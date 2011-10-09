@@ -15,19 +15,10 @@
 #include "SumatraDialogs.h"
 #include "ChmUI.h"
 
-/* Define if you want to display an additional debug menu */
-#ifdef DEBUG
-#define SHOW_DEBUG_MENU_ITEMS
-#endif
-
 void MenuUpdateDisplayMode(WindowInfo* win)
 {
-    bool enabled = false;
-    DisplayMode displayMode = gGlobalPrefs.defaultDisplayMode;
-    if (win->IsDocLoaded()) {
-        enabled = true;
-        displayMode = win->dm->displayMode();
-    }
+    bool enabled = win->IsDocLoaded();
+    DisplayMode displayMode = enabled ? win->dm->displayMode() : gGlobalPrefs.defaultDisplayMode;
 
     for (int id = IDM_VIEW_LAYOUT_FIRST; id <= IDM_VIEW_LAYOUT_LAST; id++)
         win::menu::SetEnabled(win->menu, id, enabled);
@@ -364,7 +355,7 @@ void MenuUpdatePrintItem(WindowInfo* win, HMENU menu, bool disableOnly=false) {
     win::menu::SetEnabled(menu, IDM_PRINT, filePrintEnabled && filePrintAllowed);
 }
 
-static bool IsFileCloseMenuEnabled()
+bool IsFileCloseMenuEnabled()
 {
     for (size_t i = 0; i < gWindows.Count(); i++) {
         if (!gWindows[i]->IsAboutWindow())

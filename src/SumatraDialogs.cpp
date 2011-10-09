@@ -559,11 +559,10 @@ static float GetZoomComboBoxValue(HWND hDlg, UINT idComboBox, float defaultZoom)
 
     int ix = ComboBox_GetCurSel(GetDlgItem(hDlg, idComboBox));
     if (ix == -1) {
-        TCHAR *customZoom = win::GetText(GetDlgItem(hDlg, idComboBox));
+        ScopedMem<TCHAR> customZoom(win::GetText(GetDlgItem(hDlg, idComboBox)));
         float zoom = (float)_tstof(customZoom);
         if (zoom >= ZOOM_MIN && zoom <= ZOOM_MAX)
             newZoom = zoom;
-        free(customZoom);
     } else if (0 != gItemZoom[ix])
         newZoom = gItemZoom[ix];
 

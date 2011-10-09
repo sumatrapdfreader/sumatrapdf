@@ -1,13 +1,18 @@
 /* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "BaseUtil.h"
+#include "SumatraPDF.h"
 #include "StrUtil.h"
 #include "WinUtil.h"
 #include "Ribbon.h"
 #include "WindowInfo.h"
+#include "Selection.h"
+#include "Menu.h"
+#include "Favorites.h"
+#include "FileHistory.h"
+#include "translations.h"
 #include "resource.h"
-#include <shlwapi.h>
+#include "ribbon\ribbon-gen.h"
 
 #ifndef __UIRibbon_h__
 
@@ -20,9 +25,24 @@ DEFINE_UIPROPERTYKEY(UI_PKEY_Keytip,                VT_LPWSTR,  3);
 DEFINE_UIPROPERTYKEY(UI_PKEY_Label,                 VT_LPWSTR,  4);
 DEFINE_UIPROPERTYKEY(UI_PKEY_TooltipDescription,    VT_LPWSTR,  5);
 DEFINE_UIPROPERTYKEY(UI_PKEY_TooltipTitle,          VT_LPWSTR,  6);
+DEFINE_UIPROPERTYKEY(UI_PKEY_ItemsSource,           VT_UNKNOWN, 101);
+DEFINE_UIPROPERTYKEY(UI_PKEY_CategoryId,            VT_UI4,     103);
+DEFINE_UIPROPERTYKEY(UI_PKEY_SelectedItem,          VT_UI4,     104);
+DEFINE_UIPROPERTYKEY(UI_PKEY_BooleanValue,          VT_BOOL,    200);
+DEFINE_UIPROPERTYKEY(UI_PKEY_RecentItems,           VT_ARRAY|VT_UNKNOWN,    350);
+DEFINE_UIPROPERTYKEY(UI_PKEY_Pinned,                VT_BOOL,    351);
 DEFINE_UIPROPERTYKEY(UI_PKEY_Viewable,              VT_BOOL,    1000);
 
 #endif // __UIRibbon_h__
+
+enum AppModes {
+    MODE_ALWAYS = 1 << 0,
+    MODE_REQ_DISK = 1 << 1,
+    MODE_REQ_PRINTER = 1 << 2,
+    MODE_REQ_COPYSEL = 1 << 3,
+    MODE_HAS_TEXT = 1 << 4,
+    MODE_DEBUG = 1 << 16
+};
 
 bool RibbonSupport::Initialize(HINSTANCE hInst, const WCHAR *resourceName)
 {
@@ -31,13 +51,33 @@ bool RibbonSupport::Initialize(HINSTANCE hInst, const WCHAR *resourceName)
     if (!driver)
         return false;
 
+    modes = MODE_ALWAYS
+        | (HasPermission(Perm_DiskAccess) ? MODE_REQ_DISK : 0)
+        | (HasPermission(Perm_PrinterAccess) ? MODE_REQ_PRINTER : 0)
+        | (HasPermission(Perm_CopySelection) ? MODE_REQ_COPYSEL : 0)
+        | MODE_HAS_TEXT
+#ifdef SHOW_DEBUG_MENU_ITEMS
+        | MODE_DEBUG
+#endif
+        ;
+
     HRESULT hr = driver->Initialize(win->hwndFrame, static_cast<IUIApplication *>(this));
     if (FAILED(hr)) {
         driver = NULL;
         return false;
     }
     hr = driver->LoadUI(hInst, resourceName);
+    if (SUCCEEDED(hr))
+        driver->SetModes(modes);
     return SUCCEEDED(hr);
+}
+
+inline PROPVARIANT MakeBoolVariant(bool value)
+{
+    PROPVARIANT var = { 0 };
+    var.vt = VT_BOOL;
+    var.boolVal = value ? VARIANT_TRUE : VARIANT_FALSE;
+    return var;
 }
 
 void RibbonSupport::SetVisibility(bool show)
@@ -47,16 +87,20 @@ void RibbonSupport::SetVisibility(bool show)
     ScopedComQIPtr<IPropertyStore> store(ribbon);
     if (!store) return;
 
-    PROPVARIANT var = { 0 };
-    var.vt = VT_BOOL;
-    var.boolVal = show ? VARIANT_TRUE : VARIANT_FALSE;
-    store->SetValue(UI_PKEY_Viewable, var);
+    store->SetValue(UI_PKEY_Viewable, MakeBoolVariant(show));
     store->Commit();
 }
 
 void RibbonSupport::Reset()
 {
-    // TODO: invalidate all commands
+    for (int i = 0; i < 600; i++) {
+        // tab and group names are below 20, item ids between 400 and 600
+        if (20 == i)
+            i = 400;
+        driver->InvalidateUICommand(i, UI_INVALIDATIONS_PROPERTY, &UI_PKEY_Label);
+        driver->InvalidateUICommand(i, UI_INVALIDATIONS_PROPERTY, &UI_PKEY_TooltipTitle);
+        driver->InvalidateUICommand(i, UI_INVALIDATIONS_PROPERTY, &UI_PKEY_Keytip);
+    }
 }
 
 bool RibbonSupport::SetState(const char *state)
@@ -89,7 +133,62 @@ char *RibbonSupport::GetState()
     return str::MemToHex((unsigned char *)ScopedMem<void>(binary).Get(), len);
 }
 
-STDMETHODIMP RibbonSupport::OnViewChanged(UINT32 viewId, UI_VIEWTYPE typeID, IUnknown *view, UI_VIEWVERB verb, INT32 uReasonCode)
+void RibbonSupport::UpdateState()
+{
+    // those menu items will be disabled if no document is opened, enabled otherwise
+    static UINT menusToDisableIfNoDocument[] = {
+        IDM_VIEW_ROTATE_LEFT, IDM_VIEW_ROTATE_RIGHT, IDM_GOTO_NEXT_PAGE, IDM_GOTO_PREV_PAGE,
+        IDM_GOTO_FIRST_PAGE, IDM_GOTO_LAST_PAGE, IDM_GOTO_NAV_BACK, IDM_GOTO_NAV_FORWARD,
+        IDM_GOTO_PAGE, IDM_FIND_FIRST, IDM_SAVEAS, IDM_SAVEAS_BOOKMARK, IDM_SEND_BY_EMAIL,
+        IDM_VIEW_WITH_ACROBAT, IDM_VIEW_WITH_FOXIT, IDM_VIEW_WITH_PDF_XCHANGE, 
+        IDM_SELECT_ALL, IDM_COPY_SELECTION, IDM_PROPERTIES, IDM_VIEW_PRESENTATION_MODE };
+
+    bool enabled = win->IsDocLoaded();
+    DisplayMode displayMode = enabled ? win->dm->displayMode() : gGlobalPrefs.defaultDisplayMode;
+
+    driver->SetModes(modes & (win->dm && win->dm->engine && win->dm->engine->IsImageCollection() ? ~(MODE_REQ_COPYSEL | MODE_HAS_TEXT) : 0));
+
+#define SetToggleState(id, value) driver->SetUICommandProperty(id, UI_PKEY_BooleanValue, MakeBoolVariant(value))
+#define EnableButton(id, value) driver->SetUICommandProperty(id, UI_PKEY_Enabled, MakeBoolVariant(value))
+
+    SetToggleState(IDM_VIEW_CONTINUOUS, displayModeContinuous(displayMode));
+    EnableButton(IDM_VIEW_BOOKMARKS, enabled && win->dm->HasTocTree());
+    SetToggleState(IDM_VIEW_BOOKMARKS, enabled ? win->tocVisible : gGlobalPrefs.tocVisible);
+    EnableButton(IDM_FAV_TOGGLE, gFavorites->Count() > 0);
+    SetToggleState(IDM_FAV_TOGGLE, gGlobalPrefs.favVisible);
+
+    EnableButton(IDM_CLOSE, IsFileCloseMenuEnabled());
+    EnableButton(IDM_PRINT, enabled && win->dm->engine->IsPrintingAllowed());
+
+    if (enabled) {
+        EnableButton(IDM_GOTO_NEXT_PAGE, win->dm->CurrentPageNo() < win->dm->PageCount());
+        EnableButton(IDM_GOTO_PREV_PAGE, win->dm->CurrentPageNo() > 1);
+        EnableButton(IDM_GOTO_NAV_BACK, win->dm->CanNavigate(-1));
+        EnableButton(IDM_GOTO_NAV_FORWARD, win->dm->CanNavigate(1));
+    }
+
+    for (int i = 0; i < dimof(menusToDisableIfNoDocument); i++)
+        EnableButton(menusToDisableIfNoDocument[i], enabled);
+    for (int i = IDM_VIEW_LAYOUT_FIRST; i <= IDM_VIEW_LAYOUT_LAST; i++)
+        EnableButton(i, enabled);
+    for (int i = IDM_ZOOM_FIRST; i <= IDM_ZOOM_LAST; i++)
+        EnableButton(i, enabled);
+
+    EnableButton(IDM_CHECK_UPDATE, HasPermission(Perm_InternetAccess));
+    EnableButton(IDM_MANUAL, HasPermission(Perm_DiskAccess));
+
+#ifdef SHOW_DEBUG_MENU_ITEMS
+    SetToggleState(IDM_DEBUG_SHOW_LINKS, gDebugShowLinks);
+    SetToggleState(IDM_DEBUG_GDI_RENDERER, gUseGdiRenderer);
+#endif
+
+#undef SetToggleState
+#undef EnableButton
+
+    driver->FlushPendingInvalidations();
+}
+
+IFACEMETHODIMP RibbonSupport::OnViewChanged(UINT32 viewId, UI_VIEWTYPE typeID, IUnknown *view, UI_VIEWVERB verb, INT32 uReasonCode)
 {
     switch (verb) {
     case UI_VIEWVERB_CREATE:
@@ -110,15 +209,6 @@ STDMETHODIMP RibbonSupport::OnViewChanged(UINT32 viewId, UI_VIEWTYPE typeID, IUn
     return S_OK;
 }
 
-STDMETHODIMP RibbonSupport::Execute(UINT32 commandId, UI_EXECUTIONVERB verb, const PROPERTYKEY *key, const PROPVARIANT *currentValue, IUISimplePropertySet *commandExecutionProperties)
-{
-    PostMessage(win->hwndFrame, WM_COMMAND, commandId, 0);
-    return S_OK;
-}
-
-#include "ribbon\ribbon-en-ids.h"
-#include "Menu.h"
-#include "translations.h"
 #define SEP_ITEM "-----"
 
 static MenuDef menuDefFile[] = {
@@ -259,7 +349,43 @@ HRESULT KeytipForMenu(PROPVARIANT *var, const TCHAR *value)
     return InitPropString(var, tipChar);
 }
 
-STDMETHODIMP RibbonSupport::UpdateProperty(UINT32 commandId, REFPROPERTYKEY key, const PROPVARIANT *currentValue, PROPVARIANT *newValue)
+IFACEMETHODIMP RibbonSupport::Execute(UINT32 commandId, UI_EXECUTIONVERB verb, const PROPERTYKEY *key, const PROPVARIANT *currentValue, IUISimplePropertySet *commandExecutionProperties)
+{
+    if (IDM_ZOOM_CUSTOM == commandId && key && guid_eq(*key, UI_PKEY_SelectedItem) && currentValue) {
+        float zoom = INVALID_ZOOM;
+        switch (currentValue->uintVal) {
+        case UI_COLLECTION_INVALIDINDEX:
+            if (commandExecutionProperties) {
+                PROPVARIANT var;
+                commandExecutionProperties->GetValue(UI_PKEY_Label, &var);
+                if ((var.vt == VT_LPWSTR || var.vt == VT_BSTR) && var.pwszVal)
+                    zoom = (float)_wtof(var.pwszVal);
+                PropVariantClear(&var);
+                if (zoom > 0)
+                    break;
+            }
+            return E_INVALIDARG;
+        default:
+            if (currentValue->uintVal >= 13)
+                return E_INVALIDARG;
+            zoom = (float)atof(menuDefZoom[6 + currentValue->uintVal].title);
+            break;
+        }
+        ZoomToSelection(win, zoom, false);
+        return S_OK;
+    }
+
+    if (cmdMRUList == commandId) {
+        if (!currentValue || currentValue->vt != VT_UI4 || currentValue->intVal > FILE_HISTORY_MAX_RECENT)
+            return E_INVALIDARG;
+        commandId = IDM_FILE_HISTORY_FIRST + currentValue->intVal;
+    }
+
+    PostMessage(win->hwndFrame, WM_COMMAND, commandId, 0);
+    return S_OK;
+}
+
+IFACEMETHODIMP RibbonSupport::UpdateProperty(UINT32 commandId, REFPROPERTYKEY key, const PROPVARIANT *currentValue, PROPVARIANT *newValue)
 {
     if (guid_eq(key, UI_PKEY_Keytip)) {
         switch (commandId) {
@@ -302,7 +428,7 @@ STDMETHODIMP RibbonSupport::UpdateProperty(UINT32 commandId, REFPROPERTYKEY key,
     else if (guid_eq(key, UI_PKEY_Label)) {
         switch (commandId) {
 #define LABEL(id, menudef) case id: return LabelForMenu(newValue, _TR(menudef.title), true)
-        case cmdMRUList: return InitPropString(newValue, _T("(MRU history goes here)"));
+        case cmdMRUList: return InitPropString(newValue, _T("Most recently used documents"));
         LABEL(IDM_OPEN, menuDefFile[0]);
         LABEL(IDM_CLOSE, menuDefFile[1]);
         LABEL(IDM_SAVEAS, menuDefFile[2]);
@@ -337,13 +463,14 @@ STDMETHODIMP RibbonSupport::UpdateProperty(UINT32 commandId, REFPROPERTYKEY key,
         LABEL(IDM_GOTO_PAGE, menuDefGoTo[4]);
         LABEL(IDM_GOTO_NAV_BACK, menuDefGoTo[6]);
         LABEL(IDM_GOTO_NAV_FORWARD, menuDefGoTo[7]);
+        case grpFind: return InitPropString(newValue, _T("Find"));
         LABEL(IDM_FIND_FIRST, menuDefGoTo[9]);
         case grpZoom: return InitPropString(newValue, _T("Zoom"));
         LABEL(IDM_ZOOM_FIT_PAGE, menuDefZoom[0]);
         LABEL(IDM_ZOOM_ACTUAL_SIZE, menuDefZoom[1]);
         LABEL(IDM_ZOOM_FIT_WIDTH, menuDefZoom[2]);
         LABEL(IDM_ZOOM_FIT_CONTENT, menuDefZoom[3]);
-        LABEL(IDM_ZOOM_CUSTOM, menuDefZoom[4]);
+        case IDM_ZOOM_CUSTOM: return InitPropString(newValue, _T("Zoom"));
         case grpOptions: return InitPropString(newValue, _T("Options"));
         LABEL(IDM_CHANGE_LANGUAGE, menuDefSettings[0]);
         LABEL(IDM_SETTINGS, menuDefSettings[1]);
@@ -401,6 +528,50 @@ STDMETHODIMP RibbonSupport::UpdateProperty(UINT32 commandId, REFPROPERTYKEY key,
         default: return UpdateProperty(commandId, UI_PKEY_Label, currentValue, newValue);
 #undef TOOLTIP
         }
+    }
+    else if (guid_eq(key, UI_PKEY_ItemsSource) && IDM_ZOOM_CUSTOM == commandId) {
+        if (!currentValue || !currentValue->punkVal)
+            return E_INVALIDARG;
+        ScopedComQIPtr<IUICollection> coll(currentValue->punkVal);
+        if (!coll)
+            return E_INVALIDARG;
+        for (int i = 6; i < 19; i++) {
+            ScopedMem<TCHAR> label(str::conv::FromAnsi(menuDefZoom[i].title));
+            ScopedComPtr<IUISimplePropertySet> item(new LabelPropertySet(label));
+            coll->Add(item);
+        }
+    }
+    else if (guid_eq(key, UI_PKEY_RecentItems) && cmdMRUList == commandId && !gFileHistory.IsEmpty()) {
+        if (!newValue)
+            return E_INVALIDARG;
+        SAFEARRAY *sa = SafeArrayCreateVector(VT_UNKNOWN, 0, FILE_HISTORY_MAX_RECENT);
+        if (!sa) return E_OUTOFMEMORY;
+        for (long i = 0; i < FILE_HISTORY_MAX_RECENT; i++) {
+            DisplayState *state = gFileHistory.Get(i);
+            if (!state)
+                break;
+            assert(state->filePath);
+            ScopedComPtr<IUnknown> item(new LabelPropertySet(state->filePath));
+            SafeArrayPutElement(sa, &i, item);
+        }
+        newValue->vt = VT_ARRAY | VT_UNKNOWN;
+        newValue->parray = sa;
+    }
+    return S_OK;
+}
+
+LabelPropertySet::LabelPropertySet(const TCHAR *value) :
+    lRef(1), label(str::Dup(value)) { }
+
+IFACEMETHODIMP LabelPropertySet::GetValue(const PROPERTYKEY &key, PROPVARIANT *value)
+{
+    if (guid_eq(key, UI_PKEY_Label))
+        return InitPropString(value, label);
+
+    PropVariantInit(value);
+    if (guid_eq(key, UI_PKEY_CategoryId) && value) {
+        value->vt = VT_UI4;
+        value->uintVal = UI_COLLECTION_INVALIDINDEX;
     }
     return S_OK;
 }

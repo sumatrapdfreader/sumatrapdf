@@ -187,7 +187,7 @@ $(OS): $(O) $(OE)
 $(SUMATRA_RES): src\SumatraPDF.rc src\Resource.h src\Version.h
 	rc /r /fo$@ $(EXTCFLAGS) src\SumatraPDF.rc
 
-$(SUMATRA_RIBBON_RES): src\ribbon\ribbon.rc src\ribbon\ribbon-en.rc
+$(SUMATRA_RIBBON_RES): src\ribbon\ribbon.rc src\ribbon\ribbon-gen.rc
 	rc /r /fo$@ $(EXTCFLAGS) src\ribbon\ribbon.rc
 
 $(SUMATRA_APP): $(LIBS_OBJS) $(SUMATRA_OBJS)
@@ -406,13 +406,16 @@ $(OS)\RenderCache.obj: src\ImagesEngine.h src\PdfEngine.h src\PsEngine.h
 $(OS)\RenderCache.obj: src\RenderCache.h src\TextSearch.h src\TextSelection.h
 $(OS)\RenderCache.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\Scopes.h
 $(OS)\RenderCache.obj: src\utils\StrUtil.h src\utils\Vec.h
-$(OS)\Ribbon.obj: src\BaseEngine.h src\ChmEngine.h src\DisplayModel.h
-$(OS)\Ribbon.obj: src\DisplayState.h src\DjVuEngine.h src\EngineManager.h
-$(OS)\Ribbon.obj: src\ImagesEngine.h src\PdfEngine.h src\PsEngine.h
-$(OS)\Ribbon.obj: src\Ribbon.h src\TextSearch.h src\TextSelection.h
-$(OS)\Ribbon.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\Scopes.h
-$(OS)\Ribbon.obj: src\utils\StrUtil.h src\utils\UIRibbon.h src\utils\Vec.h
-$(OS)\Ribbon.obj: src\utils\WinUtil.h src\WindowInfo.h
+$(OS)\Ribbon.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
+$(OS)\Ribbon.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
+$(OS)\Ribbon.obj: src\EngineManager.h src\Favorites.h src\FileHistory.h
+$(OS)\Ribbon.obj: src\ImagesEngine.h src\Menu.h src\PdfEngine.h
+$(OS)\Ribbon.obj: src\PsEngine.h src\resource.h src\Ribbon.h
+$(OS)\Ribbon.obj: src\ribbon\ribbon-gen.h src\Selection.h src\SumatraPDF.h
+$(OS)\Ribbon.obj: src\TextSearch.h src\TextSelection.h src\translations.h
+$(OS)\Ribbon.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
+$(OS)\Ribbon.obj: src\utils\Scopes.h src\utils\StrUtil.h src\utils\UIRibbon.h
+$(OS)\Ribbon.obj: src\utils\Vec.h src\utils\WinUtil.h src\WindowInfo.h
 $(OS)\Search.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
 $(OS)\Search.obj: src\ChmEngine.h src\DisplayModel.h src\DisplayState.h
 $(OS)\Search.obj: src\DjVuEngine.h src\EngineManager.h src\ImagesEngine.h

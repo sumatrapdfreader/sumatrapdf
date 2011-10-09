@@ -113,6 +113,8 @@
 				<Image>images/clipboard--pencil.bmp</Image>
 			</Command.SmallImages>
 		</Command>
+		
+		<Command Name="grpFind" />
 		<Command Name="cmdFind" Symbol="IDM_FIND_FIRST" Id="435">
 			<Command.SmallImages>
 				<Image>images/document-search-result.bmp</Image>
@@ -177,11 +179,7 @@
 				<Image>images/arrow-in.bmp</Image>
 			</Command.SmallImages>
 		</Command>
-		<Command Name="cmdZoomCustom" Symbol="IDM_ZOOM_CUSTOM" Id="457">
-			<Command.SmallImages>
-				<Image>images/magnifier-zoom-actual.bmp</Image>
-			</Command.SmallImages>
-		</Command>
+		<Command Name="cmdZoomCustom" Symbol="IDM_ZOOM_CUSTOM" Id="457" />
 		
 		<Command Name="grpOptions" />
 		<Command Name="cmdChangeLanguage" Symbol="IDM_CHANGE_LANGUAGE" Id="553">
@@ -203,27 +201,39 @@
 		
 		<Command Name="tabQuickAccess" />
 	</Application.Commands>
+	
 	<Application.Views>
+		<!-- ApplicationModes:
+			1 = requires Perm_DiskAccess
+			2 = requires Perm_PrinterAccess
+			3 = requires Perm_CopySelection
+			4 = supports text content
+			16 = Debug mode
+		-->
 		<Ribbon>
 			<Ribbon.ApplicationMenu>
 				<ApplicationMenu CommandName="tabFileMenu">
 					<ApplicationMenu.RecentItems>
-						<RecentItems CommandName="cmdMRUList" />
+						<RecentItems CommandName="cmdMRUList" EnablePinning="false" MaxCount="10" />
 					</ApplicationMenu.RecentItems>
-					<MenuGroup>
-						<Button CommandName="cmdOpen" />
-						<Button CommandName="cmdClose" />
-						<Button CommandName="cmdSaveAs" />
-						<Button CommandName="cmdPrint" />
+					
+					<MenuGroup Class="StandardItems">
+						<Button CommandName="cmdOpen" ApplicationModes="1" />
+						<Button CommandName="cmdClose" ApplicationModes="1" />
+						<Button CommandName="cmdSaveAs" ApplicationModes="1" />
+						<Button CommandName="cmdPrint" ApplicationModes="2" />
 					</MenuGroup>
-					<MenuGroup>
-						<Button CommandName="cmdSaveAsLink" />
-						<Button CommandName="cmdSendByEmail" />
+					
+					<MenuGroup Class="StandardItems">
+						<Button CommandName="cmdSaveAsLink" ApplicationModes="1" />
+						<Button CommandName="cmdSendByEmail" ApplicationModes="1" />
 					</MenuGroup>
-					<MenuGroup>
+					
+					<MenuGroup Class="StandardItems">
 						<Button CommandName="cmdProperties" />
 					</MenuGroup>
-					<MenuGroup>
+					
+					<MenuGroup Class="StandardItems">
 						<Button CommandName="cmdAbout" />
 						<Button CommandName="cmdExit" />
 					</MenuGroup>
@@ -231,57 +241,90 @@
 			</Ribbon.ApplicationMenu>
 			<Ribbon.Tabs>
 				<Tab CommandName="tabStart">
-					<Group CommandName="grpNav">
-						<Button CommandName="cmdNavNext" />
+					<Tab.ScalingPolicy>
+						<ScalingPolicy>
+							<ScalingPolicy.IdealSizes>
+								<Scale Group="grpNav" Size="Medium" />
+								<Scale Group="grpView" Size="Medium" />
+								<!--Scale Group="grpZoom" Size="Medium" /-->
+							</ScalingPolicy.IdealSizes>
+						</ScalingPolicy>
+					</Tab.ScalingPolicy>
+					
+					<Group CommandName="grpNav" SizeDefinition="SevenButtons">
+						<Button CommandName="cmdNavPage" />
 						<Button CommandName="cmdNavPrev" />
 						<Button CommandName="cmdNavFirst" />
-						<Button CommandName="cmdNavLast" />
 						<Button CommandName="cmdNavBack" />
+						<Button CommandName="cmdNavNext" />
+						<Button CommandName="cmdNavLast" />
 						<Button CommandName="cmdNavForward" />
-						<Button CommandName="cmdNavPage" />
 					</Group>
-					<Group CommandName="grpView">
-						<Button CommandName="cmdViewSinglePage" />
-						<Button CommandName="cmdViewFacing" />
-						<Button CommandName="cmdViewBook" />
-						<Button CommandName="cmdViewContinuous" />
+					
+					<Group CommandName="grpView" SizeDefinition="FourButtons">
+						<ToggleButton CommandName="cmdViewSinglePage" />
+						<ToggleButton CommandName="cmdViewFacing" />
+						<ToggleButton CommandName="cmdViewBook" />
+						<ToggleButton CommandName="cmdViewContinuous" />
 					</Group>
+					
 					<Group CommandName="grpZoom">
 						<Button CommandName="cmdZoomFitPage" />
 						<Button CommandName="cmdZoomActualSize" />
 						<Button CommandName="cmdZoomFitWidth" />
 						<Button CommandName="cmdZoomFitContent" />
-						<Button CommandName="cmdZoomCustom" />
+						<ComboBox CommandName="cmdZoomCustom" IsEditable="true" IsAutoCompleteEnabled="false" ResizeType="NoResize" />
 					</Group>
 				</Tab>
+				
 				<Tab CommandName="tabMore">
-					<Group CommandName="grpView2">
-						<Button CommandName="cmdViewRotateLeft" />
-						<Button CommandName="cmdViewRotateRight" />
-						<Button CommandName="cmdViewPresentationMode" />
-						<Button CommandName="cmdViewFullscreen" />
-					</Group>
-					<Group CommandName="grpEdit">
-						<Button CommandName="cmdSelectAll" />
-						<Button CommandName="cmdCopySelection" />
+					<Tab.ScalingPolicy>
+						<ScalingPolicy>
+							<ScalingPolicy.IdealSizes>
+								<Scale Group="grpFind" Size="Large" />
+								<Scale Group="grpView2" Size="Medium" />
+								<Scale Group="grpEdit" Size="Medium" />
+								<Scale Group="grpOptions" Size="Medium" />
+								<Scale Group="grpDebug" Size="Medium" />
+							</ScalingPolicy.IdealSizes>
+						</ScalingPolicy>
+					</Tab.ScalingPolicy>
+					
+					<Group CommandName="grpFind" SizeDefinition="OneButton" ApplicationModes="4">
 						<Button CommandName="cmdFind" />
 					</Group>
-					<Group CommandName="grpOptions">
+					
+					<Group CommandName="grpEdit" SizeDefinition="TwoButtons" ApplicationModes="3">
+						<Button CommandName="cmdSelectAll" />
+						<Button CommandName="cmdCopySelection" />
+					</Group>
+					
+					<Group CommandName="grpView2" SizeDefinition="FourButtons">
+						<Button CommandName="cmdViewPresentationMode" />
+						<Button CommandName="cmdViewRotateLeft" />
+						<Button CommandName="cmdViewRotateRight" />
+						<Button CommandName="cmdViewFullscreen" />
+					</Group>
+					
+					<Group CommandName="grpOptions" SizeDefinition="FiveOrSixButtons">
 						<Button CommandName="cmdSettings" />
 						<Button CommandName="cmdChangeLanguage" />
 						<Button CommandName="cmdCheckUpdate" />
-						<Button CommandName="cmdViewBookmarks" />
-						<Button CommandName="cmdViewFavorites" />
+						<ToggleButton CommandName="cmdViewBookmarks" />
+						<ToggleButton CommandName="cmdViewFavorites" />
 					</Group>
-					<Group CommandName="grpDebug">
-						<Button CommandName="cmdDebugShowLinks" />
-						<Button CommandName="cmdDebugGdiRenderer" />
+					
+					<Group CommandName="grpDebug" SizeDefinition="TwoButtons" ApplicationModes="16">
+						<ToggleButton CommandName="cmdDebugShowLinks" />
+						<ToggleButton CommandName="cmdDebugGdiRenderer" />
 					</Group>
 				</Tab>
 			</Ribbon.Tabs>
+			
 			<Ribbon.HelpButton>
 				<HelpButton CommandName="cmdHelp" />
 			</Ribbon.HelpButton>
+			
 			<Ribbon.QuickAccessToolbar>
 				<QuickAccessToolbar CommandName="tabQuickAccess" />
 			</Ribbon.QuickAccessToolbar>

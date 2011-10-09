@@ -752,6 +752,10 @@ static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win,
         UpdateToolbarPageText(&win, pageCount);
         UpdateToolbarFindText(&win);
     }
+#ifdef BUILD_RIBBON
+    if (win.ribbonSupport)
+        win.ribbonSupport->UpdateState();
+#endif
 
     const TCHAR *baseName = path::GetBaseName(win.dm->FileName());
     TCHAR *docTitle = win.dm->engine ? win.dm->engine->GetProperty("Title") : NULL;
@@ -871,6 +875,10 @@ static void UpdateToolbarAndScrollbarsForAllWindows()
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows[i];
         ToolbarUpdateStateForWindow(win);
+#ifdef BUILD_RIBBON
+        if (win->ribbonSupport)
+            win->ribbonSupport->UpdateState();
+#endif
 
         if (!win->IsDocLoaded()) {
             ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
@@ -937,7 +945,7 @@ static WindowInfo* CreateWindowInfo()
 #if defined(BUILD_RIBBON) && defined(USE_RIBBON)
     if (gGlobalPrefs.useRibbon) {
         win->ribbonSupport = new RibbonSupport(win);
-        if (!win->ribbonSupport->Initialize(ghinst, L"EN_RIBBON")) {
+        if (!win->ribbonSupport->Initialize(ghinst, L"APPLICATION_RIBBON")) {
             delete win->ribbonSupport;
             win->ribbonSupport = NULL;
         }
@@ -1134,6 +1142,10 @@ void WindowInfo::PageNoChanged(int pageNo)
         ScopedMem<TCHAR> buf(dm->engine->GetPageLabel(pageNo));
         win::SetText(hwndPageBox, buf);
         ToolbarUpdateStateForWindow(this);
+#ifdef BUILD_RIBBON
+        if (ribbonSupport)
+            ribbonSupport->UpdateState();
+#endif
         if (dm->engine && dm->engine->HasPageLabels())
             UpdateToolbarPageText(this, dm->PageCount());
     }
@@ -1639,6 +1651,10 @@ static void ToggleGdiDebugging()
             gRenderCache.KeepForDisplayModel(dm, dm);
             gWindows[i]->RedrawAll(true);
         }
+#ifdef BUILD_RIBBON
+        if (gWindows[i]->ribbonSupport)
+            gWindows[i]->ribbonSupport->UpdateState();
+#endif
     }
 }
 
@@ -2078,6 +2094,10 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
         }
         UpdateToolbarPageText(win, 0);
         UpdateToolbarFindText(win);
+#ifdef BUILD_RIBBON
+        if (win->ribbonSupport)
+            win->ribbonSupport->UpdateState();
+#endif
         DeleteOldSelectionInfo(win, true);
         win->RedrawAll();
         UpdateFindbox(win);
@@ -2776,12 +2796,17 @@ static void EnterFullscreen(WindowInfo& win, bool presentation)
     win.frameRc = WindowRect(win.hwndFrame);
     RectI rect = GetFullscreenRect(win.hwndFrame);
 
-    SetMenu(win.hwndFrame, NULL);
-    ShowWindow(win.hwndReBar, SW_HIDE);
 #ifdef BUILD_RIBBON
+    // TODO: the ribbon seems to leave the window's title bar transparent
+    //       (Paint uses a different Window for fullscreen view)
     if (win.ribbonSupport)
         win.ribbonSupport->SetVisibility(false);
+    else
 #endif
+    {
+        SetMenu(win.hwndFrame, NULL);
+        ShowWindow(win.hwndReBar, SW_HIDE);
+    }
     SetWindowLong(win.hwndFrame, GWL_STYLE, ws);
     SetWindowPos(win.hwndFrame, NULL, rect.x, rect.y, rect.dx, rect.dy, SWP_FRAMECHANGED | SWP_NOZORDER);
     SetWindowPos(win.hwndCanvas, NULL, 0, 0, rect.dx, rect.dy, SWP_NOZORDER);
@@ -2821,9 +2846,10 @@ static void ExitFullscreen(WindowInfo& win)
         win.ribbonSupport->SetVisibility(true);
     else
 #endif
-    if (gGlobalPrefs.toolbarVisible)
+    if (gGlobalPrefs.toolbarVisible) {
         ShowWindow(win.hwndReBar, SW_SHOW);
-    SetMenu(win.hwndFrame, win.menu);
+        SetMenu(win.hwndFrame, win.menu);
+    }
     SetWindowLong(win.hwndFrame, GWL_STYLE, win.prevStyle);
     SetWindowPos(win.hwndFrame, NULL, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE);
     MoveWindow(win.hwndFrame, win.frameRc);
@@ -4118,8 +4144,13 @@ static LRESULT OnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wParam, LP
 
         case IDM_DEBUG_SHOW_LINKS:
             gDebugShowLinks = !gDebugShowLinks;
-            for (size_t i = 0; i < gWindows.Count(); i++)
+            for (size_t i = 0; i < gWindows.Count(); i++) {
                 gWindows[i]->RedrawAll(true);
+#ifdef BUILD_RIBBON
+                if (gWindows[i]->ribbonSupport)
+                    gWindows[i]->ribbonSupport->UpdateState();
+#endif
+            }
             break;
 
         case IDM_DEBUG_GDI_RENDERER:

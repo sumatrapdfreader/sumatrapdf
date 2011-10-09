@@ -3,7 +3,7 @@
 // * your application.                                                          *
 // ******************************************************************************
 
-#include ".\ribbon-en-ids.h"
+#include ".\ribbon-gen.h"
 
 IDM_OPEN_SmallImages_RESID    BITMAP    "images\\folder-open-document.bmp" /* SmallImages IDM_OPEN_SmallImages_RESID: (null) */
 IDM_SAVEAS_SmallImages_RESID    BITMAP    "images\\disk--pencil.bmp" /* SmallImages IDM_SAVEAS_SmallImages_RESID: (null) */
@@ -37,7 +37,6 @@ IDM_ZOOM_FIT_PAGE_SmallImages_RESID    BITMAP    "images\\arrow-out.bmp" /* Smal
 IDM_ZOOM_ACTUAL_SIZE_SmallImages_RESID    BITMAP    "images\\blue-document-resize-actual.bmp" /* SmallImages IDM_ZOOM_ACTUAL_SIZE_SmallImages_RESID: (null) */
 IDM_ZOOM_FIT_WIDTH_SmallImages_RESID    BITMAP    "images\\arrow-resize.bmp" /* SmallImages IDM_ZOOM_FIT_WIDTH_SmallImages_RESID: (null) */
 IDM_ZOOM_FIT_CONTENT_SmallImages_RESID    BITMAP    "images\\arrow-in.bmp" /* SmallImages IDM_ZOOM_FIT_CONTENT_SmallImages_RESID: (null) */
-IDM_ZOOM_CUSTOM_SmallImages_RESID    BITMAP    "images\\magnifier-zoom-actual.bmp" /* SmallImages IDM_ZOOM_CUSTOM_SmallImages_RESID: (null) */
 IDM_CHANGE_LANGUAGE_SmallImages_RESID    BITMAP    "images\\edit-language.bmp" /* SmallImages IDM_CHANGE_LANGUAGE_SmallImages_RESID: (null) */
 IDM_SETTINGS_SmallImages_RESID    BITMAP    "images\\hammer--pencil.bmp" /* SmallImages IDM_SETTINGS_SmallImages_RESID: (null) */
-EN_RIBBON    UIFILE    "ribbon-en.bml"
+APPLICATION_RIBBON    UIFILE    "ribbon-gen.bml"

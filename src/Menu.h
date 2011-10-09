@@ -28,9 +28,6 @@ struct MenuDef {
 class WindowInfo;
 class ChmWindowInfo;
 
-void MenuUpdateDisplayMode(WindowInfo* win);
-void MenuUpdateZoom(WindowInfo* win);
-void MenuUpdateStateForWindow(WindowInfo* win);
 HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu);
 HMENU BuildMenu(WindowInfo *win);
 HMENU BuildChmMenu(ChmWindowInfo *win);
@@ -40,7 +37,13 @@ void OnMenuZoom(WindowInfo* win, UINT menuId);
 void OnMenuCustomZoom(WindowInfo* win);
 UINT MenuIdFromVirtualZoom(float virtualZoom);
 void UpdateMenu(WindowInfo *win, HMENU m);
+bool IsFileCloseMenuEnabled();
 
 extern MenuDef menuDefFavorites[];
+
+/* Define if you want to display an additional debug menu */
+#ifdef DEBUG
+#define SHOW_DEBUG_MENU_ITEMS
+#endif
 
 #endif

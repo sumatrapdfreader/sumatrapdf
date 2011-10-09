@@ -66,6 +66,19 @@ public:
     virtual HRESULT STDMETHODCALLTYPE SaveSettingsToStream(IStream *pStream) = 0;
 };
 
+MIDL_INTERFACE("DF4F45BF-6F9D-4DD7-9D68-D8F9CD18C4DB") IUICollection : public IUnknown {
+public:
+    virtual HRESULT STDMETHODCALLTYPE GetCount(UINT32 *count) = 0;
+    virtual HRESULT STDMETHODCALLTYPE GetItem(UINT32 index, IUnknown **item) = 0;
+    virtual HRESULT STDMETHODCALLTYPE Add(IUnknown *item) = 0;
+    virtual HRESULT STDMETHODCALLTYPE Insert(UINT32 index, IUnknown *item) = 0;
+    virtual HRESULT STDMETHODCALLTYPE RemoveAt(UINT32 index) = 0;
+    virtual HRESULT STDMETHODCALLTYPE Replace(UINT32 indexReplaced, IUnknown *itemReplaceWith) = 0;
+    virtual HRESULT STDMETHODCALLTYPE Clear(void) = 0;
+};
+
+#define UI_COLLECTION_INVALIDINDEX 0xFFFFFFFF
+
 // from UIRibbonKeydef.h
 
 #define DEFINE_UIPROPERTYKEY(name, type, index) extern "C" const PROPERTYKEY DECLSPEC_SELECTANY name = { { 0x00000000 + index, 0x7363, 0x696e, { 0x84, 0x41, 0x79, 0x8a, 0xcf, 0x5a, 0xeb, 0xb7 } }, type }
