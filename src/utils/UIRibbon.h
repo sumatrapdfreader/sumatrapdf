@@ -3,6 +3,7 @@
 #if !defined(UIRibbon_h) && !defined(__UIRibbon_h__)
 #define UIRibbon_h
 
+#include "BaseUtil.h"
 #include <propkeydef.h>
 
 // copied from UIRibbon.h

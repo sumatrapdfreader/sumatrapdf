@@ -941,8 +941,13 @@ static WindowInfo* CreateWindowInfo()
             delete win->ribbonSupport;
             win->ribbonSupport = NULL;
         }
-        else if (gGlobalPrefs.ribbonState)
+        else {
+            if (!gGlobalPrefs.ribbonState) {
+                size_t len = str::Len((char *)RIBBON_DEFAULT_STATE);
+                gGlobalPrefs.ribbonState = str::MemToHex(RIBBON_DEFAULT_STATE, len);
+            }
             win->ribbonSupport->SetState(gGlobalPrefs.ribbonState);
+        }
     }
     if (!win->ribbonSupport)
 #endif
@@ -960,6 +965,10 @@ static WindowInfo* CreateWindowInfo()
         win->hwndCanvas, NULL, ghinst, NULL);
 
     CreateToolbar(win);
+#ifdef BUILD_RIBBON
+    if (win->ribbonSupport)
+        ShowWindow(win->hwndReBar, SW_HIDE);
+#endif
     CreateSidebar(win);
     UpdateFindbox(win);
     DragAcceptFiles(win->hwndCanvas, TRUE);
@@ -996,6 +1005,7 @@ static void DeleteWindowInfo(WindowInfo *win)
     AbortPrinting(win);
 
 #ifdef BUILD_RIBBON
+    assert(!win->menu != !win->ribbonSupport);
     if (win->ribbonSupport) {
         free(gGlobalPrefs.ribbonState);
         gGlobalPrefs.ribbonState = win->ribbonSupport->GetState();
@@ -2704,7 +2714,11 @@ static void OnMenuGoToPage(WindowInfo& win)
         return;
 
     // Don't show a dialog if we don't have to - use the Toolbar instead
-    if (gGlobalPrefs.toolbarVisible && !win.fullScreen && PM_DISABLED == win.presentation) {
+    if (gGlobalPrefs.toolbarVisible && !win.fullScreen && !win.presentation
+#ifdef BUILD_RIBBON
+        && !win.ribbonSupport
+#endif
+        ) {
         FocusPageNoEdit(win.hwndPageBox);
         return;
     }
@@ -2764,6 +2778,9 @@ static void EnterFullscreen(WindowInfo& win, bool presentation)
 
     SetMenu(win.hwndFrame, NULL);
     ShowWindow(win.hwndReBar, SW_HIDE);
+#ifdef BUILD_RIBBON
+    // TODO: hide ribbon
+#endif
     SetWindowLong(win.hwndFrame, GWL_STYLE, ws);
     SetWindowPos(win.hwndFrame, NULL, rect.x, rect.y, rect.dx, rect.dy, SWP_FRAMECHANGED | SWP_NOZORDER);
     SetWindowPos(win.hwndCanvas, NULL, 0, 0, rect.dx, rect.dy, SWP_NOZORDER);
@@ -2798,6 +2815,10 @@ static void ExitFullscreen(WindowInfo& win)
     if (tocVisible || gGlobalPrefs.favVisible)
         SetSidebarVisibility(&win, tocVisible, gGlobalPrefs.favVisible);
 
+#ifdef BUILD_RIBBON
+    // TODO: show ribbon
+    if (!win.ribbonSupport)
+#endif
     if (gGlobalPrefs.toolbarVisible)
         ShowWindow(win.hwndReBar, SW_SHOW);
     SetMenu(win.hwndFrame, win.menu);
@@ -2831,6 +2852,9 @@ void AdvanceFocus(WindowInfo* win)
 
     bool hasToolbar = !win->fullScreen && !win->presentation &&
                       gGlobalPrefs.toolbarVisible && win->IsDocLoaded();
+#ifdef BUILD_RIBBON
+    hasToolbar = hasToolbar && !win->ribbonSupport;
+#endif
     int direction = IsShiftPressed() ? -1 : 1;
 
     struct {
@@ -3059,7 +3083,11 @@ static void OnFrameChar(WindowInfo& win, WPARAM key)
     case 'i':
         // experimental "page info" tip: make figuring out current page and
         // total pages count a one-key action (unless they're already visible)
-        if (!gGlobalPrefs.toolbarVisible || win.fullScreen || PM_ENABLED == win.presentation) {
+        if (!gGlobalPrefs.toolbarVisible || win.fullScreen || PM_ENABLED == win.presentation
+#ifdef BUILD_RIBBON
+            || win.ribbonSupport
+#endif
+            ) {
             int current = win.dm->CurrentPageNo(), total = win.dm->PageCount();
             ScopedMem<TCHAR> pageInfo(str::Format(_T("%s %d / %d"), _TR("Page:"), current, total));
             if (win.dm->engine && win.dm->engine->HasPageLabels()) {
@@ -3111,9 +3139,19 @@ static void RebuildMenuBar()
 {
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows[i];
-        HMENU oldMenu = win->menu;
-        win->menu = BuildMenu(win);
-        DestroyMenu(oldMenu);
+#ifdef BUILD_RIBBON
+        if (win->ribbonSupport) {
+            delete win->ribbonSupport;
+            win->ribbonSupport = new RibbonSupport(win);
+            win->ribbonSupport->Initialize(ghinst, L"EN_RIBBON");
+        }
+        else
+#endif
+        {
+            HMENU oldMenu = win->menu;
+            win->menu = BuildMenu(win);
+            DestroyMenu(oldMenu);
+        }
     }
 }
 
@@ -4476,6 +4514,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         i.reuseInstance = i.exitOnPrint = false;
         // always display the toolbar when embedded (as there's no menubar in that case)
         gGlobalPrefs.toolbarVisible = true;
+#ifdef BUILD_RIBBON
+        // always use the classic toolbar for the plugin
+        gGlobalPrefs.useRibbon = false;
+#endif
         // never allow esc as a shortcut to quit
         gGlobalPrefs.escToExit = false;
         // never show the sidebar by default

@@ -7,7 +7,6 @@
 		<Command Name="cmdSaveAs" LabelTitle="&amp;Save As..." Symbol="IDM_SAVEAS" Id="402" />
 		<Command Name="cmdPrint" LabelTitle="&amp;Print..." Symbol="IDM_Print" Id="403" />
 		<Command Name="cmdExit" LabelTitle="E&amp;xit" Symbol="IDM_EXIT" Id="405" />
-		<Command Name="cmdRefresh" LabelTitle="&amp;Reload" Symbol="IDM_REFRESH" Id="406" />
 		<Command Name="cmdSaveAsLink" LabelTitle="Save &amp;Bookmark..." Symbol="IDM_SAVEAS_BOOKMARK" Id="407" />
 		<Command Name="cmdSendByEmail" LabelTitle="Send As &amp;Email" Symbol="IDM_SEND_BY_EMAIL" Id="408" />
 		<Command Name="cmdProperties" LabelTitle="P&amp;roperties" Symbol="IDM_PROPERTIES" Id="409" />
@@ -35,7 +34,6 @@
 						<Button CommandName="cmdPrint" />
 					</MenuGroup>
 					<MenuGroup>
-						<Button CommandName="cmdRefresh" />
 						<Button CommandName="cmdSaveAsLink" />
 						<Button CommandName="cmdSendByEmail" />
 					</MenuGroup>

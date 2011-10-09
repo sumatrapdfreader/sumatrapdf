@@ -187,7 +187,7 @@ $(OS): $(O) $(OE)
 $(SUMATRA_RES): src\SumatraPDF.rc src\Resource.h src\Version.h
 	rc /r /fo$@ $(EXTCFLAGS) src\SumatraPDF.rc
 
-$(SUMATRA_RIBBON_RES): src\ribbon\ribbon.rc src\ribbon\ribbon-en.rc
+$(SUMATRA_RIBBON_RES): src\ribbon\ribbon.rc src\ribbon\ribbon-en.bml
 	rc /r /fo$@ $(EXTCFLAGS) src\ribbon\ribbon.rc
 
 $(SUMATRA_APP): $(LIBS_OBJS) $(SUMATRA_OBJS)
