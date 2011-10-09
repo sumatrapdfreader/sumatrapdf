@@ -2,21 +2,65 @@
 <Application xmlns="http://schemas.microsoft.com/windows/2009/Ribbon">
 	<Application.Commands>
 		<Command Name="tabFileMenu" />
-		<Command Name="cmdOpen" LabelTitle="&amp;Open..." Symbol="IDM_OPEN" Id="400" />
-		<Command Name="cmdClose" LabelTitle="&amp;Close" Symbol="IDM_CLOSE" Id="401" />
-		<Command Name="cmdSaveAs" LabelTitle="&amp;Save As..." Symbol="IDM_SAVEAS" Id="402" />
-		<Command Name="cmdPrint" LabelTitle="&amp;Print..." Symbol="IDM_Print" Id="403" />
-		<Command Name="cmdExit" LabelTitle="E&amp;xit" Symbol="IDM_EXIT" Id="405" />
-		<Command Name="cmdSaveAsLink" LabelTitle="Save &amp;Bookmark..." Symbol="IDM_SAVEAS_BOOKMARK" Id="407" />
-		<Command Name="cmdSendByEmail" LabelTitle="Send As &amp;Email" Symbol="IDM_SEND_BY_EMAIL" Id="408" />
-		<Command Name="cmdProperties" LabelTitle="P&amp;roperties" Symbol="IDM_PROPERTIES" Id="409" />
-		<Command Name="cmdAbout" LabelTitle="&amp;About" Symbol="IDM_ABOUT" Id="551" />
-		<Command Name="cmdMRUList" LabelTitle="(MRU history goes here)" />
+		<Command Name="cmdOpen" Symbol="IDM_OPEN" Id="400" />
+		<Command Name="cmdClose" Symbol="IDM_CLOSE" Id="401" />
+		<Command Name="cmdSaveAs" Symbol="IDM_SAVEAS" Id="402" />
+		<Command Name="cmdPrint" Symbol="IDM_Print" Id="403" />
+		<Command Name="cmdExit" Symbol="IDM_EXIT" Id="405" />
+		<Command Name="cmdSaveAsLink" Symbol="IDM_SAVEAS_BOOKMARK" Id="407" />
+		<Command Name="cmdSendByEmail" Symbol="IDM_SEND_BY_EMAIL" Id="408" />
+		<Command Name="cmdProperties" Symbol="IDM_PROPERTIES" Id="409" />
+		<Command Name="cmdAbout" Symbol="IDM_ABOUT" Id="551" />
+		<Command Name="cmdMRUList" />
 		
-		<Command Name="tabStart" LabelTitle="Start" Keytip="S" />
-		<Command Name="grpNav" LabelTitle="Navigation" />
-		<Command Name="cmdNavNext" LabelTitle="Next Page" Symbol="IDM_GOTO_NEXT_PAGE" Id="430" Keytip="N" />
-		<Command Name="cmdNavPrev" LabelTitle="Previous Page" Symbol="IDM_GOTO_PREV_PAGE" Id="431" Keytip="P" />
+		<Command Name="tabStart" />
+		<Command Name="tabMore" />
+		
+		<Command Name="grpView" />
+		<Command Name="cmdViewSinglePage" Symbol="IDM_VIEW_SINGLE_PAGE" Id="410" />
+		<Command Name="cmdViewFacing" Symbol="IDM_VIEW_FACING" Id="411" />
+		<Command Name="cmdViewBook" Symbol="IDM_VIEW_BOOK" Id="412" />
+		<Command Name="cmdViewContinuous" Symbol="IDM_VIEW_CONTINUOUS" Id="413" />
+		
+		<Command Name="grpView2" />
+		<Command Name="cmdViewRotateLeft" Symbol="IDM_VIEW_ROTATE_LEFT" Id="415" />
+		<Command Name="cmdViewRotateRight" Symbol="IDM_VIEW_ROTATE_RIGHT" Id="416" />
+		<Command Name="cmdViewPresentationMode" Symbol="IDM_VIEW_PRESENTATION_MODE" Id="418" />
+		<Command Name="cmdViewFullscreen" Symbol="IDM_VIEW_FULLSCREEN" Id="421" />
+		
+		<Command Name="cmdViewBookmarks" Symbol="IDM_VIEW_BOOKMARKS" Id="417" />
+		<Command Name="cmdViewFavorites" Symbol="IDM_FAV_TOGGLE" Id="562" />
+		
+		<Command Name="grpEdit" />
+		<Command Name="cmdSelectAll" Symbol="IDM_SELECT_ALL" Id="422" />
+		<Command Name="cmdCopySelection" Symbol="IDM_COPY_SELECTION" Id="420" />
+		<Command Name="cmdFind" Symbol="IDM_FIND_FIRST" Id="435" />
+		
+		<Command Name="grpNav" />
+		<Command Name="cmdNavNext" Symbol="IDM_GOTO_NEXT_PAGE" Id="430" />
+		<Command Name="cmdNavPrev" Symbol="IDM_GOTO_PREV_PAGE" Id="431" />
+		<Command Name="cmdNavFirst" Symbol="IDM_GOTO_FIRST_PAGE" Id="432" />
+		<Command Name="cmdNavLast" Symbol="IDM_GOTO_LAST_PAGE" Id="433" />
+		<Command Name="cmdNavPage" Symbol="IDM_GOTO_PAGE" Id="434" />
+		<Command Name="cmdNavBack" Symbol="IDM_GOTO_NAV_BACK" Id="558" />
+		<Command Name="cmdNavForward" Symbol="IDM_GOTO_NAV_FORWARD" Id="559" />
+		
+		<Command Name="grpZoom" />
+		<Command Name="cmdZoomFitPage" Symbol="IDM_ZOOM_FIT_PAGE" Id="440" />
+		<Command Name="cmdZoomActualSize" Symbol="IDM_ZOOM_ACTUAL_SIZE" Id="441" />
+		<Command Name="cmdZoomFitWidth" Symbol="IDM_ZOOM_FIT_WIDTH" Id="442" />
+		<Command Name="cmdZoomFitContent" Symbol="IDM_ZOOM_FIT_CONTENT" Id="456" />
+		<Command Name="cmdZoomCustom" Symbol="IDM_ZOOM_CUSTOM" Id="457" />
+		
+		<Command Name="grpOptions" />
+		<Command Name="cmdChangeLanguage" Symbol="IDM_CHANGE_LANGUAGE" Id="553" />
+		<Command Name="cmdSettings" Symbol="IDM_SETTINGS" Id="552" />
+		<Command Name="cmdHelp" Symbol="IDM_MANUAL" Id="555" />
+		<Command Name="cmdCheckUpdate" Symbol="IDM_CHECK_UPDATE" Id="554" />
+		
+		<Command Name="grpDebug" />
+		<Command Name="cmdDebugShowLinks" Symbol="IDM_DEBUG_SHOW_LINKS" Id="590" />
+		<Command Name="cmdDebugGdiRenderer" Symbol="IDM_DEBUG_GDI_RENDERER" Id="591" />
 		
 		<Command Name="tabQuickAccess" />
 	</Application.Commands>
@@ -48,12 +92,57 @@
 			</Ribbon.ApplicationMenu>
 			<Ribbon.Tabs>
 				<Tab CommandName="tabStart">
-					<Group CommandName="grpNav" SizeDefinition="TwoButtons">
-						<Button CommandName="cmdNavPrev" />
+					<Group CommandName="grpNav">
 						<Button CommandName="cmdNavNext" />
+						<Button CommandName="cmdNavPrev" />
+						<Button CommandName="cmdNavFirst" />
+						<Button CommandName="cmdNavLast" />
+						<Button CommandName="cmdNavBack" />
+						<Button CommandName="cmdNavForward" />
+						<Button CommandName="cmdNavPage" />
+					</Group>
+					<Group CommandName="grpView">
+						<Button CommandName="cmdViewSinglePage" />
+						<Button CommandName="cmdViewFacing" />
+						<Button CommandName="cmdViewBook" />
+						<Button CommandName="cmdViewContinuous" />
+					</Group>
+					<Group CommandName="grpZoom">
+						<Button CommandName="cmdZoomFitPage" />
+						<Button CommandName="cmdZoomActualSize" />
+						<Button CommandName="cmdZoomFitWidth" />
+						<Button CommandName="cmdZoomFitContent" />
+						<Button CommandName="cmdZoomCustom" />
+					</Group>
+				</Tab>
+				<Tab CommandName="tabMore">
+					<Group CommandName="grpView2">
+						<Button CommandName="cmdViewRotateLeft" />
+						<Button CommandName="cmdViewRotateRight" />
+						<Button CommandName="cmdViewPresentationMode" />
+						<Button CommandName="cmdViewFullscreen" />
+					</Group>
+					<Group CommandName="grpEdit">
+						<Button CommandName="cmdSelectAll" />
+						<Button CommandName="cmdCopySelection" />
+						<Button CommandName="cmdFind" />
+					</Group>
+					<Group CommandName="grpOptions">
+						<Button CommandName="cmdSettings" />
+						<Button CommandName="cmdChangeLanguage" />
+						<Button CommandName="cmdCheckUpdate" />
+						<Button CommandName="cmdViewBookmarks" />
+						<Button CommandName="cmdViewFavorites" />
+					</Group>
+					<Group CommandName="grpDebug">
+						<Button CommandName="cmdDebugShowLinks" />
+						<Button CommandName="cmdDebugGdiRenderer" />
 					</Group>
 				</Tab>
 			</Ribbon.Tabs>
+			<Ribbon.HelpButton>
+				<HelpButton CommandName="cmdHelp" />
+			</Ribbon.HelpButton>
 			<Ribbon.QuickAccessToolbar>
 				<QuickAccessToolbar CommandName="tabQuickAccess" />
 			</Ribbon.QuickAccessToolbar>

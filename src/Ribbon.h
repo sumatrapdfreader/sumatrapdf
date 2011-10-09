@@ -28,6 +28,8 @@ public:
     bool Initialize(HINSTANCE hInst, const WCHAR *resourceName);
     bool SetState(const char *state);
     char *GetState();
+    void SetVisibility(bool show);
+    void Reset();
 
     // IUnknown
     IFACEMETHODIMP QueryInterface(REFIID riid, void **ppv) {
@@ -63,6 +65,6 @@ public:
 
 // per default, collapse the ribbon, add some common commands to the
 // quick access toolbar and display the QAT below the ribbon
-#define RIBBON_DEFAULT_STATE ((unsigned char *)"<customUI xmlns='http://schemas.microsoft.com/windows/2009/ribbon/qat'><ribbon minimized='true'><qat position='1'><sharedControls><control idQ='431'/><control idQ='430'/></sharedControls></qat></ribbon></customUI>")
+#define RIBBON_DEFAULT_STATE ((unsigned char *)"<customUI xmlns='http://schemas.microsoft.com/windows/2009/ribbon/qat'><ribbon minimized='true'><qat position='1'><sharedControls><control idQ='403'/><control idQ='431'/><control idQ='430'/><control idQ='435'/></sharedControls></qat></ribbon></customUI>")
 
 #endif // Ribbon_h

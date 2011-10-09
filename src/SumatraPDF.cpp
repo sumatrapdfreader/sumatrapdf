@@ -2779,7 +2779,8 @@ static void EnterFullscreen(WindowInfo& win, bool presentation)
     SetMenu(win.hwndFrame, NULL);
     ShowWindow(win.hwndReBar, SW_HIDE);
 #ifdef BUILD_RIBBON
-    // TODO: hide ribbon
+    if (win.ribbonSupport)
+        win.ribbonSupport->SetVisibility(false);
 #endif
     SetWindowLong(win.hwndFrame, GWL_STYLE, ws);
     SetWindowPos(win.hwndFrame, NULL, rect.x, rect.y, rect.dx, rect.dy, SWP_FRAMECHANGED | SWP_NOZORDER);
@@ -2816,8 +2817,9 @@ static void ExitFullscreen(WindowInfo& win)
         SetSidebarVisibility(&win, tocVisible, gGlobalPrefs.favVisible);
 
 #ifdef BUILD_RIBBON
-    // TODO: show ribbon
-    if (!win.ribbonSupport)
+    if (win.ribbonSupport)
+        win.ribbonSupport->SetVisibility(true);
+    else
 #endif
     if (gGlobalPrefs.toolbarVisible)
         ShowWindow(win.hwndReBar, SW_SHOW);
@@ -3140,11 +3142,8 @@ static void RebuildMenuBar()
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows[i];
 #ifdef BUILD_RIBBON
-        if (win->ribbonSupport) {
-            delete win->ribbonSupport;
-            win->ribbonSupport = new RibbonSupport(win);
-            win->ribbonSupport->Initialize(ghinst, L"EN_RIBBON");
-        }
+        if (win->ribbonSupport)
+            win->ribbonSupport->Reset();
         else
 #endif
         {

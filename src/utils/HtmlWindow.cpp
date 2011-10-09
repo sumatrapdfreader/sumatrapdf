@@ -863,7 +863,7 @@ HRESULT HW_IDispatch::GetTypeInfoCount(unsigned int * pcTInfo)
 inline void VariantSetBool(VARIANT *res, bool val)
 {
     res->vt = VT_BOOL;
-    res->boolVal = val;
+    res->boolVal = val ? VARIANT_TRUE : VARIANT_FALSE;;
 }
 
 inline void VariantSetLong(VARIANT *res, long val)
