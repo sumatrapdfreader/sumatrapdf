@@ -377,6 +377,12 @@ static struct {
     _T("Texmaker"),           SiblingPath, HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Texmaker"), _T("UninstallString"),
                               _T("texmaker.exe"), _T("\"%f\" -line %l"),
 
+    _T("TeXworks"),           BinaryDir, HKEY_LOCAL_MACHINE, _T("Software\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{41DA4817-4D2A-4D83-AD02-6A2D95DC8DCB}_is1"), _T("InstallLocation"),
+                              _T("TeXworks.exe"), _T("-p=%l  \"%f\""),
+
+    _T("TeXworks"),           BinaryDir, HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{41DA4817-4D2A-4D83-AD02-6A2D95DC8DCB}_is1"), _T("InstallLocation"),
+                              _T("TeXworks.exe"), _T("-p=%l  \"%f\""),
+
     // TODO: find a way to detect where emacs is installed
     //_T("ntEmacs"),            BinaryPath, HKEY_LOCAL_MACHINE, _T("???"), _T("???"),
     //                          _T("emacsclientw.exe"), _T("+%l \"%f\""),
