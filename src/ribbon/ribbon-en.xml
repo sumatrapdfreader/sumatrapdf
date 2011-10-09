@@ -2,59 +2,198 @@
 <Application xmlns="http://schemas.microsoft.com/windows/2009/Ribbon">
 	<Application.Commands>
 		<Command Name="tabFileMenu" />
-		<Command Name="cmdOpen" Symbol="IDM_OPEN" Id="400" />
+		<Command Name="cmdOpen" Symbol="IDM_OPEN" Id="400">
+			<Command.SmallImages>
+				<Image>images/folder-open-document.bmp</Image>
+			</Command.SmallImages>
+		</Command>
 		<Command Name="cmdClose" Symbol="IDM_CLOSE" Id="401" />
-		<Command Name="cmdSaveAs" Symbol="IDM_SAVEAS" Id="402" />
-		<Command Name="cmdPrint" Symbol="IDM_Print" Id="403" />
-		<Command Name="cmdExit" Symbol="IDM_EXIT" Id="405" />
+		<Command Name="cmdSaveAs" Symbol="IDM_SAVEAS" Id="402">
+			<Command.SmallImages>
+				<Image>images/disk--pencil.bmp</Image>
+			</Command.SmallImages>
+		</Command>
+		<Command Name="cmdPrint" Symbol="IDM_Print" Id="403">
+			<Command.SmallImages>
+				<Image>images/printer.bmp</Image>
+			</Command.SmallImages>
+		</Command>
+		<Command Name="cmdExit" Symbol="IDM_EXIT" Id="405">
+			<Command.SmallImages>
+				<Image>images/cross-button.bmp</Image>
+			</Command.SmallImages>
+		</Command>
 		<Command Name="cmdSaveAsLink" Symbol="IDM_SAVEAS_BOOKMARK" Id="407" />
-		<Command Name="cmdSendByEmail" Symbol="IDM_SEND_BY_EMAIL" Id="408" />
-		<Command Name="cmdProperties" Symbol="IDM_PROPERTIES" Id="409" />
-		<Command Name="cmdAbout" Symbol="IDM_ABOUT" Id="551" />
+		<Command Name="cmdSendByEmail" Symbol="IDM_SEND_BY_EMAIL" Id="408">
+			<Command.SmallImages>
+				<Image>images/mail-send.bmp</Image>
+			</Command.SmallImages>
+		</Command>
+		<Command Name="cmdProperties" Symbol="IDM_PROPERTIES" Id="409">
+			<Command.SmallImages>
+				<Image>images/information.bmp</Image>
+			</Command.SmallImages>
+		</Command>
+		<Command Name="cmdAbout" Symbol="IDM_ABOUT" Id="551">
+			<Command.SmallImages>
+				<Image>images/SumatraPDF-16x16x32.bmp</Image>
+			</Command.SmallImages>
+			<Command.LargeImages>
+				<Image>images/SumatraPDF-32x32x32.bmp</Image>
+			</Command.LargeImages>
+		</Command>
 		<Command Name="cmdMRUList" />
 		
 		<Command Name="tabStart" />
 		<Command Name="tabMore" />
 		
 		<Command Name="grpView" />
-		<Command Name="cmdViewSinglePage" Symbol="IDM_VIEW_SINGLE_PAGE" Id="410" />
-		<Command Name="cmdViewFacing" Symbol="IDM_VIEW_FACING" Id="411" />
-		<Command Name="cmdViewBook" Symbol="IDM_VIEW_BOOK" Id="412" />
-		<Command Name="cmdViewContinuous" Symbol="IDM_VIEW_CONTINUOUS" Id="413" />
+		<Command Name="cmdViewSinglePage" Symbol="IDM_VIEW_SINGLE_PAGE" Id="410">
+			<Command.SmallImages>
+				<Image>images/blue-document.bmp</Image>
+			</Command.SmallImages>
+		</Command>
+		<Command Name="cmdViewFacing" Symbol="IDM_VIEW_FACING" Id="411">
+			<Command.SmallImages>
+				<Image>images/blue-document-view.bmp</Image>
+			</Command.SmallImages>
+		</Command>
+		<Command Name="cmdViewBook" Symbol="IDM_VIEW_BOOK" Id="412">
+			<Command.SmallImages>
+				<Image>images/blue-document-view-book.bmp</Image>
+			</Command.SmallImages>
+		</Command>
+		<Command Name="cmdViewContinuous" Symbol="IDM_VIEW_CONTINUOUS" Id="413">
+			<Command.SmallImages>
+				<Image>images/blue-document-insert.bmp</Image>
+			</Command.SmallImages>
+		</Command>
 		
 		<Command Name="grpView2" />
-		<Command Name="cmdViewRotateLeft" Symbol="IDM_VIEW_ROTATE_LEFT" Id="415" />
-		<Command Name="cmdViewRotateRight" Symbol="IDM_VIEW_ROTATE_RIGHT" Id="416" />
-		<Command Name="cmdViewPresentationMode" Symbol="IDM_VIEW_PRESENTATION_MODE" Id="418" />
-		<Command Name="cmdViewFullscreen" Symbol="IDM_VIEW_FULLSCREEN" Id="421" />
+		<Command Name="cmdViewRotateLeft" Symbol="IDM_VIEW_ROTATE_LEFT" Id="415">
+			<Command.SmallImages>
+				<Image>images/arrow-circle-225-left.bmp</Image>
+			</Command.SmallImages>
+		</Command>
+		<Command Name="cmdViewRotateRight" Symbol="IDM_VIEW_ROTATE_RIGHT" Id="416">
+			<Command.SmallImages>
+				<Image>images/arrow-circle-315.bmp</Image>
+			</Command.SmallImages>
+		</Command>
+		<Command Name="cmdViewPresentationMode" Symbol="IDM_VIEW_PRESENTATION_MODE" Id="418">
+			<Command.SmallImages>
+				<Image>images/projection-screen-presentation.bmp</Image>
+			</Command.SmallImages>
+		</Command>
+		<Command Name="cmdViewFullscreen" Symbol="IDM_VIEW_FULLSCREEN" Id="421">
+			<Command.SmallImages>
+				<Image>images/application-resize-full.bmp</Image>
+			</Command.SmallImages>
+		</Command>
 		
-		<Command Name="cmdViewBookmarks" Symbol="IDM_VIEW_BOOKMARKS" Id="417" />
-		<Command Name="cmdViewFavorites" Symbol="IDM_FAV_TOGGLE" Id="562" />
+		<Command Name="cmdViewBookmarks" Symbol="IDM_VIEW_BOOKMARKS" Id="417">
+			<Command.SmallImages>
+				<Image>images/application-sidebar-list.bmp</Image>
+			</Command.SmallImages>
+		</Command>
+		<Command Name="cmdViewFavorites" Symbol="IDM_FAV_TOGGLE" Id="562">
+			<Command.SmallImages>
+				<Image>images/document-bookmark.bmp</Image>
+			</Command.SmallImages>
+		</Command>
 		
 		<Command Name="grpEdit" />
-		<Command Name="cmdSelectAll" Symbol="IDM_SELECT_ALL" Id="422" />
-		<Command Name="cmdCopySelection" Symbol="IDM_COPY_SELECTION" Id="420" />
-		<Command Name="cmdFind" Symbol="IDM_FIND_FIRST" Id="435" />
+		<Command Name="cmdSelectAll" Symbol="IDM_SELECT_ALL" Id="422">
+			<Command.SmallImages>
+				<Image>images/selection-select.bmp</Image>
+			</Command.SmallImages>
+		</Command>
+		<Command Name="cmdCopySelection" Symbol="IDM_COPY_SELECTION" Id="420">
+			<Command.SmallImages>
+				<Image>images/clipboard--pencil.bmp</Image>
+			</Command.SmallImages>
+		</Command>
+		<Command Name="cmdFind" Symbol="IDM_FIND_FIRST" Id="435">
+			<Command.SmallImages>
+				<Image>images/document-search-result.bmp</Image>
+			</Command.SmallImages>
+		</Command>
 		
 		<Command Name="grpNav" />
-		<Command Name="cmdNavNext" Symbol="IDM_GOTO_NEXT_PAGE" Id="430" />
-		<Command Name="cmdNavPrev" Symbol="IDM_GOTO_PREV_PAGE" Id="431" />
-		<Command Name="cmdNavFirst" Symbol="IDM_GOTO_FIRST_PAGE" Id="432" />
-		<Command Name="cmdNavLast" Symbol="IDM_GOTO_LAST_PAGE" Id="433" />
-		<Command Name="cmdNavPage" Symbol="IDM_GOTO_PAGE" Id="434" />
-		<Command Name="cmdNavBack" Symbol="IDM_GOTO_NAV_BACK" Id="558" />
-		<Command Name="cmdNavForward" Symbol="IDM_GOTO_NAV_FORWARD" Id="559" />
+		<Command Name="cmdNavNext" Symbol="IDM_GOTO_NEXT_PAGE" Id="430">
+			<Command.SmallImages>
+				<Image>images/document-page-next.bmp</Image>
+			</Command.SmallImages>
+		</Command>
+		<Command Name="cmdNavPrev" Symbol="IDM_GOTO_PREV_PAGE" Id="431">
+			<Command.SmallImages>
+				<Image>images/document-page-previous.bmp</Image>
+			</Command.SmallImages>
+		</Command>
+		<Command Name="cmdNavFirst" Symbol="IDM_GOTO_FIRST_PAGE" Id="432">
+			<Command.SmallImages>
+				<Image>images/document-page.bmp</Image>
+			</Command.SmallImages>
+		</Command>
+		<Command Name="cmdNavLast" Symbol="IDM_GOTO_LAST_PAGE" Id="433">
+			<Command.SmallImages>
+				<Image>images/document-page-last.bmp</Image>
+			</Command.SmallImages>
+		</Command>
+		<Command Name="cmdNavPage" Symbol="IDM_GOTO_PAGE" Id="434">
+			<Command.SmallImages>
+				<Image>images/document--arrow.bmp</Image>
+			</Command.SmallImages>
+		</Command>
+		<Command Name="cmdNavBack" Symbol="IDM_GOTO_NAV_BACK" Id="558">
+			<Command.SmallImages>
+				<Image>images/navigation-180.bmp</Image>
+			</Command.SmallImages>
+		</Command>
+		<Command Name="cmdNavForward" Symbol="IDM_GOTO_NAV_FORWARD" Id="559">
+			<Command.SmallImages>
+				<Image>images/navigation.bmp</Image>
+			</Command.SmallImages>
+		</Command>
 		
 		<Command Name="grpZoom" />
-		<Command Name="cmdZoomFitPage" Symbol="IDM_ZOOM_FIT_PAGE" Id="440" />
-		<Command Name="cmdZoomActualSize" Symbol="IDM_ZOOM_ACTUAL_SIZE" Id="441" />
-		<Command Name="cmdZoomFitWidth" Symbol="IDM_ZOOM_FIT_WIDTH" Id="442" />
-		<Command Name="cmdZoomFitContent" Symbol="IDM_ZOOM_FIT_CONTENT" Id="456" />
-		<Command Name="cmdZoomCustom" Symbol="IDM_ZOOM_CUSTOM" Id="457" />
+		<Command Name="cmdZoomFitPage" Symbol="IDM_ZOOM_FIT_PAGE" Id="440">
+			<Command.SmallImages>
+				<Image>images/arrow-out.bmp</Image>
+			</Command.SmallImages>
+		</Command>
+		<Command Name="cmdZoomActualSize" Symbol="IDM_ZOOM_ACTUAL_SIZE" Id="441">
+			<Command.SmallImages>
+				<Image>images/blue-document-resize-actual.bmp</Image>
+			</Command.SmallImages>
+		</Command>
+		<Command Name="cmdZoomFitWidth" Symbol="IDM_ZOOM_FIT_WIDTH" Id="442">
+			<Command.SmallImages>
+				<Image>images/arrow-resize.bmp</Image>
+			</Command.SmallImages>
+		</Command>
+		<Command Name="cmdZoomFitContent" Symbol="IDM_ZOOM_FIT_CONTENT" Id="456">
+			<Command.SmallImages>
+				<Image>images/arrow-in.bmp</Image>
+			</Command.SmallImages>
+		</Command>
+		<Command Name="cmdZoomCustom" Symbol="IDM_ZOOM_CUSTOM" Id="457">
+			<Command.SmallImages>
+				<Image>images/magnifier-zoom-actual.bmp</Image>
+			</Command.SmallImages>
+		</Command>
 		
 		<Command Name="grpOptions" />
-		<Command Name="cmdChangeLanguage" Symbol="IDM_CHANGE_LANGUAGE" Id="553" />
-		<Command Name="cmdSettings" Symbol="IDM_SETTINGS" Id="552" />
+		<Command Name="cmdChangeLanguage" Symbol="IDM_CHANGE_LANGUAGE" Id="553">
+			<Command.SmallImages>
+				<Image>images/edit-language.bmp</Image>
+			</Command.SmallImages>
+		</Command>
+		<Command Name="cmdSettings" Symbol="IDM_SETTINGS" Id="552">
+			<Command.SmallImages>
+				<Image>images/hammer--pencil.bmp</Image>
+			</Command.SmallImages>
+		</Command>
 		<Command Name="cmdHelp" Symbol="IDM_MANUAL" Id="555" />
 		<Command Name="cmdCheckUpdate" Symbol="IDM_CHECK_UPDATE" Id="554" />
 		

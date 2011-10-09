@@ -112,7 +112,7 @@ STDMETHODIMP RibbonSupport::OnViewChanged(UINT32 viewId, UI_VIEWTYPE typeID, IUn
 
 STDMETHODIMP RibbonSupport::Execute(UINT32 commandId, UI_EXECUTIONVERB verb, const PROPERTYKEY *key, const PROPVARIANT *currentValue, IUISimplePropertySet *commandExecutionProperties)
 {
-    SendMessage(win->hwndFrame, WM_COMMAND, commandId, 0);
+    PostMessage(win->hwndFrame, WM_COMMAND, commandId, 0);
     return S_OK;
 }
 

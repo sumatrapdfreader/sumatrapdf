@@ -1,4 +1,3 @@
 #include <windows.h>
 
-LANGUAGE LANG_ENGLISH, SUBLANG_NEUTRAL
-EN_RIBBON    UIFILE    "ribbon-en.bml"
+#include "ribbon-en.rc"

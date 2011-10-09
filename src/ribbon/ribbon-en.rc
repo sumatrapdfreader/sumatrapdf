@@ -1,0 +1,43 @@
+// ******************************************************************************
+// * This is an automatically generated file containing the ribbon resource for *
+// * your application.                                                          *
+// ******************************************************************************
+
+#include ".\ribbon-en-ids.h"
+
+IDM_OPEN_SmallImages_RESID    BITMAP    "images\\folder-open-document.bmp" /* SmallImages IDM_OPEN_SmallImages_RESID: (null) */
+IDM_SAVEAS_SmallImages_RESID    BITMAP    "images\\disk--pencil.bmp" /* SmallImages IDM_SAVEAS_SmallImages_RESID: (null) */
+IDM_Print_SmallImages_RESID    BITMAP    "images\\printer.bmp" /* SmallImages IDM_Print_SmallImages_RESID: (null) */
+IDM_EXIT_SmallImages_RESID    BITMAP    "images\\cross-button.bmp" /* SmallImages IDM_EXIT_SmallImages_RESID: (null) */
+IDM_SEND_BY_EMAIL_SmallImages_RESID    BITMAP    "images\\mail-send.bmp" /* SmallImages IDM_SEND_BY_EMAIL_SmallImages_RESID: (null) */
+IDM_PROPERTIES_SmallImages_RESID    BITMAP    "images\\information.bmp" /* SmallImages IDM_PROPERTIES_SmallImages_RESID: (null) */
+IDM_ABOUT_SmallImages_RESID    BITMAP    "images\\SumatraPDF-16x16x32.bmp" /* SmallImages IDM_ABOUT_SmallImages_RESID: (null) */
+IDM_ABOUT_LargeImages_RESID    BITMAP    "images\\SumatraPDF-32x32x32.bmp" /* LargeImages IDM_ABOUT_LargeImages_RESID: (null) */
+IDM_VIEW_SINGLE_PAGE_SmallImages_RESID    BITMAP    "images\\blue-document.bmp" /* SmallImages IDM_VIEW_SINGLE_PAGE_SmallImages_RESID: (null) */
+IDM_VIEW_FACING_SmallImages_RESID    BITMAP    "images\\blue-document-view.bmp" /* SmallImages IDM_VIEW_FACING_SmallImages_RESID: (null) */
+IDM_VIEW_BOOK_SmallImages_RESID    BITMAP    "images\\blue-document-view-book.bmp" /* SmallImages IDM_VIEW_BOOK_SmallImages_RESID: (null) */
+IDM_VIEW_CONTINUOUS_SmallImages_RESID    BITMAP    "images\\blue-document-insert.bmp" /* SmallImages IDM_VIEW_CONTINUOUS_SmallImages_RESID: (null) */
+IDM_VIEW_ROTATE_LEFT_SmallImages_RESID    BITMAP    "images\\arrow-circle-225-left.bmp" /* SmallImages IDM_VIEW_ROTATE_LEFT_SmallImages_RESID: (null) */
+IDM_VIEW_ROTATE_RIGHT_SmallImages_RESID    BITMAP    "images\\arrow-circle-315.bmp" /* SmallImages IDM_VIEW_ROTATE_RIGHT_SmallImages_RESID: (null) */
+IDM_VIEW_PRESENTATION_MODE_SmallImages_RESID    BITMAP    "images\\projection-screen-presentation.bmp" /* SmallImages IDM_VIEW_PRESENTATION_MODE_SmallImages_RESID: (null) */
+IDM_VIEW_FULLSCREEN_SmallImages_RESID    BITMAP    "images\\application-resize-full.bmp" /* SmallImages IDM_VIEW_FULLSCREEN_SmallImages_RESID: (null) */
+IDM_VIEW_BOOKMARKS_SmallImages_RESID    BITMAP    "images\\application-sidebar-list.bmp" /* SmallImages IDM_VIEW_BOOKMARKS_SmallImages_RESID: (null) */
+IDM_FAV_TOGGLE_SmallImages_RESID    BITMAP    "images\\document-bookmark.bmp" /* SmallImages IDM_FAV_TOGGLE_SmallImages_RESID: (null) */
+IDM_SELECT_ALL_SmallImages_RESID    BITMAP    "images\\selection-select.bmp" /* SmallImages IDM_SELECT_ALL_SmallImages_RESID: (null) */
+IDM_COPY_SELECTION_SmallImages_RESID    BITMAP    "images\\clipboard--pencil.bmp" /* SmallImages IDM_COPY_SELECTION_SmallImages_RESID: (null) */
+IDM_FIND_FIRST_SmallImages_RESID    BITMAP    "images\\document-search-result.bmp" /* SmallImages IDM_FIND_FIRST_SmallImages_RESID: (null) */
+IDM_GOTO_NEXT_PAGE_SmallImages_RESID    BITMAP    "images\\document-page-next.bmp" /* SmallImages IDM_GOTO_NEXT_PAGE_SmallImages_RESID: (null) */
+IDM_GOTO_PREV_PAGE_SmallImages_RESID    BITMAP    "images\\document-page-previous.bmp" /* SmallImages IDM_GOTO_PREV_PAGE_SmallImages_RESID: (null) */
+IDM_GOTO_FIRST_PAGE_SmallImages_RESID    BITMAP    "images\\document-page.bmp" /* SmallImages IDM_GOTO_FIRST_PAGE_SmallImages_RESID: (null) */
+IDM_GOTO_LAST_PAGE_SmallImages_RESID    BITMAP    "images\\document-page-last.bmp" /* SmallImages IDM_GOTO_LAST_PAGE_SmallImages_RESID: (null) */
+IDM_GOTO_PAGE_SmallImages_RESID    BITMAP    "images\\document--arrow.bmp" /* SmallImages IDM_GOTO_PAGE_SmallImages_RESID: (null) */
+IDM_GOTO_NAV_BACK_SmallImages_RESID    BITMAP    "images\\navigation-180.bmp" /* SmallImages IDM_GOTO_NAV_BACK_SmallImages_RESID: (null) */
+IDM_GOTO_NAV_FORWARD_SmallImages_RESID    BITMAP    "images\\navigation.bmp" /* SmallImages IDM_GOTO_NAV_FORWARD_SmallImages_RESID: (null) */
+IDM_ZOOM_FIT_PAGE_SmallImages_RESID    BITMAP    "images\\arrow-out.bmp" /* SmallImages IDM_ZOOM_FIT_PAGE_SmallImages_RESID: (null) */
+IDM_ZOOM_ACTUAL_SIZE_SmallImages_RESID    BITMAP    "images\\blue-document-resize-actual.bmp" /* SmallImages IDM_ZOOM_ACTUAL_SIZE_SmallImages_RESID: (null) */
+IDM_ZOOM_FIT_WIDTH_SmallImages_RESID    BITMAP    "images\\arrow-resize.bmp" /* SmallImages IDM_ZOOM_FIT_WIDTH_SmallImages_RESID: (null) */
+IDM_ZOOM_FIT_CONTENT_SmallImages_RESID    BITMAP    "images\\arrow-in.bmp" /* SmallImages IDM_ZOOM_FIT_CONTENT_SmallImages_RESID: (null) */
+IDM_ZOOM_CUSTOM_SmallImages_RESID    BITMAP    "images\\magnifier-zoom-actual.bmp" /* SmallImages IDM_ZOOM_CUSTOM_SmallImages_RESID: (null) */
+IDM_CHANGE_LANGUAGE_SmallImages_RESID    BITMAP    "images\\edit-language.bmp" /* SmallImages IDM_CHANGE_LANGUAGE_SmallImages_RESID: (null) */
+IDM_SETTINGS_SmallImages_RESID    BITMAP    "images\\hammer--pencil.bmp" /* SmallImages IDM_SETTINGS_SmallImages_RESID: (null) */
+EN_RIBBON    UIFILE    "ribbon-en.bml"
