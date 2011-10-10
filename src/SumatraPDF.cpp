@@ -37,9 +37,6 @@
 #include "ChmUI.h"
 #include "Touch.h"
 
-#ifndef BUILD_RIBBON
-#define BUILD_RIBBON
-#endif
 #ifdef BUILD_RIBBON
 #include "Ribbon.h"
 // uncomment to actually use the (incomplete) ribbon
