@@ -627,19 +627,18 @@ HFONT GetSimpleFont(HDC hdc, TCHAR *fontName, int fontSize)
 
 IStream *CreateStreamFromData(void *data, size_t len)
 {
-    IStream *stream;
+    ScopedComPtr<IStream> stream;
     if (FAILED(CreateStreamOnHGlobal(NULL, TRUE, &stream)))
         return NULL;
 
     ULONG written;
-    if (FAILED(stream->Write(data, (ULONG)len, &written)) || written != len) {
-        stream->Release();
+    if (FAILED(stream->Write(data, (ULONG)len, &written)) || written != len)
         return NULL;
-    }
 
     LARGE_INTEGER zero = { 0 };
     stream->Seek(zero, STREAM_SEEK_SET, NULL);
 
+    stream->AddRef();
     return stream;
 }
 

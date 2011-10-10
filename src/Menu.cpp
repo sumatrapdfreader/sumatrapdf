@@ -24,19 +24,17 @@ void MenuUpdateDisplayMode(WindowInfo* win)
         win::menu::SetEnabled(win->menu, id, enabled);
 
     UINT id = 0;
-    switch (displayMode) {
-        case DM_SINGLE_PAGE: id = IDM_VIEW_SINGLE_PAGE; break;
-        case DM_FACING: id = IDM_VIEW_FACING; break;
-        case DM_BOOK_VIEW: id = IDM_VIEW_BOOK; break;
-        case DM_CONTINUOUS: id = IDM_VIEW_SINGLE_PAGE; break;
-        case DM_CONTINUOUS_FACING: id = IDM_VIEW_FACING; break;
-        case DM_CONTINUOUS_BOOK_VIEW: id = IDM_VIEW_BOOK; break;
-        default: assert(!win->dm && DM_AUTOMATIC == displayMode); break;
-    }
+    if (displayModeSingle(displayMode))
+        id = IDM_VIEW_SINGLE_PAGE;
+    else if (displayModeFacing(displayMode))
+        id = IDM_VIEW_FACING;
+    else if (displayModeShowCover(displayMode))
+        id = IDM_VIEW_BOOK;
+    else
+        assert(!win->dm && DM_AUTOMATIC == displayMode);
 
     CheckMenuRadioItem(win->menu, IDM_VIEW_LAYOUT_FIRST, IDM_VIEW_LAYOUT_LAST, id, MF_BYCOMMAND);
-    if (displayModeContinuous(displayMode))
-        win::menu::SetChecked(win->menu, IDM_VIEW_CONTINUOUS, true);
+    win::menu::SetChecked(win->menu, IDM_VIEW_CONTINUOUS, displayModeContinuous(displayMode));
 }
 
 #define SEP_ITEM "-----"

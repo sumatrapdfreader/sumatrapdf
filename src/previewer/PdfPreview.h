@@ -57,28 +57,27 @@ public:
 
     // IInitializeWithStream
     IFACEMETHODIMP Initialize(IStream *pStm, DWORD grfMode) {
-        if (m_pStream)
-            m_pStream->Release();
         m_pStream = pStm;
-        if (!m_pStream) return E_INVALIDARG;
+        if (!m_pStream)
+            return E_INVALIDARG;
         m_pStream->AddRef();
         return S_OK;
     };
 
     // IObjectWithSite
     IFACEMETHODIMP SetSite(IUnknown *punkSite) {
-        if (m_site) {
-            m_site->Release();
-            m_site = NULL;
-        }
+        m_site = NULL;
         if (!punkSite)
             return S_OK;
         return punkSite->QueryInterface(&m_site);
     }
     IFACEMETHODIMP GetSite(REFIID riid, void **ppv) {
-        if (!ppv) return E_INVALIDARG;
+        if (!ppv)
+            return E_INVALIDARG;
         *ppv = NULL;
-        return m_site ? m_site->QueryInterface(riid, ppv) : E_FAIL;
+        if (!m_site)
+            return E_FAIL;
+        return m_site->QueryInterface(riid, ppv);
     }
 
     // IPreviewHandler
@@ -125,10 +124,7 @@ public:
             DestroyWindow(m_hwnd);
             m_hwnd = NULL;
         }
-        if (m_pStream) {
-            m_pStream->Release();
-            m_pStream = NULL;
-        }
+        m_pStream = NULL;
         delete m_engine;
         m_engine = NULL;
         return S_OK;
@@ -136,7 +132,8 @@ public:
 
     // IOleWindow
     IFACEMETHODIMP GetWindow(HWND *phwnd) {
-        if (!m_hwndParent || !phwnd) return E_INVALIDARG;
+        if (!m_hwndParent || !phwnd)
+            return E_INVALIDARG;
         *phwnd = m_hwndParent;
         return S_OK;
     }
@@ -152,10 +149,10 @@ public:
 
 protected:
     long m_lRef, * m_plModuleRef;
-    IStream *   m_pStream;
+    ScopedComPtr<IStream> m_pStream;
     BaseEngine *m_engine;
     // state for IPreviewHandler
-    IUnknown *  m_site;
+    ScopedComPtr<IUnknown> m_site;
     HWND        m_hwnd, m_hwndParent;
     RectI       m_rcParent;
 

@@ -273,6 +273,8 @@ public:
         if (m_pStream)
             m_pStream->Release();
         m_pStream = pStm;
+        if (!m_pStream)
+            return E_INVALIDARG;
         m_pStream->AddRef();
         return S_OK;
     };

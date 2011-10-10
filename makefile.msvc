@@ -429,10 +429,11 @@ $(OS)\Search.obj: src\WindowInfo.h
 $(OS)\Selection.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
 $(OS)\Selection.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
 $(OS)\Selection.obj: src\EngineManager.h src\ImagesEngine.h src\Notifications.h
-$(OS)\Selection.obj: src\PdfEngine.h src\PsEngine.h src\Selection.h
-$(OS)\Selection.obj: src\SumatraPDF.h src\TextSearch.h src\TextSelection.h
-$(OS)\Selection.obj: src\Toolbar.h src\translations.h src\utils\BaseUtil.h
-$(OS)\Selection.obj: src\utils\GeomUtil.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\Selection.obj: src\PdfEngine.h src\PsEngine.h src\Ribbon.h
+$(OS)\Selection.obj: src\Selection.h src\SumatraPDF.h src\TextSearch.h
+$(OS)\Selection.obj: src\TextSelection.h src\Toolbar.h src\translations.h
+$(OS)\Selection.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\Scopes.h
+$(OS)\Selection.obj: src\utils\StrUtil.h src\utils\UIRibbon.h src\utils\Vec.h
 $(OS)\Selection.obj: src\utils\WinUtil.h src\WindowInfo.h
 $(OS)\StressTesting.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
 $(OS)\StressTesting.obj: src\ChmEngine.h src\DisplayModel.h src\DisplayState.h

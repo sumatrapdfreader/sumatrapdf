@@ -29,7 +29,7 @@
 				ReBuildCommandLine="nmake -f makefile.msvc CFG=dbg NASM=$(ProjectDir)bin\nasm.exe rebuild"
 				CleanCommandLine="nmake -f makefile.msvc CFG=dbg NASM=$(ProjectDir)bin\nasm.exe clean"
 				Output="obj-dbg\sumatrapdf.exe"
-				PreprocessorDefinitions="WIN32;UNICODE;_UNICODE;_DEBUG;DEBUG;SYNCTEX_FEATURE"
+				PreprocessorDefinitions="WIN32;UNICODE;_UNICODE;_DEBUG;DEBUG;SYNCTEX_FEATURE;BUILD_RIBBON;BUILD_CHM_SUPPORT"
 				IncludeSearchPath="src\utils;mupdf\fitz;mupdf\draw;mupdf\pdf;mupdf\xps"
 				ForcedIncludes=""
 				AssemblySearchPath=""

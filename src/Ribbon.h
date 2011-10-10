@@ -31,6 +31,7 @@ public:
     bool SetState(const char *state);
     char *GetState();
     void SetVisibility(bool show);
+    void SetMinimized(bool expand);
     void UpdateState();
     void Reset();
 
@@ -83,8 +84,5 @@ public:
     // IUISimplePropertySet
     IFACEMETHODIMP GetValue(const PROPERTYKEY &key, PROPVARIANT *value);
 };
-
-// per default, collapse the ribbon and add some common commands to the quick access toolbar
-#define RIBBON_DEFAULT_STATE ((unsigned char *)"<customUI xmlns='http://schemas.microsoft.com/windows/2009/ribbon/qat'><ribbon minimized='true'><qat><sharedControls><control idQ='403'/><control idQ='431'/><control idQ='430'/><control idQ='435'/></sharedControls></qat></ribbon></customUI>")
 
 #endif // Ribbon_h

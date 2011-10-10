@@ -5,6 +5,7 @@
 #include "StrUtil.h"
 #include "WinUtil.h"
 #include "FileUtil.h"
+#include <shlwapi.h>
 
 #include "Print.h"
 
@@ -379,18 +380,25 @@ static LRESULT CALLBACK DisableApplyBtnWndProc(HWND hWnd, UINT uiMsg, WPARAM wPa
 class ApplyButtonDisblingCallback : public IPrintDialogCallback
 {
 public:
-    ApplyButtonDisblingCallback() : m_cRef(0) { };
+    ApplyButtonDisblingCallback() : m_cRef(1) { };
+    // IUnknown
     STDMETHODIMP QueryInterface(REFIID riid, void **ppv) {
-        if (riid == IID_IUnknown || riid == IID_IPrintDialogCallback) {
-            *ppv = this;
-            this->AddRef();
-            return S_OK;
-        }
-        *ppv = NULL;
-        return E_NOINTERFACE;
+        static const QITAB qit[] = {
+            QITABENT(ApplyButtonDisblingCallback, IPrintDialogCallback),
+            { 0 }
+        };
+        return QISearch(this, qit, riid, ppv);
     };
-    STDMETHODIMP_(ULONG) AddRef() { return InterlockedIncrement(&m_cRef); };
-    STDMETHODIMP_(ULONG) Release() { return InterlockedDecrement(&m_cRef); };
+    STDMETHODIMP_(ULONG) AddRef() {
+        return InterlockedIncrement(&m_cRef);
+    };
+    STDMETHODIMP_(ULONG) Release() {
+        long ref = InterlockedDecrement(&m_cRef);
+        if (0 == ref)
+            delete this;
+        return ref;
+    };
+    // IPrintDialogCallback
     STDMETHODIMP HandleMessage(HWND hDlg, UINT uiMsg, WPARAM wParam, LPARAM lParam, LRESULT *pResult) {
         if (uiMsg == WM_INITDIALOG) {
             HWND hPropSheetContainer = GetParent(GetParent(hDlg));
@@ -429,7 +437,7 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
 {
     bool printSelection = false;
     Vec<PRINTPAGERANGE> ranges;
-    ApplyButtonDisblingCallback *applyCb = NULL;
+    ScopedComPtr<ApplyButtonDisblingCallback> applyCb;
 
     if (!HasPermission(Perm_PrinterAccess)) return;
 
@@ -526,7 +534,6 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
 
 Exit:
     free(ppr);
-    delete applyCb;
     DeleteDC(pd.hDC);
     GlobalFree(pd.hDevNames);
     GlobalFree(pd.hDevMode);

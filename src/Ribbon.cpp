@@ -4,13 +4,16 @@
 #include "SumatraPDF.h"
 #include "StrUtil.h"
 #include "WinUtil.h"
-#include "Ribbon.h"
+#include "FileUtil.h"
+
 #include "WindowInfo.h"
 #include "Selection.h"
 #include "Menu.h"
 #include "Favorites.h"
 #include "FileHistory.h"
 #include "translations.h"
+#include "Ribbon.h"
+
 #include "resource.h"
 #include "ribbon\ribbon-gen.h"
 
@@ -29,9 +32,11 @@ DEFINE_UIPROPERTYKEY(UI_PKEY_ItemsSource,           VT_UNKNOWN, 101);
 DEFINE_UIPROPERTYKEY(UI_PKEY_CategoryId,            VT_UI4,     103);
 DEFINE_UIPROPERTYKEY(UI_PKEY_SelectedItem,          VT_UI4,     104);
 DEFINE_UIPROPERTYKEY(UI_PKEY_BooleanValue,          VT_BOOL,    200);
+DEFINE_UIPROPERTYKEY(UI_PKEY_StringValue,           VT_LPWSTR,  202);
 DEFINE_UIPROPERTYKEY(UI_PKEY_RecentItems,           VT_ARRAY|VT_UNKNOWN,    350);
 DEFINE_UIPROPERTYKEY(UI_PKEY_Pinned,                VT_BOOL,    351);
 DEFINE_UIPROPERTYKEY(UI_PKEY_Viewable,              VT_BOOL,    1000);
+DEFINE_UIPROPERTYKEY(UI_PKEY_Minimized,             VT_BOOL,    1001);
 
 #endif // __UIRibbon_h__
 
@@ -43,6 +48,8 @@ enum AppModes {
     MODE_HAS_TEXT = 1 << 4,
     MODE_DEBUG = 1 << 16
 };
+
+static HRESULT InitPropString(PROPVARIANT *var, const TCHAR *value);
 
 bool RibbonSupport::Initialize(HINSTANCE hInst, const WCHAR *resourceName)
 {
@@ -80,6 +87,21 @@ inline PROPVARIANT MakeBoolVariant(bool value)
     return var;
 }
 
+typedef HRESULT (WINAPI * DwmExtendFrameIntoClientAreaPtr)(HWND hwnd, const RECT *margins);
+
+static void DisableClientAreaTransparency(HWND hwnd)
+{
+    static bool initialized = false;
+    static DwmExtendFrameIntoClientAreaPtr SetTransparency;
+
+    if (!initialized) {
+        SetTransparency = (DwmExtendFrameIntoClientAreaPtr)LoadDllFunc(_T("Dwmapi.dll"), "DwmExtendFrameIntoClientArea");
+        initialized = true;
+    }
+    if (SetTransparency)
+        SetTransparency(hwnd, &RectI().ToRECT());
+}
+
 void RibbonSupport::SetVisibility(bool show)
 {
     assert(ribbon);
@@ -88,6 +110,22 @@ void RibbonSupport::SetVisibility(bool show)
     if (!store) return;
 
     store->SetValue(UI_PKEY_Viewable, MakeBoolVariant(show));
+    store->Commit();
+
+    if (!show) {
+        DisableClientAreaTransparency(win->hwndFrame);
+        win->RepaintAsync(10);
+    }
+}
+
+void RibbonSupport::SetMinimized(bool expanded)
+{
+    assert(ribbon);
+    if (!ribbon) return;
+    ScopedComQIPtr<IPropertyStore> store(ribbon);
+    if (!store) return;
+
+    store->SetValue(UI_PKEY_Minimized, MakeBoolVariant(expanded));
     store->Commit();
 }
 
@@ -101,6 +139,7 @@ void RibbonSupport::Reset()
         driver->InvalidateUICommand(i, UI_INVALIDATIONS_PROPERTY, &UI_PKEY_TooltipTitle);
         driver->InvalidateUICommand(i, UI_INVALIDATIONS_PROPERTY, &UI_PKEY_Keytip);
     }
+    driver->FlushPendingInvalidations();
 }
 
 bool RibbonSupport::SetState(const char *state)
@@ -143,15 +182,33 @@ void RibbonSupport::UpdateState()
         IDM_VIEW_WITH_ACROBAT, IDM_VIEW_WITH_FOXIT, IDM_VIEW_WITH_PDF_XCHANGE, 
         IDM_SELECT_ALL, IDM_COPY_SELECTION, IDM_PROPERTIES, IDM_VIEW_PRESENTATION_MODE };
 
-    bool enabled = win->IsDocLoaded();
-    DisplayMode displayMode = enabled ? win->dm->displayMode() : gGlobalPrefs.defaultDisplayMode;
-
     driver->SetModes(modes & (win->dm && win->dm->engine && win->dm->engine->IsImageCollection() ? ~(MODE_REQ_COPYSEL | MODE_HAS_TEXT) : 0));
+    driver->InvalidateUICommand(IDM_GOTO_PAGE, UI_INVALIDATIONS_PROPERTY, &UI_PKEY_Label);
 
 #define SetToggleState(id, value) driver->SetUICommandProperty(id, UI_PKEY_BooleanValue, MakeBoolVariant(value))
 #define EnableButton(id, value) driver->SetUICommandProperty(id, UI_PKEY_Enabled, MakeBoolVariant(value))
 
+    bool enabled = win->IsDocLoaded();
+
+    DisplayMode displayMode = enabled ? win->dm->displayMode() : gGlobalPrefs.defaultDisplayMode;
+    SetToggleState(IDM_VIEW_SINGLE_PAGE, displayModeSingle(displayMode));
+    SetToggleState(IDM_VIEW_FACING, displayModeFacing(displayMode));
+    SetToggleState(IDM_VIEW_BOOK, displayModeShowCover(displayMode));
     SetToggleState(IDM_VIEW_CONTINUOUS, displayModeContinuous(displayMode));
+
+    float zoom = enabled ? win->dm->ZoomVirtual() : gGlobalPrefs.defaultZoom;
+    SetToggleState(IDM_ZOOM_FIT_PAGE, ZOOM_FIT_PAGE == zoom);
+    SetToggleState(IDM_ZOOM_ACTUAL_SIZE, ZOOM_ACTUAL_SIZE == zoom);
+    SetToggleState(IDM_ZOOM_FIT_WIDTH, ZOOM_FIT_WIDTH == zoom);
+    SetToggleState(IDM_ZOOM_FIT_CONTENT, ZOOM_FIT_CONTENT == zoom);
+
+    zoom = enabled ? win->dm->ZoomAbsolute() : zoom > 0 ? zoom : 0;
+    ScopedMem<TCHAR> zoomStr(str::Format(_T("%i%%"), (int)zoom));
+    PROPVARIANT varZoom;
+    InitPropString(&varZoom, zoom ? zoomStr : _T(""));
+    driver->SetUICommandProperty(IDM_ZOOM_CUSTOM, UI_PKEY_StringValue, varZoom);
+    PropVariantClear(&varZoom);
+
     EnableButton(IDM_VIEW_BOOKMARKS, enabled && win->dm->HasTocTree());
     SetToggleState(IDM_VIEW_BOOKMARKS, enabled ? win->tocVisible : gGlobalPrefs.tocVisible);
     EnableButton(IDM_FAV_TOGGLE, gFavorites->Count() > 0);
@@ -305,8 +362,6 @@ static MenuDef menuDefHelp[] = {
     { _TRN("&About"),                       IDM_ABOUT,                  0 },
 };
 
-#define guid_eq(a, b) (memcmp(&(a), &(b), sizeof(a)) == 0)
-
 static HRESULT InitPropString(PROPVARIANT *var, const TCHAR *value)
 {
     if (!var)
@@ -326,7 +381,8 @@ static HRESULT InitPropString(PROPVARIANT *var, const TCHAR *value)
 HRESULT LabelForMenu(PROPVARIANT *var, const TCHAR *value, bool appMenu=false)
 {
     ScopedMem<TCHAR> label(str::Dup(value));
-    str::RemoveChars(label, _T("&"));
+    if (!appMenu)
+        str::RemoveChars(label, _T("&"));
     str::TransChars(label, _T("\t"), _T("\0"));
     return InitPropString(var, label);
 }
@@ -351,7 +407,7 @@ HRESULT KeytipForMenu(PROPVARIANT *var, const TCHAR *value)
 
 IFACEMETHODIMP RibbonSupport::Execute(UINT32 commandId, UI_EXECUTIONVERB verb, const PROPERTYKEY *key, const PROPVARIANT *currentValue, IUISimplePropertySet *commandExecutionProperties)
 {
-    if (IDM_ZOOM_CUSTOM == commandId && key && guid_eq(*key, UI_PKEY_SelectedItem) && currentValue) {
+    if (IDM_ZOOM_CUSTOM == commandId && key && IsEqualPropertyKey(*key, UI_PKEY_SelectedItem) && currentValue) {
         float zoom = INVALID_ZOOM;
         switch (currentValue->uintVal) {
         case UI_COLLECTION_INVALIDINDEX:
@@ -387,7 +443,7 @@ IFACEMETHODIMP RibbonSupport::Execute(UINT32 commandId, UI_EXECUTIONVERB verb, c
 
 IFACEMETHODIMP RibbonSupport::UpdateProperty(UINT32 commandId, REFPROPERTYKEY key, const PROPVARIANT *currentValue, PROPVARIANT *newValue)
 {
-    if (guid_eq(key, UI_PKEY_Keytip)) {
+    if (IsEqualPropertyKey(key, UI_PKEY_Keytip)) {
         switch (commandId) {
         case tabStart: return InitPropString(newValue, _T("S"));
         case tabMore: return InitPropString(newValue, _T("M"));
@@ -425,7 +481,7 @@ IFACEMETHODIMP RibbonSupport::UpdateProperty(UINT32 commandId, REFPROPERTYKEY ke
 #undef KEYTIP
         }
     }
-    else if (guid_eq(key, UI_PKEY_Label)) {
+    else if (IsEqualPropertyKey(key, UI_PKEY_Label)) {
         switch (commandId) {
 #define LABEL(id, menudef) case id: return LabelForMenu(newValue, _TR(menudef.title), true)
         case cmdMRUList: return InitPropString(newValue, _T("Most recently used documents"));
@@ -460,7 +516,17 @@ IFACEMETHODIMP RibbonSupport::UpdateProperty(UINT32 commandId, REFPROPERTYKEY ke
         LABEL(IDM_GOTO_PREV_PAGE, menuDefGoTo[1]);
         LABEL(IDM_GOTO_FIRST_PAGE, menuDefGoTo[2]);
         LABEL(IDM_GOTO_LAST_PAGE, menuDefGoTo[3]);
-        LABEL(IDM_GOTO_PAGE, menuDefGoTo[4]);
+        case IDM_GOTO_PAGE:
+            if (win->IsDocLoaded()) {
+                int pageNo = win->dm->CurrentPageNo();
+                ScopedMem<TCHAR> pageInfo(str::Format(_T("%s %d / %d"), _TR("Page:"), pageNo, win->dm->PageCount()));
+                if (win->dm->engine && win->dm->engine->HasPageLabels()) {
+                    ScopedMem<TCHAR> label(win->dm->engine->GetPageLabel(pageNo));
+                    pageInfo.Set(str::Format(_T("%s %s (%d / %d)"), _TR("Page:"), label, pageNo, win->dm->PageCount()));
+                }
+                return InitPropString(newValue, pageInfo);
+            }
+            return LabelForMenu(newValue, _TR(menuDefGoTo[4].title));
         LABEL(IDM_GOTO_NAV_BACK, menuDefGoTo[6]);
         LABEL(IDM_GOTO_NAV_FORWARD, menuDefGoTo[7]);
         case grpFind: return InitPropString(newValue, _T("Find"));
@@ -484,7 +550,7 @@ IFACEMETHODIMP RibbonSupport::UpdateProperty(UINT32 commandId, REFPROPERTYKEY ke
 #undef LABEL
         }
     }
-    else if (guid_eq(key, UI_PKEY_TooltipTitle)) {
+    else if (IsEqualPropertyKey(key, UI_PKEY_TooltipTitle)) {
         switch (commandId) {
 #define TOOLTIP(id, menudef) case id: return TooltipForMenu(newValue, _TR(menudef.title))
         TOOLTIP(IDM_OPEN, menuDefFile[0]);
@@ -529,7 +595,7 @@ IFACEMETHODIMP RibbonSupport::UpdateProperty(UINT32 commandId, REFPROPERTYKEY ke
 #undef TOOLTIP
         }
     }
-    else if (guid_eq(key, UI_PKEY_ItemsSource) && IDM_ZOOM_CUSTOM == commandId) {
+    else if (IsEqualPropertyKey(key, UI_PKEY_ItemsSource) && IDM_ZOOM_CUSTOM == commandId) {
         if (!currentValue || !currentValue->punkVal)
             return E_INVALIDARG;
         ScopedComQIPtr<IUICollection> coll(currentValue->punkVal);
@@ -541,7 +607,7 @@ IFACEMETHODIMP RibbonSupport::UpdateProperty(UINT32 commandId, REFPROPERTYKEY ke
             coll->Add(item);
         }
     }
-    else if (guid_eq(key, UI_PKEY_RecentItems) && cmdMRUList == commandId && !gFileHistory.IsEmpty()) {
+    else if (IsEqualPropertyKey(key, UI_PKEY_RecentItems) && cmdMRUList == commandId && !gFileHistory.IsEmpty()) {
         if (!newValue)
             return E_INVALIDARG;
         SAFEARRAY *sa = SafeArrayCreateVector(VT_UNKNOWN, 0, FILE_HISTORY_MAX_RECENT);
@@ -551,7 +617,7 @@ IFACEMETHODIMP RibbonSupport::UpdateProperty(UINT32 commandId, REFPROPERTYKEY ke
             if (!state)
                 break;
             assert(state->filePath);
-            ScopedComPtr<IUnknown> item(new LabelPropertySet(state->filePath));
+            ScopedComPtr<IUnknown> item(new LabelPropertySet(path::GetBaseName(state->filePath)));
             SafeArrayPutElement(sa, &i, item);
         }
         newValue->vt = VT_ARRAY | VT_UNKNOWN;
@@ -565,11 +631,11 @@ LabelPropertySet::LabelPropertySet(const TCHAR *value) :
 
 IFACEMETHODIMP LabelPropertySet::GetValue(const PROPERTYKEY &key, PROPVARIANT *value)
 {
-    if (guid_eq(key, UI_PKEY_Label))
+    if (IsEqualPropertyKey(key, UI_PKEY_Label))
         return InitPropString(value, label);
 
     PropVariantInit(value);
-    if (guid_eq(key, UI_PKEY_CategoryId) && value) {
+    if (IsEqualPropertyKey(key, UI_PKEY_CategoryId) && value) {
         value->vt = VT_UI4;
         value->uintVal = UI_COLLECTION_INVALIDINDEX;
     }

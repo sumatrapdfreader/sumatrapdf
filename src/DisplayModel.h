@@ -127,6 +127,7 @@ public:
     float ZoomVirtual() const { return _zoomVirtual; }
     float ZoomReal() const { return _zoomReal; }
     float ZoomReal(int pageNo);
+    float ZoomAbsolute() const { return _zoomReal * 100 / dpiFactor; }
 
     bool HasTocTree() const {
         return engine && engine->HasToCTree();
@@ -243,7 +244,7 @@ protected:
     ScreenPagePadding* padding;
 
     /* real zoom value calculated from zoomVirtual. Same as
-       zoomVirtual * 0.01 * _dpiFactor
+       zoomVirtual * 0.01 * dpiFactor
        except for ZOOM_FIT_PAGE, ZOOM_FIT_WIDTH and ZOOM_FIT_CONTENT */
     float           _zoomReal;
     float           _zoomVirtual;

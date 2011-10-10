@@ -55,7 +55,7 @@ public:
         if (punkOuter)
             return CLASS_E_NOAGGREGATION;
 
-        IInitializeWithStream *pObject = NULL;
+        ScopedComPtr<IInitializeWithStream> pObject;
 
         CLSID clsid;
 #ifdef UNICODE
@@ -70,9 +70,7 @@ public:
         if (!pObject)
             return E_OUTOFMEMORY;
 
-        hr = pObject->QueryInterface(riid, ppv);
-        pObject->Release();
-        return hr;
+        return pObject->QueryInterface(riid, ppv);
     }
 
     IFACEMETHODIMP LockServer(BOOL bLock)

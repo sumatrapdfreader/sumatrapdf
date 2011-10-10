@@ -214,7 +214,7 @@
 			<Ribbon.ApplicationMenu>
 				<ApplicationMenu CommandName="tabFileMenu">
 					<ApplicationMenu.RecentItems>
-						<RecentItems CommandName="cmdMRUList" EnablePinning="false" MaxCount="10" />
+						<RecentItems CommandName="cmdMRUList" EnablePinning="false" MaxCount="9" />
 					</ApplicationMenu.RecentItems>
 					
 					<MenuGroup Class="StandardItems">
@@ -262,18 +262,18 @@
 					</Group>
 					
 					<Group CommandName="grpView" SizeDefinition="FourButtons">
+						<ToggleButton CommandName="cmdViewContinuous" />
 						<ToggleButton CommandName="cmdViewSinglePage" />
 						<ToggleButton CommandName="cmdViewFacing" />
 						<ToggleButton CommandName="cmdViewBook" />
-						<ToggleButton CommandName="cmdViewContinuous" />
 					</Group>
 					
 					<Group CommandName="grpZoom">
-						<Button CommandName="cmdZoomFitPage" />
-						<Button CommandName="cmdZoomActualSize" />
-						<Button CommandName="cmdZoomFitWidth" />
-						<Button CommandName="cmdZoomFitContent" />
+						<ToggleButton CommandName="cmdZoomFitPage" />
+						<ToggleButton CommandName="cmdZoomFitWidth" />
 						<ComboBox CommandName="cmdZoomCustom" IsEditable="true" IsAutoCompleteEnabled="false" ResizeType="NoResize" />
+						<ToggleButton CommandName="cmdZoomFitContent" />
+						<ToggleButton CommandName="cmdZoomActualSize" />
 					</Group>
 				</Tab>
 				
@@ -326,7 +326,17 @@
 			</Ribbon.HelpButton>
 			
 			<Ribbon.QuickAccessToolbar>
-				<QuickAccessToolbar CommandName="tabQuickAccess" />
+				<QuickAccessToolbar CommandName="tabQuickAccess">
+					<QuickAccessToolbar.ApplicationDefaults>
+						<Button CommandName="cmdOpen" ApplicationDefaults.IsChecked="false" />
+						<Button CommandName="cmdSaveAs" ApplicationDefaults.IsChecked="false" />
+						<Button CommandName="cmdPrint" />
+						<Button CommandName="cmdNavPrev" />
+						<Button CommandName="cmdNavNext" />
+						<Button CommandName="cmdFind" />
+						<Button CommandName="cmdProperties" ApplicationDefaults.IsChecked="false" />
+					</QuickAccessToolbar.ApplicationDefaults>
+				</QuickAccessToolbar>
 			</Ribbon.QuickAccessToolbar>
 		</Ribbon>
 	</Application.Views>

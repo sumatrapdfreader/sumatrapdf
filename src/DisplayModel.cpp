@@ -1313,7 +1313,7 @@ void DisplayModel::ZoomTo(float zoomVirtual, PointI *fixPt)
 
 void DisplayModel::ZoomBy(float zoomFactor, PointI *fixPt)
 {
-    // zoomTo expects a zoomVirtual, so undo the _dpiFactor here
+    // zoomTo expects a zoomVirtual, so undo the dpiFactor here
     float newZoom = 100.0f * _zoomReal / dpiFactor * zoomFactor;
     newZoom = limitValue(newZoom, ZOOM_MIN, ZOOM_MAX);
     //DBG_OUT("DisplayModel::zoomBy() zoomReal=%.6f, zoomFactor=%.2f, newZoom=%.2f\n", dm->zoomReal, zoomFactor, newZoom);

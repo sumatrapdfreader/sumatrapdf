@@ -11,6 +11,9 @@
 #include "Toolbar.h"
 #include "translations.h"
 #include "Notifications.h"
+#ifdef BUILD_RIBBON
+#include "Ribbon.h"
+#endif
 
 #define COL_SELECTION_RECT      RGB(0xF5, 0xFC, 0x0C)
 
@@ -162,6 +165,10 @@ void ZoomToSelection(WindowInfo *win, float factor, bool relative)
         win->dm->ZoomTo(factor, zoomToPt ? &pt : NULL);
 
     UpdateToolbarState(win);
+#ifdef BUILD_RIBBON
+    if (win->ribbonSupport)
+        win->ribbonSupport->UpdateState();
+#endif
 }
 
 void CopySelectionToClipboard(WindowInfo *win)

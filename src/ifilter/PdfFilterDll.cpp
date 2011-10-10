@@ -60,7 +60,7 @@ public:
         if (punkOuter)
             return CLASS_E_NOAGGREGATION;
 
-        IFilter *pFilter = NULL;
+        ScopedComPtr<IFilter> pFilter;
 
         CLSID clsid;
         if (SUCCEEDED(CLSIDFromTString(SZ_PDF_FILTER_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
@@ -74,9 +74,7 @@ public:
         if (!pFilter)
             return E_OUTOFMEMORY;
 
-        HRESULT hr = pFilter->QueryInterface(riid, ppv);
-        pFilter->Release();
-        return hr;
+        return pFilter->QueryInterface(riid, ppv);
     }
 
     IFACEMETHODIMP LockServer(BOOL bLock)

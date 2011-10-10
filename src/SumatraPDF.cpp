@@ -261,6 +261,10 @@ void SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode, bool keepCont
 
     win->dm->ChangeDisplayMode(displayMode);
     UpdateToolbarState(win);
+#ifdef BUILD_RIBBON
+    if (win->ribbonSupport)
+        win->ribbonSupport->UpdateState();
+#endif
 }
 
 WindowInfo *FindWindowInfoByHwnd(HWND hwnd)
@@ -749,10 +753,6 @@ static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win,
         UpdateToolbarPageText(&win, pageCount);
         UpdateToolbarFindText(&win);
     }
-#ifdef BUILD_RIBBON
-    if (win.ribbonSupport)
-        win.ribbonSupport->UpdateState();
-#endif
 
     const TCHAR *baseName = path::GetBaseName(win.dm->FileName());
     TCHAR *docTitle = win.dm->engine ? win.dm->engine->GetProperty("Title") : NULL;
@@ -803,6 +803,10 @@ Error:
             win.dm->SetScrollState(ss);
         UpdateToolbarState(&win);
     }
+#ifdef BUILD_RIBBON
+    if (win.ribbonSupport)
+        win.ribbonSupport->UpdateState();
+#endif
 
     SetSidebarVisibility(&win, win.tocVisible, gGlobalPrefs.favVisible);
     win.RedrawAll(true);
@@ -946,13 +950,11 @@ static WindowInfo* CreateWindowInfo()
             delete win->ribbonSupport;
             win->ribbonSupport = NULL;
         }
-        else {
-            if (!gGlobalPrefs.ribbonState) {
-                size_t len = str::Len((char *)RIBBON_DEFAULT_STATE);
-                gGlobalPrefs.ribbonState = str::MemToHex(RIBBON_DEFAULT_STATE, len);
-            }
+        else if (gGlobalPrefs.ribbonState)
             win->ribbonSupport->SetState(gGlobalPrefs.ribbonState);
-        }
+        else
+            // collapse the ribbon per default
+            win->ribbonSupport->SetMinimized(true);
     }
     if (!win->ribbonSupport)
 #endif
@@ -2794,8 +2796,6 @@ static void EnterFullscreen(WindowInfo& win, bool presentation)
     RectI rect = GetFullscreenRect(win.hwndFrame);
 
 #ifdef BUILD_RIBBON
-    // TODO: the ribbon seems to leave the window's title bar transparent
-    //       (Paint uses a different Window for fullscreen view)
     if (win.ribbonSupport)
         win.ribbonSupport->SetVisibility(false);
     else
@@ -3609,6 +3609,10 @@ static LRESULT OnMouseWheel(WindowInfo& win, UINT message, WPARAM wParam, LPARAM
         float factor = delta < 0 ? ZOOM_OUT_FACTOR : ZOOM_IN_FACTOR;
         win.dm->ZoomBy(factor, &PointI(pt.x, pt.y));
         UpdateToolbarState(&win);
+#ifdef BUILD_RIBBON
+        if (win.ribbonSupport)
+            win.ribbonSupport->UpdateState();
+#endif
 
         // don't show the context menu when zooming with the right mouse-button down
         if ((LOWORD(wParam) & MK_RBUTTON))
