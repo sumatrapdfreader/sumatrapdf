@@ -26,10 +26,16 @@ void mprintf(const char *fmt,...)
 {
   if (MsgStream==MSG_NULL || MsgStream==MSG_ERRONLY)
     return;
-  safebuf char Msg[MaxMsgSize];
+  char Msg[MaxMsgSize];
   va_list argptr;
   va_start(argptr,fmt);
-  vsprintf(Msg,fmt,argptr);
+  vsnprintf(Msg,ASIZE(Msg),fmt,argptr);
+
+  // Different vsnprintf implementation can return either -1 or >=MaxMsgSize
+  // if string is truncated. So we do not check exit code and always zero
+  // terminate the string for safety. It is faster than check for error.
+  Msg[ASIZE(Msg)-1] = 0;
+
   RawPrint(Msg,MsgStream);
   va_end(argptr);
 }
@@ -44,7 +50,13 @@ void eprintf(const char *fmt,...)
   safebuf char Msg[MaxMsgSize];
   va_list argptr;
   va_start(argptr,fmt);
-  vsprintf(Msg,fmt,argptr);
+  vsnprintf(Msg,ASIZE(Msg),fmt,argptr);
+
+  // Different vsnprintf implementation can return either -1 or >=MaxMsgSize
+  // if string is truncated. So we do not check exit code and always zero
+  // terminate the string for safety. It is faster than check for error.
+  Msg[ASIZE(Msg)-1] = 0;
+
   RawPrint(Msg,MSG_STDERR);
   va_end(argptr);
 }
@@ -70,19 +82,21 @@ void RawPrint(char *Msg,MESSAGE_TYPE MessageType)
 #ifdef _WIN_ALL
   CharToOemA(Msg,Msg);
 
-  char OutMsg[MaxMsgSize],*OutPos=OutMsg;
-  for (int I=0;Msg[I]!=0;I++)
+  char OutMsg[MaxMsgSize];
+  size_t OutPos=0;
+  for (size_t I=0;Msg[I]!=0;I++)
   {
-    if (Msg[I]=='\n' && (I==0 || Msg[I-1]!='\r'))
-      *(OutPos++)='\r';
-    *(OutPos++)=Msg[I];
+    if (Msg[I]=='\n' && (I==0 || Msg[I-1]!='\r') && OutPos<ASIZE(OutMsg)-1)
+      OutMsg[OutPos++]='\r';
+    if (OutPos<ASIZE(OutMsg)-1)
+      OutMsg[OutPos++]=Msg[I];
   }
-  *OutPos=0;
+  OutMsg[OutPos]=0;
   strcpy(Msg,OutMsg);
 #endif
 #if defined(_UNIX) || defined(_EMX)
   char OutMsg[MaxMsgSize],*OutPos=OutMsg;
-  for (int I=0;Msg[I]!=0;I++)
+  for (size_t I=0;Msg[I]!=0;I++)
     if (Msg[I]!='\r')
       *(OutPos++)=Msg[I];
   *OutPos=0;

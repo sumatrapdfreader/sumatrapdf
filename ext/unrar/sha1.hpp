@@ -7,6 +7,8 @@ typedef struct {
     uint32 state[5];
     uint32 count[2];
     unsigned char buffer[64];
+
+    unsigned char workspace[64]; // Temporary buffer.
 } hash_context;
 
 void hash_initial( hash_context * c );

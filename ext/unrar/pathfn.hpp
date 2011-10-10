@@ -38,6 +38,7 @@ char* GetVolNumPart(char *ArcName);
 wchar* GetVolNumPart(wchar *ArcName);
 void NextVolumeName(char *ArcName,wchar *ArcNameW,uint MaxLength,bool OldNumbering);
 bool IsNameUsable(const char *Name);
+bool IsNameUsable(const wchar *Name);
 void MakeNameUsable(char *Name,bool Extended);
 void MakeNameUsable(wchar *Name,bool Extended);
 char* UnixSlashToDos(char *SrcName,char *DestName=NULL,uint MaxLength=NM);
@@ -58,5 +59,8 @@ wchar* VolNameToFirstName(const wchar *VolName,wchar *FirstName,bool NewNumberin
 wchar* GetWideName(const char *Name,const wchar *NameW,wchar *DestW,size_t DestSize);
 char* GetAsciiName(const wchar *NameW,char *Name,size_t DestSize);
 
+#ifndef SFX_MODULE
+void GenerateArchiveName(char *ArcName,wchar *ArcNameW,size_t MaxSize,char *GenerateMask,bool Archiving);
+#endif
 
 #endif

@@ -89,7 +89,7 @@ int ComprDataIO::UnpRead(byte *Addr,size_t Count)
   if (RetCode!=-1)
   {
     RetCode=TotalRead;
-#ifndef NOCRYPT
+#ifndef RAR_NOCRYPT
     if (Decryption)
 #ifndef SFX_MODULE
       if (Decryption<20)
@@ -251,21 +251,21 @@ void ComprDataIO::SetEncryption(int Method,const wchar *Password,const byte *Sal
   if (Encrypt)
   {
     Encryption=*Password ? Method:0;
-#ifndef NOCRYPT
+#ifndef RAR_NOCRYPT
     Crypt.SetCryptKeys(Password,Salt,Encrypt,false,HandsOffHash);
 #endif
   }
   else
   {
     Decryption=*Password ? Method:0;
-#ifndef NOCRYPT
+#ifndef RAR_NOCRYPT
     Decrypt.SetCryptKeys(Password,Salt,Encrypt,Method<29,HandsOffHash);
 #endif
   }
 }
 
 
-#if !defined(SFX_MODULE) && !defined(NOCRYPT)
+#if !defined(SFX_MODULE) && !defined(RAR_NOCRYPT)
 void ComprDataIO::SetAV15Encryption()
 {
   Decryption=15;
@@ -274,7 +274,7 @@ void ComprDataIO::SetAV15Encryption()
 #endif
 
 
-#if !defined(SFX_MODULE) && !defined(NOCRYPT)
+#if !defined(SFX_MODULE) && !defined(RAR_NOCRYPT)
 void ComprDataIO::SetCmt13Encryption()
 {
   Decryption=13;

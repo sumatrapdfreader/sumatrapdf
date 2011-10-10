@@ -16,7 +16,7 @@ class Archive:public File
     size_t ReadOldHeader();
     void UnexpEndArcMsg();
 
-#if !defined(SHELL_EXT) && !defined(NOCRYPT)
+#if !defined(SHELL_EXT) && !defined(RAR_NOCRYPT)
     CryptData HeadersCrypt;
     byte HeadersSalt[SALT_SIZE];
 #endif

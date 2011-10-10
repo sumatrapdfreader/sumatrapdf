@@ -54,7 +54,7 @@ bool Archive::GetComment(Array<byte> *CmtData,Array<wchar> *CmtDataW)
     uint UnpCmtLength;
     if (OldFormat)
     {
-#ifdef NOCRYPT
+#ifdef RAR_NOCRYPT
       return(false);
 #else
       UnpCmtLength=GetByte();

@@ -55,9 +55,10 @@ bool WideToChar(const wchar *Src,char *Dest,size_t DestSize)
 
   // We tried to return the zero terminated string if conversion is failed,
   // but it does not work well. WideCharToMultiByte returns 'failed' code
-  // even if we wanted to convert only a part of string and passed DestSize
-  // smaller than required for fully converted string. Such call is the valid
-  // behavior in RAR code and we do not expect the empty string in this case.
+  // and partially converted string even if we wanted to convert only a part
+  // of string and passed DestSize smaller than required for fully converted
+  // string. Such call is the valid behavior in RAR code and we do not expect
+  // the empty string in this case.
 
   return(RetCode);
 }
@@ -121,6 +122,7 @@ bool CharToWide(const char *Src,wchar *Dest,size_t DestSize)
 }
 
 
+// SrcSize is in wide characters, not in bytes.
 byte* WideToRaw(const wchar *Src,byte *Dest,size_t SrcSize)
 {
   for (size_t I=0;I<SrcSize;I++,Src++)
@@ -292,6 +294,16 @@ wchar* wcsupper(wchar *Str)
 int toupperw(int ch)
 {
   return((ch<128) ? loctoupper(ch):ch);
+}
+
+
+int tolowerw(int ch)
+{
+#ifdef _WIN_ALL
+  return((int)(LPARAM)CharLowerW((wchar *)(uint)ch));
+#else
+  return((ch<128) ? loctolower(ch):ch);
+#endif
 }
 
 

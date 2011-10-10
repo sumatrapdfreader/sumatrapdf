@@ -38,11 +38,6 @@ void ListArchive(CommandData *Cmd)
         if (!Bare)
         {
           Arc.ViewComment();
-
-          // RAR can close a corrupt encrypted archive.
-//          if (!Arc.IsOpened())
-//            break;
-
           mprintf("\n");
           if (Arc.Solid)
             mprintf(St(MListSolid));
@@ -77,7 +72,7 @@ void ListArchive(CommandData *Cmd)
             case FILE_HEAD:
               IntToExt(Arc.NewLhd.FileName,Arc.NewLhd.FileName);
               FileMatched=Cmd->IsProcessFile(Arc.NewLhd)!=0;
-			  if (FileMatched)
+              if (FileMatched)
               {
                 ListFileHeader(Arc.NewLhd,Verbose,Technical,TitleShown,Bare);
                 if (!(Arc.NewLhd.Flags & LHD_SPLIT_BEFORE))

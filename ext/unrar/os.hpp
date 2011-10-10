@@ -36,6 +36,7 @@
 
 #include <windows.h>
 #include <prsht.h>
+#include <shlwapi.h>
 
 #ifndef _WIN_CE
   #include <shellapi.h>

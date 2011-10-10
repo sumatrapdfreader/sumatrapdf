@@ -28,8 +28,6 @@ bool IsDeleteAllowed(uint FileAttr);
 void PrepareToDelete(const char *Name,const wchar *NameW=NULL);
 uint GetFileAttr(const char *Name,const wchar *NameW=NULL);
 bool SetFileAttr(const char *Name,const wchar *NameW,uint Attr);
-char* MkTemp(char *Name);
-wchar* MkTemp(wchar *Name);
 
 enum CALCCRC_SHOWMODE {CALCCRC_SHOWNONE,CALCCRC_SHOWTEXT,CALCCRC_SHOWALL};
 uint CalcFileCRC(File *SrcFile,int64 Size=INT64NDF,CALCCRC_SHOWMODE ShowMode=CALCCRC_SHOWNONE);

@@ -166,6 +166,7 @@ EXTRACT_ARC_CODE CmdExtract::ExtractArchive(CommandData *Cmd)
   if (*Cmd->Command=='T' || *Cmd->Command=='I')
     Cmd->Test=true;
 
+
 #ifndef GUI
   if (*Cmd->Command=='I')
     Cmd->DisablePercentage=true;
@@ -783,6 +784,7 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,size_t HeaderS
     }
     if (ExtrFile)
     {
+
       if (!SkipSolid)
       {
         if (!TestMode && Command!='P' && CurFile.IsDevice())

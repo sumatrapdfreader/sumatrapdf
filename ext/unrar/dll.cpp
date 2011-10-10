@@ -343,7 +343,7 @@ void PASCAL RARSetProcessDataProc(HANDLE hArcData,PROCESSDATAPROC ProcessDataPro
 }
 
 
-#ifndef NOCRYPT
+#ifndef RAR_NOCRYPT
 void PASCAL RARSetPassword(HANDLE hArcData,char *Password)
 {
   DataSet *Data=(DataSet *)hArcData;

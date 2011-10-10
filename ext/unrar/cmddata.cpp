@@ -1,5 +1,6 @@
 #include "rar.hpp"
 
+
 CommandData::CommandData()
 {
   FileArgs=ExclArgs=InclArgs=StoreArgs=ArcNames=NULL;
@@ -15,6 +16,7 @@ CommandData::~CommandData()
 
 void CommandData::Init()
 {
+  RAROptions::Init();
   Close();
 
   *Command=0;
@@ -23,6 +25,8 @@ void CommandData::Init()
   *ArcNameW=0;
   FileLists=false;
   NoMoreSwitches=false;
+
+  ListMode=RCLM_AUTO;
 
   FileArgs=new StringList;
   ExclArgs=new StringList;
@@ -44,7 +48,92 @@ void CommandData::Close()
 }
 
 
-#if !defined(SFX_MODULE)
+#ifdef CUSTOM_CMDLINE_PARSER
+// Return the pointer to next position in the string and store dynamically
+// allocated command line parameters in Unicode and ASCII in ParW and ParA.
+static const wchar *AllocCmdParam(const wchar *CmdLine,wchar **ParW,char **ParA)
+{
+  const wchar *NextCmd=GetCmdParam(CmdLine,NULL,0);
+  if (NextCmd==NULL)
+    return NULL;
+  size_t ParSize=NextCmd-CmdLine+2; // Parameter size including the trailing zero.
+  *ParW=(wchar *)malloc(ParSize*sizeof(wchar));
+  if (*ParW==NULL)
+    return NULL;
+  CmdLine=GetCmdParam(CmdLine,*ParW,ParSize);
+  size_t ParSizeA=ParSize*2; // One Unicode char can be converted to several MBCS chars.
+  *ParA=(char *)malloc(ParSizeA);
+  if (*ParA==NULL)
+  {
+    free(*ParW);
+    return NULL;
+  }
+  GetAsciiName(*ParW,*ParA,ParSizeA);
+  return CmdLine;
+}
+#endif
+
+
+#ifndef SFX_MODULE
+void CommandData::PreprocessCommandLine(int argc, char *argv[])
+{
+#ifdef CUSTOM_CMDLINE_PARSER
+  // In Windows we may prefer to implement our own command line parser
+  // to avoid replacing \" by " in standard parser. Such replacing corrupts
+  // destination paths like "dest path\" in extraction commands.
+  const wchar *CmdLine=GetCommandLine();
+
+  wchar *ParW;
+  char *ParA;
+  for (bool FirstParam=true;;FirstParam=false)
+  {
+    if ((CmdLine=AllocCmdParam(CmdLine,&ParW,&ParA))==NULL)
+      break;
+    bool Code=FirstParam ? true:PreprocessSwitch(ParA);
+    free(ParW);
+    free(ParA);
+    if (!Code)
+      break;
+  }
+#else
+  for (int I=1;I<argc;I++)
+    if (!PreprocessSwitch(argv[I]))
+      break;
+#endif
+}
+#endif
+
+
+#ifndef SFX_MODULE
+void CommandData::ParseCommandLine(int argc, char *argv[])
+{
+#ifdef CUSTOM_CMDLINE_PARSER
+  // In Windows we may prefer to implement our own command line parser
+  // to avoid replacing \" by " in standard parser. Such replacing corrupts
+  // destination paths like "dest path\" in extraction commands.
+  const wchar *CmdLine=GetCommandLine();
+
+  wchar *ParW;
+  char *ParA;
+  for (bool FirstParam=true;;FirstParam=false)
+  {
+    if ((CmdLine=AllocCmdParam(CmdLine,&ParW,&ParA))==NULL)
+      break;
+    if (!FirstParam) // First parameter is the executable name.
+      ParseArg(ParA,ParW);
+    free(ParW);
+    free(ParA);
+  }
+#else
+  for (int I=1;I<argc;I++)
+    ParseArg(argv[I],NULL);
+#endif
+  ParseDone();
+}
+#endif
+
+
+#ifndef SFX_MODULE
 void CommandData::ParseArg(char *Arg,wchar *ArgW)
 {
   if (IsSwitch(*Arg) && !NoMoreSwitches)
@@ -102,13 +191,14 @@ void CommandData::ParseArg(char *Arg,wchar *ArgW)
             wcsncpyz(ExtrPathW,ArgW,ASIZE(ExtrPathW));
         }
         else
-          if ((Add || CmdChar=='T') && *Arg!='@')
+          if ((Add || CmdChar=='T') && (*Arg!='@' || ListMode==RCLM_REJECT_LISTS))
             FileArgs->AddString(Arg,ArgW);
           else
           {
             FindData FileData;
             bool Found=FindFile::FastFind(Arg,ArgW,&FileData);
-            if (!Found && *Arg=='@' && !IsWildcard(Arg,ArgW))
+            if ((!Found || ListMode==RCLM_ACCEPT_LISTS) && 
+                ListMode!=RCLM_REJECT_LISTS && *Arg=='@' && !IsWildcard(Arg,ArgW))
             {
               FileLists=true;
 
@@ -168,41 +258,40 @@ void CommandData::ParseEnvVar()
 
 
 
-// Return 'false' if -cfg- is present and preprocess switches
-// which must be processed before the rest of command line.
 #ifndef SFX_MODULE
-bool CommandData::IsConfigEnabled(int argc,char *argv[])
+// Preprocess those parameters, which must be processed before the rest of
+// command line. Return 'false' to stop further processing.
+bool CommandData::PreprocessSwitch(const char *Switch)
 {
-  bool ConfigEnabled=true;
-  for (int I=1;I<argc;I++)
-    if (IsSwitch(*argv[I]))
-    {
-      if (stricomp(&argv[I][1],"-")==0)
-        break;
-      if (stricomp(&argv[I][1],"cfg-")==0)
-        ConfigEnabled=false;
+  if (IsSwitch(Switch[0]))
+  {
+    Switch++;
+    if (stricomp(Switch,"-")==0) // Switch "--".
+      return false;
+    if (stricomp(Switch,"cfg-")==0)
+      ConfigDisabled=true;
 #ifndef GUI
-      if (strnicomp(&argv[I][1],"ilog",4)==0)
-      {
-        // Ensure that correct log file name is already set
-        // if we need to report an error when processing the command line.
-        ProcessSwitch(&argv[I][1]);
-        InitLogOptions(LogName);
-      }
-#endif
-      if (strnicomp(&argv[I][1],"sc",2)==0)
-      {
-        // Process -sc before reading any file lists.
-        ProcessSwitch(&argv[I][1]);
-      }
+    if (strnicomp(Switch,"ilog",4)==0)
+    {
+      // Ensure that correct log file name is already set
+      // if we need to report an error when processing the command line.
+      ProcessSwitch(Switch);
+      InitLogOptions(LogName);
     }
-  return(ConfigEnabled);
+#endif
+    if (strnicomp(Switch,"sc",2)==0)
+    {
+      // Process -sc before reading any file lists.
+      ProcessSwitch(Switch);
+    }
+  }
+  return true;
 }
 #endif
 
 
 #if !defined(GUI) && !defined(SFX_MODULE)
-void CommandData::ReadConfig(int argc,char *argv[])
+void CommandData::ReadConfig()
 {
   StringList List;
   if (ReadTextFile(DefConfigName,NULL,&List,true))
@@ -243,13 +332,16 @@ void CommandData::ProcessSwitchesString(char *Str)
 
 
 #if !defined(SFX_MODULE)
-void CommandData::ProcessSwitch(char *Switch,wchar *SwitchW)
+void CommandData::ProcessSwitch(const char *Switch,const wchar *SwitchW)
 {
 
   bool WidePresent=SwitchW!=NULL && *SwitchW!=0; // If 'true', SwitchW is not empty.
 
   switch(etoupper(Switch[0]))
   {
+    case '@':
+      ListMode=Switch[1]=='+' ? RCLM_ACCEPT_LISTS:RCLM_REJECT_LISTS;
+      break;
     case 'I':
       if (strnicomp(&Switch[1],"LOG",3)==0)
       {
@@ -378,10 +470,21 @@ void CommandData::ProcessSwitch(char *Switch,wchar *SwitchW)
         case 'D':
           AppendArcNameToPath=true;
           break;
+#ifndef SFX_MODULE
+        case 'G':
+          if (Switch[2]=='-' && Switch[3]==0)
+            GenerateArcName=0;
+          else
+          {
+            GenerateArcName=true;
+            strncpyz(GenerateMask,Switch+2,ASIZE(GenerateMask));
+          }
+          break;
+#endif
         case 'I':
           IgnoreGeneralAttr=true;
           break;
-        case 'N': //reserved for archive name
+        case 'N': // Reserved for archive name.
           break;
         case 'O':
           AddArcOnly=true;
@@ -466,7 +569,7 @@ void CommandData::ProcessSwitch(char *Switch,wchar *SwitchW)
         case 'I':
           {
             Priority=atoi(Switch+2);
-            char *ChPtr=strchr(Switch+2,':');
+            const char *ChPtr=strchr(Switch+2,':');
             if (ChPtr!=NULL)
             {
               SleepTime=atoi(ChPtr+1);
@@ -585,7 +688,7 @@ void CommandData::ProcessSwitch(char *Switch,wchar *SwitchW)
       {
         case 'C':
           {
-            char *Str=Switch+2;
+            const char *Str=Switch+2;
             if (*Str=='-')
               for (int I=0;I<sizeof(FilterModes)/sizeof(FilterModes[0]);I++)
                 FilterModes[I].State=FILTER_DISABLE;
@@ -639,12 +742,9 @@ void CommandData::ProcessSwitch(char *Switch,wchar *SwitchW)
           break;
         case 'S':
           {
-            char *Names=Switch+2,DefNames[512];
-            if (*Names==0)
-            {
-              strcpy(DefNames,DefaultStoreList);
-              Names=DefNames;
-            }
+            char StoreNames[1024];
+            strncpyz(StoreNames,(Switch[2]==0 ? DefaultStoreList:Switch+2),ASIZE(StoreNames));
+            char *Names=StoreNames;
             while (*Names!=0)
             {
               char *End=strchr(Names,';');
@@ -737,12 +837,10 @@ void CommandData::ProcessSwitch(char *Switch,wchar *SwitchW)
                   NewVolSize*=1000*1000;
                   break;
                 case 'g':
-                  NewVolSize*=1024*1024;
-                  NewVolSize*=1024;
+                  NewVolSize*=1024*1024*1024;
                   break;
                 case 'G':
-                  NewVolSize*=1000*1000;
-                  NewVolSize*=1000;
+                  NewVolSize*=1000*1000*1000;
                   break;
                 case 'b':
                 case 'B':
@@ -892,7 +990,7 @@ void CommandData::ProcessSwitch(char *Switch,wchar *SwitchW)
 
 
 #ifndef SFX_MODULE
-void CommandData::BadSwitch(char *Switch)
+void CommandData::BadSwitch(const char *Switch)
 {
   mprintf(St(MUnknownOption),Switch);
   ErrHandler.Exit(USER_ERROR);
@@ -952,8 +1050,8 @@ void CommandData::OutHelp()
 #elif defined(UNRAR)
     // UnRAR switches definition.
     MUNRARTitle1,MRARTitle2,MCHelpCmd,MCHelpCmdE,MCHelpCmdL,
-    MCHelpCmdP,MCHelpCmdT,MCHelpCmdV,MCHelpCmdX,MCHelpSw,
-    MCHelpSwm,MCHelpSwAC,MCHelpSwAD,MCHelpSwAI,MCHelpSwAP,
+    MCHelpCmdP,MCHelpCmdT,MCHelpCmdV,MCHelpCmdX,MCHelpSw,MCHelpSwm,
+    MCHelpSwAT,MCHelpSwAC,MCHelpSwAD,MCHelpSwAG,MCHelpSwAI,MCHelpSwAP,
     MCHelpSwCm,MCHelpSwCFGm,MCHelpSwCL,MCHelpSwCU,
     MCHelpSwDH,MCHelpSwEP,MCHelpSwEP3,MCHelpSwF,MCHelpSwIDP,MCHelpSwIERR,
     MCHelpSwINUL,MCHelpSwIOFF,MCHelpSwKB,MCHelpSwN,MCHelpSwNa,MCHelpSwNal,
@@ -1238,14 +1336,17 @@ void CommandData::ProcessCommand()
 
 #ifdef _UNIX
   if (GetExt(ArcName)==NULL && (!FileExist(ArcName) || IsDir(GetFileAttr(ArcName))))
-    strcat(ArcName,".rar");
+    strncatz(ArcName,".rar",ASIZE(ArcName));
 #else
   if (GetExt(ArcName)==NULL)
-    strcat(ArcName,".rar");
+    strncatz(ArcName,".rar",ASIZE(ArcName));
 #endif
 
   if (strchr("AFUMD",*Command)==NULL)
   {
+    if (GenerateArcName)
+      GenerateArchiveName(ArcName,ArcNameW,ASIZE(ArcName),GenerateMask,false);
+
     StringList ArcMasks;
     ArcMasks.AddString(ArcName);
     ScanTree Scan(&ArcMasks,Recurse,SaveLinks,SCAN_SKIPDIRS);
@@ -1309,7 +1410,7 @@ bool CommandData::IsSwitch(int Ch)
 
 
 #ifndef SFX_MODULE
-uint CommandData::GetExclAttr(char *Str)
+uint CommandData::GetExclAttr(const char *Str)
 {
   if (IsDigit(*Str))
     return(strtol(Str,NULL,0));

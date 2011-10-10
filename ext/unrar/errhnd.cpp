@@ -389,9 +389,12 @@ void ErrorHandler::SysErrMsg()
 #endif
 
 #if defined(_UNIX) || defined(_EMX)
-  char *err=strerror(errno);
-  if (err!=NULL)
-    Log(NULL,"\n%s",err);
+  if (errno!=0)
+  {
+    char *err=strerror(errno);
+    if (err!=NULL)
+      Log(NULL,"\n%s",err);
+  }
 #endif
 
 #endif

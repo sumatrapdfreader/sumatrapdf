@@ -63,7 +63,7 @@ size_t Archive::ReadHeader()
 
   if (Decrypt)
   {
-#if defined(SHELL_EXT) || defined(NOCRYPT)
+#if defined(SHELL_EXT) || defined(RAR_NOCRYPT)
     return(0);
 #else
     if (Read(HeadersSalt,SALT_SIZE)!=SALT_SIZE)

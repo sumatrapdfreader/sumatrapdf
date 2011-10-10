@@ -31,7 +31,7 @@
 
 // Old style main archive comment embed into main archive header. Must not
 // be used in new archives anymore. Must never be used with MHD_ENCRYPTVER
-// or other flags chaning the size of main header. RAR expects the fixed
+// or other flags changing the size of main header. RAR expects the fixed
 // size of main header preceding the comment if MHD_COMMENT is found.
 #define  MHD_COMMENT        0x0002U
 
@@ -76,10 +76,10 @@
 #define  SKIP_IF_UNKNOWN    0x4000U
 #define  LONG_BLOCK         0x8000U
 
-#define  EARC_NEXT_VOLUME   0x0001U // not last volume
-#define  EARC_DATACRC       0x0002U // store CRC32 of RAR archive (now used only in volumes)
-#define  EARC_REVSPACE      0x0004U // reserve space for end of REV file 7 byte record
-#define  EARC_VOLNUMBER     0x0008U // store a number of current volume
+#define  EARC_NEXT_VOLUME   0x0001U // Not last volume.
+#define  EARC_DATACRC       0x0002U // Store CRC32 of RAR archive (now is used only in volumes).
+#define  EARC_REVSPACE      0x0004U // Reserve space for end of REV file 7 byte record.
+#define  EARC_VOLNUMBER     0x0008U // Store a number of current volume.
 
 enum HEADER_TYPE {
   MARK_HEAD=0x72,MAIN_HEAD=0x73,FILE_HEAD=0x74,COMM_HEAD=0x75,AV_HEAD=0x76,
@@ -141,7 +141,7 @@ struct MarkHeader
 struct BaseBlock
 {
   ushort HeadCRC;
-  HEADER_TYPE HeadType;//byte
+  HEADER_TYPE HeadType; // 1 byte.
   ushort Flags;
   ushort HeadSize;
 
@@ -230,8 +230,15 @@ struct FileHeader:BlockHeader
 
 struct EndArcHeader:BaseBlock
 {
-  uint ArcDataCRC;  // optional archive CRC32
-  ushort VolNumber; // optional current volume number
+  // Optional CRC32 of entire archive up to start of EndArcHeader block.
+  // Present if EARC_DATACRC flag is set.
+  uint ArcDataCRC;  
+  
+  // Optional number of current volume.
+  // Present if EARC_VOLNUMBER flag is set.
+  ushort VolNumber; 
+
+  // 7 additional zero bytes can be stored here if EARC_REVSPACE is set.
 };
 
 

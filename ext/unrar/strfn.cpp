@@ -12,6 +12,8 @@ const wchar *NullToEmpty(const wchar *Str)
 }
 
 
+
+
 char *IntNameToExt(const char *Name)
 {
   static char OutName[NM];
@@ -22,7 +24,7 @@ char *IntNameToExt(const char *Name)
 
 void ExtToInt(const char *Src,char *Dest)
 {
-#if defined(_WIN_ALL)
+#ifdef _WIN_ALL
   CharToOemA(Src,Dest);
 #else
   if (Dest!=Src)
@@ -33,7 +35,7 @@ void ExtToInt(const char *Src,char *Dest)
 
 void IntToExt(const char *Src,char *Dest)
 {
-#if defined(_WIN_ALL)
+#ifdef _WIN_ALL
   OemToCharA(Src,Dest);
 #else
   if (Dest!=Src)
@@ -172,7 +174,7 @@ bool IsSpace(int ch)
 
 
 // We do not want to cast every signed char to unsigned when passing to
-// isspace, so we implement the replacement. Shall work for Unicode too.
+// isalpha, so we implement the replacement. Shall work for Unicode too.
 // If chars are signed, conversion from char to int could generate negative
 // values, resulting in undefined behavior in standard function.
 bool IsAlpha(int ch)
@@ -182,6 +184,19 @@ bool IsAlpha(int ch)
 
 
 
+
+#ifndef SFX_MODULE
+uint GetDigits(uint Number)
+{
+  uint Digits=1;
+  while (Number>=10)
+  {
+    Number/=10;
+    Digits++;
+  }
+  return(Digits);
+}
+#endif
 
 
 bool LowAscii(const char *Str)
@@ -254,6 +269,30 @@ wchar* wcsncpyz(wchar *dest, const wchar *src, size_t maxlen)
 }
 
 
+// Safe strncat: resulting dest length cannot exceed maxlen and dest 
+// is always zero terminated. Note that 'maxlen' parameter defines the entire
+// dest buffer size and is not compatible with standard strncat.
+char* strncatz(char* dest, const char* src, size_t maxlen)
+{
+  size_t Length = strlen(dest);
+  if (Length + 1 < maxlen)
+    strncat(dest, src, maxlen - Length - 1);
+  return dest;
+}
+
+
+// Safe wcsncat: resulting dest length cannot exceed maxlen and dest 
+// is always zero terminated. Note that 'maxlen' parameter defines the entire
+// dest buffer size and is not compatible with standard wcsncat.
+wchar* wcsncatz(wchar* dest, const wchar* src, size_t maxlen)
+{
+  size_t Length = wcslen(dest);
+  if (Length + 1 < maxlen)
+    wcsncat(dest, src, maxlen - Length - 1);
+  return dest;
+}
+
+
 void itoa(int64 n,char *Str)
 {
   char NumStr[50];
@@ -272,7 +311,7 @@ void itoa(int64 n,char *Str)
 
 
 
-int64 atoil(char *Str)
+int64 atoil(const char *Str)
 {
   int64 n=0;
   while (*Str>='0' && *Str<='9')
@@ -301,7 +340,7 @@ void itoa(int64 n,wchar *Str)
 }
 
 
-int64 atoil(wchar *Str)
+int64 atoil(const wchar *Str)
 {
   int64 n=0;
   while (*Str>='0' && *Str<='9')
@@ -325,3 +364,42 @@ const wchar* GetWide(const char *Src)
   Str[MaxLength-1]=0;
   return(Str);
 }
+
+
+#ifdef _WIN_ALL
+// Parse string containing parameters separated with spaces.
+// Support quote marks. Param can be NULL to return the pointer to next
+// parameter, which can be used to estimate the buffer size for Param.
+const wchar* GetCmdParam(const wchar *CmdLine,wchar *Param,size_t MaxSize)
+{
+  while (IsSpace(*CmdLine))
+    CmdLine++;
+  if (*CmdLine==0)
+    return NULL;
+
+  size_t ParamSize=0;
+  bool Quote=false;
+  while (*CmdLine!=0 && (Quote || !IsSpace(*CmdLine)))
+  {
+    if (*CmdLine=='\"')
+    {
+      if (CmdLine[1]=='\"')
+      {
+        // Insert the quote character instead of two adjoining quote characters.
+        if (Param!=NULL && ParamSize<MaxSize-1)
+          Param[ParamSize++]='\"';
+        CmdLine++;
+      }
+      else
+        Quote=!Quote;
+    }
+    else
+      if (Param!=NULL && ParamSize<MaxSize-1)
+        Param[ParamSize++]=*CmdLine;
+    CmdLine++;
+  }
+  if (Param!=NULL)
+    Param[ParamSize]=0;
+  return CmdLine;
+}
+#endif

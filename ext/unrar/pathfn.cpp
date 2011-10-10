@@ -323,7 +323,6 @@ void RemoveNameFromPath(char *Path)
 }
 
 
-#ifndef SFX_MODULE
 // Removes name and returns file path without the trailing
 // path separator symbol.
 void RemoveNameFromPath(wchar *Path)
@@ -333,7 +332,6 @@ void RemoveNameFromPath(wchar *Path)
     Name--;
   *Name=0;
 }
-#endif
 
 
 #if defined(_WIN_ALL) && !defined(_WIN_CE) && !defined(SFX_MODULE)
@@ -606,11 +604,11 @@ void NextVolumeName(char *ArcName,wchar *ArcNameW,uint MaxLength,bool OldNumberi
     char *ChPtr;
     if ((ChPtr=GetExt(ArcName))==NULL)
     {
-      strcat(ArcName,".rar");
+      strncatz(ArcName,".rar",MaxLength);
       ChPtr=GetExt(ArcName);
     }
     else
-      if (ChPtr[1]==0 || stricomp(ChPtr+1,"exe")==0 || stricomp(ChPtr+1,"sfx")==0)
+      if (ChPtr[1]==0 && strlen(ArcName)<MaxLength-3 || stricomp(ChPtr+1,"exe")==0 || stricomp(ChPtr+1,"sfx")==0)
         strcpy(ChPtr+1,"rar");
     if (!OldNumbering)
     {
@@ -654,11 +652,11 @@ void NextVolumeName(char *ArcName,wchar *ArcNameW,uint MaxLength,bool OldNumberi
     wchar *ChPtr;
     if ((ChPtr=GetExt(ArcNameW))==NULL)
     {
-      wcscat(ArcNameW,L".rar");
+      wcsncatz(ArcNameW,L".rar",MaxLength);
       ChPtr=GetExt(ArcNameW);
     }
     else
-      if (ChPtr[1]==0 || wcsicomp(ChPtr+1,L"exe")==0 || wcsicomp(ChPtr+1,L"sfx")==0)
+      if (ChPtr[1]==0 && wcslen(ArcNameW)<MaxLength-3 || wcsicomp(ChPtr+1,L"exe")==0 || wcsicomp(ChPtr+1,L"sfx")==0)
         wcscpy(ChPtr+1,L"rar");
     if (!OldNumbering)
     {
@@ -712,12 +710,48 @@ bool IsNameUsable(const char *Name)
       return(false);
   }
 #endif
+#ifdef _WIN_ALL
+  // In Windows we need to check if all file name characters are defined
+  // in current code page. For example, in Korean CP949 a lot of high ASCII
+  // characters are not defined, cannot be used in file names, but cannot be
+  // detected by other checks in this function.
+  if (MultiByteToWideChar(CP_ACP,MB_ERR_INVALID_CHARS,Name,-1,NULL,0)==0 &&
+      GetLastError()==ERROR_NO_UNICODE_TRANSLATION)
+    return false;
+#endif
   return(*Name!=0 && strpbrk(Name,"?*<>|\"")==NULL);
+}
+
+
+bool IsNameUsable(const wchar *Name)
+{
+#ifndef _UNIX
+  if (Name[0] && Name[1] && wcschr(Name+2,':')!=NULL)
+    return(false);
+  for (const wchar *s=Name;*s!=0;s++)
+  {
+    if ((uint)*s<32)
+      return(false);
+    if (*s==' ' && IsPathDiv(s[1]))
+      return(false);
+  }
+#endif
+  return(*Name!=0 && wcspbrk(Name,L"?*<>|\"")==NULL);
 }
 
 
 void MakeNameUsable(char *Name,bool Extended)
 {
+#ifdef _WIN_ALL
+  // In Windows we also need to convert characters not defined in current
+  // code page. This double conversion changes them to '?', which is
+  // catched by code below.
+  size_t NameLength=strlen(Name);
+  wchar NameW[NM];
+  CharToWide(Name,NameW,ASIZE(NameW));
+  WideToChar(NameW,Name,NameLength+1);
+  Name[NameLength]=0;
+#endif
   for (char *s=Name;*s!=0;s=charnext(s))
   {
     if (strchr(Extended ? "?*<>|\"":"?*",*s)!=NULL || Extended && (byte)*s<32)
@@ -1138,6 +1172,253 @@ wchar* VolNameToFirstName(const wchar *VolName,wchar *FirstName,bool NewNumberin
 #endif
 
 
+#ifndef SFX_MODULE
+static void GenArcName(char *ArcName,wchar *ArcNameW,char *GenerateMask,
+                       uint ArcNumber,bool &ArcNumPresent);
+
+void GenerateArchiveName(char *ArcName,wchar *ArcNameW,size_t MaxSize,
+                         char *GenerateMask,bool Archiving)
+{
+  // Must be enough space for archive name plus all stuff in mask plus
+  // extra overhead produced by mask 'N' (archive number) characters.
+  // One 'N' character can result in several numbers if we process more
+  // than 9 archives.
+  char NewName[NM+MAX_GENERATE_MASK+20];
+  wchar NewNameW[NM+MAX_GENERATE_MASK+20];
+
+  uint ArcNumber=1;
+  while (true) // Loop for 'N' (archive number) processing.
+  {
+    strncpyz(NewName,NullToEmpty(ArcName),ASIZE(NewName));
+    wcsncpyz(NewNameW,NullToEmpty(ArcNameW),ASIZE(NewNameW));
+    
+    bool ArcNumPresent=false;
+
+    GenArcName(NewName,NewNameW,GenerateMask,ArcNumber,ArcNumPresent);
+    
+    if (!ArcNumPresent)
+      break;
+    if (!FileExist(NewName,NewNameW))
+    {
+      if (!Archiving && ArcNumber>1)
+      {
+        // If we perform non-archiving operation, we need to use the last
+        // existing archive before the first unused name. So we generate
+        // the name for (ArcNumber-1) below.
+        strncpyz(NewName,NullToEmpty(ArcName),ASIZE(NewName));
+        wcsncpyz(NewNameW,NullToEmpty(ArcNameW),ASIZE(NewNameW));
+        GenArcName(NewName,NewNameW,GenerateMask,ArcNumber-1,ArcNumPresent);
+      }
+      break;
+    }
+    ArcNumber++;
+  }
+  if (ArcName!=NULL && *ArcName!=0)
+    strncpyz(ArcName,NewName,MaxSize);
+  if (ArcNameW!=NULL && *ArcNameW!=0)
+    wcsncpyz(ArcNameW,NewNameW,MaxSize);
+}
+
+
+void GenArcName(char *ArcName,wchar *ArcNameW,char *GenerateMask,
+                uint ArcNumber,bool &ArcNumPresent)
+{
+  bool Prefix=false;
+  if (*GenerateMask=='+')
+  {
+    Prefix=true;    // Add the time string before the archive name.
+    GenerateMask++; // Skip '+' in the beginning of time mask.
+  }
+
+  char Mask[MAX_GENERATE_MASK];
+  strncpyz(Mask,*GenerateMask ? GenerateMask:"yyyymmddhhmmss",ASIZE(Mask));
+
+  bool QuoteMode=false,Hours=false;
+  for (uint I=0;Mask[I]!=0;I++)
+  {
+    if (Mask[I]=='{' || Mask[I]=='}')
+    {
+      QuoteMode=(Mask[I]=='{');
+      continue;
+    }
+    if (QuoteMode)
+      continue;
+    int CurChar=etoupper(Mask[I]);
+    if (CurChar=='H')
+      Hours=true;
+
+    if (Hours && CurChar=='M')
+    {
+      // Replace minutes with 'I'. We use 'M' both for months and minutes,
+      // so we treat as minutes only those 'M' which are found after hours.
+      Mask[I]='I';
+    }
+    if (CurChar=='N')
+    {
+      uint Digits=GetDigits(ArcNumber);
+      uint NCount=0;
+      while (etoupper(Mask[I+NCount])=='N')
+        NCount++;
+
+      // Here we ensure that we have enough 'N' characters to fit all digits
+      // of archive number. We'll replace them by actual number later
+      // in this function.
+      if (NCount<Digits)
+      {
+        memmove(Mask+I+Digits,Mask+I+NCount,strlen(Mask+I+NCount)+1);
+        memset(Mask+I,'N',Digits);
+      }
+      I+=Max(Digits,NCount)-1;
+      ArcNumPresent=true;
+      continue;
+    }
+  }
+
+  RarTime CurTime;
+  CurTime.SetCurrentTime();
+  RarLocalTime rlt;
+  CurTime.GetLocal(&rlt);
+
+  char Ext[NM];
+  *Ext=0;
+  if (ArcName!=NULL && *ArcName!=0)
+  {
+    char *Dot;
+    if ((Dot=GetExt(ArcName))==NULL)
+      strcpy(Ext,*PointToName(ArcName)==0 ? ".rar":"");
+    else
+    {
+      strcpy(Ext,Dot);
+      *Dot=0;
+    }
+  }
+
+  wchar ExtW[NM];
+  *ExtW=0;
+  if (ArcNameW!=NULL && *ArcNameW!=0)
+  {
+    wchar *DotW;
+    if ((DotW=GetExt(ArcNameW))==NULL)
+      wcscpy(ExtW,*PointToName(ArcNameW)==0 ? L".rar":L"");
+    else
+    {
+      wcscpy(ExtW,DotW);
+      *DotW=0;
+    }
+  }
+
+  int WeekDay=rlt.wDay==0 ? 6:rlt.wDay-1;
+  int StartWeekDay=rlt.yDay-WeekDay;
+  if (StartWeekDay<0)
+    if (StartWeekDay<=-4)
+      StartWeekDay+=IsLeapYear(rlt.Year-1) ? 366:365;
+    else
+      StartWeekDay=0;
+  int CurWeek=StartWeekDay/7+1;
+  if (StartWeekDay%7>=4)
+    CurWeek++;
+
+  char Field[10][6];
+
+  sprintf(Field[0],"%04d",rlt.Year);
+  sprintf(Field[1],"%02d",rlt.Month);
+  sprintf(Field[2],"%02d",rlt.Day);
+  sprintf(Field[3],"%02d",rlt.Hour);
+  sprintf(Field[4],"%02d",rlt.Minute);
+  sprintf(Field[5],"%02d",rlt.Second);
+  sprintf(Field[6],"%02d",CurWeek);
+  sprintf(Field[7],"%d",WeekDay+1);
+  sprintf(Field[8],"%03d",rlt.yDay+1);
+  sprintf(Field[9],"%05d",ArcNumber);
+
+  const char *MaskChars="YMDHISWAEN";
+
+  int CField[sizeof(Field)/sizeof(Field[0])];
+  memset(CField,0,sizeof(CField));
+  QuoteMode=false;
+  for (int I=0;Mask[I]!=0;I++)
+  {
+    if (Mask[I]=='{' || Mask[I]=='}')
+    {
+      QuoteMode=(Mask[I]=='{');
+      continue;
+    }
+    if (QuoteMode)
+      continue;
+    const char *Ch=strchr(MaskChars,etoupper(Mask[I]));
+    if (Ch!=NULL)
+      CField[Ch-MaskChars]++;
+   }
+
+  char DateText[MAX_GENERATE_MASK];
+  *DateText=0;
+  QuoteMode=false;
+  for (size_t I=0,J=0;Mask[I]!=0 && J<ASIZE(DateText)-1;I++)
+  {
+    if (Mask[I]=='{' || Mask[I]=='}')
+    {
+      QuoteMode=(Mask[I]=='{');
+      continue;
+    }
+    const char *Ch=strchr(MaskChars,etoupper(Mask[I]));
+    if (Ch==NULL || QuoteMode)
+      DateText[J]=Mask[I];
+    else
+    {
+      size_t FieldPos=Ch-MaskChars;
+      int CharPos=(int)strlen(Field[FieldPos])-CField[FieldPos]--;
+      if (FieldPos==1 && etoupper(Mask[I+1])=='M' && etoupper(Mask[I+2])=='M')
+      {
+        strncpyz(DateText+J,GetMonthName(rlt.Month-1),ASIZE(DateText)-J);
+        J=strlen(DateText);
+        I+=2;
+        continue;
+      }
+      if (CharPos<0)
+        DateText[J]=Mask[I];
+      else
+        DateText[J]=Field[FieldPos][CharPos];
+    }
+    DateText[++J]=0;
+  }
+
+  wchar DateTextW[ASIZE(DateText)];
+  CharToWide(DateText,DateTextW);
+
+  if (Prefix)
+  {
+    if (ArcName!=NULL && *ArcName!=0)
+    {
+      char NewName[NM];
+      GetFilePath(ArcName,NewName,ASIZE(NewName));
+      AddEndSlash(NewName);
+      strcat(NewName,DateText);
+      strcat(NewName,PointToName(ArcName));
+      strcpy(ArcName,NewName);
+    }
+    if (ArcNameW!=NULL && *ArcNameW!=0)
+    {
+      wchar NewNameW[NM];
+      GetFilePath(ArcNameW,NewNameW,ASIZE(NewNameW));
+      AddEndSlash(NewNameW);
+      wcscat(NewNameW,DateTextW);
+      wcscat(NewNameW,PointToName(ArcNameW));
+      wcscpy(ArcNameW,NewNameW);
+    }
+  }
+  else
+  {
+    if (ArcName!=NULL && *ArcName!=0)
+      strcat(ArcName,DateText);
+    if (ArcNameW!=NULL && *ArcNameW!=0)
+      wcscat(ArcNameW,DateTextW);
+  }
+  if (ArcName!=NULL && *ArcName!=0)
+    strcat(ArcName,Ext);
+  if (ArcNameW!=NULL && *ArcNameW!=0)
+    wcscat(ArcNameW,ExtW);
+}
+#endif
 
 
 wchar* GetWideName(const char *Name,const wchar *NameW,wchar *DestW,size_t DestSize)

@@ -450,56 +450,6 @@ bool SetFileAttr(const char *Name,const wchar *NameW,uint Attr)
 }
 
 
-#ifndef SFX_MODULE
-char *MkTemp(char *Name)
-{
-  size_t Length=strlen(Name);
-  if (Length<=6)
-    return(NULL);
-
-  // We need some kind of random start point for first temporary name.
-  RarTime CurTime;
-  CurTime.SetCurrentTime();
-  int Random=(int)CurTime.GetRaw();
-
-  for (int Attempt=0;;Attempt++)
-  {
-    sprintf(Name+Length-6,"%06u",(Random+Attempt)%1000000);
-    Name[Length-4]='.';
-    if (!FileExist(Name))
-      break;
-    if (Attempt==1000)
-      return(NULL);
-  }
-  return(Name);
-}
-#endif
-
-
-#if defined(_WIN_ALL) && !defined(SFX_MODULE)
-wchar *MkTemp(wchar *Name)
-{
-  size_t Length=wcslen(Name);
-  if (Length<=6)
-    return(NULL);
-
-  // We need some kind of random start point for first temporary name.
-  RarTime CurTime;
-  CurTime.SetCurrentTime();
-  int Random=(int)CurTime.GetRaw();
-
-  for (uint Attempt=0;;Attempt++)
-  {
-    sprintfw(Name+Length-6,7,L"%06u",(Random+Attempt)%1000000);
-    Name[Length-4]='.';
-    if (!FileExist(NULL,Name))
-      break;
-    if (Attempt==1000)
-      return(NULL);
-  }
-  return(Name);
-}
-#endif
 
 
 #ifndef SFX_MODULE
@@ -573,6 +523,8 @@ bool DelFile(const char *Name,const wchar *NameW)
 {
   return(Name!=NULL && remove(Name)==0);
 }
+
+
 
 
 

@@ -1,30 +1,37 @@
 #ifndef _RAR_CMDDATA_
 #define _RAR_CMDDATA_
 
+
 #define DefaultStoreList "7z;ace;arj;bz2;cab;gz;jpeg;jpg;lha;lzh;mp3;rar;taz;tgz;z;zip"
+
+enum RAR_CMD_LIST_MODE {RCLM_AUTO,RCLM_REJECT_LISTS,RCLM_ACCEPT_LISTS};
 
 class CommandData:public RAROptions
 {
   private:
     void ProcessSwitchesString(char *Str);
-    void ProcessSwitch(char *Switch,wchar *SwitchW=NULL);
-    void BadSwitch(char *Switch);
+    void ProcessSwitch(const char *Switch,const wchar *SwitchW=NULL);
+    void BadSwitch(const char *Switch);
     bool ExclCheckArgs(StringList *Args,bool Dir,char *CheckName,bool CheckFullPath,int MatchMode);
-    uint GetExclAttr(char *Str);
+    uint GetExclAttr(const char *Str);
 
     bool FileLists;
     bool NoMoreSwitches;
+    RAR_CMD_LIST_MODE ListMode;
     bool BareOutput;
   public:
     CommandData();
     ~CommandData();
     void Init();
     void Close();
+
+    void PreprocessCommandLine(int argc, char *argv[]);
+    void ParseCommandLine(int argc, char *argv[]);
     void ParseArg(char *Arg,wchar *ArgW);
     void ParseDone();
     void ParseEnvVar();
-    void ReadConfig(int argc,char *argv[]);
-    bool IsConfigEnabled(int argc,char *argv[]);
+    void ReadConfig();
+    bool PreprocessSwitch(const char *Switch);
     void OutTitle();
     void OutHelp();
     bool IsSwitch(int Ch);
@@ -39,7 +46,7 @@ class CommandData:public RAROptions
     bool GetArcName(char *Name,wchar *NameW,int MaxSize);
     bool CheckWinSize();
 
-    int GetRecoverySize(char *Str,int DefSize);
+    int GetRecoverySize(const char *Str,int DefSize);
 
     char Command[NM+16];
     wchar CommandW[NM+16];

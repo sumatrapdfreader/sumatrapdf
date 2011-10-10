@@ -44,10 +44,22 @@ A million repetitions of "a"
 #define R3(v,w,x,y,z,i) {z+=(((w|x)&y)|(w&x))+blk(i)+0x8F1BBCDC+rol(v,5);w=rol(w,30);}
 #define R4(v,w,x,y,z,i) {z+=(w^x^y)+blk(i)+0xCA62C1D6+rol(v,5);w=rol(w,30);}
 
+#ifdef _MSC_VER
+#pragma optimize( "", off )
+// We need to disable the optimization to really wipe these variables.
+#endif
+static void wipevars(uint32 &a,uint32 &b,uint32 &c,uint32 &d,uint32 &e)
+{
+  // Wipe used variables for safety reason.
+  a=b=c=d=e=0;
+}
+#ifdef _MSC_VER
+#pragma optimize( "", on )
+#endif
 
 /* Hash a single 512-bit block. This is the core of the algorithm. */
 
-void SHA1Transform(uint32 state[5], unsigned char buffer[64], bool handsoff)
+void SHA1Transform(uint32 state[5], unsigned char workspace[64], unsigned char buffer[64], bool handsoff)
 {
 #ifndef SFX_MODULE
   uint32 a, b, c, d, e;
@@ -57,7 +69,6 @@ void SHA1Transform(uint32 state[5], unsigned char buffer[64], bool handsoff)
     uint32 l[16];
 } CHAR64LONG16;
 CHAR64LONG16* block;
-static unsigned char workspace[64];
     if (handsoff)
     {
       block = (CHAR64LONG16*)workspace;
@@ -133,8 +144,11 @@ static unsigned char workspace[64];
     state[4] += e;
 
     /* Wipe variables */
-    a = b = c = d = e = 0;
-    memset(&a,0,sizeof(a));
+// Such wipe method does not work in optimizing compilers.
+//    a = b = c = d = e = 0;
+//    memset(&a,0,sizeof(a));
+
+    wipevars(a,b,c,d,e);
 #endif
 }
 
@@ -165,14 +179,14 @@ uint blen = ((uint)len)<<3;
     context->count[1] += (uint32)(len >> 29);
     if ((j + len) > 63) {
         memcpy(&context->buffer[j], data, (i = 64-j));
-        SHA1Transform(context->state, context->buffer, handsoff);
+        SHA1Transform(context->state, context->workspace, context->buffer, handsoff);
         for ( ; i + 63 < len; i += 64) {
 #ifdef ALLOW_NOT_ALIGNED_INT
-            SHA1Transform(context->state, &data[i], handsoff);
+            SHA1Transform(context->state, context->workspace, &data[i], handsoff);
 #else
             unsigned char buffer[64];
             memcpy(buffer,data+i,sizeof(buffer));
-            SHA1Transform(context->state, buffer, handsoff);
+            SHA1Transform(context->state, context->workspace, buffer, handsoff);
             memcpy(data+i,buffer,sizeof(buffer));
 #endif
 #ifdef BIG_ENDIAN
@@ -227,7 +241,8 @@ unsigned char finalcount[8];
     memset(context->count, 0, 8);
     memset(&finalcount, 0, 8);
     if (handsoff)
-      SHA1Transform(context->state, context->buffer, true);
+      memset(context->workspace,0,sizeof(context->workspace)); // Wipe the temporary buffer.
+//      SHA1Transform(context->state, context->workspace, context->buffer, true); /* make SHA1Transform overwrite it's own static vars */
 }
 
 

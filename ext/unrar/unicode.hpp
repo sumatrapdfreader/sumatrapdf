@@ -48,6 +48,7 @@ int wcsnicomp(const wchar *s1,const wchar *s2,size_t n);
 wchar* wcslower(wchar *Str);
 wchar* wcsupper(wchar *Str);
 int toupperw(int ch);
+int tolowerw(int ch);
 int atoiw(const wchar *s);
 
 #ifdef DBCS_SUPPORTED

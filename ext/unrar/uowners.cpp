@@ -10,18 +10,22 @@ void ExtractUnixOwner(Archive &Arc,char *FileName)
   }
 
   struct passwd *pw;
+  errno=0; // Required by getpwnam specification if we need to check errno.
   if ((pw=getpwnam(Arc.UOHead.OwnerName))==NULL)
   {
     Log(Arc.FileName,St(MErrGetOwnerID),Arc.UOHead.OwnerName);
+    ErrHandler.SysErrMsg();
     ErrHandler.SetErrorCode(WARNING);
     return;
   }
   uid_t OwnerID=pw->pw_uid;
 
   struct group *gr;
+  errno=0; // Required by getgrnam specification if we need to check errno.
   if ((gr=getgrnam(Arc.UOHead.GroupName))==NULL)
   {
     Log(Arc.FileName,St(MErrGetGroupID),Arc.UOHead.GroupName);
+    ErrHandler.SysErrMsg();
     ErrHandler.SetErrorCode(CRC_ERROR);
     return;
   }

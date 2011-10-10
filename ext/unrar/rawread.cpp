@@ -13,7 +13,7 @@ RawRead::RawRead(File *SrcFile)
 
 void RawRead::Read(size_t Size)
 {
-#if !defined(SHELL_EXT) && !defined(NOCRYPT)
+#if !defined(SHELL_EXT) && !defined(RAR_NOCRYPT)
   if (Crypt!=NULL)
   {
     size_t CurSize=Data.Size();

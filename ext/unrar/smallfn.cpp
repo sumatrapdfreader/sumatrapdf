@@ -7,7 +7,8 @@ int ToPercent(int64 N1,int64 N2)
   return(ToPercentUnlim(N1,N2));
 }
 
-/* allows percent larger than 100 */
+
+// Allows the percent larger than 100.
 int ToPercentUnlim(int64 N1,int64 N2)
 {
   if (N2==0)

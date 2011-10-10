@@ -41,8 +41,8 @@ class RarTime
     uint GetDos();
     void SetDos(uint DosTime);
     void GetText(char *DateStr,bool FullYear);
-    void SetIsoText(char *TimeText);
-    void SetAgeText(char *TimeText);
+    void SetIsoText(const char *TimeText);
+    void SetAgeText(const char *TimeText);
     void SetCurrentTime();
     void Reset() {rlt.Year=0;}
     bool IsSet() {return(rlt.Year!=0);}

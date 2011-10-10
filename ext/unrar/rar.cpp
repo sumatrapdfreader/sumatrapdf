@@ -83,16 +83,16 @@ int main(int argc, char *argv[])
       }
     }
     Cmd.AddArcName(ModuleNameA,ModuleNameW);
-#else
-    if (Cmd.IsConfigEnabled(argc,argv))
+    Cmd.ParseDone();
+#else // !SFX_MODULE
+    Cmd.PreprocessCommandLine(argc,argv);
+    if (!Cmd.ConfigDisabled)
     {
-      Cmd.ReadConfig(argc,argv);
+      Cmd.ReadConfig();
       Cmd.ParseEnvVar();
     }
-    for (int I=1;I<argc;I++)
-      Cmd.ParseArg(argv[I],NULL);
+    Cmd.ParseCommandLine(argc,argv);
 #endif
-    Cmd.ParseDone();
 
 #if defined(_WIN_ALL) && !defined(SFX_MODULE) && !defined(SHELL_EXT)
     ShutdownOnClose=Cmd.Shutdown;
@@ -122,6 +122,7 @@ int main(int argc, char *argv[])
     ErrHandler.SetErrorCode(FATAL_ERROR);
   }
 #endif
+
   File::RemoveCreated();
 #if defined(SFX_MODULE) && defined(_DJGPP)
   _chmod(ModuleNameA,1,0x20);

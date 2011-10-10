@@ -6,7 +6,7 @@
 #define DEFAULT_RECVOLUMES  -10
 
 enum PATH_EXCL_MODE {
-  EXCL_UNCHANGED,      // Process paths as is (default).
+  EXCL_UNCHANGED=0,    // Process paths as is (default).
   EXCL_SKIPWHOLEPATH,  // -ep  (exclude the path completely)
   EXCL_BASEPATH,       // -ep1 (exclude the base part of path)
   EXCL_SAVEFULLPATH,   // -ep2 (the full path without the disk letter)
@@ -20,15 +20,15 @@ enum PATH_EXCL_MODE {
 enum {SOLID_NONE=0,SOLID_NORMAL=1,SOLID_COUNT=2,SOLID_FILEEXT=4,
       SOLID_VOLUME_DEPENDENT=8,SOLID_VOLUME_INDEPENDENT=16};
 
-enum {ARCTIME_NONE,ARCTIME_KEEP,ARCTIME_LATEST};
+enum {ARCTIME_NONE=0,ARCTIME_KEEP,ARCTIME_LATEST};
 
 enum EXTTIME_MODE {
-  EXTTIME_NONE,EXTTIME_1S,EXTTIME_HIGH1,EXTTIME_HIGH2,EXTTIME_HIGH3
+  EXTTIME_NONE=0,EXTTIME_1S,EXTTIME_HIGH1,EXTTIME_HIGH2,EXTTIME_HIGH3
 };
 
-enum {NAMES_ORIGINALCASE,NAMES_UPPERCASE,NAMES_LOWERCASE};
+enum {NAMES_ORIGINALCASE=0,NAMES_UPPERCASE,NAMES_LOWERCASE};
 
-enum MESSAGE_TYPE {MSG_STDOUT,MSG_STDERR,MSG_ERRONLY,MSG_NULL};
+enum MESSAGE_TYPE {MSG_STDOUT=0,MSG_STDERR,MSG_ERRONLY,MSG_NULL};
 
 enum RECURSE_MODE 
 {
@@ -60,6 +60,8 @@ struct FilterMode
   int Param2;
 };
 
+#define MAX_GENERATE_MASK  128
+
 
 class RAROptions
 {
@@ -73,6 +75,7 @@ class RAROptions
     bool InclAttrSet;
     uint WinSize;
     char TempPath[NM];
+    bool ConfigDisabled; // Switch -cfg-.
     char ExtrPath[NM];
     wchar ExtrPathW[NM];
     char CommentFile[NM];
@@ -118,6 +121,10 @@ class RAROptions
     bool KeepBroken;
     bool OpenShared;
     bool DeleteFiles;
+#ifndef SFX_MODULE
+    bool GenerateArcName;
+    char GenerateMask[MAX_GENERATE_MASK];
+#endif
     bool SyncFiles;
     bool ProcessEA;
     bool SaveStreams;
