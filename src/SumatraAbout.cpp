@@ -679,8 +679,6 @@ static TCHAR *GetThumbnailPath(const TCHAR *filePath)
     // content), but that's too expensive for files on slow drives
     unsigned char digest[16];
     ScopedMem<TCHAR> pathN(path::Normalize(filePath));
-    if (!pathN)
-        return NULL;
     if (path::IsOnRemovableDrive(pathN))
         pathN[0] = '?'; // ignore the drive letter, if it might change
     ScopedMem<char> pathU(str::conv::ToUtf8(pathN));

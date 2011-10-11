@@ -96,22 +96,15 @@ TCHAR *Normalize(const TCHAR *path)
     // convert to absolute path, change slashes into backslashes
     DWORD cch = GetFullPathName(path, 0, NULL, NULL);
     if (!cch)
-        return NULL;
-    TCHAR *normpath = SAZA(TCHAR, cch);
-    if (!normpath)
-        return NULL;
-    GetFullPathName(path, cch, normpath, NULL);
-
+        return str::Dup(path);
+    ScopedMem<TCHAR> fullpath(SAZA(TCHAR, cch));
+    GetFullPathName(path, cch, fullpath, NULL);
     // convert to long form
-    cch = GetLongPathName(normpath, NULL, 0);
+    cch = GetLongPathName(fullpath, NULL, 0);
     if (!cch)
-        return normpath;
-    TCHAR *tmp = (TCHAR *)realloc(normpath, cch * sizeof(TCHAR));
-    if (!tmp)
-        return normpath;
-    normpath = tmp;
-
-    GetLongPathName(normpath, normpath, cch);
+        return fullpath.StealData();
+    TCHAR *normpath = SAZA(TCHAR, cch);
+    GetLongPathName(fullpath, normpath, cch);
     return normpath;
 }
 

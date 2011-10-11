@@ -300,8 +300,6 @@ bool WindowInfoStillValid(WindowInfo *win)
 WindowInfo* FindWindowInfoByFile(TCHAR *file)
 {
     ScopedMem<TCHAR> normFile(path::Normalize(file));
-    if (!normFile)
-        return NULL;
 
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows.At(i);
@@ -1055,8 +1053,6 @@ static void RefreshUpdatedFiles() {
 WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, bool forceReuse, bool suppressPwdUI)
 {
     ScopedMem<TCHAR> fullpath(path::Normalize(fileName));
-    if (!fullpath)
-        return NULL;
 
     // fail with a notification if the file doesn't exist and
     // there is a window the user has just been interacting with
