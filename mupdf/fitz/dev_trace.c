@@ -8,6 +8,13 @@ fz_trace_matrix(fz_matrix ctm)
 }
 
 static void
+fz_trace_trm(fz_matrix trm)
+{
+	printf("trm=\"%g %g %g %g\" ",
+		trm.a, trm.b, trm.c, trm.d);
+}
+
+static void
 fz_trace_color(fz_colorspace *colorspace, float *color, float alpha)
 {
 	int i;
@@ -135,7 +142,8 @@ fz_trace_fill_text(void *user, fz_text *text, fz_matrix ctm,
 {
 	printf("<fill_text font=\"%s\" wmode=\"%d\" ", text->font->name, text->wmode);
 	fz_trace_color(colorspace, color, alpha);
-	fz_trace_matrix(fz_concat(ctm, text->trm));
+	fz_trace_matrix(ctm);
+	fz_trace_trm(text->trm);
 	printf(">\n");
 	fz_debug_text(text, 0);
 	printf("</fill_text>\n");
@@ -147,7 +155,8 @@ fz_trace_stroke_text(void *user, fz_text *text, fz_stroke_state *stroke, fz_matr
 {
 	printf("<stroke_text font=\"%s\" wmode=\"%d\" ", text->font->name, text->wmode);
 	fz_trace_color(colorspace, color, alpha);
-	fz_trace_matrix(fz_concat(ctm, text->trm));
+	fz_trace_matrix(ctm);
+	fz_trace_trm(text->trm);
 	printf(">\n");
 	fz_debug_text(text, 0);
 	printf("</stroke_text>\n");
@@ -158,7 +167,8 @@ fz_trace_clip_text(void *user, fz_text *text, fz_matrix ctm, int accumulate)
 {
 	printf("<clip_text font=\"%s\" wmode=\"%d\" ", text->font->name, text->wmode);
 	printf("accumulate=\"%d\" ", accumulate);
-	fz_trace_matrix(fz_concat(ctm, text->trm));
+	fz_trace_matrix(ctm);
+	fz_trace_trm(text->trm);
 	printf(">\n");
 	fz_debug_text(text, 0);
 	printf("</clip_text>\n");
@@ -168,7 +178,8 @@ static void
 fz_trace_clip_stroke_text(void *user, fz_text *text, fz_stroke_state *stroke, fz_matrix ctm)
 {
 	printf("<clip_stroke_text font=\"%s\" wmode=\"%d\" ", text->font->name, text->wmode);
-	fz_trace_matrix(fz_concat(ctm, text->trm));
+	fz_trace_matrix(ctm);
+	fz_trace_trm(text->trm);
 	printf(">\n");
 	fz_debug_text(text, 0);
 	printf("</clip_stroke_text>\n");
@@ -178,7 +189,8 @@ static void
 fz_trace_ignore_text(void *user, fz_text *text, fz_matrix ctm)
 {
 	printf("<ignore_text font=\"%s\" wmode=\"%d\" ", text->font->name, text->wmode);
-	fz_trace_matrix(fz_concat(ctm, text->trm));
+	fz_trace_matrix(ctm);
+	fz_trace_trm(text->trm);
 	printf(">\n");
 	fz_debug_text(text, 0);
 	printf("</ignore_text>\n");

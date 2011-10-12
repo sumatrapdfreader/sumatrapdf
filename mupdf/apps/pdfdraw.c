@@ -21,6 +21,7 @@ int showxml = 0;
 int showtext = 0;
 int showtime = 0;
 int showmd5 = 0;
+int showoutline = 0;
 int savealpha = 0;
 int uselist = 1;
 int alphabits = 8;
@@ -67,6 +68,7 @@ static void usage(void)
 		"\t-R -\trotate clockwise by given number of degrees\n"
 		"\t-G gamma\tgamma correct output\n"
 		"\t-I\tinvert output\n"
+		"\t-l\tprint outline\n"
 		"\tpages\tcomma separated list of ranges\n");
 	exit(1);
 }
@@ -410,6 +412,56 @@ static void drawrange(pdf_xref *xref, char *range)
 	}
 }
 
+static int get_page_number(pdf_xref *xref, pdf_link *link)
+{
+	if (link->kind == PDF_LINK_GOTO)
+		return pdf_find_page_number(xref, fz_array_get(link->dest, 0));
+	return 0;
+}
+
+static void print_outline_xml(pdf_xref *xref, pdf_outline *outline, int level)
+{
+	int page;
+	printf("<outline>\n");
+	while (outline)
+	{
+		page = get_page_number(xref, outline->link);
+		printf("<link title=\"%s\" page=\"%d\" />\n",
+				outline->title ? outline->title : "<null>", page);
+		if (outline->child)
+			print_outline_xml(xref, outline->child, level + 1);
+		outline = outline->next;
+	}
+	printf("</outline>\n");
+}
+
+static void print_outline_plain(pdf_xref *xref, pdf_outline *outline, int level)
+{
+	int i, page;
+	while (outline)
+	{
+		page = get_page_number(xref, outline->link);
+		for (i = 0; i < level; i++)
+			putchar('\t');
+		printf("%s %d\n", outline->title ? outline->title : "<null>", page);
+		if (outline->child)
+			print_outline_plain(xref, outline->child, level + 1);
+		outline = outline->next;
+	}
+}
+
+static void drawoutline(pdf_xref *xref)
+{
+	pdf_outline *outline = pdf_load_outline(xref);
+	if (showoutline > 2)
+		pdf_debug_outline(outline, 0);
+	else if (showoutline > 1)
+		print_outline_xml(xref, outline, 0);
+	else
+		print_outline_plain(xref, outline, 0);
+	pdf_free_outline(outline);
+}
+
 int main(int argc, char **argv)
 {
 	char *password = "";
@@ -419,7 +471,7 @@ int main(int argc, char **argv)
 	fz_error error;
 	int c;
 
-	while ((c = fz_getopt(argc, argv, "o:p:r:R:Aab:dgmtx5G:I")) != -1)
+	while ((c = fz_getopt(argc, argv, "lo:p:r:R:Aab:dgmtx5G:I")) != -1)
 	{
 		switch (c)
 		{
@@ -430,6 +482,7 @@ int main(int argc, char **argv)
 		case 'A': accelerate = 0; break;
 		case 'a': savealpha = 1; break;
 		case 'b': alphabits = atoi(fz_optarg); break;
+		case 'l': showoutline++; break;
 		case 'm': showtime++; break;
 		case 't': showtext++; break;
 		case 'x': showxml++; break;
@@ -447,7 +500,7 @@ int main(int argc, char **argv)
 	if (fz_optind == argc)
 		usage();
 
-	if (!showtext && !showxml && !showtime && !showmd5 && !output)
+	if (!showtext && !showxml && !showtime && !showmd5 && !showoutline && !output)
 	{
 		printf("nothing to do\n");
 		exit(0);
@@ -493,10 +546,16 @@ int main(int argc, char **argv)
 		if (showxml)
 			printf("<document name=\"%s\">\n", filename);
 
-		if (fz_optind == argc || !isrange(argv[fz_optind]))
-			drawrange(xref, "1-");
-		if (fz_optind < argc && isrange(argv[fz_optind]))
-			drawrange(xref, argv[fz_optind++]);
+		if (showoutline)
+			drawoutline(xref);
+
+		if (showtext || showxml || showtime || showmd5 || output)
+		{
+			if (fz_optind == argc || !isrange(argv[fz_optind]))
+				drawrange(xref, "1-");
+			if (fz_optind < argc && isrange(argv[fz_optind]))
+				drawrange(xref, argv[fz_optind++]);
+		}
 
 		if (showxml)
 			printf("</document>\n");
