@@ -1389,6 +1389,14 @@ static void DownloadSumatraUpdateInfo(WindowInfo& win, bool autoCheck)
     if (!HasPermission(Perm_InternetAccess) || gPluginMode)
         return;
 
+    // don't check for updates at the first start, so that privacy
+    // sensitive users can disable the update check in time
+    if (autoCheck && !gGlobalPrefs.lastUpdateTime) {
+        FILETIME lastUpdateTimeFt = { 0 };
+        gGlobalPrefs.lastUpdateTime =_MemToHex(&lastUpdateTimeFt);
+        return;
+    }
+
     /* For auto-check, only check if at least a day passed since last check */
     if (autoCheck && gGlobalPrefs.lastUpdateTime) {
         FILETIME lastUpdateTimeFt, currentTimeFt;
