@@ -1378,30 +1378,32 @@ bool DisplayModel::ShowResultRectToScreen(TextSel *res)
         extremes = extremes.Union(rc);
     }
 
+    // don't scroll if the whole result is already visible
+    if (RectI(PointI(), viewPort.Size()).Intersect(extremes) == extremes)
+        return false;
+
     PageInfo *pageInfo = GetPageInfo(res->pages[0]);
     int sx = 0, sy = 0;
 
-    // scroll up to make top side of selection visible
-    if (extremes.y < 0)
-        sy = max(extremes.y - 5, pageInfo->pageOnScreen.y);
-    // scroll down to make top side of selection visible
-    else if (extremes.y >= viewPort.dy)
-        sy = extremes.y - viewPort.dy + 5;
-    // scroll up to make bottom side of selection visible
-    // (if selection height fits in visible area)
-    if (extremes.y + extremes.dy > viewPort.dy && extremes.dy <= viewPort.dy + 5)
-        sy = extremes.y + extremes.dy - viewPort.dy + 5;
+    // vertically, we try to position the search result between 25%
+    // (scrolling down) and 75% (scrolling up) of the screen, so that
+    // we scroll as little as possible and still display some context
+    // before and after the found text
+    if (extremes.y < viewPort.dy / 4)
+        sy = extremes.y - viewPort.dy / 4;
+    else if (extremes.y + extremes.dy >= viewPort.dy * 3 / 4)
+        sy = min(extremes.y + extremes.dy - viewPort.dy * 3 / 4,
+                 extremes.y - viewPort.dy / 4);
 
-    // scroll left to make left side of selection visible
+    // horizontally, we try to position the search result at the
+    // center of the screen, but don't scroll further than page
+    // boundaries, so that as much context as possible remains visible
     if (extremes.x < 0)
-        sx = max(extremes.x - 5, pageInfo->pageOnScreen.x);
-    // scroll right to make left side of selection visible
-    else if (extremes.x >= viewPort.dx)
-        sx = extremes.x - viewPort.dx + 5;
-    // scroll left to make right side of selection visible
-    // (if selection width fits in visible area)
-    if (extremes.x + extremes.dx > viewPort.dx && extremes.dx <= viewPort.dx - 5)
-        sx = extremes.x + extremes.dx - viewPort.dx + 5;
+        sx = max(extremes.x + extremes.dx / 2 - viewPort.dx / 2,
+        pageInfo->pageOnScreen.x);
+    else if (extremes.x + extremes.dx >= viewPort.dx)
+        sx = min(extremes.x + extremes.dx / 2 - viewPort.dx / 2,
+                 pageInfo->pageOnScreen.x + pageInfo->pageOnScreen.dx - viewPort.dx);
 
     if (sx != 0)
         ScrollXBy(sx);

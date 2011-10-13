@@ -166,7 +166,7 @@ struct FindThreadData : public ProgressUpdateUI {
        else if (!success && loopedAround)
            wnd->UpdateMessage(_TR("No matches were found"), 3000);
        else {
-           ScopedMem<TCHAR> label(win->dm->engine->GetPageLabel(win->dm->CurrentPageNo()));
+           ScopedMem<TCHAR> label(win->dm->engine->GetPageLabel(win->dm->textSearch->GetCurrentPageNo()));
            ScopedMem<TCHAR> buf(str::Format(_TR("Found text at page %s"), label));
            if (loopedAround)
                ScopedMem<TCHAR> buf(str::Format(_TR("Found text at page %s (again)"), label));
