@@ -1385,15 +1385,15 @@ bool DisplayModel::ShowResultRectToScreen(TextSel *res)
     PageInfo *pageInfo = GetPageInfo(res->pages[0]);
     int sx = 0, sy = 0;
 
-    // vertically, we try to position the search result between 25%
-    // (scrolling down) and 75% (scrolling up) of the screen, so that
-    // we scroll as little as possible and still display some context
-    // before and after the found text
-    if (extremes.y < viewPort.dy / 4)
-        sy = extremes.y - viewPort.dy / 4;
-    else if (extremes.y + extremes.dy >= viewPort.dy * 3 / 4)
-        sy = min(extremes.y + extremes.dy - viewPort.dy * 3 / 4,
-                 extremes.y - viewPort.dy / 4);
+    // vertically, we try to position the search result between 40%
+    // (scrolling up) and 60% (scrolling down) of the screen, so that
+    // the search direction remains obvious and we still display some
+    // context before and after the found text
+    if (extremes.y < viewPort.dy * 2 / 5)
+        sy = extremes.y - viewPort.dy * 2 / 5;
+    else if (extremes.y + extremes.dy > viewPort.dy * 3 / 5)
+        sy = min(extremes.y + extremes.dy - viewPort.dy * 3 / 5,
+                 extremes.y + extremes.dy / 2 - viewPort.dy * 2 / 5);
 
     // horizontally, we try to position the search result at the
     // center of the screen, but don't scroll further than page
