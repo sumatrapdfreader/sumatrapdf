@@ -122,7 +122,7 @@ static void fz_knockout_begin(void *user)
 		fz_copy_pixmap_rect(dest, prev, bbox);
 	}
 
-	if (dev->blendmode == 0 && isolated)
+	if (dev->blendmode == 0 && isolated || 1 /* SumatraPDF: disable crashy shape code */)
 	{
 		/* We can render direct to any existing shape plane. If there
 		 * isn't one, we don't need to make one. */
@@ -1325,7 +1325,7 @@ fz_draw_begin_group(void *user, fz_rect rect, int isolated, int knockout, int bl
 		fz_copy_pixmap_rect(dest, dev->dest, bbox);
 	}
 
-	if (blendmode == 0 && alpha == 1.0 && isolated)
+	if (blendmode == 0 && alpha == 1.0 && isolated || 1 /* SumatraPDF: disable crashy shape code */)
 	{
 		/* We can render direct to any existing shape plane. If there
 		 * isn't one, we don't need to make one. */
