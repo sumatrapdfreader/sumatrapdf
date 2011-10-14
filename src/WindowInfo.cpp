@@ -211,7 +211,7 @@ void LinkHandler::GotoLink(PageDestination *link)
     }
     else if ((str::Eq(type, "LaunchFile") || str::Eq(type, "ScrollToEx")) && path) {
         /* for safety, only handle relative paths and only open them in SumatraPDF */
-        if (!str::StartsWith(path.Get(), _T("\\")) && !str::Find(path.Get(), _T("..\\"))) {
+        if (!str::StartsWith(path.Get(), _T("\\"))) {
             ScopedMem<TCHAR> basePath(path::GetDir(dm->FileName()));
             ScopedMem<TCHAR> combinedPath(path::Join(basePath, path));
             // TODO: respect fz_to_bool(fz_dict_gets(link->dest, "NewWindow")) for ScrollToEx
