@@ -1578,7 +1578,7 @@ const char *gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "&Pr\303\244sentation\tStrg+L",
   "&Vorherige Seite",
   "Drucken\342\200\246",
-  "Druckbereich",
+  "Seitenbereich",
   "Drucker mit dem angegebenen Namen nicht gefunden",
   "Bestehenden Druckvorgang abbrechen und neu beginnen?",
   "Drucke Seite %d von %d\342\200\246",

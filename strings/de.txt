@@ -519,7 +519,7 @@ Print
 Drucken…
 
 Print range
-Druckbereich
+Seitenbereich
 
 Printer with given name doesn't exist
 Drucker mit dem angegebenen Namen nicht gefunden
