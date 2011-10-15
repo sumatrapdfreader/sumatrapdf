@@ -77,9 +77,21 @@ TCHAR *          gPluginURL = NULL; // owned by CommandLineInfo in WinMain
 #define ABOUT_BG_COLOR          RGB(255,242,0)
 #endif
 
-#define COL_WINDOW_BG           RGB(0xcc, 0xcc, 0xcc)
-#define COL_WINDOW_SHADOW       RGB(0x40, 0x40, 0x40)
+// Background color comparison:
+// Adobe Reader X   0x565656 without any frame border
+// Foxit Reader 5   0x9C9C9C with a pronounced frame shadow
+// PDF-XChange      0xACA899 with a 1px frame and a gradient shadow
+// Google Chrome    0xCCCCCC with a symmetric gradient shadow
+// Evince           0xD7D1CB with a pronounced frame shadow
+#ifdef DRAW_PAGE_SHADOWS
+// SumatraPDF (old) 0xCCCCCC with a pronounced frame shadow
+#define COL_WINDOW_BG           RGB(0xCC, 0xCC, 0xCC)
 #define COL_PAGE_FRAME          RGB(0x88, 0x88, 0x88)
+#define COL_PAGE_SHADOW         RGB(0x40, 0x40, 0x40)
+#else
+// SumatraPDF       0x999999 without any frame border
+#define COL_WINDOW_BG           RGB(0x99, 0x99, 0x99)
+#endif
 
 #define CANVAS_CLASS_NAME       _T("SUMATRA_PDF_CANVAS")
 #define SPLITER_CLASS_NAME      _T("Spliter")
@@ -117,7 +129,6 @@ static HCURSOR                      gCursorNo;
        HBRUSH                       gBrushAboutBg;
 static HBRUSH                       gBrushWhite;
 static HBRUSH                       gBrushBlack;
-static HBRUSH                       gBrushShadow;
        HFONT                        gDefaultGuiFont;
 static HBITMAP                      gBitmapReloadingCue;
 
@@ -1476,26 +1487,26 @@ static void PaintPageFrameAndShadow(HDC hdc, RectI& bounds, RectI& pageRect, boo
     }
 
     // Draw shadow
-    if (!presentation)
-        FillRect(hdc, &shadow.ToRECT(), gBrushShadow);
+    if (!presentation) {
+        ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(COL_PAGE_SHADOW));
+        FillRect(hdc, &shadow.ToRECT(), brush);
+    }
 
     // Draw frame
-    HPEN pe = CreatePen(PS_SOLID, 1, presentation ? TRANSPARENT : COL_PAGE_FRAME);
+    ScopedGdiObj<HPEN> pe(CreatePen(PS_SOLID, 1, presentation ? TRANSPARENT : COL_PAGE_FRAME));
     SelectObject(hdc, pe);
     SelectObject(hdc, gRenderCache.invertColors ? gBrushBlack : gBrushWhite);
     Rectangle(hdc, frame.x, frame.y, frame.x + frame.dx, frame.y + frame.dy);
-    DeletePen(pe);
 }
 #else
 static void PaintPageFrameAndShadow(HDC hdc, RectI& bounds, RectI& pageRect, bool presentation)
 {
     RectI frame = bounds;
 
-    HPEN pe = CreatePen(PS_NULL, 0, 0);
+    ScopedGdiObj<HPEN> pe(CreatePen(PS_NULL, 0, 0));
     SelectObject(hdc, pe);
     SelectObject(hdc, gRenderCache.invertColors ? gBrushBlack : gBrushWhite);
     Rectangle(hdc, frame.x, frame.y, frame.x + frame.dx + 1, frame.y + frame.dy + 1);
-    DeletePen(pe);
 }
 #endif
 
@@ -4396,7 +4407,6 @@ static bool InstanceInit(HINSTANCE hInstance, int nCmdShow)
         gBrushAboutBg = CreateSolidBrush(ABOUT_BG_COLOR);
     gBrushWhite     = GetStockBrush(WHITE_BRUSH);
     gBrushBlack     = GetStockBrush(BLACK_BRUSH);
-    gBrushShadow    = CreateSolidBrush(COL_WINDOW_SHADOW);
 
     NONCLIENTMETRICS ncm = {0};
     ncm.cbSize = sizeof(ncm);
@@ -4728,7 +4738,6 @@ Exit:
     DeleteObject(gBrushAboutBg);
     DeleteObject(gBrushWhite);
     DeleteObject(gBrushBlack);
-    DeleteObject(gBrushShadow);
     DeleteObject(gDefaultGuiFont);
     DeleteBitmap(gBitmapReloadingCue);
 
