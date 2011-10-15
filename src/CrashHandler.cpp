@@ -428,11 +428,9 @@ static void GetMachineName(str::Str<char>& s)
 
 static void GetLanguage(str::Str<char>& s)
 {
-    char country[32] = {0};
-    GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SISO3166CTRYNAME, country, sizeof(country)-1);   
-
-    char lang[32] = {0};
-    GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SISO639LANGNAME, lang, sizeof(lang)-1);
+    char country[32] = { 0 }, lang[32] = { 0 };
+    GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SISO3166CTRYNAME, country, dimof(country) - 1);
+    GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SISO639LANGNAME, lang, dimof(lang) - 1);
     s.AppendFmt("Lang: %s %s\r\n", lang, country);
 }
 

@@ -4385,15 +4385,14 @@ static bool RegisterWinClass(HINSTANCE hinst)
     return true;
 }
 
-#define IDC_HAND            MAKEINTRESOURCE(32649)
 static bool InstanceInit(HINSTANCE hInstance, int nCmdShow)
 {
     ghinst = hInstance;
 
     gCursorArrow = LoadCursor(NULL, IDC_ARROW);
     gCursorIBeam = LoadCursor(NULL, IDC_IBEAM);
-    gCursorHand  = LoadCursor(NULL, IDC_HAND); // apparently only available if WINVER >= 0x0500
-    if (!gCursorHand)
+    gCursorHand  = LoadCursor(NULL, IDC_HAND);
+    if (!gCursorHand) // IDC_HAND isn't available if WINVER < 0x0500
         gCursorHand = LoadCursor(ghinst, MAKEINTRESOURCE(IDC_CURSORDRAG));
 
     gCursorScroll   = LoadCursor(NULL, IDC_SIZEALL);
@@ -4408,7 +4407,7 @@ static bool InstanceInit(HINSTANCE hInstance, int nCmdShow)
     gBrushWhite     = GetStockBrush(WHITE_BRUSH);
     gBrushBlack     = GetStockBrush(BLACK_BRUSH);
 
-    NONCLIENTMETRICS ncm = {0};
+    NONCLIENTMETRICS ncm = { 0 };
     ncm.cbSize = sizeof(ncm);
     SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
     gDefaultGuiFont = CreateFontIndirect(&ncm.lfMessageFont);
@@ -4438,7 +4437,7 @@ static void MakePluginWindow(WindowInfo& win, HWND hwndParent)
     assert(gPluginMode);
 
     long ws = GetWindowLong(win.hwndFrame, GWL_STYLE);
-    ws &= ~(WS_POPUP|WS_BORDER|WS_CAPTION|WS_THICKFRAME);
+    ws &= ~(WS_POPUP | WS_BORDER | WS_CAPTION | WS_THICKFRAME);
     ws |= WS_CHILD;
     SetWindowLong(win.hwndFrame, GWL_STYLE, ws);
 
@@ -4488,18 +4487,17 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     InitAllCommonControls();
     ScopedGdiPlus gdiPlus(true);
 
-    {
-        ScopedMem<TCHAR> prefsFilename(GetPrefsFileName());
-        if (!file::Exists(prefsFilename)) {
-            // guess the ui language on first start
-            CurrLangNameSet(Trans::GuessLanguage());
-            gFavorites = new Favorites();
-        } else {
-            assert(gFavorites == NULL);
-            Prefs::Load(prefsFilename, gGlobalPrefs, gFileHistory, &gFavorites);
-            CurrLangNameSet(gGlobalPrefs.currentLanguage);
-        }
+    ScopedMem<TCHAR> prefsFilename(GetPrefsFileName());
+    if (!file::Exists(prefsFilename)) {
+        // guess the ui language on first start
+        CurrLangNameSet(Trans::GuessLanguage());
+        gFavorites = new Favorites();
+    } else {
+        assert(gFavorites == NULL);
+        Prefs::Load(prefsFilename, gGlobalPrefs, gFileHistory, &gFavorites);
+        CurrLangNameSet(gGlobalPrefs.currentLanguage);
     }
+    prefsFilename.Set(NULL);
 
     CommandLineInfo i;
     i.bgColor = gGlobalPrefs.bgColor;
