@@ -23,6 +23,9 @@ Contributor: Andriy Ilechko
 &Back\tAlt+Left Arrow
 Назад\tAlt+Ліва стрілка
 
+&Book View\tCtrl+8
+Книжна розгортка\tCtrl+8
+
 &Close\tCtrl+W
 &Закрити\tCtrl+W
 
@@ -37,6 +40,9 @@ Contributor: Andriy Ilechko
 
 &Even pages only
 Тільки парні сторінки
+
+&Facing\tCtrl+7
+Дві сторінки\tCtrl+7
 
 &File
 &Файл
@@ -86,11 +92,17 @@ Contributor: Andriy Ilechko
 &Open\tCtrl+O
 Відкрити\tCtrl+O
 
+&Open Document
+Відкрити документ
+
 &Options...
 Опції...
 
 &Password:
 Пароль:
+
+&Pin Document
+Документ pin
 
 &Previous Page\tLeft Arrow
 Попередня сторінка\t<-
@@ -110,6 +122,9 @@ Contributor: Andriy Ilechko
 &Remember these settings for each document
 Зберегти налаштування для кожного документа
 
+&Remove Document
+Видалити документ
+
 &Save As...
 Зберегти як...
 
@@ -121,6 +136,9 @@ Contributor: Andriy Ilechko
 
 &Shrink pages to printable area (if necessary)
 Урізати сторінки до зони друку (при необхідності)
+
+&Single Page\tCtrl+6
+Одна сторінка\tCtrl+6
 
 &Skip this version
 Пропустити цю версію.
@@ -140,8 +158,23 @@ Contributor: Andriy Ilechko
 (of %d)
 (з %d)
 
+(page %s)
+(сторінка %s)
+
 About SumatraPDF
 Про програму SumatraPDF
+
+Add Favorite
+Додати закладку
+
+Add page %s to favorites
+Додати %s сторінку до закладок
+
+Add page %s to favorites with (optional) name:
+Додати %s сторінку до закладок з іменем(необов'язково):
+
+Add to favorites
+Додати до закладок
 
 Advanced
 Просунуті
@@ -230,6 +263,9 @@ Copy Co&mment
 Copying text was denied (copying as image only)
 Копіювання тексту заборонено (тільки як зображення)
 
+Could not obtain Printer properties
+Неможливо відобразити налаштування друкарки
+
 Could not open Printer
 Принтер недоступний.
 
@@ -241,6 +277,9 @@ Couldn't render the page
 
 Created:
 Створено:
+
+Current file
+Поточний файл
 
 Custom &Zoom...\tCtrl+Y
 Вказати масштаб...\tCtrl+Y
@@ -256,6 +295,9 @@ Default PDF reader can't be changed in portable mode
 
 Denied Permissions:
 У доступі відмовлено:
+
+DjVu documents
+Документи DjVu
 
 Document Properties
 Властивості документа
@@ -278,6 +320,9 @@ Enter the command-line to invoke when you double-click on the PDF document:
 Error loading %s
 Помилка завантаження %s
 
+F&avorites
+Закладки
+
 F&orward\tAlt+Right Arrow
 Вперед\tAlt+Права стрілка
 
@@ -289,6 +334,9 @@ Facing
 
 Failed to save a file
 Не можна зберегти файл.
+
+Favorites
+Закладки
 
 File Size:
 Розмір файла:
@@ -341,11 +389,17 @@ Found text at page %s
 Found text at page %s (again)
 Знайти текст на сторінці %s (знову)
 
+Frequently Read
+Часто читані
+
 GB
 GB
 
 Go to page
 Перейти на сторінку
+
+Hide frequently read
+Приховати часто читані
 
 Hint: Use the F3 key for finding again
 Примітка: Для повторного пошуку натисніть F3
@@ -398,6 +452,9 @@ OK
 Open
 Відкрити
 
+Open a document...
+Відкрити документ...
+
 Open in &Adobe Reader
 Відкрити у Adobe Reader
 
@@ -428,6 +485,9 @@ PDF documents
 Pa&ge...\tCtrl+G
 До сторінки...\tCtrl+G
 
+Page %s
+Сторінка %s
+
 Page Size:
 Розмір сторінки:
 
@@ -443,20 +503,41 @@ Page:
 Please wait - rendering...
 Зачекайте - генерується...
 
+Postscript documents
+Документи postscript
+
 Pr&esentation\tCtrl+L
 Презентація\tCtrl+L
 
 Previous Page
 Попередня сторінка
 
+Print
+Друк
+
 Print range
 Межі друку
+
+Printer with given name doesn't exist
+Друкарки з даним іменем не існує
+
+Printing is still in progress. Abort and start over?
+Друк і далі активний. Відмінити та розпочати знову?
+
+Printing page %d of %d...
+Друк сторінок з %d до %d...
 
 Printing problem.
 Помилка друкування.
 
 Remember &opened files
 Запам'ятати відкриті файли
+
+Remove from favorites
+Видалити із закладок
+
+Remove page %s from favorites
+Видалити %s сторінку із закладок
 
 Rotate &Left\tCtrl+Shift+-
 Повернути ліворуч\tCtrl+Shift+-
@@ -494,11 +575,20 @@ Show &Toolbar
 Show &pages continuously
 Відображати сторінки безперервно
 
+Show Favorites
+Перелік закладок
+
+Show frequently read
+Найбільш часто читані
+
 Show the &bookmarks sidebar when available
 Якщо доступно відображати полосу закладок
 
 Single Page
 Одна сторінка
+
+Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+Вибачте, але це не мало статись!\n\nНатисніть "Відмінити", якщо ви бажаєте допомогти нам виправити причину збою.
 
 Source file %s has no synchronization point
 Файл-джерело %s немає точки синхронізації
@@ -571,36 +661,4 @@ copying text
 
 printing document
 друк документа
-
-# Untranslated:
-#&Book View\tCtrl+8
-#&Facing\tCtrl+7
-#&Open Document
-#&Pin Document
-#&Remove Document
-#&Single Page\tCtrl+6
-#(page %s)
-#Add Favorite
-#Add page %s to favorites
-#Add page %s to favorites with (optional) name:
-#Add to favorites
-#Could not obtain Printer properties
-#Current file
-#DjVu documents
-#F&avorites
-#Favorites
-#Frequently Read
-#Hide frequently read
-#Open a document...
-#Page %s
-#Postscript documents
-#Print
-#Printer with given name doesn't exist
-#Printing is still in progress. Abort and start over?
-#Printing page %d of %d...
-#Remove from favorites
-#Remove page %s from favorites
-#Show Favorites
-#Show frequently read
-#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 
