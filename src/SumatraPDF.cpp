@@ -2858,8 +2858,9 @@ static void ExitFullscreen(WindowInfo& win)
         win.ribbonSupport->SetVisibility(true);
     else
 #endif
-    if (gGlobalPrefs.toolbarVisible) {
-        ShowWindow(win.hwndReBar, SW_SHOW);
+    {
+        if (gGlobalPrefs.toolbarVisible)
+            ShowWindow(win.hwndReBar, SW_SHOW);
         SetMenu(win.hwndFrame, win.menu);
     }
     SetWindowLong(win.hwndFrame, GWL_STYLE, win.prevStyle);
