@@ -828,7 +828,7 @@ static void GetProgramInfo(str::Str<char>& s)
 {
     s.AppendFmt("Ver: %s", QM(CURR_VERSION));
 #ifdef SVN_PRE_RELEASE_VER
-    s.AppendFmt(" pre-release %s", QM(SVN_PRE_RELEASE_VER));   
+    s.AppendFmt(".%s pre-release", QM(SVN_PRE_RELEASE_VER));   
 #endif
 #ifdef DEBUG
     s.Append(" dbg");
@@ -891,10 +891,10 @@ static bool DeleteSymbolsIfExist(const TCHAR *symDir)
     return file::Delete(path);
 }
 
-// In static (single executable) builds, the pdf file inside
+// In static (single executable) builds, the pdb file inside
 // symbolsZipPath are named SumatraPDF-${ver}.pdb (release) resp.
 // SumatraPDF-prelease-${buildno}.pdb (pre-release) and must be
-// extracted as SumatraPDF.pdf to match the executable name
+// extracted as SumatraPDF.pdb to match the executable name
 static bool UnpackStaticSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir)
 {
     FileToUnzip filesToUnnpack[] = {
