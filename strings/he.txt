@@ -158,8 +158,23 @@ Contributor: Amos Kotter http://sites.google.com/site/hillasystem/
 (of %d)
 (%d מ)
 
+(page %s)
+(עמוד %s)
+
 About SumatraPDF
 PDF אודות סומטרה
+
+Add Favorite
+הוסף מועדף
+
+Add page %s to favorites
+למועדפים %s הוסף עמוד
+
+Add page %s to favorites with (optional) name:
+למועדפים בשם %s הוסף עמוד:
+
+Add to favorites
+הוסף למועדפים
 
 Advanced
 מתקדם
@@ -248,6 +263,9 @@ Copy Co&mment
 Copying text was denied (copying as image only)
 העתקת טקסט נדחית (מועתק רק כתמונה)
 
+Could not obtain Printer properties
+לא ניתן להשיג מאפייני מדפסת
+
 Could not open Printer
 לא ניתן לפתוח מדפסת
 
@@ -259,6 +277,9 @@ Couldn't render the page
 
 Created:
 נוצר:
+
+Current file
+קובץ נוכחי
 
 Custom &Zoom...\tCtrl+Y
 זום משתמש...\tCtrl+Y
@@ -299,6 +320,9 @@ Enter the command-line to invoke when you double-click on the PDF document:
 Error loading %s
 שגיאת טעינה %s
 
+F&avorites
+מועדפים
+
 F&orward\tAlt+Right Arrow
 קדימה\tAlt+ ?
 
@@ -310,6 +334,9 @@ Facing
 
 Failed to save a file
 כישלון בשמירת הקובץ
+
+Favorites
+מועדפים
 
 File Size:
 גודל הקובץ:
@@ -458,6 +485,9 @@ PDF מסמך
 Pa&ge...\tCtrl+G
 דף...\tCtrl+G
 
+Page %s
+עמוד %s
+
 Page Size:
 גודל עמוד:
 
@@ -488,6 +518,9 @@ Print
 Print range
 הדפס טווח
 
+Printer with given name doesn't exist
+אין מדפסת בשם שניתן
+
 Printing is still in progress. Abort and start over?
 הדפסה בתהליך. לבטל ולהתחיל מחדש?
 
@@ -499,6 +532,12 @@ Printing problem.
 
 Remember &opened files
 זכור קבצים פתוחים
+
+Remove from favorites
+הסר ממועדפים
+
+Remove page %s from favorites
+הסר עמוד %s ממועדפים
 
 Rotate &Left\tCtrl+Shift+-
 סובב שמאלה\tCtrl+Shift+-
@@ -535,6 +574,9 @@ Show &Toolbar
 
 Show &pages continuously
 הצג דפים ברציפות
+
+Show Favorites
+הצג מועדפים
 
 Show frequently read
 הצג נקרא תכופות
@@ -619,20 +661,4 @@ copying text
 
 printing document
 מדפיס מסמך
-
-# Untranslated:
-#(page %s)
-#Add Favorite
-#Add page %s to favorites
-#Add page %s to favorites with (optional) name:
-#Add to favorites
-#Could not obtain Printer properties
-#Current file
-#F&avorites
-#Favorites
-#Page %s
-#Printer with given name doesn't exist
-#Remove from favorites
-#Remove page %s from favorites
-#Show Favorites
 
