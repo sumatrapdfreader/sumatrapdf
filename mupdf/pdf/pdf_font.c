@@ -1077,6 +1077,9 @@ pdf_load_font_descriptor(pdf_font_desc *fontdesc, pdf_xref *xref, fz_obj *dict, 
 		origname = fz_to_name(fz_dict_gets(dict, "FontName"));
 	else
 		origname = basefont;
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1666 */
+	if (*origname && !strchr(basefont, '+'))
+		origname = basefont;
 	fontname = clean_font_name(origname);
 
 	fontdesc->flags = fz_to_int(fz_dict_gets(dict, "Flags"));
