@@ -221,6 +221,7 @@ TCHAR *GetExePath()
     TCHAR buf[MAX_PATH];
     buf[0] = 0;
     GetModuleFileName(NULL, buf, dimof(buf));
+    // TODO: is normalization needed here at all?
     return path::Normalize(buf);
 }
 
