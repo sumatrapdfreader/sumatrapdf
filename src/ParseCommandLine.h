@@ -20,6 +20,7 @@ public:
     bool        exitOnPrint;
     bool        printDialog;
     TCHAR *     printerName;
+    TCHAR *     printSettings;
     int         bgColor;
     TCHAR *     inverseSearchCmdLine;
     struct {
@@ -53,7 +54,7 @@ public:
     int         stressTestCycles;
 
     CommandLineInfo() : makeDefault(false), exitOnPrint(false), printDialog(false),
-        printerName(NULL), bgColor(-1), inverseSearchCmdLine(NULL),
+        printerName(NULL), printSettings(NULL), bgColor(-1), inverseSearchCmdLine(NULL),
         escToExit(false), reuseInstance(false), lang(NULL),
         destName(NULL), pageNumber(-1),
         restrictedUse(false), invertColors(false), pluginURL(NULL),
@@ -71,6 +72,7 @@ public:
 
     ~CommandLineInfo() {
         free(printerName);
+        free(printSettings);
         free(inverseSearchCmdLine);
         free(lang);
         free(destName);

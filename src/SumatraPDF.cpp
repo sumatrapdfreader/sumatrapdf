@@ -4582,7 +4582,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         // note: this prints all PDF files. Another option would be to
         // print only the first one
         for (size_t n = 0; n < i.fileNames.Count(); n++) {
-            bool ok = PrintFile(i.fileNames[n], i.printerName, !i.silent);
+            bool ok = PrintFile(i.fileNames[n], i.printerName, !i.silent, i.printSettings);
             if (!ok)
                 msg.wParam++;
         }

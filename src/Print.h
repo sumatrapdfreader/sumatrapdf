@@ -10,7 +10,7 @@
 
 class WindowInfo;
 
-bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool displayErrors=true);
+bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool displayErrors=true, const TCHAR *settings=NULL);
 void OnMenuPrint(WindowInfo *win, bool waitForCompletion=false);
 void AbortPrinting(WindowInfo *win);
 

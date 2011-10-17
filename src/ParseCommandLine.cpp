@@ -121,6 +121,13 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
         else if (is_arg("-print-dialog")) {
             printDialog = true;
         }
+        else if (is_arg_with_param("-print-settings")) {
+            // argument is a comma separated list of page ranges and
+            // advanced options [even|odd] and [noscale|shrink|fit]
+            // e.g. -print-settings "1-3,5,10-8,odd,fit"
+            str::ReplacePtr(&printSettings, argList[++n]);
+            str::RemoveChars(printSettings, _T(" "));
+        }
         else if (is_arg("-exit-on-print")) {
             // only affects -print-dialog (-print-to and -print-to-default
             // always exit on print)

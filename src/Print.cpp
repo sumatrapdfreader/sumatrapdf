@@ -539,7 +539,42 @@ Exit:
     GlobalFree(pd.hDevMode);
 }
 
-bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool displayErrors)
+static void ApplyPrintSettings(const TCHAR *settings, int pageCount, Vec<PRINTPAGERANGE>& ranges, Print_Advanced_Data& advanced)
+{
+    StrVec rangeList;
+    if (settings)
+        rangeList.Split(settings, _T(","), true);
+
+    for (size_t i = 0; i < rangeList.Count(); i++) {
+        PRINTPAGERANGE pr;
+        if (str::Parse(rangeList[i], _T("%d-%d%$"), &pr.nFromPage, &pr.nToPage)) {
+            pr.nFromPage = limitValue(pr.nFromPage, (DWORD)1, (DWORD)pageCount);
+            pr.nToPage = limitValue(pr.nToPage, (DWORD)1, (DWORD)pageCount);
+            ranges.Append(pr);
+        }
+        else if (str::Parse(rangeList[i], _T("%d%$"), &pr.nFromPage)) {
+            pr.nFromPage = pr.nToPage = limitValue(pr.nFromPage, (DWORD)1, (DWORD)pageCount);
+            ranges.Append(pr);
+        }
+        else if (str::Eq(rangeList[i], _T("even")))
+            advanced.range = PrintRangeEven;
+        else if (str::Eq(rangeList[i], _T("odd")))
+            advanced.range = PrintRangeOdd;
+        else if (str::Eq(rangeList[i], _T("noscale")))
+            advanced.scale = PrintScaleNone;
+        else if (str::Eq(rangeList[i], _T("shrink")))
+            advanced.scale = PrintScaleShrink;
+        else if (str::Eq(rangeList[i], _T("fit")))
+            advanced.scale = PrintScaleFit;
+    }
+
+    if (ranges.Count() == 0) {
+        PRINTPAGERANGE pr = { 1, pageCount };
+        ranges.Append(pr);
+    }
+}
+
+bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool displayErrors, const TCHAR *settings)
 {
     if (!HasPermission(Perm_PrinterAccess))
         return false;
@@ -621,12 +656,12 @@ bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool displayErro
         goto Exit;
     }
     if (PrinterSupportsStretchDib(NULL, hdcPrint)) {
-        PRINTPAGERANGE pr = { 1, engine->PageCount() };
         Vec<PRINTPAGERANGE> ranges;
-        ranges.Append(pr);
-        PrintData pd(engine, hdcPrint, devMode, ranges);
-        hdcPrint = NULL; // deleted by PrintData
+        Print_Advanced_Data advanced = { PrintRangeAll, PrintScaleShrink };
+        ApplyPrintSettings(settings, engine->PageCount(), ranges, advanced);
 
+        PrintData pd(engine, hdcPrint, devMode, ranges, 0, advanced.range, advanced.scale);
+        hdcPrint = NULL; // deleted by PrintData
         PrintToDevice(pd);
         ok = true;
     }
