@@ -370,6 +370,13 @@ static TCHAR *GetShortcutPath(bool allUsers)
     return path::Join(GetStartMenuProgramsPath(allUsers), TAPP _T(".lnk"));
 }
 
+/* if the app is running, we have to kill it so that we can over-write the executable */
+static void KillSumatra()
+{
+    ScopedMem<TCHAR> exePath(GetInstalledExePath());
+    KillProcess(exePath, TRUE);
+}
+
 static HFONT CreateDefaultGuiFont()
 {
     HDC hdc = GetDC(NULL);
@@ -1073,10 +1080,6 @@ static DWORD WINAPI InstallerThread(LPVOID data)
 {
     gGlobalData.success = false;
 
-    /* if the app is running, we have to kill it so that we can over-write the executable */
-    ScopedMem<TCHAR> exePath(GetInstalledExePath());
-    KillProcess(exePath, TRUE);
-
     if (!CreateInstallationDirectory())
         goto Error;
     ProgressStep();
@@ -1145,6 +1148,8 @@ static void OnButtonInstall()
 {
     if (gShowOptions)
         OnButtonOptions();
+
+    KillSumatra();
 
     if (!CheckInstallUninstallPossible())
         return;
@@ -1379,14 +1384,9 @@ static void OnButtonBrowse()
 
 static DWORD WINAPI UninstallerThread(LPVOID data)
 {
-    /* if the app is running, we have to kill it to delete the files */
-    TCHAR *exePath = GetInstalledExePath();
-    KillProcess(exePath, TRUE);
-    free(exePath);
-
     // also kill the original uninstaller, if it's just spawned
     // a DELETE_ON_CLOSE copy from the temp directory
-    exePath = GetUninstallerPath();
+    TCHAR *exePath = GetUninstallerPath();
     if (!path::IsSame(exePath, GetOwnPath()))
         KillProcess(exePath, TRUE);
     free(exePath);
@@ -1417,6 +1417,8 @@ static DWORD WINAPI UninstallerThread(LPVOID data)
 
 static void OnButtonUninstall()
 {
+    KillSumatra();
+
     if (!CheckInstallUninstallPossible())
         return;
 
