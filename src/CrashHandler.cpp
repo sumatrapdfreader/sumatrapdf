@@ -916,7 +916,7 @@ static bool UnpackLibSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir)
 {
     FileToUnzip filesToUnnpack[] = {
         { "libmupdf.pdb", NULL },
-        { "SumatraPDF-no-MuPDF.pdb", _T("SumatraPDF.pdf") },
+        { "SumatraPDF-no-MuPDF.pdb", _T("SumatraPDF.pdb") },
         { NULL }
     };
     return UnzipFiles(symbolsZipPath, filesToUnnpack, symDir);
