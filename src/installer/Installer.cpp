@@ -144,9 +144,9 @@ static Color            COLOR_MSG_FAILED(gCol1);
 
 // REG_SZ, a path to installed executable (or "$path,0" to force the first icon)
 #define DISPLAY_ICON _T("DisplayIcon")
-// REG_SZ, e.g "SumatraPDF"
+// REG_SZ, e.g "SumatraPDF" (TAPP)
 #define DISPLAY_NAME _T("DisplayName")
-// REG_SZ, e.g. "1.2"
+// REG_SZ, e.g. "1.2" (CURR_VERSION_STR)
 #define DISPLAY_VERSION _T("DisplayVersion")
 // REG_DWORD, get size of installed directory after copying files
 #define ESTIMATED_SIZE _T("EstimatedSize")
@@ -156,7 +156,7 @@ static Color            COLOR_MSG_FAILED(gCol1);
 #define NO_MODIFY _T("NoModify")
 // REG_DWORD, set to 1
 #define NO_REPAIR _T("NoRepair")
-// REG_SZ, e.g. "Krzysztof Kowalczyk"
+// REG_SZ, e.g. "Krzysztof Kowalczyk" (PUBLISHER_STR)
 #define PUBLISHER _T("Publisher")
 // REG_SZ, path to uninstaller exe
 #define UNINSTALL_STRING _T("UninstallString")
@@ -777,12 +777,15 @@ static bool WriteUninstallerRegistryInfo(HKEY hkey)
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_ICON, installedExePath);
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_NAME, TAPP);
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_VERSION, CURR_VERSION_STR);
+    // Windows XP doesn't allow to view the version number at a glance, so include it in the DisplayName
+    if (!WindowsVerVistaOrGreater())
+        success &= WriteRegStr(hkey, REG_PATH_UNINST, DISPLAY_NAME, TAPP _T(" ") CURR_VERSION_STR);
     success &= WriteRegDWORD(hkey, REG_PATH_UNINST, ESTIMATED_SIZE, GetDirSize(gGlobalData.installDir) / 1024);
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, INSTALL_DATE, installDate);
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, INSTALL_LOCATION, installDir);
     success &= WriteRegDWORD(hkey, REG_PATH_UNINST, NO_MODIFY, 1);
     success &= WriteRegDWORD(hkey, REG_PATH_UNINST, NO_REPAIR, 1);
-    success &= WriteRegStr(hkey,   REG_PATH_UNINST, PUBLISHER, _T("Krzysztof Kowalczyk"));
+    success &= WriteRegStr(hkey,   REG_PATH_UNINST, PUBLISHER, _T(PUBLISHER_STR));
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, UNINSTALL_STRING, uninstallerPath);
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, URL_INFO_ABOUT, _T("http://blog.kowalczyk.info/software/sumatrapdf/"));
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, URL_UPDATE_INFO, _T("http://blog.kowalczyk.info/software/sumatrapdf/news.html"));

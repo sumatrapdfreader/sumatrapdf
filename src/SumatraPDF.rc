@@ -50,8 +50,7 @@ BEGIN
             VALUE "OriginalFilename", "SumatraPDF.exe"
             VALUE "ProductName", "SumatraPDF"
             VALUE "ProductVersion", VER_RESOURCE_STR
-            VALUE "Comments", "SumatraPDF viewer"
-            VALUE "CompanyName", "Krzysztof Kowalczyk"
+            VALUE "CompanyName", PUBLISHER_STR
         END
     END
     BLOCK "VarFileInfo"

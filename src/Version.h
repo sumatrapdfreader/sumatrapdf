@@ -40,5 +40,6 @@
 #endif
 
 #define COPYRIGHT_STR      "Copyright 2006-2011 all authors (GPLv3)"
+#define PUBLISHER_STR      "Krzysztof Kowalczyk"
 
 #endif

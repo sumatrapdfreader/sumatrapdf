@@ -21,7 +21,6 @@ BEGIN
       VALUE "OriginalFilename", "libmupdf.dll"
       VALUE "ProductName",      "SumatraPDF"
       VALUE "ProductVersion",   VER_RESOURCE_STR
-      VALUE "Comments",         "Rendering Library for SumatraPDF"
       VALUE "CompanyName",      "Artifex Software"
     END
   END
