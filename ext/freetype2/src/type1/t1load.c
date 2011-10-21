@@ -896,7 +896,7 @@
   }
 
 
-#endif /* T1_CONFIG_OPTION_NO_MM_SUPPORT */
+#endif /* !T1_CONFIG_OPTION_NO_MM_SUPPORT */
 
 
 
@@ -2140,9 +2140,10 @@
         }
       }
     }
-    else face->len_buildchar = 0; /* SumatraPDF: fix assertion */
+    else
+      face->len_buildchar = 0;
 
-#endif /* T1_CONFIG_OPTION_NO_MM_SUPPORT */
+#endif /* !T1_CONFIG_OPTION_NO_MM_SUPPORT */
 
     /* now, propagate the subrs, charstrings, and glyphnames tables */
     /* to the Type1 data                                            */

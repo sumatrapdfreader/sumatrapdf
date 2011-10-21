@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType GX Font Variation loader                                    */
 /*                                                                         */
-/*  Copyright 2004, 2005, 2006, 2007, 2008, 2009, 2010 by                  */
+/*  Copyright 2004-2011 by                                                 */
 /*  David Turner, Robert Wilhelm, Werner Lemberg, and George Williams.     */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -1474,6 +1474,9 @@
       {
         for ( j = 0; j < point_count; ++j )
         {
+          if ( localpoints[j] >= n_points )
+            continue;
+
           delta_xy[localpoints[j]].x += FT_MulFix( deltas_x[j], apply );
           delta_xy[localpoints[j]].y += FT_MulFix( deltas_y[j], apply );
         }

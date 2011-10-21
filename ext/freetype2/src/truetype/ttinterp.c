@@ -16,6 +16,10 @@
 /***************************************************************************/
 
 
+/* Greg Hitchcock from Microsoft has helped a lot in resolving unclear */
+/* issues; many thanks!                                                */
+
+
 #include <ft2build.h>
 #include FT_INTERNAL_DEBUG_H
 #include FT_INTERNAL_CALC_H
@@ -664,9 +668,9 @@
     FT_Int  i;
 
 
-    /* XXXX: Will probably disappear soon with all the code range */
-    /*       management, which is now rather obsolete.            */
-    /*                                                            */
+    /* XXX: Will probably disappear soon with all the code range */
+    /*      management, which is now rather obsolete.            */
+    /*                                                           */
     size->num_function_defs    = exec->numFDefs;
     size->num_instruction_defs = exec->numIDefs;
 
@@ -2840,6 +2844,17 @@
 
     A = p1->x - p2->x;
     B = p1->y - p2->y;
+
+    /* If p1 == p2, SPVTL and SFVTL behave the same as */
+    /* SPVTCA[X] and SFVTCA[X], respectively.          */
+    /*                                                 */
+    /* Confirmed by Greg Hitchcock.                    */
+
+    if ( A == 0 && B == 0 )
+    {
+      A    = 0x4000;
+      aOpc = 0;
+    }
 
     if ( ( aOpc & 1 ) != 0 )
     {
@@ -5095,8 +5110,8 @@
 
     CUR_Func_move( &CUR.zp2, L, args[1] - K );
 
-    /* not part of the specs, but here for safety */
-
+    /* UNDOCUMENTED!  The MS rasterizer does that with */
+    /* twilight points (confirmed by Greg Hitchcock)   */
     if ( CUR.GS.gep2 == 0 )
       CUR.zp2.org[L] = CUR.zp2.cur[L];
   }
@@ -5177,7 +5192,8 @@
   Ins_SDPVTL( INS_ARG )
   {
     FT_Long    A, B, C;
-    FT_UShort  p1, p2;   /* was FT_Int in pas type ERROR */
+    FT_UShort  p1, p2;            /* was FT_Int in pas type ERROR */
+    FT_Int     aOpc = CUR.opcode;
 
 
     p1 = (FT_UShort)args[1];
@@ -5198,9 +5214,20 @@
 
       A = v1->x - v2->x;
       B = v1->y - v2->y;
+
+      /* If v1 == v2, SDPVTL behaves the same as */
+      /* SVTCA[X], respectively.                 */
+      /*                                         */
+      /* Confirmed by Greg Hitchcock.            */
+
+      if ( A == 0 && B == 0 )
+      {
+        A    = 0x4000;
+        aOpc = 0;
+      }
     }
 
-    if ( ( CUR.opcode & 1 ) != 0 )
+    if ( ( aOpc & 1 ) != 0 )
     {
       C =  B;   /* counter clockwise rotation */
       B =  A;
@@ -5218,7 +5245,7 @@
       B = v1->y - v2->y;
     }
 
-    if ( ( CUR.opcode & 1 ) != 0 )
+    if ( ( aOpc & 1 ) != 0 )
     {
       C =  B;   /* counter clockwise rotation */
       B =  A;
@@ -5704,7 +5731,6 @@
         }
       }
       else
-        /* XXX: UNDOCUMENTED! SHP touches the points */
         MOVE_Zp2_Point( point, dx, dy, TRUE );
 
       CUR.GS.loop--;
@@ -5765,7 +5791,6 @@
         last_point = 0;
     }
 
-    /* XXX: UNDOCUMENTED! SHC touches the points */
     for ( i = first_point; i <= last_point; i++ )
     {
       if ( zp.cur != CUR.zp2.cur || refp != i )
@@ -5920,9 +5945,9 @@
       return;
     }
 
-    /* XXX: UNDOCUMENTED! behaviour */
-    if ( CUR.GS.gep1 == 0 )   /* if the point that is to be moved */
-                              /* is in twilight zone              */
+    /* UNDOCUMENTED!  The MS rasterizer does that with */
+    /* twilight points (confirmed by Greg Hitchcock)   */
+    if ( CUR.GS.gep1 == 0 )
     {
       CUR.zp1.org[point] = CUR.zp0.org[CUR.GS.rp0];
       CUR_Func_move_orig( &CUR.zp1, point, args[1] );
@@ -5965,8 +5990,6 @@
       return;
     }
 
-    /* XXX: Is there some undocumented feature while in the */
-    /*      twilight zone? ?                                */
     if ( ( CUR.opcode & 1 ) != 0 )
     {
       cur_dist = CUR_fast_project( &CUR.zp0.cur[point] );
@@ -6009,34 +6032,34 @@
       goto Fail;
     }
 
-    /* XXX: UNDOCUMENTED!                                */
-    /*                                                   */
-    /* The behaviour of an MIAP instruction is quite     */
-    /* different when used in the twilight zone.         */
-    /*                                                   */
-    /* First, no control value cut-in test is performed  */
-    /* as it would fail anyway.  Second, the original    */
-    /* point, i.e. (org_x,org_y) of zp0.point, is set    */
-    /* to the absolute, unrounded distance found in      */
-    /* the CVT.                                          */
-    /*                                                   */
-    /* This is used in the CVT programs of the Microsoft */
-    /* fonts Arial, Times, etc., in order to re-adjust   */
-    /* some key font heights.  It allows the use of the  */
-    /* IP instruction in the twilight zone, which        */
-    /* otherwise would be `illegal' according to the     */
-    /* specification.                                    */
-    /*                                                   */
-    /* We implement it with a special sequence for the   */
-    /* twilight zone.  This is a bad hack, but it seems  */
-    /* to work.                                          */
+    /* UNDOCUMENTED!                                                      */
+    /*                                                                    */
+    /* The behaviour of an MIAP instruction is quite different when used  */
+    /* in the twilight zone.                                              */
+    /*                                                                    */
+    /* First, no control value cut-in test is performed as it would fail  */
+    /* anyway.  Second, the original point, i.e. (org_x,org_y) of         */
+    /* zp0.point, is set to the absolute, unrounded distance found in the */
+    /* CVT.                                                               */
+    /*                                                                    */
+    /* This is used in the CVT programs of the Microsoft fonts Arial,     */
+    /* Times, etc., in order to re-adjust some key font heights.  It      */
+    /* allows the use of the IP instruction in the twilight zone, which   */
+    /* otherwise would be invalid according to the specification.         */
+    /*                                                                    */
+    /* We implement it with a special sequence for the twilight zone.     */
+    /* This is a bad hack, but it seems to work.                          */
+    /*                                                                    */
+    /* Confirmed by Greg Hitchcock.                                       */
 
     distance = CUR_Func_read_cvt( cvtEntry );
 
     if ( CUR.GS.gep0 == 0 )   /* If in twilight zone */
     {
-      CUR.zp0.org[point].x = TT_MulFix14( (FT_UInt32)distance, CUR.GS.freeVector.x );
-      CUR.zp0.org[point].y = TT_MulFix14( (FT_UInt32)distance, CUR.GS.freeVector.y ),
+      CUR.zp0.org[point].x = TT_MulFix14( (FT_UInt32)distance,
+                                          CUR.GS.freeVector.x );
+      CUR.zp0.org[point].y = TT_MulFix14( (FT_UInt32)distance,
+                                          CUR.GS.freeVector.y ),
       CUR.zp0.cur[point]   = CUR.zp0.org[point];
     }
 
@@ -6220,19 +6243,17 @@
         cvt_dist = -CUR.GS.single_width_value;
     }
 
-    /* XXX: UNDOCUMENTED! -- twilight zone */
-
+    /* UNDOCUMENTED!  The MS rasterizer does that with */
+    /* twilight points (confirmed by Greg Hitchcock)   */
     if ( CUR.GS.gep1 == 0 )
     {
       CUR.zp1.org[point].x = CUR.zp0.org[CUR.GS.rp0].x +
                              TT_MulFix14( (FT_UInt32)cvt_dist,
                                           CUR.GS.freeVector.x );
-
       CUR.zp1.org[point].y = CUR.zp0.org[CUR.GS.rp0].y +
                              TT_MulFix14( (FT_UInt32)cvt_dist,
                                           CUR.GS.freeVector.y );
-
-      CUR.zp1.cur[point] = CUR.zp0.cur[point];
+      CUR.zp1.cur[point]   = CUR.zp0.cur[point];
     }
 
     org_dist = CUR_Func_dualproj( &CUR.zp1.org[point],
@@ -6306,7 +6327,6 @@
     if ( ( CUR.opcode & 16 ) != 0 )
       CUR.GS.rp0 = point;
 
-    /* XXX: UNDOCUMENTED! */
     CUR.GS.rp2 = point;
   }
 

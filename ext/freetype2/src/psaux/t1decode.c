@@ -764,6 +764,13 @@
             if ( arg_cnt != 0 )
               goto Unexpected_OtherSubr;
 
+            if ( decoder->flex_state == 0 )
+            {
+              FT_ERROR(( "t1_decoder_parse_charstrings:"
+                         " missing flex start\n" ));
+              goto Syntax_Error;
+            }
+
             /* note that we should not add a point for index 0; */
             /* this will move our current position to the flex  */
             /* point without adding any point to the outline    */

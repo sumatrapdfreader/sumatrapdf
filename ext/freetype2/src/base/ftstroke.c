@@ -1887,7 +1887,7 @@
       /* rewind and doesn't need further processing.             */
       ft_stroke_border_close( right, FALSE );
     }
-    else if (!stroker->first_point) /* SumatraPDF: prevent a heap overflow */
+    else
     {
       FT_Angle  turn;
       FT_Int    inside_side;
@@ -2222,9 +2222,13 @@
       if ( error )
         goto Exit;
 
-      error = FT_Stroker_EndSubPath( stroker );
-      if ( error )
-        goto Exit;
+      /* don't try to end the path if no segments have been generated */
+      if ( !stroker->first_point )
+      {
+        error = FT_Stroker_EndSubPath( stroker );
+        if ( error )
+          goto Exit;
+      }
 
       first = last + 1;
     }

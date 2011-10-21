@@ -117,6 +117,7 @@ FT_BEGIN_HEADER
     FT_Int     paint_type;
     FT_Int     charstring_type;
     FT_Matrix  font_matrix;
+    FT_Bool    has_font_matrix;
     FT_ULong   units_per_em;  /* temporarily used as scaling value also */
     FT_Vector  font_offset;
     FT_ULong   unique_id;

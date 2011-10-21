@@ -1,3 +1,232 @@
+2011-10-18  Werner Lemberg  <wl@gnu.org>
+
+	* Version 2.4.7 released.
+	=========================
+
+
+	Tag sources with `VER-2-4-7'.
+
+	* docs/CHANGES: Updated.
+
+	* docs/VERSION.DLL: Update documentation and bump version number to
+	2.4.7.
+
+	* README, Jamfile (RefDoc),
+	builds/win32/vc2005/freetype.vcproj, builds/win32/vc2005/index.html,
+	builds/win32/vc2008/freetype.vcproj, builds/win32/vc2008/index.html,
+	builds/win32/vc2010/freetype.vcxproj, builds/win32/vc2010/index.html,
+	builds/win32/visualc/freetype.dsp,
+	builds/win32/visualc/freetype.vcproj,
+	builds/win32/visualc/index.html, builds/win32/visualce/freetype.dsp,
+	builds/win32/visualce/freetype.vcproj,
+	builds/win32/visualce/index.html,
+	builds/wince/vc2005-ce/freetype.vcproj,
+	builds/wince/vc2005-ce/index.html,
+	builds/wince/vc2008-ce/freetype.vcproj,
+	builds/wince/vc2008-ce/index.html: s/2.4.6/2.4.7/, s/246/247/.
+
+	* include/freetype/freetype.h (FREETYPE_PATCH): Set to 6.
+
+	* builds/unix/configure.raw (version_info): Set to 13:2:7.
+
+2011-10-15  Kal Conley  <kcconley@gmail.com>
+
+	Fix handling of transformations if no renderer is present.
+
+	* src/base/ftobjs.c (FT_Load_Glyph): Thinko.
+
+2011-10-15  Kal Conley  <kcconley@gmail.com>
+
+	Fix conditions for autohinting.
+
+	* src/base/ftobjs.c (FT_Load_Glyph): Handle
+	FT_LOAD_IGNORE_TRANSFORM.
+
+2011-10-07  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[gxvalid] Fix a bug to detect too large offset in morx table.
+
+	* src/gxvalid/gxvmorx2.c
+	(gxv_morx_subtable_type2_ligActionIndex_validate): Fix a bug
+	that too large positive offset cannot be detected.
+
+2011-10-01  Braden Thomas  <bthomas@apple.com>
+
+	Handle some border cases.
+
+	* include/freetype/config/ftstdlib.h (FT_USHORT_MAX): New macro.
+
+	* src/base/ftbitmap.c (FT_Bitmap_Convert): Protect against invalid
+	value of `target->rows'.
+
+	* src/psaux/t1decode.c (t1_decoder_parse_charstrings): Add check for
+	flex start.
+
+	* src/raster/ftrend1.c (ft_raster1_render): Check `width' and
+	`height'.
+
+	* src/truetype/ttgxvar.c (TT_Vary_Get_Glyph_Deltas): Protect against
+	invalid values in `localpoints' array.
+
+2011-10-01  Werner Lemberg  <wl@gnu.org>
+
+	[psnames] Handle zapfdingbats.
+	Problem reported by Nicolas Rougier <Nicolas.Rougier@inria.fr>.
+
+	* src/tools/glnames.py (adobe_glyph_list): Add data from AGL's
+	`zapfdingbats.txt' file.
+
+	* src/psnames/pstables.h: Regenerated.
+
+2011-09-27  Simon Bünzli  <zeniko@gmail.com>
+
+	Fix Savannah bug #34189.
+
+	* src/type1/t1load.c (T1_Open_Face): Initialize
+	`face->len_buildchar'.
+
+2011-09-26  Werner Lemberg  <wl@gnu.org>
+
+	[cff] Dump SIDs while tracing.
+
+	* src/cff/cffobjs.c (cff_face_init): Do it.
+
+	* src/cff/cffparse.c (cff_parser_run) [FT_DEBUG_LEVEL_TRACE]
+	<cff_kind_string>: Identify as SID.
+
+2011-09-17  Werner Lemberg  <wl@gnu.org>
+
+	Remove unused FT_ALIGNMENT macro.
+
+	* builds/unix/ftconfig.in, builds/vms/ftconfig.h,
+	include/freetype/config/ftconfig.h: Do it.
+
+2011-09-17  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[smooth] Slightly optimize conic and cubic flatterners.
+
+	* src/smooth/ftgrays.c (gray_render_conic, gray_render_cubic): Move
+	out some code from the main loop to speed it up.
+
+2011-09-11  Tomas Hoger  <thoger@redhat.com>
+
+	Slightly improve LZW_CLEAR handling.
+
+	* src/lzw/ftzopen.c (ft_lzwstate_io) <FT_LZW_PHASE_CODE>:
+	Ensure that subsequent (modulo garbage byte(s)) LZW_CLEAR codes are
+	handled as clear codes.  This also re-sets old_code and old_char to
+	predictable values, which is a little better than using `random'
+	ones if the code following LZW_CLEAR is invalid.
+
+2011-09-11  Tomas Hoger  <thoger@redhat.com>
+
+	Add explicit LZW decompression stack size limit.
+
+	Stack larger than 1<<LZW_MAX_BITS is never needed if prefix table is
+	constructed correctly.  It's even less than that, see e.g. 
+	libarchive code comment for a better size upper bound:
+
+	  http://code.google.com/p/libarchive/source/browse/trunk/libarchive/archive_read_support_filter_compress.c?r=3635#121
+
+	This patch adds explicit stack size limit, enforced when stack is
+	realloced.
+
+	An alternative is to ensure that code < state->prefix[code - 256]
+	when traversing prefix table.  Such check is less efficient and
+	should not be required if prefix table is constructed correctly in
+	the first place.
+
+	* src/lzw/ftzopen.c (ft_lzwstate_stack_grow): Implement it.
+
+2011-09-11  Tomas Hoger  <thoger@redhat.com>
+
+	Protect against loops in the prefix table.
+
+	LZW decompressor did not sufficiently check codes read from the
+	input LZW stream.  A specially-crafted or corrupted input could
+	create a loop in the prefix table, which leads to memory usage
+	spikes, as there's no decompression stack size limit.
+
+	* src/lzw/ftzopen.c (ft_lzwstate_io) <FT_LZW_PHASE_START>: First
+	code in valid LZW stream must be 0..255.
+	<FT_LZW_PHASE_CODE>: In the special KwKwK case, code == free_ent,
+	code > free_ent is invalid.
+
+2011-09-09  Werner Lemberg  <wl@gnu.org>
+
+	Better tracing of metrics.
+
+	* src/base/ftobjs.c (FT_Request_Size, FT_Select_Size): Decorate with
+	FT_TRACE.
+
+2011-09-07  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #33816.
+
+	* src/cff/cfftypes.h (CFF_FontRecDictRec): New member
+	`has_font_matrix'.
+	* src/cff/cffparse.c (cff_parse_font_matrix): Set it.
+	Update tracing output.
+	* src/cff/cffobjs.c (cff_face_init): Use it so that the heuristics
+	can be removed.
+
+2011-08-30  Werner Lemberg  <wl@gnu.org>
+
+	Better tracing of metrics.
+
+	* src/base/ftobjs.c (FT_Select_Metrics, FT_Request_Metrics):
+	Decorate with FT_TRACE.
+
+2011-08-25  Werner Lemberg  <wl@gnu.org>
+
+	[cff] Better tracing of the parsing process.
+
+	* src/cff/cffload.c (cff_subfont_load, cff_font_load): Decorate with
+	FT_TRACE.
+
+	* src/cff/cffparse.c (cff_parse_font_matrix, cff_parse_font_bbox,
+	cff_parse_private_dict, cff_parse_cid_ros): Updated.
+	(CFF_FIELD_NUM, CFF_FIELD_FIXED, CFF_FIELD_FIXED_1000,
+	CFF_FIELD_STRING, CFF_FIELD_BOOL, CFF_FIELD_CALLBACK, CFF_FIELD,
+	CFF_FIELD_DELTA): Add argument for ID.
+	(cff_parser_run): Decorate with FT_TRACE.
+
+	* src/cff/cffparse.h (CFF_Field_Handler) [FT_DEBUG_LEVEL_TRACE]: Add
+	`id' member.
+
+	* src/cff/cfftoken.h: Add IDs to all fields.
+
+2011-08-16  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #34022.
+
+	* README, docs/INSTALL: Remove references to UPGRADE.UNIX.
+
+2011-08-15  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #34018.
+
+	* docs/UPGRADE.UNIX: Removed.  Obsolete.
+
+2011-08-15  David Bevan  <david.bevan@pb.com>
+
+	Fix Savannah bug #33992.
+
+	* src/base/ftstroke.c (FT_Stroker_ParseOutline): Fix border case.
+
+2011-08-12  Werner Lemberg  <wl@gnu.org
+
+	[truetype] Fix degenerate case in S{P,F,DP}VTL opcodes.
+
+	* src/truetype/ttinterp.c (Ins_SxVTL): Handle p1 == p2 specially.
+	(Ins_SDPVTL): Handle v1 == v2 specially.
+
+2011-08-09  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #33975.
+
+	* src/cff/cffparse.c (cff_parse_font_matrix): Fix typo.
+
 2011-07-29  Werner Lemberg  <wl@gnu.org>
 
 	* Version 2.4.6 released.

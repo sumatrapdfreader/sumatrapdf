@@ -872,6 +872,7 @@ typedef ptrdiff_t  FT_PtrDist;
                               const FT_Vector*  to )
   {
     TPos        dx, dy;
+    TPos        min, max, y;
     int         top, level;
     int*        levels;
     FT_Vector*  arc;
@@ -884,45 +885,45 @@ typedef ptrdiff_t  FT_PtrDist;
     arc[1].y = UPSCALE( control->y );
     arc[2].x = ras.x;
     arc[2].y = ras.y;
+    top      = 0;
 
     dx = FT_ABS( arc[2].x + arc[0].x - 2 * arc[1].x );
     dy = FT_ABS( arc[2].y + arc[0].y - 2 * arc[1].y );
     if ( dx < dy )
       dx = dy;
 
+    if ( dx < ONE_PIXEL / 4 )
+      goto Draw;
+
+    /* short-cut the arc that crosses the current band */
+    min = max = arc[0].y;
+
+    y = arc[1].y;
+    if ( y < min ) min = y;
+    if ( y > max ) max = y;
+
+    y = arc[2].y;
+    if ( y < min ) min = y;
+    if ( y > max ) max = y;
+
+    if ( TRUNC( min ) >= ras.max_ey || TRUNC( max ) < ras.min_ey )
+      goto Draw;
+
     level = 0;
-    while ( dx > ONE_PIXEL / 6 )
+    do
     {
       dx >>= 2;
       level++;
-    }
+    } while ( dx > ONE_PIXEL / 4 );
 
     levels    = ras.lev_stack;
     levels[0] = level;
-    top       = 0;
 
     do
     {
       level = levels[top];
-      if ( level > 1 )
+      if ( level > 0 )
       {
-        /* check that the arc crosses the current band */
-        TPos  min, max, y;
-
-
-        min = max = arc[0].y;
-
-        y = arc[1].y;
-        if ( y < min ) min = y;
-        if ( y > max ) max = y;
-
-        y = arc[2].y;
-        if ( y < min ) min = y;
-        if ( y > max ) max = y;
-
-        if ( TRUNC( min ) >= ras.max_ey || TRUNC( max ) < ras.min_ey )
-          goto Draw;
-
         gray_split_conic( arc );
         arc += 2;
         top++;
@@ -973,6 +974,7 @@ typedef ptrdiff_t  FT_PtrDist;
                               const FT_Vector*  to )
   {
     FT_Vector*  arc;
+    TPos        min, max, y;
 
 
     arc      = ras.bez_stack;
@@ -985,35 +987,32 @@ typedef ptrdiff_t  FT_PtrDist;
     arc[3].x = ras.x;
     arc[3].y = ras.y;
 
+    /* Short-cut the arc that crosses the current band. */
+    min = max = arc[0].y;
+
+    y = arc[1].y;
+    if ( y < min )
+      min = y;
+    if ( y > max )
+      max = y;
+
+    y = arc[2].y;
+    if ( y < min )
+      min = y;
+    if ( y > max )
+      max = y;
+
+    y = arc[3].y;
+    if ( y < min )
+      min = y;
+    if ( y > max )
+      max = y;
+
+    if ( TRUNC( min ) >= ras.max_ey || TRUNC( max ) < ras.min_ey )
+      goto Draw;
+
     for (;;)
     {
-      /* Check that the arc crosses the current band. */
-      TPos  min, max, y;
-
-
-      min = max = arc[0].y;
-
-      y = arc[1].y;
-      if ( y < min )
-        min = y;
-      if ( y > max )
-        max = y;
-
-      y = arc[2].y;
-      if ( y < min )
-        min = y;
-      if ( y > max )
-        max = y;
-
-      y = arc[3].y;
-      if ( y < min )
-        min = y;
-      if ( y > max )
-        max = y;
-
-      if ( TRUNC( min ) >= ras.max_ey || TRUNC( max ) < ras.min_ey )
-        goto Draw;
-
       /* Decide whether to split or draw. See `Rapid Termination          */
       /* Evaluation for Recursive Subdivision of Bezier Curves' by Thomas */
       /* F. Hain, at                                                      */

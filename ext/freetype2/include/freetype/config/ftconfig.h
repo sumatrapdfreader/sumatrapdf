@@ -95,10 +95,6 @@ FT_BEGIN_HEADER
 #endif
 
 
-  /* Preferred alignment of data */
-#define FT_ALIGNMENT  8
-
-
   /* FT_UNUSED is a macro used to indicate that a given parameter is not  */
   /* used -- this is only used to get rid of unpleasant compiler warnings */
 #ifndef FT_UNUSED
