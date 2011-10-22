@@ -8,6 +8,7 @@
 
 Lang: dk Danish (Dansk)
 
+Contributor: Claus Ørnfeldt Willemoës
 Contributor: Lars J. Helbo
 Contributor: Jakob Wadsager
 Contributor: Mikkel Vestergaard
@@ -17,13 +18,16 @@ Contributor: Brian S. Vangsgaard
 &Om
 
 &Actual Size\tCtrl+1
-&Aktuel størrelse\tCtrl+1
+&Faktisk størrelse\tCtrl+1
 
 &All selected pages
 &Alle valgte sider
 
 &Back\tAlt+Left Arrow
 &Tilbage\tAlt+<-
+
+&Book View\tCtrl+8
+&Bogvisning\tCtrl+8
 
 &Close\tCtrl+W
 &Luk\tCtrl+W
@@ -36,6 +40,9 @@ Contributor: Brian S. Vangsgaard
 
 &Even pages only
 &Kun lige sider
+
+&Facing\tCtrl+7
+&Modstående\tCtrl+7
 
 &File
 &Filer
@@ -85,14 +92,23 @@ Contributor: Brian S. Vangsgaard
 &Open\tCtrl+O
 &Åbn\tCtrl+O
 
+&Open Document
+&Åbn dokument
+
 &Options...
 &Valgmuligheder...
 
 &Password:
 &Kodeord:
 
+&Pin Document
+&Fastgør dokument
+
 &Previous Page\tLeft Arrow
 &Forrige side\t<-
+
+&Print...
+&Udskriv...
 
 &Print...\tCtrl+P
 &Udskriv\tCtrl+P
@@ -106,6 +122,12 @@ Contributor: Brian S. Vangsgaard
 &Remember these settings for each document
 &Husk disse indstillinger for hvert dokument
 
+&Remove Document
+&Fjern dokument
+
+&Save As...
+&Gem som
+
 &Save As...\tCtrl+S
 &Gem som...\tCtrl+S
 
@@ -114,6 +136,9 @@ Contributor: Brian S. Vangsgaard
 
 &Shrink pages to printable area (if necessary)
 krymp sider til printbart område
+
+&Single Page\tCtrl+6
+&Enkelt side\tCtrl+6
 
 &Skip this version
 &Spring over denne version
@@ -133,8 +158,23 @@ krymp sider til printbart område
 (of %d)
 (af %d)
 
+(page %s)
+(side %s)
+
 About SumatraPDF
 Om SumatraPDF
+
+Add Favorite
+Tilføj bogmærke
+
+Add page %s to favorites
+Tilføj side %s til bogmærker
+
+Add page %s to favorites with (optional) name:
+Tilføj side %s til bogmærker med (valgfrit) navn:
+
+Add to favorites
+Tilføj til bogmærker
 
 Advanced
 Advanceret
@@ -142,11 +182,14 @@ Advanceret
 All files
 Alle filer
 
+All supported documents
+Alle understøttede dokumenter
+
 Application:
 Program:
 
 Associate with PDF files?
-Associer med PDF-filer?
+Tilknyt til  PDF-filer?
 
 Attachment: %s
 Bilag: %s
@@ -161,10 +204,16 @@ Automatically check for &updates
 Tjek automatisk for &opdateringer
 
 Book View
-Bog-visning
+Bogvisning
 
 Book&marks\tF12
 Bog&mærker\tF12
+
+Bookmark Shortcuts
+Gem genveje
+
+Bookmark shortcut to page %s of %s
+Gem genvej til side %s af %s
 
 Bookmarks
 Bogmærker
@@ -179,16 +228,19 @@ Cancel
 Annuller
 
 Cannot print this file
-Kan ikke printe denne fil
+Kan ikke udskrive denne fil
 
 Cannot start inverse search command. Please check the command line in the settings.
-Kan ikke starte invers søgning kommando. Tjek venligst kommandolinjen i indstillingerne.
+Kan ikke starte invers søge kommando. Tjek venligst kommandolinjen i indstillingerne.
 
 Change Language
 Skift sprog (Change Language)
 
 Check for &Updates
 Tjek for ny &version
+
+Comic books
+Tegneserier
 
 Continuous
 Fortløbende
@@ -202,8 +254,17 @@ Fortløbende modstående
 Contribute Translation
 Bidgrag med oversættelse
 
+Copy &Link Address
+Kopier &Linkadresse
+
+Copy Co&mment
+Kopier ko&mmentar
+
 Copying text was denied (copying as image only)
 Kopiering af tekst blev nægtet (kopierer kun som billede)
+
+Could not obtain Printer properties
+Kan ikke hente printer egenskaber
 
 Could not open Printer
 Kunne ikke åbne printer
@@ -216,6 +277,9 @@ Kunne ikke vise siden
 
 Created:
 Oprettet:
+
+Current file
+Aktuel fil
 
 Custom &Zoom...\tCtrl+Y
 Brugerdefineret &zoom...\tCtrl+Y
@@ -231,6 +295,9 @@ Standard PDF-læser kan ikke ændres i mobil tilstand
 
 Denied Permissions:
 Nægtede tilladelser:
+
+DjVu documents
+DjVu documenter
 
 Document Properties
 dokumentegenskaber
@@ -250,6 +317,12 @@ Indtast kodeord for %s
 Enter the command-line to invoke when you double-click on the PDF document:
 Indtast den kommandolinie du vil bruge når du dobbeltklikker på PDF-dokumentet:
 
+Error loading %s
+Side %s kan ikke indlæses
+
+F&avorites
+Bogm&ærker
+
 F&orward\tAlt+Right Arrow
 F&remad\tAlt+->
 
@@ -261,6 +334,9 @@ Modstående
 
 Failed to save a file
 Kunne ikke gemme filen
+
+Favorites
+Bogmærker
 
 File Size:
 Filstørrelse:
@@ -310,20 +386,32 @@ Vis en side ad gangen
 Found text at page %s
 Fandt tekst på side %s
 
+Found text at page %s (again)
+Tekst er (også) fundet på side %s
+
+Frequently Read
+Hyppigt læste
+
 GB
-GB
+Gb
 
 Go to page
 Gå til side
 
+Hide frequently read
+Skjul hyppigt læste
+
 Hint: Use the F3 key for finding again
 Vink: Brug F3 knappen for at finde igen
 
+Image files (*.%s)
+Billed filer (*.%s)
+
 KB
-KB
+Kb
 
 MB
-MB
+Mb
 
 Make SumatraPDF default application for PDF files?
 Gør SumatraPDF standardprogram for PDF-filer
@@ -364,32 +452,41 @@ OK
 Open
 Åbn
 
+Open a document...
+Åbn et dokument...
+
 Open in &Adobe Reader
-Åben i &Adobe Reader
+Åben med &Adobe Reader
 
 Open in &Foxit Reader
-Åben i &Foxit Reader
+Åben med &Foxit Reader
 
 Open in PDF-XChange
-Åben i PDF-XChange
+Åben med PDF-XChange
+
+P&roperties
+Egenskabe&r
 
 P&roperties\tCtrl+D
 E&genskaber\tCtrl+D
 
 PDF Document
-PDF-dokument
+PDF dokument
 
 PDF Producer:
-PDF-producent:
+PDF producent:
 
 PDF Version:
-PDF-version:
+PDF version:
 
 PDF documents
-PDF-dokumenter
+PDF dokumenter
 
 Pa&ge...\tCtrl+G
 Side...\tCtrl+G
+
+Page %s
+Side %s
 
 Page Size:
 Sidestørrelse:
@@ -406,20 +503,41 @@ Side:
 Please wait - rendering...
 Vent venligst - renderer...
 
+Postscript documents
+Postscript dokumenter
+
 Pr&esentation\tCtrl+L
-Fuldskærmstilstand
+H&ele skærmen\tCtrl+L
 
 Previous Page
 Forrige side
 
+Print
+Udskriv
+
 Print range
-Udskrivnings-rækkevidde
+Udskriftsområde
+
+Printer with given name doesn't exist
+Printer med dette navn findes ikke
+
+Printing is still in progress. Abort and start over?
+Udskrift pågår stadig. Afbryd og start forfra?
+
+Printing page %d of %d...
+Udskriver side %d af %d...
 
 Printing problem.
-Printer problem.
+Udskrift problem.
 
 Remember &opened files
 Husk &åbnede filer
+
+Remove from favorites
+Fjern fra bogmærker
+
+Remove page %s from favorites
+Fjern side %s fra bogmærker
 
 Rotate &Left\tCtrl+Shift+-
 Roter mod &venstre\tCtrl+Shift+-
@@ -430,8 +548,14 @@ Roter mod &højre\tCtrl+Shift++
 Save As
 Gem som
 
+Save S&hortcut...\tCtrl+Shift+S
+Gem ge&nvej...\tCtrl+Shift+S
+
 Searching %d of %d...
 Søgning %d af %d...
+
+Select &All
+Markér &alt
 
 Select &All\tCtrl+A
 Vælg &Alle\tCtrl+A
@@ -443,7 +567,7 @@ Send by &E-mail...
 Send med &email...
 
 Set inverse search command-line
-Sæt invers søgning komando-linje
+Indstil komando-linje til invers søgning 
 
 Show &Toolbar
 Vis &værktøjslinie
@@ -451,11 +575,20 @@ Vis &værktøjslinie
 Show &pages continuously
 Vis &sider fortløbende
 
+Show Favorites
+Vis bogmærker
+
+Show frequently read
+Vis hyppigt læste
+
 Show the &bookmarks sidebar when available
-Vis &bogmærkesidepanelet når tilgængeligt
+Vis &bogmærke sidepanelet når tilgængeligt
 
 Single Page
 Enkelt side
+
+Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+Desværrre, det var ikke meningen\n\nKlik på 'Afbryd', hvis du kan og vil hjælpe med at finde årsagen til nedbruddet.
 
 Source file %s has no synchronization point
 Kildefilen %s har ingen synkroniseringspunkter
@@ -470,7 +603,7 @@ SumatraPDF Update
 SumatraPDF Opdatering
 
 SumatraPDF crashed
-Der opstod en kritisk fejl, programmet lukkes.
+Kritisk fejl, SumatraPDF lukkes
 
 SumatraPDF is your default PDF reader
 SumatraPDF er din standard PDF-læser
@@ -479,7 +612,7 @@ SumatraPDF should now be your default PDF reader
 SumatraPDF skulle nu være din standard PDF-læser
 
 Synchronization file cannot be opened
-Symkroniseringsfil kan ikke åbnes
+Synkroniseringsfil kan ikke åbnes
 
 Text documents
 Tekstdokumenter
@@ -498,6 +631,9 @@ Besøg &webside
 
 Warning
 Advarsel
+
+XPS documents
+XPS documenter
 
 You have the latest version.
 Du har den seneste version.
@@ -518,59 +654,14 @@ Zoom factor
 Zoom faktor
 
 [Changes detected; refreshing] %s
-[Ændringer detekteret; opdaterer] %s
+[Ændringer konstateret; opdaterer] %s
 
 copying text
 kopierer tekst
 
 printing document
-printer dokument
+udskriver dokument
 
 # Untranslated:
-#&Book View\tCtrl+8
 #&Copy Selection
-#&Facing\tCtrl+7
-#&Open Document
-#&Pin Document
-#&Print...
-#&Remove Document
-#&Save As...
-#&Single Page\tCtrl+6
-#(page %s)
-#Add Favorite
-#Add page %s to favorites
-#Add page %s to favorites with (optional) name:
-#Add to favorites
-#All supported documents
-#Bookmark Shortcuts
-#Bookmark shortcut to page %s of %s
-#Comic books
-#Copy &Link Address
-#Copy Co&mment
-#Could not obtain Printer properties
-#Current file
-#DjVu documents
-#Error loading %s
-#F&avorites
-#Favorites
-#Found text at page %s (again)
-#Frequently Read
-#Hide frequently read
-#Image files (*.%s)
-#Open a document...
-#P&roperties
-#Page %s
-#Postscript documents
-#Print
-#Printer with given name doesn't exist
-#Printing is still in progress. Abort and start over?
-#Printing page %d of %d...
-#Remove from favorites
-#Remove page %s from favorites
-#Save S&hortcut...\tCtrl+Shift+S
-#Select &All
-#Show Favorites
-#Show frequently read
-#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
-#XPS documents
 

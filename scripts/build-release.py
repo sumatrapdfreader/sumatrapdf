@@ -153,7 +153,7 @@ def main():
   if upload or upload_tmp:
     if build_prerelease:
       jstxt  = 'var sumLatestVer = %s;\n' % ver
-      jstxt  = 'var sumBuiltOn = "%s";\n' % time.strftime("%Y-%m-%d")
+      jstxt += 'var sumBuiltOn = "%s";\n' % time.strftime("%Y-%m-%d")
       jstxt += 'var sumLatestName = "%s";\n' % s3_exe.split("/")[-1]
       jstxt += 'var sumLatestExe = "http://kjkpub.s3.amazonaws.com/%s";\n' % s3_exe
       jstxt += 'var sumLatestPdb = "http://kjkpub.s3.amazonaws.com/%s";\n' % s3_pdb_zip
