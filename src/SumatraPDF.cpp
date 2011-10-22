@@ -1429,40 +1429,6 @@ static void DownloadSumatraUpdateInfo(WindowInfo& win, bool autoCheck)
     gGlobalPrefs.lastUpdateTime = _MemToHex(&ft);
 }
 
-void PaintTransparentRectangle(HDC hdc, RectI screenRc, RectI *rect, COLORREF selectionColor, BYTE alpha, int margin)
-{
-    // don't draw selection parts not visible on screen
-    screenRc.Inflate(margin, margin);
-    RectI isect = rect->Intersect(screenRc);
-    if (isect.IsEmpty())
-        return;
-    rect = &isect;
-
-    HDC rectDC = CreateCompatibleDC(hdc);
-    HBITMAP hbitmap = CreateCompatibleBitmap(hdc, rect->dx, rect->dy);
-    SelectObject(rectDC, hbitmap);
-    if (!hbitmap)
-        DBG_OUT("    selection rectangle too big to be drawn\n");
-
-    // draw selection border
-    RectI rc = *rect;
-    rc.Offset(-rect->x, -rect->y);
-    if (margin) {
-        FillRect(rectDC, &rc.ToRECT(), gBrushBlack);
-        rc.Inflate(-margin, -margin);
-    }
-    // fill selection
-    HBRUSH brush = CreateSolidBrush(selectionColor);
-    FillRect(rectDC, &rc.ToRECT(), brush);
-    DeleteObject(brush);
-    // blend selection rectangle over content
-    BLENDFUNCTION bf = { AC_SRC_OVER, 0, alpha, 0 };
-    AlphaBlend(hdc, rect->x, rect->y, rect->dx, rect->dy, rectDC, 0, 0, rect->dx, rect->dy, bf);
-
-    DeleteObject(hbitmap);
-    DeleteDC(rectDC);
-}
-
 #ifdef DRAW_PAGE_SHADOWS
 #define BORDER_SIZE   1
 #define SHADOW_OFFSET 4
@@ -1501,12 +1467,10 @@ static void PaintPageFrameAndShadow(HDC hdc, RectI& bounds, RectI& pageRect, boo
 #else
 static void PaintPageFrameAndShadow(HDC hdc, RectI& bounds, RectI& pageRect, bool presentation)
 {
-    RectI frame = bounds;
-
     ScopedGdiObj<HPEN> pe(CreatePen(PS_NULL, 0, 0));
     SelectObject(hdc, pe);
     SelectObject(hdc, gRenderCache.invertColors ? gBrushBlack : gBrushWhite);
-    Rectangle(hdc, frame.x, frame.y, frame.x + frame.dx + 1, frame.y + frame.dy + 1);
+    Rectangle(hdc, bounds.x, bounds.y, bounds.x + bounds.dx + 1, bounds.y + bounds.dy + 1);
 }
 #endif
 

@@ -283,6 +283,7 @@ void PaintForwardSearchMark(WindowInfo *win, HDC hdc)
         return;
 
     // Draw the rectangles highlighting the forward search results
+    Vec<RectI> rects;
     for (size_t i = 0; i < win->fwdSearchMark.rects.Count(); i++) {
         RectI rect = win->fwdSearchMark.rects[i];
         rect = win->dm->CvtToScreen(win->fwdSearchMark.page, rect.Convert<double>());
@@ -292,9 +293,11 @@ void PaintForwardSearchMark(WindowInfo *win, HDC hdc)
             rect.y -= 4;
             rect.dy += 8;
         }
-        BYTE alpha = (BYTE)(0x5f * 1.0f * (HIDE_FWDSRCHMARK_STEPS - win->fwdSearchMark.hideStep) / HIDE_FWDSRCHMARK_STEPS);
-        PaintTransparentRectangle(hdc, win->canvasRc, &rect, gGlobalPrefs.fwdSearch.color, alpha, 0);
+        rects.Append(rect);
     }
+
+    BYTE alpha = (BYTE)(0x5f * 1.0f * (HIDE_FWDSRCHMARK_STEPS - win->fwdSearchMark.hideStep) / HIDE_FWDSRCHMARK_STEPS);
+    PaintTransparentRectangles(hdc, win->canvasRc, rects, gGlobalPrefs.fwdSearch.color, alpha, 0);
 }
 
 // returns true if the double-click was handled and false if it wasn't

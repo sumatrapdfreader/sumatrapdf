@@ -798,62 +798,7 @@ void CommandData::ProcessSwitch(const char *Switch,const wchar *SwitchW)
           VolSize=0;
           break;
         default:
-          {
-            int64 NewVolSize=atoil(&Switch[1]);
-
-            if (NewVolSize==0)
-              NewVolSize=INT64NDF; // Autodetecting volume size.
-            else
-              switch (Switch[strlen(Switch)-1])
-              {
-                case 'f':
-                case 'F':
-                  switch(NewVolSize)
-                  {
-                    case 360:
-                      NewVolSize=362496;
-                      break;
-                    case 720:
-                      NewVolSize=730112;
-                      break;
-                    case 1200:
-                      NewVolSize=1213952;
-                      break;
-                    case 1440:
-                      NewVolSize=1457664;
-                      break;
-                    case 2880:
-                      NewVolSize=2915328;
-                      break;
-                  }
-                  break;
-                case 'k':
-                  NewVolSize*=1024;
-                  break;
-                case 'm':
-                  NewVolSize*=1024*1024;
-                  break;
-                case 'M':
-                  NewVolSize*=1000*1000;
-                  break;
-                case 'g':
-                  NewVolSize*=1024*1024*1024;
-                  break;
-                case 'G':
-                  NewVolSize*=1000*1000*1000;
-                  break;
-                case 'b':
-                case 'B':
-                  break;
-                default:
-                  NewVolSize*=1000;
-                  break;
-              }
-            if (VolSize==0)
-              VolSize=NewVolSize;
-            else
-              NextVolSizes.Push(NewVolSize);
-          }
+          VolSize=INT64NDF; // UnRAR -v switch for list command.
           break;
       }
       break;

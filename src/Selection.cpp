@@ -71,8 +71,33 @@ void DeleteOldSelectionInfo(WindowInfo *win, bool alsoTextSel)
         win->dm->textSelection->Reset();
 }
 
+void PaintTransparentRectangles(HDC hdc, RectI screenRc, Vec<RectI>& rects, COLORREF selectionColor, BYTE alpha, int margin)
+{
+    using namespace Gdiplus;
+
+    // create path from rectangles
+    GraphicsPath path(FillModeWinding);
+    screenRc.Inflate(margin, margin);
+    for (size_t i = 0; i < rects.Count(); i++) {
+        RectI rc = rects[i].Intersect(screenRc);
+        if (!rc.IsEmpty())
+            path.AddRectangle(Gdiplus::Rect(rc.x, rc.y, rc.dx, rc.dy));
+    }
+
+    // fill path (and draw optional outline margin)
+    Graphics gs(hdc);
+    Color c(alpha, GetRValue(selectionColor), GetGValue(selectionColor), GetBValue(selectionColor));
+    gs.FillPath(&SolidBrush(c), &path);
+    if (margin) {
+        path.Outline(NULL, 0.2f);
+        gs.DrawPath(&Pen(Color(alpha, 0, 0, 0), (REAL)margin), &path);
+    }
+}
+
 void PaintSelection(WindowInfo *win, HDC hdc)
 {
+    Vec<RectI> rects;
+
     if (win->mouseAction == MA_SELECTING) {
         // during selecting
         RectI selRect = win->selectionRect;
@@ -85,7 +110,7 @@ void PaintSelection(WindowInfo *win, HDC hdc)
             selRect.dy *= -1;
         }
 
-        PaintTransparentRectangle(hdc, win->canvasRc, &selRect, COL_SELECTION_RECT);
+        rects.Append(selRect);
     } else {
         if (MA_SELECTING_TEXT == win->mouseAction)
             UpdateTextSelection(win);
@@ -96,9 +121,10 @@ void PaintSelection(WindowInfo *win, HDC hdc)
 
         // after selection is done
         for (size_t i = 0; i < win->selectionOnPage->Count(); i++)
-            PaintTransparentRectangle(hdc, win->canvasRc,
-                &win->selectionOnPage->At(i).GetRect(win->dm), COL_SELECTION_RECT);
+            rects.Append(win->selectionOnPage->At(i).GetRect(win->dm));
     }
+
+    PaintTransparentRectangles(hdc, win->canvasRc, rects, COL_SELECTION_RECT);
 }
 
 void UpdateTextSelection(WindowInfo *win, bool select)

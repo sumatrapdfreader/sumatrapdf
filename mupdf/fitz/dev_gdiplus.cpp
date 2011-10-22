@@ -174,7 +174,7 @@ class DrawImageAttributes : public ImageAttributes
 public:
 	DrawImageAttributes(float alpha) : ImageAttributes()
 	{
-		ColorMatrix matrix = { 
+		ColorMatrix matrix = {
 			1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
 			0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
 			0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
