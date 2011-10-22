@@ -9,198 +9,232 @@
 Lang: eu Basque (Euskara)
 
 Contributor: Igor G. Olaizola
+Contributor: Xabier Aramendi (azpidatziak@gmail.com)
 
 &About
-Ho&Ni buruz...
+Ho&ni buruz...
 
 &Actual Size\tCtrl+1
-&Berezko neurria\tCtrl+1
+&Oraingo neurria\tCtrl+1
 
 &All selected pages
-Aukeratutako orri guztuak
+&Hautatutako orrialde guztiak
 
 &Back\tAlt+Left Arrow
-&Atzera\tAlt+Gezia Ezkerrerantz
+&Atzera\tAlt+Ezker Gezia
+
+&Book View\tCtrl+8
+&Liburu Ikuspegia\tCtrl+8
 
 &Close\tCtrl+W
 &Itxi\tCtrl+W
 
 &Copy Selection
-&Aukeratua Kopiatu
+&Kopiatu Hautapena
 
 &Copy Selection\tCtrl+C
-Aukeratua kopiatu\tCtrl+C
+Kopiatu Hautapena\tCtrl+C
 
 &Don't ask me again
-Ez berriz galdetu
+&Ez galdetu berriro
 
 &Even pages only
-&Orri bakoitiak soilik
+&Orrialde bakoitiak bakarrik
+
+&Facing\tCtrl+7
+&Bi aldetatik\tCtrl+7
 
 &File
-&Fitxategia
+&Agiria
 
 &Find what:
-&Zera aurkitu:
+&Bilatu hau:
 
 &First Page\tHome
-Lehendabiziko orria \tHome
+&Lehen Orrialdea\tHome
 
 &Fit pages to printable area
-&Orriak azalera inprimagarrira egokitu
+&Zuzendu orrialdeak eremu irarkigarrira
 
 &Go To
-...ra &Joan
+&Joan Hona
 
 &Go to page:
-Orrira joan:
+J&oan orrialdera:
 
 &Help
 &Laguntza
 
 &Last Page\tEnd
-Azken orria\tEnd
+&Azken orrialdea\tEnd
 
 &Magnification:
-Handitzea:
+&Handipena:
 
 &Manual
 &Eskuliburua
 
 &Match case
-&Hizki handiz edo txikiz dagoen bezela bilatu
+&Hizki larri-xeheak bereizi
 
 &Next Page\tRight Arrow
-Hurrengo orria\t->
+&Hurrengo Orriakdea\tEskuin Gezia
 
 &No
-Ez
+&Ez
 
 &No, thanks
-Ez, Eskerrik Asko
+&Ez, eskerrik asko
 
 &Odd pages only
-&Orri bikoitiak soilik
+&Orrialde bikoitiak bakarrik
 
 &Open\tCtrl+O
-Ireki\tCtrl+O
+&Ireki\tCtrl+O
+
+&Open Document
+&Ireki Agiria
 
 &Options...
-Aukerak...
+A&ukerak...
 
 &Password:
-Pasahitza
+Sar-hitza
 
 &Previous Page\tLeft Arrow
-Aurreko orria\t<-
+&Aurreko Orrialdea\tEzker Gezia
 
 &Print...
-&Inprimatu...
+&Irarkitu...
 
 &Print...\tCtrl+P
-&Inprimatu\tCtrl+P
+&Irarkitu...\tCtrl+P
 
 &Print... (denied)
-Imprimatu... (ezeztua)
+&Irarkitu... (ukatuta)
 
 &Remember the password for this document
-Orri honetako pasahitza gogoratu
+&Gogoratu agiri honetarako sar-hitza
 
 &Remember these settings for each document
-Aldaketak hauek gogoratu dokumentu guztietarako
+G&ogoratu ezarpen hauek agiri bakoitzerako
+
+&Remove Document
+&Kendu Agira
 
 &Save As...
-&... bezala gorde
+&Gorde Honela...
 
 &Save As...\tCtrl+S
-... bezala &Gorde\tCtrl+S
+G&orde Honela...\tCtrl+S
 
 &Settings
-Aldaketak
+&Ezarpenak
 
 &Shrink pages to printable area (if necessary)
-&Orrien neurria azalera inprimagarriarenera txikitu (behar izanez gero)
+&Txikitu orrialdeak eremu irarkigarrira (beharrezkoa bada)
+
+&Single Page\tCtrl+6
+&Orrialde Bakarra\tCtrl+6
 
 &Skip this version
-Bertsio berria saihestu
+&Ahaztu bertsio hau
 
 &Use original page sizes
-Jatorrizko orri tamaina erabili
+E&rabili jatorrizko orrilde neurria
 
 &View
 I&kusi
 
 &Yes
-Bai
+&Bai
 
 &Zoom
-&Zoom-a
+&Zooma
 
 (of %d)
 (%d-tik)
 
+(page %s)
+(%s orrialdea)
+
 About SumatraPDF
-SumatraPDF-taz
+SumatraPDF-ri buruz
+
+Add Favorite
+Gehitu Gogokoena
+
+Add page %s to favorites
+Gehitu %s orrialdea gogokoenetara
+
+Add page %s to favorites with (optional) name:
+Gehitu %s gogokoenetara izenarekin (aukerazkoa):
+
+Add to favorites
+Gehitu gogokoenetara
 
 Advanced
 Aurreratua
 
 All files
-Dokumentu guztiak
+Agiri guztiak
 
 All supported documents
-Documentu onargarri guztiak
+Sostengatutako agiriguztiak
 
 Application:
 Aplikazioa:
 
 Associate with PDF files?
-PDF fitxategiekin lotu?
+Elkartu PDF agiriekin?
 
 Attachment: %s
-Itsatsia: %s
+Itsaspena: %s
 
 Author:
 Egilea:
 
 Automatic
-Automatikoa
+Berezgaitasunez
 
 Automatically check for &updates
-Automatikoki begiratu egunerapenak
+Berezgaitasunez egiaztatu e&guneraketak
 
 Book View
-Liburu bezala ikusi
+Liburu Ikuspena
 
 Book&marks\tF12
-Markagailuak\tF12
+Gogo&koenak\tF12
 
 Bookmark Shortcuts
-Liburu-marken bide-laburrak
+Gogoekoenen Lasterbideak
+
+Bookmark shortcut to page %s of %s
+Lastermarka lasterbidea %s orrialdeari %s-tik
 
 Bookmarks
-Liburu-markak
+Gogokoenak
 
 Bytes
 Byte
 
 Can't connect to the Internet (error %#x).
-Ezinezkoa da Internetera konektatu (%#x errorea).
+Ezinezkoa Internetera elkarketatzea (%#x akatsa).
 
 Cancel
 Ezeztatu
 
 Cannot print this file
-Ezinezkoa da artxiboa imprimatu
+Ezinezkoa agiri hau irarkitzea
 
 Cannot start inverse search command. Please check the command line in the settings.
-Ezin alderantzizko bilaketa komandoa hasi. Mesedez, komando lerroa begiratu konfiguraketan.
+Ezinezkoa alderantzizko bilaketa komandoa hasi. Mesedez, egiaztatu komando lerroa ezarpenetan.
 
 Change Language
-Hizkuntza aldatu (Change Language)
+Aldatu Hizkuntza
 
 Check for &Updates
-Bertsio berriagorik ba ote den begiratu
+Egiaztatu E&guneraketak
 
 Comic books
 Komiki liburuak
@@ -209,154 +243,166 @@ Continuous
 Jarraian
 
 Continuous Book View
-Liburuaren ikuspegi jarraia
+Liburu ikuspegi jarraia
 
 Continuous Facing
-Bi aldetatik jarraian
+Bi Aldetatik Jarraian
 
 Contribute Translation
-Lagun gaitzazu itzulpenekin
+Lagundu Itzultzen
 
 Copy &Link Address
-Gakoaren helbidea kopiatu
+Kopiatu &Lotura Helbidea
 
 Copy Co&mment
-Iradokizuna kopiatu
+Kopiatu Ira&dokizuna
 
 Copying text was denied (copying as image only)
-Testuaren kopiaketa eragotzia (soilik irudi bezela kopiatuz)
+Idazkia kopiatzea eragotzita (kopiatzea irudi bezala bakarrik)
+
+Could not obtain Printer properties
+Ezinezkoa Irarkailu ezaugarriak lortzea
 
 Could not open Printer
-Ezin da inprimagailua ireki
+Ezin da Irarkailua ireki
 
 Couldn't initialize printer
-Inprimagailua ezin izan da hasieratu
+Ezinezkoa irarkailua abiaraztea
 
 Couldn't render the page
-Orriaren render-a ezin izan da osatu
+Ezinezkoa orrialdea aurkeztea
 
 Created:
 Sortua:
 
+Current file
+Uneko agiria
+
 Custom &Zoom...\tCtrl+Y
-Zooma Aldatu...\tCtrl+Y
+Egile &Zooma...\tCtrl+Y
 
 Default &Layout:
 Berezko &Egitura:
 
 Default &Zoom:
-Berezko zooma:
+Berezko &Zooma:
 
 Default PDF reader can't be changed in portable mode
-Defektuzko PDF irakurtzailea ezin da aldatu era/bertsi eramangarrian
+Berezko PDF irakurtzailea ezin da eramangarri modura aldatu
 
 Denied Permissions:
-Baimen ezeztua:
+Baimen Ukatuak:
 
 DjVu documents
-DjVu dokumentuak
+DjVu agiriak
 
 Document Properties
-Dokumentuaren Propietateak
+Agiriaren Ezaugarriak
 
 Download
-Deskargatu
+Jeitsi
 
 E&xit\tCtrl+Q
-&Irten\tCtrl+Q
+I&rten\tCtrl+Q
 
 Enter password
-Pasahitza sartu
+Idatzi sar-hitza
 
 Enter password for %s
-%s-rentzat pasahitza sartu
+Idatzi %s-rentzako sar-hitza
 
 Enter the command-line to invoke when you double-click on the PDF document:
-PDF dokumentuak klik bikoitza egitean komando-lerroa sartu inbokatzeko.
+Idatzi deitzeko agindu-lerroa PDF agirian klik-bikoitza egiten duzunean:
 
 Error loading %s
-%s kargartzean errorea
+Akatsa %s gertatzerakoan
+
+F&avorites
+Gogo&koenak
 
 F&orward\tAlt+Right Arrow
-A&urrera\tAlt+Gezia eskubiruntz
+A&urrera\tAlt+Eskuin Gezia
 
 F&ullscreen\tCtrl+Shift+L
-Pantaila osoan\tCtrl+Shift+L
+Ikusleiho-osoan\tCtrl+Shift+L
 
 Facing
 Bi aldetatik
 
 Failed to save a file
-Fitxategia ezin izan da gorde
+Hutsegitea agiria gordetzerakoan
+
+Favorites
+Gogokoenak
 
 File Size:
-Dokumentuaren neurria:
+Agiriaren Neurria:
 
 File:
-Dokumentua:
+Agiria:
 
 Fin&d...\tCtrl+F
-Bilatu...\tCtrl+F
+Bi&latu...\tCtrl+F
 
 Find
 Bilatu
 
 Find Next
-Hurrengoa bilatu
+Bilatu Hurrengoa
 
 Find Previous
-Aurrekoa bilatu
+Bilatu Aurrekoa
 
 Find:
 Bilatu:
 
 Fit &Content\tCtrl+3
-Edukia &Egokitu\tCtrl+3
+Finkatu &Edukia\tCtrl+3
 
 Fit &Page\tCtrl+0
-Orriaren neurria egokitu\tCtrl+O
+Finkatu &Orrialdea\tCtrl+O
 
 Fit &Width\tCtrl+2
-Orriaren zabalera egokitu\tCtrl+2
+Finkatu &Zabalera\tCtrl+2
 
 Fit Content
-Edukia Egokitu
+Finkatu Edukia
 
 Fit Page
-Orriaren neurria egokitu
+Finkatu Orrialdea
 
 Fit Width
-Orriaren zabalera egokitu
+Finkatu Zabalera
 
 Fit Width and Show Pages Continuously
-Zabalera egokitu eta orriak jarraian azaldu
+Finkatu Zabalera eta Erakutsi Orrialdeak Jarraian
 
 Fit a Single Page
-Orri bakar bat egokitu
+Finkatu Orrialde Bakar bat
 
 Found text at page %s
-Textua aurkito %s orrian
+Bilatu idazkia %s orrialdean
 
 Found text at page %s (again)
-%s orrian bilatu (berriz) testua
+Bilatu idazkia %s orrialdean (berriro)
 
 Frequently Read
-Sarritan irakurriak
+Sarri Irakurriak
 
 GB
 GB
 
 Go to page
-...garren orrira joan
+Joan orrialdera
 
 Hide frequently read
-Ezkutatu sarritan irakurriak
+Ezkutatu sarri irakurriak
 
 Hint: Use the F3 key for finding again
-Oharra: F3 erabili berriz bilatzeko
+Oharra: Erabili F3 tekla berriro bilatzeko
 
 Image files (*.%s)
-Irudi fitxategiak (*.%s)
+Irudi agiriak (*.%s)
 
 KB
 KB
@@ -365,157 +411,181 @@ MB
 MB
 
 Make SumatraPDF default application for PDF files?
-PDF fitxategiak irakurtzeko SumatraPFD defektuzko aplikazioa izatea nahi al duzu?
+Egin SumatraPFD berezko aplikazioa PDF agirientzat?
 
 Make SumatraPDF my default PDF reader
-SumatraPDF erabili besterik ezean PDFak irakurtzeko
+Egin SumatraPDF nire berezko PDF irakurlea
 
 Match Case
 Hizki handiak edo txikiak bereizi
 
 Modified:
-Aldatua:
+Aldatuta:
 
 New version %s is available. Download new version?
-%s bertsio berria eskuragarri dago. Jeisterik nahi?
+%s bertsio berria eskuragarri dago. Bertsio berria jeitsi?
 
 Next Page
-Hurrengo orria
+Hurrengo Orrialdea
 
 No matches were found
-Ez dira Aurkito amaitzik
+Ez da emaitzik aurkitu
 
 No synchronization file found
-Sinkronizazio fitxategirik ez da aurkitu
+Aldiberetze agiria ez da aurkitu
 
 No synchronization info at this position
-Ez dago sinkronizazio informaziorik toki horretan
+Ez dago aldiberetze argibiderik toki honetan
 
 Number of Pages:
-Orri Kopurua:
+Orrialde Zenbatekoa:
 
 OK
-Ondo
+Ongi
 
 Open
 Ireki
 
 Open a document...
-Dokumentu bat ireki...
+Ireki agiri bat...
 
 Open in &Adobe Reader
-Adobe Reader-ekin ireki
+Ireki &Adobe Readerren
 
 Open in &Foxit Reader
-Foxit Reader-ekin ireki
+Ireki &Foxit Readerren
 
 Open in PDF-XChange
-PDF-XChange-ekin ireki
+Ireki PDF-XChangen
 
 P&roperties
-P&ropietateak
+Eza&ugarriak
 
 P&roperties\tCtrl+D
-Propietateak\tCtrl+D
+Ezaugarriak\tCtrl+D
 
 PDF Document
-PDF Dokumentua
+PDF Agiria
 
 PDF Producer:
-PDF sortzailea
+PDF Egilea:
 
 PDF Version:
-PDF Bertzioa:
+PDF Bertsioa:
 
 PDF documents
-PDF dokumentuak
+PDF agiriak
 
 Pa&ge...\tCtrl+G
-...garren orria\tCtrl+G
+Or&rialdea...\tCtrl+G
+
+Page %s
+%s Orrialdea
 
 Page Size:
-Orri Tamaina:
+Orrilde Neurria:
 
 Page number %u inexistant
-Ez da %u zenbaki orririk existitzen
+%u orrialde zenbakia ez dago
 
 Page scaling
-Orria eskalatzen
+Orrialdea neurriratzen
 
 Page:
-Orria
+Orrialdea:
 
 Please wait - rendering...
-Itxaron mesedez - renderizatzen oraindik
+Mesedez itxaron - aurkezten...
+
+Postscript documents
+Postscript agirak
 
 Pr&esentation\tCtrl+L
 Aurk&ezpena\tCtrl+L
 
 Previous Page
-Aurreko orria
+Aurreko Orrialdea
 
 Print
-Inprimatu
+Irarkitu
 
 Print range
-Eremua inprimatu
+Irarketa eremua
+
+Printer with given name doesn't exist
+Ez dagi emandako izenik duen irarkailurik
 
 Printing is still in progress. Abort and start over?
-Oraindik ere inprimatzen. Ezeztatu eta berriz hasterik nahi?
+Irarketa oraindik garatzen ari da. Utzi eta berriro hasi?
 
 Printing page %d of %d...
-%d/%d orria inprimatzen...
+%d orria %d-tik irarkitzen...
 
 Printing problem.
-Arazoak inprimatze lanetan
+Arazoak irarkitzerakoan.
 
 Remember &opened files
-Irekitako &orriak gogoratu
+Gogoratu ir&ekitako agiriak
+
+Remove from favorites
+Kendu gogokoenetatik
+
+Remove page %s from favorites
+Kendu %s orrialdea gogokoenetatik
 
 Rotate &Left\tCtrl+Shift+-
-Ezkerrerantz biratu\tCtrl+Shift+-
+Itzulikatu E&zkerrerantz\tCtrl+Shift+-
 
 Rotate &Right\tCtrl+Shift++
-Eskubirantz biratu\tCtrl+Shift++
+Itzulikatu E&skuinera\tCtrl+Shift++
+
+Save As
+Gorde Honela
 
 Save S&hortcut...\tCtrl+Shift+S
-&Bide laburra gorde... \tCtrl+Shift+S
+Gorde &Lasterbidea...\tCtrl+Shift+S
 
 Searching %d of %d...
-%d-tik %d Bilatzen...
+%d-tik %d bilatzen...
 
 Select &All
-Guztia &Aukeratu
+Hautatu G&uztiak
 
 Select &All\tCtrl+A
-Guztia &Aukeratu\tCtrl+A
+Hautatu &Guztiak\tCtrl+A
 
 Select content with Ctrl+left mouse button
-Edukia Ctrl+saguaren ezker botoiarekin aukeratu
+Hautatu edukia Ctrl+ezker sagu botoiarekin
 
 Send by &E-mail...
-E-mailez bidali...
+Post@z bidali...
 
 Set inverse search command-line
-Alderantzizko bilaketa ezarri
+Ezarri alderantzizko bilaketa agindu-lerroa
 
 Show &Toolbar
-Lanabes barra azaldu
+Erakutsi &Tresnabarra
 
 Show &pages continuously
-Orriak &jarraian erakutsi
+Erakutsi orrialdeak &jarraian
+
+Show Favorites
+Erakutsi Gogokoenak
 
 Show frequently read
-Sarritan irakurriak erakutsi
+Erakutsi Sarri irakurriak
 
 Show the &bookmarks sidebar when available
-Ahal denean li&buru-markak aldamenean erakutsi
+Erakutsi &lastermarka albobarra eskuragarri dagoenean
 
 Single Page
-Orri bakarra
+Orrialde bakarra
+
+Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+Barkatu, hau ez litzake gertatu behar!\n\nMesedez sakatu 'ezeztatu', matxura hau eragin duena zuzentzen laguntzea nahi badiguzu.
 
 Source file %s has no synchronization point
-%s Iturburu artxiboak ez dauka sinkronizazio punturik
+%s iturburu agiriak ez du aldiberetze punturik
 
 Subject:
 Gaia:
@@ -527,89 +597,66 @@ SumatraPDF Update
 SumatraPDF Eguneratu
 
 SumatraPDF crashed
-SumatraPDF-k arazo bat izan du
+SumatraPDF matxuratu egin da
 
 SumatraPDF is your default PDF reader
-SumatraPDF zure hasiera bateko PDF irakurlea da
+SumatraPDF zure berezko PDF irakurlea da
 
 SumatraPDF should now be your default PDF reader
-SumatraPDF-k orain zure hasiera bateko PDF irakurlea izan beharko luke
+SumatraPDF orain zure berezko PDF irakurlea izan beharko litzake
 
 Synchronization file cannot be opened
-Sinkronizazio fitxategia ezin da ireki
+Aldiberetze agiria ezin da ireki
 
 Text documents
-Textu dokumentuak
+Idazki agiriak
 
 Title:
-Titulua:
+Izenburua:
 
 Unknown source file (%s)
-(%s) iturri desesaguna 
+Iturburu agiri ezezaguna: (%s)
 
 View
 Ikusi
 
 Visit &Website
-&Web orria bisitatu
+Ikusi &Webgunea
 
 Warning
 Oharra
 
 XPS documents
-XPS dokumentuak
+XPS agiriak
 
 You have the latest version.
-Azkeneko bertsioa da daukazuna.
+Azken bertsioa duzu.
 
 You have version %s
-%s bertsioa daukazu.
+%s bertsioa duzu
 
 Zoom
 Zooma
 
 Zoom In
-Zoom-a hurbildu
+Zooma Handitu
 
 Zoom Out
-Zoom-a urruneratu
+Zooma Gutxitu
 
 Zoom factor
-Zomm faktorea
+Zomm ezaugarria
 
 [Changes detected; refreshing] %s
-[Aldaketak fitxategian, eguneratzen...] %s
+[Aldaketak atzeman dira, berritzen] %s
 
 copying text
-Textua Kopiatzen
+idazkia kopiatzen
 
 printing document
-dokumentua imprimatzen
+agiria irarkitzen
 
 # Untranslated:
-#&Book View\tCtrl+8
-#&Facing\tCtrl+7
-#&Open Document
 #&Pin Document
-#&Remove Document
-#&Single Page\tCtrl+6
-#(page %s)
-#Add Favorite
-#Add page %s to favorites
-#Add page %s to favorites with (optional) name:
-#Add to favorites
-#Bookmark shortcut to page %s of %s
-#Could not obtain Printer properties
-#Current file
-#F&avorites
-#Favorites
 #No result found around line %u in file %s
-#Page %s
-#Postscript documents
-#Printer with given name doesn't exist
-#Remove from favorites
-#Remove page %s from favorites
-#Save As
-#Show Favorites
-#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 
