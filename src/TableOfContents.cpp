@@ -503,21 +503,22 @@ void CreateToc(WindowInfo *win)
 {
    // toc windows
    win->hwndTocBox = CreateWindow(WC_STATIC, _T(""), WS_CHILD,
-                       0,0,gGlobalPrefs.sidebarDx,0, win->hwndFrame, (HMENU)0, ghinst, NULL);
+                                  0, 0, gGlobalPrefs.sidebarDx, 0,
+                                  win->hwndFrame, (HMENU)0, ghinst, NULL);
    HWND title = CreateWindow(WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
-                        0,0,0,0, win->hwndTocBox, (HMENU)IDC_TOC_TITLE, ghinst, NULL);
+                             0, 0, 0, 0, win->hwndTocBox, (HMENU)IDC_TOC_TITLE, ghinst, NULL);
    SetWindowFont(title, gDefaultGuiFont, FALSE);
    win::SetText(title, _TR("Bookmarks"));
 
    HWND hwndClose = CreateWindow(WC_STATIC, _T(""),
-                       SS_OWNERDRAW | SS_NOTIFY | WS_CHILD | WS_VISIBLE,
-                       0, 0, 16, 16, win->hwndTocBox, (HMENU)IDC_TOC_CLOSE, ghinst, NULL);
+                                 SS_OWNERDRAW | SS_NOTIFY | WS_CHILD | WS_VISIBLE,
+                                 0, 0, 16, 16, win->hwndTocBox, (HMENU)IDC_TOC_CLOSE, ghinst, NULL);
 
    win->hwndTocTree = CreateWindowEx(WS_EX_STATICEDGE, WC_TREEVIEW, _T("TOC"),
-                       TVS_HASBUTTONS|TVS_HASLINES|TVS_LINESATROOT|TVS_SHOWSELALWAYS|
-                       TVS_TRACKSELECT|TVS_DISABLEDRAGDROP|TVS_NOHSCROLL|TVS_INFOTIP|
-                       WS_TABSTOP|WS_VISIBLE|WS_CHILD,
-                       0,0,0,0, win->hwndTocBox, (HMENU)IDC_TOC_TREE, ghinst, NULL);
+                                     TVS_HASBUTTONS|TVS_HASLINES|TVS_LINESATROOT|TVS_SHOWSELALWAYS|
+                                     TVS_TRACKSELECT|TVS_DISABLEDRAGDROP|TVS_NOHSCROLL|TVS_INFOTIP|
+                                     WS_TABSTOP|WS_VISIBLE|WS_CHILD,
+                                     0, 0, 0, 0, win->hwndTocBox, (HMENU)IDC_TOC_TREE, ghinst, NULL);
 
    // Note: those must be consecutive numbers and in title/close/tree order
    CASSERT(IDC_TOC_BOX + 1 == IDC_TOC_TITLE &&

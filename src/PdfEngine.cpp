@@ -707,8 +707,12 @@ public:
     virtual PageLayoutType PreferredLayout();
     virtual TCHAR *GetProperty(char *name);
 
-    virtual bool IsPrintingAllowed() { return HasPermission(PDF_PERM_PRINT); }
-    virtual bool IsCopyingTextAllowed() { return HasPermission(PDF_PERM_COPY); }
+    virtual bool IsPrintingAllowed() {
+        return pdf_has_permission(_xref, PDF_PERM_PRINT);
+    }
+    virtual bool IsCopyingTextAllowed() {
+        return pdf_has_permission(_xref, PDF_PERM_COPY);
+    }
 
     virtual float GetFileDPI() const { return 72.0f; }
     virtual const TCHAR *GetDefaultFileExt() const { return _T(".pdf"); }
@@ -766,7 +770,6 @@ protected:
 
     PdfToCItem   *  BuildToCTree(pdf_outline *entry, int& idCounter);
     void            LinkifyPageText(pdf_page *page);
-    bool            HasPermission(int permission);
 
     int             FindPageNo(fz_obj *dest);
     bool            SaveEmbedded(fz_obj *obj, LinkSaverUI& saveUI);
@@ -785,9 +788,6 @@ class PdfLink : public PageElement, public PageDestination {
     int pageNo;
 
     fz_obj *dest() const;
-
-    // there should be no PdfLink without an CPdfEngine or a pdf_link
-    PdfLink() { assert(0); }
 
 public:
     PdfLink(CPdfEngine *engine, pdf_link *link, int pageNo=-1) :
@@ -1358,11 +1358,6 @@ RectD CPdfEngine::PageContentBox(int pageNo, RenderTarget target)
     return bbox2.Intersect(PageMediabox(pageNo));
 }
 
-bool CPdfEngine::HasPermission(int permission)
-{
-    return (bool)pdf_has_permission(_xref, permission);
-}
-
 fz_matrix CPdfEngine::viewctm(pdf_page *page, float zoom, int rotation)
 {
     fz_matrix ctm = fz_identity;
@@ -1433,7 +1428,7 @@ bool CPdfEngine::RenderPage(HDC hDC, pdf_page *page, RectI screenRect, fz_matrix
         ctm = &ctm2;
     }
 
-    HBRUSH bgBrush = CreateSolidBrush(RGB(0xFF,0xFF,0xFF));
+    HBRUSH bgBrush = CreateSolidBrush(RGB(0xFF, 0xFF, 0xFF));
     FillRect(hDC, &screenRect.ToRECT(), bgBrush); // initialize white background
     DeleteObject(bgBrush);
 
@@ -1482,7 +1477,7 @@ RenderedBitmap *CPdfEngine::RenderBitmap(int pageNo, float zoom, int rotation, R
         return NULL;
     image->x = bbox.x0; image->y = bbox.y0;
 
-    fz_clear_pixmap_with_color(image, 255); // initialize white background
+    fz_clear_pixmap_with_color(image, 0xFF); // initialize white background
     if (!_drawcache)
         _drawcache = fz_new_glyph_cache();
 
@@ -2501,7 +2496,7 @@ bool CXpsEngine::renderPage(HDC hDC, xps_page *page, RectI screenRect, fz_matrix
         ctm = &ctm2;
     }
 
-    HBRUSH bgBrush = CreateSolidBrush(RGB(0xFF,0xFF,0xFF));
+    HBRUSH bgBrush = CreateSolidBrush(RGB(0xFF, 0xFF, 0xFF));
     FillRect(hDC, &screenRect.ToRECT(), bgBrush); // initialize white background
     DeleteObject(bgBrush);
 
@@ -2550,7 +2545,7 @@ RenderedBitmap *CXpsEngine::RenderBitmap(int pageNo, float zoom, int rotation, R
         return NULL;
     image->x = bbox.x0; image->y = bbox.y0;
 
-    fz_clear_pixmap_with_color(image, 255); // initialize white background
+    fz_clear_pixmap_with_color(image, 0xFF); // initialize white background
     if (!_drawcache)
         _drawcache = fz_new_glyph_cache();
 

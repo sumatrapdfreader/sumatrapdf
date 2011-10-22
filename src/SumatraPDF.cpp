@@ -72,9 +72,9 @@ bool             gUseGdiRenderer = false;
 TCHAR *          gPluginURL = NULL; // owned by CommandLineInfo in WinMain
 
 #if defined(SVN_PRE_RELEASE_VER) && !defined(BLACK_ON_YELLOW)
-#define ABOUT_BG_COLOR          RGB(255,0,0)
+#define ABOUT_BG_COLOR          RGB(0xFF, 0, 0)
 #else
-#define ABOUT_BG_COLOR          RGB(255,242,0)
+#define ABOUT_BG_COLOR          RGB(0xFF, 0xF2, 0)
 #endif
 
 // Background color comparison:

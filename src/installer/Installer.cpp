@@ -1646,7 +1646,7 @@ static REAL DrawMessage(Graphics &g, TCHAR *msg, REAL y, REAL dx, Color color)
 #if DRAW_MSG_TEXT_SHADOW
     {
         bbox.X--; bbox.Y++;
-        SolidBrush b(Color(255,255,255));
+        SolidBrush b(Color(0xff, 0xff, 0xff));
         g.DrawString(s, -1, &f, bbox, &sft, &b);
         bbox.X++; bbox.Y--;
     }
@@ -1690,11 +1690,11 @@ static void DrawSumatraLetters(Graphics &g, Font *f, Font *fVer, REAL y)
 
     ScopedMem<WCHAR> ver_s(str::conv::ToWStr(_T("v") CURR_VERSION_STR));
 #if DRAW_TEXT_SHADOW
-    SolidBrush b1(Color(0,0,0));
-    g.DrawString(ver_s, -1, fVer, Gdiplus::PointF(x2-2,y2-1), &b1);
+    SolidBrush b1(Color(0, 0, 0));
+    g.DrawString(ver_s, -1, fVer, Gdiplus::PointF(x2 - 2, y2 - 1), &b1);
 #endif
-    SolidBrush b2(Color(255,255,255));
-    g.DrawString(ver_s, -1, fVer, Gdiplus::PointF(x2,y2), &b2);
+    SolidBrush b2(Color(0xff, 0xff, 0xff));
+    g.DrawString(ver_s, -1, fVer, Gdiplus::PointF(x2, y2), &b2);
     g.ResetTransform();
 }
 
@@ -1707,8 +1707,8 @@ static void DrawFrame2(Graphics &g, RectI r)
     Font f(L"Impact", 40, FontStyleRegular);
     CalcLettersLayout(g, &f, r.dx);
 
-    SolidBrush bgBrush(Color(255,242,0));
-    Gdiplus::Rect r2(r.y-1, r.x-1, r.dx+1, r.dy+1);
+    SolidBrush bgBrush(Color(0xff, 0xf2, 0));
+    Gdiplus::Rect r2(r.y - 1, r.x - 1, r.dx + 1, r.dy + 1);
     g.FillRectangle(&bgBrush, r2);
 
     Font f2(L"Impact", 16, FontStyleRegular);

@@ -35,7 +35,7 @@ IFACEMETHODIMP PreviewBase::GetThumbnail(UINT cx, HBITMAP *phbmp, WTS_ALPHATYPE 
     if (bmp && GetDIBits(hdc, bmp->GetBitmap(), 0, thumb.dy, bmpData, &bmi, DIB_RGB_COLORS)) {
         // cf. http://msdn.microsoft.com/en-us/library/bb774612(v=VS.85).aspx
         for (int i = 0; i < thumb.dx * thumb.dy; i++)
-            bmpData[4 * i + 3] = 255;
+            bmpData[4 * i + 3] = 0xFF;
 
         *phbmp = hthumb;
         *pdwAlpha = WTSAT_RGB;
@@ -51,7 +51,7 @@ IFACEMETHODIMP PreviewBase::GetThumbnail(UINT cx, HBITMAP *phbmp, WTS_ALPHATYPE 
     return hthumb ? S_OK : E_FAIL;
 }
 
-#define COL_WINDOW_BG   RGB(0xcc, 0xcc, 0xcc)
+#define COL_WINDOW_BG   RGB(0x99, 0x99, 0x99)
 #define PREVIEW_MARGIN  2
 #define UWM_PAINT_AGAIN (WM_USER + 1)
 

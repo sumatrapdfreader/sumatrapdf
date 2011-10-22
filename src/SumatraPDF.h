@@ -51,7 +51,7 @@ enum MenuToolbarFlags {
 #define RIGHT_TXT_FONT          _T("Arial Black")
 #define RIGHT_TXT_FONT_SIZE     12
 // for backward compatibility use a value that older versions will render as yellow
-#define ABOUT_BG_COLOR_DEFAULT  (RGB(255,242,0) - 0x80000000)
+#define ABOUT_BG_COLOR_DEFAULT  (RGB(0xff, 0xf2, 0) - 0x80000000)
 
 class WindowInfo;
 class Favorites;

@@ -14,8 +14,8 @@
 #define USER_DEFAULT_SCREEN_DPI 96
 #endif
 
-#define WIN_COL_WHITE   RGB(255,255,255)
-#define WIN_COL_BLACK   RGB(0,0,0)
+#define WIN_COL_WHITE   RGB(0xff, 0xff, 0xff)
+#define WIN_COL_BLACK   RGB(0, 0, 0)
 
 #define DRAGQUERY_NUMFILES 0xFFFFFFFF
 

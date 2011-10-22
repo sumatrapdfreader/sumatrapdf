@@ -14,7 +14,7 @@
 #define ABOUT_LEFT_RIGHT_SPACE_DX   8
 #define ABOUT_MARGIN_DX            10
 #define ABOUT_BOX_MARGIN_DY         6
-#define ABOUT_BORDER_COL            RGB(0,0,0)
+#define ABOUT_BORDER_COL            RGB(0, 0, 0)
 #define ABOUT_TXT_DY                6
 #define ABOUT_RECT_PADDING          8
 #define ABOUT_INNER_PADDING         6

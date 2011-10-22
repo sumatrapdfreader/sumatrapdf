@@ -87,7 +87,7 @@
 #define DEFAULT_DISPLAY_MODE    DM_AUTOMATIC
 #define DEFAULT_ZOOM            ZOOM_FIT_PAGE
 #define DEFAULT_LANGUAGE        "en"
-#define COL_FWDSEARCH_BG        RGB(0x65, 0x81 ,0xff)
+#define COL_FWDSEARCH_BG        RGB(0x65, 0x81, 0xff)
 
 SerializableGlobalPrefs gGlobalPrefs = {
     false, // bool globalPrefsOnly

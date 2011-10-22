@@ -676,7 +676,7 @@ void HtmlWindow::EnsureAboutBlankShown()
         IDispatch *docDispatch = NULL;
         hr = webBrowser->get_Document(&docDispatch);
         if (SUCCEEDED(hr) && (docDispatch != NULL)) {
-            hr = docDispatch->QueryInterface(IID_IHTMLDocument2,(void **)&doc);
+            hr = docDispatch->QueryInterface(IID_IHTMLDocument2, (void **)&doc);
             docDispatch->Release();
         }
     }

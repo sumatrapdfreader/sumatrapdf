@@ -143,8 +143,8 @@ void UpdateToolbarButtonsToolTipsForWindow(WindowInfo *win)
 
 void ToolbarUpdateStateForWindow(WindowInfo *win) 
 {
-    const LPARAM enabled = (LPARAM)MAKELONG(1,0);
-    const LPARAM disabled = (LPARAM)MAKELONG(0,0);
+    const LPARAM enabled = (LPARAM)MAKELONG(1, 0);
+    const LPARAM disabled = (LPARAM)MAKELONG(0, 0);
 
     for (int i = 0; i < TOOLBAR_BUTTONS_COUNT; i++) {
         BOOL hide = !IsVisibleToolbarButton(win, i);
@@ -536,7 +536,7 @@ static void CreatePageBox(WindowInfo& win)
 void CreateToolbar(WindowInfo *win)
 {
     HWND hwndToolbar = CreateWindowEx(0, TOOLBARCLASSNAME, NULL, WS_TOOLBAR,
-                                 0,0,0,0, win->hwndFrame,(HMENU)IDC_TOOLBAR, ghinst, NULL);
+                                      0, 0, 0, 0, win->hwndFrame,(HMENU)IDC_TOOLBAR, ghinst, NULL);
     win->hwndToolbar = hwndToolbar;
     LRESULT lres = SendMessage(hwndToolbar, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
 
@@ -557,7 +557,7 @@ void CreateToolbar(WindowInfo *win)
     }
     // Assume square icons
     HIMAGELIST himl = ImageList_Create(bmp.bmHeight, bmp.bmHeight, ILC_COLORDDB | ILC_MASK, 0, 0);
-    ImageList_AddMasked(himl, hbmp, RGB(255, 0, 255));
+    ImageList_AddMasked(himl, hbmp, RGB(0xFF, 0, 0xFF));
     DeleteObject(hbmp);
 
     // in Plugin mode, replace the Open with a Save As button
@@ -585,7 +585,7 @@ void CreateToolbar(WindowInfo *win)
 
     DWORD  reBarStyle = WS_REBAR | WS_VISIBLE;
     win->hwndReBar = CreateWindowEx(WS_EX_TOOLWINDOW, REBARCLASSNAME, NULL, reBarStyle,
-                             0,0,0,0, win->hwndFrame, (HMENU)IDC_REBAR, ghinst, NULL);
+                                    0, 0, 0, 0, win->hwndFrame, (HMENU)IDC_REBAR, ghinst, NULL);
     if (!win->hwndReBar)
         SeeLastError();
 

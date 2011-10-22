@@ -569,7 +569,7 @@ int SyncTex::source_to_pdf(const TCHAR* srcfilename, UINT line, UINT col, UINT *
 TryAgainAnsi:
     if (!mb_srcfilepath)
         return PDFSYNCERR_OUTOFMEMORY;
-    int ret = synctex_display_query(this->scanner,mb_srcfilepath,line,col);
+    int ret = synctex_display_query(this->scanner, mb_srcfilepath, line, col);
     free(mb_srcfilepath);
     // recent SyncTeX versions encode in UTF-8 instead of ANSI
     if (isUtf8 && -1 == ret) {
