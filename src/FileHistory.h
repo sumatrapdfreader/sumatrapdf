@@ -72,14 +72,14 @@ public:
 
     DisplayState *Get(size_t index) const {
         if (index < states.Count())
-            return states[index];
+            return states.At(index);
         return NULL;
     }
 
     DisplayState *Find(const TCHAR *filePath) const {
         for (size_t i = 0; i < states.Count(); i++)
-            if (str::EqI(states[i]->filePath, filePath))
-                return states[i];
+            if (str::EqI(states.At(i)->filePath, filePath))
+                return states.At(i);
         return NULL;
     }
 

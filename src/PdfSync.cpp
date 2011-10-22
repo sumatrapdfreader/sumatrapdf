@@ -296,7 +296,7 @@ int Pdfsync::rebuild_index()
 
         case ')':
             if (filestack.Count() > 1)
-                file_index[filestack.Pop()].end = lines.Count();
+                file_index.At(filestack.Pop()).end = lines.Count();
             else
                 DBG_OUT("Unbalanced ')' line in the pdfsync file\n");
             break;
@@ -307,7 +307,7 @@ int Pdfsync::rebuild_index()
         }
     }
 
-    file_index[0].end = lines.Count();
+    file_index.At(0).end = lines.Count();
     assert(filestack.Count() == 1);
 
     return Synchronizer::rebuild_index();;
@@ -342,18 +342,18 @@ int Pdfsync::pdf_to_source(UINT pageNo, PointI pt, ScopedMem<TCHAR>& filename, U
     UINT closest_ydist_record = (UINT)-1; // vertically-closest record
 
     // read all the sections of 'p' declarations for this pdf sheet
-    for (size_t i = sheet_index[pageNo]; i < points.Count() && points[i].page == pageNo; i++) {
+    for (size_t i = sheet_index.At(pageNo); i < points.Count() && points.At(i).page == pageNo; i++) {
         // check whether it is closer than the closest point found so far
-        UINT dx = abs(pt.x - (int)SYNC_TO_PDF_COORDINATE(points[i].x));
-        UINT dy = abs(pt.y - (int)SYNC_TO_PDF_COORDINATE(points[i].y));
+        UINT dx = abs(pt.x - (int)SYNC_TO_PDF_COORDINATE(points.At(i).x));
+        UINT dy = abs(pt.y - (int)SYNC_TO_PDF_COORDINATE(points.At(i).y));
         UINT dist = dx * dx + dy * dy;
         if (dist < PDFSYNC_EPSILON_SQUARE && dist < closest_xydist) {
-            selected_record = points[i].record;
+            selected_record = points.At(i).record;
             closest_xydist = dist;
         }
         else if ((closest_xydist == (UINT)-1) && dy < PDFSYNC_EPSILON_Y &&
                  (dy < closest_ydist || (dy == closest_ydist && dx < closest_xdist))) {
-            closest_ydist_record = points[i].record;
+            closest_ydist_record = points.At(i).record;
             closest_ydist = dy;
             closest_xdist = dx;
         }
@@ -371,7 +371,7 @@ int Pdfsync::pdf_to_source(UINT pageNo, PointI pt, ScopedMem<TCHAR>& filename, U
     if (!found)
         return PDFSYNCERR_NO_SYNC_AT_LOCATION;
 
-    filename.Set(str::Dup(srcfiles[found->file]));
+    filename.Set(str::Dup(srcfiles.At(found->file)));
     *line = found->line;
     *col = found->column;
 
@@ -405,12 +405,12 @@ UINT Pdfsync::source_to_record(const TCHAR* srcfilename, UINT line, UINT col, Ve
     // find the source file entry
     size_t isrc;
     for (isrc = 0; isrc < srcfiles.Count(); isrc++)
-        if (path::IsSame(srcfilepath, srcfiles[isrc]))
+        if (path::IsSame(srcfilepath, srcfiles.At(isrc)))
             break;
     if (isrc == srcfiles.Count())
         return PDFSYNCERR_UNKNOWN_SOURCEFILE;
 
-    if (file_index[isrc].start == file_index[isrc].end)
+    if (file_index.At(isrc).start == file_index.At(isrc).end)
         return PDFSYNCERR_NORECORD_IN_SOURCEFILE; // there is not any record declaration for that particular source file
 
     // look for sections belonging to the specified file
@@ -418,12 +418,12 @@ UINT Pdfsync::source_to_record(const TCHAR* srcfilename, UINT line, UINT col, Ve
     UINT min_distance = EPSILON_LINE; // distance to the closest record
     size_t lineIx = (size_t)-1; // closest record-line index
 
-    for (size_t isec = file_index[isrc].start; isec < file_index[isrc].end; isec++) {
+    for (size_t isec = file_index.At(isrc).start; isec < file_index.At(isrc).end; isec++) {
         // does this section belong to the desired file?
-        if (lines[isec].file != isrc)
+        if (lines.At(isec).file != isrc)
             continue;
 
-        UINT d = abs((int)lines[isec].line - (int)line);
+        UINT d = abs((int)lines.At(isec).line - (int)line);
         if (d < min_distance) {
             min_distance = d;
             lineIx = isec;
@@ -435,8 +435,8 @@ UINT Pdfsync::source_to_record(const TCHAR* srcfilename, UINT line, UINT col, Ve
         return PDFSYNCERR_NORECORD_FOR_THATLINE;
 
     // we read all the consecutive records until we reach a record belonging to another line
-    for (size_t i = lineIx; i < lines.Count() && lines[i].line == lines[lineIx].line; i++)
-        records.Push(lines[i].record);
+    for (size_t i = lineIx; i < lines.Count() && lines.At(i).line == lines.At(lineIx).line; i++)
+        records.Push(lines.At(i).record);
 
     return PDFSYNCERR_SUCCESS;
 }
@@ -461,17 +461,17 @@ int Pdfsync::source_to_pdf(const TCHAR* srcfilename, UINT line, UINT col, UINT *
     UINT firstPage = (UINT)-1;
     for (size_t irecord = 0; irecord < found_records.Count(); irecord++) {
         for (size_t i = 0; i < points.Count(); i++) {
-            if (points[i].record != found_records[irecord] ||
-                firstPage != (UINT)-1 && firstPage != points[i].page) {
+            if (points.At(i).record != found_records.At(irecord) ||
+                firstPage != (UINT)-1 && firstPage != points.At(i).page) {
                 continue;
             }
-            firstPage = *page = points[i].page;
-            RectI rc((int)SYNC_TO_PDF_COORDINATE(points[i].x),
-                     (int)SYNC_TO_PDF_COORDINATE(points[i].y),
+            firstPage = *page = points.At(i).page;
+            RectI rc((int)SYNC_TO_PDF_COORDINATE(points.At(i).x),
+                     (int)SYNC_TO_PDF_COORDINATE(points.At(i).y),
                      MARK_SIZE, MARK_SIZE);
             rects.Push(rc);
             DBG_OUT("source->pdf: %s:%u -> record:%u -> page:%u, x:%u, y:%u\n",
-                    srcfilename, line, points[i].record, firstPage, rc.x, rc.y);
+                    srcfilename, line, points.At(i).record, firstPage, rc.x, rc.y);
         }
     }
 

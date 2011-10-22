@@ -111,10 +111,6 @@ public:
         len += count;
     }
 
-    T& operator[](size_t idx) const {
-        return els[idx];
-    }
-
     T& At(size_t idx) const {
         return els[idx];
     }

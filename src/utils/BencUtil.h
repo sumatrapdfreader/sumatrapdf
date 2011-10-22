@@ -94,18 +94,18 @@ public:
     }
 
     BencString *GetString(size_t index) const {
-        if (index < Length() && value[index]->Type() == BT_STRING)
-            return static_cast<BencString *>(value[index]);
+        if (index < Length() && value.At(index)->Type() == BT_STRING)
+            return static_cast<BencString *>(value.At(index));
         return NULL;
     }
     BencInt *GetInt(size_t index) const {
-        if (index < Length() && value[index]->Type() == BT_INT)
-            return static_cast<BencInt *>(value[index]);
+        if (index < Length() && value.At(index)->Type() == BT_INT)
+            return static_cast<BencInt *>(value.At(index));
         return NULL;
     }
     BencArray *GetArray(size_t index) const {
-        if (index < Length() && value[index]->Type() == BT_ARRAY)
-            return static_cast<BencArray *>(value[index]);
+        if (index < Length() && value.At(index)->Type() == BT_ARRAY)
+            return static_cast<BencArray *>(value.At(index));
         return NULL;
     }
     BencDict *GetDict(size_t index) const;

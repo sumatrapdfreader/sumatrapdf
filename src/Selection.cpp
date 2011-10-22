@@ -79,7 +79,7 @@ void PaintTransparentRectangles(HDC hdc, RectI screenRc, Vec<RectI>& rects, COLO
     GraphicsPath path(FillModeWinding);
     screenRc.Inflate(margin, margin);
     for (size_t i = 0; i < rects.Count(); i++) {
-        RectI rc = rects[i].Intersect(screenRc);
+        RectI rc = rects.At(i).Intersect(screenRc);
         if (!rc.IsEmpty())
             path.AddRectangle(Gdiplus::Rect(rc.x, rc.y, rc.dx, rc.dy));
     }

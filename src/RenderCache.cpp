@@ -339,7 +339,7 @@ void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool c
     if (clearQueue)
         ClearQueueForDisplayModel(dm, pageNo, &tile);
 
-    for (int i=0; i < requestCount; i++) {
+    for (int i = 0; i < requestCount; i++) {
         PageRenderRequest* req = &(requests[i]);
         if ((req->pageNo == pageNo) && (req->dm == dm) && (req->tile == tile)) {
             if ((req->zoom == zoom) && (req->rotation == rotation)) {

@@ -258,7 +258,7 @@ public:
 
     virtual RectD PageMediabox(int pageNo) {
         assert(1 <= pageNo && pageNo <= PageCount());
-        return RectD(0, 0, pages[pageNo-1]->GetWidth(), pages[pageNo-1]->GetHeight());
+        return RectD(0, 0, pages.At(pageNo - 1)->GetWidth(), pages.At(pageNo - 1)->GetHeight());
     }
 
     virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
@@ -294,7 +294,7 @@ protected:
     // override for lazily loading images
     virtual Bitmap *LoadImage(int pageNo) {
         assert(1 <= pageNo && pageNo <= PageCount());
-        return pages[pageNo - 1];
+        return pages.At(pageNo - 1);
     }
 };
 
@@ -412,7 +412,8 @@ protected:
 
 ImageEngine *CImageEngine::Clone()
 {
-    Bitmap *bmp = pages[0]->Clone(0, 0, pages[0]->GetWidth(), pages[0]->GetHeight(), PixelFormat32bppARGB);
+    Bitmap *bmp = pages.At(0);
+    bmp = bmp->Clone(0, 0, bmp->GetWidth(), bmp->GetHeight(), PixelFormat32bppARGB);
     if (!bmp)
         return NULL;
 
@@ -438,7 +439,7 @@ bool CImageEngine::LoadSingleFile(const TCHAR *file)
     assert(fileExt);
     if (!fileExt) fileExt = _T(".png");
 
-    return pages[0] != NULL;
+    return pages.At(0) != NULL;
 }
 
 bool CImageEngine::LoadFromStream(IStream *stream)
@@ -450,7 +451,7 @@ bool CImageEngine::LoadFromStream(IStream *stream)
     // could sniff instead, but GDI+ allows us to convert the image format anyway
     fileExt = _T(".png");
 
-    return pages[0] != NULL;
+    return pages.At(0) != NULL;
 }
 
 unsigned char *CImageEngine::GetFileData(size_t *cbCount) {
@@ -554,16 +555,16 @@ bool CImageDirEngine::LoadImageDir(const TCHAR *dirName)
 RectD CImageDirEngine::PageMediabox(int pageNo)
 {
     assert(1 <= pageNo && pageNo <= PageCount());
-    if (!mediaboxes[pageNo-1].IsEmpty())
-        return mediaboxes[pageNo-1];
+    if (!mediaboxes.At(pageNo - 1).IsEmpty())
+        return mediaboxes.At(pageNo - 1);
 
     size_t len;
-    ScopedMem<char> bmpData(file::ReadAll(pageFileNames[pageNo-1], &len));
+    ScopedMem<char> bmpData(file::ReadAll(pageFileNames.At(pageNo - 1), &len));
     if (bmpData) {
         SizeI size = SizeFromData(bmpData, len);
-        mediaboxes[pageNo-1] = RectI(PointI(), size).Convert<double>();
+        mediaboxes.At(pageNo - 1) = RectI(PointI(), size).Convert<double>();
     }
-    return mediaboxes[pageNo-1];
+    return mediaboxes.At(pageNo - 1);
 }
 
 TCHAR *CImageDirEngine::GetPageLabel(int pageNo)
@@ -571,14 +572,14 @@ TCHAR *CImageDirEngine::GetPageLabel(int pageNo)
     if (pageNo < 1 || PageCount() < pageNo)
         return BaseEngine::GetPageLabel(pageNo);
 
-    const TCHAR *fileName = path::GetBaseName(pageFileNames[pageNo - 1]);
+    const TCHAR *fileName = path::GetBaseName(pageFileNames.At(pageNo - 1));
     return str::DupN(fileName, path::GetExt(fileName) - fileName);
 }
 
 int CImageDirEngine::GetPageByLabel(const TCHAR *label)
 {
     for (size_t i = 0; i < pageFileNames.Count(); i++) {
-        const TCHAR *fileName = path::GetBaseName(pageFileNames[i]);
+        const TCHAR *fileName = path::GetBaseName(pageFileNames.At(i));
         const TCHAR *fileExt = path::GetExt(fileName);
         if (str::StartsWithI(fileName, label) &&
             (fileName + str::Len(label) == fileExt || fileName[str::Len(label)] == '\0'))
@@ -591,15 +592,15 @@ int CImageDirEngine::GetPageByLabel(const TCHAR *label)
 Bitmap *CImageDirEngine::LoadImage(int pageNo)
 {
     assert(1 <= pageNo && pageNo <= PageCount());
-    if (pages[pageNo-1])
-        return pages[pageNo-1];
+    if (pages.At(pageNo - 1))
+        return pages.At(pageNo - 1);
 
     size_t len;
-    ScopedMem<char> bmpData(file::ReadAll(pageFileNames[pageNo-1], &len));
+    ScopedMem<char> bmpData(file::ReadAll(pageFileNames.At(pageNo - 1), &len));
     if (bmpData)
-        pages[pageNo-1] = BitmapFromData(bmpData, len);
+        pages.At(pageNo - 1) = BitmapFromData(bmpData, len);
 
-    return pages[pageNo-1];
+    return pages.At(pageNo - 1);
 }
 
 bool ImageDirEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
@@ -666,30 +667,30 @@ CCbxEngine::~CCbxEngine()
 RectD CCbxEngine::PageMediabox(int pageNo)
 {
     assert(1 <= pageNo && pageNo <= PageCount());
-    if (!mediaboxes[pageNo-1].IsEmpty())
-        return mediaboxes[pageNo-1];
+    if (!mediaboxes.At(pageNo - 1).IsEmpty())
+        return mediaboxes.At(pageNo - 1);
 
     size_t len;
     ScopedMem<char> bmpData(GetImageData(pageNo, len));
     if (bmpData) {
         SizeI size = SizeFromData(bmpData, len);
-        mediaboxes[pageNo-1] = RectI(PointI(), size).Convert<double>();
+        mediaboxes.At(pageNo - 1) = RectI(PointI(), size).Convert<double>();
     }
-    return mediaboxes[pageNo-1];
+    return mediaboxes.At(pageNo - 1);
 }
 
 Bitmap *CCbxEngine::LoadImage(int pageNo)
 {
     assert(1 <= pageNo && pageNo <= PageCount());
-    if (pages[pageNo-1])
-        return pages[pageNo-1];
+    if (pages.At(pageNo - 1))
+        return pages.At(pageNo - 1);
 
     size_t len;
     ScopedMem<char> bmpData(GetImageData(pageNo, len));
     if (bmpData)
-        pages[pageNo-1] = BitmapFromData(bmpData, len);
+        pages.At(pageNo - 1) = BitmapFromData(bmpData, len);
 
-    return pages[pageNo-1];
+    return pages.At(pageNo - 1);
 }
 
 static bool SetCurrentCbzPage(unzFile& uf, const TCHAR *fileName)
@@ -911,9 +912,9 @@ bool CCbxEngine::LoadCbrFile(const TCHAR *file)
     found.Sort(ImagesPage::cmpPageByName);
 
     for (size_t i = 0; i < found.Count(); i++) {
-        pages.Append(found[i]->bmp);
-        mediaboxes.Append(RectD(0, 0, pages[i]->GetWidth(),  pages[i]->GetHeight()));
-        found[i]->bmp = NULL;
+        pages.Append(found.At(i)->bmp);
+        mediaboxes.Append(RectD(0, 0, pages.At(i)->GetWidth(), pages.At(i)->GetHeight()));
+        found.At(i)->bmp = NULL;
     }
 
     DeleteVecMembers(found);
@@ -924,7 +925,7 @@ char *CCbxEngine::GetImageData(int pageNo, size_t& len)
 {
     if (cbzData) {
         ScopedCritSec scope(&fileAccess);
-        if (SetCurrentCbzPage(cbzData->uf, pageFileNames[pageNo-1]))
+        if (SetCurrentCbzPage(cbzData->uf, pageFileNames.At(pageNo - 1)))
             return LoadCurrentCbzData(cbzData->uf, len);
     }
     return NULL;

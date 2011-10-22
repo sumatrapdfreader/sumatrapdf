@@ -32,7 +32,7 @@ int FileFavs::SortByPageNo(const void *a, const void *b)
 void FileFavs::ResetMenuIds()
 {
     for (size_t i =0; i < favNames.Count(); i++) {
-        FavName *fn = favNames[i];
+        FavName *fn = favNames.At(i);
         fn->menuId = 0;
     }
 }
@@ -40,7 +40,7 @@ void FileFavs::ResetMenuIds()
 bool FileFavs::GetByMenuId(int menuId, size_t& idx)
 {
     for (size_t i = 0; i < favNames.Count(); i++) {
-        FavName *fn = favNames[i];
+        FavName *fn = favNames.At(i);
         if (fn->menuId == menuId) {
             idx = i;
             return true;
@@ -52,7 +52,7 @@ bool FileFavs::GetByMenuId(int menuId, size_t& idx)
 bool FileFavs::HasFavName(FavName *fn)
 {
     for (size_t i = 0; i < favNames.Count(); i++)
-        if (fn == favNames[i])
+        if (fn == favNames.At(i))
             return true;
     return false;
 
@@ -92,7 +92,7 @@ void Favorites::RemoveFav(FileFavs *fav, size_t idx)
 FileFavs *Favorites::GetByMenuId(int menuId, size_t& idx)
 {
     for (size_t i = 0; i < favs.Count(); i++) {
-        FileFavs *fav = favs[i];
+        FileFavs *fav = favs.At(i);
         if (fav->GetByMenuId(menuId, idx))
             return fav;
     }
@@ -102,7 +102,7 @@ FileFavs *Favorites::GetByMenuId(int menuId, size_t& idx)
 FileFavs *Favorites::GetByFavName(FavName *fn)
 {
     for (size_t i = 0; i < favs.Count(); i++) {
-        FileFavs *fav = favs[i];
+        FileFavs *fav = favs.At(i);
         if (fav->HasFavName(fn))
             return fav;
     }
@@ -112,7 +112,7 @@ FileFavs *Favorites::GetByFavName(FavName *fn)
 void Favorites::ResetMenuIds()
 {
     for (size_t i = 0; i < favs.Count(); i++) {
-        FileFavs *fav = favs[i];
+        FileFavs *fav = favs.At(i);
         fav->ResetMenuIds();
     }
 }
@@ -128,7 +128,7 @@ FileFavs *Favorites::GetFavByFilePath(const TCHAR *filePath, bool createIfNotExi
         found = true;
     } else {
         for (size_t i = 0; i < favs.Count(); i++) {
-            fav = favs[i];
+            fav = favs.At(i);
             if (str::Eq(filePath, fav->filePath)) {
                 idxCache = i;
                 filePathCache = fav->filePath;
@@ -429,7 +429,7 @@ void GoToFavoriteByMenuId(WindowInfo *win, int wmId)
     FileFavs *f = gFavorites->GetByMenuId(wmId, idx);
     if (!f)
         return;
-    FavName *fn = f->favNames[idx];
+    FavName *fn = f->favNames.At(idx);
     GoToFavorite(win, f, fn);
 }
 
@@ -512,7 +512,7 @@ void PopulateFavTreeIfNeeded(WindowInfo *win)
 
     SendMessage(hwndTree, WM_SETREDRAW, FALSE, 0);
     for (size_t i = 0; i < filePathsSorted.Count(); i++) {
-        FileFavs *f = gFavorites->GetFavByFilePath(filePathsSorted[i]);
+        FileFavs *f = gFavorites->GetFavByFilePath(filePathsSorted.At(i));
         bool isExpanded = (win->expandedFavorites.Find(f->filePath) != -1);
         HTREEITEM node = InsertFavTopLevelNode(hwndTree, f, isExpanded);
         if (f->favNames.Count() > 1)
@@ -538,7 +538,7 @@ static void UpdateFavoritesTreeIfNecessary(WindowInfo *win)
 bool HasFavorites()
 {
     for (size_t i = 0; i < gFavorites->Count(); i++) {
-        FileFavs *f = gFavorites->favs[i];
+        FileFavs *f = gFavorites->favs.At(i);
         if (f->favNames.Count() > 0)
             return true;
     }
@@ -548,13 +548,13 @@ bool HasFavorites()
 void UpdateFavoritesTreeForAllWindows()
 {
     for (size_t i = 0; i < gWindows.Count(); i++)
-        UpdateFavoritesTreeIfNecessary(gWindows[i]);
+        UpdateFavoritesTreeIfNecessary(gWindows.At(i));
 
     // hide the favorites tree if we removed the last favorite
     if (!HasFavorites()) {
         gGlobalPrefs.favVisible = false;
         for (size_t i = 0; i < gWindows.Count(); i++) {
-            WindowInfo *win = gWindows[i];
+            WindowInfo *win = gWindows.At(i);
             SetSidebarVisibility(win, win->tocVisible, gGlobalPrefs.favVisible);
         }
     }
@@ -639,7 +639,7 @@ void RememberFavTreeExpansionState(WindowInfo *win)
 void RememberFavTreeExpansionStateForAllWindows()
 {
     for (size_t i = 0; i < gWindows.Count(); i++)
-        RememberFavTreeExpansionState(gWindows[i]);
+        RememberFavTreeExpansionState(gWindows.At(i));
 }
 
 static LRESULT OnFavTreeNotify(WindowInfo *win, LPNMTREEVIEW pnmtv)

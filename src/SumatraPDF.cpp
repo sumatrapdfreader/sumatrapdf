@@ -485,7 +485,7 @@ static void UpdateWindowRtlLayout(WindowInfo *win)
 void UpdateRtlLayoutForAllWindows()
 {
     for (size_t i = 0; i < gWindows.Count(); i++) {
-        UpdateWindowRtlLayout(gWindows[i]);
+        UpdateWindowRtlLayout(gWindows.At(i));
     }
 }
 
@@ -692,7 +692,7 @@ static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win,
         ShowNotification(&win, msg, true, false, NG_RESPONSE_TO_ACTION);
         // TODO: CloseWindow() does slightly more than this
         //       (also, some code presumes that there is at least one window with
-        //        IsAboutWindow() == true and that that window is gWindows[0])
+        //        IsAboutWindow() == true and that that window is gWindows.At(0))
         str::ReplacePtr(&win.loadedFilePath, NULL);
     }
     */
@@ -883,7 +883,7 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
 static void UpdateToolbarAndScrollbarsForAllWindows()
 {
     for (size_t i = 0; i < gWindows.Count(); i++) {
-        WindowInfo *win = gWindows[i];
+        WindowInfo *win = gWindows.At(i);
         ToolbarUpdateStateForWindow(win);
 #ifdef BUILD_RIBBON
         if (win->ribbonSupport)
@@ -1054,7 +1054,7 @@ public:
 #ifndef THREAD_BASED_FILEWATCH
 static void RefreshUpdatedFiles() {
     for (size_t i = 0; i < gWindows.Count(); i++) {
-        WindowInfo *win = gWindows[i];
+        WindowInfo *win = gWindows.At(i);
         if (win->watcher)
             win->watcher->CheckForChanges();
     }
@@ -1079,15 +1079,15 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, b
         if (gFileHistory.MarkFileInexistent(fullpath)) {
             SavePrefs();
             // update the Frequently Read list
-            if (1 == gWindows.Count() && gWindows[0]->IsAboutWindow())
-                gWindows[0]->RedrawAll(true);
+            if (1 == gWindows.Count() && gWindows.At(0)->IsAboutWindow())
+                gWindows.At(0)->RedrawAll(true);
         }
         return NULL;
     }
 
     bool isNewWindow = false;
-    if (!win && 1 == gWindows.Count() && gWindows[0]->IsAboutWindow()) {
-        win = gWindows[0];
+    if (!win && 1 == gWindows.Count() && gWindows.At(0)->IsAboutWindow()) {
+        win = gWindows.At(0);
     } else if (!win || win->IsDocLoaded() && !forceReuse) {
         WindowInfo *currWin = win;
         win = CreateWindowInfo();
@@ -1623,15 +1623,15 @@ static void ToggleGdiDebugging()
     DebugGdiPlusDevice(gUseGdiRenderer);
 
     for (size_t i = 0; i < gWindows.Count(); i++) {
-        DisplayModel *dm = gWindows[i]->dm;
+        DisplayModel *dm = gWindows.At(i)->dm;
         if (dm) {
             gRenderCache.CancelRendering(dm);
             gRenderCache.KeepForDisplayModel(dm, dm);
-            gWindows[i]->RedrawAll(true);
+            gWindows.At(i)->RedrawAll(true);
         }
 #ifdef BUILD_RIBBON
-        if (gWindows[i]->ribbonSupport)
-            gWindows[i]->ribbonSupport->UpdateState();
+        if (gWindows.At(i)->ribbonSupport)
+            gWindows.At(i)->ribbonSupport->UpdateState();
 #endif
     }
 }
@@ -1989,7 +1989,7 @@ static void OnMenuExit()
         return;
 
     for (size_t i = 0; i < gWindows.Count(); i++) {
-        WindowInfo *win = gWindows[i];
+        WindowInfo *win = gWindows.At(i);
         AbortFinding(win);
         AbortPrinting(win);
     }
@@ -2042,9 +2042,9 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
     bool lastWindow = (1 == gWindows.Count());
     if (lastWindow) {
 #ifdef BUILD_RIBBON
-        if (gWindows[0]->ribbonSupport) {
+        if (gWindows.At(0)->ribbonSupport) {
             free(gGlobalPrefs.ribbonState);
-            gGlobalPrefs.ribbonState = gWindows[0]->ribbonSupport->GetState();
+            gGlobalPrefs.ribbonState = gWindows.At(0)->ribbonSupport->GetState();
         }
 #endif
         SavePrefs();
@@ -2469,7 +2469,7 @@ static void BrowseFolder(WindowInfo& win, bool forward)
         index = (int)(index + files.Count() - 1) % files.Count();
 
     UpdateCurrentFileDisplayStateForWin(&win);
-    LoadDocument(files[index], &win, true, true);
+    LoadDocument(files.At(index), &win, true, true);
 }
 
 static void OnVScroll(WindowInfo& win, WPARAM wParam)
@@ -2610,8 +2610,8 @@ static void OnMenuChangeLanguage(WindowInfo& win)
 
         ChangeLanguage(langName);
 
-        if (gWindows.Count() > 0 && gWindows[0]->IsAboutWindow())
-            gWindows[0]->RedrawAll(true);
+        if (gWindows.Count() > 0 && gWindows.At(0)->IsAboutWindow())
+            gWindows.At(0)->RedrawAll(true);
         SavePrefs();
     }
 }
@@ -2633,8 +2633,8 @@ static void OnMenuSettings(WindowInfo& win)
         gFileHistory.Clear();
         CleanUpThumbnailCache(gFileHistory);
     }
-    if (gWindows.Count() > 0 && gWindows[0]->IsAboutWindow())
-        gWindows[0]->RedrawAll(true);
+    if (gWindows.Count() > 0 && gWindows.At(0)->IsAboutWindow())
+        gWindows.At(0)->RedrawAll(true);
 
     SavePrefs();
 }
@@ -3131,7 +3131,7 @@ static void UpdateSidebarTitles(WindowInfo& win)
 static void UpdateUITextForLanguage()
 {
     for (size_t i = 0; i < gWindows.Count(); i++) {
-        WindowInfo *win = gWindows[i];
+        WindowInfo *win = gWindows.At(i);
         UpdateToolbarPageText(win, -1);
         UpdateToolbarFindText(win);
         UpdateToolbarButtonsToolTipsForWindow(win);
@@ -3143,7 +3143,7 @@ static void UpdateUITextForLanguage()
 static void RebuildMenuBar()
 {
     for (size_t i = 0; i < gWindows.Count(); i++) {
-        WindowInfo *win = gWindows[i];
+        WindowInfo *win = gWindows.At(i);
 #ifdef BUILD_RIBBON
         if (win->ribbonSupport)
             win->ribbonSupport->Reset();
@@ -4126,10 +4126,10 @@ static LRESULT OnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wParam, LP
         case IDM_DEBUG_SHOW_LINKS:
             gDebugShowLinks = !gDebugShowLinks;
             for (size_t i = 0; i < gWindows.Count(); i++) {
-                gWindows[i]->RedrawAll(true);
+                gWindows.At(i)->RedrawAll(true);
 #ifdef BUILD_RIBBON
-                if (gWindows[i]->ribbonSupport)
-                    gWindows[i]->ribbonSupport->UpdateState();
+                if (gWindows.At(i)->ribbonSupport)
+                    gWindows.At(i)->ribbonSupport->UpdateState();
 #endif
             }
             break;
@@ -4514,7 +4514,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
         gPluginURL = i.pluginURL;
         if (!gPluginURL)
-            gPluginURL = i.fileNames[0];
+            gPluginURL = i.fileNames.At(0);
 
         assert(i.fileNames.Count() == 1);
         while (i.fileNames.Count() > 1)
@@ -4547,7 +4547,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         // note: this prints all PDF files. Another option would be to
         // print only the first one
         for (size_t n = 0; n < i.fileNames.Count(); n++) {
-            bool ok = PrintFile(i.fileNames[n], i.printerName, !i.silent, i.printSettings);
+            bool ok = PrintFile(i.fileNames.At(n), i.printerName, !i.silent, i.printSettings);
             if (!ok)
                 msg.wParam++;
         }
@@ -4564,7 +4564,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         if (i.reuseInstance && !i.printDialog) {
             // delegate file opening to a previously running instance by sending a DDE message 
             TCHAR fullpath[MAX_PATH];
-            GetFullPathName(i.fileNames[n], dimof(fullpath), fullpath, NULL);
+            GetFullPathName(i.fileNames.At(n), dimof(fullpath), fullpath, NULL);
             ScopedMem<TCHAR> command(str::Format(_T("[") DDECOMMAND_OPEN _T("(\"%s\", 0, 1, 0)]"), fullpath));
             DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
             if (i.destName && !firstIsDocLoaded) {
@@ -4585,7 +4585,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         }
         else {
             bool showWin = !(i.printDialog && i.exitOnPrint) && !gPluginMode;
-            win = LoadDocument(i.fileNames[n], NULL, showWin);
+            win = LoadDocument(i.fileNames.At(n), NULL, showWin);
             if (!win || !win->IsDocLoaded())
                 msg.wParam++; // set an error code for the next goto Exit
             if (!win)
@@ -4652,7 +4652,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         RegisterForPdfExtentions(win->hwndFrame);
 
     if (gGlobalPrefs.enableAutoUpdate && gWindows.Count() > 0)
-        DownloadSumatraUpdateInfo(*gWindows[0], true);
+        DownloadSumatraUpdateInfo(*gWindows.At(0), true);
 
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_SUMATRAPDF));
 #ifndef THREAD_BASED_FILEWATCH
@@ -4696,7 +4696,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
 Exit:
     while (gWindows.Count() > 0)
-        DeleteWindowInfo(gWindows[0]);
+        DeleteWindowInfo(gWindows.At(0));
     DeleteObject(gBrushNoDocBg);
     DeleteObject(gBrushAboutBg);
     DeleteObject(gBrushWhite);

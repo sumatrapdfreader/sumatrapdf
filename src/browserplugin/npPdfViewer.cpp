@@ -210,10 +210,10 @@ bool GetExePath(LPTSTR lpPath, int len)
         return false;
 
     CmdLineParser args(path);
-    if (!file::Exists(args[0]))
+    if (!file::Exists(args.At(0)))
         return false;
 
-    str::BufSet(lpPath, len, args[0]);
+    str::BufSet(lpPath, len, args.At(0));
     return true;
 }
 

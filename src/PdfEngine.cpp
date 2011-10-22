@@ -355,7 +355,7 @@ static TCHAR *LinkifyFindEnd(TCHAR *start)
 static TCHAR *LinkifyMultilineText(LinkRectList *list, TCHAR *pageText, TCHAR *start, RectI *coords)
 {
     size_t lastIx = list->coords.Count() - 1;
-    ScopedMem<TCHAR> uri(list->links[lastIx]);
+    ScopedMem<TCHAR> uri(list->links.At(lastIx));
     TCHAR *end = start;
     bool multiline = false;
 
@@ -372,7 +372,7 @@ static TCHAR *LinkifyMultilineText(LinkRectList *list, TCHAR *pageText, TCHAR *s
     } while (multiline);
 
     // update the link URL for all partial links
-    list->links[lastIx] = str::Dup(uri);
+    list->links.At(lastIx) = str::Dup(uri);
     for (size_t i = lastIx; i < list->coords.Count(); i++)
         list->links.Append(str::Dup(uri));
 
@@ -569,7 +569,7 @@ TCHAR *FormatPageLabel(const char *type, int pageNo, const TCHAR *prefix)
         str::Str<TCHAR> number;
         number.Append('A' + (pageNo - 1) % 26);
         for (int i = 0; i < (pageNo - 1) / 26; i++)
-            number.Append(number[0]);
+            number.Append(number.At(0));
         if (*type == 'a')
             str::ToLower(number.Get());
         return str::Format(_T("%s%s"), prefix, number.Get());
@@ -616,8 +616,8 @@ StrVec *BuildPageLabelVec(fz_obj *root, int pageCount)
     if (data.Count() == 0)
         return NULL;
 
-    if (data.Count() == 1 && data[0].startAt == 1 && data[0].countFrom == 1 &&
-        !data[0].prefix && str::Eq(data[0].type, "D")) {
+    if (data.Count() == 1 && data.At(0).startAt == 1 && data.At(0).countFrom == 1 &&
+        !data.At(0).prefix && str::Eq(data.At(0).type, "D")) {
         // this is the default case, no need for special treatment
         return NULL;
     }
@@ -625,14 +625,15 @@ StrVec *BuildPageLabelVec(fz_obj *root, int pageCount)
     StrVec *labels = new StrVec();
     labels->AppendBlanks(pageCount);
 
-    for (size_t i = 0; i < data.Count() && data[i].startAt <= pageCount; i++) {
-        int secLen = pageCount + 1 - data[i].startAt;
-        if (i < data.Count() - 1 && data[i + 1].startAt <= pageCount)
-            secLen = data[i + 1].startAt - data[i].startAt;
-        ScopedMem<TCHAR> prefix(str::conv::FromPdf(data[i].prefix));
+    for (size_t i = 0; i < data.Count() && data.At(i).startAt <= pageCount; i++) {
+        int secLen = pageCount + 1 - data.At(i).startAt;
+        if (i < data.Count() - 1 && data.At(i + 1).startAt <= pageCount)
+            secLen = data.At(i + 1).startAt - data.At(i).startAt;
+        ScopedMem<TCHAR> prefix(str::conv::FromPdf(data.At(i).prefix));
         for (int j = 0; j < secLen; j++) {
-            free(labels->At(data[i].startAt + j - 1));
-            labels->At(data[i].startAt + j - 1) = FormatPageLabel(data[i].type, data[i].countFrom + j, prefix);
+            free(labels->At(data.At(i).startAt + j - 1));
+            labels->At(data.At(i).startAt + j - 1) =
+                FormatPageLabel(data.At(i).type, data.At(i).countFrom + j, prefix);
         }
     }
 
@@ -643,17 +644,17 @@ StrVec *BuildPageLabelVec(fz_obj *root, int pageCount)
     StrVec dups(*labels);
     dups.Sort();
     for (size_t i = 1; i < dups.Count(); i++) {
-        if (!str::Eq(dups[i], dups[i-1]))
+        if (!str::Eq(dups.At(i), dups.At(i - 1)))
             continue;
-        int ix = labels->Find(dups[i]), counter = 0;
-        while ((ix = labels->Find(dups[i], ix + 1)) != -1) {
+        int ix = labels->Find(dups.At(i)), counter = 0;
+        while ((ix = labels->Find(dups.At(i), ix + 1)) != -1) {
             ScopedMem<TCHAR> unique;
             do {
-                unique.Set(str::Format(_T("%s.%d"), dups[i], ++counter));
+                unique.Set(str::Format(_T("%s.%d"), dups.At(i), ++counter));
             } while (labels->Find(unique) != -1);
             str::ReplacePtr(&labels->At(ix), unique);
         }
-        for (; i + 1 < dups.Count() && str::Eq(dups[i], dups[i+1]); i++);
+        for (; i + 1 < dups.Count() && str::Eq(dups.At(i), dups.At(i + 1)); i++);
     }
 
     return labels;
@@ -1584,11 +1585,12 @@ void CPdfEngine::LinkifyPageText(pdf_page *page)
     for (size_t i = 0; i < list->links.Count(); i++) {
         bool overlaps = false;
         for (pdf_link *next = page->links; next && !overlaps; next = next->next)
-            overlaps = fz_significantly_overlap(next->rect, list->coords[i]);
+            overlaps = fz_significantly_overlap(next->rect, list->coords.At(i));
         if (!overlaps) {
-            ScopedMem<char> uri(str::conv::ToUtf8(list->links[i]));
+            ScopedMem<char> uri(str::conv::ToUtf8(list->links.At(i)));
             if (!uri) continue;
-            pdf_link *link = pdf_new_link(fz_new_string(uri, (int)str::Len(uri)), PDF_LINK_URI, list->coords[i]);
+            pdf_link *link = pdf_new_link(fz_new_string(uri, (int)str::Len(uri)),
+                                          PDF_LINK_URI, list->coords.At(i));
             link->next = page->links;
             page->links = link;
         }
@@ -2701,11 +2703,11 @@ void CXpsEngine::linkifyPageText(xps_page *page, int pageNo)
     for (size_t i = 0; i < list->links.Count(); i++) {
         bool overlaps = false;
         for (xps_link *next = _links[pageNo-1]; next && !overlaps; next = next->next)
-            overlaps = fz_significantly_overlap(next->rect, list->coords[i]);
+            overlaps = fz_significantly_overlap(next->rect, list->coords.At(i));
         if (!overlaps) {
-            ScopedMem<char> uri(str::conv::ToUtf8(list->links[i]));
+            ScopedMem<char> uri(str::conv::ToUtf8(list->links.At(i)));
             if (!uri) continue;
-            last = last->next = xps_new_link(uri, list->coords[i]);
+            last = last->next = xps_new_link(uri, list->coords.At(i));
             assert(IsUriTarget(last->target));
         }
     }

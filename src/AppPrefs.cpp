@@ -289,8 +289,7 @@ static inline const TCHAR *EmptyToNull(const TCHAR *s)
 static BencArray *SerializeFavData(FileFavs *fav)
 {
     BencArray *res = new BencArray();
-    for (size_t i=0; i<fav->favNames.Count(); i++)
-    {
+    for (size_t i = 0; i < fav->favNames.Count(); i++) {
         FavName *fn = fav->favNames.At(i);
         res->Add(fn->pageNo);
         res->Add(NullToEmpty(fn->name));
@@ -304,8 +303,7 @@ static BencArray *SerializeFavData(FileFavs *fav)
 static BencArray *SerializeFavorites(Favorites *favs)
 {
     BencArray *res = new BencArray();
-    for (size_t i=0; i < favs->favs.Count(); i++)
-    {
+    for (size_t i = 0; i < favs->favs.Count(); i++) {
         FileFavs *fav = favs->favs.At(i);
         res->Add(fav->filePath);
         res->Add(SerializeFavData(fav));
@@ -691,7 +689,7 @@ bool SavePrefs()
 
     /* mark currently shown files as visible */
     for (size_t i = 0; i < gWindows.Count(); i++)
-        UpdateCurrentFileDisplayStateForWin(gWindows[i]);
+        UpdateCurrentFileDisplayStateForWin(gWindows.At(i));
 
     ScopedMem<TCHAR> path(GetPrefsFileName());
     bool ok = Prefs::Save(path, gGlobalPrefs, gFileHistory, gFavorites);
@@ -727,9 +725,9 @@ bool ReloadPrefs()
     delete gFavorites;
     gFavorites = favs;
 
-    if (gWindows.Count() > 0 && gWindows[0]->IsAboutWindow()) {
-        gWindows[0]->DeleteInfotip();
-        gWindows[0]->RedrawAll(true);
+    if (gWindows.Count() > 0 && gWindows.At(0)->IsAboutWindow()) {
+        gWindows.At(0)->DeleteInfotip();
+        gWindows.At(0)->RedrawAll(true);
     }
 
     if (!str::Eq(currLang, gGlobalPrefs.currentLanguage))

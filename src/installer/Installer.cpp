@@ -525,9 +525,9 @@ static const TCHAR *ReadableProcName(const TCHAR *procPath)
 
 static void SetCloseProcessMsg()
 {
-    ScopedMem<TCHAR> procNames(str::Dup(ReadableProcName(gProcessesToClose[0])));
+    ScopedMem<TCHAR> procNames(str::Dup(ReadableProcName(gProcessesToClose.At(0))));
     for (size_t i = 1; i < gProcessesToClose.Count(); i++) {
-        const TCHAR *name = ReadableProcName(gProcessesToClose[i]);
+        const TCHAR *name = ReadableProcName(gProcessesToClose.At(i));
         if (i < gProcessesToClose.Count() - 1)
             procNames.Set(str::Join(procNames, _T(", "), name));
         else
@@ -1487,7 +1487,7 @@ static char RandUppercaseLetter()
 
 static void RandomizeLetters()
 {
-    for (int i=0; i<dimof(gLetters); i++) {
+    for (int i = 0; i < dimof(gLetters); i++) {
         gLetters[i].c = RandUppercaseLetter();
     }
 }
@@ -1495,7 +1495,7 @@ static void RandomizeLetters()
 static void SetLettersSumatraUpTo(int n)
 {
     char *s = "SUMATRAPDF";
-    for (int i=0; i<dimof(gLetters); i++) {
+    for (int i = 0; i < dimof(gLetters); i++) {
         if (i < n) {
             gLetters[i].c = s[i];
         } else {
@@ -1610,7 +1610,7 @@ static void CalcLettersLayout(Graphics& g, Font *f, int dx)
     WCHAR s[2] = { 0 };
     Gdiplus::PointF origin(0.f, 0.f);
     Gdiplus::RectF bbox;
-    for (int i=0; i<dimof(gLetters); i++) {
+    for (int i = 0; i < dimof(gLetters); i++) {
         li = &gLetters[i];
         s[0] = li->c;
         g.MeasureString(s, 1, f, origin, &sfmt, &bbox);
@@ -1621,7 +1621,7 @@ static void CalcLettersLayout(Graphics& g, Font *f, int dx)
     }
 
     REAL x = ((REAL)dx - totalDx) / 2.f;
-    for (int i=0; i<dimof(gLetters); i++) {
+    for (int i = 0; i < dimof(gLetters); i++) {
         li = &gLetters[i];
         li->x = x;
         x += li->dx;
@@ -1661,7 +1661,7 @@ static void DrawSumatraLetters(Graphics &g, Font *f, Font *fVer, REAL y)
 {
     LetterInfo *li;
     WCHAR s[2] = { 0 };
-    for (int i=0; i<dimof(gLetters); i++) {
+    for (int i = 0; i < dimof(gLetters); i++) {
         li = &gLetters[i];
         s[0] = li->c;
         if (s[0] == ' ')
@@ -2120,19 +2120,19 @@ static void ParseCommandLine(TCHAR *cmdLine)
 
     // skip the first arg (exe path)
     for (size_t i = 1; i < argList.Count(); i++) {
-        TCHAR *arg = argList[i];
+        TCHAR *arg = argList.At(i);
         if ('-' != *arg && '/' != *arg)
             continue;
 
         if (is_arg("s"))
             gGlobalData.silent = true;
         else if (is_arg_with_param("d"))
-            str::ReplacePtr(&gGlobalData.installDir, argList[++i]);
+            str::ReplacePtr(&gGlobalData.installDir, argList.At(++i));
 #ifndef BUILD_UNINSTALLER
         else if (is_arg("register"))
             gGlobalData.registerAsDefault = true;
         else if (is_arg_with_param("opt")) {
-            TCHAR *opts = argList[++i];
+            TCHAR *opts = argList.At(++i);
             str::ToLower(opts);
             str::TransChars(opts, _T(" ;"), _T(",,"));
             StrVec optlist;

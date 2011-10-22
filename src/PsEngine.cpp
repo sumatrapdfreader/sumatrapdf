@@ -47,7 +47,8 @@ TryAgain64Bit:
     // return the path to the newest installation
     for (size_t ix = versions.Count(); ix > 0; ix--) {
         for (int i = 0; i < dimof(gsProducts); i++) {
-            ScopedMem<TCHAR> keyName(str::Format(_T("Software\\%s\\%s"), gsProducts[i], versions[ix-1]));
+            ScopedMem<TCHAR> keyName(str::Format(_T("Software\\%s\\%s"),
+                                                 gsProducts[i], versions.At(ix - 1)));
             ScopedMem<TCHAR> GS_DLL(ReadRegStr(HKEY_LOCAL_MACHINE, keyName, _T("GS_DLL")));
             if (!GS_DLL)
                 continue;
@@ -69,10 +70,10 @@ TryAgain64Bit:
         StrVec paths;
         paths.Split(envpath, _T(";"), true);
         for (size_t ix = 0; ix < paths.Count(); ix++) {
-            ScopedMem<TCHAR> exe(path::Join(paths[ix], _T("gswin32c.exe")));
+            ScopedMem<TCHAR> exe(path::Join(paths.At(ix), _T("gswin32c.exe")));
             if (file::Exists(exe))
                 return exe.StealData();
-            exe.Set(path::Join(paths[ix], _T("gswin64c.exe")));
+            exe.Set(path::Join(paths.At(ix), _T("gswin64c.exe")));
             if (file::Exists(exe))
                 return exe.StealData();
         }

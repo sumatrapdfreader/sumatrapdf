@@ -140,7 +140,7 @@ void CChmEngine::HookToHwndAndDisplayIndex(HWND hwnd)
 
 void CChmEngine::DisplayPage(int pageNo)
 {
-    ChmToCItem *tocItem = pages.At(pageNo-1);
+    ChmToCItem *tocItem = pages.At(pageNo - 1);
     htmlWindow->DisplayChmPage(fileName, tocItem->url);
 }
 
@@ -463,8 +463,8 @@ static void AddPageIfUnique(Vec<ChmToCItem*>& pages, ChmToCItem *item, struct ch
 {
     TCHAR *url = item->url;
     size_t len = pages.Count();
-    for (size_t i=0; i<len; i++) {
-        ChmToCItem *tmp = pages.At(len-i-1);
+    for (size_t i = 0; i < len; i++) {
+        ChmToCItem *tmp = pages.At(len - i - 1);
         if (str::Eq(tmp->url, url))
             return;
     }

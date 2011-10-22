@@ -39,11 +39,11 @@ static bool ParsePageRanges(const TCHAR *ranges, Vec<PageRange>& result)
 
     for (size_t i = 0; i < rangeList.Count(); i++) {
         int start, end;
-        if (str::Parse(rangeList[i], _T("%d-%d%$"), &start, &end) && 0 < start && start <= end)
+        if (str::Parse(rangeList.At(i), _T("%d-%d%$"), &start, &end) && 0 < start && start <= end)
             result.Append(PageRange(start, end));
-        else if (str::Parse(rangeList[i], _T("%d-%$"), &start) && 0 < start)
+        else if (str::Parse(rangeList.At(i), _T("%d-%$"), &start) && 0 < start)
             result.Append(PageRange(start, INT_MAX));
-        else if (str::Parse(rangeList[i], _T("%d%$"), &start) && 0 < start)
+        else if (str::Parse(rangeList.At(i), _T("%d%$"), &start) && 0 < start)
             result.Append(PageRange(start, start));
         else
             return false;
@@ -64,7 +64,7 @@ bool IsValidPageRange(const TCHAR *ranges)
 inline bool IsInRange(Vec<PageRange>& ranges, int pageNo)
 {
     for (size_t i = 0; i < ranges.Count(); i++)
-        if (ranges[i].start <= pageNo && pageNo <= ranges[i].end)
+        if (ranges.At(i).start <= pageNo && pageNo <= ranges.At(i).end)
             return true;
     return false;
 }
@@ -141,7 +141,7 @@ static void BenchFile(TCHAR *filePath, const TCHAR *pagesSpec)
     Vec<PageRange> ranges;
     if (ParsePageRanges(pagesSpec, ranges)) {
         for (size_t i = 0; i < ranges.Count(); i++) {
-            for (int j = ranges[i].start; j <= ranges[i].end; j++)
+            for (int j = ranges.At(i).start; j <= ranges.At(i).end; j++)
                 if (1 <= j && j <= pages)
                     BenchLoadRender(engine, j);
         }
@@ -159,7 +159,7 @@ void Bench(StrVec& filesToBench)
 
     size_t n = filesToBench.Count() / 2;
     for (size_t i = 0; i < n; i++)
-        BenchFile(filesToBench[2*i], filesToBench[2*i + 1]);
+        BenchFile(filesToBench.At(2 * i), filesToBench.At(2 * i + 1));
 
     delete gLog;
 }
@@ -386,7 +386,7 @@ bool StressTest::GoToNextFile()
     for (;;) {
         while (filesToOpen.Count() > 0) {
             // test next file
-            ScopedMem<TCHAR> path(filesToOpen[0]);
+            ScopedMem<TCHAR> path(filesToOpen.At(0));
             filesToOpen.RemoveAt(0);
             if (!IsInRange(fileRanges, ++fileIndex))
                 continue;
@@ -396,7 +396,7 @@ bool StressTest::GoToNextFile()
 
         if (dirsToVisit.Count() > 0) {
             // test next directory
-            ScopedMem<TCHAR> path(dirsToVisit[0]);
+            ScopedMem<TCHAR> path(dirsToVisit.At(0));
             dirsToVisit.RemoveAt(0);
             OpenDir(path);
             continue;
@@ -446,7 +446,7 @@ bool StressTest::OpenFile(const TCHAR *fileName)
     if (win->tocVisible || gGlobalPrefs.favVisible)
         SetSidebarVisibility(win, win->tocVisible, gGlobalPrefs.favVisible);
 
-    currPage = pageRanges[0].start;
+    currPage = pageRanges.At(0).start;
     win->dm->GoToPage(currPage, 0);
     currPageRenderTime.Start();
     ++filesCount;

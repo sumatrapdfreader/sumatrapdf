@@ -95,10 +95,10 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
 
     int current = 0, total = 0;
     for (size_t i = 0; i < pd.ranges.Count(); i++) {
-        if (pd.ranges[i].nToPage < pd.ranges[i].nFromPage)
-            total += pd.ranges[i].nFromPage - pd.ranges[i].nToPage + 1;
+        if (pd.ranges.At(i).nToPage < pd.ranges.At(i).nFromPage)
+            total += pd.ranges.At(i).nFromPage - pd.ranges.At(i).nToPage + 1;
         else
-            total += pd.ranges[i].nToPage - pd.ranges[i].nFromPage + 1;
+            total += pd.ranges.At(i).nToPage - pd.ranges.At(i).nFromPage + 1;
     }
     total += (int)pd.sel.Count();
     if (progressUI)
@@ -128,11 +128,11 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
 
         for (size_t i = 0; i < pd.sel.Count(); i++) {
             StartPage(hdc);
-            RectD *clipRegion = &pd.sel[i].rect;
+            RectD *clipRegion = &pd.sel.At(i).rect;
 
             Size<float> sSize = clipRegion->Size().Convert<float>();
             // Swap width and height for rotated documents
-            int rotation = engine.PageRotation(pd.sel[i].pageNo) + pd.rotation;
+            int rotation = engine.PageRotation(pd.sel.At(i).pageNo) + pd.rotation;
             if (rotation % 180 != 0)
                 swap(sSize.dx, sSize.dy);
 
@@ -149,9 +149,9 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
             RectI rc = RectI::FromXY((int)(printableWidth - sSize.dx * zoom) / 2,
                                      (int)(printableHeight - sSize.dy * zoom) / 2,
                                      paperWidth, paperHeight);
-            engine.RenderPage(hdc, rc, pd.sel[i].pageNo, zoom, pd.rotation, clipRegion, Target_Print);
+            engine.RenderPage(hdc, rc, pd.sel.At(i).pageNo, zoom, pd.rotation, clipRegion, Target_Print);
 #else
-            RenderedBitmap *bmp = engine.RenderBitmap(pd.sel[i].pageNo, zoom, pd.rotation, clipRegion, Target_Print);
+            RenderedBitmap *bmp = engine.RenderBitmap(pd.sel.At(i).pageNo, zoom, pd.rotation, clipRegion, Target_Print);
             if (bmp) {
                 PointI TL((printableWidth - bmp->Size().dx) / 2,
                           (printableHeight - bmp->Size().dy) / 2);
@@ -178,8 +178,8 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
 
     // print all the pages the user requested
     for (size_t i = 0; i < pd.ranges.Count(); i++) {
-        int dir = pd.ranges[i].nFromPage > pd.ranges[i].nToPage ? -1 : 1;
-        for (DWORD pageNo = pd.ranges[i].nFromPage; pageNo != pd.ranges[i].nToPage + dir; pageNo += dir) {
+        int dir = pd.ranges.At(i).nFromPage > pd.ranges.At(i).nToPage ? -1 : 1;
+        for (DWORD pageNo = pd.ranges.At(i).nFromPage; pageNo != pd.ranges.At(i).nToPage + dir; pageNo += dir) {
             if ((PrintRangeEven == pd.rangeAdv && pageNo % 2 != 0) ||
                 (PrintRangeOdd == pd.rangeAdv && pageNo % 2 == 0))
                 continue;
@@ -547,24 +547,24 @@ static void ApplyPrintSettings(const TCHAR *settings, int pageCount, Vec<PRINTPA
 
     for (size_t i = 0; i < rangeList.Count(); i++) {
         PRINTPAGERANGE pr;
-        if (str::Parse(rangeList[i], _T("%d-%d%$"), &pr.nFromPage, &pr.nToPage)) {
+        if (str::Parse(rangeList.At(i), _T("%d-%d%$"), &pr.nFromPage, &pr.nToPage)) {
             pr.nFromPage = limitValue(pr.nFromPage, (DWORD)1, (DWORD)pageCount);
             pr.nToPage = limitValue(pr.nToPage, (DWORD)1, (DWORD)pageCount);
             ranges.Append(pr);
         }
-        else if (str::Parse(rangeList[i], _T("%d%$"), &pr.nFromPage)) {
+        else if (str::Parse(rangeList.At(i), _T("%d%$"), &pr.nFromPage)) {
             pr.nFromPage = pr.nToPage = limitValue(pr.nFromPage, (DWORD)1, (DWORD)pageCount);
             ranges.Append(pr);
         }
-        else if (str::Eq(rangeList[i], _T("even")))
+        else if (str::Eq(rangeList.At(i), _T("even")))
             advanced.range = PrintRangeEven;
-        else if (str::Eq(rangeList[i], _T("odd")))
+        else if (str::Eq(rangeList.At(i), _T("odd")))
             advanced.range = PrintRangeOdd;
-        else if (str::Eq(rangeList[i], _T("noscale")))
+        else if (str::Eq(rangeList.At(i), _T("noscale")))
             advanced.scale = PrintScaleNone;
-        else if (str::Eq(rangeList[i], _T("shrink")))
+        else if (str::Eq(rangeList.At(i), _T("shrink")))
             advanced.scale = PrintScaleShrink;
-        else if (str::Eq(rangeList[i], _T("fit")))
+        else if (str::Eq(rangeList.At(i), _T("fit")))
             advanced.scale = PrintScaleFit;
     }
 

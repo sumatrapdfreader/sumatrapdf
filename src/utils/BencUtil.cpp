@@ -112,8 +112,8 @@ BencInt *BencInt::Decode(const char *bytes, size_t *lenOut)
 }
 
 BencDict *BencArray::GetDict(size_t index) const {
-    if (index < Length() && value[index]->Type() == BT_DICT)
-        return static_cast<BencDict *>(value[index]);
+    if (index < Length() && value.At(index)->Type() == BT_DICT)
+        return static_cast<BencDict *>(value.At(index));
     return NULL;
 }
 
@@ -122,7 +122,7 @@ char *BencArray::Encode() const
     str::Str<char> bytes(256);
     bytes.Append('l');
     for (size_t i = 0; i < Length(); i++) {
-        ScopedMem<char> objBytes(value[i]->Encode());
+        ScopedMem<char> objBytes(value.At(i)->Encode());
         bytes.Append(objBytes.Get());
     }
     bytes.Append('e');
@@ -161,7 +161,7 @@ BencObj *BencDict::GetObj(const char *key) const
 {
     char **found = (char **)bsearch(&key, keys.LendData(), keys.Count(), sizeof(key), keycmp);
     if (found)
-        return values[found - keys.LendData()];
+        return values.At(found - keys.LendData());
     return NULL;
 }
 
@@ -180,13 +180,13 @@ void BencDict::Add(const char *key, BencObj *obj)
     if (keys.Count() > 0 && strcmp(keys.Last(), key) < 0)
         oix = keys.Count();
     for (; oix < keys.Count(); oix++)
-        if (strcmp(keys[oix], key) >= 0)
+        if (strcmp(keys.At(oix), key) >= 0)
             break;
 
-    if (oix < keys.Count() && str::Eq(keys[oix], key)) {
+    if (oix < keys.Count() && str::Eq(keys.At(oix), key)) {
         // overwrite a previous value
-        delete values[oix];
-        values[oix] = obj;
+        delete values.At(oix);
+        values.At(oix) = obj;
     }
     else {
         keys.InsertAt(oix, str::Dup(key));
@@ -199,8 +199,8 @@ char *BencDict::Encode() const
     str::Str<char> bytes(256);
     bytes.Append('d');
     for (size_t i = 0; i < Length(); i++) {
-        char *key = keys[i];
-        BencObj *val = values[i];
+        char *key = keys.At(i);
+        BencObj *val = values.At(i);
         if (key && val) {
             bytes.AppendFmt("%" PRIuPTR ":%s", str::Len(key), key);
             bytes.AppendAndFree(val->Encode());

@@ -285,7 +285,7 @@ void PaintForwardSearchMark(WindowInfo *win, HDC hdc)
     // Draw the rectangles highlighting the forward search results
     Vec<RectI> rects;
     for (size_t i = 0; i < win->fwdSearchMark.rects.Count(); i++) {
-        RectI rect = win->fwdSearchMark.rects[i];
+        RectI rect = win->fwdSearchMark.rects.At(i);
         rect = win->dm->CvtToScreen(win->fwdSearchMark.page, rect.Convert<double>());
         if (gGlobalPrefs.fwdSearch.offset > 0) {
             rect.x = max(pageInfo->pageOnScreen.x, 0) + (int)(gGlobalPrefs.fwdSearch.offset * win->dm->ZoomReal());
@@ -387,9 +387,9 @@ static void ShowForwardSearchResult(WindowInfo *win, const TCHAR *fileName, UINT
 
         // Scroll to show the overall highlighted zone
         int pageNo = page;
-        RectI overallrc = rects[0];
+        RectI overallrc = rects.At(0);
         for (size_t i = 1; i < rects.Count(); i++)
-            overallrc = overallrc.Union(rects[i]);
+            overallrc = overallrc.Union(rects.At(i));
         TextSel res = { 1, &pageNo, &overallrc };
         if (!win->dm->PageVisible(page))
             win->dm->GoToPage(page, 0, true);

@@ -27,7 +27,7 @@ static void EnumeratePrinters()
     assert(fOk);
     if (!fOk) return;
     printf("Printers: %ld\n", printersCount);
-    for (DWORD i=0; i < printersCount; i++) {
+    for (DWORD i = 0; i < printersCount; i++) {
         const TCHAR *printerName = info5Arr[i].pPrinterName;
         const TCHAR *printerPort = info5Arr[i].pPortName;
         bool fDefault = false;
@@ -90,14 +90,14 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
 
 #define is_arg(txt) str::EqI(_T(txt), argument)
 #define is_arg_with_param(txt) (is_arg(txt) && param != NULL)
-#define additional_param() argList[n+1]
+#define additional_param() argList.At(n + 1)
 #define has_additional_param() ((argCount > n + 1) && ('-' != additional_param()[0]))
 
     for (size_t n = 1; n < argCount; n++) {
-        TCHAR *argument = argList[n];
+        TCHAR *argument = argList.At(n);
         TCHAR *param = NULL;
         if (argCount > n + 1)
-            param = argList[n + 1];
+            param = argList.At(n + 1);
 
         if (is_arg("-register-for-pdf")) {
             makeDefault = true;
@@ -116,7 +116,7 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
             }
         }
         else if (is_arg_with_param("-print-to")) {
-            str::ReplacePtr(&printerName, argList[++n]);
+            str::ReplacePtr(&printerName, argList.At(++n));
         }
         else if (is_arg("-print-dialog")) {
             printDialog = true;
@@ -125,7 +125,7 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
             // argument is a comma separated list of page ranges and
             // advanced options [even|odd] and [noscale|shrink|fit]
             // e.g. -print-settings "1-3,5,10-8,odd,fit"
-            str::ReplacePtr(&printSettings, argList[++n]);
+            str::ReplacePtr(&printSettings, argList.At(++n));
             str::RemoveChars(printSettings, _T(" "));
         }
         else if (is_arg("-exit-on-print")) {
@@ -136,22 +136,22 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
         else if (is_arg_with_param("-bgcolor") || is_arg_with_param("-bg-color")) {
             // -bgcolor is for backwards compat (was used pre-1.3)
             // -bg-color is for consistency
-            ParseColor(&bgColor, argList[++n]);
+            ParseColor(&bgColor, argList.At(++n));
         }
         else if (is_arg_with_param("-inverse-search")) {
-            str::ReplacePtr(&inverseSearchCmdLine, argList[++n]);
+            str::ReplacePtr(&inverseSearchCmdLine, argList.At(++n));
         }
         else if (is_arg_with_param("-fwdsearch-offset")) {
-            fwdSearch.offset = _ttoi(argList[++n]);
+            fwdSearch.offset = _ttoi(argList.At(++n));
         }
         else if (is_arg_with_param("-fwdsearch-width")) {
-            fwdSearch.width = _ttoi(argList[++n]);
+            fwdSearch.width = _ttoi(argList.At(++n));
         }
         else if (is_arg_with_param("-fwdsearch-color")) {
-            ParseColor(&fwdSearch.color, argList[++n]);
+            ParseColor(&fwdSearch.color, argList.At(++n));
         }
         else if (is_arg_with_param("-fwdsearch-permanent")) {
-            fwdSearch.permanent = _ttoi(argList[++n]);
+            fwdSearch.permanent = _ttoi(argList.At(++n));
         }
         else if (is_arg("-esc-to-exit")) {
             escToExit = true;
@@ -166,15 +166,15 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
         }
         else if (is_arg_with_param("-lang")) {
             free(lang);
-            lang = str::conv::ToAnsi(argList[++n]);
+            lang = str::conv::ToAnsi(argList.At(++n));
         }
         else if (is_arg_with_param("-nameddest") || is_arg_with_param("-named-dest")) {
             // -nameddest is for backwards compat (was used pre-1.3)
             // -named-dest is for consistency
-            str::ReplacePtr(&destName, argList[++n]);
+            str::ReplacePtr(&destName, argList.At(++n));
         }
         else if (is_arg_with_param("-page")) {
-            pageNumber = _ttoi(argList[++n]);
+            pageNumber = _ttoi(argList.At(++n));
         }
         else if (is_arg("-restrict")) {
             restrictedUse = true;
@@ -191,13 +191,13 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
             enterFullscreen = true;
         }
         else if (is_arg_with_param("-view")) {
-            ParseViewMode(&startView, argList[++n]);
+            ParseViewMode(&startView, argList.At(++n));
         }
         else if (is_arg_with_param("-zoom")) {
-            ParseZoomValue(&startZoom, argList[++n]);
+            ParseZoomValue(&startZoom, argList.At(++n));
         }
         else if (is_arg_with_param("-scroll")) {
-            ParseScrollValue(&startScroll, argList[++n]);
+            ParseScrollValue(&startScroll, argList.At(++n));
         }
         else if (is_arg("-console")) {
             showConsole = true;
@@ -205,11 +205,11 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
         else if (is_arg_with_param("-plugin")) {
             // -plugin [<URL>] <parent HWND>
             if (!ChrIsDigit(*param) && has_additional_param())
-                str::ReplacePtr(&pluginURL, argList[++n]);
+                str::ReplacePtr(&pluginURL, argList.At(++n));
             // the argument is a (numeric) window handle to
             // become the parent of a frameless SumatraPDF
             // (used e.g. for embedding it into a browser plugin)
-            hwndPluginParent = (HWND)_ttol(argList[++n]);
+            hwndPluginParent = (HWND)_ttol(argList.At(++n));
         }
         else if (is_arg_with_param("-stress-test")) {
             // -stress-test <file or dir path> [<file filter>] [<page/file range(s)>] [<cycle count>x]
@@ -217,7 +217,7 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
             //      -stress-test file.pdf 1-3  render only pages 1, 2 and 3 of file.pdf
             //      -stress-test dir 301- 2x   render all files in dir twice, skipping first 300
             //      -stress-test dir *.pdf;*.xps  render all files in dir that are either PDF or XPS
-            str::ReplacePtr(&stressTestPath, argList[++n]);
+            str::ReplacePtr(&stressTestPath, argList.At(++n));
             int num;
             if (has_additional_param() && str::FindChar(additional_param(), '*')) {
                 str::ReplacePtr(&stressTestFilter, additional_param());
@@ -233,7 +233,7 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
             }
         }
         else if (is_arg_with_param("-bench")) {
-            TCHAR *s = str::Dup(argList[++n]);
+            TCHAR *s = str::Dup(argList.At(++n));
             filesToBenchmark.Push(s);
             s = NULL;
             if (has_additional_param() && IsBenchPagesInfo(additional_param())) {
@@ -254,10 +254,10 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
         else {
             // Remember this argument as a filename to open
             TCHAR *filepath = NULL;
-            if (str::EndsWithI(argList[n], _T(".lnk")))
-                filepath = ResolveLnk(argList[n]);
+            if (str::EndsWithI(argList.At(n), _T(".lnk")))
+                filepath = ResolveLnk(argList.At(n));
             if (!filepath)
-                filepath = str::Dup(argList[n]);
+                filepath = str::Dup(argList.At(n));
             fileNames.Push(filepath);
         }
     }

@@ -359,10 +359,10 @@ const TCHAR *GetStaticLink(Vec<StaticLinkInfo>& linkInfo, int x, int y, StaticLi
 
     PointI pt(x, y);
     for (size_t i = 0; i < linkInfo.Count(); i++) {
-        if (linkInfo[i].rect.Inside(pt)) {
+        if (linkInfo.At(i).rect.Inside(pt)) {
             if (info)
-                *info = linkInfo[i];
-            return linkInfo[i].target;
+                *info = linkInfo.At(i);
+            return linkInfo.At(i).target;
         }
     }
 
@@ -719,14 +719,14 @@ void CleanUpThumbnailCache(FileHistory& fileHistory)
             continue;
         int idx = files.Find(path::GetBaseName(bmpPath));
         if (idx != -1) {
-            free(files[idx]);
+            free(files.At(idx));
             files.RemoveAt(idx);
         }
     }
     delete list;
 
     for (size_t i = 0; i < files.Count(); i++) {
-        ScopedMem<TCHAR> bmpPath(path::Join(thumbsPath, files[i]));
+        ScopedMem<TCHAR> bmpPath(path::Join(thumbsPath, files.At(i)));
         file::Delete(bmpPath);
     }
 }

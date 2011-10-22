@@ -591,14 +591,14 @@ TCHAR *CDjVuEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_o
         // TODO: the coordinates aren't completely correct yet
         RectI page = PageMediabox(pageNo).Round();
         for (size_t i = 0; i < coords.Count(); i++) {
-            if (!coords[i].IsEmpty()) {
+            if (!coords.At(i).IsEmpty()) {
                 if (dpiFactor != 1.0) {
-                    Rect<float> pageF = coords[i].Convert<float>();
+                    Rect<float> pageF = coords.At(i).Convert<float>();
                     pageF.x *= dpiFactor; pageF.dx *= dpiFactor;
                     pageF.y *= dpiFactor; pageF.dy *= dpiFactor;
-                    coords[i] = pageF.Round();
+                    coords.At(i) = pageF.Round();
                 }
-                coords[i].y = page.dy - coords[i].y - coords[i].dy;
+                coords.At(i).y = page.dy - coords.At(i).y - coords.At(i).dy;
             }
         }
         *coords_out = coords.StealData();
@@ -702,8 +702,8 @@ char *CDjVuEngine::ResolveNamedDest(const char *name)
     if (!str::StartsWith(name, "#"))
         return NULL;
     for (size_t i = 0; i < fileInfo.Count(); i++)
-        if (fileInfo[i].pageno >= 0 && str::EqI(name + 1, fileInfo[i].id))
-            return str::Format("#%d", fileInfo[i].pageno + 1);
+        if (fileInfo.At(i).pageno >= 0 && str::EqI(name + 1, fileInfo.At(i).id))
+            return str::Format("#%d", fileInfo.At(i).pageno + 1);
     return NULL;
 }
 

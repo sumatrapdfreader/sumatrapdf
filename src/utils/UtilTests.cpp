@@ -437,12 +437,12 @@ static void StrVecTest()
 
     {
         StrVec v2(v);
-        assert(str::Eq(v2[1], _T("foo")));
+        assert(str::Eq(v2.At(1), _T("foo")));
         v2.Append(str::Dup(_T("nobar")));
-        assert(str::Eq(v2[3], _T("nobar")));
+        assert(str::Eq(v2.At(3), _T("nobar")));
         v2 = v;
-        assert(v2.Count() == 3 && v2[0] != v[0]);
-        assert(str::Eq(v2[1], _T("foo")));
+        assert(v2.Count() == 3 && v2.At(0) != v.At(0));
+        assert(str::Eq(v2.At(1), _T("foo")));
     }
 
     {
@@ -467,7 +467,7 @@ static size_t VecTestAppendFmt()
 {
     str::Str<char> v(256);
     int64_t val = 1;
-    for (int i=0; i < 10000; i++) {
+    for (int i = 0; i < 10000; i++) {
         v.AppendFmt("i%" PRId64 "e", val);
         val = (val * 3) / 2; // somewhat exponential growth
         val += 15;
@@ -484,8 +484,7 @@ static void VecTest()
     ints.Push(2);
     ints.InsertAt(0, -1);
     assert(ints.Count() == 3);
-    assert(ints[0] == -1 && ints[1] == 1 && ints[2] == 2);
-    assert(ints[0] == ints.At(0) && ints[1] == ints.At(1) && ints[2] == ints.At(2));
+    assert(ints.At(0) == -1 && ints.At(1) == 1 && ints.At(2) == 2);
     assert(ints.At(0) == -1 && ints.Last() == 2);
     int last = ints.Pop();
     assert(last == 2);
@@ -493,15 +492,15 @@ static void VecTest()
     ints.Push(3);
     ints.RemoveAt(0);
     assert(ints.Count() == 2);
-    assert(ints[0] == 1 && ints[1] == 3);
+    assert(ints.At(0) == 1 && ints.At(1) == 3);
     ints.Reset();
     assert(ints.Count() == 0);
 
     for (int i = 0; i < 1000; i++)
         ints.Push(i);
-    assert(ints.Count() == 1000 && ints[500] == 500);
+    assert(ints.Count() == 1000 && ints.At(500) == 500);
     ints.Remove(500);
-    assert(ints.Count() == 999 && ints[500] == 501);
+    assert(ints.Count() == 999 && ints.At(500) == 501);
 
     {
         Vec<int> ints2(ints);
@@ -516,7 +515,7 @@ static void VecTest()
     {
         char buf[2] = {'a', '\0'};
         str::Str<char> v(0);
-        for (int i=0; i<7; i++) {
+        for (int i = 0; i < 7; i++) {
             v.Append(buf, 1);
             buf[0] = buf[0] + 1;
         }
@@ -550,7 +549,7 @@ static void VecTest()
 
     {
         str::Str<char> v(0);
-        for (int i=0; i<32; i++) {
+        for (int i = 0; i < 32; i++) {
             assert(v.Count() == i * 6);
             v.Append("lambd", 5);
             if (i % 2 == 0)
@@ -586,7 +585,7 @@ static void VecTest()
         }
         while (v.Count() > 64) {
             size_t pos = rand() % v.Count();
-            PointI *f = v[pos];
+            PointI *f = v.At(pos);
             v.Remove(f);
             delete f;
         }
@@ -598,12 +597,12 @@ static void VecTest()
         v.Append(2);
         for (int i = 0; i < 500; i++)
             v.Append(4);
-        v[250] = 5;
+        v.At(250) = 5;
         v.Reverse();
-        assert(v.Count() == 501 && v[0] == 4 && v[249] == v[251] && v[250] == 5 && v[500] == 2);
+        assert(v.Count() == 501 && v.At(0) == 4 && v.At(249) == v.At(251) && v.At(250) == 5 && v.At(500) == 2);
         v.Remove(4);
         v.Reverse();
-        assert(v.Count() == 500 && v[0] == 2 && v[249] == v[251] && v[250] == 5 && v[499] == 4);
+        assert(v.Count() == 500 && v.At(0) == 2 && v.At(249) == v.At(251) && v.At(250) == 5 && v.At(499) == 4);
     }
 }
 
@@ -950,7 +949,7 @@ static void BencTestDictAppend()
 static void GenRandStr(char *buf, int bufLen)
 {
     int l = rand() % (bufLen - 1);
-    for (int i=0; i<l; i++) {
+    for (int i = 0; i < l; i++) {
         char c = (char)(33 + (rand() % (174 - 33)));
         buf[i] = c;
     }
@@ -960,7 +959,7 @@ static void GenRandStr(char *buf, int bufLen)
 static void GenRandTStr(TCHAR *buf, int bufLen)
 {
     int l = rand() % (bufLen - 1);
-    for (int i=0; i<l; i++) {
+    for (int i = 0; i < l; i++) {
         TCHAR c = (TCHAR)(33 + (rand() % (174 - 33)));
         buf[i] = c;
     }
@@ -981,7 +980,7 @@ static void BencTestStress()
     // dict with 8% probability (less than 10% probability of opening one, to
     // encourage nesting), generate int, string or raw strings uniformly
     // across the remaining 72% probability
-    for (int i=0; i<10000; i++)
+    for (int i = 0; i < 10000; i++)
     {
         int n = rand() % 100;
         if (n < 5) {

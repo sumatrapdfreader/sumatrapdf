@@ -287,7 +287,7 @@ bool IsExeAssociatedWithPdfExtension()
     if (!exePath || !argList.Find(_T("%1")))
         return false;
 
-    return path::IsSame(exePath, argList[0]);
+    return path::IsSame(exePath, argList.At(0));
 }
 
 // caller needs to free() the result
