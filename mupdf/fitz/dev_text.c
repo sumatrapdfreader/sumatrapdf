@@ -35,12 +35,21 @@ fz_new_text_span(void)
 void
 fz_free_text_span(fz_text_span *span)
 {
+	/* SumatraPDF: prevent a stack overflow when freeing an overlong linked list */
+	fz_text_span *next;
+free_without_recursion:
+	next = span->next;
+	span->next = NULL;
+
 	if (span->font)
 		fz_drop_font(span->font);
 	if (span->next)
 		fz_free_text_span(span->next);
 	fz_free(span->text);
 	fz_free(span);
+
+	if ((span = next))
+		goto free_without_recursion;
 }
 
 static void
