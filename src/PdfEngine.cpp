@@ -486,7 +486,7 @@ extern "C" {
 namespace str {
     namespace conv {
 
-// note: make sure to only call with _xrefAccess
+// Note: make sure to only call with xrefAccess
 inline TCHAR *FromPdf(fz_obj *obj)
 {
     WCHAR *ucs2 = (WCHAR *)pdf_to_ucs2(obj);
@@ -517,7 +517,7 @@ pdf_link *pdf_new_link(fz_obj *dest, pdf_link_kind kind, fz_rect rect=fz_empty_r
     return link;
 }
 
-// note: make sure to only call with _xrefAccess
+// Note: make sure to only call with xrefAccess
 pdf_outline *pdf_loadattachments(pdf_xref *xref)
 {
     fz_obj *dict = pdf_load_name_tree(xref, "EmbeddedFiles");
@@ -534,7 +534,7 @@ pdf_outline *pdf_loadattachments(pdf_xref *xref)
         fz_obj *type = fz_dict_gets(dest, "Type");
 
         node->title = fz_strdup(fz_to_name(name));
-        if (fz_is_name(type) && str::EqI(fz_to_name(type), "Filespec"))
+        if (fz_is_name(type) && str::EqI(fz_to_name(type), "Filespec") || fz_is_string(dest))
             node->link = pdf_new_link(fz_keep_obj(dest), PDF_LINK_LAUNCH);
     }
     fz_drop_obj(dict);
@@ -739,7 +739,7 @@ protected:
     const TCHAR *_fileName;
     char *_decryptionKey;
 
-    // make sure to never ask for _pagesAccess in an _xrefAccess
+    // make sure to never ask for pagesAccess in an xrefAccess
     // protected critical section in order to avoid deadlocks
     CRITICAL_SECTION xrefAccess;
     pdf_xref *      _xref;
@@ -788,6 +788,8 @@ class PdfLink : public PageElement, public PageDestination {
     int pageNo;
 
     fz_obj *dest() const;
+    fz_obj *GetDosPath(fz_obj *filespec) const;
+    TCHAR *FilespecToPath(fz_obj *filespec) const;
 
 public:
     PdfLink(CPdfEngine *engine, pdf_link *link, int pageNo=-1) :
@@ -1652,7 +1654,7 @@ TCHAR *CPdfEngine::GetProperty(char *name)
         return str::Format(_T("%d.%d"), major, minor);
     }
 
-    // _info is guaranteed not to be an indirect reference, so no need for _xrefAccess
+    // _info is guaranteed not to be an indirect reference, so no need for xrefAccess
     fz_obj *obj = fz_dict_gets(_info, name);
     if (!obj)
         return NULL;
@@ -1760,6 +1762,43 @@ static bool IsRelativeURI(const TCHAR *uri)
     return !colon || (slash && colon > slash);
 }
 
+fz_obj *PdfLink::GetDosPath(fz_obj *filespec) const
+{
+    ScopedCritSec scope(&engine->xrefAccess);
+
+    if (fz_is_string(filespec))
+        return filespec;
+
+    fz_obj *obj = fz_dict_gets(filespec, "Type");
+    // some PDF producers wrongly spell Filespec as FileSpec
+    if (obj && !str::EqI(fz_to_name(obj), "Filespec"))
+        return NULL;
+
+    obj = fz_dict_gets(filespec, "DOS");
+    if (fz_is_string(obj))
+        return obj;
+    return fz_dict_getsa(filespec, "UF", "F");
+}
+
+TCHAR *PdfLink::FilespecToPath(fz_obj *filespec) const
+{
+    ScopedCritSec scope(&engine->xrefAccess);
+
+    TCHAR *path = str::conv::FromPdf(GetDosPath(filespec));
+    if (str::IsEmpty(path)) {
+        free(path);
+        return NULL;
+    }
+
+    TCHAR drive;
+    if (str::Parse(path, _T("/%c/"), &drive)) {
+        path[0] = drive;
+        path[1] = ':';
+    }
+    str::TransChars(path, _T("/"), _T("\\"));
+    return path;
+}
+
 TCHAR *PdfLink::GetValue() const
 {
     if (!link || !engine)
@@ -1785,39 +1824,18 @@ TCHAR *PdfLink::GetValue() const
         }
         break;
     case PDF_LINK_LAUNCH:
-        obj = fz_dict_gets(link->dest, "Type");
-        if (!fz_is_name(obj) || !str::EqI(fz_to_name(obj), "Filespec"))
-            break;
-        obj = fz_dict_gets(link->dest, "UF"); 
-        if (!fz_is_string(obj))
-            obj = fz_dict_gets(link->dest, "F"); 
-
-        if (fz_is_string(obj)) {
-            path = str::conv::FromPdf(obj);
-            str::TransChars(path, _T("/"), _T("\\"));
-        }
-
-        if (path && fz_dict_gets(link->dest, "EF") && str::EndsWithI(path, _T(".pdf"))) {
-            fz_obj *embedded = dest();
+        // note: we (intentionally) don't support the /Win specific Launch parameters
+        path = FilespecToPath(link->dest);
+        if (path && str::Eq(GetType(), "LaunchEmbedded") && str::EndsWithI(path, _T(".pdf"))) {
             free(path);
-            path = str::Format(_T("%s:%d:%d"), engine->FileName(), fz_to_num(embedded), fz_to_gen(embedded));
+            obj = dest();
+            path = str::Format(_T("%s:%d:%d"), engine->FileName(), fz_to_num(obj), fz_to_gen(obj));
         }
         break;
     case PDF_LINK_ACTION:
         obj = fz_dict_gets(link->dest, "S");
-        if (!fz_is_name(obj))
-            break;
-        if (str::Eq(fz_to_name(obj), "GoToR")) {
-            obj = fz_dict_gets(link->dest, "F");
-            // Note: this might not be per standard but is required to fix Nissan_Manual_370Z.pdf
-            // from http://fofou.appspot.com/sumatrapdf/topic?id=2018365
-            if (fz_is_dict(obj))
-                obj = fz_dict_gets(obj, "F");
-            if (fz_is_string(obj)) {
-                path = str::conv::FromPdf(obj);
-                str::TransChars(path, _T("/"), _T("\\"));
-            }
-        }
+        if (fz_is_name(obj) && str::Eq(fz_to_name(obj), "GoToR"))
+            path = FilespecToPath(fz_dict_gets(link->dest, "F"));
         break;
     }
 
@@ -1848,15 +1866,16 @@ const char *PdfLink::GetType() const
     }
 }
 
-// note: make sure to only call with _xrefAccess
 fz_obj *PdfLink::dest() const
 {
+    ScopedCritSec scope(&engine->xrefAccess);
+
     if (!link)
         return NULL;
     if (PDF_LINK_ACTION == link->kind && str::Eq(GetType(), "ScrollToEx"))
         return fz_dict_gets(link->dest, "D");
     if (PDF_LINK_LAUNCH == link->kind && str::Eq(GetType(), "LaunchEmbedded"))
-        return fz_dict_getsa(fz_dict_gets(link->dest, "EF"), "UF", "F");
+        return GetDosPath(fz_dict_gets(link->dest, "EF"));
     return link->dest;
 }
 
