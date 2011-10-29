@@ -11,6 +11,7 @@
 #include "Notifications.h"
 #include "Print.h"
 #include "Selection.h"
+#include "translations.h"
 
 WindowInfo::WindowInfo(HWND hwnd) :
     dm(NULL), menu(NULL), hwndFrame(hwnd),
@@ -221,6 +222,7 @@ void LinkHandler::GotoLink(PageDestination *link)
             ScopedMem<TCHAR> combinedPath(path::Join(basePath, path));
             // TODO: respect fz_to_bool(fz_dict_gets(link->dest, "NewWindow")) for ScrollToEx
             WindowInfo *newWin = FindWindowInfoByFile(combinedPath);
+            // TODO: don't show window until it's certain that there was no error
             if (!newWin)
                 newWin = LoadDocument(combinedPath, owner);
 
@@ -230,16 +232,23 @@ void LinkHandler::GotoLink(PageDestination *link)
                 if (str::EqI(value, _T("audio")) || str::EqI(value, _T("video"))) {
                     // TODO: only do this for trusted files (cf. IsUntrustedFile)?
                     if (LaunchFile(path, NULL, _T("open"))) {
-                        CloseWindow(newWin, false);
+                        CloseWindow(newWin, true);
                         newWin = NULL;
                     }
                 }
             }
+            if (newWin && !newWin->IsDocLoaded()) {
+                ScopedMem<TCHAR> msg(str::Format(_TR("Error loading %s"), combinedPath));
+                ShowNotification(owner, msg, true /* autoDismiss */, true /* highlight */);
+                CloseWindow(newWin, true);
+                newWin = NULL;
+            }
 
-            if (newWin)
+            if (newWin) {
                 newWin->Focus();
-            if (str::Eq(type, "ScrollToEx") && newWin && newWin->IsDocLoaded())
-                newWin->linkHandler->ScrollTo(link);
+                if (str::Eq(type, "ScrollToEx"))
+                    newWin->linkHandler->ScrollTo(link);
+            }
         }
     }
     // predefined named actions

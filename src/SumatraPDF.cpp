@@ -4418,6 +4418,7 @@ static void MakePluginWindow(WindowInfo& win, HWND hwndParent)
     SetParent(win.hwndFrame, hwndParent);
     MoveWindow(win.hwndFrame, ClientRect(hwndParent));
     ShowWindow(win.hwndFrame, SW_SHOW);
+    UpdateWindow(win.hwndFrame);
 
     // from here on, we depend on the plugin's host to resize us
     SetFocus(win.hwndFrame);

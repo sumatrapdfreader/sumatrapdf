@@ -530,9 +530,9 @@ $(OS)\WindowInfo.obj: src\EngineManager.h src\FileWatch.h src\ImagesEngine.h
 $(OS)\WindowInfo.obj: src\Notifications.h src\PdfEngine.h src\PdfSync.h
 $(OS)\WindowInfo.obj: src\Print.h src\PsEngine.h src\Resource.h
 $(OS)\WindowInfo.obj: src\Selection.h src\SumatraPDF.h src\TextSearch.h
-$(OS)\WindowInfo.obj: src\TextSelection.h src\utils\BaseUtil.h src\utils\FileUtil.h
-$(OS)\WindowInfo.obj: src\utils\GeomUtil.h src\utils\StrUtil.h src\utils\Vec.h
-$(OS)\WindowInfo.obj: src\utils\WinUtil.h src\WindowInfo.h
+$(OS)\WindowInfo.obj: src\TextSelection.h src\translations.h src\utils\BaseUtil.h
+$(OS)\WindowInfo.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\StrUtil.h
+$(OS)\WindowInfo.obj: src\utils\Vec.h src\utils\WinUtil.h src\WindowInfo.h
 $(OS)\WinUtil.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\WinUtil.obj: src\utils\Scopes.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\WinUtil.obj: src\utils\WinUtil.h
