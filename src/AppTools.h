@@ -67,6 +67,7 @@ void DoAssociateExeWithPdfExtension(HKEY hkey);
 bool IsExeAssociatedWithPdfExtension();
 
 TCHAR *ExtractFilenameFromURL(const TCHAR *url);
+bool IsUntrustedFile(const TCHAR *filePath, const TCHAR *fileUrl=NULL);
 
 LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo=NULL);
 void   DDEExecute(LPCTSTR server, LPCTSTR topic, LPCTSTR command);

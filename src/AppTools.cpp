@@ -318,6 +318,30 @@ TCHAR *ExtractFilenameFromURL(const TCHAR *url)
     return urlName.StealData();
 }
 
+// files are considered untrusted, if they're either loaded from a
+// non-file URL in plugin mode, or if they're marked as being from
+// an untrusted zone (e.g. by the browser that's downloaded them)
+bool IsUntrustedFile(const TCHAR *filePath, const TCHAR *fileURL)
+{
+    ScopedMem<TCHAR> protocol;
+    if (fileURL && str::Parse(fileURL, _T("%S:"), &protocol))
+        if (str::Len(protocol) > 1 && !str::EqI(protocol, _T("file")))
+            return true;
+
+    if (file::GetZoneIdentifier(filePath) >= URLZONE_INTERNET)
+        return true;
+
+    // check all parents of embedded files and ADSs as well
+    ScopedMem<TCHAR> path(str::Dup(filePath));
+    while (str::Len(path) > 2 && str::FindChar(path + 2, ':')) {
+        *_tcsrchr(path, ':') = '\0';
+        if (file::GetZoneIdentifier(path) >= URLZONE_INTERNET)
+            return true;
+    }
+
+    return false;
+}
+
 // List of rules used to detect TeX editors.
 
 // type of path information retrieved from the registy

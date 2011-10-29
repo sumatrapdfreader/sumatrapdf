@@ -88,8 +88,7 @@ bool ViewWithFoxit(WindowInfo *win, TCHAR *args)
     // [PDF filename] [-n <page number>] [-pwd <password>] [-z <zoom>]
     // TODO: Foxit allows passing password and zoom
     ScopedMem<TCHAR> params(str::Format(_T("%s \"%s\" -n %d"), args, win->loadedFilePath, win->dm->CurrentPageNo()));
-    LaunchFile(exePath, params);
-    return true;
+    return LaunchFile(exePath, params);
 }
 
 bool CanViewWithPDFXChange(WindowInfo *win)
@@ -116,8 +115,7 @@ bool ViewWithPDFXChange(WindowInfo *win, TCHAR *args)
     // [/A "param=value [&param2=value ..."] [PDF filename] 
     // /A params: page=<page number>
     ScopedMem<TCHAR> params(str::Format(_T("%s /A \"page=%d\" \"%s\""), args, win->dm->CurrentPageNo(), win->loadedFilePath));
-    LaunchFile(exePath, params);
-    return true;
+    return LaunchFile(exePath, params);
 }
 
 bool CanViewWithAcrobat(WindowInfo *win)
@@ -152,7 +150,6 @@ bool ViewWithAcrobat(WindowInfo *win, TCHAR *args)
         params.Set(str::Format(_T("/A \"page=%d\" %s \"%s\""), win->dm->CurrentPageNo(), args, win->dm->FileName()));
     else
         params.Set(str::Format(_T("%s \"%s\""), args, win->loadedFilePath));
-    LaunchFile(exePath, params);
 
-    return true;
+    return LaunchFile(exePath, params);
 }

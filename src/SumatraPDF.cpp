@@ -207,8 +207,7 @@ bool LaunchBrowser(const TCHAR *url)
     if (gAllowedLinkProtocols.Find(protocol) == -1)
         return false;
 
-    LaunchFile(url, NULL, _T("open"));
-    return true;
+    return LaunchFile(url, NULL, _T("open"));
 }
 
 #define DEFINE_GUID_STATIC(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
@@ -2094,30 +2093,6 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
     }
 }
 
-// files are considered to be from the Internet zone, if they're
-// either loaded from a non-file URL in plugin mode, or if they're
-// already marked as such (e.g. by the browser that's downloaded them)
-static bool IsInternetFile(const TCHAR *filePath)
-{
-    ScopedMem<TCHAR> protocol;
-    if (gPluginMode && str::Parse(gPluginURL, _T("%S:"), &protocol))
-        if (str::Len(protocol) > 1 && !str::EqI(protocol, _T("file")))
-            return true;
-
-    if (file::GetZoneIdentifier(filePath) >= URLZONE_INTERNET)
-        return true;
-
-    // check all parents of embedded files and ADSs as well
-    ScopedMem<TCHAR> path(str::Dup(filePath));
-    while (str::Len(path) > 2 && str::FindChar(path + 2, ':')) {
-        *_tcsrchr(path, ':') = '\0';
-        if (file::GetZoneIdentifier(path) >= URLZONE_INTERNET)
-            return true;
-    }
-
-    return false;
-}
-
 static void OnMenuSaveAs(WindowInfo& win)
 {
     if (!HasPermission(Perm_DiskAccess)) return;
@@ -2258,7 +2233,7 @@ static void OnMenuSaveAs(WindowInfo& win)
         }
     }
 
-    if (ok && IsInternetFile(win.dm->FileName()))
+    if (ok && IsUntrustedFile(win.dm->FileName(), gPluginURL))
         file::SetZoneIdentifier(realDstFileName);
 
     if (realDstFileName != dstFileName)
@@ -2292,7 +2267,7 @@ bool LinkSaver::SaveEmbedded(unsigned char *data, int len)
     if (!ok)
         return false;
     ok = file::WriteAll(dstFileName, data, len);
-    if (ok && IsInternetFile(owner->dm ? owner->dm->FileName() : owner->loadedFilePath))
+    if (ok && IsUntrustedFile(owner->dm ? owner->dm->FileName() : owner->loadedFilePath, gPluginURL))
         file::SetZoneIdentifier(dstFileName);
     return ok;
 }

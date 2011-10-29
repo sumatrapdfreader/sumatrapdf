@@ -210,18 +210,34 @@ void LinkHandler::GotoLink(PageDestination *link)
             link->SaveEmbedded(LinkSaver(*owner, path));
     }
     else if ((str::Eq(type, "LaunchFile") || str::Eq(type, "ScrollToEx")) && path) {
-        /* for safety, only handle relative paths and only open them in SumatraPDF */
+        // for safety, only handle relative paths and only open them in SumatraPDF
+        // (unless they're of a registered audio or video type) and never launch any
+        // external file in plugin mode (where documents are supposed to be self-contained)
         TCHAR drive;
-        if (!str::StartsWith(path.Get(), _T("\\")) && !str::Parse(path, _T("%c:\\"), &drive)) {
+        if (!str::StartsWith(path.Get(), _T("\\")) &&
+            !str::Parse(path, _T("%c:\\"), &drive) &&
+            !gPluginMode) {
             ScopedMem<TCHAR> basePath(path::GetDir(dm->FileName()));
             ScopedMem<TCHAR> combinedPath(path::Join(basePath, path));
             // TODO: respect fz_to_bool(fz_dict_gets(link->dest, "NewWindow")) for ScrollToEx
             WindowInfo *newWin = FindWindowInfoByFile(combinedPath);
             if (!newWin)
                 newWin = LoadDocument(combinedPath, owner);
+
+            if (newWin && !newWin->IsDocLoaded() && str::Eq(type, "LaunchFile") && HasPermission(Perm_DiskAccess)) {
+                const TCHAR *ext = path::GetExt(path);
+                ScopedMem<TCHAR> value(ReadRegStr(HKEY_CLASSES_ROOT, ext, _T("PerceivedType")));
+                if (str::EqI(value, _T("audio")) || str::EqI(value, _T("video"))) {
+                    // TODO: only do this for trusted files (cf. IsUntrustedFile)?
+                    if (LaunchFile(path, NULL, _T("open"))) {
+                        CloseWindow(newWin, false);
+                        newWin = NULL;
+                    }
+                }
+            }
+
             if (newWin)
                 newWin->Focus();
-
             if (str::Eq(type, "ScrollToEx") && newWin && newWin->IsDocLoaded())
                 newWin->linkHandler->ScrollTo(link);
         }

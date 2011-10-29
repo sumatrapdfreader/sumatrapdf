@@ -355,10 +355,10 @@ DWORD GetFileVersion(TCHAR *path)
     return fileVersion;
 }
 
-void LaunchFile(const TCHAR *path, const TCHAR *params, const TCHAR *verb, bool hidden)
+bool LaunchFile(const TCHAR *path, const TCHAR *params, const TCHAR *verb, bool hidden)
 {
     if (!path)
-        return;
+        return false;
 
     SHELLEXECUTEINFO sei = { 0 };
     sei.cbSize  = sizeof(sei);
@@ -367,7 +367,7 @@ void LaunchFile(const TCHAR *path, const TCHAR *params, const TCHAR *verb, bool 
     sei.lpFile  = path;
     sei.lpParameters = params;
     sei.nShow   = hidden ? SW_HIDE : SW_SHOWNORMAL;
-    ShellExecuteEx(&sei);
+    return ShellExecuteEx(&sei);
 }
 
 HANDLE LaunchProcess(TCHAR *cmdLine, DWORD flags)
