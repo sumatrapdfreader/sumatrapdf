@@ -237,11 +237,11 @@ public:
 };
 
 class LinkSaver : public LinkSaverUI {
-    HWND hwnd;
+    WindowInfo *owner;
     const TCHAR *fileName;
 
 public:
-    LinkSaver(HWND hwnd, const TCHAR *fileName) : hwnd(hwnd), fileName(fileName) { }
+    LinkSaver(WindowInfo& win, const TCHAR *fileName) : owner(&win), fileName(fileName) { }
 
     virtual bool SaveEmbedded(unsigned char *data, int cbCount);
 };

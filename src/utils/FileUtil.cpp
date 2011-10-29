@@ -318,6 +318,19 @@ bool StartsWith(const TCHAR *filePath, const char *magicNumber, size_t len)
     return !memcmp(header, magicNumber, len);
 }
 
+int GetZoneIdentifier(const TCHAR *filePath)
+{
+    ScopedMem<TCHAR> path(str::Join(filePath, _T(":Zone.Identifier")));
+    return GetPrivateProfileInt(_T("ZoneTransfer"), _T("ZoneId"), URLZONE_INVALID, path);
+}
+
+bool SetZoneIdentifier(const TCHAR *filePath, int zoneId)
+{
+    ScopedMem<TCHAR> path(str::Join(filePath, _T(":Zone.Identifier")));
+    ScopedMem<TCHAR> id(str::Format(_T("%d"), zoneId));
+    return WritePrivateProfileString(_T("ZoneTransfer"), _T("ZoneId"), id, path);
+}
+
 }
 
 namespace dir {

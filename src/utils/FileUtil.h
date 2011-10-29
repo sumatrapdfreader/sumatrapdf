@@ -30,6 +30,8 @@ bool         Delete(const TCHAR *filePath);
 FILETIME     GetModificationTime(const TCHAR *filePath);
 bool         SetModificationTime(const TCHAR *filePath, FILETIME lastMod);
 bool         StartsWith(const TCHAR *filePath, const char *magicNumber, size_t len=-1);
+int          GetZoneIdentifier(const TCHAR *filePath);
+bool         SetZoneIdentifier(const TCHAR *filePath, int zoneId=URLZONE_INTERNET);
 
 }
 

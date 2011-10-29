@@ -2094,6 +2094,30 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
     }
 }
 
+// files are considered to be from the Internet zone, if they're
+// either loaded from a non-file URL in plugin mode, or if they're
+// already marked as such (e.g. by the browser that's downloaded them)
+static bool IsInternetFile(const TCHAR *filePath)
+{
+    ScopedMem<TCHAR> protocol;
+    if (gPluginMode && str::Parse(gPluginURL, _T("%S:"), &protocol))
+        if (str::Len(protocol) > 1 && !str::EqI(protocol, _T("file")))
+            return true;
+
+    if (file::GetZoneIdentifier(filePath) >= URLZONE_INTERNET)
+        return true;
+
+    // check all parents of embedded files and ADSs as well
+    ScopedMem<TCHAR> path(str::Dup(filePath));
+    while (str::Len(path) > 2 && str::FindChar(path + 2, ':')) {
+        *_tcsrchr(path, ':') = '\0';
+        if (file::GetZoneIdentifier(path) >= URLZONE_INTERNET)
+            return true;
+    }
+
+    return false;
+}
+
 static void OnMenuSaveAs(WindowInfo& win)
 {
     if (!HasPermission(Perm_DiskAccess)) return;
@@ -2168,7 +2192,8 @@ static void OnMenuSaveAs(WindowInfo& win)
     ofn.lpstrDefExt = defExt + 1;
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
 
-    if (FALSE == GetSaveFileName(&ofn))
+    bool ok = GetSaveFileName(&ofn);
+    if (!ok)
         return;
 
     TCHAR * realDstFileName = dstFileName;
@@ -2182,6 +2207,7 @@ static void OnMenuSaveAs(WindowInfo& win)
             defExt = _T(".pdf");
         realDstFileName = str::Format(_T("%s%s"), dstFileName, defExt);
     }
+
     // Extract all text when saving as a plain text file
     if (hasCopyPerm && str::EndsWithI(realDstFileName, _T(".txt"))) {
         str::Str<TCHAR> text(1024);
@@ -2190,29 +2216,29 @@ static void OnMenuSaveAs(WindowInfo& win)
 
         ScopedMem<char> textUTF8(str::conv::ToUtf8(text.LendData()));
         ScopedMem<char> textUTF8BOM(str::Join("\xEF\xBB\xBF", textUTF8));
-        file::WriteAll(realDstFileName, textUTF8BOM, str::Len(textUTF8BOM));
+        ok = file::WriteAll(realDstFileName, textUTF8BOM, str::Len(textUTF8BOM));
+        if (!ok)
+            MessageBox(win.hwndFrame, _TR("Failed to save a file"), _TR("Warning"), MB_OK | MB_ICONEXCLAMATION | (IsUIRightToLeft() ? MB_RTLREADING : 0));
     }
     // Convert the Postscript file into a PDF one
     else if (canConvertToPDF && str::EndsWithI(realDstFileName, _T(".pdf"))) {
         size_t dataLen;
         ScopedMem<unsigned char> data(static_cast<PsEngine *>(win.dm->engine)->GetPDFData(&dataLen));
-        if (data)
-            file::WriteAll(realDstFileName, data, dataLen);
-        else
+        ok = data && file::WriteAll(realDstFileName, data, dataLen);
+        if (!ok)
             MessageBox(win.hwndFrame, _TR("Failed to save a file"), _TR("Warning"), MB_OK | MB_ICONEXCLAMATION | (IsUIRightToLeft() ? MB_RTLREADING : 0));
     }
     // Recreate inexistant files from memory...
     else if (!file::Exists(srcFileName)) {
         size_t dataLen;
         ScopedMem<unsigned char> data(win.dm->engine->GetFileData(&dataLen));
-        if (data)
-            file::WriteAll(realDstFileName, data, dataLen);
-        else
+        ok = data && file::WriteAll(realDstFileName, data, dataLen);
+        if (!ok)
             MessageBox(win.hwndFrame, _TR("Failed to save a file"), _TR("Warning"), MB_OK | MB_ICONEXCLAMATION | (IsUIRightToLeft() ? MB_RTLREADING : 0));
     }
     // ... else just copy the file
     else {
-        bool ok = CopyFileEx(srcFileName, realDstFileName, NULL, NULL, NULL, 0);
+        ok = CopyFileEx(srcFileName, realDstFileName, NULL, NULL, NULL, 0);
         if (ok) {
             // Make sure that the copy isn't write-locked or hidden
             const DWORD attributesToDrop = FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM;
@@ -2231,6 +2257,10 @@ static void OnMenuSaveAs(WindowInfo& win)
             free(errorMsg);
         }
     }
+
+    if (ok && IsInternetFile(win.dm->FileName()))
+        file::SetZoneIdentifier(realDstFileName);
+
     if (realDstFileName != dstFileName)
         free(realDstFileName);
 }
@@ -2251,16 +2281,20 @@ bool LinkSaver::SaveEmbedded(unsigned char *data, int len)
 
     OPENFILENAME ofn = { 0 };
     ofn.lStructSize = sizeof(ofn);
-    ofn.hwndOwner = this->hwnd;
+    ofn.hwndOwner = owner->hwndFrame;
     ofn.lpstrFile = dstFileName;
     ofn.nMaxFile = dimof(dstFileName);
     ofn.lpstrFilter = fileFilter;
     ofn.nFilterIndex = 1;
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
 
-    if (FALSE == GetSaveFileName(&ofn))
+    bool ok = GetSaveFileName(&ofn);
+    if (!ok)
         return false;
-    return file::WriteAll(dstFileName, data, len);
+    ok = file::WriteAll(dstFileName, data, len);
+    if (ok && IsInternetFile(owner->dm ? owner->dm->FileName() : owner->loadedFilePath))
+        file::SetZoneIdentifier(dstFileName);
+    return ok;
 }
 
 static void OnMenuSaveBookmark(WindowInfo& win)

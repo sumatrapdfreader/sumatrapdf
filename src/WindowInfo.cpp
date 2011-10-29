@@ -207,7 +207,7 @@ void LinkHandler::GotoLink(PageDestination *link)
         }
         // offer to save other attachments to a file
         else
-            link->SaveEmbedded(LinkSaver(owner->hwndFrame, path));
+            link->SaveEmbedded(LinkSaver(*owner, path));
     }
     else if ((str::Eq(type, "LaunchFile") || str::Eq(type, "ScrollToEx")) && path) {
         /* for safety, only handle relative paths and only open them in SumatraPDF */
