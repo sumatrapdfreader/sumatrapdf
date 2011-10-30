@@ -191,6 +191,10 @@ Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.pdf\Progid
   TODO: No other app seems to set this one, and only UserChoice seems to make
         a difference - is this still required for Windows XP?
 
+Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.pdf\Application
+  should be SumatraPDF.exe; only needed for HKEY_CURRENT_USER
+  Windows XP seems to use this instead of:
+
 Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.pdf\UserChoice\Progid
   should be SumatraPDF as well (also only needed for HKEY_CURRENT_USER);
   this key is used for remembering a user's choice with Explorer's Open With dialog
@@ -234,12 +238,12 @@ void DoAssociateExeWithPdfExtension(HKEY hkey)
     bool ok = WriteRegStr(hkey, REG_CLASSES_APP _T("\\shell\\open\\command"), NULL, cmdPath);
 
     // also register for printing
-    ScopedMem<TCHAR> printPath(str::Format(_T("\"%s\" -print-to-default \"%%1\""), exePath)); // "${exePath}" -print-to-default "%1"
-    WriteRegStr(hkey, REG_CLASSES_APP _T("\\shell\\print\\command"), NULL, printPath);
+    cmdPath.Set(str::Format(_T("\"%s\" -print-to-default \"%%1\""), exePath)); // "${exePath}" -print-to-default "%1"
+    WriteRegStr(hkey, REG_CLASSES_APP _T("\\shell\\print\\command"), NULL, cmdPath);
 
     // also register for printing to specific printer
-    ScopedMem<TCHAR> printToPath(str::Format(_T("\"%s\" -print-to \"%%2\" \"%%1\""), exePath)); // "${exePath}" -print-to "%2" "%1"
-    WriteRegStr(hkey, REG_CLASSES_APP _T("\\shell\\printto\\command"), NULL, printToPath);
+    cmdPath.Set(str::Format(_T("\"%s\" -print-to \"%%2\" \"%%1\""), exePath)); // "${exePath}" -print-to "%2" "%1"
+    WriteRegStr(hkey, REG_CLASSES_APP _T("\\shell\\printto\\command"), NULL, cmdPath);
 
     // Only change the association if we're confident, that we've registered ourselves well enough
     if (ok) {
@@ -248,6 +252,7 @@ void DoAssociateExeWithPdfExtension(HKEY hkey)
         WriteRegStr(hkey, REG_CLASSES_PDF _T("\\OpenWithProgids"), APP_NAME_STR, _T(""));
         if (hkey == HKEY_CURRENT_USER) {
             WriteRegStr(hkey, REG_EXPLORER_PDF_EXT, _T("Progid"), APP_NAME_STR);
+            SHDeleteValue(hkey, REG_EXPLORER_PDF_EXT, _T("Application"));
             DeleteRegKey(hkey, REG_EXPLORER_PDF_EXT _T("\\UserChoice"), true);
         }
     }
@@ -262,6 +267,11 @@ bool IsExeAssociatedWithPdfExtension()
     if (tmp && !str::Eq(tmp, APP_NAME_STR))
         return false;
 
+    // this one doesn't have to exist but if it does, it must be APP_NAME_STR.exe
+    tmp.Set(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, _T("Application")));
+    if (tmp && !str::EqI(tmp, APP_NAME_STR _T(".exe")))
+        return false;
+
     // this one doesn't have to exist but if it does, it must be APP_NAME_STR
     tmp.Set(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT _T("\\UserChoice"), _T("Progid")));
     if (tmp && !str::Eq(tmp, APP_NAME_STR))
@@ -273,12 +283,12 @@ bool IsExeAssociatedWithPdfExtension()
         return false;
 
     // HKEY_CLASSES_ROOT\SumatraPDF\shell\open default key must be: open
-    tmp.Set(ReadRegStr(HKEY_CLASSES_ROOT, _T("SumatraPDF\\shell"), NULL));
+    tmp.Set(ReadRegStr(HKEY_CLASSES_ROOT, APP_NAME_STR _T("\\shell"), NULL));
     if (!str::EqI(tmp, _T("open")))
         return false;
 
     // HKEY_CLASSES_ROOT\SumatraPDF\shell\open\command default key must be: "${exe_path}" "%1"
-    tmp.Set(ReadRegStr(HKEY_CLASSES_ROOT, _T("SumatraPDF\\shell\\open\\command"), NULL));
+    tmp.Set(ReadRegStr(HKEY_CLASSES_ROOT, APP_NAME_STR _T("\\shell\\open\\command"), NULL));
     if (!tmp)
         return false;
 

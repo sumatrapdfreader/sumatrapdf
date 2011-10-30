@@ -313,18 +313,14 @@ static INT_PTR CALLBACK Dialog_PdfAssociate_Proc(HWND hDlg, UINT msg, WPARAM wPa
         case WM_COMMAND:
             data = (Dialog_PdfAssociate_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
             assert(data);
-            data->dontAskAgain = false;
+            data->dontAskAgain = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_DONT_ASK_ME_AGAIN));
             switch (LOWORD(wParam))
             {
                 case IDOK:
-                    if (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_DONT_ASK_ME_AGAIN))
-                        data->dontAskAgain = true;
                     EndDialog(hDlg, IDYES);
                     return TRUE;
 
                 case IDCANCEL:
-                    if (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_DONT_ASK_ME_AGAIN))
-                        data->dontAskAgain = true;
                     EndDialog(hDlg, IDNO);
                     return TRUE;
 

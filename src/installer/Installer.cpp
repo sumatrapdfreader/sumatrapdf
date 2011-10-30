@@ -136,6 +136,7 @@ static Color            COLOR_MSG_FAILED(gCol1);
 
 #define REG_EXPLORER_PDF_EXT  _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.pdf")
 #define PROG_ID               _T("ProgId")
+#define APPLICATION           _T("Application")
 
 #define REG_PATH_PLUGIN     _T("Software\\MozillaPlugins\\@mozilla.zeniko.ch/SumatraPDF_Browser_Plugin")
 #define PLUGIN_PATH         _T("Path")
@@ -905,6 +906,12 @@ static void UnregisterFromBeingDefaultViewer(HKEY hkey)
     ScopedMem<TCHAR> buf(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, PROG_ID));
     if (str::Eq(buf, TAPP)) {
         LONG res = SHDeleteValue(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, PROG_ID);
+        if (res != ERROR_SUCCESS)
+            SeeLastError(res);
+    }
+    buf.Set(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, APPLICATION));
+    if (str::EqI(buf, EXENAME)) {
+        LONG res = SHDeleteValue(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, APPLICATION);
         if (res != ERROR_SUCCESS)
             SeeLastError(res);
     }

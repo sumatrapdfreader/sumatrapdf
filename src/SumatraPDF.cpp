@@ -1268,8 +1268,8 @@ void AssociateExeWithPdfExtension()
     SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST | SHCNF_FLUSHNOWAIT, 0, 0);
 
     // Remind the user, when a different application takes over
-    gGlobalPrefs.pdfAssociateShouldAssociate = TRUE;
-    gGlobalPrefs.pdfAssociateDontAskAgain = FALSE;
+    gGlobalPrefs.pdfAssociateShouldAssociate = true;
+    gGlobalPrefs.pdfAssociateDontAskAgain = false;
 }
 
 // Registering happens either through the Installer or the Options dialog;
@@ -1286,14 +1286,9 @@ static bool RegisterForPdfExtentions(HWND hwnd)
        see this dialog */
     if (!gGlobalPrefs.pdfAssociateDontAskAgain) {
         INT_PTR result = Dialog_PdfAssociate(hwnd, &gGlobalPrefs.pdfAssociateDontAskAgain);
-        if (IDNO == result) {
-            gGlobalPrefs.pdfAssociateShouldAssociate = FALSE;
-        } else {
-            assert(IDYES == result);
-            gGlobalPrefs.pdfAssociateShouldAssociate = TRUE;
-        }
+        assert(IDYES == result || IDNO == result);
+        gGlobalPrefs.pdfAssociateShouldAssociate = (IDYES == result);
     }
-
     if (!gGlobalPrefs.pdfAssociateShouldAssociate)
         return false;
 
