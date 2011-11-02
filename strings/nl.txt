@@ -671,5 +671,6 @@ printing document
 bestand afdrukken
 
 # Untranslated:
+#CHM documents
 #File %s not found
 

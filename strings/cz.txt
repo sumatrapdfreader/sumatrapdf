@@ -665,5 +665,6 @@ printing document
 tisk dokumentu
 
 # Untranslated:
+#CHM documents
 #File %s not found
 

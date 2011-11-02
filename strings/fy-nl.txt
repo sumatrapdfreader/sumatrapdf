@@ -467,6 +467,7 @@ Zoomfaktor
 #Bookmark Shortcuts
 #Bookmark shortcut to page %s of %s
 #Bookmarks
+#CHM documents
 #Can't connect to the Internet (error %#x).
 #Comic books
 #Copy &Link Address

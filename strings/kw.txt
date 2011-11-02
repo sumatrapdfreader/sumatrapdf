@@ -433,6 +433,7 @@ Faktor-zoum
 #Bookmark shortcut to page %s of %s
 #Bookmarks
 #Bytes
+#CHM documents
 #Can't connect to the Internet (error %#x).
 #Comic books
 #Copy &Link Address

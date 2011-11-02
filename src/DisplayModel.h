@@ -128,7 +128,7 @@ public:
     float ZoomAbsolute() const { return _zoomReal * 100 / dpiFactor; }
 
     bool HasTocTree() const {
-        return engine && engine->HasToCTree();
+        return engine && engine->HasTocTree();
     }
     int CurrentPageNo() const;
 

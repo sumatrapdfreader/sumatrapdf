@@ -663,5 +663,6 @@ printing document
 отпечатване на документ
 
 # Untranslated:
+#CHM documents
 #File %s not found
 

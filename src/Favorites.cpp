@@ -350,12 +350,6 @@ void RebuildFavMenu(WindowInfo *win, HMENU menu)
     }
 }
 
-void RebuildFavMenu(ChmWindowInfo *win, HMENU menu)
-{
-    // TODO: pass loadedFilePath and pageNo correctly
-    RebuildFavMenu(NULL, 0, menu);
-}
-
 void ToggleFavorites(WindowInfo *win)
 {
     if (gGlobalPrefs.favVisible) {
@@ -585,7 +579,7 @@ void AddFavorite(WindowInfo *win)
     ScopedMem<TCHAR> name;
     if (win->dm->HasTocTree()) {
         // use the current ToC heading as default name
-        DocTocItem *root = win->dm->engine->GetToCTree();
+        DocTocItem *root = win->dm->engine->GetTocTree();
         DocTocItem *item = ToCItemForPageNo(root, pageNo);
         if (item)
             name.Set(str::Dup(item->title));

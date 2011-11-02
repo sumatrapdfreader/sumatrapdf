@@ -664,5 +664,6 @@ printing document
 печатается документ
 
 # Untranslated:
+#CHM documents
 #File %s not found
 

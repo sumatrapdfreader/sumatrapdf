@@ -381,8 +381,8 @@ void LinkHandler::GotoNamedDest(const TCHAR *name)
         ScrollTo(dest);
         delete dest;
     }
-    else if (engine()->HasToCTree()) {
-        DocTocItem *root = engine()->GetToCTree();
+    else if (engine()->HasTocTree()) {
+        DocTocItem *root = engine()->GetTocTree();
         ScopedMem<TCHAR> fuzName(NormalizeFuzzy(name));
         dest = FindTocItem(root, fuzName);
         if (!dest)

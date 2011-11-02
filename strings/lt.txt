@@ -657,6 +657,7 @@ spausdinamas dokumentas
 # Untranslated:
 #Bookmark Shortcuts
 #Bookmark shortcut to page %s of %s
+#CHM documents
 #File %s not found
 #Save S&hortcut...\tCtrl+Shift+S
 

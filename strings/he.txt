@@ -663,5 +663,6 @@ printing document
 מדפיס מסמך
 
 # Untranslated:
+#CHM documents
 #File %s not found
 

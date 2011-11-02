@@ -662,5 +662,6 @@ printing document
 正在打印文档
 
 # Untranslated:
+#CHM documents
 #File %s not found
 

@@ -2141,8 +2141,7 @@ static void OnMenuSaveAs(WindowInfo& win)
     case Engine_Image:  fileFilter.AppendFmt(_TR("Image files (*.%s)"), defExt + 1); break;
     case Engine_PS:     fileFilter.Append(_TR("Postscript documents")); break;
 #ifdef BUILD_CHM_SUPPORT
-    // TODO: translate when CHM support is ready
-    case Engine_Chm:    fileFilter.Append(_T("CHM documents")); break;
+    case Engine_Chm:    fileFilter.Append(_TR("CHM documents")); break;
 #endif
     default:            fileFilter.Append(_TR("PDF documents")); break;
     }
@@ -2391,8 +2390,7 @@ static void OnMenuOpen(WindowInfo& win)
         { _TR("Postscript documents"),  _T("*.ps;*.eps"),   PsEngine::IsAvailable() },
         { _TR("Comic books"),           _T("*.cbz;*.cbr"),  true },
 #ifdef BUILD_CHM_SUPPORT
-        // TODO: translate when CHM support is ready
-        { _T("CHM documents"),          _T("*.chm"),        true },
+        { _TR("CHM documents"),          _T("*.chm"),        true },
 #endif
     };
     // Prepare the file filters (use \1 instead of \0 so that the

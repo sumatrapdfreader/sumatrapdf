@@ -240,6 +240,7 @@ Zoom Out
 #Bookmark shortcut to page %s of %s
 #Bookmarks
 #Bytes
+#CHM documents
 #Can't connect to the Internet (error %#x).
 #Cancel
 #Cannot print this file

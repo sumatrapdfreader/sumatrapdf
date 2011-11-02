@@ -102,8 +102,8 @@ public:
     virtual bool BenchLoadPage(int pageNo) { return true; }
 
     // we always have toc tree
-    virtual bool HasToCTree() const { return tocRoot != NULL; }
-    virtual DocTocItem *GetToCTree();
+    virtual bool HasTocTree() const { return tocRoot != NULL; }
+    virtual DocTocItem *GetTocTree();
 
     virtual void HookHwndAndDisplayIndex(HWND hwnd);
     virtual void DisplayPage(int pageNo);
@@ -614,7 +614,7 @@ bool CChmEngine::Load(const TCHAR *fileName)
 
 // Callers delete the result so we return a copy of toc tree
 // (probably faster than re-creating it from html every time)
-DocTocItem *CChmEngine::GetToCTree()
+DocTocItem *CChmEngine::GetTocTree()
 {
     if (!tocRoot)
         return NULL;

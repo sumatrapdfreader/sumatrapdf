@@ -284,11 +284,11 @@ public:
     virtual PageDestination *GetNamedDest(const TCHAR *name) {
         return pdfEngine ? pdfEngine->GetNamedDest(name) : NULL;
     }
-    virtual bool HasToCTree() const {
-        return pdfEngine ? pdfEngine->HasToCTree() : false;
+    virtual bool HasTocTree() const {
+        return pdfEngine ? pdfEngine->HasTocTree() : false;
     }
-    virtual DocTocItem *GetToCTree() {
-        return pdfEngine ? pdfEngine->GetToCTree() : NULL;
+    virtual DocTocItem *GetTocTree() {
+        return pdfEngine ? pdfEngine->GetTocTree() : NULL;
     }
 
     virtual char *GetDecryptionKey() const {

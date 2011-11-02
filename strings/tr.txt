@@ -663,5 +663,6 @@ printing document
 belge yazdırılıyor
 
 # Untranslated:
+#CHM documents
 #File %s not found
 

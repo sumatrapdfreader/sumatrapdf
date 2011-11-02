@@ -665,5 +665,6 @@ printing document
 mencetak dokumen
 
 # Untranslated:
+#CHM documents
 #File %s not found
 

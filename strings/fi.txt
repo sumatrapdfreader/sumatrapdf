@@ -664,5 +664,6 @@ printing document
 tulostetaan asiakirjaa
 
 # Untranslated:
+#CHM documents
 #File %s not found
 

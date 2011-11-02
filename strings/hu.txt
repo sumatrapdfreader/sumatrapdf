@@ -665,5 +665,6 @@ printing document
 Nyomtatás
 
 # Untranslated:
+#CHM documents
 #File %s not found
 

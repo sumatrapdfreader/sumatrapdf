@@ -668,5 +668,6 @@ printing document
 imprimimendo documento
 
 # Untranslated:
+#CHM documents
 #File %s not found
 

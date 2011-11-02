@@ -666,5 +666,6 @@ printing document
 skriver ut dokument
 
 # Untranslated:
+#CHM documents
 #File %s not found
 

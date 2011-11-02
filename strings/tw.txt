@@ -626,6 +626,7 @@ printing document
 #Add page %s to favorites
 #Add page %s to favorites with (optional) name:
 #Add to favorites
+#CHM documents
 #Could not obtain Printer properties
 #Current file
 #F&avorites

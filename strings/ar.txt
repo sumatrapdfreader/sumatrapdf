@@ -665,5 +665,6 @@ printing document
 تتم حالياً الطباعة
 
 # Untranslated:
+#CHM documents
 #File %s not found
 

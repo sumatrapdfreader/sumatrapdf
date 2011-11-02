@@ -664,5 +664,6 @@ udskriver dokument
 
 # Untranslated:
 #&Copy Selection
+#CHM documents
 #File %s not found
 

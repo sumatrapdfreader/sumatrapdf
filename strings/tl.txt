@@ -560,6 +560,7 @@ ipini-print ang dokumento
 #All supported documents
 #Bookmark Shortcuts
 #Bookmark shortcut to page %s of %s
+#CHM documents
 #Comic books
 #Could not obtain Printer properties
 #Current file

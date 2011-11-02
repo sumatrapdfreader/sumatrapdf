@@ -665,5 +665,6 @@ printing document
 εκτύπωση εγγράφου
 
 # Untranslated:
+#CHM documents
 #File %s not found
 

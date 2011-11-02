@@ -331,7 +331,7 @@ void LoadTocTree(WindowInfo *win)
 
     win->tocRoot = NULL;
     if (win->dm->engine)
-        win->tocRoot = win->dm->engine->GetToCTree();
+        win->tocRoot = win->dm->engine->GetTocTree();
     if (!win->tocRoot)
         return;
 

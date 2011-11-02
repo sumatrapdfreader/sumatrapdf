@@ -666,5 +666,6 @@ printing document
 Dokument drucken verweigert
 
 # Untranslated:
+#CHM documents
 #File %s not found
 

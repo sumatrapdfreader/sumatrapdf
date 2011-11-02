@@ -660,5 +660,6 @@ printing document
 ag clóbhualadh an cháipéis
 
 # Untranslated:
+#CHM documents
 #File %s not found
 

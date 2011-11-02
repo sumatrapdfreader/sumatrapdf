@@ -955,10 +955,6 @@ void DisplayModel::GoToPageChm(int pageNo, bool goToUrl)
         // this will trigger navigation callback which will
         // result in us being called again, but with goToUrl = false
         chmEngine->DisplayPage(pageNo);
-        // TODO: not sure if it makes sense to keep track of this or
-        // should we just rely on browser's history for back/forward
-        // navigation
-        AddNavPoint();
     } else {
         // sync the state of the ui to show current page number
         dmCb->PageNoChanged(pageNo);

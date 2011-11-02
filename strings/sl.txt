@@ -664,5 +664,6 @@ printing document
 tiskanje dokumenta
 
 # Untranslated:
+#CHM documents
 #File %s not found
 

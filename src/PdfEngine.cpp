@@ -723,10 +723,10 @@ public:
     virtual PageElement *GetElementAtPos(int pageNo, PointD pt);
 
     virtual PageDestination *GetNamedDest(const TCHAR *name);
-    virtual bool HasToCTree() const {
+    virtual bool HasTocTree() const {
         return outline != NULL || attachments != NULL;
     }
-    virtual DocTocItem *GetToCTree();
+    virtual DocTocItem *GetTocTree();
 
     virtual bool HasPageLabels() { return _pagelabels != NULL; }
     virtual TCHAR *GetPageLabel(int pageNo);
@@ -1119,7 +1119,7 @@ PdfToCItem *CPdfEngine::BuildToCTree(pdf_outline *entry, int& idCounter)
     return node;
 }
 
-DocTocItem *CPdfEngine::GetToCTree()
+DocTocItem *CPdfEngine::GetTocTree()
 {
     PdfToCItem *node = NULL;
     int idCounter = 0;
@@ -2020,8 +2020,8 @@ public:
     virtual PageElement *GetElementAtPos(int pageNo, PointD pt);
 
     virtual PageDestination *GetNamedDest(const TCHAR *name);
-    virtual bool HasToCTree() const { return _outline != NULL; }
-    virtual DocTocItem *GetToCTree();
+    virtual bool HasTocTree() const { return _outline != NULL; }
+    virtual DocTocItem *GetTocTree();
 
     int FindPageNo(const char *target);
     fz_rect FindDestRect(const char *target);
@@ -2789,9 +2789,9 @@ XpsToCItem *CXpsEngine::BuildToCTree(xps_outline *entry, int& idCounter)
     return node;
 }
 
-DocTocItem *CXpsEngine::GetToCTree()
+DocTocItem *CXpsEngine::GetTocTree()
 {
-    if (!HasToCTree())
+    if (!HasTocTree())
         return NULL;
 
     int idCounter = 0;

@@ -381,6 +381,7 @@ Zoom Out
 #Bookmark shortcut to page %s of %s
 #Bookmarks
 #Bytes
+#CHM documents
 #Can't connect to the Internet (error %#x).
 #Cannot start inverse search command. Please check the command line in the settings.
 #Comic books

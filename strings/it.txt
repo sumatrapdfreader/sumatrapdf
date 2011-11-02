@@ -672,3 +672,6 @@ Copia del testo...
 printing document
 Stampa documento...
 
+# Untranslated:
+#CHM documents
+

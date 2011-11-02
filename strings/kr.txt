@@ -469,6 +469,7 @@ printing document
 #All supported documents
 #Bookmark Shortcuts
 #Bookmark shortcut to page %s of %s
+#CHM documents
 #Cannot start inverse search command. Please check the command line in the settings.
 #Comic books
 #Continuous Book View

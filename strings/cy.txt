@@ -536,6 +536,7 @@ argraffu dogfen
 #All supported documents
 #Bookmark Shortcuts
 #Bookmark shortcut to page %s of %s
+#CHM documents
 #Comic books
 #Copy &Link Address
 #Copy Co&mment

@@ -660,5 +660,6 @@ printing document
 
 # Untranslated:
 #(page %s)
+#CHM documents
 #File %s not found
 

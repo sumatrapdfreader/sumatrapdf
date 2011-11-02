@@ -654,6 +654,7 @@ skriver ut dokumentet
 #All supported documents
 #Bookmark Shortcuts
 #Bookmark shortcut to page %s of %s
+#CHM documents
 #Comic books
 #Could not obtain Printer properties
 #File %s not found

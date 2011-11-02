@@ -275,10 +275,10 @@ public:
     // caller must delete the result
     virtual PageDestination *GetNamedDest(const TCHAR *name) { return NULL; }
     // checks whether this document has an associated Table of Contents
-    virtual bool HasToCTree() const { return false; }
+    virtual bool HasTocTree() const { return false; }
     // returns the root element for the loaded document's Table of Contents
     // caller must delete the result (when no longer needed)
-    virtual DocTocItem *GetToCTree() { return NULL; }
+    virtual DocTocItem *GetTocTree() { return NULL; }
 
     // checks whether this document has explicit labels for pages (such as
     // roman numerals) instead of the default plain arabic numbering
