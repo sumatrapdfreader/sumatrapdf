@@ -6,6 +6,7 @@
 
 #include <shlobj.h>
 #include "GeomUtil.h"
+#include "StrUtil.h"
 #include "DisplayModel.h"
 
 class FileWatcher;
@@ -59,6 +60,9 @@ public:
     //       which doesn't allow distinction between PDF, XPS, etc. errors
     bool IsAboutWindow() const { return !loadedFilePath; }
     bool IsDocLoaded() const { return this->dm != NULL; }
+
+    // TODO: check for ChmEngine instead?
+    bool IsChm() const { return loadedFilePath && str::EndsWithI(loadedFilePath, _T(".chm")); }
 
     TCHAR *         loadedFilePath;
     DisplayModel *  dm;

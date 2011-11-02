@@ -21,9 +21,6 @@ Note: Automatic cropping is currently implemented as "Fit Content" View mode.
 
 4. eBooks seem to be all the rage those days. Add ePub support?
 
-4a. Make SumatraPDF extensible with different format back-ends/plugins and
-turn it into a general document viewer?
-
 5. Add integration with web-based backup/viewer system. The idea is that users
 could easily backup their PDFs on the server. They would have a convenient
 access to those PDFs from Sumatra as well as being able to view them on the

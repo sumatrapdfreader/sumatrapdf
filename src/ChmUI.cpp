@@ -65,7 +65,7 @@ ChmWindowInfo *CreateChmWindowInfo()
         return NULL;
     }
 
-    win->menu = BuildChmMenu(win);
+    //win->menu = BuildChmMenu(win);
 
     ShowWindow(win->hwndHtml, SW_SHOW);
     UpdateWindow(win->hwndHtml);

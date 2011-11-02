@@ -629,7 +629,7 @@
     <ClCompile Include="src\ChmUI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Touch.cpp">
+    <ClCompile Include="src\utils\Touch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -901,8 +901,14 @@
     <ClInclude Include="src\ChmUI.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Touch.h">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="src\utils\Scopes.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\Touch.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\Transactions.h">
+      <Filter>utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1095,6 +1101,8 @@
     <None Include="src\reloading.bmp">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="docs\releasenotes.txt" />
+    <None Include="docs\wishlist.txt" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="src\SumatraPDF.rc">

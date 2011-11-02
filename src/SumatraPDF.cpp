@@ -151,7 +151,6 @@ static StrVec                       gAllowedLinkProtocols;
 
 static void UpdateUITextForLanguage();
 static void UpdateToolbarAndScrollbarsForAllWindows();
-static void RebuildMenuBar();
 static void EnterFullscreen(WindowInfo& win, bool presentation=false);
 static void ExitFullscreen(WindowInfo& win);
 
@@ -604,6 +603,27 @@ void CreateThumbnailForFile(WindowInfo& win, DisplayState& state)
     gRenderCache.Render(win.dm, 1, 0, zoom, pageRect, *callback);
 }
 
+static void RebuildMenuBarForWindow(WindowInfo *win)
+{
+#ifdef BUILD_RIBBON
+    if (win->ribbonSupport)
+        win->ribbonSupport->Reset();
+    else
+#endif
+    {
+        HMENU oldMenu = win->menu;
+        win->menu = BuildMenu(win);
+        DestroyMenu(oldMenu);
+    }
+}
+
+static void RebuildMenuBarForAllWindows()
+{
+    for (size_t i = 0; i < gWindows.Count(); i++) {
+        RebuildMenuBarForWindow(gWindows.At(i));
+    }
+}
+
 static bool IsChmFile(TCHAR *fileName)
 {
     return str::EndsWithI(fileName, _T(".chm"));
@@ -755,6 +775,11 @@ static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win,
         OnMenuFindMatchCase(&win);
     }
     UpdateFindbox(&win);
+
+    // ui for chm docs is different, so we have to re-create the parts
+    // of ui that are different
+    RebuildMenuBarForWindow(&win);
+    //TODO: also toolbar
 
     int pageCount = win.dm->PageCount();
     if (pageCount > 0) {
@@ -1069,8 +1094,7 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, b
     // Note: embedded documents are referred to by an invalid path
     //       containing more information after a colon (e.g. "C:\file.pdf:3:0")
     if (win && !forceReuse && !file::Exists(fullpath) && !dir::Exists(fullpath) && !str::FindChar(fullpath + 2, ':')) {
-        // TODO: reword to "File %s not found!" after 1.7 is released
-        ScopedMem<TCHAR> msg(str::Format(_TR("Error loading %s"), fullpath));
+        ScopedMem<TCHAR> msg(str::Format(_TR("File %s not found"), fullpath));
         ShowNotification(win, msg, true /* autoDismiss */, true /* highlight */);
         // display the notification ASAP (SavePrefs() can introduce a notable delay)
         win->RedrawAll(true);
@@ -2597,7 +2621,7 @@ void ChangeLanguage(const char *langName)
 {
     CurrLangNameSet(langName);
     UpdateRtlLayoutForAllWindows();
-    RebuildMenuBar();
+    RebuildMenuBarForAllWindows();
     UpdateUITextForLanguage();
 }
 
@@ -3144,23 +3168,6 @@ static void UpdateUITextForLanguage()
     }        
 }
 
-static void RebuildMenuBar()
-{
-    for (size_t i = 0; i < gWindows.Count(); i++) {
-        WindowInfo *win = gWindows.At(i);
-#ifdef BUILD_RIBBON
-        if (win->ribbonSupport)
-            win->ribbonSupport->Reset();
-        else
-#endif
-        {
-            HMENU oldMenu = win->menu;
-            win->menu = BuildMenu(win);
-            DestroyMenu(oldMenu);
-        }
-    }
-}
-
 // TODO: the layout logic here is similar to what we do in SetSidebarVisibility()
 // would be nice to consolidate.
 static void ResizeSidebar(WindowInfo *win)
@@ -3317,7 +3324,7 @@ void DrawCloseButton(DRAWITEMSTRUCT *dis)
 }
 
 WNDPROC DefWndProcCloseButton = NULL;
-// logic needed to track on hover state of a close button by looking at
+// logic needed to track OnHover state of a close button by looking at
 // WM_MOUSEMOVE and WM_MOUSELEAVE messages.
 // We call it a button, but hwnd is really a static text.
 // We persist the state by setting hwnd's text: if cursor is over the hwnd,
@@ -3451,7 +3458,7 @@ static LRESULT OnSetCursor(WindowInfo& win, HWND hwnd)
             }
         }
     }
-    if (!win.IsDocLoaded()) {        
+    if (!win.IsDocLoaded()) {
         win.DeleteInfotip();
         return FALSE;
     }

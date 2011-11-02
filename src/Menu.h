@@ -26,11 +26,9 @@ struct MenuDef {
 };
 
 class WindowInfo;
-class ChmWindowInfo;
 
 HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu);
 HMENU BuildMenu(WindowInfo *win);
-HMENU BuildChmMenu(ChmWindowInfo *win);
 void OnContextMenu(WindowInfo* win, int x, int y);
 void OnAboutContextMenu(WindowInfo* win, int x, int y);
 void OnMenuZoom(WindowInfo* win, UINT menuId);

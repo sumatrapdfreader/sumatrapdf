@@ -217,7 +217,7 @@ static void AppendRecentFilesToMenu(HMENU m)
     InsertMenu(m, IDM_EXIT, MF_BYCOMMAND | MF_SEPARATOR, 0, NULL);
 }
 
-static void RebuildFileMenu(HMENU menu)
+static void RebuildStandardFileMenu(HMENU menu)
 {
     win::menu::Empty(menu);
     BuildMenuFromMenuDef(menuDefFile, dimof(menuDefFile), menu);
@@ -237,11 +237,11 @@ static void RebuildFileMenu(HMENU menu)
         win::menu::Remove(menu, IDM_SEND_BY_EMAIL);
 }
 
-HMENU BuildMenu(WindowInfo *win)
+static HMENU BuildStandardMenu(WindowInfo *win)
 {
     HMENU mainMenu = CreateMenu();
     HMENU m = CreateMenu();
-    RebuildFileMenu(m);
+    RebuildStandardFileMenu(m);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&File"));
     m = BuildMenuFromMenuDef(menuDefView, dimof(menuDefView), CreateMenu());
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&View"));
@@ -534,22 +534,13 @@ void OnMenuCustomZoom(WindowInfo* win)
     ZoomToSelection(win, zoom, false);
 }
 
-void UpdateMenu(WindowInfo *win, HMENU m)
-{
-    UINT id = GetMenuItemID(m, 0);
-    if (id == menuDefFile[0].id)
-        RebuildFileMenu(m);
-    else if (id == menuDefFavorites[0].id)
-        RebuildFavMenu(win, m);
-    if (win)
-        MenuUpdateStateForWindow(win);
-}
-
 // Menus in CHM UI
 
 MenuDef menuDefFileChm[] = {
     { _TRN("&Open\tCtrl+O"),                IDM_OPEN ,                  MF_REQ_DISK_ACCESS },
     { _TRN("&Close\tCtrl+W"),               IDM_CLOSE,                  MF_REQ_DISK_ACCESS },
+    { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS },
+    { _TRN("P&roperties\tCtrl+D"),          IDM_PROPERTIES,             0 },
     { SEP_ITEM,                             0,                          0 },
     { _TRN("E&xit\tCtrl+Q"),                IDM_EXIT,                   0 }
 };
@@ -585,17 +576,24 @@ MenuDef menuDefZoomChm[] = {
     { "25%",                                IDM_ZOOM_25,                MF_NO_TRANSLATE  },
 };
 
-HMENU BuildChmMenu(ChmWindowInfo *win)
+static void RebuildChmFileMenu(HMENU menu)
+{
+    win::menu::Empty(menu);
+    BuildMenuFromMenuDef(menuDefFileChm, dimof(menuDefFileChm), menu);
+    AppendRecentFilesToMenu(menu);
+}
+
+static HMENU BuildChmMenu(WindowInfo *win)
 {
     HMENU mainMenu = CreateMenu();
     HMENU m = CreateMenu();
-    RebuildFileMenu(m);
+    RebuildChmFileMenu(m);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&File"));
-    m = BuildMenuFromMenuDef(menuDefViewChm, dimof(menuDefView), CreateMenu());
+    m = BuildMenuFromMenuDef(menuDefViewChm, dimof(menuDefViewChm), CreateMenu());
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&View"));
-    m = BuildMenuFromMenuDef(menuDefGoToChm, dimof(menuDefGoTo), CreateMenu());
+    m = BuildMenuFromMenuDef(menuDefGoToChm, dimof(menuDefGoToChm), CreateMenu());
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Go To"));
-    m = BuildMenuFromMenuDef(menuDefZoomChm, dimof(menuDefZoom), CreateMenu());
+    m = BuildMenuFromMenuDef(menuDefZoomChm, dimof(menuDefZoomChm), CreateMenu());
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Zoom"));
     if (HasPermission(Perm_SavePreferences)) {
         // I think it makes sense to disable favorites in restricted mode
@@ -611,3 +609,27 @@ HMENU BuildChmMenu(ChmWindowInfo *win)
     SetMenu(win->hwndFrame, mainMenu);
     return mainMenu;
 }
+
+void UpdateMenu(WindowInfo *win, HMENU m)
+{
+    UINT id = GetMenuItemID(m, 0);
+    if (id == menuDefFile[0].id) {
+        if (win->IsChm())
+            RebuildChmFileMenu(m);
+        else
+            RebuildStandardFileMenu(m);
+    }
+    else if (id == menuDefFavorites[0].id)
+        RebuildFavMenu(win, m);
+    if (win)
+        MenuUpdateStateForWindow(win);
+}
+
+HMENU BuildMenu(WindowInfo *win)
+{
+    if (win->IsChm())
+        return BuildChmMenu(win);
+    else
+        return BuildStandardMenu(win);
+}
+
