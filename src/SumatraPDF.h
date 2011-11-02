@@ -95,7 +95,7 @@ void  SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode, bool keepCon
 void  ReloadDocument(WindowInfo *win, bool autorefresh=false);
 bool  CanSendAsEmailAttachment(WindowInfo *win=NULL);
 bool  DoCachePageRendering(WindowInfo *win, int pageNo);
-void SyncPageNoAndToc(WindowInfo *win, int pageNo, DocTocItem *ti);
+void SyncPageNo(WindowInfo *win, int pageNo);
 
 WindowInfo* FindWindowInfoByFile(const TCHAR *file);
 WindowInfo* FindWindowInfoByHwnd(HWND hwnd);

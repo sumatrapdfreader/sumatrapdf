@@ -276,8 +276,10 @@ void UpdateTocSelection(WindowInfo *win, int currPageNo)
         return;
     // select the item closest to but not after the current page
     // (or the root item, if there's no such item)
-    HTREEITEM hCurrItem = TreeItemForPageNo(win, hRoot, currPageNo);
-    TreeView_SelectItem(win->hwndTocTree, hCurrItem ? hCurrItem : hRoot);
+    HTREEITEM hItem = TreeItemForPageNo(win, hRoot, currPageNo);
+    if (NULL == hItem)
+        hItem = hRoot;
+    TreeView_SelectItem(win->hwndTocTree, hItem);
 }
 
 void UpdateTocExpansionState(WindowInfo *win, HTREEITEM hItem)

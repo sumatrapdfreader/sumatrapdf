@@ -4298,13 +4298,12 @@ InitMouseWheelInfo:
     return 0;
 }
 
-// tell the ui to show the pageNo as current page and select ti
-// in toc tree. Needed for chm ui where navigation can be initiated
+// tell the ui to show the pageNo as current page (which also syncs the toc with
+// curent page). Needed for chm ui where navigation can be initiated
 // from inside html control
-void SyncPageNoAndToc(WindowInfo *win, int pageNo, DocTocItem *ti)
+void SyncPageNo(WindowInfo *win, int pageNo)
 {
     win->dm->GoToPageChm(pageNo, false);
-    // TODO: sync the toc tree
 }
 
 static bool RegisterWinClass(HINSTANCE hinst)

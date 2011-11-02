@@ -130,17 +130,16 @@ int CChmEngine::PageNumberForUrl(const TCHAR *url)
     return -1;
 }
 
-class SyncPageNoAndTocWorkItem : public UIThreadWorkItem
+class SyncPageNoWorkItem : public UIThreadWorkItem
 {
-    DocTocItem *tocItem;
     int pageNo;
 
 public:
-    SyncPageNoAndTocWorkItem(WindowInfo *win, int pn, DocTocItem *ti) :
-        UIThreadWorkItem(win), pageNo(pn), tocItem(ti) {}
+    SyncPageNoWorkItem(WindowInfo *win, int pn) :
+        UIThreadWorkItem(win), pageNo(pn) {}
 
     virtual void Execute() {
-        SyncPageNoAndToc(win, pageNo, tocItem);
+        SyncPageNo(win, pageNo);
     }
 };
 
@@ -166,10 +165,9 @@ bool CChmEngine::OnBeforeNavigate(const TCHAR *url)
     
     int pageNo = PageNumberForUrl(url);
     if (-1 != pageNo) {
-        ChmTocItem *ti = pages.At(pageNo-1);
         WindowInfo *win = FindWindowInfoByFile(fileName);
         if (win)
-            SyncPageNoAndToc(win, pageNo, ti);
+            SyncPageNo(win, pageNo);
     }
     return true;
 }
@@ -515,12 +513,17 @@ static void AddPageIfUnique(Vec<ChmTocItem*>& pages, ChmTocItem *item, struct ch
     size_t len = pages.Count();
     for (size_t i = 0; i < len; i++) {
         ChmTocItem *tmp = pages.At(len - i - 1);
-        if (str::Eq(tmp->url, url))
+        if (str::Eq(tmp->url, url)) {
+            item->pageNo = i + 1;
             return;
+        }
     }
-    if (!ChmFileExists(chmHandle, item->url))
+    if (!ChmFileExists(chmHandle, item->url)) {
+        item->pageNo = 0;
         return;
+    }
     pages.Append(item);
+    item->pageNo = pages.Count();
 }
 
 // We fake page numbers by doing a depth-first traversal of

@@ -13,3 +13,6 @@ Things we can live without for the first release:
 * search
 * printing
 
+Done:
+* sync page number and toc with current page
+
