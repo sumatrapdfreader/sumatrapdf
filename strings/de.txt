@@ -224,6 +224,9 @@ Lesezeichen
 Bytes
 Byte
 
+CHM documents
+CHM-Dokumente
+
 Can't connect to the Internet (error %#x).
 Keine Verbindung zum Internet möglich (Fehler %#x).
 
@@ -340,6 +343,9 @@ Fehler beim Speichern der Datei!
 
 Favorites
 Favoriten
+
+File %s not found
+Datei %s nicht gefunden
 
 File Size:
 Dateigröße:
@@ -664,8 +670,4 @@ Text kopieren verweigert
 
 printing document
 Dokument drucken verweigert
-
-# Untranslated:
-#CHM documents
-#File %s not found
 

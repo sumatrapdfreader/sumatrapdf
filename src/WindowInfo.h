@@ -6,7 +6,6 @@
 
 #include <shlobj.h>
 #include "GeomUtil.h"
-#include "StrUtil.h"
 #include "DisplayModel.h"
 
 class FileWatcher;

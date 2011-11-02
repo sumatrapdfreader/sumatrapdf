@@ -195,14 +195,6 @@
 				Name="User Interface"
 				>
 				<File
-					RelativePath=".\src\ChmUI.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\src\ChmUI.h"
-					>
-				</File>
-				<File
 					RelativePath=".\src\Favorites.cpp"
 					>
 				</File>

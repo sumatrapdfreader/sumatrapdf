@@ -273,9 +273,12 @@ $(OS)\AppTools.obj: src\utils\Scopes.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\AppTools.obj: src\utils\WinUtil.h src\Version.h
 $(OS)\BencUtil.obj: src\utils\BaseUtil.h src\utils\BencUtil.h src\utils\StrUtil.h
 $(OS)\BencUtil.obj: src\utils\Vec.h
-$(OS)\ChmEngine.obj: src\BaseEngine.h src\ChmEngine.h src\utils\BaseUtil.h
+$(OS)\ChmEngine.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
+$(OS)\ChmEngine.obj: src\ChmEngine.h src\DisplayState.h src\SumatraPDF.h
+$(OS)\ChmEngine.obj: src\TextSearch.h src\TextSelection.h src\utils\BaseUtil.h
 $(OS)\ChmEngine.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\HtmlWindow.h
-$(OS)\ChmEngine.obj: src\utils\StrUtil.h src\utils\TrivialHtmlParser.h src\utils\Vec.h
+$(OS)\ChmEngine.obj: src\utils\Scopes.h src\utils\StrUtil.h src\utils\TrivialHtmlParser.h
+$(OS)\ChmEngine.obj: src\utils\Vec.h
 $(OS)\CPdfFilter.obj: src\BaseEngine.h src\ifilter\CPdfFilter.h src\ifilter\FilterBase.h
 $(OS)\CPdfFilter.obj: src\ifilter\PdfFilter.h src\PdfEngine.h src\utils\BaseUtil.h
 $(OS)\CPdfFilter.obj: src\utils\GeomUtil.h src\utils\Scopes.h src\utils\StrUtil.h
