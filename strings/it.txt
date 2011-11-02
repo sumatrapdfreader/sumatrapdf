@@ -345,6 +345,9 @@ Salvataggio file non riuscito
 Favorites
 Preferiti
 
+File %s not found
+File %s non trovato
+
 File Size:
 Dimensione file:
 
@@ -668,7 +671,4 @@ Copia del testo...
 
 printing document
 Stampa documento...
-
-# Untranslated:
-#File %s not found
 

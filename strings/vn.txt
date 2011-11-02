@@ -338,6 +338,9 @@ Không lưu được tập tin.
 Favorites
 Ưa thích
 
+File %s not found
+Không tìm thấy tập tin %s
+
 File Size:
 Kích thước:
 
@@ -661,7 +664,4 @@ copying text
 
 printing document
 đang in tập tin
-
-# Untranslated:
-#File %s not found
 
