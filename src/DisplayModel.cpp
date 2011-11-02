@@ -958,12 +958,15 @@ PointI DisplayModel::GetContentStart(int pageNo)
 //   current page number
 void DisplayModel::GoToPageChm(int pageNo, bool goToUrl)
 {
-    ChmEngine *chmEngine = GetChmEngine();
+    ChmEngine *chmEngine = AsChmEngine();
     assert(chmEngine);
     if (goToUrl) {
         // this will trigger navigation callback which will
         // result in us being called again, but with goToUrl = false
         chmEngine->DisplayPage(pageNo);
+        // TODO: not sure if it makes sense to keep track of this or
+        // should we just rely on browser's history for back/forward
+        // navigation
         AddNavPoint();
     } else {
         // sync the state of the ui to show current page number
@@ -980,7 +983,7 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
         return;
 
 #ifdef BUILD_CHM_SUPPORT
-    ChmEngine *chmEngine = GetChmEngine();
+    ChmEngine *chmEngine = AsChmEngine();
     if (chmEngine) {
         GoToPageChm(pageNo, true);
         return;
@@ -1098,7 +1101,7 @@ void DisplayModel::SetPresentationMode(bool enable)
 bool DisplayModel::GoToNextPage(int scrollY)
 {
 #ifdef BUILD_CHM_SUPPORT
-    ChmEngine *chmEngine = GetChmEngine();
+    ChmEngine *chmEngine = AsChmEngine();
     if (chmEngine) {
         int pageNo = _startPage + 1;
         if (!ValidPageNo(pageNo))
@@ -1128,7 +1131,7 @@ bool DisplayModel::GoToNextPage(int scrollY)
 bool DisplayModel::GoToPrevPage(int scrollY)
 {
 #ifdef BUILD_CHM_SUPPORT
-    ChmEngine *chmEngine = GetChmEngine();
+    ChmEngine *chmEngine = AsChmEngine();
     if (chmEngine) {
         int pageNo = _startPage - 1;
         if (!ValidPageNo(pageNo))
@@ -1549,7 +1552,7 @@ DisplayModel *DisplayModel::CreateFromFileName(const TCHAR *fileName, DisplayMod
 }
 
 #ifdef BUILD_CHM_SUPPORT
-ChmEngine *DisplayModel::GetChmEngine() const
+ChmEngine *DisplayModel::AsChmEngine() const
 {
     if (Engine_Chm != engineType)
         return NULL;

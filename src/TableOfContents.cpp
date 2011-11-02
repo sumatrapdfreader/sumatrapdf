@@ -145,7 +145,7 @@ public:
 
         if (win->IsChm()) {
             ChmTocItem *ti = reinterpret_cast<ChmTocItem*>(tocItem);
-            win->dm->GetChmEngine()->DisplayPageByUrl(ti->url);
+            win->dm->AsChmEngine()->DisplayPageByUrl(ti->url);
         } else {
             win->linkHandler->GotoLink(tocItem->GetLink());
         }

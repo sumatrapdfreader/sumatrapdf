@@ -717,7 +717,7 @@ static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win,
         }
         delete prevModel;
 #ifdef BUILD_CHM_SUPPORT
-        ChmEngine *chmEngine = win.dm->GetChmEngine();
+        ChmEngine *chmEngine = win.dm->AsChmEngine();
         if (chmEngine)
             chmEngine->HookHwndAndDisplayIndex(win.hwndCanvas);
 #endif

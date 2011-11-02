@@ -211,7 +211,7 @@ public:
     void            RepaintDisplay() { if (dmCb) dmCb->Repaint(); }
 
 #ifdef BUILD_CHM_SUPPORT
-    ChmEngine *     GetChmEngine() const;
+    ChmEngine *     AsChmEngine() const;
 #endif
 
 protected:
