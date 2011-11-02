@@ -10,9 +10,7 @@ enum EngineType {
     Engine_Image, Engine_ImageDir, Engine_ComicBook,
     Engine_PDF, Engine_XPS,
     Engine_PS,
-#ifdef BUILD_CHM_SUPPORT
     Engine_Chm,
-#endif
 };
 
 #include "BaseEngine.h"
@@ -20,9 +18,7 @@ enum EngineType {
 #include "ImagesEngine.h"
 #include "PdfEngine.h"
 #include "PsEngine.h"
-#ifdef BUILD_CHM_SUPPORT
 #include "ChmEngine.h"
-#endif
 
 class EngineManager {
 public:

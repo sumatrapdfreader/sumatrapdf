@@ -797,7 +797,6 @@ int DisplayModel::GetPageNextToPoint(PointI pt)
     return closest;
 }
 
-
 PointI DisplayModel::CvtToScreen(int pageNo, PointD pt)
 {
     PageInfo *pageInfo = GetPageInfo(pageNo);
@@ -842,15 +841,7 @@ RectD DisplayModel::CvtFromScreen(RectI r, int pageNo)
 }
 
 /* Given position 'x'/'y' in the draw area, returns a structure describing
-   a link or NULL if there is no link at this position.
-   TODO: this function is called frequently from UI code so make sure that
-         it's fast enough for a decent number of links.
-         Possible speed improvement: remember which links are visible after
-         scrolling and skip the _Inside test for those invisible.
-         Another way: build a list with only those visible, so we don't
-         even have to traverse those that are invisible.
-   TODO: we don't seem to have any speed issue, so no need to optimize?
-   */
+   a link or NULL if there is no link at this position. */
 PageElement *DisplayModel::GetElementAtPos(PointI pt)
 {
     int pageNo = GetPageNoByPoint(pt);
@@ -982,13 +973,11 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
     if (!ValidPageNo(pageNo))
         return;
 
-#ifdef BUILD_CHM_SUPPORT
     ChmEngine *chmEngine = AsChmEngine();
     if (chmEngine) {
         GoToPageChm(pageNo, true);
         return;
     }
-#endif
 
     if (addNavPt)
         AddNavPoint();
@@ -1100,7 +1089,6 @@ void DisplayModel::SetPresentationMode(bool enable)
    (e.g. because already was at the last page) */
 bool DisplayModel::GoToNextPage(int scrollY)
 {
-#ifdef BUILD_CHM_SUPPORT
     ChmEngine *chmEngine = AsChmEngine();
     if (chmEngine) {
         int pageNo = _startPage + 1;
@@ -1109,7 +1097,6 @@ bool DisplayModel::GoToNextPage(int scrollY)
         GoToPage(pageNo, 0);
         return true;
     }
-#endif
 
     int columns = columnsFromDisplayMode(displayMode());
     int currPageNo = CurrentPageNo();
@@ -1130,7 +1117,6 @@ bool DisplayModel::GoToNextPage(int scrollY)
 
 bool DisplayModel::GoToPrevPage(int scrollY)
 {
-#ifdef BUILD_CHM_SUPPORT
     ChmEngine *chmEngine = AsChmEngine();
     if (chmEngine) {
         int pageNo = _startPage - 1;
@@ -1139,7 +1125,6 @@ bool DisplayModel::GoToPrevPage(int scrollY)
         GoToPage(pageNo, 0);
         return true;
     }
-#endif
 
     int columns = columnsFromDisplayMode(displayMode());
     int currPageNo = CurrentPageNo();
@@ -1551,7 +1536,6 @@ DisplayModel *DisplayModel::CreateFromFileName(const TCHAR *fileName, DisplayMod
     return dm;
 }
 
-#ifdef BUILD_CHM_SUPPORT
 ChmEngine *DisplayModel::AsChmEngine() const
 {
     if (Engine_Chm != engineType)
@@ -1559,4 +1543,3 @@ ChmEngine *DisplayModel::AsChmEngine() const
 
     return static_cast<ChmEngine*>(engine);
 }
-#endif

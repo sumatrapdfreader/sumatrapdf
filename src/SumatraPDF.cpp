@@ -716,11 +716,9 @@ static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win,
             win.dm->CopyNavHistory(*prevModel);
         }
         delete prevModel;
-#ifdef BUILD_CHM_SUPPORT
         ChmEngine *chmEngine = win.dm->AsChmEngine();
         if (chmEngine)
             chmEngine->HookHwndAndDisplayIndex(win.hwndCanvas);
-#endif
     } else if (allowFailure) {
         DBG_OUT("failed to load file %s\n", fileName);
         delete prevModel;
@@ -2143,7 +2141,7 @@ static void OnMenuSaveAs(WindowInfo& win)
     case Engine_Image:  fileFilter.AppendFmt(_TR("Image files (*.%s)"), defExt + 1); break;
     case Engine_PS:     fileFilter.Append(_TR("Postscript documents")); break;
 #ifdef BUILD_CHM_SUPPORT
-    // TODO: translate after 1.7 is released
+    // TODO: translate when CHM support is ready
     case Engine_Chm:    fileFilter.Append(_T("CHM documents")); break;
 #endif
     default:            fileFilter.Append(_TR("PDF documents")); break;
@@ -2393,7 +2391,7 @@ static void OnMenuOpen(WindowInfo& win)
         { _TR("Postscript documents"),  _T("*.ps;*.eps"),   PsEngine::IsAvailable() },
         { _TR("Comic books"),           _T("*.cbz;*.cbr"),  true },
 #ifdef BUILD_CHM_SUPPORT
-        // TODO: translate after 1.7 is released
+        // TODO: translate when CHM support is ready
         { _T("CHM documents"),          _T("*.chm"),        true },
 #endif
     };
@@ -4263,11 +4261,10 @@ InitMouseWheelInfo:
         case WM_MOUSEWHEEL:
             if (!win)
                 break;
-#ifdef BUILD_CHM_SUPPORT
             // TODO: for HTMLWindows inside hwndCanvas, fix the infinite recursion
             if (win->IsDocLoaded() && Engine_Chm == win->dm->engineType)
                 break;
-#endif
+
             // Pass the message to the canvas' window procedure
             // (required since the canvas itself never has the focus and thus
             // never receives WM_MOUSEWHEEL messages)
