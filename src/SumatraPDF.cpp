@@ -820,7 +820,7 @@ Error:
     if (win.IsDocLoaded()) {
         ToggleWindowStyle(win.hwndPageBox, ES_NUMBER, !win.dm->engine || !win.dm->engine->HasPageLabels());
         // if the window isn't shown and win.canvasRc is still empty, zoom has not been determined yet
-        assert(!showWin || !win.canvasRc.IsEmpty());
+        //assert(!showWin || !win.canvasRc.IsEmpty()); // TODO: invalid for chm (open pdf and then open chm to trigger)
         if (showWin || ss.page != 1)
             win.dm->SetScrollState(ss);
         UpdateToolbarState(&win);

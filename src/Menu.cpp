@@ -216,7 +216,7 @@ static void AppendRecentFilesToMenu(HMENU m)
     InsertMenu(m, IDM_EXIT, MF_BYCOMMAND | MF_SEPARATOR, 0, NULL);
 }
 
-static void RebuildStandardFileMenu(HMENU menu)
+static void RebuildStandardFileMenu(HMENU menu, bool isPdf)
 {
     win::menu::Empty(menu);
     BuildMenuFromMenuDef(menuDefFile, dimof(menuDefFile), menu);
@@ -224,13 +224,14 @@ static void RebuildStandardFileMenu(HMENU menu)
 
     // Suppress menu items that depend on specific software being installed:
     // e-mail client, Adobe Reader, Foxit, PDF-XChange
-    // (don't hide items here that won't always be hidden,
-    // do that in MenuUpdateStateForWindow)
-    if (!CanViewWithAcrobat())
+    // Also only show "show with" items 
+    // Don't hide items here that won't always be hidden
+    // (MenuUpdateStateForWindow() is for that)
+    if (!isPdf || !CanViewWithAcrobat())
         win::menu::Remove(menu, IDM_VIEW_WITH_ACROBAT);
-    if (!CanViewWithFoxit())
+    if (!isPdf || !CanViewWithFoxit())
         win::menu::Remove(menu, IDM_VIEW_WITH_FOXIT);
-    if (!CanViewWithPDFXChange())
+    if (!isPdf || !CanViewWithPDFXChange())
         win::menu::Remove(menu, IDM_VIEW_WITH_PDF_XCHANGE);
     if (!CanSendAsEmailAttachment())
         win::menu::Remove(menu, IDM_SEND_BY_EMAIL);
@@ -240,7 +241,7 @@ static HMENU BuildStandardMenu(WindowInfo *win)
 {
     HMENU mainMenu = CreateMenu();
     HMENU m = CreateMenu();
-    RebuildStandardFileMenu(m);
+    RebuildStandardFileMenu(m, win->IsPdf());
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&File"));
     m = BuildMenuFromMenuDef(menuDefView, dimof(menuDefView), CreateMenu());
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&View"));
@@ -616,7 +617,7 @@ void UpdateMenu(WindowInfo *win, HMENU m)
         if (win->IsChm())
             RebuildChmFileMenu(m);
         else
-            RebuildStandardFileMenu(m);
+            RebuildStandardFileMenu(m, win->IsPdf());
     }
     else if (id == menuDefFavorites[0].id)
         RebuildFavMenu(win, m);

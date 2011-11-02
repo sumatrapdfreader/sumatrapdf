@@ -61,8 +61,8 @@ public:
     bool IsAboutWindow() const { return !loadedFilePath; }
     bool IsDocLoaded() const { return this->dm != NULL; }
 
-    // TODO: check for ChmEngine instead?
-    bool IsChm() const { return loadedFilePath && str::EndsWithI(loadedFilePath, _T(".chm")); }
+    bool IsChm() const { return dm && dm->engineType == Engine_Chm; }
+    bool IsPdf() const { return dm && dm->engineType == Engine_PDF; }
 
     TCHAR *         loadedFilePath;
     DisplayModel *  dm;
