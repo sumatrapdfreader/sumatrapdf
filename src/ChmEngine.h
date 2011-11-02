@@ -23,6 +23,8 @@ public:
     }
 
     virtual PageDestination *GetLink() { return NULL; }
+
+    ChmTocItem *Clone();
 };
 
 class ChmEngine : public BaseEngine {

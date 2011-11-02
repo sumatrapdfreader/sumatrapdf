@@ -5,10 +5,6 @@ List of things to do before we can ship CHM support:
 * modify toolbar in chm ui mode to not show non-applicable items
 * make scrolling in html window with cursor up/down etc. work
   (is it a matter of passing the messages through ?)
-* bug: after adding chm location as a favorite it looks like DocTreeItem
-  that is still referenced by toc tree is freed (because object's memory gets
-  cleared to 0xdd, which is crt's released memory http://weseetips.com/2008/04/29/crt-debug-support-the-magic-memory-values/)
-  It seems to be caused by delete root in AddFavorite() but why it's ok in PDF mode?
 
 To decide:
 * should we use our own context menu or use the one provided by IE ?

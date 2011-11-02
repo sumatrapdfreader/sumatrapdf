@@ -16,6 +16,21 @@
 #include <inttypes.h>
 #include <chm_lib.h>
 
+ChmTocItem *ChmTocItem::Clone()
+{
+    ChmTocItem *res = new ChmTocItem(str::Dup(title), str::Dup(url), str::Dup(imageNumber));
+    res->open = open;
+    res->pageNo = pageNo;
+    res->id = id;
+    ChmTocItem *tmp = reinterpret_cast<ChmTocItem*>(child);
+    if (tmp)
+        res->child = tmp->Clone();
+    tmp = reinterpret_cast<ChmTocItem*>(next);
+    if (tmp)
+        res->next = tmp->Clone();
+    return res;
+}
+
 // Data parsed from /#WINDOWS, /#STRINGS, /#SYSTEM files inside CHM file
 class ChmInfo {
 public:
@@ -87,8 +102,8 @@ public:
     virtual bool BenchLoadPage(int pageNo) { return true; }
 
     // we always have toc tree
-    virtual bool HasToCTree() const { return true; }
-    virtual DocTocItem *GetToCTree() { return tocRoot; }
+    virtual bool HasToCTree() const { return tocRoot != NULL; }
+    virtual DocTocItem *GetToCTree();
 
     virtual void HookHwndAndDisplayIndex(HWND hwnd);
     virtual void DisplayPage(int pageNo);
@@ -197,6 +212,7 @@ CChmEngine::~CChmEngine()
     chm_close(chmHandle);
     delete chmInfo;
     delete htmlWindow;
+    delete tocRoot;
     free((void *)fileName);
 }
 
@@ -594,6 +610,15 @@ bool CChmEngine::Load(const TCHAR *fileName)
         return false;
 
     return true;
+}
+
+// Callers delete the result so we return a copy of toc tree
+// (probably faster than re-creating it from html every time)
+DocTocItem *CChmEngine::GetToCTree()
+{
+    if (!tocRoot)
+        return NULL;
+    return tocRoot->Clone();
 }
 
 unsigned char *CChmEngine::GetFileData(size_t *cbCount)
