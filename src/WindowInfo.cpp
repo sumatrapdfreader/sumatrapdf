@@ -353,13 +353,13 @@ static bool MatchFuzzy(const TCHAR *s1, const TCHAR *s2, bool partially=false)
 
 // finds the first ToC entry that (partially) matches a given normalized name
 // (ignoring case and whitespace differences)
-PageDestination *LinkHandler::FindToCItem(DocToCItem *item, const TCHAR *name, bool partially)
+PageDestination *LinkHandler::FindTocItem(DocTocItem *item, const TCHAR *name, bool partially)
 {
     for (; item; item = item->next) {
         ScopedMem<TCHAR> fuzTitle(NormalizeFuzzy(item->title));
         if (MatchFuzzy(fuzTitle, name, partially))
             return item->GetLink();
-        PageDestination *dest = FindToCItem(item->child, name, partially);
+        PageDestination *dest = FindTocItem(item->child, name, partially);
         if (dest)
             return dest;
     }
@@ -382,11 +382,11 @@ void LinkHandler::GotoNamedDest(const TCHAR *name)
         delete dest;
     }
     else if (engine()->HasToCTree()) {
-        DocToCItem *root = engine()->GetToCTree();
+        DocTocItem *root = engine()->GetToCTree();
         ScopedMem<TCHAR> fuzName(NormalizeFuzzy(name));
-        dest = FindToCItem(root, fuzName);
+        dest = FindTocItem(root, fuzName);
         if (!dest)
-            dest = FindToCItem(root, fuzName, true);
+            dest = FindTocItem(root, fuzName, true);
         if (dest)
             ScrollTo(dest);
         delete root;

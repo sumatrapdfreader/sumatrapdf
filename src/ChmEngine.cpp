@@ -86,7 +86,7 @@ public:
 
     // we always have toc tree
     virtual bool HasToCTree() const { return true; }
-    virtual DocToCItem *GetToCTree() { return tocRoot; }
+    virtual DocTocItem *GetToCTree() { return tocRoot; }
 
     virtual void HookToHwndAndDisplayIndex(HWND hwnd);
     virtual void DisplayPage(int pageNo);
@@ -96,9 +96,9 @@ protected:
     const TCHAR *fileName;
     struct chmFile *chmHandle;
     ChmInfo *chmInfo;
-    ChmToCItem *tocRoot;
+    ChmTocItem *tocRoot;
 
-    Vec<ChmToCItem*> pages; // point to one of the items within tocRoot
+    Vec<ChmTocItem*> pages; // point to one of the items within tocRoot
     HtmlWindow *htmlWindow;
 
     bool Load(const TCHAR *fileName);
@@ -128,7 +128,7 @@ void CChmEngine::DisplayPageByUrl(const TCHAR *url)
 
 void CChmEngine::DisplayPage(int pageNo)
 {
-    ChmToCItem *tocItem = pages.At(pageNo - 1);
+    ChmTocItem *tocItem = pages.At(pageNo - 1);
     htmlWindow->DisplayChmPage(fileName, tocItem->url);
 }
 
@@ -378,7 +378,7 @@ static bool ParseSystemChmData(chmFile *chmHandle, ChmInfo *chmInfo)
 <li>
   ...
 */
-ChmToCItem *TocItemFromLi(HtmlElement *el)
+ChmTocItem *TocItemFromLi(HtmlElement *el)
 {
     assert(str::Eq("li", el->name));
     el = el->GetChildByName("object");
@@ -401,13 +401,13 @@ ChmToCItem *TocItemFromLi(HtmlElement *el)
     }
     if (!name || !local)
         return NULL;
-    return new ChmToCItem(name.StealData(), local.StealData(), imageNumber.StealData());
+    return new ChmTocItem(name.StealData(), local.StealData(), imageNumber.StealData());
 }
 
-ChmToCItem *BuildChmToc(HtmlElement *list)
+ChmTocItem *BuildChmToc(HtmlElement *list)
 {
     assert(str::Eq("ul", list->name));
-    ChmToCItem *node = NULL;
+    ChmTocItem *node = NULL;
 
     for (HtmlElement *el = list->down; el; el = el->next) {
         if (!str::Eq(el->name, "li"))
@@ -418,7 +418,7 @@ ChmToCItem *BuildChmToc(HtmlElement *list)
            <li>
              ...
         */
-        ChmToCItem *item = TocItemFromLi(el);
+        ChmTocItem *item = TocItemFromLi(el);
         if (!item)
             continue; // skip incomplete elements and all their children
         HtmlElement *nested = el->GetChildByName("ul");
@@ -447,12 +447,12 @@ static bool ChmFileExists(struct chmFile *chmHandle, TCHAR *fileName)
     return CHM_RESOLVE_SUCCESS == res;
 }
 
-static void AddPageIfUnique(Vec<ChmToCItem*>& pages, ChmToCItem *item, struct chmFile *chmHandle)
+static void AddPageIfUnique(Vec<ChmTocItem*>& pages, ChmTocItem *item, struct chmFile *chmHandle)
 {
     TCHAR *url = item->url;
     size_t len = pages.Count();
     for (size_t i = 0; i < len; i++) {
-        ChmToCItem *tmp = pages.At(len - i - 1);
+        ChmTocItem *tmp = pages.At(len - i - 1);
         if (str::Eq(tmp->url, url))
             return;
     }
@@ -464,9 +464,9 @@ static void AddPageIfUnique(Vec<ChmToCItem*>& pages, ChmToCItem *item, struct ch
 // We fake page numbers by doing a depth-first traversal of
 // toc tree and considering each unique html page in toc tree
 // as a page
-static void BuildPagesInfo(Vec<ChmToCItem*>& pages, DocToCItem *curr, struct chmFile *chmHandle)
+static void BuildPagesInfo(Vec<ChmTocItem*>& pages, DocTocItem *curr, struct chmFile *chmHandle)
 {
-    AddPageIfUnique(pages, static_cast<ChmToCItem *>(curr), chmHandle);
+    AddPageIfUnique(pages, static_cast<ChmTocItem *>(curr), chmHandle);
     if (curr->child)
         BuildPagesInfo(pages, curr->child, chmHandle);
     if (curr->next)

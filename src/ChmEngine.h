@@ -6,18 +6,18 @@
 
 #include "BaseEngine.h"
 
-class ChmToCItem : public DocToCItem {
+class ChmTocItem : public DocTocItem {
 public:
     TCHAR *url;
     TCHAR *imageNumber;
 
     // takes ownership of url and imageNumber
-    ChmToCItem(TCHAR *title, TCHAR *url, TCHAR *imageNumber) :
-        DocToCItem(title), url(url), imageNumber(imageNumber)
+    ChmTocItem(TCHAR *title, TCHAR *url, TCHAR *imageNumber) :
+        DocTocItem(title), url(url), imageNumber(imageNumber)
     {
     }
 
-    virtual ~ChmToCItem() {
+    virtual ~ChmTocItem() {
         free(url);
         free(imageNumber);
     }

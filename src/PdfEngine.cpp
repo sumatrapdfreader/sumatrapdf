@@ -726,7 +726,7 @@ public:
     virtual bool HasToCTree() const {
         return outline != NULL || attachments != NULL;
     }
-    virtual DocToCItem *GetToCTree();
+    virtual DocTocItem *GetToCTree();
 
     virtual bool HasPageLabels() { return _pagelabels != NULL; }
     virtual TCHAR *GetPageLabel(int pageNo);
@@ -829,11 +829,11 @@ public:
     virtual TCHAR *GetValue() const { return str::Dup(content); }
 };
 
-class PdfToCItem : public DocToCItem {
+class PdfToCItem : public DocTocItem {
     PdfLink link;
 
 public:
-    PdfToCItem(TCHAR *title, PdfLink link) : DocToCItem(title), link(link) { }
+    PdfToCItem(TCHAR *title, PdfLink link) : DocTocItem(title), link(link) { }
 
     virtual PageDestination *GetLink() { return &link; }
 };
@@ -1119,7 +1119,7 @@ PdfToCItem *CPdfEngine::BuildToCTree(pdf_outline *entry, int& idCounter)
     return node;
 }
 
-DocToCItem *CPdfEngine::GetToCTree()
+DocTocItem *CPdfEngine::GetToCTree()
 {
     PdfToCItem *node = NULL;
     int idCounter = 0;
@@ -2021,7 +2021,7 @@ public:
 
     virtual PageDestination *GetNamedDest(const TCHAR *name);
     virtual bool HasToCTree() const { return _outline != NULL; }
-    virtual DocToCItem *GetToCTree();
+    virtual DocTocItem *GetToCTree();
 
     int FindPageNo(const char *target);
     fz_rect FindDestRect(const char *target);
@@ -2120,11 +2120,11 @@ public:
     virtual TCHAR *GetDestValue() const { return GetValue(); }
 };
 
-class XpsToCItem : public DocToCItem {
+class XpsToCItem : public DocTocItem {
     XpsLink link;
 
 public:
-    XpsToCItem(TCHAR *title, XpsLink link) : DocToCItem(title), link(link) { }
+    XpsToCItem(TCHAR *title, XpsLink link) : DocTocItem(title), link(link) { }
 
     virtual PageDestination *GetLink() { return &link; }
 };
@@ -2789,7 +2789,7 @@ XpsToCItem *CXpsEngine::BuildToCTree(xps_outline *entry, int& idCounter)
     return node;
 }
 
-DocToCItem *CXpsEngine::GetToCTree()
+DocTocItem *CXpsEngine::GetToCTree()
 {
     if (!HasToCTree())
         return NULL;

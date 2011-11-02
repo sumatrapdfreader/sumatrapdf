@@ -152,8 +152,8 @@ public:
 };
 
 // an item in a document's Table of Content
-class DocToCItem {
-    DocToCItem *last; // only updated by AddSibling
+class DocTocItem {
+    DocTocItem *last; // only updated by AddSibling
 
 public:
     // the item's visible label
@@ -162,22 +162,22 @@ public:
     bool open;
     // page this item points to (0 for non-page destinations)
     int pageNo;
-    // arbitrary number allowing to distinguish this DocToCItem
+    // arbitrary number allowing to distinguish this DocTocItem
     // from any other of the same ToC tree
     int id;
 
     // first child item
-    DocToCItem *child;
+    DocTocItem *child;
     // next sibling
-    DocToCItem *next;
+    DocTocItem *next;
 
-    DocToCItem(TCHAR *title) :
+    DocTocItem(TCHAR *title) :
         title(title), open(true), pageNo(0), id(0), child(NULL), next(NULL), last(NULL) { }
 
-    virtual ~DocToCItem() {
+    virtual ~DocTocItem() {
         delete child;
         while (next) {
-            DocToCItem *tmp = next->next;
+            DocTocItem *tmp = next->next;
             next->next = NULL;
             delete next;
             next = tmp;
@@ -185,15 +185,15 @@ public:
         free(title);
     }
 
-    void AddSibling(DocToCItem *sibling)
+    void AddSibling(DocTocItem *sibling)
     {
-        DocToCItem *item;
+        DocTocItem *item;
         for (item = last ? last : this; item->next; item = item->next);
         last = item->next = sibling;
     }
 
     // returns the destination this ToC item points to
-    // (the result is owned by the DocToCItem and MUST NOT be deleted)
+    // (the result is owned by the DocTocItem and MUST NOT be deleted)
     virtual PageDestination *GetLink() = 0;
 };
 
@@ -278,7 +278,7 @@ public:
     virtual bool HasToCTree() const { return false; }
     // returns the root element for the loaded document's Table of Contents
     // caller must delete the result (when no longer needed)
-    virtual DocToCItem *GetToCTree() { return NULL; }
+    virtual DocTocItem *GetToCTree() { return NULL; }
 
     // checks whether this document has explicit labels for pages (such as
     // roman numerals) instead of the default plain arabic numbering

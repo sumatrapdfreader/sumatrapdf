@@ -287,7 +287,7 @@ public:
     virtual bool HasToCTree() const {
         return pdfEngine ? pdfEngine->HasToCTree() : false;
     }
-    virtual DocToCItem *GetToCTree() {
+    virtual DocTocItem *GetToCTree() {
         return pdfEngine ? pdfEngine->GetToCTree() : NULL;
     }
 

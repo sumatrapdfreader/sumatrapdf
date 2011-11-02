@@ -30,7 +30,7 @@ static void TreeView_ExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, b
 
 static void CustomizeToCInfoTip(LPNMTVGETINFOTIP nmit)
 {
-    DocToCItem *tocItem = (DocToCItem *)nmit->lParam;
+    DocTocItem *tocItem = (DocTocItem *)nmit->lParam;
     ScopedMem<TCHAR> path(tocItem->GetLink() ? tocItem->GetLink()->GetDestValue() : NULL);
     if (!path)
         return;
@@ -93,7 +93,7 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd)
 
     // Draw the page number right-aligned (if there is one)
     WindowInfo *win = FindWindowInfoByHwnd(hTV);
-    DocToCItem *tocItem = (DocToCItem *)item.lParam;
+    DocTocItem *tocItem = (DocTocItem *)item.lParam;
     ScopedMem<TCHAR> label;
     if (tocItem->pageNo && win && win->IsDocLoaded() && win->dm->engine) {
         label.Set(win->dm->engine->GetPageLabel(tocItem->pageNo));
@@ -133,10 +133,10 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd)
 
 class GoToTocLinkWorkItem : public UIThreadWorkItem
 {
-    DocToCItem *tocItem;
+    DocTocItem *tocItem;
 
 public:
-    GoToTocLinkWorkItem(WindowInfo *win, DocToCItem *ti) :
+    GoToTocLinkWorkItem(WindowInfo *win, DocTocItem *ti) :
         UIThreadWorkItem(win), tocItem(ti) {}
 
     virtual void Execute() {
@@ -144,7 +144,7 @@ public:
             return;
 
         if (win->IsChm()) {
-            ChmToCItem *ti = reinterpret_cast<ChmToCItem*>(tocItem);
+            ChmTocItem *ti = reinterpret_cast<ChmTocItem*>(tocItem);
             win->dm->GetChmEngine()->DisplayPageByUrl(ti->url);
         } else {
             win->linkHandler->GotoLink(tocItem->GetLink());
@@ -161,7 +161,7 @@ static void GoToTocLinkForTVItem(WindowInfo* win, HWND hTV, HTREEITEM hItem=NULL
     item.hItem = hItem;
     item.mask = TVIF_PARAM;
     TreeView_GetItem(hTV, &item);
-    DocToCItem *tocItem = (DocToCItem *)item.lParam;
+    DocTocItem *tocItem = (DocTocItem *)item.lParam;
     if (win->IsDocLoaded() && tocItem &&
         (allowExternal || tocItem->GetLink() && str::Eq(tocItem->GetLink()->GetType(), "ScrollTo"))) {
         QueueWorkItem(new GoToTocLinkWorkItem(win, tocItem));
@@ -196,7 +196,7 @@ void ToggleTocBox(WindowInfo *win)
     }
 }
 
-static HTREEITEM AddTocItemToView(HWND hwnd, DocToCItem *entry, HTREEITEM parent, bool toggleItem)
+static HTREEITEM AddTocItemToView(HWND hwnd, DocTocItem *entry, HTREEITEM parent, bool toggleItem)
 {
     TV_INSERTSTRUCT tvinsert;
     tvinsert.hParent = parent;
@@ -222,7 +222,7 @@ static HTREEITEM AddTocItemToView(HWND hwnd, DocToCItem *entry, HTREEITEM parent
     return TreeView_InsertItem(hwnd, &tvinsert);
 }
 
-static void PopulateTocTreeView(HWND hwnd, DocToCItem *entry, Vec<int>& tocState, HTREEITEM parent = NULL)
+static void PopulateTocTreeView(HWND hwnd, DocTocItem *entry, Vec<int>& tocState, HTREEITEM parent = NULL)
 {
     for (; entry; entry = entry->next) {
         bool toggle = tocState.Find(entry->id) != -1;
@@ -244,7 +244,7 @@ static HTREEITEM TreeItemForPageNo(WindowInfo *win, HTREEITEM hItem, int pageNo)
 
         // return if this item is on the specified page (or on a latter page)
         if (item.lParam) {
-            int page = ((DocToCItem *)item.lParam)->pageNo;
+            int page = ((DocTocItem *)item.lParam)->pageNo;
             if (1 <= page && page <= pageNo)
                 hCurrItem = hItem;
             if (page >= pageNo)
@@ -290,7 +290,7 @@ void UpdateTocExpansionState(WindowInfo *win, HTREEITEM hItem)
         TreeView_GetItem(win->hwndTocTree, &item);
 
         // add the ids of toggled items to tocState
-        DocToCItem *tocItem = item.lParam ? (DocToCItem *)item.lParam : NULL;
+        DocTocItem *tocItem = item.lParam ? (DocTocItem *)item.lParam : NULL;
         bool wasToggled = tocItem && !(item.state & TVIS_EXPANDED) == tocItem->open;
         if (wasToggled)
             win->tocState.Append(tocItem->id);
@@ -305,7 +305,7 @@ void UpdateTocExpansionState(WindowInfo *win, HTREEITEM hItem)
 #define ISLEFTTORIGHTCHAR(c) ((0x0041 <= (c) && (c) <= 0x005A) || (0x0061 <= (c) && (c) <= 0x007A) || (0xFB00 <= (c) && (c) <= 0xFB06))
 #define ISRIGHTTOLEFTCHAR(c) ((0x0590 <= (c) && (c) <= 0x05FF) || (0x0600 <= (c) && (c) <= 0x06FF) || (0x0750 <= (c) && (c) <= 0x077F) || (0xFB50 <= (c) && (c) <= 0xFDFF) || (0xFE70 <= (c) && (c) <= 0xFEFF))
 
-static void GetLeftRightCounts(DocToCItem *node, int& l2r, int& r2l)
+static void GetLeftRightCounts(DocTocItem *node, int& l2r, int& r2l)
 {
     if (!node)
         return;

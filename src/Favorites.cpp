@@ -560,9 +560,9 @@ void UpdateFavoritesTreeForAllWindows()
     }
 }
 
-static DocToCItem *ToCItemForPageNo(DocToCItem *item, int pageNo)
+static DocTocItem *ToCItemForPageNo(DocTocItem *item, int pageNo)
 {
-    DocToCItem *currItem = NULL;
+    DocTocItem *currItem = NULL;
 
     for (; item; item = item->next) {
         if (1 <= item->pageNo && item->pageNo <= pageNo)
@@ -571,7 +571,7 @@ static DocToCItem *ToCItemForPageNo(DocToCItem *item, int pageNo)
             break;
 
         // find any child item closer to the specified page
-        DocToCItem *subItem = ToCItemForPageNo(item->child, pageNo);
+        DocTocItem *subItem = ToCItemForPageNo(item->child, pageNo);
         if (subItem)
             currItem = subItem;
     }
@@ -585,8 +585,8 @@ void AddFavorite(WindowInfo *win)
     ScopedMem<TCHAR> name;
     if (win->dm->HasTocTree()) {
         // use the current ToC heading as default name
-        DocToCItem *root = win->dm->engine->GetToCTree();
-        DocToCItem *item = ToCItemForPageNo(root, pageNo);
+        DocTocItem *root = win->dm->engine->GetToCTree();
+        DocTocItem *item = ToCItemForPageNo(root, pageNo);
         if (item)
             name.Set(str::Dup(item->title));
         delete root;

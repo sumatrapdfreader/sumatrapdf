@@ -86,7 +86,7 @@ public:
     bool            tocVisible;
     // an array of ids for ToC items that have been expanded/collapsed by user
     Vec<int>        tocState;
-    DocToCItem *    tocRoot;
+    DocTocItem *    tocRoot;
 
     // state related to favorites
     HWND            hwndFavBox;
@@ -231,7 +231,7 @@ class LinkHandler {
     BaseEngine *engine() const;
 
     void ScrollTo(PageDestination *dest);
-    PageDestination *FindToCItem(DocToCItem *item, const TCHAR *name, bool partially=false);
+    PageDestination *FindTocItem(DocTocItem *item, const TCHAR *name, bool partially=false);
 
 public:
     LinkHandler(WindowInfo& win) : owner(&win) { }
