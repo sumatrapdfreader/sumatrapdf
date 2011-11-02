@@ -662,3 +662,6 @@ copiando texto
 printing document
 imprimindo documento
 
+# Untranslated:
+#File %s not found
+

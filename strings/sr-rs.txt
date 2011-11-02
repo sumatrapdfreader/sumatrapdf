@@ -663,3 +663,6 @@ copying text
 printing document
 штампање документа
 
+# Untranslated:
+#File %s not found
+

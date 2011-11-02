@@ -484,6 +484,7 @@ printing document
 #F&avorites
 #F&orward\tAlt+Right Arrow
 #Favorites
+#File %s not found
 #Fit &Content\tCtrl+3
 #Fit Content
 #Fit Width and Show Pages Continuously

@@ -664,3 +664,6 @@ menyalin teks
 printing document
 mencetak dokumen
 
+# Untranslated:
+#File %s not found
+

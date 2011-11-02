@@ -662,3 +662,6 @@ kopiowanie tekstu
 printing document
 drukowanie dokumentu
 
+# Untranslated:
+#File %s not found
+

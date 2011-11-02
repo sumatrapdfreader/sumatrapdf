@@ -662,3 +662,6 @@ se copiază textul
 printing document
 se imprimă documentul
 
+# Untranslated:
+#File %s not found
+

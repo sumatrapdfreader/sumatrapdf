@@ -656,4 +656,5 @@ skriver ut dokumentet
 #Bookmark shortcut to page %s of %s
 #Comic books
 #Could not obtain Printer properties
+#File %s not found
 

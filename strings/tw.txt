@@ -630,6 +630,7 @@ printing document
 #Current file
 #F&avorites
 #Favorites
+#File %s not found
 #Page %s
 #Printer with given name doesn't exist
 #Remove from favorites

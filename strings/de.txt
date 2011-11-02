@@ -665,3 +665,6 @@ Text kopieren verweigert
 printing document
 Dokument drucken verweigert
 
+# Untranslated:
+#File %s not found
+

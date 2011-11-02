@@ -670,3 +670,6 @@ tekst kopiëren
 printing document
 bestand afdrukken
 
+# Untranslated:
+#File %s not found
+

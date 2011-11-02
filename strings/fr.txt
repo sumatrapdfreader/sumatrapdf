@@ -666,3 +666,6 @@ copie du texte
 printing document
 impression du document
 
+# Untranslated:
+#File %s not found
+

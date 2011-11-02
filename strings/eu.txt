@@ -658,5 +658,6 @@ agiria irarkitzen
 
 # Untranslated:
 #&Pin Document
+#File %s not found
 #No result found around line %u in file %s
 

@@ -661,3 +661,6 @@ copying text
 printing document
 печатам документ
 
+# Untranslated:
+#File %s not found
+

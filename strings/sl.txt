@@ -663,3 +663,6 @@ kopiranje besedila
 printing document
 tiskanje dokumenta
 
+# Untranslated:
+#File %s not found
+

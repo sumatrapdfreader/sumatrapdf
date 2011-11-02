@@ -664,3 +664,6 @@ copying text
 printing document
 تتم حالياً الطباعة
 
+# Untranslated:
+#File %s not found
+

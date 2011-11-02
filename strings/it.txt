@@ -669,3 +669,6 @@ Copia del testo...
 printing document
 Stampa documento...
 
+# Untranslated:
+#File %s not found
+

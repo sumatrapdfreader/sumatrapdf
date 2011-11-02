@@ -548,6 +548,7 @@ s'està imprimint el document
 #Error loading %s
 #F&avorites
 #Favorites
+#File %s not found
 #Found text at page %s (again)
 #Frequently Read
 #Hide frequently read

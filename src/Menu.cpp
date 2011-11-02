@@ -13,7 +13,6 @@
 #include "Selection.h"
 #include "SumatraAbout.h"
 #include "SumatraDialogs.h"
-#include "ChmUI.h"
 
 void MenuUpdateDisplayMode(WindowInfo* win)
 {

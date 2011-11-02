@@ -662,3 +662,6 @@ kopiranje teksta
 printing document
 štampanje dokumenta
 
+# Untranslated:
+#File %s not found
+

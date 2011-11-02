@@ -662,3 +662,6 @@ copying text
 printing document
 מדפיס מסמך
 
+# Untranslated:
+#File %s not found
+

@@ -34,7 +34,6 @@
 #include "ExternalPdfViewer.h"
 #include "Selection.h"
 #include "Menu.h"
-#include "ChmUI.h"
 #include "Touch.h"
 
 #ifdef BUILD_RIBBON
@@ -4352,11 +4351,6 @@ static bool RegisterWinClass(HINSTANCE hinst)
 
     if (!RegisterNotificationsWndClass(hinst))
         return false;
-
-#ifdef BUILD_CHM_SUPPORT
-    if (!RegisterChmWinClass(hinst))
-        return false;
-#endif
 
     return true;
 }

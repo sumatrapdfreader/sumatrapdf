@@ -663,3 +663,6 @@ Kopioidaan tekstiä
 printing document
 tulostetaan asiakirjaa
 
+# Untranslated:
+#File %s not found
+

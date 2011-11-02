@@ -664,3 +664,6 @@ Szöveg vágólapra
 printing document
 Nyomtatás
 
+# Untranslated:
+#File %s not found
+

@@ -661,3 +661,6 @@ copying text
 printing document
 փաստաթուղթը տպվում է
 
+# Untranslated:
+#File %s not found
+

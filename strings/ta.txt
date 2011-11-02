@@ -531,6 +531,7 @@ printing document
 #Error loading %s
 #F&avorites
 #Favorites
+#File %s not found
 #Fit &Content\tCtrl+3
 #Fit Content
 #Fit Width and Show Pages Continuously

@@ -662,3 +662,6 @@ metin kopyalanıyor
 printing document
 belge yazdırılıyor
 
+# Untranslated:
+#File %s not found
+

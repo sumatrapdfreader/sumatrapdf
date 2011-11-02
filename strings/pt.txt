@@ -663,3 +663,6 @@ cópia de texto
 printing document
 impressão de documento
 
+# Untranslated:
+#File %s not found
+

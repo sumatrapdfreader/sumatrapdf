@@ -664,3 +664,6 @@ copying text
 printing document
 εκτύπωση εγγράφου
 
+# Untranslated:
+#File %s not found
+

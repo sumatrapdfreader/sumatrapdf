@@ -663,3 +663,6 @@ copying text
 printing document
 печатается документ
 
+# Untranslated:
+#File %s not found
+

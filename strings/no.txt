@@ -665,3 +665,6 @@ kopierer tekst
 printing document
 skriver ut dokument
 
+# Untranslated:
+#File %s not found
+

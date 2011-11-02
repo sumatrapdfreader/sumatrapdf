@@ -664,4 +664,5 @@ udskriver dokument
 
 # Untranslated:
 #&Copy Selection
+#File %s not found
 
