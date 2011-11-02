@@ -31,24 +31,6 @@ public:
     char *homePath;
 };
 
-class ChmToCItem : public DocToCItem {
-public:
-    TCHAR *url;
-    TCHAR *imageNumber;
-
-    ChmToCItem(TCHAR *title, TCHAR *url, TCHAR *imageNumber) :
-        DocToCItem(title), url(url), imageNumber(imageNumber)
-    {
-    }
-
-    virtual ~ChmToCItem() {
-        free(url);
-        free(imageNumber);
-    }
-
-    virtual PageDestination *GetLink() { return NULL; }
-};
-
 class CChmEngine : public ChmEngine {
     friend ChmEngine;
 
@@ -108,6 +90,7 @@ public:
 
     virtual void HookToHwndAndDisplayIndex(HWND hwnd);
     virtual void DisplayPage(int pageNo);
+    virtual void DisplayPageByUrl(const TCHAR *url);
 
 protected:
     const TCHAR *fileName;
@@ -136,6 +119,11 @@ void CChmEngine::HookToHwndAndDisplayIndex(HWND hwnd)
     ScopedMem<TCHAR> homePath(str::conv::FromAnsi(chmInfo->homePath));
     htmlWindow->DisplayChmPage(fileName, homePath);
     //htmlWindow->DisplayHtml(_T("<html><body>Hello!</body></html>"));
+}
+
+void CChmEngine::DisplayPageByUrl(const TCHAR *url)
+{
+    htmlWindow->DisplayChmPage(fileName, url);
 }
 
 void CChmEngine::DisplayPage(int pageNo)

@@ -140,8 +140,15 @@ public:
         UIThreadWorkItem(win), tocItem(ti) {}
 
     virtual void Execute() {
-        if (WindowInfoStillValid(win) && win->IsDocLoaded())
+        if (!WindowInfoStillValid(win) || !win->IsDocLoaded())
+            return;
+
+        if (win->IsChm()) {
+            ChmToCItem *ti = reinterpret_cast<ChmToCItem*>(tocItem);
+            win->dm->GetChmEngine()->DisplayPageByUrl(ti->url);
+        } else {
             win->linkHandler->GotoLink(tocItem->GetLink());
+        }
     }
 };
 
@@ -405,7 +412,6 @@ static LRESULT OnTocTreeNotify(WindowInfo *win, LPNMTREEVIEW pnmtv)
     }
     return -1;
 }
-
 
 static WNDPROC DefWndProcTocTree = NULL;
 static LRESULT CALLBACK WndProcTocTree(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
