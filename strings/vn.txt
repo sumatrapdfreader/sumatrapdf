@@ -221,6 +221,9 @@ Chỉ dấu sách
 Bytes
 Bytes
 
+CHM documents
+Tập tin CHM
+
 Can't connect to the Internet (error %#x).
 Không thể kết nối Internet (lỗi %#x).
 
@@ -664,7 +667,4 @@ copying text
 
 printing document
 đang in tập tin
-
-# Untranslated:
-#CHM documents
 

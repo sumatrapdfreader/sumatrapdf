@@ -223,6 +223,9 @@ Bookmarks
 Bytes
 Bytes
 
+CHM documents
+Έγγραφα CHM
+
 Can't connect to the Internet (error %#x).
 Δεν είναι δυνατή η σύνδεση με το Internet (σφάλμα %#x).
 
@@ -339,6 +342,9 @@ Failed to save a file
 
 Favorites
 Αγαπημένα
+
+File %s not found
+Το αρχείο %s δε βρέθηκε
 
 File Size:
 Μέγεθος Αρχείου:
@@ -663,8 +669,4 @@ copying text
 
 printing document
 εκτύπωση εγγράφου
-
-# Untranslated:
-#CHM documents
-#File %s not found
 
