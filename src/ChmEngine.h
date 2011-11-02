@@ -27,7 +27,7 @@ public:
 
 class ChmEngine : public BaseEngine {
 public:
-    virtual void HookToHwndAndDisplayIndex(HWND hwnd) = 0;
+    virtual void HookHwndAndDisplayIndex(HWND hwnd) = 0;
     virtual void DisplayPage(int pageNo) = 0;
     virtual void DisplayPageByUrl(const TCHAR *url) = 0;
 

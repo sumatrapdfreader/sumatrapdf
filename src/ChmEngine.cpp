@@ -6,6 +6,8 @@
 #include "FileUtil.h"
 #include "Vec.h"
 #include "TrivialHtmlParser.h"
+#include "AppTools.h"
+#include "SumatraPDF.h"
 #include "HtmlWindow.h"
 
 #define CHM_MT
@@ -31,7 +33,7 @@ public:
     char *homePath;
 };
 
-class CChmEngine : public ChmEngine {
+class CChmEngine : public ChmEngine, public HtmlWindowCallback {
     friend ChmEngine;
 
 public:
@@ -88,9 +90,12 @@ public:
     virtual bool HasToCTree() const { return true; }
     virtual DocTocItem *GetToCTree() { return tocRoot; }
 
-    virtual void HookToHwndAndDisplayIndex(HWND hwnd);
+    virtual void HookHwndAndDisplayIndex(HWND hwnd);
     virtual void DisplayPage(int pageNo);
     virtual void DisplayPageByUrl(const TCHAR *url);
+
+    // from HtmlWindowCallback
+    virtual bool OnBeforeNavigate(const TCHAR *url);
 
 protected:
     const TCHAR *fileName;
@@ -104,6 +109,7 @@ protected:
     bool Load(const TCHAR *fileName);
     bool LoadAndParseHtmlToc();
     bool ParseChmHtmlToc(char *html);
+    int  PageNumberForUrl(const TCHAR *url);
 };
 
 CChmEngine::CChmEngine() :
@@ -112,10 +118,66 @@ CChmEngine::CChmEngine() :
 {
 }
 
-void CChmEngine::HookToHwndAndDisplayIndex(HWND hwnd)
+// if we mapped a given chm url to a logical page, return its
+// page number. Otherwise return -1
+int CChmEngine::PageNumberForUrl(const TCHAR *url)
+{
+    for (size_t i = 0; i < pages.Count(); i++) {
+        ChmTocItem *ti = pages.At(i);
+        if (str::Eq(ti->url, url))
+            return i + 1; // pages are numbered from 1
+    }
+    return -1;
+}
+
+class SyncPageNoAndTocWorkItem : public UIThreadWorkItem
+{
+    DocTocItem *tocItem;
+    int pageNo;
+
+public:
+    SyncPageNoAndTocWorkItem(WindowInfo *win, int pn, DocTocItem *ti) :
+        UIThreadWorkItem(win), pageNo(pn), tocItem(ti) {}
+
+    virtual void Execute() {
+        SyncPageNoAndToc(win, pageNo, tocItem);
+    }
+};
+
+// called when we're about to show a given url. If this is a CHM
+// html page, sync the state of the ui with the page (show
+// the right page number, select the right item in toc tree)
+bool CChmEngine::OnBeforeNavigate(const TCHAR *url)
+{
+    // url format for chm page is: "its:MyChmFile.chm::mywebpage.htm"
+    // we need to extract the "mywebpage.htm" part
+    if (!str::StartsWithI(url, _T("its:")))
+        return true;
+    url += 4;
+    // you might be tempted to just test if url starts with fileName,
+    // but it looks like browser control can url-escape fileName, so
+    // we'll just look for "::"
+    url = str::Find(url, _T("::"));
+    if (!url)
+        return true;
+    url += 2;
+    if (*url == _T('/'))
+        ++url;
+    
+    int pageNo = PageNumberForUrl(url);
+    if (-1 != pageNo) {
+        ChmTocItem *ti = pages.At(pageNo-1);
+        WindowInfo *win = FindWindowInfoByFile(fileName);
+        if (win)
+            SyncPageNoAndToc(win, pageNo, ti);
+    }
+    return true;
+}
+
+void CChmEngine::HookHwndAndDisplayIndex(HWND hwnd)
 {
     assert(!htmlWindow);
-    htmlWindow = new HtmlWindow(hwnd);
+    htmlWindow = new HtmlWindow(hwnd, this);
     ScopedMem<TCHAR> homePath(str::conv::FromAnsi(chmInfo->homePath));
     htmlWindow->DisplayChmPage(fileName, homePath);
     //htmlWindow->DisplayHtml(_T("<html><body>Hello!</body></html>"));

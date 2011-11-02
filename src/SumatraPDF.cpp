@@ -306,7 +306,7 @@ bool WindowInfoStillValid(WindowInfo *win)
 }
 
 // Find the first window showing a given PDF file 
-WindowInfo* FindWindowInfoByFile(TCHAR *file)
+WindowInfo* FindWindowInfoByFile(const TCHAR *file)
 {
     ScopedMem<TCHAR> normFile(path::Normalize(file));
 
@@ -320,7 +320,7 @@ WindowInfo* FindWindowInfoByFile(TCHAR *file)
 }
 
 // Find the first window that has been produced from <file>
-WindowInfo* FindWindowInfoBySyncFile(TCHAR *file)
+WindowInfo* FindWindowInfoBySyncFile(const TCHAR *file)
 {
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows.At(i);
@@ -719,7 +719,7 @@ static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win,
 #ifdef BUILD_CHM_SUPPORT
         ChmEngine *chmEngine = win.dm->GetChmEngine();
         if (chmEngine)
-            chmEngine->HookToHwndAndDisplayIndex(win.hwndCanvas);
+            chmEngine->HookHwndAndDisplayIndex(win.hwndCanvas);
 #endif
     } else if (allowFailure) {
         DBG_OUT("failed to load file %s\n", fileName);
@@ -4296,6 +4296,15 @@ InitMouseWheelInfo:
             return DefWindowProc(hwnd, msg, wParam, lParam);
     }
     return 0;
+}
+
+// tell the ui to show the pageNo as current page and select ti
+// in toc tree. Needed for chm ui where navigation can be initiated
+// from inside html control
+void SyncPageNoAndToc(WindowInfo *win, int pageNo, DocTocItem *ti)
+{
+    win->dm->GoToPageChm(pageNo, false);
+    // TODO: sync the toc tree
 }
 
 static bool RegisterWinClass(HINSTANCE hinst)

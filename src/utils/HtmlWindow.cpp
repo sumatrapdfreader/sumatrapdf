@@ -382,11 +382,11 @@ void UnsubclassHtmlHwnd(HWND hwnd)
     SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)0);
 }
 
-HtmlWindow::HtmlWindow(HWND hwnd) :
+HtmlWindow::HtmlWindow(HWND hwnd, HtmlWindowCallback *cb) :
     hwnd(hwnd), webBrowser(NULL), oleObject(NULL),
     oleInPlaceObject(NULL), viewObject(NULL),
     connectionPoint(NULL), oleObjectHwnd(NULL),
-    adviseCookie(0), aboutBlankShown(false)
+    adviseCookie(0), aboutBlankShown(false), htmlWinCb(cb)
 {
     assert(hwnd);
     SubclassHtmlHwnd(hwnd, this);
@@ -607,26 +607,6 @@ void IEHtmlWin::OnMouse(wxMouseEvent& event)
 #endif
 
 #if 0
-bool HtmlWindow::OnStartURL(wxString& url)
-{
-        wxLogTrace("loading url:");
-        wxLogTrace(url.c_str());
-
-        m_currentUrl = url;
-        if (m_specificallyOpened) {
-                m_specificallyOpened = false;
-                return true;
-        }
-
-        // should we open this url?
-        // you should subclass IEHtmlWin and provide your own
-        // implementation of when to load the specificed url
-
-        return true;
-}
-#endif
-
-#if 0
 void IEHtmlWin::OnFinishURL(wxString& url)
 {
         wxLogTrace("loaded url:");
@@ -735,6 +715,15 @@ void HtmlWindow::DisplayChmPage(const TCHAR *chmFilePath, const TCHAR *chmPage)
         chmPage++;
     ScopedMem<TCHAR> url(str::Format(_T("its:%s::/%s"), chmFilePath, chmPage));
     NavigateToUrl(url);
+}
+
+// called before an url is shown. If returns false, will cancel
+// the navigation.
+bool HtmlWindow::OnBeforeNavigate(const TCHAR *url)
+{
+    if (htmlWinCb)
+        return htmlWinCb->OnBeforeNavigate(url);
+    return true;
 }
 
 FrameSite::FrameSite(HtmlWindow * win)
@@ -929,15 +918,8 @@ HRESULT HW_IDispatch::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid,
                 url = *vurl->pbstrVal;
             else
                 url = vurl->bstrVal;
-#if 0
-            if (fs->htmlWindow->OnStartURL(url)) {
-                *pDispParams->rgvarg->pboolVal = VARIANT_FALSE;
-            } else {
-                *pDispParams->rgvarg->pboolVal = VARIANT_TRUE;
-            }
-#endif
-            // don't cancel
-            *pDispParams->rgvarg->pboolVal = VARIANT_FALSE;
+            bool shouldCancel = !fs->htmlWindow->OnBeforeNavigate(url);
+            *pDispParams->rgvarg->pboolVal = shouldCancel ? VARIANT_TRUE : VARIANT_FALSE;
             break;
         }
 

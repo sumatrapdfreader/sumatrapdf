@@ -8,6 +8,12 @@
 
 class FrameSite;
 
+class HtmlWindowCallback
+{
+public:
+    virtual bool OnBeforeNavigate(const TCHAR *url) = 0;
+};
+
 class HtmlWindow
 {
 protected:
@@ -26,11 +32,13 @@ protected:
 
     bool                aboutBlankShown;
 
+    HtmlWindowCallback *htmlWinCb;
+
     void EnsureAboutBlankShown();
     void CreateBrowser();
 
 public:
-    HtmlWindow(HWND hwnd);
+    HtmlWindow(HWND hwnd, HtmlWindowCallback *cb);
     ~HtmlWindow();
 
     void OnSize(int dx, int dy);
@@ -40,5 +48,7 @@ public:
     void DisplayChmPage(const TCHAR *chmFilePath, const TCHAR *chmPage);
     void GoBack();
     void GoForward();
+
+    bool OnBeforeNavigate(const TCHAR *url);
 };
 #endif

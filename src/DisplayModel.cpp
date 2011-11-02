@@ -947,6 +947,32 @@ PointI DisplayModel::GetContentStart(int pageNo)
     return contentBox.TL().Convert<int>();
 }
 
+// In chm ui going to a page has almost nothing in common with the code
+// for standard ui, so this is just for chm mode. It can be called in
+// two cases:
+// * initiated by user action, in which case goToUrl is true and we
+//   initiate navigation to that url
+// * before navigation happens (initiated either from within html control
+//   or as a result of us being called with goToUrl=true) we get notified
+//   and call here with goToUrl=false to sync the state of the ui to show
+//   current page number
+void DisplayModel::GoToPageChm(int pageNo, bool goToUrl)
+{
+    ChmEngine *chmEngine = GetChmEngine();
+    assert(chmEngine);
+    if (goToUrl) {
+        // this will trigger navigation callback which will
+        // result in us being called again, but with goToUrl = false
+        chmEngine->DisplayPage(pageNo);
+        AddNavPoint();
+    } else {
+        // sync the state of the ui to show current page number
+        dmCb->PageNoChanged(pageNo);
+        _startPage = pageNo;
+        RepaintDisplay();
+    }
+}
+
 void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
 {
     assert(ValidPageNo(pageNo));
@@ -956,10 +982,7 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
 #ifdef BUILD_CHM_SUPPORT
     ChmEngine *chmEngine = GetChmEngine();
     if (chmEngine) {
-        chmEngine->DisplayPage(pageNo);
-        dmCb->PageNoChanged(pageNo);
-        _startPage = pageNo;
-        RepaintDisplay();
+        GoToPageChm(pageNo, true);
         return;
     }
 #endif

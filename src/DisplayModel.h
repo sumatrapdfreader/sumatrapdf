@@ -164,6 +164,8 @@ public:
     bool            LastBookPageVisible();
     void            Relayout(float zoomVirtual, int rotation);
 
+    void            GoToPageChm(int pageNo, bool goToUrl=true);
+
     void            GoToPage(int pageNo, int scrollY, bool addNavPt=false, int scrollX=-1);
     bool            GoToPrevPage(int scrollY);
     bool            GoToNextPage(int scrollY);
