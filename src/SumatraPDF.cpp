@@ -152,6 +152,7 @@ static void UpdateUITextForLanguage();
 static void UpdateToolbarAndScrollbarsForAllWindows();
 static void EnterFullscreen(WindowInfo& win, bool presentation=false);
 static void ExitFullscreen(WindowInfo& win);
+static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 bool HasPermission(int permission)
 {
@@ -628,13 +629,11 @@ static bool IsChmFile(TCHAR *fileName)
     return str::EndsWithI(fileName, _T(".chm"));
 }
 
-// for now only used for loading CHM files
-static bool LoadDoc2(TCHAR *fileName)
+// When displaying CHM document we subclass hwndCanvas. UnsubclassCanvas() reverts that.
+static void UnsubclassCanvas(HWND hwnd)
 {
-    DisplayModel *dm = DisplayModel::CreateFromFileName(fileName, NULL);
-    if (!dm)
-        return false;
-    return true;
+    SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)WndProcCanvas);
+    SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)0);
 }
 
 // isNewWindow : if true then 'win' refers to a newly created window that needs 
@@ -648,10 +647,6 @@ static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win,
     DisplayState *state, bool isNewWindow, bool allowFailure, 
     bool showWin, bool placeWindow)
 {
-#if 0
-    if (IsChmFile(fileName))
-        return LoadDoc2(fileName);
-#endif
     ScopedMem<TCHAR> title;
 
     // Never load settings from a preexisting state if the user doesn't wish to
@@ -723,11 +718,8 @@ static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win,
         delete prevModel;
 #ifdef BUILD_CHM_SUPPORT
         ChmEngine *chmEngine = win.dm->GetChmEngine();
-        if (chmEngine) {
-            // TODO: temporary hack, we'll probably need a spearate
-            // hwnd just for html browser
+        if (chmEngine)
             chmEngine->HookToHwndAndDisplayIndex(win.hwndCanvas);
-        }
 #endif
     } else if (allowFailure) {
         DBG_OUT("failed to load file %s\n", fileName);
@@ -2051,6 +2043,8 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
     if (gPluginMode && !forceClose)
         return;
 
+    bool wasChm = win->IsChm();
+
     if (win->IsDocLoaded())
         win->dm->dontRenderFlag = true;
     if (win->presentation)
@@ -2065,10 +2059,13 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
         }
 #endif
         SavePrefs();
-    } else
+    } else {
         UpdateCurrentFileDisplayStateForWin(win);
+    }
 
     if (lastWindow && !quitIfLast) {
+        if (wasChm)
+            UnsubclassCanvas(win->hwndCanvas);
         /* last window - don't delete it */
         delete win->watcher;
         win->watcher = NULL;
