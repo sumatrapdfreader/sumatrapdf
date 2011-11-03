@@ -573,21 +573,31 @@ public:
     }
 };
 
-void CreateThumbnailForFile(WindowInfo& win, DisplayState& state)
+static void CreateChmThumbnail(WindowInfo& win, DisplayState& ds)
+{
+    // TODO: implement me
+}
+
+void CreateThumbnailForFile(WindowInfo& win, DisplayState& ds)
 {
     // don't even create thumbnails for files that won't need them anytime soon
     Vec<DisplayState *> *list = gFileHistory.GetFrequencyOrder();
-    int ix = list->Find(&state);
+    int ix = list->Find(&ds);
     delete list;
     if (ix < 0 || FILE_HISTORY_MAX_FREQUENT * 2 <= ix)
         return;
 
-    if (HasThumbnail(state))
+    if (HasThumbnail(ds))
         return;
 
     // don't unnecessarily accumulate thumbnails during a stress test
     if (gIsStressTesting)
         return;
+
+    if (win.IsChm()) {
+        CreateChmThumbnail(win, ds);
+        return;
+    }
 
     RectD pageRect = win.dm->engine->PageMediabox(1);
     if (pageRect.IsEmpty())

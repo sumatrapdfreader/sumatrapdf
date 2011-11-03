@@ -24,7 +24,7 @@ const TCHAR *GetStaticLink(Vec<StaticLinkInfo>& linkInfo, int x, int y, StaticLi
 
 void    DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, bool invertColors);
 void    CleanUpThumbnailCache(FileHistory& fileHistory);
-bool    HasThumbnail(DisplayState& state);
-void    SaveThumbnail(DisplayState& state);
+bool    HasThumbnail(DisplayState& ds);
+void    SaveThumbnail(DisplayState& ds);
 
 #endif

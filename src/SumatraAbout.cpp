@@ -731,48 +731,48 @@ void CleanUpThumbnailCache(FileHistory& fileHistory)
     }
 }
 
-static bool LoadThumbnail(DisplayState& state)
+static bool LoadThumbnail(DisplayState& ds)
 {
-    if (state.thumbnail)
-        delete state.thumbnail;
-    state.thumbnail = NULL;
+    if (ds.thumbnail)
+        delete ds.thumbnail;
+    ds.thumbnail = NULL;
 
-    ScopedMem<TCHAR> bmpPath(GetThumbnailPath(state.filePath));
+    ScopedMem<TCHAR> bmpPath(GetThumbnailPath(ds.filePath));
     if (!bmpPath)
         return false;
 
-    state.thumbnail = LoadRenderedBitmap(bmpPath);
-    return state.thumbnail != NULL;
+    ds.thumbnail = LoadRenderedBitmap(bmpPath);
+    return ds.thumbnail != NULL;
 }
 
-bool HasThumbnail(DisplayState& state)
+bool HasThumbnail(DisplayState& ds)
 {
-    if (!state.thumbnail && !LoadThumbnail(state))
+    if (!ds.thumbnail && !LoadThumbnail(ds))
         return false;
 
-    ScopedMem<TCHAR> bmpPath(GetThumbnailPath(state.filePath));
+    ScopedMem<TCHAR> bmpPath(GetThumbnailPath(ds.filePath));
     if (!bmpPath)
         return true;
     FILETIME bmpTime = file::GetModificationTime(bmpPath);
-    FILETIME fileTime = file::GetModificationTime(state.filePath);
+    FILETIME fileTime = file::GetModificationTime(ds.filePath);
     // delete the thumbnail if the file is newer than the thumbnail
     if (FileTimeDiffInSecs(fileTime, bmpTime) > 0) {
-        delete state.thumbnail;
-        state.thumbnail = NULL;
+        delete ds.thumbnail;
+        ds.thumbnail = NULL;
     }
 
-    return state.thumbnail != NULL;
+    return ds.thumbnail != NULL;
 }
 
-void SaveThumbnail(DisplayState& state)
+void SaveThumbnail(DisplayState& ds)
 {
-    if (!state.thumbnail)
+    if (!ds.thumbnail)
         return;
 
-    ScopedMem<TCHAR> bmpPath(GetThumbnailPath(state.filePath));
+    ScopedMem<TCHAR> bmpPath(GetThumbnailPath(ds.filePath));
     if (!bmpPath)
         return;
     ScopedMem<TCHAR> thumbsPath(path::GetDir(bmpPath));
     if (dir::Create(thumbsPath))
-        SaveRenderedBitmap(state.thumbnail, bmpPath);
+        SaveRenderedBitmap(ds.thumbnail, bmpPath);
 }
