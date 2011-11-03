@@ -1920,6 +1920,11 @@ RectD PdfLink::GetDestRect() const
         if (!fz_is_null(fz_array_get(dest, 3)))
             result.y = fz_to_real(fz_array_get(dest, 3));
         result.dx = result.dy = 0;
+        // work around buggy documents that expect "/XYZ 0 0 0" to just point
+        // to the page just as "/XYZ null null null" (created by Office 2010?)
+        // cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1686
+        if (RectD() == result && !fz_is_null(fz_array_get(dest, 4)) && 0 == fz_to_real(fz_array_get(dest, 4)))
+            result.x = result.y = DEST_USE_DEFAULT;
     }
     else if (str::Eq(type, "FitR")) {
         result = RectD::FromXY(fz_to_real(fz_array_get(dest, 2)),  // left
