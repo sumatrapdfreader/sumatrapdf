@@ -574,9 +574,25 @@ public:
     }
 };
 
+#include "SimpleLog.h"
+
+// Create a thumbnail of chm document by loading it again and rendering
+// its first page to a hwnd specially created for it. An alternative
+// would be to reuse ChmEngine/HtmlWindow we already have but it has
+// its own problem.
+// Could be done in background but no need to do that unless it's
+// too slow
 static void CreateChmThumbnail(WindowInfo& win, DisplayState& ds)
 {
-    // TODO: implement me
+    MillisecondTimer t;
+    t.Start();
+
+    t.Stop();
+    double dur = t.GetTimeInMs();
+    if (dur > 1000.0) {
+        slog::DebugLogger l;
+        l.LogFmt(_T("Formatting %s took %.2f secs\n"), win.loadedFilePath, dur / 1000.0);
+    }
 }
 
 void CreateThumbnailForFile(WindowInfo& win, DisplayState& ds)

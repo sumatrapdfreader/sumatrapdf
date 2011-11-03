@@ -15,7 +15,7 @@
 #include "SumatraPDF.h"
 #include "Notifications.h"
 
-static Log::Logger *gLog;
+static slog::Logger *gLog;
 #define logbench(msg, ...) gLog->LogFmt(_T(msg), __VA_ARGS__)
 
 struct PageRange {
@@ -155,7 +155,7 @@ static void BenchFile(TCHAR *filePath, const TCHAR *pagesSpec)
 
 void Bench(StrVec& filesToBench)
 {
-    gLog = new Log::StderrLogger();
+    gLog = new slog::StderrLogger();
 
     size_t n = filesToBench.Count() / 2;
     for (size_t i = 0; i < n; i++)

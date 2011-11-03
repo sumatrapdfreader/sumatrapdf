@@ -7,7 +7,7 @@
 #include "Vec.h"
 #include "Scopes.h"
 
-namespace Log {
+namespace slog {
 
 class Logger {
 public:

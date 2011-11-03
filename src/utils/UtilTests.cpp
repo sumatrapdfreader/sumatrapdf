@@ -635,14 +635,14 @@ static void WinUtilTest()
 
 static void LogTest()
 {
-    Log::MultiLogger log;
+    slog::MultiLogger log;
     log.LogAndFree(str::Dup(_T("Don't leak me!")));
 
-    Log::MemoryLogger logAll;
+    slog::MemoryLogger logAll;
     log.AddLogger(&logAll);
 
     {
-        Log::MemoryLogger ml;
+        slog::MemoryLogger ml;
         log.AddLogger(&ml);
         log.Log(_T("Test1"));
         ml.Log(_T("ML"));
@@ -655,7 +655,7 @@ static void LogTest()
     {
         HANDLE hRead, hWrite;
         CreatePipe(&hRead, &hWrite, NULL, 0);
-        Log::FileLogger fl(hWrite);
+        slog::FileLogger fl(hWrite);
         log.AddLogger(&fl);
         log.Log(_T("Test2"));
         fl.Log(_T("FL"));
@@ -676,7 +676,7 @@ static void LogTest()
     log.RemoveLogger(&logAll);
 
     // don't leak the logger, don't crash on logging NULL
-    log.AddLogger(new Log::DebugLogger());
+    log.AddLogger(new slog::DebugLogger());
     log.Log(NULL);
 }
 
