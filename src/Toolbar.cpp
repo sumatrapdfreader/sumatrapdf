@@ -264,7 +264,7 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
         }
     }
     else if (WM_KEYDOWN == message) {
-        if (OnFrameKeydown(win, wParam, lParam, true))
+        if (FrameOnKeydown(win, wParam, lParam, true))
             return 0;
     }
 
@@ -434,7 +434,7 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, L
             Edit_SetRectNoPaint(hwnd, &r);
         }
     } else if (WM_KEYDOWN == message) {
-        if (OnFrameKeydown(win, wParam, lParam, true))
+        if (FrameOnKeydown(win, wParam, lParam, true))
             return 0;
     }
 

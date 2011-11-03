@@ -1,17 +1,29 @@
 List of things to do before we can ship CHM support:
 
 * a shot of the first page for the purpose of start page. 
-  We can render html to a dummy hwnd and get its bitmap
+  We can render html to a dummy hwnd and get its bitmap.
+  Example code that does that: http://codesearch.google.com/#voCiMvIjuFI/IECapt/IECapt/IECapt.cpp
 * modify toolbar in chm ui mode to not show non-applicable items
 * make scrolling in html window with cursor up/down etc. work
-  (is it a matter of passing the messages through ?)
+  (is it a matter of passing the messages through ?).
+  Notes: I don't understand how this is supposed to work. Presumably web browser control
+  hooked to a hwnd should just handle standard keyboard navigation. I tried
+  tried to forward WM_KEYDOWN messages from FrameOnKeydown() to canvas hwnd
+  so that they end up in WndProcHtml() but that didn't change anything (i.e.
+  messages get through but that doesn't make keyboard scrolling work).
+  Maybe the right approach is to implement scrolling on HtmlWindow (example:
+  http://code.google.com/p/fidolook/source/browse/trunk/Qm/ui/messageviewwindow.cpp#886)
+  and call it from FrameOnKeydown() via DisplayModel
 
 To decide:
 * should we use our own context menu or use the one provided by IE ?
 
 Things we can live without for the first release:
-* search
-* printing
+* search (it looks like there's a way to get it cheaply if we reuse
+  browser's UI for it; probably much harder if we want to preserve
+  our own UI).
+* printing, although it seems easy to add printing of a single page
+  (it's even already in the context menu)
 
 Done:
 * sync page number and toc with current page

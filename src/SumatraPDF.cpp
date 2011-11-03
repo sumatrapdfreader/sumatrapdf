@@ -2582,7 +2582,7 @@ static void AdjustWindowEdge(WindowInfo& win)
     }
 }
 
-static void OnFrameSize(WindowInfo* win, int dx, int dy)
+static void FrameOnSize(WindowInfo* win, int dx, int dy)
 {
     int rebBarDy = 0;
     if (gGlobalPrefs.toolbarVisible && !(win->presentation || win->fullScreen)) {
@@ -2922,7 +2922,7 @@ void AdvanceFocus(WindowInfo* win)
 // from one typed on the main keyboard (focuses the find textbox)
 static bool gIsDivideKeyDown = false;
 
-bool OnFrameKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield)
+bool FrameOnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield)
 {
     if ((VK_LEFT == key || VK_RIGHT == key) &&
         IsShiftPressed() && IsCtrlPressed() &&
@@ -2992,7 +2992,7 @@ bool OnFrameKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
     return true;
 }
 
-static void OnFrameChar(WindowInfo& win, WPARAM key)
+static void FrameOnChar(WindowInfo& win, WPARAM key)
 {
 //    DBG_OUT("char=%d,%c\n", key, (char)key);
 
@@ -3037,7 +3037,7 @@ static void OnFrameChar(WindowInfo& win, WPARAM key)
     switch (key) {
     case VK_SPACE:
     case VK_RETURN:
-        OnFrameKeydown(&win, IsShiftPressed() ? VK_PRIOR : VK_NEXT, 0);
+        FrameOnKeydown(&win, IsShiftPressed() ? VK_PRIOR : VK_NEXT, 0);
         break;
     case VK_BACK:
         {
@@ -3565,7 +3565,7 @@ static void OnTimer(WindowInfo& win, HWND hwnd, WPARAM timerId)
 static int  gDeltaPerLine = 0;         // for mouse wheel logic
 static bool gWheelMsgRedirect = false; // set when WM_MOUSEWHEEL has been passed on (to prevent recursion)
 
-static LRESULT OnMouseWheel(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lParam)
+static LRESULT CanvasOnMouseWheel(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lParam)
 {
     if (!win.IsDocLoaded())
         return 0;
@@ -3821,7 +3821,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
             break;
 
         case WM_MOUSEWHEEL:
-            return OnMouseWheel(*win, msg, wParam, lParam);
+            return CanvasOnMouseWheel(*win, msg, wParam, lParam);
 
         case WM_GESTURE:
             return OnGesture(*win, msg, wParam, lParam);
@@ -3862,7 +3862,7 @@ void WindowInfo::RepaintAsync(UINT delay)
     QueueWorkItem(new RepaintCanvasWorkItem(this, delay));
 }
 
-static LRESULT OnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     int wmId = LOWORD(wParam);
 
@@ -4184,7 +4184,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 
                 int dx = LOWORD(lParam);
                 int dy = HIWORD(lParam);
-                OnFrameSize(win, dx, dy);
+                FrameOnSize(win, dx, dy);
             }
             break;
 
@@ -4200,7 +4200,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
             break;
 
         case WM_COMMAND:
-            return OnCommand(win, hwnd, msg, wParam, lParam);
+            return FrameOnCommand(win, hwnd, msg, wParam, lParam);
 
         case WM_APPCOMMAND:
             // both keyboard and mouse drivers should produce WM_APPCOMMAND
@@ -4227,12 +4227,12 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 
         case WM_CHAR:
             if (win)
-                OnFrameChar(*win, wParam);
+                FrameOnChar(*win, wParam);
             break;
 
         case WM_KEYDOWN:
             if (win)
-                OnFrameKeydown(win, wParam, lParam);
+                FrameOnKeydown(win, wParam, lParam);
             break;
 
         case WM_CONTEXTMENU:
