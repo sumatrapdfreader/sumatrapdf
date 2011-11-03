@@ -23,12 +23,16 @@
 #include "SumatraDialogs.h"
 #include "AppTools.h"
 
+// don't show the Search UI for document types that don't
+// support extracting text and/or navigating to a specific
+// text selection; default to showing it, since most users
+// will never use a format that does not support search
 bool NeedsFindUI(WindowInfo *win)
 {
     if (!win->IsDocLoaded())
-        return false;
+        return true;
     if (!win->dm->engine)
-        return false;
+        return true;
     if (win->dm->engine->IsImageCollection())
         return false;
     if (win->IsChm())

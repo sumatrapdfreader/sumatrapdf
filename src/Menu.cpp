@@ -224,7 +224,7 @@ static void RebuildStandardFileMenu(HMENU menu, bool isPdf)
 
     // Suppress menu items that depend on specific software being installed:
     // e-mail client, Adobe Reader, Foxit, PDF-XChange
-    // Also only show "show with" items 
+    // Also suppress PDF specific items for non-PDF documents
     // Don't hide items here that won't always be hidden
     // (MenuUpdateStateForWindow() is for that)
     if (!isPdf || !CanViewWithAcrobat())
@@ -241,7 +241,7 @@ static HMENU BuildStandardMenu(WindowInfo *win)
 {
     HMENU mainMenu = CreateMenu();
     HMENU m = CreateMenu();
-    RebuildStandardFileMenu(m, win->IsPdf());
+    RebuildStandardFileMenu(m, !win->IsDocLoaded() || win->IsPdf());
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&File"));
     m = BuildMenuFromMenuDef(menuDefView, dimof(menuDefView), CreateMenu());
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&View"));
@@ -539,6 +539,9 @@ void OnMenuCustomZoom(WindowInfo* win)
 MenuDef menuDefFileChm[] = {
     { _TRN("&Open\tCtrl+O"),                IDM_OPEN ,                  MF_REQ_DISK_ACCESS },
     { _TRN("&Close\tCtrl+W"),               IDM_CLOSE,                  MF_REQ_DISK_ACCESS },
+    { _TRN("&Save As...\tCtrl+S"),          IDM_SAVEAS,                 MF_REQ_DISK_ACCESS },
+    { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS },
+    { _TRN("Send by &E-mail..."),           IDM_SEND_BY_EMAIL,          MF_REQ_DISK_ACCESS },
     { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS },
     { _TRN("P&roperties\tCtrl+D"),          IDM_PROPERTIES,             0 },
     { SEP_ITEM,                             0,                          0 },
@@ -617,7 +620,7 @@ void UpdateMenu(WindowInfo *win, HMENU m)
         if (win->IsChm())
             RebuildChmFileMenu(m);
         else
-            RebuildStandardFileMenu(m, win->IsPdf());
+            RebuildStandardFileMenu(m, !win->IsDocLoaded() || win->IsPdf());
     }
     else if (id == menuDefFavorites[0].id)
         RebuildFavMenu(win, m);
