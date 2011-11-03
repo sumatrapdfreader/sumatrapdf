@@ -1,6 +1,5 @@
 List of things to do before we can ship CHM support:
 
-* make the "prev page" button in toolbar work for chm docs
 * make zoom (both toolbar and menu items) for chm docs work
 * a shot of the first page for the purpose of start page. 
   We can render html to a dummy hwnd and get its bitmap.
@@ -27,6 +26,7 @@ Things we can live without for the first release:
   (it's even already in the context menu)
 
 Done:
+* make the "prev page" button in toolbar work for chm docs
 * modify toolbar in chm ui mode to not show non-applicable items
 * sync page number and toc with current page
 

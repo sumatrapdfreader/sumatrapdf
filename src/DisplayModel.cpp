@@ -442,6 +442,11 @@ int DisplayModel::FirstVisiblePageNo() const
 // (in continuous layout, there's no better criteria)
 int DisplayModel::CurrentPageNo() const
 {
+    ChmEngine *chmEngine = AsChmEngine();
+    if (chmEngine) {
+        return _startPage;
+    }
+
     if (!displayModeContinuous(displayMode()))
         return _startPage;
 
@@ -957,9 +962,8 @@ void DisplayModel::GoToPageChm(int pageNo, bool goToUrl)
         chmEngine->DisplayPage(pageNo);
     } else {
         // sync the state of the ui to show current page number
-        dmCb->PageNoChanged(pageNo);
         _startPage = pageNo;
-        RepaintDisplay();
+        dmCb->PageNoChanged(pageNo);
     }
 }
 

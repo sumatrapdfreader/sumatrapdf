@@ -1,0 +1,5 @@
+Things to do before 1.9 release:
+* finish chm support to a point described in todo_chm.txt
+
+Things to do before 2.0 release:
+* (?) ebook support
