@@ -679,3 +679,14 @@ fz_list_is_single_image(fz_display_list *list)
 {
 	return list->first && !list->first->next && list->first->cmd == FZ_CMD_FILL_IMAGE;
 }
+
+/* SumatraPDF: allow to detect pages requiring blending */
+int
+fz_list_requires_blending(fz_display_list *list)
+{
+	fz_display_node *node;
+	for (node = list->first; node; node = node->next)
+		if (node->cmd == FZ_CMD_BEGIN_GROUP && (node->item.blendmode != 0 || node->alpha != 1.0f || node->flag != ISOLATED))
+			return 1;
+	return 0;
+}

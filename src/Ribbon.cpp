@@ -546,7 +546,7 @@ IFACEMETHODIMP RibbonSupport::UpdateProperty(UINT32 commandId, REFPROPERTYKEY ke
         LABEL(IDM_ABOUT, menuDefHelp[4]);
         case grpDebug: return InitPropString(newValue, _T("Debug"));
         case IDM_DEBUG_SHOW_LINKS: return InitPropString(newValue, _T("Highlight links"));
-        case IDM_DEBUG_GDI_RENDERER: return InitPropString(newValue, _T("Use GDI+ renderer"));
+        case IDM_DEBUG_GDI_RENDERER: return InitPropString(newValue, _T("Toggle PDF/XPS renderer"));
 #undef LABEL
         }
     }

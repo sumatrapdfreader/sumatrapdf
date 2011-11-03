@@ -758,6 +758,7 @@ protected:
     bool            RenderPage(HDC hDC, pdf_page *page, RectI screenRect,
                                fz_matrix *ctm, float zoom, int rotation,
                                RectD *pageRect, RenderTarget target);
+    bool            RequiresBlending(pdf_page *page);
     TCHAR         * ExtractPageText(pdf_page *page, TCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View, bool cacheRun=false);
 
@@ -1440,6 +1441,23 @@ bool CPdfEngine::RenderPage(HDC hDC, pdf_page *page, RectI screenRect, fz_matrix
     return fz_okay == error;
 }
 
+// Fitz' draw_device.c currently isn't able to correctly render
+// transparency groups while our dev_gdiplus.cpp gets most of them right
+// cf. http://bugs.ghostscript.com/show_bug.cgi?id=690686
+// cf. http://code.google.com/p/sumatrapdf/issues/detail?id=51
+bool CPdfEngine::RequiresBlending(pdf_page *page)
+{
+    if (!page->transparency)
+        return false;
+    PdfPageRun *run = GetPageRun(page);
+    if (!run)
+        return false;
+
+    bool result = fz_list_requires_blending(run->list);
+    DropPageRun(run);
+    return result;
+}
+
 RenderedBitmap *CPdfEngine::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target)
 {    
     pdf_page* page = GetPdfPage(pageNo);
@@ -1451,7 +1469,7 @@ RenderedBitmap *CPdfEngine::RenderBitmap(int pageNo, float zoom, int rotation, R
     fz_bbox bbox = fz_round_rect(fz_transform_rect(ctm, pRect));
 
     // GDI+ seems to render quicker and more reliable at high zoom levels
-    if (zoom > 40.0 || gDebugGdiPlusDevice) {
+    if ((zoom > 40.0 || RequiresBlending(page)) != gDebugGdiPlusDevice) {
         int w = bbox.x1 - bbox.x0, h = bbox.y1 - bbox.y0;
         ctm = fz_concat(ctm, fz_translate((float)-bbox.x0, (float)-bbox.y0));
 
@@ -2537,7 +2555,7 @@ RenderedBitmap *CXpsEngine::RenderBitmap(int pageNo, float zoom, int rotation, R
     fz_bbox bbox = fz_round_rect(fz_transform_rect(ctm, pRect));
 
     // GDI+ seems to render quicker and more reliable at high zoom levels
-    if (zoom > 40.0 || gDebugGdiPlusDevice) {
+    if ((zoom > 40.0) != gDebugGdiPlusDevice) {
         int w = bbox.x1 - bbox.x0, h = bbox.y1 - bbox.y0;
         ctm = fz_concat(ctm, fz_translate((float)-bbox.x0, (float)-bbox.y0));
 
