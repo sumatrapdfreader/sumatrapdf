@@ -16,29 +16,29 @@ enum PageLayoutType { Layout_Single = 0, Layout_Facing = 1, Layout_Book = 2,
 
 class RenderedBitmap {
 protected:
-    HBITMAP _hbmp;
-    int     _width;
-    int     _height;
+    HBITMAP hbmp;
+    int     dx;
+    int     dy;
 
 public:
     // whether this bitmap will (have to) be replaced soon
     bool outOfDate;
 
-    RenderedBitmap(HBITMAP hbmp, int width, int height) :
-        _hbmp(hbmp), _width(width), _height(height), outOfDate(false) { }
-    ~RenderedBitmap() { DeleteObject(_hbmp); }
+    RenderedBitmap(HBITMAP hbmp, int dx, int dy) :
+        hbmp(hbmp), dx(dx), dy(dy), outOfDate(false) { }
+    ~RenderedBitmap() { DeleteObject(hbmp); }
 
     // callers must not delete this (use CopyImage if you have to modify it)
-    HBITMAP GetBitmap() const { return _hbmp; }
-    SizeI Size() const { return SizeI(_width, _height); }
+    HBITMAP GetBitmap() const { return hbmp; }
+    SizeI Size() const { return SizeI(dx, dy); }
 
     // render the bitmap into the target rectangle (streching and skewing as requird)
     void StretchDIBits(HDC hdc, RectI target) {
         HDC bmpDC = CreateCompatibleDC(hdc);
-        HGDIOBJ oldBmp = SelectObject(bmpDC, _hbmp);
+        HGDIOBJ oldBmp = SelectObject(bmpDC, hbmp);
         SetStretchBltMode(hdc, HALFTONE);
         StretchBlt(hdc, target.x, target.y, target.dx, target.dy,
-            bmpDC, 0, 0, _width, _height, SRCCOPY);
+            bmpDC, 0, 0, dx, dy, SRCCOPY);
         SelectObject(bmpDC, oldBmp);
         DeleteDC(bmpDC);
     }
@@ -48,19 +48,22 @@ public:
         BITMAPINFO bmi = { 0 };
 
         bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
-        bmi.bmiHeader.biHeight = _height;
-        bmi.bmiHeader.biWidth = _width;
+        bmi.bmiHeader.biWidth = dx;
+        bmi.bmiHeader.biHeight = dy;
         bmi.bmiHeader.biPlanes = 1;
         bmi.bmiHeader.biBitCount = 32;
         bmi.bmiHeader.biCompression = BI_RGB;
 
-        unsigned char *bmpData = (unsigned char *)malloc(_width * _height * 4);
-        if (GetDIBits(hDC, _hbmp, 0, _height, bmpData, &bmi, DIB_RGB_COLORS)) {
-            int dataLen = _width * _height * 4;
-            for (int i = 0; i < dataLen; i++)
-                if ((i + 1) % 4) // don't affect the alpha channel
+        int bmpBytes = dx * dy * 4;
+        unsigned char *bmpData = (unsigned char *)malloc(bmpBytes);
+        if (GetDIBits(hDC, hbmp, 0, dy, bmpData, &bmi, DIB_RGB_COLORS)) {
+            for (int i = 0; i < bmpBytes; i++) {
+                if ((i + 1) % 4) {
+                    // don't affect the alpha channel
                     bmpData[i] = (unsigned char)(bmpData[i] * alpha + (alpha > 0 ? 0 : 255));
-            SetDIBits(hDC, _hbmp, 0, _height, bmpData, &bmi, DIB_RGB_COLORS);
+                }
+            }
+            SetDIBits(hDC, hbmp, 0, dy, bmpData, &bmi, DIB_RGB_COLORS);
         }
 
         free(bmpData);
@@ -71,36 +74,35 @@ public:
     // create data for a .bmp file from this bitmap (if saved to disk, the HBITMAP
     // can be deserialized with LoadImage(NULL, ..., LD_LOADFROMFILE) and its
     // dimensions determined with GetObject(hbmp, sizeof(BITMAP), ...) )
-    unsigned char *Serialize(size_t *cbCount) {
+    unsigned char *Serialize(size_t *bmpBytesOut) {
         DWORD bmpHeaderLen = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFO);
-        DWORD bmpDataLen = ((_width * 3 + 3) / 4) * 4 * _height + bmpHeaderLen;
-        unsigned char *bmpData = SAZA(unsigned char, bmpDataLen);
+        DWORD bmpBytes = ((dx * 3 + 3) / 4) * 4 * dy + bmpHeaderLen;
+        unsigned char *bmpData = SAZA(unsigned char, bmpBytes);
         if (!bmpData)
             return NULL;
 
         BITMAPINFO *bmi = (BITMAPINFO *)(bmpData + sizeof(BITMAPFILEHEADER));
         bmi->bmiHeader.biSize = sizeof(bmi->bmiHeader);
-        bmi->bmiHeader.biHeight = _height;
-        bmi->bmiHeader.biWidth = _width;
+        bmi->bmiHeader.biWidth = dx;
+        bmi->bmiHeader.biHeight = dy;
         bmi->bmiHeader.biPlanes = 1;
         bmi->bmiHeader.biBitCount = 24;
         bmi->bmiHeader.biCompression = BI_RGB;
 
         HDC hDC = GetDC(NULL);
-        if (GetDIBits(hDC, _hbmp, 0, _height, bmpData + bmpHeaderLen, bmi, DIB_RGB_COLORS)) {
+        if (GetDIBits(hDC, hbmp, 0, dy, bmpData + bmpHeaderLen, bmi, DIB_RGB_COLORS)) {
             BITMAPFILEHEADER *bmpfh = (BITMAPFILEHEADER *)bmpData;
             bmpfh->bfType = MAKEWORD('B', 'M');
             bmpfh->bfOffBits = bmpHeaderLen;
-            bmpfh->bfSize = bmpDataLen;
-        }
-        else {
+            bmpfh->bfSize = bmpBytes;
+        } else {
             free(bmpData);
             bmpData = NULL;
         }
         ReleaseDC(NULL, hDC);
 
-        if (cbCount)
-            *cbCount = bmpDataLen;
+        if (bmpBytesOut)
+            *bmpBytesOut = bmpBytes;
         return bmpData;
     }
 };

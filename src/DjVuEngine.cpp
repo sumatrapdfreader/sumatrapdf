@@ -43,7 +43,7 @@ RenderedDjVuPixmap::RenderedDjVuPixmap(char *data, int width, int height, bool g
     bmi->bmiHeader.biClrUsed = colors;
 
     HDC hDC = GetDC(NULL);
-    _hbmp = CreateDIBitmap(hDC, &bmi->bmiHeader, CBM_INIT, data, bmi, DIB_RGB_COLORS);
+    hbmp = CreateDIBitmap(hDC, &bmi->bmiHeader, CBM_INIT, data, bmi, DIB_RGB_COLORS);
     ReleaseDC(NULL, hDC);
 
     free(bmi);

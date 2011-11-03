@@ -156,7 +156,7 @@ ProducingPaletteDone:
     bmi->bmiHeader.biSizeImage = h * (hasPalette ? rows8 : w * 4);
     bmi->bmiHeader.biClrUsed = hasPalette ? paletteSize : 0;
 
-    _hbmp = CreateDIBitmap(hDC, &bmi->bmiHeader, CBM_INIT,
+    hbmp = CreateDIBitmap(hDC, &bmi->bmiHeader, CBM_INIT,
         hasPalette ? bmpData : bgrPixmap->samples, bmi, DIB_RGB_COLORS);
 
     fz_drop_pixmap(bgrPixmap);
