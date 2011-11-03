@@ -551,6 +551,7 @@ public:
     ThumbnailRenderingWorkItem(WindowInfo *win, const TCHAR *filePath) :
         UIThreadWorkItem(win), filePath(str::Dup(filePath)), bmp(NULL) {
     }
+
     ~ThumbnailRenderingWorkItem() {
         free((void *)filePath);
         delete bmp;
@@ -562,14 +563,14 @@ public:
     }
 
     virtual void Execute() {
-        if (WindowInfoStillValid(win)) {
-            DisplayState *state = gFileHistory.Find(filePath);
-            if (state) {
-                state->thumbnail = bmp;
-                bmp = NULL;
-                SaveThumbnail(*state);
-            }
-        }
+        if (!WindowInfoStillValid(win))
+            return;
+        DisplayState *ds = gFileHistory.Find(filePath);
+        if (!ds)
+            return;
+        ds->thumbnail = bmp;
+        bmp = NULL;
+        SaveThumbnail(*ds);
     }
 };
 
