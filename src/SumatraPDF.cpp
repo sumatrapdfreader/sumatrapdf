@@ -765,10 +765,8 @@ static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win,
     }
     UpdateFindbox(&win);
 
-    // ui for chm docs is different, so we have to re-create the parts
-    // of ui that are different
+    // menu for chm docs is different, so we have to re-create it
     RebuildMenuBarForWindow(&win);
-    //TODO: also toolbar
 
     int pageCount = win.dm->PageCount();
     if (pageCount > 0) {

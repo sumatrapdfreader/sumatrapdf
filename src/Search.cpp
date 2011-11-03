@@ -25,7 +25,15 @@
 
 bool NeedsFindUI(WindowInfo *win)
 {
-    return !win->IsDocLoaded() || win->dm->engine && !win->dm->engine->IsImageCollection();
+    if (!win->IsDocLoaded())
+        return false;
+    if (!win->dm->engine)
+        return false;
+    if (win->dm->engine->IsImageCollection())
+        return false;
+    if (win->IsChm())
+        return false;
+    return true;
 }
 
 void OnMenuFind(WindowInfo *win)

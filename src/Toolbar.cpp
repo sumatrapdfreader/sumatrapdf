@@ -49,10 +49,13 @@ bool TbIsSeparator(ToolbarButtonInfo& tbi)
 
 static BOOL IsVisibleToolbarButton(WindowInfo *win, int buttonNo)
 {
-    if (!win->dm || !win->dm->engine || !win->dm->engine->IsImageCollection())
+    if (NeedsFindUI(win))
         return TRUE;
 
     int cmdId = gToolbarButtons[buttonNo].cmdId;
+    if (win->IsChm() && ((IDT_VIEW_FIT_WIDTH == cmdId) || (IDT_VIEW_FIT_PAGE == cmdId)))
+        return FALSE;
+
     switch (cmdId) {
         case IDM_FIND_FIRST:
         case IDM_FIND_NEXT:
