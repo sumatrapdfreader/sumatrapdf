@@ -199,6 +199,9 @@ public:
     void Flush(HDC hdc);
 };
 
+void GrayOutBitmap(HBITMAP hbmp, int dx, int dy, float alpha);
+unsigned char *SerializeBitmap(HBITMAP hbmp, int dx, int dy, size_t *bmpBytesOut);
+
 inline void InitAllCommonControls()
 {
     INITCOMMONCONTROLSEX cex = { 0 };

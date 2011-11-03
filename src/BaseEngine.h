@@ -6,6 +6,7 @@
 
 #include "BaseUtil.h"
 #include "GeomUtil.h"
+#include "WinUtil.h"
 #include "Vec.h"
 
 /* certain OCGs will only be rendered for some of these (e.g. watermarks) */
@@ -43,67 +44,12 @@ public:
         DeleteDC(bmpDC);
     }
 
-    void GrayOut(float alpha) {
-        HDC hDC = GetDC(NULL);
-        BITMAPINFO bmi = { 0 };
-
-        bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
-        bmi.bmiHeader.biWidth = dx;
-        bmi.bmiHeader.biHeight = dy;
-        bmi.bmiHeader.biPlanes = 1;
-        bmi.bmiHeader.biBitCount = 32;
-        bmi.bmiHeader.biCompression = BI_RGB;
-
-        int bmpBytes = dx * dy * 4;
-        unsigned char *bmpData = (unsigned char *)malloc(bmpBytes);
-        if (GetDIBits(hDC, hbmp, 0, dy, bmpData, &bmi, DIB_RGB_COLORS)) {
-            for (int i = 0; i < bmpBytes; i++) {
-                if ((i + 1) % 4) {
-                    // don't affect the alpha channel
-                    bmpData[i] = (unsigned char)(bmpData[i] * alpha + (alpha > 0 ? 0 : 255));
-                }
-            }
-            SetDIBits(hDC, hbmp, 0, dy, bmpData, &bmi, DIB_RGB_COLORS);
-        }
-
-        free(bmpData);
-        ReleaseDC(NULL, hDC);
+    void InvertColors() {
+        GrayOutBitmap(hbmp, dx, dy, -1);
     }
-    void InvertColors() { GrayOut(-1); }
 
-    // create data for a .bmp file from this bitmap (if saved to disk, the HBITMAP
-    // can be deserialized with LoadImage(NULL, ..., LD_LOADFROMFILE) and its
-    // dimensions determined with GetObject(hbmp, sizeof(BITMAP), ...) )
     unsigned char *Serialize(size_t *bmpBytesOut) {
-        DWORD bmpHeaderLen = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFO);
-        DWORD bmpBytes = ((dx * 3 + 3) / 4) * 4 * dy + bmpHeaderLen;
-        unsigned char *bmpData = SAZA(unsigned char, bmpBytes);
-        if (!bmpData)
-            return NULL;
-
-        BITMAPINFO *bmi = (BITMAPINFO *)(bmpData + sizeof(BITMAPFILEHEADER));
-        bmi->bmiHeader.biSize = sizeof(bmi->bmiHeader);
-        bmi->bmiHeader.biWidth = dx;
-        bmi->bmiHeader.biHeight = dy;
-        bmi->bmiHeader.biPlanes = 1;
-        bmi->bmiHeader.biBitCount = 24;
-        bmi->bmiHeader.biCompression = BI_RGB;
-
-        HDC hDC = GetDC(NULL);
-        if (GetDIBits(hDC, hbmp, 0, dy, bmpData + bmpHeaderLen, bmi, DIB_RGB_COLORS)) {
-            BITMAPFILEHEADER *bmpfh = (BITMAPFILEHEADER *)bmpData;
-            bmpfh->bfType = MAKEWORD('B', 'M');
-            bmpfh->bfOffBits = bmpHeaderLen;
-            bmpfh->bfSize = bmpBytes;
-        } else {
-            free(bmpData);
-            bmpData = NULL;
-        }
-        ReleaseDC(NULL, hDC);
-
-        if (bmpBytesOut)
-            *bmpBytesOut = bmpBytes;
-        return bmpData;
+        return SerializeBitmap(hbmp, dx, dy, bmpBytesOut);
     }
 };
 
