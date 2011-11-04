@@ -610,8 +610,8 @@ static void CreateChmThumbnail(WindowInfo& win, DisplayState& ds)
     // reusing CANVAS_CLASS_NAME. I don't think exact class matters (WndProc
     // will be taken over by HtmlWindow anyway) but it can't be NULL.
     // TODO: should we render to a bigger size and then scale down?
-    int winDx = THUMBNAIL_DX + GetSystemMetrics(SM_CXVSCROLL) + 80;
-    int winDy = THUMBNAIL_DY + GetSystemMetrics(SM_CYHSCROLL) + 80;
+    int winDx = THUMBNAIL_DX + GetSystemMetrics(SM_CXVSCROLL);
+    int winDy = THUMBNAIL_DY + GetSystemMetrics(SM_CYHSCROLL);
     hwnd = CreateWindow(CANVAS_CLASS_NAME, _T("BrowserCapture"), WS_POPUP, 0, 0, winDx, winDy, NULL, NULL, ghinst, NULL);
     if (!hwnd)
         goto Exit;

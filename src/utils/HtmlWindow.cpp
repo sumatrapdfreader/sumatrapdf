@@ -707,9 +707,6 @@ Exit:
 
 // Take a screenshot of a given area inside a window. Returns a HBITMAP
 // of area.Dx()-area.Dy() size.
-// TODO: not sure what to do if the rendered html is smaller than
-// the size of the area. Return desired size and fill the rest with
-// some background color? Return the smaller bitmap? 
 HBITMAP HtmlWindow::TakeScreenshot(RectI area)
 {
     long                bodyDx, bodyDy;
@@ -726,6 +723,7 @@ HBITMAP HtmlWindow::TakeScreenshot(RectI area)
     IViewObject2 *      view        = NULL;
     HDC                 dc = NULL;
     CImage              image;
+    CImage              imageRes;
     RECTL               rc = { 0, 0, 0, 0};
     HBITMAP             hbmp = NULL;
 
@@ -745,6 +743,9 @@ HBITMAP HtmlWindow::TakeScreenshot(RectI area)
     if (FAILED(hr))
         goto Exit;
 
+    // TODO: I'm really screenshoting a window so should just query
+    // size of the window (which is the same as rootDx/rootDy)
+    // instead of querying all those dimensions
     hr = body2->get_scrollWidth(&bodyDx);
     if (FAILED(hr))
         goto Exit;
@@ -780,22 +781,25 @@ HBITMAP HtmlWindow::TakeScreenshot(RectI area)
     if (FAILED(hr))
         goto Exit;
 
-    image.Create(area.dx, area.dy, 24);
+    // capture the whole window (including scrollbars)
+    // to image and create imageRes containing the area
+    // user asked for
+    image.Create(rootDx, rootDy, 24);
     dc = image.GetDC();
-    rc.right = area.dx;
-    rc.bottom = area.dy;
-    // TODO: don't quite understand how it works. It seems to
-    // drawing the whole area of the window (unfortunately including
-    // scrollbars) and resizing to the size of image.
-    // Maybe I need to create the image that is size of the window,
-    // draw into it and then create a new image with only the
-    // part of the image I want
+    rc.right = rootDx;
+    rc.bottom = rootDy;
     hr = view->Draw(DVASPECT_CONTENT, -1, NULL, NULL, dc,
                           dc, &rc, NULL, NULL, 0);
     image.ReleaseDC();
     if (FAILED(hr))
         goto Exit;
-    hbmp = image.Detach();
+
+    imageRes.Create(area.dx, area.dy, 24);
+    dc = imageRes.GetDC();
+    image.Draw(dc, 0, 0, area.dx, area.dy,
+                   0, 0, area.dx, area.dy);
+    imageRes.ReleaseDC();
+    hbmp = imageRes.Detach();
 
 Exit:
     if (view)
