@@ -386,7 +386,8 @@ HtmlWindow::HtmlWindow(HWND hwnd, HtmlWindowCallback *cb) :
     hwnd(hwnd), webBrowser(NULL), oleObject(NULL),
     oleInPlaceObject(NULL), viewObject(NULL),
     connectionPoint(NULL), oleObjectHwnd(NULL),
-    adviseCookie(0), aboutBlankShown(false), htmlWinCb(cb)
+    adviseCookie(0), aboutBlankShown(false), htmlWinCb(cb),
+    documentLoaded(false)
 {
     assert(hwnd);
     SubclassHtmlHwnd(hwnd, this);
@@ -606,16 +607,6 @@ void IEHtmlWin::OnMouse(wxMouseEvent& event)
 }
 #endif
 
-#if 0
-void IEHtmlWin::OnFinishURL(wxString& url)
-{
-        wxLogTrace("loaded url:");
-        wxLogTrace(url.c_str());
-
-        m_currentUrl = url;
-}
-#endif
-
 void HtmlWindow::NavigateToUrl(const TCHAR *urlStr)
 {
     VARIANT url;
@@ -708,6 +699,124 @@ Exit:
         docDispatch->Release();
 }
 
+#include <atlbase.h>
+#include <atlwin.h>
+#include <atlcom.h>
+#include <atlhost.h>
+#include <atlimage.h>
+
+// Take a screenshot of a given area inside a window. Returns a HBITMAP
+// of area.Dx()-area.Dy() size.
+// TODO: not sure what to do if the rendered html is smaller than
+// the size of the area. Return desired size and fill the rest with
+// some background color? Return the smaller bitmap? 
+HBITMAP HtmlWindow::TakeScreenshot(RectI area)
+{
+    long                bodyDx, bodyDy;
+    long                rootDx, rootDy;
+    long                htmlDx, htmlDy;
+    HRESULT             hr;
+    IDispatch*          docDispatch = NULL;
+    IHTMLDocument2 *    doc         = NULL;
+    IHTMLDocument3 *    doc3        = NULL;
+    IHTMLElement *      body        = NULL;
+    IHTMLElement2 *     body2       = NULL;
+    IHTMLElement *      html        = NULL;
+    IHTMLElement2 *     html2       = NULL;
+    IViewObject2 *      view        = NULL;
+    HDC                 dc = NULL;
+    CImage              image;
+    RECTL               rc = { 0, 0, 0, 0};
+    HBITMAP             hbmp = NULL;
+
+    hr = webBrowser->get_Document(&docDispatch);
+    if (FAILED(hr))
+        goto Exit;
+
+    hr = docDispatch->QueryInterface(IID_IHTMLDocument2, (void**)&doc);
+    if (FAILED(hr))
+        goto Exit;
+
+    hr = doc->get_body(&body);
+    if (FAILED(hr))
+        goto Exit;
+
+    hr = body->QueryInterface(IID_IHTMLElement2, (void**)&body2);
+    if (FAILED(hr))
+        goto Exit;
+
+    hr = body2->get_scrollWidth(&bodyDx);
+    if (FAILED(hr))
+        goto Exit;
+    hr = body2->get_scrollHeight(&bodyDy);
+    if (FAILED(hr))
+        goto Exit;
+
+    hr = docDispatch->QueryInterface(IID_IHTMLDocument3, (void**)&doc3);
+    if (FAILED(hr))
+        goto Exit;
+
+    hr = doc3->get_documentElement(&html);
+    if (FAILED(hr))
+        goto Exit;
+
+    hr = html->QueryInterface(IID_IHTMLElement2, (void**)&html2);
+    if (FAILED(hr))
+        goto Exit;
+
+    hr = html2->get_scrollWidth(&rootDx);
+    if (FAILED(hr))
+        goto Exit;
+    hr = html2->get_scrollHeight(&rootDy);
+    if (FAILED(hr))
+        goto Exit;
+
+    htmlDx = bodyDx;
+    htmlDy = bodyDy;
+    if (rootDy > bodyDy)
+        htmlDy = rootDy;
+
+    hr = doc3->QueryInterface(IID_IViewObject2, (void**)&view);
+    if (FAILED(hr))
+        goto Exit;
+
+    image.Create(area.dx, area.dy, 24);
+    dc = image.GetDC();
+    rc.right = area.dx;
+    rc.bottom = area.dy;
+    // TODO: don't quite understand how it works. It seems to
+    // drawing the whole area of the window (unfortunately including
+    // scrollbars) and resizing to the size of image.
+    // Maybe I need to create the image that is size of the window,
+    // draw into it and then create a new image with only the
+    // part of the image I want
+    hr = view->Draw(DVASPECT_CONTENT, -1, NULL, NULL, dc,
+                          dc, &rc, NULL, NULL, 0);
+    image.ReleaseDC();
+    if (FAILED(hr))
+        goto Exit;
+    hbmp = image.Detach();
+
+Exit:
+    if (view)
+        view->Release();
+    if (html2)
+        html2->Release();
+    if (html)
+        html->Release();
+    if (body2)
+        body2->Release();
+    if (body)
+        body->Release();
+    if (doc)
+        doc->Release();
+    if (doc3)
+        doc3->Release();
+    if (docDispatch)
+        docDispatch->Release();
+    return hbmp;
+}
+
 // the format for chm page is: "its:MyChmFile.chm::mywebpage.htm"
 void HtmlWindow::DisplayChmPage(const TCHAR *chmFilePath, const TCHAR *chmPage)
 {
@@ -721,9 +830,43 @@ void HtmlWindow::DisplayChmPage(const TCHAR *chmFilePath, const TCHAR *chmPage)
 // the navigation.
 bool HtmlWindow::OnBeforeNavigate(const TCHAR *url)
 {
+    documentLoaded = false;
     if (htmlWinCb)
         return htmlWinCb->OnBeforeNavigate(url);
     return true;
+}
+
+void HtmlWindow::OnDocumentComplete(const TCHAR *url)
+{
+    documentLoaded = true;
+}
+
+static void PumpRemainingMessages()
+{
+    MSG msg;
+    for (;;) {
+        bool moreMessages = PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE);
+        if (!moreMessages)
+            return;
+        GetMessage(&msg, NULL, 0, 0);
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+}
+
+// Probably could check IHTMLDocument2::::get_readyState() but checking
+// documentLoaded works
+bool HtmlWindow::WaitUntilLoaded(DWORD maxWaitMs)
+{
+    const DWORD sleepTimeMs = 200; // 0.2 sec
+    DWORD waitTimeMs = 0;
+    while (!documentLoaded && (waitTimeMs < maxWaitMs))
+    {
+        PumpRemainingMessages();
+        Sleep(sleepTimeMs);
+        waitTimeMs += sleepTimeMs;
+    }
+    return documentLoaded;
 }
 
 FrameSite::FrameSite(HtmlWindow * win)
@@ -913,7 +1056,7 @@ HRESULT HW_IDispatch::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid,
         case DISPID_BEFORENAVIGATE2:
         {
             BSTR url;
-            VARIANT * vurl = pDispParams->rgvarg[5].pvarVal;
+            VARIANT *vurl = pDispParams->rgvarg[5].pvarVal;
             if (vurl->vt & VT_BYREF)
                 url = *vurl->pbstrVal;
             else
@@ -933,16 +1076,18 @@ HRESULT HW_IDispatch::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid,
         }
 #endif
 
-#if 0
         case DISPID_DOCUMENTCOMPLETE:
         {
-            VARIANT * vurl = pDispParams->rgvarg[0].pvarVal;
-            if (vurl->vt & VT_BYREF) url = *vurl->pbstrVal;
-            else url = vurl->bstrVal;
-            fs->htmlWwindow->OnFinishURL(url);
+            BSTR url;
+            VARIANT *vurl = pDispParams->rgvarg[0].pvarVal;
+            if (vurl->vt & VT_BYREF)
+                url = *vurl->pbstrVal;
+            else
+                url = vurl->bstrVal;
+            fs->htmlWindow->OnDocumentComplete(url);
             break;
         }
-#endif
+
         default:
             return S_OK;
     }

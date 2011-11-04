@@ -472,10 +472,10 @@ $(OS)\SumatraPDF.obj: src\StressTesting.h src\SumatraAbout.h src\SumatraDialogs.
 $(OS)\SumatraPDF.obj: src\SumatraPDF.h src\SumatraProperties.h src\TableOfContents.h
 $(OS)\SumatraPDF.obj: src\TextSearch.h src\TextSelection.h src\Toolbar.h
 $(OS)\SumatraPDF.obj: src\translations.h src\utils\BaseUtil.h src\utils\FileUtil.h
-$(OS)\SumatraPDF.obj: src\utils\GeomUtil.h src\utils\Http.h src\utils\Scopes.h
-$(OS)\SumatraPDF.obj: src\utils\StrUtil.h src\utils\Touch.h src\utils\UIRibbon.h
-$(OS)\SumatraPDF.obj: src\utils\Vec.h src\utils\WinUtil.h src\Version.h
-$(OS)\SumatraPDF.obj: src\WindowInfo.h
+$(OS)\SumatraPDF.obj: src\utils\GeomUtil.h src\utils\HtmlWindow.h src\utils\Http.h
+$(OS)\SumatraPDF.obj: src\utils\Scopes.h src\utils\SimpleLog.h src\utils\StrUtil.h
+$(OS)\SumatraPDF.obj: src\utils\Touch.h src\utils\UIRibbon.h src\utils\Vec.h
+$(OS)\SumatraPDF.obj: src\utils\WinUtil.h src\Version.h src\WindowInfo.h
 $(OS)\SumatraProperties.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
 $(OS)\SumatraProperties.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
 $(OS)\SumatraProperties.obj: src\EngineManager.h src\ImagesEngine.h src\PdfEngine.h

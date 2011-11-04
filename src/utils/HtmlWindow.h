@@ -4,6 +4,7 @@
 #define HtmlWindow_h
 
 #include "BaseUtil.h"
+#include "GeomUtil.h"
 #include <exdisp.h>
 
 class FrameSite;
@@ -32,6 +33,8 @@ protected:
 
     bool                aboutBlankShown;
 
+    bool                documentLoaded;
+
     HtmlWindowCallback *htmlWinCb;
 
     void EnsureAboutBlankShown();
@@ -48,7 +51,10 @@ public:
     void DisplayChmPage(const TCHAR *chmFilePath, const TCHAR *chmPage);
     void GoBack();
     void GoForward();
+    bool WaitUntilLoaded(DWORD maxWaitMs);
 
+    HBITMAP TakeScreenshot(RectI area);
     bool OnBeforeNavigate(const TCHAR *url);
+    void OnDocumentComplete(const TCHAR *url);
 };
 #endif

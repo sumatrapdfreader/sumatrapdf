@@ -35,6 +35,7 @@
 #include "Selection.h"
 #include "Menu.h"
 #include "Touch.h"
+#include "SimpleLog.h"
 
 #ifdef BUILD_RIBBON
 #include "Ribbon.h"
@@ -542,6 +543,18 @@ void QueueWorkItem(UIThreadWorkItem *wi)
     gUIThreadMarshaller.Queue(wi);
 }
 
+static bool SaveThumbnailForFile(const TCHAR *filePath, RenderedBitmap *bmp)
+{
+    DisplayState *ds = gFileHistory.Find(filePath);
+    if (!ds)
+        return false;
+    if (ds->thumbnail)
+        delete ds->thumbnail;
+    ds->thumbnail = bmp;
+    SaveThumbnail(*ds);
+    return true;
+}
+
 class ThumbnailRenderingWorkItem : public UIThreadWorkItem, public RenderingCallback
 {
     const TCHAR *filePath;
@@ -563,35 +576,71 @@ public:
     }
 
     virtual void Execute() {
-        if (!WindowInfoStillValid(win))
-            return;
-        DisplayState *ds = gFileHistory.Find(filePath);
-        if (!ds)
-            return;
-        ds->thumbnail = bmp;
-        bmp = NULL;
-        SaveThumbnail(*ds);
+        if (SaveThumbnailForFile(filePath, bmp))
+            bmp = NULL;
     }
 };
 
-#include "SimpleLog.h"
+#include "HtmlWindow.h"
 
 // Create a thumbnail of chm document by loading it again and rendering
 // its first page to a hwnd specially created for it. An alternative
 // would be to reuse ChmEngine/HtmlWindow we already have but it has
 // its own problem.
 // Could be done in background but no need to do that unless it's
-// too slow
+// too slow (I've measured it at ~1sec for a sample document)
 static void CreateChmThumbnail(WindowInfo& win, DisplayState& ds)
 {
-    MillisecondTimer t(true);
+    EngineType et;
+    HWND hwnd = NULL;
+    BaseEngine *eng = NULL;
+    ChmEngine *chmEngine = NULL;
+    HtmlWindow *htmlWin = NULL;
+    HBITMAP hbmp = NULL;
+    RenderedBitmap *bmp = NULL;
+    RectI area(0, 0, THUMBNAIL_DX, THUMBNAIL_DY);
 
+    MillisecondTimer t(true);
+    eng = EngineManager::CreateEngine(win.loadedFilePath, NULL, &et);
+    if (!eng)
+        goto Exit;
+    if (et != Engine_Chm)
+        goto Exit;
+
+    // reusing CANVAS_CLASS_NAME. I don't think exact class matters (WndProc
+    // will be taken over by HtmlWindow anyway) but it can't be NULL.
+    // TODO: should we render to a bigger size and then scale down?
+    int winDx = THUMBNAIL_DX + GetSystemMetrics(SM_CXVSCROLL) + 80;
+    int winDy = THUMBNAIL_DY + GetSystemMetrics(SM_CYHSCROLL) + 80;
+    hwnd = CreateWindow(CANVAS_CLASS_NAME, _T("BrowserCapture"), WS_POPUP, 0, 0, winDx, winDy, NULL, NULL, ghinst, NULL);
+    if (!hwnd)
+        goto Exit;
+
+#if 0 // when debugging set to 1 to see the window
+    ShowWindow(hwnd, SW_SHOW);
+#endif
+    chmEngine = reinterpret_cast<ChmEngine*>(eng);
+    chmEngine->HookHwndAndDisplayIndex(hwnd);
+    htmlWin = chmEngine->GetHtmlWindow();
+    if (!htmlWin->WaitUntilLoaded(5*1000))
+        goto Exit;
+    hbmp = htmlWin->TakeScreenshot(area);
+    if (!hbmp)
+        goto Exit;
+    bmp = new RenderedBitmap(hbmp, THUMBNAIL_DX, THUMBNAIL_DY);
+    hbmp = NULL;
+    if (SaveThumbnailForFile(win.loadedFilePath, bmp))
+        bmp = NULL;
+Exit:
     t.Stop();
     double dur = t.GetTimeInMs();
     if (dur > 1000.0) {
         slog::DebugLogger l;
         l.LogFmt(_T("Formatting %s took %.2f secs\n"), win.loadedFilePath, dur / 1000.0);
     }
+    DeleteObject(hbmp);
+    delete eng;
+    DestroyWindow(hwnd);
 }
 
 void CreateThumbnailForFile(WindowInfo& win, DisplayState& ds)
@@ -603,17 +652,19 @@ void CreateThumbnailForFile(WindowInfo& win, DisplayState& ds)
     if (ix < 0 || FILE_HISTORY_MAX_FREQUENT * 2 <= ix)
         return;
 
+    // TODO: for now when testing chm thumbnails, always create the thumbnail
+    // move below when we're done
+    if (win.IsChm()) {
+        CreateChmThumbnail(win, ds);
+        return;
+    }
+
     if (HasThumbnail(ds))
         return;
 
     // don't unnecessarily accumulate thumbnails during a stress test
     if (gIsStressTesting)
         return;
-
-    if (win.IsChm()) {
-        CreateChmThumbnail(win, ds);
-        return;
-    }
 
     RectD pageRect = win.dm->engine->PageMediabox(1);
     if (pageRect.IsEmpty())

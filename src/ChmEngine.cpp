@@ -108,8 +108,9 @@ public:
     virtual void HookHwndAndDisplayIndex(HWND hwnd);
     virtual void DisplayPage(int pageNo);
     virtual void DisplayPageByUrl(const TCHAR *url);
+    virtual HtmlWindow *GetHtmlWindow() const { return htmlWindow; }
 
-    // from HtmlWindowCallback
+        // from HtmlWindowCallback
     virtual bool OnBeforeNavigate(const TCHAR *url);
 
 protected:
