@@ -584,8 +584,7 @@ public:
 // too slow
 static void CreateChmThumbnail(WindowInfo& win, DisplayState& ds)
 {
-    MillisecondTimer t;
-    t.Start();
+    MillisecondTimer t(true);
 
     t.Stop();
     double dur = t.GetTimeInMs();

@@ -169,6 +169,11 @@ class MillisecondTimer {
     }
 
 public:
+    MillisecondTimer(bool start=false) {
+        if (start)
+            Start();
+    }
+
     void Start() { QueryPerformanceCounter(&start); }
     void Stop() { QueryPerformanceCounter(&end); }
 
