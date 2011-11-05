@@ -24,6 +24,7 @@ public:
     virtual HtmlWindow *GetHtmlWindow() const = 0;
     virtual void SetNavigationCalback(ChmNavigationCallback *cb) = 0;
     virtual RenderedBitmap *CreateThumbnail(SizeI size) = 0;
+    virtual void PrintCurrentPage() = 0;
 
     static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
     static ChmEngine *CreateFromFileName(const TCHAR *fileName);

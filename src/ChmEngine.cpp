@@ -134,6 +134,7 @@ public:
     virtual HtmlWindow *GetHtmlWindow() const { return htmlWindow; }
     virtual void SetNavigationCalback(ChmNavigationCallback *cb) { navCb = cb; }
     virtual RenderedBitmap *CreateThumbnail(SizeI size);
+    virtual void PrintCurrentPage();
 
     // from HtmlWindowCallback
     virtual bool OnBeforeNavigate(const TCHAR *url);
@@ -252,6 +253,11 @@ RenderedBitmap *CChmEngine::CreateThumbnail(SizeI size)
 Exit:
     DestroyWindow(hwnd);
     return bmp;
+}
+
+void CChmEngine::PrintCurrentPage()
+{
+    htmlWindow->PrintCurrentPage();
 }
 
 CChmEngine::~CChmEngine()
