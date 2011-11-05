@@ -32,10 +32,8 @@ class HW_IOleClientSite;
 class HW_IOleControlSite;
 class HW_IOleCommandTarget;
 class HW_IOleItemContainer;
-class HW_IDispatch;
 class HW_DWebBrowserEvents2;
 class HW_IAdviseSink2;
-class HW_IAdviseSinkEx;
 
 inline void VariantSetBool(VARIANT *res, bool val)
 {
@@ -59,10 +57,8 @@ class FrameSite : public IUnknown
     friend class HW_IOleControlSite;
     friend class HW_IOleCommandTarget;
     friend class HW_IOleItemContainer;
-    friend class HW_IDispatch;
     friend class HW_DWebBrowserEvents2;
     friend class HW_IAdviseSink2;
-    friend class HW_IAdviseSinkEx;
 
 public:
     FrameSite(HtmlWindow * win);
@@ -82,10 +78,8 @@ protected:
     HW_IOleControlSite *            oleControlSite;
     HW_IOleCommandTarget *          oleCommandTarget;
     HW_IOleItemContainer *          oleItemContainer;
-    HW_IDispatch *                  hwIDispatch;
     HW_DWebBrowserEvents2 *         hwDWebBrowserEvents2;
     HW_IAdviseSink2 *               adviseSink2;
-    HW_IAdviseSinkEx *              adviseSinkEx;
 
     HtmlWindow * htmlWindow;
 
@@ -121,19 +115,19 @@ public:
     ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
     //IOleWindow
     STDMETHODIMP GetWindow(HWND*);
-    STDMETHODIMP ContextSensitiveHelp(BOOL);
+    STDMETHODIMP ContextSensitiveHelp(BOOL) { return S_OK; }
     //IOleInPlaceUIWindow
     STDMETHODIMP GetBorder(LPRECT);
     STDMETHODIMP RequestBorderSpace(LPCBORDERWIDTHS);
-    STDMETHODIMP SetBorderSpace(LPCBORDERWIDTHS);
-    STDMETHODIMP SetActiveObject(IOleInPlaceActiveObject*, LPCOLESTR);
+    STDMETHODIMP SetBorderSpace(LPCBORDERWIDTHS) { return S_OK; }
+    STDMETHODIMP SetActiveObject(IOleInPlaceActiveObject*, LPCOLESTR) { return S_OK; }
     //IOleInPlaceFrame
-    STDMETHODIMP InsertMenus(HMENU, LPOLEMENUGROUPWIDTHS);
-    STDMETHODIMP SetMenu(HMENU, HOLEMENU, HWND);
-    STDMETHODIMP RemoveMenus(HMENU);
-    STDMETHODIMP SetStatusText(LPCOLESTR);
-    STDMETHODIMP EnableModeless(BOOL);
-    STDMETHODIMP TranslateAccelerator(LPMSG, WORD);
+    STDMETHODIMP InsertMenus(HMENU, LPOLEMENUGROUPWIDTHS) { return S_OK; }
+    STDMETHODIMP SetMenu(HMENU, HOLEMENU, HWND) { return S_OK; }
+    STDMETHODIMP RemoveMenus(HMENU) { return S_OK; }
+    STDMETHODIMP SetStatusText(LPCOLESTR) { return S_OK; }
+    STDMETHODIMP EnableModeless(BOOL) { return S_OK; }
+    STDMETHODIMP TranslateAccelerator(LPMSG, WORD) { return E_NOTIMPL; }
 protected:
     FrameSite * fs;
 };
@@ -154,34 +148,34 @@ public:
     STDMETHODIMP ContextSensitiveHelp(BOOL b)
     { return fs->oleInPlaceFrame->ContextSensitiveHelp(b); }
     //IOleInPlaceSite
-    STDMETHODIMP CanInPlaceActivate();
+    STDMETHODIMP CanInPlaceActivate() { return S_OK; }
     STDMETHODIMP OnInPlaceActivate();
     STDMETHODIMP OnUIActivate();
     STDMETHODIMP GetWindowContext(IOleInPlaceFrame**, IOleInPlaceUIWindow**,
             LPRECT, LPRECT, LPOLEINPLACEFRAMEINFO);
-    STDMETHODIMP Scroll(SIZE);
+    STDMETHODIMP Scroll(SIZE) { return S_OK; }
     STDMETHODIMP OnUIDeactivate(BOOL);
     STDMETHODIMP OnInPlaceDeactivate();
-    STDMETHODIMP DiscardUndoState();
-    STDMETHODIMP DeactivateAndUndo();
-    STDMETHODIMP OnPosRectChange(LPCRECT);
+    STDMETHODIMP DiscardUndoState() { return S_OK; }
+    STDMETHODIMP DeactivateAndUndo() { return S_OK; }
+    STDMETHODIMP OnPosRectChange(LPCRECT) { return S_OK; }
     //IOleInPlaceSiteEx
     STDMETHODIMP OnInPlaceActivateEx(BOOL*, DWORD);
-    STDMETHODIMP OnInPlaceDeactivateEx(BOOL);
-    STDMETHODIMP RequestUIActivate();
+    STDMETHODIMP OnInPlaceDeactivateEx(BOOL) { return S_OK; }
+    STDMETHODIMP RequestUIActivate() { return S_FALSE; }
     //IOleInPlaceSiteWindowless
     STDMETHODIMP CanWindowlessActivate();
-    STDMETHODIMP GetCapture();
-    STDMETHODIMP SetCapture(BOOL);
-    STDMETHODIMP GetFocus();
-    STDMETHODIMP SetFocus(BOOL);
+    STDMETHODIMP GetCapture() { return S_FALSE; }
+    STDMETHODIMP SetCapture(BOOL) { return S_FALSE; }
+    STDMETHODIMP GetFocus() { return S_OK; }
+    STDMETHODIMP SetFocus(BOOL) { return S_OK; }
     STDMETHODIMP GetDC(LPCRECT, DWORD, HDC*);
-    STDMETHODIMP ReleaseDC(HDC);
+    STDMETHODIMP ReleaseDC(HDC) { return E_NOTIMPL; }
     STDMETHODIMP InvalidateRect(LPCRECT, BOOL);
-    STDMETHODIMP InvalidateRgn(HRGN, BOOL);
-    STDMETHODIMP ScrollRect(INT, INT, LPCRECT, LPCRECT);
-    STDMETHODIMP AdjustRect(LPRECT);
-    STDMETHODIMP OnDefWindowMessage(UINT, WPARAM, LPARAM, LRESULT*);
+    STDMETHODIMP InvalidateRgn(HRGN, BOOL) { return E_NOTIMPL; }
+    STDMETHODIMP ScrollRect(INT, INT, LPCRECT, LPCRECT) { return E_NOTIMPL; }
+    STDMETHODIMP AdjustRect(LPRECT) { return E_NOTIMPL; }
+    STDMETHODIMP OnDefWindowMessage(UINT, WPARAM, LPARAM, LRESULT*) { return E_NOTIMPL; }
 protected:
     FrameSite *fs;
 };
@@ -197,12 +191,12 @@ public:
     ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
     ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
     //IOleClientSite
-    STDMETHODIMP SaveObject();
-    STDMETHODIMP GetMoniker(DWORD, DWORD, IMoniker**);
+    STDMETHODIMP SaveObject() { return S_OK; }
+    STDMETHODIMP GetMoniker(DWORD, DWORD, IMoniker**) { return E_NOTIMPL; }
     STDMETHODIMP GetContainer(LPOLECONTAINER FAR*);
-    STDMETHODIMP ShowObject();
-    STDMETHODIMP OnShowWindow(BOOL);
-    STDMETHODIMP RequestNewObjectLayout();
+    STDMETHODIMP ShowObject() { return S_OK; }
+    STDMETHODIMP OnShowWindow(BOOL) { return S_OK; }
+    STDMETHODIMP RequestNewObjectLayout() { return E_NOTIMPL; }
 protected:
     FrameSite * fs;
 };
@@ -218,13 +212,13 @@ public:
     ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
     ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
     //IOleControlSite
-    STDMETHODIMP OnControlInfoChanged();
+    STDMETHODIMP OnControlInfoChanged() { return S_OK; }
     STDMETHODIMP LockInPlaceActive(BOOL);
-    STDMETHODIMP GetExtendedControl(IDispatch**);
+    STDMETHODIMP GetExtendedControl(IDispatch**) { return E_NOTIMPL; }
     STDMETHODIMP TransformCoords(POINTL*, POINTF*, DWORD);
-    STDMETHODIMP TranslateAccelerator(LPMSG, DWORD);
-    STDMETHODIMP OnFocus(BOOL);
-    STDMETHODIMP ShowPropertyFrame();
+    STDMETHODIMP TranslateAccelerator(LPMSG, DWORD) { return E_NOTIMPL; }
+    STDMETHODIMP OnFocus(BOOL) { return S_OK; }
+    STDMETHODIMP ShowPropertyFrame() { return E_NOTIMPL; }
 protected:
     FrameSite * fs;
 };
@@ -241,7 +235,7 @@ public:
     ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
     //IOleCommandTarget
     STDMETHODIMP QueryStatus(const GUID*, ULONG, OLECMD[], OLECMDTEXT*);
-    STDMETHODIMP Exec(const GUID*, DWORD, DWORD, VARIANTARG*, VARIANTARG*);
+    STDMETHODIMP Exec(const GUID*, DWORD, DWORD, VARIANTARG*, VARIANTARG*) { return OLECMDERR_E_NOTSUPPORTED; }
 protected:
     FrameSite * fs;
 };
@@ -257,10 +251,10 @@ public:
     ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
     ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
     //IParseDisplayName
-    STDMETHODIMP ParseDisplayName(IBindCtx*, LPOLESTR, ULONG*, IMoniker**);
+    STDMETHODIMP ParseDisplayName(IBindCtx*, LPOLESTR, ULONG*, IMoniker**) { return E_NOTIMPL; }
     //IOleContainer
-    STDMETHODIMP EnumObjects(DWORD, IEnumUnknown**);
-    STDMETHODIMP LockContainer(BOOL);
+    STDMETHODIMP EnumObjects(DWORD, IEnumUnknown**) { return E_NOTIMPL; }
+    STDMETHODIMP LockContainer(BOOL) { return S_OK; }
     //IOleItemContainer
     STDMETHODIMP GetObject(LPOLESTR, DWORD, IBindCtx*, REFIID, void**);
     STDMETHODIMP GetObjectStorage(LPOLESTR, IBindCtx*, REFIID, void**);
@@ -269,31 +263,12 @@ protected:
     FrameSite * fs;
 };
 
-class HW_IDispatch : public IDispatch
-{
-public:
-    HW_IDispatch(FrameSite* fs) : fs(fs) { }
-    ~HW_IDispatch() {}
-
-    //IUnknown
-    STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
-    ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
-    ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
-    //IDispatch
-    STDMETHODIMP GetIDsOfNames(REFIID, OLECHAR**, unsigned int, LCID, DISPID*);
-    STDMETHODIMP GetTypeInfo(unsigned int, LCID, ITypeInfo**);
-    STDMETHODIMP GetTypeInfoCount(unsigned int*);
-    STDMETHODIMP Invoke(DISPID, REFIID, LCID, WORD, DISPPARAMS*, VARIANT*, EXCEPINFO*, UINT*);
-
-    // helper
-    HRESULT DispatchPropGet(DISPID dispIdMember, VARIANT *res);
-
-protected:
-    FrameSite * fs;
-};
-
 class HW_DWebBrowserEvents2 : public DWebBrowserEvents2
 {
+    FrameSite * fs;
+
+    HRESULT DispatchPropGet(DISPID dispIdMember, VARIANT *res);
+
 public:
     HW_DWebBrowserEvents2(FrameSite* fs) : fs(fs) { }
     ~HW_DWebBrowserEvents2() {}
@@ -303,21 +278,16 @@ public:
     ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
     ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
     //IDispatch
-    STDMETHODIMP GetIDsOfNames(REFIID r, OLECHAR** o, unsigned int i, LCID l, DISPID* d)
-    { return fs->hwIDispatch->GetIDsOfNames(r, o, i, l, d); }
-    STDMETHODIMP GetTypeInfo(unsigned int i, LCID l, ITypeInfo** t)
-    { return fs->hwIDispatch->GetTypeInfo(i, l, t); }
-    STDMETHODIMP GetTypeInfoCount(unsigned int* i)
-    { return fs->hwIDispatch->GetTypeInfoCount(i); }
-    STDMETHODIMP Invoke(DISPID d, REFIID r, LCID l, WORD w, DISPPARAMS* dp,
-            VARIANT* v, EXCEPINFO* e, UINT* u)
-    { return fs->hwIDispatch->Invoke(d, r, l, w, dp, v, e, u); }
-protected:
-    FrameSite * fs;
+    STDMETHODIMP GetIDsOfNames(REFIID, OLECHAR**, unsigned int, LCID, DISPID*) { return E_NOTIMPL; }
+    STDMETHODIMP GetTypeInfo(unsigned int, LCID, ITypeInfo**) { return E_NOTIMPL; }
+    STDMETHODIMP GetTypeInfoCount(unsigned int*) { return E_NOTIMPL; }
+    STDMETHODIMP Invoke(DISPID, REFIID, LCID, WORD, DISPPARAMS*, VARIANT*, EXCEPINFO*, UINT*);
 };
 
-class HW_IAdviseSink2 : public IAdviseSink2
+class HW_IAdviseSink2 : public IAdviseSink2, public IAdviseSinkEx
 {
+    FrameSite * fs;
+
 public:
     HW_IAdviseSink2(FrameSite* fs) : fs(fs) { }
     ~HW_IAdviseSink2() {}
@@ -327,42 +297,18 @@ public:
     ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
     ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
     //IAdviseSink
-    void STDMETHODCALLTYPE OnDataChange(FORMATETC*, STGMEDIUM*);
-    void STDMETHODCALLTYPE OnViewChange(DWORD, LONG);
-    void STDMETHODCALLTYPE OnRename(IMoniker*);
-    void STDMETHODCALLTYPE OnSave();
-    void STDMETHODCALLTYPE OnClose();
+    void STDMETHODCALLTYPE OnDataChange(FORMATETC*, STGMEDIUM*) { }
+    void STDMETHODCALLTYPE OnViewChange(DWORD, LONG) {
+        // redraw the control
+        fs->oleInPlaceSiteWindowless->InvalidateRect(NULL, FALSE);
+    }
+    void STDMETHODCALLTYPE OnRename(IMoniker*) { }
+    void STDMETHODCALLTYPE OnSave() { }
+    void STDMETHODCALLTYPE OnClose() { }
     //IAdviseSink2
-    void STDMETHODCALLTYPE OnLinkSrcChange(IMoniker*);
-protected:
-    FrameSite * fs;
-};
-
-class HW_IAdviseSinkEx : public IAdviseSinkEx
-{
-public:
-    HW_IAdviseSinkEx(FrameSite* fs) : fs(fs) { }
-    ~HW_IAdviseSinkEx() {}
-
-    //IUnknown
-    STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
-    ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
-    ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
-    //IAdviseSink
-    void STDMETHODCALLTYPE OnDataChange(FORMATETC* f, STGMEDIUM* s)
-    { fs->adviseSink2->OnDataChange(f, s); }
-    void STDMETHODCALLTYPE OnViewChange(DWORD d, LONG l)
-    { fs->adviseSink2->OnViewChange(d, l); }
-    void STDMETHODCALLTYPE OnRename(IMoniker* i)
-    { fs->adviseSink2->OnRename(i); }
-    void STDMETHODCALLTYPE OnSave()
-    { fs->adviseSink2->OnSave(); }
-    void STDMETHODCALLTYPE OnClose()
-    { fs->adviseSink2->OnClose(); }
+    void STDMETHODCALLTYPE OnLinkSrcChange(IMoniker*) { }
     //IAdviseSinkEx
-    void STDMETHODCALLTYPE OnViewStatusChange(DWORD);
-protected:
-    FrameSite * fs;
+    void STDMETHODCALLTYPE OnViewStatusChange(DWORD) { }
 };
 
 static LRESULT CALLBACK WndProcHtml(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -583,43 +529,36 @@ void HtmlWindow::EnsureAboutBlankShown()
     aboutBlankShown = true;
 
     NavigateToUrl(_T("about:blank"));
-    IHTMLDocument2 *doc = NULL;
-    HRESULT hr = S_OK;
+    ScopedComQIPtr<IHTMLDocument2> doc;
     // wait until shown
-    while ((doc == NULL) && (hr == S_OK)) {
+    while (!doc) {
         Sleep(0);
-        IDispatch *docDispatch = NULL;
-        hr = webBrowser->get_Document(&docDispatch);
-        if (SUCCEEDED(hr) && (docDispatch != NULL)) {
-            hr = docDispatch->QueryInterface(IID_IHTMLDocument2, (void **)&doc);
-            docDispatch->Release();
-        }
+        ScopedComPtr<IDispatch> docDispatch;
+        HRESULT hr = webBrowser->get_Document(&docDispatch);
+        if (SUCCEEDED(hr) && docDispatch)
+            doc = docDispatch;
     }
-
-    if (doc != NULL)
-        doc->Release();
 }
 
 void HtmlWindow::DisplayHtml(const TCHAR *html)
 {
-    LPDISPATCH       docDispatch = NULL;
-    IHTMLDocument2 * doc = NULL;
-    SAFEARRAY *      arr = NULL;
-    VARIANT *        var = NULL;
-
     // don't know why, but that's what other people do
     EnsureAboutBlankShown();
+
+    ScopedComPtr<IDispatch> docDispatch;
     HRESULT hr = webBrowser->get_Document(&docDispatch);
     if (FAILED(hr))
-        goto Exit;
+        return;
 
-    hr = docDispatch->QueryInterface(IID_IHTMLDocument2, (void**)&doc);
-    if (FAILED(hr))
-        goto Exit;
+    ScopedComQIPtr<IHTMLDocument2> doc(docDispatch);
+    if (!doc)
+        return;
 
-    arr = SafeArrayCreateVector(VT_VARIANT, 0, 1);
+    SAFEARRAY *arr = SafeArrayCreateVector(VT_VARIANT, 0, 1);
     if (!arr)
-        goto Exit;
+        return;
+
+    VARIANT *var = NULL;
     hr = SafeArrayAccessData(arr, (void**)&var);
     if (FAILED(hr))
         goto Exit;
@@ -629,18 +568,11 @@ void HtmlWindow::DisplayHtml(const TCHAR *html)
         goto Exit;
     SafeArrayUnaccessData(arr);
 
-    hr = doc->write(arr);
+    doc->write(arr);
     doc->close();
-    if (FAILED(hr))
-        goto Exit;
 
 Exit:
-    if (arr)
-        SafeArrayDestroy(arr);
-    if (doc)
-        doc->Release();
-    if (docDispatch)
-        docDispatch->Release();
+    SafeArrayDestroy(arr);
 }
 
 // Take a screenshot of a given <area> inside an html window and resize
@@ -765,18 +697,14 @@ FrameSite::FrameSite(HtmlWindow * win)
     oleControlSite = new HW_IOleControlSite(this);
     oleCommandTarget = new HW_IOleCommandTarget(this);
     oleItemContainer = new HW_IOleItemContainer(this);
-    hwIDispatch = new HW_IDispatch(this);
     hwDWebBrowserEvents2 = new HW_DWebBrowserEvents2(this);
     adviseSink2 = new HW_IAdviseSink2(this);
-    adviseSinkEx = new HW_IAdviseSinkEx(this);
 }
 
 FrameSite::~FrameSite()
 {
-    delete adviseSinkEx;
     delete adviseSink2;
     delete hwDWebBrowserEvents2;
-    delete hwIDispatch;
     delete oleItemContainer;
     delete oleCommandTarget;
     delete oleControlSite;
@@ -812,15 +740,13 @@ STDMETHODIMP FrameSite::QueryInterface(REFIID riid, void **ppv)
         riid == IID_IOleContainer ||
         riid == IID_IParseDisplayName)
         *ppv = oleItemContainer;
-    else if (riid == IID_IDispatch)
-        *ppv = hwIDispatch;
-    else if (riid == DIID_DWebBrowserEvents2)
+    else if (riid == IID_IDispatch ||
+        riid == DIID_DWebBrowserEvents2)
         *ppv = hwDWebBrowserEvents2;
     else if (riid == IID_IAdviseSink ||
-        riid == IID_IAdviseSink2)
+        riid == IID_IAdviseSink2 ||
+        riid == IID_IAdviseSinkEx)
         *ppv = adviseSink2;
-    else if (riid == IID_IAdviseSinkEx)
-        *ppv = adviseSinkEx;
 
     if (*ppv == NULL)
         return E_NOINTERFACE;
@@ -844,23 +770,7 @@ STDMETHODIMP_(ULONG) FrameSite::Release()
 }
 
 //IDispatch
-HRESULT HW_IDispatch::GetIDsOfNames(REFIID riid, OLECHAR ** rgszNames,
-    unsigned int cNames, LCID lcid, DISPID * rgDispId)
-{
-    return E_NOTIMPL;
-}
-
-HRESULT HW_IDispatch::GetTypeInfo(unsigned int iTInfo, LCID lcid, ITypeInfo ** ppTInfo)
-{
-    return E_NOTIMPL;
-}
-
-HRESULT HW_IDispatch::GetTypeInfoCount(unsigned int * pcTInfo)
-{
-    return E_NOTIMPL;
-}
-
-HRESULT HW_IDispatch::DispatchPropGet(DISPID dispIdMember, VARIANT *res)
+HRESULT HW_DWebBrowserEvents2::DispatchPropGet(DISPID dispIdMember, VARIANT *res)
 {
     if (res == NULL)
         return E_INVALIDARG;
@@ -901,7 +811,7 @@ HRESULT HW_IDispatch::DispatchPropGet(DISPID dispIdMember, VARIANT *res)
     return S_OK;
 }
 
-HRESULT HW_IDispatch::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid,
+HRESULT HW_DWebBrowserEvents2::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid,
     WORD flags, DISPPARAMS * pDispParams, VARIANT * pVarResult,
     EXCEPINFO * pExcepInfo, unsigned int * puArgErr)
 {
@@ -960,11 +870,6 @@ HRESULT HW_IOleInPlaceFrame::GetWindow(HWND *phwnd)
     return S_OK;
 }
 
-HRESULT HW_IOleInPlaceFrame::ContextSensitiveHelp(BOOL fEnterMode)
-{
-    return S_OK;
-}
-
 //IOleInPlaceUIWindow
 HRESULT HW_IOleInPlaceFrame::GetBorder(LPRECT lprectBorder)
 {
@@ -980,53 +885,7 @@ HRESULT HW_IOleInPlaceFrame::RequestBorderSpace(LPCBORDERWIDTHS pborderwidths)
     return INPLACE_E_NOTOOLSPACE;
 }
 
-HRESULT HW_IOleInPlaceFrame::SetBorderSpace(LPCBORDERWIDTHS pborderwidths)
-{
-    return S_OK;
-}
-
-HRESULT HW_IOleInPlaceFrame::SetActiveObject(IOleInPlaceActiveObject *pActiveObject, LPCOLESTR pszObjName)
-{
-    return S_OK;
-}
-
-//IOleInPlaceFrame
-HRESULT HW_IOleInPlaceFrame::InsertMenus(HMENU hmenuShared, LPOLEMENUGROUPWIDTHS lpMenuWidths)
-{
-    return S_OK;
-}
-
-HRESULT HW_IOleInPlaceFrame::SetMenu(HMENU hmenuShared, HOLEMENU holemenu, HWND hwndActiveObject)
-{
-    return S_OK;
-}
-
-HRESULT HW_IOleInPlaceFrame::RemoveMenus(HMENU hmenuShared)
-{
-    return S_OK;
-}
-
-HRESULT HW_IOleInPlaceFrame::SetStatusText(LPCOLESTR pszStatusText)
-{
-    return S_OK;
-}
-
-HRESULT HW_IOleInPlaceFrame::EnableModeless(BOOL fEnable)
-{
-    return S_OK;
-}
-
-HRESULT HW_IOleInPlaceFrame::TranslateAccelerator(LPMSG lpmsg, WORD wID)
-{
-    return E_NOTIMPL;
-}
-
 //IOleInPlaceSite
-HRESULT HW_IOleInPlaceSiteWindowless::CanInPlaceActivate()
-{
-    return S_OK;
-}
-
 HRESULT HW_IOleInPlaceSiteWindowless::OnInPlaceActivate()
 {
     fs->inPlaceActive = true;
@@ -1066,11 +925,6 @@ HRESULT HW_IOleInPlaceSiteWindowless::GetWindowContext(
     return S_OK;
 }
 
-HRESULT HW_IOleInPlaceSiteWindowless::Scroll(SIZE scrollExtent)
-{
-    return S_OK;
-}
-
 HRESULT HW_IOleInPlaceSiteWindowless::OnUIDeactivate(BOOL fUndoable)
 {
     fs->uiActive = false;
@@ -1083,21 +937,6 @@ HRESULT HW_IOleInPlaceSiteWindowless::OnInPlaceDeactivate()
     return S_OK;
 }
 
-HRESULT HW_IOleInPlaceSiteWindowless::DiscardUndoState()
-{
-    return S_OK;
-}
-
-HRESULT HW_IOleInPlaceSiteWindowless::DeactivateAndUndo()
-{
-    return S_OK;
-}
-
-HRESULT HW_IOleInPlaceSiteWindowless::OnPosRectChange(LPCRECT lprcPosRect)
-{
-    return S_OK;
-}
-
 //IOleInPlaceSiteEx
 HRESULT HW_IOleInPlaceSiteWindowless::OnInPlaceActivateEx(BOOL * pfNoRedraw, DWORD dwFlags)
 {
@@ -1106,40 +945,10 @@ HRESULT HW_IOleInPlaceSiteWindowless::OnInPlaceActivateEx(BOOL * pfNoRedraw, DWO
     return S_OK;
 }
 
-HRESULT HW_IOleInPlaceSiteWindowless::OnInPlaceDeactivateEx(BOOL fNoRedraw)
-{
-    return S_OK;
-}
-
-HRESULT HW_IOleInPlaceSiteWindowless::RequestUIActivate()
-{
-    return S_FALSE;
-}
-
 //IOleInPlaceSiteWindowless
 HRESULT HW_IOleInPlaceSiteWindowless::CanWindowlessActivate()
 {
     return fs->supportsWindowlessActivation ? S_OK : S_FALSE;
-}
-
-HRESULT HW_IOleInPlaceSiteWindowless::GetCapture()
-{
-    return S_FALSE;
-}
-
-HRESULT HW_IOleInPlaceSiteWindowless::SetCapture(BOOL fCapture)
-{
-    return S_FALSE;
-}
-
-HRESULT HW_IOleInPlaceSiteWindowless::GetFocus()
-{
-    return S_OK;
-}
-
-HRESULT HW_IOleInPlaceSiteWindowless::SetFocus(BOOL fFocus)
-{
-    return S_OK;
 }
 
 HRESULT HW_IOleInPlaceSiteWindowless::GetDC(LPCRECT pRect, DWORD grfFlags, HDC* phDC)
@@ -1160,11 +969,6 @@ HRESULT HW_IOleInPlaceSiteWindowless::GetDC(LPCRECT pRect, DWORD grfFlags, HDC* 
     return E_NOTIMPL;
 }
 
-HRESULT HW_IOleInPlaceSiteWindowless::ReleaseDC(HDC hDC)
-{
-    return E_NOTIMPL;
-}
-
 HRESULT HW_IOleInPlaceSiteWindowless::InvalidateRect(LPCRECT pRect, BOOL fErase)
 {
 
@@ -1172,76 +976,12 @@ HRESULT HW_IOleInPlaceSiteWindowless::InvalidateRect(LPCRECT pRect, BOOL fErase)
     return S_OK;
 }
 
-HRESULT HW_IOleInPlaceSiteWindowless::InvalidateRgn(HRGN, BOOL)
-{
-    return E_NOTIMPL;
-}
-
-HRESULT HW_IOleInPlaceSiteWindowless::ScrollRect(INT, INT, LPCRECT, LPCRECT)
-{
-    return E_NOTIMPL;
-}
-
-HRESULT HW_IOleInPlaceSiteWindowless::AdjustRect(LPRECT)
-{
-    return E_NOTIMPL;
-}
-
-HRESULT HW_IOleInPlaceSiteWindowless::OnDefWindowMessage(UINT, WPARAM, LPARAM, LRESULT*)
-{
-    return E_NOTIMPL;
-}
-
 //IOleClientSite
-HRESULT HW_IOleClientSite::SaveObject()
-{
-    return S_OK;
-}
-
-HRESULT HW_IOleClientSite::GetMoniker(DWORD dwAssign, DWORD dwWhichMoniker,
-                                      IMoniker ** ppmk)
-{
-    return E_NOTIMPL;
-}
-
 HRESULT HW_IOleClientSite::GetContainer(LPOLECONTAINER * ppContainer)
 {
     if (ppContainer == NULL)
         return E_INVALIDARG;
     return QueryInterface(IID_IOleContainer, (void**)ppContainer);
-}
-
-HRESULT HW_IOleClientSite::ShowObject()
-{
-    return S_OK;
-}
-
-HRESULT HW_IOleClientSite::OnShowWindow(BOOL fShow)
-{
-    return S_OK;
-}
-
-HRESULT HW_IOleClientSite::RequestNewObjectLayout()
-{
-    return E_NOTIMPL;
-}
-
-//IParseDisplayName
-HRESULT HW_IOleItemContainer::ParseDisplayName(IBindCtx *pbc,
-    LPOLESTR pszDisplayName, ULONG *pchEaten, IMoniker **ppmkOut)
-{
-    return E_NOTIMPL;
-}
-
-//IOleContainer
-HRESULT HW_IOleItemContainer::EnumObjects(DWORD grfFlags, IEnumUnknown **ppenum)
-{
-    return E_NOTIMPL;
-}
-
-HRESULT HW_IOleItemContainer::LockContainer(BOOL fLock)
-{
-    return S_OK;
 }
 
 //IOleItemContainer
@@ -1275,20 +1015,10 @@ HRESULT HW_IOleItemContainer::IsRunning(LPOLESTR pszItem)
 }
 
 //IOleControlSite
-HRESULT HW_IOleControlSite::OnControlInfoChanged()
-{
-    return S_OK;
-}
-
 HRESULT HW_IOleControlSite::LockInPlaceActive(BOOL fLock)
 {
     fs->inPlaceLocked = (fLock == TRUE);
     return S_OK;
-}
-
-HRESULT HW_IOleControlSite::GetExtendedControl(IDispatch ** ppDisp)
-{
-    return E_NOTIMPL;
 }
 
 HRESULT HW_IOleControlSite::TransformCoords(POINTL *pPtlHimetric,
@@ -1302,21 +1032,6 @@ HRESULT HW_IOleControlSite::TransformCoords(POINTL *pPtlHimetric,
     return hr;
 }
 
-HRESULT HW_IOleControlSite::TranslateAccelerator(LPMSG pMsg, DWORD grfModifiers)
-{
-    return E_NOTIMPL;
-}
-
-HRESULT HW_IOleControlSite::OnFocus(BOOL fGotFocus)
-{
-    return S_OK;
-}
-
-HRESULT HW_IOleControlSite::ShowPropertyFrame()
-{
-    return E_NOTIMPL;
-}
-
 //IOleCommandTarget
 HRESULT HW_IOleCommandTarget::QueryStatus(const GUID *pguidCmdGroup, 
     ULONG cCmds, OLECMD *prgCmds, OLECMDTEXT *pCmdTet)
@@ -1324,43 +1039,4 @@ HRESULT HW_IOleCommandTarget::QueryStatus(const GUID *pguidCmdGroup,
     if (prgCmds == NULL)
         return E_INVALIDARG;
     return OLECMDERR_E_UNKNOWNGROUP;
-}
-
-HRESULT HW_IOleCommandTarget::Exec(const GUID *pguidCmdGroup, DWORD nCmdID,
-    DWORD nCmdExecOpt, VARIANTARG *pVaIn, VARIANTARG *pVaOut)
-{
-    return OLECMDERR_E_NOTSUPPORTED;
-}
-
-//IAdviseSink
-void STDMETHODCALLTYPE HW_IAdviseSink2::OnDataChange(FORMATETC * pFormatEtc, STGMEDIUM * pgStgMed)
-{
-}
-
-void STDMETHODCALLTYPE HW_IAdviseSink2::OnViewChange(DWORD dwAspect, LONG lIndex)
-{
-    // redraw the control
-    fs->oleInPlaceSiteWindowless->InvalidateRect(NULL, FALSE);
-}
-
-void STDMETHODCALLTYPE HW_IAdviseSink2::OnRename(IMoniker * pmk)
-{
-}
-
-void STDMETHODCALLTYPE HW_IAdviseSink2::OnSave()
-{
-}
-
-void STDMETHODCALLTYPE HW_IAdviseSink2::OnClose()
-{
-}
-
-//IAdviseSink2
-void STDMETHODCALLTYPE HW_IAdviseSink2::OnLinkSrcChange(IMoniker * pmk)
-{
-}
-
-//IAdviseSinkEx
-void STDMETHODCALLTYPE HW_IAdviseSinkEx::OnViewStatusChange(DWORD dwViewStatus)
-{
 }

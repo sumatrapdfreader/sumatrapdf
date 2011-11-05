@@ -60,4 +60,5 @@ public:
     bool OnBeforeNavigate(const TCHAR *url);
     void OnDocumentComplete(const TCHAR *url);
 };
+
 #endif
