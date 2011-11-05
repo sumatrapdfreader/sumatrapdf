@@ -57,17 +57,10 @@ bool CanViewExternally(WindowInfo *win)
     return file::Exists(win->loadedFilePath);
 }
 
-bool IsNonPdfDocument(WindowInfo *win)
-{
-    if (!win || !win->dm)
-        return false;
-    return win->dm->engineType != Engine_PDF;
-}
-
 bool CanViewWithFoxit(WindowInfo *win)
 {
     // Requirements: a valid filename and a valid path to Foxit
-    if (!CanViewExternally(win) || IsNonPdfDocument(win))
+    if (!CanViewExternally(win) || win && !win->IsPdf())
         return false;
     ScopedMem<TCHAR> path(GetFoxitPath());
     return path != NULL;
@@ -94,7 +87,7 @@ bool ViewWithFoxit(WindowInfo *win, TCHAR *args)
 bool CanViewWithPDFXChange(WindowInfo *win)
 {
     // Requirements: a valid filename and a valid path to PDF X-Change
-    if (!CanViewExternally(win) || IsNonPdfDocument(win))
+    if (!CanViewExternally(win) || win && !win->IsPdf())
         return false;
     ScopedMem<TCHAR> path(GetPDFXChangePath());
     return path != NULL;
@@ -121,7 +114,7 @@ bool ViewWithPDFXChange(WindowInfo *win, TCHAR *args)
 bool CanViewWithAcrobat(WindowInfo *win)
 {
     // Requirements: a valid filename and a valid path to Adobe Reader
-    if (!CanViewExternally(win) || IsNonPdfDocument(win))
+    if (!CanViewExternally(win) || win && !win->IsPdf())
         return false;
     ScopedMem<TCHAR> exePath(GetAcrobatPath());
     return exePath != NULL;

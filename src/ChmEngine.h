@@ -20,7 +20,10 @@ public:
     virtual void DisplayPage(int pageNo) = 0;
     virtual void SetNavigationCalback(ChmNavigationCallback *cb) = 0;
     virtual RenderedBitmap *CreateThumbnail(SizeI size) = 0;
+
     virtual void PrintCurrentPage() = 0;
+    virtual bool CanNavigate(int dir) = 0;
+    virtual void Navigate(int dir) = 0;
 
     static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
     static ChmEngine *CreateFromFileName(const TCHAR *fileName);

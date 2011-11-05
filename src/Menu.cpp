@@ -320,9 +320,8 @@ void MenuUpdateStateForWindow(WindowInfo* win) {
         IDM_GOTO_FIRST_PAGE, IDM_GOTO_LAST_PAGE, IDM_GOTO_NAV_BACK, IDM_GOTO_NAV_FORWARD,
         IDM_GOTO_PAGE, IDM_FIND_FIRST, IDM_SAVEAS, IDM_SAVEAS_BOOKMARK, IDM_SEND_BY_EMAIL,
         IDM_VIEW_WITH_ACROBAT, IDM_VIEW_WITH_FOXIT, IDM_VIEW_WITH_PDF_XCHANGE, 
-        IDM_SELECT_ALL, IDM_COPY_SELECTION, IDM_PROPERTIES, IDM_VIEW_PRESENTATION_MODE };
-    static UINT menusToDisableIfNotPdfDocument[] = {
-        IDM_VIEW_WITH_ACROBAT, IDM_VIEW_WITH_FOXIT, IDM_VIEW_WITH_PDF_XCHANGE
+        IDM_SELECT_ALL, IDM_COPY_SELECTION, IDM_PROPERTIES, IDM_VIEW_PRESENTATION_MODE,
+        IDM_VIEW_WITH_ACROBAT, IDM_VIEW_WITH_FOXIT, IDM_VIEW_WITH_PDF_XCHANGE,
     };
     static UINT menusToDisableIfDirectory[] = {
         IDM_SAVEAS, IDM_SEND_BY_EMAIL
@@ -353,13 +352,6 @@ void MenuUpdateStateForWindow(WindowInfo* win) {
     for (int i = 0; i < dimof(menusToDisableIfNoDocument); i++) {
         UINT id = menusToDisableIfNoDocument[i];
         win::menu::SetEnabled(win->menu, id, win->IsDocLoaded());
-    }
-
-    if (IsNonPdfDocument(win)) {
-        for (int i = 0; i < dimof(menusToDisableIfNotPdfDocument); i++) {
-            UINT id = menusToDisableIfNotPdfDocument[i];
-            win::menu::SetEnabled(win->menu, id, false);
-        }
     }
 
     if (win->dm && Engine_ImageDir == win->dm->engineType) {

@@ -1454,6 +1454,8 @@ void DisplayModel::AddNavPoint(bool keepForward)
 
 bool DisplayModel::CanNavigate(int dir) const
 {
+    if (AsChmEngine())
+        return AsChmEngine()->CanNavigate(dir);
     return navHistoryIx + dir >= 0 && navHistoryIx + dir < navHistoryEnd && (navHistoryIx != NAV_HISTORY_LEN || navHistoryIx + dir != 0);
 }
 
@@ -1462,6 +1464,8 @@ void DisplayModel::Navigate(int dir)
 {
     if (!CanNavigate(dir))
         return;
+    if (AsChmEngine())
+        return AsChmEngine()->Navigate(dir);
     AddNavPoint(true);
     navHistoryIx += dir - 1; // -1 because adding a nav point increases the index
     if (dir != 0 && navHistory[navHistoryIx].page != 0)

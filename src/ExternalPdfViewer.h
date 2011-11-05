@@ -6,7 +6,6 @@
 
 class WindowInfo;
 
-bool IsNonPdfDocument(WindowInfo *win=NULL);
 bool CanViewExternally(WindowInfo *win=NULL);
 bool CanViewWithFoxit(WindowInfo *win=NULL);
 bool ViewWithFoxit(WindowInfo *win, TCHAR *args=NULL);

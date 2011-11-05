@@ -343,7 +343,7 @@ HtmlWindow::HtmlWindow(HWND hwnd, HtmlWindowCallback *cb) :
     oleInPlaceObject(NULL), viewObject(NULL),
     connectionPoint(NULL), oleObjectHwnd(NULL),
     adviseCookie(0), aboutBlankShown(false), htmlWinCb(cb),
-    documentLoaded(false)
+    documentLoaded(false), canGoBack(false), canGoForward(false)
 {
     assert(hwnd);
     SubclassHtmlHwnd(hwnd, this);
@@ -824,8 +824,12 @@ HRESULT HW_DWebBrowserEvents2::Invoke(DISPID dispIdMember, REFIID riid, LCID lci
                 url = *vurl->pbstrVal;
             else
                 url = vurl->bstrVal;
+#ifdef UNICODE
             bool shouldCancel = !fs->htmlWindow->OnBeforeNavigate(url);
-            *pDispParams->rgvarg->pboolVal = shouldCancel ? VARIANT_TRUE : VARIANT_FALSE;
+#else
+            bool shouldCancel = !fs->htmlWindow->OnBeforeNavigate(ScopedMem<char>(str::conv::ToAnsi(url)));
+#endif
+            *pDispParams->rgvarg[0].pboolVal = shouldCancel ? VARIANT_TRUE : VARIANT_FALSE;
             break;
         }
 
@@ -847,13 +851,26 @@ HRESULT HW_DWebBrowserEvents2::Invoke(DISPID dispIdMember, REFIID riid, LCID lci
                 url = *vurl->pbstrVal;
             else
                 url = vurl->bstrVal;
+#ifdef UNICODE
             fs->htmlWindow->OnDocumentComplete(url);
+#else
+            fs->htmlWindow->OnDocumentComplete(ScopedMem<char>(str::conv::ToAnsi(url)));
+#endif
             break;
         }
 
-        default:
-            return S_OK;
+        case DISPID_COMMANDSTATECHANGE:
+            switch (pDispParams->rgvarg[1].lVal) {
+            case CSC_NAVIGATEBACK:
+                fs->htmlWindow->canGoBack = pDispParams->rgvarg[0].boolVal;
+                break;
+            case CSC_NAVIGATEFORWARD:
+                fs->htmlWindow->canGoForward = pDispParams->rgvarg[0].boolVal;
+                break;
+            }
+            break;
     }
+
     return S_OK;
 }
 

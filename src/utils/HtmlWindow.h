@@ -58,6 +58,9 @@ public:
     HBITMAP TakeScreenshot(RectI area, SizeI finalSize);
     bool OnBeforeNavigate(const TCHAR *url);
     void OnDocumentComplete(const TCHAR *url);
+
+    bool canGoBack;
+    bool canGoForward;
 };
 
 #endif

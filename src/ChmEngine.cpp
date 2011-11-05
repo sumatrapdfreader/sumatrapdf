@@ -118,7 +118,10 @@ public:
     virtual void DisplayPage(int pageNo) { DisplayPage(pages.At(pageNo - 1)); }
     virtual void SetNavigationCalback(ChmNavigationCallback *cb) { navCb = cb; }
     virtual RenderedBitmap *CreateThumbnail(SizeI size);
+
     virtual void PrintCurrentPage() { htmlWindow->PrintCurrentPage(); }
+    virtual bool CanNavigate(int dir);
+    virtual void Navigate(int dir);
 
     // from HtmlWindowCallback
     virtual bool OnBeforeNavigate(const TCHAR *url);
@@ -218,6 +221,24 @@ RenderedBitmap *CChmEngine::CreateThumbnail(SizeI size)
 Exit:
     DestroyWindow(hwnd);
     return bmp;
+}
+
+bool CChmEngine::CanNavigate(int dir)
+{
+    if (dir < 0)
+        return htmlWindow->canGoBack;
+    return htmlWindow->canGoForward;
+}
+
+void CChmEngine::Navigate(int dir)
+{
+    if (dir < 0) {
+        for (; dir < 0 && CanNavigate(dir); dir++)
+            htmlWindow->GoBack();
+    } else {
+        for (; dir > 0 && CanNavigate(dir); dir--)
+            htmlWindow->GoForward();
+    }
 }
 
 CChmEngine::~CChmEngine()

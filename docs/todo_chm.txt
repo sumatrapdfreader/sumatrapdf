@@ -1,7 +1,6 @@
 List of things to do before we can ship CHM support:
 
 * make zoom (both toolbar and menu items) for chm docs work
-* hook back/forward menu to HtmlWindow's GoBack()/GoForward()
 * make scrolling in html window with cursor up/down etc. work
   (is it a matter of passing the messages through ?).
   Notes: I don't understand how this is supposed to work. Presumably web browser control
@@ -33,3 +32,4 @@ Done:
 * hook up print menu/toolbar to printing a single page of the document
   (as invoked from context menu)
 * be more lenient in parsing ToC trees (many chm docs fail to load)
+* hook back/forward menu to HtmlWindow's GoBack()/GoForward()
