@@ -472,7 +472,7 @@ void OnMenuCustomZoom(WindowInfo* win)
         return;
 
     float zoom = win->dm->ZoomVirtual();
-    if (IDCANCEL == Dialog_CustomZoom(win->hwndFrame, &zoom))
+    if (!Dialog_CustomZoom(win->hwndFrame, win->IsChm(), &zoom))
         return;
     ZoomToSelection(win, zoom, false);
 }

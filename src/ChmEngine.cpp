@@ -184,6 +184,15 @@ void CChmEngine::DisplayPage(const TCHAR *pageUrl)
     // cf. http://msdn.microsoft.com/en-us/library/aa164814(v=office.10).aspx
     ScopedMem<TCHAR> url(str::Format(_T("its:%s::/%s"), fileName, pageUrl));
     htmlWindow->NavigateToUrl(url);
+    // unfortunate timing when loading chm docs: initial zoom level is
+    // set (via, ultimately, DisplayModel::SetZoomVirtual()), after
+    // we navigate to a page but before it might have finished
+    // loading and that causes SetZoomPercent() to be ignore.
+    // To fix that we wait here until page is loaded.
+    // TODO: unfortunately we display at standard zoom level first
+    // and them zoom in, which is visible to the user. No idea how
+    // to fix it (simply)
+    htmlWindow->WaitUntilLoaded(3*1000);
     //htmlWindow->DisplayHtml(_T("<html><body>Hello!</body></html>"));
 }
 

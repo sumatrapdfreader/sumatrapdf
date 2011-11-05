@@ -12,7 +12,7 @@ TCHAR * Dialog_GetPassword(HWND hwnd, const TCHAR *fileName, bool *rememberPassw
 INT_PTR Dialog_PdfAssociate(HWND hwnd, bool *dontAskAgainOut);
 int     Dialog_ChangeLanguge(HWND hwnd, int currLangId);
 INT_PTR Dialog_NewVersionAvailable(HWND hwnd, const TCHAR *currentVersion, const TCHAR *newVersion, bool *skipThisVersion);
-INT_PTR Dialog_CustomZoom(HWND hwnd, float *currZoom);
+bool    Dialog_CustomZoom(HWND hwnd, bool forChm, float *currZoomInOut);
 INT_PTR Dialog_Settings(HWND hwnd, SerializableGlobalPrefs *prefs);
 bool    Dialog_AddFavorite(HWND hwnd, const TCHAR *pageNo, ScopedMem<TCHAR>& favName);
 

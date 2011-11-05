@@ -511,8 +511,21 @@ void DisplayModel::SetZoomVirtual(float zoomVirtual)
         if (newZoom < this->_zoomReal || this->_zoomReal / newZoom < 0.95 ||
             this->_zoomReal < ZoomRealFromVirtualForPage(ZOOM_FIT_PAGE, CurrentPageNo()))
             this->_zoomReal = newZoom;
-    } else
+    } else {
         this->_zoomReal = zoomVirtual * 0.01f * dpiFactor;
+    }
+
+    ChmEngine *chmEngine = AsChmEngine();
+    if (chmEngine) {
+        if (IsZoomVirtual(_zoomVirtual) || !IsValidZoom(_zoomVirtual)) {
+            // shouldn't happen but if it does, assume 100%
+            _zoomVirtual = 100.0f;
+        }
+        // TODO: not sure if setting _zoomReal matters for chm, but
+        // do it anyway
+        _zoomReal = _zoomVirtual * 0.01f * dpiFactor;
+        chmEngine->ZoomTo(_zoomVirtual);
+    }
 }
 
 float DisplayModel::ZoomReal(int pageNo)
@@ -545,6 +558,14 @@ void DisplayModel::Relayout(float zoomVirtual, int rotation)
     bool needHScroll = false;
     bool needVScroll = false;
     viewPort = RectI(viewPort.TL(), totalViewPortSize);
+
+    // an optimization: the code below doesn't make sense for chm
+    // and causes SetZoomVirtual() to be called 3 times, so skip it
+    if (AsChmEngine() != NULL) {
+        canvasSize = SizeI(viewPort.dx, viewPort.dy);
+        SetZoomVirtual(zoomVirtual);
+        return;
+    }
 
 RestartLayout:
     int currPosY = padding->top;
@@ -1254,23 +1275,10 @@ void DisplayModel::ScrollYBy(int dy, bool changePage)
     RepaintDisplay();
 }
 
-void DisplayModel::ZoomToChm(float zoomLevel)
-{
-    assert(!IsZoomVirtual(zoomLevel));
-    ChmEngine *chmEngine = AsChmEngine();
-    chmEngine->ZoomTo(zoomLevel);
-    SetZoomVirtual(zoomLevel);
-}
-
 void DisplayModel::ZoomTo(float zoomLevel, PointI *fixPt)
 {
     if (!IsValidZoom(zoomLevel))
         return;
-
-    if (AsChmEngine() != NULL) {
-        ZoomToChm(zoomLevel);
-        return;
-    }
 
     ScrollState ss = GetScrollState();
 

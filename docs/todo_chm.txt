@@ -1,7 +1,9 @@
 List of things to do before we can ship CHM support:
 
-* after opening chm, set the remembered zoom level
-* custom zoom dialog for chm shouldn't hav fit page etc.
+* when navigating between chm pages using next/prev page button (or internal
+  links) we should sync selection in toc tree (including expanding that path
+  in the tree) to current page. I think it used to work that way but either
+  it didn't or it regressed.
 * make scrolling in html window with cursor up/down etc. work
   (is it a matter of passing the messages through ?).
   Notes: I don't understand how this is supposed to work. Presumably web browser control
@@ -24,6 +26,8 @@ Things we can live without for the first release:
   (it's even already in the context menu)
 
 Done:
+* custom zoom dialog for chm shouldn't have fit page etc.
+* after opening chm, set the remembered zoom level
 * make zoom (both toolbar and menu items) for chm docs work
 * a shot of the first page for the purpose of start page. 
   We can render html to a dummy hwnd and get its bitmap.
