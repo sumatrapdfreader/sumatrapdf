@@ -619,19 +619,17 @@ void CreateThumbnailForFile(WindowInfo& win, DisplayState& ds)
     if (ix < 0 || FILE_HISTORY_MAX_FREQUENT * 2 <= ix)
         return;
 
-    // TODO: for now when testing chm thumbnails, always create the thumbnail
-    // move below when we're done
-    if (win.IsChm()) {
-        CreateChmThumbnail(win, ds);
-        return;
-    }
-
     if (HasThumbnail(ds))
         return;
 
     // don't unnecessarily accumulate thumbnails during a stress test
     if (gIsStressTesting)
         return;
+
+    if (win.IsChm()) {
+        CreateChmThumbnail(win, ds);
+        return;
+    }
 
     RectD pageRect = win.dm->engine->PageMediabox(1);
     if (pageRect.IsEmpty())
