@@ -11,6 +11,7 @@
 #include "StrUtil.h"
 #include "GeomUtil.h"
 #include "WinUtil.h"
+#include "Scopes.h"
 
 // Info about implementing web browser control
 // http://www.codeproject.com/KB/COM/cwebpage.aspx
@@ -642,69 +643,45 @@ Exit:
         docDispatch->Release();
 }
 
-#include <atlbase.h>
-#include <atlwin.h>
-#include <atlcom.h>
-#include <atlhost.h>
-#include <atlimage.h>
-
 // Take a screenshot of a given <area> inside an html window and resize
 // it to <finalSize>. It's up to the caller to make sure <area> fits
 // within window (we don't check that's the case)
 HBITMAP HtmlWindow::TakeScreenshot(RectI area, SizeI finalSize)
 {
-    HRESULT             hr;
-    IDispatch*          docDispatch = NULL;
-    IHTMLDocument3 *    doc3        = NULL;
-    IViewObject2 *      view        = NULL;
-    HDC                 dc = NULL;
-    CImage              image;
-    CImage              imageRes;
-    RECTL               rc = { 0, 0, 0, 0};
-    HBITMAP             hbmp = NULL;
-    WindowRect          winRc(hwnd);
+    using namespace Gdiplus;
 
-    hr = webBrowser->get_Document(&docDispatch);
+    ScopedComPtr<IDispatch> docDispatch;
+    HRESULT hr = webBrowser->get_Document(&docDispatch);
     if (FAILED(hr))
-        goto Exit;
-
-    hr = docDispatch->QueryInterface(IID_IHTMLDocument3, (void**)&doc3);
-    if (FAILED(hr))
-        goto Exit;
-
-    hr = doc3->QueryInterface(IID_IViewObject2, (void**)&view);
-    if (FAILED(hr))
-        goto Exit;
+        return NULL;
+    ScopedComQIPtr<IViewObject2> view(docDispatch);
+    if (!view)
+        return NULL;
 
     // capture the whole window (including scrollbars)
     // to image and create imageRes containing the area
     // user asked for
-    image.Create(winRc.dx, winRc.dy, 24);
-    dc = image.GetDC();
-    rc.right = winRc.dx;
-    rc.bottom = winRc.dy;
-    hr = view->Draw(DVASPECT_CONTENT, -1, NULL, NULL, dc,
-                          dc, &rc, NULL, NULL, 0);
-    image.ReleaseDC();
+    WindowRect winRc(hwnd);
+    Bitmap image(winRc.dx, winRc.dy, PixelFormat24bppRGB);
+    Graphics g(&image);
+
+    HDC dc = g.GetHDC();
+    RECTL rc = { 0, 0, winRc.dx, winRc.dy };
+    hr = view->Draw(DVASPECT_CONTENT, -1, NULL, NULL, dc, dc, &rc, NULL, NULL, 0);
+    g.ReleaseHDC(dc);
     if (FAILED(hr))
-        goto Exit;
+        return NULL;
 
-    imageRes.Create(finalSize.dx, finalSize.dy, 24);
-    dc = imageRes.GetDC();
-    // TODO: the quality of the resize is poor. Probably should use Gdi+ instead
-    // and high-quality resize method
-    image.Draw(dc, 0, 0, finalSize.dx, finalSize.dy,
-                   0, 0, area.dx, area.dy);
-    imageRes.ReleaseDC();
-    hbmp = imageRes.Detach();
+    Bitmap imageRes(finalSize.dx, finalSize.dy, PixelFormat24bppRGB);
+    Graphics g2(&imageRes);
+    g2.SetInterpolationMode(InterpolationModeHighQualityBicubic);
+    g2.DrawImage(&image, Gdiplus::Rect(0, 0, finalSize.dx, finalSize.dy),
+                 0, 0, area.dx, area.dy, UnitPixel);
 
-Exit:
-    if (view)
-        view->Release();
-    if (doc3)
-        doc3->Release();
-    if (docDispatch)
-        docDispatch->Release();
+    HBITMAP hbmp;
+    Status ok = imageRes.GetHBITMAP(Color::White, &hbmp);
+    if (ok != Ok)
+        return NULL;
     return hbmp;
 }
 

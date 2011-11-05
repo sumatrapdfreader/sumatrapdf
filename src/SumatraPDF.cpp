@@ -701,11 +701,6 @@ static void RebuildMenuBarForAllWindows()
     }
 }
 
-static bool IsChmFile(TCHAR *fileName)
-{
-    return str::EndsWithI(fileName, _T(".chm"));
-}
-
 // When displaying CHM document we subclass hwndCanvas. UnsubclassCanvas() reverts that.
 static void UnsubclassCanvas(HWND hwnd)
 {
