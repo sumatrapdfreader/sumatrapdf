@@ -53,7 +53,7 @@ public:
     void GoForward();
     bool WaitUntilLoaded(DWORD maxWaitMs);
 
-    HBITMAP TakeScreenshot(RectI area);
+    HBITMAP TakeScreenshot(RectI area, SizeI finalSize);
     bool OnBeforeNavigate(const TCHAR *url);
     void OnDocumentComplete(const TCHAR *url);
 };

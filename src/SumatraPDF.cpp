@@ -598,7 +598,7 @@ static void CreateChmThumbnail(WindowInfo& win, DisplayState& ds)
     HtmlWindow *htmlWin = NULL;
     HBITMAP hbmp = NULL;
     RenderedBitmap *bmp = NULL;
-    RectI area(0, 0, THUMBNAIL_DX, THUMBNAIL_DY);
+    RectI area(0, 0, THUMBNAIL_DX * 2, THUMBNAIL_DY * 2);
 
     MillisecondTimer t(true);
     eng = EngineManager::CreateEngine(win.loadedFilePath, NULL, &et);
@@ -609,9 +609,9 @@ static void CreateChmThumbnail(WindowInfo& win, DisplayState& ds)
 
     // reusing CANVAS_CLASS_NAME. I don't think exact class matters (WndProc
     // will be taken over by HtmlWindow anyway) but it can't be NULL.
-    // TODO: should we render to a bigger size and then scale down?
-    int winDx = THUMBNAIL_DX + GetSystemMetrics(SM_CXVSCROLL);
-    int winDy = THUMBNAIL_DY + GetSystemMetrics(SM_CYHSCROLL);
+    // We render twice the size of thumbnail and scale it down
+    int winDx = (THUMBNAIL_DX * 2) + GetSystemMetrics(SM_CXVSCROLL);
+    int winDy = (THUMBNAIL_DY * 2) + GetSystemMetrics(SM_CYHSCROLL);
     hwnd = CreateWindow(CANVAS_CLASS_NAME, _T("BrowserCapture"), WS_POPUP, 0, 0, winDx, winDy, NULL, NULL, ghinst, NULL);
     if (!hwnd)
         goto Exit;
@@ -624,7 +624,7 @@ static void CreateChmThumbnail(WindowInfo& win, DisplayState& ds)
     htmlWin = chmEngine->GetHtmlWindow();
     if (!htmlWin->WaitUntilLoaded(5*1000))
         goto Exit;
-    hbmp = htmlWin->TakeScreenshot(area);
+    hbmp = htmlWin->TakeScreenshot(area, SizeI(THUMBNAIL_DX, THUMBNAIL_DY));
     if (!hbmp)
         goto Exit;
     bmp = new RenderedBitmap(hbmp, THUMBNAIL_DX, THUMBNAIL_DY);

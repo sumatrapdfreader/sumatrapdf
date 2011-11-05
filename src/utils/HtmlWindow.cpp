@@ -505,16 +505,6 @@ void HtmlWindow::OnSize(int dx, int dy)
         oleInPlaceObject->SetObjectRects(&r, &r);
 }
 
-#if 0
-void HtmlWindow::OnMove(int x, int y)
-{
-    if (webBrowser) {
-        webBrowser->put_Left(x);
-        webBrowser->put_Top(y);
-    }
-}
-#endif
-
 void HtmlWindow::SetVisible(bool visible)
 {
     if (visible)
@@ -524,88 +514,6 @@ void HtmlWindow::SetVisible(bool visible)
     if (webBrowser)
         webBrowser->put_Visible(visible ? TRUE : FALSE);
 }
-
-#if 0
-void IEHtmlWin::OnSetFocus(wxFocusEvent& event)
-{
-        if (m_webBrowser) {
-                m_webBrowser->put_Visible(TRUE);
-        }
-        if (m_oleInPlaceObject) {
-                //::PostMessage(m_oleObjectHWND, WM_SETFOCUS, (WPARAM)GetHWND(), NULL);
-        }
-}
-#endif
-
-#if 0
-void IEHtmlWin::OnPaint(wxPaintEvent& event)
-{
-        wxLogTrace("repainting html win");
-        wxPaintDC dc(this);
-        dc.BeginDrawing();
-        int w, h;
-        GetSize(&w, &h);
-        RECT posRect;
-        posRect.left = 0;
-        posRect.top = 0;
-        posRect.right = w;
-        posRect.bottom = h;
-
-        // Draw only when control is windowless or deactivated
-        if (m_viewObject)
-        {
-                ::RedrawWindow(m_oleObjectHWND, NULL, NULL, RDW_INTERNALPAINT);
-                {
-                        RECTL *prcBounds = (RECTL *) &posRect;
-                        m_viewObject->Draw(DVASPECT_CONTENT, -1, NULL, NULL, NULL,
-                                (HDC)dc.GetHDC(), prcBounds, NULL, NULL, 0);
-                }
-        }
-        else
-        {
-                dc.SetBrush(*wxRED_BRUSH);
-                dc.DrawRectangle(0, 0, w, h);
-                dc.SetBrush(wxNullBrush);
-        }
-        dc.EndDrawing();
-}
-#endif
-
-#if 0
-void IEHtmlWin::OnMouse(wxMouseEvent& event)
-{
-        wxLogTrace("mouse event");
-        UINT msg = 0;
-        WPARAM wParam = 0;
-        LPARAM lParam = 0;
-        LRESULT lResult = 0;
-
-        if (event.m_metaDown) wParam |= MK_CONTROL;
-        if (event.m_shiftDown) wParam |= MK_SHIFT;
-        if (event.m_leftDown) wParam |= MK_LBUTTON;
-        if (event.m_middleDown) wParam |= MK_MBUTTON;
-        if (event.m_rightDown) wParam |= MK_RBUTTON;
-        lParam = event.m_x << 16;
-        lParam |= event.m_y;
-
-        if (event.LeftDown()) msg = WM_LBUTTONDOWN;
-        else if (event.LeftDClick()) msg = WM_LBUTTONDBLCLK;
-        else if (event.LeftUp()) msg = WM_LBUTTONUP;
-        else if (event.MiddleDown()) msg = WM_MBUTTONDOWN;
-        else if (event.MiddleDClick()) msg = WM_MBUTTONDBLCLK;
-        else if (event.MiddleUp()) msg = WM_MBUTTONUP;
-        else if (event.RightDown()) msg = WM_RBUTTONDOWN;
-        else if (event.RightDClick()) msg = WM_RBUTTONDBLCLK;
-        else if (event.RightUp()) msg = WM_RBUTTONUP;
-        else if (event.Moving() || event.Dragging()) msg = WM_MOUSEMOVE;
-
-        wxString log;
-        if (msg == 0) { wxLogTrace("no message"); event.Skip(); return; }
-        if (m_oleInPlaceObject == NULL) { wxLogTrace("no oleInPlaceObject"); event.Skip(); return; }
-        if (!::SendMessage(m_oleObjectHWND, msg, wParam, lParam)) { wxLogTrace("msg not delivered"); event.Skip(); return; }
-        wxLogTrace("msg sent");
-}
-#endif
 
 void HtmlWindow::NavigateToUrl(const TCHAR *urlStr)
 {
@@ -705,77 +613,29 @@ Exit:
 #include <atlhost.h>
 #include <atlimage.h>
 
-// Take a screenshot of a given area inside a window. Returns a HBITMAP
-// of area.Dx()-area.Dy() size.
-HBITMAP HtmlWindow::TakeScreenshot(RectI area)
+// Take a screenshot of a given <area> inside an html window and resize
+// it to <finalSize>. It's up to the caller to make sure <area> fits
+// within window (we don't check that's the case)
+HBITMAP HtmlWindow::TakeScreenshot(RectI area, SizeI finalSize)
 {
-    long                bodyDx, bodyDy;
-    long                rootDx, rootDy;
-    long                htmlDx, htmlDy;
     HRESULT             hr;
     IDispatch*          docDispatch = NULL;
-    IHTMLDocument2 *    doc         = NULL;
     IHTMLDocument3 *    doc3        = NULL;
-    IHTMLElement *      body        = NULL;
-    IHTMLElement2 *     body2       = NULL;
-    IHTMLElement *      html        = NULL;
-    IHTMLElement2 *     html2       = NULL;
     IViewObject2 *      view        = NULL;
     HDC                 dc = NULL;
     CImage              image;
     CImage              imageRes;
     RECTL               rc = { 0, 0, 0, 0};
     HBITMAP             hbmp = NULL;
+    WindowRect          winRc(hwnd);
 
     hr = webBrowser->get_Document(&docDispatch);
-    if (FAILED(hr))
-        goto Exit;
-
-    hr = docDispatch->QueryInterface(IID_IHTMLDocument2, (void**)&doc);
-    if (FAILED(hr))
-        goto Exit;
-
-    hr = doc->get_body(&body);
-    if (FAILED(hr))
-        goto Exit;
-
-    hr = body->QueryInterface(IID_IHTMLElement2, (void**)&body2);
-    if (FAILED(hr))
-        goto Exit;
-
-    // TODO: I'm really screenshoting a window so should just query
-    // size of the window (which is the same as rootDx/rootDy)
-    // instead of querying all those dimensions
-    hr = body2->get_scrollWidth(&bodyDx);
-    if (FAILED(hr))
-        goto Exit;
-    hr = body2->get_scrollHeight(&bodyDy);
     if (FAILED(hr))
         goto Exit;
 
     hr = docDispatch->QueryInterface(IID_IHTMLDocument3, (void**)&doc3);
     if (FAILED(hr))
         goto Exit;
-
-    hr = doc3->get_documentElement(&html);
-    if (FAILED(hr))
-        goto Exit;
-
-    hr = html->QueryInterface(IID_IHTMLElement2, (void**)&html2);
-    if (FAILED(hr))
-        goto Exit;
-
-    hr = html2->get_scrollWidth(&rootDx);
-    if (FAILED(hr))
-        goto Exit;
-    hr = html2->get_scrollHeight(&rootDy);
-    if (FAILED(hr))
-        goto Exit;
-
-    htmlDx = bodyDx;
-    htmlDy = bodyDy;
-    if (rootDy > bodyDy)
-        htmlDy = rootDy;
 
     hr = doc3->QueryInterface(IID_IViewObject2, (void**)&view);
     if (FAILED(hr))
@@ -784,19 +644,21 @@ HBITMAP HtmlWindow::TakeScreenshot(RectI area)
     // capture the whole window (including scrollbars)
     // to image and create imageRes containing the area
     // user asked for
-    image.Create(rootDx, rootDy, 24);
+    image.Create(winRc.dx, winRc.dy, 24);
     dc = image.GetDC();
-    rc.right = rootDx;
-    rc.bottom = rootDy;
+    rc.right = winRc.dx;
+    rc.bottom = winRc.dy;
     hr = view->Draw(DVASPECT_CONTENT, -1, NULL, NULL, dc,
                           dc, &rc, NULL, NULL, 0);
     image.ReleaseDC();
     if (FAILED(hr))
         goto Exit;
 
-    imageRes.Create(area.dx, area.dy, 24);
+    imageRes.Create(finalSize.dx, finalSize.dy, 24);
     dc = imageRes.GetDC();
-    image.Draw(dc, 0, 0, area.dx, area.dy,
+    // TODO: the quality of the resize is poor. Probably should use Gdi+ instead
+    // and high-quality resize method
+    image.Draw(dc, 0, 0, finalSize.dx, finalSize.dy,
                    0, 0, area.dx, area.dy);
     imageRes.ReleaseDC();
     hbmp = imageRes.Detach();
@@ -804,16 +666,6 @@ HBITMAP HtmlWindow::TakeScreenshot(RectI area)
 Exit:
     if (view)
         view->Release();
-    if (html2)
-        html2->Release();
-    if (html)
-        html->Release();
-    if (body2)
-        body2->Release();
-    if (body)
-        body->Release();
-    if (doc)
-        doc->Release();
     if (doc3)
         doc3->Release();
     if (docDispatch)
@@ -1205,17 +1057,6 @@ HRESULT HW_IOleInPlaceSiteWindowless::GetWindowContext(
     (*ppDoc)->AddRef();
     (*ppFrame)->AddRef();
 
-#if 0
-    int w, h;
-    fs->htmlWindow->GetSize(&w, &h);
-    lprcPosRect->left = lprcPosRect->top = 0;
-    lprcPosRect->right = w;
-    lprcPosRect->bottom = h;
-    lprcClipRect->left = lprcClipRect->top = 0;
-    lprcClipRect->right = w;
-    lprcClipRect->bottom = h;
-#endif
-
     lpFrameInfo->fMDIApp = FALSE;
     lpFrameInfo->hwndFrame = fs->hwndParent;
     lpFrameInfo->haccel = NULL;
@@ -1325,24 +1166,8 @@ HRESULT HW_IOleInPlaceSiteWindowless::ReleaseDC(HDC hDC)
 
 HRESULT HW_IOleInPlaceSiteWindowless::InvalidateRect(LPCRECT pRect, BOOL fErase)
 {
-#if 0
-    // Clip the rectangle against the object's size and invalidate it
-    RECT rcI = { 0, 0, 0, 0 };
-    RECT posRect;
-    int w, h;
-    fs->htmlWindow->GetSize(&w, &h);
-    posRect.left = 0;
-    posRect.top = 0;
-    posRect.right = w;
-    posRect.bottom = h;
-    if (pRect == NULL)
-        rcI = posRect;
-    else
-        IntersectRect(&rcI, &posRect, pRect);
-    ::InvalidateRect(fs->hwndParent, &rcI, fErase);
-#else
+
     ::InvalidateRect(fs->hwndParent, NULL, fErase);
-#endif
     return S_OK;
 }
 
@@ -1473,52 +1298,6 @@ HRESULT HW_IOleControlSite::TransformCoords(POINTL *pPtlHimetric,
             return E_INVALIDARG;
     if (pPtfContainer == NULL)
             return E_INVALIDARG;
-#if 0
-    HDC hdc = ::GetDC(fs->hwndParent);
-    ::SetMapMode(hdc, MM_HIMETRIC);
-    POINT rgptConvert[2];
-    rgptConvert[0].x = 0;
-    rgptConvert[0].y = 0;
-
-    if (dwFlags & XFORMCOORDS_HIMETRICTOCONTAINER)
-    {
-        rgptConvert[1].x = pPtlHimetric->x;
-        rgptConvert[1].y = pPtlHimetric->y;
-        ::LPtoDP(hdc, rgptConvert, 2);
-        if (dwFlags & XFORMCOORDS_SIZE)
-        {
-            pPtfContainer->x = (float)(rgptConvert[1].x - rgptConvert[0].x);
-            pPtfContainer->y = (float)(rgptConvert[0].y - rgptConvert[1].y);
-        }
-        else if (dwFlags & XFORMCOORDS_POSITION)
-        {
-            pPtfContainer->x = (float)rgptConvert[1].x;
-            pPtfContainer->y = (float)rgptConvert[1].y;
-        }
-        else
-            hr = E_INVALIDARG;
-    } else if (dwFlags & XFORMCOORDS_CONTAINERTOHIMETRIC)
-    {
-        rgptConvert[1].x = (int)(pPtfContainer->x);
-        rgptConvert[1].y = (int)(pPtfContainer->y);
-        ::DPtoLP(hdc, rgptConvert, 2);
-        if (dwFlags & XFORMCOORDS_SIZE)
-        {
-            pPtlHimetric->x = rgptConvert[1].x - rgptConvert[0].x;
-            pPtlHimetric->y = rgptConvert[0].y - rgptConvert[1].y;
-        }
-        else if (dwFlags & XFORMCOORDS_POSITION)
-        {
-            pPtlHimetric->x = rgptConvert[1].x;
-            pPtlHimetric->y = rgptConvert[1].y;
-        }
-        else
-            hr = E_INVALIDARG;
-    } else
-        hr = E_INVALIDARG;
-
-    ::ReleaseDC(fs->hwndParent, hdc);
-#endif
     return hr;
 }
 
