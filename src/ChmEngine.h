@@ -6,34 +6,13 @@
 
 #include "BaseEngine.h"
 
-class ChmTocItem : public DocTocItem {
-public:
-    TCHAR *url;
-    TCHAR *imageNumber;
-
-    // takes ownership of url and imageNumber
-    ChmTocItem(TCHAR *title, TCHAR *url, TCHAR *imageNumber) :
-        DocTocItem(title), url(url), imageNumber(imageNumber)
-    {
-    }
-
-    virtual ~ChmTocItem() {
-        free(url);
-        free(imageNumber);
-    }
-
-    virtual PageDestination *GetLink() { return NULL; }
-
-    ChmTocItem *Clone();
-};
-
 class HtmlWindow;
 
 class ChmEngine : public BaseEngine {
 public:
     virtual void HookHwndAndDisplayIndex(HWND hwnd) = 0;
     virtual void DisplayPage(int pageNo) = 0;
-    virtual void DisplayPageByUrl(const TCHAR *url) = 0;
+    virtual void NavigateTo(PageDestination *dest) = 0;
     virtual HtmlWindow *GetHtmlWindow() const = 0;
 
     static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);

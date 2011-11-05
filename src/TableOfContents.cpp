@@ -143,12 +143,7 @@ public:
         if (!WindowInfoStillValid(win) || !win->IsDocLoaded())
             return;
 
-        if (win->IsChm()) {
-            ChmTocItem *ti = reinterpret_cast<ChmTocItem*>(tocItem);
-            win->dm->AsChmEngine()->DisplayPageByUrl(ti->url);
-        } else {
-            win->linkHandler->GotoLink(tocItem->GetLink());
-        }
+        win->linkHandler->GotoLink(tocItem->GetLink());
     }
 };
 

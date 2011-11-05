@@ -36,7 +36,8 @@ enum {
 enum MenuToolbarFlags {
     MF_NO_TRANSLATE      = 1 << 0,
     MF_PLUGIN_MODE_ONLY  = 1 << 1,
-#define PERM_FLAG_OFFSET 2
+    MF_NOT_FOR_CHM       = 1 << 2,
+#define PERM_FLAG_OFFSET 3
     MF_REQ_INET_ACCESS   = Perm_InternetAccess << PERM_FLAG_OFFSET,
     MF_REQ_DISK_ACCESS   = Perm_DiskAccess << PERM_FLAG_OFFSET,
     MF_REQ_PREF_ACCESS   = Perm_SavePreferences << PERM_FLAG_OFFSET,

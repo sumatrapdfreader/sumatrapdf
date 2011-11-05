@@ -27,7 +27,7 @@ struct MenuDef {
 
 class WindowInfo;
 
-HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu);
+HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu, bool forChm=false);
 HMENU BuildMenu(WindowInfo *win);
 void OnContextMenu(WindowInfo* win, int x, int y);
 void OnAboutContextMenu(WindowInfo* win, int x, int y);

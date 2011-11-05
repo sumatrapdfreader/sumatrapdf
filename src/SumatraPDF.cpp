@@ -35,7 +35,6 @@
 #include "Selection.h"
 #include "Menu.h"
 #include "Touch.h"
-#include "SimpleLog.h"
 
 #ifdef BUILD_RIBBON
 #include "Ribbon.h"
@@ -150,7 +149,7 @@ static int                          gPolicyRestrictions = Perm_All;
 static StrVec                       gAllowedLinkProtocols;
 
 static void UpdateUITextForLanguage();
-static void UpdateToolbarAndScrollbarsForAllWindows();
+static void UpdateToolbarAndScrollbarState(WindowInfo& win);
 static void EnterFullscreen(WindowInfo& win, bool presentation=false);
 static void ExitFullscreen(WindowInfo& win);
 static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -591,27 +590,25 @@ public:
 // too slow (I've measured it at ~1sec for a sample document)
 static void CreateChmThumbnail(WindowInfo& win, DisplayState& ds)
 {
-    EngineType et;
+    assert(win.IsChm());
+    if (!win.IsChm()) return;
+
     HWND hwnd = NULL;
-    BaseEngine *eng = NULL;
-    ChmEngine *chmEngine = NULL;
     HtmlWindow *htmlWin = NULL;
     HBITMAP hbmp = NULL;
     RenderedBitmap *bmp = NULL;
     RectI area(0, 0, THUMBNAIL_DX * 2, THUMBNAIL_DY * 2);
 
     MillisecondTimer t(true);
-    eng = EngineManager::CreateEngine(win.loadedFilePath, NULL, &et);
-    if (!eng)
-        goto Exit;
-    if (et != Engine_Chm)
-        goto Exit;
+    ChmEngine *chmEngine = reinterpret_cast<ChmEngine *>(win.dm->AsChmEngine()->Clone());
+    if (!chmEngine)
+        return;
 
     // reusing CANVAS_CLASS_NAME. I don't think exact class matters (WndProc
     // will be taken over by HtmlWindow anyway) but it can't be NULL.
     // We render twice the size of thumbnail and scale it down
-    int winDx = (THUMBNAIL_DX * 2) + GetSystemMetrics(SM_CXVSCROLL);
-    int winDy = (THUMBNAIL_DY * 2) + GetSystemMetrics(SM_CYHSCROLL);
+    int winDx = area.dx + GetSystemMetrics(SM_CXVSCROLL);
+    int winDy = area.dy + GetSystemMetrics(SM_CYHSCROLL);
     hwnd = CreateWindow(CANVAS_CLASS_NAME, _T("BrowserCapture"), WS_POPUP, 0, 0, winDx, winDy, NULL, NULL, ghinst, NULL);
     if (!hwnd)
         goto Exit;
@@ -619,7 +616,6 @@ static void CreateChmThumbnail(WindowInfo& win, DisplayState& ds)
 #if 0 // when debugging set to 1 to see the window
     ShowWindow(hwnd, SW_SHOW);
 #endif
-    chmEngine = reinterpret_cast<ChmEngine*>(eng);
     chmEngine->HookHwndAndDisplayIndex(hwnd);
     htmlWin = chmEngine->GetHtmlWindow();
     if (!htmlWin->WaitUntilLoaded(5*1000))
@@ -628,18 +624,15 @@ static void CreateChmThumbnail(WindowInfo& win, DisplayState& ds)
     if (!hbmp)
         goto Exit;
     bmp = new RenderedBitmap(hbmp, THUMBNAIL_DX, THUMBNAIL_DY);
-    hbmp = NULL;
     if (SaveThumbnailForFile(win.loadedFilePath, bmp))
         bmp = NULL;
 Exit:
     t.Stop();
     double dur = t.GetTimeInMs();
     if (dur > 1000.0) {
-        slog::DebugLogger l;
-        l.LogFmt(_T("Formatting %s took %.2f secs\n"), win.loadedFilePath, dur / 1000.0);
+        DBG_OUT("Formatting %s took %.2f secs\n", win.loadedFilePath, dur / 1000.0);
     }
-    DeleteObject(hbmp);
-    delete eng;
+    delete chmEngine;
     DestroyWindow(hwnd);
 }
 
@@ -890,7 +883,7 @@ Error:
     if (win.IsDocLoaded()) {
         ToggleWindowStyle(win.hwndPageBox, ES_NUMBER, !win.dm->engine || !win.dm->engine->HasPageLabels());
         // if the window isn't shown and win.canvasRc is still empty, zoom has not been determined yet
-        //assert(!showWin || !win.canvasRc.IsEmpty()); // TODO: invalid for chm (open pdf and then open chm to trigger)
+        assert(!showWin || !win.canvasRc.IsEmpty() || win.IsChm());
         if (showWin || ss.page != 1)
             win.dm->SetScrollState(ss);
         UpdateToolbarState(&win);
@@ -903,7 +896,7 @@ Error:
     SetSidebarVisibility(&win, win.tocVisible, gGlobalPrefs.favVisible);
     win.RedrawAll(true);
 
-    UpdateToolbarAndScrollbarsForAllWindows();
+    UpdateToolbarAndScrollbarState(win);
     if (!win.IsDocLoaded()) {
         win.RedrawAll();
         return false;
@@ -963,21 +956,18 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
     }
 }
 
-static void UpdateToolbarAndScrollbarsForAllWindows()
+static void UpdateToolbarAndScrollbarState(WindowInfo& win)
 {
-    for (size_t i = 0; i < gWindows.Count(); i++) {
-        WindowInfo *win = gWindows.At(i);
-        ToolbarUpdateStateForWindow(win);
+    ToolbarUpdateStateForWindow(&win);
 #ifdef BUILD_RIBBON
-        if (win->ribbonSupport)
-            win->ribbonSupport->UpdateState();
+    if (win.ribbonSupport)
+        win.ribbonSupport->UpdateState();
 #endif
 
-        if (!win->IsDocLoaded()) {
-            ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
-            if (win->IsAboutWindow())
-                win::SetText(win->hwndFrame, SUMATRA_WINDOW_TITLE);
-        }
+    if (!win.IsDocLoaded()) {
+        ShowScrollBar(win.hwndCanvas, SB_BOTH, FALSE);
+        if (win.IsAboutWindow())
+            win::SetText(win.hwndFrame, SUMATRA_WINDOW_TITLE);
     }
 }
 
@@ -2112,7 +2102,6 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
         return;
 
     bool wasChm = win->IsChm();
-
     if (win->IsDocLoaded())
         win->dm->dontRenderFlag = true;
     if (win->presentation)
@@ -2154,6 +2143,9 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
         }
         UpdateToolbarPageText(win, 0);
         UpdateToolbarFindText(win);
+        if (wasChm)
+            // restore the non-Chm menu
+            RebuildMenuBarForWindow(win);
 #ifdef BUILD_RIBBON
         if (win->ribbonSupport)
             win->ribbonSupport->UpdateState();
@@ -2171,8 +2163,9 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
     if (lastWindow && quitIfLast) {
         assert(0 == gWindows.Count());
         PostQuitMessage(0);
-    } else {
-        UpdateToolbarAndScrollbarsForAllWindows();
+    } else if (lastWindow && !quitIfLast) {
+        assert(gWindows.Find(win) != -1);
+        UpdateToolbarAndScrollbarState(*win);
     }
 }
 
@@ -4330,7 +4323,7 @@ InitMouseWheelInfo:
             if (!win)
                 break;
             // TODO: for HTMLWindows inside hwndCanvas, fix the infinite recursion
-            if (win->IsDocLoaded() && Engine_Chm == win->dm->engineType)
+            if (win->IsChm())
                 break;
 
             // Pass the message to the canvas' window procedure
@@ -4720,7 +4713,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     UpdateUITextForLanguage(); // needed for RTL languages
     if (!firstIsDocLoaded)
-        UpdateToolbarAndScrollbarsForAllWindows();
+        UpdateToolbarAndScrollbarState(*win);
 
     // Make sure that we're still registered as default,
     // if the user has explicitly told us to be

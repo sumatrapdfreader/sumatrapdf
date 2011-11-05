@@ -47,23 +47,23 @@ bool TbIsSeparator(ToolbarButtonInfo& tbi)
     return tbi.bmpIndex < 0;
 }
 
-static BOOL IsVisibleToolbarButton(WindowInfo *win, int buttonNo)
+static bool IsVisibleToolbarButton(WindowInfo *win, int buttonNo)
 {
-    if (NeedsFindUI(win))
-        return TRUE;
+    switch (gToolbarButtons[buttonNo].cmdId) {
 
-    int cmdId = gToolbarButtons[buttonNo].cmdId;
-    if (win->IsChm() && ((IDT_VIEW_FIT_WIDTH == cmdId) || (IDT_VIEW_FIT_PAGE == cmdId)))
-        return FALSE;
+    case IDT_VIEW_FIT_WIDTH:
+    case IDT_VIEW_FIT_PAGE:
+        return !win->IsChm();
 
-    switch (cmdId) {
-        case IDM_FIND_FIRST:
-        case IDM_FIND_NEXT:
-        case IDM_FIND_PREV:
-        case IDM_FIND_MATCH:
-            return FALSE;
+    case IDM_FIND_FIRST:
+    case IDM_FIND_NEXT:
+    case IDM_FIND_PREV:
+    case IDM_FIND_MATCH:
+        return NeedsFindUI(win);
+
+    default:
+        return true;
     }
-    return TRUE;
 }
 
 static bool IsToolbarButtonEnabled(WindowInfo *win, int buttonNo)
@@ -159,6 +159,11 @@ void ToolbarUpdateStateForWindow(WindowInfo *win)
         LPARAM buttonState = IsToolbarButtonEnabled(win, i) ? enabled : disabled;
         SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, gToolbarButtons[i].cmdId, buttonState);
     }
+
+    // Find labels may have to be repositioned if some
+    // toolbar buttons were shown/hidden
+    if (NeedsFindUI(win))
+        UpdateToolbarFindText(win);
 }
 
 static void UpdateToolbarBg(HWND hwnd, bool enabled)

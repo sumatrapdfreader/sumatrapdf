@@ -676,7 +676,7 @@ HBITMAP HtmlWindow::TakeScreenshot(RectI area, SizeI finalSize)
     Graphics g2(&imageRes);
     g2.SetInterpolationMode(InterpolationModeHighQualityBicubic);
     g2.DrawImage(&image, Gdiplus::Rect(0, 0, finalSize.dx, finalSize.dy),
-                 0, 0, area.dx, area.dy, UnitPixel);
+                 area.x, area.y, area.dx, area.dy, UnitPixel);
 
     HBITMAP hbmp;
     Status ok = imageRes.GetHBITMAP(Color::White, &hbmp);

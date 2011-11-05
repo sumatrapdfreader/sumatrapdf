@@ -16,6 +16,31 @@
 #include <inttypes.h>
 #include <chm_lib.h>
 
+class ChmTocItem : public DocTocItem, public PageDestination {
+public:
+    TCHAR *url;
+    TCHAR *imageNumber;
+
+    // takes ownership of url and imageNumber
+    ChmTocItem(TCHAR *title, TCHAR *url, TCHAR *imageNumber) :
+        DocTocItem(title), url(url), imageNumber(imageNumber)
+    {
+    }
+
+    virtual ~ChmTocItem() {
+        free(url);
+        free(imageNumber);
+    }
+
+    virtual PageDestination *GetLink() { return this; }
+    virtual const char *GetType() const { return NULL; }
+    virtual int GetDestPageNo() const { return 0; }
+    virtual RectD GetDestRect() const { return RectD(); }
+    virtual TCHAR *GetDestValue() const { return str::Dup(url); }
+
+    ChmTocItem *Clone();
+};
+
 ChmTocItem *ChmTocItem::Clone()
 {
     ChmTocItem *res = new ChmTocItem(str::Dup(title), str::Dup(url), str::Dup(imageNumber));
@@ -107,7 +132,7 @@ public:
 
     virtual void HookHwndAndDisplayIndex(HWND hwnd);
     virtual void DisplayPage(int pageNo);
-    virtual void DisplayPageByUrl(const TCHAR *url);
+    virtual void NavigateTo(PageDestination *dest);
     virtual HtmlWindow *GetHtmlWindow() const { return htmlWindow; }
 
         // from HtmlWindowCallback
@@ -197,8 +222,13 @@ void CChmEngine::HookHwndAndDisplayIndex(HWND hwnd)
     //htmlWindow->DisplayHtml(_T("<html><body>Hello!</body></html>"));
 }
 
-void CChmEngine::DisplayPageByUrl(const TCHAR *url)
+void CChmEngine::NavigateTo(PageDestination *dest)
 {
+    if (!dest)
+        return;
+    ScopedMem<TCHAR> url(dest->GetDestValue());
+    if (!url)
+        return;
     htmlWindow->DisplayChmPage(fileName, url);
 }
 
