@@ -514,6 +514,9 @@ public:
     virtual TCHAR *GetPageLabel(int pageNo);
     virtual int GetPageByLabel(const TCHAR *label);
 
+    virtual bool HasTocTree() const { return true; }
+    virtual DocTocItem *GetTocTree();
+
 protected:
     bool LoadImageDir(const TCHAR *dirName);
 
@@ -601,6 +604,21 @@ Bitmap *CImageDirEngine::LoadImage(int pageNo)
         pages.At(pageNo - 1) = BitmapFromData(bmpData, len);
 
     return pages.At(pageNo - 1);
+}
+
+class ImageDirTocItem : public DocTocItem {
+public:
+    ImageDirTocItem(TCHAR *title, int pageNo) : DocTocItem(title, pageNo) { }
+
+    virtual PageDestination *GetLink() { return NULL; }
+};
+
+DocTocItem *CImageDirEngine::GetTocTree()
+{
+    DocTocItem *root = new ImageDirTocItem(GetPageLabel(1), 1);
+    for (int i = 2; i <= PageCount(); i++)
+        root->AddSibling(new ImageDirTocItem(GetPageLabel(i), i));
+    return root;
 }
 
 bool ImageDirEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)

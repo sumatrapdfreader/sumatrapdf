@@ -14,15 +14,11 @@
 #include <inttypes.h>
 #include <chm_lib.h>
 
-class ChmTocItem : public DocTocItem, public PageDestination {
+class ChmTocItem : public DocTocItem {
 public:
-    ChmTocItem(TCHAR *title) : DocTocItem(title) { }
+    ChmTocItem(TCHAR *title, int pageNo) : DocTocItem(title, pageNo) { }
 
-    virtual PageDestination *GetLink() { return this; }
-    virtual const char *GetType() const { return "ScrollTo"; }
-    virtual int GetDestPageNo() const { return pageNo; }
-    virtual RectD GetDestRect() const { return RectD(); }
-    virtual TCHAR *GetDestValue() const { return NULL; }
+    virtual PageDestination *GetLink() { return NULL; }
 
     static ChmTocItem *Clone(DocTocItem *item);
 };
@@ -32,9 +28,8 @@ ChmTocItem *ChmTocItem::Clone(DocTocItem *item)
     if (!item)
         return NULL;
 
-    ChmTocItem *res = new ChmTocItem(str::Dup(item->title));
+    ChmTocItem *res = new ChmTocItem(str::Dup(item->title), item->pageNo);
     res->open = item->open;
-    res->pageNo = item->pageNo;
     res->id = item->id;
     res->child = Clone(item->child);
     res->next = Clone(item->next);
@@ -543,9 +538,7 @@ ChmTocItem *TocItemFromLi(StrVec& pages, HtmlElement *el)
     if (local && str::Find(local, _T("::/")))
         local.Set(str::Dup(str::Find(local, _T("::/")) + 3));
 
-    ChmTocItem *item = new ChmTocItem(name.StealData());
-    item->pageNo = CreatePageNoForURL(pages, local);
-    return item;
+    return new ChmTocItem(name.StealData(), CreatePageNoForURL(pages, local));
 }
 
 ChmTocItem *BuildChmToc(StrVec& pages, HtmlElement *list, bool topLevel)

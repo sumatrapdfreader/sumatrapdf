@@ -109,6 +109,7 @@ public:
     // whether any child elements are to be displayed
     bool open;
     // page this item points to (0 for non-page destinations)
+    // if GetLink() returns a destination to a page, the two should match
     int pageNo;
     // arbitrary number allowing to distinguish this DocTocItem
     // from any other of the same ToC tree
@@ -119,8 +120,8 @@ public:
     // next sibling
     DocTocItem *next;
 
-    DocTocItem(TCHAR *title) :
-        title(title), open(true), pageNo(0), id(0), child(NULL), next(NULL), last(NULL) { }
+    DocTocItem(TCHAR *title, int pageNo=0) :
+        title(title), open(true), pageNo(pageNo), id(0), child(NULL), next(NULL), last(NULL) { }
 
     virtual ~DocTocItem() {
         delete child;

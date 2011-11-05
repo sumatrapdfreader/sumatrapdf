@@ -136,14 +136,17 @@ class GoToTocLinkWorkItem : public UIThreadWorkItem
     DocTocItem *tocItem;
 
 public:
-    GoToTocLinkWorkItem(WindowInfo *win, DocTocItem *ti) :
-        UIThreadWorkItem(win), tocItem(ti) {}
+    GoToTocLinkWorkItem(WindowInfo *win, DocTocItem *tocItem) :
+        UIThreadWorkItem(win), tocItem(tocItem) { }
 
     virtual void Execute() {
-        if (!WindowInfoStillValid(win) || !win->IsDocLoaded())
+        if (!WindowInfoStillValid(win) || !win->IsDocLoaded() || !tocItem)
             return;
 
-        win->linkHandler->GotoLink(tocItem->GetLink());
+        if (tocItem->GetLink())
+            win->linkHandler->GotoLink(tocItem->GetLink());
+        else if (tocItem->pageNo)
+            win->dm->GoToPage(tocItem->pageNo, 0, true);
     }
 };
 
@@ -158,7 +161,7 @@ static void GoToTocLinkForTVItem(WindowInfo* win, HWND hTV, HTREEITEM hItem=NULL
     TreeView_GetItem(hTV, &item);
     DocTocItem *tocItem = (DocTocItem *)item.lParam;
     if (win->IsDocLoaded() && tocItem &&
-        (allowExternal || tocItem->GetLink() && str::Eq(tocItem->GetLink()->GetType(), "ScrollTo"))) {
+        (allowExternal || tocItem->GetLink() && str::Eq(tocItem->GetLink()->GetType(), "ScrollTo")) || tocItem->pageNo) {
         QueueWorkItem(new GoToTocLinkWorkItem(win, tocItem));
     }
 }
