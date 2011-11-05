@@ -221,6 +221,9 @@ Bookmarks
 Bytes
 Байт
 
+CHM documents
+Документи CHM
+
 Can't connect to the Internet (error %#x).
 Неможливо під'єднатись до інтернету (помилка %#x).
 
@@ -337,6 +340,9 @@ Failed to save a file
 
 Favorites
 Закладки
+
+File %s not found
+Файл %s не знайдено 
 
 File Size:
 Розмір файла:
@@ -661,8 +667,4 @@ copying text
 
 printing document
 друк документа
-
-# Untranslated:
-#CHM documents
-#File %s not found
 
