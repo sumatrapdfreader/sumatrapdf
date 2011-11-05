@@ -248,6 +248,7 @@ protected:
     char *ResolveNamedDest(const char *name);
     DjVuTocItem *BuildTocTree(miniexp_t entry, int& idCounter, int depth);
     bool Load(const TCHAR *fileName);
+    bool LoadMediaboxes();
 };
 
 CDjVuEngine::CDjVuEngine() : fileName(NULL), pageCount(0), mediaboxes(NULL),
@@ -274,6 +275,65 @@ CDjVuEngine::~CDjVuEngine()
         ddjvu_document_release(doc);
 }
 
+// Most functions of the ddjvu API such as ddjvu_document_get_pageinfo
+// are quite inefficient when used for all pages of a document in a row,
+// so try to either only use them when actually needed or replace them
+// with a function that extracts all the data at once:
+
+static bool ReadBytes(HANDLE h, int offset, void *buffer, int count)
+{
+    DWORD res = SetFilePointer(h, offset, NULL, FILE_BEGIN);
+    if (res != offset)
+        return false;
+    bool ok = ReadFile(h, buffer, count, &res, NULL);
+    return ok && res == count;
+}
+
+// for converting between big- and little-endian values
+#define SWAPWORD(x)    MAKEWORD(HIBYTE(x), LOBYTE(x))
+#define SWAPLONG(x)    MAKELONG(SWAPWORD(HIWORD(x)), SWAPWORD(LOWORD(x)))
+
+#define DJVU_MARK_MAGIC (*(DWORD *)"AT&T")
+#define DJVU_MARK_FORM  (*(DWORD *)"FORM")
+#define DJVU_MARK_DJVM  (*(DWORD *)"DJVM")
+#define DJVU_MARK_DJVU  (*(DWORD *)"DJVU")
+#define DJVU_MARK_INFO  (*(DWORD *)"INFO")
+
+bool CDjVuEngine::LoadMediaboxes()
+{
+    ScopedHandle h(CreateFile(fileName, GENERIC_READ, FILE_SHARE_READ, NULL,  
+                              OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL));
+    if (h == INVALID_HANDLE_VALUE)
+        return false;
+    DWORD buffer[8];
+    if (!ReadBytes(h, 0, buffer, 16) || DJVU_MARK_MAGIC != buffer[0] || DJVU_MARK_FORM != buffer[1])
+        return false;
+
+    int offset = DJVU_MARK_DJVM == buffer[3] ? 16 : 4;
+    for (int pages = 0; pages < pageCount; ) {
+        if (!ReadBytes(h, offset, buffer, 16))
+            return false;
+        if (DJVU_MARK_FORM == buffer[0] && DJVU_MARK_DJVU == buffer[2] && DJVU_MARK_INFO == buffer[3]) {
+            if (!ReadBytes(h, offset + 16, buffer + 4, 14))
+                return false;
+            int width = SWAPWORD(LOWORD(buffer[5]));
+            int height = SWAPWORD(HIWORD(buffer[5]));
+            int dpi = HIWORD(buffer[6]);
+            int flags = HIBYTE(buffer[7]);
+            mediaboxes[pages].dx = GetFileDPI() * width / dpi;
+            mediaboxes[pages].dy = GetFileDPI() * height / dpi;
+            if ((flags & 4))
+                swap(mediaboxes[pages].dx, mediaboxes[pages].dy);
+            pages++;
+        }
+        offset += 8 + SWAPLONG(buffer[1]);
+        if ((offset & 1))
+            offset++;
+    }
+
+    return true;
+}
+
 bool CDjVuEngine::Load(const TCHAR *fileName)
 {
     if (!gDjVuContext.Initialize())
@@ -296,21 +356,12 @@ bool CDjVuEngine::Load(const TCHAR *fileName)
         return false;
 
     mediaboxes = new RectD[pageCount];
+    bool ok = LoadMediaboxes();
+    assert(ok);
+
     annos = SAZA(miniexp_t, pageCount);
-
-    for (int i = 0; i < pageCount; i++) {
-        ddjvu_status_t status;
-        ddjvu_pageinfo_t info;
-        while ((status = ddjvu_document_get_pageinfo(doc, i, &info)) < DDJVU_JOB_OK)
-            gDjVuContext.SpinMessageLoop();
-        if (status != DDJVU_JOB_OK)
-            continue;
-
-        mediaboxes[i] = RectD(0, 0, info.width * GetFileDPI() / info.dpi,
-                                    info.height * GetFileDPI() / info.dpi);
-        while ((annos[i] = ddjvu_document_get_pageanno(doc, i)) == miniexp_dummy)
-            gDjVuContext.SpinMessageLoop();
-    }
+    for (int i = 0; i < pageCount; i++)
+        annos[i] = miniexp_dummy;
 
     while ((outline = ddjvu_document_get_outline(doc)) == miniexp_dummy)
         gDjVuContext.SpinMessageLoop();
@@ -608,6 +659,11 @@ TCHAR *CDjVuEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_o
 Vec<PageElement *> *CDjVuEngine::GetElements(int pageNo)
 {
     assert(1 <= pageNo && pageNo <= PageCount());
+    if (annos && miniexp_dummy == annos[pageNo-1]) {
+        ScopedCritSec scope(&gDjVuContext.lock);
+        while ((annos[pageNo-1] = ddjvu_document_get_pageanno(doc, pageNo-1)) == miniexp_dummy)
+            gDjVuContext.SpinMessageLoop();
+    }
     if (!annos || !annos[pageNo-1])
         return NULL;
 
