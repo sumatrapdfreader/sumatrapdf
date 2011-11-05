@@ -48,7 +48,6 @@ public:
     void SetVisible(bool visible);
     void NavigateToUrl(const TCHAR *url);
     void DisplayHtml(const TCHAR *html);
-    void DisplayChmPage(const TCHAR *chmFilePath, const TCHAR *chmPage);
     void GoBack();
     void GoForward();
     void PrintCurrentPage();

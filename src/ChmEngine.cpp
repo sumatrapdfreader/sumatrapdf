@@ -109,16 +109,16 @@ public:
 
     virtual bool BenchLoadPage(int pageNo) { return true; }
 
-    // we always have toc tree
     virtual bool HasTocTree() const { return tocRoot != NULL; }
-    virtual DocTocItem *GetTocTree();
+    // Callers delete the ToC tree, so we return a copy
+    // (probably faster than re-creating it from html every time)
+    virtual DocTocItem *GetTocTree() { return ChmTocItem::Clone(tocRoot); }
 
     virtual void HookHwndAndDisplayIndex(HWND hwnd);
-    virtual void DisplayPage(int pageNo);
-    virtual HtmlWindow *GetHtmlWindow() const { return htmlWindow; }
+    virtual void DisplayPage(int pageNo) { DisplayPage(pages.At(pageNo - 1)); }
     virtual void SetNavigationCalback(ChmNavigationCallback *cb) { navCb = cb; }
     virtual RenderedBitmap *CreateThumbnail(SizeI size);
-    virtual void PrintCurrentPage();
+    virtual void PrintCurrentPage() { htmlWindow->PrintCurrentPage(); }
 
     // from HtmlWindowCallback
     virtual bool OnBeforeNavigate(const TCHAR *url);
@@ -134,8 +134,7 @@ protected:
     ChmNavigationCallback *navCb;
 
     bool Load(const TCHAR *fileName);
-    bool LoadAndParseHtmlToc();
-    bool ParseChmHtmlToc(char *html);
+    void DisplayPage(const TCHAR *pageUrl);
 };
 
 CChmEngine::CChmEngine() :
@@ -173,15 +172,21 @@ bool CChmEngine::OnBeforeNavigate(const TCHAR *url)
 void CChmEngine::HookHwndAndDisplayIndex(HWND hwnd)
 {
     assert(!htmlWindow);
-    htmlWindow = new HtmlWindow(hwnd, this);
-    ScopedMem<TCHAR> homePath(str::conv::FromAnsi(chmInfo->homePath));
-    htmlWindow->DisplayChmPage(fileName, homePath);
-    //htmlWindow->DisplayHtml(_T("<html><body>Hello!</body></html>"));
+    if (!htmlWindow)
+        htmlWindow = new HtmlWindow(hwnd, this);
+    DisplayPage(1);
 }
 
-void CChmEngine::DisplayPage(int pageNo)
+void CChmEngine::DisplayPage(const TCHAR *pageUrl)
 {
-    htmlWindow->DisplayChmPage(fileName, pages.At(pageNo - 1));
+    if (str::StartsWith(pageUrl, _T("/")))
+        pageUrl++;
+
+    // the format for chm page is: "its:MyChmFile.chm::mywebpage.htm"
+    // cf. http://msdn.microsoft.com/en-us/library/aa164814(v=office.10).aspx
+    ScopedMem<TCHAR> url(str::Format(_T("its:%s::/%s"), fileName, pageUrl));
+    htmlWindow->NavigateToUrl(url);
+    //htmlWindow->DisplayHtml(_T("<html><body>Hello!</body></html>"));
 }
 
 RenderedBitmap *CChmEngine::CreateThumbnail(SizeI size)
@@ -213,11 +218,6 @@ RenderedBitmap *CChmEngine::CreateThumbnail(SizeI size)
 Exit:
     DestroyWindow(hwnd);
     return bmp;
-}
-
-void CChmEngine::PrintCurrentPage()
-{
-    htmlWindow->PrintCurrentPage();
 }
 
 CChmEngine::~CChmEngine()
@@ -322,11 +322,14 @@ static bool GetChmDataForFile(struct chmFile *chmHandle, const char *fileName, B
 
 static bool ChmFileExists(struct chmFile *chmHandle, const char *path)
 {
+    ScopedMem<char> path2;
+    if (!str::StartsWith(path, "/"))
+        path2.Set(str::Join("/", path));
+    else if (str::StartsWith(path, "///"))
+        path += 2;
+
     struct chmUnitInfo info;
-    if (chm_resolve_object(chmHandle, path, &info) != CHM_RESOLVE_SUCCESS) {
-        return false;
-    }
-    return true;
+    return chm_resolve_object(chmHandle, path2 ? path2 : path, &info) == CHM_RESOLVE_SUCCESS;
 }
 
 static char *FindHomeForPath(struct chmFile *chmHandle, const char *basePath)
@@ -335,13 +338,12 @@ static char *FindHomeForPath(struct chmFile *chmHandle, const char *basePath)
         "index.htm", "index.html",
         "default.htm", "default.html"
     };
+
     const char *sep = str::EndsWith(basePath, "/") ? "" : "/";
     for (int i = 0; i < dimof(pathsToTest); i++) {
-        char *testPath = str::Format("%s%s%s", basePath, sep, pathsToTest[i]);
-        if (ChmFileExists(chmHandle, testPath)) {
-            return testPath;
-        }
-        free(testPath);
+        ScopedMem<char> testPath(str::Format("%s%s%s", basePath, sep, pathsToTest[i]));
+        if (ChmFileExists(chmHandle, testPath))
+            return testPath.StealData();
     }
     return NULL;
 }
@@ -483,8 +485,9 @@ static int CreatePageNoForURL(StrVec& pages, ScopedMem<TCHAR>& url)
     <param name="Local" value="0789729717_main.html">
     <param name="ImageNumber" value="12">
   </object>
+  <ul> ... children ... </ul>
 <li>
-  ...
+  ... siblings ...
 */
 ChmTocItem *TocItemFromLi(StrVec& pages, HtmlElement *el)
 {
@@ -492,6 +495,7 @@ ChmTocItem *TocItemFromLi(StrVec& pages, HtmlElement *el)
     el = el->GetChildByName("object");
     if (!el)
         return NULL;
+
     ScopedMem<TCHAR> name, local;
     for (el = el->GetChildByName("param"); el; el = el->next) {
         if (!str::Eq("param", el->name))
@@ -524,15 +528,10 @@ ChmTocItem *BuildChmToc(StrVec& pages, HtmlElement *list)
     for (HtmlElement *el = list->down; el; el = el->next) {
         if (!str::Eq(el->name, "li"))
             continue; // ignore unexpected elements
-        /* <li>
-             <object>...</object>
-             <ul>...</ul>
-           <li>
-             ...
-        */
         ChmTocItem *item = TocItemFromLi(pages, el);
         if (!item)
             continue; // skip incomplete elements and all their children
+
         HtmlElement *nested = el->GetChildByName("ul");
         if (nested)
             item->child = BuildChmToc(pages, nested);
@@ -546,44 +545,19 @@ ChmTocItem *BuildChmToc(StrVec& pages, HtmlElement *list)
     return node;
 }
 
-static bool ChmFileExists(struct chmFile *chmHandle, TCHAR *fileName)
-{
-    ScopedMem<char> chmPath(str::conv::ToAnsi(fileName));
-    if (!str::StartsWith(chmPath.Get(), "/")) {
-        chmPath.Set(str::Join("/", chmPath));
-    } else if (str::StartsWith(chmPath.Get(), "///")) {
-        chmPath.Set(str::Dup(chmPath + 2));
-    }
-    struct chmUnitInfo info;
-    int res = chm_resolve_object(chmHandle, chmPath, &info);
-    return CHM_RESOLVE_SUCCESS == res;
-}
-
-bool CChmEngine::ParseChmHtmlToc(char *html)
+static ChmTocItem *ParseChmHtmlToc(StrVec& pages, char *html)
 {
     HtmlParser p;
     HtmlElement *el = p.Parse(html);
     if (!el)
-        return false;
+        return NULL;
     el = p.FindElementByName("body");
     if (!el)
-        return false;
+        return NULL;
     el = p.FindElementByName("ul", el);
     if (!el)
-        return false;
-    tocRoot = BuildChmToc(pages, el);
-    return tocRoot != NULL;
-}
-
-bool CChmEngine::LoadAndParseHtmlToc()
-{
-    Bytes b;
-    if (!GetChmDataForFile(chmHandle, chmInfo->tocPath, b))
-        return false;
-    assert(0 == pages.Count());
-    if (!ParseChmHtmlToc((char*)b.d))
-        return false;
-    return 0 != pages.Count();
+        return NULL;
+    return BuildChmToc(pages, el);
 }
 
 bool CChmEngine::Load(const TCHAR *fileName)
@@ -592,7 +566,7 @@ bool CChmEngine::Load(const TCHAR *fileName)
     this->fileName = str::Dup(fileName);
     CASSERT(2 == sizeof(OLECHAR), OLECHAR_must_be_WCHAR);
 #ifdef UNICODE
-    chmHandle = chm_open((TCHAR *)fileName);
+    chmHandle = chm_open((WCHAR *)fileName);
 #else
     chmHandle = chm_open(ScopedMem<WCHAR>(str::conv::FromAnsi(fileName)));
 #endif
@@ -603,24 +577,22 @@ bool CChmEngine::Load(const TCHAR *fileName)
     if (!ParseSystemChmData(chmHandle, chmInfo))
         return false;
 
-    if (!chmInfo->homePath)
+    if (!chmInfo->homePath || !ChmFileExists(chmHandle, chmInfo->homePath))
         chmInfo->homePath = FindHomeForPath(chmHandle, "/");
     if (!chmInfo->homePath)
         return false;
 
-    if (!chmInfo->tocPath) {
-        pages.Append(str::conv::FromAnsi(chmInfo->homePath));
-        return true;
+    // always make the document's homepage page 1
+    pages.Append(str::conv::FromAnsi(chmInfo->homePath));
+
+    if (chmInfo->tocPath) {
+        // parse the ToC here, since page numbering depends on it
+        Bytes b;
+        if (GetChmDataForFile(chmHandle, chmInfo->tocPath, b))
+            tocRoot = ParseChmHtmlToc(pages, (char *)b.d);
     }
 
-    return LoadAndParseHtmlToc();
-}
-
-// Callers delete the result so we return a copy of toc tree
-// (probably faster than re-creating it from html every time)
-DocTocItem *CChmEngine::GetTocTree()
-{
-    return ChmTocItem::Clone(tocRoot);
+    return true;
 }
 
 unsigned char *CChmEngine::GetFileData(size_t *cbCount)

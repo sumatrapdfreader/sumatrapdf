@@ -22,9 +22,6 @@
 // http://codesearch.google.com/#cbxlbgWFJ4U/wxCode/components/iehtmlwin/src/IEHtmlWin.cpp
 
 // Another code to get inspired: http://code.google.com/p/fidolook/source/browse/trunk/Qm/ui/messageviewwindow.cpp
-// To show a page within chm file use url in the form:
-// "its:MyChmFile.chm::mywebpage.htm"
-// http://msdn.microsoft.com/en-us/library/aa164814(v=office.10).aspx
 
 class HW_IOleInPlaceFrame;
 class HW_IOleInPlaceSiteWindowless;
@@ -479,7 +476,11 @@ void HtmlWindow::NavigateToUrl(const TCHAR *urlStr)
     VARIANT url;
     VariantInit(&url);
     url.vt = VT_BSTR;
+#ifdef UNICODE
     url.bstrVal = SysAllocString(urlStr);
+#else
+    url.bstrVal = SysAllocString(ScopedMem<WCHAR>(str::conv::FromAnsi(urlStr)));
+#endif
     if (!url.bstrVal)
         return;
     webBrowser->Navigate2(&url, 0, 0, 0, 0);
@@ -563,7 +564,11 @@ void HtmlWindow::DisplayHtml(const TCHAR *html)
     if (FAILED(hr))
         goto Exit;
     var->vt = VT_BSTR;
+#ifdef UNICODE
     var->bstrVal = SysAllocString(html);
+#else
+    var->bstrVal = SysAllocString(ScopedMem<WCHAR>(str::conv::FromAnsi(html)));
+#endif
     if (!var->bstrVal)
         goto Exit;
     SafeArrayUnaccessData(arr);
@@ -615,15 +620,6 @@ HBITMAP HtmlWindow::TakeScreenshot(RectI area, SizeI finalSize)
     if (ok != Ok)
         return NULL;
     return hbmp;
-}
-
-// the format for chm page is: "its:MyChmFile.chm::mywebpage.htm"
-void HtmlWindow::DisplayChmPage(const TCHAR *chmFilePath, const TCHAR *chmPage)
-{
-    if (str::StartsWith(chmPage, _T("/")))
-        chmPage++;
-    ScopedMem<TCHAR> url(str::Format(_T("its:%s::/%s"), chmFilePath, chmPage));
-    NavigateToUrl(url);
 }
 
 // called before an url is shown. If returns false, will cancel

@@ -20,7 +20,6 @@ class ChmEngine : public BaseEngine {
 public:
     virtual void HookHwndAndDisplayIndex(HWND hwnd) = 0;
     virtual void DisplayPage(int pageNo) = 0;
-    virtual HtmlWindow *GetHtmlWindow() const = 0;
     virtual void SetNavigationCalback(ChmNavigationCallback *cb) = 0;
     virtual RenderedBitmap *CreateThumbnail(SizeI size) = 0;
     virtual void PrintCurrentPage() = 0;
