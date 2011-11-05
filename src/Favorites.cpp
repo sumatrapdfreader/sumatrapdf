@@ -554,7 +554,7 @@ void UpdateFavoritesTreeForAllWindows()
     }
 }
 
-static DocTocItem *ToCItemForPageNo(DocTocItem *item, int pageNo)
+static DocTocItem *TocItemForPageNo(DocTocItem *item, int pageNo)
 {
     DocTocItem *currItem = NULL;
 
@@ -565,7 +565,7 @@ static DocTocItem *ToCItemForPageNo(DocTocItem *item, int pageNo)
             break;
 
         // find any child item closer to the specified page
-        DocTocItem *subItem = ToCItemForPageNo(item->child, pageNo);
+        DocTocItem *subItem = TocItemForPageNo(item->child, pageNo);
         if (subItem)
             currItem = subItem;
     }
@@ -580,7 +580,7 @@ void AddFavorite(WindowInfo *win)
     if (win->dm->HasTocTree()) {
         // use the current ToC heading as default name
         DocTocItem *root = win->dm->engine->GetTocTree();
-        DocTocItem *item = ToCItemForPageNo(root, pageNo);
+        DocTocItem *item = TocItemForPageNo(root, pageNo);
         if (item)
             name.Set(str::Dup(item->title));
         delete root;

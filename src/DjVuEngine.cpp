@@ -126,10 +126,8 @@ class DjVuTocItem : public DocTocItem {
     DjVuDestination *dest;
 
 public:
-    bool isGeneric;
-
     DjVuTocItem(const char *title, const char *link) :
-        DocTocItem(str::conv::FromUtf8(title)), isGeneric(false) {
+        DocTocItem(str::conv::FromUtf8(title)) {
         dest = new DjVuDestination(link);
         pageNo = dest->GetDestPageNo();
     }
@@ -230,8 +228,8 @@ public:
     virtual PageElement *GetElementAtPos(int pageNo, PointD pt);
 
     virtual PageDestination *GetNamedDest(const TCHAR *name);
-    virtual bool HasToCTree() const { return outline != miniexp_nil; }
-    virtual DocTocItem *GetToCTree();
+    virtual bool HasTocTree() const { return outline != miniexp_nil; }
+    virtual DocTocItem *GetTocTree();
 
 protected:
     const TCHAR *fileName;
@@ -248,7 +246,7 @@ protected:
     bool ExtractPageText(miniexp_t item, const TCHAR *lineSep,
                          str::Str<TCHAR>& extracted, Vec<RectI>& coords);
     char *ResolveNamedDest(const char *name);
-    DjVuTocItem *BuildToCTree(miniexp_t entry, int& idCounter);
+    DjVuTocItem *BuildTocTree(miniexp_t entry, int& idCounter, int depth);
     bool Load(const TCHAR *fileName);
 };
 
@@ -719,7 +717,7 @@ PageDestination *CDjVuEngine::GetNamedDest(const TCHAR *name)
     return NULL;
 }
 
-DjVuTocItem *CDjVuEngine::BuildToCTree(miniexp_t entry, int& idCounter)
+DjVuTocItem *CDjVuEngine::BuildTocTree(miniexp_t entry, int& idCounter, int depth)
 {
     DjVuTocItem *node = NULL;
 
@@ -739,21 +737,14 @@ DjVuTocItem *CDjVuEngine::BuildToCTree(miniexp_t entry, int& idCounter)
         else if (!str::IsEmpty(name) && !str::Eq(name, link + 1))
             tocItem = new DjVuTocItem(name, linkNo);
         else {
-            ScopedMem<char> name(str::Format("Page %d", atoi(linkNo + 1)));
-            tocItem = new DjVuTocItem(name, linkNo);
-            // don't display such generic items by default
-            tocItem->isGeneric = true;
+            // ignore generic (name-less) entries
+            delete BuildTocTree(miniexp_cddr(item), idCounter, depth + 1);
+            continue;
         }
 
         tocItem->id = ++idCounter;
-        tocItem->child = BuildToCTree(miniexp_cddr(item), idCounter);
-        if (tocItem->child) {
-            // close items that only contain generic page references
-            tocItem->open = false;
-            for (DocTocItem *n = tocItem->child; n && !tocItem->open; n = n->next)
-                if (!static_cast<DjVuTocItem *>(n)->isGeneric)
-                    tocItem->open = true;
-        }
+        tocItem->child = BuildTocTree(miniexp_cddr(item), idCounter, depth + 1);
+        tocItem->open = depth <= 2;
 
         if (!node)
             node = tocItem;
@@ -764,14 +755,14 @@ DjVuTocItem *CDjVuEngine::BuildToCTree(miniexp_t entry, int& idCounter)
     return node;
 }
 
-DocTocItem *CDjVuEngine::GetToCTree()
+DocTocItem *CDjVuEngine::GetTocTree()
 {
-    if (!HasToCTree())
+    if (!HasTocTree())
         return NULL;
 
     ScopedCritSec scope(&gDjVuContext.lock);
     int idCounter = 0;
-    return BuildToCTree(outline, idCounter);
+    return BuildTocTree(outline, idCounter, 1);
 }
 
 bool DjVuEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)

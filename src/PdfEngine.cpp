@@ -668,7 +668,7 @@ struct PdfPageRun {
     int refs;
 };
 
-class PdfToCItem;
+class PdfTocItem;
 class PdfLink;
 
 class CPdfEngine : public PdfEngine {
@@ -769,7 +769,7 @@ protected:
                             fz_bbox clipbox=fz_infinite_bbox, bool cacheRun=true);
     void            DropPageRun(PdfPageRun *run, bool forceRemove=false);
 
-    PdfToCItem   *  BuildToCTree(pdf_outline *entry, int& idCounter);
+    PdfTocItem   *  BuildTocTree(pdf_outline *entry, int& idCounter);
     void            LinkifyPageText(pdf_page *page);
 
     int             FindPageNo(fz_obj *dest);
@@ -830,11 +830,11 @@ public:
     virtual TCHAR *GetValue() const { return str::Dup(content); }
 };
 
-class PdfToCItem : public DocTocItem {
+class PdfTocItem : public DocTocItem {
     PdfLink link;
 
 public:
-    PdfToCItem(TCHAR *title, PdfLink link) : DocTocItem(title), link(link) { }
+    PdfTocItem(TCHAR *title, PdfLink link) : DocTocItem(title), link(link) { }
 
     virtual PageDestination *GetLink() { return &link; }
 };
@@ -1096,20 +1096,20 @@ bool CPdfEngine::FinishLoading()
     return true;
 }
 
-PdfToCItem *CPdfEngine::BuildToCTree(pdf_outline *entry, int& idCounter)
+PdfTocItem *CPdfEngine::BuildTocTree(pdf_outline *entry, int& idCounter)
 {
-    PdfToCItem *node = NULL;
+    PdfTocItem *node = NULL;
 
     for (; entry; entry = entry->next) {
         TCHAR *name = entry->title ? str::conv::FromUtf8(entry->title) : str::Dup(_T(""));
-        PdfToCItem *item = new PdfToCItem(name, PdfLink(this, entry->link));
+        PdfTocItem *item = new PdfTocItem(name, PdfLink(this, entry->link));
         item->open = entry->count >= 0;
         item->id = ++idCounter;
 
         if (entry->link && PDF_LINK_GOTO == entry->link->kind)
             item->pageNo = FindPageNo(entry->link->dest);
         if (entry->child)
-            item->child = BuildToCTree(entry->child, idCounter);
+            item->child = BuildTocTree(entry->child, idCounter);
 
         if (!node)
             node = item;
@@ -1122,15 +1122,15 @@ PdfToCItem *CPdfEngine::BuildToCTree(pdf_outline *entry, int& idCounter)
 
 DocTocItem *CPdfEngine::GetTocTree()
 {
-    PdfToCItem *node = NULL;
+    PdfTocItem *node = NULL;
     int idCounter = 0;
 
     if (outline) {
-        node = BuildToCTree(outline, idCounter);
+        node = BuildTocTree(outline, idCounter);
         if (attachments)
-            node->AddSibling(BuildToCTree(attachments, idCounter));
+            node->AddSibling(BuildTocTree(attachments, idCounter));
     } else if (attachments)
-        node = BuildToCTree(attachments, idCounter);
+        node = BuildTocTree(attachments, idCounter);
 
     return node;
 }
@@ -1999,7 +1999,7 @@ struct XpsPageRun {
     int refs;
 };
 
-class XpsToCItem;
+class XpsTocItem;
 
 class CXpsEngine : public XpsEngine {
     friend XpsEngine;
@@ -2085,7 +2085,7 @@ protected:
                             fz_bbox clipbox=fz_infinite_bbox, bool cacheRun=true);
     void            dropPageRun(XpsPageRun *run, bool forceRemove=false);
 
-    XpsToCItem   *  BuildToCTree(xps_outline *entry, int& idCounter);
+    XpsTocItem   *  BuildTocTree(xps_outline *entry, int& idCounter, int depth);
     void            linkifyPageText(xps_page *page, int pageNo);
 
     RectD         * _mediaboxes;
@@ -2143,11 +2143,11 @@ public:
     virtual TCHAR *GetDestValue() const { return GetValue(); }
 };
 
-class XpsToCItem : public DocTocItem {
+class XpsTocItem : public DocTocItem {
     XpsLink link;
 
 public:
-    XpsToCItem(TCHAR *title, XpsLink link) : DocTocItem(title), link(link) { }
+    XpsTocItem(TCHAR *title, XpsLink link) : DocTocItem(title), link(link) { }
 
     virtual PageDestination *GetLink() { return &link; }
 };
@@ -2788,20 +2788,20 @@ PageDestination *CXpsEngine::GetNamedDest(const TCHAR *name)
     return NULL;
 }
 
-XpsToCItem *CXpsEngine::BuildToCTree(xps_outline *entry, int& idCounter)
+XpsTocItem *CXpsEngine::BuildTocTree(xps_outline *entry, int& idCounter, int depth)
 {
-    XpsToCItem *node = NULL;
+    XpsTocItem *node = NULL;
 
     for (; entry; entry = entry->next) {
         TCHAR *name = entry->title ? str::conv::FromUtf8(entry->title) : str::Dup(_T(""));
-        XpsToCItem *item = new XpsToCItem(name, XpsLink(this, entry->target, fz_empty_rect));
-        item->open = false;
+        XpsTocItem *item = new XpsTocItem(name, XpsLink(this, entry->target, fz_empty_rect));
         item->id = ++idCounter;
+        item->open = depth <= 2;
 
         if (str::Eq(item->GetLink()->GetType(), "ScrollTo"))
             item->pageNo = FindPageNo(entry->target);
         if (entry->child)
-            item->child = BuildToCTree(entry->child, idCounter);
+            item->child = BuildTocTree(entry->child, idCounter, depth + 1);
 
         if (!node)
             node = item;
@@ -2818,7 +2818,7 @@ DocTocItem *CXpsEngine::GetTocTree()
         return NULL;
 
     int idCounter = 0;
-    return BuildToCTree(_outline, idCounter);
+    return BuildTocTree(_outline, idCounter, 1);
 }
 
 bool XpsEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)

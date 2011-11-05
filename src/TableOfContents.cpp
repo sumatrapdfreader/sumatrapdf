@@ -28,7 +28,7 @@ static void TreeView_ExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, b
     }
 }
 
-static void CustomizeToCInfoTip(LPNMTVGETINFOTIP nmit)
+static void CustomizeTocInfoTip(LPNMTVGETINFOTIP nmit)
 {
     DocTocItem *tocItem = (DocTocItem *)nmit->lParam;
     ScopedMem<TCHAR> path(tocItem->GetLink() ? tocItem->GetLink()->GetDestValue() : NULL);
@@ -404,7 +404,7 @@ static LRESULT OnTocTreeNotify(WindowInfo *win, LPNMTREEVIEW pnmtv)
 #endif
 
         case TVN_GETINFOTIP:
-            CustomizeToCInfoTip((LPNMTVGETINFOTIP)pnmtv);
+            CustomizeTocInfoTip((LPNMTVGETINFOTIP)pnmtv);
             break;
     }
     return -1;
@@ -460,7 +460,7 @@ static LRESULT CALLBACK WndProcTocTree(HWND hwnd, UINT message, WPARAM wParam, L
     return CallWindowProc(DefWndProcTocTree, hwnd, message, wParam, lParam);
 }
 
-static void CustomizeToCInfoTip(LPNMTVGETINFOTIP nmit);
+static void CustomizeTocInfoTip(LPNMTVGETINFOTIP nmit);
 #ifdef DISPLAY_TOC_PAGE_NUMBERS
 static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd);
 #endif
