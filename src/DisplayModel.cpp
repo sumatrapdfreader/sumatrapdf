@@ -218,10 +218,10 @@ DisplayModel::~DisplayModel()
     dontRenderFlag = true;
     dmCb->CleanUp(this);
 
-    free(pagesInfo);
     delete textSearch;
     delete textSelection;
     delete engine;
+    free(pagesInfo);
 }
 
 PageInfo *DisplayModel::GetPageInfo(int pageNo) const

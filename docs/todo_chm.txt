@@ -12,7 +12,6 @@ List of things to do before we can ship CHM support:
   Maybe the right approach is to implement scrolling on HtmlWindow (example:
   http://code.google.com/p/fidolook/source/browse/trunk/Qm/ui/messageviewwindow.cpp#886)
   and call it from FrameOnKeydown() via DisplayModel
-* be more lenient in parsing ToC trees (many chm docs fail to load)
 
 To decide:
 * should we use our own context menu or use the one provided by IE ?
@@ -33,3 +32,4 @@ Done:
 * sync page number and toc with current page
 * hook up print menu/toolbar to printing a single page of the document
   (as invoked from context menu)
+* be more lenient in parsing ToC trees (many chm docs fail to load)

@@ -16,41 +16,28 @@
 
 class ChmTocItem : public DocTocItem, public PageDestination {
 public:
-    TCHAR *url;
-    TCHAR *imageNumber;
-
-    // takes ownership of url and imageNumber
-    ChmTocItem(TCHAR *title, TCHAR *url, TCHAR *imageNumber) :
-        DocTocItem(title), url(url), imageNumber(imageNumber)
-    {
-    }
-
-    virtual ~ChmTocItem() {
-        free(url);
-        free(imageNumber);
-    }
+    ChmTocItem(TCHAR *title) : DocTocItem(title) { }
 
     virtual PageDestination *GetLink() { return this; }
-    virtual const char *GetType() const { return NULL; }
-    virtual int GetDestPageNo() const { return 0; }
+    virtual const char *GetType() const { return "ScrollTo"; }
+    virtual int GetDestPageNo() const { return pageNo; }
     virtual RectD GetDestRect() const { return RectD(); }
-    virtual TCHAR *GetDestValue() const { return str::Dup(url); }
+    virtual TCHAR *GetDestValue() const { return NULL; }
 
-    ChmTocItem *Clone();
+    static ChmTocItem *Clone(DocTocItem *item);
 };
 
-ChmTocItem *ChmTocItem::Clone()
+ChmTocItem *ChmTocItem::Clone(DocTocItem *item)
 {
-    ChmTocItem *res = new ChmTocItem(str::Dup(title), str::Dup(url), str::Dup(imageNumber));
-    res->open = open;
-    res->pageNo = pageNo;
-    res->id = id;
-    ChmTocItem *tmp = reinterpret_cast<ChmTocItem*>(child);
-    if (tmp)
-        res->child = tmp->Clone();
-    tmp = reinterpret_cast<ChmTocItem*>(next);
-    if (tmp)
-        res->next = tmp->Clone();
+    if (!item)
+        return NULL;
+
+    ChmTocItem *res = new ChmTocItem(str::Dup(item->title));
+    res->open = item->open;
+    res->pageNo = item->pageNo;
+    res->id = item->id;
+    res->child = Clone(item->child);
+    res->next = Clone(item->next);
     return res;
 }
 
@@ -84,11 +71,9 @@ public:
     virtual const TCHAR *FileName() const { return fileName; };
     virtual int PageCount() const { return pages.Count(); }
 
-    virtual RectD PageMediabox(int pageNo) {
-        RectD r; return r;
-    }
+    virtual RectD PageMediabox(int pageNo) { return RectD(); }
     virtual RectD PageContentBox(int pageNo, RenderTarget target=Target_View) {
-        RectD r; return r;
+        return RectD();
     }
 
     virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
@@ -130,7 +115,6 @@ public:
 
     virtual void HookHwndAndDisplayIndex(HWND hwnd);
     virtual void DisplayPage(int pageNo);
-    virtual void NavigateTo(PageDestination *dest);
     virtual HtmlWindow *GetHtmlWindow() const { return htmlWindow; }
     virtual void SetNavigationCalback(ChmNavigationCallback *cb) { navCb = cb; }
     virtual RenderedBitmap *CreateThumbnail(SizeI size);
@@ -145,32 +129,19 @@ protected:
     ChmInfo *chmInfo;
     ChmTocItem *tocRoot;
 
-    Vec<ChmTocItem*> pages; // point to one of the items within tocRoot
+    StrVec pages;
     HtmlWindow *htmlWindow;
     ChmNavigationCallback *navCb;
 
     bool Load(const TCHAR *fileName);
     bool LoadAndParseHtmlToc();
     bool ParseChmHtmlToc(char *html);
-    int  PageNumberForUrl(const TCHAR *url);
 };
 
 CChmEngine::CChmEngine() :
     fileName(NULL), chmHandle(NULL), chmInfo(NULL), tocRoot(NULL),
         htmlWindow(NULL), navCb(NULL)
 {
-}
-
-// if we mapped a given chm url to a logical page, return its
-// page number. Otherwise return -1
-int CChmEngine::PageNumberForUrl(const TCHAR *url)
-{
-    for (size_t i = 0; i < pages.Count(); i++) {
-        ChmTocItem *ti = pages.At(i);
-        if (str::Eq(ti->url, url))
-            return i + 1; // pages are numbered from 1
-    }
-    return -1;
 }
 
 // called when we're about to show a given url. If this is a CHM
@@ -193,8 +164,8 @@ bool CChmEngine::OnBeforeNavigate(const TCHAR *url)
     if (*url == _T('/'))
         ++url;
     
-    int pageNo = PageNumberForUrl(url);
-    if (-1 != pageNo && navCb)
+    int pageNo = pages.Find(url) + 1;
+    if (pageNo > 0 && navCb)
         navCb->UpdatePageNo(pageNo);
     return true;
 }
@@ -208,20 +179,9 @@ void CChmEngine::HookHwndAndDisplayIndex(HWND hwnd)
     //htmlWindow->DisplayHtml(_T("<html><body>Hello!</body></html>"));
 }
 
-void CChmEngine::NavigateTo(PageDestination *dest)
-{
-    if (!dest)
-        return;
-    ScopedMem<TCHAR> url(dest->GetDestValue());
-    if (!url)
-        return;
-    htmlWindow->DisplayChmPage(fileName, url);
-}
-
 void CChmEngine::DisplayPage(int pageNo)
 {
-    ChmTocItem *tocItem = pages.At(pageNo - 1);
-    htmlWindow->DisplayChmPage(fileName, tocItem->url);
+    htmlWindow->DisplayChmPage(fileName, pages.At(pageNo - 1));
 }
 
 RenderedBitmap *CChmEngine::CreateThumbnail(SizeI size)
@@ -264,6 +224,9 @@ CChmEngine::~CChmEngine()
 {
     chm_close(chmHandle);
     delete chmInfo;
+    // TODO: deleting htmlWindow seems to spin a modal loop which
+    //       can lead to WM_PAINT being dispatched for the parent
+    //       hwnd and then crashing in SumatraPDF.cpp's DrawDocument
     delete htmlWindow;
     delete tocRoot;
     free((void *)fileName);
@@ -497,6 +460,22 @@ static bool ParseSystemChmData(chmFile *chmHandle, ChmInfo *chmInfo)
     return true;
 }
 
+// We fake page numbers by doing a depth-first traversal of
+// toc tree and considering each unique html page in toc tree
+// as a page
+static int CreatePageNoForURL(StrVec& pages, ScopedMem<TCHAR>& url)
+{
+    if (!url)
+        return 0;
+
+    int pageNo = pages.Find(url);
+    if (pageNo != -1)
+        return pageNo + 1;
+
+    pages.Append(url.StealData());
+    return pages.Count();
+}
+
 /* The html looks like:
 <li>
   <object type="text/sitemap">
@@ -507,13 +486,13 @@ static bool ParseSystemChmData(chmFile *chmHandle, ChmInfo *chmInfo)
 <li>
   ...
 */
-ChmTocItem *TocItemFromLi(HtmlElement *el)
+ChmTocItem *TocItemFromLi(StrVec& pages, HtmlElement *el)
 {
     assert(str::Eq("li", el->name));
     el = el->GetChildByName("object");
     if (!el)
         return NULL;
-    ScopedMem<TCHAR> name, local, imageNumber;
+    ScopedMem<TCHAR> name, local;
     for (el = el->GetChildByName("param"); el; el = el->next) {
         if (!str::Eq("param", el->name))
             continue;
@@ -521,19 +500,23 @@ ChmTocItem *TocItemFromLi(HtmlElement *el)
         ScopedMem<TCHAR> attrVal(el->GetAttribute("value"));
         if (!attrName || !attrVal)
             /* ignore incomplete/unneeded <param> */;
-        else if (str::EqI(attrName, _T("name")))
+        else if (str::EqI(attrName, _T("Name")))
             name.Set(attrVal.StealData());
-        else if (str::EqI(attrName, _T("local")))
+        else if (str::EqI(attrName, _T("Local")))
             local.Set(attrVal.StealData());
-        else if (str::EqI(attrName, _T("ImageNumber")))
-            imageNumber.Set(attrVal.StealData());
     }
-    if (!name || !local)
+    if (!name)
         return NULL;
-    return new ChmTocItem(name.StealData(), local.StealData(), imageNumber.StealData());
+    // remove the ITS protocol and any filename references from the URLs
+    if (local && str::Find(local, _T("::/")))
+        local.Set(str::Dup(str::Find(local, _T("::/")) + 3));
+
+    ChmTocItem *item = new ChmTocItem(name.StealData());
+    item->pageNo = CreatePageNoForURL(pages, local);
+    return item;
 }
 
-ChmTocItem *BuildChmToc(HtmlElement *list)
+ChmTocItem *BuildChmToc(StrVec& pages, HtmlElement *list)
 {
     assert(str::Eq("ul", list->name));
     ChmTocItem *node = NULL;
@@ -547,12 +530,12 @@ ChmTocItem *BuildChmToc(HtmlElement *list)
            <li>
              ...
         */
-        ChmTocItem *item = TocItemFromLi(el);
+        ChmTocItem *item = TocItemFromLi(pages, el);
         if (!item)
             continue; // skip incomplete elements and all their children
         HtmlElement *nested = el->GetChildByName("ul");
         if (nested)
-            item->child = BuildChmToc(nested);
+            item->child = BuildChmToc(pages, nested);
 
         if (!node)
             node = item;
@@ -576,37 +559,6 @@ static bool ChmFileExists(struct chmFile *chmHandle, TCHAR *fileName)
     return CHM_RESOLVE_SUCCESS == res;
 }
 
-static void AddPageIfUnique(Vec<ChmTocItem*>& pages, ChmTocItem *item, struct chmFile *chmHandle)
-{
-    TCHAR *url = item->url;
-    size_t len = pages.Count();
-    for (size_t i = 0; i < len; i++) {
-        ChmTocItem *tmp = pages.At(len - i - 1);
-        if (str::Eq(tmp->url, url)) {
-            item->pageNo = i + 1;
-            return;
-        }
-    }
-    if (!ChmFileExists(chmHandle, item->url)) {
-        item->pageNo = 0;
-        return;
-    }
-    pages.Append(item);
-    item->pageNo = pages.Count();
-}
-
-// We fake page numbers by doing a depth-first traversal of
-// toc tree and considering each unique html page in toc tree
-// as a page
-static void BuildPagesInfo(Vec<ChmTocItem*>& pages, DocTocItem *curr, struct chmFile *chmHandle)
-{
-    AddPageIfUnique(pages, static_cast<ChmTocItem *>(curr), chmHandle);
-    if (curr->child)
-        BuildPagesInfo(pages, curr->child, chmHandle);
-    if (curr->next)
-        BuildPagesInfo(pages, curr->next, chmHandle);
-}
-
 bool CChmEngine::ParseChmHtmlToc(char *html)
 {
     HtmlParser p;
@@ -619,7 +571,7 @@ bool CChmEngine::ParseChmHtmlToc(char *html)
     el = p.FindElementByName("ul", el);
     if (!el)
         return false;
-    tocRoot = BuildChmToc(el);
+    tocRoot = BuildChmToc(pages, el);
     return tocRoot != NULL;
 }
 
@@ -628,10 +580,9 @@ bool CChmEngine::LoadAndParseHtmlToc()
     Bytes b;
     if (!GetChmDataForFile(chmHandle, chmInfo->tocPath, b))
         return false;
+    assert(0 == pages.Count());
     if (!ParseChmHtmlToc((char*)b.d))
         return false;
-    assert(0 == pages.Count());
-    BuildPagesInfo(pages, tocRoot, chmHandle);
     return 0 != pages.Count();
 }
 
@@ -652,26 +603,24 @@ bool CChmEngine::Load(const TCHAR *fileName)
     if (!ParseSystemChmData(chmHandle, chmInfo))
         return false;
 
-    if (!chmInfo->homePath) {
+    if (!chmInfo->homePath)
         chmInfo->homePath = FindHomeForPath(chmHandle, "/");
-    }
-
-    if (!chmInfo->tocPath || !chmInfo->homePath) {
-        return false;
-    }
-    if (!LoadAndParseHtmlToc())
+    if (!chmInfo->homePath)
         return false;
 
-    return true;
+    if (!chmInfo->tocPath) {
+        pages.Append(str::conv::FromAnsi(chmInfo->homePath));
+        return true;
+    }
+
+    return LoadAndParseHtmlToc();
 }
 
 // Callers delete the result so we return a copy of toc tree
 // (probably faster than re-creating it from html every time)
 DocTocItem *CChmEngine::GetTocTree()
 {
-    if (!tocRoot)
-        return NULL;
-    return tocRoot->Clone();
+    return ChmTocItem::Clone(tocRoot);
 }
 
 unsigned char *CChmEngine::GetFileData(size_t *cbCount)

@@ -188,11 +188,6 @@ void LinkHandler::GotoLink(PageDestination *link)
         return;
 
     DisplayModel *dm = owner->dm;
-    if (owner->IsChm()) {
-        dm->AsChmEngine()->NavigateTo(link);
-        return;
-    }
-
     ScopedMem<TCHAR> path(link->GetDestValue());
     const char *type = link->GetType();
     if (str::Eq(type, "ScrollTo")) {

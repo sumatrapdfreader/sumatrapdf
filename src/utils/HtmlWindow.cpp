@@ -584,7 +584,7 @@ HBITMAP HtmlWindow::TakeScreenshot(RectI area, SizeI finalSize)
 
     ScopedComPtr<IDispatch> docDispatch;
     HRESULT hr = webBrowser->get_Document(&docDispatch);
-    if (FAILED(hr))
+    if (FAILED(hr) || !docDispatch)
         return NULL;
     ScopedComQIPtr<IViewObject2> view(docDispatch);
     if (!view)
