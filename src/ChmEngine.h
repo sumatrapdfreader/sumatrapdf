@@ -24,6 +24,7 @@ public:
     virtual void PrintCurrentPage() = 0;
     virtual bool CanNavigate(int dir) = 0;
     virtual void Navigate(int dir) = 0;
+    virtual void ZoomTo(float zoomLevel) = 0;
 
     static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
     static ChmEngine *CreateFromFileName(const TCHAR *fileName);

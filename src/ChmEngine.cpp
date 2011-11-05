@@ -122,6 +122,7 @@ public:
     virtual void PrintCurrentPage() { htmlWindow->PrintCurrentPage(); }
     virtual bool CanNavigate(int dir);
     virtual void Navigate(int dir);
+    virtual void ZoomTo(float zoomLevel);
 
     // from HtmlWindowCallback
     virtual bool OnBeforeNavigate(const TCHAR *url);
@@ -239,6 +240,12 @@ void CChmEngine::Navigate(int dir)
         for (; dir > 0 && CanNavigate(dir); dir--)
             htmlWindow->GoForward();
     }
+}
+
+void CChmEngine::ZoomTo(float zoomLevel)
+{
+    int zoom = (int)zoomLevel;
+    htmlWindow->SetZoomPercent(zoom);
 }
 
 CChmEngine::~CChmEngine()

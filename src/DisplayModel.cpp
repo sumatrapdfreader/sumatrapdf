@@ -110,13 +110,20 @@ int normalizeRotation(int rotation)
     return rotation;
 }
 
-static bool ValidZoomVirtual(float zoomVirtual)
+static bool IsZoomVirtual(float zoomLevel)
 {
-    if ((ZOOM_FIT_PAGE == zoomVirtual) || (ZOOM_FIT_WIDTH == zoomVirtual) ||
-        (ZOOM_FIT_CONTENT == zoomVirtual) || (ZOOM_ACTUAL_SIZE == zoomVirtual))
+    if ((ZOOM_FIT_PAGE == zoomLevel) || (ZOOM_FIT_WIDTH == zoomLevel) ||
+        (ZOOM_FIT_CONTENT == zoomLevel))
         return true;
-    if ((zoomVirtual < ZOOM_MIN) || (zoomVirtual > ZOOM_MAX)) {
-        DBG_OUT("ValidZoomVirtual() invalid zoom: %.4f\n", zoomVirtual);
+    return false;
+}
+
+static bool IsValidZoom(float zoomLevel)
+{
+    if (IsZoomVirtual(zoomLevel))
+        return true;
+    if ((zoomLevel < ZOOM_MIN) || (zoomLevel > ZOOM_MAX)) {
+        DBG_OUT("IsValidZoom() invalid zoom: %.4f\n", zoomLevel);
         return false;
     }
     return true;
@@ -478,7 +485,7 @@ int DisplayModel::CurrentPageNo() const
 
 void DisplayModel::SetZoomVirtual(float zoomVirtual)
 {
-    assert(ValidZoomVirtual(zoomVirtual));
+    assert(IsValidZoom(zoomVirtual));
     _zoomVirtual = zoomVirtual;
 
     if ((ZOOM_FIT_WIDTH == zoomVirtual) || (ZOOM_FIT_PAGE == zoomVirtual)) {
@@ -1057,7 +1064,7 @@ void DisplayModel::SetPresentationMode(bool enable)
         if (engine && engine->IsImageCollection())
             padding = &gImagePadding;
         ChangeDisplayMode(_presDisplayMode);
-        if (!ValidZoomVirtual(_presZoomVirtual))
+        if (!IsValidZoom(_presZoomVirtual))
             _presZoomVirtual = _zoomVirtual;
         ZoomTo(_presZoomVirtual);
     }
@@ -1247,10 +1254,23 @@ void DisplayModel::ScrollYBy(int dy, bool changePage)
     RepaintDisplay();
 }
 
-void DisplayModel::ZoomTo(float zoomVirtual, PointI *fixPt)
+void DisplayModel::ZoomToChm(float zoomLevel)
 {
-    if (!ValidZoomVirtual(zoomVirtual))
+    assert(!IsZoomVirtual(zoomLevel));
+    ChmEngine *chmEngine = AsChmEngine();
+    chmEngine->ZoomTo(zoomLevel);
+    SetZoomVirtual(zoomLevel);
+}
+
+void DisplayModel::ZoomTo(float zoomLevel, PointI *fixPt)
+{
+    if (!IsValidZoom(zoomLevel))
         return;
+
+    if (AsChmEngine() != NULL) {
+        ZoomToChm(zoomLevel);
+        return;
+    }
 
     ScrollState ss = GetScrollState();
 
@@ -1264,14 +1284,14 @@ void DisplayModel::ZoomTo(float zoomVirtual, PointI *fixPt)
             fixPt = NULL;
     }
 
-    if (ZOOM_FIT_CONTENT == zoomVirtual || ZOOM_FIT_PAGE == zoomVirtual) {
+    if (ZOOM_FIT_CONTENT == zoomLevel || ZOOM_FIT_PAGE == zoomLevel) {
         // SetScrollState's first call to GoToPage will already scroll to fit
         ss.x = ss.y = -1;
         fixPt = NULL;
     }
 
-    //DBG_OUT("DisplayModel::zoomTo() zoomVirtual=%.6f\n", _zoomVirtual);
-    Relayout(zoomVirtual, _rotation);
+    //DBG_OUT("DisplayModel::zoomTo() zoomLevel=%.6f\n", _zoomLevel);
+    Relayout(zoomLevel, _rotation);
     SetScrollState(ss);
 
     if (fixPt) {

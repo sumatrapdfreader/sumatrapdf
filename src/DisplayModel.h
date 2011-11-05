@@ -93,6 +93,10 @@ public:
     virtual void CleanUp(DisplayModel *dm) = 0;
 };
 
+// TODO: in hindsight, zoomVirtual is not a good name since it's either
+// virtual zoom level OR physical zoom level. Would be good to find
+// better naming scheme (call it zoomLevel?)
+
 /* Information needed to drive the display of a given document on a screen.
    You can think of it as a model in the MVC pardigm.
    All the display changes should be done through changing this model via
@@ -222,6 +226,8 @@ protected:
 
     void            AddNavPoint(bool keepForward=false);
     RectD           GetContentBox(int pageNo, RenderTarget target=Target_View);
+
+    void            ZoomToChm(float zoomLevel);
 
     /* an array of PageInfo, len of array is pageCount */
     PageInfo *      pagesInfo;
