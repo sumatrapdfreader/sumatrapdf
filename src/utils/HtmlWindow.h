@@ -53,6 +53,7 @@ public:
     void PrintCurrentPage();
     void SetZoomPercent(int zoom);
     int  GetZoomPercent();
+    void FindInCurrentPage();
     bool WaitUntilLoaded(DWORD maxWaitMs);
 
     HBITMAP TakeScreenshot(RectI area, SizeI finalSize);

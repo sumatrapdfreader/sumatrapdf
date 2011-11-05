@@ -115,6 +115,7 @@ public:
     virtual RenderedBitmap *CreateThumbnail(SizeI size);
 
     virtual void PrintCurrentPage() { htmlWindow->PrintCurrentPage(); }
+    virtual void FindInCurrentPage() { htmlWindow->FindInCurrentPage(); }
     virtual bool CanNavigate(int dir);
     virtual void Navigate(int dir);
     virtual void ZoomTo(float zoomLevel);

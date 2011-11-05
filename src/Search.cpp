@@ -42,6 +42,11 @@ bool NeedsFindUI(WindowInfo *win)
 
 void OnMenuFind(WindowInfo *win)
 {
+    if (win->IsChm()) {
+        win->dm->AsChmEngine()->FindInCurrentPage();
+        return;
+    }
+
     if (!win->IsDocLoaded() || !NeedsFindUI(win))
         return;
 

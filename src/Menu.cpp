@@ -84,8 +84,8 @@ MenuDef menuDefGoTo[] = {
     { SEP_ITEM,                             0,                          0 },
     { _TRN("&Back\tAlt+Left Arrow"),        IDM_GOTO_NAV_BACK,          0 },
     { _TRN("F&orward\tAlt+Right Arrow"),    IDM_GOTO_NAV_FORWARD,       0 },
-    { SEP_ITEM,                             0,                          MF_NOT_FOR_CHM },
-    { _TRN("Fin&d...\tCtrl+F"),             IDM_FIND_FIRST,             MF_NOT_FOR_CHM },
+    { SEP_ITEM,                             0,                          0 },
+    { _TRN("Fin&d...\tCtrl+F"),             IDM_FIND_FIRST,             0 },
 };
 
 MenuDef menuDefZoom[] = {
