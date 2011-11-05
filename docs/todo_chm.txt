@@ -12,15 +12,10 @@ List of things to do before we can ship CHM support:
   and call it from FrameOnKeydown() via DisplayModel
 * make a click into the page move the focus (away from the ToC)
 
-To decide:
-* should we use our own context menu or use the one provided by IE ?
-
 Things we can live without for the first release:
 * search (it looks like there's a way to get it cheaply if we reuse
   browser's UI for it; probably much harder if we want to preserve
   our own UI).
-* printing, although it seems easy to add printing of a single page
-  (it's even already in the context menu)
 
 Done:
 * custom zoom dialog for chm shouldn't have fit page etc.
@@ -36,3 +31,5 @@ Done:
   (as invoked from context menu)
 * be more lenient in parsing ToC trees (many chm docs fail to load)
 * hook back/forward menu to HtmlWindow's GoBack()/GoForward()
+* printing, although it seems easy to add printing of a single page
+  (it's even already in the context menu)
