@@ -225,6 +225,9 @@ Signets
 Bytes
 Octets
 
+CHM documents
+Fichiers d'aide CHM
+
 Can't connect to the Internet (error %#x).
 Impossible de se connecter à Internet (erreur %#x)
 
@@ -341,6 +344,9 @@ Failed to save a file
 
 Favorites
 Favoris
+
+File %s not found
+Fichier %s non trouvé
 
 File Size:
 Taille du fichier :
@@ -613,7 +619,7 @@ SumatraPDF is your default PDF reader
 SumatraPDF est votre lecteur de PDF
 
 SumatraPDF should now be your default PDF reader
-SumatraPDF doit maintenant être votre lecteur de PDF
+SumatraPDF doit maintenant être votre lecteur de PDF par défaut
 
 Synchronization file cannot be opened
 Le fichier de synchronisation ne peut pas être ouvert
@@ -665,8 +671,4 @@ copie du texte
 
 printing document
 impression du document
-
-# Untranslated:
-#CHM documents
-#File %s not found
 
