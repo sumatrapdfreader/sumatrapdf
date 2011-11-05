@@ -1,9 +1,5 @@
 List of things to do before we can ship CHM support:
 
-* when navigating between chm pages using next/prev page button (or internal
-  links) we should sync selection in toc tree (including expanding that path
-  in the tree) to current page. I think it used to work that way but either
-  it didn't or it regressed.
 * make scrolling in html window with cursor up/down etc. work
   (is it a matter of passing the messages through ?).
   Notes: I don't understand how this is supposed to work. Presumably web browser control
@@ -14,6 +10,7 @@ List of things to do before we can ship CHM support:
   Maybe the right approach is to implement scrolling on HtmlWindow (example:
   http://code.google.com/p/fidolook/source/browse/trunk/Qm/ui/messageviewwindow.cpp#886)
   and call it from FrameOnKeydown() via DisplayModel
+* make a click into the page move the focus (away from the ToC)
 
 To decide:
 * should we use our own context menu or use the one provided by IE ?
