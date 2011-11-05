@@ -36,6 +36,18 @@ class HW_DWebBrowserEvents2;
 class HW_IAdviseSink2;
 class HW_IAdviseSinkEx;
 
+inline void VariantSetBool(VARIANT *res, bool val)
+{
+    res->vt = VT_BOOL;
+    res->boolVal = val ? VARIANT_TRUE : VARIANT_FALSE;;
+}
+
+inline void VariantSetLong(VARIANT *res, long val)
+{
+    res->vt = VT_I4;
+    res->lVal = val;
+}
+
 // HW stands for HtmlWindow
 class FrameSite : public IUnknown
 {
@@ -540,6 +552,24 @@ void HtmlWindow::GoForward()
         webBrowser->GoForward();
 }
 
+int HtmlWindow::GetZoomPercent()
+{
+    VARIANT vtOut;
+    HRESULT hr = webBrowser->ExecWB(OLECMDID_OPTICAL_ZOOM, OLECMDEXECOPT_DONTPROMPTUSER,
+                                    NULL, &vtOut);
+   if (FAILED(hr))
+       return 100;
+    return vtOut.lVal;
+}
+
+void HtmlWindow::SetZoomPercent(int zoom)
+{
+    VARIANT vtIn, vtOut;
+    VariantSetLong(&vtIn, zoom);
+    webBrowser->ExecWB(OLECMDID_OPTICAL_ZOOM, OLECMDEXECOPT_DONTPROMPTUSER,
+                       &vtIn, &vtOut);
+}
+
 void HtmlWindow::EnsureAboutBlankShown()
 {
     if (aboutBlankShown)
@@ -848,22 +878,11 @@ HRESULT HW_IDispatch::GetTypeInfoCount(unsigned int * pcTInfo)
     return E_NOTIMPL;
 }
 
-inline void VariantSetBool(VARIANT *res, bool val)
-{
-    res->vt = VT_BOOL;
-    res->boolVal = val ? VARIANT_TRUE : VARIANT_FALSE;;
-}
-
-inline void VariantSetLong(VARIANT *res, long val)
-{
-    res->vt = VT_I4;
-    res->lVal = val;
-}
-
 HRESULT HW_IDispatch::DispatchPropGet(DISPID dispIdMember, VARIANT *res)
 {
     if (res == NULL)
         return E_INVALIDARG;
+
     switch (dispIdMember)
     {
         case DISPID_AMBIENT_APPEARANCE:
