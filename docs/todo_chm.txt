@@ -13,7 +13,7 @@ List of things to do before we can ship CHM support:
   http://code.google.com/p/fidolook/source/browse/trunk/Qm/ui/messageviewwindow.cpp#886)
   and call it from FrameOnKeydown() via DisplayModel
 * hook up print menu/toolbar to printing a single page of the document
-  (as 
+  (as invoked from context menu)
 
 To decide:
 * should we use our own context menu or use the one provided by IE ?

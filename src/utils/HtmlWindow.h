@@ -51,8 +51,9 @@ public:
     void DisplayChmPage(const TCHAR *chmFilePath, const TCHAR *chmPage);
     void GoBack();
     void GoForward();
-    void  SetZoomPercent(int zoom);
-    int   GetZoomPercent();
+    void PrintCurrentPage();
+    void SetZoomPercent(int zoom);
+    int  GetZoomPercent();
     bool WaitUntilLoaded(DWORD maxWaitMs);
 
     HBITMAP TakeScreenshot(RectI area, SizeI finalSize);

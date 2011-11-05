@@ -570,6 +570,11 @@ void HtmlWindow::SetZoomPercent(int zoom)
                        &vtIn, &vtOut);
 }
 
+void HtmlWindow::PrintCurrentPage()
+{
+    webBrowser->ExecWB(OLECMDID_PRINT, OLECMDEXECOPT_PROMPTUSER, NULL, NULL);
+}
+
 void HtmlWindow::EnsureAboutBlankShown()
 {
     if (aboutBlankShown)
