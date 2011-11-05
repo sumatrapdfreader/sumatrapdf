@@ -580,8 +580,6 @@ public:
     }
 };
 
-#include "HtmlWindow.h"
-
 // Create a thumbnail of chm document by loading it again and rendering
 // its first page to a hwnd specially created for it. An alternative
 // would be to reuse ChmEngine/HtmlWindow we already have but it has
@@ -593,47 +591,23 @@ static void CreateChmThumbnail(WindowInfo& win, DisplayState& ds)
     assert(win.IsChm());
     if (!win.IsChm()) return;
 
-    HWND hwnd = NULL;
-    HtmlWindow *htmlWin = NULL;
-    HBITMAP hbmp = NULL;
-    RenderedBitmap *bmp = NULL;
-    RectI area(0, 0, THUMBNAIL_DX * 2, THUMBNAIL_DY * 2);
-
     MillisecondTimer t(true);
+
     ChmEngine *chmEngine = reinterpret_cast<ChmEngine *>(win.dm->AsChmEngine()->Clone());
     if (!chmEngine)
         return;
 
-    // reusing CANVAS_CLASS_NAME. I don't think exact class matters (WndProc
-    // will be taken over by HtmlWindow anyway) but it can't be NULL.
-    // We render twice the size of thumbnail and scale it down
-    int winDx = area.dx + GetSystemMetrics(SM_CXVSCROLL);
-    int winDy = area.dy + GetSystemMetrics(SM_CYHSCROLL);
-    hwnd = CreateWindow(CANVAS_CLASS_NAME, _T("BrowserCapture"), WS_POPUP, 0, 0, winDx, winDy, NULL, NULL, ghinst, NULL);
-    if (!hwnd)
-        goto Exit;
-
-#if 0 // when debugging set to 1 to see the window
-    ShowWindow(hwnd, SW_SHOW);
-#endif
-    chmEngine->HookHwndAndDisplayIndex(hwnd);
-    htmlWin = chmEngine->GetHtmlWindow();
-    if (!htmlWin->WaitUntilLoaded(5*1000))
-        goto Exit;
-    hbmp = htmlWin->TakeScreenshot(area, SizeI(THUMBNAIL_DX, THUMBNAIL_DY));
-    if (!hbmp)
-        goto Exit;
-    bmp = new RenderedBitmap(hbmp, THUMBNAIL_DX, THUMBNAIL_DY);
-    if (SaveThumbnailForFile(win.loadedFilePath, bmp))
+    SizeI thumbSize(THUMBNAIL_DX, THUMBNAIL_DY);
+    RenderedBitmap *bmp = chmEngine->CreateThumbnail(thumbSize);
+    if (bmp && SaveThumbnailForFile(win.loadedFilePath, bmp))
         bmp = NULL;
-Exit:
+    delete bmp;
+    delete chmEngine;
+
     t.Stop();
     double dur = t.GetTimeInMs();
-    if (dur > 1000.0) {
+    if (dur > 1000.0)
         DBG_OUT("Formatting %s took %.2f secs\n", win.loadedFilePath, dur / 1000.0);
-    }
-    delete chmEngine;
-    DestroyWindow(hwnd);
 }
 
 void CreateThumbnailForFile(WindowInfo& win, DisplayState& ds)
@@ -4354,14 +4328,6 @@ InitMouseWheelInfo:
             return DefWindowProc(hwnd, msg, wParam, lParam);
     }
     return 0;
-}
-
-// tell the ui to show the pageNo as current page (which also syncs the toc with
-// curent page). Needed for chm ui where navigation can be initiated
-// from inside html control
-void SyncPageNo(WindowInfo *win, int pageNo)
-{
-    win->dm->GoToPageChm(pageNo, false);
 }
 
 static bool RegisterWinClass(HINSTANCE hinst)

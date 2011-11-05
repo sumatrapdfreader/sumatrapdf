@@ -82,7 +82,6 @@ struct ScrollState {
 };
 
 class DisplayModel;
-class ChmEngine;
 
 class DisplayModelCallback : public PasswordUI {
 public:
@@ -98,7 +97,7 @@ public:
    You can think of it as a model in the MVC pardigm.
    All the display changes should be done through changing this model via
    API and re-displaying things based on new display information */
-class DisplayModel
+class DisplayModel : public ChmNavigationCallback
 {
 public:
     DisplayModel(DisplayModelCallback *dmCb);
@@ -162,8 +161,6 @@ public:
     bool            LastBookPageVisible();
     void            Relayout(float zoomVirtual, int rotation);
 
-    void            GoToPageChm(int pageNo, bool goToUrl=true);
-
     void            GoToPage(int pageNo, int scrollY, bool addNavPt=false, int scrollX=-1);
     bool            GoToPrevPage(int scrollY);
     bool            GoToNextPage(int scrollY);
@@ -209,6 +206,7 @@ public:
     void            RepaintDisplay() { if (dmCb) dmCb->Repaint(); }
 
     ChmEngine *     AsChmEngine() const;
+    virtual void    UpdatePageNo(int pageNo);
 
 protected:
 

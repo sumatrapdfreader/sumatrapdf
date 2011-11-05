@@ -268,6 +268,8 @@ bool DisplayModel::Load(const TCHAR *fileName)
     _startPage = 1;
     if (engine->IsImageCollection())
         padding = &gImagePadding;
+    if (AsChmEngine())
+        AsChmEngine()->SetNavigationCalback(this);
 
     dpiFactor = 1.0f * dmCb->GetScreenDPI() / engine->GetFileDPI();
     textSelection = new TextSelection(engine);
@@ -943,30 +945,6 @@ PointI DisplayModel::GetContentStart(int pageNo)
     return contentBox.TL().Convert<int>();
 }
 
-// In chm ui going to a page has almost nothing in common with the code
-// for standard ui, so this is just for chm mode. It can be called in
-// two cases:
-// * initiated by user action, in which case goToUrl is true and we
-//   initiate navigation to that url
-// * before navigation happens (initiated either from within html control
-//   or as a result of us being called with goToUrl=true) we get notified
-//   and call here with goToUrl=false to sync the state of the ui to show
-//   current page number
-void DisplayModel::GoToPageChm(int pageNo, bool goToUrl)
-{
-    ChmEngine *chmEngine = AsChmEngine();
-    assert(chmEngine);
-    if (goToUrl) {
-        // this will trigger navigation callback which will
-        // result in us being called again, but with goToUrl = false
-        chmEngine->DisplayPage(pageNo);
-    } else {
-        // sync the state of the ui to show current page number
-        _startPage = pageNo;
-        dmCb->PageNoChanged(pageNo);
-    }
-}
-
 void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
 {
     assert(ValidPageNo(pageNo));
@@ -975,7 +953,9 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
 
     ChmEngine *chmEngine = AsChmEngine();
     if (chmEngine) {
-        GoToPageChm(pageNo, true);
+        // this will trigger a navigation callback to
+        // UpdatePageNo for updating internal bookkeeping
+        chmEngine->DisplayPage(pageNo);
         return;
     }
 
@@ -1542,4 +1522,15 @@ ChmEngine *DisplayModel::AsChmEngine() const
         return NULL;
 
     return static_cast<ChmEngine*>(engine);
+}
+
+// Updates the displayed page number, if navigation happened
+// for a Chm document inside the HTML browser (in which case
+// we have to update the UI manually)
+void DisplayModel::UpdatePageNo(int pageNo)
+{
+    assert(AsChmEngine());
+    // sync the state of the ui to show current page number
+    _startPage = pageNo;
+    dmCb->PageNoChanged(pageNo);
 }

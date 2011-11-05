@@ -6,8 +6,6 @@
 #include "FileUtil.h"
 #include "Vec.h"
 #include "TrivialHtmlParser.h"
-#include "AppTools.h"
-#include "SumatraPDF.h"
 #include "HtmlWindow.h"
 
 #define CHM_MT
@@ -134,8 +132,10 @@ public:
     virtual void DisplayPage(int pageNo);
     virtual void NavigateTo(PageDestination *dest);
     virtual HtmlWindow *GetHtmlWindow() const { return htmlWindow; }
+    virtual void SetNavigationCalback(ChmNavigationCallback *cb) { navCb = cb; }
+    virtual RenderedBitmap *CreateThumbnail(SizeI size);
 
-        // from HtmlWindowCallback
+    // from HtmlWindowCallback
     virtual bool OnBeforeNavigate(const TCHAR *url);
 
 protected:
@@ -146,6 +146,7 @@ protected:
 
     Vec<ChmTocItem*> pages; // point to one of the items within tocRoot
     HtmlWindow *htmlWindow;
+    ChmNavigationCallback *navCb;
 
     bool Load(const TCHAR *fileName);
     bool LoadAndParseHtmlToc();
@@ -155,7 +156,7 @@ protected:
 
 CChmEngine::CChmEngine() :
     fileName(NULL), chmHandle(NULL), chmInfo(NULL), tocRoot(NULL),
-        htmlWindow(NULL)
+        htmlWindow(NULL), navCb(NULL)
 {
 }
 
@@ -170,19 +171,6 @@ int CChmEngine::PageNumberForUrl(const TCHAR *url)
     }
     return -1;
 }
-
-class SyncPageNoWorkItem : public UIThreadWorkItem
-{
-    int pageNo;
-
-public:
-    SyncPageNoWorkItem(WindowInfo *win, int pn) :
-        UIThreadWorkItem(win), pageNo(pn) {}
-
-    virtual void Execute() {
-        SyncPageNo(win, pageNo);
-    }
-};
 
 // called when we're about to show a given url. If this is a CHM
 // html page, sync the state of the ui with the page (show
@@ -205,11 +193,8 @@ bool CChmEngine::OnBeforeNavigate(const TCHAR *url)
         ++url;
     
     int pageNo = PageNumberForUrl(url);
-    if (-1 != pageNo) {
-        WindowInfo *win = FindWindowInfoByFile(fileName);
-        if (win)
-            SyncPageNo(win, pageNo);
-    }
+    if (-1 != pageNo && navCb)
+        navCb->UpdatePageNo(pageNo);
     return true;
 }
 
@@ -236,6 +221,37 @@ void CChmEngine::DisplayPage(int pageNo)
 {
     ChmTocItem *tocItem = pages.At(pageNo - 1);
     htmlWindow->DisplayChmPage(fileName, tocItem->url);
+}
+
+RenderedBitmap *CChmEngine::CreateThumbnail(SizeI size)
+{
+    RenderedBitmap *bmp = NULL;
+    // We render twice the size of thumbnail and scale it down
+    RectI area(0, 0, size.dx * 2, size.dy * 2);
+
+    // reusing WC_STATIC. I don't think exact class matters (WndProc
+    // will be taken over by HtmlWindow anyway) but it can't be NULL.
+    int winDx = area.dx + GetSystemMetrics(SM_CXVSCROLL);
+    int winDy = area.dy + GetSystemMetrics(SM_CYHSCROLL);
+    HWND hwnd = CreateWindow(WC_STATIC, _T("BrowserCapture"), WS_POPUP,
+                             0, 0, winDx, winDy, NULL, NULL, NULL, NULL);
+    if (!hwnd)
+        return NULL;
+
+#if 0 // when debugging set to 1 to see the window
+    ShowWindow(hwnd, SW_SHOW);
+#endif
+    HookHwndAndDisplayIndex(hwnd);
+    if (!htmlWindow->WaitUntilLoaded(5 * 1000))
+        goto Exit;
+    HBITMAP hbmp = htmlWindow->TakeScreenshot(area, size);
+    if (!hbmp)
+        goto Exit;
+    bmp = new RenderedBitmap(hbmp, size.dx, size.dy);
+
+Exit:
+    DestroyWindow(hwnd);
+    return bmp;
 }
 
 CChmEngine::~CChmEngine()
