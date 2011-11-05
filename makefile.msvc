@@ -104,7 +104,8 @@ BROWSER_PLUGIN_CFLAGS = $(CFLAGS) /Isrc/utils /Isrc/utils/msvc
 UTILS_OBJS = \
 	$(OS)\BencUtil.obj $(OS)\FileUtil.obj $(OS)\Http.obj \
 	$(OS)\StrUtil.obj $(OS)\UtilTests.obj $(OS)\WinUtil.obj \
-	$(OS)\DialogSizer.obj $(OS)\Transactions.obj $(OS)\Touch.obj
+	$(OS)\DialogSizer.obj $(OS)\Transactions.obj $(OS)\Touch.obj \
+	$(OS)\TrivialHtmlParser.obj $(OS)\HtmlWindow.obj
 
 SUMATRA_OBJS = \
 	$(OS)\AppPrefs.obj $(OS)\DisplayModel.obj $(OS)\CrashHandler.obj $(OS)\PdfEngine.obj \
@@ -117,17 +118,8 @@ SUMATRA_OBJS = \
 	$(OS)\Notifications.obj $(OS)\Search.obj $(OS)\Menu.obj \
 	$(OS)\ExternalPdfViewer.obj $(OS)\Selection.obj $(OS)\ZipUtil.obj \
 	$(UTILS_OBJS) $(BZIP2_OBJS) $(MINIZIP_OBJS) $(UNRAR_OBJS) $(SYNCTEX_OBJS) \
-	$(OS)\DjVuEngine.obj $(DJVU_OBJS)
-
-# disable incomplete CHM support in release builds (unless BUILD_CHM_SUPPORT is defined)
-!if "$(CFG)"=="dbg"
-BUILD_CHM_SUPPORT = 1
-!endif
-!if "$(BUILD_CHM_SUPPORT)"!=""
-UTILS_OBJS = $(UTILS_OBJS) $(OS)\TrivialHtmlParser.obj $(OS)\HtmlWindow.obj
-SUMATRA_OBJS = $(SUMATRA_OBJS) $(OS)\ChmEngine.obj $(CHMLIB_OBJS)
-SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "BUILD_CHM_SUPPORT"
-!endif
+	$(OS)\DjVuEngine.obj $(DJVU_OBJS) \
+	$(OS)\ChmEngine.obj $(CHMLIB_OBJS)
 
 # disable incomplete Ribbon support in release builds (unless BUILD_RIBBON is defined)
 !if "$(CFG)"=="dbg"

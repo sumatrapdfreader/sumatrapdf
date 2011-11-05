@@ -51,11 +51,9 @@ RetrySniffing:
         } else if (PsEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_PS) {
             engine = PsEngine::CreateFromFileName(filePath);
             engineType = Engine_PS;
-#ifdef BUILD_CHM_SUPPORT
         } else if (ChmEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_Chm) {
             engine = ChmEngine::CreateFromFileName(filePath);
             engineType = Engine_Chm;
-#endif
         }
 
         if (!engine && !sniff) {
