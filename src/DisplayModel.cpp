@@ -240,6 +240,9 @@ void DisplayModel::SetInitialViewSettings(DisplayMode displayMode, int newStartP
     if (ValidPageNo(newStartPage))
         _startPage = newStartPage;
 
+    if (AsChmEngine())
+        displayMode = DM_SINGLE_PAGE;
+
     _displayMode = displayMode;
     _presDisplayMode = displayMode;
     PageLayoutType layout = engine->PreferredLayout();
@@ -444,11 +447,6 @@ int DisplayModel::FirstVisiblePageNo() const
 // (in continuous layout, there's no better criteria)
 int DisplayModel::CurrentPageNo() const
 {
-    ChmEngine *chmEngine = AsChmEngine();
-    if (chmEngine) {
-        return _startPage;
-    }
-
     if (!displayModeContinuous(displayMode()))
         return _startPage;
 
@@ -1023,6 +1021,8 @@ void DisplayModel::ChangeDisplayMode(DisplayMode displayMode)
 {
     if (_displayMode == displayMode)
         return;
+    if (AsChmEngine())
+        return;
 
     int currPageNo = CurrentPageNo();
     if (displayModeFacing(displayMode) && displayModeShowCover(_displayMode) && currPageNo < PageCount())
@@ -1069,15 +1069,6 @@ void DisplayModel::SetPresentationMode(bool enable)
    (e.g. because already was at the last page) */
 bool DisplayModel::GoToNextPage(int scrollY)
 {
-    ChmEngine *chmEngine = AsChmEngine();
-    if (chmEngine) {
-        int pageNo = _startPage + 1;
-        if (!ValidPageNo(pageNo))
-            return false;
-        GoToPage(pageNo, 0);
-        return true;
-    }
-
     int columns = columnsFromDisplayMode(displayMode());
     int currPageNo = CurrentPageNo();
     // Fully display the current page, if the previous page is still visible
@@ -1097,15 +1088,6 @@ bool DisplayModel::GoToNextPage(int scrollY)
 
 bool DisplayModel::GoToPrevPage(int scrollY)
 {
-    ChmEngine *chmEngine = AsChmEngine();
-    if (chmEngine) {
-        int pageNo = _startPage - 1;
-        if (!ValidPageNo(pageNo))
-            return false;
-        GoToPage(pageNo, 0);
-        return true;
-    }
-
     int columns = columnsFromDisplayMode(displayMode());
     int currPageNo = CurrentPageNo();
     DBG_OUT("DisplayModel::goToPrevPage(scrollY=%d), currPageNo=%d\n", scrollY, currPageNo);
@@ -1530,6 +1512,14 @@ ChmEngine *DisplayModel::AsChmEngine() const
 void DisplayModel::UpdatePageNo(int pageNo)
 {
     assert(AsChmEngine());
+
+    // update visibility information so that GetScrollState, etc. work as expected
+    for (int i = 1; i <= PageCount(); i++) {
+        PageInfo *pageInfo = GetPageInfo(i);
+        pageInfo->shown = (i == pageNo);
+        pageInfo->visibleRatio = pageInfo->shown ? 1.0f : 0.0f;
+    }
+
     // sync the state of the ui to show current page number
     _startPage = pageNo;
     dmCb->PageNoChanged(pageNo);

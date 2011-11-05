@@ -114,7 +114,7 @@ public:
     // (probably faster than re-creating it from html every time)
     virtual DocTocItem *GetTocTree() { return ChmTocItem::Clone(tocRoot); }
 
-    virtual void HookHwndAndDisplayIndex(HWND hwnd);
+    virtual void SetParentHwnd(HWND hwnd);
     virtual void DisplayPage(int pageNo) { DisplayPage(pages.At(pageNo - 1)); }
     virtual void SetNavigationCalback(ChmNavigationCallback *cb) { navCb = cb; }
     virtual RenderedBitmap *CreateThumbnail(SizeI size);
@@ -169,12 +169,11 @@ bool CChmEngine::OnBeforeNavigate(const TCHAR *url)
     return true;
 }
 
-void CChmEngine::HookHwndAndDisplayIndex(HWND hwnd)
+void CChmEngine::SetParentHwnd(HWND hwnd)
 {
     assert(!htmlWindow);
-    if (!htmlWindow)
-        htmlWindow = new HtmlWindow(hwnd, this);
-    DisplayPage(1);
+    delete htmlWindow;
+    htmlWindow = new HtmlWindow(hwnd, this);
 }
 
 void CChmEngine::DisplayPage(const TCHAR *pageUrl)
@@ -207,7 +206,8 @@ RenderedBitmap *CChmEngine::CreateThumbnail(SizeI size)
 #if 0 // when debugging set to 1 to see the window
     ShowWindow(hwnd, SW_SHOW);
 #endif
-    HookHwndAndDisplayIndex(hwnd);
+    SetParentHwnd(hwnd);
+    DisplayPage(1);
     if (!htmlWindow->WaitUntilLoaded(5 * 1000))
         goto Exit;
     HBITMAP hbmp = htmlWindow->TakeScreenshot(area, size);

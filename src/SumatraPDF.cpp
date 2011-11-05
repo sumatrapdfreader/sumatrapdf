@@ -756,8 +756,10 @@ static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win,
         }
         delete prevModel;
         ChmEngine *chmEngine = win.dm->AsChmEngine();
-        if (chmEngine)
-            chmEngine->HookHwndAndDisplayIndex(win.hwndCanvas);
+        if (chmEngine) {
+            chmEngine->SetParentHwnd(win.hwndCanvas);
+            chmEngine->DisplayPage(state ? state->pageNo : 1);
+        }
     } else if (allowFailure) {
         DBG_OUT("failed to load file %s\n", fileName);
         delete prevModel;
