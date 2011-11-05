@@ -2085,7 +2085,7 @@ protected:
                             fz_bbox clipbox=fz_infinite_bbox, bool cacheRun=true);
     void            dropPageRun(XpsPageRun *run, bool forceRemove=false);
 
-    XpsTocItem   *  BuildTocTree(xps_outline *entry, int& idCounter, int depth);
+    XpsTocItem   *  BuildTocTree(xps_outline *entry, int& idCounter, bool topLevel);
     void            linkifyPageText(xps_page *page, int pageNo);
 
     RectD         * _mediaboxes;
@@ -2788,7 +2788,7 @@ PageDestination *CXpsEngine::GetNamedDest(const TCHAR *name)
     return NULL;
 }
 
-XpsTocItem *CXpsEngine::BuildTocTree(xps_outline *entry, int& idCounter, int depth)
+XpsTocItem *CXpsEngine::BuildTocTree(xps_outline *entry, int& idCounter, bool topLevel)
 {
     XpsTocItem *node = NULL;
 
@@ -2796,12 +2796,12 @@ XpsTocItem *CXpsEngine::BuildTocTree(xps_outline *entry, int& idCounter, int dep
         TCHAR *name = entry->title ? str::conv::FromUtf8(entry->title) : str::Dup(_T(""));
         XpsTocItem *item = new XpsTocItem(name, XpsLink(this, entry->target, fz_empty_rect));
         item->id = ++idCounter;
-        item->open = depth <= 2;
+        item->open = topLevel;
 
         if (str::Eq(item->GetLink()->GetType(), "ScrollTo"))
             item->pageNo = FindPageNo(entry->target);
         if (entry->child)
-            item->child = BuildTocTree(entry->child, idCounter, depth + 1);
+            item->child = BuildTocTree(entry->child, idCounter, false);
 
         if (!node)
             node = item;
@@ -2818,7 +2818,7 @@ DocTocItem *CXpsEngine::GetTocTree()
         return NULL;
 
     int idCounter = 0;
-    return BuildTocTree(_outline, idCounter, 1);
+    return BuildTocTree(_outline, idCounter, true);
 }
 
 bool XpsEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)

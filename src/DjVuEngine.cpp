@@ -246,7 +246,7 @@ protected:
     bool ExtractPageText(miniexp_t item, const TCHAR *lineSep,
                          str::Str<TCHAR>& extracted, Vec<RectI>& coords);
     char *ResolveNamedDest(const char *name);
-    DjVuTocItem *BuildTocTree(miniexp_t entry, int& idCounter, int depth);
+    DjVuTocItem *BuildTocTree(miniexp_t entry, int& idCounter, bool topLevel);
     bool Load(const TCHAR *fileName);
     bool LoadMediaboxes();
 };
@@ -773,7 +773,7 @@ PageDestination *CDjVuEngine::GetNamedDest(const TCHAR *name)
     return NULL;
 }
 
-DjVuTocItem *CDjVuEngine::BuildTocTree(miniexp_t entry, int& idCounter, int depth)
+DjVuTocItem *CDjVuEngine::BuildTocTree(miniexp_t entry, int& idCounter, bool topLevel)
 {
     DjVuTocItem *node = NULL;
 
@@ -794,13 +794,13 @@ DjVuTocItem *CDjVuEngine::BuildTocTree(miniexp_t entry, int& idCounter, int dept
             tocItem = new DjVuTocItem(name, linkNo);
         else {
             // ignore generic (name-less) entries
-            delete BuildTocTree(miniexp_cddr(item), idCounter, depth + 1);
+            delete BuildTocTree(miniexp_cddr(item), idCounter, false);
             continue;
         }
 
         tocItem->id = ++idCounter;
-        tocItem->child = BuildTocTree(miniexp_cddr(item), idCounter, depth + 1);
-        tocItem->open = depth <= 2;
+        tocItem->child = BuildTocTree(miniexp_cddr(item), idCounter, false);
+        tocItem->open = topLevel;
 
         if (!node)
             node = tocItem;
@@ -818,7 +818,7 @@ DocTocItem *CDjVuEngine::GetTocTree()
 
     ScopedCritSec scope(&gDjVuContext.lock);
     int idCounter = 0;
-    return BuildTocTree(outline, idCounter, 1);
+    return BuildTocTree(outline, idCounter, true);
 }
 
 bool DjVuEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)

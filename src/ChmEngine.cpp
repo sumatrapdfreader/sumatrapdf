@@ -541,7 +541,7 @@ ChmTocItem *TocItemFromLi(StrVec& pages, HtmlElement *el)
     return item;
 }
 
-ChmTocItem *BuildChmToc(StrVec& pages, HtmlElement *list)
+ChmTocItem *BuildChmToc(StrVec& pages, HtmlElement *list, bool topLevel)
 {
     assert(str::Eq("ul", list->name));
     ChmTocItem *node = NULL;
@@ -555,7 +555,8 @@ ChmTocItem *BuildChmToc(StrVec& pages, HtmlElement *list)
 
         HtmlElement *nested = el->GetChildByName("ul");
         if (nested)
-            item->child = BuildChmToc(pages, nested);
+            item->child = BuildChmToc(pages, nested, false);
+        item->open = topLevel;
 
         if (!node)
             node = item;
@@ -578,7 +579,7 @@ static ChmTocItem *ParseChmHtmlToc(StrVec& pages, char *html)
     el = p.FindElementByName("ul", el);
     if (!el)
         return NULL;
-    return BuildChmToc(pages, el);
+    return BuildChmToc(pages, el, true);
 }
 
 bool CChmEngine::Load(const TCHAR *fileName)
