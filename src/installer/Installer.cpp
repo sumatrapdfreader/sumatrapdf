@@ -175,7 +175,7 @@ static Color            COLOR_MSG_FAILED(gCol1);
 // list of supported file extensions for which SumatraPDF.exe will
 // be registered as a candidate for the Open With dialog's suggestions
 static TCHAR *gSupportedExts[] = {
-    _T(".pdf"), _T(".xps"), _T(".cbz"), _T(".cbr"), _T(".djvu")
+    _T(".pdf"), _T(".xps"), _T(".cbz"), _T(".cbr"), _T(".djvu"), _T(".chm")
 };
 
 // The following list is used to verify that all the required files have been
