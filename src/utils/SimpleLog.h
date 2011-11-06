@@ -72,10 +72,9 @@ class DebugLogger : public Logger {
 public:
     virtual void Log(TCHAR *s)
     {
-        if (s) {
-            OutputDebugString(s);
-            OutputDebugString(_T("\n"));
-        }
+        if (!s)
+            return;
+        OutputDebugString(s);
     }
 };
 
