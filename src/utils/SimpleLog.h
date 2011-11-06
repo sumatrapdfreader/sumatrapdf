@@ -74,7 +74,7 @@ public:
     {
         if (s) {
             OutputDebugString(s);
-            //OutputDebugString(_T("\n"));
+            OutputDebugString(_T("\n"));
         }
     }
 };

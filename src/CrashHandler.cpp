@@ -16,9 +16,9 @@
 #include "ZipUtil.h"
 #include "SimpleLog.h"
 
-#include "AppTools.h"
-#include "CrashHandler.h"
 #include "SumatraPDF.h"
+#include "CrashHandler.h"
+#include "AppTools.h"
 #include "translations.h"
 
 #ifndef CRASH_REPORT_URL
@@ -993,7 +993,7 @@ void SubmitCrashInfo()
 {
     LogDbgDetail("SubmitCrashInfo(): start");
     if (!HasPermission(Perm_InternetAccess)) {
-        LogDbg("SubmitCrashInfo(): No iternet access permission");
+        LogDbg("SubmitCrashInfo(): No internet access permission");
         return;
     }
 
