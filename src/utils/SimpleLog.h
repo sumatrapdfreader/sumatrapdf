@@ -75,6 +75,8 @@ public:
         if (!s)
             return;
         OutputDebugString(s);
+        if (IsDebuggerPresent())
+            OutputDebugString(_T("\n"));
     }
 };
 
