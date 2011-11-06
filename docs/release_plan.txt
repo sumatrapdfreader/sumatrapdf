@@ -1,6 +1,5 @@
 Things to do before 1.9 release:
 * finish chm support to a point described in todo_chm.txt
-* verify crash reporting works (http://code.google.com/p/sumatrapdf/issues/detail?id=1668)
 * add splitter between favorites and bookmarks windows (http://code.google.com/p/sumatrapdf/issues/detail?id=1547)
 
 Things to do before 2.0 release:

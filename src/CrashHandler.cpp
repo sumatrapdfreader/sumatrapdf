@@ -38,8 +38,6 @@
 #define CRASH_SUBMIT_URL    _T("/app/crashsubmit?appname=SumatraPDF")
 #endif
 
-//#define DEBUG_CRASH_INFO 1
-
 /* Hard won wisdom: changing symbol path with SymSetSearchPath() after modules
 have been loaded (invideProcess=TRUE in SymInitialize() or SymRefreshModuleList())
 doesn't work.
@@ -119,9 +117,6 @@ typedef BOOL _stdcall SymGetLineFromAddr64Proc(
     PDWORD pdwDisplacement,
     PIMAGEHLP_LINE64 Line);
 
-typedef VOID _stdcall RtlCaptureContextProc(
-    PCONTEXT ContextRecord);
-
 static MiniDumpWriteDumpProc *          _MiniDumpWriteDump = NULL;
 static SymInitializeWProc *             _SymInitializeW;
 static SymInitializeProc *              _SymInitialize;
@@ -144,11 +139,12 @@ static HANDLE gDumpThread = NULL;
 static MINIDUMP_EXCEPTION_INFORMATION gMei = { 0 };
 static BOOL gSymInitializeOk = FALSE;
 
-#ifdef DEBUG_CRASH_INFO
-static Log::MemoryLogger gDbgLog;
+static slog::DebugLogger gDbgLog;
 #define LogDbg(msg, ...) gDbgLog.LogFmt(_T(msg), __VA_ARGS__)
+#if 0 // 1 for more detailed debugging of crash handler progress
+#define LogDbgDetail LogDbg
 #else
-#define LogDbg(msg, ...) NoOp()
+#define LogDbgDetail(msg, ...) NoOp()
 #endif
 
 static bool LoadDbgHelpFuncs()
@@ -190,6 +186,7 @@ static TCHAR *GetCrashDumpDir()
     TCHAR *symDir = AppGenDataFilename(_T("symbols"));
     if (symDir && !dir::Create(symDir)) {
         free(symDir);
+        LogDbg("GetCrashDumpDir(): couldn't get symbols dir");
         return NULL;
     }
     return symDir;
@@ -667,18 +664,32 @@ static void GetCallstack(str::Str<char>& s, CONTEXT& ctx, HANDLE hThread)
     }
 }
 
-static void GetCurrentThreadCallstack(str::Str<char>&s)
+#if 0
+typedef VOID WINAPI RtlCaptureContextProc(
+    PCONTEXT ContextRecord);
+
+// disabled because RtlCaptureContext() seems to crash (at least on my
+// win7 x64 os) in relase build. It doesn't crash in debug build.
+// It's mystifying - I can't find where it could have possibly regressed
+// between 1.7 and 1.8.
+// This thread isn't important - it's the CrashHandler thread.
+static void GetCurrentThreadCallstack(str::Str<char>& s)
 {
+    CONTEXT ctx;
+    //Some blog post say this is an alternative way to get CONTEXT
+    //but it doesn't work in practice
+    //ctx = *(gMei.ExceptionPointers->ContextRecord);
+
     // not available under Win2000
-    RtlCaptureContextProc *RtlCaptureContext = (RtlCaptureContextProc *)LoadDllFunc(_T("kernel32.dll"), "RtlCaptureContext");
+    RtlCaptureContextProc *MyRtlCaptureContext = (RtlCaptureContextProc *)LoadDllFunc(_T("kernel32.dll"), "RtlCaptureContext");
     if (!RtlCaptureContext)
         return;
 
-    CONTEXT ctx;
-    RtlCaptureContext(&ctx);
+    MyRtlCaptureContext(&ctx);
     s.AppendFmt("Thread: %x\r\n", GetCurrentThreadId());
     GetCallstack(s, ctx, GetCurrentThread());
 }
+#endif
 
 static void GetThreadCallstack(str::Str<char>& s, DWORD threadId)
 {
@@ -842,28 +853,45 @@ extern void GetFilesInfo(str::Str<char>& s);
 
 static char *BuildCrashInfoText()
 {
-    if (!gSymInitializeOk)
+    LogDbgDetail("BuildCrashInfoText(): start");
+
+    if (!gSymInitializeOk) {
+        LogDbg("BuildCrashInfoText(): gSymInitializeOk is false");
         return NULL;
+    }
 
     str::Str<char> s(16 * 1024);
     GetProgramInfo(s);
+    LogDbgDetail("BuildCrashInfoText(): 1");
     GetOsVersion(s);
+    LogDbgDetail("BuildCrashInfoText(): 2");
     GetSystemInfo(s);
+    LogDbgDetail("BuildCrashInfoText(): 3");
     GetFilesInfo(s);
     s.Append("\r\n");
+    LogDbgDetail("BuildCrashInfoText(): 4");
     GetExceptionInfo(s, gMei.ExceptionPointers);
+    LogDbgDetail("BuildCrashInfoText(): 5");
     GetAllThreadsCallstacks(s);
     s.Append("\r\n");
+    LogDbgDetail("BuildCrashInfoText(): 6");
+#if 0 // disabled because crashes in release builds
     GetCurrentThreadCallstack(s);
     s.Append("\r\n");
+    LogDbgDetail("BuildCrashInfoText(): 7");
+#endif
     GetModules(s);
+    LogDbgDetail("BuildCrashInfoText(): finish");
     return s.StealData();
 }
 
 static void SendCrashInfo(char *s)
 {
-    if (str::IsEmpty(s))
+    LogDbgDetail("SendCrashInfo(): started");
+    if (str::IsEmpty(s)) {
+        LogDbg("SendCrashInfo(): s is empty");
         return;
+    }
 
     char *boundary = "0xKhTmLbOuNdArY";
     str::Str<char> headers(256);
@@ -963,8 +991,11 @@ static bool DownloadSymbols(const TCHAR *symDir)
 // get the callstacks etc. and submit to our server for analysis.
 void SubmitCrashInfo()
 {
-    if (!HasPermission(Perm_InternetAccess))
+    LogDbgDetail("SubmitCrashInfo(): start");
+    if (!HasPermission(Perm_InternetAccess)) {
+        LogDbg("SubmitCrashInfo(): No iternet access permission");
         return;
+    }
 
     char *s = NULL;
 
@@ -999,10 +1030,6 @@ void SubmitCrashInfo()
     SendCrashInfo(s);
 Exit:
     free(s);
-#ifdef DEBUG_CRASH_INFO
-    ScopedMem<char> log_utf8(str::conv::ToUtf8(gDbgLog.GetData()));
-    SendCrashInfo(log_utf8);
-#endif
 }
 
 static void WriteMiniDump()
