@@ -226,6 +226,9 @@ Marcadores
 Bytes
 Bytes
 
+CHM documents
+Documentos CHM
+
 Can't connect to the Internet (error %#x).
 No se puede conectar a Internet (error %#x).
 
@@ -342,6 +345,9 @@ Error al Guardar el Archivo
 
 Favorites
 Favoritos
+
+File %s not found
+El archivo %s no se encuentra
 
 File Size:
 Tamaño del Archivo:
@@ -666,8 +672,4 @@ copiado de texto
 
 printing document
 imprimimendo documento
-
-# Untranslated:
-#CHM documents
-#File %s not found
 
