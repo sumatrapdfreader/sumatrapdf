@@ -664,15 +664,14 @@ static void GetCallstack(str::Str<char>& s, CONTEXT& ctx, HANDLE hThread)
     }
 }
 
+// disabled because apparently RtlCaptureContext() crashes when code
+// is compiled with  Omit Frame Pointers option (/Oy explicitly, can
+// be turned on implictly by e.g. /O2)
+// http://www.bytetalk.net/2011/06/why-rtlcapturecontext-crashes-on.html
+// This thread isn't important - it's the CrashHandler thread.
 #if 0
 typedef VOID WINAPI RtlCaptureContextProc(
     PCONTEXT ContextRecord);
-
-// disabled because RtlCaptureContext() seems to crash (at least on my
-// win7 x64 os) in relase build. It doesn't crash in debug build.
-// It's mystifying - I can't find where it could have possibly regressed
-// between 1.7 and 1.8.
-// This thread isn't important - it's the CrashHandler thread.
 static void GetCurrentThreadCallstack(str::Str<char>& s)
 {
     CONTEXT ctx;
