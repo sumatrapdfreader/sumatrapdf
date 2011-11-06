@@ -91,6 +91,7 @@ public:
     virtual void RenderPage(int pageNo) = 0;
     virtual int  GetScreenDPI() = 0;
     virtual void CleanUp(DisplayModel *dm) = 0;
+    virtual void LaunchBrowser(const TCHAR *url) = 0;
 };
 
 // TODO: in hindsight, zoomVirtual is not a good name since it's either
@@ -211,6 +212,7 @@ public:
 
     ChmEngine *     AsChmEngine() const;
     virtual void    UpdatePageNo(int pageNo);
+    virtual void    LaunchBrowser(const TCHAR *url);
 
 protected:
 

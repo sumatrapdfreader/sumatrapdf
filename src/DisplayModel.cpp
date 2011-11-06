@@ -1556,3 +1556,9 @@ void DisplayModel::UpdatePageNo(int pageNo)
     _startPage = pageNo;
     dmCb->PageNoChanged(pageNo);
 }
+
+void DisplayModel::LaunchBrowser(const TCHAR *url)
+{
+    assert(AsChmEngine());
+    dmCb->LaunchBrowser(url);
+}

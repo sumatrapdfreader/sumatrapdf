@@ -12,7 +12,7 @@ class FrameSite;
 class HtmlWindowCallback
 {
 public:
-    virtual bool OnBeforeNavigate(const TCHAR *url) = 0;
+    virtual bool OnBeforeNavigate(const TCHAR *url, bool newWindow) = 0;
 };
 
 class HtmlWindow
@@ -57,7 +57,7 @@ public:
     bool WaitUntilLoaded(DWORD maxWaitMs);
 
     HBITMAP TakeScreenshot(RectI area, SizeI finalSize);
-    bool OnBeforeNavigate(const TCHAR *url);
+    bool OnBeforeNavigate(const TCHAR *url, bool newWindow);
     void OnDocumentComplete(const TCHAR *url);
 
     bool canGoBack;

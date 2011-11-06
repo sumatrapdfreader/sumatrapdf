@@ -12,6 +12,8 @@ public:
     // the toc with the curent page). Needed for chm ui where navigation
     // can be initiated from inside html control
     virtual void UpdatePageNo(int pageNo) = 0;
+    // tell the UI to launch the given URL in an external web browser
+    virtual void LaunchBrowser(const TCHAR *url) = 0;
 };
 
 class ChmEngine : public BaseEngine {

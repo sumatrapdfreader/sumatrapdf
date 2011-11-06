@@ -121,7 +121,7 @@ public:
     virtual void ZoomTo(float zoomLevel);
 
     // from HtmlWindowCallback
-    virtual bool OnBeforeNavigate(const TCHAR *url);
+    virtual bool OnBeforeNavigate(const TCHAR *url, bool newWindow);
 
 protected:
     const TCHAR *fileName;
@@ -146,8 +146,16 @@ CChmEngine::CChmEngine() :
 // called when we're about to show a given url. If this is a CHM
 // html page, sync the state of the ui with the page (show
 // the right page number, select the right item in toc tree)
-bool CChmEngine::OnBeforeNavigate(const TCHAR *url)
+bool CChmEngine::OnBeforeNavigate(const TCHAR *url, bool newWindow)
 {
+    if (newWindow) {
+        // don't allow new MSIE windows to be opened
+        // instead pass the URL to the system's default browser
+        if (url && navCb)
+            navCb->LaunchBrowser(url);
+        return false;
+    }
+
     // url format for chm page is: "its:MyChmFile.chm::mywebpage.htm"
     // we need to extract the "mywebpage.htm" part
     if (!str::StartsWithI(url, _T("its:")))

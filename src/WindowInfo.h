@@ -223,6 +223,7 @@ public:
     virtual void RenderPage(int pageNo);
     virtual int  GetScreenDPI() { return dpi; }
     virtual void CleanUp(DisplayModel *dm);
+    virtual void LaunchBrowser(const TCHAR *url);
 };
 
 class LinkHandler {

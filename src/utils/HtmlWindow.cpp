@@ -629,11 +629,11 @@ HBITMAP HtmlWindow::TakeScreenshot(RectI area, SizeI finalSize)
 
 // called before an url is shown. If returns false, will cancel
 // the navigation.
-bool HtmlWindow::OnBeforeNavigate(const TCHAR *url)
+bool HtmlWindow::OnBeforeNavigate(const TCHAR *url, bool newWindow)
 {
     documentLoaded = false;
     if (htmlWinCb)
-        return htmlWinCb->OnBeforeNavigate(url);
+        return htmlWinCb->OnBeforeNavigate(url, newWindow);
     return true;
 }
 
@@ -659,13 +659,11 @@ static void PumpRemainingMessages()
 // documentLoaded works
 bool HtmlWindow::WaitUntilLoaded(DWORD maxWaitMs)
 {
-    const DWORD sleepTimeMs = 200; // 0.2 sec
-    DWORD waitTimeMs = 0;
-    while (!documentLoaded && (waitTimeMs < maxWaitMs))
-    {
+    MillisecondTimer timer(true);
+    const DWORD sleepTimeMs = 100; // 0.1 sec
+    while (!documentLoaded && timer.GetCurrTimeInMs() < maxWaitMs) {
         PumpRemainingMessages();
         Sleep(sleepTimeMs);
-        waitTimeMs += sleepTimeMs;
     }
     return documentLoaded;
 }
@@ -830,9 +828,9 @@ HRESULT HW_DWebBrowserEvents2::Invoke(DISPID dispIdMember, REFIID riid, LCID lci
             else
                 url = vurl->bstrVal;
 #ifdef UNICODE
-            bool shouldCancel = !fs->htmlWindow->OnBeforeNavigate(url);
+            bool shouldCancel = !fs->htmlWindow->OnBeforeNavigate(url, false);
 #else
-            bool shouldCancel = !fs->htmlWindow->OnBeforeNavigate(ScopedMem<char>(str::conv::ToAnsi(url)));
+            bool shouldCancel = !fs->htmlWindow->OnBeforeNavigate(ScopedMem<char>(str::conv::ToAnsi(url)), false);
 #endif
             *pDispParams->rgvarg[0].pboolVal = shouldCancel ? VARIANT_TRUE : VARIANT_FALSE;
             break;
@@ -873,6 +871,24 @@ HRESULT HW_DWebBrowserEvents2::Invoke(DISPID dispIdMember, REFIID riid, LCID lci
                 fs->htmlWindow->canGoForward = pDispParams->rgvarg[0].boolVal;
                 break;
             }
+            break;
+
+        case DISPID_NEWWINDOW3:
+        {
+            BSTR url = pDispParams->rgvarg[0].bstrVal;
+#ifdef UNICODE
+            bool shouldCancel = !fs->htmlWindow->OnBeforeNavigate(url, true);
+#else
+            bool shouldCancel = !fs->htmlWindow->OnBeforeNavigate(ScopedMem<char>(str::conv::ToAnsi(url)), true);
+#endif
+            *pDispParams->rgvarg[3].pboolVal = shouldCancel ? VARIANT_TRUE : VARIANT_FALSE;
+            break;
+        }
+
+        case DISPID_NEWWINDOW2:
+            // prior to Windows XP SP2, there's no way of getting the URL
+            // to be opened, so we have to fail silently
+            *pDispParams->rgvarg[0].pboolVal = VARIANT_FALSE;
             break;
     }
 

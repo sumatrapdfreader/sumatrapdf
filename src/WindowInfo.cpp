@@ -172,6 +172,11 @@ void WindowInfo::DeleteInfotip()
     infotipVisible = false;
 }
 
+void WindowInfo::LaunchBrowser(const TCHAR *url)
+{
+    ::LaunchBrowser(url);
+}
+
 BaseEngine *LinkHandler::engine() const
 {
     if (!owner || !owner->dm)
