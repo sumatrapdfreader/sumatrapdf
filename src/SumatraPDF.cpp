@@ -932,7 +932,7 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
 
 static void UpdateToolbarAndScrollbarState(WindowInfo& win)
 {
-    ToolbarUpdateStateForWindow(&win);
+    ToolbarUpdateStateForWindow(&win, true);
 #ifdef BUILD_RIBBON
     if (win.ribbonSupport)
         win.ribbonSupport->UpdateState();
@@ -1193,13 +1193,13 @@ void WindowInfo::PageNoChanged(int pageNo)
     if (INVALID_PAGE_NO != pageNo) {
         ScopedMem<TCHAR> buf(dm->engine->GetPageLabel(pageNo));
         win::SetText(hwndPageBox, buf);
-        ToolbarUpdateStateForWindow(this);
+        ToolbarUpdateStateForWindow(this, false);
 #ifdef BUILD_RIBBON
         if (ribbonSupport)
             ribbonSupport->UpdateState();
 #endif
         if (dm->engine && dm->engine->HasPageLabels())
-            UpdateToolbarPageText(this, dm->PageCount());
+            UpdateToolbarPageText(this, dm->PageCount(), true);
     }
     if (pageNo == currPageNo)
         return;

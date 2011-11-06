@@ -1,10 +1,9 @@
 /* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "BaseUtil.h"
+#include "SumatraPDF.h"
 #include "StrUtil.h"
 #include "WinUtil.h"
-#include "SumatraPDF.h"
 #include "Toolbar.h"
 #include "translations.h"
 #include "resource.h"
@@ -42,7 +41,7 @@ static ToolbarButtonInfo gToolbarButtons[] = {
 
 #define TOOLBAR_BUTTONS_COUNT dimof(gToolbarButtons)
 
-bool TbIsSeparator(ToolbarButtonInfo& tbi)
+inline bool TbIsSeparator(ToolbarButtonInfo& tbi)
 {
     return tbi.bmpIndex < 0;
 }
@@ -120,7 +119,8 @@ static TBBUTTON TbButtonFromButtonInfo(int i) {
                     TBSTYLE_TOOLTIPS | TBSTYLE_FLAT | \
                     TBSTYLE_LIST | CCS_NODIVIDER | CCS_NOPARENTALIGN)
 
-static void BuildTBBUTTONINFO(TBBUTTONINFO& info, TCHAR *txt) {
+static void BuildTBBUTTONINFO(TBBUTTONINFO& info, TCHAR *txt)
+{
     info.cbSize = sizeof(TBBUTTONINFO);
     info.dwMask = TBIF_TEXT | TBIF_BYINDEX;
     info.pszText = txt;
@@ -144,15 +144,16 @@ void UpdateToolbarButtonsToolTipsForWindow(WindowInfo *win)
     }
 }
 
-void ToolbarUpdateStateForWindow(WindowInfo *win) 
+void ToolbarUpdateStateForWindow(WindowInfo *win, bool showHide)
 {
     const LPARAM enabled = (LPARAM)MAKELONG(1, 0);
     const LPARAM disabled = (LPARAM)MAKELONG(0, 0);
 
     for (int i = 0; i < TOOLBAR_BUTTONS_COUNT; i++) {
-        BOOL hide = !IsVisibleToolbarButton(win, i);
-        SendMessage(win->hwndToolbar, TB_HIDEBUTTON, gToolbarButtons[i].cmdId, hide);
-
+        if (showHide) {
+            BOOL hide = !IsVisibleToolbarButton(win, i);
+            SendMessage(win->hwndToolbar, TB_HIDEBUTTON, gToolbarButtons[i].cmdId, hide);
+        }
         if (TbIsSeparator(gToolbarButtons[i]))
             continue;
 
@@ -162,13 +163,8 @@ void ToolbarUpdateStateForWindow(WindowInfo *win)
 
     // Find labels may have to be repositioned if some
     // toolbar buttons were shown/hidden
-    if (NeedsFindUI(win))
+    if (showHide && NeedsFindUI(win))
         UpdateToolbarFindText(win);
-}
-
-static void UpdateToolbarBg(HWND hwnd, bool enabled)
-{
-    ToggleWindowStyle(hwnd, SS_WHITERECT, enabled);
 }
 
 void ShowOrHideToolbarGlobally()
@@ -190,8 +186,8 @@ void ShowOrHideToolbarGlobally()
 
 void UpdateFindbox(WindowInfo* win)
 {
-    UpdateToolbarBg(win->hwndFindBg, win->IsDocLoaded());
-    UpdateToolbarBg(win->hwndPageBg, win->IsDocLoaded());
+    ToggleWindowStyle(win->hwndFindBg, SS_WHITERECT, win->IsDocLoaded());
+    ToggleWindowStyle(win->hwndPageBg, SS_WHITERECT, win->IsDocLoaded());
 
     InvalidateRect(win->hwndToolbar, NULL, TRUE);
     UpdateWindow(win->hwndToolbar);
@@ -283,38 +279,20 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
         WM_CUT   == message ||
         WM_CLEAR == message ||
         WM_UNDO  == message) {
-        ToolbarUpdateStateForWindow(win);
+        ToolbarUpdateStateForWindow(win, false);
     }
 
     return ret;
 }
 
-// Note: a bit of a hack, but doing just ShowWindow(..., SW_HIDE | SW_SHOW)
-// didn't work for me
-static void MoveOffScreen(HWND hwnd)
-{
-    WindowRect r(hwnd);
-    MoveWindow(hwnd, -200, -100, r.dx, r.dy, FALSE);
-    ShowWindow(hwnd, SW_HIDE);
-}
-
-static void HideToolbarFindUI(WindowInfo *win)
-{
-    MoveOffScreen(win->hwndFindText);
-    MoveOffScreen(win->hwndFindBg);
-    MoveOffScreen(win->hwndFindBox);
-}
-
 void UpdateToolbarFindText(WindowInfo *win)
 {
-    if (!NeedsFindUI(win)) {
-        HideToolbarFindUI(win);
+    bool showUI = NeedsFindUI(win);
+    ShowWindow(win->hwndFindText, showUI ? SW_SHOW : SW_HIDE);
+    ShowWindow(win->hwndFindBg, showUI ? SW_SHOW : SW_HIDE);
+    ShowWindow(win->hwndFindBox, showUI ? SW_SHOW : SW_HIDE);
+    if (!showUI)
         return;
-    }
-
-    ShowWindow(win->hwndFindText, SW_SHOW);
-    ShowWindow(win->hwndFindBg, SW_SHOW);
-    ShowWindow(win->hwndFindBox, SW_SHOW);
 
     const TCHAR *text = _TR("Find:");
     win::SetText(win->hwndFindText, text);
@@ -450,10 +428,12 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, L
 }
 
 #define PAGE_BOX_WIDTH 40
-void UpdateToolbarPageText(WindowInfo *win, int pageCount)
+
+void UpdateToolbarPageText(WindowInfo *win, int pageCount, bool updateOnly)
 {
     const TCHAR *text = _TR("Page:");
-    win::SetText(win->hwndPageText, text);
+    if (!updateOnly)
+        win::SetText(win->hwndPageText, text);
     SIZE size = TextSizeInHwnd(win->hwndPageText, text);
     size.cx += 6;
 
@@ -485,25 +465,33 @@ void UpdateToolbarPageText(WindowInfo *win, int pageCount)
     free(buf);
 
     int padding = GetSystemMetrics(SM_CXEDGE);
-    MoveWindow(win->hwndPageText, pos_x, (pageWndRect.dy - size.cy + 1) / 2 + pos_y, size.cx, size.cy, true);
+    MoveWindow(win->hwndPageText, pos_x, (pageWndRect.dy - size.cy + 1) / 2 + pos_y, size.cx, size.cy, FALSE);
     if (IsUIRightToLeft())
         pos_x += size2.cx - 6;
-    MoveWindow(win->hwndPageBg, pos_x + size.cx, pos_y, pageWndRect.dx, pageWndRect.dy, false);
+    MoveWindow(win->hwndPageBg, pos_x + size.cx, pos_y, pageWndRect.dx, pageWndRect.dy, FALSE);
     MoveWindow(win->hwndPageBox, pos_x + size.cx + padding, (pageWndRect.dy - size.cy + 1) / 2 + pos_y,
-        pageWndRect.dx - 2 * padding, size.cy, false);
+               pageWndRect.dx - 2 * padding, size.cy, FALSE);
     // in right-to-left layout, the total comes "before" the current page number
     if (IsUIRightToLeft()) {
         pos_x -= size2.cx;
-        MoveWindow(win->hwndPageTotal, pos_x + size.cx, (pageWndRect.dy - size.cy + 1) / 2 + pos_y, size2.cx, size.cy, false);
+        MoveWindow(win->hwndPageTotal, pos_x + size.cx, (pageWndRect.dy - size.cy + 1) / 2 + pos_y, size2.cx, size.cy, FALSE);
     }
     else
-        MoveWindow(win->hwndPageTotal, pos_x + size.cx + pageWndRect.dx, (pageWndRect.dy - size.cy + 1) / 2 + pos_y, size2.cx, size.cy, false);
+        MoveWindow(win->hwndPageTotal, pos_x + size.cx + pageWndRect.dx, (pageWndRect.dy - size.cy + 1) / 2 + pos_y, size2.cx, size.cy, FALSE);
 
     TBBUTTONINFO bi;
     bi.cbSize = sizeof(bi);
     bi.dwMask = TBIF_SIZE;
-    bi.cx = (WORD)(size.cx + pageWndRect.dx + size2.cx + 12);
-    SendMessage(win->hwndToolbar, TB_SETBUTTONINFO, IDM_GOTO_PAGE, (LPARAM)&bi);
+    SendMessage(win->hwndToolbar, TB_GETBUTTONINFO, IDM_GOTO_PAGE, (LPARAM)&bi);
+    size2.cx += size.cx + pageWndRect.dx + 12;
+    if (bi.cx != size2.cx || !updateOnly) {
+        bi.cx = (WORD)size2.cx;
+        SendMessage(win->hwndToolbar, TB_SETBUTTONINFO, IDM_GOTO_PAGE, (LPARAM)&bi);
+    } else {
+        RectI rc = ClientRect(win->hwndPageTotal);
+        rc = MapRectToWindow(rc, win->hwndPageTotal, win->hwndToolbar);
+        InvalidateRect(win->hwndToolbar, &rc.ToRECT(), TRUE);
+    }
 }
 
 static void CreatePageBox(WindowInfo& win)
