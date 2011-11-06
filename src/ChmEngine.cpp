@@ -597,8 +597,7 @@ static ChmTocItem *ParseChmHtmlToc(StrVec& pages, char *html)
     if (!el)
         return NULL;
     el = p.FindElementByName("body");
-    if (!el)
-        return NULL;
+    // since <body> is optional, also continue without one
     el = p.FindElementByName("ul", el);
     if (!el)
         return NULL;
