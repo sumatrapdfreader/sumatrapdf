@@ -214,16 +214,15 @@ public:
     void CreateInfotip(const TCHAR *text, RectI& rc, bool multiline=false);
     void DeleteInfotip();
 
-    // DisplayModelCallback implementation (incl. PasswordUI)
+    // DisplayModelCallback implementation (incl. PasswordUI and ChmNavigationCallback)
     virtual TCHAR * GetPassword(const TCHAR *fileName, unsigned char *fileDigest,
                                 unsigned char decryptionKeyOut[32], bool *saveKey);
-    virtual void Repaint() { RepaintAsync(); };
     virtual void PageNoChanged(int pageNo);
+    virtual void LaunchBrowser(const TCHAR *url);
+    virtual void Repaint() { RepaintAsync(); };
     virtual void UpdateScrollbars(SizeI canvas);
     virtual void RenderPage(int pageNo);
-    virtual int  GetScreenDPI() { return dpi; }
     virtual void CleanUp(DisplayModel *dm);
-    virtual void LaunchBrowser(const TCHAR *url);
 };
 
 class LinkHandler {

@@ -83,15 +83,12 @@ struct ScrollState {
 
 class DisplayModel;
 
-class DisplayModelCallback : public PasswordUI {
+class DisplayModelCallback : public PasswordUI, public ChmNavigationCallback {
 public:
     virtual void Repaint() = 0;
-    virtual void PageNoChanged(int pageNo) = 0;
     virtual void UpdateScrollbars(SizeI canvas) = 0;
     virtual void RenderPage(int pageNo) = 0;
-    virtual int  GetScreenDPI() = 0;
     virtual void CleanUp(DisplayModel *dm) = 0;
-    virtual void LaunchBrowser(const TCHAR *url) = 0;
 };
 
 // TODO: in hindsight, zoomVirtual is not a good name since it's either
@@ -102,7 +99,7 @@ public:
    You can think of it as a model in the MVC pardigm.
    All the display changes should be done through changing this model via
    API and re-displaying things based on new display information */
-class DisplayModel : public ChmNavigationCallback
+class DisplayModel
 {
 public:
     DisplayModel(DisplayModelCallback *dmCb);
@@ -205,14 +202,12 @@ public:
     void            CopyNavHistory(DisplayModel& orig);
 
     bool            DisplayStateFromModel(DisplayState *ds);
-    void            SetInitialViewSettings(DisplayMode displayMode, int newStartPage, SizeI viewPort);
+    void            SetInitialViewSettings(DisplayMode displayMode, int newStartPage, SizeI viewPort, int screenDPI);
 
     // called when we decide that the display needs to be redrawn
-    void            RepaintDisplay() { if (dmCb) dmCb->Repaint(); }
+    void            RepaintDisplay() { dmCb->Repaint(); }
 
     ChmEngine *     AsChmEngine() const;
-    virtual void    UpdatePageNo(int pageNo);
-    virtual void    LaunchBrowser(const TCHAR *url);
 
 protected:
 

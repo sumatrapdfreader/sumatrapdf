@@ -119,6 +119,7 @@ public:
     virtual bool CanNavigate(int dir);
     virtual void Navigate(int dir);
     virtual void ZoomTo(float zoomLevel);
+    virtual int CurrentPageNo() { return currentPageNo; }
 
     // from HtmlWindowCallback
     virtual bool OnBeforeNavigate(const TCHAR *url, bool newWindow);
@@ -130,6 +131,7 @@ protected:
     ChmTocItem *tocRoot;
 
     StrVec pages;
+    int currentPageNo;
     HtmlWindow *htmlWindow;
     ChmNavigationCallback *navCb;
 
@@ -139,7 +141,7 @@ protected:
 
 CChmEngine::CChmEngine() :
     fileName(NULL), chmHandle(NULL), chmInfo(NULL), tocRoot(NULL),
-        htmlWindow(NULL), navCb(NULL)
+        htmlWindow(NULL), navCb(NULL), currentPageNo(1)
 {
 }
 
@@ -173,7 +175,7 @@ bool CChmEngine::OnBeforeNavigate(const TCHAR *url, bool newWindow)
     
     int pageNo = pages.Find(url) + 1;
     if (pageNo > 0 && navCb)
-        navCb->UpdatePageNo(pageNo);
+        navCb->PageNoChanged(pageNo);
     return true;
 }
 
@@ -186,9 +188,12 @@ void CChmEngine::SetParentHwnd(HWND hwnd)
 
 void CChmEngine::DisplayPage(const TCHAR *pageUrl)
 {
+    int pageNo = pages.Find(pageUrl) + 1;
+    if (pageNo)
+        currentPageNo = pageNo;
+
     if (str::StartsWith(pageUrl, _T("/")))
         pageUrl++;
-
     // the format for chm page is: "its:MyChmFile.chm::mywebpage.htm"
     // cf. http://msdn.microsoft.com/en-us/library/aa164814(v=office.10).aspx
     ScopedMem<TCHAR> url(str::Format(_T("its:%s::/%s"), fileName, pageUrl));

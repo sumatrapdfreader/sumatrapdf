@@ -594,7 +594,7 @@ static void CreateChmThumbnail(WindowInfo& win, DisplayState& ds)
 
     MillisecondTimer t(true);
 
-    ChmEngine *chmEngine = reinterpret_cast<ChmEngine *>(win.dm->AsChmEngine()->Clone());
+    ChmEngine *chmEngine = static_cast<ChmEngine *>(win.dm->AsChmEngine()->Clone());
     if (!chmEngine)
         return;
 
@@ -748,7 +748,7 @@ static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win,
     }
     */
     if (win.dm) {
-        win.dm->SetInitialViewSettings(displayMode, startPage, win.GetViewPortSize());
+        win.dm->SetInitialViewSettings(displayMode, startPage, win.GetViewPortSize(), win.dpi);
         if (prevModel && str::Eq(win.dm->FileName(), prevModel->FileName())) {
             gRenderCache.KeepForDisplayModel(prevModel, win.dm);
             win.dm->CopyNavHistory(*prevModel);
@@ -1540,7 +1540,7 @@ static void DebugShowLinks(DisplayModel& dm, HDC hdc)
 
     for (int pageNo = dm.PageCount(); pageNo >= 1; --pageNo) {
         PageInfo *pageInfo = dm.GetPageInfo(pageNo);
-        if (!pageInfo->shown || 0.0 == pageInfo->visibleRatio)
+        if (!pageInfo || !pageInfo->shown || 0.0 == pageInfo->visibleRatio)
             continue;
 
         Vec<PageElement *> *els = dm.engine->GetElements(pageNo);
@@ -1596,7 +1596,7 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
     DBG_OUT("DrawDocument() ");
     for (int pageNo = 1; pageNo <= dm->PageCount(); ++pageNo) {
         PageInfo *pageInfo = dm->GetPageInfo(pageNo);
-        if (0.0 == pageInfo->visibleRatio)
+        if (!pageInfo || 0.0f == pageInfo->visibleRatio)
             continue;
         assert(pageInfo->shown);
         if (!pageInfo->shown)

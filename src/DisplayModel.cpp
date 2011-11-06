@@ -233,7 +233,7 @@ DisplayModel::~DisplayModel()
 
 PageInfo *DisplayModel::GetPageInfo(int pageNo) const
 {
-    if (!ValidPageNo(pageNo))
+    if (!ValidPageNo(pageNo) || AsChmEngine())
         return NULL;
     assert(pagesInfo);
     if (!pagesInfo) return NULL;
@@ -241,9 +241,10 @@ PageInfo *DisplayModel::GetPageInfo(int pageNo) const
 }
 
 // Call this after Load() but before the first Relayout
-void DisplayModel::SetInitialViewSettings(DisplayMode displayMode, int newStartPage, SizeI viewPort)
+void DisplayModel::SetInitialViewSettings(DisplayMode displayMode, int newStartPage, SizeI viewPort, int screenDPI)
 {
     totalViewPortSize = viewPort;
+    dpiFactor = 1.0f * screenDPI / engine->GetFileDPI();
     if (ValidPageNo(newStartPage))
         _startPage = newStartPage;
 
@@ -264,7 +265,8 @@ void DisplayModel::SetInitialViewSettings(DisplayMode displayMode, int newStartP
         }
     }
     displayR2L = (layout & Layout_R2L) != 0;
-    BuildPagesInfo();
+    if (!AsChmEngine())
+        BuildPagesInfo();
 }
 
 // must call SetInitialViewSettings() after Load()
@@ -279,9 +281,8 @@ bool DisplayModel::Load(const TCHAR *fileName)
     if (engine->IsImageCollection())
         padding = &gImagePadding;
     if (AsChmEngine())
-        AsChmEngine()->SetNavigationCalback(this);
+        AsChmEngine()->SetNavigationCalback(dmCb);
 
-    dpiFactor = 1.0f * dmCb->GetScreenDPI() / engine->GetFileDPI();
     textSelection = new TextSelection(engine);
     textSearch = new TextSearch(engine);
     return true;
@@ -437,6 +438,9 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo)
 
 int DisplayModel::FirstVisiblePageNo() const
 {
+    if (AsChmEngine())
+        return AsChmEngine()->CurrentPageNo();
+
     assert(pagesInfo);
     if (!pagesInfo) return INVALID_PAGE_NO;
 
@@ -454,6 +458,9 @@ int DisplayModel::FirstVisiblePageNo() const
 // (in continuous layout, there's no better criteria)
 int DisplayModel::CurrentPageNo() const
 {
+    if (AsChmEngine())
+        return AsChmEngine()->CurrentPageNo();
+
     if (!displayModeContinuous(displayMode()))
         return _startPage;
 
@@ -488,6 +495,14 @@ void DisplayModel::SetZoomVirtual(float zoomVirtual)
     assert(IsValidZoom(zoomVirtual));
     _zoomVirtual = zoomVirtual;
 
+    if (AsChmEngine()) {
+        if (IsZoomVirtual(_zoomVirtual) || !IsValidZoom(_zoomVirtual))
+            _zoomVirtual = 100.0f;
+        _zoomReal = _zoomVirtual * 0.01f * dpiFactor;
+        AsChmEngine()->ZoomTo(_zoomVirtual);
+        return;
+    }
+
     if ((ZOOM_FIT_WIDTH == zoomVirtual) || (ZOOM_FIT_PAGE == zoomVirtual)) {
         /* we want the same zoom for all pages, so use the smallest zoom
            across the pages so that the largest page fits. In most documents
@@ -514,18 +529,6 @@ void DisplayModel::SetZoomVirtual(float zoomVirtual)
     } else {
         this->_zoomReal = zoomVirtual * 0.01f * dpiFactor;
     }
-
-    ChmEngine *chmEngine = AsChmEngine();
-    if (chmEngine) {
-        if (IsZoomVirtual(_zoomVirtual) || !IsValidZoom(_zoomVirtual)) {
-            // shouldn't happen but if it does, assume 100%
-            _zoomVirtual = 100.0f;
-        }
-        // TODO: not sure if setting _zoomReal matters for chm, but
-        // do it anyway
-        _zoomReal = _zoomVirtual * 0.01f * dpiFactor;
-        chmEngine->ZoomTo(_zoomVirtual);
-    }
 }
 
 float DisplayModel::ZoomReal(int pageNo)
@@ -549,6 +552,13 @@ float DisplayModel::ZoomReal(int pageNo)
      * navigating to another page in non-continuous mode */
 void DisplayModel::Relayout(float zoomVirtual, int rotation)
 {
+    // an optimization: the code below doesn't make sense for chm
+    // and causes SetZoomVirtual() to be called 3 times, so skip it
+    if (AsChmEngine()) {
+        SetZoomVirtual(zoomVirtual);
+        return;
+    }
+
     assert(pagesInfo);
     if (!pagesInfo)
         return;
@@ -558,14 +568,6 @@ void DisplayModel::Relayout(float zoomVirtual, int rotation)
     bool needHScroll = false;
     bool needVScroll = false;
     viewPort = RectI(viewPort.TL(), totalViewPortSize);
-
-    // an optimization: the code below doesn't make sense for chm
-    // and causes SetZoomVirtual() to be called 3 times, so skip it
-    if (AsChmEngine() != NULL) {
-        canvasSize = SizeI(viewPort.dx, viewPort.dy);
-        SetZoomVirtual(zoomVirtual);
-        return;
-    }
 
 RestartLayout:
     int currPosY = padding->top;
@@ -979,8 +981,6 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
 
     ChmEngine *chmEngine = AsChmEngine();
     if (chmEngine) {
-        // this will trigger a navigation callback to
-        // UpdatePageNo for updating internal bookkeeping
         chmEngine->DisplayPage(pageNo);
         return;
     }
@@ -1116,6 +1116,13 @@ bool DisplayModel::GoToNextPage(int scrollY)
 
 bool DisplayModel::GoToPrevPage(int scrollY)
 {
+    if (AsChmEngine()) {
+        int pageNo = AsChmEngine()->CurrentPageNo();
+        if (pageNo > 1)
+            GoToPage(pageNo - 1, 0);
+        return pageNo > 1;
+    }
+
     int columns = columnsFromDisplayMode(displayMode());
     int currPageNo = CurrentPageNo();
     DBG_OUT("DisplayModel::goToPrevPage(scrollY=%d), currPageNo=%d\n", scrollY, currPageNo);
@@ -1158,28 +1165,32 @@ bool DisplayModel::GoToLastPage()
     int firstPageInLastRow = FirstPageInARowNo(newPageNo, columns, displayModeShowCover(displayMode()));
 
     if (currPageNo == firstPageInLastRow) /* are we on the last page already ? */
-        return FALSE;
+        return false;
     GoToPage(firstPageInLastRow, 0, true);
-    return TRUE;
+    return true;
 }
 
 bool DisplayModel::GoToFirstPage()
 {
     DBG_OUT("DisplayModel::goToFirstPage()\n");
+    if (AsChmEngine()) {
+        GoToPage(1, 0, true);
+        return true;
+    }
 
     if (displayModeContinuous(displayMode())) {
         if (0 == viewPort.y) {
-            return FALSE;
+            return false;
         }
     } else {
         assert(PageShown(_startPage));
         if (1 == _startPage) {
             /* we're on a first page already */
-            return FALSE;
+            return false;
         }
     }
     GoToPage(1, 0, true);
-    return TRUE;
+    return true;
 }
 
 void DisplayModel::ScrollXTo(int xOff)
@@ -1315,7 +1326,7 @@ void DisplayModel::ZoomTo(float zoomLevel, PointI *fixPt)
 void DisplayModel::ZoomBy(float zoomFactor, PointI *fixPt)
 {
     // zoomTo expects a zoomVirtual, so undo the dpiFactor here
-    float newZoom = 100.0f * _zoomReal / dpiFactor * zoomFactor;
+    float newZoom = ZoomAbsolute() * zoomFactor;
     newZoom = limitValue(newZoom, ZOOM_MIN, ZOOM_MAX);
     //DBG_OUT("DisplayModel::zoomBy() zoomReal=%.6f, zoomFactor=%.2f, newZoom=%.2f\n", dm->zoomReal, zoomFactor, newZoom);
     ZoomTo(newZoom, fixPt);
@@ -1447,6 +1458,9 @@ void DisplayModel::SetScrollState(ScrollState state)
     // Bail out, if the page wasn't scrolled
     if (state.x < 0 && state.y < 0)
         return;
+    // TODO: allow to set scroll state for ChmEngine
+    if (AsChmEngine())
+        return;
 
     PointD newPtD(max(state.x, 0), max(state.y, 0));
     PointI newPt = CvtToScreen(state.page, newPtD);
@@ -1536,29 +1550,4 @@ ChmEngine *DisplayModel::AsChmEngine() const
         return NULL;
 
     return static_cast<ChmEngine*>(engine);
-}
-
-// Updates the displayed page number, if navigation happened
-// for a Chm document inside the HTML browser (in which case
-// we have to update the UI manually)
-void DisplayModel::UpdatePageNo(int pageNo)
-{
-    assert(AsChmEngine());
-
-    // update visibility information so that GetScrollState, etc. work as expected
-    for (int i = 1; i <= PageCount(); i++) {
-        PageInfo *pageInfo = GetPageInfo(i);
-        pageInfo->shown = (i == pageNo);
-        pageInfo->visibleRatio = pageInfo->shown ? 1.0f : 0.0f;
-    }
-
-    // sync the state of the ui to show current page number
-    _startPage = pageNo;
-    dmCb->PageNoChanged(pageNo);
-}
-
-void DisplayModel::LaunchBrowser(const TCHAR *url)
-{
-    assert(AsChmEngine());
-    dmCb->LaunchBrowser(url);
 }
