@@ -99,6 +99,7 @@ public:
 
     virtual bool IsImagePage(int pageNo) { return false; }
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
+    virtual TCHAR *GetProperty(char *name);
 
     virtual const TCHAR *GetDefaultFileExt() const { return _T(".chm"); }
 
@@ -127,7 +128,7 @@ public:
 protected:
     const TCHAR *fileName;
     struct chmFile *chmHandle;
-    ChmInfo *chmInfo;
+    ChmInfo chmInfo;
     ChmTocItem *tocRoot;
 
     StrVec pages;
@@ -140,7 +141,7 @@ protected:
 };
 
 CChmEngine::CChmEngine() :
-    fileName(NULL), chmHandle(NULL), chmInfo(NULL), tocRoot(NULL),
+    fileName(NULL), chmHandle(NULL), tocRoot(NULL),
         htmlWindow(NULL), navCb(NULL), currentPageNo(1)
 {
 }
@@ -269,7 +270,6 @@ void CChmEngine::ZoomTo(float zoomLevel)
 CChmEngine::~CChmEngine()
 {
     chm_close(chmHandle);
-    delete chmInfo;
     // TODO: deleting htmlWindow seems to spin a modal loop which
     //       can lead to WM_PAINT being dispatched for the parent
     //       hwnd and then crashing in SumatraPDF.cpp's DrawDocument
@@ -616,27 +616,33 @@ bool CChmEngine::Load(const TCHAR *fileName)
 #endif
     if (!chmHandle)
         return false;
-    chmInfo = new ChmInfo();
-    ParseWindowsChmData(chmHandle, chmInfo);
-    if (!ParseSystemChmData(chmHandle, chmInfo))
+    ParseWindowsChmData(chmHandle, &chmInfo);
+    if (!ParseSystemChmData(chmHandle, &chmInfo))
         return false;
 
-    if (!chmInfo->homePath || !ChmFileExists(chmHandle, chmInfo->homePath))
-        chmInfo->homePath = FindHomeForPath(chmHandle, "/");
-    if (!chmInfo->homePath)
+    if (!chmInfo.homePath || !ChmFileExists(chmHandle, chmInfo.homePath))
+        chmInfo.homePath = FindHomeForPath(chmHandle, "/");
+    if (!chmInfo.homePath)
         return false;
 
     // always make the document's homepage page 1
-    pages.Append(str::conv::FromAnsi(chmInfo->homePath));
+    pages.Append(str::conv::FromAnsi(chmInfo.homePath));
 
-    if (chmInfo->tocPath) {
+    if (chmInfo.tocPath) {
         // parse the ToC here, since page numbering depends on it
         Bytes b;
-        if (GetChmDataForFile(chmHandle, chmInfo->tocPath, b))
+        if (GetChmDataForFile(chmHandle, chmInfo.tocPath, b))
             tocRoot = ParseChmHtmlToc(pages, (char *)b.d);
     }
 
     return true;
+}
+
+TCHAR *CChmEngine::GetProperty(char *name)
+{
+    if (str::Eq(name, "Title") && chmInfo.title)
+        return str::conv::FromAnsi(chmInfo.title);
+    return NULL;
 }
 
 unsigned char *CChmEngine::GetFileData(size_t *cbCount)
