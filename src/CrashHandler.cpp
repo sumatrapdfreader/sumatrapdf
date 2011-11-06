@@ -1109,4 +1109,7 @@ void InstallCrashHandler(const TCHAR *crashDumpPath)
 
         SetUnhandledExceptionFilter(DumpExceptionHandler);
     }
+
+    slog::DebugLogger().Log(_T("Test"));
+    slog::DebugLogger().Log(_T("Test2"));
 }
