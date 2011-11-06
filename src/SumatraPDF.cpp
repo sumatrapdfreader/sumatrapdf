@@ -138,6 +138,7 @@ static RenderCache                  gRenderCache;
 static UIThreadWorkItemQueue        gUIThreadMarshaller;
 
 static bool                         gIsStressTesting = false;
+static bool                         gCrashOnOpen = false;
 
 // in restricted mode, some features can be disabled (such as
 // opening files, printing, following URLs), so that SumatraPDF
@@ -1106,8 +1107,22 @@ static void RefreshUpdatedFiles() {
 }
 #endif
 
+// for testing only
+static void CrashMe()
+{
+#if 1
+    char *p = NULL;
+    *p = 0;
+#else
+    SubmitCrashInfo();
+#endif
+}
+
 WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, bool forceReuse, bool suppressPwdUI)
 {
+    if (gCrashOnOpen)
+        CrashMe();
+
     ScopedMem<TCHAR> fullpath(path::Normalize(fileName));
 
     // fail with a notification if the file doesn't exist and
@@ -1643,17 +1658,6 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
     DBG_OUT("\n");
     if (!rendering)
         DebugShowLinks(*dm, hdc);
-}
-
-// for testing only
-static void CrashMe()
-{
-#if 1
-    char *p = NULL;
-    *p = 0;
-#else
-    SubmitCrashInfo();
-#endif
 }
 
 static void ToggleGdiDebugging()
@@ -4514,6 +4518,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     }
     if (i.exitImmediately)
         goto Exit;
+    gCrashOnOpen = i.crashOnOpen;
 
     gGlobalPrefs.bgColor = i.bgColor;
     gGlobalPrefs.fwdSearch.offset = i.fwdSearch.offset;

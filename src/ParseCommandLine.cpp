@@ -242,6 +242,10 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
             }
             filesToBenchmark.Push(s);
             exitImmediately = true;
+        } else if (is_arg("-crash-on-open")) {
+            // to make testing of crash reporting system in pre-release/release
+            // builds possible
+            crashOnOpen = true;
         }
 #ifdef DEBUG
         else if (is_arg("-enum-printers")) {

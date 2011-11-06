@@ -53,6 +53,8 @@ public:
     TCHAR *     stressTestRanges;
     int         stressTestCycles;
 
+    bool        crashOnOpen;
+
     CommandLineInfo() : makeDefault(false), exitOnPrint(false), printDialog(false),
         printerName(NULL), printSettings(NULL), bgColor(-1), inverseSearchCmdLine(NULL),
         escToExit(false), reuseInstance(false), lang(NULL),
@@ -62,7 +64,7 @@ public:
         startView(DM_AUTOMATIC), startZoom(INVALID_ZOOM), startScroll(PointI(-1, -1)),
         showConsole(false), exitImmediately(false), silent(false),
         stressTestPath(NULL), stressTestFilter(NULL),
-        stressTestRanges(NULL), stressTestCycles(1)
+        stressTestRanges(NULL), stressTestCycles(1), crashOnOpen(false)
     {
         fwdSearch.offset = 0;
         fwdSearch.width = 0;
