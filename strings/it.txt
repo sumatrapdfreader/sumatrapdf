@@ -228,6 +228,9 @@ Segnalibri
 Bytes
 Byte
 
+CHM documents
+Documenti CHM
+
 Can't connect to the Internet (error %#x).
 Impossibile connettersi a internet (errore %#x).
 
@@ -671,7 +674,4 @@ Copia del testo...
 
 printing document
 Stampa documento...
-
-# Untranslated:
-#CHM documents
 
