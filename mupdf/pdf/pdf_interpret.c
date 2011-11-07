@@ -335,6 +335,15 @@ pdf_show_path(pdf_csi *csi, int doclose, int dofill, int dostroke, int even_odd)
 		case PDF_MAT_NONE:
 			break;
 		case PDF_MAT_COLOR:
+			// cf. http://code.google.com/p/sumatrapdf/issues/detail?id=966
+			if (path->len < 8 && path->items[0].k == FZ_MOVETO && path->items[3].k == FZ_LINETO)
+			{
+				fz_stroke_state state = { 0 };
+				state.linewidth = 0.1f;
+				fz_stroke_path(csi->dev, path, &state, gstate->ctm,
+					gstate->fill.colorspace, gstate->fill.v, gstate->fill.alpha);
+				break;
+			}
 			fz_fill_path(csi->dev, path, even_odd, gstate->ctm,
 				gstate->fill.colorspace, gstate->fill.v, gstate->fill.alpha);
 			break;
