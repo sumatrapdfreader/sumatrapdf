@@ -72,9 +72,10 @@ class DebugLogger : public Logger {
 public:
     virtual void Log(TCHAR *s)
     {
-        if (s)
+        if (s) {
             // DbgView displays one line per OutputDebugString call
             OutputDebugString(ScopedMem<TCHAR>(str::Format(_T("%s\n"), s)));
+        }
     }
 };
 
