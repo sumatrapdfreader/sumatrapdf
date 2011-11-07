@@ -23,6 +23,19 @@
 
 // Another code to get inspired: http://code.google.com/p/fidolook/source/browse/trunk/Qm/ui/messageviewwindow.cpp
 
+// Implementing scrolling:
+// 1. provide scrolling functions to be called by callers (e.g. from FrameOnKeydow())
+//    by querying scroll state from IHTMLElement2 and setting a new scroll state
+//    http://www.codeproject.com/KB/miscctrl/scrollbrowser.aspx
+//    or using scrollTo() or scrollBy() on IHTMLWindow2:
+//    http://msdn.microsoft.com/en-us/library/aa741497(v=VS.85).aspx
+// 2. http://cboard.cprogramming.com/windows-programming/130893-ihtmldocument2-ihtmlelement2-functions-crash-ie7-access-violation-when-scrolling.html
+//    hints at focusing the control and sending it keyboard events. Would
+//    be simpler but I haven't figured out which control to focus.
+//    I tried forwarding WM_KEYDOWN events from FrameOnKeydown()
+//    to win->hwndCanvas() and that doesn't work but there's potentially
+//    an underlying window where we should send those events instead
+
 class HW_IOleInPlaceFrame;
 class HW_IOleInPlaceSiteWindowless;
 class HW_IOleClientSite;
