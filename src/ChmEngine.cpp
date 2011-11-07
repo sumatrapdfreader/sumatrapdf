@@ -193,6 +193,15 @@ void CChmEngine::DisplayPage(const TCHAR *pageUrl)
     if (pageNo)
         currentPageNo = pageNo;
 
+    // This is a hack that seems to be needed for some chm files where
+    // url starts with "..\" even though it's not accepted by ie as
+    // a correct its: url. There's a possibility it breaks some other
+    // chm files (I don't know such cases, though).
+    // A more robust solution would try to match with the actual
+    // names of files inside chm package.
+    if (str::StartsWith(pageUrl, _T("..\\")))
+        pageUrl += 3;
+
     if (str::StartsWith(pageUrl, _T("/")))
         pageUrl++;
     // the format for chm page is: "its:MyChmFile.chm::mywebpage.htm"
