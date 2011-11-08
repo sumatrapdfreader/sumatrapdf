@@ -677,58 +677,56 @@ HRESULT GetDataFromStream(IStream *stream, void **data, size_t *len)
     return S_OK;
 }
 
-// TODO: can detect dx/dy from hbmp ?
-// TODO: isn't there a way to get at hbmp data directly (would be faster) ?
-void GrayOutBitmap(HBITMAP hbmp, int dx, int dy, float alpha)
+void InvertBitmapColors(HBITMAP hbmp)
 {
     HDC hDC = GetDC(NULL);
     BITMAPINFO bmi = { 0 };
-    
+    SizeI size = GetBitmapSize(hbmp);
+
     bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
-    bmi.bmiHeader.biWidth = dx;
-    bmi.bmiHeader.biHeight = dy;
+    bmi.bmiHeader.biWidth = size.dx;
+    bmi.bmiHeader.biHeight = size.dy;
     bmi.bmiHeader.biPlanes = 1;
     bmi.bmiHeader.biBitCount = 32;
     bmi.bmiHeader.biCompression = BI_RGB;
-    
-    int bmpBytes = dx * dy * 4;
+
+    int bmpBytes = size.dx * size.dy * 4;
     unsigned char *bmpData = (unsigned char *)malloc(bmpBytes);
-    if (GetDIBits(hDC, hbmp, 0, dy, bmpData, &bmi, DIB_RGB_COLORS)) {
+    if (GetDIBits(hDC, hbmp, 0, size.dy, bmpData, &bmi, DIB_RGB_COLORS)) {
         for (int i = 0; i < bmpBytes; i++) {
-            if ((i + 1) % 4) {
-                // don't affect the alpha channel
-                bmpData[i] = (unsigned char)(bmpData[i] * alpha + (alpha > 0 ? 0 : 255));
-            }
+            // don't affect the alpha channel
+            if ((i + 1) % 4)
+                bmpData[i] = 255 - bmpData[i];
         }
-        SetDIBits(hDC, hbmp, 0, dy, bmpData, &bmi, DIB_RGB_COLORS);
+        SetDIBits(hDC, hbmp, 0, size.dy, bmpData, &bmi, DIB_RGB_COLORS);
     }
-    
+
     free(bmpData);
     ReleaseDC(NULL, hDC);
 }
 
 // create data for a .bmp file from this bitmap (if saved to disk, the HBITMAP
 // can be deserialized with LoadImage(NULL, ..., LD_LOADFROMFILE) and its
-// dimensions determined with GetObject(hbmp, sizeof(BITMAP), ...) )
-// TODO: can detect dx/dy from hbmp ?
-unsigned char *SerializeBitmap(HBITMAP hbmp, int dx, int dy, size_t *bmpBytesOut)
+// dimensions determined again with GetBitmapSize(...))
+unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut)
 {
+    SizeI size = GetBitmapSize(hbmp);
     DWORD bmpHeaderLen = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFO);
-    DWORD bmpBytes = ((dx * 3 + 3) / 4) * 4 * dy + bmpHeaderLen;
+    DWORD bmpBytes = ((size.dx * 3 + 3) / 4) * 4 * size.dy + bmpHeaderLen;
     unsigned char *bmpData = SAZA(unsigned char, bmpBytes);
     if (!bmpData)
         return NULL;
 
     BITMAPINFO *bmi = (BITMAPINFO *)(bmpData + sizeof(BITMAPFILEHEADER));
     bmi->bmiHeader.biSize = sizeof(bmi->bmiHeader);
-    bmi->bmiHeader.biWidth = dx;
-    bmi->bmiHeader.biHeight = dy;
+    bmi->bmiHeader.biWidth = size.dx;
+    bmi->bmiHeader.biHeight = size.dy;
     bmi->bmiHeader.biPlanes = 1;
     bmi->bmiHeader.biBitCount = 24;
     bmi->bmiHeader.biCompression = BI_RGB;
 
     HDC hDC = GetDC(NULL);
-    if (GetDIBits(hDC, hbmp, 0, dy, bmpData + bmpHeaderLen, bmi, DIB_RGB_COLORS)) {
+    if (GetDIBits(hDC, hbmp, 0, size.dy, bmpData + bmpHeaderLen, bmi, DIB_RGB_COLORS)) {
         BITMAPFILEHEADER *bmpfh = (BITMAPFILEHEADER *)bmpData;
         bmpfh->bfType = MAKEWORD('B', 'M');
         bmpfh->bfOffBits = bmpHeaderLen;
@@ -743,4 +741,3 @@ unsigned char *SerializeBitmap(HBITMAP hbmp, int dx, int dy, size_t *bmpBytesOut
         *bmpBytesOut = bmpBytes;
     return bmpData;
 }
-

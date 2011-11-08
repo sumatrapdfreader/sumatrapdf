@@ -607,10 +607,10 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, bool inve
                 RectI thumb(page.TL(), state->thumbnail->Size());
                 assert(thumb.dx == page.dx);
                 if (invertColors)
-                    state->thumbnail->InvertColors();
+                    InvertBitmapColors(state->thumbnail->GetBitmap());
                 state->thumbnail->StretchDIBits(hdc, thumb);
                 if (invertColors)
-                    state->thumbnail->InvertColors();
+                    InvertBitmapColors(state->thumbnail->GetBitmap());
                 SelectClipRgn(hdc, NULL);
                 DeleteObject(clip);
             }

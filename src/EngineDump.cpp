@@ -4,6 +4,7 @@
 #include "EngineManager.h"
 #include "FileUtil.h"
 #include "CmdLineParser.h"
+#include "WinUtil.h"
 
 #define Out(msg, ...) _tprintf(_T(msg), __VA_ARGS__)
 #define ErrOut(msg, ...) _ftprintf(stderr, _T(msg), __VA_ARGS__)
@@ -179,7 +180,7 @@ void DumpThumbnail(BaseEngine *engine)
     }
 
     size_t len;
-    ScopedMem<unsigned char> data(bmp->Serialize(&len));
+    ScopedMem<unsigned char> data(SerializeBitmap(bmp->GetBitmap(), &len));
     ScopedMem<char> hexData(data ? str::MemToHex(data, len) : NULL);
     ScopedMem<TCHAR> hexDataT(hexData ? str::conv::FromAnsi(hexData) : NULL);
     if (hexDataT)

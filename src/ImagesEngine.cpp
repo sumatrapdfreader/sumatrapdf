@@ -158,10 +158,7 @@ RenderedBitmap *LoadRenderedBitmap(const TCHAR *filePath)
         HBITMAP hbmp = (HBITMAP)LoadImage(NULL, filePath, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
         if (!hbmp)
             return NULL;
-
-        BITMAP bmp;
-        GetObject(hbmp, sizeof(BITMAP), &bmp);
-        return new RenderedBitmap(hbmp, bmp.bmWidth, bmp.bmHeight);
+        return new RenderedBitmap(hbmp, GetBitmapSize(hbmp));
     }
 
     size_t len;
@@ -175,7 +172,7 @@ RenderedBitmap *LoadRenderedBitmap(const TCHAR *filePath)
     HBITMAP hbmp;
     RenderedBitmap *rendered = NULL;
     if (bmp->GetHBITMAP(Color(0xFF, 0xFF, 0xFF), &hbmp) == Ok)
-        rendered = new RenderedBitmap(hbmp, bmp->GetWidth(), bmp->GetHeight());
+        rendered = new RenderedBitmap(hbmp, SizeI(bmp->GetWidth(), bmp->GetHeight()));
     delete bmp;
 
     return rendered;
@@ -207,7 +204,7 @@ static bool GetEncoderClsid(const TCHAR *format, CLSID& clsid)
 bool SaveRenderedBitmap(RenderedBitmap *bmp, const TCHAR *filePath)
 {
     size_t bmpDataLen;
-    ScopedMem<unsigned char> bmpData(bmp->Serialize(&bmpDataLen));
+    ScopedMem<unsigned char> bmpData(SerializeBitmap(bmp->GetBitmap(), &bmpDataLen));
     if (!bmpData)
         return false;
 
@@ -317,7 +314,7 @@ RenderedBitmap *ImagesEngine::RenderBitmap(int pageNo, float zoom, int rotation,
         return NULL;
     }
 
-    return new RenderedBitmap(hbmp, screen.dx, screen.dy);
+    return new RenderedBitmap(hbmp, screen.Size());
 }
 
 bool ImagesEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target)

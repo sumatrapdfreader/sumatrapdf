@@ -7,6 +7,7 @@
 #include "Vec.h"
 #include "TrivialHtmlParser.h"
 #include "HtmlWindow.h"
+#include "WinUtil.h"
 
 #define CHM_MT
 #define PPC_BSTR
@@ -245,7 +246,7 @@ RenderedBitmap *CChmEngine::CreateThumbnail(SizeI size)
     HBITMAP hbmp = htmlWindow->TakeScreenshot(area, size);
     if (!hbmp)
         goto Exit;
-    bmp = new RenderedBitmap(hbmp, size.dx, size.dy);
+    bmp = new RenderedBitmap(hbmp, size);
 
 Exit:
     DestroyWindow(hwnd);

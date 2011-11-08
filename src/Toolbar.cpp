@@ -542,22 +542,21 @@ void CreateToolbar(WindowInfo *win)
     // the name of the bitmap contains the number of icons so that after adding/removing
     // icons a complete default toolbar is used rather than an incomplete customized one
     HBITMAP hbmp = LoadExternalBitmap(ghinst, _T("toolbar_11.bmp"), IDB_TOOLBAR);
-    BITMAP bmp;
-    GetObject(hbmp, sizeof(BITMAP), &bmp);
+    SizeI size = GetBitmapSize(hbmp);
     // stretch the toolbar bitmaps for higher DPI settings
     // TODO: get nicely interpolated versions of the toolbar icons for higher resolutions
-    if (bmp.bmHeight < TOOLBAR_MIN_ICON_SIZE * win->uiDPIFactor) {
-        bmp.bmWidth *= (LONG)(win->uiDPIFactor + 0.5f);
-        bmp.bmHeight *= (LONG)(win->uiDPIFactor + 0.5f);
-        hbmp = (HBITMAP)CopyImage(hbmp, IMAGE_BITMAP, bmp.bmWidth, bmp.bmHeight, LR_COPYDELETEORG);
+    if (size.dx < TOOLBAR_MIN_ICON_SIZE * win->uiDPIFactor) {
+        size.dy *= (int)(win->uiDPIFactor + 0.5f);
+        size.dx *= (int)(win->uiDPIFactor + 0.5f);
+        hbmp = (HBITMAP)CopyImage(hbmp, IMAGE_BITMAP, size.dy, size.dx, LR_COPYDELETEORG);
     }
     // Assume square icons
-    HIMAGELIST himl = ImageList_Create(bmp.bmHeight, bmp.bmHeight, ILC_COLORDDB | ILC_MASK, 0, 0);
+    HIMAGELIST himl = ImageList_Create(size.dx, size.dx, ILC_COLORDDB | ILC_MASK, 0, 0);
     ImageList_AddMasked(himl, hbmp, RGB(0xFF, 0, 0xFF));
     DeleteObject(hbmp);
 
     // in Plugin mode, replace the Open with a Save As button
-    if (gPluginMode && bmp.bmWidth / bmp.bmHeight == 13) {
+    if (gPluginMode && size.dy / size.dx == 13) {
         gToolbarButtons[0].bmpIndex = 12;
         gToolbarButtons[0].cmdId = IDM_SAVEAS;
         gToolbarButtons[0].toolTip = _TRN("Save As");

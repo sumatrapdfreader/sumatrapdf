@@ -6,7 +6,6 @@
 
 #include "BaseUtil.h"
 #include "GeomUtil.h"
-#include "WinUtil.h"
 #include "Vec.h"
 
 /* certain OCGs will only be rendered for some of these (e.g. watermarks) */
@@ -18,20 +17,19 @@ enum PageLayoutType { Layout_Single = 0, Layout_Facing = 1, Layout_Book = 2,
 class RenderedBitmap {
 protected:
     HBITMAP hbmp;
-    int     dx;
-    int     dy;
+    SizeI size;
 
 public:
     // whether this bitmap will (have to) be replaced soon
     bool outOfDate;
 
-    RenderedBitmap(HBITMAP hbmp, int dx, int dy) :
-        hbmp(hbmp), dx(dx), dy(dy), outOfDate(false) { }
+    RenderedBitmap(HBITMAP hbmp, SizeI size) :
+        hbmp(hbmp), size(size), outOfDate(false) { }
     ~RenderedBitmap() { DeleteObject(hbmp); }
 
     // callers must not delete this (use CopyImage if you have to modify it)
     HBITMAP GetBitmap() const { return hbmp; }
-    SizeI Size() const { return SizeI(dx, dy); }
+    SizeI Size() const { return size; }
 
     // render the bitmap into the target rectangle (streching and skewing as requird)
     void StretchDIBits(HDC hdc, RectI target) {
@@ -39,17 +37,9 @@ public:
         HGDIOBJ oldBmp = SelectObject(bmpDC, hbmp);
         SetStretchBltMode(hdc, HALFTONE);
         StretchBlt(hdc, target.x, target.y, target.dx, target.dy,
-            bmpDC, 0, 0, dx, dy, SRCCOPY);
+            bmpDC, 0, 0, size.dx, size.dy, SRCCOPY);
         SelectObject(bmpDC, oldBmp);
         DeleteDC(bmpDC);
-    }
-
-    void InvertColors() {
-        GrayOutBitmap(hbmp, dx, dy, -1);
-    }
-
-    unsigned char *Serialize(size_t *bmpBytesOut) {
-        return SerializeBitmap(hbmp, dx, dy, bmpBytesOut);
     }
 };
 

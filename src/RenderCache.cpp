@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "RenderCache.h"
 #include "Scopes.h"
+#include "WinUtil.h"
 
 /* Define if you want to conserve memory by always freeing cached bitmaps
    for pages not visible. Disabling this might lead to pages not rendering
@@ -572,7 +573,7 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data)
         }
         else {
             if (bmp && cache->invertColors)
-                bmp->InvertColors();
+                InvertBitmapColors(bmp->GetBitmap());
             cache->Add(req, bmp);
 #ifdef CONSERVE_MEMORY
             cache->FreeNotVisible();

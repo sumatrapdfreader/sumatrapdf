@@ -87,7 +87,7 @@ public:
 };
 
 RenderedFitzBitmap::RenderedFitzBitmap(fz_pixmap *pixmap, HDC hDC) :
-    RenderedBitmap(NULL, pixmap->w, pixmap->h)
+    RenderedBitmap(NULL, SizeI(pixmap->w, pixmap->h))
 {
     int paletteSize = 0;
     bool hasPalette = false;
@@ -1488,7 +1488,7 @@ RenderedBitmap *CPdfEngine::RenderBitmap(int pageNo, float zoom, int rotation, R
             DeleteObject(hbmp);
             return NULL;
         }
-        return new RenderedBitmap(hbmp, w, h);
+        return new RenderedBitmap(hbmp, SizeI(w, h));
     }
 
     fz_pixmap *image = fz_new_pixmap_with_limit(fz_find_device_colorspace("DeviceRGB"),
@@ -2578,7 +2578,7 @@ RenderedBitmap *CXpsEngine::RenderBitmap(int pageNo, float zoom, int rotation, R
             DeleteObject(hbmp);
             return NULL;
         }
-        return new RenderedBitmap(hbmp, w, h);
+        return new RenderedBitmap(hbmp, SizeI(w, h));
     }
 
     fz_pixmap *image = fz_new_pixmap_with_limit(fz_find_device_colorspace("DeviceRGB"),

@@ -269,7 +269,7 @@ $(OS)\AppPrefs.obj: src\PsEngine.h src\SumatraPDF.h src\TextSearch.h
 $(OS)\AppPrefs.obj: src\TextSelection.h src\translations.h src\utils\BaseUtil.h
 $(OS)\AppPrefs.obj: src\utils\BencUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\AppPrefs.obj: src\utils\Scopes.h src\utils\StrUtil.h src\utils\Transactions.h
-$(OS)\AppPrefs.obj: src\utils\Vec.h src\utils\WinUtil.h src\WindowInfo.h
+$(OS)\AppPrefs.obj: src\utils\Vec.h src\WindowInfo.h
 $(OS)\AppTools.obj: src\AppTools.h src\translations.h src\utils\BaseUtil.h
 $(OS)\AppTools.obj: src\utils\CmdLineParser.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\AppTools.obj: src\utils\Scopes.h src\utils\StrUtil.h src\utils\Vec.h
@@ -301,10 +301,9 @@ $(OS)\DisplayModel.obj: src\DisplayState.h src\DjVuEngine.h src\EngineManager.h
 $(OS)\DisplayModel.obj: src\ImagesEngine.h src\PdfEngine.h src\PsEngine.h
 $(OS)\DisplayModel.obj: src\TextSearch.h src\TextSelection.h src\utils\BaseUtil.h
 $(OS)\DisplayModel.obj: src\utils\GeomUtil.h src\utils\StrUtil.h src\utils\Vec.h
-$(OS)\DisplayModel.obj: src\utils\WinUtil.h
 $(OS)\DjVuEngine.obj: src\BaseEngine.h src\DjVuEngine.h src\utils\BaseUtil.h
 $(OS)\DjVuEngine.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scopes.h
-$(OS)\DjVuEngine.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
+$(OS)\DjVuEngine.obj: src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\EngineDump.obj: src\BaseEngine.h src\ChmEngine.h src\DjVuEngine.h
 $(OS)\EngineDump.obj: src\EngineManager.h src\ImagesEngine.h src\PdfEngine.h
 $(OS)\EngineDump.obj: src\PsEngine.h src\utils\BaseUtil.h src\utils\CmdLineParser.h
@@ -376,7 +375,7 @@ $(OS)\ParseCommandLine.obj: src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\PdfEngine.obj: mupdf\fitz\fitz.h mupdf\pdf\mupdf.h mupdf\xps\muxps.h
 $(OS)\PdfEngine.obj: src\BaseEngine.h src\PdfEngine.h src\utils\BaseUtil.h
 $(OS)\PdfEngine.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scopes.h
-$(OS)\PdfEngine.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
+$(OS)\PdfEngine.obj: src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\PdfFilterDll.obj: src\ifilter\CPdfFilter.h src\ifilter\CTeXFilter.h src\ifilter\FilterBase.h
 $(OS)\PdfFilterDll.obj: src\ifilter\PdfFilter.h src\utils\BaseUtil.h src\utils\GeomUtil.h
 $(OS)\PdfFilterDll.obj: src\utils\Scopes.h src\utils\WinUtil.h
@@ -391,7 +390,7 @@ $(OS)\PdfSync.obj: src\DisplayState.h src\DjVuEngine.h src\EngineManager.h
 $(OS)\PdfSync.obj: src\ImagesEngine.h src\PdfEngine.h src\PdfSync.h
 $(OS)\PdfSync.obj: src\PsEngine.h src\TextSearch.h src\TextSelection.h
 $(OS)\PdfSync.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
-$(OS)\PdfSync.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
+$(OS)\PdfSync.obj: src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\Print.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
 $(OS)\Print.obj: src\ChmEngine.h src\DisplayModel.h src\DisplayState.h
 $(OS)\Print.obj: src\DjVuEngine.h src\EngineManager.h src\ImagesEngine.h
@@ -500,10 +499,9 @@ $(OS)\TableOfContents.obj: src\utils\GeomUtil.h src\utils\Scopes.h src\utils\Str
 $(OS)\TableOfContents.obj: src\utils\Vec.h src\utils\WinUtil.h src\WindowInfo.h
 $(OS)\TextSearch.obj: src\BaseEngine.h src\TextSearch.h src\TextSelection.h
 $(OS)\TextSearch.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\StrUtil.h
-$(OS)\TextSearch.obj: src\utils\Vec.h src\utils\WinUtil.h
+$(OS)\TextSearch.obj: src\utils\Vec.h
 $(OS)\TextSelection.obj: src\BaseEngine.h src\TextSelection.h src\utils\BaseUtil.h
 $(OS)\TextSelection.obj: src\utils\GeomUtil.h src\utils\StrUtil.h src\utils\Vec.h
-$(OS)\TextSelection.obj: src\utils\WinUtil.h
 $(OS)\Toolbar.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
 $(OS)\Toolbar.obj: src\ChmEngine.h src\DisplayModel.h src\DisplayState.h
 $(OS)\Toolbar.obj: src\DjVuEngine.h src\EngineManager.h src\ImagesEngine.h

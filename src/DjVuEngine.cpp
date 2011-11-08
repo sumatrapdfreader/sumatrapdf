@@ -19,14 +19,14 @@
 
 class RenderedDjVuPixmap : public RenderedBitmap {
 public:
-    RenderedDjVuPixmap(char *data, int width, int height, bool grayscale);
+    RenderedDjVuPixmap(char *data, SizeI size, bool grayscale);
 };
 
-RenderedDjVuPixmap::RenderedDjVuPixmap(char *data, int width, int height, bool grayscale) :
-    RenderedBitmap(NULL, width, height)
+RenderedDjVuPixmap::RenderedDjVuPixmap(char *data, SizeI size, bool grayscale) :
+    RenderedBitmap(NULL, size)
 {
     int bpc = grayscale ? 1 : 3;
-    int stride = ((width * bpc + 3) / 4) * 4;
+    int stride = ((size.dx * bpc + 3) / 4) * 4;
     int colors = grayscale ? 256 : 0;
 
     BITMAPINFO *bmi = (BITMAPINFO *)calloc(1, sizeof(BITMAPINFOHEADER) + colors * sizeof(RGBQUAD));
@@ -34,12 +34,12 @@ RenderedDjVuPixmap::RenderedDjVuPixmap(char *data, int width, int height, bool g
         bmi->bmiColors[i].rgbRed = bmi->bmiColors[i].rgbGreen = bmi->bmiColors[i].rgbBlue = i;
 
     bmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    bmi->bmiHeader.biWidth = width;
-    bmi->bmiHeader.biHeight = -height;
+    bmi->bmiHeader.biWidth = size.dx;
+    bmi->bmiHeader.biHeight = -size.dy;
     bmi->bmiHeader.biPlanes = 1;
     bmi->bmiHeader.biCompression = BI_RGB;
     bmi->bmiHeader.biBitCount = bpc * 8;
-    bmi->bmiHeader.biSizeImage = height * stride;
+    bmi->bmiHeader.biSizeImage = size.dy * stride;
     bmi->bmiHeader.biClrUsed = colors;
 
     HDC hDC = GetDC(NULL);
@@ -421,7 +421,7 @@ RenderedBitmap *CDjVuEngine::RenderBitmap(int pageNo, float zoom, int rotation, 
         ddjvu_render_mode_t mode = DDJVU_RENDER_MASKONLY;
 #endif
         if (ddjvu_page_render(page, mode, &prect, &rrect, fmt, stride, bmpData.Get()))
-            bmp = new RenderedDjVuPixmap(bmpData, screen.dx, screen.dy, isBitonal);
+            bmp = new RenderedDjVuPixmap(bmpData, screen.Size(), isBitonal);
     }
 
     ddjvu_format_release(fmt);

@@ -204,8 +204,15 @@ public:
     void Flush(HDC hdc);
 };
 
-void GrayOutBitmap(HBITMAP hbmp, int dx, int dy, float alpha);
-unsigned char *SerializeBitmap(HBITMAP hbmp, int dx, int dy, size_t *bmpBytesOut);
+inline SizeI GetBitmapSize(HBITMAP hbmp)
+{
+    BITMAP bmpInfo;
+    GetObject(hbmp, sizeof(BITMAP), &bmpInfo);
+    return SizeI(bmpInfo.bmWidth, bmpInfo.bmHeight);
+}
+
+void InvertBitmapColors(HBITMAP hbmp);
+unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut);
 
 inline void InitAllCommonControls()
 {
