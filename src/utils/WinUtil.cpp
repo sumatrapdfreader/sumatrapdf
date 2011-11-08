@@ -445,7 +445,7 @@ void DrawCenteredText(HDC hdc, RectI& r, const TCHAR *txt, bool isRTL)
 }
 
 /* Return size of a text <txt> in a given <hwnd>, taking into account its font */
-SIZE TextSizeInHwnd(HWND hwnd, const TCHAR *txt)
+SizeI TextSizeInHwnd(HWND hwnd, const TCHAR *txt)
 {
     SIZE sz;
     size_t txtLen = str::Len(txt);
@@ -457,7 +457,7 @@ SIZE TextSizeInHwnd(HWND hwnd, const TCHAR *txt)
     GetTextExtentPoint32(dc, txt, (int)txtLen, &sz);
     SelectObject(dc, prev);
     ReleaseDC(hwnd, dc);
-    return sz;
+    return SizeI(sz.cx, sz.cy);
 }
 
 bool IsCursorOverWindow(HWND hwnd)

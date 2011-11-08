@@ -3282,19 +3282,19 @@ void LayoutTreeContainer(HWND hwndContainer, int id)
     HWND hwndTree  = GetDlgItem(hwndContainer, id + 3);
 
     ScopedMem<TCHAR> title(win::GetText(hwndTitle));
-    SIZE size = TextSizeInHwnd(hwndTitle, title);
+    SizeI size = TextSizeInHwnd(hwndTitle, title);
 
     WindowInfo *win = FindWindowInfoByHwnd(hwndContainer);
     assert(win);
     int offset = win ? (int)(2 * win->uiDPIFactor) : 2;
-    if (size.cy < 16)
-        size.cy = 16;
-    size.cy += 2 * offset;
+    if (size.dy < 16)
+        size.dy = 16;
+    size.dy += 2 * offset;
 
     WindowRect rc(hwndContainer);   
-    MoveWindow(hwndTitle, offset, offset, rc.dx - 2 * offset - 16, size.cy - 2 * offset, TRUE);
-    MoveWindow(hwndClose, rc.dx - 16, (size.cy - 16) / 2, 16, 16, TRUE);
-    MoveWindow(hwndTree, 0, size.cy, rc.dx, rc.dy - size.cy, TRUE);
+    MoveWindow(hwndTitle, offset, offset, rc.dx - 2 * offset - 16, size.dy - 2 * offset, TRUE);
+    MoveWindow(hwndClose, rc.dx - 16, (size.dy - 16) / 2, 16, 16, TRUE);
+    MoveWindow(hwndTree, 0, size.dy, rc.dx, rc.dy - size.dy, TRUE);
 }
 
 #define BUTTON_HOVER_TEXT _T("1")

@@ -285,6 +285,8 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
     return ret;
 }
 
+#define TB_TEXT_PADDING_RIGHT 6
+
 void UpdateToolbarFindText(WindowInfo *win)
 {
     bool showUI = NeedsFindUI(win);
@@ -304,19 +306,19 @@ void UpdateToolbarFindText(WindowInfo *win)
     int pos_x = r.right + 10;
     int pos_y = (r.bottom - findWndRect.dy) / 2;
 
-    SIZE size = TextSizeInHwnd(win->hwndFindText, text);
-    size.cx += 6;
+    SizeI size = TextSizeInHwnd(win->hwndFindText, text);
+    size.dx += TB_TEXT_PADDING_RIGHT;
 
     int padding = GetSystemMetrics(SM_CXEDGE);
-    MoveWindow(win->hwndFindText, pos_x, (findWndRect.dy - size.cy + 1) / 2 + pos_y, size.cx, size.cy, TRUE);
-    MoveWindow(win->hwndFindBg, pos_x + size.cx, pos_y, findWndRect.dx, findWndRect.dy, FALSE);
-    MoveWindow(win->hwndFindBox, pos_x + size.cx + padding, (findWndRect.dy - size.cy + 1) / 2 + pos_y,
-        findWndRect.dx - 2 * padding, size.cy, FALSE);
+    MoveWindow(win->hwndFindText, pos_x, (findWndRect.dy - size.dy + 1) / 2 + pos_y, size.dx, size.dy, TRUE);
+    MoveWindow(win->hwndFindBg, pos_x + size.dx, pos_y, findWndRect.dx, findWndRect.dy, FALSE);
+    MoveWindow(win->hwndFindBox, pos_x + size.dx + padding, (findWndRect.dy - size.dy + 1) / 2 + pos_y,
+        findWndRect.dx - 2 * padding, size.dy, FALSE);
 
     TBBUTTONINFO bi;
     bi.cbSize = sizeof(bi);
     bi.dwMask = TBIF_SIZE;
-    bi.cx = (WORD)(size.cx + findWndRect.dx + 12);
+    bi.cx = (WORD)(size.dx + findWndRect.dx + 12);
     SendMessage(win->hwndToolbar, TB_SETBUTTONINFO, IDM_FIND_FIRST, (LPARAM)&bi);
 }
 
@@ -434,8 +436,8 @@ void UpdateToolbarPageText(WindowInfo *win, int pageCount, bool updateOnly)
     const TCHAR *text = _TR("Page:");
     if (!updateOnly)
         win::SetText(win->hwndPageText, text);
-    SIZE size = TextSizeInHwnd(win->hwndPageText, text);
-    size.cx += 6;
+    SizeI size = TextSizeInHwnd(win->hwndPageText, text);
+    size.dx += TB_TEXT_PADDING_RIGHT;
 
     WindowRect pageWndRect(win->hwndPageBg);
 
@@ -445,10 +447,13 @@ void UpdateToolbarPageText(WindowInfo *win, int pageCount, bool updateOnly)
     int pos_y = (r.bottom - pageWndRect.dy) / 2;
 
     TCHAR *buf;
-    SIZE size2 = { 0 };
-    if (-1 == pageCount)
+    SizeI size2;
+    if (-1 == pageCount) {
+        // preserve hwndPageTotal's text and size
         buf = win::GetText(win->hwndPageTotal);
-    else if (!pageCount)
+        size2 = ClientRect(win->hwndPageTotal).Size();
+        size2.dx -= TB_TEXT_PADDING_RIGHT;
+    } else if (!pageCount)
         buf = str::Dup(_T(""));
     else if (!win->dm || !win->dm->engine || !win->dm->engine->HasPageLabels())
         buf = str::Format(_T(" / %d"), pageCount);
@@ -459,33 +464,33 @@ void UpdateToolbarPageText(WindowInfo *win, int pageCount, bool updateOnly)
     }
 
     win::SetText(win->hwndPageTotal, buf);
-    if (0 == size2.cx)
+    if (0 == size2.dx)
         size2 = TextSizeInHwnd(win->hwndPageTotal, buf);
-    size2.cx += 6;
+    size2.dx += TB_TEXT_PADDING_RIGHT;
     free(buf);
 
     int padding = GetSystemMetrics(SM_CXEDGE);
-    MoveWindow(win->hwndPageText, pos_x, (pageWndRect.dy - size.cy + 1) / 2 + pos_y, size.cx, size.cy, FALSE);
+    MoveWindow(win->hwndPageText, pos_x, (pageWndRect.dy - size.dy + 1) / 2 + pos_y, size.dx, size.dy, FALSE);
     if (IsUIRightToLeft())
-        pos_x += size2.cx - 6;
-    MoveWindow(win->hwndPageBg, pos_x + size.cx, pos_y, pageWndRect.dx, pageWndRect.dy, FALSE);
-    MoveWindow(win->hwndPageBox, pos_x + size.cx + padding, (pageWndRect.dy - size.cy + 1) / 2 + pos_y,
-               pageWndRect.dx - 2 * padding, size.cy, FALSE);
+        pos_x += size2.dx - TB_TEXT_PADDING_RIGHT;
+    MoveWindow(win->hwndPageBg, pos_x + size.dx, pos_y, pageWndRect.dx, pageWndRect.dy, FALSE);
+    MoveWindow(win->hwndPageBox, pos_x + size.dx + padding, (pageWndRect.dy - size.dy + 1) / 2 + pos_y,
+               pageWndRect.dx - 2 * padding, size.dy, FALSE);
     // in right-to-left layout, the total comes "before" the current page number
     if (IsUIRightToLeft()) {
-        pos_x -= size2.cx;
-        MoveWindow(win->hwndPageTotal, pos_x + size.cx, (pageWndRect.dy - size.cy + 1) / 2 + pos_y, size2.cx, size.cy, FALSE);
+        pos_x -= size2.dx;
+        MoveWindow(win->hwndPageTotal, pos_x + size.dx, (pageWndRect.dy - size.dy + 1) / 2 + pos_y, size2.dx, size.dy, FALSE);
     }
     else
-        MoveWindow(win->hwndPageTotal, pos_x + size.cx + pageWndRect.dx, (pageWndRect.dy - size.cy + 1) / 2 + pos_y, size2.cx, size.cy, FALSE);
+        MoveWindow(win->hwndPageTotal, pos_x + size.dx + pageWndRect.dx, (pageWndRect.dy - size.dy + 1) / 2 + pos_y, size2.dx, size.dy, FALSE);
 
     TBBUTTONINFO bi;
     bi.cbSize = sizeof(bi);
     bi.dwMask = TBIF_SIZE;
     SendMessage(win->hwndToolbar, TB_GETBUTTONINFO, IDM_GOTO_PAGE, (LPARAM)&bi);
-    size2.cx += size.cx + pageWndRect.dx + 12;
-    if (bi.cx != size2.cx || !updateOnly) {
-        bi.cx = (WORD)size2.cx;
+    size2.dx += size.dx + pageWndRect.dx + 12;
+    if (bi.cx != size2.dx || !updateOnly) {
+        bi.cx = (WORD)size2.dx;
         SendMessage(win->hwndToolbar, TB_SETBUTTONINFO, IDM_GOTO_PAGE, (LPARAM)&bi);
     } else {
         RectI rc = ClientRect(win->hwndPageTotal);

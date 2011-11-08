@@ -111,6 +111,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\EngineDump.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\src\EngineManager.h"
 					>
 				</File>
