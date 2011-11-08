@@ -1,6 +1,6 @@
 Things to do before 1.9 release:
-* finish chm support to a point described in todo_chm.txt
 * add splitter between favorites and bookmarks windows (http://code.google.com/p/sumatrapdf/issues/detail?id=1547)
+* installer: UI for registering other supported types http://code.google.com/p/sumatrapdf/issues/detail?id=1365
 
 Things to do before 2.0 release:
 * (?) ebook support
