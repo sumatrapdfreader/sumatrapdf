@@ -121,8 +121,8 @@ public:
     virtual bool CanNavigate(int dir);
     virtual void Navigate(int dir);
     virtual void ZoomTo(float zoomLevel);
-    virtual int CurrentPageNo() { return currentPageNo; }
-
+    virtual int CurrentPageNo() const { return currentPageNo; }
+    virtual HtmlWindow *GetHtmlWindow() const { return htmlWindow; }
     // from HtmlWindowCallback
     virtual bool OnBeforeNavigate(const TCHAR *url, bool newWindow);
 

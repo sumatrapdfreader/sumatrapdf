@@ -6,6 +6,8 @@
 
 #include "BaseEngine.h"
 
+class HtmlWindow;
+
 class ChmNavigationCallback {
 public:
     // tell the ui to show the pageNo as current page (which also syncs
@@ -28,7 +30,8 @@ public:
     virtual bool CanNavigate(int dir) = 0;
     virtual void Navigate(int dir) = 0;
     virtual void ZoomTo(float zoomLevel) = 0;
-    virtual int CurrentPageNo() = 0;
+    virtual int CurrentPageNo() const = 0;
+    virtual HtmlWindow *GetHtmlWindow() const = 0;
 
     static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
     static ChmEngine *CreateFromFileName(const TCHAR *fileName);

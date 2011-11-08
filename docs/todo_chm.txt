@@ -1,16 +1,7 @@
 List of things to do before we can ship CHM support:
 
-* make scrolling in html window with cursor up/down etc. work
-  (is it a matter of passing the messages through ?).
-  Notes: I don't understand how this is supposed to work. Presumably web browser control
-  hooked to a hwnd should just handle standard keyboard navigation. I tried
-  tried to forward WM_KEYDOWN messages from FrameOnKeydown() to canvas hwnd
-  so that they end up in WndProcHtml() but that didn't change anything (i.e.
-  messages get through but that doesn't make keyboard scrolling work).
-  Maybe the right approach is to implement scrolling on HtmlWindow (example:
-  http://code.google.com/p/fidolook/source/browse/trunk/Qm/ui/messageviewwindow.cpp#886)
-  and call it from FrameOnKeydown() via DisplayModel
 * make a click into the page move the focus (away from the ToC)
+* make scrolling with mouse wheel work
 
 Things we can live without for the first release:
 * search (it looks like there's a way to get it cheaply if we reuse
@@ -18,6 +9,7 @@ Things we can live without for the first release:
   our own UI).
 
 Done:
+* make scrolling with keyboard (left/right/up/down etc.) work
 * custom zoom dialog for chm shouldn't have fit page etc.
 * after opening chm, set the remembered zoom level
 * make zoom (both toolbar and menu items) for chm docs work

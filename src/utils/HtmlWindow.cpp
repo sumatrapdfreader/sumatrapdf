@@ -24,17 +24,15 @@
 // Another code to get inspired: http://code.google.com/p/fidolook/source/browse/trunk/Qm/ui/messageviewwindow.cpp
 
 // Implementing scrolling:
-// 1. provide scrolling functions to be called by callers (e.g. from FrameOnKeydow())
-//    by querying scroll state from IHTMLElement2 and setting a new scroll state
-//    http://www.codeproject.com/KB/miscctrl/scrollbrowser.aspx
-//    or using scrollTo() or scrollBy() on IHTMLWindow2:
-//    http://msdn.microsoft.com/en-us/library/aa741497(v=VS.85).aspx
-// 2. http://cboard.cprogramming.com/windows-programming/130893-ihtmldocument2-ihtmlelement2-functions-crash-ie7-access-violation-when-scrolling.html
-//    hints at focusing the control and sending it keyboard events. Would
-//    be simpler but I haven't figured out which control to focus.
-//    I tried forwarding WM_KEYDOWN events from FrameOnKeydown()
-//    to win->hwndCanvas() and that doesn't work but there's potentially
-//    an underlying window where we should send those events instead
+// Currently we implement scrolling by sending messages simulating user input
+// to the browser control window that is responsible for processing those messages.
+// It has a benefit of being simple to implement and matching ie's behavior closely.
+
+// Another option would be to provide scrolling functions to be called by callers
+// (e.g. from FrameOnKeydow()) by querying scroll state from IHTMLElement2 and setting
+// a new scroll state http://www.codeproject.com/KB/miscctrl/scrollbrowser.aspx
+// or using scrollTo() or scrollBy() on IHTMLWindow2:
+// http://msdn.microsoft.com/en-us/library/aa741497(v=VS.85).aspx
 
 class HW_IOleInPlaceFrame;
 class HW_IOleInPlaceSiteWindowless;
@@ -321,6 +319,21 @@ public:
     void STDMETHODCALLTYPE OnViewStatusChange(DWORD) { }
 };
 
+static HWND GetBrowserControlHwnd(HWND hwndControlParent)
+{
+    // This is a fragile way to get the actual hwnd of the browser control
+    // that is responsible for processing keyboard messages (I believe the
+    // hierarchy might change depending on how the browser control is configured
+    // e.g. if it has status window etc.).
+    // But it works for us.
+    HWND w1 = GetWindow(hwndControlParent, GW_CHILD);
+    HWND w2 = GetWindow(w1, GW_CHILD);
+    HWND w3 = GetWindow(w2, GW_CHILD);
+    return w3;
+}
+
+// This is a wndproc of the window that is a parent hwnd of embedded browser
+// control.
 static LRESULT CALLBACK WndProcHtml(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     HtmlWindow *win = (HtmlWindow*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
@@ -333,8 +346,9 @@ static LRESULT CALLBACK WndProcHtml(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
                 int dx = LOWORD(lParam);
                 int dy = HIWORD(lParam);
                 win->OnSize(dx, dy);
+                return 0;
             }
-        break;
+            break;
     }
     return DefWindowProc(hwnd, msg, wParam, lParam);
 }
@@ -666,6 +680,12 @@ static void PumpRemainingMessages()
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
+}
+
+void HtmlWindow::SendMsg(UINT msg, WPARAM wp, LPARAM lp)
+{
+    HWND hwndBrowser = GetBrowserControlHwnd(hwnd);
+    SendMessage(hwndBrowser, msg, wp, lp);
 }
 
 // Probably could check IHTMLDocument2::::get_readyState() but checking

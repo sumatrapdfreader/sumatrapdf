@@ -55,6 +55,7 @@ public:
     int  GetZoomPercent();
     void FindInCurrentPage();
     bool WaitUntilLoaded(DWORD maxWaitMs);
+    void SendMsg(UINT msg, WPARAM wp, LPARAM lp);
 
     HBITMAP TakeScreenshot(RectI area, SizeI finalSize);
     bool OnBeforeNavigate(const TCHAR *url, bool newWindow);

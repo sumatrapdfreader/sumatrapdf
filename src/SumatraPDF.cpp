@@ -35,6 +35,7 @@
 #include "Selection.h"
 #include "Menu.h"
 #include "Touch.h"
+#include "HtmlWindow.h"
 
 #ifdef BUILD_RIBBON
 #include "Ribbon.h"
@@ -2957,6 +2958,21 @@ void AdvanceFocus(WindowInfo* win)
 // from one typed on the main keyboard (focuses the find textbox)
 static bool gIsDivideKeyDown = false;
 
+static bool ChmForwardKey(WPARAM key)
+{
+    if ((VK_LEFT == key) || (VK_RIGHT == key))
+        return true;
+    if ((VK_UP == key) || (VK_DOWN == key))
+        return true;
+    if ((VK_HOME == key) || (VK_END == key))
+        return true;
+    if ((VK_PRIOR == key) || (VK_NEXT == key))
+        return true;
+    if ((VK_MULTIPLY == key) || (VK_DIVIDE == key))
+        return true;
+    return false;
+}
+
 bool FrameOnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield)
 {
     if ((VK_LEFT == key || VK_RIGHT == key) &&
@@ -2971,6 +2987,14 @@ bool FrameOnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
     if (!win->IsDocLoaded())
         return false;
 
+    if (win->IsChm()) {
+        if (ChmForwardKey(key)) {
+            ChmEngine *chmEng = win->dm->AsChmEngine();
+            HtmlWindow *htmlWin = chmEng->GetHtmlWindow();
+            htmlWin->SendMsg(WM_KEYDOWN, key, lparam);
+            return true;
+        }
+    }
     //DBG_OUT("key=%d,%c,shift=%d\n", key, (char)key, (int)WasKeyDown(VK_SHIFT));
 
     if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation)
