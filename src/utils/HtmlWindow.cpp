@@ -349,6 +349,10 @@ static LRESULT CALLBACK WndProcHtml(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
                 return 0;
             }
             break;
+        // Note: not quite sure why I need this but if we don't swallow WM_MOUSEWHEEL
+        // messages, we might get infinite recursion.
+        case WM_MOUSEWHEEL:
+            return 0;
     }
     return DefWindowProc(hwnd, msg, wParam, lParam);
 }

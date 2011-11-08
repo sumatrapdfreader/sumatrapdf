@@ -1,7 +1,6 @@
 List of things to do before we can ship CHM support:
 
 * make a click into the page move the focus (away from the ToC)
-* make scrolling with mouse wheel work
 
 Things we can live without for the first release:
 * search (it looks like there's a way to get it cheaply if we reuse

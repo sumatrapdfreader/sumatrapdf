@@ -4318,9 +4318,13 @@ InitMouseWheelInfo:
         case WM_MOUSEWHEEL:
             if (!win)
                 break;
-            // TODO: for HTMLWindows inside hwndCanvas, fix the infinite recursion
-            if (win->IsChm())
+
+            if (win->IsChm()) {
+                ChmEngine *chmEngine = win->dm->AsChmEngine();
+                HtmlWindow *htmlWin = chmEngine->GetHtmlWindow();
+                htmlWin->SendMsg(msg, wParam, lParam);
                 break;
+            }
 
             // Pass the message to the canvas' window procedure
             // (required since the canvas itself never has the focus and thus
