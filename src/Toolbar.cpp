@@ -545,18 +545,18 @@ void CreateToolbar(WindowInfo *win)
     SizeI size = GetBitmapSize(hbmp);
     // stretch the toolbar bitmaps for higher DPI settings
     // TODO: get nicely interpolated versions of the toolbar icons for higher resolutions
-    if (size.dx < TOOLBAR_MIN_ICON_SIZE * win->uiDPIFactor) {
-        size.dy *= (int)(win->uiDPIFactor + 0.5f);
+    if (size.dy < TOOLBAR_MIN_ICON_SIZE * win->uiDPIFactor) {
         size.dx *= (int)(win->uiDPIFactor + 0.5f);
-        hbmp = (HBITMAP)CopyImage(hbmp, IMAGE_BITMAP, size.dy, size.dx, LR_COPYDELETEORG);
+        size.dy *= (int)(win->uiDPIFactor + 0.5f);
+        hbmp = (HBITMAP)CopyImage(hbmp, IMAGE_BITMAP, size.dx, size.dy, LR_COPYDELETEORG);
     }
     // Assume square icons
-    HIMAGELIST himl = ImageList_Create(size.dx, size.dx, ILC_COLORDDB | ILC_MASK, 0, 0);
+    HIMAGELIST himl = ImageList_Create(size.dy, size.dy, ILC_COLORDDB | ILC_MASK, 0, 0);
     ImageList_AddMasked(himl, hbmp, RGB(0xFF, 0, 0xFF));
     DeleteObject(hbmp);
 
     // in Plugin mode, replace the Open with a Save As button
-    if (gPluginMode && size.dy / size.dx == 13) {
+    if (gPluginMode && size.dx / size.dy == 13) {
         gToolbarButtons[0].bmpIndex = 12;
         gToolbarButtons[0].cmdId = IDM_SAVEAS;
         gToolbarButtons[0].toolTip = _TRN("Save As");

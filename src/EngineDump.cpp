@@ -206,7 +206,7 @@ void DumpData(BaseEngine *engine, bool fullDump)
 
 int main(int argc, char **argv)
 {
-	CmdLineParser argList(GetCommandLine());
+    CmdLineParser argList(GetCommandLine());
     if (argList.Count() < 2) {
         ErrOut("Usage: %s <filename> [-full]\n", path::GetBaseName(argList.At(0)));
         return 0;
