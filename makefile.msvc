@@ -34,7 +34,7 @@ EXTDIR=ext
 LIBMUPDF_RES = $(O)\libmupdf.res
 
 # default target
-all_sumatrapdf: SumatraPDF Uninstaller PDFFilter PdfPreview BrowserPlugin PdfBench
+all_sumatrapdf: SumatraPDF Uninstaller PDFFilter PdfPreview BrowserPlugin PdfBench EngineDump
 
 ##### add configuration changes that should also affect MuPDF before this line #####
 
@@ -101,25 +101,28 @@ BROWSER_PLUGIN = $(O)\npPdfViewer.dll
 BROWSER_PLUGIN_RES = $(OS)\npPdfViewer.res
 BROWSER_PLUGIN_CFLAGS = $(CFLAGS) /Isrc/utils /Isrc/utils/msvc
 
+ENGINEDUMP_APP = $(O)\EngineDump.exe
+
 UTILS_OBJS = \
 	$(OS)\BencUtil.obj $(OS)\FileUtil.obj $(OS)\Http.obj \
 	$(OS)\StrUtil.obj $(OS)\UtilTests.obj $(OS)\WinUtil.obj \
 	$(OS)\DialogSizer.obj $(OS)\Transactions.obj $(OS)\Touch.obj \
 	$(OS)\TrivialHtmlParser.obj $(OS)\HtmlWindow.obj
 
+ENGINE_OBJS = \
+	$(OS)\PdfEngine.obj $(OS)\ImagesEngine.obj $(OS)\PsEngine.obj \
+	$(OS)\DjVuEngine.obj $(DJVU_OBJS) $(OS)\ChmEngine.obj $(CHMLIB_OBJS)
+
 SUMATRA_OBJS = \
-	$(OS)\AppPrefs.obj $(OS)\DisplayModel.obj $(OS)\CrashHandler.obj $(OS)\PdfEngine.obj \
+	$(OS)\AppPrefs.obj $(OS)\DisplayModel.obj $(OS)\CrashHandler.obj $(OS)\Favorites.obj \
 	$(OS)\TextSearch.obj $(OS)\SumatraAbout.obj $(OS)\SumatraDialogs.obj $(OS)\SumatraProperties.obj \
 	$(OS)\SumatraPDF.obj $(OS)\translations.obj $(OS)\FileWatch.obj $(OS)\PdfSync.obj \
 	$(OS)\RenderCache.obj $(OS)\TextSelection.obj $(OS)\WindowInfo.obj $(OS)\ParseCommandLine.obj \
 	$(OS)\StressTesting.obj $(OS)\UnitTests.obj $(OS)\AppTools.obj $(SUMATRA_RES) \
-	$(OS)\ImagesEngine.obj $(OS)\PsEngine.obj $(OS)\Favorites.obj \
 	$(OS)\TableOfContents.obj $(OS)\Toolbar.obj $(OS)\Print.obj \
 	$(OS)\Notifications.obj $(OS)\Search.obj $(OS)\Menu.obj \
 	$(OS)\ExternalPdfViewer.obj $(OS)\Selection.obj $(OS)\ZipUtil.obj \
-	$(UTILS_OBJS) $(BZIP2_OBJS) $(MINIZIP_OBJS) $(UNRAR_OBJS) $(SYNCTEX_OBJS) \
-	$(OS)\DjVuEngine.obj $(DJVU_OBJS) \
-	$(OS)\ChmEngine.obj $(CHMLIB_OBJS)
+	$(UTILS_OBJS) $(BZIP2_OBJS) $(MINIZIP_OBJS) $(UNRAR_OBJS) $(SYNCTEX_OBJS) $(ENGINE_OBJS)
 
 # disable incomplete Ribbon support in release builds (unless BUILD_RIBBON is defined)
 !if "$(CFG)"=="dbg"
@@ -150,6 +153,10 @@ BROWSER_PLUGIN_OBJS = \
 	$(OS)\npPdfViewer.obj $(BROWSER_PLUGIN_RES) \
 	$(OS)\StrUtil.obj $(OS)\FileUtil.obj $(OS)\WinUtil.obj
 
+ENGINEDUMP_OBJS = \
+	$(OS)\EngineDump.obj $(ENGINE_OBJS) $(LIBMUPDF_LIB) $(OS)\MuPDF_Exports.obj \
+	$(UTILS_OBJS) $(BZIP2_OBJS) $(MINIZIP_OBJS) $(UNRAR_OBJS)
+
 !if "$(BUILD_TEX_IFILTER)"!=""
 PDFFILTER_OBJS = $(PDFFILTER_OBJS) $(OS)\CTeXFilter.obj
 PDFFILTER_CFLAGS = $(PDFFILTER_CFLAGS) /D "BUILD_TEX_IFILTER"
@@ -173,6 +180,7 @@ PDFFilter:     $(OS) $(LIBMUPDF_DLL) $(PDFFILTER_DLL)
 PdfPreview:    $(OS) $(LIBMUPDF_DLL) $(PDFPREVIEW_DLL)
 BrowserPlugin: $(OS) $(BROWSER_PLUGIN)
 PdfBench:      $(OS) $(PDFBENCH_APP)
+EngineDump:    $(OS) $(ENGINEDUMP_APP)
 
 $(OS): $(O) $(OE)
 	@if not exist $(OS) mkdir $(OS)
@@ -221,6 +229,9 @@ $(BROWSER_PLUGIN_RES): src\browserplugin\npPdfViewer.rc src\Version.h
 
 $(BROWSER_PLUGIN): $(BROWSER_PLUGIN_OBJS)
 	$(LD) /DLL $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
+
+$(ENGINEDUMP_APP): $(ENGINEDUMP_OBJS)
+	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
 
 # utils directory
 {src/utils}.cpp{$(OS)}.obj::
@@ -294,6 +305,11 @@ $(OS)\DisplayModel.obj: src\utils\WinUtil.h
 $(OS)\DjVuEngine.obj: src\BaseEngine.h src\DjVuEngine.h src\utils\BaseUtil.h
 $(OS)\DjVuEngine.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scopes.h
 $(OS)\DjVuEngine.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
+$(OS)\EngineDump.obj: src\BaseEngine.h src\ChmEngine.h src\DjVuEngine.h
+$(OS)\EngineDump.obj: src\EngineManager.h src\ImagesEngine.h src\PdfEngine.h
+$(OS)\EngineDump.obj: src\PsEngine.h src\utils\BaseUtil.h src\utils\CmdLineParser.h
+$(OS)\EngineDump.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\StrUtil.h
+$(OS)\EngineDump.obj: src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\ExternalPdfViewer.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
 $(OS)\ExternalPdfViewer.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
 $(OS)\ExternalPdfViewer.obj: src\EngineManager.h src\ExternalPdfViewer.h src\ImagesEngine.h
