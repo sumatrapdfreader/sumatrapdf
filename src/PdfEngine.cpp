@@ -373,7 +373,7 @@ static TCHAR *LinkifyMultilineText(LinkRectList *list, TCHAR *pageText, TCHAR *s
 
     // update the link URL for all partial links
     list->links.At(lastIx) = str::Dup(uri);
-    for (size_t i = lastIx; i < list->coords.Count(); i++)
+    for (size_t i = lastIx + 1; i < list->coords.Count(); i++)
         list->links.Append(str::Dup(uri));
 
     return end;
