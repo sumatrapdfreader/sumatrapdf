@@ -1,13 +1,12 @@
 List of things to do before we can ship CHM support:
 
-* make a click into the page move the focus (away from the ToC)
-
 Things we can live without for the first release:
 * search (it looks like there's a way to get it cheaply if we reuse
   browser's UI for it; probably much harder if we want to preserve
   our own UI).
 
 Done:
+* make a click into the page move the focus (away from the ToC)
 * make scrolling with keyboard (left/right/up/down etc.) work
 * custom zoom dialog for chm shouldn't have fit page etc.
 * after opening chm, set the remembered zoom level

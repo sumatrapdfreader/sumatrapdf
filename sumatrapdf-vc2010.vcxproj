@@ -180,6 +180,7 @@
     <ClCompile Include="src\CrashHandler.cpp" />
     <ClCompile Include="src\DisplayModel.cpp" />
     <ClCompile Include="src\DisplayState.cpp" />
+    <ClCompile Include="src\EngineDump.cpp" />
     <ClCompile Include="src\ExternalPdfViewer.cpp" />
     <ClCompile Include="src\Favorites.cpp" />
     <ClCompile Include="src\FileWatch.cpp" />

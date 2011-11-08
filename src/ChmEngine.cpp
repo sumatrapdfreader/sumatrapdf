@@ -8,6 +8,7 @@
 #include "TrivialHtmlParser.h"
 #include "HtmlWindow.h"
 #include "WinUtil.h"
+#include "SumatraPDF.h"
 
 #define CHM_MT
 #define PPC_BSTR
@@ -123,8 +124,13 @@ public:
     virtual void ZoomTo(float zoomLevel);
     virtual int CurrentPageNo() const { return currentPageNo; }
     virtual HtmlWindow *GetHtmlWindow() const { return htmlWindow; }
+
     // from HtmlWindowCallback
     virtual bool OnBeforeNavigate(const TCHAR *url, bool newWindow);
+    virtual void OnLButtonDown() {
+        BaseEngine *e = reinterpret_cast<BaseEngine*>(this);
+        UIFocusFrame(e);
+    }
 
 protected:
     const TCHAR *fileName;

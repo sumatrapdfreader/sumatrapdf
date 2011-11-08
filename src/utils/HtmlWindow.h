@@ -13,6 +13,7 @@ class HtmlWindowCallback
 {
 public:
     virtual bool OnBeforeNavigate(const TCHAR *url, bool newWindow) = 0;
+    virtual void OnLButtonDown() = 0;
 };
 
 class HtmlWindow
@@ -56,6 +57,7 @@ public:
     void FindInCurrentPage();
     bool WaitUntilLoaded(DWORD maxWaitMs);
     void SendMsg(UINT msg, WPARAM wp, LPARAM lp);
+    void OnLButtonDown() const;
 
     HBITMAP TakeScreenshot(RectI area, SizeI finalSize);
     bool OnBeforeNavigate(const TCHAR *url, bool newWindow);

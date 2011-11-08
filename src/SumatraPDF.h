@@ -103,4 +103,6 @@ WindowInfo* FindWindowInfoBySyncFile(const TCHAR *file);
 WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win=NULL,
                          bool showWin=true, bool forceReuse=false, bool suppressPwdUI=false);
 
+void UIFocusFrame(BaseEngine *engine);
+
 #endif
