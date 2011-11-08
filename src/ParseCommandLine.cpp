@@ -141,6 +141,13 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
         else if (is_arg_with_param("-inverse-search")) {
             str::ReplacePtr(&inverseSearchCmdLine, argList.At(++n));
         }
+        else if ((is_arg_with_param("-forward-search") ||
+                  is_arg_with_param("-fwdsearch")) && argCount > n + 2) {
+            // -forward-search is for consistency with -inverse-search
+            // -fwdsearch is for consistency with -fwdsearch-*
+            str::ReplacePtr(&forwardSearchOrigin, argList.At(++n));
+            forwardSearchLine = _ttoi(argList.At(++n));
+        }
         else if (is_arg_with_param("-fwdsearch-offset")) {
             fwdSearch.offset = _ttoi(argList.At(++n));
         }

@@ -4616,6 +4616,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
                                          fullpath, viewMode, i.startZoom, i.startScroll.x, i.startScroll.y));
                 DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
             }
+            if (i.forwardSearchOrigin && i.forwardSearchLine) {
+                ScopedMem<TCHAR> command(str::Format(_T("[") DDECOMMAND_SYNC _T("(\"%s\", \"%s\", %d, 0, 0, 1)]"),
+                                         i.fileNames.At(n), i.forwardSearchOrigin, i.forwardSearchLine));
+                DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
+            }
         }
         else {
             bool showWin = !(i.printDialog && i.exitOnPrint) && !gPluginMode;
@@ -4645,6 +4650,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
                     ss.x = i.startScroll.x;
                     ss.y = i.startScroll.y;
                     win->dm->SetScrollState(ss);
+                }
+                if (i.forwardSearchOrigin && i.forwardSearchLine && win->pdfsync) {
+                    UINT page;
+                    Vec<RectI> rects;
+                    int ret = win->pdfsync->source_to_pdf(i.forwardSearchOrigin, i.forwardSearchLine, 0, &page, rects);
+                    ShowForwardSearchResult(win, i.forwardSearchOrigin, i.forwardSearchLine, 0, ret, page, rects);
                 }
             }
         }

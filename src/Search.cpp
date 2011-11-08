@@ -388,7 +388,7 @@ bool OnInverseSearch(WindowInfo *win, int x, int y)
 }
 
 // Show the result of a PDF forward-search synchronization (initiated by a DDE command)
-static void ShowForwardSearchResult(WindowInfo *win, const TCHAR *fileName, UINT line, UINT col, UINT ret, UINT page, Vec<RectI> &rects)
+void ShowForwardSearchResult(WindowInfo *win, const TCHAR *fileName, UINT line, UINT col, UINT ret, UINT page, Vec<RectI> &rects)
 {
     win->fwdSearchMark.rects.Reset();
     const PageInfo *pi = win->dm->GetPageInfo(page);

@@ -23,6 +23,8 @@ public:
     TCHAR *     printSettings;
     int         bgColor;
     TCHAR *     inverseSearchCmdLine;
+    TCHAR *     forwardSearchOrigin;
+    int         forwardSearchLine;
     struct {
         int     offset;
         int     width;
@@ -63,6 +65,7 @@ public:
         enterPresentation(false), enterFullscreen(false), hwndPluginParent(NULL),
         startView(DM_AUTOMATIC), startZoom(INVALID_ZOOM), startScroll(PointI(-1, -1)),
         showConsole(false), exitImmediately(false), silent(false),
+        forwardSearchOrigin(NULL), forwardSearchLine(0),
         stressTestPath(NULL), stressTestFilter(NULL),
         stressTestRanges(NULL), stressTestCycles(1), crashOnOpen(false)
     {
@@ -76,6 +79,7 @@ public:
         free(printerName);
         free(printSettings);
         free(inverseSearchCmdLine);
+        free(forwardSearchOrigin);
         free(lang);
         free(destName);
         free(stressTestPath);
