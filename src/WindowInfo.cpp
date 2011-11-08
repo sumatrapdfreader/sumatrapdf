@@ -236,7 +236,7 @@ void LinkHandler::GotoLink(PageDestination *link)
                 ScopedMem<TCHAR> value(ReadRegStr(HKEY_CLASSES_ROOT, ext, _T("PerceivedType")));
                 if (str::EqI(value, _T("audio")) || str::EqI(value, _T("video"))) {
                     // TODO: only do this for trusted files (cf. IsUntrustedFile)?
-                    if (LaunchFile(path, NULL, _T("open"))) {
+                    if (LaunchFile(path)) {
                         CloseWindow(newWin, true);
                         newWin = NULL;
                     }
