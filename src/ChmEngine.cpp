@@ -623,6 +623,16 @@ static ChmTocItem *ParseChmHtmlToc(StrVec& pages, char *html)
 bool CChmEngine::Load(const TCHAR *fileName)
 {
     assert(NULL == chmHandle);
+
+    // CHM files downloaded from the internet are marked as unsafe
+    // and IE (including our embedded control) will open them
+    // but will not show the pages, which is extremely confusing
+    // for the user and most people wouldn't know how to fix that.
+    // We silently fix that for them.
+    if (file::GetZoneIdentifier(fileName) >= URLZONE_INTERNET &&
+        !file::SetZoneIdentifier(fileName, URLZONE_TRUSTED))
+        return false;
+
     this->fileName = str::Dup(fileName);
     CASSERT(2 == sizeof(OLECHAR), OLECHAR_must_be_WCHAR);
 #ifdef UNICODE
