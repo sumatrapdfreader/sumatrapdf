@@ -3,13 +3,6 @@ Things to do before 1.9 release:
 * installer: UI for registering other supported types http://code.google.com/p/sumatrapdf/issues/detail?id=1365
 * bug: focus captured by web control when clicking on "Related Topics" button in 010Editor.chm from
   http://code.google.com/p/sumatrapdf/issues/detail?id=1579
-* chm: chm files downloaded from the internet are marked as unsafe by Windows and while they open
-  just fine, IE won't render them correctly. We should fix that automatically (or at least ask
-  user to let us fix that and refuse to load a file if user doesn't agree). When it happens,
-  it trips even me (I tend to forget about that) so I'm sure it will trip up many users.
-  This setting must be some security property on a file that we can change. It can be
-  changed manually via file properties panel in window (in "General" tab there's
-  "Security" text and "Unblock" button).
 
 Things to do before 2.0 release:
 * (?) ebook support

@@ -675,6 +675,21 @@ static void UnsubclassCanvas(HWND hwnd)
     SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)0);
 }
 
+// CHM files downloaded from the internet are marked as unsafe
+// and IE (including our embedded control) will open them
+// but will not show the pages, which is extremely confusing
+// for the user and most people wouldn't know how to fix that.
+// We silently fix that for them.
+static void MarkChmFileAsSafe(const TCHAR *fileName)
+{
+    // this fix only applies to CHM files
+    if (!str::EndsWithI(fileName, _T(".chm")))
+        return;
+    if (!IsUntrustedFile(fileName))
+        return;
+    file::SetZoneIdentifier(fileName, URLZONE_LOCAL_MACHINE);
+}
+
 // isNewWindow : if true then 'win' refers to a newly created window that needs 
 //   to be resized and placed
 // allowFailure : if false then keep displaying the previously loaded document
@@ -687,6 +702,8 @@ static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win,
     bool showWin, bool placeWindow)
 {
     ScopedMem<TCHAR> title;
+
+    MarkChmFileAsSafe(fileName);
 
     // Never load settings from a preexisting state if the user doesn't wish to
     // (unless we're just refreshing the document, i.e. only if placeWindow == true)
