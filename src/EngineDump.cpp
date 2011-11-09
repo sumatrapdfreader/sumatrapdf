@@ -75,7 +75,7 @@ void DumpProperties(BaseEngine *engine)
     Out("\t/>\n");
 }
 
-void DumpTocItem(DocTocItem *item, int level)
+void DumpTocItem(DocTocItem *item, int level, int& idCounter)
 {
     for (; item; item = item->next) {
         ScopedMem<TCHAR> title(Escape(str::Dup(item->title)));
@@ -83,11 +83,15 @@ void DumpTocItem(DocTocItem *item, int level)
         Out("<Item Title=\"%s\"", title);
         if (item->pageNo)
             Out(" Page=\"%d\"", item->pageNo);
+        if (item->id != ++idCounter)
+            Out(" Id=\"%d\"", item->id);
         if (!item->child)
             Out(" />\n");
         else {
+            if (item->open)
+                Out(" Expanded=\"yes\"");
             Out(">\n");
-            DumpTocItem(item->child, level + 1);
+            DumpTocItem(item->child, level + 1, idCounter);
             for (int i = 0; i < level; i++) Out("\t");
             Out("</Item>\n");
         }
@@ -99,7 +103,8 @@ void DumpToc(BaseEngine *engine)
     DocTocItem *root = engine->GetTocTree();
     if (root) {
         Out("\t<TocTree%s>\n", engine->HasTocTree() ? _T("") : _T(" Expected=\"no\""));
-        DumpTocItem(root, 2);
+        int idCounter = 0;
+        DumpTocItem(root, 2, idCounter);
         Out("\t</TocTree>\n");
     }
     else if (engine->HasTocTree())

@@ -40,18 +40,20 @@ ChmTocItem *ChmTocItem::Clone(DocTocItem *item)
 // Data parsed from /#WINDOWS, /#STRINGS, /#SYSTEM files inside CHM file
 class ChmInfo {
 public:
-    ChmInfo() : title(NULL), tocPath(NULL), indexPath(NULL), homePath(NULL)
+    ChmInfo() : title(NULL), tocPath(NULL), indexPath(NULL), homePath(NULL), creator(NULL)
     {}
     ~ChmInfo() {
         free(title);
         free(tocPath);
         free(indexPath);
         free(homePath);
+        free(creator);
     }
     char *title;
     char *tocPath;
     char *indexPath;
     char *homePath;
+    char *creator;
 };
 
 class CChmEngine : public ChmEngine, public HtmlWindowCallback {
@@ -503,12 +505,12 @@ static bool ParseSystemChmData(chmFile *chmHandle, ChmInfo *chmInfo)
             }
             break;
         case 9:
-            {
-                char *compiler = ReadString(b, off);
-                free(compiler);
+            if (!chmInfo->creator) {
+                chmInfo->creator = ReadWsTrimmedString(b, off);
             }
             break;
         case 16:
+            // for now for debugging
             {
                 char *defaultFont = ReadString(b, off);
                 free(defaultFont);
@@ -656,6 +658,8 @@ TCHAR *CChmEngine::GetProperty(char *name)
 {
     if (str::Eq(name, "Title") && chmInfo.title)
         return str::conv::FromAnsi(chmInfo.title);
+    if (str::Eq(name, "Creator") && chmInfo.creator)
+        return str::conv::FromAnsi(chmInfo.creator);
     return NULL;
 }
 
