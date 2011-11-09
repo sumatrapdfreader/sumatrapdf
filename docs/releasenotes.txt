@@ -5,6 +5,7 @@ Next version:
 
 1.9 (????-??-??)
 
+* CHM documents support
 * support touch gestures (available on Windows 7 or later)
   (contributed by Robert Prouse)
 * open linked audio and video files in an external media player

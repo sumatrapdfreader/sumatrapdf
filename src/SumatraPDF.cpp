@@ -861,6 +861,14 @@ Error:
         if (showWin || ss.page != 1)
             win.dm->SetScrollState(ss);
         UpdateToolbarState(&win);
+        // Note: this is a hack. Somewhere between r4593 and r4629
+        // restoring zoom for chm files from history regressed and
+        // I'm too lazy to figure out where and why. This forces
+        // setting zoom level after a page has been displayed
+        // (indirectly triggered via UpdateToolbarState()).
+        if (win.IsChm()) {
+            win.dm->Relayout(zoomVirtual, rotation);
+        }
     }
 #ifdef BUILD_RIBBON
     if (win.ribbonSupport)
