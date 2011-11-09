@@ -1769,6 +1769,8 @@ static void OnPaintFrame(HWND hwnd)
 
 #ifndef BUILD_UNINSTALLER
 
+// TODO: since we have a variable UI, for better layout (anchored to the bottom,
+// not the top), we should layout controls starting at the bottom and go up
 static void OnCreateWindow(HWND hwnd)
 {
     gHwndButtonInstUninst = CreateDefaultButton(hwnd, _T("Install ") TAPP, 140);
@@ -1784,7 +1786,7 @@ static void OnCreateWindow(HWND hwnd)
     SetWindowFont(gHwndButtonOptions, gFontDefault, TRUE);
 
     int staticDy = dpiAdjust(20);
-    rc.y = TITLE_PART_DY + rc.x;
+    rc.y = TITLE_PART_DY + rc.x; // TODO: rc.x here doesn't make sense. Works by accident? (rc.x == 8)
     gHwndStaticInstDir = CreateWindow(WC_STATIC, _T("Install ") TAPP _T(" into the following &folder:"),
                                       WS_CHILD,
                                       rc.x, rc.y, r.dx - 2 * rc.x, staticDy,
@@ -1832,8 +1834,8 @@ static void OnCreateWindow(HWND hwnd)
     Button_SetCheck(gHwndCheckboxRegisterBrowserPlugin, gGlobalData.installBrowserPlugin || IsBrowserPluginInstalled());
     rc.y += staticDy;
 
-    // only show this checkbox if the bitness of DLL and OS match
-    // (assuming that the installer has the same bitness as its content!)
+    // only show this checkbox if the CPU arch of DLL and OS match
+    // (assuming that the installer has the same CPU arch as its content!)
 #ifndef _WIN64
     if (!IsRunningInWow64())
 #endif
