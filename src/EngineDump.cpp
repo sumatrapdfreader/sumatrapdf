@@ -204,10 +204,6 @@ void DumpData(BaseEngine *engine, bool fullDump)
     Out("</EngineDump>\n");
 }
 
-void UIFocusFrame(BaseEngine *engine)
-{
-}
-
 int main(int argc, char **argv)
 {
     CmdLineParser argList(GetCommandLine());

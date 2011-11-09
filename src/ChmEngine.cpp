@@ -8,7 +8,6 @@
 #include "TrivialHtmlParser.h"
 #include "HtmlWindow.h"
 #include "WinUtil.h"
-#include "SumatraPDF.h"
 
 #define CHM_MT
 #define PPC_BSTR
@@ -127,10 +126,7 @@ public:
 
     // from HtmlWindowCallback
     virtual bool OnBeforeNavigate(const TCHAR *url, bool newWindow);
-    virtual void OnLButtonDown() {
-        BaseEngine *e = reinterpret_cast<BaseEngine*>(this);
-        UIFocusFrame(e);
-    }
+    virtual void OnLButtonDown() { if (navCb) navCb->FocusFrame(); }
 
 protected:
     const TCHAR *fileName;

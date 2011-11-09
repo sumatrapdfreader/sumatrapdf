@@ -219,6 +219,7 @@ public:
                                 unsigned char decryptionKeyOut[32], bool *saveKey);
     virtual void PageNoChanged(int pageNo);
     virtual void LaunchBrowser(const TCHAR *url);
+    virtual void FocusFrame() { SetFocus(hwndFrame); }
     virtual void Repaint() { RepaintAsync(); };
     virtual void UpdateScrollbars(SizeI canvas);
     virtual void RenderPage(int pageNo);

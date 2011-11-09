@@ -16,6 +16,8 @@ public:
     virtual void PageNoChanged(int pageNo) = 0;
     // tell the UI to launch the given URL in an external web browser
     virtual void LaunchBrowser(const TCHAR *url) = 0;
+    // tell the UI to move focus back to the main window
+    virtual void FocusFrame() = 0;
 };
 
 class ChmEngine : public BaseEngine {

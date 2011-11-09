@@ -2962,14 +2962,6 @@ void AdvanceFocus(WindowInfo* win)
     SetFocus(tabOrder[ix].hwnd);
 }
 
-void UIFocusFrame(BaseEngine *engine)
-{
-    const TCHAR *file = engine->FileName();
-    WindowInfo *wi = FindWindowInfoByFile(engine->FileName());
-    if (wi)
-        SetFocus(wi->hwndFrame);
-}
-
 // allow to distinguish a '/' caused by VK_DIVIDE (rotates a document)
 // from one typed on the main keyboard (focuses the find textbox)
 static bool gIsDivideKeyDown = false;
