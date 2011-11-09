@@ -41,7 +41,7 @@
     <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">nmake -f makefile.msvc CFG=dbg  NASM=$(ProjectDir)bin\nasm.exe rebuild</NMakeReBuildCommandLine>
     <NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">nmake -f makefile.msvc CFG=dbg  NASM=$(ProjectDir)bin\nasm.exe clean</NMakeCleanCommandLine>
     <NMakeOutput Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">obj-dbg\sumatrapdf.exe</NMakeOutput>
-    <NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_DEBUG;DEBUG;SYNCTEX_FEATURE;BUILD_CHM_SUPPORT;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_DEBUG;DEBUG;SYNCTEX_FEATURE;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
     <NMakeIncludeSearchPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(NMakeIncludeSearchPath);$(ProjectDir)\src;$(ProjectDir)\src\utils;$(ProjectDir)\src\utils\msvc;$(ProjectDir)\mupdf\fitz;$(ProjectDir)\mupdf\pdf;$(ProjectDir)\mupdf\xps;$(ProjectDir)\ext\libjpeg-turbo;$(ProjectDir)\ext\zlib-1.2.5;$(ProjectDir)\ext\zlib-1.2.5\minizip;$(ProjectDir)\ext\CHMLib\src</NMakeIncludeSearchPath>
     <NMakeForcedIncludes Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(NMakeForcedIncludes)</NMakeForcedIncludes>
     <NMakeAssemblySearchPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(NMakeAssemblySearchPath)</NMakeAssemblySearchPath>
