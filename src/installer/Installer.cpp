@@ -128,6 +128,7 @@ static Color            COLOR_MSG_FAILED(gCol1);
 // the installer has to be 32bit as well, so that it goes into proper
 // place in registry (under Software\Wow6432Node\Microsoft\Windows\...
 #define REG_PATH_UNINST     _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\") TAPP
+// Legacy key, only read during an update and removed at uninstallation
 #define REG_PATH_SOFTWARE   _T("Software\\") TAPP
 
 #define REG_CLASSES_APP     _T("Software\\Classes\\") TAPP
@@ -305,11 +306,11 @@ static TCHAR *GetOwnPath()
 
 static TCHAR *GetInstallationDir()
 {
-    // try the previous installation directory first
-    ScopedMem<TCHAR> dir(ReadRegStr(HKEY_CURRENT_USER, REG_PATH_SOFTWARE, INSTALL_DIR));
-    if (!dir) dir.Set(ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_SOFTWARE, INSTALL_DIR));
-    if (!dir) dir.Set(ReadRegStr(HKEY_CURRENT_USER, REG_PATH_UNINST, INSTALL_LOCATION));
+    ScopedMem<TCHAR> dir(ReadRegStr(HKEY_CURRENT_USER, REG_PATH_UNINST, INSTALL_LOCATION));
     if (!dir) dir.Set(ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_UNINST, INSTALL_LOCATION));
+    // fall back to the legacy key if the official one isn't present yet
+    if (!dir) dir.Set(ReadRegStr(HKEY_CURRENT_USER, REG_PATH_SOFTWARE, INSTALL_DIR));
+    if (!dir) dir.Set(ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_SOFTWARE, INSTALL_DIR));
     if (dir) {
         if (str::EndsWithI(dir, _T(".exe"))) {
             dir.Set(path::GetDir(dir));
@@ -791,9 +792,6 @@ static bool WriteUninstallerRegistryInfo(HKEY hkey)
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, URL_INFO_ABOUT, _T("http://blog.kowalczyk.info/software/sumatrapdf/"));
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, URL_UPDATE_INFO, _T("http://blog.kowalczyk.info/software/sumatrapdf/news.html"));
 
-    // TODO: stop writing this around version 1.8 and instead use INSTALL_LOCATION above
-    success &= WriteRegStr(hkey,   REG_PATH_SOFTWARE, INSTALL_DIR, installDir);
-
     return success;
 }
 
@@ -885,6 +883,7 @@ static BOOL IsUninstallerNeeded()
 static bool RemoveUninstallerRegistryInfo(HKEY hkey)
 {
     bool ok1 = DeleteRegKey(hkey, REG_PATH_UNINST);
+    // this key was added by installers up to version 1.8
     bool ok2 = DeleteRegKey(hkey, REG_PATH_SOFTWARE);
     return ok1 && ok2;
 }
@@ -1291,18 +1290,23 @@ static void OnButtonStartSumatra()
     OnButtonExit();
 }
 
+inline void EnableAndShow(HWND hwnd, bool enable)
+{
+    ShowWindow(hwnd, enable ? SW_SHOW : SW_HIDE);
+    EnableWindow(hwnd, enable);
+}
+
 static void OnButtonOptions()
 {
     gShowOptions = !gShowOptions;
 
-    int nCmdShow = gShowOptions ? SW_SHOW : SW_HIDE;
-    ShowWindow(gHwndStaticInstDir, nCmdShow);
-    ShowWindow(gHwndTextboxInstDir, nCmdShow);
-    ShowWindow(gHwndButtonBrowseDir, nCmdShow);
-    ShowWindow(gHwndCheckboxRegisterDefault, nCmdShow);
-    ShowWindow(gHwndCheckboxRegisterBrowserPlugin, nCmdShow);
-    ShowWindow(gHwndCheckboxRegisterPdfFilter, nCmdShow);
-    ShowWindow(gHwndCheckboxRegisterPdfPreviewer, nCmdShow);
+    EnableAndShow(gHwndStaticInstDir, gShowOptions);
+    EnableAndShow(gHwndTextboxInstDir, gShowOptions);
+    EnableAndShow(gHwndButtonBrowseDir, gShowOptions);
+    EnableAndShow(gHwndCheckboxRegisterDefault, gShowOptions);
+    EnableAndShow(gHwndCheckboxRegisterBrowserPlugin, gShowOptions);
+    EnableAndShow(gHwndCheckboxRegisterPdfFilter, gShowOptions);
+    EnableAndShow(gHwndCheckboxRegisterPdfPreviewer, gShowOptions);
 
     win::SetText(gHwndButtonOptions, gShowOptions ? _T("Hide &Options") : _T("&Options"));
 
@@ -1786,7 +1790,7 @@ static void OnCreateWindow(HWND hwnd)
     SetWindowFont(gHwndButtonOptions, gFontDefault, TRUE);
 
     int staticDy = dpiAdjust(20);
-    rc.y = TITLE_PART_DY + rc.x; // TODO: rc.x here doesn't make sense. Works by accident? (rc.x == 8)
+    rc.y = TITLE_PART_DY + WINDOW_MARGIN;
     gHwndStaticInstDir = CreateWindow(WC_STATIC, _T("Install ") TAPP _T(" into the following &folder:"),
                                       WS_CHILD,
                                       rc.x, rc.y, r.dx - 2 * rc.x, staticDy,
