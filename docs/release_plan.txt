@@ -1,6 +1,12 @@
 Things to do before 1.9 release:
 * add splitter between favorites and bookmarks windows (http://code.google.com/p/sumatrapdf/issues/detail?id=1547)
 * installer: UI for registering other supported types http://code.google.com/p/sumatrapdf/issues/detail?id=1365
+* bug: expansion state for chm documents is not (always ?) preserved. Also, single root toc element is not
+auto-expanded. I think the semantics of DocTocItem.open and tocState for chm is broken and they might
+cancel each other but I never understood why it's so complicated (even for pdf docs). For my taste, DocTocItem.open
+should be whatever default state is (encoded in PDF doc, set via heuristic for chm docs) and
+tocState should be user selected over-ride i.e. if tocState entry exists, that's what we use for UI state. If tocState entry
+doesn't exist we use DocTocItem.open for UI state. But I don't know this code so I'm afraid of introducing regressions.
 
 Things to do before 2.0 release:
 * (?) ebook support
