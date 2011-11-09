@@ -576,7 +576,7 @@ ChmTocItem *TocItemFromLi(StrVec& pages, HtmlElement *el)
     return new ChmTocItem(name.StealData(), CreatePageNoForURL(pages, local));
 }
 
-ChmTocItem *BuildChmToc(StrVec& pages, HtmlElement *list, bool topLevel)
+ChmTocItem *BuildChmToc(StrVec& pages, HtmlElement *list, int& idCounter, bool topLevel)
 {
     assert(str::Eq("ul", list->name));
     ChmTocItem *node = NULL;
@@ -587,10 +587,11 @@ ChmTocItem *BuildChmToc(StrVec& pages, HtmlElement *list, bool topLevel)
         ChmTocItem *item = TocItemFromLi(pages, el);
         if (!item)
             continue; // skip incomplete elements and all their children
+        item->id = ++idCounter;
 
         HtmlElement *nested = el->GetChildByName("ul");
         if (nested)
-            item->child = BuildChmToc(pages, nested, false);
+            item->child = BuildChmToc(pages, nested, idCounter, false);
         item->open = topLevel;
 
         if (!node)
@@ -613,7 +614,8 @@ static ChmTocItem *ParseChmHtmlToc(StrVec& pages, char *html)
     el = p.FindElementByName("ul", el);
     if (!el)
         return NULL;
-    return BuildChmToc(pages, el, true);
+    int idCounter = 0;
+    return BuildChmToc(pages, el, idCounter, true);
 }
 
 bool CChmEngine::Load(const TCHAR *fileName)

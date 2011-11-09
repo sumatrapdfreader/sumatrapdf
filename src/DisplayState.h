@@ -78,6 +78,9 @@ public:
     int                 sidebarDx;
     // tocState is an array of ids for ToC items that have been
     // toggled by the user (i.e. aren't in their default expansion state)
+    // Note: We intentionally track toggle state as opposed to expansion state
+    //       so that we only have to save a diff instead of all states for the whole
+    //       tree (which can be quite large) - and also due to backwards compatibility
     Vec<int> *          tocState;
 };
 

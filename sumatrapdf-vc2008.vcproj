@@ -1035,6 +1035,10 @@
 			</Filter>
 		</Filter>
 		<File
+			RelativePath=".\docs\release_plan.txt"
+			>
+		</File>
+		<File
 			RelativePath=".\docs\releasenotes.txt"
 			>
 		</File>
