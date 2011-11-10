@@ -729,6 +729,15 @@ static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win,
     str::ReplacePtr(&win.loadedFilePath, fileName);
     win.dm = DisplayModel::CreateFromFileName(fileName, &win);
 
+    // make sure that MSHTML can't be used as a potential exploit
+    // vector through another browser and our plugin (which doesn't
+    // advertise itself for Chm documents but could be tricked into
+    // loading one nonetheless)
+    if (gPluginMode && win.dm && win.dm->AsChmEngine() && IsUntrustedFile(fileName, gPluginURL)) {
+        delete win.dm;
+        win.dm = NULL;
+    }
+
     bool needrefresh = !win.dm;
 
     // ToC items might hold a reference to an Engine, so make sure to
