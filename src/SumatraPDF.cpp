@@ -3619,7 +3619,6 @@ static void OnTimer(WindowInfo& win, HWND hwnd, WPARAM timerId)
         else if (win.fwdSearchMark.hideStep >= HIDE_FWDSRCHMARK_STEPS) {
             KillTimer(hwnd, HIDE_FWDSRCHMARK_TIMER_ID);
             win.fwdSearchMark.show = false;
-            win.fwdSearchMark.hideStep = 0;
             win.RepaintAsync();
         }
         else

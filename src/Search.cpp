@@ -397,10 +397,9 @@ void ShowForwardSearchResult(WindowInfo *win, const TCHAR *fileName, UINT line, 
         win->fwdSearchMark.rects = rects;
         win->fwdSearchMark.page = page;
         win->fwdSearchMark.show = true;
-        if (!gGlobalPrefs.fwdSearch.permanent) {
-            win->fwdSearchMark.hideStep = 0;
+        win->fwdSearchMark.hideStep = 0;
+        if (!gGlobalPrefs.fwdSearch.permanent)
             SetTimer(win->hwndCanvas, HIDE_FWDSRCHMARK_TIMER_ID, HIDE_FWDSRCHMARK_DELAY_IN_MS, NULL);
-        }
 
         // Scroll to show the overall highlighted zone
         int pageNo = page;
