@@ -224,6 +224,9 @@ Bokmerker
 Bytes
 bytes
 
+CHM documents
+CHM-dokumenter
+
 Can't connect to the Internet (error %#x).
 Kan ikke koble til Internett (feilmelding %#x). 
 
@@ -340,6 +343,9 @@ Feil ved lagring av filen
 
 Favorites
 Favoritter
+
+File %s not found
+Filen %s finnes ikke
 
 File Size:
 Filstørrelse:
@@ -664,8 +670,4 @@ kopierer tekst
 
 printing document
 skriver ut dokument
-
-# Untranslated:
-#CHM documents
-#File %s not found
 
