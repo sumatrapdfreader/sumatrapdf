@@ -7378,7 +7378,7 @@ const char *gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "Visiter le site &web",
   "Avertissement",
   "Documents XPS",
-  "Vous avez la derni\303\250re version sortie",
+  "Vous avez la derni\303\250re version.",
   "Votre version est la %s",
   NULL,
   "Zoom avant",
