@@ -646,7 +646,7 @@ XPS documents
 Documents XPS
 
 You have the latest version.
-Vous avez la dernière version sortie
+Vous avez la dernière version.
 
 You have version %s
 Votre version est la %s
