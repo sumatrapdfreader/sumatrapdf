@@ -41,7 +41,13 @@ protected:
     void EnsureAboutBlankShown();
     void CreateBrowser();
 
+
+    void SubclassHwnd();
+    void UnsubclassHwnd();
+
 public:
+    WNDPROC wndProcBrowserPrev;
+
     HtmlWindow(HWND hwnd, HtmlWindowCallback *cb);
     ~HtmlWindow();
 

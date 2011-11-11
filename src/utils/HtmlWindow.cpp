@@ -13,6 +13,9 @@
 #include "WinUtil.h"
 #include "Scopes.h"
 
+//TODO: not working yet
+//#define HOOK_BROWSER_CONTROL 1
+
 // Info about implementing web browser control
 // http://www.codeproject.com/KB/COM/cwebpage.aspx
 
@@ -332,9 +335,8 @@ static HWND GetBrowserControlHwnd(HWND hwndControlParent)
     return w3;
 }
 
-// This is a wndproc of the window that is a parent hwnd of embedded browser
-// control.
-static LRESULT CALLBACK WndProcHtml(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+// WndProc of the window that is a parent hwnd of embedded browser control.
+static LRESULT CALLBACK WndProcParent(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     HtmlWindow *win = (HtmlWindow*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
     if (!win)
@@ -363,16 +365,39 @@ static LRESULT CALLBACK WndProcHtml(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
     return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
-void SubclassHtmlHwnd(HWND hwnd, HtmlWindow *htmlWin)
+// WndProc of the embedded web browser control.
+static LRESULT CALLBACK WndProcBrowser(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    // Note: assuming hwnd is plain hwnd, with no special hwnd proc
-    SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)WndProcHtml);
-    SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)htmlWin);
+    HtmlWindow *win = (HtmlWindow*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    if (!win)
+        return DefWindowProc(hwnd, msg, wParam, lParam);
+    if (msg == WM_SETFOCUS) {
+        win->OnLButtonDown();
+    }
+    if (win->wndProcBrowserPrev) {
+        // TODO: why do we crash here? (if HOOK_BROWSER_CONTROL is defined)
+        return CallWindowProc(win->wndProcBrowserPrev, hwnd, msg, wParam, lParam);
+    }
+    else
+        return DefWindowProc(hwnd, msg, wParam, lParam);    
 }
 
-void UnsubclassHtmlHwnd(HWND hwnd)
+void HtmlWindow::SubclassHwnd()
+{
+    SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)WndProcParent);
+    SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)this);
+#ifdef HOOK_BROWSER_CONTROL
+    HWND hwndBrowser = GetBrowserControlHwnd(hwnd);
+    wndProcBrowserPrev = (WNDPROC)SetWindowLongPtr(hwndBrowser, GWLP_WNDPROC, (LONG_PTR)WndProcBrowser);
+    SetWindowLongPtr(hwndBrowser, GWLP_USERDATA, (LONG_PTR)this);
+#endif
+}
+
+void HtmlWindow::UnsubclassHwnd()
 {
     SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)0);
+    HWND hwndBrowser = GetBrowserControlHwnd(hwnd);
+    SetWindowLongPtr(hwndBrowser, GWLP_USERDATA, (LONG_PTR)0);
 }
 
 HtmlWindow::HtmlWindow(HWND hwnd, HtmlWindowCallback *cb) :
@@ -380,10 +405,10 @@ HtmlWindow::HtmlWindow(HWND hwnd, HtmlWindowCallback *cb) :
     oleInPlaceObject(NULL), viewObject(NULL),
     connectionPoint(NULL), oleObjectHwnd(NULL),
     adviseCookie(0), aboutBlankShown(false), htmlWinCb(cb),
+    wndProcBrowserPrev(NULL),
     documentLoaded(false), canGoBack(false), canGoForward(false)
 {
     assert(hwnd);
-    SubclassHtmlHwnd(hwnd, this);
     CreateBrowser();
 }
 
@@ -459,11 +484,14 @@ void HtmlWindow::CreateBrowser()
 
     webBrowser->put_RegisterAsBrowser(VARIANT_TRUE);
     webBrowser->put_RegisterAsDropTarget(VARIANT_TRUE);
+    EnsureAboutBlankShown();
+    WaitUntilLoaded(3*1000);
+    SubclassHwnd();
 }
 
 HtmlWindow::~HtmlWindow()
 {
-    UnsubclassHtmlHwnd(hwnd);
+    UnsubclassHwnd();
     if (oleInPlaceObject) {
         oleInPlaceObject->InPlaceDeactivate();
         oleInPlaceObject->UIDeactivate();
