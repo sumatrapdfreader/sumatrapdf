@@ -1,8 +1,8 @@
 Things to do before 1.9 release:
 * add splitter between favorites and bookmarks windows (http://code.google.com/p/sumatrapdf/issues/detail?id=1547)
-* installer: UI for registering other supported types http://code.google.com/p/sumatrapdf/issues/detail?id=1365
 * bug: focus captured by web control when clicking on "Related Topics" button in 010Editor.chm from
   http://code.google.com/p/sumatrapdf/issues/detail?id=1579
 
 Things to do before 2.0 release:
 * (?) ebook support
+* installer and settings: UI for registering other supported file types http://code.google.com/p/sumatrapdf/issues/detail?id=1365
