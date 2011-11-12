@@ -375,7 +375,6 @@ static void RememberWindowPosition(WindowInfo& win)
         gGlobalPrefs.windowState = WIN_STATE_NORMAL;
 
     gGlobalPrefs.sidebarDx = WindowRect(win.hwndTocBox).dx;
-    gGlobalPrefs.tocDy = WindowRect(win.hwndFavSplitter).y;
 
     /* don't update the window's dimensions if it is maximized, mimimized or fullscreened */
     if (WIN_STATE_NORMAL == gGlobalPrefs.windowState &&
@@ -3306,7 +3305,7 @@ static void ResizeFav(WindowInfo *win)
 {
     POINT pcur;
     GetCursorPos(&pcur);
-    ScreenToClient(win->hwndFrame, &pcur);
+    ScreenToClient(win->hwndTocBox, &pcur);
     int tocDy = pcur.y; // without splitter
 
     ClientRect rToc(win->hwndTocBox);
@@ -3340,6 +3339,7 @@ static void ResizeFav(WindowInfo *win)
     MoveWindow(win->hwndTocBox,      0, y,                       tocDx, tocDy,       TRUE);
     MoveWindow(win->hwndFavSplitter, 0, y + tocDy,               tocDx, SPLITTER_DY, TRUE);
     MoveWindow(win->hwndFavBox,      0, y + tocDy + SPLITTER_DY, tocDx, favDy,       TRUE);
+    gGlobalPrefs.tocDy = tocDy;
 }
 
 static LRESULT CALLBACK WndProcFavSplitter(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -3580,32 +3580,25 @@ void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool favVisible)
 
     bool favSplitterVisible = tocVisible && favVisible;
 
-    WindowRect tocRc(win->hwndFavSplitter);
-    int splitterY = tocRc.y;
     int tocDy = 0; // if !tocVisible
     if (tocVisible) {
         if (favVisible)
-            tocDy = splitterY;
+            tocDy = gGlobalPrefs.tocDy;
         else
             tocDy = dy;
     }
     if (favSplitterVisible) {
         // TODO: we should also limit minimum size of the frame or else
         // limitValue() blows up with an assert() if TOC_MIN_DY < dy - TOC_MIN_DY
-        int newTocDy = limitValue(tocDy, TOC_MIN_DY, dy-TOC_MIN_DY);
-        if (tocDy != newTocDy) {
-            splitterY = newTocDy;
-            tocDy = newTocDy;
-        }
+        tocDy = limitValue(tocDy, TOC_MIN_DY, dy-TOC_MIN_DY);
     }
 
     int canvasX = tocDx + SPLITTER_DX;
     RectI rToc(0, y, tocDx, tocDy);
-    // Note: splitter is always positioned at its previous position so that
-    // it's correctly remembered in preferences
-    RectI rFavSplitter(0, y + splitterY, tocDx, SPLITTER_DY);
-    int favSplitterDy = favVisible ? SPLITTER_DY : 0;
-    RectI rFav(0, y + tocDy + favSplitterDy, tocDx, dy - tocDy);
+    RectI rFavSplitter(0, y + tocDy, tocDx, SPLITTER_DY);
+    int favSplitterDy = favSplitterVisible ? SPLITTER_DY : 0;
+    RectI rFav(0, y + tocDy + favSplitterDy, tocDx, dy - tocDy - favSplitterDy);
+
     RectI rSplitter(tocDx, y, SPLITTER_DX, dy);
     RectI rCanvas(canvasX, y, rFrame.dx - canvasX, dy);
 

@@ -1,5 +1,4 @@
 Things to do before 1.9 release:
-* add splitter between favorites and bookmarks windows (http://code.google.com/p/sumatrapdf/issues/detail?id=1547)
 * bug: focus captured by web control when clicking on "Related Topics" button in 010Editor.chm from
   http://code.google.com/p/sumatrapdf/issues/detail?id=1579
 
