@@ -8,6 +8,4 @@ Things to do before 2.0 release:
   I don't know how to fix this. It seems that the problem really is that a button window inside browser
   control captures the focus. I tried hack it by detecting frame window loosing focus (via WM_KILLFOCUS) and
   doing delayed re-capture of focus to frame window, but it doesn't work and it's not the right time to do
-  it (it might kill the pop-up menu on the button). Maybe we can hack it by trying to recapture focus
-  after navigation to a new page is complete (OnDocumentComplete()) and changing focus to frame if it's
-  not in toc or page no edit box (assumption being we've lost it to a browser control).
+  it (it might kill the pop-up menu on the button).

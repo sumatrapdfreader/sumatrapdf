@@ -178,6 +178,12 @@ void WindowInfo::LaunchBrowser(const TCHAR *url)
     ::LaunchBrowser(url);
 }
 
+void WindowInfo::FocusFrame(bool always)
+{
+    if (always || !FindWindowInfoByHwnd(GetFocus()))
+        SetFocus(hwndFrame);
+}
+
 BaseEngine *LinkHandler::engine() const
 {
     if (!owner || !owner->dm)

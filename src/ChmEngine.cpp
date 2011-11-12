@@ -128,7 +128,7 @@ public:
 
     // from HtmlWindowCallback
     virtual bool OnBeforeNavigate(const TCHAR *url, bool newWindow);
-    virtual void OnLButtonDown() { if (navCb) navCb->FocusFrame(); }
+    virtual void OnLButtonDown() { if (navCb) navCb->FocusFrame(true); }
 
 protected:
     const TCHAR *fileName;
@@ -156,6 +156,11 @@ CChmEngine::CChmEngine() :
 // the right page number, select the right item in toc tree)
 bool CChmEngine::OnBeforeNavigate(const TCHAR *url, bool newWindow)
 {
+    // ensure that JavaScript doesn't keep the focus
+    // in the HtmlWindow when a new page is loaded
+    if (navCb)
+        navCb->FocusFrame(false);
+
     if (newWindow) {
         // don't allow new MSIE windows to be opened
         // instead pass the URL to the system's default browser
