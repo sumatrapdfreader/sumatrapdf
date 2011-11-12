@@ -101,8 +101,11 @@ TCHAR *          gPluginURL = NULL; // owned by CommandLineInfo in WinMain
 
 #define DEFAULT_LINK_PROTOCOLS       _T("http,https,mailto")
 
-#define SPLITTER_DX  5
-#define SIDEBAR_MIN_WIDTH 150
+#define SPLITTER_DX         5
+#define SIDEBAR_MIN_WIDTH   150
+
+#define SPLITTER_DY         4
+#define TOC_MIN_DY          100
 
 #define REPAINT_TIMER_ID            1
 #define REPAINT_MESSAGE_DELAY_IN_MS 1000
@@ -286,7 +289,7 @@ WindowInfo *FindWindowInfoByHwnd(HWND hwnd)
         WindowInfo *win = gWindows.At(i);
         if (hwnd == win->hwndFrame      ||
             hwnd == win->hwndProperties ||
-            // canvas, toolbar, rebar, tocbox, spliter
+            // canvas, toolbar, rebar, tocbox, splitters
             parent == win->hwndFrame    ||
             // infotips, message windows
             parent == win->hwndCanvas   ||
@@ -969,6 +972,8 @@ static void CreateSidebar(WindowInfo* win)
         WS_CHILDWINDOW, 0, 0, 0, 0, win->hwndFrame, (HMENU)0, ghinst, NULL);
 
     CreateToc(win);
+    win->hwndFavSplitter = CreateWindow(FAV_SPLITTER_CLASS_NAME, _T(""), 
+        WS_CHILDWINDOW, 0, 0, 0, 0, win->hwndFrame, (HMENU)0, ghinst, NULL);
     CreateFavorites(win);
 
     if (win->tocVisible) {
@@ -3262,6 +3267,11 @@ static void ResizeSidebar(WindowInfo *win)
 
     SetCursor(gCursorSizeWE);
 
+    int favSplitterDy = 0;
+    bool favSplitterVisible = win->tocVisible && gGlobalPrefs.favVisible;
+    if (favSplitterVisible)
+        favSplitterDy = SPLITTER_DY;
+
     int canvasDx = rFrame.dx - sidebarDx - SPLITTER_DX;
     int y = 0;
     int totalDy = rFrame.dy;
@@ -3279,8 +3289,10 @@ static void ResizeSidebar(WindowInfo *win)
     assert(MapRectToWindow(rToc, win->hwndTocBox, win->hwndFrame).y == y);
     //assert(totalDy == (rToc.dy + rFav.dy));
 
-    MoveWindow(win->hwndTocBox, 0, y,           sidebarDx, rToc.dy, TRUE);
-    MoveWindow(win->hwndFavBox, 0, y + rToc.dy, sidebarDx, rFav.dy, TRUE);
+    MoveWindow(win->hwndTocBox,      0, y,                           sidebarDx, rToc.dy, TRUE);
+    MoveWindow(win->hwndFavSplitter, 0, y + rToc.dy,                 sidebarDx, favSplitterDy, TRUE);
+    MoveWindow(win->hwndFavBox,      0, y + rToc.dy + favSplitterDy, sidebarDx, rFav.dy, TRUE);
+
     MoveWindow(win->hwndSidebarSplitter, sidebarDx, y, SPLITTER_DX, totalDy, TRUE);
     MoveWindow(win->hwndCanvas, sidebarDx + SPLITTER_DX, y, canvasDx, totalDy, TRUE);
 }
@@ -3504,6 +3516,7 @@ void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool favVisible)
         SetWindowPos(win->hwndCanvas, NULL, 0, toolbarDy, rFrame.dx, dy, SWP_NOZORDER);
         ShowWindow(win->hwndSidebarSplitter, SW_HIDE);
         ShowWindow(win->hwndTocBox, SW_HIDE);
+        ShowWindow(win->hwndFavSplitter, SW_HIDE);
         ShowWindow(win->hwndFavBox, SW_HIDE);
         return;
     }
@@ -3524,21 +3537,41 @@ void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool favVisible)
     }
 
     // make sure that the sidebar is never too wide or too narrow
-    // (when changing these values, also adjust ResizeSidebar)
+    // (when changing these values, also adjust ResizeSidebar() and ResizeFav())
+    // TODO: we should also limit minimum size of the frame or else
+    // limitValue() blows up with an assert() if frame.dx / 2 < SIDEBAR_MIN_WIDTH
     tocDx = limitValue(tocDx, SIDEBAR_MIN_WIDTH, rFrame.dx / 2);
 
-    int tocDy = !tocVisible ? 0 : !favVisible ? dy : dy / 2;
+    int favSplitterDy = 0;
+    bool favSplitterVisible = tocVisible && favVisible;
+    if (favSplitterVisible)
+        favSplitterDy = SPLITTER_DY;
+
+    int tocDy = 0; // if !tocVisible
+    if (tocVisible) {
+        if (favVisible)
+            tocDy = (dy - favSplitterDy) / 2;
+        else
+            tocDy = dy - favSplitterDy;
+    }
+    if (favSplitterVisible) {
+        // TODO: we should also limit minimum size of the frame or else
+        // limitValue() blows up with an assert() if TOC_MIN_DY < dy - TOC_MIN_DY
+        tocDy = limitValue(tocDy, TOC_MIN_DY, dy-TOC_MIN_DY);
+    }
 
     int canvasX = tocDx + SPLITTER_DX;
     RectI rToc(0, y, tocDx, tocDy);
-    RectI rFav(0, y + tocDy, tocDx, dy - tocDy);
+    RectI rFavSplitter(0, y + tocDy, tocDx, favSplitterDy);
+    RectI rFav(0, y + tocDy + favSplitterDy, tocDx, dy - tocDy);
     RectI rSplitter(tocDx, y, SPLITTER_DX, dy);
     RectI rCanvas(canvasX, y, rFrame.dx - canvasX, dy);
 
-    SetWinPos(win->hwndTocBox, rToc, tocVisible);
-    SetWinPos(win->hwndFavBox, rFav, favVisible);
-    SetWinPos(win->hwndSidebarSplitter, rSplitter, true);
-    SetWinPos(win->hwndCanvas, rCanvas, true);
+    SetWinPos(win->hwndTocBox,          rToc,           tocVisible);
+    SetWinPos(win->hwndFavSplitter,     rFavSplitter,   true);
+    SetWinPos(win->hwndFavBox,          rFav,           favVisible);
+    SetWinPos(win->hwndSidebarSplitter, rSplitter,      true);
+    SetWinPos(win->hwndCanvas,          rCanvas,        true);
 
     if (tocVisible)
         UpdateTocSelection(win, win->dm->CurrentPageNo());
