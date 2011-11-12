@@ -6,18 +6,20 @@
 #include "CmdLineParser.h"
 #include "WinUtil.h"
 
-#define Out(msg, ...) _tprintf(_T(msg), __VA_ARGS__)
-#define ErrOut(msg, ...) _ftprintf(stderr, _T(msg), __VA_ARGS__)
+#define Out(msg, ...) printf(msg, __VA_ARGS__)
 
-TCHAR *Escape(TCHAR *string)
+// caller must free() the result
+char *Escape(TCHAR *string, bool keepString=false)
 {
-    if (str::IsEmpty(string)) {
-        free(string);
+    ScopedMem<TCHAR> freeOnReturn;
+    if (!keepString)
+        freeOnReturn.Set(string);
+
+    if (str::IsEmpty(string))
         return NULL;
-    }
 
     if (!str::FindChar(string, '<') && !str::FindChar(string, '&') && !str::FindChar(string, '"'))
-        return string;
+        return str::conv::ToUtf8(string);
 
     str::Str<TCHAR> escaped(256);
     for (TCHAR *s = string; *s; s++) {
@@ -30,15 +32,14 @@ TCHAR *Escape(TCHAR *string)
         default: escaped.Append(*s); break;
         }
     }
-    free(string);
-    return escaped.StealData();
+    return str::conv::ToUtf8(escaped.Get());
 }
 
 void DumpProperties(BaseEngine *engine)
 {
     Out("\t<Properties\n");
-    ScopedMem<TCHAR> str;
-    str.Set(Escape(str::Dup(engine->FileName())));
+    ScopedMem<char> str;
+    str.Set(Escape((TCHAR *)engine->FileName(), true));
     Out("\t\tFilePath=\"%s\"\n", str);
     str.Set(Escape(engine->GetProperty("Title")));
     if (str)
@@ -78,7 +79,7 @@ void DumpProperties(BaseEngine *engine)
 void DumpTocItem(DocTocItem *item, int level, int& idCounter)
 {
     for (; item; item = item->next) {
-        ScopedMem<TCHAR> title(Escape(str::Dup(item->title)));
+        ScopedMem<char> title(Escape(item->title, true));
         for (int i = 0; i < level; i++) Out("\t");
         Out("<Item Title=\"%s\"", title);
         if (item->pageNo)
@@ -119,7 +120,7 @@ void DumpPageData(BaseEngine *engine, int pageNo, bool fullDump)
 
     Out("\t<Page Number=\"%d\"\n", pageNo);
     if (engine->HasPageLabels()) {
-        ScopedMem<TCHAR> label(Escape(engine->GetPageLabel(pageNo)));
+        ScopedMem<char> label(Escape(engine->GetPageLabel(pageNo)));
         Out("\t\tLabel=\"%s\"\n", label);
     }
     if (engine->PageRotation(pageNo))
@@ -131,7 +132,7 @@ void DumpPageData(BaseEngine *engine, int pageNo, bool fullDump)
     Out("\t>\n");
 
     if (fullDump) {
-        ScopedMem<TCHAR> text(Escape(engine->ExtractPageText(pageNo, _T("\n"))));
+        ScopedMem<char> text(Escape(engine->ExtractPageText(pageNo, _T("\n"))));
         if (text)
             Out("\t\t<TextContent>\n%s\t\t</TextContent>\n", text);
     }
@@ -145,16 +146,16 @@ void DumpPageData(BaseEngine *engine, int pageNo, bool fullDump)
             PageDestination *dest = els->At(i)->AsLink();
             if (dest) {
                 if (dest->GetType()) {
-                    ScopedMem<TCHAR> type(Escape(str::conv::FromAnsi(dest->GetType())));
+                    ScopedMem<char> type(Escape(str::conv::FromAnsi(dest->GetType())));
                     Out("\t\t\t\tType=\"%s\"\n", type);
                 }
                 if (dest->GetDestPageNo())
                     Out("\t\t\t\tLinkedPage=\"%d\"\n", dest->GetDestPageNo());
-                ScopedMem<TCHAR> value(Escape(dest->GetDestValue()));
+                ScopedMem<char> value(Escape(dest->GetDestValue()));
                 if (value)
                     Out("\t\t\t\tTarget=\"%s\"\n", value);
             }
-            ScopedMem<TCHAR> name(Escape(els->At(i)->GetValue()));
+            ScopedMem<char> name(Escape(els->At(i)->GetValue()));
             if (name)
                 Out("\t\t\t\tLabel=\"%s\"\n", name);
             Out("\t\t\t/>\n");
@@ -187,9 +188,8 @@ void DumpThumbnail(BaseEngine *engine)
     size_t len;
     ScopedMem<unsigned char> data(SerializeBitmap(bmp->GetBitmap(), &len));
     ScopedMem<char> hexData(data ? str::MemToHex(data, len) : NULL);
-    ScopedMem<TCHAR> hexDataT(hexData ? str::conv::FromAnsi(hexData) : NULL);
-    if (hexDataT)
-        Out("\t<Thumbnail>\n\t\t%s\n\t</Thumbnail>\n", hexDataT);
+    if (hexData)
+        Out("\t<Thumbnail>\n\t\t%s\n\t</Thumbnail>\n", hexData);
     else
         Out("\t<Thumbnail />\n");
 
@@ -198,6 +198,7 @@ void DumpThumbnail(BaseEngine *engine)
 
 void DumpData(BaseEngine *engine, bool fullDump)
 {
+    Out("\xEF\xBB\xBF"); // UTF-8 BOM
     Out("<?xml version=\"1.0\"?>\n");
     Out("<EngineDump>\n");
     DumpProperties(engine);
@@ -208,6 +209,8 @@ void DumpData(BaseEngine *engine, bool fullDump)
         DumpThumbnail(engine);
     Out("</EngineDump>\n");
 }
+
+#define ErrOut(msg, ...) _ftprintf(stderr, _T(msg), __VA_ARGS__)
 
 int main(int argc, char **argv)
 {
