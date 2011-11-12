@@ -221,6 +221,9 @@ Obeleživači
 Bytes
 bajtova
 
+CHM documents
+CHM dokumenti
+
 Can't connect to the Internet (error %#x).
 Povezivanje na internet nije moguće (greška %#x).
 
@@ -338,6 +341,9 @@ Failed to save a file
 Favorites
 Odabir
 
+File %s not found
+Datoteka %s nije pronađena
+
 File Size:
 Veličina:
 
@@ -384,10 +390,10 @@ Fit a Single Page
 Podesi prema pojedinačnoj stranici
 
 Found text at page %s
-Tekst je pronađen na %s stranici
+Tekst je pronađen na %s. stranici
 
 Found text at page %s (again)
-Pronađi tekst na %s stranici (ponovo)
+Pronađi tekst na %s. stranici (ponovo)
 
 Frequently Read
 Nedavno čitano
@@ -552,7 +558,7 @@ Save S&hortcut...\tCtrl+Shift+S
 Sačuvaj prečicu...\tCtrl+Shift+S
 
 Searching %d of %d...
-Pretraživanje %d stranice od ukupno %d...
+Pretraživanje %d. stranice od ukupno %d...
 
 Select &All
 Izaberi sve
@@ -564,7 +570,7 @@ Select content with Ctrl+left mouse button
 Izaberite sadržaj koristeći Ctrl + levo dugme miša
 
 Send by &E-mail...
-Pošalji putem e-poštoe...
+Pošalji putem e-pošte...
 
 Set inverse search command-line
 Omogući inverznu pretragu
@@ -582,7 +588,7 @@ Show frequently read
 Prikaži nedavno čitane
 
 Show the &bookmarks sidebar when available
-Prikaži bočnu traku sa obeleživačima kad god su dostupni
+Prikaži bočnu traku sa obeleživačima
 
 Single Page
 Pojedinačna stranica
@@ -600,7 +606,7 @@ SumatraPDF Options
 Podešavanja programa SumatraPDF
 
 SumatraPDF Update
-Ažuriranje programa SumatraPDF
+Ažuriranje SumatraPDF
 
 SumatraPDF crashed
 Program SumatraPDF je krahirao
@@ -661,8 +667,4 @@ kopiranje teksta
 
 printing document
 štampanje dokumenta
-
-# Untranslated:
-#CHM documents
-#File %s not found
 
