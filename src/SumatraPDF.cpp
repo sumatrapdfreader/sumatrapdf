@@ -3297,9 +3297,46 @@ static void ResizeSidebar(WindowInfo *win)
     MoveWindow(win->hwndCanvas, sidebarDx + SPLITTER_DX, y, canvasDx, totalDy, TRUE);
 }
 
+// TODO: the layout logic here is similar to what we do in SetSidebarVisibility()
+// would be nice to consolidate.
 static void ResizeFav(WindowInfo *win)
 {
+    POINT pcur;
+    GetCursorPos(&pcur);
+    ScreenToClient(win->hwndFrame, &pcur);
+    int tocDy = pcur.y; // without splitter
 
+    ClientRect rToc(win->hwndTocBox);
+    ClientRect rFav(win->hwndFavBox);
+    assert(rToc.dx == rFav.dx);
+    ClientRect rFrame(win->hwndFrame);
+    int tocDx = rToc.dx;
+
+    // make sure to keep this in sync with the calculations in SetSidebarVisibility
+    if (tocDy < min(TOC_MIN_DY, rToc.dy) ||
+        tocDy > max(rFrame.dy - TOC_MIN_DY, rToc.dy)) {
+        SetCursor(gCursorNo);
+        return;
+    }
+
+    SetCursor(gCursorSizeWE);
+
+    int y = 0;
+    int totalDy = rFrame.dy;
+    if (gGlobalPrefs.toolbarVisible && !win->fullScreen && !win->presentation)
+        y = WindowRect(win->hwndReBar).dy;
+    totalDy -= y;
+
+    // rToc.y is always 0, as rToc is a ClientRect, so we first have
+    // to convert it into coordinates relative to hwndFrame:
+    assert(MapRectToWindow(rToc, win->hwndTocBox, win->hwndFrame).y == y);
+    //assert(totalDy == (rToc.dy + rFav.dy));
+    int favDy = totalDy - tocDy - SPLITTER_DY;
+    assert(favDy >= 0);
+
+    MoveWindow(win->hwndTocBox,      0, y,                       tocDx, tocDy,       TRUE);
+    MoveWindow(win->hwndFavSplitter, 0, y + tocDy,               tocDx, SPLITTER_DY, TRUE);
+    MoveWindow(win->hwndFavBox,      0, y + tocDy + SPLITTER_DY, tocDx, favDy,       TRUE);
 }
 
 static LRESULT CALLBACK WndProcFavSplitter(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
