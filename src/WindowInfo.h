@@ -94,11 +94,9 @@ public:
 
     // vertical splitter for resizing left side panel
     HWND            hwndSidebarSplitter;
-    bool            sidebarBeingResized;
 
     // horizontal splitter for resizing favorites and bookmars parts
     HWND            hwndFavSplitter;
-    bool            favBeingResized;
 
     HWND            hwndInfotip;
     HWND            hwndProperties;

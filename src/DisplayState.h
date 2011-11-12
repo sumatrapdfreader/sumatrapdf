@@ -36,7 +36,7 @@ public:
         displayMode(DM_AUTOMATIC), pageNo(1), zoomVirtual(100.0),
         rotation(0), windowState(0), thumbnail(NULL), isPinned(false),
         decryptionKey(NULL), tocVisible(true),
-        sidebarDx(0), tocState(NULL) { }
+        sidebarDx(0), tocDy(0), tocState(NULL) { }
 
     ~DisplayState() {
         free(filePath);
@@ -76,6 +76,8 @@ public:
 
     bool                tocVisible;
     int                 sidebarDx;
+    int                 tocDy;
+
     // tocState is an array of ids for ToC items that have been
     // toggled by the user (i.e. aren't in their default expansion state)
     // Note: We intentionally track toggle state as opposed to expansion state

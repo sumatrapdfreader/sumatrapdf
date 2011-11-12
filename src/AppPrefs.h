@@ -70,7 +70,12 @@ struct SerializableGlobalPrefs {
     RectI windowPos;
 
     bool tocVisible;
+    // if sidebar (favorites and/or bookmarks) is visible, this is
+    // the widht of the left sidebar panel containing them
     int  sidebarDx;
+    // if both favorites and bookmarks parts of sidebar are
+    // visible, this is the height of bookmarks (table of contents) part
+    int  tocDy;
 
     /* Forward search highlighting settings  */
     struct {

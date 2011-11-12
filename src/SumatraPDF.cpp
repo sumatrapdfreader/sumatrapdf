@@ -128,6 +128,7 @@ static HCURSOR                      gCursorDrag;
        HCURSOR                      gCursorIBeam;
 static HCURSOR                      gCursorScroll;
 static HCURSOR                      gCursorSizeWE;
+static HCURSOR                      gCursorSizeNS;
 static HCURSOR                      gCursorNo;
        HBRUSH                       gBrushNoDocBg;
        HBRUSH                       gBrushAboutBg;
@@ -374,6 +375,7 @@ static void RememberWindowPosition(WindowInfo& win)
         gGlobalPrefs.windowState = WIN_STATE_NORMAL;
 
     gGlobalPrefs.sidebarDx = WindowRect(win.hwndTocBox).dx;
+    gGlobalPrefs.tocDy = WindowRect(win.hwndFavSplitter).y;
 
     /* don't update the window's dimensions if it is maximized, mimimized or fullscreened */
     if (WIN_STATE_NORMAL == gGlobalPrefs.windowState &&
@@ -390,8 +392,9 @@ static void UpdateDisplayStateWindowRect(WindowInfo& win, DisplayState& ds, bool
         RememberWindowPosition(win);
 
     ds.windowState = gGlobalPrefs.windowState;
-    ds.windowPos = gGlobalPrefs.windowPos;
-    ds.sidebarDx = gGlobalPrefs.sidebarDx;
+    ds.windowPos   = gGlobalPrefs.windowPos;
+    ds.sidebarDx   = gGlobalPrefs.sidebarDx;
+    ds.tocDy       = gGlobalPrefs.tocDy;
 }
 
 static void UpdateSidebarDisplayState(WindowInfo *win, DisplayState *ds)
@@ -3319,7 +3322,7 @@ static void ResizeFav(WindowInfo *win)
         return;
     }
 
-    SetCursor(gCursorSizeWE);
+    SetCursor(gCursorSizeNS);
 
     int y = 0;
     int totalDy = rFrame.dy;
@@ -3348,18 +3351,16 @@ static LRESULT CALLBACK WndProcFavSplitter(HWND hwnd, UINT message, WPARAM wPara
     switch (message)
     {
         case WM_MOUSEMOVE:
-            if (win->favBeingResized) {
+            if (hwnd == GetCapture()) {
                 ResizeFav(win);
                 return 0;
             }
             break;
         case WM_LBUTTONDOWN:
             SetCapture(hwnd);
-            win->favBeingResized = true;
             break;
         case WM_LBUTTONUP:
             ReleaseCapture();
-            win->favBeingResized = false;
             break;
     }
     return DefWindowProc(hwnd, message, wParam, lParam);
@@ -3374,18 +3375,16 @@ static LRESULT CALLBACK WndProcSidebarSplitter(HWND hwnd, UINT message, WPARAM w
     switch (message)
     {
         case WM_MOUSEMOVE:
-            if (win->sidebarBeingResized) {
+            if (hwnd == GetCapture()) {
                 ResizeSidebar(win);
                 return 0;
             }
             break;
         case WM_LBUTTONDOWN:
             SetCapture(hwnd);
-            win->sidebarBeingResized = true;
             break;
         case WM_LBUTTONUP:
             ReleaseCapture();
-            win->sidebarBeingResized = false;
             break;
     }
     return DefWindowProc(hwnd, message, wParam, lParam);
@@ -3579,33 +3578,39 @@ void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool favVisible)
     // limitValue() blows up with an assert() if frame.dx / 2 < SIDEBAR_MIN_WIDTH
     tocDx = limitValue(tocDx, SIDEBAR_MIN_WIDTH, rFrame.dx / 2);
 
-    int favSplitterDy = 0;
     bool favSplitterVisible = tocVisible && favVisible;
-    if (favSplitterVisible)
-        favSplitterDy = SPLITTER_DY;
 
+    WindowRect tocRc(win->hwndFavSplitter);
+    int splitterY = tocRc.y;
     int tocDy = 0; // if !tocVisible
     if (tocVisible) {
         if (favVisible)
-            tocDy = (dy - favSplitterDy) / 2;
+            tocDy = splitterY;
         else
-            tocDy = dy - favSplitterDy;
+            tocDy = dy;
     }
     if (favSplitterVisible) {
         // TODO: we should also limit minimum size of the frame or else
         // limitValue() blows up with an assert() if TOC_MIN_DY < dy - TOC_MIN_DY
-        tocDy = limitValue(tocDy, TOC_MIN_DY, dy-TOC_MIN_DY);
+        int newTocDy = limitValue(tocDy, TOC_MIN_DY, dy-TOC_MIN_DY);
+        if (tocDy != newTocDy) {
+            splitterY = newTocDy;
+            tocDy = newTocDy;
+        }
     }
 
     int canvasX = tocDx + SPLITTER_DX;
     RectI rToc(0, y, tocDx, tocDy);
-    RectI rFavSplitter(0, y + tocDy, tocDx, favSplitterDy);
+    // Note: splitter is always positioned at its previous position so that
+    // it's correctly remembered in preferences
+    RectI rFavSplitter(0, y + splitterY, tocDx, SPLITTER_DY);
+    int favSplitterDy = favVisible ? SPLITTER_DY : 0;
     RectI rFav(0, y + tocDy + favSplitterDy, tocDx, dy - tocDy);
     RectI rSplitter(tocDx, y, SPLITTER_DX, dy);
     RectI rCanvas(canvasX, y, rFrame.dx - canvasX, dy);
 
     SetWinPos(win->hwndTocBox,          rToc,           tocVisible);
-    SetWinPos(win->hwndFavSplitter,     rFavSplitter,   true);
+    SetWinPos(win->hwndFavSplitter,     rFavSplitter,   favSplitterVisible);
     SetWinPos(win->hwndFavBox,          rFav,           favVisible);
     SetWinPos(win->hwndSidebarSplitter, rSplitter,      true);
     SetWinPos(win->hwndCanvas,          rCanvas,        true);
@@ -4550,6 +4555,7 @@ static bool InstanceInit(HINSTANCE hInstance, int nCmdShow)
     gCursorScroll   = LoadCursor(NULL, IDC_SIZEALL);
     gCursorDrag     = LoadCursor(ghinst, MAKEINTRESOURCE(IDC_CURSORDRAG));
     gCursorSizeWE   = LoadCursor(NULL, IDC_SIZEWE);
+    gCursorSizeNS   = LoadCursor(NULL, IDC_SIZENS);
     gCursorNo       = LoadCursor(NULL, IDC_NO);
     gBrushNoDocBg   = CreateSolidBrush(COL_WINDOW_BG);
     if (ABOUT_BG_COLOR_DEFAULT != gGlobalPrefs.bgColor)
