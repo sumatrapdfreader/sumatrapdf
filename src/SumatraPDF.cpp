@@ -333,7 +333,7 @@ WindowInfo* FindWindowInfoBySyncFile(const TCHAR *file)
         WindowInfo *win = gWindows.At(i);
         Vec<RectI> rects;
         UINT page;
-        if (win->pdfsync && win->pdfsync->source_to_pdf(file, 0, 0, &page, rects) != PDFSYNCERR_UNKNOWN_SOURCEFILE)
+        if (win->pdfsync && win->pdfsync->SourceToDoc(file, 0, 0, &page, rects) != PDFSYNCERR_UNKNOWN_SOURCEFILE)
             return win;
     }
     return NULL;
@@ -4808,7 +4808,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
                 if (i.forwardSearchOrigin && i.forwardSearchLine && win->pdfsync) {
                     UINT page;
                     Vec<RectI> rects;
-                    int ret = win->pdfsync->source_to_pdf(i.forwardSearchOrigin, i.forwardSearchLine, 0, &page, rects);
+                    int ret = win->pdfsync->SourceToDoc(i.forwardSearchOrigin, i.forwardSearchLine, 0, &page, rects);
                     ShowForwardSearchResult(win, i.forwardSearchOrigin, i.forwardSearchLine, 0, ret, page, rects);
                 }
             }

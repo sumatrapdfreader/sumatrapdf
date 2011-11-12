@@ -1,16 +1,13 @@
 /* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
-// PDF-source synchronizer based on .pdfsync file
 
 #include "PdfSync.h"
-
-#include <shlwapi.h>
-#include <time.h>
-
 #include "StrUtil.h"
 #include "FileUtil.h"
 #include "DisplayModel.h"
 
+#include <shlwapi.h>
+#include <time.h>
 #include <synctex_parser.h>
 
 // size of the mark highlighting the location calculated by forward-search
@@ -46,58 +43,58 @@ struct PdfsyncPoint {
 class Pdfsync : public Synchronizer
 {
 public:
-    Pdfsync(const TCHAR* _syncfilename, DisplayModel *dm) : Synchronizer(_syncfilename, dm) { }
+    Pdfsync(const TCHAR* syncfilename) : Synchronizer(syncfilename) { }
 
-    virtual int pdf_to_source(UINT pageNo, PointI pt, ScopedMem<TCHAR>& filename, UINT *line, UINT *col);
-    virtual int source_to_pdf(const TCHAR* srcfilename, UINT line, UINT col, UINT *page, Vec<RectI>& rects);
+    virtual int DocToSource(UINT pageNo, PointI pt, ScopedMem<TCHAR>& filename, UINT *line, UINT *col);
+    virtual int SourceToDoc(const TCHAR* srcfilename, UINT line, UINT col, UINT *page, Vec<RectI>& rects);
 
 private:
-    int rebuild_index();
-    UINT source_to_record(const TCHAR* srcfilename, UINT line, UINT col, Vec<size_t>& records);
+    int RebuildIndex();
+    UINT SourceToRecord(const TCHAR* srcfilename, UINT line, UINT col, Vec<size_t>& records);
 
 private:
     StrVec srcfiles;            // source file names
     Vec<PdfsyncLine> lines;     // record-to-line mapping
     Vec<PdfsyncPoint> points;   // record-to-point mapping
-    Vec<PdfsyncFileIndex> file_index;   // start and end of entries for a file in <lines>
-    Vec<size_t> sheet_index;    // start of entries for a sheet in <points>
+    Vec<PdfsyncFileIndex> fileIndex; // start and end of entries for a file in <lines>
+    Vec<size_t> sheetIndex;     // start of entries for a sheet in <points>
 };
 
 // Synchronizer based on .synctex file generated with SyncTex
 class SyncTex : public Synchronizer
 {
 public:
-    SyncTex(const TCHAR* _syncfilename, DisplayModel *dm) :
-        Synchronizer(_syncfilename, dm), scanner(NULL)
+    SyncTex(const TCHAR* syncfilename, DisplayModel *dm) :
+        Synchronizer(syncfilename), dm(dm), scanner(NULL)
     {
-        assert(str::EndsWithI(_syncfilename, SYNCTEX_EXTENSION) ||
-               str::EndsWithI(_syncfilename, SYNCTEXGZ_EXTENSION));
+        assert(str::EndsWithI(syncfilename, SYNCTEX_EXTENSION) ||
+               str::EndsWithI(syncfilename, SYNCTEXGZ_EXTENSION));
     }
     virtual ~SyncTex()
     {
         synctex_scanner_free(scanner);
     }
 
-    virtual int pdf_to_source(UINT pageNo, PointI pt, ScopedMem<TCHAR>& filename, UINT *line, UINT *col);
-    virtual int source_to_pdf(const TCHAR* srcfilename, UINT line, UINT col, UINT *page, Vec<RectI> &rects);
+    virtual int DocToSource(UINT pageNo, PointI pt, ScopedMem<TCHAR>& filename, UINT *line, UINT *col);
+    virtual int SourceToDoc(const TCHAR* srcfilename, UINT line, UINT col, UINT *page, Vec<RectI> &rects);
 
 private:
-    int rebuild_index();
+    int RebuildIndex();
 
+    DisplayModel *dm; // needed for converting between coordinate systems
     synctex_scanner_t scanner;
 };
 
-Synchronizer::Synchronizer(const TCHAR* _syncfilepath, DisplayModel *dm) :
-    index_discarded(true), dm(dm), syncfilepath(str::Dup(_syncfilepath)),
-    dir(path::GetDir(_syncfilepath))
+Synchronizer::Synchronizer(const TCHAR* syncfilepath) :
+    indexDiscarded(true), syncfilepath(str::Dup(syncfilepath))
 {
     _tstat(syncfilepath, &syncfileTimestamp);
 }
 
-bool Synchronizer::is_index_discarded() const
+bool Synchronizer::IsIndexDiscarded() const
 {
     // was the index manually discarded?
-    if (index_discarded)
+    if (indexDiscarded)
         return true;
 
     // has the synchronization file been changed on disk?
@@ -113,12 +110,18 @@ bool Synchronizer::is_index_discarded() const
     return false;
 }
 
-int Synchronizer::rebuild_index()
+int Synchronizer::RebuildIndex()
 {
-    index_discarded = false;
+    indexDiscarded = false;
     // save sync file timestamp
     _tstat(syncfilepath, &syncfileTimestamp);
     return PDFSYNCERR_SUCCESS;
+}
+
+TCHAR * Synchronizer::PrependDir(const TCHAR* filename) const
+{
+    ScopedMem<TCHAR> dir(path::GetDir(syncfilepath));
+    return path::Join(dir, filename);
 }
 
 // Create a Synchronizer object for a PDF file.
@@ -140,7 +143,7 @@ int Synchronizer::Create(const TCHAR *pdffilename, DisplayModel *dm, Synchronize
     // Check if a PDFSYNC file is present
     ScopedMem<TCHAR> syncFile(str::Join(baseName, PDFSYNC_EXTENSION));
     if (file::Exists(syncFile)) {
-        *sync = new Pdfsync(syncFile, dm);
+        *sync = new Pdfsync(syncFile);
         return *sync ? PDFSYNCERR_SUCCESS : PDFSYNCERR_OUTOFMEMORY;
     }
 
@@ -160,7 +163,7 @@ int Synchronizer::Create(const TCHAR *pdffilename, DisplayModel *dm, Synchronize
 
 // Replace in 'pattern' the macros %f %l %c by 'filename', 'line' and 'col'
 // the caller must free() the result
-TCHAR * Synchronizer::prepare_commandline(const TCHAR* pattern, const TCHAR* filename, UINT line, UINT col)
+TCHAR * Synchronizer::PrepareCommandline(const TCHAR* pattern, const TCHAR* filename, UINT line, UINT col)
 {
     const TCHAR* perc;
     str::Str<TCHAR> cmdline(256);
@@ -198,7 +201,7 @@ static char *Advance0Line(char *line, char *end)
 }
 
 // see http://itexmac.sourceforge.net/pdfsync.html for the specification
-int Pdfsync::rebuild_index()
+int Pdfsync::RebuildIndex()
 {
     size_t len;
     ScopedMem<char> data(file::ReadAll(syncfilepath, &len));
@@ -215,7 +218,7 @@ int Pdfsync::rebuild_index()
     str::TransChars(line, "*/", " \\");
     ScopedMem<TCHAR> jobName(str::conv::FromAnsi(line));
     jobName.Set(str::Join(jobName, _T(".tex")));
-    jobName.Set(path::Join(dir, jobName));
+    jobName.Set(PrependDir(jobName));
 
     line = Advance0Line(line, dataEnd);
     UINT versionNumber = 0;
@@ -226,18 +229,18 @@ int Pdfsync::rebuild_index()
     srcfiles.Reset();
     lines.Reset();
     points.Reset();
-    file_index.Reset();
-    sheet_index.Reset();
+    fileIndex.Reset();
+    sheetIndex.Reset();
 
     Vec<size_t> filestack;
     UINT page = 1;
-    sheet_index.Append(0);
+    sheetIndex.Append(0);
 
     // add the initial tex file to the source file stack
     filestack.Push(srcfiles.Count());
     srcfiles.Append(jobName.StealData());
     PdfsyncFileIndex findex = { 0 };
-    file_index.Append(findex);
+    fileIndex.Append(findex);
 
     PdfsyncLine psline;
     PdfsyncPoint pspoint;
@@ -256,7 +259,7 @@ int Pdfsync::rebuild_index()
 
         case 's':
             if (sscanf(line, "s %u", &page) == 1)
-                sheet_index.Append(points.Count());
+                sheetIndex.Append(points.Count());
             else
                 DBG_OUT("Bad 's' line in the pdfsync file\n");
             break;
@@ -285,18 +288,18 @@ int Pdfsync::rebuild_index()
                     filename.Set(str::Join(filename, _T(".tex")));
                 // ensure that the path is absolute
                 if (PathIsRelative(filename))
-                    filename.Set(path::Join(dir, filename));
+                    filename.Set(PrependDir(filename));
 
                 filestack.Push(srcfiles.Count());
                 srcfiles.Append(filename.StealData());
                 findex.start = findex.end = lines.Count();
-                file_index.Append(findex);
+                fileIndex.Append(findex);
             }
             break;
 
         case ')':
             if (filestack.Count() > 1)
-                file_index.At(filestack.Pop()).end = lines.Count();
+                fileIndex.At(filestack.Pop()).end = lines.Count();
             else
                 DBG_OUT("Unbalanced ')' line in the pdfsync file\n");
             break;
@@ -307,10 +310,10 @@ int Pdfsync::rebuild_index()
         }
     }
 
-    file_index.At(0).end = lines.Count();
+    fileIndex.At(0).end = lines.Count();
     assert(filestack.Count() == 1);
 
-    return Synchronizer::rebuild_index();;
+    return Synchronizer::RebuildIndex();;
 }
 
 // convert a coordinate from the sync file into a PDF coordinate
@@ -321,14 +324,14 @@ static int cmpLineRecords(const void *a, const void *b)
     return ((PdfsyncLine *)a)->record - ((PdfsyncLine *)b)->record;
 }
 
-int Pdfsync::pdf_to_source(UINT pageNo, PointI pt, ScopedMem<TCHAR>& filename, UINT *line, UINT *col)
+int Pdfsync::DocToSource(UINT pageNo, PointI pt, ScopedMem<TCHAR>& filename, UINT *line, UINT *col)
 {
-    if (is_index_discarded())
-        if (rebuild_index() != PDFSYNCERR_SUCCESS)
+    if (IsIndexDiscarded())
+        if (RebuildIndex() != PDFSYNCERR_SUCCESS)
             return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
 
     // find the entry in the index corresponding to this page
-    if (pageNo < 1 || sheet_index.Count() <= pageNo)
+    if (pageNo < 1 || sheetIndex.Count() <= pageNo)
         return PDFSYNCERR_INVALID_PAGE_NUMBER;
 
     // distance to the closest pdf location (in the range <PDFSYNC_EPSILON_SQUARE)
@@ -342,7 +345,7 @@ int Pdfsync::pdf_to_source(UINT pageNo, PointI pt, ScopedMem<TCHAR>& filename, U
     UINT closest_ydist_record = (UINT)-1; // vertically-closest record
 
     // read all the sections of 'p' declarations for this pdf sheet
-    for (size_t i = sheet_index.At(pageNo); i < points.Count() && points.At(i).page == pageNo; i++) {
+    for (size_t i = sheetIndex.At(pageNo); i < points.Count() && points.At(i).page == pageNo; i++) {
         // check whether it is closer than the closest point found so far
         UINT dx = abs(pt.x - (int)SYNC_TO_PDF_COORDINATE(points.At(i).x));
         UINT dy = abs(pt.y - (int)SYNC_TO_PDF_COORDINATE(points.At(i).y));
@@ -388,7 +391,7 @@ int Pdfsync::pdf_to_source(UINT pageNo, PointI pt, ScopedMem<TCHAR>& filename, U
 // (within a range of EPSILON_LINE)
 //
 // The function returns PDFSYNCERR_SUCCESS if a matching record was found.
-UINT Pdfsync::source_to_record(const TCHAR* srcfilename, UINT line, UINT col, Vec<size_t> &records)
+UINT Pdfsync::SourceToRecord(const TCHAR* srcfilename, UINT line, UINT col, Vec<size_t> &records)
 {
     if (!srcfilename)
         return PDFSYNCERR_INVALID_ARGUMENT;
@@ -396,7 +399,7 @@ UINT Pdfsync::source_to_record(const TCHAR* srcfilename, UINT line, UINT col, Ve
     ScopedMem<TCHAR> srcfilepath;
     // convert the source file to an absolute path
     if (PathIsRelative(srcfilename))
-        srcfilepath.Set(path::Join(dir, srcfilename));
+        srcfilepath.Set(PrependDir(srcfilename));
     else
         srcfilepath.Set(str::Dup(srcfilename));
     if (!srcfilepath)
@@ -410,7 +413,7 @@ UINT Pdfsync::source_to_record(const TCHAR* srcfilename, UINT line, UINT col, Ve
     if (isrc == srcfiles.Count())
         return PDFSYNCERR_UNKNOWN_SOURCEFILE;
 
-    if (file_index.At(isrc).start == file_index.At(isrc).end)
+    if (fileIndex.At(isrc).start == fileIndex.At(isrc).end)
         return PDFSYNCERR_NORECORD_IN_SOURCEFILE; // there is not any record declaration for that particular source file
 
     // look for sections belonging to the specified file
@@ -418,7 +421,7 @@ UINT Pdfsync::source_to_record(const TCHAR* srcfilename, UINT line, UINT col, Ve
     UINT min_distance = EPSILON_LINE; // distance to the closest record
     size_t lineIx = (size_t)-1; // closest record-line index
 
-    for (size_t isec = file_index.At(isrc).start; isec < file_index.At(isrc).end; isec++) {
+    for (size_t isec = fileIndex.At(isrc).start; isec < fileIndex.At(isrc).end; isec++) {
         // does this section belong to the desired file?
         if (lines.At(isec).file != isrc)
             continue;
@@ -441,14 +444,14 @@ UINT Pdfsync::source_to_record(const TCHAR* srcfilename, UINT line, UINT col, Ve
     return PDFSYNCERR_SUCCESS;
 }
 
-int Pdfsync::source_to_pdf(const TCHAR* srcfilename, UINT line, UINT col, UINT *page, Vec<RectI> &rects)
+int Pdfsync::SourceToDoc(const TCHAR* srcfilename, UINT line, UINT col, UINT *page, Vec<RectI> &rects)
 {
-    if (is_index_discarded())
-        if (rebuild_index() != PDFSYNCERR_SUCCESS)
+    if (IsIndexDiscarded())
+        if (RebuildIndex() != PDFSYNCERR_SUCCESS)
             return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
 
     Vec<size_t> found_records;
-    UINT ret = source_to_record(srcfilename, line, col, found_records);
+    UINT ret = SourceToRecord(srcfilename, line, col, found_records);
     if (ret != PDFSYNCERR_SUCCESS || found_records.Count() == 0) {
         DBG_OUT("source->pdf: %s:%u -> no record found, error:%u\n", srcfilename, line, ret);
         return ret;
@@ -484,7 +487,7 @@ int Pdfsync::source_to_pdf(const TCHAR* srcfilename, UINT line, UINT col, UINT *
 
 // SYNCTEX synchronizer
 
-int SyncTex::rebuild_index() {
+int SyncTex::RebuildIndex() {
     synctex_scanner_free(this->scanner);
     this->scanner = NULL;
 
@@ -496,13 +499,13 @@ int SyncTex::rebuild_index() {
     if (!scanner)
         return PDFSYNCERR_SYNCFILE_NOTFOUND; // cannot rebuild the index
 
-    return Synchronizer::rebuild_index();
+    return Synchronizer::RebuildIndex();
 }
 
-int SyncTex::pdf_to_source(UINT pageNo, PointI pt, ScopedMem<TCHAR>& filename, UINT *line, UINT *col)
+int SyncTex::DocToSource(UINT pageNo, PointI pt, ScopedMem<TCHAR>& filename, UINT *line, UINT *col)
 {
-    if (this->is_index_discarded())
-        if (rebuild_index() != PDFSYNCERR_SUCCESS)
+    if (IsIndexDiscarded())
+        if (RebuildIndex() != PDFSYNCERR_SUCCESS)
             return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
     assert(this->scanner);
 
@@ -533,7 +536,7 @@ TryAgainAnsi:
     str::TransChars(filename, _T("*/"), _T(" \\"));
     // Convert the source filepath to an absolute path
     if (PathIsRelative(filename))
-        filename.Set(path::Join(this->dir, filename));
+        filename.Set(PrependDir(filename));
 
     // recent SyncTeX versions encode in UTF-8 instead of ANSI
     if (isUtf8 && !file::Exists(filename)) {
@@ -548,17 +551,17 @@ TryAgainAnsi:
     return PDFSYNCERR_SUCCESS;
 }
 
-int SyncTex::source_to_pdf(const TCHAR* srcfilename, UINT line, UINT col, UINT *page, Vec<RectI> &rects)
+int SyncTex::SourceToDoc(const TCHAR* srcfilename, UINT line, UINT col, UINT *page, Vec<RectI> &rects)
 {
-    if (this->is_index_discarded())
-        if (rebuild_index() != PDFSYNCERR_SUCCESS)
+    if (IsIndexDiscarded())
+        if (RebuildIndex() != PDFSYNCERR_SUCCESS)
             return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
     assert(this->scanner);
 
     ScopedMem<TCHAR> srcfilepath;
     // convert the source file to an absolute path
     if (PathIsRelative(srcfilename))
-        srcfilepath.Set(path::Join(dir, srcfilename));
+        srcfilepath.Set(PrependDir(srcfilename));
     else
         srcfilepath.Set(str::Dup(srcfilename));
     if (!srcfilepath)

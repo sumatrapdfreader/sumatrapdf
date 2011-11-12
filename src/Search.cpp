@@ -358,7 +358,7 @@ bool OnInverseSearch(WindowInfo *win, int x, int y)
     PointI pt = win->dm->CvtFromScreen(PointI(x, y), pageNo).Convert<int>();
     ScopedMem<TCHAR> srcfilepath;
     UINT line, col;
-    int err = win->pdfsync->pdf_to_source(pageNo, pt, srcfilepath, &line, &col);
+    int err = win->pdfsync->DocToSource(pageNo, pt, srcfilepath, &line, &col);
     if (err != PDFSYNCERR_SUCCESS) {
         DBG_OUT("cannot sync from pdf to source!\n");
         ShowNotification(win, _TR("No synchronization info at this position"));
@@ -372,7 +372,7 @@ bool OnInverseSearch(WindowInfo *win, int x, int y)
 
     ScopedMem<TCHAR> cmdline;
     if (inverseSearch)
-        cmdline.Set(win->pdfsync->prepare_commandline(inverseSearch, srcfilepath, line, col));
+        cmdline.Set(win->pdfsync->PrepareCommandline(inverseSearch, srcfilepath, line, col));
     if (!str::IsEmpty(cmdline.Get())) {
         ScopedHandle process(LaunchProcess(cmdline));
         if (!process)
@@ -516,7 +516,7 @@ static const TCHAR *HandleSyncCmd(const TCHAR *cmd, DDEACK& ack)
     assert(win->IsDocLoaded());
     UINT page;
     Vec<RectI> rects;
-    int ret = win->pdfsync->source_to_pdf(srcFile, line, col, &page, rects);
+    int ret = win->pdfsync->SourceToDoc(srcFile, line, col, &page, rects);
     ShowForwardSearchResult(win, srcFile, line, col, ret, page, rects);
     if (setFocus)
         win->Focus();
