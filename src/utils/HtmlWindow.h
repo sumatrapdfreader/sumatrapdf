@@ -21,8 +21,7 @@ class HtmlWindow
 protected:
     friend class FrameSite;
 
-    HWND hwnd;
-
+    HWND                hwndParent;
     IWebBrowser2 *      webBrowser;
     IOleObject *        oleObject;
     IOleInPlaceObject * oleInPlaceObject;
@@ -48,7 +47,7 @@ protected:
 public:
     WNDPROC wndProcBrowserPrev;
 
-    HtmlWindow(HWND hwnd, HtmlWindowCallback *cb);
+    HtmlWindow(HWND hwndParent, HtmlWindowCallback *cb);
     ~HtmlWindow();
 
     void OnSize(int dx, int dy);

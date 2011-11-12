@@ -384,10 +384,10 @@ static LRESULT CALLBACK WndProcBrowser(HWND hwnd, UINT msg, WPARAM wParam, LPARA
 
 void HtmlWindow::SubclassHwnd()
 {
-    SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)WndProcParent);
-    SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)this);
+    SetWindowLongPtr(hwndParent, GWLP_WNDPROC, (LONG_PTR)WndProcParent);
+    SetWindowLongPtr(hwndParent, GWLP_USERDATA, (LONG_PTR)this);
 #ifdef HOOK_BROWSER_CONTROL
-    HWND hwndBrowser = GetBrowserControlHwnd(hwnd);
+    HWND hwndBrowser = GetBrowserControlHwnd(hwndParent);
     wndProcBrowserPrev = (WNDPROC)SetWindowLongPtr(hwndBrowser, GWLP_WNDPROC, (LONG_PTR)WndProcBrowser);
     SetWindowLongPtr(hwndBrowser, GWLP_USERDATA, (LONG_PTR)this);
 #endif
@@ -395,20 +395,22 @@ void HtmlWindow::SubclassHwnd()
 
 void HtmlWindow::UnsubclassHwnd()
 {
-    SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)0);
-    HWND hwndBrowser = GetBrowserControlHwnd(hwnd);
+    SetWindowLongPtr(hwndParent, GWLP_USERDATA, (LONG_PTR)0);
+#ifdef HOOK_BROWSER_CONTROL
+    HWND hwndBrowser = GetBrowserControlHwnd(hwndParent);
     SetWindowLongPtr(hwndBrowser, GWLP_USERDATA, (LONG_PTR)0);
+#endif
 }
 
-HtmlWindow::HtmlWindow(HWND hwnd, HtmlWindowCallback *cb) :
-    hwnd(hwnd), webBrowser(NULL), oleObject(NULL),
+HtmlWindow::HtmlWindow(HWND hwndParent, HtmlWindowCallback *cb) :
+    hwndParent(hwndParent), webBrowser(NULL), oleObject(NULL),
     oleInPlaceObject(NULL), viewObject(NULL),
     connectionPoint(NULL), oleObjectHwnd(NULL),
     adviseCookie(0), aboutBlankShown(false), htmlWinCb(cb),
     wndProcBrowserPrev(NULL),
     documentLoaded(false), canGoBack(false), canGoForward(false)
 {
-    assert(hwnd);
+    assert(hwndParent);
     CreateBrowser();
 }
 
@@ -447,12 +449,12 @@ void HtmlWindow::CreateBrowser()
     assert(SUCCEEDED(hr));
 
     ::SetActiveWindow(oleObjectHwnd);
-    RECT rc = ClientRect(hwnd).ToRECT();
+    RECT rc = ClientRect(hwndParent).ToRECT();
 
     oleInPlaceObject->SetObjectRects(&rc, &rc);
     if (!invisibleAtRuntime) {
         hr = oleObject->DoVerb(OLEIVERB_INPLACEACTIVATE, NULL,
-                fs->oleClientSite, 0, hwnd, &rc);
+                fs->oleClientSite, 0, hwndParent, &rc);
 #if 0 // is this necessary?
         hr = oleObject->DoVerb(OLEIVERB_SHOW, 0, fs->oleClientSite, 0,
                 hwnd, &rc);
@@ -535,9 +537,9 @@ void HtmlWindow::OnLButtonDown() const
 void HtmlWindow::SetVisible(bool visible)
 {
     if (visible)
-        ShowWindow(hwnd, SW_SHOW);
+        ShowWindow(hwndParent, SW_SHOW);
     else
-        ShowWindow(hwnd, SW_HIDE);
+        ShowWindow(hwndParent, SW_HIDE);
     if (webBrowser)
         webBrowser->put_Visible(visible ? TRUE : FALSE);
 }
@@ -674,7 +676,7 @@ HBITMAP HtmlWindow::TakeScreenshot(RectI area, SizeI finalSize)
     // capture the whole window (including scrollbars)
     // to image and create imageRes containing the area
     // user asked for
-    WindowRect winRc(hwnd);
+    WindowRect winRc(hwndParent);
     Bitmap image(winRc.dx, winRc.dy, PixelFormat24bppRGB);
     Graphics g(&image);
 
@@ -728,7 +730,7 @@ static void PumpRemainingMessages()
 
 void HtmlWindow::SendMsg(UINT msg, WPARAM wp, LPARAM lp)
 {
-    HWND hwndBrowser = GetBrowserControlHwnd(hwnd);
+    HWND hwndBrowser = GetBrowserControlHwnd(hwndParent);
     SendMessage(hwndBrowser, msg, wp, lp);
 }
 
@@ -765,7 +767,7 @@ FrameSite::FrameSite(HtmlWindow * win)
     ambientAppearance = true;
 
     //m_hDCBuffer = NULL;
-    hwndParent = htmlWindow->hwnd;
+    hwndParent = htmlWindow->hwndParent;
 
     oleInPlaceFrame = new HW_IOleInPlaceFrame(this);
     oleInPlaceSiteWindowless = new HW_IOleInPlaceSiteWindowless(this);
