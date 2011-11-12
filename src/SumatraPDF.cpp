@@ -93,12 +93,13 @@ TCHAR *          gPluginURL = NULL; // owned by CommandLineInfo in WinMain
 #define COL_WINDOW_BG           RGB(0x99, 0x99, 0x99)
 #endif
 
-#define CANVAS_CLASS_NAME       _T("SUMATRA_PDF_CANVAS")
-#define SPLITER_CLASS_NAME      _T("Spliter")
-#define RESTRICTIONS_FILE_NAME  _T("sumatrapdfrestrict.ini")
-#define CRASH_DUMP_FILE_NAME    _T("sumatrapdfcrash.dmp")
+#define CANVAS_CLASS_NAME            _T("SUMATRA_PDF_CANVAS")
+#define SIDEBAR_SPLITTER_CLASS_NAME  _T("SidebarSplitter")
+#define FAV_SPLITTER_CLASS_NAME      _T("FavSplitter")
+#define RESTRICTIONS_FILE_NAME       _T("sumatrapdfrestrict.ini")
+#define CRASH_DUMP_FILE_NAME         _T("sumatrapdfcrash.dmp")
 
-#define DEFAULT_LINK_PROTOCOLS  _T("http,https,mailto")
+#define DEFAULT_LINK_PROTOCOLS       _T("http,https,mailto")
 
 #define SPLITTER_DX  5
 #define SIDEBAR_MIN_WIDTH 150
@@ -964,7 +965,7 @@ static void UpdateToolbarAndScrollbarState(WindowInfo& win)
 
 static void CreateSidebar(WindowInfo* win)
 {
-    win->hwndSidebarSpliter = CreateWindow(SPLITER_CLASS_NAME, _T(""), 
+    win->hwndSidebarSplitter = CreateWindow(SIDEBAR_SPLITTER_CLASS_NAME, _T(""), 
         WS_CHILDWINDOW, 0, 0, 0, 0, win->hwndFrame, (HMENU)0, ghinst, NULL);
 
     CreateToc(win);
@@ -3280,11 +3281,42 @@ static void ResizeSidebar(WindowInfo *win)
 
     MoveWindow(win->hwndTocBox, 0, y,           sidebarDx, rToc.dy, TRUE);
     MoveWindow(win->hwndFavBox, 0, y + rToc.dy, sidebarDx, rFav.dy, TRUE);
-    MoveWindow(win->hwndSidebarSpliter, sidebarDx, y, SPLITTER_DX, totalDy, TRUE);
+    MoveWindow(win->hwndSidebarSplitter, sidebarDx, y, SPLITTER_DX, totalDy, TRUE);
     MoveWindow(win->hwndCanvas, sidebarDx + SPLITTER_DX, y, canvasDx, totalDy, TRUE);
 }
 
-static LRESULT CALLBACK WndProcSpliter(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+static void ResizeFav(WindowInfo *win)
+{
+
+}
+
+static LRESULT CALLBACK WndProcFavSplitter(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    WindowInfo *win = FindWindowInfoByHwnd(hwnd);
+    if (!win)
+        return DefWindowProc(hwnd, message, wParam, lParam);
+
+    switch (message)
+    {
+        case WM_MOUSEMOVE:
+            if (win->favBeingResized) {
+                ResizeFav(win);
+                return 0;
+            }
+            break;
+        case WM_LBUTTONDOWN:
+            SetCapture(hwnd);
+            win->favBeingResized = true;
+            break;
+        case WM_LBUTTONUP:
+            ReleaseCapture();
+            win->favBeingResized = false;
+            break;
+    }
+    return DefWindowProc(hwnd, message, wParam, lParam);
+}
+
+static LRESULT CALLBACK WndProcSidebarSplitter(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     WindowInfo *win = FindWindowInfoByHwnd(hwnd);
     if (!win)
@@ -3470,7 +3502,7 @@ void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool favVisible)
             SetFocus(win->hwndFrame);
 
         SetWindowPos(win->hwndCanvas, NULL, 0, toolbarDy, rFrame.dx, dy, SWP_NOZORDER);
-        ShowWindow(win->hwndSidebarSpliter, SW_HIDE);
+        ShowWindow(win->hwndSidebarSplitter, SW_HIDE);
         ShowWindow(win->hwndTocBox, SW_HIDE);
         ShowWindow(win->hwndFavBox, SW_HIDE);
         return;
@@ -3505,7 +3537,7 @@ void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool favVisible)
 
     SetWinPos(win->hwndTocBox, rToc, tocVisible);
     SetWinPos(win->hwndFavBox, rFav, favVisible);
-    SetWinPos(win->hwndSidebarSpliter, rSplitter, true);
+    SetWinPos(win->hwndSidebarSplitter, rSplitter, true);
     SetWinPos(win->hwndCanvas, rCanvas, true);
 
     if (tocVisible)
@@ -4412,10 +4444,19 @@ static bool RegisterWinClass(HINSTANCE hinst)
         return false;
 
     FillWndClassEx(wcex, hinst);
-    wcex.lpfnWndProc    = WndProcSpliter;
+    wcex.lpfnWndProc    = WndProcSidebarSplitter;
     wcex.hCursor        = LoadCursor(NULL, IDC_SIZEWE);
     wcex.hbrBackground  = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
-    wcex.lpszClassName  = SPLITER_CLASS_NAME;
+    wcex.lpszClassName  = SIDEBAR_SPLITTER_CLASS_NAME;
+    atom = RegisterClassEx(&wcex);
+    if (!atom)
+        return false;
+
+    FillWndClassEx(wcex, hinst);
+    wcex.lpfnWndProc    = WndProcFavSplitter;
+    wcex.hCursor        = LoadCursor(NULL, IDC_SIZENS);
+    wcex.hbrBackground  = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
+    wcex.lpszClassName  = FAV_SPLITTER_CLASS_NAME;
     atom = RegisterClassEx(&wcex);
     if (!atom)
         return false;

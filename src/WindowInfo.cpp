@@ -22,14 +22,16 @@ WindowInfo::WindowInfo(HWND hwnd) :
     hwndCanvas(NULL), hwndToolbar(NULL), hwndReBar(NULL),
     hwndFindText(NULL), hwndFindBox(NULL), hwndFindBg(NULL),
     hwndPageText(NULL), hwndPageBox(NULL), hwndPageBg(NULL), hwndPageTotal(NULL),
-    hwndTocBox(NULL), hwndTocTree(NULL), hwndSidebarSpliter(NULL),
+    hwndTocBox(NULL), hwndTocTree(NULL), 
+    hwndSidebarSplitter(NULL), sidebarBeingResized(false),
+    hwndFavSplitter(NULL), favBeingResized(false),
     hwndInfotip(NULL), infotipVisible(false), hwndProperties(NULL),
     findThread(NULL), findCanceled(false), printThread(NULL), printCanceled(false),
     showSelection(false), mouseAction(MA_IDLE), dragStartPending(false),
     prevZoomVirtual(INVALID_ZOOM), prevDisplayMode(DM_AUTOMATIC),
     loadedFilePath(NULL), currPageNo(0),
     xScrollSpeed(0), yScrollSpeed(0), wheelAccumDelta(0),
-    delayedRepaintTimer(0), sidebarBeingResized(false), watcher(NULL),
+    delayedRepaintTimer(0), watcher(NULL),
     pdfsync(NULL), stressTest(NULL), suppressPwdUI(false),
     hwndFavBox(NULL), hwndFavTree(NULL), panStarted(false)
 #ifdef BUILD_RIBBON
