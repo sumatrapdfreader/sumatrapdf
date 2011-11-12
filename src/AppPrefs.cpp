@@ -230,7 +230,6 @@ static BencDict *DisplayState_Serialize(DisplayState *ds, bool globalPrefsOnly)
 
     prefs->Add(TOC_VISIBLE_STR, ds->tocVisible);
     prefs->Add(SIDEBAR_DX_STR, ds->sidebarDx);
-    prefs->Add(TOC_DY_STR, ds->tocDy);
 
     ScopedMem<char> zoom(str::Format("%.4f", ds->zoomVirtual));
     prefs->AddRaw(ZOOM_VIRTUAL_STR, zoom);
@@ -445,7 +444,6 @@ static DisplayState * DeserializeDisplayState(BencDict *dict, bool globalPrefsOn
     Retrieve(dict, WINDOW_DY_STR, ds->windowPos.dy);
     Retrieve(dict, TOC_VISIBLE_STR, ds->tocVisible);
     Retrieve(dict, SIDEBAR_DX_STR, ds->sidebarDx);
-    Retrieve(dict, TOC_DY_STR, ds->tocDy);
     Retrieve(dict, ZOOM_VIRTUAL_STR, ds->zoomVirtual);
     Retrieve(dict, USE_GLOBAL_VALUES_STR, ds->useGlobalValues);
 

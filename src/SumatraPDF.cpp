@@ -393,7 +393,6 @@ static void UpdateDisplayStateWindowRect(WindowInfo& win, DisplayState& ds, bool
     ds.windowState = gGlobalPrefs.windowState;
     ds.windowPos   = gGlobalPrefs.windowPos;
     ds.sidebarDx   = gGlobalPrefs.sidebarDx;
-    ds.tocDy       = gGlobalPrefs.tocDy;
 }
 
 static void UpdateSidebarDisplayState(WindowInfo *win, DisplayState *ds)
@@ -715,6 +714,7 @@ static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win,
     if (gGlobalPrefs.windowState == WIN_STATE_MAXIMIZED || showAsFullScreen)
         showType = SW_MAXIMIZE;
 
+    bool tocVisible = gGlobalPrefs.tocVisible;
     if (state) {
         startPage = state->pageNo;
         displayMode = state->displayMode;
@@ -725,6 +725,7 @@ static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win,
             showType = SW_MAXIMIZE;
         else if (state->windowState == WIN_STATE_MINIMIZED)
             showType = SW_MINIMIZE;
+        tocVisible = state->tocVisible;
     }
 
     DisplayModel *prevModel = win.dm;
@@ -803,12 +804,9 @@ static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win,
         zoomVirtual = state->zoomVirtual;
         rotation = state->rotation;
 
-        win.tocVisible = state->tocVisible;
         win.tocState.Reset();
         if (state->tocState)
             win.tocState = *state->tocState;
-    } else {
-        win.tocVisible = gGlobalPrefs.tocVisible;
     }
 
     win.dm->Relayout(zoomVirtual, rotation);
@@ -890,7 +888,7 @@ Error:
         win.ribbonSupport->UpdateState();
 #endif
 
-    SetSidebarVisibility(&win, win.tocVisible, gGlobalPrefs.favVisible);
+    SetSidebarVisibility(&win, tocVisible, gGlobalPrefs.favVisible);
     win.RedrawAll(true);
 
     UpdateToolbarAndScrollbarState(win);
@@ -3339,6 +3337,7 @@ static void ResizeFav(WindowInfo *win)
     MoveWindow(win->hwndTocBox,      0, y,                       tocDx, tocDy,       TRUE);
     MoveWindow(win->hwndFavSplitter, 0, y + tocDy,               tocDx, SPLITTER_DY, TRUE);
     MoveWindow(win->hwndFavBox,      0, y + tocDy + SPLITTER_DY, tocDx, favDy,       TRUE);
+
     gGlobalPrefs.tocDy = tocDy;
 }
 
@@ -3582,10 +3581,12 @@ void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool favVisible)
 
     int tocDy = 0; // if !tocVisible
     if (tocVisible) {
-        if (favVisible)
+        if (!favVisible)
+            tocDy = dy;
+        else if (gGlobalPrefs.tocDy)
             tocDy = gGlobalPrefs.tocDy;
         else
-            tocDy = dy;
+            tocDy = dy / 2; // default value
     }
     if (favSplitterVisible) {
         // TODO: we should also limit minimum size of the frame or else
