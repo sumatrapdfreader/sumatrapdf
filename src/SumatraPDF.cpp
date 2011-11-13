@@ -3851,21 +3851,41 @@ static LRESULT OnGesture(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lP
             break;
 
         case GID_PAN:
-            // Panning left or right changes the page
+            // Flicking left or right changes the page,
+            // panning moves the document in the scroll window
             if (gi.dwFlags == GF_BEGIN) {
-                win.panPos = gi.ptsLocation;
                 win.panStarted = true;
+                win.panPos = gi.ptsLocation;
+                win.panScrollOrig.x = GetScrollPos(win.hwndCanvas, SB_HORZ);
+                win.panScrollOrig.y = GetScrollPos(win.hwndCanvas, SB_VERT);
+
+                if (GetCursor())
+                    SetCursor(gCursorDrag);
             }
-            else if ((gi.dwFlags & GF_INERTIA)) {
-                // Switch pages once we hit inertia
-                if (win.panStarted) {
-                    win.panStarted = false;
-                    int deltaX = win.panPos.x - gi.ptsLocation.x; 
+            else if (win.panStarted) {
+                int deltaX = win.panPos.x - gi.ptsLocation.x;
+                int deltaY = win.panPos.y - gi.ptsLocation.y;
+                win.panPos = gi.ptsLocation;
+
+                if ((gi.dwFlags & GF_INERTIA) && abs(deltaX) > abs(deltaY)) {
+                    // Switch pages once we hit inertia in a horizontal direction
                     if (deltaX < 0)
                         win.dm->GoToPrevPage(0);
                     else if (deltaX > 0)
                         win.dm->GoToNextPage(0);
+                    // When we switch pages, go back to the initial scroll position
+                    // and prevent further pan movement caused by the inertia
+                    win.dm->ScrollXTo(win.panScrollOrig.x);
+                    win.dm->ScrollYTo(win.panScrollOrig.y);
+                    win.panStarted = false;
                 }
+                else {
+                    // Pan/Scroll
+                    win.MoveDocBy(deltaX, deltaY);
+                }
+
+                if ((!win.panStarted || (gi.dwFlags & GF_END)) && GetCursor())
+                    SetCursor(gCursorArrow);
             }
             break;
 

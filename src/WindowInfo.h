@@ -188,6 +188,7 @@ public:
     // WM_GESTURE handling 
     bool    panStarted;
     POINTS  panPos;
+    PointI  panScrollOrig;
     double  startArg;
 
 #ifdef BUILD_RIBBON
