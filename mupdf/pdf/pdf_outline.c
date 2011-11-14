@@ -34,7 +34,7 @@ pdf_load_outline_imp(pdf_xref *xref, fz_obj *dict)
 		node->title = pdf_to_utf8(obj);
 
 	/* SumatraPDF: support expansion states */
-	node->is_open = fz_to_int(obj) >= 0;
+	node->is_open = fz_to_int(fz_dict_gets(dict, "Count")) >= 0;
 	/* SumatraPDF: extended outline actions */
 	node->data = node->free_data = NULL;
 
