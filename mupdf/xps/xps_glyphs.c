@@ -539,8 +539,8 @@ xps_parse_glyphs(xps_context *ctx, fz_matrix ctm,
 
 	area = fz_bound_text(text, ctm);
 
-	/* SumatraPDF: support links and outlines */
-	xps_extract_link_info(ctx, root, area, base_uri);
+	/* SumatraPDF: extended link support */
+	xps_extract_anchor_info(ctx, root, area, base_uri);
 
 	xps_begin_opacity(ctx, ctm, area, opacity_mask_uri, dict, opacity_att, opacity_mask_tag);
 

@@ -139,7 +139,7 @@ static void pdfapp_open_pdf(pdfapp_t *app, char *filename, int fd)
 
 	app->outline = pdf_load_outline(app->xref);
 
-	app->doctitle = filename;
+	app->doctitle = fz_strdup(filename);
 	if (strrchr(app->doctitle, '\\'))
 		app->doctitle = strrchr(app->doctitle, '\\') + 1;
 	if (strrchr(app->doctitle, '/'))
@@ -174,7 +174,7 @@ static void pdfapp_open_xps(pdfapp_t *app, char *filename, int fd)
 		pdfapp_error(app, fz_rethrow(error, "cannot open document '%s'", filename));
 	fz_close(file);
 
-	app->doctitle = filename;
+	app->doctitle = fz_strdup(filename);
 
 	app->pagecount = xps_count_pages(app->xps);
 }
@@ -235,7 +235,7 @@ void pdfapp_close(pdfapp_t *app)
 	app->image = NULL;
 
 	if (app->outline)
-		pdf_free_outline(app->outline);
+		fz_free_outline(app->outline);
 	app->outline = NULL;
 
 	if (app->xref)

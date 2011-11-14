@@ -1085,6 +1085,28 @@ int fz_list_is_single_image(fz_display_list *list);
 int fz_list_requires_blending(fz_display_list *list);
 
 /*
+ * Document interface.
+ */
+
+typedef struct fz_outline_s fz_outline;
+
+struct fz_outline_s
+{
+	char *title;
+	int page;
+	fz_outline *next;
+	fz_outline *down;
+	int is_open; /* SumatraPDF: support expansion states */
+	/* SumatraPDF: extended outline actions */
+	void *data;
+	void (*free_data)(void *data);
+};
+
+void fz_debug_outline_xml(fz_outline *outline, int level);
+void fz_debug_outline(fz_outline *outline, int level);
+void fz_free_outline(fz_outline *outline);
+
+/*
  * Plotting functions.
  */
 

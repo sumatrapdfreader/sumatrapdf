@@ -176,7 +176,7 @@ void DumpThumbnail(BaseEngine *engine)
         return;
     }
 
-    float zoom = min(128 / (float)rect.dx, 128 / (float)rect.dy);
+    float zoom = min(128 / (float)rect.dx, 128 / (float)rect.dy) - 0.001f;
     RectI thumb = RectD(0, 0, rect.dx * zoom, rect.dy * zoom).Round();
     rect = engine->Transform(thumb.Convert<double>(), 1, zoom, 0, true);
     RenderedBitmap *bmp = engine->RenderBitmap(1, zoom, 0, &rect);

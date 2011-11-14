@@ -1,6 +1,7 @@
 /* fontdump.c -- an "xxd -i" workalike for dumping binary fonts as source code */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 static int
@@ -88,7 +89,8 @@ main(int argc, char **argv)
 		len = ftell(fi);
 		fseek(fi, 0, SEEK_SET);
 
-		printf("\t{\"%s\",pdf_font_%s,%d},\n", origname, fontname, len);
+		if (getenv("verbose"))
+			printf("\t{\"%s\",pdf_font_%s,%d},\n", origname, fontname, len);
 
 		fprintf(fo, "\n#ifdef HAVE_INCBIN\n");
 		fprintf(fo, "extern const unsigned char pdf_font_%s[%d];\n", fontname, len);

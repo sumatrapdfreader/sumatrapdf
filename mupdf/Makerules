@@ -34,6 +34,7 @@ ifeq "$(OS)" "Darwin"
 SYS_FREETYPE_INC := -I/usr/X11R6/include/freetype2
 CFLAGS += -I/usr/X11R6/include
 LDFLAGS += -L/usr/X11R6/lib
+RANLIB_CMD = ranlib $@
 X11_LIBS := -lX11 -lXext
 ifeq "$(arch)" "amd64"
 CFLAGS += -m64
@@ -56,6 +57,7 @@ endif
 #   cygwin)
 #   2) do a non cross compile build (e.g. windows in MSVC) first.
 #   3) download the generated files from mupdf.com.
+
 ifeq "$(OS)" "beagle-cross"
 CC = arm-none-linux-gnueabi-gcc
 LD = arm-none-linux-gnueabi-gcc
@@ -79,6 +81,18 @@ CC = arm-none-linux-gnueabi-gcc
 LD = arm-none-linux-gnueabi-gcc
 AR = arm-none-linux-gnueabi-ar
 CFLAGS += -O3 -mcpu=arm1136jf-s -mfpu=vfp -mfloat-abi=softfp -ffast-math -fsingle-precision-constant
+CROSSCOMPILE=yes
+NOX11=yes
+endif
+
+# Most variables when building for iOS are set up in ios/build_libs.sh,
+# which is called from the Xcode project as a "Run Script" build step.
+# The following section works for both device and simulator builds.
+
+ifeq "$(OS)" "ios"
+CC = $(PLATFORM_DEVELOPER_BIN_DIR)/clang
+AR = $(PLATFORM_DEVELOPER_BIN_DIR)/ar
+RANLIB_CMD = $(PLATFORM_DEVELOPER_BIN_DIR)/ranlib $@
 CROSSCOMPILE=yes
 NOX11=yes
 endif

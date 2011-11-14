@@ -142,7 +142,8 @@ main(int argc, char **argv)
 
 		fprintf(fo, "};\n");
 
-		printf("\t{\"%s\",&cmap_%s},\n", cmap->cmap_name, name);
+		if (getenv("verbose"))
+			printf("\t{\"%s\",&cmap_%s},\n", cmap->cmap_name, name);
 
 		fz_close(fi);
 	}

@@ -276,7 +276,7 @@ pdf_load_page(pdf_page **pagep, pdf_xref *xref, int number)
 	pdf_annot *annot;
 	fz_obj *pageobj, *pageref;
 	fz_obj *obj;
-	fz_bbox bbox;
+	fz_rect mediabox, cropbox;
 
 	if (number < 0 || number >= xref->page_len)
 		return fz_throw("cannot find page %d", number + 1);
@@ -295,28 +295,24 @@ pdf_load_page(pdf_page **pagep, pdf_xref *xref, int number)
 	page->links = NULL;
 	page->annots = NULL;
 
-	obj = fz_dict_gets(pageobj, "MediaBox");
-	bbox = fz_round_rect(pdf_to_rect(obj));
-	if (fz_is_empty_rect(pdf_to_rect(obj)))
+	mediabox = pdf_to_rect(fz_dict_gets(pageobj, "MediaBox"));
+	if (fz_is_empty_rect(mediabox))
 	{
 		fz_warn("cannot find page size for page %d", number + 1);
-		bbox.x0 = 0;
-		bbox.y0 = 0;
-		bbox.x1 = 612;
-		bbox.y1 = 792;
+		mediabox.x0 = 0;
+		mediabox.y0 = 0;
+		mediabox.x1 = 612;
+		mediabox.y1 = 792;
 	}
 
-	obj = fz_dict_gets(pageobj, "CropBox");
-	if (fz_is_array(obj))
-	{
-		fz_bbox cropbox = fz_round_rect(pdf_to_rect(obj));
-		bbox = fz_intersect_bbox(bbox, cropbox);
-	}
+	cropbox = pdf_to_rect(fz_dict_gets(pageobj, "CropBox"));
+	if (!fz_is_empty_rect(cropbox))
+		mediabox = fz_intersect_rect(mediabox, cropbox);
 
-	page->mediabox.x0 = MIN(bbox.x0, bbox.x1);
-	page->mediabox.y0 = MIN(bbox.y0, bbox.y1);
-	page->mediabox.x1 = MAX(bbox.x0, bbox.x1);
-	page->mediabox.y1 = MAX(bbox.y0, bbox.y1);
+	page->mediabox.x0 = MIN(mediabox.x0, mediabox.x1);
+	page->mediabox.y0 = MIN(mediabox.y0, mediabox.y1);
+	page->mediabox.x1 = MAX(mediabox.x0, mediabox.x1);
+	page->mediabox.y1 = MAX(mediabox.y0, mediabox.y1);
 
 	if (page->mediabox.x1 - page->mediabox.x0 < 1 || page->mediabox.y1 - page->mediabox.y0 < 1)
 	{

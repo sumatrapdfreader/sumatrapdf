@@ -376,7 +376,7 @@ xml_parse_document(unsigned char *s, int n)
 
 	error = xml_parse_document_imp(&parser, p);
 	if (error) {
-		fz_throw(error);
+		fz_throw("%s", error);
 		return NULL;
 	}
 

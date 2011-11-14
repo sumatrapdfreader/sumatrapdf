@@ -417,7 +417,6 @@ void pdf_ft_free_vsubst(pdf_font_desc *fontdesc);
 
 typedef struct pdf_link_s pdf_link;
 typedef struct pdf_annot_s pdf_annot;
-typedef struct pdf_outline_s pdf_outline;
 
 typedef enum pdf_link_kind_e
 {
@@ -445,22 +444,11 @@ struct pdf_annot_s
 	pdf_annot *next;
 };
 
-struct pdf_outline_s
-{
-	char *title;
-	pdf_link *link;
-	int count;
-	pdf_outline *child;
-	pdf_outline *next;
-};
-
 fz_obj *pdf_lookup_dest(pdf_xref *xref, fz_obj *needle);
 fz_obj *pdf_lookup_name(pdf_xref *xref, char *which, fz_obj *needle);
 fz_obj *pdf_load_name_tree(pdf_xref *xref, char *which);
 
-pdf_outline *pdf_load_outline(pdf_xref *xref);
-void pdf_debug_outline(pdf_outline *outline, int level);
-void pdf_free_outline(pdf_outline *outline);
+fz_outline *pdf_load_outline(pdf_xref *xref);
 
 pdf_link *pdf_load_link(pdf_xref *xref, fz_obj *dict);
 void pdf_load_links(pdf_link **, pdf_xref *, fz_obj *annots);

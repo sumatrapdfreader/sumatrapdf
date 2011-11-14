@@ -31,7 +31,7 @@ struct pdfapp_s
 	/* current document params */
 	char *doctitle;
 	pdf_xref *xref;
-	pdf_outline *outline;
+	fz_outline *outline;
 	xps_context *xps;
 
 	int pagecount;

@@ -13,11 +13,13 @@ typedef unsigned char byte;
 
 typedef struct xps_context_s xps_context;
 
-/* SumatraPDF: support links and outlines */
-typedef struct xps_link_s xps_link;
+/* SumatraPDF: extended link support */
+typedef struct xps_anchor_s xps_anchor;
 
 #define REL_START_PART \
 	"http://schemas.microsoft.com/xps/2005/06/fixedrepresentation"
+#define REL_DOC_STRUCTURE \
+	"http://schemas.microsoft.com/xps/2005/06/documentstructure"
 #define REL_REQUIRED_RESOURCE \
 	"http://schemas.microsoft.com/xps/2005/06/required-resource"
 #define REL_REQUIRED_RESOURCE_RECURSIVE \
@@ -73,20 +75,31 @@ void xps_free_part(xps_context *ctx, xps_part *part);
 
 typedef struct xps_document_s xps_document;
 typedef struct xps_page_s xps_page;
+typedef struct xps_target_s xps_target;
 
 struct xps_document_s
 {
 	char *name;
+	char *outline;
 	xps_document *next;
 };
 
 struct xps_page_s
 {
 	char *name;
+	int number;
 	int width;
 	int height;
 	xml_element *root;
 	xps_page *next;
+};
+
+struct xps_target_s
+{
+	char *name;
+	int page;
+	xps_target *next;
+	fz_rect rect; /* SumatraPDF: extended link support */
 };
 
 int xps_read_page_list(xps_context *ctx);
@@ -96,6 +109,12 @@ void xps_free_page_list(xps_context *ctx);
 int xps_count_pages(xps_context *ctx);
 int xps_load_page(xps_page **page, xps_context *ctx, int number);
 void xps_free_page(xps_context *ctx, xps_page *page);
+
+fz_outline *xps_load_outline(xps_context *ctx);
+
+int xps_find_link_target(xps_context *ctx, char *target_uri);
+/* SumatraPDF: extended link support */
+xps_target *xps_find_link_target_obj(xps_context *ctx, char *target_uri);
 
 /*
  * Images, fonts, and colorspaces.
@@ -209,6 +228,9 @@ struct xps_context_s
 	xps_document *last_fixdoc; /* last fixed document */
 	xps_page *first_page; /* first page of document */
 	xps_page *last_page; /* last page of document */
+	int page_count;
+
+	xps_target *target; /* link targets */
 
 	char *base_uri; /* base uri for parsing XML and resolving relative paths */
 	char *part_uri; /* part uri for parsing metadata relations */
@@ -228,49 +250,24 @@ struct xps_context_s
 	/* Current device */
 	fz_device *dev;
 
-	/* SumatraPDF: set to non-NULL for link extraction */
-	xps_link *link_root;
+	/* SumatraPDF: set to non-NULL for anchor extraction */
+	xps_anchor *link_root;
 };
 
 int xps_open_file(xps_context **ctxp, char *filename);
 int xps_open_stream(xps_context **ctxp, fz_stream *file);
 void xps_free_context(xps_context *ctx);
 
-/* SumatraPDF: support links and outlines */
-
-typedef struct xps_outline_s xps_outline;
-typedef struct xps_named_dest_s xps_named_dest;
-
-struct xps_outline_s
-{
-	char *title;
-	char *target;
-	xps_outline *child;
-	xps_outline *next;
-};
-
-struct xps_named_dest_s
-{
-	char *target;
-	int page;
-	fz_rect rect;
-	xps_named_dest *next;
-};
-
-struct xps_link_s
+/* SumatraPDF: extended link support */
+struct xps_anchor_s
 {
 	char *target;
 	fz_rect rect;
 	int is_dest;
-	xps_link *next;
+	xps_anchor *next;
 };
-
-xps_outline *xps_parse_outline(xps_context *ctx);
-void xps_free_outline(xps_outline *outline);
-xps_named_dest *xps_parse_named_dests(xps_context *ctx);
-void xps_free_named_dest(xps_named_dest *dest);
-void xps_extract_link_info(xps_context *ctx, xml_element *node, fz_rect rect, char *base_uri);
-void xps_free_link(xps_link *link);
+void xps_extract_anchor_info(xps_context *ctx, xml_element *node, fz_rect rect, char *base_uri);
+void xps_free_anchor(xps_anchor *link);
 
 /* SumatraPDF: extract document properties (hacky) */
 fz_obj *xps_extract_doc_props(xps_context *ctx);

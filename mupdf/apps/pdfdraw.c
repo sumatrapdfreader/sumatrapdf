@@ -412,54 +412,14 @@ static void drawrange(pdf_xref *xref, char *range)
 	}
 }
 
-static int get_page_number(pdf_xref *xref, pdf_link *link)
-{
-	if (link->kind == PDF_LINK_GOTO)
-		return pdf_find_page_number(xref, fz_array_get(link->dest, 0));
-	return 0;
-}
-
-static void print_outline_xml(pdf_xref *xref, pdf_outline *outline, int level)
-{
-	int page;
-	printf("<outline>\n");
-	while (outline)
-	{
-		page = get_page_number(xref, outline->link);
-		printf("<link title=\"%s\" page=\"%d\" />\n",
-				outline->title ? outline->title : "<null>", page);
-		if (outline->child)
-			print_outline_xml(xref, outline->child, level + 1);
-		outline = outline->next;
-	}
-	printf("</outline>\n");
-}
-
-static void print_outline_plain(pdf_xref *xref, pdf_outline *outline, int level)
-{
-	int i, page;
-	while (outline)
-	{
-		page = get_page_number(xref, outline->link);
-		for (i = 0; i < level; i++)
-			putchar('\t');
-		printf("%s %d\n", outline->title ? outline->title : "<null>", page);
-		if (outline->child)
-			print_outline_plain(xref, outline->child, level + 1);
-		outline = outline->next;
-	}
-}
-
 static void drawoutline(pdf_xref *xref)
 {
-	pdf_outline *outline = pdf_load_outline(xref);
-	if (showoutline > 2)
-		pdf_debug_outline(outline, 0);
-	else if (showoutline > 1)
-		print_outline_xml(xref, outline, 0);
+	fz_outline *outline = pdf_load_outline(xref);
+	if (showoutline > 1)
+		fz_debug_outline_xml(outline, 0);
 	else
-		print_outline_plain(xref, outline, 0);
-	pdf_free_outline(outline);
+		fz_debug_outline(outline, 0);
+	fz_free_outline(outline);
 }
 
 int main(int argc, char **argv)

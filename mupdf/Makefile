@@ -2,7 +2,7 @@
 
 build ?= debug
 
-OUT := build/$(build)
+OUT ?= build/$(build)
 GEN := generated
 
 # --- Variables, Commands, etc... ---
@@ -41,6 +41,7 @@ $(OUT) $(GEN) :
 
 $(OUT)/%.a :
 	$(AR_CMD)
+	$(RANLIB_CMD)
 
 $(OUT)/% : $(OUT)/%.o
 	$(LINK_CMD)
@@ -75,7 +76,6 @@ $(MUPDF_LIB) : $(addprefix $(OUT)/, $(MUPDF_SRC:%.c=%.o))
 $(MUXPS_LIB) : $(addprefix $(OUT)/, $(MUXPS_SRC:%.c=%.o))
 
 libs: $(MUXPS_LIB) $(MUPDF_LIB) $(FITZ_LIB) $(THIRD_LIBS)
-	@ echo MuPDF/XPS and underlying libraries built
 
 # --- Generated CMAP and FONT files ---
 
