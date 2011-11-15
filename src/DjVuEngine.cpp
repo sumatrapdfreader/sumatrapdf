@@ -326,9 +326,10 @@ bool CDjVuEngine::LoadMediaboxes()
                 swap(mediaboxes[pages].dx, mediaboxes[pages].dy);
             pages++;
         }
-        offset += 8 + SWAPLONG(buffer[1]);
-        if ((offset & 1))
-            offset++;
+        int partLen = SWAPLONG(buffer[1]);
+        if (partLen < 0)
+            return false;
+        offset += 8 + partLen + (partLen & 1);
     }
 
     return true;
