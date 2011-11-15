@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CID driver interface (body).                                         */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2006, 2008, 2009 by             */
+/*  Copyright 1996-2004, 2006, 2008, 2009, 2011 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -91,7 +91,8 @@
     (PS_GetFontInfoFunc)   cid_ps_get_font_info,
     (PS_GetFontExtraFunc)  cid_ps_get_font_extra,
     (PS_HasGlyphNamesFunc) NULL,        /* unsupported with CID fonts */
-    (PS_GetFontPrivateFunc)NULL         /* unsupported                */
+    (PS_GetFontPrivateFunc)NULL,        /* unsupported                */
+    (PS_GetFontValueFunc)  NULL         /* not implemented            */
   };
 
 

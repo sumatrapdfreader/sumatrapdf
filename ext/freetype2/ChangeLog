@@ -1,3 +1,107 @@
+2011-11-15  Werner Lemberg  <wl@gnu.org>
+
+	* Version 2.4.8 released.
+	=========================
+
+
+	Tag sources with `VER-2-4-8'.
+
+	* docs/CHANGES: Updated.
+
+	* docs/VERSION.DLL: Update documentation and bump version number to
+	2.4.8.
+
+	* README, Jamfile (RefDoc),
+	builds/win32/vc2005/freetype.vcproj, builds/win32/vc2005/index.html,
+	builds/win32/vc2008/freetype.vcproj, builds/win32/vc2008/index.html,
+	builds/win32/vc2010/freetype.vcxproj, builds/win32/vc2010/index.html,
+	builds/win32/visualc/freetype.dsp,
+	builds/win32/visualc/freetype.vcproj,
+	builds/win32/visualc/index.html, builds/win32/visualce/freetype.dsp,
+	builds/win32/visualce/freetype.vcproj,
+	builds/win32/visualce/index.html,
+	builds/wince/vc2005-ce/freetype.vcproj,
+	builds/wince/vc2005-ce/index.html,
+	builds/wince/vc2008-ce/freetype.vcproj,
+	builds/wince/vc2008-ce/index.html: s/2.4.7/2.4.8/, s/247/248/.
+
+	* include/freetype/freetype.h (FREETYPE_PATCH): Set to 8.
+
+	* builds/unix/configure.raw (version_info): Set to 14:0:8.
+
+2011-11-13  Chris Liddell  <chris.liddell@artifex.com>
+
+	Add FT_Get_PS_Font_Value() API.
+
+	This allows a Type 1 font face to be interrogated to retrieve most
+	of the dictionary keys (keys not relevant to FreeType's Type 1
+	interpreter are not available).
+
+	* include/freetype/internal/services/svpsinfo.h
+	(PS_GetFontValueFunc): New typedef.
+	(PSInfo): Add `ps_get_font_value'.
+	(FT_DEFINE_SERVICE_PSINFOREC): Updated.
+
+	* include/freetype/internal/t1types.h (T1_EncodingType): Moved to...
+	* include/freetype/t1tables.h: Here.
+	(PS_Dict_Keys): New enumeration.
+	(FT_Get_PS_Font_Value): New declaration.
+
+	* src/base/fttype1.c (FT_Get_PS_Font_Value): New function.
+
+	* src/type1/t1driver.c (t1_ps_get_font_value): This new function
+	does the real job.
+	(t1_service_ps_info): Add it.
+
+	* src/cff/cffdrivr.c (cff_service_ps_info), src/cid/cidriver.c
+	(cid_service_ps_info), src/type42/t42drivr.c (t42_service_ps_info):
+	Updated.
+
+2011-11-08  Braden Thomas  <bthomas@apple.com>
+
+	[cid] Various loading fixes.
+
+	* src/cid/cidload.c (cid_load_keyword) <default>,
+	(parse_font_matrix, parse_expansion_factor): Correctly check number
+	of dictionaries.
+	(cid_read_subrs): Protect against invalid values of `num_subrs'.
+	Assure that the elements of the `offsets' array are ascending.
+
+2011-11-05  Werner Lemberg  <wl@gnu.org>
+
+	* README: We use copyright ranges also.
+
+	According to
+
+	  http://www.gnu.org/prep/maintain/html_node/Copyright-Notices.html
+
+	this should be mentioned explicitly.
+
+2011-10-30  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[raccess] Supplement for previous fix.
+
+	* src/base/ftbase.h (raccess_rule_by_darwin_vfs): Do not declare
+	it on native Mac OS X.
+	* src/base/ftrfork.c (raccess_get_rule_type_from_rule_index):
+	Hide raccess_get_rule_type_from_rule_index() on native Mac OS X
+	too.
+
+2011-10-30  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[raccess] Hide raccess_rule_by_darwin_vfs() on native Mac OS X.
+
+	* src/base/ftrfork.c (raccess_rule_by_darwin_vfs): Do not
+	compile on native Mac OS X because it is not used.
+
+2011-10-25  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Fix MD instruction for twilight zone.
+
+	* src/truetype/ttinterp.c (Ins_MD): Without this fix, the MD
+	instruction applied to original coordinates of twilight points
+	always returns zero.
+
 2011-10-18  Werner Lemberg  <wl@gnu.org>
 
 	* Version 2.4.7 released.
@@ -25,7 +129,7 @@
 	builds/wince/vc2008-ce/freetype.vcproj,
 	builds/wince/vc2008-ce/index.html: s/2.4.6/2.4.7/, s/246/247/.
 
-	* include/freetype/freetype.h (FREETYPE_PATCH): Set to 6.
+	* include/freetype/freetype.h (FREETYPE_PATCH): Set to 7.
 
 	* builds/unix/configure.raw (version_info): Set to 13:2:7.
 

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    High-level Type 42 driver interface (body).                          */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2004, 2006, 2007, 2009 by Roberto Alameda.       */
+/*  Copyright 2002-2004, 2006, 2007, 2009, 2011 by Roberto Alameda.        */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
 /*  modified, and distributed under the terms of the FreeType project      */
@@ -161,9 +161,10 @@
   static const FT_Service_PsInfoRec  t42_service_ps_info =
   {
     (PS_GetFontInfoFunc)   t42_ps_get_font_info,
-    (PS_GetFontExtraFunc)   t42_ps_get_font_extra,
+    (PS_GetFontExtraFunc)  t42_ps_get_font_extra,
     (PS_HasGlyphNamesFunc) t42_ps_has_glyph_names,
-    (PS_GetFontPrivateFunc)t42_ps_get_font_private
+    (PS_GetFontPrivateFunc)t42_ps_get_font_private,
+    (PS_GetFontValueFunc)  NULL             /* not implemented */
   };
 
 

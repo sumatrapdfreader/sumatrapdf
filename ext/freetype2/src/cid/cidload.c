@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CID-keyed Type1 font loader (body).                                  */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2009 by             */
+/*  Copyright 1996-2006, 2009, 2011 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -110,7 +110,7 @@
         CID_FaceDict  dict;
 
 
-        if ( parser->num_dict < 0 )
+        if ( parser->num_dict < 0 || parser->num_dict >= cid->num_dicts )
         {
           FT_ERROR(( "cid_load_keyword: invalid use of `%s'\n",
                      keyword->ident ));
@@ -158,7 +158,7 @@
     FT_Fixed      temp_scale;
 
 
-    if ( parser->num_dict >= 0 )
+    if ( parser->num_dict >= 0 && parser->num_dict < face->cid.num_dicts )
     {
       dict   = face->cid.font_dicts + parser->num_dict;
       matrix = &dict->font_matrix;
@@ -249,7 +249,7 @@
     CID_FaceDict  dict;
 
 
-    if ( parser->num_dict >= 0 )
+    if ( parser->num_dict >= 0 && parser->num_dict < face->cid.num_dicts )
     {
       dict = face->cid.font_dicts + parser->num_dict;
 
@@ -413,11 +413,24 @@
       FT_Byte*      p;
 
 
+      /* Check for possible overflow. */
+      if ( num_subrs == FT_UINT_MAX )
+      {
+        error = CID_Err_Syntax_Error;
+        goto Fail;
+      }
+
       /* reallocate offsets array if needed */
       if ( num_subrs + 1 > max_offsets )
       {
         FT_UInt  new_max = FT_PAD_CEIL( num_subrs + 1, 4 );
 
+
+        if ( new_max <= max_offsets )
+        {
+          error = CID_Err_Syntax_Error;
+          goto Fail;
+        }
 
         if ( FT_RENEW_ARRAY( offsets, max_offsets, new_max ) )
           goto Fail;
@@ -435,6 +448,11 @@
         offsets[count] = cid_get_offset( &p, (FT_Byte)dict->sd_bytes );
 
       FT_FRAME_EXIT();
+
+      /* offsets must be ordered */
+      for ( count = 1; count <= num_subrs; count++ )
+        if ( offsets[count - 1] > offsets[count] )
+          goto Fail;
 
       /* now, compute the size of subrs charstrings, */
       /* allocate, and read them                     */

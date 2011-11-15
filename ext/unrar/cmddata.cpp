@@ -676,12 +676,17 @@ void CommandData::ProcessSwitch(const char *Switch,const wchar *SwitchW)
     case 'Z':
       if (Switch[1]==0 && (!WidePresent || SwitchW[1]==0))
       {
+#ifndef GUI // stdin is not supported by WinRAR.
         // If comment file is not specified, we read data from stdin.
         strcpy(CommentFile,"stdin");
+#endif
       }
-      strncpyz(CommentFile,Switch+1,ASIZE(CommentFile));
-      if (WidePresent)
-        wcsncpyz(CommentFileW,SwitchW+1,ASIZE(CommentFileW));
+      else
+      {
+        strncpyz(CommentFile,Switch+1,ASIZE(CommentFile));
+        if (WidePresent)
+          wcsncpyz(CommentFileW,SwitchW+1,ASIZE(CommentFileW));
+      }
       break;
     case 'M':
       switch(etoupper(Switch[1]))
