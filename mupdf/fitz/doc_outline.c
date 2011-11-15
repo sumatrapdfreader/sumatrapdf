@@ -20,7 +20,7 @@ fz_debug_outline_xml(fz_outline *outline, int level)
 {
 	while (outline)
 	{
-		printf("<outline title=\"%s\" page=\"%d\"", outline->title, outline->page);
+		printf("<outline title=\"%s\" page=\"%d\"", outline->title, outline->page + 1);
 		if (outline->down)
 		{
 			printf(">\n");
@@ -43,7 +43,7 @@ fz_debug_outline(fz_outline *outline, int level)
 	{
 		for (i = 0; i < level; i++)
 			putchar('\t');
-		printf("%s\t%d\n", outline->title, outline->page);
+		printf("%s\t%d\n", outline->title, outline->page + 1);
 		if (outline->down)
 			fz_debug_outline(outline->down, level + 1);
 		outline = outline->next;
