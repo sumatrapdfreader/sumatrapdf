@@ -230,30 +230,30 @@ void LinkHandler::GotoLink(PageDestination *link)
         if (!str::StartsWith(path.Get(), _T("\\")) &&
             !str::Parse(path, _T("%c:\\"), &drive) &&
             !gPluginMode) {
-            ScopedMem<TCHAR> basePath(path::GetDir(dm->FileName()));
-            ScopedMem<TCHAR> combinedPath(path::Join(basePath, path));
+            ScopedMem<TCHAR> fullPath(path::GetDir(dm->FileName()));
+            fullPath.Set(path::Join(fullPath, path));
+            fullPath.Set(path::Normalize(fullPath));
             // TODO: respect fz_to_bool(fz_dict_gets(link->dest, "NewWindow")) for ScrollToEx
-            WindowInfo *newWin = FindWindowInfoByFile(combinedPath);
+            WindowInfo *newWin = FindWindowInfoByFile(fullPath);
             // TODO: don't show window until it's certain that there was no error
             if (!newWin)
-                newWin = LoadDocument(combinedPath, owner);
+                newWin = LoadDocument(fullPath, owner);
 
-            if (newWin && !newWin->IsDocLoaded() && str::Eq(type, "LaunchFile") && HasPermission(Perm_DiskAccess)) {
-                const TCHAR *ext = path::GetExt(path);
-                ScopedMem<TCHAR> value(ReadRegStr(HKEY_CLASSES_ROOT, ext, _T("PerceivedType")));
-                if (str::EqI(value, _T("audio")) || str::EqI(value, _T("video"))) {
-                    // TODO: only do this for trusted files (cf. IsUntrustedFile)?
-                    if (LaunchFile(path)) {
-                        CloseWindow(newWin, true);
-                        newWin = NULL;
-                    }
-                }
-            }
-            if (newWin && !newWin->IsDocLoaded()) {
-                ScopedMem<TCHAR> msg(str::Format(_TR("Error loading %s"), combinedPath));
-                ShowNotification(owner, msg, true /* autoDismiss */, true /* highlight */);
+            bool errorLoading = newWin && !newWin->IsDocLoaded();
+            if (errorLoading) {
                 CloseWindow(newWin, true);
                 newWin = NULL;
+            }
+            if (errorLoading && str::Eq(type, "LaunchFile") && HasPermission(Perm_DiskAccess)) {
+                const TCHAR *ext = path::GetExt(fullPath);
+                ScopedMem<TCHAR> value(ReadRegStr(HKEY_CLASSES_ROOT, ext, _T("PerceivedType")));
+                // TODO: only do this for trusted files (cf. IsUntrustedFile)?
+                if (str::EqI(value, _T("audio")) || str::EqI(value, _T("video")))
+                    errorLoading = !LaunchFile(fullPath);
+            }
+            if (errorLoading) {
+                ScopedMem<TCHAR> msg(str::Format(_TR("Error loading %s"), fullPath));
+                ShowNotification(owner, msg, true /* autoDismiss */, true /* highlight */);
             }
 
             if (newWin) {
