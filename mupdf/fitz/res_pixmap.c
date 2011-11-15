@@ -64,7 +64,7 @@ fz_new_pixmap_with_data(fz_colorspace *colorspace, int w, int h, unsigned char *
 	else
 	{
 		/* SumatraPDF: abort on integer overflow */
-		if (pix->w > INT_MAX / pix->n) abort();
+		if (pix->w > INT_MAX / pix->n) fz_calloc(-1, -1);
 		fz_synchronize_begin();
 		fz_memory_used += pix->w * pix->h * pix->n;
 		fz_synchronize_end();

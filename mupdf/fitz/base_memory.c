@@ -1,9 +1,10 @@
 #include "fitz.h"
 
-// sumatra: force crash so that we get crash report
-static void sum_abort(int total_size)
+/* SumatraPDF: force crash so that we get crash report */
+static void
+fz_crash_abort(int total_size)
 {
-	char *p = (char*)total_size;
+	char *p = (char *)total_size;
 	// first try to crash on an address that is equal to total_size.
 	// this is a way to easily know the amount memory that was requested
 	// from crash report
@@ -20,7 +21,7 @@ fz_malloc(int size)
 	if (!p)
 	{
 		fprintf(stderr, "fatal error: out of memory\n");
-		sum_abort(size);
+		fz_crash_abort(size);
 	}
 	return p;
 }
@@ -49,14 +50,14 @@ fz_calloc(int count, int size)
 	if (count < 0 || size < 0 || count > INT_MAX / size)
 	{
 		fprintf(stderr, "fatal error: out of memory (integer overflow)\n");
-		sum_abort(count * size);
+		fz_crash_abort(count * size);
 	}
 
 	p = malloc(count * size);
 	if (!p)
 	{
 		fprintf(stderr, "fatal error: out of memory\n");
-		sum_abort(count *size);
+		fz_crash_abort(count *size);
 	}
 	return p;
 }
@@ -75,14 +76,14 @@ fz_realloc(void *p, int count, int size)
 	if (count < 0 || size < 0 || count > INT_MAX / size)
 	{
 		fprintf(stderr, "fatal error: out of memory (integer overflow)\n");
-		sum_abort(count * size);
+		fz_crash_abort(count * size);
 	}
 
 	np = realloc(p, count * size);
 	if (np == NULL)
 	{
 		fprintf(stderr, "fatal error: out of memory\n");
-		sum_abort(count * size);
+		fz_crash_abort(count * size);
 	}
 	return np;
 }
