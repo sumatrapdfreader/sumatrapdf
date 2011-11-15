@@ -357,8 +357,18 @@ bool CDjVuEngine::Load(const TCHAR *fileName)
 
     mediaboxes = new RectD[pageCount];
     bool ok = LoadMediaboxes();
-    //TODO: this fails on a djvu file I have
-    //assert(ok);
+    if (!ok) {
+        // fall back to the slower but safer way to extract page mediaboxes
+        for (int i = 0; i < pageCount; i++) {
+            ddjvu_status_t status;
+            ddjvu_pageinfo_t info;
+            while ((status = ddjvu_document_get_pageinfo(doc, i, &info)) < DDJVU_JOB_OK)
+                gDjVuContext.SpinMessageLoop();
+            if (DDJVU_JOB_OK == status)
+                mediaboxes[i] = RectD(0, 0, info.width * GetFileDPI() / info.dpi,
+                                            info.height * GetFileDPI() / info.dpi);
+        }
+    }
 
     annos = SAZA(miniexp_t, pageCount);
     for (int i = 0; i < pageCount; i++)
