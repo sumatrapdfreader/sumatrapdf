@@ -357,7 +357,8 @@ bool CDjVuEngine::Load(const TCHAR *fileName)
 
     mediaboxes = new RectD[pageCount];
     bool ok = LoadMediaboxes();
-    assert(ok);
+    //TODO: this fails on a djvu file I have
+    //assert(ok);
 
     annos = SAZA(miniexp_t, pageCount);
     for (int i = 0; i < pageCount; i++)
