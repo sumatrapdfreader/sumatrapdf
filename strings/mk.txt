@@ -220,6 +220,9 @@ Bookmarks
 Bytes
 бајти
 
+CHM documents
+Документи од тип CHM 
+
 Can't connect to the Internet (error %#x).
 Не можам да се поврзам на Интернет (грешка %#x).
 
@@ -296,7 +299,7 @@ Denied Permissions:
 Одбиени привилегии:
 
 DjVu documents
-DjVu документи
+Документи од тип DjVu
 
 Document Properties
 Својства на документ
@@ -336,6 +339,9 @@ Failed to save a file
 
 Favorites
 Омилени
+
+File %s not found
+Датотеката %s не е најдена
 
 File Size:
 Големина на датотека:
@@ -479,7 +485,7 @@ PDF Version:
 Верзија на PDF:
 
 PDF documents
-PDF документи
+Документи од тип PDF
 
 Pa&ge...\tCtrl+G
 Страница...\tCtrl+G
@@ -503,7 +509,7 @@ Please wait - rendering...
 Ве молам почекајте - создавам приказ...
 
 Postscript documents
-Postscript документи
+Документи од тип Postscript
 
 Pr&esentation\tCtrl+L
 Презентација\tCtrl+L
@@ -614,7 +620,7 @@ Synchronization file cannot be opened
 Синхронизациската датотека не може да се отвори
 
 Text documents
-Текст документи
+Текстуални документи
 
 Title:
 Наслов:
@@ -632,7 +638,7 @@ Warning
 Предупредување
 
 XPS documents
-XPS документи
+Документи од тип XPS
 
 You have the latest version.
 Ја имате најновата верзија.
@@ -660,8 +666,4 @@ copying text
 
 printing document
 печатам документ
-
-# Untranslated:
-#CHM documents
-#File %s not found
 
