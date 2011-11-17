@@ -16,20 +16,50 @@ Arred&or de
 &Actual Size\tCtrl+1
 &Tamaño real\tCtrl+1
 
+&All selected pages
+&Todas as páxinas seleccionadas
+
+&Back\tAlt+Left Arrow
+&Atrás\tAlt+Flecha esquerda
+
+&Book View\tCtrl+8
+Vista de &libro\tCtrl+8
+
 &Close\tCtrl+W
 &Pechar\tCtrl+W
+
+&Copy Selection
+&Copiar Selección
+
+&Copy Selection\tCtrl+C
+&Copiar Selección\tCtrl+C
 
 &Don't ask me again
 Non preguntar de novo
 
+&Even pages only
+&Páxinas pares só
+
+&Facing\tCtrl+7
+&Dúas páxinas\tCtrl+7
+
 &File
 &Arquivo
+
+&Find what:
+&Atopar que:
 
 &First Page\tHome
 Primeira páxina\tHome
 
+&Fit pages to printable area
+&Axustar páxinas á área imprimible
+
 &Go To
 Ir &a
+
+&Go to page:
+&Ir á páxina:
 
 &Help
 A&xuda
@@ -37,41 +67,173 @@ A&xuda
 &Last Page\tEnd
 Última páxina\tEnd
 
+&Magnification:
+&Aumento:
+
 &Manual
 Manual de Instruccións
+
+&Match case
+&Coincidencia maiúsculas/minúsculas
 
 &Next Page\tRight Arrow
 Páxina seguinte\t->
 
+&No
+&Non
+
+&No, thanks
+&Non, grazas
+
+&Odd pages only
+&Só páxinas impares
+
 &Open\tCtrl+O
 A&brir\tCtrl+O
+
+&Open Document
+Abrir Documento
+
+&Options...
+&Opcións...
+
+&Password:
+&Contrasinal:
+
+&Pin Document
+&Marcar Documento
 
 &Previous Page\tLeft Arrow
 Páxina anterior\t<-
 
+&Print...
+&Imprimir...
+
 &Print...\tCtrl+P
 &Imprimir\tCtrl+P
+
+&Print... (denied)
+&Imprimir... (denegado)
+
+&Remember the password for this document
+&Lembrar o contrasinal para este documento
+
+&Remember these settings for each document
+&Lembrar estes axustes para cada documento
+
+&Remove Document
+&Borrar Documento
+
+&Save As...
+&Gardar como...
 
 &Save As...\tCtrl+S
 &Salvar como...\tCtrl+S
 
+&Settings
+&Axustes
+
+&Shrink pages to printable area (if necessary)
+&Reducir páxinas á área imprimible (se for necesario)
+
+&Single Page\tCtrl+6
+&Páxina única\tCtrl+6
+
 &Skip this version
 Ignorar esta versión
+
+&Use original page sizes
+&Usar tamaños de páxina orixinais
 
 &View
 &Ver
 
+&Yes
+&Si
+
 &Zoom
 &Zoom
+
+(of %d)
+(de %d)
+
+(page %s)
+(páxina %s)
 
 About SumatraPDF
 Arredor do SumatraPDF
 
+Add Favorite
+Engadir Favorito
+
+Add page %s to favorites
+Engadir páxina %s aos favoritos
+
+Add page %s to favorites with (optional) name:
+Engadir páxina %s aos favoritos  cun nome (opcional):
+
+Add to favorites
+Engadir a favoritos
+
+Advanced
+Avanzado
+
+All files
+Todos os arquivos
+
+All supported documents
+Todos os documentos admitidos
+
+Application:
+Aplicación:
+
 Associate with PDF files?
 Asociar con arquivos PDF?
 
+Attachment: %s
+Adxunto: %s
+
+Author:
+Autor:
+
+Automatic
+Automático
+
+Automatically check for &updates
+Comprobar actualizacións automáticamente
+
+Book View
+Vista Libro
+
 Book&marks\tF12
 Preferidos\tF12
+
+Bookmark Shortcuts
+Atallos de marcadores
+
+Bookmark shortcut to page %s of %s
+Atallo de marcador á páxina %s de %s
+
+Bookmarks
+Marcadores
+
+Bytes
+Bytes
+
+CHM documents
+Documentos CHM
+
+Can't connect to the Internet (error %#x).
+Non se pode conectar a Internet (error %#x).
+
+Cancel
+Cancelar
+
+Cannot print this file
+Non se pode imprimir este ficheiro
+
+Cannot start inverse search command. Please check the command line in the settings.
+Non se pode iniciar comando de búsqueda inversa. Por favor, revisa a liña de comandos nos axustes.
 
 Change Language
 Cambiar lingua (Change Language)
@@ -79,8 +241,14 @@ Cambiar lingua (Change Language)
 Check for &Updates
 &Comprobar nova versión
 
+Comic books
+Albumes de cómic
+
 Continuous
 Contínuo
+
+Continuous Book View
+Vista continua de libro
 
 Continuous Facing
 Páxina dobre continua
@@ -88,8 +256,56 @@ Páxina dobre continua
 Contribute Translation
 Contribuir na traducción
 
+Copy &Link Address
+Copar enderezo da ligazón
+
+Copy Co&mment
+Copiar Co&mentario
+
+Copying text was denied (copying as image only)
+Copiar texto foi denegado (copiando só coma imaxe)
+
+Could not obtain Printer properties
+Non se poden obter as propiedades da impresora
+
 Could not open Printer
 Erro ao aceder á impressora.
+
+Couldn't initialize printer
+Non se pode inicializar a impresora
+
+Couldn't render the page
+Non se pode compoñer a páxina
+
+Created:
+Creado:
+
+Current file
+Ficheiro actual
+
+Custom &Zoom...\tCtrl+Y
+&Aumento a medida...\tCtrl+Y
+
+Default &Layout:
+Disposición por defecto:
+
+Default &Zoom:
+Aumento por defecto:
+
+Default PDF reader can't be changed in portable mode
+O lector de PDF por defecto non pode trocarse en modo portable
+
+Denied Permissions:
+Permisos denegados:
+
+DjVu documents
+Documentos DjVu
+
+Document Properties
+Propiedades do documento
+
+Download
+Descargar
 
 E&xit\tCtrl+Q
 Sai&r\tCtrl+Q
@@ -100,6 +316,18 @@ Introduza o contrasinal
 Enter password for %s
 Introduza contrasinal para %s
 
+Enter the command-line to invoke when you double-click on the PDF document:
+Introduza a liña de comandos a invocar cando faga dobre-click sobre o documento PDF:
+
+Error loading %s
+Erro cargando %s
+
+F&avorites
+F&avoritos
+
+F&orward\tAlt+Right Arrow
+Adiante\tAlt+Right Arrow
+
 F&ullscreen\tCtrl+Shift+L
 A toda pantalla\tCtrl+Shift+L
 
@@ -109,8 +337,23 @@ Páxina dobre
 Failed to save a file
 Erro ao salvar o arquivo.
 
+Favorites
+Favoritos
+
+File %s not found
+Ficheiro %s non atopado
+
+File Size:
+Tamaño de arquivo:
+
+File:
+Ficheiro:
+
 Fin&d...\tCtrl+F
 Procura...\tCtrl+F
+
+Find
+Procurar
 
 Find Next
 Atopar Seguinte
@@ -121,11 +364,17 @@ Atopar Anterior
 Find:
 Procura:
 
+Fit &Content\tCtrl+3
+Axustar &Contido\tCtrl+3
+
 Fit &Page\tCtrl+0
 &Páxina enteira\tCtrl+0
 
 Fit &Width\tCtrl+2
 Axustar ao ancho\tCtrl+2
+
+Fit Content
+Axustar Contido
 
 Fit Page
 Páxina enteira
@@ -133,11 +382,35 @@ Páxina enteira
 Fit Width
 Axustar ao ancho
 
+Fit Width and Show Pages Continuously
+Axustar ancho e amosar páxinas seguidas
+
+Fit a Single Page
+Axustar a páxina única
+
+Found text at page %s
+Atopado texto na páxina %s
+
+Found text at page %s (again)
+Atopado texto na páxina %s (de novo)
+
+Frequently Read
+Lido decote
+
 GB
 GB
 
 Go to page
 Ir a páxina
+
+Hide frequently read
+Agachar o lido decote
+
+Hint: Use the F3 key for finding again
+Usar "F3" para amosar seguinte resultado
+
+Image files (*.%s)
+Ficheiros de imaxe (*.%s)
 
 KB
 KB
@@ -154,26 +427,122 @@ Facer do SumatraPDF o leitor PDF por defecto
 Match Case
 Coincidir maiúsculas e minúsculas
 
+Modified:
+Modificado:
+
 New version %s is available. Download new version?
 A nova versión %s está dispoñible. ¿Desexa obtela?
 
 Next Page
 Páxina seguinte
 
+No matches were found
+Non se atoparon coincidencias
+
+No result found around line %u in file %s
+Non se atopou resultado arredor da liña %u no ficheiro %s
+
+No synchronization file found
+Non se atopou ficheiro de sincronización
+
+No synchronization info at this position
+Non hai datos de sincronización nesta posición
+
+Number of Pages:
+Número de Páxinas:
+
+OK
+OK
+
 Open
 Abrir
+
+Open a document...
+Abrir un documento...
+
+Open in &Adobe Reader
+Abrir no &Adobe Reader
+
+Open in &Foxit Reader
+Abrir no &Foxit Reader
+
+Open in PDF-XChange
+Abrir no PDF-XChange
+
+P&roperties
+P&ropiedades
+
+P&roperties\tCtrl+D
+P&ropiedades\tCtrl+D
+
+PDF Document
+Documento PDF
+
+PDF Producer:
+Productor do PDF:
+
+PDF Version:
+Versión PDF:
+
+PDF documents
+Documentos PDF
 
 Pa&ge...\tCtrl+G
 Páxina...\tCtrl+G
 
+Page %s
+Páxina %s
+
+Page Size:
+Tamaño de páxina:
+
+Page number %u inexistant
+Non existe a páxina %u
+
+Page scaling
+Escalado de páxina
+
 Page:
 Páxina:
+
+Please wait - rendering...
+Agarde por favor - compoñendo...
+
+Postscript documents
+Documentos Postscript
+
+Pr&esentation\tCtrl+L
+Pr&esentación\tCtrl+L
 
 Previous Page
 Páxina anterior
 
+Print
+Imprimir
+
+Print range
+Imprimir un rango
+
+Printer with given name doesn't exist
+A impresora co nome indicado non existe
+
+Printing is still in progress. Abort and start over?
+A impresión está aínda en curso. Detela e recomezar?
+
+Printing page %d of %d...
+Imprimir páxina %d de %d...
+
 Printing problem.
 Problema de impresión.
+
+Remember &opened files
+Lembrar ficheiros abertos
+
+Remove from favorites
+Eliminar de favoritos
+
+Remove page %s from favorites
+Eliminar páxina %s de favoritos
 
 Rotate &Left\tCtrl+Shift+-
 Xirar á esquerda\tCtrl+Shift+-
@@ -184,14 +553,80 @@ Xirar á dereita\tCtrl+Shift++
 Save As
 Salvar como
 
+Save S&hortcut...\tCtrl+Shift+S
+Gardar Atallo...\tCtrl+Shift+S
+
+Searching %d of %d...
+Procurando %d de %d...
+
+Select &All
+Seleccionar Todo
+
+Select &All\tCtrl+A
+Seleccionar Todo\tCtrl+A
+
+Select content with Ctrl+left mouse button
+Seleccionar contido con Ctrl+botón esquerdo do rato
+
+Send by &E-mail...
+Enviar por email...
+
 Set inverse search command-line
 Establecer procura inversa
 
 Show &Toolbar
 Amosar barra de ferramentas
 
+Show &pages continuously
+Amosar páxinas seguidas
+
+Show Favorites
+Amosar Favoritos
+
+Show frequently read
+Amosar lidos decote
+
+Show the &bookmarks sidebar when available
+Amosar a barra de marcadores cando estea dispoñible
+
 Single Page
 Unha soa páxina
+
+Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+Desculpe, isto non debería ocurrir\n\nPor favor, prema 'Cancelar', se quere axudarnos a reparar a causa deste erro.
+
+Source file %s has no synchronization point
+O ficheiro de orixe %s non ten punto de sincronización
+
+Subject:
+Asunto:
+
+SumatraPDF Options
+Opcións de SumatraPDF
+
+SumatraPDF Update
+Actualización de SumatraPDF
+
+SumatraPDF crashed
+SumatraPDF fallou
+
+SumatraPDF is your default PDF reader
+SumatraPDF é o seu lector de PDF por defecto
+
+SumatraPDF should now be your default PDF reader
+SumatraPDF será agora o seu lector de PDF por defecto
+
+Synchronization file cannot be opened
+O ficheiro de sincronización non pode abrirse
+
+Text documents
+Documentos de texto
+
+Title:
+Título:
+
+Unknown source file (%s)
+Ficheiros de orixe descoñecidos (%s)
 
 View
 Ver
@@ -199,11 +634,20 @@ Ver
 Visit &Website
 Visitar o &Website
 
+Warning
+Aviso
+
+XPS documents
+Documentos XPS
+
 You have the latest version.
 Ten vostede a última versión
 
 You have version %s
 A súa versión é %s
+
+Zoom
+Zoom
 
 Zoom In
 Achegar zoom
@@ -211,157 +655,15 @@ Achegar zoom
 Zoom Out
 Afastar zoom
 
-# Untranslated:
-#&All selected pages
-#&Back\tAlt+Left Arrow
-#&Book View\tCtrl+8
-#&Copy Selection
-#&Copy Selection\tCtrl+C
-#&Even pages only
-#&Facing\tCtrl+7
-#&Find what:
-#&Fit pages to printable area
-#&Go to page:
-#&Magnification:
-#&Match case
-#&No
-#&No, thanks
-#&Odd pages only
-#&Open Document
-#&Options...
-#&Password:
-#&Pin Document
-#&Print...
-#&Print... (denied)
-#&Remember the password for this document
-#&Remember these settings for each document
-#&Remove Document
-#&Save As...
-#&Settings
-#&Shrink pages to printable area (if necessary)
-#&Single Page\tCtrl+6
-#&Use original page sizes
-#&Yes
-#(of %d)
-#(page %s)
-#Add Favorite
-#Add page %s to favorites
-#Add page %s to favorites with (optional) name:
-#Add to favorites
-#Advanced
-#All files
-#All supported documents
-#Application:
-#Attachment: %s
-#Author:
-#Automatic
-#Automatically check for &updates
-#Book View
-#Bookmark Shortcuts
-#Bookmark shortcut to page %s of %s
-#Bookmarks
-#Bytes
-#CHM documents
-#Can't connect to the Internet (error %#x).
-#Cancel
-#Cannot print this file
-#Cannot start inverse search command. Please check the command line in the settings.
-#Comic books
-#Continuous Book View
-#Copy &Link Address
-#Copy Co&mment
-#Copying text was denied (copying as image only)
-#Could not obtain Printer properties
-#Couldn't initialize printer
-#Couldn't render the page
-#Created:
-#Current file
-#Custom &Zoom...\tCtrl+Y
-#Default &Layout:
-#Default &Zoom:
-#Default PDF reader can't be changed in portable mode
-#Denied Permissions:
-#DjVu documents
-#Document Properties
-#Download
-#Enter the command-line to invoke when you double-click on the PDF document:
-#Error loading %s
-#F&avorites
-#F&orward\tAlt+Right Arrow
-#Favorites
-#File %s not found
-#File Size:
-#File:
-#Find
-#Fit &Content\tCtrl+3
-#Fit Content
-#Fit Width and Show Pages Continuously
-#Fit a Single Page
-#Found text at page %s
-#Found text at page %s (again)
-#Frequently Read
-#Hide frequently read
-#Hint: Use the F3 key for finding again
-#Image files (*.%s)
-#Modified:
-#No matches were found
-#No result found around line %u in file %s
-#No synchronization file found
-#No synchronization info at this position
-#Number of Pages:
-#OK
-#Open a document...
-#Open in &Adobe Reader
-#Open in &Foxit Reader
-#Open in PDF-XChange
-#P&roperties
-#P&roperties\tCtrl+D
-#PDF Document
-#PDF Producer:
-#PDF Version:
-#PDF documents
-#Page %s
-#Page Size:
-#Page number %u inexistant
-#Page scaling
-#Please wait - rendering...
-#Postscript documents
-#Pr&esentation\tCtrl+L
-#Print
-#Print range
-#Printer with given name doesn't exist
-#Printing is still in progress. Abort and start over?
-#Printing page %d of %d...
-#Remember &opened files
-#Remove from favorites
-#Remove page %s from favorites
-#Save S&hortcut...\tCtrl+Shift+S
-#Searching %d of %d...
-#Select &All
-#Select &All\tCtrl+A
-#Select content with Ctrl+left mouse button
-#Send by &E-mail...
-#Show &pages continuously
-#Show Favorites
-#Show frequently read
-#Show the &bookmarks sidebar when available
-#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
-#Source file %s has no synchronization point
-#Subject:
-#SumatraPDF Options
-#SumatraPDF Update
-#SumatraPDF crashed
-#SumatraPDF is your default PDF reader
-#SumatraPDF should now be your default PDF reader
-#Synchronization file cannot be opened
-#Text documents
-#Title:
-#Unknown source file (%s)
-#Warning
-#XPS documents
-#Zoom
-#Zoom factor
-#[Changes detected; refreshing] %s
-#copying text
-#printing document
+Zoom factor
+Factor de aumento
+
+[Changes detected; refreshing] %s
+[Cambios detectados; actualizando] %s
+
+copying text
+copiando texto
+
+printing document
+imprimindo documento
 
