@@ -229,6 +229,9 @@ Bladwijzers
 Bytes
 Bytes
 
+CHM documents
+CHM-bestanden
+
 Can't connect to the Internet (error %#x).
 Kan geen verbinding maken met internet (fout %#x).
 
@@ -345,6 +348,9 @@ Fout bij opslaan bestand
 
 Favorites
 Favorieten
+
+File %s not found
+Bestand %s niet gevonden
 
 File Size:
 Bestandsgrootte
@@ -669,8 +675,4 @@ tekst kopiëren
 
 printing document
 bestand afdrukken
-
-# Untranslated:
-#CHM documents
-#File %s not found
 

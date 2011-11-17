@@ -221,6 +221,9 @@ Yer imleri
 Bytes
 Bayt
 
+CHM documents
+CHM belgeleri
+
 Can't connect to the Internet (error %#x).
 İnternete erişilemiyor (hata %#x)
 
@@ -337,6 +340,9 @@ Dosya kaydedilirken hata çıktı.
 
 Favorites
 Sık kullanılanlar
+
+File %s not found
+%s dosyası bulunamadı
 
 File Size:
 Dosya boyutu:
@@ -661,8 +667,4 @@ metin kopyalanıyor
 
 printing document
 belge yazdırılıyor
-
-# Untranslated:
-#CHM documents
-#File %s not found
 

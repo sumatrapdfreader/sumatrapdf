@@ -101,7 +101,7 @@ Contributor: WangKing (http://wkismet.spaces.live.com)
 密码(&P)
 
 &Pin Document
-别住文件(&P)
+固定文件(&P)
 
 &Previous Page\tLeft Arrow
 上一页\t<-
@@ -113,7 +113,7 @@ Contributor: WangKing (http://wkismet.spaces.live.com)
 打印(&P)...\tCtrl+P
 
 &Print... (denied)
-打印(&P)...(已中断)
+打印(&P)... (已中断)
 
 &Remember the password for this document
 记住本文档的密码(&R)
@@ -155,10 +155,10 @@ Contributor: WangKing (http://wkismet.spaces.live.com)
 缩放(&Z)
 
 (of %d)
-(%d中的)
+(%d 页中的)
 
 (page %s)
-(%s 页)
+(第 %s 页)
 
 About SumatraPDF
 关于 SumatraPDF
@@ -167,10 +167,10 @@ Add Favorite
 添加收藏
 
 Add page %s to favorites
-收藏第%s页
+收藏第 %s 页
 
 Add page %s to favorites with (optional) name:
-收藏%s页为:
+收藏第 %s 页为:
 
 Add to favorites
 添加到收藏
@@ -212,7 +212,7 @@ Bookmark Shortcuts
 书签快捷方式
 
 Bookmark shortcut to page %s of %s
-书签%s页/共%s页
+书签快捷方式：第 %s 页/共 %s 页
 
 Bookmarks
 书签
@@ -220,8 +220,11 @@ Bookmarks
 Bytes
 字节
 
+CHM documents
+CHM 文档
+
 Can't connect to the Internet (error %#x).
-无法连接因特网 (错误 %#x).
+无法连接因特网 (错误 %#x)。
 
 Cancel
 取消
@@ -263,7 +266,7 @@ Copying text was denied (copying as image only)
 无法复制文本 (只能作为图像复制)
 
 Could not obtain Printer properties
-无法获得打印属性
+无法获得打印机属性
 
 Could not open Printer
 无法打开打印机
@@ -284,10 +287,10 @@ Custom &Zoom...\tCtrl+Y
 自定义缩放(&Z)...\tCtrl+Y
 
 Default &Layout:
-默认布局(&L)
+默认布局(&L):
 
 Default &Zoom:
-默认缩放(&Z)
+默认缩放(&Z):
 
 Default PDF reader can't be changed in portable mode
 便携模式不能改变默认 PDF 阅读器
@@ -296,10 +299,10 @@ Denied Permissions:
 权限不足:
 
 DjVu documents
-DjVu文件
+DjVu 文件
 
 Document Properties
-文档属性:
+文档属性
 
 Download
 下载
@@ -314,7 +317,7 @@ Enter password for %s
 输入 %s 的密码
 
 Enter the command-line to invoke when you double-click on the PDF document:
-双击PDF文档时输入命令行调用
+请输入双击 PDF 文档时的命令行调用:
 
 Error loading %s
 载入错误 %s
@@ -336,6 +339,9 @@ Failed to save a file
 
 Favorites
 收藏
+
+File %s not found
+无法找到文件 %s
 
 File Size:
 文件大小:
@@ -359,7 +365,7 @@ Find:
 查找：
 
 Fit &Content\tCtrl+3
-适应内容\tCtrl+3
+适合内容\tCtrl+3
 
 Fit &Page\tCtrl+0
 适合页面(&P)\tCtrl+0
@@ -368,7 +374,7 @@ Fit &Width\tCtrl+2
 适合宽度(&H)\tCtrl+2
 
 Fit Content
-适应内容
+适合内容
 
 Fit Page
 适合页面
@@ -383,10 +389,10 @@ Fit a Single Page
 自适应单页模式
 
 Found text at page %s
-在第%s页找到文本
+在第 %s 页找到文本
 
 Found text at page %s (again)
-在第%s页找到文本(再一次)
+在第 %s 页找到文本 (再一次)
 
 Frequently Read
 最近阅读
@@ -401,7 +407,7 @@ Hide frequently read
 隐藏最近阅读
 
 Hint: Use the F3 key for finding again
-提示：按F3键再次查找
+提示: 按F3键再次查找
 
 Image files (*.%s)
 图片文件(*.%s)
@@ -455,13 +461,13 @@ Open a document...
 打开一个文件...
 
 Open in &Adobe Reader
-在&Adobe Reader中打开
+在 &Adobe Reader 中打开
 
 Open in &Foxit Reader
-在&Foxit Reader中打开
+在 &Foxit Reader 中打开
 
 Open in PDF-XChange
-在PDF-XChange中打开
+在 PDF-XChange 中打开
 
 P&roperties
 属性(&R)
@@ -491,13 +497,13 @@ Page Size:
 页面大小:
 
 Page number %u inexistant
-页码 %u 不存在
+找不到页码 %u
 
 Page scaling
 页面缩放比例
 
 Page:
-页码：
+页码:
 
 Please wait - rendering...
 请耐心等待，正在渲染中...
@@ -518,13 +524,13 @@ Print range
 打印范围
 
 Printer with given name doesn't exist
-这个打印机名字不存在
+该打印机不存在
 
 Printing is still in progress. Abort and start over?
-仍然在打印.中断并重新开始?
+仍然在打印。中断并重新开始?
 
 Printing page %d of %d...
-正在打印第 %d 页 共 %d页
+正在打印第 %d 页/共 %d 页
 
 Printing problem.
 打印问题。
@@ -536,7 +542,7 @@ Remove from favorites
 删除收藏
 
 Remove page %s from favorites
-从收藏中删除第%s页
+从收藏中删除第 %s 页
 
 Rotate &Left\tCtrl+Shift+-
 向左旋转(&L)\tCtrl+Shift+-
@@ -551,7 +557,7 @@ Save S&hortcut...\tCtrl+Shift+S
 保存快捷方式(&H)...\tCtrl+Shift+S
 
 Searching %d of %d...
-正在搜索第%d页/共%d页
+正在搜索第 %d 页/共 %d 页
 
 Select &All
 全选(&A)
@@ -587,7 +593,7 @@ Single Page
 单个页面
 
 Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
-抱歉, 本不应该发生的!\n\n如果你希望帮助我们修复这个崩溃问题, 请点击'取消'.
+抱歉，本不应该发生的！\n\n如果你希望帮助我们修复这个崩溃问题，请点击'取消'。
 
 Source file %s has no synchronization point
 源文件 %s 没有同步点
@@ -599,7 +605,7 @@ SumatraPDF Options
 SumatraPDF 选项
 
 SumatraPDF Update
-升级SumatraPDF
+升级 SumatraPDF
 
 SumatraPDF crashed
 SumatraPDF 崩溃了
@@ -660,8 +666,4 @@ copying text
 
 printing document
 正在打印文档
-
-# Untranslated:
-#CHM documents
-#File %s not found
 
