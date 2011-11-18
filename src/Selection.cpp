@@ -259,6 +259,10 @@ void OnSelectAll(WindowInfo *win, bool textOnly)
         Edit_SelectAll(GetFocus());
         return;
     }
+    if (win->IsChm()) {
+        win->dm->AsChmEngine()->SelectAll();
+        return;
+    }
 
     if (textOnly) {
         int pageNo;

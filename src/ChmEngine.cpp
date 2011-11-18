@@ -123,6 +123,8 @@ public:
     virtual bool CanNavigate(int dir);
     virtual void Navigate(int dir);
     virtual void ZoomTo(float zoomLevel);
+    virtual void SelectAll() { htmlWindow->SelectAll(); }
+    virtual void CopySelection() { htmlWindow->CopySelection(); }
     virtual int CurrentPageNo() const { return currentPageNo; }
     virtual HtmlWindow *GetHtmlWindow() const { return htmlWindow; }
 

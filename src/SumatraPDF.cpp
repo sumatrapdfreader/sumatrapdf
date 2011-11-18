@@ -4313,6 +4313,8 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
                 CopyPropertiesToClipboard(win->hwndProperties);
             else if (!HasPermission(Perm_CopySelection))
                 break;
+            else if (win->IsChm())
+                win->dm->AsChmEngine()->CopySelection();
             else if (win->selectionOnPage)
                 CopySelectionToClipboard(win);
             else

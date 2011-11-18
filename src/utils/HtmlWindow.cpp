@@ -601,6 +601,16 @@ void HtmlWindow::FindInCurrentPage()
     webBrowser->ExecWB(OLECMDID_FIND, OLECMDEXECOPT_PROMPTUSER, NULL, NULL);
 }
 
+void HtmlWindow::SelectAll()
+{
+    webBrowser->ExecWB(OLECMDID_SELECTALL, OLECMDEXECOPT_DODEFAULT, NULL, NULL);
+}
+
+void HtmlWindow::CopySelection()
+{
+    webBrowser->ExecWB(OLECMDID_COPY, OLECMDEXECOPT_DODEFAULT, NULL, NULL);
+}
+
 void HtmlWindow::EnsureAboutBlankShown()
 {
     NavigateToUrl(_T("about:blank"));

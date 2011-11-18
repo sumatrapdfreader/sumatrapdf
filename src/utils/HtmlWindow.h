@@ -57,6 +57,8 @@ public:
     void SetZoomPercent(int zoom);
     int  GetZoomPercent();
     void FindInCurrentPage();
+    void SelectAll();
+    void CopySelection();
     bool WaitUntilLoaded(DWORD maxWaitMs, const TCHAR *url=NULL);
     void SendMsg(UINT msg, WPARAM wp, LPARAM lp);
     void OnLButtonDown() const;
