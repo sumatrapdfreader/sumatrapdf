@@ -454,6 +454,146 @@ fz_paint_affine_color_near(byte *dp, byte *sp, int sw, int sh, int u, int v, int
 	}
 }
 
+/* RJW: The following code was originally written to be sensitive to
+ * FLT_EPSILON. Given the way the 'minimum representable difference'
+ * between 2 floats changes size as we scale, we now pick a larger
+ * value to ensure idempotency even with rounding problems. The
+ * value we pick is still far smaller than would ever show up with
+ * antialiasing.
+ */
+#define MY_EPSILON 0.001
+
+void
+fz_gridfit_matrix(fz_matrix *m)
+{
+	if (fabsf(m->b) < FLT_EPSILON && fabsf(m->c) < FLT_EPSILON)
+	{
+		if (m->a > 0)
+		{
+			float f;
+			/* Adjust left hand side onto pixel boundary */
+			f = (float)(int)(m->e);
+			if (f - m->e > MY_EPSILON)
+				f -= 1.0; /* Ensure it moves left */
+			m->a += m->e - f; /* width gets wider as f <= m->e */
+			m->e = f;
+			/* Adjust right hand side onto pixel boundary */
+			f = (float)(int)(m->a);
+			if (m->a - f > MY_EPSILON)
+				f += 1.0; /* Ensure it moves right */
+			m->a = f;
+		}
+		else if (m->a < 0)
+		{
+			float f;
+			/* Adjust right hand side onto pixel boundary */
+			f = (float)(int)(m->e);
+			if (m->e - f > MY_EPSILON)
+				f += 1.0; /* Ensure it moves right */
+			m->a += m->e - f; /* width gets wider (more -ve) */
+			m->e = f;
+			/* Adjust left hand side onto pixel boundary */
+			f = (float)(int)(m->a);
+			if (f - m->a > MY_EPSILON)
+				f -= 1.0; /* Ensure it moves left */
+			m->a = f;
+		}
+		if (m->d > 0)
+		{
+			float f;
+			/* Adjust top onto pixel boundary */
+			f = (float)(int)(m->f);
+			if (f - m->f > MY_EPSILON)
+				f -= 1.0; /* Ensure it moves upwards */
+			m->d += m->f - f; /* width gets wider as f <= m->f */
+			m->f = f;
+			/* Adjust bottom onto pixel boundary */
+			f = (float)(int)(m->d);
+			if (m->d - f > MY_EPSILON)
+				f += 1.0; /* Ensure it moves down */
+			m->d = f;
+		}
+		else if (m->d < 0)
+		{
+			float f;
+			/* Adjust bottom onto pixel boundary */
+			f = (float)(int)(m->f);
+			if (m->f - f > MY_EPSILON)
+				f += 1.0; /* Ensure it moves down */
+			m->d += m->f - f; /* width gets wider (more -ve) */
+			m->f = f;
+			/* Adjust top onto pixel boundary */
+			f = (float)(int)(m->d);
+			if (f - m->d > MY_EPSILON)
+				f -= 1.0; /* Ensure it moves up */
+			m->d = f;
+		}
+	}
+	else if (fabsf(m->a) < FLT_EPSILON && fabsf(m->d) < FLT_EPSILON)
+	{
+		if (m->b > 0)
+		{
+			float f;
+			/* Adjust left hand side onto pixel boundary */
+			f = (float)(int)(m->f);
+			if (f - m->f > MY_EPSILON)
+				f -= 1.0; /* Ensure it moves left */
+			m->b += m->f - f; /* width gets wider as f <= m->f */
+			m->f = f;
+			/* Adjust right hand side onto pixel boundary */
+			f = (float)(int)(m->b);
+			if (m->b - f > MY_EPSILON)
+				f += 1.0; /* Ensure it moves right */
+			m->b = f;
+		}
+		else if (m->b < 0)
+		{
+			float f;
+			/* Adjust right hand side onto pixel boundary */
+			f = (float)(int)(m->f);
+			if (m->f - f > MY_EPSILON)
+				f += 1.0; /* Ensure it moves right */
+			m->b += m->f - f; /* width gets wider (more -ve) */
+			m->f = f;
+			/* Adjust left hand side onto pixel boundary */
+			f = (float)(int)(m->b);
+			if (f - m->b > MY_EPSILON)
+				f -= 1.0; /* Ensure it moves left */
+			m->b = f;
+		}
+		if (m->c > 0)
+		{
+			float f;
+			/* Adjust top onto pixel boundary */
+			f = (float)(int)(m->e);
+			if (f - m->e > MY_EPSILON)
+				f -= 1.0; /* Ensure it moves upwards */
+			m->c += m->e - f; /* width gets wider as f <= m->e */
+			m->e = f;
+			/* Adjust bottom onto pixel boundary */
+			f = (float)(int)(m->c);
+			if (m->c - f > MY_EPSILON)
+				f += 1.0; /* Ensure it moves down */
+			m->c = f;
+		}
+		else if (m->c < 0)
+		{
+			float f;
+			/* Adjust bottom onto pixel boundary */
+			f = (float)(int)(m->e);
+			if (m->e - f > MY_EPSILON)
+				f += 1.0; /* Ensure it moves down */
+			m->c += m->e - f; /* width gets wider (more -ve) */
+			m->e = f;
+			/* Adjust top onto pixel boundary */
+			f = (float)(int)(m->c);
+			if (f - m->c > MY_EPSILON)
+				f -= 1.0; /* Ensure it moves up */
+			m->c = f;
+		}
+	}
+}
+
 /* Draw an image with an affine transform on destination */
 
 static void
@@ -469,15 +609,7 @@ fz_paint_image_imp(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *shape, fz_pixmap 
 	void (*paintfn)(byte *dp, byte *sp, int sw, int sh, int u, int v, int fa, int fb, int w, int n, int alpha, byte *color, byte *hp);
 
 	/* grid fit the image */
-	if (fz_is_rectilinear(ctm))
-	{
-		ctm.a = roundup(ctm.a);
-		ctm.b = roundup(ctm.b);
-		ctm.c = roundup(ctm.c);
-		ctm.d = roundup(ctm.d);
-		ctm.e = floorf(ctm.e);
-		ctm.f = floorf(ctm.f);
-	}
+	fz_gridfit_matrix(&ctm);
 
 	/* turn on interpolation for upscaled and non-rectilinear transforms */
 	dolerp = 0;
@@ -518,6 +650,14 @@ fz_paint_image_imp(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *shape, fz_pixmap 
 	/* Calculate initial texture positions. Do a half step to start. */
 	u = (fa * x) + (fc * y) + inv.e * 65536 + ((fa + fc) >> 1);
 	v = (fb * x) + (fd * y) + inv.f * 65536 + ((fb + fd) >> 1);
+
+	/* RJW: The following is voodoo. No idea why it works, but it gives
+	 * the best match between scaled/unscaled/interpolated/non-interpolated
+	 * that we have found. */
+	if (dolerp) {
+		u -= 32768;
+		v -= 32768;
+	}
 
 	dp = dst->samples + ((y - dst->y) * dst->w + (x - dst->x)) * dst->n;
 	n = dst->n;

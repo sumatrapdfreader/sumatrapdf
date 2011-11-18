@@ -34,6 +34,21 @@ enum {
 	FZ_DRAWDEV_FLAGS_TYPE3 = 1,
 };
 
+typedef struct fz_draw_stack_s fz_draw_stack;
+
+struct fz_draw_stack_s {
+	fz_bbox scissor;
+	fz_pixmap *dest;
+	fz_pixmap *mask;
+	fz_pixmap *shape;
+	int blendmode;
+	int luminosity;
+	float alpha;
+	fz_matrix ctm;
+	float xstep, ystep;
+	fz_rect area;
+};
+
 struct fz_draw_device_s
 {
 	fz_glyph_cache *cache;
@@ -46,18 +61,9 @@ struct fz_draw_device_s
 	int flags;
 	int top;
 	int blendmode;
-	struct {
-		fz_bbox scissor;
-		fz_pixmap *dest;
-		fz_pixmap *mask;
-		fz_pixmap *shape;
-		int blendmode;
-		int luminosity;
-		float alpha;
-		fz_matrix ctm;
-		float xstep, ystep;
-		fz_rect area;
-	} stack[STACK_SIZE];
+	fz_draw_stack *stack;
+	int stack_max;
+	fz_draw_stack init_stack[STACK_SIZE];
 };
 
 #ifdef DUMP_GROUP_BLENDS
@@ -88,6 +94,24 @@ static void dump_spaces(int x, const char *s)
 
 #endif
 
+static void fz_grow_stack(fz_draw_device *dev)
+{
+	int max = dev->stack_max * 2;
+	fz_draw_stack *stack;
+
+	if (dev->stack == &dev->init_stack[0])
+	{
+		stack = fz_malloc(sizeof(*stack) * max);
+		memcpy(stack, dev->stack, sizeof(*stack) * dev->stack_max);
+	}
+	else
+	{
+		stack = fz_realloc(dev->stack, max, sizeof(*stack));
+	}
+	dev->stack = stack;
+	dev->stack_max = max;
+}
+
 static void fz_knockout_begin(void *user)
 {
 	fz_draw_device *dev = user;
@@ -98,11 +122,8 @@ static void fz_knockout_begin(void *user)
 	if ((dev->blendmode & FZ_BLEND_KNOCKOUT) == 0)
 		return;
 
-	if (dev->top == STACK_SIZE)
-	{
-		fz_warn("assert: too many buffers on stack");
-		return;
-	}
+	if (dev->top == dev->stack_max)
+		fz_grow_stack(dev);
 
 	bbox = fz_bound_pixmap(dev->dest);
 	bbox = fz_intersect_bbox(bbox, dev->scissor);
@@ -159,11 +180,8 @@ static void fz_knockout_end(void *user)
 	if ((dev->blendmode & FZ_BLEND_KNOCKOUT) == 0)
 		return;
 
-	if (dev->top == STACK_SIZE)
-	{
-		fz_warn("assert: too many buffers on stack");
-		return;
-	}
+	if (dev->top == dev->stack_max)
+		fz_grow_stack(dev);
 
 	if (dev->top > 0)
 	{
@@ -324,11 +342,8 @@ fz_draw_clip_path(void *user, fz_path *path, fz_rect *rect, int even_odd, fz_mat
 	fz_pixmap *mask, *dest, *shape;
 	fz_bbox bbox;
 
-	if (dev->top == STACK_SIZE)
-	{
-		fz_warn("assert: too many buffers on stack");
-		return;
-	}
+	if (dev->top == dev->stack_max)
+		fz_grow_stack(dev);
 
 	fz_reset_gel(dev->gel, dev->scissor);
 	fz_flatten_fill_path(dev->gel, path, ctm, flatness);
@@ -395,11 +410,8 @@ fz_draw_clip_stroke_path(void *user, fz_path *path, fz_rect *rect, fz_stroke_sta
 	fz_pixmap *mask, *dest, *shape;
 	fz_bbox bbox;
 
-	if (dev->top == STACK_SIZE)
-	{
-		fz_warn("assert: too many buffers on stack");
-		return;
-	}
+	if (dev->top == dev->stack_max)
+		fz_grow_stack(dev);
 
 	if (linewidth * expansion < 0.1f)
 		linewidth = 1 / expansion;
@@ -608,11 +620,8 @@ fz_draw_clip_text(void *user, fz_text *text, fz_matrix ctm, int accumulate)
 	/* If accumulate == 1 then this text object is the first (or only) in a sequence */
 	/* If accumulate == 2 then this text object is a continuation */
 
-	if (dev->top == STACK_SIZE)
-	{
-		fz_warn("assert: too many buffers on stack");
-		return;
-	}
+	if (dev->top == dev->stack_max)
+		fz_grow_stack(dev);
 
 	if (accumulate == 0)
 	{
@@ -701,11 +710,8 @@ fz_draw_clip_stroke_text(void *user, fz_text *text, fz_stroke_state *stroke, fz_
 	fz_pixmap *glyph;
 	int i, x, y, gid;
 
-	if (dev->top == STACK_SIZE)
-	{
-		fz_warn("assert: too many buffers on stack");
-		return;
-	}
+	if (dev->top == dev->stack_max)
+		fz_grow_stack(dev);
 
 	/* make the mask the exact size needed */
 	bbox = fz_round_rect(fz_bound_text(text, ctm));
@@ -862,7 +868,10 @@ fz_transform_pixmap(fz_pixmap *image, fz_matrix *ctm, int x, int y, int dx, int 
 	if (ctm->a != 0 && ctm->b == 0 && ctm->c == 0 && ctm->d != 0)
 	{
 		/* Unrotated or X-flip or Y-flip or XY-flip */
-		scaled = fz_scale_pixmap_gridfit(image, ctm->e, ctm->f, ctm->a, ctm->d, gridfit);
+		fz_matrix m = *ctm;
+		if (gridfit)
+			fz_gridfit_matrix(&m);
+		scaled = fz_scale_pixmap(image, m.e, m.f, m.a, m.d);
 		if (scaled == NULL)
 			return NULL;
 		ctm->a = scaled->w;
@@ -875,7 +884,10 @@ fz_transform_pixmap(fz_pixmap *image, fz_matrix *ctm, int x, int y, int dx, int 
 	if (ctm->a == 0 && ctm->b != 0 && ctm->c != 0 && ctm->d == 0)
 	{
 		/* Other orthogonal flip/rotation cases */
-		scaled = fz_scale_pixmap_gridfit(image, ctm->f, ctm->e, ctm->b, ctm->c, gridfit);
+		fz_matrix m = *ctm;
+		if (gridfit)
+			fz_gridfit_matrix(&m);
+		scaled = fz_scale_pixmap(image, m.f, m.e, m.b, m.c);
 		if (scaled == NULL)
 			return NULL;
 		ctm->b = scaled->w;
@@ -1036,11 +1048,8 @@ fz_draw_clip_image_mask(void *user, fz_pixmap *image, fz_rect *rect, fz_matrix c
 	fz_pixmap *scaled = NULL;
 	int dx, dy;
 
-	if (dev->top == STACK_SIZE)
-	{
-		fz_warn("assert: too many buffers on stack");
-		return;
-	}
+	if (dev->top == dev->stack_max)
+		fz_grow_stack(dev);
 
 #ifdef DUMP_GROUP_BLENDS
 	dump_spaces(dev->top, "Clip (image mask) begin\n");
@@ -1179,11 +1188,8 @@ fz_draw_begin_mask(void *user, fz_rect rect, int luminosity, fz_colorspace *colo
 	fz_pixmap *shape = dev->shape;
 	fz_bbox bbox;
 
-	if (dev->top == STACK_SIZE)
-	{
-		fz_warn("assert: too many buffers on stack");
-		return;
-	}
+	if (dev->top == dev->stack_max)
+		fz_grow_stack(dev);
 
 	bbox = fz_round_rect(rect);
 	bbox = fz_intersect_bbox(bbox, dev->scissor);
@@ -1241,11 +1247,8 @@ fz_draw_end_mask(void *user)
 	fz_bbox bbox;
 	int luminosity;
 
-	if (dev->top == STACK_SIZE)
-	{
-		fz_warn("assert: too many buffers on stack");
-		return;
-	}
+	if (dev->top == dev->stack_max)
+		fz_grow_stack(dev);
 
 	if (dev->top > 0)
 	{
@@ -1298,7 +1301,7 @@ fz_draw_begin_group(void *user, fz_rect rect, int isolated, int knockout, int bl
 	fz_bbox bbox;
 	fz_pixmap *dest, *shape;
 
-	if (dev->top == STACK_SIZE)
+	if (dev->top == dev->stack_max)
 	{
 		fz_warn("assert: too many buffers on stack");
 		return;
@@ -1428,11 +1431,8 @@ fz_draw_begin_tile(void *user, fz_rect area, fz_rect view, float xstep, float ys
 	/* area, view, xstep, ystep are in pattern space */
 	/* ctm maps from pattern space to device space */
 
-	if (dev->top == STACK_SIZE)
-	{
-		fz_warn("assert: too many buffers on stack");
-		return;
-	}
+	if (dev->top == dev->stack_max)
+		fz_grow_stack(dev);
 
 	if (dev->blendmode & FZ_BLEND_KNOCKOUT)
 		fz_knockout_begin(dev);
@@ -1530,6 +1530,8 @@ fz_draw_free_user(void *user)
 	/* TODO: pop and free the stacks */
 	if (dev->top > 0)
 		fz_warn("items left on stack in draw device: %d", dev->top);
+	if (dev->stack != &dev->init_stack[0])
+		fz_free(dev->stack);
 	fz_free_gel(dev->gel);
 	fz_free(dev);
 }
@@ -1546,6 +1548,8 @@ fz_new_draw_device(fz_glyph_cache *cache, fz_pixmap *dest)
 	ddev->top = 0;
 	ddev->blendmode = 0;
 	ddev->flags = 0;
+	ddev->stack = &ddev->init_stack[0];
+	ddev->stack_max = STACK_SIZE;
 
 	ddev->scissor.x0 = dest->x;
 	ddev->scissor.y0 = dest->y;

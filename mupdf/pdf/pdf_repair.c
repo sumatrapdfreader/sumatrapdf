@@ -76,7 +76,8 @@ pdf_repair_obj(fz_stream *file, char *buf, int cap, int *stmofsp, int *stmlenp, 
 	while ( tok != PDF_TOK_STREAM &&
 		tok != PDF_TOK_ENDOBJ &&
 		tok != PDF_TOK_ERROR &&
-		tok != PDF_TOK_EOF )
+		tok != PDF_TOK_EOF &&
+		tok != PDF_TOK_INT )
 	{
 		error = pdf_lex(&tok, file, buf, cap, &len);
 		if (error)
@@ -92,8 +93,7 @@ pdf_repair_obj(fz_stream *file, char *buf, int cap, int *stmofsp, int *stmlenp, 
 		while (len-- > 0)
 			fz_unread_byte(file);
 	}
-	else
-	if (tok == PDF_TOK_STREAM)
+	else if (tok == PDF_TOK_STREAM)
 	{
 		int c = fz_read_byte(file);
 		if (c == '\r') {

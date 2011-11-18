@@ -342,6 +342,18 @@ pdf_load_jpx_image(fz_pixmap **imgp, pdf_xref *xref, fz_obj *dict)
 		}
 	}
 
+	obj = fz_dict_getsa(dict, "Decode", "D");
+	if (obj)
+	{
+		float decode[FZ_MAX_COLORS * 2];
+		int i;
+
+		for (i = 0; i < img->n * 2; i++)
+			decode[i] = fz_to_real(fz_array_get(obj, i));
+
+		fz_decode_tile(img, decode);
+	}
+
 	*imgp = img;
 	return fz_okay;
 }

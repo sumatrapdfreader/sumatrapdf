@@ -17,6 +17,9 @@
 /* Set to 1 to enable debug log traces. */
 #define DEBUG 0
 
+/* Enable to log rendering times (render each frame 100 times and time) */
+#undef TIME_DISPLAY_LIST
+
 /* Globals */
 fz_colorspace *colorspace;
 fz_glyph_cache *glyphcache;
@@ -190,7 +193,22 @@ Java_com_artifex_mupdf_MuPDFCore_drawPage(JNIEnv *env, jobject thiz, jobject bit
 	ctm = fz_concat(ctm, fz_scale(xscale, yscale));
 	bbox = fz_round_rect(fz_transform_rect(ctm,currentMediabox));
 	dev = fz_new_draw_device(glyphcache, pix);
+#ifdef TIME_DISPLAY_LIST
+	{
+		clock_t time;
+		int i;
+
+		LOGE("Executing display list");
+		time = clock();
+		for (i=0; i<100;i++) {
+#endif
 	fz_execute_display_list(currentPageList, dev, ctm, bbox);
+#ifdef TIME_DISPLAY_LIST
+		}
+		time = clock() - time;
+		LOGE("100 renders in %d (%d per sec)", time, CLOCKS_PER_SEC);
+	}
+#endif
 	fz_free_device(dev);
 	fz_drop_pixmap(pix);
 	LOGE("Rendered");

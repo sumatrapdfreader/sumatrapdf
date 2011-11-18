@@ -282,6 +282,8 @@ fz_point fz_transform_vector(fz_matrix m, fz_point p);
 fz_rect fz_transform_rect(fz_matrix m, fz_rect r);
 fz_bbox fz_transform_bbox(fz_matrix m, fz_bbox b);
 
+void fz_gridfit_matrix(fz_matrix *m);
+
 /*
  * Basic crypto functions.
  * Independent of the rest of fitz.
@@ -300,7 +302,7 @@ struct fz_md5_s
 };
 
 void fz_md5_init(fz_md5 *state);
-void fz_md5_update(fz_md5 *state, const unsigned char *input, const unsigned inlen);
+void fz_md5_update(fz_md5 *state, const unsigned char *input, unsigned inlen);
 void fz_md5_final(fz_md5 *state, unsigned char digest[16]);
 
 /* sha-256 digests */
@@ -332,8 +334,8 @@ struct fz_arc4_s
 	unsigned char state[256];
 };
 
-void fz_arc4_init(fz_arc4 *state, const unsigned char *key, const unsigned len);
-void fz_arc4_encrypt(fz_arc4 *state, unsigned char *dest, const unsigned char *src, const unsigned len);
+void fz_arc4_init(fz_arc4 *state, const unsigned char *key, unsigned len);
+void fz_arc4_encrypt(fz_arc4 *state, unsigned char *dest, const unsigned char *src, unsigned len);
 
 /* AES block cipher implementation from XYSSL */
 
@@ -410,8 +412,7 @@ fz_obj *fz_array_get(fz_obj *array, int i);
 void fz_array_put(fz_obj *array, int i, fz_obj *obj);
 void fz_array_push(fz_obj *array, fz_obj *obj);
 void fz_array_insert(fz_obj *array, fz_obj *obj);
-/* SumatraPDF: helper method */
-int fz_is_in_array(fz_obj *arr, fz_obj *obj);
+int fz_array_contains(fz_obj *array, fz_obj *obj);
 
 int fz_dict_len(fz_obj *dict);
 fz_obj *fz_dict_get_key(fz_obj *dict, int idx);
@@ -643,7 +644,6 @@ void fz_invert_pixmap(fz_pixmap *pix);
 void fz_gamma_pixmap(fz_pixmap *pix, float gamma);
 
 fz_pixmap *fz_scale_pixmap(fz_pixmap *src, float x, float y, float w, float h);
-fz_pixmap *fz_scale_pixmap_gridfit(fz_pixmap *src, float x, float y, float w, float h, int gridfit);
 
 fz_error fz_write_pnm(fz_pixmap *pixmap, char *filename);
 fz_error fz_write_pam(fz_pixmap *pixmap, char *filename, int savealpha);

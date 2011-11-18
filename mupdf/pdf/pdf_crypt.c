@@ -729,7 +729,11 @@ pdf_crypt_obj_imp(pdf_crypt *crypt, fz_obj *obj, unsigned char *key, int keylen)
 
 		if (crypt->strf.method == PDF_CRYPT_AESV2 || crypt->strf.method == PDF_CRYPT_AESV3)
 		{
-			if (n & 15 || n < 32)
+			if (n == 0)
+			{
+				/* Empty strings are permissible */
+			}
+			else if (n & 15 || n < 32)
 				fz_warn("invalid string length for aes encryption");
 			else
 			{
