@@ -211,7 +211,7 @@ inline SizeI GetBitmapSize(HBITMAP hbmp)
     return SizeI(bmpInfo.bmWidth, bmpInfo.bmHeight);
 }
 
-void InvertBitmapColors(HBITMAP hbmp);
+void UpdateBitmapColorRange(HBITMAP hbmp, COLORREF range[2]);
 unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut);
 
 inline void InitAllCommonControls()

@@ -37,7 +37,7 @@ public:
     TCHAR *     destName;
     int         pageNumber;
     bool        restrictedUse;
-    bool        invertColors;
+    COLORREF    colorRange[2]; // foreground color / background color
     bool        enterPresentation;
     bool        enterFullscreen;
     DisplayMode startView;
@@ -61,7 +61,7 @@ public:
         printerName(NULL), printSettings(NULL), bgColor(-1), inverseSearchCmdLine(NULL),
         escToExit(false), reuseInstance(false), lang(NULL),
         destName(NULL), pageNumber(-1),
-        restrictedUse(false), invertColors(false), pluginURL(NULL),
+        restrictedUse(false), pluginURL(NULL),
         enterPresentation(false), enterFullscreen(false), hwndPluginParent(NULL),
         startView(DM_AUTOMATIC), startZoom(INVALID_ZOOM), startScroll(PointI(-1, -1)),
         showConsole(false), exitImmediately(false), silent(false),
@@ -69,6 +69,8 @@ public:
         stressTestPath(NULL), stressTestFilter(NULL),
         stressTestRanges(NULL), stressTestCycles(1), crashOnOpen(false)
     {
+        colorRange[0] = RGB(0, 0, 0); // black
+        colorRange[1] = RGB(0xFF, 0xFF, 0xFF); // white
         fwdSearch.offset = 0;
         fwdSearch.width = 0;
         fwdSearch.color = 0;

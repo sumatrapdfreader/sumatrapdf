@@ -82,8 +82,8 @@ private:
     const SizeI         maxTileSize;
 
 public:
-    /* invert all colors for accessibility reasons (experimental!) */
-    bool                invertColors;
+    /* allow to modify the range of colors used for accessibility reasons (experimental!) */
+    COLORREF            colorRange[2];
 
     RenderCache();
     ~RenderCache();

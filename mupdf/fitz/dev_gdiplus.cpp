@@ -557,6 +557,8 @@ protected:
 		for (userDataStackItem *si = bgStack; si; si = si->prev)
 			if (si->layer)
 				boundsBg.Intersect(si->bounds);
+		if (boundsBg.Width == 0 || boundsBg.Height == 0)
+			return;
 		
 		Bitmap *backdrop = _flattenBlendBackdrop(bgStack, boundsBg);
 		if (!backdrop)

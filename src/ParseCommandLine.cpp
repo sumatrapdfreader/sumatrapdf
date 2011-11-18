@@ -186,10 +186,20 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
         else if (is_arg("-restrict")) {
             restrictedUse = true;
         }
+        // TODO: remove these two, once colorRange can be set from UI
+        // TODO: or just use GetSysColor(COLOR_WINDOWTEXT) and GetSysColor(COLOR_WINDOW)?
         else if (is_arg("-invertcolors") || is_arg("-invert-colors")) {
             // -invertcolors is for backwards compat (was used pre-1.3)
             // -invert-colors is for consistency
-            invertColors = TRUE;
+            // -invert-colors is a shortcut for -set-color-range 0xFFFFFF 0x000000
+            // (i.e. it sets white as foreground color and black as background color)
+            colorRange[0] = WIN_COL_WHITE;
+            colorRange[1] = WIN_COL_BLACK;
+        }
+        else if (is_arg("-set-color-range") && argCount > n + 2) {
+            CASSERT(sizeof(colorRange[0]) == sizeof(int), colorref_as_int);
+            ParseColor((int *)&colorRange[0], argList.At(++n));
+            ParseColor((int *)&colorRange[1], argList.At(++n));
         }
         else if (is_arg("-presentation")) {
             enterPresentation = true;

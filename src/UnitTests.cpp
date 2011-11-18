@@ -61,8 +61,10 @@ static void ParseCommandLineTest()
 
     {
         CommandLineInfo i;
-        i.ParseCommandLine(_T("SumatraPDF.exe -bench bar.pdf 1 -invert-colors"));
-        assert(true == i.invertColors);
+        assert(i.colorRange[0] == WIN_COL_BLACK && i.colorRange[1] == WIN_COL_WHITE);
+        i.ParseCommandLine(_T("SumatraPDF.exe -bench bar.pdf 1 -set-color-range 0x123456 #abCDef"));
+        assert(i.colorRange[0] == RGB(0x12, 0x34, 0x56));
+        assert(i.colorRange[1] == RGB(0xAB, 0xCD, 0xEF));
         assert(2 == i.filesToBenchmark.Count());
         assert(str::Eq(_T("bar.pdf"), i.filesToBenchmark.At(0)));
         assert(str::Eq(_T("1"), i.filesToBenchmark.At(1)));
@@ -80,9 +82,10 @@ static void ParseCommandLineTest()
 
     {
         CommandLineInfo i;
+        assert(i.colorRange[0] == WIN_COL_BLACK && i.colorRange[1] == WIN_COL_WHITE);
         i.ParseCommandLine(_T("SumatraPDF.exe -presentation -bgcolor 0xaa0c13 foo.pdf -invert-colors bar.pdf"));
         assert(true == i.enterPresentation);
-        assert(true == i.invertColors);
+        assert(i.colorRange[0] == WIN_COL_WHITE && i.colorRange[1] == WIN_COL_BLACK);
         assert(1248426 == i.bgColor);
         assert(2 == i.fileNames.Count());
         assert(0 == i.fileNames.Find(_T("foo.pdf")));
@@ -91,8 +94,9 @@ static void ParseCommandLineTest()
 
     {
         CommandLineInfo i;
+        assert(i.colorRange[0] == WIN_COL_BLACK && i.colorRange[1] == WIN_COL_WHITE);
         i.ParseCommandLine(_T("SumatraPDF.exe -bg-color 0xaa0c13 -invertcolors rosanna.pdf"));
-        assert(true == i.invertColors);
+        assert(i.colorRange[0] == WIN_COL_WHITE && i.colorRange[1] == WIN_COL_BLACK);
         assert(1248426 == i.bgColor);
         assert(1 == i.fileNames.Count());
         assert(0 == i.fileNames.Find(_T("rosanna.pdf")));

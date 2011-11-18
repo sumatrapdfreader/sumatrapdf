@@ -525,7 +525,7 @@ void DrawAboutPage(WindowInfo& win, HDC hdc)
 
 static bool LoadThumbnail(DisplayState& state);
 
-void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, bool invertColors)
+void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF colorRange[2])
 {
     HPEN penBorder = CreatePen(PS_SOLID, DOCLIST_SEPARATOR_DY, WIN_COL_BLACK);
     HPEN penThumbBorder = CreatePen(PS_SOLID, DOCLIST_THUMBNAIL_BORDER_W, WIN_COL_BLACK);
@@ -606,13 +606,12 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, bool inve
                 SelectClipRgn(hdc, clip);
                 RectI thumb(page.TL(), state->thumbnail->Size());
                 assert(thumb.dx == page.dx);
-                if (invertColors)
-                    InvertBitmapColors(state->thumbnail->GetBitmap());
-                state->thumbnail->StretchDIBits(hdc, thumb);
-                if (invertColors)
-                    InvertBitmapColors(state->thumbnail->GetBitmap());
+                RenderedBitmap *clone = state->thumbnail->Clone();
+                UpdateBitmapColorRange(clone->GetBitmap(), colorRange);
+                clone->StretchDIBits(hdc, thumb);
                 SelectClipRgn(hdc, NULL);
                 DeleteObject(clip);
+                delete clone;
             }
             RoundRect(hdc, page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
 

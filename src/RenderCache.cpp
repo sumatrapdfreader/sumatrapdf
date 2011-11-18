@@ -12,9 +12,12 @@
 #define CONSERVE_MEMORY
 
 RenderCache::RenderCache()
-    : cacheCount(0), requestCount(0), invertColors(false),
+    : cacheCount(0), requestCount(0),
       maxTileSize(GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN))
 {
+    colorRange[0] = WIN_COL_BLACK;
+    colorRange[1] = WIN_COL_WHITE;
+
     InitializeCriticalSection(&cacheAccess);
     InitializeCriticalSection(&requestAccess);
 
@@ -572,8 +575,8 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data)
             req.renderCb = (RenderingCallback *)1; // will crash if accessed again, which should not happen
         }
         else {
-            if (bmp && cache->invertColors)
-                InvertBitmapColors(bmp->GetBitmap());
+            if (bmp)
+                UpdateBitmapColorRange(bmp->GetBitmap(), cache->colorRange);
             cache->Add(req, bmp);
 #ifdef CONSERVE_MEMORY
             cache->FreeNotVisible();

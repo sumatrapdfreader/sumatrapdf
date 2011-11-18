@@ -677,8 +677,29 @@ HRESULT GetDataFromStream(IStream *stream, void **data, size_t *len)
     return S_OK;
 }
 
-void InvertBitmapColors(HBITMAP hbmp)
+// cf. fz_mul255 in fitz.h
+inline int mul255(int a, int b)
 {
+    int x = a * b + 128;
+    x += x >> 8;
+    return x >> 8;
+}
+
+void UpdateBitmapColorRange(HBITMAP hbmp, COLORREF range[2])
+{
+    if ((range[0] & 0xFFFFFF) == WIN_COL_BLACK &&
+        (range[1] & 0xFFFFFF) == WIN_COL_WHITE)
+        return;
+
+    // color order in DIB is blue-green-red-alpha
+    int base[4] = { GetBValue(range[0]), GetGValue(range[0]), GetRValue(range[0]), 0 };
+    int diff[4] = {
+        GetBValue(range[1]) - base[0],
+        GetGValue(range[1]) - base[1],
+        GetRValue(range[1]) - base[2],
+        255
+    };
+
     HDC hDC = GetDC(NULL);
     BITMAPINFO bmi = { 0 };
     SizeI size = GetBitmapSize(hbmp);
@@ -694,9 +715,8 @@ void InvertBitmapColors(HBITMAP hbmp)
     unsigned char *bmpData = (unsigned char *)malloc(bmpBytes);
     if (GetDIBits(hDC, hbmp, 0, size.dy, bmpData, &bmi, DIB_RGB_COLORS)) {
         for (int i = 0; i < bmpBytes; i++) {
-            // don't affect the alpha channel
-            if ((i + 1) % 4)
-                bmpData[i] = 255 - bmpData[i];
+            int k = i % 4;
+            bmpData[i] = base[k] + mul255(bmpData[i], diff[k]);
         }
         SetDIBits(hDC, hbmp, 0, size.dy, bmpData, &bmi, DIB_RGB_COLORS);
     }
