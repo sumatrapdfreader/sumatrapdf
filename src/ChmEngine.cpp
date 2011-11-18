@@ -226,7 +226,7 @@ void CChmEngine::DisplayPage(const TCHAR *pageUrl)
     // TODO: unfortunately we display at standard zoom level first
     // and them zoom in, which is visible to the user. No idea how
     // to fix it (simply)
-    htmlWindow->WaitUntilLoaded(3*1000);
+    htmlWindow->WaitUntilLoaded(3 * 1000, url);
     //htmlWindow->DisplayHtml(_T("<html><body>Hello!</body></html>"));
 }
 

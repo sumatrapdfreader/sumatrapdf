@@ -31,15 +31,12 @@ protected:
 
     DWORD               adviseCookie;
 
-    bool                aboutBlankShown;
-
-    bool                documentLoaded;
+    ScopedMem<TCHAR>    currentURL;
 
     HtmlWindowCallback *htmlWinCb;
 
     void EnsureAboutBlankShown();
     void CreateBrowser();
-
 
     void SubclassHwnd();
     void UnsubclassHwnd();
@@ -60,7 +57,7 @@ public:
     void SetZoomPercent(int zoom);
     int  GetZoomPercent();
     void FindInCurrentPage();
-    bool WaitUntilLoaded(DWORD maxWaitMs);
+    bool WaitUntilLoaded(DWORD maxWaitMs, const TCHAR *url=NULL);
     void SendMsg(UINT msg, WPARAM wp, LPARAM lp);
     void OnLButtonDown() const;
 

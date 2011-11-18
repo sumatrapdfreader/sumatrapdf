@@ -406,9 +406,9 @@ HtmlWindow::HtmlWindow(HWND hwndParent, HtmlWindowCallback *cb) :
     hwndParent(hwndParent), webBrowser(NULL), oleObject(NULL),
     oleInPlaceObject(NULL), viewObject(NULL),
     connectionPoint(NULL), oleObjectHwnd(NULL),
-    adviseCookie(0), aboutBlankShown(false), htmlWinCb(cb),
+    adviseCookie(0), htmlWinCb(cb),
     wndProcBrowserPrev(NULL),
-    documentLoaded(false), canGoBack(false), canGoForward(false)
+    canGoBack(false), canGoForward(false)
 {
     assert(hwndParent);
     CreateBrowser();
@@ -486,8 +486,8 @@ void HtmlWindow::CreateBrowser()
 
     webBrowser->put_RegisterAsBrowser(VARIANT_TRUE);
     webBrowser->put_RegisterAsDropTarget(VARIANT_TRUE);
+
     EnsureAboutBlankShown();
-    WaitUntilLoaded(3*1000);
     SubclassHwnd();
 }
 
@@ -556,13 +556,13 @@ void HtmlWindow::NavigateToUrl(const TCHAR *urlStr)
 #endif
     if (!url.bstrVal)
         return;
+    currentURL.Set(NULL);
     webBrowser->Navigate2(&url, 0, 0, 0, 0);
     VariantClear(&url);
 }
 
 void HtmlWindow::GoBack()
 {
-    aboutBlankShown = false; // TODO: is this necessary?
     if (webBrowser)
         webBrowser->GoBack();
 }
@@ -603,20 +603,8 @@ void HtmlWindow::FindInCurrentPage()
 
 void HtmlWindow::EnsureAboutBlankShown()
 {
-    if (aboutBlankShown)
-        return;
-    aboutBlankShown = true;
-
     NavigateToUrl(_T("about:blank"));
-    ScopedComQIPtr<IHTMLDocument2> doc;
-    // wait until shown
-    while (!doc) {
-        Sleep(0);
-        ScopedComPtr<IDispatch> docDispatch;
-        HRESULT hr = webBrowser->get_Document(&docDispatch);
-        if (SUCCEEDED(hr) && docDispatch)
-            doc = docDispatch;
-    }
+    WaitUntilLoaded(INFINITE, _T("about:blank"));
 }
 
 void HtmlWindow::DisplayHtml(const TCHAR *html)
@@ -704,7 +692,7 @@ HBITMAP HtmlWindow::TakeScreenshot(RectI area, SizeI finalSize)
 // the navigation.
 bool HtmlWindow::OnBeforeNavigate(const TCHAR *url, bool newWindow)
 {
-    documentLoaded = false;
+    currentURL.Set(NULL);
     if (htmlWinCb)
         return htmlWinCb->OnBeforeNavigate(url, newWindow);
     return true;
@@ -712,7 +700,7 @@ bool HtmlWindow::OnBeforeNavigate(const TCHAR *url, bool newWindow)
 
 void HtmlWindow::OnDocumentComplete(const TCHAR *url)
 {
-    documentLoaded = true;
+    currentURL.Set(str::Dup(url));
 }
 
 static void PumpRemainingMessages()
@@ -734,17 +722,15 @@ void HtmlWindow::SendMsg(UINT msg, WPARAM wp, LPARAM lp)
     SendMessage(hwndBrowser, msg, wp, lp);
 }
 
-// Probably could check IHTMLDocument2::::get_readyState() but checking
-// documentLoaded works
-bool HtmlWindow::WaitUntilLoaded(DWORD maxWaitMs)
+bool HtmlWindow::WaitUntilLoaded(DWORD maxWaitMs, const TCHAR *url)
 {
     MillisecondTimer timer(true);
-    const DWORD sleepTimeMs = 100; // 0.1 sec
-    while (!documentLoaded && timer.GetCurrTimeInMs() < maxWaitMs) {
+    // wait for either the url or any url (if url == NULL) being loaded
+    while (str::Eq(currentURL, url) == !url && timer.GetCurrTimeInMs() < maxWaitMs) {
         PumpRemainingMessages();
-        Sleep(sleepTimeMs);
+        Sleep(100);
     }
-    return documentLoaded;
+    return currentURL != NULL;
 }
 
 FrameSite::FrameSite(HtmlWindow * win)
