@@ -369,7 +369,7 @@ static HRESULT InitPropString(PROPVARIANT *var, const TCHAR *value)
 #ifdef UNICODE
     HRESULT hr = SHStrDupW(value, &var->pwszVal);
 #else
-    HRESULT hr = SHStrDupW(ScopedMem<WCHAR>(str::conv::FromAnsi(value)), &var->pwszVal);
+    HRESULT hr = SHStrDupW(ScopedMem<WCHAR>(str::conv::ToWStr(value)), &var->pwszVal);
 #endif
     if (SUCCEEDED(hr))
         var->vt = VT_LPWSTR;

@@ -552,7 +552,7 @@ void HtmlWindow::NavigateToUrl(const TCHAR *urlStr)
 #ifdef UNICODE
     url.bstrVal = SysAllocString(urlStr);
 #else
-    url.bstrVal = SysAllocString(ScopedMem<WCHAR>(str::conv::FromAnsi(urlStr)));
+    url.bstrVal = SysAllocString(ScopedMem<WCHAR>(str::conv::ToWStr(urlStr)));
 #endif
     if (!url.bstrVal)
         return;
@@ -643,7 +643,7 @@ void HtmlWindow::DisplayHtml(const TCHAR *html)
 #ifdef UNICODE
     var->bstrVal = SysAllocString(html);
 #else
-    var->bstrVal = SysAllocString(ScopedMem<WCHAR>(str::conv::FromAnsi(html)));
+    var->bstrVal = SysAllocString(ScopedMem<WCHAR>(str::conv::ToWStr(html)));
 #endif
     if (!var->bstrVal)
         goto Exit;
@@ -905,7 +905,7 @@ HRESULT HW_DWebBrowserEvents2::Invoke(DISPID dispIdMember, REFIID riid, LCID lci
 #ifdef UNICODE
             bool shouldCancel = !fs->htmlWindow->OnBeforeNavigate(url, false);
 #else
-            bool shouldCancel = !fs->htmlWindow->OnBeforeNavigate(ScopedMem<char>(str::conv::ToAnsi(url)), false);
+            bool shouldCancel = !fs->htmlWindow->OnBeforeNavigate(ScopedMem<TCHAR>(str::conv::FromWStr(url)), false);
 #endif
             *pDispParams->rgvarg[0].pboolVal = shouldCancel ? VARIANT_TRUE : VARIANT_FALSE;
             break;
@@ -932,7 +932,7 @@ HRESULT HW_DWebBrowserEvents2::Invoke(DISPID dispIdMember, REFIID riid, LCID lci
 #ifdef UNICODE
             fs->htmlWindow->OnDocumentComplete(url);
 #else
-            fs->htmlWindow->OnDocumentComplete(ScopedMem<char>(str::conv::ToAnsi(url)));
+            fs->htmlWindow->OnDocumentComplete(ScopedMem<TCHAR>(str::conv::FromWStr(url)));
 #endif
             break;
         }
@@ -954,7 +954,7 @@ HRESULT HW_DWebBrowserEvents2::Invoke(DISPID dispIdMember, REFIID riid, LCID lci
 #ifdef UNICODE
             bool shouldCancel = !fs->htmlWindow->OnBeforeNavigate(url, true);
 #else
-            bool shouldCancel = !fs->htmlWindow->OnBeforeNavigate(ScopedMem<char>(str::conv::ToAnsi(url)), true);
+            bool shouldCancel = !fs->htmlWindow->OnBeforeNavigate(ScopedMem<TCHAR>(str::conv::FromWStr(url)), true);
 #endif
             *pDispParams->rgvarg[3].pboolVal = shouldCancel ? VARIANT_TRUE : VARIANT_FALSE;
             break;

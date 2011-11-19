@@ -378,7 +378,7 @@ $(OS)\PdfEngine.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scopes.
 $(OS)\PdfEngine.obj: src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\PdfFilterDll.obj: src\ifilter\CPdfFilter.h src\ifilter\CTeXFilter.h src\ifilter\FilterBase.h
 $(OS)\PdfFilterDll.obj: src\ifilter\PdfFilter.h src\utils\BaseUtil.h src\utils\GeomUtil.h
-$(OS)\PdfFilterDll.obj: src\utils\Scopes.h src\utils\WinUtil.h
+$(OS)\PdfFilterDll.obj: src\utils\Scopes.h src\utils\StrUtil.h src\utils\WinUtil.h
 $(OS)\PdfPreview.obj: src\BaseEngine.h src\PdfEngine.h src\previewer\PdfPreview.h
 $(OS)\PdfPreview.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\Scopes.h
 $(OS)\PdfPreview.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h

@@ -319,6 +319,10 @@ private:
     CChunkValue                 m_currentChunk;
 };
 
+#ifndef UNICODE
+#include "StrUtil.h"
+#endif
+
 inline HRESULT CLSIDFromTString(TCHAR *string, CLSID *clsid)
 {
 #ifdef UNICODE

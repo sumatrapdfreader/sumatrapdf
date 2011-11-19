@@ -62,7 +62,7 @@ public:
 };
 
 class LabelPropertySet : public IUISimplePropertySet {
-    ScopedMem<WCHAR> label;
+    ScopedMem<TCHAR> label;
     LONG lRef;
 
 public:

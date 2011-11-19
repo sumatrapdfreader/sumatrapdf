@@ -267,7 +267,7 @@ WCHAR *fz_span_to_wchar(fz_text_span *text, TCHAR *lineSep, RectI **coords_out=N
         lstrcpy(dest, lineSep);
         dest += lineSepLen;
 #else
-        dest += MultiByteToWideChar(CP_ACP, 0, lineSep, -1, dest, lineSepLen + 1);
+        dest += MultiByteToWideChar(CP_ACP, 0, lineSep, lineSepLen, dest, lineSepLen);
 #endif
         if (destRect) {
             ZeroMemory(destRect, lineSepLen * sizeof(fz_bbox));
@@ -426,7 +426,7 @@ static LinkRectList *LinkifyText(TCHAR *pageText, RectI *coords)
             if (end != NULL)
                 start = email;
         }
-        else if (start > pageText && ('/' == start[-1]) || _istalnum(start[-1])) {
+        else if (start > pageText && ('/' == start[-1] || _istalnum(start[-1]))) {
             // hyperlinks must not be preceded by a slash (indicates a different protocol)
             // or an alphanumeric character (indicates part of a different protocol)
         }
@@ -1639,7 +1639,11 @@ TCHAR *CPdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, RectI **coord
     fz_free_text_span(text);
     LeaveCriticalSection(&xrefAccess);
 
-    return str::conv::FromWStrQ(content);
+#ifdef UNICODE
+    return content;
+#else
+    return str::conv::FromWStr(ScopedMem<WCHAR>(content));
+#endif
 }
 
 TCHAR *CPdfEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out, RenderTarget target)
@@ -2616,7 +2620,11 @@ TCHAR *CXpsEngine::ExtractPageText(xps_page *page, TCHAR *lineSep, RectI **coord
     fz_free_text_span(text);
     LeaveCriticalSection(&_ctxAccess);
 
-    return str::conv::FromWStrQ(content);
+#ifdef UNICODE
+    return content;
+#else
+    return str::conv::FromWStr(ScopedMem<WCHAR>(content));
+#endif
 }
 
 TCHAR *CXpsEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out, RenderTarget target)

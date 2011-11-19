@@ -10,7 +10,9 @@
 #include "WinUtil.h"
 
 #define CHM_MT
+#ifdef UNICODE
 #define PPC_BSTR
+#endif
 
 #include <inttypes.h>
 #include <chm_lib.h>
@@ -641,12 +643,7 @@ bool CChmEngine::Load(const TCHAR *fileName)
         return false;
 
     this->fileName = str::Dup(fileName);
-    CASSERT(2 == sizeof(OLECHAR), OLECHAR_must_be_WCHAR);
-#ifdef UNICODE
-    chmHandle = chm_open((WCHAR *)fileName);
-#else
-    chmHandle = chm_open(ScopedMem<WCHAR>(str::conv::FromAnsi(fileName)));
-#endif
+    chmHandle = chm_open((TCHAR *)fileName);
     if (!chmHandle)
         return false;
     ParseWindowsChmData(chmHandle, &chmInfo);

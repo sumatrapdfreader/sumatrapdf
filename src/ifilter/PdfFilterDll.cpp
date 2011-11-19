@@ -117,7 +117,7 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 
 STDAPI DllRegisterServer()
 {
-    WCHAR path[MAX_PATH];
+    TCHAR path[MAX_PATH];
     if (!GetModuleFileName(g_hInstance, path, dimof(path)))
         return HRESULT_FROM_WIN32(GetLastError());
 

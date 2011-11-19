@@ -129,8 +129,6 @@ inline TCHAR *  FromAnsi(const char *src) { return ToWideChar(src, CP_ACP); }
 inline char *   ToAnsi(const TCHAR *src) { return ToMultiByte(src, CP_ACP); }
 inline TCHAR *  FromWStr(const WCHAR *src) { return Dup(src); }
 inline WCHAR *  ToWStr(const TCHAR *src) { return Dup(src); }
-inline TCHAR *  FromWStrQ(WCHAR *src) { return src; }
-inline WCHAR *  ToWStrQ(TCHAR *src) { return src; }
 #else
 inline TCHAR *  FromUtf8(const char *src) { return ToMultiByte(src, CP_UTF8, CP_ACP); }
 inline char *   ToUtf8(const TCHAR *src) { return ToMultiByte(src, CP_ACP, CP_UTF8); }
@@ -138,18 +136,6 @@ inline TCHAR *  FromAnsi(const char *src) { return Dup(src); }
 inline char *   ToAnsi(const TCHAR *src) { return Dup(src); }
 inline TCHAR *  FromWStr(const WCHAR *src) { return ToMultiByte(src, CP_ACP); }
 inline WCHAR *  ToWStr(const TCHAR *src) { return ToWideChar(src, CP_ACP); }
-inline TCHAR *FromWStrQ(WCHAR *src) {
-    if (!src) return NULL;
-    char *str = FromWStr(src);
-    free(src);
-    return str;
-}
-inline WCHAR *ToWStrQ(TCHAR *src) {
-    if (!src) return NULL;
-    WCHAR *str = ToWStr(src);
-    free(src);
-    return str;
-}
 #endif
 
 }
