@@ -72,7 +72,6 @@ pdf_repair_obj(fz_stream *file, char *buf, int cap, int *stmofsp, int *stmlenp, 
 		fz_drop_obj(dict);
 	}
 
-	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692424
 	while ( tok != PDF_TOK_STREAM &&
 		tok != PDF_TOK_ENDOBJ &&
 		tok != PDF_TOK_ERROR &&
@@ -83,12 +82,8 @@ pdf_repair_obj(fz_stream *file, char *buf, int cap, int *stmofsp, int *stmlenp, 
 		if (error)
 			return fz_rethrow(error, "cannot scan for endobj or stream token");
 	}
-	*/
-	len = 0;
-	error = pdf_lex(&tok, file, buf, cap, &len);
-	if (error)
-		return fz_rethrow(error, "cannot scan for endobj or stream token");
-	if (tok != PDF_TOK_STREAM && tok != PDF_TOK_ENDOBJ && tok != PDF_TOK_ERROR && tok != PDF_TOK_EOF)
+
+	if (tok == PDF_TOK_INT)
 	{
 		while (len-- > 0)
 			fz_unread_byte(file);
