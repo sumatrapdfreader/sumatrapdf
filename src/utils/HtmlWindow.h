@@ -9,6 +9,8 @@
 
 class FrameSite;
 
+bool InHtmlNestedMessagePump();
+
 class HtmlWindowCallback
 {
 public:

@@ -2058,6 +2058,9 @@ static void OnMenuExit()
 
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows.At(i);
+        if (InHtmlNestedMessagePump() && win->IsChm()) {
+            return;
+        }
         AbortFinding(win);
         AbortPrinting(win);
     }
@@ -2103,6 +2106,10 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
         return;
 
     bool wasChm = win->IsChm();
+    if (wasChm && InHtmlNestedMessagePump()) {
+        return;
+    }
+
     if (win->IsDocLoaded())
         win->dm->dontRenderFlag = true;
     if (win->presentation)

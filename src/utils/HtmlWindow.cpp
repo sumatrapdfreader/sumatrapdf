@@ -713,17 +713,38 @@ void HtmlWindow::OnDocumentComplete(const TCHAR *url)
     currentURL.Set(str::Dup(url));
 }
 
+// Just to be safe, we use Interlocked*() functions
+// to maintain pumpNestCount
+static LONG pumpNestCount = 0;
+
 static void PumpRemainingMessages()
 {
     MSG msg;
+    InterlockedIncrement(&pumpNestCount);
     for (;;) {
         bool moreMessages = PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE);
         if (!moreMessages)
-            return;
+            goto Exit;
         GetMessage(&msg, NULL, 0, 0);
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
+Exit:
+    InterlockedDecrement(&pumpNestCount);
+}
+
+// TODO: this is a terrible hack. When we're processing messages
+// with the intention of advancing browser window, we might process
+// a message that will cause us to close the chm document and related
+// classes while we're still using them, so we use this function
+// to block those cases.
+// The right fix is to move to truly async processing where instead
+// of busy-waiting for html loading ot finish, we schedule the
+// remaining of the code to be executed on document loaded
+// notification/callback
+bool InHtmlNestedMessagePump()
+{
+    return pumpNestCount > 0;
 }
 
 void HtmlWindow::SendMsg(UINT msg, WPARAM wp, LPARAM lp)
