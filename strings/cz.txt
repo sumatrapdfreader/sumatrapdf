@@ -223,6 +223,9 @@ Záložky
 Bytes
 bajtů
 
+CHM documents
+CHM dokumenty
+
 Can't connect to the Internet (error %#x).
 Nelze se připojit k Internetu (chyba %#x).
 
@@ -339,6 +342,9 @@ Při ukládání došlo k chybě
 
 Favorites
 Oblíbené položky
+
+File %s not found
+Soubor %s nebyl nalezen
 
 File Size:
 Velikost souboru:
@@ -663,8 +669,4 @@ kopírování textu
 
 printing document
 tisk dokumentu
-
-# Untranslated:
-#CHM documents
-#File %s not found
 
