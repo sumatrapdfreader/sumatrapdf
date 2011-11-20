@@ -83,29 +83,24 @@ TryAgain64Bit:
 }
 
 class ScopedFile {
-    TCHAR *path;
+    ScopedMem<TCHAR> path;
 
 public:
     ScopedFile(const TCHAR *path) : path(path ? str::Dup(path) : NULL) { }
     ~ScopedFile() {
         if (path)
             file::Delete(path);
-        free(path);
     }
 };
 
 // caller must free() the result
 static TCHAR *GetTempFilePath(const TCHAR *prefix=_T("PsE"))
 {
-    TCHAR path[MAX_PATH], shortPath[MAX_PATH];
-    DWORD res = GetTempPath(MAX_PATH - 14, shortPath);
-    if (!res || res >= MAX_PATH - 14 || !GetTempFileName(shortPath, prefix, 0, path))
+    TCHAR path[MAX_PATH], tempDir[MAX_PATH - 14];
+    DWORD res = GetTempPath(dimof(tempDir), tempDir);
+    if (!res || res >= dimof(tempDir) || !GetTempFileName(tempDir, prefix, 0, path))
         return NULL;
-
-    res = GetShortPathName(path, shortPath, dimof(shortPath));
-    if (!res || res >= dimof(shortPath))
-        return str::Dup(path);
-    return str::Dup(shortPath);
+    return str::Dup(path);
 }
 
 static PdfEngine *ps2pdf(const TCHAR *fileName)
