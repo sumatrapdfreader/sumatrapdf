@@ -635,6 +635,9 @@
     <ClCompile Include="src\EngineDump.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Toolbar.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -912,6 +915,9 @@
     </ClInclude>
     <ClInclude Include="src\utils\Transactions.h">
       <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Toolbar.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

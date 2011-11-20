@@ -182,7 +182,7 @@ All files
 Kõik failid
 
 All supported documents
-Kõik toetatavad dokumendid
+Kõik toetatud vormingud
 
 Application:
 Rakendus:
@@ -209,16 +209,19 @@ Book&marks\tF12
 Jär&jehoidjad\tF12
 
 Bookmark Shortcuts
-Järjehoidjate lühiteed
+Järjehoidjate otseteed
 
 Bookmark shortcut to page %s of %s
-Tee järjehoidja lühitee leheküljele %s/%s
+Tee järjehoidja otsetee leheküljele %s/%s
 
 Bookmarks
 Järjehoidjad
 
 Bytes
 Baiti
+
+CHM documents
+CHM-dokumendid
 
 Can't connect to the Internet (error %#x).
 Internetiühenduse loomine ebaõnnestus (viga %#x).
@@ -336,6 +339,9 @@ Faili salvestamine ebaõnnestus
 
 Favorites
 Lemmikud
+
+File %s not found
+Faili %s ei leitud
 
 File Size:
 Faili suurus:
@@ -503,7 +509,7 @@ Please wait - rendering...
 Palun oota - toimub visualiseerimine...
 
 Postscript documents
-Postscript dokumendid
+Postscript-dokumendid
 
 Pr&esentation\tCtrl+L
 &Esitlus\tCtrl+L
@@ -548,7 +554,7 @@ Save As
 Salvesta kui...
 
 Save S&hortcut...\tCtrl+Shift+S
-Salvesta &lühitee...\tCtrl+Shift+S
+Salvesta &otsetee...\tCtrl+Shift+S
 
 Searching %d of %d...
 Otsitakse %d/%d...
@@ -581,7 +587,7 @@ Show frequently read
 Näita sageli loetud dokumente
 
 Show the &bookmarks sidebar when available
-Näita &järjehoidjate külgriba kui on võimalik 
+Näita &järjehoidjate külgriba kui võimalik 
 
 Single Page
 Üheleheküljeline
@@ -605,10 +611,10 @@ SumatraPDF crashed
 SumatraPDF jooksis kokku
 
 SumatraPDF is your default PDF reader
-SumatraPDF on vaikimisi PDF lehitseja
+SumatraPDF on vaikimisi PDF-lehitseja
 
 SumatraPDF should now be your default PDF reader
-SumatraPDF peaks nüüd olema vaikimisi PDF lehitseja
+SumatraPDF peaks nüüd olema vaikimisi PDF-lehitseja
 
 Synchronization file cannot be opened
 Sünkroniseerimisfaili ei suudeta avada
@@ -641,13 +647,13 @@ You have version %s
 Kasutusel on versioon %s
 
 Zoom
-Suurendus
+Suurenda
 
 Zoom In
-Suurendamine
+Suurenda
 
 Zoom Out
-Vähendamine
+Vähenda
 
 Zoom factor
 Suurendusaste
@@ -660,8 +666,4 @@ teksti kopeerimine
 
 printing document
 dokumendi printimine
-
-# Untranslated:
-#CHM documents
-#File %s not found
 
