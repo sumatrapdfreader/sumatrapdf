@@ -63,10 +63,10 @@ public:
         ScopedComPtr<IFilter> pFilter;
 
         CLSID clsid;
-        if (SUCCEEDED(CLSIDFromTString(SZ_PDF_FILTER_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
+        if (SUCCEEDED(CLSIDFromString(AsWStrQ(SZ_PDF_FILTER_CLSID), &clsid)) && IsEqualCLSID(m_clsid, clsid))
             pFilter = new NOTHROW CPdfFilter(&g_lRefCount);
 #ifdef BUILD_TEX_IFILTER
-        else if (SUCCEEDED(CLSIDFromTString(SZ_TEX_FILTER_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
+        else if (SUCCEEDED(CLSIDFromString(AsWStrQ(SZ_TEX_FILTER_CLSID), &clsid)) && IsEqualCLSID(m_clsid, clsid))
             pFilter = new NOTHROW CTeXFilter(&g_lRefCount);
 #endif
         else

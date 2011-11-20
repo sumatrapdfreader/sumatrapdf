@@ -304,11 +304,7 @@ bool CreateShortcut(const TCHAR *shortcutPath, const TCHAR *exePath,
     if (description)
         lnk->SetDescription(description);
 
-#ifndef _UNICODE
-    hr = file->Save(ScopedMem<WCHAR>(str::conv::ToWStr(shortcutPath)), TRUE);
-#else
-    hr = file->Save(shortcutPath, TRUE);
-#endif
+    hr = file->Save(AsWStrQ(shortcutPath), TRUE);
     return SUCCEEDED(hr);
 }
 

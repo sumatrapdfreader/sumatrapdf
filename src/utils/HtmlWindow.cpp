@@ -549,11 +549,7 @@ void HtmlWindow::NavigateToUrl(const TCHAR *urlStr)
     VARIANT url;
     VariantInit(&url);
     url.vt = VT_BSTR;
-#ifdef UNICODE
-    url.bstrVal = SysAllocString(urlStr);
-#else
-    url.bstrVal = SysAllocString(ScopedMem<WCHAR>(str::conv::ToWStr(urlStr)));
-#endif
+    url.bstrVal = SysAllocString(AsWStrQ(urlStr));
     if (!url.bstrVal)
         return;
     currentURL.Set(NULL);
@@ -640,11 +636,7 @@ void HtmlWindow::DisplayHtml(const TCHAR *html)
     if (FAILED(hr))
         goto Exit;
     var->vt = VT_BSTR;
-#ifdef UNICODE
-    var->bstrVal = SysAllocString(html);
-#else
-    var->bstrVal = SysAllocString(ScopedMem<WCHAR>(str::conv::ToWStr(html)));
-#endif
+    var->bstrVal = SysAllocString(AsWStrQ(html));
     if (!var->bstrVal)
         goto Exit;
     SafeArrayUnaccessData(arr);
@@ -937,11 +929,7 @@ HRESULT HW_DWebBrowserEvents2::Invoke(DISPID dispIdMember, REFIID riid, LCID lci
                 url = *vurl->pbstrVal;
             else
                 url = vurl->bstrVal;
-#ifdef UNICODE
-            bool shouldCancel = !fs->htmlWindow->OnBeforeNavigate(url, false);
-#else
-            bool shouldCancel = !fs->htmlWindow->OnBeforeNavigate(ScopedMem<TCHAR>(str::conv::FromWStr(url)), false);
-#endif
+            bool shouldCancel = !fs->htmlWindow->OnBeforeNavigate(AsTStrQ(url), false);
             *pDispParams->rgvarg[0].pboolVal = shouldCancel ? VARIANT_TRUE : VARIANT_FALSE;
             break;
         }
@@ -964,11 +952,7 @@ HRESULT HW_DWebBrowserEvents2::Invoke(DISPID dispIdMember, REFIID riid, LCID lci
                 url = *vurl->pbstrVal;
             else
                 url = vurl->bstrVal;
-#ifdef UNICODE
-            fs->htmlWindow->OnDocumentComplete(url);
-#else
-            fs->htmlWindow->OnDocumentComplete(ScopedMem<TCHAR>(str::conv::FromWStr(url)));
-#endif
+            fs->htmlWindow->OnDocumentComplete(AsTStrQ(url));
             break;
         }
 
@@ -986,11 +970,7 @@ HRESULT HW_DWebBrowserEvents2::Invoke(DISPID dispIdMember, REFIID riid, LCID lci
         case DISPID_NEWWINDOW3:
         {
             BSTR url = pDispParams->rgvarg[0].bstrVal;
-#ifdef UNICODE
-            bool shouldCancel = !fs->htmlWindow->OnBeforeNavigate(url, true);
-#else
-            bool shouldCancel = !fs->htmlWindow->OnBeforeNavigate(ScopedMem<TCHAR>(str::conv::FromWStr(url)), true);
-#endif
+            bool shouldCancel = !fs->htmlWindow->OnBeforeNavigate(AsTStrQ(url), true);
             *pDispParams->rgvarg[3].pboolVal = shouldCancel ? VARIANT_TRUE : VARIANT_FALSE;
             break;
         }

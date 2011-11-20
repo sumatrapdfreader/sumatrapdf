@@ -344,14 +344,14 @@ void OnMenuProperties(WindowInfo& win)
 
     if (!win.IsChm()) {
         str = FormatPageSize(engine, win.dm->CurrentPageNo(), win.dm->Rotation());
-    #ifdef UNICODE
+#ifdef UNICODE
         if (IsUIRightToLeft() && WindowsVerVistaOrGreater()) {
             ScopedMem<TCHAR> tmp(str);
             // ensure that the size remains ungarbled left-to-right
             // (note: XP doesn't know about \u202A...\u202C)
             str = str::Format(_T("\u202A%s\u202C"), tmp);
         }
-    #endif
+#endif
         layoutData->AddProperty(_TR("Page Size:"), str);
     }
 

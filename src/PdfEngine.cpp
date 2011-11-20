@@ -231,14 +231,14 @@ void fz_stream_fingerprint(fz_stream *file, unsigned char digest[16])
     fz_drop_buffer(buffer);
 }
 
-WCHAR *fz_span_to_wchar(fz_text_span *text, TCHAR *lineSep, RectI **coords_out=NULL)
+TCHAR *fz_span_to_tchar(fz_text_span *text, TCHAR *lineSep, RectI **coords_out=NULL)
 {
     size_t lineSepLen = str::Len(lineSep);
     size_t textLen = 0;
     for (fz_text_span *span = text; span; span = span->next)
         textLen += span->len + lineSepLen;
 
-    WCHAR *content = SAZA(WCHAR, textLen + 1);
+    TCHAR *content = SAZA(TCHAR, textLen + 1);
     if (!content)
         return NULL;
 
@@ -251,10 +251,16 @@ WCHAR *fz_span_to_wchar(fz_text_span *text, TCHAR *lineSep, RectI **coords_out=N
         }
     }
 
-    WCHAR *dest = content;
+    TCHAR *dest = content;
     for (fz_text_span *span = text; span; span = span->next) {
         for (int i = 0; i < span->len; i++) {
+#ifdef UNICODE
             *dest = span->text[i].c;
+#else
+            WCHAR c = span->text[i].c;
+            if (!WideCharToMultiByte(CP_ACP, 0, &c, 1, dest, 1, NULL, NULL))
+                *dest = '?';
+#endif
             if (*dest < 32)
                 *dest = '?';
             dest++;
@@ -263,12 +269,8 @@ WCHAR *fz_span_to_wchar(fz_text_span *text, TCHAR *lineSep, RectI **coords_out=N
         }
         if (!span->eol && span->next)
             continue;
-#ifdef UNICODE
         lstrcpy(dest, lineSep);
         dest += lineSepLen;
-#else
-        dest += MultiByteToWideChar(CP_ACP, 0, lineSep, lineSepLen, dest, lineSepLen);
-#endif
         if (destRect) {
             ZeroMemory(destRect, lineSepLen * sizeof(fz_bbox));
             destRect += lineSepLen;
@@ -1631,19 +1633,15 @@ TCHAR *CPdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, RectI **coord
     // fresh runs (otherwise the list device omits text outside the mediabox bounds)
     fz_error error = RunPage(page, fz_new_text_device(text), fz_identity, target, fz_infinite_bbox, cacheRun);
 
-    WCHAR *content = NULL;
+    TCHAR *content = NULL;
     if (!error)
-        content = fz_span_to_wchar(text, lineSep, coords_out);
+        content = fz_span_to_tchar(text, lineSep, coords_out);
 
     EnterCriticalSection(&xrefAccess);
     fz_free_text_span(text);
     LeaveCriticalSection(&xrefAccess);
 
-#ifdef UNICODE
     return content;
-#else
-    return str::conv::FromWStr(ScopedMem<WCHAR>(content));
-#endif
 }
 
 TCHAR *CPdfEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out, RenderTarget target)
@@ -2614,17 +2612,13 @@ TCHAR *CXpsEngine::ExtractPageText(xps_page *page, TCHAR *lineSep, RectI **coord
     // fresh runs (otherwise the list device omits text outside the mediabox bounds)
     runPage(page, fz_new_text_device(text), fz_identity, fz_infinite_bbox, cacheRun);
 
-    WCHAR *content = fz_span_to_wchar(text, lineSep, coords_out);
+    TCHAR *content = fz_span_to_tchar(text, lineSep, coords_out);
 
     EnterCriticalSection(&_ctxAccess);
     fz_free_text_span(text);
     LeaveCriticalSection(&_ctxAccess);
 
-#ifdef UNICODE
     return content;
-#else
-    return str::conv::FromWStr(ScopedMem<WCHAR>(content));
-#endif
 }
 
 TCHAR *CXpsEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out, RenderTarget target)

@@ -122,7 +122,7 @@ const TCHAR *   Parse(const TCHAR *str, const TCHAR *format, ...);
 
 namespace conv {
 
-#ifdef _UNICODE
+#ifdef UNICODE
 inline TCHAR *  FromUtf8(const char *src) { return ToWideChar(src, CP_UTF8); }
 inline char *   ToUtf8(const TCHAR *src) { return ToMultiByte(src, CP_UTF8); }
 inline TCHAR *  FromAnsi(const char *src) { return ToWideChar(src, CP_ACP); }
@@ -142,6 +142,15 @@ inline WCHAR *  ToWStr(const TCHAR *src) { return ToWideChar(src, CP_ACP); }
 
 }
 
+// Quick conversions are no-ops for UNICODE builds
+#ifdef UNICODE
+#define AsWStrQ(src) (src)
+#define AsTStrQ(src) (src)
+#else
+#define AsWStrQ(src) (ScopedMem<WCHAR>(str::conv::ToWStr(src)))
+#define AsTStrQ(src) (ScopedMem<TCHAR>(str::conv::FromWStr(src)))
+#endif
+
 inline bool ChrIsDigit(const WCHAR c)
 {
     return '0' <= c && c <= '9';
@@ -152,13 +161,11 @@ inline bool ChrIsDigit(const WCHAR c)
 
 #ifndef DEBUG
   #define DBG_OUT(format, ...) NoOp()
-#elif UNICODE
-  #define DBG_OUT(format, ...) str::DbgOut(L##format, __VA_ARGS__)
 #else
-  #define DBG_OUT(format, ...) str::DbgOut(format, __VA_ARGS__)
+  #define DBG_OUT(format, ...) str::DbgOut(_T(format), __VA_ARGS__)
 #endif
 
-#ifdef _UNICODE
+#ifdef UNICODE
   #define CF_T_TEXT CF_UNICODETEXT
 #else
   #define CF_T_TEXT CF_TEXT

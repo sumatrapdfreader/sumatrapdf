@@ -366,11 +366,7 @@ static HRESULT InitPropString(PROPVARIANT *var, const TCHAR *value)
 {
     if (!var)
         return E_INVALIDARG;
-#ifdef UNICODE
-    HRESULT hr = SHStrDupW(value, &var->pwszVal);
-#else
-    HRESULT hr = SHStrDupW(ScopedMem<WCHAR>(str::conv::ToWStr(value)), &var->pwszVal);
-#endif
+    HRESULT hr = SHStrDupW(AsWStrQ(value), &var->pwszVal);
     if (SUCCEEDED(hr))
         var->vt = VT_LPWSTR;
     else
