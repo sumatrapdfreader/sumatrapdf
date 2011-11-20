@@ -108,6 +108,19 @@ TCHAR *Normalize(const TCHAR *path)
     return normpath;
 }
 
+// Normalizes the file path and the converts it into a short form that
+// can be used for interaction with non-UNICODE aware applications
+TCHAR *ShortPath(const TCHAR *path)
+{
+    ScopedMem<TCHAR> normpath(Normalize(path));
+    DWORD cch = GetShortPathName(normpath, NULL, 0);
+    if (!cch)
+        return normpath;
+    TCHAR *shortpath = SAZA(TCHAR, cch);
+    GetShortPathName(normpath, shortpath, cch);
+    return shortpath;
+}
+
 // Code adapted from http://stackoverflow.com/questions/562701/best-way-to-determine-if-two-path-reference-to-same-file-in-c-c/562830#562830
 // Determine if 2 paths point ot the same file...
 bool IsSame(const TCHAR *path1, const TCHAR *path2)

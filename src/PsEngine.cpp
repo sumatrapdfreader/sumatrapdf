@@ -111,12 +111,13 @@ static TCHAR *GetTempFilePath(const TCHAR *prefix=_T("PsE"))
 static PdfEngine *ps2pdf(const TCHAR *fileName)
 {
     // TODO: read from gswin32c's stdout instead of using a TEMP file
+    ScopedMem<TCHAR> shortPath(path::ShortPath(fileName));
     ScopedMem<TCHAR> tmpFile(GetTempFilePath());
     ScopedFile tmpFileScope(tmpFile);
     ScopedMem<TCHAR> gswin32c(GetGhostscriptPath());
-    if (!tmpFile || !gswin32c)
+    if (!shortPath || !tmpFile || !gswin32c)
         return NULL;
-    ScopedMem<TCHAR> cmdLine(str::Format(_T("\"%s\" -q -dSAFER -dNOPAUSE -dBATCH -dEPSCrop -sOutputFile=\"%s\" -sDEVICE=pdfwrite -c .setpdfwrite -f \"%s\""), gswin32c, tmpFile, fileName));
+    ScopedMem<TCHAR> cmdLine(str::Format(_T("\"%s\" -q -dSAFER -dNOPAUSE -dBATCH -dEPSCrop -sOutputFile=\"%s\" -sDEVICE=pdfwrite -c .setpdfwrite -f \"%s\""), gswin32c, tmpFile, shortPath));
 
     if (getenv("MULOG")) {
         _tprintf(_T("ps2pdf: using Ghostscript from '%s'\n"), gswin32c);
