@@ -771,11 +771,11 @@ bool HtmlWindow::WaitUntilLoaded(DWORD maxWaitMs, const TCHAR *url)
     // we navigated to the url we asked for
     // TODO: we have a race here: if user chooses e.g. to close the document while we're
     // here, we'll close the ChmEngine etc. and try to use it after we exit.
-    while ((currentURL.Get() == NULL) && (timer.GetCurrTimeInMs() < maxWaitMs)) {
+    while (!currentURL && (timer.GetCurrTimeInMs() < maxWaitMs)) {
         PumpRemainingMessages();
         Sleep(100);
     }
-    return LoadedExpectedPage(url, currentURL.Get());
+    return LoadedExpectedPage(url, currentURL);
 }
 
 FrameSite::FrameSite(HtmlWindow * win)

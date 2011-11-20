@@ -189,8 +189,11 @@ bool CChmEngine::OnBeforeNavigate(const TCHAR *url, bool newWindow)
         ++url;
     
     int pageNo = pages.Find(url) + 1;
-    if (pageNo > 0 && navCb)
-        navCb->PageNoChanged(pageNo);
+    if (pageNo) {
+        currentPageNo = pageNo;
+        if (navCb)
+            navCb->PageNoChanged(pageNo);
+    }
     return true;
 }
 
