@@ -12,6 +12,7 @@
 
 #define GAP 20
 #define INDICATOR_Y -44-24
+#define SLIDER_W (width - GAP - 24)
 
 static dispatch_queue_t queue;
 static fz_glyph_cache *glyphcache = NULL;
@@ -21,8 +22,13 @@ static float screenScale = 1;
 {
 	NSArray *files;
 	NSTimer *timer;
+	struct document *_doc; // temporaries for juggling password dialog
+	NSString *_filename;
 }
 - (void) openDocument: (NSString*)filename;
+- (void) askForPassword: (NSString*)prompt;
+- (void) onPasswordOkay;
+- (void) onPasswordCancel;
 - (void) reload;
 @end
 
@@ -35,6 +41,16 @@ static float screenScale = 1;
 - (id) initWithTarget: (id)aTarget titles: (NSMutableArray*)aTitles pages: (NSMutableArray*)aPages;
 @end
 
+@interface MuHitView : UIView
+{
+	CGSize pageSize;
+	int hitCount;
+	CGRect hitRects[500];
+}
+- (id) initWithSearchResults: (int)n forDocument: (struct document *)doc;
+- (void) setPageSize: (CGSize)s;
+@end
+
 @interface MuPageView : UIScrollView <UIScrollViewDelegate>
 {
 	struct document *doc;
@@ -42,6 +58,8 @@ static float screenScale = 1;
 	UIActivityIndicatorView *loadingView;
 	UIImageView *imageView;
 	UIImageView *tileView;
+	MuHitView *hitView;
+	CGSize pageSize;
 	CGRect tileFrame;
 	float tileScale;
 	BOOL cancel;
@@ -53,29 +71,37 @@ static float screenScale = 1;
 - (void) loadTile;
 - (void) willRotate;
 - (void) resetZoomAnimated: (BOOL)animated;
+- (void) showSearchResults: (int)count;
+- (void) clearSearchResults;
 - (int) number;
 @end
 
-@interface MuDocumentController : UIViewController <UIScrollViewDelegate, UIGestureRecognizerDelegate>
+@interface MuDocumentController : UIViewController <UIScrollViewDelegate, UISearchBarDelegate>
 {
 	struct document *doc;
 	NSString *key;
-	NSMutableSet *visiblePages;
-	NSMutableSet *recycledPages;
 	MuOutlineController *outline;
 	UIScrollView *canvas;
 	UILabel *indicator;
 	UISlider *slider;
-	UIBarButtonItem *wrapper; // for slider
+	UISearchBar *searchBar;
+	UIBarButtonItem *nextButton, *prevButton, *cancelButton, *searchButton, *outlineButton;
+	UIBarButtonItem *sliderWrapper;
+	int searchPage;
+	int cancelSearch;
 	int width; // current screen size
 	int height;
 	int current; // currently visible page
 	int scroll_animating; // stop view updates during scrolling animations
 }
-- (id) initWithFile: (NSString*)filename;
+- (id) initWithFilename: (NSString*)nsfilename document: (struct document *)aDoc;
 - (void) createPageView: (int)number;
 - (void) gotoPage: (int)number animated: (BOOL)animated;
 - (void) onShowOutline: (id)sender;
+- (void) onShowSearch: (id)sender;
+- (void) onCancelSearch: (id)sender;
+- (void) resetSearch;
+- (void) showSearchResults: (int)count forPage: (int)number;
 - (void) onSlide: (id)sender;
 - (void) onTap: (UITapGestureRecognizer*)sender;
 - (void) showNavigationBar;
@@ -147,15 +173,16 @@ static void releasePixmap(void *info, const void *data, size_t size)
 static UIImage *newImageWithPixmap(fz_pixmap *pix)
 {
 	CGDataProviderRef cgdata = CGDataProviderCreateWithData(pix, pix->samples, pix->w * 4 * pix->h, releasePixmap);
+	CGColorSpaceRef cgcolor = CGColorSpaceCreateDeviceRGB();
 	CGImageRef cgimage = CGImageCreate(pix->w, pix->h, 8, 32, 4 * pix->w,
-			CGColorSpaceCreateDeviceRGB(),
-			kCGBitmapByteOrderDefault,
+			cgcolor, kCGBitmapByteOrderDefault,
 			cgdata, NULL, NO, kCGRenderingIntentDefault);
 	UIImage *image = [[UIImage alloc]
 		initWithCGImage: cgimage
 		scale: screenScale
 		orientation: UIImageOrientationUp];
 	CGDataProviderRelease(cgdata);
+	CGColorSpaceRelease(cgcolor);
 	CGImageRelease(cgimage);
 	return image;
 }
@@ -168,6 +195,13 @@ static CGSize fitPageToScreen(CGSize page, CGSize screen)
 	hscale = floorf(page.width * scale) / page.width;
 	vscale = floorf(page.height * scale) / page.height;
 	return CGSizeMake(hscale, vscale);
+}
+
+static CGSize measurePage(struct document *doc, int number)
+{
+	CGSize pageSize;
+	measure_page(doc, number, &pageSize.width, &pageSize.height);
+	return pageSize;
 }
 
 static UIImage *renderPage(struct document *doc, int number, CGSize screenSize)
@@ -317,19 +351,81 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 {
 	int row = [indexPath row];
 	if (row == 0)
-		[self openDocument: @"../MuPDF.app/About.pdf"];
+		[self openDocument: @"../MuPDF.app/About.xps"];
 	else
 		[self openDocument: [files objectAtIndex: row - 1]];
 }
 
-- (void) openDocument: (NSString*)filename
+- (void) openDocument: (NSString*)nsfilename
 {
-	MuDocumentController *document = [[MuDocumentController alloc] initWithFile: filename];
+	char filename[PATH_MAX];
+
+	dispatch_sync(queue, ^{});
+
+	strcpy(filename, [NSHomeDirectory() UTF8String]);
+	strcat(filename, "/Documents/");
+	strcat(filename, [nsfilename UTF8String]);
+
+	printf("open document '%s'\n", filename);
+
+	_filename = [nsfilename retain];
+	_doc = open_document(filename);
+	if (!_doc) {
+		showAlert(@"Cannot open document");
+		return;
+	}
+
+	if (needs_password(_doc))
+		[self askForPassword: @"'%@' needs a password:"];
+	else
+		[self onPasswordOkay];
+}
+
+- (void) askForPassword: (NSString*)prompt
+{
+	UIAlertView *passwordAlertView = [[UIAlertView alloc]
+		initWithTitle: @"Password Protected"
+		message: [NSString stringWithFormat: prompt, [_filename lastPathComponent]]
+		delegate: self
+		cancelButtonTitle: @"Cancel"
+		otherButtonTitles: @"Done", nil];
+	[passwordAlertView setAlertViewStyle: UIAlertViewStyleSecureTextInput];
+	[passwordAlertView show];
+	[passwordAlertView release];
+}
+
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+	char *password = (char*) [[[alertView textFieldAtIndex: 0] text] UTF8String];
+	[alertView dismissWithClickedButtonIndex: buttonIndex animated: TRUE];
+	if (buttonIndex == 1) {
+		if (authenticate_password(_doc, password))
+			[self onPasswordOkay];
+		else
+			[self askForPassword: @"Wrong password for '%@'. Try again:"];
+	} else {
+		[self onPasswordCancel];
+	}
+}
+
+- (void) onPasswordOkay
+{
+	MuDocumentController *document = [[MuDocumentController alloc] initWithFilename: _filename document: _doc];
 	if (document) {
 		[self setTitle: @"Library"];
 		[[self navigationController] pushViewController: document animated: YES];
 		[document release];
 	}
+	[_filename release];
+	_doc = NULL;
+}
+
+- (void) onPasswordCancel
+{
+	[_filename release];
+	printf("close document (password cancel)\n");
+	close_document(_doc);
+	_doc = NULL;
 }
 
 @end
@@ -404,6 +500,53 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 
 #pragma mark -
 
+@implementation MuHitView
+
+- (id) initWithSearchResults: (int)n forDocument: (struct document *)doc
+{
+	self = [super initWithFrame: CGRectMake(0,0,100,100)];
+	if (self) {
+		[self setOpaque: NO];
+
+		pageSize = CGSizeMake(100,100);
+
+		for (int i = 0; i < n && i < nelem(hitRects); i++) {
+			fz_bbox bbox = search_result_bbox(doc, i); // this is thread-safe enough
+			hitRects[i].origin.x = bbox.x0;
+			hitRects[i].origin.y = bbox.y0;
+			hitRects[i].size.width = bbox.x1 - bbox.x0;
+			hitRects[i].size.height = bbox.y1 - bbox.y0;
+		}
+		hitCount = n;
+	}
+	return self;
+}
+
+- (void) setPageSize: (CGSize)s
+{
+	pageSize = s;
+	// if page takes a long time to load we may have drawn at the initial (wrong) size
+	[self setNeedsDisplay];
+}
+
+- (void) drawRect: (CGRect)r
+{
+	CGSize scale = fitPageToScreen(pageSize, self.bounds.size);
+
+	[[UIColor colorWithRed: 0.3 green: 0.3 blue: 1 alpha: 0.5] set];
+
+	for (int i = 0; i < hitCount; i++) {
+		CGRect rect = hitRects[i];
+		rect.origin.x *= scale.width;
+		rect.origin.y *= scale.height;
+		rect.size.width *= scale.width;
+		rect.size.height *= scale.height;
+		UIRectFill(rect);
+	}
+}
+
+@end
+
 @implementation MuPageView
 
 - (id) initWithFrame: (CGRect)frame document: (struct document*)aDoc page: (int)aNumber
@@ -444,6 +587,7 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 		__block id block_self = self; // don't auto-retain self!
 		dispatch_async(dispatch_get_main_queue(), ^{ [block_self dealloc]; });
 	} else {
+		[hitView release];
 		[tileView release];
 		[loadingView release];
 		[imageView release];
@@ -454,6 +598,30 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 - (int) number
 {
 	return number;
+}
+
+- (void) showSearchResults: (int)count
+{
+	if (hitView) {
+		[hitView removeFromSuperview];
+		[hitView release];
+		hitView = nil;
+	}
+	hitView = [[MuHitView alloc] initWithSearchResults: count forDocument: doc];
+	if (imageView) {
+		[hitView setFrame: [imageView frame]];
+		[hitView setPageSize: pageSize];
+	}
+	[self addSubview: hitView];
+}
+
+- (void) clearSearchResults
+{
+	if (hitView) {
+		[hitView removeFromSuperview];
+		[hitView release];
+		hitView = nil;
+	}
 }
 
 - (void) resetZoomAnimated: (BOOL)animated
@@ -485,8 +653,10 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 	dispatch_async(queue, ^{
 		if (!cancel) {
 			printf("render page %d\n", number);
+			CGSize size = measurePage(doc, number);
 			UIImage *image = renderPage(doc, number, self.bounds.size);
 			dispatch_async(dispatch_get_main_queue(), ^{
+				pageSize = size;
 				[self displayImage: image];
 				[image release];
 			});
@@ -504,10 +674,15 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 		loadingView = nil;
 	}
 
+	if (hitView)
+		[hitView setPageSize: pageSize];
+
 	if (!imageView) {
 		imageView = [[UIImageView alloc] initWithImage: image];
 		imageView.opaque = YES;
 		[self addSubview: imageView];
+		if (hitView)
+			[self bringSubviewToFront: hitView];
 	} else {
 		[imageView setImage: image];
 	}
@@ -530,7 +705,7 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 			dispatch_async(queue, ^{
 				dispatch_async(dispatch_get_main_queue(), ^{
 					CGSize scale = fitPageToScreen(imageView.image.size, self.bounds.size);
-					if (fabs(scale.width - 1) > 0.1)
+					if (fabs(scale.width - 1) > 0.01)
 						[self loadPage];
 				});
 			});
@@ -542,6 +717,7 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 
 		[self layoutIfNeeded];
 	}
+
 }
 
 - (void) willRotate
@@ -577,6 +753,9 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 		loadingView.frame = frameToCenter;
 	else
 		imageView.frame = frameToCenter;
+
+	if (hitView && imageView)
+		[hitView setFrame: [imageView frame]];
 }
 
 - (UIView*) viewForZoomingInScrollView: (UIScrollView*)scrollView
@@ -586,7 +765,7 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 
 - (void) loadTile
 {
-	CGSize pageSize = self.bounds.size;
+	CGSize screenSize = self.bounds.size;
 
 	tileFrame.origin = self.contentOffset;
 	tileFrame.size = self.bounds.size;
@@ -616,7 +795,7 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 		}
 
 		printf("render tile\n");
-		UIImage *image = renderTile(doc, number, pageSize, viewFrame, scale);
+		UIImage *image = renderTile(doc, number, screenSize, viewFrame, scale);
 
 		dispatch_async(dispatch_get_main_queue(), ^{
 			isValid = CGRectEqualToRect(frame, tileFrame) && scale == tileScale;
@@ -632,6 +811,8 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 				tileView = [[UIImageView alloc] initWithFrame: frame];
 				[tileView setImage: image];
 				[self addSubview: tileView];
+				if (hitView)
+					[self bringSubviewToFront: hitView];
 			} else {
 				printf("discard tile\n");
 			}
@@ -666,53 +847,40 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 	[self loadTile];
 }
 
+- (void) scrollViewDidZoom: (UIScrollView*)scrollView
+{
+	if (hitView && imageView)
+		[hitView setFrame: [imageView frame]];
+}
+
 @end
 
 #pragma mark -
 
 @implementation MuDocumentController
 
-- (id) initWithFile: (NSString*)nsfilename
+- (id) initWithFilename: (NSString*)filename document: (struct document *)aDoc
 {
-	char filename[PATH_MAX];
-
 	self = [super init];
 	if (!self)
 		return nil;
 
-	key = [nsfilename retain];
+	key = [filename retain];
+	doc = aDoc;
 
 	dispatch_sync(queue, ^{});
 
-	strcpy(filename, [NSHomeDirectory() UTF8String]);
-	strcat(filename, "/Documents/");
-	strcat(filename, [nsfilename UTF8String]);
-
-	printf("open document '%s'\n", filename);
-
-	doc = open_document(filename);
-	if (!doc) {
-		showAlert(@"Cannot open document");
-		[self release];
-		return nil;
-	}
-
-	NSMutableArray *titles = [[NSMutableArray alloc] init];
-	NSMutableArray *pages = [[NSMutableArray alloc] init];
 	fz_outline *root = load_outline(doc);
 	if (root) {
+		NSMutableArray *titles = [[NSMutableArray alloc] init];
+		NSMutableArray *pages = [[NSMutableArray alloc] init];
 		flattenOutline(titles, pages, root, 0);
+		if ([titles count])
+			outline = [[MuOutlineController alloc] initWithTarget: self titles: titles pages: pages];
+		[titles release];
+		[pages release];
 		fz_free_outline(root);
 	}
-	if ([titles count]) {
-		outline = [[MuOutlineController alloc] initWithTarget: self titles: titles pages: pages];
-		[[self navigationItem] setRightBarButtonItem:
-			[[UIBarButtonItem alloc]
-				initWithBarButtonSystemItem: UIBarButtonSystemItemBookmarks
-				target:self action:@selector(onShowOutline:)]];
-	}
-	[titles release];
-	[pages release];
 
 	return self;
 }
@@ -728,9 +896,6 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 	UIView *view = [[UIView alloc] initWithFrame: CGRectZero];
 	[view setAutoresizingMask: UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight];
 	[view setAutoresizesSubviews: YES];
-
-	visiblePages = [[NSMutableSet alloc] init];
-	recycledPages = [[NSMutableSet alloc] init];
 
 	canvas = [[UIScrollView alloc] initWithFrame: CGRectMake(0,0,GAP,0)];
 	[canvas setAutoresizingMask: UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight];
@@ -752,29 +917,57 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 	[indicator setBackgroundColor: [[UIColor blackColor] colorWithAlphaComponent: 0.5]];
 	[indicator setTextColor: [UIColor whiteColor]];
 
+	[view addSubview: canvas];
+	[view addSubview: indicator];
+
 	slider = [[UISlider alloc] initWithFrame: CGRectZero];
 	[slider setMinimumValue: 0];
 	[slider setMaximumValue: count_pages(doc) - 1];
 	[slider addTarget: self action: @selector(onSlide:) forControlEvents: UIControlEventValueChanged];
 
-	[view addSubview: canvas];
-	[view addSubview: indicator];
+	sliderWrapper = [[UIBarButtonItem alloc] initWithCustomView: slider];
 
-	wrapper = [[UIBarButtonItem alloc] initWithCustomView: slider];
-	[self setToolbarItems: [NSArray arrayWithObjects: wrapper, nil]];
+	[self setToolbarItems: [NSArray arrayWithObjects: sliderWrapper, nil]];
+
+	// Set up the buttons on the navigation and search bar
+
+	if (outline) {
+		outlineButton = [[UIBarButtonItem alloc]
+			initWithBarButtonSystemItem: UIBarButtonSystemItemBookmarks
+			target:self action:@selector(onShowOutline:)];
+	}
+	cancelButton = [[UIBarButtonItem alloc]
+		initWithTitle: @"Cancel" style: UIBarButtonItemStyleBordered
+		target:self action:@selector(onCancelSearch:)];
+	searchButton = [[UIBarButtonItem alloc]
+		initWithBarButtonSystemItem: UIBarButtonSystemItemSearch
+		target:self action:@selector(onShowSearch:)];
+	prevButton = [[UIBarButtonItem alloc]
+		initWithBarButtonSystemItem: UIBarButtonSystemItemRewind
+		target:self action:@selector(onSearchPrev:)];
+	nextButton = [[UIBarButtonItem alloc]
+		initWithBarButtonSystemItem: UIBarButtonSystemItemFastForward
+		target:self action:@selector(onSearchNext:)];
+
+	float w = [[UIScreen mainScreen] bounds].size.width - 180;
+
+	searchBar = [[UISearchBar alloc] initWithFrame: CGRectMake(0,0,w,32)];
+	[searchBar setPlaceholder: @"Search"];
+	[searchBar setDelegate: self];
+	[searchBar setAutoresizingMask: UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight];
+	// HACK to make transparent background
+	[[searchBar.subviews objectAtIndex:0] removeFromSuperview];
+
+	[prevButton setEnabled: NO];
+	[nextButton setEnabled: NO];
+
+	[[self navigationItem] setRightBarButtonItems:
+		[NSArray arrayWithObjects: searchButton, outlineButton, nil]];
+
+	// TODO: add activityindicator to search bar
 
 	[self setView: view];
 	[view release];
-}
-
-- (void) viewDidUnload
-{
-	[visiblePages release]; visiblePages = nil;
-	[recycledPages release]; recycledPages = nil;
-	[indicator release]; indicator = nil;
-	[slider release]; slider = nil;
-	[wrapper release]; wrapper = nil;
-	[canvas release]; canvas = nil;
 }
 
 - (void) dealloc
@@ -786,6 +979,18 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 			close_document(self_doc);
 		});
 	}
+
+	[indicator release]; indicator = nil;
+	[slider release]; slider = nil;
+	[sliderWrapper release]; sliderWrapper = nil;
+	[searchBar release]; searchBar = nil;
+	[outlineButton release]; outlineButton = nil;
+	[searchButton release]; searchButton = nil;
+	[cancelButton release]; cancelButton = nil;
+	[prevButton release]; prevButton = nil;
+	[nextButton release]; nextButton = nil;
+	[canvas release]; canvas = nil;
+
 	[outline release];
 	[key release];
 	[super dealloc];
@@ -807,7 +1012,7 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 	[canvas setContentSize: CGSizeMake(count_pages(doc) * width, height)];
 	[canvas setContentOffset: CGPointMake(current * width, 0)];
 
-	[wrapper setWidth: width - GAP - 24];
+	[sliderWrapper setWidth: SLIDER_W];
 
 	[[self navigationController] setToolbarHidden: NO animated: animated];
 }
@@ -844,6 +1049,8 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 - (void) hideNavigationBar
 {
 	if (![[self navigationController] isNavigationBarHidden]) {
+		[searchBar resignFirstResponder];
+
 		[UIView beginAnimations: @"MuNavBar" context: NULL];
 		[UIView setAnimationDelegate: self];
 		[UIView setAnimationDidStopSelector: @selector(onHideNavigationBarFinished)];
@@ -866,6 +1073,139 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 - (void) onShowOutline: (id)sender
 {
 	[[self navigationController] pushViewController: outline animated: YES];
+}
+
+- (void) onShowSearch: (id)sender
+{
+	[[self navigationItem] setTitleView: searchBar];
+	[[self navigationItem] setRightBarButtonItems:
+		[NSArray arrayWithObjects: nextButton, prevButton, nil]];
+	[[self navigationItem] setLeftBarButtonItem: cancelButton];
+	[searchBar becomeFirstResponder];
+}
+
+- (void) onCancelSearch: (id)sender
+{
+	cancelSearch = YES;
+	[searchBar resignFirstResponder];
+	[[self navigationItem] setTitleView: nil];
+	[[self navigationItem] setRightBarButtonItems:
+		[NSArray arrayWithObjects: searchButton, outlineButton, nil]];
+	[[self navigationItem] setLeftBarButtonItem: nil];
+	[self resetSearch];
+}
+
+- (void) resetSearch
+{
+	searchPage = -1;
+	for (MuPageView *view in [canvas subviews])
+		[view clearSearchResults];
+}
+
+- (void) showSearchResults: (int)count forPage: (int)number
+{
+	printf("search found match on page %d\n", number);
+	searchPage = number;
+	[self gotoPage: number animated: NO];
+	for (MuPageView *view in [canvas subviews])
+		if ([view number] == number)
+			[view showSearchResults: count];
+		else
+			[view clearSearchResults];
+}
+
+- (void) searchInDirection: (int)dir
+{
+	UITextField *searchField;
+	char *needle;
+	int start;
+
+	[searchBar resignFirstResponder];
+
+	if (searchPage == current)
+		start = current + dir;
+	else
+		start = current;
+
+	needle = strdup([[searchBar text] UTF8String]);
+
+	searchField = nil;
+	for (id view in [searchBar subviews])
+		if ([view isKindOfClass: [UITextField class]])
+			searchField = view;
+
+	[prevButton setEnabled: NO];
+	[nextButton setEnabled: NO];
+	[searchField setEnabled: NO];
+
+	cancelSearch = NO;
+
+	dispatch_async(queue, ^{
+		for (int i = start; i >= 0 && i < count_pages(doc); i += dir) {
+			int n = search_page(doc, i, needle);
+			if (n) {
+				dispatch_async(dispatch_get_main_queue(), ^{
+					[prevButton setEnabled: YES];
+					[nextButton setEnabled: YES];
+					[searchField setEnabled: YES];
+					[self showSearchResults: n forPage: i];
+					free(needle);
+				});
+				return;
+			}
+			if (cancelSearch) {
+				dispatch_async(dispatch_get_main_queue(), ^{
+					[prevButton setEnabled: YES];
+					[nextButton setEnabled: YES];
+					[searchField setEnabled: YES];
+					free(needle);
+				});
+				return;
+			}
+		}
+		dispatch_async(dispatch_get_main_queue(), ^{
+			printf("no search results found\n");
+			[prevButton setEnabled: YES];
+			[nextButton setEnabled: YES];
+			[searchField setEnabled: YES];
+			UIAlertView *alert = [[UIAlertView alloc]
+				initWithTitle: @"No matches found for:"
+				message: [NSString stringWithUTF8String: needle]
+				delegate: nil
+				cancelButtonTitle: @"Close"
+				otherButtonTitles: nil];
+			[alert show];
+			[alert release];
+			free(needle);
+		});
+	});
+}
+
+- (void) onSearchPrev: (id)sender
+{
+	[self searchInDirection: -1];
+}
+
+- (void) onSearchNext: (id)sender
+{
+	[self searchInDirection: 1];
+}
+
+- (void) searchBarSearchButtonClicked: (UISearchBar*)sender
+{
+	[self onSearchNext: sender];
+}
+
+- (void) searchBar: (UISearchBar*)sender textDidChange: (NSString*)searchText
+{
+	[self resetSearch];
+	if ([[searchBar text] length] > 0) {
+		[prevButton setEnabled: YES];
+		[nextButton setEnabled: YES];
+	} else {
+		[prevButton setEnabled: NO];
+		[nextButton setEnabled: NO];
+	}
 }
 
 - (void) onSlide: (id)sender
@@ -918,22 +1258,26 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 	[indicator setText: [NSString stringWithFormat: @" %d of %d ", current+1, count_pages(doc)]];
 	[slider setValue: current];
 
-	// swap the page views in and out
+	// swap the distant page views out
 
-	for (MuPageView *view in visiblePages) {
+	NSMutableSet *invisiblePages = [[NSMutableSet alloc] init];
+	for (MuPageView *view in [canvas subviews]) {
 		if ([view number] != current)
 			[view resetZoomAnimated: YES];
-		if ([view number] < current - 2 || [view number] > current + 2) {
-			[recycledPages addObject: view];
-			[view removeFromSuperview];
-		}
+		if ([view number] < current - 2 || [view number] > current + 2)
+			[invisiblePages addObject: view];
 	}
-	[visiblePages minusSet: recycledPages];
-	[recycledPages removeAllObjects]; // don't bother recycling them...
+	for (MuPageView *view in invisiblePages)
+		[view removeFromSuperview];
+	[invisiblePages release]; // don't bother recycling them...
 
 	[self createPageView: current];
 	[self createPageView: current - 1];
 	[self createPageView: current + 1];
+
+	// reset search results when page has flipped
+	if (current != searchPage)
+		[self resetSearch];
 }
 
 - (void) createPageView: (int)number
@@ -946,7 +1290,6 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 			found = 1;
 	if (!found) {
 		MuPageView *view = [[MuPageView alloc] initWithFrame: CGRectMake(number * width, 0, width-GAP, height) document: doc page: number];
-		[visiblePages addObject: view];
 		[canvas addSubview: view];
 		[view release];
 	}
@@ -958,6 +1301,8 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 		number = 0;
 	if (number >= count_pages(doc))
 		number = count_pages(doc) - 1;
+	if (current == number)
+		return;
 	if (animated) {
 		// setContentOffset:animated: does not use the normal animation
 		// framework. It also doesn't play nice with the tap gesture
@@ -973,7 +1318,7 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 		[UIView setAnimationDelegate: self];
 		[UIView setAnimationDidStopSelector: @selector(onGotoPageFinished)];
 
-		for (MuPageView *view in visiblePages)
+		for (MuPageView *view in [canvas subviews])
 			[view resetZoomAnimated: NO];
 
 		[canvas setContentOffset: CGPointMake(number * width, 0)];
@@ -982,7 +1327,7 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 
 		[UIView commitAnimations];
 	} else {
-		for (MuPageView *view in visiblePages)
+		for (MuPageView *view in [canvas subviews])
 			[view resetZoomAnimated: NO];
 		[canvas setContentOffset: CGPointMake(number * width, 0)];
 	}
@@ -1008,20 +1353,21 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 	width = size.width;
 	height = size.height;
 
-	[wrapper setWidth: width - GAP - 24];
+	[sliderWrapper setWidth: SLIDER_W];
+
 	[[[self navigationController] toolbar] setNeedsLayout]; // force layout!
 
 	// use max_width so we don't clamp the content offset too early during animation
 	[canvas setContentSize: CGSizeMake(count_pages(doc) * max_width, height)];
 	[canvas setContentOffset: CGPointMake(current * width, 0)];
 
-	for (MuPageView *view in visiblePages) {
+	for (MuPageView *view in [canvas subviews]) {
 		if ([view number] == current) {
 			[view setFrame: CGRectMake([view number] * width, 0, width-GAP, height)];
 			[view willRotate];
 		}
 	}
-	for (MuPageView *view in visiblePages) {
+	for (MuPageView *view in [canvas subviews]) {
 		if ([view number] != current) {
 			[view setFrame: CGRectMake([view number] * width, 0, width-GAP, height)];
 			[view willRotate];

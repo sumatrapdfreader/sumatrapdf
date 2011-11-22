@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		9644E9A0146ACEC000E5B70A /* document.c in Sources */ = {isa = PBXBuildFile; fileRef = 9644E99E146ACEC000E5B70A /* document.c */; };
-		9683F619145F4F84000E1607 /* About.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 9683F618145F4F84000E1607 /* About.pdf */; };
+		9668C8D91476A30200D7BA52 /* About.xps in Resources */ = {isa = PBXBuildFile; fileRef = 9668C8D81476A30200D7BA52 /* About.xps */; };
 		968F2E9C14539C880085264E /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 968F2E9B14539C880085264E /* UIKit.framework */; };
 		968F2E9E14539C880085264E /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 968F2E9D14539C880085264E /* Foundation.framework */; };
 		968F2EA014539C880085264E /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 968F2E9F14539C880085264E /* CoreGraphics.framework */; };
@@ -39,7 +39,7 @@
 /* Begin PBXFileReference section */
 		9644E99E146ACEC000E5B70A /* document.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = document.c; sourceTree = "<group>"; };
 		9644E99F146ACEC000E5B70A /* document.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = document.h; sourceTree = "<group>"; };
-		9683F618145F4F84000E1607 /* About.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = About.pdf; sourceTree = "<group>"; };
+		9668C8D81476A30200D7BA52 /* About.xps */ = {isa = PBXFileReference; lastKnownFileType = file; path = About.xps; sourceTree = "<group>"; };
 		968461E214642DB00012AE09 /* libLibraries.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libLibraries.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		968F2E8E14539BEB0085264E /* build_libs.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = build_libs.sh; sourceTree = "<group>"; };
 		968F2E8F14539BEB0085264E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -86,7 +86,7 @@
 		968F2E9214539BF10085264E /* Sources */ = {
 			isa = PBXGroup;
 			children = (
-				9683F618145F4F84000E1607 /* About.pdf */,
+				9668C8D81476A30200D7BA52 /* About.xps */,
 				96BD2B36145AC485001CEBC3 /* Icon.png */,
 				96F2341414603FBA004A8A22 /* Icon@2x.png */,
 				96BD2B35145AC485001CEBC3 /* Icon-72.png */,
@@ -212,8 +212,8 @@
 			files = (
 				96BD2B38145AC485001CEBC3 /* Icon-72.png in Resources */,
 				96BD2B39145AC485001CEBC3 /* Icon.png in Resources */,
-				9683F619145F4F84000E1607 /* About.pdf in Resources */,
 				96F2341514603FBA004A8A22 /* Icon@2x.png in Resources */,
+				9668C8D91476A30200D7BA52 /* About.xps in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -309,7 +309,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = ..;
 				INFOPLIST_FILE = Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -335,7 +335,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = ..;
 				INFOPLIST_FILE = Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				PRODUCT_NAME = "$(TARGET_NAME)";

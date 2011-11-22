@@ -3,6 +3,8 @@
 #include "xps/muxps.h"
 #include "document.h"
 
+#include <ctype.h> // for tolower()
+
 struct document *
 open_document(char *filename)
 {
@@ -12,7 +14,7 @@ open_document(char *filename)
 		struct document *doc = fz_malloc(sizeof *doc);
 		memset(doc, 0, sizeof *doc);
 		doc->number = -1;
-		error = pdf_open_xref(&doc->pdf, filename, "");
+		error = pdf_open_xref(&doc->pdf, filename, NULL);
 		if (error) {
 			fz_free(doc);
 			fz_rethrow(error, "cannot open pdf document");
@@ -41,6 +43,24 @@ open_document(char *filename)
 		fz_throw("unknown document format");
 		return NULL;
 	}
+}
+
+int
+needs_password(struct document *doc)
+{
+	if (doc->pdf) {
+		return pdf_needs_password(doc->pdf);
+	}
+	return 0;
+}
+
+int
+authenticate_password(struct document *doc, char *password)
+{
+	if (doc->pdf) {
+		return pdf_authenticate_password(doc->pdf, password);
+	}
+	return 1;
 }
 
 fz_outline *
@@ -78,7 +98,6 @@ load_page(struct document *doc, int number)
 			pdf_free_page(doc->pdf_page);
 		}
 		doc->pdf_page = NULL;
-printf("load pdf page %d\n", number);
 		error = pdf_load_page(&doc->pdf_page, doc->pdf, number);
 		if (error)
 			fz_catch(error, "cannot load page %d", number);
@@ -87,7 +106,6 @@ printf("load pdf page %d\n", number);
 		if (doc->xps_page)
 			xps_free_page(doc->xps, doc->xps_page);
 		doc->xps_page = NULL;
-printf("load xps page %d\n", number);
 		error = xps_load_page(&doc->xps_page, doc->xps, number);
 		if (error)
 			fz_catch(error, "cannot load page %d", number);
@@ -135,6 +153,110 @@ draw_page(struct document *doc, int number, fz_device *dev, fz_matrix ctm)
 		doc->xps->dev = NULL;
 	}
 	fz_flush_warnings();
+}
+
+static int
+charat(fz_text_span *span, int idx)
+{
+	int ofs = 0;
+	while (span) {
+		if (idx < ofs + span->len)
+			return span->text[idx - ofs].c;
+		if (span->eol) {
+			if (idx == ofs + span->len)
+				return ' ';
+			ofs ++;
+		}
+		ofs += span->len;
+		span = span->next;
+	}
+	return 0;
+}
+
+static fz_bbox
+bboxat(fz_text_span *span, int idx)
+{
+	int ofs = 0;
+	while (span) {
+		if (idx < ofs + span->len)
+			return span->text[idx - ofs].bbox;
+		if (span->eol) {
+			if (idx == ofs + span->len)
+				return fz_empty_bbox;
+			ofs ++;
+		}
+		ofs += span->len;
+		span = span->next;
+	}
+	return fz_empty_bbox;
+}
+
+static int
+textlen(fz_text_span *span)
+{
+	int len = 0;
+	while (span) {
+		len += span->len;
+		if (span->eol)
+			len ++;
+		span = span->next;
+	}
+	return len;
+}
+
+static int
+match(fz_text_span *span, char *s, int n)
+{
+	int start = n, c;
+	while (*s) {
+		s += chartorune(&c, s);
+		if (c == ' ' && charat(span, n) == ' ') {
+			while (charat(span, n) == ' ')
+				n++;
+		} else {
+			if (tolower(c) != tolower(charat(span, n)))
+				return 0;
+			n++;
+		}
+	}
+	return n - start;
+}
+
+int
+search_page(struct document *doc, int number, char *needle)
+{
+	int pos, len, i, n;
+
+	if (strlen(needle) == 0)
+		return 0;
+
+	fz_text_span *text = fz_new_text_span();
+	fz_device *dev = fz_new_text_device(text);
+	draw_page(doc, number, dev, fz_identity);
+	fz_free_device(dev);
+
+	doc->hit_count = 0;
+
+	len = textlen(text);
+	for (pos = 0; pos < len; pos++) {
+		n = match(text, needle, pos);
+		if (n) {
+			for (i = 0; i < n; i++) {
+				fz_bbox r = bboxat(text, pos + i);
+				if (!fz_is_empty_bbox(r) && doc->hit_count < nelem(doc->hit_bbox))
+					doc->hit_bbox[doc->hit_count++] = r;
+			}
+		}
+	}
+
+	fz_free_text_span(text);
+	return doc->hit_count;
+}
+
+fz_bbox
+search_result_bbox(struct document *doc, int i)
+{
+	return doc->hit_bbox[i];
 }
 
 void

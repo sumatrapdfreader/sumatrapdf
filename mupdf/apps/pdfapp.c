@@ -139,17 +139,21 @@ static void pdfapp_open_pdf(pdfapp_t *app, char *filename, int fd)
 
 	app->outline = pdf_load_outline(app->xref);
 
-	app->doctitle = fz_strdup(filename);
-	if (strrchr(app->doctitle, '\\'))
-		app->doctitle = strrchr(app->doctitle, '\\') + 1;
-	if (strrchr(app->doctitle, '/'))
-		app->doctitle = strrchr(app->doctitle, '/') + 1;
 	info = fz_dict_gets(app->xref->trailer, "Info");
 	if (info)
 	{
 		obj = fz_dict_gets(info, "Title");
 		if (obj)
 			app->doctitle = pdf_to_utf8(obj);
+	}
+	if (!app->doctitle)
+	{
+		app->doctitle = filename;
+		if (strrchr(app->doctitle, '\\'))
+			app->doctitle = strrchr(app->doctitle, '\\') + 1;
+		if (strrchr(app->doctitle, '/'))
+			app->doctitle = strrchr(app->doctitle, '/') + 1;
+		app->doctitle = fz_strdup(app->doctitle);
 	}
 
 	/*
