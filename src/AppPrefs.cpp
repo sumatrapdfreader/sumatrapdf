@@ -690,6 +690,9 @@ bool SavePrefs()
     // don't save preferences for plugin windows
     if (gPluginMode)
         return false;
+    // don't save preferences without the proper permission
+    if (!HasPermission(Perm_SavePreferences))
+        return false;
 
     /* mark currently shown files as visible */
     for (size_t i = 0; i < gWindows.Count(); i++)
