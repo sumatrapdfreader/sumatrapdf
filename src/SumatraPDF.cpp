@@ -617,6 +617,10 @@ static void CreateChmThumbnail(WindowInfo& win, DisplayState& ds)
 
 void CreateThumbnailForFile(WindowInfo& win, DisplayState& ds)
 {
+    // don't create thumbnails if we won't be needing them at all
+    if (!HasPermission(Perm_SavePreferences))
+        return;
+
     // don't even create thumbnails for files that won't need them anytime soon
     Vec<DisplayState *> *list = gFileHistory.GetFrequencyOrder();
     int ix = list->Find(&ds);
