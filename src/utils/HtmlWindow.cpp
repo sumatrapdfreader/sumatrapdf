@@ -13,9 +13,6 @@
 #include "WinUtil.h"
 #include "Scopes.h"
 
-//TODO: not working yet
-//#define HOOK_BROWSER_CONTROL 1
-
 // Info about implementing web browser control
 // http://www.codeproject.com/KB/COM/cwebpage.aspx
 
@@ -472,41 +469,15 @@ static LRESULT CALLBACK WndProcParent(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
     return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
-// WndProc of the embedded web browser control.
-static LRESULT CALLBACK WndProcBrowser(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-    HtmlWindow *win = (HtmlWindow*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-    if (!win)
-        return DefWindowProc(hwnd, msg, wParam, lParam);
-    if (msg == WM_SETFOCUS) {
-        win->OnLButtonDown();
-    }
-    if (win->wndProcBrowserPrev) {
-        // TODO: why do we crash here? (if HOOK_BROWSER_CONTROL is defined)
-        return CallWindowProc(win->wndProcBrowserPrev, hwnd, msg, wParam, lParam);
-    }
-    else
-        return DefWindowProc(hwnd, msg, wParam, lParam);    
-}
-
 void HtmlWindow::SubclassHwnd()
 {
     SetWindowLongPtr(hwndParent, GWLP_WNDPROC, (LONG_PTR)WndProcParent);
     SetWindowLongPtr(hwndParent, GWLP_USERDATA, (LONG_PTR)this);
-#ifdef HOOK_BROWSER_CONTROL
-    HWND hwndBrowser = GetBrowserControlHwnd(hwndParent);
-    wndProcBrowserPrev = (WNDPROC)SetWindowLongPtr(hwndBrowser, GWLP_WNDPROC, (LONG_PTR)WndProcBrowser);
-    SetWindowLongPtr(hwndBrowser, GWLP_USERDATA, (LONG_PTR)this);
-#endif
 }
 
 void HtmlWindow::UnsubclassHwnd()
 {
     SetWindowLongPtr(hwndParent, GWLP_USERDATA, (LONG_PTR)0);
-#ifdef HOOK_BROWSER_CONTROL
-    HWND hwndBrowser = GetBrowserControlHwnd(hwndParent);
-    SetWindowLongPtr(hwndBrowser, GWLP_USERDATA, (LONG_PTR)0);
-#endif
 }
 
 HtmlWindow::HtmlWindow(HWND hwndParent, HtmlWindowCallback *cb) :
