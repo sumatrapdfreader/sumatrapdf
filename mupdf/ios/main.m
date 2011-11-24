@@ -13,6 +13,7 @@
 #define GAP 20
 #define INDICATOR_Y -44-24
 #define SLIDER_W (width - GAP - 24)
+#define SEARCH_W (width - GAP - 170)
 
 static dispatch_queue_t queue;
 static fz_glyph_cache *glyphcache = NULL;
@@ -949,12 +950,9 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 		initWithBarButtonSystemItem: UIBarButtonSystemItemFastForward
 		target:self action:@selector(onSearchNext:)];
 
-	float w = [[UIScreen mainScreen] bounds].size.width - 180;
-
-	searchBar = [[UISearchBar alloc] initWithFrame: CGRectMake(0,0,w,32)];
+	searchBar = [[UISearchBar alloc] initWithFrame: CGRectMake(0,0,50,32)];
 	[searchBar setPlaceholder: @"Search"];
 	[searchBar setDelegate: self];
-	[searchBar setAutoresizingMask: UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight];
 	// HACK to make transparent background
 	[[searchBar.subviews objectAtIndex:0] removeFromSuperview];
 
@@ -1013,6 +1011,7 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 	[canvas setContentOffset: CGPointMake(current * width, 0)];
 
 	[sliderWrapper setWidth: SLIDER_W];
+	[searchBar setFrame: CGRectMake(0,0,SEARCH_W,32)];
 
 	[[self navigationController] setToolbarHidden: NO animated: animated];
 }
@@ -1354,6 +1353,7 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 	height = size.height;
 
 	[sliderWrapper setWidth: SLIDER_W];
+	[searchBar setFrame: CGRectMake(0,0,SEARCH_W,32)];
 
 	[[[self navigationController] toolbar] setNeedsLayout]; // force layout!
 

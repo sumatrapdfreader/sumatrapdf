@@ -13,14 +13,7 @@
 		968F2E9E14539C880085264E /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 968F2E9D14539C880085264E /* Foundation.framework */; };
 		968F2EA014539C880085264E /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 968F2E9F14539C880085264E /* CoreGraphics.framework */; };
 		968F2EB014539CDA0085264E /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 968F2E9014539BEB0085264E /* main.m */; };
-		968F2EBB14539F350085264E /* libfitz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 968F2EB314539F350085264E /* libfitz.a */; };
-		968F2EBC14539F350085264E /* libfreetype.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 968F2EB414539F350085264E /* libfreetype.a */; };
-		968F2EBD14539F350085264E /* libjbig2dec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 968F2EB514539F350085264E /* libjbig2dec.a */; };
-		968F2EBE14539F350085264E /* libjpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 968F2EB614539F350085264E /* libjpeg.a */; };
-		968F2EBF14539F350085264E /* libmupdf.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 968F2EB714539F350085264E /* libmupdf.a */; };
-		968F2EC014539F350085264E /* libmuxps.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 968F2EB814539F350085264E /* libmuxps.a */; };
-		968F2EC114539F350085264E /* libopenjpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 968F2EB914539F350085264E /* libopenjpeg.a */; };
-		968F2EC214539F350085264E /* libz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 968F2EBA14539F350085264E /* libz.a */; };
+		96A4739B147C1C3A003D757D /* libLibraries.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 968461E214642DB00012AE09 /* libLibraries.a */; };
 		96BD2B38145AC485001CEBC3 /* Icon-72.png in Resources */ = {isa = PBXBuildFile; fileRef = 96BD2B35145AC485001CEBC3 /* Icon-72.png */; };
 		96BD2B39145AC485001CEBC3 /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 96BD2B36145AC485001CEBC3 /* Icon.png */; };
 		96F2341514603FBA004A8A22 /* Icon@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 96F2341414603FBA004A8A22 /* Icon@2x.png */; };
@@ -48,14 +41,6 @@
 		968F2E9B14539C880085264E /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
 		968F2E9D14539C880085264E /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		968F2E9F14539C880085264E /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = Library/Frameworks/CoreGraphics.framework; sourceTree = DEVELOPER_DIR; };
-		968F2EB314539F350085264E /* libfitz.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libfitz.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		968F2EB414539F350085264E /* libfreetype.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libfreetype.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		968F2EB514539F350085264E /* libjbig2dec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libjbig2dec.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		968F2EB614539F350085264E /* libjpeg.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libjpeg.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		968F2EB714539F350085264E /* libmupdf.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libmupdf.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		968F2EB814539F350085264E /* libmuxps.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libmuxps.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		968F2EB914539F350085264E /* libopenjpeg.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libopenjpeg.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		968F2EBA14539F350085264E /* libz.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libz.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		96BD2B35145AC485001CEBC3 /* Icon-72.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Icon-72.png"; sourceTree = "<group>"; };
 		96BD2B36145AC485001CEBC3 /* Icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Icon.png; sourceTree = "<group>"; };
 		96F2341414603FBA004A8A22 /* Icon@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Icon@2x.png"; sourceTree = "<group>"; };
@@ -69,14 +54,7 @@
 				968F2E9C14539C880085264E /* UIKit.framework in Frameworks */,
 				968F2E9E14539C880085264E /* Foundation.framework in Frameworks */,
 				968F2EA014539C880085264E /* CoreGraphics.framework in Frameworks */,
-				968F2EBB14539F350085264E /* libfitz.a in Frameworks */,
-				968F2EBC14539F350085264E /* libfreetype.a in Frameworks */,
-				968F2EBD14539F350085264E /* libjbig2dec.a in Frameworks */,
-				968F2EBE14539F350085264E /* libjpeg.a in Frameworks */,
-				968F2EBF14539F350085264E /* libmupdf.a in Frameworks */,
-				968F2EC014539F350085264E /* libmuxps.a in Frameworks */,
-				968F2EC114539F350085264E /* libopenjpeg.a in Frameworks */,
-				968F2EC214539F350085264E /* libz.a in Frameworks */,
+				96A4739B147C1C3A003D757D /* libLibraries.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -118,26 +96,10 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		968F2EB214539F230085264E /* Libraries */ = {
-			isa = PBXGroup;
-			children = (
-				968F2EB314539F350085264E /* libfitz.a */,
-				968F2EB414539F350085264E /* libfreetype.a */,
-				968F2EB514539F350085264E /* libjbig2dec.a */,
-				968F2EB614539F350085264E /* libjpeg.a */,
-				968F2EB714539F350085264E /* libmupdf.a */,
-				968F2EB814539F350085264E /* libmuxps.a */,
-				968F2EB914539F350085264E /* libopenjpeg.a */,
-				968F2EBA14539F350085264E /* libz.a */,
-			);
-			name = Libraries;
-			sourceTree = "<group>";
-		};
 		96A3B27414539BAD00D0A895 = {
 			isa = PBXGroup;
 			children = (
 				968F2E9214539BF10085264E /* Sources */,
-				968F2EB214539F230085264E /* Libraries */,
 				968F2E9A14539C880085264E /* Frameworks */,
 				968F2E9814539C880085264E /* Products */,
 			);
@@ -228,14 +190,7 @@
 			inputPaths = (
 			);
 			outputPaths = (
-				"$(DERIVED_FILE_DIR)/libmupdf.a",
-				"$(DERIVED_FILE_DIR)/libfitz.a",
-				"$(DERIVED_FILE_DIR)/libmuxps.a",
-				"$(DERIVED_FILE_DIR)/libfreetype.a",
-				"$(DERIVED_FILE_DIR)/libjbig2dec.a",
-				"$(DERIVED_FILE_DIR)/libjpeg.a",
-				"$(DERIVED_FILE_DIR)/libopenjpeg.a",
-				"$(DERIVED_FILE_DIR)/libz.a",
+				"$(DERIVED_FILE_DIR)/libLibraries.a",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -269,9 +224,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
-				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
 				PRODUCT_NAME = Libraries;
 				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
 			};
 			name = Debug;
 		};
@@ -279,9 +234,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
-				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
 				PRODUCT_NAME = Libraries;
 				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
 			};
 			name = Release;
 		};
@@ -290,7 +245,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CODE_SIGN_IDENTITY = "iPhone Distribution";
 				COPY_PHASE_STRIP = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -312,6 +267,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				WRAPPER_EXTENSION = app;
@@ -323,7 +279,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CODE_SIGN_IDENTITY = "iPhone Distribution";
 				COPY_PHASE_STRIP = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -339,6 +295,7 @@
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
