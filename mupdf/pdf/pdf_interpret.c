@@ -1967,7 +1967,7 @@ static void pdf_run_m(pdf_csi *csi)
 
 static void pdf_run_n(pdf_csi *csi)
 {
-	pdf_show_path(csi, 0, 0, 0, csi->clip == 2); /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692391 */
+	pdf_show_path(csi, 0, 0, 0, 0);
 }
 
 static void pdf_run_q(pdf_csi *csi)
