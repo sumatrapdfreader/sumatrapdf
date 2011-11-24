@@ -3,7 +3,9 @@ the release notes, as we make them, to make the release process easier.
 
 Next version:
 
-1.9 (????-??-??)
+2.0 (????-??-??)
+
+1.9 (2011-11-23)
 
 * CHM documents support
 * support touch gestures (available on Windows 7 or later)
