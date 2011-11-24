@@ -14,7 +14,7 @@ Contributor: Beqa Arabuli (arabulibeqa@yahoo.com)
 &პროგრამის შესახებ...
 
 &Actual Size\tCtrl+1
-&მიმდინარე ზომა\tCtrl+1
+&ნამდვილი ზომა\tCtrl+1
 
 &All selected pages
 &ყველა მონიშნული გვერდი
@@ -23,16 +23,16 @@ Contributor: Beqa Arabuli (arabulibeqa@yahoo.com)
 &უკან\tAlt+მარცხენა ისარი
 
 &Book View\tCtrl+8
-В &разворот\tCtrl+8
+&წიგნის რეჟიმი\tCtrl+8
 
 &Close\tCtrl+W
 &დახურვა\tCtrl+W
 
 &Copy Selection
-მონიშნულის და&კოპირება
+მონიშნულის &კოპირება
 
 &Copy Selection\tCtrl+C
-მონიშნულის და&კოპირება\tCtrl+C
+მონიშნულის &კოპირება\tCtrl+C
 
 &Don't ask me again
 &აღარ შემეკითხო
@@ -41,7 +41,7 @@ Contributor: Beqa Arabuli (arabulibeqa@yahoo.com)
 მხოლოდ &ლუწი გვერდები
 
 &Facing\tCtrl+7
-&ორ გვერდიანი\tCtrl+7
+&ურთიერთ-საპირისპიროდ\tCtrl+7
 
 &File
 &ფაილი
@@ -65,7 +65,7 @@ Contributor: Beqa Arabuli (arabulibeqa@yahoo.com)
 &დახმარება
 
 &Last Page\tEnd
-უკანა&სკნელი გვერდი\tEnd
+&ბოლო გვერდი\tEnd
 
 &Magnification:
 მას&შტაბირება:
@@ -119,7 +119,7 @@ Contributor: Beqa Arabuli (arabulibeqa@yahoo.com)
 ამ დოკუმენტისთვის პაროლის და&მახსოვრება
 
 &Remember these settings for each document
-ამ პარამეტრების დამახსოვრება ყ&ველა დოკუმენტისთვის
+ყველა დოკუმენტზე ამ პარამეტრების &მორგება
 
 &Remove Document
 დოკუმენტის &წაშლა
@@ -131,7 +131,7 @@ Contributor: Beqa Arabuli (arabulibeqa@yahoo.com)
 შენახვა &როგორც...\tCtrl+S
 
 &Settings
-&მითითებები
+&გამართვა
 
 &Shrink pages to printable area (if necessary)
 გვერდების შემცირება ბეჭდვად არეში ჩასატევად (თუ საჭიროა)
@@ -161,16 +161,16 @@ Contributor: Beqa Arabuli (arabulibeqa@yahoo.com)
 (გვერდი %s)
 
 About SumatraPDF
-SumatraPDF-ს შესახებ
+SumatraPDF-ის შესახებ
 
 Add Favorite
 რჩეულებში დამატება
 
 Add page %s to favorites
-%s გვერდის რჩეულებში დამატება
+%s გვერდის დამატება რჩეულებში
 
 Add page %s to favorites with (optional) name:
-%s გვერდის რჩეულებში დამატება (არასავალდებულო) სახელწოდებით:
+%s გვერდის დამატება რჩეულებში (არასავალდებულო) სახელწოდებით:
 
 Add to favorites
 რჩეულებში დამატება
@@ -200,7 +200,7 @@ Automatic
 ავტომატური
 
 Automatically check for &updates
-განახლებების შემოწმება &ავტომატურად
+განახლების &ავტომატურად შემოწმება
 
 Book View
 წიგნის რეჟიმი
@@ -236,22 +236,22 @@ Cannot start inverse search command. Please check the command line in the settin
 შებრუნებული ძებნის ბრძანების გაშვება ვერ მოხერხდა. გთხოვთ შეამოწმეთ ბრძანებების სტრიქონის პარამეტრები.
 
 Change Language
-&ენის შეცვლა (Change Language)
+ენის შეცვლა (Change Language)
 
 Check for &Updates
-&განახლებების შემოწმება
+&განახლების შემოწმება
 
 Comic books
 CBR, CBZ დოკუმენტები (კომიქსები)
 
 Continuous
-Разрешить прокрутку
+უწყვეტი
 
 Continuous Book View
-წიგნის რეჟიმი უწყვეტად
+წიგნის რეჟიმი (უწყვეტი)
 
 Continuous Facing
-ორ გვერდზე უწყვეტად
+ურთიერთ-საპირისპიროდ (უწყვეტი)
 
 Contribute Translation
 თარგმნაში მონაწილეობა
@@ -278,7 +278,7 @@ Couldn't render the page
 გვერდის რენდერი ვერ მოხერხდა
 
 Created:
-შექმნილი:
+შექმნილია:
 
 Current file
 მიმდინარე ფაილი
@@ -287,13 +287,13 @@ Custom &Zoom...\tCtrl+Y
 &მასშტაბის მითითება...\tCtrl+Y
 
 Default &Layout:
-&ნაგულისხმევი სქემა:
+&ნაგულისხმევი განლაგება:
 
 Default &Zoom:
 ნაგულისხმევი &მასშტაბი
 
 Default PDF reader can't be changed in portable mode
-პორტატულ რეჟიმში ნაგულისხმევი PDF წამკითხველი არ იცვლება
+პორტატულ რეჟიმში, PDF-ის ძირითად წამკითხველად დაყენება შეუძლებელია
 
 Denied Permissions:
 თქვენ არ გაქვთ საჭირო უფლებები:
@@ -329,10 +329,10 @@ F&orward\tAlt+Right Arrow
 &წინ\tAlt+ისარი მარჯვნივ
 
 F&ullscreen\tCtrl+Shift+L
-მთელს &ეკრანზე\tCtrl+Shift+L
+მთელ &ეკრანზე\tCtrl+Shift+L
 
 Facing
-ერთმანეთის პირისპირ
+ურთიერთ-საპირისპიროდ
 
 Failed to save a file
 ფაილის შენახვა ვერ მოხერხდა
@@ -350,10 +350,10 @@ File:
 ფაილი:
 
 Fin&d...\tCtrl+F
-&პოვნა...\tCtrl+F
+&ძიება...\tCtrl+F
 
 Find
-პოვნა
+ძიება
 
 Find Next
 შემდეგის პოვნა
@@ -362,7 +362,7 @@ Find Previous
 წინას პოვნა
 
 Find:
-პოვნა:
+ძიება:
 
 Fit &Content\tCtrl+3
 &შიგთავსის მიხედვით\tCtrl+3
@@ -419,16 +419,16 @@ MB
 მბ
 
 Make SumatraPDF default application for PDF files?
-ნამდვილად გსურთ რომ SumatraPDF თქვენი ნაგულისხმევი PDF წამკითხველი გახდეს?
+ნამდვილად გსურთ SumatraPDF თქვენს ნაგულისხმევი PDF წამკითხველად დაყენება?
 
 Make SumatraPDF my default PDF reader
-მოხდეს SumatraPDF-ს ასოცირება PDF ფაილებთან
+მოხდეს SumatraPDF-ის ასოცირება PDF ფაილებთან
 
 Match Case
 მთავრულის გათვალისწინებით
 
 Modified:
-შეცვლილი:
+შეცვლილია:
 
 New version %s is available. Download new version?
 ხელმიწვდომია ახალი ვერსია %s. გსურთ მისი ჩამოტვირთვა?
@@ -437,7 +437,7 @@ Next Page
 შემდეგი გვერდი
 
 No matches were found
-თანხვედრები ვერ მოიძებნა
+სიტყვა არ მოიძებნა
 
 No synchronization file found
 სინქრონიზაციის ფაილი ვერ მოიძებნა
@@ -476,10 +476,10 @@ PDF Document
 PDF დოკუმენტი
 
 PDF Producer:
-PDF მწარმოებელი:
+PDF-ის მწარმოებელი:
 
 PDF Version:
-PDF ვერსია:
+PDF-ის ვერსია:
 
 PDF documents
 PDF დოკუმენტები
@@ -572,10 +572,10 @@ Set inverse search command-line
 შებრუნებული ძებნის ბრძანების სტრიქონის დაყენება
 
 Show &Toolbar
-&ხელსაწყოების ზოლის ჩვენება
+&ხელსაწყოთა ზოლის ჩვენება
 
 Show &pages continuously
-&გვერდების ჩვენება შეუწყვეტლივ
+&გვერდების შეუწყვეტლივ ჩვენება 
 
 Show Favorites
 რჩეულების ჩვენება
@@ -587,7 +587,7 @@ Show the &bookmarks sidebar when available
 &სანიშნების ზოლის ჩვენება (როცა შესაძლებელია)
 
 Single Page
-ერთგვერდიანი
+ერთ-გვერდიანი
 
 Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 ბოდიშს გიხდით, ეს არ უნდა მომხდარიყო!\n\nთუ გსურთ რომ დაგვეხმაროთ ამ პრობლემის მოგვარებაში, გთხოვთ დააწკაპუნეთ ღილაკს 'გაუქმება'.
@@ -599,13 +599,13 @@ Subject:
 თემა:
 
 SumatraPDF Options
-SumatraPDF-ს პარამეტრები
+SumatraPDF-ის პარამეტრები
 
 SumatraPDF Update
-SumatraPDF-ს განახლება
+SumatraPDF-ის განახლება
 
 SumatraPDF crashed
-SumatraPDF-ს მუშაობა ავარიულად დასრულდა
+SumatraPDF-ის მუშაობა ავარიულად დასრულდა
 
 SumatraPDF is your default PDF reader
 SumatraPDF თქვენი ძირითადი PDF წამკითხველია
