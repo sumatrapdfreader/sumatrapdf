@@ -1071,7 +1071,8 @@ static WindowInfo* CreateWindowInfo()
 #endif
     CreateSidebar(win);
     UpdateFindbox(win);
-    DragAcceptFiles(win->hwndCanvas, TRUE);
+    if (HasPermission(Perm_DiskAccess) && !gPluginMode)
+        DragAcceptFiles(win->hwndCanvas, TRUE);
 
     gWindows.Append(win);
     UpdateWindowRtlLayout(win);
