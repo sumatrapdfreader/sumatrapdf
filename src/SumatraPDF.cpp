@@ -355,6 +355,15 @@ TCHAR *WindowInfo::GetPassword(const TCHAR *fileName, unsigned char *fileDigest,
     if (suppressPwdUI)
         return NULL;
 
+    // extract the filename from the URL in plugin mode instead
+    // of using the more confusing temporary filename
+    ScopedMem<TCHAR> urlName;
+    if (gPluginMode) {
+        urlName.Set(ExtractFilenameFromURL(gPluginURL));
+        if (urlName)
+            fileName = urlName;
+    }
+
     fileName = path::GetBaseName(fileName);
     return Dialog_GetPassword(this->hwndFrame, fileName, gGlobalPrefs.rememberOpenedFiles ? saveKey : NULL);
 }
