@@ -308,12 +308,12 @@ pdf_create_text_annot(pdf_xref *xref, fz_obj *obj)
 	rect.y1 = rect.y0 + 24;
 
 	obj = pdf_clone_for_view_only(xref, obj);
-	// TODO: support other icons by /Name: Note, Key, Help, Paragraph, NewParagraph, Insert
-	// TODO: make icon semi-transparent(?)
-	if (!strcmp(fz_to_name(fz_dict_gets(obj, "Name")), "Note"))
-		fz_buffer_printf(content, "q %s Q", ANNOT_TEXT_AP_NOTE);
-	else
+	// TODO: support other icons by /Name: Key, Help, Paragraph, NewParagraph, Insert
+	// TODO: make icons semi-transparent(?)
+	if (!strcmp(fz_to_name(fz_dict_gets(obj, "Name")), "Comment"))
 		fz_buffer_printf(content, "q %s Q", ANNOT_TEXT_AP_COMMENT);
+	else
+		fz_buffer_printf(content, "q %s Q", ANNOT_TEXT_AP_NOTE);
 
 	return pdf_create_annot(rect, obj, content, NULL);
 }
