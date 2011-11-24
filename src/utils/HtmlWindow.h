@@ -15,6 +15,7 @@ class HtmlWindowCallback
 {
 public:
     virtual bool OnBeforeNavigate(const TCHAR *url, bool newWindow) = 0;
+    virtual bool GetHtmlForUrl(const TCHAR *url, char **data, size_t *len) = 0;
     virtual void OnLButtonDown() = 0;
 };
 

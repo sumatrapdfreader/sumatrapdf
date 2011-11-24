@@ -802,9 +802,16 @@ HBITMAP HtmlWindow::TakeScreenshot(RectI area, SizeI finalSize)
 bool HtmlWindow::OnBeforeNavigate(const TCHAR *url, bool newWindow)
 {
     currentURL.Set(NULL);
-    if (htmlWinCb)
-        return htmlWinCb->OnBeforeNavigate(url, newWindow);
-    return true;
+    if (!htmlWinCb)
+        return true;
+    char *data = NULL;
+    size_t len = 0;
+    bool gotHtmlData = htmlWinCb->GetHtmlForUrl(url, &data, &len);
+    if (gotHtmlData) {
+        // TODO: write me
+        return false;
+    }
+    return htmlWinCb->OnBeforeNavigate(url, newWindow);
 }
 
 void HtmlWindow::OnDocumentComplete(const TCHAR *url)
