@@ -2,7 +2,7 @@
  * Benchmarking of loading and drawing pdf pages.
  */
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <windows.h>
 #endif
 

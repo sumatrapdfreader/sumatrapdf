@@ -22,9 +22,10 @@ testing              = test_for_flag(args, "-test") or test_for_flag(args, "-tes
 build_test_installer = test_for_flag(args, "-test-installer") or test_for_flag(args, "-testinst") or test_for_flag(args, "-testinstaller")
 build_prerelease     = test_for_flag(args, "-prerelease")
 svn_revision         = test_for_flag(args, "-svn-revision", True)
+target_platform      = test_for_flag(args, "-platform", True)
 
 def usage():
-  print("build-release.py [-upload][-uploadtmp][-test][-test-installer][-prerelease]")
+  print("build-release.py [-upload][-uploadtmp][-test][-test-installer][-prerelease][-platform=X64]")
   sys.exit(1)
 
 # Terms:
@@ -108,10 +109,13 @@ def main():
   if upload:
     map(ensure_s3_doesnt_exist, s3_files)
 
-  if not testing and not build_test_installer:
-    shutil.rmtree("obj-rel", ignore_errors=True)
-
   obj_dir = "obj-rel"
+  if target_platform == "X64":
+    obj_dir += "64"
+
+  if not testing and not build_test_installer:
+    shutil.rmtree(obj_dir, ignore_errors=True)
+
   config = "CFG=rel"
   if build_test_installer and not build_prerelease:
     obj_dir = "obj-dbg"
@@ -119,10 +123,11 @@ def main():
   extcflags = ""
   if build_prerelease:
     extcflags = "EXTCFLAGS=-DSVN_PRE_RELEASE_VER=%s" % ver
+  platform = "PLATFORM=%s" % (target_platform or "X32")
 
-  run_cmd_throw("nmake", "-f", "makefile.msvc", config, extcflags, "all_sumatrapdf")
+  run_cmd_throw("nmake", "-f", "makefile.msvc", config, extcflags, platform, "all_sumatrapdf")
   build_installer_data(obj_dir)
-  run_cmd_throw("nmake", "-f", "makefile.msvc", "Installer", config, extcflags)
+  run_cmd_throw("nmake", "-f", "makefile.msvc", "Installer", config, platform, extcflags)
 
   if build_test_installer:
     sys.exit(0)

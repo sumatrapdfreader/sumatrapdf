@@ -39,7 +39,14 @@ def uniquify(array):
 
 def test_for_flag(args, arg, has_data=False):
   if arg not in args:
-    return None if has_data else False
+    if not has_data:
+      return False
+    for argx in args:
+      if argx.startswith(arg + "="):
+        args.remove(argx)
+        return argx[len(arg) + 1:]
+    return None
+
   if not has_data:
     args.remove(arg)
     return True
