@@ -301,21 +301,14 @@ pdf_show_path(pdf_csi *csi, int doclose, int dofill, int dostroke, int even_odd)
 	if (doclose)
 		fz_closepath(path);
 
+	/* SumatraPDF: support inline OCGs */
+	if (csi->in_hidden_ocg > 0)
+		dofill = dostroke = 0;
+
 	if (dostroke)
 		bbox = fz_bound_path(path, &gstate->stroke_state, gstate->ctm);
 	else
 		bbox = fz_bound_path(path, NULL, gstate->ctm);
-	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692391 */
-	if (csi->clip)
-	{
-		gstate->clip_depth++;
-		fz_clip_path(csi->dev, path, NULL, csi->clip == 2, gstate->ctm);
-		csi->clip = 0;
-	}
-
-	/* SumatraPDF: support inline OCGs */
-	if (csi->in_hidden_ocg > 0)
-		dofill = dostroke = 0;
 
 	if (csi->clip)
 	{
