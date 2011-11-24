@@ -321,6 +321,7 @@ pdf_show_path(pdf_csi *csi, int doclose, int dofill, int dostroke, int even_odd)
 	{
 		gstate->clip_depth++;
 		fz_clip_path(csi->dev, path, NULL, csi->clip_even_odd, gstate->ctm);
+		csi->clip = 0;
 	}
 
 	if (dofill || dostroke)
