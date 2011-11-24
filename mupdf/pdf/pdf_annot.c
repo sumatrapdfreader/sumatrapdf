@@ -265,19 +265,38 @@ pdf_create_link_annot(pdf_xref *xref, fz_obj *obj)
 	return pdf_create_annot(rect, obj, content, NULL);
 }
 
-// content stream adapted from Poppler's Annot.cc, licensed under GPLv2 and later
+// content streams adapted from Poppler's Annot.cc, licensed under GPLv2 and later
+#define ANNOT_TEXT_AP_NOTE \
+	"1 J 1 j [] 0 d 4 M\n"                                                      \
+	"0.533333 0.541176 0.521569 RG\n"                                           \
+	"2 w 9 18 m 4 18 l 4 7 4 4 6 3 c 20 3 l 18 4 18 7 18 18 c 17 18 l S\n"      \
+	"1.5 w 10 16 m 14 21 l S\n"                                                 \
+	"1.85625 w\n"                                                               \
+	"15.07 20.523 m 15.07 19.672 14.379 18.977 13.523 18.977 c 12.672 18.977\n" \
+	"11.977 19.672 11.977 20.523 c 11.977 21.379 12.672 22.07 13.523 22.07 c\n" \
+	"14.379 22.07 15.07 21.379 15.07 20.523 c h S\n"                            \
+	"1 w 6.5 13.5 m 15.5 13.5 l S 6.5 10.5 m 13.5 10.5 l S\n"                   \
+	"6.801 7.5 m 15.5 7.5 l S\n"                                                \
+	"0.729412 0.741176 0.713725 RG\n"                                           \
+	"2 w 9 19 m 4 19 l 4 8 4 5 6 4 c 20 4 l 18 5 18 8 18 19 c 17 19 l S\n"      \
+	"1.5 w 10 17 m 14 22 l S\n"                                                 \
+	"1.85625 w\n"                                                               \
+	"15.07 21.523 m 15.07 20.672 14.379 19.977 13.523 19.977 c 12.672 19.977\n" \
+	"11.977 20.672 11.977 21.523 c 11.977 22.379 12.672 23.07 13.523 23.07 c\n" \
+	"14.379 23.07 15.07 22.379 15.07 21.523 c h S\n"                            \
+	"1 w 6.5 14.5 m 15.5 14.5 l S 6.5 11.5 m 13.5 11.5 l S\n"                   \
+	"6.801 8.5 m 15.5 8.5 l S\n"
+
 #define ANNOT_TEXT_AP_COMMENT \
-	"0.533333 0.541176 0.521569 RG 2 w\n"                                         \
-	"0 J 1 j [] 0 d\n"                                                            \
-	"4 M 8 20 m 16 20 l 18.363 20 20 18.215 20 16 c 20 13 l 20 10.785 18.363 9\n" \
-	"16 9 c 13 9 l 8 3 l 8 9 l 8 9 l 5.637 9 4 10.785 4 13 c 4 16 l 4 18.215\n"   \
-	"5.637 20 8 20 c h\n"                                                         \
-	"8 20 m S\n"                                                                  \
-	"0.729412 0.741176 0.713725 RG 8 21 m 16 21 l 18.363 21 20 19.215 20 17\n"    \
-	"c 20 14 l 20 11.785 18.363 10\n"                                             \
-	"16 10 c 13 10 l 8 4 l 8 10 l 8 10 l 5.637 10 4 11.785 4 14 c 4 17 l 4\n"     \
-	"19.215 5.637 21 8 21 c h\n"                                                  \
-	"8 21 m S\n"
+	"0 J 1 j [] 0 d 4 M 2 w\n"                                                  \
+	"0.533333 0.541176 0.521569 RG\n"                                           \
+	"8 20 m 16 20 l 18.363 20 20 18.215 20 16 c 20 13 l 20 10.785 18.363 9\n"   \
+	"16 9 c 13 9 l 8 3 l 8 9 l 8 9 l 5.637 9 4 10.785 4 13 c 4 16 l\n"          \
+	"4 18.215 5.637 20 8 20 c h S\n"                                            \
+	"0.729412 0.741176 0.713725 RG\n"                                           \
+	"8 21 m 16 21 l 18.363 21 20 19.215 20 17 c 20 14 l 20 11.785 18.363 10\n"  \
+	"16 10 c 13 10 l 8 4 l 8 10 l 8 10 l 5.637 10 4 11.785 4 14 c 4 17 l\n"     \
+	"4 19.215 5.637 21 8 21 c h S\n"
 
 /* SumatraPDF: partial support for text icons */
 static pdf_annot *
@@ -291,7 +310,10 @@ pdf_create_text_annot(pdf_xref *xref, fz_obj *obj)
 	obj = pdf_clone_for_view_only(xref, obj);
 	// TODO: support other icons by /Name: Note, Key, Help, Paragraph, NewParagraph, Insert
 	// TODO: make icon semi-transparent(?)
-	fz_buffer_printf(content, "q %s Q", ANNOT_TEXT_AP_COMMENT);
+	if (!strcmp(fz_to_name(fz_dict_gets(obj, "Name")), "Note"))
+		fz_buffer_printf(content, "q %s Q", ANNOT_TEXT_AP_NOTE);
+	else
+		fz_buffer_printf(content, "q %s Q", ANNOT_TEXT_AP_COMMENT);
 
 	return pdf_create_annot(rect, obj, content, NULL);
 }
