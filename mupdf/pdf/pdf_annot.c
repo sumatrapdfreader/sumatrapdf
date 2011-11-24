@@ -202,17 +202,28 @@ pdf_create_annot(fz_rect rect, fz_obj *base_obj, fz_buffer *content, fz_obj *res
 }
 
 static fz_obj *
-pdf_clone_for_view_only(pdf_xref *xref, fz_obj *obj)
+pdf_dict_from_string(pdf_xref *xref, char *string)
 {
-	char *string = "<< /OCGs << /Usage << /Print << /PrintState /OFF >> /Export << /ExportState /OFF >> >> >> >>";
+	fz_obj *result = NULL;
+
 	fz_stream *stream = fz_open_memory(string, strlen(string));
-	fz_obj *tmp = NULL;
-	pdf_parse_stm_obj(&tmp, NULL, stream, xref->scratch, sizeof(xref->scratch));
+	pdf_parse_stm_obj(&result, NULL, stream, xref->scratch, sizeof(xref->scratch));
 	fz_close(stream);
 
+	return result;
+}
+
+#define ANNOT_OC_VIEW_ONLY \
+	"<< /OCGs << /Usage << /Print << /PrintState /OFF >> /Export << /ExportState /OFF >> >> >> >>"
+
+static fz_obj *
+pdf_clone_for_view_only(pdf_xref *xref, fz_obj *obj)
+{
+	fz_obj *ocgs = pdf_dict_from_string(xref, ANNOT_OC_VIEW_ONLY);
+
 	obj = fz_copy_dict(pdf_resolve_indirect(obj));
-	fz_dict_puts(obj, "OC", tmp);
-	fz_drop_obj(tmp);
+	fz_dict_puts(obj, "OC", ocgs);
+	fz_drop_obj(ocgs);
 
 	return obj;
 }
@@ -316,6 +327,50 @@ pdf_create_text_annot(pdf_xref *xref, fz_obj *obj)
 		fz_buffer_printf(content, "q %s Q", ANNOT_TEXT_AP_NOTE);
 
 	return pdf_create_annot(rect, obj, content, NULL);
+}
+
+/* SumatraPDF: partial support for text markup annotations */
+#define ANNOT_HIGHLIGHT_AP_RESOURCES \
+	"<< /ExtGState << /GS << /Type/ExtGState /ca 0.8 /AIS false /BM /Multiply >> >> >>"
+
+static pdf_annot *
+pdf_create_highlight_annot(pdf_xref *xref, fz_obj *obj)
+{
+	fz_buffer *content = fz_new_buffer(512);
+	fz_rect rect = pdf_to_rect(fz_dict_gets(obj, "Rect"));
+	fz_obj *quad_points = fz_dict_gets(obj, "QuadPoints");
+	fz_obj *color = fz_dict_gets(obj, "C");
+	fz_obj *resources = pdf_dict_from_string(xref, ANNOT_HIGHLIGHT_AP_RESOURCES);
+	pdf_annot *annot;
+	int i, k;
+
+	float skew = 0.15 * (rect.y1 - rect.y0);
+	rect.x0 -= skew;
+	rect.x1 += skew;
+
+	fz_buffer_printf(content, "q /GS gs %.4f %.4f %.4f rg ",
+		fz_to_real(fz_array_get(color, 0)), fz_to_real(fz_array_get(color, 1)),
+		fz_to_real(fz_array_get(color, 2)));
+	for (i = 0; i < fz_array_len(quad_points) / 8; i++)
+	{
+		fz_point pts[4];
+		for (k = 0; k < 4; k++)
+		{
+			pts[k].x = fz_to_real(fz_array_get(quad_points, i * 8 + k * 2)) - rect.x0;
+			pts[k].y = fz_to_real(fz_array_get(quad_points, i * 8 + k * 2 + 1)) - rect.y0;
+		}
+		skew = 0.15 * fabs(pts[0].y - pts[2].y);
+		fz_buffer_printf(content, "%.4f %.4f m %.4f %.4f l %.4f %.4f l %.4f %.4f l h ",
+			pts[2].x - skew, pts[2].y, pts[0].x, pts[0].y,
+			pts[1].x + skew, pts[1].y, pts[3].x, pts[3].y);
+	}
+	fz_buffer_printf(content, "f Q");
+
+	annot = pdf_create_annot(rect, fz_keep_obj(obj), content, resources);
+	annot->ap->transparency = 1;
+	annot->ap->isolated = 0;
+
+	return annot;
 }
 
 /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692078 */
@@ -585,6 +640,8 @@ pdf_create_annot_with_appearance(pdf_xref *xref, fz_obj *obj)
 		return pdf_create_link_annot(xref, obj);
 	if (!strcmp(fz_to_name(fz_dict_gets(obj, "Subtype")), "Text"))
 		return pdf_create_text_annot(xref, obj);
+	if (!strcmp(fz_to_name(fz_dict_gets(obj, "Subtype")), "Highlight"))
+		return pdf_create_highlight_annot(xref, obj);
 	return NULL;
 }
 
