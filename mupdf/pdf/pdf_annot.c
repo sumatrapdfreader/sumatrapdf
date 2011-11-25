@@ -174,7 +174,7 @@ pdf_transform_annot(pdf_annot *annot)
 
 /* SumatraPDF: synthesize appearance streams for a few more annotations */
 static pdf_annot *
-pdf_create_annot(fz_rect rect, fz_obj *base_obj, fz_buffer *content, fz_obj *resources)
+pdf_create_annot(fz_rect rect, fz_obj *base_obj, fz_buffer *content, fz_obj *resources, int transparency)
 {
 	pdf_annot *annot;
 	pdf_xobject *form;
@@ -186,7 +186,8 @@ pdf_create_annot(fz_rect rect, fz_obj *base_obj, fz_buffer *content, fz_obj *res
 	form->matrix = fz_rotate(rotate);
 	form->bbox.x1 = (rotate % 180 == 0) ? rect.x1 - rect.x0 : rect.y1 - rect.y0;
 	form->bbox.y1 = (rotate % 180 == 0) ? rect.y1 - rect.y0 : rect.x1 - rect.x0;
-	form->isolated = 1;
+	form->transparency = transparency;
+	form->isolated = !transparency;
 	form->contents = content;
 	form->resources = resources;
 
@@ -273,13 +274,12 @@ pdf_create_link_annot(pdf_xref *xref, fz_obj *obj)
 		fz_to_real(fz_array_get(color, 0)), fz_to_real(fz_array_get(color, 1)),
 		fz_to_real(fz_array_get(color, 2)), rect.x1 - rect.x0, rect.y1 - rect.y0);
 
-	return pdf_create_annot(rect, obj, content, NULL);
+	return pdf_create_annot(rect, obj, content, NULL, 0);
 }
 
 // content streams adapted from Poppler's Annot.cc, licensed under GPLv2 and later
 #define ANNOT_TEXT_AP_NOTE \
-	"1 J 1 j [] 0 d 4 M\n"                                                      \
-	"0.533333 0.541176 0.521569 RG\n"                                           \
+	"1 J 1 j [] 0 d 4 M %.4f %.4f %.4f RG\n"                                    \
 	"2 w 9 18 m 4 18 l 4 7 4 4 6 3 c 20 3 l 18 4 18 7 18 18 c 17 18 l S\n"      \
 	"1.5 w 10 16 m 14 21 l S\n"                                                 \
 	"1.85625 w\n"                                                               \
@@ -287,27 +287,13 @@ pdf_create_link_annot(pdf_xref *xref, fz_obj *obj)
 	"11.977 19.672 11.977 20.523 c 11.977 21.379 12.672 22.07 13.523 22.07 c\n" \
 	"14.379 22.07 15.07 21.379 15.07 20.523 c h S\n"                            \
 	"1 w 6.5 13.5 m 15.5 13.5 l S 6.5 10.5 m 13.5 10.5 l S\n"                   \
-	"6.801 7.5 m 15.5 7.5 l S\n"                                                \
-	"0.729412 0.741176 0.713725 RG\n"                                           \
-	"2 w 9 19 m 4 19 l 4 8 4 5 6 4 c 20 4 l 18 5 18 8 18 19 c 17 19 l S\n"      \
-	"1.5 w 10 17 m 14 22 l S\n"                                                 \
-	"1.85625 w\n"                                                               \
-	"15.07 21.523 m 15.07 20.672 14.379 19.977 13.523 19.977 c 12.672 19.977\n" \
-	"11.977 20.672 11.977 21.523 c 11.977 22.379 12.672 23.07 13.523 23.07 c\n" \
-	"14.379 23.07 15.07 22.379 15.07 21.523 c h S\n"                            \
-	"1 w 6.5 14.5 m 15.5 14.5 l S 6.5 11.5 m 13.5 11.5 l S\n"                   \
-	"6.801 8.5 m 15.5 8.5 l S\n"
+	"6.801 7.5 m 15.5 7.5 l S\n"
 
 #define ANNOT_TEXT_AP_COMMENT \
-	"0 J 1 j [] 0 d 4 M 2 w\n"                                                  \
-	"0.533333 0.541176 0.521569 RG\n"                                           \
+	"0 J 1 j [] 0 d 4 M 2 w %.4f %.4f %.4f RG\n"                                \
 	"8 20 m 16 20 l 18.363 20 20 18.215 20 16 c 20 13 l 20 10.785 18.363 9\n"   \
 	"16 9 c 13 9 l 8 3 l 8 9 l 8 9 l 5.637 9 4 10.785 4 13 c 4 16 l\n"          \
-	"4 18.215 5.637 20 8 20 c h S\n"                                            \
-	"0.729412 0.741176 0.713725 RG\n"                                           \
-	"8 21 m 16 21 l 18.363 21 20 19.215 20 17 c 20 14 l 20 11.785 18.363 10\n"  \
-	"16 10 c 13 10 l 8 4 l 8 10 l 8 10 l 5.637 10 4 11.785 4 14 c 4 17 l\n"     \
-	"4 19.215 5.637 21 8 21 c h S\n"
+	"4 18.215 5.637 20 8 20 c h S\n"
 
 /* SumatraPDF: partial support for text icons */
 static pdf_annot *
@@ -315,23 +301,44 @@ pdf_create_text_annot(pdf_xref *xref, fz_obj *obj)
 {
 	fz_buffer *content = fz_new_buffer(512);
 	fz_rect rect = pdf_to_rect(fz_dict_gets(obj, "Rect"));
+	fz_obj *color = fz_dict_gets(obj, "C");
+	char *content_ap = ANNOT_TEXT_AP_NOTE;
+
 	rect.x1 = rect.x0 + 24;
-	rect.y1 = rect.y0 + 24;
+	rect.y0 = rect.y1 - 24;
+
+	// TODO: support other icons by /Name: Key, Help, Paragraph, NewParagraph, Insert
+	if (!strcmp(fz_to_name(fz_dict_gets(obj, "Name")), "Comment"))
+		content_ap = ANNOT_TEXT_AP_COMMENT;
+	// TODO: make icons semi-transparent (cf. pdf_create_highlight_annot)?
+	fz_buffer_printf(content, "q ");
+	fz_buffer_printf(content, content_ap, 0.5, 0.5, 0.5);
+	fz_buffer_printf(content, " 1 0 0 1 0 1 cm ");
+	fz_buffer_printf(content, content_ap, fz_to_real(fz_array_get(color, 0)),
+		fz_to_real(fz_array_get(color, 1)), fz_to_real(fz_array_get(color, 2)));
+	fz_buffer_printf(content, " Q", content_ap);
 
 	obj = pdf_clone_for_view_only(xref, obj);
-	// TODO: support other icons by /Name: Key, Help, Paragraph, NewParagraph, Insert
-	// TODO: make icons semi-transparent(?)
-	if (!strcmp(fz_to_name(fz_dict_gets(obj, "Name")), "Comment"))
-		fz_buffer_printf(content, "q %s Q", ANNOT_TEXT_AP_COMMENT);
-	else
-		fz_buffer_printf(content, "q %s Q", ANNOT_TEXT_AP_NOTE);
-
-	return pdf_create_annot(rect, obj, content, NULL);
+	return pdf_create_annot(rect, obj, content, NULL, 0);
 }
 
 /* SumatraPDF: partial support for text markup annotations */
 #define ANNOT_HIGHLIGHT_AP_RESOURCES \
 	"<< /ExtGState << /GS << /Type/ExtGState /ca 0.8 /AIS false /BM /Multiply >> >> >>"
+
+/* a: top/left to bottom/right; b: bottom/left to top/right */
+static void
+pdf_get_quadrilaterals(fz_obj *quad_points, int i, fz_rect *a, fz_rect *b)
+{
+	a->x0 = fz_to_real(fz_array_get(quad_points, i * 8 + 0));
+	a->y0 = fz_to_real(fz_array_get(quad_points, i * 8 + 1));
+	b->x1 = fz_to_real(fz_array_get(quad_points, i * 8 + 2));
+	b->y1 = fz_to_real(fz_array_get(quad_points, i * 8 + 3));
+	b->x0 = fz_to_real(fz_array_get(quad_points, i * 8 + 4));
+	b->y0 = fz_to_real(fz_array_get(quad_points, i * 8 + 5));
+	a->x1 = fz_to_real(fz_array_get(quad_points, i * 8 + 6));
+	a->y1 = fz_to_real(fz_array_get(quad_points, i * 8 + 7));
+}
 
 static pdf_annot *
 pdf_create_highlight_annot(pdf_xref *xref, fz_obj *obj)
@@ -341,36 +348,31 @@ pdf_create_highlight_annot(pdf_xref *xref, fz_obj *obj)
 	fz_obj *quad_points = fz_dict_gets(obj, "QuadPoints");
 	fz_obj *color = fz_dict_gets(obj, "C");
 	fz_obj *resources = pdf_dict_from_string(xref, ANNOT_HIGHLIGHT_AP_RESOURCES);
-	pdf_annot *annot;
-	int i, k;
+	fz_rect a, b;
+	float skew;
+	int i;
 
-	float skew = 0.15 * (rect.y1 - rect.y0);
-	rect.x0 -= skew;
-	rect.x1 += skew;
-
-	fz_buffer_printf(content, "q /GS gs %.4f %.4f %.4f rg ",
-		fz_to_real(fz_array_get(color, 0)), fz_to_real(fz_array_get(color, 1)),
-		fz_to_real(fz_array_get(color, 2)));
 	for (i = 0; i < fz_array_len(quad_points) / 8; i++)
 	{
-		fz_point pts[4];
-		for (k = 0; k < 4; k++)
-		{
-			pts[k].x = fz_to_real(fz_array_get(quad_points, i * 8 + k * 2)) - rect.x0;
-			pts[k].y = fz_to_real(fz_array_get(quad_points, i * 8 + k * 2 + 1)) - rect.y0;
-		}
-		skew = 0.15 * fabs(pts[0].y - pts[2].y);
+		pdf_get_quadrilaterals(quad_points, i, &a, &b);
+		skew = 0.15 * fabs(a.y0 - b.y0);
+		b.x0 -= skew; b.x1 += skew;
+		rect = fz_union_rect(rect, fz_union_rect(a, b));
+	}
+
+	fz_buffer_printf(content, "q /GS gs %.4f %.4f %.4f rg 1 0 0 1 -%.4f -%.4f cm ",
+		fz_to_real(fz_array_get(color, 0)), fz_to_real(fz_array_get(color, 1)),
+		fz_to_real(fz_array_get(color, 2)), rect.x0, rect.y0);
+	for (i = 0; i < fz_array_len(quad_points) / 8; i++)
+	{
+		pdf_get_quadrilaterals(quad_points, i, &a, &b);
+		skew = 0.15 * fabs(a.y0 - b.y0);
 		fz_buffer_printf(content, "%.4f %.4f m %.4f %.4f l %.4f %.4f l %.4f %.4f l h ",
-			pts[2].x - skew, pts[2].y, pts[0].x, pts[0].y,
-			pts[1].x + skew, pts[1].y, pts[3].x, pts[3].y);
+			a.x0, a.y0, b.x1 + skew, b.y1, a.x1, a.y1, b.x0 - skew, b.y0);
 	}
 	fz_buffer_printf(content, "f Q");
 
-	annot = pdf_create_annot(rect, fz_keep_obj(obj), content, resources);
-	annot->ap->transparency = 1;
-	annot->ap->isolated = 0;
-
-	return annot;
+	return pdf_create_annot(rect, fz_keep_obj(obj), content, resources, 1);
 }
 
 /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692078 */
@@ -630,7 +632,7 @@ pdf_update_tx_widget_annot(pdf_xref *xref, fz_obj *obj)
 	fz_drop_buffer(base_ap);
 
 	rect = fz_transform_rect(fz_rotate(-rotate), rect);
-	return pdf_create_annot(rect, fz_keep_obj(obj), content, res ? fz_keep_obj(res) : NULL);
+	return pdf_create_annot(rect, fz_keep_obj(obj), content, res ? fz_keep_obj(res) : NULL, 0);
 }
 
 static pdf_annot *
