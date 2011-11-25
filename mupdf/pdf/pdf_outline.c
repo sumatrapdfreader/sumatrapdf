@@ -57,7 +57,7 @@ pdf_load_outline_imp(pdf_xref *xref, fz_obj *dict)
 			prev = root = node;
 		else
 			prev = prev->next = node;
-	
+
 		dict = fz_dict_gets(dict, "Next");
 	} while (dict && !fz_is_null(dict));
 	node = root;

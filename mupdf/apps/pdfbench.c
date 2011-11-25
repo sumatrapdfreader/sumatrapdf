@@ -23,73 +23,73 @@ pdf_page *drawpage = NULL;
 /* milli-second timer */
 #ifdef _WIN32
 typedef struct mstimer {
-    LARGE_INTEGER   start;
-    LARGE_INTEGER   end;
+	LARGE_INTEGER   start;
+	LARGE_INTEGER   end;
 } mstimer;
 
 void timerstart(mstimer *timer)
 {
-    assert(timer);
-    if (!timer)
-        return;
-    QueryPerformanceCounter(&timer->start);
+	assert(timer);
+	if (!timer)
+		return;
+	QueryPerformanceCounter(&timer->start);
 }
 void timerstop(mstimer *timer)
 {
-    assert(timer);
-    if (!timer)
-        return;
-    QueryPerformanceCounter(&timer->end);
+	assert(timer);
+	if (!timer)
+		return;
+	QueryPerformanceCounter(&timer->end);
 }
 
 double timeinms(mstimer *timer)
 {
-    LARGE_INTEGER   freq;
-    double          time_in_secs;
-    QueryPerformanceFrequency(&freq);
-    time_in_secs = (double)(timer->end.QuadPart-timer->start.QuadPart)/(double)freq.QuadPart;
-    return time_in_secs * 1000.0;
+	LARGE_INTEGER   freq;
+	double          time_in_secs;
+	QueryPerformanceFrequency(&freq);
+	time_in_secs = (double)(timer->end.QuadPart-timer->start.QuadPart)/(double)freq.QuadPart;
+	return time_in_secs * 1000.0;
 }
 #else
 #include <sys/time.h>
 typedef struct mstimer {
-    struct timeval    start;
-    struct timeval    end;
+	struct timeval    start;
+	struct timeval    end;
 } mstimer;
 
 void timerstart(mstimer *timer)
 {
-    assert(timer);
-    if (!timer)
-        return;
-    gettimeofday(&timer->start, NULL);
+	assert(timer);
+	if (!timer)
+		return;
+	gettimeofday(&timer->start, NULL);
 }
 
 void timerstop(mstimer *timer)
 {
-    assert(timer);
-    if (!timer)
-        return;
-    gettimeofday(&timer->end, NULL);
+	assert(timer);
+	if (!timer)
+		return;
+	gettimeofday(&timer->end, NULL);
 }
 
 double timeinms(mstimer *timer)
 {
-    double timeInMs;
-    time_t seconds;
-    int    usecs;
+	double timeInMs;
+	time_t seconds;
+	int    usecs;
 
-    assert(timer);
-    if (!timer)
-        return 0.0;
-    seconds = timer->end.tv_sec - timer->start.tv_sec;
-    usecs = timer->end.tv_usec - timer->start.tv_usec;
-    if (usecs < 0) {
-        --seconds;
-        usecs += 1000000;
-    }
-    timeInMs = (double)seconds*(double)1000.0 + (double)usecs/(double)1000.0;
-    return timeInMs;
+	assert(timer);
+	if (!timer)
+		return 0.0;
+	seconds = timer->end.tv_sec - timer->start.tv_sec;
+	usecs = timer->end.tv_usec - timer->start.tv_usec;
+	if (usecs < 0) {
+		--seconds;
+		usecs += 1000000;
+	}
+	timeInMs = (double)seconds*(double)1000.0 + (double)usecs/(double)1000.0;
+	return timeInMs;
 }
 #endif
 
@@ -110,7 +110,7 @@ void closexref(void)
 fz_error openxref(char *filename, char *password)
 {
 	fz_error error;
-	
+
 	error = pdf_open_xref(&xref, filename, password);
 	if (error)
 	{
