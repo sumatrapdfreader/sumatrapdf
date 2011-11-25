@@ -13,6 +13,11 @@
 // built-in support for chm files with its:: protocol
 // TODO: not enabled because while it works for html, I don't know how to
 // provide content for linked data, like images referenced by html
+// Note: according to https://groups.google.com/forum/#!topic/microsoft.public.inetsdk.programming.webbrowser_ctl/kwlvKhaYDVg
+// it should be possible by implementing custom IMoniker
+// There's example code at https://groups.google.com/forum/#!topic/microsoft.public.inetsdk.programming.html_objmodel/-lfx7r-IA4g
+// and a blog post detailing all possibilities at
+// http://qualapps.blogspot.com/2008/10/how-to-load-mshtml-with-data.html
 #define WE_PROVIDE_CHM_DATA 0
 
 #define CHM_MT
