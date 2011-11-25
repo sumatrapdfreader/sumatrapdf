@@ -577,6 +577,34 @@ static bool ParseSystemChmData(chmFile *chmHandle, ChmInfo *chmInfo)
     return true;
 }
 
+#define CP_CHM_DEFAULT  1252
+
+static UINT GetChmCodepage(const TCHAR *fileName)
+{
+    // cf. http://msdn.microsoft.com/en-us/library/bb165625(v=VS.90).aspx
+    static struct {
+        DWORD langId;
+        UINT cp;
+    } langIdToCodepage[] = {
+        { 1025, 1256 }, { 2052,  936 }, { 1028,  950 }, { 1029, 1250 },
+        { 1032, 1253 }, { 1037, 1255 }, { 1038, 1250 }, { 1041,  932 },
+        { 1042,  949 }, { 1045, 1250 }, { 1049, 1251 }, { 1051, 1250 },
+        { 1060, 1250 }, { 1055, 1254 }
+    };
+
+    UINT codepage = CP_CHM_DEFAULT;
+    DWORD header[6];
+    if (!file::ReadAll(fileName, (char *)header, sizeof(header)))
+        return codepage;
+    DWORD lang_id = header[5];
+
+    for (int i = 0; i < dimof(langIdToCodepage); i++)
+        if (lang_id == langIdToCodepage[i].langId)
+            codepage = langIdToCodepage[i].cp;
+
+    return codepage;
+}
+
 // We fake page numbers by doing a depth-first traversal of
 // toc tree and considering each unique html page in toc tree
 // as a page
@@ -604,7 +632,7 @@ static int CreatePageNoForURL(StrVec& pages, ScopedMem<TCHAR>& url)
 <li>
   ... siblings ...
 */
-ChmTocItem *TocItemFromLi(StrVec& pages, HtmlElement *el)
+ChmTocItem *TocItemFromLi(StrVec& pages, HtmlElement *el, UINT cp)
 {
     assert(str::Eq("li", el->name));
     el = el->GetChildByName("object");
@@ -619,8 +647,15 @@ ChmTocItem *TocItemFromLi(StrVec& pages, HtmlElement *el)
         ScopedMem<TCHAR> attrVal(el->GetAttribute("value"));
         if (!attrName || !attrVal)
             /* ignore incomplete/unneeded <param> */;
-        else if (str::EqI(attrName, _T("Name")))
+        else if (str::EqI(attrName, _T("Name"))) {
+#ifdef UNICODE
+            if (cp != CP_ACP) {
+                ScopedMem<char> bytes(str::ToMultiByte(attrVal, CP_CHM_DEFAULT));
+                attrVal.Set(str::ToWideChar(bytes, cp));
+            }
+#endif
             name.Set(attrVal.StealData());
+        }
         else if (str::EqI(attrName, _T("Local")))
             local.Set(attrVal.StealData());
     }
@@ -633,7 +668,7 @@ ChmTocItem *TocItemFromLi(StrVec& pages, HtmlElement *el)
     return new ChmTocItem(name.StealData(), CreatePageNoForURL(pages, local));
 }
 
-ChmTocItem *BuildChmToc(StrVec& pages, HtmlElement *list, int& idCounter, bool topLevel)
+ChmTocItem *BuildChmToc(StrVec& pages, HtmlElement *list, UINT cp, int& idCounter, bool topLevel)
 {
     assert(str::Eq("ul", list->name));
     ChmTocItem *node = NULL;
@@ -641,14 +676,14 @@ ChmTocItem *BuildChmToc(StrVec& pages, HtmlElement *list, int& idCounter, bool t
     for (HtmlElement *el = list->down; el; el = el->next) {
         if (!str::Eq(el->name, "li"))
             continue; // ignore unexpected elements
-        ChmTocItem *item = TocItemFromLi(pages, el);
+        ChmTocItem *item = TocItemFromLi(pages, el, cp);
         if (!item)
             continue; // skip incomplete elements and all their children
         item->id = ++idCounter;
 
         HtmlElement *nested = el->GetChildByName("ul");
         if (nested)
-            item->child = BuildChmToc(pages, nested, idCounter, false);
+            item->child = BuildChmToc(pages, nested, cp, idCounter, false);
         item->open = topLevel;
 
         if (!node)
@@ -660,7 +695,7 @@ ChmTocItem *BuildChmToc(StrVec& pages, HtmlElement *list, int& idCounter, bool t
     return node;
 }
 
-static ChmTocItem *ParseChmHtmlToc(StrVec& pages, char *html)
+static ChmTocItem *ParseChmHtmlToc(StrVec& pages, char *html, UINT cp)
 {
     HtmlParser p;
     HtmlElement *el = p.Parse(html);
@@ -672,7 +707,7 @@ static ChmTocItem *ParseChmHtmlToc(StrVec& pages, char *html)
     if (!el)
         return NULL;
     int idCounter = 0;
-    return BuildChmToc(pages, el, idCounter, true);
+    return BuildChmToc(pages, el, cp, idCounter, true);
 }
 
 bool CChmEngine::Load(const TCHAR *fileName)
@@ -709,8 +744,12 @@ bool CChmEngine::Load(const TCHAR *fileName)
     if (chmInfo.tocPath) {
         // parse the ToC here, since page numbering depends on it
         Bytes b;
-        if (GetChmDataForFile(chmHandle, chmInfo.tocPath, b))
-            tocRoot = ParseChmHtmlToc(pages, (char *)b.d);
+        if (GetChmDataForFile(chmHandle, chmInfo.tocPath, b)) {
+            UINT codepage = GetChmCodepage(fileName);
+            if (GetACP() == codepage)
+                codepage = CP_ACP;
+            tocRoot = ParseChmHtmlToc(pages, (char *)b.d, codepage);
+        }
     }
 
     return true;
