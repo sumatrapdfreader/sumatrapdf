@@ -67,7 +67,7 @@ struct pdf_csi_s
 	pdf_xref *xref;
 
 	/* usage mode for optional content groups */
-	char *target; /* "View", "Print", "Export" */
+	char *event; /* "View", "Print", "Export" */
 
 	/* interpreter stack */
 	fz_obj *obj;
@@ -79,7 +79,7 @@ struct pdf_csi_s
 
 	int xbalance;
 	int in_text;
-	int in_hidden_ocg; /* SumatraPDF: support inline OCGs */
+	int in_hidden_ocg;
 
 	/* path object state */
 	fz_path *path;
@@ -105,56 +105,194 @@ static fz_error pdf_run_buffer(pdf_csi *csi, fz_obj *rdb, fz_buffer *contents);
 static fz_error pdf_run_xobject(pdf_csi *csi, fz_obj *resources, pdf_xobject *xobj, fz_matrix transform);
 static void pdf_show_pattern(pdf_csi *csi, pdf_pattern *pat, fz_rect area, int what);
 
-
-/* SumatraPDF: support inline OCGs */
 static int
-pdf_is_ocg_hidden(fz_obj *ocg, pdf_xref *xref, char *target)
+ocg_intents_include(pdf_ocg_descriptor *desc, char *name)
 {
-	char target_state[16];
-	fz_obj *obj;
-	int default_off;
+	int i, len;
 
-	fz_strlcpy(target_state, target, sizeof target_state);
-	fz_strlcat(target_state, "State", sizeof target_state);
-
-	obj = fz_dict_gets(ocg, "Usage");
-	obj = fz_dict_gets(obj, target);
-	obj = fz_dict_gets(obj, target_state);
-	if (!strcmp(fz_to_name(obj), "OFF"))
+	if (strcmp(name, "All") == 0)
 		return 1;
 
-	obj = fz_dict_gets(ocg, "Intent");
-	if (fz_is_name(obj) && strcmp(fz_to_name(obj), "View") != 0)
-		return 1;
+	/* In the absence of a specified intent, it's 'View' */
+	if (desc->intent == NULL)
+		return (strcmp(name, "View") == 0);
 
-	obj = fz_dict_gets(xref->trailer, "Root");
-	obj = fz_dict_gets(obj, "OCProperties");
-	obj = fz_dict_gets(obj, "D");
-	default_off = !strcmp(fz_to_name(fz_dict_gets(obj, "BaseState")), "OFF");
-	obj = fz_dict_gets(obj, default_off ? "ON" : "OFF");
-	if (fz_is_array(obj))
-		return !fz_array_contains(obj, ocg) == default_off;
+	if (fz_is_name(desc->intent))
+	{
+		char *intent = fz_to_name(desc->intent);
+		if (strcmp(intent, "All") == 0)
+			return 1;
+		return (strcmp(intent, name) == 0);
+	}
+	if (!fz_is_array(desc->intent))
+		return 0;
 
+	len = fz_array_len(desc->intent);
+	for (i=0; i < len; i++)
+	{
+		char *intent = fz_to_name(fz_array_get(desc->intent, i));
+		if (strcmp(intent, "All") == 0)
+			return 1;
+		if (strcmp(intent, name) == 0)
+			return 1;
+	}
 	return 0;
 }
 
 static int
-pdf_is_hidden_ocg(fz_obj *xobj, char *target)
+pdf_is_hidden_ocg(fz_obj *ocg, pdf_csi *csi, fz_obj *rdb)
 {
-	char target_state[16];
-	fz_obj *obj;
+	char event_state[16];
+	fz_obj *obj, *obj2;
+	char *type;
+	pdf_ocg_descriptor *desc = csi->xref->ocg;
 
-	fz_strlcpy(target_state, target, sizeof target_state);
-	fz_strlcat(target_state, "State", sizeof target_state);
+	/* If no ocg descriptor, everything is visible */
+	if (desc == NULL)
+		return 0;
 
-	obj = fz_dict_gets(xobj, "OC");
-	obj = fz_dict_gets(obj, "OCGs");
-	if (fz_is_array(obj))
-		obj = fz_array_get(obj, 0);
-	obj = fz_dict_gets(obj, "Usage");
-	obj = fz_dict_gets(obj, target);
-	obj = fz_dict_gets(obj, target_state);
-	return !strcmp(fz_to_name(obj), "OFF");
+	/* If we've been handed a name, look it up in the properties. */
+	if (fz_is_name(ocg))
+	{
+		ocg = fz_dict_gets(fz_dict_gets(rdb, "Properties"), fz_to_name(ocg));
+	}
+	/* If we haven't been given an ocg at all, then we're visible */
+	if (ocg == NULL)
+		return 0;
+
+	fz_strlcpy(event_state, csi->event, sizeof event_state);
+	fz_strlcat(event_state, "State", sizeof event_state);
+
+	type = fz_to_name(fz_dict_gets(ocg, "Type"));
+
+	if (strcmp(type, "OCG") == 0)
+	{
+		/* An Optional Content Group */
+		int num = fz_to_num(ocg);
+		int gen = fz_to_gen(ocg);
+		int len = desc->len;
+		int i;
+
+		for (i = 0; i < len; i++)
+		{
+			if (desc->ocgs[i].num == num && desc->ocgs[i].gen == gen)
+			{
+				if (desc->ocgs[i].state == 0)
+					return 1; /* If off, hidden */
+				break;
+			}
+		}
+
+		/* Check Intents; if our intent is not part of the set given
+		 * by the current config, we should ignore it. */
+		obj = fz_dict_gets(ocg, "Intent");
+		if (fz_is_name(obj))
+		{
+			/* If it doesn't match, it's hidden */
+			if (ocg_intents_include(desc, fz_to_name(obj)) == 0)
+				return 1;
+		}
+		else if (fz_is_array(obj))
+		{
+			int match = 0;
+			len = fz_array_len(obj);
+			for (i=0; i<len; i++) {
+				match |= ocg_intents_include(desc, fz_to_name(fz_array_get(obj, i)));
+				if (match)
+					break;
+			}
+			/* If we don't match any, it's hidden */
+			if (match == 0)
+				return 1;
+		}
+		else
+		{
+			/* If it doesn't match, it's hidden */
+			if (ocg_intents_include(desc, "View") == 0)
+				return 1;
+		}
+
+		/* FIXME: Currently we do a very simple check whereby we look
+		 * at the Usage object (an Optional Content Usage Dictionary)
+		 * and check to see if the corresponding 'event' key is on
+		 * or off.
+		 *
+		 * Really we should only look at Usage dictionaries that
+		 * correspond to entries in the AS list in the OCG config.
+		 * Given that we don't handle Zoom or User, or Language
+		 * dicts, this is not really a problem. */
+		obj = fz_dict_gets(ocg, "Usage");
+		if (!fz_is_dict(obj))
+			return 0;
+		/* FIXME: Should look at Zoom (and return hidden if out of
+		 * max/min range) */
+		/* FIXME: Could provide hooks to the caller to check if
+		 * User is appropriate - if not return hidden. */
+		obj2 = fz_dict_gets(obj, csi->event);
+		if (strcmp(fz_to_name(fz_dict_gets(obj2, event_state)), "OFF") == 0)
+		{
+			return 1;
+		}
+		return 0;
+	}
+	else if (strcmp(type, "OCMD") == 0)
+	{
+		/* An Optional Content Membership Dictionary */
+		char *name;
+		int combine, on;
+
+		obj = fz_dict_gets(ocg, "VE");
+		if (fz_is_array(obj)) {
+			/* FIXME: Calculate visibility from array */
+			return 0;
+		}
+		name = fz_to_name(fz_dict_gets(ocg, "P"));
+		/* Set combine; Bit 0 set => AND, Bit 1 set => true means
+		 * Off, otherwise true means On */
+		if (strcmp(name, "AllOn") == 0)
+		{
+			combine = 1;
+		}
+		else if (strcmp(name, "AnyOff") == 0)
+		{
+			combine = 2;
+		}
+		else if (strcmp(name, "AllOff") == 0)
+		{
+			combine = 3;
+		}
+		else	/* Assume it's the default (AnyOn) */
+		{
+			combine = 0;
+		}
+
+		obj = fz_dict_gets(ocg, "OCGs");
+		on = combine & 1;
+		if (fz_is_array(obj)) {
+			int i, len;
+			len = fz_array_len(obj);
+			for (i = 0; i < len; i++)
+			{
+				int hidden;
+				hidden = pdf_is_hidden_ocg(fz_array_get(obj, i), csi, rdb);
+				if ((combine & 1) == 0)
+					hidden = !hidden;
+				if (combine & 2)
+					on &= hidden;
+				else
+					on |= hidden;
+			}
+		}
+		else
+		{
+			on = pdf_is_hidden_ocg(obj, csi, rdb);
+			if ((combine & 1) == 0)
+				on = !on;
+		}
+		return !on;
+	}
+	/* No idea what sort of object this is - be visible */
+	return 0;
 }
 
 /*
@@ -209,7 +347,6 @@ pdf_show_shade(pdf_csi *csi, fz_shade *shd)
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
 	fz_rect bbox;
 
-	/* SumatraPDF: support inline OCGs */
 	if (csi->in_hidden_ocg > 0)
 		return;
 
@@ -228,7 +365,6 @@ pdf_show_image(pdf_csi *csi, fz_pixmap *image)
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
 	fz_rect bbox;
 
-	/* SumatraPDF: support inline OCGs */
 	if (csi->in_hidden_ocg > 0)
 		return;
 
@@ -301,10 +437,6 @@ pdf_show_path(pdf_csi *csi, int doclose, int dofill, int dostroke, int even_odd)
 	if (doclose)
 		fz_closepath(path);
 
-	/* SumatraPDF: support inline OCGs */
-	if (csi->in_hidden_ocg > 0)
-		dofill = dostroke = 0;
-
 	if (dostroke)
 		bbox = fz_bound_path(path, &gstate->stroke_state, gstate->ctm);
 	else
@@ -316,6 +448,9 @@ pdf_show_path(pdf_csi *csi, int doclose, int dofill, int dostroke, int even_odd)
 		fz_clip_path(csi->dev, path, NULL, csi->clip_even_odd, gstate->ctm);
 		csi->clip = 0;
 	}
+
+	if (csi->in_hidden_ocg > 0)
+		dostroke = dofill = 0;
 
 	if (dofill || dostroke)
 		pdf_begin_group(csi, bbox);
@@ -426,9 +561,8 @@ pdf_flush_text(pdf_csi *csi)
 	case 7: doclip = 1; break;
 	}
 
-	/* SumatraPDF: support inline OCGs */
 	if (csi->in_hidden_ocg > 0)
-		dofill = dostroke = 0;
+		dostroke = dofill = 0;
 
 	bbox = fz_bound_text(text, gstate->ctm);
 
@@ -717,14 +851,14 @@ pdf_init_gstate(pdf_gstate *gs, fz_matrix ctm)
 }
 
 static pdf_csi *
-pdf_new_csi(pdf_xref *xref, fz_device *dev, fz_matrix ctm, char *target)
+pdf_new_csi(pdf_xref *xref, fz_device *dev, fz_matrix ctm, char *event)
 {
 	pdf_csi *csi;
 
 	csi = fz_malloc(sizeof(pdf_csi));
 	csi->xref = xref;
 	csi->dev = dev;
-	csi->target = target;
+	csi->event = event;
 
 	csi->top = 0;
 	csi->obj = NULL;
@@ -734,7 +868,7 @@ pdf_new_csi(pdf_xref *xref, fz_device *dev, fz_matrix ctm, char *target)
 
 	csi->xbalance = 0;
 	csi->in_text = 0;
-	csi->in_hidden_ocg = 0; /* SumatraPDF: support inline OCGs */
+	csi->in_hidden_ocg = 0;
 
 	csi->path = fz_new_path();
 	csi->clip = 0;
@@ -1337,17 +1471,33 @@ pdf_run_extgstate(pdf_csi *csi, fz_obj *rdb, fz_obj *extgstate)
  * Operators
  */
 
-/* SumatraPDF: support inline OCGs */
 static void pdf_run_BDC(pdf_csi *csi, fz_obj *rdb)
 {
+	fz_obj *ocg;
+
+	/* If we are already in a hidden OCG, then we'll still be hidden -
+	 * just increment the depth so we pop back to visibility when we've
+	 * seen enough EDCs. */
 	if (csi->in_hidden_ocg > 0)
-		csi->in_hidden_ocg++;
-	else
 	{
-		fz_obj *ocg = fz_dict_gets(fz_dict_gets(rdb, "Properties"), csi->name);
-		if (ocg && !strcmp(fz_to_name(fz_dict_gets(ocg, "Type")), "OCG") && pdf_is_ocg_hidden(ocg, csi->xref, csi->target))
-			csi->in_hidden_ocg++;
+		csi->in_hidden_ocg++;
+		return;
 	}
+
+	ocg = fz_dict_gets(fz_dict_gets(rdb, "Properties"), csi->name);
+	if (ocg == NULL)
+	{
+		/* No Properties array, or name not found in the properties
+		 * means visible. */
+		return;
+	}
+	if (strcmp(fz_to_name(fz_dict_gets(ocg, "Type")), "OCG") != 0)
+	{
+		/* Wrong type of property */
+		return;
+	}
+	if (pdf_is_hidden_ocg(ocg, csi, rdb))
+		csi->in_hidden_ocg++;
 }
 
 static fz_error pdf_run_BI(pdf_csi *csi, fz_obj *rdb, fz_stream *file)
@@ -1396,9 +1546,13 @@ static void pdf_run_B(pdf_csi *csi)
 
 static void pdf_run_BMC(pdf_csi *csi)
 {
-	/* SumatraPDF: support inline OCGs */
+	/* If we are already in a hidden OCG, then we'll still be hidden -
+	 * just increment the depth so we pop back to visibility when we've
+	 * seen enough EDCs. */
 	if (csi->in_hidden_ocg > 0)
+	{
 		csi->in_hidden_ocg++;
+	}
 }
 
 static void pdf_run_BT(pdf_csi *csi)
@@ -1495,7 +1649,7 @@ static fz_error pdf_run_Do(pdf_csi *csi, fz_obj *rdb)
 	if (!fz_is_name(subtype))
 		return fz_throw("no XObject subtype specified");
 
-	if (pdf_is_hidden_ocg(obj, csi->target))
+	if (pdf_is_hidden_ocg(fz_dict_gets(obj, "OC"), csi, rdb))
 		return fz_okay;
 
 	if (!strcmp(fz_to_name(subtype), "Form") && fz_dict_gets(obj, "Subtype2"))
@@ -1553,7 +1707,6 @@ static fz_error pdf_run_Do(pdf_csi *csi, fz_obj *rdb)
 
 static void pdf_run_EMC(pdf_csi *csi)
 {
-	/* SumatraPDF: support inline OCGs */
 	if (csi->in_hidden_ocg > 0)
 		csi->in_hidden_ocg--;
 }
@@ -2120,7 +2273,7 @@ pdf_run_keyword(pdf_csi *csi, fz_obj *rdb, fz_stream *file, char *buf)
 	case A('\''): pdf_run_squote(csi); break;
 	case A('B'): pdf_run_B(csi); break;
 	case B('B','*'): pdf_run_Bstar(csi); break;
-	case C('B','D','C'): pdf_run_BDC(csi, rdb); break; /* SumatraPDF: support inline OCGs */
+	case C('B','D','C'): pdf_run_BDC(csi, rdb); break;
 	case B('B','I'):
 		error = pdf_run_BI(csi, rdb, file);
 		if (error)
@@ -2357,7 +2510,7 @@ pdf_run_buffer(pdf_csi *csi, fz_obj *rdb, fz_buffer *contents)
 }
 
 fz_error
-pdf_run_page_with_usage(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matrix ctm, char *target)
+pdf_run_page_with_usage(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matrix ctm, char *event)
 {
 	pdf_csi *csi;
 	fz_error error;
@@ -2367,7 +2520,7 @@ pdf_run_page_with_usage(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matri
 	if (page->transparency)
 		fz_begin_group(dev, fz_transform_rect(ctm, page->mediabox), 1, 0, 0, 1);
 
-	csi = pdf_new_csi(xref, dev, ctm, target);
+	csi = pdf_new_csi(xref, dev, ctm, event);
 	error = pdf_run_buffer(csi, page->resources, page->contents);
 	pdf_free_csi(csi);
 	if (error)
@@ -2383,17 +2536,17 @@ pdf_run_page_with_usage(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matri
 		if (flags & (1 << 1)) /* Hidden */
 			continue;
 		/* SumatraPDF: don't print annotations unless explicitly asked to */
-		if (!(flags & (1 << 2)) /* Print */ && !strcmp(target, "Print"))
+		if (!(flags & (1 << 2)) /* Print */ && !strcmp(event, "Print"))
 			continue;
 		/* SumatraPDF: only consider the NoView flag for the View target */
-		if ((flags & (1 << 5)) /* NoView */ && !strcmp(target, "View"))
+		if ((flags & (1 << 5)) /* NoView */ && !strcmp(event, "View"))
 			continue;
 
-		if (pdf_is_hidden_ocg(annot->obj, target))
-			continue;
-
-		csi = pdf_new_csi(xref, dev, ctm, target);
-		error = pdf_run_xobject(csi, page->resources, annot->ap, annot->matrix);
+		csi = pdf_new_csi(xref, dev, ctm, event);
+		if (!pdf_is_hidden_ocg(fz_dict_gets(annot->obj, "OC"), csi, page->resources))
+		{
+			error = pdf_run_xobject(csi, page->resources, annot->ap, annot->matrix);
+		}
 		pdf_free_csi(csi);
 		if (error)
 			return fz_rethrow(error, "cannot parse annotation appearance stream");

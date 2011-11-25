@@ -508,6 +508,156 @@ pdf_load_xref(pdf_xref *xref, char *buf, int bufsize)
 	return fz_okay;
 }
 
+fz_error
+pdf_ocg_set_config(pdf_xref *xref, int config)
+{
+	int i, j, len, len2;
+	pdf_ocg_descriptor *desc = xref->ocg;
+	fz_obj *obj, *cobj;
+	char *name;
+
+	obj = fz_dict_gets(fz_dict_gets(xref->trailer, "Root"), "OCProperties");
+	if (obj == NULL)
+	{
+		if (config == 0)
+			return fz_okay;
+		else
+			return fz_throw("Unknown OCG config (None known!)");
+	}
+	if (config == 0)
+	{
+		cobj = fz_dict_gets(obj, "D");
+		if (cobj == NULL)
+			return fz_throw("No default OCG config");
+	}
+	else
+	{
+		cobj = fz_array_get(fz_dict_gets(obj, "Configs"), config);
+		if (cobj == NULL)
+			return fz_throw("Illegal OCG config");
+	}
+
+	if (desc->intent != NULL)
+		fz_drop_obj(desc->intent);
+	desc->intent = fz_dict_gets(cobj, "Intent");
+	if (desc->intent != NULL)
+		fz_keep_obj(desc->intent);
+
+	len = desc->len;
+	name = fz_to_name(fz_dict_gets(cobj, "BaseState"));
+	if (strcmp(name, "Unchanged") == 0)
+	{
+		/* Do nothing */
+	}
+	else if (strcmp(name, "OFF") == 0)
+	{
+		for (i = 0; i < len; i++)
+		{
+			desc->ocgs[i].state = 0;
+		}
+	}
+	else /* Default to ON */
+	{
+		for (i = 0; i < len; i++)
+		{
+			desc->ocgs[i].state = 1;
+		}
+	}
+
+	obj = fz_dict_gets(cobj, "ON");
+	len2 = fz_array_len(obj);
+	for (i = 0; i < len2; i++)
+	{
+		fz_obj *o = fz_array_get(obj, i);
+		int n = fz_to_num(o);
+		int g = fz_to_gen(o);
+		for (j=0; j < len; j++)
+		{
+			if (desc->ocgs[j].num == n && desc->ocgs[j].gen == g)
+			{
+				desc->ocgs[j].state = 1;
+				break;
+			}
+		}
+	}
+
+	obj = fz_dict_gets(cobj, "OFF");
+	len2 = fz_array_len(obj);
+	for (i = 0; i < len2; i++)
+	{
+		fz_obj *o = fz_array_get(obj, i);
+		int n = fz_to_num(o);
+		int g = fz_to_gen(o);
+		for (j=0; j < len; j++)
+		{
+			if (desc->ocgs[j].num == n && desc->ocgs[j].gen == g)
+			{
+				desc->ocgs[j].state = 0;
+				break;
+			}
+		}
+	}
+
+	/* FIXME: Should make 'num configs' available in the descriptor. */
+	/* FIXME: Should copy out 'Intent' here into the descriptor, and remove
+	 * csi->intent in favour of that. */
+	/* FIXME: Should copy 'AS' into the descriptor, and visibility
+	 * decisions should respect it. */
+	/* FIXME: Make 'Order' available via the descriptor (when we have an
+	 * app that needs it) */
+	/* FIXME: Make 'ListMode' available via the descriptor (when we have
+	 * an app that needs it) */
+	/* FIXME: Make 'RBGroups' available via the descriptor (when we have
+	 * an app that needs it) */
+	/* FIXME: Make 'Locked' available via the descriptor (when we have
+	 * an app that needs it) */
+	return fz_okay;
+}
+
+static fz_error
+pdf_read_ocg(pdf_xref *xref)
+{
+	fz_obj *obj, *ocg;
+	int len, i;
+	pdf_ocg_descriptor *desc;
+
+	obj = fz_dict_gets(fz_dict_gets(xref->trailer, "Root"), "OCProperties");
+	if (obj == NULL)
+		return fz_okay;
+	ocg = fz_dict_gets(obj, "OCGs");
+	if (ocg == NULL || !fz_is_array(ocg))
+		/* Not ever supposed to happen, but live with it. */
+		return fz_okay;
+	len = fz_array_len(ocg);
+	desc = fz_malloc(sizeof(*desc));
+	desc->len = len;
+	desc->ocgs = fz_calloc(len, sizeof(*desc->ocgs));
+	desc->intent = NULL;
+
+	for (i=0; i < len; i++)
+	{
+		fz_obj *o = fz_array_get(ocg, i);
+		desc->ocgs[i].num = fz_to_num(o);
+		desc->ocgs[i].gen = fz_to_gen(o);
+		desc->ocgs[i].state = 0;
+	}
+	xref->ocg = desc;
+
+	return pdf_ocg_set_config(xref, 0);
+}
+
+static void
+pdf_free_ocg(pdf_ocg_descriptor *desc)
+{
+	if (desc == NULL)
+		return;
+
+	if (desc->intent)
+		fz_drop_obj(desc->intent);
+	fz_free(desc->ocgs);
+	fz_free(desc);
+}
+
 /*
  * Initialize and load xref tables.
  * If password is not null, try to decrypt.
@@ -632,6 +782,13 @@ pdf_open_xref_with_stream(pdf_xref **xrefp, fz_stream *file, char *password)
 		}
 	}
 
+	error = pdf_read_ocg(xref);
+	if (error)
+	{
+		pdf_free_xref(xref);
+		return fz_rethrow(error, "Broken Optional Content");
+	}
+
 	*xrefp = xref;
 	return fz_okay;
 }
@@ -677,6 +834,8 @@ pdf_free_xref(pdf_xref *xref)
 		fz_drop_obj(xref->trailer);
 	if (xref->crypt)
 		pdf_free_crypt(xref->crypt);
+
+	pdf_free_ocg(xref->ocg);
 
 	fz_free(xref);
 }
