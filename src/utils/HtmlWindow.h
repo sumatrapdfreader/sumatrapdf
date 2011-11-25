@@ -11,11 +11,22 @@ class FrameSite;
 
 bool InHtmlNestedMessagePump();
 
+// HtmlWindowCallback allows HtmlWindow to notify other code about notable
+// events or delegate some of the functionality.
 class HtmlWindowCallback
 {
 public:
+    // called when we're about to show a given url. Returning false will
+    // stop loading this url
     virtual bool OnBeforeNavigate(const TCHAR *url, bool newWindow) = 0;
+
+    // allows for providing html data for a given url by other code.
+    // returning false means data wasn't provided.
+    // returning true means the data (and it's len) is provided under data/len.
     virtual bool GetHtmlForUrl(const TCHAR *url, char **data, size_t *len) = 0;
+
+    // called when left mouse button is clicked in the web control window.
+    // we use it to maintain proper focus (since it's stolen by left click)
     virtual void OnLButtonDown() = 0;
 };
 

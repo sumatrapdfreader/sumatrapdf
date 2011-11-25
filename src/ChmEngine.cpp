@@ -156,11 +156,9 @@ CChmEngine::CChmEngine() :
 {
 }
 
-// allows for providing html data for a given url from external source.
-// that way CChmEngine can provide html for CHM files bypassing silly restrictions
-// IE has when doing it internally (like not opening CHM files from network
-// drives).
-// returns false if didn't provide the data
+// In order to bypass IE's refusal to read CHM files from network drives,
+// we provide html data for CHM files ourselves, instead of relying built-in
+// handling of its:: urls in IE
 bool CChmEngine::GetHtmlForUrl(const TCHAR *url, char **data, size_t *len)
 {
     // TODO: write me
@@ -170,6 +168,8 @@ bool CChmEngine::GetHtmlForUrl(const TCHAR *url, char **data, size_t *len)
 // called when we're about to show a given url. If this is a CHM
 // html page, sync the state of the ui with the page (show
 // the right page number, select the right item in toc tree)
+// TODO: this should probably be done when navigation is complete, not when
+// it's started
 bool CChmEngine::OnBeforeNavigate(const TCHAR *url, bool newWindow)
 {
     // ensure that JavaScript doesn't keep the focus
