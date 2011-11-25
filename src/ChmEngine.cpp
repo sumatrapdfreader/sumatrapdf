@@ -9,6 +9,12 @@
 #include "HtmlWindow.h"
 #include "WinUtil.h"
 
+// If defined as 1, we provide CHM data ourselves instead of relying on IE's
+// built-in support for chm files with its:: protocol
+// TODO: not enabled because while it works for html, I don't know how to
+// provide content for linked data, like images referenced by html
+#define WE_PROVIDE_CHM_DATA 0
+
 #define CHM_MT
 #ifdef UNICODE
 #define PPC_BSTR
@@ -16,6 +22,21 @@
 
 #include <inttypes.h>
 #include <chm_lib.h>
+
+CASSERT(1 == sizeof(uint8_t), uint8_is_1_byte);
+CASSERT(2 == sizeof(uint16_t), uint16_is_2_bytes);
+CASSERT(4 == sizeof(uint32_t), uint32_is_4_bytes);
+
+class Bytes {
+public:
+    Bytes() : d(NULL), size(0)
+    {}
+    ~Bytes() {
+        free(d);
+    }
+    uint8_t *d;
+    size_t size;
+};
 
 class ChmTocItem : public DocTocItem {
 public:
@@ -56,6 +77,19 @@ public:
     char *indexPath;
     char *homePath;
     char *creator;
+};
+
+class ChmCacheEntry {
+public:
+    TCHAR *url;
+    Bytes data;
+
+    ChmCacheEntry(const TCHAR *url) {
+        this->url = str::Dup(url);
+    }
+    ~ChmCacheEntry() {
+        free(url);
+    }
 };
 
 class CChmEngine : public ChmEngine, public HtmlWindowCallback {
@@ -135,6 +169,8 @@ public:
     virtual void OnLButtonDown() { if (navCb) navCb->FocusFrame(true); }
     virtual bool GetHtmlForUrl(const TCHAR *url, char **data, size_t *len);
 
+    Bytes *FindDataForUrl(const TCHAR *url);
+
 protected:
     const TCHAR *fileName;
     struct chmFile *chmHandle;
@@ -146,6 +182,8 @@ protected:
     HtmlWindow *htmlWindow;
     ChmNavigationCallback *navCb;
 
+    Vec<ChmCacheEntry*> urlDataCache;
+
     bool Load(const TCHAR *fileName);
     void DisplayPage(const TCHAR *pageUrl);
 };
@@ -156,13 +194,15 @@ CChmEngine::CChmEngine() :
 {
 }
 
-// In order to bypass IE's refusal to read CHM files from network drives,
-// we provide html data for CHM files ourselves, instead of relying built-in
-// handling of its:: urls in IE
-bool CChmEngine::GetHtmlForUrl(const TCHAR *url, char **data, size_t *len)
+Bytes *CChmEngine::FindDataForUrl(const TCHAR *url)
 {
-    // TODO: write me
-    return false;
+    for (size_t i=0; i<urlDataCache.Count(); i++)
+    {
+        ChmCacheEntry *e = urlDataCache.At(i);
+        if (str::Eq(url, e->url))
+            return &e->data;
+    }
+    return NULL;
 }
 
 // called when we're about to show a given url. If this is a CHM
@@ -246,7 +286,7 @@ void CChmEngine::DisplayPage(const TCHAR *pageUrl)
     // and them zoom in, which is visible to the user. No idea how
     // to fix it (simply)
     htmlWindow->WaitUntilLoaded(3 * 1000, url);
-    //htmlWindow->DisplayHtml(_T("<html><body>Hello!</body></html>"));
+    //htmlWindow->DisplayHtml("<html><body>Hello!</body></html>");
 }
 
 RenderedBitmap *CChmEngine::CreateThumbnail(SizeI size)
@@ -314,22 +354,8 @@ CChmEngine::~CChmEngine()
     delete htmlWindow;
     delete tocRoot;
     free((void *)fileName);
+    DeleteVecMembers(urlDataCache);
 }
-
-CASSERT(1 == sizeof(uint8_t), uint8_is_1_byte);
-CASSERT(2 == sizeof(uint16_t), uint16_is_2_bytes);
-CASSERT(4 == sizeof(uint32_t), uint32_is_4_bytes);
-
-class Bytes {
-public:
-    Bytes() : d(NULL), size(0)
-    {}
-    ~Bytes() {
-        free(d);
-    }
-    uint8_t *d;
-    size_t size;
-};
 
 // The numbers in CHM format are little-endian
 static bool ReadU16(const Bytes& b, size_t off, uint16_t& valOut)
@@ -648,6 +674,7 @@ bool CChmEngine::Load(const TCHAR *fileName)
 {
     assert(NULL == chmHandle);
 
+#if !WE_PROVIDE_CHM_DATA // TODO: this shouln't be necessary anymore
     // CHM files downloaded from the internet are marked as unsafe
     // and IE (including our embedded control) will open them
     // but will not show the pages, which is extremely confusing
@@ -656,6 +683,7 @@ bool CChmEngine::Load(const TCHAR *fileName)
     if (file::GetZoneIdentifier(fileName) >= URLZONE_INTERNET &&
         !file::SetZoneIdentifier(fileName, URLZONE_TRUSTED))
         return false;
+#endif
 
     this->fileName = str::Dup(fileName);
     chmHandle = chm_open((TCHAR *)fileName);
@@ -681,6 +709,41 @@ bool CChmEngine::Load(const TCHAR *fileName)
     }
 
     return true;
+}
+
+// In order to bypass IE's refusal to read CHM files from network drives,
+// we provide html data for CHM files ourselves, instead of relying built-in
+// handling of its:: urls in IE
+bool CChmEngine::GetHtmlForUrl(const TCHAR *url, char **data, size_t *len)
+{
+#if WE_PROVIDE_CHM_DATA
+    // TODO: links due to internal navigation (via clicking links inside html file)
+    // don't start with its:
+    if (!str::StartsWithI(url, _T("its:")))
+        return false;
+    // remove the ITS protocol and any filename references from the URLs
+    url = str::Find(url, _T("::/"));
+    if (!url)
+        return false;
+    url += 3;
+    Bytes *b = FindDataForUrl(url);
+    if (!b) {
+        ChmCacheEntry *e = new ChmCacheEntry(url);
+        ScopedMem<char> urlAnsi(str::conv::ToAnsi(url));
+        bool ok = GetChmDataForFile(chmHandle, urlAnsi, e->data);
+        if (!ok) {
+            delete e;
+            return false;
+        }
+        b = &e->data;
+        urlDataCache.Append(e);
+    }
+    *data = (char*)b->d;
+    *len = b->size;
+    return true;
+#else
+    return false;
+#endif
 }
 
 TCHAR *CChmEngine::GetProperty(char *name)

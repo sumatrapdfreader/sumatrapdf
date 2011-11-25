@@ -484,7 +484,7 @@ HtmlWindow::HtmlWindow(HWND hwndParent, HtmlWindowCallback *cb) :
     hwndParent(hwndParent), webBrowser(NULL), oleObject(NULL),
     oleInPlaceObject(NULL), viewObject(NULL),
     connectionPoint(NULL), oleObjectHwnd(NULL),
-    adviseCookie(0), htmlWinCb(cb),
+    adviseCookie(0), blankWasShown(false), htmlWinCb(cb),
     wndProcBrowserPrev(NULL),
     canGoBack(false), canGoForward(false)
 {
@@ -687,11 +687,38 @@ void HtmlWindow::CopySelection()
 
 void HtmlWindow::EnsureAboutBlankShown()
 {
+    if (blankWasShown)
+        return;
     NavigateToUrl(_T("about:blank"));
     WaitUntilLoaded(INFINITE, _T("about:blank"));
+    blankWasShown = true;
 }
 
-void HtmlWindow::DisplayHtml(const TCHAR *html)
+static SAFEARRAY *CreateOneElementWstrArray(const WCHAR *s)
+{
+    SAFEARRAY *arr = SafeArrayCreateVector(VT_VARIANT, 0, 1);
+    VARIANT *var = NULL;
+    SafeArrayAccessData(arr, (void**)&var);
+    var->vt = VT_BSTR;
+    var->bstrVal = SysAllocString(s);
+    SafeArrayUnaccessData(arr);
+    if (!var->bstrVal) {
+        SafeArrayDestroy(arr);
+        return NULL;
+    }
+    return arr;
+}
+
+// TODO: this looses the encoding of the file. Maybe I can use Load method
+// instead as shown here:
+// http://stackoverflow.com/questions/724746/problem-with-ihtmldocument2write
+static SAFEARRAY *CreateOneElementStrArray(const char *s)
+{
+    ScopedMem<WCHAR> tmp(str::conv::FromAnsi(s));
+    return CreateOneElementWstrArray(tmp);
+}
+
+void HtmlWindow::WriteHtml(SAFEARRAY* htmlArr)
 {
     // don't know why, but that's what other people do
     EnsureAboutBlankShown();
@@ -705,24 +732,21 @@ void HtmlWindow::DisplayHtml(const TCHAR *html)
     if (!doc)
         return;
 
-    SAFEARRAY *arr = SafeArrayCreateVector(VT_VARIANT, 0, 1);
-    if (!arr)
-        return;
-
-    VARIANT *var = NULL;
-    hr = SafeArrayAccessData(arr, (void**)&var);
-    if (FAILED(hr))
-        goto Exit;
-    var->vt = VT_BSTR;
-    var->bstrVal = SysAllocString(AsWStrQ(html));
-    if (!var->bstrVal)
-        goto Exit;
-    SafeArrayUnaccessData(arr);
-
-    doc->write(arr);
+    doc->write(htmlArr);
     doc->close();
+}
 
-Exit:
+void HtmlWindow::DisplayHtml(const WCHAR *html)
+{
+    SAFEARRAY *arr = CreateOneElementWstrArray(html);
+    WriteHtml(arr);
+    SafeArrayDestroy(arr);
+}
+
+void HtmlWindow::DisplayHtml(const char *html)
+{
+    SAFEARRAY *arr = CreateOneElementStrArray(html);
+    WriteHtml(arr);
     SafeArrayDestroy(arr);
 }
 
@@ -775,14 +799,17 @@ bool HtmlWindow::OnBeforeNavigate(const TCHAR *url, bool newWindow)
     currentURL.Set(NULL);
     if (!htmlWinCb)
         return true;
+    bool shouldNavigate = htmlWinCb->OnBeforeNavigate(url, newWindow);
+    if (!shouldNavigate)
+        return false;
     char *data = NULL;
     size_t len = 0;
     bool gotHtmlData = htmlWinCb->GetHtmlForUrl(url, &data, &len);
     if (gotHtmlData) {
-        // TODO: write me
+        DisplayHtml(data);
         return false;
     }
-    return htmlWinCb->OnBeforeNavigate(url, newWindow);
+    return true;
 }
 
 void HtmlWindow::OnDocumentComplete(const TCHAR *url)

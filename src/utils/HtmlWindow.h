@@ -44,6 +44,7 @@ protected:
     HWND                oleObjectHwnd;
 
     DWORD               adviseCookie;
+    bool                blankWasShown;
 
     ScopedMem<TCHAR>    currentURL;
 
@@ -55,6 +56,8 @@ protected:
     void SubclassHwnd();
     void UnsubclassHwnd();
 
+    void WriteHtml(SAFEARRAY* htmlArr);
+
 public:
     WNDPROC wndProcBrowserPrev;
 
@@ -64,7 +67,8 @@ public:
     void OnSize(int dx, int dy);
     void SetVisible(bool visible);
     void NavigateToUrl(const TCHAR *url);
-    void DisplayHtml(const TCHAR *html);
+    void DisplayHtml(const WCHAR *html);
+    void DisplayHtml(const char *html);
     void GoBack();
     void GoForward();
     void PrintCurrentPage();
