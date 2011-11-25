@@ -57,7 +57,11 @@ const TCHAR *DllMainReason(DWORD reason)
 
 NPNetscapeFuncs gNPNFuncs;
 HINSTANCE g_hInstance = NULL;
+#ifndef _WIN64
 const TCHAR *g_lpRegKey = _T("Software\\MozillaPlugins\\@mozilla.zeniko.ch/SumatraPDF_Browser_Plugin");
+#else
+const TCHAR *g_lpRegKey = _T("Software\\MozillaPlugins\\@mozilla.zeniko.ch/SumatraPDF_Browser_Plugin_x64");
+#endif
 
 
 /* ::::: DLL Exports ::::: */
