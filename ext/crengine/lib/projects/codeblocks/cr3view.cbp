@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="CoolReader 3 Viewer" />
+		<Option pch_mode="0" />
+		<Option default_target="debug" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="release">
+				<Option output="release\cr3view.exe" prefix_auto="0" extension_auto="0" />
+				<Option working_dir="release" />
+				<Option object_output="release\.objs" />
+				<Option deps_output="release\.deps" />
+				<Option external_deps="release\libcrengine.a;debug\libcrengine.a;" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+				<Option projectCompilerOptionsRelation="2" />
+				<Option projectResourceIncludeDirsRelation="0" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-Wall" />
+				</Compiler>
+				<Linker>
+					<Add directory="release" />
+				</Linker>
+			</Target>
+			<Target title="debug">
+				<Option output="debug\cr3view.exe" prefix_auto="0" extension_auto="0" />
+				<Option working_dir="debug" />
+				<Option object_output="debug\.objs" />
+				<Option deps_output="debug\.deps" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+				<Option parameters="example.fb2" />
+				<Option projectCompilerOptionsRelation="2" />
+				<Option projectResourceIncludeDirsRelation="0" />
+				<Compiler>
+					<Add option="-march=i386" />
+					<Add option="-Wall" />
+					<Add option="-g" />
+					<Add option="-D_DEBUG" />
+					<Add option="-DDEBUG" />
+				</Compiler>
+				<Linker>
+					<Add directory="debug" />
+				</Linker>
+			</Target>
+		</Build>
+		<VirtualTargets>
+			<Add alias="All" targets="release;debug;" />
+		</VirtualTargets>
+		<Compiler>
+			<Add option="-D_WIN32" />
+			<Add option="-DWIN32" />
+			<Add option="-DCYGWIN" />
+			<Add option='-Dboolean=&quot;unsigned char&quot;' />
+			<Add option='-Dwxjpeg_boolean=&quot;unsigned char&quot;' />
+			<Add option="-DCR_EMULATE_GETTEXT=1" />
+			<Add option="-DHAVE_WXJPEG_BOOLEAN=1" />
+			<Add directory="..\..\..\include" />
+			<Add directory="..\..\..\..\cximage\jpeg" />
+			<Add directory="..\..\..\..\cximage\zlib" />
+			<Add directory="..\..\..\..\cximage\png" />
+		</Compiler>
+		<Linker>
+			<Add library="gdi32" />
+			<Add library="user32" />
+			<Add library="kernel32" />
+			<Add library="jpeg" />
+			<Add library="png" />
+			<Add library="zlib" />
+			<Add directory="..\codeblocks" />
+		</Linker>
+		<Unit filename="..\..\..\Tools\Fb2Test\Fb2Test.cpp" />
+		<Unit filename="..\..\..\Tools\Fb2Test\StdAfx.cpp" />
+		<Unit filename="..\..\..\include\cp_stats.h" />
+		<Unit filename="..\..\..\include\crengine.h" />
+		<Unit filename="..\..\..\include\crsetup.h" />
+		<Unit filename="..\..\..\include\crtxtenc.h" />
+		<Unit filename="..\..\..\include\cssdef.h" />
+		<Unit filename="..\..\..\include\dtddef.h" />
+		<Unit filename="..\..\..\include\fb2def.h" />
+		<Unit filename="..\..\..\include\hist.h" />
+		<Unit filename="..\..\..\include\hyphman.h" />
+		<Unit filename="..\..\..\include\lstridmap.h" />
+		<Unit filename="..\..\..\include\lvarray.h" />
+		<Unit filename="..\..\..\include\lvbmpbuf.h" />
+		<Unit filename="..\..\..\include\lvdocview.h" />
+		<Unit filename="..\..\..\include\lvdrawbuf.h" />
+		<Unit filename="..\..\..\include\lvfnt.h" />
+		<Unit filename="..\..\..\include\lvfntman.h" />
+		<Unit filename="..\..\..\include\lvhashtable.h" />
+		<Unit filename="..\..\..\include\lvimg.h" />
+		<Unit filename="..\..\..\include\lvmemman.h" />
+		<Unit filename="..\..\..\include\lvpagesplitter.h" />
+		<Unit filename="..\..\..\include\lvptrvec.h" />
+		<Unit filename="..\..\..\include\lvref.h" />
+		<Unit filename="..\..\..\include\lvrefcache.h" />
+		<Unit filename="..\..\..\include\lvrend.h" />
+		<Unit filename="..\..\..\include\lvstream.h" />
+		<Unit filename="..\..\..\include\lvstring.h" />
+		<Unit filename="..\..\..\include\lvstsheet.h" />
+		<Unit filename="..\..\..\include\lvstyles.h" />
+		<Unit filename="..\..\..\include\lvtextfm.h" />
+		<Unit filename="..\..\..\include\lvtinydom.h" />
+		<Unit filename="..\..\..\include\lvtypes.h" />
+		<Unit filename="..\..\..\include\lvxml.h" />
+		<Unit filename="..\..\..\include\props.h" />
+		<Unit filename="..\..\..\include\rtfcmd.h" />
+		<Unit filename="..\..\..\include\rtfimp.h" />
+		<Unit filename="..\..\..\include\w32utils.h" />
+		<Unit filename="..\..\..\include\wolutil.h" />
+		<Unit filename="..\..\..\src\cp_stats.cpp" />
+		<Unit filename="..\..\..\src\cri18n.cpp" />
+		<Unit filename="..\..\..\src\crskin.cpp" />
+		<Unit filename="..\..\..\src\crtxtenc.cpp" />
+		<Unit filename="..\..\..\src\hist.cpp" />
+		<Unit filename="..\..\..\src\hyphman.cpp" />
+		<Unit filename="..\..\..\src\lstridmap.cpp" />
+		<Unit filename="..\..\..\src\lvbmpbuf.cpp" />
+		<Unit filename="..\..\..\src\lvdocview.cpp" />
+		<Unit filename="..\..\..\src\lvdrawbuf.cpp" />
+		<Unit filename="..\..\..\src\lvfnt.cpp" />
+		<Unit filename="..\..\..\src\lvfntman.cpp" />
+		<Unit filename="..\..\..\src\lvimg.cpp" />
+		<Unit filename="..\..\..\src\lvmemman.cpp" />
+		<Unit filename="..\..\..\src\lvpagesplitter.cpp" />
+		<Unit filename="..\..\..\src\lvrend.cpp" />
+		<Unit filename="..\..\..\src\lvstream.cpp" />
+		<Unit filename="..\..\..\src\lvstring.cpp" />
+		<Unit filename="..\..\..\src\lvstsheet.cpp" />
+		<Unit filename="..\..\..\src\lvstyles.cpp" />
+		<Unit filename="..\..\..\src\lvtextfm.cpp" />
+		<Unit filename="..\..\..\src\lvtinydom.cpp" />
+		<Unit filename="..\..\..\src\lvxml.cpp" />
+		<Unit filename="..\..\..\src\props.cpp" />
+		<Unit filename="..\..\..\src\rtfimp.cpp" />
+		<Unit filename="..\..\..\src\w32utils.cpp" />
+		<Unit filename="..\..\..\src\wolutil.cpp" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

@@ -1,0 +1,1 @@
+./run_make_lite.sh && ./run_make_linux.sh && ./run_make_v2_arm.sh && ./run_make_v2_i386.sh

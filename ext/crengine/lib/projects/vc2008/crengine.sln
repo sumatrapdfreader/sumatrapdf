@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual C++ Express 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "crengine", "crengine.vcproj", "{230674E1-3392-4A62-B749-5D73D586F12F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+		Unicode Debug Lite|Win32 = Unicode Debug Lite|Win32
+		Unicode Debug|Win32 = Unicode Debug|Win32
+		Unicode Release Lite|Win32 = Unicode Release Lite|Win32
+		Unicode Release|Win32 = Unicode Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{230674E1-3392-4A62-B749-5D73D586F12F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{230674E1-3392-4A62-B749-5D73D586F12F}.Debug|Win32.Build.0 = Debug|Win32
+		{230674E1-3392-4A62-B749-5D73D586F12F}.Release|Win32.ActiveCfg = Release|Win32
+		{230674E1-3392-4A62-B749-5D73D586F12F}.Release|Win32.Build.0 = Release|Win32
+		{230674E1-3392-4A62-B749-5D73D586F12F}.Unicode Debug Lite|Win32.ActiveCfg = Unicode Debug Lite|Win32
+		{230674E1-3392-4A62-B749-5D73D586F12F}.Unicode Debug Lite|Win32.Build.0 = Unicode Debug Lite|Win32
+		{230674E1-3392-4A62-B749-5D73D586F12F}.Unicode Debug|Win32.ActiveCfg = Unicode Debug|Win32
+		{230674E1-3392-4A62-B749-5D73D586F12F}.Unicode Debug|Win32.Build.0 = Unicode Debug|Win32
+		{230674E1-3392-4A62-B749-5D73D586F12F}.Unicode Release Lite|Win32.ActiveCfg = Unicode Release Lite|Win32
+		{230674E1-3392-4A62-B749-5D73D586F12F}.Unicode Release Lite|Win32.Build.0 = Unicode Release Lite|Win32
+		{230674E1-3392-4A62-B749-5D73D586F12F}.Unicode Release|Win32.ActiveCfg = Unicode Release|Win32
+		{230674E1-3392-4A62-B749-5D73D586F12F}.Unicode Release|Win32.Build.0 = Unicode Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

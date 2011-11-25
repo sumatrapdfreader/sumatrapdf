@@ -1,0 +1,360 @@
+
+Wolf file structure (sections):
+{
+  Header
+  Description
+  [Cover]
+  WolfPages
+  Catalog
+  [SubCatalog]
+  PageTable
+}
+
+1. Header
+
+  Length = 128 bytes.
+{
+  WolFileId         : array[0..12] of Char;
+  Unknown0D         : DWORD;
+  Unknown11         : WORD;
+  Unknown13         : DWORD;
+  DescriptionSize   : WORD;
+  CoverSize         : DWORD;
+  Unknown1D         : Byte;
+  CatalogSize       : DWORD;
+  Level1Items       : DWORD;
+  WolfPagesSize     : DWORD;
+  Unknown2A         : array[0..17] of Byte;
+  PageTableSize     : DWORD;
+  Unknown40         : Byte;
+  BookType          : Byte;
+  Unknown42         : WORD;
+  Unknown44         : array[0..6] of Byte;
+  Unknown4B         : WORD;
+  Unknown4D         : array[0..17] of Byte;
+  Level23Items      : WORD;
+  SubCatalogOffs    : DWORD;
+  Unknown65         : array[0..26] of Byte;
+}
+where:
+
+  [0x00] WolFileId: constant = "WolfEbook1.11"
+
+  [0x0D] Unknown0D: constant  = 0x00000000
+
+  [0x11] Unknown11: constant  = 0x0201
+
+  [0x13] Unknown13: constant  = 0x00000000
+
+  [0x17] DescriptionSize: size of section "Decription"
+
+  [0x19] CoverSize: size of section "Cover". 0, if there is no cover page.
+
+  [0x1D] Unknown1D: ??? really unknown. (!!! I think this is 0 for "Homochrome" Wolf, 1 for "Gray" Wolf file.)
+
+  [0x1E] CatalogSize: size of sections "Catalog" and "SubCatalog".
+
+  [0x22] Level1Items: count of items on first catalog level.
+
+  [0x26] WolfPagesSize: size of section "WolfPages".
+
+  [0x2A] Unknown2A: constant  = fill with 0x00.
+
+  [0x3C] PageTableSize: size of section "PageTable".
+
+  [0x40] Unknown40: constant = 0x01
+
+  [0x41] BookType: 0=book, 1=article; 2=magazine
+
+  [0x42] Unknown42: ??? really unknown. (!!! I think this fiels is = 2*<count of pages> - only for graphic wolf!)
+
+  [0x44] Unknown44: constant  = fill with 0x00.
+
+  [0x4B] Unknown4B: ??? really unknown. (!!! I think this fiels is = <count of pages> - only for graphic wolf!)
+
+  [0x4D] Unknown4D: constant  = fill with 0x00.
+
+  [0x5F] Level23Items: count of all items on levels 2 and 3.
+
+  [0x61] SubCatalogOffs: offset (from begining of file) to section "SubCatalog". 0, if there is no "SubCatalog" section.
+
+  [0x65] Unknown65: constant  = fill with 0x00.
+
+
+  CatalogSize = 19 + CountOfLevel1TOCItems * 17 + Length(NamesInLevel1TOC)
+
+  SubcatalogSize = 26 + CountOfAllTOCItems * 80 + Length(NamesInAllTOCLevels)
+
+  PageTableSize = 105 + 56 * PagesCount   {for ver="021211"}
+                = 105 + 60 * PagesCount   {for ver="001"}
+
+2. Description:
+
+  A string with 9 pseudo-XML elements. Every tag is followed by value and new line (#13#10). Tags with empty value can't be omited.
+
+  <title> - Title of book. Max - 128 chars (according to WolfDLL description).
+  <subject> - Subject, type. Max - 128 chars (according to WolfDLL description).
+  <author> - Author name. Max - 128 chars (according to WolfDLL description).
+  <adpter> - Adapter (???). Max - 128 chars (according to WolfDLL description).
+  <translator> - Translator. Max - 128 chars (according to WolfDLL description).
+  <publisher> - Publisher. Max - 128 chars (according to WolfDLL description).
+  <time_publish> - Publishing time. Max - 16 chars (according to WolfDLL description).
+  <introduction> - Annotation. Max - 1024 chars (according to WolfDLL description). This field allow using of new line chars (#10#13).
+  <ISBN> - ISBN. Max - 128 chars (according to WolfDLL description).
+
+
+3. Cover
+
+  Section "Cover" contains description (header) and data for cover page:
+{
+  CoverHeader
+  CoverData
+}
+
+3.1. CoverHeader
+
+  Length = 10 bytes.
+{
+  Compression       : WORD;
+  ImageWidth        : WORD;
+  BitsPerPixel      : WORD;
+  BytesPerLine      : WORD;
+  ImageHeight       : WORD;
+}
+where:
+
+  [0x00] Compression: 0xFFFF for raw data (no compression); 0x0001 for LZSS compression.
+
+  [0x02] ImageWidth: width of image (in pixels)
+
+  [0x04] BitsPerPixel: 1 for monochrome images; 2 for 4-level gray images.
+
+  [0x06] BytesPerLine: count of bytes in one row of image. (= ImageWidth*BitsPerPixel/8)
+
+  [0x08] ImageHeight: height of image (in pixels)
+
+3.2. CoverData
+
+  Raw bitmask for pixels (if Compression=0xFFFF) or compressed with LZSS (if Compression=0x0001).
+  Note that in monochrome images 1 is black and 0 is white; in 4-level gray images 0 is black and 3 is white.
+
+
+4. WolfPages
+
+  Pseudo-XML node; tags are written without dividers.
+  Warning: There is #13#10 between <wolf> and <catalog>, but not between </catalog> and </wolf>.
+{
+  <wolf>
+  <catalog>
+    <img bitcount=%B compact=1 width=%W height=%H length=%L> ImageData (for page 1) </img>
+    <img bitcount=%B compact=1 width=%W height=%H length=%L> ImageData (for page 2) </img>
+    ...
+    <img bitcount=%B compact=1 width=%W height=%H length=%L> ImageData (for last page) </img>
+  </catalog></wolf>
+}
+where:
+
+  %B: Bits per pixel - 1 for monochrome images; 2 for 4-level gray images.
+
+  %W: Width of image (in pixels)
+
+  %H: Height of image (in pixels)
+
+  %L: Length of ImageData
+
+  ImageData: compressed bitmask stream. Note that in monochrome images 1 is black and 0 is white; in 4-level gray images 0 is black and 3 is white.
+
+
+5. Catalog
+
+  Pseudo-XML node; tags are written without dividers (like new lines):
+{
+  <catalog>
+    <item>ItemName</item>ItemOffs
+    ...
+    <item>ItemName</item>ItemOffs
+  </catalog>
+}
+where:
+
+  ItemName: Name of element from first level in TOC (table of contents).
+
+  ItemOffs: Offset from beginning of section "WolfPages" to description of page (<img...>).
+
+
+  Every item represents one element from first level in TOC. If there is no TOC, catalog contains only one item with ItemName=BookTitle and ItemOffs=OffsetOfPage#1.
+
+
+6. SubCatalog
+
+  Describes full TOC. If there is no TOC, this section not exists.
+  Pseudo-XML node; datas are written without dividers (like new lines):
+{
+  <subcatalog>
+    Item1
+    Item2
+    ...
+    ItemN
+    Names
+  </subcatalog>
+}
+
+  Every item represents one element from TOC. Elements are ordered as followed: first are all items in level 1, then all items in level 2, and then - all items in level 3. Elements in same level are ordered by his number (index) in level.
+
+6.1. SubCatalog Item
+
+  Length = 80 bytes.
+{
+  PageOffs          : DWORD;
+  NameOffs          : DWORD;
+  NameSize          : WORD;
+  ChildsCount       : WORD;
+  PrevPeerOffs      : DWORD;
+  NextPeerOffs      : DWORD;
+  ChildOffs         : DWORD;
+  ParentOffs        : DWORD:
+  Level3Idx         : Byte;
+  Level2Idx         : Byte;
+  Level1Idx         : Byte;
+  AlignByte         : Byte;
+  ItemName          : array[0..47] of Byte;
+}
+where:
+
+  [0x00] PageOffs: offset from beginning of section "WolfPages" to description of page (<img...>).
+
+  [0x04] NameOffs: offset from beginning of file to beginnig of name (in "Names" area).
+
+  [0x08] NameSize: length (in chars) of name (in "Names" area).
+
+  [0x0A] ChildsCount: count of subitems for this element from TOC.
+
+  [0x0C] PrevPeerOffs: offset from beginning of file to the description of previous peer element in SubCatalog table. 0, if current item is the first child of parent.
+
+  [0x10] NextPeerOffs: offset from beginning of file to the description of next peer element in SubCatalog table. 0, if current item is the last child of parent.
+
+  [0x14] ChildOffs: offset from beginning of file to the description of first child in SubCatalog table. 0, if there is no subitems (in TOC) for current item.
+
+  [0x18] ParentOffs: offset from beginning of file to the description of parent element in SubCatalog table. 0, if element is on level 1.
+
+  [0x1C] Level3Idx: level 3 index of element; 0 if element is on level 1 or level 2 in TOC.
+
+  [0x1D] Level2Idx: level 2 index of element; 0 if element is on level 1 in TOC.
+
+  [0x1E] Level1Idx: level 1 index of element.
+
+  [0x1F] AlignByte: constant = 0x00.
+
+  [0x20] ItemName: name of item in TOC.
+
+  All items are ordered by levels - first going all items in level 1, then all items in level 2, then all items in level 3.
+
+6.2. Names
+
+  All names for subcatalog items without dividers. Ends with constant = 0x08.
+
+
+7. PageTable
+
+  Pseudo-XML node; tags are written without dividers (like new lines):
+{
+  <pagetable ver="021211 ">
+    Group1Offs      : DWORD;
+    Group2Offs      : DWORD;
+    GroupDiv1Offs   : DWORD;
+    Group3Offs      : DWORD;
+    Group4Offs      : DWORD;
+    GroupDiv2Offs   : DWORD;
+    Group5Offs      : DWORD;
+    Group6Offs      : DWORD;
+    GroupDiv3Offs   : DWORD;
+    Group7Offs      : DWORD;
+    Group8Offs      : DWORD;
+    GroupDiv4Offs   : DWORD;
+    EndFileOffs     : DWORD;
+  </pagetable>
+  PageOffsGroup1
+  PageOffsGroup2
+  GroupDivider1
+  PageOffsGroup3
+  PageOffsGroup4
+  GroupDivider2
+  PageOffsGroup5
+  PageOffsGroup6
+  GroupDivider3
+  PageOffsGroup7
+  PageOffsGroup8
+  GroupDivider4
+}
+where:
+
+  [0x00] Group1Offs: offset from beginning of file to PageOffsGroup1.
+
+  [0x04] Group2Offs: offset from beginning of file to PageOffsGroup2.
+
+  [0x08] GroupDiv1Offs: offset from beginning of file to GroupDivider1.
+
+  [0x0C] Group3Offs: offset from beginning of file to PageOffsGroup3.
+
+  [0x10] Group4Offs: offset from beginning of file to PageOffsGroup4.
+
+  [0x14] GroupDiv2Offs: offset from beginning of file to GroupDivider2.
+
+  [0x18] Group5Offs: offset from beginning of file to PageOffsGroup5.
+
+  [0x1C] Group6Offs: offset from beginning of file to PageOffsGroup6.
+
+  [0x20] GroupDiv3Offs: offset from beginning of file to GroupDivider3.
+
+  [0x24] Group7Offs: offset from beginning of file to PageOffsGroup7.
+
+  [0x28] Group8Offs: offset from beginning of file to PageOffsGroup8.
+
+  [0x2C] GroupDiv4Offs: offset from beginning of file to GroupDivider4.
+
+  [0x30] EndFileOffs: offset from beginning of file to end of file (size of file).
+
+  GroupDividerX: constant = 0xFFFFFFFF.
+
+  PageOffsGroup1, PageOffsGroup2, PageOffsGroup3, PageOffsGroup4, PageOffsGroup7 and PageOffsGroup8 have following structure:
+{
+  CatalogOffs       : DWORD;
+  Page1Offs         : DWORD;
+  Page2Offs         : DWORD;
+  Page2Offs         : DWORD;
+  ...
+  PageNOffs         : DWORD;
+  PageNOffs         : DWORD;
+}
+where:
+
+  [0x00] CatalogOffs: offset from beginning of file to beginning of Wolf catalog ("<catalog>" in section "WolfPages").
+
+  [0x04] Page1Offs: offset from beginning of file to description of first page (<img...>).
+
+  [0x08] Page2Offs: offset from beginning of file to description of second page (<img...>).
+  [0x0C] -"-
+  ...
+  [0x??] PageNOffs: offset from beginning of file to description of last page (<img...>).
+
+  Minimal size of this structure is 2 items (8 bytes).
+
+
+  PageOffsGroup5 and PageOffsGroup6 have following structure:
+{
+  CatalogOffs       : DWORD;
+  Page2Offs         : DWORD;
+  Page3Offs         : DWORD;
+  ...
+  PageNOffs         : DWORD;
+}
+where all items are the same as in PageOffsGroup1 description.
+
+  Minimal size of this structure is 1 item (4 bytes).
+
+
+Note: For page table version "001" header is:
+  <pagetable ver="001">
+and all groups are like PageOffsGroup5 and PageOffsGroup6.
+
+---

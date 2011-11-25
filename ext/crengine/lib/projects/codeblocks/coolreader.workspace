@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<!DOCTYPE CodeBlocks_workspace_file>
+<CodeBlocks_workspace_file>
+	<Workspace title="CoolReader3">
+		<Project filename="crengine.cbp"/>
+		<Project filename="jpeg.cbp"/>
+		<Project filename="zlib.cbp"/>
+		<Project filename="png.cbp"/>
+		<Project filename="cr3view.cbp" active="1"/>
+	</Workspace>
+</CodeBlocks_workspace_file>

@@ -1,0 +1,165 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+#include "resource.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Russian resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_RUS)
+#ifdef _WIN32
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+#pragma code_page(1251)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDC_FONTTEST ACCELERATORS DISCARDABLE 
+BEGIN
+    "O",            IDM_FILE_OPEN,          VIRTKEY, CONTROL, NOINVERT
+    VK_F1,          IDM_ABOUT,              VIRTKEY, NOINVERT
+    VK_F3,          IDM_FILE_OPEN,          VIRTKEY, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOG DISCARDABLE  0, 0, 246, 195
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "CoolReader Engine FB2 Viewer"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "Close",IDOK,189,174,50,14
+    LTEXT           "This is sample FB2 e-book viewer.",IDC_STATIC,7,34,232,
+                    8
+    LTEXT           "CoolReader Engine: FB2Test (c) Vadim Lopatin, 2006",
+                    IDC_STATIC,7,7,232,8
+    LTEXT           "http://www.coolreader.org/",IDC_STATIC,7,17,232,8
+    LTEXT           "F3 - Open FB2 file",IDC_STATIC,7,58,232,8
+    LTEXT           "Gray Plus - Zoom In (increase font size)",IDC_STATIC,7,
+                    69,232,8
+    LTEXT           "Gray Minus - Zoom Out (decrease font size)",IDC_STATIC,
+                    7,81,232,8
+    LTEXT           "Arrow Up / Arrow Down - scroll up/down by line",
+                    IDC_STATIC,7,92,232,8
+    LTEXT           "Home / End - to beginning or end of file",IDC_STATIC,7,
+                    115,232,8
+    LTEXT           "Page Up / Page Down - scroll up/down by page",
+                    IDC_STATIC,7,103,232,8
+    LTEXT           "Controls:",IDC_STATIC,7,45,232,8
+    LTEXT           "F5 - export to WOLF (gray)",IDC_STATIC,7,152,232,8
+    LTEXT           "F2 - export to WOLF (bitmap)",IDC_STATIC,7,142,232,8
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 239
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 188
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+#endif    // Russian resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""resource.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_FONTTEST            ICON    DISCARDABLE     "Fb2Test.ICO"
+IDI_SMALL               ICON    DISCARDABLE     "SMALL.ICO"
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

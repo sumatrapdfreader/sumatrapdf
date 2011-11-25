@@ -1,0 +1,18 @@
+Project for Code::Blocks v1.0 IDE Win32 build of simple e-book viewer.
+
+Requires cximage library to be unpacked at the same level as crenigne dir as cximage 
+(required for jpeg, png, and zlib support).
+Tested with CXImage 5.99c
+
+        crengine
+            src
+            include
+            lib
+                projects
+                    codeblocks
+            Tools
+                Fb2Test
+        cximage
+            jpeg
+            png
+            zlib

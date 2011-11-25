@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual C++ Express 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Fb2Test", "Fb2Test.vcproj", "{FD5B7694-AE65-4C94-B267-B463D1BB3B02}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Unicode Debug|Win32 = Unicode Debug|Win32
+		Unicode Release|Win32 = Unicode Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FD5B7694-AE65-4C94-B267-B463D1BB3B02}.Unicode Debug|Win32.ActiveCfg = Unicode Debug|Win32
+		{FD5B7694-AE65-4C94-B267-B463D1BB3B02}.Unicode Debug|Win32.Build.0 = Unicode Debug|Win32
+		{FD5B7694-AE65-4C94-B267-B463D1BB3B02}.Unicode Release|Win32.ActiveCfg = Unicode Debug|Win32
+		{FD5B7694-AE65-4C94-B267-B463D1BB3B02}.Unicode Release|Win32.Build.0 = Unicode Debug|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

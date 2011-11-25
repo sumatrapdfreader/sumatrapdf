@@ -1,0 +1,15 @@
+empty-line { height: 1em; }
+sub { vertical-align: sub; font-size: 70% }
+sup { vertical-align: super; font-size: 70% }
+a { vertical-align: super; font-size: 80% }
+p { margin-top:0em; margin-bottom: 0em }
+text-author { font-weight: bold; font-style: italic; margin-left: 5%}
+empty-line { height: 1em }
+epigraph { margin-left: 25%; margin-right: 1em; text-align: left; text-indent: 1px; font-style: italic; margin-top: 15px; margin-bottom: 25px }
+strong { font-weight: bold }
+emphasis { display: block; font-style: italic }
+title { text-align: center; text-indent: 0px; font-size: 130%; font-weight: bold; margin-top: 10px; margin-bottom: 10px }
+subtitle { text-align: center; text-indent: 0px; font-size: 150%; margin-top: 10px; margin-bottom: 10px }
+title { page-break-before: always; page-break-inside: avoid; page-break-after: avoid; }
+body { margin: 0.5em; text-align: justify; text-indent: 2em; line-height: 140% }
+cite { margin-left: 5%; margin-right: 5%; text-align: justify; text-indent: 0px;  margin-top: 20px; margin-bottom: 20px }
