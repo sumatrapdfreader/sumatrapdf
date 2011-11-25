@@ -222,6 +222,9 @@ Zaznamki
 Bytes
 Bajtov
 
+CHM documents
+CHM dokumenti
+
 Can't connect to the Internet (error %#x).
 Ne morem se povezati na internet (napaka %#x).
 
@@ -338,6 +341,9 @@ Shranjevanje datoteke ni uspelo.
 
 Favorites
 Priljubljeni
+
+File %s not found
+Datoteka %s ni bila najdena
 
 File Size:
 Velikost datoteke:
@@ -662,8 +668,4 @@ kopiranje besedila
 
 printing document
 tiskanje dokumenta
-
-# Untranslated:
-#CHM documents
-#File %s not found
 

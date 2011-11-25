@@ -221,6 +221,9 @@ Zakładki
 Bytes
 bajtów
 
+CHM documents
+Dokumenty CHM
+
 Can't connect to the Internet (error %#x).
 Nie można połączyć z Internetem (błąd %#x).
 
@@ -337,6 +340,9 @@ Błąd zapisywania pliku
 
 Favorites
 Ulubione
+
+File %s not found
+Nie znaleziono pliku %s
 
 File Size:
 Rozmiar pliku:
@@ -661,8 +667,4 @@ kopiowanie tekstu
 
 printing document
 drukowanie dokumentu
-
-# Untranslated:
-#CHM documents
-#File %s not found
 
