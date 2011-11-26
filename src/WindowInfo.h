@@ -223,6 +223,7 @@ public:
     virtual void PageNoChanged(int pageNo);
     virtual void LaunchBrowser(const TCHAR *url);
     virtual void FocusFrame(bool always);
+    virtual void OnDragDrop(HDROP hDrop);
     virtual void Repaint() { RepaintAsync(); };
     virtual void UpdateScrollbars(SizeI canvas);
     virtual void RenderPage(int pageNo);

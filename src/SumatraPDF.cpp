@@ -1414,6 +1414,11 @@ static void OnDropFiles(HDROP hDrop)
     DragFinish(hDrop);
 }
 
+void WindowInfo::OnDragDrop(HDROP hDrop)
+{
+    ::OnDropFiles(hDrop);
+}
+
 static DWORD OnUrlDownloaded(HWND hParent, HttpReqCtx *ctx, bool silent)
 {
     if (ctx->error)

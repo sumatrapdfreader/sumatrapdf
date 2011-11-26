@@ -44,6 +44,8 @@ class HW_DWebBrowserEvents2;
 class HW_IAdviseSink2;
 class HW_IServiceProvider;
 class HW_IInternetSecurityManager;
+class HW_IDocHostUIHandler;
+class HW_IDropTarget;
 
 inline void VariantSetBool(VARIANT *res, bool val)
 {
@@ -71,6 +73,8 @@ class FrameSite : public IUnknown
     friend class HW_IAdviseSink2;
     friend class HW_IServiceProvider;
     friend class HW_IInternetSecurityManager;
+    friend class HW_IDocHostUIHandler;
+    friend class HW_IDropTarget;
 
 public:
     FrameSite(HtmlWindow * win);
@@ -94,6 +98,8 @@ protected:
     HW_IAdviseSink2 *               adviseSink2;
     HW_IServiceProvider *           serviceProvider;
     HW_IInternetSecurityManager *   internetSecurityManager;
+    HW_IDocHostUIHandler *          docHostUIHandler;
+    HW_IDropTarget *                dropTarget;
 
     HtmlWindow * htmlWindow;
 
@@ -426,6 +432,64 @@ public:
     }
 };
 
+class HW_IDocHostUIHandler : public IDocHostUIHandler
+{
+    FrameSite * fs;
+public:
+    HW_IDocHostUIHandler(FrameSite* fs) : fs(fs) { }
+    ~HW_IDocHostUIHandler() {}
+
+    //IUnknown
+    STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
+    ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
+    ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
+
+    //IDocHostUIHandler
+    STDMETHODIMP ShowContextMenu(DWORD dwID, POINT *ppt, IUnknown *pcmdtReserved, IDispatch *pdispReserved) { return S_FALSE; }
+    STDMETHODIMP GetHostInfo(DOCHOSTUIINFO *pInfo) { return E_NOTIMPL; }
+    STDMETHODIMP ShowUI(DWORD dwID, IOleInPlaceActiveObject *pActiveObject, IOleCommandTarget *pCommandTarget, IOleInPlaceFrame *pFrame, IOleInPlaceUIWindow *pDoc) { return S_FALSE; }
+    STDMETHODIMP HideUI(void) { return E_NOTIMPL; }
+    STDMETHODIMP UpdateUI(void) { return E_NOTIMPL; }
+    STDMETHODIMP EnableModeless(BOOL fEnable) { return E_NOTIMPL; }
+    STDMETHODIMP OnDocWindowActivate(BOOL fActivate) { return E_NOTIMPL; }
+    STDMETHODIMP OnFrameWindowActivate(BOOL fActivate) { return E_NOTIMPL; }
+    STDMETHODIMP ResizeBorder(LPCRECT prcBorder, IOleInPlaceUIWindow *pUIWindow, BOOL fRameWindow) { return E_NOTIMPL; }
+    STDMETHODIMP TranslateAccelerator(LPMSG lpMsg, const GUID *pguidCmdGroup, DWORD nCmdID) { return S_FALSE; }
+    STDMETHODIMP GetOptionKeyPath(LPOLESTR *pchKey, DWORD dw) { return S_FALSE; }
+    STDMETHODIMP GetDropTarget(IDropTarget *pDropTarget, IDropTarget **ppDropTarget) { return fs->QueryInterface(IID_PPV_ARGS(ppDropTarget)); }
+    STDMETHODIMP GetExternal(IDispatch **ppDispatch) { if (ppDispatch) *ppDispatch = NULL; return S_FALSE; }
+    STDMETHODIMP TranslateUrl(DWORD dwTranslate, OLECHAR *pchURLIn, OLECHAR **ppchURLOut) { return S_FALSE; }
+    STDMETHODIMP FilterDataObject(IDataObject *pDO, IDataObject **ppDORet) { if (ppDORet) *ppDORet = NULL; return S_FALSE; }
+};
+
+class HW_IDropTarget : public IDropTarget
+{
+    FrameSite * fs;
+public:
+    HW_IDropTarget(FrameSite* fs) : fs(fs) { }
+    ~HW_IDropTarget() {}
+
+    //IUnknown
+    STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
+    ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
+    ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
+
+    STDMETHODIMP DragEnter(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect) {
+        bool ok = fs->htmlWindow->OnDragEnter(pDataObj);
+        *pdwEffect = DROPEFFECT_COPY;
+        return ok ? S_OK : E_FAIL;
+    }
+    STDMETHODIMP DragOver(DWORD grfKeyState, POINTL pt, DWORD *pdwEffect) {
+        *pdwEffect = DROPEFFECT_COPY;
+        return S_OK;
+    }
+    STDMETHODIMP DragLeave(void) { return S_OK; }
+    STDMETHODIMP Drop(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect) {
+        bool ok = fs->htmlWindow->OnDragDrop(pDataObj);
+        return ok ? S_OK : E_FAIL;
+    }
+};
+
 static HWND GetBrowserControlHwnd(HWND hwndControlParent)
 {
     // This is a fragile way to get the actual hwnd of the browser control
@@ -562,7 +626,7 @@ void HtmlWindow::CreateBrowser()
     webBrowser->put_StatusBar(VARIANT_FALSE);
     webBrowser->put_ToolBar(VARIANT_FALSE);
 
-    webBrowser->put_RegisterAsBrowser(VARIANT_TRUE);
+    webBrowser->put_RegisterAsBrowser(VARIANT_FALSE);
     webBrowser->put_RegisterAsDropTarget(VARIANT_TRUE);
 
     EnsureAboutBlankShown();
@@ -817,6 +881,40 @@ void HtmlWindow::OnDocumentComplete(const TCHAR *url)
     currentURL.Set(str::Dup(url));
 }
 
+bool HtmlWindow::OnDragEnter(IDataObject *dataObj)
+{
+    ScopedComQIPtr<IDataObject> data(dataObj);
+    if (!data)
+        return false;
+    FORMATETC fe = { CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
+    STGMEDIUM stg = { 0 };
+    if (FAILED(data->GetData(&fe, &stg)))
+        return false;
+    ReleaseStgMedium(&stg);
+    return true;
+}
+
+bool HtmlWindow::OnDragDrop(IDataObject *dataObj)
+{
+    ScopedComQIPtr<IDataObject> data(dataObj);
+    if (!data)
+        return false;
+    FORMATETC fe = { CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
+    STGMEDIUM stg = { 0 };
+    if (FAILED(data->GetData(&fe, &stg)))
+        return false;
+
+    HDROP hDrop = (HDROP)GlobalLock(stg.hGlobal);
+    if (hDrop) {
+        // TODO: why can't we just pass this HDROP on by SendMessage?
+        // SendMessage(hwndParent, WM_DROPFILES, (WPARAM)hDrop, 0);
+        htmlWinCb->OnDragDrop(hDrop);
+        GlobalUnlock(stg.hGlobal);
+    }
+    ReleaseStgMedium(&stg);
+    return hDrop != NULL;
+}
+
 // Just to be safe, we use Interlocked*() functions
 // to maintain pumpNestCount
 static LONG pumpNestCount = 0;
@@ -914,10 +1012,14 @@ FrameSite::FrameSite(HtmlWindow * win)
     adviseSink2                 = new HW_IAdviseSink2(this);
     serviceProvider             = new HW_IServiceProvider(this);
     internetSecurityManager     = new HW_IInternetSecurityManager(this);
+    docHostUIHandler            = new HW_IDocHostUIHandler(this);
+    dropTarget                  = new HW_IDropTarget(this);
 }
 
 FrameSite::~FrameSite()
 {
+    delete dropTarget;
+    delete docHostUIHandler;
     delete internetSecurityManager;
     delete serviceProvider;
     delete adviseSink2;
@@ -968,6 +1070,10 @@ STDMETHODIMP FrameSite::QueryInterface(REFIID riid, void **ppv)
         *ppv = serviceProvider;
     else if (riid == IID_IInternetSecurityManager)
         *ppv = internetSecurityManager;
+    else if (riid == IID_IDocHostUIHandler)
+        *ppv = docHostUIHandler;
+    else if (riid == IID_IDropTarget)
+        *ppv = dropTarget;
 
     if (*ppv == NULL)
         return E_NOINTERFACE;

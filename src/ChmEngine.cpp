@@ -174,6 +174,7 @@ public:
     virtual bool OnBeforeNavigate(const TCHAR *url, bool newWindow);
     virtual void OnLButtonDown() { if (navCb) navCb->FocusFrame(true); }
     virtual bool GetHtmlForUrl(const TCHAR *url, char **data, size_t *len);
+    virtual void OnDragDrop(HDROP hDrop) { if (navCb) navCb->OnDragDrop(hDrop); }
 
     Bytes *FindDataForUrl(const TCHAR *url);
 

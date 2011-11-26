@@ -10,7 +10,7 @@ class HtmlWindow;
 
 class ChmNavigationCallback {
 public:
-    // tell the ui to show the pageNo as current page (which also syncs
+    // tell the UI to show the pageNo as current page (which also syncs
     // the toc with the curent page). Needed for chm ui where navigation
     // can be initiated from inside html control
     virtual void PageNoChanged(int pageNo) = 0;
@@ -20,6 +20,8 @@ public:
     // (if always == false, then focus is only moved if it's inside
     // an HtmlWindow and thus outside the reach of the main UI)
     virtual void FocusFrame(bool always) = 0;
+    // tell the UI to process a drag&drop operation
+    virtual void OnDragDrop(HDROP hDrop) = 0;
 };
 
 class ChmEngine : public BaseEngine {
