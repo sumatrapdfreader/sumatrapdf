@@ -116,8 +116,11 @@ xps_target *
 xps_find_link_target_obj(xps_context *ctx, char *target_uri)
 {
 	xps_target *target;
+	char *needle = strrchr(target_uri, '#');
+	if (!needle)
+		return NULL;
 	for (target = ctx->target; target; target = target->next)
-		if (!strcmp(target->name, target_uri))
+		if (!strcmp(target->name, needle + 1))
 			return target;
 	return NULL;
 }
@@ -235,16 +238,7 @@ xps_parse_metadata_imp(xps_context *ctx, xml_element *item, xps_document *fixdoc
 		if (!strcmp(xml_tag(item), "LinkTarget"))
 		{
 			char *name = xml_att(item, "Name");
-			/* SumatraPDF: extended link support */
-			if (name && fixdoc)
-			{
-				char tgtbuf[1024];
-				fz_strlcpy(tgtbuf, fixdoc->name, sizeof(tgtbuf));
-				fz_strlcat(tgtbuf, "#", sizeof(tgtbuf));
-				fz_strlcat(tgtbuf, name, sizeof(tgtbuf));
-				xps_add_link_target(ctx, tgtbuf);
-			}
-			else if (name)
+			if (name)
 				xps_add_link_target(ctx, name);
 		}
 

@@ -263,10 +263,9 @@ struct xps_anchor_s
 {
 	char *target;
 	fz_rect rect;
-	int is_dest;
 	xps_anchor *next;
 };
-void xps_extract_anchor_info(xps_context *ctx, xml_element *node, fz_rect rect, char *base_uri);
+void xps_extract_anchor_info(xps_context *ctx, xml_element *node, fz_rect rect);
 void xps_free_anchor(xps_anchor *link);
 
 /* SumatraPDF: extract document properties (hacky) */

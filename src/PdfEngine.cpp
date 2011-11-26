@@ -2171,7 +2171,6 @@ static xps_anchor *xps_new_anchor(char *target, fz_rect rect=fz_empty_rect)
 
     link->target = fz_strdup(target);
     link->rect = rect;
-    link->is_dest = 0;
     link->next = NULL;
 
     return link;
@@ -2669,7 +2668,7 @@ PageElement *CXpsEngine::GetElementAtPos(int pageNo, PointD pt)
 
     fz_point p = { (float)pt.x, (float)pt.y };
     for (xps_anchor *link = _links[pageNo-1]; link; link = link->next)
-        if (!link->is_dest && fz_is_pt_in_rect(link->rect, p))
+        if (fz_is_pt_in_rect(link->rect, p))
             return new XpsLink(this, link->target, link->rect, pageNo);
 
     return NULL;
@@ -2683,8 +2682,7 @@ Vec<PageElement *> *CXpsEngine::GetElements(int pageNo)
     Vec<PageElement *> *els = new Vec<PageElement *>();
 
     for (xps_anchor *link = _links[pageNo-1]; link; link = link->next)
-        if (!link->is_dest)
-            els->Append(new XpsLink(this, link->target, link->rect, pageNo));
+        els->Append(new XpsLink(this, link->target, link->rect, pageNo));
 
     return els;
 }
@@ -2703,23 +2701,6 @@ void CXpsEngine::linkifyPageText(xps_page *page, int pageNo)
     if (run)
         dropPageRun(run);
     _links[pageNo-1] = root.next;
-
-    for (xps_anchor *link = root.next; link; link = link->next) {
-        // updated named destinations
-        if (link->is_dest) {
-            ScopedMem<char> target(str::Format("%s#%s", page->name, link->target));
-            xps_target *dest = xps_find_link_target_obj(_ctx, target);
-            // remember unknown destinations
-            if (!dest) {
-                dest = (xps_target *)fz_malloc(sizeof(xps_target));
-                dest->name = fz_strdup(target);
-                dest->page = pageNo - 1;
-                dest->next = _ctx->target;
-                _ctx->target = dest;
-            }
-            dest->rect = link->rect;
-        }
-    }
 
     RectI *coords;
     TCHAR *pageText = ExtractPageText(page, _T("\n"), &coords, true);

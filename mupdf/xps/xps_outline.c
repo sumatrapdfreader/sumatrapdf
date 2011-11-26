@@ -16,22 +16,18 @@ xps_find_last_outline_at_level(fz_outline *node, int level, int target_level)
 }
 
 /* SumatraPDF: extended outline actions */
-static char *
-xps_to_absolute_path(char *base, char *path)
+#define isprotc(c) (('A' <= (c) && (c) <= 'Z') || ('a' <= (c) && (c) <= 'z') || (c) == '-')
+
+static int
+xps_is_external_uri(char *path)
 {
-	char tgtbuf[1024];
-	char *base_parent = fz_strdup(base);
-	char *last_part = strrchr(base_parent, '/');
-	if (!last_part)
-		last_part = base_parent;
-	*last_part = '\0';
-	xps_absolute_path(tgtbuf, base_parent, path, sizeof(tgtbuf));
-	fz_free(base_parent);
-	return fz_strdup(tgtbuf);
+	char *c;
+	for (c = path; isprotc(*c); c++);
+	return c > path && *c == ':';
 }
 
 static fz_outline *
-xps_parse_document_outline(xps_context *ctx, xml_element *root, xps_document *fixdoc)
+xps_parse_document_outline(xps_context *ctx, xml_element *root)
 {
 	xml_element *node;
 	fz_outline *head = NULL, *entry, *tail;
@@ -43,15 +39,18 @@ xps_parse_document_outline(xps_context *ctx, xml_element *root, xps_document *fi
 			char *level = xml_att(node, "OutlineLevel");
 			char *target = xml_att(node, "OutlineTarget");
 			char *description = xml_att(node, "Description");
-			if (!target || !description)
+			/* SumatraPDF: allow target-less outline entries */
+			if (!description)
 				continue;
 
 			entry = fz_malloc(sizeof *entry);
 			entry->title = fz_strdup(description);
+			entry->page = -1;
 			/* SumatraPDF: extended outline actions */
-			entry->data = xps_to_absolute_path(fixdoc->outline, target);
+			entry->data = target ? fz_strdup(target) : NULL;
+			if (target && !xps_is_external_uri(target))
+				entry->page = xps_find_link_target(ctx, target);
 			entry->free_data = fz_free;
-			entry->page = xps_find_link_target(ctx, entry->data);
 			entry->down = NULL;
 			entry->next = NULL;
 
@@ -78,7 +77,7 @@ xps_parse_document_outline(xps_context *ctx, xml_element *root, xps_document *fi
 }
 
 static fz_outline *
-xps_parse_document_structure(xps_context *ctx, xml_element *root, xps_document *fixdoc)
+xps_parse_document_structure(xps_context *ctx, xml_element *root)
 {
 	xml_element *node;
 	if (!strcmp(xml_tag(root), "DocumentStructure"))
@@ -88,7 +87,7 @@ xps_parse_document_structure(xps_context *ctx, xml_element *root, xps_document *
 		{
 			node = xml_down(node);
 			if (!strcmp(xml_tag(node), "DocumentOutline"))
-				return xps_parse_document_outline(ctx, node, fixdoc);
+				return xps_parse_document_outline(ctx, node);
 		}
 	}
 	return NULL;
@@ -112,7 +111,7 @@ xps_load_document_structure(xps_context *ctx, xps_document *fixdoc)
 		return NULL;
 	}
 
-	outline = xps_parse_document_structure(ctx, root, fixdoc);
+	outline = xps_parse_document_structure(ctx, root);
 
 	xml_free_element(root);
 	xps_free_part(ctx, part);
@@ -144,19 +143,6 @@ xps_load_outline(xps_context *ctx)
 
 /* SumatraPDF: extended link support */
 
-static xps_anchor *
-xps_new_anchor(char *target, fz_rect rect, int is_dest)
-{
-	xps_anchor *link = fz_malloc(sizeof(xps_anchor));
-
-	link->target = fz_strdup(target);
-	link->rect = rect;
-	link->is_dest = is_dest;
-	link->next = NULL;
-
-	return link;
-}
-
 void
 xps_free_anchor(xps_anchor *link)
 {
@@ -170,30 +156,31 @@ xps_free_anchor(xps_anchor *link)
 }
 
 void
-xps_extract_anchor_info(xps_context *ctx, xml_element *node, fz_rect rect, char *base_uri)
+xps_extract_anchor_info(xps_context *ctx, xml_element *node, fz_rect rect)
 {
-	xps_anchor *link = NULL;
 	char *value;
 
-	if (!ctx->link_root)
-		return;
-
-	if ((value = xml_att(node, "FixedPage.NavigateUri")) && !strchr(value, ':'))
+	if (ctx->link_root && (value = xml_att(node, "FixedPage.NavigateUri")))
 	{
-		char tgtbuf[1024];
-		xps_absolute_path(tgtbuf, base_uri, value, sizeof(tgtbuf));
-		link = xps_new_anchor(tgtbuf, rect, 0);
-	}
-	else if (value) // link with a protocol (e.g. http://...)
-		link = xps_new_anchor(value, rect, 0);
-	else if ((value = xml_att(node, "Name")))
-		link = xps_new_anchor(value, rect, 1);
-
-	// insert the links in top-to-bottom order (first one is to be preferred)
-	if (link)
-	{
+		xps_anchor *link = fz_malloc(sizeof(xps_anchor));
+		link->target = fz_strdup(value);
+		link->rect = rect;
+		// insert the links in bottom-to-top order (first one is to be preferred)
 		link->next = ctx->link_root->next;
 		ctx->link_root->next = link;
+	}
+
+	if ((value = xml_att(node, "Name")))
+	{
+		xps_target *target;
+		char *valueId = fz_malloc(strlen(value) + 2);
+		sprintf(valueId, "#%s", value);
+		target = xps_find_link_target_obj(ctx, valueId);
+		if (target)
+			target->rect = rect;
+		else
+			fz_warn("element name without corresponding LinkTarget entry: %s", value);
+		fz_free(valueId);
 	}
 }
 

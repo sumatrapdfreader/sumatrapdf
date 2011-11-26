@@ -941,7 +941,7 @@ xps_parse_path(xps_context *ctx, fz_matrix ctm, char *base_uri, xps_resource *di
 		area = fz_bound_path(path, NULL, ctm);
 
 	/* SumatraPDF: extended link support */
-	xps_extract_anchor_info(ctx, root, area, base_uri);
+	xps_extract_anchor_info(ctx, root, area);
 
 	xps_begin_opacity(ctx, ctm, area, opacity_mask_uri, dict, opacity_att, opacity_mask_tag);
 

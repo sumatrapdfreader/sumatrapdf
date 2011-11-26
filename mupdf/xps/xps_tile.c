@@ -306,7 +306,7 @@ xps_parse_canvas(xps_context *ctx, fz_matrix ctm, fz_rect area, char *base_uri, 
 		xps_clip(ctx, ctm, dict, clip_att, clip_tag);
 
 	/* SumatraPDF: extended link support */
-	xps_extract_anchor_info(ctx, root, area, base_uri);
+	xps_extract_anchor_info(ctx, root, area);
 
 	xps_begin_opacity(ctx, ctm, area, opacity_mask_uri, dict, opacity_att, opacity_mask_tag);
 
