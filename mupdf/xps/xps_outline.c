@@ -130,6 +130,8 @@ xps_load_outline(xps_context *ctx)
 		if (fixdoc->outline) {
 			outline = xps_load_document_structure(ctx, fixdoc);
 			if (outline) {
+				/* SumatraPDF: don't overwrite outline entries */
+				if (head) while (tail->next) tail = tail->next;
 				if (!head)
 					head = outline;
 				else
@@ -178,8 +180,6 @@ xps_extract_anchor_info(xps_context *ctx, xml_element *node, fz_rect rect)
 		target = xps_find_link_target_obj(ctx, valueId);
 		if (target)
 			target->rect = rect;
-		else
-			fz_warn("element name without corresponding LinkTarget entry: %s", value);
 		fz_free(valueId);
 	}
 }
