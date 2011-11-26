@@ -86,6 +86,11 @@ void DumpTocItem(DocTocItem *item, int level, int& idCounter)
             Out(" Page=\"%d\"", item->pageNo);
         if (item->id != ++idCounter)
             Out(" Id=\"%d\"", item->id);
+        if (item->GetLink()) {
+            ScopedMem<char> target(Escape(item->GetLink()->GetDestValue()));
+            if (target)
+                Out(" Target=\"%s\"", target);
+        }
         if (!item->child)
             Out(" />\n");
         else {
@@ -126,7 +131,8 @@ void DumpPageData(BaseEngine *engine, int pageNo, bool fullDump)
     if (engine->PageRotation(pageNo))
         Out("\t\tRotation=\"%d\"\n", engine->PageRotation(pageNo));
     RectD bbox = engine->PageMediabox(pageNo);
-    Out("\t\tMediaBox=\"%.0f %.0f %.0f %.0f\"\n", bbox.x, bbox.y, bbox.dx, bbox.dy);
+    if (!bbox.IsEmpty())
+        Out("\t\tMediaBox=\"%.0f %.0f %.0f %.0f\"\n", bbox.x, bbox.y, bbox.dx, bbox.dy);
     if (engine->IsImagePage(pageNo))
         Out("\t\tImagePage=\"yes\"\n");
     Out("\t>\n");
