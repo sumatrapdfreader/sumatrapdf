@@ -513,9 +513,7 @@ static LRESULT CALLBACK WndProcParent(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
     switch (msg) {
         case WM_SIZE:
             if (SIZE_MINIMIZED != wParam) {
-                int dx = LOWORD(lParam);
-                int dy = HIWORD(lParam);
-                win->OnSize(dx, dy);
+                win->OnSize(SizeI(LOWORD(lParam), HIWORD(lParam)));
                 return 0;
             }
             break;
@@ -529,18 +527,26 @@ static LRESULT CALLBACK WndProcParent(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
             if (LOWORD(wParam) == WM_LBUTTONDOWN)
                 win->OnLButtonDown();
             break;
+
+        case WM_DROPFILES:
+            return CallWindowProc(win->wndProcBrowserPrev, hwnd, msg, wParam, lParam);
+
+        case WM_VSCROLL:
+            win->SendMsg(msg, wParam, lParam);
+            return 0;
     }
     return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
 void HtmlWindow::SubclassHwnd()
 {
-    SetWindowLongPtr(hwndParent, GWLP_WNDPROC, (LONG_PTR)WndProcParent);
+    wndProcBrowserPrev = (WNDPROC)SetWindowLongPtr(hwndParent, GWLP_WNDPROC, (LONG_PTR)WndProcParent);
     SetWindowLongPtr(hwndParent, GWLP_USERDATA, (LONG_PTR)this);
 }
 
 void HtmlWindow::UnsubclassHwnd()
 {
+    SetWindowLongPtr(hwndParent, GWLP_WNDPROC, (LONG_PTR)wndProcBrowserPrev);
     SetWindowLongPtr(hwndParent, GWLP_USERDATA, (LONG_PTR)0);
 }
 
@@ -658,16 +664,17 @@ HtmlWindow::~HtmlWindow()
     }
 }
 
-void HtmlWindow::OnSize(int dx, int dy)
+void HtmlWindow::OnSize(SizeI size)
 {
     if (webBrowser) {
-        webBrowser->put_Width(dx);
-        webBrowser->put_Height(dy);
+        webBrowser->put_Width(size.dx);
+        webBrowser->put_Height(size.dy);
     }
 
-    RECT r = { 0, 0, dx, dy };
-    if (oleInPlaceObject)
+    if (oleInPlaceObject) {
+        RECT r = RectI(PointI(), size).ToRECT();
         oleInPlaceObject->SetObjectRects(&r, &r);
+    }
 }
 
 void HtmlWindow::OnLButtonDown() const
@@ -683,7 +690,7 @@ void HtmlWindow::SetVisible(bool visible)
     else
         ShowWindow(hwndParent, SW_HIDE);
     if (webBrowser)
-        webBrowser->put_Visible(visible ? TRUE : FALSE);
+        webBrowser->put_Visible(visible ? VARIANT_TRUE : VARIANT_FALSE);
 }
 
 void HtmlWindow::NavigateToUrl(const TCHAR *urlStr)
@@ -906,9 +913,7 @@ bool HtmlWindow::OnDragDrop(IDataObject *dataObj)
 
     HDROP hDrop = (HDROP)GlobalLock(stg.hGlobal);
     if (hDrop) {
-        // TODO: why can't we just pass this HDROP on by SendMessage?
-        // SendMessage(hwndParent, WM_DROPFILES, (WPARAM)hDrop, 0);
-        htmlWinCb->OnDragDrop(hDrop);
+        SendMessage(hwndParent, WM_DROPFILES, (WPARAM)hDrop, 0);
         GlobalUnlock(stg.hGlobal);
     }
     ReleaseStgMedium(&stg);

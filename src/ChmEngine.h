@@ -20,8 +20,6 @@ public:
     // (if always == false, then focus is only moved if it's inside
     // an HtmlWindow and thus outside the reach of the main UI)
     virtual void FocusFrame(bool always) = 0;
-    // tell the UI to process a drag&drop operation
-    virtual void OnDragDrop(HDROP hDrop) = 0;
 };
 
 class ChmEngine : public BaseEngine {

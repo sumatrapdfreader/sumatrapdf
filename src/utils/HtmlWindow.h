@@ -28,9 +28,6 @@ public:
     // called when left mouse button is clicked in the web control window.
     // we use it to maintain proper focus (since it's stolen by left click)
     virtual void OnLButtonDown() = 0;
-
-    // called when a file has been dropped on the HTML canvas
-    virtual void OnDragDrop(HDROP hDrop) = 0;
 };
 
 class HtmlWindow
@@ -67,7 +64,7 @@ public:
     HtmlWindow(HWND hwndParent, HtmlWindowCallback *cb);
     ~HtmlWindow();
 
-    void OnSize(int dx, int dy);
+    void OnSize(SizeI size);
     void SetVisible(bool visible);
     void NavigateToUrl(const TCHAR *url);
     void DisplayHtml(const WCHAR *html);
