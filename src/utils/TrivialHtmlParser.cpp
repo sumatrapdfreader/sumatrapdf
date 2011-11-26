@@ -117,10 +117,22 @@ static int entityComparator(const void *a, const void *b)
     return *nameA - *nameB;
 }
 
-// caller needs to free() the result
-static TCHAR *DecodeHtmlEntitites(const char *string)
+static TCHAR IntToChar(int codepoint, UINT codepage)
 {
-    TCHAR *fixed = str::conv::FromAnsi(string), *dst = fixed;
+#ifndef UNICODE
+    char c = 0;
+    WideCharToMultiByte(codepage, 0, &codepoint, 1, &c, 1, NULL, NULL);
+    codepoint = c;
+#endif
+    if (codepoint <= 0 || codepoint >= (1 << (8 * sizeof(TCHAR))))
+        return '?';
+    return (TCHAR)codepoint;
+}
+
+// caller needs to free() the result
+static TCHAR *DecodeHtmlEntitites(const char *string, UINT codepage=CP_ACP)
+{
+    TCHAR *fixed = str::conv::FromCodePage(string, codepage), *dst = fixed;
     const TCHAR *src = fixed;
 
     while (*src) {
@@ -133,10 +145,7 @@ static TCHAR *DecodeHtmlEntitites(const char *string)
         int unicode;
         if (str::Parse(src, _T("%d;"), &unicode) ||
             str::Parse(src, _T("#%x;"), &unicode)) {
-            if (unicode < (1 << (8 * sizeof(TCHAR))))
-                *dst++ = (TCHAR)unicode;
-            else
-                *dst++ = '?';
+            *dst++ = IntToChar(unicode, codepage);
             src = str::FindChar(src, ';') + 1;
             continue;
         }
@@ -144,10 +153,7 @@ static TCHAR *DecodeHtmlEntitites(const char *string)
         HtmlEntity cmp = { src };
         HtmlEntity *entity = (HtmlEntity *)bsearch(&cmp, gHtmlEntities, dimof(gHtmlEntities), sizeof(HtmlEntity), entityComparator);
         if (entity) {
-            if (entity->unicode < (1 << (8 * sizeof(TCHAR))))
-                *dst++ = (TCHAR)entity->unicode;
-            else
-                *dst++ = '?';
+            *dst++ = IntToChar(entity->unicode, codepage);
             src += str::Len(entity->name);
             if (*src == ';')
                 src++;
@@ -184,9 +190,9 @@ HtmlAttr *HtmlParser::AllocAttr(char *name, HtmlAttr *next)
 // caller needs to free() the result
 TCHAR *HtmlElement::GetAttribute(const char *name) const
 {
-    for (HtmlAttr *attr = this->firstAttr; attr; attr = attr->next) {
+    for (HtmlAttr *attr = firstAttr; attr; attr = attr->next) {
         if (str::EqI(attr->name, name))
-            return DecodeHtmlEntitites(attr->val);
+            return DecodeHtmlEntitites(attr->val, codepage);
     }
     return NULL;
 }
@@ -196,6 +202,7 @@ HtmlElement *HtmlParser::AllocElement(char *name, HtmlElement *parent)
     HtmlElement *el = allocator.AllocStruct<HtmlElement>();
     el->name = name;
     el->up = parent;
+    el->codepage = codepage;
     ++elementsCount;
     return el;
 }
@@ -304,12 +311,14 @@ static char *ParseAttrName(char **sPtr)
 
 // Parse s in place i.e. we assume we can modify it. Must be 0-terminated.
 // The caller owns the memory for s.
-HtmlElement *HtmlParser::ParseInPlace(char *s)
+HtmlElement *HtmlParser::ParseInPlace(char *s, UINT codepage)
 {
     char *tagName, *attrName, *attrVal, *tagEnd;
     int tagEndLen;
 
-    html = s;
+    this->html = s;
+    this->codepage = codepage;
+
 ParseText:
     if (!SkipUntil(&s, '<')) {
         // Note: I think we can be in an inconsistent state here 
@@ -421,10 +430,10 @@ ParseExclOrPi: // "<!" or "<?"
     goto ParseText;
 }
 
-HtmlElement *HtmlParser::Parse(const char *s)
+HtmlElement *HtmlParser::Parse(const char *s, UINT codepage)
 {
     freeHtml = true;
-    return ParseInPlace(str::Dup(s));
+    return ParseInPlace(str::Dup(s), codepage);
 }
 
 // Does a depth-first search of element tree, looking for an element with
@@ -608,6 +617,21 @@ static void HtmlParser06()
     assert(!el->down->down);
 }
 
+static void HtmlParser07()
+{
+    HtmlParser p;
+    HtmlElement *root = p.Parse("<test umls=&auml;\xC3\xB6&#FC; zero=&1;&0;&-1;>", CP_UTF8);
+    assert(1 == p.ElementsCount());
+    ScopedMem<TCHAR> val(root->GetAttribute("umls"));
+#ifdef UNICODE
+    assert(str::Eq(val, L"\xE4\xF6\xFC"));
+#else
+    assert(str::EndsWith(val, "\xFC"));
+#endif
+    val.Set(root->GetAttribute("zero"));
+    assert(str::Eq(val, _T("\x01??")));
+}
+
 static void HtmlParserFile()
 {
     TCHAR *fileName = _T("HtmlParseTest00.html");
@@ -658,11 +682,13 @@ static void HtmlParserFile()
     assert(18 == count);
     free(d);
 }
+
 }
 
 void TrivialHtmlParser_UnitTests()
 {
     unittests::HtmlParserFile();
+    unittests::HtmlParser07();
     unittests::HtmlParser06();
     unittests::HtmlParser05();
     unittests::HtmlParser04();

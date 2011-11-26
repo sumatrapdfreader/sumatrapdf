@@ -123,20 +123,20 @@ const TCHAR *   Parse(const TCHAR *str, const TCHAR *format, ...);
 namespace conv {
 
 #ifdef UNICODE
-inline TCHAR *  FromUtf8(const char *src) { return ToWideChar(src, CP_UTF8); }
-inline char *   ToUtf8(const TCHAR *src) { return ToMultiByte(src, CP_UTF8); }
-inline TCHAR *  FromAnsi(const char *src) { return ToWideChar(src, CP_ACP); }
-inline char *   ToAnsi(const TCHAR *src) { return ToMultiByte(src, CP_ACP); }
 inline TCHAR *  FromWStr(const WCHAR *src) { return Dup(src); }
 inline WCHAR *  ToWStr(const TCHAR *src) { return Dup(src); }
+inline TCHAR *  FromCodePage(const char *src, UINT cp) { return ToWideChar(src, cp); }
+inline char *   ToCodePage(const TCHAR *src, UINT cp) { return ToMultiByte(src, cp); }
 #else
-inline TCHAR *  FromUtf8(const char *src) { return ToMultiByte(src, CP_UTF8, CP_ACP); }
-inline char *   ToUtf8(const TCHAR *src) { return ToMultiByte(src, CP_ACP, CP_UTF8); }
-inline TCHAR *  FromAnsi(const char *src) { return Dup(src); }
-inline char *   ToAnsi(const TCHAR *src) { return Dup(src); }
 inline TCHAR *  FromWStr(const WCHAR *src) { return ToMultiByte(src, CP_ACP); }
 inline WCHAR *  ToWStr(const TCHAR *src) { return ToWideChar(src, CP_ACP); }
+inline TCHAR *  FromCodePage(const char *src, UINT cp) { return ToMultiByte(src, cp, CP_ACP); }
+inline char *   ToCodePage(const TCHAR *src, UINT cp) { return ToMultiByte(src, CP_ACP, cp); }
 #endif
+inline TCHAR *  FromUtf8(const char *src) { return FromCodePage(src, CP_UTF8); }
+inline char *   ToUtf8(const TCHAR *src) { return ToCodePage(src, CP_UTF8); }
+inline TCHAR *  FromAnsi(const char *src) { return FromCodePage(src, CP_ACP); }
+inline char *   ToAnsi(const TCHAR *src) { return ToCodePage(src, CP_ACP); }
 
 }
 

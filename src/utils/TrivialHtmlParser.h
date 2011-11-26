@@ -95,6 +95,7 @@ struct HtmlElement {
     char *name;
     HtmlAttr *firstAttr;
     HtmlElement *up, *down, *next;
+    UINT codepage;
 
     TCHAR *GetAttribute(const char *name) const;
     HtmlElement *GetChildByName(const char *name, int idx=0) const;
@@ -108,6 +109,8 @@ class HtmlParser {
     // true if s was allocated by ourselves, false if managed
     // by the caller
     bool freeHtml;
+    // the codepage used for converting text to Unicode
+    UINT codepage;
 
     size_t elementsCount;
     size_t attributesCount;
@@ -135,8 +138,8 @@ public:
     HtmlParser();
     ~HtmlParser();
 
-    HtmlElement *Parse(const char *s);
-    HtmlElement *ParseInPlace(char *s);
+    HtmlElement *Parse(const char *s, UINT codepage=CP_ACP);
+    HtmlElement *ParseInPlace(char *s, UINT codepage=CP_ACP);
 
     size_t ElementsCount() const {
         return elementsCount;

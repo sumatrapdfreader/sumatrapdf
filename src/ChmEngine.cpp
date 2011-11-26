@@ -68,8 +68,8 @@ ChmTocItem *ChmTocItem::Clone(DocTocItem *item)
 // Data parsed from /#WINDOWS, /#STRINGS, /#SYSTEM files inside CHM file
 class ChmInfo {
 public:
-    ChmInfo() : title(NULL), tocPath(NULL), indexPath(NULL), homePath(NULL), creator(NULL)
-    {}
+    ChmInfo() : title(NULL), tocPath(NULL), indexPath(NULL),
+        homePath(NULL), creator(NULL), codepage(CP_ACP) { }
     ~ChmInfo() {
         free(title);
         free(tocPath);
@@ -82,6 +82,7 @@ public:
     char *indexPath;
     char *homePath;
     char *creator;
+    UINT codepage;
 };
 
 class ChmCacheEntry {
@@ -584,7 +585,7 @@ static UINT GetChmCodepage(const TCHAR *fileName)
     // cf. http://msdn.microsoft.com/en-us/library/bb165625(v=VS.90).aspx
     static struct {
         DWORD langId;
-        UINT cp;
+        UINT codepage;
     } langIdToCodepage[] = {
         { 1025, 1256 }, { 2052,  936 }, { 1028,  950 }, { 1029, 1250 },
         { 1032, 1253 }, { 1037, 1255 }, { 1038, 1250 }, { 1041,  932 },
@@ -592,17 +593,16 @@ static UINT GetChmCodepage(const TCHAR *fileName)
         { 1060, 1250 }, { 1055, 1254 }
     };
 
-    UINT codepage = CP_CHM_DEFAULT;
     DWORD header[6];
     if (!file::ReadAll(fileName, (char *)header, sizeof(header)))
-        return codepage;
+        return CP_CHM_DEFAULT;
     DWORD lang_id = header[5];
 
     for (int i = 0; i < dimof(langIdToCodepage); i++)
         if (lang_id == langIdToCodepage[i].langId)
-            codepage = langIdToCodepage[i].cp;
+            return langIdToCodepage[i].codepage;
 
-    return codepage;
+    return CP_CHM_DEFAULT;
 }
 
 // We fake page numbers by doing a depth-first traversal of
@@ -649,9 +649,9 @@ ChmTocItem *TocItemFromLi(StrVec& pages, HtmlElement *el, UINT cp)
             /* ignore incomplete/unneeded <param> */;
         else if (str::EqI(attrName, _T("Name"))) {
 #ifdef UNICODE
-            if (cp != CP_ACP) {
-                ScopedMem<char> bytes(str::ToMultiByte(attrVal, CP_CHM_DEFAULT));
-                attrVal.Set(str::ToWideChar(bytes, cp));
+            if (cp != CP_CHM_DEFAULT) {
+                ScopedMem<char> bytes(str::conv::ToCodePage(attrVal, CP_CHM_DEFAULT));
+                attrVal.Set(str::conv::FromCodePage(bytes, cp));
             }
 #endif
             name.Set(attrVal.StealData());
@@ -698,7 +698,10 @@ ChmTocItem *BuildChmToc(StrVec& pages, HtmlElement *list, UINT cp, int& idCounte
 static ChmTocItem *ParseChmHtmlToc(StrVec& pages, char *html, UINT cp)
 {
     HtmlParser p;
-    HtmlElement *el = p.Parse(html);
+    // enforce the default codepage, so that pre-encoded text and
+    // entities are in the same codepage and TocItemFromLi yields
+    // consistent results
+    HtmlElement *el = p.Parse(html, CP_CHM_DEFAULT);
     if (!el)
         return NULL;
     el = p.FindElementByName("body");
@@ -738,18 +741,18 @@ bool CChmEngine::Load(const TCHAR *fileName)
     if (!chmInfo.homePath)
         return false;
 
+    UINT codepage = GetChmCodepage(fileName);
+    if (GetACP() != codepage)
+        chmInfo.codepage = codepage;
+
     // always make the document's homepage page 1
-    pages.Append(str::conv::FromAnsi(chmInfo.homePath));
+    pages.Append(str::conv::FromCodePage(chmInfo.homePath, chmInfo.codepage));
 
     if (chmInfo.tocPath) {
         // parse the ToC here, since page numbering depends on it
         Bytes b;
-        if (GetChmDataForFile(chmHandle, chmInfo.tocPath, b)) {
-            UINT codepage = GetChmCodepage(fileName);
-            if (GetACP() == codepage)
-                codepage = CP_ACP;
+        if (GetChmDataForFile(chmHandle, chmInfo.tocPath, b))
             tocRoot = ParseChmHtmlToc(pages, (char *)b.d, codepage);
-        }
     }
 
     return true;
@@ -793,9 +796,9 @@ bool CChmEngine::GetHtmlForUrl(const TCHAR *url, char **data, size_t *len)
 TCHAR *CChmEngine::GetProperty(char *name)
 {
     if (str::Eq(name, "Title") && chmInfo.title)
-        return str::conv::FromAnsi(chmInfo.title);
+        return str::conv::FromCodePage(chmInfo.title, chmInfo.codepage);
     if (str::Eq(name, "Creator") && chmInfo.creator)
-        return str::conv::FromAnsi(chmInfo.creator);
+        return str::conv::FromCodePage(chmInfo.creator, chmInfo.codepage);
     return NULL;
 }
 
