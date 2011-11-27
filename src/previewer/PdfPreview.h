@@ -5,6 +5,9 @@
 #define PdfPreview_h
 
 #define SZ_PDF_PREVIEW_CLSID    _T("{3D3B1846-CC43-42ae-BFF9-D914083C2BA3}")
+#ifdef BUILD_XPS_PREVIEW
+#define SZ_XPS_PREVIEW_CLSID    _T("{D427A82C-6545-4fbe-8E87-030EDB3BE46D}")
+#endif
 
 #include "BaseUtil.h"
 #include "Scopes.h"
@@ -168,5 +171,17 @@ protected:
         return PdfEngine::CreateFromStream(stream);
     }
 };
+
+#ifdef BUILD_XPS_PREVIEW
+class CXpsPreview : public PreviewBase {
+public:
+    CXpsPreview(long *plRefCount) : PreviewBase(plRefCount) { }
+
+protected:
+    virtual BaseEngine *LoadEngine(IStream *stream) {
+        return XpsEngine::CreateFromStream(stream);
+    }
+};
+#endif
 
 #endif

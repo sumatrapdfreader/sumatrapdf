@@ -162,6 +162,10 @@ PDFFILTER_OBJS = $(PDFFILTER_OBJS) $(OS)\CTeXFilter.obj
 PDFFILTER_CFLAGS = $(PDFFILTER_CFLAGS) /D "BUILD_TEX_IFILTER"
 !endif
 
+!if "$(BUILD_XPS_PREVIEW)"!=""
+PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_XPS_PREVIEW"
+!endif
+
 ##### SumatraPDF-specific build rules #####
 
 rebuild: clean SumatraPDF

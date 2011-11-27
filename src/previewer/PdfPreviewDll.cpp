@@ -58,9 +58,12 @@ public:
         ScopedComPtr<IInitializeWithStream> pObject;
 
         CLSID clsid;
-        HRESULT hr = CLSIDFromString(AsWStrQ(SZ_PDF_PREVIEW_CLSID), &clsid);
-        if (SUCCEEDED(hr) && IsEqualCLSID(m_clsid, clsid))
+        if (SUCCEEDED(CLSIDFromString(AsWStrQ(SZ_PDF_PREVIEW_CLSID), &clsid)) && IsEqualCLSID(m_clsid, clsid))
             pObject = new NOTHROW CPdfPreview(&g_lRefCount);
+#ifdef BUILD_XPS_PREVIEW
+        else if (SUCCEEDED(CLSIDFromString(AsWStrQ(SZ_XPS_PREVIEW_CLSID), &clsid)) && IsEqualCLSID(m_clsid, clsid))
+            pObject = new NOTHROW CXpsPreview(&g_lRefCount);
+#endif
         else
             return CLASS_E_CLASSNOTAVAILABLE;
         if (!pObject)
@@ -132,6 +135,24 @@ STDAPI DllRegisterServer()
                 SZ_PDF_PREVIEW_CLSID,   _T("SumatraPDF Preview Handler") },
         { _T("Software\\Classes\\CLSID\\") SZ_PDF_PREVIEW_CLSID,
                 _T("AppId"),            IsRunningInWow64() ? _T("{534A1E02-D58F-44f0-B58B-36CBED287C7C}") : _T("{6d2b5079-2f0b-48dd-ab7f-97cec514d30b}") },
+#ifdef BUILD_XPS_PREVIEW
+        { _T("Software\\Classes\\CLSID\\") SZ_XPS_PREVIEW_CLSID,
+                NULL,                   _T("SumatraPDF Preview Handler") },
+        { _T("Software\\Classes\\CLSID\\") SZ_XPS_PREVIEW_CLSID _T("\\InProcServer32"),
+                NULL,                   path },
+        { _T("Software\\Classes\\CLSID\\") SZ_XPS_PREVIEW_CLSID _T("\\InProcServer32"),
+                _T("ThreadingModel"),   _T("Apartment") },
+        // IThumbnailProvider
+        { _T("Software\\Classes\\.xps\\shellex\\{e357fccd-a995-4576-b01f-234630154e96}"),
+                NULL,                   SZ_XPS_PREVIEW_CLSID },
+        // IPreviewHandler
+        { _T("Software\\Classes\\.xps\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}"),
+                NULL,                   SZ_XPS_PREVIEW_CLSID },
+        { _T("Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers"),
+                SZ_XPS_PREVIEW_CLSID,   _T("SumatraPDF Preview Handler") },
+        { _T("Software\\Classes\\CLSID\\") SZ_XPS_PREVIEW_CLSID,
+                _T("AppId"),            IsRunningInWow64() ? _T("{534A1E02-D58F-44f0-B58B-36CBED287C7C}") : _T("{6d2b5079-2f0b-48dd-ab7f-97cec514d30b}") },
+#endif
     };
 
     for (int i = 0; i < dimof(regVals); i++) {
@@ -150,6 +171,11 @@ STDAPI DllUnregisterServer()
         _T("Software\\Classes\\CLSID\\") SZ_PDF_PREVIEW_CLSID,
         _T("Software\\Classes\\.pdf\\shellex\\{e357fccd-a995-4576-b01f-234630154e96}"),
         _T("Software\\Classes\\.pdf\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}"),
+#ifdef BUILD_XPS_PREVIEW
+        _T("Software\\Classes\\CLSID\\") SZ_XPS_PREVIEW_CLSID,
+        _T("Software\\Classes\\.xps\\shellex\\{e357fccd-a995-4576-b01f-234630154e96}"),
+        _T("Software\\Classes\\.xps\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}"),
+#endif
     };
 
     HRESULT hr = S_OK;
@@ -162,6 +188,10 @@ STDAPI DllUnregisterServer()
     }
     SHDeleteValue(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers"), SZ_PDF_PREVIEW_CLSID);
     SHDeleteValue(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers"), SZ_PDF_PREVIEW_CLSID);
+#ifdef BUILD_XPS_PREVIEW
+    SHDeleteValue(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers"), SZ_XPS_PREVIEW_CLSID);
+    SHDeleteValue(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers"), SZ_XPS_PREVIEW_CLSID);
+#endif
 
     return hr;
 }
