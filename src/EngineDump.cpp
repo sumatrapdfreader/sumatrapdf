@@ -5,6 +5,7 @@
 #include "FileUtil.h"
 #include "CmdLineParser.h"
 #include "WinUtil.h"
+#include "Scopes.h"
 
 #define Out(msg, ...) printf(msg, __VA_ARGS__)
 
@@ -236,6 +237,7 @@ int main(int argc, char **argv)
     ScopedMem<TCHAR> filePath(path::GetDir(argList.At(1)));
     filePath.Set(path::Join(filePath, fdata.cFileName));
 
+    ScopedGdiPlus gdiPlus;
     BaseEngine *engine = EngineManager::CreateEngine(filePath);
     if (!engine) {
         ErrOut("Error: Couldn't create an engine for %s!\n", path::GetBaseName(filePath));

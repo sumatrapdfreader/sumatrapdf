@@ -475,9 +475,10 @@ public:
     ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
 
     STDMETHODIMP DragEnter(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect) {
-        bool ok = fs->htmlWindow->OnDragEnter(pDataObj);
-        *pdwEffect = DROPEFFECT_COPY;
-        return ok ? S_OK : E_FAIL;
+        HRESULT hr = fs->htmlWindow->OnDragEnter(pDataObj);
+        if (SUCCEEDED(hr))
+            *pdwEffect = DROPEFFECT_COPY;
+        return hr;
     }
     STDMETHODIMP DragOver(DWORD grfKeyState, POINTL pt, DWORD *pdwEffect) {
         *pdwEffect = DROPEFFECT_COPY;
@@ -485,8 +486,7 @@ public:
     }
     STDMETHODIMP DragLeave(void) { return S_OK; }
     STDMETHODIMP Drop(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect) {
-        bool ok = fs->htmlWindow->OnDragDrop(pDataObj);
-        return ok ? S_OK : E_FAIL;
+        return fs->htmlWindow->OnDragDrop(pDataObj);
     }
 };
 
@@ -888,28 +888,28 @@ void HtmlWindow::OnDocumentComplete(const TCHAR *url)
     currentURL.Set(str::Dup(url));
 }
 
-bool HtmlWindow::OnDragEnter(IDataObject *dataObj)
+HRESULT HtmlWindow::OnDragEnter(IDataObject *dataObj)
 {
     ScopedComQIPtr<IDataObject> data(dataObj);
     if (!data)
-        return false;
+        return E_INVALIDARG;
     FORMATETC fe = { CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
     STGMEDIUM stg = { 0 };
     if (FAILED(data->GetData(&fe, &stg)))
-        return false;
+        return E_FAIL;
     ReleaseStgMedium(&stg);
-    return true;
+    return S_OK;
 }
 
-bool HtmlWindow::OnDragDrop(IDataObject *dataObj)
+HRESULT HtmlWindow::OnDragDrop(IDataObject *dataObj)
 {
     ScopedComQIPtr<IDataObject> data(dataObj);
     if (!data)
-        return false;
+        return E_INVALIDARG;
     FORMATETC fe = { CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
     STGMEDIUM stg = { 0 };
     if (FAILED(data->GetData(&fe, &stg)))
-        return false;
+        return E_FAIL;
 
     HDROP hDrop = (HDROP)GlobalLock(stg.hGlobal);
     if (hDrop) {
@@ -917,7 +917,7 @@ bool HtmlWindow::OnDragDrop(IDataObject *dataObj)
         GlobalUnlock(stg.hGlobal);
     }
     ReleaseStgMedium(&stg);
-    return hDrop != NULL;
+    return hDrop != NULL ? S_OK : E_FAIL;
 }
 
 // Just to be safe, we use Interlocked*() functions

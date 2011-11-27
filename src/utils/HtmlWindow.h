@@ -84,8 +84,8 @@ public:
     HBITMAP TakeScreenshot(RectI area, SizeI finalSize);
     bool OnBeforeNavigate(const TCHAR *url, bool newWindow);
     void OnDocumentComplete(const TCHAR *url);
-    bool OnDragEnter(IDataObject *dataObj);
-    bool OnDragDrop(IDataObject *dataObj);
+    HRESULT OnDragEnter(IDataObject *dataObj);
+    HRESULT OnDragDrop(IDataObject *dataObj);
 
     bool canGoBack;
     bool canGoForward;
