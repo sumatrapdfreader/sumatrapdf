@@ -13,6 +13,9 @@
 #include "WinUtil.h"
 #include "Scopes.h"
 
+// Book on ATL: http://369o.com/data/books/atl/index.html, which is
+// helpful in understanding embedding of the browser control
+
 // Info about implementing web browser control
 // http://www.codeproject.com/KB/COM/cwebpage.aspx
 
@@ -22,6 +25,11 @@
 // http://codesearch.google.com/#cbxlbgWFJ4U/wxCode/components/iehtmlwin/src/IEHtmlWin.cpp
 
 // Another code to get inspired: http://code.google.com/p/fidolook/source/browse/trunk/Qm/ui/messageviewwindow.cpp
+// And one more: http://code.google.com/p/atc32/source/browse/trunk/WorldWindProject/lib-external/webview/windows/
+
+// Info about IInternetProtocol: http://www.codeproject.com/KB/IP/DataProtocol.aspx
+// Source code for inspiration: http://codesearch.google.com/#X_1VXq0XKpU/trunk/shareaza/IEProtocol.h
+
 
 // Implementing scrolling:
 // Currently we implement scrolling by sending messages simulating user input
@@ -489,6 +497,159 @@ public:
         return fs->htmlWindow->OnDragDrop(pDataObj);
     }
 };
+
+class HtmlMoniker : public IMoniker
+{
+public:
+    HtmlMoniker();
+    virtual ~HtmlMoniker();
+
+    HRESULT SetHtml(char *s, size_t len);
+    HRESULT SetBaseUrl(const TCHAR *baseUrl, size_t baseUrlLen);
+
+public:
+    // IMoniker
+    STDMETHODIMP BindToStorage(IBindCtx *pbc, IMoniker *pmkToLeft, REFIID riid, void **ppvObj);
+    STDMETHODIMP GetDisplayName(IBindCtx *pbc, IMoniker *pmkToLeft, LPOLESTR *ppszDisplayName);
+
+    STDMETHODIMP BindToObject(IBindCtx *pbc, IMoniker *pmkToLeft, REFIID riidResult, void **ppvResult) { return E_NOTIMPL; }
+
+    STDMETHODIMP Reduce(IBindCtx *pbc, DWORD dwReduceHowFar, IMoniker **ppmkToLeft, IMoniker **ppmkReduced) { return E_NOTIMPL; }
+
+    STDMETHODIMP ComposeWith(IMoniker *pmkRight, BOOL fOnlyIfNotGeneric, IMoniker **ppmkComposite) { return E_NOTIMPL; }
+
+    STDMETHODIMP Enum(BOOL fForward, IEnumMoniker **ppenumMoniker) { return E_NOTIMPL; }
+
+    STDMETHODIMP IsEqual(IMoniker *pmkOtherMoniker) { return E_NOTIMPL; }
+
+    STDMETHODIMP Hash(DWORD *pdwHash) { return E_NOTIMPL; }
+
+    STDMETHODIMP IsRunning(IBindCtx *pbc, IMoniker *pmkToLeft, IMoniker *pmkNewlyRunning) { return E_NOTIMPL; }
+
+    STDMETHODIMP GetTimeOfLastChange(IBindCtx *pbc, IMoniker *pmkToLeft, FILETIME *pFileTime) { return E_NOTIMPL; }
+
+    STDMETHODIMP Inverse(IMoniker **ppmk) { return E_NOTIMPL; }
+
+    STDMETHODIMP CommonPrefixWith(IMoniker *pmkOther, IMoniker **ppmkPrefix) { return E_NOTIMPL; }
+
+    STDMETHODIMP RelativePathTo(IMoniker *pmkOther, IMoniker **ppmkRelPath) { return E_NOTIMPL; }
+
+    STDMETHODIMP ParseDisplayName(IBindCtx *pbc, IMoniker *pmkToLeft,LPOLESTR pszDisplayName,
+        ULONG *pchEaten, IMoniker **ppmkOut)
+    { return E_NOTIMPL; }
+
+    STDMETHODIMP IsSystemMoniker(DWORD *pdwMksys) {
+        if (!pdwMksys)
+            return E_POINTER;
+        *pdwMksys = MKSYS_NONE;
+        return S_OK;
+    }
+
+    // IPersistStream methods
+    STDMETHODIMP Save(IStream *pStm, BOOL fClearDirty)  { return E_NOTIMPL; }
+    STDMETHODIMP IsDirty() { return E_NOTIMPL; }
+    STDMETHODIMP Load(IStream *pStm) { return E_NOTIMPL; }
+    STDMETHODIMP GetSizeMax(ULARGE_INTEGER *pcbSize) { return E_NOTIMPL; }
+
+    // IPersist
+    STDMETHODIMP GetClassID(CLSID *pClassID) { return E_NOTIMPL; }
+
+    // IUnknown
+    STDMETHODIMP QueryInterface(REFIID riid, void **ppvObject);
+    virtual ULONG STDMETHODCALLTYPE AddRef(void);
+    virtual ULONG STDMETHODCALLTYPE Release(void);
+
+private:
+    int         refCount;
+
+    char *      htmlData;
+    IStream *   htmlStream;
+
+    TCHAR *     baseUrl;
+};
+
+HtmlMoniker::HtmlMoniker()
+    : refCount(0),
+      htmlData(NULL),
+      htmlStream(NULL),
+      baseUrl(NULL)
+{
+}
+
+HtmlMoniker::~HtmlMoniker()
+{
+    if (htmlStream)
+        htmlStream->Release();
+
+    free(htmlData);
+    free(baseUrl);
+}
+
+HRESULT HtmlMoniker::SetHtml(char *s, size_t len)
+{
+    free(htmlData);
+    htmlData = s;
+    if (htmlStream)
+        htmlStream->Release();
+    //htmlStream = SHCreateMemStream(s, len);
+    return S_OK;
+}
+
+HRESULT HtmlMoniker::SetBaseUrl(const TCHAR *newBaseUrl, size_t newBaseUrlLen)
+{
+    free(baseUrl);
+    baseUrl = str::DupN(newBaseUrl, newBaseUrlLen);
+    return S_OK;
+}
+
+STDMETHODIMP HtmlMoniker::BindToStorage(IBindCtx *pbc, IMoniker *pmkToLeft, REFIID riid, void **ppvObj)
+{
+    LARGE_INTEGER seek = {0};
+    htmlStream->Seek(seek, STREAM_SEEK_SET, NULL);
+    return htmlStream->QueryInterface(riid, ppvObj);
+}
+
+STDMETHODIMP HtmlMoniker::GetDisplayName(IBindCtx *pbc, IMoniker *pmkToLeft, LPOLESTR *ppszDisplayName)
+{
+    if (!ppszDisplayName)
+        return E_POINTER;
+    *ppszDisplayName = NULL;
+    // TODO: write me
+    return S_OK;
+}
+
+STDMETHODIMP HtmlMoniker::QueryInterface(REFIID riid, void **ppvObject)
+{
+    *ppvObject = NULL;
+    if (riid == IID_IUnknown)
+            *ppvObject = static_cast<IUnknown*>(this);
+    else if (riid == IID_IMoniker)
+        *ppvObject = static_cast<IMoniker*>(this);
+    if (*ppvObject)
+    {
+        ((IUnknown*)*ppvObject)->AddRef();
+        return S_OK;
+    }
+    else return E_NOINTERFACE;
+}
+
+ULONG STDMETHODCALLTYPE HtmlMoniker::AddRef()
+{
+    return refCount++;
+}
+
+ULONG STDMETHODCALLTYPE HtmlMoniker::Release()
+{
+    refCount--;
+
+    if (refCount == 0)
+    {
+        delete this;
+        return 0;
+    }
+
+    return refCount;
+}
 
 static HWND GetBrowserControlHwnd(HWND hwndControlParent)
 {
