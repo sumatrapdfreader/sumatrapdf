@@ -442,6 +442,9 @@ Next Page
 No matches were found
 일치 항목을 찾을 수 없습니다.
 
+No result found around line %u in file %s
+%u 행 (%s 파일) 주변에서 발견된 결과가 없습니다.
+
 No synchronization file found
 동기화 파일을 찾을 수 없습니다.
 
@@ -666,7 +669,4 @@ copying text
 
 printing document
 문서 인쇄 중
-
-# Untranslated:
-#No result found around line %u in file %s
 
