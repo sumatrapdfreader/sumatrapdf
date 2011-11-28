@@ -220,6 +220,9 @@ Bookmarks
 Bytes
 Բայթ
 
+CHM documents
+CHM ֆայլեր
+
 Can't connect to the Internet (error %#x).
 Հնարավոր չէ կապնվել (սխալ %#x)։
 
@@ -336,6 +339,9 @@ Failed to save a file
 
 Favorites
 Ընտրյալներ
+
+File %s not found
+%s ֆայլը չի գտնվել
 
 File Size:
 Ֆայլի չափը.
@@ -660,8 +666,4 @@ copying text
 
 printing document
 փաստաթուղթը տպվում է
-
-# Untranslated:
-#CHM documents
-#File %s not found
 
