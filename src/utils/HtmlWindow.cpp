@@ -609,12 +609,19 @@ STDMETHODIMP HtmlMoniker::BindToStorage(IBindCtx *pbc, IMoniker *pmkToLeft, REFI
     return htmlStream->QueryInterface(riid, ppvObj);
 }
 
+static LPOLESTR OleStrDup(TCHAR *s)
+{
+    size_t cbLen = sizeof(TCHAR) * (str::Len(s) + 1);
+    LPOLESTR ret = (LPOLESTR)CoTaskMemAlloc(cbLen);
+    memcpy(ret, s, cbLen);
+    return ret;
+}
+
 STDMETHODIMP HtmlMoniker::GetDisplayName(IBindCtx *pbc, IMoniker *pmkToLeft, LPOLESTR *ppszDisplayName)
 {
     if (!ppszDisplayName)
         return E_POINTER;
-    *ppszDisplayName = NULL;
-    // TODO: write me
+    *ppszDisplayName = OleStrDup(baseUrl);;
     return S_OK;
 }
 
@@ -622,7 +629,7 @@ STDMETHODIMP HtmlMoniker::QueryInterface(REFIID riid, void **ppvObject)
 {
     *ppvObject = NULL;
     if (riid == IID_IUnknown)
-            *ppvObject = static_cast<IUnknown*>(this);
+        *ppvObject = static_cast<IUnknown*>(this);
     else if (riid == IID_IMoniker)
         *ppvObject = static_cast<IMoniker*>(this);
     if (*ppvObject)
