@@ -86,7 +86,7 @@ TCHAR * GetDefaultPrinterName();
 bool    CopyTextToClipboard(const TCHAR *text, bool appendOnly=false);
 void    ToggleWindowStyle(HWND hwnd, DWORD flag, bool enable, int type=GWL_STYLE);
 
-IStream*CreateStreamFromData(void *data, size_t len);
+IStream* CreateStreamFromData(void *data, size_t len);
 HRESULT GetDataFromStream(IStream *stream, void **data, size_t *len);
 
 namespace win {
@@ -99,32 +99,14 @@ inline size_t GetTextLen(HWND hwnd)
 /* return a text in edit control represented by hwnd
    return NULL in case of error (couldn't allocate memory)
    caller needs to free() the text */
-inline TCHAR *GetText(HWND hwnd)
-{
-    size_t  cchTxtLen = GetTextLen(hwnd);
-    TCHAR * txt = (TCHAR*)calloc(cchTxtLen + 1, sizeof(TCHAR));
-    if (NULL == txt)
-        return NULL;
-    SendMessage(hwnd, WM_GETTEXT, cchTxtLen + 1, (LPARAM)txt);
-    txt[cchTxtLen] = 0;
-    return txt;
-}
+TCHAR *GetText(HWND hwnd);
 
 inline void SetText(HWND hwnd, const TCHAR *txt)
 {
     SendMessage(hwnd, WM_SETTEXT, 0, (LPARAM)txt);
 }
 
-inline int GetHwndDpi(HWND hwnd, float *uiDPIFactor)
-{
-    HDC dc = GetDC(hwnd);
-    int dpi = GetDeviceCaps(dc, LOGPIXELSY);
-    // round untypical resolutions up to the nearest quarter
-    if (uiDPIFactor)
-        *uiDPIFactor = ceil(dpi * 4.0f / USER_DEFAULT_SCREEN_DPI) / 4.0f;
-    ReleaseDC(hwnd, dc);
-    return dpi;
-}
+int GetHwndDpi(HWND hwnd, float *uiDPIFactor);
 
 namespace menu {
 

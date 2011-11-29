@@ -673,6 +673,32 @@ HRESULT GetDataFromStream(IStream *stream, void **data, size_t *len)
     return S_OK;
 }
 
+namespace win {
+
+TCHAR *GetText(HWND hwnd)
+{
+    size_t  cchTxtLen = GetTextLen(hwnd);
+    TCHAR * txt = (TCHAR*)calloc(cchTxtLen + 1, sizeof(TCHAR));
+    if (NULL == txt)
+        return NULL;
+    SendMessage(hwnd, WM_GETTEXT, cchTxtLen + 1, (LPARAM)txt);
+    txt[cchTxtLen] = 0;
+    return txt;
+}
+
+int GetHwndDpi(HWND hwnd, float *uiDPIFactor)
+{
+    HDC dc = GetDC(hwnd);
+    int dpi = GetDeviceCaps(dc, LOGPIXELSY);
+    // round untypical resolutions up to the nearest quarter
+    if (uiDPIFactor)
+        *uiDPIFactor = ceil(dpi * 4.0f / USER_DEFAULT_SCREEN_DPI) / 4.0f;
+    ReleaseDC(hwnd, dc);
+    return dpi;
+}
+
+}
+
 // cf. fz_mul255 in fitz.h
 inline int mul255(int a, int b)
 {
