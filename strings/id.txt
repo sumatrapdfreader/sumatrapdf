@@ -12,6 +12,7 @@ Contributor: M. Ridwan Hakim (http://rescenin.blogspot.com)
 Contributor: Yudi Wibisono (http://yudiwbs.wordpress.com)
 Contributor: Ricki Yani Setiawan
 Contributor: Tri R.A. Wibowo
+Contributor: Alif Jum'an (www.boloplekcd.blogspot.com)
 
 &About
 &Tentang
@@ -223,6 +224,9 @@ Markah
 Bytes
 Bytes
 
+CHM documents
+Dokumen CHM
+
 Can't connect to the Internet (error %#x).
 Tidak bisa menghubungi Internet (kesalahan %#x).
 
@@ -339,6 +343,9 @@ Gagal menyimpan berkas
 
 Favorites
 Favorit
+
+File %s not found
+File %s tak ditemukan
 
 File Size:
 Ukuran Berkas:
@@ -663,8 +670,4 @@ menyalin teks
 
 printing document
 mencetak dokumen
-
-# Untranslated:
-#CHM documents
-#File %s not found
 
