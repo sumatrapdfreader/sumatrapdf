@@ -94,7 +94,7 @@ public:
     ULONG STDMETHODCALLTYPE Release();
 
 protected:
-    int m_cRef;
+    int refCount;
 
     HW_IOleInPlaceFrame *           oleInPlaceFrame;
     HW_IOleInPlaceSiteWindowless *  oleInPlaceSiteWindowless;
@@ -1155,7 +1155,7 @@ bool HtmlWindow::WaitUntilLoaded(DWORD maxWaitMs, const TCHAR *url)
 
 FrameSite::FrameSite(HtmlWindow * win)
 {
-    m_cRef = 1;
+    refCount = 1;
 
     htmlWindow = win;
     supportsWindowlessActivation = true;
@@ -1256,17 +1256,18 @@ STDMETHODIMP FrameSite::QueryInterface(REFIID riid, void **ppv)
 
 STDMETHODIMP_(ULONG) FrameSite::AddRef()
 {
-    return ++m_cRef;
+    return ++refCount;
 }
 
 STDMETHODIMP_(ULONG) FrameSite::Release()
 {
-    assert(m_cRef > 0);
-    if (--m_cRef == 0) {
+    assert(refCount > 0);
+    if (--refCount == 0) {
         delete this;
         return 0;
-    } else
-        return m_cRef;
+    } else {
+        return refCount;
+    }
 }
 
 //IDispatch
