@@ -88,7 +88,7 @@ public:
     FrameSite(HtmlWindow * win);
     ~FrameSite();
 
-    //IUnknown
+    // IUnknown
     STDMETHODIMP QueryInterface(REFIID iid, void **ppvObject);
     ULONG STDMETHODCALLTYPE AddRef();
     ULONG STDMETHODCALLTYPE Release();
@@ -137,19 +137,22 @@ public:
     }
     ~HW_IOleInPlaceFrame() {}
 
-    //IUnknown
+    // IUnknown
     STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
     ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
     ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
-    //IOleWindow
+
+    // IOleWindow
     STDMETHODIMP GetWindow(HWND*);
     STDMETHODIMP ContextSensitiveHelp(BOOL) { return S_OK; }
-    //IOleInPlaceUIWindow
+
+    // IOleInPlaceUIWindow
     STDMETHODIMP GetBorder(LPRECT);
     STDMETHODIMP RequestBorderSpace(LPCBORDERWIDTHS);
     STDMETHODIMP SetBorderSpace(LPCBORDERWIDTHS) { return S_OK; }
     STDMETHODIMP SetActiveObject(IOleInPlaceActiveObject*, LPCOLESTR) { return S_OK; }
-    //IOleInPlaceFrame
+
+    // IOleInPlaceFrame
     STDMETHODIMP InsertMenus(HMENU, LPOLEMENUGROUPWIDTHS) { return S_OK; }
     STDMETHODIMP SetMenu(HMENU, HOLEMENU, HWND) { return S_OK; }
     STDMETHODIMP RemoveMenus(HMENU) { return S_OK; }
@@ -166,16 +169,18 @@ public:
     HW_IOleInPlaceSiteWindowless(FrameSite* fs) : fs(fs) { }
     ~HW_IOleInPlaceSiteWindowless() {}
 
-    //IUnknown
+    // IUnknown
     STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
     ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
     ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
-    //IOleWindow
+
+    // IOleWindow
     STDMETHODIMP GetWindow(HWND* h)
     { return fs->oleInPlaceFrame->GetWindow(h); }
     STDMETHODIMP ContextSensitiveHelp(BOOL b)
     { return fs->oleInPlaceFrame->ContextSensitiveHelp(b); }
-    //IOleInPlaceSite
+
+    // IOleInPlaceSite
     STDMETHODIMP CanInPlaceActivate() { return S_OK; }
     STDMETHODIMP OnInPlaceActivate();
     STDMETHODIMP OnUIActivate();
@@ -187,11 +192,13 @@ public:
     STDMETHODIMP DiscardUndoState() { return S_OK; }
     STDMETHODIMP DeactivateAndUndo() { return S_OK; }
     STDMETHODIMP OnPosRectChange(LPCRECT) { return S_OK; }
-    //IOleInPlaceSiteEx
+
+    // IOleInPlaceSiteEx
     STDMETHODIMP OnInPlaceActivateEx(BOOL*, DWORD);
     STDMETHODIMP OnInPlaceDeactivateEx(BOOL) { return S_OK; }
     STDMETHODIMP RequestUIActivate() { return S_FALSE; }
-    //IOleInPlaceSiteWindowless
+
+    // IOleInPlaceSiteWindowless
     STDMETHODIMP CanWindowlessActivate();
     STDMETHODIMP GetCapture() { return S_FALSE; }
     STDMETHODIMP SetCapture(BOOL) { return S_FALSE; }
@@ -214,11 +221,12 @@ public:
     HW_IOleClientSite(FrameSite* fs) : fs(fs) { }
     ~HW_IOleClientSite() {}
 
-    //IUnknown
+    // IUnknown
     STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
     ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
     ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
-    //IOleClientSite
+
+    // IOleClientSite
     STDMETHODIMP SaveObject() { return S_OK; }
     STDMETHODIMP GetMoniker(DWORD, DWORD, IMoniker**) { return E_NOTIMPL; }
     STDMETHODIMP GetContainer(LPOLECONTAINER FAR*);
@@ -235,11 +243,12 @@ public:
     HW_IOleControlSite(FrameSite* fs) : fs(fs) { }
     ~HW_IOleControlSite() {}
 
-    //IUnknown
+    // IUnknown
     STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
     ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
     ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
-    //IOleControlSite
+
+    // IOleControlSite
     STDMETHODIMP OnControlInfoChanged() { return S_OK; }
     STDMETHODIMP LockInPlaceActive(BOOL);
     STDMETHODIMP GetExtendedControl(IDispatch**) { return E_NOTIMPL; }
@@ -257,11 +266,12 @@ public:
     HW_IOleCommandTarget(FrameSite* fs) : fs(fs) { }
     ~HW_IOleCommandTarget() {}
 
-    //IUnknown
+    // IUnknown
     STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
     ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
     ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
-    //IOleCommandTarget
+
+    // IOleCommandTarget
     STDMETHODIMP QueryStatus(const GUID*, ULONG, OLECMD[], OLECMDTEXT*);
     STDMETHODIMP Exec(const GUID*, DWORD, DWORD, VARIANTARG*, VARIANTARG*) { return OLECMDERR_E_NOTSUPPORTED; }
 protected:
@@ -274,16 +284,19 @@ public:
     HW_IOleItemContainer(FrameSite* fs) : fs(fs) { }
     ~HW_IOleItemContainer() {}
 
-    //IUnknown
+    // IUnknown
     STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
     ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
     ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
-    //IParseDisplayName
+
+    // IParseDisplayName
     STDMETHODIMP ParseDisplayName(IBindCtx*, LPOLESTR, ULONG*, IMoniker**) { return E_NOTIMPL; }
-    //IOleContainer
+
+    // IOleContainer
     STDMETHODIMP EnumObjects(DWORD, IEnumUnknown**) { return E_NOTIMPL; }
     STDMETHODIMP LockContainer(BOOL) { return S_OK; }
-    //IOleItemContainer
+
+    // IOleItemContainer
     STDMETHODIMP GetObject(LPOLESTR, DWORD, IBindCtx*, REFIID, void**);
     STDMETHODIMP GetObjectStorage(LPOLESTR, IBindCtx*, REFIID, void**);
     STDMETHODIMP IsRunning(LPOLESTR);
@@ -301,11 +314,12 @@ public:
     HW_DWebBrowserEvents2(FrameSite* fs) : fs(fs) { }
     ~HW_DWebBrowserEvents2() {}
 
-    //IUnknown
+    // IUnknown
     STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
     ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
     ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
-    //IDispatch
+
+    // IDispatch
     STDMETHODIMP GetIDsOfNames(REFIID, OLECHAR**, unsigned int, LCID, DISPID*) { return E_NOTIMPL; }
     STDMETHODIMP GetTypeInfo(unsigned int, LCID, ITypeInfo**) { return E_NOTIMPL; }
     STDMETHODIMP GetTypeInfoCount(unsigned int*) { return E_NOTIMPL; }
@@ -320,11 +334,12 @@ public:
     HW_IAdviseSink2(FrameSite* fs) : fs(fs) { }
     ~HW_IAdviseSink2() {}
 
-    //IUnknown
+    // IUnknown
     STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
     ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
     ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
-    //IAdviseSink
+
+    // IAdviseSink
     void STDMETHODCALLTYPE OnDataChange(FORMATETC*, STGMEDIUM*) { }
     void STDMETHODCALLTYPE OnViewChange(DWORD, LONG) {
         // redraw the control
@@ -333,9 +348,11 @@ public:
     void STDMETHODCALLTYPE OnRename(IMoniker*) { }
     void STDMETHODCALLTYPE OnSave() { }
     void STDMETHODCALLTYPE OnClose() { }
-    //IAdviseSink2
+
+    // IAdviseSink2
     void STDMETHODCALLTYPE OnLinkSrcChange(IMoniker*) { }
-    //IAdviseSinkEx
+
+    // IAdviseSinkEx
     void STDMETHODCALLTYPE OnViewStatusChange(DWORD) { }
 };
 
@@ -346,12 +363,12 @@ public:
     HW_IServiceProvider(FrameSite* fs) : fs(fs) { }
     ~HW_IServiceProvider() {}
 
-    //IUnknown
+    // IUnknown
     STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
     ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
     ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
 
-    //IServiceProvider
+    // IServiceProvider
     STDMETHODIMP QueryService(REFGUID guidService, REFIID riid, void **ppv) {
         if (guidService != SID_SInternetSecurityManager)
             return E_UNEXPECTED;
@@ -380,12 +397,12 @@ public:
     HW_IInternetSecurityManager(FrameSite* fs) : fs(fs) { }
     ~HW_IInternetSecurityManager() {}
 
-    //IUnknown
+    // IUnknown
     STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
     ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
     ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
 
-    //IInternetSecurityManager
+    // IInternetSecurityManager
     STDMETHODIMP GetSecurityId(LPCWSTR pwszUrl, BYTE *pbSecurityId, DWORD *pcbSecurityId, DWORD_PTR dwReserved) {
         DBG_OUT("GetSecurityId()");
         if (str::StartsWith(pwszUrl, L"its")) {
@@ -477,7 +494,7 @@ public:
     HW_IDropTarget(FrameSite* fs) : fs(fs) { }
     ~HW_IDropTarget() {}
 
-    //IUnknown
+    // IUnknown
     STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
     ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
     ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
@@ -508,36 +525,28 @@ public:
     HRESULT SetBaseUrl(const TCHAR *baseUrl, size_t baseUrlLen);
 
 public:
+    // IUnknown
+    STDMETHODIMP QueryInterface(REFIID riid, void **ppvObject);
+    virtual ULONG STDMETHODCALLTYPE AddRef(void);
+    virtual ULONG STDMETHODCALLTYPE Release(void);
+
     // IMoniker
     STDMETHODIMP BindToStorage(IBindCtx *pbc, IMoniker *pmkToLeft, REFIID riid, void **ppvObj);
     STDMETHODIMP GetDisplayName(IBindCtx *pbc, IMoniker *pmkToLeft, LPOLESTR *ppszDisplayName);
-
     STDMETHODIMP BindToObject(IBindCtx *pbc, IMoniker *pmkToLeft, REFIID riidResult, void **ppvResult) { return E_NOTIMPL; }
-
     STDMETHODIMP Reduce(IBindCtx *pbc, DWORD dwReduceHowFar, IMoniker **ppmkToLeft, IMoniker **ppmkReduced) { return E_NOTIMPL; }
-
     STDMETHODIMP ComposeWith(IMoniker *pmkRight, BOOL fOnlyIfNotGeneric, IMoniker **ppmkComposite) { return E_NOTIMPL; }
-
     STDMETHODIMP Enum(BOOL fForward, IEnumMoniker **ppenumMoniker) { return E_NOTIMPL; }
-
     STDMETHODIMP IsEqual(IMoniker *pmkOtherMoniker) { return E_NOTIMPL; }
-
     STDMETHODIMP Hash(DWORD *pdwHash) { return E_NOTIMPL; }
-
     STDMETHODIMP IsRunning(IBindCtx *pbc, IMoniker *pmkToLeft, IMoniker *pmkNewlyRunning) { return E_NOTIMPL; }
-
     STDMETHODIMP GetTimeOfLastChange(IBindCtx *pbc, IMoniker *pmkToLeft, FILETIME *pFileTime) { return E_NOTIMPL; }
-
     STDMETHODIMP Inverse(IMoniker **ppmk) { return E_NOTIMPL; }
-
     STDMETHODIMP CommonPrefixWith(IMoniker *pmkOther, IMoniker **ppmkPrefix) { return E_NOTIMPL; }
-
     STDMETHODIMP RelativePathTo(IMoniker *pmkOther, IMoniker **ppmkRelPath) { return E_NOTIMPL; }
-
     STDMETHODIMP ParseDisplayName(IBindCtx *pbc, IMoniker *pmkToLeft,LPOLESTR pszDisplayName,
         ULONG *pchEaten, IMoniker **ppmkOut)
     { return E_NOTIMPL; }
-
     STDMETHODIMP IsSystemMoniker(DWORD *pdwMksys) {
         if (!pdwMksys)
             return E_POINTER;
@@ -553,11 +562,6 @@ public:
 
     // IPersist
     STDMETHODIMP GetClassID(CLSID *pClassID) { return E_NOTIMPL; }
-
-    // IUnknown
-    STDMETHODIMP QueryInterface(REFIID riid, void **ppvObject);
-    virtual ULONG STDMETHODCALLTYPE AddRef(void);
-    virtual ULONG STDMETHODCALLTYPE Release(void);
 
 private:
     int         refCount;
@@ -1205,7 +1209,7 @@ FrameSite::~FrameSite()
     delete oleInPlaceFrame;
 }
 
-//IUnknown
+// IUnknown
 STDMETHODIMP FrameSite::QueryInterface(REFIID riid, void **ppv)
 {
     if (ppv == NULL)
@@ -1270,7 +1274,7 @@ STDMETHODIMP_(ULONG) FrameSite::Release()
     }
 }
 
-//IDispatch
+// IDispatch
 HRESULT HW_DWebBrowserEvents2::DispatchPropGet(DISPID dispIdMember, VARIANT *res)
 {
     if (res == NULL)
@@ -1385,7 +1389,7 @@ HRESULT HW_DWebBrowserEvents2::Invoke(DISPID dispIdMember, REFIID riid, LCID lci
     return S_OK;
 }
 
-//IOleWindow
+// IOleWindow
 HRESULT HW_IOleInPlaceFrame::GetWindow(HWND *phwnd)
 {
     if (phwnd == NULL)
@@ -1394,7 +1398,7 @@ HRESULT HW_IOleInPlaceFrame::GetWindow(HWND *phwnd)
     return S_OK;
 }
 
-//IOleInPlaceUIWindow
+// IOleInPlaceUIWindow
 HRESULT HW_IOleInPlaceFrame::GetBorder(LPRECT lprectBorder)
 {
     if (lprectBorder == NULL)
@@ -1409,7 +1413,7 @@ HRESULT HW_IOleInPlaceFrame::RequestBorderSpace(LPCBORDERWIDTHS pborderwidths)
     return INPLACE_E_NOTOOLSPACE;
 }
 
-//IOleInPlaceSite
+// IOleInPlaceSite
 HRESULT HW_IOleInPlaceSiteWindowless::OnInPlaceActivate()
 {
     fs->inPlaceActive = true;
@@ -1461,7 +1465,7 @@ HRESULT HW_IOleInPlaceSiteWindowless::OnInPlaceDeactivate()
     return S_OK;
 }
 
-//IOleInPlaceSiteEx
+// IOleInPlaceSiteEx
 HRESULT HW_IOleInPlaceSiteWindowless::OnInPlaceActivateEx(BOOL * pfNoRedraw, DWORD dwFlags)
 {
     if (pfNoRedraw)
@@ -1469,7 +1473,7 @@ HRESULT HW_IOleInPlaceSiteWindowless::OnInPlaceActivateEx(BOOL * pfNoRedraw, DWO
     return S_OK;
 }
 
-//IOleInPlaceSiteWindowless
+// IOleInPlaceSiteWindowless
 HRESULT HW_IOleInPlaceSiteWindowless::CanWindowlessActivate()
 {
     return fs->supportsWindowlessActivation ? S_OK : S_FALSE;
@@ -1500,7 +1504,7 @@ HRESULT HW_IOleInPlaceSiteWindowless::InvalidateRect(LPCRECT pRect, BOOL fErase)
     return S_OK;
 }
 
-//IOleClientSite
+// IOleClientSite
 HRESULT HW_IOleClientSite::GetContainer(LPOLECONTAINER * ppContainer)
 {
     if (ppContainer == NULL)
@@ -1508,7 +1512,7 @@ HRESULT HW_IOleClientSite::GetContainer(LPOLECONTAINER * ppContainer)
     return QueryInterface(IID_IOleContainer, (void**)ppContainer);
 }
 
-//IOleItemContainer
+// IOleItemContainer
 HRESULT HW_IOleItemContainer::GetObject(LPOLESTR pszItem,
     DWORD dwSpeedNeeded, IBindCtx * pbc, REFIID riid, void ** ppvObject)
 {
@@ -1538,7 +1542,7 @@ HRESULT HW_IOleItemContainer::IsRunning(LPOLESTR pszItem)
     return MK_E_NOOBJECT;
 }
 
-//IOleControlSite
+// IOleControlSite
 HRESULT HW_IOleControlSite::LockInPlaceActive(BOOL fLock)
 {
     fs->inPlaceLocked = (fLock == TRUE);
@@ -1556,7 +1560,7 @@ HRESULT HW_IOleControlSite::TransformCoords(POINTL *pPtlHimetric,
     return hr;
 }
 
-//IOleCommandTarget
+// IOleCommandTarget
 HRESULT HW_IOleCommandTarget::QueryStatus(const GUID *pguidCmdGroup, 
     ULONG cCmds, OLECMD *prgCmds, OLECMDTEXT *pCmdTet)
 {
