@@ -8,6 +8,7 @@
 #include <exdisp.h>
 
 class FrameSite;
+class HtmlMoniker;
 
 bool InHtmlNestedMessagePump();
 
@@ -41,6 +42,7 @@ protected:
     IOleInPlaceObject * oleInPlaceObject;
     IViewObject *       viewObject;
     IConnectionPoint *  connectionPoint;
+    HtmlMoniker *       htmlContent;
     HWND                oleObjectHwnd;
 
     DWORD               adviseCookie;
@@ -69,6 +71,7 @@ public:
     void NavigateToUrl(const TCHAR *url);
     void DisplayHtml(const WCHAR *html);
     void DisplayHtml(const char *html);
+    void SetHtml(const char *s, size_t len=-1);
     void GoBack();
     void GoForward();
     void PrintCurrentPage();

@@ -13,6 +13,16 @@
 #include "WinUtil.h"
 #include "Scopes.h"
 
+// Unresolved issues: when loading html from memory (SetHtml()) links are not resolved.
+// Possible solutions:
+// 1. choose a custom prefix for our urls (e.g. sumhtml:), implement IInternetProtocolInfo
+//    that understands those urls and register it as a namespace with IInternetSessions
+//    http://code.google.com/p/atc32/source/browse/trunk/WorldWindProject/lib-external/webview/windows/WebViewWindow.cpp
+//    (WebViewWindow::InitializeWebViewProtocol). Combine that with ability to set
+//    base url (sumhtml:/) for HtmlMoniker
+// 2. use its: and add its:filename to IE's trusted zone (http://csexwb2.googlecode.com/svn/trunk/cEXWB.cs, AddUrlToTrustedZone)
+// 3. something simpler?
+
 // Book on ATL: http://369o.com/data/books/atl/index.html, which is
 // helpful in understanding embedding of the browser control
 
@@ -24,11 +34,22 @@
 // http://codesearch.google.com/#cbxlbgWFJ4U/wxCode/components/iehtmlwin/src/IEHtmlWin.h
 // http://codesearch.google.com/#cbxlbgWFJ4U/wxCode/components/iehtmlwin/src/IEHtmlWin.cpp
 
-// Another code to get inspired: http://code.google.com/p/fidolook/source/browse/trunk/Qm/ui/messageviewwindow.cpp
-// And one more: http://code.google.com/p/atc32/source/browse/trunk/WorldWindProject/lib-external/webview/windows/
-
 // Info about IInternetProtocol: http://www.codeproject.com/KB/IP/DataProtocol.aspx
 // Source code for inspiration: http://codesearch.google.com/#X_1VXq0XKpU/trunk/shareaza/IEProtocol.h
+
+// Other code that does advanced things with embedding IE or providing it with non-trivial
+// interfaces:
+// http://osh.codeplex.com/
+// http://code.google.com/p/atc32/source/browse/trunk/WorldWindProject/lib-external/webview/windows/
+// http://code.google.com/p/fidolook/source/browse/trunk/Qm/ui/messageviewwindow.cpp
+// http://code.google.com/p/csexwb2/
+// chrome frame: http://codesearch.google.com/#wZuuyuB8jKQ/chromium/src/chrome_frame/chrome_protocol.h
+// gears: http://code.google.com/p/gears/
+// http://code.google.com/p/fictionbookeditor/
+// http://code.google.com/p/easymule/
+// http://code.google.com/p/svnprotocolhandler/ (IInternetProtocolInfo implementation)
+// https://github.com/facebook/ie-toolbar (also IInternetProtocolInfo implementation)
+// http://code.google.com/p/veryie/
 
 
 // Implementing scrolling:
@@ -464,12 +485,12 @@ public:
     HW_IDocHostUIHandler(FrameSite* fs) : fs(fs) { }
     ~HW_IDocHostUIHandler() {}
 
-    //IUnknown
+    // IUnknown
     STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
     ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
     ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
 
-    //IDocHostUIHandler
+    // IDocHostUIHandler
     STDMETHODIMP ShowContextMenu(DWORD dwID, POINT *ppt, IUnknown *pcmdtReserved, IDispatch *pdispReserved) { return S_FALSE; }
     STDMETHODIMP GetHostInfo(DOCHOSTUIINFO *pInfo) { return E_NOTIMPL; }
     STDMETHODIMP ShowUI(DWORD dwID, IOleInPlaceActiveObject *pActiveObject, IOleCommandTarget *pCommandTarget, IOleInPlaceFrame *pFrame, IOleInPlaceUIWindow *pDoc) { return S_FALSE; }
@@ -521,7 +542,7 @@ public:
     HtmlMoniker();
     virtual ~HtmlMoniker();
 
-    HRESULT SetHtml(char *s, size_t len);
+    HRESULT SetHtml(const char *s, size_t len);
     HRESULT SetBaseUrl(const TCHAR *baseUrl, size_t baseUrlLen);
 
 public:
@@ -573,7 +594,7 @@ private:
 };
 
 HtmlMoniker::HtmlMoniker()
-    : refCount(0),
+    : refCount(1),
       htmlData(NULL),
       htmlStream(NULL),
       baseUrl(NULL)
@@ -589,13 +610,14 @@ HtmlMoniker::~HtmlMoniker()
     free(baseUrl);
 }
 
-HRESULT HtmlMoniker::SetHtml(char *s, size_t len)
+HRESULT HtmlMoniker::SetHtml(const char *s, size_t len)
 {
     free(htmlData);
-    htmlData = s;
+    htmlData = str::DupN(s, len);
     if (htmlStream)
         htmlStream->Release();
-    //htmlStream = SHCreateMemStream(s, len);
+    // TODO: SHCreateMemStream() might be faster
+    htmlStream = CreateStreamFromData(htmlData, len);
     return S_OK;
 }
 
@@ -615,9 +637,9 @@ STDMETHODIMP HtmlMoniker::BindToStorage(IBindCtx *pbc, IMoniker *pmkToLeft, REFI
 
 static LPOLESTR OleStrDup(TCHAR *s)
 {
-    size_t cbLen = sizeof(TCHAR) * (str::Len(s) + 1);
-    LPOLESTR ret = (LPOLESTR)CoTaskMemAlloc(cbLen);
-    memcpy(ret, s, cbLen);
+    size_t cb = sizeof(TCHAR) * (str::Len(s) + 1);
+    LPOLESTR ret = (LPOLESTR)CoTaskMemAlloc(cb);
+    memcpy(ret, s, cb);
     return ret;
 }
 
@@ -625,7 +647,10 @@ STDMETHODIMP HtmlMoniker::GetDisplayName(IBindCtx *pbc, IMoniker *pmkToLeft, LPO
 {
     if (!ppszDisplayName)
         return E_POINTER;
-    *ppszDisplayName = OleStrDup(baseUrl);;
+    if (baseUrl)
+        *ppszDisplayName = OleStrDup(baseUrl);
+    else
+        *ppszDisplayName = OleStrDup(_T(""));
     return S_OK;
 }
 
@@ -725,7 +750,7 @@ void HtmlWindow::UnsubclassHwnd()
 HtmlWindow::HtmlWindow(HWND hwndParent, HtmlWindowCallback *cb) :
     hwndParent(hwndParent), webBrowser(NULL), oleObject(NULL),
     oleInPlaceObject(NULL), viewObject(NULL),
-    connectionPoint(NULL), oleObjectHwnd(NULL),
+    connectionPoint(NULL), htmlContent(NULL), oleObjectHwnd(NULL),
     adviseCookie(0), blankWasShown(false), htmlWinCb(cb),
     wndProcBrowserPrev(NULL),
     canGoBack(false), canGoForward(false)
@@ -828,12 +853,15 @@ HtmlWindow::~HtmlWindow()
         oleObject->SetClientSite(NULL);
         oleObject->Release();
     }
-    if (viewObject) {
+
+    if (viewObject)
         viewObject->Release();
-    }
-    if (webBrowser) {
+
+    if (htmlContent)
+        htmlContent->Release();
+
+    if (webBrowser)
         webBrowser->Release();
-    }
 }
 
 void HtmlWindow::OnSize(SizeI size)
@@ -993,6 +1021,47 @@ void HtmlWindow::DisplayHtml(const char *html)
     SafeArrayDestroy(arr);
 }
 
+#define ABOUT_BLANK _T("about:blank")
+#define ABOUT_BLANK_LEN (dimof(ABOUT_BLANK)-1)
+
+void HtmlWindow::SetHtml(const char *s, size_t len)
+{
+    if (-1 == len)
+        len = str::Len(s);
+
+    if (htmlContent)
+        htmlContent->Release();
+    htmlContent = new HtmlMoniker();
+    htmlContent->SetHtml(s, len);
+
+    ScopedComPtr<IDispatch> docDispatch;
+    HRESULT hr = webBrowser->get_Document(&docDispatch);
+    if (FAILED(hr) || !docDispatch)
+        return;
+
+    ScopedComQIPtr<IHTMLDocument2> doc(docDispatch);
+    if (!doc)
+        return;
+
+    ScopedComQIPtr<IPersistMoniker> perstMon(doc);
+    if (!perstMon)
+        return;
+
+    ScopedComQIPtr<IMoniker> htmlMon(htmlContent);
+    hr = perstMon->Load(TRUE, htmlMon, NULL, STGM_READ);
+    // this might fail if HtmlMoniker::GetDisplayName() returns bad base url
+    // (and apparently empty string is considered bad)
+    // so set it to "about:blank" (which works) and retry
+    // TODO: possibly HtmlMoniker::GetDisplayName() should just return "about:blank"
+    // if none has been set
+    if (FAILED(hr))
+    {
+        htmlContent->SetBaseUrl(ABOUT_BLANK, ABOUT_BLANK_LEN);
+        hr = perstMon->Load(TRUE, htmlMon, NULL, STGM_READ);
+        assert(!FAILED(hr));
+    }
+}
+
 // Take a screenshot of a given <area> inside an html window and resize
 // it to <finalSize>. It's up to the caller to make sure <area> fits
 // within window (we don't check that's the case)
@@ -1049,7 +1118,7 @@ bool HtmlWindow::OnBeforeNavigate(const TCHAR *url, bool newWindow)
     size_t len = 0;
     bool gotHtmlData = htmlWinCb->GetHtmlForUrl(url, &data, &len);
     if (gotHtmlData) {
-        DisplayHtml(data);
+        SetHtml(data, len);
         return false;
     }
     return true;
