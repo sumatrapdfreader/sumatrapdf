@@ -7,11 +7,14 @@
 #include <mshtmhst.h>
 #include <oaidl.h>
 #include <exdispid.h>
+#include <wininet.h>
 
 #include "StrUtil.h"
 #include "GeomUtil.h"
 #include "WinUtil.h"
 #include "Scopes.h"
+
+#pragma comment(lib, "urlmon")
 
 // Unresolved issues: when loading html from memory (SetHtml()) links are not resolved.
 // Possible solutions:
@@ -75,6 +78,8 @@ class HW_IServiceProvider;
 class HW_IInternetSecurityManager;
 class HW_IDocHostUIHandler;
 class HW_IDropTarget;
+class HW_IInternetProtocolFactory;
+class HW_IInternetProtocol;
 
 inline void VariantSetBool(VARIANT *res, bool val)
 {
@@ -89,6 +94,8 @@ inline void VariantSetLong(VARIANT *res, long val)
 }
 
 // HW stands for HtmlWindow
+// FrameSite ties together HtmlWindow and all the COM interfaces we need to implement
+// to support it
 class FrameSite : public IUnknown
 {
     friend class HtmlWindow;
@@ -149,6 +156,185 @@ protected:
     bool        ambientUserMode;
     bool        ambientAppearance;
 };
+
+#define WH_PROTO_PREFIX _T("hw_html_window")
+
+// {F1EC293F-DBBD-4A4B-94F4-FA52BA0BA6EE}
+static const GUID CLSID_HW_IInternetProtocol = { 0xf1ec293f, 0xdbbd, 0x4a4b, { 0x94, 0xf4, 0xfa, 0x52, 0xba, 0xb, 0xa6, 0xee } };
+
+class HW_IInternetProtocol : public IInternetProtocolInfo
+{
+public:
+    HW_IInternetProtocol() : refCount(1) { }
+
+protected:
+    virtual ~HW_IInternetProtocol() { }
+
+public:
+    // IUnknown
+    STDMETHODIMP QueryInterface(REFIID riid, void **ppvObject);
+    ULONG STDMETHODCALLTYPE AddRef() { return ++refCount; }
+    ULONG STDMETHODCALLTYPE Release();
+
+    // IInternetProtocolInfo
+    HRESULT STDMETHODCALLTYPE ParseUrl(LPCWSTR pwzUrl, PARSEACTION ParseAction, DWORD dwParseFlags,
+        LPWSTR pwzResult, DWORD cchResult, DWORD *pcchResult, DWORD dwReserved);
+
+    HRESULT STDMETHODCALLTYPE CombineUrl(LPCWSTR pwzBaseUrl, LPCWSTR pwzRelativeUrl,
+        DWORD dwCombineFlags, LPWSTR pwzResult, DWORD cchResult, DWORD *pcchResult,
+        DWORD dwReserved);
+        
+    HRESULT STDMETHODCALLTYPE CompareUrl(LPCWSTR pwzUrl1, LPCWSTR pwzUrl2, DWORD dwCompareFlags)
+    {
+        return INET_E_DEFAULT_ACTION;
+    }
+        
+    HRESULT STDMETHODCALLTYPE QueryInfo(LPCWSTR pwzUrl, QUERYOPTION queryOption, DWORD dwQueryFlags,
+        LPVOID pBuffer, DWORD cbBuffer, DWORD *pcbBuf, DWORD dwReserved)
+    {
+        return E_NOTIMPL;
+    }
+
+protected:
+    int refCount;
+};
+
+ULONG STDMETHODCALLTYPE HW_IInternetProtocol::Release()
+{
+    if (--refCount != 0)
+        return refCount;
+    delete this;
+    return 0;
+}
+
+STDMETHODIMP HW_IInternetProtocol::QueryInterface(REFIID riid, void **ppvObject)
+{
+    *ppvObject = NULL;
+
+    if (riid == IID_IUnknown)
+        *ppvObject = static_cast<IUnknown*>(this);
+    else if (riid == IID_IInternetProtocolInfo)
+        *ppvObject = static_cast<IInternetProtocolInfo*>(this);
+
+    if (*ppvObject)
+    {
+        static_cast<IUnknown*>(*ppvObject)->AddRef();
+        return S_OK;
+    }
+    return E_NOINTERFACE;
+}
+
+HRESULT STDMETHODCALLTYPE HW_IInternetProtocol::ParseUrl(LPCWSTR pwzUrl, PARSEACTION ParseAction,
+    DWORD dwParseFlags, LPWSTR pwzResult, DWORD cchResult, DWORD *pcchResult, DWORD dwReserved)
+{
+    if (pwzUrl == NULL || pwzResult == NULL || pcchResult == NULL)
+        return E_POINTER;
+
+    // TODO: write me
+    return S_FALSE;
+}
+
+HRESULT STDMETHODCALLTYPE HW_IInternetProtocol::CombineUrl(LPCWSTR pwzBaseUrl, LPCWSTR pwzRelativeUrl,
+    DWORD dwCombineFlags, LPWSTR pwzResult, DWORD cchResult, DWORD *pcchResult,
+    DWORD dwReserved)
+{
+    if (pwzBaseUrl == NULL || pwzRelativeUrl == NULL || pwzResult == NULL || pcchResult == NULL)
+        return E_POINTER;
+
+    *pcchResult = cchResult;
+    BOOL ret = InternetCombineUrlW(pwzBaseUrl, pwzRelativeUrl, pwzResult, pcchResult, ICU_NO_ENCODE | ICU_NO_META);
+    if (!ret)
+    {
+        DWORD err = GetLastError();
+        if (err == ERROR_INSUFFICIENT_BUFFER)
+            return S_FALSE; // Buffer too small
+        else
+            return E_FAIL;
+    }
+    return S_OK;
+}
+
+static LONG internetProtocolFactoryServerLocks = 0;
+
+class HW_IInternetProtocolFactory : public IClassFactory
+{
+protected:
+    virtual ~HW_IInternetProtocolFactory() { }
+
+public:
+    HW_IInternetProtocolFactory() : refCount(1) { }
+
+    // IUnknown
+    STDMETHODIMP QueryInterface(REFIID riid, void **ppvObject);
+    ULONG STDMETHODCALLTYPE AddRef() { return ++refCount; }
+    ULONG STDMETHODCALLTYPE Release();
+
+    // IClassFactory
+    HRESULT STDMETHODCALLTYPE CreateInstance(IUnknown *pUnkOuter, REFIID riid, void **ppvObject);
+    HRESULT STDMETHODCALLTYPE LockServer(BOOL fLock);
+
+protected:
+    int refCount;
+};
+
+ULONG STDMETHODCALLTYPE HW_IInternetProtocolFactory::Release()
+{
+    if (--refCount != 0)
+        return refCount;
+    delete this;
+    return 0;
+}
+
+STDMETHODIMP HW_IInternetProtocolFactory::QueryInterface(REFIID riid, void **ppvObject)
+{
+    *ppvObject = NULL;
+    if (riid == IID_IUnknown)
+        *ppvObject = static_cast<IUnknown*>(this);
+    else if (riid == IID_IClassFactory)
+        *ppvObject = static_cast<IClassFactory*>(this);
+    if (*ppvObject)
+    {
+        static_cast<IUnknown*>(*ppvObject)->AddRef();
+        return S_OK;
+    }
+    return E_NOINTERFACE;
+}
+
+HRESULT STDMETHODCALLTYPE HW_IInternetProtocolFactory::LockServer(BOOL fLock)
+{
+    if (fLock)
+        InterlockedIncrement(&internetProtocolFactoryServerLocks);
+    else
+        InterlockedDecrement(&internetProtocolFactoryServerLocks);
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE HW_IInternetProtocolFactory::CreateInstance(IUnknown *pUnkOuter, REFIID riid, void **ppvObject)
+{
+    if (pUnkOuter != NULL)
+        return CLASS_E_NOAGGREGATION;
+    HW_IInternetProtocol *proto = new HW_IInternetProtocol();
+    HRESULT hr = proto->QueryInterface(riid, (void**) ppvObject);
+    proto->Release();
+    return hr;
+}
+
+// Register our protocol so that urlmon will call us for every
+// url that starts with WH_PROTO_PREFIX
+void RegisterInternetProtocolFactory()
+{
+    static bool initialized = false;
+    if (initialized)
+        return;
+
+    ScopedComPtr<IInternetSession> internetSession;
+    HRESULT hr = CoInternetGetSession(0, &internetSession, 0);
+    if (FAILED(hr))
+        return;
+    ScopedComPtr<HW_IInternetProtocolFactory> factory(new HW_IInternetProtocolFactory());
+    internetSession->RegisterNameSpace(factory, CLSID_HW_IInternetProtocol, WH_PROTO_PREFIX, 0, NULL, 0);
+    initialized = true;
+}
 
 class HW_IOleInPlaceFrame : public IOleInPlaceFrame
 {
@@ -676,15 +862,10 @@ ULONG STDMETHODCALLTYPE HtmlMoniker::AddRef()
 
 ULONG STDMETHODCALLTYPE HtmlMoniker::Release()
 {
-    refCount--;
-
-    if (refCount == 0)
-    {
-        delete this;
-        return 0;
-    }
-
-    return refCount;
+    if (--refCount != 0)
+        return refCount;
+    delete this;
+    return 0;
 }
 
 static HWND GetBrowserControlHwnd(HWND hwndControlParent)
@@ -1335,12 +1516,10 @@ STDMETHODIMP_(ULONG) FrameSite::AddRef()
 STDMETHODIMP_(ULONG) FrameSite::Release()
 {
     assert(refCount > 0);
-    if (--refCount == 0) {
-        delete this;
-        return 0;
-    } else {
+    if (--refCount != 0)
         return refCount;
-    }
+    delete this;
+    return 0;
 }
 
 // IDispatch
