@@ -230,6 +230,41 @@ fz_hue_rgb(int *rr, int *rg, int *rb, int br, int bg, int bb, int sr, int sg, in
 	fz_saturation_rgb(rr, rg, rb, tr, tg, tb, br, bg, bb);
 }
 
+/* SumatraPDF: expose blending formulas to dev_gdiplus.cpp */
+void
+fz_blend_pixel(int dp[3], int bp[3], int sp[3], int blendmode)
+{
+	int k;
+	/* non-separable blend modes */
+	switch (blendmode)
+	{
+	case FZ_BLEND_HUE: fz_hue_rgb(&dp[0], &dp[1], &dp[2], bp[0], bp[1], bp[2], sp[0], sp[1], sp[2]); return;
+	case FZ_BLEND_SATURATION: fz_saturation_rgb(&dp[0], &dp[1], &dp[2], bp[0], bp[1], bp[2], sp[0], sp[1], sp[2]); return;
+	case FZ_BLEND_COLOR: fz_color_rgb(&dp[0], &dp[1], &dp[2], bp[0], bp[1], bp[2], sp[0], sp[1], sp[2]); return;
+	case FZ_BLEND_LUMINOSITY: fz_luminosity_rgb(&dp[0], &dp[1], &dp[2], bp[0], bp[1], bp[2], sp[0], sp[1], sp[2]); return;
+	}
+	/* separable blend modes */
+	for (k = 0; k < 3; k++)
+	{
+		switch (blendmode)
+		{
+		default:
+		case FZ_BLEND_NORMAL: dp[k] = sp[k]; break;
+		case FZ_BLEND_MULTIPLY: dp[k] = fz_mul255(bp[k], sp[k]); break;
+		case FZ_BLEND_SCREEN: dp[k] = fz_screen_byte(bp[k], sp[k]); break;
+		case FZ_BLEND_OVERLAY: dp[k] = fz_overlay_byte(bp[k], sp[k]); break;
+		case FZ_BLEND_DARKEN: dp[k] = fz_darken_byte(bp[k], sp[k]); break;
+		case FZ_BLEND_LIGHTEN: dp[k] = fz_lighten_byte(bp[k], sp[k]); break;
+		case FZ_BLEND_COLOR_DODGE: dp[k] = fz_color_dodge_byte(bp[k], sp[k]); break;
+		case FZ_BLEND_COLOR_BURN: dp[k] = fz_color_burn_byte(bp[k], sp[k]); break;
+		case FZ_BLEND_HARD_LIGHT: dp[k] = fz_hard_light_byte(bp[k], sp[k]); break;
+		case FZ_BLEND_SOFT_LIGHT: dp[k] = fz_soft_light_byte(bp[k], sp[k]); break;
+		case FZ_BLEND_DIFFERENCE: dp[k] = fz_difference_byte(bp[k], sp[k]); break;
+		case FZ_BLEND_EXCLUSION: dp[k] = fz_exclusion_byte(bp[k], sp[k]); break;
+		}
+	}
+}
+
 /* Blending loops */
 
 void

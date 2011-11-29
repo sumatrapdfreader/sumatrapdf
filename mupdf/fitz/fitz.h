@@ -1131,6 +1131,8 @@ void fz_paint_pixmap_with_mask(fz_pixmap *dst, fz_pixmap *src, fz_pixmap *msk);
 void fz_paint_pixmap_with_rect(fz_pixmap *dst, fz_pixmap *src, int alpha, fz_bbox bbox);
 
 void fz_blend_pixmap(fz_pixmap *dst, fz_pixmap *src, int alpha, int blendmode, int isolated, fz_pixmap *shape);
+/* SumatraPDF: expose blending formulas to dev_gdiplus.cpp */
+void fz_blend_pixel(int dp[3], int bp[3], int sp[3], int blendmode);
 
 enum
 {

@@ -107,20 +107,6 @@ public:
 	}
 };
 
-typedef BYTE (* separableBlend)(BYTE s, BYTE bg);
-static BYTE BlendNormal(BYTE s, BYTE bg)     { return s; }
-static BYTE BlendMultiply(BYTE s, BYTE bg)   { return s * bg / 255; }
-static BYTE BlendScreen(BYTE s, BYTE bg)     { return 255 - (255 - s) * (255 - bg) / 255; }
-static BYTE BlendHardLight(BYTE s, BYTE bg)  { return s <= 127 ? s * bg * 2 / 255 : BlendScreen((s - 128) * 2 + 1, bg); }
-static BYTE BlendSoftLight(BYTE s, BYTE bg);
-static BYTE BlendOverlay(BYTE s, BYTE bg)    { return BlendHardLight(bg, s); }
-static BYTE BlendDarken(BYTE s, BYTE bg)     { return MIN(s, bg); }
-static BYTE BlendLighten(BYTE s, BYTE bg)    { return MAX(s, bg); }
-static BYTE BlendColorDodge(BYTE s, BYTE bg) { return bg == 0 ? 0 : bg >= 255 - s ? 255 : (510 * bg + 255 - s) / 2 / (255 - s); }
-static BYTE BlendColorBurn(BYTE s, BYTE bg)  { return bg == 255 ? 255 : 255 - bg >= s ? 0 : 255 - (510 * (255 - bg) + s) / 2 / s; }
-static BYTE BlendDifference(BYTE s, BYTE bg) { return ABS(s - bg); }
-static BYTE BlendExclusion(BYTE s, BYTE bg)  { return s + bg - s * bg * 2 / 255; }
-
 struct userDataStackItem
 {
 	Region clip;
@@ -197,6 +183,7 @@ gdiplus_transform_point(fz_matrix ctm, float x, float y)
 
 inline float round(float x) { return floorf(x + 0.5); }
 inline float roundup(float x) { return x < 0 ? floorf(x) : ceilf(x); }
+inline BYTE BlendScreen(BYTE s, BYTE bg) { return 255 - (255 - s) * (255 - bg) / 255; }
 
 class userData
 {
@@ -607,28 +594,6 @@ protected:
 
 	void _compositeWithBackground(Bitmap *bitmap, Rect bounds, Bitmap *backdrop, Rect boundsBg, int blendmode, bool modifyBackdrop) const
 	{
-		separableBlend funcs[] = {
-			BlendNormal,
-			BlendMultiply,
-			BlendScreen,
-			BlendOverlay,
-			BlendDarken,
-			BlendLighten,
-			BlendColorDodge,
-			BlendColorBurn,
-			BlendHardLight,
-			BlendSoftLight,
-			BlendDifference,
-			BlendExclusion,
-			NULL // FZ_BLEND_HUE, FZ_BLEND_SATURATION, FZ_BLEND_COLOR, FZ_BLEND_LUMINOSITY
-		};
-		
-		if (blendmode >= nelem(funcs) || !funcs[blendmode])
-		{
-			fz_warn("blend mode %d not implemented for GDI+", blendmode);
-			blendmode = 0;
-		}
-		
 		assert(bounds.X >= 0 && bounds.Y >= 0);
 		assert(boundsBg.X == 0 && boundsBg.Y == 0);
 		assert(bounds.Width == boundsBg.Width && bounds.Height == boundsBg.Height);
@@ -660,17 +625,22 @@ protected:
 						newAlpha = alpha;
 					if (newAlpha != 0)
 					{
+						// note: GDI+ stores colors as BGRA order while Fitz expects RGBA
+						int rgb[3], rgbSrc[3], rgbBg[3];
 						for (int i = 0; i < 3; i++)
 						{
-							BYTE color = Scan0[row * data.Stride + col * 4 + i];
-							BYTE bgColor = bgScan0[row * dataBg.Stride + col * 4 + i];
+							rgbSrc[i] = Scan0[row * data.Stride + col * 4 + 2 - i];
+							rgbBg[i] = bgScan0[row * dataBg.Stride + col * 4 + 2 - i];
+						}
+						fz_blend_pixel(rgb, rgbBg, rgbSrc, blendmode);
+						for (int i = 0; i < 3; i++)
+						{
 							// basic compositing formula
-							BYTE newColor = (1 - 1.0 * alpha / newAlpha) * bgColor + 1.0 * alpha / newAlpha * ((255 - bgAlpha) * color + bgAlpha * funcs[blendmode](color, bgColor)) / 255;
-							
+							BYTE newColor = (1 - 1.0 * alpha / newAlpha) * rgbBg[i] + 1.0 * alpha / newAlpha * ((255 - bgAlpha) * rgbSrc[i] + bgAlpha * rgb[i]) / 255;
 							if (modifyBackdrop)
-								bgScan0[row * dataBg.Stride + col * 4 + i] = newColor;
+								bgScan0[row * dataBg.Stride + col * 4 + 2 - i] = newColor;
 							else
-								Scan0[row * data.Stride + col * 4 + i] = newColor;
+								Scan0[row * data.Stride + col * 4 + 2 - i] = newColor;
 						}
 					}
 					if (modifyBackdrop)
@@ -1350,19 +1320,6 @@ extern "C" static void
 fz_gdiplus_end_mask(void *user)
 {
 	((userData *)user)->applyClipMask();
-}
-
-static BYTE BlendSoftLight(BYTE s, BYTE bg)
-{
-	if (s < 128)
-		return bg - ((255 - 2 * s) / 255.0f * bg) / 255.0f * (255 - bg);
-	
-	int dbd;
-	if (bg < 64)
-		dbd = (((bg * 16 - 12) / 255.0f * bg) + 4) / 255.0f * bg;
-	else
-		dbd = (int)sqrtf(255.0f * bg);
-	return bg + ((2 * s - 255) / 255.0f * (dbd - bg));
 }
 
 extern "C" static void
