@@ -18,7 +18,7 @@
 // There's example code at https://groups.google.com/forum/#!topic/microsoft.public.inetsdk.programming.html_objmodel/-lfx7r-IA4g
 // and a blog post detailing all possibilities at
 // http://qualapps.blogspot.com/2008/10/how-to-load-mshtml-with-data.html
-#define WE_PROVIDE_CHM_DATA 0
+#define WE_PROVIDE_CHM_DATA 1
 
 #define CHM_MT
 #ifdef UNICODE
@@ -279,10 +279,15 @@ void CChmEngine::DisplayPage(const TCHAR *pageUrl)
 
     if (str::StartsWith(pageUrl, _T("/")))
         pageUrl++;
+#if WE_PROVIDE_CHM_DATA
+    ScopedMem<TCHAR> url(str::Format(_T("its://%d/%s"), htmlWindow->windowId, pageUrl));
+    htmlWindow->NavigateToUrl(url);
+#else
     // the format for chm page is: "its:MyChmFile.chm::mywebpage.htm"
     // cf. http://msdn.microsoft.com/en-us/library/aa164814(v=office.10).aspx
     ScopedMem<TCHAR> url(str::Format(_T("its:%s::/%s"), fileName, pageUrl));
     htmlWindow->NavigateToUrl(url);
+#endif
     // unfortunate timing when loading chm docs: initial zoom level is
     // set (via, ultimately, DisplayModel::SetZoomVirtual()), after
     // we navigate to a page but before it might have finished
@@ -764,6 +769,7 @@ bool CChmEngine::Load(const TCHAR *fileName)
 bool CChmEngine::GetHtmlForUrl(const TCHAR *url, char **data, size_t *len)
 {
 #if WE_PROVIDE_CHM_DATA
+#if 0
     // TODO: links due to internal navigation (via clicking links inside html file)
     // don't start with its:
     if (!str::StartsWithI(url, _T("its:")))
@@ -773,6 +779,7 @@ bool CChmEngine::GetHtmlForUrl(const TCHAR *url, char **data, size_t *len)
     if (!url)
         return false;
     url += 3;
+#endif
     Bytes *b = FindDataForUrl(url);
     if (!b) {
         ChmCacheEntry *e = new ChmCacheEntry(url);

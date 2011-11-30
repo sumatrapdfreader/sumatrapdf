@@ -50,8 +50,6 @@ protected:
 
     ScopedMem<TCHAR>    currentURL;
 
-    HtmlWindowCallback *htmlWinCb;
-
     void EnsureAboutBlankShown();
     void CreateBrowser();
 
@@ -62,6 +60,7 @@ protected:
 
 public:
     WNDPROC wndProcBrowserPrev;
+    HtmlWindowCallback *htmlWinCb;
 
     HtmlWindow(HWND hwndParent, HtmlWindowCallback *cb);
     ~HtmlWindow();
@@ -85,13 +84,14 @@ public:
     void OnLButtonDown() const;
 
     HBITMAP TakeScreenshot(RectI area, SizeI finalSize);
-    bool OnBeforeNavigate(const TCHAR *url, bool newWindow);
-    void OnDocumentComplete(const TCHAR *url);
+    bool    OnBeforeNavigate(const TCHAR *url, bool newWindow);
+    void    OnDocumentComplete(const TCHAR *url);
     HRESULT OnDragEnter(IDataObject *dataObj);
     HRESULT OnDragDrop(IDataObject *dataObj);
 
     bool canGoBack;
     bool canGoForward;
+    int  windowId;
 };
 
 #endif

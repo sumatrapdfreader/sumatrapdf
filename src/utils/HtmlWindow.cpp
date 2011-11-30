@@ -13,6 +13,7 @@
 #include "GeomUtil.h"
 #include "WinUtil.h"
 #include "Scopes.h"
+#include "Vec.h"
 
 #pragma comment(lib, "urlmon")
 
@@ -78,8 +79,6 @@ class HW_IServiceProvider;
 class HW_IInternetSecurityManager;
 class HW_IDocHostUIHandler;
 class HW_IDropTarget;
-class HW_IInternetProtocolFactory;
-class HW_IInternetProtocol;
 
 inline void VariantSetBool(VARIANT *res, bool val)
 {
@@ -157,15 +156,98 @@ protected:
     bool        ambientAppearance;
 };
 
-#define WH_PROTO_PREFIX _T("hw_html_window")
+// For simplicity, we just add to the array. We don't bother
+// reclaiming ids for deleted windows. I don't expect number
+// of HtmlWindow objects created to be so high as to be problematic
+// (1 thousand objects is just 4K of memory for the vector)
+static Vec<HtmlWindow*> gHtmlWindows;
+
+HtmlWindow *FindHtmlWindowById(int windowId)
+{
+    return gHtmlWindows.At(windowId);
+}
+
+static int GenNewWindowId(HtmlWindow *htmlWin)
+{
+    int newWindowId = (int)gHtmlWindows.Count();
+    gHtmlWindows.Append(htmlWin);
+    assert(htmlWin == FindHtmlWindowById(newWindowId));
+    return newWindowId;
+}
+
+static void FreeWindowId(int windowId)
+{
+    assert(NULL != gHtmlWindows.At(windowId));
+    gHtmlWindows.At(windowId) = NULL;
+}
+
+#define HW_PROTO_PREFIX L"its"
 
 // {F1EC293F-DBBD-4A4B-94F4-FA52BA0BA6EE}
 static const GUID CLSID_HW_IInternetProtocol = { 0xf1ec293f, 0xdbbd, 0x4a4b, { 0x94, 0xf4, 0xfa, 0x52, 0xba, 0xb, 0xa6, 0xee } };
 
-class HW_IInternetProtocol : public IInternetProtocolInfo
+class HW_IInternetProtocolInfo : public IInternetProtocolInfo
 {
 public:
-    HW_IInternetProtocol() : refCount(1) { }
+    HW_IInternetProtocolInfo() : refCount(1) { }
+
+protected:
+    virtual ~HW_IInternetProtocolInfo() { }
+
+public:
+    // IUnknown
+    STDMETHODIMP QueryInterface(REFIID riid, void **ppvObject);
+    ULONG STDMETHODCALLTYPE AddRef() { return ++refCount; }
+    ULONG STDMETHODCALLTYPE Release();
+
+    // IInternetProtocolInfo
+    HRESULT STDMETHODCALLTYPE ParseUrl(LPCWSTR pwzUrl, PARSEACTION ParseAction, DWORD dwParseFlags,
+        LPWSTR pwzResult, DWORD cchResult, DWORD *pcchResult, DWORD dwReserved)
+    { return INET_E_DEFAULT_ACTION; }
+
+    HRESULT STDMETHODCALLTYPE CombineUrl(LPCWSTR pwzBaseUrl, LPCWSTR pwzRelativeUrl,
+        DWORD dwCombineFlags, LPWSTR pwzResult, DWORD cchResult, DWORD *pcchResult,
+        DWORD dwReserved)
+    { return INET_E_DEFAULT_ACTION; }
+
+    HRESULT STDMETHODCALLTYPE CompareUrl(LPCWSTR pwzUrl1, LPCWSTR pwzUrl2, DWORD dwCompareFlags)
+    { return INET_E_DEFAULT_ACTION; }
+
+    HRESULT STDMETHODCALLTYPE QueryInfo(LPCWSTR pwzUrl, QUERYOPTION queryOption, DWORD dwQueryFlags,
+        LPVOID pBuffer, DWORD cbBuffer, DWORD *pcbBuf, DWORD dwReserved)
+    { return INET_E_DEFAULT_ACTION; }
+
+protected:
+    int refCount;
+};
+
+ULONG STDMETHODCALLTYPE HW_IInternetProtocolInfo::Release()
+{
+    if (--refCount != 0)
+        return refCount;
+    delete this;
+    return 0;
+}
+
+STDMETHODIMP HW_IInternetProtocolInfo::QueryInterface(REFIID riid, void **ppvObject)
+{
+    *ppvObject = NULL;
+    if (riid == IID_IUnknown)
+        *ppvObject = static_cast<IUnknown*>(this);
+    else if (riid == IID_IInternetProtocolInfo)
+        *ppvObject = static_cast<IInternetProtocolInfo*>(this);
+    if (*ppvObject)
+    {
+        static_cast<IUnknown*>(*ppvObject)->AddRef();
+        return S_OK;
+    }
+    return E_NOINTERFACE;
+}
+
+class HW_IInternetProtocol :public IInternetProtocol
+{
+public:
+    HW_IInternetProtocol() : refCount(1), data(NULL), dataLen(0), dataCurrPos(0) { }
 
 protected:
     virtual ~HW_IInternetProtocol() { }
@@ -176,27 +258,33 @@ public:
     ULONG STDMETHODCALLTYPE AddRef() { return ++refCount; }
     ULONG STDMETHODCALLTYPE Release();
 
-    // IInternetProtocolInfo
-    HRESULT STDMETHODCALLTYPE ParseUrl(LPCWSTR pwzUrl, PARSEACTION ParseAction, DWORD dwParseFlags,
-        LPWSTR pwzResult, DWORD cchResult, DWORD *pcchResult, DWORD dwReserved);
-
-    HRESULT STDMETHODCALLTYPE CombineUrl(LPCWSTR pwzBaseUrl, LPCWSTR pwzRelativeUrl,
-        DWORD dwCombineFlags, LPWSTR pwzResult, DWORD cchResult, DWORD *pcchResult,
-        DWORD dwReserved);
-        
-    HRESULT STDMETHODCALLTYPE CompareUrl(LPCWSTR pwzUrl1, LPCWSTR pwzUrl2, DWORD dwCompareFlags)
-    {
-        return INET_E_DEFAULT_ACTION;
-    }
-        
-    HRESULT STDMETHODCALLTYPE QueryInfo(LPCWSTR pwzUrl, QUERYOPTION queryOption, DWORD dwQueryFlags,
-        LPVOID pBuffer, DWORD cbBuffer, DWORD *pcbBuf, DWORD dwReserved)
-    {
-        return E_NOTIMPL;
-    }
-
+    // IInternetProtocol
+    STDMETHOD(Start)(
+            LPCWSTR szUrl,
+            IInternetProtocolSink *pIProtSink,
+            IInternetBindInfo *pIBindInfo,
+            DWORD grfSTI,
+            HANDLE_PTR dwReserved);
+    STDMETHOD(Continue)(PROTOCOLDATA *pStateInfo);
+    STDMETHOD(Abort)(HRESULT hrReason,DWORD dwOptions);
+    STDMETHOD(Terminate)(DWORD dwOptions);
+    STDMETHOD(Suspend)();
+    STDMETHOD(Resume)();
+    STDMETHOD(Read)(void *pv,ULONG cb,ULONG *pcbRead);
+    STDMETHOD(Seek)(
+            LARGE_INTEGER dlibMove,
+            DWORD dwOrigin,
+            ULARGE_INTEGER *plibNewPosition);
+    STDMETHOD(LockRequest)(DWORD dwOptions);
+    STDMETHOD(UnlockRequest)();
 protected:
     int refCount;
+
+    // those are filled in Start() and represent data to be sent
+    // for a given url
+    char * data;
+    size_t dataLen;
+    size_t dataCurrPos;
 };
 
 ULONG STDMETHODCALLTYPE HW_IInternetProtocol::Release()
@@ -210,12 +298,10 @@ ULONG STDMETHODCALLTYPE HW_IInternetProtocol::Release()
 STDMETHODIMP HW_IInternetProtocol::QueryInterface(REFIID riid, void **ppvObject)
 {
     *ppvObject = NULL;
-
     if (riid == IID_IUnknown)
         *ppvObject = static_cast<IUnknown*>(this);
-    else if (riid == IID_IInternetProtocolInfo)
-        *ppvObject = static_cast<IInternetProtocolInfo*>(this);
-
+    else if (riid == IID_IInternetProtocol)
+        *ppvObject = static_cast<IInternetProtocol*>(this);
     if (*ppvObject)
     {
         static_cast<IUnknown*>(*ppvObject)->AddRef();
@@ -224,37 +310,147 @@ STDMETHODIMP HW_IInternetProtocol::QueryInterface(REFIID riid, void **ppvObject)
     return E_NOINTERFACE;
 }
 
-HRESULT STDMETHODCALLTYPE HW_IInternetProtocol::ParseUrl(LPCWSTR pwzUrl, PARSEACTION ParseAction,
-    DWORD dwParseFlags, LPWSTR pwzResult, DWORD cchResult, DWORD *pcchResult, DWORD dwReserved)
+STDMETHODIMP HW_IInternetProtocol::Continue(PROTOCOLDATA * /*pStateInfo*/)
 {
-    if (pwzUrl == NULL || pwzResult == NULL || pcchResult == NULL)
-        return E_POINTER;
-
-    // TODO: write me
-    return S_FALSE;
-}
-
-HRESULT STDMETHODCALLTYPE HW_IInternetProtocol::CombineUrl(LPCWSTR pwzBaseUrl, LPCWSTR pwzRelativeUrl,
-    DWORD dwCombineFlags, LPWSTR pwzResult, DWORD cchResult, DWORD *pcchResult,
-    DWORD dwReserved)
-{
-    if (pwzBaseUrl == NULL || pwzRelativeUrl == NULL || pwzResult == NULL || pcchResult == NULL)
-        return E_POINTER;
-
-    *pcchResult = cchResult;
-    BOOL ret = InternetCombineUrlW(pwzBaseUrl, pwzRelativeUrl, pwzResult, pcchResult, ICU_NO_ENCODE | ICU_NO_META);
-    if (!ret)
-    {
-        DWORD err = GetLastError();
-        if (err == ERROR_INSUFFICIENT_BUFFER)
-            return S_FALSE; // Buffer too small
-        else
-            return E_FAIL;
-    }
     return S_OK;
 }
 
-static LONG internetProtocolFactoryServerLocks = 0;
+STDMETHODIMP HW_IInternetProtocol::Abort(HRESULT /*hrReason*/,DWORD /*dwOptions*/)
+{
+    return S_OK;
+}
+
+STDMETHODIMP HW_IInternetProtocol::Terminate(DWORD /*dwOptions*/)
+{
+    return S_OK;
+}
+
+STDMETHODIMP HW_IInternetProtocol::Suspend()
+{
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP HW_IInternetProtocol::Resume()
+{
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP HW_IInternetProtocol::LockRequest(DWORD /*dwOptions*/)
+{
+    return S_OK;
+}
+
+STDMETHODIMP HW_IInternetProtocol::UnlockRequest()
+{
+    return S_OK;
+}
+
+// given url in the form "hw_html_win://$htmlWindowId/$urlRest, parses
+// out $htmlWindowId and $urlRest. Returns false if url doesn't conform
+// to this pattern.
+// Caller has to free urlRest
+static bool ParseProtoUrl(LPCWSTR url, int *htmlWindowId, LPCWSTR *urlRest)
+{
+    const TCHAR *rest = str::Parse(url, HW_PROTO_PREFIX L"://%d/%s", htmlWindowId, urlRest);
+    return (NULL != rest) && (0 == *rest);
+}
+
+static WCHAR *MimeFromExt(const WCHAR *ext)
+{
+    if (str::EqI(ext, L"gif"))
+        return L"image/gif";
+    if (str::EqI(ext, L"png"))
+        return L"image/png";
+    if (str::EqI(ext, L"jpg") ||
+        str::EqI(ext, L"jpeg")) {
+        return L"image/jpeg";
+    }
+    if (str::EqI(ext, L"css"))
+        return L"text/css";
+    if (str::EqI(ext, L"txt"))
+        return L"text/plain";
+    return L"text/html"; // default
+}
+
+static WCHAR *MimeFromUrl(const WCHAR *url)
+{
+    const WCHAR *ext = str::FindCharLast(url, L'.');
+    if (ext)
+        return MimeFromExt(ext + 1);
+    return L"text/html"; // default
+}
+
+// TODO: return an error page html in case of errors?
+STDMETHODIMP HW_IInternetProtocol::Start(
+    LPCWSTR szUrl,
+    IInternetProtocolSink *pIProtSink,
+    IInternetBindInfo *pIBindInfo,
+    DWORD grfSTI,
+    HANDLE_PTR /*dwReserved*/)
+{
+    LPCWSTR urlRest = NULL;
+    int htmlWindowId;
+    HtmlWindow *win;
+    WCHAR* mime;
+    bool ok;
+    // if we don't have content for the url, return S_OK unless
+    // this is a request for parsing url, in which case return S_FALSE
+    // seems counter-intuitive but that's what others seem to be doing
+    HRESULT hr = S_OK;
+    if (grfSTI & PI_PARSE_URL)
+        hr = S_FALSE;
+
+    ok = ParseProtoUrl(szUrl, &htmlWindowId, &urlRest);
+    if (!ok)
+        goto Exit;
+
+    pIProtSink->ReportProgress(BINDSTATUS_FINDINGRESOURCE, urlRest);
+    pIProtSink->ReportProgress(BINDSTATUS_CONNECTING, urlRest);
+    pIProtSink->ReportProgress(BINDSTATUS_SENDINGREQUEST, urlRest);
+    win = FindHtmlWindowById(htmlWindowId);
+    assert(win);
+    if (!win)
+        goto Exit;
+    if (!win->htmlWinCb)
+        goto Exit;
+    ok = win->htmlWinCb->GetHtmlForUrl(urlRest, &data, &dataLen);
+    if (!ok)
+        goto Exit;
+    mime = MimeFromUrl(urlRest);
+    pIProtSink->ReportProgress(BINDSTATUS_VERIFIEDMIMETYPEAVAILABLE, mime);
+    pIProtSink->ReportData(BSCF_FIRSTDATANOTIFICATION, 0, dataLen);
+    pIProtSink->ReportData(BSCF_LASTDATANOTIFICATION | BSCF_DATAFULLYAVAILABLE, dataLen, dataLen);
+    pIProtSink->ReportResult(S_OK, 200, NULL);
+Exit:
+    free((void*)urlRest);
+    return hr;
+}
+
+STDMETHODIMP HW_IInternetProtocol::Read(void *pv, ULONG cb, ULONG *pcbRead)
+{
+    if (!data)
+        return S_FALSE;
+    size_t dataAvail = dataLen - dataCurrPos;
+    if (0 == dataAvail)
+        return S_FALSE;
+    size_t toRead = cb;
+    if (toRead > dataAvail)
+        toRead = dataAvail;
+    char *dataToRead = data + dataCurrPos;
+    memcpy(pv, dataToRead, toRead);
+    dataCurrPos += toRead;
+    *pcbRead = toRead;
+    return S_OK;
+}
+
+STDMETHODIMP HW_IInternetProtocol::Seek(
+    LARGE_INTEGER /*dlibMove*/,
+    DWORD /*dwOrigin*/,
+    ULARGE_INTEGER * /*plibNewPosition*/)
+{
+    // doesn't seem to be called
+    return E_NOTIMPL;
+}
 
 class HW_IInternetProtocolFactory : public IClassFactory
 {
@@ -302,10 +498,6 @@ STDMETHODIMP HW_IInternetProtocolFactory::QueryInterface(REFIID riid, void **ppv
 
 HRESULT STDMETHODCALLTYPE HW_IInternetProtocolFactory::LockServer(BOOL fLock)
 {
-    if (fLock)
-        InterlockedIncrement(&internetProtocolFactoryServerLocks);
-    else
-        InterlockedDecrement(&internetProtocolFactoryServerLocks);
     return S_OK;
 }
 
@@ -313,9 +505,16 @@ HRESULT STDMETHODCALLTYPE HW_IInternetProtocolFactory::CreateInstance(IUnknown *
 {
     if (pUnkOuter != NULL)
         return CLASS_E_NOAGGREGATION;
-    HW_IInternetProtocol *proto = new HW_IInternetProtocol();
-    HRESULT hr = proto->QueryInterface(riid, (void**) ppvObject);
-    proto->Release();
+    HRESULT hr = E_NOINTERFACE;
+    if (riid == IID_IInternetProtocol) {
+        HW_IInternetProtocol *proto = new HW_IInternetProtocol();
+        hr = proto->QueryInterface(riid, ppvObject);
+        proto->Release();
+    } else if (riid == IID_IInternetProtocolInfo) {
+        HW_IInternetProtocolInfo *proto = new HW_IInternetProtocolInfo();
+        hr = proto->QueryInterface(riid, ppvObject);
+        proto->Release();
+    }
     return hr;
 }
 
@@ -331,8 +530,11 @@ void RegisterInternetProtocolFactory()
     HRESULT hr = CoInternetGetSession(0, &internetSession, 0);
     if (FAILED(hr))
         return;
+    // TODO: we're leaking HW_IInternetProtocolFactory().
+    // Would that be fixed by un-registering the protocol?
     ScopedComPtr<HW_IInternetProtocolFactory> factory(new HW_IInternetProtocolFactory());
-    internetSession->RegisterNameSpace(factory, CLSID_HW_IInternetProtocol, WH_PROTO_PREFIX, 0, NULL, 0);
+    hr = internetSession->RegisterNameSpace(factory, CLSID_HW_IInternetProtocol, HW_PROTO_PREFIX, 0, NULL, 0);
+    assert(!FAILED(hr));
     initialized = true;
 }
 
@@ -729,7 +931,7 @@ public:
     virtual ~HtmlMoniker();
 
     HRESULT SetHtml(const char *s, size_t len);
-    HRESULT SetBaseUrl(const TCHAR *baseUrl, size_t baseUrlLen);
+    HRESULT SetBaseUrl(const TCHAR *baseUrl);
 
 public:
     // IUnknown
@@ -752,8 +954,7 @@ public:
     STDMETHODIMP CommonPrefixWith(IMoniker *pmkOther, IMoniker **ppmkPrefix) { return E_NOTIMPL; }
     STDMETHODIMP RelativePathTo(IMoniker *pmkOther, IMoniker **ppmkRelPath) { return E_NOTIMPL; }
     STDMETHODIMP ParseDisplayName(IBindCtx *pbc, IMoniker *pmkToLeft,LPOLESTR pszDisplayName,
-        ULONG *pchEaten, IMoniker **ppmkOut)
-    { return E_NOTIMPL; }
+        ULONG *pchEaten, IMoniker **ppmkOut);
     STDMETHODIMP IsSystemMoniker(DWORD *pdwMksys) {
         if (!pdwMksys)
             return E_POINTER;
@@ -807,10 +1008,10 @@ HRESULT HtmlMoniker::SetHtml(const char *s, size_t len)
     return S_OK;
 }
 
-HRESULT HtmlMoniker::SetBaseUrl(const TCHAR *newBaseUrl, size_t newBaseUrlLen)
+HRESULT HtmlMoniker::SetBaseUrl(const TCHAR *newBaseUrl)
 {
     free(baseUrl);
-    baseUrl = str::DupN(newBaseUrl, newBaseUrlLen);
+    baseUrl = str::Dup(newBaseUrl);
     return S_OK;
 }
 
@@ -829,7 +1030,8 @@ static LPOLESTR OleStrDup(TCHAR *s)
     return ret;
 }
 
-STDMETHODIMP HtmlMoniker::GetDisplayName(IBindCtx *pbc, IMoniker *pmkToLeft, LPOLESTR *ppszDisplayName)
+STDMETHODIMP HtmlMoniker::GetDisplayName(IBindCtx *pbc, IMoniker *pmkToLeft, 
+    LPOLESTR *ppszDisplayName)
 {
     if (!ppszDisplayName)
         return E_POINTER;
@@ -838,6 +1040,14 @@ STDMETHODIMP HtmlMoniker::GetDisplayName(IBindCtx *pbc, IMoniker *pmkToLeft, LPO
     else
         *ppszDisplayName = OleStrDup(_T(""));
     return S_OK;
+}
+
+STDMETHODIMP HtmlMoniker::ParseDisplayName(IBindCtx *pbc, IMoniker *pmkToLeft,
+    LPOLESTR pszDisplayName,
+        ULONG *pchEaten, IMoniker **ppmkOut)
+{
+    DBG_OUT("%s", pszDisplayName);
+    return E_NOTIMPL;
 }
 
 STDMETHODIMP HtmlMoniker::QueryInterface(REFIID riid, void **ppvObject)
@@ -937,6 +1147,8 @@ HtmlWindow::HtmlWindow(HWND hwndParent, HtmlWindowCallback *cb) :
     canGoBack(false), canGoForward(false)
 {
     assert(hwndParent);
+    RegisterInternetProtocolFactory();
+    windowId = GenNewWindowId(this);
     CreateBrowser();
 }
 
@@ -1043,6 +1255,8 @@ HtmlWindow::~HtmlWindow()
 
     if (webBrowser)
         webBrowser->Release();
+
+    FreeWindowId(windowId);
 }
 
 void HtmlWindow::OnSize(SizeI size)
@@ -1203,7 +1417,6 @@ void HtmlWindow::DisplayHtml(const char *html)
 }
 
 #define ABOUT_BLANK _T("about:blank")
-#define ABOUT_BLANK_LEN (dimof(ABOUT_BLANK)-1)
 
 void HtmlWindow::SetHtml(const char *s, size_t len)
 {
@@ -1214,6 +1427,10 @@ void HtmlWindow::SetHtml(const char *s, size_t len)
         htmlContent->Release();
     htmlContent = new HtmlMoniker();
     htmlContent->SetHtml(s, len);
+    ScopedMem<TCHAR> baseUrl(str::Format(HW_PROTO_PREFIX L"://%d/", windowId));
+    htmlContent->SetBaseUrl(baseUrl);
+
+    //htmlContent->SetBaseUrl(_T("http://blog.kowalczyk.info"));
 
     ScopedComPtr<IDispatch> docDispatch;
     HRESULT hr = webBrowser->get_Document(&docDispatch);
@@ -1227,7 +1444,6 @@ void HtmlWindow::SetHtml(const char *s, size_t len)
     ScopedComQIPtr<IPersistMoniker> perstMon(doc);
     if (!perstMon)
         return;
-
     ScopedComQIPtr<IMoniker> htmlMon(htmlContent);
     hr = perstMon->Load(TRUE, htmlMon, NULL, STGM_READ);
     // this might fail if HtmlMoniker::GetDisplayName() returns bad base url
@@ -1237,7 +1453,7 @@ void HtmlWindow::SetHtml(const char *s, size_t len)
     // if none has been set
     if (FAILED(hr))
     {
-        htmlContent->SetBaseUrl(ABOUT_BLANK, ABOUT_BLANK_LEN);
+        htmlContent->SetBaseUrl(ABOUT_BLANK);
         hr = perstMon->Load(TRUE, htmlMon, NULL, STGM_READ);
         assert(!FAILED(hr));
     }
