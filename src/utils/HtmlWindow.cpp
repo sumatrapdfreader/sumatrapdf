@@ -17,29 +17,53 @@
 
 #pragma comment(lib, "urlmon")
 
-// Unresolved issues: when loading html from memory (SetHtml()) links are not resolved.
-// Possible solutions:
-// 1. choose a custom prefix for our urls (e.g. sumhtml:), implement IInternetProtocolInfo
-//    that understands those urls and register it as a namespace with IInternetSessions
-//    http://code.google.com/p/atc32/source/browse/trunk/WorldWindProject/lib-external/webview/windows/WebViewWindow.cpp
-//    (WebViewWindow::InitializeWebViewProtocol). Combine that with ability to set
-//    base url (sumhtml:/) for HtmlMoniker
-// 2. use its: and add its:filename to IE's trusted zone (http://csexwb2.googlecode.com/svn/trunk/cEXWB.cs, AddUrlToTrustedZone)
-// 3. something simpler?
+// An important (to Sumatra) use case is displaying CHM documents. First we used
+// IE's built-in support form CHM documents (using its: protocol e.g. its:MyChmFile.chm::mywebpage.htm)).
+// However, that doesn't work for CHM documents from network drives (http://code.google.com/p/sumatrapdf/issues/detail?id=1706)
+// To solve that we ended up the following solution:
+// * an app can provide html as data in memory. We write the data using custom
+//   IMoniker implementation with IE's IPersistentMoniker::Load() function.
+//   This allows us to provide base url which will be used to resolve relative
+//   links within the html (e.g. to embedded images in <img> tags etc.)
+// * We register application-global protocol handler and provide custom IInternetProtocol
+//   implementation which is called to handle getting content for URLs in that namespace.
+//   I've decided to over-ride its: protocol for our needs. A protocol unique to our
+//   code would be better, but completely new protocol don't seem to work with
+//   IPersistentMoniker::Load() code (I can see our IMoniker::GetDisplayName() (which
+//   returns the base url) called twice from mshtml/ieframe code but if the returned
+//   base url doesn't start with protocol that IE already understands, IPersistentMoniker::Load()
+//   fails) so I was forced to over-ride existing protocol name.
+//
+// I also tried the approach of implementing IInternetSecurityManager thinking that I can just
+// use built-in its: handling and tell IE to trust those links, but it seems that in case
+// of its: links for CHM files from network drives, that code isn't even reached.
+
+// Implementing scrolling:
+// Currently we implement scrolling by sending messages simulating user input
+// to the browser control window that is responsible for processing those messages.
+// It has a benefit of being simple to implement and matching ie's behavior closely.
+
+// Another option would be to provide scrolling functions to be called by callers
+// (e.g. from FrameOnKeydow()) by querying scroll state from IHTMLElement2 and setting
+// a new scroll state http://www.codeproject.com/KB/miscctrl/scrollbrowser.aspx
+// or using scrollTo() or scrollBy() on IHTMLWindow2:
+// http://msdn.microsoft.com/en-us/library/aa741497(v=VS.85).aspx
+
+// The more advanced ways of interacting with mshtml/ieframe are extremely poorly
+// documented so I mostly puzzled it out based on existing open source code that
+// does similar things. Some useful resources:
 
 // Book on ATL: http://369o.com/data/books/atl/index.html, which is
-// helpful in understanding embedding of the browser control
+// helpful in understanding basics of COM, has chapter on basics of embedding IE.
 
-// Info about implementing web browser control
 // http://www.codeproject.com/KB/COM/cwebpage.aspx
 
-// The code is structured in a similar way as wxWindows'
+// This code is structured in a similar way as wxWindows'
 // browser wrapper
 // http://codesearch.google.com/#cbxlbgWFJ4U/wxCode/components/iehtmlwin/src/IEHtmlWin.h
 // http://codesearch.google.com/#cbxlbgWFJ4U/wxCode/components/iehtmlwin/src/IEHtmlWin.cpp
 
 // Info about IInternetProtocol: http://www.codeproject.com/KB/IP/DataProtocol.aspx
-// Source code for inspiration: http://codesearch.google.com/#X_1VXq0XKpU/trunk/shareaza/IEProtocol.h
 
 // Other code that does advanced things with embedding IE or providing it with non-trivial
 // interfaces:
@@ -54,18 +78,6 @@
 // http://code.google.com/p/svnprotocolhandler/ (IInternetProtocolInfo implementation)
 // https://github.com/facebook/ie-toolbar (also IInternetProtocolInfo implementation)
 // http://code.google.com/p/veryie/
-
-
-// Implementing scrolling:
-// Currently we implement scrolling by sending messages simulating user input
-// to the browser control window that is responsible for processing those messages.
-// It has a benefit of being simple to implement and matching ie's behavior closely.
-
-// Another option would be to provide scrolling functions to be called by callers
-// (e.g. from FrameOnKeydow()) by querying scroll state from IHTMLElement2 and setting
-// a new scroll state http://www.codeproject.com/KB/miscctrl/scrollbrowser.aspx
-// or using scrollTo() or scrollBy() on IHTMLWindow2:
-// http://msdn.microsoft.com/en-us/library/aa741497(v=VS.85).aspx
 
 class HW_IOleInPlaceFrame;
 class HW_IOleInPlaceSiteWindowless;
@@ -181,6 +193,7 @@ static void FreeWindowId(int windowId)
     gHtmlWindows.At(windowId) = NULL;
 }
 
+// Re-using its protocol, see comments at the top.
 #define HW_PROTO_PREFIX L"its"
 
 // {F1EC293F-DBBD-4A4B-94F4-FA52BA0BA6EE}
@@ -345,7 +358,7 @@ STDMETHODIMP HW_IInternetProtocol::UnlockRequest()
     return S_OK;
 }
 
-// given url in the form "hw_html_win://$htmlWindowId/$urlRest, parses
+// given url in the form "its://$htmlWindowId/$urlRest, parses
 // out $htmlWindowId and $urlRest. Returns false if url doesn't conform
 // to this pattern.
 // Caller has to free urlRest
@@ -519,7 +532,7 @@ HRESULT STDMETHODCALLTYPE HW_IInternetProtocolFactory::CreateInstance(IUnknown *
 }
 
 // Register our protocol so that urlmon will call us for every
-// url that starts with WH_PROTO_PREFIX
+// url that starts with HW_PROTO_PREFIX
 void RegisterInternetProtocolFactory()
 {
     static bool initialized = false;
@@ -789,16 +802,6 @@ public:
     }
 };
 
-// In theory we should be able to change the trust for its:: urls via MapUrlToZone()
-// and ProcessUrlAction() (see e.g. http://codesearch.google.com/#nJHaZQ1IJ84/trunk/gears/ui/ie/html_dialog_host.cc)
-// so that we can read chm files from network drives but they don't even seem to be
-// reaching here if chm file is on network drive (but do reach if it's on regular drive).
-// Do I have to RegisterNameSpace() with urlmon.dll as in wxWebViewIE::RegisterHandler in
-// http://trac.wxwidgets.org/browser/wxWidgets/trunk/src/msw/webview_ie.cpp ?
-// Or maybe we should implement reading of chm files ourselves instead of relying
-// on IE to load them, as seem to be done in wxHtmlWindow::LoadPage() in
-// http://trac.wxwidgets.org/browser/wxWidgets/trunk/src/html/htmlwin.cpp
-// combined with CHMFSHandler() in xchm's CHMFSHandler.cpp
 class HW_IInternetSecurityManager : public IInternetSecurityManager
 {
     FrameSite * fs;

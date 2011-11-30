@@ -31,6 +31,8 @@ public:
     virtual void OnLButtonDown() = 0;
 };
 
+// HtmlWindow embeds a web browser (Internet Explorer) control
+// inside provided HWND so that an app can display html content.
 class HtmlWindow
 {
 protected:
