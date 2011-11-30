@@ -50,6 +50,16 @@ void OnMenuFind(WindowInfo *win)
     if (!win->IsDocLoaded() || !NeedsFindUI(win))
         return;
 
+    // copy any selected text to the find bar, if it's still empty
+    if (win->dm->textSelection->result.len > 0 &&
+        Edit_GetTextLength(win->hwndFindBox) == 0) {
+        ScopedMem<TCHAR> selection(win->dm->textSelection->ExtractText(_T("\n")));
+        str::TransChars(selection, _T("\n"), _T("\0"));
+        str::NormalizeWS(selection);
+        if (!str::IsEmpty(selection.Get()))
+            win::SetText(win->hwndFindBox, selection);
+    }
+
     // Don't show a dialog if we don't have to - use the Toolbar instead
     if (gGlobalPrefs.toolbarVisible && !win->fullScreen && !win->presentation
 #ifdef BUILD_RIBBON
