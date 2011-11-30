@@ -89,8 +89,6 @@ class HW_IOleCommandTarget;
 class HW_IOleItemContainer;
 class HW_DWebBrowserEvents2;
 class HW_IAdviseSink2;
-class HW_IServiceProvider;
-class HW_IInternetSecurityManager;
 class HW_IDocHostUIHandler;
 class HW_IDropTarget;
 
@@ -120,8 +118,6 @@ class FrameSite : public IUnknown
     friend class HW_IOleItemContainer;
     friend class HW_DWebBrowserEvents2;
     friend class HW_IAdviseSink2;
-    friend class HW_IServiceProvider;
-    friend class HW_IInternetSecurityManager;
     friend class HW_IDocHostUIHandler;
     friend class HW_IDropTarget;
 
@@ -145,8 +141,6 @@ protected:
     HW_IOleItemContainer *          oleItemContainer;
     HW_DWebBrowserEvents2 *         hwDWebBrowserEvents2;
     HW_IAdviseSink2 *               adviseSink2;
-    HW_IServiceProvider *           serviceProvider;
-    HW_IInternetSecurityManager *   internetSecurityManager;
     HW_IDocHostUIHandler *          docHostUIHandler;
     HW_IDropTarget *                dropTarget;
 
@@ -781,97 +775,6 @@ public:
 
     // IAdviseSinkEx
     void STDMETHODCALLTYPE OnViewStatusChange(DWORD) { }
-};
-
-class HW_IServiceProvider : public IServiceProvider
-{
-    FrameSite * fs;
-public:
-    HW_IServiceProvider(FrameSite* fs) : fs(fs) { }
-    ~HW_IServiceProvider() {}
-
-    // IUnknown
-    STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
-    ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
-    ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
-
-    // IServiceProvider
-    STDMETHODIMP QueryService(REFGUID guidService, REFIID riid, void **ppv) {
-        if (guidService != SID_SInternetSecurityManager)
-            return E_UNEXPECTED;
-
-        if (riid != IID_IInternetSecurityManager)
-            return E_NOINTERFACE;
-
-        return fs->QueryInterface(riid, ppv);
-    }
-};
-
-class HW_IInternetSecurityManager : public IInternetSecurityManager
-{
-    FrameSite * fs;
-public:
-    HW_IInternetSecurityManager(FrameSite* fs) : fs(fs) { }
-    ~HW_IInternetSecurityManager() {}
-
-    // IUnknown
-    STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
-    ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
-    ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
-
-    // IInternetSecurityManager
-    STDMETHODIMP GetSecurityId(LPCWSTR pwszUrl, BYTE *pbSecurityId, DWORD *pcbSecurityId, DWORD_PTR dwReserved) {
-        DBG_OUT("GetSecurityId()");
-        if (str::StartsWith(pwszUrl, L"its")) {
-            return INET_E_DEFAULT_ACTION;
-        }
-        return INET_E_DEFAULT_ACTION;
-    }
-
-    STDMETHODIMP GetSecuritySite(IInternetSecurityMgrSite **ppSite) {
-        DBG_OUT("GetSecuritySite()");
-        return INET_E_DEFAULT_ACTION;
-    }
-
-    STDMETHODIMP GetZoneMappings(DWORD dwZone, IEnumString **ppenumString, DWORD dwFlags) {
-        DBG_OUT("GetZoneMappings()");
-        return INET_E_DEFAULT_ACTION;
-    }
-
-    STDMETHODIMP MapUrlToZone(LPCWSTR pwszUrl, DWORD *pdwZone, DWORD dwFlags) {
-        DBG_OUT("MapUrlToZone()");
-        if (str::StartsWith(pwszUrl, L"its")) {
-            return INET_E_DEFAULT_ACTION;
-        }
-        return INET_E_DEFAULT_ACTION;
-    }
-
-    STDMETHODIMP ProcessUrlAction(LPCWSTR pwszUrl, DWORD dwAction, BYTE *pPolicy, DWORD cbPolicy, BYTE *pContext, DWORD cbContext, DWORD dwFlags, DWORD dwReserved) {
-        if (cbPolicy != 4) 
-            return INET_E_DEFAULT_ACTION;
-        if (str::StartsWith(pwszUrl, L"its")) {
-            *pPolicy = URLPOLICY_ALLOW;
-            return S_OK;
-        }
-        return INET_E_DEFAULT_ACTION;
-    }
-    STDMETHODIMP QueryCustomPolicy(LPCWSTR pwszUrl, REFGUID guidKey, BYTE **ppPolicy, DWORD *pcbPolicy, BYTE *pContext, DWORD cbContext, DWORD dwReserved) {
-        DBG_OUT("QueryCustomPolicy()");
-        if (str::StartsWith(pwszUrl, L"its")) {
-            return INET_E_DEFAULT_ACTION;
-        }
-        return INET_E_DEFAULT_ACTION;
-    }
-
-    STDMETHODIMP SetSecuritySite(IInternetSecurityMgrSite *pSite) {
-        DBG_OUT("SetSecuritySite()");
-        return INET_E_DEFAULT_ACTION;
-    }
-
-    STDMETHODIMP SetZoneMapping(DWORD dwZone, LPCWSTR lpszPattern, DWORD dwFlags) {
-        DBG_OUT("SetZoneMapping()");
-        return INET_E_DEFAULT_ACTION;
-    }
 };
 
 class HW_IDocHostUIHandler : public IDocHostUIHandler
@@ -1639,8 +1542,6 @@ FrameSite::FrameSite(HtmlWindow * win)
     oleItemContainer            = new HW_IOleItemContainer(this);
     hwDWebBrowserEvents2        = new HW_DWebBrowserEvents2(this);
     adviseSink2                 = new HW_IAdviseSink2(this);
-    serviceProvider             = new HW_IServiceProvider(this);
-    internetSecurityManager     = new HW_IInternetSecurityManager(this);
     docHostUIHandler            = new HW_IDocHostUIHandler(this);
     dropTarget                  = new HW_IDropTarget(this);
 }
@@ -1649,8 +1550,6 @@ FrameSite::~FrameSite()
 {
     delete dropTarget;
     delete docHostUIHandler;
-    delete internetSecurityManager;
-    delete serviceProvider;
     delete adviseSink2;
     delete hwDWebBrowserEvents2;
     delete oleItemContainer;
@@ -1695,10 +1594,6 @@ STDMETHODIMP FrameSite::QueryInterface(REFIID riid, void **ppv)
         riid == IID_IAdviseSink2 ||
         riid == IID_IAdviseSinkEx)
         *ppv = adviseSink2;
-    else if (riid == IID_IServiceProvider)
-        *ppv = serviceProvider;
-    else if (riid == IID_IInternetSecurityManager)
-        *ppv = internetSecurityManager;
     else if (riid == IID_IDocHostUIHandler)
         *ppv = docHostUIHandler;
     else if (riid == IID_IDropTarget)
