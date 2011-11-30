@@ -260,23 +260,7 @@ void CChmEngine::DisplayPage(const TCHAR *pageUrl)
     if (str::StartsWith(pageUrl, _T("/")))
         pageUrl++;
 
-    char *data;
-    size_t len;
-    bool ok = GetHtmlForUrl(pageUrl, &data, &len);
-    if (!ok)
-        return;
-    htmlWindow->SetHtml(data, len);
-    //htmlWindow->NavigateToUrl(url);
-
-    // unfortunate timing when loading chm docs: initial zoom level is
-    // set (via, ultimately, DisplayModel::SetZoomVirtual()), after
-    // we navigate to a page but before it might have finished
-    // loading and that causes SetZoomPercent() to be ignored.
-    // To fix that we wait here until page is loaded.
-    // TODO: unfortunately we display at standard zoom level first
-    // and them zoom in, which is visible to the user. No idea how
-    // to fix it (simply)
-    //htmlWindow->WaitUntilLoaded(3 * 1000, url);
+    htmlWindow->NavigateToDataUrl(pageUrl);
 }
 
 RenderedBitmap *CChmEngine::CreateThumbnail(SizeI size)

@@ -1296,17 +1296,25 @@ void HtmlWindow::SetVisible(bool visible)
         webBrowser->put_Visible(visible ? VARIANT_TRUE : VARIANT_FALSE);
 }
 
-void HtmlWindow::NavigateToUrl(const TCHAR *urlStr)
+// Use for urls for which data will be provided by HtmlWindowCallback::GetHtmlForUrl()
+// (will be called from OnBeforeNavigate()
+void HtmlWindow::NavigateToDataUrl(const TCHAR *url)
 {
-    VARIANT url;
-    VariantInit(&url);
-    url.vt = VT_BSTR;
-    url.bstrVal = SysAllocString(AsWStrQ(urlStr));
-    if (!url.bstrVal)
+    ScopedMem<TCHAR> fullUrl(str::Format(_T("its://%d/%s"), windowId, url));
+    NavigateToUrl(fullUrl);
+}
+
+void HtmlWindow::NavigateToUrl(const TCHAR *url)
+{
+    VARIANT urlVar;
+    VariantInit(&urlVar);
+    urlVar.vt = VT_BSTR;
+    urlVar.bstrVal = SysAllocString(AsWStrQ(url));
+    if (!urlVar.bstrVal)
         return;
     currentURL.Set(NULL);
-    webBrowser->Navigate2(&url, 0, 0, 0, 0);
-    VariantClear(&url);
+    webBrowser->Navigate2(&urlVar, 0, 0, 0, 0);
+    VariantClear(&urlVar);
 }
 
 void HtmlWindow::GoBack()
@@ -1392,40 +1400,10 @@ static SAFEARRAY *CreateOneElementStrArray(const char *s)
     return CreateOneElementWstrArray(tmp);
 }
 
-void HtmlWindow::WriteHtml(SAFEARRAY* htmlArr)
-{
-    // don't know why, but that's what other people do
-    EnsureAboutBlankShown();
-
-    ScopedComPtr<IDispatch> docDispatch;
-    HRESULT hr = webBrowser->get_Document(&docDispatch);
-    if (FAILED(hr))
-        return;
-
-    ScopedComQIPtr<IHTMLDocument2> doc(docDispatch);
-    if (!doc)
-        return;
-
-    doc->write(htmlArr);
-    doc->close();
-}
-
-void HtmlWindow::DisplayHtml(const WCHAR *html)
-{
-    SAFEARRAY *arr = CreateOneElementWstrArray(html);
-    WriteHtml(arr);
-    SafeArrayDestroy(arr);
-}
-
-void HtmlWindow::DisplayHtml(const char *html)
-{
-    SAFEARRAY *arr = CreateOneElementStrArray(html);
-    WriteHtml(arr);
-    SafeArrayDestroy(arr);
-}
-
 void HtmlWindow::SetHtml(const char *s, size_t len)
 {
+    assert(blankWasShown);
+
     if (-1 == len)
         len = str::Len(s);
 
@@ -1520,12 +1498,13 @@ bool HtmlWindow::OnBeforeNavigate(const TCHAR *url, bool newWindow)
     // part as we don't want to expose it to clients.
     int protoWindowId;
     const TCHAR *urlReal = url;
+    ScopedMem<TCHAR> urlToFree;
     bool ok = ParseProtoUrl(url, &protoWindowId, &urlReal);
-    bool shouldNavigate = htmlWinCb->OnBeforeNavigate(urlReal, newWindow);
     if (ok) {
         assert(protoWindowId == windowId);
-        free((void*)urlReal);
+        urlToFree.Set((TCHAR*)urlReal);
     }
+    bool shouldNavigate = htmlWinCb->OnBeforeNavigate(urlReal, newWindow);
     if (!shouldNavigate)
         return false;
     char *data = NULL;
@@ -1538,6 +1517,7 @@ bool HtmlWindow::OnBeforeNavigate(const TCHAR *url, bool newWindow)
     return true;
 }
 
+// TODO: now we always get "about:blank" here. How did I break this?
 void HtmlWindow::OnDocumentComplete(const TCHAR *url)
 {
     // if it's url for our internal protocol, strip the protocol

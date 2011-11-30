@@ -73,8 +73,7 @@ public:
     void OnSize(SizeI size);
     void SetVisible(bool visible);
     void NavigateToUrl(const TCHAR *url);
-    void DisplayHtml(const WCHAR *html);
-    void DisplayHtml(const char *html);
+    void NavigateToDataUrl(const TCHAR *url);
     void SetHtml(const char *s, size_t len=-1);
     void GoBack();
     void GoForward();
