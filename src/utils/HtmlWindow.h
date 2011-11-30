@@ -60,8 +60,6 @@ protected:
     void SubclassHwnd();
     void UnsubclassHwnd();
 
-    void WriteHtml(SAFEARRAY* htmlArr);
-
 public:
     WNDPROC wndProcBrowserPrev;
     HtmlWindowCallback *htmlWinCb;
