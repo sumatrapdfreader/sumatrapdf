@@ -526,28 +526,40 @@ HRESULT STDMETHODCALLTYPE HW_IInternetProtocolFactory::CreateInstance(IUnknown *
     return hr;
 }
 
+static LONG gProtocolFactoryRefCount = 0;
+HW_IInternetProtocolFactory *gInternetProtocolFactory = NULL;
+
 // Register our protocol so that urlmon will call us for every
 // url that starts with HW_PROTO_PREFIX
-// TODO: we could add UnregisterInternetProtocolFactory(),
-// call it from HtmlWindow::~HtmlWindow() and ref count
-// to make sure we only register once and don't unregister prematurely
-void RegisterInternetProtocolFactory()
+static void RegisterInternetProtocolFactory()
 {
-    static bool initialized = false;
-    if (initialized)
+    LONG val = InterlockedIncrement(&gProtocolFactoryRefCount);
+    if (val > 1)
         return;
 
     ScopedComPtr<IInternetSession> internetSession;
     HRESULT hr = CoInternetGetSession(0, &internetSession, 0);
-    if (FAILED(hr))
-        return;
-    // TODO: we're leaking HW_IInternetProtocolFactory().
-    // Would that be fixed by un-registering the protocol?
-    ScopedComPtr<HW_IInternetProtocolFactory> factory(new HW_IInternetProtocolFactory());
-    hr = internetSession->RegisterNameSpace(factory, CLSID_HW_IInternetProtocol, HW_PROTO_PREFIX, 0, NULL, 0);
     assert(!FAILED(hr));
-    initialized = true;
+    assert(NULL == gInternetProtocolFactory);
+    gInternetProtocolFactory = new HW_IInternetProtocolFactory();
+    hr = internetSession->RegisterNameSpace(gInternetProtocolFactory, CLSID_HW_IInternetProtocol, HW_PROTO_PREFIX, 0, NULL, 0);
+    assert(!FAILED(hr));
 }
+
+static void UnregisterInternetProtocolFactory()
+{
+    LONG val = InterlockedDecrement(&gProtocolFactoryRefCount);
+    if (val > 0)
+        return;
+    ScopedComPtr<IInternetSession> internetSession;
+    HRESULT hr = CoInternetGetSession(0, &internetSession, 0);
+    assert(!FAILED(hr));
+    internetSession->UnregisterNameSpace(gInternetProtocolFactory, HW_PROTO_PREFIX);
+    ULONG refCount = gInternetProtocolFactory->Release();
+    assert(0 == refCount);
+    gInternetProtocolFactory = NULL;
+}
+
 
 class HW_IOleInPlaceFrame : public IOleInPlaceFrame
 {
@@ -1168,6 +1180,7 @@ HtmlWindow::~HtmlWindow()
         webBrowser->Release();
 
     FreeWindowId(windowId);
+    UnregisterInternetProtocolFactory();
 }
 
 void HtmlWindow::OnSize(SizeI size)
