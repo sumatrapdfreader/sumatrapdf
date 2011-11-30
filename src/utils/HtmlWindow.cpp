@@ -1471,6 +1471,9 @@ bool HtmlWindow::OnBeforeNavigate(const TCHAR *url, bool newWindow)
     currentURL.Set(NULL);
     if (!htmlWinCb)
         return true;
+    if (str::EqI(_T("about:blank"), url))
+        return true;
+
     // if it's url for our internal protocol, strip the protocol
     // part as we don't want to expose it to clients.
     int protoWindowId;
@@ -1487,8 +1490,9 @@ bool HtmlWindow::OnBeforeNavigate(const TCHAR *url, bool newWindow)
     char *data = NULL;
     size_t len = 0;
     bool gotHtmlData = htmlWinCb->GetDataForUrl(urlReal, &data, &len);
-    if (gotHtmlData)
-        SetHtml(data, len);
+    if (!gotHtmlData)
+        return false;
+    SetHtml(data, len);
     return true;
 }
 

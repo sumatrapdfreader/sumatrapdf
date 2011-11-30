@@ -678,6 +678,8 @@ static const TCHAR *ParseLimitedNumber(const TCHAR *str, const TCHAR *format,
    */
 const TCHAR *Parse(const TCHAR *str, const TCHAR *format, ...)
 {
+    if (!str)
+        return NULL;
     va_list args;
     va_start(args, format);
     for (const TCHAR *f = format; *f; f++) {
