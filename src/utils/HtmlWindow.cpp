@@ -427,8 +427,7 @@ STDMETHODIMP HW_IInternetProtocol::Start(
         goto Exit;
     mime = MimeFromUrl(urlRest);
     pIProtSink->ReportProgress(BINDSTATUS_VERIFIEDMIMETYPEAVAILABLE, mime);
-    pIProtSink->ReportData(BSCF_FIRSTDATANOTIFICATION, 0, dataLen);
-    pIProtSink->ReportData(BSCF_LASTDATANOTIFICATION | BSCF_DATAFULLYAVAILABLE, dataLen, dataLen);
+    pIProtSink->ReportData(BSCF_FIRSTDATANOTIFICATION | BSCF_LASTDATANOTIFICATION | BSCF_DATAFULLYAVAILABLE, dataLen, dataLen);
     pIProtSink->ReportResult(S_OK, 200, NULL);
 Exit:
     free((void*)urlRest);
