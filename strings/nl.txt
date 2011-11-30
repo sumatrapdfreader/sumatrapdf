@@ -676,3 +676,6 @@ tekst kopiëren
 printing document
 bestand afdrukken
 
+# Untranslated:
+#Copy &Image
+

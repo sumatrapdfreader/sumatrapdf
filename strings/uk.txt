@@ -668,3 +668,6 @@ copying text
 printing document
 друк документа
 
+# Untranslated:
+#Copy &Image
+

@@ -667,3 +667,6 @@ copying text
 printing document
 печатам документ
 
+# Untranslated:
+#Copy &Image
+

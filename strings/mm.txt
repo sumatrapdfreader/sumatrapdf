@@ -263,6 +263,7 @@ Zoom Out
 #Comic books
 #Continuous Book View
 #Contribute Translation
+#Copy &Image
 #Copy &Link Address
 #Copy Co&mment
 #Copying text was denied (copying as image only)

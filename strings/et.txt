@@ -667,3 +667,6 @@ teksti kopeerimine
 printing document
 dokumendi printimine
 
+# Untranslated:
+#Copy &Image
+

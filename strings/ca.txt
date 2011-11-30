@@ -669,3 +669,6 @@ s'està copiant text
 printing document
 s'està imprimint el document
 
+# Untranslated:
+#Copy &Image
+

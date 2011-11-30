@@ -661,5 +661,6 @@ printing document
 # Untranslated:
 #(page %s)
 #CHM documents
+#Copy &Image
 #File %s not found
 

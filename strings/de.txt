@@ -260,6 +260,9 @@ Fortlaufende Doppelseiten
 Contribute Translation
 Übersetzung beisteuern
 
+Copy &Image
+&Bild kopieren
+
 Copy &Link Address
 Adresse des &Links kopieren
 

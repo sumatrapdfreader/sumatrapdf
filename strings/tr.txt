@@ -668,3 +668,6 @@ metin kopyalanıyor
 printing document
 belge yazdırılıyor
 
+# Untranslated:
+#Copy &Image
+

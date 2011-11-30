@@ -668,3 +668,6 @@ kopiranje teksta
 printing document
 štampanje dokumenta
 
+# Untranslated:
+#Copy &Image
+

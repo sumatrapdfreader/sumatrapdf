@@ -538,6 +538,7 @@ argraffu dogfen
 #Bookmark shortcut to page %s of %s
 #CHM documents
 #Comic books
+#Copy &Image
 #Copy &Link Address
 #Copy Co&mment
 #Could not obtain Printer properties

@@ -668,3 +668,6 @@ kopiowanie tekstu
 printing document
 drukowanie dokumentu
 
+# Untranslated:
+#Copy &Image
+

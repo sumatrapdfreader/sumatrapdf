@@ -471,7 +471,7 @@ class SimpleDest : public PageDestination {
 public:
     SimpleDest(int pageNo, RectD rect) : pageNo(pageNo), rect(rect) { }
 
-    virtual const char *GetType() const { return NULL; }
+    virtual const char *GetDestType() const { return NULL; }
     virtual int GetDestPageNo() const { return pageNo; }
     virtual RectD GetDestRect() const { return rect; }
 };
@@ -804,6 +804,7 @@ public:
     PdfLink(CPdfEngine *engine, pdf_link *link, int pageNo=-1) :
         engine(engine), link(link), pageNo(pageNo) { }
 
+    virtual PageElementType GetType() const { return Element_Link; }
     virtual int GetPageNo() const { return pageNo; }
     virtual RectD GetRect() const {
         if (!link)
@@ -813,7 +814,7 @@ public:
     virtual TCHAR *GetValue() const;
     virtual PageDestination *AsLink() { return this; }
 
-    virtual const char *GetType() const;
+    virtual const char *GetDestType() const;
     virtual int GetDestPageNo() const;
     virtual RectD GetDestRect() const;
     virtual TCHAR *GetDestValue() const { return GetValue(); }
@@ -833,6 +834,7 @@ public:
         free(content);
     }
 
+    virtual PageElementType GetType() const { return Element_Comment; }
     virtual int GetPageNo() const { return pageNo; }
     virtual RectD GetRect() const { return rect; }
     virtual TCHAR *GetValue() const { return str::Dup(content); }
@@ -1848,7 +1850,7 @@ TCHAR *PdfLink::GetValue() const
     case PDF_LINK_LAUNCH:
         // note: we (intentionally) don't support the /Win specific Launch parameters
         path = FilespecToPath(link->dest);
-        if (path && str::Eq(GetType(), "LaunchEmbedded") && str::EndsWithI(path, _T(".pdf"))) {
+        if (path && str::Eq(GetDestType(), "LaunchEmbedded") && str::EndsWithI(path, _T(".pdf"))) {
             free(path);
             obj = dest();
             path = str::Format(_T("%s:%d:%d"), engine->FileName(), fz_to_num(obj), fz_to_gen(obj));
@@ -1864,7 +1866,7 @@ TCHAR *PdfLink::GetValue() const
     return path;
 }
 
-const char *PdfLink::GetType() const
+const char *PdfLink::GetDestType() const
 {
     if (!link || !engine)
         return NULL;
@@ -1894,9 +1896,9 @@ fz_obj *PdfLink::dest() const
 
     if (!link)
         return NULL;
-    if (PDF_LINK_ACTION == link->kind && str::Eq(GetType(), "ScrollToEx"))
+    if (PDF_LINK_ACTION == link->kind && str::Eq(GetDestType(), "ScrollToEx"))
         return fz_dict_gets(link->dest, "D");
-    if (PDF_LINK_LAUNCH == link->kind && str::Eq(GetType(), "LaunchEmbedded"))
+    if (PDF_LINK_LAUNCH == link->kind && str::Eq(GetDestType(), "LaunchEmbedded"))
         return GetDosPath(fz_dict_gets(link->dest, "EF"));
     return link->dest;
 }
@@ -2117,6 +2119,7 @@ public:
     XpsLink(CXpsEngine *engine, char *target, fz_rect rect, int pageNo=-1) :
         engine(engine), target(target), rect(rect), pageNo(pageNo) { }
 
+    virtual PageElementType GetType() const { return Element_Link; }
     virtual int GetPageNo() const { return pageNo; }
     virtual RectD GetRect() const { return fz_rect_to_RectD(rect); }
     virtual TCHAR *GetValue() const {
@@ -2126,7 +2129,7 @@ public:
     }
     virtual PageDestination *AsLink() { return this; }
 
-    virtual const char *GetType() const {
+    virtual const char *GetDestType() const {
         if (!target)
             return NULL;
         if (IsUriTarget(target))

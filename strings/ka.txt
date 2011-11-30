@@ -665,5 +665,6 @@ printing document
 დოკუმენტი იბეჭდება
 
 # Untranslated:
+#Copy &Image
 #No result found around line %u in file %s
 

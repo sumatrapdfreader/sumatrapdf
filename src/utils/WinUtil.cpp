@@ -522,6 +522,38 @@ bool CopyTextToClipboard(const TCHAR *text, bool appendOnly)
     return handle != NULL;
 }
 
+bool CopyImageToClipboard(HBITMAP hbmp, bool appendOnly)
+{
+    if (!appendOnly) {
+        if (!OpenClipboard(NULL))
+            return false;
+        EmptyClipboard();
+    }
+
+    bool ok = false;
+    if (hbmp) {
+        BITMAP bmpInfo;
+        GetObject(hbmp, sizeof(BITMAP), &bmpInfo);
+        if (bmpInfo.bmBits != NULL) {
+            // GDI+ produced HBITMAPs are DIBs instead of DDBs which
+            // aren't correctly handled by the clipboard, so create a
+            // clipboard-safe clone
+            ScopedGdiObj<HBITMAP> ddbBmp((HBITMAP)CopyImage(hbmp,
+                IMAGE_BITMAP, bmpInfo.bmWidth, bmpInfo.bmHeight, 0));
+            ok = SetClipboardData(CF_BITMAP, ddbBmp) != NULL;
+        }
+        else
+            ok = SetClipboardData(CF_BITMAP, hbmp) != NULL;
+        if (!ok)
+            SeeLastError();
+    }
+
+    if (!appendOnly)
+        CloseClipboard();
+
+    return ok;
+}
+
 void ToggleWindowStyle(HWND hwnd, DWORD flag, bool enable, int type)
 {
     DWORD style = GetWindowLong(hwnd, type);

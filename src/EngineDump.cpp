@@ -152,8 +152,8 @@ void DumpPageData(BaseEngine *engine, int pageNo, bool fullDump)
             Out("\t\t\t<Element\n\t\t\t\tRect=\"%.0f %.0f %.0f %.0f\"\n", rect.x, rect.y, rect.dx, rect.dy);
             PageDestination *dest = els->At(i)->AsLink();
             if (dest) {
-                if (dest->GetType()) {
-                    ScopedMem<char> type(Escape(str::conv::FromAnsi(dest->GetType())));
+                if (dest->GetDestType()) {
+                    ScopedMem<char> type(Escape(str::conv::FromAnsi(dest->GetDestType())));
                     Out("\t\t\t\tType=\"%s\"\n", type);
                 }
                 if (dest->GetDestPageNo())

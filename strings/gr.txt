@@ -670,3 +670,6 @@ copying text
 printing document
 εκτύπωση εγγράφου
 
+# Untranslated:
+#Copy &Image
+

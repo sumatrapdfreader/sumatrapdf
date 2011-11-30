@@ -474,6 +474,7 @@ printing document
 #CHM documents
 #Can't connect to the Internet (error %#x).
 #Comic books
+#Copy &Image
 #Copy &Link Address
 #Copy Co&mment
 #Copying text was denied (copying as image only)

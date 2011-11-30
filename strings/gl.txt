@@ -667,3 +667,6 @@ copiando texto
 printing document
 imprimindo documento
 
+# Untranslated:
+#Copy &Image
+

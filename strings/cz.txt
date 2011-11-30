@@ -670,3 +670,6 @@ kopírování textu
 printing document
 tisk dokumentu
 
+# Untranslated:
+#Copy &Image
+

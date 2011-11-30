@@ -59,7 +59,7 @@ class PageDestination {
 public:
     // type of the destination (see LinkHandler::GotoLink in WindowInfo.cpp for
     // the supported values; the most common values are "ScrollTo" and "LaunchURL")
-    virtual const char *GetType() const = 0;
+    virtual const char *GetDestType() const = 0;
     // page the destination points to (0 for external destinations such as URLs)
     virtual int GetDestPageNo() const = 0;
     // rectangle of the destination on the above returned page
@@ -77,10 +77,18 @@ public:
 // use in PageDestination::GetDestRect for values that don't matter
 #define DEST_USE_DEFAULT    -999.9
 
+enum PageElementType {
+    Element_Link,
+    Element_Comment,
+    Element_Image,
+};
+
 // hoverable (and maybe interactable) element on a single page
 class PageElement {
 public:
     virtual ~PageElement() { }
+    // the type of this page element
+    virtual PageElementType GetType() const = 0;
     // page this element lives on (0 for elements in a ToC)
     virtual int GetPageNo() const = 0;
     // rectangle that can be interacted with
@@ -92,6 +100,9 @@ public:
     // if this element is a link, this returns information about the link's destination
     // (the result is owned by the PageElement and MUST NOT be deleted)
     virtual PageDestination *AsLink() { return NULL; }
+    // if this element is an image, this returns it
+    // caller must delete the result
+    virtual RenderedBitmap *GetImage() { return NULL; }
 };
 
 // an item in a document's Table of Content

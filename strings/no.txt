@@ -671,3 +671,6 @@ kopierer tekst
 printing document
 skriver ut dokument
 
+# Untranslated:
+#Copy &Image
+

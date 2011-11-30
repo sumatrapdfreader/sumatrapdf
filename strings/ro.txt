@@ -664,5 +664,6 @@ se imprimă documentul
 
 # Untranslated:
 #CHM documents
+#Copy &Image
 #File %s not found
 

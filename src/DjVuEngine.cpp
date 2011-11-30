@@ -65,7 +65,7 @@ public:
     DjVuDestination(const char *link) : link(str::Dup(link)) { }
     ~DjVuDestination() { free(link); }
 
-    virtual const char *GetType() const {
+    virtual const char *GetDestType() const {
         if (IsPageLink(link))
             return "ScrollTo";
         if (str::Eq(link, "#+1"))
@@ -85,7 +85,7 @@ public:
         return RectD();
     }
     virtual TCHAR *GetDestValue() const {
-        if (str::Eq(GetType(), "LaunchURL"))
+        if (str::Eq(GetDestType(), "LaunchURL"))
             return str::conv::FromUtf8(link);
         return NULL;
     }
@@ -109,12 +109,13 @@ public:
         free(value);
     }
 
+    virtual PageElementType GetType() const { return Element_Link; }
     virtual int GetPageNo() const { return pageNo; }
     virtual RectD GetRect() const { return rect; }
     virtual TCHAR *GetValue() const {
         if (value)
             return str::Dup(value);
-        if (str::Eq(dest->GetType(), "LaunchURL"))
+        if (str::Eq(dest->GetDestType(), "LaunchURL"))
             return dest->GetDestValue();
         return NULL;
     }

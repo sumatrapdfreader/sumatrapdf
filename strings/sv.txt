@@ -656,6 +656,7 @@ skriver ut dokumentet
 #Bookmark shortcut to page %s of %s
 #CHM documents
 #Comic books
+#Copy &Image
 #Could not obtain Printer properties
 #File %s not found
 

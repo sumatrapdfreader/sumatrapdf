@@ -669,3 +669,6 @@ Kopioidaan tekstiä
 printing document
 tulostetaan asiakirjaa
 
+# Untranslated:
+#Copy &Image
+

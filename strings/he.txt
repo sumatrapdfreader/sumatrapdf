@@ -664,5 +664,6 @@ printing document
 
 # Untranslated:
 #CHM documents
+#Copy &Image
 #File %s not found
 

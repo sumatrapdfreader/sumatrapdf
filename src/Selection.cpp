@@ -239,11 +239,9 @@ void CopySelectionToClipboard(WindowInfo *win)
     SelectionOnPage *selOnPage = &win->selectionOnPage->At(0);
     RenderedBitmap * bmp = win->dm->engine->RenderBitmap(selOnPage->pageNo,
         win->dm->ZoomReal(), win->dm->Rotation(), &selOnPage->rect, Target_Export);
-    if (bmp) {
-        if (!SetClipboardData(CF_BITMAP, bmp->GetBitmap()))
-            SeeLastError();
-        delete bmp;
-    }
+    if (bmp)
+        CopyImageToClipboard(bmp->GetBitmap(), true);
+    delete bmp;
 
     CloseClipboard();
 }

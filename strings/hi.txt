@@ -266,6 +266,7 @@ Zoom Out
 #Cannot start inverse search command. Please check the command line in the settings.
 #Comic books
 #Continuous Book View
+#Copy &Image
 #Copy &Link Address
 #Copy Co&mment
 #Copying text was denied (copying as image only)

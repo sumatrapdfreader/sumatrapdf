@@ -669,3 +669,6 @@ cópia de texto
 printing document
 impressão de documento
 
+# Untranslated:
+#Copy &Image
+

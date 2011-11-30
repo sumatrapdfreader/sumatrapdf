@@ -673,3 +673,6 @@ copiado de texto
 printing document
 imprimimendo documento
 
+# Untranslated:
+#Copy &Image
+

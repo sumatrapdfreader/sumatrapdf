@@ -661,5 +661,6 @@ ag clóbhualadh an cháipéis
 
 # Untranslated:
 #CHM documents
+#Copy &Image
 #File %s not found
 

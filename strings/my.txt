@@ -364,6 +364,7 @@ mencetak dokumen
 #Cannot start inverse search command. Please check the command line in the settings.
 #Check for &Updates
 #Comic books
+#Copy &Image
 #Copy &Link Address
 #Copy Co&mment
 #Copying text was denied (copying as image only)

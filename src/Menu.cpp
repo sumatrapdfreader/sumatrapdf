@@ -147,6 +147,7 @@ MenuDef menuDefContext[] = {
     { _TRN("&Copy Selection"),              IDM_COPY_SELECTION,         MF_REQ_ALLOW_COPY },
     { _TRN("Copy &Link Address"),           IDM_COPY_LINK_TARGET,       MF_REQ_ALLOW_COPY },
     { _TRN("Copy Co&mment"),                IDM_COPY_COMMENT,           MF_REQ_ALLOW_COPY },
+    { _TRN("Copy &Image"),                  IDM_COPY_IMAGE,             MF_REQ_ALLOW_COPY },
     { SEP_ITEM,                             0,                          MF_REQ_ALLOW_COPY },
     { _TRN("Select &All"),                  IDM_SELECT_ALL,             MF_REQ_ALLOW_COPY },
     { SEP_ITEM,                             0,                          MF_PLUGIN_MODE_ONLY | MF_REQ_ALLOW_COPY },
@@ -420,12 +421,15 @@ void OnContextMenu(WindowInfo* win, int x, int y)
 
     PageElement *pageEl = win->dm->GetElementAtPos(PointI(x, y));
     ScopedMem<TCHAR> value(pageEl ? pageEl->GetValue() : NULL);
+    RenderedBitmap *bmp = NULL;
 
     HMENU popup = BuildMenuFromMenuDef(menuDefContext, dimof(menuDefContext), CreatePopupMenu());
-    if (!value || NULL == pageEl->AsLink())
+    if (!value || pageEl->GetType() != Element_Link)
         win::menu::Remove(popup, IDM_COPY_LINK_TARGET);
-    if (!value || NULL != pageEl->AsLink())
+    if (!value || pageEl->GetType() != Element_Comment)
         win::menu::Remove(popup, IDM_COPY_COMMENT);
+    if (pageEl->GetType() != Element_Image)
+        win::menu::Remove(popup, IDM_COPY_IMAGE);
 
     if (!win->selectionOnPage)
         win::menu::SetEnabled(popup, IDM_COPY_SELECTION, false);
@@ -447,6 +451,13 @@ void OnContextMenu(WindowInfo* win, int x, int y)
     case IDM_COPY_LINK_TARGET:
     case IDM_COPY_COMMENT:
         CopyTextToClipboard(value);
+        break;
+
+    case IDM_COPY_IMAGE:
+        bmp = pageEl->GetImage();
+        if (bmp)
+            CopyImageToClipboard(bmp->GetBitmap());
+        delete bmp;
         break;
     }
 

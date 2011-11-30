@@ -36,6 +36,7 @@
 #define IDM_COPY_SELECTION              420
 #define IDM_VIEW_FULLSCREEN             421
 #define IDM_SELECT_ALL                  422
+#define IDM_COPY_IMAGE                  427
 #define IDM_COPY_LINK_TARGET            428
 #define IDM_COPY_COMMENT                429
 #define IDM_GOTO_NEXT_PAGE              430

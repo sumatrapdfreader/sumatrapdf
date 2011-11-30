@@ -562,6 +562,7 @@ ipini-print ang dokumento
 #Bookmark shortcut to page %s of %s
 #CHM documents
 #Comic books
+#Copy &Image
 #Could not obtain Printer properties
 #Current file
 #DjVu documents

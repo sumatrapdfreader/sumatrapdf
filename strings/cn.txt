@@ -667,3 +667,6 @@ copying text
 printing document
 正在打印文档
 
+# Untranslated:
+#Copy &Image
+

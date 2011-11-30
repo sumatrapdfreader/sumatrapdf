@@ -53,7 +53,7 @@ static void CustomizeTocInfoTip(LPNMTVGETINFOTIP nmit)
         infotip.Append(_T("\r\n"));
     }
 
-    if (tocItem->GetLink() && str::Eq(tocItem->GetLink()->GetType(), "LaunchEmbedded"))
+    if (tocItem->GetLink() && str::Eq(tocItem->GetLink()->GetDestType(), "LaunchEmbedded"))
         path.Set(str::Format(_TR("Attachment: %s"), path));
 
     infotip.Append(path);
@@ -161,7 +161,7 @@ static void GoToTocLinkForTVItem(WindowInfo* win, HWND hTV, HTREEITEM hItem=NULL
     TreeView_GetItem(hTV, &item);
     DocTocItem *tocItem = (DocTocItem *)item.lParam;
     if (win->IsDocLoaded() && tocItem &&
-        (allowExternal || tocItem->GetLink() && str::Eq(tocItem->GetLink()->GetType(), "ScrollTo")) || tocItem->pageNo) {
+        (allowExternal || tocItem->GetLink() && str::Eq(tocItem->GetLink()->GetDestType(), "ScrollTo")) || tocItem->pageNo) {
         QueueWorkItem(new GoToTocLinkWorkItem(win, tocItem));
     }
 }

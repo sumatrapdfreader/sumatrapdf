@@ -224,6 +224,7 @@ Zoom Out
 #Check for &Updates
 #Comic books
 #Continuous Book View
+#Copy &Image
 #Copy &Link Address
 #Copy Co&mment
 #Copying text was denied (copying as image only)

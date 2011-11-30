@@ -659,6 +659,7 @@ agiria irarkitzen
 # Untranslated:
 #&Pin Document
 #CHM documents
+#Copy &Image
 #File %s not found
 #No result found around line %u in file %s
 

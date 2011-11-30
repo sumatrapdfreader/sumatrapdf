@@ -171,7 +171,7 @@ RenderedBitmap *LoadRenderedBitmap(const TCHAR *filePath)
 
     HBITMAP hbmp;
     RenderedBitmap *rendered = NULL;
-    if (bmp->GetHBITMAP(Color(0xFF, 0xFF, 0xFF), &hbmp) == Ok)
+    if (bmp->GetHBITMAP(Color::White, &hbmp) == Ok)
         rendered = new RenderedBitmap(hbmp, SizeI(bmp->GetWidth(), bmp->GetHeight()));
     delete bmp;
 
@@ -277,6 +277,9 @@ public:
     virtual bool IsImageCollection() { return true; }
 
     virtual const TCHAR *GetDefaultFileExt() const { return fileExt; }
+
+    virtual Vec<PageElement *> *GetElements(int pageNo);
+    virtual PageElement *GetElementAtPos(int pageNo, PointD pt);
 
     virtual bool BenchLoadPage(int pageNo) { return LoadImage(pageNo) != NULL; }
 
@@ -390,6 +393,40 @@ RectD ImagesEngine::Transform(RectD rect, int pageNo, float zoom, int rotation, 
         m.Invert();
     m.TransformPoints(pts, 2);
     return RectD::FromXY(pts[0].X, pts[0].Y, pts[1].X, pts[1].Y);
+}
+
+class ImageElement : public PageElement {
+    Bitmap *bmp;
+    int pageNo;
+
+public:
+    ImageElement(int pageNo, Bitmap *bmp) : pageNo(pageNo), bmp(bmp) { }
+
+    virtual PageElementType GetType() const { return Element_Image; }
+    virtual int GetPageNo() const { return pageNo; }
+    virtual RectD GetRect() const { return RectD(0, 0, bmp->GetWidth(), bmp->GetHeight()); }
+    virtual TCHAR *GetValue() const { return NULL; }
+
+    virtual RenderedBitmap *GetImage() {
+        HBITMAP hbmp;
+        if (bmp->GetHBITMAP(Color::White, &hbmp) != Ok)
+            return NULL;
+        return new RenderedBitmap(hbmp, SizeI(bmp->GetWidth(), bmp->GetHeight()));
+    }
+};
+
+Vec<PageElement *> *ImagesEngine::GetElements(int pageNo)
+{
+    Vec<PageElement *> *els = new Vec<PageElement *>();
+    els->Append(new ImageElement(pageNo, LoadImage(pageNo)));
+    return els;
+}
+
+PageElement *ImagesEngine::GetElementAtPos(int pageNo, PointD pt)
+{
+    if (!PageMediabox(pageNo).Inside(pt))
+        return NULL;
+    return new ImageElement(pageNo, LoadImage(pageNo));
 }
 
 ///// ImageEngine handles a single image file /////

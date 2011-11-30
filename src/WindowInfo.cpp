@@ -201,7 +201,7 @@ void LinkHandler::GotoLink(PageDestination *link)
 
     DisplayModel *dm = owner->dm;
     ScopedMem<TCHAR> path(link->GetDestValue());
-    const char *type = link->GetType();
+    const char *type = link->GetDestType();
     if (str::Eq(type, "ScrollTo")) {
         ScrollTo(link);
     }

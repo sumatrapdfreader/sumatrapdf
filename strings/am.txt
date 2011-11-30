@@ -667,3 +667,6 @@ copying text
 printing document
 փաստաթուղթը տպվում է
 
+# Untranslated:
+#Copy &Image
+

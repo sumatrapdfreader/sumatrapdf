@@ -669,3 +669,6 @@ copying text
 printing document
 штампање документа
 
+# Untranslated:
+#Copy &Image
+

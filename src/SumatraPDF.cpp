@@ -1587,6 +1587,8 @@ static void DebugShowLinks(DisplayModel& dm, HDC hdc)
         Vec<PageElement *> *els = dm.engine->GetElements(pageNo);
         if (els) {
             for (size_t i = 0; i < els->Count(); i++) {
+                if (els->At(i)->GetType() == Element_Image && 0)
+                    continue;
                 RectI rect = dm.CvtToScreen(pageNo, els->At(i)->GetRect());
                 RectI isect = viewPortRect.Intersect(rect);
                 if (!isect.IsEmpty())
@@ -1827,7 +1829,7 @@ static void OnMouseLeftButtonDown(WindowInfo& win, int x, int y, WPARAM key)
 
     assert(!win.linkOnLastButtonDown);
     PageElement *pageEl = win.dm->GetElementAtPos(PointI(x, y));
-    if (pageEl && pageEl->AsLink())
+    if (pageEl && pageEl->GetType() == Element_Link)
         win.linkOnLastButtonDown = pageEl;
     else
         delete pageEl;
@@ -3682,7 +3684,7 @@ static LRESULT OnSetCursor(WindowInfo& win, HWND hwnd)
                     RectI rc = win.dm->CvtToScreen(pageEl->GetPageNo(), pageEl->GetRect());
                     win.CreateInfotip(text, rc, true);
 
-                    bool isLink = pageEl->AsLink() != NULL;
+                    bool isLink = pageEl->GetType() == Element_Link;
                     delete pageEl;
 
                     if (isLink) {
