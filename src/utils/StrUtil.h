@@ -152,8 +152,8 @@ inline char *   ToAnsi(const TCHAR *src) { return ToCodePage(src, CP_ACP); }
 
 // Quick conversions are no-ops for UNICODE builds
 #ifdef UNICODE
-#define AsWStrQ(src) (src)
-#define AsTStrQ(src) (src)
+#define AsWStrQ(src) ((WCHAR *)(src))
+#define AsTStrQ(src) ((TCHAR *)(src))
 #else
 #define AsWStrQ(src) (ScopedMem<WCHAR>(str::conv::ToWStr(src)))
 #define AsTStrQ(src) (ScopedMem<TCHAR>(str::conv::FromWStr(src)))

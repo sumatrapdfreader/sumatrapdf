@@ -70,7 +70,7 @@ public:
             pFilter = new NOTHROW CTeXFilter(&g_lRefCount);
 #endif
         else
-            return CLASS_E_CLASSNOTAVAILABLE;
+            return E_NOINTERFACE;
         if (!pFilter)
             return E_OUTOFMEMORY;
 

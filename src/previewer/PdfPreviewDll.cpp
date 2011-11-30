@@ -65,7 +65,7 @@ public:
             pObject = new NOTHROW CXpsPreview(&g_lRefCount);
 #endif
         else
-            return CLASS_E_CLASSNOTAVAILABLE;
+            return E_NOINTERFACE;
         if (!pObject)
             return E_OUTOFMEMORY;
 
