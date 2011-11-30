@@ -166,7 +166,7 @@ bool HasPermission(int permission)
 
 bool CurrLangNameSet(const char *langName)
 {
-    const char *langCode = Trans::ConfirmLanguage(langName);
+    const char *langCode = Trans::VerifyLanguageCode(langName);
     if (!langCode)
         return false;
 

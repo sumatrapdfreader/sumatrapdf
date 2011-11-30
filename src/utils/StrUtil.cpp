@@ -250,7 +250,7 @@ char *FmtV(const char *fmt, va_list args)
     for (;;)
     {
         int count = _vsnprintf(buf, bufCchSize, fmt, args);
-        if (0 <= count && (size_t)count < bufCchSize)
+        if ((count >= 0) && ((size_t)count < bufCchSize))
             break;
         /* we have to make the buffer bigger. The algorithm used to calculate
            the new size is arbitrary (aka. educated guess) */
@@ -288,7 +288,7 @@ WCHAR *FmtV(const WCHAR *fmt, va_list args)
     for (;;)
     {
         int count = _vsnwprintf(buf, bufCchSize, fmt, args);
-        if (0 <= count && (size_t)count < bufCchSize)
+        if ((count >= 0) && ((size_t)count < bufCchSize))
             break;
         /* we have to make the buffer bigger. The algorithm used to calculate
            the new size is arbitrary (aka. educated guess) */

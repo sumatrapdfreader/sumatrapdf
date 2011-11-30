@@ -79,7 +79,7 @@ int TextSelection::FindClosestGlyph(int pageNo, double x, double y)
 
     if (-1 == result)
         return 0;
-    assert(0 <= result && result < lens[pageNo - 1]);
+    assert((result >= 0) && (result < lens[pageNo - 1]));
 
     // the result indexes the first glyph to be selected in a forward selection
     RectD bbox = engine->Transform(_coords[result].Convert<double>(), pageNo, 1.0, 0);

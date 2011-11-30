@@ -376,11 +376,10 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM w
         langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
         for (int i = 0; Trans::GetLanguageCode(i) != NULL; i++) {
             ScopedMem<TCHAR> langName(Trans::GetLanguageName(i));
-            assert(langName);
             ListBox_AppendString_NoSort(langList, langName);
         }
         ListBox_SetCurSel(langList, data->langId);
-        // the language list is meant to be layed out left-to-right
+        // the language list is meant to be laid out left-to-right
         ToggleWindowStyle(langList, WS_EX_LAYOUTRTL, false, GWL_EXSTYLE);
         SetDlgItemText(hDlg, IDOK, _TR("OK"));
         SetDlgItemText(hDlg, IDCANCEL, _TR("Cancel"));
