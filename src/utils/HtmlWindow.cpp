@@ -1229,6 +1229,7 @@ void HtmlWindow::CreateBrowser()
     webBrowser->put_AddressBar(VARIANT_FALSE);
     webBrowser->put_StatusBar(VARIANT_FALSE);
     webBrowser->put_ToolBar(VARIANT_FALSE);
+    webBrowser->put_Silent(VARIANT_TRUE);
 
     webBrowser->put_RegisterAsBrowser(VARIANT_FALSE);
     webBrowser->put_RegisterAsDropTarget(VARIANT_TRUE);
@@ -1374,30 +1375,6 @@ void HtmlWindow::EnsureAboutBlankShown()
     NavigateToUrl(_T("about:blank"));
     WaitUntilLoaded(INFINITE, _T("about:blank"));
     blankWasShown = true;
-}
-
-static SAFEARRAY *CreateOneElementWstrArray(const WCHAR *s)
-{
-    SAFEARRAY *arr = SafeArrayCreateVector(VT_VARIANT, 0, 1);
-    VARIANT *var = NULL;
-    SafeArrayAccessData(arr, (void**)&var);
-    var->vt = VT_BSTR;
-    var->bstrVal = SysAllocString(s);
-    SafeArrayUnaccessData(arr);
-    if (!var->bstrVal) {
-        SafeArrayDestroy(arr);
-        return NULL;
-    }
-    return arr;
-}
-
-// TODO: this looses the encoding of the file. Maybe I can use Load method
-// instead as shown here:
-// http://stackoverflow.com/questions/724746/problem-with-ihtmldocument2write
-static SAFEARRAY *CreateOneElementStrArray(const char *s)
-{
-    ScopedMem<WCHAR> tmp(str::conv::FromAnsi(s));
-    return CreateOneElementWstrArray(tmp);
 }
 
 void HtmlWindow::SetHtml(const char *s, size_t len)
