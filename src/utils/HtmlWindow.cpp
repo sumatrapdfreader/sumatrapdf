@@ -18,7 +18,7 @@
 #pragma comment(lib, "urlmon")
 
 // An important (to Sumatra) use case is displaying CHM documents. First we used
-// IE's built-in support form CHM documents (using its: protocol e.g. its:MyChmFile.chm::mywebpage.htm)).
+// IE's built-in support form CHM documents (using its: protocol http://msdn.microsoft.com/en-us/library/aa164814(v=office.10).aspx).
 // However, that doesn't work for CHM documents from network drives (http://code.google.com/p/sumatrapdf/issues/detail?id=1706)
 // To solve that we ended up the following solution:
 // * an app can provide html as data in memory. We write the data using custom
@@ -64,6 +64,8 @@
 // http://codesearch.google.com/#cbxlbgWFJ4U/wxCode/components/iehtmlwin/src/IEHtmlWin.cpp
 
 // Info about IInternetProtocol: http://www.codeproject.com/KB/IP/DataProtocol.aspx
+
+// All the ways to load html into mshtml: http://qualapps.blogspot.com/2008/10/how-to-load-mshtml-with-data.html
 
 // Other code that does advanced things with embedding IE or providing it with non-trivial
 // interfaces:

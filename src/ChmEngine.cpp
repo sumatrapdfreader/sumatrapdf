@@ -9,17 +9,6 @@
 #include "HtmlWindow.h"
 #include "WinUtil.h"
 
-// If defined as 1, we provide CHM data ourselves instead of relying on IE's
-// built-in support for chm files with its:: protocol
-// TODO: not enabled because while it works for html, I don't know how to
-// provide content for linked data, like images referenced by html
-// Note: according to https://groups.google.com/forum/#!topic/microsoft.public.inetsdk.programming.webbrowser_ctl/kwlvKhaYDVg
-// it should be possible by implementing custom IMoniker
-// There's example code at https://groups.google.com/forum/#!topic/microsoft.public.inetsdk.programming.html_objmodel/-lfx7r-IA4g
-// and a blog post detailing all possibilities at
-// http://qualapps.blogspot.com/2008/10/how-to-load-mshtml-with-data.html
-#define WE_PROVIDE_CHM_DATA 1
-
 #define CHM_MT
 #ifdef UNICODE
 #define PPC_BSTR
@@ -270,25 +259,24 @@ void CChmEngine::DisplayPage(const TCHAR *pageUrl)
 
     if (str::StartsWith(pageUrl, _T("/")))
         pageUrl++;
-#if WE_PROVIDE_CHM_DATA
-    ScopedMem<TCHAR> url(str::Format(_T("its://%d/%s"), htmlWindow->windowId, pageUrl));
-    htmlWindow->NavigateToUrl(url);
-#else
-    // the format for chm page is: "its:MyChmFile.chm::mywebpage.htm"
-    // cf. http://msdn.microsoft.com/en-us/library/aa164814(v=office.10).aspx
-    ScopedMem<TCHAR> url(str::Format(_T("its:%s::/%s"), fileName, pageUrl));
-    htmlWindow->NavigateToUrl(url);
-#endif
+
+    char *data;
+    size_t len;
+    bool ok = GetHtmlForUrl(pageUrl, &data, &len);
+    if (!ok)
+        return;
+    htmlWindow->SetHtml(data, len);
+    //htmlWindow->NavigateToUrl(url);
+
     // unfortunate timing when loading chm docs: initial zoom level is
     // set (via, ultimately, DisplayModel::SetZoomVirtual()), after
     // we navigate to a page but before it might have finished
-    // loading and that causes SetZoomPercent() to be ignore.
+    // loading and that causes SetZoomPercent() to be ignored.
     // To fix that we wait here until page is loaded.
     // TODO: unfortunately we display at standard zoom level first
     // and them zoom in, which is visible to the user. No idea how
     // to fix it (simply)
-    htmlWindow->WaitUntilLoaded(3 * 1000, url);
-    //htmlWindow->DisplayHtml("<html><body>Hello!</body></html>");
+    //htmlWindow->WaitUntilLoaded(3 * 1000, url);
 }
 
 RenderedBitmap *CChmEngine::CreateThumbnail(SizeI size)
@@ -754,23 +742,9 @@ bool CChmEngine::Load(const TCHAR *fileName)
     return true;
 }
 
-// In order to bypass IE's refusal to read CHM files from network drives,
-// we provide html data for CHM files ourselves, instead of relying built-in
-// handling of its:: urls in IE
+// Load and cache data for a given url inside CHM file.
 bool CChmEngine::GetHtmlForUrl(const TCHAR *url, char **data, size_t *len)
 {
-#if WE_PROVIDE_CHM_DATA
-#if 0
-    // TODO: links due to internal navigation (via clicking links inside html file)
-    // don't start with its:
-    if (!str::StartsWithI(url, _T("its:")))
-        return false;
-    // remove the ITS protocol and any filename references from the URLs
-    url = str::Find(url, _T("::/"));
-    if (!url)
-        return false;
-    url += 3;
-#endif
     Bytes *b = FindDataForUrl(url);
     if (!b) {
         ChmCacheEntry *e = new ChmCacheEntry(url);
@@ -786,9 +760,6 @@ bool CChmEngine::GetHtmlForUrl(const TCHAR *url, char **data, size_t *len)
     *data = (char*)b->d;
     *len = b->size;
     return true;
-#else
-    return false;
-#endif
 }
 
 TCHAR *CChmEngine::GetProperty(char *name)
