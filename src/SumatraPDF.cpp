@@ -2338,7 +2338,7 @@ static void OnMenuSaveAs(WindowInfo& win)
         free(realDstFileName);
 }
 
-bool LinkSaver::SaveEmbedded(unsigned char *data, int len)
+bool LinkSaver::SaveEmbedded(unsigned char *data, size_t len)
 {
     if (!HasPermission(Perm_DiskAccess))
         return false;

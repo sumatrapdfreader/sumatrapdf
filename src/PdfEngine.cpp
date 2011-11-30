@@ -96,7 +96,7 @@ RenderedFitzBitmap::RenderedFitzBitmap(fz_pixmap *pixmap, HDC hDC) :
     int h = pixmap->h;
     int rows8 = ((w + 3) / 4) * 4;
 
-    /* abgr is a GDI compatible format */
+    /* BGRA is a GDI compatible format */
     fz_pixmap *bgrPixmap = fz_new_pixmap_with_limit(fz_find_device_colorspace("DeviceBGR"), w, h);
     if (!bgrPixmap)
         return;
@@ -474,7 +474,6 @@ public:
     virtual const char *GetType() const { return NULL; }
     virtual int GetDestPageNo() const { return pageNo; }
     virtual RectD GetDestRect() const { return rect; }
-    virtual TCHAR *GetDestValue() const { return NULL; }
 };
 
 // Ensure that fz_accelerate is called before using Fitz the first time.

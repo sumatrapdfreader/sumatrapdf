@@ -250,7 +250,7 @@ class LinkSaver : public LinkSaverUI {
 public:
     LinkSaver(WindowInfo& win, const TCHAR *fileName) : owner(&win), fileName(fileName) { }
 
-    virtual bool SaveEmbedded(unsigned char *data, int cbCount);
+    virtual bool SaveEmbedded(unsigned char *data, size_t cbCount);
 };
 
 #endif

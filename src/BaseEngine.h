@@ -51,7 +51,7 @@ public:
 // interface to be implemented for saving embedded documents that a link points to
 class LinkSaverUI {
 public:
-    virtual bool SaveEmbedded(unsigned char *data, int cbCount) = 0;
+    virtual bool SaveEmbedded(unsigned char *data, size_t cbCount) = 0;
 };
 
 // a link destination
