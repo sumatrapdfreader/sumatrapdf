@@ -685,17 +685,6 @@ bool CChmEngine::Load(const TCHAR *fileName)
 {
     assert(NULL == chmHandle);
 
-#if !WE_PROVIDE_CHM_DATA // TODO: this shouln't be necessary anymore
-    // CHM files downloaded from the internet are marked as unsafe
-    // and IE (including our embedded control) will open them
-    // but will not show the pages, which is extremely confusing
-    // for the user and most people wouldn't know how to fix that.
-    // We silently fix that for them.
-    if (file::GetZoneIdentifier(fileName) >= URLZONE_INTERNET &&
-        !file::SetZoneIdentifier(fileName, URLZONE_TRUSTED))
-        return false;
-#endif
-
     this->fileName = str::Dup(fileName);
     chmHandle = chm_open((TCHAR *)fileName);
     if (!chmHandle)
