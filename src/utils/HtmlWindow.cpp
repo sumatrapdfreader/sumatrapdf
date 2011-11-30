@@ -428,7 +428,7 @@ STDMETHODIMP HW_IInternetProtocol::Start(
         goto Exit;
     if (!win->htmlWinCb)
         goto Exit;
-    ok = win->htmlWinCb->GetHtmlForUrl(urlRest, &data, &dataLen);
+    ok = win->htmlWinCb->GetDataForUrl(urlRest, &data, &dataLen);
     if (!ok)
         goto Exit;
     mime = MimeFromUrl(urlRest);
@@ -1486,15 +1486,12 @@ bool HtmlWindow::OnBeforeNavigate(const TCHAR *url, bool newWindow)
         return false;
     char *data = NULL;
     size_t len = 0;
-    bool gotHtmlData = htmlWinCb->GetHtmlForUrl(urlReal, &data, &len);
-    if (gotHtmlData) {
+    bool gotHtmlData = htmlWinCb->GetDataForUrl(urlReal, &data, &len);
+    if (gotHtmlData)
         SetHtml(data, len);
-        return false;
-    }
     return true;
 }
 
-// TODO: now we always get "about:blank" here. How did I break this?
 void HtmlWindow::OnDocumentComplete(const TCHAR *url)
 {
     // if it's url for our internal protocol, strip the protocol

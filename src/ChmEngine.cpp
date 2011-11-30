@@ -163,7 +163,7 @@ public:
     virtual bool OnBeforeNavigate(const TCHAR *url, bool newWindow);
     virtual void OnDocumentComplete(const TCHAR *url);
     virtual void OnLButtonDown() { if (navCb) navCb->FocusFrame(true); }
-    virtual bool GetHtmlForUrl(const TCHAR *url, char **data, size_t *len);
+    virtual bool GetDataForUrl(const TCHAR *url, char **data, size_t *len);
 
     Bytes *FindDataForUrl(const TCHAR *url);
 
@@ -716,7 +716,7 @@ bool CChmEngine::Load(const TCHAR *fileName)
 }
 
 // Load and cache data for a given url inside CHM file.
-bool CChmEngine::GetHtmlForUrl(const TCHAR *url, char **data, size_t *len)
+bool CChmEngine::GetDataForUrl(const TCHAR *url, char **data, size_t *len)
 {
     Bytes *b = FindDataForUrl(url);
     if (!b) {

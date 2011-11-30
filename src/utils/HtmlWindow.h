@@ -24,10 +24,9 @@ public:
     // called after html document has been completely loaded
     virtual void OnDocumentComplete(const TCHAR *url) = 0;
 
-    // allows for providing html data for a given url by other code.
+    // allows for providing data for a given url.
     // returning false means data wasn't provided.
-    // returning true means the data (and it's len) is provided under data/len.
-    virtual bool GetHtmlForUrl(const TCHAR *url, char **data, size_t *len) = 0;
+    virtual bool GetDataForUrl(const TCHAR *url, char **data, size_t *len) = 0;
 
     // called when left mouse button is clicked in the web control window.
     // we use it to maintain proper focus (since it's stolen by left click)
