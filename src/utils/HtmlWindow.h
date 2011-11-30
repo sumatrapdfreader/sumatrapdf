@@ -21,6 +21,9 @@ public:
     // stop loading this url
     virtual bool OnBeforeNavigate(const TCHAR *url, bool newWindow) = 0;
 
+    // called after html document has been completely loaded
+    virtual void OnDocumentComplete(const TCHAR *url) = 0;
+
     // allows for providing html data for a given url by other code.
     // returning false means data wasn't provided.
     // returning true means the data (and it's len) is provided under data/len.

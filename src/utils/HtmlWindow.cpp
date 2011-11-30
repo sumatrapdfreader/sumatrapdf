@@ -533,6 +533,9 @@ HRESULT STDMETHODCALLTYPE HW_IInternetProtocolFactory::CreateInstance(IUnknown *
 
 // Register our protocol so that urlmon will call us for every
 // url that starts with HW_PROTO_PREFIX
+// TODO: we could add UnregisterInternetProtocolFactory(),
+// call it from HtmlWindow::~HtmlWindow() and ref count
+// to make sure we only register once and don't unregister prematurely
 void RegisterInternetProtocolFactory()
 {
     static bool initialized = false;
@@ -1419,8 +1422,6 @@ void HtmlWindow::DisplayHtml(const char *html)
     SafeArrayDestroy(arr);
 }
 
-#define ABOUT_BLANK _T("about:blank")
-
 void HtmlWindow::SetHtml(const char *s, size_t len)
 {
     if (-1 == len)
@@ -1432,8 +1433,6 @@ void HtmlWindow::SetHtml(const char *s, size_t len)
     htmlContent->SetHtml(s, len);
     ScopedMem<TCHAR> baseUrl(str::Format(HW_PROTO_PREFIX L"://%d/", windowId));
     htmlContent->SetBaseUrl(baseUrl);
-
-    //htmlContent->SetBaseUrl(_T("http://blog.kowalczyk.info"));
 
     ScopedComPtr<IDispatch> docDispatch;
     HRESULT hr = webBrowser->get_Document(&docDispatch);
@@ -1449,14 +1448,18 @@ void HtmlWindow::SetHtml(const char *s, size_t len)
         return;
     ScopedComQIPtr<IMoniker> htmlMon(htmlContent);
     hr = perstMon->Load(TRUE, htmlMon, NULL, STGM_READ);
-    // this might fail if HtmlMoniker::GetDisplayName() returns bad base url
-    // (and apparently empty string is considered bad)
-    // so set it to "about:blank" (which works) and retry
-    // TODO: possibly HtmlMoniker::GetDisplayName() should just return "about:blank"
-    // if none has been set
+    // IPersistMoniker::Load() might fail if HtmlMoniker::GetDisplayName()
+    // returns bad base url. Apparently anything that doesn't start
+    // with a protocol already known to IE (which unfortunately doesn't
+    // seem to include new protocols we register with
+    // IInternetSession::RegisterNameSpace()) is considered bad.
+    assert(!FAILED(hr));
     if (FAILED(hr))
     {
-        htmlContent->SetBaseUrl(ABOUT_BLANK);
+        // Given that above we set base url (aka. display name) to a known
+        // protocol, we should never get here, but just in case we'll retry
+        // with a base url that should always be valid.
+        htmlContent->SetBaseUrl(_T("about:blank"));
         hr = perstMon->Load(TRUE, htmlMon, NULL, STGM_READ);
         assert(!FAILED(hr));
     }
@@ -1511,12 +1514,21 @@ bool HtmlWindow::OnBeforeNavigate(const TCHAR *url, bool newWindow)
     currentURL.Set(NULL);
     if (!htmlWinCb)
         return true;
-    bool shouldNavigate = htmlWinCb->OnBeforeNavigate(url, newWindow);
+    // if it's url for our internal protocol, strip the protocol
+    // part as we don't want to expose it to clients.
+    int protoWindowId;
+    const TCHAR *urlReal = url;
+    bool ok = ParseProtoUrl(url, &protoWindowId, &urlReal);
+    bool shouldNavigate = htmlWinCb->OnBeforeNavigate(urlReal, newWindow);
+    if (ok) {
+        assert(protoWindowId == windowId);
+        free((void*)urlReal);
+    }
     if (!shouldNavigate)
         return false;
     char *data = NULL;
     size_t len = 0;
-    bool gotHtmlData = htmlWinCb->GetHtmlForUrl(url, &data, &len);
+    bool gotHtmlData = htmlWinCb->GetHtmlForUrl(urlReal, &data, &len);
     if (gotHtmlData) {
         SetHtml(data, len);
         return false;
@@ -1526,7 +1538,18 @@ bool HtmlWindow::OnBeforeNavigate(const TCHAR *url, bool newWindow)
 
 void HtmlWindow::OnDocumentComplete(const TCHAR *url)
 {
-    currentURL.Set(str::Dup(url));
+    // if it's url for our internal protocol, strip the protocol
+    // part as we don't want to expose it to clients.
+    int protoWindowId;
+    const TCHAR *urlReal = url;
+    bool ok = ParseProtoUrl(url, &protoWindowId, &urlReal);
+    currentURL.Set(str::Dup(urlReal));
+    if (htmlWinCb)
+        htmlWinCb->OnDocumentComplete(urlReal);
+    if (ok) {
+        assert(protoWindowId == windowId);
+        free((void*)urlReal);
+    }
 }
 
 HRESULT HtmlWindow::OnDragEnter(IDataObject *dataObj)
@@ -1783,6 +1806,14 @@ HRESULT HW_DWebBrowserEvents2::DispatchPropGet(DISPID dispIdMember, VARIANT *res
     return S_OK;
 }
 
+static BSTR BstrFromVariant(VARIANT *vurl)
+{
+    if (vurl->vt & VT_BYREF)
+        return *vurl->pbstrVal;
+    else
+        return vurl->bstrVal;
+}
+
 HRESULT HW_DWebBrowserEvents2::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid,
     WORD flags, DISPPARAMS * pDispParams, VARIANT * pVarResult,
     EXCEPINFO * pExcepInfo, unsigned int * puArgErr)
@@ -1794,12 +1825,7 @@ HRESULT HW_DWebBrowserEvents2::Invoke(DISPID dispIdMember, REFIID riid, LCID lci
     {
         case DISPID_BEFORENAVIGATE2:
         {
-            BSTR url;
-            VARIANT *vurl = pDispParams->rgvarg[5].pvarVal;
-            if (vurl->vt & VT_BYREF)
-                url = *vurl->pbstrVal;
-            else
-                url = vurl->bstrVal;
+            BSTR url = BstrFromVariant(pDispParams->rgvarg[5].pvarVal);
             bool shouldCancel = !fs->htmlWindow->OnBeforeNavigate(AsTStrQ(url), false);
             *pDispParams->rgvarg[0].pboolVal = shouldCancel ? VARIANT_TRUE : VARIANT_FALSE;
             break;
@@ -1817,13 +1843,18 @@ HRESULT HW_DWebBrowserEvents2::Invoke(DISPID dispIdMember, REFIID riid, LCID lci
 
         case DISPID_DOCUMENTCOMPLETE:
         {
-            BSTR url;
-            VARIANT *vurl = pDispParams->rgvarg[0].pvarVal;
-            if (vurl->vt & VT_BYREF)
-                url = *vurl->pbstrVal;
-            else
-                url = vurl->bstrVal;
+            // TODO: there are complexities related to multi-frame documents. This
+            // gets called on every frame and we should probably only notify
+            // on completion of top-level frame. On the other hand, I haven't
+            // encountered problems related to that yet
+            BSTR url = BstrFromVariant(pDispParams->rgvarg[0].pvarVal);
             fs->htmlWindow->OnDocumentComplete(AsTStrQ(url));
+            break;
+        }
+
+        case DISPID_NAVIGATEERROR:
+        {
+            // TODO: probably should notify about that too
             break;
         }
 

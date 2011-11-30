@@ -172,6 +172,7 @@ public:
 
     // from HtmlWindowCallback
     virtual bool OnBeforeNavigate(const TCHAR *url, bool newWindow);
+    virtual void OnDocumentComplete(const TCHAR *url);
     virtual void OnLButtonDown() { if (navCb) navCb->FocusFrame(true); }
     virtual bool GetHtmlForUrl(const TCHAR *url, char **data, size_t *len);
 
@@ -211,11 +212,23 @@ Bytes *CChmEngine::FindDataForUrl(const TCHAR *url)
     return NULL;
 }
 
-// called when we're about to show a given url. If this is a CHM
-// html page, sync the state of the ui with the page (show
+// Called after html document has been loaded.
+// Sync the state of the ui with the page (show
 // the right page number, select the right item in toc tree)
-// TODO: this should probably be done when navigation is complete, not when
-// it's started
+void CChmEngine::OnDocumentComplete(const TCHAR *url)
+{
+    if (*url == _T('/'))
+        ++url;
+    int pageNo = pages.Find(url) + 1;
+    if (pageNo) {
+        currentPageNo = pageNo;
+        if (navCb)
+            navCb->PageNoChanged(pageNo);
+    }
+}
+
+// Called before we start loading html for a given url. Will block
+// loading if returns false.
 bool CChmEngine::OnBeforeNavigate(const TCHAR *url, bool newWindow)
 {
     // ensure that JavaScript doesn't keep the focus
@@ -229,28 +242,6 @@ bool CChmEngine::OnBeforeNavigate(const TCHAR *url, bool newWindow)
         if (url && navCb)
             navCb->LaunchBrowser(url);
         return false;
-    }
-
-    // url format for chm page is: "its:MyChmFile.chm::mywebpage.htm"
-    // we need to extract the "mywebpage.htm" part
-    if (!str::StartsWithI(url, _T("its:")))
-        return true;
-    url += 4;
-    // you might be tempted to just test if url starts with fileName,
-    // but it looks like browser control can url-escape fileName, so
-    // we'll just look for "::"
-    url = str::Find(url, _T("::"));
-    if (!url)
-        return true;
-    url += 2;
-    if (*url == _T('/'))
-        ++url;
-    
-    int pageNo = pages.Find(url) + 1;
-    if (pageNo) {
-        currentPageNo = pageNo;
-        if (navCb)
-            navCb->PageNoChanged(pageNo);
     }
     return true;
 }
