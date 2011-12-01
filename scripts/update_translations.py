@@ -118,7 +118,6 @@ def make_lang_layouts(lang_index):
 def gen_c_code(langs_ex, strings_dict, file_name, lang_index):
     langs_ex.sort(lang_sort_func)
     langs = [cols[0] for cols in langs_ex]
-    print(langs)
     assert DEFAULT_LANG == langs[0]
     langs_count = len(langs)
     translations_count = len(strings_dict)

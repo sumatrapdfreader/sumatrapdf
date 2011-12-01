@@ -231,7 +231,7 @@ Cannot start inverse search command. Please check the command line in the settin
 Ezinezkoa alderantzizko bilaketa komandoa hasi. Mesedez, egiaztatu komando lerroa ezarpenetan.
 
 Change Language
-Aldatu Hizkuntza
+Aldatu Hizkuntza (Change Language)
 
 Check for &Updates
 Egiaztatu E&guneraketak

@@ -231,7 +231,7 @@ Cannot start inverse search command. Please check the command line in the settin
 Ní féidir ordú cuardaigh aisiompaithe a thosú. Dearbháil líne na n-orduithe sna socruithe.
 
 Change Language
-Athraigh an Teanga
+Athraigh an Teanga (Change Language)
 
 Check for &Updates
 Lorg Nuashonruithe

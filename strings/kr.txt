@@ -239,7 +239,7 @@ Cannot start inverse search command. Please check the command line in the settin
 역 검색 명령을 시작할 수 없습니다. 설정에서 명령줄을 확인하세요.
 
 Change Language
-언어 바꾸기
+언어 바꾸기 (Change Language)
 
 Check for &Updates
 업데이트 확인(&U)

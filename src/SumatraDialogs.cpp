@@ -374,11 +374,18 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM w
         // otherwise all the user will see are squares
         win::SetText(hDlg, _TR("Change Language"));
         langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
-        for (int i = 0; Trans::GetLanguageCode(i) != NULL; i++) {
-            ScopedMem<TCHAR> langName(Trans::GetLanguageName(i));
+        int itemToSelect = 0;
+        for (int langIdx = 0; Trans::GetLanguageCode(langIdx) != NULL; langIdx++) {
+            if (Trans::IsIncompleteTranslation(langIdx))
+                continue;
+            ScopedMem<TCHAR> langName(Trans::GetLanguageName(langIdx));
             ListBox_AppendString_NoSort(langList, langName);
+            int elIdx = ListBox_GetCount(langList) - 1;
+            ListBox_SetItemData(langList, elIdx, (LPARAM)langIdx);
+            if (langIdx == data->langId)
+                itemToSelect = elIdx;
         }
-        ListBox_SetCurSel(langList, data->langId);
+        ListBox_SetCurSel(langList, itemToSelect);
         // the language list is meant to be laid out left-to-right
         ToggleWindowStyle(langList, WS_EX_LAYOUTRTL, false, GWL_EXSTYLE);
         SetDlgItemText(hDlg, IDOK, _TR("OK"));
@@ -398,7 +405,7 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM w
                 assert(IDC_CHANGE_LANG_LANG_LIST == LOWORD(wParam));
                 langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
                 assert(langList == (HWND)lParam);
-                data->langId = ListBox_GetCurSel(langList);
+                data->langId = (int)ListBox_GetItemData(langList, ListBox_GetCurSel(langList));
                 EndDialog(hDlg, IDOK);
                 return FALSE;
             }
@@ -421,7 +428,7 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM w
 }
 
 /* Show "Change Language" dialog.
-   Returns language id (as stored in g_langs[]._langId) or -1 if the user 
+   Returns language id (an index into gLangData) or -1 if the user 
    choses 'cancel' */
 int Dialog_ChangeLanguge(HWND hwnd, int currLangId)
 {
