@@ -218,6 +218,9 @@ Ceanáin
 Bytes
 Bearta
 
+CHM documents
+Cáipéisí CHM
+
 Can't connect to the Internet (error %#x).
 Ní féidir ceangailt leis an idirlíon (botún %#x).
 
@@ -250,6 +253,9 @@ Dhá leathanach ar leanúint
 
 Contribute Translation
 Aistrigh é seo
+
+Copy &Image
+Macasamhlaigh &Íomhánna
 
 Copy &Link Address
 Macasamhlaigh seoladh an naisc
@@ -334,6 +340,9 @@ Theip air comhad a chuir i dtaisce
 
 Favorites
 Ceanáin
+
+File %s not found
+NÃor aimsÃodh an comhad %s
 
 File Size:
 Méid an chomhaid:
@@ -658,9 +667,4 @@ ag macasamhlú an téacs
 
 printing document
 ag clóbhualadh an cháipéis
-
-# Untranslated:
-#CHM documents
-#Copy &Image
-#File %s not found
 

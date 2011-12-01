@@ -258,6 +258,9 @@ Continuous Facing
 Contribute Translation
 Помочь с переводом
 
+Copy &Image
+Скопировать &изображение
+
 Copy &Link Address
 Скопировать адрес &ссылки
 
@@ -668,7 +671,4 @@ copying text
 
 printing document
 печатается документ
-
-# Untranslated:
-#Copy &Image
 

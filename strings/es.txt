@@ -11,7 +11,7 @@ Lang: es Spanish (Español)
 Contributor: Jose Virgili
 Contributor: LinoSP [http://reactos.wordpress.com]
 Contributor: pragmart [http://putolinux.wordpress.com]
-Contributor: Pedro Sanchez
+Contributor: Pedro Sanchez [http://www.pedrosanchez-net.es]
 Contributor: Carlos Luna
 Contributor: Juan Vílchez [http://www.juanvilchez.es]
 Contributor: Javier Gutiérrez [http://guti.isgreat.org]
@@ -261,6 +261,9 @@ Página doble continua
 
 Contribute Translation
 Contribuir en la traducción
+
+Copy &Image
+Copiar &Imagen
 
 Copy &Link Address
 Copiar dirección de enlace
@@ -672,7 +675,4 @@ copiado de texto
 
 printing document
 imprimimendo documento
-
-# Untranslated:
-#Copy &Image
 

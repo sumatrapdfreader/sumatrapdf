@@ -259,6 +259,9 @@ Continuous Facing
 Contribute Translation
 번역 기여
 
+Copy &Image
+이미지 복사(&I)
+
 Copy &Link Address
 링크 주소 복사(&L)
 
@@ -669,7 +672,4 @@ copying text
 
 printing document
 문서 인쇄 중
-
-# Untranslated:
-#Copy &Image
 
