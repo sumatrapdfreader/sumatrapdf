@@ -50,16 +50,16 @@ const char *GuessLanguage()
     return langCode;
 }
 
-static bool IsValidLangIdx(int idx)
+inline bool IsValidLangIdx(int idx)
 {
     return (idx >= 0) && (idx < LANGS_COUNT);
 }
 
 static int GetLangIndexFromCode(const char *code)
 {
-    for (size_t i = 0; i < LANGS_COUNT; i++)
+    for (int i = 0; i < LANGS_COUNT; i++)
         if (str::Eq(code, gLangData[i].code))
-            return (int)i;
+            return i;
     return -1;
 }
 
@@ -178,25 +178,7 @@ bool IsLanguageRtL(int langIdx)
     assert(IsValidLangIdx(langIdx));
     if (!IsValidLangIdx(langIdx))
         return false;
-    return gLangData[langIdx].isRTL != 0;
-}
-
-// We consider a translation incomplete if it has more than 40 untranslated strings
-bool IsIncompleteTranslation(int langIdx)
-{
-    assert(IsValidLangIdx(langIdx));
-    if (!IsValidLangIdx(langIdx))
-        return true;
-    int startIdx = langIdx * STRINGS_COUNT;
-    int endIdx = startIdx + STRINGS_COUNT;
-    int untranslatedCount = 0;
-    for (int i=startIdx; i<endIdx; i++) {
-        if (NULL != gTranslations[i])
-            continue;
-        if (++untranslatedCount == 40)
-            return true;
-    }
-    return false;
+    return gLangData[langIdx].isRTL;
 }
 
 }

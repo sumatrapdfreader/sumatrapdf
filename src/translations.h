@@ -15,7 +15,6 @@ int           GetLanguageIndex(const char *code);
 const char *  GetLanguageCode(int langIdx);
 TCHAR *       GetLanguageName(int langIdx);
 bool          IsLanguageRtL(int langIdx);
-bool          IsIncompleteTranslation(int langIdx);
 
 }
 

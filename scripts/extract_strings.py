@@ -171,20 +171,23 @@ def gen_diff(strings_dict, strings):
 def langs_sort_func(x, y):
     return cmp(len(y[1]), len(x[1])) or cmp(x[0], y[0])
 
+def get_missing_for_language(strings, strings_dict, lang):
+    untranslated = []
+    for s in strings:
+        if not s in strings_dict:
+            untranslated.append(s)
+            continue
+        translations = strings_dict[s]
+        found = filter(lambda tr: tr[0] == lang, translations)
+        if not found and s not in untranslated:
+            untranslated.append(s)
+    return untranslated
+
 # strings_dict maps a string to a list of [lang, translations...] list
 def dump_missing_per_language(strings, strings_dict, dump_strings=False):
     untranslated_dict = {}
     for lang in get_lang_list(strings_dict):
-        untranslated = []
-        for s in strings:
-            if not s in strings_dict:
-                untranslated.append(s)
-                continue
-            translations = strings_dict[s]
-            found = filter(lambda tr: tr[0] == lang, translations)
-            if not found and s not in untranslated:
-                untranslated.append(s)
-        untranslated_dict[lang] = untranslated
+        untranslated_dict[lang] = get_missing_for_language(strings, strings_dict, lang)
     items = untranslated_dict.items()
     items.sort(langs_sort_func)
     for (lang, untranslated) in items:
