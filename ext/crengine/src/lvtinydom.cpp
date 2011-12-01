@@ -9653,7 +9653,7 @@ bool LVTocItem::deserialize( ldomDocument * doc, SerialBuf & buf )
 
 
 
-#if defined(_DEBUG) 
+#if defined(_DEBUG) && DISABLE_TINYDOM_TESTS!=1
 
 #define TEST_FILE_NAME "/tmp/test-cache-file.dat"
 
@@ -10056,7 +10056,7 @@ void runBasicTinyDomUnitTests()
 
 void runCHMUnitTest()
 {
-#if BUILD_LITE!=1
+#if BUILD_LITE!=1 && CHM_SUPPORT_ENABLED=1
     LVStreamRef stream = LVOpenFileStream("/home/lve/src/test/mysql.chm", LVOM_READ);
     MYASSERT ( !stream.isNull(), "container stream opened" );
     CRLog::trace("runCHMUnitTest() -- file stream opened ok");

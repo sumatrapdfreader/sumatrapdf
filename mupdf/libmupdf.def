@@ -516,9 +516,13 @@ EXPORTS
 	gztell
 	gzread
 	gzclose
+	inflateInit_
 	inflateInit2_
 	inflate
 	inflateEnd
+	deflateInit_
+	deflate
+	deflateEnd
 	compress
 	compressBound
 	crc32

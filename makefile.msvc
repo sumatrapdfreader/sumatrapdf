@@ -114,16 +114,20 @@ ENGINE_OBJS = \
 	$(OS)\DjVuEngine.obj $(DJVU_OBJS) $(OS)\ChmEngine.obj $(CHMLIB_OBJS)
 
 SUMATRA_OBJS = \
-	$(OS)\AppPrefs.obj $(OS)\DisplayModel.obj $(OS)\CrashHandler.obj $(OS)\Favorites.obj \
-	$(OS)\TextSearch.obj $(OS)\SumatraAbout.obj $(OS)\SumatraDialogs.obj $(OS)\SumatraProperties.obj \
-	$(OS)\SumatraPDF.obj $(OS)\translations.obj $(OS)\FileWatch.obj $(OS)\PdfSync.obj \
-	$(OS)\RenderCache.obj $(OS)\TextSelection.obj $(OS)\WindowInfo.obj $(OS)\ParseCommandLine.obj \
-	$(OS)\StressTesting.obj $(OS)\UnitTests.obj $(OS)\AppTools.obj $(SUMATRA_RES) \
-	$(OS)\TableOfContents.obj $(OS)\Toolbar.obj $(OS)\Print.obj \
-	$(OS)\Notifications.obj $(OS)\Search.obj $(OS)\Menu.obj \
-	$(OS)\ExternalPdfViewer.obj $(OS)\Selection.obj $(OS)\ZipUtil.obj \
-	$(UTILS_OBJS) $(BZIP2_OBJS) $(MINIZIP_OBJS) $(UNRAR_OBJS) $(SYNCTEX_OBJS) $(ENGINE_OBJS)
-
+	$(OS)\AppPrefs.obj $(OS)\DisplayModel.obj $(OS)\CrashHandler.obj \
+	$(OS)\Favorites.obj $(OS)\TextSearch.obj $(OS)\SumatraAbout.obj \
+	$(OS)\SumatraDialogs.obj $(OS)\SumatraProperties.obj \
+	$(OS)\SumatraPDF.obj $(OS)\translations.obj $(OS)\FileWatch.obj \
+	$(OS)\PdfSync.obj $(OS)\RenderCache.obj $(OS)\TextSelection.obj \
+	$(OS)\WindowInfo.obj $(OS)\ParseCommandLine.obj $(OS)\StressTesting.obj \
+	$(OS)\UnitTests.obj $(OS)\AppTools.obj $(OS)\TableOfContents.obj \
+	$(OS)\Toolbar.obj $(OS)\Print.obj $(OS)\Notifications.obj \
+	$(OS)\Search.obj $(OS)\Menu.obj $(OS)\ExternalPdfViewer.obj \
+	$(OS)\Selection.obj $(OS)\ZipUtil.obj $(SUMATRA_RES) \
+	$(UTILS_OBJS) $(BZIP2_OBJS) $(MINIZIP_OBJS) $(UNRAR_OBJS) \
+	$(SYNCTEX_OBJS) $(ENGINE_OBJS)
+# $(CRENGINE_OBJS)
+ 
 # disable incomplete Ribbon support in release builds (unless BUILD_RIBBON is defined)
 !if "$(CFG)"=="dbg"
 BUILD_RIBBON = 1

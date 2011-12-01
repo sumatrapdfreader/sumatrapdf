@@ -231,7 +231,7 @@ public:
 
 
 class LVRendLineInfo {
-    friend class PageSplitState;
+    friend struct PageSplitState;
     LVFootNoteList * links; // 4 bytes
     int start;              // 4 bytes
     lInt16 height;          // 2 bytes

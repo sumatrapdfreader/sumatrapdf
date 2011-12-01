@@ -84,7 +84,7 @@
 #endif
 #define GRAY_INVERSE						 0
 #define MAX_IMAGE_SCALE_MUL                  1
-#if defined(CYGWIN)
+#if defined(CYGWIN) || (USE_WIN32_FONTS==1)
 #define USE_FREETYPE                         0
 #else
 #define USE_FREETYPE                         1

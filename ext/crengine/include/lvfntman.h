@@ -266,7 +266,8 @@ protected:
     int     _height;
     int     _baseline;
     LVColorDrawBuf _drawbuf;
-    
+    lString8 _fontTypeFace;
+
 public:    
 
     LVBaseWin32Font() : _hfont(NULL), _height(0), _baseline(0), _drawbuf(1,1) 
@@ -281,7 +282,7 @@ public:
     }
     
     /// returns font height
-    virtual int getHeight()
+    virtual int getHeight() const
     {
         return _height;
     }
@@ -291,7 +292,40 @@ public:
     {
         return (void*)_hfont;
     }
-    
+
+    /// returns font weight
+    virtual int getWeight() const
+    {
+        // TODO sumatra: write me
+        assert(0);
+        return 0;
+    }
+
+    /// returns italic flag
+    virtual int getItalic() const
+    {
+        // TODO sumatra: write me
+        assert(0);
+        return 0;
+    }
+
+    /// returns font typeface name
+    virtual lString8 getTypeFace() const
+    {
+        // TODO sumatra: write me
+        assert(0);
+        return _fontTypeFace;
+    }
+
+    /// returns font family id
+    virtual css_font_family_t getFontFamily() const
+    {
+        // TODO sumatra: write me
+        assert(0);
+        return css_ff_serif;
+    }
+
+
     /// returns char width
     virtual int getCharWidth( lChar16 ch )
     {

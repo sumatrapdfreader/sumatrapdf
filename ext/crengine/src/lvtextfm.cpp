@@ -699,9 +699,13 @@ void LFormattedText::AddSourceObject(
      )
 {
     ldomNode * node = (ldomNode*)object;
+#if BUILD_LITE!=1
     LVImageSourceRef img = node->getObjectImageSource();
     if ( img.isNull() )
         img = LVCreateDummyImageSource( node, 50, 50 );
+#else
+    LVImageSourceRef img = LVCreateDummyImageSource( node, 50, 50 );
+#endif
     lUInt16 width = (lUInt16)img->GetWidth();
     lUInt16 height = (lUInt16)img->GetHeight();
     lvtextAddSourceObject(m_pbuffer,
