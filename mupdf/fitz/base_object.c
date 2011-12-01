@@ -789,7 +789,8 @@ fz_sort_dict(fz_obj *obj)
 	obj = fz_resolve_indirect(obj);
 	if (!fz_is_dict(obj))
 		return;
-	if (!obj->u.d.sorted)
+	/* SumatraPDF: never sort empty dictionaries (could crash later on) */
+	if (!obj->u.d.sorted && obj->u.d.len > 0)
 	{
 		qsort(obj->u.d.items, obj->u.d.len, sizeof(struct keyval), keyvalcmp);
 		obj->u.d.sorted = 1;
