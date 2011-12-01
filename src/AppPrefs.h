@@ -28,7 +28,7 @@ struct SerializableGlobalPrefs {
     }
 
     bool globalPrefsOnly;
-    /* pointer to a static string returned by Trans::VerifyLanguageCode, don't free */
+    /* pointer to a static string returned by Trans::ValidateLanguageCode(), don't free */
     const char *currentLanguage;
 
     bool toolbarVisible;

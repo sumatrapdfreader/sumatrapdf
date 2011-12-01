@@ -45,14 +45,10 @@ typedef struct {
 #define _LANGID(lang) MAKELANGID(lang, SUBLANG_NEUTRAL)
 
 LangDef gLangData[LANGS_COUNT] = {
-    %(lang_names)s
+    %(lang_data)s
 };
 
 #undef _LANGID
-
-const char *gLangOrder[LANGS_COUNT] = {
-    %(langs_c)s
-};
 
 const char *gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
 %(translations)s
@@ -120,15 +116,12 @@ def make_lang_layouts(lang_index):
     return lang_layouts
 
 def gen_c_code(langs_ex, strings_dict, file_name, lang_index):
-    # This is just to make the order the same as the old code that was parsing
-    # just one translation file, to avoid a diff in generated c code when switching
-    # from the old to the new method
-    langs = [cols[0] for cols in lang_index]
+    langs_ex.sort(lang_sort_func)
+    langs = [cols[0] for cols in langs_ex]
+    print(langs)
     assert DEFAULT_LANG == langs[0]
     langs_count = len(langs)
     translations_count = len(strings_dict)
-    langs_c = [c_escape(tmp) for tmp in langs]
-    langs_c = ",\n    ".join([", ".join(ten) for ten in group(langs_c, 10)])
     
     keys = strings_dict.keys()
     keys.sort(cmp=key_sort_func)
@@ -143,11 +136,10 @@ def gen_c_code(langs_ex, strings_dict, file_name, lang_index):
         lines += ["  %s," % c_escape(t) for t in trans]
     translations = "\n".join(lines)
     
-    langs_ex.sort(lang_sort_func)
     lang_ids = make_lang_ids(langs_ex, lang_index)
     lang_layouts = make_lang_layouts(lang_index)
-    lang_names = ['{ "%s", %s, %s, %d },' % (lang[0], c_escape(lang[1]), lang_ids[lang[0]], lang_layouts[lang[0]]) for lang in langs_ex]
-    lang_names = "\n    ".join(lang_names)
+    lang_data = ['{ "%s", %s, %s, %d },' % (lang[0], c_escape(lang[1]), lang_ids[lang[0]], lang_layouts[lang[0]]) for lang in langs_ex]
+    lang_data = "\n    ".join(lang_data)
     
     file_content = TRANSLATIONS_TXT_C % locals()
     file(file_name, "wb").write(file_content)

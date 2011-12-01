@@ -7,7 +7,7 @@
 namespace Trans {
 
 const char *  GuessLanguage();
-const char *  VerifyLanguageCode(const char *code);
+const char *  ValidateLanguageCode(const char *code);
 bool          SetCurrentLanguage(const char *code);
 const TCHAR * GetTranslation(const char *txt);
 

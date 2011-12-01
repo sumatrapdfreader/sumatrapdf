@@ -10,12 +10,7 @@ namespace Trans {
 /*
 This code relies on the following variables that must be defined in 
 a separate file translations_txt.cpp which is automatically generated 
-by a script from translation files.
-
-// TODO: merge with gLangData(?)
-// array of language codes so that gLangOrder[i] is a code of
-// language. i is in 0 .. LANGS_COUNT-1
-const char *gLangOrder[LANGS_COUNT];
+from translation files by scripts\update_translations.py.
 
 // array of UTF-8 encoded translated strings. 
 // it has LANGS_COUNT * STRINGS_COUNT elements
@@ -57,30 +52,30 @@ const char *GuessLanguage()
 
 static bool IsValidLangIdx(int idx)
 {
-    return (idx >= 0) && (idx <LANGS_COUNT);
+    return (idx >= 0) && (idx < LANGS_COUNT);
 }
 
-static int GetLangOrderIndex(const char *code)
+static int GetLangIndexFromCode(const char *code)
 {
-    for (size_t i = 0; i < dimof(gLangOrder); i++)
-        if (str::Eq(code, gLangOrder[i]))
+    for (size_t i = 0; i < LANGS_COUNT; i++)
+        if (str::Eq(code, gLangData[i].code))
             return (int)i;
     return -1;
 }
 
 // checks whether the language code is known and returns
 // a static pointer to the same code if so (else NULL)
-const char *VerifyLanguageCode(const char *code)
+const char *ValidateLanguageCode(const char *code)
 {
-    int index = GetLangOrderIndex(code);
+    int index = GetLangIndexFromCode(code);
     if (IsValidLangIdx(index))
-        return gLangOrder[index];
+        return gLangData[index].code;
     return NULL;
 }
 
 bool SetCurrentLanguage(const char *code)
 {
-    int newIdx = GetLangOrderIndex(code);
+    int newIdx = GetLangIndexFromCode(code);
     if (newIdx != -1)
         gCurrLangIdx = newIdx;
     return newIdx != -1;

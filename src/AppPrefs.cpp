@@ -504,7 +504,7 @@ static void DeserializePrefs(const char *prefsTxt, SerializableGlobalPrefs& glob
     RetrieveRaw(global, LAST_UPDATE_STR, globalPrefs.lastUpdateTime);
 
     const char *lang = GetRawString(global, UI_LANGUAGE_STR);
-    const char *langCode = Trans::VerifyLanguageCode(lang);
+    const char *langCode = Trans::ValidateLanguageCode(lang);
     if (langCode)
         globalPrefs.currentLanguage = langCode;
 

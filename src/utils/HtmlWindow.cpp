@@ -516,7 +516,6 @@ static void UnregisterInternetProtocolFactory()
     gInternetProtocolFactory = NULL;
 }
 
-
 class HW_IOleInPlaceFrame : public IOleInPlaceFrame
 {
 public:
