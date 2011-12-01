@@ -5,6 +5,8 @@ Next version:
 
 2.0 (????-??-??)
 
+* we can now open CHM documents from network drives
+
 1.9 (2011-11-23)
 
 * CHM documents support
