@@ -1587,7 +1587,7 @@ static void DebugShowLinks(DisplayModel& dm, HDC hdc)
         Vec<PageElement *> *els = dm.engine->GetElements(pageNo);
         if (els) {
             for (size_t i = 0; i < els->Count(); i++) {
-                if (els->At(i)->GetType() == Element_Image && 0)
+                if (els->At(i)->GetType() == Element_Image)
                     continue;
                 RectI rect = dm.CvtToScreen(pageNo, els->At(i)->GetRect());
                 RectI isect = viewPortRect.Intersect(rect);
@@ -1927,18 +1927,35 @@ static void OnMouseLeftButtonDblClk(WindowInfo& win, int x, int y, WPARAM key)
     bool dontSelect = false;
     if (gGlobalPrefs.enableTeXEnhancements && !(key & ~MK_LBUTTON))
         dontSelect = OnInverseSearch(&win, x, y);
-
-    if (dontSelect || !win.IsDocLoaded() || !win.dm->IsOverText(PointI(x, y)))
+    if (dontSelect || !win.IsDocLoaded())
         return;
 
-    int pageNo = win.dm->GetPageNoByPoint(PointI(x, y));
-    if (win.dm->ValidPageNo(pageNo)) {
-        PointD pt = win.dm->CvtFromScreen(PointI(x, y), pageNo);
-        win.dm->textSelection->SelectWordAt(pageNo, pt.x, pt.y);
+    if (win.dm->IsOverText(PointI(x, y))) {
+        int pageNo = win.dm->GetPageNoByPoint(PointI(x, y));
+        if (win.dm->ValidPageNo(pageNo)) {
+            PointD pt = win.dm->CvtFromScreen(PointI(x, y), pageNo);
+            win.dm->textSelection->SelectWordAt(pageNo, pt.x, pt.y);
+            UpdateTextSelection(&win, false);
+            win.RepaintAsync();
+        }
+        return;
     }
 
-    UpdateTextSelection(&win, false);
-    win.RepaintAsync();
+    PageElement *pageEl = win.dm->GetElementAtPos(PointI(x, y));
+    if (pageEl && pageEl->GetType() == Element_Link) {
+        // speed up navigation in a file where navigation links are in a fixed position
+        OnMouseLeftButtonDown(win, x, y, key);
+    }
+    else if (pageEl && pageEl->GetType() == Element_Image) {
+        // select an image that could be copied to the clipboard
+        RectI rc = win.dm->CvtToScreen(pageEl->GetPageNo(), pageEl->GetRect());
+
+        DeleteOldSelectionInfo(&win, true);
+        win.selectionOnPage = SelectionOnPage::FromRectangle(win.dm, rc);
+        win.showSelection = true;
+        win.RepaintAsync();
+    }
+    delete pageEl;
 }
 
 static void OnMouseMiddleButtonDown(WindowInfo& win, int x, int y, WPARAM key)

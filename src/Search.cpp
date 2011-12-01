@@ -343,15 +343,13 @@ bool OnInverseSearch(WindowInfo *win, int x, int y)
         int err = Synchronizer::Create(win->loadedFilePath, win->dm, &win->pdfsync);
         if (err == PDFSYNCERR_SYNCFILE_NOTFOUND) {
             DBG_OUT("Pdfsync: Sync file not found!\n");
-            // Fall back to selecting a word when double-clicking over text in
-            // a document with no corresponding synchronization file
-            if (win->dm->IsOverText(PointI(x, y)))
-                return false;
             // In order to avoid confusion for non-LaTeX users, we do not show
             // any error message if the SyncTeX enhancements are hidden from UI
             if (gGlobalPrefs.enableTeXEnhancements)
                 ShowNotification(win, _TR("No synchronization file found"));
-            return true;
+            // Fall back to selecting a word when double-clicking over text in
+            // a document with no corresponding synchronization file
+            return false;
         }
         if (err != PDFSYNCERR_SUCCESS) {
             DBG_OUT("Pdfsync: Sync file cannot be loaded!\n");

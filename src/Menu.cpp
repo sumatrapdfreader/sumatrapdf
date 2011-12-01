@@ -428,7 +428,7 @@ void OnContextMenu(WindowInfo* win, int x, int y)
         win::menu::Remove(popup, IDM_COPY_LINK_TARGET);
     if (!value || pageEl->GetType() != Element_Comment)
         win::menu::Remove(popup, IDM_COPY_COMMENT);
-    if (pageEl->GetType() != Element_Image)
+    if (!pageEl || pageEl->GetType() != Element_Image)
         win::menu::Remove(popup, IDM_COPY_IMAGE);
 
     if (!win->selectionOnPage)
