@@ -1040,7 +1040,7 @@ static void WriteMiniDump()
 
     MINIDUMP_TYPE type = (MINIDUMP_TYPE)(MiniDumpNormal | MiniDumpWithIndirectlyReferencedMemory | MiniDumpScanMemory);
     // set the SUMATRAPDF_FULLDUMP environment variable for far more complete minidumps
-    if (GetEnvironmentVariable(_T("SUMATRAPDF_FULLDUMP"), NULL, 0))
+    if (GetEnvironmentVariableA("SUMATRAPDF_FULLDUMP", NULL, 0))
         type = (MINIDUMP_TYPE)(type | MiniDumpWithDataSegs | MiniDumpWithHandleData | MiniDumpWithPrivateReadWriteMemory);
     MINIDUMP_CALLBACK_INFORMATION mci = { OpenMiniDumpCallback, NULL }; 
 
