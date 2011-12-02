@@ -3067,9 +3067,7 @@ bool FrameOnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
 
     if (win->IsChm()) {
         if (ChmForwardKey(key)) {
-            ChmEngine *chmEng = win->dm->AsChmEngine();
-            HtmlWindow *htmlWin = chmEng->GetHtmlWindow();
-            htmlWin->SendMsg(WM_KEYDOWN, key, lparam);
+            win->dm->AsChmEngine()->PassUIMsg(WM_KEYDOWN, key, lparam);
             return true;
         }
     }
@@ -4514,9 +4512,7 @@ InitMouseWheelInfo:
                 break;
 
             if (win->IsChm()) {
-                ChmEngine *chmEngine = win->dm->AsChmEngine();
-                HtmlWindow *htmlWin = chmEngine->GetHtmlWindow();
-                htmlWin->SendMsg(msg, wParam, lParam);
+                win->dm->AsChmEngine()->PassUIMsg(msg, wParam, lParam);
                 break;
             }
 

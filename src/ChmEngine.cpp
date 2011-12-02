@@ -149,15 +149,17 @@ public:
     virtual void SetNavigationCalback(ChmNavigationCallback *cb) { navCb = cb; }
     virtual RenderedBitmap *CreateThumbnail(SizeI size);
 
-    virtual void PrintCurrentPage() { htmlWindow->PrintCurrentPage(); }
-    virtual void FindInCurrentPage() { htmlWindow->FindInCurrentPage(); }
+    virtual void PrintCurrentPage() { if (htmlWindow) htmlWindow->PrintCurrentPage(); }
+    virtual void FindInCurrentPage() { if (htmlWindow) htmlWindow->FindInCurrentPage(); }
     virtual bool CanNavigate(int dir);
     virtual void Navigate(int dir);
     virtual void ZoomTo(float zoomLevel);
-    virtual void SelectAll() { htmlWindow->SelectAll(); }
-    virtual void CopySelection() { htmlWindow->CopySelection(); }
+    virtual void SelectAll() { if (htmlWindow) htmlWindow->SelectAll(); }
+    virtual void CopySelection() { if (htmlWindow) htmlWindow->CopySelection(); }
     virtual int CurrentPageNo() const { return currentPageNo; }
-    virtual HtmlWindow *GetHtmlWindow() const { return htmlWindow; }
+    virtual void PassUIMsg(UINT msg, WPARAM wParam, LPARAM lParam) {
+        if (htmlWindow) htmlWindow->SendMsg(msg, wParam, lParam);
+    }
 
     // from HtmlWindowCallback
     virtual bool OnBeforeNavigate(const TCHAR *url, bool newWindow);
@@ -186,7 +188,7 @@ protected:
 
 CChmEngine::CChmEngine() :
     fileName(NULL), chmHandle(NULL), tocRoot(NULL),
-        htmlWindow(NULL), navCb(NULL), currentPageNo(1)
+    htmlWindow(NULL), navCb(NULL), currentPageNo(1)
 {
 }
 
@@ -260,7 +262,9 @@ void CChmEngine::DisplayPage(const TCHAR *pageUrl)
     if (str::StartsWith(pageUrl, _T("/")))
         pageUrl++;
 
-    htmlWindow->NavigateToDataUrl(pageUrl);
+    assert(htmlWindow);
+    if (htmlWindow)
+        htmlWindow->NavigateToDataUrl(pageUrl);
 }
 
 RenderedBitmap *CChmEngine::CreateThumbnail(SizeI size)
@@ -283,7 +287,7 @@ RenderedBitmap *CChmEngine::CreateThumbnail(SizeI size)
 #endif
     SetParentHwnd(hwnd);
     DisplayPage(1);
-    if (!htmlWindow->WaitUntilLoaded(5 * 1000))
+    if (!htmlWindow || !htmlWindow->WaitUntilLoaded(5 * 1000))
         goto Exit;
     HBITMAP hbmp = htmlWindow->TakeScreenshot(area, size);
     if (!hbmp)
@@ -297,6 +301,8 @@ Exit:
 
 bool CChmEngine::CanNavigate(int dir)
 {
+    if (!htmlWindow)
+        return false;
     if (dir < 0)
         return htmlWindow->canGoBack;
     return htmlWindow->canGoForward;
@@ -304,6 +310,8 @@ bool CChmEngine::CanNavigate(int dir)
 
 void CChmEngine::Navigate(int dir)
 {
+    if (!htmlWindow)
+        return;
     if (dir < 0) {
         for (; dir < 0 && CanNavigate(dir); dir++)
             htmlWindow->GoBack();
@@ -315,8 +323,8 @@ void CChmEngine::Navigate(int dir)
 
 void CChmEngine::ZoomTo(float zoomLevel)
 {
-    int zoom = (int)zoomLevel;
-    htmlWindow->SetZoomPercent(zoom);
+    if (htmlWindow)
+        htmlWindow->SetZoomPercent((int)zoomLevel);
 }
 
 CChmEngine::~CChmEngine()

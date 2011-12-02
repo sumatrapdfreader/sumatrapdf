@@ -37,7 +37,7 @@ public:
     virtual void SelectAll() = 0;
     virtual void CopySelection() = 0;
     virtual int CurrentPageNo() const = 0;
-    virtual HtmlWindow *GetHtmlWindow() const = 0;
+    virtual void PassUIMsg(UINT msg, WPARAM wParam, LPARAM lParam) = 0;
 
     static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
     static ChmEngine *CreateFromFileName(const TCHAR *fileName);
