@@ -624,10 +624,17 @@ static void CreateChmThumbnail(WindowInfo& win, DisplayState& ds)
         DBG_OUT("Formatting %s took %.2f secs\n", win.loadedFilePath, dur / 1000.0);
 }
 
-void CreateThumbnailForFile(WindowInfo& win, DisplayState& ds)
+static void CreateThumbnailForFile(WindowInfo& win, DisplayState& ds)
 {
     // don't create thumbnails if we won't be needing them at all
     if (!HasPermission(Perm_SavePreferences))
+        return;
+
+    assert(win.IsDocLoaded() && win.dm->engine);
+    if (!win.IsDocLoaded() || !win.dm->engine) return;
+
+    // don't unnecessarily accumulate thumbnails during a stress test
+    if (gIsStressTesting)
         return;
 
     // don't even create thumbnails for files that won't need them anytime soon
@@ -637,11 +644,13 @@ void CreateThumbnailForFile(WindowInfo& win, DisplayState& ds)
     if (ix < 0 || FILE_HISTORY_MAX_FREQUENT * 2 <= ix)
         return;
 
-    if (HasThumbnail(ds))
+    // don't create thumbnails for password protected documents
+    if (win.dm->engine->IsPasswordProtected()) {
+        RemoveThumbnail(ds);
         return;
+    }
 
-    // don't unnecessarily accumulate thumbnails during a stress test
-    if (gIsStressTesting)
+    if (HasThumbnail(ds))
         return;
 
     if (win.IsChm()) {

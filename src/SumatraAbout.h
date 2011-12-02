@@ -26,5 +26,6 @@ void    DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORR
 void    CleanUpThumbnailCache(FileHistory& fileHistory);
 bool    HasThumbnail(DisplayState& ds);
 void    SaveThumbnail(DisplayState& ds);
+void    RemoveThumbnail(DisplayState& ds);
 
 #endif

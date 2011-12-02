@@ -769,12 +769,14 @@ public:
     virtual TCHAR *GetPageLabel(int pageNo);
     virtual int GetPageByLabel(const TCHAR *label);
 
+    virtual bool IsPasswordProtected() const { return isProtected; }
     virtual char *GetDecryptionKey() const;
     virtual void RunGC();
 
 protected:
     const TCHAR *_fileName;
     char *_decryptionKey;
+    bool isProtected;
 
     // make sure to never ask for pagesAccess in an xrefAccess
     // protected critical section in order to avoid deadlocks
@@ -907,7 +909,8 @@ public:
 
 CPdfEngine::CPdfEngine() : _fileName(NULL), _xref(NULL), _mediaboxes(NULL),
     outline(NULL), attachments(NULL), _info(NULL), _pages(NULL),
-    _drawcache(NULL), _pagelabels(NULL), _decryptionKey(NULL), hasImages(NULL)
+    _drawcache(NULL), _pagelabels(NULL), _decryptionKey(NULL), hasImages(NULL),
+    isProtected(false)
 {
     InitializeCriticalSection(&pagesAccess);
     InitializeCriticalSection(&xrefAccess);
@@ -1089,46 +1092,46 @@ bool CPdfEngine::LoadFromStream(fz_stream *stm, PasswordUI *pwdUI)
     if (error || !_xref)
         return false;
 
-    if (pdf_needs_password(_xref)) {
-        if (!pwdUI)
-            return false;
+    isProtected = pdf_needs_password(_xref);
+    if (!isProtected)
+        return true;
 
-        unsigned char digest[16 + 32] = { 0 };
-        fz_stream_fingerprint(_xref->file, digest);
+    if (!pwdUI)
+        return false;
 
-        bool okay = false, saveKey = false;
-        for (int i = 0; !okay && i < 3; i++) {
-            ScopedMem<TCHAR> pwd(pwdUI->GetPassword(_fileName, digest, pdf_get_crypt_key(_xref), &saveKey));
-            if (!pwd) {
-                // password not given or encryption key has been remembered
-                okay = saveKey;
-                break;
-            }
+    unsigned char digest[16 + 32] = { 0 };
+    fz_stream_fingerprint(_xref->file, digest);
 
-            char *pwd_doc = str::conv::ToPDF(pwd);
-            okay = pwd_doc && pdf_authenticate_password(_xref, pwd_doc);
-            fz_free(pwd_doc);
-            // try the UTF-8 password, if the PDFDocEncoding one doesn't work
-            if (!okay) {
-                ScopedMem<char> pwd_utf8(str::conv::ToUtf8(pwd));
-                okay = pwd_utf8 && pdf_authenticate_password(_xref, pwd_utf8);
-            }
-            // fall back to an ANSI-encoded password as a last measure
-            if (!okay) {
-                ScopedMem<char> pwd_ansi(str::conv::ToAnsi(pwd));
-                okay = pwd_ansi && pdf_authenticate_password(_xref, pwd_ansi);
-            }
+    bool ok = false, saveKey = false;
+    for (int i = 0; !ok && i < 3; i++) {
+        ScopedMem<TCHAR> pwd(pwdUI->GetPassword(_fileName, digest, pdf_get_crypt_key(_xref), &saveKey));
+        if (!pwd) {
+            // password not given or encryption key has been remembered
+            ok = saveKey;
+            break;
         }
-        if (!okay)
-            return false;
 
-        if (saveKey) {
-            memcpy(digest + 16, pdf_get_crypt_key(_xref), 32);
-            _decryptionKey = _MemToHex(&digest);
+        char *pwd_doc = str::conv::ToPDF(pwd);
+        ok = pwd_doc && pdf_authenticate_password(_xref, pwd_doc);
+        fz_free(pwd_doc);
+        // try the UTF-8 password, if the PDFDocEncoding one doesn't work
+        if (!ok) {
+            ScopedMem<char> pwd_utf8(str::conv::ToUtf8(pwd));
+            ok = pwd_utf8 && pdf_authenticate_password(_xref, pwd_utf8);
+        }
+        // fall back to an ANSI-encoded password as a last measure
+        if (!ok) {
+            ScopedMem<char> pwd_ansi(str::conv::ToAnsi(pwd));
+            ok = pwd_ansi && pdf_authenticate_password(_xref, pwd_ansi);
         }
     }
 
-    return true;
+    if (ok && saveKey) {
+        memcpy(digest + 16, pdf_get_crypt_key(_xref), 32);
+        _decryptionKey = _MemToHex(&digest);
+    }
+
+    return ok;
 }
 
 bool CPdfEngine::FinishLoading()

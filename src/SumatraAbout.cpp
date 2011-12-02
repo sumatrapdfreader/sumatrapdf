@@ -775,3 +775,15 @@ void SaveThumbnail(DisplayState& ds)
     if (dir::Create(thumbsPath))
         SaveRenderedBitmap(ds.thumbnail, bmpPath);
 }
+
+void RemoveThumbnail(DisplayState& ds)
+{
+    if (!HasThumbnail(ds))
+        return;
+
+    ScopedMem<TCHAR> bmpPath(GetThumbnailPath(ds.filePath));
+    if (bmpPath)
+        file::Delete(bmpPath);
+    delete ds.thumbnail;
+    ds.thumbnail = NULL;
+}

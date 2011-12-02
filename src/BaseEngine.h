@@ -244,6 +244,8 @@ public:
     // reverts GetPageLabel by returning the first page number having the given label
     virtual int GetPageByLabel(const TCHAR *label) { return _ttoi(label); }
 
+    // whether this document required a password in order to be loaded
+    virtual bool IsPasswordProtected() const { return false; }
     // returns a string to remember when the user wants to save a document's password
     // (don't implement for document types that don't support password protection)
     // caller must free() the result
