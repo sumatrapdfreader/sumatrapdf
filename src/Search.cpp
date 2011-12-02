@@ -343,12 +343,11 @@ bool OnInverseSearch(WindowInfo *win, int x, int y)
         int err = Synchronizer::Create(win->loadedFilePath, win->dm, &win->pdfsync);
         if (err == PDFSYNCERR_SYNCFILE_NOTFOUND) {
             DBG_OUT("Pdfsync: Sync file not found!\n");
-            // In order to avoid confusion for non-LaTeX users, we do not show
-            // any error message if the SyncTeX enhancements are hidden from UI
-            if (gGlobalPrefs.enableTeXEnhancements)
-                ShowNotification(win, _TR("No synchronization file found"));
-            // Fall back to selecting a word when double-clicking over text in
-            // a document with no corresponding synchronization file
+            // We used to warn that "No synchronization file found" at this
+            // point if gGlobalPrefs.enableTeXEnhancements is set; we no longer
+            // so do because a double-click has several other meanings
+            // (selecting a word or an image, navigating quickly using links)
+            // and showing an unrelated warning in all those cases seems wrong
             return false;
         }
         if (err != PDFSYNCERR_SUCCESS) {
