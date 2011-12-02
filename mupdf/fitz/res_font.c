@@ -96,10 +96,11 @@ fz_drop_font(fz_font *font)
 void
 fz_set_font_bbox(fz_font *font, float xmin, float ymin, float xmax, float ymax)
 {
-	font->bbox.x0 = xmin;
-	font->bbox.y0 = ymin;
-	font->bbox.x1 = xmax;
-	font->bbox.y1 = ymax;
+	/* SumatraPDF: the font bbox is assumed to be premultiplied with 1000 */
+	font->bbox.x0 = xmin * 1000;
+	font->bbox.y0 = ymin * 1000;
+	font->bbox.x1 = xmax * 1000;
+	font->bbox.y1 = ymax * 1000;
 }
 
 /*
