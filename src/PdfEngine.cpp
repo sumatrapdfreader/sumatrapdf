@@ -490,10 +490,11 @@ extern "C" static void
 fz_extract_image(void *user, fz_pixmap *image, fz_matrix ctm, float alpha)
 {
     // TODO: try to better distinguish images a user might actually want to extract
-    if (image->w < 10 || image->h < 10)
+    if (image->w < 16 || image->h < 16)
         return;
     fz_rect rect = fz_transform_rect(ctm, fz_unit_rect);
-    ((Vec<FitzImagePos> *)user)->Append(FitzImagePos(image, rect));
+    if (!fz_is_empty_rect(rect))
+        ((Vec<FitzImagePos> *)user)->Append(FitzImagePos(image, rect));
 }
 
 static fz_device *fz_new_image_extractor(Vec<FitzImagePos> *list)
@@ -810,7 +811,8 @@ protected:
 
     PdfTocItem   *  BuildTocTree(fz_outline *entry, int& idCounter);
     void            LinkifyPageText(pdf_page *page);
-    Vec<FitzImagePos> GetPageImages(pdf_page *page);
+    fz_rect       * GetPageImageRects(pdf_page *page);
+    RenderedBitmap *GetPageImage(int pageNo, RectD rect, size_t imageIx);
 
     int             FindPageNo(fz_obj *dest);
     bool            SaveEmbedded(fz_obj *obj, LinkSaverUI& saveUI);
@@ -821,7 +823,7 @@ protected:
     fz_obj        * _info;
     fz_glyph_cache* _drawcache;
     StrVec        * _pagelabels;
-    bool          * hasImages;
+    fz_rect      ** imageRects;
 };
 
 class PdfLink : public PageElement, public PageDestination {
@@ -884,33 +886,29 @@ public:
 
 class PdfImage : public PageElement {
     CPdfEngine *engine;
-    fz_pixmap *image;
     int pageNo;
     RectD rect;
+    size_t imageIx;
 
 public:
-    PdfImage(CPdfEngine *engine, fz_pixmap *image, int pageNo, fz_rect rect) :
-        engine(engine), image(image), pageNo(pageNo), rect(fz_rect_to_RectD(rect)) {
-        ScopedCritSec scope(&engine->xrefAccess);
-        fz_keep_pixmap(image);
-    }
-    ~PdfImage() {
-        ScopedCritSec scope(&engine->xrefAccess);
-        fz_drop_pixmap(image);
-    }
+    PdfImage(CPdfEngine *engine, int pageNo, fz_rect rect, size_t imageIx) :
+        engine(engine), pageNo(pageNo), rect(fz_rect_to_RectD(rect)), imageIx(imageIx) { }
 
     virtual PageElementType GetType() const { return Element_Image; }
     virtual int GetPageNo() const { return pageNo; }
     virtual RectD GetRect() const { return rect; }
     virtual TCHAR *GetValue() const { return NULL; }
 
-    virtual RenderedBitmap *GetImage() { return new RenderedFitzBitmap(image); }
+    virtual RenderedBitmap *GetImage() {
+        return engine->GetPageImage(pageNo, rect, imageIx);
+    }
 };
 
-CPdfEngine::CPdfEngine() : _fileName(NULL), _xref(NULL), _mediaboxes(NULL),
-    outline(NULL), attachments(NULL), _info(NULL), _pages(NULL),
-    _drawcache(NULL), _pagelabels(NULL), _decryptionKey(NULL), hasImages(NULL),
-    isProtected(false)
+CPdfEngine::CPdfEngine() : _fileName(NULL), _xref(NULL),
+    _pages(NULL), _mediaboxes(NULL), _info(NULL),
+    outline(NULL), attachments(NULL), _pagelabels(NULL),
+    _drawcache(NULL), _decryptionKey(NULL), isProtected(false),
+    imageRects(NULL)    
 {
     InitializeCriticalSection(&pagesAccess);
     InitializeCriticalSection(&xrefAccess);
@@ -937,6 +935,12 @@ CPdfEngine::~CPdfEngine()
     if (_info)
         fz_drop_obj(_info);
 
+    if (imageRects) {
+        for (int i = 0; i < PageCount(); i++)
+            free(imageRects[i]);
+        free(imageRects);
+    }
+
     if (_xref) {
         pdf_free_xref(_xref);
         _xref = NULL;
@@ -951,7 +955,6 @@ CPdfEngine::~CPdfEngine()
 
     delete[] _mediaboxes;
     delete _pagelabels;
-    free(hasImages);
     free((void*)_fileName);
     free(_decryptionKey);
 
@@ -1162,9 +1165,9 @@ bool CPdfEngine::FinishLoading()
     fz_obj *pagelabels = fz_dict_gets(fz_dict_gets(_xref->trailer, "Root"), "PageLabels");
     if (pagelabels)
         _pagelabels = BuildPageLabelVec(pagelabels, PageCount());
-    hasImages = SAZA(bool, PageCount());
+    imageRects = SAZA(fz_rect *, PageCount());
 
-    return true;
+    return _pages != NULL && _mediaboxes != NULL && imageRects != NULL;
 }
 
 PdfTocItem *CPdfEngine::BuildTocTree(fz_outline *entry, int& idCounter)
@@ -1261,7 +1264,7 @@ pdf_page *CPdfEngine::GetPdfPage(int pageNo, bool failIfBusy)
         if (!error) {
             LinkifyPageText(page);
             _pages[pageNo-1] = page;
-            hasImages[pageNo-1] = GetPageImages(page).Count() > 0;
+            imageRects[pageNo-1] = GetPageImageRects(page);
         }
     }
 
@@ -1599,13 +1602,10 @@ PageElement *CPdfEngine::GetElementAtPos(int pageNo, PointD pt)
             }
     }
 
-    if (hasImages[pageNo-1]) {
-        // GetPageImages blocks, so don't call it unless there really are any images
-        Vec<FitzImagePos> positions = GetPageImages(page);
-        assert(positions.Count() > 0);
-        for (size_t i = 0; i < positions.Count(); i++)
-            if (fz_is_pt_in_rect(positions.At(i).rect, p))
-                return new PdfImage(this, positions.At(i).image, pageNo, positions.At(i).rect);
+    if (imageRects[pageNo-1]) {
+        for (size_t i = 0; !fz_is_empty_rect(imageRects[pageNo-1][i]); i++)
+            if (fz_is_pt_in_rect(imageRects[pageNo-1][i], p))
+                return new PdfImage(this, pageNo, imageRects[pageNo-1][i], i);
     }
 
     return NULL;
@@ -1632,11 +1632,9 @@ Vec<PageElement *> *CPdfEngine::GetElements(int pageNo)
             }
     }
 
-    if (hasImages[pageNo-1]) {
-        Vec<FitzImagePos> positions = GetPageImages(page);
-        assert(positions.Count() > 0);
-        for (size_t i = 0; i < positions.Count(); i++)
-            els->Append(new PdfImage(this, positions.At(i).image, pageNo, positions.At(i).rect));
+    if (imageRects[pageNo-1]) {
+        for (size_t i = 0; !fz_is_empty_rect(imageRects[pageNo-1][i]); i++)
+            els->Append(new PdfImage(this, pageNo, imageRects[pageNo-1][i], i));
     }
 
     return els;
@@ -1698,12 +1696,41 @@ void CPdfEngine::LinkifyPageText(pdf_page *page)
     free(pageText);
 }
 
-Vec<FitzImagePos> CPdfEngine::GetPageImages(pdf_page *page)
+fz_rect *CPdfEngine::GetPageImageRects(pdf_page *page)
 {
     Vec<FitzImagePos> positions;
     RunPage(page, fz_new_image_extractor(&positions), fz_identity);
+    // images are extracted in bottom-to-top order, but for GetElements
+    // we want to access them in top-to-bottom order (since images at
+    // the bottom might not be visible at all)
     positions.Reverse();
-    return positions;
+    if (positions.Count() == 0)
+        return NULL;
+
+    // the list of page image rectangles is terminated with a null-rectangle
+    fz_rect *result = SAZA(fz_rect, positions.Count() + 1);
+    for (size_t i = 0; i < positions.Count(); i++)
+        result[i] = positions.At(i).rect;
+    return result;
+}
+
+RenderedBitmap *CPdfEngine::GetPageImage(int pageNo, RectD rect, size_t imageIx)
+{
+    pdf_page *page = GetPdfPage(pageNo);
+    if (!page)
+        return NULL;
+
+    ScopedCritSec scope(&xrefAccess);
+
+    Vec<FitzImagePos> positions;
+    RunPage(page, fz_new_image_extractor(&positions), fz_identity);
+    positions.Reverse();
+    if (imageIx >= positions.Count() || fz_rect_to_RectD(positions.At(imageIx).rect) != rect) {
+        assert(0);
+        return NULL;
+    }
+
+    return new RenderedFitzBitmap(positions.At(imageIx).image);
 }
 
 TCHAR *CPdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, RectI **coords_out, RenderTarget target, bool cacheRun)
@@ -2113,7 +2140,7 @@ public:
                          RenderTarget target=Target_View);
     virtual bool RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation,
                          RectD *pageRect=NULL, RenderTarget target=Target_View) {
-        return renderPage(hDC, getXpsPage(pageNo), screenRect, NULL, zoom, rotation, pageRect);
+        return renderPage(hDC, GetXpsPage(pageNo), screenRect, NULL, zoom, rotation, pageRect);
     }
 
     virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false);
@@ -2128,7 +2155,7 @@ public:
     virtual float GetFileDPI() const { return 96.0f; }
     virtual const TCHAR *GetDefaultFileExt() const { return _T(".xps"); }
 
-    virtual bool BenchLoadPage(int pageNo) { return getXpsPage(pageNo) != NULL; }
+    virtual bool BenchLoadPage(int pageNo) { return GetXpsPage(pageNo) != NULL; }
 
     virtual Vec<PageElement *> *GetElements(int pageNo);
     virtual PageElement *GetElementAtPos(int pageNo, PointD pt);
@@ -2156,7 +2183,7 @@ protected:
     bool            load(fz_stream *stm);
     bool            load_from_stream(fz_stream *stm);
 
-    xps_page      * getXpsPage(int pageNo, bool failIfBusy=false);
+    xps_page      * GetXpsPage(int pageNo, bool failIfBusy=false);
     fz_matrix       viewctm(int pageNo, float zoom, int rotation) {
         return viewctm(PageMediabox(pageNo), zoom, rotation);
     }
@@ -2178,14 +2205,15 @@ protected:
 
     XpsTocItem   *  BuildTocTree(fz_outline *entry, int& idCounter);
     void            LinkifyPageText(xps_page *page, int pageNo);
-    Vec<FitzImagePos> GetPageImages(xps_page *page);
+    fz_rect       * GetPageImageRects(xps_page *page);
+    RenderedBitmap *GetPageImage(int pageNo, RectD rect, size_t imageIx);
 
     RectD         * _mediaboxes;
     fz_outline    * _outline;
     xps_anchor   ** _links;
     fz_obj        * _info;
     fz_glyph_cache* _drawcache;
-    bool          * hasImages;
+    fz_rect      ** imageRects;
 };
 
 static bool IsUriTarget(const char *target)
@@ -2247,27 +2275,22 @@ public:
 
 class XpsImage : public PageElement {
     CXpsEngine *engine;
-    fz_pixmap *image;
     int pageNo;
     RectD rect;
+    size_t imageIx;
 
 public:
-    XpsImage(CXpsEngine *engine, fz_pixmap *image, int pageNo, fz_rect rect) :
-        engine(engine), image(image), pageNo(pageNo), rect(fz_rect_to_RectD(rect)) {
-        ScopedCritSec scope(&engine->_ctxAccess);
-        fz_keep_pixmap(image);
-    }
-    ~XpsImage() {
-        ScopedCritSec scope(&engine->_ctxAccess);
-        fz_drop_pixmap(image);
-    }
+    XpsImage(CXpsEngine *engine, int pageNo, fz_rect rect, size_t imageIx) :
+        engine(engine), pageNo(pageNo), rect(fz_rect_to_RectD(rect)), imageIx(imageIx) { }
 
     virtual PageElementType GetType() const { return Element_Image; }
     virtual int GetPageNo() const { return pageNo; }
     virtual RectD GetRect() const { return rect; }
     virtual TCHAR *GetValue() const { return NULL; }
 
-    virtual RenderedBitmap *GetImage() { return new RenderedFitzBitmap(image); }
+    virtual RenderedBitmap *GetImage() {
+        return engine->GetPageImage(pageNo, rect, imageIx);
+    }
 };
 
 static void xps_run_page(xps_context *ctx, xps_page *page, fz_device *dev, fz_matrix ctm, xps_anchor *extract=NULL)
@@ -2291,7 +2314,7 @@ static xps_anchor *xps_new_anchor(char *target, fz_rect rect=fz_empty_rect)
 }
 
 CXpsEngine::CXpsEngine() : _fileName(NULL), _ctx(NULL), _pages(NULL), _mediaboxes(NULL),
-    _outline(NULL), _links(NULL), _info(NULL), _drawcache(NULL), hasImages(NULL)
+    _outline(NULL), _links(NULL), _info(NULL), _drawcache(NULL), imageRects(NULL)
 {
     InitializeCriticalSection(&_pagesAccess);
     InitializeCriticalSection(&_ctxAccess);
@@ -2321,7 +2344,11 @@ CXpsEngine::~CXpsEngine()
         fz_free_outline(_outline);
     if (_mediaboxes)
         delete[] _mediaboxes;
-    free(hasImages);
+    if (imageRects) {
+        for (int i = 0; i < PageCount(); i++)
+            free(imageRects[i]);
+        free(imageRects);
+    }
 
     if (_ctx) {
         xps_free_context(_ctx);
@@ -2394,15 +2421,15 @@ bool CXpsEngine::load_from_stream(fz_stream *stm)
     _pages = SAZA(xps_page *, PageCount());
     _links = SAZA(xps_anchor *, PageCount());
     _mediaboxes = new RectD[PageCount()];
-    hasImages = SAZA(bool, PageCount());
+    imageRects = SAZA(fz_rect *, PageCount());
 
     _outline = xps_load_outline(_ctx);
     _info = xps_extract_doc_props(_ctx);
 
-    return true;
+    return _pages != NULL && _links != NULL && _mediaboxes != NULL && imageRects != NULL;
 }
 
-xps_page *CXpsEngine::getXpsPage(int pageNo, bool failIfBusy)
+xps_page *CXpsEngine::GetXpsPage(int pageNo, bool failIfBusy)
 {
     if (!_pages)
         return NULL;
@@ -2418,7 +2445,7 @@ xps_page *CXpsEngine::getXpsPage(int pageNo, bool failIfBusy)
         if (!error) {
             LinkifyPageText(page, pageNo);
             _pages[pageNo-1] = page;
-            hasImages[pageNo-1] = GetPageImages(page).Count() > 0;
+            imageRects[pageNo-1] = GetPageImageRects(page);
         }
     }
 
@@ -2563,14 +2590,14 @@ RectD CXpsEngine::PageMediabox(int pageNo)
     if (!mbox.IsEmpty())
         return mbox;
 
-    xps_page *page = getXpsPage(pageNo, true);
+    xps_page *page = GetXpsPage(pageNo, true);
     if (!page) {
         RectI rect = xps_extract_mediabox_quick_and_dirty(_ctx, pageNo);
         if (!rect.IsEmpty()) {
             _mediaboxes[pageNo-1] = rect.Convert<double>();
             return _mediaboxes[pageNo-1];
         }
-        if (!(page = getXpsPage(pageNo)))
+        if (!(page = GetXpsPage(pageNo)))
             return RectD();
     }
 
@@ -2581,7 +2608,7 @@ RectD CXpsEngine::PageMediabox(int pageNo)
 RectD CXpsEngine::PageContentBox(int pageNo, RenderTarget target)
 {
     assert(1 <= pageNo && pageNo <= PageCount());
-    xps_page *page = getXpsPage(pageNo);
+    xps_page *page = GetXpsPage(pageNo);
     if (!page)
         return RectD();
 
@@ -2667,7 +2694,7 @@ bool CXpsEngine::renderPage(HDC hDC, xps_page *page, RectI screenRect, fz_matrix
 
 RenderedBitmap *CXpsEngine::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target)
 {
-    xps_page* page = getXpsPage(pageNo);
+    xps_page* page = GetXpsPage(pageNo);
     if (!page)
         return NULL;
 
@@ -2736,7 +2763,7 @@ TCHAR *CXpsEngine::ExtractPageText(xps_page *page, TCHAR *lineSep, RectI **coord
 
 TCHAR *CXpsEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out, RenderTarget target)
 {
-    xps_page *page = getXpsPage(pageNo, true);
+    xps_page *page = GetXpsPage(pageNo, true);
     if (page)
         return ExtractPageText(page, lineSep, coords_out);
 
@@ -2785,13 +2812,10 @@ PageElement *CXpsEngine::GetElementAtPos(int pageNo, PointD pt)
         if (fz_is_pt_in_rect(link->rect, p))
             return new XpsLink(this, link->target, link->rect, pageNo);
 
-    xps_page *page;
-    if (hasImages[pageNo-1] && (page = getXpsPage(pageNo))) {
-        Vec<FitzImagePos> positions = GetPageImages(page);
-        assert(positions.Count() > 0);
-        for (size_t i = 0; i < positions.Count(); i++)
-            if (fz_is_pt_in_rect(positions.At(i).rect, p))
-                return new XpsImage(this, positions.At(i).image, pageNo, positions.At(i).rect);
+    if (imageRects[pageNo-1]) {
+        for (int i = 0; !fz_is_empty_rect(imageRects[pageNo-1][i]); i++)
+            if (fz_is_pt_in_rect(imageRects[pageNo-1][i], p))
+                return new XpsImage(this, pageNo, imageRects[pageNo-1][i], i);
     }
 
     return NULL;
@@ -2807,12 +2831,9 @@ Vec<PageElement *> *CXpsEngine::GetElements(int pageNo)
     for (xps_anchor *link = _links[pageNo-1]; link; link = link->next)
         els->Append(new XpsLink(this, link->target, link->rect, pageNo));
 
-    xps_page *page;
-    if (hasImages[pageNo-1] && (page = getXpsPage(pageNo))) {
-        Vec<FitzImagePos> positions = GetPageImages(page);
-        assert(positions.Count() > 0);
-        for (size_t i = 0; i < positions.Count(); i++)
-            els->Append(new XpsImage(this, positions.At(i).image, pageNo, positions.At(i).rect));
+    if (imageRects[pageNo-1]) {
+        for (int i = 0; !fz_is_empty_rect(imageRects[pageNo-1][i]); i++)
+            els->Append(new XpsImage(this, pageNo, imageRects[pageNo-1][i], i));
     }
 
     return els;
@@ -2862,12 +2883,37 @@ void CXpsEngine::LinkifyPageText(xps_page *page, int pageNo)
     free(pageText);
 }
 
-Vec<FitzImagePos> CXpsEngine::GetPageImages(xps_page *page)
+fz_rect *CXpsEngine::GetPageImageRects(xps_page *page)
 {
     Vec<FitzImagePos> positions;
     RunPage(page, fz_new_image_extractor(&positions), fz_identity);
     positions.Reverse();
-    return positions;
+    if (positions.Count() == 0)
+        return NULL;
+
+    fz_rect *result = SAZA(fz_rect, positions.Count() + 1);
+    for (size_t i = 0; i < positions.Count(); i++)
+        result[i] = positions.At(i).rect;
+    return result;
+}
+
+RenderedBitmap *CXpsEngine::GetPageImage(int pageNo, RectD rect, size_t imageIx)
+{
+    xps_page *page = GetXpsPage(pageNo);
+    if (!page)
+        return NULL;
+
+    ScopedCritSec scope(&_ctxAccess);
+
+    Vec<FitzImagePos> positions;
+    RunPage(page, fz_new_image_extractor(&positions), fz_identity);
+    positions.Reverse();
+    if (imageIx >= positions.Count() || fz_rect_to_RectD(positions.At(imageIx).rect) != rect) {
+        assert(0);
+        return NULL;
+    }
+
+    return new RenderedFitzBitmap(positions.At(imageIx).image);
 }
 
 int CXpsEngine::FindPageNo(const char *target)
