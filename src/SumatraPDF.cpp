@@ -645,7 +645,9 @@ static void CreateThumbnailForFile(WindowInfo& win, DisplayState& ds)
         return;
 
     // don't create thumbnails for password protected documents
-    if (win.dm->engine->IsPasswordProtected()) {
+    // (unless we're also remembering the decryption key anyway)
+    if (win.dm->engine->IsPasswordProtected() &&
+        !ScopedMem<char>(win.dm->engine->GetDecryptionKey())) {
         RemoveThumbnail(ds);
         return;
     }
