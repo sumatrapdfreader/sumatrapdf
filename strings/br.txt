@@ -221,6 +221,9 @@ Marcadores
 Bytes
 Bytes
 
+CHM documents
+Documentos CHM
+
 Can't connect to the Internet (error %#x).
 Falha na conexão à Internet (erro %#x).
 
@@ -253,6 +256,9 @@ Página dupla contínua
 
 Contribute Translation
 Contribute Translation
+
+Copy &Image
+Copiar &Imagem
 
 Copy &Link Address
 Copiar Ata&lho
@@ -337,6 +343,9 @@ Erro ao salvar o arquivo.
 
 Favorites
 Favoritos
+
+File %s not found
+Arquivo %s não encontrado
 
 File Size:
 Tamanho do arquivo:
@@ -661,9 +670,4 @@ copiando texto
 
 printing document
 imprimindo documento
-
-# Untranslated:
-#CHM documents
-#Copy &Image
-#File %s not found
 

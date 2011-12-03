@@ -264,6 +264,9 @@ Pagine affiancate continue
 Contribute Translation
 Contribuisci alla traduzione
 
+Copy &Image
+Copia &immagine
+
 Copy &Link Address
 Copia indirizzo co&llegamento
 
@@ -674,7 +677,4 @@ Copia del testo...
 
 printing document
 Stampa documento...
-
-# Untranslated:
-#Copy &Image
 

@@ -257,6 +257,9 @@ Trang kép liên tiếp
 Contribute Translation
 Đóng góp dịch thuật
 
+Copy &Image
+Sao chép hình ảnh
+
 Copy &Link Address
 Chép địa chỉ liên kết
 
@@ -667,7 +670,4 @@ copying text
 
 printing document
 đang in tập tin
-
-# Untranslated:
-#Copy &Image
 
