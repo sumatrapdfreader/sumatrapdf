@@ -194,12 +194,12 @@ CChmEngine::CChmEngine() :
 
 Bytes *CChmEngine::FindDataForUrl(const TCHAR *url)
 {
-    for (size_t i=0; i<urlDataCache.Count(); i++)
-    {
+    for (size_t i = 0; i < urlDataCache.Count(); i++) {
         ChmCacheEntry *e = urlDataCache.At(i);
         if (str::Eq(url, e->url))
             return &e->data;
     }
+
     return NULL;
 }
 
@@ -726,10 +726,14 @@ bool CChmEngine::Load(const TCHAR *fileName)
 // Load and cache data for a given url inside CHM file.
 bool CChmEngine::GetDataForUrl(const TCHAR *url, char **data, size_t *len)
 {
-    Bytes *b = FindDataForUrl(url);
+    // remove query and hash from the url first
+    ScopedMem<TCHAR> plainUrl(str::Dup(url));
+    str::TransChars(plainUrl, _T("#?"), _T("\0\0"));
+
+    Bytes *b = FindDataForUrl(plainUrl);
     if (!b) {
-        ChmCacheEntry *e = new ChmCacheEntry(url);
-        ScopedMem<char> urlAnsi(str::conv::ToAnsi(url));
+        ChmCacheEntry *e = new ChmCacheEntry(plainUrl);
+        ScopedMem<char> urlAnsi(str::conv::ToAnsi(plainUrl));
         bool ok = GetChmDataForFile(chmHandle, urlAnsi, e->data);
         if (!ok) {
             delete e;
