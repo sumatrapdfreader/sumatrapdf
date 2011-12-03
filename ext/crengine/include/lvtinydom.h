@@ -87,6 +87,9 @@
 #define DOC_PROP_FILE_FORMAT_ID  "doc.file.format.id"
 #define DOC_PROP_FILE_CRC32      "doc.file.crc32"
 #define DOC_PROP_CODE_BASE       "doc.file.code.base"
+#define DOC_PROP_COVER_FILE      "doc.cover.file"
+
+#define DEF_MIN_SPACE_CONDENSING_PERCENT 50
 
 //#if BUILD_LITE!=1
 /// final block cache
@@ -106,6 +109,43 @@ typedef enum {
 } xpath_step_t;
 xpath_step_t ParseXPathStep( const lChar8 * &path, lString8 & name, int & index );
 
+/// return value for continuous operations
+typedef enum {
+    CR_DONE,    ///< operation is finished successfully
+    CR_TIMEOUT, ///< operation is incomplete - interrupted by timeout
+    CR_ERROR   ///< error while executing operation
+} ContinuousOperationResult;
+
+/// type of image scaling
+typedef enum {
+    IMG_NO_SCALE, /// scaling is disabled
+    IMG_INTEGER_SCALING, /// integer multipier/divisor scaling -- *2, *3 only
+    IMG_FREE_SCALING, /// free scaling, non-integer factor
+} img_scaling_mode_t;
+
+/// image scaling option
+struct img_scaling_option_t {
+    img_scaling_mode_t mode;
+    int max_scale;
+    int getHash() { return (int)mode * 33 + max_scale; }
+    // creates default option value
+    img_scaling_option_t();
+};
+
+/// set of images scaling options for different kind of images
+struct img_scaling_options_t {
+    img_scaling_option_t zoom_in_inline;
+    img_scaling_option_t zoom_in_block;
+    img_scaling_option_t zoom_out_inline;
+    img_scaling_option_t zoom_out_block;
+    /// returns hash value
+    int getHash() { return (((zoom_in_inline.getHash()*33 + zoom_in_block.getHash())*33 + zoom_out_inline.getHash())*33 + zoom_out_block.getHash()); }
+    /// creates default options
+    img_scaling_options_t();
+    /// returns true if any changes occured
+    bool update( CRPropRef props, int fontSize );
+};
+
 //#if BUILD_LITE!=1
 struct DataStorageItemHeader;
 struct TextDataStorageItem;
@@ -124,6 +164,8 @@ typedef enum {
     doc_format_html,
     doc_format_txt_bookmark, // coolreader TXT format bookmark
     doc_format_chm,
+    doc_format_doc,
+    doc_format_max = doc_format_doc
     // don't forget update getDocFormatName() when changing this enum
 } doc_format_t;
 
@@ -179,6 +221,24 @@ struct ldomNodeStyleInfo
     lUInt16 _styleIndex;
 };
 
+class ldomBlobItem;
+#define BLOB_NAME_PREFIX L"@blob#"
+#define MOBI_IMAGE_NAME_PREFIX L"mobi_image_"
+class ldomBlobCache
+{
+    CacheFile * _cacheFile;
+    LVPtrVector<ldomBlobItem> _list;
+    bool _changed;
+    bool loadIndex();
+    bool saveIndex();
+public:
+    ldomBlobCache();
+    void setCacheFile( CacheFile * cacheFile );
+    ContinuousOperationResult saveToCache(CRTimerUtil & timeout);
+    bool addBlob( const lUInt8 * data, int size, lString16 name );
+    LVStreamRef getBlob( lString16 name );
+};
+
 class ldomDataStorageManager
 {
     friend class ldomTextStorageChunk;
@@ -193,12 +253,11 @@ protected:
     int _chunkSize;
     char _type;       /// type, to show in log
     ldomTextStorageChunk * getChunk( lUInt32 address );
-    /// checks buffer sizes, compacts most unused chunks
 public:
     /// type
     lUInt16 cacheType();
     /// saves all unsaved chunks to cache file
-    bool save();
+    bool save( CRTimerUtil & maxTime );
     /// load chunk index from cache file
     bool load();
     /// sets cache file
@@ -246,13 +305,13 @@ class ldomTextStorageChunk
 {
     friend class ldomDataStorageManager;
     ldomDataStorageManager * _manager;
+    ldomTextStorageChunk * _nextRecent;
+    ldomTextStorageChunk * _prevRecent;
     lUInt8 * _buf;     /// buffer for uncompressed data
     lUInt32 _bufsize;  /// _buf (uncompressed) area size, bytes
     lUInt32 _bufpos;  /// _buf (uncompressed) data write position (for appending of new data)
     lUInt16 _index;  /// ? index of chunk in storage
     char _type;       /// type, to show in log
-    ldomTextStorageChunk * _nextRecent;
-    ldomTextStorageChunk * _prevRecent;
     bool _saved;
 
     void setunpacked( const lUInt8 * buf, int bufsize );
@@ -307,7 +366,7 @@ public:
 // forward declaration
 class ldomNode;
 
-#define TNC_PART_COUNT 512
+#define TNC_PART_COUNT 1024
 #define TNC_PART_SHIFT 10
 #define TNC_PART_INDEX_SHIFT (TNC_PART_SHIFT+4)
 #define TNC_PART_LEN (1<<TNC_PART_SHIFT)
@@ -338,6 +397,11 @@ protected:
     CacheFile * _cacheFile;
     bool _mapped;
     bool _maperror;
+    int  _mapSavingStage;
+
+    img_scaling_options_t _imgScalingOptions;
+    int  _minSpaceCondensingPercent;
+
 
     int calcFinalBlocks();
     void dropStyles();
@@ -351,9 +415,14 @@ protected:
     CRPropRef _docProps;
     lUInt32 _docFlags; // document flags
 
+    int _styleIndex;
+
     LVStyleSheet  _stylesheet;
 
     LVHashTable<lUInt16, lUInt16> _fontMap; // style index to font index
+
+    /// checks buffer sizes, compacts most unused chunks
+    ldomBlobCache _blobCache;
 
     /// uniquie id of file format parsing option (usually 0, but 1 for preformatted text files)
     int getPersistenceFlags();
@@ -385,19 +454,35 @@ protected:
 
     tinyNodeCollection( tinyNodeCollection & v );
 
-
 public:
+
+    bool setMinSpaceCondensingPercent(int minSpaceCondensingPercent) {
+        if (minSpaceCondensingPercent == _minSpaceCondensingPercent)
+            return false;
+        _minSpaceCondensingPercent = minSpaceCondensingPercent;
+        return true;
+    }
+
+    /// add named BLOB data to document
+    bool addBlob(lString16 name, const lUInt8 * data, int size) { return _blobCache.addBlob(data, size, name); }
+    /// get BLOB by name
+    LVStreamRef getBlob(lString16 name) { return _blobCache.getBlob(name); }
 
     /// called on document loading end
     bool validateDocument();
 
 #if BUILD_LITE!=1
+    /// swaps to cache file or saves changes, limited by time interval (can be called again to continue after TIMEOUT)
+    virtual ContinuousOperationResult swapToCache(CRTimerUtil & maxTime) = 0;
     /// try opening from cache file, find by source file name (w/o path) and crc32
     virtual bool openFromCache( CacheLoadingCallback * formatCallback ) = 0;
-    /// swap to cache file, find by source file name (w/o path) and crc32
-    virtual bool swapToCache( lUInt32 reservedDataSize=0 ) = 0;
+    /// saves recent changes to mapped file, with timeout (can be called again to continue after TIMEOUT)
+    virtual ContinuousOperationResult updateMap(CRTimerUtil & maxTime) = 0;
     /// saves recent changes to mapped file
-    virtual bool updateMap() = 0;
+    virtual bool updateMap() {
+        CRTimerUtil infinite;
+        return updateMap(infinite)!=CR_ERROR;
+    }
 
     bool swapToCacheIfNecessary();
 
@@ -444,7 +529,7 @@ public:
 
 #if BUILD_LITE!=1
     /// put all object into persistent storage
-    virtual void persist();
+    virtual void persist( CRTimerUtil & maxTime );
 #endif
 
 
@@ -663,11 +748,19 @@ public:
 
     /// returns child node by index
     ldomNode * getChildNode( lUInt32 index ) const;
+    /// returns true child node is element
+    bool isChildNodeElement( lUInt32 index ) const;
+    /// returns true child node is text
+    bool isChildNodeText( lUInt32 index ) const;
+    /// returns child node by index, NULL if node with this index is not element or nodeId!=0 and element node id!=nodeId
+    ldomNode * getChildElementNode( lUInt32 index, lUInt16 nodeId=0 ) const;
+    /// returns child node by index, NULL if node with this index is not element or nodeTag!=0 and element node name!=nodeTag
+    ldomNode * getChildElementNode( lUInt32 index, const lChar16 * nodeTag ) const;
 
     /// returns text node text as wide string
-    lString16 getText( lChar16 blockDelimiter = 0 ) const;
+    lString16 getText( lChar16 blockDelimiter = 0, int maxSize=0 ) const;
     /// returns text node text as utf8 string
-    lString8 getText8( lChar8 blockDelimiter = 0 ) const;
+    lString8 getText8( lChar8 blockDelimiter = 0, int maxSize=0 ) const;
     /// sets text node text as wide string
     void setText( lString16 );
     /// sets text node text as utf8 string
@@ -942,6 +1035,9 @@ public:
 #endif
 
 
+    /// create formatted text object with options set
+    LFormattedText * createFormattedText();
+
 protected:
 #if BUILD_LITE!=1
     struct DocFileHeader {
@@ -1133,7 +1229,7 @@ public:
     /// returns true for NULL pointer
 	bool isNull() const
 	{
-		return _data->isNull();
+        return !this || !_data || _data->isNull();
 	}
     /// returns true if object is pointer
 	bool isPointer() const
@@ -1294,21 +1390,48 @@ public:
     /// returns true if current node is visible element or text
     bool isVisible();
     /// move to next text node
-    bool nextText();
+    bool nextText( bool thisBlockOnly = false );
     /// move to previous text node
-    bool prevText();
+    bool prevText( bool thisBlockOnly = false );
     /// move to next visible text node
-    bool nextVisibleText();
+    bool nextVisibleText( bool thisBlockOnly = false );
     /// move to previous visible text node
-    bool prevVisibleText();
+    bool prevVisibleText( bool thisBlockOnly = false );
+
     /// move to previous visible word beginning
-    bool prevVisibleWordStart();
+    bool prevVisibleWordStart( bool thisBlockOnly = false );
     /// move to previous visible word end
-    bool prevVisibleWordEnd();
+    bool prevVisibleWordEnd( bool thisBlockOnly = false );
     /// move to next visible word beginning
-    bool nextVisibleWordStart();
+    bool nextVisibleWordStart( bool thisBlockOnly = false );
     /// move to next visible word end
-    bool nextVisibleWordEnd();
+    bool nextVisibleWordEnd( bool thisBlockOnly = false );
+
+    /// move to beginning of current visible text sentence
+    bool thisSentenceStart();
+    /// move to end of current visible text sentence
+    bool thisSentenceEnd();
+    /// move to beginning of next visible text sentence
+    bool nextSentenceStart();
+    /// move to beginning of next visible text sentence
+    bool prevSentenceStart();
+    /// move to end of next visible text sentence
+    bool nextSentenceEnd();
+    /// move to end of prev visible text sentence
+    bool prevSentenceEnd();
+    /// returns true if points to beginning of sentence
+    bool isSentenceStart();
+    /// returns true if points to end of sentence
+    bool isSentenceEnd();
+
+    /// returns true if points to last visible text inside block element
+    bool isLastVisibleTextInBlock();
+    /// returns true if points to first visible text inside block element
+    bool isFirstVisibleTextInBlock();
+
+    /// returns block owner node of current node (or current node if it's block)
+    ldomNode * getThisBlockNode();
+
     /// returns true if current position is visible word beginning
     bool isVisibleWordStart();
     /// returns true if current position is visible word end
@@ -1435,6 +1558,13 @@ public:
             return true;
         return false;
     }
+    /// makes range empty
+    void clear()
+    {
+        _start.clear();
+        _end.clear();
+        _flags = 0;
+    }
     /// returns true if pointer position is inside range
     bool isInside( const ldomXPointerEx & p ) const
     {
@@ -1472,7 +1602,7 @@ public:
     ldomNode * getNearestCommonParent();
 
     /// searches for specified text inside range
-    bool findText( lString16 pattern, bool caseInsensitive, bool reverse, LVArray<ldomWord> & words, int maxCount, int maxHeight );
+    bool findText( lString16 pattern, bool caseInsensitive, bool reverse, LVArray<ldomWord> & words, int maxCount, int maxHeight, bool checkMaxFromStart = false );
 };
 
 class ldomMarkedText
@@ -1493,6 +1623,14 @@ public:
 
 typedef LVPtrVector<ldomMarkedText> ldomMarkedTextList;
 
+enum MoveDirection {
+    DIR_ANY,
+    DIR_LEFT,
+    DIR_RIGHT,
+    DIR_UP,
+    DIR_DOWN,
+};
+
 /// range in document, marked with specified flags
 class ldomMarkedRange
 {
@@ -1507,6 +1645,10 @@ public:
     {
         return ( start.y>end.y || ( start.y == end.y && start.x >= end.x ) );
     }
+    /// returns mark middle point for single line mark, or start point for multiline mark
+    lvPoint getMiddlePoint();
+    /// returns distance (dx+dy) from specified point to middle point
+    int calcDistance( int x, int y, MoveDirection dir );
     /// returns true if intersects specified line rectangle
     bool intersects( lvRect & rc, lvRect & intersection );
     /// constructor
@@ -1514,12 +1656,75 @@ public:
     : start(_start), end(_end), flags(_flags)
     {
     }
+    /// constructor
+    ldomMarkedRange( ldomWord & word ) {
+        ldomXPointer startPos(word.getNode(), word.getStart() );
+        ldomXPointer endPos(word.getNode(), word.getEnd() );
+        start = startPos.toPoint();
+        end = endPos.toPoint();
+    }
+
     /// copy constructor
     ldomMarkedRange( const ldomMarkedRange & v )
     : start(v.start), end(v.end), flags(v.flags)
     {
     }
 };
+
+class ldomWordEx : public ldomWord
+{
+    ldomWord _word;
+    ldomMarkedRange _mark;
+    ldomXRange _range;
+    lString16 _text;
+public:
+    ldomWordEx( ldomWord & word )
+        :  _word(word), _range(word), _mark(word)
+    {
+        _text = _word.getText();
+    }
+    ldomWord & getWord() { return _word; }
+    ldomXRange & getRange() { return _range; }
+    ldomMarkedRange & getMark() { return _mark; }
+    lString16 & getText() { return _text; }
+};
+
+/// list of extended words
+class ldomWordExList : public LVPtrVector<ldomWordEx>
+{
+    int minx;
+    int maxx;
+    int miny;
+    int maxy;
+    int x;
+    int y;
+    ldomWordEx * selWord;
+    lString16Collection pattern;
+    void init();
+    ldomWordEx * findWordByPattern();
+public:
+    ldomWordExList()
+        : minx(-1), maxx(-1), miny(-1), maxy(-1), x(-1), y(-1), selWord(NULL)
+    {
+    }
+    /// adds all visible words from range, returns number of added words
+    int addRangeWords( ldomXRange & range, bool trimPunctuation );
+    /// find word nearest to specified point
+    ldomWordEx * findNearestWord( int x, int y, MoveDirection dir );
+    /// select word
+    void selectWord( ldomWordEx * word, MoveDirection dir );
+    /// select next word in specified direction
+    ldomWordEx * selectNextWord( MoveDirection dir, int moveBy = 1 );
+    /// select middle word in range
+    ldomWordEx * selectMiddleWord();
+    /// get selected word
+    ldomWordEx * getSelWord() { return selWord; }
+    /// try append search pattern and find word
+    ldomWordEx * appendPattern(lString16 chars);
+    /// remove last character from pattern and try to search
+    ldomWordEx * reducePattern();
+};
+
 
 /// list of marked ranges
 class ldomMarkedRangeList : public LVPtrVector<ldomMarkedRange>
@@ -1636,8 +1841,8 @@ class ldomNavigationHistory
         int _pos;
         void clearTail()
         {
-            if ( _links.length()-_pos > 0 )
-                _links.erase(_pos, _links.length()-_pos);
+            if (_links.length() > _pos)
+                _links.erase(_pos, _links.length() - _pos);
         }
     public:
         void clear()
@@ -1653,6 +1858,9 @@ class ldomNavigationHistory
                 clearTail();
                 _links.add( link );
                 _pos = _links.length();
+                return true;
+            } else if (_links[_pos]==link) {
+                _pos++;
                 return true;
             }
             return false;
@@ -1694,6 +1902,7 @@ typedef LVRef<ListNumberingProps> ListNumberingPropsRef;
 class ldomDocument : public lxmlDocBase
 {
     friend class ldomDocumentWriter;
+    friend class ldomDocumentWriterFilter;
 private:
 #if BUILD_LITE!=1
     font_ref_t _def_font; // default font
@@ -1704,6 +1913,8 @@ private:
     bool _rendered;
     ldomXRangeList _selections;
 #endif
+
+    lString16 _docStylesheetFileName;
 
     LVContainerRef _container;
 
@@ -1716,6 +1927,8 @@ private:
 
     /// save changes to cache file
     bool saveChanges();
+    /// saves changes to cache file, limited by time interval (can be called again to continue after TIMEOUT)
+    virtual ContinuousOperationResult saveChanges( CRTimerUtil & maxTime );
 #endif
 
 protected:
@@ -1759,10 +1972,15 @@ public:
 #if BUILD_LITE!=1
     /// try opening from cache file, find by source file name (w/o path) and crc32
     virtual bool openFromCache( CacheLoadingCallback * formatCallback );
-    /// swap to cache file, find by source file name (w/o path) and crc32
-    virtual bool swapToCache( lUInt32 reservedDataSize=0 );
     /// saves recent changes to mapped file
-    virtual bool updateMap();
+    virtual ContinuousOperationResult updateMap(CRTimerUtil & maxTime);
+    /// swaps to cache file or saves changes, limited by time interval
+    virtual ContinuousOperationResult swapToCache( CRTimerUtil & maxTime );
+    /// saves recent changes to mapped file
+    virtual bool updateMap() {
+        CRTimerUtil infinite;
+        return updateMap(infinite)!=CR_ERROR;
+    }
 #endif
 
 
@@ -1773,6 +1991,8 @@ public:
     void clearRendBlockCache() { _renderedBlockCache.clear(); }
 #endif
     void clear();
+    lString16 getDocStylesheetFileName() { return _docStylesheetFileName; }
+    void setDocStylesheetFileName(lString16 fileName) { _docStylesheetFileName = fileName; }
 
     ldomDocument();
     /// creates empty document which is ready to be copy target of doc partial contents
@@ -1799,9 +2019,9 @@ public:
     virtual ~ldomDocument();
 #if BUILD_LITE!=1
     /// renders (formats) document in memory
-    virtual int render( LVRendPageList * pages, LVDocViewCallback * callback, int width, int dy, bool showCover, int y0, font_ref_t def_font, int def_interline_space );
+    virtual int render( LVRendPageList * pages, LVDocViewCallback * callback, int width, int dy, bool showCover, int y0, font_ref_t def_font, int def_interline_space, CRPropRef props );
     /// renders (formats) document in memory
-    virtual bool setRenderProps( int width, int dy, bool showCover, int y0, font_ref_t def_font, int def_interline_space );
+    virtual bool setRenderProps( int width, int dy, bool showCover, int y0, font_ref_t def_font, int def_interline_space, CRPropRef props );
 #endif
     /// create xpointer from pointer string
     ldomXPointer createXPointer( const lString16 & xPointerStr );
@@ -1847,6 +2067,8 @@ class ldomElementWriter
     bool _isBlock;
     bool _isSection;
     bool _stylesheetIsSet;
+    bool _bodyEnterCalled;
+    lUInt32 _flags;
     lUInt32 getFlags();
     void updateTocItem();
     void onBodyEnter();
@@ -1912,6 +2134,11 @@ public:
     ldomElementWriter * pop( ldomElementWriter * obj, lUInt16 id );
     /// called on text
     virtual void OnText( const lChar16 * text, int len, lUInt32 flags );
+    /// add named BLOB data to document
+    virtual bool OnBlob(lString16 name, const lUInt8 * data, int size) { return _document->addBlob(name, data, size); }
+    /// set document property
+    virtual void OnDocProperty(const char * name, lString8 value) { _document->getProps()->setString(name, value); }
+
     /// constructor
     ldomDocumentWriter(ldomDocument * document, bool headerOnly=false );
     /// destructor
@@ -1934,6 +2161,7 @@ protected:
     lUInt16 _styleAttrId;
     lUInt16 _classAttrId;
     lUInt16 * _rules[MAX_ELEMENT_TYPE_ID];
+    bool _tagBodyCalled;
     virtual void AutoClose( lUInt16 tag_id, bool open );
     virtual void ElementCloseHandler( ldomNode * elem );
     virtual void appendStyle( const lChar16 * style );
@@ -1966,6 +2194,7 @@ private:
     lString16 filePathName;
     lString16 codeBasePrefix;
     lString16 stylesheetFile;
+    lString16 tmpStylesheetFile;
     bool insideTag;
     int styleDetectionState;
     LVHashTable<lString16, lString16> pathSubstitutions;
@@ -2002,6 +2231,14 @@ public:
     /// called on parsing end
     virtual void OnStop()
     {
+        if ( insideTag ) {
+            insideTag = false;
+            if ( !baseTagReplacement.empty() ) {
+                parent->OnTagClose(L"", baseTagReplacement.c_str());
+            }
+            baseElement = NULL;
+            return;
+        }
         insideTag = false;
     }
     /// called on opening tag
@@ -2018,6 +2255,10 @@ public:
         if ( insideTag )
             parent->OnText( text, len, flags );
     }
+    /// add named BLOB data to document
+    virtual bool OnBlob(lString16 name, const lUInt8 * data, int size) { return parent->OnBlob(name, data, size); }
+    /// set document property
+    virtual void OnDocProperty(const char * name, lString8 value) { parent->OnDocProperty(name, value); }
     /// constructor
     ldomDocumentFragmentWriter( LVXMLParserCallback * parentWriter, lString16 baseTagName, lString16 baseTagReplacementName, lString16 fragmentFilePath )
     : parent(parentWriter), baseTag(baseTagName), baseTagReplacement(baseTagReplacementName),

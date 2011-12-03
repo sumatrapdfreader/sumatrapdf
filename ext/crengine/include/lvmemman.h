@@ -31,6 +31,16 @@ inline void crFatalError() { crFatalError( -1, "Unknown fatal error" ); }
 /// set fatal error handler
 void crSetFatalErrorHandler( lv_FatalErrorHandler_t * handler );
 
+/// typed realloc with result check (size is counted in T), fatal error if failed
+template <typename T> T * cr_realloc( T * ptr, size_t newSize ) {
+    T * newptr = reinterpret_cast<T*>(realloc(ptr, sizeof(T)*newSize));
+    if ( newptr )
+        return newptr;
+    free(ptr); // to bypass cppcheck warning
+    crFatalError(-2, "realloc failed");
+    return NULL;
+}
+
 
 #if (LDOM_USE_OWN_MEM_MAN==1)
 #include <stdlib.h>
@@ -141,9 +151,9 @@ struct ldomMemManStorage
         // alloc new slice
         if (slice_count >= MAX_SLICE_COUNT)
             THROW_MEM_MAN_EXCEPTION;
-        slices[slice_count++] = 
+        slices[slice_count] = 
             new ldomMemSlice(block_size, FIRST_SLICE_SIZE << (slice_count+1));
-        return slices[slice_count-1]->alloc_block();
+        return slices[slice_count++]->alloc_block();
     }
     void free( ldomMemBlock * pBlock )
     {

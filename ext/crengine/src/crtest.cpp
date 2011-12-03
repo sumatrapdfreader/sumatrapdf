@@ -175,7 +175,7 @@ void testTxtSelector();
 
 void runCRUnitTests()
 {
-#if defined(_DEBUG) && DISABLE_TINYDOM_TESTS!=1
+#ifdef _DEBUG
     //runCHMUnitTest();
     runTinyDomUnitTests();
     testTxtSelector();

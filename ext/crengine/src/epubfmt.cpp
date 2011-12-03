@@ -34,18 +34,36 @@ public:
     }
 };
 
-
+static void dumpZip( LVContainerRef arc ) {
+    lString16 arcName = LVExtractFilenameWithoutExtension( arc->GetName() );
+    if ( arcName.empty() )
+        arcName = L"unziparc";
+    lString16 outDir = lString16("/tmp/") + arcName;
+    LVCreateDirectory(outDir);
+    for ( int i=0; i<arc->GetObjectCount(); i++ ) {
+        const LVContainerItemInfo * info = arc->GetObjectInfo(i);
+        if ( !info->IsContainer() ) {
+            lString16 outFileName = outDir + L"/" + info->GetName();
+            LVCreateDirectory(LVExtractPath(outFileName));
+            LVStreamRef in = arc->OpenStream(info->GetName(), LVOM_READ);
+            LVStreamRef out = LVOpenFileStream(outFileName.c_str(), LVOM_WRITE);
+            if ( !in.isNull() && !out.isNull() ) {
+                CRLog::trace("Writing %s", LCSTR(outFileName));
+                LVPumpStream(out.get(), in.get());
+            }
+        }
+    }
+}
 
 bool DetectEpubFormat( LVStreamRef stream )
 {
 
 
-
-
-
     LVContainerRef m_arc = LVOpenArchieve( stream );
     if ( m_arc.isNull() )
         return false; // not a ZIP archive
+
+    //dumpZip( m_arc );
 
     // read "mimetype" file contents from root of archive
     lString16 mimeType;
@@ -97,7 +115,9 @@ void ReadEpubToc( ldomDocument * doc, ldomNode * mapRoot, LVTocItem * baseToc, l
         title.trimDoubleSpaces(false, false, false);
         if ( href.empty() || title.empty() )
             continue;
+        //CRLog::trace("TOC href before convert: %s", LCSTR(href));
         href = appender.convertHref(href);
+        //CRLog::trace("TOC href after convert: %s", LCSTR(href));
         if ( href.empty() || href[0]!='#' )
             continue;
         ldomNode * target = doc->getNodeById(doc->getAttrValueIndex(href.substr(1).c_str()));
@@ -109,12 +129,8 @@ void ReadEpubToc( ldomDocument * doc, ldomNode * mapRoot, LVTocItem * baseToc, l
     }
 }
 
-bool ImportEpubDocument( LVStreamRef stream, ldomDocument * m_doc, LVDocViewCallback * progressCallback, CacheLoadingCallback * formatCallback )
+lString16 EpubGetRootFilePath( LVContainerRef m_arc )
 {
-    LVContainerRef m_arc = LVOpenArchieve( stream );
-    if ( m_arc.isNull() )
-        return false; // not a ZIP archive
-
     // check root media type
     lString16 rootfilePath;
     lString16 rootfileMediaType;
@@ -135,7 +151,20 @@ bool ImportEpubDocument( LVStreamRef stream, ldomDocument * m_doc, LVDocViewCall
     }
 
     if ( rootfilePath.empty() || rootfileMediaType!=L"application/oebps-package+xml" )
-        return false;
+        return lString16::empty_str;
+    return rootfilePath;
+}
+
+bool ImportEpubDocument( LVStreamRef stream, ldomDocument * m_doc, LVDocViewCallback * progressCallback, CacheLoadingCallback * formatCallback )
+{
+    LVContainerRef m_arc = LVOpenArchieve( stream );
+    if ( m_arc.isNull() )
+        return false; // not a ZIP archive
+
+    // check root media type
+    lString16 rootfilePath = EpubGetRootFilePath(m_arc);
+    if ( rootfilePath.empty() )
+    	return false;
 
     m_doc->setContainer(m_arc);
 
@@ -144,16 +173,12 @@ bool ImportEpubDocument( LVStreamRef stream, ldomDocument * m_doc, LVDocViewCall
     //EpubItem * epubToc = NULL; //TODO
     LVArray<EpubItem*> spineItems;
     lString16 codeBase;
-    lString16 css;
+    //lString16 css;
 
     //
     {
-        int lastSlash = -1;
-        for ( int i=0; i<(int)rootfilePath.length(); i++ )
-            if ( rootfilePath[i]=='/' )
-                lastSlash = i;
-        if ( lastSlash>0 )
-            codeBase = lString16( rootfilePath.c_str(), lastSlash + 1);
+        codeBase=LVExtractPath(rootfilePath, false);
+        CRLog::trace("codeBase=%s", LCSTR(codeBase));
     }
 
     LVStreamRef content_stream = m_arc->OpenStream(rootfilePath.c_str(), LVOM_READ);
@@ -162,6 +187,7 @@ bool ImportEpubDocument( LVStreamRef stream, ldomDocument * m_doc, LVDocViewCall
 
 
     lString16 ncxHref;
+    lString16 coverId;
 
     // reading content stream
     {
@@ -169,9 +195,25 @@ bool ImportEpubDocument( LVStreamRef stream, ldomDocument * m_doc, LVDocViewCall
         if ( !doc )
             return false;
 
-        CRPropRef m_doc_props = doc->getProps();
-        m_doc_props->setString(DOC_PROP_TITLE, doc->textFromXPath( lString16(L"package/metadata/title") ));
-        m_doc_props->setString(DOC_PROP_AUTHORS, doc->textFromXPath( lString16(L"package/metadata/creator") ));
+        CRPropRef m_doc_props = m_doc->getProps();
+        lString16 author = doc->textFromXPath( lString16(L"package/metadata/creator"));
+        lString16 title = doc->textFromXPath( lString16(L"package/metadata/title"));
+        m_doc_props->setString(DOC_PROP_TITLE, title);
+        m_doc_props->setString(DOC_PROP_AUTHORS, author );
+        CRLog::info("Author: %s Title: %s", LCSTR(author), LCSTR(title));
+        for ( int i=1; i<20; i++ ) {
+            ldomNode * item = doc->nodeFromXPath( lString16(L"package/metadata/meta[") + lString16::itoa(i) + L"]" );
+            if ( !item )
+                break;
+            lString16 name = item->getAttributeValue(L"name");
+            lString16 content = item->getAttributeValue(L"content");
+            if ( name == L"cover" )
+                coverId = content;
+            else if ( name==L"calibre:series" )
+                m_doc_props->setString(DOC_PROP_SERIES_NAME, content );
+            else if ( name==L"calibre:series_index" )
+                m_doc_props->setInt(DOC_PROP_SERIES_NUMBER, content.atoi() );
+        }
 
         // items
         for ( int i=1; i<50000; i++ ) {
@@ -182,20 +224,33 @@ bool ImportEpubDocument( LVStreamRef stream, ldomDocument * m_doc, LVDocViewCall
             lString16 mediaType = item->getAttributeValue(L"media-type");
             lString16 id = item->getAttributeValue(L"id");
             if ( !href.empty() && !id.empty() ) {
+                if ( id==coverId ) {
+                    // coverpage file
+                    lString16 coverFileName = codeBase + href;
+                    CRLog::info("EPUB coverpage file: %s", LCSTR(coverFileName));
+                    LVStreamRef stream = m_arc->OpenStream(coverFileName.c_str(), LVOM_READ);
+                    if ( !stream.isNull() ) {
+                        LVImageSourceRef img = LVCreateStreamImageSource(stream);
+                        if ( !img.isNull() ) {
+                            CRLog::info("EPUB coverpage image is correct: %d x %d", img->GetWidth(), img->GetHeight() );
+                            m_doc_props->setString(DOC_PROP_COVER_FILE, coverFileName);
+                        }
+                    }
+                }
                 EpubItem * epubItem = new EpubItem;
                 epubItem->href = href;
                 epubItem->id = id;
                 epubItem->mediaType = mediaType;
                 epubItems.add( epubItem );
             }
-            if ( mediaType==L"text/css" ) {
-                lString16 name = codeBase + href;
-                LVStreamRef cssStream = m_arc->OpenStream(name.c_str(), LVOM_READ);
-                if ( !cssStream.isNull() ) {
-                    css << L"\n";
-                    css << LVReadTextFile( cssStream );
-                }
-            }
+//            if ( mediaType==L"text/css" ) {
+//                lString16 name = codeBase + href;
+//                LVStreamRef cssStream = m_arc->OpenStream(name.c_str(), LVOM_READ);
+//                if ( !cssStream.isNull() ) {
+//                    css << L"\n";
+//                    css << LVReadTextFile( cssStream );
+//                }
+//            }
         }
 
         // spine == itemrefs
@@ -236,7 +291,7 @@ bool ImportEpubDocument( LVStreamRef stream, ldomDocument * m_doc, LVDocViewCall
     }
 #endif
 
-    lUInt32 saveFlags = m_doc ? m_doc->getDocFlags() : DOC_FLAG_DEFAULTS;
+    lUInt32 saveFlags = m_doc->getDocFlags();
     m_doc->setDocFlags( saveFlags );
     m_doc->setContainer( m_arc );
 
@@ -266,7 +321,8 @@ bool ImportEpubDocument( LVStreamRef stream, ldomDocument * m_doc, LVDocViewCall
                 LVStreamRef stream = m_arc->OpenStream(name.c_str(), LVOM_READ);
                 if ( !stream.isNull() ) {
                     appender.setCodeBase( name );
-                    LVXMLParser parser(stream, &appender);
+                    //LVXMLParser
+                    LVHTMLParser parser(stream, &appender);
                     if ( parser.CheckFormat() && parser.Parse() ) {
                         // valid
                         fragmentCount++;
@@ -281,6 +337,10 @@ bool ImportEpubDocument( LVStreamRef stream, ldomDocument * m_doc, LVDocViewCall
     ldomDocument * ncxdoc = NULL;
     if ( !ncxHref.empty() ) {
         LVStreamRef stream = m_arc->OpenStream(ncxHref.c_str(), LVOM_READ);
+        lString16 codeBase = LVExtractPath( ncxHref );
+        if ( codeBase.length()>0 && codeBase.lastChar()!='/' )
+            codeBase.append(1, L'/');
+        appender.setCodeBase(codeBase);
         if ( !stream.isNull() ) {
             ldomDocument * ncxdoc = LVParseXMLStream( stream );
             if ( ncxdoc!=NULL ) {

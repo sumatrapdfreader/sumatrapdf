@@ -4,33 +4,40 @@
 
    lvtinydom.cpp: fast and compact XML DOM tree
 
-   (c) Vadim Lopatin, 2000-2009
+   (c) Vadim Lopatin, 2000-2011
    This source code is distributed under the terms of
    GNU General Public License
    See LICENSE file for details
 
 *******************************************************/
 
-/// change in case of incompatible changes in swap/cache file format
-#define CACHE_FILE_FORMAT_VERSION "3.02.29"
+/// change in case of incompatible changes in swap/cache file format to avoid using incompatible swap file
+#define CACHE_FILE_FORMAT_VERSION "3.04.07"
 
 #ifndef DOC_DATA_COMPRESSION_LEVEL
 /// data compression level (0=no compression, 1=fast compressions, 3=normal compression)
 #define DOC_DATA_COMPRESSION_LEVEL 1 // 0, 1, 3 (0=no compression)
 #endif
 
+#ifndef STREAM_AUTO_SYNC_SIZE
+#define STREAM_AUTO_SYNC_SIZE 300000
+#endif //STREAM_AUTO_SYNC_SIZE
+
 //=====================================================
 // Document data caching parameters
 //=====================================================
 
 #ifndef DOC_BUFFER_SIZE
-#define DOC_BUFFER_SIZE 0x400000 // default buffer size
+#define DOC_BUFFER_SIZE 0xA00000 // default buffer size
 #endif
 
 //--------------------------------------------------------
 // cache memory sizes
 //--------------------------------------------------------
+#ifndef ENABLED_BLOCK_WRITE_CACHE
 #define ENABLED_BLOCK_WRITE_CACHE 1
+#endif
+
 #define WRITE_CACHE_TOTAL_SIZE    (10*DOC_BUFFER_SIZE/100)
 
 #define TEXT_CACHE_UNPACKED_SPACE (25*DOC_BUFFER_SIZE/100)
@@ -56,6 +63,7 @@
 
 /// set t 1 to log storage reads/writes
 #define DEBUG_DOM_STORAGE 0
+//#define TRACE_AUTOBOX
 /// set to 1 to enable crc check of all blocks of cache file on open
 #ifndef ENABLE_CACHE_FILE_CONTENTS_VALIDATION
 #define ENABLE_CACHE_FILE_CONTENTS_VALIDATION 0
@@ -102,22 +110,25 @@ enum CacheFileBlockType {
     CBT_INDEX = 1,
     CBT_TEXT_DATA,
     CBT_ELEM_DATA,
-    CBT_RECT_DATA,
+    CBT_RECT_DATA, //4
     CBT_ELEM_STYLE_DATA,
     CBT_MAPS_DATA,
-    CBT_PAGE_DATA,
+    CBT_PAGE_DATA, //7
     CBT_PROP_DATA,
     CBT_NODE_INDEX,
     CBT_ELEM_NODE,
     CBT_TEXT_NODE,
-    CBT_REND_PARAMS,
+    CBT_REND_PARAMS, //12
     CBT_TOC_DATA,
     CBT_STYLE_DATA,
+    CBT_BLOB_INDEX, //15
+    CBT_BLOB_DATA,
 };
 
 
 #include <stdlib.h>
 #include <string.h>
+#include "../include/crsetup.h"
 #include "../include/lvstring.h"
 #include "../include/lvtinydom.h"
 #include "../include/fb2def.h"
@@ -261,8 +272,11 @@ lUInt32 calcGlobalSettingsHash()
     lUInt32 hash = 0;
     if ( fontMan->getKerning() )
         hash += 127365;
+    hash = hash * 31 + fontMan->GetFontListHash();
     if ( LVRendGetFontEmbolden() )
         hash = hash * 75 + 2384761;
+    if ( gFlgFloatingPunctuationEnabled )
+        hash = hash * 75 + 1761;
     hash = hash * 31 + (HyphMan::getSelectedDictionary()!=NULL ? HyphMan::getSelectedDictionary()->getHash() : 123 );
     return hash;
 }
@@ -328,29 +342,40 @@ struct CacheFileItem
 };
 
 
-struct CacheFileHeader
+struct SimpleCacheFileHeader
 {
     char _magic[CACHE_FILE_MAGIC_SIZE]; // magic
+    lUInt32 _dirty;
+    SimpleCacheFileHeader( lUInt32 dirtyFlag ) {
+        memset( _magic, 0, sizeof(_magic));
+        memcpy( _magic, CACHE_FILE_MAGIC, CACHE_FILE_MAGIC_SIZE );
+        _dirty = dirtyFlag;
+    }
+};
+
+struct CacheFileHeader : public SimpleCacheFileHeader
+{
     lUInt32 _fsize;
     CacheFileItem _indexBlock; // index array block parameters,
     // duplicate of one of index records which contains
-
     bool validate()
     {
-        if ( memcmp( _magic, CACHE_FILE_MAGIC, CACHE_FILE_MAGIC_SIZE ) ) {
+        if (memcmp(_magic, CACHE_FILE_MAGIC, CACHE_FILE_MAGIC_SIZE) != 0) {
             CRLog::error("CacheFileHeader::validate: magic doesn't match");
+            return false;
+        }
+        if ( _dirty!=0 ) {
+            CRLog::error("CacheFileHeader::validate: dirty flag is set");
             return false;
         }
         return true;
     }
-    CacheFileHeader( CacheFileItem * indexRec, int fsize )
-    : _indexBlock(0,0)
+    CacheFileHeader( CacheFileItem * indexRec, int fsize, lUInt32 dirtyFlag )
+    : SimpleCacheFileHeader(dirtyFlag), _indexBlock(0,0)
     {
-        memset( _magic, 0, sizeof(_magic));
-        memcpy( _magic, CACHE_FILE_MAGIC, CACHE_FILE_MAGIC_SIZE );
-        if ( indexRec )
+        if ( indexRec ) {
             memcpy( &_indexBlock, indexRec, sizeof(CacheFileItem));
-        else
+        } else
             memset( &_indexBlock, 0, sizeof(CacheFileItem));
         _fsize = fsize;
     }
@@ -364,6 +389,7 @@ class CacheFile
     int _sectorSize; // block position and size granularity
     int _size;
     bool _indexChanged;
+    bool _dirty;
     LVStreamRef _stream; // file stream
     LVPtrVector<CacheFileItem, true> _index; // full file block index
     LVPtrVector<CacheFileItem, false> _freeIndex; // free file block index
@@ -375,7 +401,7 @@ class CacheFile
     // mark block as free, for later reusing
     void freeBlock( CacheFileItem * block );
     // writes file header
-    bool updateHeader( CacheFileItem * indexItem );
+    bool updateHeader();
     // writes index block
     bool writeIndex();
     // reads index from file
@@ -417,35 +443,75 @@ public:
     {
         return read(type, 0, buf);
     }
+    /// reads block as a stream
+    LVStreamRef readStream(lUInt16 type, lUInt16 index);
 
+    /// sets dirty flag value, returns true if value is changed
+    bool setDirtyFlag( bool dirty );
     // flushes index
-    bool flush( bool sync );
+    bool flush( bool clearDirtyFlag, CRTimerUtil & maxTime );
     int roundSector( int n )
     {
         return (n + (_sectorSize-1)) & ~(_sectorSize-1);
+    }
+    void setAutoSyncSize(int sz) {
+        _stream->setAutoSyncSize(sz);
     }
 };
 
 
 // create uninitialized cache file, call open or create to initialize
 CacheFile::CacheFile()
-: _sectorSize( CACHE_FILE_SECTOR_SIZE ), _size(0), _indexChanged(false), _map(1024)
+: _sectorSize( CACHE_FILE_SECTOR_SIZE ), _size(0), _indexChanged(false), _dirty(true), _map(1024)
 {
 }
 
 // free resources
 CacheFile::~CacheFile()
 {
-    if ( !_stream.isNull() )
-        flush( true );
+    if ( !_stream.isNull() ) {
+        // don't flush -- leave file dirty
+        //CRTimerUtil infinite;
+        //flush( true, infinite );
+    }
+}
+
+/// sets dirty flag value, returns true if value is changed
+bool CacheFile::setDirtyFlag( bool dirty )
+{
+    if ( _dirty==dirty )
+        return false;
+    if ( !dirty ) {
+        CRLog::info("CacheFile::clearing Dirty flag");
+        _stream->Flush(true);
+    } else {
+        CRLog::info("CacheFile::setting Dirty flag");
+    }
+    _dirty = dirty;
+    SimpleCacheFileHeader hdr(_dirty?1:0);
+    _stream->SetPos(0);
+    lvsize_t bytesWritten = 0;
+    _stream->Write(&hdr, sizeof(hdr), &bytesWritten );
+    if ( bytesWritten!=sizeof(hdr) )
+        return false;
+    _stream->Flush(true);
+    //CRLog::trace("setDirtyFlag : hdr is saved with Dirty flag = %d", hdr._dirty);
+    return true;
 }
 
 // flushes index
-bool CacheFile::flush( bool sync )
+bool CacheFile::flush( bool clearDirtyFlag, CRTimerUtil & maxTime )
 {
-    if ( !writeIndex() )
-        return false;
-    return _stream->Flush( sync )==LVERR_OK;
+    if ( clearDirtyFlag ) {
+        //setDirtyFlag(true);
+        if ( !writeIndex() )
+            return false;
+        setDirtyFlag(false);
+    } else {
+        _stream->Flush(false, maxTime);
+        //CRLog::trace("CacheFile->flush() took %d ms ", (int)timer.elapsed());
+    }
+    return true;
 }
 
 // reads all blocks of index and checks CRCs
@@ -468,12 +534,13 @@ bool CacheFile::validateContents()
 // reads index from file
 bool CacheFile::readIndex()
 {
-    CacheFileHeader hdr(NULL, _size);
+    CacheFileHeader hdr(NULL, _size, 0);
     _stream->SetPos(0);
     lvsize_t bytesRead = 0;
     _stream->Read(&hdr, sizeof(hdr), &bytesRead );
     if ( bytesRead!=sizeof(hdr) )
         return false;
+    CRLog::info("Header read: DirtyFlag=%d", hdr._dirty);
     if ( !hdr.validate() )
         return false;
     if ( (int)hdr._fsize > _size + 4096-1 ) {
@@ -504,11 +571,13 @@ bool CacheFile::readIndex()
     // check CRC
     lUInt64 hash = calcHash64( (lUInt8*)index, sz );
     if ( hdr._indexBlock._dataHash!=hash ) {
-        CRLog::error("CacheFile::readIndex: CRC doesn't match");
+        CRLog::error("CacheFile::readIndex: CRC doesn't match found %08x expected %08x", hash, hdr._indexBlock._dataHash);
         delete[] index;
         return false;
     }
     for ( int i=0; i<count; i++ ) {
+        if (index[i]._dataType == CBT_INDEX)
+            index[i] = hdr._indexBlock;
         if ( !index[i].validate(_size) ) {
             delete[] index;
             return false;
@@ -528,6 +597,7 @@ bool CacheFile::readIndex()
         CRLog::error("CacheFile::readIndex: index block info doesn't match header");
         return false;
     }
+    _dirty = hdr._dirty;
     return true;
 }
 
@@ -536,41 +606,56 @@ bool CacheFile::writeIndex()
 {
     if ( !_indexChanged )
         return true; // no changes: no writes
+
     if ( _index.length()==0 )
-        return updateHeader( 0 );
+        return updateHeader();
+
     // create copy of index in memory
-    bool indexItemFound = findBlock( CBT_INDEX, 0 )!=NULL;
     int count = _index.length();
-    if ( !indexItemFound ) {
-        count++;
-        allocBlock( CBT_INDEX, 0, sizeof(CacheFileItem)*count );
+    CacheFileItem * indexItem = findBlock(CBT_INDEX, 0);
+    if (!indexItem) {
+        int sz = sizeof(CacheFileItem) * (count * 2 + 100);
+        allocBlock(CBT_INDEX, 0, sz);
+        indexItem = findBlock(CBT_INDEX, 0);
+        count = _index.length();
     }
-    CacheFileItem * index = new CacheFileItem[_index.length()];
-    memset( index, 0, sizeof(CacheFileItem)*_index.length());
-    for ( int i=0; i<_index.length(); i++ ) {
+    CacheFileItem * index = new CacheFileItem[count];
+    int sz = count * sizeof(CacheFileItem);
+    memset(index, 0, sz);
+    for ( int i = 0; i < count; i++ ) {
         memcpy( &index[i], _index[i], sizeof(CacheFileItem) );
+        if (index[i]._dataType == CBT_INDEX) {
+            index[i]._dataHash = 0;
+            index[i]._packedHash = 0;
+            index[i]._dataSize = 0;
+        }
     }
-    bool res = write( CBT_INDEX, 0, (const lUInt8*)index, _index.length()*sizeof(CacheFileItem), false );
-    CacheFileItem * indexItem = findBlock( CBT_INDEX, 0 );
+    bool res = write(CBT_INDEX, 0, (const lUInt8*)index, sz, false);
     delete[] index;
+
+    indexItem = findBlock(CBT_INDEX, 0);
     if ( !res || !indexItem ) {
         CRLog::error("CacheFile::writeIndex: error while writing index!!!");
         return false;
     }
-    updateHeader( indexItem );
+
+    updateHeader();
     _indexChanged = false;
     return true;
 }
 
 // writes file header
-bool CacheFile::updateHeader( CacheFileItem * indexItem )
+bool CacheFile::updateHeader()
 {
-    CacheFileHeader hdr(indexItem, _size);
+    CacheFileItem * indexItem = NULL;
+    indexItem = findBlock(CBT_INDEX, 0);
+    CacheFileHeader hdr(indexItem, _size, _dirty?1:0);
     _stream->SetPos(0);
     lvsize_t bytesWritten = 0;
     _stream->Write(&hdr, sizeof(hdr), &bytesWritten );
     if ( bytesWritten!=sizeof(hdr) )
         return false;
+    //CRLog::trace("updateHeader finished: Dirty flag = %d", hdr._dirty);
     return true;
 }
 
@@ -583,6 +668,23 @@ void CacheFile::freeBlock( CacheFileItem * block )
     block->_dataType = 0;
     block->_dataSize = 0;
     _freeIndex.add( block );
+}
+
+/// reads block as a stream
+LVStreamRef CacheFile::readStream(lUInt16 type, lUInt16 index)
+{
+    CacheFileItem * block = findBlock(type, index);
+    if (block && block->_dataSize) {
+#if 0
+        lUInt8 * buf = NULL;
+        int size = 0;
+        if (read(type, index, buf, size))
+            return LVCreateMemoryStream(buf, size);
+#else
+        return LVStreamRef(new LVStreamFragment(_stream, block->_blockFilePos, block->_dataSize));
+#endif
+    }
+    return LVStreamRef();
 }
 
 // searches for existing block
@@ -735,7 +837,7 @@ bool CacheFile::read( lUInt16 type, lUInt16 dataIndex, lUInt8 * &buf, int &size 
 
     // check CRC
     lUInt64 hash = calcHash64( buf, size );
-    if ( hash!=block->_dataHash ) {
+    if (hash != block->_dataHash) {
         CRLog::error("CacheFile::read: CRC doesn't match for block %d:%d of size %d", type, dataIndex, (int)size);
         free(buf);
         buf = NULL;
@@ -752,9 +854,20 @@ bool CacheFile::write( lUInt16 type, lUInt16 dataIndex, const lUInt8 * buf, int 
     // check whether data is changed
     lUInt64 newhash = calcHash64( buf, size );
     CacheFileItem * existingblock = findBlock( type, dataIndex );
-    if ( existingblock && (int)existingblock->_uncompressedSize==size && existingblock->_dataHash==newhash ) {
-        return true;
+
+    if (existingblock) {
+        bool sameSize = ((int)existingblock->_uncompressedSize==size) || (existingblock->_uncompressedSize==0 && (int)existingblock->_dataSize==size);
+        if (sameSize && existingblock->_dataHash == newhash ) {
+            return true;
+        }
     }
+
+#if 1
+    if (existingblock)
+        CRLog::trace("*    oldsz=%d oldhash=%08x", (int)existingblock->_uncompressedSize, (int)existingblock->_dataHash);
+    CRLog::trace("* wr block t=%d[%d] sz=%d hash=%08x", type, dataIndex, size, newhash);
+#endif
+    setDirtyFlag(true);
 
     lUInt32 uncompressedSize = 0;
     lUInt64 newpackedhash = newhash;
@@ -772,7 +885,7 @@ bool CacheFile::write( lUInt16 type, lUInt16 dataIndex, const lUInt8 * buf, int 
             buf = dstbuf;
             newpackedhash = calcHash64( buf, size );
 #if DEBUG_DOM_STORAGE==1
-            CRLog::trace("packed block %d:%d : %d to %d bytes (%d%%)", type, dataIndex, srcsize, dstsize, srcsize>0?(100*dstsize/srcsize):0 );
+            //CRLog::trace("packed block %d:%d : %d to %d bytes (%d%%)", type, dataIndex, srcsize, dstsize, srcsize>0?(100*dstsize/srcsize):0 );
 #endif
         }
     }
@@ -802,11 +915,19 @@ bool CacheFile::write( lUInt16 type, lUInt16 dataIndex, const lUInt8 * buf, int 
 #if CACHE_FILE_WRITE_BLOCK_PADDING==1
     int paddingSize = block->_blockSize - size; //roundSector( size ) - size
     if ( paddingSize ) {
-        if ( block->_blockFilePos+block->_dataSize >= (int)_stream->GetSize() - _sectorSize ) {
+        if ((int)block->_blockFilePos + (int)block->_dataSize >= (int)_stream->GetSize() - _sectorSize) {
             LASSERT(size + paddingSize == block->_blockSize );
+//            if (paddingSize > 16384) {
+//                CRLog::error("paddingSize > 16384");
+//            }
+//            LASSERT(paddingSize <= 16384);
             lUInt8 tmp[16384];//paddingSize];
-            memset(tmp, 0xFF, paddingSize );
-            _stream->Write(tmp, paddingSize, &bytesWritten );
+            memset(tmp, 0xFF, paddingSize < 16384 ? paddingSize : 16384);
+            do {
+                int blkSize = paddingSize < 16384 ? paddingSize : 16384;
+                _stream->Write(tmp, blkSize, &bytesWritten );
+                paddingSize -= blkSize;
+            } while (paddingSize > 0);
         }
     }
 #endif
@@ -857,11 +978,14 @@ bool CacheFile::open( lString16 filename )
     }
     return open(stream);
 }
+
+
 // try open existing cache file
 bool CacheFile::open( LVStreamRef stream )
 {
     _stream = stream;
     _size = _stream->GetSize();
+    //_stream->setAutoSyncSize(STREAM_AUTO_SYNC_SIZE);
 
     if ( !readIndex() ) {
         CRLog::error("CacheFile::open : cannot read index from file");
@@ -889,6 +1013,7 @@ bool CacheFile::create( lString16 filename )
 bool CacheFile::create( LVStreamRef stream )
 {
     _stream = stream;
+    //_stream->setAutoSyncSize(STREAM_AUTO_SYNC_SIZE);
     if ( _stream->SetPos(0)!=0 ) {
         CRLog::error( "CacheFile::create: cannot seek file");
         _stream.Clear();
@@ -904,11 +1029,172 @@ bool CacheFile::create( LVStreamRef stream )
         _stream.Clear();
         return false;
     }
-    if ( !updateHeader( NULL ) ) {
+    if (!updateHeader()) {
         _stream.Clear();
         return false;
     }
     return true;
+}
+
+// BLOB storage
+
+class ldomBlobItem {
+    int _storageIndex;
+    lString16 _name;
+    int _size;
+    lUInt8 * _data;
+public:
+    ldomBlobItem( lString16 name ) : _storageIndex(-1), _name(name), _size(0), _data(NULL) {
+
+    }
+    ~ldomBlobItem() {
+        if ( _data )
+            delete[] _data;
+    }
+    int getSize() { return _size; }
+    int getIndex() { return _storageIndex; }
+    lUInt8 * getData() { return _data; }
+    lString16 getName() { return _name; }
+    void setIndex(int index, int size) {
+        if ( _data )
+            delete[] _data;
+        _data = NULL;
+        _storageIndex = index;
+        _size = size;
+    }
+    void setData( const lUInt8 * data, int size ) {
+        if ( _data )
+            delete[] _data;
+        if (data && size>0) {
+            _data = new lUInt8[size];
+            memcpy(_data, data, size);
+            _size = size;
+        } else {
+            _data = NULL;
+            _size = -1;
+        }
+    }
+};
+
+ldomBlobCache::ldomBlobCache() : _cacheFile(NULL), _changed(false)
+{
+
+}
+
+#define BLOB_INDEX_MAGIC "BLOBINDX"
+
+bool ldomBlobCache::loadIndex()
+{
+    bool res;
+    SerialBuf buf(0,true);
+    res = _cacheFile->read(CBT_BLOB_INDEX, buf);
+    if (!res) {
+        _list.clear();
+        return true; // missing blob index: treat as empty list of blobs
+    }
+    if (!buf.checkMagic(BLOB_INDEX_MAGIC))
+        return false;
+    lUInt32 len;
+    buf >> len;
+    for ( lUInt32 i = 0; i<len; i++ ) {
+        lString16 name;
+        buf >> name;
+        lUInt32 size;
+        buf >> size;
+        if (buf.error())
+            break;
+        ldomBlobItem * item = new ldomBlobItem(name);
+        item->setIndex(i, size);
+        _list.add(item);
+    }
+    res = !buf.error();
+    return res;
+}
+
+bool ldomBlobCache::saveIndex()
+{
+    bool res;
+    SerialBuf buf(0,true);
+    buf.putMagic(BLOB_INDEX_MAGIC);
+    lUInt32 len = _list.length();
+    buf << len;
+    for ( lUInt32 i = 0; i<len; i++ ) {
+        ldomBlobItem * item = _list[i];
+        buf << item->getName();
+        buf << (lUInt32)item->getSize();
+    }
+    res = _cacheFile->write( CBT_BLOB_INDEX, buf, false );
+    return res;
+}
+
+ContinuousOperationResult ldomBlobCache::saveToCache(CRTimerUtil & timeout)
+{
+    if (!_list.length() || !_changed || _cacheFile==NULL)
+        return CR_DONE;
+    bool res = true;
+    for ( int i=0; i<_list.length(); i++ ) {
+        ldomBlobItem * item = _list[i];
+        if ( item->getData() ) {
+            res = _cacheFile->write(CBT_BLOB_DATA, i, item->getData(), item->getSize(), false) && res;
+            if (res)
+                item->setIndex(i, item->getSize());
+        }
+        if (timeout.expired())
+            return CR_TIMEOUT;
+    }
+    res = saveIndex() && res;
+    if ( res )
+        _changed = false;
+    return res ? CR_DONE : CR_ERROR;
+}
+
+void ldomBlobCache::setCacheFile( CacheFile * cacheFile )
+{
+    _cacheFile = cacheFile;
+    CRTimerUtil infinite;
+    if (_list.empty())
+        loadIndex();
+    else
+        saveToCache(infinite);
+}
+
+bool ldomBlobCache::addBlob( const lUInt8 * data, int size, lString16 name )
+{
+    CRLog::debug("ldomBlobCache::addBlob( %s, size=%d, [%02x,%02x,%02x,%02x] )", LCSTR(name), size, data[0], data[1], data[2], data[3]);
+    int index = _list.length();
+    ldomBlobItem * item = new ldomBlobItem(name);
+    if (_cacheFile != NULL) {
+        _cacheFile->write(CBT_BLOB_DATA, index, data, size, false);
+        item->setIndex(index, size);
+    } else {
+        item->setData(data, size);
+    }
+    _list.add(item);
+    _changed = true;
+    return true;
+}
+
+LVStreamRef ldomBlobCache::getBlob( lString16 name )
+{
+    ldomBlobItem * item = NULL;
+    lUInt16 index = 0;
+    for ( int i=0; i<_list.length(); i++ ) {
+        if (_list[i]->getName() == name) {
+            item = _list[i];
+            index = i;
+            break;
+        }
+    }
+    if (item) {
+        if (item->getData()) {
+            // RAM
+            return LVCreateMemoryStream(item->getData(), item->getSize(), true);
+        } else {
+            // CACHE FILE
+            return _cacheFile->readStream(CBT_BLOB_DATA, index);
+        }
+    }
+    return LVStreamRef();
 }
 
 #if BUILD_LITE!=1
@@ -1166,6 +1452,8 @@ tinyNodeCollection::tinyNodeCollection()
 , _cacheFile(NULL)
 , _mapped(false)
 , _maperror(false)
+, _mapSavingStage(0)
+, _minSpaceCondensingPercent(DEF_MIN_SPACE_CONDENSING_PERCENT)
 #endif
 , _textStorage(this, 't', TEXT_CACHE_UNPACKED_SPACE, TEXT_CACHE_CHUNK_SIZE ) // persistent text node data storage
 , _elemStorage(this, 'e', ELEM_CACHE_UNPACKED_SPACE, ELEM_CACHE_CHUNK_SIZE ) // persistent element data storage
@@ -1194,6 +1482,8 @@ tinyNodeCollection::tinyNodeCollection( tinyNodeCollection & v )
 , _cacheFile(NULL)
 , _mapped(false)
 , _maperror(false)
+, _mapSavingStage(0)
+, _minSpaceCondensingPercent(DEF_MIN_SPACE_CONDENSING_PERCENT)
 #endif
 , _textStorage(this, 't', TEXT_CACHE_UNPACKED_SPACE, TEXT_CACHE_CHUNK_SIZE ) // persistent text node data storage
 , _elemStorage(this, 'e', ELEM_CACHE_UNPACKED_SPACE, ELEM_CACHE_CHUNK_SIZE ) // persistent element data storage
@@ -1245,6 +1535,7 @@ bool tinyNodeCollection::openCacheFile()
     _elemStorage.setCache( f );
     _rectStorage.setCache( f );
     _styleStorage.setCache( f );
+    _blobCache.setCacheFile( f );
     return true;
 }
 
@@ -1290,6 +1581,7 @@ bool tinyNodeCollection::createCacheFile()
     _elemStorage.setCache( f );
     _rectStorage.setCache( f );
     _styleStorage.setCache( f );
+    _blobCache.setCacheFile( f );
     return true;
 }
 
@@ -1609,7 +1901,7 @@ tinyNodeCollection::~tinyNodeCollection()
 
 #if BUILD_LITE!=1
 /// put all objects into persistent storage
-void tinyNodeCollection::persist()
+void tinyNodeCollection::persist( CRTimerUtil & maxTime )
 {
     CRLog::info("lxmlDocBase::persist() invoked - converting all nodes to persistent objects");
     // elements
@@ -1618,20 +1910,32 @@ void tinyNodeCollection::persist()
         if ( part ) {
             int n0 = TNC_PART_LEN * partindex;
             for ( int i=0; i<TNC_PART_LEN && n0+i<=_elemCount; i++ )
-                if ( !part[i].isNull() && !part[i].isPersistent() )
+                if ( !part[i].isNull() && !part[i].isPersistent() ) {
                     part[i].persist();
+                    if (maxTime.expired())
+                        return;
+                }
         }
     }
+    //_cacheFile->flush(false); // intermediate flush
+    if ( maxTime.expired() )
+        return;
     // texts
     for ( int partindex = 0; partindex<=(_textCount>>TNC_PART_SHIFT); partindex++ ) {
         ldomNode * part = _textList[partindex];
         if ( part ) {
             int n0 = TNC_PART_LEN * partindex;
             for ( int i=0; i<TNC_PART_LEN && n0+i<=_textCount; i++ )
-                if ( !part[i].isNull() && !part[i].isPersistent() )
+                if ( !part[i].isNull() && !part[i].isPersistent() ) {
+                    //CRLog::trace("before persist");
                     part[i].persist();
+                    //CRLog::trace("after persist");
+                    if (maxTime.expired())
+                        return;
+                }
         }
     }
+    //_cacheFile->flush(false); // intermediate flush
 }
 #endif
 
@@ -1659,15 +1963,27 @@ void tinyNodeCollection::persist()
 
 
 /// saves all unsaved chunks to cache file
-bool ldomDataStorageManager::save()
+bool ldomDataStorageManager::save( CRTimerUtil & maxTime )
 {
     bool res = true;
 #if BUILD_LITE!=1
     if ( !_cache )
         return true;
-    for ( int i=0; i<_chunks.length(); i++ )
-        if ( !_chunks[i]->save() )
+    for ( int i=0; i<_chunks.length(); i++ ) {
+        if ( !_chunks[i]->save() ) {
             res = false;
+            break;
+        }
+        //CRLog::trace("time elapsed: %d", (int)maxTime.elapsed());
+        if (maxTime.expired())
+            return res;
+//        if ( (i&3)==3 &&  maxTime.expired() )
+//            return res;
+    }
+    if (!maxTime.infinite())
+        _cache->flush(false, maxTime); // intermediate flush
+    if ( maxTime.expired() )
+        return res;
     if ( !res )
         return false;
     // save chunk index
@@ -1929,7 +2245,7 @@ void ldomDataStorageManager::compact( int reservedSpace )
         int sumsize = reservedSpace;
         for ( ldomTextStorageChunk * p = _recentChunk; p; p = p->_nextRecent ) {
             if ( p->_bufsize >= 0 ) {
-                if ( p->_bufsize + sumsize < _maxUncompressedSize || (p==_activeChunk && reservedSpace<0xFFFFFFF)) {
+                if ( (int)p->_bufsize + sumsize < _maxUncompressedSize || (p==_activeChunk && reservedSpace<0xFFFFFFF)) {
                     // fits
                     sumsize += p->_bufsize;
                 } else {
@@ -2087,8 +2403,8 @@ void ldomTextStorageChunk::setRaw( int offset, int size, const lUInt8 * buf )
     if ( !_buf || offset+size>(int)_bufpos || offset+size>(int)_bufsize )
         crFatalError(123, "ldomTextStorageChunk: Invalid raw data buffer position");
 #endif
-    if ( memcmp( _buf+offset, buf, size ) ) {
-        memcpy( _buf+offset, buf, size );
+    if (memcmp(_buf+offset, buf, size) != 0) {
+        memcpy(_buf+offset, buf, size);
         modified();
     }
 }
@@ -2388,7 +2704,7 @@ public:
         if (_len>=_size)
         {
             _size += 4;
-            _list = (lxmlAttribute*) realloc( _list, _size*sizeof(lxmlAttribute) );
+            _list = cr_realloc( _list, _size );
         }
         _list[ _len++ ].setData(nsId, attrId, valueIndex);
     }
@@ -2398,7 +2714,7 @@ public:
         if (_len>=_size)
         {
             _size += 4;
-            _list = (lxmlAttribute*) realloc( _list, _size*sizeof(lxmlAttribute) );
+            _list = cr_realloc( _list, _size );
         }
         _list[ _len++ ].setData(nsId, attrId, valueIndex);
     }
@@ -2408,7 +2724,7 @@ public:
         if (_len>=_size)
         {
             _size += 4;
-            _list = (lxmlAttribute*) realloc( _list, _size*sizeof(lxmlAttribute) );
+            _list = cr_realloc( _list, _size );
         }
         _list[ _len++ ] = *v;
     }
@@ -2518,6 +2834,15 @@ lUInt16 lxmlDocBase::getElementNameIndex( const lChar16 * name )
     return _nextUnknownElementId++;
 }
 
+
+/// create formatted text object with options set
+LFormattedText * lxmlDocBase::createFormattedText()
+{
+    LFormattedText * p = new LFormattedText();
+    p->setImageScalingOptions(&_imgScalingOptions);
+    p->setMinSpaceCondensingPercent(_minSpaceCondensingPercent);
+    return p;
+}
 
 /// returns main element (i.e. FictionBook for FB2)
 ldomNode * lxmlDocBase::getRootNode()
@@ -2693,10 +3018,11 @@ ldomDocument::~ldomDocument()
 #if BUILD_LITE!=1
 
 /// renders (formats) document in memory
-bool ldomDocument::setRenderProps( int width, int dy, bool showCover, int y0, font_ref_t def_font, int def_interline_space )
+bool ldomDocument::setRenderProps( int width, int dy, bool showCover, int y0, font_ref_t def_font, int def_interline_space, CRPropRef props )
 {
     bool changed = false;
     _renderedBlockCache.clear();
+    changed = _imgScalingOptions.update(props, def_font->getSize()) || changed;
     css_style_ref_t s( new css_style_rec_t );
     s->display = css_d_block;
     s->white_space = css_ws_normal;
@@ -2718,7 +3044,7 @@ bool ldomDocument::setRenderProps( int width, int dy, bool showCover, int y0, fo
     s->vertical_align = css_va_baseline;
     s->font_family = def_font->getFontFamily();
     s->font_size.type = css_val_px;
-    s->font_size.value = def_font->getHeight();
+    s->font_size.value = def_font->getSize();
     s->font_name = def_font->getTypeFace();
     s->font_weight = css_fw_400;
     s->font_style = css_fs_normal;
@@ -2819,22 +3145,38 @@ void ldomDocument::applyDocumentStyleSheet()
         CRLog::trace("applyDocumentStyleSheet() : DOC_FLAG_ENABLE_INTERNAL_STYLES is disabled");
         return;
     }
-    ldomXPointer ss = createXPointer(lString16(L"/FictionBook/stylesheet"));
-    if ( !ss.isNull() ) {
-        lString16 css = ss.getText('\n');
-        if ( !css.empty() ) {
-            CRLog::debug("applyDocumentStyleSheet() : Using internal FB2 document stylesheet:\n%s", LCSTR(css));
-            _stylesheet.parse(LCSTR(css));
-        } else {
-            CRLog::trace("applyDocumentStyleSheet() : stylesheet under /FictionBook/stylesheet is empty");
+    if ( !_docStylesheetFileName.empty() ) {
+        if ( getContainer().isNull() )
+            return;
+        LVStreamRef cssStream = getContainer()->OpenStream(_docStylesheetFileName.c_str(), LVOM_READ);
+        if ( !cssStream.isNull() ) {
+            lString16 css;
+            css << LVReadTextFile( cssStream );
+            if ( !css.empty() ) {
+                CRLog::debug("applyDocumentStyleSheet() : Using document stylesheet from link/stylesheet from %s", LCSTR(_docStylesheetFileName));
+                _stylesheet.parse(LCSTR(css));
+                return;
+            }
         }
+        CRLog::error("applyDocumentStyleSheet() : cannot load link/stylesheet from %s", LCSTR(_docStylesheetFileName));
     } else {
-        CRLog::trace("applyDocumentStyleSheet() : No internal FB2 stylesheet found under /FictionBook/stylesheet");
+        ldomXPointer ss = createXPointer(lString16(L"/FictionBook/stylesheet"));
+        if ( !ss.isNull() ) {
+            lString16 css = ss.getText('\n');
+            if ( !css.empty() ) {
+                CRLog::debug("applyDocumentStyleSheet() : Using internal FB2 document stylesheet:\n%s", LCSTR(css));
+                _stylesheet.parse(LCSTR(css));
+            } else {
+                CRLog::trace("applyDocumentStyleSheet() : stylesheet under /FictionBook/stylesheet is empty");
+            }
+        } else {
+            CRLog::trace("applyDocumentStyleSheet() : No internal FB2 stylesheet found under /FictionBook/stylesheet");
+        }
     }
 }
 
 
-int ldomDocument::render( LVRendPageList * pages, LVDocViewCallback * callback, int width, int dy, bool showCover, int y0, font_ref_t def_font, int def_interline_space )
+int ldomDocument::render( LVRendPageList * pages, LVDocViewCallback * callback, int width, int dy, bool showCover, int y0, font_ref_t def_font, int def_interline_space, CRPropRef props )
 {
     CRLog::info("Render is called for width %d, pageHeight=%d, fontFace=%s", width, dy, def_font->getTypeFace().c_str() );
     CRLog::trace("initializing default style...");
@@ -2844,7 +3186,7 @@ int ldomDocument::render( LVRendPageList * pages, LVDocViewCallback * callback, 
 //        styleHash = styleHash * 31 + calcGlobalSettingsHash();
 //        CRLog::debug("Style hash before setRenderProps: %x", styleHash);
 //    } //bool propsChanged =
-    setRenderProps( width, dy, showCover, y0, def_font, def_interline_space );
+    setRenderProps( width, dy, showCover, y0, def_font, def_interline_space, props );
 
     // update styles
 //    if ( getRootNode()->getStyle().isNull() || getRootNode()->getFont().isNull()
@@ -2918,7 +3260,11 @@ int ldomDocument::render( LVRendPageList * pages, LVDocViewCallback * callback, 
         _pagesData.reset();
         pages->serialize( _pagesData );
 
-        saveChanges();
+        if ( callback ) {
+            callback->OnFormatEnd();
+        }
+
+        //saveChanges();
 
         //persist();
         dumpStatistics();
@@ -3141,16 +3487,20 @@ bool IsEmptySpace( const lChar16 * text, int len )
 static bool IS_FIRST_BODY = false;
 
 ldomElementWriter::ldomElementWriter(ldomDocument * document, lUInt16 nsid, lUInt16 id, ldomElementWriter * parent)
-    : _parent(parent), _document(document), _tocItem(NULL), _isBlock(true), _isSection(false), _stylesheetIsSet(false)
+    : _parent(parent), _document(document), _tocItem(NULL), _isBlock(true), _isSection(false), _stylesheetIsSet(false), _bodyEnterCalled(false)
 {
     //logfile << "{c";
     _typeDef = _document->getElementTypePtr( id );
+    _flags = 0;
+    if ( (_typeDef && _typeDef->white_space==css_ws_pre) || (_parent && _parent->getFlags()&TXTFLG_PRE) )
+        _flags |= TXTFLG_PRE;
     _isSection = (id==el_section);
     _allowText = _typeDef ? _typeDef->allow_text : (_parent?true:false);
     if (_parent)
         _element = _parent->getElement()->insertChildElement( (lUInt32)-1, nsid, id );
     else
         _element = _document->getRootNode(); //->insertChildElement( (lUInt32)-1, nsid, id );
+    //CRLog::trace("ldomElementWriter created for element 0x%04x %s", _element->getDataIndex(), LCSTR(_element->getNodeName()));
     if ( IS_FIRST_BODY && id==el_body ) {
         _tocItem = _document->getToc();
         //_tocItem->clear();
@@ -3161,10 +3511,7 @@ ldomElementWriter::ldomElementWriter(ldomDocument * document, lUInt16 nsid, lUIn
 
 lUInt32 ldomElementWriter::getFlags()
 {
-    lUInt32 flags = 0;
-    if ( _typeDef && _typeDef->white_space==css_ws_pre )
-        flags |= TXTFLG_PRE;
-    return flags;
+    return _flags;
 }
 
 static bool isBlockNode( ldomNode * node )
@@ -3217,10 +3564,10 @@ static lString16 getSectionHeader( ldomNode * section )
     lString16 header;
     if ( !section || section->getChildCount() == 0 )
         return header;
-    ldomNode * child = section->getChildNode(0);
-    if ( !child->isElement() || child->getNodeName()!=L"title" )
+    ldomNode * child = section->getChildElementNode(0, L"title");
+    if ( !child )
         return header;
-    header = child->getText(L' ');
+    header = child->getText(L' ', 1024);
     return header;
 }
 
@@ -3247,10 +3594,17 @@ void ldomElementWriter::updateTocItem()
 
 void ldomElementWriter::onBodyEnter()
 {
+    _bodyEnterCalled = true;
 #if BUILD_LITE!=1
+    //CRLog::trace("onBodyEnter() for node %04x %s", _element->getDataIndex(), LCSTR(_element->getNodeName()));
     if ( _document->isDefStyleSet() ) {
         _element->initNodeStyle();
+//        if ( _element->getStyle().isNull() ) {
+//            CRLog::error("error while style initialization of element %x %s", _element->getNodeIndex(), LCSTR(_element->getNodeName()) );
+//            crFatalError();
+//        }
         _isBlock = isBlockNode(_element);
+    } else {
     }
     if ( _isSection ) {
         if ( _parent && _parent->_isSection ) {
@@ -3273,30 +3627,36 @@ void ldomNode::autoboxChildren( int startIndex, int endIndex )
 #if BUILD_LITE!=1
     if ( !isElement() )
         return;
+    css_style_ref_t style = getStyle();
+    bool pre = ( style->white_space==css_ws_pre );
     int firstNonEmpty = startIndex;
     int lastNonEmpty = endIndex;
-    while ( firstNonEmpty<=endIndex && getChildNode(firstNonEmpty)->isText() ) {
-        lString16 s = getChildNode(firstNonEmpty)->getText();
-        if ( !IsEmptySpace(s.c_str(), s.length() ) )
-            break;
-        firstNonEmpty++;
-    }
-    while ( lastNonEmpty>=endIndex && getChildNode(lastNonEmpty)->isText() ) {
-        lString16 s = getChildNode(lastNonEmpty)->getText();
-        if ( !IsEmptySpace(s.c_str(), s.length() ) )
-            break;
-        lastNonEmpty--;
-    }
 
-    bool hasInline = false;
-    for ( int i=firstNonEmpty; i<=lastNonEmpty; i++ ) {
-        ldomNode * node = getChildNode(i);
-        if ( isInlineNode( node ) )
-            hasInline = true;
+    bool hasInline = pre;
+    if ( !pre ) {
+        while ( firstNonEmpty<=endIndex && getChildNode(firstNonEmpty)->isText() ) {
+            lString16 s = getChildNode(firstNonEmpty)->getText();
+            if ( !IsEmptySpace(s.c_str(), s.length() ) )
+                break;
+            firstNonEmpty++;
+        }
+        while ( lastNonEmpty>=endIndex && getChildNode(lastNonEmpty)->isText() ) {
+            lString16 s = getChildNode(lastNonEmpty)->getText();
+            if ( !IsEmptySpace(s.c_str(), s.length() ) )
+                break;
+            lastNonEmpty--;
+        }
+
+        for ( int i=firstNonEmpty; i<=lastNonEmpty; i++ ) {
+            ldomNode * node = getChildNode(i);
+            if ( isInlineNode( node ) )
+                hasInline = true;
+        }
     }
 
     if ( hasInline ) { //&& firstNonEmpty<=lastNonEmpty
 
+#ifdef TRACE_AUTOBOX
         CRLog::trace("Autobox children %d..%d of node <%s>  childCount=%d", firstNonEmpty, lastNonEmpty, LCSTR(getNodeName()), getChildCount());
 
         for ( int i=firstNonEmpty; i<=lastNonEmpty; i++ ) {
@@ -3306,6 +3666,7 @@ void ldomNode::autoboxChildren( int startIndex, int endIndex )
             else
                 CRLog::trace("    elem: %d <%s> rendMode=%d  display=%d", node->getDataIndex(), LCSTR(node->getNodeName()), node->getRendMethod(), node->getStyle()->display);
         }
+#endif
         // remove starting empty
         removeChildren(lastNonEmpty+1, endIndex);
 
@@ -3597,6 +3958,19 @@ void ldomElementWriter::onBodyExit()
 #if BUILD_LITE!=1
     if ( !_document->isDefStyleSet() )
         return;
+    if ( !_bodyEnterCalled ) {
+        onBodyEnter();
+    }
+//    if ( _element->getStyle().isNull() ) {
+//        lString16 path;
+//        ldomNode * p = _element->getParentNode();
+//        while (p) {
+//            path = p->getNodeName() + L"/" + path;
+//            p = p->getParentNode();
+//        }
+//        //CRLog::error("style not initialized for element 0x%04x %s path %s", _element->getDataIndex(), LCSTR(_element->getNodeName()), LCSTR(path));
+//        crFatalError();
+//    }
     _element->initNodeRendMethod();
 
     if ( _stylesheetIsSet )
@@ -3610,7 +3984,7 @@ void ldomElementWriter::onText( const lChar16 * text, int len, lUInt32 )
     {
         // normal mode: store text copy
         // add text node, if not first empty space string of block node
-        if ( !_isBlock || _element->getChildCount()!=0 || !IsEmptySpace( text, len ) )
+        if ( !_isBlock || _element->getChildCount()!=0 || !IsEmptySpace( text, len ) || (_flags&TXTFLG_PRE) )
             _element->insertChildText(lString16(text, len));
         else {
             //CRLog::trace("ldomElementWriter::onText: Ignoring first empty space of block item");
@@ -3619,10 +3993,12 @@ void ldomElementWriter::onText( const lChar16 * text, int len, lUInt32 )
     //logfile << "}";
 }
 
+//#define DISABLE_STYLESHEET_REL
 #if BUILD_LITE!=1
 /// if stylesheet file name is set, and file is found, set stylesheet to its value
 bool ldomNode::applyNodeStylesheet()
 {
+#ifndef DISABLE_STYLESHEET_REL
     if ( getNodeId()!=el_DocFragment || !hasAttribute(attr_StyleSheet) )
         return false;
     lString16 v = getAttributeValue(attr_StyleSheet);
@@ -3640,6 +4016,7 @@ bool ldomNode::applyNodeStylesheet()
             return true;
         }
     }
+#endif
     return false;
 }
 #endif
@@ -3660,8 +4037,6 @@ ldomElementWriter * ldomDocumentWriter::pop( ldomElementWriter * obj, lUInt16 id
     ldomElementWriter * tmp = obj;
     for ( ; tmp; tmp = tmp->_parent )
     {
-        tmp->getElement()->persist();
-
         //logfile << "-";
         if (tmp->getElement()->getNodeId() == id)
             break;
@@ -3678,10 +4053,12 @@ ldomElementWriter * ldomDocumentWriter::pop( ldomElementWriter * obj, lUInt16 id
     {
         //logfile << "-";
         tmp2 = tmp->_parent;
-        if (tmp->getElement()->getNodeId() == id)
-            break;
+        bool stop = (tmp->getElement()->getNodeId() == id);
         ElementCloseHandler( tmp->getElement() );
+        tmp->getElement()->persist();
         delete tmp;
+        if ( stop )
+            return tmp2;
     }
     /*
     logfile << "3 * ";
@@ -3689,14 +4066,13 @@ ldomElementWriter * ldomDocumentWriter::pop( ldomElementWriter * obj, lUInt16 id
     logfile << (int)tmp->getElement()->childCount << " - "
             << (int)tmp2->getElement()->childCount;
     */
-    ElementCloseHandler( tmp->getElement() );
-    delete tmp;
     //logfile << "}";
     return tmp2;
 }
 
 ldomElementWriter::~ldomElementWriter()
 {
+    //CRLog::trace("~ldomElementWriter for element 0x%04x %s", _element->getDataIndex(), LCSTR(_element->getNodeName()));
     //getElement()->persist();
     onBodyExit();
 }
@@ -3784,6 +4160,19 @@ void ldomDocumentWriter::OnTagClose( const lChar16 *, const lChar16 * tagname )
         //logfile << " !c-err!\n";
         return;
     }
+    if ( tagname[0]=='l' && _currNode && !lStr_cmp(tagname, L"link") ) {
+        // link node
+        if ( _currNode && _currNode->getElement() && _currNode->getElement()->getNodeName()==L"link" &&
+             _currNode->getElement()->getParentNode() && _currNode->getElement()->getParentNode()->getNodeName()==L"head" &&
+             _currNode->getElement()->getAttributeValue(L"rel")==L"stylesheet" &&
+             _currNode->getElement()->getAttributeValue(L"type")==L"text/css" ) {
+            lString16 href = _currNode->getElement()->getAttributeValue(L"href");
+            lString16 stylesheetFile = LVCombinePaths( _document->getCodeBase(), href );
+            CRLog::debug("Internal stylesheet file: %s", LCSTR(stylesheetFile));
+            _document->setDocStylesheetFileName(stylesheetFile);
+            _document->applyDocumentStyleSheet();
+        }
+    }
     lUInt16 id = _document->getElementNameIndex(tagname);
     //lUInt16 nsid = (nsname && nsname[0]) ? _document->getNsNameIndex(nsname) : 0;
     _errFlag |= (id != _currNode->getElement()->getNodeId());
@@ -3827,7 +4216,7 @@ void ldomDocumentWriter::OnText( const lChar16 * text, int len, lUInt32 flags )
     if (_currNode)
     {
         if ( (_flags & XML_FLAG_NO_SPACE_TEXT)
-             && IsEmptySpace(text, len) )
+             && IsEmptySpace(text, len)  && !(flags & TXTFLG_PRE))
              return;
         if (_currNode->_allowText)
             _currNode->onText( text, len, flags );
@@ -4145,6 +4534,67 @@ public:
     }
 };
 
+img_scaling_option_t::img_scaling_option_t()
+{
+    mode = (MAX_IMAGE_SCALE_MUL>1) ? (ARBITRARY_IMAGE_SCALE_ENABLED==1 ? IMG_FREE_SCALING : IMG_INTEGER_SCALING) : IMG_NO_SCALE;
+    max_scale = (MAX_IMAGE_SCALE_MUL>1) ? MAX_IMAGE_SCALE_MUL : 1;
+}
+
+img_scaling_options_t::img_scaling_options_t()
+{
+    img_scaling_option_t option;
+    zoom_in_inline = option;
+    zoom_in_block = option;
+    zoom_out_inline = option;
+    zoom_out_block = option;
+}
+
+#define FONT_SIZE_BIG 32
+#define FONT_SIZE_VERY_BIG 50
+static bool updateScalingOption( img_scaling_option_t & v, CRPropRef props, int fontSize, bool zoomin, bool isInline )
+{
+    lString8 propName("crengine.image.scaling.");
+    propName << (zoomin ? "zoomin." : "zoomout.");
+    propName << (isInline ? "inline." : "block.");
+    lString8 propNameMode = propName + "mode";
+    lString8 propNameScale = propName + "scale";
+    img_scaling_option_t def;
+    int currMode = props->getIntDef(propNameMode.c_str(), (int)def.mode);
+    int currScale = props->getIntDef(propNameScale.c_str(), (int)def.max_scale);
+    if ( currScale==0 ) {
+        if ( fontSize>=FONT_SIZE_VERY_BIG )
+            currScale = 3;
+        else if ( fontSize>=FONT_SIZE_BIG )
+            currScale = 2;
+        else
+            currScale = 1;
+    }
+    if ( currScale==1 )
+        currMode = 0;
+    int updated = false;
+    if ( v.max_scale!=currScale ) {
+        updated = true;
+        v.max_scale = currScale;
+    }
+    if ( v.mode!=(img_scaling_mode_t)currMode ) {
+        updated = true;
+        v.mode = (img_scaling_mode_t)currMode;
+    }
+    props->setIntDef(propNameMode.c_str(), currMode);
+    props->setIntDef(propNameScale.c_str(), currScale);
+    return updated;
+}
+
+/// returns true if any changes occured
+bool img_scaling_options_t::update( CRPropRef props, int fontSize )
+{
+    bool updated = false;
+    updated = updateScalingOption( zoom_in_inline, props, fontSize, true, true ) || updated;
+    updated = updateScalingOption( zoom_in_block, props, fontSize, true, false ) || updated;
+    updated = updateScalingOption( zoom_out_inline, props, fontSize, false, true ) || updated;
+    updated = updateScalingOption( zoom_out_block, props, fontSize, false, false ) || updated;
+    return updated;
+}
 
 xpath_step_t ParseXPathStep( const lChar16 * &path, lString16 & name, int & index )
 {
@@ -4271,7 +4721,7 @@ ldomXPointer ldomDocument::createXPointer( lvPoint pt, int direction )
     pt.y -= rc.top;
     //if ( !r )
     //    return ptr;
-    if ( finalNode->getRendMethod() != erm_final ) {
+    if ( finalNode->getRendMethod() != erm_final && finalNode->getRendMethod() !=  erm_list_item) {
         // not final, use as is
         if ( pt.y < (rc.bottom + rc.top) / 2 )
             return ldomXPointer( finalNode, 0 );
@@ -4304,8 +4754,13 @@ ldomXPointer ldomDocument::createXPointer( lvPoint pt, int direction )
                     continue;
                 if ( src->flags & LTEXT_SRC_IS_OBJECT ) {
                     // object (image)
+#if 1
+                    // return image object itself
+                    return ldomXPointer(node, 0);
+#else
                     return ldomXPointer( node->getParentNode(),
                         node->getNodeIndex() + (( x < word->x + word->width/2 ) ? 0 : 1) );
+#endif
                 }
                 LVFont * font = (LVFont *) src->t.font;
                 lUInt16 w[512];
@@ -4380,53 +4835,81 @@ bool ldomXPointer::getRect(lvRect & rect) const
 
         ldomNode * node = getNode();
         int offset = getOffset();
-        if ( node->isElement() ) {
-            if ( offset>=0 ) {
-                //
-                if ( offset>= (int)node->getChildCount() ) {
-                    node = node->getLastTextChild();
-                    if ( node )
-                        offset = node->getText().length();
-                    else
-                        return false;
-                } else {
-                    for ( int ci=offset; ci<(int)node->getChildCount(); ci++ ) {
-                        ldomNode * child = node->getChildNode( offset );
-                        ldomNode * txt = txt = child->getFirstTextChild( true );
-                        if ( txt ) {
-                            node = txt;
-//                            lString16 s = txt->getText();
-//                            CRLog::debug("text: [%d] '%s'", s.length(), LCSTR(s));
-                            break;
-                        }
-                    }
-                    if ( !node->isText() )
-                        return false;
-                    offset = 0;
-                }
-            }
-        }
+////        ldomXPointerEx xp(node, offset);
+////        if ( !node->isText() ) {
+////            //ldomXPointerEx xp(node, offset);
+////            xp.nextVisibleText();
+////            node = xp.getNode();
+////            offset = xp.getOffset();
+////        }
+//        if ( node->isElement() ) {
+//            if ( offset>=0 ) {
+//                //
+//                if ( offset>= (int)node->getChildCount() ) {
+//                    node = node->getLastTextChild();
+//                    if ( node )
+//                        offset = node->getText().length();
+//                    else
+//                        return false;
+//                } else {
+//                    for ( int ci=offset; ci<(int)node->getChildCount(); ci++ ) {
+//                        ldomNode * child = node->getChildNode( offset );
+//                        ldomNode * txt = txt = child->getFirstTextChild( true );
+//                        if ( txt ) {
+//                            node = txt;
+////                            lString16 s = txt->getText();
+////                            CRLog::debug("text: [%d] '%s'", s.length(), LCSTR(s));
+//                            break;
+//                        }
+//                    }
+//                    if ( !node->isText() )
+//                        return false;
+//                    offset = 0;
+//                }
+//            }
+//        }
 
         // text node
         int srcIndex = -1;
         int srcLen = -1;
+        int lastIndex = -1;
+        int lastLen = -1;
+        int lastOffset = -1;
+        ldomXPointerEx xp(node, offset);
         for ( int i=0; i<txtform->GetSrcCount(); i++ ) {
             const src_text_fragment_t * src = txtform->GetSrcInfo(i);
+            bool isObject = (src->flags&LTEXT_SRC_IS_OBJECT)!=0;
             if ( src->object == node ) {
                 srcIndex = i;
-                srcLen = src->t.len;
+                srcLen = isObject ? 0 : src->t.len;
+                break;
+            }
+            lastIndex = i;
+            lastLen =  isObject ? 0 : src->t.len;
+            lastOffset = isObject ? 0 : src->t.offset;
+            ldomXPointerEx xp2((ldomNode*)src->object, lastOffset);
+            if ( xp2.compare(xp)>0 ) {
+                srcIndex = i;
+                srcLen = lastLen;
+                offset = lastOffset;
                 break;
             }
         }
-        if ( srcIndex == -1 )
-            return false;
+        if ( srcIndex == -1 ) {
+            if ( lastIndex<0 )
+                return false;
+            srcIndex = lastIndex;
+            srcLen = lastLen;
+            offset = lastOffset;
+        }
         for ( int l = 0; l<txtform->GetLineCount(); l++ ) {
             const formatted_line_t * frmline = txtform->GetLineInfo(l);
             for ( int w=0; w<(int)frmline->word_count; w++ ) {
                 const formatted_word_t * word = &frmline->words[w];
-                if ( word->src_text_index==srcIndex ) {
+                bool lastWord = (l==txtform->GetLineCount()-1 && w==frmline->word_count-1);
+                if ( word->src_text_index>=srcIndex || lastWord ) {
                     // found word from same src line
-                    if ( offset<=word->t.start ) {
+                    if ( word->src_text_index>srcIndex || offset<=word->t.start ) {
                         // before this word
                         rect.left = word->x + rc.left + frmline->x;
                         //rect.top = word->y + rc.top + frmline->y + frmline->baseline;
@@ -4448,9 +4931,15 @@ bool ldomXPointer::getRect(lvRect & rect) const
                         rect.right = rect.left + 1;
                         rect.bottom = rect.top + frmline->height;
                         return true;
+                    } else if (lastWord) {
+                        // after last word
+                        rect.left = word->x + rc.left + frmline->x + word->width;
+                        //rect.top = word->y + rc.top + frmline->y + frmline->baseline;
+                        rect.top = rc.top + frmline->y;
+                        rect.right = rect.left + 1;
+                        rect.bottom = rect.top + frmline->height;
+                        return true;
                     }
-                } else if ( word->src_text_index>srcIndex ) {
-                    return false;
                 }
             }
         }
@@ -4626,8 +5115,8 @@ lString16 ldomXPointer::toString()
             int index = -1;
             int count = 0;
             for ( unsigned i=0; i<parent->getChildCount(); i++ ) {
-                ldomNode * node = parent->getChildNode( i );
-                if ( node->isElement() && node->getNodeId()==id ) {
+                ldomNode * node = parent->getChildElementNode( i, id );
+                if ( node ) {
                     count++;
                     if ( node==p )
                         index = count;
@@ -4746,12 +5235,13 @@ void ldomXPointerEx::initIndex()
 /// move to sibling #
 bool ldomXPointerEx::sibling( int index )
 {
-    if ( _level < 1 )
+    if ( _level <= 1 )
         return false;
     ldomNode * p = getNode()->getParentNode();
     if ( !p || index < 0 || index >= (int)p->getChildCount() )
         return false;
     setNode( p->getChildNode( index ) );
+    setOffset(0);
     _indexes[ _level-1 ] = index;
     return true;
 }
@@ -4765,17 +5255,19 @@ bool ldomXPointerEx::nextSibling()
 /// move to previous sibling
 bool ldomXPointerEx::prevSibling()
 {
+    if ( _level <= 1 )
+        return false;
     return sibling( _indexes[_level-1] - 1 );
 }
 
 /// move to next sibling element
 bool ldomXPointerEx::nextSiblingElement()
 {
-    if ( _level < 1 )
+    if ( _level <= 1 )
         return false;
     ldomNode * node = getNode();
     ldomNode * p = node->getParentNode();
-    for ( int i=_indexes[_level-1] + 1; i<(int)node->getChildCount(); i++ ) {
+    for ( int i=_indexes[_level-1] + 1; i<(int)p->getChildCount(); i++ ) {
         if ( p->getChildNode( i )->isElement() )
             return sibling( i );
     }
@@ -4785,7 +5277,7 @@ bool ldomXPointerEx::nextSiblingElement()
 /// move to previous sibling element
 bool ldomXPointerEx::prevSiblingElement()
 {
-    if ( _level < 1 )
+    if ( _level <= 1 )
         return false;
     ldomNode * node = getNode();
     ldomNode * p = node->getParentNode();
@@ -4802,6 +5294,7 @@ bool ldomXPointerEx::parent()
     if ( _level<=1 )
         return false;
     setNode( getNode()->getParentNode() );
+    setOffset(0);
     _level--;
     return true;
 }
@@ -4816,6 +5309,7 @@ bool ldomXPointerEx::child( int index )
         return false;
     _indexes[ _level++ ] = index;
     setNode( getNode()->getChildNode( index ) );
+    setOffset(0);
     return true;
 }
 
@@ -4830,11 +5324,12 @@ int ldomXPointerEx::compare( const ldomXPointerEx& v ) const
             return 1;
     }
     if ( _level < v._level ) {
-        if ( getOffset() < v._indexes[i] )
-            return -1;
-        if ( getOffset() > v._indexes[i] )
-            return 1;
         return -1;
+//        if ( getOffset() < v._indexes[i] )
+//            return -1;
+//        if ( getOffset() > v._indexes[i] )
+//            return 1;
+//        return -1;
     }
     if ( _level > v._level ) {
         if ( _indexes[i] < v.getOffset() )
@@ -5111,7 +5606,7 @@ static bool findTextRev( const lString16 & str, int & pos, const lString16 & pat
 }
 
 /// searches for specified text inside range
-bool ldomXRange::findText( lString16 pattern, bool caseInsensitive, bool reverse, LVArray<ldomWord> & words, int maxCount, int maxHeight )
+bool ldomXRange::findText( lString16 pattern, bool caseInsensitive, bool reverse, LVArray<ldomWord> & words, int maxCount, int maxHeight, bool checkMaxFromStart )
 {
     if ( caseInsensitive )
         pattern.lowercase();
@@ -5161,13 +5656,18 @@ bool ldomXRange::findText( lString16 pattern, bool caseInsensitive, bool reverse
         if ( !_start.isText() )
             _start.nextVisibleText();
         int firstFoundTextY = -1;
+        if (checkMaxFromStart) {
+			ldomXPointer p( _start.getNode(), _start.getOffset() );
+			firstFoundTextY = p.toPoint().y;
+		}
         while ( !isNull() ) {
             int offs = _start.getOffset();
 
             if ( firstFoundTextY!=-1 && maxHeight>0 ) {
                 ldomXPointer p( _start.getNode(), offs );
                 int currentTextY = p.toPoint().y;
-                if ( currentTextY>firstFoundTextY+maxHeight )
+                if ( (checkMaxFromStart && currentTextY>=firstFoundTextY+maxHeight) ||
+					currentTextY>firstFoundTextY+maxHeight )
                     return words.length()>0;
             }
 
@@ -5178,7 +5678,12 @@ bool ldomXRange::findText( lString16 pattern, bool caseInsensitive, bool reverse
             while ( ::findText( txt, offs, pattern ) ) {
                 if ( !words.length() && maxHeight>0 ) {
                     ldomXPointer p( _start.getNode(), offs );
-                    firstFoundTextY = p.toPoint().y;
+                    int currentTextY = p.toPoint().y;
+                    if (checkMaxFromStart) {
+						if ( currentTextY>=firstFoundTextY+maxHeight )
+							return words.length()>0;
+					} else
+						firstFoundTextY = currentTextY;
                 }
                 words.add( ldomWord(_start.getNode(), offs, offs + pattern.length() ) );
                 offs++;
@@ -5200,7 +5705,11 @@ void ldomXRangeList::getRanges( ldomMarkedRangeList &dst )
         return;
     for ( int i=0; i<length(); i++ ) {
         ldomXRange * range = get(i);
-        ldomMarkedRange * item = new ldomMarkedRange( range->getStart().toPoint(), range->getEnd().toPoint(), range->getFlags() );
+        lvPoint ptStart = range->getStart().toPoint();
+        lvPoint ptEnd = range->getEnd().toPoint();
+//        // LVE:DEBUG
+//        CRLog::trace("selectRange( %d,%d : %d,%d : %s, %s )", ptStart.x, ptStart.y, ptEnd.x, ptEnd.y, LCSTR(range->getStart().toString()), LCSTR(range->getEnd().toString()) );
+        ldomMarkedRange * item = new ldomMarkedRange( ptStart, ptEnd, range->getFlags() );
         if ( !item->empty() )
             dst.add( item );
         else
@@ -5342,10 +5851,10 @@ ldomMarkedRangeList::ldomMarkedRangeList( const ldomMarkedRangeList * list, lvRe
 {
     if ( !list || list->empty() )
         return;
-    if ( list->get(0)->start.y>rc.bottom )
-        return;
-    if ( list->get( list->length()-1 )->end.y < rc.top )
-        return;
+//    if ( list->get(0)->start.y>rc.bottom )
+//        return;
+//    if ( list->get( list->length()-1 )->end.y < rc.top )
+//        return;
     for ( int i=0; i<list->length(); i++ ) {
         ldomMarkedRange * src = list->get(i);
         if ( src->start.y>=rc.bottom || src->end.y<rc.top )
@@ -5414,8 +5923,11 @@ bool ldomXPointerEx::ensureElement()
     ldomNode * node = getNode();
     if ( !node )
         return false;
-    if ( node->isText() && !parent() )
-        return false;
+    if ( node->isText()) {
+        if (!parent())
+            return false;
+        node = getNode();
+    }
     if ( !node || !node->isElement() )
         return false;
     return true;
@@ -5503,12 +6015,17 @@ bool ldomXPointerEx::isVisibleFinal()
 }
 
 /// move to next visible text node
-bool ldomXPointerEx::nextVisibleText()
+bool ldomXPointerEx::nextVisibleText( bool thisBlockOnly )
 {
-    while ( nextText() ) {
+    ldomXPointerEx backup;
+    if ( thisBlockOnly )
+        backup = *this;
+    while ( nextText(thisBlockOnly) ) {
         if ( isVisible() )
             return true;
     }
+    if ( thisBlockOnly )
+        *this = backup;
     return false;
 }
 
@@ -5530,20 +6047,23 @@ bool ldomXPointerEx::isVisible()
 }
 
 /// move to next text node
-bool ldomXPointerEx::nextText()
+bool ldomXPointerEx::nextText( bool thisBlockOnly )
 {
+    ldomNode * block = NULL;
+    if ( thisBlockOnly )
+        block = getThisBlockNode();
     setOffset( 0 );
     while ( firstChild() ) {
         if ( isText() )
-            return true;
+            return (!thisBlockOnly || getThisBlockNode()==block);
     }
     for (;;) {
         while ( nextSibling() ) {
             if ( isText() )
-                return true;
+                return (!thisBlockOnly || getThisBlockNode()==block);
             while ( firstChild() ) {
                 if ( isText() )
-                    return true;
+                    return (!thisBlockOnly || getThisBlockNode()==block);
             }
         }
         if ( !parent() )
@@ -5552,16 +6072,19 @@ bool ldomXPointerEx::nextText()
 }
 
 /// move to previous text node
-bool ldomXPointerEx::prevText()
+bool ldomXPointerEx::prevText( bool thisBlockOnly )
 {
+    ldomNode * block = NULL;
+    if ( thisBlockOnly )
+        block = getThisBlockNode();
     setOffset( 0 );
     for (;;) {
         while ( prevSibling() ) {
             if ( isText() )
-                return true;
+                return  (!thisBlockOnly || getThisBlockNode()==block);
             while ( lastChild() ) {
                 if ( isText() )
-                    return true;
+                    return (!thisBlockOnly || getThisBlockNode()==block);
             }
         }
         if ( !parent() )
@@ -5570,22 +6093,41 @@ bool ldomXPointerEx::prevText()
 }
 
 /// move to previous visible text node
-bool ldomXPointerEx::prevVisibleText()
+bool ldomXPointerEx::prevVisibleText( bool thisBlockOnly )
 {
-    while ( prevText() )
+    ldomXPointerEx backup;
+    if ( thisBlockOnly )
+        backup = *this;
+    while ( prevText( thisBlockOnly ) )
         if ( isVisible() )
             return true;
+    if ( thisBlockOnly )
+        *this = backup;
     return false;
 }
 
 // TODO: implement better behavior
-static bool IsUnicodeSpace( lChar16 ch )
+inline bool IsUnicodeSpace( lChar16 ch )
 {
     return ch==' ';
 }
 
+// TODO: implement better behavior
+inline bool IsUnicodeSpaceOrNull( lChar16 ch )
+{
+    return ch==0 || ch==' ';
+}
+
+inline bool canWrapWordBefore( lChar16 ch ) {
+    return ch>=0x2e80 && ch<0xa640;
+}
+
+inline bool canWrapWordAfter( lChar16 ch ) {
+    return ch>=0x2e80 && ch<0xa640;
+}
+
 /// move to previous visible word beginning
-bool ldomXPointerEx::prevVisibleWordStart()
+bool ldomXPointerEx::prevVisibleWordStart( bool thisBlockOnly )
 {
     if ( isNull() )
         return false;
@@ -5595,7 +6137,7 @@ bool ldomXPointerEx::prevVisibleWordStart()
     for ( ;; ) {
         if ( !isText() || !isVisible() || _data->getOffset()==0 ) {
             // move to previous text
-            if ( !prevVisibleText() )
+            if ( !prevVisibleText(thisBlockOnly) )
                 return false;
             node = getNode();
             text = node->getText();
@@ -5621,7 +6163,7 @@ bool ldomXPointerEx::prevVisibleWordStart()
 }
 
 /// move to previous visible word end
-bool ldomXPointerEx::prevVisibleWordEnd()
+bool ldomXPointerEx::prevVisibleWordEnd( bool thisBlockOnly )
 {
     if ( isNull() )
         return false;
@@ -5632,7 +6174,7 @@ bool ldomXPointerEx::prevVisibleWordEnd()
     for ( ;; ) {
         if ( !isText() || !isVisible() || _data->getOffset()==0 ) {
             // move to previous text
-            if ( !prevVisibleText() )
+            if ( !prevVisibleText(thisBlockOnly) )
                 return false;
             node = getNode();
             text = node->getText();
@@ -5668,7 +6210,7 @@ bool ldomXPointerEx::prevVisibleWordEnd()
 }
 
 /// move to next visible word beginning
-bool ldomXPointerEx::nextVisibleWordStart()
+bool ldomXPointerEx::nextVisibleWordStart( bool thisBlockOnly )
 {
     if ( isNull() )
         return false;
@@ -5679,7 +6221,7 @@ bool ldomXPointerEx::nextVisibleWordStart()
     for ( ;; ) {
         if ( !isText() || !isVisible() ) {
             // move to previous text
-            if ( !nextVisibleText() )
+            if ( !nextVisibleText(thisBlockOnly) )
                 return false;
             node = getNode();
             text = node->getText();
@@ -5693,7 +6235,7 @@ bool ldomXPointerEx::nextVisibleWordStart()
                 textLen = text.length();
                 if ( _data->getOffset() < textLen )
                     break;
-                if ( !nextVisibleText() )
+                if ( !nextVisibleText(thisBlockOnly) )
                     return false;
                 _data->setOffset( 0 );
             }
@@ -5723,7 +6265,7 @@ bool ldomXPointerEx::nextVisibleWordStart()
 }
 
 /// move to next visible word end
-bool ldomXPointerEx::nextVisibleWordEnd()
+bool ldomXPointerEx::nextVisibleWordEnd( bool thisBlockOnly )
 {
     if ( isNull() )
         return false;
@@ -5734,7 +6276,7 @@ bool ldomXPointerEx::nextVisibleWordEnd()
     for ( ;; ) {
         if ( !isText() || !isVisible() ) {
             // move to previous text
-            if ( !nextVisibleText() )
+            if ( !nextVisibleText(thisBlockOnly) )
                 return false;
             node = getNode();
             text = node->getText();
@@ -5748,7 +6290,7 @@ bool ldomXPointerEx::nextVisibleWordEnd()
                 textLen = text.length();
                 if ( _data->getOffset() < textLen )
                     break;
-                if ( !nextVisibleText() )
+                if ( !nextVisibleText(thisBlockOnly) )
                     return false;
                 _data->setOffset( 0 );
             }
@@ -5791,7 +6333,9 @@ bool ldomXPointerEx::isVisibleWordStart()
     lString16 text = node->getText();
     int textLen = text.length();
     int i = _data->getOffset();
-    if ( (i==0 && i<textLen && !IsUnicodeSpace(text[i])) || (i<textLen && IsUnicodeSpace(text[i-1]) && !IsUnicodeSpace(text[i]) ) )
+    lChar16 currCh = i<textLen ? text[i] : 0;
+    lChar16 prevCh = i<textLen && i>0 ? text[i-1] : 0;
+    if ( canWrapWordBefore(currCh) || IsUnicodeSpaceOrNull(prevCh) && !IsUnicodeSpace(currCh) )
         return true;
     return false;
  }
@@ -5799,7 +6343,7 @@ bool ldomXPointerEx::isVisibleWordStart()
 /// returns true if current position is visible word end
 bool ldomXPointerEx::isVisibleWordEnd()
 {
-   if ( isNull() )
+    if ( isNull() )
         return false;
     if ( !isText() || !isVisible() )
         return false;
@@ -5807,10 +6351,219 @@ bool ldomXPointerEx::isVisibleWordEnd()
     lString16 text = node->getText();
     int textLen = text.length();
     int i = _data->getOffset();
-    if ( (i==textLen && i>0 && !IsUnicodeSpace(text[i-1]))
-        || (i>0 && !IsUnicodeSpace(text[i-1]) && IsUnicodeSpace(text[i]) ) )
+    lChar16 currCh = i>0 ? text[i-1] : 0;
+    lChar16 nextCh = i<textLen ? text[i] : 0;
+    if ( canWrapWordAfter(currCh) || !IsUnicodeSpace(currCh) && IsUnicodeSpaceOrNull(nextCh) )
         return true;
     return false;
+}
+
+/// returns block owner node of current node (or current node if it's block)
+ldomNode * ldomXPointerEx::getThisBlockNode()
+{
+    if ( isNull() )
+        return NULL;
+    ldomNode * node = getNode();
+    if ( node->isText() )
+        node = node->getParentNode();
+    for (;;) {
+        if ( !node )
+            return NULL;
+        lvdom_element_render_method rm = node->getRendMethod();
+        switch ( rm ) {
+        case erm_runin: // treat as separate block
+        case erm_block:
+        case erm_final:
+        case erm_mixed:
+        case erm_list_item:
+        case erm_table:
+        case erm_table_row_group:
+        case erm_table_row:
+        case erm_table_caption:
+            return node;
+        default:
+            break; // ignore
+        }
+        node = node->getParentNode();
+    }
+}
+
+/// returns true if points to last visible text inside block element
+bool ldomXPointerEx::isLastVisibleTextInBlock()
+{
+    if ( !isText() )
+        return false;
+    ldomXPointerEx pos(*this);
+    return !pos.nextVisibleText(true);
+}
+
+/// returns true if points to first visible text inside block element
+bool ldomXPointerEx::isFirstVisibleTextInBlock()
+{
+    if ( !isText() )
+        return false;
+    ldomXPointerEx pos(*this);
+    return !pos.prevVisibleText(true);
+}
+
+// sentence navigation
+
+/// returns true if points to beginning of sentence
+bool ldomXPointerEx::isSentenceStart()
+{
+    if ( isNull() )
+        return false;
+    if ( !isText() || !isVisible() )
+        return false;
+    ldomNode * node = getNode();
+    lString16 text = node->getText();
+    int textLen = text.length();
+    int i = _data->getOffset();
+    lChar16 currCh = i<textLen ? text[i] : 0;
+    lChar16 prevCh = i>0 ? text[i-1] : 0;
+    lChar16 prevNonSpace = 0;
+    for ( ;i>0; i-- ) {
+        lChar16 ch = text[i-1];
+        if ( !IsUnicodeSpace(ch) ) {
+            prevNonSpace = ch;
+            break;
+        }
+    }
+    if ( !prevNonSpace ) {
+        ldomXPointerEx pos(*this);
+        while ( !prevNonSpace && pos.prevVisibleText(true) ) {
+            lString16 prevText = pos.getText();
+            for ( int j=prevText.length()-1; j>=0; j-- ) {
+                lChar16 ch = prevText[j];
+                if ( !IsUnicodeSpace(ch) ) {
+                    prevNonSpace = ch;
+                    break;
+                }
+            }
+        }
+    }
+
+    if ( !IsUnicodeSpace(currCh) && IsUnicodeSpaceOrNull(prevCh) ) {
+        switch (prevNonSpace) {
+        case 0:
+        case '.':
+        case '?':
+        case '!':
+        case L'\x2026': // horizontal ellypsis
+            return true;
+        default:
+            return false;
+        }
+    }
+    return false;
+}
+
+/// returns true if points to end of sentence
+bool ldomXPointerEx::isSentenceEnd()
+{
+    if ( isNull() )
+        return false;
+    if ( !isText() || !isVisible() )
+        return false;
+    ldomNode * node = getNode();
+    lString16 text = node->getText();
+    int textLen = text.length();
+    int i = _data->getOffset();
+    lChar16 currCh = i<textLen ? text[i] : 0;
+    lChar16 prevCh = i>0 ? text[i-1] : 0;
+    if ( IsUnicodeSpaceOrNull(currCh) ) {
+        switch (prevCh) {
+        case 0:
+        case '.':
+        case '?':
+        case '!':
+        case L'\x2026': // horizontal ellypsis
+            return true;
+        default:
+            break;
+        }
+    }
+    // word is not ended with . ! ?
+    // check whether it's last word of block
+    ldomXPointerEx pos(*this);
+    return !pos.nextVisibleWordStart(true);
+}
+
+/// move to beginning of current visible text sentence
+bool ldomXPointerEx::thisSentenceStart()
+{
+    if ( isNull() )
+        return false;
+    if ( !isText() && !nextVisibleText() && !prevVisibleText() )
+        return false;
+    for (;;) {
+        if ( isSentenceStart() )
+            return true;
+        if ( !prevVisibleWordStart(true) )
+            return false;
+    }
+}
+
+/// move to end of current visible text sentence
+bool ldomXPointerEx::thisSentenceEnd()
+{
+    if ( isNull() )
+        return false;
+    if ( !isText() && !nextVisibleText() && !prevVisibleText() )
+        return false;
+    for (;;) {
+        if ( isSentenceEnd() )
+            return true;
+        if ( !nextVisibleWordEnd(true) )
+            return false;
+    }
+}
+
+/// move to beginning of next visible text sentence
+bool ldomXPointerEx::nextSentenceStart()
+{
+    if ( !isSentenceStart() && !thisSentenceEnd() )
+        return false;
+    for (;;) {
+        if ( !nextVisibleWordStart() )
+            return false;
+        if ( isSentenceStart() )
+            return true;
+    }
+}
+
+/// move to beginning of prev visible text sentence
+bool ldomXPointerEx::prevSentenceStart()
+{
+    if ( !thisSentenceStart() )
+        return false;
+    for (;;) {
+        if ( !prevVisibleWordStart() )
+            return false;
+        if ( isSentenceStart() )
+            return true;
+    }
+}
+
+/// move to end of next visible text sentence
+bool ldomXPointerEx::nextSentenceEnd()
+{
+    if ( !nextSentenceStart() )
+        return false;
+    return thisSentenceEnd();
+}
+
+/// move to end of next visible text sentence
+bool ldomXPointerEx::prevSentenceEnd()
+{
+    if ( !thisSentenceStart() )
+        return false;
+    for (;;) {
+        if ( !prevVisibleWordEnd() )
+            return false;
+        if ( isSentenceEnd() )
+            return true;
+    }
 }
 
 /// if start is after end, swap start and end
@@ -5896,7 +6649,7 @@ void ldomXRange::forEach( ldomNodeCallback * callback )
         // move to next item
         bool stop = false;
         if ( !allowGoRecurse || !pos._start.child(0) ) {
-            while ( !pos._start.nextSibling() ) {
+             while ( !pos._start.nextSibling() ) {
                 if ( !pos._start.parent() ) {
                     stop = true;
                     break;
@@ -5908,46 +6661,296 @@ void ldomXRange::forEach( ldomNodeCallback * callback )
     }
 }
 
+class ldomWordsCollector : public ldomNodeCallback {
+    LVArray<ldomWord> & _list;
+public:
+    ldomWordsCollector( LVArray<ldomWord> & list )
+        : _list( list )
+    {
+    }
+    /// called for each found text fragment in range
+    virtual void onText( ldomXRange * nodeRange )
+    {
+        ldomNode * node = nodeRange->getStart().getNode();
+        lString16 text = node->getText();
+        int len = text.length();
+        int end = nodeRange->getEnd().getOffset();
+        if ( len>end )
+            len = end;
+        int beginOfWord = -1;
+        for ( int i=nodeRange->getStart().getOffset(); i <= len; i++ ) {
+            int alpha = lGetCharProps(text[i]) & CH_PROP_ALPHA;
+            if (alpha && beginOfWord<0 ) {
+                beginOfWord = i;
+            }
+            if ( !alpha && beginOfWord>=0) {
+                _list.add( ldomWord( node, beginOfWord, i ) );
+                beginOfWord = -1;
+            }
+        }
+    }
+    /// called for each found node in range
+    virtual bool onElement( ldomXPointerEx * ptr )
+    {
+        ldomNode * elem = ptr->getNode();
+        if ( elem->getRendMethod()==erm_invisible )
+            return false;
+        return true;
+    }
+};
+
 /// get all words from specified range
 void ldomXRange::getRangeWords( LVArray<ldomWord> & list )
 {
-    class ldomWordsCollector : public ldomNodeCallback {
-        LVArray<ldomWord> & _list;
-    public:
-        ldomWordsCollector( LVArray<ldomWord> & list )
-            : _list( list )
-        {
-        }
-        /// called for each found text fragment in range
-        virtual void onText( ldomXRange * nodeRange )
-        {
-            ldomNode * node = nodeRange->getStart().getNode();
-            lString16 text = node->getText();
-            int len = text.length();
-            int beginOfWord = -1;
-            for ( int i=0; i <= len; i++ ) {
-                int alpha = lGetCharProps(text[i]) & CH_PROP_ALPHA;
-                if (alpha && beginOfWord<0 ) {
-                    beginOfWord = i;
-                }
-                if ( !alpha && beginOfWord>=0) {
-                    _list.add( ldomWord( node, beginOfWord, i ) );
-                    beginOfWord = -1;
-                }
-            }
-        }
-        /// called for each found node in range
-        virtual bool onElement( ldomXPointerEx * ptr )
-        {
-            ldomNode * elem = ptr->getNode();
-            if ( elem->getRendMethod()==erm_invisible )
-                return false;
-            return true;
-        }
-    };
     ldomWordsCollector collector( list );
     forEach( &collector );
 }
+
+/// adds all visible words from range, returns number of added words
+int ldomWordExList::addRangeWords( ldomXRange & range, bool trimPunctuation ) {
+    LVArray<ldomWord> list;
+    range.getRangeWords( list );
+    for ( int i=0; i<list.length(); i++ )
+        add( new ldomWordEx(list[i]) );
+    init();
+    return list.length();
+}
+
+lvPoint ldomMarkedRange::getMiddlePoint() {
+    if ( start.y==end.y ) {
+        return lvPoint( ((start.x + end.x)>>1), start.y );
+    } else {
+        return start;
+    }
+}
+
+/// returns distance (dx+dy) from specified point to middle point
+int ldomMarkedRange::calcDistance( int x, int y, MoveDirection dir ) {
+    lvPoint middle = getMiddlePoint();
+    int dx = middle.x - x;
+    int dy = middle.y - y;
+    if ( dx<0 ) dx = -dx;
+    if ( dy<0 ) dy = -dy;
+    switch (dir) {
+    case DIR_LEFT:
+    case DIR_RIGHT:
+        return dx + dy;
+    case DIR_UP:
+    case DIR_DOWN:
+        return dx + dy*100;
+    }
+
+
+    return dx + dy;
+}
+
+/// select word
+void ldomWordExList::selectWord( ldomWordEx * word, MoveDirection dir )
+{
+    selWord = word;
+    if ( selWord ) {
+        lvPoint middle = word->getMark().getMiddlePoint();
+        if ( x==-1 || (dir!=DIR_UP && dir!=DIR_DOWN) )
+            x = middle.x;
+        y = middle.y;
+    } else {
+        x = y = -1;
+    }
+}
+
+/// select next word in specified direction
+ldomWordEx * ldomWordExList::selectNextWord( MoveDirection dir, int moveBy )
+{
+    if ( !selWord )
+        return selectMiddleWord();
+    pattern.clear();
+    for ( int i=0; i<moveBy; i++ ) {
+        ldomWordEx * word = findNearestWord( x, y, dir );
+        if ( word )
+            selectWord( word, dir );
+    }
+    return selWord;
+}
+
+/// select middle word in range
+ldomWordEx * ldomWordExList::selectMiddleWord() {
+    if ( minx==-1 )
+        init();
+    ldomWordEx * word = findNearestWord( (maxx+minx)/2, (miny+maxy)/2, DIR_ANY );
+    selectWord(word, DIR_ANY);
+    return word;
+}
+
+ldomWordEx * ldomWordExList::findWordByPattern()
+{
+    ldomWordEx * lastBefore = NULL;
+    ldomWordEx * firstAfter = NULL;
+    bool selReached = false;
+    for ( int i=0; i<length(); i++ ) {
+        ldomWordEx * item = get(i);
+        if ( item==selWord )
+            selReached = true;
+        lString16 text = item->getText();
+        text.lowercase();
+        bool flg = true;
+        for ( unsigned j=0; j<pattern.length(); j++ ) {
+            if ( j>=text.length() ) {
+                flg = false;
+                break;
+            }
+            lString16 chars = pattern[j];
+            chars.lowercase();
+            bool charFound = false;
+            for ( unsigned k=0; k<chars.length(); k++ ) {
+                if ( chars[k]==text[j] ) {
+                    charFound = true;
+                    break;
+                }
+            }
+            if ( !charFound ) {
+                flg = false;
+                break;
+            }
+        }
+        if ( !flg )
+            continue;
+        if ( selReached ) {
+            if ( firstAfter==NULL )
+                firstAfter = item;
+        } else {
+            lastBefore = item;
+        }
+    }
+
+    if ( firstAfter )
+        return firstAfter;
+    else
+        return lastBefore;
+}
+
+/// try append search pattern and find word
+ldomWordEx * ldomWordExList::appendPattern(lString16 chars)
+{
+    pattern.add(chars);
+    ldomWordEx * foundWord = findWordByPattern();
+
+    if ( foundWord ) {
+        selectWord(foundWord, DIR_ANY);
+    } else {
+        pattern.erase(pattern.length()-1, 1);
+    }
+    return foundWord;
+}
+
+/// remove last character from pattern and try to search
+ldomWordEx * ldomWordExList::reducePattern()
+{
+    if ( pattern.length()==0 )
+        return NULL;
+    pattern.erase(pattern.length()-1, 1);
+    ldomWordEx * foundWord = findWordByPattern();
+
+    if ( foundWord )
+        selectWord(foundWord, DIR_ANY);
+    return foundWord;
+}
+
+/// find word nearest to specified point
+ldomWordEx * ldomWordExList::findNearestWord( int x, int y, MoveDirection dir ) {
+    if ( !length() )
+        return NULL;
+    int bestDistance = -1;
+    ldomWordEx * bestWord = NULL;
+    ldomWordEx * defWord = (dir==DIR_LEFT || dir==DIR_UP) ? get(length()-1) : get(0);
+    int i;
+    if ( dir==DIR_LEFT || dir==DIR_RIGHT ) {
+        int thisLineY = -1;
+        int thisLineDy = -1;
+        for ( i=0; i<length(); i++ ) {
+            ldomWordEx * item = get(i);
+            lvPoint middle = item->getMark().getMiddlePoint();
+            int dy = middle.y - y;
+            if ( dy<0 ) dy = -dy;
+            if ( thisLineY==-1 || thisLineDy>dy ) {
+                thisLineY = middle.y;
+                thisLineDy = dy;
+            }
+        }
+        ldomWordEx * nextLineWord = NULL;
+        for ( i=0; i<length(); i++ ) {
+            ldomWordEx * item = get(i);
+            if ( dir!=DIR_ANY && item==selWord )
+                continue;
+            ldomMarkedRange * mark = &item->getMark();
+            lvPoint middle = mark->getMiddlePoint();
+            switch ( dir ) {
+            case DIR_LEFT:
+                if ( middle.y<thisLineY )
+                    nextLineWord = item; // last word of prev line
+                if ( middle.x>=x )
+                    continue;
+                break;
+            case DIR_RIGHT:
+                if ( nextLineWord==NULL && middle.y>thisLineY )
+                    nextLineWord = item; // first word of next line
+                if ( middle.x<=x )
+                    continue;
+                break;
+            }
+            if ( middle.y!=thisLineY )
+                continue;
+            int dist = mark->calcDistance(x, y, dir);
+            if ( bestDistance==-1 || dist<bestDistance ) {
+                bestWord = item;
+                bestDistance = dist;
+            }
+        }
+        if ( bestWord!=NULL )
+            return bestWord; // found in the same line
+        if ( nextLineWord!=NULL  )
+            return nextLineWord;
+        return defWord;
+    }
+    for ( i=0; i<length(); i++ ) {
+        ldomWordEx * item = get(i);
+        if ( dir!=DIR_ANY && item==selWord )
+            continue;
+        ldomMarkedRange * mark = &item->getMark();
+        lvPoint middle = mark->getMiddlePoint();
+        if ( dir==DIR_UP && middle.y >= y )
+            continue;
+        if ( dir==DIR_DOWN && middle.y <= y )
+            continue;
+
+        int dist = mark->calcDistance(x, y, dir);
+        if ( bestDistance==-1 || dist<bestDistance ) {
+            bestWord = item;
+            bestDistance = dist;
+        }
+    }
+    if ( bestWord!=NULL )
+        return bestWord;
+    return defWord;
+}
+
+void ldomWordExList::init()
+{
+    if ( !length() )
+        return;
+    for ( int i=0; i<length(); i++ ) {
+        ldomWordEx * item = get(i);
+        lvPoint middle = item->getMark().getMiddlePoint();
+        if ( i==0 || minx > middle.x )
+            minx = middle.x;
+        if ( i==0 || maxx < middle.x )
+            maxx = middle.x;
+        if ( i==0 || miny > middle.y )
+            miny = middle.y;
+        if ( i==0 || maxy < middle.y )
+            maxy = middle.y;
+    }
+}
+
 
 class ldomTextCollector : public ldomNodeCallback
 {
@@ -6150,18 +7153,15 @@ lString16 ldomDocumentFragmentWriter::convertHref( lString16 href )
 
     href = LVCombinePaths(codeBase, href);
 
-
-    if ( codeBasePrefix.empty() )
-        return href;
-
-
     // resolve relative links
     lString16 p, id;
     if ( !href.split2(lString16("#"), p, id) )
         p = href;
-    if ( p.empty() )
+    if ( p.empty() ) {
+        if ( codeBasePrefix.empty() )
+            return href;
         p = codeBasePrefix;
-    else {
+    } else {
         lString16 replacement = pathSubstitutions.get(p);
         if ( !replacement.empty() )
             p = replacement;
@@ -6208,14 +7208,21 @@ void ldomDocumentFragmentWriter::OnAttribute( const lChar16 * nsname, const lCha
             parent->OnAttribute(nsname, attrname, attrvalue);
         }
     } else {
-        if ( styleDetectionState == 1 && !lStr_cmp(attrname, L"rel") && !lStr_cmp(attrvalue, L"stylesheet") )
-            styleDetectionState = 2;
-        else if ( styleDetectionState == 2 && !lStr_cmp(attrname, L"type") && !lStr_cmp(attrvalue, L"text/css") )
-            styleDetectionState = 3;
-        else if ( styleDetectionState == 3 && !lStr_cmp(attrname, L"href") ) {
-            lString16 href = attrvalue;
-            stylesheetFile = LVCombinePaths( codeBase, href );
-            styleDetectionState = 0;
+        if ( styleDetectionState ) {
+            if ( !lStr_cmp(attrname, L"rel") && !lStr_cmp(attrvalue, L"stylesheet") )
+                styleDetectionState |= 2;
+            else if ( !lStr_cmp(attrname, L"type") && !lStr_cmp(attrvalue, L"text/css") )
+                styleDetectionState |= 4;
+            else if ( !lStr_cmp(attrname, L"href") ) {
+                styleDetectionState |= 8;
+                lString16 href = attrvalue;
+                tmpStylesheetFile = LVCombinePaths( codeBase, href );
+            }
+            if ( styleDetectionState==15 ) {
+                stylesheetFile = tmpStylesheetFile;
+                styleDetectionState = 0;
+                CRLog::trace("CSS file href: %s", LCSTR(stylesheetFile));
+            }
         }
     }
 }
@@ -6257,6 +7264,7 @@ void ldomDocumentFragmentWriter::OnTagClose( const lChar16 * nsname, const lChar
             parent->OnTagClose(L"", baseTagReplacement.c_str());
         }
         baseElement = NULL;
+        return;
     }
     if ( insideTag )
         parent->OnTagClose(nsname, tagname);
@@ -6343,6 +7351,11 @@ void ldomDocumentWriterFilter::AutoClose( lUInt16 tag_id, bool open )
 
 ldomNode * ldomDocumentWriterFilter::OnTagOpen( const lChar16 * nsname, const lChar16 * tagname )
 {
+    if ( !_tagBodyCalled ) {
+        CRLog::error("OnTagOpen w/o parent's OnTagBody : %s", LCSTR(lString16(tagname)));
+        crFatalError();
+    }
+    _tagBodyCalled = false;
     //logfile << "lxmlDocumentWriter::OnTagOpen() [" << nsname << ":" << tagname << "]";
 //    if ( nsname && nsname[0] )
 //        lStr_lowercase( const_cast<lChar16 *>(nsname), lStr_len(nsname) );
@@ -6372,6 +7385,7 @@ ldomNode * ldomDocumentWriterFilter::OnTagOpen( const lChar16 * nsname, const lC
 
 void ldomDocumentWriterFilter::OnTagBody()
 {
+    _tagBodyCalled = true;
     if ( _currNode ) {
         _currNode->onBodyEnter();
     }
@@ -6442,6 +7456,10 @@ void ldomDocumentWriterFilter::OnAttribute( const lChar16 * nsname, const lChar1
 /// called on closing tag
 void ldomDocumentWriterFilter::OnTagClose( const lChar16 * nsname, const lChar16 * tagname )
 {
+    if ( !_tagBodyCalled ) {
+        CRLog::error("OnTagClose w/o parent's OnTagBody : %s", LCSTR(lString16(tagname)));
+        crFatalError();
+    }
     //logfile << "ldomDocumentWriter::OnTagClose() [" << nsname << ":" << tagname << "]";
 //    if ( nsname && nsname[0] )
 //        lStr_lowercase( const_cast<lChar16 *>(nsname), lStr_len(nsname) );
@@ -6452,6 +7470,22 @@ void ldomDocumentWriterFilter::OnTagClose( const lChar16 * nsname, const lChar16
         //logfile << " !c-err!\n";
         return;
     }
+
+
+    if ( tagname[0]=='l' && _currNode && !lStr_cmp(tagname, L"link") ) {
+        // link node
+        if ( _currNode && _currNode->getElement() && _currNode->getElement()->getNodeName()==L"link" &&
+             _currNode->getElement()->getParentNode() && _currNode->getElement()->getParentNode()->getNodeName()==L"head" &&
+             _currNode->getElement()->getAttributeValue(L"rel")==L"stylesheet" &&
+             _currNode->getElement()->getAttributeValue(L"type")==L"text/css" ) {
+            lString16 href = _currNode->getElement()->getAttributeValue(L"href");
+            lString16 stylesheetFile = LVCombinePaths( _document->getCodeBase(), href );
+            CRLog::debug("Internal stylesheet file: %s", LCSTR(stylesheetFile));
+            _document->setDocStylesheetFileName(stylesheetFile);
+            _document->applyDocumentStyleSheet();
+        }
+    }
+
     lUInt16 id = _document->getElementNameIndex(tagname);
 
     // HTML title detection
@@ -6499,7 +7533,7 @@ void ldomDocumentWriterFilter::OnText( const lChar16 * text, int len, lUInt32 fl
     {
         AutoClose( _currNode->_element->getNodeId(), false );
         if ( (_flags & XML_FLAG_NO_SPACE_TEXT)
-             && IsEmptySpace(text, len) )
+             && IsEmptySpace(text, len) && !(flags & TXTFLG_PRE))
              return;
         bool autoPara = _libRuDocumentDetected && (flags & TXTFLG_PRE);
         if (_currNode->_allowText) {
@@ -6566,6 +7600,7 @@ ldomDocumentWriterFilter::ldomDocumentWriterFilter(ldomDocument * document, bool
 , _libRuParagraphStart(false)
 , _styleAttrId(0)
 , _classAttrId(0)
+, _tagBodyCalled(true)
 {
     lUInt16 i;
     for ( i=0; i<MAX_ELEMENT_TYPE_ID; i++ )
@@ -6720,7 +7755,7 @@ bool ldomDocument::loadCacheFileContent(CacheLoadingCallback * formatCallback)
         if ( formatCallback ) {
             int fmt = getProps()->getIntDef(DOC_PROP_FILE_FORMAT_ID,
                     doc_format_fb2);
-            if (fmt < doc_format_fb2 || fmt > doc_format_txt_bookmark)
+            if (fmt < doc_format_fb2 || fmt > doc_format_max)
                 fmt = doc_format_fb2;
             // notify about format detection, to allow setting format-specific CSS
             formatCallback->OnCacheFileFormatDetected((doc_format_t)fmt);
@@ -6830,105 +7865,212 @@ bool ldomDocument::loadCacheFileContent(CacheLoadingCallback * formatCallback)
 
 static const char * styles_magic = "CRSTYLES";
 
+#define CHECK_EXPIRATION(s) \
+    if ( maxTime.expired() ) { CRLog::info("timer expired while " s); return CR_TIMEOUT; }
+
+/// saves changes to cache file, limited by time interval (can be called again to continue after TIMEOUT)
+ContinuousOperationResult ldomDocument::saveChanges( CRTimerUtil & maxTime )
+{
+    if ( !_cacheFile )
+        return CR_DONE;
+
+    if (maxTime.infinite()) {
+        _mapSavingStage = 0; // all stages from the beginning
+        _cacheFile->setAutoSyncSize(0);
+    } else {
+        //CRLog::trace("setting autosync");
+        _cacheFile->setAutoSyncSize(STREAM_AUTO_SYNC_SIZE);
+        //CRLog::trace("setting autosync - done");
+    }
+
+    CRLog::trace("ldomDocument::saveChanges(timeout=%d stage=%d)", maxTime.interval(), _mapSavingStage);
+
+    switch (_mapSavingStage) {
+    default:
+    case 0:
+
+        if (!maxTime.infinite())
+            _cacheFile->flush(false, maxTime);
+        CHECK_EXPIRATION("flushing of stream")
+
+        persist( maxTime );
+        CHECK_EXPIRATION("persisting of node data")
+
+        // fall through
+    case 1:
+        _mapSavingStage = 1;
+        CRLog::trace("ldomDocument::saveChanges() - element storage");
+
+        if ( !_elemStorage.save(maxTime) ) {
+            CRLog::error("Error while saving element data");
+            return CR_ERROR;
+        }
+        CHECK_EXPIRATION("saving element storate")
+        // fall through
+    case 2:
+        _mapSavingStage = 2;
+        CRLog::trace("ldomDocument::saveChanges() - text storage");
+        if ( !_textStorage.save(maxTime) ) {
+            CRLog::error("Error while saving text data");
+            return CR_ERROR;
+        }
+        CHECK_EXPIRATION("saving text storate")
+        // fall through
+    case 3:
+        _mapSavingStage = 3;
+        CRLog::trace("ldomDocument::saveChanges() - rect storage");
+
+        if ( !_rectStorage.save(maxTime) ) {
+            CRLog::error("Error while saving rect data");
+            return CR_ERROR;
+        }
+        CHECK_EXPIRATION("saving rect storate")
+        // fall through
+    case 41:
+        _mapSavingStage = 41;
+        CRLog::trace("ldomDocument::saveChanges() - blob storage data");
+
+        if ( _blobCache.saveToCache(maxTime) == CR_ERROR ) {
+            CRLog::error("Error while saving blob storage data");
+            return CR_ERROR;
+        }
+        if (!maxTime.infinite())
+            _cacheFile->flush(false, maxTime); // intermediate flush
+        CHECK_EXPIRATION("saving blob storage data")
+        // fall through
+    case 4:
+        _mapSavingStage = 4;
+        CRLog::trace("ldomDocument::saveChanges() - node style storage");
+
+        if ( !_styleStorage.save(maxTime) ) {
+            CRLog::error("Error while saving node style data");
+            return CR_ERROR;
+        }
+        if (!maxTime.infinite())
+            _cacheFile->flush(false, maxTime); // intermediate flush
+        CHECK_EXPIRATION("saving node style storage")
+        // fall through
+    case 5:
+        _mapSavingStage = 5;
+        CRLog::trace("ldomDocument::saveChanges() - misc data");
+        {
+            SerialBuf propsbuf(4096);
+            getProps()->serialize( propsbuf );
+            if ( !_cacheFile->write( CBT_PROP_DATA, propsbuf, COMPRESS_MISC_DATA ) ) {
+                CRLog::error("Error while saving props data");
+                return CR_ERROR;
+            }
+        }
+        if (!maxTime.infinite())
+            _cacheFile->flush(false, maxTime); // intermediate flush
+        CHECK_EXPIRATION("saving props data")
+        // fall through
+    case 6:
+        _mapSavingStage = 6;
+        CRLog::trace("ldomDocument::saveChanges() - ID data");
+        {
+            SerialBuf idbuf(4096);
+            serializeMaps( idbuf );
+            if ( !_cacheFile->write( CBT_MAPS_DATA, idbuf, COMPRESS_MISC_DATA ) ) {
+                CRLog::error("Error while saving Id data");
+                return CR_ERROR;
+            }
+        }
+        if (!maxTime.infinite())
+            _cacheFile->flush(false, maxTime); // intermediate flush
+        CHECK_EXPIRATION("saving ID data")
+        // fall through
+    case 7:
+        _mapSavingStage = 7;
+        if ( _pagesData.pos() ) {
+            CRLog::trace("ldomDocument::saveChanges() - page data (%d bytes)", _pagesData.pos());
+            if ( !_cacheFile->write( CBT_PAGE_DATA, _pagesData, COMPRESS_PAGES_DATA  ) ) {
+                CRLog::error("Error while saving pages data");
+                return CR_ERROR;
+            }
+        } else {
+            CRLog::trace("ldomDocument::saveChanges() - no page data");
+        }
+        if (!maxTime.infinite())
+            _cacheFile->flush(false, maxTime); // intermediate flush
+        CHECK_EXPIRATION("saving page data")
+        // fall through
+    case 8:
+        _mapSavingStage = 8;
+
+        CRLog::trace("ldomDocument::saveChanges() - node data");
+        if ( !saveNodeData() ) {
+            CRLog::error("Error while node instance data");
+            return CR_ERROR;
+        }
+        if (!maxTime.infinite())
+            _cacheFile->flush(false, maxTime); // intermediate flush
+        CHECK_EXPIRATION("saving node data")
+        // fall through
+    case 9:
+        _mapSavingStage = 9;
+        CRLog::trace("ldomDocument::saveChanges() - render info");
+        {
+            SerialBuf hdrbuf(0,true);
+            if ( !_hdr.serialize(hdrbuf) ) {
+                CRLog::error("Header data serialization is failed");
+                return CR_ERROR;
+            } else if ( !_cacheFile->write( CBT_REND_PARAMS, hdrbuf, false ) ) {
+                CRLog::error("Error while writing header data");
+                return CR_ERROR;
+            }
+        }
+        CRLog::info("Saving render properties: styleHash=%x, stylesheetHash=%x, docflags=%x, width=%x, height=%x",
+                    _hdr.render_style_hash, _hdr.stylesheet_hash, _hdr.render_docflags, _hdr.render_dx, _hdr.render_dy);
+
+
+        CRLog::trace("ldomDocument::saveChanges() - TOC");
+        {
+            SerialBuf tocbuf(0,true);
+            if ( !m_toc.serialize(tocbuf) ) {
+                CRLog::error("TOC data serialization is failed");
+                return CR_ERROR;
+            } else if ( !_cacheFile->write( CBT_TOC_DATA, tocbuf, COMPRESS_TOC_DATA ) ) {
+                CRLog::error("Error while writing TOC data");
+                return CR_ERROR;
+            }
+        }
+        if (!maxTime.infinite())
+            _cacheFile->flush(false, maxTime); // intermediate flush
+        CHECK_EXPIRATION("saving TOC data")
+        // fall through
+    case 10:
+        _mapSavingStage = 10;
+
+        if ( !saveStylesData() ) {
+            CRLog::error("Error while writing style data");
+            return CR_ERROR;
+        }
+        CRLog::trace("ldomDocument::saveChanges() - flush");
+        {
+            CRTimerUtil infinite;
+            if ( !_cacheFile->flush(true, infinite) ) {
+                CRLog::error("Error while updating index of cache file");
+                return CR_ERROR;
+            }
+        }
+        // fall through
+    case 11:
+        _mapSavingStage = 11;
+    }
+    CRLog::trace("ldomDocument::saveChanges() - done");
+    return CR_DONE;
+}
+
 /// save changes to cache file, @see loadCacheFileContent()
 bool ldomDocument::saveChanges()
 {
-    bool res = true;
     if ( !_cacheFile )
         return true;
-    CRLog::trace("ldomDocument::saveChanges()");
-    persist();
-    CRLog::trace("ldomDocument::saveChanges() - element storage");
-    if ( !_elemStorage.save() ) {
-        CRLog::error("Error while saving element data");
-        res = false;
-    }
-    CRLog::trace("ldomDocument::saveChanges() - text storage");
-    if ( !_textStorage.save() ) {
-        CRLog::error("Error while saving text data");
-        res = false;
-    }
-    CRLog::trace("ldomDocument::saveChanges() - rect storage");
-    if ( !_rectStorage.save() ) {
-        CRLog::error("Error while saving rect data");
-        res = false;
-    }
-    CRLog::trace("ldomDocument::saveChanges() - node style storage");
-    if ( !_styleStorage.save() ) {
-        CRLog::error("Error while saving node style data");
-        res = false;
-    }
-
-
-    CRLog::trace("ldomDocument::saveChanges() - misc data");
-    SerialBuf propsbuf(4096);
-    getProps()->serialize( propsbuf );
-    if ( !_cacheFile->write( CBT_PROP_DATA, propsbuf, COMPRESS_MISC_DATA ) ) {
-        CRLog::error("Error while saving props data");
-        res = false;
-    }
-
-    SerialBuf idbuf(4096);
-    serializeMaps( idbuf );
-    if ( !_cacheFile->write( CBT_MAPS_DATA, idbuf, COMPRESS_MISC_DATA ) ) {
-        CRLog::error("Error while saving Id data");
-        res = false;
-    }
-
-    if ( _pagesData.pos() ) {
-        CRLog::trace("ldomDocument::saveChanges() - page data (%d bytes)", _pagesData.pos());
-        if ( !_cacheFile->write( CBT_PAGE_DATA, _pagesData, COMPRESS_PAGES_DATA  ) ) {
-            CRLog::error("Error while saving pages data");
-            res = false;
-        }
-    } else {
-        CRLog::trace("ldomDocument::saveChanges() - no page data");
-    }
-
-    CRLog::trace("ldomDocument::saveChanges() - node data");
-    if ( !saveNodeData() ) {
-        CRLog::error("Error while node instance data");
-        res = false;
-    }
-
-    CRLog::trace("ldomDocument::saveChanges() - render info");
-    SerialBuf hdrbuf(0,true);
-    if ( !_hdr.serialize(hdrbuf) ) {
-        CRLog::error("Header data serialization is failed");
-        res = false;
-    } else if ( !_cacheFile->write( CBT_REND_PARAMS, hdrbuf, false ) ) {
-        CRLog::error("Error while writing header data");
-        res = false;
-    }
-    CRLog::info("Saving render properties: styleHash=%x, stylesheetHash=%x, docflags=%x, width=%x, height=%x",
-                _hdr.render_style_hash, _hdr.stylesheet_hash, _hdr.render_docflags, _hdr.render_dx, _hdr.render_dy);
-
-
-    CRLog::trace("ldomDocument::saveChanges() - TOC");
-    SerialBuf tocbuf(0,true);
-    if ( !m_toc.serialize(tocbuf) ) {
-        CRLog::error("TOC data serialization is failed");
-        res = false;
-    } else if ( !_cacheFile->write( CBT_TOC_DATA, tocbuf, COMPRESS_TOC_DATA ) ) {
-        CRLog::error("Error while writing TOC data");
-        res = false;
-    }
-
-    if ( !saveStylesData() ) {
-            CRLog::error("Error while writing style data");
-            res = false;
-    }
-
-    if ( res ) {
-        CRLog::trace("ldomDocument::saveChanges() - flush");
-        if ( !_cacheFile->flush(true) ) {
-            CRLog::error("Error while updating index of cache file");
-            res = false;
-        }
-    }
-
-    CRLog::trace("ldomDocument::saveChanges() - done %s", (res?"successfully":"with error"));
-    return res;
+    CRLog::debug("ldomDocument::saveChanges() - infinite");
+    CRTimerUtil timerNoLimit;
+    ContinuousOperationResult res = saveChanges(timerNoLimit);
+    return res!=CR_ERROR;
 }
 
 bool tinyNodeCollection::saveStylesData()
@@ -7031,6 +8173,8 @@ lUInt32 tinyNodeCollection::calcStyleHash()
             }
         }
     }
+    res = res * 31 + _imgScalingOptions.getHash();
+    res = res * 31 + _minSpaceCondensingPercent;
     res = (res * 31 + globalHash) * 31 + docFlags;
 //    CRLog::info("Calculated style hash = %08x", res);
     return res;
@@ -7164,48 +8308,52 @@ bool tinyNodeCollection::updateLoadedStyles( bool enabled )
     return res;
 }
 
-bool ldomDocument::swapToCache( lUInt32 reservedSize )
+/// swaps to cache file or saves changes, limited by time interval
+ContinuousOperationResult ldomDocument::swapToCache( CRTimerUtil & maxTime )
 {
     if ( _maperror )
-        return false;
-    if ( _mapped ) {
-        return true;
+        return CR_ERROR;
+    if ( !_mapped ) {
+        if ( !createCacheFile() ) {
+            CRLog::error("ldomDocument::swapToCache: failed: cannot create cache file");
+            _maperror = true;
+            return CR_ERROR;
+        }
     }
-    if ( !createCacheFile() ) {
-        CRLog::error("ldomDocument::swapToCache: failed: cannot create cache file");
-        _maperror = true;
-        return false;
+    _mapped = true;
+    if (!maxTime.infinite()) {
+        CRLog::info("Cache file is created, but document saving is postponed");
+        return CR_TIMEOUT;
     }
-
-    if ( !saveChanges() )
+    ContinuousOperationResult res = saveChanges(maxTime);
+    if ( res==CR_ERROR )
     {
         CRLog::error("Error while saving changes to cache file");
         _maperror = true;
-        return false;
+        return CR_ERROR;
     }
-
-    _mapped = true;
-
     CRLog::info("Successfully saved document to cache file: %dK", _cacheFile->getSize()/1024 );
-    return true;
+    return res;
 }
 
 /// saves recent changes to mapped file
-bool ldomDocument::updateMap()
+ContinuousOperationResult ldomDocument::updateMap(CRTimerUtil & maxTime)
 {
     if ( !_cacheFile || !_mapped )
-        return false;
+        return CR_DONE;
 
-    if ( !saveChanges() )
+    ContinuousOperationResult res = saveChanges(maxTime);
+    if ( res==CR_ERROR )
     {
         CRLog::error("Error while saving changes to cache file");
-        return false;
+        return CR_ERROR;
     }
 
-    CRLog::info("Cache file updated successfully");
-    dumpStatistics();
-
-    return true;
+    if ( res==CR_DONE ) {
+        CRLog::info("Cache file updated successfully");
+        dumpStatistics();
+    }
+    return res;
 }
 
 #endif
@@ -7625,13 +8773,13 @@ bool ldomDocument::checkRenderContext()
 
         return true;
     }
-    _hdr.render_style_hash = styleHash;
-    _hdr.stylesheet_hash = stylesheetHash;
-    _hdr.render_dx = dx;
-    _hdr.render_dy = dy;
-    _hdr.render_docflags = _docFlags;
-    CRLog::info("New render properties: styleHash=%x, stylesheetHash=%x, docflags=%x, width=%x, height=%x",
-                _hdr.render_style_hash, _hdr.stylesheet_hash, _hdr.render_docflags, _hdr.render_dx, _hdr.render_dy);
+//    _hdr.render_style_hash = styleHash;
+//    _hdr.stylesheet_hash = stylesheetHash;
+//    _hdr.render_dx = dx;
+//    _hdr.render_dy = dy;
+//    _hdr.render_docflags = _docFlags;
+//    CRLog::info("New render properties: styleHash=%x, stylesheetHash=%x, docflags=%x, width=%x, height=%x",
+//                _hdr.render_style_hash, _hdr.stylesheet_hash, _hdr.render_docflags, _hdr.render_dx, _hdr.render_dy);
     return false;
 }
 
@@ -7639,6 +8787,7 @@ bool ldomDocument::checkRenderContext()
 
 void lxmlDocBase::setStyleSheet( const char * css, bool replace )
 {
+    lUInt32 oldHash = _stylesheet.getHash();
     if ( replace ) {
         //CRLog::debug("cleaning stylesheet contents");
         _stylesheet.clear();
@@ -7646,6 +8795,10 @@ void lxmlDocBase::setStyleSheet( const char * css, bool replace )
     if ( css && *css ) {
         //CRLog::debug("appending stylesheet contents: \n%s", css);
         _stylesheet.parse( css );
+    }
+    lUInt32 newHash = _stylesheet.getHash();
+    if (oldHash != newHash) {
+        CRLog::debug("New stylesheet hash: %08x", newHash);
     }
 }
 
@@ -7896,8 +9049,10 @@ void ldomNode::modified()
 void ldomNode::setParentNode( ldomNode * parent )
 {
     ASSERT_NODE_NOT_NULL;
+#ifdef TRACE_AUTOBOX
     if ( getParentNode()!=NULL && parent != NULL )
         CRLog::trace("Changing parent of %d from %d to %d", getDataIndex(), getParentNode()->getDataIndex(), parent->getDataIndex());
+#endif
     switch ( TNTYPE ) {
     case NT_ELEMENT:
         NPELEM->_parentNode = parent;
@@ -7979,6 +9134,84 @@ ldomNode * ldomNode::getParentNode() const
         break;
     }
     return parentIndex ? getTinyNode(parentIndex) : NULL;
+}
+
+/// returns true child node is element
+bool ldomNode::isChildNodeElement( lUInt32 index ) const
+{
+    ASSERT_NODE_NOT_NULL;
+#if BUILD_LITE!=1
+    if ( !isPersistent() ) {
+#endif
+        // element
+        tinyElement * me = NPELEM;
+        int n = me->_children[index];
+        return ( (n & 1)==1 );
+#if BUILD_LITE!=1
+    } else {
+        // persistent element
+        ElementDataStorageItem * me = getDocument()->_elemStorage.getElem( _data._pelem_addr );
+        int n = me->children[index];
+        return ( (n & 1)==1 );
+    }
+#endif
+}
+
+/// returns true child node is text
+bool ldomNode::isChildNodeText( lUInt32 index ) const
+{
+    ASSERT_NODE_NOT_NULL;
+#if BUILD_LITE!=1
+    if ( !isPersistent() ) {
+#endif
+        // element
+        tinyElement * me = NPELEM;
+        int n = me->_children[index];
+        return ( (n & 1)==0 );
+#if BUILD_LITE!=1
+    } else {
+        // persistent element
+        ElementDataStorageItem * me = getDocument()->_elemStorage.getElem( _data._pelem_addr );
+        int n = me->children[index];
+        return ( (n & 1)==0 );
+    }
+#endif
+}
+
+/// returns child node by index, NULL if node with this index is not element or nodeTag!=0 and element node name!=nodeTag
+ldomNode * ldomNode::getChildElementNode( lUInt32 index, const lChar16 * nodeTag ) const
+{
+    lUInt16 nodeId = getDocument()->getElementNameIndex(nodeTag);
+    return getChildElementNode( index, nodeId );
+}
+
+/// returns child node by index, NULL if node with this index is not element or nodeId!=0 and element node id!=nodeId
+ldomNode * ldomNode::getChildElementNode( lUInt32 index, lUInt16 nodeId ) const
+{
+    ASSERT_NODE_NOT_NULL;
+    ldomNode * res = NULL;
+#if BUILD_LITE!=1
+    if ( !isPersistent() ) {
+#endif
+        // element
+        tinyElement * me = NPELEM;
+        int n = me->_children[index];
+        if ( (n & 1)==0 ) // not element
+            return NULL;
+        res = getTinyNode( n );
+#if BUILD_LITE!=1
+    } else {
+        // persistent element
+        ElementDataStorageItem * me = getDocument()->_elemStorage.getElem( _data._pelem_addr );
+        int n = me->children[index];
+        if ( (n & 1)==0 ) // not element
+            return NULL;
+        res = getTinyNode( n );
+    }
+#endif
+    if ( res && nodeId!=0 && res->getNodeId()!=nodeId )
+        res = NULL;
+    return res;
 }
 
 /// returns child node by index
@@ -8302,7 +9535,7 @@ const lString16 & ldomNode::getNodeNsName() const
 
 
 /// returns text node text as wide string
-lString16 ldomNode::getText( lChar16 blockDelimiter ) const
+lString16 ldomNode::getText( lChar16 blockDelimiter, int maxSize ) const
 {
     ASSERT_NODE_NOT_NULL;
     switch ( TNTYPE ) {
@@ -8314,16 +9547,16 @@ lString16 ldomNode::getText( lChar16 blockDelimiter ) const
             lString16 txt;
             unsigned cc = getChildCount();
             for ( unsigned i=0; i<cc; i++ ) {
-                txt += getChildNode(i)->getText(blockDelimiter);
                 ldomNode * child = getChildNode(i);
-                if ( i>=getChildCount()-1 )
+                txt += child->getText(blockDelimiter, maxSize);
+                if ( maxSize!=0 && txt.length()>(unsigned)maxSize )
+                    break;
+                if ( i>=cc-1 )
                     break;
 #if BUILD_LITE!=1
                 if ( blockDelimiter && child->isElement() ) {
-                    if ( child->getStyle()->display == css_d_block )
-#endif
+                    if ( !child->getStyle().isNull() && child->getStyle()->display == css_d_block )
                         txt << blockDelimiter;
-#if BUILD_LITE!=1
                 }
 #endif
             }
@@ -8341,7 +9574,7 @@ lString16 ldomNode::getText( lChar16 blockDelimiter ) const
 }
 
 /// returns text node text as utf8 string
-lString8 ldomNode::getText8( lChar8 blockDelimiter ) const
+lString8 ldomNode::getText8( lChar8 blockDelimiter, int maxSize ) const
 {
     ASSERT_NODE_NOT_NULL;
     switch ( TNTYPE ) {
@@ -8352,8 +9585,10 @@ lString8 ldomNode::getText8( lChar8 blockDelimiter ) const
             lString8 txt;
             unsigned cc = getChildCount();
             for ( unsigned i=0; i<cc; i++ ) {
-                txt += getChildNode(i)->getText8(blockDelimiter);
                 ldomNode * child = getChildNode(i);
+                txt += child->getText8(blockDelimiter, maxSize);
+                if ( maxSize!=0 && txt.length()>(unsigned)maxSize )
+                    break;
                 if ( i>=getChildCount()-1 )
                     break;
                 if ( blockDelimiter && child->isElement() ) {
@@ -8599,7 +9834,7 @@ ldomNode * ldomNode::getFirstTextChild(bool skipEmpty)
             return this;
         lString16 txt = getText();
         bool nonSpaceFound = false;
-        for ( int i=0; i<txt.length(); i++ ) {
+        for ( unsigned i=0; i<txt.length(); i++ ) {
             lChar16 ch = txt[i];
             if ( ch!=' ' && ch!='\t' && ch!='\r' && ch!='\n' ) {
                 nonSpaceFound = true;
@@ -9046,7 +10281,9 @@ void ldomNode::moveItemsTo( ldomNode * destination, int startChildIndex, int end
     if ( isPersistent() )
         modify();
 
-    CRLog::warn( "moveItemsTo() invoked from %d to %d", getDataIndex(), destination->getDataIndex() );
+#ifdef TRACE_AUTOBOX
+    CRLog::debug( "moveItemsTo() invoked from %d to %d", getDataIndex(), destination->getDataIndex() );
+#endif
     //if ( getDataIndex()==INDEX2 || getDataIndex()==INDEX1) {
     //    CRLog::trace("nodes from element %d are being moved", getDataIndex());
     //}
@@ -9296,14 +10533,31 @@ lString16 ldomNode::getObjectImageRefName()
         return lString16();
     lUInt16 hrefId = getDocument()->getAttrNameIndex(L"href");
     lUInt16 srcId = getDocument()->getAttrNameIndex(L"src");
+    lUInt16 recIndexId = getDocument()->getAttrNameIndex(L"recindex");
     lString16 refName = getAttributeValue( getDocument()->getNsNameIndex(L"xlink"),
         hrefId );
+
     if ( refName.empty() )
         refName = getAttributeValue( getDocument()->getNsNameIndex(L"l"), hrefId );
     if ( refName.empty() )
         refName = getAttributeValue( LXML_NS_ANY, hrefId ); //LXML_NS_NONE
     if ( refName.empty() )
         refName = getAttributeValue( LXML_NS_ANY, srcId ); //LXML_NS_NONE
+    if (refName.empty()) {
+        lString16 recindex = getAttributeValue( LXML_NS_ANY, recIndexId );
+        if (!recindex.empty()) {
+            int n;
+            if (recindex.atoi(n)) {
+                refName = lString16(MOBI_IMAGE_NAME_PREFIX) + lString16::itoa(n);
+                //CRLog::debug("get mobi image %s", LCSTR(refName));
+            }
+        }
+//        else {
+//            for (int k=0; k<getAttrCount(); k++) {
+//                CRLog::debug("attr %s=%s", LCSTR(getAttributeName(k)), LCSTR(getAttributeValue(getAttributeName(k).c_str())));
+//            }
+//        }
+    }
     if ( refName.length()<2 )
         return lString16();
     refName = DecodeHTMLUrlString(refName);
@@ -9345,12 +10599,28 @@ LVImageSourceRef ldomNode::getObjectImageSource()
 LVStreamRef ldomDocument::getObjectImageStream( lString16 refName )
 {
     LVStreamRef ref;
-    if ( refName[0]!='#' ) {
+    if ( refName.startsWith(lString16(BLOB_NAME_PREFIX)) ) {
+        return _blobCache.getBlob(refName);
+    } if ( refName[0]!='#' ) {
         if ( !getContainer().isNull() ) {
             lString16 name = refName;
             if ( !getCodeBase().empty() )
                 name = getCodeBase() + refName;
             ref = getContainer()->OpenStream(name.c_str(), LVOM_READ);
+            if ( ref.isNull() ) {
+                lString16 fname = getProps()->getStringDef( DOC_PROP_FILE_NAME, "" );
+                fname = LVExtractFilenameWithoutExtension(fname);
+                if ( !fname.empty() ) {
+                    lString16 fn = fname + L"_img";
+//                    if ( getContainer()->GetObjectInfo(fn) ) {
+
+//                    }
+                    lString16 name = fn + L"/" + refName;
+                    if ( !getCodeBase().empty() )
+                        name = getCodeBase() + name;
+                    ref = getContainer()->OpenStream(name.c_str(), LVOM_READ);
+                }
+            }
             if ( ref.isNull() )
                 CRLog::error("Cannot open stream by name %s", LCSTR(name));
         }
@@ -9409,7 +10679,7 @@ int ldomNode::renderFinalBlock(  LFormattedTextRef & frmtext, RenderRectAccessor
         //CRLog::trace("Found existing formatted object for node #%08X", (lUInt32)this);
         return fmt->getHeight();
     }
-    f = new LFormattedText();
+    f = getDocument()->createFormattedText();
     if ( (rm != erm_final && rm != erm_list_item && rm != erm_table_caption) )
         return 0;
     //RenderRectAccessor fmt( this );
@@ -9653,7 +10923,7 @@ bool LVTocItem::deserialize( ldomDocument * doc, SerialBuf & buf )
 
 
 
-#if defined(_DEBUG) && DISABLE_TINYDOM_TESTS!=1
+#if defined(_DEBUG) 
 
 #define TEST_FILE_NAME "/tmp/test-cache-file.dat"
 
@@ -10013,7 +11283,8 @@ void runBasicTinyDomUnitTests()
     }
 
     CRLog::info("* convert to persistent");
-    doc->persist();
+    CRTimerUtil infinite;
+    doc->persist(infinite);
     doc->dumpStatistics();
 
     MYASSERT(el21->getFirstChild()==NULL,"first child - no children");
@@ -10031,7 +11302,8 @@ void runBasicTinyDomUnitTests()
     MYASSERT(el211->getChildCount()==2, "child count, in persistent");
     el211->modify();
     MYASSERT(el211->getChildCount()==2, "child count, in mutable again");
-    doc->persist();
+    CRTimerUtil infinite2;
+    doc->persist(infinite2);
 
     ldomNode * f1 = root->findChildElement(path1);
     MYASSERT(f1->getNodeId()==el_p, "find 1");
@@ -10056,7 +11328,8 @@ void runBasicTinyDomUnitTests()
 
 void runCHMUnitTest()
 {
-#if BUILD_LITE!=1 && CHM_SUPPORT_ENABLED=1
+#if CHM_SUPPORT_ENABLED==1
+#if BUILD_LITE!=1
     LVStreamRef stream = LVOpenFileStream("/home/lve/src/test/mysql.chm", LVOM_READ);
     MYASSERT ( !stream.isNull(), "container stream opened" );
     CRLog::trace("runCHMUnitTest() -- file stream opened ok");
@@ -10080,6 +11353,7 @@ void runCHMUnitTest()
     buf[999] = 0;
     CRLog::trace("CHM/index.html Contents 0: %s", buf);
 #endif
+#endif
 }
 
 static void makeTestFile( const char * fname, int size )
@@ -10093,7 +11367,7 @@ static void makeTestFile( const char * fname, int size )
         seed = seed * 31 + 14323;
     }
     MYASSERT( s->Write(buf, size, NULL)==LVERR_OK, "makeTestFile write" );
-    delete buf;
+    delete[] buf;
 }
 
 void runBlockWriteCacheTest()

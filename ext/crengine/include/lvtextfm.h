@@ -31,10 +31,13 @@ extern "C" {
 #define LTEXT_ALIGN_CENTER     0x0003  /**< \brief new centered paragraph */
 #define LTEXT_ALIGN_WIDTH      0x0004  /**< \brief new justified paragraph */
 
+#define LTEXT_LAST_LINE_ALIGN_SHIFT 16
+
 #define LTEXT_LAST_LINE_ALIGN_LEFT       0x00010000  /**< \brief last line of justified paragraph should be left-aligned */
 #define LTEXT_LAST_LINE_ALIGN_RIGHT      0x00020000  /**< \brief last line of justified paragraph should be right-aligned */
 #define LTEXT_LAST_LINE_ALIGN_CENTER     0x00030000  /**< \brief last line of justified paragraph should be centered */
 #define LTEXT_LAST_LINE_ALIGN_WIDTH      0x00040000  /**< \brief last line of justified paragraph should be justified */
+
 
 #define LTEXT_FLAG_NEWLINE     0x0007  /**< \brief new line flags mask */
 #define LTEXT_FLAG_OWNTEXT     0x0008  /**< \brief store local copy of text instead of pointer */
@@ -95,19 +98,19 @@ typedef struct
    lUInt16  x;               /**< \brief 08 word x position in line */
    lInt8    y;               /**< \brief 10 baseline y position */
    lUInt8   flags;           /**< \brief 11 flags */
-   lUInt16  inline_width;    /**< \brief 12 word width, pixels when inside line */
-    // move unions bottom to simplify debugging
    union {
           /// for text word
        struct {
-           lUInt16  start;           /**< \brief 02 position of word in source text */
-           lUInt16  len;             /**< \brief 04 number of chars in word */
+           lUInt16  start;           /**< \brief 12 position of word in source text */
+           lUInt16  len;             /**< \brief 14 number of chars in word */
        } t;
        /// for object
        struct {
-           lUInt16  height;           /**< \brief 02 height of image */
+           lUInt16  height;           /**< \brief 12 height of image */
        } o;
    };
+   lUInt16 min_width;        /**< \brief 16 index of source text line */
+   lUInt16 padding;          /**< \brief 18 not used */
 } formatted_word_t;
 
 /// can add space after this word
@@ -150,7 +153,16 @@ typedef struct
    lUInt32               frmlinecount;  /**< formatted lines count*/
    lUInt32               height;        /**< height of text fragment */
    lUInt16               width;         /**< width of text fragment */
-   lUInt16               page_height;   /**< width of text fragment */
+   lUInt16               page_height;   /**< max page height */
+   lInt32                img_zoom_in_mode_block; /**< can zoom in block images: 0=disabled, 1=integer scale, 2=free scale */
+   lInt32                img_zoom_in_scale_block; /**< max scale for block images zoom in: 1, 2, 3 */
+   lInt32                img_zoom_in_mode_inline; /**< can zoom in inline images: 0=disabled, 1=integer scale, 2=free scale */
+   lInt32                img_zoom_in_scale_inline; /**< max scale for inline images zoom in: 1, 2, 3 */
+   lInt32                img_zoom_out_mode_block; /**< can zoom out block images: 0=disabled, 1=integer scale, 2=free scale */
+   lInt32                img_zoom_out_scale_block; /**< max scale for block images zoom out: 1, 2, 3 */
+   lInt32                img_zoom_out_mode_inline; /**< can zoom out inline images: 0=disabled, 1=integer scale, 2=free scale */
+   lInt32                img_zoom_out_scale_inline; /**< max scale for inline images zoom out: 1, 2, 3 */
+   lInt32                min_space_condensing_percent; /**< min size of space (relative to normal size) to allow fitting line by reducing of spaces */
 } formatted_text_fragment_t;
 
 /**  Alloc & init formatted text buffer
@@ -201,26 +213,13 @@ void lvtextAddSourceObject(
    lInt8           letter_spacing
                          );
 
-/** Formats source lines stored in buffer into formatted lines
-
-   \return height (in pixels) of formatted text
-*/
-lUInt32 lvtextFormat( formatted_text_fragment_t * pbuffer );
-
-/** Reformats source lines stored in buffer into formatted lines
-
-   \return height (in pixels) of formatted text
-*/
-lUInt32 lvtextResize( formatted_text_fragment_t * pbuffer, int width, int page_height );
-
-/** \brief Draws formatted text to draw buffer (C API) */
-void lvtextDraw( formatted_text_fragment_t * text, draw_buf_t * buf, int x, int y );
 
 #ifdef __cplusplus
 }
 
 class LVDrawBuf;
 class ldomMarkedRangeList;
+struct img_scaling_options_t;
 
 /* C++ wrapper class */
 class LFormattedText
@@ -230,6 +229,12 @@ private:
     formatted_text_fragment_t * m_pbuffer;
 public:
     formatted_text_fragment_t * GetBuffer() { return m_pbuffer; }
+
+    /// set image scaling options
+    void setImageScalingOptions( img_scaling_options_t * options );
+
+    /// set space condensing line fitting option (25..100%)
+    void setMinSpaceCondensingPercent(int minSpaceWidthPercent);
 
     void Clear()
     { 
@@ -266,15 +271,7 @@ public:
             flags, interval, margin, object, (lUInt16)offset, letter_spacing );
     }
 
-    lUInt32 FormatOld(lUInt16 width, lUInt16 page_height) { return lvtextResize( m_pbuffer, width, page_height ); }
-    lUInt32 FormatNew(lUInt16 width, lUInt16 page_height);
-    lUInt32 FormatNew2(lUInt16 width, lUInt16 page_height);
-
-#if (USE_NEW_FORMATTER==1)
-    lUInt32 Format(lUInt16 width, lUInt16 page_height) { return FormatNew( width, page_height ); }
-#else
-    lUInt32 Format(lUInt16 width, lUInt16 page_height) { return FormatOld( width, page_height ); }
-#endif
+    lUInt32 Format(lUInt16 width, lUInt16 page_height);
 
     int GetSrcCount()
     {
@@ -301,7 +298,7 @@ public:
         return m_pbuffer->frmlines[index];
     }
 
-    void Draw( LVDrawBuf * buf, int x, int y, ldomMarkedRangeList * marks );
+    void Draw( LVDrawBuf * buf, int x, int y, ldomMarkedRangeList * marks,  ldomMarkedRangeList *bookmarks = NULL );
 
     LFormattedText() { m_pbuffer = lvtextAllocFormatter( 0 ); }
 
@@ -309,5 +306,7 @@ public:
 };
 
 #endif
+
+extern bool gFlgFloatingPunctuationEnabled;
 
 #endif

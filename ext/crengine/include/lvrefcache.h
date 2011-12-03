@@ -324,6 +324,8 @@ public:
     {
         clear();
         size = nearestPowerOf2(list.length()>0 ? list.length()*4 : 32);
+        if ( table )
+            delete[] table;
         table = new LVRefCacheRec * [ size ];
         for( int i=0; i<size; i++ )
             table[i] = NULL;

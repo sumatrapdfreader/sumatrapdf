@@ -67,6 +67,8 @@ public:
     virtual void OnTagBody()
     {
     }
+    /// add named BLOB data to document
+    virtual bool OnBlob(lString16 name, const lUInt8 * data, int size) { return true; }
     /// called on opening tag
     virtual ldomNode * OnTagOpen( const lChar16 * nsname, const lChar16 * tagname)
     {
@@ -189,6 +191,8 @@ public:
             for ( ; attrvalue[i]>='0' && attrvalue[i]<='9'; i++)
                 n1 = n1*10 + (attrvalue[i]-'0');
             _curr_bookmark->setTimestamp( n1 );
+        } else if (lStr_cmp(attrname, L"page")==0 && state==in_bm) {
+            _curr_bookmark->setBookmarkPage(lString16( attrvalue ).atoi());
         }
     }
     /// called on text
@@ -236,6 +240,8 @@ public:
     /// destructor
     virtual ~CRHistoryFileParserCallback()
     {
+        if ( _curr_file )
+            delete _curr_file;
     }
 };
 
@@ -243,7 +249,10 @@ bool CRFileHist::loadFromStream( LVStreamRef stream )
 {
     CRHistoryFileParserCallback cb(this);
     LVXMLParser parser( stream, &cb );
-    parser.Parse();
+    if ( !parser.CheckFormat() )
+        return false;
+    if ( !parser.Parse() )
+        return false;
     return true;
 }
 
@@ -273,7 +282,8 @@ static void putBookmark( LVStream * stream, CRBookmark * bmk )
     char percent[32];
     sprintf( percent, "%d.%02d%%", bmk->getPercent()/100, bmk->getPercent()%100 );
     char bmktag[255];
-    sprintf(bmktag, "bookmark type=\"%s\" percent=\"%s\" timestamp=\"%d\" shortcut=\"%d\"", tname, percent, (int)bmk->getTimestamp(), bmk->getShortcut() );
+    sprintf(bmktag, "bookmark type=\"%s\" percent=\"%s\" timestamp=\"%d\" shortcut=\"%d\" page=\"%d\"", tname, percent,
+            (int)bmk->getTimestamp(), (int)bmk->getShortcut(), (int)bmk->getBookmarkPage() );
     putTag(stream, 3, bmktag);
     putTagValue( stream, 4, "start-point", bmk->getStartPos() );
     putTagValue( stream, 4, "end-point", bmk->getEndPos() );
@@ -463,14 +473,14 @@ CRFileHistRecord * CRFileHist::savePosition( lString16 fpathname, size_t sz,
                             const lString16 & series,
                             ldomXPointer ptr )
 {
-    CRLog::trace("CRFileHist::savePosition");
+    //CRLog::trace("CRFileHist::savePosition");
     lString16 name;
 	lString16 path;
     splitFName( fpathname, path, name );
     CRBookmark bmk( ptr );
-    CRLog::trace("Bookmark created");
+    //CRLog::trace("Bookmark created");
     int index = findEntry( name, path, sz );
-    CRLog::trace("findEntry exited");
+    //CRLog::trace("findEntry exited");
     if ( index>=0 ) {
         makeTop( index );
         _records[0]->setLastPos( &bmk );
@@ -488,7 +498,7 @@ CRFileHistRecord * CRFileHist::savePosition( lString16 fpathname, size_t sz,
     rec->setLastTime( (time_t)time(0) );
 
     _records.insert( 0, rec );
-    CRLog::trace("CRFileHist::savePosition - exit");
+    //CRLog::trace("CRFileHist::savePosition - exit");
     return rec;
 }
 

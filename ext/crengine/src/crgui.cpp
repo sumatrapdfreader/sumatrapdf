@@ -321,6 +321,9 @@ void CRGUIWindowManager::closeWindow( CRGUIWindow * window )
     delete window;
     for ( int i=0; i<_windows.length() && (index<0 || i<index); i++ )
         _windows[i]->setDirty();
+    CRGUIWindow * gotFocus = getTopVisibleWindow();
+    if (gotFocus)
+        gotFocus->reactivated();
     fontMan->gc();
 }
 
@@ -491,7 +494,7 @@ void CRGUIScreenBase::flush( bool full )
             if ( y>=0 && y<_height ) {
                 void * line1 = _canvas->GetScanLine( y );
                 void * line2 = _front->GetScanLine( y );
-                if ( memcmp( line1, line2, sz ) ) {
+                if (memcmp( line1, line2, sz ) != 0) {
                     // line content is different
                     lineRect.top = y;
                     lineRect.bottom = y+1;
@@ -601,7 +604,8 @@ lvPoint CRGUIWindowBase::getMinScrollSize( int page, int pages )
     CRRectSkinRef statusSkin = skin->getStatusSkin();
     CRScrollSkinRef sskin = skin->getScrollSkin();
     if ( !sskin.isNull() ) {
-        int h = sskin->getFontSize();
+		LVFontRef sf = sskin->getFont();
+        int h = sf.isNull() ? sskin->getFontSize() : sf->getHeight();
         int w = 0;
         bool noData = sskin->getAutohide() && pages<=1;
         lString16 label = getScrollLabel( page, pages );
@@ -908,6 +912,7 @@ void CRDocViewWindow::setRect( const lvRect & rc )
 
 void CRMenuItem::Draw( LVDrawBuf & buf, lvRect & rc, CRRectSkinRef skin, CRRectSkinRef valueSkin, bool selected )
 {
+    _itemDirty = false;
     lvRect itemBorders = skin->getBorderWidths();
     skin->draw( buf, rc );
     buf.SetTextColor( skin->getTextColor() );
@@ -951,7 +956,7 @@ int CRMenu::getPageCount()
     return (_items.length() + _pageItems - 1) / _pageItems;
 }
 
-void CRMenu::setCurPage( int nPage )
+bool CRMenu::setCurPage( int nPage )
 {
     int oldTop = _topItem;
     _topItem = _pageItems * nPage;
@@ -964,8 +969,12 @@ void CRMenu::setCurPage( int nPage )
 #endif
     if ( _topItem < 0 )
         _topItem = 0;
-    if ( _topItem != oldTop )
+    if ( _topItem != oldTop ) {
+		_pageUpdate = true;
         setDirty();
+        return true;
+	}
+	return false;
 }
 
 int CRMenu::getCurPage( )
@@ -1011,8 +1020,10 @@ void CRMenu::Draw( LVDrawBuf & buf, lvRect & rc, CRRectSkinRef skin, CRRectSkinR
             valueSkin->drawText( buf, textRect, s );
         }
     } else {
-        textRect.top += (textRect.height() - skin->getFontSize() - itemBorders.top - itemBorders.bottom) / 2;
-        textRect.bottom = textRect.top + skin->getFontSize() + itemBorders.top + itemBorders.bottom;
+		LVFontRef skinFont = skin->getFont();
+		int fh = skinFont.isNull() ? skin->getFontSize() : skinFont->getHeight();
+        textRect.top += (textRect.height() - fh - itemBorders.top - itemBorders.bottom) / 2;
+        textRect.bottom = textRect.top + fh + itemBorders.top + itemBorders.bottom;
     }
     skin->drawText( buf, textRect, _label );
     if ( !s.empty() ) {
@@ -1024,11 +1035,11 @@ void CRMenu::Draw( LVDrawBuf & buf, lvRect & rc, CRRectSkinRef skin, CRRectSkinR
             int hh = rc2.height();
             buf.SetTextColor( skin->getTextColor() );
             _valueFont->DrawTextString( &buf, rc2.right - w - ITEM_MARGIN, rc2.top + hh/2 - _valueFont->getHeight()/2, s.c_str(), s.length(), L'?', NULL, false, 0 );
-
         } else {
             valueSkin->drawText( buf, valueRect, s );
         }
     }
+    _itemDirty = false;
     CRLog::trace("exit CRMenu::Draw()");
 }
 
@@ -1275,9 +1286,10 @@ void CRMenu::highlightCommandItem( int cmd )
 {
     CRLog::debug("Highlighting menu item");
     _cmdToHighlight = cmd;
+    _selectedItem = getSelectedItemIndex();
+    _cmdToHighlight = -1;
     setDirty();
     _wm->updateWindow(this);
-    _cmdToHighlight = -1;
 }
 
 void CRMenu::drawClient()
@@ -1320,7 +1332,7 @@ void CRMenu::drawClient()
 
     lvRect clientRect;
     getClientRect(clientRect);
-    if ( !clientSkin.isNull() )
+    if ( !clientSkin.isNull() && _pageUpdate)
         clientSkin->draw( buf, clientRect );
 
     lvPoint itemSize = getMaxItemSize();
@@ -1340,10 +1352,24 @@ void CRMenu::drawClient()
         int i = _topItem + index;
         if ( i >= _items.length() )
             break;
+        CRMenuItem * item = _items[i];
 
-        bool selected = (i == getSelectedItemIndex());
+        bool selected = (i == _selectedItem);
 
         rc.bottom = rc.top + itemSize.y;
+		if (!(_pageUpdate || item->isItemDirty())) {
+			rc.top = rc.bottom + separatorHeight;
+			continue;
+		}
+
+		if (!_pageUpdate && !clientSkin.isNull()) {
+			lvRect oldcr;
+			buf.GetClipRect(&oldcr);
+			buf.SetClipRect(&rc);
+			clientSkin->draw( buf, clientRect );
+			buf.SetClipRect(&oldcr);
+		}
+
         bool even = (i & 1);
         CRRectSkinRef is = selected
                            ? (even ? evenitemSelSkin : itemSelSkin)
@@ -1378,7 +1404,6 @@ void CRMenu::drawClient()
         }
 
         is->setTextAlign( is->getTextAlign() | SKIN_EXTEND_TAB);
-        CRMenuItem * item = _items[i];
         item->Draw( buf, itemRc, is, valueSkin, selected );
 
         // draw separator
@@ -1391,6 +1416,7 @@ void CRMenu::drawClient()
         rc.top += itemSize.y + separatorHeight;
     }
     CRLog::trace("exit CRMenu::drawClient()");
+    _pageUpdate = false;
 }
 
 /// draw battery state to specified rectangle of screen
@@ -1403,10 +1429,28 @@ void CRGUIWindowManager::drawBattery( LVDrawBuf & buf, const lvRect & rc )
     LVDrawStateSaver saver( buf );
     buf.SetTextColor(0xFFFFFF);
     buf.SetBackgroundColor(0x000000);
+
+    LVRefVec<LVImageSource> icons;
+    bool drawPercent = false; //m_props->getBoolDef(PROP_SHOW_BATTERY_PERCENT, true) || m_batteryIcons.size()<=2;
+    if ( m_batteryIcons.size()>1 ) {
+        icons.add(getBatteryIcons()[0]);
+        if ( drawPercent ) {
+//            m_batteryFont = fontMan->GetFont(getBatteryIcons()[0]->GetHeight()-1, 900, false,
+//                    DEFAULT_FONT_FAMILY, m_statusFontFace);
+            icons.add(getBatteryIcons()[getBatteryIcons().length()-1]);
+        } else {
+            for ( int i=1; i<getBatteryIcons().length()-1; i++ )
+                icons.add(getBatteryIcons()[i]);
+        }
+    } else {
+        if ( m_batteryIcons.size()==1 )
+            icons.add(getBatteryIcons()[0]);
+    }
+
     //bool drawPercent = m_props->getBoolDef( PROP_SHOW_BATTERY_PERCENT, true );
     LVDrawBatteryIcon( &buf, rc,
                        percent, charge,
-                       getBatteryIcons(),
+                       icons,
                        NULL );
 }
 
@@ -1478,52 +1522,100 @@ void CRMenu::activated()
     int curItem = getSelectedItemIndex();
     if ( curItem>=0 ) {
         _topItem = curItem / _pageItems * _pageItems;
-    }
+        _selectedItem = curItem;
+    } else
+		_selectedItem = getDefaultSelectionIndex();
+    _pageUpdate = true;
     setDirty();
+}
+
+void CRMenu::doCloseMenu(int command, bool highlight, int param)
+{
+	if ( _menu == NULL ) {
+		if (highlight)
+			highlightCommandItem( command );
+		closeMenu(command, param); // close, for root menu	
+    } else
+		closeMenu(0);
+}
+
+int CRMenu::getLastOnPage()
+{
+	int lastOnPage = _topItem + _pageItems;
+	if (lastOnPage >= (int)_items.length())
+		lastOnPage = (int)_items.length();
+	return lastOnPage;
+}
+
+void CRMenu::setCurItem(int nItem)
+{
+	int oldItem = _selectedItem;
+
+	if (_selectedItem >= 0) {
+		_items[oldItem]->onLeave();
+	}
+	int lastOnPage = getLastOnPage();
+	_selectedItem = nItem;
+	if (_selectedItem < _topItem)
+		_selectedItem = lastOnPage -1;
+	else if (_selectedItem > lastOnPage -1)
+		_selectedItem = _topItem;
+	_items[_selectedItem]->onEnter();
+	if (oldItem != _selectedItem) {
+		setDirty();
+		_wm->updateWindow(this);
+	}
 }
 
 /// returns true if command is processed
 bool CRMenu::onCommand( int command, int params )
 {
-    CRLog::trace( "CRMenu::onCommand(%d, %d)", command, params );
-    if ( command==MCMD_CANCEL ) {
-        closeMenu( 0 );
-        return true;
-    }
-    if ( command==MCMD_OK ) {
-        int command = getId();
-        if ( _menu != NULL )
-            closeMenu( 0 );
-        else {
-            closeMenu( command ); // close, for root menu
-        }
-        return true;
-    }
-	
-    if ( command==MCMD_SCROLL_FORWARD_LONG ) {
+	CRLog::trace( "CRMenu::onCommand(%d, %d)", command, params );
+    switch (command) {
+	case MCMD_CANCEL:
+		closeMenu( 0 );
+		return true;
+	case MCMD_OK:
+		doCloseMenu(getId(), false, params);
+		return true;
+	case MCMD_SCROLL_FORWARD_LONG:
         setCurPage( getCurPage()+10 );
         return true;
-    }
-    if ( command==MCMD_SCROLL_BACK_LONG ) {
-        setCurPage( getCurPage()-10 );
-        return true;
-    }
-    if ( command==MCMD_SCROLL_FORWARD ) {
+    case MCMD_SCROLL_BACK_LONG:
+		setCurPage( getCurPage()-10 );
+		return true;
+	case MCMD_SCROLL_FORWARD:
 		if ( params==0 )
 			params = 1;
         setCurPage( getCurPage()+params );
         return true;
-    }
-    if ( command==MCMD_SCROLL_BACK_LONG ) {
-        setCurPage( getCurPage()-10 );
-        return true;
-    }
-    if ( command==MCMD_SCROLL_BACK ) {
+    case MCMD_SCROLL_BACK:
 		if ( params==0 )
 			params = 1;
         setCurPage( getCurPage()-params );
         return true;
-    }
+    case MCMD_NEXT_ITEM:
+		setCurItem(_selectedItem + 1);
+		return true;
+    case MCMD_PREV_ITEM:
+		setCurItem(_selectedItem < 0 ? getLastOnPage() -1 : _selectedItem - 1);
+		return true;
+    case MCMD_NEXT_PAGE:
+		if (setCurPage(getCurPage() + 1))
+			if (_selectedItem >= 0)	
+				setCurItem(_selectedItem + _pageItems);
+		return true;
+    case MCMD_PREV_PAGE:
+		if (_topItem == 0) {
+			doCloseMenu(getId(), false, params);
+		} else if (setCurPage(getCurPage() - 1) && _selectedItem >= 0)
+			setCurItem(_selectedItem - _pageItems);
+		return true;
+    case MCMD_SELECT:
+		onItemSelect(_selectedItem, params);
+		return true;
+	}
+
     int option = -1;
     int longPress = 0;
     if ( command>=MCMD_SELECT_0 && command<=MCMD_SELECT_9 )
@@ -1536,19 +1628,28 @@ bool CRMenu::onCommand( int command, int params )
         CRLog::error( "CRMenu::onCommand() - unsupported command %d, %d", command, params );
         return true;
     }
-  
-    option += getTopItem();
-    if ( option >= getItems().length() )
+	onItemSelect(option += getTopItem(), longPress);
+    return true;
+}
+
+bool CRMenu::onItemSelect(int itemId, int param)
+{
+	if (itemId < 0 || itemId >= _items.length()) {
+		CRLog::error( "CRMenu::onItemSelect() - invalid selection: %d", itemId);
+		return true;
+	}
+
+    CRMenuItem * item = _items[itemId];
+
+    if (item->onSelect() > 0)
         return true;
-    CRLog::trace( "CRMenu::onCommand() - option %d selected", option );
-    CRMenuItem * item = getItems()[option];
-    if ( item->onSelect()>0 )
-        return true;
-    if ( item->isSubmenu() ) {
+
+    if (item->isSubmenu()) {
         CRMenu * menu = (CRMenu *)item;
         if ( menu->getItems().length() <= 3 ) {
             // toggle 2 and 3 choices w/o menu
             menu->toggleSubmenuValue();
+            item->setItemDirty();
             setDirty();
         } else {
             // show menu
@@ -1561,23 +1662,12 @@ bool CRMenu::onCommand( int command, int params )
                 // set property
             CRLog::trace("Setting property value");
             _props->setString( UnicodeToUtf8(getPropName()).c_str(), item->getPropValue() );
-            int command = getId();
-            if ( _menu != NULL )
-                closeMenu( 0 );
-            else
-                closeMenu( command ); // close, for root menu
+            doCloseMenu(getId());
             return true;
         }
-        int command = item->getId();
-        if ( _menu != NULL )
-            closeMenu( 0 );
-        else {
-            highlightCommandItem( command );
-            closeMenu( command, longPress ); // close, for root menu
-        }
+        doCloseMenu(item->getId(), true, param);
         return true;
-    }
-    return false;
+	}
 }
 
 const lvRect & CRMenu::getRect()
@@ -1592,11 +1682,18 @@ const lvRect & CRMenu::getRect()
 
 void CRMenu::draw()
 {
-    _pages = _pageItems>0 ? (_items.length()+_pageItems-1)/_pageItems : 0;
-    _page = _pages>0 ? _topItem/_pageItems+1 : 0;
-    _caption = _label;
-    _icon = _image;
-    CRGUIWindowBase::draw();
+	_pages = _pageItems>0 ? (_items.length()+_pageItems-1)/_pageItems : 0;
+	_page = _pages>0 ? _topItem/_pageItems+1 : 0;
+	_caption = _label;
+	_icon = _image;
+
+	if (_pageUpdate) {
+		CRGUIWindowBase::draw();
+	} else {
+	    drawTitleBar();
+		drawClient();
+		drawStatusBar();
+	}
 }
 
 static bool readNextLine( const LVStreamRef & stream, lString16 & dst )

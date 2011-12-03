@@ -38,7 +38,6 @@ void crSetFatalErrorHandler( lv_FatalErrorHandler_t * handler )
     lvFatalErrorHandler = handler;
 }
 
-
 ref_count_rec_t ref_count_rec_t::null_ref(NULL);
 
 #if (LDOM_USE_OWN_MEM_MAN==1)

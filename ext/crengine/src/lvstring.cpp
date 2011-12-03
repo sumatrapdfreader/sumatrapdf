@@ -847,7 +847,15 @@ int lString16::atoi() const
     return n;
 }
 
-static int hexDigit( int c )
+static const char * hex_digits = "0123456789abcdef";
+// converts 0..15 to 0..f
+char toHexDigit( int c )
+{
+    return hex_digits[c&0xf];
+}
+
+// returns 0..15 if c is hex digit, -1 otherwise
+int hexDigit( int c )
 {
     if ( c>='0' && c<='9')
         return c-'0';
@@ -856,6 +864,34 @@ static int hexDigit( int c )
     if ( c>='A' && c<='F')
         return c-'A'+10;
     return -1;
+}
+
+// decode LEN hex digits, return decoded number, -1 if invalid
+int decodeHex( const lChar16 * str, int len ) {
+    int n = 0;
+    for ( int i=0; i<len; i++ ) {
+        if ( !str[i] )
+            return -1;
+        int d = hexDigit(str[i]);
+        if ( d==-1 )
+            return -1;
+        n = (n<<4) | d;
+    }
+    return n;
+}
+
+// decode LEN decimal digits, return decoded number, -1 if invalid
+int decodeDecimal( const lChar16 * str, int len ) {
+    int n = 0;
+    for ( int i=0; i<len; i++ ) {
+        if ( !str[i] )
+            return -1;
+        int d = str[i] - '0';
+        if ( d<0 || d>9 )
+            return -1;
+        n = n*10 + d;
+    }
+    return n;
 }
 
 bool lString16::atoi( int &n ) const
@@ -920,7 +956,7 @@ bool lString16::atoi( lInt64 &n ) const
     return *s=='\0' || *s==' ' || *s=='\t';
 }
 
-#define STRING_HASH_MULT 75317
+#define STRING_HASH_MULT 31
 lUInt32 lString16::getHash() const
 {
     lUInt32 res = 0;
@@ -1809,7 +1845,7 @@ lString16 lString16::itoa( int n )
 // constructs string representation of integer
 lString16 lString16::itoa( lInt64 n )
 {
-    lChar16 buf[16];
+    lChar16 buf[32];
     int i=0;
     int negative = 0;
     if (n==0)
@@ -1819,7 +1855,7 @@ lString16 lString16::itoa( lInt64 n )
         negative = 1;
         n = -n;
     }
-    for ( ; n; n/=10 )
+    for ( ; n && i<30; n/=10 )
     {
         buf[i++] = (lChar16)('0' + (n%10));
     }
@@ -1985,7 +2021,7 @@ lString16 lString16::itoa( unsigned int n )
 // constructs string representation of integer
 lString16 lString16::itoa( lUInt64 n )
 {
-    lChar16 buf[16];
+    lChar16 buf[24];
     int i=0;
     if (n==0)
         return lString16("0");
@@ -2349,7 +2385,7 @@ CH_PROP_SIGN, // '\''
 CH_PROP_SIGN, // '*'
 CH_PROP_SIGN, // '+'
 CH_PROP_PUNCT, // ','
-CH_PROP_SIGN, // '-'
+CH_PROP_SIGN|CH_PROP_DASH, // '-'
 CH_PROP_PUNCT, // '.'
 CH_PROP_SIGN, // '/'
 // 0x0030:
@@ -2874,7 +2910,7 @@ void lStr_getCharProps( const lChar16 * str, int sz, lUInt16 * props )
     const lChar16 maxchar = sizeof(char_props) / sizeof( lUInt16 );
     for ( int i=0; i<sz; i++ ) {
         lChar16 ch = str[i];
-        props[i] = (ch<maxchar) ? char_props[ch] : 0;
+        props[i] = (ch<maxchar) ? char_props[ch] : (ch>=0x2012 && ch<=0x2015 ? CH_PROP_DASH|CH_PROP_SIGN : 0);
     }
 }
 
@@ -2884,15 +2920,43 @@ void lStr_findWordBounds( const lChar16 * str, int sz, int pos, int & start, int
     int hwStart, hwEnd;
     const lChar16 maxchar = sizeof(char_props) / sizeof( lUInt16 );
 
-    for (hwStart=pos-1; hwStart>0; hwStart--)
+//    // skip spaces
+//    for (hwStart=pos-1; hwStart>0; hwStart--)
+//    {
+//        lChar16 ch = str[hwStart];
+//        if ( ch<(int)maxchar ) {
+//            lUInt16 props = char_props[ch];
+//            if ( !(props & CH_PROP_SPACE) )
+//                break;
+//        }
+//    }
+//    // skip punctuation signs and digits
+//    for (; hwStart>0; hwStart--)
+//    {
+//        lChar16 ch = str[hwStart];
+//        if ( ch<(int)maxchar ) {
+//            lUInt16 props = char_props[ch];
+//            if ( !(props & (CH_PROP_PUNCT|CH_PROP_DIGIT)) )
+//                break;
+//        }
+//    }
+    // skip until first alpha
+    for (hwStart = pos-1; hwStart > 0; hwStart--)
     {
         lChar16 ch = str[hwStart];
         if ( ch<(int)maxchar ) {
             lUInt16 props = char_props[ch];
-            if ( !(props & (CH_PROP_PUNCT|CH_PROP_DIGIT)) )
+            if ( props & CH_PROP_ALPHA )
                 break;
         }
     }
+    if ( hwStart<0 ) {
+        // no alphas found
+        start = end = pos;
+        return;
+    }
+    hwEnd = hwStart+1;
+    // skipping while alpha
     for (; hwStart>0; hwStart--)
     {
         lChar16 ch = str[hwStart];
@@ -2903,11 +2967,12 @@ void lStr_findWordBounds( const lChar16 * str, int sz, int pos, int & start, int
             hwStart++;
             break;
         }
-        if ( lastAlpha<0 ) {
-            start = end = pos;
-            return;
-        }
     }
+//    if ( lastAlpha<0 ) {
+//        // no alphas found
+//        start = end = pos;
+//        return;
+//    }
     for (hwEnd=hwStart+1; hwEnd<sz; hwEnd++) // 20080404
     {
         lChar16 ch = str[hwEnd];
@@ -2934,7 +2999,7 @@ void  lString16::limit( size_type sz )
 lUInt16 lGetCharProps( lChar16 ch )
 {
     const lChar16 maxchar = sizeof(char_props) / sizeof( lUInt16 );
-    return (ch<maxchar) ? char_props[ch] : 0;
+    return (ch<maxchar) ? char_props[ch] : (ch>=0x2012 && ch<=0x2015 ? CH_PROP_DASH|CH_PROP_SIGN : 0);
 }
 
 
@@ -3154,6 +3219,32 @@ bool lString8::startsWith( const lString8 & substring ) const
 }
 
 /// returns true if string ends with specified substring
+bool lString8::endsWith( const lChar8 * substring ) const
+{
+	if ( !substring || !*substring )
+		return true;
+	unsigned len = strlen(substring);
+    if ( length() < len )
+        return false;
+    const lChar8 * s1 = c_str() + (length()-len);
+    const lChar8 * s2 = substring;
+	return lStr_cmp( s1, s2 )==0;
+}
+
+/// returns true if string ends with specified substring
+bool lString16::endsWith( const lChar16 * substring ) const
+{
+	if ( !substring || !*substring )
+		return true;
+	unsigned len = lStr_len(substring);
+    if ( length() < len )
+        return false;
+    const lChar16 * s1 = c_str() + (length()-len);
+    const lChar16 * s2 = substring;
+	return lStr_cmp( s1, s2 )==0;
+}
+
+/// returns true if string ends with specified substring
 bool lString16::endsWith ( const lString16 & substring ) const
 {
     if ( substring.empty() )
@@ -3222,7 +3313,7 @@ bool SerialBuf::check( int reserved )
 	if ( space()<reserved ) {
         if ( _autoresize ) {
             _size = (_size>16384 ? _size*2 : 16384) + reserved;
-            _buf = (lUInt8*)realloc(_buf, _size );
+            _buf = cr_realloc(_buf, _size );
             memset( _buf+_pos, 0, _size-_pos );
             return false;
         } else {
@@ -3495,7 +3586,7 @@ bool splitIntegerList( lString16 s, lString16 delim, int &value1, int &value2 )
 lString16 & lString16::replace(size_type p0, size_type n0, const lString16 & str)
 {
     lString16 s1 = substr( 0, p0 );
-    lString16 s2 = length()-p0-n0 > 0 ? substr( p0+n0, length()-p0-n0 ) : lString16(L"");
+    lString16 s2 = (int)length()-(int)p0-(int)n0 > 0 ? substr( p0+n0, length()-p0-n0 ) : lString16(L"");
     *this = s1 + str + s2;
     return *this;
 }
@@ -3582,3 +3673,20 @@ lString16 DecodeHTMLUrlString( lString16 s )
     }
     return s;
 }
+
+void limitStringSize(lString16 & str, int maxSize) {
+	if ((int) str.length() < maxSize)
+		return;
+	int lastSpace = -1;
+	for (int i = str.length() - 1; i > 0; i--)
+		if (str[i] == ' ') {
+			while (i > 0 && str[i - 1] == ' ')
+				i--;
+			lastSpace = i;
+			break;
+		}
+	int split = lastSpace > 0 ? lastSpace : maxSize;
+	str = str.substr(0, split);
+	str += L"...";
+}
+

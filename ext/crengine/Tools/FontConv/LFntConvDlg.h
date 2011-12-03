@@ -287,14 +287,16 @@ public:
                 break;
             }
         }
-        if ( RecurseBits( dsttable, head, 0, 0 ) > m_max_code_bits )
+        if ( RecurseBits( dsttable, head, 0, 0 ) > m_max_code_bits ) {
+            delete[] run_index;
             return -1; // error: too long code
+        }
         int total_len = 0;
         for (i=num_items-1; i>=0; i--)
         {
             total_len += dsttable[i].codelen * dsttable[i].stats;
         }
-        delete run_index;
+        delete[] run_index;
         return total_len;
     }
 

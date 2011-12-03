@@ -12,6 +12,7 @@
 *******************************************************/
 #include "../include/rtfimp.h"
 #include "../include/crtxtenc.h"
+#include "../include/lvtinydom.h"
 #include <string.h>
 
 //==================================================
@@ -278,12 +279,75 @@ public:
     }
 };
 
+class LVRtfPictDestination : public LVRtfDestination
+{
+    LVArray<lUInt8> _buf;
+    int _fmt;
+    int _lastDigit;
+public:
+    LVRtfPictDestination(  LVRtfParser & parser )
+    : LVRtfDestination( parser ), _fmt(rtf_img_unknown), _lastDigit(-1)
+    {
+    }
+    virtual void OnControlWord( const char *, int )
+    {
+    }
+    virtual void OnText( const lChar16 * text, int len, lUInt32 flags)
+    {
+        int fmt = m_stack.getInt(pi_imgfmt);
+        if (!fmt)
+            return;
+        _fmt = fmt;
+        for (int i=0; i<len;) {
+            int d = -1;
+            do {
+                d = i<len ? hexDigit(text[i]) : -1;
+                i++;
+            } while (d<0 && i<len);
+            if (_lastDigit>=0 && d>=0) {
+                _buf.add((lUInt8)((_lastDigit<<4) | d));
+                _lastDigit = -1;
+            } else {
+                if (d>=0)
+                    _lastDigit = d;
+            }
+        }
+    }
+    virtual void OnTblProp( int, int )
+    {
+    }
+    virtual void OnAction( int )
+    {
+    }
+    virtual ~LVRtfPictDestination()
+    {
+        if (!_fmt || _buf.empty())
+            return;
+        // add Image BLOB
+        lString16 name(BLOB_NAME_PREFIX); // L"@blob#"
+        name << L"image";
+        name << lString16::itoa(m_parser.nextImageIndex());
+        name << (_fmt==rtf_img_jpeg ? L".jpg" : L".png");
+        m_callback->OnBlob(name, _buf.get(), _buf.length());
+#if 0
+        {
+            LVStreamRef stream = LVOpenFileStream((lString16(L"/tmp/") + name).c_str(), LVOM_WRITE);
+            stream->Write(_buf.get(), _buf.length(), NULL);
+        }
+#endif
+        m_callback->OnTagOpen(LXML_NS_NONE, L"img");
+        m_callback->OnAttribute(LXML_NS_NONE, L"src", name.c_str());
+        m_callback->OnTagClose(LXML_NS_NONE, L"img");
+    }
+};
+
 
 /// constructor
 LVRtfParser::LVRtfParser( LVStreamRef stream, LVXMLParserCallback * callback )
     : LVFileParserBase(stream)
     , m_callback(callback)
     , txtbuf(NULL)
+    , imageIndex(0)
 {
     m_stack.setDestination(  new LVRtfDefDestination(*this) );
     m_firstPageTextCounter = 1000;
@@ -612,9 +676,11 @@ void LVRtfParser::OnControlWord( const char * control, int param, bool asterisk 
             case dest_info:
             case dest_header:
             case dest_footer:
-            case dest_pict:
             case dest_colortbl:
                 m_stack.set( new LVRtfNullDestination(*this) );
+                break;
+            case dest_pict:
+                m_stack.set( new LVRtfPictDestination(*this) );
                 break;
             }
             break;

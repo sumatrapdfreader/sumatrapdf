@@ -314,13 +314,19 @@ bool CRPropAccessor::getColor( const char * propName, lUInt32 &result ) const
 {
     unsigned n = 0;
     lString16 value;
-    if ( !getString( propName, value ) || value.empty() || value[0]!='#' )
+    if ( !getString( propName, value ) ) {
+        //CRLog::debug("%s is not found", propName);
         return false;
-    for ( unsigned i=1; i<value.length(); i++ ) {
+    }
+    if ( value.empty() || (value[0]!='#' && (value[0]!='0' || value[1]!='x')) ) {
+//        CRLog::debug("%s = %s", propName, LCSTR(value));
+        return false;
+    }
+    for ( unsigned i=value[0]=='#' ? 1 : 2; i<value.length(); i++ ) {
         lChar16 ch = value[i];
         if ( ch>='0' && ch<='9' )
             n = (n << 4) | (ch - '0');
-        else if ( ch>='a' && ch<='F' )
+        else if ( ch>='a' && ch<='f' )
             n = (n << 4) | (ch - 'a' + 10);
         else if ( ch>='A' && ch<='F' )
             n = (n << 4) | (ch - 'A' + 10);
@@ -328,13 +334,16 @@ bool CRPropAccessor::getColor( const char * propName, lUInt32 &result ) const
             return false;
     }
     result = (lUInt32)n;
+//    CRLog::debug("%s = %s (%08x)", propName, LCSTR(value), n);
     return true;
 }
+
 
 /// get color (#xxxxxx) property by name, returns default value if not found
 lUInt32 CRPropAccessor::getColorDef( const char * propName, lUInt32 defValue ) const
 {
     lUInt32 v = 0;
+//    CRLog::debug("getColorDef(%s), 0x%06x", propName, defValue);
     if ( !getColor( propName, v ) )
         return defValue;
     else

@@ -233,7 +233,7 @@ cr_jpeg_src (j_decompress_ptr cinfo, LVStream * stream)
      * manager serially with the same JPEG object.  Caveat programmer.
      */
     if (cinfo->src == NULL) { /* first time for this JPEG object? */
-        src = (cr_jpeg_source_mgr *) new cr_jpeg_source_mgr;
+        src = new cr_jpeg_source_mgr();
         cinfo->src = (struct jpeg_source_mgr *) src;
         src->buffer = new JOCTET[INPUT_BUF_SIZE];
     }
@@ -657,7 +657,7 @@ bool LVPngImageSource::Decode( LVImageDecoderCallback * callback )
     if ( !png_ptr )
         return false;
 
-    if (setjmp( png_ptr->jmpbuf )) {
+    if (setjmp(png_jmpbuf(png_ptr))) {
         _width = 0;
         _height = 0;
         if (png_ptr)
@@ -665,7 +665,7 @@ bool LVPngImageSource::Decode( LVImageDecoderCallback * callback )
             png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
         }
         if ( row )
-            delete row;
+            delete [] row;
         if (callback)
             callback->OnEndDecode(this, true); // error!
         return false;
@@ -676,7 +676,7 @@ bool LVPngImageSource::Decode( LVImageDecoderCallback * callback )
     if (!info_ptr)
         lvpng_error_func(png_ptr, "cannot create png info struct");
     png_set_read_fn(png_ptr,
-        (voidp)this, lvpng_read_func);
+        (void*)this, lvpng_read_func);
     png_read_info( png_ptr, info_ptr );
 
 
@@ -704,7 +704,8 @@ bool LVPngImageSource::Decode( LVImageDecoderCallback * callback )
             png_set_palette_to_rgb(png_ptr);
 
         if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)
-#if PNG_LIBPNG_VER_RELEASE==7
+//#if PNG_LIBPNG_VER_RELEASE==7
+#if (PNG_LIBPNG_VER_MAJOR == 1) && (PNG_LIBPNG_VER_MINOR < 4)
             png_set_gray_1_2_4_to_8(png_ptr);
 #else
             png_set_expand_gray_1_2_4_to_8(png_ptr);
@@ -859,6 +860,10 @@ public:
         lUInt32 * line = new lUInt32[w];
         int transp_color = m_pImage->m_transparent_color;
         lUInt32 * pColorTable = GetColorTable();
+        int interlacePos = 0;
+        int interlaceTable[] = {8, 0, 8, 4, 4, 2, 2, 1, 1, 1}; // pairs: step, offset
+        int dy = interlaceTable[interlacePos];
+        int y = 0;
         for ( int i=0; i<h; i++ ) {
             for ( int j=0; j<w; j++ ) {
                 line[j] = 0xFFFFFFFF; // transparent
@@ -872,7 +877,17 @@ public:
                     }
                 }
             }
-            callback->OnLineDecoded( m_pImage, i, line );
+            callback->OnLineDecoded( m_pImage, y, line );
+            if ( m_flg_interlaced ) {
+                y += dy;
+                if ( y>=m_cy ) {
+                    interlacePos += 2;
+                    dy = interlaceTable[interlacePos];
+                    y = interlaceTable[interlacePos+1];
+                }
+            } else {
+                y++;
+            }
         }
         delete[] line;
         callback->OnEndDecode( m_pImage, false );
@@ -934,8 +949,8 @@ int LVGifImageSource::DecodeFromBuffer(unsigned char *buf, int buf_size, LVImage
 
         m_global_color_table = new lUInt32[m_color_count];
         for (int i=0; i<m_color_count; i++) {
-            //m_global_color_table[i] = RGB(p[i*3],p[i*3+1],p[i*3+2]);
-            m_global_color_table[i] = lRGB(p[i*3+2],p[i*3+1],p[i*3+0]);
+            m_global_color_table[i] = lRGB(p[i*3],p[i*3+1],p[i*3+2]);
+            //m_global_color_table[i] = lRGB(p[i*3+2],p[i*3+1],p[i*3+0]);
         }
 
         // next
@@ -1259,6 +1274,7 @@ int LVGifFrame::DecodeFromBuffer( unsigned char * buf, int buf_size, int &bytes_
         m_local_color_table = new lUInt32[m_color_count];
         for (int i=0; i<m_color_count; i++) {
             m_local_color_table[i] = lRGB(p[i*3],p[i*3+1],p[i*3+2]);
+            //m_local_color_table[i] = lRGB(p[i*3+2],p[i*3+1],p[i*3+0]);
         }
         // next
         p+=(m_color_count * 3);
@@ -1777,7 +1793,7 @@ public:
                     row[x] = rgb565to888(src[x]);
                 res = callback->OnLineDecoded( this, y, row );
             }
-            delete row;
+            delete[] row;
         }
         callback->OnEndDecode( this, false );
         return true;
@@ -1839,7 +1855,9 @@ void LVDrawBatteryIcon( LVDrawBuf * drawbuf, const lvRect & batteryRc, int perce
         if ( !charging ) {
             if ( icons.length()>2 ) {
                 int numTicks = icons.length() - 1;
-                iconIndex = ((numTicks - 1) * percent + (100/numTicks/2) )/ 100 + 1;
+                int perTick = 10000/(numTicks -1);
+                //iconIndex = ((numTicks - 1) * percent + (100/numTicks/2) )/ 100 + 1;
+                iconIndex = (percent * 100 + perTick/2)/perTick + 1;
                 if ( iconIndex<1 )
                     iconIndex = 1;
                 if ( iconIndex>icons.length()-1 )
@@ -1880,8 +1898,9 @@ void LVDrawBatteryIcon( LVDrawBuf * drawbuf, const lvRect & batteryRc, int perce
         int y = (rc.top + rc.bottom - h)/2+1;
         lUInt32 bgcolor = drawbuf->GetBackgroundColor();
         lUInt32 textcolor = drawbuf->GetTextColor();
-        drawbuf->SetBackgroundColor( bgcolor );
-        drawbuf->SetTextColor( textcolor );
+
+        drawbuf->SetBackgroundColor( textcolor );
+        drawbuf->SetTextColor( bgcolor );
         font->DrawTextString(drawbuf, x-1, y, txt.c_str(), txt.length(), '?', NULL);
         font->DrawTextString(drawbuf, x+1, y, txt.c_str(), txt.length(), '?', NULL);
 //        font->DrawTextString(drawbuf, x-1, y+1, txt.c_str(), txt.length(), '?', NULL);
@@ -1892,8 +1911,8 @@ void LVDrawBatteryIcon( LVDrawBuf * drawbuf, const lvRect & batteryRc, int perce
 //        font->DrawTextString(drawbuf, x-1, y+1, txt.c_str(), txt.length(), '?', NULL);
         //drawbuf->SetBackgroundColor( textcolor );
         //drawbuf->SetTextColor( bgcolor );
-        drawbuf->SetBackgroundColor( textcolor );
-        drawbuf->SetTextColor( bgcolor );
+        drawbuf->SetBackgroundColor( bgcolor );
+        drawbuf->SetTextColor( textcolor );
         font->DrawTextString(drawbuf, x, y, txt.c_str(), txt.length(), '?', NULL);
     }
 }

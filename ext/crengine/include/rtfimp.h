@@ -39,6 +39,12 @@ typedef struct  {
     int defvalue;
 } rtf_control_word;
 
+enum rtfImageFormat {
+    rtf_img_unknown,
+    rtf_img_png,
+    rtf_img_jpeg,
+};
+
 enum propIndex {
     pi_destination=-2,
     pi_bracket=-1,
@@ -54,6 +60,7 @@ enum propIndex {
     pi_deflang,
     pi_align,
     pi_intbl,
+    pi_imgfmt,
     pi_max
 };
 
@@ -302,16 +309,20 @@ public:
                 error = true;
                 break;
             }
-            int i = stack[--sp].index;
-            if ( i==pi_bracket )
+            int i = stack[sp-1].index;
+            if ( i==pi_bracket ) {
+                sp--;
                 break;
+            }
             if ( i==pi_destination ) {
                 delete dest;
+                sp--;
                 dest = stack[sp].value.dest;
 #ifdef LOG_RTF_PARSING
                 CRLog::trace("Restoring destination. Level=%d Value=%08X", sp, (unsigned)dest);
 #endif
             } else {
+                sp--;
                 props[i] = stack[sp].value;
             }
         }
@@ -329,6 +340,7 @@ protected:
     lChar16 * txtbuf; /// text buffer
     int txtpos; /// text chars
     int txtfstart; /// text start file offset
+    int imageIndex;
     LVRtfValueStack & getStack() { return m_stack; }
     LVXMLParserCallback * getCallback() { return m_callback; }
     void OnBraceOpen();
@@ -338,6 +350,8 @@ protected:
     void AddChar( lChar16 ch );
     void AddChar8( lUInt8 ch );
 public:
+    /// counter for image index
+    int nextImageIndex() { return imageIndex++; }
     /// constructor
     LVRtfParser( LVStreamRef stream, LVXMLParserCallback * callback );
     /// returns true if format is recognized by parser

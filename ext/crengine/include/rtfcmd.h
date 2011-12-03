@@ -40,6 +40,7 @@ RTF_DST( info, dest_info )
 RTF_IPR( intbl,pi_intbl, 1 )     // in table
 RTF_TPR( irow, tpi_irowN, 0 )    // N is the row index of this row.
 RTF_TPR( irowband, tpi_irowbandN, 0 )// N is the row index of the row, adjusted to account for header rows. A header row has a value of –1.
+RTF_IPR( jpegblip, pi_imgfmt, rtf_img_jpeg )
 RTF_IPR( lang, pi_lang, 1024 )
 RTF_TPR( lastrow, tpi_lastrow, 0 )// Output if this is the last row in the table.
 RTF_CHC( ldblquote, 0x201C )
@@ -47,6 +48,7 @@ RTF_CHC( lquote, 0x2018 )
 RTF_CHC( par, 13 )
 RTF_ACT( pard, LVRtfDestination::RA_PARD )
 RTF_DST( pict, dest_pict )
+RTF_IPR( pngblip, pi_imgfmt, rtf_img_png )
 RTF_IPR( qc, pi_align, ha_center )
 RTF_IPR( qd, pi_align, ha_distributed )
 RTF_IPR( qj, pi_align, ha_justified )

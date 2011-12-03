@@ -449,6 +449,7 @@ class CRGUIWindow
         virtual void flush() = 0;
         /// called if window gets focus
         virtual void activated() { setDirty(); }
+        virtual void reactivated() {}
         /// called if window loss focus
         virtual void covered() { }
         /// called if window is being closed
@@ -980,6 +981,12 @@ enum CRMenuControlCmd {
     MCMD_SCROLL_FORWARD_LONG,
     MCMD_SCROLL_BACK_LONG,
     MCMD_CLEAR,
+    MCMD_NEXT_ITEM,
+    MCMD_PREV_ITEM,
+    MCMD_NEXT_PAGE,
+    MCMD_PREV_PAGE,
+    MCMD_SELECT,
+    MCMD_SELECT_LONG
 };
 
 enum CRGUICmd {
@@ -998,6 +1005,7 @@ class CRMenuItem
         LVImageSourceRef _image;
         LVFontRef _defFont;
         lString16 _propValue;
+        bool _itemDirty;
     public:
         /// id of item
         int getId() { return _id; }
@@ -1005,6 +1013,7 @@ class CRMenuItem
         void setId( int id ) { _id = id; }
         /// item label
         lString16 getLabel() { return _label; }
+        void setLabel(lString16 label) { _label = label; setItemDirty(); }
         /// item icon
         LVImageSourceRef getImage() { return _image; }
         /// item label font
@@ -1028,10 +1037,16 @@ class CRMenuItem
         virtual lString16 getSubmenuValue() { return lString16(); }
         /// property value, for options editor support
         virtual lString16 getPropValue() { return _propValue; }
+        virtual bool isItemDirty() { return _itemDirty; }
+        virtual void setItemDirty() { _itemDirty = true; }
+        virtual void onLeave() { CRLog::trace("Menu item %d leave", _id); setItemDirty(); }
+        virtual void onEnter() { CRLog::trace("Menu item %d enter", _id); setItemDirty(); }
 };
 
 /// CRGUI menu base class
 class CRMenu : public CRGUIWindowBase, public CRMenuItem {
+	private:
+		void doCloseMenu(int command, bool highlight = false, int param = 0);
     protected:
         LVPtrVector<CRMenuItem> _items;
         CRPropRef _props;
@@ -1041,22 +1056,34 @@ class CRMenu : public CRGUIWindowBase, public CRMenuItem {
         int _pageItems;
         int _helpHeight;
         int _cmdToHighlight;
+        int _selectedItem;
+        bool _pageUpdate;
         CRMenuSkinRef _skin;// = _wm->getSkin()->getMenuSkin( path.c_str() );
         // override for CRGUIWindow method
         virtual void draw();
         virtual void Draw( LVDrawBuf & buf, lvRect & rc, CRRectSkinRef skin, CRRectSkinRef valueSkin, bool selected );
         //virtual void Draw( LVDrawBuf & buf, int x, int y );
         virtual void highlightCommandItem( int cmd );
+		virtual bool onItemSelect(int command, int params = 0 );
+		int getLastOnPage();
     public:
         /// returns index of selected item, -1 if no item selected
         virtual int getSelectedItemIndex();
+        virtual int getDefaultSelectionIndex() 
+        {
+#ifdef CR_POCKETBOOK
+			if (getProps().isNull())
+				return 0;
+#endif
+			return -1; 
+        }
         virtual void activated();
         virtual void drawClient();
         virtual int getScrollHeight();
         CRMenuSkinRef getSkin();
         CRMenu( CRGUIWindowManager * wm, CRMenu * parentMenu, int id, lString16 label, LVImageSourceRef image, LVFontRef defFont, LVFontRef valueFont, CRPropRef props=CRPropRef(), const char * propName=NULL, int pageItems=8 )
         : CRGUIWindowBase( wm ), CRMenuItem( parentMenu, id, label, image, defFont ), _props(props), _propName(Utf8ToUnicode(lString8(propName))), _valueFont(valueFont), _topItem(0), _pageItems(pageItems),
-          _cmdToHighlight(-1)
+          _cmdToHighlight(-1), _selectedItem(-1), _pageUpdate(true)
         { _fullscreen = false; _helpHeight=0; }
         CRMenu( CRGUIWindowManager * wm, CRMenu * parentMenu, int id, const char * label, LVImageSourceRef image, LVFontRef defFont, LVFontRef valueFont, CRPropRef props=CRPropRef(), const char * propName=NULL, int pageItems=8 )
         : CRGUIWindowBase( wm ), CRMenuItem( parentMenu, id, label, image, defFont ), _props(props), _propName(Utf8ToUnicode(lString8(propName))), _valueFont(valueFont), _topItem(0), _pageItems(pageItems),
@@ -1084,7 +1111,9 @@ class CRMenu : public CRGUIWindowBase, public CRMenuItem {
         /// called on system configuration change: screen size and orientation
         virtual void reconfigure( int flags );
         virtual int getPageCount();
-        virtual void setCurPage( int nPage );
+        /// returns true if current page is changed
+        virtual bool setCurPage( int nPage );
+		virtual void setCurItem(int nItem);
         virtual int getCurPage( );
         virtual int getTopItem();
         virtual lString16 getSubmenuValue();
@@ -1106,6 +1135,7 @@ class CRMenu : public CRGUIWindowBase, public CRMenuItem {
         virtual void closeAllMenu( int command, int params = 0 );
         /// closes menu and its submenus
         virtual void destroyMenu();
+        virtual void covered() { _pageUpdate = true; }
 };
 
 class CRGUIUpdateEvent : public CRGUIEvent

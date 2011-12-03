@@ -527,6 +527,7 @@ public:
     {
         return p;
     }
+    inline T & operator [] (int index) { return p[index]; }
     inline T * get() { return p; }
     inline T & operator * ()
     {

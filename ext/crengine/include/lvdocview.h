@@ -22,16 +22,19 @@
 #include "lvthread.h"
 
 // standard properties supported by LVDocView
+#define PROP_FONT_GAMMA              "font.gamma" // currently supported: 0.65 .. 1.35, see gammatbl.h
 #define PROP_FONT_ANTIALIASING       "font.antialiasing.mode"
 #define PROP_FONT_COLOR              "font.color.default"
 #define PROP_FONT_FACE               "font.face.default"
 #define PROP_FONT_WEIGHT_EMBOLDEN    "font.face.weight.embolden"
 #define PROP_BACKGROUND_COLOR        "background.color.default"
+#define PROP_BACKGROUND_IMAGE        "background.image.filename"
 #define PROP_TXT_OPTION_PREFORMATTED "crengine.file.txt.preformatted"
 #define PROP_LOG_FILENAME            "crengine.log.filename"
 #define PROP_LOG_LEVEL               "crengine.log.level"
 #define PROP_LOG_AUTOFLUSH           "crengine.log.autoflush"
 #define PROP_FONT_SIZE               "crengine.font.size"
+#define PROP_FALLBACK_FONT_FACE      "crengine.font.fallback.face"
 #define PROP_STATUS_FONT_COLOR       "crengine.page.header.font.color"
 #define PROP_STATUS_FONT_FACE        "crengine.page.header.font.face"
 #define PROP_STATUS_FONT_SIZE        "crengine.page.header.font.size"
@@ -55,16 +58,36 @@
 #define PROP_SHOW_TITLE              "window.status.title"
 #define PROP_STATUS_CHAPTER_MARKS    "crengine.page.header.chapter.marks"
 #define PROP_SHOW_BATTERY            "window.status.battery"
+#define PROP_SHOW_POS_PERCENT        "window.status.pos.percent"
+#define PROP_SHOW_PAGE_COUNT         "window.status.pos.page.count"
+#define PROP_SHOW_PAGE_NUMBER        "window.status.pos.page.number"
 #define PROP_SHOW_BATTERY_PERCENT    "window.status.battery.percent"
 #define PROP_FONT_KERNING_ENABLED    "font.kerning.enabled"
 #define PROP_LANDSCAPE_PAGES         "window.landscape.pages"
 #define PROP_HYPHENATION_DICT        "crengine.hyphenation.directory"
 #define PROP_AUTOSAVE_BOOKMARKS      "crengine.autosave.bookmarks"
 
+#define PROP_FLOATING_PUNCTUATION    "crengine.style.floating.punctuation.enabled"
+#define PROP_FORMAT_MIN_SPACE_CONDENSING_PERCENT "crengine.style.space.condensing.percent"
+
+#define PROP_FILE_PROPS_FONT_SIZE    "cr3.file.props.font.size"
+
+
 #define PROP_MIN_FILE_SIZE_TO_CACHE  "crengine.cache.filesize.min"
 #define PROP_FORCED_MIN_FILE_SIZE_TO_CACHE  "crengine.cache.forced.filesize.min"
 #define PROP_PROGRESS_SHOW_FIRST_PAGE  "crengine.progress.show.first.page"
-
+#define PROP_HIGHLIGHT_COMMENT_BOOKMARKS "crengine.highlight.bookmarks"
+// image scaling settings
+// mode: 0=disabled, 1=integer scaling factors, 2=free scaling
+// scale: 0=auto based on font size, 1=no zoom, 2=scale up to *2, 3=scale up to *3
+#define PROP_IMG_SCALING_ZOOMIN_INLINE_MODE  "crengine.image.scaling.zoomin.inline.mode"
+#define PROP_IMG_SCALING_ZOOMIN_INLINE_SCALE  "crengine.image.scaling.zoomin.inline.scale"
+#define PROP_IMG_SCALING_ZOOMOUT_INLINE_MODE "crengine.image.scaling.zoomout.inline.mode"
+#define PROP_IMG_SCALING_ZOOMOUT_INLINE_SCALE "crengine.image.scaling.zoomout.inline.scale"
+#define PROP_IMG_SCALING_ZOOMIN_BLOCK_MODE  "crengine.image.scaling.zoomin.block.mode"
+#define PROP_IMG_SCALING_ZOOMIN_BLOCK_SCALE  "crengine.image.scaling.zoomin.block.scale"
+#define PROP_IMG_SCALING_ZOOMOUT_BLOCK_MODE "crengine.image.scaling.zoomout.block.mode"
+#define PROP_IMG_SCALING_ZOOMOUT_BLOCK_SCALE "crengine.image.scaling.zoomout.block.scale"
 
 const lChar16 * getDocFormatName( doc_format_t fmt );
 
@@ -73,6 +96,12 @@ typedef enum {
     txt_format_pre,  // no formatting, leave lines as is
     txt_format_auto  // autodetect format
 } txt_format_t;
+
+/// no battery
+#define CR_BATTERY_STATE_NO_BATTERY -2
+/// battery is charging
+#define CR_BATTERY_STATE_CHARGING -1
+// values 0..100 -- battery life percent
 
 #ifndef CR_ENABLE_PAGE_IMAGE_CACHE
 #ifdef ANDROID
@@ -201,6 +230,30 @@ class LVDocViewImageCache
 };
 #endif
 
+class LVPageWordSelector {
+    LVDocView * _docview;
+    ldomWordExList _words;
+    void updateSelection();
+public:
+    // selects middle word of current page
+    LVPageWordSelector( LVDocView * docview );
+    // clears selection
+    ~LVPageWordSelector();
+    // move current word selection in specified direction, (distance) times
+    void moveBy( MoveDirection dir, int distance = 1 );
+    // returns currently selected word
+    ldomWordEx * getSelectedWord() { return _words.getSelWord(); }
+    // access to words
+    ldomWordExList & getWords() { return _words; }
+    // append chars to search pattern
+    ldomWordEx * appendPattern( lString16 chars );
+    // remove last item from pattern
+    ldomWordEx * reducePattern();
+    // selects word of current page with specified coords;
+    void selectWord(int x, int y);
+};
+
+
 #define LVDOCVIEW_COMMANDS_START 100
 /// LVDocView commands
 enum LVDocCmd
@@ -235,6 +288,14 @@ enum LVDocCmd
     DCMD_SCROLL_BY, // scroll by N pixels, for Scroll view mode only
     DCMD_REQUEST_RENDER, // invalidate rendered data
     DCMD_GO_PAGE_DONT_SAVE_HISTORY,
+    DCMD_SET_INTERNAL_STYLES, // set internal styles option
+
+    // selection by sentences
+    DCMD_SELECT_FIRST_SENTENCE, // select first sentence on page
+    DCMD_SELECT_NEXT_SENTENCE, // nove selection to next sentence
+    DCMD_SELECT_PREV_SENTENCE, // nove selection to next sentence
+    DCMD_SELECT_MOVE_LEFT_BOUND_BY_WORDS, // move selection start by words
+    DCMD_SELECT_MOVE_RIGHT_BOUND_BY_WORDS, // move selection end by words
 
     //=======================================
     DCMD_EDIT_CURSOR_LEFT,
@@ -282,11 +343,13 @@ enum {
     PGHDR_CLOCK=16,
     PGHDR_BATTERY=32,
     PGHDR_CHAPTER_MARKS=64,
+    PGHDR_PERCENT=128,
 };
 
 
 //typedef lUInt64 LVPosBookmark;
 
+typedef LVArray<int> LVBookMarkPercentInfo;
 
 #define DEF_COLOR_BUFFER_BPP 32
 
@@ -347,15 +410,21 @@ private:
     LVImageSourceRef m_backgroundImage;
     LVRef<LVColorDrawBuf> m_backgroundImageScaled;
     bool m_backgroundTiled;
-
+    bool m_highlightBookmarks;
+    LVPtrVector<LVBookMarkPercentInfo> m_bookmarksPercents;
 
 protected:
     lString16 m_last_clock;
 
     ldomMarkedRangeList m_markRanges;
+    ldomMarkedRangeList m_bmkRanges;
 
 private:
     lString16 m_filename;
+#define ORIGINAL_FILENAME_PATCH
+#ifdef ORIGINAL_FILENAME_PATCH
+    lString16 m_originalFilename;
+#endif
     lvsize_t  m_filesize;
 
 
@@ -420,6 +489,9 @@ private:
     bool ParseDocument( );
     /// format of document from cache is known
     virtual void OnCacheFileFormatDetected( doc_format_t fmt );
+    void insertBookmarkPercentInfo(int start_page, int end_y, int percent);
+
+    void updateDocStyleSheet();
 
 protected:
     /// draw to specified buffer by either Y pos or page number (unused param should be -1)
@@ -442,7 +514,7 @@ protected:
     /// selects link on page, if any (delta==0 - current, 1-next, -1-previous). returns selected link range, null if no links.
     virtual ldomXRange * selectPageLink( int delta, bool wrapAround);
     /// set status bar and clock mode
-    void setStatusMode( int newMode, bool showClock, bool showTitle, bool showBattery, bool showChapterMarks );
+    void setStatusMode( int newMode, bool showClock, bool showTitle, bool showBattery, bool showChapterMarks, bool showPercent, bool showPageNumber, bool showPageCount );
     /// create document and set flags
     void createEmptyDocument();
     /// get document rectangle for specified cursor position, returns false if not visible
@@ -473,6 +545,12 @@ public:
     void setCursorPos( ldomXPointer ptr ) { m_cursorPos = ptr; }
     /// try swappping of document to cache, if size is big enough, and no swapping attempt yet done
     void swapToCache();
+    /// save document to cache file, with timeout option
+    ContinuousOperationResult swapToCache(CRTimerUtil & maxTime);
+    /// save unsaved data to cache file (if one is created), with timeout option
+    ContinuousOperationResult updateCache(CRTimerUtil & maxTime);
+    /// save unsaved data to cache file (if one is created), w/o timeout
+    ContinuousOperationResult updateCache();
 
     /// returns selected (marked) ranges
     ldomMarkedRangeList * getMarkedRanges() { return &m_markRanges; }
@@ -503,8 +581,12 @@ public:
     CRBookmark * saveCurrentPageBookmark( lString16 comment );
     /// removes bookmark from list, and deletes it, false if not found
     bool removeBookmark( CRBookmark * bm );
+    /// sets new list of bookmarks, removes old values
+    void setBookmarkList(LVPtrVector<CRBookmark> & bookmarks);
     /// restores page using bookmark by numbered shortcut
 	bool goToPageShortcutBookmark( int number );
+    /// find bookmark by window point, return NULL if point doesn't belong to any bookmark
+    CRBookmark * findBookmarkByPoint(lvPoint pt);
     /// returns true if coverpage display is on
     bool getShowCover() { return  m_showCover; }
     /// sets coverpage display flag
@@ -534,7 +616,7 @@ public:
 
     // callback functions
     /// set callback
-    void setCallback( LVDocViewCallback * callback ) { m_callback = callback; }
+    LVDocViewCallback * setCallback( LVDocViewCallback * callback ) { LVDocViewCallback * old = m_callback; m_callback = callback; return old; }
     /// get callback
     LVDocViewCallback * getCallback( ) { return m_callback; }
 
@@ -553,8 +635,14 @@ public:
     virtual void selectRange( const ldomXRange & range );
     /// sets selection for list of words, clears previous selection
     virtual void selectWords( const LVArray<ldomWord> & words );
+    /// sets selections for ranges, clears previous selections
+    virtual void selectRanges(ldomXRangeList & ranges);
     /// clears selection
     virtual void clearSelection();
+    /// update selection -- command handler
+    int onSelectionCommand( int cmd, int param );
+
+
     /// navigation history
     ldomNavigationHistory & getNavigationHistory() { return _navigationHistory; }
     /// get list of links
@@ -606,10 +694,15 @@ public:
     LVMutex & getMutex() { return _mutex; }
     /// update selection ranges
     void updateSelections();
+    void updateBookMarksRanges();
     /// get page document range, -1 for current page
     LVRef<ldomXRange> getPageDocumentRange( int pageIndex=-1 );
     /// get page text, -1 for current page
     lString16 getPageText( bool wrapWords, int pageIndex=-1 );
+    /// returns number of non-space characters on current page
+    int getCurrentPageCharCount();
+    /// returns number of images on current page
+    int getCurrentPageImageCount();
     /// calculate page header rectangle
     virtual void getPageHeaderRectangle( int pageIndex, lvRect & headerRc );
     /// calculate page header height
@@ -705,11 +798,27 @@ public:
         clearImageCache();
     }
 
+    /// returns text color
+    lUInt32 getStatusColor()
+    {
+        return m_statusColor;
+    }
+    /// sets text color
+    void setStatusColor( lUInt32 cl )
+    {
+        m_statusColor = cl;
+        clearImageCache();
+    }
+
     CRPageSkinRef getPageSkin();
     void setPageSkin( CRPageSkinRef skin );
 
     /// returns xpointer for specified window point
     ldomXPointer getNodeByPoint( lvPoint pt );
+    /// returns image source for specified window point, if point is inside image
+    LVImageSourceRef getImageByPoint(lvPoint pt);
+    /// draws scaled image into buffer, clear background according to current settings
+    bool drawImage(LVDrawBuf * buf, LVImageSourceRef img, int x, int y, int dx, int dy);
     /// converts point from window to document coordinates, returns true if success
     bool windowToDocPoint( lvPoint & pt );
     /// converts point from documsnt to window coordinates, returns true if success
@@ -816,6 +925,8 @@ public:
     /// set vertical position of view inside document
     int SetPos( int pos, bool savePos=true );
 
+	int getPageHeight(int pageIndex);
+
     /// get number of current page
     int getCurPage();
     /// move to specified page
@@ -836,6 +947,18 @@ public:
     void savePosition();
     /// restore last file position
     void restorePosition();
+
+#ifdef ORIGINAL_FILENAME_PATCH
+    void setOriginalFilename( const lString16 & fn ) {
+        m_originalFilename = fn;
+    }
+    const lString16 & getOriginalFilename() {
+        return m_originalFilename;
+    }
+    void setMinFileSizeToCache( int size ) {
+        m_props->setInt(PROP_MIN_FILE_SIZE_TO_CACHE, size);
+    }
+#endif
 
     /// render (format) document
     void Render( int dx=0, int dy=0, LVRendPageList * pages=NULL );

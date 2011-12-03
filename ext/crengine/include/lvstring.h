@@ -20,9 +20,11 @@
 #include "lvmemman.h"
 
 /// soft hyphen code
-#define UNICODE_SOFT_HYPHEN_CODE 0x00AD
-#define UNICODE_ZERO_WIDTH_SPACE 0x200B
-#define UNICODE_NO_BREAK_SPACE   0x00A0
+#define UNICODE_SOFT_HYPHEN_CODE 0x00ad
+#define UNICODE_ZERO_WIDTH_SPACE 0x200b
+#define UNICODE_NO_BREAK_SPACE   0x00a0
+#define UNICODE_HYPHEN   0x2010
+#define UNICODE_NB_HYPHEN   0x2011
 
 
 
@@ -67,6 +69,16 @@ void lStr_lowercase( lChar16 * str, int len );
 /// calculates CRC32 for buffer contents
 lUInt32 lStr_crc32( lUInt32 prevValue, const void * buf, int size );
 
+// converts 0..15 to 0..f
+char toHexDigit( int c );
+// returns 0..15 if c is hex digit, -1 otherwise
+int hexDigit( int c );
+// decode LEN hex digits, return decoded number, -1 if invalid
+int decodeHex( const lChar16 * str, int len );
+// decode LEN decimal digits, return decoded number, -1 if invalid
+int decodeDecimal( const lChar16 * str, int len );
+
+
 #define CH_PROP_UPPER       0x0001 ///< uppercase alpha character flag
 #define CH_PROP_LOWER       0x0002 ///< lowercase alpha character flag
 #define CH_PROP_ALPHA       0x0003 ///< alpha flag is combination of uppercase and lowercase flags
@@ -78,6 +90,7 @@ lUInt32 lStr_crc32( lUInt32 prevValue, const void * buf, int size );
 #define CH_PROP_CONSONANT   0x0080 ///< consonant character flag
 #define CH_PROP_SIGN        0x0100 ///< sign character flag
 #define CH_PROP_ALPHA_SIGN  0x0200 ///< alpha sign character flag
+#define CH_PROP_DASH        0x0400 ///< minus, emdash, endash, ... (- signs)
 
 /// retrieve character properties mask array for wide c-string
 void lStr_getCharProps( const lChar16 * str, int sz, lUInt16 * props );
@@ -148,6 +161,8 @@ private:
 public:
     /// default constrictor
     explicit lString8() : pchunk(EMPTY_STR_8) { addref(); }
+    /// constructor of empty string with buffer of specified size
+    explicit lString8( int size ) : pchunk(EMPTY_STR_8) { addref(); reserve(size); }
     /// copy constructor
     lString8(const lString8 & str) : pchunk(str.pchunk) { addref(); }
     /// constructor from C string
@@ -300,6 +315,9 @@ public:
     /// append single character
     lString8 & operator += ( value_type ch ) { return append(1, ch); }
 
+    /// returns true if string ends with specified substring
+    bool endsWith( const lChar8 * substring ) const;
+
     /// constructs string representation of integer
     static lString8 itoa( int i );
     /// constructs string representation of unsigned integer
@@ -434,6 +452,8 @@ public:
 
     /// returns true if string starts with specified substring
     bool startsWith ( const lString16 & substring ) const;
+    /// returns true if string ends with specified substring
+    bool endsWith( const lChar16 * substring ) const;
     /// returns true if string ends with specified substring
     bool endsWith ( const lString16 & substring ) const;
     /// returns true if string starts with specified substring, case insensitive
@@ -768,6 +788,8 @@ lString16 Utf8ToUnicode( const char * s );
 lString16 Utf8ToUnicode( const char * s, int sz );
 /// decodes path like "file%20name" to "file name"
 lString16 DecodeHTMLUrlString( lString16 s );
+/// truncates string by specified size, appends ... if truncated, prefers to wrap whole words
+void limitStringSize(lString16 & str, int maxSize);
 
 #define LCSTR(x) (UnicodeToUtf8(x).c_str())
 bool splitIntegerList( lString16 s, lString16 delim, int & value1, int & value2 );

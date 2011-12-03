@@ -87,7 +87,9 @@ public:
     /// removes several items from vector
     void erase( int pos, int count )
     {
-        if ( pos<0 || count<=0 || pos+count > _count )
+        if ( count<=0 )
+            return;
+        if ( pos<0 || pos+count > _count )
             crFatalError();
         int i;
         for (i=0; i<count; i++)
@@ -150,10 +152,9 @@ public:
         if ( pos<0 )
             return NULL;
         T * item = _list[pos];
-        for ( i=pos; i<_count; i++ )
+        for ( i=pos; i<_count-1; i++ )
         {
-            _list[i] = _list[i];
-            _list[i] = NULL;
+            _list[i] = _list[i+1];
         }
         _count--;
         return item;
@@ -247,12 +248,13 @@ protected:
 public:
     LVMatrix<_Ty> () : numcols(0), numrows(0), rows(NULL) {}
     void Clear() {
-        if (numrows && numcols) {
-            for (int i=0; i<numrows; i++)
-                free( rows[i] );
-        }
-        if (rows)
+        if (rows) {
+			if (numrows && numcols) {
+				for (int i=0; i<numrows; i++)
+					free( rows[i] );
+			}
             free( rows );
+		}
         rows = NULL;
         numrows = 0;
         numcols = 0;

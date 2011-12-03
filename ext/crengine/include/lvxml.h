@@ -69,6 +69,10 @@ public:
     virtual void OnAttribute( const lChar16 * nsname, const lChar16 * attrname, const lChar16 * attrvalue ) = 0;
     /// called on text
     virtual void OnText( const lChar16 * text, int len, lUInt32 flags ) = 0;
+    /// add named BLOB data to document
+    virtual bool OnBlob(lString16 name, const lUInt8 * data, int size) = 0;
+    /// call to set document property
+    virtual void OnDocProperty(const char * name, lString8 value) { }
     /// destructor
     virtual ~LVXMLParserCallback() {}
 };
@@ -86,9 +90,10 @@ public:
 #define TXTFLG_PRE_PARA_SPLITTING           128
 #define TXTFLG_ENCODING_MASK                0xFF00
 #define TXTFLG_ENCODING_SHIFT               8
+#define TXTFLG_CONVERT_8BIT_ENTITY_ENCODING 0x10000
 
 /// converts XML text: decode character entities, convert space chars
-void PreProcessXmlString( lString16 & s, lUInt32 flags );
+void PreProcessXmlString( lString16 & s, lUInt32 flags, const lChar16 * enc_table=NULL );
 
 #define MAX_PERSISTENT_BUF_SIZE 16384
 
@@ -263,7 +268,7 @@ public:
     virtual bool Eof() { return m_eof; /* m_buf_fpos + m_buf_pos >= m_stream_size;*/ }
     virtual void Reset();
     /// tries to autodetect text encoding
-    bool AutodetectEncoding();
+    bool AutodetectEncoding( bool utfOnly=false );
     /// reads next text line, tells file position and size of line, sets EOL flag
     lString16 ReadLine( int maxLineSize, lUInt32 & flags );
     //lString16 ReadLine( int maxLineSize, lvpos_t & fpos, lvsize_t & fsize, lUInt32 & flags );
@@ -378,6 +383,8 @@ private:
     bool ReadText();
 protected:
     bool m_citags;
+    bool m_allowHtml;
+    bool m_fb2Only;
 public:
     /// returns true if format is recognized by parser
     virtual bool CheckFormat();
@@ -388,7 +395,7 @@ public:
     /// resets parsing, moves to beginning of stream
     virtual void Reset();
     /// constructor
-    LVXMLParser( LVStreamRef stream, LVXMLParserCallback * callback );
+    LVXMLParser( LVStreamRef stream, LVXMLParserCallback * callback, bool allowHtml=true, bool fb2Only=false );
     /// changes space mode
     virtual void SetSpaceMode( bool flgTrimSpaces );
     /// returns space mode

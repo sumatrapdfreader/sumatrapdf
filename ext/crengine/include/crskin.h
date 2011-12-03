@@ -300,8 +300,11 @@ public:
     void setPressedImage( LVImageSourceRef img ) { _pressedimage = img; }
     void setSelectedImage( LVImageSourceRef img ) { _selectedimage = img; }
     virtual void drawButton( LVDrawBuf & buf, const lvRect & rc, int flags = ENABLED );
+    LVImageSourceRef getImage(int flags = ENABLED);
     CRButtonSkin();
-    virtual ~CRButtonSkin() { }
+    virtual ~CRButtonSkin() { 
+		CRLog::trace("~CRButtonSkin()");
+	}
 };
 typedef LVFastRef<CRButtonSkin> CRButtonSkinRef;
 
@@ -369,6 +372,38 @@ public:
 };
 typedef LVFastRef<CRScrollSkin> CRScrollSkinRef;
 
+class CRButtonList
+{
+protected:
+    LVRefVec<CRButtonSkin> _list;
+public:
+    void add( LVRef<CRButtonSkin> button ) { _list.add( button ); }
+    void add( CRButtonList & list ) { _list.add( list._list ); }
+    int length() { return _list.length(); }
+    LVRef<CRButtonSkin> get(int index) { return (index >= 0 && index < _list.length()) ? _list[index] : LVRef<CRButtonSkin>(); }
+    CRButtonList() { }
+    virtual ~CRButtonList() {
+		CRLog::trace("~CRButtonList();");
+	}
+};
+typedef LVRef<CRButtonList> CRButtonListRef;
+
+class CRToolBarSkin : public CRRectSkin
+{
+protected:
+    CRButtonListRef _buttons;
+public:
+    CRToolBarSkin() { }
+    virtual ~CRToolBarSkin() { 
+		CRLog::trace("~CRToolBarSkin();");
+	}    
+
+    CRButtonListRef getButtons() { return _buttons; }
+    void setButtons(CRButtonListRef list) { _buttons = list; }
+    virtual void drawToolBar( LVDrawBuf & buf, const lvRect & rc, bool enabled, int selectedButton );
+    virtual void drawButton(LVDrawBuf & buf, const lvRect & rc, int index, int flags);
+};
+typedef LVFastRef<CRToolBarSkin> CRToolBarSkinRef;
 
 class CRWindowSkin : public CRRectSkin
 {
@@ -465,6 +500,7 @@ protected:
     virtual bool readWindowSkin(  const lChar16 * path, CRWindowSkin * res );
     virtual bool readPageSkin(  const lChar16 * path, CRPageSkin * res );
     virtual bool readMenuSkin(  const lChar16 * path, CRMenuSkin * res );
+    virtual bool readToolBarSkin( const lChar16 * path, CRToolBarSkin *res );
 public:
     /// retuns path to base definition, if attribute base="#nodeid" is specified for element of path
     virtual lString16 getBasePath( const lChar16 * path );
@@ -502,9 +538,8 @@ public:
     virtual LVImageSourceRef readImage( const lChar16 * path, const lChar16 * attrname, bool * res=NULL );
     /// reads list of icons
     virtual CRIconListRef readIcons( const lChar16 * path, bool * res=NULL );
-
-
-
+	/// reads list of buttons
+    virtual CRButtonListRef readButtons( const lChar16 * path, bool * res=NULL );
     /// returns rect skin by path or #id
     virtual CRRectSkinRef getRectSkin( const lChar16 * path ) = 0;
     /// returns scroll skin by path or #id
@@ -517,6 +552,8 @@ public:
     virtual CRPageSkinRef getPageSkin( const lChar16 * path ) = 0;
     /// returns book page skin list
     virtual CRPageSkinListRef getPageSkinList() = 0;
+    /// returns toolbar skin by path or #id
+    virtual CRToolBarSkinRef getToolBarSkin( const lChar16 * path ) = 0;
 
     /// garbage collection
     virtual void gc() { }

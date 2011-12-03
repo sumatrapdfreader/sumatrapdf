@@ -125,8 +125,7 @@ SUMATRA_OBJS = \
 	$(OS)\Search.obj $(OS)\Menu.obj $(OS)\ExternalPdfViewer.obj \
 	$(OS)\Selection.obj $(OS)\ZipUtil.obj $(SUMATRA_RES) \
 	$(UTILS_OBJS) $(BZIP2_OBJS) $(MINIZIP_OBJS) $(UNRAR_OBJS) \
-	$(SYNCTEX_OBJS) $(ENGINE_OBJS)
-# $(CRENGINE_OBJS)
+	$(SYNCTEX_OBJS) $(ENGINE_OBJS) $(CRENGINE_OBJS)
  
 # disable incomplete Ribbon support in release builds (unless BUILD_RIBBON is defined)
 !if "$(CFG)"=="dbg"

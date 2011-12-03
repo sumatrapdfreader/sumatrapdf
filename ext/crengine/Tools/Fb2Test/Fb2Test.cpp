@@ -423,7 +423,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
     if (!fontMan->GetFontCount())
     {
         //error
-        char str[100];
+        char str[1000];
 #if (USE_FREETYPE==1)
         sprintf(str, "Cannot open font file(s) fonts/*.ttf \nCannot work without font\nPlace some TTF files to font\\ directory" );
 #else

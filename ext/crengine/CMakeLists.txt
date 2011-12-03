@@ -35,6 +35,7 @@ if ( NOT ${GUI} STREQUAL FB2PROPS )
     src/hist.cpp      
     src/chmfmt.cpp     
     src/epubfmt.cpp     
+    src/pdbfmt.cpp     
     src/wordfmt.cpp     
     #src/xutils.cpp
     )

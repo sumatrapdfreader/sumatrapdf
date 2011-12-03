@@ -18,6 +18,8 @@
 #include "../include/fb2def.h"
 #include "../include/lvstream.h"
 
+// define to dump all tokens
+//#define DUMP_CSS_PARSING
 
 enum css_decl_code {
     cssd_unknown,
@@ -26,7 +28,10 @@ enum css_decl_code {
     cssd_text_align,
     cssd_text_align_last,
     cssd_text_decoration,
-    cssd_hyphenate,
+    cssd_hyphenate, // hyphenate
+    cssd_hyphenate2, // -webkit-hyphens
+    cssd_hyphenate3, // adobe-hyphenate
+    cssd_hyphenate4, // adobe-text-layout
     cssd_color,
     cssd_background_color,
     cssd_vertical_align,
@@ -68,6 +73,9 @@ static const char * css_decl_name[] = {
     "text-align-last",
     "text-decoration",
     "hyphenate",
+    "-webkit-hyphens",
+    "adobe-hyphenate",
+    "adobe-text-layout",
     "color",
     "background-color",
     "vertical-align",
@@ -163,6 +171,8 @@ static bool skip_spaces( const char * & str )
         while ( *str && str[1] && (str[0]!='*' || str[1]!='/') )
             str++;
     }
+    while (*str==' ' || *str=='\t' || *str=='\n' || *str == '\r')
+        str++;
     return *str != 0;
 }
 
@@ -176,6 +186,9 @@ static css_decl_code parse_property_name( const char * & res )
             // found!
             skip_spaces(str);
             if ( substr_compare( ":", str )) {
+#ifdef DUMP_CSS_PARSING
+                CRLog::trace("property name: %s", lString8(res, str-res).c_str() );
+#endif
                 skip_spaces(str);
                 res = str;
                 return (css_decl_code)i;
@@ -217,19 +230,19 @@ static bool parse_number_value( const char * & str, css_length_t & value )
         value.value = 0;
         return true;
     }
-    if (*str<'0' || *str>'9') {
-        return false; // not a number
-    }
     int n = 0;
-    while (*str>='0' && *str<='9')
-    {
-        n = n*10 + (*str - '0');
-        str++;
+    if (*str != '.') {
+        if (*str<'0' || *str>'9') {
+            return false; // not a number
+        }
+        while (*str>='0' && *str<='9') {
+            n = n*10 + (*str - '0');
+            str++;
+        }
     }
     int frac = 0;
     int frac_div = 1;
-    if (*str == '.')
-    {
+    if (*str == '.') {
         str++;
         while (*str>='0' && *str<='9')
         {
@@ -404,7 +417,23 @@ static const char * css_hyph_names[] =
     NULL
 };
 
-static const char * css_pb_names[] = 
+static const char * css_hyph_names2[] =
+{
+    "inherit",
+    "optimizeSpeed",
+    "optimizeQuality",
+    NULL
+};
+
+static const char * css_hyph_names3[] =
+{
+    "inherit",
+    "none",
+    "explicit",
+    NULL
+};
+
+static const char * css_pb_names[] =
 {
     "inherit",
     "auto",
@@ -496,6 +525,7 @@ static const char * css_lsp_names[] =
     NULL
 };
 
+
 bool LVCssDeclaration::parse( const char * &decl )
 {
     #define MAX_DECL_SIZE 512
@@ -536,7 +566,15 @@ bool LVCssDeclaration::parse( const char * &decl )
                 n = parse_name( decl, css_td_names, -1 );
                 break;
             case cssd_hyphenate:
+            case cssd_hyphenate2:
+            case cssd_hyphenate3:
+            case cssd_hyphenate4:
+            	prop_code = cssd_hyphenate;
                 n = parse_name( decl, css_hyph_names, -1 );
+                if ( n==-1 )
+                    n = parse_name( decl, css_hyph_names2, -1 );
+                if ( n==-1 )
+                    n = parse_name( decl, css_hyph_names3, -1 );
                 break;
             case cssd_page_break_before:
                 n = parse_name( decl, css_pb_names, -1 );
@@ -592,12 +630,17 @@ bool LVCssDeclaration::parse( const char * &decl )
                 {
                     // read length
                     css_length_t len;
+                    bool negative = false;
+                    if ( *decl == '-' ) {
+                        decl++;
+                        negative = true;
+                    }
                     if ( parse_number_value( decl, len ) )
                     {
                         // read optional "hanging" flag
                         skip_spaces( decl );
                         int attr = parse_name( decl, css_ti_attribute_names, -1 );
-                        if ( attr==0 ) {
+                        if ( attr==0 || negative ) {
                             len.value = -len.value;
                         }
                         // save result
@@ -829,6 +872,16 @@ void LVCssDeclaration::apply( css_style_rec_t * style )
     }
 }
 
+lUInt32 LVCssDeclaration::getHash() {
+    if (!_data)
+        return 0;
+    int * p = _data;
+    lUInt32 hash = 0;
+    for (;*p != cssd_stop;p++)
+        hash = hash * 31 + *p;
+    return hash;
+}
+
 static bool parse_ident( const char * &str, char * ident )
 {
     *ident = 0;
@@ -875,10 +928,17 @@ bool LVCssSelectorRule::check( const ldomNode * & node )
         //
         {
             int index = node->getNodeIndex();
-            if (index<=0)
-                return false;
-            node = node->getParentNode()->getChildNode(index-1);
-            return (node->getNodeId()==_id);
+            // while
+            if (index>0) {
+                ldomNode * elem = node->getParentNode()->getChildElementNode(index-1, _id);
+                if ( elem ) {
+                    node = elem;
+                    //CRLog::trace("+ selector: found pred element");
+                    return true;
+                }
+                //index--;
+            }
+            return false;
         }
         break;
     case cssrt_attrset:       // E[foo]
@@ -894,6 +954,7 @@ bool LVCssSelectorRule::check( const ldomNode * & node )
             bool res = (val == _value);
             //if ( res )
             //    return true;
+            //CRLog::trace("attreq: %s %s", LCSTR(val), LCSTR(_value) );
             return res;
         }
         break;
@@ -933,8 +994,10 @@ bool LVCssSelectorRule::check( const ldomNode * & node )
         // todo
         {
             lString16 val = node->getAttributeValue(attr_class);
-            if (_value.length()>val.length())
-                return false;
+            val.lowercase();
+//            if ( val.length() != _value.length() )
+//                return false;
+            //CRLog::trace("attr_class: %s %s", LCSTR(val), LCSTR(_value) );
             return val == _value;
         }
         break;
@@ -1019,6 +1082,7 @@ LVCssSelectorRule * parse_attr( const char * &str, lxmlDocBase * doc )
         skip_spaces( str );
         LVCssSelectorRule * rule = new LVCssSelectorRule(cssrt_class);
         lString16 s( attrvalue );
+        s.lowercase();
         rule->setAttr(attr_class, s);
         return rule;
     } else if ( *str=='#' ) {
@@ -1106,6 +1170,10 @@ bool LVCssSelector::parse( const char * &str, lxmlDocBase * doc )
             skip_spaces( str );
             _id = 0;
         } 
+        else if ( *str == '.' ) // classname follows
+        {
+            _id = 0;
+        }
         else if ( css_is_alpha( *str ) )
         {
             // ident
@@ -1270,9 +1338,9 @@ void LVStyleSheet::apply( const ldomNode * node, css_style_rec_t * style )
 lUInt32 LVCssSelectorRule::getHash()
 {
     lUInt32 hash = 0;
-    hash = ( ( ( (lUInt32)_type * 75
-        + (lUInt32)_id ) *75 )
-        + (lUInt32)_attrid * 75 )
+    hash = ( ( ( (lUInt32)_type * 31
+        + (lUInt32)_id ) *31 )
+        + (lUInt32)_attrid * 31 )
         + ::getHash(_value);
     return hash;
 }
@@ -1281,13 +1349,16 @@ lUInt32 LVCssSelector::getHash()
 {
     lUInt32 hash = 0;
     lUInt32 nextHash = 0;
-    if ( _next )
-        _next->getHash();
-    for ( LVCssSelectorRule * p = _rules; p; p = p->getNext() ) {
+
+    if (_next)
+        nextHash = _next->getHash();
+    for (LVCssSelectorRule * p = _rules; p; p = p->getNext()) {
         lUInt32 ruleHash = p->getHash();
-        hash = hash * 75 + ruleHash;
+        hash = hash * 31 + ruleHash;
     }
-    hash = hash * 75 + nextHash;
+    hash = hash * 31 + nextHash;
+    if (!_decl.isNull())
+        hash = hash * 31 + _decl->getHash();
     return hash;
 }
 
@@ -1297,7 +1368,7 @@ lUInt32 LVStyleSheet::getHash()
     lUInt32 hash = 0;
     for ( int i=0; i<_selectors.length(); i++ ) {
         if ( _selectors[i] )
-            hash = hash * 75 + _selectors[i]->getHash() + i*15324;
+            hash = hash * 31 + _selectors[i]->getHash() + i*15324;
     }
     return hash;
 }
@@ -1404,7 +1475,7 @@ bool LVProcessStyleSheetImport( const char * &str, lString8 & import_file )
     if ( *p !='@' )
         return false;
     p++;
-    if ( strncmp(p, "import", 6) )
+    if (strncmp(p, "import", 6) != 0)
         return false;
     p+=6;
     skip_spaces( p );

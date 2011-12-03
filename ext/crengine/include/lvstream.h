@@ -135,6 +135,7 @@ public:
     virtual lverror_t SetMode( lvopen_mode_t ) { return LVERR_NOTIMPL; }
     /// flushes unsaved data from buffers to file, with optional flush of OS buffers
     virtual lverror_t Flush( bool sync ) { return LVERR_OK; }
+    virtual lverror_t Flush( bool sync, CRTimerUtil & timeout ) { return Flush(sync); }
 
     /// Seek (change file pos)
     /**
@@ -188,7 +189,7 @@ public:
 
     virtual lverror_t GetSize( lvsize_t * pSize )
     {
-        *pSize = LVStream::GetSize();
+        *pSize = GetSize();
         return LVERR_OK;
     }
 
@@ -263,6 +264,9 @@ public:
     virtual lverror_t crc32( lUInt32 & dst );
     /// calculate crc32 code for stream, returns 0 for error or empty stream
     inline lUInt32 crc32() { lUInt32 res = 0; crc32( res ); return res; }
+
+    /// set write bytes limit to call flush(true) automatically after writing of each sz bytes
+    virtual void setAutoSyncSize(lvsize_t sz) { }
 
     /// Constructor
     LVStream() { }
@@ -341,8 +345,22 @@ protected:
     lvopen_mode_t          m_mode;
     lUInt32 _crc;
     bool _crcFailed;
+    lvsize_t _autosyncLimit;
+    lvsize_t _bytesWritten;
+    virtual void handleAutoSync(lvsize_t bytesWritten) {
+        _bytesWritten += bytesWritten;
+        if (_autosyncLimit==0)
+            return;
+        if (_bytesWritten>_autosyncLimit) {
+            Flush(true);
+            _bytesWritten = 0;
+        }
+    }
+
 public:
-    LVNamedStream() : _crc(0), _crcFailed(false) { }
+    LVNamedStream() : _crc(0), _crcFailed(false), _autosyncLimit(0), _bytesWritten(0) { }
+    /// set write bytes limit to call flush(true) automatically after writing of each sz bytes
+    virtual void setAutoSyncSize(lvsize_t sz) { _autosyncLimit = sz; }
     /// returns stream/container name, may be NULL if unknown
     virtual const lChar16 * GetName();
     /// sets stream/container name, may be not implemented for some objects
@@ -561,6 +579,13 @@ public:
             return m_list[index];
         return NULL;
     }
+    virtual const LVContainerItemInfo * GetObjectInfo(lString16 name)
+    {
+        for ( int i=0; i<m_list.length(); i++ )
+            if (m_list[i]->GetName()==name )
+                return m_list[i];
+        return NULL;
+    }
     virtual int GetObjectCount() const
     {
         return m_list.length();
@@ -607,7 +632,13 @@ public:
 
     virtual lverror_t Seek(lvoffset_t pos, lvseek_origin_t origin, lvpos_t* newPos)
     {
-        lverror_t res = m_stream->Seek( m_start + pos, origin, &m_pos );
+        if ( origin==LVSEEK_SET )
+            pos += m_start;
+        else if ( origin==LVSEEK_END ) {
+            origin = LVSEEK_SET;
+            pos = m_start + m_size;
+        }
+        lverror_t res = m_stream->Seek( pos, origin, &m_pos );
         if (res == LVERR_OK)
             m_pos -= m_start;
         if (newPos)
@@ -623,7 +654,11 @@ public:
     virtual lverror_t Read(void* buf, lvsize_t size, lvsize_t* pBytesRead)
     {
         lvsize_t bytesRead = 0;
-        lverror_t res = m_stream->Read( buf, size, &bytesRead );
+        lvpos_t p;
+        lverror_t res = m_stream->Seek( m_pos+m_start, LVSEEK_SET, &p );
+        if ( res!=LVERR_OK )
+            return res;
+        res = m_stream->Read( buf, size, &bytesRead );
         if (res == LVERR_OK)
             m_pos += bytesRead;
         if (pBytesRead)
@@ -722,7 +757,7 @@ LVStreamRef LVCreateBufferedStream( LVStreamRef stream, int bufSize );
 LVStreamRef LVCreateTCRDecoderStream( LVStreamRef stream );
 
 /// returns path part of pathname (appended with / or \ delimiter)
-lString16 LVExtractPath( lString16 pathName );
+lString16 LVExtractPath( lString16 pathName, bool appendEmptyPath=true );
 /// removes first path part from pathname and returns it
 lString16 LVExtractFirstPathElement( lString16 & pathName );
 /// removes last path part from pathname and returns it
@@ -750,8 +785,8 @@ lString16 LVCombinePaths( lString16 basePath, lString16 newPath );
 bool LVSplitArcName( lString16 fullPathName, lString16 & arcPathName, lString16 & arcItemPathName );
 
 /// returns true if specified file exists
-bool LVFileExists( lString16 pathName );
+bool LVFileExists( const lString16 & pathName );
 /// returns true if specified directory exists
-bool LVDirectoryExists( lString16 pathName );
+bool LVDirectoryExists( const lString16 & pathName );
 
 #endif // __LVSTREAM_H_INCLUDED__

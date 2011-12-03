@@ -644,7 +644,7 @@ public:
 		// WIN32
 		__int64 offset = size - 1;
         lUInt32 pos_low = (lUInt32)((__int64)offset & 0xFFFFFFFF);
-        long pos_high = (long)(((__int64)offset >> 32) & 0xFFFFFFFF);
+        LONG pos_high = (long)(((__int64)offset >> 32) & 0xFFFFFFFF);
 		pos_low = SetFilePointer(m_hFile, pos_low, &pos_high, FILE_BEGIN );
         if (pos_low == 0xFFFFFFFF) {
             lUInt32 err = GetLastError();
@@ -736,13 +736,13 @@ public:
 		}
 		// check size
         lUInt32 hw=0;
-        m_size = GetFileSize( m_hFile, &hw );
+        m_size = GetFileSize( m_hFile, (LPDWORD)&hw );
 #if LVLONG_FILE_SUPPORT
         if (hw)
             m_size |= (((lvsize_t)hw)<<32);
 #endif
 
-        if ( minSize>=0 && mode == LVOM_APPEND && m_size < minSize ) {
+        if ( mode == LVOM_APPEND && m_size < minSize ) {
             if ( SetSize( minSize ) != LVERR_OK ) {
                 CRLog::error( "Cannot set file size for %s", fn8.c_str() );
                 return error();
@@ -760,7 +760,7 @@ public:
 		// LINUX IMPLEMENTATION
         m_fd = -1;
 
-        int flags = (mode==LVOM_READ) ? O_RDONLY : O_RDWR | O_CREAT | O_SYNC;
+        int flags = (mode==LVOM_READ) ? O_RDONLY : O_RDWR | O_CREAT; // | O_SYNC
         m_fd = open( fn8.c_str(), flags, (mode_t)0666);
         if (m_fd == -1) {
             CRLog::error( "Error opening file %s for %s, errno=%d, msg=%s", fn8.c_str(), (mode==LVOM_READ) ? "reading" : "read/write",  (int)errno, strerror(errno) );
@@ -886,6 +886,7 @@ public:
         lvsize_t sz = fwrite( buf, 1, count, m_file );
         if (nBytesWritten)
             *nBytesWritten = sz;
+        handleAutoSync(sz);
         if (sz < count)
         {
             return LVERR_FAIL;
@@ -979,12 +980,17 @@ public:
     virtual lverror_t Flush( bool sync )
     {
 #ifdef _WIN32
-		if ( m_hFile==INVALID_HANDLE_VALUE || !FlushFileBuffers( m_hFile ) )
+        if ( m_hFile==INVALID_HANDLE_VALUE || !FlushFileBuffers( m_hFile ) )
             return LVERR_FAIL;
 #else
         if ( m_fd==-1 )
             return LVERR_FAIL;
-        fsync( m_fd );
+        if ( sync ) {
+//            CRTimerUtil timer;
+//            CRLog::trace("calling fsync");
+            fsync( m_fd );
+//            CRLog::trace("fsync took %d ms", (int)timer.elapsed());
+        }
 #endif
         return LVERR_OK;
     }
@@ -1009,7 +1015,7 @@ public:
 			return LVERR_FAIL; // EOF
 
         lUInt32 dwBytesRead = 0;
-        if (ReadFile( m_hFile, buf, (lUInt32)count, &dwBytesRead, NULL )) {
+        if (ReadFile( m_hFile, buf, (lUInt32)count, (LPDWORD)&dwBytesRead, NULL )) {
             if (nBytesRead)
                 *nBytesRead = dwBytesRead;
             m_pos += dwBytesRead;
@@ -1097,13 +1103,14 @@ public:
             return LVERR_FAIL;
         //
         lUInt32 dwBytesWritten = 0;
-        if (WriteFile( m_hFile, buf, (lUInt32)count, &dwBytesWritten, NULL )) {
+        if (WriteFile( m_hFile, buf, (lUInt32)count, (LPDWORD)&dwBytesWritten, NULL )) {
             if (nBytesWritten)
                 *nBytesWritten = dwBytesWritten;
             m_pos += dwBytesWritten;
             if ( m_size < m_pos )
                 m_size = m_pos;
-	        return LVERR_OK;
+            handleAutoSync(dwBytesWritten);
+            return LVERR_OK;
         }
         if (nBytesWritten)
             *nBytesWritten = 0;
@@ -1119,6 +1126,7 @@ public:
             m_pos += res;
             if ( m_size < m_pos )
                 m_size = m_pos;
+            handleAutoSync(res);
             return LVERR_OK;
         }
         if (nBytesWritten)
@@ -1133,7 +1141,7 @@ public:
         if (m_hFile == INVALID_HANDLE_VALUE)
             return LVERR_FAIL;
         lUInt32 pos_low = (lUInt32)((__int64)offset & 0xFFFFFFFF);
-        long pos_high = (long)(((__int64)offset >> 32) & 0xFFFFFFFF);
+        LONG pos_high = (LONG)(((__int64)offset >> 32) & 0xFFFFFFFF);
         lUInt32 m=0;
         switch (origin) {
         case LVSEEK_SET:
@@ -1267,7 +1275,7 @@ public:
         // set file size and position
         m_mode = (lvopen_mode_t)mode;
         lUInt32 hw=0;
-        m_size = GetFileSize( m_hFile, &hw );
+        m_size = GetFileSize( m_hFile, (LPDWORD)&hw );
 #if LVLONG_FILE_SUPPORT
         if (hw)
             m_size |= (((lvsize_t)hw)<<32);
@@ -1283,12 +1291,13 @@ public:
 #else
         m_fd = -1;
 
-        int flags = (mode==LVOM_READ) ? O_RDONLY : O_RDWR | O_CREAT | (use_sync ? O_SYNC : 0);
+        int flags = (mode==LVOM_READ) ? O_RDONLY : O_RDWR | O_CREAT | (use_sync ? O_SYNC : 0) | (mode==LVOM_WRITE ? O_TRUNC : 0);
         lString8 fn8 = UnicodeToUtf8(fname);
         m_fd = open( fn8.c_str(), flags, (mode_t)0666);
         if (m_fd == -1) {
 #ifndef ANDROID
-            CRLog::error( "Error opening file %s for %s, errno=%d, msg=%s", fn8.c_str(), (mode==LVOM_READ) ? "reading" : "read/write",  (int)errno, strerror(errno) );
+            CRLog::error( "Error opening file %s for %s", fn8.c_str(), (mode==LVOM_READ) ? "reading" : "read/write" );
+            //CRLog::error( "Error opening file %s for %s, errno=%d, msg=%s", fn8.c_str(), (mode==LVOM_READ) ? "reading" : "read/write",  (int)errno, strerror(errno) );
 #endif
             return LVERR_FAIL;
         }
@@ -1750,7 +1759,7 @@ private:
         //if ( m_stream->SetPos( item->start )==(lvpos_t)(~0) )
         if ( m_stream->SetPos( item->start )!=(lvpos_t)item->start )
             return false;
-
+        int streamSize=m_stream->GetSize(); int bytesLeft = m_stream->GetSize() - m_stream->GetPos();
         lvsize_t bytesRead = 0;
         if ( m_stream->Read( item->buf, item->size, &bytesRead )!=LVERR_OK || bytesRead!=item->size )
             return false;
@@ -2070,8 +2079,10 @@ struct ZipHd2
 };
 #pragma pack(pop)
 
-#define ARC_INBUF_SIZE  8192
-#define ARC_OUTBUF_SIZE 16384
+//#define ARC_INBUF_SIZE  4096
+//#define ARC_OUTBUF_SIZE 16384
+#define ARC_INBUF_SIZE  5000
+#define ARC_OUTBUF_SIZE 10000
 
 #if (USE_ZLIB==1)
 
@@ -2161,8 +2172,10 @@ private:
             else
             {
                 //check CRC
-                if ( m_CRC != m_originalCRC )
+                if ( m_CRC != m_originalCRC ) {
+                    CRLog::error("ZIP stream '%s': CRC doesn't match", LCSTR(lString16(GetName())) );
                     return -1; // CRC error
+                }
             }
         }
         return m_zstream.avail_in;
@@ -2179,6 +2192,7 @@ private:
         // inbuf
         m_inbytesleft = m_packsize;
         m_zstream.next_in = m_inbuf;
+        m_zstream.avail_in = 0;
         fillInBuf();
         // outbuf
         m_zstream.next_out = m_outbuf;
@@ -2286,18 +2300,20 @@ private:
                 return bytesRead;
             }
 
-            if (avail >= bytesToRead)
-                avail = bytesToRead;
+            int delta = avail;
+            if (delta > bytesToRead)
+                delta = bytesToRead;
+
 
             // copy data
             lUInt8 * src = m_outbuf + m_decodedpos;
-            for (int i=avail; i>0; --i)
+            for (int i=delta; i>0; --i)
                 *buf++ = *src++;
 
-            m_decodedpos += avail;
-            m_outbytesleft -= avail;
-            bytesRead += avail;
-            bytesToRead -= avail;
+            m_decodedpos += delta;
+            m_outbytesleft -= delta;
+            bytesRead += delta;
+            bytesToRead -= delta;
         }
         return bytesRead;
     }
@@ -2375,6 +2391,7 @@ public:
         }
         if (bytesRead)
             *bytesRead = (lvsize_t)readBytes;
+        //CRLog::trace("%d bytes requested, %d bytes read, %d bytes left", count, readBytes, m_outbytesleft);
         return LVERR_OK;
     }
     virtual lverror_t SetSize(lvsize_t)
@@ -2460,7 +2477,8 @@ public:
             stream->SetName(m_list[found_index]->GetName());
             // Use buffering?
             //return stream;
-            return LVCreateBufferedStream( stream, ZIP_STREAM_BUFFER_SIZE );
+            return stream;
+            //return LVCreateBufferedStream( stream, ZIP_STREAM_BUFFER_SIZE );
         }
         return stream;
     }
@@ -2594,16 +2612,22 @@ public:
                 break; //(GETARC_EOF);
             }
 
-            const int NM = 513;
+            //const int NM = 513;
+            const int NM = 4096;
+            if ( ZipHeader.NameLen>NM ) {
+                CRLog::error("ZIP entry name length is too big: %d", (int)ZipHeader.NameLen);
+                return 0;
+            }
             lUInt32 SizeToRead=(ZipHeader.NameLen<NM) ? ZipHeader.NameLen : NM;
-            char fnbuf[1025];
+            char fnbuf[NM+1];
             m_stream->Read( fnbuf, SizeToRead, &ReadSize);
 
             if (ReadSize!=SizeToRead) {
+                CRLog::error("error while reading zip entry name");
                 return 0;
             }
 
-            fnbuf[ZipHeader.NameLen]=0;
+            fnbuf[SizeToRead]=0;
 
             long SeekLen=ZipHeader.AddLen+ZipHeader.CommLen;
 
@@ -2626,6 +2650,14 @@ public:
 
             item->SetItemInfo(fName.c_str(), ZipHeader.UnpSize, (ZipHeader.getAttr() & 0x3f));
             item->SetSrc( ZipHeader.getOffset(), ZipHeader.PackSize, ZipHeader.Method );
+
+//#define DUMP_ZIP_HEADERS
+#ifdef DUMP_ZIP_HEADERS
+            CRLog::trace("ZIP entry '%s' unpSz=%d, pSz=%d, m=%x, offs=%x, zAttr=%x, flg=%x", LCSTR(fName), (int)ZipHeader.UnpSize, (int)ZipHeader.PackSize, (int)ZipHeader.Method, (int)ZipHeader.getOffset(), (int)ZipHeader.getZIPAttr(), (int)ZipHeader.getAttr());
+            //, addL=%d, commL=%d, dn=%d
+            //, (int)ZipHeader.AddLen, (int)ZipHeader.CommLen, (int)ZipHeader.DiskNum
+#endif
+
             m_list.add(item);
         }
         int sz2 = m_list.length();
@@ -3391,7 +3423,16 @@ public:
 		}
 		return LVERR_OK;
 	}
-	virtual lverror_t GetSize( lvsize_t * pSize )
+    virtual lvsize_t  GetSize()
+    {
+        if (!m_pBuffer)
+            return (lvsize_t)(-1);
+        if (m_size<m_pos)
+            m_size = m_pos;
+        return m_size;
+    }
+
+    virtual lverror_t GetSize( lvsize_t * pSize )
 	{
 		if (!m_pBuffer || !pSize)
 			return LVERR_FAIL;
@@ -3411,7 +3452,7 @@ public:
 			return LVERR_FAIL; // cannot resize foreign buffer
 		//
 		int newbufsize = (int)(new_size * 2 + 4096);
-		m_pBuffer = (lUInt8*) realloc( m_pBuffer, newbufsize );
+        m_pBuffer = cr_realloc( m_pBuffer, newbufsize );
 		m_bufsize = newbufsize;
 		return LVERR_OK;
 	}
@@ -3639,14 +3680,24 @@ lvsize_t LVPumpStream( LVStreamRef out, LVStreamRef in )
 
 lvsize_t LVPumpStream( LVStream * out, LVStream * in )
 {
-    char buf[4096];
+    char buf[5000];
     lvsize_t totalBytesRead = 0;
     lvsize_t bytesRead = 0;
     in->SetPos(0);
-    while ( in->Read( buf, 4096, &bytesRead )==LVERR_OK && bytesRead>0 )
+    lvsize_t bytesToRead = in->GetSize();
+    while ( bytesToRead>0 )
     {
+        unsigned blockSize = 5000;
+        if (blockSize > bytesToRead)
+            blockSize = bytesToRead;
+        bytesRead = 0;
+        if ( in->Read( buf, blockSize, &bytesRead )!=LVERR_OK )
+            break;
+        if ( !bytesRead )
+            break;
         out->Write( buf, bytesRead, NULL );
         totalBytesRead += bytesRead;
+        bytesToRead -= bytesRead;
     }
     return totalBytesRead;
 }
@@ -3734,7 +3785,7 @@ class LVTCRStream : public LVNamedStream
                 _decoded[_decodedLen++] = item->str[j];
             if ( _decodedLen >= _decodedSize - 256 ) {
                 _decodedSize += TCR_READ_BUF_SIZE / 2;
-                _decoded = (lUInt8*)realloc( _decoded, _decodedSize );
+                _decoded = cr_realloc( _decoded, _decodedSize );
             }
         }
         _decodedStart = _index[index];
@@ -3811,7 +3862,7 @@ public:
         if ( stream->Read(buf, 9, &bytesRead)!=LVERR_OK
             || bytesRead!=9 )
             return res;
-        if ( memcmp(signature, buf, 9) )
+        if (memcmp(signature, buf, 9) != 0)
             return res;
         LVTCRStream * decoder = new LVTCRStream( stream );
         if ( !decoder->init() ) {
@@ -3986,7 +4037,7 @@ LVStreamRef LVCreateTCRDecoderStream( LVStreamRef stream )
 }
 
 /// returns path part of pathname (appended with / or \ delimiter)
-lString16 LVExtractPath( lString16 pathName )
+lString16 LVExtractPath( lString16 pathName, bool appendEmptyPath )
 {
     int last_delim_pos = -1;
     for ( unsigned i=0; i<pathName.length(); i++ )
@@ -3994,9 +4045,9 @@ lString16 LVExtractPath( lString16 pathName )
             last_delim_pos = i;
     if ( last_delim_pos==-1 )
 #ifdef _LINUX
-        return lString16(L"./");
+        return lString16(appendEmptyPath ? L"./" : L"");
 #else
-        return lString16(L".\\");
+        return lString16(appendEmptyPath ? L".\\" : L"");
 #endif
     return pathName.substr( 0, last_delim_pos+1 );
 }
@@ -4209,7 +4260,7 @@ void LVRemovePathDelimiter( lString16 & pathName )
 
 
 /// returns true if specified file exists
-bool LVFileExists( lString16 pathName )
+bool LVFileExists( const lString16 & pathName )
 {
 #ifdef _WIN32
 	LVStreamRef stream = LVOpenFileStream( pathName.c_str(), LVOM_READ );
@@ -4225,7 +4276,7 @@ bool LVFileExists( lString16 pathName )
 }
 
 /// returns true if specified directory exists
-bool LVDirectoryExists( lString16 pathName )
+bool LVDirectoryExists( const lString16 & pathName )
 {
 	// TODO: optimize
     LVContainerRef dir = LVOpenDirectory( pathName.c_str() );
@@ -4332,6 +4383,8 @@ class LVBlockWriteStream : public LVNamedStream
                 CRLog::error("buffer allocation failed");
             }
             memset(buf, 0, size);
+//            modified_start = 0;
+//            modified_end = size;
         }
         ~Block()
         {
@@ -4343,18 +4396,18 @@ class LVBlockWriteStream : public LVNamedStream
 #if TRACE_BLOCK_WRITE_STREAM
             CRLog::trace("block %x save %x, %x", (int)block_start, (int)pos, (int)len);
 #endif
-            lvpos_t offset = (int)(pos - block_start);
-            if ( offset>(lvpos_t)size || offset<0 || len > (lvpos_t)size || offset+len > (lvpos_t)size ) {
+            int offset = (int)(pos - block_start);
+            if ( offset>size || (int)offset < 0 || len > size || (int)offset + (int)len > size ) {
                 CRLog::error("Unaligned access to block %x", (int)block_start);
             }
             for ( unsigned i=0; i<len; i++ ) {
                 lUInt8 ch1 = buf[offset+i];
-                lUInt8 ch2 = ptr[i];
-                if ( pos+i>block_end || ch1!=ch2 ) {
+                if ( pos+i>block_end || ch1!=ptr[i] ) {
                     buf[offset+i] = ptr[i];
-                    if ( modified_start==(lvpos_t)-1 )
-                        modified_start = modified_end = pos + i;
-                    else {
+                    if ( modified_start==(lvpos_t)-1 ) {
+                        modified_start = pos + i;
+                        modified_end = modified_start + 1;
+                    } else {
                         if ( modified_start>pos+i )
                             modified_start = pos+i;
                         if ( modified_end<pos+i+1)
@@ -4376,6 +4429,13 @@ class LVBlockWriteStream : public LVNamedStream
     // list of blocks
     Block * _firstBlock;
     int _count;
+
+    /// set write bytes limit to call flush(true) automatically after writing of each sz bytes
+    void setAutoSyncSize(lvsize_t sz) {
+        _baseStream->setAutoSyncSize(sz);
+        handleAutoSync(0);
+    }
+
 
     /// fills block with data existing in file
     lverror_t readBlock( Block * block )
@@ -4413,10 +4473,13 @@ class LVBlockWriteStream : public LVNamedStream
             CRLog::trace("WRITE BLOCK %x (%x, %x)", (int)block->block_start, (int)block->modified_start, (int)(block->modified_end-block->modified_start));
 #endif
             _baseStream->SetPos( block->modified_start );
+            if (block->modified_end > _size) {
+                block->modified_end = block->block_end;
+            }
             lvpos_t bytesWritten = 0;
             lverror_t res = _baseStream->Write( block->buf + (block->modified_start-block->block_start), block->modified_end-block->modified_start, &bytesWritten );
             if ( res==LVERR_OK ) {
-                if ( _size<block->modified_end )
+                if (_size < block->modified_end)
                     _size = block->modified_end;
             }
             block->modified_end = block->modified_start = (lvpos_t)-1;
@@ -4527,8 +4590,12 @@ class LVBlockWriteStream : public LVNamedStream
 
 
 public:
+    virtual lverror_t Flush( bool sync ) {
+        CRTimerUtil infinite;
+        return Flush(sync, infinite);
+    }
     /// flushes unsaved data from buffers to file, with optional flush of OS buffers
-    virtual lverror_t Flush( bool sync )
+    virtual lverror_t Flush( bool sync, CRTimerUtil & timeout )
     {
 #if TRACE_BLOCK_WRITE_STREAM
         CRLog::trace("flushing unsaved blocks");
@@ -4540,6 +4607,12 @@ public:
                 res = LVERR_FAIL;
             p = p->next;
             delete tmp;
+            if (!sync && timeout.expired()) {
+                //CRLog::trace("LVBlockWriteStream::flush - timeout expired");
+                _firstBlock = p;
+                return LVERR_OK;
+            }
+
         }
         _firstBlock = NULL;
         _baseStream->Flush( sync );
@@ -4729,3 +4802,7 @@ LVStreamRef LVCreateBlockWriteStream( LVStreamRef baseStream, int blockSize, int
         return baseStream;
     return LVStreamRef( new LVBlockWriteStream(baseStream, blockSize, blockCount) );
 }
+
+
+
+

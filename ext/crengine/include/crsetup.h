@@ -22,7 +22,9 @@
 #endif
 #define USE_DOM_UTF8_STORAGE                 1
 #define CR_USE_THREADS                       0
+#ifndef MAX_IMAGE_SCALE_MUL
 #define MAX_IMAGE_SCALE_MUL                  2
+#endif
 #define USE_ZLIB                             1
 #define COLOR_BACKBUFFER                     0
 #define USE_ANSI_FILES                       1
@@ -83,11 +85,12 @@
 #define COLOR_BACKBUFFER                     1
 #endif
 #define GRAY_INVERSE						 0
+#ifndef MAX_IMAGE_SCALE_MUL
 #define MAX_IMAGE_SCALE_MUL                  1
-#if defined(CYGWIN) || (USE_WIN32_FONTS==1)
+#endif
+// SumatraPDF: default to not using FreeType for Win32
+#ifndef USE_FREETYPE
 #define USE_FREETYPE                         0
-#else
-#define USE_FREETYPE                         1
 #endif
 #define USE_UNRAR                            0
 #define ALLOW_KERNING                        1
@@ -236,7 +239,7 @@
 
 /// maximum picture zoom (1, 2, 3)
 #ifndef MAX_IMAGE_SCALE_MUL
-#define MAX_IMAGE_SCALE_MUL 1
+#define MAX_IMAGE_SCALE_MUL 2
 #endif
 
 // max unpacked size of skin image to hold in cache unpacked
@@ -267,6 +270,16 @@
 #define DOCUMENT_CACHING_SIZE_THRESHOLD 0x100000 // 1Mb
 #endif
 
+#ifndef ENABLE_ANTIWORD
+#define ENABLE_ANTIWORD 1
+#endif
 
+#ifndef ARBITRARY_IMAGE_SCALE_ENABLED
+#define ARBITRARY_IMAGE_SCALE_ENABLED 1
+#endif
+
+#ifndef MAX_IMAGE_SCALE_MUL
+#define MAX_IMAGE_SCALE_MUL 2
+#endif
 
 #endif//CRSETUP_H_INCLUDED

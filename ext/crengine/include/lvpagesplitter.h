@@ -22,6 +22,13 @@
 #include "lvstring.h"
 #include "lvhashtable.h"
 
+#ifndef RENDER_PROGRESS_INTERVAL_MILLIS
+#define RENDER_PROGRESS_INTERVAL_MILLIS 1200
+#endif
+#ifndef RENDER_PROGRESS_INTERVAL_PERCENT
+#define RENDER_PROGRESS_INTERVAL_PERCENT 2
+#endif
+
 /// &7 values
 #define RN_SPLIT_AUTO   0
 #define RN_SPLIT_AVOID  1
@@ -76,7 +83,7 @@ template <typename T, int RESIZE_MULT, int RESIZE_ADD> class CompactArray
         {
             if ( _size<=_length ) {
                 _size = _size*RESIZE_MULT + RESIZE_ADD;
-                _list = (T*)realloc( _list, sizeof(T)*_size );
+                _list = cr_realloc( _list, _size );
             }
             _list[_length++] = item;
         }
@@ -86,7 +93,7 @@ template <typename T, int RESIZE_MULT, int RESIZE_ADD> class CompactArray
                 return;
             if ( _size<_length+count ) {
                 _size = _length+count;
-                _list = (T*)realloc( _list, sizeof(T)*_size );
+                _list = cr_realloc( _list, _size );
             }
             for ( int i=0; i<count; i++ )
                 _list[_length+i] = items[i];
@@ -98,7 +105,7 @@ template <typename T, int RESIZE_MULT, int RESIZE_ADD> class CompactArray
                 return;
             if ( _size<_length+count ) {
                 _size = _length+count;
-                _list = (T*)realloc( _list, sizeof(T)*_size );
+                _list = cr_realloc( _list, _size );
             }
         }
         void clear()
@@ -313,9 +320,9 @@ class LVRendPageContext
     LVDocViewCallback * callback;
     int totalFinalBlocks;
     int renderedFinalBlocks;
-    time_t lastSentProgress;
     int lastPercent;
-    
+    CRTimerUtil progressTimeout;
+
 
     // page start line
     //LVRendLineInfoBase pagestart;
@@ -350,7 +357,7 @@ public:
 
     void setCallback(LVDocViewCallback * cb, int _totalFinalBlocks) {
         callback = cb; totalFinalBlocks=_totalFinalBlocks;
-        lastSentProgress = 0;
+        progressTimeout.restart(RENDER_PROGRESS_INTERVAL_MILLIS);
     }
     bool updateRenderProgress( int numFinalBlocksRendered );
 

@@ -38,7 +38,8 @@ int renderTable( LVRendPageContext & context, ldomNode * element, int x, int y, 
 void setNodeStyle( ldomNode * node, css_style_ref_t parent_style, LVFontRef parent_font );
 
 /// draws formatted document to drawing buffer
-void DrawDocument( LVDrawBuf & drawbuf, ldomNode * node, int x0, int y0, int dx, int dy, int doc_x, int doc_y, int page_height, ldomMarkedRangeList * marks );
+void DrawDocument( LVDrawBuf & drawbuf, ldomNode * node, int x0, int y0, int dx, int dy, int doc_x, int doc_y, int page_height, ldomMarkedRangeList * marks,
+                   ldomMarkedRangeList * bookmarks = NULL);
 
 #define STYLE_FONT_EMBOLD_MODE_NORMAL 0
 #define STYLE_FONT_EMBOLD_MODE_EMBOLD 300

@@ -224,7 +224,14 @@ void CRIconSkin::draw( LVDrawBuf & buf, const lvRect & rc )
         LVImageSourceRef img = LVCreateStretchFilledTransform( _image,
             rc2.width(), rc2.height(), _hTransform, _vTransform, _splitPoint.x, _splitPoint.y );
         LVDrawStateSaver saver(buf);
-        buf.SetClipRect(&rc);
+		lvRect oldClip;
+		buf.GetClipRect(&oldClip);
+		if (oldClip.isEmpty())
+			buf.SetClipRect(&rc);
+		else if (oldClip.intersect(rc))
+			buf.SetClipRect(&oldClip);
+		else
+			return;
         buf.Draw( img, rc2.left, rc2.top, rc2.width(), rc2.height(), false );
     }
 }
@@ -267,6 +274,7 @@ protected:
     LVCacheMap<lString16,CRWindowSkinRef> _windowCache;
     LVCacheMap<lString16,CRMenuSkinRef> _menuCache;
     LVCacheMap<lString16,CRPageSkinRef> _pageCache;
+    LVCacheMap<lString16,CRToolBarSkinRef> _toolbarCache;
     CRPageSkinListRef _pageSkinList;
 public:
     /// returns scroll skin by path or #id
@@ -281,6 +289,8 @@ public:
     virtual CRPageSkinRef getPageSkin( const lChar16 * path );
     /// returns book page skin list
     virtual CRPageSkinListRef getPageSkinList();
+    /// return ToolBar skin by path or #id
+	virtual CRToolBarSkinRef getToolBarSkin( const lChar16 * path );
     /// get DOM path by id
     virtual lString16 pathById( const lChar16 * id );
     /// gets image from container
@@ -293,7 +303,7 @@ public:
         _imageCache.clear();
     }
     /// constructor does nothing
-    CRSkinImpl()  : _imageCache(8), _rectCache(8), _scrollCache(1), _windowCache(8), _menuCache(8), _pageCache(8) { }
+    CRSkinImpl()  : _imageCache(8), _rectCache(8), _scrollCache(1), _windowCache(8), _menuCache(8), _pageCache(8), _toolbarCache(2) { }
     virtual ~CRSkinImpl(){ }
     // open from container
     virtual bool open( LVContainerRef container );
@@ -701,7 +711,7 @@ lvPoint CRSkinContainer::readSize( const lChar16 * path, const lChar16 * attrnam
     bool b1=false;
     bool b2=false;
     p.x = toSkinPercent( s1, defValue.x, &b1 );
-    p.y = toSkinPercent( s2, defValue.x, &b2 );
+    p.y = toSkinPercent( s2, defValue.y, &b2 );
     if ( b1 && b2 ) {
         if ( res )
             *res = true;
@@ -1051,7 +1061,18 @@ void CRButtonSkin::drawButton( LVDrawBuf & buf, const lvRect & rect, int flags )
 {
     lvRect rc = rect;
     rc.shrinkBy( _margins );
+    LVImageSourceRef btnImage = getImage(flags);
+    if ( !btnImage.isNull() ) {
+        LVImageSourceRef img = LVCreateStretchFilledTransform( btnImage,
+            rc.width(), rc.height() );
+        buf.Draw( btnImage, rc.left, rc.top, rc.width(), rc.height(), false );
+    }
+}
+
+LVImageSourceRef CRButtonSkin::getImage(int flags)
+{
     LVImageSourceRef btnImage;
+
     if ( flags & ENABLED ) {
         if ( flags & PRESSED )
             btnImage = _pressedimage;
@@ -1063,11 +1084,7 @@ void CRButtonSkin::drawButton( LVDrawBuf & buf, const lvRect & rect, int flags )
         btnImage = _disabledimage;
     if ( btnImage.isNull() )
         btnImage = _normalimage;
-    if ( !btnImage.isNull() ) {
-        LVImageSourceRef img = LVCreateStretchFilledTransform( btnImage,
-            rc.width(), rc.height() );
-        buf.Draw( btnImage, rc.left, rc.top, rc.width(), rc.height(), false );
-    }
+	return btnImage;
 }
 
 void CRScrollSkin::drawScroll( LVDrawBuf & buf, const lvRect & rect, bool vertical, int pos, int maxpos, int pagesize )
@@ -1259,6 +1276,60 @@ void CRScrollSkin::drawGauge( LVDrawBuf & buf, const lvRect & rect, int percent 
     }
 }
 
+void CRToolBarSkin::drawToolBar( LVDrawBuf & buf, const lvRect & rect, bool enabled, int selectedButton )
+{
+	draw(buf, rect);
+    lvRect rc = rect;
+    rc.shrinkBy( _margins );
+    int width = 0;
+	for ( int i=0; i<_buttons->length(); i++ ) {
+		int flags = enabled ? CRButtonSkin::ENABLED : 0;
+		if (i == selectedButton && enabled)
+			flags |= CRButtonSkin::SELECTED;
+		LVRef<CRButtonSkin> button = _buttons->get(i);
+		if (!button.isNull()) {
+			width += button->getMinSize().x;
+			int h = button->getMinSize().y;
+			if (h > rc.height())
+				return;
+		}
+	}
+	if (width > rc.width())
+		return; // That's all for now
+	int offsetX = 0;
+	if (getHAlign() == SKIN_HALIGN_RIGHT)
+		offsetX = rc.width() - width;
+	else if (getHAlign() == SKIN_HALIGN_CENTER ) 
+		offsetX = rc.width() - width/2;
+	int h = rc.height();
+    for ( int i=0; i<_buttons->length(); i++ ) {
+		lvRect rc2 = rc;
+		int flags = enabled ? CRButtonSkin::ENABLED : 0;
+		if (i == selectedButton && enabled)
+			flags |= CRButtonSkin::SELECTED;
+		LVRef<CRButtonSkin> button = _buttons->get(i);
+		if (!button.isNull()) {
+			LVImageSourceRef img = button->getImage(flags);
+			rc2.left += offsetX;
+			rc2.right = rc2.left + button->getMinSize().x;
+			if ( getVAlign()==SKIN_VALIGN_BOTTOM )
+				rc2.top = rc2.bottom - button->getMinSize().y;
+			else if ( getVAlign()==SKIN_VALIGN_CENTER ) {
+				int imgh = button->getMinSize().y;
+				rc2.top += (h - imgh/2);
+				rc2.bottom = rc2.top + imgh;
+			} else
+				rc2.bottom = rc2.top + button->getMinSize().y;
+			button->drawButton( buf, rc2, flags );
+			offsetX = rc2.right - rc.left;
+		}
+	}
+}
+
+void CRToolBarSkin::drawButton(LVDrawBuf & buf, const lvRect & rc, int index, int flags)
+{
+	
+}
 
 CRRectSkin::CRRectSkin()
 : _margins( 0, 0, 0, 0 )
@@ -1618,7 +1689,7 @@ bool CRSkinContainer::readPageSkin(  const lChar16 * path, CRPageSkin * res )
     if ( !name.empty() )
         res->setName(name);
 
-    flg = readRectSkin( (p + L"scroll-skin").c_str(),  res->getSkin( PAGE_SKIN_SCROLL ).get() ) || res;
+    flg = readRectSkin( (p + L"scroll-skin").c_str(),  res->getSkin( PAGE_SKIN_SCROLL ).get() ) || flg;
     flg = readRectSkin( (p + L"left-page-skin").c_str(),  res->getSkin( PAGE_SKIN_LEFT_PAGE ).get() ) || flg;
     flg = readRectSkin( (p + L"right-page-skin").c_str(),  res->getSkin( PAGE_SKIN_RIGHT_PAGE ).get() ) || flg;
     flg = readRectSkin( (p + L"single-page-skin").c_str(),  res->getSkin( PAGE_SKIN_SINGLE_PAGE ).get() ) || flg;
@@ -1780,6 +1851,64 @@ bool CRSkinContainer::readMenuSkin(  const lChar16 * path, CRMenuSkin * res )
     return flg;
 }
 
+CRButtonListRef CRSkinContainer::readButtons( const lChar16 * path, bool * res )
+{
+    CRButtonListRef list = CRButtonListRef(new CRButtonList() );
+    for ( int i=1; i<64; i++ ) {
+        lString16 p = lString16(path) + L"[" + lString16::itoa(i) + L"]";
+        CRButtonSkin * button = new CRButtonSkin();
+        if ( readButtonSkin(p.c_str(), button ) )
+            list->add( LVRef<CRButtonSkin>(button) );
+        else {
+            delete button;
+            break;
+        }
+    }
+    if ( list->length()==0 ) {
+#ifdef TRACE_SKIN_ERRORS
+        crtrace log;
+        log << "CRSkinContainer::readButtons( " << path << ") - cannot read button from specified path";
+#endif
+		if ( res )
+			*res = false;
+        return CRButtonListRef();
+    }
+    if ( res )
+        *res = true;
+    return list;	
+}
+
+bool CRSkinContainer::readToolBarSkin(  const lChar16 * path, CRToolBarSkin * res )
+{
+    bool flg = false;
+    lString16 base = getBasePath( path );
+    RecursionLimit limit;
+    if ( !base.empty() && limit.test() ) {
+        // read base skin first
+        flg = readToolBarSkin( base.c_str(), res ) || flg;
+    }
+
+    lString16 p( path );
+    ldomXPointer ptr = getXPointer( path );
+    if ( !ptr ) {
+#ifdef TRACE_SKIN_ERRORS
+        crtrace log;
+        log << "ToolBar skin by path " << p << " was not found";
+#endif
+        return false;
+    }
+    flg = readRectSkin( path, res ) || flg;
+
+    lString16 buttonspath = p + L"/button";
+    bool buttonsFlag = false;
+    CRButtonListRef buttons = readButtons( buttonspath.c_str(), &buttonsFlag);
+    if ( buttonsFlag ) {
+        res->setButtons( buttons );
+        flg = true;
+    }
+	return flg;
+}
+
 lString16 CRSkinImpl::pathById( const lChar16 * id )
 {
     ldomNode * elem = _doc->getElementById( id );
@@ -1894,6 +2023,22 @@ CRMenuSkinRef CRSkinImpl::getMenuSkin( const lChar16 * path )
     res = CRMenuSkinRef( new CRMenuSkin() );
     readMenuSkin( p.c_str(), res.get() );
     _menuCache.set( lString16(path), res );
+    return res;
+}
+
+CRToolBarSkinRef CRSkinImpl::getToolBarSkin( const lChar16 * path )
+{
+    lString16 p(path);
+    CRToolBarSkinRef res;
+    if ( _toolbarCache.get( p, res ) )
+        return res; // found in cache
+    if ( *path == '#' ) {
+        // find by id
+        p = pathById( path+1 );
+    }
+    res = CRToolBarSkinRef( new CRToolBarSkin() );
+    readToolBarSkin( p.c_str(), res.get() );
+    _toolbarCache.set( lString16(path), res );
     return res;
 }
 

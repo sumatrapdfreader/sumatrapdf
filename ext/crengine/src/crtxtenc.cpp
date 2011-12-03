@@ -211,6 +211,49 @@ static const lChar16 __cp1252[128] = {
     0x00fc, 0x00fd, 0x00fe, 0x00ff,
 };
 
+static const lChar16 __cp1254[128] = {
+    /* 0x80 */
+    0x20ac, 0xfffd, 0x201a, 0x0192,
+    0x201e, 0x2026, 0x2020, 0x2021,
+    0x02c6, 0x2030, 0x0160, 0x2039,
+    0x0152, 0xfffd, 0xfffd, 0xfffd,
+    /* 0x90 */
+    0xfffd, 0x2018, 0x2019, 0x201c,
+    0x201d, 0x2022, 0x2013, 0x2014,
+    0x02dc, 0x2122, 0x0161, 0x203a,
+    0x0153, 0xfffd, 0xfffd, 0x0178,
+    /* 0xa0*/
+    0x00a0, 0x00a1, 0x00a2, 0x00a3,
+    0x00a4, 0x00a5, 0x00a6, 0x00a7,
+    0x00a8, 0x00a9, 0x00aa, 0x00ab,
+    0x00ac, 0x00ad, 0x00ae, 0x00af,
+    /* 0xb0*/
+    0x00b0, 0x00b1, 0x00b2, 0x00b3,
+    0x00b4, 0x00b5, 0x00b6, 0x00b7,
+    0x00b8, 0x00b9, 0x00ba, 0x00bb,
+    0x00bc, 0x00bd, 0x00be, 0x00bf,
+    /* 0xc0*/
+    0x00c0, 0x00c1, 0x00c2, 0x00c3,
+    0x00c4, 0x00c5, 0x00c6, 0x00c7,
+    0x00c8, 0x00c9, 0x00ca, 0x00cb,
+    0x00cc, 0x00cd, 0x00ce, 0x00cf,
+    /* 0xd0 */
+    0x011e, 0x00d1, 0x00d2, 0x00d3,
+    0x00d4, 0x00d5, 0x00d6, 0x00d7,
+    0x00d8, 0x00d9, 0x00da, 0x00db,
+    0x00dc, 0x0130, 0x015e, 0x00df,
+    /* 0xe0*/
+    0x00e0, 0x00e1, 0x00e2, 0x00e3,
+    0x00e4, 0x00e5, 0x00e6, 0x00e7,
+    0x00e8, 0x00e9, 0x00ea, 0x00eb,
+    0x00ec, 0x00ed, 0x00ee, 0x00ef,
+    /* 0xf0 */
+    0x011f, 0x00f1, 0x00f2, 0x00f3,
+    0x00f4, 0x00f5, 0x00f6, 0x00f7,
+    0x00f8, 0x00f9, 0x00fa, 0x00fb,
+    0x00fc, 0x0131, 0x015f, 0x00ff,
+};
+
 static const lChar16 __cp866[128] = {
     /* 0x80*/
     0x0410, 0x0411, 0x0412, 0x0413,
@@ -441,6 +484,7 @@ static const lChar16 __cp850[128] = {
 #define CRENC_ID_CP850   (CRENC_ID_8BIT_START+9)
 #define CRENC_ID_KOI8R   (CRENC_ID_8BIT_START+10)
 #define CRENC_ID_ISO8859_2 (CRENC_ID_8BIT_START+11)
+#define CRENC_ID_CP1254   (CRENC_ID_8BIT_START+12)
 
 
 /// add other encodings here
@@ -453,12 +497,21 @@ static struct {
     {"windows-1251", __cp1251, CRENC_ID_CP1251},
     {"windows-1252", __cp1252, CRENC_ID_CP1252},
     {"windows-1253", __cp1253, CRENC_ID_CP1253},
+    {"windows-1254", __cp1254, CRENC_ID_CP1254},
     {"windows-1257", __cp1257, CRENC_ID_CP1257},
     {"cp775", __cp775, CRENC_ID_CP775},
     {"cp737", __cp737, CRENC_ID_CP737},
     {"cp1250", __cp1250, CRENC_ID_CP1250},
     {"cp1251", __cp1251, CRENC_ID_CP1251},
+    {"cp1254", __cp1254, CRENC_ID_CP1254},
+    {"iso-8859-5", __cp1251, CRENC_ID_CP1251},
+    {"iso_8859-5", __cp1251, CRENC_ID_CP1251},
+    {"iso8859-5", __cp1251, CRENC_ID_CP1251},
     {"cp1252", __cp1252, CRENC_ID_CP1252},
+    {"iso-8859-1", __cp1252, CRENC_ID_CP1252},
+    {"iso_8859-1", __cp1252, CRENC_ID_CP1252},
+    {"iso8859-1", __cp1252, CRENC_ID_CP1252},
+    {"latin-1", __cp1252, CRENC_ID_CP1252},
     {"cp1253", __cp1253, CRENC_ID_CP1253},
     {"cp1257", __cp1257, CRENC_ID_CP1257},
     {"cp866", __cp866, CRENC_ID_CP866},
@@ -468,6 +521,7 @@ static struct {
     {"koi-8r", __koi8r, CRENC_ID_KOI8R},
     {"koi8r", __koi8r, CRENC_ID_KOI8R},
     {"iso8859-2", __iso8859_2, CRENC_ID_ISO8859_2},
+    {"iso-8859-2", __iso8859_2, CRENC_ID_ISO8859_2},
     {"iso8859_2", __iso8859_2, CRENC_ID_ISO8859_2},
     {"latin-2", __iso8859_2, CRENC_ID_ISO8859_2},
     {"latin-5", __iso8859_2, CRENC_ID_ISO8859_2},
@@ -1476,7 +1530,7 @@ typedef struct {
 // EXTERNAL DEFINE
 extern cp_stat_t cp_stat_table[];
 
-int AutodetectCodePage( const unsigned char * buf, int buf_size, char * cp_name, char * lang_name )
+int AutodetectCodePageUtf( const unsigned char * buf, int buf_size, char * cp_name, char * lang_name )
 {
     // checking byte order signatures
     if ( buf[0]==0xEF && buf[1]==0xBB && buf[2]==0xBF ) {
@@ -1505,6 +1559,14 @@ int AutodetectCodePage( const unsigned char * buf, int buf_size, char * cp_name,
         strcpy( lang_name, "en" );
         return 1;
     }
+   return 0;
+}
+
+int AutodetectCodePage( const unsigned char * buf, int buf_size, char * cp_name, char * lang_name )
+{
+    int res = AutodetectCodePageUtf( buf, buf_size, cp_name, lang_name );
+    if ( res )
+        return res;
     // use character statistics
    short char_stat[256];
    dbl_char_stat_t dbl_char_stat[DBL_CHAR_STAT_SIZE];
@@ -1528,6 +1590,7 @@ int AutodetectCodePage( const unsigned char * buf, int buf_size, char * cp_name,
    }
    strcpy(cp_name, cp_stat_table[bestn].cp_name);
    strcpy(lang_name, cp_stat_table[bestn].lang_name);
+   CRLog::debug("Detected codepage:%s lang:%s", cp_name, lang_name);
    return 1;
 }
 void MakeStatsForFile( const char * fname, const char * cp_name, const char * lang_name, int index, FILE * f, lString8 & list )
@@ -1568,6 +1631,6 @@ void MakeStatsForFile( const char * fname, const char * cp_name, const char * la
    sprintf(str, "{ch_stat_%s_%s%d,dbl_ch_stat_%s_%s%d,\"%s\",\"%s\"}, \n", cp_name, lang_name, index, cp_name, lang_name, index, cp_name, lang_name );
    list += str;
    fprintf(f, "};\n\n" );
-   delete buf;
+   delete [] buf;
    fclose(in);
 }

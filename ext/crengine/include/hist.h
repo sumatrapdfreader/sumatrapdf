@@ -33,8 +33,24 @@ private:
     lString16 _titletext;
     lString16 _commenttext;
     time_t    _timestamp;
+    int       _page;
 public:
 	static lString16 getChapterName( ldomXPointer p );
+
+    // fake bookmark for range
+    CRBookmark(lString16 startPos,lString16 endPos)
+                : _startpos(startPos)
+    , _endpos(endPos)
+    , _percent(0)
+    , _type(0)
+        , _shortcut(0)
+    , _postext(lString16())
+    , _titletext(lString16())
+    , _commenttext(lString16())
+    , _timestamp(time_t(0))
+    ,_page(0)
+    {
+    }
     CRBookmark(const CRBookmark & v )
     : _startpos(v._startpos)
     , _endpos(v._endpos)
@@ -45,6 +61,7 @@ public:
     , _titletext(v._titletext)
     , _commenttext(v._commenttext)
     , _timestamp(v._timestamp)
+    , _page(v._page)
     {
     }
     CRBookmark & operator = (const CRBookmark & v )
@@ -58,9 +75,10 @@ public:
         _titletext = v._titletext;
         _commenttext = v._commenttext;
         _timestamp = v._timestamp;
+        _page = v._page;
         return *this;
     }
-    CRBookmark() : _percent(0), _type(0), _shortcut(0), _timestamp(0) { }
+    CRBookmark() : _percent(0), _type(0), _shortcut(0), _timestamp(0), _page(0) { }
     CRBookmark ( ldomXPointer ptr );
     lString16 getStartPos() { return _startpos; }
     lString16 getEndPos() { return _endpos; }
@@ -80,6 +98,8 @@ public:
 	void setShortcut( int n ) { _shortcut = n; }
     void setPercent( int n ) { _percent = n; }
     void setTimestamp( time_t t ) { _timestamp = t; }
+    void setBookmarkPage( int page ) { _page = page; }
+    int getBookmarkPage() { return _page; }
 };
 
 class CRFileHistRecord {

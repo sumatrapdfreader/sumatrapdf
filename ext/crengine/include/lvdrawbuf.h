@@ -59,6 +59,8 @@ public:
     virtual void GetClipRect( lvRect * clipRect ) = 0;
     /// sets clip rect
     virtual void SetClipRect( const lvRect * clipRect ) = 0;
+    /// set to true for drawing in Paged mode, false for Scroll mode
+    virtual void setHidePartialGlyphs( bool hide ) = 0;
     /// invert image
     virtual void  Invert() = 0;
     /// get buffer width, pixels
@@ -110,6 +112,8 @@ public:
     }
     /// fills rectangle with pattern
     virtual void FillRectPattern( int x0, int y0, int x1, int y1, lUInt32 color0, lUInt32 color1, lUInt8 * pattern ) = 0;
+    /// inverts image in specified rectangle
+    virtual void InvertRect(int x0, int y0, int x1, int y1) = 0;
     /// sets new size
     virtual void Resize( int dx, int dy ) = 0;
     /// draws bitmap (1 byte per pixel) using specified palette
@@ -150,7 +154,9 @@ protected:
     unsigned char * _data;
     lUInt32 _backgroundColor;
     lUInt32 _textColor;
+    bool _hidePartialGlyphs;
 public:
+    virtual void setHidePartialGlyphs( bool hide ) { _hidePartialGlyphs = hide; }
     /// returns current background color
     virtual lUInt32 GetBackgroundColor() { return _backgroundColor; }
     /// sets current background color
@@ -179,7 +185,7 @@ public:
     /// draws formatted text
     //virtual void DrawFormattedText( formatted_text_fragment_t * text, int x, int y );
     
-    LVBaseDrawBuf() : _dx(0), _dy(0), _rowsize(0), _data(NULL) { }
+    LVBaseDrawBuf() : _dx(0), _dy(0), _rowsize(0), _data(NULL), _hidePartialGlyphs(true) { }
     virtual ~LVBaseDrawBuf() { }
 };
 
@@ -265,6 +271,8 @@ public:
     virtual lUInt32 GetPixel( int x, int y );
     /// fills rectangle with specified color
     virtual void FillRect( int x0, int y0, int x1, int y1, lUInt32 color );
+    /// inverts image in specified rectangle
+    virtual void InvertRect( int x0, int y0, int x1, int y1 );
     /// fills rectangle with pattern
     virtual void FillRectPattern( int x0, int y0, int x1, int y1, lUInt32 color0, lUInt32 color1, lUInt8 * pattern );
     /// sets new size
@@ -329,6 +337,8 @@ public:
     virtual void FillRect( int x0, int y0, int x1, int y1, lUInt32 color );
     /// fills rectangle with pattern
     virtual void FillRectPattern( int x0, int y0, int x1, int y1, lUInt32 color0, lUInt32 color1, lUInt8 * pattern );
+    /// inverts specified rectangle
+	virtual void InvertRect( int x0, int y0, int x1, int y1 );
     /// sets new size
     virtual void Resize( int dx, int dy );
     /// draws image

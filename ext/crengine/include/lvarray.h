@@ -181,13 +181,22 @@ public:
         _count += count;
     }
 
-    /// adds new item to end of vector
+    /// adds new items to end of vector
     void add( const LVArray & list )
     {
         reserve( _count + list._count );
         for (int i=0; i<list._count; i++)
             _array[ _count+i ] = list._array[i];
         _count += list._count;
+    }
+
+    /// adds new items to end of vector
+    void add( const T * list, int count )
+    {
+        reserve( _count + count );
+        for (int i=0; i<count; i++)
+            _array[ _count+i ] = list[i];
+        _count += count;
     }
 
     T * addSpace( int count )

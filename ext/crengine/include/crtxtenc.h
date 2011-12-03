@@ -14,6 +14,8 @@
 #define __CRTXTENC_H_INCLUDED__
 
 #include "lvtypes.h"
+#include <stdio.h>
+#include "lvstring.h"
 
 
 enum char_encoding_type {
@@ -69,6 +71,17 @@ int langToCodepage( int lang );
     \return non-zero on success
 */
 int AutodetectCodePage( const unsigned char * buf, int buf_size, char * cp_name, char * lang_name );
+/**
+    \brief Autodetects encoding of text data in buffer, only using ByteOrderMark or Utf-8 validity detection.
+
+    \param buf is buffer with text data to autodetect
+    \param buf_size is size of data in buffer, bytes
+    \param cp_name is buffer to store autodetected name of encoding, i.e. "utf-8", "windows-1251"
+    \param lang_name is buffer to store autodetected name of language, i.e. "en", "ru"
+
+    \return non-zero on success
+*/
+int AutodetectCodePageUtf( const unsigned char * buf, int buf_size, char * cp_name, char * lang_name );
 
 /**
     \brief checks whether data buffer is valid utf-8 stream
@@ -80,6 +93,7 @@ int AutodetectCodePage( const unsigned char * buf, int buf_size, char * cp_name,
 */
 bool isValidUtf8Data( const unsigned char * buf, int buf_size );
 
+void MakeStatsForFile( const char * fname, const char * cp_name, const char * lang_name, int index, FILE * f, lString8 & list );
 
 
 #endif
