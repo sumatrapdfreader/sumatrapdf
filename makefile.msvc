@@ -59,7 +59,8 @@ CFLAGS = $(CFLAGS) /wd4800
 SUMATRA_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/Isrc/utils /Isrc/utils/msvc /I$(MUPDF_DIR)\fitz /I$(MUPDF_DIR)\pdf \
 	/I$(MUPDF_DIR)\xps /Isrc /I$(EXTDIR)/synctex /I$(ZLIB_DIR) \
-	/I$(ZLIB_DIR)/minizip /I$(EXTDIR)/libdjvu /I$(EXTDIR)/CHMLib/src
+	/I$(ZLIB_DIR)/minizip /I$(EXTDIR)/libdjvu /I$(EXTDIR)/CHMLib/src \
+	/I$(EXTDIR)/crengine/include
 
 INSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/Isrc/utils /Isrc/utils/msvc /Isrc /Isrc/installer /I$(ZLIB_DIR) /I$(ZLIB_DIR)/minizip
@@ -111,7 +112,8 @@ UTILS_OBJS = \
 
 ENGINE_OBJS = \
 	$(OS)\PdfEngine.obj $(OS)\ImagesEngine.obj $(OS)\PsEngine.obj \
-	$(OS)\DjVuEngine.obj $(DJVU_OBJS) $(OS)\ChmEngine.obj $(CHMLIB_OBJS)
+	$(OS)\DjVuEngine.obj $(DJVU_OBJS) $(OS)\ChmEngine.obj $(CHMLIB_OBJS) \
+	$(OS)\EpubEngine.obj $(CRENGINE_OBJS)
 
 SUMATRA_OBJS = \
 	$(OS)\AppPrefs.obj $(OS)\DisplayModel.obj $(OS)\CrashHandler.obj \
@@ -125,7 +127,7 @@ SUMATRA_OBJS = \
 	$(OS)\Search.obj $(OS)\Menu.obj $(OS)\ExternalPdfViewer.obj \
 	$(OS)\Selection.obj $(OS)\ZipUtil.obj $(SUMATRA_RES) \
 	$(UTILS_OBJS) $(BZIP2_OBJS) $(MINIZIP_OBJS) $(UNRAR_OBJS) \
-	$(SYNCTEX_OBJS) $(ENGINE_OBJS) $(CRENGINE_OBJS)
+	$(SYNCTEX_OBJS) $(ENGINE_OBJS)
  
 # disable incomplete Ribbon support in release builds (unless BUILD_RIBBON is defined)
 !if "$(CFG)"=="dbg"
