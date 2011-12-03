@@ -191,7 +191,14 @@ pdf_load_image_imp(fz_pixmap **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict, 
 		}
 	}
 
-	samples = fz_calloc(h, stride);
+	/* SumatraPDF: don't crash on OOM */
+	samples = fz_calloc_no_abort(h, stride);
+	if (!samples)
+	{
+		fz_close(stm);
+		fz_drop_pixmap(tile);
+		return fz_throw("out of memory");
+	}
 
 	len = fz_read(stm, samples, h * stride);
 	if (len < 0)

@@ -31,8 +31,9 @@ static DWORDLONG fz_get_memory_limit()
 }
 #endif
 
-fz_pixmap *
-fz_new_pixmap_with_data(fz_colorspace *colorspace, int w, int h, unsigned char *samples)
+/* SumatraPDF: allow memory allocation to fail */
+static fz_pixmap *
+fz_new_pixmap_with_data2(fz_colorspace *colorspace, int w, int h, unsigned char *samples, int abort_on_oom)
 {
 	fz_pixmap *pix;
 
@@ -65,10 +66,20 @@ fz_new_pixmap_with_data(fz_colorspace *colorspace, int w, int h, unsigned char *
 	{
 		/* SumatraPDF: abort on integer overflow */
 		if (pix->w > INT_MAX / pix->n) fz_calloc(-1, -1);
+		/* SumatraPDF: allow memory allocation to fail */
+		pix->samples = fz_calloc_no_abort(pix->h, pix->w * pix->n);
+		if (!pix->samples && abort_on_oom)
+			pix->samples = fz_calloc(pix->h, pix->w * pix->n);
+		else if (!pix->samples)
+		{
+			if (pix->colorspace)
+				fz_drop_colorspace(pix->colorspace);
+			fz_free(pix);
+			return NULL;
+		}
 		fz_synchronize_begin();
 		fz_memory_used += pix->w * pix->h * pix->n;
 		fz_synchronize_end();
-		pix->samples = fz_calloc(pix->h, pix->w * pix->n);
 		pix->free_samples = 1;
 	}
 
@@ -86,7 +97,13 @@ fz_new_pixmap_with_limit(fz_colorspace *colorspace, int w, int h)
 			(int)(fz_memory_used/(1<<20)), (int)(size/(1<<20)), (int)(fz_get_memory_limit()/(1<<20)));
 		return NULL;
 	}
-	return fz_new_pixmap_with_data(colorspace, w, h, NULL);
+	return fz_new_pixmap_with_data2(colorspace, w, h, NULL, 0);
+}
+
+fz_pixmap *
+fz_new_pixmap_with_data(fz_colorspace *colorspace, int w, int h, unsigned char *samples)
+{
+	return fz_new_pixmap_with_data2(colorspace, w, h, samples, 1);
 }
 
 fz_pixmap *
