@@ -41,11 +41,14 @@ pdf_load_outline_imp(pdf_xref *xref, fz_obj *dict)
 	if (fz_dict_gets(dict, "Dest") || fz_dict_gets(dict, "A"))
 	{
 		link = pdf_load_link(xref, dict);
+		if (link) /* SumatraPDF: don't crash if it's no link after all */
+		{
 		if (link->kind == PDF_LINK_GOTO)
 			node->page = pdf_find_page_number(xref, fz_array_get(link->dest, 0));
 		/* SumatraPDF: extended outline actions */
 		node->data = link;
 		node->free_data = pdf_free_link;
+		}
 	}
 
 	obj = fz_dict_gets(dict, "First");
