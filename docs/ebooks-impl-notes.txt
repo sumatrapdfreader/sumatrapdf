@@ -1,0 +1,136 @@
+# Thoughts on implementing ebook support.
+
+There are quite a few ebook formats: mobi, epub, fb2, plucker, oeb etc.
+It's best to start with just one, mobi being the best candidate (it's
+the format used by Kindle).
+
+There most important part is the quality of text rendering. Kindle for PC
+does it best, FBReader does it well, CoolReader is bad.
+
+Another important part is the UI. I will try to replicate Kindle's UI as
+they did it best. It's simple, elegant and provides all the necessary
+features.
+
+In order to not be bogged down by current Sumatra design, I'll start it
+as a new, test app. I want to experiment with UI a bit.
+
+There are 3 important parts:
+* prototyping the UI effects
+* parsing mobi file format
+* text formatting and display (can be prototyped on text files as mobi
+  is mostly text with few formatting capabilities and occasional images).
+
+Those part are mostly independent and can be worked on in parallel.
+
+Existing code to looked at:
+* https://github.com/geometer/FBReader
+* https://github.com/Prezu/MobiReader
+* https://github.com/thijs/iliad-hacking
+* CoolReader
+
+I'll probably lift the mobi format reading from FBReader or MobiReader.
+Initially I considered CoolReader, but it's the ugliest code. MobiReader
+seems to be the least complicated although FBReader is most promising
+long term, since they support the most formats (they even have CHM
+implementation that could be used in place of chmlib).
+
+I'm tempted to experiment with skia for UI rendering. Recreating some
+of the Kindle effects requires composited 2d rendering with partial
+transparency. Gdi+ does some of this stuff but I believe skia has more
+built-in functionality (that I would otherwise have to implement with
+Gdi+).
+
+# Brainstorming on how to do text layout (ideas might end up crap in
+practice).
+
+A text run is a string with associated font formatting. From looking at what
+Kindle displays, we only need basic formatting:
+* bold
+* italic
+* non-default font
+
+Book is rendered into pages. A page is a rectangle on the screen.
+Layout process determines position and bounding box of text runs on a page.
+
+We need to re-layout every time the size of a page changes or when user
+changes the size of default font. Kindle does reformating in real time
+and so should we.
+
+Layout can be done in two steps.
+
+First steps pre-processes text from the standard "foo bar." form into
+a form that makes the layout faster. That form pre-computes the length
+of text runs and stores them consequtively in memory as length-prefixed
+strings i.e. "\3foo\4bar." (\3 and \4 indicate number 3 and 4 embedded
+inside string). This breaks the text into word-size chunks where "word"
+in this context means "string that won't be split up across lines" and
+implies at least one space between them.
+
+We also need to encode formatting information. Formatting is indicated
+by formatting codes that optionally procede a text run. We'll reserve the
+upper range (255;255-$n) where $n is the number of formatting codes (so
+that they can be distinguished from the length of a text run).
+Formatting codes can nest (e.g. if italic is after bold, the text run
+ir both bold and italic). Second appearance of the control code cancels
+it. E.g. a text with the following html formatting 
+"<b>bold, <i>ita</i>lic</b>."
+would be encoded as:
+"\200\5bold,\201\3ita\201lic\200\1." (assuming \200 is code for bold
+and \201 for italic).
+Note: this scheme needs re-working as it looses info about words. We need
+to preserve that.
+Note 2: to accommodate possibility that a string length would overlap
+with formatting code, 255-$n-1 will be "length externder" code and will
+e.g. mean that the real length follows as 4-byte integer. This should be
+rare.
+
+We need formatting codes for:
+* bold, italic
+* change font
+* list indentation (i.e. html's <ul>, <li> elements)
+* center on the line
+* end page
+* image
+
+Once calculated this information is read-only and safe to access from
+multiple threads.
+
+Layout process traverses this from the beginning, keeping track of
+current formatting, which is a stack, and calculating
+position and bboxes of strings. We can put that info into an array
+of:
+struct TextRunLayoutInfo {
+  int x,y;
+  Rect bbox;
+};
+where position in the array implicitly corresponds to the position
+of the text inside the optimized string.
+
+Layout is the simple "justify both" layout i.e. we accumulate the sizes
+of the strings plus the size of a space between them and if total
+size of the current line exceeds width of the page we redistribute the
+remaining space at right equally between words (unless it's the paragraph
+end, in which case it's justify left). Hyphenation would be nice but
+Kindle doesn't do it, so we don't need it either.
+
+Layout info for each page is thus:
+struct Page {
+  Vec<TextRunLayoutInfo> runs;
+  const char *s; // points into pre-processed text with formatting info
+  const char *initialFormatting; // see below for explanation
+};
+
+Drawing process reads from s, keeping track of formatting in the same
+way as layout process, and draws the strings using position information.
+
+There's complication: information about a page should be self-contained
+but there could be carry-over formatting information from previous page.
+That's what initialFormatting is for: when layout process moves to
+another page, it looks at formatting stack and if it's not empty, it'll
+create the initialFormatting string with controld codes that will
+re-create that stack when drawing.
+
+This scheme can be thought of as a VM, where control codes are instructions
+to change formatting and text runs are instructions to draw strings using
+current formatting.
+
