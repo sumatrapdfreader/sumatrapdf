@@ -57,6 +57,7 @@ public:
 // a link destination
 class PageDestination {
 public:
+    virtual ~PageDestination() { }
     // type of the destination (see LinkHandler::GotoLink in WindowInfo.cpp for
     // the supported values; the most common values are "ScrollTo" and "LaunchURL")
     virtual const char *GetDestType() const = 0;

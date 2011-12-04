@@ -294,6 +294,11 @@ void LinkHandler::ScrollTo(PageDestination *dest)
     if (pageNo <= 0)
         return;
 
+    if (owner->dm->AsChmEngine()) {
+        owner->dm->AsChmEngine()->GoToDestination(dest);
+        return;
+    }
+
     DisplayModel *dm = owner->dm;
     PointI scroll(-1, 0);
     RectD rect = dest->GetDestRect();

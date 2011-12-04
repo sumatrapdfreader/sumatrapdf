@@ -32,25 +32,45 @@ public:
     size_t size;
 };
 
-class ChmTocItem : public DocTocItem {
+static bool IsExternalUrl(const TCHAR *url)
+{
+    return str::StartsWithI(url, _T("http://")) ||
+           str::StartsWithI(url, _T("https://")) ||
+           str::StartsWithI(url, _T("mailto:"));
+}
+
+class ChmTocItem : public DocTocItem, public PageDestination {
 public:
-    ChmTocItem(TCHAR *title, int pageNo) : DocTocItem(title, pageNo) { }
+    ScopedMem<TCHAR> url;
 
-    virtual PageDestination *GetLink() { return NULL; }
+    ChmTocItem(TCHAR *title, int pageNo, TCHAR *url) :
+        DocTocItem(title, pageNo), url(url) { }
+    ChmTocItem *Clone();
 
-    static ChmTocItem *Clone(DocTocItem *item);
+    virtual PageDestination *GetLink() { return this; }
+    virtual const char *GetDestType() const {
+        if (url && IsExternalUrl(url))
+            return "LaunchURL";
+        return "ScrollTo";
+    }
+    virtual int GetDestPageNo() const { return pageNo; }
+    virtual RectD GetDestRect() const { return RectD(); }
+    virtual TCHAR *GetDestValue() const {
+        if (url && IsExternalUrl(url))
+            return str::Dup(url);
+        return NULL;
+    }
 };
 
-ChmTocItem *ChmTocItem::Clone(DocTocItem *item)
+ChmTocItem *ChmTocItem::Clone()
 {
-    if (!item)
-        return NULL;
-
-    ChmTocItem *res = new ChmTocItem(str::Dup(item->title), item->pageNo);
-    res->open = item->open;
-    res->id = item->id;
-    res->child = Clone(item->child);
-    res->next = Clone(item->next);
+    ChmTocItem *res = new ChmTocItem(str::Dup(title), pageNo, url ? str::Dup(url) : NULL);
+    res->open = open;
+    res->id = id;
+    if (child)
+        res->child = static_cast<ChmTocItem *>(child)->Clone();
+    if (next)
+        res->next = static_cast<ChmTocItem *>(next)->Clone();
     return res;
 }
 
@@ -139,15 +159,17 @@ public:
 
     virtual bool BenchLoadPage(int pageNo) { return true; }
 
+    virtual PageDestination *GetNamedDest(const TCHAR *name);
     virtual bool HasTocTree() const { return tocRoot != NULL; }
     // Callers delete the ToC tree, so we return a copy
     // (probably faster than re-creating it from html every time)
-    virtual DocTocItem *GetTocTree() { return ChmTocItem::Clone(tocRoot); }
+    virtual DocTocItem *GetTocTree() { return tocRoot ? tocRoot->Clone() : NULL; }
 
     virtual void SetParentHwnd(HWND hwnd);
     virtual void DisplayPage(int pageNo) { DisplayPage(pages.At(pageNo - 1)); }
     virtual void SetNavigationCalback(ChmNavigationCallback *cb) { navCb = cb; }
     virtual RenderedBitmap *CreateThumbnail(SizeI size);
+    virtual void GoToDestination(PageDestination *link);
 
     virtual void PrintCurrentPage() { if (htmlWindow) htmlWindow->PrintCurrentPage(); }
     virtual void FindInCurrentPage() { if (htmlWindow) htmlWindow->FindInCurrentPage(); }
@@ -203,6 +225,13 @@ Bytes *CChmEngine::FindDataForUrl(const TCHAR *url)
     return NULL;
 }
 
+static TCHAR *ToPlainUrl(const TCHAR *url)
+{
+    TCHAR *plainUrl = str::Dup(url);
+    str::TransChars(plainUrl, _T("#?"), _T("\0\0"));
+    return plainUrl;
+}
+
 // Called after html document has been loaded.
 // Sync the state of the ui with the page (show
 // the right page number, select the right item in toc tree)
@@ -210,7 +239,7 @@ void CChmEngine::OnDocumentComplete(const TCHAR *url)
 {
     if (*url == _T('/'))
         ++url;
-    int pageNo = pages.Find(url) + 1;
+    int pageNo = pages.Find(ScopedMem<TCHAR>(ToPlainUrl(url))) + 1;
     if (pageNo) {
         currentPageNo = pageNo;
         if (navCb)
@@ -244,13 +273,6 @@ void CChmEngine::SetParentHwnd(HWND hwnd)
     htmlWindow = new HtmlWindow(hwnd, this);
 }
 
-static bool IsExternalUrl(const TCHAR *url)
-{
-    return str::StartsWithI(url, _T("http://")) ||
-           str::StartsWithI(url, _T("https://")) ||
-           str::StartsWithI(url, _T("mailto:"));
-}
-
 void CChmEngine::DisplayPage(const TCHAR *pageUrl)
 {
     if (IsExternalUrl(pageUrl)) {
@@ -261,7 +283,7 @@ void CChmEngine::DisplayPage(const TCHAR *pageUrl)
         return;
     }
 
-    int pageNo = pages.Find(pageUrl) + 1;
+    int pageNo = pages.Find(ScopedMem<TCHAR>(ToPlainUrl(pageUrl))) + 1;
     if (pageNo)
         currentPageNo = pageNo;
 
@@ -312,6 +334,13 @@ RenderedBitmap *CChmEngine::CreateThumbnail(SizeI size)
 Exit:
     DestroyWindow(hwnd);
     return bmp;
+}
+
+void CChmEngine::GoToDestination(PageDestination *link)
+{
+    ChmTocItem *item = static_cast<ChmTocItem *>(link);
+    if (item && item->url)
+        DisplayPage(item->url);
 }
 
 bool CChmEngine::CanNavigate(int dir)
@@ -599,16 +628,17 @@ static UINT GetChmCodepage(const TCHAR *fileName)
 // We fake page numbers by doing a depth-first traversal of
 // toc tree and considering each unique html page in toc tree
 // as a page
-static int CreatePageNoForURL(StrVec& pages, ScopedMem<TCHAR>& url)
+static int CreatePageNoForURL(StrVec& pages, const TCHAR *url)
 {
-    if (!url)
+    if (!url || IsExternalUrl(url))
         return 0;
 
-    int pageNo = pages.Find(url);
-    if (pageNo != -1)
-        return pageNo + 1;
+    ScopedMem<TCHAR> plainUrl(ToPlainUrl(url));
+    int pageNo = pages.Find(plainUrl) + 1;
+    if (pageNo > 0)
+        return pageNo;
 
-    pages.Append(url.StealData());
+    pages.Append(plainUrl.StealData());
     return pages.Count();
 }
 
@@ -656,7 +686,8 @@ ChmTocItem *TocItemFromLi(StrVec& pages, HtmlElement *el, UINT cp)
     if (local && str::Find(local, _T("::/")))
         local.Set(str::Dup(str::Find(local, _T("::/")) + 3));
 
-    return new ChmTocItem(name.StealData(), CreatePageNoForURL(pages, local));
+    int pageNo = CreatePageNoForURL(pages, local);
+    return new ChmTocItem(name.StealData(), pageNo, local.StealData());
 }
 
 ChmTocItem *BuildChmToc(StrVec& pages, HtmlElement *list, UINT cp, int& idCounter, bool topLevel)
@@ -741,10 +772,7 @@ bool CChmEngine::Load(const TCHAR *fileName)
 // Load and cache data for a given url inside CHM file.
 bool CChmEngine::GetDataForUrl(const TCHAR *url, char **data, size_t *len)
 {
-    // remove query and hash from the url first
-    ScopedMem<TCHAR> plainUrl(str::Dup(url));
-    str::TransChars(plainUrl, _T("#?"), _T("\0\0"));
-
+    ScopedMem<TCHAR> plainUrl(ToPlainUrl(url));
     Bytes *b = FindDataForUrl(plainUrl);
     if (!b) {
         ChmCacheEntry *e = new ChmCacheEntry(plainUrl);
@@ -760,6 +788,15 @@ bool CChmEngine::GetDataForUrl(const TCHAR *url, char **data, size_t *len)
     *data = (char*)b->d;
     *len = b->size;
     return true;
+}
+
+PageDestination *CChmEngine::GetNamedDest(const TCHAR *name)
+{
+    ScopedMem<TCHAR> plainUrl(ToPlainUrl(name));
+    int pageNo = pages.Find(plainUrl) + 1;
+    if (pageNo > 0)
+        return new ChmTocItem(NULL, pageNo, str::Dup(name));
+    return NULL;
 }
 
 TCHAR *CChmEngine::GetProperty(char *name)

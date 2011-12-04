@@ -6,8 +6,6 @@
 
 #include "BaseEngine.h"
 
-class HtmlWindow;
-
 class ChmNavigationCallback {
 public:
     // tell the UI to show the pageNo as current page (which also syncs
@@ -28,6 +26,7 @@ public:
     virtual void DisplayPage(int pageNo) = 0;
     virtual void SetNavigationCalback(ChmNavigationCallback *cb) = 0;
     virtual RenderedBitmap *CreateThumbnail(SizeI size) = 0;
+    virtual void GoToDestination(PageDestination *link) = 0;
 
     virtual void PrintCurrentPage() = 0;
     virtual void FindInCurrentPage() = 0;
