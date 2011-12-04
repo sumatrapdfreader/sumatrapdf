@@ -479,7 +479,13 @@ pdf_repair_obj_stms(pdf_xref *xref)
 	{
 		if (xref->table[i].stm_ofs)
 		{
-			pdf_load_object(&dict, xref, i, 0);
+			/* SumatraPDF: always check error codes */
+			fz_error error = pdf_load_object(&dict, xref, i, 0);
+			if (error)
+			{
+				fz_catch(error, "this shouldn't have happened (%d 0 R)!", i);
+				continue;
+			}
 			if (!strcmp(fz_to_name(fz_dict_gets(dict, "Type")), "ObjStm"))
 				pdf_repair_obj_stm(xref, i, 0);
 			fz_drop_obj(dict);
