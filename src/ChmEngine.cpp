@@ -244,6 +244,12 @@ void CChmEngine::SetParentHwnd(HWND hwnd)
     htmlWindow = new HtmlWindow(hwnd, this);
 }
 
+static bool IsHttpUrl(const TCHAR *url)
+{
+    return str::StartsWithI(url, _T("http://")) ||
+           str::StartsWithI(url, _T("https://"));
+}
+
 void CChmEngine::DisplayPage(const TCHAR *pageUrl)
 {
     int pageNo = pages.Find(pageUrl) + 1;
@@ -263,8 +269,13 @@ void CChmEngine::DisplayPage(const TCHAR *pageUrl)
         pageUrl++;
 
     assert(htmlWindow);
-    if (htmlWindow)
+    if (!htmlWindow)
+        return;
+    if (IsHttpUrl(pageUrl)) {
+        htmlWindow->NavigateToUrl(pageUrl);
+    } else {
         htmlWindow->NavigateToDataUrl(pageUrl);
+    }
 }
 
 RenderedBitmap *CChmEngine::CreateThumbnail(SizeI size)

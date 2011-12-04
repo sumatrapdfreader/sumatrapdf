@@ -1334,17 +1334,7 @@ bool HtmlWindow::OnBeforeNavigate(const TCHAR *url, bool newWindow)
     bool ok = ParseProtoUrl(url, &protoWindowId, &urlReal);
     assert(!ok || protoWindowId == windowId);
     bool shouldNavigate = htmlWinCb->OnBeforeNavigate(urlReal, newWindow);
-    if (!shouldNavigate)
-        return false;
-    char *data = NULL;
-    size_t len = 0;
-    // we only ask for data to determine if we should cancel navigation.
-    // the data will actually be fetched from HW_IInternetProtocol::Start()
-    // TODO: not sure if that's necessary
-    bool gotHtmlData = htmlWinCb->GetDataForUrl(urlReal, &data, &len);
-    if (!gotHtmlData)
-        return false;
-    return true;
+    return shouldNavigate;
 }
 
 void HtmlWindow::OnDocumentComplete(const TCHAR *url)
