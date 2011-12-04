@@ -1273,21 +1273,6 @@ void HtmlWindow::SetHtml(const char *s, size_t len)
         return;
     ScopedComQIPtr<IMoniker> htmlMon(htmlContent);
     hr = perstMon->Load(TRUE, htmlMon, NULL, STGM_READ);
-    // IPersistMoniker::Load() might fail if HtmlMoniker::GetDisplayName()
-    // returns bad base url. Apparently anything that doesn't start
-    // with a protocol already known to IE (which unfortunately doesn't
-    // seem to include new protocols we register with
-    // IInternetSession::RegisterNameSpace()) is considered bad.
-    assert(!FAILED(hr));
-    if (FAILED(hr))
-    {
-        // Given that above we set base url (aka. display name) to a known
-        // protocol, we should never get here, but just in case we'll retry
-        // with a base url that should always be valid.
-        htmlContent->SetBaseUrl(_T("about:blank"));
-        hr = perstMon->Load(TRUE, htmlMon, NULL, STGM_READ);
-        assert(!FAILED(hr));
-    }
 }
 
 // Take a screenshot of a given <area> inside an html window and resize
@@ -1353,10 +1338,12 @@ bool HtmlWindow::OnBeforeNavigate(const TCHAR *url, bool newWindow)
         return false;
     char *data = NULL;
     size_t len = 0;
+    // we only ask for data to determine if we should cancel navigation.
+    // the data will actually be fetched from HW_IInternetProtocol::Start()
+    // TODO: not sure if that's necessary
     bool gotHtmlData = htmlWinCb->GetDataForUrl(urlReal, &data, &len);
     if (!gotHtmlData)
         return false;
-    SetHtml(data, len);
     return true;
 }
 
