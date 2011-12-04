@@ -244,14 +244,23 @@ void CChmEngine::SetParentHwnd(HWND hwnd)
     htmlWindow = new HtmlWindow(hwnd, this);
 }
 
-static bool IsHttpUrl(const TCHAR *url)
+static bool IsExternalUrl(const TCHAR *url)
 {
     return str::StartsWithI(url, _T("http://")) ||
-           str::StartsWithI(url, _T("https://"));
+           str::StartsWithI(url, _T("https://")) ||
+           str::StartsWithI(url, _T("mailto:"));
 }
 
 void CChmEngine::DisplayPage(const TCHAR *pageUrl)
 {
+    if (IsExternalUrl(pageUrl)) {
+        // open external links in an external browser
+        // (same as for PDF, XPS, etc. documents)
+        if (navCb)
+            navCb->LaunchBrowser(pageUrl);
+        return;
+    }
+
     int pageNo = pages.Find(pageUrl) + 1;
     if (pageNo)
         currentPageNo = pageNo;
@@ -269,13 +278,8 @@ void CChmEngine::DisplayPage(const TCHAR *pageUrl)
         pageUrl++;
 
     assert(htmlWindow);
-    if (!htmlWindow)
-        return;
-    if (IsHttpUrl(pageUrl)) {
-        htmlWindow->NavigateToUrl(pageUrl);
-    } else {
+    if (htmlWindow)
         htmlWindow->NavigateToDataUrl(pageUrl);
-    }
 }
 
 RenderedBitmap *CChmEngine::CreateThumbnail(SizeI size)
