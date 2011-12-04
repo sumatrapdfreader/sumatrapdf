@@ -273,12 +273,16 @@ void LinkHandler::GotoLink(PageDestination *link)
     else if (str::Eq(type, "LastPage"))
         dm->GoToLastPage();
     // Adobe Reader extensions to the spec, cf. http://www.tug.org/applications/hyperref/manual.html
+    else if (str::Eq(type, "Find"))
+        PostMessage(owner->hwndFrame, WM_COMMAND, IDM_FIND_FIRST, 0);
     else if (str::Eq(type, "FullScreen"))
         PostMessage(owner->hwndFrame, WM_COMMAND, IDM_VIEW_PRESENTATION_MODE, 0);
     else if (str::Eq(type, "GoBack"))
         dm->Navigate(-1);
     else if (str::Eq(type, "GoForward"))
         dm->Navigate(1);
+    else if (str::Eq(type, "GoToPage"))
+        PostMessage(owner->hwndFrame, WM_COMMAND, IDM_GOTO_PAGE, 0);
     else if (str::Eq(type, "Print"))
         PostMessage(owner->hwndFrame, WM_COMMAND, IDM_PRINT, 0);
     else if (str::Eq(type, "SaveAs"))
