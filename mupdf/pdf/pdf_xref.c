@@ -1052,6 +1052,12 @@ pdf_resolve_indirect(fz_obj *ref)
 				fz_catch(error, "cannot load object (%d %d R) into cache", num, gen);
 				return ref;
 			}
+			/* SumatraPDF: base_object.c can't handle multiple indirections */
+			if (fz_is_indirect(xref->table[num].obj))
+			{
+				fz_warn("ignoring unexpected double-indirection (%d %d R)", num, gen);
+				return ref;
+			}
 			if (xref->table[num].obj)
 				return xref->table[num].obj;
 		}
