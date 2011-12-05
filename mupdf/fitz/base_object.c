@@ -613,7 +613,7 @@ fz_dict_get_val(fz_obj *obj, int i)
 static int
 fz_dict_finds(fz_obj *obj, char *key, int *location)
 {
-	if (obj->u.d.sorted)
+	if (obj->u.d.sorted && obj->u.d.len > 0)
 	{
 		int l = 0;
 		int r = obj->u.d.len - 1;
@@ -734,7 +734,7 @@ fz_dict_put(fz_obj *obj, fz_obj *key, fz_obj *val)
 			fz_dict_grow(obj);
 
 		i = location;
-		if (obj->u.d.sorted)
+		if (obj->u.d.sorted && obj->u.d.len > 0)
 			memmove(&obj->u.d.items[i + 1],
 				&obj->u.d.items[i],
 				(obj->u.d.len - i) * sizeof(struct keyval));
@@ -789,8 +789,7 @@ fz_sort_dict(fz_obj *obj)
 	obj = fz_resolve_indirect(obj);
 	if (!fz_is_dict(obj))
 		return;
-	/* SumatraPDF: never sort empty dictionaries (could crash later on) */
-	if (!obj->u.d.sorted && obj->u.d.len > 0)
+	if (!obj->u.d.sorted)
 	{
 		qsort(obj->u.d.items, obj->u.d.len, sizeof(struct keyval), keyvalcmp);
 		obj->u.d.sorted = 1;

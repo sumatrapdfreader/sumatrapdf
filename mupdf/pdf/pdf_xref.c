@@ -991,7 +991,12 @@ pdf_cache_object(pdf_xref *xref, int num, int gen)
 			return fz_rethrow(error, "cannot parse object (%d %d R)", num, gen);
 
 		if (rnum != num)
+		{
+			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1728 */
+			fz_drop_obj(x->obj);
+			x->obj = NULL;
 			return fz_throw("found object (%d %d R) instead of (%d %d R)", rnum, rgen, num, gen);
+		}
 
 		if (xref->crypt)
 			pdf_crypt_obj(xref->crypt, x->obj, num, gen);
