@@ -259,6 +259,9 @@ Dvojstránky průběžně
 Contribute Translation
 Zaslat překlad
 
+Copy &Image
+Kopírovat &obrázek
+
 Copy &Link Address
 Kopírovat &adresu odkazu
 
@@ -669,7 +672,4 @@ kopírování textu
 
 printing document
 tisk dokumentu
-
-# Untranslated:
-#Copy &Image
 

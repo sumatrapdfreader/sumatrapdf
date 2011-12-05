@@ -261,6 +261,9 @@ Vue continue, page double
 Contribute Translation
 Contribuer à la traduction
 
+Copy &Image
+Copier l'&image
+
 Copy &Link Address
 Copier l'adresse du &lien
 
@@ -671,7 +674,4 @@ copie du texte
 
 printing document
 impression du document
-
-# Untranslated:
-#Copy &Image
 

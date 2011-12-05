@@ -258,6 +258,9 @@ Duas páginas contínua
 Contribute Translation
 Ajudar na tradução
 
+Copy &Image
+Copiar &imagem
+
 Copy &Link Address
 Copiar endereço da &ligação
 
@@ -668,7 +671,4 @@ cópia de texto
 
 printing document
 impressão de documento
-
-# Untranslated:
-#Copy &Image
 
