@@ -540,7 +540,6 @@ HMENU BuildMenu(WindowInfo *win)
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _T("Debug"));
 #endif
 
-    SetMenu(win->hwndFrame, mainMenu);
     return mainMenu;
 }
 

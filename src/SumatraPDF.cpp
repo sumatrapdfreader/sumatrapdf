@@ -684,6 +684,8 @@ static void RebuildMenuBarForWindow(WindowInfo *win)
     {
         HMENU oldMenu = win->menu;
         win->menu = BuildMenu(win);
+        if (!win->presentation && !win->fullScreen)
+            SetMenu(win->hwndFrame, win->menu);
         DestroyMenu(oldMenu);
     }
 }
@@ -1065,6 +1067,7 @@ static WindowInfo* CreateWindowInfo()
     {
         assert(!win->menu);
         win->menu = BuildMenu(win);
+        SetMenu(win->hwndFrame, win->menu);
     }
 
     ShowWindow(win->hwndCanvas, SW_SHOW);
