@@ -192,7 +192,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\installer\Installer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\installer\InstallOnly.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\installer\Resource.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\installer\UninstallOnly.cpp"
 				>
 			</File>
 		</Filter>
