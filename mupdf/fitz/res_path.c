@@ -136,6 +136,10 @@ fz_bound_path(fz_path *path, fz_stroke_state *stroke, fz_matrix ctm)
 	fz_rect r = fz_empty_rect;
 	int i = 0;
 
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1732 */
+	if (path->len == 0)
+		return fz_empty_rect;
+
 	if (path->len)
 	{
 		p.x = path->items[1].v;
