@@ -28,8 +28,8 @@ using namespace Gdiplus;
 
 #define ET_FRAME_CLASS_NAME    _T("ET_FRAME")
 
-#define WIN_DX    420
-#define WIN_DY    340
+#define WIN_DX    640
+#define WIN_DY    480
 
 static HINSTANCE        ghinst;
 static HWND             gHwndFrame = NULL;
@@ -41,6 +41,10 @@ Color gCol2(227, 107, 35); Color gCol2Shadow(155, 77, 31);
 Color gCol3(93,  160, 40); Color gCol3Shadow(51, 87, 39);
 Color gCol4(69, 132, 190); Color gCol4Shadow(47, 89, 127);
 Color gCol5(112, 115, 207); Color gCol5Shadow(66, 71, 118);
+
+//Color gColBg(0xff, 0xf2, 0); // this is yellow
+Color gColBg(0xe9, 0xe9, 0xe9); // this is darkish gray
+Color gColBgTop(0xfa, 0xfa, 0xfa); // this is lightish gray
 
 #define TEN_SECONDS_IN_MS 10*1000
 
@@ -321,8 +325,9 @@ static void DrawFrame2(Graphics &g, RectI r)
     Font f(L"Impact", 40, FontStyleRegular);
     CalcLettersLayout(g, &f, r.dx);
 
-    SolidBrush bgBrush(Color(0xff, 0xf2, 0));
+    //SolidBrush bgBrush(gColBg);
     Gdiplus::Rect r2(r.y - 1, r.x - 1, r.dx + 1, r.dy + 1);
+    LinearGradientBrush bgBrush(RectF(0, 0, (REAL)r.dx, (REAL)r.dy), Color(0xd0,0xd0,0xd0), Color(0xff,0xff,0xff), LinearGradientModeVertical);
     g.FillRectangle(&bgBrush, r2);
 
     Font f2(L"Impact", 16, FontStyleRegular);
