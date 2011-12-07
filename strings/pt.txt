@@ -139,7 +139,7 @@ Esq&uecer documento
 &Reduzir páginas à área de impressão (se necessário)
 
 &Single Page\tCtrl+6
-&Página única\tCtrl+6
+Uma &página\tCtrl+6
 
 &Skip this version
 Ignorar &esta versão
@@ -247,13 +247,13 @@ Comic books
 Livros Comic
 
 Continuous
-Página única contínua
+Uma página contínua
 
 Continuous Book View
-Livro contínuo
+Como livro contínuo
 
 Continuous Facing
-Duas páginas contínua
+Duas páginas contínuas
 
 Contribute Translation
 Ajudar na tradução
@@ -595,7 +595,7 @@ Show the &bookmarks sidebar when available
 &Mostrar barra de marcadores quando disponível
 
 Single Page
-Página única
+uma página
 
 Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 Isto não devia ter ocorrido!\n\nPrima "Cancelar", se nos quiser ajudar a corrigir a origem deste erro.

@@ -221,6 +221,9 @@ Bookmarks
 Bytes
 Байтове
 
+CHM documents
+CHM документи
+
 Can't connect to the Internet (error %#x).
 Няма връзка с Интернет (грешка %#x).
 
@@ -240,7 +243,7 @@ Check for &Updates
 Проверка за нова &версия
 
 Comic books
-Книжки с картинки
+CBR, CBZ документи (комикси)
 
 Continuous
 Непрекъснати страници
@@ -253,6 +256,9 @@ Continuous Facing
 
 Contribute Translation
 Допринеси за превода
+
+Copy &Image
+Копирай &изображението
 
 Copy &Link Address
 Копирай Интернет &адреса
@@ -337,6 +343,9 @@ Failed to save a file
 
 Favorites
 Любими
+
+File %s not found
+Файлът %s не е намерен
 
 File Size:
 Размер на файла:
@@ -513,7 +522,7 @@ Previous Page
 Предишна страница
 
 Print
-Отпечатване
+Отпечатай
 
 Print range
 Отпечатване на някои страници
@@ -564,7 +573,7 @@ Select content with Ctrl+left mouse button
 Изберете съдържание с Ctrl и левия бутон на мишката
 
 Send by &E-mail...
-Изпрати по &имейл
+Изпрати по &електронната поща
 
 Set inverse search command-line
 Въведи параметри за обратно търсене
@@ -615,7 +624,7 @@ Synchronization file cannot be opened
 Файлът за синхронизация не може да бъде отворен
 
 Text documents
-Текстов документ
+Текстови документи
 
 Title:
 Заглавие:
@@ -661,9 +670,4 @@ copying text
 
 printing document
 отпечатване на документ
-
-# Untranslated:
-#CHM documents
-#Copy &Image
-#File %s not found
 

@@ -171,13 +171,13 @@ Add Favorite
 Tambah Favorit
 
 Add page %s to favorites
-Tambah halaman %s ke favorit
+Tambah Halaman %s Ke favorit
 
 Add page %s to favorites with (optional) name:
-Tambah halaman %s ke favorit dengan nama:
+Tambah Halaman %s Ke Favorit Dengan Nama:
 
 Add to favorites
-Tambah ke favorit
+Tambah Ke Favorit
 
 Advanced
 Lanjutan
@@ -259,6 +259,9 @@ Dua Halaman Kontinu
 
 Contribute Translation
 Bantu Alihbahasa
+
+Copy &Image
+Salin &Gambar
 
 Copy &Link Address
 Salin Alamat &Link
@@ -543,10 +546,10 @@ Remember &opened files
 Ingat &berkas yang pernah dibuka
 
 Remove from favorites
-Hapus dari favorit
+Hapus Dari Favorit
 
 Remove page %s from favorites
-Hapus halaman %s dari favorit
+Hapus Halaman %s Dari Favorit
 
 Rotate &Left\tCtrl+Shift+-
 Putar Ke Kiri\tCtrl+Shift+-
@@ -670,7 +673,4 @@ menyalin teks
 
 printing document
 mencetak dokumen
-
-# Untranslated:
-#Copy &Image
 
