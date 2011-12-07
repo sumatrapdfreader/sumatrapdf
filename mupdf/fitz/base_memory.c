@@ -4,13 +4,7 @@
 static void
 fz_crash_abort(int total_size)
 {
-	char *p = (char *)total_size;
-	// first try to crash on an address that is equal to total_size.
-	// this is a way to easily know the amount memory that was requested
-	// from crash report
-	*p = 0;
-	// if that address was writeable, crash for sure writing to address 0
-	p = NULL;
+	char *p = NULL;
 	*p = 0;
 }
 
