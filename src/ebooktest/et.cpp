@@ -31,14 +31,8 @@ using namespace Gdiplus;
 #define WIN_DX    420
 #define WIN_DY    340
 
-#define ID_BUTTON_EXIT                11
-
-#define PUSH_BUTTON_DY  dpiAdjust(22)
-#define WINDOW_MARGIN   8
-
 static HINSTANCE        ghinst;
 static HWND             gHwndFrame = NULL;
-static HWND             gHwndButtonExit = NULL;
 
 static HFONT            gFontDefault;
 
@@ -47,7 +41,6 @@ Color gCol2(227, 107, 35); Color gCol2Shadow(155, 77, 31);
 Color gCol3(93,  160, 40); Color gCol3Shadow(51, 87, 39);
 Color gCol4(69, 132, 190); Color gCol4Shadow(47, 89, 127);
 Color gCol5(112, 115, 207); Color gCol5Shadow(66, 71, 118);
-
 
 #define TEN_SECONDS_IN_MS 10*1000
 
@@ -71,30 +64,8 @@ static void InvalidateFrame()
     ClientRect rc(gHwndFrame);
     InvalidateRect(gHwndFrame, &rc.ToRECT(), FALSE);
 }
-static HWND CreateDefaultButton(HWND hwndParent, const TCHAR *label, int width, int id=IDOK)
-{
-    RectI rc(0, 0, dpiAdjust(width), PUSH_BUTTON_DY);
 
-    // TODO: determine the sizes of buttons by measuring their real size
-    // and adjust size of the window appropriately
-    ClientRect r(hwndParent);
-    rc.x = r.dx - rc.dx - WINDOW_MARGIN;
-    rc.y = r.dy - rc.dy - WINDOW_MARGIN;
-    HWND button = CreateWindow(WC_BUTTON, label,
-                        BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
-                        rc.x, rc.y, rc.dx, rc.dy, hwndParent,
-                        (HMENU)id, ghinst, NULL);
-    SetWindowFont(button, gFontDefault, TRUE);
-
-    return button;
-}
-
-static void CreateButtonExit(HWND hwndParent)
-{
-    gHwndButtonExit = CreateDefaultButton(hwndParent, _T("Close"), 80, ID_BUTTON_EXIT);
-}
-
-static void OnButtonExit()
+static void OnExit()
 {
     SendMessage(gHwndFrame, WM_CLOSE, 0, 0);
 }
@@ -339,21 +310,6 @@ static void DrawSumatraLetters(Graphics &g, Font *f, Font *fVer, REAL y)
         g.RotateTransform(li->rotation, MatrixOrderAppend);
         g.ResetTransform();
     }
-
-    // draw version number
-    REAL x = gLetters[dimof(gLetters)-1].x;
-    g.TranslateTransform(x, y);
-    g.RotateTransform(45.f);
-    REAL x2 = 15; REAL y2 = -34;
-
-    ScopedMem<WCHAR> ver_s(str::conv::ToWStr(_T("v") CURR_VERSION_STR));
-#if DRAW_TEXT_SHADOW
-    SolidBrush b1(Color(0, 0, 0));
-    g.DrawString(ver_s, -1, fVer, Gdiplus::PointF(x2 - 2, y2 - 1), &b1);
-#endif
-    SolidBrush b2(Color(0xff, 0xff, 0xff));
-    g.DrawString(ver_s, -1, fVer, Gdiplus::PointF(x2, y2), &b2);
-    g.ResetTransform();
 }
 
 static void DrawFrame2(Graphics &g, RectI r)
@@ -377,12 +333,6 @@ static void DrawFrame(HWND hwnd, HDC dc, PAINTSTRUCT *ps)
 {
     RECT rc;
     GetClientRect(hwnd, &rc);
-    RECT rcTmp;
-    if (IntersectRect(&rcTmp, &rc, &ps->rcPaint)) {
-        HBRUSH brushNativeBg = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
-        FillRect(dc, &rc, brushNativeBg);
-        DeleteObject(brushNativeBg);
-    }
 
     // TODO: cache bmp object?
     Graphics g(dc);
@@ -401,9 +351,19 @@ static void OnPaintFrame(HWND hwnd)
     EndPaint(hwnd, &ps);
 }
 
+static void RestartAnimation()
+{
+    delete gRevealingLettersAnim;
+    RevealingLettersAnimStart();
+}
+
+static void OnLButtonDown()
+{
+    RestartAnimation();
+}
+
 static void OnCreateWindow(HWND hwnd)
 {
-    gHwndButtonExit = CreateDefaultButton(hwnd, _T("Exit"), 150);
 }
 
 static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -425,12 +385,15 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
             OnPaintFrame(hwnd);
             break;
 
+        case WM_LBUTTONDOWN:
+            OnLButtonDown();
+            break;
+
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
-                case ID_BUTTON_EXIT:
                 case IDCANCEL:
-                    OnButtonExit();
+                    OnExit();
                     break;
 
                 default:
