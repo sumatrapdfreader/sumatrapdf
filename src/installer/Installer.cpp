@@ -12,12 +12,6 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 
 #include "Installer.h"
 
-#ifndef BUILD_UNINSTALLER
-#include "InstallOnly.cpp"
-#else
-#include "UninstallOnly.cpp"
-#endif
-
 using namespace Gdiplus;
 
 // define to 1 to enable shadow effect, to 0 to disable

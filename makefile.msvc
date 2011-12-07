@@ -143,10 +143,10 @@ SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "BUILD_RIBBON"
 !endif
 
 INSTALLER_OBJS = \
-	$(OS)\Installer.obj $(INSTALLER_RES)
+	$(OS)\Installer.obj $(OS)\InstallOnly.obj $(INSTALLER_RES)
 
 UNINSTALLER_OBJS = \
-	$(OS)\Uninstaller.obj $(UNINSTALLER_RES)
+	$(OS)\Uninstaller.obj  $(OS)\UninstallOnly.obj $(UNINSTALLER_RES)
 
 ET_OBJS = \
 	$(OS)\et.obj $(ET_RES)
@@ -281,6 +281,8 @@ $(ENGINEDUMP_APP): $(ENGINEDUMP_OBJS)
 	$(CC) $(INSTALLER_CFLAGS) /Fo$(OS)\ /Fd$(O)\vc80.pdb $<
 $(OS)\Uninstaller.obj: $(OS)\Installer.obj
 	$(CC) $(UNINSTALLER_CFLAGS) /Fo$(OS)\Uninstaller.obj /Fd$(O)\vc80.pdb src\installer\Installer.cpp
+$(OS)\UninstallOnly.obj: src\installer\UninstallOnly.cpp
+	$(CC) $(UNINSTALLER_CFLAGS) /Fo$(OS)\UninstallOnly.obj /Fd$(O)\vc80.pdb src\installer\UninstallOnly.cpp
 
 # ebooktest directory
 {src\ebooktest}.cpp{$(OS)}.obj::
@@ -373,9 +375,7 @@ $(OS)\ImagesEngine.obj: ext\unrar\dll.hpp src\BaseEngine.h src\ImagesEngine.h
 $(OS)\ImagesEngine.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\ImagesEngine.obj: src\utils\Scopes.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\ImagesEngine.obj: src\utils\WinUtil.h
-$(OS)\Installer.obj: src\BaseEngine.h src\ifilter\PdfFilter.h src\previewer\PdfPreview.h
-$(OS)\Installer.obj: src\installer\Installer.h src\installer\InstallOnly.cpp src\installer\Resource.h
-$(OS)\Installer.obj: src\installer\UninstallOnly.cpp src\PdfEngine.h src\utils\BaseUtil.h
+$(OS)\Installer.obj: src\installer\Installer.h src\installer\Resource.h src\utils\BaseUtil.h
 $(OS)\Installer.obj: src\utils\CmdLineParser.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\Installer.obj: src\utils\Scopes.h src\utils\StrUtil.h src\utils\Transactions.h
 $(OS)\Installer.obj: src\utils\Vec.h src\utils\WinUtil.h src\Version.h
