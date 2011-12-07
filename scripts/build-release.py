@@ -13,7 +13,7 @@ import re
 from util import log, run_cmd_throw, test_for_flag, s3UploadFilePublic
 from util import s3UploadDataPublic, ensure_s3_doesnt_exist, ensure_path_exists
 from util import zip_file, extract_sumatra_version, verify_started_in_right_directory
-from util import build_installer_data, parse_svninfo_out
+from util import build_installer_data, parse_svninfo_out, s3List, s3Delete
 
 args = sys.argv[1:]
 upload               = test_for_flag(args, "-upload")
@@ -65,6 +65,32 @@ def copy_to_dst_dir(src_path, dst_dir):
   name_in_obj_rel = os.path.basename(src_path)
   dst_path = os.path.join(dst_dir, name_in_obj_rel)
   shutil.copy(src_path, dst_path)
+
+# delete all but the last 3 pre-release builds in order to use less s3 storage
+def deleteOldPreReleaseBuilds():
+  s3Dir = "sumatrapdf/prerel/"
+  keys = s3List(s3Dir)
+  files_by_ver = {}
+  for k in keys:
+    #print(k.name)
+    # sumatrapdf/prerel/SumatraPDF-prerelease-4819.pdb.zip
+    ver = re.findall(r'sumatrapdf/prerel/SumatraPDF-prerelease-(\d+)*', k.name)
+    ver = int(ver[0])
+    #print(ver)
+    val = files_by_ver.get(ver, [])
+    #print(val)
+    val.append(k.name)
+    #print(val)
+    files_by_ver[ver] = val
+  versions = files_by_ver.keys()
+  versions.sort()
+  #print(versions)
+  todelete = versions[:-3]
+  #print(todelete)
+  for vertodelete in todelete:
+    for f in files_by_ver[vertodelete]:
+      #print("Deleting %s" % f)
+      s3Delete(f)
 
 def main():
   if len(args) != 0:
@@ -172,6 +198,7 @@ def main():
       s3UploadDataPublic(jstxt, "sumatrapdf/sumatralatest.js")
       txt = "%s\n" % ver
       s3UploadDataPublic(txt, "sumatrapdf/sumpdf-prerelease-latest.txt")
+      deleteOldPreReleaseBuilds()
     else:
       s3UploadFilePublic(exe_zip, s3_exe_zip)
 

@@ -8,10 +8,11 @@ import zipfile2 as zipfile
 import bz2
 
 def import_boto():
-  global Key, S3Connection, awscreds
+  global Key, S3Connection, bucket_lister, awscreds
   try:
     from boto.s3.key import Key
     from boto.s3.connection import S3Connection
+    from boto.s3.bucketlistresultset import bucket_lister
   except:
     print("You need boto library (http://code.google.com/p/boto/)")
     print("svn checkout http://boto.googlecode.com/svn/trunk/ boto")
@@ -91,6 +92,16 @@ def s3UploadDataPublic(data, remote_file_name):
   k.set_contents_from_string(data)
   k.make_public()
 
+def s3List(s3dir):
+  bucket = s3PubBucket()
+  return bucket_lister(bucket, s3dir)
+
+def s3Delete(s3Name):
+  log("s3 delete '%s'" % s3Name)
+  bucket = s3PubBucket()
+  k = Key(bucket, s3Name)
+  k.delete()
+  
 def ensure_s3_doesnt_exist(remote_file_path):
   bucket = s3PubBucket()
   if not bucket.get_key(remote_file_path):
