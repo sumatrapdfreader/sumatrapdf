@@ -7366,7 +7366,7 @@ const char *gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "Mostrar favoritos",
   "Mostrar frequentes",
   "&Mostrar barra de marcadores quando dispon\303\255vel",
-  "uma p\303\241gina",
+  "Uma p\303\241gina",
   "Isto n\303\243o devia ter ocorrido!\n\nPrima \"Cancelar\", se nos quiser ajudar a corrigir a origem deste erro.",
   "O ficheiro %s n\303\243o tem ponto de sincroniza\303\247\303\243o",
   "Assunto:",

@@ -595,7 +595,7 @@ Show the &bookmarks sidebar when available
 &Mostrar barra de marcadores quando disponível
 
 Single Page
-uma página
+Uma página
 
 Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 Isto não devia ter ocorrido!\n\nPrima "Cancelar", se nos quiser ajudar a corrigir a origem deste erro.
