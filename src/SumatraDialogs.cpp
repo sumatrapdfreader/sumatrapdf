@@ -804,6 +804,10 @@ INT_PTR Dialog_Settings(HWND hwnd, SerializableGlobalPrefs *prefs)
                            Dialog_Settings_Proc, (LPARAM)prefs);
 }
 
+#ifndef ID_APPLY_NOW
+#define ID_APPLY_NOW 0x3021
+#endif
+
 static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     Print_Advanced_Data *data;
@@ -827,7 +831,7 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wP
         CheckRadioButton(hDlg, IDC_PRINT_RANGE_ALL, IDC_PRINT_RANGE_ODD,
             data->range == PrintRangeEven ? IDC_PRINT_RANGE_EVEN :
             data->range == PrintRangeOdd ? IDC_PRINT_RANGE_ODD : IDC_PRINT_RANGE_ALL);
-        CheckRadioButton(hDlg, IDC_PRINT_SCALE_SHRINK, IDC_PRINT_SCALE_FIT,
+        CheckRadioButton(hDlg, IDC_PRINT_SCALE_SHRINK, IDC_PRINT_SCALE_NONE,
             data->scale == PrintScaleFit ? IDC_PRINT_SCALE_FIT :
             data->scale == PrintScaleShrink ? IDC_PRINT_SCALE_SHRINK : IDC_PRINT_SCALE_NONE);
 
@@ -852,6 +856,18 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wP
             return TRUE;
         }
         break;
+
+    case WM_COMMAND:
+        switch (LOWORD(wParam)) {
+        case IDC_PRINT_RANGE_ALL: case IDC_PRINT_RANGE_EVEN:
+        case IDC_PRINT_RANGE_ODD: case IDC_PRINT_SCALE_SHRINK:
+        case IDC_PRINT_SCALE_FIT: case IDC_PRINT_SCALE_NONE:
+            {
+                HWND hApplyButton = GetDlgItem(GetParent(hDlg), ID_APPLY_NOW);
+                EnableWindow(hApplyButton, TRUE);
+            }
+            break;
+        }
     }
     return FALSE;
 }

@@ -363,57 +363,22 @@ void AbortPrinting(WindowInfo *win)
     win->printCanceled = false;
 }
 
-#ifndef ID_APPLY_NOW
-#define ID_APPLY_NOW 0x3021
-#endif
-
-static LRESULT CALLBACK DisableApplyBtnWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
+static HGLOBAL GlobalMemDup(void *data, size_t len)
 {
-    if (uiMsg == WM_ENABLE)
-        EnableWindow(hWnd, FALSE);
+    HGLOBAL hGlobal = GlobalAlloc(GMEM_MOVEABLE, len);
+    if (!hGlobal)
+        return NULL;
 
-    WNDPROC nextWndProc = (WNDPROC)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-    return CallWindowProc(nextWndProc, hWnd, uiMsg, wParam, lParam);
+    void *globalData = GlobalLock(hGlobal);
+    if (!globalData) {
+        GlobalFree(hGlobal);
+        return NULL;
+    }
+
+    memcpy(globalData, data, len);
+    GlobalUnlock(hGlobal);
+    return hGlobal;
 }
-
-/* minimal IPrintDialogCallback implementation for hiding the useless Apply button */
-class ApplyButtonDisblingCallback : public IPrintDialogCallback
-{
-public:
-    ApplyButtonDisblingCallback() : m_cRef(1) { };
-    // IUnknown
-    STDMETHODIMP QueryInterface(REFIID riid, void **ppv) {
-        static const QITAB qit[] = {
-            QITABENT(ApplyButtonDisblingCallback, IPrintDialogCallback),
-            { 0 }
-        };
-        return QISearch(this, qit, riid, ppv);
-    };
-    STDMETHODIMP_(ULONG) AddRef() {
-        return InterlockedIncrement(&m_cRef);
-    };
-    STDMETHODIMP_(ULONG) Release() {
-        long ref = InterlockedDecrement(&m_cRef);
-        if (0 == ref)
-            delete this;
-        return ref;
-    };
-    // IPrintDialogCallback
-    STDMETHODIMP HandleMessage(HWND hDlg, UINT uiMsg, WPARAM wParam, LPARAM lParam, LRESULT *pResult) {
-        if (uiMsg == WM_INITDIALOG) {
-            HWND hPropSheetContainer = GetParent(GetParent(hDlg));
-            HWND hApplyButton = GetDlgItem(hPropSheetContainer, ID_APPLY_NOW);
-            WNDPROC nextWndProc = (WNDPROC)SetWindowLongPtr(hApplyButton, GWLP_WNDPROC, (LONG_PTR)DisableApplyBtnWndProc);
-            SetWindowLongPtr(hApplyButton, GWLP_USERDATA, (LONG_PTR)nextWndProc);
-        }
-        return S_FALSE;
-    };
-    STDMETHODIMP InitDone() { return S_FALSE; };
-    STDMETHODIMP SelectionChange() { return S_FALSE; };
-protected:
-    LONG m_cRef;
-    WNDPROC m_wndProc;
-};
 
 /* Show Print Dialog box to allow user to select the printer
 and the pages to print.
@@ -435,9 +400,12 @@ In order to print with Adobe Reader instead: ViewWithAcrobat(win, _T("/P"));
 #define MAXPAGERANGES 10
 void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
 {
+    // we remember some printer settings per process
+    static ScopedMem<DEVMODE> defaultDevMode;
+    static PrintScaleAdv defaultScaleAdv = PrintScaleShrink;
+
     bool printSelection = false;
     Vec<PRINTPAGERANGE> ranges;
-    ScopedComPtr<ApplyButtonDisblingCallback> applyCb;
 
     if (!HasPermission(Perm_PrinterAccess)) return;
 
@@ -464,14 +432,12 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
     ZeroMemory(&pd, sizeof(PRINTDLGEX));
     pd.lStructSize = sizeof(PRINTDLGEX);
     pd.hwndOwner   = win->hwndFrame;
-    pd.hDevMode    = NULL;
-    pd.hDevNames   = NULL;
     pd.Flags       = PD_RETURNDC | PD_USEDEVMODECOPIESANDCOLLATE | PD_COLLATE;
     if (!win->selectionOnPage)
         pd.Flags |= PD_NOSELECTION;
     pd.nCopies     = 1;
     /* by default print all pages */
-    pd.nPageRanges =1;
+    pd.nPageRanges = 1;
     pd.nMaxPageRanges = MAXPAGERANGES;
     PRINTPAGERANGE *ppr = SAZA(PRINTPAGERANGE, MAXPAGERANGES);
     pd.lpPageRanges = ppr;
@@ -480,15 +446,17 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
     pd.nMinPage = 1;
     pd.nMaxPage = dm->PageCount();
     pd.nStartPage = START_PAGE_GENERAL;
-    applyCb = new ApplyButtonDisblingCallback();
-    pd.lpCallback = applyCb;
 
-    // TODO: remember these (and maybe all of PRINTDLGEX) at least for this document/WindowInfo?
     Print_Advanced_Data advanced = { PrintRangeAll, PrintScaleShrink };
     ScopedMem<DLGTEMPLATE> dlgTemplate; // needed for RTL languages
     HPROPSHEETPAGE hPsp = CreatePrintAdvancedPropSheet(&advanced, dlgTemplate);
     pd.lphPropertyPages = &hPsp;
     pd.nPropertyPages = 1;
+
+    // restore remembered settings
+    if (defaultDevMode)
+        pd.hDevMode = GlobalMemDup(defaultDevMode.Get(), defaultDevMode.Get()->dmSize + defaultDevMode.Get()->dmDriverExtra);
+    advanced.scale = defaultScaleAdv;
 
     if (PrintDlgEx(&pd) != S_OK) {
         if (CommDlgExtendedError() != 0) { 
@@ -500,6 +468,16 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
             MessageBox(win->hwndFrame, _TR("Couldn't initialize printer"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0));
         }
         goto Exit;
+    }
+
+    if (pd.dwResultAction == PD_RESULT_PRINT || pd.dwResultAction == PD_RESULT_APPLY) {
+        // remember settings for this process
+        LPDEVMODE devMode = (LPDEVMODE)GlobalLock(pd.hDevMode);
+        if (devMode) {
+            defaultDevMode.Set((LPDEVMODE)memdup(devMode, devMode->dmSize + devMode->dmDriverExtra));
+            GlobalUnlock(pd.hDevMode);
+        }
+        defaultScaleAdv = advanced.scale;
     }
 
     if (pd.dwResultAction != PD_RESULT_PRINT)
