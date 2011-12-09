@@ -304,6 +304,9 @@ static void drawpage(pdf_xref *xref, int pagenum)
 		if (gamma_value != 1)
 			fz_gamma_pixmap(pix, gamma_value);
 
+		if (savealpha)
+			fz_unmultiply_pixmap(pix);
+
 		if (output)
 		{
 			char buf[512];

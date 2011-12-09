@@ -207,7 +207,7 @@ int fz_to_int(fz_obj *obj)
 	if (fz_is_int(obj))
 		return obj->u.i;
 	if (fz_is_real(obj))
-		return obj->u.f;
+		return (int)(obj->u.f + 0.5f); /* No roundf in MSVC */
 	return 0;
 }
 

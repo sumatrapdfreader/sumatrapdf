@@ -155,7 +155,14 @@ pdf_load_image_imp(fz_pixmap **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict, 
 	{
 		usecolorkey = 1;
 		for (i = 0; i < n * 2; i++)
+		{
+			if (!fz_is_int(fz_array_get(obj, i)))
+			{
+				fz_warn("invalid value in color key mask");
+				usecolorkey = 0;
+			}
 			colorkey[i] = fz_to_int(fz_array_get(obj, i));
+		}
 	}
 
 	/* Allocate now, to fail early if we run out of memory */

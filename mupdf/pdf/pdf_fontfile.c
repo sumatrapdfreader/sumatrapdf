@@ -26,14 +26,6 @@ pdf_find_builtin_font(char *name, unsigned int *len)
 		*len = sizeof pdf_font_NimbusMonL_Bold;
 		return (unsigned char*) pdf_font_NimbusMonL_Bold;
 	}
-	if (!strcmp("Courier", name)) {
-		*len = sizeof pdf_font_NimbusMonL_Regu;
-		return (unsigned char*) pdf_font_NimbusMonL_Regu;
-	}
-	if (!strcmp("Courier-Bold", name)) {
-		*len = sizeof pdf_font_NimbusMonL_Bold;
-		return (unsigned char*) pdf_font_NimbusMonL_Bold;
-	}
 	if (!strcmp("Courier-Oblique", name)) {
 		*len = sizeof pdf_font_NimbusMonL_ReguObli;
 		return (unsigned char*) pdf_font_NimbusMonL_ReguObli;

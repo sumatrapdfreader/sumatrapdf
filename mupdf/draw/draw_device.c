@@ -1438,6 +1438,12 @@ fz_draw_begin_tile(void *user, fz_rect area, fz_rect view, float xstep, float ys
 		fz_knockout_begin(dev);
 
 	bbox = fz_round_rect(fz_transform_rect(ctm, view));
+	/* We should never have a bbox that entirely covers our destination.
+	 * If we do, then the check for only 1 tile being visible above has
+	 * failed. */
+	/* SumatraPDF: assertion intentionally disabled
+	assert(bbox.x0 > dev->dest->x || bbox.x1 < dev->dest->x + dev->dest->w ||
+		bbox.y0 > dev->dest->y || bbox.y1 < dev->dest->y + dev->dest->h);
 	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692418 */
 	dest = fz_new_pixmap_with_limit(model, bbox.x1 - bbox.x0, bbox.y1 - bbox.y0);
 	if (dest)
