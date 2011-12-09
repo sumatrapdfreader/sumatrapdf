@@ -197,9 +197,9 @@ def main():
             strings_dict[s] = []
 
     c_file_name = os.path.join(g_src_dir, "translations_txt.cpp")
+    gen_and_upload_js(strings_dict, langs, contributors)
     remove_incomplete_translations(langs, strings, strings_dict, INCOMPLETE_MISSING_THRESHOLD)
     gen_c_code(langs, strings_dict, c_file_name, load_lang_index())
-    gen_and_upload_js(strings_dict, langs, contributors)
 
 if __name__ == "__main__":
     main()
