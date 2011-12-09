@@ -320,6 +320,9 @@ bool CDjVuEngine::LoadMediaboxes()
             int width = SWAPWORD(LOWORD(buffer[5]));
             int height = SWAPWORD(HIWORD(buffer[5]));
             int dpi = HIWORD(buffer[6]);
+            // DjVuLibre ignores DPI values outside 25 to 6000 in DjVuInfo::decode
+            if (dpi < 25 || 6000 < dpi)
+                dpi = 300;
             int flags = HIBYTE(buffer[7]);
             mediaboxes[pages].dx = GetFileDPI() * width / dpi;
             mediaboxes[pages].dy = GetFileDPI() * height / dpi;
