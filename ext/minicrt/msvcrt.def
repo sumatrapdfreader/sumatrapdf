@@ -760,6 +760,7 @@ EXPORTS
        wcschr
        wcscoll
 	wcscpy
+       wcscmp
        wcsncpy
        wcsncmp
        wcscspn
