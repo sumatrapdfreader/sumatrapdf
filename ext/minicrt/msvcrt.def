@@ -2,33 +2,180 @@ LIBRARY	MSVCRT.DLL
 EXPORTS
        ??2@YAPAXI@Z
        ??3@YAXPAX@Z
+       _CIacos
+       _CIasin
+       _CIatan
+       _CIatan2
+       _CIcos
+       _CIcosh
+       _CIexp
+       _CIfmod
+       _CIlog
+       _CIlog10
+       _CIpow
+       _CIsin
+       _CIsinh
+       _CIsqrt
+       _CItan
+       _CItanh
        __p__iob
+       __iob_func=__p__iob ; TODO: verify
+       _chdir
+       _close
+       close=_close ; TODO: verify
+       _ctime64
+       _dup
+       _errno
        _fdopen
+       _fileno
        _ftol
        _ftol2_sse
+       _getcwd
+       _HUGE
+       _hypot
        _initterm
+       _localtime64
+       _lseek
+       _lseeki64
+       _onexit
+       _open
+       open=_open ; TODO: verify
        _open_osfhandle	
        __open_osfhandle=_open_osfhandle
        _purecall
+       _read
+       read=_read ; TODO: verify
+       _rmdir
        _strdup
+       _setjmp
+       _setjmp3
+       _setmode
+       _snprintf
+       _snwprintf
+       _stat
+       _stat64
+       _stati64
        _stricmp
+       stricmp=_stricmp ; TODO: verify
        _strnicmp
+       strnicmp=_strnicmp; TODO: verify
        _time64
        _vsnprintf
        _vsnwprintf
+       _wfopen
        _wcsdup
        _wcsicmp
        _wcsnicmp
+       _wopen
+       _wrename
+       _write
+       write=_write ; TODO: verify
+       _wstat
+       _wstat64
+       _wstati64
+       _wtoi
+       _wtoi64
+       _wtol
        abort
+       abs
+       acos
+       asctime
+       asin
+       atan
+       atan2
        atexit
+       atof
+       atoi
+       atol
        bsearch
        calloc
        ceil
+       clearerr
+       clock
+       cos
+       cosh
+       ctime
+       difftime
+       div
+       exit
+       exp
+       fabs
+       fclose
+       feof
+       ferror
+       fflush
+       fgetc
+       fgetpos
+       fgets
+       fgetwc
+       fgetws
        floor
+       fmod
+       fopen
+       fprintf
+       fputc
+       fputs
+       fputwc
+       fputws
+       fread
        free
+       freopen
+       frexp
+       fscanf
+       fseek
+       fsetpos
+       ftell
+       fwprintf
+       fwrite
+       fwscanf
+       getc
+       getchar
+       getenv
+       gets
+       getwc
+       getwchar
+       gmtime
+       is_wctype
+       isalnum
+       isalpha
+       iscntrl
+       isdigit
+       isgraph
+       isleadbyte
+       islower
+       isprint
+       ispunct
+       isspace
+       isupper
        iswalnum
+       iswalpha
+       iswascii
+       iswcntrl
+       iswctype
        iswdigit
+       iswgraph
+       iswlower
+       iswprint
+       iswpunct
        iswspace
+       iswupper
+       iswxdigit
+       isxdigit
+       longjmp
+       perror
+       pow
+       printf
+       putc
+       putchar
+       puts
+       putwc
+       putwchar
+       remove
+       rename
+       rewind
+       scanf
+       setbuf
+       setlocale
        malloc
        memchr
        memcmp
@@ -47,10 +194,51 @@ EXPORTS
        strlen
        strncmp
        strncpy
+       sin
+       sinh
+       sqrt
+       strcat
+       strcoll
+       strcpy
+       strcspn
+       strerror
+       strftime
+       strncat
+       strncpy
+       strpbrk
+       strrchr
+       strspn
+       strstr
+       strtod
+       strtok
+       strtol
+       strtoul
+       strxfrm
+       swprintf
+       swscanf
+       system
+       tan
+       tanh
+       time
        tolower
        toupper
        towlower
        towupper
+       ungetc
+       ungetwc
+       vswprintf
+       vfprintf
+       vfwprintf
+       vprintf
+       vwprintf
+       wcscoll
+       wcscpy
+       wcscspn
+       wcsftime
+       wcstok
+       wcsxfrm
+       wctomb
+       wscanf
        wcschr
        wcscmp
        wcslen
@@ -61,4 +249,5 @@ EXPORTS
        wcstod
        wcstol
        wcstoul
+       wprintf
 

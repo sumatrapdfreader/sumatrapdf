@@ -1,6 +1,31 @@
 LIBRARY	NTDLL.DLL
 EXPORTS
+	__chkstk
+	_chkstk=__chkstk ; TODO: is it valid?
 	_alldiv
 	_allmul
+	_allshr ; TODO: is it here:
+	_aullrem ; TODO: is it here?
+	_aulldvrm ; TODO: is it here?
+	_aulldiv ; TODO: is it here?
 	_fltused
+	_vsnprintf
+	_stricmp
+	_strnicmp
+	_vsnprintf
+	vsnprintf=_vsnprintf ; TODO: is it valid?
+	_vsnprintf_s
+	_vsnwprintf
+	_vsnwprintf_s
+	_vswprintf
+	vsprintf
+	vsprintf_s
+	vswprintf_s
+	wcscat
+	wcscat_s
+	wcsncat
+	wcsncat_s
+	wcsncmp
+	wcsncmp
+	wcsncpy_s
 

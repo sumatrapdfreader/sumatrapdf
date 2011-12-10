@@ -33,6 +33,10 @@ TODO:
   to make sure we don't use function that are not present in XP
   (by extracting list of symbols from msvcrt.dll on XP with
   dumpbin and not using anything that is not there)
+* a mystery: on my win7 64bit thinkpad, according to dumpbin /exports,
+  ntdll.dll doesn't have _alldiv() and yet everything works. Why
+  isn't it there (it is on my other win7 32bit vm)? What gets
+  called in et.exe?
 */
 
 
@@ -119,10 +123,12 @@ void __cdecl _wassert(const wchar_t *msg, const wchar_t *file, unsigned line)
     crash_me();
 }
 
+#if 0
 // TODO: can it be made just an alias to __p_iob ?
 FILE * __cdecl __iob_func(void) {
 	return __p__iob();
 }
+#endif
 
 }
 
