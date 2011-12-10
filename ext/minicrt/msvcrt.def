@@ -758,13 +758,18 @@ EXPORTS
        vwprintf
        wcschr
        wcscoll
-	   wcscpy
+	wcscpy
+       wcsncpy
+       wcsncmp
        wcscspn
        wcsftime
        wcslen
+       wcsrchr
        wcsstr
        wcstod
        wcstok
+       wcstol
+       wcstoul
        wcsxfrm
        wctomb
        wprintf
