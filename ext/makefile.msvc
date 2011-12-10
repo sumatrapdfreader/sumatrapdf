@@ -133,7 +133,7 @@ MINICRT_OBJS = \
 !endif
 
 MINICRT_OBJS = \
-	$(OM)\minicrt.obj $(OM)\msvcrt_dll.lib
+	$(OM)\minicrt.obj $(OM)\msvcrt_dll.lib $(OM)\ntdll_dll.lib
 
 $(OE): force
 	@if not exist $(OE) mkdir $(OE)
@@ -173,3 +173,7 @@ $(OE): force
 
 $(OM)\msvcrt_dll.lib: $(EXTDIR)\minicrt\msvcrt.def
 	lib /def:$(EXTDIR)\minicrt\msvcrt.def /OUT:$(OM)\msvcrt_dll.lib
+
+$(OM)\ntdll_dll.lib: $(EXTDIR)\minicrt\ntdll.def
+	lib /def:$(EXTDIR)\minicrt\ntdll.def /OUT:$(OM)\ntdll_dll.lib
+

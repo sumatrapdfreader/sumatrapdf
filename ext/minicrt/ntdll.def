@@ -1,0 +1,6 @@
+LIBRARY	NTDLL.DLL
+EXPORTS
+	_alldiv
+	_allmul
+	_fltused
+
