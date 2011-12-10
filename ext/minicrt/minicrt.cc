@@ -58,6 +58,7 @@ TODO:
 #include <stdlib.h>
 #include <malloc.h>
 #include <assert.h>
+#include <typeinfo.h>
 
 extern "C" {
 
@@ -130,6 +131,23 @@ FILE * __cdecl __iob_func(void) {
 }
 #endif
 
+}
+
+
+// provide symbol:
+// type_info::'vftable' ["const type_info::`vftable'" (??_7type_info@@6B@)].
+// needed when compiling classes with virtual methods with /GR 
+type_info::type_info(const type_info& rhs)
+{
+}
+
+type_info& type_info::operator=(const type_info& rhs)
+{
+        return *this;
+}
+
+type_info::~type_info()
+{
 }
 
 // debug version of new
