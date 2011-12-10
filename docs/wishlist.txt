@@ -3,7 +3,8 @@ order:
 
 1. Improve find UI. The one I like the best is in Chrome browser (with 
 modification needed for specyfing search parameters like case sensitivity
-and additions like 'match whole words' modifier).
+and additions like 'match whole words' modifier). Another nice implementation
+is in Kindle PC reader.
 We could then free up significant amount of space in the toolbar.
 
 2. Screen space is always at premium and most PDFs have very wasteful
@@ -19,7 +20,7 @@ Note: Automatic cropping is currently implemented as "Fit Content" View mode.
 
 3. Editing/saving of PDF forms. Many people want that.
 
-4. eBooks seem to be all the rage those days. Add ePub support?
+4. eBooks seem to be all the rage those days. Add mobi, ePub support.
 
 5. Add integration with web-based backup/viewer system. The idea is that users
 could easily backup their PDFs on the server. They would have a convenient
@@ -83,3 +84,9 @@ The big idea is to make contributing a translation as easy as possible.
 Our system is as easy as I could make it but not easy in the absolute sense.
 
 The code would of course be open-source.
+
+10. Native client version (https://developers.google.com/native-client/).
+
+There are some challenges (need completely custom UI, fonts aren't as easy
+to get at, CHM support would be much harder). The upside is we would be
+no-install, browser hosted (well, at least in Chrome).
