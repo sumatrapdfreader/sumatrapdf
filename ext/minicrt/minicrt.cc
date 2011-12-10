@@ -53,6 +53,7 @@ TODO:
 #include <stdio.h>
 #include <stdlib.h>
 #include <malloc.h>
+#include <assert.h>
 
 extern "C" {
 
@@ -107,12 +108,29 @@ wchar_t * __cdecl _wcsdup_dbg(const wchar_t *s, int blockType, const char *file,
 	return _wcsdup(s);
 }
 
+void crash_me()
+{
+    char *p = 0;
+    *p = 0;
+}
+
+void __cdecl _wassert(const wchar_t *msg, const wchar_t *file, unsigned line)
+{
+    crash_me();
+}
+
 // TODO: can it be made just an alias to __p_iob ?
 FILE * __cdecl __iob_func(void) {
 	return __p__iob();
 }
 
 }
+
+// debug version of new
+void * __cdecl operator new(unsigned int s, int, char const *file, int line) {
+  return malloc(s);
+}
+
 
 extern "C" void __cdecl WinMainCRTStartup() {
     int mainret;
