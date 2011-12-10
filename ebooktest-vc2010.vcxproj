@@ -11,7 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectName>Installer</ProjectName>
+    <ProjectName>EbookTest</ProjectName>
     <ProjectGuid>{BC42DA91-3BE7-410E-8ACE-E5F42DEDF41B}</ProjectGuid>
     <RootNamespace>Installer</RootNamespace>
     <Keyword>MakeFileProj</Keyword>
