@@ -126,6 +126,13 @@ void __cdecl _wassert(const wchar_t *msg, const wchar_t *file, unsigned line)
     crash_me();
 }
 
+// TODO: msvcrt.dll in XP doesn't have _ftol2_sse, so we match it
+// just _ftol(), which might be slower. Could find an optimized version.
+void __declspec(naked) _ftol2_sse()
+{
+    _ftol();
+}
+
 #if 0
 // TODO: can it be made just an alias to __p_iob ?
 FILE * __cdecl __iob_func(void) {
