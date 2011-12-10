@@ -29,7 +29,6 @@ EXPORTS
        _fdopen
        _fileno
        _ftol
-       _ftol2_sse
        _getcwd
        _HUGE
        _hypot
