@@ -33,9 +33,6 @@ WindowInfo::WindowInfo(HWND hwnd) :
     delayedRepaintTimer(0), watcher(NULL),
     pdfsync(NULL), stressTest(NULL), suppressPwdUI(false),
     hwndFavBox(NULL), hwndFavTree(NULL), panStarted(false)
-#ifdef BUILD_RIBBON
-    , ribbonSupport(NULL)
-#endif
 {
     ZeroMemory(&selectionRect, sizeof(selectionRect));
 

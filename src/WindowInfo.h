@@ -14,9 +14,6 @@ class DoubleBuffer;
 class SelectionOnPage;
 class LinkHandler;
 class Notifications;
-#ifdef BUILD_RIBBON
-class RibbonSupport;
-#endif
 
 /* Describes actions which can be performed by mouse */
 enum MouseAction {
@@ -190,10 +187,6 @@ public:
     POINTS  panPos;
     PointI  panScrollOrig;
     double  startArg;
-
-#ifdef BUILD_RIBBON
-    RibbonSupport *ribbonSupport;
-#endif
 
     void  UpdateCanvasSize();
     SizeI GetViewPortSize();

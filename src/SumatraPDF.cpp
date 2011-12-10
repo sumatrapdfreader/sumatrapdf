@@ -37,12 +37,6 @@
 #include "Touch.h"
 #include "HtmlWindow.h"
 
-#ifdef BUILD_RIBBON
-#include "Ribbon.h"
-// uncomment to actually use the (incomplete) ribbon
-// #define USE_RIBBON
-#endif
-
 #include "CrashHandler.h"
 #include "ParseCommandLine.h"
 #include "StressTesting.h"
@@ -275,10 +269,6 @@ void SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode, bool keepCont
 
     win->dm->ChangeDisplayMode(displayMode);
     UpdateToolbarState(win);
-#ifdef BUILD_RIBBON
-    if (win->ribbonSupport)
-        win->ribbonSupport->UpdateState();
-#endif
 }
 
 WindowInfo *FindWindowInfoByHwnd(HWND hwnd)
@@ -676,18 +666,11 @@ static void CreateThumbnailForFile(WindowInfo& win, DisplayState& ds)
 
 static void RebuildMenuBarForWindow(WindowInfo *win)
 {
-#ifdef BUILD_RIBBON
-    if (win->ribbonSupport)
-        win->ribbonSupport->Reset();
-    else
-#endif
-    {
-        HMENU oldMenu = win->menu;
-        win->menu = BuildMenu(win);
-        if (!win->presentation && !win->fullScreen)
-            SetMenu(win->hwndFrame, win->menu);
-        DestroyMenu(oldMenu);
-    }
+    HMENU oldMenu = win->menu;
+    win->menu = BuildMenu(win);
+    if (!win->presentation && !win->fullScreen)
+        SetMenu(win->hwndFrame, win->menu);
+    DestroyMenu(oldMenu);
 }
 
 static void RebuildMenuBarForAllWindows()
@@ -907,10 +890,6 @@ Error:
             win.dm->Relayout(zoomVirtual, rotation);
         }
     }
-#ifdef BUILD_RIBBON
-    if (win.ribbonSupport)
-        win.ribbonSupport->UpdateState();
-#endif
 
     SetSidebarVisibility(&win, tocVisible, gGlobalPrefs.favVisible);
     win.RedrawAll(true);
@@ -981,10 +960,6 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
 static void UpdateToolbarAndScrollbarState(WindowInfo& win)
 {
     ToolbarUpdateStateForWindow(&win, true);
-#ifdef BUILD_RIBBON
-    if (win.ribbonSupport)
-        win.ribbonSupport->UpdateState();
-#endif
 
     if (!win.IsDocLoaded()) {
         ShowScrollBar(win.hwndCanvas, SB_BOTH, FALSE);
@@ -1049,26 +1024,9 @@ static WindowInfo* CreateWindowInfo()
     // hide scrollbars to avoid showing/hiding on empty window
     ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
 
-#if defined(BUILD_RIBBON) && defined(USE_RIBBON)
-    if (gGlobalPrefs.useRibbon) {
-        win->ribbonSupport = new RibbonSupport(win);
-        if (!win->ribbonSupport->Initialize(ghinst, L"APPLICATION_RIBBON")) {
-            delete win->ribbonSupport;
-            win->ribbonSupport = NULL;
-        }
-        else if (gGlobalPrefs.ribbonState)
-            win->ribbonSupport->SetState(gGlobalPrefs.ribbonState);
-        else
-            // collapse the ribbon per default
-            win->ribbonSupport->SetMinimized(true);
-    }
-    if (!win->ribbonSupport)
-#endif
-    {
-        assert(!win->menu);
-        win->menu = BuildMenu(win);
-        SetMenu(win->hwndFrame, win->menu);
-    }
+    assert(!win->menu);
+    win->menu = BuildMenu(win);
+    SetMenu(win->hwndFrame, win->menu);
 
     ShowWindow(win->hwndCanvas, SW_SHOW);
     UpdateWindow(win->hwndCanvas);
@@ -1079,10 +1037,6 @@ static WindowInfo* CreateWindowInfo()
         win->hwndCanvas, NULL, ghinst, NULL);
 
     CreateToolbar(win);
-#ifdef BUILD_RIBBON
-    if (win->ribbonSupport)
-        ShowWindow(win->hwndReBar, SW_HIDE);
-#endif
     CreateSidebar(win);
     UpdateFindbox(win);
     if (HasPermission(Perm_DiskAccess) && !gPluginMode)
@@ -1119,14 +1073,6 @@ static void DeleteWindowInfo(WindowInfo *win)
     AbortFinding(win);
     AbortPrinting(win);
 
-#ifdef BUILD_RIBBON
-    assert(!win->menu != !win->ribbonSupport);
-    if (win->ribbonSupport) {
-        free(gGlobalPrefs.ribbonState);
-        gGlobalPrefs.ribbonState = win->ribbonSupport->GetState();
-    }
-    delete win->ribbonSupport;
-#endif
     delete win;
 }
 
@@ -1260,10 +1206,6 @@ void WindowInfo::PageNoChanged(int pageNo)
         ScopedMem<TCHAR> buf(dm->engine->GetPageLabel(pageNo));
         win::SetText(hwndPageBox, buf);
         ToolbarUpdateStateForWindow(this, false);
-#ifdef BUILD_RIBBON
-        if (ribbonSupport)
-            ribbonSupport->UpdateState();
-#endif
         if (dm->engine && dm->engine->HasPageLabels())
             UpdateToolbarPageText(this, dm->PageCount(), true);
     }
@@ -1730,10 +1672,6 @@ static void ToggleGdiDebugging()
             gRenderCache.KeepForDisplayModel(dm, dm);
             gWindows.At(i)->RedrawAll(true);
         }
-#ifdef BUILD_RIBBON
-        if (gWindows.At(i)->ribbonSupport)
-            gWindows.At(i)->ribbonSupport->UpdateState();
-#endif
     }
 }
 
@@ -2167,12 +2105,6 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
 
     bool lastWindow = (1 == gWindows.Count());
     if (lastWindow) {
-#ifdef BUILD_RIBBON
-        if (gWindows.At(0)->ribbonSupport) {
-            free(gGlobalPrefs.ribbonState);
-            gGlobalPrefs.ribbonState = gWindows.At(0)->ribbonSupport->GetState();
-        }
-#endif
         SavePrefs();
     } else {
         UpdateCurrentFileDisplayStateForWin(win);
@@ -2204,10 +2136,6 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
         if (wasChm)
             // restore the non-Chm menu
             RebuildMenuBarForWindow(win);
-#ifdef BUILD_RIBBON
-        if (win->ribbonSupport)
-            win->ribbonSupport->UpdateState();
-#endif
         DeleteOldSelectionInfo(win, true);
         win->RedrawAll();
         UpdateFindbox(win);
@@ -2704,11 +2632,6 @@ static void FrameOnSize(WindowInfo* win, int dx, int dy)
     int rebBarDy = 0;
     if (gGlobalPrefs.toolbarVisible && !(win->presentation || win->fullScreen)) {
         SetWindowPos(win->hwndReBar, NULL, 0, 0, dx, 0, SWP_NOZORDER);
-#ifdef BUILD_RIBBON
-        if (win->ribbonSupport)
-            rebBarDy = win->ribbonSupport->ribbonDy;
-        else
-#endif
         rebBarDy = WindowRect(win->hwndReBar).dy;
     }
 
@@ -2849,11 +2772,7 @@ static void OnMenuGoToPage(WindowInfo& win)
         return;
 
     // Don't show a dialog if we don't have to - use the Toolbar instead
-    if (gGlobalPrefs.toolbarVisible && !win.fullScreen && !win.presentation
-#ifdef BUILD_RIBBON
-        && !win.ribbonSupport
-#endif
-        ) {
+    if (gGlobalPrefs.toolbarVisible && !win.fullScreen && !win.presentation) {
         FocusPageNoEdit(win.hwndPageBox);
         return;
     }
@@ -2911,15 +2830,9 @@ static void EnterFullscreen(WindowInfo& win, bool presentation)
     win.frameRc = WindowRect(win.hwndFrame);
     RectI rect = GetFullscreenRect(win.hwndFrame);
 
-#ifdef BUILD_RIBBON
-    if (win.ribbonSupport)
-        win.ribbonSupport->SetVisibility(false);
-    else
-#endif
-    {
-        SetMenu(win.hwndFrame, NULL);
-        ShowWindow(win.hwndReBar, SW_HIDE);
-    }
+    SetMenu(win.hwndFrame, NULL);
+    ShowWindow(win.hwndReBar, SW_HIDE);
+
     SetWindowLong(win.hwndFrame, GWL_STYLE, ws);
     SetWindowPos(win.hwndFrame, NULL, rect.x, rect.y, rect.dx, rect.dy, SWP_FRAMECHANGED | SWP_NOZORDER);
     SetWindowPos(win.hwndCanvas, NULL, 0, 0, rect.dx, rect.dy, SWP_NOZORDER);
@@ -2954,16 +2867,10 @@ static void ExitFullscreen(WindowInfo& win)
     if (tocVisible || gGlobalPrefs.favVisible)
         SetSidebarVisibility(&win, tocVisible, gGlobalPrefs.favVisible);
 
-#ifdef BUILD_RIBBON
-    if (win.ribbonSupport)
-        win.ribbonSupport->SetVisibility(true);
-    else
-#endif
-    {
-        if (gGlobalPrefs.toolbarVisible)
-            ShowWindow(win.hwndReBar, SW_SHOW);
-        SetMenu(win.hwndFrame, win.menu);
-    }
+    if (gGlobalPrefs.toolbarVisible)
+        ShowWindow(win.hwndReBar, SW_SHOW);
+    SetMenu(win.hwndFrame, win.menu);
+
     SetWindowLong(win.hwndFrame, GWL_STYLE, win.prevStyle);
     SetWindowPos(win.hwndFrame, NULL, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE);
     MoveWindow(win.hwndFrame, win.frameRc);
@@ -2994,9 +2901,6 @@ void AdvanceFocus(WindowInfo* win)
 
     bool hasToolbar = !win->fullScreen && !win->presentation &&
                       gGlobalPrefs.toolbarVisible && win->IsDocLoaded();
-#ifdef BUILD_RIBBON
-    hasToolbar = hasToolbar && !win->ribbonSupport;
-#endif
     int direction = IsShiftPressed() ? -1 : 1;
 
     struct {
@@ -3246,11 +3150,7 @@ static void FrameOnChar(WindowInfo& win, WPARAM key)
     case 'i':
         // experimental "page info" tip: make figuring out current page and
         // total pages count a one-key action (unless they're already visible)
-        if (!gGlobalPrefs.toolbarVisible || win.fullScreen || PM_ENABLED == win.presentation
-#ifdef BUILD_RIBBON
-            || win.ribbonSupport
-#endif
-            ) {
+        if (!gGlobalPrefs.toolbarVisible || win.fullScreen || PM_ENABLED == win.presentation) {
             int current = win.dm->CurrentPageNo(), total = win.dm->PageCount();
             ScopedMem<TCHAR> pageInfo(str::Format(_T("%s %d / %d"), _TR("Page:"), current, total));
             if (win.dm->engine && win.dm->engine->HasPageLabels()) {
@@ -3331,11 +3231,6 @@ static void ResizeSidebar(WindowInfo *win)
     int canvasDx = rFrame.dx - sidebarDx - SPLITTER_DX;
     int y = 0;
     int totalDy = rFrame.dy;
-#ifdef BUILD_RIBBON
-    if (win->ribbonSupport && !win->fullScreen && !win->presentation)
-        y = win->ribbonSupport->ribbonDy;
-    else
-#endif
     if (gGlobalPrefs.toolbarVisible && !win->fullScreen && !win->presentation)
         y = WindowRect(win->hwndReBar).dy;
     totalDy -= y;
@@ -3591,11 +3486,6 @@ void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool favVisible)
 
     ClientRect rFrame(win->hwndFrame);
     int toolbarDy = 0;
-#ifdef BUILD_RIBBON
-    if (win->ribbonSupport && !win->fullScreen && !win->presentation)
-        toolbarDy = win->ribbonSupport->ribbonDy;
-    else
-#endif
     if (gGlobalPrefs.toolbarVisible && !win->fullScreen && !win->presentation)
         toolbarDy = WindowRect(win->hwndReBar).dy;
     int dy = rFrame.dy - toolbarDy;
@@ -3824,10 +3714,6 @@ static LRESULT CanvasOnMouseWheel(WindowInfo& win, UINT message, WPARAM wParam, 
         float factor = delta < 0 ? ZOOM_OUT_FACTOR : ZOOM_IN_FACTOR;
         win.dm->ZoomBy(factor, &PointI(pt.x, pt.y));
         UpdateToolbarState(&win);
-#ifdef BUILD_RIBBON
-        if (win.ribbonSupport)
-            win.ribbonSupport->UpdateState();
-#endif
 
         // don't show the context menu when zooming with the right mouse-button down
         if ((LOWORD(wParam) & MK_RBUTTON))
@@ -4382,13 +4268,8 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
 
         case IDM_DEBUG_SHOW_LINKS:
             gDebugShowLinks = !gDebugShowLinks;
-            for (size_t i = 0; i < gWindows.Count(); i++) {
+            for (size_t i = 0; i < gWindows.Count(); i++)
                 gWindows.At(i)->RedrawAll(true);
-#ifdef BUILD_RIBBON
-                if (gWindows.At(i)->ribbonSupport)
-                    gWindows.At(i)->ribbonSupport->UpdateState();
-#endif
-            }
             break;
 
         case IDM_DEBUG_GDI_RENDERER:
@@ -4786,10 +4667,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         i.reuseInstance = i.exitOnPrint = false;
         // always display the toolbar when embedded (as there's no menubar in that case)
         gGlobalPrefs.toolbarVisible = true;
-#ifdef BUILD_RIBBON
-        // always use the classic toolbar for the plugin
-        gGlobalPrefs.useRibbon = false;
-#endif
         // never allow esc as a shortcut to quit
         gGlobalPrefs.escToExit = false;
         // never show the sidebar by default

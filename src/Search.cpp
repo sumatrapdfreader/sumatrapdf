@@ -61,11 +61,7 @@ void OnMenuFind(WindowInfo *win)
     }
 
     // Don't show a dialog if we don't have to - use the Toolbar instead
-    if (gGlobalPrefs.toolbarVisible && !win->fullScreen && !win->presentation
-#ifdef BUILD_RIBBON
-        && !win->ribbonSupport
-#endif
-        ) {
+    if (gGlobalPrefs.toolbarVisible && !win->fullScreen && !win->presentation) {
         if (GetFocus() == win->hwndFindBox)
             SendMessage(win->hwndFindBox, WM_SETFOCUS, 0, 0);
         else

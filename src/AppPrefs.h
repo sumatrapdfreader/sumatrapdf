@@ -22,9 +22,6 @@ struct SerializableGlobalPrefs {
         free(versionToSkip);
         free(inverseSearchCmdLine);
         free(lastUpdateTime);
-#ifdef BUILD_RIBBON
-        free(ribbonState);
-#endif
     }
 
     bool globalPrefsOnly;
@@ -91,11 +88,6 @@ struct SerializableGlobalPrefs {
     int  openCountWeek; /* week count since 2011-01-01 needed to "age" openCount values in file history */
 
     FILETIME lastPrefUpdate; /* modification time of the preferences file when it was last read */
-
-#ifdef BUILD_RIBBON
-    bool useRibbon; /* allows to disable the ribbon on Windows 7 and later */
-    char *ribbonState; /* quick access toolbar configuration */
-#endif
 };
 
 extern SerializableGlobalPrefs gGlobalPrefs;

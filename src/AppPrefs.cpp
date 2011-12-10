@@ -71,10 +71,6 @@
 #define FWDSEARCH_COLOR             "ForwardSearch_HighlightColor"
 #define FWDSEARCH_WIDTH             "ForwardSearch_HighlightWidth"
 #define FWDSEARCH_PERMANENT         "ForwardSearch_HighlightPermanent"
-#ifdef BUILD_RIBBON
-#define USE_RIBBON_STR              "UseRibbon"
-#define RIBBON_STATE_STR            "RibbonState"
-#endif
 
 #define DM_AUTOMATIC_STR            "automatic"
 #define DM_SINGLE_PAGE_STR          "single page"
@@ -121,10 +117,6 @@ SerializableGlobalPrefs gGlobalPrefs = {
     true, // bool showStartPage
     0, // int openCountWeek
     { 0, 0 }, // FILETIME lastPrefUpdate
-#ifdef BUILD_RIBBON
-    true, // bool useRibbon
-    NULL, // char *ribbonState
-#endif
 };
 
 // number of weeks past since 2011-01-01
@@ -189,12 +181,6 @@ static BencDict* SerializeGlobalPrefs(SerializableGlobalPrefs& globalPrefs)
     prefs->Add(FWDSEARCH_COLOR, globalPrefs.fwdSearch.color);
     prefs->Add(FWDSEARCH_WIDTH, globalPrefs.fwdSearch.width);
     prefs->Add(FWDSEARCH_PERMANENT, globalPrefs.fwdSearch.permanent);
-
-#ifdef BUILD_RIBBON
-    prefs->Add(USE_RIBBON_STR, globalPrefs.useRibbon);
-    if (globalPrefs.ribbonState)
-        prefs->AddRaw(RIBBON_STATE_STR, globalPrefs.ribbonState);
-#endif
 
     return prefs;
 }
@@ -556,11 +542,6 @@ static void DeserializePrefs(const char *prefsTxt, SerializableGlobalPrefs& glob
             favs->AddOrReplace(filePath, pageNo, EmptyToNull(name));
         }
     }
-
-#ifdef BUILD_RIBBON
-    Retrieve(global, USE_RIBBON_STR, globalPrefs.useRibbon);
-    RetrieveRaw(global, RIBBON_STATE_STR, globalPrefs.ribbonState);
-#endif
 
 Exit:
     delete obj;

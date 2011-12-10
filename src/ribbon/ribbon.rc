@@ -1,3 +1,0 @@
-#include <windows.h>
-
-#include "ribbon-gen.rc"

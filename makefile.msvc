@@ -92,7 +92,6 @@ OS = $(O)\sumatrapdf
 SUMATRA_APP = $(O)\SumatraPDF.exe
 SUMATRA_APP_NO_MUPDF = $(O)\SumatraPDF-no-MuPDF.exe
 SUMATRA_RES = $(OS)\sumatrapdf.res
-SUMATRA_RIBBON_RES = $(OS)\sumatrapdf-ribbon.res
 
 INSTALLER_APP   = $(O)\Installer.exe
 INSTALLER_RES   = $(OS)\Installer.res
@@ -142,15 +141,6 @@ SUMATRA_OBJS = \
 	$(UTILS_OBJS) $(BZIP2_OBJS) $(MINIZIP_OBJS) $(UNRAR_OBJS) \
 	$(SYNCTEX_OBJS) $(ENGINE_OBJS)
  
-# disable incomplete Ribbon support in release builds (unless BUILD_RIBBON is defined)
-#!if "$(CFG)"=="dbg"
-#BUILD_RIBBON = 1
-#!endif
-!if "$(BUILD_RIBBON)"!=""
-SUMATRA_OBJS = $(SUMATRA_OBJS) $(OS)\Ribbon.obj $(SUMATRA_RIBBON_RES)
-SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "BUILD_RIBBON"
-!endif
-
 INSTALLER_OBJS = \
 	$(OS)\Installer.obj $(OS)\InstallOnly.obj $(INSTALLER_RES)
 
@@ -214,9 +204,6 @@ $(OS): $(O) $(OE)
 $(SUMATRA_RES): src\SumatraPDF.rc src\Resource.h src\Version.h
 	rc /r /fo$@ $(EXTCFLAGS) src\SumatraPDF.rc
 
-$(SUMATRA_RIBBON_RES): src\ribbon\ribbon.rc src\ribbon\ribbon-gen.rc
-	rc /r /fo$@ $(EXTCFLAGS) src\ribbon\ribbon.rc
-
 !if "$(MINICRT)"=="yes"
 $(SUMATRA_APP): $(LIBS_OBJS) $(SUMATRA_OBJS) $(MINICRT_OBJS)
 	$(LD) /SUBSYSTEM:windows $(LDFLAGS) /NODEFAULTLIB  $** $(LIBS) uuid.lib urlmon.lib /PDB:$*.pdb /OUT:$@
@@ -224,7 +211,6 @@ $(SUMATRA_APP): $(LIBS_OBJS) $(SUMATRA_OBJS) $(MINICRT_OBJS)
 $(SUMATRA_APP): $(LIBS_OBJS) $(SUMATRA_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
 !endif
-
 
 $(SUMATRA_APP_NO_MUPDF): $(SUMATRA_OBJS) $(OS)\MuPDF_Exports.obj
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ $(LIBMUPDF_LIB)
@@ -473,17 +459,6 @@ $(OS)\RenderCache.obj: src\PsEngine.h src\RenderCache.h src\TextSearch.h
 $(OS)\RenderCache.obj: src\TextSelection.h src\utils\BaseUtil.h src\utils\GeomUtil.h
 $(OS)\RenderCache.obj: src\utils\Scopes.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\RenderCache.obj: src\utils\WinUtil.h
-$(OS)\Ribbon.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
-$(OS)\Ribbon.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
-$(OS)\Ribbon.obj: src\EngineManager.h src\EpubEngine.h src\Favorites.h
-$(OS)\Ribbon.obj: src\FileHistory.h src\ImagesEngine.h src\Menu.h
-$(OS)\Ribbon.obj: src\PdfEngine.h src\PsEngine.h src\resource.h
-$(OS)\Ribbon.obj: src\Ribbon.h src\ribbon\ribbon-gen.h src\Selection.h
-$(OS)\Ribbon.obj: src\SumatraPDF.h src\TextSearch.h src\TextSelection.h
-$(OS)\Ribbon.obj: src\translations.h src\utils\BaseUtil.h src\utils\FileUtil.h
-$(OS)\Ribbon.obj: src\utils\GeomUtil.h src\utils\Scopes.h src\utils\StrUtil.h
-$(OS)\Ribbon.obj: src\utils\UIRibbon.h src\utils\Vec.h src\utils\WinUtil.h
-$(OS)\Ribbon.obj: src\WindowInfo.h
 $(OS)\Search.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
 $(OS)\Search.obj: src\ChmEngine.h src\DisplayModel.h src\DisplayState.h
 $(OS)\Search.obj: src\DjVuEngine.h src\EngineManager.h src\EpubEngine.h
@@ -498,10 +473,9 @@ $(OS)\Selection.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
 $(OS)\Selection.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
 $(OS)\Selection.obj: src\EngineManager.h src\EpubEngine.h src\ImagesEngine.h
 $(OS)\Selection.obj: src\Notifications.h src\PdfEngine.h src\PsEngine.h
-$(OS)\Selection.obj: src\Ribbon.h src\Selection.h src\SumatraPDF.h
-$(OS)\Selection.obj: src\TextSearch.h src\TextSelection.h src\Toolbar.h
-$(OS)\Selection.obj: src\translations.h src\utils\BaseUtil.h src\utils\GeomUtil.h
-$(OS)\Selection.obj: src\utils\Scopes.h src\utils\StrUtil.h src\utils\UIRibbon.h
+$(OS)\Selection.obj: src\Selection.h src\SumatraPDF.h src\TextSearch.h
+$(OS)\Selection.obj: src\TextSelection.h src\Toolbar.h src\translations.h
+$(OS)\Selection.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\StrUtil.h
 $(OS)\Selection.obj: src\utils\Vec.h src\utils\WinUtil.h src\WindowInfo.h
 $(OS)\StressTesting.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
 $(OS)\StressTesting.obj: src\ChmEngine.h src\DisplayModel.h src\DisplayState.h
@@ -536,15 +510,15 @@ $(OS)\SumatraPDF.obj: src\FileHistory.h src\FileWatch.h src\ImagesEngine.h
 $(OS)\SumatraPDF.obj: src\Menu.h src\Notifications.h src\ParseCommandLine.h
 $(OS)\SumatraPDF.obj: src\PdfEngine.h src\PdfSync.h src\Print.h
 $(OS)\SumatraPDF.obj: src\PsEngine.h src\RenderCache.h src\resource.h
-$(OS)\SumatraPDF.obj: src\Resource.h src\Ribbon.h src\Search.h
-$(OS)\SumatraPDF.obj: src\Selection.h src\StressTesting.h src\SumatraAbout.h
-$(OS)\SumatraPDF.obj: src\SumatraDialogs.h src\SumatraPDF.h src\SumatraProperties.h
-$(OS)\SumatraPDF.obj: src\TableOfContents.h src\TextSearch.h src\TextSelection.h
-$(OS)\SumatraPDF.obj: src\Toolbar.h src\translations.h src\utils\BaseUtil.h
-$(OS)\SumatraPDF.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\HtmlWindow.h
-$(OS)\SumatraPDF.obj: src\utils\Http.h src\utils\Scopes.h src\utils\StrUtil.h
-$(OS)\SumatraPDF.obj: src\utils\Touch.h src\utils\UIRibbon.h src\utils\Vec.h
-$(OS)\SumatraPDF.obj: src\utils\WinUtil.h src\Version.h src\WindowInfo.h
+$(OS)\SumatraPDF.obj: src\Resource.h src\Search.h src\Selection.h
+$(OS)\SumatraPDF.obj: src\StressTesting.h src\SumatraAbout.h src\SumatraDialogs.h
+$(OS)\SumatraPDF.obj: src\SumatraPDF.h src\SumatraProperties.h src\TableOfContents.h
+$(OS)\SumatraPDF.obj: src\TextSearch.h src\TextSelection.h src\Toolbar.h
+$(OS)\SumatraPDF.obj: src\translations.h src\utils\BaseUtil.h src\utils\FileUtil.h
+$(OS)\SumatraPDF.obj: src\utils\GeomUtil.h src\utils\HtmlWindow.h src\utils\Http.h
+$(OS)\SumatraPDF.obj: src\utils\Scopes.h src\utils\StrUtil.h src\utils\Touch.h
+$(OS)\SumatraPDF.obj: src\utils\Vec.h src\utils\WinUtil.h src\Version.h
+$(OS)\SumatraPDF.obj: src\WindowInfo.h
 $(OS)\SumatraProperties.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
 $(OS)\SumatraProperties.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
 $(OS)\SumatraProperties.obj: src\EngineManager.h src\EpubEngine.h src\ImagesEngine.h
