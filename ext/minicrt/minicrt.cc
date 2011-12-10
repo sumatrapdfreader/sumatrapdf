@@ -10,12 +10,17 @@ finish this code, but this is the plan:
   add the necessary functions one by one, guided by what
   linker tells us is missing. This is to learn what is the absolutely
   minimum to include and review all the code that is included
+* I'll reuse as much as possible from msvcrt.dll
 * I'll use the code already written in omaha's minicrt project
   (but only after reviewing each function)
 * the code that comes in *.obj files will have to be written
 * other places that I might steal the code from:
  - http://llvm.org/svn/llvm-project/compiler-rt/trunk/
  - http://www.jbox.dk/sanos/source/
+
+First order of business: figure out how to tell it
+to use functions from msvcrt.dll defined in msvcrt.def
+(e.g. rand, srand, _time64, memcmp etc.)
 */
 
 /*
@@ -250,3 +255,59 @@ TODO: here's the current score for EbookTest app:
 1>LINK : error LNK2001: unresolved external symbol _WinMainCRTStartup
 1>obj-dbg\et.exe : fatal error LNK1120: 67 unresolved externals
 */
+
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+
+#ifdef UNICODE
+#undef UNICODE
+#endif
+
+#ifdef _UNICODE
+#undef _UNICODE
+#endif
+
+#include <windows.h>
+
+extern "C" {
+/* TODO: use its own heap ? */
+/* TODO: use malloc/free/calloc from msvcrt.dll and 
+   redirect _malloc_dbg/_free_dbg/_calloc_dbg to malloc/free/callco
+   from msvcrt.dll ? */
+void * __cdecl malloc(size_t size) {
+    return HeapAlloc(GetProcessHeap(), 0, size );
+}
+
+void __cdecl free(void * p) {
+    HeapFree(GetProcessHeap(), 0, p);
+}
+
+void * __cdecl realloc(void * p, size_t size) {
+    if (p)
+        return HeapReAlloc(GetProcessHeap(), 0, p, size);
+    else    // 'p' is 0, and HeapReAlloc doesn't act like realloc() here
+        return HeapAlloc(GetProcessHeap(), 0, size);
+}
+
+void * __cdecl calloc(size_t nitems, size_t size) {
+    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, nitems * size);
+}
+
+void * __cdecl _recalloc(void * p, size_t nitems, size_t size) {
+    return realloc(p, nitems * size);
+}
+
+void * __cdecl _malloc_dbg(size_t size) {
+    return HeapAlloc(GetProcessHeap(), 0, size);
+}
+
+void __cdecl _free_dbg(void * p) {
+    HeapFree(GetProcessHeap(), 0, p);
+}
+
+void * __cdecl _calloc_dbg(size_t nitems, size_t size) {
+    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, nitems * size);
+}
+
+}
