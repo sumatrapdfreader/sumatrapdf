@@ -117,21 +117,6 @@ CRENGINE_OBJS = \
 	$(OCR)\txtselector.obj $(OCR)\w32utils.obj $(OCR)\wolutil.obj \
 	$(OCR)\wordfmt.obj $(OCR)\xutils.obj $(OCR)\pdbfmt.obj
 
-!if "$(THIS_IS)"=="NOT_TRUE"
-MINICRT_OBJS = \
-	$(OM)\alloc.obj $(OM)\alloc2.obj $(OM)\allocsup.obj $(OM)\argcargv.obj \
-	$(OM)\crt0tcon.obj $(OM)\crt0twin.obj $(OM)\dllcrt0.obj $(OM)\fullpath.obj \
-	$(OM)\initterm.obj $(OM)\isctype.obj $(OM)\memory.obj \
-	$(OM)\misc.obj $(OM)\newdel.obj $(OM)\puts.obj $(OM)\security.obj \
-	$(OM)\stricmp.obj $(OM)\string.obj $(OM)\struplwr.obj \
-	$(OM2)\alloca16.obj $(OM2)\chandler4.obj $(OM2)\chkstk.obj \
-	$(OM2)\dllsupp.obj $(OM2)\eh3valid.obj $(OM2)\exsup.obj \
-	$(OM2)\exsup3.obj $(OM2)\exsup4.obj $(OM2)\ftol2.obj \
-	$(OM2)\lldiv.obj $(OM2)\lldvrm.obj $(OM2)\llmul.obj \
-	$(OM2)\llrem.obj $(OM2)\llshl.obj $(OM2)\llshr.obj \
-	$(OM2)\sehprolg.obj $(OM2)\sehprolg4.obj $(OM2)\sehprolg4gs.obj $(OM2)\ulldiv.obj $(OM2)\ulldvrm.obj $(OM2)\ullrem.obj $(OM2)\ullshr.obj  
-!endif
-
 MINICRT_OBJS = \
 	$(OM)\minicrt.obj $(OM)\msvcrt_dll.lib $(OM)\ntdll_dll.lib
 
