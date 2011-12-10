@@ -20,10 +20,8 @@ finish this code, but this is the plan:
 
 More info:
 * http://kobyk.wordpress.com/2007/07/20/dynamically-linking-with-msvcrtdll-using-visual-c-2005/
-
-First order of business: figure out how to tell it
-to use functions from msvcrt.dll defined in msvcrt.def
-(e.g. rand, srand, _time64, memcmp etc.)
+* http://adrianhenke.wordpress.com/2008/12/05/create-lib-file-from-dll/ - info on how to create
+  .lib file from .def file
 */
 
 /*
@@ -273,44 +271,25 @@ TODO: here's the current score for EbookTest app:
 
 #include <windows.h>
 
+/* definitions of functions implemented in msvcrt.dll */
 extern "C" {
-/* TODO: use its own heap ? */
-/* TODO: use malloc/free/calloc from msvcrt.dll and 
-   redirect _malloc_dbg/_free_dbg/_calloc_dbg to malloc/free/callco
-   from msvcrt.dll ? */
-void * __cdecl malloc(size_t size) {
-    return HeapAlloc(GetProcessHeap(), 0, size );
+void * __cdecl malloc(size_t size);
+void __cdecl free(void * p);
+void * __cdecl calloc(size_t nitems, size_t size);
 }
 
-void __cdecl free(void * p) {
-    HeapFree(GetProcessHeap(), 0, p);
-}
-
-void * __cdecl realloc(void * p, size_t size) {
-    if (p)
-        return HeapReAlloc(GetProcessHeap(), 0, p, size);
-    else    // 'p' is 0, and HeapReAlloc doesn't act like realloc() here
-        return HeapAlloc(GetProcessHeap(), 0, size);
-}
-
-void * __cdecl calloc(size_t nitems, size_t size) {
-    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, nitems * size);
-}
-
-void * __cdecl _recalloc(void * p, size_t nitems, size_t size) {
-    return realloc(p, nitems * size);
-}
+extern "C" {
 
 void * __cdecl _malloc_dbg(size_t size) {
-    return HeapAlloc(GetProcessHeap(), 0, size);
+	return malloc(size);
 }
 
 void __cdecl _free_dbg(void * p) {
-    HeapFree(GetProcessHeap(), 0, p);
+	return free(p);
 }
 
 void * __cdecl _calloc_dbg(size_t nitems, size_t size) {
-    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, nitems * size);
+	return calloc(nitems, size);
 }
 
 }

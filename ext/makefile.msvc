@@ -133,7 +133,7 @@ MINICRT_OBJS = \
 !endif
 
 MINICRT_OBJS = \
-	$(OM)\minicrt.obj
+	$(OM)\minicrt.obj $(OM)\msvcrt_dll.lib
 
 $(OE): force
 	@if not exist $(OE) mkdir $(OE)
@@ -170,3 +170,6 @@ $(OE): force
 
 {$(EXTDIR)\minicrt}.cc{$(OM)}.obj::
 	$(CC) $(MINICRT_CFLAGS) /Fo$(OM)\ /Fd$(O)\vc80.pdb $<
+
+$(OM)\msvcrt_dll.lib: $(EXTDIR)\minicrt\msvcrt.def
+	lib /def:$(EXTDIR)\minicrt\msvcrt.def /OUT:$(OM)\msvcrt_dll.lib
