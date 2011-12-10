@@ -109,15 +109,14 @@ LDFLAGS = $(LDFLAGS) /NXCOMPAT /DYNAMICBASE /FIXED:NO
 !else
 # /MTd  : statically link debug crt (libcmtd.lib)
 CFLAGSB = $(CFLAGSB) /MTd
-# /Od   : disable optimizations
-CFLAGS = $(CFLAGSB) /Od
-
 # /RTCs : stack frame runtime checking
 # /RTCu : ununitialized local usage checks
-!if "$(MINICRT)"!="yes"
-CFLAGSB = $(CFLAGSB) /RTCs /RTCu
+# /Od   : disable optimizations
+!if "$(MINICRT)"=="yes"
+CFLAGS = $(CFLAGSB) /Od
+!else
+CFLAGS = $(CFLAGSB) /Od /RTCs /RTCu
 !endif
-
 CFLAGSOPT = $(CFLAGSB) $(OPTLEVEL) /D "NDEBUG"
 !endif
 

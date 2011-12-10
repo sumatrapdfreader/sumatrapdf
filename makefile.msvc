@@ -143,9 +143,9 @@ SUMATRA_OBJS = \
 	$(SYNCTEX_OBJS) $(ENGINE_OBJS)
  
 # disable incomplete Ribbon support in release builds (unless BUILD_RIBBON is defined)
-!if "$(CFG)"=="dbg"
-BUILD_RIBBON = 1
-!endif
+#!if "$(CFG)"=="dbg"
+#BUILD_RIBBON = 1
+#!endif
 !if "$(BUILD_RIBBON)"!=""
 SUMATRA_OBJS = $(SUMATRA_OBJS) $(OS)\Ribbon.obj $(SUMATRA_RIBBON_RES)
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "BUILD_RIBBON"
