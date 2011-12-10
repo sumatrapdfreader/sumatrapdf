@@ -18,6 +18,8 @@ finish this code, but this is the plan:
  - http://llvm.org/svn/llvm-project/compiler-rt/trunk/
  - http://www.jbox.dk/sanos/source/
  - http://f4b24.googlecode.com/svn/trunk/extra/smartvc9/
+ - http://code.google.com/p/ontl/source/browse/trunk/ntl/rtl/eh.cpp
+   implements __CxxFrameHandler3 and other exceptions support
 
 More info:
 * http://kobyk.wordpress.com/2007/07/20/dynamically-linking-with-msvcrtdll-using-visual-c-2005/
