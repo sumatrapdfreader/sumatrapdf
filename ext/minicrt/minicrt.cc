@@ -55,7 +55,7 @@ TODO:
 #include <stdio.h>
 #include <stdlib.h>
 #include <malloc.h>
-#include <crtdbg.h>
+//#include <crtdbg.h>
 
 extern "C" {
 
@@ -278,7 +278,7 @@ L8:
     }
 }
 
-// TODO: should it be 1? should it be defined in asm file ?does it matter?
+// TODO: should it be 1? should it be defined in asm file? does it matter?
 int _fltused = 0x9875;
 
 }
