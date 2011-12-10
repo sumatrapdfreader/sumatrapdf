@@ -8,7 +8,7 @@
 # PLATFORM=X86
 #   the PLATFORM var is usually set in the x64 and x64 cross tools Visual Studio command prompt
 #   note: building on X64 isn't officially supported and might unintentionally be broken
-# MINICRT=yes
+MINICRT=yes
 #   set to yes to build (currently ebooktest app) with minicrt, to see how much we save
 #   note: doesn't work yet. Doesn't find few libc functions that are not implemented. 
 #   also probably wouldn't work for 64-bit builds due to using *.obj files. 
@@ -78,6 +78,8 @@ UNINSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/Isrc/utils /Isrc/utils/msvc /Isrc /Isrc/installer \
 	/D "BUILD_UNINSTALLER"
 
+MINICRT_CFLAGS = $(CFLAGS)
+
 !if "$(CFG)"=="dbg"
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "DEBUG" /D "_DEBUG"
 INSTALLER_CFLAGS = $(INSTALLER_CFLAGS) /D "DEBUG" /D "_DEBUG"
@@ -115,6 +117,9 @@ BROWSER_PLUGIN_RES = $(OS)\npPdfViewer.res
 BROWSER_PLUGIN_CFLAGS = $(CFLAGS) /Isrc/utils /Isrc/utils/msvc
 
 ENGINEDUMP_APP = $(O)\EngineDump.exe
+
+MINICRT_OBJS = \
+	$(OS)\ucrt.obj $(OS)\msvcrt_dll.lib $(OS)\ntdll_dll.lib
 
 UTILS_OBJS = \
 	$(OS)\BencUtil.obj $(OS)\FileUtil.obj $(OS)\Http.obj \
@@ -261,6 +266,17 @@ $(BROWSER_PLUGIN): $(BROWSER_PLUGIN_OBJS)
 
 $(ENGINEDUMP_APP): $(ENGINEDUMP_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
+
+# ucrt directory
+{src\ucrt}.cpp{$(OS)}.obj::
+	$(CC) $(MINICRT_CFLAGS) /Fo$(OS)\ /Fd$(O)\vc80.pdb $<
+
+# TODO: replace with a single rule
+$(OS)\msvcrt_dll.lib: src\ucrt\msvcrt.def
+	lib /def:src\ucrt\msvcrt.def /OUT:$(OS)\msvcrt_dll.lib
+
+$(OS)\ntdll_dll.lib: src\ucrt\ntdll.def
+	lib /def:src\ucrt\ntdll.def /OUT:$(OS)\ntdll_dll.lib
 
 # utils directory
 {src/utils}.cpp{$(OS)}.obj::

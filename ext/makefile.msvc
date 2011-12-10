@@ -10,8 +10,6 @@ OR = $(O)\unrar
 ODV= $(O)\djvu
 OC = $(O)\chmlib
 OCR= $(O)\crengine
-OM = $(O)\minicrt
-OM2 = $(EXTDIR)\minicrt
 
 SYNCTEX_CFLAGS = $(CFLAGS) /I$(EXTDIR)/synctex /I$(ZLIB_DIR) /TC /wd4244
 !if "$(PLATFORM)"=="X64"
@@ -52,8 +50,6 @@ CRENGINE_CFLAGS = $(CRENGINE_CFLAGS) /D "ENABLE_ANTIWORD=0" /D "CHM_SUPPORT_ENAB
 CRENGINE_CFLAGS = $(CRENGINE_CFLAGS) /I$(EXTDIR)/crengine/include
 CRENGINE_CFLAGS = $(CRENGINE_CFLAGS) /I$(ZLIB_DIR) /I$(JPEG_TURBO_DIR) 
 CRENGINE_CFLAGS = $(CRENGINE_CFLAGS) /wd4018 /wd4101 /wd4244 /wd4800 /wd4355
-
-MINICRT_CFLAGS = $(CFLAGSOPT)
 
 SYNCTEX_OBJS = \
 	$(OE)\synctex_parser.obj $(OE)\synctex_parser_utils.obj
@@ -117,9 +113,6 @@ CRENGINE_OBJS = \
 	$(OCR)\txtselector.obj $(OCR)\w32utils.obj $(OCR)\wolutil.obj \
 	$(OCR)\wordfmt.obj $(OCR)\xutils.obj $(OCR)\pdbfmt.obj
 
-MINICRT_OBJS = \
-	$(OM)\minicrt.obj $(OM)\msvcrt_dll.lib $(OM)\ntdll_dll.lib
-
 $(OE): force
 	@if not exist $(OE) mkdir $(OE)
 	@if not exist $(OBZ) mkdir $(OBZ)
@@ -127,7 +120,6 @@ $(OE): force
 	@if not exist $(ODV) mkdir $(ODV)
 	@if not exist $(OC) mkdir $(OC)
 	@if not exist $(OCR) mkdir $(OCR)
-	@if not exist $(OM) mkdir $(OM)
 
 {baseutils}.cpp{$(OS)}.obj::
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(OS)\ /Fd$(O)\vc80.pdb $<
@@ -152,13 +144,3 @@ $(OE): force
 
 {$(EXTDIR)\crengine\src}.cpp{$(OCR)}.obj::
 	$(CC) $(CRENGINE_CFLAGS) /Fo$(OCR)\ /Fd$(O)\vc80.pdb $<
-
-{$(EXTDIR)\minicrt}.cc{$(OM)}.obj::
-	$(CC) $(MINICRT_CFLAGS) /Fo$(OM)\ /Fd$(O)\vc80.pdb $<
-
-$(OM)\msvcrt_dll.lib: $(EXTDIR)\minicrt\msvcrt.def
-	lib /def:$(EXTDIR)\minicrt\msvcrt.def /OUT:$(OM)\msvcrt_dll.lib
-
-$(OM)\ntdll_dll.lib: $(EXTDIR)\minicrt\ntdll.def
-	lib /def:$(EXTDIR)\minicrt\ntdll.def /OUT:$(OM)\ntdll_dll.lib
-
