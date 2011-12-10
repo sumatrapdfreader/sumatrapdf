@@ -249,6 +249,7 @@ EXPORTS
        _ftime
        _ftime64
        _ftol
+       _ftol2_sse
        _fullpath
        _futime
        _futime64
