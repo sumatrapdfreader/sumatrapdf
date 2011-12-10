@@ -18,6 +18,9 @@ finish this code, but this is the plan:
  - http://llvm.org/svn/llvm-project/compiler-rt/trunk/
  - http://www.jbox.dk/sanos/source/
 
+More info:
+* http://kobyk.wordpress.com/2007/07/20/dynamically-linking-with-msvcrtdll-using-visual-c-2005/
+
 First order of business: figure out how to tell it
 to use functions from msvcrt.dll defined in msvcrt.def
 (e.g. rand, srand, _time64, memcmp etc.)

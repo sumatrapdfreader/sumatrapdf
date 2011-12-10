@@ -77,7 +77,13 @@ CFLAGSB = $(CFLAGSB) /wd4996
 # /Zi  : enable debug information
 # /GS  : enable security checks
 # /Gy  : separate functions for linker
-CFLAGSB = $(CFLAGSB) /W3 /WX /GR- /Zi /GS /Gy
+CFLAGSB = $(CFLAGSB) /W3 /WX /GR- /Zi /Gy
+
+!if "$(MINICRT)"=="yes"
+CFLAGSB = $(CFLAGSB) /GS-
+!else
+CFLAGSB = $(CFLAGSB) /GS
+!endif
 
 # Make it easy to compile as ANSI or UNICODE application
 !if "$(_ANSI)"==""
@@ -104,9 +110,14 @@ LDFLAGS = $(LDFLAGS) /NXCOMPAT /DYNAMICBASE /FIXED:NO
 # /MTd  : statically link debug crt (libcmtd.lib)
 CFLAGSB = $(CFLAGSB) /MTd
 # /Od   : disable optimizations
+CFLAGS = $(CFLAGSB) /Od
+
 # /RTCs : stack frame runtime checking
 # /RTCu : ununitialized local usage checks
-CFLAGS = $(CFLAGSB) /Od /RTCs /RTCu
+!if "$(MINICRT)"!="yes"
+CFLAGSB = $(CFLAGSB) /RTCs /RTCu
+!endif
+
 CFLAGSOPT = $(CFLAGSB) $(OPTLEVEL) /D "NDEBUG"
 !endif
 
