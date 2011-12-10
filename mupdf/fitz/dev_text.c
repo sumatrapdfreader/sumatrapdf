@@ -272,7 +272,7 @@ static int
 ornatecharacter(int ornate, int character)
 {
 	static wchar_t *ornates[] = {
-		L" \xA8\xB4`^\u02DA",
+		L" \xA8\xB4\x60\x5E\u02DA",
 		L"a\xE4\xE1\xE0\xE2\xE5", L"A\xC4\xC1\xC0\xC2\0",
 		L"e\xEB\xE9\xE8\xEA\0", L"E\xCB\xC9\xC8\xCA\0",
 		L"i\xEF\xED\xEC\xEE\0", L"I\xCF\xCD\xCC\xCE\0",
@@ -332,11 +332,11 @@ fixuptextspan(fz_text_span *head)
 			switch (span->text[i].c)
 			{
 			/* recombine characters and their accents */
-			case 0x00A8: /* ¨ */
-			case 0x00B4: /* ´ */
-			case 0x0060: /* ` */
-			case 0x005E: /* ^ */
-			case 0x02DA: /* ° */
+			case 0x00A8: /* diaeresis/umlaut */
+			case 0x00B4: /* accute accent */
+			case 0x0060: /* grave accent */
+			case 0x005E: /* circumflex accent */
+			case 0x02DA: /* ring above */
 				if (span->next && span->next->len > 0 && (i + 1 == span->len || i + 2 == span->len && span->text[i + 1].c == 32))
 				{
 					mergetwospans(span);
