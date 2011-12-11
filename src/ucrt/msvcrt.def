@@ -55,7 +55,6 @@ EXPORTS
        _stat64
        _stati64
        _stricmp
-       stricmp=_stricmp ; TODO: verify
        _strnicmp
        strnicmp=_strnicmp; TODO: verify
        _time64

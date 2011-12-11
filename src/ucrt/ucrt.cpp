@@ -41,17 +41,6 @@ TODO:
   called in et.exe?
 */
 
-
-#if 0 // TODO: not sure what the right thing to do is: undefine, leave it alone?
-#ifdef UNICODE
-#undef UNICODE
-#endif
-
-#ifdef _UNICODE
-#undef _UNICODE
-#endif
-#endif
-
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
@@ -125,22 +114,6 @@ void __cdecl _wassert(const wchar_t *msg, const wchar_t *file, unsigned line)
 {
     crash_me();
 }
-
-#if 0
-// TODO: msvcrt.dll in XP doesn't have _ftol2_sse, so we match it
-// just _ftol(), which might be slower. Could find an optimized version.
-void __declspec(naked) _ftol2_sse()
-{
-    _ftol();
-}
-#endif
-
-#if 0
-// TODO: can it be made just an alias to __p_iob ?
-FILE * __cdecl __iob_func(void) {
-	return __p__iob();
-}
-#endif
 
 }
 

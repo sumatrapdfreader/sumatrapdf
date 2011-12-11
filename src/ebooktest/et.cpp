@@ -490,7 +490,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     ScopedGdiPlus gdi;
 
     //ParseCommandLine(GetCommandLine());
-
     if (!RegisterWinClass(hInstance))
         goto Exit;
 
