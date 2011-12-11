@@ -188,6 +188,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\src\installer\Install.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\installer\Installer.cpp"
 				>
 			</File>
@@ -196,15 +200,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\installer\InstallOnly.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\src\installer\Resource.h"
 				>
 			</File>
 			<File
-				RelativePath=".\src\installer\UninstallOnly.cpp"
+				RelativePath=".\src\installer\Uninstall.cpp"
 				>
 			</File>
 		</Filter>

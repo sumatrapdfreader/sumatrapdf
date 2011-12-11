@@ -77,12 +77,11 @@ CFLAGSB = $(CFLAGSB) /wd4996
 # /Zi  : enable debug information
 # /GS  : enable security checks
 # /Gy  : separate functions for linker
-CFLAGSB = $(CFLAGSB) /W3 /WX /GR- /Zi /Gy
+CFLAGSB = $(CFLAGSB) /W3 /WX /GR- /Zi /GS /Gy
 
 !if "$(MINICRT)"=="yes"
-CFLAGSB = $(CFLAGSB) /GS-
-!else
-CFLAGSB = $(CFLAGSB) /GS-
+# TODO: try to make uCRT compile with /GS
+CFLAGSB = $(CFLAGSB: /GS = /GS- )
 !endif
 
 # Make it easy to compile as ANSI or UNICODE application
@@ -112,10 +111,11 @@ CFLAGSB = $(CFLAGSB) /MTd
 # /RTCs : stack frame runtime checking
 # /RTCu : ununitialized local usage checks
 # /Od   : disable optimizations
-!if "$(MINICRT)"=="yes"
-CFLAGS = $(CFLAGSB) /Od
-!else
 CFLAGS = $(CFLAGSB) /Od /RTCs /RTCu
+!if "$(MINICRT)"=="yes"
+# TODO: try to make uCRT compile with /RTCs /RTCu  (or don't link
+#       it at all, since we statically link the debug CRT anyway)
+CFLAGS = $(CFLAGSB:/RTCs /RTCu=)
 !endif
 CFLAGSOPT = $(CFLAGSB) $(OPTLEVEL) /D "NDEBUG"
 !endif

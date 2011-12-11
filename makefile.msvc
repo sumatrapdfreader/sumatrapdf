@@ -8,16 +8,13 @@
 # PLATFORM=X86
 #   the PLATFORM var is usually set in the x64 and x64 cross tools Visual Studio command prompt
 #   note: building on X64 isn't officially supported and might unintentionally be broken
-#MINICRT=yes
-#   set to yes to build (currently ebooktest app) with minicrt, to see how much we save
+# MINICRT=yes
+#   set to yes to build with ucrt, to see how much we save
 #   note: doesn't work yet. Doesn't find few libc functions that are not implemented. 
-#   also probably wouldn't work for 64-bit builds due to using *.obj files. 
-#   also might have problems when using different msvc version 
-#   (again due to using *.obj files that are apparently taken from vs 2003)
+#   also probably wouldn't work for 64-bit builds due to ...?
 #   trick: using /verbose option to the linker helps understand what it does
 #   also I'm probably mixing dll support with non-dll support
-#   note: should probably add msvcrt.def to reuse msvcrt.dll functionality
-#   (msvcrt.dll ships on every OS)
+
 # Set default configuration
 !if "$(CFG)"==""
 CFG=dbg
