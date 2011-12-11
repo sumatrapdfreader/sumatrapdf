@@ -8,7 +8,12 @@
 ; * decleare __imp__bar as dword external symbol (external means its defined
 ;   somewhere else)
 ; * create a function _foo that jumps to __imp__bar
-
+;
+; Exception handling support:
+; ___CxxFrameHandler[n] is called for try/catch blocks (C++)
+; See "How a C++ compiler implements exception handling"
+; http://www.codeproject.com/cpp/exceptionhandler.asp
+   
    .386
 
 ; TODO: write redirects for those and test they work as expected
@@ -28,12 +33,14 @@ _TEXT segment use32 para public 'CODE'
     public _vsnprintf
     public  __chkstk
     public __alloca_probe
+    public  ___CxxFrameHandler3
 
     extrn __imp___ftol:dword
     extrn __imp___stricmp:dword
     extrn __imp____p__iob:dword
     extrn __imp___strnicmp:dword
     extrn __imp___vsnprintf:dword
+    extrn __imp____CxxFrameHandler:dword
 
 ; redirect _ftol2_sse => _ftol in msvcrt.dll
 __ftol2_sse     proc near
@@ -59,6 +66,11 @@ ___iob_func     endp
 _vsnprintf      proc near
                 jmp __imp___vsnprintf
 _vsnprintf      endp
+
+; redirect ___CxxFrameHandler3 => _CxxFrameHandler in msvcrt.dll
+___CxxFrameHandler3 proc near
+                jmp  __imp____CxxFrameHandler
+___CxxFrameHandler3 endp
 
 ; _alloca_probe and _chkstk come from sanos project
 ; http://www.jbox.dk/sanos/source/lib/chkstk.asm.html

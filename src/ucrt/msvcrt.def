@@ -68,6 +68,7 @@ EXPORTS
        _wtoi
        _wtoi64
        _wtol
+       __CxxFrameHandler
        abort
        abs
        acos
