@@ -8,7 +8,7 @@
 # PLATFORM=X86
 #   the PLATFORM var is usually set in the x64 and x64 cross tools Visual Studio command prompt
 #   note: building on X64 isn't officially supported and might unintentionally be broken
-MINICRT=yes
+#MINICRT=yes
 #   set to yes to build (currently ebooktest app) with minicrt, to see how much we save
 #   note: doesn't work yet. Doesn't find few libc functions that are not implemented. 
 #   also probably wouldn't work for 64-bit builds due to using *.obj files. 
@@ -119,7 +119,7 @@ BROWSER_PLUGIN_CFLAGS = $(CFLAGS) /Isrc/utils /Isrc/utils/msvc
 ENGINEDUMP_APP = $(O)\EngineDump.exe
 
 MINICRT_OBJS = \
-	$(OS)\ucrt.obj $(OS)\msvcrt_dll.lib $(OS)\ntdll_dll.lib
+	$(OS)\ucrt.obj $(OS)\ucrt_asm.obj $(OS)\msvcrt_dll.lib $(OS)\ntdll_dll.lib
 
 UTILS_OBJS = \
 	$(OS)\BencUtil.obj $(OS)\FileUtil.obj $(OS)\Http.obj \
@@ -270,6 +270,10 @@ $(ENGINEDUMP_APP): $(ENGINEDUMP_OBJS)
 # ucrt directory
 {src\ucrt}.cpp{$(OS)}.obj::
 	$(CC) $(MINICRT_CFLAGS) /Fo$(OS)\ /Fd$(O)\vc80.pdb $<
+
+# http://msdn.microsoft.com/en-us/library/s0ksfwcf.aspx
+{src\ucrt}.asm{$(OS)}.obj::
+	ml /c /coff /Fo$(OS)\ $<
 
 # TODO: replace with a single rule
 $(OS)\msvcrt_dll.lib: src\ucrt\msvcrt.def
