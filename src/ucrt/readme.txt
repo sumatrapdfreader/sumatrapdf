@@ -88,6 +88,7 @@ Dev notes
 * http://msinilo.pl/blog/?p=719 info about vector constructor iterator, also
   http://stackoverflow.com/questions/1025313/c-will-an-empty-destructor-do-the-
 same-thing-as-the-generated-destructor/2322314#2322314
+* http://code.google.com/p/tinyrss/source/browse/tiny/tcrt.cpp - another minimal crt
 
 TODO
 ----
