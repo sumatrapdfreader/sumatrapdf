@@ -33,7 +33,8 @@ _TEXT segment use32 para public 'CODE'
     public _vsnprintf
     public  __chkstk
     public __alloca_probe
-    public  ___CxxFrameHandler3
+    public ___CxxFrameHandler3
+    public __CxxThrowException@8
 
     extrn __imp___ftol:dword
     extrn __imp___stricmp:dword
@@ -41,36 +42,42 @@ _TEXT segment use32 para public 'CODE'
     extrn __imp___strnicmp:dword
     extrn __imp___vsnprintf:dword
     extrn __imp____CxxFrameHandler:dword
+    extrn __imp___CxxThrowException:dword
 
-; redirect _ftol2_sse => _ftol in msvcrt.dll
+; _ftol2_sse => msvcrt._ftol
 __ftol2_sse     proc near
                 jmp  __imp___ftol
 __ftol2_sse     endp
 
-; redirect stricmp => _stricmp in msvcrt.dll
+; stricmp => msvcrt._stricmp
 _stricmp        proc near
                 jmp __imp___stricmp
 _stricmp        endp
 
-; redirect strnicmp => _strnicmp in msvcrt.dll
+; strnicmp => msvcrt._strnicmp
 _strnicmp       proc near
                 jmp __imp___strnicmp
 _strnicmp       endp
 
-; redirect __iob_func => __p_iob in msvcrt.dll
+; __iob_func => msvcrt.__p_iob
 ___iob_func     proc near
                 jmp __imp____p__iob
 ___iob_func     endp
 
-; redirect vsnprintf => _vsnprintf in ntdll.dll
+; vsnprintf => ntdll._vsnprintf
 _vsnprintf      proc near
                 jmp __imp___vsnprintf
 _vsnprintf      endp
 
-; redirect ___CxxFrameHandler3 => _CxxFrameHandler in msvcrt.dll
+; __CxxFrameHandler3 => msvcrt._CxxFrameHandler
 ___CxxFrameHandler3 proc near
                 jmp  __imp____CxxFrameHandler
 ___CxxFrameHandler3 endp
+
+; _CxxThrowException@8 => msvcrt._CxxThrowException
+__CxxThrowException@8 proc near
+                jmp  __imp___CxxThrowException
+__CxxThrowException@8 endp
 
 ; _alloca_probe and _chkstk come from sanos project
 ; http://www.jbox.dk/sanos/source/lib/chkstk.asm.html
