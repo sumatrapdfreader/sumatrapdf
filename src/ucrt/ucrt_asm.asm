@@ -16,14 +16,6 @@
    
    .386
 
-; TODO: write redirects for those and test they work as expected
-; by writing small code snippets that call them and step through
-; asembly to verify we end up in msvcrt.dll
-;close=_close ; TODO: verify
-;open=_open ; TODO: verify
-;read=_read ; TODO: verify
-;write=_write ; TODO: verify
-
 _TEXT segment use32 para public 'CODE'
 
     public  __ftol2_sse
