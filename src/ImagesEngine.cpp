@@ -747,8 +747,8 @@ Bitmap *CCbxEngine::LoadImage(int pageNo)
 
 static bool SetCurrentCbzPage(unzFile& uf, const TCHAR *fileName)
 {
-    ScopedMem<char> fileNameUtf8(str::conv::ToUtf8(fileName));
-    int err = unzLocateFile(uf, fileNameUtf8, 0);
+    ScopedMem<char> fileNameAnsi(str::conv::ToAnsi(fileName));
+    int err = unzLocateFile(uf, fileNameAnsi, 0);
     return err == UNZ_OK;
 }
 
@@ -811,7 +811,7 @@ bool CCbxEngine::LoadCbzFile(const TCHAR *file)
         char fileName[MAX_PATH];
         int err = unzGetCurrentFileInfo64(cbzData->uf, NULL, fileName, dimof(fileName), NULL, 0, NULL, 0);
         if (err == UNZ_OK) {
-            ScopedMem<TCHAR> fileName2(str::conv::FromUtf8(fileName));
+            ScopedMem<TCHAR> fileName2(str::conv::FromAnsi(fileName));
             if (ImageEngine::IsSupportedFile(fileName2) &&
                 // OS X occasionally leaves metadata with image extensions
                 !str::StartsWith(path::GetBaseName(fileName2), _T("."))) {
