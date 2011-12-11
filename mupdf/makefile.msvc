@@ -82,7 +82,7 @@ CFLAGSB = $(CFLAGSB) /W3 /WX /GR- /Zi /Gy
 !if "$(MINICRT)"=="yes"
 CFLAGSB = $(CFLAGSB) /GS-
 !else
-CFLAGSB = $(CFLAGSB) /GS
+CFLAGSB = $(CFLAGSB) /GS-
 !endif
 
 # Make it easy to compile as ANSI or UNICODE application
