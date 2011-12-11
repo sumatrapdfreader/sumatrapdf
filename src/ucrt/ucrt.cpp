@@ -213,6 +213,34 @@ type_info::~type_info()
 {
 }
 
+#if 0
+extern "C"
+void __stdcall  __ehvec_ctor(
+        void*           ptr,            // Pointer to array to destruct   
+        unsigned int    size,           // Size of each element (including padding)   
+        int             count,          // Number of elements in the array   
+        void(__thiscall *pCtor)(void*),   // Constructor to call   
+        void(__thiscall *pDtor)(void*)    // Destructor to call should exception be thrown   
+){   
+    int i;
+    int ok = 0;
+    __try
+    {
+        for (i = 0;  i < count;  i++ )
+        {
+            (*pCtor)(ptr);
+            ptr = (char*)ptr + size;
+        }   
+        ok = 1;
+    }   
+    __finally
+    {
+        //if (!ok)
+        //    __ArrayUnwind(ptr, size, i, pDtor);
+    }
+}
+#endif
+
 // debug version of new
 void * __cdecl operator new(unsigned int s, int, char const *file, int line) {
   return malloc(s);
