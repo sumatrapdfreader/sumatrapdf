@@ -6,7 +6,9 @@ Windows executables. It does that by implementing a smaller crt
 library than the one included with Visual Studio.
 
 It's a work in progress. It works for some programs, it might not work
-for others. It has only been tried with 32bit programs.
+for others. It has only been tried with 32bit programs. I'm unclear if the
+assembly code needs to be rewritten for 64bit or if 32bit version will compile
+for 64bit.
 
 How much can you save?
 -------------------------

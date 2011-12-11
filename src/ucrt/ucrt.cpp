@@ -80,7 +80,8 @@ void __cdecl _wassert(const wchar_t *msg, const wchar_t *file, unsigned line)
     crash_me();
 }
 
-double _wtof(const wchar_t *s)
+// http://msdn.microsoft.com/en-us/library/hc25t012.aspx
+double __cdecl _wtof(const wchar_t *s)
 {
     if (!s) {
         errno = EINVAL;
@@ -95,6 +96,26 @@ double _wtof(const wchar_t *s)
     double ret = atof(s2);
     free(s2);
     return ret;
+}
+
+// http://msdn.microsoft.com/en-us/library/217yyhy9(v=VS.100).aspx
+// note: msdn lists the prototype as:
+// wchar_t * __cdecl wcspbrk(const wchar_t *str, const wchar_t *strCharSet)\
+// but only this version works
+const wchar_t * __cdecl wcspbrk(const wchar_t *str, const wchar_t *strCharSet)
+{
+    if (!str || !strCharSet)
+        return NULL;
+
+    while (*str) {
+        wchar_t c = *str++;
+        const wchar_t *tmp = strCharSet;
+        while (*tmp) {
+            if (c == *tmp++)
+                return str;
+        }
+    }
+    return NULL;
 }
 
 // _aligned_malloc and _aligned_free are based on:
