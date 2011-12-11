@@ -21,7 +21,6 @@
 
 ; TODO: those were in ntdll.def
 ; _chkstk=__chkstk ; TODO: is it valid?
-; vsnprintf=_vsnprintf ; TODO: is it valid?
 
 _TEXT segment use32 para public 'CODE'
 
@@ -29,11 +28,13 @@ _TEXT segment use32 para public 'CODE'
     public  _stricmp
     public  ___iob_func
     public _strnicmp
+    public _vsnprintf
 
     extrn __imp___ftol:dword
     extrn __imp___stricmp:dword
     extrn __imp____p__iob:dword
     extrn __imp___strnicmp:dword
+    extrn __imp___vsnprintf:dword
 
 ; redirect _ftol2_sse => _ftol in msvcrt.dll
 __ftol2_sse     proc near
@@ -54,6 +55,11 @@ _strnicmp       endp
 ___iob_func     proc near
                 jmp __imp____p__iob
 ___iob_func     endp
+
+; redirect vsnprintf => _vsnprintf in ntdll.dll
+_vsnprintf      proc near
+                jmp __imp___vsnprintf
+_vsnprintf      endp
 
 _TEXT           ends
                 end

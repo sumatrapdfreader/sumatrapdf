@@ -40,6 +40,8 @@ For more detailed explanations, read the following explanations:
 * http://drdobbs.com/windows/184416623
 * http://kobyk.wordpress.com/2007/07/20/dynamically-linking-with-msvcrtdll-using-visual-c-2005/
 * http://in4k.untergrund.net/various%20web%20articles/Creating_Small_Win32_Executables_-_Fast_Builds.htm
+* http://blog.koroirc.com/2008/09/trimming-executables-part-1-getting-rid-of-the
+-c-runtime/
 
 We do what they describe i.e. re-implement crt functions. If equivalent
 function already exists in msvcrt.dll or ntdll.dll, we just redirect
