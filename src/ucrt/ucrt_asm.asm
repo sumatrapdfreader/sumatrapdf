@@ -35,6 +35,7 @@ _TEXT segment use32 para public 'CODE'
     public __alloca_probe
     public ___CxxFrameHandler3
     public __CxxThrowException@8
+    public ___CxxLongjmpUnwind@4
 
     extrn __imp___ftol:dword
     extrn __imp___stricmp:dword
@@ -43,6 +44,7 @@ _TEXT segment use32 para public 'CODE'
     extrn __imp___vsnprintf:dword
     extrn __imp____CxxFrameHandler:dword
     extrn __imp___CxxThrowException:dword
+    extrn __imp____CxxLongjmpUnwind:dword
 
 ; _ftol2_sse => msvcrt._ftol
 __ftol2_sse     proc near
@@ -78,6 +80,12 @@ ___CxxFrameHandler3 endp
 __CxxThrowException@8 proc near
                 jmp  __imp___CxxThrowException
 __CxxThrowException@8 endp
+
+; TODO: just guessing
+; __CxxLongjmpUnwind@4 => msvcrt.__CxxLongjmpUnwind
+___CxxLongjmpUnwind@4 proc near
+                jmp __imp____CxxLongjmpUnwind
+___CxxLongjmpUnwind@4 endp
 
 ; _alloca_probe and _chkstk come from sanos project
 ; http://www.jbox.dk/sanos/source/lib/chkstk.asm.html

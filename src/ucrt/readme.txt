@@ -79,6 +79,9 @@ Dev notes
    other useful code
  - Visual Studio crt code is included under Vc\crt\src directory. Useful
    for figuring out some things
+ - http://www.openrce.org/articles/full_view/23 has some info that might be
+   helpful figuring out what 'eh vector constructor iterator' is and how
+   to implement it
 
 TODO
 ----

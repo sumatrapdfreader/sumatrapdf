@@ -70,6 +70,7 @@ EXPORTS
        _wtoi64
        _wtol
        __CxxFrameHandler
+	   __CxxLongjmpUnwind
        abort
        abs
        acos
