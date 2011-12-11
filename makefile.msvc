@@ -147,10 +147,10 @@ SUMATRA_OBJS = \
 	$(SYNCTEX_OBJS) $(ENGINE_OBJS)
  
 INSTALLER_OBJS = \
-	$(OS)\Installer.obj $(OS)\InstallOnly.obj $(INSTALLER_RES)
+	$(OS)\Installer.obj $(OS)\Install.obj $(INSTALLER_RES)
 
 UNINSTALLER_OBJS = \
-	$(OS)\Uninstaller.obj  $(OS)\UninstallOnly.obj $(UNINSTALLER_RES)
+	$(OS)\Uninstaller.obj  $(OS)\Uninstall.obj $(UNINSTALLER_RES)
 
 ET_OBJS = \
 	$(OS)\et.obj $(ET_RES)
@@ -304,8 +304,8 @@ $(OS)\ntdll_dll.lib: src\ucrt\ntdll.def
 	$(CC) $(INSTALLER_CFLAGS) /Fo$(OS)\ /Fd$(O)\vc80.pdb $<
 $(OS)\Uninstaller.obj: $(OS)\Installer.obj
 	$(CC) $(UNINSTALLER_CFLAGS) /Fo$(OS)\Uninstaller.obj /Fd$(O)\vc80.pdb src\installer\Installer.cpp
-$(OS)\UninstallOnly.obj: src\installer\UninstallOnly.cpp
-	$(CC) $(UNINSTALLER_CFLAGS) /Fo$(OS)\UninstallOnly.obj /Fd$(O)\vc80.pdb src\installer\UninstallOnly.cpp
+$(OS)\Uninstall.obj: src\installer\Uninstall.cpp
+	$(CC) $(UNINSTALLER_CFLAGS) /Fo$(OS)\Uninstall.obj /Fd$(O)\vc80.pdb src\installer\Uninstall.cpp
 
 # ebooktest directory
 {src\ebooktest}.cpp{$(OS)}.obj::
@@ -398,16 +398,16 @@ $(OS)\ImagesEngine.obj: ext\unrar\dll.hpp src\BaseEngine.h src\ImagesEngine.h
 $(OS)\ImagesEngine.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\ImagesEngine.obj: src\utils\Scopes.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\ImagesEngine.obj: src\utils\WinUtil.h
+$(OS)\Install.obj: src\BaseEngine.h src\ifilter\PdfFilter.h src\previewer\PdfPreview.h
+$(OS)\Install.obj: src\installer\Installer.h src\installer\Resource.h src\PdfEngine.h
+$(OS)\Install.obj: src\utils\BaseUtil.h src\utils\CmdLineParser.h src\utils\FileUtil.h
+$(OS)\Install.obj: src\utils\GeomUtil.h src\utils\Scopes.h src\utils\StrUtil.h
+$(OS)\Install.obj: src\utils\Transactions.h src\utils\Vec.h src\utils\WinUtil.h
+$(OS)\Install.obj: src\Version.h
 $(OS)\Installer.obj: src\installer\Installer.h src\installer\Resource.h src\utils\BaseUtil.h
 $(OS)\Installer.obj: src\utils\CmdLineParser.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\Installer.obj: src\utils\Scopes.h src\utils\StrUtil.h src\utils\Transactions.h
 $(OS)\Installer.obj: src\utils\Vec.h src\utils\WinUtil.h src\Version.h
-$(OS)\InstallOnly.obj: src\BaseEngine.h src\ifilter\PdfFilter.h src\previewer\PdfPreview.h
-$(OS)\InstallOnly.obj: src\installer\Installer.h src\installer\Resource.h src\PdfEngine.h
-$(OS)\InstallOnly.obj: src\utils\BaseUtil.h src\utils\CmdLineParser.h src\utils\FileUtil.h
-$(OS)\InstallOnly.obj: src\utils\GeomUtil.h src\utils\Scopes.h src\utils\StrUtil.h
-$(OS)\InstallOnly.obj: src\utils\Transactions.h src\utils\Vec.h src\utils\WinUtil.h
-$(OS)\InstallOnly.obj: src\Version.h
 $(OS)\Menu.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
 $(OS)\Menu.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
 $(OS)\Menu.obj: src\EngineManager.h src\EpubEngine.h src\ExternalPdfViewer.h
@@ -576,10 +576,10 @@ $(OS)\translations.obj: src\utils\StrUtil.h
 $(OS)\TrivialHtmlParser.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\TrivialHtmlParser.obj: src\utils\StrUtil.h src\utils\TrivialHtmlParser.h src\utils\Vec.h
 $(OS)\TrivialHtmlParser.obj: src\utils\WinUtil.h
-$(OS)\UninstallOnly.obj: src\installer\Installer.h src\installer\Resource.h src\utils\BaseUtil.h
-$(OS)\UninstallOnly.obj: src\utils\CmdLineParser.h src\utils\FileUtil.h src\utils\GeomUtil.h
-$(OS)\UninstallOnly.obj: src\utils\Scopes.h src\utils\StrUtil.h src\utils\Transactions.h
-$(OS)\UninstallOnly.obj: src\utils\Vec.h src\utils\WinUtil.h src\Version.h
+$(OS)\Uninstall.obj: src\installer\Installer.h src\installer\Resource.h src\utils\BaseUtil.h
+$(OS)\Uninstall.obj: src\utils\CmdLineParser.h src\utils\FileUtil.h src\utils\GeomUtil.h
+$(OS)\Uninstall.obj: src\utils\Scopes.h src\utils\StrUtil.h src\utils\Transactions.h
+$(OS)\Uninstall.obj: src\utils\Vec.h src\utils\WinUtil.h src\Version.h
 $(OS)\UnitTests.obj: src\AppTools.h src\BaseEngine.h src\DisplayState.h
 $(OS)\UnitTests.obj: src\ParseCommandLine.h src\StressTesting.h src\utils\BaseUtil.h
 $(OS)\UnitTests.obj: src\utils\GeomUtil.h src\utils\Scopes.h src\utils\StrUtil.h

@@ -21,10 +21,10 @@
     <ClCompile Include="src\utils\FileUtil.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\installer\InstallOnly.cpp">
+    <ClCompile Include="src\installer\Install.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\installer\UninstallOnly.cpp">
+    <ClCompile Include="src\installer\Uninstall.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -3,19 +3,23 @@ What is ucrt?
 
 ucrt (micro crt) is a BSD-licensed library for creating smaller
 Windows executables. It does that by implementing a smaller crt
-library than the one shipping with Visual Studio.
+library than the one included with Visual Studio.
 
 It's a work in progress. It works for some programs, it might not work
 for others. It has only been tried with 32bit programs.
 
-How much do can you save?
+How much can you save?
 -------------------------
 
 Using ucrt on an example program of mine shaved ~60kB from final
-executable size. It might be slightly different for you.
+executable size. It might be different for you.
 
 How to use it my program?
 -------------------------
+
+Crt stands for C runtime and implements the C standard library functions
+like malloc(), printf() etc. as well as low-level support for C++, like
+exception handling.
 
 When you compile a C/C++ program with Visual Studio, you have 2 choices:
 a) dynamically link with its crt dll and ship the whole dll with your

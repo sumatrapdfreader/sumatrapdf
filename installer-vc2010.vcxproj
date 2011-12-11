@@ -69,9 +69,9 @@
     </BuildLog>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\installer\Install.cpp" />
     <ClCompile Include="src\installer\Installer.cpp" />
-    <ClCompile Include="src\installer\InstallOnly.cpp" />
-    <ClCompile Include="src\installer\UninstallOnly.cpp" />
+    <ClCompile Include="src\installer\Uninstall.cpp" />
     <ClCompile Include="src\utils\FileUtil.cpp" />
   </ItemGroup>
   <ItemGroup>
