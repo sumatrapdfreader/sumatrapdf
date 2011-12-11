@@ -4,12 +4,6 @@
 #ifndef Installer_h
 #define Installer_h
 
-// define for testing the uninstaller
-// #define TEST_UNINSTALLER
-#if defined(TEST_UNINSTALLER) && !defined(BUILD_UNINSTALLER)
-#define BUILD_UNINSTALLER
-#endif
-
 #include <windows.h>
 #include <GdiPlus.h>
 #include <shlobj.h>
@@ -166,11 +160,14 @@ void InstallPdfFilter();
 void InstallPdfPreviewer();
 
 #ifdef BUILD_UNINSTALLER
+
 bool ExecuteUninstallerFromTempDir();
 BOOL IsUninstallerNeeded();
 void OnUninstallationFinished();
 DWORD WINAPI UninstallerThread(LPVOID data);
+
 #else
+
 extern HWND gHwndButtonRunSumatra;
 BOOL IsValidInstaller();
 void OnInstallationFinished();

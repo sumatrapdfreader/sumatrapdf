@@ -10,7 +10,20 @@ The installer is good enough for production but it doesn't mean it couldn't be i
  * show fireworks on successful installation/uninstallation
 */
 
+// define for testing the uninstaller
+// #define TEST_UNINSTALLER
+#if defined(TEST_UNINSTALLER) && !defined(BUILD_UNINSTALLER)
+#define BUILD_UNINSTALLER
+#endif
+
 #include "Installer.h"
+
+// TODO: can't build these separately without breaking TEST_UNINSTALLER
+#ifdef BUILD_UNINSTALLER
+#include "Uninstall.cpp"
+#else
+#include "Install.cpp"
+#endif
 
 using namespace Gdiplus;
 
@@ -300,7 +313,7 @@ bool RegisterServerDLL(TCHAR *dllPath, bool unregister=false)
     return ok;
 }
 
-#if !defined(BUILD_UNINSTALLER) || defined(TEST_UNINSTALLER)
+#ifndef BUILD_UNINSTALLER
 extern "C" {
 // needed because we compile bzip2 with #define BZ_NO_STDIO
 void bz_internal_error(int errcode)

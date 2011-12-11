@@ -9,8 +9,6 @@
 #define UNINSTALLER_WIN_DX  INSTALLER_WIN_DX
 #define UNINSTALLER_WIN_DY  INSTALLER_WIN_DY
 
-using namespace Gdiplus;
-
 // Try harder getting temporary directory
 // Caller needs to free() the result.
 // Returns NULL if fails for any reason.
@@ -86,6 +84,25 @@ static void UnregisterFromBeingDefaultViewer(HKEY hkey)
         DeleteRegKey(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT _T("\\UserChoice"), true);
 }
 
+static bool DeleteEmptyRegKey(HKEY root, const TCHAR *keyName)
+{
+    HKEY hkey;
+    if (RegOpenKeyEx(root, keyName, 0, KEY_READ, &hkey) != ERROR_SUCCESS)
+        return true;
+
+    DWORD subkeys, values;
+    bool isEmpty = false;
+    if (RegQueryInfoKey(hkey, NULL, NULL, NULL, &subkeys, NULL, NULL,
+                        &values, NULL, NULL, NULL, NULL) == ERROR_SUCCESS) {
+        isEmpty = 0 == subkeys && 0 == values;
+    }
+    RegCloseKey(hkey);
+
+    if (isEmpty)
+        DeleteRegKey(root, keyName);
+    return isEmpty;
+}
+
 static void RemoveOwnRegistryKeys()
 {
     HKEY keys[] = { HKEY_LOCAL_MACHINE, HKEY_CURRENT_USER };
@@ -96,11 +113,20 @@ static void RemoveOwnRegistryKeys()
         DeleteRegKey(keys[i], REG_CLASSES_APPS);
         SHDeleteValue(keys[i], REG_CLASSES_PDF _T("\\OpenWithProgids"), TAPP);
 
-        for (int i = 0; NULL != gSupportedExts[i]; i++) {
-            ScopedMem<TCHAR> keyname(str::Join(_T("Software\\Classes\\"), gSupportedExts[i], _T("\\OpenWithProgids")));
+        for (int j = 0; NULL != gSupportedExts[j]; j++) {
+            ScopedMem<TCHAR> keyname(str::Join(_T("Software\\Classes\\"), gSupportedExts[j], _T("\\OpenWithProgids")));
             SHDeleteValue(keys[i], keyname, TAPP);
-            keyname.Set(str::Join(_T("Software\\Classes\\"), gSupportedExts[i], _T("\\OpenWithList\\") EXENAME));
-            DeleteRegKey(keys[i], keyname);
+            DeleteEmptyRegKey(keys[i], keyname);
+
+            keyname.Set(str::Join(_T("Software\\Classes\\"), gSupportedExts[j], _T("\\OpenWithList\\") EXENAME));
+            if (!DeleteRegKey(keys[i], keyname))
+                continue;
+            // remove empty keys that the installer might have created
+            *(TCHAR *)str::FindCharLast(keyname, '\\') = '\0';
+            if (!DeleteEmptyRegKey(keys[i], keyname))
+                continue;
+            *(TCHAR *)str::FindCharLast(keyname, '\\') = '\0';
+            DeleteEmptyRegKey(keys[i], keyname);
         }
     }
 }
@@ -223,10 +249,10 @@ DWORD WINAPI UninstallerThread(LPVOID data)
     if (!RemoveShortcut(true) && !RemoveShortcut(false))
         NotifyFailed(_T("Couldn't remove the shortcut"));
 
-    RemoveOwnRegistryKeys();
     UninstallBrowserPlugin();
     UninstallPdfFilter();
     UninstallPdfPreviewer();
+    RemoveOwnRegistryKeys();
 
     if (!RemoveInstalledFiles())
         NotifyFailed(_T("Couldn't remove installation directory"));

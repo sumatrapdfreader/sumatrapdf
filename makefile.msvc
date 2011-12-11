@@ -144,10 +144,10 @@ SUMATRA_OBJS = \
 	$(SYNCTEX_OBJS) $(ENGINE_OBJS)
  
 INSTALLER_OBJS = \
-	$(OS)\Installer.obj $(OS)\Install.obj $(INSTALLER_RES)
+	$(OS)\Installer.obj $(INSTALLER_RES)
 
 UNINSTALLER_OBJS = \
-	$(OS)\Uninstaller.obj  $(OS)\Uninstall.obj $(UNINSTALLER_RES)
+	$(OS)\Uninstaller.obj $(UNINSTALLER_RES)
 
 ET_OBJS = \
 	$(OS)\et.obj $(ET_RES)
@@ -301,8 +301,6 @@ $(OS)\ntdll_dll.lib: src\ucrt\ntdll.def
 	$(CC) $(INSTALLER_CFLAGS) /Fo$(OS)\ /Fd$(O)\vc80.pdb $<
 $(OS)\Uninstaller.obj: $(OS)\Installer.obj
 	$(CC) $(UNINSTALLER_CFLAGS) /Fo$(OS)\Uninstaller.obj /Fd$(O)\vc80.pdb src\installer\Installer.cpp
-$(OS)\Uninstall.obj: src\installer\Uninstall.cpp
-	$(CC) $(UNINSTALLER_CFLAGS) /Fo$(OS)\Uninstall.obj /Fd$(O)\vc80.pdb src\installer\Uninstall.cpp
 
 # ebooktest directory
 {src\ebooktest}.cpp{$(OS)}.obj::
@@ -401,7 +399,9 @@ $(OS)\Install.obj: src\utils\BaseUtil.h src\utils\CmdLineParser.h src\utils\File
 $(OS)\Install.obj: src\utils\GeomUtil.h src\utils\Scopes.h src\utils\StrUtil.h
 $(OS)\Install.obj: src\utils\Transactions.h src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\Install.obj: src\Version.h
-$(OS)\Installer.obj: src\installer\Installer.h src\installer\Resource.h src\utils\BaseUtil.h
+$(OS)\Installer.obj: src\BaseEngine.h src\ifilter\PdfFilter.h src\previewer\PdfPreview.h
+$(OS)\Installer.obj: src\installer\Install.cpp src\installer\Installer.h src\installer\Resource.h
+$(OS)\Installer.obj: src\installer\Uninstall.cpp src\PdfEngine.h src\utils\BaseUtil.h
 $(OS)\Installer.obj: src\utils\CmdLineParser.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\Installer.obj: src\utils\Scopes.h src\utils\StrUtil.h src\utils\Transactions.h
 $(OS)\Installer.obj: src\utils\Vec.h src\utils\WinUtil.h src\Version.h

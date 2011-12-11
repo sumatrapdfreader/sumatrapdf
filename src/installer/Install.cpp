@@ -33,8 +33,6 @@ static HWND             gHwndCheckboxRegisterPdfFilter = NULL;
 static HWND             gHwndCheckboxRegisterPdfPreviewer = NULL;
 static HWND             gHwndProgressBar = NULL;
 
-using namespace Gdiplus;
-
 static int GetInstallationStepCount()
 {
     /* Installation steps
