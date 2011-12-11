@@ -1,45 +1,5 @@
-/*
-This is a single-file implementation of Visual Studio crt
-made in order to reduce the size of executables.
-
-This is preliminary, I might change my mind or never
-finish this code, but this is the plan:
-* implementation is in a single file, to make it easy to integrate
-  in Sumatra and other projects
-* I'll start from scratch i.e. start with no code at all and
-  add the necessary functions one by one, guided by what
-  linker tells us is missing. This is to learn what is the absolutely
-  minimum to include and review all the code that is included
-* I'll reuse as much as possible from msvcrt.dll
-* I'll use the code already written in omaha's minicrt project
-  (but only after reviewing each function)
-* the code that comes in *.obj files will have to be written
-* other places that I might steal the code from:
- - http://llvm.org/svn/llvm-project/compiler-rt/trunk/
- - http://www.jbox.dk/sanos/source/
- - http://f4b24.googlecode.com/svn/trunk/extra/smartvc9/
- - http://code.google.com/p/ontl/source/browse/trunk/ntl/rtl/eh.cpp
-   implements __CxxFrameHandler3 and other exceptions support
-
-More info:
-* http://kobyk.wordpress.com/2007/07/20/dynamically-linking-with-msvcrtdll-using-visual-c-2005/
-* http://adrianhenke.wordpress.com/2008/12/05/create-lib-file-from-dll/ - info on how to create
-  .lib file from .def file
-* http://www.ibsensoftware.com/download.html wcrt is another small C runtime library, not
-   open source
-* http://drdobbs.com/windows/184416623
-
-TODO:
-* msvcrt.dll (c:\windows\system32\msvcrt.dll) might contain
-  more functionality in later versions of windows. We have
-  to make sure we don't use function that are not present in XP
-  (by extracting list of symbols from msvcrt.dll on XP with
-  dumpbin and not using anything that is not there)
-* a mystery: on my win7 64bit thinkpad, according to dumpbin /exports,
-  ntdll.dll doesn't have _alldiv() and yet everything works. Why
-  isn't it there (it is on my other win7 32bit vm)? What gets
-  called in et.exe?
-*/
+/* Copyright 2011-2012 the ucrt project authors (see AUTHORS file).
+   License: Simplified BSD (see COPYING) */
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -117,7 +77,6 @@ void __cdecl _wassert(const wchar_t *msg, const wchar_t *file, unsigned line)
 
 }
 
-
 // provide symbol:
 // type_info::'vftable' ["const type_info::`vftable'" (??_7type_info@@6B@)].
 // needed when compiling classes with virtual methods with /GR 
@@ -138,7 +97,6 @@ type_info::~type_info()
 void * __cdecl operator new(unsigned int s, int, char const *file, int line) {
   return malloc(s);
 }
-
 
 extern "C" void __cdecl WinMainCRTStartup() {
     int mainret;

@@ -19,10 +19,8 @@ EXPORTS
        _CItan
        _CItanh
        __p__iob
-       __iob_func=__p__iob ; TODO: verify
        _chdir
        _close
-       close=_close ; TODO: verify
        _ctime64
        _dup
        _errno
@@ -38,12 +36,10 @@ EXPORTS
        _lseeki64
        _onexit
        _open
-       open=_open ; TODO: verify
        _open_osfhandle	
        __open_osfhandle=_open_osfhandle
        _purecall
        _read
-       read=_read ; TODO: verify
        _rmdir
        _strdup
        _setjmp
@@ -56,7 +52,6 @@ EXPORTS
        _stati64
        _stricmp
        _strnicmp
-       strnicmp=_strnicmp; TODO: verify
        _time64
        _vsnprintf
        _vsnwprintf
@@ -67,7 +62,6 @@ EXPORTS
        _wopen
        _wrename
        _write
-       write=_write ; TODO: verify
        _wstat
        _wstat64
        _wstati64
