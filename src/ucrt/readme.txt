@@ -89,6 +89,10 @@ Dev notes
   http://stackoverflow.com/questions/1025313/c-will-an-empty-destructor-do-the-
 same-thing-as-the-generated-destructor/2322314#2322314
 * http://code.google.com/p/tinyrss/source/browse/tiny/tcrt.cpp - another minimal crt
+* http://reactos-mirror.googlecode.com/svn/trunk/reactos/lib/sdk/crt/except/cppexcept.c
+  http://reactos-mirror.googlecode.com/svn/trunk/reactos/lib/sdk/crt/except/except.c
+  look but don't copy (GPL)
+* https://github.com/7shi/minix-tools/tree/master/lib/c - maybe there's code to reuse
 
 TODO
 ----
