@@ -73,6 +73,7 @@ Dev notes
 TODO
 ----
 * write all the remaining code to support Sumatra
+* build PdfFilter.dll, PdfPreview.dll and npPdfViewer.dll with ucrt
 * write a test program that calls all the functions we claim to
   implement and verifies they work as expected
 * test on XP SP2 (maybe earlier). I develop on Win 7 and some functions

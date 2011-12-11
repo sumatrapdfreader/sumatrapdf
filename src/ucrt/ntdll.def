@@ -1,7 +1,6 @@
 LIBRARY	NTDLL.DLL
 EXPORTS
 	__chkstk
-	_chkstk=__chkstk ; TODO: is it valid?
 	_alldiv
 	_allmul
 	_allshr ; TODO: is it here:
@@ -13,7 +12,6 @@ EXPORTS
 	_stricmp
 	_strnicmp
 	_vsnprintf
-	vsnprintf=_vsnprintf ; TODO: is it valid?
 	_vsnprintf_s
 	_vsnwprintf
 	_vsnwprintf_s

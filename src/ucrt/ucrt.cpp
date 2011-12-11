@@ -11,6 +11,9 @@
 #include <assert.h>
 #include <typeinfo.h>
 
+#pragma comment(linker, "/nodefaultlib:libc.lib")
+#pragma comment(linker, "/nodefaultlib:libcmt.lib")
+
 extern "C" {
 
 /* definitions of functions implemented in msvcrt.dll.

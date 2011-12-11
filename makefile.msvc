@@ -173,6 +173,13 @@ ENGINEDUMP_OBJS = \
 	$(OS)\EngineDump.obj $(ENGINE_OBJS) $(LIBMUPDF_LIB) $(OS)\MuPDF_Exports.obj \
 	$(UTILS_OBJS) $(BZIP2_OBJS) $(MINIZIP_OBJS) $(UNRAR_OBJS)
 
+!if "$(MINICRT)"=="yes"
+ET_OBJS = $(ET_OBJS) $(MINICRT_OBJS)
+INSTALLER_OBJS = $(INSTALLER_OBJS) $(MINICRT_OBJS)
+UNINSTALLER_OBJS = $(UNINSTALLER_OBJS) $(MINICRT_OBJS)
+#SUMATRA_OBJS = $(SUMATRA_OBJS) $(MINICRT_OBJS)
+!endif
+
 !if "$(BUILD_TEX_IFILTER)"!=""
 PDFFILTER_OBJS = $(PDFFILTER_OBJS) $(OS)\CTeXFilter.obj
 PDFFILTER_CFLAGS = $(PDFFILTER_CFLAGS) /D "BUILD_TEX_IFILTER"
@@ -209,13 +216,8 @@ $(OS): $(O) $(OE)
 $(SUMATRA_RES): src\SumatraPDF.rc src\Resource.h src\Version.h
 	rc /r /fo$@ $(EXTCFLAGS) src\SumatraPDF.rc
 
-!if "$(MINICRT)"=="yes"
-$(SUMATRA_APP): $(LIBS_OBJS) $(SUMATRA_OBJS) $(MINICRT_OBJS)
-	$(LD) /SUBSYSTEM:windows $(LDFLAGS) /NODEFAULTLIB  $** $(LIBS) uuid.lib urlmon.lib /PDB:$*.pdb /OUT:$@
-!else
 $(SUMATRA_APP): $(LIBS_OBJS) $(SUMATRA_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
-!endif
 
 $(SUMATRA_APP_NO_MUPDF): $(SUMATRA_OBJS) $(OS)\MuPDF_Exports.obj
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ $(LIBMUPDF_LIB)
@@ -238,13 +240,8 @@ $(UNINSTALLER_APP): $(UTILS_OBJS) $(UNINSTALLER_OBJS)
 $(ET_RES): src\ebooktest\et.rc src\ebooktest\Resource.h src\Version.h
 	rc /r /fo$@ $(EXTCFLAGS) src\ebooktest\et.rc
 
-!if "$(MINICRT)"=="yes"
-$(ET_APP): $(UTILS_OBJS) $(ET_OBJS) $(MINICRT_OBJS)
-	$(LD) /SUBSYSTEM:windows $(LDFLAGS) /NODEFAULTLIB $** $(LIBS) uuid.lib urlmon.lib /PDB:$*.pdb /OUT:$@
-!else
 $(ET_APP): $(UTILS_OBJS) $(ET_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
-!endif
 
 $(PDFFILTER_RES): src\ifilter\PdfFilter.rc src\Version.h
 	rc /r /fo$@ $(EXTCFLAGS) src\ifilter\PdfFilter.rc

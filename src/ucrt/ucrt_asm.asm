@@ -19,6 +19,10 @@
 ;read=_read ; TODO: verify
 ;write=_write ; TODO: verify
 
+; TODO: those were in ntdll.def
+; _chkstk=__chkstk ; TODO: is it valid?
+; vsnprintf=_vsnprintf ; TODO: is it valid?
+
 _TEXT segment use32 para public 'CODE'
 
     public  __ftol2_sse
