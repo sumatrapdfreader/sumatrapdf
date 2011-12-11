@@ -212,13 +212,15 @@ clip_lerp_x(int val, int m, int x0, int y0, int x1, int y1, int *out)
 
 	if (v1out)
 	{
-		*out = y0 + (y1 - y0) * (val - x0) / (x1 - x0);
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1741 */
+		*out = y0 + (int)(1.0f * (y1 - y0) * (val - x0) / (x1 - x0));
 		return LEAVE;
 	}
 
 	else
 	{
-		*out = y1 + (y0 - y1) * (val - x1) / (x0 - x1);
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1741 */
+		*out = y1 + (int)(1.0f * (y0 - y1) * (val - x1) / (x0 - x1));
 		return ENTER;
 	}
 }
