@@ -15,6 +15,7 @@
 
 #pragma comment(linker, "/nodefaultlib:libc.lib")
 #pragma comment(linker, "/nodefaultlib:libcmt.lib")
+#pragma comment(linker, "/nodefaultlib:libcmtd.lib")
 
 extern "C" {
 

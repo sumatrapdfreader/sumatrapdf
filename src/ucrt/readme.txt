@@ -82,6 +82,12 @@ Dev notes
  - http://www.openrce.org/articles/full_view/23 has some info that might be
    helpful figuring out what 'eh vector constructor iterator' is and how
    to implement it
+ - http://code.google.com/p/wceccrtrtti, might help implementing
+   "eh vector constructor iterator" 
+   (http://code.google.com/p/wceccrtrtti/source/browse/trunk/wce_ccrtrtti/ehvec.cpp)
+* http://msinilo.pl/blog/?p=719 info about vector constructor iterator, also
+  http://stackoverflow.com/questions/1025313/c-will-an-empty-destructor-do-the-
+same-thing-as-the-generated-destructor/2322314#2322314
 
 TODO
 ----
