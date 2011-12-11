@@ -47,7 +47,7 @@ We do what they describe i.e. re-implement crt functions. If equivalent
 function already exists in msvcrt.dll or ntdll.dll, we just redirect
 to it. If it doesn't, we do a minimal implementation.
 
-How come our code is smaller than Visual Studio? Because size is what
+How come our code is smaller than Visual Studio's? Because size is what
 we focus on.
 
 Other projects like this
@@ -75,6 +75,8 @@ Dev notes
  - http://codesearch.google.com/#XAzRy8oK4zA/libm/src/e_hypotf.c&ct=rc&cd=3&q=hypotf&l=24
    hypotf code from android's bionic C library, also might contain
    other useful code
+ - Visual Studio crt code is included under Vc\crt\src directory. Useful
+   for figuring out some things
 
 TODO
 ----

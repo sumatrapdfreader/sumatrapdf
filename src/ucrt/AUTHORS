@@ -2,5 +2,6 @@ ucrt contains code by:
 
 * Krzysztof J. Kowalczyk (http://blog.kowalczyk.info)
 
-Some code comes from or is based on code in the following projects:
+Some code comes from the following projects:
 * http://code.google.com/p/webrt (BSD license)
+* http://www.jbox.dk/sanos/ (BSD license)
