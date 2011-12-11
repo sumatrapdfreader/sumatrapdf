@@ -19,7 +19,7 @@ How to use it my program?
 
 Crt stands for C runtime and implements the C standard library functions
 like malloc(), printf() etc. as well as low-level support for C++, like
-exception handling.
+exception handling, i.e. http://msdn.microsoft.com/en-us/library/634ca0c2.aspx
 
 When you compile a C/C++ program with Visual Studio, you have 2 choices:
 a) dynamically link with its crt dll and ship the whole dll with your

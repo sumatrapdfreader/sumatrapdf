@@ -10,6 +10,8 @@
 #include <malloc.h>
 #include <assert.h>
 #include <typeinfo.h>
+#include <math.h>
+#include <errno.h>
 
 #pragma comment(linker, "/nodefaultlib:libc.lib")
 #pragma comment(linker, "/nodefaultlib:libcmt.lib")
@@ -76,6 +78,23 @@ void crash_me()
 void __cdecl _wassert(const wchar_t *msg, const wchar_t *file, unsigned line)
 {
     crash_me();
+}
+
+double _wtof(const wchar_t *s)
+{
+    if (!s) {
+        errno = EINVAL;
+        return 0;
+    }
+    size_t len = wcslen(s);
+    char *s2 = (char*)malloc(len+1);
+    char *tmp = s2;
+    while (*s) {
+        *tmp++ = (char)*s++;
+    }
+    double ret = atof(s2);
+    free(s2);
+    return ret;
 }
 
 }
