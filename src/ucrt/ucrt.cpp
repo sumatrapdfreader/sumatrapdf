@@ -245,6 +245,23 @@ void __stdcall __ehvec_ctor(void *a, unsigned int objSize, int n,
     }
 }
 
+// TODO: write a proper implementation
+__int64 __cdecl _strtoi64(const char *s, char **endptr, int base)
+{
+    long l = strtol(s, endptr, base);
+    return (__int64)l;
+}
+
+double __cdecl _difftime64(__time64_t b, __time64_t a)
+{
+    if ((a < 0) || (b < 0)) {
+        errno = EINVAL;
+        return 0;
+    }
+
+    return (double)(b - a);
+}
+
 } // extern "C"
 
 // provide symbol:
