@@ -273,6 +273,7 @@ __int64 __cdecl _strtoi64(const char *s, char **endptr, int base)
     return (__int64)l;
 }
 
+// http://msdn.microsoft.com/en-us/library/3wbd7281.aspx
 double __cdecl _difftime64(__time64_t b, __time64_t a)
 {
     if ((a < 0) || (b < 0)) {
@@ -281,6 +282,35 @@ double __cdecl _difftime64(__time64_t b, __time64_t a)
     }
 
     return (double)(b - a);
+}
+
+// http://msdn.microsoft.com/en-us/library/d45bbxx4(v=VS.100).aspx
+errno_t __cdecl wcscat_s(wchar_t *dst, size_t n, const wchar_t *src)
+{
+    if (!src || !dst)
+        goto Error;
+    wchar_t *dstEnd = dst + n;
+    while (*dst && (dst < dstEnd)) {
+        ++dst;
+    }
+    size_t dstLeft = (dstEnd - dst);
+    if (0 == dstLeft) {
+        // not null terminated
+        goto Error;
+    }
+    size_t srcLen = wcslen(src);
+    if (srcLen > dstLeft) {
+        // no space for src in dst
+        goto Error;
+    }
+    while (*src) {
+        *dst++ = *src++;
+    }
+    *dst = 0;
+    return 0;
+Error:    
+    errno = EINVAL;
+    return EINVAL;
 }
 
 // http://msdn.microsoft.com/en-us/library/84x924s7(v=VS.100).aspx

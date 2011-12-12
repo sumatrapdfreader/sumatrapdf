@@ -24,10 +24,7 @@ EXPORTS
 	vsprintf_s
 	vswprintf_s
 	wcscat
-	wcscat_s
 	wcsncat
-	wcsncat_s
 	wcsncmp
 	wcsncmp
-	wcsncpy_s
 
