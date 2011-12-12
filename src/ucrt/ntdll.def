@@ -1,6 +1,7 @@
 LIBRARY	NTDLL.DLL
 EXPORTS
 	_alldiv
+	_alldvrm
 	_alldvrm@16
 	_allmul
 	_allrem@16
