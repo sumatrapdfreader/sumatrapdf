@@ -364,9 +364,42 @@ type_info::~type_info()
 {
 }
 
+#if 0
+void * __cdecl operator new(unsigned int s)
+{
+    return malloc(s);
+}
+#endif
+
+#if 0
+void __cdecl operator delete(void* p)
+{
+    free(p);
+}
+#endif
+
+#if 0
+void * __cdecl operator new[](size_t n)
+{
+    return operator new(n);
+}
+#endif
+
+void __cdecl operator delete[](void* p)
+{
+    operator delete(p);
+}
+
 // debug version of new
-void * __cdecl operator new(unsigned int s, int, char const *file, int line) {
-  return malloc(s);
+void * __cdecl operator new(unsigned int s, int, char const *file, int line)
+{
+    return malloc(s);
+}
+
+// debug version of new[]
+void * __cdecl operator new[](unsigned int s, int, char const *file, int line)
+{
+    return malloc(s);
 }
 
 extern "C" void __cdecl WinMainCRTStartup() {
