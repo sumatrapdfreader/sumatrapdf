@@ -22,7 +22,7 @@ BZIP2_CFLAGS = $(BZIP2_CFLAGS) /wd4244
 !endif
 MINIZIP_CFLAGS = $(ZLIB_CFLAGS) /D "HAVE_BZIP2" /I$(ZLIB_DIR) /I$(EXTDIR)/bzip2
 
-UNRAR_CFLAGS = $(CFLAGSOPT) /D "UNRAR" /D "RARDLL"
+UNRAR_CFLAGS = $(CFLAGSOPT) /D "UNRAR" /D "RARDLL" /D "SILENT"
 # a hack to enable C++ exception handling for UnRAR (without triggering a warning)
 UNRAR_CFLAGS = $(UNRAR_CFLAGS:/EHs-c-=/EHsc)
 # a hack to undo /D "UNICODE" since unrar defines it unconditionally, causing
