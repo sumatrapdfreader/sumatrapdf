@@ -2,6 +2,8 @@ LIBRARY	MSVCRT.DLL
 EXPORTS
        ??2@YAPAXI@Z
        ??3@YAXPAX@Z
+       ?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z
+       ?set_new_handler@@YAP6AXXZP6AXXZ@Z
 	   _CxxThrowException
        _CIacos
        _CIasin
