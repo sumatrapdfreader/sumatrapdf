@@ -27,6 +27,8 @@ EXPORTS
        _ctime64
        _dup
        _errno
+       _except_handler2
+       _except_handler3
        _fdopen
        _fileno
        _ftol

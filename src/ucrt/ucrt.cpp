@@ -287,8 +287,8 @@ size_t __cdecl mbrtowc(wchar_t *wchar, const char *mbchar, size_t cbSize, mbstat
 // http://msdn.microsoft.com/en-us/library/a9yb3dbt.aspx
 float __cdecl _hypotf(float x, float y)
 {
-    crash_me();
-    return 0;
+    float res = (float)_hypot((double)x, (double)y);
+    return res;
 }
 
 // http://msdn.microsoft.com/en-us/library/14h5k7ff.aspx
@@ -332,7 +332,7 @@ int __cdecl _vswprintf_c_l(wchar_t *dst, size_t count, const wchar_t *fmt, _loca
     if (locale != 0) {
         crash_me();
     }
-    int ret = vswprintf(dst, count, fmt, argList);
+    int ret = msvcrt_vswprintf(dst, count, fmt, argList);
     return ret;
 }
 
