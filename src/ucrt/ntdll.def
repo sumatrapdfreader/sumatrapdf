@@ -1,14 +1,17 @@
 LIBRARY	NTDLL.DLL
 EXPORTS
-	__chkstk
 	_alldiv
+	_alldvrm@16
 	_allmul
-	_allshr ; TODO: is it here:
-	_aullrem ; TODO: is it here?
-	_aulldvrm ; TODO: is it here?
-	_aulldiv ; TODO: is it here?
-	_allshl ; TODO: is it here?
-	_fltused
+	_allrem@16
+	_allshl
+	_allshr
+	_atoi64
+	_aulldiv
+	_aulldvrm
+	_aullrem
+	_aullshr
+	_fltused DATA
 	_vsnprintf
 	_stricmp
 	_strnicmp

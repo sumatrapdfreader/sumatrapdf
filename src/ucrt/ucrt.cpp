@@ -39,6 +39,8 @@ __huge_val_union huge_val = { 0, 0, 0, 0, 0, 0, 0xf0, 0x7f }; // only valid for 
 // note: _HUGE is only available after C static initializers are called, so don't use it before that
 double _HUGE = huge_val.d;
 
+int _fltused = 1;
+
 #pragma section(".CRT$XCA",long,read)
 #pragma section(".CRT$XCZ",long,read)
 #pragma section(".CRT$XIA",long,read)
