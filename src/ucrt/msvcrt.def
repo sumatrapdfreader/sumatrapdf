@@ -160,6 +160,8 @@ EXPORTS
        iswupper
        iswxdigit
        isxdigit
+       log
+       log10
        longjmp
        perror
        pow

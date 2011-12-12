@@ -48,27 +48,32 @@ __declspec(allocate(".CRT$XTZ")) _PIFV __xt_z[] = { 0 }; /* C terminators */
 
 void * __cdecl _malloc_dbg(size_t size, int nBlockUse, const char *file,int line)
 {
-	return malloc(size);
+    return malloc(size);
 }
 
-void __cdecl _free_dbg(void *data, int nBlockUse)
+void * __cdecl _realloc_dbg(void *mem, size_t newSize, int blockType, const char *file, int line)
 {
-	free(data);
+    return realloc(mem, newSize);
 }
 
 void * __cdecl _calloc_dbg(size_t nNum, size_t nSize, int nBlockUse, const char *file, int line)
 {
-	return calloc(nNum, nSize);
+    return calloc(nNum, nSize);
+}
+
+void __cdecl _free_dbg(void *data, int nBlockUse)
+{
+    free(data);
 }
 
 char * __cdecl _strdup_dbg(const char *s, int blockType, const char *file, int line)
 {
-	return _strdup(s);
+    return _strdup(s);
 }
 
 wchar_t * __cdecl _wcsdup_dbg(const wchar_t *s, int blockType, const char *file, int line)
 {
-	return _wcsdup(s);
+    return _wcsdup(s);
 }
 
 void crash_me()
@@ -319,7 +324,6 @@ int __cdecl _fseeki64(FILE *stream, __int64 offset, int origin)
     return 0;
 }
 
-
 // a bit of gymnastics: Visual Studio headers define vswprintf() as a macro that ultimately expands to
 // _vswprintf_c_l(). We don't want to implement _vswprintf_c_l(), we want to re-use vswprintf() in msvcrt.dll
 // but we can't say vswprintf() because that'll expand back to _vswprintf_c_l, so we introduced
@@ -334,6 +338,12 @@ int __cdecl _vswprintf_c_l(wchar_t *dst, size_t count, const wchar_t *fmt, _loca
     }
     int ret = msvcrt_vswprintf(dst, count, fmt, argList);
     return ret;
+}
+
+int __cdecl _CrtSetDbgFlag(int newFlag)
+{
+    // do nothing, we don't the equivalent of crt's debugging
+    return 0;
 }
 
 } // extern "C"
