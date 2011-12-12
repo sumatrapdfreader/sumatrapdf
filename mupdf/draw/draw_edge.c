@@ -301,10 +301,11 @@ fz_insert_gel(fz_gel *gel, float fx0, float fy0, float fx1, float fy1)
 	fy0 = floorf(fy0 * fz_aa_vscale);
 	fy1 = floorf(fy1 * fz_aa_vscale);
 
-	x0 = CLAMP(fx0, BBOX_MIN, BBOX_MAX);
-	y0 = CLAMP(fy0, BBOX_MIN, BBOX_MAX);
-	x1 = CLAMP(fx1, BBOX_MIN, BBOX_MAX);
-	y1 = CLAMP(fy1, BBOX_MIN, BBOX_MAX);
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1741 */
+	x0 = CLAMP(fx0, BBOX_MIN * fz_aa_hscale, BBOX_MAX * fz_aa_hscale);
+	y0 = CLAMP(fy0, BBOX_MIN * fz_aa_vscale, BBOX_MAX * fz_aa_vscale);
+	x1 = CLAMP(fx1, BBOX_MIN * fz_aa_hscale, BBOX_MAX * fz_aa_hscale);
+	y1 = CLAMP(fy1, BBOX_MIN * fz_aa_vscale, BBOX_MAX * fz_aa_vscale);
 
 	d = clip_lerp_y(gel->clip.y0, 0, x0, y0, x1, y1, &v);
 	if (d == OUTSIDE) return;
