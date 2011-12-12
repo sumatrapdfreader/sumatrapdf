@@ -12,6 +12,7 @@
 #include <typeinfo.h>
 #include <math.h>
 #include <errno.h>
+#include <wchar.h>
 
 #pragma comment(linker, "/nodefaultlib:libc.lib")
 #pragma comment(linker, "/nodefaultlib:libcmt.lib")
@@ -260,6 +261,62 @@ double __cdecl _difftime64(__time64_t b, __time64_t a)
     }
 
     return (double)(b - a);
+}
+
+// http://msdn.microsoft.com/en-us/library/84x924s7(v=VS.100).aspx
+size_t __cdecl wcrtomb(char *mbchar, wchar_t wchar, mbstate_t *mbstate)
+{
+    crash_me();
+    return 0;
+}
+
+// http://msdn.microsoft.com/en-us/library/tt1kc7c1.aspx
+size_t __cdecl mbrlen(const char *str, size_t maxSize, mbstate_t* mbstate)
+{
+    crash_me();
+    return 0;
+}
+
+// http://msdn.microsoft.com/en-us/library/5wazc5ys.aspx
+size_t __cdecl mbrtowc(wchar_t *wchar, const char *mbchar, size_t cbSize, mbstate_t *mbstate)
+{
+    crash_me();
+    return 0;
+}
+
+// http://msdn.microsoft.com/en-us/library/a9yb3dbt.aspx
+float __cdecl _hypotf(float x, float y)
+{
+    crash_me();
+    return 0;
+}
+
+// http://msdn.microsoft.com/en-us/library/14h5k7ff.aspx
+int __cdecl _wstat64i32(const wchar_t *path, struct _stat64i32 *buffer)
+{
+    crash_me();
+    return 0;
+}
+
+// http://msdn.microsoft.com/en-us/library/14h5k7ff.aspx
+int __cdecl _stat64i32(const char *path, struct _stat64i32 *buffer)
+{
+    crash_me();
+    return 0;
+}
+
+// http://msdn.microsoft.com/en-us/library/0ys3hc0b.aspx
+__int64 __cdecl _ftelli64(FILE *stream)
+{
+    crash_me();
+    return 0;
+}
+
+// http://msdn.microsoft.com/en-us/library/75yw9bf3.aspx
+int __cdecl _fseeki64(FILE *stream, __int64 offset, int origin)
+{
+    crash_me();
+    return 0;
 }
 
 } // extern "C"
