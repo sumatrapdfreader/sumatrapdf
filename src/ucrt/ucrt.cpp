@@ -76,7 +76,7 @@ wchar_t * __cdecl _wcsdup_dbg(const wchar_t *s, int blockType, const char *file,
     return _wcsdup(s);
 }
 
-void crash_me()
+static void crash_me()
 {
     char *p = 0;
     *p = 0;
@@ -84,7 +84,7 @@ void crash_me()
 
 void __cdecl _wassert(const wchar_t *msg, const wchar_t *file, unsigned line)
 {
-    crash_me();
+    OutputDebugStringW(msg);
 }
 
 // http://msdn.microsoft.com/en-us/library/hc25t012.aspx
