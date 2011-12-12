@@ -101,7 +101,7 @@ double __cdecl _wtof(const wchar_t *s)
 
 // http://msdn.microsoft.com/en-us/library/217yyhy9(v=VS.100).aspx
 // note: msdn lists the prototype as:
-// wchar_t * __cdecl wcspbrk(const wchar_t *str, const wchar_t *strCharSet)\
+// wchar_t * __cdecl wcspbrk(const wchar_t *str, const wchar_t *strCharSet)
 // but only this version works
 const wchar_t * __cdecl wcspbrk(const wchar_t *str, const wchar_t *strCharSet)
 {
@@ -194,8 +194,58 @@ void __cdecl _aligned_free(void* memBlock)
     delete deleteMemory;
 }
 
-
+// Called by the compiler to destruct an array of objects
+// This might be governed by 15.2 section of C++ standard (e.g. http://www-d0.fnal.gov/~dladams/cxx_standard.pdf)
+// TODO: test me
+void __stdcall __ehvec_dtor(void *a, unsigned int objSize, int n, void (__thiscall *dtor)(void *))
+{
+    char *obj = (char*)a;
+    char *end = obj + (n * objSize);
+    __try {
+        // TODO: should we destruct in reverse as per section 15.2?
+        while (obj < end) {
+            (*dtor)((void*)obj);
+            obj += objSize;
+        }
+    } __finally {
+        // TODO: technically we should exit?
+    }
 }
+
+/* Called by the compiler to initialize an array of objects e.g. if you have:
+static MyClass arrayOfMyClassObjects[10];
+the compiler might generate code to call us, where a is a pointer to the beginning
+of the memory taken by the array, size is objSize of the object (including padding),
+n is size of the array (10 in this case), ctr is a constructor function to be called
+for each object and dtr is a destructor
+*/
+// TODO: test me
+void __stdcall __ehvec_ctor(void *a, unsigned int objSize, int n,
+    void(__thiscall *ctor)(void*), void(__thiscall *dtor)(void*))
+{
+    char *obj = (char*)a;
+    char *end = obj + (n * objSize);
+    __try
+    {
+        while (obj < end) {
+            (*ctor)((void*)obj);
+            obj += objSize;
+        }
+    } __finally {
+        if (obj != end) {
+            // TODO: could call __ehvec_dtor() instead
+            // we haven't constructed all of the objects therefore an exception
+            // must have happened, therefore we must destroy partially constructed objects
+            char *tmp = (char*)a;
+            while (tmp < obj) {
+                (*dtor)((void*)tmp);
+                tmp += objSize;
+            }
+        }
+    }
+}
+
+} // extern "C"
 
 // provide symbol:
 // type_info::'vftable' ["const type_info::`vftable'" (??_7type_info@@6B@)].
@@ -212,34 +262,6 @@ type_info& type_info::operator=(const type_info& rhs)
 type_info::~type_info()
 {
 }
-
-#if 0
-extern "C"
-void __stdcall  __ehvec_ctor(
-        void*           ptr,            // Pointer to array to destruct   
-        unsigned int    size,           // Size of each element (including padding)   
-        int             count,          // Number of elements in the array   
-        void(__thiscall *pCtor)(void*),   // Constructor to call   
-        void(__thiscall *pDtor)(void*)    // Destructor to call should exception be thrown   
-){   
-    int i;
-    int ok = 0;
-    __try
-    {
-        for (i = 0;  i < count;  i++ )
-        {
-            (*pCtor)(ptr);
-            ptr = (char*)ptr + size;
-        }   
-        ok = 1;
-    }   
-    __finally
-    {
-        //if (!ok)
-        //    __ArrayUnwind(ptr, size, i, pDtor);
-    }
-}
-#endif
 
 // debug version of new
 void * __cdecl operator new(unsigned int s, int, char const *file, int line) {
