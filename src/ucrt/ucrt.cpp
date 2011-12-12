@@ -361,6 +361,21 @@ int __cdecl _CrtSetDbgFlag(int newFlag)
     return 0;
 }
 
+UINT_PTR __security_cookie = 0x3da4c303;
+
+void __declspec(naked) __fastcall __security_check_cookie(UINT_PTR cookie)
+{
+    __asm {
+        cmp ecx, __security_cookie
+        jne failure
+        rep ret
+failure:
+        // crash
+        xor eax, eax
+        mov dword ptr [eax], 0
+        ret
+    }
+}
 } // extern "C"
 
 // provide symbol:

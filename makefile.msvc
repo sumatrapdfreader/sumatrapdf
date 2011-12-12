@@ -8,7 +8,7 @@
 # PLATFORM=X86
 #   the PLATFORM var is usually set in the x64 and x64 cross tools Visual Studio command prompt
 #   note: building on X64 isn't officially supported and might unintentionally be broken
-# MINICRT=yes
+#MINICRT=yes
 #   set to yes to build with ucrt, to see how much we save
 #   note: doesn't work yet. Doesn't find few libc functions that are not implemented. 
 #   also probably wouldn't work for 64-bit builds due to ...?
@@ -174,7 +174,7 @@ ENGINEDUMP_OBJS = \
 ET_OBJS = $(ET_OBJS) $(MINICRT_OBJS)
 INSTALLER_OBJS = $(INSTALLER_OBJS) $(MINICRT_OBJS)
 UNINSTALLER_OBJS = $(UNINSTALLER_OBJS) $(MINICRT_OBJS)
-#SUMATRA_OBJS = $(SUMATRA_OBJS) $(MINICRT_OBJS)
+SUMATRA_OBJS = $(SUMATRA_OBJS) $(MINICRT_OBJS)
 !endif
 
 !if "$(BUILD_TEX_IFILTER)"!=""
