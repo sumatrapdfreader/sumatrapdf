@@ -4,6 +4,7 @@
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
+
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,6 +26,18 @@ extern "C" {
 typedef int (__cdecl *_PIFV)(void);
 FILE *  __cdecl __p__iob(void);
 int _cdecl _initterm(_PIFV *, _PIFV *);
+
+/* TODO: this is a hack, I clearly don't know what I'm doing here. math.h does:
+#define HUGE_VAL _HUGE
+There is msvcrt._HUGE symbol but when it was exported in msvcrt.def as "_HUGE",
+it was some weird address not even within msvcrt.dll address space.
+When I export is as "_HUGE DATA" (following ming-w64), it's no longer visible as
+_HUGE to the linker. I'm clearly missing something here, but this is how I work-around this:
+*/
+typedef union { unsigned char c[8]; double d; } __huge_val_union;
+__huge_val_union huge_val = { 0, 0, 0, 0, 0, 0, 0xf0, 0x7f }; // only valid for little endian
+// note: _HUGE is only available after C static initializers are called, so don't use it before that
+double _HUGE = huge_val.d;
 
 #pragma section(".CRT$XCA",long,read)
 #pragma section(".CRT$XCZ",long,read)

@@ -33,7 +33,7 @@ EXPORTS
        _fileno
        _ftol
        _getcwd
-       _HUGE
+       _HUGE DATA
        _hypot
        _initterm
        _localtime64
