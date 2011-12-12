@@ -319,6 +319,23 @@ int __cdecl _fseeki64(FILE *stream, __int64 offset, int origin)
     return 0;
 }
 
+
+// a bit of gymnastics: Visual Studio headers define vswprintf() as a macro that ultimately expands to
+// _vswprintf_c_l(). We don't want to implement _vswprintf_c_l(), we want to re-use vswprintf() in msvcrt.dll
+// but we can't say vswprintf() because that'll expand back to _vswprintf_c_l, so we introduced
+// msvcrt_vswprintf() alias for msvcrt.vswprintf()
+extern int __cdecl msvcrt_vswprintf(wchar_t *buffer, size_t count, const wchar_t *fmt, va_list argptr);
+int __cdecl _vswprintf_c_l(wchar_t *dst, size_t count, const wchar_t *fmt, _locale_t locale, va_list argList)
+{
+    // TODO: in sumatra code (from unrar) this is never called with a locale.
+    // Alternatively, we could just ignore locale
+    if (locale != 0) {
+        crash_me();
+    }
+    int ret = vswprintf(dst, count, fmt, argList);
+    return ret;
+}
+
 } // extern "C"
 
 // provide symbol:

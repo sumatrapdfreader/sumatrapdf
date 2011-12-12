@@ -28,6 +28,7 @@ _TEXT segment use32 para public 'CODE'
     public ___CxxFrameHandler3
     public __CxxThrowException@8
     public ___CxxLongjmpUnwind@4
+    public _msvcrt_vswprintf
 
     extrn __imp___ftol:dword
     extrn __imp___stricmp:dword
@@ -37,6 +38,7 @@ _TEXT segment use32 para public 'CODE'
     extrn __imp____CxxFrameHandler:dword
     extrn __imp___CxxThrowException:dword
     extrn __imp____CxxLongjmpUnwind:dword
+    extrn __imp__vswprintf:dword
 
 ; _ftol2_sse => msvcrt._ftol
 __ftol2_sse     proc near
@@ -53,15 +55,20 @@ _strnicmp       proc near
                 jmp __imp___strnicmp
 _strnicmp       endp
 
-; __iob_func => msvcrt.__p_iob
-___iob_func     proc near
-                jmp __imp____p__iob
-___iob_func     endp
+; msvcrt_vswprintf => msvcrt.vswprintf
+_msvcrt_vswprintf proc near
+                jmp __imp__vswprintf
+_msvcrt_vswprintf endp
 
 ; vsnprintf => ntdll._vsnprintf
 _vsnprintf      proc near
                 jmp __imp___vsnprintf
 _vsnprintf      endp
+
+; __iob_func => msvcrt.__p_iob
+___iob_func     proc near
+                jmp __imp____p__iob
+___iob_func     endp
 
 ; __CxxFrameHandler3 => msvcrt._CxxFrameHandler
 ___CxxFrameHandler3 proc near
