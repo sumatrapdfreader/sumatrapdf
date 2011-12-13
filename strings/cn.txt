@@ -32,7 +32,7 @@ Contributor: WangKing (http://wkismet.spaces.live.com)
 复制选择内容(&C)\tCtrl+C
 
 &Copy Selection\tCtrl+C
-复制选择内容\tCtrl+C
+复制所选内容\tCtrl+C
 
 &Don't ask me again
 以后不再询问
@@ -59,7 +59,7 @@ Contributor: WangKing (http://wkismet.spaces.live.com)
 转到(&G)
 
 &Go to page:
-转到页面
+转到页面(&G)
 
 &Help
 帮助(&H)
@@ -256,11 +256,14 @@ Continuous Facing
 Contribute Translation
 提供翻译
 
+Copy &Image
+复制图片(&I)
+
 Copy &Link Address
 复制链接地址(&L)
 
 Copy Co&mment
-复制注释(&m)
+复制注释(&M)
 
 Copying text was denied (copying as image only)
 无法复制文本 (只能作为图像复制)
@@ -371,7 +374,7 @@ Fit &Page\tCtrl+0
 适合页面(&P)\tCtrl+0
 
 Fit &Width\tCtrl+2
-适合宽度(&H)\tCtrl+2
+适合宽度(&W)\tCtrl+2
 
 Fit Content
 适合内容
@@ -666,7 +669,4 @@ copying text
 
 printing document
 正在打印文档
-
-# Untranslated:
-#Copy &Image
 

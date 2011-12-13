@@ -11,6 +11,7 @@ Lang: sk Slovak (Slovenčina)
 Contributor: Radoslav Zelenák (radoslav.zelenak@elkop.sk)
 Contributor: Bernard Holý - TREVERT
 Contributor: Dalibor
+Contributor: Peter Bartik
 
 &About
 &O programe...
