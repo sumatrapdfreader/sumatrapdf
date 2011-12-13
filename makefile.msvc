@@ -117,7 +117,7 @@ BROWSER_PLUGIN_CFLAGS = $(CFLAGS) /Isrc/utils /Isrc/utils/msvc
 ENGINEDUMP_APP = $(O)\EngineDump.exe
 
 MINICRT_OBJS = \
-	$(OS)\ucrt.obj $(OS)\ucrt_asm.obj $(OS)\_wstat64i32.obj $(OS)\_stat64i32.obj \
+	$(OS)\ucrt.obj $(OS)\ucrt_asm.obj $(OS)\ucrt_math.obj $(OS)\_wstat64i32.obj $(OS)\_stat64i32.obj \
 	$(OS)\msvcrt_dll.lib $(OS)\ntdll_dll.lib
 
 MINICRT_WIN_OBJS = \
