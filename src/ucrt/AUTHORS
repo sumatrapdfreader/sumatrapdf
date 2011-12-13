@@ -5,3 +5,4 @@ ucrt contains code by:
 Some code comes from the following projects:
 * http://code.google.com/p/webrt (BSD license)
 * http://www.jbox.dk/sanos/ (BSD license)
+* http://mingw-w64.sourceforge.net/ (Public Domain)

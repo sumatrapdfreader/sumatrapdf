@@ -8,6 +8,7 @@
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <io.h>
 #include <malloc.h>
 #include <assert.h>
 #include <typeinfo.h>
@@ -341,38 +342,37 @@ float __cdecl _hypotf(float x, float y)
     return res;
 }
 
-// http://msdn.microsoft.com/en-us/library/14h5k7ff.aspx
-int __cdecl _wstat64i32(const wchar_t *path, struct _stat64i32 *buffer)
-{
-    crash_me();
-    return 0;
-}
+// make sure we go to msvcrt._fileno
+// TODO: more robust if we introduce an alias, e.g. msvcrt__fileno
+#ifdef _fileno
+#undef _fileno
+#endif
 
-// http://msdn.microsoft.com/en-us/library/14h5k7ff.aspx
-int __cdecl _stat64i32(const char *path, struct _stat64i32 *buffer)
+// http://msdn.microsoft.com/en-us/library/75yw9bf3.aspx
+// note: not sure if don't have to sth. more complicated, like manage buffers.
+// that's what mingw implementation does but since FILE layout we have in headers
+// might be different than it was when msvcrt.dll was compiled, I kindof have
+// to implement it only in terms of functions available in msvcrt.dll
+int __cdecl _fseeki64(FILE *stream, __int64 offset, int origin)
 {
-    crash_me();
-    return 0;
+    int fd = _fileno(stream);
+    return (int)_lseeki64(fd, offset, origin);
 }
 
 // http://msdn.microsoft.com/en-us/library/0ys3hc0b.aspx
 __int64 __cdecl _ftelli64(FILE *stream)
 {
-    crash_me();
-    return 0;
+    int fd = _fileno(stream);
+    __int64 res = _telli64(fd);
+    return res;
 }
 
-// http://msdn.microsoft.com/en-us/library/75yw9bf3.aspx
-int __cdecl _fseeki64(FILE *stream, __int64 offset, int origin)
-{
-    crash_me();
-    return 0;
-}
-
-// a bit of gymnastics: Visual Studio headers define vswprintf() as a macro that ultimately expands to
-// _vswprintf_c_l(). We don't want to implement _vswprintf_c_l(), we want to re-use vswprintf() in msvcrt.dll
-// but we can't say vswprintf() because that'll expand back to _vswprintf_c_l, so we introduced
-// msvcrt_vswprintf() alias for msvcrt.vswprintf()
+// We implement _vswprintf_c_l() in terms of vswprintf() by dropping the locale
+// argument (none of our code uses it).
+// There is msvcrt.vswprintf() but we can't use it because Visual Studio headers
+// #define vswprintf as a macro that ultimately expands to _vswprintf_c_l()
+// To avoid circular dependencies, we define  msvcrt_vswprintf() as an alias
+// for msvcrt.vswprintf()
 extern int __cdecl msvcrt_vswprintf(wchar_t *buffer, size_t count, const wchar_t *fmt, va_list argptr);
 int __cdecl _vswprintf_c_l(wchar_t *dst, size_t count, const wchar_t *fmt, _locale_t locale, va_list argList)
 {
@@ -482,3 +482,4 @@ extern "C" void __cdecl WinMainCRTStartup() {
 
     ExitProcess(mainret);
 }
+

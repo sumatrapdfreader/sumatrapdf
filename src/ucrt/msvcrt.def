@@ -57,6 +57,8 @@ EXPORTS
        _stati64
        _stricmp
        _strnicmp
+       _tell
+       _telli64
        _time64
        _vsnprintf
        _vsnwprintf
