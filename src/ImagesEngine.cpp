@@ -745,10 +745,17 @@ Bitmap *CCbxEngine::LoadImage(int pageNo)
     return pages.At(pageNo - 1);
 }
 
+// cf. http://www.pkware.com/documents/casestudies/APPNOTE.TXT Appendix D
+#define CP_ZIP 437
+
 static bool SetCurrentCbzPage(unzFile& uf, const TCHAR *fileName)
 {
-    ScopedMem<char> fileNameAnsi(str::conv::ToAnsi(fileName));
-    int err = unzLocateFile(uf, fileNameAnsi, 0);
+    ScopedMem<char> fileName2(str::conv::ToCodePage(fileName, CP_ZIP));
+    int err = unzLocateFile(uf, fileName2, 0);
+    if (err != UNZ_OK) {
+        fileName2.Set(str::conv::ToUtf8(fileName));
+        err = unzLocateFile(uf, fileName2, 0);
+    }
     return err == UNZ_OK;
 }
 
@@ -808,10 +815,15 @@ bool CCbxEngine::LoadCbzFile(const TCHAR *file)
     unzGoToFirstFile(cbzData->uf);
 
     for (int n = 0; n < ginfo.number_entry; n++) {
+        unz_file_info64 finfo;
         char fileName[MAX_PATH];
-        int err = unzGetCurrentFileInfo64(cbzData->uf, NULL, fileName, dimof(fileName), NULL, 0, NULL, 0);
+        int err = unzGetCurrentFileInfo64(cbzData->uf, &finfo, fileName, dimof(fileName), NULL, 0, NULL, 0);
         if (err == UNZ_OK) {
-            ScopedMem<TCHAR> fileName2(str::conv::FromAnsi(fileName));
+            ScopedMem<TCHAR> fileName2;
+            if (!(finfo.flag & (1 << 11)))
+                fileName2.Set(str::conv::FromCodePage(fileName, CP_ZIP));
+            else
+                fileName2.Set(str::conv::FromUtf8(fileName));
             if (ImageEngine::IsSupportedFile(fileName2) &&
                 // OS X occasionally leaves metadata with image extensions
                 !str::StartsWith(path::GetBaseName(fileName2), _T("."))) {
