@@ -56,7 +56,7 @@ RetrySniffing:
         } else if (ChmEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_Chm) {
             engine = ChmEngine::CreateFromFileName(filePath);
             engineType = Engine_Chm;
-#ifdef DEBUG
+#ifdef noDEBUG
         } else if (EpubEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_Epub) {
             engine = EpubEngine::CreateFromFileName(filePath);
             engineType = Engine_Epub;

@@ -128,8 +128,8 @@ UTILS_OBJS = \
 
 ENGINE_OBJS = \
 	$(OS)\PdfEngine.obj $(OS)\ImagesEngine.obj $(OS)\PsEngine.obj \
-	$(OS)\DjVuEngine.obj $(DJVU_OBJS) $(OS)\ChmEngine.obj $(CHMLIB_OBJS) \
-	$(OS)\EpubEngine.obj $(CRENGINE_OBJS)
+	$(OS)\DjVuEngine.obj $(DJVU_OBJS) $(OS)\ChmEngine.obj $(CHMLIB_OBJS)
+#	$(OS)\EpubEngine.obj $(CRENGINE_OBJS)
 
 SUMATRA_OBJS = \
 	$(OS)\AppPrefs.obj $(OS)\DisplayModel.obj $(OS)\CrashHandler.obj \
