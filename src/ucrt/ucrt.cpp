@@ -4,7 +4,6 @@
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
-
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -464,24 +463,22 @@ void * __cdecl operator new[](unsigned int s, int, char const *file, int line)
     return malloc(s);
 }
 
-extern "C" void __cdecl WinMainCRTStartup() {
-    int mainret;
-    STARTUPINFO StartupInfo = {0};
-    GetStartupInfo(&StartupInfo);
-
-    //_atexit_init();
+void OnStart()
+{
+    // TODO: initialize atexit support
+    // _atexit_init();
 
     // call C initializers and C++ constructors
     _initterm(__xi_a, __xi_z);
     _initterm(__xc_a, __xc_z);
+}
 
-    mainret = WinMain(GetModuleHandle(NULL), NULL, NULL,
-                      StartupInfo.dwFlags & STARTF_USESHOWWINDOW
-                            ? StartupInfo.wShowWindow : SW_SHOWDEFAULT );
+void OnExit()
+{
+    // TODO: call atexit() functions?
 
+    // call C and C++ destructors
     _initterm(__xp_a, __xp_z);
     _initterm(__xt_a, __xt_z);
-
-    ExitProcess(mainret);
 }
 
