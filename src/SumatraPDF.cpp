@@ -1047,7 +1047,7 @@ static WindowInfo* CreateWindowInfo()
 
     if (Touch::SupportsGestures()) {
         GESTURECONFIG gc = { 0, GC_ALLGESTURES, 0 };
-        Touch::SetGestureConfig(hwndFrame, 0, 1, &gc, sizeof(GESTURECONFIG));
+        Touch::SetGestureConfig(win->hwndCanvas, 0, 1, &gc, sizeof(GESTURECONFIG));
     }
 
     return win;
@@ -3798,11 +3798,7 @@ static LRESULT OnGesture(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lP
             if (gi.dwFlags == GF_BEGIN) {
                 win.panStarted = true;
                 win.panPos = gi.ptsLocation;
-                win.panScrollOrig.x = GetScrollPos(win.hwndCanvas, SB_HORZ);
-                win.panScrollOrig.y = GetScrollPos(win.hwndCanvas, SB_VERT);
-
-                if (GetCursor())
-                    SetCursor(gCursorDrag);
+                win.panScrollOrigX = GetScrollPos(win.hwndCanvas, SB_HORZ);
             }
             else if (win.panStarted) {
                 int deltaX = win.panPos.x - gi.ptsLocation.x;
@@ -3817,17 +3813,13 @@ static LRESULT OnGesture(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lP
                         win.dm->GoToNextPage(0);
                     // When we switch pages, go back to the initial scroll position
                     // and prevent further pan movement caused by the inertia
-                    win.dm->ScrollXTo(win.panScrollOrig.x);
-                    win.dm->ScrollYTo(win.panScrollOrig.y);
+                    win.dm->ScrollXTo(win.panScrollOrigX);
                     win.panStarted = false;
                 }
                 else {
                     // Pan/Scroll
                     win.MoveDocBy(deltaX, deltaY);
                 }
-
-                if ((!win.panStarted || (gi.dwFlags & GF_END)) && GetCursor())
-                    SetCursor(gCursorArrow);
             }
             break;
 

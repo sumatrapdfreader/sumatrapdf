@@ -185,7 +185,7 @@ public:
     // WM_GESTURE handling 
     bool    panStarted;
     POINTS  panPos;
-    PointI  panScrollOrig;
+    int     panScrollOrigX;
     double  startArg;
 
     void  UpdateCanvasSize();
