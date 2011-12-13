@@ -180,6 +180,9 @@ EXPORTS
        setbuf
        setlocale
        malloc
+       mblen
+       mbstowcs
+       mbtowc
        memchr
        memcmp
        memcpy

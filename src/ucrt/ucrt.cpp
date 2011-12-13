@@ -314,6 +314,7 @@ Error:
     return EINVAL;
 }
 
+#if 0
 // http://msdn.microsoft.com/en-us/library/84x924s7(v=VS.100).aspx
 size_t __cdecl wcrtomb(char *mbchar, wchar_t wchar, mbstate_t *mbstate)
 {
@@ -334,6 +335,7 @@ size_t __cdecl mbrtowc(wchar_t *wchar, const char *mbchar, size_t cbSize, mbstat
     crash_me();
     return 0;
 }
+#endif
 
 // http://msdn.microsoft.com/en-us/library/a9yb3dbt.aspx
 float __cdecl _hypotf(float x, float y)
