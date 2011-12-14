@@ -1,0 +1,64 @@
+
+CC = cl.exe
+LD = link.exe
+
+O = o$(O)
+
+CFLAGS =  /nologo /c  /D "WIN32" /D "_WIN32" $(CFLAGS)
+LDFLAGS = /nologo /DEBUG /RELEASE /opt:ref /opt:icf
+LIBS = $(LIBS) kernel32.lib
+
+MINICRT_OBJS = \
+	$(O)\ucrt.obj $(O)\ucrt_asm.obj $(O)\ucrt_math.obj $(O)\_wstat64i32.obj \
+	$(O)\_stat64i32.obj $(O)\msvcrt_dll.lib $(O)\ntdll_dll.lib
+
+MINICRT_WIN_OBJS = \
+	$(MINICRT_OBJS) $(O)\ucrt_win.obj
+
+MINICRT_DLL_OBJS = \
+	$(MINICRT_OBJS) $(O)\ucrt_dll.obj
+
+MINICRT_CON_OBJS = \
+	$(MINICRT_OBJS) $(O)\ucrt_con.obj
+
+TEST_WIN_APP = $(O)\test_win.exe
+
+TEST_CON_APP = $(O)\test_con.exe
+
+TEST_DLL = $(O)\test.dll
+
+TEST_DLL_APP = $(O)\test_con_dll.exe
+
+all: $(O) $(TEST_WIN_APP) $(TEST_CON_APP)
+
+# $(TEST_DLL) $(TEST_DLL_APP)
+
+$(O): force
+	@if not exist $(O) mkdir $(O)
+
+$(TEST_WIN_APP): $(O)\test_win.obj $(O)\test.obj $(MINICRT_WIN_OBJS)
+	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
+
+$(TEST_CON_APP): $(O)\test_con.obj $(O)\test.obj $(MINICRT_CON_OBJS)
+	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
+
+# ucrt directory
+{}.cpp{$(S)}.obj::
+	$(CC) $(CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+
+{mingw}.c{$(O)}.obj::
+	$(CC) $(CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+
+# http://msdn.microsoft.com/en-us/library/s0ksfwcf.aspx
+{}.asm{$(O)}.obj::
+	ml /c /coff /Fo$(O)\ $<
+
+# TODO: replace with a single rule
+$(O)\msvcrt_dll.lib: msvcrt.def
+	lib /def:msvcrt.def /OUT:$(O)\msvcrt_dll.lib
+
+$(O)\ntdll_dll.lib: ntdll.def
+	lib /def:ntdll.def /OUT:$(O)\ntdll_dll.lib
+
+force: ;
+
