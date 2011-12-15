@@ -811,6 +811,7 @@ protected:
 
     PdfTocItem   *  BuildTocTree(fz_outline *entry, int& idCounter);
     void            LinkifyPageText(pdf_page *page);
+    void            LinkifyPageAttachments(pdf_page *page);
     fz_rect       * GetPageImageRects(pdf_page *page);
     RenderedBitmap *GetPageImage(int pageNo, RectD rect, size_t imageIx);
 
@@ -1263,6 +1264,7 @@ pdf_page *CPdfEngine::GetPdfPage(int pageNo, bool failIfBusy)
         LeaveCriticalSection(&xrefAccess);
         if (!error) {
             LinkifyPageText(page);
+            LinkifyPageAttachments(page);
             _pages[pageNo-1] = page;
             imageRects[pageNo-1] = GetPageImageRects(page);
         }
@@ -1694,6 +1696,21 @@ void CPdfEngine::LinkifyPageText(pdf_page *page)
     delete list;
     delete[] coords;
     free(pageText);
+}
+
+void CPdfEngine::LinkifyPageAttachments(pdf_page *page)
+{
+    for (pdf_annot *annot = page->annots; annot; annot = annot->next) {
+        if (str::Eq(fz_to_name(fz_dict_gets(annot->obj, "Subtype")), "FileAttachment")) {
+            fz_obj *file = fz_dict_gets(annot->obj, "FS");
+            fz_rect rect = pdf_to_rect(fz_dict_gets(annot->obj, "Rect"));
+            if (file && fz_dict_gets(file, "EF") && !fz_is_empty_rect(rect)) {
+                pdf_link *link = pdf_new_link(fz_keep_obj(file), PDF_LINK_LAUNCH, rect);
+                link->next = page->links;
+                page->links = link;
+            }
+        }
+    }
 }
 
 fz_rect *CPdfEngine::GetPageImageRects(pdf_page *page)
