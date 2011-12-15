@@ -687,6 +687,9 @@ pdf_append_line(pdf_xref *xref, fz_obj *res, fz_buffer *content, fz_buffer *base
 		end = ucs2;
 		do
 		{
+			if (*end == '\n' || *end == '\r' && *(end + 1) != '\n')
+				break;
+
 			for (keep = end + 1; *keep && !iswspace(*keep); keep++);
 			w = pdf_get_string_width(xref, res, base_ap, ucs2, keep);
 			if (w <= width || end == ucs2)
@@ -816,6 +819,68 @@ pdf_update_tx_widget_annot(pdf_xref *xref, fz_obj *obj)
 	return pdf_create_annot(rect, fz_keep_obj(obj), content, res ? fz_keep_obj(res) : NULL, 0);
 }
 
+/* SumatraPDF: partial support for freetext annotations */
+
+#define ANNOT_FREETEXT_AP_RESOURCES \
+	"<< /Font << /Default << /Type /Font /BaseFont /Helvetica /Subtype /Type1 >> >> >>"
+
+static pdf_annot *
+pdf_create_freetext_annot(pdf_xref *xref, fz_obj *obj)
+{
+	fz_buffer *content = fz_new_buffer(256);
+	fz_buffer *base_ap = fz_new_buffer(256);
+	fz_obj *ap = fz_dict_gets(obj, "DA");
+	fz_obj *value = fz_dict_gets(obj, "Contents");
+	fz_rect rect = pdf_to_rect(fz_dict_gets(obj, "Rect"));
+	int align = fz_to_int(fz_dict_gets(obj, "Q"));
+	fz_obj *res = pdf_dict_from_string(xref, ANNOT_FREETEXT_AP_RESOURCES);
+	unsigned short *ucs2, *rest;
+	float x;
+
+	char *font_name = NULL;
+	float font_size = pdf_extract_font_size(xref, fz_to_str_buf(ap), &font_name);
+	if (!font_size)
+		font_size = 10;
+	/* TODO: what resource dictionary does this font name refer to? */
+	if (font_name)
+	{
+		fz_obj *font = fz_dict_gets(res, "Font");
+		fz_dict_puts(font, font_name, fz_dict_gets(font, "Default"));
+		fz_free(font_name);
+	}
+
+	fz_buffer_printf(content, "q 1 1 %.4f %.4f re W n BT %s ",
+		rect.x1 - rect.x0 - 2.0f, rect.y1 - rect.y0 - 2.0f, fz_to_str_buf(ap));
+	fz_buffer_printf(base_ap, "q BT %s ", fz_to_str_buf(ap));
+	fz_buffer_printf(content, "/Default %.4f Tf ", font_size);
+	fz_buffer_printf(base_ap, "/Default %.4f Tf ", font_size);
+	fz_buffer_printf(content, "1 0 0 1 2 %.4f Tm ", rect.y1 - rect.y0 - 2);
+
+	/* Adobe Reader seems to consider "[1 0 0] r" and "1 0 0 rg" to mean the same(?) */
+	if (strchr(base_ap->data, '['))
+	{
+		float r, g, b;
+		if (sscanf(strchr(base_ap->data, '['), "[%f %f %f] r", &r, &g, &b) == 3)
+			fz_buffer_printf(content, "%.4f %.4f %.4f rg ", r, g, b);
+	}
+
+	ucs2 = pdf_to_ucs2(value);
+	for (rest = ucs2; *rest; rest++)
+		if (*rest > 0xFF)
+			*rest = '?';
+
+	x = 0;
+	rest = ucs2;
+	while (*rest)
+		rest = pdf_append_line(xref, res, content, base_ap, rest, font_size, align, rect.x1 - rect.x0 - 4.0f, 1, &x);
+
+	fz_free(ucs2);
+	fz_buffer_printf(content, "ET Q");
+	fz_drop_buffer(base_ap);
+
+	return pdf_create_annot(rect, fz_keep_obj(obj), content, res, 0);
+}
+
 static pdf_annot *
 pdf_create_annot_with_appearance(pdf_xref *xref, fz_obj *obj)
 {
@@ -827,10 +892,13 @@ pdf_create_annot_with_appearance(pdf_xref *xref, fz_obj *obj)
 		return pdf_create_text_annot(xref, obj);
 	if (!strcmp(type, "FileAttachment"))
 		return pdf_create_file_annot(xref, obj);
+	/* TODO: Adobe Reader seems to sometimes ignore the appearance stream for highlights(?) */
 	if (!strcmp(type, "Highlight"))
 		return pdf_create_highlight_annot(xref, obj);
 	if (!strcmp(type, "Underline") || !strcmp(type, "StrikeOut") || !strcmp(type, "Squiggly"))
 		return pdf_create_markup_annot(xref, obj, type);
+	if (!strcmp(type, "FreeText"))
+		return pdf_create_freetext_annot(xref, obj);
 
 	return NULL;
 }

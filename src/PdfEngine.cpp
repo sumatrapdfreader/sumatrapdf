@@ -1598,7 +1598,8 @@ PageElement *CPdfEngine::GetElementAtPos(int pageNo, PointD pt)
 
         for (pdf_annot *annot = page->annots; annot; annot = annot->next)
             if (fz_is_pt_in_rect(annot->rect, p) &&
-                !str::IsEmpty(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents")))) {
+                !str::IsEmpty(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents"))) &&
+                !str::Eq(fz_to_name(fz_dict_gets(annot->obj, "Subtype")), "FreeText")) {
                 ScopedMem<TCHAR> contents(str::conv::FromPdf(fz_dict_gets(annot->obj, "Contents")));
                 return new PdfComment(contents, fz_rect_to_RectD(annot->rect), pageNo);
             }
@@ -1628,7 +1629,8 @@ Vec<PageElement *> *CPdfEngine::GetElements(int pageNo)
         ScopedCritSec scope(&xrefAccess);
 
         for (pdf_annot *annot = page->annots; annot; annot = annot->next)
-            if (!str::IsEmpty(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents")))) {
+            if (!str::IsEmpty(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents"))) &&
+                !str::Eq(fz_to_name(fz_dict_gets(annot->obj, "Subtype")), "FreeText")) {
                 ScopedMem<TCHAR> contents(str::conv::FromPdf(fz_dict_gets(annot->obj, "Contents")));
                 els->Append(new PdfComment(contents, fz_rect_to_RectD(annot->rect), pageNo));
             }
