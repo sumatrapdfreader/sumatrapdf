@@ -3137,6 +3137,8 @@ static void FrameOnChar(WindowInfo& win, WPARAM key)
             else if (!forward && currPage <= win.dm->CurrentPageNo())
                 win.dm->GoToPrevPage(0);
         }
+        else if (win.presentation)
+            win.ChangePresentationMode(PM_BLACK_SCREEN);
         break;
     case '.':
         // for Logitech's wireless presenters which target PowerPoint's shortcuts
