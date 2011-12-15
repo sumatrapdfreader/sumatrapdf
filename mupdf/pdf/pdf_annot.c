@@ -305,23 +305,22 @@ pdf_create_link_annot(pdf_xref *xref, fz_obj *obj)
 	"4 18.215 5.637 20 8 20 c h S\n"
 
 #define ANNOT_TEXT_AP_KEY \
-	"%.4f %.4f %.4f RG 0 J 1 j [] 0 d 4 M 2 w\n"                                \
-	"11.895 18.754 m 13.926 20.625 17.09 20.496 18.961 18.465 c 20.832\n"       \
+	"%.4f %.4f %.4f RG 0 J 1 j [] 0 d 4 M\n"                                    \
+	"2 w 11.895 18.754 m 13.926 20.625 17.09 20.496 18.961 18.465 c 20.832\n"   \
 	"16.434 20.699 13.27 18.668 11.398 c 17.164 10.016 15.043 9.746 13.281\n"   \
 	"10.516 c 12.473 9.324 l 11.281 10.078 l 9.547 8.664 l 9.008 6.496 l\n"     \
 	"7.059 6.059 l 6.34 4.121 l 5.543 3.668 l 3.375 4.207 l 2.938 6.156 l\n"    \
 	"10.57 13.457 l 9.949 15.277 10.391 17.367 11.895 18.754 c h S\n"           \
-	"1.5 w\n"                                                                   \
-	"16.059 15.586 m 16.523 15.078 17.316 15.043 17.824 15.512 c 18.332\n"      \
-	"15.98 18.363 16.77 17.895 17.277 c 17.43 17.785 16.637 17.816 16.129\n"    \
-	"17.352 c 15.621 16.883 15.59 16.094 16.059 15.586 c h S\n"
+	"1.5 w 16.059 15.586 m 16.523 15.078 17.316 15.043 17.824 15.512 c\n"       \
+	"18.332 15.98 18.363 16.77 17.895 17.277 c 17.43 17.785 16.637 17.816\n"    \
+	"16.129 17.352 c 15.621 16.883 15.59 16.094 16.059 15.586 c h S\n"
 
 #define ANNOT_TEXT_AP_HELP \
 	"%.4f %.4f %.4f RG 0 J 1 j [] 0 d 4 M 2.5 w\n"                              \
 	"8.289 16.488 m 8.824 17.828 10.043 18.773 11.473 18.965 c 12.902 19.156\n" \
 	"14.328 18.559 15.195 17.406 c 16.062 16.254 16.242 14.723 15.664 13.398\n" \
 	"c S 12 8 m 12 12 16 11 16 15 c S\n"                                        \
-	"q 1 0 0 -0.999991 0 24 cm 1.539286 w\n"                                    \
+	"q 1 0 0 -1 0 24 cm 1.539286 w\n"                                           \
 	"12.684 20.891 m 12.473 21.258 12.004 21.395 11.629 21.196 c 11.254\n"      \
 	"20.992 11.105 20.531 11.297 20.149 c 11.488 19.77 11.945 19.61 12.332\n"   \
 	"19.789 c 12.719 19.969 12.891 20.426 12.719 20.817 c S Q\n"
@@ -391,6 +390,73 @@ pdf_create_text_annot(pdf_xref *xref, fz_obj *obj)
 
 	// TODO: make icons semi-transparent (cf. pdf_create_highlight_annot)?
 	fz_buffer_printf(content, "q ");
+	fz_buffer_printf(content, content_ap, 0.5, 0.5, 0.5);
+	fz_buffer_printf(content, " 1 0 0 1 0 1 cm ");
+	fz_buffer_printf(content, content_ap, rgb[0], rgb[1], rgb[2]);
+	fz_buffer_printf(content, " Q", content_ap);
+
+	obj = pdf_clone_for_view_only(xref, obj);
+	return pdf_create_annot(rect, obj, content, NULL, 0);
+}
+
+// appearance streams adapted from Poppler's Annot.cc, licensed under GPLv2 and later
+#define ANNOT_FILE_ATTACHMENT_AP_PUSHPIN \
+	"%.4f %.4f %.4f RG 1 J 1 j [] 0 d 4 M\n"                                    \
+	"2 w 5 4 m 6 5 l S\n"                                                       \
+	"11 14 m 9 12 l 6 12 l 13 5 l 13 8 l 15 10 l 18 11 l 20 11 l 12 19 l 12\n"  \
+	"17 l 11 14 l h\n"                                                          \
+	"3 w 6 5 m 9 8 l S\n"
+
+#define ANNOT_FILE_ATTACHMENT_AP_PAPERCLIP \
+	"%.4f %.4f %.4f RG 1 J 1 j [] 0 d 4 M 2 w\n"                                \
+	"16.645 12.035 m 12.418 7.707 l 10.902 6.559 6.402 11.203 8.09 12.562 c\n"  \
+	"14.133 18.578 l 14.949 19.387 16.867 19.184 17.539 18.465 c 20.551\n"      \
+	"15.23 l 21.191 14.66 21.336 12.887 20.426 12.102 c 13.18 4.824 l 12.18\n"  \
+	"3.82 6.25 2.566 4.324 4.461 c 3 6.395 3.383 11.438 4.711 12.801 c 9.648\n" \
+	"17.887 l S\n"
+
+#define ANNOT_FILE_ATTACHMENT_AP_GRAPH \
+	"%.4f %.4f %.4f RG 1 J 1 j [] 0 d 4 M\n"                                    \
+	"1 w 18.5 15.5 m 18.5 13.086 l 16.086 15.5 l 18.5 15.5 l h\n"               \
+	"7 7 m 10 11 l 13 9 l 18 15 l S\n"                                          \
+	"2 w 3 19 m 3 3 l 21 3 l S\n"
+
+#define ANNOT_FILE_ATTACHMENT_AP_TAG \
+	"%.4f %.4f %.4f RG 1 J 1 j [] 0 d 4 M\n"                                    \
+	"1 w q 1 0 0 -1 0 24 cm\n"                                                  \
+	"8.492 8.707 m 8.492 9.535 7.82 10.207 6.992 10.207 c 6.164 10.207 5.492\n" \
+	"9.535 5.492 8.707 c 5.492 7.879 6.164 7.207 6.992 7.207 c 7.82 7.207\n"    \
+	"8.492 7.879 8.492 8.707 c h S Q\n"                                         \
+	"2 w\n"                                                                     \
+	"2 w 20.078 11.414 m 20.891 10.602 20.785 9.293 20.078 8.586 c 14.422\n"    \
+	"2.93 l 13.715 2.223 12.301 2.223 11.594 2.93 c 3.816 10.707 l 3.109\n"     \
+	"11.414 2.402 17.781 3.816 19.195 c 5.23 20.609 11.594 19.902 12.301\n"     \
+	"19.195 c 20.078 11.414 l h S\n"                                            \
+	"1 w 11.949 13.184 m 16.191 8.941 l S 14.07 6.82 m 9.828 11.062 l S\n"      \
+	"6.93 15.141 m 8 20 14.27 20.5 16 20.5 c 18.094 20.504 19.5 20 19.5 18 c\n" \
+	"19.5 16.699 20.91 16.418 22.5 16.5 c S\n"
+
+/* SumatraPDF: partial support for file attachment icons */
+static pdf_annot *
+pdf_create_file_annot(pdf_xref *xref, fz_obj *obj)
+{
+	fz_buffer *content = fz_new_buffer(512);
+	fz_rect rect = pdf_to_rect(fz_dict_gets(obj, "Rect"));
+	char *icon_name = fz_to_name(fz_dict_gets(obj, "Name"));
+	char *content_ap = ANNOT_FILE_ATTACHMENT_AP_PUSHPIN;
+	float rgb[3];
+
+	pdf_get_annot_color(obj, rgb);
+
+	if (!strcmp(icon_name, "Graph"))
+		content_ap = ANNOT_FILE_ATTACHMENT_AP_GRAPH;
+	else if (!strcmp(icon_name, "Paperclip"))
+		content_ap = ANNOT_FILE_ATTACHMENT_AP_PAPERCLIP;
+	else if (!strcmp(icon_name, "Tag"))
+		content_ap = ANNOT_FILE_ATTACHMENT_AP_TAG;
+
+	fz_buffer_printf(content, "q %.4f 0 0 %.4f 0 0 cm ",
+		(rect.x1 - rect.x0) / 24, (rect.y1 - rect.y0) / 24);
 	fz_buffer_printf(content, content_ap, 0.5, 0.5, 0.5);
 	fz_buffer_printf(content, " 1 0 0 1 0 1 cm ");
 	fz_buffer_printf(content, content_ap, rgb[0], rgb[1], rgb[2]);
@@ -753,18 +819,19 @@ pdf_update_tx_widget_annot(pdf_xref *xref, fz_obj *obj)
 static pdf_annot *
 pdf_create_annot_with_appearance(pdf_xref *xref, fz_obj *obj)
 {
-	if (!strcmp(fz_to_name(fz_dict_gets(obj, "Subtype")), "Link"))
+	char *type = fz_to_name(fz_dict_gets(obj, "Subtype"));
+
+	if (!strcmp(type, "Link"))
 		return pdf_create_link_annot(xref, obj);
-	if (!strcmp(fz_to_name(fz_dict_gets(obj, "Subtype")), "Text"))
+	if (!strcmp(type, "Text"))
 		return pdf_create_text_annot(xref, obj);
-	if (!strcmp(fz_to_name(fz_dict_gets(obj, "Subtype")), "Highlight"))
+	if (!strcmp(type, "FileAttachment"))
+		return pdf_create_file_annot(xref, obj);
+	if (!strcmp(type, "Highlight"))
 		return pdf_create_highlight_annot(xref, obj);
-	if (!strcmp(fz_to_name(fz_dict_gets(obj, "Subtype")), "Underline"))
-		return pdf_create_markup_annot(xref, obj, "Underline");
-	if (!strcmp(fz_to_name(fz_dict_gets(obj, "Subtype")), "StrikeOut"))
-		return pdf_create_markup_annot(xref, obj, "StrikeOut");
-	if (!strcmp(fz_to_name(fz_dict_gets(obj, "Subtype")), "Squiggly"))
-		return pdf_create_markup_annot(xref, obj, "Squiggly");
+	if (!strcmp(type, "Underline") || !strcmp(type, "StrikeOut") || !strcmp(type, "Squiggly"))
+		return pdf_create_markup_annot(xref, obj, type);
+
 	return NULL;
 }
 
