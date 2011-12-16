@@ -536,6 +536,20 @@ fz_draw_fill_text(void *user, fz_text *text, fz_matrix ctm,
 		glyph = fz_render_glyph(dev->cache, text->font, gid, trm, model);
 		if (glyph)
 		{
+			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1746 */
+			if (glyph->n > 1 && text->font->t3procs)
+			{
+				float light;
+				fz_convert_color(colorspace, color, fz_device_gray, &light);
+				if (light != 0)
+				{
+					fz_pixmap *gray = fz_new_pixmap_with_rect(fz_device_gray, fz_bound_pixmap(glyph));
+					fz_convert_pixmap(glyph, gray);
+					fz_drop_pixmap(glyph);
+					glyph = fz_alpha_from_gray(gray, 0);
+					fz_drop_pixmap(gray);
+				}
+			}
 			if (glyph->n == 1)
 			{
 				draw_glyph(colorbv, dev->dest, glyph, x, y, dev->scissor);
