@@ -43,6 +43,9 @@ pdf_load_type3_font(pdf_font_desc **fontdescp, pdf_xref *xref, fz_obj *rdb, fz_o
 	bbox = fz_transform_rect(matrix, bbox);
 	fz_set_font_bbox(fontdesc->font, bbox.x0, bbox.y0, bbox.x1, bbox.y1);
 
+	/* SumatraPDF: expose Type3 FontDescriptor flags */
+	fontdesc->flags = fz_to_int(fz_dict_gets(fz_dict_gets(dict, "FontDescriptor"), "Flags"));
+
 	/* Encoding */
 
 	for (i = 0; i < 256; i++)
@@ -89,6 +92,12 @@ pdf_load_type3_font(pdf_font_desc **fontdescp, pdf_xref *xref, fz_obj *rdb, fz_o
 	error = pdf_load_to_unicode(fontdesc, xref, estrings, NULL, fz_dict_gets(dict, "ToUnicode"));
 	if (error)
 		goto cleanup;
+
+	/* SumatraPDF: trying to match Adobe Reader's behavior */
+	if (!(fontdesc->flags & PDF_FD_SYMBOLIC) && fontdesc->cid_to_ucs_len >= 128)
+		for (i = 32; i < 128; i++)
+			if (fontdesc->cid_to_ucs[i] == '?' || fontdesc->cid_to_ucs[i] == '\0')
+				fontdesc->cid_to_ucs[i] = i;
 
 	/* Widths */
 

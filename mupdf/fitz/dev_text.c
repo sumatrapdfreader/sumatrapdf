@@ -430,6 +430,12 @@ fz_text_extract_span(fz_text_span **last, fz_text *text, fz_matrix ctm, fz_point
 		ascender = (float)face->ascender / face->units_per_EM;
 		descender = (float)face->descender / face->units_per_EM;
 	}
+	/* SumatraPDF: use a Type 3 font's FontBBox instead of 1 and 0 */
+	else if (font->t3procs && !fz_is_empty_rect(font->bbox))
+	{
+		ascender = font->bbox.y1 / 1000;
+		descender = font->bbox.y0 / 1000;
+	}
 
 	rect = fz_empty_rect;
 
@@ -497,9 +503,10 @@ fz_text_extract_span(fz_text_span **last, fz_text *text, fz_matrix ctm, fz_point
 				{
 					fz_rect spacerect;
 					spacerect.x0 = -0.2f;
-					spacerect.y0 = 0;
+					/* SumatraPDF: make spaces stand out less */
+					spacerect.y0 = descender;
 					spacerect.x1 = 0;
-					spacerect.y1 = 1;
+					spacerect.y1 = ascender;
 					spacerect = fz_transform_rect(trm, spacerect);
 					fz_add_text_char(last, font, size, text->wmode, ' ', fz_round_rect(spacerect));
 				}
