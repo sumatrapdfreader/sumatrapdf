@@ -334,18 +334,29 @@ static void DrawFrame2(Graphics &g, RectI r)
     DrawSumatraLetters(g, &f, &f2, 18.f);
 }
 
+static bool BitmapSizeEquals(Bitmap *bmp, int dx, int dy)
+{
+    if (NULL == bmp)
+        return false;
+    return ((dx == bmp->GetWidth()) && (dy == bmp->GetHeight()));
+}
+
+static Bitmap *frameBmp = NULL;
+
 static void DrawFrame(HWND hwnd, HDC dc, PAINTSTRUCT *ps)
 {
     RECT rc;
     GetClientRect(hwnd, &rc);
 
-    // TODO: cache bmp object?
     Graphics g(dc);
     ClientRect rc2(hwnd);
-    Bitmap bmp(rc2.dx, rc2.dy, &g);
-    Graphics g2((Image*)&bmp);
+    if (!BitmapSizeEquals(frameBmp, rc2.dx, rc2.dy)) {
+        delete frameBmp;
+        frameBmp = new Bitmap(rc2.dx, rc2.dy, &g);
+    }
+    Graphics g2((Image*)frameBmp);
     DrawFrame2(g2, rc2);
-    g.DrawImage(&bmp, 0, 0);
+    g.DrawImage(frameBmp, 0, 0);
 }
 
 static void OnPaintFrame(HWND hwnd)
@@ -498,6 +509,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     ret = RunApp();
 
+    delete frameBmp;
 Exit:
     return ret;
 }
