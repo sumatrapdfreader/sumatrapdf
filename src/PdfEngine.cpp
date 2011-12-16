@@ -406,6 +406,9 @@ static TCHAR *LinkifyEmailAddress(TCHAR *start)
     for (end = start; IsEmailUsernameChar(*end); end++);
     if (end == start || *end != '@' || !IsEmailDomainChar(*(end + 1)))
         return NULL;
+    for (end++; IsEmailDomainChar(*end); end++);
+    if ('.' != *end || !IsEmailDomainChar(*(end + 1)))
+        return NULL;
     do {
         for (end++; IsEmailDomainChar(*end); end++);
     } while ('.' == *end && IsEmailDomainChar(*(end + 1)));
