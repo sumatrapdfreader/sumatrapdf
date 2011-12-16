@@ -395,7 +395,6 @@ fixup_delete_duplicates:
 				deletecharacter(span, i);
 			else if (i == span->len && span->eol)
 				span->eol = 0;
-			i--;
 		}
 	}
 }
