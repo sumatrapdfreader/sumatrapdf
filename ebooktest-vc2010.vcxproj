@@ -73,6 +73,7 @@
     <ClCompile Include="src\utils\FileUtil.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\gdiplussafe.h" />
     <ClInclude Include="src\installer\Resource.h" />
     <ClInclude Include="src\installer\Version.h" />
     <ClInclude Include="src\utils\FileUtil.h" />

@@ -3,6 +3,7 @@
 
 #include <windows.h>
 #include <GdiPlus.h>
+
 #include <shlobj.h>
 #include <Tlhelp32.h>
 #include <Shlwapi.h>
@@ -80,68 +81,6 @@ inline void EnableAndShow(HWND hwnd, bool enable)
     EnableWindow(hwnd, enable);
 }
 
-// This display is inspired by http://letteringjs.com/
-typedef struct {
-    // part that doesn't change
-    char c;
-    Color col, colShadow;
-    REAL rotation;
-    REAL dyOff; // displacement
-
-    // part calculated during layout
-    REAL dx, dy;
-    REAL x;
-} LetterInfo;
-
-LetterInfo gLetters[] = {
-    { 'S', gCol1, gCol1Shadow, -3.f,     0, 0, 0 },
-    { 'U', gCol2, gCol2Shadow,  0.f,     0, 0, 0 },
-    { 'M', gCol3, gCol3Shadow,  2.f,  -2.f, 0, 0 },
-    { 'A', gCol4, gCol4Shadow,  0.f, -2.4f, 0, 0 },
-    { 'T', gCol5, gCol5Shadow,  0.f,     0, 0, 0 },
-    { 'R', gCol5, gCol5Shadow, 2.3f, -1.4f, 0, 0 },
-    { 'A', gCol4, gCol4Shadow,  0.f,     0, 0, 0 },
-    { 'P', gCol3, gCol3Shadow,  0.f, -2.3f, 0, 0 },
-    { 'D', gCol2, gCol2Shadow,  0.f,   3.f, 0, 0 },
-    { 'F', gCol1, gCol1Shadow,  0.f,     0, 0, 0 }
-};
-
-#define SUMATRA_LETTERS_COUNT (dimof(gLetters))
-
-static char RandUppercaseLetter()
-{
-    // TODO: clearly, not random but seem to work ok anyway
-    static char l = 'A' - 1;
-    l++;
-    if (l > 'Z')
-        l = 'A';
-    return l;
-}
-
-static void RandomizeLetters()
-{
-    for (int i = 0; i < dimof(gLetters); i++) {
-        gLetters[i].c = RandUppercaseLetter();
-    }
-}
-
-static void SetLettersSumatraUpTo(int n)
-{
-    char *s = "SUMATRAPDF";
-    for (int i = 0; i < dimof(gLetters); i++) {
-        if (i < n) {
-            gLetters[i].c = s[i];
-        } else {
-            gLetters[i].c = ' ';
-        }
-    }
-}
-
-static void SetLettersSumatra()
-{
-    SetLettersSumatraUpTo(SUMATRA_LETTERS_COUNT);
-}
-
 class FrameTimeoutCalculator {
 
     LARGE_INTEGER   timeStart;
@@ -186,89 +125,13 @@ public:
     }
 };
 
-// an animation that reveals letters one by one
-
-// how long the animation lasts, in seconds
-#define REVEALING_ANIM_DUR double(2)
-
-static FrameTimeoutCalculator *gRevealingLettersAnim = NULL;
-
-int gRevealingLettersAnimLettersToShow;
-
-static void RevealingLettersAnimStart()
-{
-    int framesPerSec = (int)(double(SUMATRA_LETTERS_COUNT) / REVEALING_ANIM_DUR);
-    gRevealingLettersAnim = new FrameTimeoutCalculator(framesPerSec);
-    gRevealingLettersAnimLettersToShow = 0;
-    SetLettersSumatraUpTo(0);
-}
-
-static void RevealingLettersAnimStop()
-{
-    delete gRevealingLettersAnim;
-    gRevealingLettersAnim = NULL;
-    SetLettersSumatra();
-    InvalidateFrame();
-}
-
-static void RevealingLettersAnim()
-{
-    if (gRevealingLettersAnim->ElapsedTotal() > REVEALING_ANIM_DUR) {
-        RevealingLettersAnimStop();
-        return;
-    }
-    DWORD timeOut = gRevealingLettersAnim->GetTimeoutInMilliseconds();
-    if (timeOut != 0)
-        return;
-    SetLettersSumatraUpTo(++gRevealingLettersAnimLettersToShow);
-    gRevealingLettersAnim->Step();
-    InvalidateFrame();
-}
-
-static void AnimStep()
-{
-    if (gRevealingLettersAnim)
-        RevealingLettersAnim();
-}
-
-static void CalcLettersLayout(Graphics& g, Font *f, int dx)
-{
-    static BOOL didLayout = FALSE;
-    if (didLayout) return;
-
-    LetterInfo *li;
-    StringFormat sfmt;
-    const REAL letterSpacing = -12.f;
-    REAL totalDx = -letterSpacing; // counter last iteration of the loop
-    WCHAR s[2] = { 0 };
-    Gdiplus::PointF origin(0.f, 0.f);
-    Gdiplus::RectF bbox;
-    for (int i = 0; i < dimof(gLetters); i++) {
-        li = &gLetters[i];
-        s[0] = li->c;
-        g.MeasureString(s, 1, f, origin, &sfmt, &bbox);
-        li->dx = bbox.Width;
-        li->dy = bbox.Height;
-        totalDx += li->dx;
-        totalDx += letterSpacing;
-    }
-
-    REAL x = ((REAL)dx - totalDx) / 2.f;
-    for (int i = 0; i < dimof(gLetters); i++) {
-        li = &gLetters[i];
-        li->x = x;
-        x += li->dx;
-        x += letterSpacing;
-    }
-    RevealingLettersAnimStart();
-    didLayout = TRUE;
-}
+static Font *gFont = NULL;
 
 static REAL DrawMessage(Graphics &g, TCHAR *msg, REAL y, REAL dx, Color color)
 {
+#if 0
     ScopedMem<WCHAR> s(str::conv::ToWStr(msg));
 
-    Font f(L"Impact", 16, FontStyleRegular);
     Gdiplus::RectF maxbox(0, y, dx, 0);
     Gdiplus::RectF bbox;
     g.MeasureString(s, -1, &f, maxbox, &bbox);
@@ -276,44 +139,13 @@ static REAL DrawMessage(Graphics &g, TCHAR *msg, REAL y, REAL dx, Color color)
     bbox.X += (dx - bbox.Width) / 2.f;
     StringFormat sft;
     sft.SetAlignment(StringAlignmentCenter);
-#if DRAW_MSG_TEXT_SHADOW
-    {
-        bbox.X--; bbox.Y++;
-        SolidBrush b(Color(0xff, 0xff, 0xff));
-        g.DrawString(s, -1, &f, bbox, &sft, &b);
-        bbox.X++; bbox.Y--;
-    }
-#endif
     SolidBrush b(color);
     g.DrawString(s, -1, &f, bbox, &sft, &b);
 
     return bbox.Height;
-}
-
-static void DrawSumatraLetters(Graphics &g, Font *f, Font *fVer, REAL y)
-{
-    LetterInfo *li;
-    WCHAR s[2] = { 0 };
-    for (int i = 0; i < dimof(gLetters); i++) {
-        li = &gLetters[i];
-        s[0] = li->c;
-        if (s[0] == ' ')
-            return;
-
-        g.RotateTransform(li->rotation, MatrixOrderAppend);
-#if DRAW_TEXT_SHADOW
-        // draw shadow first
-        SolidBrush b2(li->colShadow);
-        Gdiplus::PointF o2(li->x - 3.f, y + 4.f + li->dyOff);
-        g.DrawString(s, 1, f, o2, &b2);
+#else
+    return 0;
 #endif
-
-        SolidBrush b1(li->col);
-        Gdiplus::PointF o1(li->x, y + li->dyOff);
-        g.DrawString(s, 1, f, o1, &b1);
-        g.RotateTransform(li->rotation, MatrixOrderAppend);
-        g.ResetTransform();
-    }
 }
 
 static void DrawFrame2(Graphics &g, RectI r)
@@ -322,16 +154,11 @@ static void DrawFrame2(Graphics &g, RectI r)
     g.SetSmoothingMode(SmoothingModeAntiAlias);
     g.SetPageUnit(UnitPixel);
 
-    Font f(L"Impact", 40, FontStyleRegular);
-    CalcLettersLayout(g, &f, r.dx);
-
     //SolidBrush bgBrush(gColBg);
     Gdiplus::Rect r2(r.y - 1, r.x - 1, r.dx + 1, r.dy + 1);
     LinearGradientBrush bgBrush(RectF(0, 0, (REAL)r.dx, (REAL)r.dy), Color(0xd0,0xd0,0xd0), Color(0xff,0xff,0xff), LinearGradientModeVertical);
     g.FillRectangle(&bgBrush, r2);
 
-    Font f2(L"Impact", 16, FontStyleRegular);
-    DrawSumatraLetters(g, &f, &f2, 18.f);
 }
 
 static bool BitmapSizeEquals(Bitmap *bmp, int dx, int dy)
@@ -352,7 +179,7 @@ static void DrawFrame(HWND hwnd, HDC dc, PAINTSTRUCT *ps)
     ClientRect rc2(hwnd);
     if (!BitmapSizeEquals(frameBmp, rc2.dx, rc2.dy)) {
         delete frameBmp;
-        frameBmp = new Bitmap(rc2.dx, rc2.dy, &g);
+        frameBmp = ::new Bitmap(rc2.dx, rc2.dy, &g);
     }
     Graphics g2((Image*)frameBmp);
     DrawFrame2(g2, rc2);
@@ -367,19 +194,13 @@ static void OnPaintFrame(HWND hwnd)
     EndPaint(hwnd, &ps);
 }
 
-static void RestartAnimation()
-{
-    delete gRevealingLettersAnim;
-    RevealingLettersAnimStart();
-}
-
 static void OnLButtonDown()
 {
-    RestartAnimation();
 }
 
 static void OnCreateWindow(HWND hwnd)
 {
+    gFont = ::new Font(L"Times New Roman", 16, FontStyleRegular);
 }
 
 static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -474,7 +295,7 @@ static int RunApp()
             res = MsgWaitForMultipleObjects(0, 0, TRUE, timeout, QS_ALLEVENTS);
         }
         if (res == WAIT_TIMEOUT) {
-            AnimStep();
+            //AnimStep();
             ftc.Step();
         }
 
@@ -509,7 +330,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     ret = RunApp();
 
+    delete gFont;
     delete frameBmp;
+
 Exit:
     return ret;
 }
