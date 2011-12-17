@@ -372,11 +372,11 @@ public:
 private:
     REAL GetTotalLineDx();
     void LayoutLeftStartingAt(REAL offX);
-    void LineJustifyLeft();
-    void LineJustifyRight();
-    void LineJustifyCenter();
-    void LineJustifyBoth();
-    void LineJustify();
+    void JustifyLineLeft();
+    void JustifyLineRight();
+    void JustifyLineCenter();
+    void JustifyLineBoth();
+    void JustifyLine();
 
     void StartLayout();
     void StartNewPage();
@@ -441,12 +441,12 @@ void PageLayout::LayoutLeftStartingAt(REAL offX)
     }
 }
 
-void PageLayout::LineJustifyLeft()
+void PageLayout::JustifyLineLeft()
 {
     LayoutLeftStartingAt(0);
 }
 
-void PageLayout::LineJustifyRight()
+void PageLayout::JustifyLineRight()
 {
     x = pageDx;
     for (size_t i = 0; i < lineStringsDx.Count(); i++) {
@@ -459,7 +459,7 @@ void PageLayout::LineJustifyRight()
     }
 }
 
-void PageLayout::LineJustifyCenter()
+void PageLayout::JustifyLineCenter()
 {
     REAL margin = (pageDx - GetTotalLineDx());
     LayoutLeftStartingAt(margin / 2.f);
@@ -467,7 +467,7 @@ void PageLayout::LineJustifyCenter()
 
 // TODO: a line at the end of paragraph (i.e. followed by an empty line or the last line)
 // should be justified left. Need to look ahead for that
-void PageLayout::LineJustifyBoth()
+void PageLayout::JustifyLineBoth()
 {
     REAL extraDxSpace = (pageDx - GetTotalLineDx()) / (REAL)(lineStringsDx.Count() - 1);
     size_t middleString = lineStringsDx.Count() / 2;
@@ -494,22 +494,22 @@ void PageLayout::LineJustifyBoth()
     }
 }
 
-void PageLayout::LineJustify()
+void PageLayout::JustifyLine()
 {
     if (0 == lineStringsDx.Count())
         return; // nothing to do
     switch (j) {
         case Left:
-            LineJustifyLeft();
+            JustifyLineLeft();
             break;
         case Right:
-            LineJustifyRight();
+            JustifyLineRight();
             break;
         case Center:
-            LineJustifyCenter();
+            JustifyLineCenter();
             break;
         case Both:
-            LineJustifyBoth();
+            JustifyLineBoth();
             break;
         default:
             assert(0);
@@ -520,7 +520,7 @@ void PageLayout::LineJustify()
 
 void PageLayout::StartNewLine()
 {
-    LineJustify();
+    JustifyLine();
     x = 0;
     y += lineSpacing;
     lineStringsDx.Reset();
@@ -583,7 +583,7 @@ Vec<Page*> *PageLayout::Layout(Graphics *g, Font *f, const char *s)
     }
     if (j == Both)
         j = Left;
-    LineJustify();
+    JustifyLine();
     RemoveLastPageIfEmpty();
     Vec<Page*> *ret = pages;
     pages = NULL;
