@@ -371,7 +371,7 @@ public:
 
 private:
     REAL GetTotalLineDx();
-    void LayoutLeftStartingAt(REAL offX, REAL extraSpaceDx);
+    void LayoutLeftStartingAt(REAL offX);
     void LineJustifyLeft();
     void LineJustifyRight();
     void LineJustifyCenter();
@@ -403,7 +403,7 @@ private:
 
 void PageLayout::StartLayout()
 {
-    j = Right;
+    j = Both;
     pages = new Vec<Page*>();
     lineSpacing = f->GetHeight(g);
     spaceDx = GetSpaceDx(g, f);
@@ -429,7 +429,7 @@ REAL PageLayout::GetTotalLineDx()
     return dx;
 }
 
-void PageLayout::LayoutLeftStartingAt(REAL offX, REAL extraSpaceDx)
+void PageLayout::LayoutLeftStartingAt(REAL offX)
 {
     x = offX;
     for (size_t i = 0; i < lineStringsDx.Count(); i++) {
@@ -437,20 +437,20 @@ void PageLayout::LayoutLeftStartingAt(REAL offX, REAL extraSpaceDx)
         RectF bb(x, y, sdx.dx, sdx.dy);
         StringPos sp(sdx.s, sdx.len, bb);
         p->strings->Append(sp);
-        x += (sdx.dx + spaceDx + extraSpaceDx);
+        x += (sdx.dx + spaceDx);
     }
 }
 
 void PageLayout::LineJustifyLeft()
 {
-    LayoutLeftStartingAt(0, 0);
+    LayoutLeftStartingAt(0);
 }
 
 void PageLayout::LineJustifyRight()
 {
     x = pageDx;
     for (size_t i = 0; i < lineStringsDx.Count(); i++) {
-        StrDx sdx = lineStringsDx.At(i);
+        StrDx sdx = lineStringsDx.At(lineStringsDx.Count() - i - 1);
         x -= sdx.dx;
         RectF bb(x, y, sdx.dx, sdx.dy);
         StringPos sp(sdx.s, sdx.len, bb);
@@ -459,19 +459,39 @@ void PageLayout::LineJustifyRight()
     }
 }
 
-// TODO: needs more precise justification, so that the right string is closer to right edge
-// TODO: a line at the end of paragraph (i.e. followed by an empty line or the last line)
-// should be justified left. Need to look ahead for that
 void PageLayout::LineJustifyCenter()
 {
     REAL margin = (pageDx - GetTotalLineDx());
-    LayoutLeftStartingAt(margin / 2.f, 0);
+    LayoutLeftStartingAt(margin / 2.f);
 }
 
+// TODO: a line at the end of paragraph (i.e. followed by an empty line or the last line)
+// should be justified left. Need to look ahead for that
 void PageLayout::LineJustifyBoth()
 {
-    REAL extraSpaceDx = (pageDx - GetTotalLineDx()) / (REAL)lineStringsDx.Count();
-    LayoutLeftStartingAt(0, extraSpaceDx);
+    REAL extraDxSpace = (pageDx - GetTotalLineDx()) / (REAL)(lineStringsDx.Count() - 1);
+    size_t middleString = lineStringsDx.Count() / 2;
+
+    // first half of strings are laid out starting from left
+    x = 0;
+    for (size_t i = 0; i <= middleString; i++) {
+        StrDx sdx = lineStringsDx.At(i);
+        RectF bb(x, y, sdx.dx, sdx.dy);
+        StringPos sp(sdx.s, sdx.len, bb);
+        p->strings->Append(sp);
+        x += (sdx.dx + spaceDx);
+    }
+
+    // second half of strings are laid out from right
+    x = pageDx;
+    for (size_t i = lineStringsDx.Count() - 1; i > middleString; i--) {
+        StrDx sdx = lineStringsDx.At(i);
+        x -= sdx.dx;
+        RectF bb(x, y, sdx.dx, sdx.dy);
+        StringPos sp(sdx.s, sdx.len, bb);
+        p->strings->Append(sp);
+        x -= (spaceDx + extraDxSpace);
+    }
 }
 
 void PageLayout::LineJustify()
@@ -544,6 +564,11 @@ void PageLayout::RemoveLastPageIfEmpty()
     // TODO: write me
 }
 
+// How layout works: 
+// * measure the strings
+// * remember a line's worth of widths
+// * when we fill a line we calculate the position of strings in
+//   a line for a given justification setting (left, right, center, both)
 Vec<Page*> *PageLayout::Layout(Graphics *g, Font *f, const char *s)
 {
     this->g = g;
