@@ -286,51 +286,128 @@ WordInfo *WordsIter::Next()
     return &wi;
 }
 
-static Vec<Page*> *LayoutText(Graphics *g, Font *f, int pageDx, int pageDy, const char *s)
+// TODO: not quite sure why spaceDx1 != spaceDx2, using spaceDx2 because
+// is smaller and looks as better spacing to me
+static REAL GetSpaceDx(Graphics *g, Font *f)
 {
-    Vec<Page*> *pages = new Vec<Page*>();
-    WCHAR buf[512];
-    PointF pointZero(0, 0);
     RectF bb;
-    g->MeasureString(L" ", 1, f, pointZero, &bb);
-    REAL spaceDx = bb.Width;
+    PointF pz(0,0);
+#if 0
+    g->MeasureString(L" ", 1, f, pz, &bb);
+    REAL spaceDx1 = bb.Width;
+#endif
+    g->MeasureString(L"wa", 2, f, pz, &bb);
+    REAL l1 = bb.Width;
+    g->MeasureString(L"w a", 3, f, pz, &bb);
+    REAL l2 = bb.Width;
+    REAL spaceDx2 = l2 - l1;
+    //assert(spaceDx2 == spaceDx1);
+    return spaceDx2;
+}
+
+class PageLayout
+{
+public:
+    PageLayout(int dx, int dy) {
+        pageDx = (REAL)dx; pageDy = (REAL)dy;
+        lineSpacing = 0; spaceDx = 0;
+        pages = NULL; p = NULL;
+        x = y = 0;
+    }
+
+    Vec<Page *> *Layout(Graphics *g, Font *f, const char *s);
+
+private:
+    void StartLayout();
+    void StartNewPage();
+    void StartNewLine();
+    void RemoveLastPageIfEmpty();
+    void AddWord(WordInfo *wi);
+
+    // constant during layout process
+    REAL pageDx, pageDy;
+    REAL lineSpacing;
+    REAL spaceDx;
+    Graphics *g;
+    Font *f;
+
+    // temporary state during layout process
+    Vec<Page *> *pages;
+    Page *p; // current page
+    REAL x, y; // current position in a page
+    WCHAR buf[512];
+};
+
+void PageLayout::StartLayout()
+{
+    pages = new Vec<Page*>();
+    lineSpacing = f->GetHeight(g);
+    // TODO: why does it return ridiculusly big spacing? Is in a different metric?
     //FontFamily ff;
     //f->GetFamily(&ff);
-    //REAL lineSpacing = (REAL)ff.GetLineSpacing(f->GetStyle()); // TODO: why does it return ridiculusly big numbe?
-    REAL lineSpacing = f->GetHeight(g);
+    //REAL lineSpacing = (REAL)ff.GetLineSpacing(f->GetStyle());
+    spaceDx = GetSpaceDx(g, f);
+    StartNewPage();
+}
+
+void PageLayout::StartNewPage()
+{
+    x = y = 0;
+    p = new Page((int)pageDx, (int)pageDy);
+    pages->Append(p);
+}
+
+void PageLayout::StartNewLine()
+{
+    x = 0;
+    y += lineSpacing;
+    if (y > pageDy)
+        StartNewPage();
+}
+
+void PageLayout::AddWord(WordInfo *wi)
+{
+    RectF bb;
+
+    Utf8ToWchar(wi->s, wi->len, buf, dimof(buf));
+    g->MeasureString(buf, wi->len, f, PointF(0,0), &bb);
+    StringPos sp(wi->s, wi->len, x, y);
+    x += bb.Width;
+    p->strings->Append(sp);
+    x += spaceDx;
+    if (x > pageDx)
+        StartNewLine();
+}
+
+void PageLayout::RemoveLastPageIfEmpty()
+{
+    // TODO: write me
+}
+
+Vec<Page*> *PageLayout::Layout(Graphics *g, Font *f, const char *s)
+{
+    this->g = g;
+    this->f = f;
+    StartLayout();
     WordsIter iter(s);
-    WordInfo *wi;
     for (;;) {
-        // layout a single page
-        Page *page = new Page(pageDx, pageDy);
-        REAL dyLeft = (REAL)pageDy;
-        REAL y = 0;
-        while (dyLeft > lineSpacing) {
-            // layout a single line
-            REAL x = 0;
-            for (;;) {
-                wi = iter.Next();
-                if (NULL == wi)
-                    break;
-                Utf8ToWchar(wi->s, wi->len, buf, dimof(buf));
-                g->MeasureString(buf, wi->len, f, pointZero, &bb);
-                StringPos sp(wi->s, wi->len, x, y);
-                x += bb.Width;
-                page->strings->Append(sp);
-                x += spaceDx;
-                if (x > pageDx)
-                    break;
-            }
-            if (NULL == wi)
-                break;
-            dyLeft -= lineSpacing;
-            y += lineSpacing;
-        }
-        pages->Append(page);
+        WordInfo *wi = iter.Next();
         if (NULL == wi)
             break;
+        AddWord(wi);
     }
-    return pages;
+    RemoveLastPageIfEmpty();
+    Vec<Page*> *ret = pages;
+    pages = NULL;
+    return ret;
+}
+
+Vec<Page*> *LayoutText(Graphics *g, Font *f, int pageDx, int pageDy, const char *s)
+{
+    PageLayout *l = new PageLayout(pageDx, pageDy);
+    Vec<Page*> *ret = l->Layout(g, f, s);
+    delete l;
+    return ret;
 }
 
 static void DrawPage(Graphics *g, Font *f, int pageNo, REAL offX, REAL offY)
