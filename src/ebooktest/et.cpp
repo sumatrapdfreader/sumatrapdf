@@ -371,7 +371,7 @@ public:
 
 private:
     REAL GetTotalLineDx();
-    void LayoutLeftStartingAt(REAL offX);
+    void LayoutLeftStartingAt(REAL offX, REAL extraSpaceDx);
     void LineJustifyLeft();
     void LineJustifyRight();
     void LineJustifyCenter();
@@ -403,7 +403,7 @@ private:
 
 void PageLayout::StartLayout()
 {
-    j = Center;
+    j = Both;
     pages = new Vec<Page*>();
     lineSpacing = f->GetHeight(g);
     spaceDx = GetSpaceDx(g, f);
@@ -418,29 +418,6 @@ void PageLayout::StartNewPage()
     pages->Append(p);
 }
 
-void PageLayout::LayoutLeftStartingAt(REAL offX)
-{
-    x = offX;
-    for (size_t i = 0; i < lineStringsDx.Count(); i++) {
-        StrDx sdx = lineStringsDx.At(i);
-        RectF bb(x, y, sdx.dx, sdx.dy);
-        StringPos sp(sdx.s, sdx.len, bb);
-        p->strings->Append(sp);
-        x += (sdx.dx + spaceDx);
-    }
-}
-
-void PageLayout::LineJustifyLeft()
-{
-    LayoutLeftStartingAt(0);
-}
-
-void PageLayout::LineJustifyRight()
-{
-    // TODO: write me
-    assert(0);
-}
-
 REAL PageLayout::GetTotalLineDx()
 {
     REAL dx = -spaceDx;
@@ -452,16 +429,42 @@ REAL PageLayout::GetTotalLineDx()
     return dx;
 }
 
+void PageLayout::LayoutLeftStartingAt(REAL offX, REAL extraSpaceDx)
+{
+    x = offX;
+    for (size_t i = 0; i < lineStringsDx.Count(); i++) {
+        StrDx sdx = lineStringsDx.At(i);
+        RectF bb(x, y, sdx.dx, sdx.dy);
+        StringPos sp(sdx.s, sdx.len, bb);
+        p->strings->Append(sp);
+        x += (sdx.dx + spaceDx + extraSpaceDx);
+    }
+}
+
+void PageLayout::LineJustifyLeft()
+{
+    LayoutLeftStartingAt(0, 0);
+}
+
+void PageLayout::LineJustifyRight()
+{
+    // TODO: write me
+    assert(0);
+}
+
+// TODO: needs more precise justification, so that the right string is closer to right edge
+// TODO: a line at the end of paragraph (i.e. followed by an empty line or the last line)
+// should be justified left. Need to look ahead for that
 void PageLayout::LineJustifyCenter()
 {
     REAL margin = (pageDx - GetTotalLineDx());
-    LayoutLeftStartingAt(margin / 2.f);
+    LayoutLeftStartingAt(margin / 2.f, 0);
 }
 
 void PageLayout::LineJustifyBoth()
 {
-    // TODO: write me
-    assert(0);
+    REAL extraSpaceDx = (pageDx - GetTotalLineDx()) / (REAL)lineStringsDx.Count();
+    LayoutLeftStartingAt(0, extraSpaceDx);
 }
 
 void PageLayout::LineJustify()
@@ -469,21 +472,21 @@ void PageLayout::LineJustify()
     if (0 == lineStringsDx.Count())
         return; // nothing to do
     switch (j) {
-    case Left:
-        LineJustifyLeft();
-        break;
-    case Right:
-        LineJustifyRight();
-        break;
-    case Center:
-        LineJustifyCenter();
-        break;
-    case Both:
-        LineJustifyBoth();
-        break;
-    default:
-        assert(0);
-        break;
+        case Left:
+            LineJustifyLeft();
+            break;
+        case Right:
+            LineJustifyRight();
+            break;
+        case Center:
+            LineJustifyCenter();
+            break;
+        case Both:
+            LineJustifyBoth();
+            break;
+        default:
+            assert(0);
+            break;
     }
     lineStringsDx.Reset();
 }
@@ -546,6 +549,8 @@ Vec<Page*> *PageLayout::Layout(Graphics *g, Font *f, const char *s)
             break;
         AddWord(wi);
     }
+    if (j == Both)
+        j = Left;
     LineJustify();
     RemoveLastPageIfEmpty();
     Vec<Page*> *ret = pages;
@@ -561,7 +566,7 @@ Vec<Page*> *LayoutText(Graphics *g, Font *f, int pageDx, int pageDy, const char 
     return ret;
 }
 
-static bool gShowTextBoundingBoxes = true;
+static bool gShowTextBoundingBoxes = false;
 
 static void DrawPage(Graphics *g, Font *f, int pageNo, REAL offX, REAL offY)
 {
@@ -609,8 +614,10 @@ static void DrawFrame2(Graphics &g, RectI r)
     LinearGradientBrush bgBrush(RectF(0, 0, (REAL)r.dx, (REAL)r.dy), Color(0xd0,0xd0,0xd0), Color(0xff,0xff,0xff), LinearGradientModeVertical);
     g.FillRectangle(&bgBrush, r2);
 
-    Pen p(Color(0,0,255), 1);
-    g.DrawRectangle(&p, pageBorderX, pageBorderY, r.dx - (pageBorderX * 2), r.dy - (pageBorderY * 2));
+    if (gShowTextBoundingBoxes) {
+        Pen p(Color(0,0,255), 1);
+        g.DrawRectangle(&p, pageBorderX, pageBorderY, r.dx - (pageBorderX * 2), r.dy - (pageBorderY * 2));
+    }
     DrawPage(&g, gFont, 0, (REAL)pageBorderX, (REAL)pageBorderY);
 }
 
@@ -653,7 +660,8 @@ static void OnLButtonDown()
 
 static void OnCreateWindow(HWND hwnd)
 {
-    gFont = ::new Font(L"Times New Roman", 12, FontStyleRegular);
+    //gFont = ::new Font(L"Times New Roman", 16, FontStyleRegular);
+    gFont = ::new Font(L"Georgia", 16, FontStyleRegular);
 }
 
 static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
