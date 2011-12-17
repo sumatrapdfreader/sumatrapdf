@@ -295,13 +295,14 @@ static RectF MeasureTextAccurate(Graphics *g, Font *f, const WCHAR *s, size_t le
     StringFormat sf(StringFormat::GenericTypographic());
     //StringFormat sf(StringFormat::GenericDefault());
     //StringFormat sf;
-    RectF layoutRect(0, 0, 4096, f->GetHeight(g) * 1.5f);
+    RectF layoutRect;
     CharacterRange cr(0, len);
     sf.SetMeasurableCharacterRanges(1, &cr);
     Region r;
     g->MeasureCharacterRanges(s, len, f, layoutRect, &sf, 1, &r);
     RectF bb;
     r.GetBounds(&bb, g);
+    bb.Width += 4.5f; // TODO: total magic, but seems to produce better results
     return bb;
 }
 
@@ -373,6 +374,7 @@ private:
     Page *p; // current page
     REAL x, y; // current position in a page
     WCHAR buf[512];
+    int newLinesCount; // consequitive newlines
 };
 
 void PageLayout::StartLayout()
@@ -390,6 +392,7 @@ void PageLayout::StartLayout()
 void PageLayout::StartNewPage()
 {
     x = y = 0;
+    newLinesCount = 0;
     p = new Page((int)pageDx, (int)pageDy);
     pages->Append(p);
 }
@@ -406,9 +409,15 @@ void PageLayout::AddWord(WordInfo *wi)
 {
     RectF bb;
     if (wi->IsNewline()) {
-        // TODO: for now ignoring
+        // a single newline is considered "soft" and ignored
+        // two or more consequitive newlines are considered a
+        // single paragraph break
+        newLinesCount++;
+        if (2 == newLinesCount)
+            StartNewLine();
         return;
     }
+    newLinesCount = 0;
     Utf8ToWchar(wi->s, wi->len, buf, dimof(buf));
     bb = MeasureText(g, f, buf, wi->len);
     RectF bb2(bb);
