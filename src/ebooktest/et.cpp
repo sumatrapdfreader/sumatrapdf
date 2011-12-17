@@ -275,7 +275,7 @@ WordInfo *WordsIter::Next()
         return NULL;
     assert(*curr != 0);
     if (IsNewlineSkip(curr, left)) {
-        wi.len = 0;
+        wi.len = 1;
         wi.s = NewLineStr;
         return &wi;
     }
@@ -286,23 +286,60 @@ WordInfo *WordsIter::Next()
     return &wi;
 }
 
-// TODO: not quite sure why spaceDx1 != spaceDx2, using spaceDx2 because
-// is smaller and looks as better spacing to me
-static REAL GetSpaceDx(Graphics *g, Font *f)
+// http://www.codeproject.com/KB/GDI-plus/measurestring.aspx
+// TODO: this seems to sometimes reports size that is slightly too small
+static RectF MeasureTextAccurate(Graphics *g, Font *f, const WCHAR *s, size_t len)
+{
+    assert(len > 0);
+    // note: frankly, I don't see a difference between those StringFormat variations
+    StringFormat sf(StringFormat::GenericTypographic());
+    //StringFormat sf(StringFormat::GenericDefault());
+    //StringFormat sf;
+    RectF layoutRect(0, 0, 4096, f->GetHeight(g) * 1.5f);
+    CharacterRange cr(0, len);
+    sf.SetMeasurableCharacterRanges(1, &cr);
+    Region r;
+    g->MeasureCharacterRanges(s, len, f, layoutRect, &sf, 1, &r);
+    RectF bb;
+    r.GetBounds(&bb, g);
+    return bb;
+}
+
+// this usually reports size that is too large
+static RectF MeasureTextStandard(Graphics *g, Font *f, const WCHAR *s, size_t len)
 {
     RectF bb;
     PointF pz(0,0);
-#if 0
-    g->MeasureString(L" ", 1, f, pz, &bb);
+    g->MeasureString(s, len, f, pz, &bb);
+    return bb;
+}
+
+static inline RectF MeasureText(Graphics *g, Font *f, const WCHAR *s, size_t len)
+{
+    RectF bb1 = MeasureTextStandard(g, f, s, len);
+    RectF bb2 = MeasureTextAccurate(g, f, s, len);
+    return bb2;
+}
+
+// TODO: not quite sure why spaceDx1 != spaceDx2, using spaceDx2 because
+// is smaller and looks as better spacing to me
+// note: we explicitly use MeasureTextStandard() because
+// MeasureTextAccurate() ignores the trailing whitespace
+static REAL GetSpaceDx(Graphics *g, Font *f)
+{
+    RectF bb;
+#if 1
+    bb = MeasureTextStandard(g, f, L" ", 1);
     REAL spaceDx1 = bb.Width;
-#endif
-    g->MeasureString(L"wa", 2, f, pz, &bb);
+    return spaceDx1;
+#else
+    bb = MeasureTextStandard(g, f, L"wa", 2);
     REAL l1 = bb.Width;
-    g->MeasureString(L"w a", 3, f, pz, &bb);
+    bb = MeasureTextStandard(g, f, L"w a", 3);
     REAL l2 = bb.Width;
     REAL spaceDx2 = l2 - l1;
-    //assert(spaceDx2 == spaceDx1);
     return spaceDx2;
+#endif
 }
 
 class PageLayout
@@ -368,10 +405,16 @@ void PageLayout::StartNewLine()
 void PageLayout::AddWord(WordInfo *wi)
 {
     RectF bb;
-
+    if (wi->IsNewline()) {
+        // TODO: for now ignoring
+        return;
+    }
     Utf8ToWchar(wi->s, wi->len, buf, dimof(buf));
-    g->MeasureString(buf, wi->len, f, PointF(x, y), &bb);
-    StringPos sp(wi->s, wi->len, bb);
+    bb = MeasureText(g, f, buf, wi->len);
+    RectF bb2(bb);
+    bb2.X = x;
+    bb2.Y = y;
+    StringPos sp(wi->s, wi->len, bb2);
     x += bb.Width;
     p->strings->Append(sp);
     x += spaceDx;
@@ -414,8 +457,10 @@ static bool gShowTextBoundingBoxes = true;
 
 static void DrawPage(Graphics *g, Font *f, int pageNo, REAL offX, REAL offY)
 {
+    StringFormat sf(StringFormat::GenericTypographic());
     SolidBrush br(Color(0,0,0));
-    SolidBrush br2(Color(255,255,255));
+    SolidBrush br2(Color(255, 255, 255, 255));
+    Pen pen(Color(255, 0, 0), 1);
     Page *p = gPages->At(pageNo);
     size_t n = p->strings->Count();
     WCHAR buf[512];
@@ -427,8 +472,10 @@ static void DrawPage(Graphics *g, Font *f, int pageNo, REAL offX, REAL offY)
         bb.Y += offY;
         Utf8ToWchar(sp.s, sp.len, buf, dimof(buf));
         bb.GetLocation(&pos);
-        if (gShowTextBoundingBoxes)
-            g->FillRectangle(&br2, bb);
+        if (gShowTextBoundingBoxes) {
+            //g->FillRectangle(&br, bb);
+            g->DrawRectangle(&pen, bb);
+        }
         g->DrawString(buf, sp.len, f, pos, NULL, &br);
     }
 }
@@ -442,7 +489,7 @@ static void DrawFrame2(Graphics &g, RectI r)
     g.SetPageUnit(UnitPixel);
 
     const int pageBorderX = 10;
-    const int pageBorderY = 20;
+    const int pageBorderY = 10;
     if (!gPages) {
         int pageDx = r.dx - (pageBorderX * 2);
         int pageDy = r.dy - (pageBorderY * 2);
@@ -450,10 +497,12 @@ static void DrawFrame2(Graphics &g, RectI r)
     }
 
     //SolidBrush bgBrush(gColBg);
-    Gdiplus::Rect r2(r.y - 1, r.x - 1, r.dx + 1, r.dy + 1);
+    Gdiplus::Rect r2(r.x, r.y, r.dx, r.dy);
     LinearGradientBrush bgBrush(RectF(0, 0, (REAL)r.dx, (REAL)r.dy), Color(0xd0,0xd0,0xd0), Color(0xff,0xff,0xff), LinearGradientModeVertical);
     g.FillRectangle(&bgBrush, r2);
 
+    Pen p(Color(0,0,255), 1);
+    g.DrawRectangle(&p, pageBorderX, pageBorderY, r.dx - (pageBorderX * 2), r.dy - (pageBorderY * 2));
     DrawPage(&g, gFont, 0, (REAL)pageBorderX, (REAL)pageBorderY);
 }
 
@@ -496,7 +545,7 @@ static void OnLButtonDown()
 
 static void OnCreateWindow(HWND hwnd)
 {
-    gFont = ::new Font(L"Times New Roman", 10, FontStyleRegular);
+    gFont = ::new Font(L"Times New Roman", 12, FontStyleRegular);
 }
 
 static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
