@@ -152,13 +152,13 @@ static REAL DrawMessage(Graphics &g, TCHAR *msg, REAL y, REAL dx, Color color)
 const char *gTxt = "ClearType is dependent on the orientation and ordering of the LCD stripes. Currently,\nClearType is implemented only for vertical stripes that are ordered RGB. This might be a concern if you are\n using a tablet PC, where the display can be oriented in any direction, or if you are using a screen that\ncan be turned from landscape to portrait.\n\nThe following example draws text with two different quality settings:";
 
 struct StringPos {
-    StringPos() : s(NULL), len(0), x(0), y(0) {
+    StringPos() : s(NULL), len(0) {
     }
-    StringPos(const char *s, size_t len, REAL x, REAL y) : s(s), len(len), x(x), y(y) {
+    StringPos(const char *s, size_t len, RectF bb) : s(s), len(len), bb(bb) {
     }
     const char *s;
     size_t len;
-    REAL x,y;
+    RectF bb;
 };
 
 class Page {
@@ -370,8 +370,8 @@ void PageLayout::AddWord(WordInfo *wi)
     RectF bb;
 
     Utf8ToWchar(wi->s, wi->len, buf, dimof(buf));
-    g->MeasureString(buf, wi->len, f, PointF(0,0), &bb);
-    StringPos sp(wi->s, wi->len, x, y);
+    g->MeasureString(buf, wi->len, f, PointF(x, y), &bb);
+    StringPos sp(wi->s, wi->len, bb);
     x += bb.Width;
     p->strings->Append(sp);
     x += spaceDx;
@@ -410,17 +410,26 @@ Vec<Page*> *LayoutText(Graphics *g, Font *f, int pageDx, int pageDy, const char 
     return ret;
 }
 
+static bool gShowTextBoundingBoxes = true;
+
 static void DrawPage(Graphics *g, Font *f, int pageNo, REAL offX, REAL offY)
 {
-    SolidBrush br(Color(0,0,0)); // black
+    SolidBrush br(Color(0,0,0));
+    SolidBrush br2(Color(255,255,255));
     Page *p = gPages->At(pageNo);
     size_t n = p->strings->Count();
     WCHAR buf[512];
+    PointF pos;
     for (size_t i = 0; i < n; i++) {
         StringPos sp = p->strings->At(i);
-        PointF o(sp.x + offX, sp.y + offY);
+        RectF bb = sp.bb;
+        bb.X += offX;
+        bb.Y += offY;
         Utf8ToWchar(sp.s, sp.len, buf, dimof(buf));
-        g->DrawString(buf, sp.len, f, o, NULL, &br);
+        bb.GetLocation(&pos);
+        if (gShowTextBoundingBoxes)
+            g->FillRectangle(&br2, bb);
+        g->DrawString(buf, sp.len, f, pos, NULL, &br);
     }
 }
 
@@ -428,6 +437,8 @@ static void DrawFrame2(Graphics &g, RectI r)
 {
     g.SetCompositingQuality(CompositingQualityHighQuality);
     g.SetSmoothingMode(SmoothingModeAntiAlias);
+    //g.SetSmoothingMode(SmoothingModeHighQuality);
+    g.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
     g.SetPageUnit(UnitPixel);
 
     const int pageBorderX = 10;
@@ -485,7 +496,7 @@ static void OnLButtonDown()
 
 static void OnCreateWindow(HWND hwnd)
 {
-    gFont = ::new Font(L"Times New Roman", 16, FontStyleRegular);
+    gFont = ::new Font(L"Times New Roman", 10, FontStyleRegular);
 }
 
 static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
