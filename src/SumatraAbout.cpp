@@ -602,13 +602,16 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF 
             if (isRtl)
                 page.x = rc.dx - page.x - page.dx;
             if (state->thumbnail || LoadThumbnail(*state)) {
+                SizeI thumbSize = state->thumbnail->Size();
+                if (thumbSize.dx != THUMBNAIL_DX || thumbSize.dy != THUMBNAIL_DY) {
+                    page.dy = thumbSize.dy * THUMBNAIL_DX / thumbSize.dx;
+                    page.y += THUMBNAIL_DY - page.dy;
+                }
                 HRGN clip = CreateRoundRectRgn(page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
                 SelectClipRgn(hdc, clip);
-                RectI thumb(page.TL(), state->thumbnail->Size());
-                assert(thumb.dx == page.dx);
                 RenderedBitmap *clone = state->thumbnail->Clone();
                 UpdateBitmapColorRange(clone->GetBitmap(), colorRange);
-                clone->StretchDIBits(hdc, thumb);
+                clone->StretchDIBits(hdc, page);
                 SelectClipRgn(hdc, NULL);
                 DeleteObject(clip);
                 delete clone;
@@ -616,7 +619,7 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF 
             RoundRect(hdc, page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
 
             int iconSpace = (int)(20 * win.uiDPIFactor);
-            RectI rect(page.x + iconSpace, page.y + THUMBNAIL_DY + 3, THUMBNAIL_DX - iconSpace, iconSpace);
+            RectI rect(page.x + iconSpace, page.y + page.dy + 3, page.dx - iconSpace, iconSpace);
             if (isRtl)
                 rect.x -= iconSpace;
             DrawText(hdc, path::GetBaseName(state->filePath), -1, &rect.ToRECT(), DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT));
