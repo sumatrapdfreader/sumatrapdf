@@ -403,7 +403,7 @@ private:
 
 void PageLayout::StartLayout()
 {
-    j = Both;
+    j = Right;
     pages = new Vec<Page*>();
     lineSpacing = f->GetHeight(g);
     spaceDx = GetSpaceDx(g, f);
@@ -448,8 +448,15 @@ void PageLayout::LineJustifyLeft()
 
 void PageLayout::LineJustifyRight()
 {
-    // TODO: write me
-    assert(0);
+    x = pageDx;
+    for (size_t i = 0; i < lineStringsDx.Count(); i++) {
+        StrDx sdx = lineStringsDx.At(i);
+        x -= sdx.dx;
+        RectF bb(x, y, sdx.dx, sdx.dy);
+        StringPos sp(sdx.s, sdx.len, bb);
+        p->strings->Append(sp);
+        x -= spaceDx;
+    }
 }
 
 // TODO: needs more precise justification, so that the right string is closer to right edge
