@@ -330,8 +330,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     ret = RunApp();
 
-    delete gFont;
-    delete frameBmp;
+    ::delete gFont;
+    ::delete frameBmp;
 
 Exit:
     return ret;
