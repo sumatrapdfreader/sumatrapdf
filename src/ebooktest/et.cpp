@@ -413,22 +413,27 @@ void PageLayout::AddWord(WordInfo *wi)
         // two or more consequitive newlines are considered a
         // single paragraph break
         newLinesCount++;
-        if (2 == newLinesCount)
+        if (2 == newLinesCount) {
+            bool needsTwo = (x != 0);
             StartNewLine();
+            if (needsTwo)
+                StartNewLine();
+        }
         return;
     }
     newLinesCount = 0;
     Utf8ToWchar(wi->s, wi->len, buf, dimof(buf));
     bb = MeasureText(g, f, buf, wi->len);
-    RectF bb2(bb);
-    bb2.X = x;
-    bb2.Y = y;
-    StringPos sp(wi->s, wi->len, bb2);
-    x += bb.Width;
-    p->strings->Append(sp);
-    x += spaceDx;
-    if (x > pageDx)
+    if (x + bb.Width > pageDx) {
+        // start new line if the new text would exceed the line length
         StartNewLine();
+    }
+    // TODO: handle a case where a single word is bigger than the whole
+    // line, in which case it must be split into multiple lines
+    bb.X = x; bb.Y = y;
+    StringPos sp(wi->s, wi->len, bb);
+    p->strings->Append(sp);
+    x += (bb.Width + spaceDx);
 }
 
 void PageLayout::RemoveLastPageIfEmpty()
@@ -506,7 +511,7 @@ static void DrawFrame2(Graphics &g, RectI r)
     }
 
     //SolidBrush bgBrush(gColBg);
-    Gdiplus::Rect r2(r.x, r.y, r.dx, r.dy);
+    Gdiplus::Rect r2(r.x-1, r.y-1, r.dx+2, r.dy+2);
     LinearGradientBrush bgBrush(RectF(0, 0, (REAL)r.dx, (REAL)r.dy), Color(0xd0,0xd0,0xd0), Color(0xff,0xff,0xff), LinearGradientModeVertical);
     g.FillRectangle(&bgBrush, r2);
 
