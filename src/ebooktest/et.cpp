@@ -345,6 +345,20 @@ static REAL GetSpaceDx(Graphics *g, Font *f)
 
 class PageLayout
 {
+    enum TextJustification {
+        Left, Right, Center, Both
+    };
+
+    struct StrDx {
+        StrDx() : s(NULL), len(0), dx(0), dy(0) {
+        }
+        StrDx(const char *s, size_t len, REAL dx, REAL dy) : s(s), len(len), dx(dx), dy(dy) {
+        }
+        const char *s;
+        size_t len;
+        REAL dx, dy;
+    };
+
 public:
     PageLayout(int dx, int dy) {
         pageDx = (REAL)dx; pageDy = (REAL)dy;
@@ -359,6 +373,11 @@ private:
     void StartLayout();
     void StartNewPage();
     void StartNewLine();
+    void LineJustify();
+    void LineJustifyLeft();
+    void LineJustifyRight();
+    void LineJustifyCenter();
+    void LineJustifyBoth();
     void RemoveLastPageIfEmpty();
     void AddWord(WordInfo *wi);
 
@@ -370,21 +389,20 @@ private:
     Font *f;
 
     // temporary state during layout process
+    TextJustification j;
     Vec<Page *> *pages;
     Page *p; // current page
     REAL x, y; // current position in a page
     WCHAR buf[512];
-    int newLinesCount; // consequitive newlines
+    int newLinesCount; // consecutive newlines
+    Vec<StrDx> lineStringsDx;
 };
 
 void PageLayout::StartLayout()
 {
+    j = Left;
     pages = new Vec<Page*>();
     lineSpacing = f->GetHeight(g);
-    // TODO: why does it return ridiculusly big spacing? Is in a different metric?
-    //FontFamily ff;
-    //f->GetFamily(&ff);
-    //REAL lineSpacing = (REAL)ff.GetLineSpacing(f->GetStyle());
     spaceDx = GetSpaceDx(g, f);
     StartNewPage();
 }
@@ -397,10 +415,66 @@ void PageLayout::StartNewPage()
     pages->Append(p);
 }
 
-void PageLayout::StartNewLine()
+void PageLayout::LineJustifyLeft()
 {
     x = 0;
+    for (size_t i = 0; i < lineStringsDx.Count(); i++) {
+        StrDx sdx = lineStringsDx.At(i);
+        RectF bb(x, y, sdx.dx, sdx.dy);
+        StringPos sp(sdx.s, sdx.len, bb);
+        p->strings->Append(sp);
+        x += (sdx.dx + spaceDx);
+    }
+}
+
+void PageLayout::LineJustifyRight()
+{
+    // TODO: write me
+    assert(0);
+}
+
+void PageLayout::LineJustifyCenter()
+{
+    // TODO: write me
+    assert(0);
+}
+
+void PageLayout::LineJustifyBoth()
+{
+    // TODO: write me
+    assert(0);
+}
+
+void PageLayout::LineJustify()
+{
+    if (0 == lineStringsDx.Count())
+        return; // nothing to do
+    switch (j) {
+    case Left:
+        LineJustifyLeft();
+        break;
+    case Right:
+        LineJustifyRight();
+        break;
+    case Center:
+        LineJustifyCenter();
+        break;
+    case Both:
+        LineJustifyBoth();
+        break;
+    default:
+        assert(0);
+        break;
+    }
+    lineStringsDx.Reset();
+}
+
+void PageLayout::StartNewLine()
+{
+    LineJustify();
+    x = 0;
     y += lineSpacing;
+    lineStringsDx.Reset();
     if (y > pageDy)
         StartNewPage();
 }
@@ -424,16 +498,16 @@ void PageLayout::AddWord(WordInfo *wi)
     newLinesCount = 0;
     Utf8ToWchar(wi->s, wi->len, buf, dimof(buf));
     bb = MeasureText(g, f, buf, wi->len);
-    if (x + bb.Width > pageDx) {
+    // TODO: handle a case where a single word is bigger than the whole
+    // line, in which case it must be split into multiple lines
+    REAL dx = bb.Width;
+    if (x + dx > pageDx) {
         // start new line if the new text would exceed the line length
         StartNewLine();
     }
-    // TODO: handle a case where a single word is bigger than the whole
-    // line, in which case it must be split into multiple lines
-    bb.X = x; bb.Y = y;
-    StringPos sp(wi->s, wi->len, bb);
-    p->strings->Append(sp);
-    x += (bb.Width + spaceDx);
+    StrDx sdx(wi->s, wi->len, dx, bb.Height);
+    lineStringsDx.Append(sdx);
+    x += (dx + spaceDx);
 }
 
 void PageLayout::RemoveLastPageIfEmpty()
