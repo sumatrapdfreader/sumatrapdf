@@ -370,14 +370,17 @@ public:
     Vec<Page *> *Layout(Graphics *g, Font *f, const char *s);
 
 private:
-    void StartLayout();
-    void StartNewPage();
-    void StartNewLine();
-    void LineJustify();
+    REAL GetTotalLineDx();
+    void LayoutLeftStartingAt(REAL offX);
     void LineJustifyLeft();
     void LineJustifyRight();
     void LineJustifyCenter();
     void LineJustifyBoth();
+    void LineJustify();
+
+    void StartLayout();
+    void StartNewPage();
+    void StartNewLine();
     void RemoveLastPageIfEmpty();
     void AddWord(WordInfo *wi);
 
@@ -400,7 +403,7 @@ private:
 
 void PageLayout::StartLayout()
 {
-    j = Left;
+    j = Center;
     pages = new Vec<Page*>();
     lineSpacing = f->GetHeight(g);
     spaceDx = GetSpaceDx(g, f);
@@ -415,9 +418,9 @@ void PageLayout::StartNewPage()
     pages->Append(p);
 }
 
-void PageLayout::LineJustifyLeft()
+void PageLayout::LayoutLeftStartingAt(REAL offX)
 {
-    x = 0;
+    x = offX;
     for (size_t i = 0; i < lineStringsDx.Count(); i++) {
         StrDx sdx = lineStringsDx.At(i);
         RectF bb(x, y, sdx.dx, sdx.dy);
@@ -427,16 +430,32 @@ void PageLayout::LineJustifyLeft()
     }
 }
 
+void PageLayout::LineJustifyLeft()
+{
+    LayoutLeftStartingAt(0);
+}
+
 void PageLayout::LineJustifyRight()
 {
     // TODO: write me
     assert(0);
 }
 
+REAL PageLayout::GetTotalLineDx()
+{
+    REAL dx = -spaceDx;
+    for (size_t i = 0; i < lineStringsDx.Count(); i++) {
+        StrDx sdx = lineStringsDx.At(i);
+        dx += sdx.dx;
+        dx += spaceDx;
+    }
+    return dx;
+}
+
 void PageLayout::LineJustifyCenter()
 {
-    // TODO: write me
-    assert(0);
+    REAL margin = (pageDx - GetTotalLineDx());
+    LayoutLeftStartingAt(margin / 2.f);
 }
 
 void PageLayout::LineJustifyBoth()
@@ -527,6 +546,7 @@ Vec<Page*> *PageLayout::Layout(Graphics *g, Font *f, const char *s)
             break;
         AddWord(wi);
     }
+    LineJustify();
     RemoveLastPageIfEmpty();
     Vec<Page*> *ret = pages;
     pages = NULL;
