@@ -134,29 +134,14 @@ void PageLayout::JustifyLineCenter()
 
 void PageLayout::JustifyLineBoth()
 {
-    REAL extraDxSpace = (pageDx - GetTotalLineDx()) / (REAL)(lineStringsDx.Count() - 1);
-    size_t middleString = lineStringsDx.Count() / 2;
+    REAL margin = pageDx - GetTotalLineDx();
+    size_t startIx = p->strings->Count();
+    LayoutLeftStartingAt(0);
+    size_t count = p->strings->Count() - startIx;
 
-    // first half of strings are laid out starting from left
-    x = 0;
-    for (size_t i = 0; i <= middleString; i++) {
-        StrDx sdx = lineStringsDx.At(i);
-        RectF bb(x, y, sdx.dx, sdx.dy);
-        StringPos sp(sdx.s, sdx.len, bb);
-        p->strings->Append(sp);
-        x += (sdx.dx + spaceDx);
-    }
-
-    // second half of strings are laid out from right
-    x = pageDx;
-    for (size_t i = lineStringsDx.Count() - 1; i > middleString; i--) {
-        StrDx sdx = lineStringsDx.At(i);
-        x -= sdx.dx;
-        RectF bb(x, y, sdx.dx, sdx.dy);
-        StringPos sp(sdx.s, sdx.len, bb);
-        p->strings->Append(sp);
-        x -= (spaceDx + extraDxSpace);
-    }
+    REAL add = count > 1 ? margin / (count - 1) : margin;
+    for (size_t i = 0; i < count; i++)
+        p->strings->At(startIx + i).bb.X += i * add;
 }
 
 void PageLayout::JustifyLine()
