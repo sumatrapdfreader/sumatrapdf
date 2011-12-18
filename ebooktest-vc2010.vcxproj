@@ -72,12 +72,14 @@
     <ClCompile Include="src\ebooktest\ET.cpp" />
     <ClCompile Include="src\PageLayout.cpp" />
     <ClCompile Include="src\utils\FileUtil.cpp" />
+    <ClCompile Include="src\utils\GdiPlusUtil.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\installer\Resource.h" />
     <ClInclude Include="src\installer\Version.h" />
     <ClInclude Include="src\PageLayout.h" />
     <ClInclude Include="src\utils\FileUtil.h" />
+    <ClInclude Include="src\utils\GdiPlusUtil.h" />
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="src\ebooktest\ET.exe.manifest" />

@@ -130,7 +130,7 @@ Vec<Page*> *LayoutText(Graphics *graphics, Font *font, int pageDx, int pageDy, c
     return layouter.Layout(graphics, font, string);
 }
 
-static bool gShowTextBoundingBoxes = false;
+static bool gShowTextBoundingBoxes = true;
 
 static void DrawPage(Graphics *g, Font *f, int pageNo, REAL offX, REAL offY)
 {

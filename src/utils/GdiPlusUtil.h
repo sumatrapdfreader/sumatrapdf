@@ -9,6 +9,7 @@
 using namespace Gdiplus;
 
 RectF MeasureTextAccurate(Graphics *g, Font *f, const WCHAR *s, size_t len);
+RectF MeasureTextAccurate2(Graphics *g, Font *f, const WCHAR *s, size_t len);
 RectF MeasureTextStandard(Graphics *g, Font *f, const WCHAR *s, size_t len);
 RectF MeasureText(Graphics *g, Font *f, const WCHAR *s, size_t len);
 REAL GetSpaceDx(Graphics *g, Font *f);
