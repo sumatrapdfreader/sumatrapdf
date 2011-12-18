@@ -4,9 +4,7 @@
 #ifndef PageLayout_h
 #define PageLayout_h
 
-#include <Windows.h>
-#include <GdiPlus.h>
-
+#include "BaseUtil.h"
 #include "Vec.h"
 
 using namespace Gdiplus;
@@ -101,7 +99,7 @@ private:
     void JustifyLineRight();
     void JustifyLineCenter();
     void JustifyLineBoth();
-    void JustifyLine();
+    void JustifyLine(TextJustification mode);
 
     void StartLayout();
     void StartNewPage();

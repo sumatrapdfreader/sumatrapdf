@@ -1,9 +1,6 @@
 /* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include <Windows.h>
-#include <GdiPlus.h>
-
 #include "PageLayout.h"
 #include "GdiPlusUtil.h"
 #include "StrUtil.h"
@@ -136,20 +133,24 @@ void PageLayout::JustifyLineCenter()
 void PageLayout::JustifyLineBoth()
 {
     REAL margin = pageDx - GetTotalLineDx();
-    size_t startIx = p->strings->Count();
+    size_t prevCount = p->strings->Count();
     LayoutLeftStartingAt(0);
-    size_t count = p->strings->Count() - startIx;
 
-    REAL add = count > 1 ? margin / (count - 1) : margin;
-    for (size_t i = 0; i < count; i++)
-        p->strings->At(startIx + i).bb.X += i * add;
+    // move all words proportionally to the right so that the
+    // spacing remains uniform and the last word touches the
+    // right page border
+    size_t count = p->strings->Count() - prevCount;
+    REAL extraSpaceDx = count > 1 ? margin / (count - 1) : margin;
+    for (size_t i = 1; i < count; i++) {
+        p->strings->At(prevCount + i).bb.X += i * extraSpaceDx;
+    }
 }
 
-void PageLayout::JustifyLine()
+void PageLayout::JustifyLine(TextJustification mode)
 {
     if (0 == lineStringsDx.Count())
         return; // nothing to do
-    switch (j) {
+    switch (mode) {
         case Left:
             JustifyLineLeft();
             break;
@@ -172,9 +173,9 @@ void PageLayout::JustifyLine()
 void PageLayout::StartNewLine(bool isParagraphBreak)
 {
     if (isParagraphBreak && Both == j)
-        JustifyLineLeft();
+        JustifyLine(Left);
     else
-        JustifyLine();
+        JustifyLine(j);
 
     x = 0;
     y += lineSpacing;
