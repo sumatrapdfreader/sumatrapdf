@@ -733,11 +733,13 @@ Failure:
 
 void Utf8ToWcharBuf(const char *s, size_t sLen, WCHAR *bufOut, size_t bufOutMax)
 {
-    // TODO: clearly, write proper utf8 => wchar, check we don't exceed bufOutMax
-    for (size_t i = 0; i < sLen; i++) {
-        bufOut[i] = *s++;
-    }
-    bufOut[sLen] = 0;
+    if (0 == bufOutMax)
+        return;
+    int size = MultiByteToWideChar(CP_UTF8, 0, s, (int)sLen, NULL, 0);
+    if ((size_t)size >= bufOutMax)
+        size = (int)bufOutMax - 1;
+    MultiByteToWideChar(CP_UTF8, 0, s, (int)sLen, bufOut, size);
+    bufOut[size] = '\0';
 }
 
 }

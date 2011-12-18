@@ -86,7 +86,7 @@
     <ResourceCompile Include="src\ebooktest\ET.rc" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="src\ebook-todo.txt" />
+    <None Include="docs\ebook-todo.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

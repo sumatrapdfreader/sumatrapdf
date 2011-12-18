@@ -1,15 +1,6 @@
 /* Copyright 2010-2011 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include <windows.h>
-#include <GdiPlus.h>
-
-#include <shlobj.h>
-#include <Tlhelp32.h>
-#include <Shlwapi.h>
-#include <objidl.h>
-#include <io.h>
-
 #include "Resource.h"
 #include "BaseUtil.h"
 #include "StrUtil.h"
@@ -133,12 +124,10 @@ const char *gTxt = "ClearType is dependent on the orientation and ordering of th
 
 Vec<Page*> *gPages;
 
-Vec<Page*> *LayoutText(Graphics *g, Font *f, int pageDx, int pageDy, const char *s)
+Vec<Page*> *LayoutText(Graphics *graphics, Font *font, int pageDx, int pageDy, const char *string)
 {
-    PageLayout *l = new PageLayout(pageDx, pageDy);
-    Vec<Page*> *ret = l->Layout(g, f, s);
-    delete l;
-    return ret;
+    PageLayout layouter(pageDx, pageDy);
+    return layouter.Layout(graphics, font, string);
 }
 
 static bool gShowTextBoundingBoxes = false;

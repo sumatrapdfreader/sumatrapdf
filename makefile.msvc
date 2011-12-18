@@ -41,7 +41,7 @@ EXTDIR=ext
 LIBMUPDF_RES = $(O)\libmupdf.res
 
 # default target
-all_sumatrapdf: SumatraPDF Uninstaller PDFFilter PdfPreview BrowserPlugin PdfBench EngineDump
+all_sumatrapdf: SumatraPDF Uninstaller PDFFilter PdfPreview BrowserPlugin PdfBench EngineDump et
 
 ##### add configuration changes that should also affect MuPDF before this line #####
 
@@ -401,7 +401,7 @@ $(OS)\FileUtil.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\Scopes.h
 $(OS)\FileUtil.obj: src\utils\StrUtil.h
 $(OS)\FileWatch.obj: src\FileWatch.h src\utils\BaseUtil.h src\utils\FileUtil.h
 $(OS)\FileWatch.obj: src\utils\StrUtil.h
-$(OS)\GdiPlusUtil.obj: src\utils\GdiPlusUtil.h
+$(OS)\GdiPlusUtil.obj: src\utils\BaseUtil.h src\utils\GdiPlusUtil.h
 $(OS)\HtmlWindow.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\HtmlWindow.h
 $(OS)\HtmlWindow.obj: src\utils\Scopes.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\HtmlWindow.obj: src\utils\WinUtil.h

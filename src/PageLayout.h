@@ -92,7 +92,7 @@ public:
         x = y = 0;
     }
 
-    Vec<Page *> *Layout(Graphics *g, Font *f, const char *s);
+    Vec<Page *> *Layout(Graphics *graphics, Font *font, const char *string);
 
 private:
     REAL GetTotalLineDx();
@@ -105,7 +105,7 @@ private:
 
     void StartLayout();
     void StartNewPage();
-    void StartNewLine();
+    void StartNewLine(bool isParagraphBreak);
     void RemoveLastPageIfEmpty();
     void AddWord(WordInfo *wi);
 

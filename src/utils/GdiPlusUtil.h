@@ -4,8 +4,7 @@
 #ifndef GdiPlusUtil_h
 #define GdiPlusUtil_h
 
-#include <Windows.h>
-#include <GdiPlus.h>
+#include "BaseUtil.h"
 
 using namespace Gdiplus;
 
@@ -15,4 +14,3 @@ RectF MeasureText(Graphics *g, Font *f, const WCHAR *s, size_t len);
 REAL GetSpaceDx(Graphics *g, Font *f);
 
 #endif
-

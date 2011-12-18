@@ -1,11 +1,6 @@
 /* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-
-#include <Windows.h>
-#include <GdiPlus.h>
-#include <assert.h>
-
 #include "GdiPlusUtil.h"
 
 using namespace Gdiplus;
@@ -66,5 +61,3 @@ REAL GetSpaceDx(Graphics *g, Font *f)
     return spaceDx2;
 #endif
 }
-
-

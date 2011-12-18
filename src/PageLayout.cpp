@@ -31,7 +31,7 @@ static void SkipNonWordBreak(const char *& s, size_t& left)
     }
 }
 
-// return true if s points to "\n", "\n\r", "\r" or "\r\n"
+// return true if s points to "\n", "\r" or "\r\n"
 // and advance s/left to skip it
 // We don't want to collapse multiple consequitive newlines into
 // one as we want to be able to detect paragraph breaks (i.e. empty
@@ -46,18 +46,16 @@ static bool IsNewlineSkip(const char *& s, size_t& left)
             --left; ++s;
         }
         return true;
-    } else if ('\n' == *s) {
+    }
+    if ('\n' == *s) {
         --left; ++s;
-        if ((left > 0) && ('\r' == *s)) {
-            --left; ++s;
-        }
         return true;
     }
     return false;
 }
 
 // iterates words in a string e.g. "foo bar\n" returns "foo", "bar" and "\n"
-// also unifies line endings i.e. "\r" an "\n\r" are turned into a single "\n"
+// also unifies line endings i.e. "\r" and "\r\n" are turned into a single "\n"
 // returning NULL means end of iterations
 WordInfo *WordsIter::Next()
 {
@@ -124,15 +122,8 @@ void PageLayout::JustifyLineLeft()
 
 void PageLayout::JustifyLineRight()
 {
-    x = pageDx;
-    for (size_t i = 0; i < lineStringsDx.Count(); i++) {
-        StrDx sdx = lineStringsDx.At(lineStringsDx.Count() - i - 1);
-        x -= sdx.dx;
-        RectF bb(x, y, sdx.dx, sdx.dy);
-        StringPos sp(sdx.s, sdx.len, bb);
-        p->strings->Append(sp);
-        x -= spaceDx;
-    }
+    REAL margin = pageDx - GetTotalLineDx();
+    LayoutLeftStartingAt(margin);
 }
 
 void PageLayout::JustifyLineCenter()
@@ -141,8 +132,6 @@ void PageLayout::JustifyLineCenter()
     LayoutLeftStartingAt(margin / 2.f);
 }
 
-// TODO: a line at the end of paragraph (i.e. followed by an empty line or the last line)
-// should be justified left. Need to look ahead for that
 void PageLayout::JustifyLineBoth()
 {
     REAL extraDxSpace = (pageDx - GetTotalLineDx()) / (REAL)(lineStringsDx.Count() - 1);
@@ -194,9 +183,13 @@ void PageLayout::JustifyLine()
     lineStringsDx.Reset();
 }
 
-void PageLayout::StartNewLine()
+void PageLayout::StartNewLine(bool isParagraphBreak)
 {
-    JustifyLine();
+    if (isParagraphBreak && Both == j)
+        JustifyLineLeft();
+    else
+        JustifyLine();
+
     x = 0;
     y += lineSpacing;
     lineStringsDx.Reset();
@@ -214,9 +207,9 @@ void PageLayout::AddWord(WordInfo *wi)
         newLinesCount++;
         if (2 == newLinesCount) {
             bool needsTwo = (x != 0);
-            StartNewLine();
+            StartNewLine(true);
             if (needsTwo)
-                StartNewLine();
+                StartNewLine(true);
         }
         return;
     }
@@ -228,7 +221,7 @@ void PageLayout::AddWord(WordInfo *wi)
     REAL dx = bb.Width;
     if (x + dx > pageDx) {
         // start new line if the new text would exceed the line length
-        StartNewLine();
+        StartNewLine(false);
     }
     StrDx sdx(wi->s, wi->len, dx, bb.Height);
     lineStringsDx.Append(sdx);
@@ -257,9 +250,7 @@ Vec<Page*> *PageLayout::Layout(Graphics *g, Font *f, const char *s)
             break;
         AddWord(wi);
     }
-    if (j == Both)
-        j = Left;
-    JustifyLine();
+    StartNewLine(true);
     RemoveLastPageIfEmpty();
     Vec<Page*> *ret = pages;
     pages = NULL;
