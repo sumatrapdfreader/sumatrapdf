@@ -161,7 +161,7 @@ UNINSTALLER_OBJS = \
 	$(OS)\Uninstaller.obj $(UNINSTALLER_RES)
 
 ET_OBJS = \
-	$(OS)\et.obj $(ET_RES)
+	$(OS)\et.obj $(OS)\PageLayout.obj $(ET_RES)
 
 PDFFILTER_OBJS = \
 	$(OS)\PdfFilterDll.obj $(OS)\CPdfFilter.obj $(PDFFILTER_RES) \
@@ -446,6 +446,8 @@ $(OS)\npPdfViewer.obj: src\browserplugin\npapi\nptypes.h src\utils\BaseUtil.h sr
 $(OS)\npPdfViewer.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scopes.h
 $(OS)\npPdfViewer.obj: src\utils\SimpleLog.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\npPdfViewer.obj: src\utils\WinUtil.h
+$(OS)\PageLayout.obj: src\PageLayout.h src\utils\BaseUtil.h src\utils\StrUtil.h
+$(OS)\PageLayout.obj: src\utils\Vec.h
 $(OS)\ParseCommandLine.obj: src\AppPrefs.h src\BaseEngine.h src\DisplayState.h
 $(OS)\ParseCommandLine.obj: src\ParseCommandLine.h src\StressTesting.h src\SumatraPDF.h
 $(OS)\ParseCommandLine.obj: src\TextSearch.h src\TextSelection.h src\utils\BaseUtil.h

@@ -70,11 +70,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\ebooktest\ET.cpp" />
+    <ClCompile Include="src\PageLayout.cpp" />
     <ClCompile Include="src\utils\FileUtil.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\installer\Resource.h" />
     <ClInclude Include="src\installer\Version.h" />
+    <ClInclude Include="src\PageLayout.h" />
     <ClInclude Include="src\utils\FileUtil.h" />
   </ItemGroup>
   <ItemGroup>
@@ -82,6 +84,9 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="src\ebooktest\ET.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\ebook-todo.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
