@@ -78,6 +78,7 @@ WordInfo *WordsIter::Next()
 void PageLayout::StartLayout()
 {
     j = Both;
+    assert(!pages);
     pages = new Vec<Page*>();
     lineSpacing = f->GetHeight(g);
     spaceDx = GetSpaceDx(g, f);
@@ -215,7 +216,8 @@ void PageLayout::AddWord(WordInfo *wi)
 
 void PageLayout::RemoveLastPageIfEmpty()
 {
-    // TODO: write me
+    while (pages->Count() > 1 && pages->Last()->strings->Count() == 0)
+        delete pages->Pop();
 }
 
 // How layout works: 
@@ -223,12 +225,12 @@ void PageLayout::RemoveLastPageIfEmpty()
 // * remember a line's worth of widths
 // * when we fill a line we calculate the position of strings in
 //   a line for a given justification setting (left, right, center, both)
-Vec<Page*> *PageLayout::Layout(Graphics *g, Font *f, const char *s)
+Vec<Page*> *PageLayout::Layout(Graphics *graphics, Font *font, const char *string)
 {
-    this->g = g;
-    this->f = f;
+    this->g = graphics;
+    this->f = font;
     StartLayout();
-    WordsIter iter(s);
+    WordsIter iter(string);
     for (;;) {
         WordInfo *wi = iter.Next();
         if (NULL == wi)
