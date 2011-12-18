@@ -1,5 +1,5 @@
 /* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
-   License: Simplified BSD (see COPYING) */
+   License: Simplified BSD (see COPYING.BSD) */
 
 #ifndef StrUtil_h
 #define StrUtil_h

@@ -1,5 +1,5 @@
 ; Copyright 2011-2012 the ucrt project authors (see AUTHORS file)
-; License: Simplified BSD (see COPYING)
+; License: Simplified BSD (see COPYING.BSD)
 
 ; many of the functions here are redirects to functions in msvcrt.dll (or some
 ; other dll). If we want to redirect function foo() to function bar() defined
