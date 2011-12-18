@@ -133,7 +133,7 @@ UTILS_OBJS = \
 	$(OS)\BencUtil.obj $(OS)\FileUtil.obj $(OS)\Http.obj \
 	$(OS)\StrUtil.obj $(OS)\UtilTests.obj $(OS)\WinUtil.obj \
 	$(OS)\DialogSizer.obj $(OS)\Transactions.obj $(OS)\Touch.obj \
-	$(OS)\TrivialHtmlParser.obj $(OS)\HtmlWindow.obj
+	$(OS)\TrivialHtmlParser.obj $(OS)\HtmlWindow.obj $(OS)\GdiPlusUtil.obj
 
 ENGINE_OBJS = \
 	$(OS)\PdfEngine.obj $(OS)\ImagesEngine.obj $(OS)\PsEngine.obj \
@@ -401,6 +401,7 @@ $(OS)\FileUtil.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\Scopes.h
 $(OS)\FileUtil.obj: src\utils\StrUtil.h
 $(OS)\FileWatch.obj: src\FileWatch.h src\utils\BaseUtil.h src\utils\FileUtil.h
 $(OS)\FileWatch.obj: src\utils\StrUtil.h
+$(OS)\GdiPlusUtil.obj: src\utils\GdiPlusUtil.h
 $(OS)\HtmlWindow.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\HtmlWindow.h
 $(OS)\HtmlWindow.obj: src\utils\Scopes.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\HtmlWindow.obj: src\utils\WinUtil.h
@@ -446,8 +447,8 @@ $(OS)\npPdfViewer.obj: src\browserplugin\npapi\nptypes.h src\utils\BaseUtil.h sr
 $(OS)\npPdfViewer.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scopes.h
 $(OS)\npPdfViewer.obj: src\utils\SimpleLog.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\npPdfViewer.obj: src\utils\WinUtil.h
-$(OS)\PageLayout.obj: src\PageLayout.h src\utils\BaseUtil.h src\utils\StrUtil.h
-$(OS)\PageLayout.obj: src\utils\Vec.h
+$(OS)\PageLayout.obj: src\PageLayout.h src\utils\BaseUtil.h src\utils\GdiPlusUtil.h
+$(OS)\PageLayout.obj: src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\ParseCommandLine.obj: src\AppPrefs.h src\BaseEngine.h src\DisplayState.h
 $(OS)\ParseCommandLine.obj: src\ParseCommandLine.h src\StressTesting.h src\SumatraPDF.h
 $(OS)\ParseCommandLine.obj: src\TextSearch.h src\TextSelection.h src\utils\BaseUtil.h
