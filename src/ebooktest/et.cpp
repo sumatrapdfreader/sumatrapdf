@@ -140,14 +140,14 @@ static void DrawPage(Graphics *g, Font *f, int pageNo, REAL offX, REAL offY)
     PointF pos;
     for (size_t i = 0; i < n; i++) {
         StringPos sp = p->strings->At(i);
-        RectF bb = sp.bb;
-        bb.X += offX;
-        bb.Y += offY;
+        RectF bbox = sp.bbox;
+        bbox.X += offX;
+        bbox.Y += offY;
         str::Utf8ToWcharBuf(sp.s, sp.len, buf, dimof(buf));
-        bb.GetLocation(&pos);
+        bbox.GetLocation(&pos);
         if (gShowTextBoundingBoxes) {
-            //g->FillRectangle(&br, bb);
-            g->DrawRectangle(&pen, bb);
+            //g->FillRectangle(&br, bbox);
+            g->DrawRectangle(&pen, bbox);
         }
         g->DrawString(buf, sp.len, f, pos, NULL, &br);
     }

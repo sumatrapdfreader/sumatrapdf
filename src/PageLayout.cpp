@@ -7,30 +7,6 @@
 
 using namespace Gdiplus;
 
-struct StringPos {
-    StringPos() : s(NULL), len(0) {
-    }
-    StringPos(const char *s, size_t len, RectF bb) : s(s), len(len), bb(bb) {
-    }
-    const char *s;
-    size_t len;
-    RectF bb;
-};
-
-class Page {
-public:
-    Page() : dx(0), dy(0), strings(NULL) {
-    }
-    Page(int dx, int dy) : dx(dx), dy(dy) {
-        strings = new Vec<StringPos>();
-    }
-    ~Page() {
-        delete strings;
-    }
-    int dx, dy; // used during layout
-    Vec<StringPos> *strings;
-};
-
 struct WordInfo {
     const char *s;
     size_t len;
@@ -163,8 +139,8 @@ void PageLayout::LayoutLeftStartingAt(REAL offX)
     x = offX;
     for (size_t i = 0; i < lineStringsDx.Count(); i++) {
         StrDx sdx = lineStringsDx.At(i);
-        RectF bb(x, y, sdx.dx, sdx.dy);
-        StringPos sp(sdx.s, sdx.len, bb);
+        RectF bbox(x, y, sdx.dx, sdx.dy);
+        StringPos sp(sdx.s, sdx.len, bbox);
         currPage->strings->Append(sp);
         x += (sdx.dx + spaceDx);
     }
@@ -199,7 +175,7 @@ void PageLayout::JustifyLineBoth()
     size_t count = currPage->strings->Count() - prevCount;
     REAL extraSpaceDx = count > 1 ? margin / (count - 1) : margin;
     for (size_t i = 1; i < count; i++) {
-        currPage->strings->At(prevCount + i).bb.X += i * extraSpaceDx;
+        currPage->strings->At(prevCount + i).bbox.X += i * extraSpaceDx;
     }
 }
 
@@ -243,7 +219,7 @@ void PageLayout::StartNewLine(bool isParagraphBreak)
 
 void PageLayout::AddWord(WordInfo *wi)
 {
-    RectF bb;
+    RectF bbox;
     if (wi->IsNewline()) {
         // a single newline is considered "soft" and ignored
         // two or more consequitive newlines are considered a
@@ -259,15 +235,15 @@ void PageLayout::AddWord(WordInfo *wi)
     }
     newLinesCount = 0;
     str::Utf8ToWcharBuf(wi->s, wi->len, buf, dimof(buf));
-    bb = MeasureText(g, f, buf, wi->len);
+    bbox = MeasureText(g, f, buf, wi->len);
     // TODO: handle a case where a single word is bigger than the whole
     // line, in which case it must be split into multiple lines
-    REAL dx = bb.Width;
+    REAL dx = bbox.Width;
     if (x + dx > pageDx) {
         // start new line if the new text would exceed the line length
         StartNewLine(false);
     }
-    StrDx sdx(wi->s, wi->len, dx, bb.Height);
+    StrDx sdx(wi->s, wi->len, dx, bbox.Height);
     lineStringsDx.Append(sdx);
     x += (dx + spaceDx);
 }

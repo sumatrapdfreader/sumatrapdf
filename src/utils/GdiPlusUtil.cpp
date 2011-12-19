@@ -51,18 +51,18 @@ RectF MeasureTextAccurate2(Graphics *g, Font *f, const WCHAR *s, size_t len)
     FixedArray<Region, 1024> regionBuf(len);
     Region *r = regionBuf.Get();
     g->MeasureCharacterRanges(s, len, f, layoutRect, &sf, len, r);
-    RectF bb;
+    RectF bbox;
     REAL maxDy = 0;
     REAL totalDx = 0;
     for (size_t i = 0; i < len; i++) {
-        r[i].GetBounds(&bb, g);
-        if (bb.Height > maxDy)
-            maxDy = bb.Height;
-        totalDx += bb.Width;
+        r[i].GetBounds(&bbox, g);
+        if (bbox.Height > maxDy)
+            maxDy = bbox.Height;
+        totalDx += bbox.Width;
     }
-    bb.Width = totalDx;
-    bb.Height = maxDy;
-    return bb;
+    bbox.Width = totalDx;
+    bbox.Height = maxDy;
+    return bbox;
 }
 
 // http://www.codeproject.com/KB/GDI-plus/measurestring.aspx
@@ -81,43 +81,43 @@ RectF MeasureTextAccurate(Graphics *g, Font *f, const WCHAR *s, size_t len)
     sf.SetMeasurableCharacterRanges(1, &cr);
     Region r;
     g->MeasureCharacterRanges(s, len, f, layoutRect, &sf, 1, &r);
-    RectF bb;
-    r.GetBounds(&bb, g);
-    bb.Width += 4.5f; // TODO: total magic, but seems to produce better results
-    return bb;
+    RectF bbox;
+    r.GetBounds(&bbox, g);
+    bbox.Width += 4.5f; // TODO: total magic, but seems to produce better results
+    return bbox;
 }
 
 // this usually reports size that is too large
 RectF MeasureTextStandard(Graphics *g, Font *f, const WCHAR *s, size_t len)
 {
-    RectF bb;
+    RectF bbox;
     PointF pz(0,0);
-    g->MeasureString(s, len, f, pz, &bb);
-    return bb;
+    g->MeasureString(s, len, f, pz, &bbox);
+    return bbox;
 }
 
 RectF MeasureText(Graphics *g, Font *f, const WCHAR *s, size_t len)
 {
-    //RectF bb = MeasureTextStandard(g, f, s, len);
-    RectF bb = MeasureTextAccurate(g, f, s, len);
-    //RectF bb = MeasureTextAccurate2(g, f, s, len);
-    return bb;
+    //RectF bbox = MeasureTextStandard(g, f, s, len);
+    RectF bbox = MeasureTextAccurate(g, f, s, len);
+    //RectF bbox = MeasureTextAccurate2(g, f, s, len);
+    return bbox;
 }
 
 // TODO: not quite sure why spaceDx1 != spaceDx2, using spaceDx2 because
 // is smaller and looks as better spacing to me
 REAL GetSpaceDx(Graphics *g, Font *f)
 {
-    RectF bb;
+    RectF bbox;
 #if 1
-    bb = MeasureText(g, f, L" ", 1);
-    REAL spaceDx1 = bb.Width;
+    bbox = MeasureText(g, f, L" ", 1);
+    REAL spaceDx1 = bbox.Width;
     return spaceDx1;
 #else
-    bb = MeasureText(g, f, L"wa", 2);
-    REAL l1 = bb.Width;
-    bb = MeasureText(g, f, L"w a", 3);
-    REAL l2 = bb.Width;
+    bbox = MeasureText(g, f, L"wa", 2);
+    REAL l1 = bbox.Width;
+    bbox = MeasureText(g, f, L"w a", 3);
+    REAL l2 = bbox.Width;
     REAL spaceDx2 = l2 - l1;
     return spaceDx2;
 #endif

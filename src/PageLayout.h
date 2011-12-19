@@ -9,8 +9,32 @@
 
 using namespace Gdiplus;
 
-class Page;
 struct WordInfo;
+
+struct StringPos {
+    StringPos() : s(NULL), len(0) {
+    }
+    StringPos(const char *s, size_t len, RectF bbox) : s(s), len(len), bbox(bbox) {
+    }
+    const char *s;
+    size_t len;
+    RectF bbox;
+};
+
+class Page {
+public:
+    Page() : dx(0), dy(0), strings(NULL) {
+    }
+    Page(int dx, int dy) : dx(dx), dy(dy) {
+        strings = new Vec<StringPos>();
+    }
+    ~Page() {
+        delete strings;
+    }
+    int dx, dy; // used during layout
+    Vec<StringPos> *strings;
+};
+
 
 class PageLayout
 {
