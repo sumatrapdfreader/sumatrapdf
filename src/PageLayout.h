@@ -1,4 +1,4 @@
-/* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2011-2012 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
 #ifndef PageLayout_h
@@ -9,62 +9,8 @@
 
 using namespace Gdiplus;
 
-struct StringPos {
-    StringPos() : s(NULL), len(0) {
-    }
-    StringPos(const char *s, size_t len, RectF bb) : s(s), len(len), bb(bb) {
-    }
-    const char *s;
-    size_t len;
-    RectF bb;
-};
-
-class Page {
-public:
-    Page() : dx(0), dy(0), strings(NULL) {
-    }
-    Page(int dx, int dy) : dx(dx), dy(dy) {
-        strings = new Vec<StringPos>();
-    }
-    ~Page() {
-        delete strings;
-    }
-    int dx, dy; // used during layout
-    Vec<StringPos> *strings;
-};
-
-struct WordInfo {
-    const char *s;
-    size_t len;
-    bool IsNewline() {
-        return ((len == 1) && (s[0] == '\n'));
-    }
-};
-
-class WordsIter {
-public:
-    WordsIter(const char *s) : s(s) {
-        Reset();
-    }
-
-    void Reset() {
-        curr = s;
-        len = strlen(s);
-        left = len;
-    }
-
-    WordInfo *Next();
-
-private:
-    WordInfo wi;
-
-    static const char *NewLineStr;
-    const char *s;
-    size_t len;
-
-    const char *curr;
-    size_t left;
-};
+class Page;
+struct WordInfo;
 
 class PageLayout
 {
@@ -86,7 +32,7 @@ public:
     PageLayout(int dx, int dy) {
         pageDx = (REAL)dx; pageDy = (REAL)dy;
         lineSpacing = 0; spaceDx = 0;
-        pages = NULL; p = NULL;
+        pages = NULL; currPage = NULL;
         x = y = 0;
     }
 
@@ -115,9 +61,9 @@ private:
     Font *f;
 
     // temporary state during layout process
-    TextJustification j;
+    TextJustification justification;
     Vec<Page *> *pages;
-    Page *p; // current page
+    Page *currPage; // current page
     REAL x, y; // current position in a page
     WCHAR buf[512];
     int newLinesCount; // consecutive newlines

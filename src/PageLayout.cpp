@@ -1,4 +1,4 @@
-/* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2011-2012 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "PageLayout.h"
@@ -6,6 +6,63 @@
 #include "StrUtil.h"
 
 using namespace Gdiplus;
+
+struct StringPos {
+    StringPos() : s(NULL), len(0) {
+    }
+    StringPos(const char *s, size_t len, RectF bb) : s(s), len(len), bb(bb) {
+    }
+    const char *s;
+    size_t len;
+    RectF bb;
+};
+
+class Page {
+public:
+    Page() : dx(0), dy(0), strings(NULL) {
+    }
+    Page(int dx, int dy) : dx(dx), dy(dy) {
+        strings = new Vec<StringPos>();
+    }
+    ~Page() {
+        delete strings;
+    }
+    int dx, dy; // used during layout
+    Vec<StringPos> *strings;
+};
+
+struct WordInfo {
+    const char *s;
+    size_t len;
+    bool IsNewline() {
+        return ((len == 1) && (s[0] == '\n'));
+    }
+};
+
+class WordsIter {
+public:
+    WordsIter(const char *s) : s(s) {
+        Reset();
+    }
+
+    void Reset() {
+        curr = s;
+        len = strlen(s);
+        left = len;
+    }
+
+    WordInfo *Next();
+
+private:
+    WordInfo wi;
+
+    static const char *NewLineStr;
+    const char *s;
+    size_t len;
+
+    const char *curr;
+    size_t left;
+};
 
 const char *WordsIter::NewLineStr = "\n";
 
@@ -74,7 +131,7 @@ WordInfo *WordsIter::Next()
 
 void PageLayout::StartLayout()
 {
-    j = Both;
+    justification = Both;
     assert(!pages);
     pages = new Vec<Page*>();
     lineSpacing = f->GetHeight(g);
@@ -86,8 +143,8 @@ void PageLayout::StartNewPage()
 {
     x = y = 0;
     newLinesCount = 0;
-    p = new Page((int)pageDx, (int)pageDy);
-    pages->Append(p);
+    currPage = new Page((int)pageDx, (int)pageDy);
+    pages->Append(currPage);
 }
 
 REAL PageLayout::GetTotalLineDx()
@@ -108,7 +165,7 @@ void PageLayout::LayoutLeftStartingAt(REAL offX)
         StrDx sdx = lineStringsDx.At(i);
         RectF bb(x, y, sdx.dx, sdx.dy);
         StringPos sp(sdx.s, sdx.len, bb);
-        p->strings->Append(sp);
+        currPage->strings->Append(sp);
         x += (sdx.dx + spaceDx);
     }
 }
@@ -133,16 +190,16 @@ void PageLayout::JustifyLineCenter()
 void PageLayout::JustifyLineBoth()
 {
     REAL margin = pageDx - GetTotalLineDx();
-    size_t prevCount = p->strings->Count();
+    size_t prevCount = currPage->strings->Count();
     LayoutLeftStartingAt(0);
 
     // move all words proportionally to the right so that the
     // spacing remains uniform and the last word touches the
     // right page border
-    size_t count = p->strings->Count() - prevCount;
+    size_t count = currPage->strings->Count() - prevCount;
     REAL extraSpaceDx = count > 1 ? margin / (count - 1) : margin;
     for (size_t i = 1; i < count; i++) {
-        p->strings->At(prevCount + i).bb.X += i * extraSpaceDx;
+        currPage->strings->At(prevCount + i).bb.X += i * extraSpaceDx;
     }
 }
 
@@ -172,10 +229,10 @@ void PageLayout::JustifyLine(TextJustification mode)
 
 void PageLayout::StartNewLine(bool isParagraphBreak)
 {
-    if (isParagraphBreak && Both == j)
+    if (isParagraphBreak && Both == justification)
         JustifyLine(Left);
     else
-        JustifyLine(j);
+        JustifyLine(justification);
 
     x = 0;
     y += lineSpacing;
