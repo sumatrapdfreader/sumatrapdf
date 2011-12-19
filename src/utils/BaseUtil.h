@@ -11,9 +11,6 @@
 #define _UNICODE
 #endif
 
-// have to include winsock2.h before windows.h or else it'll pull in
-// winsock.h and we'll have conflicts if we try to include winsock2.h
-#include <winsock2.h>
 #include <windows.h>
 #include <unknwn.h>
 #include <gdiplus.h>

@@ -2,8 +2,6 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "MobiParse.h"
-
-#include "BaseUtil.h"
 #include "StrUtil.h"
 
 #define DETAILED_LOGGING 1 // set to 1 for detailed logging during debugging
@@ -16,22 +14,22 @@
 #define PALMDOC_TYPE_CREATOR   "TEXtREAd"
 #define MOBI_TYPE_CREATOR      "BOOKMOBI"
 
-#pragma comment(lib, "Ws2_32.lib") // for ntohs(), ntohl()
+// as used in pdf_fontfile.c, DjVuEngine.cpp and ImagesEngine.cpp:
+// TODO: move to BaseUtil.h?
+// for converting between big- and little-endian values
+#define SWAPWORD(x)    MAKEWORD(HIBYTE(x), LOBYTE(x))
+#define SWAPLONG(x)    MAKELONG(SWAPWORD(HIWORD(x)), SWAPWORD(LOWORD(x)))
 
-// change big-endian int16 to native endian
+// change big-endian int16 to little-endian
 static void SwapI16(int16_t& i)
 {
-    u_short *p = (u_short*)&i;
-    u_short tmp = ntohs(*p);
-    *p = tmp;
+    i = SWAPWORD(i);
 }
 
-// change big-endian int32 to native endian
+// change big-endian int32 to little-endian
 static void SwapI32(int32_t& i)
 {
-    u_long *p = (u_long*)&i;
-    u_long tmp = ntohl(*p);
-    *p = tmp;
+    i = SWAPLONG(i);
 }
 
 static bool IsMobiPdb(PdbHeader *pdbHdr)
@@ -98,4 +96,3 @@ MobiParse *MobiParse::ParseFile(const TCHAR *fileName)
     }
     return mb;
 }
-

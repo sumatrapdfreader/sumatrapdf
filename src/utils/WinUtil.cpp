@@ -1,19 +1,17 @@
 /* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-// must include BaseUtil.h before windows headers to prevent
-// winsock.h/winsock2.h issues
 #include "BaseUtil.h"
-#include <shlwapi.h>
-#include <shlobj.h>
-#include <io.h>
-#include <fcntl.h>
-
 #include "FileUtil.h"
 #include "StrUtil.h"
 #include "Vec.h"
 #include "WinUtil.h"
 #include "Scopes.h"
+
+#include <shlwapi.h>
+#include <shlobj.h>
+#include <io.h>
+#include <fcntl.h>
 
 // Loads a DLL explicitly from the system's library collection
 HMODULE SafeLoadLibrary(const TCHAR *dllName)

@@ -41,7 +41,7 @@ EXTDIR=ext
 LIBMUPDF_RES = $(O)\libmupdf.res
 
 # default target
-all_sumatrapdf: SumatraPDF Uninstaller PDFFilter PdfPreview BrowserPlugin PdfBench EngineDump et
+all_sumatrapdf: SumatraPDF Uninstaller PDFFilter PdfPreview BrowserPlugin PdfBench EngineDump et tester
 
 ##### add configuration changes that should also affect MuPDF before this line #####
 
@@ -372,6 +372,8 @@ $(OS)\CTeXFilter.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\StrUti
 $(OS)\CTeXFilter.obj: src\utils\WinUtil.h
 $(OS)\DialogSizer.obj: src\utils\BaseUtil.h src\utils\DialogSizer.h src\utils\GeomUtil.h
 $(OS)\DialogSizer.obj: src\utils\WinUtil.h
+$(OS)\DirIter.obj: src\utils\BaseUtil.h src\utils\DirIter.h src\utils\FileUtil.h
+$(OS)\DirIter.obj: src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\DisplayModel.obj: src\BaseEngine.h src\ChmEngine.h src\DisplayModel.h
 $(OS)\DisplayModel.obj: src\DisplayState.h src\DjVuEngine.h src\EngineManager.h
 $(OS)\DisplayModel.obj: src\EpubEngine.h src\ImagesEngine.h src\PdfEngine.h
@@ -445,6 +447,7 @@ $(OS)\Menu.obj: src\SumatraDialogs.h src\SumatraPDF.h src\TextSearch.h
 $(OS)\Menu.obj: src\TextSelection.h src\translations.h src\utils\BaseUtil.h
 $(OS)\Menu.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\StrUtil.h
 $(OS)\Menu.obj: src\utils\Vec.h src\utils\WinUtil.h src\WindowInfo.h
+$(OS)\MobiParse.obj: src\MobiParse.h src\utils\BaseUtil.h src\utils\StrUtil.h
 $(OS)\MuPDF_Exports.obj: mupdf\fitz\fitz.h
 $(OS)\Notifications.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
 $(OS)\Notifications.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
@@ -582,6 +585,8 @@ $(OS)\TableOfContents.obj: src\TextSearch.h src\TextSelection.h src\translations
 $(OS)\TableOfContents.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\Scopes.h
 $(OS)\TableOfContents.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\TableOfContents.obj: src\WindowInfo.h
+$(OS)\Tester.obj: src\MobiParse.h src\utils\BaseUtil.h src\utils\DirIter.h
+$(OS)\Tester.obj: src\utils\FileUtil.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\TextSearch.obj: src\BaseEngine.h src\TextSearch.h src\TextSelection.h
 $(OS)\TextSearch.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\StrUtil.h
 $(OS)\TextSearch.obj: src\utils\Vec.h

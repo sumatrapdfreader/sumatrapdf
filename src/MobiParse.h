@@ -4,8 +4,8 @@
 #ifndef MobiParse_h
 #define MobiParse_h
 
-#include <stdint.h>
 #include "BaseUtil.h"
+#include <stdint.h>
 
 // http://en.wikipedia.org/wiki/PDB_(Palm_OS)
 
