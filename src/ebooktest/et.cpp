@@ -15,10 +15,6 @@
 
 using namespace Gdiplus;
 
-// define to 1 to enable shadow effect, to 0 to disable
-#define DRAW_TEXT_SHADOW 1
-#define DRAW_MSG_TEXT_SHADOW 0
-
 #define ET_FRAME_CLASS_NAME    _T("ET_FRAME")
 
 #define WIN_DX    640
@@ -225,6 +221,8 @@ static void OnLButtonDown()
 static void OnCreateWindow(HWND hwnd)
 {
     //gFont = ::new Font(L"Times New Roman", 16, FontStyleRegular);
+    //HDC dc = GetDC(hwnd);
+    //gFont = ::new Font(dc, gFontDefault); 
     gFont = ::new Font(L"Georgia", 16, FontStyleRegular);
 }
 
