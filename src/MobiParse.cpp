@@ -38,7 +38,7 @@ static bool IsMobiPdb(PdbHeader *pdbHdr)
     return str::EqN(pdbHdr->type, MOBI_TYPE_CREATOR, 8);
 }
 
-MobiParse::MobiParse() : fileName(NULL), fileHandle(0)
+MobiParse::MobiParse() : fileName(NULL), fileHandle(0), recHeaders(NULL)
 {
 }
 
@@ -46,6 +46,7 @@ MobiParse::~MobiParse()
 {
     CloseHandle(fileHandle);
     free(fileName);
+    free(recHeaders);
 }
 
 bool MobiParse::ParseHeader()
@@ -68,6 +69,15 @@ bool MobiParse::ParseHeader()
     if (pdbHeader.numRecords < 1)
         return false;
 
+    recHeaders = SAZA(PdbRecordHeader, pdbHeader.numRecords);
+    DWORD toRead = kPdbRecordHeaderLen * pdbHeader.numRecords;
+    ok = ReadFile(fileHandle, (void*)recHeaders, toRead, &bytesRead, NULL);
+    if (!ok || (toRead != bytesRead)) {
+        return false;
+    }
+    for (int i = 0; i < pdbHeader.numRecords; i++) {
+        SwapI32(recHeaders[i].offset);
+    }
     // TODO: write more
     return false;
 }

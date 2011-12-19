@@ -55,10 +55,11 @@ CASSERT(kPdbRecordHeaderLen == sizeof(PdbRecordHeader), validPdbRecordHeader);
 
 class MobiParse
 {
-    TCHAR *fileName;
-    HANDLE fileHandle;
+    TCHAR *             fileName;
+    HANDLE              fileHandle;
 
-    PdbHeader pdbHeader;
+    PdbHeader           pdbHeader;
+    PdbRecordHeader *   recHeaders;
 
     MobiParse();
 
