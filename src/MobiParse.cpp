@@ -13,11 +13,8 @@
 #define l(s) NoOp()
 #endif
 
-#define PALMDOC_TYPE       "TEXt"
-#define PALMDOC_CREATOR    "REAd"
-
-#define MOBI_TYPE          "BOOK"
-#define MOBI_CREATOR       "MOBI"
+#define PALMDOC_TYPE_CREATOR   "TEXtREAd"
+#define MOBI_TYPE_CREATOR      "BOOKMOBI"
 
 #pragma comment(lib, "Ws2_32.lib") // for ntohs(), ntohl()
 
@@ -38,8 +35,7 @@ static void SwapI32(int32_t& i)
 
 static bool IsMobiPdb(PdbHeader *pdbHdr)
 {
-    return str::EqN(pdbHdr->type, MOBI_TYPE, 4) &&
-           str::EqN(pdbHdr->creator, MOBI_CREATOR, 4);
+    return str::EqN(pdbHdr->type, MOBI_TYPE_CREATOR, 8);
 }
 
 MobiParse::MobiParse() : fileName(NULL), fileHandle(0)
