@@ -9,11 +9,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "BaseUtil.h"
-#include "StrUtil.h"
-#include "FileUtil.h"
-#include "Vec.h"
 #include "DirIter.h"
+#include "MobiParse.h"
 
 static int usage()
 {

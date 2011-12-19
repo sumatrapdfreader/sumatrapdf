@@ -69,11 +69,13 @@
     </BuildLog>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\MobiParse.cpp" />
     <ClCompile Include="src\Tester.cpp" />
     <ClCompile Include="src\utils\DirIter.cpp" />
     <ClCompile Include="src\utils\FileUtil.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\MobiParse.h" />
     <ClInclude Include="src\utils\DirIter.h" />
     <ClInclude Include="src\utils\FileUtil.h" />
   </ItemGroup>
