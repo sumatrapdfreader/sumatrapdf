@@ -8,6 +8,7 @@ using namespace Gdiplus;
 // A helper for allocating an array of elements of type T
 // either on stack (if they fit within StackBufInBytes)
 // or in memory. Allocating on stack is a perf optimization
+// note: not the best name
 template <typename T, int StackBufInBytes>
 class FixedArray {
     T stackBuf[StackBufInBytes / sizeof(T)];
@@ -19,9 +20,11 @@ public:
         if (elCount > stackEls)
             memBuf = (T*)malloc(elCount * sizeof(T));
     }
+
     ~FixedArray() {
         free(memBuf);
     }
+
     T *Get() {
         if (memBuf)
             return memBuf;
@@ -63,7 +66,7 @@ RectF MeasureTextAccurate2(Graphics *g, Font *f, const WCHAR *s, size_t len)
 }
 
 // http://www.codeproject.com/KB/GDI-plus/measurestring.aspx
-// TODO: this seems to sometimes reports size that is slightly too small
+// TODO: this seems to sometimes report size that is slightly too small
 // Adding a magic 4.5f to the width seems to make it more or less right
 RectF MeasureTextAccurate(Graphics *g, Font *f, const WCHAR *s, size_t len)
 {
@@ -103,8 +106,6 @@ RectF MeasureText(Graphics *g, Font *f, const WCHAR *s, size_t len)
 
 // TODO: not quite sure why spaceDx1 != spaceDx2, using spaceDx2 because
 // is smaller and looks as better spacing to me
-// note: we explicitly use MeasureTextStandard() because
-// MeasureTextAccurate() ignores the trailing whitespace
 REAL GetSpaceDx(Graphics *g, Font *f)
 {
     RectF bb;
