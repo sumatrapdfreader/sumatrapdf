@@ -18,7 +18,7 @@
 
 #pragma comment(lib, "Ws2_32.lib") // for ntohs(), ntohl()
 
-// change big-endian int16 to host (which we assume is little endian)
+// change big-endian int16 to native endian
 static void SwapI16(int16_t& i)
 {
     u_short *p = (u_short*)&i;
@@ -26,6 +26,7 @@ static void SwapI16(int16_t& i)
     *p = tmp;
 }
 
+// change big-endian int32 to native endian
 static void SwapI32(int32_t& i)
 {
     u_long *p = (u_long*)&i;
