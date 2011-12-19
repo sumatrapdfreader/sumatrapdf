@@ -23,6 +23,12 @@ static int usage()
 static void testmobifile(TCHAR *path)
 {
     _tprintf(_T("Testing file '%s'\n"), path);
+    MobiParse *mb = MobiParse::ParseFile(path);
+    if (!mb) {
+        printf(" error: failed to parse the file\n");
+        return;
+    }
+    delete mb;
 }
 
 static bool IsMobiFile(TCHAR *f)
