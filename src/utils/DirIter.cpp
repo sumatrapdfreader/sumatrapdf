@@ -53,10 +53,10 @@ bool DirIter::Start(TCHAR *dir)
 }
 
 // try to filter out things that are not files
+// note: we don't skip files with FILE_ATTRIBUTE_ARCHIVE because
+// it's set on e.g. networked samba drives
 static bool IsRegularFile(DWORD fileAttr)
 {
-    if (fileAttr & FILE_ATTRIBUTE_ARCHIVE)
-        return false;
     if (fileAttr & FILE_ATTRIBUTE_DEVICE)
         return false;
     if (fileAttr & FILE_ATTRIBUTE_DIRECTORY)
