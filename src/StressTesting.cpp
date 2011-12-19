@@ -198,7 +198,8 @@ static bool IsStressTestSupportedFile(const TCHAR *fileName, const TCHAR *filter
     return PdfEngine::IsSupportedFile(fileName)  ||
            XpsEngine::IsSupportedFile(fileName)  ||
            DjVuEngine::IsSupportedFile(fileName) ||
-           CbxEngine::IsSupportedFile(fileName);
+           CbxEngine::IsSupportedFile(fileName) ||
+           ChmEngine::IsSupportedFile(fileName);
 }
 
 static bool CollectStressTestSupportedFilesFromDirectory(const TCHAR *dirPath, const TCHAR *filter, StrVec& paths)
