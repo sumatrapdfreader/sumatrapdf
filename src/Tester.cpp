@@ -11,11 +11,12 @@
 
 #include "DirIter.h"
 #include "MobiParse.h"
+#include "FileUtil.h"
 
 static int usage()
 {
-    printf("st.exe\n");
-    printf("  -mobi dir : run mobi tests in a given directory\n");
+    printf("Tester.exe\n");
+    printf("  -mobi dirOrFile : run mobi tests in a given directory or for a given file\n");
     return 1;
 }
 
@@ -24,13 +25,17 @@ static void testmobifile(TCHAR *path)
     _tprintf(_T("Testing file '%s'\n"), path);
 }
 
-static void mobitest(char *dir)
+static bool IsMobiFile(TCHAR *f)
 {
-    printf("Testing mobi files in '%s'\n", dir);
+    return str::EndsWithI(f, _T(".mobi"));
+}
+
+static void mobitestdir(TCHAR *dir)
+{
+    _tprintf(_T("Testing mobi files in '%s'\n"), dir);
     DirIter di(true);
-    ScopedMem<TCHAR> tmp(str::conv::FromAnsi(dir));
-    if (!di.Start(tmp)) {
-        printf("Error: invalid directory '%s'\n", dir);
+    if (!di.Start(dir)) {
+        _tprintf(_T("Error: invalid directory '%s'\n"), dir);
         return;
     }
 
@@ -38,9 +43,19 @@ static void mobitest(char *dir)
         TCHAR *p = di.Next();
         if (NULL == p)
             break;
-        if (str::EndsWithI(p, _T(".mobi")))
+        if (IsMobiFile(p))
             testmobifile(p);
     }
+}
+
+static void mobitest(char *dirOrFile)
+{
+    ScopedMem<TCHAR> tmp(str::conv::FromAnsi(dirOrFile));
+
+    if (file::Exists(tmp) && IsMobiFile(tmp))
+        testmobifile(tmp);
+    else
+        mobitestdir(tmp);
 }
 
 extern "C"
