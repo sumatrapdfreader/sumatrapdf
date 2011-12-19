@@ -18,4 +18,5 @@ Things nice to have but can wait for future:
 * bookmarks
 * support epub
 * support other formats
+* hyphenation (http://www.tug.org/docs/liang/)
 

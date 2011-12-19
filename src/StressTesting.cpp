@@ -468,8 +468,9 @@ bool StressTest::GoToNextPage()
     ShowNotification(win, s, true, false, NG_STRESS_TEST_BENCHMARK);
 
     ++currPage;
-    while (!IsInRange(pageRanges, currPage) && currPage <= win->dm->PageCount())
+    while (!IsInRange(pageRanges, currPage) && currPage <= win->dm->PageCount()) {
         currPage++;
+    }
 
     if (currPage > win->dm->PageCount()) {
         if (GoToNextFile())
