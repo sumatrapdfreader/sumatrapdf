@@ -616,7 +616,7 @@ static UINT GetChmCodepage(const TCHAR *fileName)
     DWORD header[6];
     if (!file::ReadAll(fileName, (char *)header, sizeof(header)))
         return CP_CHM_DEFAULT;
-    DWORD lang_id = header[5];
+    DWORD lang_id = LITTLE_ENDIAN_32(header[5]);
 
     for (int i = 0; i < dimof(langIdToCodepage); i++)
         if (lang_id == langIdToCodepage[i].langId)

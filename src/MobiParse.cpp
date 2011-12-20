@@ -15,24 +15,6 @@
 #define PALMDOC_TYPE_CREATOR   "TEXtREAd"
 #define MOBI_TYPE_CREATOR      "BOOKMOBI"
 
-// as used in pdf_fontfile.c, DjVuEngine.cpp and ImagesEngine.cpp:
-// TODO: move to BaseUtil.h?
-// for converting between big- and little-endian values
-#define SWAPWORD(x)    MAKEWORD(HIBYTE(x), LOBYTE(x))
-#define SWAPLONG(x)    MAKELONG(SWAPWORD(HIWORD(x)), SWAPWORD(LOWORD(x)))
-
-// change big-endian int16 to little-endian
-static void SwapI16(int16_t& i)
-{
-    i = SWAPWORD(i);
-}
-
-// change big-endian int32 to little-endian
-static void SwapI32(int32_t& i)
-{
-    i = SWAPLONG(i);
-}
-
 static bool IsMobiPdb(PdbHeader *pdbHdr)
 {
     return str::EqN(pdbHdr->type, MOBI_TYPE_CREATOR, 8);
@@ -65,7 +47,7 @@ bool MobiParse::ParseHeader()
 
     // the values are in big-endian, so convert to host order
     // but only those that we actually access
-    SwapI16(pdbHeader.numRecords);
+    pdbHeader.numRecords = BIG_ENDIAN_16(pdbHeader.numRecords);
     if (pdbHeader.numRecords < 1)
         return false;
 
@@ -78,7 +60,7 @@ bool MobiParse::ParseHeader()
         return false;
     }
     for (int i = 0; i < pdbHeader.numRecords; i++) {
-        SwapI32(recHeaders[i].offset);
+        recHeaders[i].offset = BIG_ENDIAN_32(recHeaders[i].offset);
     }
     size_t fileSize = file::GetSize(fileName);
     recHeaders[pdbHeader.numRecords].offset = fileSize;

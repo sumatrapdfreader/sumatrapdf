@@ -62,10 +62,6 @@ const TCHAR *FileExtFromData(char *data, size_t len)
     return NULL;
 }
 
-// for converting between big- and little-endian values
-#define SWAPWORD(x)    MAKEWORD(HIBYTE(x), LOBYTE(x))
-#define SWAPLONG(x)    MAKELONG(SWAPWORD(HIWORD(x)), SWAPWORD(LOWORD(x)))
-
 // adapted from http://cpansearch.perl.org/src/RJRAY/Image-Size-3.230/lib/Image/Size.pm
 SizeI SizeFromData(char *data, size_t len)
 {
@@ -77,14 +73,16 @@ SizeI SizeFromData(char *data, size_t len)
     else if (str::StartsWith(data, "BM")) {
         if (len >= sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER)) {
             BITMAPINFOHEADER *bmi = (BITMAPINFOHEADER *)(data + sizeof(BITMAPFILEHEADER));
-            result = SizeI(bmi->biWidth, bmi->biHeight);
+            DWORD width = LITTLE_ENDIAN_32(bmi->biWidth);
+            DWORD height = LITTLE_ENDIAN_32(bmi->biHeight);
+            result = SizeI(width, height);
         }
     }
     // PNG
     else if (str::StartsWith(data, "\x89PNG\x0D\x0A\x1A\x0A")) {
         if (len >= 24 && str::StartsWith(data + 12, "IHDR")) {
-            DWORD width = SWAPLONG(*(DWORD *)(data + 16));
-            DWORD height = SWAPLONG(*(DWORD *)(data + 20));
+            DWORD width = BIG_ENDIAN_32(*(DWORD *)(data + 16));
+            DWORD height = BIG_ENDIAN_32(*(DWORD *)(data + 20));
             result = SizeI(width, height);
         }
     }
@@ -93,11 +91,11 @@ SizeI SizeFromData(char *data, size_t len)
         // find the last start of frame marker for non-differential Huffman coding
         for (size_t ix = 2; ix + 9 < len && data[ix] == '\xFF'; ) {
             if ('\xC0' <= data[ix + 1] && data[ix + 1] <= '\xC3') {
-                WORD width = SWAPWORD(*(WORD *)(data + ix + 7));
-                WORD height = SWAPWORD(*(WORD *)(data + ix + 5));
+                WORD width = BIG_ENDIAN_16(*(WORD *)(data + ix + 7));
+                WORD height = BIG_ENDIAN_16(*(WORD *)(data + ix + 5));
                 result = SizeI(width, height);
             }
-            ix += SWAPWORD(*(WORD *)(data + ix + 2)) + 2;
+            ix += BIG_ENDIAN_16(*(WORD *)(data + ix + 2)) + 2;
         }
     }
     // GIF
@@ -111,8 +109,8 @@ SizeI SizeFromData(char *data, size_t len)
                 ix += 3 * (1 << ((data[10] & 0x07) + 1));
             while (ix + 8 < len) {
                 if (data[ix] == '\x2c') {
-                    WORD width = *(WORD *)(data + ix + 5);
-                    WORD height = *(WORD *)(data + ix + 7);
+                    WORD width = LITTLE_ENDIAN_16(*(WORD *)(data + ix + 5));
+                    WORD height = LITTLE_ENDIAN_16(*(WORD *)(data + ix + 7));
                     result = SizeI(width, height);
                     break;
                 }
