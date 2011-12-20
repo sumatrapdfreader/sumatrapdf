@@ -45,6 +45,18 @@ struct MobiFirstRecord
 
 STATIC_ASSERT(kMobiFirstRecordLen == sizeof(MobiFirstRecord), validMobiFirstRecord);
 
+// change big-endian int16 to little-endian (our native format)
+static void SwapI16(int16_t& i)
+{
+    i = BIG_ENDIAN_16(i);
+}
+
+// change big-endian int32 to little-endian (our native format)
+static void SwapI32(int32_t& i)
+{
+    i = BIG_ENDIAN_32(i);
+}
+
 static bool IsMobiPdb(PdbHeader *pdbHdr)
 {
     return str::EqN(pdbHdr->type, MOBI_TYPE_CREATOR, 8);
@@ -92,7 +104,7 @@ bool MobiParse::ParseHeader()
 
     // the values are in big-endian, so convert to host order
     // but only those that we actually access
-    pdbHeader.numRecords = BIG_ENDIAN_16(pdbHeader.numRecords);
+    SwapI16(pdbHeader.numRecords);
     if (pdbHeader.numRecords < 1)
         return false;
 
@@ -105,7 +117,7 @@ bool MobiParse::ParseHeader()
         return false;
     }
     for (int i = 0; i < pdbHeader.numRecords; i++) {
-        recHeaders[i].offset = BIG_ENDIAN_32(recHeaders[i].offset);
+        SwapI32(recHeaders[i].offset);
     }
     size_t fileSize = file::GetSize(fileName);
     recHeaders[pdbHeader.numRecords].offset = fileSize;
