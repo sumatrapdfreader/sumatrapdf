@@ -527,7 +527,7 @@ void CreateToc(WindowInfo *win)
                                      0, 0, 0, 0, win->hwndTocBox, (HMENU)IDC_TOC_TREE, ghinst, NULL);
 
    // Note: those must be consecutive numbers and in title/close/tree order
-   CASSERT(IDC_TOC_BOX + 1 == IDC_TOC_TITLE &&
+   STATIC_ASSERT(IDC_TOC_BOX + 1 == IDC_TOC_TITLE &&
            IDC_TOC_BOX + 2 == IDC_TOC_CLOSE &&
            IDC_TOC_BOX + 3 == IDC_TOC_TREE, consecutive_toc_ids);
 

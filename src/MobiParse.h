@@ -8,7 +8,6 @@
 #include <stdint.h>
 
 // http://en.wikipedia.org/wiki/PDB_(Palm_OS)
-
 #define kDBNameLength    32
 #define kPdbHeaderLen    78
 
@@ -34,7 +33,7 @@ struct PdbHeader
 };
 #pragma pack(pop)
 
-CASSERT(kPdbHeaderLen == sizeof(PdbHeader), validPdbHeader);
+STATIC_ASSERT(kPdbHeaderLen == sizeof(PdbHeader), validPdbHeader);
 
 #define kPdbRecordHeaderLen 8
 
@@ -51,7 +50,9 @@ struct PdbRecordHeader {
 };
 #pragma pack(pop)
 
-CASSERT(kPdbRecordHeaderLen == sizeof(PdbRecordHeader), validPdbRecordHeader);
+STATIC_ASSERT(kPdbRecordHeaderLen == sizeof(PdbRecordHeader), validPdbRecordHeader);
+
+#define kMaxRecordSize 64*1024
 
 class MobiParse
 {
@@ -61,15 +62,20 @@ class MobiParse
     PdbHeader           pdbHeader;
     PdbRecordHeader *   recHeaders;
 
+    bool                isMobi;
+
+    char                recordBuf[kMaxRecordSize];
+
     MobiParse();
 
     bool ParseHeader();
     size_t GetRecordSize(size_t recNo);
 
+    bool ReadRecord(size_t recNo);
+
 public:
     ~MobiParse();
     static MobiParse *ParseFile(const TCHAR *fileName);
-
 };
 
 #endif

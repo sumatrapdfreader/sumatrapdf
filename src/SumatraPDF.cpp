@@ -4011,7 +4011,7 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
     }
 
     // 10 submenus max with 10 items each max (=100) plus generous buffer => 200
-    CASSERT(IDM_FAV_LAST - IDM_FAV_FIRST == 200, enough_fav_menu_ids);
+    STATIC_ASSERT(IDM_FAV_LAST - IDM_FAV_FIRST == 200, enough_fav_menu_ids);
     if ((wmId >= IDM_FAV_FIRST) && (wmId <= IDM_FAV_LAST))
     {
         GoToFavoriteByMenuId(win, wmId);

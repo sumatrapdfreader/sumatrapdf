@@ -833,7 +833,7 @@ void CreateFavorites(WindowInfo *win)
                                       0, 0, 0, 0, win->hwndFavBox, (HMENU)IDC_FAV_TREE, ghinst, NULL);
 
     // Note: those must be consecutive numbers and in title/close/tree order
-    CASSERT(IDC_FAV_BOX + 1 == IDC_FAV_TITLE &&
+    STATIC_ASSERT(IDC_FAV_BOX + 1 == IDC_FAV_TITLE &&
             IDC_FAV_BOX + 2 == IDC_FAV_CLOSE &&
             IDC_FAV_BOX + 3 == IDC_FAV_TREE, consecutive_fav_ids);
 

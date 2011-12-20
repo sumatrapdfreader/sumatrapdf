@@ -5,6 +5,8 @@
 #include "FileUtil.h"
 #include "StrUtil.h"
 
+// Parse mobi format http://wiki.mobileread.com/wiki/MOBI
+
 #define DETAILED_LOGGING 1 // set to 1 for detailed logging during debugging
 #if DETAILED_LOGGING
 #define l(s) printf(s)
@@ -15,12 +17,52 @@
 #define PALMDOC_TYPE_CREATOR   "TEXtREAd"
 #define MOBI_TYPE_CREATOR      "BOOKMOBI"
 
+#define kMobiFirstRecordLen 16
+
+#define COMPRESSION_NONE 1
+#define COMPRESSION_PALM 2
+#define COMPRESSION_HUFF 17480
+
+#define ENCRYPTION_NONE 0
+#define ENCRYPTION_OLD  1
+#define ENCRYPTION_NEW  2
+
+struct MobiFirstRecord
+{
+    int16_t    compressionType;               // off 0
+    int16_t    reserved1;                     // off 2
+    int32_t    uncompressedDocSize;           // off 4
+    int16_t    recordsCount;                  // off 8
+    int16_t    recordSize;                    // off 10
+    union {
+        int32_t    currPos;                   // off 12, if it's palmdoc
+        struct mobi {  // if it's mobi
+          int16_t  encrType;                  // off 12
+          int16_t  reserved2;                 // off 14
+        };
+    };
+};
+
+STATIC_ASSERT(kMobiFirstRecordLen == sizeof(MobiFirstRecord), validMobiFirstRecord);
+
 static bool IsMobiPdb(PdbHeader *pdbHdr)
 {
     return str::EqN(pdbHdr->type, MOBI_TYPE_CREATOR, 8);
 }
 
-MobiParse::MobiParse() : fileName(NULL), fileHandle(0), recHeaders(NULL)
+static bool IsPalmDocPdb(PdbHeader *pdbHdr)
+{
+    return str::EqN(pdbHdr->type, PALMDOC_TYPE_CREATOR, 8);
+}
+
+static bool IsValidCompression(int comprType)
+{
+    return  (COMPRESSION_NONE == comprType) ||
+            (COMPRESSION_PALM == comprType) ||
+            (COMPRESSION_HUFF == comprType);
+}
+
+MobiParse::MobiParse() : fileName(NULL), fileHandle(0), recHeaders(NULL), isMobi(false)
 {
 }
 
@@ -38,12 +80,15 @@ bool MobiParse::ParseHeader()
     if (!ok || (kPdbHeaderLen != bytesRead))
         return false;
 
-    if (!IsMobiPdb(&pdbHeader)) {
+    if (IsMobiPdb(&pdbHeader)) {
+        isMobi = true;
+    } else if (IsPalmDocPdb(&pdbHeader)) {
+        isMobi = false;
+    } else {
         // TODO: print type/creator
         l(" unknown pdb type/creator\n");
         return false;
     }
-    // TODO: also allow palmdoc?
 
     // the values are in big-endian, so convert to host order
     // but only those that we actually access
@@ -70,18 +115,50 @@ bool MobiParse::ParseHeader()
             l("invalid offset field\n");
             return false;
         }
-        if (GetRecordSize(i) > 64 * 1024) {
+        if (GetRecordSize(i) > kMaxRecordSize) {
             l("invalid size\n");
             return false;
         }
     }
+
+    if (!ReadRecord(0)) {
+        l("failed to read record\n");
+        return false;
+    }
+
+    MobiFirstRecord *firstRec = (MobiFirstRecord*)recordBuf;
+    SwapI16(firstRec->compressionType);
+    SwapI32(firstRec->uncompressedDocSize);
+    SwapI16(firstRec->recordsCount);
+    SwapI16(firstRec->recordSize);
+    if (!IsValidCompression(firstRec->compressionType)) {
+        l("unknown compression type\n");
+        return false;
+    }
+
     // TODO: write more
     return false;
 }
 
 size_t MobiParse::GetRecordSize(size_t recNo)
 {
-    return recHeaders[recNo + 1].offset - recHeaders[recNo].offset;
+    size_t size = recHeaders[recNo + 1].offset - recHeaders[recNo].offset;
+    return size;
+}
+
+// read a record into recordBuf. Return false if error
+bool MobiParse::ReadRecord(size_t recNo)
+{
+    size_t off = recHeaders[recNo].offset;
+    DWORD toRead = GetRecordSize(recNo);
+    DWORD bytesRead;
+    DWORD res = SetFilePointer(fileHandle, off, NULL, FILE_BEGIN);
+    if (INVALID_SET_FILE_POINTER == res)
+        return false;
+    BOOL ok = ReadFile(fileHandle, (void*)recordBuf, toRead, &bytesRead, NULL);
+    if (!ok || (toRead != bytesRead))
+        return false;
+    return true;
 }
 
 MobiParse *MobiParse::ParseFile(const TCHAR *fileName)

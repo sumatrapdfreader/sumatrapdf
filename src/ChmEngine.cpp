@@ -17,9 +17,9 @@
 #include <inttypes.h>
 #include <chm_lib.h>
 
-CASSERT(1 == sizeof(uint8_t), uint8_is_1_byte);
-CASSERT(2 == sizeof(uint16_t), uint16_is_2_bytes);
-CASSERT(4 == sizeof(uint32_t), uint32_is_4_bytes);
+STATIC_ASSERT(1 == sizeof(uint8_t), uint8_is_1_byte);
+STATIC_ASSERT(2 == sizeof(uint16_t), uint16_is_2_bytes);
+STATIC_ASSERT(4 == sizeof(uint32_t), uint32_is_4_bytes);
 
 class Bytes {
 public:

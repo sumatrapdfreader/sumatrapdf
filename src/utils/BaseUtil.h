@@ -47,7 +47,7 @@
 #define NoOp()      ((void)0)
 
 /* compile-time assert */
-#define CASSERT(exp, name) typedef int assert_##name [(exp) != FALSE]
+#define STATIC_ASSERT(exp, name) typedef int assert_##name [(exp) != FALSE]
 
 // for converting between big- and little-endian values
 // note: code assumes to be compiled for little-endian architectures

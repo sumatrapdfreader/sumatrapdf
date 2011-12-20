@@ -197,7 +197,7 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
             colorRange[1] = WIN_COL_BLACK;
         }
         else if (is_arg("-set-color-range") && argCount > n + 2) {
-            CASSERT(sizeof(colorRange[0]) == sizeof(int), colorref_as_int);
+            STATIC_ASSERT(sizeof(colorRange[0]) == sizeof(int), colorref_as_int);
             ParseColor((int *)&colorRange[0], argList.At(++n));
             ParseColor((int *)&colorRange[1], argList.At(++n));
         }
