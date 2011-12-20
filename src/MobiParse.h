@@ -64,6 +64,8 @@ class MobiParse
     MobiParse();
 
     bool ParseHeader();
+    size_t GetRecordSize(size_t recNo);
+
 public:
     ~MobiParse();
     static MobiParse *ParseFile(const TCHAR *fileName);

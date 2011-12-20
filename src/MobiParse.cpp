@@ -2,6 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "MobiParse.h"
+#include "FileUtil.h"
 #include "StrUtil.h"
 
 #define DETAILED_LOGGING 1 // set to 1 for detailed logging during debugging
@@ -68,7 +69,9 @@ bool MobiParse::ParseHeader()
     if (pdbHeader.numRecords < 1)
         return false;
 
-    recHeaders = SAZA(PdbRecordHeader, pdbHeader.numRecords);
+    // allocate one more record as a sentinel to make calculating
+    // size of the records easier
+    recHeaders = SAZA(PdbRecordHeader, pdbHeader.numRecords + 1);
     DWORD toRead = kPdbRecordHeaderLen * pdbHeader.numRecords;
     ok = ReadFile(fileHandle, (void*)recHeaders, toRead, &bytesRead, NULL);
     if (!ok || (toRead != bytesRead)) {
@@ -77,8 +80,26 @@ bool MobiParse::ParseHeader()
     for (int i = 0; i < pdbHeader.numRecords; i++) {
         SwapI32(recHeaders[i].offset);
     }
+    size_t fileSize = file::GetSize(fileName);
+    recHeaders[pdbHeader.numRecords].offset = fileSize;
+    // validate offset field
+    for (int i = 0; i < pdbHeader.numRecords; i++) {
+        if (recHeaders[i + 1].offset <= recHeaders[i].offset) {
+            l("invalid offset field\n");
+            return false;
+        }
+        if (GetRecordSize(i) > 64 * 1024) {
+            l("invalid size\n");
+            return false;
+        }
+    }
     // TODO: write more
     return false;
+}
+
+size_t MobiParse::GetRecordSize(size_t recNo)
+{
+    return recHeaders[recNo + 1].offset - recHeaders[recNo].offset;
 }
 
 MobiParse *MobiParse::ParseFile(const TCHAR *fileName)
