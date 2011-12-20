@@ -73,16 +73,16 @@ SizeI SizeFromData(char *data, size_t len)
     else if (str::StartsWith(data, "BM")) {
         if (len >= sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER)) {
             BITMAPINFOHEADER *bmi = (BITMAPINFOHEADER *)(data + sizeof(BITMAPFILEHEADER));
-            DWORD width = LITTLE_ENDIAN_32(bmi->biWidth);
-            DWORD height = LITTLE_ENDIAN_32(bmi->biHeight);
+            DWORD width = LEtoHl(bmi->biWidth);
+            DWORD height = LEtoHl(bmi->biHeight);
             result = SizeI(width, height);
         }
     }
     // PNG
     else if (str::StartsWith(data, "\x89PNG\x0D\x0A\x1A\x0A")) {
         if (len >= 24 && str::StartsWith(data + 12, "IHDR")) {
-            DWORD width = BIG_ENDIAN_32(*(DWORD *)(data + 16));
-            DWORD height = BIG_ENDIAN_32(*(DWORD *)(data + 20));
+            DWORD width = BEtoHl(*(DWORD *)(data + 16));
+            DWORD height = BEtoHl(*(DWORD *)(data + 20));
             result = SizeI(width, height);
         }
     }
@@ -91,11 +91,11 @@ SizeI SizeFromData(char *data, size_t len)
         // find the last start of frame marker for non-differential Huffman coding
         for (size_t ix = 2; ix + 9 < len && data[ix] == '\xFF'; ) {
             if ('\xC0' <= data[ix + 1] && data[ix + 1] <= '\xC3') {
-                WORD width = BIG_ENDIAN_16(*(WORD *)(data + ix + 7));
-                WORD height = BIG_ENDIAN_16(*(WORD *)(data + ix + 5));
+                WORD width = BEtoHs(*(WORD *)(data + ix + 7));
+                WORD height = BEtoHs(*(WORD *)(data + ix + 5));
                 result = SizeI(width, height);
             }
-            ix += BIG_ENDIAN_16(*(WORD *)(data + ix + 2)) + 2;
+            ix += BEtoHs(*(WORD *)(data + ix + 2)) + 2;
         }
     }
     // GIF
@@ -109,8 +109,8 @@ SizeI SizeFromData(char *data, size_t len)
                 ix += 3 * (1 << ((data[10] & 0x07) + 1));
             while (ix + 8 < len) {
                 if (data[ix] == '\x2c') {
-                    WORD width = LITTLE_ENDIAN_16(*(WORD *)(data + ix + 5));
-                    WORD height = LITTLE_ENDIAN_16(*(WORD *)(data + ix + 7));
+                    WORD width = LEtoHs(*(WORD *)(data + ix + 5));
+                    WORD height = LEtoHs(*(WORD *)(data + ix + 7));
                     result = SizeI(width, height);
                     break;
                 }

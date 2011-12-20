@@ -48,13 +48,13 @@ STATIC_ASSERT(kMobiFirstRecordLen == sizeof(MobiFirstRecord), validMobiFirstReco
 // change big-endian int16 to little-endian (our native format)
 static void SwapI16(int16_t& i)
 {
-    i = BIG_ENDIAN_16(i);
+    i = BEtoHs(i);
 }
 
 // change big-endian int32 to little-endian (our native format)
 static void SwapI32(int32_t& i)
 {
-    i = BIG_ENDIAN_32(i);
+    i = BEtoHl(i);
 }
 
 static bool IsMobiPdb(PdbHeader *pdbHdr)

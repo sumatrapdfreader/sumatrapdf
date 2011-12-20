@@ -142,8 +142,8 @@ pdf_find_substitute_cjk_font(int ros, int serif, unsigned int *len)
 #include FT_TRUETYPE_IDS_H
 #include FT_TRUETYPE_TAGS_H
 
-#define BIG_ENDIAN_16(x)    MAKEWORD(HIBYTE(x), LOBYTE(x))
-#define BIG_ENDIAN_32(x)    MAKELONG(BIG_ENDIAN_16(HIWORD(x)), BIG_ENDIAN_16(LOWORD(x)))
+#define BEtoHs(x)   MAKEWORD(HIBYTE(x), LOBYTE(x))
+#define BEtoHl(x)   MAKELONG(BEtoHs(HIWORD(x)), BEtoHs(LOWORD(x)))
 
 #define TTC_VERSION1	0x00010000
 #define TTC_VERSION2	0x00020000
@@ -291,7 +291,7 @@ decodeunicodeBE(char* source, int sourcelen, char* dest, int destlen)
 
 	tmp = fz_calloc(sourcelen / 2 + 1, sizeof(WCHAR));
 	for (i = 0; i < sourcelen / 2; i++)
-		tmp[i] = BIG_ENDIAN_16(((WCHAR *)source)[i]);
+		tmp[i] = BEtoHs(((WCHAR *)source)[i]);
 	tmp[sourcelen / 2] = '\0';
 
 	converted = WideCharToMultiByte(CP_UTF8, 0, tmp, -1, dest, destlen, NULL, NULL);
@@ -393,15 +393,15 @@ read_ttf_string(fz_stream *file, int offset, TT_NAME_RECORD *ttRecord, char *buf
 	fz_error err;
 	char szTemp[MAX_FACENAME * 2];
 	// ignore empty and overlong strings
-	int stringLength = BIG_ENDIAN_16(ttRecord->uStringLength);
+	int stringLength = BEtoHs(ttRecord->uStringLength);
 	if (stringLength == 0 || stringLength >= sizeof(szTemp))
 		return fz_okay;
 
-	fz_seek(file, offset + BIG_ENDIAN_16(ttRecord->uStringOffset), 0);
+	fz_seek(file, offset + BEtoHs(ttRecord->uStringOffset), 0);
 	err = safe_read(file, szTemp, stringLength);
 	if (err) return err;
-	return decodeplatformstring(BIG_ENDIAN_16(ttRecord->uPlatformID),
-		BIG_ENDIAN_16(ttRecord->uEncodingID), szTemp, stringLength, buf, size);
+	return decodeplatformstring(BEtoHs(ttRecord->uPlatformID),
+		BEtoHs(ttRecord->uEncodingID), szTemp, stringLength, buf, size);
 }
 
 static fz_error
@@ -422,31 +422,31 @@ parseTTF(fz_stream *file, int offset, int index, char *path)
 	if (err) return err;
 
 	// check if this is a TrueType font of version 1.0 or an OpenType font
-	if (BIG_ENDIAN_32(ttOffsetTable.uVersion) != TTC_VERSION1 && ttOffsetTable.uVersion != TTAG_OTTO)
+	if (BEtoHl(ttOffsetTable.uVersion) != TTC_VERSION1 && ttOffsetTable.uVersion != TTAG_OTTO)
 		return fz_throw("fonterror : invalid font version");
 
 	// determine the name table's offset by iterating through the offset table
-	count = BIG_ENDIAN_16(ttOffsetTable.uNumOfTables);
+	count = BEtoHs(ttOffsetTable.uNumOfTables);
 	for (i = 0; i < count; i++)
 	{
 		err = safe_read(file, (char *)&tblDir, sizeof(TT_TABLE_DIRECTORY));
 		if (err) return err;
-		if (!tblDir.uTag || BIG_ENDIAN_32(tblDir.uTag) == TTAG_name)
+		if (!tblDir.uTag || BEtoHl(tblDir.uTag) == TTAG_name)
 			break;
 	}
 	if (count == i || !tblDir.uTag)
 		return fz_throw("fonterror : nameless font");
-	tblOffset = BIG_ENDIAN_32(tblDir.uOffset);
+	tblOffset = BEtoHl(tblDir.uOffset);
 
 	// read the 'name' table for record count and offsets
 	fz_seek(file, tblOffset, 0);
 	err = safe_read(file, (char *)&ttNTHeader, sizeof(TT_NAME_TABLE_HEADER));
 	if (err) return err;
 	offset = tblOffset + sizeof(TT_NAME_TABLE_HEADER);
-	tblOffset += BIG_ENDIAN_16(ttNTHeader.uStorageOffset);
+	tblOffset += BEtoHs(ttNTHeader.uStorageOffset);
 
 	// read through the strings for PostScript name and font family
-	count = BIG_ENDIAN_16(ttNTHeader.uNRCount);
+	count = BEtoHs(ttNTHeader.uNRCount);
 	for (i = 0; i < count; i++)
 	{
 		short nameId;
@@ -456,10 +456,10 @@ parseTTF(fz_stream *file, int offset, int index, char *path)
 		if (err) return err;
 
 		// ignore non-English strings
-		if (ttRecord.uLanguageID && BIG_ENDIAN_16(ttRecord.uLanguageID) != TT_MS_LANGID_ENGLISH_UNITED_STATES)
+		if (ttRecord.uLanguageID && BEtoHs(ttRecord.uLanguageID) != TT_MS_LANGID_ENGLISH_UNITED_STATES)
 			continue;
 		// ignore names other than font (sub)family and PostScript name
-		nameId = BIG_ENDIAN_16(ttRecord.uNameID);
+		nameId = BEtoHs(ttRecord.uNameID);
 		if (TT_NAME_ID_FONT_FAMILY == nameId)
 			err = read_ttf_string(file, tblOffset, &ttRecord, szTTName, MAX_FACENAME);
 		else if (TT_NAME_ID_FONT_SUBFAMILY == nameId)
@@ -530,24 +530,24 @@ parseTTCs(char *path)
 
 	err = safe_read(file, (char *)&fontcollection, sizeof(FONT_COLLECTION));
 	if (err) goto cleanup;
-	if (BIG_ENDIAN_32(fontcollection.Tag) != TTAG_ttcf)
+	if (BEtoHl(fontcollection.Tag) != TTAG_ttcf)
 	{
 		err = fz_throw("fonterror : wrong format");
 		goto cleanup;
 	}
-	if (BIG_ENDIAN_32(fontcollection.Version) != TTC_VERSION1 &&
-		BIG_ENDIAN_32(fontcollection.Version) != TTC_VERSION2)
+	if (BEtoHl(fontcollection.Version) != TTC_VERSION1 &&
+		BEtoHl(fontcollection.Version) != TTC_VERSION2)
 	{
 		err = fz_throw("fonterror : invalid version");
 		goto cleanup;
 	}
 
-	numFonts = BIG_ENDIAN_32(fontcollection.NumFonts);
+	numFonts = BEtoHl(fontcollection.NumFonts);
 	offsettable = fz_calloc(numFonts, sizeof(ULONG));
 
 	err = safe_read(file, (char *)offsettable, numFonts * sizeof(ULONG));
 	for (i = 0; i < numFonts && !err; i++)
-		err = parseTTF(file, BIG_ENDIAN_32(offsettable[i]), i, path);
+		err = parseTTF(file, BEtoHl(offsettable[i]), i, path);
 
 cleanup:
 	fz_free(offsettable);

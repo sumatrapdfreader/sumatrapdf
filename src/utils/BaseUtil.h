@@ -49,13 +49,13 @@
 /* compile-time assert */
 #define STATIC_ASSERT(exp, name) typedef int assert_##name [(exp) != FALSE]
 
-// for converting between big- and little-endian values
-// note: code assumes to be compiled for little-endian architectures
-#define BIG_ENDIAN_16(x) MAKEWORD(HIBYTE(x), LOBYTE(x))
-#define BIG_ENDIAN_32(x) MAKELONG(BIG_ENDIAN_16(HIWORD(x)), BIG_ENDIAN_16(LOWORD(x)))
-// no-ops for pointing out where data is already little-endian
-#define LITTLE_ENDIAN_16(x) (x)
-#define LITTLE_ENDIAN_32(x) (x)
+// for converting between big-/little-endian values and host endianness
+// (the same macros could also be used for conversion in the opposite direction)
+// TODO: swap definitions should we ever compile for big-endian architectures
+#define BEtoHs(x) MAKEWORD(HIBYTE(x), LOBYTE(x))
+#define BEtoHl(x) MAKELONG(BEtoHs(HIWORD(x)), BEtoHs(LOWORD(x)))
+#define LEtoHs(x) (x)
+#define LEtoHl(x) (x)
 
 template <typename T>
 inline void swap(T& one, T&two)

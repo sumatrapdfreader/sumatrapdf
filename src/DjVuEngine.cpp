@@ -313,20 +313,20 @@ bool CDjVuEngine::LoadMediaboxes()
         if (DJVU_MARK_FORM == buffer[0] && DJVU_MARK_DJVU == buffer[2] && DJVU_MARK_INFO == buffer[3]) {
             if (!ReadBytes(h, offset + 16, buffer + 4, 14))
                 return false;
-            int width = HIWORD(BIG_ENDIAN_32(buffer[5]));
-            int height = LOWORD(BIG_ENDIAN_32(buffer[5]));
-            int dpi = HIWORD(LITTLE_ENDIAN_32(buffer[6]));
+            int width = HIWORD(BEtoHl(buffer[5]));
+            int height = LOWORD(BEtoHl(buffer[5]));
+            int dpi = HIWORD(LEtoHl(buffer[6]));
             // DjVuLibre ignores DPI values outside 25 to 6000 in DjVuInfo::decode
             if (dpi < 25 || 6000 < dpi)
                 dpi = 300;
-            int flags = HIBYTE(LITTLE_ENDIAN_32(buffer[7]));
+            int flags = HIBYTE(LEtoHl(buffer[7]));
             mediaboxes[pages].dx = GetFileDPI() * width / dpi;
             mediaboxes[pages].dy = GetFileDPI() * height / dpi;
             if ((flags & 4))
                 swap(mediaboxes[pages].dx, mediaboxes[pages].dy);
             pages++;
         }
-        int partLen = BIG_ENDIAN_32(buffer[1]);
+        int partLen = BEtoHl(buffer[1]);
         if (partLen < 0)
             return false;
         offset += 8 + partLen + (partLen & 1);

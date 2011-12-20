@@ -447,7 +447,8 @@ $(OS)\Menu.obj: src\SumatraDialogs.h src\SumatraPDF.h src\TextSearch.h
 $(OS)\Menu.obj: src\TextSelection.h src\translations.h src\utils\BaseUtil.h
 $(OS)\Menu.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\StrUtil.h
 $(OS)\Menu.obj: src\utils\Vec.h src\utils\WinUtil.h src\WindowInfo.h
-$(OS)\MobiParse.obj: src\MobiParse.h src\utils\BaseUtil.h src\utils\StrUtil.h
+$(OS)\MobiParse.obj: src\MobiParse.h src\utils\BaseUtil.h src\utils\FileUtil.h
+$(OS)\MobiParse.obj: src\utils\StrUtil.h
 $(OS)\MuPDF_Exports.obj: mupdf\fitz\fitz.h
 $(OS)\Notifications.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
 $(OS)\Notifications.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
