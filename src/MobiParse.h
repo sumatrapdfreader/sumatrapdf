@@ -63,19 +63,25 @@ class MobiParse
     PdbRecordHeader *   recHeaders;
 
     bool                isMobi;
-
+    size_t              docRecCount;
+    size_t              docUncompressedSize;
+    int                 compressionType;
+    char *              doc;
+    
     char                recordBuf[kMaxRecordSize];
 
     MobiParse();
 
-    bool ParseHeader();
-    size_t GetRecordSize(size_t recNo);
-
-    bool ReadRecord(size_t recNo);
+    bool    ParseHeader();
+    size_t  GetRecordSize(size_t recNo);
+    bool    ReadRecord(size_t recNo);
+    bool    LoadDocRecordIntoBuffer(size_t recNo, char*& buf, size_t& bufLeft);
 
 public:
-    ~MobiParse();
     static MobiParse *ParseFile(const TCHAR *fileName);
+
+    ~MobiParse();
+    bool LoadDocument();
 };
 
 #endif
