@@ -30,16 +30,17 @@
 #define kPalmDocHeaderLen 16
 struct PalmDocHeader
 {
-    int16_t    compressionType;               // off 0
-    int16_t    reserved1;                     // off 2
-    int32_t    uncompressedDocSize;           // off 4
-    int16_t    recordsCount;                  // off 8
-    int16_t    maxUncompressedRecSize;        // off 10, usually 4096
+    int16_t    compressionType;
+    int16_t    reserved1;
+    int32_t    uncompressedDocSize;
+    int16_t    recordsCount;
+    int16_t    maxRecSize;     // usually (always?) 4096
+    // if it's palmdoc, we have currPos, if mobi, encrType/reserved2
     union {
-        int32_t    currPos;                   // off 12, if it's palmdoc
-        struct {  // if it's mobi
-          int16_t  encrType;                  // off 12
-          int16_t  reserved2;                 // off 14
+        int32_t    currPos;
+        struct {
+          int16_t  encrType;
+          int16_t  reserved2;
         } mobi;
     };
 };
@@ -66,42 +67,42 @@ enum MobiDocType {
 #define kMobiHeaderLen 232
 struct MobiHeader {
     char        id[4];
-    int32_t     hdrLen;   // including 4 id bytes
-    int32_t     type;     // MobiDocType
-    int32_t     textEncoding;
-    int32_t     uniqueId;
-    int32_t     mobiFormatVersion;
-    int32_t     ortographicIdxRec; // -1 if no ortographics index
-    int32_t     inflectionIdxRec;
-    int32_t     namesIdxRec;
-    int32_t     keysIdxRec;
-    int32_t     extraIdx0Rec;
-    int32_t     extraIdx1Rec;
-    int32_t     extraIdx2Rec;
-    int32_t     extraIdx3Rec;
-    int32_t     extraIdx4Rec;
-    int32_t     extraIdx5Rec;
-    int32_t     firstNonBookRec;
-    int32_t     fullNameOffset; // offset in record 0
-    int32_t     fullNameLen;
+    uint32_t     hdrLen;   // including 4 id bytes
+    uint32_t     type;     // MobiDocType
+    uint32_t     textEncoding;
+    uint32_t     uniqueId;
+    uint32_t     mobiFormatVersion;
+    uint32_t     ortographicIdxRec; // -1 if no ortographics index
+    uint32_t     inflectionIdxRec;
+    uint32_t     namesIdxRec;
+    uint32_t     keysIdxRec;
+    uint32_t     extraIdx0Rec;
+    uint32_t     extraIdx1Rec;
+    uint32_t     extraIdx2Rec;
+    uint32_t     extraIdx3Rec;
+    uint32_t     extraIdx4Rec;
+    uint32_t     extraIdx5Rec;
+    uint32_t     firstNonBookRec;
+    uint32_t     fullNameOffset; // offset in record 0
+    uint32_t     fullNameLen;
     // Low byte is main language e.g. 09 = English, 
     // next byte is dialect, 08 = British, 04 = US. 
     // Thus US English is 1033, UK English is 2057
-    int32_t     locale;
-    int32_t     inputDictLanguage;
-    int32_t     outputDictLanguage;
-    int32_t     minRequiredMobiFormatVersion;
-    int32_t     firstImageRec;
-    int32_t     firstHuffmanRec;
-    int32_t     huffmanRecCount;
-    int32_t     huffmanTableOffset;
-    int32_t     huffmanTableLen;
-    int32_t     exhtFlags;  // bitfield. if bit 6 (0x40) is set => there's an EXTH record
+    uint32_t     locale;
+    uint32_t     inputDictLanguage;
+    uint32_t     outputDictLanguage;
+    uint32_t     minRequiredMobiFormatVersion;
+    uint32_t     imageFirstRec;
+    uint32_t     huffmanFirstRec;
+    uint32_t     huffmanRecCount;
+    uint32_t     huffmanTableOffset;
+    uint32_t     huffmanTableLen;
+    uint32_t     exhtFlags;  // bitfield. if bit 6 (0x40) is set => there's an EXTH record
     char        reserved1[32];
-    int32_t     drmOffset; // -1 if no drm info
-    int32_t     drmEntriesCount; // -1 if no drm
-    int32_t     drmSize;
-    int32_t     drmFlags;
+    uint32_t     drmOffset; // -1 if no drm info
+    uint32_t     drmEntriesCount; // -1 if no drm
+    uint32_t     drmSize;
+    uint32_t     drmFlags;
     char        reserved2[62];
     // A set of binary flags, some of which indicate extra data at the end of each text block.
     // This only seems to be valid for Mobipocket format version 5 and 6 (and higher?), when
@@ -125,6 +126,11 @@ static void SwapU16(uint16_t& i)
 
 // change big-endian int32 to little-endian (our native format)
 static void SwapI32(int32_t& i)
+{
+    i = BEtoHl(i);
+}
+
+static void SwapU32(uint32_t& i)
 {
     i = BEtoHl(i);
 }
@@ -187,8 +193,23 @@ static size_t PalmdocUncompress(uint8_t *src, size_t srcLen, uint8_t *dst, size_
     return dst - dstOrig;
 }
 
+#define kHuffHeaderLen 24
+struct HuffHeader
+{
+    char         id[4];           // “HUFF”
+    uint32_t     hdrLen;          // should be 24
+    uint32_t     cacheOffset;     // should be 24 as well
+    uint32_t     baseTableOffset; // 1024
+    char         unknown[8];
+};
+
+STATIC_ASSERT(kHuffHeaderLen == sizeof(HuffHeader), validHuffHeader);
+
 class HuffDicDecompressor 
 {
+    uint8_t *   huffData;
+    size_t      huffDataLen;
+
 public:
     HuffDicDecompressor();
     ~HuffDicDecompressor();
@@ -206,6 +227,20 @@ HuffDicDecompressor::~HuffDicDecompressor()
 
 bool HuffDicDecompressor::SetHuffData(uint8_t *huffData, size_t huffDataLen)
 {
+    assert(huffDataLen > kHuffHeaderLen);
+    if (huffDataLen < kHuffHeaderLen)
+        return false;
+    HuffHeader *huffHdr = (HuffHeader*)huffData;
+    SwapU32(huffHdr->hdrLen);
+    SwapU32(huffHdr->cacheOffset);
+    SwapU32(huffHdr->baseTableOffset);
+
+    if (!str::EqN("HUFF", huffHdr->id, 4))
+        return false;
+    assert(huffHdr->hdrLen == kHuffHeaderLen);
+    if (huffHdr->hdrLen != kHuffHeaderLen)
+        return false;
+    // TODO: finish me
     return false;
 }
 
@@ -234,7 +269,8 @@ static bool IsValidCompression(int comprType)
 MobiParse::MobiParse() : 
     fileName(NULL), fileHandle(0), recHeaders(NULL), isMobi(false),
     docRecCount(0), compressionType(0), docUncompressedSize(0),
-    multibyte(false), trailersCount(0)
+    multibyte(false), trailersCount(0), bufDynamic(NULL), bufDynamicSize(0),
+    huffDic(NULL)
 {
 }
 
@@ -243,6 +279,8 @@ MobiParse::~MobiParse()
     CloseHandle(fileHandle);
     free(fileName);
     free(recHeaders);
+    free(bufDynamic);
+    delete huffDic;
 }
 
 bool MobiParse::ParseHeader()
@@ -281,7 +319,7 @@ bool MobiParse::ParseHeader()
     }
     size_t fileSize = file::GetSize(fileName);
     recHeaders[pdbHeader.numRecords].offset = fileSize;
-    // validate offset field
+    // validate offsets
     for (int i = 0; i < pdbHeader.numRecords; i++) {
         if (recHeaders[i + 1].offset < recHeaders[i].offset) {
             l("invalid offset field\n");
@@ -291,13 +329,14 @@ bool MobiParse::ParseHeader()
         // but it's not true for mobi files, so we don't validate that
     }
 
-    if (!ReadRecord(0)) {
+    size_t recLeft;
+    char *buf = ReadRecord(0, recLeft);
+    if (NULL == buf) {
         l("failed to read record\n");
         return false;
     }
 
-    char *currRecPos = recordBuf;
-    size_t recLeft = GetRecordSize(0);
+    char *currRecPos = buf;
     PalmDocHeader *palmDocHdr = (PalmDocHeader*)currRecPos;
     currRecPos += sizeof(PalmDocHeader);
     recLeft -= sizeof(PalmDocHeader);
@@ -308,10 +347,6 @@ bool MobiParse::ParseHeader()
     //SwapI16(palmDocHdr->maxUncompressedRecSize);
     if (!IsValidCompression(palmDocHdr->compressionType)) {
         l("unknown compression type\n");
-        return false;
-    }
-    if (palmDocHdr->compressionType == COMPRESSION_HUFF) {
-        l("huff compression not supported yet\n");
         return false;
     }
     if (isMobi) {
@@ -338,21 +373,21 @@ bool MobiParse::ParseHeader()
         l("MobiHeader.id is not 'MOBI'\n");
         return false;
     }
-    SwapI32(mobiHdr->hdrLen);
-    SwapI32(mobiHdr->type);
-    SwapI32(mobiHdr->textEncoding);
-    SwapI32(mobiHdr->mobiFormatVersion);
-    SwapI32(mobiHdr->firstNonBookRec);
-    SwapI32(mobiHdr->fullNameOffset);
-    SwapI32(mobiHdr->fullNameLen);
-    SwapI32(mobiHdr->locale);
-    SwapI32(mobiHdr->minRequiredMobiFormatVersion);
-    SwapI32(mobiHdr->firstImageRec);
-    SwapI32(mobiHdr->firstHuffmanRec);
-    SwapI32(mobiHdr->huffmanRecCount);
-    SwapI32(mobiHdr->huffmanTableOffset);
-    SwapI32(mobiHdr->huffmanTableLen);
-    SwapI32(mobiHdr->exhtFlags);
+    SwapU32(mobiHdr->hdrLen);
+    SwapU32(mobiHdr->type);
+    SwapU32(mobiHdr->textEncoding);
+    SwapU32(mobiHdr->mobiFormatVersion);
+    SwapU32(mobiHdr->firstNonBookRec);
+    SwapU32(mobiHdr->fullNameOffset);
+    SwapU32(mobiHdr->fullNameLen);
+    SwapU32(mobiHdr->locale);
+    SwapU32(mobiHdr->minRequiredMobiFormatVersion);
+    SwapU32(mobiHdr->imageFirstRec);
+    SwapU32(mobiHdr->huffmanFirstRec);
+    SwapU32(mobiHdr->huffmanRecCount);
+    SwapU32(mobiHdr->huffmanTableOffset);
+    SwapU32(mobiHdr->huffmanTableLen);
+    SwapU32(mobiHdr->exhtFlags);
 
     size_t hdrLen = mobiHdr->hdrLen;
     if (hdrLen > recLeft) {
@@ -374,6 +409,25 @@ bool MobiParse::ParseHeader()
         }
     }
 
+    if (palmDocHdr->compressionType == COMPRESSION_HUFF) {
+        assert(isMobi);
+        size_t recSize;
+        char *recData = ReadRecord(mobiHdr->huffmanFirstRec, recSize);
+        if (!recData)
+            return false;
+        assert(NULL == huffDic);
+        huffDic = new HuffDicDecompressor();
+        if (!huffDic->SetHuffData((uint8_t*)recData, recSize))
+            return false;
+        for (size_t i = 1; i < mobiHdr->huffmanRecCount; i++) {
+            char *recData = ReadRecord(mobiHdr->huffmanFirstRec + i, recSize);
+            if (!recData)
+                return false;
+            if (!huffDic->AddCdicData((uint8_t*)recData, recSize))
+                return false;
+        }
+    }
+
     return true;
 }
 
@@ -383,21 +437,36 @@ size_t MobiParse::GetRecordSize(size_t recNo)
     return size;
 }
 
-// read a record into recordBuf. Return false if error
-bool MobiParse::ReadRecord(size_t recNo)
+// returns NULL if error (failed to allocated)
+char *MobiParse::GetBufForRecordData(size_t size)
+{
+    if (size <= sizeof(bufStatic))
+        return bufStatic;
+    if (size <= bufDynamicSize)
+        return bufDynamic;
+    free(bufDynamic);
+    bufDynamic = (char*)malloc(size);
+    bufDynamicSize = size;
+    return bufDynamic;
+}
+
+// read a record and return it's data and size. Return NULL if error
+char* MobiParse::ReadRecord(size_t recNo, size_t& sizeOut)
 {
     size_t off = recHeaders[recNo].offset;
     DWORD toRead = GetRecordSize(recNo);
-    // TODO: if toRead > sizeof(recordBuf), allocate buffer in memory
-    assert(toRead <= sizeof(recordBuf));
+    sizeOut = toRead;
+    char *buf = GetBufForRecordData(toRead);
+    if (NULL == buf)
+        return NULL;
     DWORD bytesRead;
     DWORD res = SetFilePointer(fileHandle, off, NULL, FILE_BEGIN);
     if (INVALID_SET_FILE_POINTER == res)
-        return false;
-    BOOL ok = ReadFile(fileHandle, (void*)recordBuf, toRead, &bytesRead, NULL);
+        return NULL;
+    BOOL ok = ReadFile(fileHandle, (void*)buf, toRead, &bytesRead, NULL);
     if (!ok || (toRead != bytesRead))
-        return false;
-    return true;
+        return NULL;
+    return buf;
 }
 
 // each record can have extra data at the end, which we must discard
@@ -432,19 +501,20 @@ static size_t ExtraDataSize(uint8_t *recData, size_t recLen, size_t trailersCoun
 // Returns false if error.
 bool MobiParse::LoadDocRecordIntoBuffer(size_t recNo, str::Str<char>& strOut)
 {
-    if (!ReadRecord(recNo))
+    size_t recSize;
+    char *recData = ReadRecord(recNo, recSize);
+    if (NULL == recData)
         return false;
-    size_t recSize = GetRecordSize(recNo);
-    size_t extraSize = ExtraDataSize((uint8_t*)recordBuf, recSize, trailersCount, multibyte);
+    size_t extraSize = ExtraDataSize((uint8_t*)recData, recSize, trailersCount, multibyte);
     recSize -= extraSize;
     if (COMPRESSION_NONE == compressionType) {
-        strOut.Append(recordBuf, recSize);
+        strOut.Append(recData, recSize);
         return true;
     }
 
     if (COMPRESSION_PALM == compressionType) {
         char buf[6000]; // should be enough to decompress any record
-        size_t uncompressedSize = PalmdocUncompress((uint8_t*)recordBuf, recSize, (uint8_t*)buf, sizeof(buf));
+        size_t uncompressedSize = PalmdocUncompress((uint8_t*)recData, recSize, (uint8_t*)buf, sizeof(buf));
         if (-1 == uncompressedSize) {
             l("PalmDoc decompression failed\n");
             return false;

@@ -9,6 +9,8 @@
 #include "BaseUtil.h"
 #include "Vec.h"
 
+class HuffDicDecompressor;
+
 // http://en.wikipedia.org/wiki/PDB_(Palm_OS)
 #define kDBNameLength    32
 #define kPdbHeaderLen    78
@@ -72,13 +74,19 @@ class MobiParse
     bool                multibyte;
     size_t              trailersCount;
 
-    char                recordBuf[kMaxRecordSize];
+    // we use bufStatic if record fits in it, bufDynamic otherwise
+    char                bufStatic[kMaxRecordSize];
+    char *              bufDynamic;
+    size_t              bufDynamicSize;
+
+    HuffDicDecompressor *huffDic;
 
     MobiParse();
 
     bool    ParseHeader();
+    char *  GetBufForRecordData(size_t size);
     size_t  GetRecordSize(size_t recNo);
-    bool    ReadRecord(size_t recNo);
+    char*   ReadRecord(size_t recNo, size_t& sizeOut);
     bool    LoadDocRecordIntoBuffer(size_t recNo, str::Str<char>& strOut);
 
 public:
