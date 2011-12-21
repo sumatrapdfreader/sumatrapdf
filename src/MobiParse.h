@@ -4,8 +4,10 @@
 #ifndef MobiParse_h
 #define MobiParse_h
 
-#include "BaseUtil.h"
 #include <stdint.h>
+
+#include "BaseUtil.h"
+#include "Vec.h"
 
 // http://en.wikipedia.org/wiki/PDB_(Palm_OS)
 #define kDBNameLength    32
@@ -64,10 +66,12 @@ class MobiParse
 
     bool                isMobi;
     size_t              docRecCount;
-    size_t              docUncompressedSize;
     int                 compressionType;
-    char *              doc;
-    
+    size_t              docUncompressedSize;
+    str::Str<char>      doc;
+    bool                multibyte;
+    size_t              trailersCount;
+
     char                recordBuf[kMaxRecordSize];
 
     MobiParse();
@@ -75,7 +79,7 @@ class MobiParse
     bool    ParseHeader();
     size_t  GetRecordSize(size_t recNo);
     bool    ReadRecord(size_t recNo);
-    bool    LoadDocRecordIntoBuffer(size_t recNo, char*& buf, size_t& bufLeft);
+    bool    LoadDocRecordIntoBuffer(size_t recNo, str::Str<char>& strOut);
 
 public:
     static MobiParse *ParseFile(const TCHAR *fileName);

@@ -78,6 +78,7 @@
     <ClInclude Include="src\MobiParse.h" />
     <ClInclude Include="src\utils\DirIter.h" />
     <ClInclude Include="src\utils\FileUtil.h" />
+    <ClInclude Include="src\utils\Vec.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
