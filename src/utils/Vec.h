@@ -36,7 +36,9 @@ protected:
         if (needed > newCap)
             newCap = needed;
 
-        if (newCap + pad >= INT_MAX / sizeof(T)) abort();
+        if (newCap + pad >= INT_MAX / sizeof(T))
+            CrashMe();
+
         T * newEls = SAZA(T, newCap + pad);
         memcpy(newEls, els, len * sizeof(T));
         FreeEls();
@@ -52,7 +54,7 @@ protected:
             T* dst = els + idx + count;
             memmove(dst, src, (len - idx) * sizeof(T));
         }
-        LenIncrease(count);
+        IncreaseLen(count);
         return res;
     }
 
@@ -67,6 +69,7 @@ public:
         Reset();
         EnsureCap(initCap);
     }
+
     ~Vec() {
         FreeEls();
     }
@@ -79,6 +82,7 @@ public:
         // use memcpy, as Vec only supports POD types
         memcpy(els, orig.els, sizeof(T) * (len = orig.len));
     }
+
     Vec& operator=(const Vec& that) {
         if (this != &that) {
             Reset();
@@ -99,7 +103,7 @@ public:
 
     // ensures empty space at the end of the list where items can
     // be appended through ReadFile or memcpy (don't forget to call
-    // LenIncrease once you know how many items have been added)
+    // IncreaseLen once you know how many items have been added)
     // and returns a pointer to the first empty spot
     // Note: use AppendBlanks if you know the number of items in advance
     T *EnsureEndPadding(size_t count) {
@@ -107,14 +111,14 @@ public:
         return &els[len];
     }
 
-    void LenIncrease(size_t count) {
+    void IncreaseLen(size_t count) {
         len += count;
     }
 
+    // use &At() if you need a pointer to the element (e.g. if T is a struct)
     T& At(size_t idx) const {
         return els[idx];
     }
-    // use &At() if you need a pointer to the element (e.g. if T is a struct)
 
     size_t Count() const {
         return len;
@@ -137,6 +141,8 @@ public:
         memcpy(dst, src, count * sizeof(T));
     }
 
+    // TODO: bad name, it doesn't append anything; AllocateAtEnd()?
+    // like EnsureEndPadding() but also increases the length
     T* AppendBlanks(size_t count) {
         return MakeSpaceAt(len, count);
     }

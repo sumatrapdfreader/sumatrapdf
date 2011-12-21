@@ -49,7 +49,7 @@ static void CustomizeTocInfoTip(LPNMTVGETINFOTIP nmit)
         item.pszText = infotip.Get();
         item.cchTextMax = INFOTIPSIZE;
         TreeView_GetItem(hTV, &item);
-        infotip.LenIncrease(str::Len(item.pszText));
+        infotip.IncreaseLen(str::Len(item.pszText));
         infotip.Append(_T("\r\n"));
     }
 

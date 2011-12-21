@@ -31,7 +31,7 @@ DWORD HttpGet(const TCHAR *url, str::Str<char> *dataOut)
         char *buf = dataOut->EnsureEndPadding(1024);
         if (!InternetReadFile(hFile, buf, 1024, &dwRead))
             goto Error;
-        dataOut->LenIncrease(dwRead);
+        dataOut->IncreaseLen(dwRead);
     } while (dwRead > 0);
 
 Exit:
@@ -150,7 +150,7 @@ bool HttpPost(const TCHAR *server, const TCHAR *url, str::Str<char> *headers, st
         char *buf = resp.EnsureEndPadding(1024);
         if (!InternetReadFile(hReq, buf, 1024, &dwRead))
             goto Exit;
-        resp.LenIncrease(dwRead);
+        resp.IncreaseLen(dwRead);
     } while (dwRead > 0);
 
 #if 0

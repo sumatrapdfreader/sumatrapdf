@@ -1106,17 +1106,6 @@ static void RefreshUpdatedFiles() {
 }
 #endif
 
-// for testing only
-static void CrashMe()
-{
-#if 1
-    char *p = NULL;
-    *p = 0;
-#else
-    SubmitCrashInfo();
-#endif
-}
-
 WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, bool forceReuse, bool suppressPwdUI)
 {
     if (gCrashOnOpen)
