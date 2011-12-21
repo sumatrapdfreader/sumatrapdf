@@ -187,6 +187,33 @@ static size_t PalmdocUncompress(uint8_t *src, size_t srcLen, uint8_t *dst, size_
     return dst - dstOrig;
 }
 
+class HuffDicDecompressor 
+{
+public:
+    HuffDicDecompressor();
+    ~HuffDicDecompressor();
+    bool SetHuffData(uint8_t *huffData, size_t huffDataLen);
+    bool AddCdicData(uint8_t *cdicData, size_t cdicDataLen);
+};
+
+HuffDicDecompressor::HuffDicDecompressor()
+{
+}
+
+HuffDicDecompressor::~HuffDicDecompressor()
+{
+}
+
+bool HuffDicDecompressor::SetHuffData(uint8_t *huffData, size_t huffDataLen)
+{
+    return false;
+}
+
+bool HuffDicDecompressor::AddCdicData(uint8_t *cdicData, size_t cdicDataLen)
+{
+    return false;
+}
+
 static bool IsMobiPdb(PdbHeader *pdbHdr)
 {
     return str::EqN(pdbHdr->type, MOBI_TYPE_CREATOR, 8);
