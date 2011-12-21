@@ -33,7 +33,10 @@ static void testmobifile(TCHAR *path)
 
 static bool IsMobiFile(TCHAR *f)
 {
-    return str::EndsWithI(f, _T(".mobi"));
+    // TODO: also .prc and .pdb ?
+    return str::EndsWithI(f, _T(".mobi")) ||
+           str::EndsWithI(f, _T(".azw")) ||
+           str::EndsWithI(f, _T(".azw1"));
 }
 
 static void mobitestdir(TCHAR *dir)
