@@ -65,6 +65,7 @@ class MobiParse
 
     PdbHeader           pdbHeader;
     PdbRecordHeader *   recHeaders;
+    char *              firstRecData;
 
     bool                isMobi;
     size_t              docRecCount;

@@ -207,8 +207,14 @@ STATIC_ASSERT(kHuffHeaderLen == sizeof(HuffHeader), validHuffHeader);
 
 class HuffDicDecompressor 
 {
-    uint8_t *   huffData;
-    size_t      huffDataLen;
+    // underlying data for cache and baseTable
+    // (an optimization to only do one allocation instead of two)
+    uint8_t *   huffmanData;
+
+    // always 1024 bytes, 4 bytes for each of 256 byte values
+    uint32_t *  cache;
+    uint8_t *   baseTable;
+    size_t      baseTableLen;
 
 public:
     HuffDicDecompressor();
@@ -217,12 +223,14 @@ public:
     bool AddCdicData(uint8_t *cdicData, size_t cdicDataLen);
 };
 
-HuffDicDecompressor::HuffDicDecompressor()
+HuffDicDecompressor::HuffDicDecompressor() :
+    huffmanData(NULL), cache(NULL), baseTable(NULL)
 {
 }
 
 HuffDicDecompressor::~HuffDicDecompressor()
 {
+    free(huffmanData);
 }
 
 bool HuffDicDecompressor::SetHuffData(uint8_t *huffData, size_t huffDataLen)
@@ -240,8 +248,19 @@ bool HuffDicDecompressor::SetHuffData(uint8_t *huffData, size_t huffDataLen)
     assert(huffHdr->hdrLen == kHuffHeaderLen);
     if (huffHdr->hdrLen != kHuffHeaderLen)
         return false;
-    // TODO: finish me
-    return false;
+    if (huffHdr->baseTableOffset != (huffHdr->cacheOffset + 1024))
+        return false;
+    if (huffHdr->baseTableOffset >= huffDataLen)
+        return false;
+    // could skip huffData's HuffHeader, by why complicate code?
+    assert(NULL == huffmanData);
+    huffmanData = (uint8_t*)memdup(huffData, huffDataLen);
+    if (!huffmanData)
+        return false;
+    cache = (uint32_t*)(huffmanData + huffHdr->cacheOffset);
+    baseTable = (uint8_t*)(huffmanData + huffHdr->baseTableOffset);
+    baseTableLen = huffDataLen - huffHdr->baseTableOffset;
+    return true;
 }
 
 bool HuffDicDecompressor::AddCdicData(uint8_t *cdicData, size_t cdicDataLen)
@@ -267,7 +286,7 @@ static bool IsValidCompression(int comprType)
 }
 
 MobiParse::MobiParse() : 
-    fileName(NULL), fileHandle(0), recHeaders(NULL), isMobi(false),
+    fileName(NULL), fileHandle(0), recHeaders(NULL), firstRecData(NULL), isMobi(false),
     docRecCount(0), compressionType(0), docUncompressedSize(0),
     multibyte(false), trailersCount(0), bufDynamic(NULL), bufDynamicSize(0),
     huffDic(NULL)
@@ -278,6 +297,7 @@ MobiParse::~MobiParse()
 {
     CloseHandle(fileHandle);
     free(fileName);
+    free(firstRecData);
     free(recHeaders);
     free(bufDynamic);
     delete huffDic;
@@ -336,7 +356,11 @@ bool MobiParse::ParseHeader()
         return false;
     }
 
-    char *currRecPos = buf;
+    assert(NULL == firstRecData);
+    firstRecData = (char*)memdup(buf, recLeft);
+    if (!firstRecData)
+        return false;
+    char *currRecPos = firstRecData;
     PalmDocHeader *palmDocHdr = (PalmDocHeader*)currRecPos;
     currRecPos += sizeof(PalmDocHeader);
     recLeft -= sizeof(PalmDocHeader);
