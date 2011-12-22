@@ -419,6 +419,21 @@ RectI GetFullscreenRect(HWND hwnd)
     return RectI(0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
 }
 
+static BOOL CALLBACK GetMonitorRectProc(HMONITOR hMonitor, HDC hdc, LPRECT rcMonitor, LPARAM data)
+{
+    RectI *rcAll = (RectI *)data;
+    *rcAll = rcAll->Union(RectI::FromRECT(*rcMonitor));
+    return TRUE;
+}
+
+// returns the smallest rectangle that covers the entire virtual screen (all monitors)
+RectI GetVirtualScreenRect()
+{
+    RectI result(0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+    EnumDisplayMonitors(NULL, NULL, GetMonitorRectProc, (LPARAM)&result);
+    return result;
+}
+
 void PaintRect(HDC hdc, RectI& rect)
 {
     MoveToEx(hdc, rect.x, rect.y, NULL);

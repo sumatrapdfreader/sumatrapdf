@@ -631,6 +631,12 @@ static void WinUtilTest()
         assert(stringSize == len && str::Eq(data, string));
         free(data);
     }
+
+    {
+        RectI oneScreen = GetFullscreenRect(NULL);
+        RectI allScreens = GetVirtualScreenRect();
+        assert(allScreens.Intersect(oneScreen) == oneScreen);
+    }
 }
 
 static void LogTest()

@@ -71,6 +71,7 @@ HFONT   GetSimpleFont(HDC hdc, TCHAR *fontName, int fontSize);
 
 RectI   ShiftRectToWorkArea(RectI rect, bool bFully=false);
 RectI   GetFullscreenRect(HWND hwnd);
+RectI   GetVirtualScreenRect();
 
 bool    LaunchFile(const TCHAR *path, const TCHAR *params=NULL, const TCHAR *verb=NULL, bool hidden=false);
 HANDLE  LaunchProcess(TCHAR *cmdLine, DWORD flags=0);

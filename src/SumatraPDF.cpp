@@ -2631,10 +2631,11 @@ static void FrameOnSize(WindowInfo* win, int dx, int dy)
         SetWindowPos(win->hwndCanvas, NULL, 0, rebBarDy, dx, dy - rebBarDy, SWP_NOZORDER);
 
     if (win->presentation || win->fullScreen) {
-        RectI rect = GetFullscreenRect(win->hwndFrame);
+        RectI fullscreen = GetFullscreenRect(win->hwndFrame);
+        WindowRect rect(win->hwndFrame);
         // Windows XP sometimes seems to change the window size on it's own
-        if (rect != WindowRect(win->hwndFrame))
-            MoveWindow(win->hwndFrame, rect);
+        if (rect != fullscreen && rect != GetVirtualScreenRect())
+            MoveWindow(win->hwndFrame, fullscreen);
     }
 }
 
