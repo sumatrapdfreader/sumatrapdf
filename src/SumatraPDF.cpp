@@ -3080,10 +3080,10 @@ static void FrameOnChar(WindowInfo& win, WPARAM key)
         OnMenuGoToPage(win);
         break;
     case 'j':
-        SendMessage(win.hwndCanvas, WM_VSCROLL, SB_LINEDOWN, 0);
+        FrameOnKeydown(&win, VK_DOWN, 0);
         break;
     case 'k':
-        SendMessage(win.hwndCanvas, WM_VSCROLL, SB_LINEUP, 0);
+        FrameOnKeydown(&win, VK_UP, 0);
         break;
     case 'n':
         win.dm->GoToNextPage(0);
