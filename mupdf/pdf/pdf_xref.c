@@ -785,8 +785,8 @@ pdf_open_xref_with_stream(pdf_xref **xrefp, fz_stream *file, char *password)
 	error = pdf_read_ocg(xref);
 	if (error)
 	{
-		pdf_free_xref(xref);
-		return fz_rethrow(error, "Broken Optional Content");
+		/* SumatraPDF: this is far from critical */
+		fz_warn("Ignoring broken Optional Content");
 	}
 
 	*xrefp = xref;
