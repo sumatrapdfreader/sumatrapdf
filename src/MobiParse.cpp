@@ -205,32 +205,65 @@ struct HuffHeader
 
 STATIC_ASSERT(kHuffHeaderLen == sizeof(HuffHeader), validHuffHeader);
 
+struct Dict1Entry {
+    uint32_t    codeLen;
+    uint32_t    term;
+    uint32_t    maxCode;
+};
+
+struct Dic2Entry {
+};
+
 class HuffDicDecompressor 
 {
     // underlying data for cache and baseTable
     // (an optimization to only do one allocation instead of two)
     uint8_t *   huffmanData;
 
-    // always 1024 bytes, 4 bytes for each of 256 byte values
-    uint32_t *  cache;
     uint8_t *   baseTable;
     size_t      baseTableLen;
+
+    Dict1Entry  dict1[256];
+    uint32_t    minCode;
+    uint32_t    maxCode;
+
+    Vec<Dic2Entry> dictionary;
 
 public:
     HuffDicDecompressor();
     ~HuffDicDecompressor();
     bool SetHuffData(uint8_t *huffData, size_t huffDataLen);
+    bool UnpackCacheData(uint32_t *cache);
     bool AddCdicData(uint8_t *cdicData, size_t cdicDataLen);
 };
 
 HuffDicDecompressor::HuffDicDecompressor() :
-    huffmanData(NULL), cache(NULL), baseTable(NULL)
+    huffmanData(NULL), baseTable(NULL)
 {
 }
 
 HuffDicDecompressor::~HuffDicDecompressor()
 {
     free(huffmanData);
+}
+
+// always 256 values in cache, caller ensures that
+bool HuffDicDecompressor::UnpackCacheData(uint32_t *cache)
+{
+    for (size_t i = 0; i < 256; i++) {
+        uint32_t v = cache[i];
+        SwapU32(v);
+        dict1[i].codeLen = v & 0x1f;
+        if (0 == dict1[i].codeLen)
+            return false;
+        dict1[i].term    = v & 0x80;
+        if ((dict1[i].codeLen <= 8) && (0 == dict1[i].term))
+            return false;
+        uint32_t maxCode = v >> 8;
+        maxCode = ((maxCode + 1) << (32 - dict1[i].codeLen)) - 1;
+        dict1[i].maxCode = maxCode;
+    }
+    return true;
 }
 
 bool HuffDicDecompressor::SetHuffData(uint8_t *huffData, size_t huffDataLen)
@@ -257,7 +290,9 @@ bool HuffDicDecompressor::SetHuffData(uint8_t *huffData, size_t huffDataLen)
     huffmanData = (uint8_t*)memdup(huffData, huffDataLen);
     if (!huffmanData)
         return false;
-    cache = (uint32_t*)(huffmanData + huffHdr->cacheOffset);
+    uint32_t *cache = (uint32_t*)(huffmanData + huffHdr->cacheOffset);
+    UnpackCacheData(cache);
+
     baseTable = (uint8_t*)(huffmanData + huffHdr->baseTableOffset);
     baseTableLen = huffDataLen - huffHdr->baseTableOffset;
     return true;
