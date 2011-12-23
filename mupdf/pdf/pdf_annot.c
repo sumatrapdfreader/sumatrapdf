@@ -335,7 +335,7 @@ pdf_create_annot(fz_context *ctx, fz_rect rect, fz_obj *base_obj, fz_buffer *con
 	pdf_xobject *form;
 	int rotate = fz_to_int(fz_dict_gets(fz_dict_gets(base_obj, "MK"), "R")); 
 
-	form = fz_malloc(ctx, sizeof(pdf_xobject));
+	form = fz_malloc_struct(ctx, pdf_xobject);
 	memset(form, 0, sizeof(pdf_xobject));
 	FZ_INIT_STORABLE(form, 1, pdf_free_xobject_imp);
 	form->matrix = fz_rotate(rotate);

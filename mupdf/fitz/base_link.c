@@ -37,8 +37,8 @@ fz_new_link(fz_context *ctx, fz_link_kind kind, fz_rect bbox, fz_link_dest dest,
 		fz_rethrow(ctx);
 	}
 	link->kind = kind;
-	link->rect = bbox;
 	link->dest = dest;
+	link->rect = bbox;
 	link->next = NULL;
 	/* SumatraPDF: provide access to the link object */
 	link->extra = extra ? fz_keep_obj(extra) : NULL;

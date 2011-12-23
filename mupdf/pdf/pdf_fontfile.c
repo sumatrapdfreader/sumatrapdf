@@ -528,7 +528,7 @@ parseTTCs(fz_context *ctx, char *path)
 			fz_throw(ctx, "fonterror : invalid version %x", BEtoHl(fontcollection.Version));
 
 		numFonts = BEtoHl(fontcollection.NumFonts);
-		offsettable = fz_calloc(ctx, numFonts, sizeof(ULONG));
+		offsettable = fz_malloc_array(ctx, numFonts, sizeof(ULONG));
 
 		safe_read(file, (char *)offsettable, numFonts * sizeof(ULONG));
 		for (i = 0; i < numFonts; i++)

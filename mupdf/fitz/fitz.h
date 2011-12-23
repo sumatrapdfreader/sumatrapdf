@@ -131,6 +131,7 @@ struct fz_error_context_s
 void fz_var_imp(void *);
 #define fz_var(var) fz_var_imp((void *)&(var))
 
+/* SumatraPDF: Note: never call return/continue/goto inside fz_try (and caution with break)! */
 #define fz_try(ctx) \
 	if (fz_push_try(ctx->error), \
 		!setjmp(ctx->error->stack[ctx->error->top].buffer)) \

@@ -188,9 +188,10 @@ pdf_load_builtin_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontname)
 		fz_try(ctx)
 		{
 			pdf_load_windows_font(ctx, fontdesc, fontname);
-			return;
 		}
 		fz_catch(ctx) { }
+		if (fontdesc->font)
+			return;
 #endif
 		fz_throw(ctx, "cannot find builtin font: '%s'", fontname);
 	}
@@ -231,20 +232,23 @@ pdf_load_substitute_cjk_font(fz_context *ctx, pdf_font_desc *fontdesc, int ros, 
 	fz_try(ctx)
 	{
 		pdf_load_similar_cjk_font(ctx, fontdesc, ros, serif);
-		fontdesc->font->ft_substitute = 1;
-		return;
 	}
-	fz_catch(ctx) { }
-#ifdef NOCJKFONT
-	fz_try(ctx)
+	fz_catch(ctx)
 	{
-		/* If no CJK fallback font is builtin, maybe one has been shipped separately */
-		pdf_load_windows_font(ctx, fontdesc, "DroidSansFallback");
+#ifdef NOCJKFONT
+		fz_try(ctx)
+		{
+			/* If no CJK fallback font is builtin, maybe one has been shipped separately */
+			pdf_load_windows_font(ctx, fontdesc, "DroidSansFallback");
+		}
+		fz_catch(ctx) { }
+#endif
+	}
+	if (fontdesc->font)
+	{
 		fontdesc->font->ft_substitute = 1;
 		return;
 	}
-	fz_catch(ctx) { }
-#endif
 #endif
 
 	data = pdf_find_substitute_cjk_font(ros, serif, &len);
@@ -270,12 +274,15 @@ pdf_load_system_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontname, c
 	fz_try(ctx)
 	{
 		pdf_load_windows_font(ctx, fontdesc, fontname);
+	}
+	fz_catch(ctx) { }
+	if (fontdesc->font)
+	{
 		/* TODO: this seems to be required at least for MS-Mincho - why? */
 		if (collection)
 			fontdesc->font->ft_substitute = 1;
 		return;
 	}
-	fz_catch(ctx) { }
 #endif
 
 	if (strstr(fontname, "Bold"))
@@ -1115,10 +1122,10 @@ pdf_load_font_descriptor(pdf_font_desc *fontdesc, pdf_xref *xref, fz_obj *dict, 
 				fz_try(ctx)
 				{
 					pdf_load_system_font(ctx, fontdesc, fontname + 7, collection, has_encoding);
-					goto font_successfully_loaded;
 				}
 				fz_catch(ctx) { }
 			}
+			if (!fontdesc->font)
 			if (origname != fontname)
 				pdf_load_builtin_font(ctx, fontdesc, fontname);
 			else
@@ -1134,7 +1141,6 @@ pdf_load_font_descriptor(pdf_font_desc *fontdesc, pdf_xref *xref, fz_obj *dict, 
 			pdf_load_system_font(ctx, fontdesc, fontname, collection, has_encoding);
 		/* RJW: "cannot load font descriptor (%d %d R)", fz_to_num(dict), fz_to_gen(dict) */
 	}
-font_successfully_loaded:
 
 	fz_strlcpy(fontdesc->font->name, fontname, sizeof fontdesc->font->name);
 

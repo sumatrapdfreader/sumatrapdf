@@ -21,7 +21,7 @@ fz_free_context(fz_context *ctx)
 
 	if (ctx->error)
 	{
-		// TODO: assert(ctx->error->top == -1);
+		assert(ctx->error->top == -1);
 		fz_free(ctx, ctx->error);
 		fz_free(ctx, ctx->warn);
 	}
