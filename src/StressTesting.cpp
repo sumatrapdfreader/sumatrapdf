@@ -416,6 +416,8 @@ bool StressTest::GoToNextFile()
 bool StressTest::OpenFile(const TCHAR *fileName)
 {
     bool reuse = rand() % 3 != 1;
+    _tprintf(_T("%s\n"), fileName);
+    fflush(stdout);
     WindowInfo *w = LoadDocument(fileName, NULL, true /* show */, reuse, true /* suppressPwdUI */);
     if (!w)
         return false;
