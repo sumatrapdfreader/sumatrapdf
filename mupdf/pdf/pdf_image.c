@@ -303,11 +303,12 @@ pdf_load_jpx_image(pdf_xref *xref, fz_obj *dict)
 {
 	fz_buffer *buf = NULL;
 	fz_colorspace *colorspace = NULL;
-	fz_pixmap *img;
+	fz_pixmap *img = NULL;
 	fz_obj *obj;
 	fz_context *ctx = xref->ctx;
 	int indexed = 0; /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1610 */
 
+	fz_var(img);
 	fz_var(buf);
 	fz_var(colorspace);
 

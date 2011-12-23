@@ -319,7 +319,7 @@ decodeplatformstring(fz_context *ctx, int platform, int enctype, char* source, i
 		{
 		case TT_MAC_ID_ROMAN:
 			if (sourcelen + 1 > destlen)
-                fz_throw(ctx, "fonterror : overlong fontname: %s", source);
+				fz_throw(ctx, "fonterror : overlong fontname: %s", source);
 			// TODO: Convert to UTF-8 from what encoding?
 			memcpy(dest, source, sourcelen);
 			dest[sourcelen] = 0;
@@ -698,7 +698,7 @@ pdf_load_windows_font(fz_context *ctx, pdf_font_desc *font, char *fontname)
 
 	fz_free(ctx, fontname);
 	if (!found)
-        fz_throw(ctx, "couldn't find system font '%s'", orig_name);
+		fz_throw(ctx, "couldn't find system font '%s'", orig_name);
 
 	if (getenv("MULOG"))
 		printf("pdf_load_windows_font: loading font from '%s'\n", found->fontpath);

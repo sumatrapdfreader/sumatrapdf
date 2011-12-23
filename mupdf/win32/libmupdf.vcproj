@@ -355,6 +355,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\fitz\base_link.c"
+				>
+			</File>
+			<File
 				RelativePath="..\fitz\base_memory.c"
 				>
 			</File>

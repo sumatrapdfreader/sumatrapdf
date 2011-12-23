@@ -551,23 +551,6 @@ inline TCHAR *FromPdf(fz_obj *obj)
     }
 }
 
-pdf_link *pdf_new_link(fz_context *ctx, fz_obj *dest, pdf_link_kind kind, fz_rect rect=fz_empty_rect)
-{
-    pdf_link *link = (pdf_link *)fz_malloc(ctx, sizeof(pdf_link));
-
-    link->dest = dest;
-    link->kind = kind;
-    link->rect = rect;
-    link->next = NULL;
-
-    return link;
-}
-
-static void pdf_free_link2(fz_context *ctx, void *data)
-{
-    pdf_free_link(ctx, (pdf_link *)data);
-}
-
 // Note: make sure to only call with xrefAccess
 fz_outline *pdf_loadattachments(pdf_xref *xref)
 {
@@ -587,8 +570,9 @@ fz_outline *pdf_loadattachments(pdf_xref *xref)
 
         node->title = fz_strdup(xref->ctx, fz_to_name(name));
         if (fz_is_name(type) && str::EqI(fz_to_name(type), "Filespec") || fz_is_string(dest)) {
-            node->data = pdf_new_link(xref->ctx, fz_keep_obj(dest), PDF_LINK_LAUNCH);
-            node->free_data = pdf_free_link2;
+            fz_link_dest ld;
+            ld.launch.file_spec = pdf_to_utf8(xref->ctx, fz_dict_getsa(dest, "UF", "F"));
+            node->link = fz_new_link(xref->ctx, FZ_LINK_LAUNCH, fz_empty_rect, ld, dest);
         }
     }
     fz_drop_obj(dict);
@@ -848,7 +832,7 @@ protected:
 
 class PdfLink : public PageElement, public PageDestination {
     CPdfEngine *engine;
-    pdf_link *link;
+    fz_link *link;
     int pageNo;
 
     fz_obj *dest() const;
@@ -856,7 +840,7 @@ class PdfLink : public PageElement, public PageDestination {
     TCHAR *FilespecToPath(fz_obj *filespec) const;
 
 public:
-    PdfLink(CPdfEngine *engine, pdf_link *link, int pageNo=-1) :
+    PdfLink(CPdfEngine *engine, fz_link *link, int pageNo=-1) :
         engine(engine), link(link), pageNo(pageNo) { }
 
     virtual PageElementType GetType() const { return Element_Link; }
@@ -1224,7 +1208,7 @@ PdfTocItem *CPdfEngine::BuildTocTree(fz_outline *entry, int& idCounter)
 
     for (; entry; entry = entry->next) {
         TCHAR *name = entry->title ? str::conv::FromUtf8(entry->title) : str::Dup(_T(""));
-        PdfTocItem *item = new PdfTocItem(name, PdfLink(this, (pdf_link *)entry->data));
+        PdfTocItem *item = new PdfTocItem(name, PdfLink(this, entry->link));
         item->open = entry->is_open;
         item->id = ++idCounter;
         item->pageNo = entry->page + 1;
@@ -1289,7 +1273,8 @@ PageDestination *CPdfEngine::GetNamedDest(const TCHAR *name)
     if (!fz_is_array(dest))
         return NULL;
 
-    pdf_link link = { PDF_LINK_GOTO, fz_empty_rect, dest, NULL };
+    fz_link_dest ld = { 0 };
+    fz_link link = { FZ_LINK_GOTO, fz_empty_rect, ld, NULL, dest };
     PdfLink tmp(this, &link);
 
     return new SimpleDest(tmp.GetDestPageNo(), tmp.GetDestRect());
@@ -1653,7 +1638,7 @@ PageElement *CPdfEngine::GetElementAtPos(int pageNo, PointD pt)
         return NULL;
 
     fz_point p = { (float)pt.x, (float)pt.y };
-    for (pdf_link *link = page->links; link; link = link->next)
+    for (fz_link *link = page->links; link; link = link->next)
         if (fz_is_pt_in_rect(link->rect, p))
             return new PdfLink(this, link, pageNo);
 
@@ -1686,8 +1671,9 @@ Vec<PageElement *> *CPdfEngine::GetElements(int pageNo)
     if (!page)
         return els;
 
-    for (pdf_link *link = page->links; link; link = link->next)
-        els->Append(new PdfLink(this, link, pageNo));
+    for (fz_link *link = page->links; link; link = link->next)
+        if (link->extra || link->kind == FZ_LINK_URI)
+            els->Append(new PdfLink(this, link, pageNo));
 
     if (page->annots) {
         ScopedCritSec scope(&xrefAccess);
@@ -1708,22 +1694,22 @@ Vec<PageElement *> *CPdfEngine::GetElements(int pageNo)
     return els;
 }
 
-static pdf_link *FixupPageLinks(pdf_link *root)
+static fz_link *FixupPageLinks(fz_link *root)
 {
     // Links in PDF documents are added from bottom-most to top-most,
     // i.e. links that appear later in the list should be preferred
     // to links appearing before. Since we search from the start of
     // the (single-linked) list, we have to reverse the order of links
     // (cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1303 )
-    pdf_link *newRoot = NULL;
+    fz_link *new_root = NULL;
     while (root) {
-        pdf_link *tmp = root->next;
-        root->next = newRoot;
-        newRoot = root;
+        fz_link *tmp = root->next;
+        root->next = new_root;
+        new_root = root;
         root = tmp;
 
         // there are PDFs that have x,y positions in reverse order, so fix them up
-        pdf_link *link = newRoot;
+        fz_link *link = new_root;
         if (link->rect.x0 > link->rect.x1)
             swap(link->rect.x0, link->rect.x1);
         if (link->rect.y0 > link->rect.y1)
@@ -1731,7 +1717,7 @@ static pdf_link *FixupPageLinks(pdf_link *root)
         assert(link->rect.x1 >= link->rect.x0);
         assert(link->rect.y1 >= link->rect.y0);
     }
-    return newRoot;
+    return new_root;
 }
 
 void CPdfEngine::LinkifyPageText(pdf_page *page)
@@ -1746,13 +1732,14 @@ void CPdfEngine::LinkifyPageText(pdf_page *page)
     LinkRectList *list = LinkifyText(pageText, coords);
     for (size_t i = 0; i < list->links.Count(); i++) {
         bool overlaps = false;
-        for (pdf_link *next = page->links; next && !overlaps; next = next->next)
+        for (fz_link *next = page->links; next && !overlaps; next = next->next)
             overlaps = fz_significantly_overlap(next->rect, list->coords.At(i));
         if (!overlaps) {
             ScopedMem<char> uri(str::conv::ToUtf8(list->links.At(i)));
             if (!uri) continue;
-            pdf_link *link = pdf_new_link(ctx, fz_new_string(ctx, uri, (int)str::Len(uri)),
-                                          PDF_LINK_URI, list->coords.At(i));
+            fz_link_dest ld;
+            ld.uri.uri = fz_strdup(ctx, uri);
+            fz_link *link = fz_new_link(ctx, FZ_LINK_URI, list->coords.At(i), ld, NULL);
             link->next = page->links;
             page->links = link;
         }
@@ -1771,7 +1758,9 @@ void CPdfEngine::LinkifyPageAttachments(pdf_page *page)
             fz_obj *file = fz_dict_gets(annot->obj, "FS");
             fz_rect rect = pdf_to_rect(ctx, fz_dict_gets(annot->obj, "Rect"));
             if (file && fz_dict_gets(file, "EF") && !fz_is_empty_rect(rect)) {
-                pdf_link *link = pdf_new_link(ctx, fz_keep_obj(file), PDF_LINK_LAUNCH, rect);
+                fz_link_dest ld;
+                ld.launch.file_spec = pdf_to_utf8(ctx, fz_dict_getsa(file, "UF", "F"));
+                fz_link *link = fz_new_link(ctx, FZ_LINK_LAUNCH, rect, ld, file);
                 link->next = page->links;
                 page->links = link;
             }
@@ -2018,6 +2007,8 @@ TCHAR *PdfLink::GetValue() const
 {
     if (!link || !engine)
         return NULL;
+    if (!link->extra && link->kind != FZ_LINK_URI)
+        return NULL;
 
     ScopedCritSec scope(&engine->xrefAccess);
 
@@ -2025,8 +2016,11 @@ TCHAR *PdfLink::GetValue() const
     fz_obj *obj;
 
     switch (link->kind) {
-    case PDF_LINK_URI:
-        path = str::conv::FromPdf(link->dest);
+    case FZ_LINK_URI:
+        if (link->extra)
+            path = str::conv::FromPdf(link->extra);
+        else
+            path = str::conv::FromUtf8(link->dest.uri.uri);
         if (IsRelativeURI(path)) {
             obj = fz_dict_gets(engine->_xref->trailer, "Root");
             obj = fz_dict_gets(fz_dict_gets(obj, "URI"), "Base");
@@ -2038,19 +2032,17 @@ TCHAR *PdfLink::GetValue() const
             }
         }
         break;
-    case PDF_LINK_LAUNCH:
+    case FZ_LINK_LAUNCH:
         // note: we (intentionally) don't support the /Win specific Launch parameters
-        path = FilespecToPath(link->dest);
+        path = FilespecToPath(link->extra);
         if (path && str::Eq(GetDestType(), "LaunchEmbedded") && str::EndsWithI(path, _T(".pdf"))) {
             free(path);
             obj = dest();
             path = str::Format(_T("%s:%d:%d"), engine->FileName(), fz_to_num(obj), fz_to_gen(obj));
         }
         break;
-    case PDF_LINK_ACTION:
-        obj = fz_dict_gets(link->dest, "S");
-        if (fz_is_name(obj) && str::Eq(fz_to_name(obj), "GoToR"))
-            path = FilespecToPath(fz_dict_gets(link->dest, "F"));
+    case FZ_LINK_GOTOR:
+        path = FilespecToPath(fz_dict_gets(link->extra, "F"));
         break;
     }
 
@@ -2065,19 +2057,15 @@ const char *PdfLink::GetDestType() const
     ScopedCritSec scope(&engine->xrefAccess);
 
     switch (link->kind) {
-    case PDF_LINK_URI: return "LaunchURL";
-    case PDF_LINK_GOTO: return "ScrollTo";
-    case PDF_LINK_NAMED: return fz_to_name(link->dest);
-    case PDF_LINK_LAUNCH:
-        if (fz_dict_gets(link->dest, "EF"))
+    case FZ_LINK_URI: return "LaunchURL";
+    case FZ_LINK_GOTO: return "ScrollTo";
+    case FZ_LINK_NAMED: return fz_to_name(link->extra);
+    case FZ_LINK_LAUNCH:
+        if (link->extra && fz_dict_gets(link->extra, "EF"))
             return "LaunchEmbedded";
         return "LaunchFile";
-    case PDF_LINK_ACTION:
-        if (str::Eq(fz_to_name(fz_dict_gets(link->dest, "S")), "GoToR"))
-            return "ScrollToEx";
-        return NULL; // unsupported action
-    default:
-        return NULL;
+    case FZ_LINK_GOTOR: return "ScrollToEx";
+    default: return NULL; // unsupported action
     }
 }
 
@@ -2087,18 +2075,18 @@ fz_obj *PdfLink::dest() const
 
     if (!link)
         return NULL;
-    if (PDF_LINK_ACTION == link->kind && str::Eq(GetDestType(), "ScrollToEx"))
-        return fz_dict_gets(link->dest, "D");
-    if (PDF_LINK_LAUNCH == link->kind && str::Eq(GetDestType(), "LaunchEmbedded"))
-        return GetDosPath(fz_dict_gets(link->dest, "EF"));
-    return link->dest;
+    if (FZ_LINK_GOTOR == link->kind)
+        return fz_dict_gets(link->extra, "D");
+    if (FZ_LINK_LAUNCH == link->kind && str::Eq(GetDestType(), "LaunchEmbedded"))
+        return GetDosPath(fz_dict_gets(link->extra, "EF"));
+    return link->extra;
 }
 
 int PdfLink::GetDestPageNo() const
 {
     if (!link || !engine)
         return 0;
-    return engine->FindPageNo(link->dest);
+    return engine->FindPageNo(link->extra);
 }
 
 RectD PdfLink::GetDestRect() const
@@ -2210,7 +2198,7 @@ public:
 
     virtual const TCHAR *FileName() const { return _fileName; };
     virtual int PageCount() const {
-        return _ctx ? xps_count_pages(_ctx) : 0;
+        return _doc ? xps_count_pages(_doc) : 0;
     }
 
     virtual RectD PageMediabox(int pageNo);
@@ -2251,10 +2239,10 @@ public:
 protected:
     const TCHAR *_fileName;
 
-    // make sure to never ask for _pagesAccess in an _ctxAccess
+    // make sure to never ask for _pagesAccess in an _docAccess
     // protected critical section in order to avoid deadlocks
-    CRITICAL_SECTION _ctxAccess;
-    xps_document *  _ctx;
+    CRITICAL_SECTION _docAccess;
+    xps_document *  _doc;
     fz_context *    ctx;
 
     CRITICAL_SECTION _pagesAccess;
@@ -2280,7 +2268,7 @@ protected:
                                     RectI **coords_out=NULL, bool cacheRun=false);
 
     XpsPageRun    * _runCache[MAX_PAGE_RUN_CACHE];
-    XpsPageRun    * GetPageRun(xps_page *page, bool tryOnly=false, xps_anchor *extract=NULL);
+    XpsPageRun    * GetPageRun(xps_page *page, bool tryOnly=false, fz_link *extract=NULL);
     void            RunPage(xps_page *page, fz_device *dev, fz_matrix ctm,
                             fz_bbox clipbox=fz_infinite_bbox, bool cacheRun=true);
     void            DropPageRun(XpsPageRun *run, bool forceRemove=false);
@@ -2292,7 +2280,7 @@ protected:
 
     RectD         * _mediaboxes;
     fz_outline    * _outline;
-    xps_anchor   ** _links;
+    fz_link      ** _links;
     fz_obj        * _info;
     fz_glyph_cache* _drawcache;
     fz_rect      ** imageRects;
@@ -2307,7 +2295,7 @@ static bool IsUriTarget(const char *target)
 
 class XpsLink : public PageElement, public PageDestination {
     CXpsEngine *engine;
-    const char *target; // owned by either an xps_anchor or an fz_outline
+    const char *target; // owned by a fz_link
     fz_rect rect;
     int pageNo;
 
@@ -2375,7 +2363,7 @@ public:
     }
 };
 
-static void xps_run_page(xps_document *doc, xps_page *page, fz_device *dev, fz_matrix ctm, xps_anchor *extract=NULL)
+static void xps_run_page(xps_document *doc, xps_page *page, fz_device *dev, fz_matrix ctm, fz_link *extract=NULL)
 {
     doc->dev = dev;
     doc->link_root = extract;
@@ -2384,22 +2372,18 @@ static void xps_run_page(xps_document *doc, xps_page *page, fz_device *dev, fz_m
     doc->dev = NULL;
 }
 
-static xps_anchor *xps_new_anchor(fz_context *ctx, char *target, fz_rect rect=fz_empty_rect)
+static fz_link *xps_new_anchor(fz_context *ctx, char *target, fz_rect rect=fz_empty_rect)
 {
-    xps_anchor *link = (xps_anchor *)fz_malloc(ctx, sizeof(xps_anchor));
-
-    link->target = fz_strdup(ctx, target);
-    link->rect = rect;
-    link->next = NULL;
-
-    return link;
+    fz_link_dest ld;
+    ld.uri.uri = fz_strdup(ctx, target);
+    return fz_new_link(ctx, FZ_LINK_URI, rect, ld, NULL);
 }
 
-CXpsEngine::CXpsEngine() : _fileName(NULL), _ctx(NULL), _pages(NULL), _mediaboxes(NULL),
+CXpsEngine::CXpsEngine() : _fileName(NULL), _doc(NULL), _pages(NULL), _mediaboxes(NULL),
     _outline(NULL), _links(NULL), _info(NULL), _drawcache(NULL), imageRects(NULL)
 {
     InitializeCriticalSection(&_pagesAccess);
-    InitializeCriticalSection(&_ctxAccess);
+    InitializeCriticalSection(&_docAccess);
     ZeroMemory(&_runCache, sizeof(_runCache));
 
     ctx = fz_new_context(NULL, FZ_STORE_UNLIMITED);
@@ -2408,19 +2392,19 @@ CXpsEngine::CXpsEngine() : _fileName(NULL), _ctx(NULL), _pages(NULL), _mediaboxe
 CXpsEngine::~CXpsEngine()
 {
     EnterCriticalSection(&_pagesAccess);
-    EnterCriticalSection(&_ctxAccess);
+    EnterCriticalSection(&_docAccess);
 
     if (_pages) {
         for (int i = 0; i < PageCount(); i++) {
             if (_pages[i])
-                xps_free_page(_ctx, _pages[i]);
+                xps_free_page(_doc, _pages[i]);
         }
         free(_pages);
     }
     if (_links) {
         for (int i = 0; i < PageCount(); i++)
             if (_links[i])
-                xps_free_anchor(_ctx, _links[i]);
+                fz_free_link(ctx, _links[i]);
         free(_links);
     }
 
@@ -2434,9 +2418,9 @@ CXpsEngine::~CXpsEngine()
         free(imageRects);
     }
 
-    if (_ctx) {
-        xps_free_context(_ctx);
-        _ctx = NULL;
+    if (_doc) {
+        xps_free_context(_doc);
+        _doc = NULL;
     }
     if (_info)
         fz_drop_obj(_info);
@@ -2452,8 +2436,8 @@ CXpsEngine::~CXpsEngine()
 
     free((void*)_fileName);
 
-    LeaveCriticalSection(&_ctxAccess);
-    DeleteCriticalSection(&_ctxAccess);
+    LeaveCriticalSection(&_docAccess);
+    DeleteCriticalSection(&_docAccess);
     LeaveCriticalSection(&_pagesAccess);
     DeleteCriticalSection(&_pagesAccess);
 }
@@ -2461,7 +2445,7 @@ CXpsEngine::~CXpsEngine()
 CXpsEngine *CXpsEngine::Clone()
 {
     CXpsEngine *clone = new CXpsEngine();
-    if (!clone || !clone->load(_ctx->file)) {
+    if (!clone || !clone->load(_doc->file)) {
         delete clone;
         return NULL;
     }
@@ -2474,7 +2458,7 @@ CXpsEngine *CXpsEngine::Clone()
 
 bool CXpsEngine::load(const TCHAR *fileName)
 {
-    assert(!_fileName && !_ctx);
+    assert(!_fileName && !_doc);
     _fileName = str::Dup(fileName);
     if (!_fileName || !ctx)
         return false;
@@ -2483,7 +2467,7 @@ bool CXpsEngine::load(const TCHAR *fileName)
 
 bool CXpsEngine::load(IStream *stream)
 {
-    assert(!_fileName && !_ctx);
+    assert(!_fileName && !_doc);
     if (!ctx)
         return false;
     return load_from_stream(fz_open_istream(ctx, stream));
@@ -2491,7 +2475,7 @@ bool CXpsEngine::load(IStream *stream)
 
 bool CXpsEngine::load(fz_stream *stm)
 {
-    assert(!_fileName && !_ctx);
+    assert(!_fileName && !_doc);
     if (!ctx)
         return false;
     return load_from_stream(fz_keep_stream(stm));
@@ -2503,7 +2487,7 @@ bool CXpsEngine::load_from_stream(fz_stream *stm)
         return false;
 
     fz_try(ctx) {
-        _ctx = xps_open_stream(stm);
+        _doc = xps_open_stream(stm);
     }
     fz_catch(ctx) {
         fz_close(stm);
@@ -2515,12 +2499,12 @@ bool CXpsEngine::load_from_stream(fz_stream *stm)
         return false;
 
     _pages = SAZA(xps_page *, PageCount());
-    _links = SAZA(xps_anchor *, PageCount());
+    _links = SAZA(fz_link *, PageCount());
     _mediaboxes = new RectD[PageCount()];
     imageRects = SAZA(fz_rect *, PageCount());
 
-    _outline = xps_load_outline(_ctx);
-    _info = xps_extract_doc_props(_ctx);
+    _outline = xps_load_outline(_doc);
+    _info = xps_extract_doc_props(_doc);
 
     return _pages != NULL && _links != NULL && _mediaboxes != NULL && imageRects != NULL;
 }
@@ -2536,9 +2520,9 @@ xps_page *CXpsEngine::GetXpsPage(int pageNo, bool failIfBusy)
 
     xps_page *page = _pages[pageNo-1];
     if (!page) {
-        ScopedCritSec scope(&_ctxAccess);
+        ScopedCritSec scope(&_docAccess);
         fz_try(ctx) {
-            page = xps_load_page(_ctx, pageNo - 1);
+            page = xps_load_page(_doc, pageNo - 1);
         }
         fz_catch(ctx) { }
         if (page) {
@@ -2553,7 +2537,7 @@ xps_page *CXpsEngine::GetXpsPage(int pageNo, bool failIfBusy)
     return page;
 }
 
-XpsPageRun *CXpsEngine::GetPageRun(xps_page *page, bool tryOnly, xps_anchor *extract)
+XpsPageRun *CXpsEngine::GetPageRun(xps_page *page, bool tryOnly, fz_link *extract)
 {
     ScopedCritSec scope(&_pagesAccess);
 
@@ -2572,10 +2556,10 @@ XpsPageRun *CXpsEngine::GetPageRun(xps_page *page, bool tryOnly, xps_anchor *ext
         fz_display_list *list = fz_new_display_list(ctx);
 
         fz_device *dev = fz_new_list_device(ctx, list);
-        EnterCriticalSection(&_ctxAccess);
-        xps_run_page(_ctx, page, dev, fz_identity, extract);
+        EnterCriticalSection(&_docAccess);
+        xps_run_page(_doc, page, dev, fz_identity, extract);
         fz_free_device(dev);
-        LeaveCriticalSection(&_ctxAccess);
+        LeaveCriticalSection(&_docAccess);
 
         XpsPageRun newRun = { page, list, 1 };
         result = _runCache[i] = (XpsPageRun *)_memdup(&newRun);
@@ -2597,14 +2581,14 @@ void CXpsEngine::RunPage(xps_page *page, fz_device *dev, fz_matrix ctm, fz_bbox 
 {
     XpsPageRun *run = GetPageRun(page, !cacheRun);
     if (run) {
-        EnterCriticalSection(&_ctxAccess);
+        EnterCriticalSection(&_docAccess);
         fz_execute_display_list(run->list, dev, ctm, clipbox);
-        LeaveCriticalSection(&_ctxAccess);
+        LeaveCriticalSection(&_docAccess);
         DropPageRun(run);
     }
     else {
-        ScopedCritSec scope(&_ctxAccess);
-        xps_run_page(_ctx, page, dev, ctm);
+        ScopedCritSec scope(&_docAccess);
+        xps_run_page(_doc, page, dev, ctm);
     }
     fz_free_device(dev);
 }
@@ -2622,7 +2606,7 @@ void CXpsEngine::DropPageRun(XpsPageRun *run, bool forceRemove)
             _runCache[MAX_PAGE_RUN_CACHE-1] = NULL;
         }
         if (0 == run->refs) {
-            ScopedCritSec scope(&_ctxAccess);
+            ScopedCritSec scope(&_docAccess);
             fz_free_display_list(ctx, run->list);
             free(run);
         }
@@ -2697,7 +2681,7 @@ RectD CXpsEngine::PageMediabox(int pageNo)
 
     xps_page *page = GetXpsPage(pageNo, true);
     if (!page) {
-        RectI rect = xps_extract_mediabox_quick_and_dirty(_ctx, pageNo);
+        RectI rect = xps_extract_mediabox_quick_and_dirty(_doc, pageNo);
         if (!rect.IsEmpty()) {
             _mediaboxes[pageNo-1] = rect.Convert<double>();
             return _mediaboxes[pageNo-1];
@@ -2861,9 +2845,9 @@ TCHAR *CXpsEngine::ExtractPageText(xps_page *page, TCHAR *lineSep, RectI **coord
 
     TCHAR *content = fz_span_to_tchar(text, lineSep, coords_out);
 
-    EnterCriticalSection(&_ctxAccess);
+    EnterCriticalSection(&_docAccess);
     fz_free_text_span(ctx, text);
-    LeaveCriticalSection(&_ctxAccess);
+    LeaveCriticalSection(&_docAccess);
 
     return content;
 }
@@ -2874,28 +2858,28 @@ TCHAR *CXpsEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_ou
     if (page)
         return ExtractPageText(page, lineSep, coords_out);
 
-    EnterCriticalSection(&_ctxAccess);
+    EnterCriticalSection(&_docAccess);
     fz_try(ctx) {
-        page = xps_load_page(_ctx, pageNo - 1);
+        page = xps_load_page(_doc, pageNo - 1);
     }
     fz_catch(ctx) { }
-    LeaveCriticalSection(&_ctxAccess);
+    LeaveCriticalSection(&_docAccess);
     if (!page)
         return NULL;
 
     TCHAR *result = ExtractPageText(page, lineSep, coords_out);
 
-    EnterCriticalSection(&_ctxAccess);
-    xps_free_page(_ctx, page);
-    LeaveCriticalSection(&_ctxAccess);
+    EnterCriticalSection(&_docAccess);
+    xps_free_page(_doc, page);
+    LeaveCriticalSection(&_docAccess);
 
     return result;
 }
 
 unsigned char *CXpsEngine::GetFileData(size_t *cbCount)
 {
-    ScopedCritSec scope(&_ctxAccess);
-    unsigned char *data = fz_extract_stream_data(_ctx->file, cbCount);
+    ScopedCritSec scope(&_docAccess);
+    unsigned char *data = fz_extract_stream_data(_doc->file, cbCount);
     return data ? data : (unsigned char *)file::ReadAll(_fileName, cbCount);
 }
 
@@ -2918,9 +2902,9 @@ PageElement *CXpsEngine::GetElementAtPos(int pageNo, PointD pt)
         return NULL;
 
     fz_point p = { (float)pt.x, (float)pt.y };
-    for (xps_anchor *link = _links[pageNo-1]; link; link = link->next)
+    for (fz_link *link = _links[pageNo-1]; link; link = link->next)
         if (fz_is_pt_in_rect(link->rect, p))
-            return new XpsLink(this, link->target, link->rect, pageNo);
+            return new XpsLink(this, link->dest.uri.uri, link->rect, pageNo);
 
     if (imageRects[pageNo-1]) {
         for (int i = 0; !fz_is_empty_rect(imageRects[pageNo-1][i]); i++)
@@ -2938,8 +2922,8 @@ Vec<PageElement *> *CXpsEngine::GetElements(int pageNo)
 
     Vec<PageElement *> *els = new Vec<PageElement *>();
 
-    for (xps_anchor *link = _links[pageNo-1]; link; link = link->next)
-        els->Append(new XpsLink(this, link->target, link->rect, pageNo));
+    for (fz_link *link = _links[pageNo-1]; link; link = link->next)
+        els->Append(new XpsLink(this, link->dest.uri.uri, link->rect, pageNo));
 
     if (imageRects[pageNo-1]) {
         for (int i = 0; !fz_is_empty_rect(imageRects[pageNo-1][i]); i++)
@@ -2957,7 +2941,8 @@ void CXpsEngine::LinkifyPageText(xps_page *page, int pageNo)
 
     // make MuXPS extract all links and named destinations from the page
     assert(!GetPageRun(page, true));
-    xps_anchor root = { 0 };
+    fz_link root;
+    ZeroMemory(&root, sizeof(root));
     XpsPageRun *run = GetPageRun(page, false, &root);
     assert(run);
     if (run)
@@ -2969,19 +2954,19 @@ void CXpsEngine::LinkifyPageText(xps_page *page, int pageNo)
     if (!pageText)
         return;
 
-    xps_anchor *last;
+    fz_link *last;
     for (last = &root; last->next; last = last->next);
     LinkRectList *list = LinkifyText(pageText, coords);
 
     for (size_t i = 0; i < list->links.Count(); i++) {
         bool overlaps = false;
-        for (xps_anchor *next = _links[pageNo-1]; next && !overlaps; next = next->next)
+        for (fz_link *next = _links[pageNo-1]; next && !overlaps; next = next->next)
             overlaps = fz_significantly_overlap(next->rect, list->coords.At(i));
         if (!overlaps) {
             ScopedMem<char> uri(str::conv::ToUtf8(list->links.At(i)));
             if (!uri) continue;
             last = last->next = xps_new_anchor(ctx, uri, list->coords.At(i));
-            assert(IsUriTarget(last->target));
+            assert(IsUriTarget(last->dest.uri.uri));
         }
     }
 
@@ -3013,7 +2998,7 @@ RenderedBitmap *CXpsEngine::GetPageImage(int pageNo, RectD rect, size_t imageIx)
     if (!page)
         return NULL;
 
-    ScopedCritSec scope(&_ctxAccess);
+    ScopedCritSec scope(&_docAccess);
 
     Vec<FitzImagePos> positions;
     RunPage(page, fz_new_image_extractor(ctx, &positions), fz_identity);
@@ -3031,7 +3016,7 @@ int CXpsEngine::FindPageNo(const char *target)
     if (str::IsEmpty(target))
         return 0;
 
-    return xps_find_link_target(_ctx, (char *)target) + 1;
+    return xps_find_link_target(_doc, (char *)target) + 1;
 }
 
 fz_rect CXpsEngine::FindDestRect(const char *target)
@@ -3039,7 +3024,7 @@ fz_rect CXpsEngine::FindDestRect(const char *target)
     if (str::IsEmpty(target))
         return fz_empty_rect;
 
-    xps_target *found = xps_find_link_target_obj(_ctx, (char *)target);
+    xps_target *found = xps_find_link_target_obj(_doc, (char *)target);
     return found ? found->rect : fz_empty_rect;
 }
 
@@ -3049,7 +3034,7 @@ PageDestination *CXpsEngine::GetNamedDest(const TCHAR *name)
     if (!str::StartsWith(name_utf8.Get(), "#"))
         name_utf8.Set(str::Join("#", name_utf8));
 
-    for (xps_target *dest = _ctx->target; dest; dest = dest->next)
+    for (xps_target *dest = _doc->target; dest; dest = dest->next)
         if (str::EndsWithI(dest->name, name_utf8))
             return new SimpleDest(dest->page + 1, fz_rect_to_RectD(dest->rect));
 
@@ -3062,7 +3047,8 @@ XpsTocItem *CXpsEngine::BuildTocTree(fz_outline *entry, int& idCounter)
 
     for (; entry; entry = entry->next) {
         TCHAR *name = entry->title ? str::conv::FromUtf8(entry->title) : str::Dup(_T(""));
-        XpsTocItem *item = new XpsTocItem(name, XpsLink(this, (char *)entry->data, fz_empty_rect));
+        char *target = entry->link ? entry->link->dest.uri.uri : NULL;
+        XpsTocItem *item = new XpsTocItem(name, XpsLink(this, target, fz_empty_rect));
         item->id = ++idCounter;
         item->open = entry->is_open;
         item->pageNo = entry->page + 1;

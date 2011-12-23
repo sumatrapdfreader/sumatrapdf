@@ -32,7 +32,7 @@ void fz_warn_imp(fz_context *ctx, char *file, int line, char *fmt, ...)
 	else
 	{
 		fz_flush_warnings(ctx);
-		fprintf(stderr, "\\ %s:%d: %s\n", file, line, buf);
+		fprintf(stderr, "- %s:%d: %s\n", file, line, buf);
 		fz_strlcpy(ctx->warn->message, buf, sizeof ctx->warn->message);
 		ctx->warn->count = 1;
 	}
@@ -76,7 +76,7 @@ void fz_throw_imp(fz_context *ctx, char *file, int line, char *fmt, ...)
 	vsnprintf(ctx->error->message, sizeof ctx->error->message, fmt, args);
 	va_end(args);
 
-	fprintf(stderr, "+ %s:%d: %s\n", file, line, ctx->error->message);
+	fprintf(stderr, "! %s:%d: %s\n", file, line, ctx->error->message);
 
 	throw(ctx->error);
 }

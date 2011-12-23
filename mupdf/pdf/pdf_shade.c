@@ -964,14 +964,16 @@ pdf_load_shading_dict(pdf_xref *xref, fz_obj *dict, fz_matrix transform)
 	pdf_function *func[FZ_MAX_COLORS] = { NULL };
 	fz_stream *stream = NULL;
 	fz_obj *obj;
-	int funcs;
-	int type;
+	int funcs = 0;
+	int type = 0;
 	int i;
 	fz_context *ctx = xref->ctx;
 
 	fz_var(shade);
 	fz_var(func);
+	fz_var(funcs);
 	fz_var(stream);
+	fz_var(type);
 
 	fz_try(ctx)
 	{

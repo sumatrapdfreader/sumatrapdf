@@ -5,7 +5,6 @@ static fz_outline *
 pdf_load_outline_imp(pdf_xref *xref, fz_obj *dict)
 {
 	fz_context *ctx = xref->ctx;
-	pdf_link *link;
 	fz_outline *node;
 	fz_obj *obj;
 	/* SumatraPDF: prevent potential stack overflow */
@@ -37,20 +36,19 @@ pdf_load_outline_imp(pdf_xref *xref, fz_obj *dict)
 
 	/* SumatraPDF: support expansion states */
 	node->is_open = fz_to_int(fz_dict_gets(dict, "Count")) >= 0;
-	/* SumatraPDF: extended outline actions */
-	node->data = node->free_data = NULL;
+	node->link = NULL; /* SumatraPDF: extended outline actions */
 
 	if (fz_dict_gets(dict, "Dest") || fz_dict_gets(dict, "A"))
 	{
-		link = pdf_load_link(xref, dict);
-		if (link && link->kind == PDF_LINK_GOTO)
-			node->page = pdf_find_page_number(xref, fz_array_get(link->dest, 0));
+		fz_link_dest ld = pdf_parse_link_dest(xref, dict);
+		node->page = ld.gotor.page;
 		/* SumatraPDF: extended outline actions */
-		if (link)
-		{
-			node->data = link;
-			node->free_data = pdf_free_link;
-		}
+		node->link = pdf_load_link(xref, dict);
+		/* SumatraPDF: fix page number detection */
+		if (node->link && node->link->kind == FZ_LINK_GOTO)
+			node->page = node->link->dest.gotor.page;
+		else
+			node->page = -1;
 	}
 
 	obj = fz_dict_gets(dict, "First");

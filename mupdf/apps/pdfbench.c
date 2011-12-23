@@ -13,15 +13,9 @@
 	printf(__VA_ARGS__); \
 	fflush(stdout)
 
-int pagetobench = -1;
-int loadonly = 0;
-pdf_xref *xref = NULL;
-int pagecount = 0;
-fz_glyph_cache *drawcache = NULL;
-pdf_page *drawpage = NULL;
-
 /* milli-second timer */
 #ifdef _WIN32
+
 typedef struct mstimer {
 	LARGE_INTEGER   start;
 	LARGE_INTEGER   end;
@@ -30,27 +24,30 @@ typedef struct mstimer {
 void timerstart(mstimer *timer)
 {
 	assert(timer);
-	if (!timer)
-		return;
-	QueryPerformanceCounter(&timer->start);
+	if (timer)
+		QueryPerformanceCounter(&timer->start);
 }
 void timerstop(mstimer *timer)
 {
 	assert(timer);
-	if (!timer)
-		return;
-	QueryPerformanceCounter(&timer->end);
+	if (timer)
+		QueryPerformanceCounter(&timer->end);
 }
 
 double timeinms(mstimer *timer)
 {
 	LARGE_INTEGER   freq;
 	double          time_in_secs;
+	assert(timer);
+	if (!timer)
+		return 0.0;
 	QueryPerformanceFrequency(&freq);
 	time_in_secs = (double)(timer->end.QuadPart-timer->start.QuadPart)/(double)freq.QuadPart;
 	return time_in_secs * 1000.0;
 }
+
 #else
+
 #include <sys/time.h>
 typedef struct mstimer {
 	struct timeval    start;
@@ -60,17 +57,15 @@ typedef struct mstimer {
 void timerstart(mstimer *timer)
 {
 	assert(timer);
-	if (!timer)
-		return;
-	gettimeofday(&timer->start, NULL);
+	if (timer)
+		gettimeofday(&timer->start, NULL);
 }
 
 void timerstop(mstimer *timer)
 {
 	assert(timer);
-	if (!timer)
-		return;
-	gettimeofday(&timer->end, NULL);
+	if (timer)
+		gettimeofday(&timer->end, NULL);
 }
 
 double timeinms(mstimer *timer)
@@ -91,31 +86,12 @@ double timeinms(mstimer *timer)
 	timeInMs = (double)seconds*(double)1000.0 + (double)usecs/(double)1000.0;
 	return timeInMs;
 }
+
 #endif
 
-void closexref(void)
+pdf_xref *openxref(fz_context *ctx, char *filename, char *password)
 {
-	if (!xref)
-		return;
-
-	if (xref->store)
-	{
-		pdf_free_store(xref->store);
-		xref->store = NULL;
-	}
-	pdf_free_xref(xref);
-	xref = NULL;
-}
-
-fz_error openxref(char *filename, char *password)
-{
-	fz_error error;
-
-	error = pdf_open_xref(&xref, filename, password);
-	if (error)
-	{
-		return fz_rethrow(error, "pdf_openxref() failed");
-	}
+	pdf_xref *xref = pdf_open_xref(ctx, filename, password);
 
 	if (pdf_needs_password(xref))
 	{
@@ -123,131 +99,117 @@ fz_error openxref(char *filename, char *password)
 		if (!okay)
 		{
 			logbench("Warning: pdf_setpassword() failed, incorrect password\n");
-			return fz_throw("invalid password");
+			fz_throw(ctx, "invalid password");
 		}
 	}
 
-	error = pdf_load_page_tree(xref);
-	if (error)
-	{
-		return fz_rethrow(error, "cannot load page tree: %s", filename);
-	}
+	pdf_load_page_tree(xref);
 
-	pagecount = pdf_count_pages(xref);
-
-	return fz_okay;
+	return xref;
 }
 
-fz_error benchloadpage(int pagenum)
+pdf_page *benchloadpage(pdf_xref *xref, int pagenum)
 {
-	fz_error error;
+	pdf_page *page;
 	mstimer timer;
-	double timems;
 
 	timerstart(&timer);
-
-	drawpage = NULL;
-	error = pdf_load_page(&drawpage, xref, pagenum - 1);
-	timerstop(&timer);
-	if (error)
-	{
-		logbench("Error: failed to load page %d\n", pagenum);
-		return error;
+	fz_try(xref->ctx) {
+		page = pdf_load_page(xref, pagenum - 1);
 	}
-	timems = timeinms(&timer);
-	logbench("pageload   %3d: %.2f ms\n", pagenum, timems);
-	return fz_okay;
+	fz_catch(xref->ctx) {
+		logbench("Error: failed to load page %d\n", pagenum);
+		return NULL;
+	}
+	timerstop(&timer);
+	logbench("pageload   %3d: %.2f ms\n", pagenum, timeinms(&timer));
+
+	return page;
 }
 
-fz_error benchrenderpage(int pagenum)
+void benchrenderpage(pdf_xref *xref, fz_glyph_cache *drawcache, pdf_page *page, int pagenum)
 {
-	fz_error error;
+	fz_device *dev;
+	fz_pixmap *pix;
 	fz_matrix ctm;
 	fz_bbox bbox;
-	fz_pixmap *pix;
-	int w, h;
 	mstimer timer;
-	double timems;
-	fz_device *dev;
 
 	timerstart(&timer);
 	ctm = fz_identity;
-	ctm = fz_concat(ctm, fz_translate(0, -drawpage->mediabox.y1));
+	ctm = fz_concat(ctm, fz_translate(0, -page->mediabox.y1));
 
-	bbox = fz_round_rect(fz_transform_rect(ctm, drawpage->mediabox));
-	w = bbox.x1 - bbox.x0;
-	h = bbox.y1 - bbox.y0;
-
-	pix = fz_new_pixmap_with_rect(fz_device_rgb, bbox);
+	bbox = fz_round_rect(fz_transform_rect(ctm, page->mediabox));
+	pix = fz_new_pixmap_with_rect(xref->ctx, fz_device_rgb, bbox);
 	fz_clear_pixmap_with_color(pix, 0xFF);
-	dev = fz_new_draw_device(drawcache, pix);
-	error = pdf_run_page(xref, drawpage, dev, ctm);
-	fz_free_device(dev);
-	if (error)
-	{
-		logbench("Error: pdf_runcontentstream() failed\n");
-		goto Exit;
+	dev = fz_new_draw_device(xref->ctx, drawcache, pix);
+	fz_try(xref->ctx) {
+		pdf_run_page(xref, page, dev, ctm);
+		timerstop(&timer);
+		logbench("pagerender %3d: %.2f ms\n", pagenum, timeinms(&timer));
+	}
+	fz_catch(xref->ctx) {
+		logbench("Error: pdf_run_page() failed\n");
 	}
 
-	timerstop(&timer);
-	timems = timeinms(&timer);
-
-	logbench("pagerender %3d: %.2f ms\n", pagenum, timems);
-Exit:
-	fz_drop_pixmap(pix);
-	return fz_okay;
+	fz_drop_pixmap(xref->ctx, pix);
+	fz_free_device(dev);
 }
 
-void freepage(void)
+void benchfile(char *pdffilename, int loadonly, int pageNo)
 {
-	pdf_free_page(drawpage);
-	drawpage = NULL;
-}
-
-void benchfile(char *pdffilename)
-{
-	fz_error error;
+	pdf_xref *xref;
+	fz_glyph_cache *drawcache;
 	mstimer timer;
-	double timems;
-	int pages;
+	int page_count;
 	int curpage;
 
-	drawcache = fz_new_glyph_cache();
-	if (!drawcache)
-	{
+	fz_context *ctx = fz_new_context(NULL, FZ_STORE_UNLIMITED);
+	if (!ctx) {
+		logbench("Error: fz_new_context() failed\n");
+		return;
+	}
+
+	drawcache = fz_new_glyph_cache(ctx);
+	if (!drawcache) {
 		logbench("Error: fz_newglyphcache() failed\n");
 		goto Exit;
 	}
 
 	logbench("Starting: %s\n", pdffilename);
 	timerstart(&timer);
-	error = openxref(pdffilename, "");
-	timerstop(&timer);
-	if (error)
+	fz_try(ctx) {
+		xref = openxref(ctx, pdffilename, "");
+	}
+	fz_catch(ctx) {
+		xref = NULL;
 		goto Exit;
-	timems = timeinms(&timer);
-	logbench("load: %.2f ms\n", timems);
+	}
+	timerstop(&timer);
+	logbench("load: %.2f ms\n", timeinms(&timer));
 
-	pages = pagecount;
-	logbench("page count: %d\n", pages);
+	page_count = pdf_count_pages(xref);
+	logbench("page count: %d\n", page_count);
 
 	if (loadonly)
 		goto Exit;
-	for (curpage = 1; curpage <= pages; curpage++) {
-		if ((-1 != pagetobench) && (pagetobench != curpage))
+	for (curpage = 1; curpage <= page_count; curpage++) {
+		pdf_page *page;
+		if ((-1 != pageNo) && (pageNo != curpage))
 			continue;
-		error = benchloadpage(curpage);
-		if (!error)
-			benchrenderpage(curpage);
-		if (drawpage)
-			freepage();
+		page = benchloadpage(xref, curpage);
+		if (page) {
+			benchrenderpage(xref, drawcache, page, curpage);
+			pdf_free_page(xref->ctx, page);
+		}
 	}
 
 Exit:
 	logbench("Finished: %s\n", pdffilename);
-	if (drawcache)
-		fz_free_glyph_cache(drawcache);
-	closexref();
+	pdf_free_xref(xref);
+	fz_free_glyph_cache(ctx, drawcache);
+	if (ctx)
+		fz_free_context(ctx);
 }
 
 void usage(void)
@@ -256,41 +218,32 @@ void usage(void)
 	exit(1);
 }
 
-int isarg(char *arg, char *name)
-{
-	if ('-' != *arg++)
-		return 0;
-	/* be liberal, allow '-' and '--' as arg prefix */
-	if ('-'== *arg) ++arg;
-	return (0 == strcmp(arg, name));
-}
-
-void parsecmdargs(int argc, char **argv)
+void parsecmdargs(int argc, char **argv, int *loadonly, int *pageNo)
 {
 	int i;
-	char *arg;
 
 	if (argc < 2)
 		usage();
 
-	for (i=1; i<argc; i++) {
-		arg = argv[i];	
-		if (isarg(arg, "loadonly")) {
-			loadonly = 1;
+	for (i = 1; i < argc - 1; i++) {
+		if (!strcmp(argv[i], "-loadonly")) {
+			*loadonly = 1;
 		}
-		if (isarg(arg, "page")) {
+		else if (!strcmp(argv[i], "-page") && i + 1 < argc) {
 			++i;
-			if (i == argc)
-				usage();
-			pagetobench = atoi(argv[i]);
+			*pageNo = atoi(argv[i]);
+		}
+		else {
+			usage();
 		}
 	}
 }
 
 int main(int argc, char **argv)
 {
-	parsecmdargs(argc, argv);
+	int loadonly = 0, pageNo = -1;
+	parsecmdargs(argc, argv, &loadonly, &pageNo);
 	/* for simplicity assume the file to parse is always the last */
-	benchfile(argv[argc-1]);
+	benchfile(argv[argc-1], loadonly, pageNo);
 	return 0;
 }

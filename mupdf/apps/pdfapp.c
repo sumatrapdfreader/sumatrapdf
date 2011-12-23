@@ -238,7 +238,7 @@ void pdfapp_close(pdfapp_t *app)
 	app->page_text = NULL;
 
 	if (app->page_links)
-		pdf_free_link(app->ctx, app->page_links);
+		fz_free_link(app->ctx, app->page_links);
 	app->page_links = NULL;
 
 	if (app->doctitle)
@@ -394,7 +394,7 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 		if (app->page_text)
 			fz_free_text_span(app->ctx, app->page_text);
 		if (app->page_links)
-			pdf_free_link(app->ctx, app->page_links);
+			fz_free_link(app->ctx, app->page_links);
 
 		if (app->xref)
 			pdfapp_loadpage_pdf(app);
@@ -467,25 +467,13 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 	fz_flush_warnings(app->ctx);
 }
 
-static void pdfapp_gotouri(pdfapp_t *app, fz_obj *uri)
+static void pdfapp_gotouri(pdfapp_t *app, char *uri)
 {
-	char *buf;
-	int n = fz_to_str_len(uri);
-	buf = fz_malloc(app->ctx, n + 1);
-	memcpy(buf, fz_to_str_buf(uri), n);
-	buf[n] = 0;
-	winopenuri(app, buf);
-	fz_free(app->ctx, buf);
+	winopenuri(app, uri);
 }
 
-static void pdfapp_gotopage(pdfapp_t *app, fz_obj *obj)
+static void pdfapp_gotopage(pdfapp_t *app, int number)
 {
-	int number;
-
-	number = pdf_find_page_number(app->xref, obj);
-	if (number < 0)
-		return;
-
 	if (app->histlen + 1 == 256)
 	{
 		memmove(app->hist, app->hist + 1, sizeof(int) * 255);
@@ -1025,7 +1013,7 @@ void pdfapp_onkey(pdfapp_t *app, int c)
 
 void pdfapp_onmouse(pdfapp_t *app, int x, int y, int btn, int modifiers, int state)
 {
-	pdf_link *link;
+	fz_link *link;
 	fz_matrix ctm;
 	fz_point p;
 
@@ -1049,10 +1037,10 @@ void pdfapp_onmouse(pdfapp_t *app, int x, int y, int btn, int modifiers, int sta
 		wincursor(app, HAND);
 		if (btn == 1 && state == 1)
 		{
-			if (link->kind == PDF_LINK_URI)
-				pdfapp_gotouri(app, link->dest);
-			else if (link->kind == PDF_LINK_GOTO)
-				pdfapp_gotopage(app, fz_array_get(link->dest, 0)); /* [ pageobj ... ] */
+			if (link->kind == FZ_LINK_URI)
+				pdfapp_gotouri(app, link->dest.uri.uri);
+			else if (link->kind == FZ_LINK_GOTO)
+				pdfapp_gotopage(app, link->dest.gotor.page);
 			return;
 		}
 	}

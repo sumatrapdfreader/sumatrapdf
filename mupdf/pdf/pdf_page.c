@@ -364,7 +364,7 @@ pdf_free_page(fz_context *ctx, pdf_page *page)
 	if (page->contents)
 		fz_drop_buffer(ctx, page->contents);
 	if (page->links)
-		pdf_free_link(ctx, page->links);
+		fz_free_link(ctx, page->links);
 	if (page->annots)
 		pdf_free_annot(ctx, page->annots);
 	fz_free(ctx, page);

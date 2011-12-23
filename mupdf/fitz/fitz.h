@@ -201,6 +201,7 @@ char *fz_strdup_no_throw(fz_context *ctx, char *s);
 #define fz_malloc_struct(CTX, STRUCT) \
 	Memento_label(fz_malloc(CTX,sizeof(STRUCT)), #STRUCT)
 
+
 /* runtime (hah!) test for endian-ness */
 int fz_is_big_endian(void);
 
@@ -1183,6 +1184,7 @@ int fz_list_requires_blending(fz_display_list *list);
  */
 
 typedef struct fz_outline_s fz_outline;
+typedef struct fz_link_s fz_link;
 
 struct fz_outline_s
 {
@@ -1192,9 +1194,7 @@ struct fz_outline_s
 	fz_outline *next;
 	fz_outline *down;
 	int is_open; /* SumatraPDF: support expansion states */
-	/* SumatraPDF: extended outline actions */
-	void *data;
-	void (*free_data)(fz_context *ctx, void *data);
+	fz_link *link; /* SumatraPDF: extended outline actions */
 };
 
 void fz_debug_outline_xml(fz_outline *outline, int level);
@@ -1256,6 +1256,68 @@ enum
 	FZ_BLEND_ISOLATED = 16,
 	FZ_BLEND_KNOCKOUT = 32
 };
+
+/* Links */
+
+typedef struct fz_link_s fz_link;
+
+typedef union fz_link_dest_s fz_link_dest;
+
+typedef enum fz_link_kind_e
+{
+	FZ_LINK_GOTO = 0,
+	FZ_LINK_URI,
+	FZ_LINK_LAUNCH,
+	FZ_LINK_NAMED,
+	FZ_LINK_GOTOR
+} fz_link_kind;
+
+enum {
+	fz_link_flag_l_valid   = 1,  /* lt.x is valid */
+	fz_link_flag_t_valid   = 2,  /* lt.y is valid */
+	fz_link_flag_r_valid   = 4,  /* rb.x is valid */
+	fz_link_flag_b_valid   = 8,  /* rb.y is valid */
+	fz_link_flag_fit_h     = 16, /* Fit horizontally */
+	fz_link_flag_fit_v     = 32, /* Fit vertically */
+	fz_link_flag_r_is_zoom = 64  /* rb.x is actually a zoom figure */
+};
+
+union fz_link_dest_s
+{
+	struct {
+		int page;
+		int flags;
+		fz_point lt;
+		fz_point rb;
+		char *file_spec;
+		int new_window;
+	} gotor;
+	struct {
+		char *uri;
+		int is_map;
+	} uri;
+	struct {
+		char *file_spec;
+		int new_window;
+	} launch;
+	struct {
+		char *named;
+	} named;
+};
+
+
+struct fz_link_s
+{
+	fz_link_kind kind;
+	fz_rect rect;
+	fz_link_dest dest;
+	fz_link *next;
+	fz_obj *extra; /* SumatraPDF: provide access to the link object */
+};
+
+/* SumatraPDF: provide access to the link object */
+fz_link *fz_new_link(fz_context *ctx, fz_link_kind, fz_rect bbox, fz_link_dest dest, fz_obj *extra);
+void fz_free_link(fz_context *ctx, fz_link *);
 
 /* SumatraPDF: basic global synchronizing */
 void fz_synchronize_begin();

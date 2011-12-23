@@ -25,6 +25,7 @@ LOCAL_SRC_FILES := \
 	$(MY_ROOT)/fitz/base_geometry.c \
 	$(MY_ROOT)/fitz/base_getopt.c \
 	$(MY_ROOT)/fitz/base_hash.c \
+	$(MY_ROOT)/fitz/base_link.c \
 	$(MY_ROOT)/fitz/base_memory.c \
 	$(MY_ROOT)/fitz/base_object.c \
 	$(MY_ROOT)/fitz/base_string.c \

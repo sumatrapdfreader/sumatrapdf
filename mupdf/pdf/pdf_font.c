@@ -486,7 +486,8 @@ pdf_load_simple_font(pdf_xref *xref, fz_obj *dict)
 
 		descriptor = fz_dict_gets(dict, "FontDescriptor");
 		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=691690 */
-		fz_try(ctx) {
+		fz_try(ctx)
+		{
 		if (descriptor)
 			pdf_load_font_descriptor(fontdesc, xref, descriptor, NULL, basefont, fz_dict_gets(dict, "Encoding") != NULL);
 		else
@@ -736,7 +737,7 @@ pdf_load_simple_font(pdf_xref *xref, fz_obj *dict)
 			for (i = 0; i < 256; i++)
 				if (etable[i] && estrings[i] && !pdf_lookup_agl(estrings[i]))
 					estrings[i] = (char *)pdf_standard[i];
-	
+
 		fontdesc->encoding = pdf_new_identity_cmap(ctx, 0, 1);
 		fontdesc->size += pdf_cmap_size(fontdesc->encoding);
 		fontdesc->cid_to_gid_len = 256;

@@ -22,11 +22,14 @@ pdf_load_embedded_cmap(pdf_xref *xref, fz_obj *stmobj)
 	pdf_cmap *cmap = NULL;
 	pdf_cmap *usecmap;
 	fz_obj *wmode;
-	fz_obj *obj;
+	fz_obj *obj = NULL;
 	fz_context *ctx = xref->ctx;
 	int phase = 0;
 
 	fz_var(phase);
+	fz_var(obj);
+	fz_var(file);
+	fz_var(cmap);
 
 	if ((cmap = fz_find_item(ctx, pdf_free_cmap_imp, stmobj)))
 	{

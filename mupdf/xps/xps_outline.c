@@ -48,10 +48,15 @@ xps_parse_document_outline(xps_document *doc, xml_element *root)
 			entry->page = -1;
 			/* SumatraPDF: extended outline actions */
 			entry->ctx = doc->ctx;
-			entry->data = target ? fz_strdup(doc->ctx, target) : NULL;
-			if (target && !xps_is_external_uri(target))
-				entry->page = xps_find_link_target(doc, target);
-			entry->free_data = fz_free;
+			entry->link = NULL;
+			if (target)
+			{
+				fz_link_dest ld;
+				ld.uri.uri = fz_strdup(doc->ctx, target);
+				entry->link = fz_new_link(doc->ctx, FZ_LINK_URI, fz_empty_rect, ld, NULL);
+				if (!xps_is_external_uri(target))
+					entry->page = xps_find_link_target(doc, target);
+			}
 			entry->down = NULL;
 			entry->next = NULL;
 
@@ -155,27 +160,16 @@ xps_load_outline(xps_document *doc)
 /* SumatraPDF: extended link support */
 
 void
-xps_free_anchor(xps_document *doc, xps_anchor *link)
-{
-	while (link)
-	{
-		xps_anchor *next = link->next;
-		fz_free(doc->ctx, link->target);
-		fz_free(doc->ctx, link);
-		link = next;
-	}
-}
-
-void
 xps_extract_anchor_info(xps_document *doc, xml_element *node, fz_rect rect)
 {
 	char *value;
 
 	if (doc->link_root && (value = xml_att(node, "FixedPage.NavigateUri")))
 	{
-		xps_anchor *link = fz_malloc_struct(doc->ctx, xps_anchor);
-		link->target = fz_strdup(doc->ctx, value);
-		link->rect = rect;
+		fz_link *link;
+		fz_link_dest ld;
+		ld.uri.uri = fz_strdup(doc->ctx, value);
+		link = fz_new_link(doc->ctx, FZ_LINK_URI, rect, ld, NULL);
 		// insert the links in bottom-to-top order (first one is to be preferred)
 		link->next = doc->link_root->next;
 		doc->link_root->next = link;

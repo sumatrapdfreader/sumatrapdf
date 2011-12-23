@@ -144,11 +144,13 @@ static void
 pdf_repair_obj_stm(pdf_xref *xref, int num, int gen)
 {
 	fz_obj *obj;
-	fz_stream *stm;
+	fz_stream *stm = NULL;
 	int tok;
 	int i, n, count;
 	char buf[256];
 	fz_context *ctx = xref->ctx;
+
+	fz_var(stm);
 
 	fz_try(ctx)
 	{

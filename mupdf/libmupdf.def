@@ -324,6 +324,8 @@ EXPORTS
 	fz_paint_pixmap_with_rect
 	fz_blend_pixmap
 	fz_blend_pixel
+	fz_new_link
+	fz_free_link
 	fz_synchronize_begin
 	fz_synchronize_end
 
@@ -435,13 +437,13 @@ EXPORTS
 	pdf_debug_font
 	pdf_ft_get_vgid
 	pdf_ft_free_vsubst
+	pdf_parse_link_dest
 	pdf_lookup_dest
 	pdf_lookup_name
 	pdf_load_name_tree
 	pdf_load_outline
 	pdf_load_link
 	pdf_load_links
-	pdf_free_link
 	pdf_load_annots
 	pdf_free_annot
 	pdf_load_page_tree
@@ -511,7 +513,6 @@ EXPORTS
 	xps_open_stream
 	xps_free_context
 	xps_extract_anchor_info
-	xps_free_anchor
 	xps_extract_doc_props
 
 ; jpeg exports

@@ -9,7 +9,7 @@ fz_free_outline(fz_outline *outline)
 		fz_free_outline(outline->down);
 		fz_free(outline->ctx, outline->title);
 		/* SumatraPDF: extended outline actions */
-		if (outline->free_data) outline->free_data(outline->ctx, outline->data);
+		fz_free_link(outline->ctx, outline->link);
 		fz_free(outline->ctx, outline);
 		outline = next;
 	}

@@ -226,7 +226,7 @@ FITZ_OBJS = \
 	$(OFZ)\base_memory.obj $(OFZ)\base_string.obj $(OFZ)\base_time.obj $(OFZ)\base_object.obj \
 	$(OFZ)\dev_bbox.obj $(OFZ)\dev_list.obj $(OFZ)\dev_null.obj $(OFZ)\dev_text.obj \
 	$(OFZ)\dev_trace.obj $(OFZ)\crypt_aes.obj $(OFZ)\crypt_arc4.obj $(OFZ)\crypt_md5.obj \
-	$(OFZ)\doc_outline.obj $(OFZ)\crypt_sha2.obj $(OFZ)\base_context.obj \
+	$(OFZ)\doc_outline.obj $(OFZ)\crypt_sha2.obj $(OFZ)\base_context.obj $(OFZ)\base_link.obj \
 	$(OFZ)\filt_basic.obj $(OFZ)\filt_faxd.obj $(OFZ)\filt_flate.obj $(OFZ)\filt_jbig2d.obj \
 	$(OFZ)\filt_jpxd.obj $(OFZ)\filt_lzwd.obj $(OFZ)\filt_predict.obj $(OFZ)\res_store.obj \
 	$(OFZ)\res_path.obj $(OFZ)\res_pixmap.obj $(OFZ)\res_text.obj $(OFZ)\res_bitmap.obj \
@@ -303,8 +303,7 @@ LIBMUPDF_DEF = $(MUPDF_DIR)\libmupdf.def
 LIBMUPDF_OBJS = $(LIBS_OBJS)
 LIBMUPDF_DLL = $(O)\libmupdf.dll
 
-all: $(O) $(PDFDRAW_APP) $(PDFSHOW_APP) $(PDFCLEAN_APP) $(PDFINFO_APP) $(PDFEXTRACT_APP) $(PDFAPP_APP) $(XPSDRAW_APP)
-# TODO: $(PDFBENCH_APP)
+all: $(O) $(PDFDRAW_APP) $(PDFSHOW_APP) $(PDFCLEAN_APP) $(PDFINFO_APP) $(PDFEXTRACT_APP) $(PDFAPP_APP) $(XPSDRAW_APP) $(PDFBENCH_APP)
 
 clean: force
 	-rmdir /S /Q $(O)

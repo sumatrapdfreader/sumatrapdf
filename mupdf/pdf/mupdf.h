@@ -420,25 +420,7 @@ void pdf_ft_free_vsubst(pdf_font_desc *fontdesc);
  * Interactive features
  */
 
-typedef struct pdf_link_s pdf_link;
 typedef struct pdf_annot_s pdf_annot;
-
-typedef enum pdf_link_kind_e
-{
-	PDF_LINK_GOTO = 0,
-	PDF_LINK_URI,
-	PDF_LINK_LAUNCH,
-	PDF_LINK_NAMED,
-	PDF_LINK_ACTION,
-} pdf_link_kind;
-
-struct pdf_link_s
-{
-	pdf_link_kind kind;
-	fz_rect rect;
-	fz_obj *dest;
-	pdf_link *next;
-};
 
 struct pdf_annot_s
 {
@@ -449,15 +431,16 @@ struct pdf_annot_s
 	pdf_annot *next;
 };
 
+fz_link_dest pdf_parse_link_dest(pdf_xref *xref, fz_obj *dest);
+
 fz_obj *pdf_lookup_dest(pdf_xref *xref, fz_obj *needle);
 fz_obj *pdf_lookup_name(pdf_xref *xref, char *which, fz_obj *needle);
 fz_obj *pdf_load_name_tree(pdf_xref *xref, char *which);
 
 fz_outline *pdf_load_outline(pdf_xref *xref);
 
-pdf_link *pdf_load_link(pdf_xref *xref, fz_obj *dict);
-void pdf_load_links(pdf_link **, pdf_xref *, fz_obj *annots);
-void pdf_free_link(fz_context *ctx, pdf_link *link);
+fz_link *pdf_load_link(pdf_xref *xref, fz_obj *dict);
+void pdf_load_links(fz_link **, pdf_xref *, fz_obj *annots);
 
 void pdf_load_annots(pdf_annot **, pdf_xref *, fz_obj *annots);
 void pdf_free_annot(fz_context *ctx, pdf_annot *link);
@@ -475,7 +458,7 @@ struct pdf_page_s
 	int transparency;
 	fz_obj *resources;
 	fz_buffer *contents;
-	pdf_link *links;
+	fz_link *links;
 	pdf_annot *annots;
 };
 

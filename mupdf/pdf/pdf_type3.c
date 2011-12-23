@@ -12,7 +12,7 @@ pdf_load_type3_font(pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
 {
 	char buf[256];
 	char *estrings[256];
-	pdf_font_desc *fontdesc;
+	pdf_font_desc *fontdesc = NULL;
 	fz_obj *encoding;
 	fz_obj *widths;
 	fz_obj *charprocs;
@@ -22,6 +22,8 @@ pdf_load_type3_font(pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
 	fz_rect bbox;
 	fz_matrix matrix;
 	fz_context *ctx = xref->ctx;
+
+	fz_var(fontdesc);
 
 	fz_try(ctx)
 	{
@@ -159,7 +161,8 @@ pdf_load_type3_font(pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
 	}
 	fz_catch(ctx)
 	{
-		fz_drop_font(ctx, fontdesc->font);
+		if (fontdesc)
+			fz_drop_font(ctx, fontdesc->font);
 		fz_free(ctx, fontdesc);
 		fz_throw(ctx, "cannot load type3 font (%d %d R)", fz_to_num(dict), fz_to_gen(dict));
 	}

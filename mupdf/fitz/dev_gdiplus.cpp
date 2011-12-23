@@ -464,9 +464,9 @@ public:
 			}
 			Graphics g2(scaled);
 			_setup(&g2);
-			g2.DrawImage(&PixmapBitmap(ctx, image), Rect(0, 0, w, h), 0, 0, image->w, image->h, UnitPixel, &DrawImageAttributes(1.0f));
-			
-			graphics->DrawImage(scaled, corners, _countof(corners), 0, 0, w, h, UnitPixel, &DrawImageAttributes(alpha));
+			Status status = g2.DrawImage(&PixmapBitmap(ctx, image), Rect(0, 0, w, h), 0, 0, image->w, image->h, UnitPixel, &DrawImageAttributes(1.0f));
+			if (status == Ok)
+				graphics->DrawImage(scaled, corners, _countof(corners), 0, 0, w, h, UnitPixel, &DrawImageAttributes(alpha));
 			delete scaled;
 			fz_free(ctx, pal8bit);
 		}

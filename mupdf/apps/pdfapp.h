@@ -49,7 +49,7 @@ struct pdfapp_s
 	float page_rotate;
 	fz_display_list *page_list;
 	fz_text_span *page_text;
-	pdf_link *page_links;
+	fz_link *page_links;
 
 	/* snapback history */
 	int hist[256];

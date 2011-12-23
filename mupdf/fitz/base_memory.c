@@ -53,19 +53,6 @@ fz_malloc(fz_context *ctx, unsigned int size)
 	return p;
 }
 
-/* SumatraPDF: allow to failibly allocate memory */
-void *
-fz_calloc_no_abort(int count, int size)
-{
-	if (count == 0 || size == 0)
-		return NULL;
-
-	if (count < 0 || size < 0 || count > INT_MAX / size)
-		return NULL;
-
-	return malloc(count * size);
-}
-
 void *
 fz_malloc_no_throw(fz_context *ctx, unsigned int size)
 {

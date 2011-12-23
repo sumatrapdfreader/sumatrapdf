@@ -296,7 +296,7 @@ pdf_read_new_xref_section(pdf_xref *xref, fz_stream *stm, int i0, int i1, int w0
 static fz_obj *
 pdf_read_new_xref(pdf_xref *xref, char *buf, int cap)
 {
-	fz_stream *stm;
+	fz_stream *stm = NULL;
 	fz_obj *trailer = NULL;
 	fz_obj *index = NULL;
 	fz_obj *obj = NULL;
@@ -306,6 +306,7 @@ pdf_read_new_xref(pdf_xref *xref, char *buf, int cap)
 	fz_context *ctx = xref->ctx;
 
 	fz_var(trailer);
+	fz_var(stm);
 
 	fz_try(ctx)
 	{
@@ -846,8 +847,8 @@ pdf_debug_xref(pdf_xref *xref)
 static void
 pdf_load_obj_stm(pdf_xref *xref, int num, int gen, char *buf, int cap)
 {
-	fz_stream *stm;
-	fz_obj *objstm;
+	fz_stream *stm = NULL;
+	fz_obj *objstm = NULL;
 	int *numbuf = NULL;
 	int *ofsbuf = NULL;
 
@@ -860,6 +861,9 @@ pdf_load_obj_stm(pdf_xref *xref, int num, int gen, char *buf, int cap)
 
 	fz_var(numbuf);
 	fz_var(ofsbuf);
+	fz_var(objstm);
+	fz_var(stm);
+
 	fz_try(ctx)
 	{
 		objstm = pdf_load_object(xref, num, gen);

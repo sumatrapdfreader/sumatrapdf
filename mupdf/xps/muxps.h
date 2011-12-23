@@ -13,9 +13,6 @@ typedef unsigned char byte;
 
 typedef struct xps_document_s xps_document;
 
-/* SumatraPDF: extended link support */
-typedef struct xps_anchor_s xps_anchor;
-
 #define REL_START_PART \
 	"http://schemas.microsoft.com/xps/2005/06/fixedrepresentation"
 #define REL_DOC_STRUCTURE \
@@ -252,8 +249,8 @@ struct xps_document_s
 	/* Current device */
 	fz_device *dev;
 
-	/* SumatraPDF: set to non-NULL for anchor extraction */
-	xps_anchor *link_root;
+	/* SumatraPDF: set to non-NULL for link extraction */
+	fz_link *link_root;
 };
 
 xps_document *xps_open_file(fz_context *ctx, char *filename);
@@ -261,15 +258,7 @@ xps_document *xps_open_stream(fz_stream *file);
 void xps_free_context(xps_document *doc);
 
 /* SumatraPDF: extended link support */
-struct xps_anchor_s
-{
-	char *target;
-	fz_rect rect;
-	xps_anchor *next;
-};
 void xps_extract_anchor_info(xps_document *doc, xml_element *node, fz_rect rect);
-void xps_free_anchor(xps_document *doc, xps_anchor *link);
-
 /* SumatraPDF: extract document properties (hacky) */
 fz_obj *xps_extract_doc_props(xps_document *doc);
 
