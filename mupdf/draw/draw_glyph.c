@@ -23,19 +23,27 @@ struct fz_glyph_key_s
 };
 
 fz_glyph_cache *
-fz_new_glyph_cache(void)
+fz_new_glyph_cache(fz_context *ctx)
 {
 	fz_glyph_cache *cache;
 
-	cache = fz_malloc(sizeof(fz_glyph_cache));
-	cache->hash = fz_new_hash_table(509, sizeof(fz_glyph_key));
+	cache = fz_malloc_struct(ctx, fz_glyph_cache);
+	fz_try(ctx)
+	{
+		cache->hash = fz_new_hash_table(ctx, 509, sizeof(fz_glyph_key));
+	}
+	fz_catch(ctx)
+	{
+		fz_free(ctx, cache);
+		fz_rethrow(ctx);
+	}
 	cache->total = 0;
 
 	return cache;
 }
 
 static void
-fz_evict_glyph_cache(fz_glyph_cache *cache)
+fz_evict_glyph_cache(fz_context *ctx, fz_glyph_cache *cache)
 {
 	fz_glyph_key *key;
 	fz_pixmap *pixmap;
@@ -45,10 +53,10 @@ fz_evict_glyph_cache(fz_glyph_cache *cache)
 	{
 		key = fz_hash_get_key(cache->hash, i);
 		if (key->font)
-			fz_drop_font(key->font);
+			fz_drop_font(ctx, key->font);
 		pixmap = fz_hash_get_val(cache->hash, i);
 		if (pixmap)
-			fz_drop_pixmap(pixmap);
+			fz_drop_pixmap(ctx, pixmap);
 	}
 
 	cache->total = 0;
@@ -57,23 +65,26 @@ fz_evict_glyph_cache(fz_glyph_cache *cache)
 }
 
 void
-fz_free_glyph_cache(fz_glyph_cache *cache)
+fz_free_glyph_cache(fz_context *ctx, fz_glyph_cache *cache)
 {
-	fz_evict_glyph_cache(cache);
+	if (!cache)
+		return;
+
+	fz_evict_glyph_cache(ctx, cache);
 	fz_free_hash(cache->hash);
-	fz_free(cache);
+	fz_free(ctx, cache);
 }
 
 fz_pixmap *
-fz_render_stroked_glyph(fz_glyph_cache *cache, fz_font *font, int gid, fz_matrix trm, fz_matrix ctm, fz_stroke_state *stroke)
+fz_render_stroked_glyph(fz_context *ctx, fz_glyph_cache *cache, fz_font *font, int gid, fz_matrix trm, fz_matrix ctm, fz_stroke_state *stroke)
 {
 	if (font->ft_face)
-		return fz_render_ft_stroked_glyph(font, gid, trm, ctm, stroke);
-	return fz_render_glyph(cache, font, gid, trm, NULL);
+		return fz_render_ft_stroked_glyph(ctx, font, gid, trm, ctm, stroke);
+	return fz_render_glyph(ctx, cache, font, gid, trm, NULL);
 }
 
 fz_pixmap *
-fz_render_glyph(fz_glyph_cache *cache, fz_font *font, int gid, fz_matrix ctm, fz_colorspace *model)
+fz_render_glyph(fz_context *ctx, fz_glyph_cache *cache, fz_font *font, int gid, fz_matrix ctm, fz_colorspace *model)
 {
 	fz_glyph_key key;
 	fz_pixmap *val;
@@ -82,7 +93,7 @@ fz_render_glyph(fz_glyph_cache *cache, fz_font *font, int gid, fz_matrix ctm, fz
 	if (size > MAX_FONT_SIZE)
 	{
 		/* TODO: this case should be handled by rendering glyph as a path fill */
-		fz_warn("font size too large (%g), not rendering glyph", size);
+		fz_warn(ctx, "font size too large (%g), not rendering glyph", size);
 		return NULL;
 	}
 
@@ -105,15 +116,15 @@ fz_render_glyph(fz_glyph_cache *cache, fz_font *font, int gid, fz_matrix ctm, fz
 
 	if (font->ft_face)
 	{
-		val = fz_render_ft_glyph(font, gid, ctm);
+		val = fz_render_ft_glyph(ctx, font, gid, ctm);
 	}
 	else if (font->t3procs)
 	{
-		val = fz_render_t3_glyph(font, gid, ctm, model);
+		val = fz_render_t3_glyph(ctx, font, gid, ctm, model);
 	}
 	else
 	{
-		fz_warn("assert: uninitialized font structure");
+		fz_warn(ctx, "assert: uninitialized font structure");
 		return NULL;
 	}
 
@@ -122,11 +133,19 @@ fz_render_glyph(fz_glyph_cache *cache, fz_font *font, int gid, fz_matrix ctm, fz
 		if (val->w < MAX_GLYPH_SIZE && val->h < MAX_GLYPH_SIZE)
 		{
 			if (cache->total + val->w * val->h > MAX_CACHE_SIZE)
-				fz_evict_glyph_cache(cache);
-			fz_keep_font(key.font);
-			fz_hash_insert(cache->hash, &key, val);
+				fz_evict_glyph_cache(ctx, cache);
+			fz_try(ctx)
+			{
+				fz_hash_insert(cache->hash, &key, val);
+				fz_keep_font(key.font);
+				val = fz_keep_pixmap(val);
+			}
+			fz_catch(ctx)
+			{
+				fz_warn(ctx, "Failed to encache glyph - continuing");
+			}
 			cache->total += val->w * val->h;
-			return fz_keep_pixmap(val);
+			return val;
 		}
 		return val;
 	}

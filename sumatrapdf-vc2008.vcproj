@@ -541,6 +541,10 @@
 				Name="fitz"
 				>
 				<File
+					RelativePath=".\mupdf\fitz\base_context.c"
+					>
+				</File>
+				<File
 					RelativePath=".\mupdf\fitz\base_error.c"
 					>
 				</File>
@@ -657,10 +661,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\fitz\obj_print.c"
-					>
-				</File>
-				<File
 					RelativePath=".\mupdf\fitz\res_bitmap.c"
 					>
 				</File>
@@ -686,6 +686,10 @@
 				</File>
 				<File
 					RelativePath=".\mupdf\fitz\res_shade.c"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\fitz\res_store.c"
 					>
 				</File>
 				<File
@@ -866,10 +870,6 @@
 				</File>
 				<File
 					RelativePath=".\mupdf\pdf\pdf_shade.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\pdf\pdf_store.c"
 					>
 				</File>
 				<File

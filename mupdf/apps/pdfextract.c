@@ -6,15 +6,8 @@
 #include "mupdf.h"
 
 static pdf_xref *xref = NULL;
+static fz_context *ctx = NULL;
 static int dorgb = 0;
-
-void die(fz_error error)
-{
-	fz_catch(error, "aborting");
-	if (xref)
-		pdf_free_xref(xref);
-	exit(1);
-}
 
 static void usage(void)
 {
@@ -38,25 +31,22 @@ static int isfontdesc(fz_obj *obj)
 
 static void saveimage(int num)
 {
-	fz_error error;
 	fz_pixmap *img;
 	fz_obj *ref;
 	char name[1024];
 
-	ref = fz_new_indirect(num, 0, xref);
+	ref = fz_new_indirect(ctx, num, 0, xref);
 
 	/* TODO: detect DCTD and save as jpeg */
 
-	error = pdf_load_image(&img, xref, ref);
-	if (error)
-		die(error);
+	img = pdf_load_image(xref, ref);
 
 	if (dorgb && img->colorspace && img->colorspace != fz_device_rgb)
 	{
 		fz_pixmap *temp;
-		temp = fz_new_pixmap_with_rect(fz_device_rgb, fz_bound_pixmap(img));
-		fz_convert_pixmap(img, temp);
-		fz_drop_pixmap(img);
+		temp = fz_new_pixmap_with_rect(ctx, fz_device_rgb, fz_bound_pixmap(img));
+		fz_convert_pixmap(ctx, img, temp);
+		fz_drop_pixmap(ctx, img);
 		img = temp;
 	}
 
@@ -64,22 +54,21 @@ static void saveimage(int num)
 	{
 		sprintf(name, "img-%04d.png", num);
 		printf("extracting image %s\n", name);
-		fz_write_png(img, name, 0);
+		fz_write_png(ctx, img, name, 0);
 	}
 	else
 	{
 		sprintf(name, "img-%04d.pam", num);
 		printf("extracting image %s\n", name);
-		fz_write_pam(img, name, 0);
+		fz_write_pam(ctx, img, name, 0);
 	}
 
-	fz_drop_pixmap(img);
+	fz_drop_pixmap(ctx, img);
 	fz_drop_obj(ref);
 }
 
 static void savefont(fz_obj *dict, int num)
 {
-	fz_error error;
 	char name[1024];
 	char *subtype;
 	fz_buffer *buf;
@@ -115,7 +104,7 @@ static void savefont(fz_obj *dict, int num)
 
 		obj = fz_dict_gets(obj, "Subtype");
 		if (obj && !fz_is_name(obj))
-			die(fz_throw("Invalid font descriptor subtype"));
+			fz_throw(ctx, "Invalid font descriptor subtype");
 
 		subtype = fz_to_name(obj);
 		if (!strcmp(subtype, "Type1C"))
@@ -123,49 +112,42 @@ static void savefont(fz_obj *dict, int num)
 		else if (!strcmp(subtype, "CIDFontType0C"))
 			ext = "cid";
 		else
-			die(fz_throw("Unhandled font type '%s'", subtype));
+			fz_throw(ctx, "Unhandled font type '%s'", subtype);
 	}
 
 	if (!stream)
 	{
-		fz_warn("Unhandled font type");
+		fz_warn(ctx, "Unhandled font type");
 		return;
 	}
 
-	buf = fz_new_buffer(0);
-
-	error = pdf_load_stream(&buf, xref, fz_to_num(stream), fz_to_gen(stream));
-	if (error)
-		die(error);
+	buf = pdf_load_stream(xref, fz_to_num(stream), fz_to_gen(stream));
 
 	sprintf(name, "%s-%04d.%s", fontname, num, ext);
 	printf("extracting font %s\n", name);
 
 	f = fopen(name, "wb");
-	if (f == NULL)
-		die(fz_throw("Error creating font file"));
+	if (!f)
+		fz_throw(ctx, "Error creating font file");
 
 	n = fwrite(buf->data, 1, buf->len, f);
 	if (n < buf->len)
-		die(fz_throw("Error writing font file"));
+		fz_throw(ctx, "Error writing font file");
 
 	if (fclose(f) < 0)
-		die(fz_throw("Error closing font file"));
+		fz_throw(ctx, "Error closing font file");
 
-	fz_drop_buffer(buf);
+	fz_drop_buffer(ctx, buf);
 }
 
 static void showobject(int num)
 {
-	fz_error error;
 	fz_obj *obj;
 
 	if (!xref)
-		die(fz_throw("no file specified"));
+		fz_throw(ctx, "no file specified");
 
-	error = pdf_load_object(&obj, xref, num, 0);
-	if (error)
-		die(error);
+	obj = pdf_load_object(xref, num, 0);
 
 	if (isimage(obj))
 		saveimage(num);
@@ -177,7 +159,6 @@ static void showobject(int num)
 
 int main(int argc, char **argv)
 {
-	fz_error error;
 	char *infile;
 	char *password = "";
 	int c, o;
@@ -196,9 +177,15 @@ int main(int argc, char **argv)
 		usage();
 
 	infile = argv[fz_optind++];
-	error = pdf_open_xref(&xref, infile, password);
-	if (error)
-		die(fz_rethrow(error, "cannot open input file '%s'", infile));
+
+	ctx = fz_new_context(&fz_alloc_default, 256<<20);
+	if (!ctx)
+	{
+		fprintf(stderr, "cannot initialise context\n");
+		exit(1);
+	}
+
+	xref = pdf_open_xref(ctx, infile, password);
 
 	if (fz_optind == argc)
 	{
@@ -215,8 +202,7 @@ int main(int argc, char **argv)
 	}
 
 	pdf_free_xref(xref);
-
-	fz_flush_warnings();
-
+	fz_flush_warnings(ctx);
+	fz_free_context(ctx);
 	return 0;
 }

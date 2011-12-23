@@ -42,6 +42,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\scripts;..\fitz;..\pdf;..\thirdparty\jbig2dec;..\thirdparty\jpeg-8c;..\thirdparty\openjpeg-1.4\libopenjpeg;..\thirdparty\zlib-1.2.5;..\thirdparty\freetype-2.4.4\include"
+				PreprocessorDefinitions="DEBUG=1"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -110,6 +111,69 @@
 				EnableFunctionLevelLinking="true"
 				WarningLevel="3"
 				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Memento|Win32"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)\$(ProjectName)"
+			ConfigurationType="4"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+				Description="Generate CMap and Font source files"
+				CommandLine="generate.bat"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories="..\scripts;..\fitz;..\pdf;..\thirdparty\jbig2dec;..\thirdparty\jpeg-8c;..\thirdparty\openjpeg-1.4\libopenjpeg;..\thirdparty\zlib-1.2.5;..\thirdparty\freetype-2.4.4\include"
+				PreprocessorDefinitions="MEMENTO=1;DEBUG=1"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="1"
+				WarningLevel="3"
+				DebugInformationFormat="4"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -247,10 +311,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\pdf\pdf_store.c"
-				>
-			</File>
-			<File
 				RelativePath="..\pdf\pdf_stream.c"
 				>
 			</File>
@@ -274,6 +334,10 @@
 		<Filter
 			Name="fitz"
 			>
+			<File
+				RelativePath="..\fitz\base_context.c"
+				>
+			</File>
 			<File
 				RelativePath="..\fitz\base_error.c"
 				>
@@ -323,10 +387,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\fitz\doc_outline.c"
-				>
-			</File>
-			<File
 				RelativePath="..\fitz\dev_bbox.c"
 				>
 			</File>
@@ -344,6 +404,10 @@
 			</File>
 			<File
 				RelativePath="..\fitz\dev_trace.c"
+				>
+			</File>
+			<File
+				RelativePath="..\fitz\doc_outline.c"
 				>
 			</File>
 			<File
@@ -383,7 +447,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\fitz\obj_print.c"
+				RelativePath="..\fitz\memento.c"
+				>
+			</File>
+			<File
+				RelativePath="..\fitz\memento.h"
 				>
 			</File>
 			<File
@@ -412,6 +480,10 @@
 			</File>
 			<File
 				RelativePath="..\fitz\res_shade.c"
+				>
+			</File>
+			<File
+				RelativePath="..\fitz\res_store.c"
 				>
 			</File>
 			<File
@@ -482,6 +554,10 @@
 		<Filter
 			Name="xps"
 			>
+			<File
+				RelativePath="..\xps\muxps.h"
+				>
+			</File>
 			<File
 				RelativePath="..\xps\xps_common.c"
 				>

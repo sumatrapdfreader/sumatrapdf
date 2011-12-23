@@ -11,8 +11,8 @@ char *
 fz_strsep(char **stringp, const char *delim)
 {
 	char *ret = *stringp;
-	if (ret == NULL) return NULL;
-	if ((*stringp = strpbrk(*stringp, delim)) != NULL)
+	if (!ret) return NULL;
+	if ((*stringp = strpbrk(*stringp, delim)))
 		*((*stringp)++) = '\0';
 	return ret;
 }

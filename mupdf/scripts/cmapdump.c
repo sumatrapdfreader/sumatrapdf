@@ -3,9 +3,13 @@
 #include <stdio.h>
 #include <string.h>
 
+/* We never want to build memento versions of the cmapdump util */
+#undef MEMENTO
+
 #include "fitz.h"
 #include "mupdf.h"
 
+#include "../fitz/base_context.c"
 #include "../fitz/base_error.c"
 #include "../fitz/base_memory.c"
 #include "../fitz/base_string.c"
@@ -32,16 +36,23 @@ int
 main(int argc, char **argv)
 {
 	pdf_cmap *cmap;
-	fz_error error;
 	fz_stream *fi;
 	FILE *fo;
 	char name[256];
 	char *realname;
 	int i, k;
+	fz_context *ctx;
 
 	if (argc < 3)
 	{
 		fprintf(stderr, "usage: cmapdump output.c lots of cmap files\n");
+		return 1;
+	}
+
+	ctx = fz_new_context(&fz_alloc_default, FZ_STORE_UNLIMITED);
+	if (!ctx)
+	{
+		fprintf(stderr, "cannot initialise context\n");
 		return 1;
 	}
 
@@ -73,16 +84,9 @@ main(int argc, char **argv)
 		strcpy(name, realname);
 		clean(name);
 
-		fi = fz_open_file(argv[i]);
-		if (!fi)
-			fz_throw("cmapdump: could not open input file '%s'\n", argv[i]);
-
-		error = pdf_parse_cmap(&cmap, fi);
-		if (error)
-		{
-			fz_catch(error, "cmapdump: could not parse input cmap '%s'\n", argv[i]);
-			return 1;
-		}
+		fi = fz_open_file(ctx, argv[i]);
+		cmap = pdf_parse_cmap(fi);
+		fz_close(fi);
 
 		fprintf(fo, "\n/* %s */\n\n", cmap->cmap_name);
 
@@ -118,7 +122,7 @@ main(int argc, char **argv)
 		}
 
 		fprintf(fo, "static pdf_cmap cmap_%s = {\n", name);
-		fprintf(fo, "\t-1, ");
+		fprintf(fo, "\t{-1, pdf_free_cmap_imp}, ");
 		fprintf(fo, "\"%s\", ", cmap->cmap_name);
 		fprintf(fo, "\"%s\", 0, ", cmap->usecmap_name);
 		fprintf(fo, "%d, ", cmap->wmode);
@@ -144,8 +148,6 @@ main(int argc, char **argv)
 
 		if (getenv("verbose"))
 			printf("\t{\"%s\",&cmap_%s},\n", cmap->cmap_name, name);
-
-		fz_close(fi);
 	}
 
 	if (fclose(fo))
@@ -154,5 +156,44 @@ main(int argc, char **argv)
 		return 1;
 	}
 
+	fz_free_context(ctx);
+	return 0;
+}
+
+void fz_new_font_context(fz_context *ctx)
+{
+}
+
+void fz_free_font_context(fz_context *ctx)
+{
+}
+
+void fz_new_aa_context(fz_context *ctx)
+{
+}
+
+void fz_free_aa_context(fz_context *ctx)
+{
+}
+
+void *fz_keep_storable(fz_storable *s)
+{
+	return s;
+}
+
+void fz_drop_storable(fz_context *ctx, fz_storable *s)
+{
+}
+
+void fz_new_store_context(fz_context *ctx, unsigned int max)
+{
+}
+
+void fz_free_store_context(fz_context *ctx)
+{
+}
+
+int fz_store_scavenge(fz_context *ctx, unsigned int size, int *phase)
+{
 	return 0;
 }

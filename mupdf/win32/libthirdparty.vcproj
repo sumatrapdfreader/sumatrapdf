@@ -40,7 +40,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\scripts;..\thirdparty\jbig2dec;..\thirdparty\jpeg-8c;..\thirdparty\openjpeg-1.4\libopenjpeg;..\thirdparty\zlib-1.2.5;..\thirdparty\freetype-2.4.4\include"
-				PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;FT_CONFIG_MODULES_H=\&quot;slimftmodules.h\&quot;;FT_CONFIG_OPTIONS_H=\&quot;slimftoptions.h\&quot;"
+				PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;FT_CONFIG_MODULES_H=\&quot;slimftmodules.h\&quot;;FT_CONFIG_OPTIONS_H=\&quot;slimftoptions.h\&quot;;DEBUG=1"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -108,6 +108,67 @@
 				EnableFunctionLevelLinking="true"
 				WarningLevel="3"
 				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Memento|Win32"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)\$(ProjectName)"
+			ConfigurationType="4"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories="..\scripts;..\thirdparty\jbig2dec;..\thirdparty\jpeg-8c;..\thirdparty\openjpeg-1.4\libopenjpeg;..\thirdparty\zlib-1.2.5;..\thirdparty\freetype-2.4.4\include"
+				PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;FT_CONFIG_MODULES_H=\&quot;slimftmodules.h\&quot;;FT_CONFIG_OPTIONS_H=\&quot;slimftoptions.h\&quot;;MEMENTO=1;DEBUG=1"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="1"
+				WarningLevel="3"
+				DebugInformationFormat="4"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"

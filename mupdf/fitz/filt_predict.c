@@ -153,8 +153,6 @@ read_predict(fz_stream *stm, unsigned char *buf, int len)
 	while (p < ep)
 	{
 		n = fz_read(state->chain, state->in, state->stride + ispng);
-		if (n < 0)
-			return fz_rethrow(n, "read error in prediction filter");
 		if (n == 0)
 			return p - buf;
 
@@ -179,65 +177,84 @@ read_predict(fz_stream *stm, unsigned char *buf, int len)
 }
 
 static void
-close_predict(fz_stream *stm)
+close_predict(fz_context *ctx, void *state_)
 {
-	fz_predict *state = stm->state;
+	fz_predict *state = (fz_predict *)state_;
 	fz_close(state->chain);
-	fz_free(state->in);
-	fz_free(state->out);
-	fz_free(state->ref);
-	fz_free(state);
+	fz_free(ctx, state->in);
+	fz_free(ctx, state->out);
+	fz_free(ctx, state->ref);
+	fz_free(ctx, state);
 }
 
 fz_stream *
 fz_open_predict(fz_stream *chain, fz_obj *params)
 {
-	fz_predict *state;
+	fz_predict *state = NULL;
 	fz_obj *obj;
+	fz_context *ctx = chain->ctx;
 
-	state = fz_malloc(sizeof(fz_predict));
-	state->chain = chain;
+	fz_var(state);
 
-	state->predictor = 1;
-	state->columns = 1;
-	state->colors = 1;
-	state->bpc = 8;
-
-	obj = fz_dict_gets(params, "Predictor");
-	if (obj)
-		state->predictor = fz_to_int(obj);
-
-	if (state->predictor != 1 && state->predictor != 2 &&
-		state->predictor != 10 && state->predictor != 11 &&
-		state->predictor != 12 && state->predictor != 13 &&
-		state->predictor != 14 && state->predictor != 15)
+	fz_try(ctx)
 	{
-		fz_warn("invalid predictor: %d", state->predictor);
+		state = fz_malloc_struct(ctx, fz_predict);
+		state->in = NULL;
+		state->out = NULL;
+		state->chain = chain;
+
 		state->predictor = 1;
+		state->columns = 1;
+		state->colors = 1;
+		state->bpc = 8;
+
+		obj = fz_dict_gets(params, "Predictor");
+		if (obj)
+			state->predictor = fz_to_int(obj);
+
+		if (state->predictor != 1 && state->predictor != 2 &&
+			state->predictor != 10 && state->predictor != 11 &&
+			state->predictor != 12 && state->predictor != 13 &&
+			state->predictor != 14 && state->predictor != 15)
+		{
+			fz_warn(ctx, "invalid predictor: %d", state->predictor);
+			state->predictor = 1;
+		}
+
+		obj = fz_dict_gets(params, "Columns");
+		if (obj)
+			state->columns = fz_to_int(obj);
+
+		obj = fz_dict_gets(params, "Colors");
+		if (obj)
+			state->colors = fz_to_int(obj);
+
+		obj = fz_dict_gets(params, "BitsPerComponent");
+		if (obj)
+			state->bpc = fz_to_int(obj);
+
+		state->stride = (state->bpc * state->colors * state->columns + 7) / 8;
+		state->bpp = (state->bpc * state->colors + 7) / 8;
+
+		state->in = fz_malloc(ctx, state->stride + 1);
+		state->out = fz_malloc(ctx, state->stride);
+		state->ref = fz_malloc(ctx, state->stride);
+		state->rp = state->out;
+		state->wp = state->out;
+
+		memset(state->ref, 0, state->stride);
+	}
+	fz_catch(ctx)
+	{
+		if (state)
+		{
+			fz_free(ctx, state->in);
+			fz_free(ctx, state->out);
+		}
+		fz_free(ctx, state);
+		fz_close(chain);
+		fz_rethrow(ctx);
 	}
 
-	obj = fz_dict_gets(params, "Columns");
-	if (obj)
-		state->columns = fz_to_int(obj);
-
-	obj = fz_dict_gets(params, "Colors");
-	if (obj)
-		state->colors = fz_to_int(obj);
-
-	obj = fz_dict_gets(params, "BitsPerComponent");
-	if (obj)
-		state->bpc = fz_to_int(obj);
-
-	state->stride = (state->bpc * state->colors * state->columns + 7) / 8;
-	state->bpp = (state->bpc * state->colors + 7) / 8;
-
-	state->in = fz_malloc(state->stride + 1);
-	state->out = fz_malloc(state->stride);
-	state->ref = fz_malloc(state->stride);
-	state->rp = state->out;
-	state->wp = state->out;
-
-	memset(state->ref, 0, state->stride);
-
-	return fz_new_stream(state, read_predict, close_predict);
+	return fz_new_stream(ctx, state, read_predict, close_predict);
 }

@@ -27,9 +27,9 @@ static void pdfapp_warn(pdfapp_t *app, const char *fmt, ...)
 	winwarn(app, buf);
 }
 
-static void pdfapp_error(pdfapp_t *app, fz_error error)
+static void pdfapp_error(pdfapp_t *app, char *msg)
 {
-	winerror(app, error);
+	winerror(app, msg);
 }
 
 char *pdfapp_version(pdfapp_t *app)
@@ -68,12 +68,13 @@ char *pdfapp_usage(pdfapp_t *app)
 	;
 }
 
-void pdfapp_init(pdfapp_t *app)
+void pdfapp_init(fz_context *ctx, pdfapp_t *app)
 {
 	memset(app, 0, sizeof(pdfapp_t));
 	app->scrw = 640;
 	app->scrh = 480;
 	app->resolution = 72;
+	app->ctx = ctx;
 }
 
 void pdfapp_invert(pdfapp_t *app, fz_bbox rect)
@@ -99,21 +100,26 @@ void pdfapp_invert(pdfapp_t *app, fz_bbox rect)
 
 static void pdfapp_open_pdf(pdfapp_t *app, char *filename, int fd)
 {
-	fz_error error;
 	fz_stream *file;
 	char *password = "";
 	fz_obj *obj;
 	fz_obj *info;
+	fz_context *ctx = app->ctx;
 
 	/*
 	 * Open PDF and load xref table
 	 */
 
-	file = fz_open_fd(fd);
-	error = pdf_open_xref_with_stream(&app->xref, file, NULL);
-	if (error)
-		pdfapp_error(app, fz_rethrow(error, "cannot open document '%s'", filename));
-	fz_close(file);
+	fz_try(ctx)
+	{
+		file = fz_open_fd(ctx, fd);
+		app->xref = pdf_open_xref_with_stream(file, NULL);
+		fz_close(file);
+	}
+	fz_catch(ctx)
+	{
+		pdfapp_error(app, "cannot open document");
+	}
 
 	/*
 	 * Handle encrypted PDF files
@@ -144,7 +150,7 @@ static void pdfapp_open_pdf(pdfapp_t *app, char *filename, int fd)
 	{
 		obj = fz_dict_gets(info, "Title");
 		if (obj)
-			app->doctitle = pdf_to_utf8(obj);
+			app->doctitle = pdf_to_utf8(ctx, obj);
 	}
 	if (!app->doctitle)
 	{
@@ -153,32 +159,41 @@ static void pdfapp_open_pdf(pdfapp_t *app, char *filename, int fd)
 			app->doctitle = strrchr(app->doctitle, '\\') + 1;
 		if (strrchr(app->doctitle, '/'))
 			app->doctitle = strrchr(app->doctitle, '/') + 1;
-		app->doctitle = fz_strdup(app->doctitle);
+		app->doctitle = fz_strdup(ctx, app->doctitle);
 	}
 
 	/*
 	 * Start at first page
 	 */
 
-	error = pdf_load_page_tree(app->xref);
-	if (error)
-		pdfapp_error(app, fz_rethrow(error, "cannot load page tree"));
+	fz_try(ctx)
+	{
+		pdf_load_page_tree(app->xref);
+	}
+	fz_catch(ctx)
+	{
+		pdfapp_error(app, "cannot load page tree");
+	}
 
 	app->pagecount = pdf_count_pages(app->xref);
 }
 
 static void pdfapp_open_xps(pdfapp_t *app, char *filename, int fd)
 {
-	fz_error error;
 	fz_stream *file;
 
-	file = fz_open_fd(fd);
-	error = xps_open_stream(&app->xps, file);
-	if (error)
-		pdfapp_error(app, fz_rethrow(error, "cannot open document '%s'", filename));
+	file = fz_open_fd(app->ctx, fd);
+	fz_try(app->ctx)
+	{
+		app->xps = xps_open_stream(file);
+	}
+	fz_catch(app->ctx)
+	{
+		pdfapp_error(app, "cannot open document");
+	}
 	fz_close(file);
 
-	app->doctitle = fz_strdup(filename);
+	app->doctitle = fz_strdup(app->ctx, filename);
 
 	app->pagecount = xps_count_pages(app->xps);
 }
@@ -190,7 +205,7 @@ void pdfapp_open(pdfapp_t *app, char *filename, int fd, int reload)
 	else
 		pdfapp_open_pdf(app, filename, fd);
 
-	app->cache = fz_new_glyph_cache();
+	app->cache = fz_new_glyph_cache(app->ctx);
 
 	if (app->pageno < 1)
 		app->pageno = 1;
@@ -215,27 +230,27 @@ void pdfapp_open(pdfapp_t *app, char *filename, int fd, int reload)
 void pdfapp_close(pdfapp_t *app)
 {
 	if (app->page_list)
-		fz_free_display_list(app->page_list);
+		fz_free_display_list(app->ctx, app->page_list);
 	app->page_list = NULL;
 
 	if (app->page_text)
-		fz_free_text_span(app->page_text);
+		fz_free_text_span(app->ctx, app->page_text);
 	app->page_text = NULL;
 
 	if (app->page_links)
-		pdf_free_link(app->page_links);
+		pdf_free_link(app->ctx, app->page_links);
 	app->page_links = NULL;
 
 	if (app->doctitle)
-		fz_free(app->doctitle);
+		fz_free(app->ctx, app->doctitle);
 	app->doctitle = NULL;
 
 	if (app->cache)
-		fz_free_glyph_cache(app->cache);
+		fz_free_glyph_cache(app->ctx, app->cache);
 	app->cache = NULL;
 
 	if (app->image)
-		fz_drop_pixmap(app->image);
+		fz_drop_pixmap(app->ctx, app->image);
 	app->image = NULL;
 
 	if (app->outline)
@@ -244,10 +259,6 @@ void pdfapp_close(pdfapp_t *app)
 
 	if (app->xref)
 	{
-		if (app->xref->store)
-			pdf_free_store(app->xref->store);
-		app->xref->store = NULL;
-
 		pdf_free_xref(app->xref);
 		app->xref = NULL;
 	}
@@ -258,7 +269,7 @@ void pdfapp_close(pdfapp_t *app)
 		app->xps = NULL;
 	}
 
-	fz_flush_warnings();
+	fz_flush_warnings(app->ctx);
 }
 
 static fz_matrix pdfapp_viewctm(pdfapp_t *app)
@@ -301,12 +312,16 @@ static void pdfapp_panview(pdfapp_t *app, int newx, int newy)
 static void pdfapp_loadpage_pdf(pdfapp_t *app)
 {
 	pdf_page *page;
-	fz_error error;
 	fz_device *mdev;
 
-	error = pdf_load_page(&page, app->xref, app->pageno - 1);
-	if (error)
-		pdfapp_error(app, error);
+	fz_try(app->ctx)
+	{
+		page = pdf_load_page(app->xref, app->pageno - 1);
+	}
+	fz_catch(app->ctx)
+	{
+		pdfapp_error(app, "cannot load page");
+	}
 
 	app->page_bbox = page->mediabox;
 	app->page_rotate = page->rotate;
@@ -314,30 +329,34 @@ static void pdfapp_loadpage_pdf(pdfapp_t *app)
 	page->links = NULL;
 
 	/* Create display list */
-	app->page_list = fz_new_display_list();
-	mdev = fz_new_list_device(app->page_list);
-	error = pdf_run_page(app->xref, page, mdev, fz_identity);
-	if (error)
+	app->page_list = fz_new_display_list(app->ctx);
+	mdev = fz_new_list_device(app->ctx, app->page_list);
+	fz_try(app->ctx)
 	{
-		error = fz_rethrow(error, "cannot draw page %d in '%s'", app->pageno, app->doctitle);
-		pdfapp_error(app, error);
+		pdf_run_page(app->xref, page, mdev, fz_identity);
+	}
+	fz_catch(app->ctx)
+	{
+		pdfapp_error(app, "cannot draw page");
 	}
 	fz_free_device(mdev);
 
-	pdf_free_page(page);
-
-	pdf_age_store(app->xref->store, 3);
+	pdf_free_page(app->ctx, page);
 }
 
 static void pdfapp_loadpage_xps(pdfapp_t *app)
 {
 	xps_page *page;
 	fz_device *mdev;
-	fz_error error;
 
-	error = xps_load_page(&page, app->xps, app->pageno - 1);
-	if (error)
-		pdfapp_error(app, fz_rethrow(error, "cannot load page %d in file '%s'", app->pageno, app->doctitle));
+	fz_try(app->ctx)
+	{
+		page = xps_load_page(app->xps, app->pageno - 1);
+	}
+	fz_catch(app->ctx)
+	{
+		pdfapp_error(app, "cannot load page");
+	}
 
 	app->page_bbox.x0 = 0;
 	app->page_bbox.y0 = 0;
@@ -347,8 +366,8 @@ static void pdfapp_loadpage_xps(pdfapp_t *app)
 	app->page_links = NULL;
 
 	/* Create display list */
-	app->page_list = fz_new_display_list();
-	mdev = fz_new_list_device(app->page_list);
+	app->page_list = fz_new_display_list(app->ctx);
+	mdev = fz_new_list_device(app->ctx, app->page_list);
 	app->xps->dev = mdev;
 	xps_parse_fixed_page(app->xps, fz_identity, page);
 	app->xps->dev = NULL;
@@ -371,11 +390,11 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 	if (loadpage)
 	{
 		if (app->page_list)
-			fz_free_display_list(app->page_list);
+			fz_free_display_list(app->ctx, app->page_list);
 		if (app->page_text)
-			fz_free_text_span(app->page_text);
+			fz_free_text_span(app->ctx, app->page_text);
 		if (app->page_links)
-			pdf_free_link(app->page_links);
+			pdf_free_link(app->ctx, app->page_links);
 
 		if (app->xref)
 			pdfapp_loadpage_pdf(app);
@@ -387,8 +406,8 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 		app->hitlen = 0;
 
 		/* Extract text */
-		app->page_text = fz_new_text_span();
-		tdev = fz_new_text_device(app->page_text);
+		app->page_text = fz_new_text_span(app->ctx);
+		tdev = fz_new_text_device(app->ctx, app->page_text);
 		fz_execute_display_list(app->page_list, tdev, fz_identity, fz_infinite_bbox);
 		fz_free_device(tdev);
 	}
@@ -404,7 +423,7 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 
 		/* Draw */
 		if (app->image)
-			fz_drop_pixmap(app->image);
+			fz_drop_pixmap(app->ctx, app->image);
 		if (app->grayscale)
 			colorspace = fz_device_gray;
 		else
@@ -413,9 +432,9 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 #else
 			colorspace = fz_device_rgb;
 #endif
-		app->image = fz_new_pixmap_with_rect(colorspace, bbox);
+		app->image = fz_new_pixmap_with_rect(app->ctx, colorspace, bbox);
 		fz_clear_pixmap_with_color(app->image, 255);
-		idev = fz_new_draw_device(app->cache, app->image);
+		idev = fz_new_draw_device(app->ctx, app->cache, app->image);
 		fz_execute_display_list(app->page_list, idev, ctm, bbox);
 		fz_free_device(idev);
 	}
@@ -445,17 +464,18 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 		wincursor(app, ARROW);
 	}
 
-	fz_flush_warnings();
+	fz_flush_warnings(app->ctx);
 }
 
 static void pdfapp_gotouri(pdfapp_t *app, fz_obj *uri)
 {
 	char *buf;
-	buf = fz_malloc(fz_to_str_len(uri) + 1);
-	memcpy(buf, fz_to_str_buf(uri), fz_to_str_len(uri));
-	buf[fz_to_str_len(uri)] = 0;
+	int n = fz_to_str_len(uri);
+	buf = fz_malloc(app->ctx, n + 1);
+	memcpy(buf, fz_to_str_buf(uri), n);
+	buf[n] = 0;
 	winopenuri(app, buf);
-	fz_free(buf);
+	fz_free(app->ctx, buf);
 }
 
 static void pdfapp_gotopage(pdfapp_t *app, fz_obj *obj)

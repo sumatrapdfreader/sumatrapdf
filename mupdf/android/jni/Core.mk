@@ -20,6 +20,7 @@ LOCAL_C_INCLUDES := \
 
 LOCAL_MODULE    := mupdfcore
 LOCAL_SRC_FILES := \
+	$(MY_ROOT)/fitz/base_context.c \
 	$(MY_ROOT)/fitz/base_error.c \
 	$(MY_ROOT)/fitz/base_geometry.c \
 	$(MY_ROOT)/fitz/base_getopt.c \
@@ -37,6 +38,7 @@ LOCAL_SRC_FILES := \
 	$(MY_ROOT)/fitz/dev_null.c \
 	$(MY_ROOT)/fitz/dev_text.c \
 	$(MY_ROOT)/fitz/dev_trace.c \
+	$(MY_ROOT)/fitz/doc_outline.c \
 	$(MY_ROOT)/fitz/filt_basic.c \
 	$(MY_ROOT)/fitz/filt_dctd.c \
 	$(MY_ROOT)/fitz/filt_faxd.c \
@@ -45,12 +47,12 @@ LOCAL_SRC_FILES := \
 	$(MY_ROOT)/fitz/filt_jpxd.c \
 	$(MY_ROOT)/fitz/filt_lzwd.c \
 	$(MY_ROOT)/fitz/filt_predict.c \
-	$(MY_ROOT)/fitz/obj_print.c \
 	$(MY_ROOT)/fitz/res_colorspace.c \
 	$(MY_ROOT)/fitz/res_font.c \
 	$(MY_ROOT)/fitz/res_path.c \
 	$(MY_ROOT)/fitz/res_pixmap.c \
 	$(MY_ROOT)/fitz/res_shade.c \
+	$(MY_ROOT)/fitz/res_store.c \
 	$(MY_ROOT)/fitz/res_text.c \
 	$(MY_ROOT)/fitz/stm_buffer.c \
 	$(MY_ROOT)/fitz/stm_open.c \
@@ -88,7 +90,6 @@ LOCAL_SRC_FILES := \
 	$(MY_ROOT)/pdf/pdf_pattern.c \
 	$(MY_ROOT)/pdf/pdf_repair.c \
 	$(MY_ROOT)/pdf/pdf_shade.c \
-	$(MY_ROOT)/pdf/pdf_store.c \
 	$(MY_ROOT)/pdf/pdf_stream.c \
 	$(MY_ROOT)/pdf/pdf_type3.c \
 	$(MY_ROOT)/pdf/pdf_unicode.c \

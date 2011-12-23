@@ -5,12 +5,14 @@
 
 static void fz_opj_error_callback(const char *msg, void *client_data)
 {
-	fz_warn("openjpeg error: %s", msg);
+	fz_context *ctx = (fz_context *)client_data;
+	// TODO: fz_warn(ctx, "openjpeg error: %s", msg);
 }
 
 static void fz_opj_warning_callback(const char *msg, void *client_data)
 {
-	fz_warn("openjpeg warning: %s", msg);
+	fz_context *ctx = (fz_context *)client_data;
+	// TODO: fz_warn(ctx, "openjpeg warning: %s", msg);
 }
 
 static void fz_opj_info_callback(const char *msg, void *client_data)
@@ -18,8 +20,8 @@ static void fz_opj_info_callback(const char *msg, void *client_data)
 	/* fz_warn("openjpeg info: %s", msg); */
 }
 
-fz_error
-fz_load_jpx_image(fz_pixmap **imgp, unsigned char *data, int size, fz_colorspace *defcs)
+fz_pixmap *
+fz_load_jpx_image(fz_context *ctx, unsigned char *data, int size, fz_colorspace *defcs)
 {
 	fz_pixmap *img;
 	opj_event_mgr_t evtmgr;
@@ -34,7 +36,7 @@ fz_load_jpx_image(fz_pixmap **imgp, unsigned char *data, int size, fz_colorspace
 	int x, y, k, v;
 
 	if (size < 2)
-		return fz_throw("not enough data to determine image format");
+		fz_throw(ctx, "not enough data to determine image format");
 
 	/* Check for SOC marker -- if found we have a bare J2K stream */
 	if (data[0] == 0xFF && data[1] == 0x4F)
@@ -50,6 +52,7 @@ fz_load_jpx_image(fz_pixmap **imgp, unsigned char *data, int size, fz_colorspace
 	opj_set_default_decoder_parameters(&params);
 
 	info = opj_create_decompress(format);
+	info->client_data = (void *)ctx;
 	opj_set_event_mgr((opj_common_ptr)info, &evtmgr, stderr);
 	opj_setup_decoder(info, &params);
 
@@ -61,16 +64,16 @@ fz_load_jpx_image(fz_pixmap **imgp, unsigned char *data, int size, fz_colorspace
 	opj_destroy_decompress(info);
 
 	if (!jpx)
-		return fz_throw("opj_decode failed");
+		fz_throw(ctx, "opj_decode failed");
 
 	for (k = 1; k < jpx->numcomps; k++)
 	{
 		if (jpx->comps[k].w != jpx->comps[0].w)
-			return fz_throw("image components have different width");
+			fz_throw(ctx, "image components have different width");
 		if (jpx->comps[k].h != jpx->comps[0].h)
-			return fz_throw("image components have different height");
+			fz_throw(ctx, "image components have different height");
 		if (jpx->comps[k].prec != jpx->comps[0].prec)
-			return fz_throw("image components have different precision");
+			fz_throw(ctx, "image components have different precision");
 	}
 
 	n = jpx->numcomps;
@@ -93,7 +96,7 @@ fz_load_jpx_image(fz_pixmap **imgp, unsigned char *data, int size, fz_colorspace
 		}
 		else
 		{
-			fz_warn("jpx file and dict colorspaces do not match");
+			fz_warn(ctx, "jpx file and dict colorspaces do not match");
 			defcs = NULL;
 		}
 	}
@@ -108,11 +111,14 @@ fz_load_jpx_image(fz_pixmap **imgp, unsigned char *data, int size, fz_colorspace
 		}
 	}
 
-	img = fz_new_pixmap_with_limit(colorspace, w, h);
-	if (!img)
+	fz_try(ctx)
+	{
+		img = fz_new_pixmap(ctx, colorspace, w, h);
+	}
+	fz_catch(ctx)
 	{
 		opj_image_destroy(jpx);
-		return fz_throw("out of memory");
+		fz_throw(ctx, "out of memory");
 	}
 
 	p = img->samples;
@@ -138,9 +144,9 @@ fz_load_jpx_image(fz_pixmap **imgp, unsigned char *data, int size, fz_colorspace
 	{
 		if (n == 4)
 		{
-			fz_pixmap *tmp = fz_new_pixmap(fz_device_rgb, w, h);
-			fz_convert_pixmap(img, tmp);
-			fz_drop_pixmap(img);
+			fz_pixmap *tmp = fz_new_pixmap(ctx, fz_device_rgb, w, h);
+			fz_convert_pixmap(ctx, img, tmp);
+			fz_drop_pixmap(ctx, img);
 			img = tmp;
 		}
 		fz_premultiply_pixmap(img);
@@ -148,6 +154,5 @@ fz_load_jpx_image(fz_pixmap **imgp, unsigned char *data, int size, fz_colorspace
 
 	opj_image_destroy(jpx);
 
-	*imgp = img;
-	return fz_okay;
+	return img;
 }

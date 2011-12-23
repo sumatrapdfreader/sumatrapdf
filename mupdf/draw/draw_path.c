@@ -542,10 +542,7 @@ fz_flatten_stroke_path(fz_gel *gel, fz_path *path, fz_stroke_state *stroke, fz_m
 	i = 0;
 
 	if (path->len > 0 && path->items[0].k != FZ_MOVETO)
-	{
-		fz_warn("assert: path must begin with moveto");
 		return;
-	}
 
 	p0.x = p0.y = 0;
 
@@ -750,10 +747,7 @@ fz_flatten_dash_path(fz_gel *gel, fz_path *path, fz_stroke_state *stroke, fz_mat
 	s.cap = stroke->start_cap;
 
 	if (path->len > 0 && path->items[0].k != FZ_MOVETO)
-	{
-		fz_warn("assert: path must begin with moveto");
 		return;
-	}
 
 	phase_len = 0;
 	for (i = 0; i < stroke->dash_len; i++)

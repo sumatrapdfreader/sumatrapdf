@@ -12,7 +12,7 @@ typedef struct pdfapp_s pdfapp_t;
 enum { ARROW, HAND, WAIT };
 
 extern void winwarn(pdfapp_t*, char *s);
-extern void winerror(pdfapp_t*, fz_error error);
+extern void winerror(pdfapp_t*, char *s);
 extern void wintitle(pdfapp_t*, char *title);
 extern void winresize(pdfapp_t*, int w, int h);
 extern void winrepaint(pdfapp_t*);
@@ -32,7 +32,7 @@ struct pdfapp_s
 	char *doctitle;
 	pdf_xref *xref;
 	fz_outline *outline;
-	xps_context *xps;
+	xps_document *xps;
 
 	int pagecount;
 	fz_glyph_cache *cache;
@@ -88,9 +88,11 @@ struct pdfapp_s
 
 	/* client context storage */
 	void *userdata;
+
+	fz_context *ctx;
 };
 
-void pdfapp_init(pdfapp_t *app);
+void pdfapp_init(fz_context *ctx, pdfapp_t *app);
 void pdfapp_open(pdfapp_t *app, char *filename, int fd, int reload);
 void pdfapp_close(pdfapp_t *app);
 

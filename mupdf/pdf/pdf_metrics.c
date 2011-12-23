@@ -21,12 +21,12 @@ pdf_set_default_vmtx(pdf_font_desc *font, int y, int w)
 }
 
 void
-pdf_add_hmtx(pdf_font_desc *font, int lo, int hi, int w)
+pdf_add_hmtx(fz_context *ctx, pdf_font_desc *font, int lo, int hi, int w)
 {
 	if (font->hmtx_len + 1 >= font->hmtx_cap)
 	{
 		font->hmtx_cap = font->hmtx_cap + 16;
-		font->hmtx = fz_realloc(font->hmtx, font->hmtx_cap, sizeof(pdf_hmtx));
+		font->hmtx = fz_resize_array(ctx, font->hmtx, font->hmtx_cap, sizeof(pdf_hmtx));
 	}
 
 	font->hmtx[font->hmtx_len].lo = lo;
@@ -36,12 +36,12 @@ pdf_add_hmtx(pdf_font_desc *font, int lo, int hi, int w)
 }
 
 void
-pdf_add_vmtx(pdf_font_desc *font, int lo, int hi, int x, int y, int w)
+pdf_add_vmtx(fz_context *ctx, pdf_font_desc *font, int lo, int hi, int x, int y, int w)
 {
 	if (font->vmtx_len + 1 >= font->vmtx_cap)
 	{
 		font->vmtx_cap = font->vmtx_cap + 16;
-		font->vmtx = fz_realloc(font->vmtx, font->vmtx_cap, sizeof(pdf_vmtx));
+		font->vmtx = fz_resize_array(ctx, font->vmtx, font->vmtx_cap, sizeof(pdf_vmtx));
 	}
 
 	font->vmtx[font->vmtx_len].lo = lo;
@@ -72,6 +72,7 @@ pdf_end_hmtx(pdf_font_desc *font)
 	if (!font->hmtx)
 		return;
 	qsort(font->hmtx, font->hmtx_len, sizeof(pdf_hmtx), cmph);
+	font->size += font->hmtx_cap * sizeof(pdf_hmtx);
 }
 
 void
@@ -80,6 +81,7 @@ pdf_end_vmtx(pdf_font_desc *font)
 	if (!font->vmtx)
 		return;
 	qsort(font->vmtx, font->vmtx_len, sizeof(pdf_vmtx), cmpv);
+	font->size += font->vmtx_cap * sizeof(pdf_vmtx);
 }
 
 pdf_hmtx

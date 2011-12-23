@@ -1,11 +1,11 @@
 #include "fitz.h"
 
 fz_text *
-fz_new_text(fz_font *font, fz_matrix trm, int wmode)
+fz_new_text(fz_context *ctx, fz_font *font, fz_matrix trm, int wmode)
 {
 	fz_text *text;
 
-	text = fz_malloc(sizeof(fz_text));
+	text = fz_malloc_struct(ctx, fz_text);
 	text->font = fz_keep_font(font);
 	text->trm = trm;
 	text->wmode = wmode;
@@ -17,26 +17,37 @@ fz_new_text(fz_font *font, fz_matrix trm, int wmode)
 }
 
 void
-fz_free_text(fz_text *text)
+fz_free_text(fz_context *ctx, fz_text *text)
 {
-	fz_drop_font(text->font);
-	fz_free(text->items);
-	fz_free(text);
+	if (text != NULL)
+	{
+		fz_drop_font(ctx, text->font);
+		fz_free(ctx, text->items);
+	}
+	fz_free(ctx, text);
 }
 
 fz_text *
-fz_clone_text(fz_text *old)
+fz_clone_text(fz_context *ctx, fz_text *old)
 {
 	fz_text *text;
 
-	text = fz_malloc(sizeof(fz_text));
+	text = fz_malloc_struct(ctx, fz_text);
+	text->len = old->len;
+	fz_try(ctx)
+	{
+		text->items = fz_malloc_array(ctx, text->len, sizeof(fz_text_item));
+	}
+	fz_catch(ctx)
+	{
+		fz_free(ctx, text);
+		fz_rethrow(ctx);
+	}
+	memcpy(text->items, old->items, text->len * sizeof(fz_text_item));
 	text->font = fz_keep_font(old->font);
 	text->trm = old->trm;
 	text->wmode = old->wmode;
-	text->len = old->len;
 	text->cap = text->len;
-	text->items = fz_calloc(text->len, sizeof(fz_text_item));
-	memcpy(text->items, old->items, text->len * sizeof(fz_text_item));
 
 	return text;
 }
@@ -91,19 +102,19 @@ fz_bound_text(fz_text *text, fz_matrix ctm)
 }
 
 static void
-fz_grow_text(fz_text *text, int n)
+fz_grow_text(fz_context *ctx, fz_text *text, int n)
 {
 	if (text->len + n < text->cap)
 		return;
 	while (text->len + n > text->cap)
 		text->cap = text->cap + 36;
-	text->items = fz_realloc(text->items, text->cap, sizeof(fz_text_item));
+	text->items = fz_resize_array(ctx, text->items, text->cap, sizeof(fz_text_item));
 }
 
 void
-fz_add_text(fz_text *text, int gid, int ucs, float x, float y)
+fz_add_text(fz_context *ctx, fz_text *text, int gid, int ucs, float x, float y)
 {
-	fz_grow_text(text, 1);
+	fz_grow_text(ctx, text, 1);
 	text->items[text->len].ucs = ucs;
 	text->items[text->len].gid = gid;
 	text->items[text->len].x = x;

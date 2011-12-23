@@ -19,6 +19,7 @@ struct fz_hash_entry_s
 
 struct fz_hash_table_s
 {
+	fz_context *ctx;
 	int keylen;
 	int size;
 	int load;
@@ -42,18 +43,27 @@ static unsigned hash(unsigned char *s, int len)
 }
 
 fz_hash_table *
-fz_new_hash_table(int initialsize, int keylen)
+fz_new_hash_table(fz_context *ctx, int initialsize, int keylen)
 {
 	fz_hash_table *table;
 
 	assert(keylen <= MAX_KEY_LEN);
 
-	table = fz_malloc(sizeof(fz_hash_table));
+	table = fz_malloc_struct(ctx, fz_hash_table);
+	table->ctx = ctx;
 	table->keylen = keylen;
 	table->size = initialsize;
 	table->load = 0;
-	table->ents = fz_calloc(table->size, sizeof(fz_hash_entry));
-	memset(table->ents, 0, sizeof(fz_hash_entry) * table->size);
+	fz_try(ctx)
+	{
+		table->ents = fz_malloc_array(ctx, table->size, sizeof(fz_hash_entry));
+		memset(table->ents, 0, sizeof(fz_hash_entry) * table->size);
+	}
+	fz_catch(ctx)
+	{
+		fz_free(ctx, table);
+		fz_rethrow(ctx);
+	}
 
 	return table;
 }
@@ -86,8 +96,8 @@ fz_hash_get_val(fz_hash_table *table, int idx)
 void
 fz_free_hash(fz_hash_table *table)
 {
-	fz_free(table->ents);
-	fz_free(table);
+	fz_free(table->ctx, table->ents);
+	fz_free(table->ctx, table);
 }
 
 static void
@@ -100,11 +110,11 @@ fz_resize_hash(fz_hash_table *table, int newsize)
 
 	if (newsize < oldload * 8 / 10)
 	{
-		fz_throw("assert: resize hash too small");
+		fz_warn(table->ctx, "assert: resize hash too small");
 		return;
 	}
 
-	table->ents = fz_calloc(newsize, sizeof(fz_hash_entry));
+	table->ents = fz_malloc_array(table->ctx, newsize, sizeof(fz_hash_entry));
 	memset(table->ents, 0, sizeof(fz_hash_entry) * newsize);
 	table->size = newsize;
 	table->load = 0;
@@ -117,7 +127,7 @@ fz_resize_hash(fz_hash_table *table, int newsize)
 		}
 	}
 
-	fz_free(oldents);
+	fz_free(table->ctx, oldents);
 }
 
 void *
@@ -166,7 +176,7 @@ fz_hash_insert(fz_hash_table *table, void *key, void *val)
 		}
 
 		if (memcmp(key, ents[pos].key, table->keylen) == 0)
-			fz_warn("assert: overwrite hash slot");
+			fz_warn(table->ctx, "assert: overwrite hash slot");
 
 		pos = (pos + 1) % size;
 	}
@@ -184,7 +194,7 @@ fz_hash_remove(fz_hash_table *table, void *key)
 	{
 		if (!ents[pos].val)
 		{
-			fz_warn("assert: remove inexistant hash entry");
+			fz_warn(table->ctx, "assert: remove inexistant hash entry");
 			return;
 		}
 

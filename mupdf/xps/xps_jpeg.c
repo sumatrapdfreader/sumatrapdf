@@ -47,8 +47,8 @@ static void skip_input_data(j_decompress_ptr cinfo, long num_bytes)
 	}
 }
 
-int
-xps_decode_jpeg(fz_pixmap **imagep, byte *rbuf, int rlen)
+fz_pixmap *
+xps_decode_jpeg(fz_context *ctx, byte *rbuf, int rlen)
 {
 	struct jpeg_decompress_struct cinfo;
 	struct jpeg_error_mgr_jmp err;
@@ -63,8 +63,8 @@ xps_decode_jpeg(fz_pixmap **imagep, byte *rbuf, int rlen)
 	if (setjmp(err.env))
 	{
 		if (image)
-			fz_drop_pixmap(image);
-		return fz_throw("jpeg error: %s", err.msg);
+			fz_drop_pixmap(ctx, image);
+		fz_throw(ctx, "jpeg error: %s", err.msg);
 	}
 
 	cinfo.err = jpeg_std_error(&err.super);
@@ -92,14 +92,17 @@ xps_decode_jpeg(fz_pixmap **imagep, byte *rbuf, int rlen)
 	else if (cinfo.output_components == 4)
 		colorspace = fz_device_cmyk;
 	else
-		return fz_throw("bad number of components in jpeg: %d", cinfo.output_components);
+		fz_throw(ctx, "bad number of components in jpeg: %d", cinfo.output_components);
 
-	image = fz_new_pixmap_with_limit(colorspace, cinfo.output_width, cinfo.output_height);
-	if (!image)
+	fz_try(ctx)
+	{
+		image = fz_new_pixmap(ctx, colorspace, cinfo.output_width, cinfo.output_height);
+	}
+	fz_catch(ctx)
 	{
 		jpeg_finish_decompress(&cinfo);
 		jpeg_destroy_decompress(&cinfo);
-		return fz_throw("out of memory");
+		fz_throw(ctx, "out of memory");
 	}
 
 	if (cinfo.density_unit == 1)
@@ -115,7 +118,7 @@ xps_decode_jpeg(fz_pixmap **imagep, byte *rbuf, int rlen)
 
 	fz_clear_pixmap(image);
 
-	row[0] = fz_malloc(cinfo.output_components * cinfo.output_width);
+	row[0] = fz_malloc(ctx, cinfo.output_components * cinfo.output_width);
 	dp = image->samples;
 	while (cinfo.output_scanline < cinfo.output_height)
 	{
@@ -128,13 +131,12 @@ xps_decode_jpeg(fz_pixmap **imagep, byte *rbuf, int rlen)
 			*dp++ = 255;
 		}
 	}
-	fz_free(row[0]);
+	fz_free(ctx, row[0]);
 
 	jpeg_finish_decompress(&cinfo);
 	jpeg_destroy_decompress(&cinfo);
 
 	image->has_alpha = 0; /* SumatraPDF: allow optimizing non-alpha pixmaps */
 
-	*imagep = image;
-	return fz_okay;
+	return image;
 }

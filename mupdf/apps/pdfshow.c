@@ -6,17 +6,10 @@
 #include "mupdf.h"
 
 static pdf_xref *xref = NULL;
+static fz_context *ctx = NULL;
 static int showbinary = 0;
 static int showdecode = 1;
 static int showcolumn;
-
-void die(fz_error error)
-{
-	fz_catch(error, "aborting");
-	if (xref)
-		pdf_free_xref(xref);
-	exit(1);
-}
 
 static void usage(void)
 {
@@ -30,7 +23,7 @@ static void usage(void)
 static void showtrailer(void)
 {
 	if (!xref)
-		die(fz_throw("no file specified"));
+		fz_throw(ctx, "no file specified");
 	printf("trailer\n");
 	fz_debug_obj(xref->trailer);
 	printf("\n");
@@ -39,27 +32,22 @@ static void showtrailer(void)
 static void showxref(void)
 {
 	if (!xref)
-		die(fz_throw("no file specified"));
+		fz_throw(ctx, "no file specified");
 	pdf_debug_xref(xref);
 	printf("\n");
 }
 
 static void showpagetree(void)
 {
-	fz_error error;
 	fz_obj *ref;
 	int count;
 	int i;
 
 	if (!xref)
-		die(fz_throw("no file specified"));
+		fz_throw(ctx, "no file specified");
 
 	if (!xref->page_len)
-	{
-		error = pdf_load_page_tree(xref);
-		if (error)
-			die(fz_rethrow(error, "cannot load page tree"));
-	}
+		pdf_load_page_tree(xref);
 
 	count = pdf_count_pages(xref);
 	for (i = 0; i < count; i++)
@@ -95,7 +83,6 @@ static void showsafe(unsigned char *buf, int n)
 
 static void showstream(int num, int gen)
 {
-	fz_error error;
 	fz_stream *stm;
 	unsigned char buf[2048];
 	int n;
@@ -103,17 +90,13 @@ static void showstream(int num, int gen)
 	showcolumn = 0;
 
 	if (showdecode)
-		error = pdf_open_stream(&stm, xref, num, gen);
+		stm = pdf_open_stream(xref, num, gen);
 	else
-		error = pdf_open_raw_stream(&stm, xref, num, gen);
-	if (error)
-		die(error);
+		stm = pdf_open_raw_stream(xref, num, gen);
 
 	while (1)
 	{
 		n = fz_read(stm, buf, sizeof buf);
-		if (n < 0)
-			die(n);
 		if (n == 0)
 			break;
 		if (showbinary)
@@ -127,15 +110,12 @@ static void showstream(int num, int gen)
 
 static void showobject(int num, int gen)
 {
-	fz_error error;
 	fz_obj *obj;
 
 	if (!xref)
-		die(fz_throw("no file specified"));
+		fz_throw(ctx, "no file specified");
 
-	error = pdf_load_object(&obj, xref, num, gen);
-	if (error)
-		die(error);
+	obj = pdf_load_object(xref, num, gen);
 
 	if (pdf_is_stream(xref, num, gen))
 	{
@@ -165,7 +145,6 @@ static void showobject(int num, int gen)
 
 static void showgrep(char *filename)
 {
-	fz_error error;
 	fz_obj *obj;
 	int i;
 
@@ -173,11 +152,14 @@ static void showgrep(char *filename)
 	{
 		if (xref->table[i].type == 'n' || xref->table[i].type == 'o')
 		{
-			error = pdf_load_object(&obj, xref, i, 0);
 			/* SumatraPDF: skip invalid objects instead of aborting */
-			if (error)
+			fz_try(ctx)
 			{
-				fz_catch(error, "skipping object (%d 0 R)", i);
+				obj = pdf_load_object(xref, i, 0);
+			}
+			fz_catch(ctx)
+			{
+				fz_warn(ctx, "skipping object (%d 0 R)", i);
 				continue;
 			}
 
@@ -198,7 +180,6 @@ int main(int argc, char **argv)
 {
 	char *password = NULL; /* don't throw errors if encrypted */
 	char *filename;
-	fz_error error;
 	int c;
 
 	while ((c = fz_getopt(argc, argv, "p:be")) != -1)
@@ -216,9 +197,15 @@ int main(int argc, char **argv)
 		usage();
 
 	filename = argv[fz_optind++];
-	error = pdf_open_xref(&xref, filename, password);
-	if (error)
-		die(fz_rethrow(error, "cannot open document: %s", filename));
+
+	ctx = fz_new_context(&fz_alloc_default, 256<<20);
+	if (!ctx)
+	{
+		fprintf(stderr, "cannot initialise context\n");
+		exit(1);
+	}
+
+	xref = pdf_open_xref(ctx, filename, password);
 
 	if (fz_optind == argc)
 		showtrailer();
@@ -237,8 +224,7 @@ int main(int argc, char **argv)
 	}
 
 	pdf_free_xref(xref);
-
-	fz_flush_warnings();
-
+	fz_flush_warnings(ctx);
+	fz_free_context(ctx);
 	return 0;
 }

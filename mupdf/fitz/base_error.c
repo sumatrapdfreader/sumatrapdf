@@ -1,159 +1,87 @@
 #include "fitz.h"
 
-enum { LINE_LEN = 160, LINE_COUNT = 25 };
+/* Warning context */
 
-static char warn_message[LINE_LEN] = "";
-static int warn_count = 0;
-
-void fz_flush_warnings(void)
+void fz_var_imp(void *var)
 {
-	if (warn_count > 1)
-		fprintf(stderr, "warning: ... repeated %d times ...\n", warn_count);
-	warn_message[0] = 0;
-	warn_count = 0;
+	var = var; /* Do nothing */
 }
 
-void fz_warn(char *fmt, ...)
+void fz_flush_warnings(fz_context *ctx)
+{
+	if (ctx->warn->count > 1)
+		fprintf(stderr, "warning: ... repeated %d times ...\n", ctx->warn->count);
+	ctx->warn->message[0] = 0;
+	ctx->warn->count = 0;
+}
+
+/* SumatraPDF: add filename and line number to errors and warnings */
+void fz_warn_imp(fz_context *ctx, char *file, int line, char *fmt, ...)
 {
 	va_list ap;
-	char buf[LINE_LEN];
+	char buf[sizeof ctx->warn->message];
 
 	va_start(ap, fmt);
 	vsnprintf(buf, sizeof buf, fmt, ap);
 	va_end(ap);
 
-	if (!strcmp(buf, warn_message))
+	if (!strcmp(buf, ctx->warn->message))
 	{
-		warn_count++;
+		ctx->warn->count++;
 	}
 	else
 	{
-		fz_flush_warnings();
-		fprintf(stderr, "warning: %s\n", buf);
-		fz_strlcpy(warn_message, buf, sizeof warn_message);
-		warn_count = 1;
+		fz_flush_warnings(ctx);
+		fprintf(stderr, "\\ %s:%d: %s\n", file, line, buf);
+		fz_strlcpy(ctx->warn->message, buf, sizeof ctx->warn->message);
+		ctx->warn->count = 1;
 	}
 }
 
-static char error_message[LINE_COUNT][LINE_LEN];
-static int error_count = 0;
+/* Error context */
 
-static void
-fz_emit_error(char what, char *location, char *message)
+static void throw(fz_error_context *ex)
 {
-	fz_flush_warnings();
+	if (ex->top >= 0) {
+		longjmp(ex->stack[ex->top--].buffer, 1);
+	} else {
+		fprintf(stderr, "uncaught exception: %s\n", ex->message);
+		exit(EXIT_FAILURE);
+	}
+}
 
-	fprintf(stderr, "%c %s%s\n", what, location, message);
-
-	if (error_count < LINE_COUNT)
+void fz_push_try(fz_error_context *ex)
+{
+	assert(ex);
+	if (ex->top + 1 >= nelem(ex->stack))
 	{
-		fz_strlcpy(error_message[error_count], location, LINE_LEN);
-		fz_strlcat(error_message[error_count], message, LINE_LEN);
-		error_count++;
+		fprintf(stderr, "exception stack overflow!\n");
+		exit(EXIT_FAILURE);
 	}
+	ex->top++;
 }
 
-int
-fz_get_error_count(void)
+char *fz_caught(fz_context *ctx)
 {
-	return error_count;
+	assert(ctx);
+	assert(ctx->error);
+	return ctx->error->message;
 }
 
-char *
-fz_get_error_line(int n)
+/* SumatraPDF: add filename and line number to errors and warnings */
+void fz_throw_imp(fz_context *ctx, char *file, int line, char *fmt, ...)
 {
-	return error_message[n];
+	va_list args;
+	va_start(args, fmt);
+	vsnprintf(ctx->error->message, sizeof ctx->error->message, fmt, args);
+	va_end(args);
+
+	fprintf(stderr, "+ %s:%d: %s\n", file, line, ctx->error->message);
+
+	throw(ctx->error);
 }
 
-fz_error
-fz_throw_imp(const char *file, int line, const char *func, char *fmt, ...)
+void fz_rethrow(fz_context *ctx)
 {
-	va_list ap;
-	char one[LINE_LEN], two[LINE_LEN];
-
-	error_count = 0;
-
-	snprintf(one, sizeof one, "%s:%d: %s(): ", file, line, func);
-	va_start(ap, fmt);
-	vsnprintf(two, sizeof two, fmt, ap);
-	va_end(ap);
-
-	fz_emit_error('+', one, two);
-
-	return -1;
-}
-
-fz_error
-fz_rethrow_imp(const char *file, int line, const char *func, fz_error cause, char *fmt, ...)
-{
-	va_list ap;
-	char one[LINE_LEN], two[LINE_LEN];
-
-	snprintf(one, sizeof one, "%s:%d: %s(): ", file, line, func);
-	va_start(ap, fmt);
-	vsnprintf(two, sizeof two, fmt, ap);
-	va_end(ap);
-
-	fz_emit_error('|', one, two);
-
-	return cause;
-}
-
-void
-fz_catch_imp(const char *file, int line, const char *func, fz_error cause, char *fmt, ...)
-{
-	va_list ap;
-	char one[LINE_LEN], two[LINE_LEN];
-
-	snprintf(one, sizeof one, "%s:%d: %s(): ", file, line, func);
-	va_start(ap, fmt);
-	vsnprintf(two, sizeof two, fmt, ap);
-	va_end(ap);
-
-	fz_emit_error('\\', one, two);
-}
-
-fz_error
-fz_throw_impx(char *fmt, ...)
-{
-	va_list ap;
-	char buf[LINE_LEN];
-
-	error_count = 0;
-
-	va_start(ap, fmt);
-	vsnprintf(buf, sizeof buf, fmt, ap);
-	va_end(ap);
-
-	fz_emit_error('+', "", buf);
-
-	return -1;
-}
-
-fz_error
-fz_rethrow_impx(fz_error cause, char *fmt, ...)
-{
-	va_list ap;
-	char buf[LINE_LEN];
-
-	va_start(ap, fmt);
-	vsnprintf(buf, sizeof buf, fmt, ap);
-	va_end(ap);
-
-	fz_emit_error('|', "", buf);
-
-	return cause;
-}
-
-void
-fz_catch_impx(fz_error cause, char *fmt, ...)
-{
-	va_list ap;
-	char buf[LINE_LEN];
-
-	va_start(ap, fmt);
-	vsnprintf(buf, sizeof buf, fmt, ap);
-	va_end(ap);
-
-	fz_emit_error('\\', "", buf);
+	throw(ctx->error);
 }

@@ -15,15 +15,43 @@ static inline int fz_idiv(int a, int b)
  * antialiasing is done. If it is undefined to we will leave the antialiasing
  * accuracy as a run time choice.
  */
+struct fz_aa_context_s
+{
+	int hscale;
+	int vscale;
+	int scale;
+	int level;
+};
 
+void fz_new_aa_context(fz_context *ctx)
+{
 #ifndef AA_BITS
-#define AA_SCALE(x) ((x * fz_aa_scale) >> 8)
-static int fz_aa_hscale = 17;
-static int fz_aa_vscale = 15;
-static int fz_aa_scale = 256;
-static int fz_aa_level = 8;
+	ctx->aa = fz_malloc_struct(ctx, fz_aa_context);
+	ctx->aa->hscale = 17;
+	ctx->aa->vscale = 15;
+	ctx->aa->scale = 256;
+	ctx->aa->level = 8;
 
-#elif AA_BITS > 6
+#define fz_aa_hscale ((ctxaa)->hscale)
+#define fz_aa_vscale ((ctxaa)->vscale)
+#define fz_aa_scale ((ctxaa)->scale)
+#define fz_aa_level ((ctxaa)->level)
+#define AA_SCALE(x) ((x * fz_aa_scale) >> 8)
+
+#endif
+}
+
+void fz_free_aa_context(fz_context *ctx)
+{
+#ifndef AA_BITS
+	fz_free(ctx, ctx->aa);
+	ctx->aa = NULL;
+#endif
+}
+
+#ifdef AA_BITS
+
+#if AA_BITS > 6
 #define AA_SCALE(x) (x)
 #define fz_aa_hscale 17
 #define fz_aa_vscale 15
@@ -54,18 +82,21 @@ static int fz_aa_level = 8;
 #define fz_aa_level 0
 
 #endif
+#endif
 
 int
-fz_get_aa_level(void)
+fz_get_aa_level(fz_context *ctx)
 {
+	fz_aa_context *ctxaa = ctx->aa;
 	return fz_aa_level;
 }
 
 void
-fz_set_aa_level(int level)
+fz_set_aa_level(fz_context *ctx, int level)
 {
+	fz_aa_context *ctxaa = ctx->aa;
 #ifdef AA_BITS
-	fz_warn("anti-aliasing was compiled with a fixed precision of %d bits", fz_aa_level);
+	fz_warn(ctx, "anti-aliasing was compiled with a fixed precision of %d bits", fz_aa_level);
 #else
 	if (level > 6)
 	{
@@ -127,27 +158,40 @@ struct fz_gel_s
 	fz_edge *edges;
 	int acap, alen;
 	fz_edge **active;
+	fz_context *ctx;
 };
 
 fz_gel *
-fz_new_gel(void)
+fz_new_gel(fz_context *ctx)
 {
 	fz_gel *gel;
 
-	gel = fz_malloc(sizeof(fz_gel));
-	gel->cap = 512;
-	gel->len = 0;
-	gel->edges = fz_calloc(gel->cap, sizeof(fz_edge));
+	gel = fz_malloc_struct(ctx, fz_gel);
+	fz_try(ctx)
+	{
+		gel->edges = NULL;
+		gel->ctx = ctx;
+		gel->cap = 512;
+		gel->len = 0;
+		gel->edges = fz_malloc_array(ctx, gel->cap, sizeof(fz_edge));
 
-	gel->clip.x0 = gel->clip.y0 = BBOX_MAX;
-	gel->clip.x1 = gel->clip.y1 = BBOX_MIN;
+		gel->clip.x0 = gel->clip.y0 = BBOX_MAX;
+		gel->clip.x1 = gel->clip.y1 = BBOX_MIN;
 
-	gel->bbox.x0 = gel->bbox.y0 = BBOX_MAX;
-	gel->bbox.x1 = gel->bbox.y1 = BBOX_MIN;
+		gel->bbox.x0 = gel->bbox.y0 = BBOX_MAX;
+		gel->bbox.x1 = gel->bbox.y1 = BBOX_MIN;
 
-	gel->acap = 64;
-	gel->alen = 0;
-	gel->active = fz_calloc(gel->acap, sizeof(fz_edge*));
+		gel->acap = 64;
+		gel->alen = 0;
+		gel->active = fz_malloc_array(ctx, gel->acap, sizeof(fz_edge*));
+	}
+	fz_catch(ctx)
+	{
+		if (gel)
+			fz_free(ctx, gel->edges);
+		fz_free(ctx, gel);
+		fz_rethrow(ctx);
+	}
 
 	return gel;
 }
@@ -155,6 +199,8 @@ fz_new_gel(void)
 void
 fz_reset_gel(fz_gel *gel, fz_bbox clip)
 {
+	fz_aa_context *ctxaa = gel->ctx->aa;
+
 	if (fz_is_infinite_rect(clip))
 	{
 		gel->clip.x0 = gel->clip.y0 = BBOX_MAX;
@@ -176,15 +222,18 @@ fz_reset_gel(fz_gel *gel, fz_bbox clip)
 void
 fz_free_gel(fz_gel *gel)
 {
-	fz_free(gel->active);
-	fz_free(gel->edges);
-	fz_free(gel);
+	if (gel == NULL)
+		return;
+	fz_free(gel->ctx, gel->active);
+	fz_free(gel->ctx, gel->edges);
+	fz_free(gel->ctx, gel);
 }
 
 fz_bbox
 fz_bound_gel(fz_gel *gel)
 {
 	fz_bbox bbox;
+	fz_aa_context *ctxaa = gel->ctx->aa;
 	if (gel->len == 0)
 		return fz_empty_bbox;
 	bbox.x0 = fz_idiv(gel->bbox.x0, fz_aa_hscale);
@@ -255,7 +304,7 @@ fz_insert_gel_raw(fz_gel *gel, int x0, int y0, int x1, int y1)
 
 	if (gel->len + 1 == gel->cap) {
 		gel->cap = gel->cap + 512;
-		gel->edges = fz_realloc(gel->edges, gel->cap, sizeof(fz_edge));
+		gel->edges = fz_resize_array(gel->ctx, gel->edges, gel->cap, sizeof(fz_edge));
 	}
 
 	edge = &gel->edges[gel->len++];
@@ -295,6 +344,7 @@ fz_insert_gel(fz_gel *gel, float fx0, float fy0, float fx1, float fy1)
 {
 	int x0, y0, x1, y1;
 	int d, v;
+	fz_aa_context *ctxaa = gel->ctx->aa;
 
 	fx0 = floorf(fx0 * fz_aa_hscale);
 	fx1 = floorf(fx1 * fz_aa_hscale);
@@ -446,7 +496,7 @@ insert_active(fz_gel *gel, int y, int *e)
 	while (*e < gel->len && gel->edges[*e].y == y) {
 		if (gel->alen + 1 == gel->acap) {
 			int newcap = gel->acap + 64;
-			fz_edge **newactive = fz_realloc(gel->active, newcap, sizeof(fz_edge*));
+			fz_edge **newactive = fz_resize_array(gel->ctx, gel->active, newcap, sizeof(fz_edge*));
 			gel->active = newactive;
 			gel->acap = newcap;
 		}
@@ -490,7 +540,7 @@ advance_active(fz_gel *gel)
  * Anti-aliased scan conversion.
  */
 
-static inline void add_span_aa(int *list, int x0, int x1, int xofs)
+static inline void add_span_aa(fz_aa_context *ctxaa, int *list, int x0, int x1, int xofs)
 {
 	int x0pix, x0sub;
 	int x1pix, x1sub;
@@ -527,12 +577,14 @@ static inline void non_zero_winding_aa(fz_gel *gel, int *list, int xofs)
 	int winding = 0;
 	int x = 0;
 	int i;
+	fz_aa_context *ctxaa = gel->ctx->aa;
+
 	for (i = 0; i < gel->alen; i++)
 	{
 		if (!winding && (winding + gel->active[i]->ydir))
 			x = gel->active[i]->x;
 		if (winding && !(winding + gel->active[i]->ydir))
-			add_span_aa(list, x, gel->active[i]->x, xofs);
+			add_span_aa(ctxaa, list, x, gel->active[i]->x, xofs);
 		winding += gel->active[i]->ydir;
 	}
 }
@@ -542,17 +594,19 @@ static inline void even_odd_aa(fz_gel *gel, int *list, int xofs)
 	int even = 0;
 	int x = 0;
 	int i;
+	fz_aa_context *ctxaa = gel->ctx->aa;
+
 	for (i = 0; i < gel->alen; i++)
 	{
 		if (!even)
 			x = gel->active[i]->x;
 		else
-			add_span_aa(list, x, gel->active[i]->x, xofs);
+			add_span_aa(ctxaa, list, x, gel->active[i]->x, xofs);
 		even = !even;
 	}
 }
 
-static inline void undelta_aa(unsigned char * restrict out, int * restrict in, int n)
+static inline void undelta_aa(fz_aa_context *ctxaa, unsigned char * restrict out, int * restrict in, int n)
 {
 	int d = 0;
 	while (n--)
@@ -581,6 +635,8 @@ fz_scan_convert_aa(fz_gel *gel, int eofill, fz_bbox clip,
 	int *deltas;
 	int y, e;
 	int yd, yc;
+	fz_context *ctx = gel->ctx;
+	fz_aa_context *ctxaa = ctx->aa;
 
 	int xmin = fz_idiv(gel->bbox.x0, fz_aa_hscale);
 	int xmax = fz_idiv(gel->bbox.x1, fz_aa_hscale) + 1;
@@ -596,8 +652,14 @@ fz_scan_convert_aa(fz_gel *gel, int eofill, fz_bbox clip,
 	assert(clip.x0 >= xmin);
 	assert(clip.x1 <= xmax);
 
-	alphas = fz_malloc(xmax - xmin + 1);
-	deltas = fz_malloc((xmax - xmin + 1) * sizeof(int));
+	alphas = fz_malloc_no_throw(ctx, xmax - xmin + 1);
+	deltas = fz_malloc_no_throw(ctx, (xmax - xmin + 1) * sizeof(int));
+	if (alphas == NULL || deltas == NULL)
+	{
+		fz_free(ctx, alphas);
+		fz_free(ctx, deltas);
+		fz_throw(ctx, "scan conversion failed (malloc failure)");
+	}
 	memset(deltas, 0, (xmax - xmin + 1) * sizeof(int));
 
 	e = 0;
@@ -612,7 +674,7 @@ fz_scan_convert_aa(fz_gel *gel, int eofill, fz_bbox clip,
 		{
 			if (yd >= clip.y0 && yd < clip.y1)
 			{
-				undelta_aa(alphas, deltas, skipx + clipn);
+				undelta_aa(ctxaa, alphas, deltas, skipx + clipn);
 				blit_aa(dst, xmin + skipx, yd, alphas + skipx, clipn, color);
 				memset(deltas, 0, (skipx + clipn) * sizeof(int));
 			}
@@ -639,12 +701,12 @@ fz_scan_convert_aa(fz_gel *gel, int eofill, fz_bbox clip,
 
 	if (yd >= clip.y0 && yd < clip.y1)
 	{
-		undelta_aa(alphas, deltas, skipx + clipn);
+		undelta_aa(ctxaa, alphas, deltas, skipx + clipn);
 		blit_aa(dst, xmin + skipx, yd, alphas + skipx, clipn, color);
 	}
 
-	fz_free(deltas);
-	fz_free(alphas);
+	fz_free(ctx, deltas);
+	fz_free(ctx, alphas);
 }
 
 /*
@@ -731,6 +793,8 @@ void
 fz_scan_convert(fz_gel *gel, int eofill, fz_bbox clip,
 	fz_pixmap *dst, unsigned char *color)
 {
+	fz_aa_context *ctxaa = gel->ctx->aa;
+
 	if (fz_aa_level > 0)
 		fz_scan_convert_aa(gel, eofill, clip, dst, color);
 	else

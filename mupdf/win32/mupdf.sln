@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 9.00
-# Visual C++ Express 2005
+# Visual Studio 2005
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mupdf", "mupdf.vcproj", "{E74F29F0-FA43-4ADC-B92C-6AFA08E4A417}"
 	ProjectSection(ProjectDependencies) = postProject
 		{5F615F91-DFF8-4F05-BF48-6222B7D86519} = {5F615F91-DFF8-4F05-BF48-6222B7D86519}
@@ -44,39 +44,56 @@ EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
+		Memento|Win32 = Memento|Win32
 		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{E74F29F0-FA43-4ADC-B92C-6AFA08E4A417}.Debug|Win32.ActiveCfg = Debug|Win32
 		{E74F29F0-FA43-4ADC-B92C-6AFA08E4A417}.Debug|Win32.Build.0 = Debug|Win32
+		{E74F29F0-FA43-4ADC-B92C-6AFA08E4A417}.Memento|Win32.ActiveCfg = Memento|Win32
+		{E74F29F0-FA43-4ADC-B92C-6AFA08E4A417}.Memento|Win32.Build.0 = Memento|Win32
 		{E74F29F0-FA43-4ADC-B92C-6AFA08E4A417}.Release|Win32.ActiveCfg = Release|Win32
 		{E74F29F0-FA43-4ADC-B92C-6AFA08E4A417}.Release|Win32.Build.0 = Release|Win32
 		{5EDCF4FD-0291-4FB9-8D96-D58957CA5E3C}.Debug|Win32.ActiveCfg = Debug|Win32
 		{5EDCF4FD-0291-4FB9-8D96-D58957CA5E3C}.Debug|Win32.Build.0 = Debug|Win32
+		{5EDCF4FD-0291-4FB9-8D96-D58957CA5E3C}.Memento|Win32.ActiveCfg = Memento|Win32
+		{5EDCF4FD-0291-4FB9-8D96-D58957CA5E3C}.Memento|Win32.Build.0 = Memento|Win32
 		{5EDCF4FD-0291-4FB9-8D96-D58957CA5E3C}.Release|Win32.ActiveCfg = Release|Win32
 		{5EDCF4FD-0291-4FB9-8D96-D58957CA5E3C}.Release|Win32.Build.0 = Release|Win32
 		{5F615F91-DFF8-4F05-BF48-6222B7D86519}.Debug|Win32.ActiveCfg = Debug|Win32
 		{5F615F91-DFF8-4F05-BF48-6222B7D86519}.Debug|Win32.Build.0 = Debug|Win32
+		{5F615F91-DFF8-4F05-BF48-6222B7D86519}.Memento|Win32.ActiveCfg = Memento|Win32
+		{5F615F91-DFF8-4F05-BF48-6222B7D86519}.Memento|Win32.Build.0 = Memento|Win32
 		{5F615F91-DFF8-4F05-BF48-6222B7D86519}.Release|Win32.ActiveCfg = Release|Win32
 		{5F615F91-DFF8-4F05-BF48-6222B7D86519}.Release|Win32.Build.0 = Release|Win32
 		{26C5D7C3-BEE9-4886-9CDB-846D26F5BCDB}.Debug|Win32.ActiveCfg = Debug|Win32
 		{26C5D7C3-BEE9-4886-9CDB-846D26F5BCDB}.Debug|Win32.Build.0 = Debug|Win32
+		{26C5D7C3-BEE9-4886-9CDB-846D26F5BCDB}.Memento|Win32.ActiveCfg = Memento|Win32
+		{26C5D7C3-BEE9-4886-9CDB-846D26F5BCDB}.Memento|Win32.Build.0 = Memento|Win32
 		{26C5D7C3-BEE9-4886-9CDB-846D26F5BCDB}.Release|Win32.ActiveCfg = Release|Win32
 		{26C5D7C3-BEE9-4886-9CDB-846D26F5BCDB}.Release|Win32.Build.0 = Release|Win32
 		{923D7C3D-A5CD-47F1-9BB3-F716531DCCCE}.Debug|Win32.ActiveCfg = Debug|Win32
 		{923D7C3D-A5CD-47F1-9BB3-F716531DCCCE}.Debug|Win32.Build.0 = Debug|Win32
+		{923D7C3D-A5CD-47F1-9BB3-F716531DCCCE}.Memento|Win32.ActiveCfg = Memento|Win32
+		{923D7C3D-A5CD-47F1-9BB3-F716531DCCCE}.Memento|Win32.Build.0 = Memento|Win32
 		{923D7C3D-A5CD-47F1-9BB3-F716531DCCCE}.Release|Win32.ActiveCfg = Release|Win32
 		{923D7C3D-A5CD-47F1-9BB3-F716531DCCCE}.Release|Win32.Build.0 = Release|Win32
 		{50644121-C85F-4EE9-9C54-F7D1BDFAE354}.Debug|Win32.ActiveCfg = Debug|Win32
 		{50644121-C85F-4EE9-9C54-F7D1BDFAE354}.Debug|Win32.Build.0 = Debug|Win32
+		{50644121-C85F-4EE9-9C54-F7D1BDFAE354}.Memento|Win32.ActiveCfg = Memento|Win32
+		{50644121-C85F-4EE9-9C54-F7D1BDFAE354}.Memento|Win32.Build.0 = Memento|Win32
 		{50644121-C85F-4EE9-9C54-F7D1BDFAE354}.Release|Win32.ActiveCfg = Release|Win32
 		{50644121-C85F-4EE9-9C54-F7D1BDFAE354}.Release|Win32.Build.0 = Release|Win32
 		{BD4473E7-2DBE-4568-A0FC-38EED70182DC}.Debug|Win32.ActiveCfg = Debug|Win32
 		{BD4473E7-2DBE-4568-A0FC-38EED70182DC}.Debug|Win32.Build.0 = Debug|Win32
+		{BD4473E7-2DBE-4568-A0FC-38EED70182DC}.Memento|Win32.ActiveCfg = Memento|Win32
+		{BD4473E7-2DBE-4568-A0FC-38EED70182DC}.Memento|Win32.Build.0 = Memento|Win32
 		{BD4473E7-2DBE-4568-A0FC-38EED70182DC}.Release|Win32.ActiveCfg = Release|Win32
 		{BD4473E7-2DBE-4568-A0FC-38EED70182DC}.Release|Win32.Build.0 = Release|Win32
 		{E6A93617-41BD-45B2-BF61-4F7ED263CDF2}.Debug|Win32.ActiveCfg = Debug|Win32
 		{E6A93617-41BD-45B2-BF61-4F7ED263CDF2}.Debug|Win32.Build.0 = Debug|Win32
+		{E6A93617-41BD-45B2-BF61-4F7ED263CDF2}.Memento|Win32.ActiveCfg = Memento|Win32
+		{E6A93617-41BD-45B2-BF61-4F7ED263CDF2}.Memento|Win32.Build.0 = Memento|Win32
 		{E6A93617-41BD-45B2-BF61-4F7ED263CDF2}.Release|Win32.ActiveCfg = Release|Win32
 		{E6A93617-41BD-45B2-BF61-4F7ED263CDF2}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection

@@ -1,11 +1,11 @@
 #include "fitz.h"
 
 fz_bitmap *
-fz_new_bitmap(int w, int h, int n)
+fz_new_bitmap(fz_context *ctx, int w, int h, int n)
 {
 	fz_bitmap *bit;
 
-	bit = fz_malloc(sizeof(fz_bitmap));
+	bit = fz_malloc_struct(ctx, fz_bitmap);
 	bit->refs = 1;
 	bit->w = w;
 	bit->h = h;
@@ -14,7 +14,7 @@ fz_new_bitmap(int w, int h, int n)
 	 * use SSE2 etc. */
 	bit->stride = ((n * w + 31) & ~31) >> 3;
 
-	bit->samples = fz_calloc(h, bit->stride);
+	bit->samples = fz_malloc_array(ctx, h, bit->stride);
 
 	return bit;
 }
@@ -27,12 +27,12 @@ fz_keep_bitmap(fz_bitmap *pix)
 }
 
 void
-fz_drop_bitmap(fz_bitmap *bit)
+fz_drop_bitmap(fz_context *ctx, fz_bitmap *bit)
 {
 	if (bit && --bit->refs == 0)
 	{
-		fz_free(bit->samples);
-		fz_free(bit);
+		fz_free(ctx, bit->samples);
+		fz_free(ctx, bit);
 	}
 }
 
@@ -46,8 +46,8 @@ fz_clear_bitmap(fz_bitmap *bit)
  * Write bitmap to PBM file
  */
 
-fz_error
-fz_write_pbm(fz_bitmap *bitmap, char *filename)
+void
+fz_write_pbm(fz_context *ctx, fz_bitmap *bitmap, char *filename)
 {
 	FILE *fp;
 	unsigned char *p;
@@ -55,7 +55,7 @@ fz_write_pbm(fz_bitmap *bitmap, char *filename)
 
 	fp = fopen(filename, "wb");
 	if (!fp)
-		return fz_throw("cannot open file '%s': %s", filename, strerror(errno));
+		fz_throw(ctx, "cannot open file '%s': %s", filename, strerror(errno));
 
 	assert(bitmap->n == 1);
 
@@ -72,5 +72,4 @@ fz_write_pbm(fz_bitmap *bitmap, char *filename)
 	}
 
 	fclose(fp);
-	return fz_okay;
 }

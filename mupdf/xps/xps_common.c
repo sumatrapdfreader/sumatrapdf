@@ -10,35 +10,35 @@ static inline int unhex(int a)
 }
 
 void
-xps_parse_brush(xps_context *ctx, fz_matrix ctm, fz_rect area, char *base_uri, xps_resource *dict, xml_element *node)
+xps_parse_brush(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri, xps_resource *dict, xml_element *node)
 {
 	/* SolidColorBrushes are handled in a special case and will never show up here */
 	if (!strcmp(xml_tag(node), "ImageBrush"))
-		xps_parse_image_brush(ctx, ctm, area, base_uri, dict, node);
+		xps_parse_image_brush(doc, ctm, area, base_uri, dict, node);
 	else if (!strcmp(xml_tag(node), "VisualBrush"))
-		xps_parse_visual_brush(ctx, ctm, area, base_uri, dict, node);
+		xps_parse_visual_brush(doc, ctm, area, base_uri, dict, node);
 	else if (!strcmp(xml_tag(node), "LinearGradientBrush"))
-		xps_parse_linear_gradient_brush(ctx, ctm, area, base_uri, dict, node);
+		xps_parse_linear_gradient_brush(doc, ctm, area, base_uri, dict, node);
 	else if (!strcmp(xml_tag(node), "RadialGradientBrush"))
-		xps_parse_radial_gradient_brush(ctx, ctm, area, base_uri, dict, node);
+		xps_parse_radial_gradient_brush(doc, ctm, area, base_uri, dict, node);
 	else
-		fz_warn("unknown brush tag: %s", xml_tag(node));
+		fz_warn(doc->ctx, "unknown brush tag: %s", xml_tag(node));
 }
 
 void
-xps_parse_element(xps_context *ctx, fz_matrix ctm, fz_rect area, char *base_uri, xps_resource *dict, xml_element *node)
+xps_parse_element(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri, xps_resource *dict, xml_element *node)
 {
 	if (!strcmp(xml_tag(node), "Path"))
-		xps_parse_path(ctx, ctm, base_uri, dict, node);
+		xps_parse_path(doc, ctm, base_uri, dict, node);
 	if (!strcmp(xml_tag(node), "Glyphs"))
-		xps_parse_glyphs(ctx, ctm, base_uri, dict, node);
+		xps_parse_glyphs(doc, ctm, base_uri, dict, node);
 	if (!strcmp(xml_tag(node), "Canvas"))
-		xps_parse_canvas(ctx, ctm, area, base_uri, dict, node);
+		xps_parse_canvas(doc, ctm, area, base_uri, dict, node);
 	/* skip unknown tags (like Foo.Resources and similar) */
 }
 
 void
-xps_begin_opacity(xps_context *ctx, fz_matrix ctm, fz_rect area,
+xps_begin_opacity(xps_document *doc, fz_matrix ctm, fz_rect area,
 	char *base_uri, xps_resource *dict,
 	char *opacity_att, xml_element *opacity_mask_tag)
 {
@@ -61,45 +61,45 @@ xps_begin_opacity(xps_context *ctx, fz_matrix ctm, fz_rect area,
 		{
 			fz_colorspace *colorspace;
 			float samples[32];
-			xps_parse_color(ctx, base_uri, scb_color_att, &colorspace, samples);
+			xps_parse_color(doc, base_uri, scb_color_att, &colorspace, samples);
 			opacity = opacity * samples[0];
 		}
 		opacity_mask_tag = NULL;
 	}
 
-	if (ctx->opacity_top + 1 < nelem(ctx->opacity))
+	if (doc->opacity_top + 1 < nelem(doc->opacity))
 	{
-		ctx->opacity[ctx->opacity_top + 1] = ctx->opacity[ctx->opacity_top] * opacity;
-		ctx->opacity_top++;
+		doc->opacity[doc->opacity_top + 1] = doc->opacity[doc->opacity_top] * opacity;
+		doc->opacity_top++;
 	}
 
 	if (opacity_mask_tag)
 	{
-		fz_begin_mask(ctx->dev, area, 0, NULL, NULL);
-		xps_parse_brush(ctx, ctm, area, base_uri, dict, opacity_mask_tag);
-		fz_end_mask(ctx->dev);
+		fz_begin_mask(doc->dev, area, 0, NULL, NULL);
+		xps_parse_brush(doc, ctm, area, base_uri, dict, opacity_mask_tag);
+		fz_end_mask(doc->dev);
 	}
 }
 
 void
-xps_end_opacity(xps_context *ctx, char *base_uri, xps_resource *dict,
+xps_end_opacity(xps_document *doc, char *base_uri, xps_resource *dict,
 	char *opacity_att, xml_element *opacity_mask_tag)
 {
 	if (!opacity_att && !opacity_mask_tag)
 		return;
 
-	if (ctx->opacity_top > 0)
-		ctx->opacity_top--;
+	if (doc->opacity_top > 0)
+		doc->opacity_top--;
 
 	if (opacity_mask_tag)
 	{
 		if (strcmp(xml_tag(opacity_mask_tag), "SolidColorBrush"))
-			fz_pop_clip(ctx->dev);
+			fz_pop_clip(doc->dev);
 	}
 }
 
 void
-xps_parse_render_transform(xps_context *ctx, char *transform, fz_matrix *matrix)
+xps_parse_render_transform(xps_document *doc, char *transform, fz_matrix *matrix)
 {
 	float args[6];
 	char *s = transform;
@@ -124,7 +124,7 @@ xps_parse_render_transform(xps_context *ctx, char *transform, fz_matrix *matrix)
 }
 
 void
-xps_parse_matrix_transform(xps_context *ctx, xml_element *root, fz_matrix *matrix)
+xps_parse_matrix_transform(xps_document *doc, xml_element *root, fz_matrix *matrix)
 {
 	char *transform;
 
@@ -134,12 +134,12 @@ xps_parse_matrix_transform(xps_context *ctx, xml_element *root, fz_matrix *matri
 	{
 		transform = xml_att(root, "Matrix");
 		if (transform)
-			xps_parse_render_transform(ctx, transform, matrix);
+			xps_parse_render_transform(doc, transform, matrix);
 	}
 }
 
 void
-xps_parse_rectangle(xps_context *ctx, char *text, fz_rect *rect)
+xps_parse_rectangle(xps_document *doc, char *text, fz_rect *rect)
 {
 	float args[4];
 	char *s = text;
@@ -176,7 +176,7 @@ static int count_commas(char *s)
 }
 
 void
-xps_parse_color(xps_context *ctx, char *base_uri, char *string,
+xps_parse_color(xps_document *doc, char *base_uri, char *string,
 		fz_colorspace **csp, float *samples)
 {
 	char *p;
@@ -230,7 +230,7 @@ xps_parse_color(xps_context *ctx, char *base_uri, char *string,
 		profile = strchr(buf, ' ');
 		if (!profile)
 		{
-			fz_warn("cannot find icc profile uri in '%s'", string);
+			fz_warn(doc->ctx, "cannot find icc profile uri in '%s'", string);
 			return;
 		}
 
@@ -238,7 +238,7 @@ xps_parse_color(xps_context *ctx, char *base_uri, char *string,
 		p = strchr(profile, ' ');
 		if (!p)
 		{
-			fz_warn("cannot find component values in '%s'", profile);
+			fz_warn(doc->ctx, "cannot find component values in '%s'", profile);
 			return;
 		}
 
@@ -272,11 +272,11 @@ xps_parse_color(xps_context *ctx, char *base_uri, char *string,
 }
 
 void
-xps_set_color(xps_context *ctx, fz_colorspace *colorspace, float *samples)
+xps_set_color(xps_document *doc, fz_colorspace *colorspace, float *samples)
 {
 	int i;
-	ctx->colorspace = colorspace;
+	doc->colorspace = colorspace;
 	for (i = 0; i < colorspace->n; i++)
-		ctx->color[i] = samples[i + 1];
-	ctx->alpha = samples[0] * ctx->opacity[ctx->opacity_top];
+		doc->color[i] = samples[i + 1];
+	doc->alpha = samples[0] * doc->opacity[doc->opacity_top];
 }

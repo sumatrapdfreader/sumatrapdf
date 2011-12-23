@@ -14,6 +14,13 @@
 
 static FILE *out = NULL;
 
+enum
+{
+	expand_images = 1,
+	expand_fonts = 2,
+	expand_all = -1
+};
+
 static char *uselist = NULL;
 static int *ofslist = NULL;
 static int *genlist = NULL;
@@ -24,14 +31,7 @@ static int doexpand = 0;
 static int doascii = 0;
 
 static pdf_xref *xref = NULL;
-
-void die(fz_error error)
-{
-	fz_catch(error, "aborting");
-	if (xref)
-		pdf_free_xref(xref);
-	exit(1);
-}
+static fz_context *ctx = NULL;
 
 static void usage(void)
 {
@@ -41,7 +41,9 @@ static void usage(void)
 		"\t-g\tgarbage collect unused objects\n"
 		"\t-gg\tin addition to -g compact xref table\n"
 		"\t-ggg\tin addition to -gg merge duplicate objects\n"
-		"\t-d\tdecompress streams\n"
+		"\t-d\tdecompress all streams\n"
+		"\t-i\ttoggle decompression of image streams\n"
+		"\t-f\ttoggle decompression of font streams\n"
 		"\t-a\tascii hex encode binary streams\n"
 		"\tpages\tcomma separated list of ranges\n");
 	exit(1);
@@ -61,12 +63,18 @@ static void sweepobj(fz_obj *obj)
 		sweepref(obj);
 
 	else if (fz_is_dict(obj))
-		for (i = 0; i < fz_dict_len(obj); i++)
+	{
+		int n = fz_dict_len(obj);
+		for (i = 0; i < n; i++)
 			sweepobj(fz_dict_get_val(obj, i));
+	}
 
 	else if (fz_is_array(obj))
-		for (i = 0; i < fz_array_len(obj); i++)
+	{
+		int n = fz_array_len(obj);
+		for (i = 0; i < n; i++)
 			sweepobj(fz_array_get(obj, i));
+	}
 }
 
 static void sweepref(fz_obj *obj)
@@ -176,16 +184,18 @@ static void compactxref(void)
 static void renumberobj(fz_obj *obj)
 {
 	int i;
+	fz_context *ctx = xref->ctx;
 
 	if (fz_is_dict(obj))
 	{
-		for (i = 0; i < fz_dict_len(obj); i++)
+		int n = fz_dict_len(obj);
+		for (i = 0; i < n; i++)
 		{
 			fz_obj *key = fz_dict_get_key(obj, i);
 			fz_obj *val = fz_dict_get_val(obj, i);
 			if (fz_is_indirect(val))
 			{
-				val = fz_new_indirect(renumbermap[fz_to_num(val)], 0, xref);
+				val = fz_new_indirect(ctx, renumbermap[fz_to_num(val)], 0, xref);
 				fz_dict_put(obj, key, val);
 				fz_drop_obj(val);
 			}
@@ -198,12 +208,13 @@ static void renumberobj(fz_obj *obj)
 
 	else if (fz_is_array(obj))
 	{
-		for (i = 0; i < fz_array_len(obj); i++)
+		int n = fz_array_len(obj);
+		for (i = 0; i < n; i++)
 		{
 			fz_obj *val = fz_array_get(obj, i);
 			if (fz_is_indirect(val))
 			{
-				val = fz_new_indirect(renumbermap[fz_to_num(val)], 0, xref);
+				val = fz_new_indirect(ctx, renumbermap[fz_to_num(val)], 0, xref);
 				fz_array_put(obj, i, val);
 				fz_drop_obj(val);
 			}
@@ -229,7 +240,7 @@ static void renumberobjs(void)
 
 		if (fz_is_indirect(obj))
 		{
-			obj = fz_new_indirect(renumbermap[fz_to_num(obj)], 0, xref);
+			obj = fz_new_indirect(ctx, renumbermap[fz_to_num(obj)], 0, xref);
 			pdf_update_object(xref, num, 0, obj);
 			fz_drop_obj(obj);
 		}
@@ -241,7 +252,7 @@ static void renumberobjs(void)
 
 	/* Create new table for the reordered, compacted xref */
 	oldxref = xref->table;
-	xref->table = fz_calloc(xref->len, sizeof(pdf_xref_entry));
+	xref->table = fz_malloc_array(xref->ctx, xref->len, sizeof(pdf_xref_entry));
 	xref->table[0] = oldxref[0];
 
 	/* Move used objects into the new compacted xref */
@@ -261,7 +272,7 @@ static void renumberobjs(void)
 		}
 	}
 
-	fz_free(oldxref);
+	fz_free(xref->ctx, oldxref);
 
 	/* Update the used objects count in compacted xref */
 	xref->len = newlen + 1;
@@ -277,13 +288,10 @@ static void renumberobjs(void)
 
 static void retainpages(int argc, char **argv)
 {
-	fz_error error;
 	fz_obj *oldroot, *root, *pages, *kids, *countobj, *parent, *olddests;
 
 	/* Load the old page tree */
-	error = pdf_load_page_tree(xref);
-	if (error)
-		die(fz_rethrow(error, "cannot load page tree"));
+	pdf_load_page_tree(xref);
 
 	/* Keep only pages/type and (reduced) dest entries to avoid
 	 * references to unretained pages */
@@ -291,7 +299,7 @@ static void retainpages(int argc, char **argv)
 	pages = fz_dict_gets(oldroot, "Pages");
 	olddests = pdf_load_name_tree(xref, "Dests");
 
-	root = fz_new_dict(2);
+	root = fz_new_dict(ctx, 2);
 	fz_dict_puts(root, "Type", fz_dict_gets(oldroot, "Type"));
 	fz_dict_puts(root, "Pages", fz_dict_gets(oldroot, "Pages"));
 
@@ -300,8 +308,8 @@ static void retainpages(int argc, char **argv)
 	fz_drop_obj(root);
 
 	/* Create a new kids array with only the pages we want to keep */
-	parent = fz_new_indirect(fz_to_num(pages), fz_to_gen(pages), xref);
-	kids = fz_new_array(1);
+	parent = fz_new_indirect(ctx, fz_to_num(pages), fz_to_gen(pages), xref);
+	kids = fz_new_array(ctx, 1);
 
 	/* Retain pages specified */
 	while (argc - fz_optind)
@@ -356,7 +364,7 @@ static void retainpages(int argc, char **argv)
 	fz_drop_obj(parent);
 
 	/* Update page count and kids array */
-	countobj = fz_new_int(fz_array_len(kids));
+	countobj = fz_new_int(ctx, fz_array_len(kids));
 	fz_dict_puts(pages, "Count", countobj);
 	fz_drop_obj(countobj);
 	fz_dict_puts(pages, "Kids", kids);
@@ -366,15 +374,15 @@ static void retainpages(int argc, char **argv)
 	if (olddests)
 	{
 		int i;
-		fz_obj *names = fz_new_dict(1);
-		fz_obj *dests = fz_new_dict(1);
-		fz_obj *names_list = fz_new_array(32);
+		fz_obj *names = fz_new_dict(ctx, 1);
+		fz_obj *dests = fz_new_dict(ctx, 1);
+		fz_obj *names_list = fz_new_array(ctx, 32);
 
 		for (i = 0; i < fz_dict_len(olddests); i++)
 		{
 			fz_obj *key = fz_dict_get_key(olddests, i);
 			fz_obj *val = fz_dict_get_val(olddests, i);
-			fz_obj *key_str = fz_new_string(fz_to_name(key), strlen(fz_to_name(key)));
+			fz_obj *key_str = fz_new_string(ctx, fz_to_name(key), strlen(fz_to_name(key)));
 			fz_obj *dest = fz_dict_gets(val, "D");
 
 			dest = fz_array_get(dest ? dest : val, 0);
@@ -404,7 +412,6 @@ static void retainpages(int argc, char **argv)
 
 static void preloadobjstms(void)
 {
-	fz_error error;
 	fz_obj *obj;
 	int num;
 
@@ -412,9 +419,7 @@ static void preloadobjstms(void)
 	{
 		if (xref->table[num].type == 'o')
 		{
-			error = pdf_load_object(&obj, xref, num, 0);
-			if (error)
-				die(error);
+			obj = pdf_load_object(xref, num, 0);
 			fz_drop_obj(obj);
 		}
 	}
@@ -446,7 +451,7 @@ static fz_buffer *hexbuf(unsigned char *p, int n)
 	fz_buffer *buf;
 	int x = 0;
 
-	buf = fz_new_buffer(n * 2 + (n / 32) + 2);
+	buf = fz_new_buffer(ctx, n * 2 + (n / 32) + 2);
 
 	while (n--)
 	{
@@ -471,8 +476,8 @@ static void addhexfilter(fz_obj *dict)
 	fz_obj *f, *dp, *newf, *newdp;
 	fz_obj *ahx, *nullobj;
 
-	ahx = fz_new_name("ASCIIHexDecode");
-	nullobj = fz_new_null();
+	ahx = fz_new_name(ctx, "ASCIIHexDecode");
+	nullobj = fz_new_null(ctx);
 	newf = newdp = NULL;
 
 	f = fz_dict_gets(dict, "Filter");
@@ -480,13 +485,13 @@ static void addhexfilter(fz_obj *dict)
 
 	if (fz_is_name(f))
 	{
-		newf = fz_new_array(2);
+		newf = fz_new_array(ctx, 2);
 		fz_array_push(newf, ahx);
 		fz_array_push(newf, f);
 		f = newf;
 		if (fz_is_dict(dp))
 		{
-			newdp = fz_new_array(2);
+			newdp = fz_new_array(ctx, 2);
 			fz_array_push(newdp, nullobj);
 			fz_array_push(newdp, dp);
 			dp = newdp;
@@ -515,45 +520,39 @@ static void addhexfilter(fz_obj *dict)
 
 static void copystream(fz_obj *obj, int num, int gen)
 {
-	fz_error error;
 	fz_buffer *buf, *tmp;
 	fz_obj *newlen;
 
-	error = pdf_load_raw_stream(&buf, xref, num, gen);
-	if (error)
-		die(error);
+	buf = pdf_load_raw_stream(xref, num, gen);
 
 	if (doascii && isbinarystream(buf))
 	{
 		tmp = hexbuf(buf->data, buf->len);
-		fz_drop_buffer(buf);
+		fz_drop_buffer(ctx, buf);
 		buf = tmp;
 
 		addhexfilter(obj);
 
-		newlen = fz_new_int(buf->len);
+		newlen = fz_new_int(ctx, buf->len);
 		fz_dict_puts(obj, "Length", newlen);
 		fz_drop_obj(newlen);
 	}
 
 	fprintf(out, "%d %d obj\n", num, gen);
-	fz_fprint_obj(out, obj, !doexpand);
+	fz_fprint_obj(out, obj, doexpand == 0);
 	fprintf(out, "stream\n");
 	fwrite(buf->data, 1, buf->len, out);
 	fprintf(out, "endstream\nendobj\n\n");
 
-	fz_drop_buffer(buf);
+	fz_drop_buffer(ctx, buf);
 }
 
 static void expandstream(fz_obj *obj, int num, int gen)
 {
-	fz_error error;
 	fz_buffer *buf, *tmp;
 	fz_obj *newlen;
 
-	error = pdf_load_stream(&buf, xref, num, gen);
-	if (error)
-		die(error);
+	buf = pdf_load_stream(xref, num, gen);
 
 	fz_dict_dels(obj, "Filter");
 	fz_dict_dels(obj, "DecodeParms");
@@ -561,34 +560,31 @@ static void expandstream(fz_obj *obj, int num, int gen)
 	if (doascii && isbinarystream(buf))
 	{
 		tmp = hexbuf(buf->data, buf->len);
-		fz_drop_buffer(buf);
+		fz_drop_buffer(ctx, buf);
 		buf = tmp;
 
 		addhexfilter(obj);
 	}
 
-	newlen = fz_new_int(buf->len);
+	newlen = fz_new_int(ctx, buf->len);
 	fz_dict_puts(obj, "Length", newlen);
 	fz_drop_obj(newlen);
 
 	fprintf(out, "%d %d obj\n", num, gen);
-	fz_fprint_obj(out, obj, !doexpand);
+	fz_fprint_obj(out, obj, doexpand == 0);
 	fprintf(out, "stream\n");
 	fwrite(buf->data, 1, buf->len, out);
 	fprintf(out, "endstream\nendobj\n\n");
 
-	fz_drop_buffer(buf);
+	fz_drop_buffer(ctx, buf);
 }
 
 static void writeobject(int num, int gen)
 {
-	fz_error error;
 	fz_obj *obj;
 	fz_obj *type;
 
-	error = pdf_load_object(&obj, xref, num, gen);
-	if (error)
-		die(error);
+	obj = pdf_load_object(xref, num, gen);
 
 	/* skip ObjStm and XRef objects */
 	if (fz_is_dict(obj))
@@ -611,12 +607,35 @@ static void writeobject(int num, int gen)
 	if (!pdf_is_stream(xref, num, gen))
 	{
 		fprintf(out, "%d %d obj\n", num, gen);
-		fz_fprint_obj(out, obj, !doexpand);
+		fz_fprint_obj(out, obj, doexpand == 0);
 		fprintf(out, "endobj\n\n");
 	}
 	else
 	{
-		if (doexpand && !pdf_is_jpx_image(obj))
+		int dontexpand = 0;
+		if (doexpand != 0 && doexpand != expand_all)
+		{
+			fz_obj *o;
+
+			if ((o = fz_dict_gets(obj, "Type"), !strcmp(fz_to_name(o), "XObject")) &&
+				(o = fz_dict_gets(obj, "Subtype"), !strcmp(fz_to_name(o), "Image")))
+				dontexpand = !(doexpand & expand_images);
+			if (o = fz_dict_gets(obj, "Type"), !strcmp(fz_to_name(o), "Font"))
+				dontexpand = !(doexpand & expand_fonts);
+			if (o = fz_dict_gets(obj, "Type"), !strcmp(fz_to_name(o), "FontDescriptor"))
+				dontexpand = !(doexpand & expand_fonts);
+			if ((o = fz_dict_gets(obj, "Length1")) != NULL)
+				dontexpand = !(doexpand & expand_fonts);
+			if ((o = fz_dict_gets(obj, "Length2")) != NULL)
+				dontexpand = !(doexpand & expand_fonts);
+			if ((o = fz_dict_gets(obj, "Length3")) != NULL)
+				dontexpand = !(doexpand & expand_fonts);
+			if (o = fz_dict_gets(obj, "Subtype"), !strcmp(fz_to_name(o), "Type1C"))
+				dontexpand = !(doexpand & expand_fonts);
+			if (o = fz_dict_gets(obj, "Subtype"), !strcmp(fz_to_name(o), "CIDFontType0C"))
+				dontexpand = !(doexpand & expand_fonts);
+		}
+		if (doexpand && !dontexpand && !pdf_is_jpx_image(ctx, obj))
 			expandstream(obj, num, gen);
 		else
 			copystream(obj, num, gen);
@@ -644,9 +663,9 @@ static void writexref(void)
 	}
 	fprintf(out, "\n");
 
-	trailer = fz_new_dict(5);
+	trailer = fz_new_dict(ctx, 5);
 
-	obj = fz_new_int(xref->len);
+	obj = fz_new_int(ctx, xref->len);
 	fz_dict_puts(trailer, "Size", obj);
 	fz_drop_obj(obj);
 
@@ -663,7 +682,7 @@ static void writexref(void)
 		fz_dict_puts(trailer, "ID", obj);
 
 	fprintf(out, "trailer\n");
-	fz_fprint_obj(out, trailer, !doexpand);
+	fz_fprint_obj(out, trailer, doexpand != 0);
 	fprintf(out, "\n");
 
 	fz_drop_obj(trailer);
@@ -713,20 +732,21 @@ static void writepdf(void)
 
 int main(int argc, char **argv)
 {
-	fz_error error;
 	char *infile;
 	char *outfile = "out.pdf";
 	char *password = "";
 	int c, num;
 	int subset;
 
-	while ((c = fz_getopt(argc, argv, "adgp:")) != -1)
+	while ((c = fz_getopt(argc, argv, "adfgip:")) != -1)
 	{
 		switch (c)
 		{
 		case 'p': password = fz_optarg; break;
 		case 'g': dogarbage ++; break;
-		case 'd': doexpand ++; break;
+		case 'd': doexpand ^= expand_all; break;
+		case 'f': doexpand ^= expand_fonts; break;
+		case 'i': doexpand ^= expand_images; break;
 		case 'a': doascii ++; break;
 		default: usage(); break;
 		}
@@ -747,21 +767,26 @@ int main(int argc, char **argv)
 	if (argc - fz_optind > 0)
 		subset = 1;
 
-	error = pdf_open_xref(&xref, infile, password);
-	if (error)
-		die(fz_rethrow(error, "cannot open input file '%s'", infile));
+	ctx = fz_new_context(&fz_alloc_default, 256<<20);
+	if (!ctx)
+	{
+		fprintf(stderr, "cannot initialise context\n");
+		exit(1);
+	}
+
+	xref = pdf_open_xref(ctx, infile, password);
 
 	out = fopen(outfile, "wb");
 	if (!out)
-		die(fz_throw("cannot open output file '%s'", outfile));
+		fz_throw(ctx, "cannot open output file '%s'", outfile);
 
 	fprintf(out, "%%PDF-%d.%d\n", xref->version / 10, xref->version % 10);
 	fprintf(out, "%%\316\274\341\277\246\n\n");
 
-	uselist = fz_calloc(xref->len + 1, sizeof(char));
-	ofslist = fz_calloc(xref->len + 1, sizeof(int));
-	genlist = fz_calloc(xref->len + 1, sizeof(int));
-	renumbermap = fz_calloc(xref->len + 1, sizeof(int));
+	uselist = fz_malloc_array(ctx, xref->len + 1, sizeof(char));
+	ofslist = fz_malloc_array(ctx, xref->len + 1, sizeof(int));
+	genlist = fz_malloc_array(ctx, xref->len + 1, sizeof(int));
+	renumbermap = fz_malloc_array(ctx, xref->len + 1, sizeof(int));
 
 	for (num = 0; num < xref->len; num++)
 	{
@@ -794,22 +819,21 @@ int main(int argc, char **argv)
 	/* Do not renumber objects if encryption is in use, as the object
 	 * numbers are baked into the streams/strings, and we can't currently
 	 * cope with moving them. See bug 692627. */
-	if (dogarbage >= 2 && xref->crypt == NULL)
+	if (dogarbage >= 2 && !xref->crypt)
 		renumberobjs();
 
 	writepdf();
 
 	if (fclose(out))
-		die(fz_throw("cannot close output file '%s'", outfile));
+		fz_throw(ctx, "cannot close output file '%s'", outfile);
 
-	fz_free(uselist);
-	fz_free(ofslist);
-	fz_free(genlist);
-	fz_free(renumbermap);
+	fz_free(xref->ctx, uselist);
+	fz_free(xref->ctx, ofslist);
+	fz_free(xref->ctx, genlist);
+	fz_free(xref->ctx, renumbermap);
 
 	pdf_free_xref(xref);
-
-	fz_flush_warnings();
-
+	fz_flush_warnings(ctx);
+	fz_free_context(ctx);
 	return 0;
 }

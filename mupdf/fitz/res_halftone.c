@@ -1,12 +1,12 @@
 #include "fitz.h"
 
 fz_halftone *
-fz_new_halftone(int comps)
+fz_new_halftone(fz_context *ctx, int comps)
 {
 	fz_halftone *ht;
 	int i;
 
-	ht = fz_malloc(sizeof(fz_halftone) + (comps-1)*sizeof(fz_pixmap *));
+	ht = fz_malloc(ctx, sizeof(fz_halftone) + (comps-1)*sizeof(fz_pixmap *));
 	ht->refs = 1;
 	ht->n = comps;
 	for (i = 0; i < comps; i++)
@@ -23,15 +23,15 @@ fz_keep_halftone(fz_halftone *ht)
 }
 
 void
-fz_drop_halftone(fz_halftone *ht)
+fz_drop_halftone(fz_context *ctx, fz_halftone *ht)
 {
 	int i;
 
 	if (!ht || --ht->refs != 0)
 		return;
 	for (i = 0; i < ht->n; i++)
-		fz_drop_pixmap(ht->comp[i]);
-	fz_free(ht);
+		fz_drop_pixmap(ctx, ht->comp[i]);
+	fz_free(ctx, ht);
 }
 
 /* Default mono halftone, lifted from Ghostscript. */
@@ -55,11 +55,11 @@ static unsigned char mono_ht[] =
 	0xF2, 0x72, 0xD2, 0x52, 0xFA, 0x7A, 0xDA, 0x5A, 0xF0, 0x70, 0xD0, 0x50, 0xF8, 0x78, 0xD8, 0x58
 };
 
-fz_halftone *fz_get_default_halftone(int num_comps)
+fz_halftone *fz_get_default_halftone(fz_context *ctx, int num_comps)
 {
-	fz_halftone *ht = fz_new_halftone(num_comps);
+	fz_halftone *ht = fz_new_halftone(ctx, num_comps);
 	assert(num_comps == 1); /* Only support 1 component for now */
-	ht->comp[0] = fz_new_pixmap_with_data(NULL, 16, 16, mono_ht);
+	ht->comp[0] = fz_new_pixmap_with_data(ctx, NULL, 16, 16, mono_ht);
 	return ht;
 }
 
@@ -156,20 +156,20 @@ static void do_threshold_1(unsigned char *ht_line, unsigned char *pixmap, unsign
 		*out++ = h;
 }
 
-fz_bitmap *fz_halftone_pixmap(fz_pixmap *pix, fz_halftone *ht)
+fz_bitmap *fz_halftone_pixmap(fz_context *ctx, fz_pixmap *pix, fz_halftone *ht)
 {
 	fz_bitmap *out;
 	unsigned char *ht_line, *o, *p;
 	int w, h, x, y, n, pstride, ostride;
 
-	if (pix == NULL || ht == NULL)
+	if (!pix || !ht)
 		return NULL;
 
 	assert(pix->n == 2); /* Mono + Alpha */
 
 	n = pix->n-1; /* Remove alpha */
-	ht_line = fz_malloc(pix->w * n);
-	out = fz_new_bitmap(pix->w, pix->h, n);
+	ht_line = fz_malloc(ctx, pix->w * n);
+	out = fz_new_bitmap(ctx, pix->w, pix->h, n);
 	o = out->samples;
 	p = pix->samples;
 

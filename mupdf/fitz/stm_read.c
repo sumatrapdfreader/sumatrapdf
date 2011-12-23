@@ -20,12 +20,7 @@ fz_read(fz_stream *stm, unsigned char *buf, int len)
 	if (len - count < stm->ep - stm->bp)
 	{
 		n = stm->read(stm, stm->bp, stm->ep - stm->bp);
-		if (n < 0)
-		{
-			stm->error = 1;
-			return fz_rethrow(n, "read error");
-		}
-		else if (n == 0)
+		if (n == 0)
 		{
 			stm->eof = 1;
 		}
@@ -47,12 +42,7 @@ fz_read(fz_stream *stm, unsigned char *buf, int len)
 	else
 	{
 		n = stm->read(stm, buf + count, len - count);
-		if (n < 0)
-		{
-			stm->error = 1;
-			return fz_rethrow(n, "read error");
-		}
-		else if (n == 0)
+		if (n == 0)
 		{
 			stm->eof = 1;
 		}
@@ -76,69 +66,83 @@ fz_fill_buffer(fz_stream *stm)
 	if (stm->error || stm->eof)
 		return;
 
-	n = stm->read(stm, stm->bp, stm->ep - stm->bp);
-	if (n < 0)
+	fz_try(stm->ctx)
 	{
+		n = stm->read(stm, stm->bp, stm->ep - stm->bp);
+		if (n == 0)
+		{
+			stm->eof = 1;
+		}
+		else if (n > 0)
+		{
+			stm->rp = stm->bp;
+			stm->wp = stm->bp + n;
+			stm->pos += n;
+		}
+	}
+	fz_catch(stm->ctx)
+	{
+		fz_warn(stm->ctx, "read error; treating as end of file");
 		stm->error = 1;
-		fz_catch(n, "read error; treating as end of file");
-	}
-	else if (n == 0)
-	{
-		stm->eof = 1;
-	}
-	else if (n > 0)
-	{
-		stm->rp = stm->bp;
-		stm->wp = stm->bp + n;
-		stm->pos += n;
 	}
 }
 
 /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692260 */
-fz_error
-fz_read_all2(fz_buffer **bufp, fz_stream *stm, int initial, int fail_on_error)
+fz_buffer *
+fz_read_all2(fz_stream *stm, int initial, int fail_on_error)
 {
-	fz_buffer *buf;
+	fz_buffer *buf = NULL;
 	int n;
+	fz_context *ctx = stm->ctx;
 
-	if (initial < 1024)
-		initial = 1024;
+	fz_var(buf);
 
-	buf = fz_new_buffer(initial);
-
-	while (1)
+	fz_try(ctx)
 	{
-		if (buf->len == buf->cap)
-			fz_grow_buffer(buf);
+		if (initial < 1024)
+			initial = 1024;
 
-		if (buf->len / 200 > initial)
+		buf = fz_new_buffer(ctx, initial);
+
+		while (1)
 		{
-			fz_drop_buffer(buf);
-			return fz_throw("compression bomb detected");
-		}
+			if (buf->len == buf->cap)
+				fz_grow_buffer(ctx, buf);
 
-		n = fz_read(stm, buf->data + buf->len, buf->cap - buf->len);
-		if (n < 0 && (fail_on_error || buf->len == 0))
-		{
-			fz_drop_buffer(buf);
-			return fz_rethrow(n, "read error");
-		}
-		if (n < 0)
-			fz_catch(n, "capping stream at read error");
-		if (n == 0)
-			break;
+			if (buf->len / 200 > initial)
+				fz_throw(ctx, "compression bomb detected");
 
-		buf->len += n;
+			/* http://bugs.ghostscript.com/show_bug.cgi?id=692260 */
+			fz_try(ctx)
+			{
+				n = fz_read(stm, buf->data + buf->len, buf->cap - buf->len);
+			}
+			fz_catch(ctx)
+			{
+				if (fail_on_error || buf->len == 0)
+					fz_rethrow(ctx);
+				fz_warn(ctx, "capping stream at read error");
+				break;
+			}
+			if (n == 0)
+				break;
+
+			buf->len += n;
+		}
+	}
+	fz_catch(ctx)
+	{
+		fz_drop_buffer(ctx, buf);
+		fz_rethrow(ctx);
 	}
 
-	*bufp = buf;
-	return fz_okay;
+	return buf;
 }
 
-fz_error
-fz_read_all(fz_buffer **bufp, fz_stream *stm, int initial)
+fz_buffer *
+fz_read_all(fz_stream *stm, int initial)
 {
-	return fz_read_all2(bufp, stm, initial, 1);
+	return fz_read_all2(stm, initial, 1);
 }
 
 void
@@ -200,11 +204,11 @@ fz_seek(fz_stream *stm, int offset, int whence)
 		if (whence == 0)
 			offset -= fz_tell(stm);
 		if (offset < 0)
-			fz_warn("cannot seek backwards");
+			fz_warn(stm->ctx, "cannot seek backwards");
 		/* dog slow, but rare enough */
 		while (offset-- > 0)
 			fz_read_byte(stm);
 	}
 	else
-		fz_warn("cannot seek");
+		fz_warn(stm->ctx, "cannot seek");
 }

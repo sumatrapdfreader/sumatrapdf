@@ -481,7 +481,7 @@ fz_paint_radial(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
 }
 
 static void
-fz_paint_mesh(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
+fz_paint_mesh(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
 {
 	float tri[3][MAXN];
 	fz_point p;
@@ -509,7 +509,7 @@ fz_paint_mesh(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
 				tri[k][2] = *mesh++ * 255;
 			else
 			{
-				fz_convert_color(shade->colorspace, mesh, dest->colorspace, tri[k] + 2);
+				fz_convert_color(ctx, shade->colorspace, mesh, dest->colorspace, tri[k] + 2);
 				for (i = 0; i < dest->colorspace->n; i++)
 					tri[k][i + 2] *= 255;
 				mesh += shade->colorspace->n;
@@ -520,55 +520,68 @@ fz_paint_mesh(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
 }
 
 void
-fz_paint_shade(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
+fz_paint_shade(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
 {
 	unsigned char clut[256][FZ_MAX_COLORS];
-	fz_pixmap *temp, *conv;
+	fz_pixmap *temp = NULL;
+	fz_pixmap *conv = NULL;
 	float color[FZ_MAX_COLORS];
 	int i, k;
 
-	ctm = fz_concat(shade->matrix, ctm);
+	fz_var(temp);
+	fz_var(conv);
 
-	if (shade->use_function)
+	fz_try(ctx)
 	{
-		for (i = 0; i < 256; i++)
+		ctm = fz_concat(shade->matrix, ctm);
+
+		if (shade->use_function)
 		{
-			fz_convert_color(shade->colorspace, shade->function[i], dest->colorspace, color);
-			for (k = 0; k < dest->colorspace->n; k++)
-				clut[i][k] = color[k] * 255;
-			clut[i][k] = shade->function[i][shade->colorspace->n] * 255;
+			for (i = 0; i < 256; i++)
+			{
+				fz_convert_color(ctx, shade->colorspace, shade->function[i], dest->colorspace, color);
+				for (k = 0; k < dest->colorspace->n; k++)
+					clut[i][k] = color[k] * 255;
+				clut[i][k] = shade->function[i][shade->colorspace->n] * 255;
+			}
+			conv = fz_new_pixmap_with_rect(ctx, dest->colorspace, bbox);
+			temp = fz_new_pixmap_with_rect(ctx, fz_device_gray, bbox);
+			fz_clear_pixmap(temp);
 		}
-		conv = fz_new_pixmap_with_rect(dest->colorspace, bbox);
-		temp = fz_new_pixmap_with_rect(fz_device_gray, bbox);
-		fz_clear_pixmap(temp);
-	}
-	else
-	{
-		temp = dest;
-	}
-
-	switch (shade->type)
-	{
-	case FZ_LINEAR: fz_paint_linear(shade, ctm, temp, bbox); break;
-	case FZ_RADIAL: fz_paint_radial(shade, ctm, temp, bbox); break;
-	case FZ_MESH: fz_paint_mesh(shade, ctm, temp, bbox); break;
-	}
-
-	if (shade->use_function)
-	{
-		unsigned char *s = temp->samples;
-		unsigned char *d = conv->samples;
-		int len = temp->w * temp->h;
-		while (len--)
+		else
 		{
-			int v = *s++;
-			int a = fz_mul255(*s++, clut[v][conv->n - 1]);
-			for (k = 0; k < conv->n - 1; k++)
-				*d++ = fz_mul255(clut[v][k], a);
-			*d++ = a;
+			temp = dest;
 		}
-		fz_paint_pixmap(dest, conv, 255);
-		fz_drop_pixmap(conv);
-		fz_drop_pixmap(temp);
+
+		switch (shade->type)
+		{
+		case FZ_LINEAR: fz_paint_linear(shade, ctm, temp, bbox); break;
+		case FZ_RADIAL: fz_paint_radial(shade, ctm, temp, bbox); break;
+		case FZ_MESH: fz_paint_mesh(ctx, shade, ctm, temp, bbox); break;
+		}
+
+		if (shade->use_function)
+		{
+			unsigned char *s = temp->samples;
+			unsigned char *d = conv->samples;
+			int len = temp->w * temp->h;
+			while (len--)
+			{
+				int v = *s++;
+				int a = fz_mul255(*s++, clut[v][conv->n - 1]);
+				for (k = 0; k < conv->n - 1; k++)
+					*d++ = fz_mul255(clut[v][k], a);
+				*d++ = a;
+			}
+			fz_paint_pixmap(dest, conv, 255);
+			fz_drop_pixmap(ctx, conv);
+			fz_drop_pixmap(ctx, temp);
+		}
+	}
+	fz_catch(ctx)
+	{
+		fz_drop_pixmap(ctx, conv);
+		fz_drop_pixmap(ctx, temp);
+		fz_rethrow(ctx);
 	}
 }

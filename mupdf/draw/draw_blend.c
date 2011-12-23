@@ -415,9 +415,9 @@ fz_blend_separable_nonisolated(byte * restrict bp, byte * restrict sp, int n, in
 			/* Because we are a non-isolated group, we need to
 			 * 'uncomposite' before we blend (recomposite).
 			 * We assume that normal blending has been done inside
-			 * the group, so:   ra.rc = (1-ha).bc + ha.sc
+			 * the group, so: ra.rc = (1-ha).bc + ha.sc
 			 * A bit of rearrangement, and that gives us that:
-			 *  sc = (ra.rc - bc)/ha + bc
+			 * sc = (ra.rc - bc)/ha + bc
 			 * Now, the result of the blend was stored in src, so:
 			 */
 			int invha = ha ? 255 * 256 / ha : 0;
@@ -482,9 +482,9 @@ fz_blend_nonseparable_nonisolated(byte * restrict bp, byte * restrict sp, int w,
 				 * need to 'uncomposite' before we blend
 				 * (recomposite). We assume that normal
 				 * blending has been done inside the group,
-				 * so:     ra.rc = (1-ha).bc + ha.sc
+				 * so: ra.rc = (1-ha).bc + ha.sc
 				 * A bit of rearrangement, and that gives us
-				 * that:   sc = (ra.rc - bc)/ha + bc
+				 * that: sc = (ra.rc - bc)/ha + bc
 				 * Now, the result of the blend was stored in
 				 * src, so: */
 				int invha = ha ? 255 * 256 / ha : 0;

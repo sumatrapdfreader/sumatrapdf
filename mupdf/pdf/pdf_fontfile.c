@@ -280,30 +280,28 @@ pdf_find_windows_font_path(const char *fontname)
 }
 
 /* source and dest can be same */
-static fz_error
-decodeunicodeBE(char* source, int sourcelen, char* dest, int destlen)
+static void
+decodeunicodeBE(fz_context *ctx, char* source, int sourcelen, char* dest, int destlen)
 {
 	WCHAR *tmp;
 	int converted, i;
 
 	if (sourcelen % 2 != 0)
-		return fz_throw("fonterror : invalid unicode string");
+		fz_throw(ctx, "fonterror : invalid unicode string");
 
-	tmp = fz_calloc(sourcelen / 2 + 1, sizeof(WCHAR));
+	tmp = fz_malloc_array(ctx, sourcelen / 2 + 1, sizeof(WCHAR));
 	for (i = 0; i < sourcelen / 2; i++)
 		tmp[i] = BEtoHs(((WCHAR *)source)[i]);
 	tmp[sourcelen / 2] = '\0';
 
 	converted = WideCharToMultiByte(CP_UTF8, 0, tmp, -1, dest, destlen, NULL, NULL);
-	fz_free(tmp);
+	fz_free(ctx, tmp);
 	if (!converted)
-		return fz_throw("fonterror : invalid unicode string");
-
-	return fz_okay;
+		fz_throw(ctx, "fonterror : invalid unicode string");
 }
 
-static fz_error
-decodeplatformstring(int platform, int enctype, char* source, int sourcelen, char* dest, int destlen)
+static void
+decodeplatformstring(fz_context *ctx, int platform, int enctype, char* source, int sourcelen, char* dest, int destlen)
 {
 	switch (platform)
 	{
@@ -312,37 +310,39 @@ decodeplatformstring(int platform, int enctype, char* source, int sourcelen, cha
 		{
 		case TT_APPLE_ID_DEFAULT:
 		case TT_APPLE_ID_UNICODE_2_0:
-			return decodeunicodeBE(source, sourcelen, dest, destlen);
+			decodeunicodeBE(ctx, source, sourcelen, dest, destlen);
+			return;
 		}
-		return fz_throw("fonterror : unsupported encoding");
+		fz_throw(ctx, "fonterror : unsupported encoding (%d/%d)", platform, enctype);
 	case TT_PLATFORM_MACINTOSH:
-		switch( enctype)
+		switch(enctype)
 		{
 		case TT_MAC_ID_ROMAN:
 			if (sourcelen + 1 > destlen)
-				return fz_throw("fonterror : short buf length");
+                fz_throw(ctx, "fonterror : overlong fontname: %s", source);
 			// TODO: Convert to UTF-8 from what encoding?
 			memcpy(dest, source, sourcelen);
 			dest[sourcelen] = 0;
-			return fz_okay;
+			return;
 		}
-		return fz_throw("fonterror : unsupported encoding");
+		fz_throw(ctx, "fonterror : unsupported encoding (%d/%d)", platform, enctype);
 	case TT_PLATFORM_MICROSOFT:
 		switch (enctype)
 		{
 		case TT_MS_ID_SYMBOL_CS:
 		case TT_MS_ID_UNICODE_CS:
 		case TT_MS_ID_UCS_4:
-			return decodeunicodeBE(source, sourcelen, dest, destlen);
+			decodeunicodeBE(ctx, source, sourcelen, dest, destlen);
+			return;
 		}
-		return fz_throw("fonterror : unsupported encoding");
+		fz_throw(ctx, "fonterror : unsupported encoding (%d/%d)", platform, enctype);
 	default:
-		return fz_throw("fonterror : unsupported platform");
+		fz_throw(ctx, "fonterror : unsupported encoding (%d/%d)", platform, enctype);
 	}
 }
 
 static void
-grow_system_font_list(pdf_fontlistMS *fl)
+grow_system_font_list(fz_context *ctx, pdf_fontlistMS *fl)
 {
 	int newcap;
 	pdf_fontmapMS *newitems;
@@ -352,63 +352,59 @@ grow_system_font_list(pdf_fontlistMS *fl)
 	else
 		newcap = fl->cap * 2;
 
-	newitems = fz_realloc(fl->fontmap, newcap, sizeof(pdf_fontmapMS));
+	// use realloc/free for the fontmap, since the list can
+	// remain in memory even with all fz_contexts destroyed
+	newitems = realloc(fl->fontmap, newcap * sizeof(pdf_fontmapMS));
+	if (!newitems)
+		fz_throw(ctx, "OOM in grow_system_font_list");
 	memset(newitems + fl->cap, 0, sizeof(pdf_fontmapMS) * (newcap - fl->cap));
 
 	fl->fontmap = newitems;
 	fl->cap = newcap;
 }
 
-static fz_error
-insert_mapping(pdf_fontlistMS *fl, char *facename, char *path, int index)
+static void
+insert_mapping(fz_context *ctx, pdf_fontlistMS *fl, char *facename, char *path, int index)
 {
 	if (fl->len == fl->cap)
-		grow_system_font_list(fl);
+		grow_system_font_list(ctx, fl);
 
 	if (fl->len >= fl->cap)
-		return fz_throw("fonterror : fontlist overflow");
+		fz_throw(ctx, "fonterror : fontlist overflow");
 
 	fz_strlcpy(fl->fontmap[fl->len].fontface, facename, sizeof(fl->fontmap[0].fontface));
 	fz_strlcpy(fl->fontmap[fl->len].fontpath, path, sizeof(fl->fontmap[0].fontpath));
 	fl->fontmap[fl->len].index = index;
 
 	++fl->len;
-
-	return fz_okay;
 }
 
-static fz_error
+static void
 safe_read(fz_stream *file, char *buf, int size)
 {
 	int n = fz_read(file, buf, size);
 	if (n != size) /* covers n < 0 case */
-		return fz_throw("ioerror");
-
-	return fz_okay;
+		fz_throw(file->ctx, "ioerror : read %d, expected %d", n, size);
 }
 
-static fz_error
+static void
 read_ttf_string(fz_stream *file, int offset, TT_NAME_RECORD *ttRecord, char *buf, int size)
 {
-	fz_error err;
 	char szTemp[MAX_FACENAME * 2];
 	// ignore empty and overlong strings
 	int stringLength = BEtoHs(ttRecord->uStringLength);
 	if (stringLength == 0 || stringLength >= sizeof(szTemp))
-		return fz_okay;
+		return;
 
 	fz_seek(file, offset + BEtoHs(ttRecord->uStringOffset), 0);
-	err = safe_read(file, szTemp, stringLength);
-	if (err) return err;
-	return decodeplatformstring(BEtoHs(ttRecord->uPlatformID),
+	safe_read(file, szTemp, stringLength);
+	decodeplatformstring(file->ctx, BEtoHs(ttRecord->uPlatformID),
 		BEtoHs(ttRecord->uEncodingID), szTemp, stringLength, buf, size);
 }
 
-static fz_error
+static void
 parseTTF(fz_stream *file, int offset, int index, char *path)
 {
-	fz_error err = fz_okay;
-
 	TT_OFFSET_TABLE ttOffsetTable;
 	TT_TABLE_DIRECTORY tblDir;
 	TT_NAME_TABLE_HEADER ttNTHeader;
@@ -418,30 +414,27 @@ parseTTF(fz_stream *file, int offset, int index, char *path)
 	int i, count, tblOffset;
 
 	fz_seek(file,offset,0);
-	err = safe_read(file, (char *)&ttOffsetTable, sizeof(TT_OFFSET_TABLE));
-	if (err) return err;
+	safe_read(file, (char *)&ttOffsetTable, sizeof(TT_OFFSET_TABLE));
 
 	// check if this is a TrueType font of version 1.0 or an OpenType font
 	if (BEtoHl(ttOffsetTable.uVersion) != TTC_VERSION1 && ttOffsetTable.uVersion != TTAG_OTTO)
-		return fz_throw("fonterror : invalid font version");
+		fz_throw(file->ctx, "fonterror : invalid font version %x", BEtoHl(ttOffsetTable.uVersion));
 
 	// determine the name table's offset by iterating through the offset table
 	count = BEtoHs(ttOffsetTable.uNumOfTables);
 	for (i = 0; i < count; i++)
 	{
-		err = safe_read(file, (char *)&tblDir, sizeof(TT_TABLE_DIRECTORY));
-		if (err) return err;
+		safe_read(file, (char *)&tblDir, sizeof(TT_TABLE_DIRECTORY));
 		if (!tblDir.uTag || BEtoHl(tblDir.uTag) == TTAG_name)
 			break;
 	}
 	if (count == i || !tblDir.uTag)
-		return fz_throw("fonterror : nameless font");
+		fz_throw(file->ctx, "fonterror : nameless font");
 	tblOffset = BEtoHl(tblDir.uOffset);
 
 	// read the 'name' table for record count and offsets
 	fz_seek(file, tblOffset, 0);
-	err = safe_read(file, (char *)&ttNTHeader, sizeof(TT_NAME_TABLE_HEADER));
-	if (err) return err;
+	safe_read(file, (char *)&ttNTHeader, sizeof(TT_NAME_TABLE_HEADER));
 	offset = tblOffset + sizeof(TT_NAME_TABLE_HEADER);
 	tblOffset += BEtoHs(ttNTHeader.uStorageOffset);
 
@@ -452,33 +445,35 @@ parseTTF(fz_stream *file, int offset, int index, char *path)
 		short nameId;
 
 		fz_seek(file, offset + i * sizeof(TT_NAME_RECORD), 0);
-		err = safe_read(file, (char *)&ttRecord, sizeof(TT_NAME_RECORD));
-		if (err) return err;
+		safe_read(file, (char *)&ttRecord, sizeof(TT_NAME_RECORD));
 
 		// ignore non-English strings
 		if (ttRecord.uLanguageID && BEtoHs(ttRecord.uLanguageID) != TT_MS_LANGID_ENGLISH_UNITED_STATES)
 			continue;
 		// ignore names other than font (sub)family and PostScript name
 		nameId = BEtoHs(ttRecord.uNameID);
-		if (TT_NAME_ID_FONT_FAMILY == nameId)
-			err = read_ttf_string(file, tblOffset, &ttRecord, szTTName, MAX_FACENAME);
-		else if (TT_NAME_ID_FONT_SUBFAMILY == nameId)
-			err = read_ttf_string(file, tblOffset, &ttRecord, szStyle, MAX_FACENAME);
-		else if (TT_NAME_ID_PS_NAME == nameId)
-			err = read_ttf_string(file, tblOffset, &ttRecord, szPSName, MAX_FACENAME);
-		if (err) fz_catch(err, "ignoring face name decoding fonterror");
+		fz_try(file->ctx)
+		{
+			if (TT_NAME_ID_FONT_FAMILY == nameId)
+				read_ttf_string(file, tblOffset, &ttRecord, szTTName, MAX_FACENAME);
+			else if (TT_NAME_ID_FONT_SUBFAMILY == nameId)
+				read_ttf_string(file, tblOffset, &ttRecord, szStyle, MAX_FACENAME);
+			else if (TT_NAME_ID_PS_NAME == nameId)
+				read_ttf_string(file, tblOffset, &ttRecord, szPSName, MAX_FACENAME);
+		}
+		fz_catch(file->ctx)
+		{
+			fz_warn(file->ctx, "ignoring face name decoding fonterror");
+		}
 	}
 
 	// TODO: is there a better way to distinguish Arial Caps from Arial proper?
 	// cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1290
 	if (!strcmp(szPSName, "ArialMT") && (strstr(path, "caps") || strstr(path, "Caps")))
-		return fz_throw("ignore %s, as it can't be distinguished from Arial,Regular", path);
+		fz_throw(file->ctx, "ignore %s, as it can't be distinguished from Arial,Regular", path);
 
 	if (szPSName[0])
-	{
-		err = insert_mapping(&fontlistMS, szPSName, path, index);
-		if (err) return err;
-	}
+		insert_mapping(file->ctx, &fontlistMS, szPSName, path, index);
 	if (szTTName[0])
 	{
 		// derive a PostScript-like name and add it, if it's different from the font's
@@ -493,86 +488,79 @@ parseTTF(fz_stream *file, int offset, int index, char *path)
 		removespaces(szTTName);
 		// compare the two names before adding this one
 		if (lookupcompare(szTTName, szPSName))
-		{
-			err = insert_mapping(&fontlistMS, szTTName, path, index);
-			if (err) return err;
-		}
+			insert_mapping(file->ctx, &fontlistMS, szTTName, path, index);
 	}
-	return fz_okay;
 }
 
-static fz_error
-parseTTFs(char *path)
+static void
+parseTTFs(fz_context *ctx, char *path)
 {
-	fz_error err;
-	fz_stream *file = fz_open_file(path);
-	if (!file)
-		return fz_throw("fonterror : %s not found", path);
-
-	err = parseTTF(file, 0, 0, path);
-	fz_close(file);
-	return err;
+	fz_stream *file = fz_open_file(ctx, path);
+	/* "fonterror : %s not found", path */
+	fz_try(ctx)
+	{
+		parseTTF(file, 0, 0, path);
+		fz_close(file);
+	}
+	fz_catch(ctx)
+	{
+		fz_close(file);
+		fz_rethrow(ctx);
+	}
 }
 
-static fz_error
-parseTTCs(char *path)
+static void
+parseTTCs(fz_context *ctx, char *path)
 {
 	FONT_COLLECTION fontcollection;
 	ULONG i, numFonts, *offsettable = NULL;
-	fz_error err;
 
-	fz_stream *file = fz_open_file(path);
-	if (!file)
+	fz_stream *file = fz_open_file(ctx, path);
+	/* "fonterror : %s not found", path */
+
+	fz_try(ctx)
 	{
-		err = fz_throw("fonterror : %s not found", path);
-		goto cleanup;
-	}
+		safe_read(file, (char *)&fontcollection, sizeof(FONT_COLLECTION));
+		if (BEtoHl(fontcollection.Tag) != TTAG_ttcf)
+			fz_throw(ctx, "fonterror : wrong format %x", BEtoHl(fontcollection.Tag));
+		if (BEtoHl(fontcollection.Version) != TTC_VERSION1 &&
+			BEtoHl(fontcollection.Version) != TTC_VERSION2)
+			fz_throw(ctx, "fonterror : invalid version %x", BEtoHl(fontcollection.Version));
 
-	err = safe_read(file, (char *)&fontcollection, sizeof(FONT_COLLECTION));
-	if (err) goto cleanup;
-	if (BEtoHl(fontcollection.Tag) != TTAG_ttcf)
-	{
-		err = fz_throw("fonterror : wrong format");
-		goto cleanup;
-	}
-	if (BEtoHl(fontcollection.Version) != TTC_VERSION1 &&
-		BEtoHl(fontcollection.Version) != TTC_VERSION2)
-	{
-		err = fz_throw("fonterror : invalid version");
-		goto cleanup;
-	}
+		numFonts = BEtoHl(fontcollection.NumFonts);
+		offsettable = fz_calloc(ctx, numFonts, sizeof(ULONG));
 
-	numFonts = BEtoHl(fontcollection.NumFonts);
-	offsettable = fz_calloc(numFonts, sizeof(ULONG));
+		safe_read(file, (char *)offsettable, numFonts * sizeof(ULONG));
+		for (i = 0; i < numFonts; i++)
+			parseTTF(file, BEtoHl(offsettable[i]), i, path);
 
-	err = safe_read(file, (char *)offsettable, numFonts * sizeof(ULONG));
-	for (i = 0; i < numFonts && !err; i++)
-		err = parseTTF(file, BEtoHl(offsettable[i]), i, path);
-
-cleanup:
-	fz_free(offsettable);
-	if (file)
+		fz_free(ctx, offsettable);
 		fz_close(file);
-
-	return err;
+	}
+	fz_catch(ctx)
+	{
+		fz_free(ctx, offsettable);
+		fz_close(file);
+		fz_rethrow(ctx);
+	}
 }
 
-static fz_error
-extend_system_font_list(const TCHAR *path)
+static void
+extend_system_font_list(fz_context *ctx, const TCHAR *path)
 {
 	TCHAR szPath[MAX_PATH], *lpFileName;
 	WIN32_FIND_DATA FileData;
 	HANDLE hList;
 
-	GetFullPathName(path, _countof(szPath), szPath, &lpFileName);
+	GetFullPathName(path, nelem(szPath), szPath, &lpFileName);
 
 	hList = FindFirstFile(szPath, &FileData);
 	if (hList == INVALID_HANDLE_VALUE)
 	{
 		// Don't complain about missing directories
 		if (GetLastError() == ERROR_FILE_NOT_FOUND)
-			return fz_okay;
-		return fz_throw("extend_system_font_list: unknown error %d", GetLastError());
+			return;
+		fz_throw(ctx, "extend_system_font_list: unknown error %d", GetLastError());
 	}
 	do
 	{
@@ -589,39 +577,43 @@ extend_system_font_list(const TCHAR *path)
 			isNonAnsiPath = strchr(szPathAnsi, '?') != NULL;
 #endif
 			fileExt = szPathAnsi + strlen(szPathAnsi) - 4;
-			if (isNonAnsiPath)
-				fz_warn("ignoring font with non-ANSI filename: %s", szPathAnsi);
-			else if (!_stricmp(fileExt, ".ttc"))
-				parseTTCs(szPathAnsi);
-			else if (!_stricmp(fileExt, ".ttf") || !_stricmp(fileExt, ".otf"))
-				parseTTFs(szPathAnsi);
-			// ignore errors occurring while parsing a given font file
+			fz_try(ctx)
+			{
+				if (isNonAnsiPath)
+					fz_warn(ctx, "ignoring font with non-ANSI filename: %s", szPathAnsi);
+				else if (!_stricmp(fileExt, ".ttc"))
+					parseTTCs(ctx, szPathAnsi);
+				else if (!_stricmp(fileExt, ".ttf") || !_stricmp(fileExt, ".otf"))
+					parseTTFs(ctx, szPathAnsi);
+			}
+			fz_catch(ctx)
+			{
+				// ignore errors occurring while parsing a given font file
+			}
 		}
 	} while (FindNextFile(hList, &FileData));
 	FindClose(hList);
-
-	return fz_okay;
 }
 
 static int
 destroy_system_font_list(void)
 {
-	fz_free(fontlistMS.fontmap);
+	free(fontlistMS.fontmap);
 	memset(&fontlistMS, 0, sizeof(fontlistMS));
 	return 0;
 }
 
-static fz_error
-create_system_font_list()
+static void
+create_system_font_list(fz_context *ctx)
 {
 	TCHAR szFontDir[MAX_PATH];
 
-	GetWindowsDirectory(szFontDir, _countof(szFontDir) - 12);
+	GetWindowsDirectory(szFontDir, nelem(szFontDir) - 12);
 	_tcscat_s(szFontDir, MAX_PATH, _T("\\Fonts\\*.?t?"));
-	extend_system_font_list(szFontDir);
+	extend_system_font_list(ctx, szFontDir);
 
 	if (fontlistMS.len == 0)
-		fz_warn("couldn't find any usable system fonts");
+		fz_warn(ctx, "couldn't find any usable system fonts");
 
 #ifdef NOCJKFONT
 	{
@@ -631,40 +623,41 @@ create_system_font_list()
 		GetModuleFileName(0, szFontDir, MAX_PATH);
 		GetFullPathName(szFontDir, MAX_PATH, szFile, &lpFileName);
 		lstrcpyn(lpFileName, _T("DroidSansFallback.ttf"), szFile + MAX_PATH - lpFileName);
-		extend_system_font_list(szFile);
+		extend_system_font_list(ctx, szFile);
 	}
 #endif
-
-	// TODO: add fonts from Adobe Reader (when installed)?
 
 	// sort the font list, so that it can be searched binarily
 	qsort(fontlistMS.fontmap, fontlistMS.len, sizeof(pdf_fontmapMS), _stricmp);
 
 	// make sure to clean up after ourselves
 	_onexit(destroy_system_font_list);
-
-	return fz_okay;
 }
 
-fz_error
-pdf_load_windows_font(pdf_font_desc *font, char *fontname)
+void
+pdf_load_windows_font(fz_context *ctx, pdf_font_desc *font, char *fontname)
 {
-	fz_error error;
 	pdf_fontmapMS *found = NULL;
-	char *comma;
+	char *comma, *orig_name = fontname;
 
 	fz_synchronize_begin();
 	if (fontlistMS.len == 0)
-		create_system_font_list();
+	{
+		fz_try(ctx)
+		{
+			create_system_font_list(ctx);
+		}
+		fz_catch(ctx) { }
+	}
 	fz_synchronize_end();
 	if (fontlistMS.len == 0)
-		return !fz_okay;
+		fz_throw(ctx, "fonterror: couldn't find any fonts");
 
 	if (getenv("MULOG"))
 		printf("pdf_load_windows_font: looking for font '%s'\n", fontname);
 
 	// work on a normalized copy of the font name
-	fontname = fz_strdup(fontname);
+	fontname = fz_strdup(ctx, fontname);
 	removespaces(fontname);
 
 	// first, try to find the exact font name (including appended style information)
@@ -679,7 +672,7 @@ pdf_load_windows_font(pdf_font_desc *font, char *fontname)
 	else
 	{
 		int i;
-		for (i = 0; i < _countof(baseSubstitutes) && !found; i++)
+		for (i = 0; i < nelem(baseSubstitutes) && !found; i++)
 			if (!strcmp(fontname, baseSubstitutes[i].name))
 				found = pdf_find_windows_font_path(baseSubstitutes[i].pattern);
 	}
@@ -690,7 +683,7 @@ pdf_load_windows_font(pdf_font_desc *font, char *fontname)
 	if (!found && !comma && (strendswith(fontname, "Bold") || strendswith(fontname, "Italic")))
 	{
 		int styleLen = strendswith(fontname, "Bold") ? 4 : strendswith(fontname, "BoldItalic") ? 10 : 6;
-		fontname = fz_realloc(fontname, strlen(fontname) + 2, sizeof(char));
+		fontname = fz_resize_array(ctx, fontname, strlen(fontname) + 2, sizeof(char));
 		comma = fontname + strlen(fontname) - styleLen;
 		memmove(comma + 1, comma, styleLen + 1);
 		*comma = '-';
@@ -703,49 +696,52 @@ pdf_load_windows_font(pdf_font_desc *font, char *fontname)
 	if (found && (!strcmp(fontname, "Symbol") || !strcmp(fontname, "ZapfDingbats")))
 		font->flags |= PDF_FD_SYMBOLIC;
 
-	fz_free(fontname);
+	fz_free(ctx, fontname);
 	if (!found)
-		return !fz_okay;
-
-	error = fz_new_font_from_file(&font->font, found->fontpath, found->index);
-	if (error)
-		return fz_rethrow(error, "cannot load freetype font from a file %s", found->fontpath);
-
-	font->font->ft_file = fz_strdup(found->fontpath);
+        fz_throw(ctx, "couldn't find system font '%s'", orig_name);
 
 	if (getenv("MULOG"))
 		printf("pdf_load_windows_font: loading font from '%s'\n", found->fontpath);
 
-	return fz_okay;
+	font->font = fz_new_font_from_file(ctx, found->fontpath, found->index);
+	/* "cannot load freetype font from file %s", found->fontpath */
+	font->font->ft_file = fz_strdup(ctx, found->fontpath);
 }
 
-fz_error
-pdf_load_similar_cjk_font(pdf_font_desc *font, int ros, int serif)
+void
+pdf_load_similar_cjk_font(fz_context *ctx, pdf_font_desc *fontdesc, int ros, int serif)
 {
 	if (serif)
 	{
 		switch (ros)
 		{
-		case PDF_ROS_CNS: return pdf_load_windows_font(font, "MingLiU");
-		case PDF_ROS_GB: return pdf_load_windows_font(font, "SimSun");
-		case PDF_ROS_JAPAN: return pdf_load_windows_font(font, "MS-Mincho");
-		case PDF_ROS_KOREA: return pdf_load_windows_font(font, "Batang");
+		case PDF_ROS_CNS: pdf_load_windows_font(ctx, fontdesc, "MingLiU"); break;
+		case PDF_ROS_GB: pdf_load_windows_font(ctx, fontdesc, "SimSun"); break;
+		case PDF_ROS_JAPAN: pdf_load_windows_font(ctx, fontdesc, "MS-Mincho"); break;
+		case PDF_ROS_KOREA: pdf_load_windows_font(ctx, fontdesc, "Batang"); break;
+		default: fz_throw(ctx, "invalid serif ros");
 		}
 	}
 	else
 	{
 		switch (ros)
 		{
-		case PDF_ROS_CNS: return pdf_load_windows_font(font, "DFKaiShu-SB-Estd-BF");
+		case PDF_ROS_CNS: pdf_load_windows_font(ctx, fontdesc, "DFKaiShu-SB-Estd-BF"); break;
 		case PDF_ROS_GB:
-			if (fz_okay == pdf_load_windows_font(font, "KaiTi"))
-				return fz_okay;
-			return pdf_load_windows_font(font, "KaiTi_GB2312");
-		case PDF_ROS_JAPAN: return pdf_load_windows_font(font, "MS-Gothic");
-		case PDF_ROS_KOREA: return pdf_load_windows_font(font, "Gulim");
+			fz_try(ctx)
+			{
+				pdf_load_windows_font(ctx, fontdesc, "KaiTi");
+			}
+			fz_catch(ctx)
+			{
+				pdf_load_windows_font(ctx, fontdesc, "KaiTi_GB2312");
+			}
+			break;
+		case PDF_ROS_JAPAN: pdf_load_windows_font(ctx, fontdesc, "MS-Gothic"); break;
+		case PDF_ROS_KOREA: pdf_load_windows_font(ctx, fontdesc, "Gulim"); break;
+		default: fz_throw(ctx, "invalid sans-serif ros");
 		}
 	}
-	return -1;
 }
 
 #endif

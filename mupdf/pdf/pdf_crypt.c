@@ -37,37 +37,37 @@ struct pdf_crypt_s
 	int encrypt_metadata;
 
 	unsigned char key[32]; /* decryption key generated from password */
+	fz_context *ctx;
 };
 
-static fz_error pdf_parse_crypt_filter(pdf_crypt_filter *cf, fz_obj *dict, char *name, int defaultlength);
+static void pdf_parse_crypt_filter(fz_context *ctx, pdf_crypt_filter *cf, fz_obj *dict, char *name, int defaultlength);
 
 /*
  * Create crypt object for decrypting strings and streams
  * given the Encryption and ID objects.
  */
 
-fz_error
-pdf_new_crypt(pdf_crypt **cryptp, fz_obj *dict, fz_obj *id)
+pdf_crypt *
+pdf_new_crypt(fz_context *ctx, fz_obj *dict, fz_obj *id)
 {
 	pdf_crypt *crypt;
-	fz_error error;
 	fz_obj *obj;
 
-	crypt = fz_malloc(sizeof(pdf_crypt));
-	memset(crypt, 0x00, sizeof(pdf_crypt));
+	crypt = fz_malloc_struct(ctx, pdf_crypt);
+	memset(crypt, 0, sizeof *crypt);
 
 	/* Common to all security handlers (PDF 1.7 table 3.18) */
 
 	obj = fz_dict_gets(dict, "Filter");
 	if (!fz_is_name(obj))
 	{
-		pdf_free_crypt(crypt);
-		return fz_throw("unspecified encryption handler");
+		pdf_free_crypt(ctx, crypt);
+		fz_throw(ctx, "unspecified encryption handler");
 	}
 	if (strcmp(fz_to_name(obj), "Standard") != 0)
 	{
-		pdf_free_crypt(crypt);
-		return fz_throw("unknown encryption handler: '%s'", fz_to_name(obj));
+		pdf_free_crypt(ctx, crypt);
+		fz_throw(ctx, "unknown encryption handler: '%s'", fz_to_name(obj));
 	}
 
 	crypt->v = 0;
@@ -76,8 +76,8 @@ pdf_new_crypt(pdf_crypt **cryptp, fz_obj *dict, fz_obj *id)
 		crypt->v = fz_to_int(obj);
 	if (crypt->v != 1 && crypt->v != 2 && crypt->v != 4 && crypt->v != 5)
 	{
-		pdf_free_crypt(crypt);
-		return fz_throw("unknown encryption version");
+		pdf_free_crypt(ctx, crypt);
+		fz_throw(ctx, "unknown encryption version");
 	}
 
 	crypt->length = 40;
@@ -93,13 +93,13 @@ pdf_new_crypt(pdf_crypt **cryptp, fz_obj *dict, fz_obj *id)
 
 		if (crypt->length % 8 != 0)
 		{
-			pdf_free_crypt(crypt);
-			return fz_throw("invalid encryption key length");
+			pdf_free_crypt(ctx, crypt);
+			fz_throw(ctx, "invalid encryption key length");
 		}
 		if (crypt->length > 256)
 		{
-			pdf_free_crypt(crypt);
-			return fz_throw("invalid encryption key length");
+			pdf_free_crypt(ctx, crypt);
+			fz_throw(ctx, "invalid encryption key length");
 		}
 	}
 
@@ -133,26 +133,20 @@ pdf_new_crypt(pdf_crypt **cryptp, fz_obj *dict, fz_obj *id)
 			crypt->cf = NULL;
 		}
 
-		obj = fz_dict_gets(dict, "StmF");
-		if (fz_is_name(obj))
+		fz_try(ctx)
 		{
-			error = pdf_parse_crypt_filter(&crypt->stmf, crypt->cf, fz_to_name(obj), crypt->length);
-			if (error)
-			{
-				pdf_free_crypt(crypt);
-				return fz_rethrow(error, "cannot parse stream crypt filter (%d %d R)", fz_to_num(obj), fz_to_gen(obj));
-			}
-		}
+			obj = fz_dict_gets(dict, "StmF");
+			if (fz_is_name(obj))
+				pdf_parse_crypt_filter(ctx, &crypt->stmf, crypt->cf, fz_to_name(obj), crypt->length);
 
-		obj = fz_dict_gets(dict, "StrF");
-		if (fz_is_name(obj))
+			obj = fz_dict_gets(dict, "StrF");
+			if (fz_is_name(obj))
+				pdf_parse_crypt_filter(ctx, &crypt->strf, crypt->cf, fz_to_name(obj), crypt->length);
+		}
+		fz_catch(ctx)
 		{
-			error = pdf_parse_crypt_filter(&crypt->strf, crypt->cf, fz_to_name(obj), crypt->length);
-			if (error)
-			{
-				pdf_free_crypt(crypt);
-				return fz_rethrow(error, "cannot parse string crypt filter (%d %d R)", fz_to_num(obj), fz_to_gen(obj));
-			}
+			pdf_free_crypt(ctx, crypt);
+			fz_throw(ctx, "cannot parse string crypt filter (%d %d R)", fz_to_num(obj), fz_to_gen(obj));
 		}
 
 		/* in crypt revision 4, the crypt filter determines the key length */
@@ -167,8 +161,8 @@ pdf_new_crypt(pdf_crypt **cryptp, fz_obj *dict, fz_obj *id)
 		crypt->r = fz_to_int(obj);
 	else
 	{
-		pdf_free_crypt(crypt);
-		return fz_throw("encryption dictionary missing revision value");
+		pdf_free_crypt(ctx, crypt);
+		fz_throw(ctx, "encryption dictionary missing revision value");
 	}
 
 	obj = fz_dict_gets(dict, "O");
@@ -179,8 +173,8 @@ pdf_new_crypt(pdf_crypt **cryptp, fz_obj *dict, fz_obj *id)
 		memcpy(crypt->o, fz_to_str_buf(obj), 48);
 	else
 	{
-		pdf_free_crypt(crypt);
-		return fz_throw("encryption dictionary missing owner password");
+		pdf_free_crypt(ctx, crypt);
+		fz_throw(ctx, "encryption dictionary missing owner password");
 	}
 
 	obj = fz_dict_gets(dict, "U");
@@ -190,13 +184,13 @@ pdf_new_crypt(pdf_crypt **cryptp, fz_obj *dict, fz_obj *id)
 		memcpy(crypt->u, fz_to_str_buf(obj), 48);
 	else if (fz_is_string(obj) && fz_to_str_len(obj) < 32)
 	{
-		fz_warn("encryption password key too short (%d)", fz_to_str_len(obj));
+		fz_warn(ctx, "encryption password key too short (%d)", fz_to_str_len(obj));
 		memcpy(crypt->u, fz_to_str_buf(obj), fz_to_str_len(obj));
 	}
 	else
 	{
-		pdf_free_crypt(crypt);
-		return fz_throw("encryption dictionary missing user password");
+		pdf_free_crypt(ctx, crypt);
+		fz_throw(ctx, "encryption dictionary missing user password");
 	}
 
 	obj = fz_dict_gets(dict, "P");
@@ -204,8 +198,8 @@ pdf_new_crypt(pdf_crypt **cryptp, fz_obj *dict, fz_obj *id)
 		crypt->p = fz_to_int(obj);
 	else
 	{
-		pdf_free_crypt(crypt);
-		return fz_throw("encryption dictionary missing permissions value");
+		pdf_free_crypt(ctx, crypt);
+		fz_throw(ctx, "encryption dictionary missing permissions value");
 	}
 
 	if (crypt->r == 5)
@@ -213,16 +207,16 @@ pdf_new_crypt(pdf_crypt **cryptp, fz_obj *dict, fz_obj *id)
 		obj = fz_dict_gets(dict, "OE");
 		if (!fz_is_string(obj) || fz_to_str_len(obj) != 32)
 		{
-			pdf_free_crypt(crypt);
-			return fz_throw("encryption dictionary missing owner encryption key");
+			pdf_free_crypt(ctx, crypt);
+			fz_throw(ctx, "encryption dictionary missing owner encryption key");
 		}
 		memcpy(crypt->oe, fz_to_str_buf(obj), 32);
 
 		obj = fz_dict_gets(dict, "UE");
 		if (!fz_is_string(obj) || fz_to_str_len(obj) != 32)
 		{
-			pdf_free_crypt(crypt);
-			return fz_throw("encryption dictionary missing user encryption key");
+			pdf_free_crypt(ctx, crypt);
+			fz_throw(ctx, "encryption dictionary missing user encryption key");
 		}
 		memcpy(crypt->ue, fz_to_str_buf(obj), 32);
 	}
@@ -241,26 +235,25 @@ pdf_new_crypt(pdf_crypt **cryptp, fz_obj *dict, fz_obj *id)
 			crypt->id = fz_keep_obj(obj);
 	}
 	else
-		fz_warn("missing file identifier, may not be able to do decryption");
+		fz_warn(ctx, "missing file identifier, may not be able to do decryption");
 
-	*cryptp = crypt;
-	return fz_okay;
+	return crypt;
 }
 
 void
-pdf_free_crypt(pdf_crypt *crypt)
+pdf_free_crypt(fz_context *ctx, pdf_crypt *crypt)
 {
 	if (crypt->id) fz_drop_obj(crypt->id);
 	if (crypt->cf) fz_drop_obj(crypt->cf);
-	fz_free(crypt);
+	fz_free(ctx, crypt);
 }
 
 /*
  * Parse a CF dictionary entry (PDF 1.7 table 3.22)
  */
 
-static fz_error
-pdf_parse_crypt_filter(pdf_crypt_filter *cf, fz_obj *cf_obj, char *name, int defaultlength)
+static void
+pdf_parse_crypt_filter(fz_context *ctx, pdf_crypt_filter *cf, fz_obj *cf_obj, char *name, int defaultlength)
 {
 	fz_obj *obj;
 	fz_obj *dict;
@@ -268,23 +261,21 @@ pdf_parse_crypt_filter(pdf_crypt_filter *cf, fz_obj *cf_obj, char *name, int def
 	int is_stdcf = (!is_identity && (strcmp(name, "StdCF") == 0));
 
 	if (!is_identity && !is_stdcf)
-	{
-		return fz_throw("Crypt Filter not Identity or StdCF (%d %d R)", fz_to_num(cf_obj), fz_to_gen(cf_obj));
-	}
+		fz_throw(ctx, "Crypt Filter not Identity or StdCF (%d %d R)", fz_to_num(cf_obj), fz_to_gen(cf_obj));
+
 	cf->method = PDF_CRYPT_NONE;
 	cf->length = defaultlength;
 
-	if (cf_obj == NULL)
+	if (!cf_obj)
 	{
 		cf->method = (is_identity ? PDF_CRYPT_NONE : PDF_CRYPT_RC4);
-		return fz_okay;
+		return;
 	}
 
 	dict = fz_dict_gets(cf_obj, name);
 	if (!fz_is_dict(dict))
-	{
-		return fz_throw("cannot parse crypt filter (%d %d R)", fz_to_num(cf_obj), fz_to_gen(cf_obj));
-	}
+		fz_throw(ctx, "cannot parse crypt filter (%d %d R)", fz_to_num(cf_obj), fz_to_gen(cf_obj));
+
 	obj = fz_dict_gets(dict, "CFM");
 	if (fz_is_name(obj))
 	{
@@ -297,7 +288,7 @@ pdf_parse_crypt_filter(pdf_crypt_filter *cf, fz_obj *cf_obj, char *name, int def
 		else if (!strcmp(fz_to_name(obj), "AESV3"))
 			cf->method = PDF_CRYPT_AESV3;
 		else
-			fz_throw("unknown encryption method: %s", fz_to_name(obj));
+			fz_warn(ctx, "unknown encryption method: %s", fz_to_name(obj));
 	}
 
 	obj = fz_dict_gets(dict, "Length");
@@ -309,9 +300,7 @@ pdf_parse_crypt_filter(pdf_crypt_filter *cf, fz_obj *cf_obj, char *name, int def
 		cf->length = cf->length * 8;
 
 	if ((cf->length % 8) != 0)
-		return fz_throw("invalid key length: %d", cf->length);
-
-	return fz_okay;
+		fz_throw(ctx, "invalid key length: %d", cf->length);
 }
 
 /*
@@ -707,7 +696,7 @@ pdf_compute_object_key(pdf_crypt *crypt, pdf_crypt_filter *cf, int num, int gen,
  */
 
 static void
-pdf_crypt_obj_imp(pdf_crypt *crypt, fz_obj *obj, unsigned char *key, int keylen)
+pdf_crypt_obj_imp(fz_context *ctx, pdf_crypt *crypt, fz_obj *obj, unsigned char *key, int keylen)
 {
 	unsigned char *s;
 	int i, n;
@@ -717,7 +706,7 @@ pdf_crypt_obj_imp(pdf_crypt *crypt, fz_obj *obj, unsigned char *key, int keylen)
 
 	if (fz_is_string(obj))
 	{
-		s = (unsigned char *) fz_to_str_buf(obj);
+		s = (unsigned char *)fz_to_str_buf(obj);
 		n = fz_to_str_len(obj);
 
 		if (crypt->strf.method == PDF_CRYPT_RC4)
@@ -734,7 +723,7 @@ pdf_crypt_obj_imp(pdf_crypt *crypt, fz_obj *obj, unsigned char *key, int keylen)
 				/* Empty strings are permissible */
 			}
 			else if (n & 15 || n < 32)
-				fz_warn("invalid string length for aes encryption");
+				fz_warn(ctx, "invalid string length for aes encryption");
 			else
 			{
 				unsigned char iv[16];
@@ -744,7 +733,7 @@ pdf_crypt_obj_imp(pdf_crypt *crypt, fz_obj *obj, unsigned char *key, int keylen)
 				aes_crypt_cbc(&aes, AES_DECRYPT, n - 16, iv, s + 16, s);
 				/* delete space used for iv and padding bytes at end */
 				if (s[n - 17] < 1 || s[n - 17] > 16)
-					fz_warn("aes padding out of range");
+					fz_warn(ctx, "aes padding out of range");
 				else
 					fz_set_str_len(obj, n - 16 - s[n - 17]);
 			}
@@ -756,7 +745,7 @@ pdf_crypt_obj_imp(pdf_crypt *crypt, fz_obj *obj, unsigned char *key, int keylen)
 		n = fz_array_len(obj);
 		for (i = 0; i < n; i++)
 		{
-			pdf_crypt_obj_imp(crypt, fz_array_get(obj, i), key, keylen);
+			pdf_crypt_obj_imp(ctx, crypt, fz_array_get(obj, i), key, keylen);
 		}
 	}
 
@@ -765,20 +754,20 @@ pdf_crypt_obj_imp(pdf_crypt *crypt, fz_obj *obj, unsigned char *key, int keylen)
 		n = fz_dict_len(obj);
 		for (i = 0; i < n; i++)
 		{
-			pdf_crypt_obj_imp(crypt, fz_dict_get_val(obj, i), key, keylen);
+			pdf_crypt_obj_imp(ctx, crypt, fz_dict_get_val(obj, i), key, keylen);
 		}
 	}
 }
 
 void
-pdf_crypt_obj(pdf_crypt *crypt, fz_obj *obj, int num, int gen)
+pdf_crypt_obj(fz_context *ctx, pdf_crypt *crypt, fz_obj *obj, int num, int gen)
 {
 	unsigned char key[32];
 	int len;
 
 	len = pdf_compute_object_key(crypt, &crypt->strf, num, gen, key);
 
-	pdf_crypt_obj_imp(crypt, obj, key, len);
+	pdf_crypt_obj_imp(ctx, crypt, obj, key, len);
 }
 
 /*
@@ -792,6 +781,7 @@ pdf_open_crypt_imp(fz_stream *chain, pdf_crypt *crypt, pdf_crypt_filter *stmf, i
 	unsigned char key[32];
 	int len;
 
+	crypt->ctx = chain->ctx;
 	len = pdf_compute_object_key(crypt, stmf, num, gen, key);
 
 	if (stmf->method == PDF_CRYPT_RC4)
@@ -812,16 +802,11 @@ pdf_open_crypt(fz_stream *chain, pdf_crypt *crypt, int num, int gen)
 fz_stream *
 pdf_open_crypt_with_filter(fz_stream *chain, pdf_crypt *crypt, char *name, int num, int gen)
 {
-	fz_error error;
-	pdf_crypt_filter cf;
-
 	if (strcmp(name, "Identity"))
 	{
-		error = pdf_parse_crypt_filter(&cf, crypt->cf, name, crypt->length);
-		if (error)
-			fz_catch(error, "cannot parse crypt filter (%d %d R)", num, gen);
-		else
-			return pdf_open_crypt_imp(chain, crypt, &cf, num, gen);
+		pdf_crypt_filter cf;
+		pdf_parse_crypt_filter(chain->ctx, &cf, crypt->cf, name, crypt->length);
+		return pdf_open_crypt_imp(chain, crypt, &cf, num, gen);
 	}
 	return chain;
 }

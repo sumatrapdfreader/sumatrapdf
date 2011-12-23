@@ -83,10 +83,10 @@ inline bool fz_significantly_overlap(fz_rect r1, fz_rect r2)
 
 class RenderedFitzBitmap : public RenderedBitmap {
 public:
-    RenderedFitzBitmap(fz_pixmap *pixmap);
+    RenderedFitzBitmap(fz_context *ctx, fz_pixmap *pixmap);
 };
 
-RenderedFitzBitmap::RenderedFitzBitmap(fz_pixmap *pixmap) :
+RenderedFitzBitmap::RenderedFitzBitmap(fz_context *ctx, fz_pixmap *pixmap) :
     RenderedBitmap(NULL, SizeI(pixmap->w, pixmap->h))
 {
     int paletteSize = 0;
@@ -97,11 +97,14 @@ RenderedFitzBitmap::RenderedFitzBitmap(fz_pixmap *pixmap) :
     int rows8 = ((w + 3) / 4) * 4;
 
     /* BGRA is a GDI compatible format */
-    fz_pixmap *bgrPixmap = fz_new_pixmap_with_limit(fz_find_device_colorspace("DeviceBGR"), w, h);
-    if (!bgrPixmap)
+    fz_pixmap *bgrPixmap;
+    fz_try(ctx) {
+        bgrPixmap = fz_new_pixmap_with_rect(ctx, fz_find_device_colorspace("DeviceBGR"), fz_bound_pixmap(pixmap));
+        fz_convert_pixmap(ctx, pixmap, bgrPixmap);
+    }
+    fz_catch(ctx) {
         return;
-    bgrPixmap->x = pixmap->x; bgrPixmap->y = pixmap->y;
-    fz_convert_pixmap(pixmap, bgrPixmap);
+    }
 
     assert(bgrPixmap->n == 4);
 
@@ -161,35 +164,40 @@ ProducingPaletteDone:
         hasPalette ? bmpData : bgrPixmap->samples, bmi, DIB_RGB_COLORS);
     ReleaseDC(NULL, hDC);
 
-    fz_drop_pixmap(bgrPixmap);
+    fz_drop_pixmap(ctx, bgrPixmap);
     free(bmi);
     free(bmpData);
 }
 
-fz_stream *fz_open_file2(const TCHAR *filePath)
+fz_stream *fz_open_file2(fz_context *ctx, const TCHAR *filePath)
 {
-    fz_stream *file = NULL;
-
     size_t fileSize = file::GetSize(filePath);
     // load small files entirely into memory so that they can be
     // overwritten even by programs that don't open files with FILE_SHARE_READ
     if (fileSize < MAX_MEMORY_FILE_SIZE) {
-        fz_buffer *data = fz_new_buffer((int)fileSize);
-        if (data) {
+        fz_stream *file = NULL;
+        fz_buffer *data = NULL;
+        fz_try(ctx) {
+            data = fz_new_buffer(ctx, (int)fileSize);
             if (file::ReadAll(filePath, (char *)data->data, (data->len = (int)fileSize)))
-                file = fz_open_buffer(data);
-            fz_drop_buffer(data);
+                file = fz_open_buffer(ctx, data);
         }
-    }
-    if (!file) {
-#ifdef UNICODE
-        file = fz_open_file_w(filePath);
-#else
-        file = fz_open_file(filePath);
-#endif
+        fz_catch(ctx) { }
+        fz_drop_buffer(ctx, data);
+        if (file)
+            return file;
     }
 
-    return file;
+    fz_try(ctx) {
+#ifdef UNICODE
+        return fz_open_file_w(ctx, filePath);
+#else
+        return fz_open_file(ctx, filePath);
+#endif
+    }
+    fz_catch(ctx) {
+        return NULL;
+    }
 }
 
 unsigned char *fz_extract_stream_data(fz_stream *stream, size_t *cbCount)
@@ -199,16 +207,19 @@ unsigned char *fz_extract_stream_data(fz_stream *stream, size_t *cbCount)
 
     fz_buffer *buffer;
     fz_seek(stream, 0, 0);
-    fz_error error = fz_read_all(&buffer, stream, fileLen);
-    if (error)
+    fz_try(stream->ctx) {
+        buffer = fz_read_all(stream, fileLen);
+    }
+    fz_catch(stream->ctx) {
         return NULL;
+    }
     assert(fileLen == buffer->len);
 
     unsigned char *data = (unsigned char *)memdup(buffer->data, buffer->len);
     if (cbCount)
         *cbCount = buffer->len;
 
-    fz_drop_buffer(buffer);
+    fz_drop_buffer(stream->ctx, buffer);
 
     return data;
 }
@@ -220,9 +231,11 @@ void fz_stream_fingerprint(fz_stream *file, unsigned char digest[16])
 
     fz_buffer *buffer;
     fz_seek(file, 0, 0);
-    fz_error error = fz_read_all(&buffer, file, fileLen);
-    if (error) {
-        fz_catch(error, "couldn't read stream data, using a NULL fingerprint instead");
+    fz_try(file->ctx) {
+        buffer = fz_read_all(file, fileLen);
+    }
+    fz_catch(file->ctx) {
+        fz_warn(file->ctx, "couldn't read stream data, using a NULL fingerprint instead");
         ZeroMemory(digest, 16);
         return;
     }
@@ -230,7 +243,7 @@ void fz_stream_fingerprint(fz_stream *file, unsigned char digest[16])
 
     CalcMD5Digest(buffer->data, buffer->len, digest);
 
-    fz_drop_buffer(buffer);
+    fz_drop_buffer(file->ctx, buffer);
 }
 
 TCHAR *fz_span_to_tchar(fz_text_span *text, TCHAR *lineSep, RectI **coords_out=NULL)
@@ -287,7 +300,7 @@ extern "C" static int read_istream(fz_stream *stm, unsigned char *buf, int len)
     ULONG cbRead = len;
     HRESULT res = ((IStream *)stm->state)->Read(buf, len, &cbRead);
     if (FAILED(res))
-        return fz_throw("read error: %s", res);
+        fz_throw(stm->ctx, "read error: %s", res);
     return (int)cbRead;
 }
 
@@ -298,17 +311,17 @@ extern "C" static void seek_istream(fz_stream *stm, int offset, int whence)
     off.QuadPart = offset;
     HRESULT res = ((IStream *)stm->state)->Seek(off, whence, &n);
     if (FAILED(res))
-        fz_warn("cannot seek: %s", res);
+        fz_warn(stm->ctx, "cannot seek: %s", res);
     stm->pos = (int)n.QuadPart;
     stm->rp = stm->wp = stm->bp;
 }
 
-extern "C" static void close_istream(fz_stream *stm)
+extern "C" static void close_istream(fz_context *ctx, void *state)
 {
-    ((IStream *)stm->state)->Release();
+    ((IStream *)state)->Release();
 }
 
-fz_stream *fz_open_istream(IStream *stream)
+fz_stream *fz_open_istream(fz_context *ctx, IStream *stream)
 {
     if (!stream)
         return NULL;
@@ -317,7 +330,7 @@ fz_stream *fz_open_istream(IStream *stream)
     LARGE_INTEGER zero = { 0 };
     stream->Seek(zero, STREAM_SEEK_SET, NULL);
 
-    fz_stream *stm = fz_new_stream(stream, read_istream, close_istream);
+    fz_stream *stm = fz_new_stream(ctx, stream, read_istream, close_istream);
     stm->seek = seek_istream;
     return stm;
 }
@@ -490,19 +503,19 @@ struct FitzImagePos {
 };
 
 extern "C" static void
-fz_extract_image(void *user, fz_pixmap *image, fz_matrix ctm, float alpha)
+fz_extract_image(fz_device *dev, fz_pixmap *image, fz_matrix ctm, float alpha)
 {
     // TODO: try to better distinguish images a user might actually want to extract
     if (image->w < 16 || image->h < 16)
         return;
     fz_rect rect = fz_transform_rect(ctm, fz_unit_rect);
     if (!fz_is_empty_rect(rect))
-        ((Vec<FitzImagePos> *)user)->Append(FitzImagePos(image, rect));
+        ((Vec<FitzImagePos> *)dev->user)->Append(FitzImagePos(image, rect));
 }
 
-static fz_device *fz_new_image_extractor(Vec<FitzImagePos> *list)
+static fz_device *fz_new_image_extractor(fz_context *ctx, Vec<FitzImagePos> *list)
 {
-    fz_device *dev = fz_new_device(list);
+    fz_device *dev = fz_new_device(ctx, list);
     dev->fill_image = fz_extract_image;
     return dev;
 }
@@ -515,31 +528,32 @@ extern "C" {
 #include <mupdf.h>
 }
 
+class GlobalContext {
+public:
+    fz_context *ctx;
+    GlobalContext() : ctx(fz_new_context(NULL, FZ_STORE_UNLIMITED)) { }
+    ~GlobalContext() { fz_free_context(ctx);}
+};
+GlobalContext gContext;
+
 namespace str {
     namespace conv {
 
 // Note: make sure to only call with xrefAccess
 inline TCHAR *FromPdf(fz_obj *obj)
 {
-    WCHAR *ucs2 = (WCHAR *)pdf_to_ucs2(obj);
+    WCHAR *ucs2 = (WCHAR *)pdf_to_ucs2(gContext.ctx, obj);
     TCHAR *tstr = FromWStr(ucs2);
-    fz_free(ucs2);
+    fz_free(gContext.ctx, ucs2);
     return tstr;
-}
-
-// Caller needs to fz_free the result
-inline char *ToPDF(TCHAR *tstr)
-{
-    ScopedMem<WCHAR> wstr(ToWStr(tstr));
-    return pdf_from_ucs2((unsigned short *)wstr.Get());
 }
 
     }
 }
 
-pdf_link *pdf_new_link(fz_obj *dest, pdf_link_kind kind, fz_rect rect=fz_empty_rect)
+pdf_link *pdf_new_link(fz_context *ctx, fz_obj *dest, pdf_link_kind kind, fz_rect rect=fz_empty_rect)
 {
-    pdf_link *link = (pdf_link *)fz_malloc(sizeof(pdf_link));
+    pdf_link *link = (pdf_link *)fz_malloc(ctx, sizeof(pdf_link));
 
     link->dest = dest;
     link->kind = kind;
@@ -549,9 +563,9 @@ pdf_link *pdf_new_link(fz_obj *dest, pdf_link_kind kind, fz_rect rect=fz_empty_r
     return link;
 }
 
-static void pdf_free_link2(void *data)
+static void pdf_free_link2(fz_context *ctx, void *data)
 {
-    pdf_free_link((pdf_link *)data);
+    pdf_free_link(ctx, (pdf_link *)data);
 }
 
 // Note: make sure to only call with xrefAccess
@@ -563,16 +577,17 @@ fz_outline *pdf_loadattachments(pdf_xref *xref)
 
     fz_outline root = { 0 }, *node = &root;
     for (int i = 0; i < fz_dict_len(dict); i++) {
-        node = node->next = (fz_outline *)fz_malloc(sizeof(fz_outline));
+        node = node->next = (fz_outline *)fz_malloc_struct(xref->ctx, fz_outline);
         ZeroMemory(node, sizeof(fz_outline));
+        node->ctx = xref->ctx;
 
         fz_obj *name = fz_dict_get_key(dict, i);
         fz_obj *dest = fz_dict_get_val(dict, i);
         fz_obj *type = fz_dict_gets(dest, "Type");
 
-        node->title = fz_strdup(fz_to_name(name));
+        node->title = fz_strdup(xref->ctx, fz_to_name(name));
         if (fz_is_name(type) && str::EqI(fz_to_name(type), "Filespec") || fz_is_string(dest)) {
-            node->data = pdf_new_link(fz_keep_obj(dest), PDF_LINK_LAUNCH);
+            node->data = pdf_new_link(xref->ctx, fz_keep_obj(dest), PDF_LINK_LAUNCH);
             node->free_data = pdf_free_link2;
         }
     }
@@ -616,16 +631,16 @@ TCHAR *FormatPageLabel(const char *type, int pageNo, const TCHAR *prefix)
     return str::Dup(prefix);
 }
 
-void BuildPageLabelRec(fz_obj *node, int pageCount, Vec<PageLabelInfo>& data)
+void BuildPageLabelRec(fz_context *ctx, fz_obj *node, int pageCount, Vec<PageLabelInfo>& data)
 {
     fz_obj *obj;
     if ((obj = fz_dict_gets(node, "Kids")) && !fz_dict_gets(node, ".seen")) {
-        fz_obj *flag = fz_new_null();
+        fz_obj *flag = fz_new_null(ctx);
         fz_dict_puts(node, ".seen", flag);
         fz_drop_obj(flag);
 
         for (int i = 0; i < fz_array_len(obj); i++)
-            BuildPageLabelRec(fz_array_get(obj, i), pageCount, data);
+            BuildPageLabelRec(ctx, fz_array_get(obj, i), pageCount, data);
         fz_dict_dels(node, ".seen");
     }
     else if ((obj = fz_dict_gets(node, "Nums"))) {
@@ -646,10 +661,10 @@ void BuildPageLabelRec(fz_obj *node, int pageCount, Vec<PageLabelInfo>& data)
     }
 }
 
-StrVec *BuildPageLabelVec(fz_obj *root, int pageCount)
+StrVec *BuildPageLabelVec(fz_context *ctx, fz_obj *root, int pageCount)
 {
     Vec<PageLabelInfo> data;
-    BuildPageLabelRec(root, pageCount, data);
+    BuildPageLabelRec(ctx, root, pageCount, data);
     data.Sort(CmpPageLabelInfo);
 
     if (data.Count() == 0)
@@ -775,7 +790,7 @@ public:
 
     virtual bool IsPasswordProtected() const { return isProtected; }
     virtual char *GetDecryptionKey() const;
-    virtual void RunGC();
+    virtual void RunGC() { /* TODO: still needed? */ }
 
 protected:
     const TCHAR *_fileName;
@@ -786,6 +801,7 @@ protected:
     // protected critical section in order to avoid deadlocks
     CRITICAL_SECTION xrefAccess;
     pdf_xref *      _xref;
+    fz_context *    ctx;
 
     CRITICAL_SECTION pagesAccess;
     pdf_page **     _pages;
@@ -807,7 +823,7 @@ protected:
 
     PdfPageRun    * runCache[MAX_PAGE_RUN_CACHE];
     PdfPageRun    * GetPageRun(pdf_page *page, bool tryOnly=false);
-    fz_error        RunPage(pdf_page *page, fz_device *dev, fz_matrix ctm,
+    bool            RunPage(pdf_page *page, fz_device *dev, fz_matrix ctm,
                             RenderTarget target=Target_View,
                             fz_bbox clipbox=fz_infinite_bbox, bool cacheRun=true);
     void            DropPageRun(PdfPageRun *run, bool forceRemove=false);
@@ -917,6 +933,8 @@ CPdfEngine::CPdfEngine() : _fileName(NULL), _xref(NULL),
     InitializeCriticalSection(&pagesAccess);
     InitializeCriticalSection(&xrefAccess);
     ZeroMemory(&runCache, sizeof(runCache));
+
+    ctx = fz_new_context(NULL, FZ_STORE_UNLIMITED);
 }
 
 CPdfEngine::~CPdfEngine()
@@ -927,7 +945,7 @@ CPdfEngine::~CPdfEngine()
     if (_pages) {
         for (int i = 0; i < PageCount(); i++) {
             if (_pages[i])
-                pdf_free_page(_pages[i]);
+                pdf_free_page(ctx, _pages[i]);
         }
         free(_pages);
     }
@@ -951,11 +969,13 @@ CPdfEngine::~CPdfEngine()
     }
 
     if (_drawcache)
-        fz_free_glyph_cache(_drawcache);
+        fz_free_glyph_cache(ctx, _drawcache);
     while (runCache[0]) {
         assert(runCache[0]->refs == 1);
         DropPageRun(runCache[0], true);
     }
+
+    fz_free_context(ctx);
 
     delete[] _mediaboxes;
     delete _pagelabels;
@@ -1034,7 +1054,7 @@ bool CPdfEngine::Load(const TCHAR *fileName, PasswordUI *pwdUI)
 {
     assert(!_fileName && !_xref);
     _fileName = str::Dup(fileName);
-    if (!_fileName)
+    if (!_fileName || !ctx)
         return false;
 
     // File names ending in :<digits>:<digits> are interpreted as containing
@@ -1042,7 +1062,7 @@ bool CPdfEngine::Load(const TCHAR *fileName, PasswordUI *pwdUI)
     TCHAR *embedMarks = (TCHAR *)findEmbedMarks(_fileName);
     if (embedMarks)
         *embedMarks = '\0';
-    fz_stream *file = fz_open_file2(_fileName);
+    fz_stream *file = fz_open_file2(ctx, _fileName);
     if (embedMarks)
         *embedMarks = ':';
 
@@ -1060,12 +1080,15 @@ OpenEmbeddedFile:
         return false;
 
     fz_buffer *buffer;
-    fz_error error = pdf_load_stream(&buffer, _xref, num, gen);
-    if (error)
+    fz_try(ctx) {
+        buffer = pdf_load_stream(_xref, num, gen);
+    }
+    fz_catch(ctx) {
         return false;
+    }
 
-    file = fz_open_buffer(buffer);
-    fz_drop_buffer(buffer);
+    file = fz_open_buffer(ctx, buffer);
+    fz_drop_buffer(ctx, buffer);
     pdf_free_xref(_xref);
     _xref = NULL;
 
@@ -1074,15 +1097,19 @@ OpenEmbeddedFile:
 
 bool CPdfEngine::Load(IStream *stream, PasswordUI *pwdUI)
 {
-    assert(!_fileName && !_xref);
-    if (!LoadFromStream(fz_open_istream(stream), pwdUI))
+    assert(!_fileName && !_xref && ctx);
+    if (!ctx)
+        return false;
+    if (!LoadFromStream(fz_open_istream(ctx, stream), pwdUI))
         return false;
     return FinishLoading();
 }
 
 bool CPdfEngine::Load(fz_stream *stm, PasswordUI *pwdUI)
 {
-    assert(!_fileName && !_xref);
+    assert(!_fileName && !_xref && ctx);
+    if (!ctx || stm->ctx != ctx)
+        return false;
     if (!LoadFromStream(fz_keep_stream(stm), pwdUI))
         return false;
     return FinishLoading();
@@ -1094,10 +1121,14 @@ bool CPdfEngine::LoadFromStream(fz_stream *stm, PasswordUI *pwdUI)
         return false;
 
     // don't pass in a password so that _xref isn't thrown away if it was wrong
-    fz_error error = pdf_open_xref_with_stream(&_xref, stm, NULL);
-    fz_close(stm);
-    if (error || !_xref)
+    fz_try(ctx) {
+        _xref = pdf_open_xref_with_stream(stm, NULL);
+    }
+    fz_catch(ctx) {
+        fz_close(stm);
         return false;
+    }
+    fz_close(stm);
 
     isProtected = pdf_needs_password(_xref);
     if (!isProtected)
@@ -1118,9 +1149,11 @@ bool CPdfEngine::LoadFromStream(fz_stream *stm, PasswordUI *pwdUI)
             break;
         }
 
-        char *pwd_doc = str::conv::ToPDF(pwd);
+        ScopedMem<WCHAR> wstr(str::conv::ToWStr(pwd));
+        char *pwd_doc = pdf_from_ucs2(ctx, (unsigned short *)wstr.Get());
         ok = pwd_doc && pdf_authenticate_password(_xref, pwd_doc);
-        fz_free(pwd_doc);
+        fz_free(ctx, pwd_doc);
+
         // try the UTF-8 password, if the PDFDocEncoding one doesn't work
         if (!ok) {
             ScopedMem<char> pwd_utf8(str::conv::ToUtf8(pwd));
@@ -1143,35 +1176,46 @@ bool CPdfEngine::LoadFromStream(fz_stream *stm, PasswordUI *pwdUI)
 
 bool CPdfEngine::FinishLoading()
 {
-    fz_error error = pdf_load_page_tree(_xref);
-    if (error)
+    fz_try(ctx) {
+        pdf_load_page_tree(_xref);
+    }
+    fz_catch(ctx) {
         return false;
+    }
     if (PageCount() == 0)
         return false;
 
     _pages = SAZA(pdf_page *, PageCount());
     _mediaboxes = new RectD[PageCount()];
+    imageRects = SAZA(fz_rect *, PageCount());
+
+    if (!_pages || !_mediaboxes || !imageRects)
+        return false;
 
     ScopedCritSec scope(&xrefAccess);
 
-    outline = pdf_load_outline(_xref);
-    // silently ignore errors from pdf_loadoutline()
-    // this information is not critical and checking the
-    // error might prevent loading some pdfs that would
-    // otherwise get displayed
-    attachments = pdf_loadattachments(_xref);
-    // keep a copy of the Info dictionary, as accessing the original
-    // isn't thread safe and we don't want to block for this when
-    // displaying document properties
-    _info = fz_dict_gets(_xref->trailer, "Info");
-    if (_info)
-        _info = fz_copy_dict(pdf_resolve_indirect(_info));
-    fz_obj *pagelabels = fz_dict_gets(fz_dict_gets(_xref->trailer, "Root"), "PageLabels");
-    if (pagelabels)
-        _pagelabels = BuildPageLabelVec(pagelabels, PageCount());
-    imageRects = SAZA(fz_rect *, PageCount());
+    fz_try(ctx) {
+        outline = pdf_load_outline(_xref);
+        // silently ignore errors from pdf_loadoutline()
+        // this information is not critical and checking the
+        // error might prevent loading some pdfs that would
+        // otherwise get displayed
+        attachments = pdf_loadattachments(_xref);
+        // keep a copy of the Info dictionary, as accessing the original
+        // isn't thread safe and we don't want to block for this when
+        // displaying document properties
+        _info = fz_dict_gets(_xref->trailer, "Info");
+        if (_info)
+            _info = fz_copy_dict(ctx, pdf_resolve_indirect(_info));
+        fz_obj *pagelabels = fz_dict_gets(fz_dict_gets(_xref->trailer, "Root"), "PageLabels");
+        if (pagelabels)
+            _pagelabels = BuildPageLabelVec(ctx, pagelabels, PageCount());
+    }
+    fz_catch(ctx) {
+        return false;
+    }
 
-    return _pages != NULL && _mediaboxes != NULL && imageRects != NULL;
+    return true;
 }
 
 PdfTocItem *CPdfEngine::BuildTocTree(fz_outline *entry, int& idCounter)
@@ -1235,7 +1279,7 @@ PageDestination *CPdfEngine::GetNamedDest(const TCHAR *name)
     ScopedCritSec scope(&xrefAccess);
 
     ScopedMem<char> name_utf8(str::conv::ToUtf8(name));
-    fz_obj *nameobj = fz_new_string((char *)name_utf8, (int)str::Len(name_utf8));
+    fz_obj *nameobj = fz_new_string(ctx, (char *)name_utf8, (int)str::Len(name_utf8));
     fz_obj *dest = pdf_lookup_dest(_xref, nameobj);
     fz_drop_obj(nameobj);
 
@@ -1263,9 +1307,12 @@ pdf_page *CPdfEngine::GetPdfPage(int pageNo, bool failIfBusy)
     pdf_page *page = _pages[pageNo-1];
     if (!page) {
         EnterCriticalSection(&xrefAccess);
-        fz_error error = pdf_load_page(&page, _xref, pageNo - 1);
+        fz_try(ctx) {
+            page = pdf_load_page(_xref, pageNo - 1);
+        }
+        fz_catch(ctx) { }
         LeaveCriticalSection(&xrefAccess);
-        if (!error) {
+        if (page) {
             LinkifyPageText(page);
             LinkifyPageAttachments(page);
             _pages[pageNo-1] = page;
@@ -1293,17 +1340,23 @@ PdfPageRun *CPdfEngine::GetPageRun(pdf_page *page, bool tryOnly)
             i--;
         }
 
-        fz_display_list *list = fz_new_display_list();
+        fz_display_list *list = fz_new_display_list(ctx);
 
-        fz_device *dev = fz_new_list_device(list);
+        fz_device *dev = fz_new_list_device(ctx, list);
+        bool ok = true;
         EnterCriticalSection(&xrefAccess);
-        fz_error error = pdf_run_page(_xref, page, dev, fz_identity);
+        fz_try(ctx) {
+            pdf_run_page(_xref, page, dev, fz_identity);
+        }
+        fz_catch(ctx) {
+            ok = false;
+        }
         fz_free_device(dev);
-        if (error)
-            fz_free_display_list(list);
+        if (!ok)
+            fz_free_display_list(ctx, list);
         LeaveCriticalSection(&xrefAccess);
 
-        if (!error) {
+        if (ok) {
             PdfPageRun newRun = { page, list, 1 };
             result = runCache[i] = (PdfPageRun *)_memdup(&newRun);
         }
@@ -1322,14 +1375,17 @@ PdfPageRun *CPdfEngine::GetPageRun(pdf_page *page, bool tryOnly)
     return result;
 }
 
-fz_error CPdfEngine::RunPage(pdf_page *page, fz_device *dev, fz_matrix ctm, RenderTarget target, fz_bbox clipbox, bool cacheRun)
+bool CPdfEngine::RunPage(pdf_page *page, fz_device *dev, fz_matrix ctm, RenderTarget target, fz_bbox clipbox, bool cacheRun)
 {
-    fz_error error = fz_okay;
+    bool ok = true;
     PdfPageRun *run;
 
     if (Target_View == target && (run = GetPageRun(page, !cacheRun))) {
         EnterCriticalSection(&xrefAccess);
-        fz_execute_display_list(run->list, dev, ctm, clipbox);
+        fz_try(ctx) {
+            fz_execute_display_list(run->list, dev, ctm, clipbox);
+        }
+        fz_catch(ctx) { }
         LeaveCriticalSection(&xrefAccess);
         DropPageRun(run);
     }
@@ -1337,12 +1393,17 @@ fz_error CPdfEngine::RunPage(pdf_page *page, fz_device *dev, fz_matrix ctm, Rend
         char *targetName = target == Target_Print ? "Print" :
                            target == Target_Export ? "Export" : "View";
         EnterCriticalSection(&xrefAccess);
-        error = pdf_run_page_with_usage(_xref, page, dev, ctm, targetName);
+        fz_try(ctx) {
+            pdf_run_page_with_usage(_xref, page, dev, ctm, targetName);
+        }
+        fz_catch(ctx) {
+            ok = false;
+        }
         LeaveCriticalSection(&xrefAccess);
     }
     fz_free_device(dev);
 
-    return error;
+    return ok;
 }
 
 void CPdfEngine::DropPageRun(PdfPageRun *run, bool forceRemove)
@@ -1359,7 +1420,7 @@ void CPdfEngine::DropPageRun(PdfPageRun *run, bool forceRemove)
         }
         if (0 == run->refs) {
             EnterCriticalSection(&xrefAccess);
-            fz_free_display_list(run->list);
+            fz_free_display_list(ctx, run->list);
             LeaveCriticalSection(&xrefAccess);
             free(run);
         }
@@ -1402,13 +1463,13 @@ RectD CPdfEngine::PageMediabox(int pageNo)
     ScopedCritSec scope(&xrefAccess);
 
     // cf. pdf_page.c's pdf_load_page
-    RectD mbox = fz_rect_to_RectD(pdf_to_rect(fz_dict_gets(page, "MediaBox")));
+    RectD mbox = fz_rect_to_RectD(pdf_to_rect(ctx, fz_dict_gets(page, "MediaBox")));
     if (mbox.IsEmpty()) {
-        fz_warn("cannot find page size for page %d", pageNo);
+        fz_warn(ctx, "cannot find page size for page %d", pageNo);
         mbox = RectD(0, 0, 612, 792);
     }
 
-    RectD cbox = fz_rect_to_RectD(pdf_to_rect(fz_dict_gets(page, "CropBox")));
+    RectD cbox = fz_rect_to_RectD(pdf_to_rect(ctx, fz_dict_gets(page, "CropBox")));
     if (!cbox.IsEmpty())
         mbox = mbox.Intersect(cbox);
 
@@ -1427,8 +1488,8 @@ RectD CPdfEngine::PageContentBox(int pageNo, RenderTarget target)
         return RectD();
 
     fz_bbox bbox;
-    fz_error error = RunPage(page, fz_new_bbox_device(&bbox), fz_identity, target, fz_round_rect(page->mediabox), false);
-    if (error != fz_okay)
+    bool ok = RunPage(page, fz_new_bbox_device(ctx, &bbox), fz_identity, target, fz_round_rect(page->mediabox), false);
+    if (!ok)
         return PageMediabox(pageNo);
     if (fz_is_infinite_bbox(bbox))
         return PageMediabox(pageNo);
@@ -1512,9 +1573,7 @@ bool CPdfEngine::RenderPage(HDC hDC, pdf_page *page, RectI screenRect, fz_matrix
     DeleteObject(bgBrush);
 
     fz_bbox clipbox = fz_RectI_to_bbox(screenRect);
-    fz_error error = RunPage(page, fz_new_gdiplus_device(hDC, clipbox), *ctm, target, clipbox);
-
-    return fz_okay == error;
+    return RunPage(page, fz_new_gdiplus_device(ctx, hDC, clipbox), *ctm, target, clipbox);
 }
 
 // Fitz' draw_device.c currently isn't able to correctly render
@@ -1567,21 +1626,23 @@ RenderedBitmap *CPdfEngine::RenderBitmap(int pageNo, float zoom, int rotation, R
         return new RenderedBitmap(hbmp, SizeI(w, h));
     }
 
-    fz_pixmap *image = fz_new_pixmap_with_limit(fz_find_device_colorspace("DeviceRGB"),
-        bbox.x1 - bbox.x0, bbox.y1 - bbox.y0);
-    if (!image)
+    fz_pixmap *image;
+    fz_try(ctx) {
+        image = fz_new_pixmap_with_rect(ctx, fz_find_device_colorspace("DeviceRGB"), bbox);
+    }
+    fz_catch(ctx) {
         return NULL;
-    image->x = bbox.x0; image->y = bbox.y0;
+    }
 
     fz_clear_pixmap_with_color(image, 0xFF); // initialize white background
     if (!_drawcache)
-        _drawcache = fz_new_glyph_cache();
+        _drawcache = fz_new_glyph_cache(ctx);
 
-    fz_error error = RunPage(page, fz_new_draw_device(_drawcache, image), ctm, target, bbox);
+    bool ok = RunPage(page, fz_new_draw_device(ctx, _drawcache, image), ctm, target, bbox);
     RenderedBitmap *bitmap = NULL;
-    if (!error)
-        bitmap = new RenderedFitzBitmap(image);
-    fz_drop_pixmap(image);
+    if (ok)
+        bitmap = new RenderedFitzBitmap(ctx, image);
+    fz_drop_pixmap(ctx, image);
     return bitmap;
 }
 
@@ -1690,7 +1751,7 @@ void CPdfEngine::LinkifyPageText(pdf_page *page)
         if (!overlaps) {
             ScopedMem<char> uri(str::conv::ToUtf8(list->links.At(i)));
             if (!uri) continue;
-            pdf_link *link = pdf_new_link(fz_new_string(uri, (int)str::Len(uri)),
+            pdf_link *link = pdf_new_link(ctx, fz_new_string(ctx, uri, (int)str::Len(uri)),
                                           PDF_LINK_URI, list->coords.At(i));
             link->next = page->links;
             page->links = link;
@@ -1708,9 +1769,9 @@ void CPdfEngine::LinkifyPageAttachments(pdf_page *page)
     for (pdf_annot *annot = page->annots; annot; annot = annot->next) {
         if (str::Eq(fz_to_name(fz_dict_gets(annot->obj, "Subtype")), "FileAttachment")) {
             fz_obj *file = fz_dict_gets(annot->obj, "FS");
-            fz_rect rect = pdf_to_rect(fz_dict_gets(annot->obj, "Rect"));
+            fz_rect rect = pdf_to_rect(ctx, fz_dict_gets(annot->obj, "Rect"));
             if (file && fz_dict_gets(file, "EF") && !fz_is_empty_rect(rect)) {
-                pdf_link *link = pdf_new_link(fz_keep_obj(file), PDF_LINK_LAUNCH, rect);
+                pdf_link *link = pdf_new_link(ctx, fz_keep_obj(file), PDF_LINK_LAUNCH, rect);
                 link->next = page->links;
                 page->links = link;
             }
@@ -1721,7 +1782,7 @@ void CPdfEngine::LinkifyPageAttachments(pdf_page *page)
 fz_rect *CPdfEngine::GetPageImageRects(pdf_page *page)
 {
     Vec<FitzImagePos> positions;
-    RunPage(page, fz_new_image_extractor(&positions), fz_identity);
+    RunPage(page, fz_new_image_extractor(ctx, &positions), fz_identity);
     // images are extracted in bottom-to-top order, but for GetElements
     // we want to access them in top-to-bottom order (since images at
     // the bottom might not be visible at all)
@@ -1745,14 +1806,14 @@ RenderedBitmap *CPdfEngine::GetPageImage(int pageNo, RectD rect, size_t imageIx)
     ScopedCritSec scope(&xrefAccess);
 
     Vec<FitzImagePos> positions;
-    RunPage(page, fz_new_image_extractor(&positions), fz_identity);
+    RunPage(page, fz_new_image_extractor(ctx, &positions), fz_identity);
     positions.Reverse();
     if (imageIx >= positions.Count() || fz_rect_to_RectD(positions.At(imageIx).rect) != rect) {
         assert(0);
         return NULL;
     }
 
-    return new RenderedFitzBitmap(positions.At(imageIx).image);
+    return new RenderedFitzBitmap(ctx, positions.At(imageIx).image);
 }
 
 TCHAR *CPdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, RectI **coords_out, RenderTarget target, bool cacheRun)
@@ -1760,18 +1821,18 @@ TCHAR *CPdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, RectI **coord
     if (!page)
         return NULL;
 
-    fz_text_span *text = fz_new_text_span();
+    fz_text_span *text = fz_new_text_span(ctx);
     // use an infinite rectangle as bounds (instead of page->mediabox) to ensure that
     // the extracted text is consistent between cached runs using a list device and
     // fresh runs (otherwise the list device omits text outside the mediabox bounds)
-    fz_error error = RunPage(page, fz_new_text_device(text), fz_identity, target, fz_infinite_bbox, cacheRun);
+    bool ok = RunPage(page, fz_new_text_device(ctx, text), fz_identity, target, fz_infinite_bbox, cacheRun);
 
     TCHAR *content = NULL;
-    if (!error)
+    if (ok)
         content = fz_span_to_tchar(text, lineSep, coords_out);
 
     EnterCriticalSection(&xrefAccess);
-    fz_free_text_span(text);
+    fz_free_text_span(ctx, text);
     LeaveCriticalSection(&xrefAccess);
 
     return content;
@@ -1784,15 +1845,18 @@ TCHAR *CPdfEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_ou
         return ExtractPageText(page, lineSep, coords_out, target);
 
     EnterCriticalSection(&xrefAccess);
-    fz_error error = pdf_load_page(&page, _xref, pageNo - 1);
+    fz_try(ctx) {
+        page = pdf_load_page(_xref, pageNo - 1);
+    }
+    fz_catch(ctx) { }
     LeaveCriticalSection(&xrefAccess);
-    if (error)
+    if (!page)
         return NULL;
 
     TCHAR *result = ExtractPageText(page, lineSep, coords_out, target);
 
     EnterCriticalSection(&xrefAccess);
-    pdf_free_page(page);
+    pdf_free_page(ctx, page);
     LeaveCriticalSection(&xrefAccess);
 
     return result;
@@ -1858,11 +1922,14 @@ bool CPdfEngine::SaveEmbedded(fz_obj *obj, LinkSaverUI& saveUI)
     ScopedCritSec scope(&xrefAccess);
 
     fz_buffer *data = NULL;
-    fz_error error = pdf_load_stream(&data, _xref, fz_to_num(obj), fz_to_gen(obj));
-    if (error != fz_okay)
+    fz_try(ctx) {
+        data = pdf_load_stream(_xref, fz_to_num(obj), fz_to_gen(obj));
+    }
+    fz_catch(ctx) {
         return false;
+    }
     bool result = saveUI.SaveEmbedded(data->data, data->len);
-    fz_drop_buffer(data);
+    fz_drop_buffer(ctx, data);
     return result;
 }
 
@@ -1900,14 +1967,6 @@ int CPdfEngine::GetPageByLabel(const TCHAR *label)
         return BaseEngine::GetPageByLabel(label);
 
     return pageNo;
-}
-
-void CPdfEngine::RunGC()
-{
-    EnterCriticalSection(&xrefAccess);
-    if (_xref && _xref->store)
-        pdf_age_store(_xref->store, 3);
-    LeaveCriticalSection(&xrefAccess);
 }
 
 static bool IsRelativeURI(const TCHAR *uri)
@@ -2195,7 +2254,8 @@ protected:
     // make sure to never ask for _pagesAccess in an _ctxAccess
     // protected critical section in order to avoid deadlocks
     CRITICAL_SECTION _ctxAccess;
-    xps_context *    _ctx;
+    xps_document *  _ctx;
+    fz_context *    ctx;
 
     CRITICAL_SECTION _pagesAccess;
     xps_page **     _pages;
@@ -2315,20 +2375,20 @@ public:
     }
 };
 
-static void xps_run_page(xps_context *ctx, xps_page *page, fz_device *dev, fz_matrix ctm, xps_anchor *extract=NULL)
+static void xps_run_page(xps_document *doc, xps_page *page, fz_device *dev, fz_matrix ctm, xps_anchor *extract=NULL)
 {
-    ctx->dev = dev;
-    ctx->link_root = extract;
-    xps_parse_fixed_page(ctx, ctm, page);
-    ctx->link_root = NULL;
-    ctx->dev = NULL;
+    doc->dev = dev;
+    doc->link_root = extract;
+    xps_parse_fixed_page(doc, ctm, page);
+    doc->link_root = NULL;
+    doc->dev = NULL;
 }
 
-static xps_anchor *xps_new_anchor(char *target, fz_rect rect=fz_empty_rect)
+static xps_anchor *xps_new_anchor(fz_context *ctx, char *target, fz_rect rect=fz_empty_rect)
 {
-    xps_anchor *link = (xps_anchor *)fz_malloc(sizeof(xps_anchor));
+    xps_anchor *link = (xps_anchor *)fz_malloc(ctx, sizeof(xps_anchor));
 
-    link->target = fz_strdup(target);
+    link->target = fz_strdup(ctx, target);
     link->rect = rect;
     link->next = NULL;
 
@@ -2341,6 +2401,8 @@ CXpsEngine::CXpsEngine() : _fileName(NULL), _ctx(NULL), _pages(NULL), _mediaboxe
     InitializeCriticalSection(&_pagesAccess);
     InitializeCriticalSection(&_ctxAccess);
     ZeroMemory(&_runCache, sizeof(_runCache));
+
+    ctx = fz_new_context(NULL, FZ_STORE_UNLIMITED);
 }
 
 CXpsEngine::~CXpsEngine()
@@ -2358,7 +2420,7 @@ CXpsEngine::~CXpsEngine()
     if (_links) {
         for (int i = 0; i < PageCount(); i++)
             if (_links[i])
-                xps_free_anchor(_links[i]);
+                xps_free_anchor(_ctx, _links[i]);
         free(_links);
     }
 
@@ -2380,11 +2442,14 @@ CXpsEngine::~CXpsEngine()
         fz_drop_obj(_info);
 
     if (_drawcache)
-        fz_free_glyph_cache(_drawcache);
+        fz_free_glyph_cache(ctx, _drawcache);
     while (_runCache[0]) {
         assert(_runCache[0]->refs == 1);
         DropPageRun(_runCache[0], true);
     }
+
+    fz_free_context(ctx);
+
     free((void*)_fileName);
 
     LeaveCriticalSection(&_ctxAccess);
@@ -2411,20 +2476,24 @@ bool CXpsEngine::load(const TCHAR *fileName)
 {
     assert(!_fileName && !_ctx);
     _fileName = str::Dup(fileName);
-    if (!_fileName)
+    if (!_fileName || !ctx)
         return false;
-    return load_from_stream(fz_open_file2(_fileName));
+    return load_from_stream(fz_open_file2(ctx, _fileName));
 }
 
 bool CXpsEngine::load(IStream *stream)
 {
     assert(!_fileName && !_ctx);
-    return load_from_stream(fz_open_istream(stream));
+    if (!ctx)
+        return false;
+    return load_from_stream(fz_open_istream(ctx, stream));
 }
 
 bool CXpsEngine::load(fz_stream *stm)
 {
     assert(!_fileName && !_ctx);
+    if (!ctx)
+        return false;
     return load_from_stream(fz_keep_stream(stm));
 }
 
@@ -2433,10 +2502,15 @@ bool CXpsEngine::load_from_stream(fz_stream *stm)
     if (!stm)
         return false;
 
-    xps_open_stream(&_ctx, stm);
-    fz_close(stm);
-    if (!_ctx)
+    fz_try(ctx) {
+        _ctx = xps_open_stream(stm);
+    }
+    fz_catch(ctx) {
+        fz_close(stm);
         return false;
+    }
+    fz_close(stm);
+
     if (PageCount() == 0)
         return false;
 
@@ -2463,8 +2537,11 @@ xps_page *CXpsEngine::GetXpsPage(int pageNo, bool failIfBusy)
     xps_page *page = _pages[pageNo-1];
     if (!page) {
         ScopedCritSec scope(&_ctxAccess);
-        int error = xps_load_page(&page, _ctx, pageNo - 1);
-        if (!error) {
+        fz_try(ctx) {
+            page = xps_load_page(_ctx, pageNo - 1);
+        }
+        fz_catch(ctx) { }
+        if (page) {
             LinkifyPageText(page, pageNo);
             _pages[pageNo-1] = page;
             imageRects[pageNo-1] = GetPageImageRects(page);
@@ -2492,9 +2569,9 @@ XpsPageRun *CXpsEngine::GetPageRun(xps_page *page, bool tryOnly, xps_anchor *ext
             i--;
         }
 
-        fz_display_list *list = fz_new_display_list();
+        fz_display_list *list = fz_new_display_list(ctx);
 
-        fz_device *dev = fz_new_list_device(list);
+        fz_device *dev = fz_new_list_device(ctx, list);
         EnterCriticalSection(&_ctxAccess);
         xps_run_page(_ctx, page, dev, fz_identity, extract);
         fz_free_device(dev);
@@ -2546,7 +2623,7 @@ void CXpsEngine::DropPageRun(XpsPageRun *run, bool forceRemove)
         }
         if (0 == run->refs) {
             ScopedCritSec scope(&_ctxAccess);
-            fz_free_display_list(run->list);
+            fz_free_display_list(ctx, run->list);
             free(run);
         }
     }
@@ -2556,12 +2633,12 @@ void CXpsEngine::DropPageRun(XpsPageRun *run, bool forceRemove)
 
 // MuPDF doesn't allow partial parsing of XML content, so try to
 // extract a page's root element manually before feeding it to the parser
-static RectI xps_extract_mediabox_quick_and_dirty(xps_context *ctx, int pageNo)
+static RectI xps_extract_mediabox_quick_and_dirty(xps_document *doc, int pageNo)
 {
     xps_part *part = NULL;
-    for (xps_page *page = ctx->first_page; page && !part; page = page->next)
+    for (xps_page *page = doc->first_page; page && !part; page = page->next)
         if (--pageNo == 0)
-            part = xps_read_part(ctx, page->name);
+            part = xps_read_part(doc, page->name);
     if (!part)
         return RectI();
 
@@ -2583,13 +2660,19 @@ static RectI xps_extract_mediabox_quick_and_dirty(xps_context *ctx, int pageNo)
     }
     // we depend on the parser not validating its input (else we'd
     // have to append a closing "</FixedPage>" to the byte data)
-    xml_element *root = end ? xml_parse_document(part->data, (int)(end - part->data)) : NULL;
-    xps_free_part(ctx, part);
+    xml_element *root = NULL;
+    if (end) {
+        fz_try(doc->ctx) {
+            root = xml_parse_document(doc->ctx, part->data, (int)(end - part->data));
+        }
+        fz_catch(doc->ctx) { }
+    }
+    xps_free_part(doc, part);
     if (!root)
         return RectI();
 
     RectI rect;
-    if (root && str::Eq(xml_tag(root), "FixedPage")) {
+    if (str::Eq(xml_tag(root), "FixedPage")) {
         char *width = xml_att(root, "Width");
         if (width)
             rect.dx = atoi(width);
@@ -2598,7 +2681,7 @@ static RectI xps_extract_mediabox_quick_and_dirty(xps_context *ctx, int pageNo)
             rect.dy = atoi(height);
     }
 
-    xml_free_element(root);
+    xml_free_element(doc->ctx, root);
     return rect;
 }
 
@@ -2635,7 +2718,7 @@ RectD CXpsEngine::PageContentBox(int pageNo, RenderTarget target)
         return RectD();
 
     fz_bbox bbox;
-    RunPage(page, fz_new_bbox_device(&bbox), fz_identity);
+    RunPage(page, fz_new_bbox_device(ctx, &bbox), fz_identity);
     if (fz_is_infinite_bbox(bbox))
         return PageMediabox(pageNo);
 
@@ -2709,7 +2792,7 @@ bool CXpsEngine::renderPage(HDC hDC, xps_page *page, RectI screenRect, fz_matrix
     DeleteObject(bgBrush);
 
     fz_bbox clipbox = fz_RectI_to_bbox(screenRect);
-    RunPage(page, fz_new_gdiplus_device(hDC, clipbox), *ctm, clipbox);
+    RunPage(page, fz_new_gdiplus_device(ctx, hDC, clipbox), *ctm, clipbox);
 
     return true;
 }
@@ -2747,19 +2830,21 @@ RenderedBitmap *CXpsEngine::RenderBitmap(int pageNo, float zoom, int rotation, R
         return new RenderedBitmap(hbmp, SizeI(w, h));
     }
 
-    fz_pixmap *image = fz_new_pixmap_with_limit(fz_find_device_colorspace("DeviceRGB"),
-        bbox.x1 - bbox.x0, bbox.y1 - bbox.y0);
-    if (!image)
+    fz_pixmap *image;
+    fz_try(ctx) {
+        image = fz_new_pixmap_with_rect(ctx, fz_find_device_colorspace("DeviceRGB"), bbox);
+    }
+    fz_catch(ctx) {
         return NULL;
-    image->x = bbox.x0; image->y = bbox.y0;
+    }
 
     fz_clear_pixmap_with_color(image, 0xFF); // initialize white background
     if (!_drawcache)
-        _drawcache = fz_new_glyph_cache();
+        _drawcache = fz_new_glyph_cache(ctx);
 
-    RunPage(page, fz_new_draw_device(_drawcache, image), ctm, bbox);
-    RenderedBitmap *bitmap = new RenderedFitzBitmap(image);
-    fz_drop_pixmap(image);
+    RunPage(page, fz_new_draw_device(ctx, _drawcache, image), ctm, bbox);
+    RenderedBitmap *bitmap = new RenderedFitzBitmap(ctx, image);
+    fz_drop_pixmap(ctx, image);
     return bitmap;
 }
 
@@ -2768,16 +2853,16 @@ TCHAR *CXpsEngine::ExtractPageText(xps_page *page, TCHAR *lineSep, RectI **coord
     if (!page)
         return NULL;
 
-    fz_text_span *text = fz_new_text_span();
+    fz_text_span *text = fz_new_text_span(ctx);
     // use an infinite rectangle as bounds (instead of a mediabox) to ensure that
     // the extracted text is consistent between cached runs using a list device and
     // fresh runs (otherwise the list device omits text outside the mediabox bounds)
-    RunPage(page, fz_new_text_device(text), fz_identity, fz_infinite_bbox, cacheRun);
+    RunPage(page, fz_new_text_device(ctx, text), fz_identity, fz_infinite_bbox, cacheRun);
 
     TCHAR *content = fz_span_to_tchar(text, lineSep, coords_out);
 
     EnterCriticalSection(&_ctxAccess);
-    fz_free_text_span(text);
+    fz_free_text_span(ctx, text);
     LeaveCriticalSection(&_ctxAccess);
 
     return content;
@@ -2790,9 +2875,12 @@ TCHAR *CXpsEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_ou
         return ExtractPageText(page, lineSep, coords_out);
 
     EnterCriticalSection(&_ctxAccess);
-    int error = xps_load_page(&page, _ctx, pageNo - 1);
+    fz_try(ctx) {
+        page = xps_load_page(_ctx, pageNo - 1);
+    }
+    fz_catch(ctx) { }
     LeaveCriticalSection(&_ctxAccess);
-    if (error)
+    if (!page)
         return NULL;
 
     TCHAR *result = ExtractPageText(page, lineSep, coords_out);
@@ -2892,7 +2980,7 @@ void CXpsEngine::LinkifyPageText(xps_page *page, int pageNo)
         if (!overlaps) {
             ScopedMem<char> uri(str::conv::ToUtf8(list->links.At(i)));
             if (!uri) continue;
-            last = last->next = xps_new_anchor(uri, list->coords.At(i));
+            last = last->next = xps_new_anchor(ctx, uri, list->coords.At(i));
             assert(IsUriTarget(last->target));
         }
     }
@@ -2908,7 +2996,7 @@ void CXpsEngine::LinkifyPageText(xps_page *page, int pageNo)
 fz_rect *CXpsEngine::GetPageImageRects(xps_page *page)
 {
     Vec<FitzImagePos> positions;
-    RunPage(page, fz_new_image_extractor(&positions), fz_identity);
+    RunPage(page, fz_new_image_extractor(ctx, &positions), fz_identity);
     positions.Reverse();
     if (positions.Count() == 0)
         return NULL;
@@ -2928,14 +3016,14 @@ RenderedBitmap *CXpsEngine::GetPageImage(int pageNo, RectD rect, size_t imageIx)
     ScopedCritSec scope(&_ctxAccess);
 
     Vec<FitzImagePos> positions;
-    RunPage(page, fz_new_image_extractor(&positions), fz_identity);
+    RunPage(page, fz_new_image_extractor(ctx, &positions), fz_identity);
     positions.Reverse();
     if (imageIx >= positions.Count() || fz_rect_to_RectD(positions.At(imageIx).rect) != rect) {
         assert(0);
         return NULL;
     }
 
-    return new RenderedFitzBitmap(positions.At(imageIx).image);
+    return new RenderedFitzBitmap(ctx, positions.At(imageIx).image);
 }
 
 int CXpsEngine::FindPageNo(const char *target)

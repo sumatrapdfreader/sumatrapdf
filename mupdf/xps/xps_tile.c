@@ -16,57 +16,57 @@ struct closure
 	xps_resource *dict;
 	xml_element *root;
 	void *user;
-	void (*func)(xps_context*, fz_matrix, fz_rect, char*, xps_resource*, xml_element*, void*);
+	void (*func)(xps_document*, fz_matrix, fz_rect, char*, xps_resource*, xml_element*, void*);
 };
 
 static void
-xps_paint_tiling_brush_clipped(xps_context *ctx, fz_matrix ctm, fz_rect viewbox, struct closure *c)
+xps_paint_tiling_brush_clipped(xps_document *doc, fz_matrix ctm, fz_rect viewbox, struct closure *c)
 {
-	fz_path *path = fz_new_path();
-	fz_moveto(path, viewbox.x0, viewbox.y0);
-	fz_lineto(path, viewbox.x0, viewbox.y1);
-	fz_lineto(path, viewbox.x1, viewbox.y1);
-	fz_lineto(path, viewbox.x1, viewbox.y0);
-	fz_closepath(path);
-	fz_clip_path(ctx->dev, path, NULL, 0, ctm);
-	fz_free_path(path);
-	c->func(ctx, ctm, viewbox, c->base_uri, c->dict, c->root, c->user);
-	fz_pop_clip(ctx->dev);
+	fz_path *path = fz_new_path(doc->ctx);
+	fz_moveto(doc->ctx, path, viewbox.x0, viewbox.y0);
+	fz_lineto(doc->ctx, path, viewbox.x0, viewbox.y1);
+	fz_lineto(doc->ctx, path, viewbox.x1, viewbox.y1);
+	fz_lineto(doc->ctx, path, viewbox.x1, viewbox.y0);
+	fz_closepath(doc->ctx, path);
+	fz_clip_path(doc->dev, path, NULL, 0, ctm);
+	fz_free_path(doc->ctx, path);
+	c->func(doc, ctm, viewbox, c->base_uri, c->dict, c->root, c->user);
+	fz_pop_clip(doc->dev);
 }
 
 static void
-xps_paint_tiling_brush(xps_context *ctx, fz_matrix ctm, fz_rect viewbox, int tile_mode, struct closure *c)
+xps_paint_tiling_brush(xps_document *doc, fz_matrix ctm, fz_rect viewbox, int tile_mode, struct closure *c)
 {
 	fz_matrix ttm;
 
-	xps_paint_tiling_brush_clipped(ctx, ctm, viewbox, c);
+	xps_paint_tiling_brush_clipped(doc, ctm, viewbox, c);
 
 	if (tile_mode == TILE_FLIP_X || tile_mode == TILE_FLIP_X_Y)
 	{
 		ttm = fz_concat(fz_translate(viewbox.x1 * 2, 0), ctm);
 		ttm = fz_concat(fz_scale(-1, 1), ttm);
-		xps_paint_tiling_brush_clipped(ctx, ttm, viewbox, c);
+		xps_paint_tiling_brush_clipped(doc, ttm, viewbox, c);
 	}
 
 	if (tile_mode == TILE_FLIP_Y || tile_mode == TILE_FLIP_X_Y)
 	{
 		ttm = fz_concat(fz_translate(0, viewbox.y1 * 2), ctm);
 		ttm = fz_concat(fz_scale(1, -1), ttm);
-		xps_paint_tiling_brush_clipped(ctx, ttm, viewbox, c);
+		xps_paint_tiling_brush_clipped(doc, ttm, viewbox, c);
 	}
 
 	if (tile_mode == TILE_FLIP_X_Y)
 	{
 		ttm = fz_concat(fz_translate(viewbox.x1 * 2, viewbox.y1 * 2), ctm);
 		ttm = fz_concat(fz_scale(-1, -1), ttm);
-		xps_paint_tiling_brush_clipped(ctx, ttm, viewbox, c);
+		xps_paint_tiling_brush_clipped(doc, ttm, viewbox, c);
 	}
 }
 
 void
-xps_parse_tiling_brush(xps_context *ctx, fz_matrix ctm, fz_rect area,
+xps_parse_tiling_brush(xps_document *doc, fz_matrix ctm, fz_rect area,
 	char *base_uri, xps_resource *dict, xml_element *root,
-	void (*func)(xps_context*, fz_matrix, fz_rect, char*, xps_resource*, xml_element*, void*), void *user)
+	void (*func)(xps_document*, fz_matrix, fz_rect, char*, xps_resource*, xml_element*, void*), void *user)
 {
 	xml_element *node;
 	struct closure c;
@@ -110,22 +110,22 @@ xps_parse_tiling_brush(xps_context *ctx, fz_matrix ctm, fz_rect area,
 			transform_tag = xml_down(node);
 	}
 
-	xps_resolve_resource_reference(ctx, dict, &transform_att, &transform_tag, NULL);
+	xps_resolve_resource_reference(doc, dict, &transform_att, &transform_tag, NULL);
 
 	transform = fz_identity;
 	if (transform_att)
-		xps_parse_render_transform(ctx, transform_att, &transform);
+		xps_parse_render_transform(doc, transform_att, &transform);
 	if (transform_tag)
-		xps_parse_matrix_transform(ctx, transform_tag, &transform);
+		xps_parse_matrix_transform(doc, transform_tag, &transform);
 	ctm = fz_concat(transform, ctm);
 
 	viewbox = fz_unit_rect;
 	if (viewbox_att)
-		xps_parse_rectangle(ctx, viewbox_att, &viewbox);
+		xps_parse_rectangle(doc, viewbox_att, &viewbox);
 
 	viewport = fz_unit_rect;
 	if (viewport_att)
-		xps_parse_rectangle(ctx, viewport_att, &viewport);
+		xps_parse_rectangle(doc, viewport_att, &viewport);
 
 	/* some sanity checks on the viewport/viewbox size */
 	if (fabsf(viewport.x1 - viewport.x0) < 0.01f) return;
@@ -159,7 +159,7 @@ xps_parse_tiling_brush(xps_context *ctx, fz_matrix ctm, fz_rect area,
 	if (tile_mode == TILE_FLIP_Y || tile_mode == TILE_FLIP_X_Y)
 		ystep *= 2;
 
-	xps_begin_opacity(ctx, ctm, area, base_uri, dict, opacity_att, NULL);
+	xps_begin_opacity(doc, ctm, area, base_uri, dict, opacity_att, NULL);
 
 	ctm = fz_concat(fz_translate(viewport.x0, viewport.y0), ctm);
 	ctm = fz_concat(fz_scale(xscale, yscale), ctm);
@@ -184,9 +184,9 @@ xps_parse_tiling_brush(xps_context *ctx, fz_matrix ctm, fz_rect area,
 			fz_rect bigview = viewbox;
 			bigview.x1 = bigview.x0 + xstep;
 			bigview.y1 = bigview.y0 + ystep;
-			fz_begin_tile(ctx->dev, area, bigview, xstep, ystep, ctm);
-			xps_paint_tiling_brush(ctx, ctm, viewbox, tile_mode, &c);
-			fz_end_tile(ctx->dev);
+			fz_begin_tile(doc->dev, area, bigview, xstep, ystep, ctm);
+			xps_paint_tiling_brush(doc, ctm, viewbox, tile_mode, &c);
+			fz_end_tile(doc->dev);
 		}
 		else
 		{
@@ -196,28 +196,28 @@ xps_parse_tiling_brush(xps_context *ctx, fz_matrix ctm, fz_rect area,
 				for (x = x0; x < x1; x++)
 				{
 					fz_matrix ttm = fz_concat(fz_translate(xstep * x, ystep * y), ctm);
-					xps_paint_tiling_brush(ctx, ttm, viewbox, tile_mode, &c);
+					xps_paint_tiling_brush(doc, ttm, viewbox, tile_mode, &c);
 				}
 			}
 		}
 	}
 	else
 	{
-		xps_paint_tiling_brush(ctx, ctm, viewbox, tile_mode, &c);
+		xps_paint_tiling_brush(doc, ctm, viewbox, tile_mode, &c);
 	}
 
-	xps_end_opacity(ctx, base_uri, dict, opacity_att, NULL);
+	xps_end_opacity(doc, base_uri, dict, opacity_att, NULL);
 }
 
 static void
-xps_paint_visual_brush(xps_context *ctx, fz_matrix ctm, fz_rect area,
+xps_paint_visual_brush(xps_document *doc, fz_matrix ctm, fz_rect area,
 	char *base_uri, xps_resource *dict, xml_element *root, void *visual_tag)
 {
-	xps_parse_element(ctx, ctm, area, base_uri, dict, (xml_element *)visual_tag);
+	xps_parse_element(doc, ctm, area, base_uri, dict, (xml_element *)visual_tag);
 }
 
 void
-xps_parse_visual_brush(xps_context *ctx, fz_matrix ctm, fz_rect area,
+xps_parse_visual_brush(xps_document *doc, fz_matrix ctm, fz_rect area,
 	char *base_uri, xps_resource *dict, xml_element *root)
 {
 	xml_element *node;
@@ -235,22 +235,21 @@ xps_parse_visual_brush(xps_context *ctx, fz_matrix ctm, fz_rect area,
 	}
 
 	visual_uri = base_uri;
-	xps_resolve_resource_reference(ctx, dict, &visual_att, &visual_tag, &visual_uri);
+	xps_resolve_resource_reference(doc, dict, &visual_att, &visual_tag, &visual_uri);
 
 	if (visual_tag)
 	{
-		xps_parse_tiling_brush(ctx, ctm, area,
+		xps_parse_tiling_brush(doc, ctm, area,
 			visual_uri, dict, root, xps_paint_visual_brush, visual_tag);
 	}
 }
 
 void
-xps_parse_canvas(xps_context *ctx, fz_matrix ctm, fz_rect area, char *base_uri, xps_resource *dict, xml_element *root)
+xps_parse_canvas(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri, xps_resource *dict, xml_element *root)
 {
 	xps_resource *new_dict = NULL;
 	xml_element *node;
 	char *opacity_mask_uri;
-	int code;
 
 	char *transform_att;
 	char *clip_att;
@@ -272,13 +271,16 @@ xps_parse_canvas(xps_context *ctx, fz_matrix ctm, fz_rect area, char *base_uri, 
 	{
 		if (!strcmp(xml_tag(node), "Canvas.Resources") && xml_down(node))
 		{
-			code = xps_parse_resource_dictionary(ctx, &new_dict, base_uri, xml_down(node));
-			if (code)
-				fz_catch(code, "cannot load Canvas.Resources");
-			else
+			/* SumatraPDF: try to continue without Canvas.Resources */
+			fz_try(doc->ctx)
 			{
+				new_dict = xps_parse_resource_dictionary(doc, base_uri, xml_down(node));
 				new_dict->parent = dict;
 				dict = new_dict;
+			}
+			fz_catch(doc->ctx)
+			{
+				fz_warn(doc->ctx, "cannot load Canvas.Resources");
 			}
 		}
 
@@ -291,48 +293,47 @@ xps_parse_canvas(xps_context *ctx, fz_matrix ctm, fz_rect area, char *base_uri, 
 	}
 
 	opacity_mask_uri = base_uri;
-	xps_resolve_resource_reference(ctx, dict, &transform_att, &transform_tag, NULL);
-	xps_resolve_resource_reference(ctx, dict, &clip_att, &clip_tag, NULL);
-	xps_resolve_resource_reference(ctx, dict, &opacity_mask_att, &opacity_mask_tag, &opacity_mask_uri);
+	xps_resolve_resource_reference(doc, dict, &transform_att, &transform_tag, NULL);
+	xps_resolve_resource_reference(doc, dict, &clip_att, &clip_tag, NULL);
+	xps_resolve_resource_reference(doc, dict, &opacity_mask_att, &opacity_mask_tag, &opacity_mask_uri);
 
 	transform = fz_identity;
 	if (transform_att)
-		xps_parse_render_transform(ctx, transform_att, &transform);
+		xps_parse_render_transform(doc, transform_att, &transform);
 	if (transform_tag)
-		xps_parse_matrix_transform(ctx, transform_tag, &transform);
+		xps_parse_matrix_transform(doc, transform_tag, &transform);
 	ctm = fz_concat(transform, ctm);
 
 	if (clip_att || clip_tag)
-		xps_clip(ctx, ctm, dict, clip_att, clip_tag);
+		xps_clip(doc, ctm, dict, clip_att, clip_tag);
 
 	/* SumatraPDF: extended link support */
-	xps_extract_anchor_info(ctx, root, area);
+	xps_extract_anchor_info(doc, root, area);
 
-	xps_begin_opacity(ctx, ctm, area, opacity_mask_uri, dict, opacity_att, opacity_mask_tag);
+	xps_begin_opacity(doc, ctm, area, opacity_mask_uri, dict, opacity_att, opacity_mask_tag);
 
 	for (node = xml_down(root); node; node = xml_next(node))
 	{
-		xps_parse_element(ctx, ctm, area, base_uri, dict, node);
+		xps_parse_element(doc, ctm, area, base_uri, dict, node);
 	}
 
-	xps_end_opacity(ctx, opacity_mask_uri, dict, opacity_att, opacity_mask_tag);
+	xps_end_opacity(doc, opacity_mask_uri, dict, opacity_att, opacity_mask_tag);
 
 	if (clip_att || clip_tag)
-		fz_pop_clip(ctx->dev);
+		fz_pop_clip(doc->dev);
 
 	if (new_dict)
-		xps_free_resource_dictionary(ctx, new_dict);
+		xps_free_resource_dictionary(doc, new_dict);
 }
 
 void
-xps_parse_fixed_page(xps_context *ctx, fz_matrix ctm, xps_page *page)
+xps_parse_fixed_page(xps_document *doc, fz_matrix ctm, xps_page *page)
 {
 	xml_element *node;
 	xps_resource *dict;
 	char base_uri[1024];
 	fz_rect area;
 	char *s;
-	int code;
 
 	fz_strlcpy(base_uri, page->name, sizeof base_uri);
 	s = strrchr(base_uri, '/');
@@ -341,8 +342,8 @@ xps_parse_fixed_page(xps_context *ctx, fz_matrix ctm, xps_page *page)
 
 	dict = NULL;
 
-	ctx->opacity_top = 0;
-	ctx->opacity[0] = 1;
+	doc->opacity_top = 0;
+	doc->opacity[0] = 1;
 
 	if (!page->root)
 		return;
@@ -353,15 +354,20 @@ xps_parse_fixed_page(xps_context *ctx, fz_matrix ctm, xps_page *page)
 	{
 		if (!strcmp(xml_tag(node), "FixedPage.Resources") && xml_down(node))
 		{
-			code = xps_parse_resource_dictionary(ctx, &dict, base_uri, xml_down(node));
-			if (code)
-				fz_catch(code, "cannot load FixedPage.Resources");
+			/* SumatraPDF: many documents seem to lack FixedPage.Resources */
+			fz_try(doc->ctx)
+			{
+				dict = xps_parse_resource_dictionary(doc, base_uri, xml_down(node));
+			}
+			fz_catch(doc->ctx)
+			{
+				fz_warn(doc->ctx, "cannot load FixedPage.Resources");
+				dict = NULL;
+			}
 		}
-		xps_parse_element(ctx, ctm, area, base_uri, dict, node);
+		xps_parse_element(doc, ctm, area, base_uri, dict, node);
 	}
 
 	if (dict)
-	{
-		xps_free_resource_dictionary(ctx, dict);
-	}
+		xps_free_resource_dictionary(doc, dict);
 }

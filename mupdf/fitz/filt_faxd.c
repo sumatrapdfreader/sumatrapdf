@@ -266,6 +266,7 @@ enum
 
 struct fz_faxd_s
 {
+	fz_context *ctx;
 	fz_stream *chain;
 
 	int k;
@@ -332,8 +333,8 @@ get_code(fz_faxd *fax, const cfd_node *table, int initialbits)
 }
 
 /* decode one 1d code */
-static fz_error
-dec1d(fz_faxd *fax)
+static void
+dec1d(fz_context *ctx, fz_faxd *fax)
 {
 	int code;
 
@@ -346,13 +347,13 @@ dec1d(fz_faxd *fax)
 		code = get_code(fax, cf_white_decode, cfd_white_initial_bits);
 
 	if (code == UNCOMPRESSED)
-		return fz_throw("uncompressed data in faxd");
+		fz_throw(ctx, "uncompressed data in faxd");
 
 	if (code < 0)
-		return fz_throw("negative code in 1d faxd");
+		fz_throw(ctx, "negative code in 1d faxd");
 
 	if (fax->a + code > fax->columns)
-		return fz_throw("overflow in 1d faxd");
+		fz_throw(ctx, "overflow in 1d faxd");
 
 	if (fax->c)
 		setbits(fax->dst, fax->a, fax->a + code);
@@ -366,13 +367,11 @@ dec1d(fz_faxd *fax)
 	}
 	else
 		fax->stage = STATE_MAKEUP;
-
-	return fz_okay;
 }
 
 /* decode one 2d code */
-static fz_error
-dec2d(fz_faxd *fax)
+static void
+dec2d(fz_context *ctx, fz_faxd *fax)
 {
 	int code, b1, b2;
 
@@ -387,13 +386,13 @@ dec2d(fz_faxd *fax)
 			code = get_code(fax, cf_white_decode, cfd_white_initial_bits);
 
 		if (code == UNCOMPRESSED)
-			return fz_throw("uncompressed data in faxd");
+			fz_throw(ctx, "uncompressed data in faxd");
 
 		if (code < 0)
-			return fz_throw("negative code in 2d faxd");
+			fz_throw(ctx, "negative code in 2d faxd");
 
 		if (fax->a + code > fax->columns)
-			return fz_throw("overflow in 2d faxd");
+			fz_throw(ctx, "overflow in 2d faxd");
 
 		if (fax->c)
 			setbits(fax->dst, fax->a, fax->a + code);
@@ -409,7 +408,7 @@ dec2d(fz_faxd *fax)
 				fax->stage = STATE_NORMAL;
 		}
 
-		return fz_okay;
+		return;
 	}
 
 	code = get_code(fax, cf_2d_decode, cfd_2d_initial_bits);
@@ -486,16 +485,14 @@ dec2d(fz_faxd *fax)
 		break;
 
 	case UNCOMPRESSED:
-		return fz_throw("uncompressed data in faxd");
+		fz_throw(ctx, "uncompressed data in faxd");
 
 	case ERROR:
-		return fz_throw("invalid code in 2d faxd");
+		fz_throw(ctx, "invalid code in 2d faxd");
 
 	default:
-		return fz_throw("invalid code in 2d faxd (%d)", code);
+		fz_throw(ctx, "invalid code in 2d faxd (%d)", code);
 	}
-
-	return 0;
 }
 
 static int
@@ -505,7 +502,6 @@ read_faxd(fz_stream *stm, unsigned char *buf, int len)
 	unsigned char *p = buf;
 	unsigned char *ep = buf + len;
 	unsigned char *tmp;
-	fz_error error;
 
 	if (fax->stage == STATE_DONE)
 		return 0;
@@ -559,16 +555,12 @@ loop:
 	else if (fax->dim == 1)
 	{
 		fax->eolc = 0;
-		error = dec1d(fax);
-		if (error)
-			return fz_rethrow(error, "cannot decode 1d code");
+		dec1d(stm->ctx, fax);
 	}
 	else if (fax->dim == 2)
 	{
 		fax->eolc = 0;
-		error = dec2d(fax);
-		if (error)
-			return fz_rethrow(error, "cannot decode 2d code");
+		dec2d(stm->ctx, fax);
 	}
 
 	/* no eol check after makeup codes nor in the middle of an H code */
@@ -652,9 +644,9 @@ rtc:
 }
 
 static void
-close_faxd(fz_stream *stm)
+close_faxd(fz_context *ctx, void *state_)
 {
-	fz_faxd *fax = stm->state;
+	fz_faxd *fax = (fz_faxd *)state_;
 	int i;
 
 	/* if we read any extra bytes, try to put them back */
@@ -663,70 +655,87 @@ close_faxd(fz_stream *stm)
 		fz_unread_byte(fax->chain);
 
 	fz_close(fax->chain);
-	fz_free(fax->ref);
-	fz_free(fax->dst);
-	fz_free(fax);
+	fz_free(ctx, fax->ref);
+	fz_free(ctx, fax->dst);
+	fz_free(ctx, fax);
 }
 
 fz_stream *
 fz_open_faxd(fz_stream *chain, fz_obj *params)
 {
-	fz_faxd *fax;
+	fz_faxd *fax = NULL;
 	fz_obj *obj;
+	fz_context *ctx = chain->ctx;
 
-	fax = fz_malloc(sizeof(fz_faxd));
-	fax->chain = chain;
+	fz_var(fax);
 
-	fax->ref = NULL;
-	fax->dst = NULL;
+	fz_try(ctx)
+	{
+		fax = fz_malloc_struct(ctx, fz_faxd);
+		fax->chain = chain;
 
-	fax->k = 0;
-	fax->end_of_line = 0;
-	fax->encoded_byte_align = 0;
-	fax->columns = 1728;
-	fax->rows = 0;
-	fax->end_of_block = 1;
-	fax->black_is_1 = 0;
+		fax->ref = NULL;
+		fax->dst = NULL;
 
-	obj = fz_dict_gets(params, "K");
-	if (obj) fax->k = fz_to_int(obj);
+		fax->k = 0;
+		fax->end_of_line = 0;
+		fax->encoded_byte_align = 0;
+		fax->columns = 1728;
+		fax->rows = 0;
+		fax->end_of_block = 1;
+		fax->black_is_1 = 0;
 
-	obj = fz_dict_gets(params, "EndOfLine");
-	if (obj) fax->end_of_line = fz_to_bool(obj);
+		obj = fz_dict_gets(params, "K");
+		if (obj) fax->k = fz_to_int(obj);
 
-	obj = fz_dict_gets(params, "EncodedByteAlign");
-	if (obj) fax->encoded_byte_align = fz_to_bool(obj);
+		obj = fz_dict_gets(params, "EndOfLine");
+		if (obj) fax->end_of_line = fz_to_bool(obj);
 
-	obj = fz_dict_gets(params, "Columns");
-	if (obj) fax->columns = fz_to_int(obj);
+		obj = fz_dict_gets(params, "EncodedByteAlign");
+		if (obj) fax->encoded_byte_align = fz_to_bool(obj);
 
-	obj = fz_dict_gets(params, "Rows");
-	if (obj) fax->rows = fz_to_int(obj);
+		obj = fz_dict_gets(params, "Columns");
+		if (obj) fax->columns = fz_to_int(obj);
 
-	obj = fz_dict_gets(params, "EndOfBlock");
-	if (obj) fax->end_of_block = fz_to_bool(obj);
+		obj = fz_dict_gets(params, "Rows");
+		if (obj) fax->rows = fz_to_int(obj);
 
-	obj = fz_dict_gets(params, "BlackIs1");
-	if (obj) fax->black_is_1 = fz_to_bool(obj);
+		obj = fz_dict_gets(params, "EndOfBlock");
+		if (obj) fax->end_of_block = fz_to_bool(obj);
 
-	fax->stride = ((fax->columns - 1) >> 3) + 1;
-	fax->ridx = 0;
-	fax->bidx = 32;
-	fax->word = 0;
+		obj = fz_dict_gets(params, "BlackIs1");
+		if (obj) fax->black_is_1 = fz_to_bool(obj);
 
-	fax->stage = STATE_NORMAL;
-	fax->a = -1;
-	fax->c = 0;
-	fax->dim = fax->k < 0 ? 2 : 1;
-	fax->eolc = 0;
+		fax->stride = ((fax->columns - 1) >> 3) + 1;
+		fax->ridx = 0;
+		fax->bidx = 32;
+		fax->word = 0;
 
-	fax->ref = fz_malloc(fax->stride);
-	fax->dst = fz_malloc(fax->stride);
-	fax->rp = fax->dst;
-	fax->wp = fax->dst + fax->stride;
+		fax->stage = STATE_NORMAL;
+		fax->a = -1;
+		fax->c = 0;
+		fax->dim = fax->k < 0 ? 2 : 1;
+		fax->eolc = 0;
 
-	memset(fax->ref, 0, fax->stride);
-	memset(fax->dst, 0, fax->stride);
+		fax->ref = fz_malloc(ctx, fax->stride);
+		fax->dst = fz_malloc(ctx, fax->stride);
+		fax->rp = fax->dst;
+		fax->wp = fax->dst + fax->stride;
 
-	return fz_new_stream(fax, read_faxd, close_faxd);
+		memset(fax->ref, 0, fax->stride);
+		memset(fax->dst, 0, fax->stride);
+	}
+	fz_catch(ctx)
+	{
+		if (fax)
+		{
+			fz_free(ctx, fax->dst);
+			fz_free(ctx, fax->ref);
+		}
+		fz_free(ctx, fax);
+		fz_close(chain);
+		fz_rethrow(ctx);
+	}
+
+	return fz_new_stream(ctx, fax, read_faxd, close_faxd);
 }

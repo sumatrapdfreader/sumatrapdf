@@ -68,6 +68,8 @@ struct ft2vert_st
 	FT_Bytes GSUB_table;
 	FT_Bytes kanaFeature;
 	FT_Bytes vertLookup, vrt2Lookup;
+
+	fz_context *ctx;
 };
 
 
@@ -98,14 +100,14 @@ static void scan_Coverage(struct ft2vert_st *ret, const FT_Bytes top)
 	{
 	case 1: 
 		t->GlyphCount = BYTE2(s);
-		t->GlyphArray = fz_calloc(t->GlyphCount, sizeof(t->GlyphArray[0]));
+		t->GlyphArray = fz_malloc_array(ret->ctx, t->GlyphCount, sizeof(t->GlyphArray[0]));
 		memset(t->GlyphArray, 0, t->GlyphCount * sizeof(t->GlyphArray[0]));
 		for (i = 0; i < t->GlyphCount; i++)
 			t->GlyphArray[i] = BYTE2(s);
 		break;
 	case 2:
 		t->RangeCount = BYTE2(s);
-		t->RangeRecord = fz_calloc(t->RangeCount, sizeof(t->RangeRecord[0]));
+		t->RangeRecord = fz_malloc_array(ret->ctx, t->RangeCount, sizeof(t->RangeRecord[0]));
 		memset(t->RangeRecord, 0, t->RangeCount * sizeof(t->RangeRecord[0]));
 		for (i = 0; i < t->RangeCount; i++)
 		{
@@ -115,7 +117,7 @@ static void scan_Coverage(struct ft2vert_st *ret, const FT_Bytes top)
 		}
 		break;
 	default:
-		fz_warn("scan_Coverage: unknown CoverageFormat (%d).", t->CoverageFormat);
+		fz_warn(ret->ctx, "scan_Coverage: unknown CoverageFormat (%d).", t->CoverageFormat);
 		return;
 	}
 	ret->SubTableCount++;
@@ -139,13 +141,13 @@ static void scan_SubTable(struct ft2vert_st *ret, const FT_Bytes top)
 		break;
 	case 2: /* SingleSubstFormat2 */
 		t->GlyphCount   = BYTE2(s);
-		t->Substitute = fz_calloc(t->GlyphCount, sizeof(t->Substitute[0]));
+		t->Substitute = fz_malloc_array(ret->ctx, t->GlyphCount, sizeof(t->Substitute[0]));
 		memset(t->Substitute, 0, t->GlyphCount * sizeof(t->Substitute[0]));
 		for (i = 0; i < t->GlyphCount; i++)
 			t->Substitute[i] = BYTE2(s);
 		break;
 	default:
-		fz_warn("scan_SubTable: unknown SubstFormat (%d).", t->SubstFormat);
+		fz_warn(ret->ctx, "scan_SubTable: unknown SubstFormat (%d).", t->SubstFormat);
 	}
 }
 
@@ -163,13 +165,13 @@ static void scan_Lookup(struct ft2vert_st *ret, const FT_Bytes top)
 	SubTableCount = BYTE2(s);
 	SubTable      = BYTE2(s);
 
-	ret->SubTable = fz_calloc(SubTableCount, sizeof(ret->SubTable[0]));
+	ret->SubTable = fz_malloc_array(ret->ctx, SubTableCount, sizeof(ret->SubTable[0]));
 	memset(ret->SubTable, 0, SubTableCount * sizeof(ret->SubTable[0]));
 	for (i = 0; i < SubTableCount; i++)
 		scan_SubTable(ret, top + SubTable);
 
 	if (ret->SubTableCount != SubTableCount)
-		fz_warn("scan_Lookup: SubTableCount (=%d) is not expected (=%d).\n",
+		fz_warn(ret->ctx, "scan_Lookup: SubTableCount (=%d) is not expected (=%d).\n",
 				ret->SubTableCount, SubTableCount);
 }
 
@@ -276,7 +278,7 @@ static void scan_GSUB_Header(struct ft2vert_st *ret, const FT_Bytes top)
 	LookupList  = BYTE2(s);
 
 	if (Version != 0x00010000)
-		fz_warn("GSUB Version (=%.1f) is not 1.0\n", (double)Version / 0x10000);
+		fz_warn(ret->ctx, "GSUB Version (=%.1f) is not 1.0\n", (double)Version / 0x10000);
 
 	scan_ScriptList(ret, top + ScriptList);
 	scan_FeatureList(ret, top + FeatureList);
@@ -286,51 +288,53 @@ static void scan_GSUB_Header(struct ft2vert_st *ret, const FT_Bytes top)
 	scan_LookupList(ret, top + LookupList);
 }
 
-static struct ft2vert_st *ft2vert_init(FT_Face face)
+static struct ft2vert_st *ft2vert_init(fz_context *ctx, FT_Face face)
 {
 	struct ft2vert_st *ret;
 	int ft_error;
 	FT_Bytes base, gdef, gpos, jstf;
 
-	ret = fz_malloc(sizeof(ret[0]));
+	ret = fz_malloc(ctx, sizeof(ret[0]));
 	memset(ret, 0, sizeof(ret[0]));
+	ret->ctx = ctx;
 
 	ft_error = FT_OpenType_Validate(face, FT_VALIDATE_GSUB, &base, &gdef, &gpos, &ret->GSUB_table, &jstf);
 	assert(ft_error != FT_Err_Unimplemented_Feature); // make sure to enable the otvalid module
 	if (ft_error != 0 || ret->GSUB_table == 0)
 	{
-		fz_warn("%s has no GSUB table.\n", face->family_name);
+		fz_warn(ctx, "%s has no GSUB table.\n", face->family_name);
 		return ret;
 	}
 	scan_GSUB_Header(ret, ret->GSUB_table);
 	if (ret->SubTableCount == 0)
-		fz_warn("%s has no vrt2/vert feature.\n", face->family_name);
+		fz_warn(ctx, "%s has no vrt2/vert feature.\n", face->family_name);
 
 	return ret;
 }
 
 static void ft2vert_final(FT_Face face, struct ft2vert_st *vert){
+	fz_context *ctx = vert->ctx;
 	int j;
 	for (j = 0; j < vert->SubTableCount; j++)
 	{
-		fz_free(vert->SubTable[j].SingleSubst.Substitute);
-		fz_free(vert->SubTable[j].Coverage.GlyphArray);
-		fz_free(vert->SubTable[j].Coverage.RangeRecord);
+		fz_free(ctx, vert->SubTable[j].SingleSubst.Substitute);
+		fz_free(ctx, vert->SubTable[j].Coverage.GlyphArray);
+		fz_free(ctx, vert->SubTable[j].Coverage.RangeRecord);
 	}
-	fz_free(vert->SubTable);
+	fz_free(ctx, vert->SubTable);
 	FT_OpenType_Free(face, vert->GSUB_table);
-	fz_free(vert);
+	fz_free(ctx, vert);
 }
 
 /********** converting part *****************/
 
-static FT_UInt get_vert_nth_gid(struct SubTable_st *t, FT_UInt gid, int n)
+static FT_UInt get_vert_nth_gid(fz_context *ctx, struct SubTable_st *t, FT_UInt gid, int n)
 {
 	switch (t->SingleSubst.SubstFormat)
 	{
 	case 1: return gid + t->SingleSubst.DeltaGlyphID;
 	case 2: return t->SingleSubst.Substitute[n];
-	default: fz_warn("get_vert_nth_gid: internal error");
+	default: fz_warn(ctx, "get_vert_nth_gid: internal error");
 	}
 	return 0;
 }
@@ -348,19 +352,19 @@ static FT_UInt ft2gsub_get_gid(const struct ft2vert_st *ft2vert, const FT_UInt g
 		case 1:
 			for (i = 0; i < t->Coverage.GlyphCount; i++)
 				if (t->Coverage.GlyphArray[i] == gid)
-					return get_vert_nth_gid(t, gid, i);
+					return get_vert_nth_gid(ft2vert->ctx, t, gid, i);
 			break;
 		case 2:
 			for (i = 0; i < t->Coverage.RangeCount; i++)
 			{
 				struct RangeRecord_st *r = &t->Coverage.RangeRecord[i];
 				if (r->Start <= gid && gid <= r->End)
-					return get_vert_nth_gid(t, gid, gid - r->Start + j);
+					return get_vert_nth_gid(ft2vert->ctx, t, gid, gid - r->Start + j);
 				j += r->End - r->Start + 1;
 			}
 			break;
 		default:
-			fz_warn("ft2gsub_get_gid: internal error");
+			fz_warn(ft2vert->ctx, "ft2gsub_get_gid: internal error");
 		}
 	}
 
@@ -368,11 +372,20 @@ static FT_UInt ft2gsub_get_gid(const struct ft2vert_st *ft2vert, const FT_UInt g
 }
 
 
-int pdf_ft_get_vgid(pdf_font_desc *fontdesc, int gid)
+int pdf_ft_get_vgid(fz_context *ctx, pdf_font_desc *fontdesc, int gid)
 {
 	int vgid = 0;
 	if (!fontdesc->_vsubst)
-		fontdesc->_vsubst = ft2vert_init(fontdesc->font->ft_face);
+	{
+		fz_try(ctx)
+		{
+			fontdesc->_vsubst = ft2vert_init(ctx, fontdesc->font->ft_face);
+		}
+		fz_catch(ctx)
+		{
+			return gid;
+		}
+	}
 	vgid = ft2gsub_get_gid(fontdesc->_vsubst, gid);
 	return vgid ? vgid : gid;
 }

@@ -679,7 +679,7 @@ fz_paint_image_imp(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *shape, fz_pixmap 
 
 	if (dst->n == 4 && img->n == 2)
 	{
-		assert(color == NULL);
+		assert(!color);
 		if (dolerp)
 			paintfn = fz_paint_affine_g2rgb_lerp;
 		else

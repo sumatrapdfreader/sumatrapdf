@@ -98,15 +98,15 @@ static int showingpage = 0;
  * Dialog boxes
  */
 
-void winwarn(pdfapp_t *app, char *msg)
+void winerror(pdfapp_t *app, char *msg)
 {
-	fprintf(stderr, "mupdf: %s\n", msg);
+	fprintf(stderr, "mupdf: error: %s\n", msg);
+	exit(1);
 }
 
-void winerror(pdfapp_t *app, fz_error error)
+void winwarn(pdfapp_t *app, char *msg)
 {
-	fz_catch(error, "aborting");
-	exit(1);
+	fprintf(stderr, "mupdf: warning: %s\n", msg);
 }
 
 char *winpassword(pdfapp_t *app, char *filename)
@@ -127,7 +127,7 @@ static void winopen(void)
 
 	xdpy = XOpenDisplay(NULL);
 	if (!xdpy)
-		winerror(&gapp, fz_throw("cannot open display"));
+		fz_throw(gapp.ctx, "cannot open display");
 
 	XA_TARGETS = XInternAtom(xdpy, "TARGETS", False);
 	XA_TIMESTAMP = XInternAtom(xdpy, "TIMESTAMP", False);
@@ -161,7 +161,7 @@ static void winopen(void)
 		0,
 		NULL);
 	if (xwin == None)
-		winerror(&gapp, fz_throw("cannot create window"));
+		fz_throw(gapp.ctx, "cannot create window");
 
 	XSetWindowColormap(xdpy, xwin, ximage_get_colormap());
 	XSelectInput(xdpy, xwin,
@@ -337,7 +337,7 @@ static void winblit(pdfapp_t *app)
 	{
 		int i = gapp.image->w*gapp.image->h;
 		unsigned char *color = malloc(i*4);
-		if (color != NULL)
+		if (color)
 		{
 			unsigned char *s = gapp.image->samples;
 			unsigned char *d = color;
@@ -501,7 +501,7 @@ void winreloadfile(pdfapp_t *app)
 
 	fd = open(filename, O_BINARY | O_RDONLY, 0666);
 	if (fd < 0)
-		winerror(app, fz_throw("cannot reload file '%s'", filename));
+		fz_throw(gapp.ctx, "cannot reload file '%s'", filename);
 
 	pdfapp_open(app, filename, fd, 1);
 }
@@ -581,10 +581,18 @@ int main(int argc, char **argv)
 	fd_set fds;
 	int width = -1;
 	int height = -1;
+	fz_context *ctx;
 	struct timeval tmo_at;
 	struct timeval now;
 	struct timeval tmo;
 	struct timeval *timeout;
+
+	ctx = fz_new_context(&fz_alloc_default, 256<<20);
+	if (!ctx)
+	{
+		fprintf(stderr, "cannot initialise context\n");
+		exit(1);
+	}
 
 	while ((c = fz_getopt(argc, argv, "p:r:b:A")) != -1)
 	{
@@ -593,7 +601,7 @@ int main(int argc, char **argv)
 		case 'p': password = fz_optarg; break;
 		case 'r': resolution = atoi(fz_optarg); break;
 		case 'A': accelerate = 0; break;
-		case 'b': fz_set_aa_level(atoi(fz_optarg)); break;
+		case 'b': fz_set_aa_level(ctx, atoi(fz_optarg)); break;
 		default: usage();
 		}
 	}
@@ -611,6 +619,7 @@ int main(int argc, char **argv)
 
 	winopen();
 
+	pdfapp_init(ctx, &gapp);
 	if (resolution == -1)
 		resolution = winresolution();
 	if (resolution < MINRES)
@@ -618,7 +627,6 @@ int main(int argc, char **argv)
 	if (resolution > MAXRES)
 		resolution = MAXRES;
 
-	pdfapp_init(&gapp);
 	gapp.scrw = DisplayWidth(xdpy, xscr);
 	gapp.scrh = DisplayHeight(xdpy, xscr);
 	gapp.resolution = resolution;
@@ -626,7 +634,7 @@ int main(int argc, char **argv)
 
 	fd = open(filename, O_BINARY | O_RDONLY, 0666);
 	if (fd < 0)
-		winerror(&gapp, fz_throw("cannot open file '%s'", filename));
+		fz_throw(gapp.ctx, "cannot open file '%s'", filename);
 
 	pdfapp_open(&gapp, filename, fd, 0);
 
@@ -811,6 +819,8 @@ int main(int argc, char **argv)
 	XFreeGC(xdpy, xgc);
 
 	XCloseDisplay(xdpy);
+
+	fz_free_context(ctx);
 
 	return 0;
 }

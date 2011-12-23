@@ -285,7 +285,7 @@ create_pool(void)
 		info.pool[i] = createximage(info.display,
 			info.visual.visual, &info.shminfo[i], info.visual.depth,
 			WIDTH, HEIGHT);
-		if (info.pool[i] == NULL) {
+		if (!info.pool[i]) {
 			return 0;
 		}
 	}

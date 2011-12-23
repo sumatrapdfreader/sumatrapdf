@@ -23,18 +23,13 @@ int uselist = 1;
 fz_colorspace *colorspace;
 fz_glyph_cache *glyphcache;
 char *filename;
+fz_context *ctx;
 
 struct {
 	int count, total;
 	int min, max;
 	int minpage, maxpage;
 } timing;
-
-static void die(fz_error error)
-{
-	fz_catch(error, "aborting");
-	exit(1);
-}
 
 static void usage(void)
 {
@@ -85,15 +80,15 @@ static int isrange(char *s)
 }
 
 static void
-xps_run_page(xps_context *ctx, xps_page *page, fz_device *dev, fz_matrix ctm)
+xps_run_page(xps_document *doc, xps_page *page, fz_device *dev, fz_matrix ctm)
 {
-	ctx->dev = dev;
-	xps_parse_fixed_page(ctx, ctm, page);
-	ctx->dev = NULL;
+	doc->dev = dev;
+	xps_parse_fixed_page(doc, ctm, page);
+	doc->dev = NULL;
 }
 
 #ifdef GDI_PLUS_BMP_RENDERER
-static void drawbmp(xps_context *ctx, xps_page *page, fz_display_list *list, int pagenum)
+static void drawbmp(xps_document *doc, xps_page *page, fz_display_list *list, int pagenum)
 {
 	float zoom;
 	fz_matrix ctm;
@@ -136,11 +131,11 @@ static void drawbmp(xps_context *ctx, xps_page *page, fz_display_list *list, int
 	bbox.x0 = 0; bbox.x1 = w;
 	bbox.y0 = 0; bbox.y1 = h;
 
-	dev = fz_new_gdiplus_device(hDC, bbox);
+	dev = fz_new_gdiplus_device(doc->ctx, hDC, bbox);
 	if (list)
 		fz_execute_display_list(list, dev, ctm, bbox);
 	else
-		xps_run_page(ctx, page, dev, ctm);
+		xps_run_page(doc, page, dev, ctm);
 	fz_free_device(dev);
 
 	bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
@@ -151,9 +146,9 @@ static void drawbmp(xps_context *ctx, xps_page *page, fz_display_list *list, int
 	bmi.bmiHeader.biCompression = BI_RGB;
 
 	bmpDataLen = ((w * 3 + 3) / 4) * 4 * h;
-	bmpData = fz_malloc(bmpDataLen);
+	bmpData = fz_malloc(doc->ctx, bmpDataLen);
 	if (!GetDIBits(hDC, hbmp, 0, h, bmpData, &bmi, DIB_RGB_COLORS))
-		die(fz_throw("gdierror: cannot draw page %d in PDF file '%s'", pagenum, filename));
+		fz_throw(doc->ctx, "gdierror: cannot draw page %d in PDF file '%s'", pagenum, filename);
 
 	DeleteDC(hDC);
 	ReleaseDC(NULL, hDCMain);
@@ -168,7 +163,7 @@ static void drawbmp(xps_context *ctx, xps_page *page, fz_display_list *list, int
 		sprintf(buf, output, pagenum);
 		fd = open(buf, O_BINARY|O_WRONLY|O_CREAT|O_TRUNC, 0666);
 		if (fd < 0)
-			die(fz_throw("ioerror: could not create raster file '%s'", buf));
+			fz_throw(doc->ctx, "ioerror: could not create raster file '%s'", buf);
 
 		bmpfh.bfType = MAKEWORD('B', 'M');
 		bmpfh.bfOffBits = sizeof(bmpfh) + sizeof(bmi);
@@ -196,57 +191,54 @@ static void drawbmp(xps_context *ctx, xps_page *page, fz_display_list *list, int
 			printf("%02x", digest[i]);
 	}
 
-	fz_free(bmpData);
+	fz_free(doc->ctx, bmpData);
 }
 #endif
 
-static void drawpage(xps_context *ctx, int pagenum)
+static void drawpage(xps_document *doc, int pagenum)
 {
 	xps_page *page;
 	fz_display_list *list;
 	fz_device *dev;
 	int start;
-	int code;
 
 	if (showtime)
 	{
 		start = gettime();
 	}
 
-	code = xps_load_page(&page, ctx, pagenum - 1);
-	if (code)
-		die(fz_rethrow(code, "cannot load page %d in file '%s'", pagenum, filename));
+	page = xps_load_page(doc, pagenum - 1);
 
 	list = NULL;
 
 	if (uselist)
 	{
-		list = fz_new_display_list();
-		dev = fz_new_list_device(list);
-		xps_run_page(ctx, page, dev, fz_identity);
+		list = fz_new_display_list(doc->ctx);
+		dev = fz_new_list_device(doc->ctx, list);
+		xps_run_page(doc, page, dev, fz_identity);
 		fz_free_device(dev);
 	}
 
 	if (showxml)
 	{
-		dev = fz_new_trace_device();
+		dev = fz_new_trace_device(doc->ctx);
 		printf("<page number=\"%d\">\n", pagenum);
 		if (list)
 			fz_execute_display_list(list, dev, fz_identity, fz_infinite_bbox);
 		else
-			xps_run_page(ctx, page, dev, fz_identity);
+			xps_run_page(doc, page, dev, fz_identity);
 		printf("</page>\n");
 		fz_free_device(dev);
 	}
 
 	if (showtext)
 	{
-		fz_text_span *text = fz_new_text_span();
-		dev = fz_new_text_device(text);
+		fz_text_span *text = fz_new_text_span(doc->ctx);
+		dev = fz_new_text_device(doc->ctx, text);
 		if (list)
 			fz_execute_display_list(list, dev, fz_identity, fz_infinite_bbox);
 		else
-			xps_run_page(ctx, page, dev, fz_identity);
+			xps_run_page(doc, page, dev, fz_identity);
 		fz_free_device(dev);
 		printf("[Page %d]\n", pagenum);
 		if (showtext > 1)
@@ -254,7 +246,7 @@ static void drawpage(xps_context *ctx, int pagenum)
 		else
 			fz_debug_text_span(text);
 		printf("\n");
-		fz_free_text_span(text);
+		fz_free_text_span(doc->ctx, text);
 	}
 
 	if (showmd5 || showtime)
@@ -262,7 +254,7 @@ static void drawpage(xps_context *ctx, int pagenum)
 
 #ifdef GDI_PLUS_BMP_RENDERER
 	if (output && strstr(output, ".bmp"))
-		drawbmp(ctx, page, list, pagenum);
+		drawbmp(doc, page, list, pagenum);
 	else
 #endif
 	if (output || showmd5 || showtime)
@@ -284,18 +276,18 @@ static void drawpage(xps_context *ctx, int pagenum)
 
 		/* TODO: banded rendering and multi-page ppm */
 
-		pix = fz_new_pixmap_with_rect(colorspace, bbox);
+		pix = fz_new_pixmap_with_rect(doc->ctx, colorspace, bbox);
 
 		if (savealpha)
 			fz_clear_pixmap(pix);
 		else
 			fz_clear_pixmap_with_color(pix, 255);
 
-		dev = fz_new_draw_device(glyphcache, pix);
+		dev = fz_new_draw_device(doc->ctx, glyphcache, pix);
 		if (list)
 			fz_execute_display_list(list, dev, ctm, bbox);
 		else
-			xps_run_page(ctx, page, dev, ctm);
+			xps_run_page(doc, page, dev, ctm);
 		fz_free_device(dev);
 
 		if (output)
@@ -303,11 +295,11 @@ static void drawpage(xps_context *ctx, int pagenum)
 			char buf[512];
 			sprintf(buf, output, pagenum);
 			if (strstr(output, ".pgm") || strstr(output, ".ppm") || strstr(output, ".pnm"))
-				fz_write_pnm(pix, buf);
+				fz_write_pnm(doc->ctx, pix, buf);
 			else if (strstr(output, ".pam"))
-				fz_write_pam(pix, buf, savealpha);
+				fz_write_pam(doc->ctx, pix, buf, savealpha);
 			else if (strstr(output, ".png"))
-				fz_write_png(pix, buf, savealpha);
+				fz_write_png(doc->ctx, pix, buf, savealpha);
 		}
 
 		if (showmd5)
@@ -325,11 +317,11 @@ static void drawpage(xps_context *ctx, int pagenum)
 				printf("%02x", digest[i]);
 		}
 
-		fz_drop_pixmap(pix);
+		fz_drop_pixmap(doc->ctx, pix);
 	}
 
 	if (list)
-		fz_free_display_list(list);
+		fz_free_display_list(doc->ctx, list);
 
 	if (showtime)
 	{
@@ -356,7 +348,7 @@ static void drawpage(xps_context *ctx, int pagenum)
 		printf("\n");
 }
 
-static void drawrange(xps_context *ctx, char *range)
+static void drawrange(xps_document *doc, char *range)
 {
 	int page, spage, epage;
 	char *spec, *dash;
@@ -367,7 +359,7 @@ static void drawrange(xps_context *ctx, char *range)
 		dash = strchr(spec, '-');
 
 		if (dash == spec)
-			spage = epage = xps_count_pages(ctx);
+			spage = epage = xps_count_pages(doc);
 		else
 			spage = epage = atoi(spec);
 
@@ -376,26 +368,26 @@ static void drawrange(xps_context *ctx, char *range)
 			if (strlen(dash) > 1)
 				epage = atoi(dash + 1);
 			else
-				epage = xps_count_pages(ctx);
+				epage = xps_count_pages(doc);
 		}
 
-		spage = CLAMP(spage, 1, xps_count_pages(ctx));
-		epage = CLAMP(epage, 1, xps_count_pages(ctx));
+		spage = CLAMP(spage, 1, xps_count_pages(doc));
+		epage = CLAMP(epage, 1, xps_count_pages(doc));
 
 		if (spage < epage)
 			for (page = spage; page <= epage; page++)
-				drawpage(ctx, page);
+				drawpage(doc, page);
 		else
 			for (page = spage; page >= epage; page--)
-				drawpage(ctx, page);
+				drawpage(doc, page);
 
 		spec = fz_strsep(&range, ",");
 	}
 }
 
-static void drawoutline(xps_context *ctx)
+static void drawoutline(xps_document *doc)
 {
-	fz_outline *outline = xps_load_outline(ctx);
+	fz_outline *outline = xps_load_outline(doc);
 	if (showoutline > 1)
 		fz_debug_outline_xml(outline, 0);
 	else
@@ -407,8 +399,7 @@ int main(int argc, char **argv)
 {
 	int grayscale = 0;
 	int accelerate = 1;
-	xps_context *ctx;
-	int code;
+	xps_document *doc;
 	int c;
 
 	while ((c = fz_getopt(argc, argv, "o:p:r:Aadglmtx5")) != -1)
@@ -442,7 +433,14 @@ int main(int argc, char **argv)
 	if (accelerate)
 		fz_accelerate();
 
-	glyphcache = fz_new_glyph_cache();
+	ctx = fz_new_context(&fz_alloc_default, 256<<20);
+	if (!ctx)
+	{
+		fprintf(stderr, "cannot initialise context\n");
+		exit(1);
+	}
+
+	glyphcache = fz_new_glyph_cache(ctx);
 
 	colorspace = fz_device_rgb;
 	if (grayscale)
@@ -466,28 +464,26 @@ int main(int argc, char **argv)
 	{
 		filename = argv[fz_optind++];
 
-		code = xps_open_file(&ctx, filename);
-		if (code)
-			die(fz_rethrow(code, "cannot open document: %s", filename));
+		doc = xps_open_file(ctx, filename);
 
 		if (showxml)
 			printf("<document name=\"%s\">\n", filename);
 
 		if (showoutline)
-			drawoutline(ctx);
+			drawoutline(doc);
 
 		if (showtext || showxml || showtime || showmd5 || output)
 		{
 			if (fz_optind == argc || !isrange(argv[fz_optind]))
-				drawrange(ctx, "1-");
+				drawrange(doc, "1-");
 			if (fz_optind < argc && isrange(argv[fz_optind]))
-				drawrange(ctx, argv[fz_optind++]);
+				drawrange(doc, argv[fz_optind++]);
 		}
 
 		if (showxml)
 			printf("</document>\n");
 
-		xps_free_context(ctx);
+		xps_free_context(doc);
 	}
 
 	if (showtime)
@@ -498,7 +494,8 @@ int main(int argc, char **argv)
 		printf("slowest page %d: %dms\n", timing.maxpage, timing.max);
 	}
 
-	fz_free_glyph_cache(glyphcache);
+	fz_free_glyph_cache(ctx, glyphcache);
+	fz_free_context(ctx);
 
 	return 0;
 }

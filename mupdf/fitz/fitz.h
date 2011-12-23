@@ -1,12 +1,6 @@
 #ifndef _FITZ_H_
 #define _FITZ_H_
 
-#ifdef _DEBUG
-#define _CRTDBG_MAP_ALLOC
-#include <stdlib.h>
-#include <crtdbg.h>
-#endif
-
 /*
  * Include the standard libc headers.
  */
@@ -23,6 +17,15 @@
 #include <limits.h>	/* INT_MAX & co */
 #include <float.h> /* FLT_EPSILON */
 #include <fcntl.h> /* O_RDONLY & co */
+
+#include <setjmp.h>
+
+/* SumatraPDF: memento isn't distributed under GPLv3 */
+#ifndef MEMENTO
+#define Memento_label(ptr, label) (ptr)
+#else
+#include "memento.h"
+#endif
 
 #define nelem(x) (sizeof(x)/sizeof((x)[0]))
 
@@ -71,35 +74,15 @@ int gettimeofday(struct timeval *tv, struct timezone *tz);
  */
 
 #if __STDC_VERSION__ == 199901L /* C99 */
-
-#define fz_throw(...) fz_throw_imp(__FILE__, __LINE__, __func__, __VA_ARGS__)
-#define fz_rethrow(cause, ...) fz_rethrow_imp(__FILE__, __LINE__, __func__, cause, __VA_ARGS__)
-#define fz_catch(cause, ...) fz_catch_imp(__FILE__, __LINE__, __func__, cause, __VA_ARGS__)
-
 #elif _MSC_VER >= 1500 /* MSVC 9 or newer */
-
 #define inline __inline
 #define restrict __restrict
-#define fz_throw(...) fz_throw_imp(__FILE__, __LINE__, __FUNCTION__, __VA_ARGS__)
-#define fz_rethrow(cause, ...) fz_rethrow_imp(__FILE__, __LINE__, __FUNCTION__, cause, __VA_ARGS__)
-#define fz_catch(cause, ...) fz_catch_imp(__FILE__, __LINE__, __FUNCTION__, cause, __VA_ARGS__)
-
 #elif __GNUC__ >= 3 /* GCC 3 or newer */
-
 #define inline __inline
 #define restrict __restrict
-#define fz_throw(fmt...) fz_throw_imp(__FILE__, __LINE__, __FUNCTION__, fmt)
-#define fz_rethrow(cause, fmt...) fz_rethrow_imp(__FILE__, __LINE__, __FUNCTION__, cause, fmt)
-#define fz_catch(cause, fmt...) fz_catch_imp(__FILE__, __LINE__, __FUNCTION__, cause, fmt)
-
 #else /* Unknown or ancient */
-
 #define inline
 #define restrict
-#define fz_throw fz_throw_impx
-#define fz_rethrow fz_rethrow_impx
-#define fz_catch fz_catch_impx
-
 #endif
 
 /*
@@ -115,42 +98,108 @@ int gettimeofday(struct timeval *tv, struct timezone *tz);
 #endif
 #endif
 
-/*
- * Error handling
- */
+/* Contexts */
 
-typedef int fz_error;
+typedef struct fz_alloc_context_s fz_alloc_context;
+typedef struct fz_error_context_s fz_error_context;
+typedef struct fz_warn_context_s fz_warn_context;
+typedef struct fz_font_context_s fz_font_context;
+typedef struct fz_aa_context_s fz_aa_context;
+typedef struct fz_store_s fz_store;
+typedef struct fz_context_s fz_context;
 
-#define fz_okay ((fz_error)0)
+struct fz_alloc_context_s
+{
+	void *user;
+	void *(*malloc)(void *, unsigned int);
+	void *(*realloc)(void *, void *, unsigned int);
+	void (*free)(void *, void *);
+};
 
-void fz_warn(char *fmt, ...) __printflike(1, 2);
-void fz_flush_warnings(void);
+/* Default allocator */
+extern fz_alloc_context fz_alloc_default;
 
-fz_error fz_throw_imp(const char *file, int line, const char *func, char *fmt, ...) __printflike(4, 5);
-fz_error fz_rethrow_imp(const char *file, int line, const char *func, fz_error cause, char *fmt, ...) __printflike(5, 6);
-void fz_catch_imp(const char *file, int line, const char *func, fz_error cause, char *fmt, ...) __printflike(5, 6);
+struct fz_error_context_s
+{
+	int top;
+	struct {
+		jmp_buf buffer;
+	} stack[256];
+	char message[256];
+};
 
-fz_error fz_throw_impx(char *fmt, ...) __printflike(1, 2);
-fz_error fz_rethrow_impx(fz_error cause, char *fmt, ...) __printflike(2, 3);
-void fz_catch_impx(fz_error cause, char *fmt, ...) __printflike(2, 3);
+void fz_var_imp(void *);
+#define fz_var(var) fz_var_imp((void *)&(var))
 
-/* extract the last error stack trace */
-int fz_get_error_count(void);
-char *fz_get_error_line(int n);
+#define fz_try(ctx) \
+	if (fz_push_try(ctx->error), \
+		!setjmp(ctx->error->stack[ctx->error->top].buffer)) \
+	{ do {
+
+#define fz_catch(ctx) \
+		} while(0); \
+		ctx->error->top--; \
+	} \
+	else
+
+void fz_push_try(fz_error_context *ex);
+/* SumatraPDF: add filename and line number to errors and warnings */
+#define fz_throw(CTX, MSG, ...) fz_throw_imp(CTX, __FILE__, __LINE__, MSG, __VA_ARGS__)
+void fz_throw_imp(fz_context *ctx, char *file, int line, char *fmt, ...) __printflike(4, 5);
+void fz_rethrow(fz_context *);
+
+struct fz_warn_context_s
+{
+	char message[256];
+	int count;
+};
+
+/* SumatraPDF: add filename and line number to errors and warnings */
+#define fz_warn(CTX, MSG, ...) fz_warn_imp(CTX, __FILE__, __LINE__,MSG,  __VA_ARGS__)
+void fz_warn_imp(fz_context *ctx, char *file, int line, char *fmt, ...) __printflike(4, 5);
+void fz_flush_warnings(fz_context *ctx);
+
+struct fz_context_s
+{
+	fz_alloc_context *alloc;
+	fz_error_context *error;
+	fz_warn_context *warn;
+	fz_font_context *font;
+	fz_aa_context *aa;
+	fz_store *store;
+};
+
+fz_context *fz_new_context(fz_alloc_context *alloc, unsigned int max_store);
+fz_context *fz_clone_context(fz_context *ctx);
+void fz_free_context(fz_context *ctx);
+
+void fz_new_aa_context(fz_context *ctx);
+void fz_free_aa_context(fz_context *ctx);
 
 /*
  * Basic runtime and utility functions
  */
 
 /* memory allocation */
-void *fz_malloc(int size);
-void *fz_calloc(int count, int size);
-/* SumatraPDF: allow to failibly allocate memory */
-void *fz_calloc_no_abort(int count, int size);
 
-void *fz_realloc(void *p, int count, int size);
-void fz_free(void *p);
-char *fz_strdup(char *s);
+/* The following throw exceptions on failure to allocate */
+void *fz_malloc(fz_context *ctx, unsigned int size);
+void *fz_malloc_array(fz_context *ctx, unsigned int count, unsigned int size);
+void *fz_calloc(fz_context *ctx, unsigned int count, unsigned int size);
+void *fz_resize_array(fz_context *ctx, void *p, unsigned int count, unsigned int size);
+char *fz_strdup(fz_context *ctx, char *s);
+
+void fz_free(fz_context *ctx, void *p);
+
+/* The following returns NULL on failure to allocate */
+void *fz_malloc_no_throw(fz_context *ctx, unsigned int size);
+void *fz_malloc_array_no_throw(fz_context *ctx, unsigned int count, unsigned int size);
+void *fz_calloc_no_throw(fz_context *ctx, unsigned int count, unsigned int size);
+void *fz_resize_array_no_throw(fz_context *ctx, void *p, unsigned int count, unsigned int size);
+char *fz_strdup_no_throw(fz_context *ctx, char *s);
+
+#define fz_malloc_struct(CTX, STRUCT) \
+	Memento_label(fz_malloc(CTX,sizeof(STRUCT)), #STRUCT)
 
 /* runtime (hah!) test for endian-ness */
 int fz_is_big_endian(void);
@@ -179,7 +228,7 @@ extern char *fz_optarg;
 
 typedef struct fz_hash_table_s fz_hash_table;
 
-fz_hash_table *fz_new_hash_table(int initialsize, int keylen);
+fz_hash_table *fz_new_hash_table(fz_context *ctx, int initialsize, int keylen);
 void fz_debug_hash(fz_hash_table *table);
 void fz_empty_hash(fz_hash_table *table);
 void fz_free_hash(fz_hash_table *table);
@@ -366,20 +415,20 @@ void aes_crypt_cbc( fz_aes *ctx, int mode, int length,
 
 typedef struct fz_obj_s fz_obj;
 
-extern fz_obj* (*fz_resolve_indirect)(fz_obj*);
+extern fz_obj *(*fz_resolve_indirect)(fz_obj *obj);
 
-fz_obj *fz_new_null(void);
-fz_obj *fz_new_bool(int b);
-fz_obj *fz_new_int(int i);
-fz_obj *fz_new_real(float f);
-fz_obj *fz_new_name(char *str);
-fz_obj *fz_new_string(char *str, int len);
-fz_obj *fz_new_indirect(int num, int gen, void *xref);
+fz_obj *fz_new_null(fz_context *ctx);
+fz_obj *fz_new_bool(fz_context *ctx, int b);
+fz_obj *fz_new_int(fz_context *ctx, int i);
+fz_obj *fz_new_real(fz_context *ctx, float f);
+fz_obj *fz_new_name(fz_context *ctx, char *str);
+fz_obj *fz_new_string(fz_context *ctx, char *str, int len);
+fz_obj *fz_new_indirect(fz_context *ctx, int num, int gen, void *xref);
 
-fz_obj *fz_new_array(int initialcap);
-fz_obj *fz_new_dict(int initialcap);
-fz_obj *fz_copy_array(fz_obj *array);
-fz_obj *fz_copy_dict(fz_obj *dict);
+fz_obj *fz_new_array(fz_context *ctx, int initialcap);
+fz_obj *fz_new_dict(fz_context *ctx, int initialcap);
+fz_obj *fz_copy_array(fz_context *ctx, fz_obj *array);
+fz_obj *fz_copy_dict(fz_context *ctx, fz_obj *dict);
 
 fz_obj *fz_keep_obj(fz_obj *obj);
 void fz_drop_obj(fz_obj *obj);
@@ -397,7 +446,7 @@ int fz_is_indirect(fz_obj *obj);
 
 int fz_objcmp(fz_obj *a, fz_obj *b);
 
-/* safe, silent failure, no error reporting */
+/* safe, silent failure, no error reporting on type mismatches */
 int fz_to_bool(fz_obj *obj);
 int fz_to_int(fz_obj *obj);
 float fz_to_real(fz_obj *obj);
@@ -446,12 +495,49 @@ struct fz_buffer_s
 	int cap, len;
 };
 
-fz_buffer *fz_new_buffer(int size);
+fz_buffer *fz_new_buffer(fz_context *ctx, int size);
 fz_buffer *fz_keep_buffer(fz_buffer *buf);
-void fz_drop_buffer(fz_buffer *buf);
+void fz_drop_buffer(fz_context *ctx, fz_buffer *buf);
 
-void fz_resize_buffer(fz_buffer *buf, int size);
-void fz_grow_buffer(fz_buffer *buf);
+void fz_resize_buffer(fz_context *ctx, fz_buffer *buf, int size);
+void fz_grow_buffer(fz_context *ctx, fz_buffer *buf);
+
+/*
+ * Resource store
+ */
+
+typedef struct fz_storable_s fz_storable;
+
+typedef struct fz_item_s fz_item;
+
+typedef void (fz_store_free_fn)(fz_context *, fz_storable *);
+
+struct fz_storable_s {
+	int refs;
+	fz_store_free_fn *free;
+};
+
+#define FZ_INIT_STORABLE(S_,RC,FREE) \
+	do { fz_storable *S = &(S_)->storable; S->refs = (RC); \
+	S->free = (FREE); \
+	} while (0)
+
+enum {
+	FZ_STORE_UNLIMITED = 0
+};
+
+void fz_new_store_context(fz_context *ctx, unsigned int max);
+void fz_free_store_context(fz_context *ctx);
+void fz_debug_store(fz_context *ctx);
+
+void *fz_keep_storable(fz_storable *);
+void fz_drop_storable(fz_context *, fz_storable *);
+
+void fz_store_item(fz_context *ctx, fz_obj *key, void *val, unsigned int itemsize);
+void *fz_find_item(fz_context *ctx, fz_store_free_fn *freefn, fz_obj *key);
+void fz_remove_item(fz_context *ctx, fz_store_free_fn *freefn, fz_obj *key);
+void fz_empty_store(fz_context *ctx);
+int fz_store_scavenge(fz_context *ctx, unsigned int size, int *phase);
 
 /*
  * Buffered reader.
@@ -462,6 +548,7 @@ typedef struct fz_stream_s fz_stream;
 
 struct fz_stream_s
 {
+	fz_context *ctx;
 	int refs;
 	int error;
 	int eof;
@@ -471,19 +558,19 @@ struct fz_stream_s
 	unsigned char *bp, *rp, *wp, *ep;
 	void *state;
 	int (*read)(fz_stream *stm, unsigned char *buf, int len);
-	void (*close)(fz_stream *stm);
+	void (*close)(fz_context *ctx, void *state);
 	void (*seek)(fz_stream *stm, int offset, int whence);
 	unsigned char buf[4096];
 };
 
-fz_stream *fz_open_fd(int file);
-fz_stream *fz_open_file(const char *filename);
-fz_stream *fz_open_file_w(const wchar_t *filename); /* only on win32 */
-fz_stream *fz_open_buffer(fz_buffer *buf);
-fz_stream *fz_open_memory(unsigned char *data, int len);
+fz_stream *fz_open_fd(fz_context *ctx, int file);
+fz_stream *fz_open_file(fz_context *ctx, const char *filename);
+fz_stream *fz_open_file_w(fz_context *ctx, const wchar_t *filename); /* only on win32 */
+fz_stream *fz_open_buffer(fz_context *ctx, fz_buffer *buf);
+fz_stream *fz_open_memory(fz_context *ctx, unsigned char *data, int len);
 void fz_close(fz_stream *stm);
 
-fz_stream *fz_new_stream(void*, int(*)(fz_stream*, unsigned char*, int), void(*)(fz_stream *));
+fz_stream *fz_new_stream(fz_context *ctx, void*, int(*)(fz_stream*, unsigned char*, int), void(*)(fz_context *, void *));
 fz_stream *fz_keep_stream(fz_stream *stm);
 void fz_fill_buffer(fz_stream *stm);
 
@@ -492,9 +579,9 @@ void fz_seek(fz_stream *stm, int offset, int whence);
 
 int fz_read(fz_stream *stm, unsigned char *buf, int len);
 void fz_read_line(fz_stream *stm, char *buf, int max);
-fz_error fz_read_all(fz_buffer **bufp, fz_stream *stm, int initial);
+fz_buffer *fz_read_all(fz_stream *stm, int initial);
 /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692260 */
-fz_error fz_read_all2(fz_buffer **bufp, fz_stream *stm, int initial, int fail_on_error);
+fz_buffer *fz_read_all2(fz_stream *stm, int initial, int fail_on_error);
 
 static inline int fz_read_byte(fz_stream *stm)
 {
@@ -613,7 +700,7 @@ typedef struct fz_colorspace_s fz_colorspace;
 
 struct fz_pixmap_s
 {
-	int refs;
+	fz_storable storable;
 	int x, y, w, h, n;
 	fz_pixmap *mask; /* explicit soft/image mask */
 	int interpolate;
@@ -624,33 +711,32 @@ struct fz_pixmap_s
 	int has_alpha; /* SumatraPDF: allow optimizing non-alpha pixmaps */
 };
 
-/* will return NULL if soft limit is exceeded */
-fz_pixmap *fz_new_pixmap_with_limit(fz_colorspace *colorspace, int w, int h);
-
-fz_pixmap *fz_new_pixmap_with_data(fz_colorspace *colorspace, int w, int h, unsigned char *samples);
-fz_pixmap *fz_new_pixmap_with_rect(fz_colorspace *, fz_bbox bbox);
-fz_pixmap *fz_new_pixmap_with_rect_and_data(fz_colorspace *, fz_bbox bbox, unsigned char *samples);
-fz_pixmap *fz_new_pixmap(fz_colorspace *, int w, int h);
+fz_pixmap *fz_new_pixmap_with_data(fz_context *ctx, fz_colorspace *colorspace, int w, int h, unsigned char *samples);
+fz_pixmap *fz_new_pixmap_with_rect(fz_context *ctx, fz_colorspace *, fz_bbox bbox);
+fz_pixmap *fz_new_pixmap_with_rect_and_data(fz_context *ctx, fz_colorspace *, fz_bbox bbox, unsigned char *samples);
+fz_pixmap *fz_new_pixmap(fz_context *ctx, fz_colorspace *, int w, int h);
 fz_pixmap *fz_keep_pixmap(fz_pixmap *pix);
-void fz_drop_pixmap(fz_pixmap *pix);
+void fz_drop_pixmap(fz_context *ctx, fz_pixmap *pix);
+void fz_free_pixmap_imp(fz_context *ctx, fz_storable *pix);
 void fz_clear_pixmap(fz_pixmap *pix);
 void fz_clear_pixmap_with_color(fz_pixmap *pix, int value);
 void fz_clear_pixmap_rect_with_color(fz_pixmap *pix, int value, fz_bbox r);
 void fz_copy_pixmap_rect(fz_pixmap *dest, fz_pixmap *src, fz_bbox r);
 void fz_premultiply_pixmap(fz_pixmap *pix);
 void fz_unmultiply_pixmap(fz_pixmap *pix);
-fz_pixmap *fz_alpha_from_gray(fz_pixmap *gray, int luminosity);
+fz_pixmap *fz_alpha_from_gray(fz_context *ctx, fz_pixmap *gray, int luminosity);
 fz_bbox fz_bound_pixmap(fz_pixmap *pix);
 void fz_invert_pixmap(fz_pixmap *pix);
 void fz_gamma_pixmap(fz_pixmap *pix, float gamma);
+unsigned int fz_pixmap_size(fz_pixmap *pix);
 
-fz_pixmap *fz_scale_pixmap(fz_pixmap *src, float x, float y, float w, float h);
+fz_pixmap *fz_scale_pixmap(fz_context *ctx, fz_pixmap *src, float x, float y, float w, float h);
 
-fz_error fz_write_pnm(fz_pixmap *pixmap, char *filename);
-fz_error fz_write_pam(fz_pixmap *pixmap, char *filename, int savealpha);
-fz_error fz_write_png(fz_pixmap *pixmap, char *filename, int savealpha);
+void fz_write_pnm(fz_context *ctx, fz_pixmap *pixmap, char *filename);
+void fz_write_pam(fz_context *ctx, fz_pixmap *pixmap, char *filename, int savealpha);
+void fz_write_png(fz_context *ctx, fz_pixmap *pixmap, char *filename, int savealpha);
 
-fz_error fz_load_jpx_image(fz_pixmap **imgp, unsigned char *data, int size, fz_colorspace *dcs);
+fz_pixmap *fz_load_jpx_image(fz_context *ctx, unsigned char *data, int size, fz_colorspace *dcs);
 
 /*
  * Bitmaps have 1 component per bit. Only used for creating halftoned versions
@@ -667,12 +753,12 @@ struct fz_bitmap_s
 	unsigned char *samples;
 };
 
-fz_bitmap *fz_new_bitmap(int w, int h, int n);
+fz_bitmap *fz_new_bitmap(fz_context *ctx, int w, int h, int n);
 fz_bitmap *fz_keep_bitmap(fz_bitmap *bit);
 void fz_clear_bitmap(fz_bitmap *bit);
-void fz_drop_bitmap(fz_bitmap *bit);
+void fz_drop_bitmap(fz_context *ctx, fz_bitmap *bit);
 
-fz_error fz_write_pbm(fz_bitmap *bitmap, char *filename);
+void fz_write_pbm(fz_context *ctx, fz_bitmap *bitmap, char *filename);
 
 /*
  * A halftone is a set of threshold tiles, one per component. Each threshold
@@ -688,12 +774,12 @@ struct fz_halftone_s
 	fz_pixmap *comp[1];
 };
 
-fz_halftone *fz_new_halftone(int num_comps);
-fz_halftone *fz_get_default_halftone(int num_comps);
+fz_halftone *fz_new_halftone(fz_context *ctx, int num_comps);
+fz_halftone *fz_get_default_halftone(fz_context *ctx, int num_comps);
 fz_halftone *fz_keep_halftone(fz_halftone *half);
-void fz_drop_halftone(fz_halftone *half);
+void fz_drop_halftone(fz_context *ctx, fz_halftone *half);
 
-fz_bitmap *fz_halftone_pixmap(fz_pixmap *pix, fz_halftone *ht);
+fz_bitmap *fz_halftone_pixmap(fz_context *ctx, fz_pixmap *pix, fz_halftone *ht);
 
 /*
  * Colorspace resources.
@@ -706,21 +792,23 @@ extern fz_colorspace *fz_device_cmyk;
 
 struct fz_colorspace_s
 {
-	int refs;
+	fz_storable storable;
+	unsigned int size;
 	char name[16];
 	int n;
-	void (*to_rgb)(fz_colorspace *, float *src, float *rgb);
-	void (*from_rgb)(fz_colorspace *, float *rgb, float *dst);
-	void (*free_data)(fz_colorspace *);
+	void (*to_rgb)(fz_context *ctx, fz_colorspace *, float *src, float *rgb);
+	void (*from_rgb)(fz_context *ctx, fz_colorspace *, float *rgb, float *dst);
+	void (*free_data)(fz_context *Ctx, fz_colorspace *);
 	void *data;
 };
 
-fz_colorspace *fz_new_colorspace(char *name, int n);
+fz_colorspace *fz_new_colorspace(fz_context *ctx, char *name, int n);
 fz_colorspace *fz_keep_colorspace(fz_colorspace *colorspace);
-void fz_drop_colorspace(fz_colorspace *colorspace);
+void fz_drop_colorspace(fz_context *ctx, fz_colorspace *colorspace);
+void fz_free_colorspace_imp(fz_context *ctx, fz_storable *colorspace);
 
-void fz_convert_color(fz_colorspace *srcs, float *srcv, fz_colorspace *dsts, float *dstv);
-void fz_convert_pixmap(fz_pixmap *src, fz_pixmap *dst);
+void fz_convert_color(fz_context *ctx, fz_colorspace *srcs, float *srcv, fz_colorspace *dsts, float *dstv);
+void fz_convert_pixmap(fz_context *ctx, fz_pixmap *src, fz_pixmap *dst);
 
 fz_colorspace *fz_find_device_colorspace(char *name);
 
@@ -756,7 +844,7 @@ struct fz_font_s
 	fz_buffer **t3procs; /* has 256 entries if used */
 	float *t3widths; /* has 256 entries if used */
 	void *t3xref; /* a pdf_xref for the callback */
-	fz_error (*t3run)(void *xref, fz_obj *resources, fz_buffer *contents,
+	void (*t3run)(void *xref, fz_obj *resources, fz_buffer *contents,
 		struct fz_device_s *dev, fz_matrix ctm);
 
 	fz_rect bbox;
@@ -766,13 +854,16 @@ struct fz_font_s
 	int *width_table;
 };
 
-fz_font *fz_new_type3_font(char *name, fz_matrix matrix);
+void fz_new_font_context(fz_context *ctx);
+void fz_free_font_context(fz_context *ctx);
 
-fz_error fz_new_font_from_memory(fz_font **fontp, unsigned char *data, int len, int index);
-fz_error fz_new_font_from_file(fz_font **fontp, char *path, int index);
+fz_font *fz_new_type3_font(fz_context *ctx, char *name, fz_matrix matrix);
+
+fz_font *fz_new_font_from_memory(fz_context *ctx, unsigned char *data, int len, int index);
+fz_font *fz_new_font_from_file(fz_context *ctx, char *path, int index);
 
 fz_font *fz_keep_font(fz_font *font);
-void fz_drop_font(fz_font *font);
+void fz_drop_font(fz_context *ctx, fz_font *font);
 
 void fz_debug_font(fz_font *font);
 void fz_set_font_bbox(fz_font *font, float xmin, float ymin, float xmax, float ymax);
@@ -822,18 +913,18 @@ struct fz_stroke_state_s
 	float dash_list[32];
 };
 
-fz_path *fz_new_path(void);
-void fz_moveto(fz_path*, float x, float y);
-void fz_lineto(fz_path*, float x, float y);
-void fz_curveto(fz_path*, float, float, float, float, float, float);
-void fz_curvetov(fz_path*, float, float, float, float);
-void fz_curvetoy(fz_path*, float, float, float, float);
-void fz_closepath(fz_path*);
-void fz_free_path(fz_path *path);
+fz_path *fz_new_path(fz_context *ctx);
+void fz_moveto(fz_context*, fz_path*, float x, float y);
+void fz_lineto(fz_context*, fz_path*, float x, float y);
+void fz_curveto(fz_context*,fz_path*, float, float, float, float, float, float);
+void fz_curvetov(fz_context*,fz_path*, float, float, float, float);
+void fz_curvetoy(fz_context*,fz_path*, float, float, float, float);
+void fz_closepath(fz_context*,fz_path*);
+void fz_free_path(fz_context *ctx, fz_path *path);
 
 void fz_transform_path(fz_path *path, fz_matrix transform);
 
-fz_path *fz_clone_path(fz_path *old);
+fz_path *fz_clone_path(fz_context *ctx, fz_path *old);
 
 fz_rect fz_bound_path(fz_path *path, fz_stroke_state *stroke, fz_matrix ctm);
 void fz_debug_path(fz_path *, int indent);
@@ -869,12 +960,12 @@ struct fz_text_s
 	fz_text_item *items;
 };
 
-fz_text *fz_new_text(fz_font *face, fz_matrix trm, int wmode);
-void fz_add_text(fz_text *text, int gid, int ucs, float x, float y);
-void fz_free_text(fz_text *text);
+fz_text *fz_new_text(fz_context *ctx, fz_font *face, fz_matrix trm, int wmode);
+void fz_add_text(fz_context *ctx, fz_text *text, int gid, int ucs, float x, float y);
+void fz_free_text(fz_context *ctx, fz_text *text);
 void fz_debug_text(fz_text*, int indent);
 fz_rect fz_bound_text(fz_text *text, fz_matrix ctm);
-fz_text *fz_clone_text(fz_text *old);
+fz_text *fz_clone_text(fz_context *ctx, fz_text *old);
 
 /*
  * The shading code uses gouraud shaded triangle meshes.
@@ -891,7 +982,7 @@ typedef struct fz_shade_s fz_shade;
 
 struct fz_shade_s
 {
-	int refs;
+	fz_storable storable;
 
 	fz_rect bbox;		/* can be fz_infinite_rect */
 	fz_colorspace *colorspace;
@@ -912,11 +1003,12 @@ struct fz_shade_s
 };
 
 fz_shade *fz_keep_shade(fz_shade *shade);
-void fz_drop_shade(fz_shade *shade);
+void fz_drop_shade(fz_context *ctx, fz_shade *shade);
+void fz_free_shade_imp(fz_context *ctx, fz_storable *shade);
 void fz_debug_shade(fz_shade *shade);
 
 fz_rect fz_bound_shade(fz_shade *shade, fz_matrix ctm);
-void fz_paint_shade(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox);
+void fz_paint_shade(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox);
 
 /*
  * Glyph cache
@@ -924,24 +1016,24 @@ void fz_paint_shade(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbo
 
 typedef struct fz_glyph_cache_s fz_glyph_cache;
 
-fz_glyph_cache *fz_new_glyph_cache(void);
-fz_pixmap *fz_render_ft_glyph(fz_font *font, int cid, fz_matrix trm);
-fz_pixmap *fz_render_t3_glyph(fz_font *font, int cid, fz_matrix trm, fz_colorspace *model);
-fz_pixmap *fz_render_ft_stroked_glyph(fz_font *font, int gid, fz_matrix trm, fz_matrix ctm, fz_stroke_state *state);
-fz_pixmap *fz_render_glyph(fz_glyph_cache*, fz_font*, int, fz_matrix, fz_colorspace *model);
-fz_pixmap *fz_render_stroked_glyph(fz_glyph_cache*, fz_font*, int, fz_matrix, fz_matrix, fz_stroke_state *stroke);
-void fz_free_glyph_cache(fz_glyph_cache *);
+fz_glyph_cache *fz_new_glyph_cache(fz_context *ctx);
+fz_pixmap *fz_render_ft_glyph(fz_context *ctx, fz_font *font, int cid, fz_matrix trm);
+fz_pixmap *fz_render_t3_glyph(fz_context *ctx, fz_font *font, int cid, fz_matrix trm, fz_colorspace *model);
+fz_pixmap *fz_render_ft_stroked_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm, fz_matrix ctm, fz_stroke_state *state);
+fz_pixmap *fz_render_glyph(fz_context *ctx, fz_glyph_cache*, fz_font*, int, fz_matrix, fz_colorspace *model);
+fz_pixmap *fz_render_stroked_glyph(fz_context *ctx, fz_glyph_cache*, fz_font*, int, fz_matrix, fz_matrix, fz_stroke_state *stroke);
+void fz_free_glyph_cache(fz_context *ctx, fz_glyph_cache *);
 
 /*
  * Scan converter
  */
 
-int fz_get_aa_level(void);
-void fz_set_aa_level(int bits);
+int fz_get_aa_level(fz_context *ctx);
+void fz_set_aa_level(fz_context *ctx, int bits);
 
 typedef struct fz_gel_s fz_gel;
 
-fz_gel *fz_new_gel(void);
+fz_gel *fz_new_gel(fz_context *ctx);
 void fz_insert_gel(fz_gel *gel, float x0, float y0, float x1, float y1);
 void fz_reset_gel(fz_gel *gel, fz_bbox clip);
 void fz_sort_gel(fz_gel *gel);
@@ -978,33 +1070,34 @@ struct fz_device_s
 	int flags;
 
 	void *user;
-	void (*free_user)(void *);
+	void (*free_user)(fz_device *);
+	fz_context *ctx;
 
-	void (*fill_path)(void *, fz_path *, int even_odd, fz_matrix, fz_colorspace *, float *color, float alpha);
-	void (*stroke_path)(void *, fz_path *, fz_stroke_state *, fz_matrix, fz_colorspace *, float *color, float alpha);
-	void (*clip_path)(void *, fz_path *, fz_rect *rect, int even_odd, fz_matrix);
-	void (*clip_stroke_path)(void *, fz_path *, fz_rect *rect, fz_stroke_state *, fz_matrix);
+	void (*fill_path)(fz_device *, fz_path *, int even_odd, fz_matrix, fz_colorspace *, float *color, float alpha);
+	void (*stroke_path)(fz_device *, fz_path *, fz_stroke_state *, fz_matrix, fz_colorspace *, float *color, float alpha);
+	void (*clip_path)(fz_device *, fz_path *, fz_rect *rect, int even_odd, fz_matrix);
+	void (*clip_stroke_path)(fz_device *, fz_path *, fz_rect *rect, fz_stroke_state *, fz_matrix);
 
-	void (*fill_text)(void *, fz_text *, fz_matrix, fz_colorspace *, float *color, float alpha);
-	void (*stroke_text)(void *, fz_text *, fz_stroke_state *, fz_matrix, fz_colorspace *, float *color, float alpha);
-	void (*clip_text)(void *, fz_text *, fz_matrix, int accumulate);
-	void (*clip_stroke_text)(void *, fz_text *, fz_stroke_state *, fz_matrix);
-	void (*ignore_text)(void *, fz_text *, fz_matrix);
+	void (*fill_text)(fz_device *, fz_text *, fz_matrix, fz_colorspace *, float *color, float alpha);
+	void (*stroke_text)(fz_device *, fz_text *, fz_stroke_state *, fz_matrix, fz_colorspace *, float *color, float alpha);
+	void (*clip_text)(fz_device *, fz_text *, fz_matrix, int accumulate);
+	void (*clip_stroke_text)(fz_device *, fz_text *, fz_stroke_state *, fz_matrix);
+	void (*ignore_text)(fz_device *, fz_text *, fz_matrix);
 
-	void (*fill_shade)(void *, fz_shade *shd, fz_matrix ctm, float alpha);
-	void (*fill_image)(void *, fz_pixmap *img, fz_matrix ctm, float alpha);
-	void (*fill_image_mask)(void *, fz_pixmap *img, fz_matrix ctm, fz_colorspace *, float *color, float alpha);
-	void (*clip_image_mask)(void *, fz_pixmap *img, fz_rect *rect, fz_matrix ctm);
+	void (*fill_shade)(fz_device *, fz_shade *shd, fz_matrix ctm, float alpha);
+	void (*fill_image)(fz_device *, fz_pixmap *img, fz_matrix ctm, float alpha);
+	void (*fill_image_mask)(fz_device *, fz_pixmap *img, fz_matrix ctm, fz_colorspace *, float *color, float alpha);
+	void (*clip_image_mask)(fz_device *, fz_pixmap *img, fz_rect *rect, fz_matrix ctm);
 
-	void (*pop_clip)(void *);
+	void (*pop_clip)(fz_device *);
 
-	void (*begin_mask)(void *, fz_rect, int luminosity, fz_colorspace *, float *bc);
-	void (*end_mask)(void *);
-	void (*begin_group)(void *, fz_rect, int isolated, int knockout, int blendmode, float alpha);
-	void (*end_group)(void *);
+	void (*begin_mask)(fz_device *, fz_rect, int luminosity, fz_colorspace *, float *bc);
+	void (*end_mask)(fz_device *);
+	void (*begin_group)(fz_device *, fz_rect, int isolated, int knockout, int blendmode, float alpha);
+	void (*end_group)(fz_device *);
 
-	void (*begin_tile)(void *, fz_rect area, fz_rect view, float xstep, float ystep, fz_matrix ctm);
-	void (*end_tile)(void *);
+	void (*begin_tile)(fz_device *, fz_rect area, fz_rect view, float xstep, float ystep, fz_matrix ctm);
+	void (*end_tile)(fz_device *);
 };
 
 void fz_fill_path(fz_device *dev, fz_path *path, int even_odd, fz_matrix ctm, fz_colorspace *colorspace, float *color, float alpha);
@@ -1028,16 +1121,16 @@ void fz_end_group(fz_device *dev);
 void fz_begin_tile(fz_device *dev, fz_rect area, fz_rect view, float xstep, float ystep, fz_matrix ctm);
 void fz_end_tile(fz_device *dev);
 
-fz_device *fz_new_device(void *user);
+fz_device *fz_new_device(fz_context *ctx, void *user);
 void fz_free_device(fz_device *dev);
 
-fz_device *fz_new_trace_device(void);
-fz_device *fz_new_bbox_device(fz_bbox *bboxp);
-fz_device *fz_new_draw_device(fz_glyph_cache *cache, fz_pixmap *dest);
-fz_device *fz_new_draw_device_type3(fz_glyph_cache *cache, fz_pixmap *dest);
+fz_device *fz_new_trace_device(fz_context *ctx);
+fz_device *fz_new_bbox_device(fz_context *ctx, fz_bbox *bboxp);
+fz_device *fz_new_draw_device(fz_context *ctx, fz_glyph_cache *cache, fz_pixmap *dest);
+fz_device *fz_new_draw_device_type3(fz_context *ctx, fz_glyph_cache *cache, fz_pixmap *dest);
 
 /* SumatraPDF: GDI+ draw device */
-fz_device *fz_new_gdiplus_device(void *hDC, fz_bbox baseClip);
+fz_device *fz_new_gdiplus_device(fz_context *ctx, void *hDC, fz_bbox baseClip);
 
 /*
  * Text extraction device
@@ -1063,12 +1156,12 @@ struct fz_text_span_s
 	int eol;
 };
 
-fz_text_span *fz_new_text_span(void);
-void fz_free_text_span(fz_text_span *line);
+fz_text_span *fz_new_text_span(fz_context *ctx);
+void fz_free_text_span(fz_context *ctx, fz_text_span *line);
 void fz_debug_text_span(fz_text_span *line);
 void fz_debug_text_span_xml(fz_text_span *span);
 
-fz_device *fz_new_text_device(fz_text_span *text);
+fz_device *fz_new_text_device(fz_context *ctx, fz_text_span *text);
 
 /*
  * Display list device -- record and play back device commands.
@@ -1076,9 +1169,9 @@ fz_device *fz_new_text_device(fz_text_span *text);
 
 typedef struct fz_display_list_s fz_display_list;
 
-fz_display_list *fz_new_display_list(void);
-void fz_free_display_list(fz_display_list *list);
-fz_device *fz_new_list_device(fz_display_list *list);
+fz_display_list *fz_new_display_list(fz_context *ctx);
+void fz_free_display_list(fz_context *ctx, fz_display_list *list);
+fz_device *fz_new_list_device(fz_context *ctx, fz_display_list *list);
 void fz_execute_display_list(fz_display_list *list, fz_device *dev, fz_matrix ctm, fz_bbox area);
 /* SumatraPDF: allow to optimize handling of single-image pages */
 int fz_list_is_single_image(fz_display_list *list);
@@ -1093,6 +1186,7 @@ typedef struct fz_outline_s fz_outline;
 
 struct fz_outline_s
 {
+	fz_context *ctx;
 	char *title;
 	int page;
 	fz_outline *next;
@@ -1100,7 +1194,7 @@ struct fz_outline_s
 	int is_open; /* SumatraPDF: support expansion states */
 	/* SumatraPDF: extended outline actions */
 	void *data;
-	void (*free_data)(void *data);
+	void (*free_data)(fz_context *ctx, void *data);
 };
 
 void fz_debug_outline_xml(fz_outline *outline, int level);

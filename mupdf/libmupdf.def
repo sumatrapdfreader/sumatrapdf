@@ -6,22 +6,28 @@ EXPORTS
 ; Fitz exports
 
 	gettimeofday
-	fz_warn
-	fz_flush_warnings
+	fz_var_imp
+	fz_push_try
 	fz_throw_imp
-	fz_rethrow_imp
-	fz_catch_imp
-	fz_throw_impx
-	fz_rethrow_impx
-	fz_catch_impx
-	fz_get_error_count
-	fz_get_error_line
+	fz_rethrow
+	fz_warn_imp
+	fz_flush_warnings
+	fz_new_context
+	fz_clone_context
+	fz_free_context
+	fz_new_aa_context
+	fz_free_aa_context
 	fz_malloc
+	fz_malloc_array
 	fz_calloc
-	fz_calloc_no_abort
-	fz_realloc
-	fz_free
+	fz_resize_array
 	fz_strdup
+	fz_free
+	fz_malloc_no_throw
+	fz_malloc_array_no_throw
+	fz_calloc_no_throw
+	fz_resize_array_no_throw
+	fz_strdup_no_throw
 	fz_is_big_endian
 	fz_strsep
 	fz_strlcpy
@@ -128,6 +134,16 @@ EXPORTS
 	fz_drop_buffer
 	fz_resize_buffer
 	fz_grow_buffer
+	fz_new_store_context
+	fz_free_store_context
+	fz_debug_store
+	fz_keep_storable
+	fz_drop_storable
+	fz_store_item
+	fz_find_item
+	fz_remove_item
+	fz_empty_store
+	fz_store_scavenge
 	fz_open_fd
 	fz_open_file
 	fz_open_file_w
@@ -158,13 +174,13 @@ EXPORTS
 	fz_open_jbig2d
 	fz_find_blendmode
 	fz_blendmode_name
-	fz_new_pixmap_with_limit
 	fz_new_pixmap_with_data
 	fz_new_pixmap_with_rect
 	fz_new_pixmap_with_rect_and_data
 	fz_new_pixmap
 	fz_keep_pixmap
 	fz_drop_pixmap
+	fz_free_pixmap_imp
 	fz_clear_pixmap
 	fz_clear_pixmap_with_color
 	fz_clear_pixmap_rect_with_color
@@ -175,6 +191,7 @@ EXPORTS
 	fz_bound_pixmap
 	fz_invert_pixmap
 	fz_gamma_pixmap
+	fz_pixmap_size
 	fz_scale_pixmap
 	fz_write_pnm
 	fz_write_pam
@@ -193,10 +210,13 @@ EXPORTS
 	fz_new_colorspace
 	fz_keep_colorspace
 	fz_drop_colorspace
+	fz_free_colorspace_imp
 	fz_convert_color
 	fz_convert_pixmap
 	fz_find_device_colorspace
 	ft_error_string
+	fz_new_font_context
+	fz_free_font_context
 	fz_new_type3_font
 	fz_new_font_from_memory
 	fz_new_font_from_file
@@ -224,6 +244,7 @@ EXPORTS
 	fz_clone_text
 	fz_keep_shade
 	fz_drop_shade
+	fz_free_shade_imp
 	fz_debug_shade
 	fz_bound_shade
 	fz_paint_shade
@@ -312,7 +333,6 @@ EXPORTS
 	pdf_parse_array
 	pdf_parse_dict
 	pdf_parse_stm_obj
-	pdf_parse_ind_obj
 	pdf_to_rect
 	pdf_to_matrix
 	pdf_to_utf8
@@ -350,17 +370,11 @@ EXPORTS
 	pdf_get_crypt_length
 	pdf_get_crypt_key
 	pdf_debug_crypt
-	pdf_new_store
-	pdf_free_store
-	pdf_debug_store
-	pdf_store_item
-	pdf_find_item
-	pdf_remove_item
-	pdf_age_store
 	pdf_load_function
 	pdf_eval_function
 	pdf_keep_function
 	pdf_drop_function
+	pdf_function_size
 	pdf_load_colorspace
 	pdf_expand_indexed_pixmap
 	pdf_load_shading
@@ -376,6 +390,8 @@ EXPORTS
 	pdf_new_cmap
 	pdf_keep_cmap
 	pdf_drop_cmap
+	pdf_free_cmap_imp
+	pdf_cmap_size
 	pdf_debug_cmap
 	pdf_get_wmode
 	pdf_set_wmode
@@ -449,6 +465,7 @@ EXPORTS
 	xml_free_element
 	xml_print_element
 	xps_new_part
+	xps_has_part
 	xps_read_part
 	xps_free_part
 	xps_read_page_list
@@ -470,7 +487,6 @@ EXPORTS
 	xps_measure_font_glyph
 	xps_parse_color
 	xps_set_color
-	xps_parse_resource_dictionary
 	xps_free_resource_dictionary
 	xps_resolve_resource_reference
 	xps_debug_resource_dictionary
