@@ -223,7 +223,6 @@ xps_read_zip_dir(xps_document *doc, int start_offset)
 
 	doc->zip_count = count;
 	doc->zip_table = fz_malloc_array(doc->ctx, count, sizeof(xps_entry));
-	memset(doc->zip_table, 0, sizeof(xps_entry) * count);
 
 	fz_seek(doc->file, offset, 0);
 

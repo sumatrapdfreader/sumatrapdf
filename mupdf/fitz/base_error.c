@@ -40,13 +40,20 @@ void fz_warn_imp(fz_context *ctx, char *file, int line, char *fmt, ...)
 
 /* Error context */
 
+/* SumatraPDF: force crash so that we get crash report */
+inline void fz_crash_abort()
+{
+	char *p = NULL;
+	*p = 0;
+}
+
 static void throw(fz_error_context *ex)
 {
 	if (ex->top >= 0) {
 		longjmp(ex->stack[ex->top--].buffer, 1);
 	} else {
 		fprintf(stderr, "uncaught exception: %s\n", ex->message);
-		exit(EXIT_FAILURE);
+		fz_crash_abort();
 	}
 }
 
@@ -56,7 +63,7 @@ void fz_push_try(fz_error_context *ex)
 	if (ex->top + 1 >= nelem(ex->stack))
 	{
 		fprintf(stderr, "exception stack overflow!\n");
-		exit(EXIT_FAILURE);
+		fz_crash_abort();
 	}
 	ex->top++;
 }
