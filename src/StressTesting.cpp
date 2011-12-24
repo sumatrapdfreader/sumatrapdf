@@ -455,6 +455,12 @@ bool StressTest::OpenFile(const TCHAR *fileName)
     ++filesCount;
 
     pageForSearchStart = (rand() % win->dm->PageCount()) + 1;
+    // search immediately in single page documents
+    if (1 == pageForSearchStart) {
+        // use text that is unlikely to be found, so that we search all pages
+        win::SetText(win->hwndFindBox, _T("!z_yt"));
+        FindTextOnThread(win);
+    }
 
     int secs = SecsSinceSystemTime(stressStartTime);
     ScopedMem<TCHAR> tm(FormatTime(secs));
