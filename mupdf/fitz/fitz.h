@@ -1132,7 +1132,9 @@ fz_device *fz_new_draw_device(fz_context *ctx, fz_glyph_cache *cache, fz_pixmap 
 fz_device *fz_new_draw_device_type3(fz_context *ctx, fz_glyph_cache *cache, fz_pixmap *dest);
 
 /* SumatraPDF: GDI+ draw device */
+#ifdef _WIN32
 fz_device *fz_new_gdiplus_device(fz_context *ctx, void *hDC, fz_bbox baseClip);
+#endif
 
 /*
  * Text extraction device
@@ -1321,7 +1323,9 @@ fz_link *fz_new_link(fz_context *ctx, fz_link_kind, fz_rect bbox, fz_link_dest d
 void fz_free_link(fz_context *ctx, fz_link *);
 
 /* SumatraPDF: basic global synchronizing */
+#ifdef _WIN32
 void fz_synchronize_begin();
 void fz_synchronize_end();
+#endif
 
 #endif

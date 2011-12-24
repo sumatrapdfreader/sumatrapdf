@@ -1,5 +1,5 @@
 /* SumatraPDF: enable MSVCRT's memory debugging in debug builds */
-#ifdef _DEBUG
+#if defined(_MSC_VER) && defined(_DEBUG)
 #define _CRTDBG_MAP_ALLOC
 #endif
 
