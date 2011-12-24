@@ -1467,10 +1467,12 @@ RectD CPdfEngine::PageContentBox(int pageNo, RenderTarget target)
     if (!page)
         return RectD();
 
-    ScopedCritSec scope(&ctxAccess);
-
     fz_bbox bbox;
-    bool ok = RunPage(page, fz_new_bbox_device(ctx, &bbox), fz_identity, target, fz_round_rect(page->mediabox), false);
+    EnterCriticalSection(&ctxAccess);
+    fz_device *dev = fz_new_bbox_device(ctx, &bbox);
+    LeaveCriticalSection(&ctxAccess);
+
+    bool ok = RunPage(page, dev, fz_identity, target, fz_round_rect(page->mediabox), false);
     if (!ok)
         return PageMediabox(pageNo);
     if (fz_is_infinite_bbox(bbox))
@@ -1554,9 +1556,12 @@ bool CPdfEngine::RenderPage(HDC hDC, pdf_page *page, RectI screenRect, fz_matrix
     FillRect(hDC, &screenRect.ToRECT(), bgBrush); // initialize white background
     DeleteObject(bgBrush);
 
-    ScopedCritSec scope(&ctxAccess);
     fz_bbox clipbox = fz_RectI_to_bbox(screenRect);
-    return RunPage(page, fz_new_gdiplus_device(ctx, hDC, clipbox), *ctm, target, clipbox);
+    EnterCriticalSection(&ctxAccess);
+    fz_device *dev = fz_new_gdiplus_device(ctx, hDC, clipbox);
+    LeaveCriticalSection(&ctxAccess);
+
+    return RunPage(page, dev, *ctm, target, clipbox);
 }
 
 // Fitz' draw_device.c currently isn't able to correctly render
@@ -1609,21 +1614,26 @@ RenderedBitmap *CPdfEngine::RenderBitmap(int pageNo, float zoom, int rotation, R
         return new RenderedBitmap(hbmp, SizeI(w, h));
     }
 
-    ScopedCritSec scope(&ctxAccess);
-
+    EnterCriticalSection(&ctxAccess);
     fz_pixmap *image;
     fz_try(ctx) {
         image = fz_new_pixmap_with_rect(ctx, fz_find_device_colorspace("DeviceRGB"), bbox);
     }
     fz_catch(ctx) {
+        LeaveCriticalSection(&ctxAccess);
         return NULL;
     }
 
     fz_clear_pixmap_with_color(image, 0xFF); // initialize white background
     if (!_drawcache)
         _drawcache = fz_new_glyph_cache(ctx);
+    fz_device *dev = fz_new_draw_device(ctx, _drawcache, image);
+    LeaveCriticalSection(&ctxAccess);
 
-    bool ok = RunPage(page, fz_new_draw_device(ctx, _drawcache, image), ctm, target, bbox);
+    bool ok = RunPage(page, dev, ctm, target, bbox);
+
+    ScopedCritSec scope(&ctxAccess);
+
     RenderedBitmap *bitmap = NULL;
     if (ok)
         bitmap = new RenderedFitzBitmap(ctx, image);
@@ -1792,16 +1802,19 @@ RenderedBitmap *CPdfEngine::GetPageImage(int pageNo, RectD rect, size_t imageIx)
     if (!page)
         return NULL;
 
-    ScopedCritSec scope(&ctxAccess);
-
     Vec<FitzImagePos> positions;
-    RunPage(page, fz_new_image_extractor(ctx, &positions), fz_identity);
+    EnterCriticalSection(&ctxAccess);
+    fz_device *dev = fz_new_image_extractor(ctx, &positions);
+    LeaveCriticalSection(&ctxAccess);
+
+    RunPage(page, dev, fz_identity);
     positions.Reverse();
     if (imageIx >= positions.Count() || fz_rect_to_RectD(positions.At(imageIx).rect) != rect) {
         assert(0);
         return NULL;
     }
 
+    ScopedCritSec scope(&ctxAccess);
     return new RenderedFitzBitmap(ctx, positions.At(imageIx).image);
 }
 
@@ -1810,13 +1823,17 @@ TCHAR *CPdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, RectI **coord
     if (!page)
         return NULL;
 
-    ScopedCritSec scope(&ctxAccess);
-
+    EnterCriticalSection(&ctxAccess);
     fz_text_span *text = fz_new_text_span(ctx);
+    fz_device *dev = fz_new_text_device(ctx, text);
+    LeaveCriticalSection(&ctxAccess);
+
     // use an infinite rectangle as bounds (instead of page->mediabox) to ensure that
     // the extracted text is consistent between cached runs using a list device and
     // fresh runs (otherwise the list device omits text outside the mediabox bounds)
-    bool ok = RunPage(page, fz_new_text_device(ctx, text), fz_identity, target, fz_infinite_bbox, cacheRun);
+    bool ok = RunPage(page, dev, fz_identity, target, fz_infinite_bbox, cacheRun);
+
+    ScopedCritSec scope(&ctxAccess);
 
     TCHAR *content = NULL;
     if (ok)
@@ -2269,7 +2286,7 @@ protected:
 
     XpsPageRun    * _runCache[MAX_PAGE_RUN_CACHE];
     XpsPageRun    * GetPageRun(xps_page *page, bool tryOnly=false, fz_link *extract=NULL);
-    void            RunPage(xps_page *page, fz_device *dev, fz_matrix ctm,
+    bool            RunPage(xps_page *page, fz_device *dev, fz_matrix ctm,
                             fz_bbox clipbox=fz_infinite_bbox, bool cacheRun=true);
     void            DropPageRun(XpsPageRun *run, bool forceRemove=false);
 
@@ -2584,23 +2601,37 @@ XpsPageRun *CXpsEngine::GetPageRun(xps_page *page, bool tryOnly, fz_link *extrac
     return result;
 }
 
-void CXpsEngine::RunPage(xps_page *page, fz_device *dev, fz_matrix ctm, fz_bbox clipbox, bool cacheRun)
+bool CXpsEngine::RunPage(xps_page *page, fz_device *dev, fz_matrix ctm, fz_bbox clipbox, bool cacheRun)
 {
+    bool ok = true;
+
     XpsPageRun *run = GetPageRun(page, !cacheRun);
     if (run) {
         EnterCriticalSection(&ctxAccess);
-        fz_execute_display_list(run->list, dev, ctm, clipbox);
+        fz_try(ctx) {
+            fz_execute_display_list(run->list, dev, ctm, clipbox);
+        }
+        fz_catch(ctx) {
+            ok = false;
+        }
         LeaveCriticalSection(&ctxAccess);
         DropPageRun(run);
     }
     else {
         ScopedCritSec scope(&ctxAccess);
-        xps_run_page(_doc, page, dev, ctm);
+        fz_try(ctx) {
+            xps_run_page(_doc, page, dev, ctm);
+        }
+        fz_catch(ctx) {
+            ok = false;
+        }
     }
 
     EnterCriticalSection(&ctxAccess);
     fz_free_device(dev);
     LeaveCriticalSection(&ctxAccess);
+
+    return ok;
 }
 
 void CXpsEngine::DropPageRun(XpsPageRun *run, bool forceRemove)
@@ -2712,10 +2743,12 @@ RectD CXpsEngine::PageContentBox(int pageNo, RenderTarget target)
     if (!page)
         return RectD();
 
-    ScopedCritSec scope(&ctxAccess);
-
     fz_bbox bbox;
-    RunPage(page, fz_new_bbox_device(ctx, &bbox), fz_identity);
+    EnterCriticalSection(&ctxAccess);
+    fz_device *dev = fz_new_bbox_device(ctx, &bbox);
+    LeaveCriticalSection(&ctxAccess);
+
+    RunPage(page, dev, fz_identity);
     if (fz_is_infinite_bbox(bbox))
         return PageMediabox(pageNo);
 
@@ -2788,11 +2821,12 @@ bool CXpsEngine::renderPage(HDC hDC, xps_page *page, RectI screenRect, fz_matrix
     FillRect(hDC, &screenRect.ToRECT(), bgBrush); // initialize white background
     DeleteObject(bgBrush);
 
-    ScopedCritSec scope(&ctxAccess);
-
     fz_bbox clipbox = fz_RectI_to_bbox(screenRect);
-    RunPage(page, fz_new_gdiplus_device(ctx, hDC, clipbox), *ctm, clipbox);
-    return true;
+    EnterCriticalSection(&ctxAccess);
+    fz_device *dev = fz_new_gdiplus_device(ctx, hDC, clipbox);
+    LeaveCriticalSection(&ctxAccess);
+
+    return RunPage(page, dev, *ctm, clipbox);
 }
 
 RenderedBitmap *CXpsEngine::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target)
@@ -2828,21 +2862,26 @@ RenderedBitmap *CXpsEngine::RenderBitmap(int pageNo, float zoom, int rotation, R
         return new RenderedBitmap(hbmp, SizeI(w, h));
     }
 
-    ScopedCritSec scope(&ctxAccess);
-
+    EnterCriticalSection(&ctxAccess);
     fz_pixmap *image;
     fz_try(ctx) {
         image = fz_new_pixmap_with_rect(ctx, fz_find_device_colorspace("DeviceRGB"), bbox);
     }
     fz_catch(ctx) {
         return NULL;
+        LeaveCriticalSection(&ctxAccess);
     }
 
     fz_clear_pixmap_with_color(image, 0xFF); // initialize white background
     if (!_drawcache)
         _drawcache = fz_new_glyph_cache(ctx);
+    fz_device *dev = fz_new_draw_device(ctx, _drawcache, image);
+    LeaveCriticalSection(&ctxAccess);
 
-    RunPage(page, fz_new_draw_device(ctx, _drawcache, image), ctm, bbox);
+    RunPage(page, dev, ctm, bbox);
+
+    ScopedCritSec scope(&ctxAccess);
+
     RenderedBitmap *bitmap = new RenderedFitzBitmap(ctx, image);
     fz_drop_pixmap(ctx, image);
     return bitmap;
@@ -2853,16 +2892,19 @@ TCHAR *CXpsEngine::ExtractPageText(xps_page *page, TCHAR *lineSep, RectI **coord
     if (!page)
         return NULL;
 
-    ScopedCritSec scope(&ctxAccess);
-
+    EnterCriticalSection(&ctxAccess);
     fz_text_span *text = fz_new_text_span(ctx);
+    fz_device *dev = fz_new_text_device(ctx, text);
+    LeaveCriticalSection(&ctxAccess);
+
     // use an infinite rectangle as bounds (instead of a mediabox) to ensure that
     // the extracted text is consistent between cached runs using a list device and
     // fresh runs (otherwise the list device omits text outside the mediabox bounds)
-    RunPage(page, fz_new_text_device(ctx, text), fz_identity, fz_infinite_bbox, cacheRun);
+    RunPage(page, dev, fz_identity, fz_infinite_bbox, cacheRun);
+
+    ScopedCritSec scope(&ctxAccess);
 
     TCHAR *content = fz_span_to_tchar(text, lineSep, coords_out);
-
     fz_free_text_span(ctx, text);
 
     return content;
@@ -3014,16 +3056,19 @@ RenderedBitmap *CXpsEngine::GetPageImage(int pageNo, RectD rect, size_t imageIx)
     if (!page)
         return NULL;
 
-    ScopedCritSec scope(&ctxAccess);
-
     Vec<FitzImagePos> positions;
-    RunPage(page, fz_new_image_extractor(ctx, &positions), fz_identity);
+    EnterCriticalSection(&ctxAccess);
+    fz_device *dev = fz_new_image_extractor(ctx, &positions);
+    LeaveCriticalSection(&ctxAccess);
+
+    RunPage(page, dev, fz_identity);
     positions.Reverse();
     if (imageIx >= positions.Count() || fz_rect_to_RectD(positions.At(imageIx).rect) != rect) {
         assert(0);
         return NULL;
     }
 
+    ScopedCritSec scope(&ctxAccess);
     return new RenderedFitzBitmap(ctx, positions.At(imageIx).image);
 }
 
