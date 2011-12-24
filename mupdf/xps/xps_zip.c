@@ -221,10 +221,9 @@ xps_read_zip_dir(xps_document *doc, int start_offset)
 			fz_throw(doc->ctx, "zip64 files larger than 2 GB aren't supported");
 	}
 
-	doc->zip_count = count;
 	doc->zip_table = fz_malloc_array(doc->ctx, count, sizeof(xps_entry));
 
-	fz_seek(doc->file, offset, 0);
+    fz_seek(doc->file, offset, 0);
 
 	for (i = 0; i < count; i++)
 	{
@@ -232,6 +231,9 @@ xps_read_zip_dir(xps_document *doc, int start_offset)
 		if (sig != ZIP_CENTRAL_DIRECTORY_SIG)
 			fz_throw(doc->ctx, "wrong zip central directory signature (0x%x)", sig);
 
+		/* SumatraPDF: only update doc->zip_count if we load an entry so that
+		   cleanup routine has the right info in case of an exceptin */
+		doc->zip_count = count;
 		(void) getshort(doc->file); /* version made by */
 		(void) getshort(doc->file); /* version to extract */
 		(void) getshort(doc->file); /* general */
