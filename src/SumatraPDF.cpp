@@ -4408,6 +4408,10 @@ InitMouseWheelInfo:
             ReloadPrefs();
             break;
 
+        case WM_TIMER:
+            OnTimer(*win, hwnd, wParam);
+            break;
+
         default:
             return DefWindowProc(hwnd, msg, wParam, lParam);
     }

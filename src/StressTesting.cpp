@@ -519,14 +519,22 @@ bool StressTest::GoToNextPage()
 
 void StressTest::TickTimer()
 {
-    SetTimer(win->hwndCanvas, DIR_STRESS_TIMER_ID, USER_TIMER_MINIMUM, NULL);
+    SetTimer(win->hwndFrame, DIR_STRESS_TIMER_ID, USER_TIMER_MINIMUM, NULL);
 }
 
 void StressTest::OnTimer()
 {
-    KillTimer(win->hwndCanvas, DIR_STRESS_TIMER_ID);
+    KillTimer(win->hwndFrame, DIR_STRESS_TIMER_ID);
     if (!win->dm || !win->dm->engine)
         return;
+
+    // chm documents aren't rendered and we block until we show them
+    // so we can assume previous page has been shown and go to next page
+    if (win->dm->AsChmEngine()) {
+        if (!GoToNextPage())
+            return;
+        goto Next;
+    }
 
     // For non-image files, we detect if a page was rendered by checking the cache
     // (but we don't wait more than 3 seconds).
@@ -543,6 +551,7 @@ void StressTest::OnTimer()
         if (!GoToNextPage())
             return;
     }
+Next:
     MakeRandomSelection(win->dm, currPage);
     TickTimer();
 }
