@@ -41,7 +41,8 @@ Jbig2Image* jbig2_image_new(Jbig2Ctx *ctx, int width, int height)
 	}
 
 	stride = ((width - 1) >> 3) + 1; /* generate a byte-aligned stride */
-	image->data = jbig2_new(ctx, uint8_t, stride*height);
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1759 */
+	image->data = jbig2_new(ctx, uint8_t, stride*height + 1);
 	if (image->data == NULL) {
                 jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
                     "could not allocate image data buffer! [%d bytes]\n", stride*height);
