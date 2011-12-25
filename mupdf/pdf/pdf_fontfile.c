@@ -413,7 +413,7 @@ parseTTF(fz_stream *file, int offset, int index, char *path)
 	char szPSName[MAX_FACENAME] = { 0 }, szTTName[MAX_FACENAME] = { 0 }, szStyle[MAX_FACENAME] = { 0 };
 	int i, count, tblOffset;
 
-	fz_seek(file,offset,0);
+	fz_seek(file, offset, 0);
 	safe_read(file, (char *)&ttOffsetTable, sizeof(TT_OFFSET_TABLE));
 
 	// check if this is a TrueType font of version 1.0 or an OpenType font

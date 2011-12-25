@@ -562,6 +562,8 @@ struct fz_stream_s
 	int (*read)(fz_stream *stm, unsigned char *buf, int len);
 	void (*close)(fz_context *ctx, void *state);
 	void (*seek)(fz_stream *stm, int offset, int whence);
+	/* SumatraPDF: allow to clone a stream */
+	fz_stream *(*reopen)(fz_context *ctx, fz_stream *stm);
 	unsigned char buf[4096];
 };
 
@@ -571,6 +573,8 @@ fz_stream *fz_open_file_w(fz_context *ctx, const wchar_t *filename); /* only on 
 fz_stream *fz_open_buffer(fz_context *ctx, fz_buffer *buf);
 fz_stream *fz_open_memory(fz_context *ctx, unsigned char *data, int len);
 void fz_close(fz_stream *stm);
+/* SumatraPDF: allow to clone a stream */
+fz_stream *fz_clone_stream(fz_context *ctx, fz_stream *stm);
 
 fz_stream *fz_new_stream(fz_context *ctx, void*, int(*)(fz_stream*, unsigned char*, int), void(*)(fz_context *, void *));
 fz_stream *fz_keep_stream(fz_stream *stm);

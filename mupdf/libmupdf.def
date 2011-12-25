@@ -150,6 +150,7 @@ EXPORTS
 	fz_open_buffer
 	fz_open_memory
 	fz_close
+	fz_clone_stream
 	fz_new_stream
 	fz_keep_stream
 	fz_fill_buffer

@@ -34,6 +34,7 @@ fz_new_stream(fz_context *ctx, void *state,
 	stm->read = read;
 	stm->close = close;
 	stm->seek = NULL;
+	stm->reopen = NULL;
 	stm->ctx = ctx;
 
 	return stm;
@@ -58,6 +59,18 @@ fz_close(fz_stream *stm)
 			stm->close(stm->ctx, stm->state);
 		fz_free(stm->ctx, stm);
 	}
+}
+
+/* SumatraPDF: allow to clone a stream */
+fz_stream *
+fz_clone_stream(fz_context *ctx, fz_stream *stm)
+{
+	fz_stream *clone;
+	if (!stm->reopen)
+		fz_throw(ctx, "can't clone stream without reopening");
+	clone = stm->reopen(ctx, stm);
+	fz_seek(clone, fz_tell(stm), 0);
+	return clone;
 }
 
 /* File stream */
@@ -88,6 +101,12 @@ static void close_file(fz_context *ctx, void *state)
 	fz_free(ctx, state);
 }
 
+/* SumatraPDF: allow to clone a stream */
+static fz_stream *reopen_file(fz_context *ctx, fz_stream *stm)
+{
+	return fz_open_fd(ctx, dup(*(int *)stm->state));
+}
+
 fz_stream *
 fz_open_fd(fz_context *ctx, int fd)
 {
@@ -107,6 +126,7 @@ fz_open_fd(fz_context *ctx, int fd)
 		fz_rethrow(ctx);
 	}
 	stm->seek = seek_file;
+	stm->reopen = reopen_file;
 
 	return stm;
 }
@@ -157,6 +177,19 @@ static void close_buffer(fz_context *ctx, void *state_)
 		fz_drop_buffer(ctx, state);
 }
 
+/* SumatraPDF: allow to clone a stream */
+static fz_stream *reopen_buffer(fz_context *ctx, fz_stream *stm)
+{
+	fz_stream *clone;
+
+	fz_buffer *buf = fz_new_buffer(ctx, stm->ep - stm->bp);
+	memcpy(buf->data, stm->bp, (buf->len = buf->cap));
+	clone = fz_open_buffer(ctx, buf);
+	fz_drop_buffer(ctx, buf);
+
+	return clone;
+}
+
 fz_stream *
 fz_open_buffer(fz_context *ctx, fz_buffer *buf)
 {
@@ -165,6 +198,7 @@ fz_open_buffer(fz_context *ctx, fz_buffer *buf)
 	fz_keep_buffer(buf);
 	stm = fz_new_stream(ctx, buf, read_buffer, close_buffer);
 	stm->seek = seek_buffer;
+	stm->reopen = reopen_buffer;
 
 	stm->bp = buf->data;
 	stm->rp = buf->data;
@@ -183,6 +217,7 @@ fz_open_memory(fz_context *ctx, unsigned char *data, int len)
 
 	stm = fz_new_stream(ctx, NULL, read_buffer, close_buffer);
 	stm->seek = seek_buffer;
+	stm->reopen = reopen_buffer;
 
 	stm->bp = data;
 	stm->rp = data;

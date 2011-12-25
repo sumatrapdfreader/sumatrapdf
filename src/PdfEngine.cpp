@@ -322,6 +322,13 @@ extern "C" static void close_istream(fz_context *ctx, void *state)
     ((IStream *)state)->Release();
 }
 
+fz_stream *fz_open_istream(fz_context *ctx, IStream *stream);
+
+extern "C" static fz_stream *reopen_istream(fz_context *ctx, fz_stream *stm)
+{
+    return fz_open_istream(ctx, (IStream *)stm->state);
+}
+
 fz_stream *fz_open_istream(fz_context *ctx, IStream *stream)
 {
     if (!stream)
@@ -333,6 +340,7 @@ fz_stream *fz_open_istream(fz_context *ctx, IStream *stream)
 
     fz_stream *stm = fz_new_stream(ctx, stream, read_istream, close_istream);
     stm->seek = seek_istream;
+    stm->reopen = reopen_istream;
     return stm;
 }
 
@@ -998,21 +1006,20 @@ public:
 
 CPdfEngine *CPdfEngine::Clone()
 {
-    CPdfEngine *clone = new CPdfEngine();
-    if (!clone)
-        return NULL;
+    ScopedCritSec scope(&ctxAccess);
 
     // use this document's encryption key (if any) to load the clone
     PasswordCloner *pwdUI = NULL;
     if (_xref->crypt)
         pwdUI = new PasswordCloner(pdf_get_crypt_key(_xref));
-    bool ok = clone->Load(_xref->file, pwdUI);
-    delete pwdUI;
 
-    if (!ok) {
+    CPdfEngine *clone = new CPdfEngine();
+    if (!clone || !clone->Load(_xref->file, pwdUI)) {
         delete clone;
+        delete pwdUI;
         return NULL;
     }
+    delete pwdUI;
 
     if (_fileName)
         clone->_fileName = str::Dup(_fileName);
@@ -1045,7 +1052,7 @@ static const TCHAR *findEmbedMarks(const TCHAR *fileName)
 
 bool CPdfEngine::Load(const TCHAR *fileName, PasswordUI *pwdUI)
 {
-    assert(!_fileName && !_xref);
+    assert(!_fileName && !_xref && ctx);
     _fileName = str::Dup(fileName);
     if (!_fileName || !ctx)
         return false;
@@ -1101,9 +1108,9 @@ bool CPdfEngine::Load(IStream *stream, PasswordUI *pwdUI)
 bool CPdfEngine::Load(fz_stream *stm, PasswordUI *pwdUI)
 {
     assert(!_fileName && !_xref && ctx);
-    if (!ctx || stm->ctx != ctx)
+    if (!ctx)
         return false;
-    if (!LoadFromStream(fz_keep_stream(stm), pwdUI))
+    if (!LoadFromStream(fz_clone_stream(ctx, stm), pwdUI))
         return false;
     return FinishLoading();
 }
@@ -2487,6 +2494,8 @@ CXpsEngine::~CXpsEngine()
 
 CXpsEngine *CXpsEngine::Clone()
 {
+    ScopedCritSec scope(&ctxAccess);
+
     CXpsEngine *clone = new CXpsEngine();
     if (!clone || !clone->load(_doc->file)) {
         delete clone;
@@ -2501,7 +2510,7 @@ CXpsEngine *CXpsEngine::Clone()
 
 bool CXpsEngine::load(const TCHAR *fileName)
 {
-    assert(!_fileName && !_doc);
+    assert(!_fileName && !_doc && ctx);
     _fileName = str::Dup(fileName);
     if (!_fileName || !ctx)
         return false;
@@ -2510,7 +2519,7 @@ bool CXpsEngine::load(const TCHAR *fileName)
 
 bool CXpsEngine::load(IStream *stream)
 {
-    assert(!_fileName && !_doc);
+    assert(!_fileName && !_doc && ctx);
     if (!ctx)
         return false;
     return load_from_stream(fz_open_istream(ctx, stream));
@@ -2518,10 +2527,10 @@ bool CXpsEngine::load(IStream *stream)
 
 bool CXpsEngine::load(fz_stream *stm)
 {
-    assert(!_fileName && !_doc);
+    assert(!_fileName && !_doc && ctx);
     if (!ctx)
         return false;
-    return load_from_stream(fz_keep_stream(stm));
+    return load_from_stream(fz_clone_stream(ctx, stm));
 }
 
 bool CXpsEngine::load_from_stream(fz_stream *stm)
