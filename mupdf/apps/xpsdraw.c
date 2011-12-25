@@ -464,6 +464,11 @@ int main(int argc, char **argv)
 	{
 		filename = argv[fz_optind++];
 
+		/* SumatraPDF: don't abort on the first failure */
+		fz_try(ctx)
+		{
+			doc = NULL;
+
 		doc = xps_open_file(ctx, filename);
 
 		if (showxml)
@@ -484,6 +489,13 @@ int main(int argc, char **argv)
 			printf("</document>\n");
 
 		xps_free_context(doc);
+
+		}
+		fz_catch(ctx)
+		{
+			if (doc)
+				xps_free_context(doc);
+		}
 	}
 
 	if (showtime)
