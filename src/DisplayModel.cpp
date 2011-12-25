@@ -294,7 +294,7 @@ void DisplayModel::BuildPagesInfo()
     int pageCount = PageCount();
     pagesInfo = SAZA(PageInfo, pageCount);
 
-    TCHAR unitSystem[2];
+    TCHAR unitSystem[2] = { 0 };
     GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_IMEASURE, unitSystem, dimof(unitSystem));
     RectD defaultRect;
     if (unitSystem[0] == '0') // metric A4 size
