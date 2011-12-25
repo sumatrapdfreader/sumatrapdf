@@ -110,6 +110,7 @@ fz_open_jbig2d(fz_stream *chain, fz_buffer *globals)
 
 		if (globals)
 		{
+			/* SumatraPDF: TODO: this call leads to memory leaks */
 			jbig2_data_in(state->ctx, globals->data, globals->len);
 			state->gctx = jbig2_make_global_ctx(state->ctx);
 			state->ctx = jbig2_ctx_new(NULL, JBIG2_OPTIONS_EMBEDDED, state->gctx, error_callback, ctx);

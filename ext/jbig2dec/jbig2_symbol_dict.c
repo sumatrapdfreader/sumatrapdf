@@ -703,7 +703,8 @@ jbig2_decode_symbol_dict(Jbig2Ctx *ctx,
         break;
       }
       for(k = 0; k < exrunlength; k++) {
-        if (exflag) {
+        /* SumatraPDF: prevent crash due to missing JBIG2Globals */
+        if (exflag && (i < m || i - m < SDNEWSYMS->n_symbols)) {
           SDEXSYMS->glyphs[j++] = (i < m) ?
             jbig2_image_clone(ctx, params->SDINSYMS->glyphs[i]) :
             jbig2_image_clone(ctx, SDNEWSYMS->glyphs[i-m]);

@@ -95,7 +95,15 @@ build_filter(fz_stream *chain, pdf_xref * xref, fz_obj * f, fz_obj * p, int num,
 			fz_buffer *globals;
 			globals = pdf_load_stream(xref, fz_to_num(obj), fz_to_gen(obj));
 			/* RJW: "cannot load jbig2 global segments" */
+			/* SumatraPDF: fix memory leak */
+			fz_try(ctx) {
 			chain = fz_open_jbig2d(chain, globals);
+			}
+			fz_catch(ctx)
+			{
+				fz_drop_buffer(ctx, globals);
+				fz_rethrow(ctx);
+			}
 			fz_drop_buffer(ctx, globals);
 			return chain;
 		}

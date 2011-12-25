@@ -469,6 +469,17 @@ public:
 				graphics->DrawImage(scaled, corners, _countof(corners), 0, 0, w, h, UnitPixel, &DrawImageAttributes(alpha));
 			delete scaled;
 			fz_free(ctx, pal8bit);
+			
+			if (status == OutOfMemory)
+			{
+				fz_try(ctx)
+				{
+					fz_pixmap *scaled = fz_scale_pixmap(ctx, image, 0, 0, w, h);
+					graphics->DrawImage(&PixmapBitmap(ctx, scaled), corners, _countof(corners), 0, 0, w, h, UnitPixel, &DrawImageAttributes(alpha));
+					fz_drop_pixmap(ctx, scaled);
+				}
+				fz_catch(ctx) { }
+			}
 		}
 		else
 			graphics->DrawImage(&PixmapBitmap(ctx, image), corners, 3, 0, 0, image->w, image->h, UnitPixel, &DrawImageAttributes(alpha));

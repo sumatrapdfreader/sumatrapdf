@@ -68,6 +68,7 @@ jbig2_page_info (Jbig2Ctx *ctx, Jbig2Segment *segment, const uint8_t *segment_da
     /* a new page info segment implies the previous page is finished */
     page = &(ctx->pages[ctx->current_page]);
     if ((page->number != 0) &&
+            page->image /* cf. http://ghostscript.com/pipermail/jbig2-dev/2011-December/000127.html */ &&
             ((page->state == JBIG2_PAGE_NEW) || (page->state == JBIG2_PAGE_FREE))) {
         page->state = JBIG2_PAGE_COMPLETE;
         jbig2_error(ctx, JBIG2_SEVERITY_WARNING, segment->number,
