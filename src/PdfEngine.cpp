@@ -514,10 +514,20 @@ fz_extract_image(fz_device *dev, fz_pixmap *image, fz_matrix ctm, float alpha)
         ((Vec<FitzImagePos> *)dev->user)->Append(FitzImagePos(image, rect));
 }
 
+extern "C" static void 
+fz_reverse_image_list(fz_device *dev)
+{
+    // images are extracted in bottom-to-top order, but for GetElements
+    // we want to access them in top-to-bottom order (since images at
+    // the bottom might not be visible at all)
+    ((Vec<FitzImagePos> *)dev->user)->Reverse();
+}
+
 static fz_device *fz_new_image_extractor(fz_context *ctx, Vec<FitzImagePos> *list)
 {
     fz_device *dev = fz_new_device(ctx, list);
     dev->fill_image = fz_extract_image;
+    dev->free_user = fz_reverse_image_list;
     return dev;
 }
 
@@ -807,7 +817,7 @@ protected:
 
     PdfTocItem   *  BuildTocTree(fz_outline *entry, int& idCounter);
     void            LinkifyPageText(pdf_page *page);
-    void            LinkifyPageAttachments(pdf_page *page);
+    pdf_annot    ** ProcessPageAnnotations(pdf_page *page);
     fz_rect       * GetPageImageRects(pdf_page *page);
     RenderedBitmap *GetPageImage(int pageNo, RectD rect, size_t imageIx);
 
@@ -820,6 +830,7 @@ protected:
     fz_obj        * _info;
     fz_glyph_cache* _drawcache;
     StrVec        * _pagelabels;
+    pdf_annot   *** pageComments;
     fz_rect      ** imageRects;
 };
 
@@ -905,7 +916,7 @@ CPdfEngine::CPdfEngine() : _fileName(NULL), _xref(NULL),
     _pages(NULL), _mediaboxes(NULL), _info(NULL),
     outline(NULL), attachments(NULL), _pagelabels(NULL),
     _drawcache(NULL), _decryptionKey(NULL), isProtected(false),
-    imageRects(NULL)    
+    pageComments(NULL), imageRects(NULL)    
 {
     InitializeCriticalSection(&pagesAccess);
     InitializeCriticalSection(&ctxAccess);
@@ -934,6 +945,11 @@ CPdfEngine::~CPdfEngine()
     if (_info)
         fz_drop_obj(_info);
 
+    if (pageComments) {
+        for (int i = 0; i < PageCount(); i++)
+            free(pageComments[i]);
+        free(pageComments);
+    }
     if (imageRects) {
         for (int i = 0; i < PageCount(); i++)
             free(imageRects[i]);
@@ -1164,9 +1180,10 @@ bool CPdfEngine::FinishLoading()
 
     _pages = SAZA(pdf_page *, PageCount());
     _mediaboxes = new RectD[PageCount()];
+    pageComments = SAZA(pdf_annot **, PageCount());
     imageRects = SAZA(fz_rect *, PageCount());
 
-    if (!_pages || !_mediaboxes || !imageRects)
+    if (!_pages || !_mediaboxes || !pageComments || !imageRects)
         return false;
 
     ScopedCritSec scope(&ctxAccess);
@@ -1287,10 +1304,10 @@ pdf_page *CPdfEngine::GetPdfPage(int pageNo, bool failIfBusy)
         EnterCriticalSection(&ctxAccess);
         fz_try(ctx) {
             page = pdf_load_page(_xref, pageNo - 1);
+            _pages[pageNo-1] = page;
 
             LinkifyPageText(page);
-            LinkifyPageAttachments(page);
-            _pages[pageNo-1] = page;
+            pageComments[pageNo-1] = ProcessPageAnnotations(page);
             imageRects[pageNo-1] = GetPageImageRects(page);
         }
         fz_catch(ctx) { }
@@ -1652,16 +1669,16 @@ PageElement *CPdfEngine::GetElementAtPos(int pageNo, PointD pt)
         if (fz_is_pt_in_rect(link->rect, p))
             return new PdfLink(this, link, pageNo);
 
-    if (page->annots) {
-        ScopedCritSec scope(&ctxAccess);
+    if (pageComments[pageNo-1]) {
+        for (size_t i = 0; pageComments[pageNo-1][i]; i++) {
+            pdf_annot *annot = pageComments[pageNo-1][i];
+            if (fz_is_pt_in_rect(annot->rect, p)) {
+                ScopedCritSec scope(&ctxAccess);
 
-        for (pdf_annot *annot = page->annots; annot; annot = annot->next)
-            if (fz_is_pt_in_rect(annot->rect, p) &&
-                !str::IsEmpty(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents"))) &&
-                !str::Eq(fz_to_name(fz_dict_gets(annot->obj, "Subtype")), "FreeText")) {
                 ScopedMem<TCHAR> contents(str::conv::FromPdf(ctx, fz_dict_gets(annot->obj, "Contents")));
                 return new PdfComment(contents, fz_rect_to_RectD(annot->rect), pageNo);
             }
+        }
     }
 
     if (imageRects[pageNo-1]) {
@@ -1685,15 +1702,14 @@ Vec<PageElement *> *CPdfEngine::GetElements(int pageNo)
         if (link->extra || link->kind == FZ_LINK_URI)
             els->Append(new PdfLink(this, link, pageNo));
 
-    if (page->annots) {
+    if (pageComments[pageNo-1]) {
         ScopedCritSec scope(&ctxAccess);
 
-        for (pdf_annot *annot = page->annots; annot; annot = annot->next)
-            if (!str::IsEmpty(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents"))) &&
-                !str::Eq(fz_to_name(fz_dict_gets(annot->obj, "Subtype")), "FreeText")) {
-                ScopedMem<TCHAR> contents(str::conv::FromPdf(ctx, fz_dict_gets(annot->obj, "Contents")));
-                els->Append(new PdfComment(contents, fz_rect_to_RectD(annot->rect), pageNo));
-            }
+        for (size_t i = 0; pageComments[pageNo-1][i]; i++) {
+            pdf_annot *annot = pageComments[pageNo-1][i];
+            ScopedMem<TCHAR> contents(str::conv::FromPdf(ctx, fz_dict_gets(annot->obj, "Contents")));
+            els->Append(new PdfComment(contents, fz_rect_to_RectD(annot->rect), pageNo));
+        }
     }
 
     if (imageRects[pageNo-1]) {
@@ -1761,10 +1777,13 @@ void CPdfEngine::LinkifyPageText(pdf_page *page)
     free(pageText);
 }
 
-void CPdfEngine::LinkifyPageAttachments(pdf_page *page)
+pdf_annot **CPdfEngine::ProcessPageAnnotations(pdf_page *page)
 {
+    Vec<pdf_annot *> comments;
+
     for (pdf_annot *annot = page->annots; annot; annot = annot->next) {
-        if (str::Eq(fz_to_name(fz_dict_gets(annot->obj, "Subtype")), "FileAttachment")) {
+        char *subtype = fz_to_name(fz_dict_gets(annot->obj, "Subtype"));
+        if (str::Eq(subtype, "FileAttachment")) {
             fz_obj *file = fz_dict_gets(annot->obj, "FS");
             fz_rect rect = pdf_to_rect(ctx, fz_dict_gets(annot->obj, "Rect"));
             if (file && fz_dict_gets(file, "EF") && !fz_is_empty_rect(rect)) {
@@ -1775,17 +1794,24 @@ void CPdfEngine::LinkifyPageAttachments(pdf_page *page)
                 page->links = link;
             }
         }
+        else if (!str::IsEmpty(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents"))) &&
+            !str::Eq(subtype, "FreeText")) {
+            comments.Append(annot);
+        }
     }
+
+    if (comments.Count() == 0)
+        return NULL;
+
+    // add sentinel value
+    comments.Append(NULL);
+    return comments.StealData();
 }
 
 fz_rect *CPdfEngine::GetPageImageRects(pdf_page *page)
 {
     Vec<FitzImagePos> positions;
     RunPage(page, fz_new_image_extractor(ctx, &positions), fz_identity);
-    // images are extracted in bottom-to-top order, but for GetElements
-    // we want to access them in top-to-bottom order (since images at
-    // the bottom might not be visible at all)
-    positions.Reverse();
     if (positions.Count() == 0)
         return NULL;
 
@@ -1808,7 +1834,7 @@ RenderedBitmap *CPdfEngine::GetPageImage(int pageNo, RectD rect, size_t imageIx)
     LeaveCriticalSection(&ctxAccess);
 
     RunPage(page, dev, fz_identity);
-    positions.Reverse();
+
     if (imageIx >= positions.Count() || fz_rect_to_RectD(positions.At(imageIx).rect) != rect) {
         assert(0);
         return NULL;
@@ -3040,10 +3066,10 @@ fz_rect *CXpsEngine::GetPageImageRects(xps_page *page)
 {
     Vec<FitzImagePos> positions;
     RunPage(page, fz_new_image_extractor(ctx, &positions), fz_identity);
-    positions.Reverse();
     if (positions.Count() == 0)
         return NULL;
 
+    // the list of page image rectangles is terminated with a null-rectangle
     fz_rect *result = SAZA(fz_rect, positions.Count() + 1);
     for (size_t i = 0; i < positions.Count(); i++)
         result[i] = positions.At(i).rect;
@@ -3062,7 +3088,7 @@ RenderedBitmap *CXpsEngine::GetPageImage(int pageNo, RectD rect, size_t imageIx)
     LeaveCriticalSection(&ctxAccess);
 
     RunPage(page, dev, fz_identity);
-    positions.Reverse();
+
     if (imageIx >= positions.Count() || fz_rect_to_RectD(positions.At(imageIx).rect) != rect) {
         assert(0);
         return NULL;
