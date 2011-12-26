@@ -171,34 +171,30 @@ ProducingPaletteDone:
 
 fz_stream *fz_open_file2(fz_context *ctx, const TCHAR *filePath)
 {
-    fz_stream *file = NULL;
-
     size_t fileSize = file::GetSize(filePath);
     // load small files entirely into memory so that they can be
     // overwritten even by programs that don't open files with FILE_SHARE_READ
     if (fileSize < MAX_MEMORY_FILE_SIZE) {
         fz_buffer *data = NULL;
+        fz_stream *file;
         fz_try(ctx) {
             data = fz_new_buffer(ctx, (int)fileSize);
             if (file::ReadAll(filePath, (char *)data->data, (data->len = (int)fileSize)))
                 file = fz_open_buffer(ctx, data);
         }
-        fz_catch(ctx) { }
-        fz_drop_buffer(ctx, data);
-    }
-
-    if (!file) {
-        fz_try(ctx) {
-#ifdef UNICODE
-            file = fz_open_file_w(ctx, filePath);
-#else
-            file = fz_open_file(ctx, filePath);
-#endif
+        fz_catch(ctx) {
+            file = NULL;
         }
-        fz_catch(ctx) { }
+        fz_drop_buffer(ctx, data);
+        if (file)
+            return file;
     }
 
-    return file;
+#ifdef UNICODE
+    return fz_open_file_w(ctx, filePath);
+#else
+    return fz_open_file(ctx, filePath);
+#endif
 }
 
 unsigned char *fz_extract_stream_data(fz_stream *stream, size_t *cbCount)
@@ -1057,12 +1053,18 @@ bool CPdfEngine::Load(const TCHAR *fileName, PasswordUI *pwdUI)
     if (!_fileName || !ctx)
         return false;
 
+    fz_stream *file;
     // File names ending in :<digits>:<digits> are interpreted as containing
     // embedded PDF documents (the digits are :<num>:<gen> of the embedded file stream)
     TCHAR *embedMarks = (TCHAR *)findEmbedMarks(_fileName);
     if (embedMarks)
         *embedMarks = '\0';
-    fz_stream *file = fz_open_file2(ctx, _fileName);
+    fz_try(ctx) {
+        file = fz_open_file2(ctx, _fileName);
+    }
+    fz_catch(ctx) {
+        file = NULL;
+    }
     if (embedMarks)
         *embedMarks = ':';
 
@@ -1079,16 +1081,17 @@ OpenEmbeddedFile:
     if (!embedMarks || !pdf_is_stream(_xref, num, gen))
         return false;
 
-    fz_buffer *buffer;
+    fz_buffer *buffer = NULL;
     fz_try(ctx) {
         buffer = pdf_load_stream(_xref, num, gen);
+        file = fz_open_buffer(ctx, buffer);
     }
     fz_catch(ctx) {
+        fz_drop_buffer(ctx, buffer);
         return false;
     }
-
-    file = fz_open_buffer(ctx, buffer);
     fz_drop_buffer(ctx, buffer);
+
     pdf_free_xref(_xref);
     _xref = NULL;
 
@@ -1100,7 +1103,15 @@ bool CPdfEngine::Load(IStream *stream, PasswordUI *pwdUI)
     assert(!_fileName && !_xref && ctx);
     if (!ctx)
         return false;
-    if (!LoadFromStream(fz_open_istream(ctx, stream), pwdUI))
+
+    fz_stream *stm;
+    fz_try(ctx) {
+        stm = fz_open_istream(ctx, stream);
+    }
+    fz_catch(ctx) {
+        stm = NULL;
+    }
+    if (!LoadFromStream(stm, pwdUI))
         return false;
     return FinishLoading();
 }
@@ -1110,7 +1121,14 @@ bool CPdfEngine::Load(fz_stream *stm, PasswordUI *pwdUI)
     assert(!_fileName && !_xref && ctx);
     if (!ctx)
         return false;
-    if (!LoadFromStream(fz_clone_stream(ctx, stm), pwdUI))
+
+    fz_try(ctx) {
+        stm = fz_clone_stream(ctx, stm);
+    }
+    fz_catch(ctx) {
+        stm = NULL;
+    }
+    if (!LoadFromStream(stm, pwdUI))
         return false;
     return FinishLoading();
 }
@@ -1329,7 +1347,8 @@ PdfPageRun *CPdfEngine::GetPageRun(pdf_page *page, bool tryOnly)
     PdfPageRun *result = NULL;
     int i;
 
-    EnterCriticalSection(&pagesAccess);
+    ScopedCritSec scope(&pagesAccess);
+
     for (i = 0; i < MAX_PAGE_RUN_CACHE && runCache[i] && !result; i++)
         if (runCache[i]->page == page)
             result = runCache[i];
@@ -1339,23 +1358,22 @@ PdfPageRun *CPdfEngine::GetPageRun(pdf_page *page, bool tryOnly)
             i--;
         }
 
-        EnterCriticalSection(&ctxAccess);
+        ScopedCritSec scope(&ctxAccess);
 
-        fz_display_list *list = fz_new_display_list(ctx);
-        fz_device *dev = fz_new_list_device(ctx, list);
-        bool ok = false;
+        fz_display_list *list = NULL;
+        fz_device *dev = NULL;
         fz_try(ctx) {
+            list = fz_new_display_list(ctx);
+            dev = fz_new_list_device(ctx, list);
             pdf_run_page(_xref, page, dev, fz_identity);
-            ok = true;
         }
         fz_catch(ctx) {
             fz_free_display_list(ctx, list);
+            list = NULL;
         }
         fz_free_device(dev);
 
-        LeaveCriticalSection(&ctxAccess);
-
-        if (ok) {
+        if (list) {
             PdfPageRun newRun = { page, list, 1 };
             result = runCache[i] = (PdfPageRun *)_memdup(&newRun);
         }
@@ -1370,7 +1388,6 @@ PdfPageRun *CPdfEngine::GetPageRun(pdf_page *page, bool tryOnly)
 
     if (result)
         result->refs++;
-    LeaveCriticalSection(&pagesAccess);
     return result;
 }
 
@@ -1801,7 +1818,7 @@ pdf_annot **CPdfEngine::ProcessPageAnnotations(pdf_page *page)
                 page->links = link;
             }
         }
-        else if (!str::IsEmpty(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents"))) &&
+        if (!str::IsEmpty(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents"))) &&
             !str::Eq(subtype, "FreeText")) {
             comments.Append(annot);
         }
@@ -2298,10 +2315,10 @@ protected:
     CRITICAL_SECTION _pagesAccess;
     xps_page **     _pages;
 
-    virtual bool    load(const TCHAR *fileName);
-    virtual bool    load(IStream *stream);
-    bool            load(fz_stream *stm);
-    bool            load_from_stream(fz_stream *stm);
+    virtual bool    Load(const TCHAR *fileName);
+    virtual bool    Load(IStream *stream);
+    bool            Load(fz_stream *stm);
+    bool            LoadFromStream(fz_stream *stm);
 
     xps_page      * GetXpsPage(int pageNo, bool failIfBusy=false);
     fz_matrix       viewctm(int pageNo, float zoom, int rotation) {
@@ -2497,7 +2514,7 @@ CXpsEngine *CXpsEngine::Clone()
     ScopedCritSec scope(&ctxAccess);
 
     CXpsEngine *clone = new CXpsEngine();
-    if (!clone || !clone->load(_doc->file)) {
+    if (!clone || !clone->Load(_doc->file)) {
         delete clone;
         return NULL;
     }
@@ -2508,32 +2525,55 @@ CXpsEngine *CXpsEngine::Clone()
     return clone;
 }
 
-bool CXpsEngine::load(const TCHAR *fileName)
+bool CXpsEngine::Load(const TCHAR *fileName)
 {
     assert(!_fileName && !_doc && ctx);
     _fileName = str::Dup(fileName);
     if (!_fileName || !ctx)
         return false;
-    return load_from_stream(fz_open_file2(ctx, _fileName));
+
+    fz_stream *stm;
+    fz_try(ctx) {
+        stm = fz_open_file2(ctx, _fileName);
+    }
+    fz_catch(ctx) {
+        stm = NULL;
+    }
+    return LoadFromStream(stm);
 }
 
-bool CXpsEngine::load(IStream *stream)
+bool CXpsEngine::Load(IStream *stream)
 {
     assert(!_fileName && !_doc && ctx);
     if (!ctx)
         return false;
-    return load_from_stream(fz_open_istream(ctx, stream));
+
+    fz_stream *stm;
+    fz_try(ctx) {
+        stm = fz_open_istream(ctx, stream);
+    }
+    fz_catch(ctx) {
+        stm = NULL;
+    }
+    return LoadFromStream(stm);
 }
 
-bool CXpsEngine::load(fz_stream *stm)
+bool CXpsEngine::Load(fz_stream *stm)
 {
     assert(!_fileName && !_doc && ctx);
     if (!ctx)
         return false;
-    return load_from_stream(fz_clone_stream(ctx, stm));
+
+    fz_try(ctx) {
+        stm = fz_clone_stream(ctx, stm);
+    }
+    fz_catch(ctx) {
+        stm = NULL;
+    }
+    return LoadFromStream(stm);
 }
 
-bool CXpsEngine::load_from_stream(fz_stream *stm)
+bool CXpsEngine::LoadFromStream(fz_stream *stm)
 {
     if (!stm)
         return false;
@@ -2602,23 +2642,22 @@ XpsPageRun *CXpsEngine::GetPageRun(xps_page *page, bool tryOnly, fz_link *extrac
             i--;
         }
 
-        EnterCriticalSection(&ctxAccess);
+        ScopedCritSec scope(&ctxAccess);
 
-        fz_display_list *list = fz_new_display_list(ctx);
-        fz_device *dev = fz_new_list_device(ctx, list);
-        bool ok = false;
+        fz_display_list *list = NULL;
+        fz_device *dev = NULL;
         fz_try(ctx) {
+            list = fz_new_display_list(ctx);
+            dev = fz_new_list_device(ctx, list);
             xps_run_page(_doc, page, dev, fz_identity, extract);
-            ok = true;
         }
         fz_catch(ctx) {
             fz_free_display_list(ctx, list);
+            list = NULL;
         }
         fz_free_device(dev);
 
-        LeaveCriticalSection(&ctxAccess);
-
-        if (ok) {
+        if (list) {
             XpsPageRun newRun = { page, list, 1 };
             result = _runCache[i] = (XpsPageRun *)_memdup(&newRun);
         }
@@ -3184,7 +3223,7 @@ bool XpsEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
 XpsEngine *XpsEngine::CreateFromFileName(const TCHAR *fileName)
 {
     CXpsEngine *engine = new CXpsEngine();
-    if (!engine || !fileName || !engine->load(fileName)) {
+    if (!engine || !fileName || !engine->Load(fileName)) {
         delete engine;
         return NULL;
     }
@@ -3194,7 +3233,7 @@ XpsEngine *XpsEngine::CreateFromFileName(const TCHAR *fileName)
 XpsEngine *XpsEngine::CreateFromStream(IStream *stream)
 {
     CXpsEngine *engine = new CXpsEngine();
-    if (!engine->load(stream)) {
+    if (!engine->Load(stream)) {
         delete engine;
         return NULL;
     }
