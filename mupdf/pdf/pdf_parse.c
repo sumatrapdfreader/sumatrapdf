@@ -412,8 +412,6 @@ pdf_parse_dict(pdf_xref *xref, fz_stream *file, char *buf, int cap)
 				fz_throw(ctx, "invalid indirect reference in dict");
 
 			default:
-				fz_drop_obj(key);
-				fz_drop_obj(dict);
 				fz_throw(ctx, "unknown token in dict");
 			}
 
