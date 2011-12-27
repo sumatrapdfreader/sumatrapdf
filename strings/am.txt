@@ -116,10 +116,10 @@ Contributor: Hrant Ohanyan »»» http://haysoft.org (hrantohanyan@mail.am)
 &Տպել... (մերժված)
 
 &Remember the password for this document
-&Հիշել փաստաթղթի գաղտնաբառը
+&Հիշել ֆայլի գաղտնաբառը
 
 &Remember these settings for each document
-Հիշել այս կարգավորումները &բոլոր փաստաթղթերի համար
+Հիշել այս կարգավորումները &բոլոր ֆայլերի համար
 
 &Remove Document
 Հեռացնել էջը
@@ -256,6 +256,9 @@ Continuous Facing
 Contribute Translation
 Օգնել թարգմանել
 
+Copy &Image
+Պատճենել &Նկարը
+
 Copy &Link Address
 Պատճենել &հղումը
 
@@ -299,10 +302,10 @@ Denied Permissions:
 Լիազորությունները մերժված են.
 
 DjVu documents
-DjVu փաստաթղթեր
+DjVu ֆայլեր
 
 Document Properties
-Փաստաթղթի հատկությունները
+Ֆայլի հատկությունները
 
 Download
 Բեռնել
@@ -317,7 +320,7 @@ Enter password for %s
 Գրել ծածկագիրը՝ %s-ի համար
 
 Enter the command-line to invoke when you double-click on the PDF document:
-Մուտքագրեք հրաման, որը կկատարվի PDF փաստաթղթում մկնիկի կրկնակի սեղման ժամանակ. 
+Մուտքագրեք հրաման, որը կկատարվի PDF ֆայլում մկնիկի կրկնակի սեղման ժամանակ. 
 
 Error loading %s
 Բացման սխալ %s
@@ -395,7 +398,7 @@ Found text at page %s (again)
 Գտնել տեքստ %s էջում (կրկին)
 
 Frequently Read
-Կարդալու քանակը
+Հաճախակի բացվածները
 
 GB
 ԳԲ
@@ -458,7 +461,7 @@ Open
 Բացել
 
 Open a document...
-Բացել փաստաթուղթը...
+Բացել ֆայլ...
 
 Open in &Adobe Reader
 Բացել &Adobe Reader-ում
@@ -476,7 +479,7 @@ P&roperties\tCtrl+D
 Հ&ատկություններ...\tCtrl+D
 
 PDF Document
-PDF փաստաթուղթ
+PDF ֆայլ
 
 PDF Producer:
 PDF արտադրողը.
@@ -485,7 +488,7 @@ PDF Version:
 PDF-ի տարբերակը.
 
 PDF documents
-PDF փաստաթղթեր
+PDF ֆայլեր
 
 Pa&ge...\tCtrl+G
 Էջ&ը...\tCtrl+G
@@ -509,7 +512,7 @@ Please wait - rendering...
 Խնդրում ենք սպասել...
 
 Postscript documents
-Հետգրվածքային փաստաթղթեր
+Հետգրվածքային ֆայլեր
 
 Pr&esentation\tCtrl+L
 Ներ&կայացումը\tCtrl+L
@@ -620,7 +623,7 @@ Synchronization file cannot be opened
 Հնարավոր չէ բացել համաժամեցման ֆայլը
 
 Text documents
-Տեքստային փաստաթղթեր
+Տեքստային ֆայլեր
 
 Title:
 Անունը.
@@ -638,7 +641,7 @@ Warning
 Զգուշացում
 
 XPS documents
-XPS փաստաթուղթ
+XPS ֆայլեր
 
 You have the latest version.
 Սա վերջին տարբերակն է։
@@ -665,8 +668,5 @@ copying text
 տեքստը պատճենվում է
 
 printing document
-փաստաթուղթը տպվում է
-
-# Untranslated:
-#Copy &Image
+ֆայլը տպվում է
 
