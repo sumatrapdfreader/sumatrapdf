@@ -65,9 +65,9 @@ CFLAGSB = $(CFLAGSB) /nologo /c
 # standard windows defines
 !if "$(PLATFORM)"=="X64"
 CFLAGSB = $(CFLAGSB) /D "WIN64" /D "_WIN64"
-!else
-CFLAGSB = $(CFLAGSB) /D "WIN32" /D "_WIN32"
 !endif
+# WIN32 means any Windows, not just 32-bit Windows
+CFLAGSB = $(CFLAGSB) /D "WIN32" /D "_WIN32"
 # suppress warning C4996: 'function': was declared deprecated
 CFLAGSB = $(CFLAGSB) /wd4996
 

@@ -179,7 +179,7 @@ pdf_load_builtin_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontname)
 	data = pdf_find_builtin_font(fontname, &len);
 	if (!data)
 	{
-#ifdef WIN32
+#ifdef _WIN32
 		/* we use built-in fonts in addition to those installed on windows
 		   because the metric for Times-Roman in windows fonts seems wrong
 		   and we end up with over-lapping text if this font is used.
@@ -227,7 +227,7 @@ pdf_load_substitute_cjk_font(fz_context *ctx, pdf_font_desc *fontdesc, int ros, 
 	unsigned char *data;
 	unsigned int len;
 
-#ifdef WIN32
+#ifdef _WIN32
 	/* Try to fall back to a reasonable TrueType font that might be installed locally */
 	fz_try(ctx)
 	{
@@ -269,7 +269,7 @@ pdf_load_system_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontname, c
 	int serif = 0;
 	int mono = 0;
 
-#ifdef WIN32
+#ifdef _WIN32
 	/* try to find a precise match in Windows' fonts before falling back to a built-in one */
 	fz_try(ctx)
 	{
