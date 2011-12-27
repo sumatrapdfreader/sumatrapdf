@@ -232,7 +232,7 @@ static bool SendAsEmailAttachment(WindowInfo *win)
     // We use the SendTo drop target provided by SendMail.dll, which should ship with all
     // commonly used Windows versions, instead of MAPISendMail, which doesn't support
     // Unicode paths and might not be set up on systems not having Microsoft Outlook installed.
-    ScopedComPtr<IDataObject> pDataObject(GetDataObjectForFile(win->dm->FileName(), win->hwndFrame));
+    ScopedComPtr<IDataObject> pDataObject(GetDataObjectForFile(win->loadedFilePath, win->hwndFrame));
     if (!pDataObject)
         return false;
 

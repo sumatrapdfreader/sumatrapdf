@@ -60,7 +60,7 @@ bool CanViewExternally(WindowInfo *win)
 bool CanViewWithFoxit(WindowInfo *win)
 {
     // Requirements: a valid filename and a valid path to Foxit
-    if (!CanViewExternally(win) || win && !win->IsPdf())
+    if (win && win->IsNotPdf() || !CanViewExternally(win))
         return false;
     ScopedMem<TCHAR> path(GetFoxitPath());
     return path != NULL;
@@ -80,14 +80,18 @@ bool ViewWithFoxit(WindowInfo *win, TCHAR *args)
     // Foxit cmd-line format:
     // [PDF filename] [-n <page number>] [-pwd <password>] [-z <zoom>]
     // TODO: Foxit allows passing password and zoom
-    ScopedMem<TCHAR> params(str::Format(_T("%s \"%s\" -n %d"), args, win->loadedFilePath, win->dm->CurrentPageNo()));
+    ScopedMem<TCHAR> params;
+    if (win->IsDocLoaded())
+        params.Set(str::Format(_T("\"%s\" %s -n %d"), win->dm->FileName(), args, win->dm->CurrentPageNo()));
+    else
+        params.Set(str::Format(_T("\"%s\" %s"), win->loadedFilePath, args));
     return LaunchFile(exePath, params);
 }
 
 bool CanViewWithPDFXChange(WindowInfo *win)
 {
     // Requirements: a valid filename and a valid path to PDF X-Change
-    if (!CanViewExternally(win) || win && !win->IsPdf())
+    if (win && win->IsNotPdf() || !CanViewExternally(win))
         return false;
     ScopedMem<TCHAR> path(GetPDFXChangePath());
     return path != NULL;
@@ -107,14 +111,18 @@ bool ViewWithPDFXChange(WindowInfo *win, TCHAR *args)
     // PDFXChange cmd-line format:
     // [/A "param=value [&param2=value ..."] [PDF filename] 
     // /A params: page=<page number>
-    ScopedMem<TCHAR> params(str::Format(_T("%s /A \"page=%d\" \"%s\""), args, win->dm->CurrentPageNo(), win->loadedFilePath));
+    ScopedMem<TCHAR> params;
+    if (win->IsDocLoaded())
+        params.Set(str::Format(_T("%s /A \"page=%d\" \"%s\""), args, win->dm->CurrentPageNo(), win->dm->FileName()));
+    else
+        params.Set(str::Format(_T("%s \"%s\""), args, win->loadedFilePath));
     return LaunchFile(exePath, params);
 }
 
 bool CanViewWithAcrobat(WindowInfo *win)
 {
     // Requirements: a valid filename and a valid path to Adobe Reader
-    if (!CanViewExternally(win) || win && !win->IsPdf())
+    if (win && win->IsNotPdf() || !CanViewExternally(win))
         return false;
     ScopedMem<TCHAR> exePath(GetAcrobatPath());
     return exePath != NULL;
@@ -132,14 +140,14 @@ bool ViewWithAcrobat(WindowInfo *win, TCHAR *args)
     if (!args)
         args = _T("");
 
-    ScopedMem<TCHAR> params(NULL);
+    ScopedMem<TCHAR> params;
     // Command line format for version 6 and later:
     //   /A "page=%d&zoom=%.1f,%d,%d&..." <filename>
     // see http://www.adobe.com/devnet/acrobat/pdfs/pdf_open_parameters.pdf
     //   /P <filename>
     // see http://www.adobe.com/devnet/acrobat/pdfs/Acrobat_SDK_developer_faq.pdf#page=24
     // TODO: Also set zoom factor and scroll to current position?
-    if (win->dm && HIWORD(GetFileVersion(exePath)) >= 6)
+    if (win->IsDocLoaded() && HIWORD(GetFileVersion(exePath)) >= 6)
         params.Set(str::Format(_T("/A \"page=%d\" %s \"%s\""), win->dm->CurrentPageNo(), args, win->dm->FileName()));
     else
         params.Set(str::Format(_T("%s \"%s\""), args, win->loadedFilePath));

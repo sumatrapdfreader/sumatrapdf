@@ -320,12 +320,14 @@ void MenuUpdateStateForWindow(WindowInfo* win) {
         IDM_VIEW_ROTATE_LEFT, IDM_VIEW_ROTATE_RIGHT, IDM_GOTO_NEXT_PAGE, IDM_GOTO_PREV_PAGE,
         IDM_GOTO_FIRST_PAGE, IDM_GOTO_LAST_PAGE, IDM_GOTO_NAV_BACK, IDM_GOTO_NAV_FORWARD,
         IDM_GOTO_PAGE, IDM_FIND_FIRST, IDM_SAVEAS, IDM_SAVEAS_BOOKMARK, IDM_SEND_BY_EMAIL,
-        IDM_VIEW_WITH_ACROBAT, IDM_VIEW_WITH_FOXIT, IDM_VIEW_WITH_PDF_XCHANGE, 
         IDM_SELECT_ALL, IDM_COPY_SELECTION, IDM_PROPERTIES, IDM_VIEW_PRESENTATION_MODE,
         IDM_VIEW_WITH_ACROBAT, IDM_VIEW_WITH_FOXIT, IDM_VIEW_WITH_PDF_XCHANGE,
     };
     static UINT menusToDisableIfDirectory[] = {
         IDM_SAVEAS, IDM_SEND_BY_EMAIL
+    };
+    static UINT menusToEnableIfBrokenPDF[] = {
+        IDM_VIEW_WITH_ACROBAT, IDM_VIEW_WITH_FOXIT, IDM_VIEW_WITH_PDF_XCHANGE, 
     };
 
     assert(IsFileCloseMenuEnabled() == !win->IsAboutWindow());
@@ -359,6 +361,13 @@ void MenuUpdateStateForWindow(WindowInfo* win) {
         for (int i = 0; i < dimof(menusToDisableIfDirectory); i++) {
             UINT id = menusToDisableIfDirectory[i];
             win::menu::SetEnabled(win->menu, id, false);
+        }
+    }
+
+    if (!win->IsDocLoaded() && !win->IsAboutWindow() && str::EndsWithI(win->loadedFilePath, _T(".pdf"))) {
+        for (int i = 0; i < dimof(menusToEnableIfBrokenPDF); i++) {
+            UINT id = menusToEnableIfBrokenPDF[i];
+            win::menu::SetEnabled(win->menu, id, true);
         }
     }
 
@@ -502,12 +511,11 @@ static void RebuildFileMenu(WindowInfo *win, HMENU menu)
         win::menu::Remove(menu, IDM_SEND_BY_EMAIL);
 
     // Also suppress PDF specific items for non-PDF documents
-    bool isNonPdf = win->IsDocLoaded() && !win->IsPdf();
-    if (isNonPdf || !CanViewWithAcrobat())
+    if (win->IsNotPdf() || !CanViewWithAcrobat())
         win::menu::Remove(menu, IDM_VIEW_WITH_ACROBAT);
-    if (isNonPdf || !CanViewWithFoxit())
+    if (win->IsNotPdf() || !CanViewWithFoxit())
         win::menu::Remove(menu, IDM_VIEW_WITH_FOXIT);
-    if (isNonPdf || !CanViewWithPDFXChange())
+    if (win->IsNotPdf() || !CanViewWithPDFXChange())
         win::menu::Remove(menu, IDM_VIEW_WITH_PDF_XCHANGE);
 }
 

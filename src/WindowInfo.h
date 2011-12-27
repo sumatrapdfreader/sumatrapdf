@@ -58,7 +58,7 @@ public:
     bool IsDocLoaded() const { return this->dm != NULL; }
 
     bool IsChm() const { return dm && dm->engineType == Engine_Chm; }
-    bool IsPdf() const { return dm && dm->engineType == Engine_PDF; }
+    bool IsNotPdf() const { return dm && dm->engineType != Engine_PDF; }
 
     TCHAR *         loadedFilePath;
     DisplayModel *  dm;
