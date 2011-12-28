@@ -436,9 +436,11 @@ int fz_store_scavenge(fz_context *ctx, unsigned int size, int *phase)
 #endif
 	do
 	{
-		/* SumatraPDF: avoid division by zero below */
+		/* SumatraPDF: scavenging might never find enough objects to free
+		               which could lead to a division by zero below */
 		if (*phase >= 16)
-			break;
+			max = 0;
+		else
 		/* Calculate 'max' as the maximum size of the store for this phase */
 		if (store->max != FZ_STORE_UNLIMITED)
 			max = store->max / 16 * (16 - *phase);
