@@ -752,7 +752,8 @@ fz_flatten_dash_path(fz_gel *gel, fz_path *path, fz_stroke_state *stroke, fz_mat
 	phase_len = 0;
 	for (i = 0; i < stroke->dash_len; i++)
 		phase_len += stroke->dash_list[i];
-	if (phase_len < 0.01f || phase_len < stroke->linewidth * 0.5f)
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1763 */
+	if (phase_len < 1.0f && phase_len * fz_matrix_expansion(ctm) < 0.5f)
 	{
 		fz_flatten_stroke_path(gel, path, stroke, ctm, flatness, linewidth);
 		return;
