@@ -86,7 +86,7 @@ Contributor: 4Li
 아니오(&N)
 
 &No, thanks
-아니오, 괜찮습니다.(&N)
+아니오(&N)
 
 &Odd pages only
 홀수 페이지만(&O)
@@ -311,7 +311,7 @@ Document Properties
 문서 속성
 
 Download
-다운로드
+예
 
 E&xit\tCtrl+Q
 끝내기(&X)\tCtrl+Q
