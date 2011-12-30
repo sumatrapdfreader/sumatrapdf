@@ -8,8 +8,8 @@ fz_free_outline(fz_outline *outline)
 		fz_outline *next = outline->next;
 		fz_free_outline(outline->down);
 		fz_free(outline->ctx, outline->title);
-		/* SumatraPDF: extended outline actions */
-		fz_free_link(outline->ctx, outline->link);
+		/* SumatraPDF: fix memory leak */
+		fz_free_link_dest(outline->ctx, &outline->dest);
 		fz_free(outline->ctx, outline);
 		outline = next;
 	}
@@ -20,7 +20,8 @@ fz_debug_outline_xml(fz_outline *outline, int level)
 {
 	while (outline)
 	{
-		printf("<outline title=\"%s\" page=\"%d\"", outline->title, outline->page + 1);
+		/* SumatraPDF: support extended link actions */
+		printf("<outline title=\"%s\" page=\"%d\"", outline->title, outline->dest.kind == FZ_LINK_GOTO ? outline->dest.ld.gotor.page + 1 : 0);
 		if (outline->down)
 		{
 			printf(">\n");
@@ -43,7 +44,8 @@ fz_debug_outline(fz_outline *outline, int level)
 	{
 		for (i = 0; i < level; i++)
 			putchar('\t');
-		printf("%s\t%d\n", outline->title, outline->page + 1);
+		/* SumatraPDF: support extended link actions */
+		printf("%s\t%d\n", outline->title, outline->dest.kind == FZ_LINK_GOTO ? outline->dest.ld.gotor.page + 1 : 0);
 		if (outline->down)
 			fz_debug_outline(outline->down, level + 1);
 		outline = outline->next;

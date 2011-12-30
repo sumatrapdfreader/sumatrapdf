@@ -307,9 +307,6 @@ EXPORTS
 	fz_execute_display_list
 	fz_list_is_single_image
 	fz_list_requires_blending
-	fz_debug_outline_xml
-	fz_debug_outline
-	fz_free_outline
 	fz_accelerate
 	fz_decode_tile
 	fz_decode_indexed_tile
@@ -325,8 +322,12 @@ EXPORTS
 	fz_paint_pixmap_with_rect
 	fz_blend_pixmap
 	fz_blend_pixel
+	fz_free_link_dest
 	fz_new_link
 	fz_free_link
+	fz_debug_outline_xml
+	fz_debug_outline
+	fz_free_outline
 	fz_synchronize_begin
 	fz_synchronize_end
 
@@ -439,6 +440,7 @@ EXPORTS
 	pdf_ft_get_vgid
 	pdf_ft_free_vsubst
 	pdf_parse_link_dest
+	pdf_parse_action
 	pdf_lookup_dest
 	pdf_lookup_name
 	pdf_load_name_tree

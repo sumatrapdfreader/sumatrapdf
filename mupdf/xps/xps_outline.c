@@ -15,17 +15,6 @@ xps_find_last_outline_at_level(fz_outline *node, int level, int target_level)
 	return xps_find_last_outline_at_level(node->down, level + 1, target_level);
 }
 
-/* SumatraPDF: extended outline actions */
-#define isprotc(c) (('A' <= (c) && (c) <= 'Z') || ('a' <= (c) && (c) <= 'z') || (c) == '-')
-
-static int
-xps_is_external_uri(char *path)
-{
-	char *c;
-	for (c = path; isprotc(*c); c++);
-	return c > path && *c == ':';
-}
-
 static fz_outline *
 xps_parse_document_outline(xps_document *doc, xml_element *root)
 {
@@ -45,17 +34,15 @@ xps_parse_document_outline(xps_document *doc, xml_element *root)
 
 			entry = fz_malloc_struct(doc->ctx, fz_outline);
 			entry->title = fz_strdup(doc->ctx, description);
-			entry->page = -1;
 			/* SumatraPDF: extended outline actions */
 			entry->ctx = doc->ctx;
-			entry->link = NULL;
+			entry->dest.kind = FZ_LINK_NONE;
 			if (target)
 			{
-				fz_link_dest ld;
-				ld.uri.uri = fz_strdup(doc->ctx, target);
-				entry->link = fz_new_link(doc->ctx, FZ_LINK_URI, fz_empty_rect, ld, NULL);
-				if (!xps_is_external_uri(target))
-					entry->page = xps_find_link_target(doc, target);
+				entry->dest.kind = FZ_LINK_URI;
+				entry->dest.ld.uri.uri = fz_strdup(doc->ctx, target);
+				entry->dest.ld.uri.is_map = 0;
+				entry->dest.extra = NULL;
 			}
 			entry->down = NULL;
 			entry->next = NULL;
@@ -168,8 +155,11 @@ xps_extract_anchor_info(xps_document *doc, xml_element *node, fz_rect rect)
 	{
 		fz_link *link;
 		fz_link_dest ld;
-		ld.uri.uri = fz_strdup(doc->ctx, value);
-		link = fz_new_link(doc->ctx, FZ_LINK_URI, rect, ld, NULL);
+		ld.kind = FZ_LINK_URI;
+		ld.ld.uri.uri = fz_strdup(doc->ctx, value);
+		ld.ld.uri.is_map = 0;
+		ld.extra = NULL;
+		link = fz_new_link(doc->ctx, rect, ld);
 		// insert the links in bottom-to-top order (first one is to be preferred)
 		link->next = doc->link_root->next;
 		doc->link_root->next = link;

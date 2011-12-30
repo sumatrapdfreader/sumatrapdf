@@ -350,16 +350,14 @@ png_read_phys(struct info *info, unsigned char *p, int size)
 }
 
 static void
-png_read_image(struct info *info, unsigned char *p, int total)
+png_read_image(fz_context *ctx, struct info *info, unsigned char *p, int total)
 {
 	int passw[7], passh[7], passofs[8];
 	int code, size;
 	z_stream stm;
 
-	/* SumatraPDF: prevent NULL pointer dereference */
-	fz_context *save_ctx = info->ctx;
 	memset(info, 0, sizeof (struct info));
-	info->ctx = save_ctx;
+	info->ctx = ctx;
 	memset(info->palette, 255, sizeof(info->palette));
 	info->xres = 96;
 	info->yres = 96;
@@ -510,9 +508,7 @@ xps_decode_png(fz_context *ctx, byte *p, int total)
 	struct info png;
 	int stride;
 
-	png.ctx = ctx;
-
-	png_read_image(&png, p, total);
+	png_read_image(ctx, &png, p, total);
 
 	if (png.n == 3 || png.n == 4)
 		colorspace = fz_device_rgb;

@@ -399,37 +399,64 @@ fz_blend_separable_nonisolated(byte * restrict bp, byte * restrict sp, int n, in
 		int ha = *hp++;
 		int haa = fz_mul255(ha, alpha); /* ha = shape_alpha */
 		/* If haa == 0 then leave everything unchanged */
-		if (haa != 0)
+		while (haa != 0) /* Use while, so we can break out */
 		{
-			int sa = sp[n1];
-			int ba = bp[n1];
-			int baha = fz_mul255(ba, haa);
+			int sa, ba, bahaa, ra, invsa, invba, invha, invra;
+			sa = sp[n1];
+			if (sa == 0)
+				break; /* No change! */
+			invsa = sa ? 255 * 256 / sa : 0;
+			ba = bp[n1];
+			if (ba == 0)
+			{
+				/* Just copy pixels (allowing for change in
+				 * premultiplied alphas) */
+				for (k = 0; k < n1; k++)
+				{
+					bp[k] = fz_mul255((sp[k] * invsa) >> 8, haa);
+				}
+				bp[n1] = haa;
+				break;
+			}
+			bahaa = fz_mul255(ba, haa);
 
 			/* ugh, division to get non-premul components */
-			int invsa = sa ? 255 * 256 / sa : 0;
-			int invba = ba ? 255 * 256 / ba : 0;
+			invba = ba ? 255 * 256 / ba : 0;
 
-			/* Calculate result_alpha */
-			int ra = bp[n1] = ba - baha + haa;
-
+			/* Calculate result_alpha - a combination of the
+			 * background alpha, and 'shape' */
+			ra = bp[n1] = ba - bahaa + haa;
+			if (ra == 0)
+				break;
 			/* Because we are a non-isolated group, we need to
 			 * 'uncomposite' before we blend (recomposite).
 			 * We assume that normal blending has been done inside
-			 * the group, so: ra.rc = (1-ha).bc + ha.sc
+			 * the group, so: rc = (1-ha).bc + ha.sc
 			 * A bit of rearrangement, and that gives us that:
-			 * sc = (ra.rc - bc)/ha + bc
-			 * Now, the result of the blend was stored in src, so:
+			 * sc = (rc - bc)/ha + bc
+			 * Now, the result of the blend (rc) was stored in src, so
+			 * we actually want to calculate:
+			 *  sc = (sc-bc)/ha + bc
 			 */
-			int invha = ha ? 255 * 256 / ha : 0;
+			invha = ha ? 255 * 256 / ha : 0;
+			invra = ra ? 255 * 256 / ra : 0;
 
-			if (ra != 0) for (k = 0; k < n1; k++)
+			/* sa = the final alpha to blend with - this
+			 * is calculated from the shape + alpha,
+			 * divided by ra. */
+			sa = (haa*invra + 128)>>8;
+			if (sa < 0) sa = 0;
+			if (sa > 255) sa = 255;
+
+			for (k = 0; k < n1; k++)
 			{
-				int sc = (sp[k] * invsa) >> 8;
-				int bc = (bp[k] * invba) >> 8;
+				/* Read pixels (and convert to non-premultiplied form) */
+				int sc = (sp[k] * invsa + 128) >> 8;
+				int bc = (bp[k] * invba + 128) >> 8;
 				int rc;
 
-				/* Uncomposite */
-				sc = (((sc-bc)*invha)>>8) + bc;
+				/* Uncomposite (see above) */
+				sc = (((sc-bc) * invha + 128)>>8) + bc;
 				if (sc < 0) sc = 0;
 				if (sc > 255) sc = 255;
 
@@ -449,11 +476,15 @@ fz_blend_separable_nonisolated(byte * restrict bp, byte * restrict sp, int n, in
 				case FZ_BLEND_DIFFERENCE: rc = fz_difference_byte(bc, sc); break;
 				case FZ_BLEND_EXCLUSION: rc = fz_exclusion_byte(bc, sc); break;
 				}
-				rc = fz_mul255(255 - haa, bc) + fz_mul255(fz_mul255(255 - ba, sc), haa) + fz_mul255(baha, rc);
+				/* Composition formula, as given in pdf_reference17.pdf:
+				 * rc = ( 1 - (ha/ra)) * bc + (ha/ra) * ((1-ba)*sc + ba * rc)
+				 */
+				rc = bc + fz_mul255(sa, fz_mul255(255 - ba, sc) + fz_mul255(ba, rc) - bc);
 				if (rc < 0) rc = 0;
 				if (rc > 255) rc = 255;
 				bp[k] = fz_mul255(rc, ra);
 			}
+			break;
 		}
 
 		sp += n;

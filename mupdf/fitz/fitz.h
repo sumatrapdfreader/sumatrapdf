@@ -1187,28 +1187,6 @@ int fz_list_is_single_image(fz_display_list *list);
 int fz_list_requires_blending(fz_display_list *list);
 
 /*
- * Document interface.
- */
-
-typedef struct fz_outline_s fz_outline;
-typedef struct fz_link_s fz_link;
-
-struct fz_outline_s
-{
-	fz_context *ctx;
-	char *title;
-	int page;
-	fz_outline *next;
-	fz_outline *down;
-	int is_open; /* SumatraPDF: support expansion states */
-	fz_link *link; /* SumatraPDF: extended outline actions */
-};
-
-void fz_debug_outline_xml(fz_outline *outline, int level);
-void fz_debug_outline(fz_outline *outline, int level);
-void fz_free_outline(fz_outline *outline);
-
-/*
  * Plotting functions.
  */
 
@@ -1268,11 +1246,12 @@ enum
 
 typedef struct fz_link_s fz_link;
 
-typedef union fz_link_dest_s fz_link_dest;
+typedef struct fz_link_dest_s fz_link_dest;
 
 typedef enum fz_link_kind_e
 {
-	FZ_LINK_GOTO = 0,
+	FZ_LINK_NONE = 0,
+	FZ_LINK_GOTO,
 	FZ_LINK_URI,
 	FZ_LINK_LAUNCH,
 	FZ_LINK_NAMED,
@@ -1289,42 +1268,75 @@ enum {
 	fz_link_flag_r_is_zoom = 64  /* rb.x is actually a zoom figure */
 };
 
-union fz_link_dest_s
+struct fz_link_dest_s
 {
-	struct {
-		int page;
-		int flags;
-		fz_point lt;
-		fz_point rb;
-		char *file_spec;
-		int new_window;
-	} gotor;
-	struct {
-		char *uri;
-		int is_map;
-	} uri;
-	struct {
-		char *file_spec;
-		int new_window;
-	} launch;
-	struct {
-		char *named;
-	} named;
+	fz_link_kind kind;
+	union
+	{
+		struct
+		{
+			int page;
+			int flags;
+			fz_point lt;
+			fz_point rb;
+			char *file_spec;
+			int new_window;
+		}
+		gotor;
+		struct
+		{
+			char *uri;
+			int is_map;
+		}
+		uri;
+		struct
+		{
+			char *file_spec;
+			int new_window;
+		}
+		launch;
+		struct
+		{
+			char *named;
+		}
+		named;
+	}
+	ld;
+	fz_obj *extra; /* SumatraPDF: support extended link actions */
 };
 
+/* SumatraPDF: fix memory leak */
+void fz_free_link_dest(fz_context *ctx, fz_link_dest *dest);
 
 struct fz_link_s
 {
-	fz_link_kind kind;
 	fz_rect rect;
 	fz_link_dest dest;
 	fz_link *next;
-	fz_obj *extra; /* SumatraPDF: provide access to the link object */
 };
 
-/* SumatraPDF: provide access to the link object */
-fz_link *fz_new_link(fz_context *ctx, fz_link_kind, fz_rect bbox, fz_link_dest dest, fz_obj *extra);
-void fz_free_link(fz_context *ctx, fz_link *);
+fz_link *fz_new_link(fz_context *ctx, fz_rect bbox, fz_link_dest dest);
+void fz_free_link(fz_context *ctx, fz_link *link);
+
+/*
+ * Document interface.
+ */
+
+typedef struct fz_outline_s fz_outline;
+
+struct fz_outline_s
+{
+	fz_context *ctx;
+	char *title;
+	fz_link_dest dest;
+	fz_outline *next;
+	fz_outline *down;
+	int is_open; /* SumatraPDF: support expansion states */
+};
+
+void fz_debug_outline_xml(fz_outline *outline, int level);
+void fz_debug_outline(fz_outline *outline, int level);
+void fz_free_outline(fz_outline *outline);
 
 /* SumatraPDF: basic global synchronizing */
 #ifdef _WIN32

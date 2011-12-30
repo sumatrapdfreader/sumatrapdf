@@ -5,71 +5,56 @@ static fz_outline *
 pdf_load_outline_imp(pdf_xref *xref, fz_obj *dict)
 {
 	fz_context *ctx = xref->ctx;
-	fz_outline *node;
+	fz_outline *node, **prev, *first;
 	fz_obj *obj;
-	/* SumatraPDF: prevent potential stack overflow */
-	fz_outline *prev, *root = NULL;
+	/* SumatraPDF: prevent cyclic outlines */
 	fz_obj *origDict = dict;
 
-	if (fz_is_null(dict))
-		return NULL;
-
-	/* SumatraPDF: prevent cyclic outlines */
-	do
+	first = NULL;
+	prev = &first;
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1172 */
+	while (dict && !fz_is_null(dict))
 	{
+		/* SumatraPDF: prevent cyclic outlines */
 		if (fz_dict_gets(dict, ".seen"))
 			break;
 		obj = fz_new_null(ctx);
 		fz_dict_puts(dict, ".seen", obj);
 		fz_drop_obj(obj);
 
-	node = fz_malloc_struct(ctx, fz_outline);
-	node->ctx = ctx;
-	node->title = NULL;
-	node->page = -1;
-	node->down = NULL;
-	node->next = NULL;
+		node = fz_malloc_struct(ctx, fz_outline);
+		node->ctx = ctx;
+		node->title = NULL;
+		node->dest.kind = FZ_LINK_NONE;
+		node->down = NULL;
+		node->next = NULL;
+		*prev = node;
+		prev = &node->next;
 
-	obj = fz_dict_gets(dict, "Title");
-	if (obj)
-		node->title = pdf_to_utf8(ctx, obj);
+		obj = fz_dict_gets(dict, "Title");
+		if (obj)
+			node->title = pdf_to_utf8(ctx, obj);
 
-	/* SumatraPDF: support expansion states */
-	node->is_open = fz_to_int(fz_dict_gets(dict, "Count")) >= 0;
-	node->link = NULL; /* SumatraPDF: extended outline actions */
+		/* SumatraPDF: support expansion states */
+		node->is_open = fz_to_int(fz_dict_gets(dict, "Count")) >= 0;
 
-	if (fz_dict_gets(dict, "Dest") || fz_dict_gets(dict, "A"))
-	{
-		fz_link_dest ld = pdf_parse_link_dest(xref, dict);
-		node->page = ld.gotor.page;
-		/* SumatraPDF: extended outline actions */
-		node->link = pdf_load_link(xref, dict);
-		/* SumatraPDF: fix page number detection */
-		if (node->link && node->link->kind == FZ_LINK_GOTO)
-			node->page = node->link->dest.gotor.page;
-		else
-			node->page = -1;
-	}
+		if ((obj = fz_dict_gets(dict, "Dest")))
+			node->dest = pdf_parse_link_dest(xref, obj);
+		else if ((obj = fz_dict_gets(dict, "A")))
+			node->dest = pdf_parse_action(xref, obj);
 
-	obj = fz_dict_gets(dict, "First");
-	if (obj)
-		node->down = pdf_load_outline_imp(xref, obj);
-
-		/* SumatraPDF: prevent potential stack overflow */
-		if (!root)
-			prev = root = node;
-		else
-			prev = prev->next = node;
+		obj = fz_dict_gets(dict, "First");
+		if (obj)
+			node->down = pdf_load_outline_imp(xref, obj);
 
 		dict = fz_dict_gets(dict, "Next");
-	} while (dict && !fz_is_null(dict));
-	node = root;
+	}
 
 	/* SumatraPDF: prevent cyclic outlines */
 	for (dict = origDict; dict && fz_dict_gets(dict, ".seen"); dict = fz_dict_gets(dict, "Next"))
 		fz_dict_dels(dict, ".seen");
 
-	return node;
+	return first;
 }
 
 fz_outline *

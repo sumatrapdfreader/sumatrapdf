@@ -7,9 +7,8 @@
 #define STACK_SIZE 96
 
 /* Enable the following to attempt to support knockout and/or isolated
- * blending groups. This code is known to give incorrect results currently
- * so disabled by default. See bug 692377. */
-#undef ATTEMPT_KNOCKOUT_AND_ISOLATED
+ * blending groups. */
+#define ATTEMPT_KNOCKOUT_AND_ISOLATED
 
 /* Enable the following to help debug group blending. */
 #undef DUMP_GROUP_BLENDS
@@ -70,7 +69,7 @@ struct fz_draw_device_s
 #ifdef DUMP_GROUP_BLENDS
 static int group_dump_count = 0;
 
-static void fz_dump_blend(fz_pixmap *pix, const char *s)
+static void fz_dump_blend(fz_context *ctx, fz_pixmap *pix, const char *s)
 {
 	char name[80];
 
@@ -82,7 +81,7 @@ static void fz_dump_blend(fz_pixmap *pix, const char *s)
 		printf("%s%02d", s, group_dump_count);
 	group_dump_count++;
 
-	fz_write_png(pix, name, (pix->n > 1));
+	fz_write_png(ctx, pix, name, (pix->n > 1));
 }
 
 static void dump_spaces(int x, const char *s)
@@ -143,7 +142,7 @@ static void fz_knockout_begin(fz_draw_device *dev)
 		fz_copy_pixmap_rect(dest, prev, bbox);
 	}
 
-	if (dev->blendmode == 0 && isolated || 1 /* SumatraPDF: disable crashy shape code */)
+	if (dev->blendmode == 0 && isolated)
 	{
 		/* We can render direct to any existing shape plane. If there
 		 * isn't one, we don't need to make one. */
@@ -194,12 +193,12 @@ static void fz_knockout_end(fz_draw_device *dev)
 
 #ifdef DUMP_GROUP_BLENDS
 		dump_spaces(dev->top, "");
-		fz_dump_blend(group, "Blending ");
+		fz_dump_blend(dev->ctx, group, "Blending ");
 		if (shape)
-			fz_dump_blend(shape, "/");
-		fz_dump_blend(dev->dest, " onto ");
+			fz_dump_blend(dev->ctx, shape, "/");
+		fz_dump_blend(dev->ctx, dev->dest, " onto ");
 		if (dev->shape)
-			fz_dump_blend(dev->shape, "/");
+			fz_dump_blend(dev->ctx, dev->shape, "/");
 		if (blendmode != 0)
 			printf(" (blend %d)", blendmode);
 		if (isolated != 0)
@@ -221,9 +220,9 @@ static void fz_knockout_end(fz_draw_device *dev)
 			fz_drop_pixmap(dev->ctx, shape);
 		}
 #ifdef DUMP_GROUP_BLENDS
-		fz_dump_blend(dev->dest, " to get ");
+		fz_dump_blend(dev->ctx, dev->dest, " to get ");
 		if (dev->shape)
-			fz_dump_blend(dev->shape, "/");
+			fz_dump_blend(dev->ctx, dev->shape, "/");
 		printf("\n");
 #endif
 	}
@@ -1185,13 +1184,13 @@ fz_draw_pop_clip(fz_device *devp)
 
 #ifdef DUMP_GROUP_BLENDS
 			dump_spaces(dev->top, "");
-			fz_dump_blend(dev->dest, "Clipping ");
+			fz_dump_blend(dev->ctx, dev->dest, "Clipping ");
 			if (dev->shape)
-				fz_dump_blend(dev->shape, "/");
-			fz_dump_blend(dest, " onto ");
+				fz_dump_blend(dev->ctx, dev->shape, "/");
+			fz_dump_blend(dev->ctx, dest, " onto ");
 			if (shape)
-				fz_dump_blend(shape, "/");
-			fz_dump_blend(mask, " with ");
+				fz_dump_blend(dev->ctx, shape, "/");
+			fz_dump_blend(dev->ctx, mask, " with ");
 #endif
 			fz_paint_pixmap_with_mask(dest, dev->dest, mask);
 			if (shape)
@@ -1205,9 +1204,9 @@ fz_draw_pop_clip(fz_device *devp)
 			fz_drop_pixmap(dev->ctx, dev->dest);
 			dev->dest = dest;
 #ifdef DUMP_GROUP_BLENDS
-			fz_dump_blend(dev->dest, " to get ");
+			fz_dump_blend(dev->ctx, dev->dest, " to get ");
 			if (dev->shape)
-				fz_dump_blend(dev->shape, "/");
+				fz_dump_blend(dev->ctx, dev->shape, "/");
 			printf("\n");
 #endif
 		}
@@ -1371,7 +1370,7 @@ fz_draw_begin_group(fz_device *devp, fz_rect rect, int isolated, int knockout, i
 		fz_copy_pixmap_rect(dest, dev->dest, bbox);
 	}
 
-	if (blendmode == 0 && alpha == 1.0 && isolated || 1 /* SumatraPDF: disable crashy shape code */)
+	if (blendmode == 0 && alpha == 1.0 && isolated)
 	{
 		/* We can render direct to any existing shape plane. If there
 		 * isn't one, we don't need to make one. */
@@ -1430,12 +1429,12 @@ fz_draw_end_group(fz_device *devp)
 
 #ifdef DUMP_GROUP_BLENDS
 		dump_spaces(dev->top, "");
-		fz_dump_blend(group, "Blending ");
+		fz_dump_blend(dev->ctx, group, "Blending ");
 		if (shape)
-			fz_dump_blend(shape, "/");
-		fz_dump_blend(dev->dest, " onto ");
+			fz_dump_blend(dev->ctx, shape, "/");
+		fz_dump_blend(dev->ctx, dev->dest, " onto ");
 		if (dev->shape)
-			fz_dump_blend(dev->shape, "/");
+			fz_dump_blend(dev->ctx, dev->shape, "/");
 		if (alpha != 1.0f)
 			printf(" (alpha %g)", alpha);
 		if (blendmode != 0)
@@ -1460,9 +1459,9 @@ fz_draw_end_group(fz_device *devp)
 			fz_drop_pixmap(dev->ctx, shape);
 		}
 #ifdef DUMP_GROUP_BLENDS
-		fz_dump_blend(dev->dest, " to get ");
+		fz_dump_blend(dev->ctx, dev->dest, " to get ");
 		if (dev->shape)
-			fz_dump_blend(dev->shape, "/");
+			fz_dump_blend(dev->ctx, dev->shape, "/");
 		printf("\n");
 #endif
 	}
@@ -1492,20 +1491,12 @@ fz_draw_begin_tile(fz_device *devp, fz_rect area, fz_rect view, float xstep, flo
 	/* We should never have a bbox that entirely covers our destination.
 	 * If we do, then the check for only 1 tile being visible above has
 	 * failed. */
-	/* SumatraPDF: assertion intentionally disabled
+	/* SumatraPDF: this assertion doesn't always hold
+	   (fails e.g. for "infinite pattern recursion.pdf")
 	assert(bbox.x0 > dev->dest->x || bbox.x1 < dev->dest->x + dev->dest->w ||
 		bbox.y0 > dev->dest->y || bbox.y1 < dev->dest->y + dev->dest->h);
-	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692418 */
-	fz_try(dev->ctx)
-	{
-		dest = fz_new_pixmap_with_rect(dev->ctx, model, bbox);
-	}
-	fz_catch(dev->ctx)
-	{
-		bbox.x1 = bbox.x0;
-		bbox.y1 = bbox.y0;
-		dest = fz_new_pixmap_with_rect(dev->ctx, model, bbox);
-	}
+	*/
+	dest = fz_new_pixmap_with_rect(dev->ctx, model, bbox);
 	/* FIXME: See note #1 */
 	fz_clear_pixmap(dest);
 
@@ -1522,6 +1513,13 @@ fz_draw_begin_tile(fz_device *devp, fz_rect area, fz_rect view, float xstep, flo
 	dump_spaces(dev->top, "Tile begin\n");
 #endif
 	dev->top++;
+
+	/* SumatraPDF: fix shaping crash */
+	if (dev->shape)
+	{
+		dev->shape = fz_new_pixmap_with_rect(dev->ctx, NULL, bbox);
+		fz_clear_pixmap(dev->shape);
+	}
 
 	dev->scissor = bbox;
 	dev->dest = dest;
@@ -1572,6 +1570,14 @@ fz_draw_end_tile(fz_device *devp)
 		}
 
 		fz_drop_pixmap(dev->ctx, tile);
+
+		/* SumatraPDF: fix shaping crash */
+		/* TODO: apply the shape tile-wise */
+		if (dev->shape)
+		{
+			fz_drop_pixmap(dev->ctx, dev->shape);
+			dev->shape = dev->stack[dev->top].shape;
+		}
 	}
 
 	if (dev->blendmode & FZ_BLEND_KNOCKOUT)

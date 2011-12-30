@@ -432,7 +432,7 @@ struct pdf_annot_s
 };
 
 fz_link_dest pdf_parse_link_dest(pdf_xref *xref, fz_obj *dest);
-
+fz_link_dest pdf_parse_action(pdf_xref *xref, fz_obj *action);
 fz_obj *pdf_lookup_dest(pdf_xref *xref, fz_obj *needle);
 fz_obj *pdf_lookup_name(pdf_xref *xref, char *which, fz_obj *needle);
 fz_obj *pdf_load_name_tree(pdf_xref *xref, char *which);

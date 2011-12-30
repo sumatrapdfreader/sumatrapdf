@@ -357,6 +357,8 @@ pdf_parse_cmap(fz_stream *file)
 
 	strcpy(key, ".notdef");
 
+	fz_var(where);
+
 	fz_try(ctx)
 	{
 		while (1)

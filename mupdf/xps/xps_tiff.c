@@ -699,17 +699,16 @@ xps_swap_byte_order(byte *buf, int n)
 }
 
 static void
-xps_decode_tiff_header(struct tiff *tiff, byte *buf, int len)
+xps_decode_tiff_header(fz_context *ctx, struct tiff *tiff, byte *buf, int len)
 {
 	unsigned version;
 	unsigned offset;
 	unsigned count;
 	unsigned i;
 
-	/* SumatraPDF: prevent NULL pointer dereference */
-	fz_context *save_ctx = tiff->ctx;
 	memset(tiff, 0, sizeof(struct tiff));
-	tiff->ctx = save_ctx;
+	/* SumatraPDF: prevent NULL pointer dereference */
+	tiff->ctx = ctx;
 
 	tiff->bp = buf;
 	tiff->rp = buf;
@@ -768,8 +767,7 @@ xps_decode_tiff(fz_context *ctx, byte *buf, int len)
 	fz_pixmap *image;
 	struct tiff tiff;
 
-	tiff.ctx = ctx;
-	xps_decode_tiff_header(&tiff, buf, len);
+	xps_decode_tiff_header(ctx, &tiff, buf, len);
 
 	/* Decode the image strips */
 

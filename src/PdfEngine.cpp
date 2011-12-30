@@ -577,9 +577,10 @@ fz_outline *pdf_loadattachments(pdf_xref *xref)
 
         node->title = fz_strdup(xref->ctx, fz_to_name(name));
         if (fz_is_name(type) && str::EqI(fz_to_name(type), "Filespec") || fz_is_string(dest)) {
-            fz_link_dest ld;
-            ld.launch.file_spec = pdf_to_utf8(xref->ctx, fz_dict_getsa(dest, "UF", "F"));
-            node->link = fz_new_link(xref->ctx, FZ_LINK_LAUNCH, fz_empty_rect, ld, dest);
+            node->dest.kind = FZ_LINK_LAUNCH;
+            node->dest.ld.launch.file_spec = pdf_to_utf8(xref->ctx, fz_dict_getsa(dest, "UF", "F"));
+            node->dest.ld.launch.new_window = 0;
+            node->dest.extra = dest ? fz_keep_obj(dest) : NULL;
         }
     }
     fz_drop_obj(dict);
@@ -840,7 +841,8 @@ protected:
 
 class PdfLink : public PageElement, public PageDestination {
     CPdfEngine *engine;
-    fz_link *link;
+    fz_link_dest *link; // owned by an fz_link or fz_outline
+    RectD rect;
     int pageNo;
 
     fz_obj *dest() const;
@@ -848,16 +850,13 @@ class PdfLink : public PageElement, public PageDestination {
     TCHAR *FilespecToPath(fz_obj *filespec) const;
 
 public:
-    PdfLink(CPdfEngine *engine, fz_link *link, int pageNo=-1) :
-        engine(engine), link(link), pageNo(pageNo) { }
+    PdfLink(CPdfEngine *engine, fz_link_dest *link,
+        fz_rect rect=fz_empty_rect, int pageNo=-1) :
+        engine(engine), link(link), rect(fz_rect_to_RectD(rect)), pageNo(pageNo) { }
 
     virtual PageElementType GetType() const { return Element_Link; }
     virtual int GetPageNo() const { return pageNo; }
-    virtual RectD GetRect() const {
-        if (!link)
-            return RectD();
-        return fz_rect_to_RectD(link->rect);
-    }
+    virtual RectD GetRect() const { return rect; }
     virtual TCHAR *GetValue() const;
     virtual PageDestination *AsLink() { return this; }
 
@@ -1243,11 +1242,12 @@ PdfTocItem *CPdfEngine::BuildTocTree(fz_outline *entry, int& idCounter)
 
     for (; entry; entry = entry->next) {
         TCHAR *name = entry->title ? str::conv::FromUtf8(entry->title) : str::Dup(_T(""));
-        PdfTocItem *item = new PdfTocItem(name, PdfLink(this, entry->link));
+        PdfTocItem *item = new PdfTocItem(name, PdfLink(this, &entry->dest));
         item->open = entry->is_open;
         item->id = ++idCounter;
-        item->pageNo = entry->page + 1;
 
+        if (entry->dest.kind == FZ_LINK_GOTO)
+            item->pageNo = entry->dest.ld.gotor.page + 1;
         if (entry->down)
             item->child = BuildTocTree(entry->down, idCounter);
 
@@ -1308,11 +1308,12 @@ PageDestination *CPdfEngine::GetNamedDest(const TCHAR *name)
     if (!fz_is_array(dest))
         return NULL;
 
-    fz_link_dest ld = { 0 };
-    fz_link link = { FZ_LINK_GOTO, fz_empty_rect, ld, NULL, dest };
-    PdfLink tmp(this, &link);
+    fz_link_dest ld = pdf_parse_link_dest(_xref, dest);
+    PdfLink tmp(this, &ld);
+    PageDestination *pageDest = new SimpleDest(tmp.GetDestPageNo(), tmp.GetDestRect());
+    fz_free_link_dest(ctx, &ld);
 
-    return new SimpleDest(tmp.GetDestPageNo(), tmp.GetDestRect());
+    return pageDest;
 }
 
 pdf_page *CPdfEngine::GetPdfPage(int pageNo, bool failIfBusy)
@@ -1690,8 +1691,8 @@ PageElement *CPdfEngine::GetElementAtPos(int pageNo, PointD pt)
 
     fz_point p = { (float)pt.x, (float)pt.y };
     for (fz_link *link = page->links; link; link = link->next)
-        if (fz_is_pt_in_rect(link->rect, p))
-            return new PdfLink(this, link, pageNo);
+        if (link->dest.kind != FZ_LINK_NONE && fz_is_pt_in_rect(link->rect, p))
+            return new PdfLink(this, &link->dest, link->rect, pageNo);
 
     if (pageComments[pageNo-1]) {
         for (size_t i = 0; pageComments[pageNo-1][i]; i++) {
@@ -1723,8 +1724,8 @@ Vec<PageElement *> *CPdfEngine::GetElements(int pageNo)
         return els;
 
     for (fz_link *link = page->links; link; link = link->next)
-        if (link->extra || link->kind == FZ_LINK_URI)
-            els->Append(new PdfLink(this, link, pageNo));
+        if (link->dest.kind != FZ_LINK_NONE && (link->dest.extra || link->dest.kind == FZ_LINK_URI))
+            els->Append(new PdfLink(this, &link->dest, link->rect, pageNo));
 
     if (pageComments[pageNo-1]) {
         ScopedCritSec scope(&ctxAccess);
@@ -1787,9 +1788,9 @@ void CPdfEngine::LinkifyPageText(pdf_page *page)
         if (!overlaps) {
             ScopedMem<char> uri(str::conv::ToUtf8(list->links.At(i)));
             if (!uri) continue;
-            fz_link_dest ld;
-            ld.uri.uri = fz_strdup(ctx, uri);
-            fz_link *link = fz_new_link(ctx, FZ_LINK_URI, list->coords.At(i), ld, NULL);
+            fz_link_dest ld = { FZ_LINK_URI, 0 };
+            ld.ld.uri.uri = fz_strdup(ctx, uri);
+            fz_link *link = fz_new_link(ctx, list->coords.At(i), ld);
             link->next = page->links;
             page->links = link;
         }
@@ -1811,9 +1812,10 @@ pdf_annot **CPdfEngine::ProcessPageAnnotations(pdf_page *page)
             fz_obj *file = fz_dict_gets(annot->obj, "FS");
             fz_rect rect = pdf_to_rect(ctx, fz_dict_gets(annot->obj, "Rect"));
             if (file && fz_dict_gets(file, "EF") && !fz_is_empty_rect(rect)) {
-                fz_link_dest ld;
-                ld.launch.file_spec = pdf_to_utf8(ctx, fz_dict_getsa(file, "UF", "F"));
-                fz_link *link = fz_new_link(ctx, FZ_LINK_LAUNCH, rect, ld, file);
+                fz_link_dest ld = { FZ_LINK_LAUNCH, 0 };
+                ld.ld.launch.file_spec = pdf_to_utf8(ctx, fz_dict_getsa(file, "UF", "F"));
+                ld.extra = fz_keep_obj(file);
+                fz_link *link = fz_new_link(ctx, rect, ld);
                 link->next = page->links;
                 page->links = link;
             }
@@ -2072,7 +2074,7 @@ TCHAR *PdfLink::FilespecToPath(fz_obj *filespec) const
 
 TCHAR *PdfLink::GetValue() const
 {
-    if (!link || !engine)
+    if (!link || !engine || FZ_LINK_NONE == link->kind)
         return NULL;
     if (!link->extra && link->kind != FZ_LINK_URI)
         return NULL;
@@ -2087,7 +2089,7 @@ TCHAR *PdfLink::GetValue() const
         if (link->extra)
             path = str::conv::FromPdf(engine->ctx, link->extra);
         else
-            path = str::conv::FromUtf8(link->dest.uri.uri);
+            path = str::conv::FromUtf8(link->ld.uri.uri);
         if (IsRelativeURI(path)) {
             obj = fz_dict_gets(engine->_xref->trailer, "Root");
             obj = fz_dict_gets(fz_dict_gets(obj, "URI"), "Base");
@@ -2140,7 +2142,7 @@ fz_obj *PdfLink::dest() const
 {
     ScopedCritSec scope(&engine->ctxAccess);
 
-    if (!link)
+    if (!link || FZ_LINK_NONE == link->kind)
         return NULL;
     if (FZ_LINK_GOTOR == link->kind)
         return fz_dict_gets(link->extra, "D");
@@ -2151,7 +2153,7 @@ fz_obj *PdfLink::dest() const
 
 int PdfLink::GetDestPageNo() const
 {
-    if (!link || !engine)
+    if (!link || !engine || FZ_LINK_NONE == link->kind)
         return 0;
     return engine->FindPageNo(link->extra);
 }
@@ -2353,11 +2355,14 @@ protected:
     fz_rect      ** imageRects;
 };
 
-static bool IsUriTarget(const char *target)
+static bool IsExternalUri(const char *target)
 {
-    return str::StartsWithI(target, "http:") ||
-           str::StartsWithI(target, "https:") ||
-           str::StartsWithI(target, "mailto:");
+    // does the target start with a URI protocol?
+    const char *c = target;
+    for (; *c && *c != ':'; c++)
+        if (!isalpha(*c) && *c != '-')
+            return false;
+    return c > target && *c == ':';
 }
 
 class XpsLink : public PageElement, public PageDestination {
@@ -2375,7 +2380,7 @@ public:
     virtual int GetPageNo() const { return pageNo; }
     virtual RectD GetRect() const { return fz_rect_to_RectD(rect); }
     virtual TCHAR *GetValue() const {
-        if (!target || !IsUriTarget(target))
+        if (!target || !IsExternalUri(target))
             return NULL;
         return str::conv::FromUtf8(target);
     }
@@ -2384,7 +2389,7 @@ public:
     virtual const char *GetDestType() const {
         if (!target)
             return NULL;
-        if (IsUriTarget(target))
+        if (IsExternalUri(target))
             return "LaunchURL";
         return "ScrollTo";
     }
@@ -2441,9 +2446,9 @@ static void xps_run_page(xps_document *doc, xps_page *page, fz_device *dev, fz_m
 
 static fz_link *xps_new_anchor(fz_context *ctx, char *target, fz_rect rect=fz_empty_rect)
 {
-    fz_link_dest ld;
-    ld.uri.uri = fz_strdup(ctx, target);
-    return fz_new_link(ctx, FZ_LINK_URI, rect, ld, NULL);
+    fz_link_dest ld = { FZ_LINK_URI, 0 };
+    ld.ld.uri.uri = fz_strdup(ctx, target);
+    return fz_new_link(ctx, rect, ld);
 }
 
 CXpsEngine::CXpsEngine() : _fileName(NULL), _doc(NULL), _pages(NULL), _mediaboxes(NULL),
@@ -3035,8 +3040,8 @@ PageElement *CXpsEngine::GetElementAtPos(int pageNo, PointD pt)
 
     fz_point p = { (float)pt.x, (float)pt.y };
     for (fz_link *link = _links[pageNo-1]; link; link = link->next)
-        if (fz_is_pt_in_rect(link->rect, p))
-            return new XpsLink(this, link->dest.uri.uri, link->rect, pageNo);
+        if (link->dest.kind == FZ_LINK_URI && fz_is_pt_in_rect(link->rect, p))
+            return new XpsLink(this, link->dest.ld.uri.uri, link->rect, pageNo);
 
     if (imageRects[pageNo-1]) {
         for (int i = 0; !fz_is_empty_rect(imageRects[pageNo-1][i]); i++)
@@ -3055,7 +3060,8 @@ Vec<PageElement *> *CXpsEngine::GetElements(int pageNo)
     Vec<PageElement *> *els = new Vec<PageElement *>();
 
     for (fz_link *link = _links[pageNo-1]; link; link = link->next)
-        els->Append(new XpsLink(this, link->dest.uri.uri, link->rect, pageNo));
+        if (link->dest.kind == FZ_LINK_URI)
+            els->Append(new XpsLink(this, link->dest.ld.uri.uri, link->rect, pageNo));
 
     if (imageRects[pageNo-1]) {
         for (int i = 0; !fz_is_empty_rect(imageRects[pageNo-1][i]); i++)
@@ -3098,7 +3104,7 @@ void CXpsEngine::LinkifyPageText(xps_page *page, int pageNo)
             ScopedMem<char> uri(str::conv::ToUtf8(list->links.At(i)));
             if (!uri) continue;
             last = last->next = xps_new_anchor(ctx, uri, list->coords.At(i));
-            assert(IsUriTarget(last->dest.uri.uri));
+            assert(IsExternalUri(last->dest.ld.uri.uri));
         }
     }
 
@@ -3182,12 +3188,13 @@ XpsTocItem *CXpsEngine::BuildTocTree(fz_outline *entry, int& idCounter)
 
     for (; entry; entry = entry->next) {
         TCHAR *name = entry->title ? str::conv::FromUtf8(entry->title) : str::Dup(_T(""));
-        char *target = entry->link ? entry->link->dest.uri.uri : NULL;
+        char *target = entry->dest.kind == FZ_LINK_URI ? entry->dest.ld.uri.uri : NULL;
         XpsTocItem *item = new XpsTocItem(name, XpsLink(this, target, fz_empty_rect));
         item->id = ++idCounter;
         item->open = entry->is_open;
-        item->pageNo = entry->page + 1;
 
+        if (target && !IsExternalUri(target))
+            item->pageNo = xps_find_link_target(_doc, target) + 1;
         if (entry->down)
             item->child = BuildTocTree(entry->down, idCounter);
 

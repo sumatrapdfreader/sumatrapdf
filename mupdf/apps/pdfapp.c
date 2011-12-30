@@ -143,8 +143,6 @@ static void pdfapp_open_pdf(pdfapp_t *app, char *filename, int fd)
 	 * Load meta information
 	 */
 
-	app->outline = pdf_load_outline(app->xref);
-
 	info = fz_dict_gets(app->xref->trailer, "Info");
 	if (info)
 	{
@@ -176,6 +174,8 @@ static void pdfapp_open_pdf(pdfapp_t *app, char *filename, int fd)
 	}
 
 	app->pagecount = pdf_count_pages(app->xref);
+
+	app->outline = pdf_load_outline(app->xref);
 }
 
 static void pdfapp_open_xps(pdfapp_t *app, char *filename, int fd)
@@ -1037,10 +1037,10 @@ void pdfapp_onmouse(pdfapp_t *app, int x, int y, int btn, int modifiers, int sta
 		wincursor(app, HAND);
 		if (btn == 1 && state == 1)
 		{
-			if (link->kind == FZ_LINK_URI)
-				pdfapp_gotouri(app, link->dest.uri.uri);
-			else if (link->kind == FZ_LINK_GOTO)
-				pdfapp_gotopage(app, link->dest.gotor.page);
+			if (link->dest.kind == FZ_LINK_URI)
+				pdfapp_gotouri(app, link->dest.ld.uri.uri);
+			else if (link->dest.kind == FZ_LINK_GOTO)
+				pdfapp_gotopage(app, link->dest.ld.gotor.page);
 			return;
 		}
 	}
