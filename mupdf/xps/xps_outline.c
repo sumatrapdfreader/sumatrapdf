@@ -15,6 +15,17 @@ xps_find_last_outline_at_level(fz_outline *node, int level, int target_level)
 	return xps_find_last_outline_at_level(node->down, level + 1, target_level);
 }
 
+/* SumatraPDF: extended outline actions */
+#define isprotc(c) (('A' <= (c) && (c) <= 'Z') || ('a' <= (c) && (c) <= 'z') || (c) == '-')
+
+static int
+is_external_target(char *target)
+{
+	char *c = target;
+	for (; isprotc(*c); c++);
+	return c > target && *c == ':';
+}
+
 static fz_outline *
 xps_parse_document_outline(xps_document *doc, xml_element *root)
 {
@@ -36,8 +47,16 @@ xps_parse_document_outline(xps_document *doc, xml_element *root)
 			entry->title = fz_strdup(doc->ctx, description);
 			/* SumatraPDF: extended outline actions */
 			entry->ctx = doc->ctx;
-			entry->dest.kind = FZ_LINK_NONE;
-			if (target)
+			if (!target)
+				entry->dest.kind = FZ_LINK_NONE;
+			else if (!is_external_target(target))
+			{
+				memset(&entry->dest, 0, sizeof(fz_link_dest));
+				entry->dest.kind = FZ_LINK_GOTO;
+				entry->dest.ld.gotor.page = xps_find_link_target(doc, target);
+				entry->dest.extra = fz_new_string(doc->ctx, target, strlen(target));
+			}
+			else
 			{
 				entry->dest.kind = FZ_LINK_URI;
 				entry->dest.ld.uri.uri = fz_strdup(doc->ctx, target);
@@ -153,16 +172,21 @@ xps_extract_anchor_info(xps_document *doc, xml_element *node, fz_rect rect)
 
 	if (doc->link_root && (value = xml_att(node, "FixedPage.NavigateUri")))
 	{
-		fz_link *link;
-		fz_link_dest ld;
-		ld.kind = FZ_LINK_URI;
-		ld.ld.uri.uri = fz_strdup(doc->ctx, value);
-		ld.ld.uri.is_map = 0;
-		ld.extra = NULL;
-		link = fz_new_link(doc->ctx, rect, ld);
-		// insert the links in bottom-to-top order (first one is to be preferred)
-		link->next = doc->link_root->next;
-		doc->link_root->next = link;
+		fz_link_dest ld = { 0 };
+		if (!is_external_target(value))
+		{
+			ld.kind = FZ_LINK_GOTO;
+			ld.ld.gotor.page = xps_find_link_target(doc, value);
+			ld.extra = fz_new_string(doc->ctx, value, strlen(value));
+		}
+		else
+		{
+			ld.kind = FZ_LINK_URI;
+			ld.ld.uri.uri = fz_strdup(doc->ctx, value);
+			ld.ld.uri.is_map = 0;
+			ld.extra = NULL;
+		}
+		doc->link_root = doc->link_root->next = fz_new_link(doc->ctx, rect, ld);
 	}
 
 	if ((value = xml_att(node, "Name")))

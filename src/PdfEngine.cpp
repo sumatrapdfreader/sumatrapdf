@@ -487,6 +487,32 @@ static LinkRectList *LinkifyText(TCHAR *pageText, RectI *coords)
     return list;
 }
 
+static fz_link *FixupPageLinks(fz_link *root)
+{
+    // Links in PDF documents are added from bottom-most to top-most,
+    // i.e. links that appear later in the list should be preferred
+    // to links appearing before. Since we search from the start of
+    // the (single-linked) list, we have to reverse the order of links
+    // (cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1303 )
+    fz_link *new_root = NULL;
+    while (root) {
+        fz_link *tmp = root->next;
+        root->next = new_root;
+        new_root = root;
+        root = tmp;
+
+        // there are PDFs that have x,y positions in reverse order, so fix them up
+        fz_link *link = new_root;
+        if (link->rect.x0 > link->rect.x1)
+            swap(link->rect.x0, link->rect.x1);
+        if (link->rect.y0 > link->rect.y1)
+            swap(link->rect.y0, link->rect.y1);
+        assert(link->rect.x1 >= link->rect.x0);
+        assert(link->rect.y1 >= link->rect.y0);
+    }
+    return new_root;
+}
+
 class SimpleDest : public PageDestination {
     int pageNo;
     RectD rect;
@@ -1717,15 +1743,18 @@ PageElement *CPdfEngine::GetElementAtPos(int pageNo, PointD pt)
 
 Vec<PageElement *> *CPdfEngine::GetElements(int pageNo)
 {
-    Vec<PageElement *> *els = new Vec<PageElement *>();
-
     pdf_page *page = GetPdfPage(pageNo, true);
     if (!page)
-        return els;
+        return NULL;
 
-    for (fz_link *link = page->links; link; link = link->next)
-        if (link->dest.kind != FZ_LINK_NONE && (link->dest.extra || link->dest.kind == FZ_LINK_URI))
-            els->Append(new PdfLink(this, &link->dest, link->rect, pageNo));
+    // since all elements lists are in last-to-first order, append
+    // item types in inverse order and reverse the whole list at the end
+    Vec<PageElement *> *els = new Vec<PageElement *>();
+
+    if (imageRects[pageNo-1]) {
+        for (size_t i = 0; !fz_is_empty_rect(imageRects[pageNo-1][i]); i++)
+            els->Append(new PdfImage(this, pageNo, imageRects[pageNo-1][i], i));
+    }
 
     if (pageComments[pageNo-1]) {
         ScopedCritSec scope(&ctxAccess);
@@ -1737,46 +1766,20 @@ Vec<PageElement *> *CPdfEngine::GetElements(int pageNo)
         }
     }
 
-    if (imageRects[pageNo-1]) {
-        for (size_t i = 0; !fz_is_empty_rect(imageRects[pageNo-1][i]); i++)
-            els->Append(new PdfImage(this, pageNo, imageRects[pageNo-1][i], i));
-    }
+    for (fz_link *link = page->links; link; link = link->next)
+        if (link->dest.kind != FZ_LINK_NONE && (link->dest.extra || link->dest.kind == FZ_LINK_URI))
+            els->Append(new PdfLink(this, &link->dest, link->rect, pageNo));
 
+    els->Reverse();
     return els;
-}
-
-static fz_link *FixupPageLinks(fz_link *root)
-{
-    // Links in PDF documents are added from bottom-most to top-most,
-    // i.e. links that appear later in the list should be preferred
-    // to links appearing before. Since we search from the start of
-    // the (single-linked) list, we have to reverse the order of links
-    // (cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1303 )
-    fz_link *new_root = NULL;
-    while (root) {
-        fz_link *tmp = root->next;
-        root->next = new_root;
-        new_root = root;
-        root = tmp;
-
-        // there are PDFs that have x,y positions in reverse order, so fix them up
-        fz_link *link = new_root;
-        if (link->rect.x0 > link->rect.x1)
-            swap(link->rect.x0, link->rect.x1);
-        if (link->rect.y0 > link->rect.y1)
-            swap(link->rect.y0, link->rect.y1);
-        assert(link->rect.x1 >= link->rect.x0);
-        assert(link->rect.y1 >= link->rect.y0);
-    }
-    return new_root;
 }
 
 void CPdfEngine::LinkifyPageText(pdf_page *page)
 {
     RectI *coords;
     TCHAR *pageText = ExtractPageText(page, _T("\n"), &coords, Target_View, true);
+    page->links = FixupPageLinks(page->links);
     if (!pageText) {
-        page->links = FixupPageLinks(page->links);
         return;
     }
 
@@ -1790,12 +1793,12 @@ void CPdfEngine::LinkifyPageText(pdf_page *page)
             if (!uri) continue;
             fz_link_dest ld = { FZ_LINK_URI, 0 };
             ld.ld.uri.uri = fz_strdup(ctx, uri);
+            // add links in top-to-bottom order (i.e. last-to-first)
             fz_link *link = fz_new_link(ctx, list->coords.At(i), ld);
             link->next = page->links;
             page->links = link;
         }
     }
-    page->links = FixupPageLinks(page->links);
 
     delete list;
     delete[] coords;
@@ -1815,6 +1818,7 @@ pdf_annot **CPdfEngine::ProcessPageAnnotations(pdf_page *page)
                 fz_link_dest ld = { FZ_LINK_LAUNCH, 0 };
                 ld.ld.launch.file_spec = pdf_to_utf8(ctx, fz_dict_getsa(file, "UF", "F"));
                 ld.extra = fz_keep_obj(file);
+                // add links in top-to-bottom order (i.e. last-to-first)
                 fz_link *link = fz_new_link(ctx, rect, ld);
                 link->next = page->links;
                 page->links = link;
@@ -1829,6 +1833,8 @@ pdf_annot **CPdfEngine::ProcessPageAnnotations(pdf_page *page)
     if (comments.Count() == 0)
         return NULL;
 
+    // re-order list into top-to-bottom order (i.e. last-to-first)
+    comments.Reverse();
     // add sentinel value
     comments.Append(NULL);
     return comments.StealData();
@@ -2355,53 +2361,45 @@ protected:
     fz_rect      ** imageRects;
 };
 
-static bool IsExternalUri(const char *target)
-{
-    // does the target start with a URI protocol?
-    const char *c = target;
-    for (; *c && *c != ':'; c++)
-        if (!isalpha(*c) && *c != '-')
-            return false;
-    return c > target && *c == ':';
-}
-
 class XpsLink : public PageElement, public PageDestination {
     CXpsEngine *engine;
-    const char *target; // owned by a fz_link
-    fz_rect rect;
+    fz_link_dest *link; // owned by a fz_link or fz_outline
+    RectD rect;
     int pageNo;
 
 public:
-    XpsLink() : engine(NULL), target(NULL), rect(fz_empty_rect), pageNo(-1) { }
-    XpsLink(CXpsEngine *engine, char *target, fz_rect rect, int pageNo=-1) :
-        engine(engine), target(target), rect(rect), pageNo(pageNo) { }
+    XpsLink() : engine(NULL), link(NULL), pageNo(-1) { }
+    XpsLink(CXpsEngine *engine, fz_link_dest *link, fz_rect rect=fz_empty_rect, int pageNo=-1) :
+        engine(engine), link(link), rect(fz_rect_to_RectD(rect)), pageNo(pageNo) { }
 
     virtual PageElementType GetType() const { return Element_Link; }
     virtual int GetPageNo() const { return pageNo; }
-    virtual RectD GetRect() const { return fz_rect_to_RectD(rect); }
+    virtual RectD GetRect() const { return rect; }
     virtual TCHAR *GetValue() const {
-        if (!target || !IsExternalUri(target))
-            return NULL;
-        return str::conv::FromUtf8(target);
+        if (link && FZ_LINK_URI == link->kind)
+            return str::conv::FromUtf8(link->ld.uri.uri);
+        return NULL;
     }
     virtual PageDestination *AsLink() { return this; }
 
     virtual const char *GetDestType() const {
-        if (!target)
+        if (!link)
             return NULL;
-        if (IsExternalUri(target))
+        if (FZ_LINK_GOTO == link->kind)
+            return "ScrollTo";
+        if (FZ_LINK_URI == link->kind)
             return "LaunchURL";
-        return "ScrollTo";
+        return NULL;
     }
     virtual int GetDestPageNo() const {
-        if (!target || !engine)
+        if (!engine || !link || link->kind != FZ_LINK_GOTO)
             return 0;
-        return engine->FindPageNo(target);
+        return engine->FindPageNo(fz_to_str_buf(link->extra));
     }
     virtual RectD GetDestRect() const {
-        if (!target || !engine)
+        if (!engine || !link || link->kind != FZ_LINK_GOTO)
             return RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
-        return fz_rect_to_RectD(engine->FindDestRect(target));
+        return fz_rect_to_RectD(engine->FindDestRect(fz_to_str_buf(link->extra)));
     }
     virtual TCHAR *GetDestValue() const { return GetValue(); }
 };
@@ -2442,13 +2440,6 @@ static void xps_run_page(xps_document *doc, xps_page *page, fz_device *dev, fz_m
     xps_parse_fixed_page(doc, ctm, page);
     doc->link_root = NULL;
     doc->dev = NULL;
-}
-
-static fz_link *xps_new_anchor(fz_context *ctx, char *target, fz_rect rect=fz_empty_rect)
-{
-    fz_link_dest ld = { FZ_LINK_URI, 0 };
-    ld.ld.uri.uri = fz_strdup(ctx, target);
-    return fz_new_link(ctx, rect, ld);
 }
 
 CXpsEngine::CXpsEngine() : _fileName(NULL), _doc(NULL), _pages(NULL), _mediaboxes(NULL),
@@ -3040,8 +3031,8 @@ PageElement *CXpsEngine::GetElementAtPos(int pageNo, PointD pt)
 
     fz_point p = { (float)pt.x, (float)pt.y };
     for (fz_link *link = _links[pageNo-1]; link; link = link->next)
-        if (link->dest.kind == FZ_LINK_URI && fz_is_pt_in_rect(link->rect, p))
-            return new XpsLink(this, link->dest.ld.uri.uri, link->rect, pageNo);
+        if (fz_is_pt_in_rect(link->rect, p))
+            return new XpsLink(this, &link->dest, link->rect, pageNo);
 
     if (imageRects[pageNo-1]) {
         for (int i = 0; !fz_is_empty_rect(imageRects[pageNo-1][i]); i++)
@@ -3057,17 +3048,19 @@ Vec<PageElement *> *CXpsEngine::GetElements(int pageNo)
     if (!_links)
         return NULL;
 
+    // since all elements lists are in last-to-first order, append
+    // item types in inverse order and reverse the whole list at the end
     Vec<PageElement *> *els = new Vec<PageElement *>();
-
-    for (fz_link *link = _links[pageNo-1]; link; link = link->next)
-        if (link->dest.kind == FZ_LINK_URI)
-            els->Append(new XpsLink(this, link->dest.ld.uri.uri, link->rect, pageNo));
 
     if (imageRects[pageNo-1]) {
         for (int i = 0; !fz_is_empty_rect(imageRects[pageNo-1][i]); i++)
             els->Append(new XpsImage(this, pageNo, imageRects[pageNo-1][i], i));
     }
 
+    for (fz_link *link = _links[pageNo-1]; link; link = link->next)
+        els->Append(new XpsLink(this, &link->dest, link->rect, pageNo));
+
+    els->Reverse();
     return els;
 }
 
@@ -3079,23 +3072,19 @@ void CXpsEngine::LinkifyPageText(xps_page *page, int pageNo)
 
     // make MuXPS extract all links and named destinations from the page
     assert(!GetPageRun(page, true));
-    fz_link root;
-    ZeroMemory(&root, sizeof(root));
+    fz_link root = { 0 };
     XpsPageRun *run = GetPageRun(page, false, &root);
     assert(run);
     if (run)
         DropPageRun(run);
-    _links[pageNo-1] = root.next;
+    _links[pageNo-1] = FixupPageLinks(root.next);
 
     RectI *coords;
     TCHAR *pageText = ExtractPageText(page, _T("\n"), &coords, true);
     if (!pageText)
         return;
 
-    fz_link *last;
-    for (last = &root; last->next; last = last->next);
     LinkRectList *list = LinkifyText(pageText, coords);
-
     for (size_t i = 0; i < list->links.Count(); i++) {
         bool overlaps = false;
         for (fz_link *next = _links[pageNo-1]; next && !overlaps; next = next->next)
@@ -3103,13 +3092,14 @@ void CXpsEngine::LinkifyPageText(xps_page *page, int pageNo)
         if (!overlaps) {
             ScopedMem<char> uri(str::conv::ToUtf8(list->links.At(i)));
             if (!uri) continue;
-            last = last->next = xps_new_anchor(ctx, uri, list->coords.At(i));
-            assert(IsExternalUri(last->dest.ld.uri.uri));
+            fz_link_dest ld = { FZ_LINK_URI, 0 };
+            ld.ld.uri.uri = fz_strdup(ctx, uri);
+            // add links in top-to-bottom order (i.e. last-to-first)
+            fz_link *link = fz_new_link(ctx, list->coords.At(i), ld);
+            link->next = _links[pageNo-1];
+            _links[pageNo-1] = link;
         }
     }
-
-    // in case there were no native links
-    _links[pageNo-1] = root.next;
 
     delete list;
     delete[] coords;
@@ -3188,13 +3178,12 @@ XpsTocItem *CXpsEngine::BuildTocTree(fz_outline *entry, int& idCounter)
 
     for (; entry; entry = entry->next) {
         TCHAR *name = entry->title ? str::conv::FromUtf8(entry->title) : str::Dup(_T(""));
-        char *target = entry->dest.kind == FZ_LINK_URI ? entry->dest.ld.uri.uri : NULL;
-        XpsTocItem *item = new XpsTocItem(name, XpsLink(this, target, fz_empty_rect));
+        XpsTocItem *item = new XpsTocItem(name, XpsLink(this, &entry->dest));
         item->id = ++idCounter;
         item->open = entry->is_open;
 
-        if (target && !IsExternalUri(target))
-            item->pageNo = xps_find_link_target(_doc, target) + 1;
+        if (FZ_LINK_GOTO == entry->dest.kind)
+            item->pageNo = entry->dest.ld.gotor.page + 1;
         if (entry->down)
             item->child = BuildTocTree(entry->down, idCounter);
 

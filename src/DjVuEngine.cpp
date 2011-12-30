@@ -748,6 +748,10 @@ PageElement *CDjVuEngine::GetElementAtPos(int pageNo, PointD pt)
     if (!els)
         return NULL;
 
+    // elements are extracted bottom-to-top but are accessed
+    // in top-to-bottom order, so reverse the list first
+    els->Reverse();
+
     PageElement *el = NULL;
     for (size_t i = 0; i < els->Count() && !el; i++)
         if (els->At(i)->GetRect().Inside(pt))
