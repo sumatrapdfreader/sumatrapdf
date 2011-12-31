@@ -107,7 +107,11 @@ int TextSearch::MatchLen(TCHAR *start)
             return -1;
         match++;
         end++;
-        if (!isnoncjkwordchar(*(match - 1)) || _istspace(*(match - 1)) && _istspace(*(end - 1))) {
+        // treat "??" and "? ?" differently, since '?' could have been a word
+        // character that's just missing an encoding (and '?' is the replacement
+        // character); cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1574
+        if (!isnoncjkwordchar(*(match - 1)) && (*(match - 1) != '?' || *match != '?') ||
+            _istspace(*(match - 1)) && _istspace(*(end - 1))) {
             SkipWhitespace(match);
             SkipWhitespace(end);
         }
