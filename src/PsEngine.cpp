@@ -114,7 +114,7 @@ static PdfEngine *ps2pdf(const TCHAR *fileName)
         return NULL;
     ScopedMem<TCHAR> cmdLine(str::Format(_T("\"%s\" -q -dSAFER -dNOPAUSE -dBATCH -dEPSCrop -sOutputFile=\"%s\" -sDEVICE=pdfwrite -c .setpdfwrite -f \"%s\""), gswin32c, tmpFile, shortPath));
 
-    if (getenv("MULOG")) {
+    if (GetEnvironmentVariable(_T("MULOG"), NULL, 0)) {
         _tprintf(_T("ps2pdf: using Ghostscript from '%s'\n"), gswin32c);
         _tprintf(_T("ps2pdf: for creating '%s'\n"), tmpFile);
     }
@@ -141,7 +141,7 @@ static PdfEngine *ps2pdf(const TCHAR *fileName)
     if (!stream)
         return NULL;
 
-    if (getenv("MULOG"))
+    if (GetEnvironmentVariable(_T("MULOG"), NULL, 0))
         _tprintf(_T("ps2pdf: PDF conversion successful\n"));
 
     return PdfEngine::CreateFromStream(stream);

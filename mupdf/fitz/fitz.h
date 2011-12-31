@@ -156,7 +156,7 @@ struct fz_warn_context_s
 };
 
 /* SumatraPDF: add filename and line number to errors and warnings */
-#define fz_warn(CTX, MSG, ...) fz_warn_imp(CTX, __FILE__, __LINE__,MSG,  __VA_ARGS__)
+#define fz_warn(CTX, MSG, ...) fz_warn_imp(CTX, __FILE__, __LINE__, MSG, __VA_ARGS__)
 void fz_warn_imp(fz_context *ctx, char *file, int line, char *fmt, ...) __printflike(4, 5);
 void fz_flush_warnings(fz_context *ctx);
 
