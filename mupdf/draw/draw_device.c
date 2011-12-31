@@ -1571,18 +1571,18 @@ fz_draw_end_tile(fz_device *devp)
 		/* SumatraPDF: fix shaping crash */
 		if (dev->shape)
 		{
-			fz_pixmap *dummy = fz_new_pixmap_with_rect(dev->ctx, dev->dest->colorspace, fz_bound_pixmap(tile));
 			fz_pixmap *shape = dev->shape;
-			int blendmode = dev->blendmode & FZ_BLEND_MODEMASK;
-			int isolated = dev->blendmode & FZ_BLEND_ISOLATED;
-
 			dev->shape = dev->stack[dev->top].shape;
-			tile->x = shape->x;
-			tile->y = shape->y;
-			fz_blend_pixmap(dummy, tile, 255, blendmode, isolated, dev->shape);
-			fz_paint_pixmap(dev->shape, shape, 255);
-
-			fz_drop_pixmap(dev->ctx, dummy);
+			for (y = y0; y < y1; y++)
+			{
+				for (x = x0; x < x1; x++)
+				{
+					ttm = fz_concat(fz_translate(x * xstep, y * ystep), ctm);
+					shape->x = ttm.e;
+					shape->y = ttm.f;
+					fz_paint_pixmap(dev->shape, shape, 255);
+				}
+			}
 			fz_drop_pixmap(dev->ctx, shape);
 		}
 
