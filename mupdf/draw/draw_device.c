@@ -1549,7 +1549,6 @@ fz_draw_end_tile(fz_device *devp)
 		dev->dest = dev->stack[dev->top].dest;
 		dev->blendmode = dev->stack[dev->top].blendmode;
 
-
 		x0 = floorf(area.x0 / xstep);
 		y0 = floorf(area.y0 / ystep);
 		x1 = ceilf(area.x1 / xstep);
@@ -1569,15 +1568,25 @@ fz_draw_end_tile(fz_device *devp)
 			}
 		}
 
-		fz_drop_pixmap(dev->ctx, tile);
-
 		/* SumatraPDF: fix shaping crash */
-		/* TODO: apply the shape tile-wise */
 		if (dev->shape)
 		{
-			fz_drop_pixmap(dev->ctx, dev->shape);
+			fz_pixmap *dummy = fz_new_pixmap_with_rect(dev->ctx, dev->dest->colorspace, fz_bound_pixmap(tile));
+			fz_pixmap *shape = dev->shape;
+			int blendmode = dev->blendmode & FZ_BLEND_MODEMASK;
+			int isolated = dev->blendmode & FZ_BLEND_ISOLATED;
+
 			dev->shape = dev->stack[dev->top].shape;
+			tile->x = shape->x;
+			tile->y = shape->y;
+			fz_blend_pixmap(dummy, tile, 255, blendmode, isolated, dev->shape);
+			fz_paint_pixmap(dev->shape, shape, 255);
+
+			fz_drop_pixmap(dev->ctx, dummy);
+			fz_drop_pixmap(dev->ctx, shape);
 		}
+
+		fz_drop_pixmap(dev->ctx, tile);
 	}
 
 	if (dev->blendmode & FZ_BLEND_KNOCKOUT)
