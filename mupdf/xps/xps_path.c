@@ -255,8 +255,8 @@ xps_parse_abbreviated_geometry(xps_document *doc, char *geom, int *fill_rule)
 		}
 	}
 
-	pargs[0] = s;
-	pargs[1] = 0;
+	/* SumatraPDF: prevent buffer overflow */
+	*pargs = s;
 
 	n = pargs - args;
 	i = 0;
@@ -286,53 +286,63 @@ xps_parse_abbreviated_geometry(xps_document *doc, char *geom, int *fill_rule)
 		switch (cmd)
 		{
 		case 'F':
+			if (i >= n) break; /* SumatraPDF: prevent buffer overflow */
 			*fill_rule = atoi(args[i]);
 			i ++;
 			break;
 
 		case 'M':
+			if (i + 1 >= n) break; /* SumatraPDF: prevent buffer overflow */
 			fz_moveto(doc->ctx, path, fz_atof(args[i]), fz_atof(args[i+1]));
 			i += 2;
 			break;
 		case 'm':
+			if (i + 1 >= n) break; /* SumatraPDF: prevent buffer overflow */
 			pt = fz_currentpoint(path);
 			fz_moveto(doc->ctx, path, pt.x + fz_atof(args[i]), pt.y + fz_atof(args[i+1]));
 			i += 2;
 			break;
 
 		case 'L':
+			if (i + 1 >= n) break; /* SumatraPDF: prevent buffer overflow */
 			fz_lineto(doc->ctx, path, fz_atof(args[i]), fz_atof(args[i+1]));
 			i += 2;
 			break;
 		case 'l':
+			if (i + 1 >= n) break; /* SumatraPDF: prevent buffer overflow */
 			pt = fz_currentpoint(path);
 			fz_lineto(doc->ctx, path, pt.x + fz_atof(args[i]), pt.y + fz_atof(args[i+1]));
 			i += 2;
 			break;
 
 		case 'H':
+			if (i >= n) break; /* SumatraPDF: prevent buffer overflow */
 			pt = fz_currentpoint(path);
 			fz_lineto(doc->ctx, path, fz_atof(args[i]), pt.y);
 			i += 1;
 			break;
 		case 'h':
+			if (i >= n) break; /* SumatraPDF: prevent buffer overflow */
 			pt = fz_currentpoint(path);
 			fz_lineto(doc->ctx, path, pt.x + fz_atof(args[i]), pt.y);
 			i += 1;
 			break;
 
 		case 'V':
+			if (i >= n) break; /* SumatraPDF: prevent buffer overflow */
 			pt = fz_currentpoint(path);
 			fz_lineto(doc->ctx, path, pt.x, fz_atof(args[i]));
 			i += 1;
 			break;
 		case 'v':
+			if (i >= n) break; /* SumatraPDF: prevent buffer overflow */
 			pt = fz_currentpoint(path);
 			fz_lineto(doc->ctx, path, pt.x, pt.y + fz_atof(args[i]));
 			i += 1;
 			break;
 
 		case 'C':
+			if (i + 5 >= n) break; /* SumatraPDF: prevent buffer overflow */
 			x1 = fz_atof(args[i+0]);
 			y1 = fz_atof(args[i+1]);
 			x2 = fz_atof(args[i+2]);
@@ -347,6 +357,7 @@ xps_parse_abbreviated_geometry(xps_document *doc, char *geom, int *fill_rule)
 			break;
 
 		case 'c':
+			if (i + 5 >= n) break; /* SumatraPDF: prevent buffer overflow */
 			pt = fz_currentpoint(path);
 			x1 = fz_atof(args[i+0]) + pt.x;
 			y1 = fz_atof(args[i+1]) + pt.y;
@@ -362,6 +373,7 @@ xps_parse_abbreviated_geometry(xps_document *doc, char *geom, int *fill_rule)
 			break;
 
 		case 'S':
+			if (i + 3 >= n) break; /* SumatraPDF: prevent buffer overflow */
 			pt = fz_currentpoint(path);
 			x1 = fz_atof(args[i+0]);
 			y1 = fz_atof(args[i+1]);
@@ -375,6 +387,7 @@ xps_parse_abbreviated_geometry(xps_document *doc, char *geom, int *fill_rule)
 			break;
 
 		case 's':
+			if (i + 3 >= n) break; /* SumatraPDF: prevent buffer overflow */
 			pt = fz_currentpoint(path);
 			x1 = fz_atof(args[i+0]) + pt.x;
 			y1 = fz_atof(args[i+1]) + pt.y;
@@ -388,6 +401,7 @@ xps_parse_abbreviated_geometry(xps_document *doc, char *geom, int *fill_rule)
 			break;
 
 		case 'Q':
+			if (i + 3 >= n) break; /* SumatraPDF: prevent buffer overflow */
 			pt = fz_currentpoint(path);
 			x1 = fz_atof(args[i+0]);
 			y1 = fz_atof(args[i+1]);
@@ -400,6 +414,7 @@ xps_parse_abbreviated_geometry(xps_document *doc, char *geom, int *fill_rule)
 			i += 4;
 			break;
 		case 'q':
+			if (i + 3 >= n) break; /* SumatraPDF: prevent buffer overflow */
 			pt = fz_currentpoint(path);
 			x1 = fz_atof(args[i+0]) + pt.x;
 			y1 = fz_atof(args[i+1]) + pt.y;
@@ -413,6 +428,7 @@ xps_parse_abbreviated_geometry(xps_document *doc, char *geom, int *fill_rule)
 			break;
 
 		case 'A':
+			if (i + 6 >= n) break; /* SumatraPDF: prevent buffer overflow */
 			xps_draw_arc(doc->ctx, path,
 				fz_atof(args[i+0]), fz_atof(args[i+1]), fz_atof(args[i+2]),
 				atoi(args[i+3]), atoi(args[i+4]),
@@ -420,6 +436,7 @@ xps_parse_abbreviated_geometry(xps_document *doc, char *geom, int *fill_rule)
 			i += 7;
 			break;
 		case 'a':
+			if (i + 6 >= n) break; /* SumatraPDF: prevent buffer overflow */
 			pt = fz_currentpoint(path);
 			xps_draw_arc(doc->ctx, path,
 				fz_atof(args[i+0]), fz_atof(args[i+1]), fz_atof(args[i+2]),
