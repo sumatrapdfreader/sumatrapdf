@@ -495,6 +495,10 @@ xps_parse_arc_segment(fz_context *doc, fz_path *path, xml_element *root, int str
 	if (!is_stroked)
 		*skipped_stroke = 1;
 
+	/* SumatraPDF: prevent use of unitialized values */
+	point_x = point_y = 0;
+	size_x = size_y = 0;
+
 	sscanf(point_att, "%g,%g", &point_x, &point_y);
 	sscanf(size_att, "%g,%g", &size_x, &size_y);
 	rotation_angle = fz_atof(rotation_angle_att);
@@ -930,7 +934,9 @@ xps_parse_path(xps_document *doc, fz_matrix ctm, char *base_uri, xps_resource *d
 		{
 			while (*s == ' ')
 				s++;
-			stroke.dash_list[stroke.dash_len++] = fz_atof(s) * stroke.linewidth;
+			/* cf. http://git.ghostscript.com/?p=ghostpdl.git;h=856eedc584a224bd311fa7688fc29ba487521dfb */
+			if (*s) /* needed in case of a space before the last quote */
+				stroke.dash_list[stroke.dash_len++] = fz_atof(s) * stroke.linewidth;
 			while (*s && *s != ' ')
 				s++;
 		}
