@@ -290,9 +290,6 @@ public:
     virtual char *GetDecryptionKey() const {
         return pdfEngine ? pdfEngine->GetDecryptionKey() : NULL;
     }
-    virtual void RunGC() {
-        if (pdfEngine) pdfEngine->RunGC();
-    }
 
     virtual unsigned char *GetPDFData(size_t *cbCount) {
         return pdfEngine->GetFileData(cbCount);
@@ -332,7 +329,7 @@ bool PsEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
         file::ReadAll(fileName, header, sizeof(header) - 1);
         if (str::StartsWith(header, "\xC5\xD0\xD3\xC6")) {
             // Windows-format EPS file - cf. http://partners.adobe.com/public/developer/en/ps/5002.EPSF_Spec.pdf
-            DWORD psStart = *(DWORD *)(header + 4);
+            DWORD psStart = LEtohl(*(DWORD *)(header + 4));
             return psStart >= sizeof(header) - 12 || str::StartsWith(header + psStart, "%!PS-Adobe-");
         }
         return str::StartsWith(header, "%!") ||

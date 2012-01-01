@@ -117,9 +117,6 @@ void RenderCache::Add(PageRenderRequest &req, RenderedBitmap *bitmap)
         delete bitmap;
     else
         cacheCount++;
-    // allow rendering engines to free more memory needed for rendering
-    if (req.dm->engine)
-        req.dm->engine->RunGC();
 }
 
 // get the (user) coordinates of a specific tile

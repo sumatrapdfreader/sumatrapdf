@@ -808,7 +808,6 @@ public:
 
     virtual bool IsPasswordProtected() const { return isProtected; }
     virtual char *GetDecryptionKey() const;
-    virtual void RunGC() { /* TODO: still needed? */ }
 
 protected:
     const TCHAR *_fileName;

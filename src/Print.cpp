@@ -169,7 +169,6 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
                 AbortDoc(hdc);
                 return;
             }
-            engine.RunGC();
         }
 
         EndDoc(hdc);
@@ -266,7 +265,6 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
                 AbortDoc(hdc);
                 return;
             }
-            engine.RunGC();
         }
     }
 
