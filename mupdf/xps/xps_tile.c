@@ -269,6 +269,10 @@ xps_parse_canvas(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri,
 
 	for (node = xml_down(root); node; node = xml_next(node))
 	{
+		/* SumatraPDF: fix memory leak */
+		if (!strcmp(xml_tag(node), "Canvas.Resources") && new_dict)
+			fz_warn(doc->ctx, "ignoring follow-up resource dictionaries");
+		else
 		if (!strcmp(xml_tag(node), "Canvas.Resources") && xml_down(node))
 		{
 			/* SumatraPDF: don't warn about empty resource dictionaries */
@@ -348,6 +352,10 @@ xps_parse_fixed_page(xps_document *doc, fz_matrix ctm, xps_page *page)
 
 	for (node = xml_down(page->root); node; node = xml_next(node))
 	{
+		/* SumatraPDF: fix memory leak */
+		if (!strcmp(xml_tag(node), "FixedPage.Resources") && dict)
+			fz_warn(doc->ctx, "ignoring follow-up resource dictionaries");
+		else
 		if (!strcmp(xml_tag(node), "FixedPage.Resources") && xml_down(node))
 			dict = xps_parse_resource_dictionary(doc, base_uri, xml_down(node));
 		xps_parse_element(doc, ctm, area, base_uri, dict, node);
