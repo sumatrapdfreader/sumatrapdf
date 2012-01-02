@@ -80,6 +80,8 @@ xps_parse_remote_resource_dictionary(xps_document *doc, char *base_uri, char *so
 		s[1] = 0;
 
 	dict = xps_parse_resource_dictionary(doc, part_uri, xml);
+	/* SumatraPDF: don't warn about empty resource dictionaries */
+	if (dict)
 	dict->base_xml = xml; /* pass on ownership */
 
 	return dict;
@@ -119,7 +121,7 @@ xps_parse_resource_dictionary(xps_document *doc, char *base_uri, xml_element *ro
 	if (head)
 		head->base_uri = fz_strdup(doc->ctx, base_uri);
 	else
-		fz_throw(doc->ctx, "empty resource dictionary");
+		/* SumatraPDF: don't warn about empty resource dictionaries */;
 
 	return head;
 }

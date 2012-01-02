@@ -206,6 +206,9 @@ xps_parse_metadata_imp(xps_document *doc, xml_element *item, xps_fixdoc *fixdoc)
 					doc->start_part = fz_strdup(doc->ctx, tgtbuf);
 				if (!strcmp(type, REL_DOC_STRUCTURE) && fixdoc)
 					fixdoc->outline = fz_strdup(doc->ctx, tgtbuf);
+				/* SumatraPDF: XPSViewer rejects documents without a relationship id */
+				if (!xml_att(item, "Id"))
+					fz_warn(doc->ctx, "Missing Relationship-Id for %s", target);
 			}
 		}
 

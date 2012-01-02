@@ -317,9 +317,9 @@ xps_draw_radial_gradient(xps_document *doc, fz_matrix ctm,
 	x1 = y1 = 1;
 
 	if (origin_att)
-		sscanf(origin_att, "%g,%g", &x0, &y0);
+		xps_get_point(origin_att, &x0, &y0);
 	if (center_att)
-		sscanf(center_att, "%g,%g", &x1, &y1);
+		xps_get_point(center_att, &x1, &y1);
 	if (radius_x_att)
 		xrad = fz_atof(radius_x_att);
 	if (radius_y_att)
@@ -363,9 +363,9 @@ xps_draw_linear_gradient(xps_document *doc, fz_matrix ctm,
 	x1 = y1 = 1;
 
 	if (start_point_att)
-		sscanf(start_point_att, "%g,%g", &x0, &y0);
+		xps_get_point(start_point_att, &x0, &y0);
 	if (end_point_att)
-		sscanf(end_point_att, "%g,%g", &x1, &y1);
+		xps_get_point(end_point_att, &x1, &y1);
 
 	xps_draw_one_linear_gradient(doc, ctm, stops, count, 1, x0, y0, x1, y1);
 }
