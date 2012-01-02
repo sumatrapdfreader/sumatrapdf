@@ -3037,7 +3037,7 @@ const char *gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "Doorlopend boekaanzicht",
   "Dubbele pagina doorlopend",
   "Help met vertalen",
-  NULL,
+  "Afbeelding kopi\303\253ren",
   "&Verwijzing kopi\303\253ren",
   "Notitie kopi\303\253ren",
   "Tekst kopi\303\253ren niet toegestaan (kopieer als afbeelding)",

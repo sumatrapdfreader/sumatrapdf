@@ -265,6 +265,9 @@ Dubbele pagina doorlopend
 Contribute Translation
 Help met vertalen
 
+Copy &Image
+Afbeelding kopiëren
+
 Copy &Link Address
 &Verwijzing kopiëren
 
@@ -675,7 +678,4 @@ tekst kopiëren
 
 printing document
 bestand afdrukken
-
-# Untranslated:
-#Copy &Image
 
