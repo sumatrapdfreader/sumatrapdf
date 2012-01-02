@@ -192,7 +192,7 @@ struct FindThreadData : public ProgressUpdateUI {
            ScopedMem<TCHAR> label(win->dm->engine->GetPageLabel(win->dm->textSearch->GetCurrentPageNo()));
            ScopedMem<TCHAR> buf(str::Format(_TR("Found text at page %s"), label));
            if (loopedAround)
-               ScopedMem<TCHAR> buf(str::Format(_TR("Found text at page %s (again)"), label));
+               buf.Set(str::Format(_TR("Found text at page %s (again)"), label));
            wnd->UpdateMessage(buf, 3000, loopedAround);
        }
    }
