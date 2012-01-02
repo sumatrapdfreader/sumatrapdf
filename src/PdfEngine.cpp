@@ -176,7 +176,7 @@ fz_stream *fz_open_file2(fz_context *ctx, const TCHAR *filePath)
     // overwritten even by programs that don't open files with FILE_SHARE_READ
     if (fileSize < MAX_MEMORY_FILE_SIZE) {
         fz_buffer *data = NULL;
-        fz_stream *file;
+        fz_stream *file = NULL;
         fz_try(ctx) {
             data = fz_new_buffer(ctx, (int)fileSize);
             if (file::ReadAll(filePath, (char *)data->data, (data->len = (int)fileSize)))

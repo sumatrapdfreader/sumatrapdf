@@ -76,8 +76,8 @@ bool HttpGetToFile(const TCHAR *url, const TCHAR *destFilePath)
             break;
 
         DWORD size;
-        BOOL ok = WriteFile(hf, buf, (DWORD)dwRead, &size, NULL);
-        if (!ok) {
+        BOOL wroteOk = WriteFile(hf, buf, (DWORD)dwRead, &size, NULL);
+        if (!wroteOk) {
             SeeLastError();
             goto Exit;
         }
