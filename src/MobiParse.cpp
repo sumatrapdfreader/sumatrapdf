@@ -364,6 +364,8 @@ bool MobiParse::ParseHeader()
     // allocate one more record as a sentinel to make calculating
     // size of the records easier
     recHeaders = SAZA(PdbRecordHeader, pdbHeader.numRecords + 1);
+    if (!recHeaders)
+        return false;
     DWORD toRead = kPdbRecordHeaderLen * pdbHeader.numRecords;
     ok = ReadFile(fileHandle, (void*)recHeaders, toRead, &bytesRead, NULL);
     if (!ok || (toRead != bytesRead)) {
@@ -479,7 +481,7 @@ bool MobiParse::ParseHeader()
         if (!huffDic->SetHuffData((uint8_t*)recData, recSize))
             return false;
         for (size_t i = 1; i < mobiHdr->huffmanRecCount; i++) {
-            char *recData = ReadRecord(mobiHdr->huffmanFirstRec + i, recSize);
+            recData = ReadRecord(mobiHdr->huffmanFirstRec + i, recSize);
             if (!recData)
                 return false;
             if (!huffDic->AddCdicData((uint8_t*)recData, recSize))

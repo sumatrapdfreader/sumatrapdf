@@ -601,7 +601,10 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF 
                        THUMBNAIL_DX, THUMBNAIL_DY);
             if (isRtl)
                 page.x = rc.dx - page.x - page.dx;
-            if (state->thumbnail || LoadThumbnail(*state)) {
+            bool loadOk = true;
+            if (!state->thumbnail)
+                loadOk = LoadThumbnail(*state);
+            if (loadOk && state->thumbnail) {
                 SizeI thumbSize = state->thumbnail->Size();
                 if (thumbSize.dx != THUMBNAIL_DX || thumbSize.dy != THUMBNAIL_DY) {
                     page.dy = thumbSize.dy * THUMBNAIL_DX / thumbSize.dx;

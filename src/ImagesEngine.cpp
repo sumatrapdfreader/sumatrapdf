@@ -815,7 +815,7 @@ bool CCbxEngine::LoadCbzFile(const TCHAR *file)
     for (int n = 0; n < ginfo.number_entry; n++) {
         unz_file_info64 finfo;
         char fileName[MAX_PATH];
-        int err = unzGetCurrentFileInfo64(cbzData->uf, &finfo, fileName, dimof(fileName), NULL, 0, NULL, 0);
+        err = unzGetCurrentFileInfo64(cbzData->uf, &finfo, fileName, dimof(fileName), NULL, 0, NULL, 0);
         if (err == UNZ_OK) {
             ScopedMem<TCHAR> fileName2;
             if (!(finfo.flag & (1 << 11)))

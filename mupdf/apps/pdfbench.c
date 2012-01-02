@@ -158,7 +158,7 @@ void benchrenderpage(pdf_xref *xref, fz_glyph_cache *drawcache, pdf_page *page, 
 
 void benchfile(char *pdffilename, int loadonly, int pageNo)
 {
-	pdf_xref *xref;
+	pdf_xref *xref = NULL;
 	fz_glyph_cache *drawcache;
 	mstimer timer;
 	int page_count;

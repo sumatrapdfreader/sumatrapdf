@@ -35,8 +35,10 @@ DWORD HttpGet(const TCHAR *url, str::Str<char> *dataOut)
     } while (dwRead > 0);
 
 Exit:
-    InternetCloseHandle(hFile);
-    InternetCloseHandle(hInet);
+    if (hFile)
+        InternetCloseHandle(hFile);
+    if (hInet)
+        InternetCloseHandle(hInet);
     return error;
 
 Error:
@@ -88,8 +90,10 @@ bool HttpGetToFile(const TCHAR *url, const TCHAR *destFilePath)
     ok = true;
 Exit:
     CloseHandle(hf);
-    InternetCloseHandle(hFile);
-    InternetCloseHandle(hInet);
+    if (hFile)
+        InternetCloseHandle(hFile);
+    if (hInet)
+        InternetCloseHandle(hInet);
     if (!ok)
         file::Delete(destFilePath);
     return ok;
@@ -163,9 +167,12 @@ bool HttpPost(const TCHAR *server, const TCHAR *url, str::Str<char> *headers, st
 #endif
     ok = (200 == respHttpCode);
 Exit:
-    InternetCloseHandle(hReq);
-    InternetCloseHandle(hConn);
-    InternetCloseHandle(hInet);
+    if (hReq)
+        InternetCloseHandle(hReq);
+    if (hConn)
+        InternetCloseHandle(hConn);
+    if (hInet)
+        InternetCloseHandle(hInet);
     return ok;
 }
 

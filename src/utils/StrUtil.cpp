@@ -515,6 +515,8 @@ TCHAR *FormatNumWithThousandSep(size_t num, const TCHAR *sep)
 
     size_t resLen = str::Len(buf) + str::Len(sep) * (str::Len(buf) + 3) / 3 + 1;
     TCHAR *res = SAZA(TCHAR, resLen);
+    if (!res)
+        return NULL;
     TCHAR *next = res;
     int i = 3 - (str::Len(buf) % 3);
     for (TCHAR *src = buf.Get(); *src;) {

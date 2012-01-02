@@ -41,31 +41,31 @@ void DumpProperties(BaseEngine *engine)
     Out("\t<Properties\n");
     ScopedMem<char> str;
     str.Set(Escape((TCHAR *)engine->FileName(), true));
-    Out("\t\tFilePath=\"%s\"\n", str);
+    Out("\t\tFilePath=\"%s\"\n", str.Get());
     str.Set(Escape(engine->GetProperty("Title")));
     if (str)
-        Out("\t\tTitle=\"%s\"\n", str);
+        Out("\t\tTitle=\"%s\"\n", str.Get());
     str.Set(Escape(engine->GetProperty("Subject")));
     if (str)
-        Out("\t\tSubject=\"%s\"\n", str);
+        Out("\t\tSubject=\"%s\"\n", str.Get());
     str.Set(Escape(engine->GetProperty("Author")));
     if (str)
-        Out("\t\tAuthor=\"%s\"\n", str);
+        Out("\t\tAuthor=\"%s\"\n", str.Get());
     str.Set(Escape(engine->GetProperty("CreationDate")));
     if (str)
-        Out("\t\tCreationDate=\"%s\"\n", str);
+        Out("\t\tCreationDate=\"%s\"\n", str.Get());
     str.Set(Escape(engine->GetProperty("ModDate")));
     if (str)
-        Out("\t\tModDate=\"%s\"\n", str);
+        Out("\t\tModDate=\"%s\"\n", str.Get());
     str.Set(Escape(engine->GetProperty("Creator")));
     if (str)
-        Out("\t\tCreator=\"%s\"\n", str);
+        Out("\t\tCreator=\"%s\"\n", str.Get());
     str.Set(Escape(engine->GetProperty("Producer")));
     if (str)
-        Out("\t\tProducer=\"%s\"\n", str);
+        Out("\t\tProducer=\"%s\"\n", str.Get());
     str.Set(Escape(engine->GetProperty("PdfVersion")));
     if (str)
-        Out("\t\tPdfVersion=\"%s\"\n", str);
+        Out("\t\tPdfVersion=\"%s\"\n", str.Get());
     if (!engine->IsPrintingAllowed())
         Out("\t\tPrintingAllowed=\"no\"\n");
     if (!engine->IsCopyingTextAllowed())
@@ -82,7 +82,7 @@ void DumpTocItem(DocTocItem *item, int level, int& idCounter)
     for (; item; item = item->next) {
         ScopedMem<char> title(Escape(item->title, true));
         for (int i = 0; i < level; i++) Out("\t");
-        Out("<Item Title=\"%s\"", title);
+        Out("<Item Title=\"%s\"", title.Get());
         if (item->pageNo)
             Out(" Page=\"%d\"", item->pageNo);
         if (item->id != ++idCounter)
@@ -90,7 +90,7 @@ void DumpTocItem(DocTocItem *item, int level, int& idCounter)
         if (item->GetLink()) {
             ScopedMem<char> target(Escape(item->GetLink()->GetDestValue()));
             if (target)
-                Out(" Target=\"%s\"", target);
+                Out(" Target=\"%s\"", target.Get());
         }
         if (!item->child)
             Out(" />\n");
@@ -109,7 +109,7 @@ void DumpToc(BaseEngine *engine)
 {
     DocTocItem *root = engine->GetTocTree();
     if (root) {
-        Out("\t<TocTree%s>\n", engine->HasTocTree() ? _T("") : _T(" Expected=\"no\""));
+        Out("\t<TocTree%s>\n", engine->HasTocTree() ? "" : " Expected=\"no\"");
         int idCounter = 0;
         DumpTocItem(root, 2, idCounter);
         Out("\t</TocTree>\n");
@@ -127,7 +127,7 @@ void DumpPageData(BaseEngine *engine, int pageNo, bool fullDump)
     Out("\t<Page Number=\"%d\"\n", pageNo);
     if (engine->HasPageLabels()) {
         ScopedMem<char> label(Escape(engine->GetPageLabel(pageNo)));
-        Out("\t\tLabel=\"%s\"\n", label);
+        Out("\t\tLabel=\"%s\"\n", label.Get());
     }
     if (engine->PageRotation(pageNo))
         Out("\t\tRotation=\"%d\"\n", engine->PageRotation(pageNo));
@@ -141,7 +141,7 @@ void DumpPageData(BaseEngine *engine, int pageNo, bool fullDump)
     if (fullDump) {
         ScopedMem<char> text(Escape(engine->ExtractPageText(pageNo, _T("\n"))));
         if (text)
-            Out("\t\t<TextContent>\n%s\t\t</TextContent>\n", text);
+            Out("\t\t<TextContent>\n%s\t\t</TextContent>\n", text.Get());
     }
 
     Vec<PageElement *> *els = engine->GetElements(pageNo);
@@ -154,17 +154,17 @@ void DumpPageData(BaseEngine *engine, int pageNo, bool fullDump)
             if (dest) {
                 if (dest->GetDestType()) {
                     ScopedMem<char> type(Escape(str::conv::FromAnsi(dest->GetDestType())));
-                    Out("\t\t\t\tType=\"%s\"\n", type);
+                    Out("\t\t\t\tType=\"%s\"\n", type.Get());
                 }
                 if (dest->GetDestPageNo())
                     Out("\t\t\t\tLinkedPage=\"%d\"\n", dest->GetDestPageNo());
                 ScopedMem<char> value(Escape(dest->GetDestValue()));
                 if (value)
-                    Out("\t\t\t\tTarget=\"%s\"\n", value);
+                    Out("\t\t\t\tTarget=\"%s\"\n", value.Get());
             }
             ScopedMem<char> name(Escape(els->At(i)->GetValue()));
             if (name)
-                Out("\t\t\t\tLabel=\"%s\"\n", name);
+                Out("\t\t\t\tLabel=\"%s\"\n", name.Get());
             Out("\t\t\t/>\n");
         }
         Out("\t\t</PageElements>\n");
@@ -196,7 +196,7 @@ void DumpThumbnail(BaseEngine *engine)
     ScopedMem<unsigned char> data(SerializeBitmap(bmp->GetBitmap(), &len));
     ScopedMem<char> hexData(data ? str::MemToHex(data, len) : NULL);
     if (hexData)
-        Out("\t<Thumbnail>\n\t\t%s\n\t</Thumbnail>\n", hexData);
+        Out("\t<Thumbnail>\n\t\t%s\n\t</Thumbnail>\n", hexData.Get());
     else
         Out("\t<Thumbnail />\n");
 

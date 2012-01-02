@@ -463,10 +463,12 @@ void OnContextMenu(WindowInfo* win, int x, int y)
         break;
 
     case IDM_COPY_IMAGE:
-        bmp = pageEl->GetImage();
-        if (bmp)
-            CopyImageToClipboard(bmp->GetBitmap());
-        delete bmp;
+        if (pageEl) {
+            bmp = pageEl->GetImage();
+            if (bmp)
+                CopyImageToClipboard(bmp->GetBitmap());
+            delete bmp;
+        }
         break;
     }
 

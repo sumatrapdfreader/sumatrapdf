@@ -1384,7 +1384,7 @@ PdfPageRun *CPdfEngine::GetPageRun(pdf_page *page, bool tryOnly)
             i--;
         }
 
-        ScopedCritSec scope(&ctxAccess);
+        ScopedCritSec scope2(&ctxAccess);
 
         fz_display_list *list = NULL;
         fz_device *dev = NULL;
@@ -1848,8 +1848,11 @@ fz_rect *CPdfEngine::GetPageImageRects(pdf_page *page)
 
     // the list of page image rectangles is terminated with a null-rectangle
     fz_rect *result = SAZA(fz_rect, positions.Count() + 1);
-    for (size_t i = 0; i < positions.Count(); i++)
+    if (!result)
+        return NULL;
+    for (size_t i = 0; i < positions.Count(); i++) {
         result[i] = positions.At(i).rect;
+    }
     return result;
 }
 
@@ -2607,7 +2610,7 @@ xps_page *CXpsEngine::GetXpsPage(int pageNo, bool failIfBusy)
 
     xps_page *page = _pages[pageNo-1];
     if (!page) {
-        ScopedCritSec scope(&ctxAccess);
+        ScopedCritSec ctxScope(&ctxAccess);
         fz_try(ctx) {
             page = xps_load_page(_doc, pageNo - 1);
 
@@ -2637,7 +2640,7 @@ XpsPageRun *CXpsEngine::GetPageRun(xps_page *page, bool tryOnly, fz_link *extrac
             i--;
         }
 
-        ScopedCritSec scope(&ctxAccess);
+        ScopedCritSec ctxScope(&ctxAccess);
 
         fz_display_list *list = NULL;
         fz_device *dev = NULL;
@@ -2716,7 +2719,7 @@ void CXpsEngine::DropPageRun(XpsPageRun *run, bool forceRemove)
             _runCache[MAX_PAGE_RUN_CACHE-1] = NULL;
         }
         if (0 == run->refs) {
-            ScopedCritSec scope(&ctxAccess);
+            ScopedCritSec ctxScope(&ctxAccess);
             fz_free_display_list(ctx, run->list);
             free(run);
         }
@@ -3050,14 +3053,18 @@ Vec<PageElement *> *CXpsEngine::GetElements(int pageNo)
     // since all elements lists are in last-to-first order, append
     // item types in inverse order and reverse the whole list at the end
     Vec<PageElement *> *els = new Vec<PageElement *>();
+    if (!els)
+        return NULL;
 
     if (imageRects[pageNo-1]) {
-        for (int i = 0; !fz_is_empty_rect(imageRects[pageNo-1][i]); i++)
+        for (int i = 0; !fz_is_empty_rect(imageRects[pageNo-1][i]); i++) {
             els->Append(new XpsImage(this, pageNo, imageRects[pageNo-1][i], i));
+        }
     }
 
-    for (fz_link *link = _links[pageNo-1]; link; link = link->next)
+    for (fz_link *link = _links[pageNo-1]; link; link = link->next) {
         els->Append(new XpsLink(this, &link->dest, link->rect, pageNo));
+    }
 
     els->Reverse();
     return els;
@@ -3114,6 +3121,8 @@ fz_rect *CXpsEngine::GetPageImageRects(xps_page *page)
 
     // the list of page image rectangles is terminated with a null-rectangle
     fz_rect *result = SAZA(fz_rect, positions.Count() + 1);
+    if (!result)
+        return NULL;
     for (size_t i = 0; i < positions.Count(); i++)
         result[i] = positions.At(i).rect;
     return result;
