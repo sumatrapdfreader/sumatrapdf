@@ -5,6 +5,12 @@
 #include "BaseUtil.h"
 #include "StrUtil.h"
 
+void CrashMe()
+{
+    char *p = NULL;
+    *p = 0;
+}
+
 namespace str {
 
 #define EntryCheck(arg1, arg2) \

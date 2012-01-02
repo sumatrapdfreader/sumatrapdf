@@ -81,14 +81,6 @@ inline void *memdup(void *data, size_t len)
 }
 #define _memdup(ptr) memdup(ptr, sizeof(*(ptr)))
 
-// TODO: this should be forced to not be inlined so that it shows up
-// on the callstack
-inline void CrashMe()
-{
-    char *p = NULL;
-    *p = 0;
-}
-
 // auto-free memory for arbitrary malloc()ed memory of type T*
 template <typename T>
 class ScopedMem

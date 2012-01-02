@@ -396,7 +396,7 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, in
     data = (InstanceData *)instance->pdata;
     gNPNFuncs.setvalue(instance, NPPVpluginWindowBool, (void *)true);
     
-    if (GetExePath(data->exepath, dimof(data->exepath)))
+    if (data && GetExePath(data->exepath, dimof(data->exepath)))
         data->message = _T("Opening document in SumatraPDF...");
     else
         data->message = _T("Error: SumatraPDF hasn't been found!");
@@ -620,7 +620,8 @@ NPError NP_LOADDS NPP_DestroyStream(NPP instance, NPStream* stream, NPReason rea
         goto Exit;
 
     CloseHandle(data->hFile);
-    LaunchWithSumatra(data, stream->url);
+    if (stream)
+        LaunchWithSumatra(data, stream->url);
 
 Exit:
     if (data->npwin)

@@ -77,7 +77,11 @@ CFLAGSB = $(CFLAGSB) /wd4996
 # /Zi  : enable debug information
 # /GS  : enable security checks
 # /Gy  : separate functions for linker
-CFLAGSB = $(CFLAGSB) /W3 /WX /GR- /Zi /GS /Gy
+CFLAGSB = $(CFLAGSB) /W3 /GR- /Zi /GS /Gy
+
+!if "$(WITH_ANALYZE)"!="yes"
+CFLAGSB = $(CFLAGSB) /WX
+!endif
 
 # Make it easy to compile as ANSI or UNICODE application
 !if "$(_ANSI)"==""

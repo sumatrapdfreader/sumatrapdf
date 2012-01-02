@@ -8,6 +8,8 @@
 # PLATFORM=X86
 #   the PLATFORM var is usually set in the x64 and x64 cross tools Visual Studio command prompt
 #   note: building on X64 isn't officially supported and might unintentionally be broken
+#WITH_ANALYZE=yes
+#   use /analyze compiler flag 
 #MINICRT=yes
 #   set to yes to build with ucrt, to see how much we save
 #   note: doesn't work yet. Doesn't find few libc functions that are not implemented. 
@@ -62,6 +64,10 @@ CFLAGSOPT = $(CFLAGSOPT) /Isrc/utils/msvc
 CFLAGS = $(CFLAGS) /D "WINVER=0x0500" /D "_WIN32_WINNT=0x0500"
 # Suppress warning C4800: forcing value to bool 'true' or 'false'
 CFLAGS = $(CFLAGS) /wd4800
+
+!if "$(WITH_ANALYZE)"=="yes"
+CFLAGS = $(CFLAGS) /analyze
+!endif
 
 SUMATRA_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/Isrc/utils /Isrc/utils/msvc /I$(MUPDF_DIR)\fitz /I$(MUPDF_DIR)\pdf \
