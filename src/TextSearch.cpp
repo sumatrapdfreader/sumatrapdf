@@ -60,6 +60,13 @@ void TextSearch::SetText(TCHAR *text)
             ;
         anchor = str::DupN(text, end - text);
     }
+#ifdef UNICODE
+    // Adobe Reader also matches certain hard-to-type Unicode
+    // characters when searching for easy-to-type homoglyphs
+    // cf. http://forums.fofou.org/sumatrapdf/topic?id=2432337
+    else if (*text == '-' || *text == '\'' || *text == '"')
+        anchor = NULL;
+#endif
     else
         anchor = str::DupN(text, 1);
 
@@ -93,7 +100,6 @@ void TextSearch::SetDirection(TextSearchDirection direction)
 int TextSearch::MatchLen(TCHAR *start)
 {
     TCHAR *match = findText, *end = start;
-    assert(!_istspace(*end));
 
     if (matchWordStart && start > pageText && iswordchar(start[-1]) && iswordchar(start[0]))
         return -1;
@@ -101,9 +107,22 @@ int TextSearch::MatchLen(TCHAR *start)
     while (*match) {
         if (!*end)
             return -1;
-        if (_istspace(*match) && _istspace(*end))
+        if (caseSensitive ? *match != *end : CharLower((LPTSTR)LOWORD(*match)) == CharLower((LPTSTR)LOWORD(*end)))
+            /* characters are identical */;
+        else if (_istspace(*match) && _istspace(*end))
             /* treat all whitespace as identical */;
-        else if (caseSensitive ? *match != *end : CharLower((LPTSTR)LOWORD(*match)) != CharLower((LPTSTR)LOWORD(*end)))
+#ifdef UNICODE
+        // TODO: Adobe Reader seems to have a more extensive list of
+        //       normalizations - is there an easier way?
+        else if (*match == '-' && (0x2010 <= *end && *end <= 0x2014))
+            /* make HYPHEN-MINUS also match HYPHEN, NON-BREAKING HYPHEN,
+               FIGURE DASH, EN DASH and EM DASH (but not the other way around) */;
+        else if (*match == '\'' && (0x2018 <= *end && *end <= 0x201b))
+            /* make APOSTROPHE also match LEFT/RIGHT SINGLE QUOTATION MARK */;
+        else if (*match == '"' && (0x201c <= *end && *end <= 0x201f))
+            /* make QUOTATION MARK also match LEFT/RIGHT DOUBLE QUOTATION MARK */;
+#endif
+        else
             return -1;
         match++;
         end++;
@@ -123,9 +142,17 @@ int TextSearch::MatchLen(TCHAR *start)
     return (int)(end - start);
 }
 
+static TCHAR *GetNextIndex(TCHAR *base, int offset, bool forward)
+{
+    TCHAR *c = base + offset + (forward ? 0 : -1);
+    if (c < base || !*c)
+        return NULL;
+    return c;
+}
+
 bool TextSearch::FindTextInPage(int pageNo)
 {
-    if (str::IsEmpty(anchor))
+    if (str::IsEmpty(findText))
         return false;
     if (!pageNo)
         pageNo = findPage;
@@ -134,7 +161,9 @@ bool TextSearch::FindTextInPage(int pageNo)
     TCHAR *found;
     int length;
     do {
-        if (forward)
+        if (!anchor)
+            found = GetNextIndex(pageText, findIndex, forward);
+        else if (forward)
             found = (caseSensitive ? StrStr : StrStrI)(pageText + findIndex, anchor);
         else
             found = StrRStrI(pageText, pageText + findIndex, anchor);
@@ -158,7 +187,7 @@ bool TextSearch::FindTextInPage(int pageNo)
 
 bool TextSearch::FindStartingAtPage(int pageNo, ProgressUpdateUI *tracker)
 {
-    if (str::IsEmpty(anchor))
+    if (str::IsEmpty(findText))
         return false;
 
     int total = engine->PageCount();

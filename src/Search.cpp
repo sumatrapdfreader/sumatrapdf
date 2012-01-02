@@ -56,8 +56,10 @@ void OnMenuFind(WindowInfo *win)
         ScopedMem<TCHAR> selection(win->dm->textSelection->ExtractText(_T("\n")));
         str::TransChars(selection, _T("\n"), _T("\0"));
         str::NormalizeWS(selection);
-        if (!str::IsEmpty(selection.Get()))
+        if (!str::IsEmpty(selection.Get())) {
             win::SetText(win->hwndFindBox, selection);
+            Edit_SetModify(win->hwndFindBox, TRUE);
+        }
     }
 
     // Don't show a dialog if we don't have to - use the Toolbar instead
