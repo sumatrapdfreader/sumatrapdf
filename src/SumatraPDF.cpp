@@ -784,8 +784,8 @@ static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win,
     } else if (allowFailure) {
         DBG_OUT("failed to load file %s\n", fileName);
         delete prevModel;
-        ScopedMem<TCHAR> title(str::Format(_T("%s - %s"), path::GetBaseName(fileName), SUMATRA_WINDOW_TITLE));
-        win::SetText(win.hwndFrame, title);
+        ScopedMem<TCHAR> title2(str::Format(_T("%s - %s"), path::GetBaseName(fileName), SUMATRA_WINDOW_TITLE));
+        win::SetText(win.hwndFrame, title2);
         goto Error;
     } else {
         // if there is an error while reading the document and a repair is not requested
@@ -1599,7 +1599,10 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
         bool renderOutOfDateCue = false;
         UINT renderDelay = 0;
         if (!DoCachePageRendering(&win, pageNo))
-            dm->engine->RenderPage(hdc, pageInfo->pageOnScreen, pageNo, dm->ZoomReal(pageNo), dm->Rotation());
+        {
+            if (dm->engine)
+                dm->engine->RenderPage(hdc, pageInfo->pageOnScreen, pageNo, dm->ZoomReal(pageNo), dm->Rotation());
+        }
         else
             renderDelay = gRenderCache.Paint(hdc, &bounds, dm, pageNo, pageInfo, &renderOutOfDateCue);
 
@@ -4697,24 +4700,24 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             ScopedMem<TCHAR> command(str::Format(_T("[") DDECOMMAND_OPEN _T("(\"%s\", 0, 1, 0)]"), fullpath));
             DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
             if (i.destName && !firstIsDocLoaded) {
-                ScopedMem<TCHAR> command(str::Format(_T("[") DDECOMMAND_GOTO _T("(\"%s\", \"%s\")]"), fullpath, i.destName));
-                DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
+                ScopedMem<TCHAR> cmd(str::Format(_T("[") DDECOMMAND_GOTO _T("(\"%s\", \"%s\")]"), fullpath, i.destName));
+                DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
             }
             else if (i.pageNumber > 0 && !firstIsDocLoaded) {
-                ScopedMem<TCHAR> command(str::Format(_T("[") DDECOMMAND_PAGE _T("(\"%s\", %d)]"), fullpath, i.pageNumber));
-                DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
+                ScopedMem<TCHAR> cmd(str::Format(_T("[") DDECOMMAND_PAGE _T("(\"%s\", %d)]"), fullpath, i.pageNumber));
+                DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
             }
             if ((i.startView != DM_AUTOMATIC || i.startZoom != INVALID_ZOOM ||
                  i.startScroll.x != -1 && i.startScroll.y != -1) && !firstIsDocLoaded) {
                 const TCHAR *viewMode = DisplayModeConv::NameFromEnum(i.startView);
-                ScopedMem<TCHAR> command(str::Format(_T("[") DDECOMMAND_SETVIEW _T("(\"%s\", \"%s\", %.2f, %d, %d)]"),
+                ScopedMem<TCHAR> cmd(str::Format(_T("[") DDECOMMAND_SETVIEW _T("(\"%s\", \"%s\", %.2f, %d, %d)]"),
                                          fullpath, viewMode, i.startZoom, i.startScroll.x, i.startScroll.y));
-                DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
+                DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
             }
             if (i.forwardSearchOrigin && i.forwardSearchLine) {
-                ScopedMem<TCHAR> command(str::Format(_T("[") DDECOMMAND_SYNC _T("(\"%s\", \"%s\", %d, 0, 0, 1)]"),
+                ScopedMem<TCHAR> cmd(str::Format(_T("[") DDECOMMAND_SYNC _T("(\"%s\", \"%s\", %d, 0, 0, 1)]"),
                                          i.fileNames.At(n), i.forwardSearchOrigin, i.forwardSearchLine));
-                DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
+                DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
             }
         }
         else {

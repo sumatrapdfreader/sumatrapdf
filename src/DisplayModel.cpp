@@ -1361,7 +1361,10 @@ TCHAR *DisplayModel::GetTextInRegion(int pageNo, RectD region)
         return NULL;
 
     RectI regionI = region.Round();
-    TCHAR *result = SAZA(TCHAR, str::Len(pageText) + 1), *dest = result;
+    TCHAR *result = SAZA(TCHAR, str::Len(pageText) + 1);
+    if (!result)
+        return NULL;
+    TCHAR *dest = result;
     for (TCHAR *src = pageText; *src; src++) {
         if (*src != '\r' && *src != '\n') {
             RectI rect = coords[src - pageText];
