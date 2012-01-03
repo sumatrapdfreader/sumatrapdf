@@ -160,8 +160,9 @@ static void GoToTocLinkForTVItem(WindowInfo* win, HWND hTV, HTREEITEM hItem=NULL
     item.mask = TVIF_PARAM;
     TreeView_GetItem(hTV, &item);
     DocTocItem *tocItem = (DocTocItem *)item.lParam;
-    if (win->IsDocLoaded() && tocItem &&
-        (allowExternal || tocItem->GetLink() && str::Eq(tocItem->GetLink()->GetDestType(), "ScrollTo")) || tocItem->pageNo) {
+    if (!tocItem || !win->IsDocLoaded())
+        return;
+    if ((allowExternal || tocItem->GetLink() && str::Eq(tocItem->GetLink()->GetDestType(), "ScrollTo")) || tocItem->pageNo) {
         QueueWorkItem(new GoToTocLinkWorkItem(win, tocItem));
     }
 }

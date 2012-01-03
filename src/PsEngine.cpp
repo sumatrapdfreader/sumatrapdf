@@ -115,8 +115,8 @@ static PdfEngine *ps2pdf(const TCHAR *fileName)
     ScopedMem<TCHAR> cmdLine(str::Format(_T("\"%s\" -q -dSAFER -dNOPAUSE -dBATCH -dEPSCrop -sOutputFile=\"%s\" -sDEVICE=pdfwrite -c .setpdfwrite -f \"%s\""), gswin32c, tmpFile, shortPath));
 
     if (GetEnvironmentVariable(_T("MULOG"), NULL, 0)) {
-        _tprintf(_T("ps2pdf: using Ghostscript from '%s'\n"), gswin32c);
-        _tprintf(_T("ps2pdf: for creating '%s'\n"), tmpFile);
+        _tprintf(_T("ps2pdf: using Ghostscript from '%s'\n"), gswin32c.Get());
+        _tprintf(_T("ps2pdf: for creating '%s'\n"), tmpFile.Get());
     }
 
     // TODO: the PS-to-PDF conversion can hang the UI for several seconds
@@ -174,7 +174,7 @@ static PdfEngine *psgz2pdf(const TCHAR *fileName)
         return NULL;
     }
 
-    char buffer[1 << 14];
+    char buffer[12*1024];
     for (;;) {
         int len = gzread(inFile, buffer, sizeof(buffer));
         if (len <= 0)

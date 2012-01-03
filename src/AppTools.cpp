@@ -520,10 +520,15 @@ void DDEExecute(LPCTSTR server, LPCTSTR topic, LPCTSTR command)
         DBG_OUT("DDE transaction failed %u.\n", DdeGetLastError(inst));
 
 exit:
-    DdeFreeDataHandle(hddedata);
-    DdeDisconnect(hconv);
-    DdeFreeStringHandle(inst, hszTopic);
-    DdeFreeStringHandle(inst, hszServer);
+    if (hddedata)
+        DdeFreeDataHandle(hddedata);
+    if (hconv)
+        DdeDisconnect(hconv);
+
+    if (hszTopic)
+        DdeFreeStringHandle(inst, hszTopic);
+    if (hszServer)
+        DdeFreeStringHandle(inst, hszServer);
     DdeUninitialize(inst);
 }
 
