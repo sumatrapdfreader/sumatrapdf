@@ -13,26 +13,26 @@
 #include <sys/time.h>
 #endif
 
-char *output = NULL;
-float resolution = 72;
-float rotation = 0;
+static char *output = NULL;
+static float resolution = 72;
+static float rotation = 0;
 
-int showxml = 0;
-int showtext = 0;
-int showtime = 0;
-int showmd5 = 0;
-int showoutline = 0;
-int savealpha = 0;
-int uselist = 1;
-int alphabits = 8;
-float gamma_value = 1;
-int invert = 0;
+static int showxml = 0;
+static int showtext = 0;
+static int showtime = 0;
+static int showmd5 = 0;
+static int showoutline = 0;
+static int savealpha = 0;
+static int uselist = 1;
+static int alphabits = 8;
+static float gamma_value = 1;
+static int invert = 0;
 
-fz_colorspace *colorspace;
-fz_glyph_cache *glyphcache;
-char *filename;
+static fz_colorspace *colorspace;
+static fz_glyph_cache *glyphcache;
+static char *filename;
 
-struct {
+static struct {
 	int count, total;
 	int min, max;
 	int minpage, maxpage;
@@ -473,7 +473,11 @@ static void drawoutline(pdf_xref *xref)
 	fz_free_outline(outline);
 }
 
+#ifdef MUPDF_COMBINED_EXE
+int pdfdraw_main(int argc, char **argv)
+#else
 int main(int argc, char **argv)
+#endif
 {
 	char *password = "";
 	int grayscale = 0;

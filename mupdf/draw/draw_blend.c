@@ -140,13 +140,13 @@ fz_luminosity_rgb(int *rd, int *gd, int *bd, int rb, int gb, int bb, int rs, int
 		{
 			int max;
 			max = MAX(r, MAX(g, b));
-			scale = ((255 - y) << 16) / (max - y);
+			scale = (max == y ? 0 : ((255 - y) << 16) / (max - y));
 		}
 		else
 		{
 			int min;
 			min = MIN(r, MIN(g, b));
-			scale = (y << 16) / (y - min);
+			scale = (y == min ? 0 : (y << 16) / (y - min));
 		}
 		r = y + (((r - y) * scale + 0x8000) >> 16);
 		g = y + (((g - y) * scale + 0x8000) >> 16);

@@ -176,7 +176,11 @@ static void showgrep(char *filename)
 	fz_fprint_obj(stdout, xref->trailer, 1);
 }
 
+#ifdef MUPDF_COMBINED_EXE
+int pdfshow_main(int argc, char **argv)
+#else
 int main(int argc, char **argv)
+#endif
 {
 	char *password = NULL; /* don't throw errors if encrypted */
 	char *filename;

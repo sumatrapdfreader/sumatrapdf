@@ -124,9 +124,13 @@ $(OUT)/cmapdump.o : pdf/pdf_cmap.c pdf/pdf_cmap_parse.c
 
 PDF_APPS := $(addprefix $(OUT)/, pdfdraw pdfclean pdfextract pdfinfo pdfshow)
 XPS_APPS := $(addprefix $(OUT)/, xpsdraw)
+BUSY_APP := $(addprefix $(OUT)/, mubusy)
+BUSY_SRC := $(notdir $(wildcard apps/mubusy_*.c))
+BUSY_LIBS := $(addprefix $(OUT)/, $(BUSY_SRC:%.c=%.o))
 
 $(PDF_APPS) : $(MUPDF_LIB) $(FITZ_LIB) $(THIRD_LIBS)
 $(XPS_APPS) : $(MUXPS_LIB) $(FITZ_LIB) $(THIRD_LIBS)
+$(BUSY_APP) : $(BUSY_LIBS) $(MUPDF_LIB) $(MUXPS_LIB) $(FITZ_LIB) $(THIRD_LIBS)
 
 MUPDF := $(OUT)/mupdf
 $(MUPDF) : $(MUXPS_LIB) $(MUPDF_LIB) $(FITZ_LIB) $(THIRD_LIBS)
@@ -152,7 +156,7 @@ install: $(MUXPS_LIB) $(MUPDF_LIB) $(FITZ_LIB) $(PDF_APPS) $(XPS_APPS) $(MUPDF)
 
 # --- Clean and Default ---
 
-all: $(THIRD_LIBS) $(FITZ_LIB) $(PDF_APPS) $(XPS_APPS) $(MUPDF)
+all: $(THIRD_LIBS) $(FITZ_LIB) $(PDF_APPS) $(XPS_APPS) $(MUPDF) $(BUSY_APP)
 
 clean:
 	rm -rf $(OUT)

@@ -157,7 +157,11 @@ static void showobject(int num)
 	fz_drop_obj(obj);
 }
 
+#ifdef MUPDF_COMBINED_EXE
+int pdfextract_main(int argc, char **argv)
+#else
 int main(int argc, char **argv)
+#endif
 {
 	char *infile;
 	char *password = "";

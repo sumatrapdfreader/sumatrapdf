@@ -395,7 +395,11 @@ static void drawoutline(xps_document *doc)
 	fz_free_outline(outline);
 }
 
+#ifdef MUPDF_COMBINED_EXE
+int xpsdraw_main(int argc, char **argv)
+#else
 int main(int argc, char **argv)
+#endif
 {
 	int grayscale = 0;
 	int accelerate = 1;
