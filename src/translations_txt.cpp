@@ -3259,7 +3259,7 @@ const char *gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "J\303\244tkuv raamatuvaade",
   "J\303\244tkuv kahelehek\303\274ljeline",
   "Osale t\303\265lkimises",
-  NULL,
+  "Kopeeri &pilt",
   "Kopeeri &lingi aadress",
   "Kopeeri ko&mmentaar",
   "Teksti kopeerimine on keelatud (kopeerida saab vaid pildina)",

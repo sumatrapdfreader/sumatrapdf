@@ -256,6 +256,9 @@ Jätkuv kaheleheküljeline
 Contribute Translation
 Osale tõlkimises
 
+Copy &Image
+Kopeeri &pilt
+
 Copy &Link Address
 Kopeeri &lingi aadress
 
@@ -666,7 +669,4 @@ teksti kopeerimine
 
 printing document
 dokumendi printimine
-
-# Untranslated:
-#Copy &Image
 
