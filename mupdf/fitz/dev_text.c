@@ -219,7 +219,7 @@ fz_debug_text_span(fz_text_span *span)
 
 /***** SumatraPDF: various string fixups *****/
 static void
-ensurespanlength(fz_context *ctx, fz_text_span *span, int mincap)
+ensure_span_length(fz_context *ctx, fz_text_span *span, int mincap)
 {
 	if (span->cap < mincap)
 	{
@@ -229,12 +229,12 @@ ensurespanlength(fz_context *ctx, fz_text_span *span, int mincap)
 }
 
 static void
-mergetwospans(fz_context *ctx, fz_text_span *span)
+merge_two_spans(fz_context *ctx, fz_text_span *span)
 {
 	if (!span->next || span->font != span->next->font || span->size != span->next->size || span->wmode != span->next->wmode)
 		return;
 
-	ensurespanlength(ctx, span, span->len + span->next->len);
+	ensure_span_length(ctx, span, span->len + span->next->len);
 	memcpy(&span->text[span->len], &span->next->text[0], span->next->len * sizeof(fz_text_char));
 	span->len += span->next->len;
 	span->next->len = 0;
@@ -250,14 +250,14 @@ mergetwospans(fz_context *ctx, fz_text_span *span)
 }
 
 static void
-deletecharacter(fz_text_span *span, int i)
+delete_character(fz_text_span *span, int i)
 {
 	memmove(&span->text[i], &span->text[i + 1], (span->len - (i + 1)) * sizeof(fz_text_char));
 	span->len--;
 }
 
 static void
-reversecharacters(fz_text_span *span, int i, int j)
+reverse_characters(fz_text_span *span, int i, int j)
 {
 	while (i < j)
 	{
@@ -269,7 +269,7 @@ reversecharacters(fz_text_span *span, int i, int j)
 }
 
 static int
-ornatecharacter(int ornate, int character)
+ornate_character(int ornate, int character)
 {
 	static wchar_t *ornates[] = {
 		L" \xA8\xB4\x60\x5E\u02DA",
@@ -280,15 +280,18 @@ ornatecharacter(int ornate, int character)
 		L"u\xFC\xFA\xF9\xFB\0", L"U\xDC\xDA\xD9\xDB\0",
 		NULL
 	};
-	int i, j;
-
-	for (i = 1; ornates[0][i] && ornates[0][i] != (wchar_t)ornate; i++);
-	for (j = 1; ornates[j] && ornates[j][0] != (wchar_t)character; j++);
-	return ornates[0][i] && ornates[j] ? ornates[j][i] : 0;
+	int i = 1, j = 1;
+	while (ornates[0][i] && ornates[0][i] != (wchar_t)ornate)
+		i++;
+	while (ornates[j] && ornates[j][0] != (wchar_t)character)
+		j++;
+	if (!ornates[0][i] || !ornates[j])
+		return 0;
+	return ornates[j][i];
 }
 
 static float
-calcbboxoverlap(fz_bbox bbox1, fz_bbox bbox2)
+calc_bbox_overlap(fz_bbox bbox1, fz_bbox bbox2)
 {
 	fz_bbox intersect = fz_intersect_bbox(bbox1, bbox2);
 	int area1, area2, area3;
@@ -304,15 +307,15 @@ calcbboxoverlap(fz_bbox bbox1, fz_bbox bbox2)
 }
 
 static int
-doglyphsoverlap(fz_text_span *span, int i, fz_text_span *span2, int j)
+do_glyphs_overlap(fz_text_span *span, int i, fz_text_span *span2, int j)
 {
 	return
 		i < span->len && j < span2->len && span->text[i].c == span2->text[j].c &&
-		(calcbboxoverlap(span->text[i].bbox, span2->text[j].bbox) > 0.7f ||
+		(calc_bbox_overlap(span->text[i].bbox, span2->text[j].bbox) > 0.7f ||
 		 // bboxes of slim glyphs sometimes don't overlap enough, so
 		 // check if the overlapping continues with the following glyph
 		 i + 1 < span->len && j + 1 < span2->len && span->text[i + 1].c == span2->text[j + 1].c &&
-		 calcbboxoverlap(span->text[i + 1].bbox, span2->text[j + 1].bbox) > 0.7f);
+		 calc_bbox_overlap(span->text[i + 1].bbox, span2->text[j + 1].bbox) > 0.7f);
 }
 
 /* TODO: Complete these lists... */
@@ -320,7 +323,7 @@ doglyphsoverlap(fz_text_span *span, int i, fz_text_span *span2, int j)
 #define ISRIGHTTOLEFTCHAR(c) ((0x0590 <= (c) && (c) <= 0x05FF) || (0x0600 <= (c) && (c) <= 0x06FF) || (0x0750 <= (c) && (c) <= 0x077F) || (0xFB50 <= (c) && (c) <= 0xFDFF) || (0xFE70 <= (c) && (c) <= 0xFEFF))
 
 static void
-fixuptextspan(fz_context *ctx, fz_text_span *head)
+fixup_text_span(fz_context *ctx, fz_text_span *head)
 {
 	fz_text_span *span;
 	int i;
@@ -339,18 +342,18 @@ fixuptextspan(fz_context *ctx, fz_text_span *head)
 			case 0x02DA: /* ring above */
 				if (span->next && span->next->len > 0 && (i + 1 == span->len || i + 2 == span->len && span->text[i + 1].c == 32))
 				{
-					mergetwospans(ctx, span);
+					merge_two_spans(ctx, span);
 				}
 				if (i + 1 < span->len)
 				{
 					int newC = 0;
 					if (span->text[i + 1].c != 32 || i + 2 >= span->len)
-						newC = ornatecharacter(span->text[i].c, span->text[i + 1].c);
-					else if ((newC = ornatecharacter(span->text[i].c, span->text[i + 2].c)))
-						deletecharacter(span, i + 1);
+						newC = ornate_character(span->text[i].c, span->text[i + 1].c);
+					else if ((newC = ornate_character(span->text[i].c, span->text[i + 2].c)))
+						delete_character(span, i + 1);
 					if (newC)
 					{
-						deletecharacter(span, i);
+						delete_character(span, i);
 						span->text[i].c = newC;
 					}
 				}
@@ -363,7 +366,7 @@ fixuptextspan(fz_context *ctx, fz_text_span *head)
 					int j = i + 1;
 					while (j < span->len && span->text[j - 1].bbox.x0 <= span->text[j].bbox.x0 && !ISLEFTTORIGHTCHAR(span->text[i].c))
 						j++;
-					reversecharacters(span, i, j - 1);
+					reverse_characters(span, i, j - 1);
 					i = j;
 				}
 			}
@@ -374,7 +377,7 @@ fixuptextspan(fz_context *ctx, fz_text_span *head)
 	/* remove duplicate character sequences in (almost) the same spot */
 	for (span = head; span; span = span->next)
 	{
-		if (span->size < 5) /* doglyphsoverlap fails too often for small fonts */
+		if (span->size < 5) /* do_glyphs_overlap fails too often for small fonts */
 			continue;
 		for (i = 0; i < span->len; i++)
 		{
@@ -382,17 +385,17 @@ fixuptextspan(fz_context *ctx, fz_text_span *head)
 			int newlines, j;
 			for (span2 = span, j = i + 1, newlines = 0; span2 && newlines < 2; newlines += span2->eol, span2 = span2->next, j = 0)
 				for (; j < span2->len; j++)
-					if (span->text[i].c != 32 && doglyphsoverlap(span, i, span2, j))
+					if (span->text[i].c != 32 && do_glyphs_overlap(span, i, span2, j))
 						goto fixup_delete_duplicates;
 			continue;
 
 fixup_delete_duplicates:
 			do
-				deletecharacter(span, i);
-			while (doglyphsoverlap(span, i, span2, ++j));
+				delete_character(span, i);
+			while (do_glyphs_overlap(span, i, span2, ++j));
 
 			if (i < span->len && span->text[i].c == 32)
-				deletecharacter(span, i);
+				delete_character(span, i);
 			else if (i == span->len && span->eol)
 				span->eol = 0;
 		}
@@ -592,7 +595,7 @@ fz_text_free_user(fz_device *dev)
 
 	/* TODO: unicode NFC normalization */
 	/* TODO: bidi logical reordering */
-	fixuptextspan(dev->ctx, tdev->head);
+	fixup_text_span(dev->ctx, tdev->head);
 
 	fz_free(dev->ctx, tdev);
 }

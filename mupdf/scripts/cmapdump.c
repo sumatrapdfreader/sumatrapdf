@@ -87,6 +87,8 @@ main(int argc, char **argv)
 		fi = fz_open_file(ctx, argv[i]);
 		cmap = pdf_parse_cmap(fi);
 		fz_close(fi);
+		/* SumatraPDF: flush warnings here instead of in pdf_parse_cmap */
+		fz_flush_warnings(ctx);
 
 		fprintf(fo, "\n/* %s */\n\n", cmap->cmap_name);
 

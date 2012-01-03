@@ -996,6 +996,7 @@ CPdfEngine::~CPdfEngine()
         DropPageRun(runCache[0], true);
     }
 
+    fz_flush_warnings(ctx);
     fz_free_context(ctx);
 
     delete[] _mediaboxes;
@@ -2497,6 +2498,7 @@ CXpsEngine::~CXpsEngine()
         DropPageRun(_runCache[0], true);
     }
 
+    fz_flush_warnings(ctx);
     fz_free_context(ctx);
 
     free((void*)_fileName);

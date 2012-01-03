@@ -164,7 +164,7 @@ void benchfile(char *pdffilename, int loadonly, int pageNo)
 	int page_count;
 	int curpage;
 
-	fz_context *ctx = fz_new_context(NULL, FZ_STORE_UNLIMITED);
+	fz_context *ctx = fz_new_context(NULL, 256 << 20);
 	if (!ctx) {
 		logbench("Error: fz_new_context() failed\n");
 		return;
@@ -208,8 +208,7 @@ Exit:
 	logbench("Finished: %s\n", pdffilename);
 	pdf_free_xref(xref);
 	fz_free_glyph_cache(ctx, drawcache);
-	if (ctx)
-		fz_free_context(ctx);
+	fz_free_context(ctx);
 }
 
 void usage(void)

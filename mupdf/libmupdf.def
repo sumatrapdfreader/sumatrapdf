@@ -512,6 +512,7 @@ EXPORTS
 	xps_parse_brush
 	xps_parse_element
 	xps_clip
+	xps_get_point
 	xps_open_file
 	xps_open_stream
 	xps_free_context

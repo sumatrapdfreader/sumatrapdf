@@ -507,6 +507,7 @@ int main(int argc, char **argv)
 	}
 
 	fz_free_glyph_cache(ctx, glyphcache);
+	fz_flush_warnings(ctx);
 	fz_free_context(ctx);
 
 	return 0;

@@ -398,8 +398,6 @@ pdf_sort_cmap(fz_context *ctx, pdf_cmap *cmap)
 	}
 
 	cmap->rlen = a - cmap->ranges + 1;
-
-	fz_flush_warnings(ctx);
 }
 
 /*
