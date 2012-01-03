@@ -257,7 +257,6 @@ struct InstanceData {
     TCHAR       filepath[MAX_PATH];
     HANDLE      hFile;
     HANDLE      hProcess;
-    HANDLE      hFileLock;
     TCHAR       exepath[MAX_PATH];
     float       progress, prevProgress;
     uint32_t    totalSize, currSize;
@@ -477,16 +476,20 @@ NPError NP_LOADDS NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream,
     *stype = NP_ASFILE;
 
     data->hFile = NULL;
-    data->hFileLock = NULL;
 
-    // Firefox has a bug https://bugzilla.mozilla.org/show_bug.cgi?id=644149
-    // where it's internal caching doesn't work for large files and is flaky
-    // for small files. As a workaround, we do file downloading ourselves.
-    // cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1328
-    // and http://fofou.appspot.com/sumatrapdf/topic?id=2067366&comments=16
-    // Opera disabled the cache for private tabs, so we have to do the caching ourselves, too
+    // Work around limitations in specific browsers:
+    // * Firefox has bug https://bugzilla.mozilla.org/show_bug.cgi?id=644149
+    //   where it's internal caching doesn't work for large files and is flaky
+    //   for small files. As a workaround, we do file downloading ourselves.
+    //   cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1328
+    //   and http://fofou.appspot.com/sumatrapdf/topic?id=2067366
+    // * Opera disables the cache for private tabs, which we can't easily distinguish
+    // * QupZilla deletes files immediately after download (and doesn't remove them later)
+    //   cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1769
     const char *userAgent = gNPNFuncs.uagent(instance);
-    if (str::Find(userAgent, "Gecko/") || str::StartsWith(userAgent, "Opera/"))
+    if (str::Find(userAgent, "Gecko/") ||
+        str::StartsWith(userAgent, "Opera/") ||
+        str::Find(userAgent, "QupZilla/"))
     {
         data->hFile = CreateTempFile(data->filepath);
         if (data->hFile)
@@ -541,13 +544,6 @@ static void LaunchWithSumatra(InstanceData *data, const char *url_utf8)
 {
     if (!file::Exists(data->filepath))
         dbg("sp: NPP_StreamAsFile() error: file doesn't exist");
-    else
-    {
-        // prevent the file from being removed or modified
-        // while SumatraPDF displays it
-        data->hFileLock = CreateFile(data->filepath, GENERIC_READ,
-            FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
-    }
 
     ScopedMem<TCHAR> url(str::conv::FromUtf8(url_utf8));
     ScopedMem<TCHAR> cmdLine(str::Format(_T("\"%s\" -plugin \"%s\" %d \"%s\""),
@@ -660,10 +656,6 @@ NPError NP_LOADDS NPP_Destroy(NPP instance, NPSavedData** save)
         TerminateProcess(data->hProcess, 99);
         WaitForSingleObject(data->hProcess, INFINITE);
         CloseHandle(data->hProcess);
-    }
-    if (data->hFileLock)
-    {
-        CloseHandle(data->hFileLock);
     }
     if (data->hFile)
     {
