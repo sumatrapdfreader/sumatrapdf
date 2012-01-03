@@ -46,8 +46,6 @@ struct ScreenPagePadding {
    columns > 1 */
 #define PADDING_BETWEEN_PAGES_X_DEF      PADDING_BETWEEN_PAGES_Y_DEF
 
-#define NAV_HISTORY_LEN             50
-
 /* Describes many attributes of one page in one, convenient place */
 struct PageInfo {
     /* data that is constant for a given page. page size in document units */
@@ -76,6 +74,9 @@ struct PageInfo {
 /* coordinates are in user space units (per page) */
 struct ScrollState {
     ScrollState(int page=0, double x=0, double y=0) : page(page), x(x), y(y) { }
+    bool operator==(ScrollState& other) {
+        return this->page == other.page && this->x == other.x && this->y == other.y;
+    }
 
     int page;
     double x, y;
@@ -221,7 +222,7 @@ protected:
     void            RecalcVisibleParts();
     void            RenderVisibleParts();
 
-    void            AddNavPoint(bool keepForward=false);
+    void            AddNavPoint();
     RectD           GetContentBox(int pageNo, RenderTarget target=Target_View);
 
     void            ZoomToChm(float zoomLevel);
@@ -260,9 +261,10 @@ protected:
     float           _presZoomVirtual;
     DisplayMode     _presDisplayMode;
 
-    ScrollState     navHistory[NAV_HISTORY_LEN];
-    int             navHistoryIx;
-    int             navHistoryEnd;
+    Vec<ScrollState>navHistory;
+    /* index of the "current" history entry (to be updated on navigation),
+       resp. number of Back history entries */
+    size_t          navHistoryIx;
 
 public:
     /* allow resizing a window without triggering a new rendering (needed for window destruction) */

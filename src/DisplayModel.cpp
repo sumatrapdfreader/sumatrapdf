@@ -213,7 +213,6 @@ DisplayModel::DisplayModel(DisplayModelCallback *cb)
     pagesInfo = NULL;
 
     navHistoryIx = 0;
-    navHistoryEnd = 0;
 
     dontRenderFlag = false;
 
@@ -1484,30 +1483,38 @@ void DisplayModel::SetScrollState(ScrollState state)
     GoToPage(state.page, newPt.y, false, newPt.x);
 }
 
+// don't remember more than "enough" history entries (same number as Firefox uses)
+#define MAX_NAV_HISTORY_LEN 50
+
 /* Records the current scroll state for later navigating back to. */
-void DisplayModel::AddNavPoint(bool keepForward)
+void DisplayModel::AddNavPoint()
 {
     ScrollState ss = GetScrollState();
-
-    if (!keepForward && navHistoryIx > 0 && !memcmp(&ss, &navHistory[navHistoryIx - 1], sizeof(ss))) {
-        // don't add another point to exact the same position (so overwrite instead of append)
-        navHistoryIx--;
+    // remove the current and all Forward history entries
+    if (navHistoryIx < navHistory.Count())
+        navHistory.RemoveAt(navHistoryIx, navHistory.Count() - navHistoryIx);
+    // don't add another entry for the exact same position
+    if (navHistoryIx > 0 && ss == navHistory.At(navHistoryIx - 1))
+        return;
+    // make sure that the history doesn't grow overly large
+    if (navHistoryIx >= MAX_NAV_HISTORY_LEN) {
+        assert(navHistoryIx == MAX_NAV_HISTORY_LEN);
+        navHistory.RemoveAt(0, navHistoryIx - MAX_NAV_HISTORY_LEN + 1);
+        navHistoryIx = MAX_NAV_HISTORY_LEN - 1;
     }
-    else if (NAV_HISTORY_LEN == navHistoryIx) {
-        memmove(navHistory, navHistory + 1, (NAV_HISTORY_LEN - 1) * sizeof(ScrollState));
-        navHistoryIx--;
-    }
-    navHistory[navHistoryIx] = ss;
+    // add a new Back history entry
+    navHistory.Append(ss);
     navHistoryIx++;
-    if (!keepForward || navHistoryIx > navHistoryEnd)
-        navHistoryEnd = navHistoryIx;
 }
 
 bool DisplayModel::CanNavigate(int dir) const
 {
     if (AsChmEngine())
         return AsChmEngine()->CanNavigate(dir);
-    return navHistoryIx + dir >= 0 && navHistoryIx + dir < navHistoryEnd && (navHistoryIx != NAV_HISTORY_LEN || navHistoryIx + dir != 0);
+    assert(navHistoryIx <= navHistory.Count());
+    if (dir < 0)
+        return navHistoryIx >= (size_t)-dir;
+    return navHistoryIx + dir < navHistory.Count();
 }
 
 /* Navigates |dir| steps forward or backwards. */
@@ -1517,25 +1524,26 @@ void DisplayModel::Navigate(int dir)
         return;
     if (AsChmEngine())
         return AsChmEngine()->Navigate(dir);
-    AddNavPoint(true);
-    navHistoryIx += dir - 1; // -1 because adding a nav point increases the index
-    if (dir != 0 && navHistory[navHistoryIx].page != 0)
-        SetScrollState(navHistory[navHistoryIx]);
+    // update the current history entry
+    ScrollState ss = GetScrollState();
+    if (navHistoryIx < navHistory.Count())
+        navHistory.At(navHistoryIx) = ss;
+    else
+        navHistory.Append(ss);
+    navHistoryIx += dir;
+    SetScrollState(navHistory.At(navHistoryIx));
 }
 
 void DisplayModel::CopyNavHistory(DisplayModel& orig)
 {
+    navHistory = orig.navHistory;
     navHistoryIx = orig.navHistoryIx;
-    navHistoryEnd = orig.navHistoryEnd;
-    // copy navigation history for all (still valid) pages over
-    for (int i = 0; i < navHistoryEnd; i++) {
-        if (ValidPageNo(orig.navHistory[i].page))
-            navHistory[i] = orig.navHistory[i];
-        else {
-            if (i <= navHistoryIx)
+    // remove navigation history entries for all no longer valid pages
+    for (size_t i = navHistory.Count(); i > 0; i--) {
+        if (!ValidPageNo(navHistory.At(i - 1).page)) {
+            navHistory.RemoveAt(i - 1);
+            if (i - 1 < navHistoryIx)
                 navHistoryIx--;
-            navHistoryEnd--;
-            i--;
         }
     }
 }
