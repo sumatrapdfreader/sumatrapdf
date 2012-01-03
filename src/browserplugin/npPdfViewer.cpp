@@ -36,7 +36,7 @@
    In debug output sp: stands for "Sumatra Plugin" (so that we can distinguish
    our logs from other apps logs) */
 #if 0
-Log::DebugLogger gLogger;
+slog::DebugLogger gLogger;
 #define dbg(msg, ...) gLogger.LogFmt(_T(msg), __VA_ARGS__)
 
 const TCHAR *DllMainReason(DWORD reason)
@@ -257,6 +257,7 @@ struct InstanceData {
     TCHAR       filepath[MAX_PATH];
     HANDLE      hFile;
     HANDLE      hProcess;
+    HANDLE      hFileLock;
     TCHAR       exepath[MAX_PATH];
     float       progress, prevProgress;
     uint32_t    totalSize, currSize;
@@ -388,7 +389,7 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, in
     }
 
     if (pluginType)
-        dbg("sp:   pluginType: %s ", pluginType);
+        dbg("sp:   pluginType: %s ", ScopedMem<TCHAR>(str::conv::FromAnsi(pluginType)));
     if (saved)
         dbg("sp:   SavedData: len=%d", saved->len);
 
@@ -470,12 +471,13 @@ NPError NP_LOADDS NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream,
         return NPERR_FILE_NOT_FOUND;
     }
 
-    dbg("sp: NPP_NewStream() end = %d", stream->end);
+    dbg("sp: NPP_NewStream() end=%d", stream->end);
 
     // default to asking the browser to create the temporary file for us
     *stype = NP_ASFILE;
 
     data->hFile = NULL;
+    data->hFileLock = NULL;
 
     // Firefox has a bug https://bugzilla.mozilla.org/show_bug.cgi?id=644149
     // where it's internal caching doesn't work for large files and is flaky
@@ -505,7 +507,7 @@ NPError NP_LOADDS NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream,
 int32_t NP_LOADDS NPP_WriteReady(NPP instance, NPStream* stream)
 {
     int32_t res = stream->end > 0 ? stream->end : INT_MAX;
-    dbg("sp: NPP_WriteReady() res = %d", res);
+    dbg("sp: NPP_WriteReady() res=%d", res);
     return res;
 }
 
@@ -514,7 +516,7 @@ int32_t NP_LOADDS NPP_Write(NPP instance, NPStream* stream, int32_t offset, int3
     InstanceData *data = (InstanceData *)instance->pdata;
     DWORD bytesWritten = len;
 
-    dbg("sp: NPP_Write() off = %d, len=%d", offset, len);
+    dbg("sp: NPP_Write() off=%d, len=%d", offset, len);
 
     if (data->hFile)
     {
@@ -539,6 +541,13 @@ static void LaunchWithSumatra(InstanceData *data, const char *url_utf8)
 {
     if (!file::Exists(data->filepath))
         dbg("sp: NPP_StreamAsFile() error: file doesn't exist");
+    else
+    {
+        // prevent the file from being removed or modified
+        // while SumatraPDF displays it
+        data->hFileLock = CreateFile(data->filepath, GENERIC_READ,
+            FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+    }
 
     ScopedMem<TCHAR> url(str::conv::FromUtf8(url_utf8));
     ScopedMem<TCHAR> cmdLine(str::Format(_T("\"%s\" -plugin \"%s\" %d \"%s\""),
@@ -599,7 +608,7 @@ NPError NP_LOADDS NPP_DestroyStream(NPP instance, NPStream* stream, NPReason rea
     if (stream)
     {
         if (stream->url)
-            dbg("sp:   url: %s", stream->url);
+            dbg("sp:   url: %s", ScopedMem<TCHAR>(str::conv::FromUtf8(stream->url)));
         dbg("sp:   end: %d", stream->end);
     }
 
@@ -651,6 +660,10 @@ NPError NP_LOADDS NPP_Destroy(NPP instance, NPSavedData** save)
         TerminateProcess(data->hProcess, 99);
         WaitForSingleObject(data->hProcess, INFINITE);
         CloseHandle(data->hProcess);
+    }
+    if (data->hFileLock)
+    {
+        CloseHandle(data->hFileLock);
     }
     if (data->hFile)
     {
