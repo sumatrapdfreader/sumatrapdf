@@ -682,7 +682,7 @@ static void writexref(void)
 		fz_dict_puts(trailer, "ID", obj);
 
 	fprintf(out, "trailer\n");
-	fz_fprint_obj(out, trailer, doexpand != 0);
+	fz_fprint_obj(out, trailer, doexpand == 0);
 	fprintf(out, "\n");
 
 	fz_drop_obj(trailer);

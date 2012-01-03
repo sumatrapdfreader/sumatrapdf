@@ -208,6 +208,7 @@ Exit:
 	logbench("Finished: %s\n", pdffilename);
 	pdf_free_xref(xref);
 	fz_free_glyph_cache(ctx, drawcache);
+	fz_flush_warnings(ctx);
 	fz_free_context(ctx);
 }
 
