@@ -1475,8 +1475,10 @@ fz_draw_begin_tile(fz_device *devp, fz_rect area, fz_rect view, float xstep, flo
 {
 	fz_draw_device *dev = devp->user;
 	fz_colorspace *model = dev->dest->colorspace;
-	fz_pixmap *dest;
+	fz_pixmap *dest = NULL;
+	fz_pixmap *shape = dev->shape;
 	fz_bbox bbox;
+	fz_context *ctx = dev->ctx;
 
 	/* area, view, xstep, ystep are in pattern space */
 	/* ctm maps from pattern space to device space */
@@ -1499,7 +1501,20 @@ fz_draw_begin_tile(fz_device *devp, fz_rect area, fz_rect view, float xstep, flo
 	dest = fz_new_pixmap_with_rect(dev->ctx, model, bbox);
 	/* FIXME: See note #1 */
 	fz_clear_pixmap(dest);
-
+	if (shape)
+	{
+		fz_var(shape);
+		fz_try(ctx)
+		{
+			shape = fz_new_pixmap_with_rect(dev->ctx, NULL, bbox);
+			fz_clear_pixmap(shape);
+		}
+		fz_catch(ctx)
+		{
+			fz_drop_pixmap(ctx, dest);
+			fz_rethrow(ctx);
+		}
+	}
 	dev->stack[dev->top].scissor = dev->scissor;
 	dev->stack[dev->top].dest = dev->dest;
 	dev->stack[dev->top].shape = dev->shape;
@@ -1514,15 +1529,9 @@ fz_draw_begin_tile(fz_device *devp, fz_rect area, fz_rect view, float xstep, flo
 #endif
 	dev->top++;
 
-	/* SumatraPDF: fix shaping crash */
-	if (dev->shape)
-	{
-		dev->shape = fz_new_pixmap_with_rect(dev->ctx, NULL, bbox);
-		fz_clear_pixmap(dev->shape);
-	}
-
 	dev->scissor = bbox;
 	dev->dest = dest;
+	dev->shape = shape;
 }
 
 static void
@@ -1530,23 +1539,22 @@ fz_draw_end_tile(fz_device *devp)
 {
 	fz_draw_device *dev = devp->user;
 	fz_pixmap *tile = dev->dest;
+	fz_pixmap *tileshape = dev->shape;
 	float xstep, ystep;
-	fz_matrix ctm, ttm;
+	fz_matrix ctm, ttm, shapectm;
 	fz_rect area;
 	int x0, y0, x1, y1, x, y;
 
 	if (dev->top > 0)
 	{
 		dev->top--;
-#ifdef DUMP_GROUP_BLENDS
-		dump_spaces(dev->top, "Tile end\n");
-#endif
 		xstep = dev->stack[dev->top].xstep;
 		ystep = dev->stack[dev->top].ystep;
 		area = dev->stack[dev->top].area;
 		ctm = dev->stack[dev->top].ctm;
 		dev->scissor = dev->stack[dev->top].scissor;
 		dev->dest = dev->stack[dev->top].dest;
+		dev->shape = dev->stack[dev->top].shape;
 		dev->blendmode = dev->stack[dev->top].blendmode;
 
 		x0 = floorf(area.x0 / xstep);
@@ -1556,6 +1564,22 @@ fz_draw_end_tile(fz_device *devp)
 
 		ctm.e = tile->x;
 		ctm.f = tile->y;
+		if (tileshape)
+		{
+			shapectm = ctm;
+			shapectm.e = tileshape->x;
+			shapectm.f = tileshape->y;
+		}
+
+#ifdef DUMP_GROUP_BLENDS
+		dump_spaces(dev->top, "");
+		fz_dump_blend(dev->ctx, tile, "Tiling ");
+		if (tileshape)
+			fz_dump_blend(dev->ctx, tileshape, "/");
+		fz_dump_blend(dev->ctx, dev->dest, " onto ");
+		if (dev->shape)
+			fz_dump_blend(dev->ctx, dev->shape, "/");
+#endif
 
 		for (y = y0; y < y1; y++)
 		{
@@ -1565,28 +1589,24 @@ fz_draw_end_tile(fz_device *devp)
 				tile->x = ttm.e;
 				tile->y = ttm.f;
 				fz_paint_pixmap_with_rect(dev->dest, tile, 255, dev->scissor);
-			}
-		}
-
-		/* SumatraPDF: fix shaping crash */
-		if (dev->shape)
-		{
-			fz_pixmap *shape = dev->shape;
-			dev->shape = dev->stack[dev->top].shape;
-			for (y = y0; y < y1; y++)
-			{
-				for (x = x0; x < x1; x++)
+				if (tileshape)
 				{
-					ttm = fz_concat(fz_translate(x * xstep, y * ystep), ctm);
-					shape->x = ttm.e;
-					shape->y = ttm.f;
-					fz_paint_pixmap(dev->shape, shape, 255);
+					ttm = fz_concat(fz_translate(x * xstep, y * ystep), shapectm);
+					tileshape->x = ttm.e;
+					tileshape->y = ttm.f;
+					fz_paint_pixmap_with_rect(dev->shape, tileshape, 255, dev->scissor);
 				}
 			}
-			fz_drop_pixmap(dev->ctx, shape);
 		}
 
 		fz_drop_pixmap(dev->ctx, tile);
+		fz_drop_pixmap(dev->ctx, tileshape);
+#ifdef DUMP_GROUP_BLENDS
+		fz_dump_blend(dev->ctx, dev->dest, " to get ");
+		if (dev->shape)
+			fz_dump_blend(dev->ctx, dev->shape, "/");
+		printf("\n");
+#endif
 	}
 
 	if (dev->blendmode & FZ_BLEND_KNOCKOUT)
@@ -1598,7 +1618,7 @@ fz_draw_free_user(fz_device *devp)
 {
 	fz_draw_device *dev = devp->user;
 	fz_context *ctx = dev->ctx;
-	/* TODO: pop and free the stacks */
+	/* pop and free the stacks */
 	if (dev->top > 0)
 	{
 		fz_warn(ctx, "items left on stack in draw device: %d", dev->top);

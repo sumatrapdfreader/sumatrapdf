@@ -27,7 +27,7 @@ fz_rect
 fz_bound_shade(fz_shade *shade, fz_matrix ctm)
 {
 	float *v;
-	fz_rect r;
+	fz_rect r, s;
 	fz_point p;
 	int i, ncomp, nvert;
 
@@ -36,10 +36,11 @@ fz_bound_shade(fz_shade *shade, fz_matrix ctm)
 	nvert = shade->mesh_len / ncomp;
 	v = shade->mesh;
 
+	s = fz_transform_rect(ctm, shade->bbox);
 	if (shade->type == FZ_LINEAR)
-		return fz_infinite_rect;
+		return fz_intersect_rect(s, fz_infinite_rect);
 	if (shade->type == FZ_RADIAL)
-		return fz_infinite_rect;
+		return fz_intersect_rect(s, fz_infinite_rect);
 
 	if (nvert == 0)
 		return fz_empty_rect;
@@ -63,7 +64,7 @@ fz_bound_shade(fz_shade *shade, fz_matrix ctm)
 		if (p.y > r.y1) r.y1 = p.y;
 	}
 
-	return r;
+	return fz_intersect_rect(s, r);
 }
 
 void
