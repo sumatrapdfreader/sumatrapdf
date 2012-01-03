@@ -297,7 +297,7 @@ extern "C" static int read_istream(fz_stream *stm, unsigned char *buf, int len)
     ULONG cbRead = len;
     HRESULT res = ((IStream *)stm->state)->Read(buf, len, &cbRead);
     if (FAILED(res))
-        fz_throw(stm->ctx, "read error: %s", res);
+        fz_throw(stm->ctx, "IStream read error: %x", res);
     return (int)cbRead;
 }
 
@@ -308,8 +308,10 @@ extern "C" static void seek_istream(fz_stream *stm, int offset, int whence)
     off.QuadPart = offset;
     HRESULT res = ((IStream *)stm->state)->Seek(off, whence, &n);
     if (FAILED(res))
-        fz_warn(stm->ctx, "cannot seek: %s", res);
-    stm->pos = (int)n.QuadPart;
+        fz_throw(stm->ctx, "IStream seek error: %x", res);
+    if (n.HighPart != 0 || n.LowPart > INT_MAX)
+        fz_throw(stm->ctx, "documents beyond 2GB aren't supported");
+    stm->pos = n.LowPart;
     stm->rp = stm->wp = stm->bp;
 }
 
@@ -322,7 +324,13 @@ fz_stream *fz_open_istream(fz_context *ctx, IStream *stream);
 
 extern "C" static fz_stream *reopen_istream(fz_context *ctx, fz_stream *stm)
 {
-    return fz_open_istream(ctx, (IStream *)stm->state);
+    ScopedComPtr<IStream> stream2;
+    HRESULT res = ((IStream *)stm->state)->Clone(&stream2);
+    if (E_NOTIMPL == res)
+        fz_throw(ctx, "IStream doesn't support cloning");
+    if (FAILED(res))
+        fz_throw(ctx, "IStream clone error: %x", res);
+    return fz_open_istream(ctx, stream2);
 }
 
 fz_stream *fz_open_istream(fz_context *ctx, IStream *stream)
@@ -330,9 +338,11 @@ fz_stream *fz_open_istream(fz_context *ctx, IStream *stream)
     if (!stream)
         return NULL;
 
-    stream->AddRef();
     LARGE_INTEGER zero = { 0 };
-    stream->Seek(zero, STREAM_SEEK_SET, NULL);
+    HRESULT res = stream->Seek(zero, STREAM_SEEK_SET, NULL);
+    if (FAILED(res))
+        fz_throw(ctx, "IStream seek error: %x", res);
+    stream->AddRef();
 
     fz_stream *stm = fz_new_stream(ctx, stream, read_istream, close_istream);
     stm->seek = seek_istream;

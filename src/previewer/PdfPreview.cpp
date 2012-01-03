@@ -67,9 +67,17 @@ class PageRenderer {
     CRITICAL_SECTION currAccess;
     HANDLE thread;
 
+    // seeking inside an IStream spins an inner event loop
+    // which can cause reentrance in OnPaint and leave an
+    // engine semi-initialized when it's called recursively
+    // (this only applies for the UI thread where the critical
+    // sections can't prevent recursion without the risk of deadlock)
+    bool preventRecursion;
+
 public:
     PageRenderer(BaseEngine *engine, HWND hwnd) : engine(engine), hwnd(hwnd),
-        currPage(0), currBmp(NULL), reqPage(0), reqZoom(0), thread(NULL) {
+        currPage(0), currBmp(NULL), reqPage(0), reqZoom(0), thread(NULL),
+        preventRecursion(false) {
         InitializeCriticalSection(&currAccess);
     }
     ~PageRenderer() {
@@ -79,7 +87,17 @@ public:
         DeleteCriticalSection(&currAccess);
     }
 
-    BaseEngine *GetEngine() const { return engine; }
+    RectD GetPageRect(int pageNo) {
+        if (preventRecursion)
+            return RectD();
+
+        preventRecursion = true;
+        // assume that any engine methods could lead to a seek
+        RectD bbox = engine->PageMediabox(pageNo);
+        bbox = engine->Transform(bbox, pageNo, 1.0, 0);
+        preventRecursion = false;
+        return bbox;
+    }
 
     void Render(HDC hdc, RectI target, int pageNo, float zoom) {
         ScopedCritSec scope(&currAccess);
@@ -125,16 +143,17 @@ static LRESULT OnPaint(HWND hwnd)
 
     PreviewBase *preview = (PreviewBase *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
     if (preview && preview->renderer) {
-        BaseEngine *engine = preview->renderer->GetEngine();
         int pageNo = GetScrollPos(hwnd, SB_VERT);
-        rect.Inflate(-PREVIEW_MARGIN, -PREVIEW_MARGIN);
-        RectD page = engine->Transform(engine->PageMediabox(pageNo), pageNo, 1.0, 0);
-        float zoom = (float)min(rect.dx / page.dx, rect.dy / page.dy);
-        RectI onScreen = RectD(rect.x, rect.y, page.dx * zoom, page.dy * zoom).Round();
-        onScreen.Offset((rect.dx - onScreen.dx) / 2, (rect.dy - onScreen.dy) / 2);
+        RectD page = preview->renderer->GetPageRect(pageNo);
+        if (!page.IsEmpty()) {
+            rect.Inflate(-PREVIEW_MARGIN, -PREVIEW_MARGIN);
+            float zoom = (float)min(rect.dx / page.dx, rect.dy / page.dy);
+            RectI onScreen = RectD(rect.x, rect.y, page.dx * zoom, page.dy * zoom).Round();
+            onScreen.Offset((rect.dx - onScreen.dx) / 2, (rect.dy - onScreen.dy) / 2);
 
-        FillRect(hdc, &onScreen.ToRECT(), brushWhite);
-        preview->renderer->Render(hdc, onScreen, pageNo, zoom);
+            FillRect(hdc, &onScreen.ToRECT(), brushWhite);
+            preview->renderer->Render(hdc, onScreen, pageNo, zoom);
+        }
     }
 
     DeleteObject(brushBg);
@@ -237,16 +256,24 @@ IFACEMETHODIMP PreviewBase::DoPreview()
     if (!m_hwnd)
         return HRESULT_FROM_WIN32(GetLastError());
 
+    this->renderer = NULL;
     SetWindowLongPtr(m_hwnd, GWLP_USERDATA, (LONG_PTR)this);
+
     BaseEngine *engine = GetEngine();
-    this->renderer = engine ? new PageRenderer(engine, m_hwnd) : NULL;
+    int pageCount = 1;
+    if (engine) {
+        pageCount = engine->PageCount();
+        this->renderer = new PageRenderer(engine, m_hwnd);
+        // don't use the engine afterwards directly (cf. PageRenderer::preventRecursion)
+        engine = NULL;
+    }
 
     SCROLLINFO si = { 0 };
     si.cbSize = sizeof(si);
     si.fMask = SIF_ALL;
     si.nPos = 1;
     si.nMin = 1;
-    si.nMax = engine ? engine->PageCount() : 1;
+    si.nMax = pageCount;
     si.nPage = si.nMax > 1 ? 1 : 2;
     SetScrollInfo(m_hwnd, SB_VERT, &si, TRUE);
 
