@@ -474,9 +474,9 @@ public:
 			{
 				fz_try(ctx)
 				{
-					fz_pixmap *scaled = fz_scale_pixmap(ctx, image, 0, 0, w, h);
-					graphics->DrawImage(&PixmapBitmap(ctx, scaled), corners, _countof(corners), 0, 0, w, h, UnitPixel, &DrawImageAttributes(alpha));
-					fz_drop_pixmap(ctx, scaled);
+					fz_pixmap *scaledPixmap = fz_scale_pixmap(ctx, image, 0, 0, w, h);
+					graphics->DrawImage(&PixmapBitmap(ctx, scaledPixmap), corners, _countof(corners), 0, 0, w, h, UnitPixel, &DrawImageAttributes(alpha));
+					fz_drop_pixmap(ctx, scaledPixmap);
 				}
 				fz_catch(ctx) { }
 			}
