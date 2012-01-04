@@ -54,6 +54,7 @@ protected:
 
     size_t      len;
     size_t      cap;
+    size_t      initialCap;
     T *         els;
     T           buf[INTERNAL_BUF_SIZE];
     Allocator * allocator;
@@ -66,9 +67,10 @@ protected:
         size_t newCap = cap * 2;
         if (needed > newCap)
             newCap = needed;
+        if (initialCap > newCap)
+            newCap = initialCap;
 
         size_t newElCount = newCap + PADDING;
-
         CrashAlwaysIf(newElCount >= INT_MAX / sizeof(T));
 
         size_t allocSize = newElCount * sizeof(T);
@@ -100,13 +102,12 @@ protected:
 public:
     // Vec takes ownership of allocator and will delete it
     Vec(size_t initCap=0, Allocator *allocator = NULL) 
-        : allocator(allocator)
+        : initialCap(initCap), allocator(allocator)
     {
         els = buf;
         if (NULL == this->allocator)
             this->allocator = &mallocAllocator;
         Reset();
-        EnsureCap(initCap);
     }
 
     ~Vec() {
@@ -117,6 +118,7 @@ public:
 
     // ensure that a Vec never shares its els buffer with another after a clone/copy
     Vec(const Vec& orig) {
+        initialCap = 0;
         els = buf;
         // note: we don't inherit allocator as it's not needed for
         // our use cases
@@ -235,9 +237,10 @@ public:
     }
 
     int Find(T el, size_t startAt=0) const {
-        for (size_t i = startAt; i < len; i++)
+        for (size_t i = startAt; i < len; i++) {
             if (els[i] == el)
                 return (int)i;
+        }
         return -1;
     }
 
@@ -252,8 +255,9 @@ public:
     }
 
     void Reverse() {
-        for (size_t i = 0; i < len / 2; i++)
+        for (size_t i = 0; i < len / 2; i++) {
             swap(els[i], els[len - i - 1]);
+        }
     }
 };
 
@@ -336,9 +340,10 @@ public:
     StrVec() : Vec() { }
     StrVec(const StrVec& orig) : Vec(orig) {
         // make sure not to share string pointers between StrVecs
-        for (size_t i = 0; i < len; i++)
+        for (size_t i = 0; i < len; i++) {
             if (At(i))
                 At(i) = str::Dup(At(i));
+        }
     }
     ~StrVec() {
         FreeVecMembers(*this);
@@ -348,9 +353,10 @@ public:
         if (this != &that) {
             FreeVecMembers(*this);
             Vec::operator=(that);
-            for (size_t i = 0; i < that.len; i++)
+            for (size_t i = 0; i < that.len; i++) {
                 if (At(i))
                     At(i) = str::Dup(At(i));
+            }
         }
         return *this;
     }
