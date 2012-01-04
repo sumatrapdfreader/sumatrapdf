@@ -284,7 +284,8 @@ png_read_plte(struct info *info, unsigned char *p, int size)
 	int n = size / 3;
 	int i;
 
-	if (n > 256 || n > (1 << info->depth))
+	/* SumatraPDF: don't reject 4-bit images */
+	if (n > 256)
 		fz_throw(info->ctx, "too many samples in palette");
 
 	for (i = 0; i < n; i++)
@@ -304,7 +305,8 @@ png_read_trns(struct info *info, unsigned char *p, int size)
 
 	if (info->indexed)
 	{
-		if (size > 256 || size > (1 << info->depth))
+		/* SumatraPDF: don't reject 4-bit images */
+		if (size > 256)
 			fz_throw(info->ctx, "too many samples in transparency table");
 		for (i = 0; i < size; i++)
 			info->palette[i * 4 + 3] = p[i];
@@ -410,6 +412,10 @@ png_read_image(fz_context *ctx, struct info *info, unsigned char *p, int total)
 	if (code != Z_OK)
 		fz_throw(info->ctx, "zlib error: %s", stm.msg);
 
+	/* SumatraPDF: fix memory leak */
+	fz_try(ctx)
+	{
+
 	/* Read remaining chunks until IEND */
 
 	while (total > 8)
@@ -432,6 +438,13 @@ png_read_image(fz_context *ctx, struct info *info, unsigned char *p, int total)
 
 		p += size + 12;
 		total -= size + 12;
+	}
+
+	}
+	fz_catch(ctx)
+	{
+		inflateEnd(&stm);
+		fz_rethrow(ctx);
 	}
 
 	code = inflateEnd(&stm);
@@ -508,7 +521,16 @@ xps_decode_png(fz_context *ctx, byte *p, int total)
 	struct info png;
 	int stride;
 
+	/* SumatraPDF: fix memory leak */
+	fz_try(ctx)
+	{
 	png_read_image(ctx, &png, p, total);
+	}
+	fz_catch(ctx)
+	{
+		fz_free(png.ctx, png.samples);
+		fz_rethrow(ctx);
+	}
 
 	if (png.n == 3 || png.n == 4)
 		colorspace = fz_device_rgb;

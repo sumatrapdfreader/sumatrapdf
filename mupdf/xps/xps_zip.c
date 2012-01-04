@@ -1,6 +1,8 @@
 #include "fitz.h"
 #include "muxps.h"
 
+/* SumatraPDF: TODO: broken ZIP files can cause a varying number of memory leaks */
+
 #include <zlib.h>
 
 xps_part *

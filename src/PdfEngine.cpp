@@ -1235,8 +1235,10 @@ bool CPdfEngine::FinishLoading()
     fz_catch(ctx) {
         return false;
     }
-    if (PageCount() == 0)
+    if (PageCount() == 0) {
+        fz_warn(ctx, "document has no pages");
         return false;
+    }
 
     _pages = SAZA(pdf_page *, PageCount());
     _mediaboxes = new RectD[PageCount()];
@@ -2597,8 +2599,10 @@ bool CXpsEngine::LoadFromStream(fz_stream *stm)
     }
     fz_close(stm);
 
-    if (PageCount() == 0)
+    if (PageCount() == 0) {
+        fz_warn(ctx, "document has no pages");
         return false;
+    }
 
     _pages = SAZA(xps_page *, PageCount());
     _links = SAZA(fz_link *, PageCount());
