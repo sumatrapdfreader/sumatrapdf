@@ -827,6 +827,8 @@ gdiplus_get_font(fz_device *dev, fz_font *font, float height, float *out_ascent)
 	userData *user = (userData *)dev->user;
 	if (!font->ft_data && !font->ft_file)
 		return NULL;
+	if (font->ft_bold || font->ft_italic)
+		return NULL;
 	
 	if (!user->fontCollections)
 		user->fontCollections = fz_new_hash_table(dev->ctx, 13, sizeof(font->name));
@@ -987,7 +989,7 @@ static FT_Outline_Funcs OutlineFuncs = {
 };
 
 static float
-ftgetwidthscale(fz_font *font, int gid)
+ft_get_width_scale(fz_font *font, int gid)
 {
 	if (font->ft_substitute && gid < font->width_count)
 	{
@@ -1006,7 +1008,7 @@ ftgetwidthscale(fz_font *font, int gid)
 }
 
 static WCHAR
-ftgetcharcode(fz_font *font, fz_text_item *el)
+ft_get_charcode(fz_font *font, fz_text_item *el)
 {
 	FT_Face face = (FT_Face)font->ft_face;
 	if (el->gid == FT_Get_Char_Index(face, el->ucs))
@@ -1030,7 +1032,7 @@ typedef struct {
 } ftglyphkey;
 
 static GraphicsPath *
-ftrenderglyph(fz_context *ctx, fz_font *font, int gid, fz_hash_table *outlines)
+ft_render_glyph(fz_context *ctx, fz_font *font, int gid, fz_hash_table *outlines)
 {
 	FT_Face face = (FT_Face)font->ft_face;
 	ftglyphkey key = { face, gid };
@@ -1043,11 +1045,18 @@ ftrenderglyph(fz_context *ctx, fz_font *font, int gid, fz_hash_table *outlines)
 	if (fterr)
 		return NULL;
 	
+	if (font->ft_bold)
+	{
+		float unit = 26.6f;
+		FT_Outline_Embolden(&face->glyph->outline, 2 * unit);
+		FT_Outline_Translate(&face->glyph->outline, -unit, -unit);
+	}
+	
 	fz_path *path = fz_new_path(ctx);
 	FT_Outline_Decompose(&face->glyph->outline, &OutlineFuncs, &PathContext(ctx, path));
 	int evenodd = face->glyph->outline.flags & FT_OUTLINE_EVEN_ODD_FILL;
 	
-	glyph = gdiplus_get_path(path, fz_scale(ftgetwidthscale(font, gid), 1), evenodd);
+	glyph = gdiplus_get_path(path, fz_scale(ft_get_width_scale(font, gid), 1), evenodd);
 	
 	fz_free_path(ctx, path);
 	fz_hash_insert(outlines, &key, glyph);
@@ -1071,13 +1080,15 @@ gdiplus_render_text(fz_device *dev, fz_text *text, fz_matrix ctm, Brush *brush, 
 	
 	for (int i = 0; i < text->len; i++)
 	{
-		GraphicsPath *glyph = ftrenderglyph(dev->ctx, text->font, text->items[i].gid, user->outlines);
+		GraphicsPath *glyph = ft_render_glyph(dev->ctx, text->font, text->items[i].gid, user->outlines);
 		if (!glyph)
 			continue;
 		
 		fz_matrix ctm2 = fz_translate(text->items[i].x, text->items[i].y);
 		ctm2 = fz_concat(fz_scale(1.0 / charSize, 1.0 / charSize), ctm2);
 		ctm2 = fz_concat(text->trm, ctm2);
+		if (text->font->ft_italic)
+			ctm2 = fz_concat(fz_shear(0.3f, 0), ctm2);
 		if (!gpath)
 			ctm2 = fz_concat(ctm2, ctm);
 		
@@ -1116,7 +1127,7 @@ gdiplus_run_text(fz_device *dev, fz_text *text, fz_matrix ctm, Brush *brush)
 	
 	for (int i = 0; i < text->len; i++)
 	{
-		WCHAR out = ftgetcharcode(text->font, &text->items[i]);
+		WCHAR out = ft_get_charcode(text->font, &text->items[i]);
 		if (!out)
 		{
 			fz_text t2 = *text;
@@ -1130,7 +1141,7 @@ gdiplus_run_text(fz_device *dev, fz_text *text, fz_matrix ctm, Brush *brush)
 		fz_matrix ctm2 = fz_concat(fz_translate(text->items[i].x, text->items[i].y), ctm);
 		ctm2 = fz_concat(fz_scale(-1, 1), fz_concat(rotate, ctm2));
 		ctm2 = fz_concat(fz_translate(0, -fontSize * cellAscent), ctm2);
-		float widthScale = ftgetwidthscale(text->font, text->items[i].gid);
+		float widthScale = ft_get_width_scale(text->font, text->items[i].gid);
 		if (widthScale != 1.0)
 			ctm2 = fz_concat(fz_scale(widthScale, 1), ctm2);
 		
@@ -1189,7 +1200,7 @@ extern "C" static void
 fz_gdiplus_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *stroke, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
-	GraphicsPath gpath;
+	GraphicsPath gpath(FillModeWinding);
 	if (text->font->ft_face)
 		gdiplus_render_text(dev, text, ctm, NULL, &gpath);
 	else
@@ -1207,7 +1218,7 @@ fz_gdiplus_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *stroke, f
 extern "C" static void
 fz_gdiplus_clip_text(fz_device *dev, fz_text *text, fz_matrix ctm, int accumulate)
 {
-	GraphicsPath gpath;
+	GraphicsPath gpath(FillModeWinding);
 	float black[3] = { 0 };
 	if (text->font->ft_face)
 		gdiplus_render_text(dev, text, ctm, NULL, &gpath);
@@ -1221,7 +1232,7 @@ fz_gdiplus_clip_text(fz_device *dev, fz_text *text, fz_matrix ctm, int accumulat
 extern "C" static void
 fz_gdiplus_clip_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *stroke, fz_matrix ctm)
 {
-	GraphicsPath gpath;
+	GraphicsPath gpath(FillModeWinding);
 	float black[3] = { 0 };
 	if (text->font->ft_face)
 		gdiplus_render_text(dev, text, ctm, NULL, &gpath);

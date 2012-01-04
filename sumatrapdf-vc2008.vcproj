@@ -426,6 +426,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\utils\BitReader.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\utils\BitReader.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\utils\CmdLineParser.h"
 				>
 			</File>
