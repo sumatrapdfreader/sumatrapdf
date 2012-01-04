@@ -7,6 +7,36 @@
 #include "BaseUtil.h"
 #include "StrUtil.h"
 
+// Base class for allocators that can be provided to Vec class
+// (and potentially others). Needed because e.g. in crash handler
+// we want to use Vec but not use standard malloc()/free() functions
+class Allocator {
+public:
+    Allocator() {}
+    virtual ~Allocator() { };
+    virtual void *Alloc(size_t size) { CrashMe(); return NULL; };
+    virtual void Free(void *mem) {  CrashMe();  };
+
+    void *Dup(void *mem, size_t size) {
+        void *newMem = Alloc(size);
+        if (newMem)
+            memcpy(newMem, mem, size);
+        return newMem;
+    }
+};
+
+class MallocAllocator : public Allocator {
+public:
+    MallocAllocator() {}
+    virtual ~MallocAllocator() {}
+    virtual void *Alloc(size_t size) {
+        return malloc(size);
+    }
+    virtual void Free(void *mem) {
+        free(mem);
+    }
+};
+
 /* Simple but also optimized for small sizes vector/array class that can
 store pointer types or POD types
 (http://stackoverflow.com/questions/146452/what-are-pod-types-in-c).
@@ -22,11 +52,14 @@ template <typename T>
 class Vec {
 protected:
     static const size_t INTERNAL_BUF_SIZE = 16;
-    size_t  pad;
-    size_t  len;
-    size_t  cap;
-    T *     els;
-    T       buf[INTERNAL_BUF_SIZE];
+
+    size_t      pad;
+    size_t      len;
+    size_t      cap;
+    T *         els;
+    T           buf[INTERNAL_BUF_SIZE];
+    Allocator * allocator;
+    MallocAllocator mallocAllocator;
 
     void EnsureCap(size_t needed) {
         if (cap >= needed)
@@ -39,7 +72,9 @@ protected:
         if (newCap + pad >= INT_MAX / sizeof(T))
             CrashMe();
 
-        T * newEls = SAZA(T, newCap + pad);
+        size_t allocSize = (newCap + pad) * sizeof(T);
+        T * newEls = (T*)allocator->Alloc(allocSize);
+        memset(newEls, 0, allocSize);
         memcpy(newEls, els, len * sizeof(T));
         FreeEls();
         cap = newCap;
@@ -60,23 +95,33 @@ protected:
 
     void FreeEls() {
         if (els != buf)
-            free(els);
+            allocator->Free(els);
     }
 
 public:
-    Vec(size_t initCap=0, size_t padding=0) : pad(padding) {
+    // Vec takes ownership of allocator and will delete it
+    Vec(size_t initCap=0, size_t padding=1, Allocator *allocator = NULL) 
+        : pad(padding), allocator(allocator)
+    {
         els = buf;
+        if (NULL == this->allocator)
+            this->allocator = &mallocAllocator;
         Reset();
         EnsureCap(initCap);
     }
 
     ~Vec() {
         FreeEls();
+        if (allocator != &mallocAllocator)
+            delete allocator;
     }
 
     // ensure that a Vec never shares its els buffer with another after a clone/copy
     Vec(const Vec& orig) : pad(orig.pad) {
         els = buf;
+        // note: we don't inherit allocator as it's not needed for
+        // our use cases
+        allocator = &mallocAllocator;
         Reset();
         EnsureCap(orig.cap);
         // use memcpy, as Vec only supports POD types
@@ -180,7 +225,7 @@ public:
     T *StealData() {
         T* res = els;
         if (els == buf)
-            res = (T*)memdup(buf, (len + pad) * sizeof(T));
+            res = (T*)allocator->Dup(buf, (len + pad) * sizeof(T));
         els = buf;
         Reset();
         return res;
