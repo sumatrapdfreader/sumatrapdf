@@ -71,7 +71,7 @@ class MobiParse
     size_t              docRecCount;
     int                 compressionType;
     size_t              docUncompressedSize;
-    str::Str<char>      doc;
+    str::Str<char> *    doc;
     bool                multibyte;
     size_t              trailersCount;
 

@@ -545,7 +545,7 @@ static bool IsValidCompression(int comprType)
 
 MobiParse::MobiParse() : 
     fileName(NULL), fileHandle(0), recHeaders(NULL), firstRecData(NULL), isMobi(false),
-    docRecCount(0), compressionType(0), docUncompressedSize(0),
+    docRecCount(0), compressionType(0), docUncompressedSize(0), doc(NULL),
     multibyte(false), trailersCount(0), bufDynamic(NULL), bufDynamicSize(0),
     huffDic(NULL)
 {
@@ -559,6 +559,7 @@ MobiParse::~MobiParse()
     free(recHeaders);
     free(bufDynamic);
     delete huffDic;
+    delete doc;
 }
 
 bool MobiParse::ParseHeader()
@@ -833,13 +834,13 @@ bool MobiParse::LoadDocRecordIntoBuffer(size_t recNo, str::Str<char>& strOut)
 bool MobiParse::LoadDocument()
 {
     assert(docUncompressedSize > 0);
-    assert(0 == doc.Size());
-    // TODO: pre-expand doc to docUncompressedSize to save re-allocations
+    assert(!doc);
+    doc = new str::Str<char>(docUncompressedSize);
     for (size_t i = 1; i <= docRecCount; i++) {
-        if (!LoadDocRecordIntoBuffer(i, doc))
+        if (!LoadDocRecordIntoBuffer(i, *doc))
             return false;
     }
-    //assert(docUncompressedSize == doc.Size());
+    //assert(docUncompressedSize == doc.Size()); // doesn't seem to be true for huffdic compressed docs
     return true;
 }
 
