@@ -41,19 +41,17 @@ public:
 store pointer types or POD types
 (http://stackoverflow.com/questions/146452/what-are-pod-types-in-c).
 
-When padding is used, we ensure there's always zeroed <pad> elements at the end.
-They're not counted as part of the vector, you can think of them as ensuring
-zero-termination generalized to n zero-terminating elements (because n is as
-simple to code as 1).
-
-One use case: Vec<char> with padding=1 is C-compatible string buffer.
+We always pad the elements with a single 0 value. This makes
+Vec<char> and Vec<WCHAR> a C-compatible string. Although it's
+not useful for other types, the code is simpler if we always do it
+(rather than have it an optional behavior).
 */
 template <typename T>
 class Vec {
 protected:
     static const size_t INTERNAL_BUF_SIZE = 16;
+    static const size_t PADDING = 1;
 
-    size_t      pad;
     size_t      len;
     size_t      cap;
     T *         els;
@@ -69,10 +67,11 @@ protected:
         if (needed > newCap)
             newCap = needed;
 
-        if (newCap + pad >= INT_MAX / sizeof(T))
+        size_t newElCount = newCap + PADDING;
+        if (newElCount >= INT_MAX / sizeof(T))
             CrashMe();
 
-        size_t allocSize = (newCap + pad) * sizeof(T);
+        size_t allocSize = newElCount * sizeof(T);
         T * newEls = (T*)allocator->Alloc(allocSize);
         memset(newEls, 0, allocSize);
         memcpy(newEls, els, len * sizeof(T));
@@ -100,8 +99,8 @@ protected:
 
 public:
     // Vec takes ownership of allocator and will delete it
-    Vec(size_t initCap=0, size_t padding=1, Allocator *allocator = NULL) 
-        : pad(padding), allocator(allocator)
+    Vec(size_t initCap=0, Allocator *allocator = NULL) 
+        : allocator(allocator)
     {
         els = buf;
         if (NULL == this->allocator)
@@ -117,7 +116,7 @@ public:
     }
 
     // ensure that a Vec never shares its els buffer with another after a clone/copy
-    Vec(const Vec& orig) : pad(orig.pad) {
+    Vec(const Vec& orig) {
         els = buf;
         // note: we don't inherit allocator as it's not needed for
         // our use cases
@@ -140,7 +139,7 @@ public:
 
     void Reset() {
         len = 0;
-        cap = INTERNAL_BUF_SIZE - pad;
+        cap = INTERNAL_BUF_SIZE - PADDING;
         FreeEls();
         els = buf;
         memset(buf, 0, sizeof(buf));
@@ -225,7 +224,7 @@ public:
     T *StealData() {
         T* res = els;
         if (els == buf)
-            res = (T*)allocator->Dup(buf, (len + pad) * sizeof(T));
+            res = (T*)allocator->Dup(buf, (len + PADDING) * sizeof(T));
         els = buf;
         Reset();
         return res;
@@ -286,7 +285,7 @@ template <typename T>
 
 class Str : public Vec<T> {
 public:
-    Str(size_t initCap=0) : Vec(initCap, 1) { }
+    Str(size_t initCap=0) : Vec(initCap) { }
 
     void Append(T c)
     {
