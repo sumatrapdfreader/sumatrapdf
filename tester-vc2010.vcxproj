@@ -82,6 +82,10 @@
     <ClInclude Include="src\utils\FileUtil.h" />
     <ClInclude Include="src\utils\Vec.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="docs\ebook-todo.txt" />
+    <None Include="docs\ebooks-impl-notes.txt" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

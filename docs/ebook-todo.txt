@@ -1,5 +1,6 @@
 Things to do for the first version of ebook (mobi) support:
-* parse the structure of mobi file
+* mobi format: read images
+* convert mobi html to an representation optimized for layout/display
 * improve layout/display to support all (or at least most)
   features of mobi files (images, bold/italic, different fonts,
   line indent at paragraph start, page breaks, links etc.)
