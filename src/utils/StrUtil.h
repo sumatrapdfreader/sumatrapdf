@@ -154,6 +154,30 @@ inline char *   ToAnsi(const TCHAR *src) { return ToCodePage(src, CP_ACP); }
 
 void CrashMe();
 
+// CrashIf() is like assert() except it crashes in debug and pre-release builds
+// The idea is that assert() indicates "can't possibly happen" situation and if
+// it does happen, we would like to fix the underlying cause.
+// In practice in our testing we rarely get notified when an assert() is triggered
+// and they are disabled in builds running on user's computers.
+// Now that we have crash reporting, we can get notified about such cases if we
+// use CrashIf() instead of assert(), which we should be doing from now on.
+// Conservatively I only enable it for debug and pre-release builds although
+// I would be fine with enabling it all builds.
+// To crash uncoditionally, there is CrashAlwaysIf()
+// Juast as weith assert(), the condition is not guaranteed to be executed
+// in some builds, so it shouldn't contain the actual logic of the code
+#if defined(SVN_PRE_RELEASE_VER) || defined(DEBUG)
+#define CrashIf(exp) \
+    if (exp) \
+        CrashMe();
+#else
+#define CrashIf(exp) NoOp()
+#endif
+
+#define CrashAlwaysIf(exp) \
+    if (exp) \
+        CrashMe();
+
 // Quick conversions are no-ops for UNICODE builds
 #ifdef UNICODE
 #define AsWStrQ(src) ((WCHAR *)(src))

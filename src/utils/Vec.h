@@ -68,8 +68,8 @@ protected:
             newCap = needed;
 
         size_t newElCount = newCap + PADDING;
-        if (newElCount >= INT_MAX / sizeof(T))
-            CrashMe();
+
+        CrashAlwaysIf(newElCount >= INT_MAX / sizeof(T));
 
         size_t allocSize = newElCount * sizeof(T);
         T * newEls = (T*)allocator->Alloc(allocSize);
