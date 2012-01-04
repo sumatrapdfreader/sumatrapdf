@@ -143,7 +143,7 @@ UTILS_OBJS = \
 	$(OS)\StrUtil.obj $(OS)\UtilTests.obj $(OS)\WinUtil.obj \
 	$(OS)\DialogSizer.obj $(OS)\Transactions.obj $(OS)\Touch.obj \
 	$(OS)\TrivialHtmlParser.obj $(OS)\HtmlWindow.obj $(OS)\GdiPlusUtil.obj \
-	$(OS)\DirIter.obj $(OS)\MobiParse.obj
+	$(OS)\DirIter.obj $(OS)\MobiParse.obj $(OS)\BitReader.obj
 
 ENGINE_OBJS = \
 	$(OS)\PdfEngine.obj $(OS)\ImagesEngine.obj $(OS)\PsEngine.obj \

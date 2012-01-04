@@ -4,6 +4,7 @@
 #include "MobiParse.h"
 #include <time.h>
 
+#include "BitReader.h"
 #include "FileUtil.h"
 #include "StrUtil.h"
 
@@ -11,9 +12,9 @@
 
 #define DETAILED_LOGGING 1 // set to 1 for detailed logging during debugging
 #if DETAILED_LOGGING
-#define l(s) printf(s)
+#define l(fmt, ...) printf(fmt, __VA_ARGS__)
 #else
-#define l(s) NoOp()
+#define l(fmt, ...) NoOp()
 #endif
 
 #define PALMDOC_TYPE_CREATOR   "TEXtREAd"
@@ -379,56 +380,26 @@ bool HuffDicDecompressor::DecodeOne(uint32_t code, uint8_t *& dst, size_t& dstLe
 
 size_t HuffDicDecompressor::Decompress(uint8_t *src, size_t srcSize, uint8_t *dst, size_t dstSize)
 {
-    uint32_t    bits = 0, bitsLen = 0;
-    uint32_t    cachedBits = 0, cachedBitsLen = 0;
-    uint32_t    codeLen = 0;
+    uint32_t    bitsConsumed = 0;
+    uint32_t    bits = 0;
 
+    BitReader br(src, srcSize);
     size_t      dstLeft = dstSize;
-    size_t      srcLeft = srcSize;
 
     for (;;) {
-
-        if ((0 == srcLeft) && (0 == bitsLen))
-            break;
-
-        uint32_t bitsConsumed = codeLen;
-        if (bitsConsumed > bitsLen) {
+        if (bitsConsumed > br.BitsLeft()) {
             l("not enough data\n");
             return -1; 
         }
-        bits <<= codeLen;
-        bitsLen -= bitsConsumed;
-
-        uint32_t bitsNeeded = 32 - bitsLen;
-        while (bitsNeeded > 0) {
-            if (cachedBitsLen > 0) {
-                uint32_t bitsCopied = bitsNeeded;
-                if (bitsCopied >cachedBitsLen)
-                    bitsCopied = cachedBitsLen;
-                bits |= cachedBits >> bitsLen;
-                bitsNeeded -= bitsCopied;
-                bitsLen += bitsCopied;
-                cachedBitsLen -= bitsCopied;
-                if (bitsCopied == 32)
-                    cachedBits = 0;
-                else
-                    cachedBits <<= bitsCopied;
-            }
-
-            while (((32 - cachedBitsLen) >= 8) && (srcLeft > 0)) {
-                cachedBits |= *(src++) << (24 - cachedBitsLen);
-                cachedBitsLen += 8;
-                srcLeft--;
-            }
-            if (0 == srcLeft)
-                break;
-        }
-
-        if ((bitsLen < 8) && !bits)
+        br.Eat(bitsConsumed);
+        if (0 == br.BitsLeft())
             break;
 
+        bits = br.Peek(32);
+        if (br.BitsLeft() < 8 && 0 == bits)
+            break;
         uint32_t v = cacheTable[bits >> 24];
-        codeLen = v & 0x1f;
+        uint32_t codeLen = v & 0x1f;
         if (!codeLen) {
             l("corrupted table, zero code len\n");
             return -1;
@@ -455,9 +426,10 @@ size_t HuffDicDecompressor::Decompress(uint8_t *src, size_t srcSize, uint8_t *ds
 
         if (!DecodeOne(code, dst, dstLeft))
             return -1;
+        bitsConsumed = codeLen;
     }
 
-    if ((0 == srcLeft) && (bitsLen > 0) && (bits != 0)) {
+    if (br.BitsLeft() > 0 && 0 != bits) {
         l("compressed data left\n");
     }
     return dstSize - dstLeft;
@@ -840,7 +812,7 @@ bool MobiParse::LoadDocument()
         if (!LoadDocRecordIntoBuffer(i, *doc))
             return false;
     }
-    //assert(docUncompressedSize == doc.Size()); // doesn't seem to be true for huffdic compressed docs
+    assert(docUncompressedSize == doc->Size());
     return true;
 }
 

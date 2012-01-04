@@ -5,9 +5,12 @@
 #include "BaseUtil.h"
 
 BitReader::BitReader(unsigned char *data, int len) {
+    // TODO: optimize so that we don't need to make a copy of the
+    // data (we do it for simplicity of decoding so that we can
+    // stick sentinel 0 bytes)
     this->data = new unsigned char[len+8];
     memcpy(this->data, data, len);
-    memset(this->data+len, 0, 8);
+    memset(this->data+len, 0, 8); // sentinel bytes for ease of decoding
     pos = 0;
     bitsCount = len * 8;
 }

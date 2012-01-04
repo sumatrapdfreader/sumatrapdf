@@ -71,11 +71,13 @@
   <ItemGroup>
     <ClCompile Include="src\MobiParse.cpp" />
     <ClCompile Include="src\Tester.cpp" />
+    <ClCompile Include="src\utils\BitReader.cpp" />
     <ClCompile Include="src\utils\DirIter.cpp" />
     <ClCompile Include="src\utils\FileUtil.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\MobiParse.h" />
+    <ClInclude Include="src\utils\BitReader.h" />
     <ClInclude Include="src\utils\DirIter.h" />
     <ClInclude Include="src\utils\FileUtil.h" />
     <ClInclude Include="src\utils\Vec.h" />
