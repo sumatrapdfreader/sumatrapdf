@@ -8,16 +8,23 @@
 
 class BitReader
 {
-public:
-    BitReader(unsigned char *data, int len);
-    ~BitReader();
-    uint32_t Peek(int n);
-    size_t BitsLeft();
-    bool Eat(int n);
+    uint8_t GetByte(size_t pos) {
+        if (pos >= dataLen)
+            return 0;
+        return data[pos];
+    }
 
-    unsigned char *data;
-    int pos;
-    int bitsCount;
+public:
+    BitReader(uint8_t *data, size_t len);
+    ~BitReader();
+    uint32_t    Peek(size_t bitsCount);
+    size_t      BitsLeft();
+    bool        Eat(size_t bitsCount);
+
+    uint8_t *   data;
+    size_t      dataLen;
+    size_t      currBitPos;
+    size_t      bitsCount;
 };
 
 #endif

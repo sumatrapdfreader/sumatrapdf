@@ -4,42 +4,46 @@
 #include "BitReader.h"
 #include "BaseUtil.h"
 
-BitReader::BitReader(unsigned char *data, int len) {
-    // TODO: optimize so that we don't need to make a copy of the
-    // data (we do it for simplicity of decoding so that we can
-    // stick sentinel 0 bytes)
-    this->data = new unsigned char[len+8];
-    memcpy(this->data, data, len);
-    memset(this->data+len, 0, 8); // sentinel bytes for ease of decoding
-    pos = 0;
+// Bit reader is a streaming reader of bits from underlying memory data
+
+// data has to be valid for the lifetime of this class
+BitReader::BitReader(uint8_t *data, size_t len) :
+    data(data), dataLen(len), currBitPos(0)
+{
     bitsCount = len * 8;
 }
 
 BitReader::~BitReader() {
-    delete data;
 }
 
-bool BitReader::Eat(int n) {
-    pos += n;
-    return (pos <= bitsCount);
+// advance position in the bit stream
+// returns false if we've eaten bits more than we have
+bool BitReader::Eat(size_t bitsCount) {
+    currBitPos += bitsCount;
+    return (currBitPos <= bitsCount);
 }
 
 size_t BitReader::BitsLeft() {
-    return bitsCount - pos;
+    if (currBitPos < bitsCount)
+        return bitsCount - currBitPos;
+    return 0;
 }
 
-uint32_t BitReader::Peek(int n) {
-    int currBytePos = pos / 8;
-    uint8_t currByte = data[currBytePos];
-    uint8_t currBit = pos % 8;
+// Read bitsCount bytes, without advancing the position in the bit stream
+// If asked for more bits than we have left, the extra bits will be 0
+// TODO: this could be faster
+uint32_t BitReader::Peek(size_t bitsCount) {
+    size_t currBytePos = currBitPos / 8;
+    uint8_t currByte = GetByte(currBytePos);
+    uint8_t currBit = currBitPos % 8;
     currByte = currByte << currBit;
     uint8_t bitsLeft = 8 - currBit;
     uint32_t ret = 0;
-    while (n > 0) {
+    while (bitsCount > 0) {
         assert(bitsLeft >= 0);
         if (0 == bitsLeft) {
             ++currBytePos;
-            currByte = data[currBytePos];
+            currByte = GetByte(currBytePos);
             bitsLeft = 8;
         }
         ret = ret << 1;
@@ -47,7 +51,7 @@ uint32_t BitReader::Peek(int n) {
             ret |= 1;
         currByte = currByte << 1;
         --bitsLeft;
-        --n;
+        --bitsCount;
     }
     return ret;
 }
