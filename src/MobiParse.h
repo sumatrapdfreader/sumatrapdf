@@ -58,6 +58,11 @@ STATIC_ASSERT(kPdbRecordHeaderLen == sizeof(PdbRecordHeader), validPdbRecordHead
 
 #define kMaxRecordSize 64*1024
 
+struct ImageData {
+    uint8_t *   imgData;
+    size_t      imgDataLen;
+};
+
 class MobiParse
 {
     TCHAR *             fileName;
@@ -74,6 +79,9 @@ class MobiParse
     str::Str<char> *    doc;
     bool                multibyte;
     size_t              trailersCount;
+    size_t              imageFirstRec; // 0 if no images
+    size_t              imagesCount;
+    ImageData *         images;
 
     // we use bufStatic if record fits in it, bufDynamic otherwise
     char                bufStatic[kMaxRecordSize];
@@ -89,6 +97,8 @@ class MobiParse
     size_t  GetRecordSize(size_t recNo);
     char*   ReadRecord(size_t recNo, size_t& sizeOut);
     bool    LoadDocRecordIntoBuffer(size_t recNo, str::Str<char>& strOut);
+    void    LoadImages();
+    bool    LoadImage(size_t imageNo);
 
 public:
     static MobiParse *ParseFile(const TCHAR *fileName);

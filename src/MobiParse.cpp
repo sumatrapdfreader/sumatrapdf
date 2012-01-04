@@ -518,8 +518,8 @@ static bool IsValidCompression(int comprType)
 MobiParse::MobiParse() : 
     fileName(NULL), fileHandle(0), recHeaders(NULL), firstRecData(NULL), isMobi(false),
     docRecCount(0), compressionType(0), docUncompressedSize(0), doc(NULL),
-    multibyte(false), trailersCount(0), bufDynamic(NULL), bufDynamicSize(0),
-    huffDic(NULL)
+    multibyte(false), trailersCount(0), imageFirstRec(0), imagesCount(0),
+    images(NULL), bufDynamic(NULL), bufDynamicSize(0), huffDic(NULL)
 {
 }
 
@@ -530,6 +530,7 @@ MobiParse::~MobiParse()
     free(firstRecData);
     free(recHeaders);
     free(bufDynamic);
+    free(images);
     delete huffDic;
     delete doc;
 }
@@ -621,10 +622,12 @@ bool MobiParse::ParseHeader()
 
     if (0 == recLeft) {
         assert(!isMobi);
+        // TODO: calculate imageFirstRec / imagesCount
         return true;
     }
     if (recLeft < 8) // id and hdrLen
         return false;
+
     MobiHeader *mobiHdr = (MobiHeader*)currRecPos;
     if (!str::EqN("MOBI", mobiHdr->id, 4)) {
         l("MobiHeader.id is not 'MOBI'\n");
@@ -646,6 +649,10 @@ bool MobiParse::ParseHeader()
     SwapU32(mobiHdr->huffmanTableLen);
     SwapU32(mobiHdr->exhtFlags);
 
+    if (pdbHeader.numRecords > mobiHdr->imageFirstRec) {
+        imageFirstRec = mobiHdr->imageFirstRec;
+        imagesCount = pdbHeader.numRecords - mobiHdr->imageFirstRec;
+    }
     size_t hdrLen = mobiHdr->hdrLen;
     if (hdrLen > recLeft) {
         l("MobiHeader too big\n");
@@ -689,7 +696,85 @@ bool MobiParse::ParseHeader()
         }
     }
 
+    LoadImages();
     return true;
+}
+
+static uint8_t EOF_REC[4]  = { 0xe9, 0x8e, 0x0d, 0x0a };
+static uint8_t FLIS_REC[4] = { 'F', 'L', 'I', 'S' };
+static uint8_t FCIS_REC[4] = { 'F', 'C', 'I', 'S' };
+static uint8_t FDST_REC[4] = { 'F', 'D', 'S', 'T' };
+static uint8_t DATP_REC[4] = { 'D', 'A', 'T', 'P' };
+static uint8_t SRCS_REC[4] = { 'S', 'R', 'C', 'S' };
+
+static uint8_t GIF_MAGIC1[6] = { 'G', 'I', 'F', '8', '7', 'a' };
+static uint8_t GIF_MAGIC2[6] = { 'G', 'I', 'F', '8', '9', 'a' };
+
+static bool IsEofRecord(uint8_t *data, size_t dataLen)
+{
+    return (4 == dataLen) && memeq(data, EOF_REC,  4);
+}
+
+static bool KnownNonImageRec(uint8_t *data, size_t dataLen)
+{
+    if (dataLen < 4) return false;
+    if (memeq(data, FLIS_REC, 4)) return true;
+    if (memeq(data, FCIS_REC, 4)) return true;
+    if (memeq(data, FDST_REC, 4)) return true;
+    if (memeq(data, DATP_REC, 4)) return true;
+    if (memeq(data, SRCS_REC, 4)) return true;
+    return false;
+}
+
+static bool KnownImageFormat(uint8_t *data, size_t dataLen)
+{
+    if ((dataLen > dimof(GIF_MAGIC1)) && memeq(data, GIF_MAGIC1, dimof(GIF_MAGIC1)))
+        return true;
+    if ((dataLen > dimof(GIF_MAGIC2)) && memeq(data, GIF_MAGIC2, dimof(GIF_MAGIC2)))
+        return true;
+    // TODO: add jpeg, bmp, png
+    return false;
+}
+
+// return false if we should stop loading images (because we 
+// encountered eof record or ran out of memory)
+bool MobiParse::LoadImage(size_t imageNo)
+{
+    size_t imageRec = imageFirstRec + imageNo;
+    images[imageNo].imgData = 0;
+    images[imageNo].imgDataLen = 0;
+    size_t imgDataLen;
+
+    uint8_t *imgData = (uint8_t*)ReadRecord(imageRec, imgDataLen);
+    if (!imgData)
+        return true;
+    if (IsEofRecord(imgData, imgDataLen))
+        return false;
+    if (KnownNonImageRec(imgData, imgDataLen)) {
+        imgData[5] = 0;
+        l("Skipping record %s\n", imgData);
+        return true;
+    }
+    if (!KnownImageFormat(imgData, imgDataLen)) {
+        l("Unknown image format\n");
+        return true;
+    }
+    images[imageNo].imgData = (uint8_t*)memdup(imgData, imgDataLen);
+    if (!images[imageNo].imgData)
+        return false;
+    images[imageNo].imgDataLen = imgDataLen;
+    return true;
+}
+
+void MobiParse::LoadImages()
+{
+    if (0 == imagesCount)
+        return;
+    images = SAZA(ImageData, imagesCount);
+    for (size_t i = 0; i < imagesCount; i++) {
+        if (!LoadImage(i))
+            return;
+    }
 }
 
 size_t MobiParse::GetRecordSize(size_t recNo)

@@ -74,12 +74,15 @@
     <ClCompile Include="src\utils\BitReader.cpp" />
     <ClCompile Include="src\utils\DirIter.cpp" />
     <ClCompile Include="src\utils\FileUtil.cpp" />
+    <ClCompile Include="src\utils\StrUtil.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\MobiParse.h" />
+    <ClInclude Include="src\utils\BaseUtil.h" />
     <ClInclude Include="src\utils\BitReader.h" />
     <ClInclude Include="src\utils\DirIter.h" />
     <ClInclude Include="src\utils\FileUtil.h" />
+    <ClInclude Include="src\utils\StrUtil.h" />
     <ClInclude Include="src\utils\Vec.h" />
   </ItemGroup>
   <ItemGroup>

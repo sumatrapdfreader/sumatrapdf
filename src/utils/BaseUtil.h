@@ -81,6 +81,11 @@ inline void *memdup(void *data, size_t len)
 }
 #define _memdup(ptr) memdup(ptr, sizeof(*(ptr)))
 
+inline bool memeq(const void *s1, const void *s2, size_t len)
+{
+    return 0 == memcmp(s1, s2, len);
+}
+
 // auto-free memory for arbitrary malloc()ed memory of type T*
 template <typename T>
 class ScopedMem
