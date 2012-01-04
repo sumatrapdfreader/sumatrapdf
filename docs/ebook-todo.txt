@@ -1,5 +1,6 @@
 Things to do for the first version of ebook (mobi) support:
-* mobi format: read images
+* mobi: read images
+* mobi: read codepage and other metadata
 * convert mobi html to an representation optimized for layout/display
 * improve layout/display to support all (or at least most)
   features of mobi files (images, bold/italic, different fonts,
