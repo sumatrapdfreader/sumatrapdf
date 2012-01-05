@@ -154,6 +154,15 @@ fz_bound_path(fz_path *path, fz_stroke_state *stroke, fz_matrix ctm)
 	if (path->len == 0)
 		return fz_empty_rect;
 
+	/* SumatraPDF: ignore spurious/invisible MoveTo instructions */
+	if (!stroke || !stroke->dash_len && !stroke->start_cap)
+	{
+		while (i + 3 < path->len && path->items[i].k == FZ_MOVETO && path->items[i + 3].k == FZ_MOVETO)
+			i += 3;
+		if (i + 3 == path->len && path->items[i].k == FZ_MOVETO)
+			return fz_empty_rect;
+	}
+
 	if (path->len)
 	{
 		p.x = path->items[1].v;

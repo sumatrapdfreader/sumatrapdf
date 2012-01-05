@@ -155,7 +155,8 @@ fz_append_display_node(fz_display_list *list, fz_display_node *node)
 			if (list->tiled == 0)
 			{
 				/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692346 */
-				if (!fz_is_infinite_rect(list->stack[list->top].rect))
+				if (!fz_is_infinite_rect(list->stack[list->top].rect) &&
+					!fz_is_empty_rect(list->stack[list->top].rect))
 				{
 					/* add some fuzz at the edges, as especially glyph rects
 					 * are sometimes not actually completely bounding the glyph */

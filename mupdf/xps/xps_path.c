@@ -1001,7 +1001,7 @@ xps_parse_path(xps_document *doc, fz_matrix ctm, char *base_uri, xps_resource *d
 	{
 		/* SumatraPDF: fill-path and stroke-path may differ */
 		area = fz_bound_path(stroke_path, &stroke, ctm);
-		if (stroke_path != path)
+		if (stroke_path != path && (fill_att || fill_tag))
 			area = fz_union_rect(area, fz_bound_path(path, NULL, ctm));
 	}
 	else
