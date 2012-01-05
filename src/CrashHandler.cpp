@@ -185,6 +185,7 @@ static TCHAR *  gSymbolsZipPath = NULL;
 static TCHAR *  gLibMupdfPdbPath = NULL;
 static TCHAR *  gSumatraPdfPdbPath = NULL;
 static char *   gSystemInfo = NULL;
+static char *   gModulesInfo = NULL;
 
 static HANDLE   gDumpEvent = NULL;
 static HANDLE   gDumpThread = NULL;
@@ -328,23 +329,6 @@ static BOOL CALLBACK OpenMiniDumpCallback(void* /*param*/, PMINIDUMP_CALLBACK_IN
     default:
         return FALSE;
     }
-}
-
-static void GetModules(str::Str<char>& s)
-{
-    HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
-    if (snap == INVALID_HANDLE_VALUE) return;
-
-    MODULEENTRY32 mod;
-    mod.dwSize = sizeof(mod);
-    BOOL cont = Module32First(snap, &mod);
-    while (cont) {
-        ScopedMem<char> nameA(str::conv::ToUtf8(mod.szModule));
-        ScopedMem<char> pathA(str::conv::ToUtf8(mod.szExePath));
-        s.AppendFmt("Module: %08X %06X %-16s %s\r\n", (DWORD)mod.modBaseAddr, (DWORD)mod.modBaseSize, nameA, pathA);
-        cont = Module32Next(snap, &mod);
-    }
-    CloseHandle(snap);
 }
 
 // TODO: should offsetOut be DWORD_PTR for 64-bit compat?
@@ -709,7 +693,9 @@ static char *BuildCrashInfoText()
     s.Append("\r\n");
     LogDbgDetail("BuildCrashInfoText(): 7");
 #endif
-    GetModules(s);
+
+    s.Append(gModulesInfo);
+
     LogDbgDetail("BuildCrashInfoText(): finish");
     return s.StealData();
 }
@@ -723,10 +709,10 @@ static void SendCrashInfo(char *s)
     }
 
     char *boundary = "0xKhTmLbOuNdArY";
-    str::Str<char> headers(256);
+    str::Str<char> headers(256, gCrashHandlerAllocator);
     headers.AppendFmt("Content-Type: multipart/form-data; boundary=%s", boundary);
 
-    str::Str<char> data(2048);
+    str::Str<char> data(2048, gCrashHandlerAllocator);
     data.AppendFmt("--%s\r\n", boundary);
     data.Append("Content-Disposition: form-data; name=\"file\"; filename=\"test.bin\"\r\n\r\n");
     data.Append(s);
@@ -1056,6 +1042,30 @@ static void GetSystemInfo(str::Str<char>& s)
 // in SumatraPDF.cpp
 extern void GetFilesInfo(str::Str<char>& s);
 
+static void GetModules(str::Str<char>& s)
+{
+    HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
+    if (snap == INVALID_HANDLE_VALUE) return;
+
+    MODULEENTRY32 mod;
+    mod.dwSize = sizeof(mod);
+    BOOL cont = Module32First(snap, &mod);
+    while (cont) {
+        ScopedMem<char> nameA(str::conv::ToUtf8(mod.szModule));
+        ScopedMem<char> pathA(str::conv::ToUtf8(mod.szExePath));
+        s.AppendFmt("Module: %08X %06X %-16s %s\r\n", (DWORD)mod.modBaseAddr, (DWORD)mod.modBaseSize, nameA, pathA);
+        cont = Module32Next(snap, &mod);
+    }
+    CloseHandle(snap);
+}
+
+static void BuildModulesInfo()
+{
+    str::Str<char> s(1024);
+    GetModules(s);
+    gModulesInfo = s.StealData();
+}
+
 static void BuildSystemInfo()
 {
     str::Str<char> s(1024);
@@ -1174,6 +1184,9 @@ void InstallCrashHandler(const TCHAR *crashDumpPath)
     if (!BuildSymbolPath())
         return;
     BuildSystemInfo();
+    // at this point list of modules should be complete (except
+    // dbghlp.dll which shouldn't be loaded yet)
+    BuildModulesInfo();
 
     gIsStaticBuild = IsStaticBuild();
     // we pre-allocate as much as possible to minimize allocations
@@ -1209,5 +1222,6 @@ void UninstallCrashHandler()
     free(gSymbolPathW);
     free(gSymbolPathA);
     free(gSystemInfo);
+    free(gModulesInfo);
     delete gCrashHandlerAllocator;
 }
