@@ -133,6 +133,38 @@ static SymFromAddrProc *                _SymFromAddr;
 static SymRefreshModuleListProc *       _SymRefreshModuleList;
 static SymGetLineFromAddr64Proc *       _SymGetLineFromAddr64;
 
+/* Note about memory allocations during handling a crash: we cannot
+   use standard malloc()/free()/new()/delete().
+   For multi-thread safety, there is a per-heap lock taken inside
+   HeapAlloc() etc. It's possible that a crash originates from 
+   inside such functions after a lock has been taken. If we then
+   try to allocate memory from the same heap, we'll deadlock and
+   won't send crash report.
+   For that reason we create a heap used only for crash handler
+   and must only allocate, directly or indirectly, from that heap.
+   Note: I'm not sure what happens if a Windows function (e.g. http
+   calls) has to allocate memory. I assume it'll use GetProcessHeap()
+   heap and further assume that CRT creates its own heap for
+   malloc()/free() etc. so that while a deadlock is still possible,
+   the probability should be greatly reduced.
+*/
+
+static HANDLE gCrashHandlerHeap = NULL;
+
+class CrashHandlerAllocator : public Allocator {
+public:
+    CrashHandlerAllocator() {}
+    virtual ~CrashHandlerAllocator() {}
+    virtual void *Alloc(size_t size) {
+        return HeapAlloc(gCrashHandlerHeap, 0, size);
+    }
+    virtual void Free(void *mem) {
+        HeapFree(gCrashHandlerHeap, 0, mem);
+    }
+};
+
+static CrashHandlerAllocator *gCrashHandlerAllocator = NULL;
+
 static ScopedMem<TCHAR> gCrashDumpPath(NULL);
 static HANDLE gDumpEvent = NULL;
 static HANDLE gDumpThread = NULL;
@@ -857,7 +889,7 @@ static char *BuildCrashInfoText()
         return NULL;
     }
 
-    str::Str<char> s(16 * 1024);
+    str::Str<char> s(16 * 1024, gCrashHandlerAllocator);
     GetProgramInfo(s);
     LogDbgDetail("BuildCrashInfoText(): 1");
     GetOsVersion(s);

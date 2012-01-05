@@ -100,7 +100,7 @@ protected:
     }
 
 public:
-    // Vec takes ownership of allocator and will delete it
+    // allocator must outlive Vec
     Vec(size_t initCap=0, Allocator *allocator = NULL) 
         : initialCap(initCap), allocator(allocator)
     {
@@ -112,8 +112,6 @@ public:
 
     ~Vec() {
         FreeEls();
-        if (allocator != &mallocAllocator)
-            delete allocator;
     }
 
     // ensure that a Vec never shares its els buffer with another after a clone/copy
@@ -289,7 +287,7 @@ template <typename T>
 
 class Str : public Vec<T> {
 public:
-    Str(size_t initCap=0) : Vec(initCap) { }
+    Str(size_t initCap=0, Allocator *allocator = NULL) : Vec(initCap, allocator) { }
 
     void Append(T c)
     {
