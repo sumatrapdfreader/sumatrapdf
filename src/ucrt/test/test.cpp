@@ -18,6 +18,8 @@ static void crash_me()
 
 void RunTests()
 {
+    printf("Tests start\n");
 
+    printf("Tests finished\n");
 }
 

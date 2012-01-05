@@ -9,7 +9,7 @@ extern void RunTests();
 int main()
 {
     RunTests();
-    printf("All tests passed\n");
+    printf("Console tests finished\n");
     return 0;
 }
 
