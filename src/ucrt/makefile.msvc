@@ -40,14 +40,17 @@ $(TEST_CON_APP): $(O)\test_con.obj $(O)\test.obj $(MICROCRT_CON_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
 
 # ucrt directory
-{}.cpp{$(S)}.obj::
+{src}.cpp{$(S)}.obj::
 	$(CC) $(CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
-{mingw}.c{$(O)}.obj::
+{src\mingw}.c{$(O)}.obj::
+	$(CC) $(CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+
+{src\test}.cpp{$(S)}.obj::
 	$(CC) $(CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 # http://msdn.microsoft.com/en-us/library/s0ksfwcf.aspx
-{}.asm{$(O)}.obj:
+{src}.asm{$(O)}.obj:
 	ml /c /coff /Fo$(O)\ $<
 
 force: ;
