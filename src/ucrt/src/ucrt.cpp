@@ -32,11 +32,13 @@ int _cdecl _initterm(_PIFV *, _PIFV *);
 There is msvcrt._HUGE symbol but when it was exported in msvcrt.def as "_HUGE",
 it was some weird address not even within msvcrt.dll address space.
 When I export is as "_HUGE DATA" (following ming-w64), it's no longer visible as
-_HUGE to the linker. I'm clearly missing something here, but this is how I work-around this:
+_HUGE to the linker. I'm clearly missing something here, but this is my work-around:
 */
 typedef union { unsigned char c[8]; double d; } __huge_val_union;
-__huge_val_union huge_val = { 0, 0, 0, 0, 0, 0, 0xf0, 0x7f }; // only valid for little endian
-// note: _HUGE is only available after C static initializers are called, so don't use it before that
+// only valid for little endian
+__huge_val_union huge_val = { 0, 0, 0, 0, 0, 0, 0xf0, 0x7f }; 
+// note: _HUGE is only available after C static initializers are called
+// so don't use it before that
 double _HUGE = huge_val.d;
 
 int _fltused = 1;
