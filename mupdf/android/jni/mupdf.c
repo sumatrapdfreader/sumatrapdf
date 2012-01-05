@@ -139,7 +139,7 @@ Java_com_artifex_mupdf_MuPDFCore_gotoPageInternal(JNIEnv *env, jobject thiz, int
 		/* Render to list */
 		currentPageList = fz_new_display_list(ctx);
 		dev = fz_new_list_device(ctx, currentPageList);
-		pdf_run_page(xref, currentPage, dev, fz_identity);
+		pdf_run_page(xref, currentPage, dev, fz_identity, NULL);
 	}
 	fz_catch(ctx)
 	{
@@ -240,7 +240,7 @@ Java_com_artifex_mupdf_MuPDFCore_drawPage(JNIEnv *env, jobject thiz, jobject bit
 			time = clock();
 			for (i=0; i<100;i++) {
 #endif
-				fz_execute_display_list(currentPageList, dev, ctm, bbox);
+				fz_execute_display_list(currentPageList, dev, ctm, bbox, NULL);
 #ifdef TIME_DISPLAY_LIST
 			}
 			time = clock() - time;

@@ -1404,7 +1404,7 @@ PdfPageRun *CPdfEngine::GetPageRun(pdf_page *page, bool tryOnly)
         fz_try(ctx) {
             list = fz_new_display_list(ctx);
             dev = fz_new_list_device(ctx, list);
-            pdf_run_page(_xref, page, dev, fz_identity);
+            pdf_run_page(_xref, page, dev, fz_identity, NULL);
         }
         fz_catch(ctx) {
             fz_free_display_list(ctx, list);
@@ -1438,7 +1438,7 @@ bool CPdfEngine::RunPage(pdf_page *page, fz_device *dev, fz_matrix ctm, RenderTa
     if (Target_View == target && (run = GetPageRun(page, !cacheRun))) {
         EnterCriticalSection(&ctxAccess);
         fz_try(ctx) {
-            fz_execute_display_list(run->list, dev, ctm, clipbox);
+            fz_execute_display_list(run->list, dev, ctm, clipbox, NULL);
         }
         fz_catch(ctx) {
             ok = false;
@@ -1451,7 +1451,7 @@ bool CPdfEngine::RunPage(pdf_page *page, fz_device *dev, fz_matrix ctm, RenderTa
                            target == Target_Export ? "Export" : "View";
         EnterCriticalSection(&ctxAccess);
         fz_try(ctx) {
-            pdf_run_page_with_usage(_xref, page, dev, ctm, targetName);
+            pdf_run_page_with_usage(_xref, page, dev, ctm, targetName, NULL);
         }
         fz_catch(ctx) {
             ok = false;
@@ -2697,7 +2697,7 @@ bool CXpsEngine::RunPage(xps_page *page, fz_device *dev, fz_matrix ctm, fz_bbox 
     if (run) {
         EnterCriticalSection(&ctxAccess);
         fz_try(ctx) {
-            fz_execute_display_list(run->list, dev, ctm, clipbox);
+            fz_execute_display_list(run->list, dev, ctm, clipbox, NULL);
         }
         fz_catch(ctx) {
             ok = false;

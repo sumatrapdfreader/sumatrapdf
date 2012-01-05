@@ -134,9 +134,9 @@ static void drawbmp(pdf_xref *xref, pdf_page *page, fz_display_list *list, int p
 
 	dev = fz_new_gdiplus_device(xref->ctx, hDC, bbox);
 	if (list)
-		fz_execute_display_list(list, dev, ctm, bbox);
+		fz_execute_display_list(list, dev, ctm, bbox, NULL);
 	else
-		pdf_run_page(xref, page, dev, ctm);
+		pdf_run_page(xref, page, dev, ctm, NULL);
 	fz_free_device(dev);
 
 	bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
@@ -227,7 +227,7 @@ static void drawpage(pdf_xref *xref, int pagenum)
 		{
 			list = fz_new_display_list(ctx);
 			dev = fz_new_list_device(ctx, list);
-			pdf_run_page(xref, page, dev, fz_identity);
+			pdf_run_page(xref, page, dev, fz_identity, NULL);
 		}
 		fz_catch(ctx)
 		{
@@ -247,9 +247,9 @@ static void drawpage(pdf_xref *xref, int pagenum)
 			dev = fz_new_trace_device(ctx);
 			printf("<page number=\"%d\">\n", pagenum);
 			if (list)
-				fz_execute_display_list(list, dev, fz_identity, fz_infinite_bbox);
+				fz_execute_display_list(list, dev, fz_identity, fz_infinite_bbox, NULL);
 			else
-				pdf_run_page(xref, page, dev, fz_identity);
+				pdf_run_page(xref, page, dev, fz_identity, NULL);
 			printf("</page>\n");
 		}
 		fz_catch(ctx)
@@ -274,9 +274,9 @@ static void drawpage(pdf_xref *xref, int pagenum)
 			text = fz_new_text_span(ctx);
 			dev = fz_new_text_device(ctx, text);
 			if (list)
-				fz_execute_display_list(list, dev, fz_identity, fz_infinite_bbox);
+				fz_execute_display_list(list, dev, fz_identity, fz_infinite_bbox, NULL);
 			else
-				pdf_run_page(xref, page, dev, fz_identity);
+				pdf_run_page(xref, page, dev, fz_identity, NULL);
 			fz_free_device(dev);
 			dev = NULL;
 			printf("[Page %d]\n", pagenum);
@@ -334,9 +334,9 @@ static void drawpage(pdf_xref *xref, int pagenum)
 
 			dev = fz_new_draw_device(ctx, glyphcache, pix);
 			if (list)
-				fz_execute_display_list(list, dev, ctm, bbox);
+				fz_execute_display_list(list, dev, ctm, bbox, NULL);
 			else
-				pdf_run_page(xref, page, dev, ctm);
+				pdf_run_page(xref, page, dev, ctm, NULL);
 			fz_free_device(dev);
 			dev = NULL;
 

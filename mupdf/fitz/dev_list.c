@@ -602,7 +602,7 @@ fz_free_display_list(fz_context *ctx, fz_display_list *list)
 }
 
 void
-fz_execute_display_list(fz_display_list *list, fz_device *dev, fz_matrix top_ctm, fz_bbox scissor)
+fz_execute_display_list(fz_display_list *list, fz_device *dev, fz_matrix top_ctm, fz_bbox scissor, fz_cookie *cookie)
 {
 	fz_display_node *node;
 	fz_matrix ctm;
@@ -611,6 +611,7 @@ fz_execute_display_list(fz_display_list *list, fz_device *dev, fz_matrix top_ctm
 	int clipped = 0;
 	int tiled = 0;
 	int empty;
+	int progress = 0;
 
 	if (!fz_is_infinite_bbox(scissor))
 	{
@@ -620,8 +621,22 @@ fz_execute_display_list(fz_display_list *list, fz_device *dev, fz_matrix top_ctm
 		scissor.x1 += 20; scissor.y1 += 20;
 	}
 
+	if (cookie)
+	{
+		cookie->progress_max = list->last - list->first;
+		cookie->progress = 0;
+	}
+
 	for (node = list->first; node; node = node->next)
 	{
+		/* Check the cookie for aborting */
+		if (cookie)
+		{
+			if (cookie->abort)
+				break;
+			cookie->progress = progress++;
+		}
+
 		/* cull objects to draw using a quick visibility test */
 
 		if (tiled || node->cmd == FZ_CMD_BEGIN_TILE || node->cmd == FZ_CMD_END_TILE)

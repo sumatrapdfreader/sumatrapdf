@@ -333,7 +333,7 @@ static void pdfapp_loadpage_pdf(pdfapp_t *app)
 	mdev = fz_new_list_device(app->ctx, app->page_list);
 	fz_try(app->ctx)
 	{
-		pdf_run_page(app->xref, page, mdev, fz_identity);
+		pdf_run_page(app->xref, page, mdev, fz_identity, NULL);
 	}
 	fz_catch(app->ctx)
 	{
@@ -408,7 +408,7 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 		/* Extract text */
 		app->page_text = fz_new_text_span(app->ctx);
 		tdev = fz_new_text_device(app->ctx, app->page_text);
-		fz_execute_display_list(app->page_list, tdev, fz_identity, fz_infinite_bbox);
+		fz_execute_display_list(app->page_list, tdev, fz_identity, fz_infinite_bbox, NULL);
 		fz_free_device(tdev);
 	}
 
@@ -435,7 +435,7 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 		app->image = fz_new_pixmap_with_rect(app->ctx, colorspace, bbox);
 		fz_clear_pixmap_with_color(app->image, 255);
 		idev = fz_new_draw_device(app->ctx, app->cache, app->image);
-		fz_execute_display_list(app->page_list, idev, ctm, bbox);
+		fz_execute_display_list(app->page_list, idev, ctm, bbox, NULL);
 		fz_free_device(idev);
 	}
 
