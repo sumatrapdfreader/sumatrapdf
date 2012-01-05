@@ -21,6 +21,8 @@
 #include "AppTools.h"
 #include "translations.h"
 
+// TODO: UnzipFiles() must take allocator
+
 #ifndef CRASH_REPORT_URL
 #define CRASH_REPORT_URL _T("http://blog.kowalczyk.info/software/sumatrapdf/develop.html")
 #endif
@@ -169,11 +171,13 @@ static TCHAR *  gCrashDumpPath = NULL;
 static WCHAR *  gSymbolPathW = NULL;
 static char *   gSymbolPathA = NULL;
 static TCHAR *  gCrashDumpDir = NULL;
+static TCHAR *  gSymbolsZipPath = NULL;
 static char *   gSystemInfo = NULL;
 
 static HANDLE   gDumpEvent = NULL;
 static HANDLE   gDumpThread = NULL;
 static BOOL     gSymInitializeOk = FALSE;
+static bool     gIsStaticBuild = false;
 
 static MINIDUMP_EXCEPTION_INFORMATION gMei = { 0 };
 static LPTOP_LEVEL_EXCEPTION_FILTER gPrevExceptionFilter = NULL;
@@ -313,27 +317,6 @@ static BOOL CALLBACK OpenMiniDumpCallback(void* /*param*/, PMINIDUMP_CALLBACK_IN
     default:
         return FALSE;
     }
-}
-
-// return true for static, single executable build, false for a build with libmupdf.dll
-static bool IsStaticBuild()
-{
-    HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
-    if (snap == INVALID_HANDLE_VALUE) return true;
-    MODULEENTRY32 mod;
-    mod.dwSize = sizeof(mod);
-    BOOL cont = Module32First(snap, &mod);
-    bool isStatic = true;
-    while (cont) {
-        TCHAR *name = mod.szModule;
-        if (str::EqI(name, _T("libmupdf.dll"))) {
-            isStatic = false;
-            break;
-        }
-        cont = Module32Next(snap, &mod);
-    }
-    CloseHandle(snap);
-    return isStatic;
 }
 
 static void GetModules(str::Str<char>& s)
@@ -787,7 +770,7 @@ static bool UnpackLibSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir)
 
 // *.pdb files are on S3 with a known name. Try to download them here to a directory
 // in symbol path to get meaningful callstacks 
-static bool DownloadSymbols(const TCHAR *symDir)
+static bool DownloadSymbols(const TCHAR *symDir, const TCHAR *symbolsZipPath)
 {
     if (!symDir || !dir::Exists(symDir))
         return false;
@@ -799,7 +782,6 @@ static bool DownloadSymbols(const TCHAR *symDir)
     return false;
 #endif
 
-    ScopedMem<TCHAR> symbolsZipPath(path::Join(symDir, _T("symbols_tmp.zip")));
     if (!HttpGetToFile(SYMBOL_DOWNLOAD_URL, symbolsZipPath)) {
 #ifndef SVN_PRE_RELEASE_VER
         LogDbg("Couldn't download release symbols");
@@ -808,7 +790,7 @@ static bool DownloadSymbols(const TCHAR *symDir)
     }
 
     bool ok = false;
-    if (IsStaticBuild()) {
+    if (gIsStaticBuild) {
         ok = UnpackStaticSymbols(symbolsZipPath, symDir);
         if (!ok)
             LogDbg("Couldn't unpack symbols for static build");
@@ -840,7 +822,7 @@ void SubmitCrashInfo()
     }
 
     if (!HasOwnSymbols()) {
-        if (!DownloadSymbols(gCrashDumpDir)) {
+        if (!DownloadSymbols(gCrashDumpDir, gSymbolsZipPath)) {
             LogDbg("SubmitCrashInfo(): failed to download symbols");
             goto Exit;
         }
@@ -1083,7 +1065,10 @@ static bool BuilCrashDumpDir()
         return false;
     }
     gCrashDumpDir = symDir;
-    return true;
+    if (!symDir)
+        return false;
+    gSymbolsZipPath = path::Join(symDir, _T("symbols_tmp.zip"));
+    return gSymbolsZipPath != NULL;
 }
 
 /* Setting symbol path:
@@ -1139,6 +1124,27 @@ static bool BuildSymbolPath()
     return true;
 }
 
+// return true for static, single executable build, false for a build with libmupdf.dll
+static bool IsStaticBuild()
+{
+    HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
+    if (snap == INVALID_HANDLE_VALUE) return true;
+    MODULEENTRY32 mod;
+    mod.dwSize = sizeof(mod);
+    BOOL cont = Module32First(snap, &mod);
+    bool isStatic = true;
+    while (cont) {
+        TCHAR *name = mod.szModule;
+        if (str::EqI(name, _T("libmupdf.dll"))) {
+            isStatic = false;
+            break;
+        }
+        cont = Module32Next(snap, &mod);
+    }
+    CloseHandle(snap);
+    return isStatic;
+}
+
 void InstallCrashHandler(const TCHAR *crashDumpPath)
 {
     assert(!gDumpEvent && !gDumpThread);
@@ -1151,6 +1157,7 @@ void InstallCrashHandler(const TCHAR *crashDumpPath)
         return;
     BuildSystemInfo();
 
+    gIsStaticBuild = IsStaticBuild();
     // we pre-allocate as much as possible to minimize allocations
     // when crash handler is invoked. It's ok to use standard
     // allocation functions here.
@@ -1175,6 +1182,7 @@ void UninstallCrashHandler()
 
     free(gCrashDumpPath);
     free(gCrashDumpDir);
+    free(gSymbolsZipPath);
     free(gSymbolPathW);
     free(gSymbolPathA);
     free(gSystemInfo);
