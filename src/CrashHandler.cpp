@@ -827,34 +827,34 @@ void SubmitCrashInfo()
 
     if (!InitializeDbgHelp()) {
         LogDbg("SubmitCrashInfo(): InitializeDbgHelp() failed");
-        goto Exit;
+        return;
     }
 
     if (!HasOwnSymbols()) {
         if (!DownloadSymbols(gCrashDumpDir, gSymbolsZipPath)) {
             LogDbg("SubmitCrashInfo(): failed to download symbols");
-            goto Exit;
+            return;
         }
 
         _SymCleanup(GetCurrentProcess());
         if (!InitializeDbgHelp()) {
             LogDbg("SubmitCrashInfo(): InitializeDbgHelp() failed");
-            goto Exit;
+            return;
         }
     }
 
     if (!HasOwnSymbols()) {
         LogDbg("SubmitCrashInfo(): HasOwnSymbols() false after downloading symbols");
-        goto Exit;
+        return;
     }
 
     s = BuildCrashInfoText();
     if (!s) {
         LogDbg("SubmitCrashInfo(): BuildCrashInfoText() returned NULL for second report");
-        goto Exit;
+        return;
     }
+
     SendCrashInfo(s);
-Exit:
     gCrashHandlerAllocator->Free(s);
 }
 
@@ -884,7 +884,9 @@ static DWORD WINAPI CrashDumpThread(LPVOID data)
     if (!LoadDbgHelpFuncs())
         return 0;
 
+#ifndef HAS_NO_SYMBOLS
     SubmitCrashInfo();
+#endif
     // always write a MiniDump (for the latest crash only)
     WriteMiniDump();
 
@@ -1166,6 +1168,7 @@ void InstallCrashHandler(const TCHAR *crashDumpPath)
 
     if (!crashDumpPath)
         return;
+#ifndef HAS_NO_SYMBOLS
     if (!BuilCrashDumpPaths())
         return;
     if (!BuildSymbolPath())
@@ -1177,6 +1180,7 @@ void InstallCrashHandler(const TCHAR *crashDumpPath)
     // when crash handler is invoked. It's ok to use standard
     // allocation functions here.
     gCrashHandlerAllocator = new CrashHandlerAllocator();
+#endif
     gCrashDumpPath = str::Dup(crashDumpPath);
 
     gDumpEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -1192,7 +1196,9 @@ void UninstallCrashHandler()
 {
     if (gDumpEvent)
         SetUnhandledExceptionFilter(gPrevExceptionFilter);
-    // TODO: destroy gDumpThread?
+    TerminateThread(gDumpThread, 1);
+    CloseHandle(gDumpThread);
+    CloseHandle(gDumpEvent);
 
     free(gCrashDumpPath);
     free(gCrashDumpDir);
