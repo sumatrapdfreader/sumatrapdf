@@ -39,6 +39,9 @@
     <Filter Include="crengine\include">
       <UniqueIdentifier>{18566573-c79a-409b-9d75-b1cf5fa752e6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="unzip">
+      <UniqueIdentifier>{6cc62844-e2e6-47cd-bdbf-4724dc28da51}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ext\jbig2dec\jbig2.c">
@@ -749,6 +752,15 @@
     <ClCompile Include="ext\crengine\src\xutils.cpp">
       <Filter>crengine</Filter>
     </ClCompile>
+    <ClCompile Include="ext\zlib-1.2.5\minizip\ioapi.c">
+      <Filter>unzip</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\zlib-1.2.5\minizip\iowin32.c">
+      <Filter>unzip</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\zlib-1.2.5\minizip\unzip.c">
+      <Filter>unzip</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -1179,6 +1191,15 @@
     </ClInclude>
     <ClInclude Include="ext\crengine\include\xutils.h">
       <Filter>crengine\include</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\zlib-1.2.5\minizip\ioapi.h">
+      <Filter>unzip</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\zlib-1.2.5\minizip\iowin32.h">
+      <Filter>unzip</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\zlib-1.2.5\minizip\unzip.h">
+      <Filter>unzip</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
