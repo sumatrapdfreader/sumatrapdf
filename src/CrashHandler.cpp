@@ -167,11 +167,15 @@ public:
 
 static CrashHandlerAllocator *gCrashHandlerAllocator = NULL;
 
+// Note: intentionally not using ScopedMem<> to avoid
+// static initializers/destructors, which are bad
 static TCHAR *  gCrashDumpPath = NULL;
 static WCHAR *  gSymbolPathW = NULL;
 static char *   gSymbolPathA = NULL;
 static TCHAR *  gCrashDumpDir = NULL;
 static TCHAR *  gSymbolsZipPath = NULL;
+static TCHAR *  gLibMupdfPdbPath = NULL;
+static TCHAR *  gSumatraPdfPdbPath = NULL;
 static char *   gSystemInfo = NULL;
 
 static HANDLE   gDumpEvent = NULL;
@@ -728,13 +732,11 @@ static void SendCrashInfo(char *s)
 // We might have symbol files for older builds. If we're here, then we
 // didn't get the symbols so we assume it's because symbols didn't match
 // Returns false if files were there but we couldn't delete them
-static bool DeleteSymbolsIfExist(const TCHAR *symDir)
+static bool DeleteSymbolsIfExist()
 {
-    ScopedMem<TCHAR> path(path::Join(symDir, _T("libmupdf.pdb")));
-    if (!file::Delete(path))
+    if (!file::Delete(gLibMupdfPdbPath))
         return false;
-    path.Set(path::Join(symDir, _T("SumatraPDF.pdb")));
-    return file::Delete(path);
+    return file::Delete(gSumatraPdfPdbPath);
 }
 
 // In static (single executable) builds, the pdb file inside
@@ -774,7 +776,7 @@ static bool DownloadSymbols(const TCHAR *symDir, const TCHAR *symbolsZipPath)
 {
     if (!symDir || !dir::Exists(symDir))
         return false;
-    if (!DeleteSymbolsIfExist(symDir))
+    if (!DeleteSymbolsIfExist())
         return false;
 
 #ifdef DEBUG
@@ -1056,19 +1058,21 @@ static void BuildSystemInfo()
     gSystemInfo = s.StealData();
 }
 
-static bool BuilCrashDumpDir()
+static bool BuilCrashDumpPaths()
 {
     TCHAR *symDir = AppGenDataFilename(_T("symbols"));
-    if (symDir && !dir::Create(symDir)) {
+    if (!symDir)
+        return false;
+    if (!dir::Create(symDir)) {
         free(symDir);
         LogDbg("GetCrashDumpDir(): couldn't get symbols dir");
         return false;
     }
     gCrashDumpDir = symDir;
-    if (!symDir)
-        return false;
     gSymbolsZipPath = path::Join(symDir, _T("symbols_tmp.zip"));
-    return gSymbolsZipPath != NULL;
+    gLibMupdfPdbPath = path::Join(symDir, _T("SumatraPDF.pdb"));
+    gSumatraPdfPdbPath = path::Join(symDir, _T("libmupdf.pdb"));
+    return true;
 }
 
 /* Setting symbol path:
@@ -1151,7 +1155,7 @@ void InstallCrashHandler(const TCHAR *crashDumpPath)
 
     if (NULL == crashDumpPath)
         return;
-    if (!BuilCrashDumpDir())
+    if (!BuilCrashDumpPaths())
         return;
     if (!BuildSymbolPath())
         return;
@@ -1183,6 +1187,9 @@ void UninstallCrashHandler()
     free(gCrashDumpPath);
     free(gCrashDumpDir);
     free(gSymbolsZipPath);
+    free(gLibMupdfPdbPath);
+    free(gSumatraPdfPdbPath);
+
     free(gSymbolPathW);
     free(gSymbolPathA);
     free(gSystemInfo);
