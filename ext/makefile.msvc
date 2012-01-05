@@ -9,7 +9,6 @@ OBZ= $(O)\bzip2
 OR = $(O)\unrar
 ODV= $(O)\djvu
 OC = $(O)\chmlib
-OCR= $(O)\crengine
 
 SYNCTEX_CFLAGS = $(CFLAGS) /I$(EXTDIR)/synctex /I$(ZLIB_DIR) /TC /wd4244
 !if "$(PLATFORM)"=="X64"
@@ -43,13 +42,6 @@ DJVU_CFLAGS = $(DJVU_CFLAGS) /D "WIN32" /wd4244 /wd4267
 CHMLIB_CFLAGS = $(CFLAGSOPT) /D "WIN32" /D "CHM_MT" /wd4244 /wd4018
 # ChmLib also needs PPC_BSTR defined for UNICODE builds
 CHMLIB_CFLAGS = $(CHMLIB_CFLAGS:"_UNICODE"="_UNICODE" /D "PPC_BSTR")
-
-CRENGINE_CFLAGS = $(CFLAGSOPT) /D "_WIN32" /D "WIN32" /D "CR_EMULATE_GETTEXT=1"
-CRENGINE_CFLAGS = $(CRENGINE_CFLAGS) /D "USE_LIBPNG=0" /D "USE_LIBJPEG=0"
-CRENGINE_CFLAGS = $(CRENGINE_CFLAGS) /D "ENABLE_ANTIWORD=0" /D "CHM_SUPPORT_ENABLED=0"
-CRENGINE_CFLAGS = $(CRENGINE_CFLAGS) /I$(EXTDIR)/crengine/include
-CRENGINE_CFLAGS = $(CRENGINE_CFLAGS) /I$(ZLIB_DIR) /I$(JPEG_TURBO_DIR) 
-CRENGINE_CFLAGS = $(CRENGINE_CFLAGS) /wd4018 /wd4101 /wd4244 /wd4800 /wd4355
 
 SYNCTEX_OBJS = \
 	$(OE)\synctex_parser.obj $(OE)\synctex_parser_utils.obj
@@ -99,27 +91,12 @@ DJVU_OBJS = \
 CHMLIB_OBJS = \
 	$(OC)\chm_lib.obj $(OC)\lzx.obj
 
-CRENGINE_OBJS = \
-	$(OCR)\chmfmt.obj $(OCR)\cp_stats.obj $(OCR)\crgui.obj \
-	$(OCR)\cri18n.obj $(OCR)\crskin.obj $(OCR)\crtest.obj \
-	$(OCR)\crtxtenc.obj $(OCR)\epubfmt.obj $(OCR)\hist.obj \
-	$(OCR)\hyphman.obj $(OCR)\lstridmap.obj $(OCR)\lvbmpbuf.obj \
-	$(OCR)\lvdocview.obj $(OCR)\lvdrawbuf.obj $(OCR)\lvfnt.obj \
-	$(OCR)\lvfntman.obj $(OCR)\lvimg.obj $(OCR)\lvmemman.obj \
-	$(OCR)\lvpagesplitter.obj $(OCR)\lvrend.obj $(OCR)\lvstream.obj \
-	$(OCR)\lvstring.obj $(OCR)\lvstsheet.obj $(OCR)\lvstyles.obj \
-	$(OCR)\lvtextfm.obj $(OCR)\lvtinydom.obj $(OCR)\lvxml.obj \
-	$(OCR)\props.obj $(OCR)\rtfimp.obj $(OCR)\s32utils.obj \
-	$(OCR)\txtselector.obj $(OCR)\w32utils.obj $(OCR)\wolutil.obj \
-	$(OCR)\wordfmt.obj $(OCR)\xutils.obj $(OCR)\pdbfmt.obj
-
 $(OE): force
 	@if not exist $(OE) mkdir $(OE)
 	@if not exist $(OBZ) mkdir $(OBZ)
 	@if not exist $(OR) mkdir $(OR)
 	@if not exist $(ODV) mkdir $(ODV)
 	@if not exist $(OC) mkdir $(OC)
-	@if not exist $(OCR) mkdir $(OCR)
 
 {baseutils}.cpp{$(OS)}.obj::
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(OS)\ /Fd$(O)\vc80.pdb $<
@@ -141,6 +118,3 @@ $(OE): force
 
 {$(EXTDIR)\CHMLib\src}.c{$(OC)}.obj::
 	$(CC) $(CHMLIB_CFLAGS) /Fo$(OC)\ /Fd$(O)\vc80.pdb $<
-
-{$(EXTDIR)\crengine\src}.cpp{$(OCR)}.obj::
-	$(CC) $(CRENGINE_CFLAGS) /Fo$(OCR)\ /Fd$(O)\vc80.pdb $<

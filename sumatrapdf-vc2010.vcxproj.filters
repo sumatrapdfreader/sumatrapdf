@@ -33,13 +33,13 @@
     <Filter Include="chm">
       <UniqueIdentifier>{87c09434-b151-4582-b0b3-eab39e5a51ef}</UniqueIdentifier>
     </Filter>
-    <Filter Include="crengine">
-      <UniqueIdentifier>{1629419d-eaf7-47c0-a002-12aa51311c8b}</UniqueIdentifier>
+    <Filter Include="zlib">
+      <UniqueIdentifier>{310fe4d2-d0c3-429d-a84b-43e01d893c84}</UniqueIdentifier>
     </Filter>
-    <Filter Include="crengine\include">
-      <UniqueIdentifier>{18566573-c79a-409b-9d75-b1cf5fa752e6}</UniqueIdentifier>
+    <Filter Include="bzip2">
+      <UniqueIdentifier>{3af8a3ab-791c-4c29-b28f-43adfe940d8c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="unzip">
+    <Filter Include="zlib\minizip">
       <UniqueIdentifier>{6cc62844-e2e6-47cd-bdbf-4724dc28da51}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -647,119 +647,83 @@
     <ClCompile Include="src\Toolbar.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ext\crengine\src\chmfmt.cpp">
-      <Filter>crengine</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\crengine\src\cp_stats.cpp">
-      <Filter>crengine</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\crengine\src\crgui.cpp">
-      <Filter>crengine</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\crengine\src\cri18n.cpp">
-      <Filter>crengine</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\crengine\src\crskin.cpp">
-      <Filter>crengine</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\crengine\src\crtest.cpp">
-      <Filter>crengine</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\crengine\src\crtxtenc.cpp">
-      <Filter>crengine</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\crengine\src\epubfmt.cpp">
-      <Filter>crengine</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\crengine\src\hist.cpp">
-      <Filter>crengine</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\crengine\src\hyphman.cpp">
-      <Filter>crengine</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\crengine\src\lstridmap.cpp">
-      <Filter>crengine</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\crengine\src\lvbmpbuf.cpp">
-      <Filter>crengine</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\crengine\src\lvdocview.cpp">
-      <Filter>crengine</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\crengine\src\lvdrawbuf.cpp">
-      <Filter>crengine</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\crengine\src\lvfnt.cpp">
-      <Filter>crengine</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\crengine\src\lvfntman.cpp">
-      <Filter>crengine</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\crengine\src\lvimg.cpp">
-      <Filter>crengine</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\crengine\src\lvmemman.cpp">
-      <Filter>crengine</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\crengine\src\lvpagesplitter.cpp">
-      <Filter>crengine</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\crengine\src\lvrend.cpp">
-      <Filter>crengine</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\crengine\src\lvstream.cpp">
-      <Filter>crengine</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\crengine\src\lvstring.cpp">
-      <Filter>crengine</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\crengine\src\lvstsheet.cpp">
-      <Filter>crengine</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\crengine\src\lvstyles.cpp">
-      <Filter>crengine</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\crengine\src\lvtextfm.cpp">
-      <Filter>crengine</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\crengine\src\lvtinydom.cpp">
-      <Filter>crengine</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\crengine\src\lvxml.cpp">
-      <Filter>crengine</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\crengine\src\props.cpp">
-      <Filter>crengine</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\crengine\src\rtfimp.cpp">
-      <Filter>crengine</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\crengine\src\s32utils.cpp">
-      <Filter>crengine</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\crengine\src\txtselector.cpp">
-      <Filter>crengine</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\crengine\src\w32utils.cpp">
-      <Filter>crengine</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\crengine\src\wolutil.cpp">
-      <Filter>crengine</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\crengine\src\wordfmt.cpp">
-      <Filter>crengine</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\crengine\src\xutils.cpp">
-      <Filter>crengine</Filter>
-    </ClCompile>
     <ClCompile Include="ext\zlib-1.2.5\minizip\ioapi.c">
-      <Filter>unzip</Filter>
+      <Filter>zlib\minizip</Filter>
     </ClCompile>
     <ClCompile Include="ext\zlib-1.2.5\minizip\iowin32.c">
-      <Filter>unzip</Filter>
+      <Filter>zlib\minizip</Filter>
     </ClCompile>
     <ClCompile Include="ext\zlib-1.2.5\minizip\unzip.c">
-      <Filter>unzip</Filter>
+      <Filter>zlib\minizip</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\bzip2\blocksort.c">
+      <Filter>bzip2</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\bzip2\bzlib.c">
+      <Filter>bzip2</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\bzip2\compress.c">
+      <Filter>bzip2</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\bzip2\crctable.c">
+      <Filter>bzip2</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\bzip2\decompress.c">
+      <Filter>bzip2</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\bzip2\huffman.c">
+      <Filter>bzip2</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\bzip2\randtable.c">
+      <Filter>bzip2</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\zlib-1.2.5\adler32.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\zlib-1.2.5\compress.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\zlib-1.2.5\crc32.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\zlib-1.2.5\deflate.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\zlib-1.2.5\gzclose.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\zlib-1.2.5\gzlib.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\zlib-1.2.5\gzread.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\zlib-1.2.5\gzwopen.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\zlib-1.2.5\gzwrite.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\zlib-1.2.5\infback.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\zlib-1.2.5\inffast.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\zlib-1.2.5\inflate.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\zlib-1.2.5\inftrees.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\zlib-1.2.5\trees.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\zlib-1.2.5\uncompr.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\zlib-1.2.5\zutil.c">
+      <Filter>zlib</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1042,164 +1006,53 @@
     <ClInclude Include="src\Toolbar.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="ext\crengine\include\chmfmt.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\cp_stats.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\cr3version.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\crengine.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\crgui.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\cri18n.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\crsetup.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\crskin.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\crtest.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\crtrace.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\crtxtenc.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\cssdef.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\dtddef.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\epubfmt.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\fb2def.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\hist.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\hyphman.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\lstridmap.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\lvarray.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\lvbmpbuf.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\lvdocview.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\lvdrawbuf.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\lvfnt.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\lvfntman.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\lvhashtable.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\lvimg.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\lvmemman.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\lvpagesplitter.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\lvptrvec.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\lvref.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\lvrefcache.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\lvrend.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\lvstream.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\lvstring.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\lvstsheet.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\lvstyles.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\lvtextfm.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\lvthread.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\lvtinydom.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\lvtypes.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\lvxml.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\props.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\rtfcmd.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\rtfimp.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\s32utils.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\txtselector.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\w32utils.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\wolutil.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\wordfmt.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\crengine\include\xutils.h">
-      <Filter>crengine\include</Filter>
-    </ClInclude>
     <ClInclude Include="ext\zlib-1.2.5\minizip\ioapi.h">
-      <Filter>unzip</Filter>
+      <Filter>zlib\minizip</Filter>
     </ClInclude>
     <ClInclude Include="ext\zlib-1.2.5\minizip\iowin32.h">
-      <Filter>unzip</Filter>
+      <Filter>zlib\minizip</Filter>
     </ClInclude>
     <ClInclude Include="ext\zlib-1.2.5\minizip\unzip.h">
-      <Filter>unzip</Filter>
+      <Filter>zlib\minizip</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\bzip2\bzlib.h">
+      <Filter>bzip2</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\bzip2\bzlib_private.h">
+      <Filter>bzip2</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\zlib-1.2.5\crc32.h">
+      <Filter>zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\zlib-1.2.5\deflate.h">
+      <Filter>zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\zlib-1.2.5\gzguts.h">
+      <Filter>zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\zlib-1.2.5\inffast.h">
+      <Filter>zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\zlib-1.2.5\inffixed.h">
+      <Filter>zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\zlib-1.2.5\inflate.h">
+      <Filter>zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\zlib-1.2.5\inftrees.h">
+      <Filter>zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\zlib-1.2.5\trees.h">
+      <Filter>zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\zlib-1.2.5\zconf.h">
+      <Filter>zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\zlib-1.2.5\zlib.h">
+      <Filter>zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\zlib-1.2.5\zutil.h">
+      <Filter>zlib</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
