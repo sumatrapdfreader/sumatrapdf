@@ -4,6 +4,7 @@
 #include <windows.h>
 #include <dbghelp.h>
 #include <tlhelp32.h>
+#include <stdint.h>
 
 #include "Version.h"
 
@@ -204,6 +205,24 @@ static LPTOP_LEVEL_EXCEPTION_FILTER gPrevExceptionFilter = NULL;
 #else
 #define LogDbgDetail(msg) NoOp()
 #endif
+
+// alloc/free bzip2/zlib functions to be passed to unzip.c
+static void* bz_alloc(void* opaque, int32_t items, int32_t size)
+{
+    void* v = gCrashHandlerAllocator->Alloc(items * size);
+    return v;
+}
+
+static void* zip_alloc(void* opaque, uint32_t items, uint32_t size)
+{
+    void* v = gCrashHandlerAllocator->Alloc(items * size);
+    return v;
+}
+
+static void bz_zip_free(void* opaque, void* addr)
+{
+    gCrashHandlerAllocator->Free(addr);
+}
 
 static bool LoadDbgHelpFuncs()
 {
