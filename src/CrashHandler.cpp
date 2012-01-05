@@ -165,18 +165,27 @@ public:
 
 static CrashHandlerAllocator *gCrashHandlerAllocator = NULL;
 
-static ScopedMem<TCHAR> gCrashDumpPath(NULL);
-static HANDLE gDumpEvent = NULL;
-static HANDLE gDumpThread = NULL;
-static MINIDUMP_EXCEPTION_INFORMATION gMei = { 0 };
-static BOOL gSymInitializeOk = FALSE;
+static TCHAR *  gCrashDumpPath = NULL;
+static WCHAR *  gSymbolPathW = NULL;
+static char *   gSymbolPathA = NULL;
+static TCHAR *  gCrashDumpDir = NULL;
+static char *   gSystemInfo = NULL;
 
-static slog::DebugLogger gDbgLog;
-#define LogDbg(msg, ...) gDbgLog.LogFmt(_T(msg), __VA_ARGS__)
+static HANDLE   gDumpEvent = NULL;
+static HANDLE   gDumpThread = NULL;
+static BOOL     gSymInitializeOk = FALSE;
+
+static MINIDUMP_EXCEPTION_INFORMATION gMei = { 0 };
+static LPTOP_LEVEL_EXCEPTION_FILTER gPrevExceptionFilter = NULL;
+
+#define LogDbg(msg) \
+    OutputDebugStringA(msg)
+
 #if 0 // 1 for more detailed debugging of crash handler progress
-#define LogDbgDetail LogDbg
+#define LogDbgDetail(msg) \
+    OutputDebugStringA(msg)
 #else
-#define LogDbgDetail(msg, ...) NoOp()
+#define LogDbgDetail(msg) NoOp()
 #endif
 
 static bool LoadDbgHelpFuncs()
@@ -211,66 +220,6 @@ static bool LoadDbgHelpFuncs()
 #undef Load
 
     return _StackWalk64 != NULL;
-}
-
-static TCHAR *GetCrashDumpDir()
-{
-    TCHAR *symDir = AppGenDataFilename(_T("symbols"));
-    if (symDir && !dir::Create(symDir)) {
-        free(symDir);
-        LogDbg("GetCrashDumpDir(): couldn't get symbols dir");
-        return NULL;
-    }
-    return symDir;
-}
-
-/* Setting symbol path:
-add GetEnvironmentVariableA("_NT_SYMBOL_PATH", ..., ...)
-add GetEnvironmentVariableA("_NT_ALTERNATE_SYMBOL_PATH", ..., ...)
-add: "srv*c:\\symbols*http://msdl.microsoft.com/download/symbols;cache*c:\\symbols"
-(except a better directory than c:\\symbols
-
-Note: I've decided to use just one, known to me location rather than the
-more comprehensive list. It works so why give dbghelp.dll more directories
-to scan?
-*/
-static WCHAR *GetSymbolPath()
-{
-    str::Str<WCHAR> path(1024);
-
-#if 0
-    WCHAR buf[512];
-    DWORD res = GetEnvironmentVariableW(L"_NT_SYMBOL_PATH", buf, dimof(buf));
-    if (0 < res && res < dimof(buf)) {
-        path.Append(buf);
-        path.Append(L";");
-    }
-    res = GetEnvironmentVariableW(L"_NT_ALTERNATE_SYMBOL_PATH", buf, dimof(buf));
-    if (0 < res && res < dimof(buf)) {
-        path.Append(buf);
-        path.Append(L";");
-    }
-#endif
-
-    ScopedMem<TCHAR> symDir(GetCrashDumpDir());
-    if (symDir) {
-        path.Append(AsWStrQ(symDir));
-        //path.Append(_T(";"));
-    }
-#if 0
-    // this probably wouldn't work anyway because it requires symsrv.dll in the same directory
-    // as dbghelp.dll and it's not present with the os-provided dbghelp.dll
-    path.Append(L"srv*");
-    path.Append(symDir);
-    path.Append(L"*http://msdl.microsoft.com/download/symbols;cache*");
-    path.Append(symDir);
-#endif
-#if 0
-    // when running local builds, *.pdb is in the same dir as *.exe 
-    ScopedMem<TCHAR> exePath(GetExePath());
-    path.AppendFmt(L"%s", AsWStrQ(exePath));
-#endif
-    return path.StealData();
 }
 
 #if 0
@@ -318,18 +267,11 @@ static bool InitializeDbgHelp()
         return false;
     }
 
-    WCHAR *symPath = GetSymbolPath();
-    if (!symPath) {
-        LogDbg("InitializeDbgHelp(): GetSymbolPath() failed");
-        return false;
-    }
-
     if (_SymInitializeW) {
-        gSymInitializeOk = _SymInitializeW(GetCurrentProcess(), symPath, TRUE);
+        gSymInitializeOk = _SymInitializeW(GetCurrentProcess(), gSymbolPathW, TRUE);
     } else {
-        ScopedMem<char> tmp(str::conv::ToAnsi(AsTStrQ(symPath)));
-        if (tmp)
-            gSymInitializeOk = _SymInitialize(GetCurrentProcess(), tmp, TRUE);
+        if (gSymbolPathA)
+            gSymInitializeOk = _SymInitialize(GetCurrentProcess(), gSymbolPathA, TRUE);
     }
 
     if (!gSymInitializeOk) {
@@ -371,120 +313,6 @@ static BOOL CALLBACK OpenMiniDumpCallback(void* /*param*/, PMINIDUMP_CALLBACK_IN
     default:
         return FALSE;
     }
-}
-
-static char *OsNameFromVer(OSVERSIONINFOEX ver)
-{
-    if (VER_PLATFORM_WIN32_NT != ver.dwPlatformId)
-        return "9x";
-
-    if (ver.dwMajorVersion == 6 && ver.dwMinorVersion == 1)
-        return "7"; // or Server 2008
-    if (ver.dwMajorVersion == 6 && ver.dwMinorVersion == 0)
-        return "Vista";
-    if (ver.dwMajorVersion == 5 && ver.dwMinorVersion == 2)
-        return "Server 2003";
-    if (ver.dwMajorVersion == 5 && ver.dwMinorVersion == 1)
-        return "XP";
-    if (ver.dwMajorVersion == 5 && ver.dwMinorVersion == 0)
-        return "2000";
-
-    // either a newer or an older NT version, neither of which we support
-    static char osVerStr[32];
-    wsprintfA(osVerStr, "NT %d.%d", ver.dwMajorVersion, ver.dwMinorVersion);
-    return osVerStr;
-}
-
-static void GetOsVersion(str::Str<char>& s)
-{
-    OSVERSIONINFOEX ver;
-    ZeroMemory(&ver, sizeof(ver));
-    ver.dwOSVersionInfoSize = sizeof(ver);
-    BOOL ok = GetVersionEx((OSVERSIONINFO*)&ver);
-    if (!ok)
-        return;
-    char *os = OsNameFromVer(ver);
-    int servicePackMajor = ver.wServicePackMajor;
-    int servicePackMinor = ver.wServicePackMinor;
-    int buildNumber = ver.dwBuildNumber & 0xFFFF;
-#ifdef _WIN64
-    char *arch = "64-bit";
-#else
-    char *arch = IsRunningInWow64() ? "Wow64" : "32-bit";
-#endif
-    if (0 == servicePackMajor)
-        s.AppendFmt("OS: Windows %s build %d %s\r\n", os, buildNumber, arch);
-    else if (0 == servicePackMinor)
-        s.AppendFmt("OS: Windows %s SP%d build %d %s\r\n", os, servicePackMajor, buildNumber, arch);
-    else
-        s.AppendFmt("OS: Windows %s %d.%d build %d %s\r\n", os, servicePackMajor, servicePackMinor, buildNumber, arch);
-}
-
-static void GetProcessorName(str::Str<char>& s)
-{
-    TCHAR *name = ReadRegStr(HKEY_LOCAL_MACHINE, _T("HARDWARE\\DESCRIPTION\\System\\CentralProcessor"), _T("ProcessorNameString"));
-    if (!name) // if more than one processor
-        name = ReadRegStr(HKEY_LOCAL_MACHINE, _T("HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0"), _T("ProcessorNameString"));
-    if (!name)
-        return;
-
-    ScopedMem<char> tmp(str::conv::ToUtf8(name));
-    s.AppendFmt("Processor: %s\r\n", tmp);
-    free(name);
-}
-
-static void GetMachineName(str::Str<char>& s)
-{
-    TCHAR *s1 = ReadRegStr(HKEY_LOCAL_MACHINE, _T("HARDWARE\\DESCRIPTION\\System\\BIOS"), _T("SystemFamily"));
-    TCHAR *s2 = ReadRegStr(HKEY_LOCAL_MACHINE, _T("HARDWARE\\DESCRIPTION\\System\\BIOS"), _T("SystemVersion"));
-    ScopedMem<char> s1u(s1 ? str::conv::ToUtf8(s1) : NULL);
-    ScopedMem<char> s2u(s2 ? str::conv::ToUtf8(s2) : NULL);
-
-    if (!s1u && !s2u)
-        ; // pass
-    else if (!s1u)
-        s.AppendFmt("Machine: %s\r\n", s2u.Get());
-    else if (!s2u || str::EqI(s1u, s2u))
-        s.AppendFmt("Machine: %s\r\n", s1u.Get());
-    else
-        s.AppendFmt("Machine: %s %s\r\n", s1u.Get(), s2u.Get());
-
-    free(s1);
-    free(s2);
-}
-
-static void GetLanguage(str::Str<char>& s)
-{
-    char country[32] = { 0 }, lang[32] = { 0 };
-    GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SISO3166CTRYNAME, country, dimof(country) - 1);
-    GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SISO639LANGNAME, lang, dimof(lang) - 1);
-    s.AppendFmt("Lang: %s %s\r\n", lang, country);
-}
-
-static void GetSystemInfo(str::Str<char>& s)
-{
-    SYSTEM_INFO si;
-    GetSystemInfo(&si);
-    s.AppendFmt("Number Of Processors: %d\r\n", si.dwNumberOfProcessors);
-    GetProcessorName(s);
-
-    MEMORYSTATUSEX ms;
-    ms.dwLength = sizeof(ms);
-    GlobalMemoryStatusEx(&ms);
-
-    float physMemGB   = (float)ms.ullTotalPhys     / (float)(1024 * 1024 * 1024);
-    float totalPageGB = (float)ms.ullTotalPageFile / (float)(1024 * 1024 * 1024);
-    DWORD usedPerc = ms.dwMemoryLoad;
-    s.AppendFmt("Physical Memory: %.2f GB\r\nCommit Charge Limit: %.2f GB\r\nMemory Used: %d%%\r\n", physMemGB, totalPageGB, usedPerc);
-
-    GetMachineName(s);
-    GetLanguage(s);
-
-    // Note: maybe more information, like:
-    // * amount of memory used by Sumatra,
-    // * graphics card and its driver version
-    // * processor capabilities (mmx, sse, sse2 etc.)
-    // * list of currently opened documents (by traversing gWindows)
 }
 
 // return true for static, single executable build, false for a build with libmupdf.dll
@@ -864,19 +692,6 @@ static void GetExceptionInfo(str::Str<char>& s, EXCEPTION_POINTERS *excPointers)
     GetCallstack(s, *ctx, GetCurrentThread());
 }
 
-static void GetProgramInfo(str::Str<char>& s)
-{
-    s.AppendFmt("Ver: %s", QM(CURR_VERSION));
-#ifdef SVN_PRE_RELEASE_VER
-    s.AppendFmt(".%s pre-release", QM(SVN_PRE_RELEASE_VER));   
-#endif
-#ifdef DEBUG
-    s.Append(" dbg");
-#endif
-    s.Append("\r\n");
-    s.AppendFmt("Browser plugin: %s\r\n", gPluginMode ? "yes" : "no");
-}
-
 // in SumatraPDF.cpp
 extern void GetFilesInfo(str::Str<char>& s);
 
@@ -890,15 +705,9 @@ static char *BuildCrashInfoText()
     }
 
     str::Str<char> s(16 * 1024, gCrashHandlerAllocator);
-    GetProgramInfo(s);
-    LogDbgDetail("BuildCrashInfoText(): 1");
-    GetOsVersion(s);
-    LogDbgDetail("BuildCrashInfoText(): 2");
-    GetSystemInfo(s);
-    LogDbgDetail("BuildCrashInfoText(): 3");
-    GetFilesInfo(s);
-    s.Append("\r\n");
-    LogDbgDetail("BuildCrashInfoText(): 4");
+    if (gSystemInfo)
+        s.Append(gSystemInfo);
+
     GetExceptionInfo(s, gMei.ExceptionPointers);
     LogDbgDetail("BuildCrashInfoText(): 5");
     GetAllThreadsCallstacks(s);
@@ -1034,7 +843,7 @@ void SubmitCrashInfo()
     }
 
     if (!HasOwnSymbols()) {
-        if (!DownloadSymbols(GetCrashDumpDir())) {
+        if (!DownloadSymbols(gCrashDumpDir)) {
             LogDbg("SubmitCrashInfo(): failed to download symbols");
             goto Exit;
         }
@@ -1058,7 +867,7 @@ void SubmitCrashInfo()
     }
     SendCrashInfo(s);
 Exit:
-    free(s);
+    gCrashHandlerAllocator->Free(s);
 }
 
 static void WriteMiniDump()
@@ -1127,16 +936,249 @@ static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS *exceptionInfo)
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
-void InstallCrashHandler(const TCHAR *crashDumpPath)
+static void GetProgramInfo(str::Str<char>& s)
 {
-    if (NULL == crashDumpPath)
+    s.AppendFmt("Ver: %s", QM(CURR_VERSION));
+#ifdef SVN_PRE_RELEASE_VER
+    s.AppendFmt(".%s pre-release", QM(SVN_PRE_RELEASE_VER));   
+#endif
+#ifdef DEBUG
+    s.Append(" dbg");
+#endif
+    s.Append("\r\n");
+    s.AppendFmt("Browser plugin: %s\r\n", gPluginMode ? "yes" : "no");
+}
+
+static char *OsNameFromVer(OSVERSIONINFOEX ver)
+{
+    if (VER_PLATFORM_WIN32_NT != ver.dwPlatformId)
+        return "9x";
+
+    if (ver.dwMajorVersion == 6 && ver.dwMinorVersion == 1)
+        return "7"; // or Server 2008
+    if (ver.dwMajorVersion == 6 && ver.dwMinorVersion == 0)
+        return "Vista";
+    if (ver.dwMajorVersion == 5 && ver.dwMinorVersion == 2)
+        return "Server 2003";
+    if (ver.dwMajorVersion == 5 && ver.dwMinorVersion == 1)
+        return "XP";
+    if (ver.dwMajorVersion == 5 && ver.dwMinorVersion == 0)
+        return "2000";
+
+    // either a newer or an older NT version, neither of which we support
+    static char osVerStr[32];
+    wsprintfA(osVerStr, "NT %d.%d", ver.dwMajorVersion, ver.dwMinorVersion);
+    return osVerStr;
+}
+
+static void GetOsVersion(str::Str<char>& s)
+{
+    OSVERSIONINFOEX ver;
+    ZeroMemory(&ver, sizeof(ver));
+    ver.dwOSVersionInfoSize = sizeof(ver);
+    BOOL ok = GetVersionEx((OSVERSIONINFO*)&ver);
+    if (!ok)
+        return;
+    char *os = OsNameFromVer(ver);
+    int servicePackMajor = ver.wServicePackMajor;
+    int servicePackMinor = ver.wServicePackMinor;
+    int buildNumber = ver.dwBuildNumber & 0xFFFF;
+#ifdef _WIN64
+    char *arch = "64-bit";
+#else
+    char *arch = IsRunningInWow64() ? "Wow64" : "32-bit";
+#endif
+    if (0 == servicePackMajor)
+        s.AppendFmt("OS: Windows %s build %d %s\r\n", os, buildNumber, arch);
+    else if (0 == servicePackMinor)
+        s.AppendFmt("OS: Windows %s SP%d build %d %s\r\n", os, servicePackMajor, buildNumber, arch);
+    else
+        s.AppendFmt("OS: Windows %s %d.%d build %d %s\r\n", os, servicePackMajor, servicePackMinor, buildNumber, arch);
+}
+
+static void GetProcessorName(str::Str<char>& s)
+{
+    TCHAR *name = ReadRegStr(HKEY_LOCAL_MACHINE, _T("HARDWARE\\DESCRIPTION\\System\\CentralProcessor"), _T("ProcessorNameString"));
+    if (!name) // if more than one processor
+        name = ReadRegStr(HKEY_LOCAL_MACHINE, _T("HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0"), _T("ProcessorNameString"));
+    if (!name)
         return;
 
-    gCrashDumpPath.Set(str::Dup(crashDumpPath));
-    if (!gDumpEvent && !gDumpThread) {
-        gDumpEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-        gDumpThread = CreateThread(NULL, 0, CrashDumpThread, NULL, 0, 0);
-
-        SetUnhandledExceptionFilter(DumpExceptionHandler);
-    }
+    ScopedMem<char> tmp(str::conv::ToUtf8(name));
+    s.AppendFmt("Processor: %s\r\n", tmp);
+    free(name);
 }
+
+static void GetMachineName(str::Str<char>& s)
+{
+    TCHAR *s1 = ReadRegStr(HKEY_LOCAL_MACHINE, _T("HARDWARE\\DESCRIPTION\\System\\BIOS"), _T("SystemFamily"));
+    TCHAR *s2 = ReadRegStr(HKEY_LOCAL_MACHINE, _T("HARDWARE\\DESCRIPTION\\System\\BIOS"), _T("SystemVersion"));
+    ScopedMem<char> s1u(s1 ? str::conv::ToUtf8(s1) : NULL);
+    ScopedMem<char> s2u(s2 ? str::conv::ToUtf8(s2) : NULL);
+
+    if (!s1u && !s2u)
+        ; // pass
+    else if (!s1u)
+        s.AppendFmt("Machine: %s\r\n", s2u.Get());
+    else if (!s2u || str::EqI(s1u, s2u))
+        s.AppendFmt("Machine: %s\r\n", s1u.Get());
+    else
+        s.AppendFmt("Machine: %s %s\r\n", s1u.Get(), s2u.Get());
+
+    free(s1);
+    free(s2);
+}
+
+static void GetLanguage(str::Str<char>& s)
+{
+    char country[32] = { 0 }, lang[32] = { 0 };
+    GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SISO3166CTRYNAME, country, dimof(country) - 1);
+    GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SISO639LANGNAME, lang, dimof(lang) - 1);
+    s.AppendFmt("Lang: %s %s\r\n", lang, country);
+}
+
+static void GetSystemInfo(str::Str<char>& s)
+{
+    SYSTEM_INFO si;
+    GetSystemInfo(&si);
+    s.AppendFmt("Number Of Processors: %d\r\n", si.dwNumberOfProcessors);
+    GetProcessorName(s);
+
+    MEMORYSTATUSEX ms;
+    ms.dwLength = sizeof(ms);
+    GlobalMemoryStatusEx(&ms);
+
+    float physMemGB   = (float)ms.ullTotalPhys     / (float)(1024 * 1024 * 1024);
+    float totalPageGB = (float)ms.ullTotalPageFile / (float)(1024 * 1024 * 1024);
+    DWORD usedPerc = ms.dwMemoryLoad;
+    s.AppendFmt("Physical Memory: %.2f GB\r\nCommit Charge Limit: %.2f GB\r\nMemory Used: %d%%\r\n", physMemGB, totalPageGB, usedPerc);
+
+    GetMachineName(s);
+    GetLanguage(s);
+
+    // Note: maybe more information, like:
+    // * amount of memory used by Sumatra,
+    // * graphics card and its driver version
+    // * processor capabilities (mmx, sse, sse2 etc.)
+    // * list of currently opened documents (by traversing gWindows)
+}
+
+static void BuildSystemInfo()
+{
+    str::Str<char> s(1024);
+    GetProgramInfo(s);
+    GetOsVersion(s);
+    GetSystemInfo(s);
+    GetFilesInfo(s);
+    s.Append("\r\n");
+    gSystemInfo = s.StealData();
+}
+
+static bool BuilCrashDumpDir()
+{
+    TCHAR *symDir = AppGenDataFilename(_T("symbols"));
+    if (symDir && !dir::Create(symDir)) {
+        free(symDir);
+        LogDbg("GetCrashDumpDir(): couldn't get symbols dir");
+        return false;
+    }
+    gCrashDumpDir = symDir;
+    return true;
+}
+
+/* Setting symbol path:
+add GetEnvironmentVariableA("_NT_SYMBOL_PATH", ..., ...)
+add GetEnvironmentVariableA("_NT_ALTERNATE_SYMBOL_PATH", ..., ...)
+add: "srv*c:\\symbols*http://msdl.microsoft.com/download/symbols;cache*c:\\symbols"
+(except a better directory than c:\\symbols
+
+Note: I've decided to use just one, known to me location rather than the
+more comprehensive list. It works so why give dbghelp.dll more directories
+to scan?
+*/
+static bool BuildSymbolPath()
+{
+    str::Str<WCHAR> path(1024);
+
+#if 0
+    WCHAR buf[512];
+    DWORD res = GetEnvironmentVariableW(L"_NT_SYMBOL_PATH", buf, dimof(buf));
+    if (0 < res && res < dimof(buf)) {
+        path.Append(buf);
+        path.Append(L";");
+    }
+    res = GetEnvironmentVariableW(L"_NT_ALTERNATE_SYMBOL_PATH", buf, dimof(buf));
+    if (0 < res && res < dimof(buf)) {
+        path.Append(buf);
+        path.Append(L";");
+    }
+#endif
+
+    path.Append(AsWStrQ(gCrashDumpDir));
+    //path.Append(_T(";"));
+#if 0
+    // this probably wouldn't work anyway because it requires symsrv.dll in the same directory
+    // as dbghelp.dll and it's not present with the os-provided dbghelp.dll
+    path.Append(L"srv*");
+    path.Append(symDir);
+    path.Append(L"*http://msdl.microsoft.com/download/symbols;cache*");
+    path.Append(symDir);
+#endif
+#if 0
+    // when running local builds, *.pdb is in the same dir as *.exe 
+    ScopedMem<TCHAR> exePath(GetExePath());
+    path.AppendFmt(L"%s", AsWStrQ(exePath));
+#endif
+    gSymbolPathW = path.StealData();
+    if (!gSymbolPathW)
+        return false;
+
+    // gSymbolPathA can be NULL in case gSymbolPathW exists but
+    // cannot be represented in Ansii
+    gSymbolPathA = str::conv::ToAnsi(AsTStrQ(gSymbolPathW));
+    return true;
+}
+
+void InstallCrashHandler(const TCHAR *crashDumpPath)
+{
+    CrashAlwaysIf(gDumpEvent || gDumpThread);
+
+    if (NULL == crashDumpPath)
+        return;
+    if (!BuilCrashDumpDir())
+        return;
+    if (!BuildSymbolPath())
+        return;
+    BuildSystemInfo();
+
+    // we pre-allocate as much as possible to minimize allocations
+    // when crash handler is invoked. It's ok to use standard
+    // allocation functions here.
+    gCrashHandlerHeap = HeapCreate(0, 128*1024, 0);
+    gCrashHandlerAllocator = new CrashHandlerAllocator();
+    gCrashDumpPath = str::Dup(crashDumpPath);
+
+    gDumpEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+    if (!gDumpEvent)
+        return;
+    gDumpThread = CreateThread(NULL, 0, CrashDumpThread, NULL, 0, 0);
+    if (!gDumpThread)
+        return;
+    gPrevExceptionFilter = SetUnhandledExceptionFilter(DumpExceptionHandler);
+}
+
+void UninstallCrashHandler()
+{
+    if (gDumpEvent)
+        SetUnhandledExceptionFilter(gPrevExceptionFilter);
+    // TODO: destroy gDumpThread?
+
+    free(gCrashDumpPath);
+    free(gCrashDumpDir);
+    free(gSymbolPathW);
+    free(gSymbolPathA);
+    free(gSystemInfo);
+    delete gCrashHandlerAllocator;
+    HeapDestroy(gCrashHandlerHeap);
+}
+
