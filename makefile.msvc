@@ -133,7 +133,7 @@ MICROCRT_WIN_OBJS = $(MICROCRT_OBJS) $(OS)\ucrt_win.obj
 
 MICROCRT_DLL_OBJS = $(MICROCRT_OBJS) $(OS)\ucrt_dll.obj
 
-MICROCRT_CON_OBJS = $(MICROCRT_OBJS) $(OS)\ucrt_con.obj
+MICROCRT_CONSOLE_OBJS = $(MICROCRT_OBJS) $(OS)\ucrt_console.obj
 
 UTILS_OBJS = \
 	$(OS)\BencUtil.obj $(OS)\FileUtil.obj $(OS)\Http.obj \
