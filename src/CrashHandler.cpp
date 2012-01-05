@@ -22,6 +22,7 @@
 #include "translations.h"
 
 // TODO: UnzipFiles() must take allocator
+//       (UnzipFiles' Vec never allocates data on the heap, however unzip.c does!)
 
 #ifndef CRASH_REPORT_URL
 #define CRASH_REPORT_URL _T("http://blog.kowalczyk.info/software/sumatrapdf/develop.html")
@@ -151,17 +152,24 @@ static SymGetLineFromAddr64Proc *       _SymGetLineFromAddr64;
    the probability should be greatly reduced.
 */
 
-static HANDLE gCrashHandlerHeap = NULL;
-
 class CrashHandlerAllocator : public Allocator {
+    HANDLE allocHeap;
+
 public:
-    CrashHandlerAllocator() {}
-    virtual ~CrashHandlerAllocator() {}
+    CrashHandlerAllocator() {
+        allocHeap = HeapCreate(0, 128 * 1024, 0);
+    }
+    virtual ~CrashHandlerAllocator() {
+        HeapDestroy(allocHeap);
+    }
     virtual void *Alloc(size_t size) {
-        return HeapAlloc(gCrashHandlerHeap, 0, size);
+        return HeapAlloc(allocHeap, 0, size);
+    }
+    virtual void *Realloc(void *mem, size_t size) {
+        return HeapReAlloc(allocHeap, 0, mem, size);
     }
     virtual void Free(void *mem) {
-        HeapFree(gCrashHandlerHeap, 0, mem);
+        HeapFree(allocHeap, 0, mem);
     }
 };
 
@@ -277,9 +285,8 @@ static bool InitializeDbgHelp()
 
     if (_SymInitializeW) {
         gSymInitializeOk = _SymInitializeW(GetCurrentProcess(), gSymbolPathW, TRUE);
-    } else {
-        if (gSymbolPathA)
-            gSymInitializeOk = _SymInitialize(GetCurrentProcess(), gSymbolPathA, TRUE);
+    } else if (gSymbolPathA) {
+        gSymInitializeOk = _SymInitialize(GetCurrentProcess(), gSymbolPathA, TRUE);
     }
 
     if (!gSymInitializeOk) {
@@ -853,7 +860,7 @@ Exit:
 
 static void WriteMiniDump()
 {
-    if (NULL == _MiniDumpWriteDump)
+    if (!_MiniDumpWriteDump)
         return;
 
     HANDLE dumpFile = CreateFile(gCrashDumpPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, NULL);
@@ -1060,6 +1067,10 @@ static void BuildSystemInfo()
 
 static bool BuilCrashDumpPaths()
 {
+    // TODO: move into %TEMP%? or rename? currently the
+    //       "symbols" folder isn't obviously related to
+    //       SumatraPDF when running in portable mode from
+    //       a folder containing multiple applications
     TCHAR *symDir = AppGenDataFilename(_T("symbols"));
     if (!symDir)
         return false;
@@ -1153,7 +1164,7 @@ void InstallCrashHandler(const TCHAR *crashDumpPath)
 {
     assert(!gDumpEvent && !gDumpThread);
 
-    if (NULL == crashDumpPath)
+    if (!crashDumpPath)
         return;
     if (!BuilCrashDumpPaths())
         return;
@@ -1165,7 +1176,6 @@ void InstallCrashHandler(const TCHAR *crashDumpPath)
     // we pre-allocate as much as possible to minimize allocations
     // when crash handler is invoked. It's ok to use standard
     // allocation functions here.
-    gCrashHandlerHeap = HeapCreate(0, 128*1024, 0);
     gCrashHandlerAllocator = new CrashHandlerAllocator();
     gCrashDumpPath = str::Dup(crashDumpPath);
 
@@ -1194,6 +1204,4 @@ void UninstallCrashHandler()
     free(gSymbolPathA);
     free(gSystemInfo);
     delete gCrashHandlerAllocator;
-    HeapDestroy(gCrashHandlerHeap);
 }
-

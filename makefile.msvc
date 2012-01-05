@@ -629,7 +629,6 @@ $(OS)\UnitTests.obj: src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\UtilTests.obj: src\utils\BaseUtil.h src\utils\BencUtil.h src\utils\FileUtil.h
 $(OS)\UtilTests.obj: src\utils\GeomUtil.h src\utils\Scopes.h src\utils\SimpleLog.h
 $(OS)\UtilTests.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
-$(OS)\Vec.obj: src\utils\BaseUtil.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\WindowInfo.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
 $(OS)\WindowInfo.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
 $(OS)\WindowInfo.obj: src\EngineManager.h src\EpubEngine.h src\FileWatch.h

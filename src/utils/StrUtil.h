@@ -164,19 +164,24 @@ void CrashMe();
 // Conservatively I only enable it for debug and pre-release builds although
 // I would be fine with enabling it all builds.
 // To crash uncoditionally, there is CrashAlwaysIf()
-// Juast as weith assert(), the condition is not guaranteed to be executed
+// Just as with assert(), the condition is not guaranteed to be executed
 // in some builds, so it shouldn't contain the actual logic of the code
 #if defined(SVN_PRE_RELEASE_VER) || defined(DEBUG)
 #define CrashIf(exp) \
     if (exp) \
-        CrashMe();
+        CrashMe(); \
+    /* prevent CrashIf(...) else ... from compiling accidentally */ \
+    else \
+        NoOp()
 #else
 #define CrashIf(exp) NoOp()
 #endif
 
 #define CrashAlwaysIf(exp) \
     if (exp) \
-        CrashMe();
+        CrashMe(); \
+    else \
+        NoOp()
 
 // Quick conversions are no-ops for UNICODE builds
 #ifdef UNICODE

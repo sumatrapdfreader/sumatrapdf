@@ -14,11 +14,12 @@ class Allocator {
 public:
     Allocator() {}
     virtual ~Allocator() { };
-    virtual void *Alloc(size_t size) { CrashMe(); return NULL; };
-    virtual void Free(void *mem) {  CrashMe();  };
+    virtual void *Alloc(size_t size) = 0;
+    virtual void *Realloc(void *mem, size_t size) = 0;
+    virtual void Free(void *mem) = 0;
 
-    void *Dup(void *mem, size_t size) {
-        void *newMem = Alloc(size);
+    void *Dup(void *mem, size_t size, size_t padding=0) {
+        void *newMem = Alloc(size + padding);
         if (newMem)
             memcpy(newMem, mem, size);
         return newMem;
@@ -31,6 +32,9 @@ public:
     virtual ~MallocAllocator() {}
     virtual void *Alloc(size_t size) {
         return malloc(size);
+    }
+    virtual void *Realloc(void *mem, size_t size) {
+        return realloc(mem, size);
     }
     virtual void Free(void *mem) {
         free(mem);
@@ -71,15 +75,17 @@ protected:
             newCap = initialCap;
 
         size_t newElCount = newCap + PADDING;
-        CrashAlwaysIf(newElCount >= INT_MAX / sizeof(T));
+        CrashAlwaysIf(newElCount >= SIZE_MAX / sizeof(T));
 
         size_t allocSize = newElCount * sizeof(T);
-        T * newEls = (T*)allocator->Alloc(allocSize);
-        memset(newEls, 0, allocSize);
-        memcpy(newEls, els, len * sizeof(T));
-        FreeEls();
+        size_t newPadding = allocSize - len * sizeof(T);
+        if (buf == els)
+            els = (T *)allocator->Dup(buf, len * sizeof(T), newPadding);
+        else
+            els = (T *)allocator->Realloc(els, allocSize);
+        CrashAlwaysIf(!els);
+        memset(els + len, 0, newPadding);
         cap = newCap;
-        els = newEls;
     }
 
     T* MakeSpaceAt(size_t idx, size_t count) {
@@ -101,11 +107,11 @@ protected:
 
 public:
     // allocator must outlive Vec
-    Vec(size_t initCap=0, Allocator *allocator = NULL) 
+    Vec(size_t initCap=0, Allocator *allocator=NULL) 
         : initialCap(initCap), allocator(allocator)
     {
         els = buf;
-        if (NULL == this->allocator)
+        if (!allocator)
             this->allocator = &mallocAllocator;
         Reset();
     }
@@ -224,7 +230,7 @@ public:
     T *StealData() {
         T* res = els;
         if (els == buf)
-            res = (T*)allocator->Dup(buf, (len + PADDING) * sizeof(T));
+            res = (T *)allocator->Dup(buf, (len + PADDING) * sizeof(T));
         els = buf;
         Reset();
         return res;
@@ -287,7 +293,7 @@ template <typename T>
 
 class Str : public Vec<T> {
 public:
-    Str(size_t initCap=0, Allocator *allocator = NULL) : Vec(initCap, allocator) { }
+    Str(size_t initCap=0, Allocator *allocator=NULL) : Vec(initCap, allocator) { }
 
     void Append(T c)
     {
