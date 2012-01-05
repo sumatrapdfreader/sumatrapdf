@@ -297,7 +297,7 @@ $(ENGINEDUMP_APP): $(ENGINEDUMP_OBJS)
 	$(CC) $(MICROCRT_CFLAGS) /Fo$(OS)\ /Fd$(O)\vc80.pdb $<
 
 # http://msdn.microsoft.com/en-us/library/s0ksfwcf.aspx
-{src\ucrt}.asm{$(OS)}.obj::
+{src\ucrt}.asm{$(OS)}.obj:
 	ml /c /coff /Fo$(OS)\ $<
 
 # utils directory

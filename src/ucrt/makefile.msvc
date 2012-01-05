@@ -47,7 +47,7 @@ $(TEST_CON_APP): $(O)\test_con.obj $(O)\test.obj $(MICROCRT_CON_OBJS)
 	$(CC) $(CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 # http://msdn.microsoft.com/en-us/library/s0ksfwcf.aspx
-{}.asm{$(O)}.obj::
+{}.asm{$(O)}.obj:
 	ml /c /coff /Fo$(O)\ $<
 
 force: ;
