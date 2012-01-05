@@ -10,7 +10,7 @@
 #   note: building on X64 isn't officially supported and might unintentionally be broken
 #WITH_ANALYZE=yes
 #   use /analyze compiler flag 
-#MINICRT=yes
+#WITH_MICROCRT=yes
 #   set to yes to build with ucrt, to see how much we save
 #   note: doesn't work yet. Doesn't find few libc functions that are not implemented. 
 #   also probably wouldn't work for 64-bit builds due to ...?
@@ -28,7 +28,7 @@ O = obj-$(CFG)
 # for x86 : obj-dbg and obj-rel ; for x64 : obj-dbg64 and obj-rel64
 !if "$(PLATFORM)"=="X64"
 O = $(O)64
-MINICRT=no # uCRT not tested on x64
+WITH_MICROCRT=no # uCRT not tested on x64
 !endif
 
 !if "$(MUPDF_DIR)"==""
@@ -81,7 +81,7 @@ UNINSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/Isrc/utils /Isrc/utils/msvc /Isrc /Isrc/installer \
 	/D "BUILD_UNINSTALLER"
 
-MINICRT_CFLAGS = $(CFLAGS)
+MICROCRT_CFLAGS = $(CFLAGS)
 
 !if "$(CFG)"=="dbg"
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "DEBUG" /D "_DEBUG"
@@ -124,18 +124,16 @@ BROWSER_PLUGIN_CFLAGS = $(CFLAGS) /Isrc/utils /Isrc/utils/msvc
 
 ENGINEDUMP_APP = $(O)\EngineDump.exe
 
-MINICRT_OBJS = \
-	$(OS)\ucrt.obj $(OS)\ucrt_asm.obj $(OS)\ucrt_math.obj $(OS)\_wstat64i32.obj $(OS)\_stat64i32.obj \
-	$(OS)\msvcrt_dll.lib $(OS)\ntdll_dll.lib
+MICROCRT_OBJS = \
+	$(OS)\ucrt.obj $(OS)\ucrt_asm.obj $(OS)\ucrt_math.obj \
+	$(OS)\_wstat64i32.obj $(OS)\_stat64i32.obj \
+	src\ucrt\lib\msvcrt_dll.lib src\ucrt\lib\ntdll_dll.lib
 
-MINICRT_WIN_OBJS = \
-	$(MINICRT_OBJS) $(OS)\ucrt_win.obj
+MICROCRT_WIN_OBJS = $(MICROCRT_OBJS) $(OS)\ucrt_win.obj
 
-MINICRT_DLL_OBJS = \
-	$(MINICRT_OBJS) $(OS)\ucrt_dll.obj
+MICROCRT_DLL_OBJS = $(MICROCRT_OBJS) $(OS)\ucrt_dll.obj
 
-MINICRT_CON_OBJS = \
-	$(MINICRT_OBJS) $(OS)\ucrt_con.obj
+MICROCRT_CON_OBJS = $(MICROCRT_OBJS) $(OS)\ucrt_con.obj
 
 UTILS_OBJS = \
 	$(OS)\BencUtil.obj $(OS)\FileUtil.obj $(OS)\Http.obj \
@@ -193,14 +191,14 @@ ENGINEDUMP_OBJS = \
 	$(OS)\EngineDump.obj $(ENGINE_OBJS) $(LIBMUPDF_LIB) $(OS)\MuPDF_Exports.obj \
 	$(UTILS_OBJS) $(BZIP2_OBJS) $(MINIZIP_OBJS) $(UNRAR_OBJS)
 
-!if "$(MINICRT)"=="yes"
-ET_OBJS = $(ET_OBJS) $(MINICRT_WIN_OBJS)
-INSTALLER_OBJS = $(INSTALLER_OBJS) $(MINICRT_WIN_OBJS)
-UNINSTALLER_OBJS = $(UNINSTALLER_OBJS) $(MINICRT_WIN_OBJS)
-SUMATRA_OBJS = $(SUMATRA_OBJS) $(MINICRT_WIN_OBJS)
-PDFFILTER_OBJS = $(PDFFILTER_OBJS) $(MINICRT_DLL_OBJS)
-PDFPREVIEW_OBJS = $(PDFPREVIEW_OBJS) $(MINICRT_DLL_OBJS)
-BROWSER_PLUGIN_OBJS = $(BROWSER_PLUGIN_OBJS) $(MINICRT_DLL_OBJS)
+!if "$(WITH_MICROCRT)"=="yes"
+ET_OBJS 		 	= $(ET_OBJS) $(MICROCRT_WIN_OBJS)
+INSTALLER_OBJS 	 	= $(INSTALLER_OBJS) $(MICROCRT_WIN_OBJS)
+UNINSTALLER_OBJS 	= $(UNINSTALLER_OBJS) $(MICROCRT_WIN_OBJS)
+SUMATRA_OBJS 	 	= $(SUMATRA_OBJS) $(MICROCRT_WIN_OBJS)
+PDFFILTER_OBJS 		= $(PDFFILTER_OBJS) $(MICROCRT_DLL_OBJS)
+PDFPREVIEW_OBJS 	= $(PDFPREVIEW_OBJS) $(MICROCRT_DLL_OBJS)
+BROWSER_PLUGIN_OBJS = $(BROWSER_PLUGIN_OBJS) $(MICROCRT_DLL_OBJS)
 !endif
 
 !if "$(BUILD_TEX_IFILTER)"!=""
@@ -293,22 +291,14 @@ $(ENGINEDUMP_APP): $(ENGINEDUMP_OBJS)
 
 # ucrt directory
 {src\ucrt}.cpp{$(OS)}.obj::
-	$(CC) $(MINICRT_CFLAGS) /Fo$(OS)\ /Fd$(O)\vc80.pdb $<
+	$(CC) $(MICROCRT_CFLAGS) /Fo$(OS)\ /Fd$(O)\vc80.pdb $<
 
 {src\ucrt\mingw}.c{$(OS)}.obj::
-	$(CC) $(MINICRT_CFLAGS) /Fo$(OS)\ /Fd$(O)\vc80.pdb $<
-
+	$(CC) $(MICROCRT_CFLAGS) /Fo$(OS)\ /Fd$(O)\vc80.pdb $<
 
 # http://msdn.microsoft.com/en-us/library/s0ksfwcf.aspx
 {src\ucrt}.asm{$(OS)}.obj::
 	ml /c /coff /Fo$(OS)\ $<
-
-# TODO: replace with a single rule
-$(OS)\msvcrt_dll.lib: src\ucrt\msvcrt.def
-	lib /def:src\ucrt\msvcrt.def /OUT:$(OS)\msvcrt_dll.lib
-
-$(OS)\ntdll_dll.lib: src\ucrt\ntdll.def
-	lib /def:src\ucrt\ntdll.def /OUT:$(OS)\ntdll_dll.lib
 
 # utils directory
 {src/utils}.cpp{$(OS)}.obj::
