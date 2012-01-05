@@ -144,7 +144,7 @@ void benchrenderpage(pdf_xref *xref, fz_glyph_cache *drawcache, pdf_page *page, 
 	fz_clear_pixmap_with_color(pix, 0xFF);
 	dev = fz_new_draw_device(xref->ctx, drawcache, pix);
 	fz_try(xref->ctx) {
-		pdf_run_page(xref, page, dev, ctm);
+		pdf_run_page(xref, page, dev, ctm, NULL);
 		timerstop(&timer);
 		logbench("pagerender %3d: %.2f ms\n", pagenum, timeinms(&timer));
 	}
