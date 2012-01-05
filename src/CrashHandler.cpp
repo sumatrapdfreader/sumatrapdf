@@ -692,9 +692,6 @@ static void GetExceptionInfo(str::Str<char>& s, EXCEPTION_POINTERS *excPointers)
     GetCallstack(s, *ctx, GetCurrentThread());
 }
 
-// in SumatraPDF.cpp
-extern void GetFilesInfo(str::Str<char>& s);
-
 static char *BuildCrashInfoText()
 {
     LogDbgDetail("BuildCrashInfoText(): start");
@@ -1063,6 +1060,9 @@ static void GetSystemInfo(str::Str<char>& s)
     // * list of currently opened documents (by traversing gWindows)
 }
 
+// in SumatraPDF.cpp
+extern void GetFilesInfo(str::Str<char>& s);
+
 static void BuildSystemInfo()
 {
     str::Str<char> s(1024);
@@ -1141,7 +1141,7 @@ static bool BuildSymbolPath()
 
 void InstallCrashHandler(const TCHAR *crashDumpPath)
 {
-    CrashAlwaysIf(gDumpEvent || gDumpThread);
+    assert(!gDumpEvent && !gDumpThread);
 
     if (NULL == crashDumpPath)
         return;
