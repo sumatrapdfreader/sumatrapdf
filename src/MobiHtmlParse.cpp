@@ -6,11 +6,10 @@
 
 struct HtmlToken {
     enum TokenType {
-        StartTag,       // <foo>
-        EndTag,         // </foo>
-        StartEndTag,    // <foo/>
-        Text,           // <foo>text</foo> => "text"
-        Finished,
+        StartTag,           // <foo>
+        EndTag,             // </foo>
+        EmptyElementTag,    // <foo/>
+        Text,               // <foo>text</foo> => "text"
         Error
     };
 
@@ -24,10 +23,9 @@ struct HtmlToken {
 
     bool IsStartTag() const { return type == StartTag; }
     bool IsEndTag() const { return type == EndTag; }
-    bool IsStartEndTag() const { return type == StartEndTag; }
-    bool IsTag() const { return IsStartTag() || IsEndTag() || IsStartEndTag(); }
+    bool IsEmptyElementEndTag() const { return type == EmptyElementTag; }
+    bool IsTag() const { return IsStartTag() || IsEndTag() || IsEmptyElementEndTag(); }
     bool IsText() const { return type == Text; }
-    bool IsFinished() const { return type == Finished; }
     bool IsError() const { return type == Error; }
 
     void SetError(ParsingError err, uint8_t *errContext) {
@@ -42,6 +40,9 @@ struct HtmlToken {
     size_t          sLen;
 };
 
+/* A very simple pull html parser. Simply call Next() to get the next part of
+html, which can be one one of 3 tag types or error. If a tag has attributes,
+the caller has to parse them out. */
 class HtmlPullParser {
     uint8_t *   s;
     uint8_t *   currPos;
@@ -86,14 +87,13 @@ static bool IsSpaceOnly(uint8_t *s, size_t len)
     return true;
 }
 
+// Returns next part of html or NULL if finished
 HtmlToken *HtmlPullParser::Next()
 {
     uint8_t *start;
  
-    if (!*currPos) {
-        currToken.type = HtmlToken::Finished;
-        return &currToken;
-    }
+    if (!*currPos)
+        return NULL;
 
     if (s == currPos) {
         // at the beginning, we expect a tag
@@ -140,7 +140,7 @@ Next:
         len -= 1;
     } else if ('/' == currPos[-1]) {
         // <foo/>
-        type = HtmlToken::StartEndTag;
+        type = HtmlToken::EmptyElementTag;
         len -= 1;
     }
     assert('>' == *currPos);
@@ -152,19 +152,21 @@ Next:
 }
 
 // convert mobi html to a format optimized for layout/display
+// returns NULL in case of an error
 // caller has to free() the result
 uint8_t *MobiHtmlToDisplay(uint8_t *s, size_t sLen, size_t& lenOut)
 {
-    Vec<uint8_t> res(sLen); // set estimated size to avoid allocations
+    Vec<uint8_t> res(sLen); // set estimated size to avoid re-allocations
     HtmlPullParser parser(s);
 
     for (;;)
     {
         HtmlToken *t = parser.Next();
-        if (t->IsFinished())
+        if (!t)
             break;
         if (t->IsError())
             return NULL;
+        // TODO: interpret the tag
     }
     lenOut = res.Size();
     uint8_t *resData = res.StealData();
