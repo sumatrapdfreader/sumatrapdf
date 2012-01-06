@@ -1199,6 +1199,7 @@ fz_display_list *fz_new_display_list(fz_context *ctx);
 void fz_free_display_list(fz_context *ctx, fz_display_list *list);
 fz_device *fz_new_list_device(fz_context *ctx, fz_display_list *list);
 void fz_execute_display_list(fz_display_list *list, fz_device *dev, fz_matrix ctm, fz_bbox area, fz_cookie *cookie);
+
 /* SumatraPDF: allow to optimize handling of single-image pages */
 int fz_list_is_single_image(fz_display_list *list);
 /* SumatraPDF: allow to detect pages requiring blending */

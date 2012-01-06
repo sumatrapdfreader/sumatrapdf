@@ -531,16 +531,7 @@ xps_decode_png(fz_context *ctx, byte *p, int total)
 	struct info png;
 	int stride;
 
-	/* SumatraPDF: fix memory leak */
-	fz_try(ctx)
-	{
 	png_read_image(ctx, &png, p, total);
-	}
-	fz_catch(ctx)
-	{
-		fz_free(png.ctx, png.samples);
-		fz_rethrow(ctx);
-	}
 
 	if (png.n == 3 || png.n == 4)
 		colorspace = fz_device_rgb;

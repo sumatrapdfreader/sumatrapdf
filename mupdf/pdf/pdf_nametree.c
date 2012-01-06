@@ -120,10 +120,6 @@ pdf_load_name_tree_imp(fz_obj *dict, pdf_xref *xref, fz_obj *node)
 
 	if (kids && !fz_dict_mark(node))
 	{
-		fz_obj *tmp = fz_new_null(ctx);
-		fz_dict_puts(node, ".seen", tmp);
-		fz_drop_obj(tmp);
-
 		for (i = 0; i < fz_array_len(kids); i++)
 			pdf_load_name_tree_imp(dict, xref, fz_array_get(kids, i));
 		fz_dict_unmark(node);

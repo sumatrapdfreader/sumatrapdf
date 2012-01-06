@@ -275,7 +275,6 @@ xps_parse_canvas(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri,
 		else
 		if (!strcmp(xml_tag(node), "Canvas.Resources") && xml_down(node))
 		{
-			/* SumatraPDF: don't warn about empty resource dictionaries */
 			new_dict = xps_parse_resource_dictionary(doc, base_uri, xml_down(node));
 			if (new_dict)
 			{

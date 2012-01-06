@@ -326,7 +326,7 @@ xps_draw_radial_gradient(xps_document *doc, fz_matrix ctm,
 	if (radius_y_att)
 		yrad = fz_atof(radius_y_att);
 
-	/* SumatraPDF: fix Zero-radius.xps */
+	/* SumatraPDF: fix "Zero-radius.xps" */
 	if (xrad == 0.0)
 		xrad = 0.01f;
 

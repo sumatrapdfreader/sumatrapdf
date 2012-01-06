@@ -356,10 +356,6 @@ pdf_transform_annot(pdf_annot *annot)
 	x = rect.x0 - bbox.x0;
 	y = rect.y0 - bbox.y0;
 
-	/* SumatraPDF: prevent matrices with undefined values */
-	if (fz_is_empty_rect(bbox))
-		w = h = 0;
-
 	annot->matrix = fz_concat(fz_scale(w, h), fz_translate(x, y));
 }
 
