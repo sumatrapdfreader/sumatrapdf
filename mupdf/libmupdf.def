@@ -99,6 +99,9 @@ EXPORTS
 	fz_is_dict
 	fz_is_indirect
 	fz_objcmp
+	fz_dict_marked
+	fz_dict_mark
+	fz_dict_unmark
 	fz_to_bool
 	fz_to_int
 	fz_to_real
@@ -322,9 +325,9 @@ EXPORTS
 	fz_paint_pixmap_with_rect
 	fz_blend_pixmap
 	fz_blend_pixel
-	fz_free_link_dest
 	fz_new_link
 	fz_free_link
+	fz_free_link_dest
 	fz_debug_outline_xml
 	fz_debug_outline
 	fz_free_outline

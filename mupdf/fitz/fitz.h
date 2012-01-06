@@ -1324,9 +1324,6 @@ struct fz_link_dest_s
 	fz_obj *extra; /* SumatraPDF: support extended link actions */
 };
 
-/* SumatraPDF: fix memory leak */
-void fz_free_link_dest(fz_context *ctx, fz_link_dest *dest);
-
 struct fz_link_s
 {
 	fz_rect rect;
