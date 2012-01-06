@@ -470,6 +470,9 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 Åpne i &Foxit Reader
 
+Open in Microsoft XPS-Viewer
+Åpne i Microsoft XPS-Viewer
+
 Open in PDF-XChange
 Åpne i PDF-XChange
 
@@ -673,5 +676,4 @@ skriver ut dokument
 
 # Untranslated:
 #Copy &Image
-#Open in Microsoft XPS-Viewer
 

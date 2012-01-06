@@ -463,6 +463,9 @@ Megnyitás &Adobe Acrobat-ban
 Open in &Foxit Reader
 Megnyitás &Foxit Readerben
 
+Open in Microsoft XPS-Viewer
+Megnyitás Microsoft XPS-Viewerben
+
 Open in PDF-XChange
 Megnyitás PDF-XChangeben
 
@@ -668,5 +671,4 @@ Nyomtatás
 #CHM documents
 #Copy &Image
 #File %s not found
-#Open in Microsoft XPS-Viewer
 

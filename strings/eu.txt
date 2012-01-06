@@ -455,6 +455,9 @@ Ireki &Adobe Readerren
 Open in &Foxit Reader
 Ireki &Foxit Readerren
 
+Open in Microsoft XPS-Viewer
+Ireki Microsoft XPS-Viewern
+
 Open in PDF-XChange
 Ireki PDF-XChangen
 
@@ -662,5 +665,4 @@ agiria irarkitzen
 #Copy &Image
 #File %s not found
 #No result found around line %u in file %s
-#Open in Microsoft XPS-Viewer
 

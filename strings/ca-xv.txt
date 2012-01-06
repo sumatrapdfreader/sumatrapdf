@@ -467,6 +467,9 @@ Obri amb l'&Adobe Reader
 Open in &Foxit Reader
 Obri amb el &Foxit Reader
 
+Open in Microsoft XPS-Viewer
+Obri amb el Microsoft XPS-Viewer
+
 Open in PDF-XChange
 Obri amb el PDF-XChange
 
@@ -667,6 +670,5 @@ s'està imprimint el document
 
 # Untranslated:
 #Copy &Image
-#Open in Microsoft XPS-Viewer
 #Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 

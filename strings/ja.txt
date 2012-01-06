@@ -362,10 +362,13 @@ Open in &Adobe Reader
 Adobe Reader で開く(&A)
 
 Open in &Foxit Reader
-Foxit Reader で開く(&A)
+Foxit Reader で開く
+
+Open in Microsoft XPS-Viewer
+Microsoft XPS-Viewer で開く
 
 Open in PDF-XChange
-PDF-XChange で開く(&A)
+PDF-XChange で開く
 
 P&roperties\tCtrl+D
 プロパティ(&R)\tCtrl+D
@@ -553,7 +556,6 @@ printing document
 #Image files (*.%s)
 #No result found around line %u in file %s
 #Open a document...
-#Open in Microsoft XPS-Viewer
 #P&roperties
 #Page %s
 #Postscript documents

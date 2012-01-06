@@ -477,6 +477,9 @@ Apri con &Adobe Reader
 Open in &Foxit Reader
 Apri con &Foxit Reader
 
+Open in Microsoft XPS-Viewer
+Apri con Microsoft XPS-Viewer
+
 Open in PDF-XChange
 Apri con PDF-XChange
 
@@ -677,7 +680,4 @@ Copia del testo...
 
 printing document
 Stampa documento...
-
-# Untranslated:
-#Open in Microsoft XPS-Viewer
 

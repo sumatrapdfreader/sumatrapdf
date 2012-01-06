@@ -467,6 +467,9 @@ Otwórz w &Adobe Reader
 Open in &Foxit Reader
 Otwórz w &Foxit Reader
 
+Open in Microsoft XPS-Viewer
+Otwórz w Microsoft XPS-Viewer
+
 Open in PDF-XChange
 Otwórz w PDF-XChange
 
@@ -670,5 +673,4 @@ drukowanie dokumentu
 
 # Untranslated:
 #Copy &Image
-#Open in Microsoft XPS-Viewer
 

@@ -365,6 +365,9 @@ Agor yn &Adobe Reader
 Open in &Foxit Reader
 Agor yn &Foxit Reader
 
+Open in Microsoft XPS-Viewer
+Agor yn Microsoft XPS-Viewer
+
 Open in PDF-XChange
 Agor yn PDF-XChange
 
@@ -554,7 +557,6 @@ argraffu dogfen
 #Hide frequently read
 #Image files (*.%s)
 #Open a document...
-#Open in Microsoft XPS-Viewer
 #P&roperties
 #Page %s
 #Postscript documents

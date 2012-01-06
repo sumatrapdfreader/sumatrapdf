@@ -469,6 +469,9 @@ Otvori u &Adobe Readeru
 Open in &Foxit Reader
 Otvori u &Foxit Readeru
 
+Open in Microsoft XPS-Viewer
+Otvori u Microsoft XPS-Viewer
+
 Open in PDF-XChange
 Otvori u PDF-XChange
 
@@ -669,7 +672,4 @@ kopiram tekst
 
 printing document
 štampam dokument
-
-# Untranslated:
-#Open in Microsoft XPS-Viewer
 

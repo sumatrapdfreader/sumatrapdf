@@ -468,6 +468,9 @@ Odpri s programom &Adobe Reader
 Open in &Foxit Reader
 Odpri s programom &Foxit Reader
 
+Open in Microsoft XPS-Viewer
+Odpri s programom Microsoft XPS-Viewer
+
 Open in PDF-XChange
 Odpri s programom PDF-XChange
 
@@ -671,5 +674,4 @@ tiskanje dokumenta
 
 # Untranslated:
 #Copy &Image
-#Open in Microsoft XPS-Viewer
 

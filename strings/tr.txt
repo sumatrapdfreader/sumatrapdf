@@ -467,6 +467,9 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 &Adobe Foxit ile aç
 
+Open in Microsoft XPS-Viewer
+Microsoft XPS-Viewer ile aç
+
 Open in PDF-XChange
 PDF-XChange ile aç
 
@@ -670,5 +673,4 @@ belge yazdırılıyor
 
 # Untranslated:
 #Copy &Image
-#Open in Microsoft XPS-Viewer
 

@@ -448,6 +448,9 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 Öppna i Foxit Reader
 
+Open in Microsoft XPS-Viewer
+Öppna i Microsoft XPS-Viewer
+
 Open in PDF-XChange
 Öppna i PDF-XChange
 
@@ -659,5 +662,4 @@ skriver ut dokumentet
 #Copy &Image
 #Could not obtain Printer properties
 #File %s not found
-#Open in Microsoft XPS-Viewer
 

@@ -463,6 +463,9 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 გახსნა &Foxit Reader-ში
 
+Open in Microsoft XPS-Viewer
+გახსნა Microsoft XPS-Viewer-ში
+
 Open in PDF-XChange
 გახსნა PDF-XChange-ში
 
@@ -667,5 +670,4 @@ printing document
 # Untranslated:
 #Copy &Image
 #No result found around line %u in file %s
-#Open in Microsoft XPS-Viewer
 

@@ -248,6 +248,9 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 Адкрыць у &Foxit Reader
 
+Open in Microsoft XPS-Viewer
+Адкрыць у Microsoft XPS-Viewer
+
 Open in PDF-XChange
 Адкрыць у PDF-XChange
 
@@ -419,7 +422,6 @@ Zoom Out
 #No synchronization file found
 #Number of Pages:
 #Open a document...
-#Open in Microsoft XPS-Viewer
 #P&roperties
 #P&roperties\tCtrl+D
 #PDF Producer:

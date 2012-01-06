@@ -288,6 +288,9 @@ Ygeri yn &Adobe Reader
 Open in &Foxit Reader
 Ygeri yn &Foxit Reader
 
+Open in Microsoft XPS-Viewer
+Ygeri yn Microsoft XPS-Viewer
+
 Open in PDF-XChange
 Ygeri yn PDF-XChange
 
@@ -464,7 +467,6 @@ Faktor-zoum
 #Modified:
 #Number of Pages:
 #Open a document...
-#Open in Microsoft XPS-Viewer
 #P&roperties
 #P&roperties\tCtrl+D
 #PDF Producer:

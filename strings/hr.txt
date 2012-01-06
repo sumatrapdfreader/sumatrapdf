@@ -433,6 +433,9 @@ Otvori u programu &Adobe Reader
 Open in &Foxit Reader
 Otvori u programu &Foxit Reader
 
+Open in Microsoft XPS-Viewer
+Otvori u programu Microsoft XPS-Viewer
+
 Open in PDF-XChange
 Otvori u programu PDF-XChange
 
@@ -632,7 +635,6 @@ ispisujem dokument
 #F&avorites
 #Favorites
 #File %s not found
-#Open in Microsoft XPS-Viewer
 #Page %s
 #Printer with given name doesn't exist
 #Remove from favorites

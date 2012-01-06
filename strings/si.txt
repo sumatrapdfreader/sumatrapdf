@@ -364,6 +364,9 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 &Foxit කියවනය මගින් විවෘතකරන්න
 
+Open in Microsoft XPS-Viewer
+Microsoft XPS-Viewer කියවනය මගින් විවෘතකරන්න
+
 Open in PDF-XChange
 PDF-XChange කියවනය මගින් විවෘතකරන්න
 
@@ -535,7 +538,6 @@ printing document
 #Image files (*.%s)
 #No result found around line %u in file %s
 #Open a document...
-#Open in Microsoft XPS-Viewer
 #P&roperties
 #Page %s
 #Page scaling

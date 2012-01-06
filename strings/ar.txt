@@ -463,6 +463,9 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 فتح الملف بـ Foxit Reader
 
+Open in Microsoft XPS-Viewer
+فتح الملف بـ Microsoft XPS-Viewer
+
 Open in PDF-XChange
 فتح الملف بـ PDF-XChange
 
@@ -668,5 +671,4 @@ printing document
 #CHM documents
 #Copy &Image
 #File %s not found
-#Open in Microsoft XPS-Viewer
 

@@ -461,6 +461,9 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 Åben med &Foxit Reader
 
+Open in Microsoft XPS-Viewer
+Åben med Microsoft XPS-Viewer
+
 Open in PDF-XChange
 Åben med PDF-XChange
 
@@ -667,5 +670,4 @@ udskriver dokument
 #CHM documents
 #Copy &Image
 #File %s not found
-#Open in Microsoft XPS-Viewer
 

@@ -461,6 +461,9 @@ Deschide în &Adobe Reader
 Open in &Foxit Reader
 Deschide în &Foxit Reader
 
+Open in Microsoft XPS-Viewer
+Deschide în Microsoft XPS-Viewer
+
 Open in PDF-XChange
 Deschide în PDF-XChange
 
@@ -666,5 +669,4 @@ se imprimă documentul
 #CHM documents
 #Copy &Image
 #File %s not found
-#Open in Microsoft XPS-Viewer
 

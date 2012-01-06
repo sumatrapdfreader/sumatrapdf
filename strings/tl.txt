@@ -383,6 +383,9 @@ Buksan sa Adobe Reader
 Open in &Foxit Reader
 Buksan sa Foxit Reader
 
+Open in Microsoft XPS-Viewer
+Buksan sa Microsoft XPS-Viewer
+
 Open in PDF-XChange
 Buksan sa PDF-XChange
 
@@ -575,7 +578,6 @@ ipini-print ang dokumento
 #Hide frequently read
 #Image files (*.%s)
 #Open a document...
-#Open in Microsoft XPS-Viewer
 #Page %s
 #Postscript documents
 #Print

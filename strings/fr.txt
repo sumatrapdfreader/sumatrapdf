@@ -474,6 +474,9 @@ Ouvrir dans &Adobe Reader
 Open in &Foxit Reader
 Ouvrir dans Fo&xit Reader
 
+Open in Microsoft XPS-Viewer
+Ouvrir dans Microsoft XPS-Viewer
+
 Open in PDF-XChange
 Ouvrir dans PDF-XChange
 
@@ -674,7 +677,4 @@ copie du texte
 
 printing document
 impression du document
-
-# Untranslated:
-#Open in Microsoft XPS-Viewer
 

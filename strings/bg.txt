@@ -470,6 +470,9 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 Отвори с &Foxit Reader
 
+Open in Microsoft XPS-Viewer
+Отвори с Microsoft XPS-Viewer
+
 Open in PDF-XChange
 Отвори с PDF-XChange
 
@@ -670,7 +673,4 @@ copying text
 
 printing document
 отпечатване на документ
-
-# Untranslated:
-#Open in Microsoft XPS-Viewer
 

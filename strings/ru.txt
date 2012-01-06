@@ -471,6 +471,9 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 Отк&рыть в Foxit Reader
 
+Open in Microsoft XPS-Viewer
+Открыть в Microsoft XPS-Viewer
+
 Open in PDF-XChange
 Открыть в PDF-XChange
 
@@ -671,7 +674,4 @@ copying text
 
 printing document
 печатается документ
-
-# Untranslated:
-#Open in Microsoft XPS-Viewer
 

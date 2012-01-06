@@ -472,6 +472,9 @@ Otvoriť v programe &Adobe Reader
 Open in &Foxit Reader
 Otvoriť v programe &Foxit Reader
 
+Open in Microsoft XPS-Viewer
+Otvoriť v programe Microsoft XPS-Viewer
+
 Open in PDF-XChange
 Otvoriť v programe PDF-XChange
 
@@ -672,7 +675,4 @@ prebieha kopírovanie textu
 
 printing document
 prebieha tlač dokumentu
-
-# Untranslated:
-#Open in Microsoft XPS-Viewer
 

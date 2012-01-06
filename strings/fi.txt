@@ -468,6 +468,9 @@ Avaa &Adobe Readerissa
 Open in &Foxit Reader
 Avaa &Foxit Readerissa
 
+Open in Microsoft XPS-Viewer
+Avaa Microsoft XPS-Viewer
+
 Open in PDF-XChange
 Avaa PDF-XChange
 
@@ -671,5 +674,4 @@ tulostetaan asiakirjaa
 
 # Untranslated:
 #Copy &Image
-#Open in Microsoft XPS-Viewer
 

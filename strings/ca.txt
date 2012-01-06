@@ -468,6 +468,9 @@ Obre amb l'&Adobe Reader
 Open in &Foxit Reader
 Obre amb el &Foxit Reader
 
+Open in Microsoft XPS-Viewer
+Obre amb el Microsoft XPS-Viewer
+
 Open in PDF-XChange
 Obre amb el PDF-XChange
 
@@ -671,5 +674,4 @@ s'està imprimint el document
 
 # Untranslated:
 #Copy &Image
-#Open in Microsoft XPS-Viewer
 

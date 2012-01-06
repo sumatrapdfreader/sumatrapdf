@@ -472,6 +472,9 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 Άνοιγμα με &Foxit Reader
 
+Open in Microsoft XPS-Viewer
+Άνοιγμα με Microsoft XPS-Viewer
+
 Open in PDF-XChange
 Άνοιγμα με PDF-XChange
 
@@ -672,7 +675,4 @@ copying text
 
 printing document
 εκτύπωση εγγράφου
-
-# Untranslated:
-#Open in Microsoft XPS-Viewer
 

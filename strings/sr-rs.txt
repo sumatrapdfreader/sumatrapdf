@@ -468,6 +468,9 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 Отвори у програму Foxit Reader
 
+Open in Microsoft XPS-Viewer
+Отвори у програму Microsoft XPS-Viewer
+
 Open in PDF-XChange
 Отвори у програму PDF-XChange
 
@@ -671,5 +674,4 @@ printing document
 
 # Untranslated:
 #Copy &Image
-#Open in Microsoft XPS-Viewer
 

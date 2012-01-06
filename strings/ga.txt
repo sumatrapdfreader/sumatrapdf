@@ -467,6 +467,9 @@ Oscail in Adobe Reader
 Open in &Foxit Reader
 Oscail i bhFoxit Reader
 
+Open in Microsoft XPS-Viewer
+Oscail i bMicrosoft XPS-Viewer
+
 Open in PDF-XChange
 Oscail i bPDF-XChange
 
@@ -667,7 +670,4 @@ ag macasamhlú an téacs
 
 printing document
 ag clóbhualadh an cháipéis
-
-# Untranslated:
-#Open in Microsoft XPS-Viewer
 
