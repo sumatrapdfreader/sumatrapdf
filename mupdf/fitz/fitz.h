@@ -448,6 +448,11 @@ int fz_is_indirect(fz_obj *obj);
 
 int fz_objcmp(fz_obj *a, fz_obj *b);
 
+/* dict marking and unmarking functions - to avoid infinite recursions */
+int fz_dict_marked(fz_obj *obj);
+int fz_dict_mark(fz_obj *obj);
+void fz_dict_unmark(fz_obj *obj);
+
 /* safe, silent failure, no error reporting on type mismatches */
 int fz_to_bool(fz_obj *obj);
 int fz_to_int(fz_obj *obj);
@@ -1330,6 +1335,7 @@ struct fz_link_s
 
 fz_link *fz_new_link(fz_context *ctx, fz_rect bbox, fz_link_dest dest);
 void fz_free_link(fz_context *ctx, fz_link *link);
+void fz_free_link_dest(fz_context *ctx, fz_link_dest *dest);
 
 /*
  * Document interface.

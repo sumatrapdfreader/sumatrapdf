@@ -52,64 +52,69 @@ pdf_load_page_tree_node(pdf_xref *xref, fz_obj *node, struct info info)
 	fz_context *ctx = xref->ctx;
 
 	/* prevent infinite recursion */
-	if (fz_dict_gets(node, ".seen"))
+	if (!node || fz_dict_mark(node))
 		return;
 
-	kids = fz_dict_gets(node, "Kids");
-	count = fz_dict_gets(node, "Count");
-
-	if (fz_is_array(kids) && fz_is_int(count))
+	fz_try(ctx)
 	{
-		obj = fz_dict_gets(node, "Resources");
-		if (obj)
-			info.resources = obj;
-		obj = fz_dict_gets(node, "MediaBox");
-		if (obj)
-			info.mediabox = obj;
-		obj = fz_dict_gets(node, "CropBox");
-		if (obj)
-			info.cropbox = obj;
-		obj = fz_dict_gets(node, "Rotate");
-		if (obj)
-			info.rotate = obj;
+		kids = fz_dict_gets(node, "Kids");
+		count = fz_dict_gets(node, "Count");
 
-		put_marker_bool(ctx, node, ".seen", 0);
-
-		n = fz_array_len(kids);
-		for (i = 0; i < n; i++)
+		if (fz_is_array(kids) && fz_is_int(count))
 		{
-			obj = fz_array_get(kids, i);
-			pdf_load_page_tree_node(xref, obj, info);
-		}
+			obj = fz_dict_gets(node, "Resources");
+			if (obj)
+				info.resources = obj;
+			obj = fz_dict_gets(node, "MediaBox");
+			if (obj)
+				info.mediabox = obj;
+			obj = fz_dict_gets(node, "CropBox");
+			if (obj)
+				info.cropbox = obj;
+			obj = fz_dict_gets(node, "Rotate");
+			if (obj)
+				info.rotate = obj;
 
-		fz_dict_dels(node, ".seen");
+			n = fz_array_len(kids);
+			for (i = 0; i < n; i++)
+			{
+				obj = fz_array_get(kids, i);
+				pdf_load_page_tree_node(xref, obj, info);
+			}
+		}
+		/* SumatraPDF: fix a potential NULL pointer dereference */
+		else if (fz_is_indirect(node) || fz_is_dict(node))
+		{
+			dict = fz_resolve_indirect(node);
+
+			if (info.resources && !fz_dict_gets(dict, "Resources"))
+				fz_dict_puts(dict, "Resources", info.resources);
+			if (info.mediabox && !fz_dict_gets(dict, "MediaBox"))
+				fz_dict_puts(dict, "MediaBox", info.mediabox);
+			if (info.cropbox && !fz_dict_gets(dict, "CropBox"))
+				fz_dict_puts(dict, "CropBox", info.cropbox);
+			if (info.rotate && !fz_dict_gets(dict, "Rotate"))
+				fz_dict_puts(dict, "Rotate", info.rotate);
+
+			if (xref->page_len == xref->page_cap)
+			{
+				fz_warn(ctx, "found more pages than expected");
+				xref->page_cap ++;
+				xref->page_refs = fz_resize_array(ctx, xref->page_refs, xref->page_cap, sizeof(fz_obj*));
+				xref->page_objs = fz_resize_array(ctx, xref->page_objs, xref->page_cap, sizeof(fz_obj*));
+			}
+
+			xref->page_refs[xref->page_len] = fz_keep_obj(node);
+			xref->page_objs[xref->page_len] = fz_keep_obj(dict);
+			xref->page_len ++;
+		}
 	}
-	/* SumatraPDF: fix a potential NULL pointer dereference */
-	else if (fz_is_indirect(node) || fz_is_dict(node))
+	fz_catch(ctx)
 	{
-		dict = fz_resolve_indirect(node);
-
-		if (info.resources && !fz_dict_gets(dict, "Resources"))
-			fz_dict_puts(dict, "Resources", info.resources);
-		if (info.mediabox && !fz_dict_gets(dict, "MediaBox"))
-			fz_dict_puts(dict, "MediaBox", info.mediabox);
-		if (info.cropbox && !fz_dict_gets(dict, "CropBox"))
-			fz_dict_puts(dict, "CropBox", info.cropbox);
-		if (info.rotate && !fz_dict_gets(dict, "Rotate"))
-			fz_dict_puts(dict, "Rotate", info.rotate);
-
-		if (xref->page_len == xref->page_cap)
-		{
-			fz_warn(ctx, "found more pages than expected");
-			xref->page_cap ++;
-			xref->page_refs = fz_resize_array(ctx, xref->page_refs, xref->page_cap, sizeof(fz_obj*));
-			xref->page_objs = fz_resize_array(ctx, xref->page_objs, xref->page_cap, sizeof(fz_obj*));
-		}
-
-		xref->page_refs[xref->page_len] = fz_keep_obj(node);
-		xref->page_objs[xref->page_len] = fz_keep_obj(dict);
-		xref->page_len ++;
+		fz_dict_unmark(node);
+		fz_rethrow(ctx);
 	}
+	fz_dict_unmark(node);
 }
 
 void
@@ -173,41 +178,55 @@ pdf_xobject_uses_blending(fz_context *ctx, fz_obj *dict)
 static int
 pdf_resources_use_blending(fz_context *ctx, fz_obj *rdb)
 {
-	fz_obj *dict;
-	int i, n;
+	fz_obj *obj;
+	int i, n, useBM = 0;
 
 	if (!rdb)
 		return 0;
 
+	/* Have we been here before and stashed an answer? */
+	obj = fz_dict_gets(rdb, ".useBM");
+	if (obj)
+		return fz_to_bool(obj);
+
 	/* stop on cyclic resource dependencies */
-	if (fz_dict_gets(rdb, ".useBM"))
-		return fz_to_bool(fz_dict_gets(rdb, ".useBM"));
+	if (fz_dict_mark(rdb))
+		return 0;
 
-	put_marker_bool(ctx, rdb, ".useBM", 0);
+	fz_try(ctx)
+	{
+		obj = fz_dict_gets(rdb, "ExtGState");
+		n = fz_dict_len(obj);
+		for (i = 0; i < n; i++)
+			if (pdf_extgstate_uses_blending(ctx, fz_dict_get_val(obj, i)))
+				goto found;
 
-	dict = fz_dict_gets(rdb, "ExtGState");
-	n = fz_dict_len(dict);
-	for (i = 0; i < n; i++)
-		if (pdf_extgstate_uses_blending(ctx, fz_dict_get_val(dict, i)))
-			goto found;
+		obj = fz_dict_gets(rdb, "Pattern");
+		n = fz_dict_len(obj);
+		for (i = 0; i < n; i++)
+			if (pdf_pattern_uses_blending(ctx, fz_dict_get_val(obj, i)))
+				goto found;
 
-	dict = fz_dict_gets(rdb, "Pattern");
-	n = fz_dict_len(dict);
-	for (i = 0; i < n; i++)
-		if (pdf_pattern_uses_blending(ctx, fz_dict_get_val(dict, i)))
-			goto found;
-
-	dict = fz_dict_gets(rdb, "XObject");
-	n = fz_dict_len(dict);
-	for (i = 0; i < n; i++)
-		if (pdf_xobject_uses_blending(ctx, fz_dict_get_val(dict, i)))
-			goto found;
-
-	return 0;
-
+		obj = fz_dict_gets(rdb, "XObject");
+		n = fz_dict_len(obj);
+		for (i = 0; i < n; i++)
+			if (pdf_xobject_uses_blending(ctx, fz_dict_get_val(obj, i)))
+				goto found;
+		if (0)
+		{
 found:
-	put_marker_bool(ctx, rdb, ".useBM", 1);
-	return 1;
+			useBM = 1;
+		}
+	}
+	fz_catch(ctx)
+	{
+		fz_dict_unmark(rdb);
+		fz_rethrow(ctx);
+	}
+	fz_dict_unmark(rdb);
+
+	put_marker_bool(ctx, rdb, ".useBM", useBM);
+	return useBM;
 }
 
 /* we need to combine all sub-streams into one for the content stream interpreter */

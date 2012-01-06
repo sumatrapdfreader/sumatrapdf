@@ -6,72 +6,75 @@
 #include <ctype.h> // for tolower()
 
 struct document *
-open_document(char *filename)
+open_document(fz_context *ctx, char *filename)
 {
-	fz_error error;
+	struct document *doc;
 
-	if (strstr(filename, ".pdf") || strstr(filename, ".PDF")) {
-		struct document *doc = fz_malloc(sizeof *doc);
-		memset(doc, 0, sizeof *doc);
-		doc->number = -1;
-		error = pdf_open_xref(&doc->pdf, filename, NULL);
-		if (error) {
-			fz_free(doc);
-			fz_rethrow(error, "cannot open pdf document");
-			return NULL;
+	doc = fz_malloc_struct(ctx, struct document);
+	memset(doc, 0, sizeof *doc);
+	doc->ctx = ctx;
+	doc->number = -1;
+
+	fz_try(ctx)
+	{
+		if (strstr(filename, ".pdf") || strstr(filename, ".PDF"))
+		{
+			doc->pdf = pdf_open_xref(ctx, filename, NULL);
+			pdf_load_page_tree(doc->pdf);
 		}
-		error = pdf_load_page_tree(doc->pdf);
-		if (error) {
-			pdf_free_xref(doc->pdf);
-			fz_free(doc);
-			fz_rethrow(error, "cannot open pdf document");
-			return NULL;
+		else if (strstr(filename, ".xps") || strstr(filename, ".XPS"))
+		{
+			doc->xps = xps_open_file(ctx, filename);
 		}
-		return doc;
-	} else if (strstr(filename, ".xps") || strstr(filename, ".XPS")) {
-		struct document *doc = fz_malloc(sizeof *doc);
-		memset(doc, 0, sizeof *doc);
-		doc->number = -1;
-		error = xps_open_file(&doc->xps, filename);
-		if (error) {
-			fz_free(doc);
-			fz_rethrow(error, "cannot open xps document");
-			return NULL;
+		else
+		{
+			fz_throw(ctx, "unknown document format");
 		}
-		return doc;
-	} else {
-		fz_throw("unknown document format");
+	}
+	fz_catch(ctx)
+	{
+		close_document(doc);
 		return NULL;
 	}
+
+	return doc;
 }
 
 int
 needs_password(struct document *doc)
 {
-	if (doc->pdf) {
+	if (doc->pdf)
 		return pdf_needs_password(doc->pdf);
-	}
 	return 0;
 }
 
 int
 authenticate_password(struct document *doc, char *password)
 {
-	if (doc->pdf) {
+	if (doc->pdf)
 		return pdf_authenticate_password(doc->pdf, password);
-	}
 	return 1;
 }
 
 fz_outline *
 load_outline(struct document *doc)
 {
-	if (doc->pdf)
-		return pdf_load_outline(doc->pdf);
-	else if (doc->xps)
-		return xps_load_outline(doc->xps);
-	else
-		return NULL;
+	fz_outline *outline;
+	fz_var(outline);
+	fz_try (doc->ctx)
+	{
+		if (doc->pdf)
+			outline = pdf_load_outline(doc->pdf);
+		else if (doc->xps)
+			outline = xps_load_outline(doc->xps);
+		else
+			outline = NULL;
+	}
+	fz_catch (doc->ctx)
+	{
+		outline = NULL;
+	}
+	return outline;
 }
 
 int
@@ -88,27 +91,27 @@ count_pages(struct document *doc)
 static void
 load_page(struct document *doc, int number)
 {
-	fz_error error;
 	if (doc->number == number)
 		return;
-	doc->number = number;
-	if (doc->pdf) {
-		if (doc->pdf_page) {
-			pdf_age_store(doc->pdf->store, 1);
-			pdf_free_page(doc->pdf_page);
+	fz_try (doc->ctx)
+	{
+		doc->number = number;
+		if (doc->pdf) {
+			if (doc->pdf_page)
+				pdf_free_page(doc->ctx, doc->pdf_page);
+			doc->pdf_page = NULL;
+			doc->pdf_page = pdf_load_page(doc->pdf, number);
 		}
-		doc->pdf_page = NULL;
-		error = pdf_load_page(&doc->pdf_page, doc->pdf, number);
-		if (error)
-			fz_catch(error, "cannot load page %d", number);
+		if (doc->xps) {
+			if (doc->xps_page)
+				xps_free_page(doc->xps, doc->xps_page);
+			doc->xps_page = NULL;
+			doc->xps_page = xps_load_page(doc->xps, number);
+		}
 	}
-	if (doc->xps) {
-		if (doc->xps_page)
-			xps_free_page(doc->xps, doc->xps_page);
-		doc->xps_page = NULL;
-		error = xps_load_page(&doc->xps_page, doc->xps, number);
-		if (error)
-			fz_catch(error, "cannot load page %d", number);
+	fz_catch (doc->ctx)
+	{
+		fprintf(stderr, "cannot load page %d", number);
 	}
 }
 
@@ -130,29 +133,36 @@ measure_page(struct document *doc, int number, float *w, float *h)
 	else {
 		*w = *h = 72;
 	}
-	fz_flush_warnings();
+	fz_flush_warnings(doc->ctx);
 }
 
 void
-draw_page(struct document *doc, int number, fz_device *dev, fz_matrix ctm)
+draw_page(struct document *doc, int number, fz_device *dev, fz_matrix ctm, fz_cookie *cookie)
 {
 	load_page(doc, number);
-	if (doc->pdf_page) {
-		pdf_page *page = doc->pdf_page;
-		fz_matrix page_ctm = fz_concat(fz_rotate(-page->rotate), fz_scale(1, -1));
-		fz_rect mediabox = fz_transform_rect(page_ctm, page->mediabox);
-		page_ctm = fz_concat(page_ctm, fz_translate(-mediabox.x0, -mediabox.y0));
-		ctm = fz_concat(page_ctm, ctm);
-		pdf_run_page(doc->pdf, page, dev, ctm);
-	} else if (doc->xps_page) {
-		xps_page *page = doc->xps_page;
-		fz_matrix page_ctm = fz_scale(72.0f / 96.0f, 72.0f / 96.0f);
-		ctm = fz_concat(page_ctm, ctm);
-		doc->xps->dev = dev;
-		xps_parse_fixed_page(doc->xps, ctm, page);
-		doc->xps->dev = NULL;
+	fz_try (doc->ctx)
+	{
+		if (doc->pdf_page) {
+			pdf_page *page = doc->pdf_page;
+			fz_matrix page_ctm = fz_concat(fz_rotate(-page->rotate), fz_scale(1, -1));
+			fz_rect mediabox = fz_transform_rect(page_ctm, page->mediabox);
+			page_ctm = fz_concat(page_ctm, fz_translate(-mediabox.x0, -mediabox.y0));
+			ctm = fz_concat(page_ctm, ctm);
+			pdf_run_page(doc->pdf, page, dev, ctm, cookie);
+		} else if (doc->xps_page) {
+			xps_page *page = doc->xps_page;
+			fz_matrix page_ctm = fz_scale(72.0f / 96.0f, 72.0f / 96.0f);
+			ctm = fz_concat(page_ctm, ctm);
+			doc->xps->dev = dev;
+			xps_parse_fixed_page(doc->xps, ctm, page);
+			doc->xps->dev = NULL;
+		}
 	}
-	fz_flush_warnings();
+	fz_catch (doc->ctx)
+	{
+		fprintf(stderr, "cannot draw page %d", number);
+	}
+	fz_flush_warnings(doc->ctx);
 }
 
 static int
@@ -223,16 +233,16 @@ match(fz_text_span *span, char *s, int n)
 }
 
 int
-search_page(struct document *doc, int number, char *needle)
+search_page(struct document *doc, int number, char *needle, fz_cookie *cookie)
 {
 	int pos, len, i, n;
 
 	if (strlen(needle) == 0)
 		return 0;
 
-	fz_text_span *text = fz_new_text_span();
-	fz_device *dev = fz_new_text_device(text);
-	draw_page(doc, number, dev, fz_identity);
+	fz_text_span *text = fz_new_text_span(doc->ctx);
+	fz_device *dev = fz_new_text_device(doc->ctx, text);
+	draw_page(doc, number, dev, fz_identity, cookie);
 	fz_free_device(dev);
 
 	doc->hit_count = 0;
@@ -249,7 +259,7 @@ search_page(struct document *doc, int number, char *needle)
 		}
 	}
 
-	fz_free_text_span(text);
+	fz_free_text_span(doc->ctx, text);
 	return doc->hit_count;
 }
 
@@ -264,10 +274,7 @@ close_document(struct document *doc)
 {
 	if (doc->pdf) {
 		if (doc->pdf_page)
-			pdf_free_page(doc->pdf_page);
-		if (doc->pdf->store)
-			pdf_free_store(doc->pdf->store);
-		doc->pdf->store = NULL;
+			pdf_free_page(doc->ctx, doc->pdf_page);
 		pdf_free_xref(doc->pdf);
 	}
 	if (doc->xps) {
@@ -275,5 +282,6 @@ close_document(struct document *doc)
 			xps_free_page(doc->xps, doc->xps_page);
 		xps_free_context(doc->xps);
 	}
-	fz_flush_warnings();
+	fz_flush_warnings(doc->ctx);
+	fz_free(doc->ctx, doc);
 }

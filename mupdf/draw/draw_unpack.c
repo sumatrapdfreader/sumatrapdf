@@ -199,8 +199,6 @@ fz_decode_indexed_tile(fz_pixmap *pix, float *decode, int maxval)
 	{
 		for (k = 0; k < n; k++)
 		{
-			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1650 */
-			/* TODO: this doesn't always result in the same values as for Adobe Reader */
 			int value = (add[k] + (((p[k] << 8) * mul[k]) >> 8)) >> 8;
 			p[k] = CLAMP(value, 0, 255);
 		}
@@ -236,7 +234,6 @@ fz_decode_tile(fz_pixmap *pix, float *decode)
 	{
 		for (k = 0; k < n; k++)
 		{
-			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1650 */
 			int value = add[k] + fz_mul255(p[k], mul[k]);
 			p[k] = CLAMP(value, 0, 255);
 		}

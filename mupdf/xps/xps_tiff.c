@@ -707,9 +707,7 @@ xps_decode_tiff_header(fz_context *ctx, struct tiff *tiff, byte *buf, int len)
 	unsigned i;
 
 	memset(tiff, 0, sizeof(struct tiff));
-	/* SumatraPDF: prevent NULL pointer dereference */
 	tiff->ctx = ctx;
-
 	tiff->bp = buf;
 	tiff->rp = buf;
 	tiff->ep = buf + len;

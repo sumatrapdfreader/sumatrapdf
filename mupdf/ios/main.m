@@ -18,6 +18,7 @@
 static dispatch_queue_t queue;
 static fz_glyph_cache *glyphcache = NULL;
 static float screenScale = 1;
+static fz_context *ctx = NULL;
 
 @interface MuLibraryController : UITableViewController
 {
@@ -119,23 +120,11 @@ static float screenScale = 1;
 
 #pragma mark -
 
-static void showAlert(NSString *msg)
+static void showAlert(NSString *msg, NSString *filename)
 {
-	char msgbuf[160 * 30];
-	int i;
-
-	fz_strlcpy(msgbuf, "", sizeof msgbuf);
-	for (i = 0; i < fz_get_error_count(); i++)
-	{
-		char *s = fz_get_error_line(i);
-		s = strstr(s, "(): ") + 4;
-		fz_strlcat(msgbuf, s, sizeof msgbuf);
-		fz_strlcat(msgbuf, "\n", sizeof msgbuf);
-	}
-
 	UIAlertView *alert = [[UIAlertView alloc]
 		initWithTitle: msg
-		message: [NSString stringWithUTF8String: msgbuf]
+		message: filename
 		delegate: nil
 		cancelButtonTitle: @"Okay"
 		otherButtonTitles: nil];
@@ -152,10 +141,15 @@ static void flattenOutline(NSMutableArray *titles, NSMutableArray *pages, fz_out
 	indent[level * 4] = 0;
 	while (outline)
 	{
-		if (outline->page >= 0 && outline->title) {
-			NSString *title = [NSString stringWithUTF8String: outline->title];
-			[titles addObject: [NSString stringWithFormat: @"%s%@", indent, title]];
-			[pages addObject: [NSNumber numberWithInt: outline->page]];
+		if (outline->dest.kind == FZ_LINK_GOTO)
+		{
+			int page = outline->dest.ld.gotor.page;
+			if (page >= 0 && outline->title)
+			{
+				NSString *title = [NSString stringWithUTF8String: outline->title];
+				[titles addObject: [NSString stringWithFormat: @"%s%@", indent, title]];
+				[pages addObject: [NSNumber numberWithInt: page]];
+			}
 		}
 		flattenOutline(titles, pages, outline->down, level + 1);
 		outline = outline->next;
@@ -168,7 +162,7 @@ static void loadOutline(NSMutableArray *titles, NSMutableArray *pages, struct do
 
 static void releasePixmap(void *info, const void *data, size_t size)
 {
-	fz_drop_pixmap(info);
+	fz_drop_pixmap(ctx, info);
 }
 
 static UIImage *newImageWithPixmap(fz_pixmap *pix)
@@ -222,11 +216,11 @@ static UIImage *renderPage(struct document *doc, int number, CGSize screenSize)
 	ctm = fz_scale(scale.width, scale.height);
 	bbox = (fz_bbox){0, 0, pageSize.width * scale.width, pageSize.height * scale.height};
 
-	pix = fz_new_pixmap_with_rect(fz_device_rgb, bbox);
+	pix = fz_new_pixmap_with_rect(ctx, fz_device_rgb, bbox);
 	fz_clear_pixmap_with_color(pix, 255);
 
-	dev = fz_new_draw_device(glyphcache, pix);
-	draw_page(doc, number, dev, ctm);
+	dev = fz_new_draw_device(ctx, glyphcache, pix);
+	draw_page(doc, number, dev, ctm, NULL);
 	fz_free_device(dev);
 
 	return newImageWithPixmap(pix);
@@ -259,11 +253,11 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 	rect.y1 = tileRect.origin.y + tileRect.size.height;
 	bbox = fz_round_rect(rect);
 
-	pix = fz_new_pixmap_with_rect(fz_device_rgb, bbox);
+	pix = fz_new_pixmap_with_rect(ctx, fz_device_rgb, bbox);
 	fz_clear_pixmap_with_color(pix, 255);
 
-	dev = fz_new_draw_device(glyphcache, pix);
-	draw_page(doc, number, dev, ctm);
+	dev = fz_new_draw_device(ctx, glyphcache, pix);
+	draw_page(doc, number, dev, ctm, NULL);
 	fz_free_device(dev);
 
 	return newImageWithPixmap(pix);
@@ -370,9 +364,9 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 	printf("open document '%s'\n", filename);
 
 	_filename = [nsfilename retain];
-	_doc = open_document(filename);
+	_doc = open_document(ctx, filename);
 	if (!_doc) {
-		showAlert(@"Cannot open document");
+		showAlert(@"Cannot open document", nsfilename);
 		return;
 	}
 
@@ -1141,7 +1135,7 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 
 	dispatch_async(queue, ^{
 		for (int i = start; i >= 0 && i < count_pages(doc); i += dir) {
-			int n = search_page(doc, i, needle);
+			int n = search_page(doc, i, needle, NULL);
 			if (n) {
 				dispatch_async(dispatch_get_main_queue(), ^{
 					[prevButton setEnabled: YES];
@@ -1391,7 +1385,10 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 {
 	queue = dispatch_queue_create("com.artifex.mupdf.queue", NULL);
 
-	glyphcache = fz_new_glyph_cache();
+	// use at most 128M for resource cache
+	ctx = fz_new_context(&fz_alloc_default, 128<<20);
+
+	glyphcache = fz_new_glyph_cache(ctx);
 
 	screenScale = [[UIScreen mainScreen] scale];
 

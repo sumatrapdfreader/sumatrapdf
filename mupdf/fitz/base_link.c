@@ -1,6 +1,5 @@
 #include "fitz.h"
 
-/* SumatraPDF: fix memory leak */
 void
 fz_free_link_dest(fz_context *ctx, fz_link_dest *dest)
 {

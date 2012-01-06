@@ -125,10 +125,12 @@ fz_open_jbig2d(fz_stream *chain, fz_buffer *globals)
 			if (state->ctx)
 				jbig2_ctx_free(state->ctx);
 		}
+		fz_drop_buffer(ctx, globals);
 		fz_free(ctx, state);
 		fz_close(chain);
 		fz_rethrow(ctx);
 	}
+	fz_drop_buffer(ctx, globals);
 
 	return fz_new_stream(ctx, state, read_jbig2d, close_jbig2d);
 }

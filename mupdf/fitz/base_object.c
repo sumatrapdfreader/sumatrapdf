@@ -41,6 +41,7 @@ struct fz_obj_s
 		} a;
 		struct {
 			char sorted;
+			char marked;
 			int len;
 			int cap;
 			struct keyval *items;
@@ -549,6 +550,7 @@ fz_new_dict(fz_context *ctx, int initialcap)
 	obj->kind = FZ_DICT;
 
 	obj->u.d.sorted = 0;
+	obj->u.d.marked = 0;
 	obj->u.d.len = 0;
 	obj->u.d.cap = initialcap > 1 ? initialcap : 10;
 
@@ -823,6 +825,36 @@ fz_sort_dict(fz_obj *obj)
 		qsort(obj->u.d.items, obj->u.d.len, sizeof(struct keyval), keyvalcmp);
 		obj->u.d.sorted = 1;
 	}
+}
+
+int
+fz_dict_marked(fz_obj *obj)
+{
+	obj = fz_resolve_indirect(obj);
+	if (!fz_is_dict(obj))
+		return 0;
+	return obj->u.d.marked;
+}
+
+int
+fz_dict_mark(fz_obj *obj)
+{
+	int marked;
+	obj = fz_resolve_indirect(obj);
+	if (!fz_is_dict(obj))
+		return 0;
+	marked = obj->u.d.marked;
+	obj->u.d.marked = 1;
+	return marked;
+}
+
+void
+fz_dict_unmark(fz_obj *obj)
+{
+	obj = fz_resolve_indirect(obj);
+	if (!fz_is_dict(obj))
+		return;
+	obj->u.d.marked = 0;
 }
 
 static void

@@ -399,7 +399,7 @@ png_read_image(fz_context *ctx, struct info *info, unsigned char *p, int total)
 		info->size = passofs[7];
 	}
 
-	info->samples = fz_malloc(info->ctx, info->size);
+	info->samples = fz_malloc(ctx, info->size);
 
 	stm.zalloc = zalloc;
 	stm.zfree = zfree;
@@ -410,53 +410,63 @@ png_read_image(fz_context *ctx, struct info *info, unsigned char *p, int total)
 
 	code = inflateInit(&stm);
 	if (code != Z_OK)
-		fz_throw(info->ctx, "zlib error: %s", stm.msg);
-
-	/* SumatraPDF: fix memory leak */
-	fz_try(ctx)
 	{
-
-	/* Read remaining chunks until IEND */
-
-	while (total > 8)
-	{
-		size = getint(p);
-
-		if (size + 12 > total)
-			fz_throw(info->ctx, "premature end of data in png image");
-
-		if (!memcmp(p + 4, "PLTE", 4))
-			png_read_plte(info, p + 8, size);
-		if (!memcmp(p + 4, "tRNS", 4))
-			png_read_trns(info, p + 8, size);
-		if (!memcmp(p + 4, "pHYs", 4))
-			png_read_phys(info, p + 8, size);
-		if (!memcmp(p + 4, "IDAT", 4))
-			png_read_idat(info, p + 8, size, &stm);
-		if (!memcmp(p + 4, "IEND", 4))
-			break;
-
-		p += size + 12;
-		total -= size + 12;
+		fz_free(ctx, info->samples);
+		fz_throw(ctx, "zlib error: %s", stm.msg);
 	}
 
+	fz_try(ctx)
+	{
+		/* Read remaining chunks until IEND */
+		while (total > 8)
+		{
+			size = getint(p);
+
+			if (size + 12 > total)
+				fz_throw(info->ctx, "premature end of data in png image");
+
+			if (!memcmp(p + 4, "PLTE", 4))
+				png_read_plte(info, p + 8, size);
+			if (!memcmp(p + 4, "tRNS", 4))
+				png_read_trns(info, p + 8, size);
+			if (!memcmp(p + 4, "pHYs", 4))
+				png_read_phys(info, p + 8, size);
+			if (!memcmp(p + 4, "IDAT", 4))
+				png_read_idat(info, p + 8, size, &stm);
+			if (!memcmp(p + 4, "IEND", 4))
+				break;
+
+			p += size + 12;
+			total -= size + 12;
+		}
 	}
 	fz_catch(ctx)
 	{
 		inflateEnd(&stm);
+		fz_free(ctx, info->samples);
 		fz_rethrow(ctx);
 	}
 
 	code = inflateEnd(&stm);
 	if (code != Z_OK)
+	{
+		fz_free(ctx, info->samples);
 		fz_throw(info->ctx, "zlib error: %s", stm.msg);
+	}
 
 	/* Apply prediction filter and deinterlacing */
-
-	if (!info->interlace)
-		png_predict(info->samples, info->width, info->height, info->n, info->depth);
-	else
-		png_deinterlace(info, passw, passh, passofs);
+	fz_try(ctx)
+	{
+		if (!info->interlace)
+			png_predict(info->samples, info->width, info->height, info->n, info->depth);
+		else
+			png_deinterlace(info, passw, passh, passofs);
+	}
+	fz_catch(ctx)
+	{
+		fz_free(ctx, info->samples);
+		fz_rethrow(ctx);
+	}
 }
 
 static fz_pixmap *

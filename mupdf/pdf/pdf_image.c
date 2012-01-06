@@ -306,7 +306,7 @@ pdf_load_jpx_image(pdf_xref *xref, fz_obj *dict)
 	fz_pixmap *img = NULL;
 	fz_obj *obj;
 	fz_context *ctx = xref->ctx;
-	int indexed = 0; /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1610 */
+	int indexed = 0;
 
 	fz_var(img);
 	fz_var(buf);
@@ -315,6 +315,7 @@ pdf_load_jpx_image(pdf_xref *xref, fz_obj *dict)
 	buf = pdf_load_stream(xref, fz_to_num(dict), fz_to_gen(dict));
 	/* RJW: "cannot load jpx image data" */
 
+	/* FIXME: We can't handle decode arrays for indexed images currently */
 	fz_try(ctx)
 	{
 		obj = fz_dict_gets(dict, "ColorSpace");
@@ -322,7 +323,6 @@ pdf_load_jpx_image(pdf_xref *xref, fz_obj *dict)
 		{
 			colorspace = pdf_load_colorspace(xref, obj);
 			/* RJW: "cannot load image colorspace" */
-			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1610 */
 			indexed = !strcmp(colorspace->name, "Indexed");
 		}
 
@@ -345,7 +345,7 @@ pdf_load_jpx_image(pdf_xref *xref, fz_obj *dict)
 		}
 
 		obj = fz_dict_getsa(dict, "Decode", "D");
-		if (obj && !indexed /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1610 */)
+		if (obj && !indexed)
 		{
 			float decode[FZ_MAX_COLORS * 2];
 			int i;

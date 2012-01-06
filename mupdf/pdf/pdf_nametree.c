@@ -24,16 +24,14 @@ pdf_lookup_name_imp(fz_context *ctx, fz_obj *node, fz_obj *needle)
 				r = m - 1;
 			else if (fz_objcmp(needle, last) > 0)
 				l = m + 1;
-			/* SumatraPDF: prevent a cycle */
-			else if (fz_dict_gets(node, ".seen"))
-				break;
 			else
 			{
-				fz_obj *obj, *tmp = fz_new_null(ctx);
-				fz_dict_puts(node, ".seen", tmp);
-				fz_drop_obj(tmp);
+				fz_obj *obj;
+
+				if (fz_dict_mark(node))
+					break;
 				obj = pdf_lookup_name_imp(ctx, kid, needle);
-				fz_dict_dels(node, ".seen");
+				fz_dict_unmark(node);
 				return obj;
 			}
 		}
@@ -60,8 +58,11 @@ pdf_lookup_name_imp(fz_context *ctx, fz_obj *node, fz_obj *needle)
 				return val;
 		}
 
-		/* SumatraPDF: Adobe Reader seems to handle unsorted /Names, as long as the /Limits are correct */
-		for (l = 0; l < fz_array_len(names) / 2; l++)
+		/* Spec says names should be sorted (hence the binary search,
+		 * above), but Acrobat copes with non-sorted. Drop back to a
+		 * simple search if the binary search fails. */
+		r = fz_array_len(names)/2;
+		for (l = 0; l < r; l++)
 			if (!fz_objcmp(needle, fz_array_get(names, l * 2)))
 				return fz_array_get(names, l * 2 + 1);
 	}
@@ -117,8 +118,7 @@ pdf_load_name_tree_imp(fz_obj *dict, pdf_xref *xref, fz_obj *node)
 	fz_obj *names = fz_dict_gets(node, "Names");
 	int i;
 
-	/* SumatraPDF: prevent a cycle */
-	if (kids && !fz_dict_gets(node, ".seen"))
+	if (kids && !fz_dict_mark(node))
 	{
 		fz_obj *tmp = fz_new_null(ctx);
 		fz_dict_puts(node, ".seen", tmp);
@@ -126,7 +126,7 @@ pdf_load_name_tree_imp(fz_obj *dict, pdf_xref *xref, fz_obj *node)
 
 		for (i = 0; i < fz_array_len(kids); i++)
 			pdf_load_name_tree_imp(dict, xref, fz_array_get(kids, i));
-		fz_dict_dels(node, ".seen");
+		fz_dict_unmark(node);
 	}
 
 	if (names)

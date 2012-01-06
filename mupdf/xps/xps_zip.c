@@ -389,9 +389,8 @@ static int
 xps_has_zip_part(xps_document *doc, char *name)
 {
 	char buf[2048];
-	/* SumatraPDF: ZIP entries are all relative to the root */
 	if (name[0] == '/')
-		name ++;
+		name++;
 	if (xps_find_zip_entry(doc, name))
 		return 1;
 	sprintf(buf, "%s/[0].piece", name);

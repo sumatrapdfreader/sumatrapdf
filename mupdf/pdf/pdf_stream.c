@@ -89,25 +89,12 @@ build_filter(fz_stream *chain, pdf_xref * xref, fz_obj * f, fz_obj * p, int num,
 
 	else if (!strcmp(s, "JBIG2Decode"))
 	{
+		fz_buffer *globals = NULL;
 		fz_obj *obj = fz_dict_gets(p, "JBIG2Globals");
 		if (obj)
-		{
-			fz_buffer *globals;
 			globals = pdf_load_stream(xref, fz_to_num(obj), fz_to_gen(obj));
-			/* RJW: "cannot load jbig2 global segments" */
-			/* SumatraPDF: fix memory leak */
-			fz_try(ctx) {
-			chain = fz_open_jbig2d(chain, globals);
-			}
-			fz_catch(ctx)
-			{
-				fz_drop_buffer(ctx, globals);
-				fz_rethrow(ctx);
-			}
-			fz_drop_buffer(ctx, globals);
-			return chain;
-		}
-		return fz_open_jbig2d(chain, NULL);
+		/* fz_open_jbig2d takes possession of globals */
+		return fz_open_jbig2d(chain, globals);
 	}
 
 	else if (!strcmp(s, "JPXDecode"))
