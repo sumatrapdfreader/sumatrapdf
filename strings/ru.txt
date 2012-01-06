@@ -672,3 +672,6 @@ copying text
 printing document
 печатается документ
 
+# Untranslated:
+#Open in Microsoft XPS-Viewer
+

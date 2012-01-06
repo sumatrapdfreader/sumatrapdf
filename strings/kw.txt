@@ -464,6 +464,7 @@ Faktor-zoum
 #Modified:
 #Number of Pages:
 #Open a document...
+#Open in Microsoft XPS-Viewer
 #P&roperties
 #P&roperties\tCtrl+D
 #PDF Producer:

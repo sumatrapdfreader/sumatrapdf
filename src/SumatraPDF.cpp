@@ -4208,6 +4208,10 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
             ViewWithPDFXChange(win);
             break;
 
+        case IDM_VIEW_WITH_XPS_VIEWER:
+            ViewWithXPSViewer(win);
+            break;
+
         case IDM_SEND_BY_EMAIL:
             SendAsEmailAttachment(win);
             break;

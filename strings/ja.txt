@@ -553,6 +553,7 @@ printing document
 #Image files (*.%s)
 #No result found around line %u in file %s
 #Open a document...
+#Open in Microsoft XPS-Viewer
 #P&roperties
 #Page %s
 #Postscript documents

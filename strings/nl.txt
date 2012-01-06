@@ -679,3 +679,6 @@ tekst kopiëren
 printing document
 bestand afdrukken
 
+# Untranslated:
+#Open in Microsoft XPS-Viewer
+

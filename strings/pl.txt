@@ -670,4 +670,5 @@ drukowanie dokumentu
 
 # Untranslated:
 #Copy &Image
+#Open in Microsoft XPS-Viewer
 

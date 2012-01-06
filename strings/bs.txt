@@ -670,3 +670,6 @@ kopiram tekst
 printing document
 štampam dokument
 
+# Untranslated:
+#Open in Microsoft XPS-Viewer
+

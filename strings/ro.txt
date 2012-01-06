@@ -666,4 +666,5 @@ se imprimă documentul
 #CHM documents
 #Copy &Image
 #File %s not found
+#Open in Microsoft XPS-Viewer
 

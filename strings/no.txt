@@ -673,4 +673,5 @@ skriver ut dokument
 
 # Untranslated:
 #Copy &Image
+#Open in Microsoft XPS-Viewer
 

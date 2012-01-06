@@ -554,6 +554,7 @@ argraffu dogfen
 #Hide frequently read
 #Image files (*.%s)
 #Open a document...
+#Open in Microsoft XPS-Viewer
 #P&roperties
 #Page %s
 #Postscript documents

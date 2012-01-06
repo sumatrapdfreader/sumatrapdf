@@ -667,4 +667,5 @@ printing document
 # Untranslated:
 #Copy &Image
 #No result found around line %u in file %s
+#Open in Microsoft XPS-Viewer
 

@@ -671,3 +671,6 @@ copying text
 printing document
 отпечатване на документ
 
+# Untranslated:
+#Open in Microsoft XPS-Viewer
+

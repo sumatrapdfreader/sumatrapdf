@@ -575,6 +575,7 @@ ipini-print ang dokumento
 #Hide frequently read
 #Image files (*.%s)
 #Open a document...
+#Open in Microsoft XPS-Viewer
 #Page %s
 #Postscript documents
 #Print

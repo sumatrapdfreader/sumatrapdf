@@ -670,3 +670,6 @@ copying text
 printing document
 ֆայլը տպվում է
 
+# Untranslated:
+#Open in Microsoft XPS-Viewer
+

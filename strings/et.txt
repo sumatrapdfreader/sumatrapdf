@@ -670,3 +670,6 @@ teksti kopeerimine
 printing document
 dokumendi printimine
 
+# Untranslated:
+#Open in Microsoft XPS-Viewer
+

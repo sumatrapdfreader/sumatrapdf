@@ -673,3 +673,6 @@ copying text
 printing document
 εκτύπωση εγγράφου
 
+# Untranslated:
+#Open in Microsoft XPS-Viewer
+

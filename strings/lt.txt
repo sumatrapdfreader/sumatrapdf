@@ -660,5 +660,6 @@ spausdinamas dokumentas
 #CHM documents
 #Copy &Image
 #File %s not found
+#Open in Microsoft XPS-Viewer
 #Save S&hortcut...\tCtrl+Shift+S
 

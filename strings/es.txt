@@ -676,3 +676,6 @@ copiado de texto
 printing document
 imprimimendo documento
 
+# Untranslated:
+#Open in Microsoft XPS-Viewer
+

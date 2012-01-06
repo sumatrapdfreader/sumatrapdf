@@ -670,3 +670,6 @@ copying text
 printing document
 正在打印文档
 
+# Untranslated:
+#Open in Microsoft XPS-Viewer
+

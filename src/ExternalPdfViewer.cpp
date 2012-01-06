@@ -48,6 +48,32 @@ static TCHAR *GetPDFXChangePath()
     return NULL;
 }
 
+static TCHAR *GetXPSViewerPath()
+{
+    // the XPS-Viewer seems to always be installed into %WINDIR%\system32
+    TCHAR buffer[MAX_PATH];
+    UINT res = GetSystemDirectory(buffer, dimof(buffer));
+    if (!res || res >= dimof(buffer))
+        return NULL;
+    ScopedMem<TCHAR> exePath(path::Join(buffer, _T("xpsrchvw.exe")));
+    if (file::Exists(exePath))
+        return exePath.StealData();
+#ifndef _WIN64
+    // Wow64 redirects access to system32 to syswow64 instead, so we
+    // disable file system redirection using the recommended method from
+    // http://msdn.microsoft.com/en-us/library/aa384187(v=vs.85).aspx
+    if (IsRunningInWow64()) {
+        res = GetWindowsDirectory(buffer, dimof(buffer));
+        if (!res || res >= dimof(buffer))
+            return NULL;
+        exePath.Set(path::Join(buffer, _T("Sysnative\\xpsrchvw.exe")));
+        if (file::Exists(exePath))
+            return exePath.StealData();
+    }
+#endif
+    return NULL;
+}
+
 bool CanViewExternally(WindowInfo *win)
 {
     if (!HasPermission(Perm_DiskAccess))
@@ -152,5 +178,40 @@ bool ViewWithAcrobat(WindowInfo *win, TCHAR *args)
     else
         params.Set(str::Format(_T("%s \"%s\""), args, win->loadedFilePath));
 
+    return LaunchFile(exePath, params);
+}
+
+bool CanViewWithXPSViewer(WindowInfo *win)
+{
+    // Requirements: a valid filename and a valid path to XPS-Viewer
+    if (!win || win->IsAboutWindow() || !CanViewExternally(win))
+        return false;
+    // allow viewing with XPS-Viewer, if either an XPS document is loaded...
+    if (win->IsDocLoaded() && win->dm->engineType != Engine_XPS)
+        return false;
+    // or a file ending in .xps has failed to be loaded
+    if (!win->IsDocLoaded() && !str::EndsWithI(win->loadedFilePath, _T(".xps")))
+        return false;
+    ScopedMem<TCHAR> path(GetXPSViewerPath());
+    return path != NULL;
+}
+
+bool ViewWithXPSViewer(WindowInfo *win, TCHAR *args)
+{
+    if (!CanViewWithXPSViewer(win))
+        return false;
+
+    ScopedMem<TCHAR> exePath(GetXPSViewerPath());
+    if (!exePath)
+        return false;
+
+    if (!args)
+        args = _T("");
+
+    ScopedMem<TCHAR> params;
+    if (win->IsDocLoaded())
+        params.Set(str::Format(_T("%s \"%s\""), args, win->dm->FileName()));
+    else
+        params.Set(str::Format(_T("%s \"%s\""), args, win->loadedFilePath));
     return LaunchFile(exePath, params);
 }

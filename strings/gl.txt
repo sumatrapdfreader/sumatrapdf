@@ -669,4 +669,5 @@ imprimindo documento
 
 # Untranslated:
 #Copy &Image
+#Open in Microsoft XPS-Viewer
 

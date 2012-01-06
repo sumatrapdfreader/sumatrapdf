@@ -672,3 +672,6 @@ cópia de texto
 printing document
 impressão de documento
 
+# Untranslated:
+#Open in Microsoft XPS-Viewer
+

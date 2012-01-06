@@ -673,3 +673,6 @@ prebieha kopírovanie textu
 printing document
 prebieha tlač dokumentu
 
+# Untranslated:
+#Open in Microsoft XPS-Viewer
+

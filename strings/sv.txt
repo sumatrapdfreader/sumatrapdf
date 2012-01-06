@@ -659,4 +659,5 @@ skriver ut dokumentet
 #Copy &Image
 #Could not obtain Printer properties
 #File %s not found
+#Open in Microsoft XPS-Viewer
 
