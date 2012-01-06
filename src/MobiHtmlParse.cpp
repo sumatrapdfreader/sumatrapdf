@@ -17,7 +17,6 @@ struct HtmlToken {
         ExpectedElement,
         NonTagAtEnd,
         UnclosedTag,
-        EmptyTag,
         InvalidTag
     };
 
@@ -120,13 +119,23 @@ Next:
 
     // '<' - tag begins
     ++start;
+
     if (!SkipUntil(&currPos, '>'))
         return MakeError(HtmlToken::UnclosedTag, start);
 
+    CrashIf('>' != *currPos);
     if (currPos == start) {
-        // <>
-        return MakeError(HtmlToken::EmptyTag, start);
+        // skip empty tags (<>), because we're lenient
+        ++currPos;
+        goto Next;
     }
+
+    // skip <? and <! (processing instructions and comments)
+    if (('?' == *start) || ('!' == *start)) {
+        ++currPos;
+        goto Next;
+    }
+
     HtmlToken::TokenType type = HtmlToken::StartTag;
     if (('/' == *start) && ('/' == currPos[-1])) {
         // </foo/>
@@ -143,7 +152,7 @@ Next:
         type = HtmlToken::EmptyElementTag;
         len -= 1;
     }
-    assert('>' == *currPos);
+    CrashIf('>' != *currPos);
     ++currPos;
     currToken.type = type;
     currToken.s = start;
