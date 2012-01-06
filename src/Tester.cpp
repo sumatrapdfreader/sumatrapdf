@@ -12,15 +12,16 @@
 #include "DirIter.h"
 #include "MobiParse.h"
 #include "FileUtil.h"
+#include "MobiHtmlParse.h"
 
-static int usage()
+static int Usage()
 {
     printf("Tester.exe\n");
     printf("  -mobi dirOrFile : run mobi tests in a given directory or for a given file\n");
     return 1;
 }
 
-static void testmobifile(TCHAR *path)
+static void TestMobiFile(TCHAR *path)
 {
     _tprintf(_T("Testing file '%s'\n"), path);
     MobiParse *mb = MobiParse::ParseFile(path);
@@ -28,6 +29,11 @@ static void testmobifile(TCHAR *path)
         printf(" error: failed to parse the file\n");
         return;
     }
+    size_t sLen;
+    char *s = mb->GetBookHtmlData(sLen);
+    size_t forLayoutLen;
+    uint8_t *forLayout = MobiHtmlToDisplay((uint8_t*)s, sLen, forLayoutLen);
+    free(forLayout);
     delete mb;
 }
 
@@ -39,7 +45,7 @@ static bool IsMobiFile(TCHAR *f)
            str::EndsWithI(f, _T(".azw1"));
 }
 
-static void mobitestdir(TCHAR *dir)
+static void MobiTestDir(TCHAR *dir)
 {
     _tprintf(_T("Testing mobi files in '%s'\n"), dir);
     DirIter di(true);
@@ -53,18 +59,18 @@ static void mobitestdir(TCHAR *dir)
         if (NULL == p)
             break;
         if (IsMobiFile(p))
-            testmobifile(p);
+            TestMobiFile(p);
     }
 }
 
-static void mobitest(char *dirOrFile)
+static void MobiTest(char *dirOrFile)
 {
     ScopedMem<TCHAR> tmp(str::conv::FromAnsi(dirOrFile));
 
     if (file::Exists(tmp) && IsMobiFile(tmp))
-        testmobifile(tmp);
+        TestMobiFile(tmp);
     else
-        mobitestdir(tmp);
+        MobiTestDir(tmp);
 }
 
 extern "C"
@@ -74,15 +80,15 @@ int main(int argc, char **argv)
     int left = argc - 1;
 
     if (left < 2)
-        return usage();
+        return Usage();
 
     if (str::Eq(argv[i], "-mobi")) {
         ++i; --left;
         if (left != 1)
-            return usage();
-        mobitest(argv[i]);
+            return Usage();
+        MobiTest(argv[i]);
         return 0;
     }
 
-    return usage();
+    return Usage();
 }

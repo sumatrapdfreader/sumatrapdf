@@ -69,6 +69,7 @@
     </BuildLog>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\MobiHtmlParse.cpp" />
     <ClCompile Include="src\MobiParse.cpp" />
     <ClCompile Include="src\Tester.cpp" />
     <ClCompile Include="src\utils\BitReader.cpp" />
@@ -77,6 +78,7 @@
     <ClCompile Include="src\utils\StrUtil.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\MobiHtmlParse.h" />
     <ClInclude Include="src\MobiParse.h" />
     <ClInclude Include="src\utils\BaseUtil.h" />
     <ClInclude Include="src\utils\BitReader.h" />

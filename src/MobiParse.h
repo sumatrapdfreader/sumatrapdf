@@ -103,6 +103,11 @@ class MobiParse
 public:
     static MobiParse *ParseFile(const TCHAR *fileName);
 
+    char *GetBookHtmlData(size_t& lenOut) {
+        lenOut = doc->Size();
+        return doc->Get();
+    }
+
     ~MobiParse();
     bool LoadDocument();
 };
