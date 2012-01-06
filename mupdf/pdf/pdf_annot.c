@@ -345,8 +345,14 @@ pdf_transform_annot(pdf_annot *annot)
 	float w, h, x, y;
 
 	bbox = fz_transform_rect(matrix, bbox);
-	w = (rect.x1 - rect.x0) / (bbox.x1 - bbox.x0);
-	h = (rect.y1 - rect.y0) / (bbox.y1 - bbox.y0);
+	if (bbox.x1 == bbox.x0)
+		w = 0;
+	else
+		w = (rect.x1 - rect.x0) / (bbox.x1 - bbox.x0);
+	if (bbox.y1 == bbox.y0)
+		h = 0;
+	else
+		h = (rect.y1 - rect.y0) / (bbox.y1 - bbox.y0);
 	x = rect.x0 - bbox.x0;
 	y = rect.y0 - bbox.y0;
 

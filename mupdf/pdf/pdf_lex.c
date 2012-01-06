@@ -403,7 +403,6 @@ pdf_lex(fz_stream *f, char *buf, int n, int *sl)
 			*sl = lex_string(f, buf, n);
 			return PDF_TOK_STRING;
 		case ')':
-			/* SumatraPDF: don't fail on unmatched closing parentheses */
 			fz_warn(f->ctx, "lexical error (unexpected ')')");
 			continue;
 		case '<':
@@ -424,7 +423,6 @@ pdf_lex(fz_stream *f, char *buf, int n, int *sl)
 			{
 				return PDF_TOK_CLOSE_DICT;
 			}
-			/* SumatraPDF: don't fail on unmatched closing parentheses */
 			fz_warn(f->ctx, "lexical error (unexpected '>')");
 			continue;
 		case '[':

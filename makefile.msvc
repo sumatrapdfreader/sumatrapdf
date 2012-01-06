@@ -444,6 +444,8 @@ $(OS)\Menu.obj: src\SumatraDialogs.h src\SumatraPDF.h src\TextSearch.h
 $(OS)\Menu.obj: src\TextSelection.h src\translations.h src\utils\BaseUtil.h
 $(OS)\Menu.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\StrUtil.h
 $(OS)\Menu.obj: src\utils\Vec.h src\utils\WinUtil.h src\WindowInfo.h
+$(OS)\MobiHtmlParse.obj: src\MobiHtmlParse.h src\utils\BaseUtil.h src\utils\StrUtil.h
+$(OS)\MobiHtmlParse.obj: src\utils\Vec.h
 $(OS)\MobiParse.obj: src\MobiParse.h src\utils\BaseUtil.h src\utils\BitReader.h
 $(OS)\MobiParse.obj: src\utils\FileUtil.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\MuPDF_Exports.obj: mupdf\fitz\fitz.h
@@ -583,8 +585,9 @@ $(OS)\TableOfContents.obj: src\TextSearch.h src\TextSelection.h src\translations
 $(OS)\TableOfContents.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\Scopes.h
 $(OS)\TableOfContents.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\TableOfContents.obj: src\WindowInfo.h
-$(OS)\Tester.obj: src\MobiParse.h src\utils\BaseUtil.h src\utils\DirIter.h
-$(OS)\Tester.obj: src\utils\FileUtil.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\Tester.obj: src\MobiHtmlParse.h src\MobiParse.h src\utils\BaseUtil.h
+$(OS)\Tester.obj: src\utils\DirIter.h src\utils\FileUtil.h src\utils\StrUtil.h
+$(OS)\Tester.obj: src\utils\Vec.h
 $(OS)\TextSearch.obj: src\BaseEngine.h src\TextSearch.h src\TextSelection.h
 $(OS)\TextSearch.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\StrUtil.h
 $(OS)\TextSearch.obj: src\utils\Vec.h

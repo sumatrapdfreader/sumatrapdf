@@ -147,10 +147,11 @@ fz_rect
 fz_bound_path(fz_path *path, fz_stroke_state *stroke, fz_matrix ctm)
 {
 	fz_point p;
-	fz_rect r = fz_empty_rect;
+	fz_rect r;
 	int i = 0;
 
-	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1732 */
+	/* If the path is empty, return the empty rectangle here - don't wait
+	 * for it to be expanded in the stroked case below. */
 	if (path->len == 0)
 		return fz_empty_rect;
 
@@ -163,14 +164,11 @@ fz_bound_path(fz_path *path, fz_stroke_state *stroke, fz_matrix ctm)
 			return fz_empty_rect;
 	}
 
-	if (path->len)
-	{
-		p.x = path->items[1].v;
-		p.y = path->items[2].v;
-		p = fz_transform_point(ctm, p);
-		r.x0 = r.x1 = p.x;
-		r.y0 = r.y1 = p.y;
-	}
+	p.x = path->items[i + 1].v;
+	p.y = path->items[i + 2].v;
+	p = fz_transform_point(ctm, p);
+	r.x0 = r.x1 = p.x;
+	r.y0 = r.y1 = p.y;
 
 	while (i < path->len)
 	{

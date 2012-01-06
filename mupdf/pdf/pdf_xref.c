@@ -769,8 +769,7 @@ pdf_open_xref_with_stream(fz_stream *file, char *password)
 	}
 	fz_catch(ctx)
 	{
-		/* SumatraPDF: this is far from critical */
-		fz_warn(ctx, "Ignoring broken OCG configuration");
+		fz_warn(ctx, "Ignoring Broken Optional Content");
 	}
 
 	return xref;
@@ -969,7 +968,6 @@ pdf_cache_object(pdf_xref *xref, int num, int gen)
 
 		if (rnum != num)
 		{
-			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1728 */
 			fz_drop_obj(x->obj);
 			x->obj = NULL;
 			fz_throw(ctx, "found object (%d %d R) instead of (%d %d R)", rnum, rgen, num, gen);
@@ -1022,7 +1020,9 @@ pdf_load_object(pdf_xref *xref, int num, int gen)
 fz_obj *
 pdf_resolve_indirect(fz_obj *ref)
 {
-	if (fz_is_indirect(ref))
+	int sanity = 10;
+
+	while (fz_is_indirect(ref) && sanity--)
 	{
 		pdf_xref *xref = fz_get_indirect_xref(ref);
 		if (xref)
@@ -1039,14 +1039,15 @@ pdf_resolve_indirect(fz_obj *ref)
 				fz_warn(ctx, "cannot load object (%d %d R) into cache", num, gen);
 				return ref;
 			}
-			/* SumatraPDF: base_object.c can't handle multiple indirections */
+			if (!xref->table[num].obj)
+				return ref;
+			/* SumatraPDF: base_object.c assumes that pdf_resolve_indirect is idempotent */
 			if (fz_is_indirect(xref->table[num].obj))
 			{
 				fz_warn(ctx, "ignoring unexpected double-indirection (%d %d R)", num, gen);
 				return ref;
 			}
-			if (xref->table[num].obj)
-				return xref->table[num].obj;
+			return xref->table[num].obj;
 		}
 	}
 	return ref;

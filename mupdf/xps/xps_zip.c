@@ -325,7 +325,6 @@ xps_read_zip_part(xps_document *doc, char *partname)
 	xps_part *part;
 	int count, size, offset, i;
 	char *name;
-	/* SumatraPDF: consistent piece counting */
 	int seen_last = 0;
 
 	name = partname;
@@ -352,14 +351,13 @@ xps_read_zip_part(xps_document *doc, char *partname)
 		{
 			sprintf(buf, "%s/[%d].last.piece", name, count);
 			ent = xps_find_zip_entry(doc, buf);
-			seen_last = ent != NULL;
+			seen_last = (ent != NULL);
 		}
 		if (!ent)
 			break;
 		count ++;
 		size += ent->usize;
 	}
-	/* SumatraPDF: consistent piece counting */
 	if (!seen_last)
 		fz_throw(doc->ctx, "cannot find all pieces for part '%s'", partname);
 

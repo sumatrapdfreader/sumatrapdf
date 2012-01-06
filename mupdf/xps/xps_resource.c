@@ -80,9 +80,8 @@ xps_parse_remote_resource_dictionary(xps_document *doc, char *base_uri, char *so
 		s[1] = 0;
 
 	dict = xps_parse_resource_dictionary(doc, part_uri, xml);
-	/* SumatraPDF: don't warn about empty resource dictionaries */
 	if (dict)
-	dict->base_xml = xml; /* pass on ownership */
+		dict->base_xml = xml; /* pass on ownership */
 
 	return dict;
 }

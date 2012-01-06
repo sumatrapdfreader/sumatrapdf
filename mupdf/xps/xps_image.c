@@ -28,16 +28,17 @@ xps_paint_image_brush(xps_document *doc, fz_matrix ctm, fz_rect area, char *base
 	xml_element *root, void *vimage)
 {
 	fz_pixmap *pixmap = vimage;
-	/* SumatraPDF: prevent a potential division by zero */
-	if (pixmap->xres != 0 && pixmap->yres != 0)
-	{
-	float xs = pixmap->w * 96 / pixmap->xres;
-	float ys = pixmap->h * 96 / pixmap->yres;
-	fz_matrix im = fz_scale(xs, -ys);
+	float xs, ys;
+	fz_matrix im;
+
+	if (pixmap->xres == 0 || pixmap->yres == 0)
+		return;
+	xs = pixmap->w * 96 / pixmap->xres;
+	ys = pixmap->h * 96 / pixmap->yres;
+	im = fz_scale(xs, -ys);
 	im.f = ys;
 	ctm = fz_concat(im, ctm);
 	fz_fill_image(doc->dev, pixmap, ctm, doc->opacity[doc->opacity_top]);
-	}
 }
 
 static xps_part *

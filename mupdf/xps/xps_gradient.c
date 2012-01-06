@@ -312,9 +312,10 @@ xps_draw_radial_gradient(xps_document *doc, fz_matrix ctm,
 	char *radius_x_att = xml_att(root, "RadiusX");
 	char *radius_y_att = xml_att(root, "RadiusY");
 
-	/* SumatraPDF: prevent use of uninitialized values (cf. xps_draw_linear_gradient) */
-	x0 = y0 = 0;
-	x1 = y1 = 1;
+	x0 = y0 = 0.0;
+	x1 = y1 = 1.0;
+	xrad = 1.0;
+	yrad = 1.0;
 
 	if (origin_att)
 		xps_get_point(origin_att, &x0, &y0);
@@ -325,18 +326,20 @@ xps_draw_radial_gradient(xps_document *doc, fz_matrix ctm,
 	if (radius_y_att)
 		yrad = fz_atof(radius_y_att);
 
-	/* SumatraPDF: prevent a division by zero (e.g. in "Zero-radius.xps") */
-	if (!xrad)
+	/* SumatraPDF: fix Zero-radius.xps */
+	if (xrad == 0.0)
 		xrad = 0.01f;
-	if (!yrad)
-		yrad = 0.01f;
 
 	/* scale the ctm to make ellipses */
-	ctm = fz_concat(fz_scale(1, yrad / xrad), ctm);
+	if (xrad != 0.0)
+		ctm = fz_concat(fz_scale(1, yrad / xrad), ctm);
 
-	invscale = xrad / yrad;
-	y0 = y0 * invscale;
-	y1 = y1 * invscale;
+	if (yrad != 0.0)
+	{
+		invscale = xrad / yrad;
+		y0 = y0 * invscale;
+		y1 = y1 * invscale;
+	}
 
 	r0 = 0;
 	r1 = xrad;

@@ -1413,11 +1413,11 @@ fz_draw_begin_tile(fz_device *devp, fz_rect area, fz_rect view, float xstep, flo
 	/* We should never have a bbox that entirely covers our destination.
 	 * If we do, then the check for only 1 tile being visible above has
 	 * failed. */
-	/* SumatraPDF: this assertion doesn't always hold
-	   (fails e.g. for "infinite pattern recursion.pdf")
+	/* SumatraPDF: this assertion doesn't always hold (fails e.g. for
+	   "edgy image smooth scaling (MuPDF).pdf" and "infinite pattern recursion.pdf") */
 	assert(bbox.x0 > state->dest->x || bbox.x1 < state->dest->x + state->dest->w ||
 		bbox.y0 > state->dest->y || bbox.y1 < state->dest->y + state->dest->h);
-	*/
+	/**/
 	dest = fz_new_pixmap_with_rect(dev->ctx, model, bbox);
 	fz_clear_pixmap(dest);
 	shape = state[0].shape;

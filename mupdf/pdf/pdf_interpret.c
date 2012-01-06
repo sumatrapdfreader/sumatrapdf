@@ -2572,9 +2572,8 @@ pdf_run_buffer(pdf_csi *csi, fz_obj *rdb, fz_buffer *contents)
 	fz_var(buf);
 	fz_var(file);
 
-	/* SumatraPDF: be slightly more defensive */
-	if (!contents)
-		fz_throw(ctx, "cannot run NULL content stream");
+	if (contents == NULL)
+		return;
 
 	fz_try(ctx)
 	{
@@ -2582,14 +2581,13 @@ pdf_run_buffer(pdf_csi *csi, fz_obj *rdb, fz_buffer *contents)
 		file = fz_open_buffer(ctx, contents);
 		save_in_text = csi->in_text;
 		csi->in_text = 0;
-		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692260 */
 		fz_try(ctx)
 		{
 			pdf_run_stream(csi, rdb, file, buf, len);
 		}
 		fz_catch(ctx)
 		{
-			fz_warn(ctx, "couldn't parse the whole content stream, rendering anyway");
+			fz_warn(ctx, "Content stream parsing error - rendering truncated");
 		}
 		csi->in_text = save_in_text;
 	}
@@ -2651,11 +2649,9 @@ pdf_run_page_with_usage(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matri
 			continue;
 		if (flags & (1 << 1)) /* Hidden */
 			continue;
-		/* SumatraPDF: don't print annotations unless explicitly asked to */
-		if (!(flags & (1 << 2)) /* Print */ && !strcmp(event, "Print"))
+		if (!strcmp(event, "Print") && !(flags & (1 << 2))) /* Print */
 			continue;
-		/* SumatraPDF: only consider the NoView flag for the View target */
-		if ((flags & (1 << 5)) /* NoView */ && !strcmp(event, "View"))
+		if (!strcmp(event, "View") && (flags & (1 << 5))) /* NoView */
 			continue;
 
 		csi = pdf_new_csi(xref, dev, ctm, event, cookie);
