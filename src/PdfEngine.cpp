@@ -860,7 +860,6 @@ protected:
     fz_rect       * GetPageImageRects(pdf_page *page);
     RenderedBitmap *GetPageImage(int pageNo, RectD rect, size_t imageIx);
 
-    int             FindPageNo(fz_obj *dest);
     bool            SaveEmbedded(fz_obj *obj, LinkSaverUI& saveUI);
 
     RectD         * _mediaboxes;
@@ -878,11 +877,16 @@ class PdfLink : public PageElement, public PageDestination {
     fz_link_dest *link; // owned by an fz_link or fz_outline
     RectD rect;
     int pageNo;
+    PointD pt;
 
 public:
     PdfLink(CPdfEngine *engine, fz_link_dest *link,
-        fz_rect rect=fz_empty_rect, int pageNo=-1) :
-        engine(engine), link(link), rect(fz_rect_to_RectD(rect)), pageNo(pageNo) { }
+        fz_rect rect=fz_empty_rect, int pageNo=-1, fz_point *pt=NULL) :
+        engine(engine), link(link), rect(fz_rect_to_RectD(rect)), pageNo(pageNo) {
+        // cursor coordinates for IsMap URI links
+        if (pt)
+            this->pt = PointD(pt->x, pt->y);
+    }
 
     virtual PageElementType GetType() const { return Element_Link; }
     virtual int GetPageNo() const { return pageNo; }
@@ -894,6 +898,7 @@ public:
     virtual int GetDestPageNo() const;
     virtual RectD GetDestRect() const;
     virtual TCHAR *GetDestValue() const { return GetValue(); }
+    virtual TCHAR *GetDestName() const;
 
     virtual bool SaveEmbedded(LinkSaverUI& saveUI);
 };
@@ -1308,33 +1313,6 @@ DocTocItem *CPdfEngine::GetTocTree()
     return node;
 }
 
-int CPdfEngine::FindPageNo(fz_obj *dest)
-{
-    ScopedCritSec scope(&ctxAccess);
-
-    if (fz_is_dict(dest)) {
-        // The destination is linked from a Go-To action's D array
-        fz_obj * D = fz_dict_gets(dest, "D");
-        if (D && fz_is_array(D))
-            dest = D;
-    }
-    if (fz_is_name(dest) || fz_is_string(dest)) {
-        // names refer to either an array or a dictionary with an array /D
-        dest = pdf_lookup_dest(_xref, dest);
-        if (fz_is_dict(dest))
-            dest = fz_dict_gets(dest, "D");
-        if (!fz_is_array(dest))
-            return 0;
-    }
-
-    if (fz_is_array(dest))
-        dest = fz_array_get(dest, 0);
-    if (fz_is_int(dest))
-        return fz_to_int(dest) + 1;
-
-    return pdf_find_page_number(_xref, dest) + 1;
-}
-
 PageDestination *CPdfEngine::GetNamedDest(const TCHAR *name)
 {
     ScopedCritSec scope(&ctxAccess);
@@ -1344,15 +1322,15 @@ PageDestination *CPdfEngine::GetNamedDest(const TCHAR *name)
     fz_obj *dest = pdf_lookup_dest(_xref, nameobj);
     fz_drop_obj(nameobj);
 
-    // names refer to either an array or a dictionary with an array /D
-    if (fz_is_dict(dest))
-        dest = fz_dict_gets(dest, "D");
-    if (!fz_is_array(dest))
-        return NULL;
+    PageDestination *pageDest = NULL;
 
     fz_link_dest ld = pdf_parse_link_dest(_xref, dest);
-    PdfLink tmp(this, &ld);
-    PageDestination *pageDest = new SimpleDest(tmp.GetDestPageNo(), tmp.GetDestRect());
+    if (FZ_LINK_GOTO == ld.kind) {
+        // create a SimpleDest because we have to
+        // free the fz_link_dest before returning
+        PdfLink tmp(this, &ld);
+        pageDest = new SimpleDest(tmp.GetDestPageNo(), tmp.GetDestRect());
+    }
     fz_free_link_dest(ctx, &ld);
 
     return pageDest;
@@ -1734,7 +1712,7 @@ PageElement *CPdfEngine::GetElementAtPos(int pageNo, PointD pt)
     fz_point p = { (float)pt.x, (float)pt.y };
     for (fz_link *link = page->links; link; link = link->next)
         if (link->dest.kind != FZ_LINK_NONE && fz_is_pt_in_rect(link->rect, p))
-            return new PdfLink(this, &link->dest, link->rect, pageNo);
+            return new PdfLink(this, &link->dest, link->rect, pageNo, &p);
 
     if (pageComments[pageNo-1]) {
         for (size_t i = 0; pageComments[pageNo-1][i]; i++) {
@@ -2088,6 +2066,16 @@ TCHAR *PdfLink::GetValue() const
                 path = uri.StealData();
             }
         }
+        if (link->ld.uri.is_map) {
+            PointI mapPt;
+            if (rect.Inside(pt)) {
+                mapPt.x = (int)(pt.x - rect.x + 0.5);
+                mapPt.y = (int)(rect.y + rect.dy - pt.y + 0.5);
+            }
+            ScopedMem<TCHAR> uri(str::Format(_T("%s?%d,%d"), path, mapPt.x, mapPt.y));
+            free(path);
+            path = uri.StealData();
+        }
         break;
     case FZ_LINK_LAUNCH:
         // note: we (intentionally) don't support the /Win specific Launch parameters
@@ -2108,10 +2096,8 @@ TCHAR *PdfLink::GetValue() const
 
 const char *PdfLink::GetDestType() const
 {
-    if (!link || !engine)
+    if (!link)
         return NULL;
-
-    ScopedCritSec scope(&engine->ctxAccess);
 
     switch (link->kind) {
     case FZ_LINK_GOTO: return "ScrollTo";
@@ -2121,7 +2107,7 @@ const char *PdfLink::GetDestType() const
         if (link->ld.launch.embedded)
             return "LaunchEmbedded";
         return "LaunchFile";
-    case FZ_LINK_GOTOR: return "ScrollToEx";
+    case FZ_LINK_GOTOR: return "LaunchFile";
     default: return NULL; // unsupported action
     }
 }
@@ -2130,9 +2116,8 @@ int PdfLink::GetDestPageNo() const
 {
     if (link && FZ_LINK_GOTO == link->kind)
         return link->ld.gotor.page + 1;
-    // TODO: this resolves against the wrong engine
-    if (link && FZ_LINK_GOTOR == link->kind)
-        return engine->FindPageNo(link->ld.gotor.details);
+    if (link && FZ_LINK_GOTOR == link->kind && !link->ld.gotor.rname)
+        return link->ld.gotor.page + 1;
     return 0;
 }
 
@@ -2140,50 +2125,37 @@ RectD PdfLink::GetDestRect() const
 {
     RectD result(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
     if (!link || FZ_LINK_GOTO != link->kind && FZ_LINK_GOTOR != link->kind)
-        return result;
-
-    ScopedCritSec scope(&engine->ctxAccess);
-
-    fz_obj *dest = link->ld.gotor.details;
-    // TODO: properly resolve the destination against the remote document
-    if (FZ_LINK_GOTOR == link->kind)
-        dest = fz_dict_gets(dest, "D");
-    fz_obj *obj = fz_array_get(dest, 1);
-    const char *type = fz_to_name(obj);
-
-    if (str::Eq(type, "XYZ")) {
-        // NULL values for the coordinates mean: keep the current position
-        if (!fz_is_null(fz_array_get(dest, 2)))
-            result.x = fz_to_real(fz_array_get(dest, 2));
-        if (!fz_is_null(fz_array_get(dest, 3)))
-            result.y = fz_to_real(fz_array_get(dest, 3));
+        /* not applicable */;
+    else if ((link->ld.gotor.flags & fz_link_flag_r_is_zoom)) {
+        // /XYZ link, undefined values for the coordinates mean: keep the current position
+        if ((link->ld.gotor.flags & fz_link_flag_l_valid))
+            result.x = link->ld.gotor.lt.x;
+        if ((link->ld.gotor.flags & fz_link_flag_t_valid))
+            result.y = link->ld.gotor.lt.y;
         result.dx = result.dy = 0;
-        // work around buggy documents that expect "/XYZ 0 0 0" to just point
-        // to the page just as "/XYZ null null null" (created by Office 2010?)
-        // cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1686
-        if (RectD() == result && !fz_is_null(fz_array_get(dest, 4)) && 0 == fz_to_real(fz_array_get(dest, 4)))
-            result.x = result.y = DEST_USE_DEFAULT;
     }
-    else if (str::Eq(type, "FitR")) {
-        result = RectD::FromXY(fz_to_real(fz_array_get(dest, 2)),  // left
-                               fz_to_real(fz_array_get(dest, 5)),  // top
-                               fz_to_real(fz_array_get(dest, 4)),  // right
-                               fz_to_real(fz_array_get(dest, 3))); // bottom
-        // empty destination rectangle implies an /XYZ-type link
+    else if ((link->ld.gotor.flags & (fz_link_flag_fit_h | fz_link_flag_fit_v)) == (fz_link_flag_fit_h | fz_link_flag_fit_v) &&
+        (link->ld.gotor.flags & (fz_link_flag_l_valid | fz_link_flag_t_valid | fz_link_flag_r_valid | fz_link_flag_b_valid))) {
+        // /FitR link
+        result = RectD::FromXY(link->ld.gotor.lt.x, link->ld.gotor.lt.y,
+                               link->ld.gotor.rb.x, link->ld.gotor.rb.y);
+        // an empty destination rectangle would imply an /XYZ-type link to callers
         if (result.IsEmpty())
             result.dx = result.dy = 0.1;
     }
-    else if (str::Eq(type, "FitH") || str::Eq(type, "FitBH")) {
-        result.y = fz_to_real(fz_array_get(dest, 2)); // top
-        // zoom = str::Eq(type, "FitH") ? ZOOM_FIT_WIDTH : ZOOM_FIT_CONTENT;
+    else if ((link->ld.gotor.flags & (fz_link_flag_fit_h | fz_link_flag_fit_v)) == fz_link_flag_fit_h) {
+        // /FitH or /FitBH link
+        result.y = link->ld.gotor.lt.y;
     }
-    else if (str::Eq(type, "Fit") || str::Eq(type, "FitV")) {
-        // zoom = ZOOM_FIT_PAGE;
-    }
-    else if (str::Eq(type, "FitB") || str::Eq(type, "FitBV")) {
-        // zoom = ZOOM_FIT_CONTENT;
-    }
+    // all other link types only affect the zoom level, which we intentionally leave alone
     return result;
+}
+
+TCHAR *PdfLink::GetDestName() const
+{
+    if (!link || FZ_LINK_GOTOR != link->kind || !link->ld.gotor.rname)
+        return NULL;
+    return str::conv::FromUtf8(link->ld.gotor.rname);
 }
 
 bool PdfLink::SaveEmbedded(LinkSaverUI& saveUI)
@@ -2289,7 +2261,6 @@ public:
     virtual bool HasTocTree() const { return _outline != NULL; }
     virtual DocTocItem *GetTocTree();
 
-    int FindPageNo(const char *target);
     fz_rect FindDestRect(const char *target);
 
 protected:
@@ -2373,14 +2344,14 @@ public:
         return NULL;
     }
     virtual int GetDestPageNo() const {
-        if (!engine || !link || link->kind != FZ_LINK_GOTOR)
+        if (!link || link->kind != FZ_LINK_GOTOR)
             return 0;
-        return engine->FindPageNo(link->ld.gotor.file_spec);
+        return link->ld.gotor.page + 1;
     }
     virtual RectD GetDestRect() const {
         if (!engine || !link || link->kind != FZ_LINK_GOTOR)
             return RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
-        return fz_rect_to_RectD(engine->FindDestRect(link->ld.gotor.file_spec));
+        return fz_rect_to_RectD(engine->FindDestRect(link->ld.gotor.rname));
     }
     virtual TCHAR *GetDestValue() const { return GetValue(); }
 };
@@ -3132,21 +3103,20 @@ RenderedBitmap *CXpsEngine::GetPageImage(int pageNo, RectD rect, size_t imageIx)
     return new RenderedFitzBitmap(ctx, positions.At(imageIx).image);
 }
 
-int CXpsEngine::FindPageNo(const char *target)
-{
-    if (str::IsEmpty(target))
-        return 0;
-
-    return xps_find_link_target(_doc, (char *)target) + 1;
-}
-
 fz_rect CXpsEngine::FindDestRect(const char *target)
 {
     if (str::IsEmpty(target))
         return fz_empty_rect;
 
     xps_target *found = xps_find_link_target_obj(_doc, (char *)target);
-    return found ? found->rect : fz_empty_rect;
+    if (!found)
+        return fz_empty_rect;
+    if (fz_is_empty_rect(found->rect)) {
+        // ensure that the target rectangle could have been
+        // updated through LinkifyPageText -> xps_extract_anchor_info
+        GetXpsPage(found->page);
+    }
+    return found->rect;
 }
 
 PageDestination *CXpsEngine::GetNamedDest(const TCHAR *name)

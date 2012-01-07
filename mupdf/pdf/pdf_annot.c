@@ -74,8 +74,6 @@ pdf_parse_link_dest(pdf_xref *xref, fz_obj *dest)
 	ld.ld.gotor.rb.y = 0;
 	ld.ld.gotor.file_spec = NULL;
 	ld.ld.gotor.new_window = 0;
-	/* SumatraPDF: allow to resolve against remote documents */
-	ld.ld.gotor.details = fz_keep_obj(dest);
 
 	obj = fz_array_get(dest, 1);
 	if (!fz_is_name(obj))
@@ -195,6 +193,13 @@ pdf_parse_link_dest(pdf_xref *xref, fz_obj *dest)
 	if ((ld.ld.gotor.flags & (fz_link_flag_t_valid | fz_link_flag_b_valid)) == fz_link_flag_b_valid)
 		ld.ld.gotor.lt.y = ld.ld.gotor.rb.y;
 
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1686 */
+	/* some producers wrongly expect "/XYZ 0 0 0" to be the same as "/XYZ null null null" */
+	if ((ld.ld.gotor.flags & fz_link_flag_r_is_zoom) &&
+		(ld.ld.gotor.flags & (fz_link_flag_l_valid | fz_link_flag_t_valid | fz_link_flag_r_valid)) == (fz_link_flag_l_valid | fz_link_flag_t_valid | fz_link_flag_r_valid) &&
+		ld.ld.gotor.lt.x == 0 && ld.ld.gotor.lt.y == 0 && ld.ld.gotor.rb.x == 0)
+		ld.ld.gotor.flags = fz_link_flag_r_is_zoom;
+
 	return ld;
 }
 
@@ -259,7 +264,7 @@ pdf_parse_action(pdf_xref *xref, fz_obj *action)
 	else if (!strcmp(fz_to_name(obj), "URI"))
 	{
 		ld.kind = FZ_LINK_URI;
-		ld.ld.uri.is_map = fz_to_int(fz_dict_gets(action, "IsMap"));
+		ld.ld.uri.is_map = fz_to_bool(fz_dict_gets(action, "IsMap"));
 		ld.ld.uri.uri = pdf_to_utf8(ctx, fz_dict_gets(action, "URI"));
 	}
 	else if (!strcmp(fz_to_name(obj), "Launch"))
@@ -284,17 +289,25 @@ pdf_parse_action(pdf_xref *xref, fz_obj *action)
 	}
 	else if (!strcmp(fz_to_name(obj), "GoToR"))
 	{
-		dest = fz_dict_gets(action, "D");
-		ld = pdf_parse_link_dest(xref, dest);
 		/* SumatraPDF: allow to resolve against remote documents */
-		if (ld.kind != FZ_LINK_NONE)
-			fz_drop_obj(ld.ld.gotor.details);
+		char *rname = NULL;
+		memset(&ld, 0, sizeof(ld));
+		dest = fz_dict_gets(action, "D");
+		if (fz_is_array(dest))
+			ld = pdf_parse_link_dest(xref, dest);
+		else if (fz_is_name(dest))
+			rname = fz_strdup(ctx, fz_to_name(dest));
+		else if (fz_is_string(dest))
+			rname = pdf_to_utf8(ctx, dest);
+		if (rname || ld.kind == FZ_LINK_GOTO && ld.ld.gotor.page >= 0)
+		{
 		ld.kind = FZ_LINK_GOTOR;
 		/* SumatraPDF: parse full file specifications */
 		ld.ld.gotor.file_spec = pdf_file_spec_to_str(ctx, fz_dict_gets(action, "F"));
 		ld.ld.gotor.new_window = fz_to_int(fz_dict_gets(action, "NewWindow"));
 		/* SumatraPDF: allow to resolve against remote documents */
-		ld.ld.gotor.details = fz_keep_obj(action);
+		ld.ld.gotor.rname = rname;
+		}
 	}
 	return ld;
 }

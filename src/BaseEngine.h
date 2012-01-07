@@ -68,6 +68,10 @@ public:
     // string value associated with the destination (e.g. a path or a URL)
     // caller must free() the result
     virtual TCHAR *GetDestValue() const { return NULL; }
+    // the name of this destination (reverses BaseEngine::GetNamedDest) or NULL
+    // (mainly applicable for links of type "LaunchFile" to PDF documents)
+    // caller must free() the result
+    virtual TCHAR *GetDestName() const { return NULL; }
 
     // if this destination's target is an embedded file, this allows to
     // save that file efficiently (the LinkSaverUI might get passed a link

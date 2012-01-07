@@ -80,6 +80,10 @@ void DumpProperties(BaseEngine *engine)
 // caller must free() the result
 char *DestRectToStr(BaseEngine *engine, PageDestination *dest)
 {
+    if (ScopedMem<TCHAR>(dest->GetDestName())) {
+        ScopedMem<char> name(Escape(dest->GetDestName()));
+        return str::Format("Name=\"%s\"", name);
+    }
     // as handled by LinkHandler::ScrollTo in WindowInfo.cpp
     int pageNo = dest->GetDestPageNo();
     if (pageNo <= 0 || pageNo > engine->PageCount())
@@ -119,7 +123,7 @@ void DumpTocItem(BaseEngine *engine, DocTocItem *item, int level, int& idCounter
                 Out(" TargetPage=\"%d\"", dest->GetDestPageNo());
             ScopedMem<char> rectStr(DestRectToStr(engine, dest));
             if (rectStr)
-                Out(" Target%s", rectStr);
+                Out(" Target%s", rectStr.Get());
         }
         if (!item->child)
             Out(" />\n");
@@ -188,12 +192,11 @@ void DumpPageData(BaseEngine *engine, int pageNo, bool fullDump)
                 ScopedMem<char> value(Escape(dest->GetDestValue()));
                 if (value)
                     Out("\t\t\t\tTarget=\"%s\"\n", value.Get());
-                if (dest->GetDestPageNo()) {
+                if (dest->GetDestPageNo())
                     Out("\t\t\t\tLinkedPage=\"%d\"\n", dest->GetDestPageNo());
-                    ScopedMem<char> rectStr(DestRectToStr(engine, dest));
-                    if (rectStr)
-                        Out("\t\t\t\tLinked%s\n", rectStr);
-                }
+                ScopedMem<char> rectStr(DestRectToStr(engine, dest));
+                if (rectStr)
+                    Out("\t\t\t\tLinked%s\n", rectStr.Get());
             }
             ScopedMem<char> name(Escape(els->At(i)->GetValue()));
             if (name)

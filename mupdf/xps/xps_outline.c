@@ -52,10 +52,10 @@ xps_parse_document_outline(xps_document *doc, xml_element *root)
 			else if (!is_external_target(target))
 			{
 				memset(&entry->dest, 0, sizeof(fz_link_dest));
-				/* SumatraPDF: GOTOR causes the (here misnamed) file_spec to be freed */
 				entry->dest.kind = FZ_LINK_GOTOR;
 				entry->dest.ld.gotor.page = xps_find_link_target(doc, target);
-				entry->dest.ld.gotor.file_spec = fz_strdup(doc->ctx, target);
+				/* for retrieving updated target rectangles */
+				entry->dest.ld.gotor.rname = fz_strdup(doc->ctx, target);
 			}
 			else
 			{
@@ -177,7 +177,8 @@ xps_extract_anchor_info(xps_document *doc, xml_element *node, fz_rect rect)
 		{
 			ld.kind = FZ_LINK_GOTOR;
 			ld.ld.gotor.page = xps_find_link_target(doc, value);
-			ld.ld.gotor.file_spec = fz_strdup(doc->ctx, value);
+			/* for retrieving updated target rectangles */
+			ld.ld.gotor.rname = fz_strdup(doc->ctx, value);
 		}
 		else
 		{

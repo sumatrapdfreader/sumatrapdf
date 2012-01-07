@@ -1310,7 +1310,7 @@ struct fz_link_dest_s
 			fz_point rb;
 			char *file_spec;
 			int new_window;
-			fz_obj *details; /* SumatraPDF: allow to resolve against remote documents */
+			char *rname; /* SumatraPDF: allow to resolve against remote documents */
 		}
 		gotor;
 		struct

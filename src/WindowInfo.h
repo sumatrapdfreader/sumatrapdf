@@ -227,6 +227,7 @@ class LinkHandler {
     BaseEngine *engine() const;
 
     void ScrollTo(PageDestination *dest);
+    void LaunchFile(const TCHAR *path, PageDestination *link);
     PageDestination *FindTocItem(DocTocItem *item, const TCHAR *name, bool partially=false);
 
 public:

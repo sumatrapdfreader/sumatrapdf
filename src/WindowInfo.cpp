@@ -200,6 +200,7 @@ void LinkHandler::GotoLink(PageDestination *link)
     ScopedMem<TCHAR> path(link->GetDestValue());
     const char *type = link->GetDestType();
     if (str::Eq(type, "ScrollTo")) {
+        // TODO: respect link->ld.gotor.new_window for PDF documents ?
         ScrollTo(link);
     }
     else if (str::Eq(type, "LaunchURL") && path) {
@@ -219,46 +220,9 @@ void LinkHandler::GotoLink(PageDestination *link)
         else
             link->SaveEmbedded(LinkSaver(*owner, path));
     }
-    else if ((str::Eq(type, "LaunchFile") || str::Eq(type, "ScrollToEx")) && path) {
-        // for safety, only handle relative paths and only open them in SumatraPDF
-        // (unless they're of a registered audio or video type) and never launch any
-        // external file in plugin mode (where documents are supposed to be self-contained)
-        TCHAR drive;
-        if (!str::StartsWith(path.Get(), _T("\\")) &&
-            !str::Parse(path, _T("%c:\\"), &drive) &&
-            !gPluginMode) {
-            ScopedMem<TCHAR> fullPath(path::GetDir(dm->FileName()));
-            fullPath.Set(path::Join(fullPath, path));
-            fullPath.Set(path::Normalize(fullPath));
-            // TODO: respect fz_to_bool(fz_dict_gets(link->dest, "NewWindow")) for ScrollToEx
-            WindowInfo *newWin = FindWindowInfoByFile(fullPath);
-            // TODO: don't show window until it's certain that there was no error
-            if (!newWin)
-                newWin = LoadDocument(fullPath, owner);
-
-            bool errorLoading = newWin && !newWin->IsDocLoaded();
-            if (errorLoading) {
-                CloseWindow(newWin, true);
-                newWin = NULL;
-            }
-            if (errorLoading && str::Eq(type, "LaunchFile") && HasPermission(Perm_DiskAccess)) {
-                const TCHAR *ext = path::GetExt(fullPath);
-                ScopedMem<TCHAR> value(ReadRegStr(HKEY_CLASSES_ROOT, ext, _T("PerceivedType")));
-                // TODO: only do this for trusted files (cf. IsUntrustedFile)?
-                if (str::EqI(value, _T("audio")) || str::EqI(value, _T("video")))
-                    errorLoading = !LaunchFile(fullPath);
-            }
-            if (errorLoading) {
-                ScopedMem<TCHAR> msg(str::Format(_TR("Error loading %s"), fullPath));
-                ShowNotification(owner, msg, true /* autoDismiss */, true /* highlight */);
-            }
-
-            if (newWin) {
-                newWin->Focus();
-                if (str::Eq(type, "ScrollToEx"))
-                    newWin->linkHandler->ScrollTo(link);
-            }
-        }
+    else if (str::Eq(type, "LaunchFile") && path) {
+        // OpenExternal only opens files inside SumatraPDF (except for registered media files)
+        LaunchFile(path, link);
     }
     // predefined named actions
     else if (str::Eq(type, "NextPage"))
@@ -344,6 +308,57 @@ void LinkHandler::ScrollTo(PageDestination *dest)
     }
     // */
     dm->GoToPage(pageNo, scroll.y, true, scroll.x);
+}
+
+void LinkHandler::LaunchFile(const TCHAR *path, PageDestination *link)
+{
+    // for safety, only handle relative paths and only open them in SumatraPDF
+    // (unless they're of a registered audio or video type) and never launch any
+    // external file in plugin mode (where documents are supposed to be self-contained)
+    TCHAR drive;
+    if (str::StartsWith(path, _T("\\")) || str::Parse(path, _T("%c:\\"), &drive) || gPluginMode) {
+        return;
+    }
+
+    ScopedMem<TCHAR> fullPath(path::GetDir(owner->dm->FileName()));
+    fullPath.Set(path::Join(fullPath, path));
+    fullPath.Set(path::Normalize(fullPath));
+    // TODO: respect link->ld.gotor.new_window for PDF documents ?
+    WindowInfo *newWin = FindWindowInfoByFile(fullPath);
+    // TODO: don't show window until it's certain that there was no error
+    if (!newWin)
+        newWin = LoadDocument(fullPath, owner);
+
+    bool errorLoading = newWin && !newWin->IsDocLoaded();
+    if (errorLoading) {
+        CloseWindow(newWin, true);
+        newWin = NULL;
+    }
+    if (errorLoading && HasPermission(Perm_DiskAccess)) {
+        const TCHAR *ext = path::GetExt(fullPath);
+        ScopedMem<TCHAR> value(ReadRegStr(HKEY_CLASSES_ROOT, ext, _T("PerceivedType")));
+        // TODO: only do this for trusted files (cf. IsUntrustedFile)?
+        if (str::EqI(value, _T("audio")) || str::EqI(value, _T("video")))
+            errorLoading = !::LaunchFile(fullPath);
+    }
+    if (errorLoading) {
+        ScopedMem<TCHAR> msg(str::Format(_TR("Error loading %s"), fullPath));
+        ShowNotification(owner, msg, true /* autoDismiss */, true /* highlight */);
+    }
+    if (!newWin)
+        return;
+
+    newWin->Focus();
+    ScopedMem<TCHAR> name(link->GetDestName());
+    if (!name)
+        newWin->linkHandler->ScrollTo(link);
+    else {
+        PageDestination *dest = newWin->dm->engine->GetNamedDest(name);
+        if (dest) {
+            newWin->linkHandler->ScrollTo(dest);
+            delete dest;
+        }
+    }
 }
 
 // normalizes case and whitespace in the string
