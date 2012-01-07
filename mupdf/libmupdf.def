@@ -473,6 +473,7 @@ EXPORTS
 	xml_att
 	xml_free_element
 	xml_print_element
+	xml_detach
 	xps_new_part
 	xps_has_part
 	xps_read_part
@@ -515,6 +516,7 @@ EXPORTS
 	xps_end_opacity
 	xps_parse_brush
 	xps_parse_element
+	xps_find_alternate_content
 	xps_clip
 	xps_get_point
 	xps_open_file
