@@ -4557,8 +4557,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     MSG msg = { 0 };
 
 #ifdef DEBUG
-    // Memory leak detection
-    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+    // Memory leak detection (only enable _CRTDBG_LEAK_CHECK_DF for
+    // regular termination so that leaks aren't checked on exceptions,
+    // aborts, etc. where some clean-up might not take place)
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF);
     //_CrtSetBreakAlloc(421);
 #endif
 
@@ -4854,6 +4856,11 @@ Exit:
     // it's still possible to crash after this (destructors of static classes,
     // atexit() code etc.) point, but it's very unlikely
     UninstallCrashHandler();
+
+#ifdef DEBUG
+    // output leaks after all destructors of static objects have run
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
 
     return (int)msg.wParam;
 }

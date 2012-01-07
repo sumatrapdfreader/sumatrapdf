@@ -77,7 +77,30 @@ void DumpProperties(BaseEngine *engine)
     Out("\t/>\n");
 }
 
-void DumpTocItem(DocTocItem *item, int level, int& idCounter)
+// caller must free() the result
+char *DestRectToStr(BaseEngine *engine, PageDestination *dest)
+{
+    // as handled by LinkHandler::ScrollTo in WindowInfo.cpp
+    int pageNo = dest->GetDestPageNo();
+    if (pageNo <= 0 || pageNo > engine->PageCount())
+        return NULL;
+    RectD rect = dest->GetDestRect();
+    if (rect.IsEmpty()) {
+        PointD pt = engine->Transform(rect.TL(), pageNo, 1.0, 0);
+        return str::Format("Point=\"%.0f,%.0f\"", pt.x, pt.y);
+    }
+    if (rect.dx != DEST_USE_DEFAULT && rect.dy != DEST_USE_DEFAULT) {
+        RECT rc = engine->Transform(rect, pageNo, 1.0, 0).ToRECT();
+        return str::Format("Rect=\"%d,%d,%d,%d\"", rc.left, rc.top, rc.right, rc.bottom);
+    }
+    if (rect.y != DEST_USE_DEFAULT) {
+        PointD pt = engine->Transform(rect.TL(), pageNo, 1.0, 0);
+        return str::Format("Point=\"x,%.0f\"", pt.y);
+    }
+    return NULL;
+}
+
+void DumpTocItem(BaseEngine *engine, DocTocItem *item, int level, int& idCounter)
 {
     for (; item; item = item->next) {
         ScopedMem<char> title(Escape(item->title, true));
@@ -88,9 +111,15 @@ void DumpTocItem(DocTocItem *item, int level, int& idCounter)
         if (item->id != ++idCounter)
             Out(" Id=\"%d\"", item->id);
         if (item->GetLink()) {
-            ScopedMem<char> target(Escape(item->GetLink()->GetDestValue()));
+            PageDestination *dest = item->GetLink();
+            ScopedMem<char> target(Escape(dest->GetDestValue()));
             if (target)
                 Out(" Target=\"%s\"", target.Get());
+            if (item->pageNo != dest->GetDestPageNo())
+                Out(" TargetPage=\"%d\"", dest->GetDestPageNo());
+            ScopedMem<char> rectStr(DestRectToStr(engine, dest));
+            if (rectStr)
+                Out(" Target%s", rectStr);
         }
         if (!item->child)
             Out(" />\n");
@@ -98,7 +127,7 @@ void DumpTocItem(DocTocItem *item, int level, int& idCounter)
             if (item->open)
                 Out(" Expanded=\"yes\"");
             Out(">\n");
-            DumpTocItem(item->child, level + 1, idCounter);
+            DumpTocItem(engine, item->child, level + 1, idCounter);
             for (int i = 0; i < level; i++) Out("\t");
             Out("</Item>\n");
         }
@@ -111,7 +140,7 @@ void DumpToc(BaseEngine *engine)
     if (root) {
         Out("\t<TocTree%s>\n", engine->HasTocTree() ? "" : " Expected=\"no\"");
         int idCounter = 0;
-        DumpTocItem(root, 2, idCounter);
+        DumpTocItem(engine, root, 2, idCounter);
         Out("\t</TocTree>\n");
     }
     else if (engine->HasTocTree())
@@ -156,11 +185,15 @@ void DumpPageData(BaseEngine *engine, int pageNo, bool fullDump)
                     ScopedMem<char> type(Escape(str::conv::FromAnsi(dest->GetDestType())));
                     Out("\t\t\t\tType=\"%s\"\n", type.Get());
                 }
-                if (dest->GetDestPageNo())
-                    Out("\t\t\t\tLinkedPage=\"%d\"\n", dest->GetDestPageNo());
                 ScopedMem<char> value(Escape(dest->GetDestValue()));
                 if (value)
                     Out("\t\t\t\tTarget=\"%s\"\n", value.Get());
+                if (dest->GetDestPageNo()) {
+                    Out("\t\t\t\tLinkedPage=\"%d\"\n", dest->GetDestPageNo());
+                    ScopedMem<char> rectStr(DestRectToStr(engine, dest));
+                    if (rectStr)
+                        Out("\t\t\t\tLinked%s\n", rectStr);
+                }
             }
             ScopedMem<char> name(Escape(els->At(i)->GetValue()));
             if (name)
@@ -238,13 +271,23 @@ int main(int argc, char **argv)
     filePath.Set(path::Join(filePath, fdata.cFileName));
 
     ScopedGdiPlus gdiPlus;
-    BaseEngine *engine = EngineManager::CreateEngine(filePath);
+    EngineType engineType;
+    BaseEngine *engine = EngineManager::CreateEngine(filePath, NULL, &engineType);
     if (!engine) {
         ErrOut("Error: Couldn't create an engine for %s!\n", path::GetBaseName(filePath));
         return 1;
     }
     DumpData(engine, argList.Find(_T("-full")) != -1);
     delete engine;
+
+#ifdef DEBUG
+    // report memory leaks on stderr for engines that shouldn't leak
+    if (engineType != Engine_DjVu) {
+        _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
+        _CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDERR);
+        _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+    }
+#endif
 
     return 0;
 }

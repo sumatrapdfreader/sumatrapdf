@@ -189,7 +189,7 @@ BROWSER_PLUGIN_OBJS = \
 	$(OS)\StrUtil.obj $(OS)\FileUtil.obj $(OS)\WinUtil.obj
 
 ENGINEDUMP_OBJS = \
-	$(OS)\EngineDump.obj $(ENGINE_OBJS) $(LIBMUPDF_LIB) $(OS)\MuPDF_Exports.obj \
+	$(OS)\EngineDump.obj $(ENGINE_OBJS) $(LIBS_OBJS) \
 	$(UTILS_OBJS) $(BZIP2_OBJS) $(MINIZIP_OBJS) $(UNRAR_OBJS)
 
 !if "$(WITH_MICROCRT)"=="yes"
