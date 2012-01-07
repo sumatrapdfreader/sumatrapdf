@@ -603,21 +603,20 @@ fz_outline *pdf_loadattachments(pdf_xref *xref)
 
     fz_outline root = { 0 }, *node = &root;
     for (int i = 0; i < fz_dict_len(dict); i++) {
+        fz_obj *name = fz_dict_get_key(dict, i);
+        fz_obj *dest = fz_dict_get_val(dict, i);
+        fz_obj *embedded = fz_dict_getsa(fz_dict_gets(dest, "EF"), "DOS", "F");
+        if (!embedded)
+            continue;
+
         node = node->next = (fz_outline *)fz_malloc_struct(xref->ctx, fz_outline);
         ZeroMemory(node, sizeof(fz_outline));
         node->ctx = xref->ctx;
-
-        fz_obj *name = fz_dict_get_key(dict, i);
-        fz_obj *dest = fz_dict_get_val(dict, i);
-        fz_obj *type = fz_dict_gets(dest, "Type");
-
         node->title = fz_strdup(xref->ctx, fz_to_name(name));
-        if (fz_is_name(type) && str::EqI(fz_to_name(type), "Filespec") || fz_is_string(dest)) {
-            node->dest.kind = FZ_LINK_LAUNCH;
-            node->dest.ld.launch.file_spec = pdf_to_utf8(xref->ctx, fz_dict_getsa(dest, "UF", "F"));
-            node->dest.ld.launch.new_window = 0;
-            node->dest.ld.launch.full_file_spec = dest ? fz_keep_obj(dest) : NULL;
-        }
+        node->dest.kind = FZ_LINK_LAUNCH;
+        node->dest.ld.launch.file_spec = pdf_file_spec_to_str(xref->ctx, dest);
+        node->dest.ld.launch.new_window = 1;
+        node->dest.ld.launch.embedded = fz_keep_obj(embedded);
     }
     fz_drop_obj(dict);
 
@@ -879,9 +878,6 @@ class PdfLink : public PageElement, public PageDestination {
     fz_link_dest *link; // owned by an fz_link or fz_outline
     RectD rect;
     int pageNo;
-
-    fz_obj *GetDosPath(fz_obj *filespec) const;
-    TCHAR *FilespecToPath(fz_obj *filespec) const;
 
 public:
     PdfLink(CPdfEngine *engine, fz_link_dest *link,
@@ -1834,10 +1830,13 @@ pdf_annot **CPdfEngine::ProcessPageAnnotations(pdf_page *page)
         if (str::Eq(subtype, "FileAttachment")) {
             fz_obj *file = fz_dict_gets(annot->obj, "FS");
             fz_rect rect = pdf_to_rect(ctx, fz_dict_gets(annot->obj, "Rect"));
-            if (file && fz_dict_gets(file, "EF") && !fz_is_empty_rect(rect)) {
-                fz_link_dest ld = { FZ_LINK_LAUNCH, 0 };
-                ld.ld.launch.file_spec = pdf_to_utf8(ctx, fz_dict_getsa(file, "UF", "F"));
-                ld.ld.launch.full_file_spec = fz_keep_obj(file);
+            fz_obj *embedded = fz_dict_getsa(fz_dict_gets(file, "EF"), "DOS", "F");
+            if (file && embedded && !fz_is_empty_rect(rect)) {
+                fz_link_dest ld;
+                ld.kind = FZ_LINK_LAUNCH;
+                ld.ld.launch.file_spec = pdf_file_spec_to_str(ctx, file);
+                ld.ld.launch.new_window = 1;
+                ld.ld.launch.embedded = fz_keep_obj(embedded);
                 // add links in top-to-bottom order (i.e. last-to-first)
                 fz_link *link = fz_new_link(ctx, rect, ld);
                 link->next = page->links;
@@ -2064,43 +2063,6 @@ static bool IsRelativeURI(const TCHAR *uri)
     return !colon || (slash && colon > slash);
 }
 
-fz_obj *PdfLink::GetDosPath(fz_obj *filespec) const
-{
-    ScopedCritSec scope(&engine->ctxAccess);
-
-    if (fz_is_string(filespec))
-        return filespec;
-
-    fz_obj *obj = fz_dict_gets(filespec, "Type");
-    // some PDF producers wrongly spell Filespec as FileSpec
-    if (obj && !str::EqI(fz_to_name(obj), "Filespec"))
-        return NULL;
-
-    obj = fz_dict_gets(filespec, "DOS");
-    if (fz_is_string(obj))
-        return obj;
-    return fz_dict_getsa(filespec, "UF", "F");
-}
-
-TCHAR *PdfLink::FilespecToPath(fz_obj *filespec) const
-{
-    ScopedCritSec scope(&engine->ctxAccess);
-
-    TCHAR *path = str::conv::FromPdf(engine->ctx, GetDosPath(filespec));
-    if (str::IsEmpty(path)) {
-        free(path);
-        return NULL;
-    }
-
-    TCHAR drive;
-    if (str::Parse(path, _T("/%c/"), &drive)) {
-        path[0] = drive;
-        path[1] = ':';
-    }
-    str::TransChars(path, _T("/"), _T("\\"));
-    return path;
-}
-
 TCHAR *PdfLink::GetValue() const
 {
     if (!link || !engine)
@@ -2112,13 +2074,12 @@ TCHAR *PdfLink::GetValue() const
     ScopedCritSec scope(&engine->ctxAccess);
 
     TCHAR *path = NULL;
-    fz_obj *obj;
 
     switch (link->kind) {
     case FZ_LINK_URI:
         path = str::conv::FromUtf8(link->ld.uri.uri);
         if (IsRelativeURI(path)) {
-            obj = fz_dict_gets(engine->_xref->trailer, "Root");
+            fz_obj *obj = fz_dict_gets(engine->_xref->trailer, "Root");
             obj = fz_dict_gets(fz_dict_gets(obj, "URI"), "Base");
             ScopedMem<TCHAR> base(obj ? str::conv::FromPdf(engine->ctx, obj) : NULL);
             if (!str::IsEmpty(base.Get())) {
@@ -2130,15 +2091,15 @@ TCHAR *PdfLink::GetValue() const
         break;
     case FZ_LINK_LAUNCH:
         // note: we (intentionally) don't support the /Win specific Launch parameters
-        path = FilespecToPath(link->ld.launch.full_file_spec);
-        if (path && str::Eq(GetDestType(), "LaunchEmbedded") && str::EndsWithI(path, _T(".pdf"))) {
+        path = str::conv::FromUtf8(link->ld.launch.file_spec);
+        if (path && link->ld.launch.embedded && str::EndsWithI(path, _T(".pdf"))) {
             free(path);
-            obj = GetDosPath(fz_dict_gets(link->ld.launch.full_file_spec, "EF"));
-            path = str::Format(_T("%s:%d:%d"), engine->FileName(), fz_to_num(obj), fz_to_gen(obj));
+            path = str::Format(_T("%s:%d:%d"), engine->FileName(),
+                fz_to_num(link->ld.launch.embedded), fz_to_gen(link->ld.launch.embedded));
         }
         break;
     case FZ_LINK_GOTOR:
-        path = FilespecToPath(fz_dict_gets(link->ld.gotor.details, "F"));
+        path = str::conv::FromUtf8(link->ld.gotor.file_spec);
         break;
     }
 
@@ -2157,10 +2118,8 @@ const char *PdfLink::GetDestType() const
     case FZ_LINK_URI: return "LaunchURL";
     case FZ_LINK_NAMED: return link->ld.named.named;
     case FZ_LINK_LAUNCH:
-        if (link->ld.launch.full_file_spec &&
-            fz_dict_gets(link->ld.launch.full_file_spec, "EF")) {
+        if (link->ld.launch.embedded)
             return "LaunchEmbedded";
-        }
         return "LaunchFile";
     case FZ_LINK_GOTOR: return "ScrollToEx";
     default: return NULL; // unsupported action
@@ -2230,8 +2189,7 @@ RectD PdfLink::GetDestRect() const
 bool PdfLink::SaveEmbedded(LinkSaverUI& saveUI)
 {
     ScopedCritSec scope(&engine->ctxAccess);
-    fz_obj *embedded = GetDosPath(fz_dict_gets(link->ld.launch.full_file_spec, "EF"));
-    return engine->SaveEmbedded(embedded, saveUI);
+    return engine->SaveEmbedded(link->ld.launch.embedded, saveUI);
 }
 
 bool PdfEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)

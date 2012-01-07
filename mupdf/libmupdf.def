@@ -443,6 +443,7 @@ EXPORTS
 	pdf_ft_get_vgid
 	pdf_ft_free_vsubst
 	pdf_parse_link_dest
+	pdf_file_spec_to_str
 	pdf_parse_action
 	pdf_lookup_dest
 	pdf_lookup_name

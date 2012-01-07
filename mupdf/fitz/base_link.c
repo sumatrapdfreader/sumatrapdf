@@ -8,7 +8,7 @@ fz_free_link_dest(fz_context *ctx, fz_link_dest *dest)
 	case FZ_LINK_NONE:
 		break;
 	case FZ_LINK_GOTO:
-		/* SumatraPDF: support extended link actions */
+		/* SumatraPDF: allow to resolve against remote documents */
 		fz_drop_obj(dest->ld.gotor.details);
 		break;
 	case FZ_LINK_URI:
@@ -16,15 +16,15 @@ fz_free_link_dest(fz_context *ctx, fz_link_dest *dest)
 		break;
 	case FZ_LINK_LAUNCH:
 		fz_free(ctx, dest->ld.launch.file_spec);
-		/* SumatraPDF: support extended link actions */
-		fz_drop_obj(dest->ld.launch.full_file_spec);
+		/* SumatraPDF: support launching embedded files */
+		fz_drop_obj(dest->ld.launch.embedded);
 		break;
 	case FZ_LINK_NAMED:
 		fz_free(ctx, dest->ld.named.named);
 		break;
 	case FZ_LINK_GOTOR:
 		fz_free(ctx, dest->ld.gotor.file_spec);
-		/* SumatraPDF: support extended link actions */
+		/* SumatraPDF: allow to resolve against remote documents */
 		fz_drop_obj(dest->ld.gotor.details);
 		break;
 	}

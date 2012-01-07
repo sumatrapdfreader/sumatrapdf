@@ -74,7 +74,7 @@ pdf_parse_link_dest(pdf_xref *xref, fz_obj *dest)
 	ld.ld.gotor.rb.y = 0;
 	ld.ld.gotor.file_spec = NULL;
 	ld.ld.gotor.new_window = 0;
-	/* SumatraPDF: support extended link actions */
+	/* SumatraPDF: allow to resolve against remote documents */
 	ld.ld.gotor.details = fz_keep_obj(dest);
 
 	obj = fz_array_get(dest, 1);
@@ -198,6 +198,46 @@ pdf_parse_link_dest(pdf_xref *xref, fz_obj *dest)
 	return ld;
 }
 
+/* SumatraPDF: parse full file specifications */
+#include <ctype.h>
+#undef iswspace
+
+char *
+pdf_file_spec_to_str(fz_context *ctx, fz_obj *file_spec)
+{
+	fz_obj *obj = NULL;
+	char *path = NULL, *c;
+
+	if (fz_is_string(file_spec))
+		obj = file_spec;
+	else if (fz_is_dict(file_spec))
+	{
+#ifdef _WIN32
+		obj = fz_dict_gets(file_spec, "DOS");
+#else
+		obj = fz_dict_gets(file_spec, "Unix");
+#endif
+		if (!obj)
+			obj = fz_dict_getsa(file_spec, "UF", "F");
+	}
+	if (!fz_is_string(obj))
+		return NULL;
+
+	path = pdf_to_utf8(ctx, obj);
+#ifdef _WIN32
+	/* move the file name into the expected place and use the expected path separator */
+	if (path[0] == '/' && ('A' <= toupper(path[1]) && toupper(path[1]) <= 'Z') && path[2] == '/')
+	{
+		path[0] = path[1];
+		path[1] = ':';
+	}
+	for (c = path; *c; c++)
+		if (*c == '/')
+			*c = '\\';
+#endif
+	return path;
+}
+
 fz_link_dest
 pdf_parse_action(pdf_xref *xref, fz_obj *action)
 {
@@ -225,13 +265,17 @@ pdf_parse_action(pdf_xref *xref, fz_obj *action)
 	else if (!strcmp(fz_to_name(obj), "Launch"))
 	{
 		ld.kind = FZ_LINK_LAUNCH;
-		/* SumatraPDF: TODO: this doesn't allow to distinguish embedded
-		   documents nor does it support *full* file specifications
-		   (cf. PdfLink::GetDosPath in src/PdfEngine.cpp) */
-		ld.ld.launch.file_spec = pdf_to_utf8(ctx, fz_dict_gets(action, "F"));
+		/* SumatraPDF: parse full file specifications */
+		ld.ld.launch.file_spec = pdf_file_spec_to_str(ctx, fz_dict_gets(action, "F"));
 		ld.ld.launch.new_window = fz_to_int(fz_dict_gets(action, "NewWindow"));
-		/* SumatraPDF: support extended link actions */
-		ld.ld.launch.full_file_spec = fz_dict_gets(action, "F") ? fz_keep_obj(fz_dict_gets(action, "F")) : NULL;
+		/* SumatraPDF: support launching embedded files */
+		obj = fz_dict_gets(fz_dict_gets(action, "F"), "EF");
+#ifdef _WIN32
+		obj = fz_dict_getsa(obj, "DOS", "F");
+#else
+		obj = fz_dict_getsa(obj, "Unix", "F");
+#endif
+		ld.ld.launch.embedded = obj ? fz_keep_obj(obj) : NULL;
 	}
 	else if (!strcmp(fz_to_name(obj), "Named"))
 	{
@@ -241,17 +285,15 @@ pdf_parse_action(pdf_xref *xref, fz_obj *action)
 	else if (!strcmp(fz_to_name(obj), "GoToR"))
 	{
 		dest = fz_dict_gets(action, "D");
-		/* SumatraPDF: TODO: this might find the wrong page number
-		   (should resolve against the xref of the remote document)
-		   and also only supports simple file specifications */
 		ld = pdf_parse_link_dest(xref, dest);
-		/* SumatraPDF: support extended link actions */
+		/* SumatraPDF: allow to resolve against remote documents */
 		if (ld.kind != FZ_LINK_NONE)
 			fz_drop_obj(ld.ld.gotor.details);
 		ld.kind = FZ_LINK_GOTOR;
-		ld.ld.gotor.file_spec = pdf_to_utf8(ctx, fz_dict_gets(action, "F"));
+		/* SumatraPDF: parse full file specifications */
+		ld.ld.gotor.file_spec = pdf_file_spec_to_str(ctx, fz_dict_gets(action, "F"));
 		ld.ld.gotor.new_window = fz_to_int(fz_dict_gets(action, "NewWindow"));
-		/* SumatraPDF: support extended link actions */
+		/* SumatraPDF: allow to resolve against remote documents */
 		ld.ld.gotor.details = fz_keep_obj(action);
 	}
 	return ld;
