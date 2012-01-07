@@ -94,7 +94,7 @@ LOCAL_SRC_FILES := \
 	$(MY_ROOT)/thirdparty/jpeg-8c/jquant2.c \
 	$(MY_ROOT)/thirdparty/jpeg-8c/jutils.c \
 	$(MY_ROOT)/thirdparty/jpeg-8c/jmemmgr.c \
-	$(MY_ROOT)/thirdparty/jpeg-8c/jmemansi.c \
+	$(MY_ROOT)/thirdparty/jpeg-8c/jmemnobs.c \
 	$(MY_ROOT)/thirdparty/zlib-1.2.5/adler32.c \
 	$(MY_ROOT)/thirdparty/zlib-1.2.5/compress.c \
 	$(MY_ROOT)/thirdparty/zlib-1.2.5/crc32.c \

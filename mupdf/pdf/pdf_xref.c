@@ -821,6 +821,8 @@ pdf_free_xref(pdf_xref *xref)
 
 	pdf_free_ocg(ctx, xref->ocg);
 
+	fz_empty_store(ctx);
+
 	fz_free(ctx, xref);
 }
 

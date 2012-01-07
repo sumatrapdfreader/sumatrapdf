@@ -325,7 +325,7 @@ pdf_repair_xref(pdf_xref *xref, char *buf, int bufsize)
 					 * do. */
 					if (!root)
 						fz_rethrow(ctx);
-					fz_warn(ctx, "cannot parse trailer dictionary - ignoring rest of file", num, gen);
+					fz_warn(ctx, "cannot parse trailer dictionary - ignoring rest of file");
 					break;
 				}
 

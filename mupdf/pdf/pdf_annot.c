@@ -6,6 +6,7 @@ resolve_dest(pdf_xref *xref, fz_obj *dest)
 {
 	if (fz_is_name(dest) || fz_is_string(dest))
 	{
+		/* SumatraPDF: TODO: prevent infinite recursion */
 		dest = pdf_lookup_dest(xref, dest);
 		return resolve_dest(xref, dest);
 	}
@@ -17,6 +18,7 @@ resolve_dest(pdf_xref *xref, fz_obj *dest)
 
 	else if (fz_is_dict(dest))
 	{
+		/* SumatraPDF: TODO: prevent infinite recursion */
 		dest = fz_dict_gets(dest, "D");
 		return resolve_dest(xref, dest);
 	}
@@ -204,6 +206,8 @@ pdf_parse_action(pdf_xref *xref, fz_obj *action)
 	fz_context *ctx = xref->ctx;
 
 	ld.kind = FZ_LINK_NONE;
+	/* SumatraPDF: support extended link actions */
+	ld.extra = NULL;
 
 	if (!action)
 		return ld;
@@ -219,12 +223,13 @@ pdf_parse_action(pdf_xref *xref, fz_obj *action)
 		ld.kind = FZ_LINK_URI;
 		ld.ld.uri.is_map = fz_to_int(fz_dict_gets(action, "IsMap"));
 		ld.ld.uri.uri = pdf_to_utf8(ctx, fz_dict_gets(action, "URI"));
-		/* SumatraPDF: support extended link actions */
-		ld.extra = fz_keep_non_null_obj(fz_dict_gets(action, "URI"));
 	}
 	else if (!strcmp(fz_to_name(obj), "Launch"))
 	{
 		ld.kind = FZ_LINK_LAUNCH;
+		/* SumatraPDF: TODO: this doesn't allow to distinguish embedded
+		   documents nor does it support *full* file specifications
+		   (cf. PdfLink::GetDosPath in src/PdfEngine.cpp) */
 		ld.ld.launch.file_spec = pdf_to_utf8(ctx, fz_dict_gets(action, "F"));
 		ld.ld.launch.new_window = fz_to_int(fz_dict_gets(action, "NewWindow"));
 		/* SumatraPDF: support extended link actions */
@@ -233,18 +238,20 @@ pdf_parse_action(pdf_xref *xref, fz_obj *action)
 	else if (!strcmp(fz_to_name(obj), "Named"))
 	{
 		ld.kind = FZ_LINK_NAMED;
-		ld.ld.named.named = pdf_to_utf8(ctx, fz_dict_gets(action, "N"));
-		/* SumatraPDF: support extended link actions */
-		ld.extra = fz_keep_non_null_obj(fz_dict_gets(action, "N"));
+		ld.ld.named.named = fz_strdup(ctx, fz_to_name(fz_dict_gets(action, "N")));
 	}
 	else if (!strcmp(fz_to_name(obj), "GoToR"))
 	{
 		dest = fz_dict_gets(action, "D");
+		/* SumatraPDF: TODO: this might find the wrong page number
+		   (should resolve against the xref of the remote document)
+		   and also only supports simple file specifications */
 		ld = pdf_parse_link_dest(xref, dest);
 		ld.kind = FZ_LINK_GOTOR;
 		ld.ld.gotor.file_spec = pdf_to_utf8(ctx, fz_dict_gets(action, "F"));
 		ld.ld.gotor.new_window = fz_to_int(fz_dict_gets(action, "NewWindow"));
 		/* SumatraPDF: support extended link actions */
+		fz_drop_obj(ld.extra);
 		ld.extra = fz_keep_non_null_obj(action);
 	}
 	return ld;

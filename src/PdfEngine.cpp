@@ -880,7 +880,6 @@ class PdfLink : public PageElement, public PageDestination {
     RectD rect;
     int pageNo;
 
-    fz_obj *dest() const;
     fz_obj *GetDosPath(fz_obj *filespec) const;
     TCHAR *FilespecToPath(fz_obj *filespec) const;
 
@@ -1323,6 +1322,15 @@ int CPdfEngine::FindPageNo(fz_obj *dest)
         if (D && fz_is_array(D))
             dest = D;
     }
+    if (fz_is_name(dest) || fz_is_string(dest)) {
+        // names refer to either an array or a dictionary with an array /D
+        dest = pdf_lookup_dest(_xref, dest);
+        if (fz_is_dict(dest))
+            dest = fz_dict_gets(dest, "D");
+        if (!fz_is_array(dest))
+            return 0;
+    }
+
     if (fz_is_array(dest))
         dest = fz_array_get(dest, 0);
     if (fz_is_int(dest))
@@ -1779,7 +1787,7 @@ Vec<PageElement *> *CPdfEngine::GetElements(int pageNo)
     }
 
     for (fz_link *link = page->links; link; link = link->next)
-        if (link->dest.kind != FZ_LINK_NONE && (link->dest.extra || link->dest.kind == FZ_LINK_URI))
+        if (link->dest.kind != FZ_LINK_NONE)
             els->Append(new PdfLink(this, &link->dest, link->rect, pageNo));
 
     els->Reverse();
@@ -2095,9 +2103,10 @@ TCHAR *PdfLink::FilespecToPath(fz_obj *filespec) const
 
 TCHAR *PdfLink::GetValue() const
 {
-    if (!link || !engine || FZ_LINK_NONE == link->kind)
+    if (!link || !engine)
         return NULL;
-    if (!link->extra && link->kind != FZ_LINK_URI)
+    if (link->kind != FZ_LINK_URI && link->kind != FZ_LINK_LAUNCH &&
+        link->kind != FZ_LINK_GOTOR)
         return NULL;
 
     ScopedCritSec scope(&engine->ctxAccess);
@@ -2107,10 +2116,7 @@ TCHAR *PdfLink::GetValue() const
 
     switch (link->kind) {
     case FZ_LINK_URI:
-        if (link->extra)
-            path = str::conv::FromPdf(engine->ctx, link->extra);
-        else
-            path = str::conv::FromUtf8(link->ld.uri.uri);
+        path = str::conv::FromUtf8(link->ld.uri.uri);
         if (IsRelativeURI(path)) {
             obj = fz_dict_gets(engine->_xref->trailer, "Root");
             obj = fz_dict_gets(fz_dict_gets(obj, "URI"), "Base");
@@ -2127,7 +2133,7 @@ TCHAR *PdfLink::GetValue() const
         path = FilespecToPath(link->extra);
         if (path && str::Eq(GetDestType(), "LaunchEmbedded") && str::EndsWithI(path, _T(".pdf"))) {
             free(path);
-            obj = dest();
+            obj = GetDosPath(fz_dict_gets(link->extra, "EF"));
             path = str::Format(_T("%s:%d:%d"), engine->FileName(), fz_to_num(obj), fz_to_gen(obj));
         }
         break;
@@ -2147,9 +2153,9 @@ const char *PdfLink::GetDestType() const
     ScopedCritSec scope(&engine->ctxAccess);
 
     switch (link->kind) {
-    case FZ_LINK_URI: return "LaunchURL";
     case FZ_LINK_GOTO: return "ScrollTo";
-    case FZ_LINK_NAMED: return fz_to_name(link->extra);
+    case FZ_LINK_URI: return "LaunchURL";
+    case FZ_LINK_NAMED: return link->ld.named.named;
     case FZ_LINK_LAUNCH:
         if (link->extra && fz_dict_gets(link->extra, "EF"))
             return "LaunchEmbedded";
@@ -2159,32 +2165,27 @@ const char *PdfLink::GetDestType() const
     }
 }
 
-fz_obj *PdfLink::dest() const
-{
-    ScopedCritSec scope(&engine->ctxAccess);
-
-    if (!link || FZ_LINK_NONE == link->kind)
-        return NULL;
-    if (FZ_LINK_GOTOR == link->kind)
-        return fz_dict_gets(link->extra, "D");
-    if (FZ_LINK_LAUNCH == link->kind && str::Eq(GetDestType(), "LaunchEmbedded"))
-        return GetDosPath(fz_dict_gets(link->extra, "EF"));
-    return link->extra;
-}
-
 int PdfLink::GetDestPageNo() const
 {
-    if (!link || !engine || FZ_LINK_NONE == link->kind)
-        return 0;
-    return engine->FindPageNo(link->extra);
+    if (link && FZ_LINK_GOTO == link->kind)
+        return link->ld.gotor.page + 1;
+    if (link && FZ_LINK_GOTOR == link->kind)
+        return engine->FindPageNo(link->extra);
+    return 0;
 }
 
 RectD PdfLink::GetDestRect() const
 {
+    RectD result(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
+    if (!link || FZ_LINK_GOTO != link->kind && FZ_LINK_GOTOR != link->kind)
+        return result;
+
     ScopedCritSec scope(&engine->ctxAccess);
 
-    RectD result(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
-    fz_obj *dest = this->dest();
+    fz_obj *dest = link->extra;
+    // TODO: properly resolve the destination against the remote document
+    if (FZ_LINK_GOTOR == link->kind)
+        dest = fz_dict_gets(dest, "D");
     fz_obj *obj = fz_array_get(dest, 1);
     const char *type = fz_to_name(obj);
 
@@ -2206,6 +2207,9 @@ RectD PdfLink::GetDestRect() const
                                fz_to_real(fz_array_get(dest, 5)),  // top
                                fz_to_real(fz_array_get(dest, 4)),  // right
                                fz_to_real(fz_array_get(dest, 3))); // bottom
+        // empty destination rectangle implies an /XYZ-type link
+        if (result.IsEmpty())
+            result.dx = result.dy = 0.1;
     }
     else if (str::Eq(type, "FitH") || str::Eq(type, "FitBH")) {
         result.y = fz_to_real(fz_array_get(dest, 2)); // top
@@ -2223,7 +2227,8 @@ RectD PdfLink::GetDestRect() const
 bool PdfLink::SaveEmbedded(LinkSaverUI& saveUI)
 {
     ScopedCritSec scope(&engine->ctxAccess);
-    return engine->SaveEmbedded(dest(), saveUI);
+    fz_obj *embedded = GetDosPath(fz_dict_gets(link->extra, "EF"));
+    return engine->SaveEmbedded(embedded, saveUI);
 }
 
 bool PdfEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
