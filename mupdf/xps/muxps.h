@@ -47,6 +47,8 @@ char *xml_tag(xml_element *item);
 char *xml_att(xml_element *item, const char *att);
 void xml_free_element(fz_context *doc, xml_element *item);
 void xml_print_element(xml_element *item, int level);
+/* SumatraPDF: allow to keep only part of an XML tree */
+void xml_detach(xml_element *node);
 
 /*
  * Container parts.
@@ -197,6 +199,9 @@ void xps_end_opacity(xps_document *doc, char *base_uri, xps_resource *dict, char
 
 void xps_parse_brush(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri, xps_resource *dict, xml_element *node);
 void xps_parse_element(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri, xps_resource *dict, xml_element *node);
+
+/* SumatraPDF: basic support for alternate content */
+xml_element *xps_parse_alternate_content(xml_element *node);
 
 void xps_clip(xps_document *doc, fz_matrix ctm, xps_resource *dict, char *clip_att, xml_element *clip_tag);
 /* SumatraPDF: better whitespace parsing */

@@ -67,11 +67,22 @@ xps_parse_remote_resource_dictionary(xps_document *doc, char *base_uri, char *so
 	part = xps_read_part(doc, part_name);
 	xml = xml_parse_document(doc->ctx, part->data, part->size);
 	xps_free_part(doc, part);
+	/* SumatraPDF: fix a potential NULL-pointer dereference */
+	if (!xml)
+		return NULL;
 
 	if (strcmp(xml_tag(xml), "ResourceDictionary"))
 	{
-		xml_free_element(doc->ctx, xml);
+		/* SumatraPDF: fix memory access violation */
+		fz_try(doc->ctx)
+		{
 		fz_throw(doc->ctx, "expected ResourceDictionary element (found %s)", xml_tag(xml));
+		}
+		fz_catch(doc->ctx)
+		{
+			xml_free_element(doc->ctx, xml);
+			fz_rethrow(doc->ctx);
+		}
 	}
 
 	fz_strlcpy(part_uri, part_name, sizeof part_uri);

@@ -123,6 +123,9 @@ xps_load_document_structure(xps_document *doc, xps_fixdoc *fixdoc)
 		fz_rethrow(doc->ctx);
 	}
 	xps_free_part(doc, part);
+	/* SumatraPDF: fix a potential NULL-pointer dereference */
+	if (!root)
+		return NULL;
 
 	fz_try(doc->ctx)
 	{
@@ -147,6 +150,12 @@ xps_load_outline(xps_document *doc)
 	for (fixdoc = doc->first_fixdoc; fixdoc; fixdoc = fixdoc->next) {
 		if (fixdoc->outline) {
 			outline = xps_load_document_structure(doc, fixdoc);
+			/* SumatraPDF: ignore empty outlines */
+			if (!outline)
+			{
+				fz_warn(doc->ctx, "Ignoring empty (broken?) outline for %s", fixdoc->name);
+				continue;
+			}
 			/* SumatraPDF: don't overwrite outline entries */
 			if (head)
 			{
@@ -257,7 +266,7 @@ xps_find_doc_props_path(xps_document *doc, char path[1024])
 	xml_element *root = xps_open_and_parse(doc, "/_rels/.rels");
 	xml_element *item;
 
-	if (strcmp(xml_tag(root), "Relationships") != 0)
+	if (!root || strcmp(xml_tag(root), "Relationships") != 0)
 		fz_throw(doc->ctx, "couldn't parse part '/_rels/.rels'");
 
 	*path = '\0';

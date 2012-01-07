@@ -9,6 +9,27 @@ static inline int unhex(int a)
 	return 0;
 }
 
+/* SumatraPDF: basic support for alternate content */
+xml_element *
+xps_find_alternate_content(xml_element *node)
+{
+	for (node = xml_down(node); node; node = xml_next(node))
+	{
+		if (!strcmp(xml_tag(node), "mc:Choice") && xml_att(node, "Requires"))
+		{
+			char list[64];
+			char *next = list, *item;
+			fz_strlcpy(list, xml_att(node, "Requires"), sizeof(list));
+			while ((item = fz_strsep(&next, " \t\r\n")) && (!*item || !strcmp(item, "xps")));
+			if (!item)
+				return xml_down(node);
+		}
+		else if (!strcmp(xml_tag(node), "mc:Fallback"))
+			return xml_down(node);
+	}
+	return NULL;
+}
+
 void
 xps_parse_brush(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri, xps_resource *dict, xml_element *node)
 {
@@ -34,6 +55,13 @@ xps_parse_element(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri
 		xps_parse_glyphs(doc, ctm, base_uri, dict, node);
 	if (!strcmp(xml_tag(node), "Canvas"))
 		xps_parse_canvas(doc, ctm, area, base_uri, dict, node);
+	/* SumatraPDF: basic support for alternate content */
+	if (!strcmp(xml_tag(node), "mc:AlternateContent"))
+	{
+		node = xps_find_alternate_content(node);
+		if (node)
+			xps_parse_element(doc, ctm, area, base_uri, dict, node);
+	}
 	/* skip unknown tags (like Foo.Resources and similar) */
 }
 

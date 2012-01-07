@@ -339,6 +339,23 @@ xps_load_fixed_page(xps_document *doc, xps_page *page)
 	part = xps_read_part(doc, page->name);
 	root = xml_parse_document(doc->ctx, part->data, part->size);
 	xps_free_part(doc, part);
+	/* SumatraPDF: fix a potential NULL-pointer dereference */
+	if (!root)
+		fz_throw(doc->ctx, "FixedPage missing root element");
+
+	/* SumatraPDF: basic support for alternate content */
+	if (!strcmp(xml_tag(root), "mc:AlternateContent"))
+	{
+		xml_element *node = xps_find_alternate_content(root);
+		if (!node)
+		{
+			xml_free_element(doc->ctx, root);
+			fz_throw(doc->ctx, "FixedPage missing alternate root element");
+		}
+		xml_detach(node);
+		xml_free_element(doc->ctx, root);
+		root = node;
+	}
 
 	if (strcmp(xml_tag(root), "FixedPage"))
 	{

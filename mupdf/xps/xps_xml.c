@@ -95,6 +95,13 @@ void xml_free_element(fz_context *ctx, struct element *item)
 	}
 }
 
+/* SumatraPDF: allow to keep only part of an XML tree */
+void xml_detach(xml_element *node)
+{
+	if (node->up)
+		node->up->down = NULL;
+}
+
 static int xml_parse_entity(int *c, char *a)
 {
 	char *b;
