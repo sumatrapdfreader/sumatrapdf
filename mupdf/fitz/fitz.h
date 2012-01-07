@@ -134,7 +134,7 @@ struct fz_error_context_s
 	int top;
 	struct {
 		jmp_buf buffer;
-	} stack[256];
+	} stack[512]; /* SumatraPDF: increase the stack size from 256, needed for some PDFs */
 	char message[256];
 };
 
