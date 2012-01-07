@@ -2337,19 +2337,19 @@ public:
     virtual const char *GetDestType() const {
         if (!link)
             return NULL;
-        if (FZ_LINK_GOTOR == link->kind)
+        if (FZ_LINK_GOTO == link->kind)
             return "ScrollTo";
         if (FZ_LINK_URI == link->kind)
             return "LaunchURL";
         return NULL;
     }
     virtual int GetDestPageNo() const {
-        if (!link || link->kind != FZ_LINK_GOTOR)
+        if (!link || link->kind != FZ_LINK_GOTO)
             return 0;
         return link->ld.gotor.page + 1;
     }
     virtual RectD GetDestRect() const {
-        if (!engine || !link || link->kind != FZ_LINK_GOTOR)
+        if (!engine || !link || link->kind != FZ_LINK_GOTO || !link->ld.gotor.rname)
             return RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
         return fz_rect_to_RectD(engine->FindDestRect(link->ld.gotor.rname));
     }
@@ -3142,7 +3142,7 @@ XpsTocItem *CXpsEngine::BuildTocTree(fz_outline *entry, int& idCounter)
         item->id = ++idCounter;
         item->open = entry->is_open;
 
-        if (FZ_LINK_GOTOR == entry->dest.kind)
+        if (FZ_LINK_GOTO == entry->dest.kind)
             item->pageNo = entry->dest.ld.gotor.page + 1;
         if (entry->down)
             item->child = BuildTocTree(entry->down, idCounter);

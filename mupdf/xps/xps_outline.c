@@ -52,7 +52,7 @@ xps_parse_document_outline(xps_document *doc, xml_element *root)
 			else if (!is_external_target(target))
 			{
 				memset(&entry->dest, 0, sizeof(fz_link_dest));
-				entry->dest.kind = FZ_LINK_GOTOR;
+				entry->dest.kind = FZ_LINK_GOTO;
 				entry->dest.ld.gotor.page = xps_find_link_target(doc, target);
 				/* for retrieving updated target rectangles */
 				entry->dest.ld.gotor.rname = fz_strdup(doc->ctx, target);
@@ -175,7 +175,7 @@ xps_extract_anchor_info(xps_document *doc, xml_element *node, fz_rect rect)
 		fz_link_dest ld = { 0 };
 		if (!is_external_target(value))
 		{
-			ld.kind = FZ_LINK_GOTOR;
+			ld.kind = FZ_LINK_GOTO;
 			ld.ld.gotor.page = xps_find_link_target(doc, value);
 			/* for retrieving updated target rectangles */
 			ld.ld.gotor.rname = fz_strdup(doc->ctx, value);

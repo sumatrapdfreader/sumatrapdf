@@ -466,7 +466,7 @@ public:
 			_setup(&g2);
 			Status status = g2.DrawImage(&PixmapBitmap(ctx, image), Rect(0, 0, w, h), 0, 0, image->w, image->h, UnitPixel, &DrawImageAttributes(1.0f));
 			if (status == Ok)
-				graphics->DrawImage(scaled, corners, _countof(corners), 0, 0, w, h, UnitPixel, &DrawImageAttributes(alpha));
+				status = graphics->DrawImage(scaled, corners, 3, 0, 0, w, h, UnitPixel, &DrawImageAttributes(alpha));
 			delete scaled;
 			fz_free(ctx, pal8bit);
 			
@@ -475,7 +475,7 @@ public:
 				fz_try(ctx)
 				{
 					fz_pixmap *scaledPixmap = fz_scale_pixmap(ctx, image, 0, 0, w, h);
-					graphics->DrawImage(&PixmapBitmap(ctx, scaledPixmap), corners, _countof(corners), 0, 0, w, h, UnitPixel, &DrawImageAttributes(alpha));
+					graphics->DrawImage(&PixmapBitmap(ctx, scaledPixmap), corners, 3, 0, 0, w, h, UnitPixel, &DrawImageAttributes(alpha));
 					fz_drop_pixmap(ctx, scaledPixmap);
 				}
 				fz_catch(ctx) { }

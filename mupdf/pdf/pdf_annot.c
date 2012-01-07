@@ -74,6 +74,8 @@ pdf_parse_link_dest(pdf_xref *xref, fz_obj *dest)
 	ld.ld.gotor.rb.y = 0;
 	ld.ld.gotor.file_spec = NULL;
 	ld.ld.gotor.new_window = 0;
+	/* SumatraPDF: allow to resolve against remote documents */
+	ld.ld.gotor.rname = NULL;
 
 	obj = fz_array_get(dest, 1);
 	if (!fz_is_name(obj))

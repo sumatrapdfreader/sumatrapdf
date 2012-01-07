@@ -340,20 +340,33 @@ xps_load_fixed_page(xps_document *doc, xps_page *page)
 	root = xml_parse_document(doc->ctx, part->data, part->size);
 	xps_free_part(doc, part);
 
-	/* SumatraPDF: fix memory leak */
-	if (strcmp(xml_tag(root), "FixedPage") || !xml_att(root, "Width") || !xml_att(root, "Height"))
-		xml_free_element(doc->ctx, root);
-
 	if (strcmp(xml_tag(root), "FixedPage"))
+	{
+		/* SumatraPDF: fix memory leak */
+		fz_try(doc->ctx)
+		{
 		fz_throw(doc->ctx, "expected FixedPage element (found %s)", xml_tag(root));
+		}
+		fz_catch(doc->ctx)
+		{
+			xml_free_element(doc->ctx, root);
+			fz_rethrow(doc->ctx);
+		}
+	}
 
 	width_att = xml_att(root, "Width");
 	if (!width_att)
+	{
+		xml_free_element(doc->ctx, root);
 		fz_throw(doc->ctx, "FixedPage missing required attribute: Width");
+	}
 
 	height_att = xml_att(root, "Height");
 	if (!height_att)
+	{
+		xml_free_element(doc->ctx, root);
 		fz_throw(doc->ctx, "FixedPage missing required attribute: Height");
+	}
 
 	page->width = atoi(width_att);
 	page->height = atoi(height_att);
