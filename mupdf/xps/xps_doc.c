@@ -340,6 +340,10 @@ xps_load_fixed_page(xps_document *doc, xps_page *page)
 	root = xml_parse_document(doc->ctx, part->data, part->size);
 	xps_free_part(doc, part);
 
+	/* SumatraPDF: fix memory leak */
+	if (strcmp(xml_tag(root), "FixedPage") || !xml_att(root, "Width") || !xml_att(root, "Height"))
+		xml_free_element(doc->ctx, root);
+
 	if (strcmp(xml_tag(root), "FixedPage"))
 		fz_throw(doc->ctx, "expected FixedPage element (found %s)", xml_tag(root));
 

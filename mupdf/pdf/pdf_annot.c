@@ -247,11 +247,13 @@ pdf_parse_action(pdf_xref *xref, fz_obj *action)
 		   (should resolve against the xref of the remote document)
 		   and also only supports simple file specifications */
 		ld = pdf_parse_link_dest(xref, dest);
+		/* SumatraPDF: support extended link actions */
+		if (ld.kind != FZ_LINK_NONE)
+			fz_drop_obj(ld.extra);
 		ld.kind = FZ_LINK_GOTOR;
 		ld.ld.gotor.file_spec = pdf_to_utf8(ctx, fz_dict_gets(action, "F"));
 		ld.ld.gotor.new_window = fz_to_int(fz_dict_gets(action, "NewWindow"));
 		/* SumatraPDF: support extended link actions */
-		fz_drop_obj(ld.extra);
 		ld.extra = fz_keep_non_null_obj(action);
 	}
 	return ld;

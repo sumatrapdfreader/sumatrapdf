@@ -2821,9 +2821,9 @@ RectD CXpsEngine::PageMediabox(int pageNo)
             _mediaboxes[pageNo-1] = rect.Convert<double>();
             return _mediaboxes[pageNo-1];
         }
-        if (!(page = GetXpsPage(pageNo)))
-            return RectD();
     }
+    if (!page && !(page = GetXpsPage(pageNo)))
+        return RectD();
 
     _mediaboxes[pageNo-1] = RectD(0, 0, page->width, page->height);
     return _mediaboxes[pageNo-1];
