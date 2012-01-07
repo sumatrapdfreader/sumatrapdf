@@ -6,8 +6,10 @@ resolve_dest(pdf_xref *xref, fz_obj *dest)
 {
 	if (fz_is_name(dest) || fz_is_string(dest))
 	{
-		/* SumatraPDF: TODO: prevent infinite recursion */
 		dest = pdf_lookup_dest(xref, dest);
+		/* SumatraPDF: prevent infinite recursion */
+		if (fz_is_name(dest) || fz_is_string(dest))
+			return NULL;
 		return resolve_dest(xref, dest);
 	}
 
@@ -18,22 +20,20 @@ resolve_dest(pdf_xref *xref, fz_obj *dest)
 
 	else if (fz_is_dict(dest))
 	{
-		/* SumatraPDF: TODO: prevent infinite recursion */
+		/* SumatraPDF: prevent infinite recursion */
+		fz_obj *odest = dest;
+		if (fz_dict_mark(dest))
+			return NULL;
 		dest = fz_dict_gets(dest, "D");
-		return resolve_dest(xref, dest);
+		dest = resolve_dest(xref, dest);
+		fz_dict_unmark(odest);
+		return dest;
 	}
 
 	else if (fz_is_indirect(dest))
 		return dest;
 
 	return NULL;
-}
-
-/* SumatraPDF: support extended link actions */
-static fz_obj *
-fz_keep_non_null_obj(fz_obj *obj)
-{
-	return obj ? fz_keep_obj(obj) : NULL;
 }
 
 fz_link_dest
@@ -75,7 +75,7 @@ pdf_parse_link_dest(pdf_xref *xref, fz_obj *dest)
 	ld.ld.gotor.file_spec = NULL;
 	ld.ld.gotor.new_window = 0;
 	/* SumatraPDF: support extended link actions */
-	ld.extra = fz_keep_non_null_obj(dest);
+	ld.ld.gotor.details = fz_keep_obj(dest);
 
 	obj = fz_array_get(dest, 1);
 	if (!fz_is_name(obj))
@@ -206,8 +206,6 @@ pdf_parse_action(pdf_xref *xref, fz_obj *action)
 	fz_context *ctx = xref->ctx;
 
 	ld.kind = FZ_LINK_NONE;
-	/* SumatraPDF: support extended link actions */
-	ld.extra = NULL;
 
 	if (!action)
 		return ld;
@@ -233,7 +231,7 @@ pdf_parse_action(pdf_xref *xref, fz_obj *action)
 		ld.ld.launch.file_spec = pdf_to_utf8(ctx, fz_dict_gets(action, "F"));
 		ld.ld.launch.new_window = fz_to_int(fz_dict_gets(action, "NewWindow"));
 		/* SumatraPDF: support extended link actions */
-		ld.extra = fz_keep_non_null_obj(fz_dict_gets(action, "F"));
+		ld.ld.launch.full_file_spec = fz_dict_gets(action, "F") ? fz_keep_obj(fz_dict_gets(action, "F")) : NULL;
 	}
 	else if (!strcmp(fz_to_name(obj), "Named"))
 	{
@@ -249,12 +247,12 @@ pdf_parse_action(pdf_xref *xref, fz_obj *action)
 		ld = pdf_parse_link_dest(xref, dest);
 		/* SumatraPDF: support extended link actions */
 		if (ld.kind != FZ_LINK_NONE)
-			fz_drop_obj(ld.extra);
+			fz_drop_obj(ld.ld.gotor.details);
 		ld.kind = FZ_LINK_GOTOR;
 		ld.ld.gotor.file_spec = pdf_to_utf8(ctx, fz_dict_gets(action, "F"));
 		ld.ld.gotor.new_window = fz_to_int(fz_dict_gets(action, "NewWindow"));
 		/* SumatraPDF: support extended link actions */
-		ld.extra = fz_keep_non_null_obj(action);
+		ld.ld.gotor.details = fz_keep_obj(action);
 	}
 	return ld;
 }

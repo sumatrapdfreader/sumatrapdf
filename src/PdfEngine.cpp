@@ -616,7 +616,7 @@ fz_outline *pdf_loadattachments(pdf_xref *xref)
             node->dest.kind = FZ_LINK_LAUNCH;
             node->dest.ld.launch.file_spec = pdf_to_utf8(xref->ctx, fz_dict_getsa(dest, "UF", "F"));
             node->dest.ld.launch.new_window = 0;
-            node->dest.extra = dest ? fz_keep_obj(dest) : NULL;
+            node->dest.ld.launch.full_file_spec = dest ? fz_keep_obj(dest) : NULL;
         }
     }
     fz_drop_obj(dict);
@@ -1837,7 +1837,7 @@ pdf_annot **CPdfEngine::ProcessPageAnnotations(pdf_page *page)
             if (file && fz_dict_gets(file, "EF") && !fz_is_empty_rect(rect)) {
                 fz_link_dest ld = { FZ_LINK_LAUNCH, 0 };
                 ld.ld.launch.file_spec = pdf_to_utf8(ctx, fz_dict_getsa(file, "UF", "F"));
-                ld.extra = fz_keep_obj(file);
+                ld.ld.launch.full_file_spec = fz_keep_obj(file);
                 // add links in top-to-bottom order (i.e. last-to-first)
                 fz_link *link = fz_new_link(ctx, rect, ld);
                 link->next = page->links;
@@ -2130,15 +2130,15 @@ TCHAR *PdfLink::GetValue() const
         break;
     case FZ_LINK_LAUNCH:
         // note: we (intentionally) don't support the /Win specific Launch parameters
-        path = FilespecToPath(link->extra);
+        path = FilespecToPath(link->ld.launch.full_file_spec);
         if (path && str::Eq(GetDestType(), "LaunchEmbedded") && str::EndsWithI(path, _T(".pdf"))) {
             free(path);
-            obj = GetDosPath(fz_dict_gets(link->extra, "EF"));
+            obj = GetDosPath(fz_dict_gets(link->ld.launch.full_file_spec, "EF"));
             path = str::Format(_T("%s:%d:%d"), engine->FileName(), fz_to_num(obj), fz_to_gen(obj));
         }
         break;
     case FZ_LINK_GOTOR:
-        path = FilespecToPath(fz_dict_gets(link->extra, "F"));
+        path = FilespecToPath(fz_dict_gets(link->ld.gotor.details, "F"));
         break;
     }
 
@@ -2157,8 +2157,10 @@ const char *PdfLink::GetDestType() const
     case FZ_LINK_URI: return "LaunchURL";
     case FZ_LINK_NAMED: return link->ld.named.named;
     case FZ_LINK_LAUNCH:
-        if (link->extra && fz_dict_gets(link->extra, "EF"))
+        if (link->ld.launch.full_file_spec &&
+            fz_dict_gets(link->ld.launch.full_file_spec, "EF")) {
             return "LaunchEmbedded";
+        }
         return "LaunchFile";
     case FZ_LINK_GOTOR: return "ScrollToEx";
     default: return NULL; // unsupported action
@@ -2169,8 +2171,9 @@ int PdfLink::GetDestPageNo() const
 {
     if (link && FZ_LINK_GOTO == link->kind)
         return link->ld.gotor.page + 1;
+    // TODO: this resolves against the wrong engine
     if (link && FZ_LINK_GOTOR == link->kind)
-        return engine->FindPageNo(link->extra);
+        return engine->FindPageNo(link->ld.gotor.details);
     return 0;
 }
 
@@ -2182,7 +2185,7 @@ RectD PdfLink::GetDestRect() const
 
     ScopedCritSec scope(&engine->ctxAccess);
 
-    fz_obj *dest = link->extra;
+    fz_obj *dest = link->ld.gotor.details;
     // TODO: properly resolve the destination against the remote document
     if (FZ_LINK_GOTOR == link->kind)
         dest = fz_dict_gets(dest, "D");
@@ -2227,7 +2230,7 @@ RectD PdfLink::GetDestRect() const
 bool PdfLink::SaveEmbedded(LinkSaverUI& saveUI)
 {
     ScopedCritSec scope(&engine->ctxAccess);
-    fz_obj *embedded = GetDosPath(fz_dict_gets(link->extra, "EF"));
+    fz_obj *embedded = GetDosPath(fz_dict_gets(link->ld.launch.full_file_spec, "EF"));
     return engine->SaveEmbedded(embedded, saveUI);
 }
 
@@ -2405,21 +2408,21 @@ public:
     virtual const char *GetDestType() const {
         if (!link)
             return NULL;
-        if (FZ_LINK_GOTO == link->kind)
+        if (FZ_LINK_GOTOR == link->kind)
             return "ScrollTo";
         if (FZ_LINK_URI == link->kind)
             return "LaunchURL";
         return NULL;
     }
     virtual int GetDestPageNo() const {
-        if (!engine || !link || link->kind != FZ_LINK_GOTO)
+        if (!engine || !link || link->kind != FZ_LINK_GOTOR)
             return 0;
-        return engine->FindPageNo(fz_to_str_buf(link->extra));
+        return engine->FindPageNo(link->ld.gotor.file_spec);
     }
     virtual RectD GetDestRect() const {
-        if (!engine || !link || link->kind != FZ_LINK_GOTO)
+        if (!engine || !link || link->kind != FZ_LINK_GOTOR)
             return RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
-        return fz_rect_to_RectD(engine->FindDestRect(fz_to_str_buf(link->extra)));
+        return fz_rect_to_RectD(engine->FindDestRect(link->ld.gotor.file_spec));
     }
     virtual TCHAR *GetDestValue() const { return GetValue(); }
 };
@@ -3211,7 +3214,7 @@ XpsTocItem *CXpsEngine::BuildTocTree(fz_outline *entry, int& idCounter)
         item->id = ++idCounter;
         item->open = entry->is_open;
 
-        if (FZ_LINK_GOTO == entry->dest.kind)
+        if (FZ_LINK_GOTOR == entry->dest.kind)
             item->pageNo = entry->dest.ld.gotor.page + 1;
         if (entry->down)
             item->child = BuildTocTree(entry->down, idCounter);

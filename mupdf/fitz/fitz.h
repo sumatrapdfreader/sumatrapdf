@@ -1310,6 +1310,7 @@ struct fz_link_dest_s
 			fz_point rb;
 			char *file_spec;
 			int new_window;
+			fz_obj *details; /* SumatraPDF: support extended link actions */
 		}
 		gotor;
 		struct
@@ -1322,6 +1323,7 @@ struct fz_link_dest_s
 		{
 			char *file_spec;
 			int new_window;
+			fz_obj *full_file_spec; /* SumatraPDF: support extended link actions */
 		}
 		launch;
 		struct
@@ -1331,7 +1333,6 @@ struct fz_link_dest_s
 		named;
 	}
 	ld;
-	fz_obj *extra; /* SumatraPDF: support extended link actions */
 };
 
 struct fz_link_s
