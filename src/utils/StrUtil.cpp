@@ -502,18 +502,14 @@ bool HexToMem(const char *s, unsigned char *buf, int bufLen)
 
 // format a number with a given thousand separator e.g. it turns 1234 into "1,234"
 // Caller needs to free() the result.
-TCHAR *FormatNumWithThousandSep(size_t num, const TCHAR *sep)
+TCHAR *FormatNumWithThousandSep(size_t num, LCID locale)
 {
     TCHAR thousandSep[4];
-    if (!sep) {
-        if (GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_STHOUSAND, thousandSep, dimof(thousandSep)))
-            sep = thousandSep;
-        else
-            sep = _T("");
-    }
+    if (!GetLocaleInfo(locale, LOCALE_STHOUSAND, thousandSep, dimof(thousandSep)))
+        str::BufSet(thousandSep, dimof(thousandSep), _T(","));
     ScopedMem<TCHAR> buf(str::Format(_T("%Iu"), num));
 
-    size_t resLen = str::Len(buf) + str::Len(sep) * (str::Len(buf) + 3) / 3 + 1;
+    size_t resLen = str::Len(buf) + str::Len(thousandSep) * (str::Len(buf) + 3) / 3 + 1;
     TCHAR *res = SAZA(TCHAR, resLen);
     if (!res)
         return NULL;
@@ -522,7 +518,7 @@ TCHAR *FormatNumWithThousandSep(size_t num, const TCHAR *sep)
     for (TCHAR *src = buf.Get(); *src;) {
         *next++ = *src++;
         if (*src && i == 2)
-            next += str::BufSet(next, resLen - (next - res), sep);
+            next += str::BufSet(next, resLen - (next - res), thousandSep);
         i = (i + 1) % 3;
     }
 
@@ -531,13 +527,13 @@ TCHAR *FormatNumWithThousandSep(size_t num, const TCHAR *sep)
 
 // Format a floating point number with at most two decimal after the point
 // Caller needs to free the result.
-TCHAR *FormatFloatWithThousandSep(double number)
+TCHAR *FormatFloatWithThousandSep(double number, LCID locale)
 {
     size_t num = (size_t)(number * 100 + 0.5);
 
-    ScopedMem<TCHAR> tmp(FormatNumWithThousandSep(num / 100));
+    ScopedMem<TCHAR> tmp(FormatNumWithThousandSep(num / 100, locale));
     TCHAR decimal[4];
-    if (!GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, decimal, dimof(decimal)))
+    if (!GetLocaleInfo(locale, LOCALE_SDECIMAL, decimal, dimof(decimal)))
         str::BufSet(decimal, dimof(decimal), _T("."));
 
     // always add between one and two decimals after the point

@@ -232,6 +232,10 @@ static void TStrTest()
     assert(str::CmpNatural(_T("ab0200"), _T("AB333")) < 0);
     assert(str::CmpNatural(_T("a b"), _T("a  c")) < 0);
 
+#ifndef LOCALE_INVARIANT
+#define LOCALE_INVARIANT (MAKELCID(MAKELANGID(LANG_INVARIANT, SUBLANG_NEUTRAL), SORT_DEFAULT))
+#endif
+
     struct {
         size_t number;
         const TCHAR *result;
@@ -239,15 +243,15 @@ static void TStrTest()
         { 1,        _T("1") },
         { 12,       _T("12") },
         { 123,      _T("123") },
-        { 1234,     _T("1'234") },
-        { 12345,    _T("12'345") },
-        { 123456,   _T("123'456") },
-        { 1234567,  _T("1'234'567") },
-        { 12345678, _T("12'345'678") },
+        { 1234,     _T("1,234") },
+        { 12345,    _T("12,345") },
+        { 123456,   _T("123,456") },
+        { 1234567,  _T("1,234,567") },
+        { 12345678, _T("12,345,678") },
     };
 
     for (int i = 0; i < dimof(formatNumData); i++) {
-        ScopedMem<TCHAR> tmp(str::FormatNumWithThousandSep(formatNumData[i].number, _T("'")));
+        ScopedMem<TCHAR> tmp(str::FormatNumWithThousandSep(formatNumData[i].number, LOCALE_INVARIANT));
         assert(str::Eq(tmp, formatNumData[i].result));
     }
 
@@ -261,10 +265,11 @@ static void TStrTest()
         { 1.234,    _T("1.23") },
         { 12.345,   _T("12.35") },
         { 123.456,  _T("123.46") },
+        { 1234.5678,_T("1,234.57") },
     };
 
     for (int i = 0; i < dimof(formatFloatData); i++) {
-        ScopedMem<TCHAR> tmp(str::FormatFloatWithThousandSep(formatFloatData[i].number));
+        ScopedMem<TCHAR> tmp(str::FormatFloatWithThousandSep(formatFloatData[i].number, LOCALE_INVARIANT));
         assert(str::Eq(tmp, formatFloatData[i].result));
     }
 

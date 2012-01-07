@@ -113,8 +113,8 @@ size_t  BufSet(WCHAR *dst, size_t dstCchSize, const WCHAR *src);
 char *  MemToHex(const unsigned char *buf, int len);
 bool    HexToMem(const char *s, unsigned char *buf, int bufLen);
 
-TCHAR * FormatFloatWithThousandSep(double number);
-TCHAR * FormatNumWithThousandSep(size_t num, const TCHAR *sep=NULL);
+TCHAR * FormatFloatWithThousandSep(double number, LCID locale=LOCALE_USER_DEFAULT);
+TCHAR * FormatNumWithThousandSep(size_t num, LCID locale=LOCALE_USER_DEFAULT);
 TCHAR * FormatRomanNumeral(int number);
 
 int     CmpNatural(const TCHAR *a, const TCHAR *b);
