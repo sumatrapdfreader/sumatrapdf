@@ -9,7 +9,8 @@ Our format can be thought of as a stream of Virtual Machine instructions.
 A VM instruction is either a string to be displayed or a formatting code (possibly
 with some additional data for this formatting code).
 We tokenize strings into words during this process because words are basic units
-of layout.
+of layout. During laytou/display, a string implies a space (unless string is followed
+by a formatting code like FC_MobiPageBreak etc., in which case it's elided.
 Our format is a sequence of instructions encoded as sequence of bytes.
 If an instruction starts with a byte in the range <FC_Last - 255>, it's a formatting
 code followed by data specific for a given code.
@@ -18,70 +19,13 @@ string data.
 If string length is >= FC_Last, we emit FC_Last followed by a 2-byte length (i.e. a
 string cannot be longer than 65 kB).
 Strings are utf8.
+
+TODO: this encoding doesn't support a case of formatting code inside a string e.g.
+"partially<i>itallic</i>". We can solve that by introducing a formatting code
+denoting a string with embedded formatting codes. It's length would be 16-bit
+(for simplicity of construction) telling the total size of nested data. I don't
+think it happens very often in practice, though.
 */
-
-// format codes correspond to html formatting tags
-// TODO: do I need to represent Tag_Guide, Tag_Reference ?
-enum FormatCode : uint8_t {
-    // <b>
-    FC_BoldStart = 255,
-    FC_BoldEnd = 254,
-    // <blockquote>
-    FC_BlockQuoteStart = 253,
-    FC_BlockQuoteEnd = 252,
-    // <i>
-    FC_ItalicStart = 251,
-    FC_ItalicEnd = 250,
-    // <p>
-    FC_ParagraphStart = 249,
-    FC_ParagraphEnd = 248,
-    // <mbp:pagebrake>
-    FC_MobiPageBreak = 247,
-    // <table>
-    FC_TableStart = 246,
-    FC_TableEnd = 245,
-    // <td>
-    FC_TdStart = 244,
-    FC_TdEnd = 243,
-    // <tr>
-    FC_TrStart = 242,
-    FC_TrEnd = 241,
-    // <a>
-    FC_A = 240,
-    // <br>
-    FC_Br = 239,
-    // <div>
-    FC_DivStart = 238,
-    FC_DivEnd = 237,
-    // <font>
-    FC_FontStart = 236,
-    FC_FontEnd = 235,
-    // <h2>
-    FC_H2Start = 234,
-    FC_H2End = 233,
-    // <img>
-    FC_Img = 232,
-    // <ol>
-    FC_OlStart = 231,
-    FC_OlEnd = 230,
-    // <li>
-    FC_LiStart = 229,
-    FC_LiEnd = 228,
-    // <span>
-    FC_SpanStart = 227,
-    FC_SpanEnd = 226,
-    // <sup>
-    FC_SupStart = 225,
-    FC_SupEnd = 224,
-    // <u>
-    FC_UnderlineStart = 223,
-    FC_UnderlineEnd = 222,
-    // <ul>
-    FC_UlStart = 221,
-    FC_UlEnd = 220,
-
-    FC_Last = 219
-};
 
 struct HtmlToken {
     enum TokenType {
@@ -272,7 +216,7 @@ enum TagEnum {
 
 char *gTags = "a\0b\0blockquote\0body\0br\0div\0font\0guide\0h2\0head\0html\0i\0img\0li\0mbp:pagebreak\0ol\0p\0reference\0span\0sup\0table\0td\0tr\0u\0ul\0";
 
-TagEnum FindTag(char *tag, size_t len)
+static TagEnum FindTag(char *tag, size_t len)
 {
     char *curr = gTags;
     char *end = tag + len;
@@ -359,18 +303,28 @@ static void SkipNonWs(uint8_t*& s, uint8_t *end)
     }
 }
 
-static void EmitWord(Vec<uint8_t>& res, uint8_t *s, size_t len)
+static void EmitFormatCode(Vec<uint8_t> *out, FormatCode fc)
+{
+    out->Append(fc);
+}
+
+static void EmitWord(Vec<uint8_t>& out, uint8_t *s, size_t len)
 {
     // TODO: convert html entities to text
     if (len >= FC_Last) {
         // TODO: emit FC_Last and then len as 2 bytes
         return;
     }
-    res.Append((uint8_t)len);
-    res.Append(s, len);
+    out.Append((uint8_t)len);
+    out.Append(s, len);
 }
 
-static void EmitText(Vec<uint8_t>& res, HtmlToken *t)
+// Tokenize text into words and serialize those words to
+// our layout/display format
+// Note: I'm collapsing multiple whitespaces. This might
+// not be the right thing to do (e.g. when showing source
+// code snippets)
+static void EmitText(Vec<uint8_t>& out, HtmlToken *t)
 {
     CrashIf(!t->IsText());
     uint8_t *end = t->s + t->sLen;
@@ -381,9 +335,81 @@ static void EmitText(Vec<uint8_t>& res, HtmlToken *t)
         SkipNonWs(curr, end);
         size_t len = curr - currStart;
         if (len > 0)
-            EmitWord(res, currStart, len);
+            EmitWord(out, currStart, len);
         SkipWs(curr, end);
     }
+}
+
+// Represents a tag in the tag nesting stack. Most of the time
+// the tag wil be one of the known tags but we also allow for
+// a possibility of unknown tags. We can tell them apart because
+// TagEnum is a small integer and a pointer will never be that small.
+// TODO: alternatively we could not record unknown tags - we ignore
+// them anyway. That way we could encode the tag as a single byte.
+union TagInfo {
+    TagEnum     tagEnum;
+    uint8_t *   tagAddr;
+};
+
+struct ConverterState {
+    Vec<uint8_t> *out;
+    Vec<TagInfo> *tagNesting;
+};
+
+static void AddStartTag(Vec<TagInfo>* tagNesting, TagEnum tag)
+{
+    // TODO: ignore self-closing tags
+    TagInfo ti;
+    ti.tagEnum = tag;
+    tagNesting->Append(ti);
+}
+
+static void AddEndTag(Vec<TagInfo> *tagNesting, TagEnum tag)
+{
+    // TODO: remove matching tag from the end and do
+    // other cleanups of html structure if things are
+    // off
+}
+
+// Returns FC_Invalid if no formatting code for this tag
+static FormatCode GetFormatCodeForTag(TagEnum tag, bool isEndTag)
+{
+    FormatCode fc = FC_Invalid;
+    if (Tag_I == tag) fc = FC_ItalicStart;
+    else if (Tag_B == tag) fc = FC_BoldStart;
+    else if (Tag_U == tag) fc = FC_UnderlineStart;
+    else if (Tag_H2 == tag) fc = FC_H2Start;
+    // TODO: more mappings
+
+    if (FC_Invalid != fc) {
+        // we rely on convention that end code is start code - 1
+        if (isEndTag)
+            fc = (FormatCode) ((int)fc - 1);
+    }
+    return fc;
+}
+
+static void HandleTag(ConverterState *state, HtmlToken *t)
+{
+    CrashIf(!t->IsTag());
+
+    // HtmlToken string includes potential attributes,
+    // get the length of just the tag
+    size_t tagLen = GetTagLen(t->s, t->sLen);
+    TagEnum tag = FindTag((char*)t->s, tagLen);
+    CrashIf(tag == TagNotFound);
+    if (t->IsStartTag())
+        AddStartTag(state->tagNesting, tag);
+    else if (t->IsEndTag())
+        AddEndTag(state->tagNesting, tag);
+
+    FormatCode fc = GetFormatCodeForTag(tag, t->IsEndTag());
+    if (fc != FC_Invalid) {
+        CrashIf(t->IsEmptyElementEndTag());
+        EmitFormatCode(state->out, fc);
+        return;
+    }
+    // TODO: handle other tags
 }
 
 // convert mobi html to a format optimized for layout/display
@@ -391,7 +417,16 @@ static void EmitText(Vec<uint8_t>& res, HtmlToken *t)
 // caller has to free() the result
 uint8_t *MobiHtmlToDisplay(uint8_t *s, size_t sLen, size_t& lenOut)
 {
-    Vec<uint8_t> res(sLen); // set estimated size to avoid re-allocations
+    Vec<uint8_t> res(sLen); // avoid re-allocations by pre-allocating expected size
+
+    // tagsStack represents the current html tree nesting at current
+    // parsing point. We add open tag to the stack when we encounter
+    // them and we remove them from the stack when we encounter
+    // its closing tag.
+    Vec<TagInfo> tagNesting(256);
+
+    ConverterState state = { &res, &tagNesting };
+
     HtmlPullParser parser(s);
 
     for (;;)
@@ -403,11 +438,7 @@ uint8_t *MobiHtmlToDisplay(uint8_t *s, size_t sLen, size_t& lenOut)
             return NULL;
         // TODO: interpret the tag
         if (t->IsTag()) {
-            // HtmlToken string includes potential attributes,
-            // get the length of just the tagb
-            size_t tagLen = GetTagLen(t->s, t->sLen);
-            TagEnum tag = FindTag((char*)t->s, tagLen);
-            assert(tag != TagNotFound);
+            HandleTag(&state, t);
         } else {
             // TODO: make sure valid utf8 or convert to utf8
             EmitText(res, t);
