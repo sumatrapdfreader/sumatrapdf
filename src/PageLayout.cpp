@@ -214,7 +214,7 @@ void PageLayout::StartNewLine(bool isParagraphBreak)
     x = 0;
     y += lineSpacing;
     lineStringsDx.Reset();
-    if (y > pageDy)
+    if (y + lineSpacing > pageDy)
         StartNewPage();
 }
 
@@ -288,7 +288,7 @@ Vec<Page *> *PageLayout::LayoutInternal(Graphics *graphics, Font *defaultFnt, ui
     StartLayout();
     WordInfo wi;
     uint8_t *end = s + sLen;
-    // perf: pre-allocated lineStringsDx vector
+    // perf: pre-allocate lineStringsDx vector
     size_t estimatedStrings = sLen  / 4;
     lineStringsDx.EnsureCap(estimatedStrings);
     while (s < end) {

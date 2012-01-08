@@ -214,7 +214,7 @@ static void OnCreateWindow(HWND hwnd)
     //gFont = ::new Font(L"Times New Roman", 16, FontStyleRegular);
     //HDC dc = GetDC(hwnd);
     //gFont = ::new Font(dc, gFontDefault); 
-    gFont = ::new Font(L"Georgia", 16, FontStyleRegular);
+    gFont = ::new Font(L"Georgia", 14, FontStyleRegular);
     HMENU menu = BuildMenu();
     SetMenu(hwnd, menu);
 }

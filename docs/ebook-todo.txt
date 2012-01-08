@@ -1,5 +1,4 @@
 Things to do for the first version of ebook (mobi) support:
-* layout bug: the last line on a page seem to go past page bounding box
 * mobi: read images
 * mobi: read codepage and other metadata
 * convert mobi html to an representation optimized for layout/display
