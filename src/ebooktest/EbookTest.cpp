@@ -165,11 +165,11 @@ static void DrawFrame2(Graphics &g, RectI r)
     LinearGradientBrush bgBrush(RectF(0, 0, (REAL)r.dx, (REAL)r.dy), Color(0xd0,0xd0,0xd0), Color(0xff,0xff,0xff), LinearGradientModeVertical);
     g.FillRectangle(&bgBrush, r2);
 
+    DrawPage(&g, gFont, 0, (REAL)pageBorderX, (REAL)pageBorderY);
     if (gShowTextBoundingBoxes) {
         Pen p(Color(0,0,255), 1);
         g.DrawRectangle(&p, pageBorderX, pageBorderY, r.dx - (pageBorderX * 2), r.dy - (pageBorderY * 2));
     }
-    DrawPage(&g, gFont, 0, (REAL)pageBorderX, (REAL)pageBorderY);
 }
 
 static bool BitmapSizeEquals(Bitmap *bmp, int dx, int dy)
