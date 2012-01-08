@@ -4,6 +4,7 @@
 #ifndef PageLayout_h
 #define PageLayout_h
 
+#include <stdint.h>
 #include "BaseUtil.h"
 #include "Vec.h"
 
@@ -35,7 +36,6 @@ public:
     Vec<StringPos> *strings;
 };
 
-
 class PageLayout
 {
     enum TextJustification {
@@ -60,7 +60,8 @@ public:
         x = y = 0;
     }
 
-    Vec<Page *> *Layout(Graphics *graphics, Font *font, const char *string);
+    Vec<Page *> *LayoutText(Graphics *graphics, Font *defaultFnt, const char *s);
+    Vec<Page *> *LayoutInternal(Graphics *graphics, Font *defaultFnt, uint8_t *s, size_t sLen);
 
 private:
     REAL GetTotalLineDx();
@@ -81,8 +82,9 @@ private:
     REAL pageDx, pageDy;
     REAL lineSpacing;
     REAL spaceDx;
-    Graphics *g;
-    Font *f;
+    Graphics *gfx;
+    Font *defaultFont;
+    Font *currFont;
 
     // temporary state during layout process
     TextJustification justification;

@@ -140,8 +140,7 @@ UTILS_OBJS = \
 	$(OS)\StrUtil.obj $(OS)\UtilTests.obj $(OS)\WinUtil.obj \
 	$(OS)\DialogSizer.obj $(OS)\Transactions.obj $(OS)\Touch.obj \
 	$(OS)\TrivialHtmlParser.obj $(OS)\HtmlWindow.obj $(OS)\GdiPlusUtil.obj \
-	$(OS)\DirIter.obj $(OS)\MobiParse.obj $(OS)\MobiHtmlParse.obj \
-	$(OS)\BitReader.obj
+	$(OS)\DirIter.obj $(OS)\BitReader.obj
 
 ENGINE_OBJS = \
 	$(OS)\PdfEngine.obj $(OS)\ImagesEngine.obj $(OS)\PsEngine.obj \
@@ -169,10 +168,11 @@ UNINSTALLER_OBJS = \
 	$(OS)\Uninstaller.obj $(UNINSTALLER_RES)
 
 ET_OBJS = \
-	$(OS)\et.obj $(OS)\PageLayout.obj $(ET_RES)
+	$(OS)\et.obj $(OS)\PageLayout.obj $(OS)\MobiParse.obj \
+	$(OS)\MobiHtmlParse.obj $(ET_RES)
 
 TESTER_OBJS = \
-	$(OS)\Tester.obj
+	$(OS)\Tester.obj $(OS)\MobiParse.obj $(OS)\MobiHtmlParse.obj
 
 PDFFILTER_OBJS = \
 	$(OS)\PdfFilterDll.obj $(OS)\CPdfFilter.obj $(PDFFILTER_RES) \
@@ -461,8 +461,8 @@ $(OS)\npPdfViewer.obj: src\browserplugin\npapi\nptypes.h src\utils\BaseUtil.h sr
 $(OS)\npPdfViewer.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scopes.h
 $(OS)\npPdfViewer.obj: src\utils\SimpleLog.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\npPdfViewer.obj: src\utils\WinUtil.h
-$(OS)\PageLayout.obj: src\PageLayout.h src\utils\BaseUtil.h src\utils\GdiPlusUtil.h
-$(OS)\PageLayout.obj: src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\PageLayout.obj: src\MobiHtmlParse.h src\PageLayout.h src\utils\BaseUtil.h
+$(OS)\PageLayout.obj: src\utils\GdiPlusUtil.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\ParseCommandLine.obj: src\AppPrefs.h src\BaseEngine.h src\DisplayState.h
 $(OS)\ParseCommandLine.obj: src\ParseCommandLine.h src\StressTesting.h src\SumatraPDF.h
 $(OS)\ParseCommandLine.obj: src\TextSearch.h src\TextSelection.h src\utils\BaseUtil.h

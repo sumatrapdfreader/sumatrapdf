@@ -4,6 +4,7 @@
 #include "PageLayout.h"
 #include "GdiPlusUtil.h"
 #include "StrUtil.h"
+#include "MobiHtmlParse.h"
 
 using namespace Gdiplus;
 
@@ -110,8 +111,8 @@ void PageLayout::StartLayout()
     justification = Both;
     assert(!pages);
     pages = new Vec<Page*>();
-    lineSpacing = f->GetHeight(g);
-    spaceDx = GetSpaceDx(g, f);
+    lineSpacing = currFont->GetHeight(gfx);
+    spaceDx = GetSpaceDx(gfx, currFont);
     StartNewPage();
 }
 
@@ -235,7 +236,7 @@ void PageLayout::AddWord(WordInfo *wi)
     }
     newLinesCount = 0;
     str::Utf8ToWcharBuf(wi->s, wi->len, buf, dimof(buf));
-    bbox = MeasureText(g, f, buf, wi->len);
+    bbox = MeasureText(gfx, currFont, buf, wi->len);
     // TODO: handle a case where a single word is bigger than the whole
     // line, in which case it must be split into multiple lines
     REAL dx = bbox.Width;
@@ -259,17 +260,46 @@ void PageLayout::RemoveLastPageIfEmpty()
 // * remember a line's worth of widths
 // * when we fill a line we calculate the position of strings in
 //   a line for a given justification setting (left, right, center, both)
-Vec<Page*> *PageLayout::Layout(Graphics *graphics, Font *font, const char *string)
+Vec<Page*> *PageLayout::LayoutText(Graphics *graphics, Font *defaultFnt, const char *s)
 {
-    this->g = graphics;
-    this->f = font;
+    gfx = graphics;
+    defaultFont = defaultFnt;
+    currFont = defaultFnt;
     StartLayout();
-    WordsIter iter(string);
+    WordsIter iter(s);
     for (;;) {
         WordInfo *wi = iter.Next();
         if (NULL == wi)
             break;
         AddWord(wi);
+    }
+    StartNewLine(true);
+    RemoveLastPageIfEmpty();
+    Vec<Page*> *ret = pages;
+    pages = NULL;
+    return ret;
+}
+
+Vec<Page *> *PageLayout::LayoutInternal(Graphics *graphics, Font *defaultFnt, uint8_t *s, size_t sLen)
+{
+    gfx = graphics;
+    defaultFont = defaultFnt;
+    currFont = defaultFnt;
+    StartLayout();
+    WordInfo wi;
+    uint8_t *end = s + sLen;
+    while (s < end) {
+        uint8_t stringLen = *s++;
+        if (stringLen < FC_Last) {
+            CrashIf(s + stringLen > end);
+            wi.s = (char*)s;
+            wi.len = stringLen;
+            AddWord(&wi);
+            s += stringLen;
+        } else {
+            FormatCode fc = (FormatCode)stringLen;
+            // TODO: handle the code
+        }
     }
     StartNewLine(true);
     RemoveLastPageIfEmpty();

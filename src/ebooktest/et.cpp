@@ -12,6 +12,8 @@
 #include "Transactions.h"
 #include "Scopes.h"
 #include "PageLayout.h"
+#include "MobiParse.h"
+#include "MobiHtmlParse.h"
 
 using namespace Gdiplus;
 
@@ -120,10 +122,29 @@ const char *gTxt = "ClearType is dependent on the orientation and ordering of th
 
 Vec<Page*> *gPages;
 
-Vec<Page*> *LayoutText(Graphics *graphics, Font *font, int pageDx, int pageDy, const char *string)
+Vec<Page*> *LayoutText(Graphics *gfx, Font *defaultFont, int pageDx, int pageDy, const char *s)
 {
     PageLayout layouter(pageDx, pageDy);
-    return layouter.Layout(graphics, font, string);
+    return layouter.LayoutText(gfx, defaultFont, s);
+}
+
+Vec<Page*> *LayoutMobiFile(const TCHAR *file, Graphics *gfx, Font *defaultFont, int pageDx, int pageDy)
+{
+    MobiParse *mb = MobiParse::ParseFile(file);
+    if (!mb)
+        return NULL;
+
+    size_t sLen;
+    char *s = mb->GetBookHtmlData(sLen);
+    size_t forLayoutLen;
+    uint8_t *forLayout = MobiHtmlToDisplay((uint8_t*)s, sLen, forLayoutLen);
+    PageLayout layouter(pageDx, pageDy);
+    Vec<Page*> *pages = layouter.LayoutInternal(gfx, defaultFont, forLayout, forLayoutLen);
+    //TODO: leaking forLayout data, we need to preserve it for display since
+    //pages data point to it
+    //free(forLayout);
+    delete mb;
+    return pages;
 }
 
 static bool gShowTextBoundingBoxes = true;
@@ -153,6 +174,22 @@ static void DrawPage(Graphics *g, Font *f, int pageNo, REAL offX, REAL offY)
     }
 }
 
+const int pageBorderX = 10;
+const int pageBorderY = 10;
+
+static void LayoutTestText(Graphics* gfx, RectI r)
+{
+    int pageDx = r.dx - (pageBorderX * 2);
+    int pageDy = r.dy - (pageBorderY * 2);
+
+    TCHAR *testFile = _T("docs\\KafkaTrial.mobi");
+    if (file::Exists(testFile))
+        gPages = LayoutMobiFile(testFile, gfx, gFont, pageDx, pageDy);
+
+    if (!gPages) // in case LayoutMobiFile() failed
+        gPages = LayoutText(gfx, gFont, pageDx, pageDy , gTxt);
+}
+
 static void DrawFrame2(Graphics &g, RectI r)
 {
     g.SetCompositingQuality(CompositingQualityHighQuality);
@@ -161,12 +198,8 @@ static void DrawFrame2(Graphics &g, RectI r)
     g.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
     g.SetPageUnit(UnitPixel);
 
-    const int pageBorderX = 10;
-    const int pageBorderY = 10;
     if (!gPages) {
-        int pageDx = r.dx - (pageBorderX * 2);
-        int pageDy = r.dy - (pageBorderY * 2);
-        gPages = LayoutText(&g, gFont, pageDx, pageDy , gTxt);
+        LayoutTestText(&g, r);
     }
 
     //SolidBrush bgBrush(gColBg);
@@ -353,7 +386,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     ret = RunApp();
 
-    DeleteVecMembers<Page*>(*gPages);
+    if (gPages)
+        DeleteVecMembers<Page*>(*gPages);
     delete gPages;
     ::delete gFont;
     ::delete frameBmp;
