@@ -22,6 +22,9 @@ __pragma(warning(pop))
 // maximum estimated memory requirement allowed for the run cache of one document
 #define MAX_PAGE_RUN_MEMORY (40 * 1024 * 1024)
 
+// maximum amount of memory that MuPDF should use per fz_context store
+#define MAX_CONTEXT_MEMORY  (256 * 1024 * 1024)
+
 // when set, always uses GDI+ for rendering (else GDI+ is only used for
 // zoom levels above 4000% and for rendering directly into an HDC)
 static bool gDebugGdiPlusDevice = false;
@@ -975,7 +978,7 @@ CPdfEngine::CPdfEngine() : _fileName(NULL), _xref(NULL),
     InitializeCriticalSection(&pagesAccess);
     InitializeCriticalSection(&ctxAccess);
 
-    ctx = fz_new_context(NULL, FZ_STORE_UNLIMITED);
+    ctx = fz_new_context(NULL, MAX_CONTEXT_MEMORY);
 }
 
 CPdfEngine::~CPdfEngine()
@@ -2422,7 +2425,7 @@ CXpsEngine::CXpsEngine() : _fileName(NULL), _doc(NULL), _pages(NULL), _mediaboxe
     InitializeCriticalSection(&_pagesAccess);
     InitializeCriticalSection(&ctxAccess);
 
-    ctx = fz_new_context(NULL, FZ_STORE_UNLIMITED);
+    ctx = fz_new_context(NULL, MAX_CONTEXT_MEMORY);
 }
 
 CXpsEngine::~CXpsEngine()
