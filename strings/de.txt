@@ -597,7 +597,7 @@ Show frequently read
 Oft gelesene Dokumente einblenden
 
 Show the &bookmarks sidebar when available
-&Lesezeichenleiste beim Start anzeigen
+&Lesezeichen standardmässig anzeigen
 
 Single Page
 Einzelne Seite

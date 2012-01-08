@@ -4500,7 +4500,7 @@ const char *gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "Seiten &fortlaufend anzeigen",
   "Favoriten anzeigen",
   "Oft gelesene Dokumente einblenden",
-  "&Lesezeichenleiste beim Start anzeigen",
+  "&Lesezeichen standardm\303\244ssig anzeigen",
   "Einzelne Seite",
   "Entschuldigen Sie bitte dieses unerwartete Missgeschick!\n\nBitte dr\303\274cken Sie 'Abbrechen', wenn Sie uns beim Beheben dieses Fehlers behilflich sein m\303\266chten.",
   "%s hat keinen Synchronisations-Punkt",
