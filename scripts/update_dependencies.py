@@ -8,7 +8,7 @@ import os, re, fnmatch
 from util import verify_started_in_right_directory, group, uniquify
 pjoin = os.path.join
 
-DIRS = ["src", pjoin("src", "utils"), pjoin("src", "installer"), pjoin("src", "ifilter"), pjoin("src", "browserplugin"), pjoin("src", "previewer")]
+DIRS = ["src", pjoin("src", "utils"), pjoin("src", "installer"), pjoin("src", "ifilter"), pjoin("src", "browserplugin"), pjoin("src", "previewer"), pjoin("src", "ebooktest")]
 INCLUDE_DIRS = DIRS + [pjoin("mupdf", "fitz"), pjoin("mupdf", "pdf"), pjoin("mupdf", "xps")]
 MAKEFILE = "makefile.msvc"
 DEPENDENCIES_PER_LINE = 3

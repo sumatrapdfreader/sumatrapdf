@@ -140,7 +140,7 @@ static void LayoutTestText(Graphics* gfx, RectI r)
     int pageDx = r.dx - (pageBorderX * 2);
     int pageDy = r.dy - (pageBorderY * 2);
 
-    TCHAR *testFile = _T("docs\\KafkaTrial.mobi");
+    TCHAR *testFile = _T("src\\ebooktest\\KafkaTrial.mobi");
     if (file::Exists(testFile))
         gPages = LayoutMobiFile(testFile, gfx, gFont, pageDx, pageDy);
 
