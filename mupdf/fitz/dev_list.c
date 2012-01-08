@@ -793,3 +793,23 @@ fz_list_requires_blending(fz_display_list *list)
 			return 1;
 	return 0;
 }
+
+/* SumatraPDF: allow to detect lists occupying lots of memory */
+int
+fz_list_estimate_memory(fz_display_list *list)
+{
+	int count = 0;
+	fz_display_node *node;
+	for (node = list->first; node; node = node->next)
+	{
+		if (node->cmd == FZ_CMD_FILL_IMAGE ||
+			node->cmd == FZ_CMD_FILL_IMAGE_MASK ||
+			node->cmd == FZ_CMD_CLIP_IMAGE_MASK)
+		{
+			fz_pixmap *pix = node->item.image;
+			if (pix && pix->free_samples)
+				count += pix->w * pix->h * pix->n;
+		}
+	}
+	return count;
+}

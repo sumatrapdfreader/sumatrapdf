@@ -1214,6 +1214,8 @@ void fz_execute_display_list(fz_display_list *list, fz_device *dev, fz_matrix ct
 int fz_list_is_single_image(fz_display_list *list);
 /* SumatraPDF: allow to detect pages requiring blending */
 int fz_list_requires_blending(fz_display_list *list);
+/* SumatraPDF: allow to detect lists occupying lots of memory */
+int fz_list_estimate_memory(fz_display_list *list);
 
 /*
  * Plotting functions.

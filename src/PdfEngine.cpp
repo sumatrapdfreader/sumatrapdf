@@ -19,6 +19,8 @@ __pragma(warning(pop))
 
 // number of page content trees to cache for quicker rendering
 #define MAX_PAGE_RUN_CACHE  8
+// maximum estimated memory requirement allowed for the run cache of one document
+#define MAX_PAGE_RUN_MEMORY (40 * 1024 * 1024)
 
 // when set, always uses GDI+ for rendering (else GDI+ is only used for
 // zoom levels above 4000% and for rendering directly into an HDC)
@@ -759,6 +761,7 @@ StrVec *BuildPageLabelVec(fz_context *ctx, fz_obj *root, int pageCount)
 struct PdfPageRun {
     pdf_page *page;
     fz_display_list *list;
+    size_t size_est;
     int refs;
 };
 
@@ -860,7 +863,7 @@ protected:
     TCHAR         * ExtractPageText(pdf_page *page, TCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View, bool cacheRun=false);
 
-    PdfPageRun    * runCache[MAX_PAGE_RUN_CACHE];
+    Vec<PdfPageRun*>runCache; // ordered most recently used first
     PdfPageRun    * GetPageRun(pdf_page *page, bool tryOnly=false);
     bool            RunPage(pdf_page *page, fz_device *dev, fz_matrix ctm,
                             RenderTarget target=Target_View,
@@ -971,7 +974,6 @@ CPdfEngine::CPdfEngine() : _fileName(NULL), _xref(NULL),
 {
     InitializeCriticalSection(&pagesAccess);
     InitializeCriticalSection(&ctxAccess);
-    ZeroMemory(&runCache, sizeof(runCache));
 
     ctx = fz_new_context(NULL, FZ_STORE_UNLIMITED);
 }
@@ -1014,9 +1016,9 @@ CPdfEngine::~CPdfEngine()
 
     if (_drawcache)
         fz_free_glyph_cache(ctx, _drawcache);
-    while (runCache[0]) {
-        assert(runCache[0]->refs == 1);
-        DropPageRun(runCache[0], true);
+    while (runCache.Count() > 0) {
+        assert(runCache.Last()->refs == 1);
+        DropPageRun(runCache.Last(), true);
     }
 
     fz_flush_warnings(ctx);
@@ -1379,17 +1381,28 @@ pdf_page *CPdfEngine::GetPdfPage(int pageNo, bool failIfBusy)
 PdfPageRun *CPdfEngine::GetPageRun(pdf_page *page, bool tryOnly)
 {
     PdfPageRun *result = NULL;
-    int i;
 
     ScopedCritSec scope(&pagesAccess);
 
-    for (i = 0; i < MAX_PAGE_RUN_CACHE && runCache[i] && !result; i++)
-        if (runCache[i]->page == page)
-            result = runCache[i];
+    for (size_t i = 0; i < runCache.Count(); i++) {
+        if (runCache.At(i)->page == page) {
+            result = runCache.At(i);
+            break;
+        }
+    }
     if (!result && !tryOnly) {
-        if (MAX_PAGE_RUN_CACHE == i) {
-            DropPageRun(runCache[0], true);
-            i--;
+        size_t mem = 0;
+        for (size_t i = 0; i < runCache.Count(); i++) {
+            // drop page runs that take up too much memory due to huge images
+            // (except for the very recently used ones)
+            if (i >= 4 && mem + runCache.At(i)->size_est >= MAX_PAGE_RUN_MEMORY)
+                DropPageRun(runCache.At(i--), true);
+            else
+                mem += runCache.At(i)->size_est;
+        }
+        if (runCache.Count() >= MAX_PAGE_RUN_CACHE) {
+            assert(runCache.Count() == MAX_PAGE_RUN_CACHE);
+            DropPageRun(runCache.Last(), true);
         }
 
         ScopedCritSec scope2(&ctxAccess);
@@ -1408,16 +1421,16 @@ PdfPageRun *CPdfEngine::GetPageRun(pdf_page *page, bool tryOnly)
         fz_free_device(dev);
 
         if (list) {
-            PdfPageRun newRun = { page, list, 1 };
-            result = runCache[i] = (PdfPageRun *)_memdup(&newRun);
+            size_t size_est = fz_list_estimate_memory(list);
+            PdfPageRun newRun = { page, list, size_est, 1 };
+            result = (PdfPageRun *)_memdup(&newRun);
+            runCache.InsertAt(0, result);
         }
     }
-    else {
-        // keep the list Least Recently Used first
-        for (; i < MAX_PAGE_RUN_CACHE && runCache[i]; i++) {
-            runCache[i-1] = runCache[i];
-            runCache[i] = result;
-        }
+    else if (result && result != runCache.At(0)) {
+        // keep the list Most Recently Used first
+        runCache.Remove(result);
+        runCache.InsertAt(0, result);
     }
 
     if (result)
@@ -1467,12 +1480,7 @@ void CPdfEngine::DropPageRun(PdfPageRun *run, bool forceRemove)
     run->refs--;
 
     if (0 == run->refs || forceRemove) {
-        int i;
-        for (i = 0; i < MAX_PAGE_RUN_CACHE && runCache[i] != run; i++);
-        if (i < MAX_PAGE_RUN_CACHE) {
-            memmove(&runCache[i], &runCache[i+1], (MAX_PAGE_RUN_CACHE - i - 1) * sizeof(PdfPageRun *));
-            runCache[MAX_PAGE_RUN_CACHE-1] = NULL;
-        }
+        runCache.Remove(run);
         if (0 == run->refs) {
             EnterCriticalSection(&ctxAccess);
             fz_free_display_list(ctx, run->list);
@@ -2222,6 +2230,7 @@ extern "C" {
 struct XpsPageRun {
     xps_page *page;
     fz_display_list *list;
+    size_t size_est;
     int refs;
 };
 
@@ -2307,7 +2316,7 @@ protected:
     TCHAR         * ExtractPageText(xps_page *page, TCHAR *lineSep,
                                     RectI **coords_out=NULL, bool cacheRun=false);
 
-    XpsPageRun    * _runCache[MAX_PAGE_RUN_CACHE];
+    Vec<XpsPageRun*>runCache; // ordered most recently used first
     XpsPageRun    * GetPageRun(xps_page *page, bool tryOnly=false, fz_link *extract=NULL);
     bool            RunPage(xps_page *page, fz_device *dev, fz_matrix ctm,
                             fz_bbox clipbox=fz_infinite_bbox, bool cacheRun=true);
@@ -2412,7 +2421,6 @@ CXpsEngine::CXpsEngine() : _fileName(NULL), _doc(NULL), _pages(NULL), _mediaboxe
 {
     InitializeCriticalSection(&_pagesAccess);
     InitializeCriticalSection(&ctxAccess);
-    ZeroMemory(&_runCache, sizeof(_runCache));
 
     ctx = fz_new_context(NULL, FZ_STORE_UNLIMITED);
 }
@@ -2455,9 +2463,9 @@ CXpsEngine::~CXpsEngine()
 
     if (_drawcache)
         fz_free_glyph_cache(ctx, _drawcache);
-    while (_runCache[0]) {
-        assert(_runCache[0]->refs == 1);
-        DropPageRun(_runCache[0], true);
+    while (runCache.Count() > 0) {
+        assert(runCache.Last()->refs == 1);
+        DropPageRun(runCache.Last(), true);
     }
 
     fz_flush_warnings(ctx);
@@ -2595,15 +2603,26 @@ XpsPageRun *CXpsEngine::GetPageRun(xps_page *page, bool tryOnly, fz_link *extrac
     ScopedCritSec scope(&_pagesAccess);
 
     XpsPageRun *result = NULL;
-    int i;
 
-    for (i = 0; i < MAX_PAGE_RUN_CACHE && _runCache[i] && !result; i++)
-        if (_runCache[i]->page == page)
-            result = _runCache[i];
+    for (size_t i = 0; i < runCache.Count(); i++) {
+        if (runCache.At(i)->page == page) {
+            result = runCache.At(i);
+            break;
+        }
+    }
     if (!result && !tryOnly) {
-        if (MAX_PAGE_RUN_CACHE == i) {
-            DropPageRun(_runCache[0], true);
-            i--;
+        size_t mem = 0;
+        for (size_t i = 0; i < runCache.Count(); i++) {
+            // drop page runs that take up too much memory due to huge images
+            // (except for the very recently used ones)
+            if (i >= 4 && mem + runCache.At(i)->size_est >= MAX_PAGE_RUN_MEMORY)
+                DropPageRun(runCache.At(i--), true);
+            else
+                mem += runCache.At(i)->size_est;
+        }
+        if (runCache.Count() >= MAX_PAGE_RUN_CACHE) {
+            assert(runCache.Count() == MAX_PAGE_RUN_CACHE);
+            DropPageRun(runCache.Last(), true);
         }
 
         ScopedCritSec ctxScope(&ctxAccess);
@@ -2622,16 +2641,16 @@ XpsPageRun *CXpsEngine::GetPageRun(xps_page *page, bool tryOnly, fz_link *extrac
         fz_free_device(dev);
 
         if (list) {
-            XpsPageRun newRun = { page, list, 1 };
-            result = _runCache[i] = (XpsPageRun *)_memdup(&newRun);
+            size_t size_est = fz_list_estimate_memory(list);
+            XpsPageRun newRun = { page, list, size_est, 1 };
+            result = (XpsPageRun *)_memdup(&newRun);
+            runCache.InsertAt(0, result);
         }
     }
-    else {
-        // keep the list Least Recently Used first
-        for (; i < MAX_PAGE_RUN_CACHE && _runCache[i]; i++) {
-            _runCache[i-1] = _runCache[i];
-            _runCache[i] = result;
-        }
+    else if (result && result != runCache.At(0)) {
+        // keep the list Most Recently Used first
+        runCache.Remove(result);
+        runCache.InsertAt(0, result);
     }
 
     if (result)
@@ -2678,12 +2697,7 @@ void CXpsEngine::DropPageRun(XpsPageRun *run, bool forceRemove)
     run->refs--;
 
     if (0 == run->refs || forceRemove) {
-        int i;
-        for (i = 0; i < MAX_PAGE_RUN_CACHE && _runCache[i] != run; i++);
-        if (i < MAX_PAGE_RUN_CACHE) {
-            memmove(&_runCache[i], &_runCache[i+1], (MAX_PAGE_RUN_CACHE - i - 1) * sizeof(XpsPageRun *));
-            _runCache[MAX_PAGE_RUN_CACHE-1] = NULL;
-        }
+        runCache.Remove(run);
         if (0 == run->refs) {
             ScopedCritSec ctxScope(&ctxAccess);
             fz_free_display_list(ctx, run->list);
