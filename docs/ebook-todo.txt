@@ -1,13 +1,20 @@
 Things to do for the first version of ebook (mobi) support:
+* layout bug: the last line on a page seem to go past page bounding box
 * mobi: read images
 * mobi: read codepage and other metadata
 * convert mobi html to an representation optimized for layout/display
-* improve layout/display to support all (or at least most)
-  features of mobi files (images, bold/italic, different fonts,
-  line indent at paragraph start, page breaks, links etc.)
+* layout: support images
+* layout: support bold/italic/underline
+* layout: support different fonts
+* layout: indent first line of a paragraph
+* layout: page breaks
+* layout: links
 * ui: turn pages
 * ui: show position status like in Kindle app ("n% Page N out of M * Location X of Y")
 * ui: show scrollbar at the bottom and reacto to it
+* layout: do layout on a thread, send laid out pages incrementally. Laying out
+  a whole book takes a while, the idea is to be able to display the current
+  page as soon as it's available
 
 Things nice to have but can wait for future:
 * ui: double page display

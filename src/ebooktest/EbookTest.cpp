@@ -9,11 +9,13 @@
 #include "Version.h"
 #include "Vec.h"
 #include "CmdLineParser.h"
+#include "FrameTimeoutCalculator.h"
 #include "Transactions.h"
 #include "Scopes.h"
 #include "PageLayout.h"
 #include "MobiParse.h"
 #include "MobiHtmlParse.h"
+#include "EbookTestMenu.h"
 
 using namespace Gdiplus;
 
@@ -26,6 +28,8 @@ static HINSTANCE        ghinst;
 static HWND             gHwndFrame = NULL;
 
 static HFONT            gFontDefault;
+
+static bool gShowTextBoundingBoxes = true;
 
 Color gCol1(196, 64, 50); Color gCol1Shadow(134, 48, 39);
 Color gCol2(227, 107, 35); Color gCol2Shadow(155, 77, 31);
@@ -71,50 +75,6 @@ inline void EnableAndShow(HWND hwnd, bool enable)
     EnableWindow(hwnd, enable);
 }
 
-class FrameTimeoutCalculator {
-
-    LARGE_INTEGER   timeStart;
-    LARGE_INTEGER   timeLast;
-    LONGLONG        ticksPerFrame;
-    LONGLONG        ticsPerMs;
-    LARGE_INTEGER   timeFreq;
-
-public:
-    FrameTimeoutCalculator(int framesPerSecond) {
-        QueryPerformanceFrequency(&timeFreq); // number of ticks per second
-        ticsPerMs = timeFreq.QuadPart / 1000;
-        ticksPerFrame = timeFreq.QuadPart / framesPerSecond;
-        QueryPerformanceCounter(&timeStart);
-        timeLast = timeStart;
-    }
-
-    // in seconds, as a double
-    double ElapsedTotal() {
-        LARGE_INTEGER timeCurr;
-        QueryPerformanceCounter(&timeCurr);
-        LONGLONG elapsedTicks =  timeCurr.QuadPart - timeStart.QuadPart;
-        double res = (double)elapsedTicks / (double)timeFreq.QuadPart;
-        return res;
-    }
-
-    DWORD GetTimeoutInMilliseconds() {
-        LARGE_INTEGER timeCurr;
-        LONGLONG elapsedTicks;
-        QueryPerformanceCounter(&timeCurr);
-        elapsedTicks = timeCurr.QuadPart - timeLast.QuadPart;
-        if (elapsedTicks > ticksPerFrame) {
-            return 0;
-        } else {
-            LONGLONG timeoutMs = (ticksPerFrame - elapsedTicks) / ticsPerMs;
-            return (DWORD)timeoutMs;
-        }
-    }
-
-    void Step() {
-        timeLast.QuadPart += ticksPerFrame;
-    }
-};
-
 static Font *gFont = NULL;
 
 // A sample text we're laying out
@@ -146,8 +106,6 @@ Vec<Page*> *LayoutMobiFile(const TCHAR *file, Graphics *gfx, Font *defaultFont, 
     delete mb;
     return pages;
 }
-
-static bool gShowTextBoundingBoxes = true;
 
 static void DrawPage(Graphics *g, Font *f, int pageNo, REAL offX, REAL offY)
 {
@@ -257,11 +215,80 @@ static void OnCreateWindow(HWND hwnd)
     //HDC dc = GetDC(hwnd);
     //gFont = ::new Font(dc, gFontDefault); 
     gFont = ::new Font(L"Georgia", 16, FontStyleRegular);
+    HMENU menu = BuildMenu();
+    SetMenu(hwnd, menu);
 }
 
-static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+static void LoadEbook(TCHAR *fileName)
 {
-    switch (message)
+    // TODO: implement me
+}
+
+static void OnOpen(HWND hwnd)
+{
+    OPENFILENAME ofn = { 0 };
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = hwnd;
+
+    str::Str<TCHAR> fileFilter;
+    fileFilter.Append(_T("All supported documents"));
+
+    ofn.lpstrFilter = _T("All supported documents\0;*.mobi;*.awz;\0\0");
+    ofn.nFilterIndex = 1;
+    ofn.lpstrFileTitle = NULL;
+    ofn.nMaxFileTitle = 0;
+    ofn.lpstrInitialDir = NULL;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY |
+                OFN_ALLOWMULTISELECT | OFN_EXPLORER;
+    ofn.nMaxFile = MAX_PATH * 100;
+    ScopedMem<TCHAR> file(SAZA(TCHAR, ofn.nMaxFile));
+    ofn.lpstrFile = file;
+
+    if (!GetOpenFileName(&ofn))
+        return;
+
+    TCHAR *fileName = ofn.lpstrFile + ofn.nFileOffset;
+    if (*(fileName - 1)) {
+        // special case: single filename without NULL separator
+        LoadEbook(ofn.lpstrFile);
+        return;
+    }
+    // TODO: support multiple files
+    CrashIf(true);
+
+}
+
+static void OnToggleBbox(HWND hwnd)
+{
+    gShowTextBoundingBoxes = !gShowTextBoundingBoxes;
+    InvalidateRect(hwnd, NULL, TRUE);
+}
+
+static LRESULT OnCommand(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    int wmId = LOWORD(wParam);
+
+    if ((IDM_EXIT == wmId) || (IDCANCEL == wmId)) {
+        OnExit();
+        return 0;
+    }
+
+    if (IDM_OPEN == wmId) {
+        OnOpen(hwnd);
+        return 0;
+    }
+
+    if (IDM_TOGGLE_BBOX == wmId) {
+        OnToggleBbox(hwnd);
+        return 0;
+    }
+
+    return DefWindowProc(hwnd, msg, wParam, lParam);
+}
+
+static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    switch (msg)
     {
         case WM_CREATE:
             OnCreateWindow(hwnd);
@@ -283,19 +310,11 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
             break;
 
         case WM_COMMAND:
-            switch (LOWORD(wParam))
-            {
-                case IDCANCEL:
-                    OnExit();
-                    break;
-
-                default:
-                    return DefWindowProc(hwnd, message, wParam, lParam);
-            }
+            OnCommand(hwnd, msg, wParam, lParam);
             break;
 
         default:
-            return DefWindowProc(hwnd, message, wParam, lParam);
+            return DefWindowProc(hwnd, msg, wParam, lParam);
     }
 
     return 0;

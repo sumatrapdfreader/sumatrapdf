@@ -79,6 +79,7 @@
     <ClInclude Include="src\installer\Resource.h" />
     <ClInclude Include="src\installer\Version.h" />
     <ClInclude Include="src\utils\FileUtil.h" />
+    <ClInclude Include="src\utils\FrameTimeoutCalculator.h" />
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="src\installer\Installer.exe.manifest" />

@@ -103,8 +103,8 @@ INSTALLER_RES   = $(OS)\Installer.res
 UNINSTALLER_APP = $(O)\uninstall.exe
 UNINSTALLER_RES = $(OS)\Uninstaller.res
 
-ET_APP          = $(O)\et.exe
-ET_RES          = $(OS)\et.res
+ET_APP          = $(O)\EbookTest.exe
+ET_RES          = $(OS)\EbookTest.res
 ET_CFLAGS       = $(SUMATRA_CFLAGS)
 
 TESTER_APP          = $(O)\tester.exe
@@ -168,8 +168,8 @@ UNINSTALLER_OBJS = \
 	$(OS)\Uninstaller.obj $(UNINSTALLER_RES)
 
 ET_OBJS = \
-	$(OS)\et.obj $(OS)\PageLayout.obj $(OS)\MobiParse.obj \
-	$(OS)\MobiHtmlParse.obj $(ET_RES)
+	$(OS)\EbookTest.obj $(OS)\EbookTestMenu.obj $(OS)\PageLayout.obj \
+	$(OS)\MobiParse.obj $(OS)\MobiHtmlParse.obj $(ET_RES)
 
 TESTER_OBJS = \
 	$(OS)\Tester.obj $(OS)\MobiParse.obj $(OS)\MobiHtmlParse.obj
@@ -260,8 +260,8 @@ $(INSTALLER_APP): $(ZLIB_OBJS) $(MINIZIP_OBJS) $(BZIP2_OBJS) $(UTILS_OBJS) $(INS
 $(UNINSTALLER_APP): $(UTILS_OBJS) $(UNINSTALLER_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
 
-$(ET_RES): src\ebooktest\et.rc src\ebooktest\Resource.h src\Version.h
-	rc /r /fo$@ $(EXTCFLAGS) src\ebooktest\et.rc
+$(ET_RES): src\ebooktest\EbookTest.rc src\ebooktest\Resource.h src\Version.h
+	rc /r /fo$@ $(EXTCFLAGS) src\ebooktest\EbookTest.rc
 
 $(ET_APP): $(UTILS_OBJS) $(ET_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@

@@ -752,7 +752,6 @@ bool MobiParse::LoadImage(size_t imageNo)
         return false;
     if (KnownNonImageRec(imgData, imgDataLen)) {
         imgData[5] = 0;
-        l("Skipping record %s\n", imgData);
         return true;
     }
     if (!KnownImageFormat(imgData, imgDataLen)) {

@@ -41,6 +41,9 @@
     <ClInclude Include="src\installer\Installer.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\utils\FrameTimeoutCalculator.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="src\installer\Installer.exe.manifest">

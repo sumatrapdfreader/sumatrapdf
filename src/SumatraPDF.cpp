@@ -2428,25 +2428,27 @@ static void OnMenuOpen(WindowInfo& win)
         { _TR("DjVu documents"),        _T("*.djvu"),       true },
         { _TR("Postscript documents"),  _T("*.ps;*.eps"),   PsEngine::IsAvailable() },
         { _TR("Comic books"),           _T("*.cbz;*.cbr"),  true },
-        { _TR("CHM documents"),          _T("*.chm"),        true },
+        { _TR("CHM documents"),          _T("*.chm"),       true },
     };
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
     str::Str<TCHAR> fileFilter;
     StrVec filters;
-    for (int i = 0; i < dimof(fileFormats); i++)
+    for (int i = 0; i < dimof(fileFormats); i++) {
         if (fileFormats[i].available)
             filters.Append(fileFormats[i].filter);
+    }
     fileFilter.Append(_TR("All supported documents"));
     fileFilter.Append('\1');
     fileFilter.AppendAndFree(filters.Join(_T(";")));
     fileFilter.Append('\1');
     filters.Reset();
 
-    for (int i = 0; i < dimof(fileFormats); i++)
+    for (int i = 0; i < dimof(fileFormats); i++) {
         if (fileFormats[i].available)
             fileFilter.AppendAndFree(str::Format(_T("%s\1%s\1"), fileFormats[i].name, fileFormats[i].filter));
+    }
     fileFilter.AppendAndFree(str::Format(_T("%s\1*.*\1"), _TR("All files")));
     str::TransChars(fileFilter.Get(), _T("\1"), _T("\0"));
 
