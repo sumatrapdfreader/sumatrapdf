@@ -346,6 +346,7 @@ EXPORTS
 	pdf_to_ucs2
 	pdf_to_utf8_name
 	pdf_from_ucs2
+	pdf_to_ucs2_buf
 	pdf_resolve_indirect
 	pdf_cache_object
 	pdf_load_object

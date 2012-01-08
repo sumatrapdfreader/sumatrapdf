@@ -350,6 +350,21 @@ fz_stream *fz_open_istream(fz_context *ctx, IStream *stream)
     return stm;
 }
 
+fz_obj *fz_copy_str_dict(fz_context *ctx, fz_obj *dict)
+{
+    fz_obj *copy = fz_copy_dict(ctx, dict);
+    for (int i = 0; i < fz_dict_len(copy); i++) {
+        fz_obj *val = fz_dict_get_val(copy, i);
+        // resolve all indirect references
+        if (fz_is_indirect(val)) {
+            fz_obj *val2 = fz_new_string(ctx, fz_to_str_buf(val), fz_to_str_len(val));
+            fz_dict_put(copy, fz_dict_get_key(copy, i), val2);
+            fz_drop_obj(val2);
+        }
+    }
+    return copy;
+}
+
 struct LinkRectList {
     StrVec links;
     Vec<fz_rect> coords;
@@ -582,13 +597,11 @@ extern "C" {
 namespace str {
     namespace conv {
 
-// Note: make sure to only call with ctxAccess
-inline TCHAR *FromPdf(fz_context *ctx, fz_obj *obj)
+inline TCHAR *FromPdf(fz_obj *obj)
 {
-    WCHAR *ucs2 = (WCHAR *)pdf_to_ucs2(ctx, obj);
-    TCHAR *tstr = FromWStr(ucs2);
-    fz_free(ctx, ucs2);
-    return tstr;
+    ScopedMem<WCHAR> str(SAZA(WCHAR, fz_to_str_len(obj) + 1));
+    pdf_to_ucs2_buf((unsigned short *)str.Get(), obj);
+    return str::conv::FromWStr(str);
 }
 
     }
@@ -710,7 +723,7 @@ StrVec *BuildPageLabelVec(fz_context *ctx, fz_obj *root, int pageCount)
         int secLen = pageCount + 1 - data.At(i).startAt;
         if (i < data.Count() - 1 && data.At(i + 1).startAt <= pageCount)
             secLen = data.At(i + 1).startAt - data.At(i).startAt;
-        ScopedMem<TCHAR> prefix(str::conv::FromPdf(ctx, data.At(i).prefix));
+        ScopedMem<TCHAR> prefix(str::conv::FromPdf(data.At(i).prefix));
         for (int j = 0; j < secLen; j++) {
             free(labels->At(data.At(i).startAt + j - 1));
             labels->At(data.At(i).startAt + j - 1) =
@@ -1262,7 +1275,7 @@ bool CPdfEngine::FinishLoading()
         // displaying document properties
         _info = fz_dict_gets(_xref->trailer, "Info");
         if (_info)
-            _info = fz_copy_dict(ctx, pdf_resolve_indirect(_info));
+            _info = fz_copy_str_dict(ctx, pdf_resolve_indirect(_info));
         fz_obj *pagelabels = fz_dict_gets(fz_dict_gets(_xref->trailer, "Root"), "PageLabels");
         if (pagelabels)
             _pagelabels = BuildPageLabelVec(ctx, pagelabels, PageCount());
@@ -1720,7 +1733,7 @@ PageElement *CPdfEngine::GetElementAtPos(int pageNo, PointD pt)
             if (fz_is_pt_in_rect(annot->rect, p)) {
                 ScopedCritSec scope(&ctxAccess);
 
-                ScopedMem<TCHAR> contents(str::conv::FromPdf(ctx, fz_dict_gets(annot->obj, "Contents")));
+                ScopedMem<TCHAR> contents(str::conv::FromPdf(fz_dict_gets(annot->obj, "Contents")));
                 return new PdfComment(contents, fz_rect_to_RectD(annot->rect), pageNo);
             }
         }
@@ -1755,7 +1768,7 @@ Vec<PageElement *> *CPdfEngine::GetElements(int pageNo)
 
         for (size_t i = 0; pageComments[pageNo-1][i]; i++) {
             pdf_annot *annot = pageComments[pageNo-1][i];
-            ScopedMem<TCHAR> contents(str::conv::FromPdf(ctx, fz_dict_gets(annot->obj, "Contents")));
+            ScopedMem<TCHAR> contents(str::conv::FromPdf(fz_dict_gets(annot->obj, "Contents")));
             els->Append(new PdfComment(contents, fz_rect_to_RectD(annot->rect), pageNo));
         }
     }
@@ -1937,13 +1950,13 @@ TCHAR *CPdfEngine::GetProperty(char *name)
         return str::Format(_T("%d.%d"), major, minor);
     }
 
-    // _info is guaranteed not to be an indirect reference, so no need for ctxAccess
+    // _info is guaranteed not to contain any indirect references,
+    // so no need for ctxAccess
     fz_obj *obj = fz_dict_gets(_info, name);
     if (!obj)
         return NULL;
 
-    ScopedCritSec scope(&ctxAccess);
-    return str::conv::FromPdf(ctx, obj);
+    return str::conv::FromPdf(obj);
 };
 
 char *CPdfEngine::GetDecryptionKey() const
@@ -2059,7 +2072,7 @@ TCHAR *PdfLink::GetValue() const
         if (IsRelativeURI(path)) {
             fz_obj *obj = fz_dict_gets(engine->_xref->trailer, "Root");
             obj = fz_dict_gets(fz_dict_gets(obj, "URI"), "Base");
-            ScopedMem<TCHAR> base(obj ? str::conv::FromPdf(engine->ctx, obj) : NULL);
+            ScopedMem<TCHAR> base(obj ? str::conv::FromPdf(obj) : NULL);
             if (!str::IsEmpty(base.Get())) {
                 ScopedMem<TCHAR> uri(str::Join(base, path));
                 free(path);
@@ -2968,6 +2981,8 @@ unsigned char *CXpsEngine::GetFileData(size_t *cbCount)
 
 TCHAR *CXpsEngine::GetProperty(char *name)
 {
+    // _info is guaranteed not to contain any indirect references,
+    // so no need for ctxAccess
     fz_obj *obj = fz_dict_gets(_info, name);
     if (!obj)
         return NULL;

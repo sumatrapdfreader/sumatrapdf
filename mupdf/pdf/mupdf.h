@@ -38,6 +38,8 @@ char *pdf_to_utf8(fz_context *ctx, fz_obj *src);
 unsigned short *pdf_to_ucs2(fz_context *ctx, fz_obj *src);
 fz_obj *pdf_to_utf8_name(fz_context *ctx, fz_obj *src);
 char *pdf_from_ucs2(fz_context *ctx, unsigned short *str);
+/* SumatraPDF: allow to convert to UCS-2 without the need for an fz_context */
+void pdf_to_ucs2_buf(unsigned short *buffer, fz_obj *src);
 
 /*
  * xref and object / stream api
