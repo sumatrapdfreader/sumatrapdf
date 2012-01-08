@@ -64,30 +64,6 @@ protected:
     Allocator * allocator;
     MallocAllocator mallocAllocator;
 
-    void EnsureCap(size_t needed) {
-        if (cap >= needed)
-            return;
-
-        size_t newCap = cap * 2;
-        if (needed > newCap)
-            newCap = needed;
-        if (initialCap > newCap)
-            newCap = initialCap;
-
-        size_t newElCount = newCap + PADDING;
-        CrashAlwaysIf(newElCount >= SIZE_MAX / sizeof(T));
-
-        size_t allocSize = newElCount * sizeof(T);
-        size_t newPadding = allocSize - len * sizeof(T);
-        if (buf == els)
-            els = (T *)allocator->Dup(buf, len * sizeof(T), newPadding);
-        else
-            els = (T *)allocator->Realloc(els, allocSize);
-        CrashAlwaysIf(!els);
-        memset(els + len, 0, newPadding);
-        cap = newCap;
-    }
-
     T* MakeSpaceAt(size_t idx, size_t count) {
         EnsureCap(len + count);
         T* res = &(els[idx]);
@@ -149,6 +125,30 @@ public:
         FreeEls();
         els = buf;
         memset(buf, 0, sizeof(buf));
+    }
+
+    void EnsureCap(size_t needed) {
+        if (cap >= needed)
+            return;
+
+        size_t newCap = cap * 2;
+        if (needed > newCap)
+            newCap = needed;
+        if (initialCap > newCap)
+            newCap = initialCap;
+
+        size_t newElCount = newCap + PADDING;
+        CrashAlwaysIf(newElCount >= SIZE_MAX / sizeof(T));
+
+        size_t allocSize = newElCount * sizeof(T);
+        size_t newPadding = allocSize - len * sizeof(T);
+        if (buf == els)
+            els = (T *)allocator->Dup(buf, len * sizeof(T), newPadding);
+        else
+            els = (T *)allocator->Realloc(els, allocSize);
+        CrashAlwaysIf(!els);
+        memset(els + len, 0, newPadding);
+        cap = newCap;
     }
 
     // ensures empty space at the end of the list where items can

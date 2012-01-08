@@ -288,6 +288,9 @@ Vec<Page *> *PageLayout::LayoutInternal(Graphics *graphics, Font *defaultFnt, ui
     StartLayout();
     WordInfo wi;
     uint8_t *end = s + sLen;
+    // perf: pre-allocated lineStringsDx vector
+    size_t estimatedStrings = sLen  / 4;
+    lineStringsDx.EnsureCap(estimatedStrings);
     while (s < end) {
         uint8_t stringLen = *s++;
         if (stringLen < FC_Last) {
