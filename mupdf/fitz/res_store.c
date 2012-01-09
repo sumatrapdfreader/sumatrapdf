@@ -429,6 +429,10 @@ int fz_store_scavenge(fz_context *ctx, unsigned int size, int *phase)
 	if (store == NULL)
 		return 0;
 
+	/* SumatraPDF: prevent integer overflow */
+	if (size > UINT_MAX - store->size)
+		size = UINT_MAX - store->size;
+
 #ifdef DEBUG_SCAVENGING
 	printf("Scavenging: store=%d size=%d phase=%d\n", store->size, size, *phase);
 	fz_debug_store(ctx);
