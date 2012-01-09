@@ -383,9 +383,49 @@ static void EmitText(Vec<uint8_t>& out, HtmlToken *t)
     }
 }
 
+struct AttrInfo {
+    uint8_t *   name;
+    size_t      nameLen;
+    uint8_t *   val;
+    size_t      valLen;
+};
+
+AttrInfo *GetNextAttr(uint8_t *&s, size_t& sLen)
+{
+    static AttrInfo attrInfo;
+    if (0 == sLen)
+        return NULL;
+    // TODO: write me
+    return NULL;
+}
+
+static bool IsAllowedTag(HtmlAttr *allowed, HtmlAttr attr)
+{
+    while (AttrNotFound != *allowed) {
+        if (attr == *allowed)
+            return true;
+        ++allowed;
+    }
+    return false;
+}
+
 static void EmitAttributes(HtmlToken *t, HtmlAttr *allowedAttributes)
 {
-    // TODO: write me
+    AttrInfo *attrInfo;
+    HtmlAttr attr;
+    uint8_t *s = t->s;
+    size_t sLen = t->sLen;
+    sLen -= GetTagLen(s, sLen);
+
+    for (;;) {
+        attrInfo = GetNextAttr(s, sLen);
+        if (!attrInfo)
+            return;
+        attr = FindAttr((char*)attrInfo->name, attrInfo->nameLen);
+        CrashAlwaysIf(AttrNotFound != attr);
+        if (!IsAllowedTag(allowedAttributes, attr))
+            continue;
+    }
 }
 
 static void EmitTagP(Vec<uint8_t>* out, HtmlToken *t)
