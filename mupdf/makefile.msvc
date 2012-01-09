@@ -274,6 +274,11 @@ LIBS_OBJS = \
 	$(MUPDF_OBJS) \
 	$(MUXPS_OBJS)
 
+MUAPPS_OBJS = \
+	$(OA)\win_main.obj $(OA)\pdfapp.obj $(OA)\xpsdraw.obj $(OA)\pdfdraw.obj \
+	$(OA)\pdfshow.obj $(OA)\pdfclean.obj $(OA)\pdfinfo.obj $(OA)\pdfextract.obj \
+	$(OA)\pdfbench.obj
+
 PDFAPP_RES = $(OA)\pdfview.res
 PDFAPP_OBJS = $(LIBS_OBJS) $(OA)\win_main.obj $(OA)\pdfapp.obj $(PDFAPP_RES)
 PDFAPP_APP = $(O)\pdfview.exe
@@ -304,7 +309,6 @@ XPSDRAW_APP = $(O)\xpsdraw.exe
 
 LIBMUPDF_LIB = $(O)\libmupdf.lib
 LIBMUPDF_DEF = $(MUPDF_DIR)\libmupdf.def
-LIBMUPDF_OBJS = $(LIBS_OBJS)
 LIBMUPDF_DLL = $(O)\libmupdf.dll
 
 all: $(O) $(PDFDRAW_APP) $(PDFSHOW_APP) $(PDFCLEAN_APP) $(PDFINFO_APP) $(PDFEXTRACT_APP) $(PDFAPP_APP) $(XPSDRAW_APP) $(PDFBENCH_APP)
@@ -358,8 +362,8 @@ $(PDFEXTRACT_APP): $(PDFEXTRACT_OBJS)
 $(XPSDRAW_APP): $(XPSDRAW_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
 
-$(LIBMUPDF_DLL): $(LIBMUPDF_OBJS) $(LIBMUPDF_DEF) $(LIBMUPDF_RES)
-	$(LD) /DLL $(LDFLAGS) $(LIBMUPDF_OBJS) $(LIBMUPDF_RES) $(LIBS) /DEF:$(LIBMUPDF_DEF) /IMPLIB:$(LIBMUPDF_LIB) /PDB:$*.pdb /OUT:$@
+$(LIBMUPDF_DLL): $(LIBS_OBJS) $(LIBMUPDF_DEF) $(LIBMUPDF_RES)
+	$(LD) /DLL $(LDFLAGS) $(LIBS_OBJS) $(LIBMUPDF_RES) $(LIBS) /DEF:$(LIBMUPDF_DEF) /IMPLIB:$(LIBMUPDF_LIB) /PDB:$*.pdb /OUT:$@
 
 # freetype directories
 {$(FREETYPE_DIR)\builds\win32}.c{$(OFT)}.obj::
@@ -490,5 +494,6 @@ $(OP)\pdf_cmap_tables.obj: $(MUPDF_GEN_DIR) \
 $(FITZ_OBJS) $(FITZ_DRAW_OBJS): $(MUPDF_DIR)\fitz\fitz.h
 $(MUPDF_OBJS) $(CMAP_OBJS): $(MUPDF_DIR)\fitz\fitz.h $(MUPDF_DIR)\pdf\mupdf.h
 $(MUXPS_OBJS): $(MUPDF_DIR)\fitz\fitz.h $(MUPDF_DIR)\xps\muxps.h
+$(MUAPPS_OBJS): $(MUPDF_DIR)\fitz\fitz.h $(MUPDF_DIR)\pdf\mupdf.h $(MUPDF_DIR)\xps\muxps.h
 
 force: ;

@@ -518,6 +518,8 @@ parseTTCs(fz_context *ctx, char *path)
 	fz_stream *file = fz_open_file(ctx, path);
 	/* "fonterror : %s not found", path */
 
+	fz_var(offsettable);
+
 	fz_try(ctx)
 	{
 		safe_read(file, (char *)&fontcollection, sizeof(FONT_COLLECTION));

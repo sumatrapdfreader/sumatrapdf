@@ -610,6 +610,9 @@ xps_free_context(xps_document *doc)
 	xps_font_cache *font, *next;
 	int i;
 
+	if (!doc)
+		return;
+
 	if (doc->file)
 		fz_close(doc->file);
 

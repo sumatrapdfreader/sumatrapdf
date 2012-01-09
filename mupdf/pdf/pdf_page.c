@@ -242,6 +242,7 @@ pdf_load_page_contents_array(pdf_xref *xref, fz_obj *list)
 	big = fz_new_buffer(ctx, 32 * 1024);
 
 	n = fz_array_len(list);
+	fz_var(i); /* Workaround Mac compiler bug */
 	for (i = 0; i < n; i++)
 	{
 		fz_obj *stm = fz_array_get(list, i);

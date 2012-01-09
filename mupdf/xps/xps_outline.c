@@ -152,10 +152,7 @@ xps_load_outline(xps_document *doc)
 			outline = xps_load_document_structure(doc, fixdoc);
 			/* SumatraPDF: ignore empty outlines */
 			if (!outline)
-			{
-				fz_warn(doc->ctx, "Ignoring empty (broken?) outline for %s", fixdoc->name);
 				continue;
-			}
 			/* SumatraPDF: don't overwrite outline entries */
 			if (head)
 			{
@@ -218,17 +215,18 @@ xps_open_and_parse(xps_document *doc, char *path)
 	xml_element *root = NULL;
 	xps_part *part = xps_read_part(doc, path);
 	/* "cannot read part '%s'", path */;
+	fz_var(part);
 
 	fz_try(doc->ctx)
 	{
 		root = xml_parse_document(doc->ctx, part->data, part->size);
-		xps_free_part(doc, part);
 	}
 	fz_catch(doc->ctx)
 	{
 		xps_free_part(doc, part);
 		fz_rethrow(doc->ctx);
 	}
+	xps_free_part(doc, part);
 
 	return root;
 }

@@ -723,7 +723,7 @@ fz_flatten_dash_path(fz_gel *gel, fz_path *path, fz_stroke_state *stroke, fz_mat
 {
 	struct sctx s;
 	fz_point p0, p1, p2, p3, beg;
-	float phase_len;
+	float phase_len, max_expand;
 	int i;
 
 	s.gel = gel;
@@ -752,8 +752,8 @@ fz_flatten_dash_path(fz_gel *gel, fz_path *path, fz_stroke_state *stroke, fz_mat
 	phase_len = 0;
 	for (i = 0; i < stroke->dash_len; i++)
 		phase_len += stroke->dash_list[i];
-	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1763 */
-	if (phase_len < 1.0f && phase_len * fz_matrix_expansion(ctm) < 0.5f)
+	max_expand = MAX(MAX(fabs(ctm.a),fabs(ctm.b)),MAX(fabs(ctm.c),fabs(ctm.d)));
+	if (phase_len < 1.0f && phase_len * max_expand < 0.5f)
 	{
 		fz_flatten_stroke_path(gel, path, stroke, ctm, flatness, linewidth);
 		return;
