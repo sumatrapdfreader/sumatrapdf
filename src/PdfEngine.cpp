@@ -79,11 +79,12 @@ inline bool fz_is_pt_in_rect(fz_rect rect, fz_point pt)
     return fz_rect_to_RectD(rect).Inside(PointD(pt.x, pt.y));
 }
 
-inline bool fz_significantly_overlap(fz_rect r1, fz_rect r2)
+inline float fz_calc_overlap(fz_rect r1, fz_rect r2)
 {
-    RectD rect1 = fz_rect_to_RectD(r1);
-    RectD isect = rect1.Intersect(fz_rect_to_RectD(r2));
-    return !isect.IsEmpty() && isect.dx * isect.dy >= 0.25 * rect1.dx * rect1.dy;
+    if (r1.x0 == r1.x1 || r1.y0 == r1.y1)
+        return 0.0f;
+    fz_rect isect = fz_intersect_rect(r1, r2);
+    return (isect.x1 - isect.x0) * (isect.y1 - isect.y0) / ((r1.x1 - r1.x0) * (r1.y1 - r1.y0));
 }
 
 class RenderedFitzBitmap : public RenderedBitmap {
@@ -563,31 +564,65 @@ struct FitzImagePos {
         image(image), rect(rect) { }
 };
 
+struct ListInspectionData {
+    Vec<FitzImagePos> *images;
+    bool requiresBlending;
+    size_t mem_estimate;
+};
+
 extern "C" static void
-fz_extract_image(fz_device *dev, fz_pixmap *image, fz_matrix ctm, float alpha)
+fz_inspection_fill_image(fz_device *dev, fz_pixmap *image, fz_matrix ctm, float alpha)
 {
+    if (image && image->free_samples)
+        ((ListInspectionData *)dev->user)->mem_estimate += image->w * image->h * image->n;
+
+    // extract rectangles for images a user might want to extract
     // TODO: try to better distinguish images a user might actually want to extract
     if (image->w < 16 || image->h < 16)
         return;
     fz_rect rect = fz_transform_rect(ctm, fz_unit_rect);
     if (!fz_is_empty_rect(rect))
-        ((Vec<FitzImagePos> *)dev->user)->Append(FitzImagePos(image, rect));
+        ((ListInspectionData *)dev->user)->images->Append(FitzImagePos(image, rect));
+}
+
+extern "C" static void
+fz_inspection_fill_image_mask(fz_device *dev, fz_pixmap *image, fz_matrix ctm, fz_colorspace *colorspace, float *color, float alpha)
+{
+    if (image && image->free_samples)
+        ((ListInspectionData *)dev->user)->mem_estimate += image->w * image->h * image->n;
+}
+
+extern "C" static void
+fz_inspection_clip_image_mask(fz_device *dev, fz_pixmap *image, fz_rect *rect, fz_matrix ctm)
+{
+    if (image && image->free_samples)
+        ((ListInspectionData *)dev->user)->mem_estimate += image->w * image->h * image->n;
+}
+
+extern "C" static void
+fz_inspection_begin_group(fz_device *dev, fz_rect rect, int isolated, int knockout, int blendmode, float alpha)
+{
+    if (blendmode != FZ_BLEND_NORMAL || alpha != 1.0f || !isolated || knockout)
+        ((ListInspectionData *)dev->user)->requiresBlending = true;
 }
 
 extern "C" static void 
-fz_reverse_image_list(fz_device *dev)
+fz_inspection_free(fz_device *dev)
 {
     // images are extracted in bottom-to-top order, but for GetElements
     // we want to access them in top-to-bottom order (since images at
     // the bottom might not be visible at all)
-    ((Vec<FitzImagePos> *)dev->user)->Reverse();
+    ((ListInspectionData *)dev->user)->images->Reverse();
 }
 
-static fz_device *fz_new_image_extractor(fz_context *ctx, Vec<FitzImagePos> *list)
+static fz_device *fz_new_inspection_device(fz_context *ctx, ListInspectionData *data)
 {
-    fz_device *dev = fz_new_device(ctx, list);
-    dev->fill_image = fz_extract_image;
-    dev->free_user = fz_reverse_image_list;
+    fz_device *dev = fz_new_device(ctx, data);
+    dev->fill_image = fz_inspection_fill_image;
+    dev->fill_image_mask = fz_inspection_fill_image_mask;
+    dev->clip_image_mask = fz_inspection_clip_image_mask;
+    dev->begin_group = fz_inspection_begin_group;
+    dev->free_user = fz_inspection_free;
     return dev;
 }
 
@@ -765,6 +800,7 @@ struct PdfPageRun {
     pdf_page *page;
     fz_display_list *list;
     size_t size_est;
+    bool req_blending;
     int refs;
 };
 
@@ -857,6 +893,7 @@ protected:
     bool            LoadFromStream(fz_stream *stm, PasswordUI *pwdUI=NULL);
     bool            FinishLoading();
     pdf_page      * GetPdfPage(int pageNo, bool failIfBusy=false);
+    int             GetPageNo(pdf_page *page);
     fz_matrix       viewctm(int pageNo, float zoom, int rotation);
     fz_matrix       viewctm(pdf_page *page, float zoom, int rotation);
     bool            RenderPage(HDC hDC, pdf_page *page, RectI screenRect,
@@ -867,6 +904,7 @@ protected:
                                     RenderTarget target=Target_View, bool cacheRun=false);
 
     Vec<PdfPageRun*>runCache; // ordered most recently used first
+    PdfPageRun    * CreatePageRun(pdf_page *page, fz_display_list *list);
     PdfPageRun    * GetPageRun(pdf_page *page, bool tryOnly=false);
     bool            RunPage(pdf_page *page, fz_device *dev, fz_matrix ctm,
                             RenderTarget target=Target_View,
@@ -876,7 +914,6 @@ protected:
     PdfTocItem   *  BuildTocTree(fz_outline *entry, int& idCounter);
     void            LinkifyPageText(pdf_page *page);
     pdf_annot    ** ProcessPageAnnotations(pdf_page *page);
-    fz_rect       * GetPageImageRects(pdf_page *page);
     RenderedBitmap *GetPageImage(int pageNo, RectD rect, size_t imageIx);
 
     bool            SaveEmbedded(fz_obj *obj, LinkSaverUI& saveUI);
@@ -1369,16 +1406,53 @@ pdf_page *CPdfEngine::GetPdfPage(int pageNo, bool failIfBusy)
         fz_try(ctx) {
             page = pdf_load_page(_xref, pageNo - 1);
             _pages[pageNo-1] = page;
-
             LinkifyPageText(page);
             pageComments[pageNo-1] = ProcessPageAnnotations(page);
-            imageRects[pageNo-1] = GetPageImageRects(page);
         }
         fz_catch(ctx) { }
         LeaveCriticalSection(&ctxAccess);
     }
 
     return page;
+}
+
+int CPdfEngine::GetPageNo(pdf_page *page)
+{
+    for (int i = 0; i < PageCount(); i++)
+        if (page == _pages[i])
+            return i + 1;
+    assert(0);
+    return 0;
+}
+
+PdfPageRun *CPdfEngine::CreatePageRun(pdf_page *page, fz_display_list *list)
+{
+    Vec<FitzImagePos> positions;
+    ListInspectionData data = { &positions, false, 0 };
+    fz_device *dev = NULL;
+
+    fz_try(ctx) {
+        dev = fz_new_inspection_device(ctx, &data);
+        fz_execute_display_list(list, dev, fz_identity, fz_infinite_bbox, NULL);
+    }
+    fz_catch(ctx) { }
+    fz_free_device(dev);
+
+    // save the image rectangles for this page
+    int pageNo = GetPageNo(page);
+    if (!imageRects[pageNo-1] && positions.Count() > 0) {
+        // the list of page image rectangles is terminated with a null-rectangle
+        fz_rect *rects = SAZA(fz_rect, positions.Count() + 1);
+        if (rects) {
+            for (size_t i = 0; i < positions.Count(); i++) {
+                rects[i] = positions.At(i).rect;
+            }
+            imageRects[pageNo-1] = rects;
+        }
+    }
+
+    PdfPageRun newRun = { page, list, data.mem_estimate, data.requiresBlending, 1 };
+    return (PdfPageRun *)_memdup(&newRun);
 }
 
 PdfPageRun *CPdfEngine::GetPageRun(pdf_page *page, bool tryOnly)
@@ -1424,9 +1498,7 @@ PdfPageRun *CPdfEngine::GetPageRun(pdf_page *page, bool tryOnly)
         fz_free_device(dev);
 
         if (list) {
-            size_t size_est = fz_list_estimate_memory(list);
-            PdfPageRun newRun = { page, list, size_est, 1 };
-            result = (PdfPageRun *)_memdup(&newRun);
+            result = CreatePageRun(page, list);
             runCache.InsertAt(0, result);
         }
     }
@@ -1662,7 +1734,7 @@ bool CPdfEngine::RequiresBlending(pdf_page *page)
     if (!run)
         return false;
 
-    bool result = fz_list_requires_blending(run->list);
+    bool result = run->req_blending;
     DropPageRun(run);
     return result;
 }
@@ -1805,7 +1877,7 @@ void CPdfEngine::LinkifyPageText(pdf_page *page)
     for (size_t i = 0; i < list->links.Count(); i++) {
         bool overlaps = false;
         for (fz_link *next = page->links; next && !overlaps; next = next->next)
-            overlaps = fz_significantly_overlap(next->rect, list->coords.At(i));
+            overlaps = fz_calc_overlap(next->rect, list->coords.At(i)) >= 0.25f;
         if (!overlaps) {
             ScopedMem<char> uri(str::conv::ToUtf8(list->links.At(i)));
             if (!uri) continue;
@@ -1861,23 +1933,6 @@ pdf_annot **CPdfEngine::ProcessPageAnnotations(pdf_page *page)
     return comments.StealData();
 }
 
-fz_rect *CPdfEngine::GetPageImageRects(pdf_page *page)
-{
-    Vec<FitzImagePos> positions;
-    RunPage(page, fz_new_image_extractor(ctx, &positions), fz_identity);
-    if (positions.Count() == 0)
-        return NULL;
-
-    // the list of page image rectangles is terminated with a null-rectangle
-    fz_rect *result = SAZA(fz_rect, positions.Count() + 1);
-    if (!result)
-        return NULL;
-    for (size_t i = 0; i < positions.Count(); i++) {
-        result[i] = positions.At(i).rect;
-    }
-    return result;
-}
-
 RenderedBitmap *CPdfEngine::GetPageImage(int pageNo, RectD rect, size_t imageIx)
 {
     pdf_page *page = GetPdfPage(pageNo);
@@ -1885,8 +1940,9 @@ RenderedBitmap *CPdfEngine::GetPageImage(int pageNo, RectD rect, size_t imageIx)
         return NULL;
 
     Vec<FitzImagePos> positions;
+    ListInspectionData data = { &positions, false, 0 };
     EnterCriticalSection(&ctxAccess);
-    fz_device *dev = fz_new_image_extractor(ctx, &positions);
+    fz_device *dev = fz_new_inspection_device(ctx, &data);
     LeaveCriticalSection(&ctxAccess);
 
     RunPage(page, dev, fz_identity);
@@ -2024,20 +2080,16 @@ bool CPdfEngine::SaveEmbedded(fz_obj *obj, LinkSaverUI& saveUI)
 bool CPdfEngine::IsImagePage(int pageNo)
 {
     pdf_page *page = GetPdfPage(pageNo, true);
-    // pages containing a single image usually contain about 50
-    // characters worth of instructions, so don't bother checking
-    // more instruction-heavy pages
-    if (!page || !page->contents || page->contents->len > 100)
+    // GetPdfPage extracts imageRects for us
+    if (!page || !imageRects[pageNo-1])
         return false;
 
-    PdfPageRun *run = GetPageRun(page);
-    if (!run)
-        return false;
-
-    bool hasSingleImage = fz_list_is_single_image(run->list);
-    DropPageRun(run);
-
-    return hasSingleImage;
+    fz_rect mbox = fz_RectD_to_rect(PageMediabox(pageNo));
+    // check if any image covers at least 90% of the page
+    for (int i = 0; !fz_is_empty_rect(imageRects[pageNo-1][i]); i++)
+        if (fz_calc_overlap(mbox, imageRects[pageNo-1][i]) >= 0.9f)
+            return true;
+    return false;
 }
 
 TCHAR *CPdfEngine::GetPageLabel(int pageNo)
@@ -2271,7 +2323,7 @@ public:
     virtual unsigned char *GetFileData(size_t *cbCount);
     virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View);
-    virtual bool IsImagePage(int pageNo) { return false; }
+    virtual bool IsImagePage(int pageNo);
     virtual TCHAR *GetProperty(char *name);
 
     virtual float GetFileDPI() const { return 96.0f; }
@@ -2306,6 +2358,7 @@ protected:
     bool            LoadFromStream(fz_stream *stm);
 
     xps_page      * GetXpsPage(int pageNo, bool failIfBusy=false);
+    int             GetPageNo(xps_page *page);
     fz_matrix       viewctm(int pageNo, float zoom, int rotation) {
         return viewctm(PageMediabox(pageNo), zoom, rotation);
     }
@@ -2320,6 +2373,7 @@ protected:
                                     RectI **coords_out=NULL, bool cacheRun=false);
 
     Vec<XpsPageRun*>runCache; // ordered most recently used first
+    XpsPageRun    * CreatePageRun(xps_page *page, fz_display_list *list);
     XpsPageRun    * GetPageRun(xps_page *page, bool tryOnly=false, fz_link *extract=NULL);
     bool            RunPage(xps_page *page, fz_device *dev, fz_matrix ctm,
                             fz_bbox clipbox=fz_infinite_bbox, bool cacheRun=true);
@@ -2327,7 +2381,6 @@ protected:
 
     XpsTocItem   *  BuildTocTree(fz_outline *entry, int& idCounter);
     void            LinkifyPageText(xps_page *page, int pageNo);
-    fz_rect       * GetPageImageRects(xps_page *page);
     RenderedBitmap *GetPageImage(int pageNo, RectD rect, size_t imageIx);
 
     RectD         * _mediaboxes;
@@ -2590,15 +2643,52 @@ xps_page *CXpsEngine::GetXpsPage(int pageNo, bool failIfBusy)
         ScopedCritSec ctxScope(&ctxAccess);
         fz_try(ctx) {
             page = xps_load_page(_doc, pageNo - 1);
-
-            LinkifyPageText(page, pageNo);
             _pages[pageNo-1] = page;
-            imageRects[pageNo-1] = GetPageImageRects(page);
+            LinkifyPageText(page, pageNo);
         }
         fz_catch(ctx) { }
     }
 
     return page;
+}
+
+int CXpsEngine::GetPageNo(xps_page *page)
+{
+    for (int i = 0; i < PageCount(); i++)
+        if (page == _pages[i])
+            return i + 1;
+    assert(0);
+    return 0;
+}
+
+XpsPageRun *CXpsEngine::CreatePageRun(xps_page *page, fz_display_list *list)
+{
+    Vec<FitzImagePos> positions;
+    ListInspectionData data = { &positions, false, 0 };
+    fz_device *dev = NULL;
+
+    fz_try(ctx) {
+        dev = fz_new_inspection_device(ctx, &data);
+        fz_execute_display_list(list, dev, fz_identity, fz_infinite_bbox, NULL);
+    }
+    fz_catch(ctx) { }
+    fz_free_device(dev);
+
+    // save the image rectangles for this page
+    int pageNo = GetPageNo(page);
+    if (!imageRects[pageNo-1] && positions.Count() > 0) {
+        // the list of page image rectangles is terminated with a null-rectangle
+        fz_rect *rects = SAZA(fz_rect, positions.Count() + 1);
+        if (rects) {
+            for (size_t i = 0; i < positions.Count(); i++) {
+                rects[i] = positions.At(i).rect;
+            }
+            imageRects[pageNo-1] = rects;
+        }
+    }
+
+    XpsPageRun newRun = { page, list, data.mem_estimate, 1 };
+    return (XpsPageRun *)_memdup(&newRun);
 }
 
 XpsPageRun *CXpsEngine::GetPageRun(xps_page *page, bool tryOnly, fz_link *extract)
@@ -2644,9 +2734,7 @@ XpsPageRun *CXpsEngine::GetPageRun(xps_page *page, bool tryOnly, fz_link *extrac
         fz_free_device(dev);
 
         if (list) {
-            size_t size_est = fz_list_estimate_memory(list);
-            XpsPageRun newRun = { page, list, size_est, 1 };
-            result = (XpsPageRun *)_memdup(&newRun);
+            result = CreatePageRun(page, list);
             runCache.InsertAt(0, result);
         }
     }
@@ -3079,7 +3167,7 @@ void CXpsEngine::LinkifyPageText(xps_page *page, int pageNo)
     for (size_t i = 0; i < list->links.Count(); i++) {
         bool overlaps = false;
         for (fz_link *next = _links[pageNo-1]; next && !overlaps; next = next->next)
-            overlaps = fz_significantly_overlap(next->rect, list->coords.At(i));
+            overlaps = fz_calc_overlap(next->rect, list->coords.At(i)) >= 0.25f;
         if (!overlaps) {
             ScopedMem<char> uri(str::conv::ToUtf8(list->links.At(i)));
             if (!uri) continue;
@@ -3097,22 +3185,6 @@ void CXpsEngine::LinkifyPageText(xps_page *page, int pageNo)
     free(pageText);
 }
 
-fz_rect *CXpsEngine::GetPageImageRects(xps_page *page)
-{
-    Vec<FitzImagePos> positions;
-    RunPage(page, fz_new_image_extractor(ctx, &positions), fz_identity);
-    if (positions.Count() == 0)
-        return NULL;
-
-    // the list of page image rectangles is terminated with a null-rectangle
-    fz_rect *result = SAZA(fz_rect, positions.Count() + 1);
-    if (!result)
-        return NULL;
-    for (size_t i = 0; i < positions.Count(); i++)
-        result[i] = positions.At(i).rect;
-    return result;
-}
-
 RenderedBitmap *CXpsEngine::GetPageImage(int pageNo, RectD rect, size_t imageIx)
 {
     xps_page *page = GetXpsPage(pageNo);
@@ -3120,8 +3192,9 @@ RenderedBitmap *CXpsEngine::GetPageImage(int pageNo, RectD rect, size_t imageIx)
         return NULL;
 
     Vec<FitzImagePos> positions;
+    ListInspectionData data = { &positions, false, 0 };
     EnterCriticalSection(&ctxAccess);
-    fz_device *dev = fz_new_image_extractor(ctx, &positions);
+    fz_device *dev = fz_new_inspection_device(ctx, &data);
     LeaveCriticalSection(&ctxAccess);
 
     RunPage(page, dev, fz_identity);
@@ -3195,6 +3268,21 @@ DocTocItem *CXpsEngine::GetTocTree()
 
     int idCounter = 0;
     return BuildTocTree(_outline, idCounter);
+}
+
+bool CXpsEngine::IsImagePage(int pageNo)
+{
+    xps_page *page = GetXpsPage(pageNo, true);
+    // GetXpsPage extracts imageRects for us
+    if (!page || !imageRects[pageNo-1])
+        return false;
+
+    fz_rect mbox = fz_RectD_to_rect(PageMediabox(pageNo));
+    // check if any image covers at least 90% of the page
+    for (int i = 0; !fz_is_empty_rect(imageRects[pageNo-1][i]); i++)
+        if (fz_calc_overlap(mbox, imageRects[pageNo-1][i]) >= 0.9f)
+            return true;
+    return false;
 }
 
 bool XpsEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)

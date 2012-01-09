@@ -232,7 +232,7 @@ fz_hue_rgb(int *rr, int *rg, int *rb, int br, int bg, int bb, int sr, int sg, in
 
 /* SumatraPDF: expose blending formulas to dev_gdiplus.cpp */
 void
-fz_blend_pixel(int dp[3], int bp[3], int sp[3], int blendmode)
+fz_blend_pixel(int dp[3], unsigned char bp[3], unsigned char sp[3], int blendmode)
 {
 	int k;
 	/* non-separable blend modes */

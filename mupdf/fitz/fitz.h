@@ -1210,13 +1210,6 @@ void fz_free_display_list(fz_context *ctx, fz_display_list *list);
 fz_device *fz_new_list_device(fz_context *ctx, fz_display_list *list);
 void fz_execute_display_list(fz_display_list *list, fz_device *dev, fz_matrix ctm, fz_bbox area, fz_cookie *cookie);
 
-/* SumatraPDF: allow to optimize handling of single-image pages */
-int fz_list_is_single_image(fz_display_list *list);
-/* SumatraPDF: allow to detect pages requiring blending */
-int fz_list_requires_blending(fz_display_list *list);
-/* SumatraPDF: allow to detect lists occupying lots of memory */
-int fz_list_estimate_memory(fz_display_list *list);
-
 /*
  * Plotting functions.
  */
@@ -1243,7 +1236,7 @@ void fz_paint_pixmap_with_rect(fz_pixmap *dst, fz_pixmap *src, int alpha, fz_bbo
 
 void fz_blend_pixmap(fz_pixmap *dst, fz_pixmap *src, int alpha, int blendmode, int isolated, fz_pixmap *shape);
 /* SumatraPDF: expose blending formulas to dev_gdiplus.cpp */
-void fz_blend_pixel(int dp[3], int bp[3], int sp[3], int blendmode);
+void fz_blend_pixel(int dp[3], unsigned char bp[3], unsigned char sp[3], int blendmode);
 
 enum
 {

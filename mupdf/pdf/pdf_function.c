@@ -1422,12 +1422,13 @@ pdf_load_function(pdf_xref *xref, fz_obj *dict)
 	}
 	fz_catch(ctx)
 	{
+		int type = func->type;
 		pdf_drop_function(ctx, func);
 		fz_throw(ctx, "cannot load %s function (%d %d R)",
-				(func->type == SAMPLE ? "sampled" :
-				 (func->type == EXPONENTIAL ? "exponential" :
-				  (func->type == STITCHING ? "stitching" :
-				   (func->type == POSTSCRIPT ? "calculator" :
+				(type == SAMPLE ? "sampled" :
+				 (type == EXPONENTIAL ? "exponential" :
+				  (type == STITCHING ? "stitching" :
+				   (type == POSTSCRIPT ? "calculator" :
 				    "unknown")))), fz_to_num(dict), fz_to_gen(dict));
 	}
 

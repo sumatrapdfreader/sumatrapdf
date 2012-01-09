@@ -308,9 +308,6 @@ EXPORTS
 	fz_free_display_list
 	fz_new_list_device
 	fz_execute_display_list
-	fz_list_is_single_image
-	fz_list_requires_blending
-	fz_list_estimate_memory
 	fz_accelerate
 	fz_decode_tile
 	fz_decode_indexed_tile

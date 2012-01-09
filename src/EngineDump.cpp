@@ -253,13 +253,23 @@ void DumpData(BaseEngine *engine, bool fullDump)
     Out("</EngineDump>\n");
 }
 
+class PasswordHolder : public PasswordUI {
+    const TCHAR *password;
+public:
+    PasswordHolder(const TCHAR *password) : password(password) { }
+    virtual TCHAR * GetPassword(const TCHAR *fileName, unsigned char *fileDigest,
+                                unsigned char decryptionKeyOut[32], bool *saveKey) {
+        return password ? str::Dup(password) : NULL;
+    }
+};
+
 #define ErrOut(msg, ...) _ftprintf(stderr, _T(msg), __VA_ARGS__)
 
 int main(int argc, char **argv)
 {
     CmdLineParser argList(GetCommandLine());
     if (argList.Count() < 2) {
-        ErrOut("Usage: %s <filename> [-full]\n", path::GetBaseName(argList.At(0)));
+        ErrOut("Usage: %s <filename> [-pwd <password>] [-full]\n", path::GetBaseName(argList.At(0)));
         return 0;
     }
 
@@ -273,14 +283,22 @@ int main(int argc, char **argv)
     ScopedMem<TCHAR> filePath(path::GetDir(argList.At(1)));
     filePath.Set(path::Join(filePath, fdata.cFileName));
 
+    ScopedMem<TCHAR> password;
+    int pwdIdx = argList.Find(_T("-pwd"));
+    if (pwdIdx > 1 && (size_t)pwdIdx + 1 < argList.Count()) {
+        password.Set(argList.At(pwdIdx + 1));
+        argList.RemoveAt(pwdIdx + 1);
+    }
+    PasswordHolder pwdUI(password);
+
     ScopedGdiPlus gdiPlus;
     EngineType engineType;
-    BaseEngine *engine = EngineManager::CreateEngine(filePath, NULL, &engineType);
+    BaseEngine *engine = EngineManager::CreateEngine(filePath, &pwdUI, &engineType);
     if (!engine) {
         ErrOut("Error: Couldn't create an engine for %s!\n", path::GetBaseName(filePath));
         return 1;
     }
-    DumpData(engine, argList.Find(_T("-full")) != -1);
+    DumpData(engine, argList.Find(_T("-full")) > 1);
     delete engine;
 
 #ifdef DEBUG
