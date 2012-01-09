@@ -108,12 +108,32 @@
 #define UNZ_MAXFILENAMEINZIP (256)
 #endif
 
-#ifndef ALLOC
-# define ALLOC(size) (malloc(size))
-#endif
-#ifndef TRYFREE
-# define TRYFREE(p) {if (p) free(p);}
-#endif
+/* SumatraPDF: allow custom alloc/free functions */
+static UnzipAllocFuncs *gAllocFuncs = NULL;
+
+void unzSetAllocFuncs(UnzipAllocFuncs *funcs)
+{
+    gAllocFuncs = funcs;
+}
+
+static void *unzAlloc(size_t size)
+{
+    if (gAllocFuncs)
+        return gAllocFuncs->zip_alloc(NULL, 1, size);
+    else
+        return malloc(size);
+}
+
+static void unzFree(void *p)
+{
+    if (gAllocFuncs)
+        gAllocFuncs->bz_zip_free(NULL, p);
+    else
+        free(p);
+}
+
+#define ALLOC(size) unzAlloc(size)
+#define TRYFREE(p) unzFree(p)
 
 #define SIZECENTRALDIRITEM (0x2e)
 #define SIZEZIPLOCALHEADER (0x1e)

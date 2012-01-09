@@ -428,7 +428,16 @@ extern uLong ZEXPORT unzGetOffset (unzFile file);
 extern int ZEXPORT unzSetOffset64 (unzFile file, ZPOS64_T pos);
 extern int ZEXPORT unzSetOffset (unzFile file, uLong pos);
 
+/* SumatraPDF: allow custom alloc/free functions */
+#include <stdint.h>
 
+typedef struct {
+    void* (*bz_alloc)(void* opaque, int32_t items, int32_t size);
+    void* (*zip_alloc)(void* opaque, uint32_t items, uint32_t size);
+    void (*bz_zip_free)(void* opaque, void* addr);
+} UnzipAllocFuncs;
+
+extern void unzSetAllocFuncs(UnzipAllocFuncs *funcs);
 
 #ifdef __cplusplus
 }
