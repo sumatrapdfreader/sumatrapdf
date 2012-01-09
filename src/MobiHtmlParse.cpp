@@ -271,6 +271,19 @@ static HtmlAttr FindAttr(char *attr, size_t len)
     return (HtmlAttr)FindStrPos(gAttrs, attr, len);
 }
 
+static bool IsSelfClosingTag(HtmlTag tag)
+{
+    // TODO: add more tags
+    static HtmlTag selfClosingTags[] = { Tag_Br, Tag_Img, TagNotFound };
+    HtmlTag *tags = selfClosingTags;
+    while (*tags != TagNotFound) {
+        if (tag == *tags)
+            return true;
+        ++tags;
+    }
+    return false;
+}
+
 #if 0
 void DumpTag(HtmlToken *t)
 {
@@ -461,7 +474,8 @@ struct ConverterState {
 // of html tree
 static void RecordStartTag(Vec<TagInfo>* tagNesting, HtmlTag tag)
 {
-    // TODO: ignore self-closing tags
+    if (IsSelfClosingTag(tag))
+        return;
     TagInfo ti;
     ti.tagEnum = tag;
     tagNesting->Append(ti);
