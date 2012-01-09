@@ -203,6 +203,13 @@ static void OnPaintFrame(HWND hwnd)
     HDC dc = BeginPaint(hwnd, &ps);
     DrawFrame(hwnd, dc, &ps);
     EndPaint(hwnd, &ps);
+
+    if (!gPages)
+        return;
+    size_t pagesCount = gPages->Count();
+    ScopedMem<TCHAR> s(str::Format(_T("%d pages"), (int)pagesCount));
+    win::SetText(hwnd, s.Get());
+
 }
 
 static void OnLButtonDown()
@@ -253,9 +260,8 @@ static void OnOpen(HWND hwnd)
         LoadEbook(ofn.lpstrFile);
         return;
     }
-    // TODO: support multiple files
+    // this is just a test app, no need to support multiple files
     CrashIf(true);
-
 }
 
 static void OnToggleBbox(HWND hwnd)
