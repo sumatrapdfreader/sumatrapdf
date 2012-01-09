@@ -141,9 +141,13 @@
     <ClCompile Include="ext\zlib-1.2.5\trees.c" />
     <ClCompile Include="ext\zlib-1.2.5\uncompr.c" />
     <ClCompile Include="ext\zlib-1.2.5\zutil.c" />
+    <ClCompile Include="mupdf\fitz\base_context.c" />
     <ClCompile Include="mupdf\fitz\base_geometry.c" />
     <ClCompile Include="mupdf\fitz\base_getopt.c" />
+    <ClCompile Include="mupdf\fitz\base_link.c" />
+    <ClCompile Include="mupdf\fitz\base_object.c" />
     <ClCompile Include="mupdf\fitz\base_time.c" />
+    <ClCompile Include="mupdf\fitz\crypt_sha2.c" />
     <ClCompile Include="mupdf\fitz\dev_bbox.c" />
     <ClCompile Include="mupdf\fitz\dev_draw.c" />
     <ClCompile Include="mupdf\fitz\dev_gdiplus.cpp" />
@@ -151,8 +155,12 @@
     <ClCompile Include="mupdf\fitz\dev_null.c" />
     <ClCompile Include="mupdf\fitz\dev_text.c" />
     <ClCompile Include="mupdf\fitz\dev_trace.c" />
+    <ClCompile Include="mupdf\fitz\doc_outline.c" />
+    <ClCompile Include="mupdf\fitz\res_bitmap.c" />
+    <ClCompile Include="mupdf\fitz\res_halftone.c" />
     <ClCompile Include="mupdf\fitz\res_path.c" />
     <ClCompile Include="mupdf\fitz\res_pixmap.c" />
+    <ClCompile Include="mupdf\fitz\res_store.c" />
     <ClCompile Include="mupdf\fitz\res_text.c" />
     <ClCompile Include="mupdf\pdf\pdf_annot.c" />
     <ClCompile Include="mupdf\pdf\pdf_cmap.c" />

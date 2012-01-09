@@ -725,6 +725,30 @@
     <ClCompile Include="ext\zlib-1.2.5\zutil.c">
       <Filter>zlib</Filter>
     </ClCompile>
+    <ClCompile Include="mupdf\fitz\base_context.c">
+      <Filter>mupdf\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\fitz\base_link.c">
+      <Filter>mupdf\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\fitz\base_object.c">
+      <Filter>mupdf\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\fitz\crypt_sha2.c">
+      <Filter>mupdf\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\fitz\doc_outline.c">
+      <Filter>mupdf\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\fitz\res_bitmap.c">
+      <Filter>mupdf\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\fitz\res_halftone.c">
+      <Filter>mupdf\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\fitz\res_store.c">
+      <Filter>mupdf\fitz</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
