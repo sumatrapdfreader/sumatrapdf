@@ -758,6 +758,16 @@ void ToUtf8Buf(char *buf, size_t cbBufSize, const WCHAR *s)
     WideCharToMultiByte(CP_UTF8, 0, s, -1, buf, cbBufSize, NULL, NULL);
 }
 
+void FromAnsiBuf(char *buf, size_t cchBufSize, const char *s)
+{
+    BufSet(buf, cchBufSize, s);
+}
+
+void FromAnsiBuf(WCHAR *buf, size_t cchBufSize, const char *s)
+{
+    MultiByteToWideChar(CP_ACP, 0, s, -1, buf, cchBufSize);
+}
+
 }
 
 }

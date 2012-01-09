@@ -21,9 +21,7 @@
 #include "CrashHandler.h"
 #include "AppTools.h"
 #include "translations.h"
-
-// TODO: UnzipFiles() must take allocator
-//       (UnzipFiles' Vec never allocates data on the heap, however unzip.c does!)
+#include "unzip.h"
 
 #ifndef CRASH_REPORT_URL
 #define CRASH_REPORT_URL _T("http://blog.kowalczyk.info/software/sumatrapdf/develop.html")
@@ -223,6 +221,12 @@ static void bz_zip_free(void* opaque, void* addr)
 {
     gCrashHandlerAllocator->Free(addr);
 }
+
+static UnzipAllocFuncs gUnzipAllocFuncs = {
+    &bz_alloc,
+    &zip_alloc,
+    &bz_zip_free
+};
 
 static bool LoadDbgHelpFuncs()
 {
@@ -771,7 +775,7 @@ static bool UnpackStaticSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir
 #endif
         { NULL }
     };
-    return UnzipFiles(symbolsZipPath, filesToUnnpack, symDir);
+    return UnzipFiles(gCrashHandlerAllocator, symbolsZipPath, filesToUnnpack, symDir);
 }
 
 // In lib (.exe + libmupdf.dll) release and pre-release builds, the pdb files
@@ -785,7 +789,7 @@ static bool UnpackLibSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir)
         { "SumatraPDF-no-MuPDF.pdb", _T("SumatraPDF.pdb") },
         { NULL }
     };
-    return UnzipFiles(symbolsZipPath, filesToUnnpack, symDir);
+    return UnzipFiles(gCrashHandlerAllocator, symbolsZipPath, filesToUnnpack, symDir);
 }
 
 // *.pdb files are on S3 with a known name. Try to download them here to a directory
@@ -808,6 +812,8 @@ static bool DownloadSymbols(const TCHAR *symDir, const TCHAR *symbolsZipPath)
 #endif
         return false;
     }
+
+    unzSetAllocFuncs(&gUnzipAllocFuncs);
 
     bool ok = false;
     if (gIsStaticBuild) {

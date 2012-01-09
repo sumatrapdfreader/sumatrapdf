@@ -24,6 +24,18 @@ public:
             memcpy(newMem, mem, size);
         return newMem;
     }
+
+    static void *Alloc(Allocator *a, size_t size) {
+        if (!a)
+            return malloc(size);
+        return a->Alloc(size);
+    }
+    static void Free(Allocator *a, void *p) {
+        if (!a)
+            free(p);
+        else
+            return a->Free(p);
+    }
 };
 
 class MallocAllocator : public Allocator {

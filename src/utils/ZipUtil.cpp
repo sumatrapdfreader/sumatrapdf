@@ -12,7 +12,7 @@
 #include <unzip.h>
 
 // returns the FileToUnzip that's been successfully unzipped (or NULL)
-static FileToUnzip *UnzipFile(unzFile& uf,  FileToUnzip *files, const TCHAR *dir)
+static FileToUnzip *UnzipFile(Allocator *allocator, unzFile& uf,  FileToUnzip *files, const TCHAR *dir)
 {
     char fileName[MAX_PATH];
     unz_file_info64 finfo;
@@ -35,15 +35,20 @@ static FileToUnzip *UnzipFile(unzFile& uf,  FileToUnzip *files, const TCHAR *dir
     }
     if (!file)
         return NULL;
+    str::Str<TCHAR> filePath(256, allocator);
+    filePath.Append(dir);
+    if (!str::EndsWith(filePath.Get(), _T("\\")))
+        filePath.Append(_T("\\"));
 
-    ScopedMem<TCHAR> filePath;
-    if (file->unzippedName)
-        filePath.Set(str::Dup(file->unzippedName));
-    else
-        filePath.Set(str::conv::FromAnsi(fileName)); // Note: maybe FromUtf8?
-    filePath.Set(path::Join(dir, filePath));
+    if (file->unzippedName) {
+        filePath.Append(file->unzippedName);
+    } else {
+        TCHAR buf[256] = { 0 };
+        str::conv::FromAnsiBuf(buf, dimof(buf), fileName);  // Note: maybe FromUtf8?
+        filePath.Append(buf);
+    }
 
-    ScopedMem<void> data(malloc(len));
+    void *data = Allocator::Alloc(allocator, len);
     if (!data)
         return NULL;
 
@@ -52,7 +57,7 @@ static FileToUnzip *UnzipFile(unzFile& uf,  FileToUnzip *files, const TCHAR *dir
         return NULL;
 
     unsigned int readBytes = unzReadCurrentFile(uf, data, len);
-    if (readBytes != len || !file::WriteAll(filePath, data, len))
+    if (readBytes != len || !file::WriteAll(filePath.Get(), data, len))
         file = NULL;
 
     unzCloseCurrentFile(uf); // ignoring error code
@@ -69,7 +74,7 @@ static bool WereAllUnzipped(FileToUnzip *files, Vec<FileToUnzip *> unzipped)
     return true;
 }
 
-bool UnzipFiles(const TCHAR *zipFile, FileToUnzip *files, const TCHAR *dir)
+bool UnzipFiles(Allocator *allocator, const TCHAR *zipFile, FileToUnzip *files, const TCHAR *dir)
 {
     Vec<FileToUnzip *> unzipped;
 
@@ -88,7 +93,7 @@ bool UnzipFiles(const TCHAR *zipFile, FileToUnzip *files, const TCHAR *dir)
 
     unzGoToFirstFile(uf);
     for (int n = 0; n < ginfo.number_entry; n++) {
-        FileToUnzip *file = UnzipFile(uf, files, dir);
+        FileToUnzip *file = UnzipFile(allocator, uf, files, dir);
         if (file)
             unzipped.Append(file);
         err = unzGoToNextFile(uf);
