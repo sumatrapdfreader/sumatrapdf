@@ -2049,10 +2049,8 @@ static void OnMenuExit()
     PostQuitMessage(0);
 }
 
-// Note: not sure if this is a good idea, if gWindows or its WindowInfo objects
-// are corrupted, we might crash trying to access them. Maybe use IsBadReadPtr()
-// to test pointers (even if it's not advised in general)
-void GetFilesInfo(str::Str<char>& s)
+// note: used from CrashHanlder.cpp, should not allocate memory
+void GetStressTestInfo(str::Str<char>* s)
 {
     // only add paths to files encountered during an explicit stress test
     // (for privacy reasons, users should be able to decide themselves
@@ -2065,10 +2063,12 @@ void GetFilesInfo(str::Str<char>& s)
         if (!w || !w->dm || !w->loadedFilePath)
             continue;
 
-        s.Append("File: ");
-        s.AppendAndFree(str::conv::ToUtf8(w->loadedFilePath));
-        s.AppendAndFree(GetStressTestInfo(w->stressTest));
-        s.Append("\r\n");
+        s->Append("File: ");
+        char buf[256];
+        str::conv::ToUtf8Buf(buf, dimof(buf), w->loadedFilePath);
+        s->Append(buf);
+        GetStressTestInfo(w->stressTest, s);
+        s->Append("\r\n");
     }
 }
 

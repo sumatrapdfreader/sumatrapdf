@@ -689,6 +689,9 @@ static void GetExceptionInfo(str::Str<char>& s, EXCEPTION_POINTERS *excPointers)
     GetCallstack(s, *ctx, GetCurrentThread());
 }
 
+// in SumatraPDF.cpp
+extern void GetStressTestInfo(str::Str<char>* s);
+
 static char *BuildCrashInfoText()
 {
     LogDbgDetail("BuildCrashInfoText(): start");
@@ -701,6 +704,9 @@ static char *BuildCrashInfoText()
     str::Str<char> s(16 * 1024, gCrashHandlerAllocator);
     if (gSystemInfo)
         s.Append(gSystemInfo);
+
+    GetStressTestInfo(&s);
+    s.Append("\r\n");
 
     GetExceptionInfo(s, gMei.ExceptionPointers);
     LogDbgDetail("BuildCrashInfoText(): 5");
@@ -1058,9 +1064,6 @@ static void GetSystemInfo(str::Str<char>& s)
     // * list of currently opened documents (by traversing gWindows)
 }
 
-// in SumatraPDF.cpp
-extern void GetFilesInfo(str::Str<char>& s);
-
 static void GetModules(str::Str<char>& s)
 {
     HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
@@ -1091,8 +1094,6 @@ static void BuildSystemInfo()
     GetProgramInfo(s);
     GetOsVersion(s);
     GetSystemInfo(s);
-    GetFilesInfo(s);
-    s.Append("\r\n");
     gSystemInfo = s.StealData();
 }
 

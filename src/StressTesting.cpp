@@ -252,6 +252,19 @@ static TCHAR *FormatTime(int totalSecs)
     return str::Format(_T("%d secs"), secs);
 }
 
+static void FormatTime(int totalSecs, str::Str<char> *s)
+{
+    int secs = totalSecs % 60;
+    int totalMins = totalSecs / 60;
+    int mins = totalMins % 60;
+    int hrs = totalMins / 60;
+    if (hrs > 0)
+        s->AppendFmt("%d hrs %d mins %d secs", hrs, mins, secs);
+    if (mins > 0)
+        s->AppendFmt("%d mins %d secs", mins, secs);
+    s->AppendFmt("%d secs", secs);
+}
+
 static void MakeRandomSelection(DisplayModel *dm, int pageNo)
 {
     if (!dm->ValidPageNo(pageNo))
@@ -309,7 +322,7 @@ public:
         filesCount(0), cycles(1), fileIndex(0)
         { }
 
-    char *GetLogInfo();
+    void GetLogInfo(str::Str<char> *s);
     void Start(const TCHAR *path, const TCHAR *filter, const TCHAR *ranges, int cycles);
 
     virtual void Callback() { OnTimer(); }
@@ -556,17 +569,17 @@ Next:
     TickTimer();
 }
 
-char *StressTest::GetLogInfo()
+// used from CrashHandler, shouldn't allocate memory
+void StressTest::GetLogInfo(str::Str<char> *s)
 {
-    int secs = SecsSinceSystemTime(stressStartTime);
-    ScopedMem<TCHAR> st(FormatTime(secs));
-    ScopedMem<char> su(str::conv::ToUtf8(st));
-    return str::Format(", stress test rendered %d files in %s, currPage: %d", filesCount, su, currPage);
+    s->AppendFmt(", stress test rendered %d files in ", filesCount);
+    FormatTime(SecsSinceSystemTime(stressStartTime), s);
+    s->AppendFmt(", currPage: %d", currPage);
 }
 
-char *GetStressTestInfo(CallbackFunc *dst)
+void GetStressTestInfo(CallbackFunc *dst, str::Str<char> *s)
 {
-    return static_cast<StressTest *>(dst)->GetLogInfo();
+    static_cast<StressTest *>(dst)->GetLogInfo(s);
 }
 
 void StartStressTest(WindowInfo *win, const TCHAR *path, const TCHAR *filter,

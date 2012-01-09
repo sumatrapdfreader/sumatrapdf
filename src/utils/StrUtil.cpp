@@ -442,13 +442,12 @@ size_t RemoveChars(WCHAR *str, const WCHAR *toRemove)
     return removed;
 }
 
-
 // Note: BufSet() should only be used when absolutely necessary (e.g. when
 // handling buffers in OS-defined structures)
 // returns the number of characters written (without the terminating \0)
 size_t BufSet(char *dst, size_t dstCchSize, const char *src)
 {
-    if (0 == dstCchSize) return 0;
+    CrashAlwaysIf(0 == dstCchSize);
 
     size_t srcCchSize = str::Len(src);
     size_t size = min(dstCchSize - 1, srcCchSize);
@@ -461,7 +460,7 @@ size_t BufSet(char *dst, size_t dstCchSize, const char *src)
 
 size_t BufSet(WCHAR *dst, size_t dstCchSize, const WCHAR *src)
 {
-    if (0 == dstCchSize) return 0;
+    CrashAlwaysIf(0 == dstCchSize);
 
     size_t srcCchSize = str::Len(src);
     size_t size = min(dstCchSize - 1, srcCchSize);
@@ -744,6 +743,21 @@ void Utf8ToWcharBuf(const char *s, size_t sLen, WCHAR *bufOut, size_t bufOutMax)
         size = (int)bufOutMax - 1;
     MultiByteToWideChar(CP_UTF8, 0, s, (int)sLen, bufOut, size);
     bufOut[size] = '\0';
+}
+
+namespace conv {
+
+// not exactly to utf8, if it's ascii, we just copy it verbatim
+void ToUtf8Buf(char *buf, size_t cbBufSize, const char *s)
+{
+    BufSet(buf, cbBufSize, s);
+}
+
+void ToUtf8Buf(char *buf, size_t cbBufSize, const WCHAR *s)
+{
+    WideCharToMultiByte(CP_UTF8, 0, s, -1, buf, cbBufSize, NULL, NULL);
+}
+
 }
 
 }

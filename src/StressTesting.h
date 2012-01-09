@@ -19,6 +19,6 @@ class DisplayModel;
 bool CollectPathsFromDirectory(const TCHAR *pattern, StrVec& paths, bool dirsInsteadOfFiles=false);
 void StartStressTest(WindowInfo *win, const TCHAR *path, const TCHAR *filter,
                      const TCHAR *ranges, int cycles, RenderCache *renderCache);
-char *GetStressTestInfo(CallbackFunc *dst);
+void GetStressTestInfo(CallbackFunc *dst, str::Str<char> *s);
 
 #endif
