@@ -73,6 +73,13 @@ enum FormatCode : uint8_t {
     FC_Invalid = 0
 };
 
+enum AlignAttr : uint8_t {
+    AlignLeft    = 0,
+    AlignRight   = 1,
+    AlignCenter  = 2,
+    AlignJustify = 3
+};
+
 uint8_t *MobiHtmlToDisplay(uint8_t *s, size_t sLen, size_t& lenOut);
 
 #endif

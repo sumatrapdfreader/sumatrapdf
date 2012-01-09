@@ -3,6 +3,7 @@
 
 #include "MobiHtmlParse.h"
 #include "Vec.h"
+#include "FileUtil.h"
 
 /* Converts mobi html to our internal format optimized for further layout/display.
 Our format can be thought of as a stream of Virtual Machine instructions.
@@ -26,6 +27,9 @@ denoting a string with embedded formatting codes. It's length would be 16-bit
 (for simplicity of construction) telling the total size of nested data. I don't
 think it happens very often in practice, though.
 */
+
+static bool gSaveHtml = false;
+#define HTML_FILE_NAME _T("mobi-test.html")
 
 struct HtmlToken {
     enum TokenType {
@@ -184,8 +188,39 @@ Next:
     return &currToken;
 }
 
-// enum names match the order of tags in an array
-enum TagEnum {
+static int FindStrPos(const char *strings, char *str, size_t len)
+{
+    const char *curr = strings;
+    char *end = str + len;
+    char firstChar = *str;
+    int n = 0;
+    for (;;) {
+        // we're at the start of the next tag
+        char c = *curr;
+        if ((0 == c) || (c > firstChar)) {
+            // strings are sorted alphabetically, so we
+            // can quit if current str is > tastringg
+            return -1;
+        }
+        char *s = str;
+        while (*curr && (s < end)) {
+            if (*s++ != *curr++)
+                goto Next;
+        }
+        if ((s == end) && (0 == *curr))
+            return n;
+Next:
+        while (*curr) {
+            ++curr;
+        }
+        ++curr;
+        ++n;
+    }
+    return -1;
+}
+
+// enum names must match the order in strings array
+enum HtmlTag {
     TagNotFound = -1,
     Tag_A = 0,
     Tag_B = 1,
@@ -214,37 +249,26 @@ enum TagEnum {
     Tag_Ul = 24
 };
 
-char *gTags = "a\0b\0blockquote\0body\0br\0div\0font\0guide\0h2\0head\0html\0i\0img\0li\0mbp:pagebreak\0ol\0p\0reference\0span\0sup\0table\0td\0tr\0u\0ul\0";
+const char *gTags = "a\0b\0blockquote\0body\0br\0div\0font\0guide\0h2\0head\0html\0i\0img\0li\0mbp:pagebreak\0ol\0p\0reference\0span\0sup\0table\0td\0tr\0u\0ul\0";
 
-static TagEnum FindTag(char *tag, size_t len)
+HtmlTag FindTag(char *tag, size_t len)
 {
-    char *curr = gTags;
-    char *end = tag + len;
-    char firstTagChar = *tag;
-    int n = 0;
-    for (;;) {
-        // we're at the start of the next tag
-        char c = *curr;
-        if ((0 == c) || (c > firstTagChar)) {
-            // gTags are sorted alphabetically, so we
-            // can quit if current tag is > tag
-            return TagNotFound;
-        }
-        char *s = tag;
-        while (*curr && (s < end)) {
-            if (*s++ != *curr++)
-                goto NextTag;
-        }
-        if ((s == end) && (0 == *curr))
-            return (TagEnum)n;
-NextTag:
-        while (*curr) {
-            ++curr;
-        }
-        ++curr;
-        ++n;
-    }
-    return TagNotFound;
+    return (HtmlTag)FindStrPos(gTags, tag, len);
+}
+
+// enum names must match the order in strings array
+enum HtmlAttr {
+    AttrNotFound    = -1,
+    Attr_Align = 0,
+    Attr_Height = 1,
+    Attr_Width = 2
+};
+
+const char *gAttrs = "align\0height\0width\0";
+
+static HtmlAttr FindAttr(char *attr, size_t len)
+{
+    return (HtmlAttr)FindStrPos(gAttrs, attr, len);
 }
 
 #if 0
@@ -303,6 +327,25 @@ static void SkipNonWs(uint8_t*& s, uint8_t *end)
     }
 }
 
+// Returns FC_Invalid if no formatting code for this tag
+static FormatCode GetFormatCodeForTag(HtmlTag tag, bool isEndTag)
+{
+    FormatCode fc = FC_Invalid;
+    if (Tag_I == tag) fc = FC_ItalicStart;
+    else if (Tag_B == tag) fc = FC_BoldStart;
+    else if (Tag_U == tag) fc = FC_UnderlineStart;
+    else if (Tag_H2 == tag) fc = FC_H2Start;
+    else if (Tag_P == tag) fc = FC_ParagraphStart;
+    // TODO: more mappings
+
+    if (FC_Invalid != fc) {
+        // we rely on convention that end code is start code - 1
+        if (isEndTag)
+            fc = (FormatCode) ((int)fc - 1);
+    }
+    return fc;
+}
+
 static void EmitFormatCode(Vec<uint8_t> *out, FormatCode fc)
 {
     out->Append(fc);
@@ -340,6 +383,23 @@ static void EmitText(Vec<uint8_t>& out, HtmlToken *t)
     }
 }
 
+static void EmitAttributes(HtmlToken *t, HtmlAttr *allowedAttributes)
+{
+    // TODO: write me
+}
+
+static void EmitTagP(Vec<uint8_t>* out, HtmlToken *t)
+{
+    static HtmlAttr validPAttrs[] = { Attr_Align, AttrNotFound };
+    FormatCode fc = GetFormatCodeForTag(Tag_P, t->IsEndTag());
+    CrashAlwaysIf(FC_Invalid == fc);
+    CrashAlwaysIf(t->IsEmptyElementEndTag());
+    EmitFormatCode(out, fc);
+    if (t->IsStartTag()) {
+        EmitAttributes(t, validPAttrs);
+    }
+}
+
 // Represents a tag in the tag nesting stack. Most of the time
 // the tag wil be one of the known tags but we also allow for
 // a possibility of unknown tags. We can tell them apart because
@@ -347,16 +407,19 @@ static void EmitText(Vec<uint8_t>& out, HtmlToken *t)
 // TODO: alternatively we could not record unknown tags - we ignore
 // them anyway. That way we could encode the tag as a single byte.
 union TagInfo {
-    TagEnum     tagEnum;
+    HtmlTag     tagEnum;
     uint8_t *   tagAddr;
 };
 
 struct ConverterState {
     Vec<uint8_t> *out;
     Vec<TagInfo> *tagNesting;
+    Vec<uint8_t> *html; // prettified html
 };
 
-static void AddStartTag(Vec<TagInfo>* tagNesting, TagEnum tag)
+// record the tag for the purpose of building current state
+// of html tree
+static void RecordStartTag(Vec<TagInfo>* tagNesting, HtmlTag tag)
 {
     // TODO: ignore self-closing tags
     TagInfo ti;
@@ -364,29 +427,16 @@ static void AddStartTag(Vec<TagInfo>* tagNesting, TagEnum tag)
     tagNesting->Append(ti);
 }
 
-static void AddEndTag(Vec<TagInfo> *tagNesting, TagEnum tag)
+// remove the tag from state of html tree
+static void RecordEndTag(Vec<TagInfo> *tagNesting, HtmlTag tag)
 {
-    // TODO: remove matching tag from the end and do
-    // other cleanups of html structure if things are
-    // off
-}
-
-// Returns FC_Invalid if no formatting code for this tag
-static FormatCode GetFormatCodeForTag(TagEnum tag, bool isEndTag)
-{
-    FormatCode fc = FC_Invalid;
-    if (Tag_I == tag) fc = FC_ItalicStart;
-    else if (Tag_B == tag) fc = FC_BoldStart;
-    else if (Tag_U == tag) fc = FC_UnderlineStart;
-    else if (Tag_H2 == tag) fc = FC_H2Start;
-    // TODO: more mappings
-
-    if (FC_Invalid != fc) {
-        // we rely on convention that end code is start code - 1
-        if (isEndTag)
-            fc = (FormatCode) ((int)fc - 1);
-    }
-    return fc;
+    // TODO: this logic might need to be a bit more complicated
+    // e.g. when closing a tag, if the top tag doesn't match
+    // but there are only potentially self-closing tags
+    // on the stack between the matching tag, we should pop
+    // all of them
+    if (tagNesting->Count() > 0)
+        tagNesting->Pop();
 }
 
 static void HandleTag(ConverterState *state, HtmlToken *t)
@@ -396,12 +446,19 @@ static void HandleTag(ConverterState *state, HtmlToken *t)
     // HtmlToken string includes potential attributes,
     // get the length of just the tag
     size_t tagLen = GetTagLen(t->s, t->sLen);
-    TagEnum tag = FindTag((char*)t->s, tagLen);
+    HtmlTag tag = FindTag((char*)t->s, tagLen);
     CrashIf(tag == TagNotFound);
+
+    // update the current state of html tree
     if (t->IsStartTag())
-        AddStartTag(state->tagNesting, tag);
+        RecordStartTag(state->tagNesting, tag);
     else if (t->IsEndTag())
-        AddEndTag(state->tagNesting, tag);
+        RecordEndTag(state->tagNesting, tag);
+
+    if (Tag_P == tag) {
+        EmitTagP(state->out, t);
+        return;
+    }
 
     FormatCode fc = GetFormatCodeForTag(tag, t->IsEndTag());
     if (fc != FC_Invalid) {
@@ -410,6 +467,53 @@ static void HandleTag(ConverterState *state, HtmlToken *t)
         return;
     }
     // TODO: handle other tags
+}
+
+static void HtmlAddWithNesting(Vec<uint8_t>* html, size_t nesting, uint8_t *s, size_t sLen)
+{
+    for (size_t i = 0; i < nesting; i++) {
+        html->Append(' ');
+    }
+    html->Append(s, sLen);
+    html->Append('\n');
+}
+
+static void PrettifyHtml(ConverterState *state, HtmlToken *t)
+{
+    if (!gSaveHtml)
+        return;
+    size_t nesting = state->tagNesting->Count();
+    if (t->IsText()) {
+        HtmlAddWithNesting(state->html, nesting, t->s, t->sLen);
+        return;
+    }
+
+    if (!t->IsTag())
+        return;
+
+    if (t->IsEmptyElementEndTag()) {
+        HtmlAddWithNesting(state->html, nesting, t->s - 1, t->sLen + 3);
+        return;
+    }
+
+    if (t->IsStartTag()) {
+        HtmlAddWithNesting(state->html, nesting, t->s - 1, t->sLen + 2);
+        return;
+    }
+
+    if (t->IsEndTag()) {
+        if (nesting > 0)
+            --nesting;
+        HtmlAddWithNesting(state->html, nesting, t->s - 2, t->sLen + 3);
+    }
+}
+
+static void SavePrettifiedHtml(Vec<uint8_t>* html)
+{
+    if (!gSaveHtml)
+        return;
+
+    file::WriteAll(HTML_FILE_NAME, (void*)html->LendData(), html->Count());
 }
 
 // convert mobi html to a format optimized for layout/display
@@ -425,7 +529,9 @@ uint8_t *MobiHtmlToDisplay(uint8_t *s, size_t sLen, size_t& lenOut)
     // its closing tag.
     Vec<TagInfo> tagNesting(256);
 
-    ConverterState state = { &res, &tagNesting };
+    Vec<uint8_t> html(sLen * 2);
+
+    ConverterState state = { &res, &tagNesting, &html };
 
     HtmlPullParser parser(s);
 
@@ -436,6 +542,7 @@ uint8_t *MobiHtmlToDisplay(uint8_t *s, size_t sLen, size_t& lenOut)
             break;
         if (t->IsError())
             return NULL;
+        PrettifyHtml(&state, t);
         // TODO: interpret the tag
         if (t->IsTag()) {
             HandleTag(&state, t);
@@ -449,6 +556,7 @@ uint8_t *MobiHtmlToDisplay(uint8_t *s, size_t sLen, size_t& lenOut)
         }
 #endif
     }
+    SavePrettifiedHtml(state.html);
     lenOut = res.Size();
     uint8_t *resData = res.StealData();
     return resData;
