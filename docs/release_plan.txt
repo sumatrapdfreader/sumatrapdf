@@ -1,6 +1,8 @@
 Things to do before 2.0 release:
 * (?) ebook support
 * installer and settings: UI for registering other supported file types http://code.google.com/p/sumatrapdf/issues/detail?id=1365
+* switch to ucrt
+* fix crashes during stress test
 * bug: focus captured by web control when clicking on "Related Topics" button in 010Editor.chm from
   http://code.google.com/p/sumatrapdf/issues/detail?id=1579
   I don't know how to fix this. It seems that the problem really is that a button window inside browser
