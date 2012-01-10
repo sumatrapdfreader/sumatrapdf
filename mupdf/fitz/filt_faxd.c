@@ -152,7 +152,7 @@ const cfd_node cf_2d_decode[] = {
 	{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-3,3}
 };
 
-/* Uncompresssed decoding table. */
+/* Uncompressed decoding table. */
 const cfd_node cf_uncompressed_decode[] = {
 	{64,12},{5,6},{4,5},{4,5},{3,4},{3,4},{3,4},{3,4},{2,3},{2,3},
 	{2,3},{2,3},{2,3},{2,3},{2,3},{2,3},{1,2},{1,2},{1,2},{1,2},{1,2},

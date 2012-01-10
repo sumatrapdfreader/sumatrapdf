@@ -15,7 +15,7 @@ intermediate results rather than ints.
 /* Do we special case handling of single pixel high/wide images? The
  * 'purest' handling is given by not special casing them, but certain
  * files that use such images 'stack' them to give full images. Not
- * special casing them results in then being fainter and giving noticable
+ * special casing them results in then being fainter and giving noticeable
  * rounding errors.
  */
 #define SINGLE_PIXEL_SPECIALS
@@ -1195,7 +1195,7 @@ fz_scale_pixmap(fz_context *ctx, fz_pixmap *src, float x, float y, float w, floa
 	 * When scaling vertically, we always store out forwards, but may
 	 * feed source rows in in a different order.
 	 *
-	 * Consider the image rectange 'r' to which the image is mapped,
+	 * Consider the image rectangle 'r' to which the image is mapped,
 	 * and the (possibly) larger rectangle 'R', given by expanding 'r' to
 	 * complete pixels.
 	 *

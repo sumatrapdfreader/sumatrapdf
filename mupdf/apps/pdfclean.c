@@ -114,7 +114,7 @@ static void removeduplicateobjs(void)
 
 	for (num = 1; num < xref->len; num++)
 	{
-		/* Only compare an object to objects preceeding it */
+		/* Only compare an object to objects preceding it */
 		for (other = 1; other < num; other++)
 		{
 			fz_obj *a, *b;
@@ -289,9 +289,6 @@ static void renumberobjs(void)
 static void retainpages(int argc, char **argv)
 {
 	fz_obj *oldroot, *root, *pages, *kids, *countobj, *parent, *olddests;
-
-	/* Load the old page tree */
-	pdf_load_page_tree(xref);
 
 	/* Keep only pages/type and (reduced) dest entries to avoid
 	 * references to unretained pages */

@@ -135,7 +135,7 @@ fz_set_aa_level(fz_context *ctx, int level)
 /*
  * Global Edge List -- list of straight path segments for scan conversion
  *
- * Stepping along the edges is with bresenham's line algorithm.
+ * Stepping along the edges is with Bresenham's line algorithm.
  *
  * See Mike Abrash -- Graphics Programming Black Book (notably chapter 40)
  */

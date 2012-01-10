@@ -154,17 +154,6 @@ fz_append_display_node(fz_display_list *list, fz_display_node *node)
 			update = list->stack[list->top].update;
 			if (list->tiled == 0)
 			{
-				/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692346 */
-				if (!fz_is_infinite_rect(list->stack[list->top].rect) &&
-					!fz_is_empty_rect(list->stack[list->top].rect))
-				{
-					/* add some fuzz at the edges, as especially glyph rects
-					 * are sometimes not actually completely bounding the glyph */
-					list->stack[list->top].rect.x0 -= 20;
-					list->stack[list->top].rect.y0 -= 20;
-					list->stack[list->top].rect.x1 += 20;
-					list->stack[list->top].rect.y1 += 20;
-				}
 				if (update)
 				{
 					*update = fz_intersect_rect(*update, list->stack[list->top].rect);
@@ -235,6 +224,21 @@ fz_free_display_node(fz_context *ctx, fz_display_node *node)
 		fz_drop_colorspace(ctx, node->colorspace);
 	fz_free(ctx, node);
 }
+
+/* SumatraPDF: add some fuzz at the edges, as glyph rects are
+   sometimes not actually completely bounding the glyph */
+static fz_rect
+fz_bound_text_fuzz(fz_text *text, fz_matrix ctm)
+{
+	fz_rect rect = fz_bound_text(text, ctm);
+	if (!fz_is_infinite_rect(rect) && !fz_is_empty_rect(rect))
+	{
+		rect.x0 -= 20; rect.y0 -= 20;
+		rect.x1 += 20; rect.y1 += 20;
+	}
+	return rect;
+}
+#define fz_bound_text(text, ctm) fz_bound_text_fuzz(text, ctm)
 
 static void
 fz_list_fill_path(fz_device *dev, fz_path *path, int even_odd, fz_matrix ctm,
@@ -612,14 +616,6 @@ fz_execute_display_list(fz_display_list *list, fz_device *dev, fz_matrix top_ctm
 	int tiled = 0;
 	int empty;
 	int progress = 0;
-
-	if (!fz_is_infinite_bbox(scissor))
-	{
-		/* add some fuzz at the edges, as especially glyph rects
-		 * are sometimes not actually completely bounding the glyph */
-		scissor.x0 -= 20; scissor.y0 -= 20;
-		scissor.x1 += 20; scissor.y1 += 20;
-	}
 
 	if (cookie)
 	{

@@ -183,6 +183,7 @@ fz_stream *fz_open_file2(fz_context *ctx, const TCHAR *filePath)
     if (fileSize < MAX_MEMORY_FILE_SIZE) {
         fz_buffer *data = NULL;
         fz_stream *file = NULL;
+        fz_var(data);
         fz_try(ctx) {
             data = fz_new_buffer(ctx, (int)fileSize);
             if (file::ReadAll(filePath, (char *)data->data, (data->len = (int)fileSize)))
@@ -1172,15 +1173,17 @@ OpenEmbeddedFile:
         return false;
 
     fz_buffer *buffer = NULL;
+    fz_var(buffer);
     fz_try(ctx) {
         buffer = pdf_load_stream(_xref, num, gen);
         file = fz_open_buffer(ctx, buffer);
     }
-    fz_catch(ctx) {
+    fz_always(ctx) {
         fz_drop_buffer(ctx, buffer);
+    }
+    fz_catch(ctx) {
         return false;
     }
-    fz_drop_buffer(ctx, buffer);
 
     pdf_free_xref(_xref);
     _xref = NULL;
@@ -1199,7 +1202,7 @@ bool CPdfEngine::Load(IStream *stream, PasswordUI *pwdUI)
         stm = fz_open_istream(ctx, stream);
     }
     fz_catch(ctx) {
-        stm = NULL;
+        return false;
     }
     if (!LoadFromStream(stm, pwdUI))
         return false;
@@ -1216,7 +1219,7 @@ bool CPdfEngine::Load(fz_stream *stm, PasswordUI *pwdUI)
         stm = fz_clone_stream(ctx, stm);
     }
     fz_catch(ctx) {
-        stm = NULL;
+        return false;
     }
     if (!LoadFromStream(stm, pwdUI))
         return false;
@@ -1232,11 +1235,12 @@ bool CPdfEngine::LoadFromStream(fz_stream *stm, PasswordUI *pwdUI)
     fz_try(ctx) {
         _xref = pdf_open_xref_with_stream(stm, NULL);
     }
-    fz_catch(ctx) {
+    fz_always(ctx) {
         fz_close(stm);
+    }
+    fz_catch(ctx) {
         return false;
     }
-    fz_close(stm);
 
     isProtected = pdf_needs_password(_xref);
     if (!isProtected)
@@ -1285,7 +1289,8 @@ bool CPdfEngine::LoadFromStream(fz_stream *stm, PasswordUI *pwdUI)
 bool CPdfEngine::FinishLoading()
 {
     fz_try(ctx) {
-        pdf_load_page_tree(_xref);
+        // this calls pdf_load_page_tree(xref) which may throw
+        pdf_count_pages(_xref);
     }
     fz_catch(ctx) {
         return false;
@@ -1402,6 +1407,7 @@ pdf_page *CPdfEngine::GetPdfPage(int pageNo, bool failIfBusy)
 
     pdf_page *page = _pages[pageNo-1];
     if (!page) {
+        fz_var(page);
         EnterCriticalSection(&ctxAccess);
         fz_try(ctx) {
             page = pdf_load_page(_xref, pageNo - 1);
@@ -1431,6 +1437,7 @@ PdfPageRun *CPdfEngine::CreatePageRun(pdf_page *page, fz_display_list *list)
     ListInspectionData data = { &positions, false, 0 };
     fz_device *dev = NULL;
 
+    fz_var(dev);
     fz_try(ctx) {
         dev = fz_new_inspection_device(ctx, &data);
         fz_execute_display_list(list, dev, fz_identity, fz_infinite_bbox, NULL);
@@ -1486,6 +1493,8 @@ PdfPageRun *CPdfEngine::GetPageRun(pdf_page *page, bool tryOnly)
 
         fz_display_list *list = NULL;
         fz_device *dev = NULL;
+        fz_var(list);
+        fz_var(dev);
         fz_try(ctx) {
             list = fz_new_display_list(ctx);
             dev = fz_new_list_device(ctx, list);
@@ -1866,9 +1875,10 @@ Vec<PageElement *> *CPdfEngine::GetElements(int pageNo)
 
 void CPdfEngine::LinkifyPageText(pdf_page *page)
 {
+    page->links = FixupPageLinks(page->links);
+
     RectI *coords;
     TCHAR *pageText = ExtractPageText(page, _T("\n"), &coords, Target_View, true);
-    page->links = FixupPageLinks(page->links);
     if (!pageText) {
         return;
     }
@@ -1988,6 +1998,7 @@ TCHAR *CPdfEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_ou
         return ExtractPageText(page, lineSep, coords_out, target);
 
     EnterCriticalSection(&ctxAccess);
+    fz_var(page);
     fz_try(ctx) {
         page = pdf_load_page(_xref, pageNo - 1);
     }
@@ -2374,7 +2385,7 @@ protected:
 
     Vec<XpsPageRun*>runCache; // ordered most recently used first
     XpsPageRun    * CreatePageRun(xps_page *page, fz_display_list *list);
-    XpsPageRun    * GetPageRun(xps_page *page, bool tryOnly=false, fz_link *extract=NULL);
+    XpsPageRun    * GetPageRun(xps_page *page, bool tryOnly=false, int firstForPage=0);
     bool            RunPage(xps_page *page, fz_device *dev, fz_matrix ctm,
                             fz_bbox clipbox=fz_infinite_bbox, bool cacheRun=true);
     void            DropPageRun(XpsPageRun *run, bool forceRemove=false);
@@ -2563,7 +2574,7 @@ bool CXpsEngine::Load(const TCHAR *fileName)
         stm = fz_open_file2(ctx, _fileName);
     }
     fz_catch(ctx) {
-        stm = NULL;
+        return false;
     }
     return LoadFromStream(stm);
 }
@@ -2579,7 +2590,7 @@ bool CXpsEngine::Load(IStream *stream)
         stm = fz_open_istream(ctx, stream);
     }
     fz_catch(ctx) {
-        stm = NULL;
+        return false;
     }
     return LoadFromStream(stm);
 }
@@ -2594,7 +2605,7 @@ bool CXpsEngine::Load(fz_stream *stm)
         stm = fz_clone_stream(ctx, stm);
     }
     fz_catch(ctx) {
-        stm = NULL;
+        return false;
     }
     return LoadFromStream(stm);
 }
@@ -2607,11 +2618,12 @@ bool CXpsEngine::LoadFromStream(fz_stream *stm)
     fz_try(ctx) {
         _doc = xps_open_stream(stm);
     }
-    fz_catch(ctx) {
+    fz_always(ctx) {
         fz_close(stm);
+    }
+    fz_catch(ctx) {
         return false;
     }
-    fz_close(stm);
 
     if (PageCount() == 0) {
         fz_warn(ctx, "document has no pages");
@@ -2640,6 +2652,7 @@ xps_page *CXpsEngine::GetXpsPage(int pageNo, bool failIfBusy)
 
     xps_page *page = _pages[pageNo-1];
     if (!page) {
+        fz_var(page);
         ScopedCritSec ctxScope(&ctxAccess);
         fz_try(ctx) {
             page = xps_load_page(_doc, pageNo - 1);
@@ -2667,6 +2680,7 @@ XpsPageRun *CXpsEngine::CreatePageRun(xps_page *page, fz_display_list *list)
     ListInspectionData data = { &positions, false, 0 };
     fz_device *dev = NULL;
 
+    fz_var(dev);
     fz_try(ctx) {
         dev = fz_new_inspection_device(ctx, &data);
         fz_execute_display_list(list, dev, fz_identity, fz_infinite_bbox, NULL);
@@ -2691,7 +2705,7 @@ XpsPageRun *CXpsEngine::CreatePageRun(xps_page *page, fz_display_list *list)
     return (XpsPageRun *)_memdup(&newRun);
 }
 
-XpsPageRun *CXpsEngine::GetPageRun(xps_page *page, bool tryOnly, fz_link *extract)
+XpsPageRun *CXpsEngine::GetPageRun(xps_page *page, bool tryOnly, int firstForPage)
 {
     ScopedCritSec scope(&_pagesAccess);
 
@@ -2722,12 +2736,16 @@ XpsPageRun *CXpsEngine::GetPageRun(xps_page *page, bool tryOnly, fz_link *extrac
 
         fz_display_list *list = NULL;
         fz_device *dev = NULL;
+        fz_link root = { 0 };
+        fz_var(list);
+        fz_var(dev);
         fz_try(ctx) {
             list = fz_new_display_list(ctx);
             dev = fz_new_list_device(ctx, list);
-            xps_run_page(_doc, page, dev, fz_identity, extract);
+            xps_run_page(_doc, page, dev, fz_identity, firstForPage ? &root : NULL);
         }
         fz_catch(ctx) {
+            fz_free_link(ctx, root.next);
             fz_free_display_list(ctx, list);
             list = NULL;
         }
@@ -2736,6 +2754,11 @@ XpsPageRun *CXpsEngine::GetPageRun(xps_page *page, bool tryOnly, fz_link *extrac
         if (list) {
             result = CreatePageRun(page, list);
             runCache.InsertAt(0, result);
+
+            if (firstForPage) {
+                assert(!_links[firstForPage-1]);
+                _links[firstForPage-1] = root.next;
+            }
         }
     }
     else if (result && result != runCache.At(0)) {
@@ -2830,6 +2853,7 @@ static RectI xps_extract_mediabox_quick_and_dirty(xps_document *doc, int pageNo)
     // have to append a closing "</FixedPage>" to the byte data)
     xml_element *root = NULL;
     if (end) {
+        fz_var(root);
         fz_try(doc->ctx) {
             root = xml_parse_document(doc->ctx, part->data, (int)(end - part->data));
         }
@@ -3011,8 +3035,8 @@ RenderedBitmap *CXpsEngine::RenderBitmap(int pageNo, float zoom, int rotation, R
         image = fz_new_pixmap_with_rect(ctx, fz_find_device_colorspace("DeviceRGB"), bbox);
     }
     fz_catch(ctx) {
-        return NULL;
         LeaveCriticalSection(&ctxAccess);
+        return NULL;
     }
 
     fz_clear_pixmap_with_color(image, 0xFF); // initialize white background
@@ -3060,6 +3084,7 @@ TCHAR *CXpsEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_ou
         return ExtractPageText(page, lineSep, coords_out);
 
     EnterCriticalSection(&ctxAccess);
+    fz_var(page);
     fz_try(ctx) {
         page = xps_load_page(_doc, pageNo - 1);
     }
@@ -3101,9 +3126,6 @@ TCHAR *CXpsEngine::GetProperty(char *name)
 
 PageElement *CXpsEngine::GetElementAtPos(int pageNo, PointD pt)
 {
-    if (!_links)
-        return NULL;
-
     fz_point p = { (float)pt.x, (float)pt.y };
     for (fz_link *link = _links[pageNo-1]; link; link = link->next)
         if (fz_is_pt_in_rect(link->rect, p))
@@ -3120,9 +3142,6 @@ PageElement *CXpsEngine::GetElementAtPos(int pageNo, PointD pt)
 
 Vec<PageElement *> *CXpsEngine::GetElements(int pageNo)
 {
-    if (!_links)
-        return NULL;
-
     // since all elements lists are in last-to-first order, append
     // item types in inverse order and reverse the whole list at the end
     Vec<PageElement *> *els = new Vec<PageElement *>();
@@ -3145,18 +3164,13 @@ Vec<PageElement *> *CXpsEngine::GetElements(int pageNo)
 
 void CXpsEngine::LinkifyPageText(xps_page *page, int pageNo)
 {
-    assert(_links && !_links[pageNo-1]);
-    if (!_links)
-        return;
-
     // make MuXPS extract all links and named destinations from the page
     assert(!GetPageRun(page, true));
-    fz_link root = { 0 };
-    XpsPageRun *run = GetPageRun(page, false, &root);
+    XpsPageRun *run = GetPageRun(page, false, pageNo);
     assert(run);
     if (run)
         DropPageRun(run);
-    _links[pageNo-1] = FixupPageLinks(root.next);
+    _links[pageNo-1] = FixupPageLinks(_links[pageNo-1]);
 
     RectI *coords;
     TCHAR *pageText = ExtractPageText(page, _T("\n"), &coords, true);

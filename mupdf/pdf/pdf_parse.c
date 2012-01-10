@@ -389,7 +389,7 @@ pdf_parse_dict(pdf_xref *xref, fz_stream *file, char *buf, int cap)
 				{
 					fz_warn(ctx, "ignoring broken array for '%s'", fz_to_name(key));
 					fz_drop_obj(key);
-					key = NULL;
+					val = key = NULL;
 					do
 						tok = pdf_lex(file, buf, cap, &len);
 					while (tok != PDF_TOK_CLOSE_DICT && tok != PDF_TOK_CLOSE_ARRAY &&

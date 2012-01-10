@@ -1123,7 +1123,7 @@ fz_draw_pop_clip(fz_device *devp)
 
 	if (dev->top == 0)
 	{
-		fz_warn(ctx, "Unexpectd pop clip");
+		fz_warn(ctx, "Unexpected pop clip");
 		return;
 	}
 	state = &dev->stack[--dev->top];

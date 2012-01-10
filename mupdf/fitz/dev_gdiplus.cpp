@@ -640,13 +640,12 @@ protected:
 					if (newAlpha != 0)
 					{
 						// note: GDI+ stores colors as BGRA order while Fitz expects RGBA
-						BYTE rgbSrc[3], rgbBg[3];
+						BYTE rgb[3], rgbSrc[3], rgbBg[3];
 						for (int i = 0; i < 3; i++)
 						{
 							rgbSrc[i] = Scan0[row * data.Stride + col * 4 + 2 - i];
 							rgbBg[i] = bgScan0[row * dataBg.Stride + col * 4 + 2 - i];
 						}
-						int rgb[3];
 						fz_blend_pixel(rgb, rgbBg, rgbSrc, blendmode);
 						for (int i = 0; i < 3; i++)
 						{

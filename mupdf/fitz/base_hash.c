@@ -1,7 +1,7 @@
 #include "fitz.h"
 
 /*
-Simple hashtable with open adressing linear probe.
+Simple hashtable with open addressing linear probe.
 Unlike text book examples, removing entries works
 correctly in this implementation, so it wont start
 exhibiting bad behaviour if entries are inserted
@@ -194,7 +194,7 @@ fz_hash_remove(fz_hash_table *table, void *key)
 	{
 		if (!ents[pos].val)
 		{
-			fz_warn(table->ctx, "assert: remove inexistant hash entry");
+			fz_warn(table->ctx, "assert: remove inexistent hash entry");
 			return;
 		}
 

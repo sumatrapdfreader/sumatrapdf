@@ -491,7 +491,7 @@ pdf_repair_obj_stms(pdf_xref *xref)
 		}
 	}
 
-	/* Ensure that streamed objects reside insided a known non-streamed object */
+	/* Ensure that streamed objects reside inside a known non-streamed object */
 	for (i = 0; i < xref->len; i++)
 		if (xref->table[i].type == 'o' && xref->table[xref->table[i].ofs].type != 'n')
 			fz_throw(xref->ctx, "invalid reference to non-object-stream: %d (%d 0 R)", xref->table[i].ofs, i);

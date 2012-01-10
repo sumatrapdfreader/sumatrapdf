@@ -61,7 +61,7 @@ pdf_add_quad(fz_context *ctx, fz_shade *shade,
 	pdf_add_triangle(ctx, shade, v1, v3, v2);
 }
 
-/* Subdivide and tesselate tensor-patches */
+/* Subdivide and tessellate tensor-patches */
 
 typedef struct pdf_tensor_patch_s pdf_tensor_patch;
 

@@ -500,11 +500,13 @@ parseTTFs(fz_context *ctx, char *path)
 	fz_try(ctx)
 	{
 		parseTTF(file, 0, 0, path);
+	}
+	fz_always(ctx)
+	{
 		fz_close(file);
 	}
 	fz_catch(ctx)
 	{
-		fz_close(file);
 		fz_rethrow(ctx);
 	}
 }
@@ -535,14 +537,14 @@ parseTTCs(fz_context *ctx, char *path)
 		safe_read(file, (char *)offsettable, numFonts * sizeof(ULONG));
 		for (i = 0; i < numFonts; i++)
 			parseTTF(file, BEtoHl(offsettable[i]), i, path);
-
+	}
+	fz_always(ctx)
+	{
 		fz_free(ctx, offsettable);
 		fz_close(file);
 	}
 	fz_catch(ctx)
 	{
-		fz_free(ctx, offsettable);
-		fz_close(file);
 		fz_rethrow(ctx);
 	}
 }

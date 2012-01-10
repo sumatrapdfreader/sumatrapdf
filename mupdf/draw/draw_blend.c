@@ -122,7 +122,7 @@ static inline int fz_exclusion_byte(int b, int s)
 /* Non-separable blend modes */
 
 static void
-fz_luminosity_rgb(int *rd, int *gd, int *bd, int rb, int gb, int bb, int rs, int gs, int bs)
+fz_luminosity_rgb(unsigned char *rd, unsigned char *gd, unsigned char *bd, int rb, int gb, int bb, int rs, int gs, int bs)
 {
 	int delta, scale;
 	int r, g, b, y;
@@ -153,13 +153,13 @@ fz_luminosity_rgb(int *rd, int *gd, int *bd, int rb, int gb, int bb, int rs, int
 		b = y + (((b - y) * scale + 0x8000) >> 16);
 	}
 
-	*rd = r;
-	*gd = g;
-	*bd = b;
+	*rd = CLAMP(r, 0, 255);
+	*gd = CLAMP(g, 0, 255);
+	*bd = CLAMP(b, 0, 255);
 }
 
 static void
-fz_saturation_rgb(int *rd, int *gd, int *bd, int rb, int gb, int bb, int rs, int gs, int bs)
+fz_saturation_rgb(unsigned char *rd, unsigned char *gd, unsigned char *bd, int rb, int gb, int bb, int rs, int gs, int bs)
 {
 	int minb, maxb;
 	int mins, maxs;
@@ -172,6 +172,7 @@ fz_saturation_rgb(int *rd, int *gd, int *bd, int rb, int gb, int bb, int rs, int
 	if (minb == maxb)
 	{
 		/* backdrop has zero saturation, avoid divide by 0 */
+		gb = CLAMP(gb, 0, 255);
 		*rd = gb;
 		*gd = gb;
 		*bd = gb;
@@ -211,28 +212,27 @@ fz_saturation_rgb(int *rd, int *gd, int *bd, int rb, int gb, int bb, int rs, int
 		b = y + (((b - y) * scale + 0x8000) >> 16);
 	}
 
-	*rd = r;
-	*gd = g;
-	*bd = b;
+	*rd = CLAMP(r, 0, 255);
+	*gd = CLAMP(g, 0, 255);
+	*bd = CLAMP(b, 0, 255);
 }
 
 static void
-fz_color_rgb(int *rr, int *rg, int *rb, int br, int bg, int bb, int sr, int sg, int sb)
+fz_color_rgb(unsigned char *rr, unsigned char *rg, unsigned char *rb, int br, int bg, int bb, int sr, int sg, int sb)
 {
 	fz_luminosity_rgb(rr, rg, rb, sr, sg, sb, br, bg, bb);
 }
 
 static void
-fz_hue_rgb(int *rr, int *rg, int *rb, int br, int bg, int bb, int sr, int sg, int sb)
+fz_hue_rgb(unsigned char *rr, unsigned char *rg, unsigned char *rb, int br, int bg, int bb, int sr, int sg, int sb)
 {
-	int tr, tg, tb;
+	unsigned char tr, tg, tb;
 	fz_luminosity_rgb(&tr, &tg, &tb, sr, sg, sb, br, bg, bb);
 	fz_saturation_rgb(rr, rg, rb, tr, tg, tb, br, bg, bb);
 }
 
-/* SumatraPDF: expose blending formulas to dev_gdiplus.cpp */
 void
-fz_blend_pixel(int dp[3], unsigned char bp[3], unsigned char sp[3], int blendmode)
+fz_blend_pixel(unsigned char dp[3], unsigned char bp[3], unsigned char sp[3], int blendmode)
 {
 	int k;
 	/* non-separable blend modes */
@@ -320,7 +320,7 @@ fz_blend_nonseparable(byte * restrict bp, byte * restrict sp, int w, int blendmo
 {
 	while (w--)
 	{
-		int rr, rg, rb;
+		unsigned char rr, rg, rb;
 
 		int sa = sp[3];
 		int ba = bp[3];
@@ -520,7 +520,7 @@ fz_blend_nonseparable_nonisolated(byte * restrict bp, byte * restrict sp, int w,
 				 * src, so: */
 				int invha = ha ? 255 * 256 / ha : 0;
 
-				int rr, rg, rb;
+				unsigned char rr, rg, rb;
 
 				/* ugh, division to get non-premul components */
 				int invsa = sa ? 255 * 256 / sa : 0;

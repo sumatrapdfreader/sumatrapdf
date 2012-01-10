@@ -612,7 +612,7 @@ void handlekey(int c)
 		winrepaint(&gapp);
 	}
 
-	/* translate VK into ascii equivalents */
+	/* translate VK into ASCII equivalents */
 	if (c > 256)
 	{
 		switch (c - 256)

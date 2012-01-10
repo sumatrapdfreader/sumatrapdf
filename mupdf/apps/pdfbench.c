@@ -98,12 +98,21 @@ pdf_xref *openxref(fz_context *ctx, char *filename, char *password)
 		int okay = pdf_authenticate_password(xref, password);
 		if (!okay)
 		{
+			pdf_free_xref(xref);
 			logbench("Warning: pdf_setpassword() failed, incorrect password\n");
 			fz_throw(ctx, "invalid password");
 		}
 	}
 
-	pdf_load_page_tree(xref);
+	fz_try(ctx)
+	{
+		pdf_count_pages(xref);
+	}
+	fz_catch(ctx)
+	{
+		pdf_free_xref(xref);
+		fz_rethrow(ctx);
+	}
 
 	return xref;
 }
@@ -178,11 +187,11 @@ void benchfile(char *pdffilename, int loadonly, int pageNo)
 
 	logbench("Starting: %s\n", pdffilename);
 	timerstart(&timer);
+	fz_var(xref);
 	fz_try(ctx) {
 		xref = openxref(ctx, pdffilename, "");
 	}
 	fz_catch(ctx) {
-		xref = NULL;
 		goto Exit;
 	}
 	timerstop(&timer);

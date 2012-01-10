@@ -9,22 +9,6 @@ struct info
 	fz_obj *rotate;
 };
 
-int
-pdf_count_pages(pdf_xref *xref)
-{
-	return xref->page_len;
-}
-
-int
-pdf_find_page_number(pdf_xref *xref, fz_obj *page)
-{
-	int i, num = fz_to_num(page);
-	for (i = 0; i < xref->page_len; i++)
-		if (num == fz_to_num(xref->page_refs[i]))
-			return i;
-	return -1;
-}
-
 static void
 put_marker_bool(fz_context *ctx, fz_obj *rdb, char *marker, int val)
 {
@@ -117,14 +101,21 @@ pdf_load_page_tree_node(pdf_xref *xref, fz_obj *node, struct info info)
 	fz_dict_unmark(node);
 }
 
-void
+static void
 pdf_load_page_tree(pdf_xref *xref)
 {
-	struct info info;
 	fz_context *ctx = xref->ctx;
-	fz_obj *catalog = fz_dict_gets(xref->trailer, "Root");
-	fz_obj *pages = fz_dict_gets(catalog, "Pages");
-	fz_obj *count = fz_dict_gets(pages, "Count");
+	fz_obj *catalog;
+	fz_obj *pages;
+	fz_obj *count;
+	struct info info;
+
+	if (xref->page_len)
+		return;
+
+	catalog = fz_dict_gets(xref->trailer, "Root");
+	pages = fz_dict_gets(catalog, "Pages");
+	count = fz_dict_gets(pages, "Count");
 
 	if (!fz_is_dict(pages))
 		fz_throw(ctx, "missing page tree");
@@ -142,6 +133,25 @@ pdf_load_page_tree(pdf_xref *xref)
 	info.rotate = NULL;
 
 	pdf_load_page_tree_node(xref, pages, info);
+}
+
+int
+pdf_count_pages(pdf_xref *xref)
+{
+	pdf_load_page_tree(xref);
+	return xref->page_len;
+}
+
+int
+pdf_find_page_number(pdf_xref *xref, fz_obj *page)
+{
+	int i, num = fz_to_num(page);
+
+	pdf_load_page_tree(xref);
+	for (i = 0; i < xref->page_len; i++)
+		if (num == fz_to_num(xref->page_refs[i]))
+			return i;
+	return -1;
 }
 
 /* We need to know whether to install a page-level transparency group */
@@ -304,6 +314,7 @@ pdf_load_page(pdf_xref *xref, int number)
 	fz_rect mediabox, cropbox;
 	fz_context *ctx = xref->ctx;
 
+	pdf_load_page_tree(xref);
 	if (number < 0 || number >= xref->page_len)
 		fz_throw(ctx, "cannot find page %d", number + 1);
 

@@ -36,7 +36,7 @@ char *pdfapp_version(pdfapp_t *app)
 {
 	return
 		"MuPDF 0.9\n"
-		"Copyright 2006-2011 Artifex Sofware, Inc.\n";
+		"Copyright 2006-2011 Artifex Software, Inc.\n";
 }
 
 char *pdfapp_usage(pdfapp_t *app)
@@ -163,15 +163,6 @@ static void pdfapp_open_pdf(pdfapp_t *app, char *filename, int fd)
 	/*
 	 * Start at first page
 	 */
-
-	fz_try(ctx)
-	{
-		pdf_load_page_tree(app->xref);
-	}
-	fz_catch(ctx)
-	{
-		pdfapp_error(app, "cannot load page tree");
-	}
 
 	app->pagecount = pdf_count_pages(app->xref);
 
@@ -813,7 +804,7 @@ void pdfapp_onkey(pdfapp_t *app, int c)
 #endif
 
 	/*
-	 * Pan view, but dont need to repaint image
+	 * Pan view, but don't need to repaint image
 	 */
 
 	case 'w':
@@ -1124,7 +1115,7 @@ void pdfapp_onmouse(pdfapp_t *app, int x, int y, int btn, int modifiers, int sta
 		{
 			/* Yes. We can assume that deltay != 0 */
 			int deltay = y - app->sely;
-			/* Check whether the panning has occured in the
+			/* Check whether the panning has occurred in the
 			 * direction that we are already crossing the
 			 * limit it. If not, we can conclude that we
 			 * have switched ends of the page and will thus
@@ -1133,7 +1124,7 @@ void pdfapp_onmouse(pdfapp_t *app, int x, int y, int btn, int modifiers, int sta
 			if( app->beyondy == 0 || (app->beyondy ^ deltay) >= 0 )
 			{
 				/* Updating how far we are beyond and
-				 * flipping pages if beyond threshhold
+				 * flipping pages if beyond threshold
 				 */
 				app->beyondy += deltay;
 				if (app->beyondy > BEYOND_THRESHHOLD)

@@ -98,6 +98,10 @@ fz_bound_text(fz_text *text, fz_matrix ctm)
 	bbox.x1 += fbox.x1;
 	bbox.y1 += fbox.y1;
 
+	/* SumatraPDF: don't unnecessarily expand the bbox at this point as
+	   it breaks pdf_get_string_width and PageContentBox calculations
+	   for the more common case that the glyph bbox is actually correct */
+
 	return bbox;
 }
 

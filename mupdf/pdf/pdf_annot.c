@@ -475,14 +475,20 @@ pdf_create_annot(fz_context *ctx, fz_rect rect, fz_obj *base_obj, fz_buffer *con
 static fz_obj *
 pdf_dict_from_string(pdf_xref *xref, char *string)
 {
-	fz_obj *result = NULL;
+	fz_obj *result;
 	fz_stream *stream = fz_open_memory(xref->ctx, string, strlen(string));
 	fz_try(xref->ctx)
 	{
 		result = pdf_parse_stm_obj(NULL, stream, xref->scratch, sizeof(xref->scratch));
 	}
-	fz_catch(xref->ctx) { }
-	fz_close(stream);
+	fz_always(xref->ctx)
+	{
+		fz_close(stream);
+	}
+	fz_catch(xref->ctx)
+	{
+		return NULL;
+	}
 
 	return result;
 }

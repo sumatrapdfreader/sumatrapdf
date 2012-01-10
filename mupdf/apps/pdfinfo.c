@@ -994,7 +994,6 @@ int main(int argc, char **argv)
 			filename = argv[fz_optind];
 			printf("%s:\n", filename);
 			xref = pdf_open_xref(ctx, filename, password);
-			pdf_load_page_tree(xref);
 			pagecount = pdf_count_pages(xref);
 
 			showglobalinfo();

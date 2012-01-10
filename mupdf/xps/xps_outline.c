@@ -221,12 +221,14 @@ xps_open_and_parse(xps_document *doc, char *path)
 	{
 		root = xml_parse_document(doc->ctx, part->data, part->size);
 	}
-	fz_catch(doc->ctx)
+	fz_always(doc->ctx)
 	{
 		xps_free_part(doc, part);
+	}
+	fz_catch(doc->ctx)
+	{
 		fz_rethrow(doc->ctx);
 	}
-	xps_free_part(doc, part);
 
 	return root;
 }

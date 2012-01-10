@@ -14,7 +14,7 @@
  *
  * The file 'opj_config.h' will be included in some source files.
  * ==== YOU CAN NOT COMPILE WITHOUT IT. ====
- * === DO NOT FOREGET TO CHANGE 'config.nix' APPROPRIATELY. ====
+ * === DO NOT FORGET TO CHANGE 'config.nix' APPROPRIATELY. ====
 */
 
 /* DO NOT DEFINE BOTH VERSIONS OF LCMS */

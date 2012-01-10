@@ -753,6 +753,7 @@ fz_flatten_dash_path(fz_gel *gel, fz_path *path, fz_stroke_state *stroke, fz_mat
 	for (i = 0; i < stroke->dash_len; i++)
 		phase_len += stroke->dash_list[i];
 	max_expand = MAX(MAX(fabs(ctm.a),fabs(ctm.b)),MAX(fabs(ctm.c),fabs(ctm.d)));
+	/* SumatraPDF: only flatten if quite short phases are in fact too short */
 	if (phase_len < 1.0f && phase_len * max_expand < 0.5f)
 	{
 		fz_flatten_stroke_path(gel, path, stroke, ctm, flatness, linewidth);

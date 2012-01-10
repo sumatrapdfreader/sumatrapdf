@@ -570,15 +570,6 @@ int main(int argc, char **argv)
 				fz_throw(ctx, "cannot open document: %s", filename);
 			}
 
-			fz_try(ctx)
-			{
-				pdf_load_page_tree(xref);
-			}
-			fz_catch(ctx)
-			{
-				fz_throw(ctx, "cannot load page tree: %s", filename);
-			}
-
 			if (showxml)
 				printf("<document name=\"%s\">\n", filename);
 

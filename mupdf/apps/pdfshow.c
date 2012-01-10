@@ -46,9 +46,6 @@ static void showpagetree(void)
 	if (!xref)
 		fz_throw(ctx, "no file specified");
 
-	if (!xref->page_len)
-		pdf_load_page_tree(xref);
-
 	count = pdf_count_pages(xref);
 	for (i = 0; i < count; i++)
 	{

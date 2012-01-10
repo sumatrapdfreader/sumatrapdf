@@ -651,7 +651,7 @@ pdf_get_crypt_length(pdf_xref *xref)
  * PDF 1.7 algorithm 3.1 and ExtensionLevel 3 algorithm 3.1a
  *
  * Using the global encryption key that was generated from the
- * password, create a new key that is used to decrypt indivual
+ * password, create a new key that is used to decrypt individual
  * objects and streams. This key is based on the object and
  * generation numbers.
  */

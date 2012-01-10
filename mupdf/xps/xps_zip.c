@@ -1,8 +1,6 @@
 #include "fitz.h"
 #include "muxps.h"
 
-/* SumatraPDF: TODO: broken ZIP files can cause a varying number of memory leaks */
-
 #include <zlib.h>
 
 xps_part *
@@ -145,16 +143,26 @@ xps_read_zip_entry(xps_document *doc, xps_entry *ent, unsigned char *outbuf)
 
 		code = inflateInit2(&stream, -15);
 		if (code != Z_OK)
+		{
+			/* SumatraPDF: fix memory leak */
+			fz_free(doc->ctx, inbuf);
 			fz_throw(doc->ctx, "zlib inflateInit2 error: %s", stream.msg);
+		}
 		code = inflate(&stream, Z_FINISH);
 		if (code != Z_STREAM_END)
 		{
 			inflateEnd(&stream);
+			/* SumatraPDF: fix memory leak */
+			fz_free(doc->ctx, inbuf);
 			fz_throw(doc->ctx, "zlib inflate error: %s", stream.msg);
 		}
 		code = inflateEnd(&stream);
 		if (code != Z_OK)
+		{
+			/* SumatraPDF: fix memory leak */
+			fz_free(doc->ctx, inbuf);
 			fz_throw(doc->ctx, "zlib inflateEnd error: %s", stream.msg);
+		}
 
 		fz_free(doc->ctx, inbuf);
 	}
@@ -336,7 +344,16 @@ xps_read_zip_part(xps_document *doc, char *partname)
 	if (ent)
 	{
 		part = xps_new_part(doc, partname, ent->usize);
+		/* SumatraPDF: fix memory leak */
+		fz_try(doc->ctx)
+		{
 		xps_read_zip_entry(doc, ent, part->data);
+		}
+		fz_catch(doc->ctx)
+		{
+			xps_free_part(doc, part);
+			fz_rethrow(doc->ctx);
+		}
 		return part;
 	}
 
@@ -373,7 +390,16 @@ xps_read_zip_part(xps_document *doc, char *partname)
 			else
 				sprintf(buf, "%s/[%d].last.piece", name, i);
 			ent = xps_find_zip_entry(doc, buf);
+			/* SumatraPDF: fix memory leak */
+			fz_try(doc->ctx)
+			{
 			xps_read_zip_entry(doc, ent, part->data + offset);
+			}
+			fz_catch(doc->ctx)
+			{
+				xps_free_part(doc, part);
+				fz_rethrow(doc->ctx);
+			}
 			offset += ent->usize;
 		}
 		return part;
@@ -410,6 +436,7 @@ xps_read_dir_part(xps_document *doc, char *name)
 	xps_part *part;
 	FILE *file;
 	int count, size, offset, i, n;
+	int seen_last = 0;
 
 	fz_strlcpy(buf, doc->directory, sizeof buf);
 	fz_strlcat(buf, name, sizeof buf);
@@ -430,7 +457,7 @@ xps_read_dir_part(xps_document *doc, char *name)
 	/* Count the number of pieces and their total size */
 	count = 0;
 	size = 0;
-	while (1)
+	while (!seen_last)
 	{
 		sprintf(buf, "%s%s/[%d].piece", doc->directory, name, count);
 		file = fopen(buf, "rb");
@@ -438,6 +465,7 @@ xps_read_dir_part(xps_document *doc, char *name)
 		{
 			sprintf(buf, "%s%s/[%d].last.piece", doc->directory, name, count);
 			file = fopen(buf, "rb");
+			seen_last = (file != NULL);
 		}
 		if (!file)
 			break;
@@ -446,6 +474,9 @@ xps_read_dir_part(xps_document *doc, char *name)
 		size += ftell(file);
 		fclose(file);
 	}
+	/* SumatraPDF: consistent piece counting */
+	if (!seen_last)
+		fz_throw(doc->ctx, "cannot find all pieces for part '%s'", name);
 
 	/* Inflate the pieces */
 	if (count)
@@ -460,7 +491,11 @@ xps_read_dir_part(xps_document *doc, char *name)
 				sprintf(buf, "%s%s/[%d].last.piece", doc->directory, name, i);
 			file = fopen(buf, "rb");
 			if (!file)
+			{
+				/* SumatraPDF: fix memory leak */
+				xps_free_part(doc, part);
 				fz_throw(doc->ctx, "cannot open file '%s'", buf);
+			}
 			n = fread(part->data + offset, 1, size - offset, file);
 			offset += n;
 			fclose(file);

@@ -452,7 +452,6 @@ EXPORTS
 	pdf_load_links
 	pdf_load_annots
 	pdf_free_annot
-	pdf_load_page_tree
 	pdf_find_page_number
 	pdf_count_pages
 	pdf_load_page

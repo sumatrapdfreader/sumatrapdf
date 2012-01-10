@@ -197,7 +197,7 @@ void fz_var_imp(void *);
  *        }
  *
  * 3) The macros are implemented using setjmp and longjmp, and so the standard
- *    C restrictions on the use of those functions apply to fz_try/fa_catch
+ *    C restrictions on the use of those functions apply to fz_try/fz_catch
  *    too. In particular, any "truly local" variable that is set between the
  *    start of fz_try and something in fz_try throwing an exception may become
  *    undefined as part of the process of throwing that exception.
@@ -1425,8 +1425,7 @@ void fz_paint_pixmap_with_mask(fz_pixmap *dst, fz_pixmap *src, fz_pixmap *msk);
 void fz_paint_pixmap_with_rect(fz_pixmap *dst, fz_pixmap *src, int alpha, fz_bbox bbox);
 
 void fz_blend_pixmap(fz_pixmap *dst, fz_pixmap *src, int alpha, int blendmode, int isolated, fz_pixmap *shape);
-/* SumatraPDF: expose blending formulas to dev_gdiplus.cpp */
-void fz_blend_pixel(int dp[3], unsigned char bp[3], unsigned char sp[3], int blendmode);
+void fz_blend_pixel(unsigned char dp[3], unsigned char bp[3], unsigned char sp[3], int blendmode);
 
 enum
 {

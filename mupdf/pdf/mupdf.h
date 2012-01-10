@@ -466,7 +466,6 @@ struct pdf_page_s
 	pdf_annot *annots;
 };
 
-void pdf_load_page_tree(pdf_xref *xref);
 int pdf_find_page_number(pdf_xref *xref, fz_obj *pageobj);
 int pdf_count_pages(pdf_xref *xref);
 
