@@ -29,7 +29,7 @@ static HWND             gHwndFrame = NULL;
 
 static HFONT            gFontDefault;
 
-static bool gShowTextBoundingBoxes = true;
+static bool gShowTextBoundingBoxes = false;
 
 Color gCol1(196, 64, 50); Color gCol1Shadow(134, 48, 39);
 Color gCol2(227, 107, 35); Color gCol2Shadow(155, 77, 31);

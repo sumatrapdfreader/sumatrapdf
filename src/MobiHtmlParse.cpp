@@ -5,21 +5,34 @@
 #include "Vec.h"
 #include "FileUtil.h"
 
-/* Converts mobi html to our internal format optimized for further layout/display.
+/*
+Converts mobi html to our internal format optimized for further layout/display.
+
 Our format can be thought of as a stream of Virtual Machine instructions.
+
 A VM instruction is either a string to be displayed or a formatting code (possibly
 with some additional data for this formatting code).
+
 We tokenize strings into words during this process because words are basic units
 of layout. During laytou/display, a string implies a space (unless string is followed
-by a formatting code like FC_MobiPageBreak etc., in which case it's elided.
+by a html tag (formatting code) like Tag_Font etc., in which case it's elided).
+
 Our format is a sequence of instructions encoded as sequence of bytes.
-If an instruction starts with a byte in the range <FC_Last - 255>, it's a formatting
-code followed by data specific for a given code.
-Otherwise it's a string and the first byte is the length of the string followed by
-string data.
-If string length is >= FC_Last, we emit FC_Last followed by a 2-byte length (i.e. a
-string cannot be longer than 65 kB).
+
+The last bytes are reserved for formatting code. 
+
+Bytes smaller than that encode length of the string followed by bytes of the string.
+
+If string length is >= Tag_First, we emit Tag_First followed by
+a 2-byte length (i.e. a string cannot be longer than 65 kB).
+
 Strings are utf8.
+
+Tag is followed by a byte:
+* if bit 0 is set, it's an end tag, otherwise a start (or self-closing tag)
+* if bit 1 is set, the tag has attributes
+
+If there are attributes, they follow the tag.
 
 TODO: this encoding doesn't support a case of formatting code inside a string e.g.
 "partially<i>itallic</i>". We can solve that by introducing a formatting code
@@ -322,50 +335,12 @@ Next:
     return -1;
 }
 
-// enum names must match the order in strings array
-enum HtmlTag {
-    TagNotFound = -1,
-    Tag_A = 0,
-    Tag_B = 1,
-    Tag_Blockquote = 2,
-    Tag_Body = 3,
-    Tag_Br = 4,
-    Tag_Div = 5,
-    Tag_Font = 6,
-    Tag_Guide = 7,
-    Tag_H2 = 8,
-    Tag_Head = 9,
-    Tag_Html = 10,
-    Tag_I = 11,
-    Tag_Img = 12,
-    Tag_Li = 13,
-    Tag_Mbp_Pagebreak = 14,
-    Tag_Ol = 15,
-    Tag_P = 16,
-    Tag_Reference = 17,
-    Tag_Span = 18,
-    Tag_Sup = 19,
-    Tag_Table = 20,
-    Tag_Td = 21,
-    Tag_Tr = 22,
-    Tag_U = 23,
-    Tag_Ul = 24
-};
-
 const char *gTags = "a\0b\0blockquote\0body\0br\0div\0font\0guide\0h2\0head\0html\0i\0img\0li\0mbp:pagebreak\0ol\0p\0reference\0span\0sup\0table\0td\0tr\0u\0ul\0";
 
 HtmlTag FindTag(char *tag, size_t len)
 {
     return (HtmlTag)FindStrPos(gTags, tag, len);
 }
-
-// enum names must match the order in strings array
-enum HtmlAttr {
-    AttrNotFound    = -1,
-    Attr_Align = 0,
-    Attr_Height = 1,
-    Attr_Width = 2
-};
 
 const char *gAttrs = "align\0height\0width\0";
 
@@ -377,9 +352,9 @@ static HtmlAttr FindAttr(char *attr, size_t len)
 static bool IsSelfClosingTag(HtmlTag tag)
 {
     // TODO: add more tags
-    static HtmlTag selfClosingTags[] = { Tag_Br, Tag_Img, TagNotFound };
+    static HtmlTag selfClosingTags[] = { Tag_Br, Tag_Img, Tag_NotFound };
     HtmlTag *tags = selfClosingTags;
-    while (*tags != TagNotFound) {
+    while (*tags != -1) {
         if (tag == *tags)
             return true;
         ++tags;
@@ -417,40 +392,28 @@ static size_t GetTagLen(uint8_t *s, size_t len)
     return len;
 }
 
-// Returns FC_Invalid if no formatting code for this tag
-static FormatCode GetFormatCodeForTag(HtmlTag tag, bool isEndTag)
-{
-    FormatCode fc = FC_Invalid;
-    if (Tag_I == tag) fc = FC_ItalicStart;
-    else if (Tag_B == tag) fc = FC_BoldStart;
-    else if (Tag_U == tag) fc = FC_UnderlineStart;
-    else if (Tag_H2 == tag) fc = FC_H2Start;
-    else if (Tag_P == tag) fc = FC_ParagraphStart;
-    // TODO: more mappings
-
-    if (FC_Invalid != fc) {
-        // we rely on convention that end code is start code - 1
-        if (isEndTag)
-            fc = (FormatCode) ((int)fc - 1);
-    }
-    return fc;
-}
-
 static void EmitByte(Vec<uint8_t> *out, uint8_t v)
 {
     out->Append(v);
 }
 
-static void EmitFormatCode(Vec<uint8_t> *out, FormatCode fc)
+static void EmitTag(Vec<uint8_t> *out, HtmlTag tag, bool isEndTag, bool hasAttributes)
 {
-    out->Append(fc);
+    CrashAlwaysIf(hasAttributes && isEndTag);
+    out->Append((uint8_t)255-tag);
+    uint8_t tagPostfix = 0;
+    if (isEndTag)
+        tagPostfix |= IS_END_TAG_MASK;
+    if (hasAttributes)
+        tagPostfix |= HAS_ATTR_MASK;
+    out->Append(tagPostfix);
 }
 
 static void EmitWord(Vec<uint8_t>& out, uint8_t *s, size_t len)
 {
     // TODO: convert html entities to text
-    if (len >= FC_Last) {
-        // TODO: emit FC_Last and then len as 2 bytes
+    if (len >= Tag_First) {
+        // TODO: emit Tag_First and then len as 2 bytes
         return;
     }
     out.Append((uint8_t)len);
@@ -480,7 +443,7 @@ static void EmitText(Vec<uint8_t>& out, HtmlToken *t)
 
 static bool IsAllowedTag(HtmlAttr *allowed, HtmlAttr attr)
 {
-    while (AttrNotFound != *allowed) {
+    while (-1 != *allowed) {
         if (attr == *allowed)
             return true;
         ++allowed;
@@ -513,7 +476,7 @@ static void EmitAttributes(Vec<uint8_t> *out, HtmlToken *t, HtmlAttr *allowedAtt
         if (!attrInfo)
             break;
         attr = FindAttr((char*)attrInfo->name, attrInfo->nameLen);
-        CrashAlwaysIf(AttrNotFound == attr);
+        CrashAlwaysIf(Attr_NotFound == attr);
         if (!IsAllowedTag(allowedAttributes, attr))
             continue;
         ++attrCount;
@@ -524,13 +487,23 @@ static void EmitAttributes(Vec<uint8_t> *out, HtmlToken *t, HtmlAttr *allowedAtt
 
 static void EmitTagP(Vec<uint8_t>* out, HtmlToken *t)
 {
-    static HtmlAttr validPAttrs[] = { Attr_Align, AttrNotFound };
-    FormatCode fc = GetFormatCodeForTag(Tag_P, t->IsEndTag());
-    CrashAlwaysIf(FC_Invalid == fc);
-    CrashAlwaysIf(t->IsEmptyElementEndTag());
-    EmitFormatCode(out, fc);
-    if (t->IsStartTag()) {
-        EmitAttributes(out, t, validPAttrs);
+    static HtmlAttr validPAttrs[] = { Attr_Align, Attr_NotFound };
+    if (t->IsEmptyElementEndTag()) {
+        // TODO: should I generate both start and end tags?
+        return;
+    }
+    if (t->IsEndTag()) {
+        EmitTag(out, Tag_P, t->IsEndTag(), false);
+    } else {
+        CrashAlwaysIf(!t->IsStartTag());
+        //Vec<uint8_t> attrs;
+        //bool hasAttributes = EmitAttributes(&attrs, t, validPAttrs);
+        bool hasAttributes = false;
+        EmitTag(out, Tag_P, t->IsEndTag(), hasAttributes);
+        
+        /*if (hasAttributes) {
+            // TODO: append atttrs to otu
+        } */
     }
 }
 
@@ -582,7 +555,7 @@ static void HandleTag(ConverterState *state, HtmlToken *t)
     // get the length of just the tag
     size_t tagLen = GetTagLen(t->s, t->sLen);
     HtmlTag tag = FindTag((char*)t->s, tagLen);
-    CrashIf(tag == TagNotFound);
+    CrashIf(tag == Tag_NotFound);
 
     // update the current state of html tree
     if (t->IsStartTag())
@@ -594,14 +567,8 @@ static void HandleTag(ConverterState *state, HtmlToken *t)
         EmitTagP(state->out, t);
         return;
     }
-
-    FormatCode fc = GetFormatCodeForTag(tag, t->IsEndTag());
-    if (fc != FC_Invalid) {
-        CrashIf(t->IsEmptyElementEndTag());
-        EmitFormatCode(state->out, fc);
-        return;
-    }
     // TODO: handle other tags
+    EmitTag(state->out, tag, t->IsEndTag(), false);
 }
 
 static void HtmlAddWithNesting(Vec<uint8_t>* html, size_t nesting, uint8_t *s, size_t sLen)

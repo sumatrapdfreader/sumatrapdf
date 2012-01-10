@@ -293,15 +293,18 @@ Vec<Page *> *PageLayout::LayoutInternal(Graphics *graphics, Font *defaultFnt, ui
     lineStringsDx.EnsureCap(estimatedStrings);
     while (s < end) {
         uint8_t stringLen = *s++;
-        if (stringLen < FC_Last) {
+        if (stringLen < Tag_First) {
             CrashIf(s + stringLen > end);
             wi.s = (char*)s;
             wi.len = stringLen;
             AddWord(&wi);
             s += stringLen;
         } else {
-            FormatCode fc = (FormatCode)stringLen;
-            if (FC_ParagraphStart == fc) {
+            HtmlTag tag = (HtmlTag)(255 - stringLen);
+            uint8_t b = *s++;
+            bool isEndTag = (IS_END_TAG_MASK == (b & IS_END_TAG_MASK));
+            bool hasAttr  = (HAS_ATTR_MASK == (b & HAS_ATTR_MASK));
+            if ((Tag_P == tag) && isEndTag) {
                 // TODO: collapse multiple line breaks into one
                 // i.e. don't start a new paragraph if we're already
                 // at the paragraph start (including the beginning)

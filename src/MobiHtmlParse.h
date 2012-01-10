@@ -6,79 +6,60 @@
 
 #include <stdint.h>
 
-// format codes correspond to html formatting tags
-// Note: if there is both start/end version of the
-// formatting code, the end version should always
-// be $startVersion - 1
-// TODO: do I need to represent Tag_Guide, Tag_Reference ?
-enum FormatCode : uint8_t {
-    // <b>
-    FC_BoldStart = 255,
-    FC_BoldEnd = 254,
-    // <blockquote>
-    FC_BlockQuoteStart = 253,
-    FC_BlockQuoteEnd = 252,
-    // <i>
-    FC_ItalicStart = 251,
-    FC_ItalicEnd = 250,
-    // <p>
-    FC_ParagraphStart = 249,
-    FC_ParagraphEnd = 248,
-    // <mbp:pagebrake>
-    FC_MobiPageBreak = 247,
-    // <table>
-    FC_TableStart = 246,
-    FC_TableEnd = 245,
-    // <td>
-    FC_TdStart = 244,
-    FC_TdEnd = 243,
-    // <tr>
-    FC_TrStart = 242,
-    FC_TrEnd = 241,
-    // <a>
-    FC_A = 240,
-    // <br>
-    FC_Br = 239,
-    // <div>
-    FC_DivStart = 238,
-    FC_DivEnd = 237,
-    // <font>
-    FC_FontStart = 236,
-    FC_FontEnd = 235,
-    // <h2>
-    FC_H2Start = 234,
-    FC_H2End = 233,
-    // <img>
-    FC_Img = 232,
-    // <ol>
-    FC_OlStart = 231,
-    FC_OlEnd = 230,
-    // <li>
-    FC_LiStart = 229,
-    FC_LiEnd = 228,
-    // <span>
-    FC_SpanStart = 227,
-    FC_SpanEnd = 226,
-    // <sup>
-    FC_SupStart = 225,
-    FC_SupEnd = 224,
-    // <u>
-    FC_UnderlineStart = 223,
-    FC_UnderlineEnd = 222,
-    // <ul>
-    FC_UlStart = 221,
-    FC_UlEnd = 220,
-
-    FC_Last = 219,
-    FC_Invalid = 0
+// enums must match gTags order
+enum HtmlTag {
+    Tag_NotFound = -1,
+    Tag_A = 0,
+    Tag_B = 1,
+    Tag_Blockquote = 2,
+    Tag_Body = 3,
+    Tag_Br = 4,
+    Tag_Div = 5,
+    Tag_Font = 6,
+    Tag_Guide = 7,
+    Tag_H2 = 8,
+    Tag_Head = 9,
+    Tag_Html = 10,
+    Tag_I = 11,
+    Tag_Img = 12,
+    Tag_Li = 13,
+    Tag_Mbp_Pagebreak = 14,
+    Tag_Ol = 15,
+    Tag_P = 16,
+    Tag_Reference = 17,
+    Tag_Span = 18,
+    Tag_Sup = 19,
+    Tag_Table = 20,
+    Tag_Td = 21,
+    Tag_Tr = 22,
+    Tag_U = 23,
+    Tag_Ul = 24,
+    Tag_Last = 25
 };
 
-enum AlignAttr : uint8_t {
-    AlignLeft    = 0,
-    AlignRight   = 1,
-    AlignCenter  = 2,
-    AlignJustify = 3
+// enums must match gAttrs order
+enum HtmlAttr {
+    Attr_NotFound = -1,
+    Attr_Align = 0,
+    Attr_Height = 1,
+    Attr_Width = 2,
+    Attr_Last = 3
 };
+
+// enums must match gAlignAttrs order
+enum AlignAttr {
+    Align_NotFound = -1,
+    Align_Center = 0,
+    Align_Justify = 1,
+    Align_Left = 2,
+    Align_Right = 3,
+    Align_Last = 4
+};
+
+#define Tag_First (255 - Tag_Last)
+
+#define IS_END_TAG_MASK  0x01
+#define HAS_ATTR_MASK    0x02
 
 uint8_t *MobiHtmlToDisplay(uint8_t *s, size_t sLen, size_t& lenOut);
 
