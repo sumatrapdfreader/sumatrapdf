@@ -98,9 +98,53 @@ static bool SkipUntil(char **sPtr, char c)
     return *s == c;
 }
 
+// *sPtr must be zero-terminated
 static bool SkipUntil(uint8_t **sPtr, char c)
 {
     return SkipUntil((char**)sPtr, c);
+}
+
+static bool SkipUntil(uint8_t*& s, uint8_t *end, uint8_t c)
+{
+    while ((s < end) && (*s != c)) {
+        ++s;
+    }
+    return *s == c;
+}
+
+
+static bool IsWs(uint8_t c) {
+    return (' ' == c) || ('\t' == c) || ('\n' == c) || ('\r' == c);
+}
+
+static void SkipWs(uint8_t*& s, uint8_t *end)
+{
+    while ((s < end) && IsWs(*s)) {
+        ++s;
+    }
+}
+
+static void SkipNonWs(uint8_t*& s, uint8_t *end)
+{
+    while ((s < end) && !IsWs(*s)) {
+        ++s;
+    }
+}
+
+static int IsName(int c)
+{
+    return c == '.' || c == '-' || c == '_' || c == ':' ||
+        (c >= '0' && c <= '9') ||
+        (c >= 'A' && c <= 'Z') ||
+        (c >= 'a' && c <= 'z');
+}
+
+// skip all html tag or attribute chatacters
+static void SkipName(uint8_t*& s, uint8_t *end)
+{
+    while ((s < end) && IsName(*s)) {
+        s++;
+    }
 }
 
 // return true if s consists of only spaces
@@ -112,6 +156,65 @@ static bool IsSpaceOnly(uint8_t *s, size_t len)
             return false;
     }
     return true;
+}
+
+struct AttrInfo {
+    uint8_t *   name;
+    size_t      nameLen;
+    uint8_t *   val;
+    size_t      valLen;
+};
+
+// at this point we're either after tag name or
+// after previous attribute
+// We expect: 
+// whitespace | attribute name | = | attribute value
+// where both attribute name and attribute value can
+// be quoted
+// Not multi-thread safe (uses static buffer)
+AttrInfo *GetNextAttr(uint8_t *&s, uint8_t *end)
+{
+    static AttrInfo attrInfo;
+
+    // parse attribute name
+    SkipWs(s, end);
+    if (s == end)
+        return NULL;
+
+    attrInfo.name = s;
+    SkipName(s, end);
+    attrInfo.nameLen = s - attrInfo.name;
+    if (0 == attrInfo.nameLen)
+        return NULL;
+    SkipWs(s, end);
+    if ((s == end) || ('=' != *s))
+        return NULL;
+
+    // parse attribute value
+    ++s; // skip '='
+    SkipWs(s, end);
+    if (s == end)
+        return NULL;
+    uint8_t quoteChar = *s;
+    if (('\'' == quoteChar) || ('\"' == quoteChar)) {
+        ++s;
+        attrInfo.val = s;
+        if (!SkipUntil(s, end, quoteChar))
+            return NULL;
+        attrInfo.valLen = s - attrInfo.val;
+        ++s;
+    } else {
+        attrInfo.val = s;
+        while ((s < end) && !IsWs(*s)) {
+            ++s;
+        }
+        attrInfo.valLen = s - attrInfo.val;
+    }
+
+    // TODO: should I allow empty values?
+    if (0 == attrInfo.valLen)
+        return NULL;
+    return &attrInfo;
 }
 
 // Returns next part of html or NULL if finished
@@ -302,14 +405,6 @@ void DumpTag(HtmlToken *t)
 }
 #endif
 
-static int IsName(int c)
-{
-    return c == '.' || c == '-' || c == '_' || c == ':' ||
-        (c >= '0' && c <= '9') ||
-        (c >= 'A' && c <= 'Z') ||
-        (c >= 'a' && c <= 'z');
-}
-
 static size_t GetTagLen(uint8_t *s, size_t len)
 {
     uint8_t *end = s + len;
@@ -320,24 +415,6 @@ static size_t GetTagLen(uint8_t *s, size_t len)
         ++curr;
     }
     return len;
-}
-
-static bool IsWs(uint8_t c) {
-    return (' ' == c) || ('\t' == c) || ('\n' == c) || ('\r' == c);
-}
-
-static void SkipWs(uint8_t*& s, uint8_t *end)
-{
-    while ((s < end) && IsWs(*s)) {
-        ++s;
-    }
-}
-
-static void SkipNonWs(uint8_t*& s, uint8_t *end)
-{
-    while ((s < end) && !IsWs(*s)) {
-        ++s;
-    }
 }
 
 // Returns FC_Invalid if no formatting code for this tag
@@ -357,6 +434,11 @@ static FormatCode GetFormatCodeForTag(HtmlTag tag, bool isEndTag)
             fc = (FormatCode) ((int)fc - 1);
     }
     return fc;
+}
+
+static void EmitByte(Vec<uint8_t> *out, uint8_t v)
+{
+    out->Append(v);
 }
 
 static void EmitFormatCode(Vec<uint8_t> *out, FormatCode fc)
@@ -396,22 +478,6 @@ static void EmitText(Vec<uint8_t>& out, HtmlToken *t)
     }
 }
 
-struct AttrInfo {
-    uint8_t *   name;
-    size_t      nameLen;
-    uint8_t *   val;
-    size_t      valLen;
-};
-
-AttrInfo *GetNextAttr(uint8_t *&s, size_t& sLen)
-{
-    static AttrInfo attrInfo;
-    if (0 == sLen)
-        return NULL;
-    // TODO: write me
-    return NULL;
-}
-
 static bool IsAllowedTag(HtmlAttr *allowed, HtmlAttr attr)
 {
     while (AttrNotFound != *allowed) {
@@ -422,23 +488,38 @@ static bool IsAllowedTag(HtmlAttr *allowed, HtmlAttr attr)
     return false;
 }
 
-static void EmitAttributes(HtmlToken *t, HtmlAttr *allowedAttributes)
+static void EmitAttribute(Vec<uint8_t> *out, AttrInfo *attrInfo)
+{
+    // TODO: write me
+
+}
+
+static void EmitAttributes(Vec<uint8_t> *out, HtmlToken *t, HtmlAttr *allowedAttributes)
 {
     AttrInfo *attrInfo;
     HtmlAttr attr;
     uint8_t *s = t->s;
-    size_t sLen = t->sLen;
-    sLen -= GetTagLen(s, sLen);
+    uint8_t *end = s + t->sLen;
+    s += GetTagLen(s, t->sLen);
+
+    // we need to cache attribute info because we first
+    // need to emit attribute count and we don't know it
+    // yet her
+    Vec<uint8_t> attributesEncoded;
+    size_t attrCount = 0;
 
     for (;;) {
-        attrInfo = GetNextAttr(s, sLen);
+        attrInfo = GetNextAttr(s, end);
         if (!attrInfo)
-            return;
+            break;
         attr = FindAttr((char*)attrInfo->name, attrInfo->nameLen);
-        CrashAlwaysIf(AttrNotFound != attr);
+        CrashAlwaysIf(AttrNotFound == attr);
         if (!IsAllowedTag(allowedAttributes, attr))
             continue;
+        ++attrCount;
     }
+    // TODO: emit attrCount
+    // TODO: add attributesEncoded to out
 }
 
 static void EmitTagP(Vec<uint8_t>* out, HtmlToken *t)
@@ -449,7 +530,7 @@ static void EmitTagP(Vec<uint8_t>* out, HtmlToken *t)
     CrashAlwaysIf(t->IsEmptyElementEndTag());
     EmitFormatCode(out, fc);
     if (t->IsStartTag()) {
-        EmitAttributes(t, validPAttrs);
+        EmitAttributes(out, t, validPAttrs);
     }
 }
 

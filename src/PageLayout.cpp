@@ -301,7 +301,14 @@ Vec<Page *> *PageLayout::LayoutInternal(Graphics *graphics, Font *defaultFnt, ui
             s += stringLen;
         } else {
             FormatCode fc = (FormatCode)stringLen;
-            // TODO: handle the code
+            if (FC_ParagraphStart == fc) {
+                // TODO: collapse multiple line breaks into one
+                // i.e. don't start a new paragraph if we're already
+                // at the paragraph start (including the beginning)
+                // This is visible in Kafka's Trial.
+                StartNewLine(true);
+            }
+            // TODO: handle more codes
         }
     }
     StartNewLine(true);
