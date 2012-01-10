@@ -464,6 +464,7 @@ fz_render_ft_stroked_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix tr
 	FT_Glyph glyph;
 	FT_BitmapGlyph bitmap;
 	fz_pixmap *pixmap;
+	FT_Stroker_LineJoin line_join; /* SumatraPDF: use proper line join */
 
 	trm = fz_adjust_ft_glyph_width(ctx, font, gid, trm);
 
@@ -500,7 +501,12 @@ fz_render_ft_stroked_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix tr
 		return NULL;
 	}
 
-	FT_Stroker_Set(stroker, linewidth, state->start_cap, state->linejoin, state->miterlimit * 65536);
+	/* SumatraPDF: use proper line join */
+	line_join = state->linejoin == 0 ? FT_STROKER_LINEJOIN_MITER_FIXED :
+	            state->linejoin == 1 ? FT_STROKER_LINEJOIN_ROUND :
+	            state->linejoin == 2 ? FT_STROKER_LINEJOIN_BEVEL :
+	                                   FT_STROKER_LINEJOIN_MITER_VARIABLE;
+	FT_Stroker_Set(stroker, linewidth, state->start_cap, line_join, state->miterlimit * 65536);
 
 	fterr = FT_Get_Glyph(face->glyph, &glyph);
 	if (fterr)

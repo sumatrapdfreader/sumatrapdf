@@ -198,9 +198,12 @@ fz_bound_path(fz_path *path, fz_stroke_state *stroke, fz_matrix ctm)
 
 	if (stroke)
 	{
-		float miterlength = stroke->miterlimit;
+		/* SumatraPDF: miter limit = miter length / line width */
+		float miterlength = stroke->miterlimit * stroke->linewidth;
 		float linewidth = stroke->linewidth;
 		float expand = MAX(miterlength, linewidth) * 0.5f;
+		/* SumatraPDF: scale the expansion per the matrix */
+		expand *= fz_matrix_expansion(ctm);
 		r.x0 -= expand;
 		r.y0 -= expand;
 		r.x1 += expand;

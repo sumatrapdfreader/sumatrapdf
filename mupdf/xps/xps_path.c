@@ -80,40 +80,26 @@ xps_draw_arc_segment(fz_context *doc, fz_path *path, fz_matrix mtx, float th0, f
 
 	if (iscw)
 	{
-		p.x = cosf(th0);
-		p.y = sinf(th0);
-		p = fz_transform_point(mtx, p);
-		fz_lineto(doc, path, p.x, p.y);
-		for (t = th0; t < th1; t += d)
+		/* SumatraPDF: prevent three and a half unneeded linetos which can cause bad miter joins */
+		for (t = th0 + d; t < th1 - d / 2; t += d)
 		{
 			p.x = cosf(t);
 			p.y = sinf(t);
 			p = fz_transform_point(mtx, p);
 			fz_lineto(doc, path, p.x, p.y);
 		}
-		p.x = cosf(th1);
-		p.y = sinf(th1);
-		p = fz_transform_point(mtx, p);
-		fz_lineto(doc, path, p.x, p.y);
 	}
 	else
 	{
 		th0 += (float)M_PI * 2;
-		p.x = cosf(th0);
-		p.y = sinf(th0);
-		p = fz_transform_point(mtx, p);
-		fz_lineto(doc, path, p.x, p.y);
-		for (t = th0; t > th1; t -= d)
+		/* SumatraPDF: prevent three and a half unneeded linetos which can cause bad miter joins */
+		for (t = th0 - d; t > th1 + d / 2; t -= d)
 		{
 			p.x = cosf(t);
 			p.y = sinf(t);
 			p = fz_transform_point(mtx, p);
 			fz_lineto(doc, path, p.x, p.y);
 		}
-		p.x = cosf(th1);
-		p.y = sinf(th1);
-		p = fz_transform_point(mtx, p);
-		fz_lineto(doc, path, p.x, p.y);
 	}
 }
 
@@ -936,10 +922,11 @@ xps_parse_path(xps_document *doc, fz_matrix ctm, char *base_uri, xps_resource *d
 	stroke.dash_cap = xps_parse_line_cap(stroke_dash_cap_att);
 	stroke.end_cap = xps_parse_line_cap(stroke_end_line_cap_att);
 
-	stroke.linejoin = 0;
+	/* SumatraPDF: XPS miter joins are clipped instead of converted to bevel joins */
+	stroke.linejoin = 3;
 	if (stroke_line_join_att)
 	{
-		if (!strcmp(stroke_line_join_att, "Miter")) stroke.linejoin = 0;
+		if (!strcmp(stroke_line_join_att, "Miter")) stroke.linejoin = 3;
 		if (!strcmp(stroke_line_join_att, "Round")) stroke.linejoin = 1;
 		if (!strcmp(stroke_line_join_att, "Bevel")) stroke.linejoin = 2;
 	}
@@ -947,6 +934,8 @@ xps_parse_path(xps_document *doc, fz_matrix ctm, char *base_uri, xps_resource *d
 	stroke.miterlimit = 10;
 	if (stroke_miter_limit_att)
 		stroke.miterlimit = fz_atof(stroke_miter_limit_att);
+	/* SumatraPDF: the XPS miter limit is the ratio between miter length and *half* the stroke width */
+	stroke.miterlimit *= 2;
 
 	stroke.linewidth = 1;
 	if (stroke_thickness_att)
@@ -1024,8 +1013,6 @@ xps_parse_path(xps_document *doc, fz_matrix ctm, char *base_uri, xps_resource *d
 
 	if (fill_tag)
 	{
-		area = fz_bound_path(path, NULL, ctm);
-
 		fz_clip_path(doc->dev, path, NULL, fill_rule == 0, ctm);
 		xps_parse_brush(doc, ctm, area, fill_uri, dict, fill_tag);
 		fz_pop_clip(doc->dev);

@@ -793,11 +793,11 @@ gdiplus_get_pen(Brush *brush, fz_matrix ctm, fz_stroke_state *stroke)
 	Pen *pen = new Pen(brush, stroke->linewidth * me);
 	pen->SetTransform(&Matrix(ctm.a / me, ctm.b / me, ctm.c / me, ctm.d / me, 0, 0));
 	
-	pen->SetMiterLimit(stroke->miterlimit);
+	pen->SetMiterLimit(stroke->miterlimit / 2);
 	pen->SetLineCap(stroke->start_cap == 1 ? LineCapRound : stroke->start_cap == 2 ? LineCapSquare : LineCapFlat,
 		stroke->end_cap == 1 ? LineCapRound : stroke->end_cap == 2 ? LineCapSquare : LineCapFlat,
 		stroke->dash_cap == 1 ? DashCapRound : DashCapFlat);
-	pen->SetLineJoin(stroke->linejoin == 1 ? LineJoinRound : stroke->linejoin == 2 ? LineJoinBevel : LineJoinMiter);
+	pen->SetLineJoin(stroke->linejoin == 1 ? LineJoinRound : stroke->linejoin == 2 ? LineJoinBevel : stroke->linejoin == 3 ? LineJoinMiter : LineJoinMiterClipped);
 	
 	if (stroke->dash_len > 0)
 	{
