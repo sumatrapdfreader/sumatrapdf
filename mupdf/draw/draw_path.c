@@ -240,6 +240,14 @@ fz_add_line_join(struct sctx *s, fz_point a, fz_point b, fz_point c)
 	if (dx1 * dx1 + dy1 * dy1 < FLT_EPSILON)
 		linejoin = BEVEL;
 
+	/* SumatraPDF: ensure that cross < 0 below for less code duplication */
+	if (dx1 * dy0 - dx0 * dy1 > 0)
+	{
+		float tmp;
+		tmp = dx1; dx1 = -dx0; dx0 = -tmp;
+		tmp = dy1; dy1 = -dy0; dy0 = -tmp;
+	}
+
 	scale = linewidth / sqrtf(dx0 * dx0 + dy0 * dy0);
 	dlx0 = dy0 * scale;
 	dly0 = -dx0 * scale;
@@ -271,8 +279,16 @@ fz_add_line_join(struct sctx *s, fz_point a, fz_point b, fz_point c)
 			linejoin = MITER;
 		else
 		{
-			/* SumatraPDF: TODO: actually clip overlarge XPS miter joins */
-			linejoin = MITER;
+			float k;
+			scale = linewidth * linewidth / dmr2;
+			k = (scale - linewidth * miterlimit / sqrtf(dmr2)) / (scale - 1);
+			dmx *= scale;
+			dmy *= scale;
+
+			fz_add_line(s, b.x - dlx0, b.y - dly0, b.x - dlx1, b.y - dly1);
+			fz_add_line(s, b.x + dlx1, b.y + dly1, b.x + dmx - k * (dmx - dlx1), b.y + dmy - k * (dmy - dly1));
+			fz_add_line(s, b.x + dmx - k * (dmx - dlx1), b.y + dmy - k * (dmy - dly1), b.x + dmx - k * (dmx - dlx0), b.y + dmy - k * (dmy - dly0));
+			fz_add_line(s, b.x + dmx - k * (dmx - dlx0), b.y + dmy - k * (dmy - dly0), b.x + dlx0, b.y + dly0);
 		}
 	}
 

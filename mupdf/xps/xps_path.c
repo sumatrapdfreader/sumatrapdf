@@ -934,8 +934,6 @@ xps_parse_path(xps_document *doc, fz_matrix ctm, char *base_uri, xps_resource *d
 	stroke.miterlimit = 10;
 	if (stroke_miter_limit_att)
 		stroke.miterlimit = fz_atof(stroke_miter_limit_att);
-	/* SumatraPDF: the XPS miter limit is the ratio between miter length and *half* the stroke width */
-	stroke.miterlimit *= 2;
 
 	stroke.linewidth = 1;
 	if (stroke_thickness_att)

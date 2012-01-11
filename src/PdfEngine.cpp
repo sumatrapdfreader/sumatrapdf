@@ -2915,7 +2915,10 @@ RectD CXpsEngine::PageContentBox(int pageNo, RenderTarget target)
     fz_device *dev = fz_new_bbox_device(ctx, &bbox);
     LeaveCriticalSection(&ctxAccess);
 
-    RunPage(page, dev, fz_identity);
+    fz_bbox mediabox = { 0, 0, page->width, page->height };
+    bool ok = RunPage(page, dev, fz_identity, mediabox, false);
+    if (!ok)
+        return PageMediabox(pageNo);
     if (fz_is_infinite_bbox(bbox))
         return PageMediabox(pageNo);
 
