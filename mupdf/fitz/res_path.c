@@ -202,6 +202,9 @@ fz_bound_path(fz_path *path, fz_stroke_state *stroke, fz_matrix ctm)
 		float miterlength = stroke->miterlimit * stroke->linewidth;
 		float linewidth = stroke->linewidth;
 		float expand = MAX(miterlength, linewidth) * 0.5f;
+		/* SumatraPDF: ignore miter length for round and bevel joins */
+		if (stroke->linejoin != 0 && stroke->linejoin != 3)
+			expand = stroke->linewidth * 0.5f;
 		/* SumatraPDF: scale the expansion per the matrix */
 		expand *= fz_matrix_expansion(ctm);
 		r.x0 -= expand;

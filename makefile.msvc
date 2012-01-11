@@ -419,7 +419,8 @@ $(OS)\FileUtil.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\Scopes.h
 $(OS)\FileUtil.obj: src\utils\StrUtil.h
 $(OS)\FileWatch.obj: src\FileWatch.h src\utils\BaseUtil.h src\utils\FileUtil.h
 $(OS)\FileWatch.obj: src\utils\StrUtil.h
-$(OS)\GdiPlusUtil.obj: src\utils\BaseUtil.h src\utils\GdiPlusUtil.h
+$(OS)\GdiPlusUtil.obj: src\utils\BaseUtil.h src\utils\GdiPlusUtil.h src\utils\GeomUtil.h
+$(OS)\GdiPlusUtil.obj: src\utils\Scopes.h src\utils\StrUtil.h src\utils\WinUtil.h
 $(OS)\HtmlWindow.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\HtmlWindow.h
 $(OS)\HtmlWindow.obj: src\utils\Scopes.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\HtmlWindow.obj: src\utils\WinUtil.h
@@ -427,9 +428,9 @@ $(OS)\Http.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\Http.obj: src\utils\Http.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\Http.obj: src\utils\WinUtil.h
 $(OS)\ImagesEngine.obj: ext\unrar\dll.hpp src\BaseEngine.h src\ImagesEngine.h
-$(OS)\ImagesEngine.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
-$(OS)\ImagesEngine.obj: src\utils\Scopes.h src\utils\StrUtil.h src\utils\Vec.h
-$(OS)\ImagesEngine.obj: src\utils\WinUtil.h
+$(OS)\ImagesEngine.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GdiPlusUtil.h
+$(OS)\ImagesEngine.obj: src\utils\GeomUtil.h src\utils\Scopes.h src\utils\StrUtil.h
+$(OS)\ImagesEngine.obj: src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\Install.obj: src\BaseEngine.h src\ifilter\PdfFilter.h src\previewer\PdfPreview.h
 $(OS)\Install.obj: src\installer\Installer.h src\installer\Resource.h src\PdfEngine.h
 $(OS)\Install.obj: src\utils\BaseUtil.h src\utils\CmdLineParser.h src\utils\FileUtil.h
@@ -456,7 +457,8 @@ $(OS)\Menu.obj: src\utils\Vec.h src\utils\WinUtil.h src\WindowInfo.h
 $(OS)\MobiHtmlParse.obj: src\MobiHtmlParse.h src\utils\BaseUtil.h src\utils\FileUtil.h
 $(OS)\MobiHtmlParse.obj: src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\MobiParse.obj: src\MobiParse.h src\utils\BaseUtil.h src\utils\BitReader.h
-$(OS)\MobiParse.obj: src\utils\FileUtil.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\MobiParse.obj: src\utils\FileUtil.h src\utils\GdiPlusUtil.h src\utils\StrUtil.h
+$(OS)\MobiParse.obj: src\utils\Vec.h
 $(OS)\MuPDF_Exports.obj: mupdf\fitz\fitz.h
 $(OS)\Notifications.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
 $(OS)\Notifications.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h

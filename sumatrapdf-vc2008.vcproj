@@ -454,6 +454,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\utils\GdiPlusUtil.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\utils\GdiPlusUtil.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\utils\GeomUtil.h"
 				>
 			</File>
