@@ -674,10 +674,10 @@ protected:
 		if (image->w > 2 || image->h > 2 || !image->colorspace)
 			return false;
 		
-		for (int i = 1; i < image->w * image->h; i++)
+		for (int i = 1; i < image->w * image->h; i++) {
 			if (memcmp(image->samples + i * image->n, image->samples, image->n) != 0)
 				return false;
-		
+		}
 		return true;
 	}
 };

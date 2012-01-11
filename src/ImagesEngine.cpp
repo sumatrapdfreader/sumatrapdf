@@ -57,7 +57,7 @@ const TCHAR *FileExtFromData(char *data, size_t len)
         return _T(".jpg");
     if (str::StartsWith(header, "GIF87a") || str::StartsWith(header, "GIF89a"))
         return _T(".gif");
-    if (!memcmp(header, "MM\x00\x2A", 4) || !memcmp(header, "II\x2A\x00", 4))
+    if (memeq(header, "MM\x00\x2A", 4) || memeq(header, "II\x2A\x00", 4))
         return _T(".tif");
     return NULL;
 }
@@ -134,7 +134,7 @@ SizeI SizeFromData(char *data, size_t len)
         }
     }
     // TIFF
-    else if (!memcmp(data, "MM\x00\x2A", 4) || !memcmp(data, "II\x2A\x00", 4)) {
+    else if (memeq(data, "MM\x00\x2A", 4) || memeq(data, "II\x2A\x00", 4)) {
         // TODO: speed this up (if necessary)
     }
 

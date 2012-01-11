@@ -18,7 +18,7 @@ static void hexstrTest()
     assert(str::Eq(s, "010221ff0012"));
     bool ok = _HexToMem(s, &buf2);
     assert(ok);
-    assert(memcmp(buf, buf2, sizeof(buf)) == 0);
+    assert(memeq(buf, buf2, sizeof(buf)));
     free(s);
 
     FILETIME ft1, ft2;

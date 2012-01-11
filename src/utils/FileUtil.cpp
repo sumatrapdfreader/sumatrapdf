@@ -328,7 +328,7 @@ bool StartsWith(const TCHAR *filePath, const char *magicNumber, size_t len)
         return false;
 
     ReadAll(filePath, header, len);
-    return !memcmp(header, magicNumber, len);
+    return memeq(header, magicNumber, len);
 }
 
 int GetZoneIdentifier(const TCHAR *filePath)
