@@ -559,36 +559,23 @@ static void EmitTagP(Vec<uint8_t>* out, HtmlToken *t)
     }
 }
 
-// Represents a tag in the tag nesting stack. Most of the time
-// the tag wil be one of the known tags but we also allow for
-// a possibility of unknown tags. We can tell them apart because
-// TagEnum is a small integer and a pointer will never be that small.
-// TODO: alternatively we could not record unknown tags - we ignore
-// them anyway. That way we could encode the tag as a single byte.
-union TagInfo {
-    HtmlTag     tagEnum;
-    uint8_t *   tagAddr;
-};
-
 struct ConverterState {
     Vec<uint8_t> *out;
-    Vec<TagInfo> *tagNesting;
+    Vec<HtmlTag> *tagNesting;
     Vec<uint8_t> *html; // prettified html
 };
 
 // record the tag for the purpose of building current state
 // of html tree
-static void RecordStartTag(Vec<TagInfo>* tagNesting, HtmlTag tag)
+static void RecordStartTag(Vec<HtmlTag>* tagNesting, HtmlTag tag)
 {
     if (IsSelfClosingTag(tag))
         return;
-    TagInfo ti;
-    ti.tagEnum = tag;
-    tagNesting->Append(ti);
+    tagNesting->Append(tag);
 }
 
 // remove the tag from state of html tree
-static void RecordEndTag(Vec<TagInfo> *tagNesting, HtmlTag tag)
+static void RecordEndTag(Vec<HtmlTag> *tagNesting, HtmlTag tag)
 {
     // TODO: this logic might need to be a bit more complicated
     // e.g. when closing a tag, if the top tag doesn't match
@@ -681,7 +668,7 @@ uint8_t *MobiHtmlToDisplay(uint8_t *s, size_t sLen, size_t& lenOut)
     // parsing point. We add open tag to the stack when we encounter
     // them and we remove them from the stack when we encounter
     // its closing tag.
-    Vec<TagInfo> tagNesting(256);
+    Vec<HtmlTag> tagNesting(256);
 
     Vec<uint8_t> html(sLen * 2);
 
