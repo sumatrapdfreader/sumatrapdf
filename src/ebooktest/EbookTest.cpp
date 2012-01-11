@@ -41,6 +41,25 @@ Color gCol5(112, 115, 207); Color gCol5Shadow(66, 71, 118);
 Color gColBg(0xe9, 0xe9, 0xe9); // this is darkish gray
 Color gColBgTop(0xfa, 0xfa, 0xfa); // this is lightish gray
 
+struct EbookWindowInfo 
+{
+    MobiParse * mb;
+    uint8_t *   forLayout;
+    size_t      forLayoutLen;
+
+    EbookWindowInfo() : mb(NULL), forLayout(NULL), forLayoutLen(0)
+    {
+    }
+
+    ~EbookWindowInfo() {
+        free(forLayout);
+        delete mb;
+    }
+
+};
+
+static EbookWindowInfo *gCurrentEbook = NULL;
+
 #define TEN_SECONDS_IN_MS 10*1000
 
 static HFONT CreateDefaultGuiFont()
@@ -88,22 +107,30 @@ Vec<Page*> *LayoutText(Graphics *gfx, Font *defaultFont, int pageDx, int pageDy,
     return layouter.LayoutText(gfx, defaultFont, s);
 }
 
-Vec<Page*> *LayoutMobiFile(const TCHAR *file, Graphics *gfx, Font *defaultFont, int pageDx, int pageDy)
+EbookWindowInfo *LoadEbook(const TCHAR *fileName)
 {
-    MobiParse *mb = MobiParse::ParseFile(file);
-    if (!mb)
-        return NULL;
+    EbookWindowInfo *wi = new EbookWindowInfo();
+    wi->mb = MobiParse::ParseFile(fileName);
+    if (!wi->mb)
+        goto Error;
 
     size_t sLen;
-    char *s = mb->GetBookHtmlData(sLen);
-    size_t forLayoutLen;
-    uint8_t *forLayout = MobiHtmlToDisplay((uint8_t*)s, sLen, forLayoutLen);
+    char *s = wi->mb->GetBookHtmlData(sLen);
+    wi->forLayout = MobiHtmlToDisplay((uint8_t*)s, sLen, wi->forLayoutLen);
+    if (!wi->forLayout)
+        goto Error;
+
+    return wi;
+
+Error:
+    delete wi;
+    return NULL;
+}
+
+Vec<Page*> *LayoutMobiFile(EbookWindowInfo *wi, Graphics *gfx, Font *defaultFont, int pageDx, int pageDy)
+{
     PageLayout layouter(pageDx, pageDy);
-    Vec<Page*> *pages = layouter.LayoutInternal(gfx, defaultFont, forLayout, forLayoutLen);
-    //TODO: leaking forLayout data, we need to preserve it for display since
-    //pages data point to it
-    //free(forLayout);
-    delete mb;
+    Vec<Page*> *pages = layouter.LayoutInternal(gfx, defaultFont, wi->forLayout, wi->forLayoutLen);
     return pages;
 }
 
@@ -135,14 +162,15 @@ static void DrawPage(Graphics *g, Font *f, int pageNo, REAL offX, REAL offY)
 const int pageBorderX = 10;
 const int pageBorderY = 10;
 
-static void LayoutTestText(Graphics* gfx, RectI r)
+static void ReLayout(Graphics* gfx, RectI r)
 {
+    CrashAlwaysIf(gPages);
+
     int pageDx = r.dx - (pageBorderX * 2);
     int pageDy = r.dy - (pageBorderY * 2);
 
-    TCHAR *testFile = _T("src\\ebooktest\\KafkaTrial.mobi");
-    if (file::Exists(testFile))
-        gPages = LayoutMobiFile(testFile, gfx, gFont, pageDx, pageDy);
+    if (gCurrentEbook)
+        gPages = LayoutMobiFile(gCurrentEbook, gfx, gFont, pageDx, pageDy);
 
     if (!gPages) // in case LayoutMobiFile() failed
         gPages = LayoutText(gfx, gFont, pageDx, pageDy , gTxt);
@@ -156,9 +184,8 @@ static void DrawFrame2(Graphics &g, RectI r)
     g.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
     g.SetPageUnit(UnitPixel);
 
-    if (!gPages) {
-        LayoutTestText(&g, r);
-    }
+    if (!gPages)
+        ReLayout(&g, r);
 
     //SolidBrush bgBrush(gColBg);
     Gdiplus::Rect r2(r.x-1, r.y-1, r.dx+2, r.dy+2);
@@ -226,9 +253,16 @@ static void OnCreateWindow(HWND hwnd)
     SetMenu(hwnd, menu);
 }
 
-static void LoadEbook(TCHAR *fileName)
+static void LoadEbookAndTriggerLayout(TCHAR *fileName, HWND hwnd)
 {
-    // TODO: implement me
+    EbookWindowInfo *wi = LoadEbook(fileName);
+    if (!wi)
+        return;
+    delete gCurrentEbook;
+    gCurrentEbook = wi;
+    delete gPages;
+    gPages = NULL; // this triggers re-layout
+    InvalidateRect(hwnd, NULL, true);
 }
 
 static void OnOpen(HWND hwnd)
@@ -257,7 +291,7 @@ static void OnOpen(HWND hwnd)
     TCHAR *fileName = ofn.lpstrFile + ofn.nFileOffset;
     if (*(fileName - 1)) {
         // special case: single filename without NULL separator
-        LoadEbook(ofn.lpstrFile);
+        LoadEbookAndTriggerLayout(ofn.lpstrFile, hwnd);
         return;
     }
     // this is just a test app, no need to support multiple files
@@ -414,6 +448,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     if (gPages)
         DeleteVecMembers<Page*>(*gPages);
     delete gPages;
+    delete gCurrentEbook;
     ::delete gFont;
     ::delete frameBmp;
 
