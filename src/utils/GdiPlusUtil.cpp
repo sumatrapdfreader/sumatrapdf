@@ -1,36 +1,13 @@
 /* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+#include "BaseUtil.h"
+#include "WinUtil.h"
 #include "GdiPlusUtil.h"
+#include "Scopes.h"
+#include "StrUtil.h"
 
 using namespace Gdiplus;
-
-// A helper for allocating an array of elements of type T
-// either on stack (if they fit within StackBufInBytes)
-// or in memory. Allocating on stack is a perf optimization
-// note: not the best name
-template <typename T, int StackBufInBytes>
-class FixedArray {
-    T stackBuf[StackBufInBytes / sizeof(T)];
-    T *memBuf;
-public:
-    FixedArray(size_t elCount) {
-        memBuf = NULL;
-        size_t stackEls = StackBufInBytes / sizeof(T);
-        if (elCount > stackEls)
-            memBuf = (T*)malloc(elCount * sizeof(T));
-    }
-
-    ~FixedArray() {
-        free(memBuf);
-    }
-
-    T *Get() {
-        if (memBuf)
-            return memBuf;
-        return &(stackBuf[0]);
-    }
-};
 
 // Get width of each character and add them up.
 // Doesn't seem to be any different than MeasureTextAccurate() i.e. it still
@@ -122,3 +99,39 @@ REAL GetSpaceDx(Graphics *g, Font *f)
     return spaceDx2;
 #endif
 }
+
+const TCHAR *GfxFileExtFromData(char *data, size_t len)
+{
+    char header[9] = { 0 };
+    memcpy(header, data, min(len, sizeof(header)));
+
+    if (str::StartsWith(header, "BM"))
+        return _T(".bmp");
+    if (str::StartsWith(header, "\x89PNG\x0D\x0A\x1A\x0A"))
+        return _T(".png");
+    if (str::StartsWith(header, "\xFF\xD8"))
+        return _T(".jpg");
+    if (str::StartsWith(header, "GIF87a") || str::StartsWith(header, "GIF89a"))
+        return _T(".gif");
+    if (memeq(header, "MM\x00\x2A", 4) || memeq(header, "II\x2A\x00", 4))
+        return _T(".tif");
+    return NULL;
+}
+
+// cf. http://stackoverflow.com/questions/4598872/creating-hbitmap-from-memory-buffer/4616394#4616394
+Bitmap *BitmapFromData(void *data, size_t len)
+{
+    ScopedComPtr<IStream> stream(CreateStreamFromData(data, len));
+    if (!stream)
+        return NULL;
+
+    Bitmap *bmp = Bitmap::FromStream(stream);
+    if (bmp && bmp->GetLastStatus() != Ok) {
+        delete bmp;
+        bmp = NULL;
+    }
+
+    return bmp;
+}
+
+

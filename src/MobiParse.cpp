@@ -6,6 +6,7 @@
 
 #include "BitReader.h"
 #include "FileUtil.h"
+#include "GdiPlusUtil.h"
 #include "StrUtil.h"
 
 // Parse mobi format http://wiki.mobileread.com/wiki/MOBI
@@ -518,7 +519,7 @@ static bool IsValidCompression(int comprType)
 MobiParse::MobiParse() : 
     fileName(NULL), fileHandle(0), recHeaders(NULL), firstRecData(NULL), isMobi(false),
     docRecCount(0), compressionType(0), docUncompressedSize(0), doc(NULL),
-    multibyte(false), trailersCount(0), imageFirstRec(0), imagesCount(0),
+    multibyte(false), trailersCount(0), imageFirstRec(0), imagesCount(0), validImagesCount(0),
     images(NULL), bufDynamic(NULL), bufDynamicSize(0), huffDic(NULL)
 {
 }
@@ -707,9 +708,6 @@ static uint8_t FDST_REC[4] = { 'F', 'D', 'S', 'T' };
 static uint8_t DATP_REC[4] = { 'D', 'A', 'T', 'P' };
 static uint8_t SRCS_REC[4] = { 'S', 'R', 'C', 'S' };
 
-static uint8_t GIF_MAGIC1[6] = { 'G', 'I', 'F', '8', '7', 'a' };
-static uint8_t GIF_MAGIC2[6] = { 'G', 'I', 'F', '8', '9', 'a' };
-
 static bool IsEofRecord(uint8_t *data, size_t dataLen)
 {
     return (4 == dataLen) && memeq(data, EOF_REC,  4);
@@ -728,12 +726,7 @@ static bool KnownNonImageRec(uint8_t *data, size_t dataLen)
 
 static bool KnownImageFormat(uint8_t *data, size_t dataLen)
 {
-    if ((dataLen > dimof(GIF_MAGIC1)) && memeq(data, GIF_MAGIC1, dimof(GIF_MAGIC1)))
-        return true;
-    if ((dataLen > dimof(GIF_MAGIC2)) && memeq(data, GIF_MAGIC2, dimof(GIF_MAGIC2)))
-        return true;
-    // TODO: add jpeg, bmp, png
-    return false;
+    return NULL != GfxFileExtFromData((char*)data, dataLen);
 }
 
 // return false if we should stop loading images (because we 
@@ -762,6 +755,7 @@ bool MobiParse::LoadImage(size_t imageNo)
     if (!images[imageNo].imgData)
         return false;
     images[imageNo].imgDataLen = imgDataLen;
+    ++validImagesCount;
     return true;
 }
 

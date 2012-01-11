@@ -7,6 +7,7 @@
 #include "WinUtil.h"
 #include "Vec.h"
 #include "Scopes.h"
+#include "GdiPlusUtil.h"
 
 // mini(un)zip
 #include <ioapi.h>
@@ -27,40 +28,6 @@ void bz_internal_error(int errcode) { /* do nothing */ }
 using namespace Gdiplus;
 
 ///// Helper methods for handling image files of the most common types /////
-
-// cf. http://stackoverflow.com/questions/4598872/creating-hbitmap-from-memory-buffer/4616394#4616394
-Bitmap *BitmapFromData(void *data, size_t len)
-{
-    ScopedComPtr<IStream> stream(CreateStreamFromData(data, len));
-    if (!stream)
-        return NULL;
-
-    Bitmap *bmp = Bitmap::FromStream(stream);
-    if (bmp && bmp->GetLastStatus() != Ok) {
-        delete bmp;
-        bmp = NULL;
-    }
-
-    return bmp;
-}
-
-const TCHAR *FileExtFromData(char *data, size_t len)
-{
-    char header[9] = { 0 };
-    memcpy(header, data, min(len, sizeof(header)));
-
-    if (str::StartsWith(header, "BM"))
-        return _T(".bmp");
-    if (str::StartsWith(header, "\x89PNG\x0D\x0A\x1A\x0A"))
-        return _T(".png");
-    if (str::StartsWith(header, "\xFF\xD8"))
-        return _T(".jpg");
-    if (str::StartsWith(header, "GIF87a") || str::StartsWith(header, "GIF89a"))
-        return _T(".gif");
-    if (memeq(header, "MM\x00\x2A", 4) || memeq(header, "II\x2A\x00", 4))
-        return _T(".tif");
-    return NULL;
-}
 
 // adapted from http://cpansearch.perl.org/src/RJRAY/Image-Size-3.230/lib/Image/Size.pm
 SizeI SizeFromData(char *data, size_t len)
@@ -467,7 +434,7 @@ bool CImageEngine::LoadSingleFile(const TCHAR *file)
     pages.Append(BitmapFromData(bmpData, len));
 
     fileName = str::Dup(file);
-    fileExt = FileExtFromData(bmpData, len);
+    fileExt = GfxFileExtFromData(bmpData, len);
     assert(fileExt);
     if (!fileExt) fileExt = _T(".png");
 
@@ -499,7 +466,7 @@ bool ImageEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
     if (sniff) {
         char header[9] = { 0 };
         file::ReadAll(fileName, header, sizeof(header));
-        fileName = FileExtFromData(header, sizeof(header));
+        fileName = GfxFileExtFromData(header, sizeof(header));
     }
 
     return str::EndsWithI(fileName, _T(".png")) ||

@@ -81,6 +81,7 @@ class MobiParse
     size_t              trailersCount;
     size_t              imageFirstRec; // 0 if no images
     size_t              imagesCount;
+    size_t              validImagesCount;
     ImageData *         images;
 
     // we use bufStatic if record fits in it, bufDynamic otherwise

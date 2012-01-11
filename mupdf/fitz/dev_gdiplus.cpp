@@ -682,7 +682,6 @@ protected:
 	}
 };
 
-
 static void
 gdiplus_apply_transform(Graphics *graphics, fz_matrix ctm)
 {
