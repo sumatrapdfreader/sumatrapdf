@@ -340,17 +340,21 @@ Next:
 }
 
 const char *gTags = "a\0b\0blockquote\0body\0br\0div\0font\0guide\0h2\0head\0html\0i\0img\0li\0mbp:pagebreak\0ol\0p\0reference\0span\0sup\0table\0td\0tr\0u\0ul\0";
-
 HtmlTag FindTag(char *tag, size_t len)
 {
     return (HtmlTag)FindStrPos(gTags, tag, len);
 }
 
 const char *gAttrs = "align\0height\0width\0";
-
 static HtmlAttr FindAttr(char *attr, size_t len)
 {
     return (HtmlAttr)FindStrPos(gAttrs, attr, len);
+}
+
+const char *gAlignAttrs = "center\0justify\0left\0right\0last\0";
+static AlignAttr FindAlignAttr(char *attr, size_t len)
+{
+    return (AlignAttr)FindStrPos(gAlignAttrs, attr, len);
 }
 
 static bool IsSelfClosingTag(HtmlTag tag)
@@ -413,15 +417,17 @@ static void EmitTag(Vec<uint8_t> *out, HtmlTag tag, bool isEndTag, bool hasAttri
     out->Append(tagPostfix);
 }
 
-static void EmitWord(Vec<uint8_t>& out, uint8_t *s, size_t len)
+static void EmitWord(Vec<uint8_t>* out, uint8_t *s, size_t len)
 {
     // TODO: convert html entities to text
     if (len >= Tag_First) {
         // TODO: emit Tag_First and then len as 2 bytes
+        // TODO: fix EmitAttribute() when this limit is fixed
+        // TODO: fix DecodeAttributes() when this limit is fixed
         return;
     }
-    out.Append((uint8_t)len);
-    out.Append(s, len);
+    out->Append((uint8_t)len);
+    out->Append(s, len);
 }
 
 // Tokenize text into words and serialize those words to
@@ -440,12 +446,12 @@ static void EmitText(Vec<uint8_t>& out, HtmlToken *t)
         SkipNonWs(curr, end);
         size_t len = curr - currStart;
         if (len > 0)
-            EmitWord(out, currStart, len);
+            EmitWord(&out, currStart, len);
         SkipWs(curr, end);
     }
 }
 
-static bool IsAllowedTag(HtmlAttr *allowed, HtmlAttr attr)
+static bool IsAllowedAttr(HtmlAttr *allowed, HtmlAttr attr)
 {
     while (-1 != *allowed) {
         if (attr == *allowed)
@@ -455,13 +461,54 @@ static bool IsAllowedTag(HtmlAttr *allowed, HtmlAttr attr)
     return false;
 }
 
-static void EmitAttribute(Vec<uint8_t> *out, AttrInfo *attrInfo)
-{
-    // TODO: write me
+static struct {
+    HtmlAttr attr;
+    const char *validValues;
+} gValidAttrValues[] = {
+    { Attr_Align, gAlignAttrs } };
 
+bool AttrHasEnumVal(HtmlAttr attr)
+{
+    for (size_t i = 0; i < dimof(gValidAttrValues); i++) {
+        if (gValidAttrValues[i].attr == attr)
+            return true;
+    }
+    return false;
 }
 
-static void EmitAttributes(Vec<uint8_t> *out, HtmlToken *t, HtmlAttr *allowedAttributes)
+// Emit a given attribute and its value.
+// Attribute value either belongs to a set of known value (in which case we
+// encode it as a byte) or an arbitrary string, in which case we encode it as
+// as a string.
+// Returns false if we couldn't emit the attribute (e.g. because we expected
+// a known attribute value and it didn' match any).
+static bool EmitAttribute(Vec<uint8_t> *out, HtmlAttr attr, uint8_t *attrVal, size_t attrValLen)
+{
+    const char *validValues = NULL;
+    for (size_t i = 0; i < dimof(gValidAttrValues); i++) {
+        if (attr == gValidAttrValues[i].attr) {
+            validValues = gValidAttrValues[i].validValues;
+            break;
+        }
+    }
+
+    if (NULL != validValues) {
+        int valIdx = FindStrPos(validValues, (char*)attrVal, attrValLen);
+        if (-1 == valIdx)
+            return false;
+        out->Append((uint8_t)attr);
+        out->Append((uint8_t)valIdx);
+        return true;
+    }
+    // TODO: remove this check when EmitWord() can handle larger strings
+    if (attrValLen > Tag_First)
+        return false;
+    out->Append((uint8_t)attr);
+    EmitWord(out, attrVal, attrValLen);
+    return true;
+}
+
+static bool EmitAttributes(Vec<uint8_t> *out, HtmlToken *t, HtmlAttr *allowedAttributes)
 {
     AttrInfo *attrInfo;
     HtmlAttr attr;
@@ -481,12 +528,17 @@ static void EmitAttributes(Vec<uint8_t> *out, HtmlToken *t, HtmlAttr *allowedAtt
             break;
         attr = FindAttr((char*)attrInfo->name, attrInfo->nameLen);
         CrashAlwaysIf(Attr_NotFound == attr);
-        if (!IsAllowedTag(allowedAttributes, attr))
+        if (!IsAllowedAttr(allowedAttributes, attr))
             continue;
-        ++attrCount;
+        if (EmitAttribute(&attributesEncoded, attr, attrInfo->val, attrInfo->valLen))
+            ++attrCount;
     }
-    // TODO: emit attrCount
-    // TODO: add attributesEncoded to out
+    if (0 == attrCount)
+        return false;
+    CrashAlwaysIf(attributesEncoded.Count() == 0);
+    out->Append((uint8_t)attrCount);
+    out->Append(attributesEncoded.LendData(), attributesEncoded.Count());
+    return true;
 }
 
 static void EmitTagP(Vec<uint8_t>* out, HtmlToken *t)
@@ -500,14 +552,11 @@ static void EmitTagP(Vec<uint8_t>* out, HtmlToken *t)
         EmitTag(out, Tag_P, t->IsEndTag(), false);
     } else {
         CrashAlwaysIf(!t->IsStartTag());
-        //Vec<uint8_t> attrs;
-        //bool hasAttributes = EmitAttributes(&attrs, t, validPAttrs);
-        bool hasAttributes = false;
+        Vec<uint8_t> attrs;
+        bool hasAttributes = EmitAttributes(&attrs, t, validPAttrs);
         EmitTag(out, Tag_P, t->IsEndTag(), hasAttributes);
-        
-        /*if (hasAttributes) {
-            // TODO: append atttrs to otu
-        } */
+        if (hasAttributes)
+            out->Append(attrs.LendData(), attrs.Count());
     }
 }
 

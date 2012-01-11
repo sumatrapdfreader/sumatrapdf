@@ -61,6 +61,7 @@ enum AlignAttr {
 #define IS_END_TAG_MASK  0x01
 #define HAS_ATTR_MASK    0x02
 
-uint8_t *MobiHtmlToDisplay(uint8_t *s, size_t sLen, size_t& lenOut);
+bool      AttrHasEnumVal(HtmlAttr attr);
+uint8_t * MobiHtmlToDisplay(uint8_t *s, size_t sLen, size_t& lenOut);
 
 #endif

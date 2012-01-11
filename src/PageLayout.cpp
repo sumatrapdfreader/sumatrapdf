@@ -280,6 +280,50 @@ Vec<Page*> *PageLayout::LayoutText(Graphics *graphics, Font *defaultFnt, const c
     return ret;
 }
 
+// Describes a html attribute decoded from our internal format
+// Attribute value is either represented by valEnum (if AttrHasEnumVal(attr)
+// is true) or arbitrary string described by val/valLen.
+// Could have used a union for valEnum/{val/valLen} but there's not much
+// win in that.
+struct DecodedAttr {
+    HtmlAttr attr;
+    int       valEnum;
+    uint8_t * val;
+    size_t    valLen;
+};
+
+static void DecodeAttributes(Vec<DecodedAttr> *attrs, uint8_t* &s, size_t& sLen)
+{
+    DecodedAttr attr;
+    CrashAlwaysIf(sLen < 1);
+
+    size_t attrCount = *s++; --sLen;
+    attrs->Reset();
+    for (size_t i = 0; i < attrCount; i++) {
+        CrashAlwaysIf(sLen < 2);
+        attr.attr = (HtmlAttr)*s++; --sLen;
+        if (AttrHasEnumVal(attr.attr)) {
+            attr.valEnum = (int)*s++; --sLen;
+        } else {
+            // TODO: fix when we change encoding of string in EmitWord()
+            attr.valLen = (size_t)*s++; --sLen;
+            CrashAlwaysIf(sLen < attr.valLen);
+            attr.val = s; sLen -= attr.valLen;
+        }
+        attrs->Append(attr);
+    }
+}
+
+static DecodedAttr *FindAttr(Vec<DecodedAttr> *attrs, HtmlAttr attr)
+{
+    for (size_t i = 0; i < attrs->Count(); i++) {
+        DecodedAttr a = attrs->At(i);
+        if (a.attr == attr)
+            return &attrs->At(i);
+    }
+    return NULL;
+}
+
 Vec<Page *> *PageLayout::LayoutInternal(Graphics *graphics, Font *defaultFnt, uint8_t *s, size_t sLen)
 {
     gfx = graphics;
@@ -287,6 +331,9 @@ Vec<Page *> *PageLayout::LayoutInternal(Graphics *graphics, Font *defaultFnt, ui
     currFont = defaultFnt;
     StartLayout();
     WordInfo wi;
+
+    Vec<DecodedAttr> attrs;
+
     uint8_t *end = s + sLen;
     // perf: pre-allocate lineStringsDx vector
     size_t estimatedStrings = sLen  / 4;
@@ -304,6 +351,10 @@ Vec<Page *> *PageLayout::LayoutInternal(Graphics *graphics, Font *defaultFnt, ui
             uint8_t b = *s++;
             bool isEndTag = (IS_END_TAG_MASK == (b & IS_END_TAG_MASK));
             bool hasAttr  = (HAS_ATTR_MASK == (b & HAS_ATTR_MASK));
+            if (hasAttr) {
+                size_t sLen = end - s;
+                DecodeAttributes(&attrs, s, sLen);
+            }
             if ((Tag_P == tag) && isEndTag) {
                 // TODO: collapse multiple line breaks into one
                 // i.e. don't start a new paragraph if we're already
