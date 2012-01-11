@@ -1081,6 +1081,20 @@ pdf_update_tx_widget_annot(pdf_xref *xref, fz_obj *obj)
 	fz_buffer_printf(xref->ctx, base_ap, "/Tx BMC q BT %s ", fz_to_str_buf(ap));
 	if (font_name)
 	{
+		pdf_font_desc *fontdesc = NULL;
+		fz_obj *font_obj = fz_dict_gets(fz_dict_gets(res, "Font"), font_name);
+		if (font_obj)
+			fontdesc = pdf_load_font(xref, res, font_obj);
+		/* TODO: try to reverse the encoding instead of replacing the font */
+		if (fontdesc && fontdesc->cid_to_gid && !fontdesc->cid_to_ucs)
+		{
+			fz_obj *new_font = pdf_dict_from_string(xref, "<< /Type /Font /BaseFont /Helvetica /Subtype /Type1 >>");
+			fz_free(xref->ctx, font_name);
+			font_name = fz_strdup(xref->ctx, "Default");
+			fz_dict_puts(fz_dict_gets(res, "Font"), font_name, new_font);
+			fz_drop_obj(new_font);
+		}
+		pdf_drop_font(xref->ctx, fontdesc);
 		fz_buffer_printf(xref->ctx, content, "/%s %.4f Tf ", font_name, font_size);
 		fz_buffer_printf(xref->ctx, base_ap, "/%s %.4f Tf ", font_name, font_size);
 		fz_free(xref->ctx, font_name);
