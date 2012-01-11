@@ -204,8 +204,15 @@ void LinkHandler::GotoLink(PageDestination *link)
         ScrollTo(link);
     }
     else if (str::Eq(type, "LaunchURL") && path) {
-        // LaunchBrowser will reject unsupported URI schemes
-        LaunchBrowser(path);
+        // treat relative URIs as file paths
+        if (!str::FindChar(path, ':')) {
+            // LaunchFile will reject unsupported file types
+            LaunchFile(path, NULL);
+        }
+        else {
+            // LaunchBrowser will reject unsupported URI schemes
+            LaunchBrowser(path);
+        }
     }
     else if (str::Eq(type, "LaunchEmbedded")) {
         // open embedded PDF documents in a new window
@@ -221,7 +228,8 @@ void LinkHandler::GotoLink(PageDestination *link)
             link->SaveEmbedded(LinkSaver(*owner, path));
     }
     else if (str::Eq(type, "LaunchFile") && path) {
-        // OpenExternal only opens files inside SumatraPDF (except for registered media files)
+        // LaunchFile only opens files inside SumatraPDF
+        // (except for registered media files)
         LaunchFile(path, link);
     }
     // predefined named actions
@@ -349,6 +357,9 @@ void LinkHandler::LaunchFile(const TCHAR *path, PageDestination *link)
         return;
 
     newWin->Focus();
+    if (!link)
+        return;
+
     ScopedMem<TCHAR> name(link->GetDestName());
     if (!name)
         newWin->linkHandler->ScrollTo(link);

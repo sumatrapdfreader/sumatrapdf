@@ -232,7 +232,7 @@ pdf_repair_xref(pdf_xref *xref, char *buf, int bufsize)
 		list = fz_malloc_array(ctx, listcap, sizeof(struct entry));
 
 		/* look for '%PDF' version marker within first kilobyte of file */
-		n = fz_read(xref->file, (unsigned char *)buf, MAX(bufsize, 1024));
+		n = fz_read(xref->file, (unsigned char *)buf, MIN(bufsize, 1024));
 		if (n < 0)
 			fz_throw(ctx, "cannot read from file");
 
