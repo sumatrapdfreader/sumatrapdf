@@ -304,11 +304,14 @@ Next:
     return &currToken;
 }
 
+// strings is an array of 0-separated strings consequitevely laid out
+// in memory. This functions find the position of str in this array,
+// -1 means not found. The search is case-insensitive
 static int FindStrPos(const char *strings, char *str, size_t len)
 {
     const char *curr = strings;
     char *end = str + len;
-    char firstChar = *str;
+    char firstChar = tolower(*str);
     int n = 0;
     for (;;) {
         // we're at the start of the next tag
@@ -320,7 +323,8 @@ static int FindStrPos(const char *strings, char *str, size_t len)
         }
         char *s = str;
         while (*curr && (s < end)) {
-            if (*s++ != *curr++)
+            char c = tolower(*s++);
+            if (c != *curr++)
                 goto Next;
         }
         if ((s == end) && (0 == *curr))
