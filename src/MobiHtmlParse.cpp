@@ -339,7 +339,7 @@ Next:
     return -1;
 }
 
-const char *gTags = "a\0b\0blockquote\0body\0br\0div\0font\0guide\0h2\0head\0html\0i\0img\0li\0mbp:pagebreak\0ol\0p\0reference\0span\0sup\0table\0td\0tr\0u\0ul\0";
+const char *gTags = "a\0b\0blockquote\0body\0br\0div\0font\0guide\0h2\0head\0hr\0html\0i\0img\0li\0mbp:pagebreak\0ol\0p\0reference\0span\0sup\0table\0td\0tr\0u\0ul\0last\0";
 HtmlTag FindTag(char *tag, size_t len)
 {
     return (HtmlTag)FindStrPos(gTags, tag, len);
@@ -360,12 +360,11 @@ static AlignAttr FindAlignAttr(char *attr, size_t len)
 static bool IsSelfClosingTag(HtmlTag tag)
 {
     // TODO: add more tags
-    static HtmlTag selfClosingTags[] = { Tag_Br, Tag_Img, Tag_NotFound };
-    HtmlTag *tags = selfClosingTags;
-    while (*tags != -1) {
-        if (tag == *tags)
+    // TODO: optimize by sorting selfClosingTags and doing early bailout
+    static HtmlTag selfClosingTags[] = { Tag_Br, Tag_Img, Tag_Hr };
+    for (size_t i = 0; i < dimof(selfClosingTags); i++) {
+        if (tag == selfClosingTags[i])
             return true;
-        ++tags;
     }
     return false;
 }
