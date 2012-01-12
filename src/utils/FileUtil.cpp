@@ -28,6 +28,7 @@ const WCHAR *GetBaseName(const WCHAR *path)
     return fileBaseName;
 }
 
+// Note: returns pointer inside <path>, do not free
 const char *GetBaseName(const char *path)
 {
     const char *fileBaseName = path + str::Len(path);

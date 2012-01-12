@@ -5,6 +5,7 @@
 #define MobiHtmlParse_h
 
 #include <stdint.h>
+#include <Vec.h>
 
 // enums must match HTML_TAGS_STRINGS order
 enum HtmlTag {
@@ -103,6 +104,7 @@ enum AlignAttr {
 #define HAS_ATTR_MASK    0x02
 
 bool      AttrHasEnumVal(HtmlAttr attr);
-uint8_t * MobiHtmlToDisplay(uint8_t *s, size_t sLen, size_t& lenOut);
+
+Vec<uint8_t> *MobiHtmlToDisplay(uint8_t *s, size_t sLen, Vec<uint8_t> *html);
 
 #endif

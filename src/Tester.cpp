@@ -21,6 +21,7 @@ static int Usage()
     return 1;
 }
 
+static bool gSaveHtml = true;
 static void TestMobiFile(TCHAR *path)
 {
     _tprintf(_T("Testing file '%s'\n"), path);
@@ -29,11 +30,26 @@ static void TestMobiFile(TCHAR *path)
         printf(" error: failed to parse the file\n");
         return;
     }
-    size_t sLen;
-    char *s = mb->GetBookHtmlData(sLen);
-    size_t forLayoutLen;
-    uint8_t *forLayout = MobiHtmlToDisplay((uint8_t*)s, sLen, forLayoutLen);
-    free(forLayout);
+
+    mb->ConvertToDisplayFormat(gSaveHtml);
+    if (!gSaveHtml)
+        return;
+
+    TCHAR *dir = _T("..\\ebooks-converted");
+    dir::CreateAll(dir);
+    ScopedMem<TCHAR> fileBase(str::Dup(path::GetBaseName(path)));
+    TCHAR *ext = (TCHAR*)str::FindCharLast(fileBase, '.');
+    *ext = 0;
+    ScopedMem<TCHAR> outFileHtml(str::Join(fileBase.Get(), _T("_pp.html")));
+    ScopedMem<TCHAR> outFile(path::Join(dir, outFileHtml.Get()));
+    file::WriteAll(outFile.Get(), (void*)mb->prettyPrintedHtml->LendData(), mb->prettyPrintedHtml->Count());
+
+    outFileHtml.Set(str::Join(fileBase.Get(), _T(".html")));
+    outFile.Set(path::Join(dir, outFileHtml.Get()));
+    file::WriteAll(outFile.Get(), mb->doc->LendData(), mb->doc->Count());
+
+    // TODO: write out images
+
     delete mb;
 }
 

@@ -76,7 +76,7 @@ class MobiParse
     size_t              docRecCount;
     int                 compressionType;
     size_t              docUncompressedSize;
-    str::Str<char> *    doc;
+
     bool                multibyte;
     size_t              trailersCount;
     size_t              imageFirstRec; // 0 if no images
@@ -102,7 +102,13 @@ class MobiParse
     bool    LoadImage(size_t imageNo);
 
 public:
+    str::Str<char> *    doc;
+    Vec<uint8_t> *      displayFormat;
+    Vec<uint8_t> *      prettyPrintedHtml;
+
     static MobiParse *ParseFile(const TCHAR *fileName);
+
+    void ConvertToDisplayFormat(bool generatePrettyPrintedHtml);
 
     char *GetBookHtmlData(size_t& lenOut) {
         lenOut = doc->Size();

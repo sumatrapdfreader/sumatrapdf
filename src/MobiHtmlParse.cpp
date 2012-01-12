@@ -41,9 +41,6 @@ denoting a string with embedded formatting codes. It's length would be 16-bit
 think it happens very often in practice, though.
 */
 
-static bool gSaveHtml = false;
-#define HTML_FILE_NAME _T("mobi-test.html")
-
 struct HtmlToken {
     enum TokenType {
         StartTag,           // <foo>
@@ -124,7 +121,6 @@ static bool SkipUntil(uint8_t*& s, uint8_t *end, uint8_t c)
     }
     return *s == c;
 }
-
 
 static bool IsWs(uint8_t c) {
     return (' ' == c) || ('\t' == c) || ('\n' == c) || ('\r' == c);
@@ -431,7 +427,7 @@ static void EmitWord(Vec<uint8_t>* out, uint8_t *s, size_t len)
 // Note: I'm collapsing multiple whitespaces. This might
 // not be the right thing to do (e.g. when showing source
 // code snippets)
-static void EmitText(Vec<uint8_t>& out, HtmlToken *t)
+static void EmitText(Vec<uint8_t>* out, HtmlToken *t)
 {
     CrashIf(!t->IsText());
     uint8_t *end = t->s + t->sLen;
@@ -442,7 +438,7 @@ static void EmitText(Vec<uint8_t>& out, HtmlToken *t)
         SkipNonWs(curr, end);
         size_t len = curr - currStart;
         if (len > 0)
-            EmitWord(&out, currStart, len);
+            EmitWord(out, currStart, len);
         SkipWs(curr, end);
     }
 }
@@ -696,8 +692,9 @@ static void HtmlAddWithNesting(Vec<uint8_t>* html, HtmlTag tag, bool isStartTag,
 
 static void PrettifyHtml(ConverterState *state, HtmlToken *t)
 {
-    if (!gSaveHtml)
+    if (!state->html)
         return;
+
     size_t nesting = state->tagNesting->Count();
     if (t->IsText()) {
         state->html->Append(t->s, t->sLen);
@@ -726,20 +723,11 @@ static void PrettifyHtml(ConverterState *state, HtmlToken *t)
     }
 }
 
-static void SavePrettifiedHtml(Vec<uint8_t>* html)
-{
-    if (!gSaveHtml)
-        return;
-
-    file::WriteAll(HTML_FILE_NAME, (void*)html->LendData(), html->Count());
-}
-
 // convert mobi html to a format optimized for layout/display
 // returns NULL in case of an error
-// caller has to free() the result
-uint8_t *MobiHtmlToDisplay(uint8_t *s, size_t sLen, size_t& lenOut)
+Vec<uint8_t> *MobiHtmlToDisplay(uint8_t *s, size_t sLen, Vec<uint8_t> *html)
 {
-    Vec<uint8_t> res(sLen); // avoid re-allocations by pre-allocating expected size
+    Vec<uint8_t> *res = new Vec<uint8_t>(sLen); // avoid re-allocations by pre-allocating expected size
 
     // tagsStack represents the current html tree nesting at current
     // parsing point. We add open tag to the stack when we encounter
@@ -747,9 +735,7 @@ uint8_t *MobiHtmlToDisplay(uint8_t *s, size_t sLen, size_t& lenOut)
     // its closing tag.
     Vec<HtmlTag> tagNesting(256);
 
-    Vec<uint8_t> html(sLen * 2);
-
-    ConverterState state = { &res, &tagNesting, &html };
+    ConverterState state = { res, &tagNesting, html };
 
     HtmlPullParser parser(s);
 
@@ -758,8 +744,10 @@ uint8_t *MobiHtmlToDisplay(uint8_t *s, size_t sLen, size_t& lenOut)
         HtmlToken *t = parser.Next();
         if (!t)
             break;
-        if (t->IsError())
+        if (t->IsError()) {
+            delete res;
             return NULL;
+        }
         PrettifyHtml(&state, t);
         // TODO: interpret the tag
         if (t->IsTag()) {
@@ -774,8 +762,5 @@ uint8_t *MobiHtmlToDisplay(uint8_t *s, size_t sLen, size_t& lenOut)
         }
 #endif
     }
-    SavePrettifiedHtml(state.html);
-    lenOut = res.Size();
-    uint8_t *resData = res.StealData();
-    return resData;
+    return res;
 }
