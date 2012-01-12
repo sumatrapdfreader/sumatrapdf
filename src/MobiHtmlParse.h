@@ -6,7 +6,7 @@
 
 #include <stdint.h>
 
-// enums must match gTags order
+// enums must match HTML_TAGS_STRINGS order
 enum HtmlTag {
     Tag_NotFound = -1,
     Tag_A = 0,
@@ -15,39 +15,55 @@ enum HtmlTag {
     Tag_Body = 3,
     Tag_Br = 4,
     Tag_Div = 5,
-    Tag_Font = 6,
-    Tag_Guide = 7,
-    Tag_H2 = 8,
-    Tag_Head = 9,
-    Tag_Hr = 10,
-    Tag_Html = 11,
-    Tag_I = 12,
-    Tag_Img = 13,
-    Tag_Li = 14,
-    Tag_Mbp_Pagebreak = 15,
-    Tag_Ol = 16,
-    Tag_P = 17,
-    Tag_Reference = 18,
-    Tag_Span = 19,
-    Tag_Sup = 20,
-    Tag_Table = 21,
-    Tag_Td = 22,
-    Tag_Tr = 23,
-    Tag_U = 24,
-    Tag_Ul = 25,
-    Tag_Last = 26
+    Tag_Em = 6,
+    Tag_Font = 7,
+    Tag_Guide = 8,
+    Tag_H1 = 9,
+    Tag_H2 = 10,
+    Tag_H3 = 11,
+    Tag_H4 = 12,
+    Tag_H5 = 13,
+    Tag_Head = 14,
+    Tag_Hr = 15,
+    Tag_Html = 16,
+    Tag_I = 17,
+    Tag_Img = 18,
+    Tag_Li = 19,
+    Tag_Mbp_Pagebreak = 20,
+    Tag_Ol = 21,
+    Tag_P = 22,
+    Tag_Reference = 23,
+    Tag_S = 24,
+    Tag_Small = 25,
+    Tag_Span = 26,
+    Tag_Strike = 27,
+    Tag_Strong = 28,
+    Tag_Sub = 29,
+    Tag_Sup = 30,
+    Tag_Table = 31,
+    Tag_Td = 32,
+    Tag_Th = 33,
+    Tag_Tr = 34,
+    Tag_Tt = 35,
+    Tag_U = 36,
+    Tag_Ul = 37,
+    Tag_Video = 38,
+    Tag_Last = 39
 };
+#define HTML_TAGS_STRINGS "a\0b\0blockquote\0body\0br\0div\0em\0font\0guide\0h1\0h2\0h3\0h4\0h5\0head\0hr\0html\0i\0img\0li\0mbp:pagebreak\0ol\0p\0reference\0s\0small\0span\0strike\0strong\0sub\0sup\0table\0td\0th\0tr\0tt\0u\0ul\0video\0last\0"
 
-// enums must match gAttrs order
+// enums must match HTML_ATTRS_STRINGS order
 enum HtmlAttr {
     Attr_NotFound = -1,
     Attr_Align = 0,
     Attr_Height = 1,
     Attr_Width = 2,
-    Attr_Last = 3
+    Attr_Xmlns_Dc = 3,
+    Attr_Last = 4
 };
+#define HTML_ATTRS_STRINGS "align\0height\0width\0xmlns:dc\0last\0"
 
-// enums must match gAlignAttrs order
+// enums must match ALIGN_ATTRS_STRINGS order
 enum AlignAttr {
     Align_NotFound = -1,
     Align_Center = 0,
@@ -56,6 +72,7 @@ enum AlignAttr {
     Align_Right = 3,
     Align_Last = 4
 };
+#define ALIGN_ATTRS_STRINGS "center\0justify\0left\0right\0last\0"
 
 #define Tag_First (255 - Tag_Last)
 

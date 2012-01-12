@@ -339,22 +339,19 @@ Next:
     return -1;
 }
 
-const char *gTags = "a\0b\0blockquote\0body\0br\0div\0font\0guide\0h2\0head\0hr\0html\0i\0img\0li\0mbp:pagebreak\0ol\0p\0reference\0span\0sup\0table\0td\0tr\0u\0ul\0last\0";
 HtmlTag FindTag(char *tag, size_t len)
 {
-    return (HtmlTag)FindStrPos(gTags, tag, len);
+    return (HtmlTag)FindStrPos(HTML_TAGS_STRINGS, tag, len);
 }
 
-const char *gAttrs = "align\0height\0width\0";
 static HtmlAttr FindAttr(char *attr, size_t len)
 {
-    return (HtmlAttr)FindStrPos(gAttrs, attr, len);
+    return (HtmlAttr)FindStrPos(HTML_ATTRS_STRINGS, attr, len);
 }
 
-const char *gAlignAttrs = "center\0justify\0left\0right\0last\0";
 static AlignAttr FindAlignAttr(char *attr, size_t len)
 {
-    return (AlignAttr)FindStrPos(gAlignAttrs, attr, len);
+    return (AlignAttr)FindStrPos(ALIGN_ATTRS_STRINGS, attr, len);
 }
 
 static bool IsSelfClosingTag(HtmlTag tag)
@@ -464,7 +461,7 @@ static struct {
     HtmlAttr attr;
     const char *validValues;
 } gValidAttrValues[] = {
-    { Attr_Align, gAlignAttrs } };
+    { Attr_Align, ALIGN_ATTRS_STRINGS } };
 
 bool AttrHasEnumVal(HtmlAttr attr)
 {
@@ -517,7 +514,7 @@ static bool EmitAttributes(Vec<uint8_t> *out, HtmlToken *t, HtmlAttr *allowedAtt
 
     // we need to cache attribute info because we first
     // need to emit attribute count and we don't know it
-    // yet her
+    // yet here
     Vec<uint8_t> attributesEncoded;
     size_t attrCount = 0;
 
@@ -586,6 +583,19 @@ static void RecordEndTag(Vec<HtmlTag> *tagNesting, HtmlTag tag)
         tagNesting->Pop();
 }
 
+// tags that I want to explicitly ignore and not define
+// HtmlTag enums for them
+// One file has a bunch of st1:* tags (st1:city, st1:place etc.)
+static bool IgnoreTag(uint8_t *s, size_t sLen)
+{
+    if (sLen >= 4 && s[3] == ':' && s[0] == 's' && s[1] == 't' && s[2] == '1')
+        return true;
+    // no idea what "o:p" is
+    if (sLen == 3 && s[1] == ':' && s[0] == 'o'  && s[2] == 'p')
+        return true;
+    return false;
+}
+
 static void HandleTag(ConverterState *state, HtmlToken *t)
 {
     CrashIf(!t->IsTag());
@@ -593,7 +603,11 @@ static void HandleTag(ConverterState *state, HtmlToken *t)
     // HtmlToken string includes potential attributes,
     // get the length of just the tag
     size_t tagLen = GetTagLen(t->s, t->sLen);
+    if (IgnoreTag(t->s, tagLen))
+        return;
+
     HtmlTag tag = FindTag((char*)t->s, tagLen);
+    // TODO: ignore instead of crashing once we're satisfied we covered all the tags
     CrashIf(tag == Tag_NotFound);
 
     // update the current state of html tree

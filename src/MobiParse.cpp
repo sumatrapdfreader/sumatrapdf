@@ -652,7 +652,11 @@ bool MobiParse::ParseHeader()
 
     if (pdbHeader.numRecords > mobiHdr->imageFirstRec) {
         imageFirstRec = mobiHdr->imageFirstRec;
-        imagesCount = pdbHeader.numRecords - mobiHdr->imageFirstRec;
+        if (0 == imageFirstRec) {
+            // I don't think this should ever happen but I've seen it
+            imagesCount = 0;
+        } else
+            imagesCount = pdbHeader.numRecords - mobiHdr->imageFirstRec;
     }
     size_t hdrLen = mobiHdr->hdrLen;
     if (hdrLen > recLeft) {
@@ -707,12 +711,17 @@ static uint8_t FCIS_REC[4] = { 'F', 'C', 'I', 'S' };
 static uint8_t FDST_REC[4] = { 'F', 'D', 'S', 'T' };
 static uint8_t DATP_REC[4] = { 'D', 'A', 'T', 'P' };
 static uint8_t SRCS_REC[4] = { 'S', 'R', 'C', 'S' };
+// don't know what VIDE record is, probably some sort
+// of video
+static uint8_t VIDE_REC[4] = { 'V', 'I', 'D', 'E' };
 
 static bool IsEofRecord(uint8_t *data, size_t dataLen)
 {
     return (4 == dataLen) && memeq(data, EOF_REC,  4);
 }
 
+// TODO: speed up by grabbing 4 bytes as uint32_t and comparing
+// with uint32_t constants instead of 4 byte memeq
 static bool KnownNonImageRec(uint8_t *data, size_t dataLen)
 {
     if (dataLen < 4) return false;
@@ -721,6 +730,7 @@ static bool KnownNonImageRec(uint8_t *data, size_t dataLen)
     if (memeq(data, FDST_REC, 4)) return true;
     if (memeq(data, DATP_REC, 4)) return true;
     if (memeq(data, SRCS_REC, 4)) return true;
+    if (memeq(data, VIDE_REC, 4)) return true;
     return false;
 }
 
