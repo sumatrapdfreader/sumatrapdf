@@ -2207,27 +2207,36 @@ RectD PdfLink::GetDestRect() const
 {
     RectD result(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
     if (!link || FZ_LINK_GOTO != link->kind && FZ_LINK_GOTOR != link->kind)
-        /* not applicable */;
-    else if ((link->ld.gotor.flags & fz_link_flag_r_is_zoom)) {
+        return result;
+    if (link->ld.gotor.page < 0 || link->ld.gotor.page >= engine->PageCount())
+        return result;
+
+    pdf_page *page = engine->GetPdfPage(link->ld.gotor.page + 1, true);
+    if (!page)
+        return result;
+    fz_matrix ctm = pdf_get_adjustment(page);
+    fz_point lt = fz_transform_point(ctm, link->ld.gotor.lt);
+    fz_point rb = fz_transform_point(ctm, link->ld.gotor.rb);
+
+    if ((link->ld.gotor.flags & fz_link_flag_r_is_zoom)) {
         // /XYZ link, undefined values for the coordinates mean: keep the current position
         if ((link->ld.gotor.flags & fz_link_flag_l_valid))
-            result.x = link->ld.gotor.lt.x;
+            result.x = lt.x;
         if ((link->ld.gotor.flags & fz_link_flag_t_valid))
-            result.y = link->ld.gotor.lt.y;
+            result.y = lt.y;
         result.dx = result.dy = 0;
     }
     else if ((link->ld.gotor.flags & (fz_link_flag_fit_h | fz_link_flag_fit_v)) == (fz_link_flag_fit_h | fz_link_flag_fit_v) &&
         (link->ld.gotor.flags & (fz_link_flag_l_valid | fz_link_flag_t_valid | fz_link_flag_r_valid | fz_link_flag_b_valid))) {
         // /FitR link
-        result = RectD::FromXY(link->ld.gotor.lt.x, link->ld.gotor.lt.y,
-                               link->ld.gotor.rb.x, link->ld.gotor.rb.y);
+        result = RectD::FromXY(lt.x, lt.y, rb.x, rb.y);
         // an empty destination rectangle would imply an /XYZ-type link to callers
         if (result.IsEmpty())
             result.dx = result.dy = 0.1;
     }
     else if ((link->ld.gotor.flags & (fz_link_flag_fit_h | fz_link_flag_fit_v)) == fz_link_flag_fit_h) {
         // /FitH or /FitBH link
-        result.y = link->ld.gotor.lt.y;
+        result.y = lt.y;
     }
     // all other link types only affect the zoom level, which we intentionally leave alone
     return result;
