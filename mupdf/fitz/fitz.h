@@ -1433,6 +1433,7 @@ void fz_free_display_list(fz_context *ctx, fz_display_list *list);
 fz_device *fz_new_list_device(fz_context *ctx, fz_display_list *list);
 void fz_execute_display_list(fz_display_list *list, fz_device *dev, fz_matrix ctm, fz_bbox area, fz_cookie *cookie);
 
+
 /*
  * Plotting functions.
  */
@@ -1551,6 +1552,7 @@ struct fz_link_dest_s
 	}
 	ld;
 };
+
 
 struct fz_link_s
 {

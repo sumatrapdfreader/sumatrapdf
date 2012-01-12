@@ -435,8 +435,8 @@ fz_text_extract_span(fz_context *ctx, fz_text_span **last, fz_text *text, fz_mat
 	/* SumatraPDF: use a Type 3 font's FontBBox instead of 1 and 0 */
 	else if (font->t3procs && !fz_is_empty_rect(font->bbox))
 	{
-		ascender = font->bbox.y1 / 1000;
-		descender = font->bbox.y0 / 1000;
+		ascender = font->bbox.y1;
+		descender = font->bbox.y0;
 	}
 
 	rect = fz_empty_rect;

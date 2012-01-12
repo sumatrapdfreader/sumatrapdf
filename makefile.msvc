@@ -456,9 +456,9 @@ $(OS)\Menu.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\StrUtil.h
 $(OS)\Menu.obj: src\utils\Vec.h src\utils\WinUtil.h src\WindowInfo.h
 $(OS)\MobiHtmlParse.obj: src\MobiHtmlParse.h src\utils\BaseUtil.h src\utils\FileUtil.h
 $(OS)\MobiHtmlParse.obj: src\utils\StrUtil.h src\utils\Vec.h
-$(OS)\MobiParse.obj: src\MobiParse.h src\utils\BaseUtil.h src\utils\BitReader.h
-$(OS)\MobiParse.obj: src\utils\FileUtil.h src\utils\GdiPlusUtil.h src\utils\StrUtil.h
-$(OS)\MobiParse.obj: src\utils\Vec.h
+$(OS)\MobiParse.obj: src\MobiHtmlParse.h src\MobiParse.h src\utils\BaseUtil.h
+$(OS)\MobiParse.obj: src\utils\BitReader.h src\utils\FileUtil.h src\utils\GdiPlusUtil.h
+$(OS)\MobiParse.obj: src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\MuPDF_Exports.obj: mupdf\fitz\fitz.h
 $(OS)\Notifications.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
 $(OS)\Notifications.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
