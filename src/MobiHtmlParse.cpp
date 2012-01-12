@@ -610,12 +610,24 @@ static void HandleTag(ConverterState *state, HtmlToken *t)
     EmitTag(state->out, tag, t->IsEndTag(), false);
 }
 
-static void HtmlAddWithNesting(Vec<uint8_t>* html, size_t nesting, uint8_t *s, size_t sLen)
+static void HtmlAddWithNesting(Vec<uint8_t>* html, HtmlTag tag, bool isStartTag, size_t nesting, uint8_t *s, size_t sLen)
 {
-    for (size_t i = 0; i < nesting; i++) {
-        html->Append(' ');
+    static HtmlTag inlineTags[] = {Tag_Font, Tag_B, Tag_I, Tag_U};
+    bool isInline = false;
+    for (size_t i = 0; i < dimof(inlineTags); i++) {
+        if (tag == inlineTags[i]) {
+            isInline = true;
+            break;
+        }
+    }
+    if (!isInline && isStartTag) {
+        for (size_t i = 0; i < nesting; i++) {
+            html->Append(' ');
+        }
     }
     html->Append(s, sLen);
+    if (isInline || isStartTag)
+        return;
     html->Append('\n');
 }
 
@@ -625,27 +637,29 @@ static void PrettifyHtml(ConverterState *state, HtmlToken *t)
         return;
     size_t nesting = state->tagNesting->Count();
     if (t->IsText()) {
-        HtmlAddWithNesting(state->html, nesting, t->s, t->sLen);
+        state->html->Append(t->s, t->sLen);
+        //HtmlAddWithNesting(state->html, t->tag, nesting, t->s, t->sLen);
         return;
     }
 
     if (!t->IsTag())
         return;
 
+    HtmlTag tag = FindTag((char*)t->s, t->sLen);
     if (t->IsEmptyElementEndTag()) {
-        HtmlAddWithNesting(state->html, nesting, t->s - 1, t->sLen + 3);
+        HtmlAddWithNesting(state->html, tag, false, nesting, t->s - 1, t->sLen + 3);
         return;
     }
 
     if (t->IsStartTag()) {
-        HtmlAddWithNesting(state->html, nesting, t->s - 1, t->sLen + 2);
+        HtmlAddWithNesting(state->html, tag, true, nesting, t->s - 1, t->sLen + 2);
         return;
     }
 
     if (t->IsEndTag()) {
         if (nesting > 0)
             --nesting;
-        HtmlAddWithNesting(state->html, nesting, t->s - 2, t->sLen + 3);
+        HtmlAddWithNesting(state->html, tag, false, nesting, t->s - 2, t->sLen + 3);
     }
 }
 

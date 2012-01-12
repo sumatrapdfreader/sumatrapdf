@@ -2,6 +2,7 @@ Things to do for the first version of ebook (mobi) support:
 * mobi: read images
 * mobi: read codepage and other metadata
 * convert mobi html to an representation optimized for layout/display
+* mobi: parse table of content (<html><head><guide><reference type="toc" title="Table of Contents", filepos=$N />)
 * layout: support images
 * layout: support bold/italic/underline
 * layout: support different fonts
