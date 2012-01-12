@@ -235,8 +235,8 @@ void PageLayout::AddWord(WordInfo *wi)
         return;
     }
     newLinesCount = 0;
-    str::Utf8ToWcharBuf(wi->s, wi->len, buf, dimof(buf));
-    bbox = MeasureText(gfx, currFont, buf, wi->len);
+    size_t strLen = str::Utf8ToWcharBuf(wi->s, wi->len, buf, dimof(buf));
+    bbox = MeasureText(gfx, currFont, buf, strLen);
     // TODO: handle a case where a single word is bigger than the whole
     // line, in which case it must be split into multiple lines
     REAL dx = bbox.Width;

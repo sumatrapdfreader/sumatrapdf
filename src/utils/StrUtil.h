@@ -128,7 +128,7 @@ void    DbgOut(const TCHAR *format, ...);
 
 const TCHAR *   Parse(const TCHAR *str, const TCHAR *format, ...);
 
-void Utf8ToWcharBuf(const char *s, size_t sLen, WCHAR *bufOut, size_t bufOutMax);
+size_t Utf8ToWcharBuf(const char *s, size_t sLen, WCHAR *bufOut, size_t bufOutMax);
 
 namespace conv {
 

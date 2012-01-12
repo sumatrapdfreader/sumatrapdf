@@ -734,15 +734,16 @@ Failure:
     return NULL;
 }
 
-void Utf8ToWcharBuf(const char *s, size_t sLen, WCHAR *bufOut, size_t bufOutMax)
+size_t Utf8ToWcharBuf(const char *s, size_t sLen, WCHAR *bufOut, size_t bufOutMax)
 {
     if (0 == bufOutMax)
-        return;
-    int size = MultiByteToWideChar(CP_UTF8, 0, s, (int)sLen, NULL, 0);
-    if ((size_t)size >= bufOutMax)
-        size = (int)bufOutMax - 1;
-    MultiByteToWideChar(CP_UTF8, 0, s, (int)sLen, bufOut, size);
-    bufOut[size] = '\0';
+        return 0;
+    int sLenConverted = MultiByteToWideChar(CP_UTF8, 0, s, (int)sLen, NULL, 0);
+    if ((size_t)sLenConverted >= bufOutMax)
+        sLenConverted = (int)bufOutMax - 1;
+    MultiByteToWideChar(CP_UTF8, 0, s, (int)sLen, bufOut, sLenConverted);
+    bufOut[sLenConverted] = '\0';
+    return sLenConverted;
 }
 
 namespace conv {
