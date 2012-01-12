@@ -88,7 +88,7 @@ void fz_throw_imp(fz_context *ctx, char *file, int line, char *fmt, ...)
 	vsnprintf(ctx->error->message, sizeof ctx->error->message, fmt, args);
 	va_end(args);
 
-	fz_flush_warnings(ctx); /* SumatraPDF: warnings might be related to this error message */
+	fz_flush_warnings(ctx);
 	fprintf(stderr, "! %s:%d: %s\n", file, line, ctx->error->message);
 	LOGE("error: %s\n", ctx->error->message);
 

@@ -228,6 +228,7 @@ EXPORTS
 	fz_drop_font
 	fz_debug_font
 	fz_set_font_bbox
+	fz_bound_glyph
 	fz_new_path
 	fz_moveto
 	fz_lineto
@@ -240,25 +241,25 @@ EXPORTS
 	fz_clone_path
 	fz_bound_path
 	fz_debug_path
+	fz_new_glyph_cache_context
+	fz_free_glyph_cache_context
+	fz_render_ft_glyph
+	fz_render_t3_glyph
+	fz_render_ft_stroked_glyph
+	fz_render_glyph
+	fz_render_stroked_glyph
 	fz_new_text
 	fz_add_text
 	fz_free_text
-	fz_debug_text
 	fz_bound_text
 	fz_clone_text
+	fz_debug_text
 	fz_keep_shade
 	fz_drop_shade
 	fz_free_shade_imp
 	fz_debug_shade
 	fz_bound_shade
 	fz_paint_shade
-	fz_new_glyph_cache
-	fz_render_ft_glyph
-	fz_render_t3_glyph
-	fz_render_ft_stroked_glyph
-	fz_render_glyph
-	fz_render_stroked_glyph
-	fz_free_glyph_cache
 	fz_get_aa_level
 	fz_set_aa_level
 	fz_new_gel
@@ -455,6 +456,7 @@ EXPORTS
 	pdf_find_page_number
 	pdf_count_pages
 	pdf_load_page
+	pdf_bound_page
 	pdf_free_page
 	pdf_run_page_with_usage
 	pdf_run_page
@@ -481,6 +483,7 @@ EXPORTS
 	xps_free_page_list
 	xps_count_pages
 	xps_load_page
+	xps_bound_page
 	xps_free_page
 	xps_load_outline
 	xps_find_link_target
@@ -498,6 +501,7 @@ EXPORTS
 	xps_free_resource_dictionary
 	xps_resolve_resource_reference
 	xps_debug_resource_dictionary
+	xps_run_page
 	xps_parse_fixed_page
 	xps_parse_canvas
 	xps_parse_path

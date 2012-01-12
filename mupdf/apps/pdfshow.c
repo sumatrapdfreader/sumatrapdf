@@ -198,7 +198,7 @@ int main(int argc, char **argv)
 
 	filename = argv[fz_optind++];
 
-	ctx = fz_new_context(&fz_alloc_default, 256<<20);
+	ctx = fz_new_context(NULL, FZ_STORE_UNLIMITED);
 	if (!ctx)
 	{
 		fprintf(stderr, "cannot initialise context\n");

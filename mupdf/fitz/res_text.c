@@ -53,54 +53,46 @@ fz_clone_text(fz_context *ctx, fz_text *old)
 }
 
 fz_rect
-fz_bound_text(fz_text *text, fz_matrix ctm)
+fz_bound_text(fz_context *ctx, fz_text *text, fz_matrix ctm)
 {
-	fz_matrix trm;
+	fz_matrix tm, trm;
 	fz_rect bbox;
-	fz_rect fbox;
+	fz_rect gbox;
 	int i;
 
 	if (text->len == 0)
 		return fz_empty_rect;
 
-	/* find bbox of glyph origins in ctm space */
+	// TODO: stroke state
 
-	bbox.x0 = bbox.x1 = text->items[0].x;
-	bbox.y0 = bbox.y1 = text->items[0].y;
+	tm = text->trm;
+
+	tm.e = text->items[0].x;
+	tm.f = text->items[0].y;
+	trm = fz_concat(tm, ctm);
+	bbox = fz_bound_glyph(ctx, text->font, text->items[0].gid, trm);
 
 	for (i = 1; i < text->len; i++)
 	{
-		bbox.x0 = MIN(bbox.x0, text->items[i].x);
-		bbox.y0 = MIN(bbox.y0, text->items[i].y);
-		bbox.x1 = MAX(bbox.x1, text->items[i].x);
-		bbox.y1 = MAX(bbox.y1, text->items[i].y);
+		if (text->items[i].gid >= 0)
+		{
+			tm.e = text->items[i].x;
+			tm.f = text->items[i].y;
+			trm = fz_concat(tm, ctm);
+			gbox = fz_bound_glyph(ctx, text->font, text->items[i].gid, trm);
+
+			bbox.x0 = MIN(bbox.x0, gbox.x0);
+			bbox.y0 = MIN(bbox.y0, gbox.y0);
+			bbox.x1 = MAX(bbox.x1, gbox.x1);
+			bbox.y1 = MAX(bbox.y1, gbox.y1);
+		}
 	}
 
-	bbox = fz_transform_rect(ctm, bbox);
-
-	/* find bbox of font in trm * ctm space */
-
-	trm = fz_concat(text->trm, ctm);
-	trm.e = 0;
-	trm.f = 0;
-
-	fbox.x0 = text->font->bbox.x0 * 0.001f;
-	fbox.y0 = text->font->bbox.y0 * 0.001f;
-	fbox.x1 = text->font->bbox.x1 * 0.001f;
-	fbox.y1 = text->font->bbox.y1 * 0.001f;
-
-	fbox = fz_transform_rect(trm, fbox);
-
-	/* expand glyph origin bbox by font bbox */
-
-	bbox.x0 += fbox.x0;
-	bbox.y0 += fbox.y0;
-	bbox.x1 += fbox.x1;
-	bbox.y1 += fbox.y1;
-
-	/* SumatraPDF: don't unnecessarily expand the bbox at this point as
-	   it breaks pdf_get_string_width and PageContentBox calculations
-	   for the more common case that the glyph bbox is actually correct */
+	/* Compensate for the glyph cache limited positioning precision */
+	bbox.x0 -= 1;
+	bbox.y0 -= 1;
+	bbox.x1 += 1;
+	bbox.y1 += 1;
 
 	return bbox;
 }

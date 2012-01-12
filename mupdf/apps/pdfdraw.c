@@ -29,7 +29,6 @@ static float gamma_value = 1;
 static int invert = 0;
 
 static fz_colorspace *colorspace;
-static fz_glyph_cache *glyphcache;
 static char *filename;
 
 static struct {
@@ -110,12 +109,10 @@ static void drawbmp(pdf_xref *xref, pdf_page *page, fz_display_list *list, int p
 	char *bmpData;
 
 	zoom = resolution / 72;
-	ctm = fz_translate(-page->mediabox.x0, -page->mediabox.y1);
-	ctm = fz_concat(ctm, fz_scale(zoom, -zoom));
-	ctm = fz_concat(ctm, fz_rotate(page->rotate));
-	bbox = fz_round_rect(fz_transform_rect(ctm, page->mediabox));
+	ctm = fz_scale(zoom, zoom);
+	ctm = fz_concat(ctm, fz_rotate(rotation));
+	bbox = fz_round_rect(fz_transform_rect(ctm, pdf_bound_page(xref, page)));
 
-	ctm = fz_concat(ctm, fz_translate(-bbox.x0, -bbox.y0));
 	w = bbox.x1 - bbox.x0;
 	h = bbox.y1 - bbox.y0;
 
@@ -128,9 +125,6 @@ static void drawbmp(pdf_xref *xref, pdf_page *page, fz_display_list *list, int p
 	bgBrush = CreateSolidBrush(RGB(0xFF,0xFF,0xFF));
 	FillRect(hDC, &rc, bgBrush);
 	DeleteObject(bgBrush);
-
-	bbox.x0 = 0; bbox.x1 = w;
-	bbox.y0 = 0; bbox.y1 = h;
 
 	dev = fz_new_gdiplus_device(xref->ctx, hDC, bbox);
 	if (list)
@@ -309,17 +303,17 @@ static void drawpage(pdf_xref *xref, int pagenum)
 	{
 		float zoom;
 		fz_matrix ctm;
+		fz_rect bounds;
 		fz_bbox bbox;
 		fz_pixmap *pix = NULL;
 
 		fz_var(pix);
 
+		bounds = pdf_bound_page(xref, page);
 		zoom = resolution / 72;
-		ctm = fz_translate(0, -page->mediabox.y1);
-		ctm = fz_concat(ctm, fz_scale(zoom, -zoom));
-		ctm = fz_concat(ctm, fz_rotate(page->rotate));
+		ctm = fz_scale(zoom, zoom);
 		ctm = fz_concat(ctm, fz_rotate(rotation));
-		bbox = fz_round_rect(fz_transform_rect(ctm, page->mediabox));
+		bbox = fz_round_rect(fz_transform_rect(ctm, bounds));
 
 		/* TODO: banded rendering and multi-page ppm */
 
@@ -332,7 +326,7 @@ static void drawpage(pdf_xref *xref, int pagenum)
 			else
 				fz_clear_pixmap_with_color(pix, 255);
 
-			dev = fz_new_draw_device(ctx, glyphcache, pix);
+			dev = fz_new_draw_device(ctx, pix);
 			if (list)
 				fz_execute_display_list(list, dev, ctm, bbox, NULL);
 			else
@@ -524,7 +518,7 @@ int main(int argc, char **argv)
 	if (accelerate)
 		fz_accelerate();
 
-	ctx = fz_new_context(&fz_alloc_default, 256<<20);
+	ctx = fz_new_context(NULL, FZ_STORE_DEFAULT);
 	if (!ctx)
 	{
 		fprintf(stderr, "cannot initialise context\n");
@@ -555,8 +549,6 @@ int main(int argc, char **argv)
 
 	fz_try(ctx)
 	{
-		glyphcache = fz_new_glyph_cache(ctx);
-
 		while (fz_optind < argc)
 		{
 			filename = argv[fz_optind++];
@@ -604,8 +596,6 @@ int main(int argc, char **argv)
 		printf("slowest page %d: %dms\n", timing.maxpage, timing.max);
 	}
 
-	fz_free_glyph_cache(ctx, glyphcache);
-	fz_flush_warnings(ctx);
 	fz_free_context(ctx);
 	return 0;
 }

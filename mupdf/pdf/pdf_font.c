@@ -130,8 +130,7 @@ static int ft_cid_to_gid(pdf_font_desc *fontdesc, int cid)
 		return ft_char_index(fontdesc->font->ft_face, cid);
 	}
 
-	/* SumatraPDF: fix potential access violation */
-	if (fontdesc->cid_to_gid && cid < fontdesc->cid_to_gid_len)
+	if (fontdesc->cid_to_gid && cid < fontdesc->cid_to_gid_len && cid >= 0)
 		return fontdesc->cid_to_gid[cid];
 
 	return cid;
@@ -197,7 +196,7 @@ pdf_load_builtin_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontname)
 		fz_throw(ctx, "cannot find builtin font: '%s'", fontname);
 	}
 
-	fontdesc->font = fz_new_font_from_memory(ctx, data, len, 0);
+	fontdesc->font = fz_new_font_from_memory(ctx, data, len, 0, 1);
 	/* RJW: "cannot load freetype font from memory" */
 
 	if (!strcmp(fontname, "Symbol") || !strcmp(fontname, "ZapfDingbats"))
@@ -214,7 +213,7 @@ pdf_load_substitute_font(fz_context *ctx, pdf_font_desc *fontdesc, int mono, int
 	if (!data)
 		fz_throw(ctx, "cannot find substitute font");
 
-	fontdesc->font = fz_new_font_from_memory(ctx, data, len, 0);
+	fontdesc->font = fz_new_font_from_memory(ctx, data, len, 0, 1);
 	/* RJW: "cannot load freetype font from memory" */
 
 	fontdesc->font->ft_substitute = 1;
@@ -256,7 +255,8 @@ pdf_load_substitute_cjk_font(fz_context *ctx, pdf_font_desc *fontdesc, int ros, 
 	if (!data)
 		fz_throw(ctx, "cannot find builtin CJK font");
 
-	fontdesc->font = fz_new_font_from_memory(ctx, data, len, 0);
+	/* a glyph bbox cache is too big for droid sans fallback (51k glyphs!) */
+	fontdesc->font = fz_new_font_from_memory(ctx, data, len, 0, 0);
 	/* RJW: "cannot load builtin CJK font" */
 
 	fontdesc->font->ft_substitute = 1;
@@ -346,7 +346,7 @@ pdf_load_embedded_font(pdf_font_desc *fontdesc, pdf_xref *xref, fz_obj *stmref)
 
 	fz_try(ctx)
 	{
-		fontdesc->font = fz_new_font_from_memory(ctx, buf->data, buf->len, 0);
+		fontdesc->font = fz_new_font_from_memory(ctx, buf->data, buf->len, 0, 1);
 	}
 	fz_catch(ctx)
 	{
@@ -1158,21 +1158,21 @@ static void
 pdf_make_width_table(fz_context *ctx, pdf_font_desc *fontdesc)
 {
 	fz_font *font = fontdesc->font;
-	int i, k, cid, gid;
+	int i, k, n, cid, gid;
 
-	font->width_count = 0;
+	n = 0;
 	for (i = 0; i < fontdesc->hmtx_len; i++)
 	{
 		for (k = fontdesc->hmtx[i].lo; k <= fontdesc->hmtx[i].hi; k++)
 		{
 			cid = pdf_lookup_cmap(fontdesc->encoding, k);
 			gid = pdf_font_cid_to_gid(fontdesc, cid);
-			if (gid > font->width_count)
-				font->width_count = gid;
+			if (gid > n)
+				n = gid;
 		}
-	}
-	font->width_count ++;
+	};
 
+	font->width_count = n + 1;
 	font->width_table = fz_malloc_array(ctx, font->width_count, sizeof(int));
 	fontdesc->size += font->width_count * sizeof(int);
 

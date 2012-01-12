@@ -49,7 +49,7 @@ main(int argc, char **argv)
 		return 1;
 	}
 
-	ctx = fz_new_context(&fz_alloc_default, FZ_STORE_UNLIMITED);
+	ctx = fz_new_context(NULL, FZ_STORE_UNLIMITED);
 	if (!ctx)
 	{
 		fprintf(stderr, "cannot initialise context\n");
@@ -198,4 +198,8 @@ void fz_free_store_context(fz_context *ctx)
 int fz_store_scavenge(fz_context *ctx, unsigned int size, int *phase)
 {
 	return 0;
+}
+
+void fz_free_glyph_cache_context(fz_context *ctx)
+{
 }

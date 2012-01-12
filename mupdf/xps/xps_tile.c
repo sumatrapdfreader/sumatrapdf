@@ -363,3 +363,18 @@ xps_parse_fixed_page(xps_document *doc, fz_matrix ctm, xps_page *page)
 	if (dict)
 		xps_free_resource_dictionary(doc, dict);
 }
+
+void
+xps_run_page(xps_document *doc, xps_page *page, fz_device *dev, fz_matrix ctm, fz_cookie *cookie)
+{
+	fz_matrix page_ctm;
+
+	page_ctm = fz_scale(72.0f / 96.0f, 72.0f / 96.0f);
+	ctm = fz_concat(page_ctm, ctm);
+
+	doc->cookie = cookie;
+	doc->dev = dev;
+	xps_parse_fixed_page(doc, ctm, page);
+	doc->cookie = NULL;
+	doc->dev = NULL;
+}

@@ -25,7 +25,7 @@ fz_bbox_fill_text(fz_device *dev, fz_text *text, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
 	fz_bbox *result = dev->user;
-	fz_bbox bbox = fz_round_rect(fz_bound_text(text, ctm));
+	fz_bbox bbox = fz_round_rect(fz_bound_text(dev->ctx, text, ctm));
 	*result = fz_union_bbox(*result, bbox);
 }
 
@@ -34,7 +34,7 @@ fz_bbox_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *stroke, fz_m
 	fz_colorspace *colorspace, float *color, float alpha)
 {
 	fz_bbox *result = dev->user;
-	fz_bbox bbox = fz_round_rect(fz_bound_text(text, ctm));
+	fz_bbox bbox = fz_round_rect(fz_bound_text(dev->ctx, text, ctm));
 	*result = fz_union_bbox(*result, bbox);
 }
 

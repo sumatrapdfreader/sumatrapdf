@@ -40,12 +40,11 @@ pdf_load_type3_font(pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
 
 		obj = fz_dict_gets(dict, "FontBBox");
 		bbox = pdf_to_rect(ctx, obj);
+		bbox = fz_transform_rect(matrix, bbox);
 
 		fontdesc->font = fz_new_type3_font(ctx, buf, matrix);
 		fontdesc->size += sizeof(fz_font) + 256 * (sizeof(fz_buffer*) + sizeof(float));
 
-		/* SumatraPDF: map the bbox from glyph space to text space */
-		bbox = fz_transform_rect(matrix, bbox);
 		fz_set_font_bbox(fontdesc->font, bbox.x0, bbox.y0, bbox.x1, bbox.y1);
 
 		/* SumatraPDF: expose Type3 FontDescriptor flags */

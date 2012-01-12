@@ -242,7 +242,6 @@ fz_trace_begin_mask(fz_device *dev, fz_rect bbox, int luminosity, fz_colorspace 
 	printf("<mask bbox=\"%g %g %g %g\" s=\"%s\" ",
 		bbox.x0, bbox.y0, bbox.x1, bbox.y1,
 		luminosity ? "luminosity" : "alpha");
-//	fz_trace_color(colorspace, color, 1);
 	printf(">\n");
 }
 

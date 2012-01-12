@@ -16,7 +16,6 @@
 #define SEARCH_W (width - GAP - 170)
 
 static dispatch_queue_t queue;
-static fz_glyph_cache *glyphcache = NULL;
 static float screenScale = 1;
 static fz_context *ctx = NULL;
 
@@ -219,7 +218,7 @@ static UIImage *renderPage(struct document *doc, int number, CGSize screenSize)
 	pix = fz_new_pixmap_with_rect(ctx, fz_device_rgb, bbox);
 	fz_clear_pixmap_with_color(pix, 255);
 
-	dev = fz_new_draw_device(ctx, glyphcache, pix);
+	dev = fz_new_draw_device(ctx, pix);
 	draw_page(doc, number, dev, ctm, NULL);
 	fz_free_device(dev);
 
@@ -256,7 +255,7 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 	pix = fz_new_pixmap_with_rect(ctx, fz_device_rgb, bbox);
 	fz_clear_pixmap_with_color(pix, 255);
 
-	dev = fz_new_draw_device(ctx, glyphcache, pix);
+	dev = fz_new_draw_device(ctx, pix);
 	draw_page(doc, number, dev, ctm, NULL);
 	fz_free_device(dev);
 
@@ -1386,9 +1385,7 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 	queue = dispatch_queue_create("com.artifex.mupdf.queue", NULL);
 
 	// use at most 128M for resource cache
-	ctx = fz_new_context(&fz_alloc_default, 128<<20);
-
-	glyphcache = fz_new_glyph_cache(ctx);
+	ctx = fz_new_context(NULL, 128<<20);
 
 	screenScale = [[UIScreen mainScreen] scale];
 

@@ -436,7 +436,7 @@ fz_blend_separable_nonisolated(byte * restrict bp, byte * restrict sp, int n, in
 			 * sc = (rc - bc)/ha + bc
 			 * Now, the result of the blend (rc) was stored in src, so
 			 * we actually want to calculate:
-			 *  sc = (sc-bc)/ha + bc
+			 * sc = (sc-bc)/ha + bc
 			 */
 			invha = ha ? 255 * 256 / ha : 0;
 			invra = ra ? 255 * 256 / ra : 0;

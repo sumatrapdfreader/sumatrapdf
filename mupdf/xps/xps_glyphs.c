@@ -139,7 +139,6 @@ xps_select_best_font_encoding(xps_document *doc, fz_font *font)
 		{ 3, 3 },		/* Prc */
 		{ 3, 2 },		/* ShiftJis */
 		{ 3, 0 },		/* Symbol */
-		// { 0, * }, -- Unicode (deprecated)
 		{ 1, 0 },
 		{ -1, -1 },
 	};
@@ -519,7 +518,7 @@ xps_parse_glyphs(xps_document *doc, fz_matrix ctm,
 
 		fz_try(doc->ctx)
 		{
-			font = fz_new_font_from_memory(doc->ctx, part->data, part->size, subfontid);
+			font = fz_new_font_from_memory(doc->ctx, part->data, part->size, subfontid, 1);
 		}
 		fz_catch(doc->ctx)
 		{
@@ -570,7 +569,7 @@ xps_parse_glyphs(xps_document *doc, fz_matrix ctm,
 			fz_atof(origin_x_att), fz_atof(origin_y_att),
 			is_sideways, bidi_level, indices_att, unicode_att);
 
-	area = fz_bound_text(text, ctm);
+	area = fz_bound_text(doc->ctx, text, ctm);
 
 	/* SumatraPDF: extended link support */
 	xps_extract_anchor_info(doc, root, area);

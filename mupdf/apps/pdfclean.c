@@ -768,7 +768,7 @@ int main(int argc, char **argv)
 	if (argc - fz_optind > 0)
 		subset = 1;
 
-	ctx = fz_new_context(&fz_alloc_default, 256<<20);
+	ctx = fz_new_context(NULL, FZ_STORE_UNLIMITED);
 	if (!ctx)
 	{
 		fprintf(stderr, "cannot initialise context\n");
@@ -834,7 +834,6 @@ int main(int argc, char **argv)
 	fz_free(xref->ctx, renumbermap);
 
 	pdf_free_xref(xref);
-	fz_flush_warnings(ctx);
 	fz_free_context(ctx);
 	return 0;
 }

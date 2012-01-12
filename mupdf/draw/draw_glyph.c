@@ -22,8 +22,8 @@ struct fz_glyph_key_s
 	unsigned char e, f;
 };
 
-fz_glyph_cache *
-fz_new_glyph_cache(fz_context *ctx)
+void
+fz_new_glyph_cache_context(fz_context *ctx)
 {
 	fz_glyph_cache *cache;
 
@@ -39,12 +39,13 @@ fz_new_glyph_cache(fz_context *ctx)
 	}
 	cache->total = 0;
 
-	return cache;
+	ctx->glyph_cache = cache;
 }
 
 static void
-fz_evict_glyph_cache(fz_context *ctx, fz_glyph_cache *cache)
+fz_evict_glyph_cache(fz_context *ctx)
 {
+	fz_glyph_cache *cache = ctx->glyph_cache;
 	fz_glyph_key *key;
 	fz_pixmap *pixmap;
 	int i;
@@ -65,30 +66,36 @@ fz_evict_glyph_cache(fz_context *ctx, fz_glyph_cache *cache)
 }
 
 void
-fz_free_glyph_cache(fz_context *ctx, fz_glyph_cache *cache)
+fz_free_glyph_cache_context(fz_context *ctx)
 {
-	if (!cache)
+	if (!ctx->glyph_cache)
 		return;
 
-	fz_evict_glyph_cache(ctx, cache);
-	fz_free_hash(cache->hash);
-	fz_free(ctx, cache);
+	fz_evict_glyph_cache(ctx);
+	fz_free_hash(ctx->glyph_cache->hash);
+	fz_free(ctx, ctx->glyph_cache);
+	ctx->glyph_cache = NULL;
 }
 
 fz_pixmap *
-fz_render_stroked_glyph(fz_context *ctx, fz_glyph_cache *cache, fz_font *font, int gid, fz_matrix trm, fz_matrix ctm, fz_stroke_state *stroke)
+fz_render_stroked_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm, fz_matrix ctm, fz_stroke_state *stroke)
 {
 	if (font->ft_face)
 		return fz_render_ft_stroked_glyph(ctx, font, gid, trm, ctm, stroke);
-	return fz_render_glyph(ctx, cache, font, gid, trm, NULL);
+	return fz_render_glyph(ctx, font, gid, trm, NULL);
 }
 
 fz_pixmap *
-fz_render_glyph(fz_context *ctx, fz_glyph_cache *cache, fz_font *font, int gid, fz_matrix ctm, fz_colorspace *model)
+fz_render_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix ctm, fz_colorspace *model)
 {
+	fz_glyph_cache *cache;
 	fz_glyph_key key;
 	fz_pixmap *val;
 	float size = fz_matrix_expansion(ctm);
+
+	if (!ctx->glyph_cache)
+		fz_new_glyph_cache_context(ctx);
+	cache = ctx->glyph_cache;
 
 	if (size > MAX_FONT_SIZE)
 	{
@@ -133,7 +140,7 @@ fz_render_glyph(fz_context *ctx, fz_glyph_cache *cache, fz_font *font, int gid, 
 		if (val->w < MAX_GLYPH_SIZE && val->h < MAX_GLYPH_SIZE)
 		{
 			if (cache->total + val->w * val->h > MAX_CACHE_SIZE)
-				fz_evict_glyph_cache(ctx, cache);
+				fz_evict_glyph_cache(ctx);
 			fz_try(ctx)
 			{
 				fz_hash_insert(cache->hash, &key, val);

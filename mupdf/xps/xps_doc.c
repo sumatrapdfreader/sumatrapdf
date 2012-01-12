@@ -411,6 +411,16 @@ xps_load_page(xps_document *doc, int number)
 	return NULL;
 }
 
+fz_rect
+xps_bound_page(xps_document *doc, xps_page *page)
+{
+	fz_rect bounds;
+	bounds.x0 = bounds.y0 = 0;
+	bounds.x1 = page->width * 72.0f / 96.0f;
+	bounds.y1 = page->height * 72.0f / 96.0f;
+	return bounds;
+}
+
 void
 xps_free_page(xps_document *doc, xps_page *page)
 {

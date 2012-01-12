@@ -108,6 +108,7 @@ void xps_free_page_list(xps_document *doc);
 
 int xps_count_pages(xps_document *doc);
 xps_page *xps_load_page(xps_document *doc, int number);
+fz_rect xps_bound_page(xps_document *doc, xps_page *page);
 void xps_free_page(xps_document *doc, xps_page *page);
 
 fz_outline *xps_load_outline(xps_document *doc);
@@ -177,6 +178,8 @@ void xps_debug_resource_dictionary(xps_resource *dict);
 /*
  * Fixed page/graphics parsing.
  */
+
+void xps_run_page(xps_document *doc, xps_page *page, fz_device *dev, fz_matrix ctm, fz_cookie *cookie);
 
 void xps_parse_fixed_page(xps_document *doc, fz_matrix ctm, xps_page *page);
 void xps_parse_canvas(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri, xps_resource *dict, xml_element *node);
@@ -254,6 +257,7 @@ struct xps_document_s
 	float alpha;
 
 	/* Current device */
+	fz_cookie *cookie;
 	fz_device *dev;
 
 	/* SumatraPDF: set to non-NULL for link extraction */

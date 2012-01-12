@@ -136,24 +136,21 @@ pdf_page *benchloadpage(pdf_xref *xref, int pagenum)
 	return page;
 }
 
-void benchrenderpage(pdf_xref *xref, fz_glyph_cache *drawcache, pdf_page *page, int pagenum)
+void benchrenderpage(pdf_xref *xref, pdf_page *page, int pagenum)
 {
 	fz_device *dev;
 	fz_pixmap *pix;
-	fz_matrix ctm;
 	fz_bbox bbox;
 	mstimer timer;
 
 	timerstart(&timer);
-	ctm = fz_identity;
-	ctm = fz_concat(ctm, fz_translate(0, -page->mediabox.y1));
 
-	bbox = fz_round_rect(fz_transform_rect(ctm, page->mediabox));
+	bbox = fz_round_rect(pdf_bound_page(xref, page));
 	pix = fz_new_pixmap_with_rect(xref->ctx, fz_device_rgb, bbox);
 	fz_clear_pixmap_with_color(pix, 0xFF);
-	dev = fz_new_draw_device(xref->ctx, drawcache, pix);
+	dev = fz_new_draw_device(xref->ctx, pix);
 	fz_try(xref->ctx) {
-		pdf_run_page(xref, page, dev, ctm, NULL);
+		pdf_run_page(xref, page, dev, fz_identity, NULL);
 		timerstop(&timer);
 		logbench("pagerender %3d: %.2f ms\n", pagenum, timeinms(&timer));
 	}
@@ -168,21 +165,14 @@ void benchrenderpage(pdf_xref *xref, fz_glyph_cache *drawcache, pdf_page *page, 
 void benchfile(char *pdffilename, int loadonly, int pageNo)
 {
 	pdf_xref *xref = NULL;
-	fz_glyph_cache *drawcache;
 	mstimer timer;
 	int page_count;
 	int curpage;
 
-	fz_context *ctx = fz_new_context(NULL, 256 << 20);
+	fz_context *ctx = fz_new_context(NULL, FZ_STORE_DEFAULT);
 	if (!ctx) {
 		logbench("Error: fz_new_context() failed\n");
 		return;
-	}
-
-	drawcache = fz_new_glyph_cache(ctx);
-	if (!drawcache) {
-		logbench("Error: fz_newglyphcache() failed\n");
-		goto Exit;
 	}
 
 	logbench("Starting: %s\n", pdffilename);
@@ -208,7 +198,7 @@ void benchfile(char *pdffilename, int loadonly, int pageNo)
 			continue;
 		page = benchloadpage(xref, curpage);
 		if (page) {
-			benchrenderpage(xref, drawcache, page, curpage);
+			benchrenderpage(xref, page, curpage);
 			pdf_free_page(xref->ctx, page);
 		}
 	}
@@ -216,7 +206,6 @@ void benchfile(char *pdffilename, int loadonly, int pageNo)
 Exit:
 	logbench("Finished: %s\n", pdffilename);
 	pdf_free_xref(xref);
-	fz_free_glyph_cache(ctx, drawcache);
 	fz_flush_warnings(ctx);
 	fz_free_context(ctx);
 }

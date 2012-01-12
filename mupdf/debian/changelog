@@ -2,6 +2,7 @@ mupdf (0.8-1) unstable; urgency=low
 
   * MuPDF version 0.8
 
+ -- Tor Andersson <tor@ghostscript.com>  Mon, 11 Oct 2010 11:04:00 +0100
 mupdf (0.7-1) unstable; urgency=low
 
   * MuPDF version 0.7

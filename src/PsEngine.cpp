@@ -210,9 +210,6 @@ public:
         return pdfEngine ? pdfEngine->PageCount() : 0;
     }
 
-    virtual int PageRotation(int pageNo) {
-        return pdfEngine ? pdfEngine->PageRotation(pageNo) : 0;
-    }
     virtual RectD PageMediabox(int pageNo) {
         return pdfEngine ? pdfEngine->PageMediabox(pageNo) : RectD();
     }

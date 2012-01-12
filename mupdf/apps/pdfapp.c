@@ -36,7 +36,7 @@ char *pdfapp_version(pdfapp_t *app)
 {
 	return
 		"MuPDF 0.9\n"
-		"Copyright 2006-2011 Artifex Software, Inc.\n";
+		"Copyright 2006-2012 Artifex Software, Inc.\n";
 }
 
 char *pdfapp_usage(pdfapp_t *app)
@@ -196,8 +196,6 @@ void pdfapp_open(pdfapp_t *app, char *filename, int fd, int reload)
 	else
 		pdfapp_open_pdf(app, filename, fd);
 
-	app->cache = fz_new_glyph_cache(app->ctx);
-
 	if (app->pageno < 1)
 		app->pageno = 1;
 	if (app->pageno > app->pagecount)
@@ -236,10 +234,6 @@ void pdfapp_close(pdfapp_t *app)
 		fz_free(app->ctx, app->doctitle);
 	app->doctitle = NULL;
 
-	if (app->cache)
-		fz_free_glyph_cache(app->ctx, app->cache);
-	app->cache = NULL;
-
 	if (app->image)
 		fz_drop_pixmap(app->ctx, app->image);
 	app->image = NULL;
@@ -266,13 +260,8 @@ void pdfapp_close(pdfapp_t *app)
 static fz_matrix pdfapp_viewctm(pdfapp_t *app)
 {
 	fz_matrix ctm;
-	ctm = fz_identity;
-	ctm = fz_concat(ctm, fz_translate(0, -app->page_bbox.y1));
-	if (app->xref)
-		ctm = fz_concat(ctm, fz_scale(app->resolution/72.0f, -app->resolution/72.0f));
-	else
-		ctm = fz_concat(ctm, fz_scale(app->resolution/96.0f, app->resolution/96.0f));
-	ctm = fz_concat(ctm, fz_rotate(app->rotate + app->page_rotate));
+	ctm = fz_scale(app->resolution/72.0f, app->resolution/72.0f);
+	ctm = fz_concat(ctm, fz_rotate(app->rotate));
 	return ctm;
 }
 
@@ -314,8 +303,7 @@ static void pdfapp_loadpage_pdf(pdfapp_t *app)
 		pdfapp_error(app, "cannot load page");
 	}
 
-	app->page_bbox = page->mediabox;
-	app->page_rotate = page->rotate;
+	app->page_bbox = pdf_bound_page(app->xref, page);
 	app->page_links = page->links;
 	page->links = NULL;
 
@@ -349,19 +337,13 @@ static void pdfapp_loadpage_xps(pdfapp_t *app)
 		pdfapp_error(app, "cannot load page");
 	}
 
-	app->page_bbox.x0 = 0;
-	app->page_bbox.y0 = 0;
-	app->page_bbox.x1 = page->width;
-	app->page_bbox.y1 = page->height;
-	app->page_rotate = 0;
+	app->page_bbox = xps_bound_page(app->xps, page);
 	app->page_links = NULL;
 
 	/* Create display list */
 	app->page_list = fz_new_display_list(app->ctx);
 	mdev = fz_new_list_device(app->ctx, app->page_list);
-	app->xps->dev = mdev;
-	xps_parse_fixed_page(app->xps, fz_identity, page);
-	app->xps->dev = NULL;
+	xps_run_page(app->xps, page, mdev, fz_identity, NULL);
 	fz_free_device(mdev);
 
 	xps_free_page(app->xps, page);
@@ -425,7 +407,7 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 #endif
 		app->image = fz_new_pixmap_with_rect(app->ctx, colorspace, bbox);
 		fz_clear_pixmap_with_color(app->image, 255);
-		idev = fz_new_draw_device(app->ctx, app->cache, app->image);
+		idev = fz_new_draw_device(app->ctx, app->image);
 		fz_execute_display_list(app->page_list, idev, ctm, bbox, NULL);
 		fz_free_device(idev);
 	}

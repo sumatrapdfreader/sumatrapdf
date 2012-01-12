@@ -162,8 +162,6 @@ void DumpPageData(BaseEngine *engine, int pageNo, bool fullDump)
         ScopedMem<char> label(Escape(engine->GetPageLabel(pageNo)));
         Out("\t\tLabel=\"%s\"\n", label.Get());
     }
-    if (engine->PageRotation(pageNo))
-        Out("\t\tRotation=\"%d\"\n", engine->PageRotation(pageNo));
     RectD bbox = engine->PageMediabox(pageNo);
     if (!bbox.IsEmpty())
         Out("\t\tMediaBox=\"%.0f %.0f %.0f %.0f\"\n", bbox.x, bbox.y, bbox.dx, bbox.dy);

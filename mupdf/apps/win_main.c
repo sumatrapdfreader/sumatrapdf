@@ -831,7 +831,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShow
 
 	fz_accelerate();
 
-	ctx = fz_new_context(&fz_alloc_default, 256<<20);
+	ctx = fz_new_context(NULL, FZ_STORE_DEFAULT);
 	if (!ctx)
 	{
 		fprintf(stderr, "cannot initialise context\n");

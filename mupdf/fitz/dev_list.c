@@ -228,9 +228,9 @@ fz_free_display_node(fz_context *ctx, fz_display_node *node)
 /* SumatraPDF: add some fuzz at the edges, as glyph rects are
    sometimes not actually completely bounding the glyph */
 static fz_rect
-fz_bound_text_fuzz(fz_text *text, fz_matrix ctm)
+fz_bound_text_fuzz(fz_context *ctx, fz_text *text, fz_matrix ctm)
 {
-	fz_rect rect = fz_bound_text(text, ctm);
+	fz_rect rect = fz_bound_text(ctx, text, ctm);
 	if (!fz_is_infinite_rect(rect) && !fz_is_empty_rect(rect))
 	{
 		rect.x0 -= 20; rect.y0 -= 20;
@@ -238,7 +238,7 @@ fz_bound_text_fuzz(fz_text *text, fz_matrix ctm)
 	}
 	return rect;
 }
-#define fz_bound_text(text, ctm) fz_bound_text_fuzz(text, ctm)
+#define fz_bound_text(ctx, text, ctm) fz_bound_text_fuzz(ctx, text, ctm)
 
 static void
 fz_list_fill_path(fz_device *dev, fz_path *path, int even_odd, fz_matrix ctm,
@@ -335,7 +335,7 @@ fz_list_fill_text(fz_device *dev, fz_text *text, fz_matrix ctm,
 	node = fz_new_display_node(ctx, FZ_CMD_FILL_TEXT, ctm, colorspace, color, alpha);
 	fz_try(ctx)
 	{
-		node->rect = fz_bound_text(text, ctm);
+		node->rect = fz_bound_text(dev->ctx, text, ctm);
 		node->item.text = fz_clone_text(dev->ctx, text);
 	}
 	fz_catch(ctx)
@@ -356,7 +356,7 @@ fz_list_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *stroke, fz_m
 	node->item.text = NULL;
 	fz_try(ctx)
 	{
-		node->rect = fz_bound_text(text, ctm);
+		node->rect = fz_bound_text(dev->ctx, text, ctm);
 		node->item.text = fz_clone_text(dev->ctx, text);
 		node->stroke = fz_clone_stroke_state(dev->ctx, stroke);
 	}
@@ -376,7 +376,7 @@ fz_list_clip_text(fz_device *dev, fz_text *text, fz_matrix ctm, int accumulate)
 	node = fz_new_display_node(ctx, FZ_CMD_CLIP_TEXT, ctm, NULL, NULL, 0);
 	fz_try(ctx)
 	{
-		node->rect = fz_bound_text(text, ctm);
+		node->rect = fz_bound_text(dev->ctx, text, ctm);
 		node->item.text = fz_clone_text(dev->ctx, text);
 		node->flag = accumulate;
 		/* when accumulating, be conservative about culling */
@@ -399,7 +399,7 @@ fz_list_clip_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *stroke,
 	node = fz_new_display_node(ctx, FZ_CMD_CLIP_STROKE_TEXT, ctm, NULL, NULL, 0);
 	fz_try(ctx)
 	{
-		node->rect = fz_bound_text(text, ctm);
+		node->rect = fz_bound_text(dev->ctx, text, ctm);
 		node->item.text = fz_clone_text(dev->ctx, text);
 		node->stroke = fz_clone_stroke_state(dev->ctx, stroke);
 	}
@@ -419,7 +419,7 @@ fz_list_ignore_text(fz_device *dev, fz_text *text, fz_matrix ctm)
 	node = fz_new_display_node(ctx, FZ_CMD_IGNORE_TEXT, ctm, NULL, NULL, 0);
 	fz_try(ctx)
 	{
-		node->rect = fz_bound_text(text, ctm);
+		node->rect = fz_bound_text(dev->ctx, text, ctm);
 		node->item.text = fz_clone_text(dev->ctx, text);
 	}
 	fz_catch(ctx)

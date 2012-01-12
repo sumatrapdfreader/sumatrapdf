@@ -470,6 +470,7 @@ int pdf_find_page_number(pdf_xref *xref, fz_obj *pageobj);
 int pdf_count_pages(pdf_xref *xref);
 
 pdf_page *pdf_load_page(pdf_xref *xref, int number);
+fz_rect pdf_bound_page(pdf_xref *xref, pdf_page *page);
 void pdf_free_page(fz_context *ctx, pdf_page *page);
 
 /*

@@ -372,6 +372,29 @@ fz_obj *fz_copy_str_dict(fz_context *ctx, fz_obj *dict)
     return copy;
 }
 
+fz_matrix fz_create_view_ctm(fz_rect mediabox, float zoom, int rotation)
+{
+    fz_matrix ctm = fz_identity;
+
+    assert(0 == mediabox.x0 && 0 == mediabox.y0);
+    rotation = (rotation + 360) % 360;
+    if (90 == rotation)
+        ctm = fz_concat(ctm, fz_translate(0, -mediabox.y1));
+    else if (180 == rotation)
+        ctm = fz_concat(ctm, fz_translate(-mediabox.x1, -mediabox.y1));
+    else if (270 == rotation)
+        ctm = fz_concat(ctm, fz_translate(-mediabox.x1, 0));
+
+    ctm = fz_concat(ctm, fz_scale(zoom, zoom));
+    ctm = fz_concat(ctm, fz_rotate((float)rotation));
+
+    assert(fz_matrix_expansion(ctm) > 0);
+    if (fz_matrix_expansion(ctm) == 0)
+        return fz_identity;
+
+    return ctm;
+}
+
 struct LinkRectList {
     StrVec links;
     Vec<fz_rect> coords;
@@ -824,7 +847,6 @@ public:
         return _xref ? pdf_count_pages(_xref) : 0;
     }
 
-    virtual int PageRotation(int pageNo);
     virtual RectD PageMediabox(int pageNo);
     virtual RectD PageContentBox(int pageNo, RenderTarget target=Target_View);
 
@@ -895,8 +917,12 @@ protected:
     bool            FinishLoading();
     pdf_page      * GetPdfPage(int pageNo, bool failIfBusy=false);
     int             GetPageNo(pdf_page *page);
-    fz_matrix       viewctm(int pageNo, float zoom, int rotation);
-    fz_matrix       viewctm(pdf_page *page, float zoom, int rotation);
+    fz_matrix       viewctm(int pageNo, float zoom, int rotation) {
+        return fz_create_view_ctm(fz_RectD_to_rect(PageMediabox(pageNo)), zoom, rotation);
+    }
+    fz_matrix       viewctm(pdf_page *page, float zoom, int rotation) {
+        return fz_create_view_ctm(pdf_bound_page(_xref, page), zoom, rotation);
+    }
     bool            RenderPage(HDC hDC, pdf_page *page, RectI screenRect,
                                fz_matrix *ctm, float zoom, int rotation,
                                RectD *pageRect, RenderTarget target);
@@ -923,7 +949,6 @@ protected:
     fz_outline    * outline;
     fz_outline    * attachments;
     fz_obj        * _info;
-    fz_glyph_cache* _drawcache;
     StrVec        * _pagelabels;
     pdf_annot   *** pageComments;
     fz_rect      ** imageRects;
@@ -1010,7 +1035,7 @@ public:
 CPdfEngine::CPdfEngine() : _fileName(NULL), _xref(NULL),
     _pages(NULL), _mediaboxes(NULL), _info(NULL),
     outline(NULL), attachments(NULL), _pagelabels(NULL),
-    _drawcache(NULL), _decryptionKey(NULL), isProtected(false),
+    _decryptionKey(NULL), isProtected(false),
     pageComments(NULL), imageRects(NULL)    
 {
     InitializeCriticalSection(&pagesAccess);
@@ -1055,8 +1080,6 @@ CPdfEngine::~CPdfEngine()
         _xref = NULL;
     }
 
-    if (_drawcache)
-        fz_free_glyph_cache(ctx, _drawcache);
     while (runCache.Count() > 0) {
         assert(runCache.Last()->refs == 1);
         DropPageRun(runCache.Last(), true);
@@ -1576,27 +1599,6 @@ void CPdfEngine::DropPageRun(PdfPageRun *run, bool forceRemove)
     LeaveCriticalSection(&pagesAccess);
 }
 
-int CPdfEngine::PageRotation(int pageNo)
-{
-    assert(1 <= pageNo && pageNo <= PageCount());
-    fz_obj *page = _xref->page_objs[pageNo-1];
-    if (!page)
-        return 0;
-
-    int rotation;
-    // use a lock, if indirect references are involved, else don't block for speed
-    if (fz_is_indirect(page) || fz_is_indirect(fz_dict_gets(page, "Rotate"))) {
-        ScopedCritSec scope(&ctxAccess);
-        rotation = fz_to_int(fz_dict_gets(page, "Rotate"));
-    }
-    else
-        rotation = fz_to_int(fz_dict_gets(page, "Rotate"));
-
-    if ((rotation % 90) != 0)
-        return 0;
-    return rotation;
-}
-
 RectD CPdfEngine::PageMediabox(int pageNo)
 {
     assert(1 <= pageNo && pageNo <= PageCount());
@@ -1610,20 +1612,26 @@ RectD CPdfEngine::PageMediabox(int pageNo)
     ScopedCritSec scope(&ctxAccess);
 
     // cf. pdf_page.c's pdf_load_page
-    RectD mbox = fz_rect_to_RectD(pdf_to_rect(ctx, fz_dict_gets(page, "MediaBox")));
-    if (mbox.IsEmpty()) {
+    fz_rect mbox = pdf_to_rect(ctx, fz_dict_gets(page, "MediaBox"));
+    if (fz_is_empty_rect(mbox)) {
         fz_warn(ctx, "cannot find page size for page %d", pageNo);
-        mbox = RectD(0, 0, 612, 792);
+        mbox.x0 = 0; mbox.y0 = 0;
+        mbox.x1 = 612; mbox.y1 = 792;
     }
+    fz_rect cbox = pdf_to_rect(ctx, fz_dict_gets(page, "CropBox"));
+    if (!fz_is_empty_rect(cbox)) {
+        mbox = fz_intersect_rect(mbox, cbox);
+        if (fz_is_empty_rect(mbox))
+            return RectD();
+    }
+    int rotate = fz_to_int(fz_dict_gets(page, "Rotate"));
+    if ((rotate % 90) != 0)
+        rotate = 0;
 
-    RectD cbox = fz_rect_to_RectD(pdf_to_rect(ctx, fz_dict_gets(page, "CropBox")));
-    if (!cbox.IsEmpty())
-        mbox = mbox.Intersect(cbox);
+    // cf. pdf_page.c's pdf_bound_page
+    mbox = fz_transform_rect(fz_rotate((float)rotate), mbox);
 
-    if (mbox.IsEmpty())
-        return RectD();
-
-    _mediaboxes[pageNo-1] = mbox;
+    _mediaboxes[pageNo-1] = RectD(0, 0, mbox.x1 - mbox.x0, mbox.y1 - mbox.y0);
     return _mediaboxes[pageNo-1];
 }
 
@@ -1639,7 +1647,8 @@ RectD CPdfEngine::PageContentBox(int pageNo, RenderTarget target)
     fz_device *dev = fz_new_bbox_device(ctx, &bbox);
     LeaveCriticalSection(&ctxAccess);
 
-    bool ok = RunPage(page, dev, fz_identity, target, fz_round_rect(page->mediabox), false);
+    fz_bbox mediabox = fz_round_rect(pdf_bound_page(_xref, page));
+    bool ok = RunPage(page, dev, fz_identity, target, mediabox, false);
     if (!ok)
         return PageMediabox(pageNo);
     if (fz_is_infinite_bbox(bbox))
@@ -1647,42 +1656,6 @@ RectD CPdfEngine::PageContentBox(int pageNo, RenderTarget target)
 
     RectD bbox2 = fz_bbox_to_RectI(bbox).Convert<double>();
     return bbox2.Intersect(PageMediabox(pageNo));
-}
-
-fz_matrix CPdfEngine::viewctm(pdf_page *page, float zoom, int rotation)
-{
-    fz_matrix ctm = fz_identity;
-
-    rotation = (rotation + page->rotate) % 360;
-    if (rotation < 0) rotation = rotation + 360;
-    if (90 == rotation)
-        ctm = fz_concat(ctm, fz_translate(-page->mediabox.x0, -page->mediabox.y0));
-    else if (180 == rotation)
-        ctm = fz_concat(ctm, fz_translate(-page->mediabox.x1, -page->mediabox.y0));
-    else if (270 == rotation)
-        ctm = fz_concat(ctm, fz_translate(-page->mediabox.x1, -page->mediabox.y1));
-    else // if (0 == rotation)
-        ctm = fz_concat(ctm, fz_translate(-page->mediabox.x0, -page->mediabox.y1));
-
-    ctm = fz_concat(ctm, fz_scale(zoom, -zoom));
-    ctm = fz_concat(ctm, fz_rotate((float)rotation));
-
-    assert(fz_matrix_expansion(ctm) > 0);
-    if (fz_matrix_expansion(ctm) == 0)
-        return fz_identity;
-
-    return ctm;
-}
-
-fz_matrix CPdfEngine::viewctm(int pageNo, float zoom, int rotation)
-{
-    pdf_page partialPage;
-    partialPage.mediabox = fz_RectD_to_rect(PageMediabox(pageNo));
-    partialPage.rotate = PageRotation(pageNo);
-
-    if (fz_is_empty_rect(partialPage.mediabox))
-        return fz_identity;
-    return viewctm(&partialPage, zoom, rotation);
 }
 
 PointD CPdfEngine::Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse)
@@ -1713,11 +1686,12 @@ bool CPdfEngine::RenderPage(HDC hDC, pdf_page *page, RectI screenRect, fz_matrix
     fz_matrix ctm2;
     if (!ctm) {
         ctm2 = viewctm(page, zoom, rotation);
-        fz_rect pRect = pageRect ? fz_RectD_to_rect(*pageRect) : page->mediabox;
+        fz_rect pRect = pageRect ? fz_RectD_to_rect(*pageRect) : pdf_bound_page(_xref, page);
         fz_bbox bbox = fz_round_rect(fz_transform_rect(ctm2, pRect));
         ctm2 = fz_concat(ctm2, fz_translate((float)screenRect.x - bbox.x0, (float)screenRect.y - bbox.y0));
-        ctm = &ctm2;
     }
+    else
+        ctm2 = *ctm;
 
     HBRUSH bgBrush = CreateSolidBrush(RGB(0xFF, 0xFF, 0xFF));
     FillRect(hDC, &screenRect.ToRECT(), bgBrush); // initialize white background
@@ -1728,7 +1702,7 @@ bool CPdfEngine::RenderPage(HDC hDC, pdf_page *page, RectI screenRect, fz_matrix
     fz_device *dev = fz_new_gdiplus_device(ctx, hDC, clipbox);
     LeaveCriticalSection(&ctxAccess);
 
-    return RunPage(page, dev, *ctm, target, clipbox);
+    return RunPage(page, dev, ctm2, target, clipbox);
 }
 
 // Fitz' draw_device.c currently isn't able to correctly render
@@ -1754,7 +1728,7 @@ RenderedBitmap *CPdfEngine::RenderBitmap(int pageNo, float zoom, int rotation, R
     if (!page)
         return NULL;
 
-    fz_rect pRect = pageRect ? fz_RectD_to_rect(*pageRect) : page->mediabox;
+    fz_rect pRect = pageRect ? fz_RectD_to_rect(*pageRect) : pdf_bound_page(_xref, page);
     fz_matrix ctm = viewctm(page, zoom, rotation);
     fz_bbox bbox = fz_round_rect(fz_transform_rect(ctm, pRect));
 
@@ -1792,9 +1766,7 @@ RenderedBitmap *CPdfEngine::RenderBitmap(int pageNo, float zoom, int rotation, R
     }
 
     fz_clear_pixmap_with_color(image, 0xFF); // initialize white background
-    if (!_drawcache)
-        _drawcache = fz_new_glyph_cache(ctx);
-    fz_device *dev = fz_new_draw_device(ctx, _drawcache, image);
+    fz_device *dev = fz_new_draw_device(ctx, image);
     LeaveCriticalSection(&ctxAccess);
 
     bool ok = RunPage(page, dev, ctm, target, bbox);
@@ -1976,7 +1948,7 @@ TCHAR *CPdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, RectI **coord
     fz_device *dev = fz_new_text_device(ctx, text);
     LeaveCriticalSection(&ctxAccess);
 
-    // use an infinite rectangle as bounds (instead of page->mediabox) to ensure that
+    // use an infinite rectangle as bounds (instead of pdf_bound_page) to ensure that
     // the extracted text is consistent between cached runs using a list device and
     // fresh runs (otherwise the list device omits text outside the mediabox bounds)
     bool ok = RunPage(page, dev, fz_identity, target, fz_infinite_bbox, cacheRun);
@@ -2325,7 +2297,7 @@ public:
                          RenderTarget target=Target_View);
     virtual bool RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation,
                          RectD *pageRect=NULL, RenderTarget target=Target_View) {
-        return renderPage(hDC, GetXpsPage(pageNo), screenRect, NULL, zoom, rotation, pageRect);
+        return RenderPage(hDC, GetXpsPage(pageNo), screenRect, NULL, zoom, rotation, pageRect);
     }
 
     virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false);
@@ -2337,7 +2309,7 @@ public:
     virtual bool IsImagePage(int pageNo);
     virtual TCHAR *GetProperty(char *name);
 
-    virtual float GetFileDPI() const { return 96.0f; }
+    virtual float GetFileDPI() const { return 72.0f; }
     virtual const TCHAR *GetDefaultFileExt() const { return _T(".xps"); }
 
     virtual bool BenchLoadPage(int pageNo) { return GetXpsPage(pageNo) != NULL; }
@@ -2371,13 +2343,12 @@ protected:
     xps_page      * GetXpsPage(int pageNo, bool failIfBusy=false);
     int             GetPageNo(xps_page *page);
     fz_matrix       viewctm(int pageNo, float zoom, int rotation) {
-        return viewctm(PageMediabox(pageNo), zoom, rotation);
+        return fz_create_view_ctm(fz_RectD_to_rect(PageMediabox(pageNo)), zoom, rotation);
     }
     fz_matrix       viewctm(xps_page *page, float zoom, int rotation) {
-        return viewctm(RectD(0, 0, page->width, page->height), zoom, rotation);
+        return fz_create_view_ctm(xps_bound_page(_doc, page), zoom, rotation);
     }
-    fz_matrix       viewctm(RectD mediabox, float zoom, int rotation);
-    bool            renderPage(HDC hDC, xps_page *page, RectI screenRect,
+    bool            RenderPage(HDC hDC, xps_page *page, RectI screenRect,
                                fz_matrix *ctm, float zoom, int rotation,
                                RectD *pageRect);
     TCHAR         * ExtractPageText(xps_page *page, TCHAR *lineSep,
@@ -2398,7 +2369,6 @@ protected:
     fz_outline    * _outline;
     fz_link      ** _links;
     fz_obj        * _info;
-    fz_glyph_cache* _drawcache;
     fz_rect      ** imageRects;
 };
 
@@ -2474,17 +2444,8 @@ public:
     }
 };
 
-static void xps_run_page(xps_document *doc, xps_page *page, fz_device *dev, fz_matrix ctm, fz_link *extract=NULL)
-{
-    doc->dev = dev;
-    doc->link_root = extract;
-    xps_parse_fixed_page(doc, ctm, page);
-    doc->link_root = NULL;
-    doc->dev = NULL;
-}
-
 CXpsEngine::CXpsEngine() : _fileName(NULL), _doc(NULL), _pages(NULL), _mediaboxes(NULL),
-    _outline(NULL), _links(NULL), _info(NULL), _drawcache(NULL), imageRects(NULL)
+    _outline(NULL), _links(NULL), _info(NULL), imageRects(NULL)
 {
     InitializeCriticalSection(&_pagesAccess);
     InitializeCriticalSection(&ctxAccess);
@@ -2528,8 +2489,6 @@ CXpsEngine::~CXpsEngine()
     if (_info)
         fz_drop_obj(_info);
 
-    if (_drawcache)
-        fz_free_glyph_cache(ctx, _drawcache);
     while (runCache.Count() > 0) {
         assert(runCache.Last()->refs == 1);
         DropPageRun(runCache.Last(), true);
@@ -2739,10 +2698,12 @@ XpsPageRun *CXpsEngine::GetPageRun(xps_page *page, bool tryOnly, int firstForPag
         fz_link root = { 0 };
         fz_var(list);
         fz_var(dev);
+        if (firstForPage)
+            _doc->link_root = &root;
         fz_try(ctx) {
             list = fz_new_display_list(ctx);
             dev = fz_new_list_device(ctx, list);
-            xps_run_page(_doc, page, dev, fz_identity, firstForPage ? &root : NULL);
+            xps_run_page(_doc, page, dev, fz_identity, NULL);
         }
         fz_catch(ctx) {
             fz_free_link(ctx, root.next);
@@ -2750,6 +2711,7 @@ XpsPageRun *CXpsEngine::GetPageRun(xps_page *page, bool tryOnly, int firstForPag
             list = NULL;
         }
         fz_free_device(dev);
+        _doc->link_root = NULL;
 
         if (list) {
             result = CreatePageRun(page, list);
@@ -2791,7 +2753,7 @@ bool CXpsEngine::RunPage(xps_page *page, fz_device *dev, fz_matrix ctm, fz_bbox 
     else {
         ScopedCritSec scope(&ctxAccess);
         fz_try(ctx) {
-            xps_run_page(_doc, page, dev, ctm);
+            xps_run_page(_doc, page, dev, ctm, NULL);
         }
         fz_catch(ctx) {
             ok = false;
@@ -2824,14 +2786,14 @@ void CXpsEngine::DropPageRun(XpsPageRun *run, bool forceRemove)
 
 // MuPDF doesn't allow partial parsing of XML content, so try to
 // extract a page's root element manually before feeding it to the parser
-static RectI xps_extract_mediabox_quick_and_dirty(xps_document *doc, int pageNo)
+static RectD xps_extract_mediabox_quick_and_dirty(xps_document *doc, int pageNo)
 {
     xps_part *part = NULL;
     for (xps_page *page = doc->first_page; page && !part; page = page->next)
         if (--pageNo == 0)
             part = xps_read_part(doc, page->name);
     if (!part)
-        return RectI();
+        return RectD();
 
     byte *end = NULL;
     if (0xFF == part->data[0] && 0xFE == part->data[1]) {
@@ -2861,16 +2823,16 @@ static RectI xps_extract_mediabox_quick_and_dirty(xps_document *doc, int pageNo)
     }
     xps_free_part(doc, part);
     if (!root)
-        return RectI();
+        return RectD();
 
-    RectI rect;
+    RectD rect;
     if (str::Eq(xml_tag(root), "FixedPage")) {
         char *width = xml_att(root, "Width");
         if (width)
-            rect.dx = atoi(width);
+            rect.dx = atof(width) * 72 / 96;
         char *height = xml_att(root, "Height");
         if (height)
-            rect.dy = atoi(height);
+            rect.dy = atof(height) * 72 / 96;
     }
 
     xml_free_element(doc->ctx, root);
@@ -2890,16 +2852,16 @@ RectD CXpsEngine::PageMediabox(int pageNo)
     xps_page *page = GetXpsPage(pageNo, true);
     if (!page) {
         ScopedCritSec scope(&ctxAccess);
-        RectI rect = xps_extract_mediabox_quick_and_dirty(_doc, pageNo);
-        if (!rect.IsEmpty()) {
-            _mediaboxes[pageNo-1] = rect.Convert<double>();
+        mbox = xps_extract_mediabox_quick_and_dirty(_doc, pageNo);
+        if (!mbox.IsEmpty()) {
+            _mediaboxes[pageNo-1] = mbox;
             return _mediaboxes[pageNo-1];
         }
     }
     if (!page && !(page = GetXpsPage(pageNo)))
         return RectD();
 
-    _mediaboxes[pageNo-1] = RectD(0, 0, page->width, page->height);
+    _mediaboxes[pageNo-1] = fz_rect_to_RectD(xps_bound_page(_doc, page));
     return _mediaboxes[pageNo-1];
 }
 
@@ -2915,7 +2877,7 @@ RectD CXpsEngine::PageContentBox(int pageNo, RenderTarget target)
     fz_device *dev = fz_new_bbox_device(ctx, &bbox);
     LeaveCriticalSection(&ctxAccess);
 
-    fz_bbox mediabox = { 0, 0, page->width, page->height };
+    fz_bbox mediabox = fz_round_rect(xps_bound_page(_doc, page));
     bool ok = RunPage(page, dev, fz_identity, mediabox, false);
     if (!ok)
         return PageMediabox(pageNo);
@@ -2924,32 +2886,6 @@ RectD CXpsEngine::PageContentBox(int pageNo, RenderTarget target)
 
     RectD bbox2 = fz_bbox_to_RectI(bbox).Convert<double>();
     return bbox2.Intersect(PageMediabox(pageNo));
-}
-
-fz_matrix CXpsEngine::viewctm(RectD mediabox, float zoom, int rotation)
-{
-    fz_matrix ctm = fz_identity;
-
-    assert(0 == mediabox.x && 0 == mediabox.y);
-    rotation = rotation % 360;
-    if (rotation < 0) rotation = rotation + 360;
-    if (90 == rotation)
-        ctm = fz_concat(ctm, fz_translate(0, (float)-mediabox.dy));
-    else if (180 == rotation)
-        ctm = fz_concat(ctm, fz_translate((float)-mediabox.dx, (float)-mediabox.dy));
-    else if (270 == rotation)
-        ctm = fz_concat(ctm, fz_translate((float)-mediabox.dx, 0));
-    else // if (0 == rotation)
-        ctm = fz_concat(ctm, fz_translate(0, 0));
-
-    ctm = fz_concat(ctm, fz_scale(zoom, zoom));
-    ctm = fz_concat(ctm, fz_rotate((float)rotation));
-
-    assert(fz_matrix_expansion(ctm) > 0);
-    if (fz_matrix_expansion(ctm) == 0)
-        return fz_identity;
-
-    return ctm;
 }
 
 PointD CXpsEngine::Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse)
@@ -2972,20 +2908,20 @@ RectD CXpsEngine::Transform(RectD rect, int pageNo, float zoom, int rotation, bo
     return fz_rect_to_RectD(rect2);
 }
 
-bool CXpsEngine::renderPage(HDC hDC, xps_page *page, RectI screenRect, fz_matrix *ctm, float zoom, int rotation, RectD *pageRect)
+bool CXpsEngine::RenderPage(HDC hDC, xps_page *page, RectI screenRect, fz_matrix *ctm, float zoom, int rotation, RectD *pageRect)
 {
     if (!page)
         return false;
 
     fz_matrix ctm2;
     if (!ctm) {
-        fz_bbox mediabox = { 0, 0, page->width, page->height };
         ctm2 = viewctm(page, zoom, rotation);
-        fz_rect pRect = pageRect ? fz_RectD_to_rect(*pageRect) : fz_bbox_to_rect(mediabox);
+        fz_rect pRect = pageRect ? fz_RectD_to_rect(*pageRect) : xps_bound_page(_doc, page);
         fz_bbox bbox = fz_round_rect(fz_transform_rect(ctm2, pRect));
         ctm2 = fz_concat(ctm2, fz_translate((float)screenRect.x - bbox.x0, (float)screenRect.y - bbox.y0));
-        ctm = &ctm2;
     }
+    else
+        ctm2 = *ctm;
 
     HBRUSH bgBrush = CreateSolidBrush(RGB(0xFF, 0xFF, 0xFF));
     FillRect(hDC, &screenRect.ToRECT(), bgBrush); // initialize white background
@@ -2996,7 +2932,7 @@ bool CXpsEngine::renderPage(HDC hDC, xps_page *page, RectI screenRect, fz_matrix
     fz_device *dev = fz_new_gdiplus_device(ctx, hDC, clipbox);
     LeaveCriticalSection(&ctxAccess);
 
-    return RunPage(page, dev, *ctm, clipbox);
+    return RunPage(page, dev, ctm2, clipbox);
 }
 
 RenderedBitmap *CXpsEngine::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target)
@@ -3005,8 +2941,7 @@ RenderedBitmap *CXpsEngine::RenderBitmap(int pageNo, float zoom, int rotation, R
     if (!page)
         return NULL;
 
-    fz_bbox mediabox = { 0, 0, page->width, page->height };
-    fz_rect pRect = pageRect ? fz_RectD_to_rect(*pageRect) : fz_bbox_to_rect(mediabox);
+    fz_rect pRect = pageRect ? fz_RectD_to_rect(*pageRect) : xps_bound_page(_doc, page);
     fz_matrix ctm = viewctm(page, zoom, rotation);
     fz_bbox bbox = fz_round_rect(fz_transform_rect(ctm, pRect));
 
@@ -3022,7 +2957,7 @@ RenderedBitmap *CXpsEngine::RenderBitmap(int pageNo, float zoom, int rotation, R
         DeleteObject(SelectObject(hDCMem, hbmp));
 
         RectI rc(0, 0, w, h);
-        bool ok = renderPage(hDCMem, page, rc, &ctm, 0, 0, pageRect);
+        bool ok = RenderPage(hDCMem, page, rc, &ctm, 0, 0, pageRect);
         DeleteDC(hDCMem);
         ReleaseDC(NULL, hDC);
         if (!ok) {
@@ -3043,9 +2978,7 @@ RenderedBitmap *CXpsEngine::RenderBitmap(int pageNo, float zoom, int rotation, R
     }
 
     fz_clear_pixmap_with_color(image, 0xFF); // initialize white background
-    if (!_drawcache)
-        _drawcache = fz_new_glyph_cache(ctx);
-    fz_device *dev = fz_new_draw_device(ctx, _drawcache, image);
+    fz_device *dev = fz_new_draw_device(ctx, image);
     LeaveCriticalSection(&ctxAccess);
 
     RunPage(page, dev, ctm, bbox);

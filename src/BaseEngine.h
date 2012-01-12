@@ -175,8 +175,6 @@ public:
     virtual RectD PageContentBox(int pageNo, RenderTarget target=Target_View) {
         return PageMediabox(pageNo);
     }
-    // the angle in degrees the given page is rotated natively (usually 0 deg)
-    virtual int PageRotation(int pageNo) { return 0; }
 
     // renders a page into a cacheable RenderedBitmap
     virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,

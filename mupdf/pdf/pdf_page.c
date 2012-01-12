@@ -387,6 +387,16 @@ pdf_load_page(pdf_xref *xref, int number)
 	return page;
 }
 
+fz_rect
+pdf_bound_page(pdf_xref *xref, pdf_page *page)
+{
+	fz_rect bounds, mediabox = fz_transform_rect(fz_rotate(page->rotate), page->mediabox);
+	bounds.x0 = bounds.y0 = 0;
+	bounds.x1 = mediabox.x1 - mediabox.x0;
+	bounds.y1 = mediabox.y1 - mediabox.y0;
+	return bounds;
+}
+
 void
 pdf_free_page(fz_context *ctx, pdf_page *page)
 {

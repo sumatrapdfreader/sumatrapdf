@@ -15,15 +15,21 @@ fz_free_context(fz_context *ctx)
 		return;
 
 	/* Other finalisation calls go here (in reverse order) */
+	fz_free_glyph_cache_context(ctx);
 	fz_free_store_context(ctx);
 	fz_free_aa_context(ctx);
 	fz_free_font_context(ctx);
+
+	if (ctx->warn)
+	{
+		fz_flush_warnings(ctx);
+		fz_free(ctx, ctx->warn);
+	}
 
 	if (ctx->error)
 	{
 		assert(ctx->error->top == -1);
 		fz_free(ctx, ctx->error);
-		fz_free(ctx, ctx->warn);
 	}
 
 	/* Free the context itself */
@@ -35,7 +41,6 @@ fz_new_context(fz_alloc_context *alloc, unsigned int max_store)
 {
 	fz_context *ctx;
 
-	/* SumatraPDF: simplify using the default allocator */
 	if (!alloc)
 		alloc = &fz_alloc_default;
 
@@ -44,6 +49,8 @@ fz_new_context(fz_alloc_context *alloc, unsigned int max_store)
 		return NULL;
 	memset(ctx, 0, sizeof *ctx);
 	ctx->alloc = alloc;
+
+	ctx->glyph_cache = NULL;
 
 	ctx->error = fz_malloc_no_throw(ctx, sizeof(fz_error_context));
 	if (!ctx->error)

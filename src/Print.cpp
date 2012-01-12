@@ -131,11 +131,6 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
             RectD *clipRegion = &pd.sel.At(i).rect;
 
             Size<float> sSize = clipRegion->Size().Convert<float>();
-            // Swap width and height for rotated documents
-            int rotation = engine.PageRotation(pd.sel.At(i).pageNo) + pd.rotation;
-            if (rotation % 180 != 0)
-                swap(sSize.dx, sSize.dy);
-
             float zoom = min((float)printableWidth / sSize.dx,
                              (float)printableHeight / sSize.dy);
             // use the correct zoom values, if the page fits otherwise
@@ -190,7 +185,7 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
             // Positive x is to the right; positive y is down.
 
             Size<float> pSize = engine.PageMediabox(pageNo).Size().Convert<float>();
-            int rotation = engine.PageRotation(pageNo);
+            int rotation = 0;
             // Turn the document by 90 deg if it isn't in portrait mode
             if (pSize.dx > pSize.dy) {
                 rotation += 90;

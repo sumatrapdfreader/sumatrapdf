@@ -419,7 +419,7 @@ pdf_compute_encryption_key_r5(pdf_crypt *crypt, unsigned char *password, int pwl
 	fz_sha256_update(&sha256, buffer, pwlen + 8);
 	fz_sha256_final(&sha256, buffer);
 
-	// clear password buffer and use it as iv
+	/* clear password buffer and use it as iv */
 	memset(buffer + 32, 0, sizeof(buffer) - 32);
 	aes_setkey_dec(&aes, buffer, crypt->length);
 	aes_crypt_cbc(&aes, AES_DECRYPT, 32, buffer + 32, ownerkey ? crypt->oe : crypt->ue, crypt->key);

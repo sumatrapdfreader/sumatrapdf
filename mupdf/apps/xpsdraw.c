@@ -21,7 +21,6 @@ int savealpha = 0;
 int uselist = 1;
 
 fz_colorspace *colorspace;
-fz_glyph_cache *glyphcache;
 char *filename;
 fz_context *ctx;
 
@@ -79,14 +78,6 @@ static int isrange(char *s)
 	return 1;
 }
 
-static void
-xps_run_page(xps_document *doc, xps_page *page, fz_device *dev, fz_matrix ctm)
-{
-	doc->dev = dev;
-	xps_parse_fixed_page(doc, ctm, page);
-	doc->dev = NULL;
-}
-
 #ifdef GDI_PLUS_BMP_RENDERER
 static void drawbmp(xps_document *doc, xps_page *page, fz_display_list *list, int pagenum)
 {
@@ -105,16 +96,11 @@ static void drawbmp(xps_document *doc, xps_page *page, fz_display_list *list, in
 	int bmpDataLen;
 	char *bmpData;
 
-	rect.x0 = rect.y0 = 0;
-	rect.x1 = page->width;
-	rect.y1 = page->height;
-
-	zoom = resolution / 96;
-	ctm = fz_translate(0, -page->height);
-	ctm = fz_concat(ctm, fz_scale(zoom, zoom));
+	rect = xps_bound_page(doc, page);
+	zoom = resolution / 72;
+	ctm = fz_scale(zoom, zoom);
 	bbox = fz_round_rect(fz_transform_rect(ctm, rect));
 
-	ctm = fz_concat(ctm, fz_translate(-bbox.x0, -bbox.y0));
 	w = bbox.x1 - bbox.x0;
 	h = bbox.y1 - bbox.y0;
 
@@ -128,14 +114,11 @@ static void drawbmp(xps_document *doc, xps_page *page, fz_display_list *list, in
 	FillRect(hDC, &rc, bgBrush);
 	DeleteObject(bgBrush);
 
-	bbox.x0 = 0; bbox.x1 = w;
-	bbox.y0 = 0; bbox.y1 = h;
-
 	dev = fz_new_gdiplus_device(doc->ctx, hDC, bbox);
 	if (list)
 		fz_execute_display_list(list, dev, ctm, bbox, NULL);
 	else
-		xps_run_page(doc, page, dev, ctm);
+		xps_run_page(doc, page, dev, ctm, NULL);
 	fz_free_device(dev);
 
 	bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
@@ -215,7 +198,7 @@ static void drawpage(xps_document *doc, int pagenum)
 	{
 		list = fz_new_display_list(doc->ctx);
 		dev = fz_new_list_device(doc->ctx, list);
-		xps_run_page(doc, page, dev, fz_identity);
+		xps_run_page(doc, page, dev, fz_identity, NULL);
 		fz_free_device(dev);
 	}
 
@@ -226,7 +209,7 @@ static void drawpage(xps_document *doc, int pagenum)
 		if (list)
 			fz_execute_display_list(list, dev, fz_identity, fz_infinite_bbox, NULL);
 		else
-			xps_run_page(doc, page, dev, fz_identity);
+			xps_run_page(doc, page, dev, fz_identity, NULL);
 		printf("</page>\n");
 		fz_free_device(dev);
 	}
@@ -238,7 +221,7 @@ static void drawpage(xps_document *doc, int pagenum)
 		if (list)
 			fz_execute_display_list(list, dev, fz_identity, fz_infinite_bbox, NULL);
 		else
-			xps_run_page(doc, page, dev, fz_identity);
+			xps_run_page(doc, page, dev, fz_identity, NULL);
 		fz_free_device(dev);
 		printf("[Page %d]\n", pagenum);
 		if (showtext > 1)
@@ -265,13 +248,9 @@ static void drawpage(xps_document *doc, int pagenum)
 		fz_bbox bbox;
 		fz_pixmap *pix;
 
-		rect.x0 = rect.y0 = 0;
-		rect.x1 = page->width;
-		rect.y1 = page->height;
-
-		zoom = resolution / 96;
-		ctm = fz_translate(0, -page->height);
-		ctm = fz_concat(ctm, fz_scale(zoom, zoom));
+		rect = xps_bound_page(doc, page);
+		zoom = resolution / 72;
+		ctm = fz_scale(zoom, zoom);
 		bbox = fz_round_rect(fz_transform_rect(ctm, rect));
 
 		/* TODO: banded rendering and multi-page ppm */
@@ -283,11 +262,11 @@ static void drawpage(xps_document *doc, int pagenum)
 		else
 			fz_clear_pixmap_with_color(pix, 255);
 
-		dev = fz_new_draw_device(doc->ctx, glyphcache, pix);
+		dev = fz_new_draw_device(doc->ctx, pix);
 		if (list)
 			fz_execute_display_list(list, dev, ctm, bbox, NULL);
 		else
-			xps_run_page(doc, page, dev, ctm);
+			xps_run_page(doc, page, dev, ctm, NULL);
 		fz_free_device(dev);
 
 		if (output)
@@ -439,14 +418,12 @@ int main(int argc, char **argv)
 	if (accelerate)
 		fz_accelerate();
 
-	ctx = fz_new_context(&fz_alloc_default, 256<<20);
+	ctx = fz_new_context(NULL, FZ_STORE_DEFAULT);
 	if (!ctx)
 	{
 		fprintf(stderr, "cannot initialise context\n");
 		exit(1);
 	}
-
-	glyphcache = fz_new_glyph_cache(ctx);
 
 	colorspace = fz_device_rgb;
 	if (grayscale)
@@ -507,8 +484,6 @@ int main(int argc, char **argv)
 		printf("slowest page %d: %dms\n", timing.maxpage, timing.max);
 	}
 
-	fz_free_glyph_cache(ctx, glyphcache);
-	fz_flush_warnings(ctx);
 	fz_free_context(ctx);
 
 	return 0;
