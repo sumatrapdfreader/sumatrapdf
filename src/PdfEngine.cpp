@@ -671,6 +671,14 @@ inline TCHAR *FromPdf(fz_obj *obj)
     }
 }
 
+// allow to undo/redo what pdf_run_page_with_usage does implicitly
+fz_matrix pdf_get_adjustment(pdf_page *page)
+{
+    fz_matrix page_ctm = fz_concat(fz_rotate((float)-page->rotate), fz_scale(1, -1));
+    fz_rect mediabox = fz_transform_rect(page_ctm, page->mediabox);
+    return fz_concat(page_ctm, fz_translate(-mediabox.x0, -mediabox.y0));
+}
+
 // Note: make sure to only call with ctxAccess
 fz_outline *pdf_loadattachments(pdf_xref *xref)
 {
@@ -1786,19 +1794,24 @@ PageElement *CPdfEngine::GetElementAtPos(int pageNo, PointD pt)
     if (!page)
         return NULL;
 
+    fz_matrix ctm = pdf_get_adjustment(page);
+
     fz_point p = { (float)pt.x, (float)pt.y };
-    for (fz_link *link = page->links; link; link = link->next)
-        if (link->dest.kind != FZ_LINK_NONE && fz_is_pt_in_rect(link->rect, p))
-            return new PdfLink(this, &link->dest, link->rect, pageNo, &p);
+    for (fz_link *link = page->links; link; link = link->next) {
+        fz_rect rect = fz_transform_rect(ctm, link->rect);
+        if (link->dest.kind != FZ_LINK_NONE && fz_is_pt_in_rect(rect, p))
+            return new PdfLink(this, &link->dest, rect, pageNo, &p);
+    }
 
     if (pageComments[pageNo-1]) {
         for (size_t i = 0; pageComments[pageNo-1][i]; i++) {
             pdf_annot *annot = pageComments[pageNo-1][i];
-            if (fz_is_pt_in_rect(annot->rect, p)) {
+            fz_rect rect = fz_transform_rect(ctm, annot->rect);
+            if (fz_is_pt_in_rect(rect, p)) {
                 ScopedCritSec scope(&ctxAccess);
 
                 ScopedMem<TCHAR> contents(str::conv::FromPdf(fz_dict_gets(annot->obj, "Contents")));
-                return new PdfComment(contents, fz_rect_to_RectD(annot->rect), pageNo);
+                return new PdfComment(contents, fz_rect_to_RectD(rect), pageNo);
             }
         }
     }
@@ -1818,9 +1831,13 @@ Vec<PageElement *> *CPdfEngine::GetElements(int pageNo)
     if (!page)
         return NULL;
 
+    fz_matrix ctm = pdf_get_adjustment(page);
+
     // since all elements lists are in last-to-first order, append
     // item types in inverse order and reverse the whole list at the end
     Vec<PageElement *> *els = new Vec<PageElement *>();
+    if (!els)
+        return NULL;
 
     if (imageRects[pageNo-1]) {
         for (size_t i = 0; !fz_is_empty_rect(imageRects[pageNo-1][i]); i++)
@@ -1832,14 +1849,18 @@ Vec<PageElement *> *CPdfEngine::GetElements(int pageNo)
 
         for (size_t i = 0; pageComments[pageNo-1][i]; i++) {
             pdf_annot *annot = pageComments[pageNo-1][i];
+            fz_rect rect = fz_transform_rect(ctm, annot->rect);
             ScopedMem<TCHAR> contents(str::conv::FromPdf(fz_dict_gets(annot->obj, "Contents")));
-            els->Append(new PdfComment(contents, fz_rect_to_RectD(annot->rect), pageNo));
+            els->Append(new PdfComment(contents, fz_rect_to_RectD(rect), pageNo));
         }
     }
 
-    for (fz_link *link = page->links; link; link = link->next)
-        if (link->dest.kind != FZ_LINK_NONE)
-            els->Append(new PdfLink(this, &link->dest, link->rect, pageNo));
+    for (fz_link *link = page->links; link; link = link->next) {
+        if (link->dest.kind != FZ_LINK_NONE) {
+            fz_rect rect = fz_transform_rect(ctm, link->rect);
+            els->Append(new PdfLink(this, &link->dest, rect, pageNo));
+        }
+    }
 
     els->Reverse();
     return els;
@@ -1855,18 +1876,20 @@ void CPdfEngine::LinkifyPageText(pdf_page *page)
         return;
     }
 
+    fz_matrix inv_ctm = fz_invert_matrix(pdf_get_adjustment(page));
     LinkRectList *list = LinkifyText(pageText, coords);
     for (size_t i = 0; i < list->links.Count(); i++) {
+        fz_rect rect = fz_transform_rect(inv_ctm, list->coords.At(i));
         bool overlaps = false;
         for (fz_link *next = page->links; next && !overlaps; next = next->next)
-            overlaps = fz_calc_overlap(next->rect, list->coords.At(i)) >= 0.25f;
+            overlaps = fz_calc_overlap(next->rect, rect) >= 0.25f;
         if (!overlaps) {
             ScopedMem<char> uri(str::conv::ToUtf8(list->links.At(i)));
             if (!uri) continue;
             fz_link_dest ld = { FZ_LINK_URI, 0 };
             ld.ld.uri.uri = fz_strdup(ctx, uri);
             // add links in top-to-bottom order (i.e. last-to-first)
-            fz_link *link = fz_new_link(ctx, list->coords.At(i), ld);
+            fz_link *link = fz_new_link(ctx, rect, ld);
             link->next = page->links;
             page->links = link;
         }
@@ -2126,12 +2149,12 @@ TCHAR *PdfLink::GetValue() const
             }
         }
         if (link->ld.uri.is_map) {
-            PointI mapPt;
+            int x = 0, y = 0;
             if (rect.Inside(pt)) {
-                mapPt.x = (int)(pt.x - rect.x + 0.5);
-                mapPt.y = (int)(rect.y + rect.dy - pt.y + 0.5);
+                x = (int)(pt.x - rect.x + 0.5);
+                y = (int)(pt.y - rect.y + 0.5);
             }
-            ScopedMem<TCHAR> uri(str::Format(_T("%s?%d,%d"), path, mapPt.x, mapPt.y));
+            ScopedMem<TCHAR> uri(str::Format(_T("%s?%d,%d"), path, x, y));
             free(path);
             path = uri.StealData();
         }
