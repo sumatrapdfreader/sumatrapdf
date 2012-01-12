@@ -56,12 +56,35 @@ enum HtmlTag {
 enum HtmlAttr {
     Attr_NotFound = -1,
     Attr_Align = 0,
-    Attr_Height = 1,
-    Attr_Width = 2,
-    Attr_Xmlns_Dc = 3,
-    Attr_Last = 4
+    Attr_Bgcolor = 1,
+    Attr_Border = 2,
+    Attr_Class = 3,
+    Attr_Clear = 4,
+    Attr_Color = 5,
+    Attr_Colspan = 6,
+    Attr_Controls = 7,
+    Attr_Face = 8,
+    Attr_Filepos = 9,
+    Attr_Height = 10,
+    Attr_Href = 11,
+    Attr_Id = 12,
+    Attr_Lang = 13,
+    Attr_Link = 14,
+    Attr_Mediarecindex = 15,
+    Attr_Recindex = 16,
+    Attr_Rowspan = 17,
+    Attr_Size = 18,
+    Attr_Style = 19,
+    Attr_Title = 20,
+    Attr_Valign = 21,
+    Attr_Value = 22,
+    Attr_Vlink = 23,
+    Attr_Width = 24,
+    Attr_Xmlns = 25,
+    Attr_Xmlns_Dc = 26,
+    Attr_Last = 27
 };
-#define HTML_ATTRS_STRINGS "align\0height\0width\0xmlns:dc\0last\0"
+#define HTML_ATTRS_STRINGS "align\0bgcolor\0border\0class\0clear\0color\0colspan\0controls\0face\0filepos\0height\0href\0id\0lang\0link\0mediarecindex\0recindex\0rowspan\0size\0style\0title\0valign\0value\0vlink\0width\0xmlns\0xmlns:dc\0last\0"
 
 // enums must match ALIGN_ATTRS_STRINGS order
 enum AlignAttr {

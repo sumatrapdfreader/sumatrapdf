@@ -504,6 +504,28 @@ static bool EmitAttribute(Vec<uint8_t> *out, HtmlAttr attr, uint8_t *attrVal, si
     return true;
 }
 
+#if 0
+void DumpAttr(uint8_t *s, size_t sLen)
+{
+    static Vec<char *> seen;
+    char *sCopy = str::DupN((char*)s, sLen);
+    bool didSee = false;
+    for (size_t i = 0; i < seen.Count(); i++) {
+        char *tmp = seen.At(i);
+        if (str::EqI(sCopy, tmp)) {
+            didSee = true;
+            break;
+        }
+    }
+    if (didSee) {
+        free(sCopy);
+        return;
+    }
+    seen.Append(sCopy);
+    printf("%s\n", sCopy);
+}
+#endif
+
 static bool EmitAttributes(Vec<uint8_t> *out, HtmlToken *t, HtmlAttr *allowedAttributes)
 {
     AttrInfo *attrInfo;
@@ -523,6 +545,10 @@ static bool EmitAttributes(Vec<uint8_t> *out, HtmlToken *t, HtmlAttr *allowedAtt
         if (!attrInfo)
             break;
         attr = FindAttr((char*)attrInfo->name, attrInfo->nameLen);
+#if 0
+        if (Attr_NotFound == attr)
+            DumpAttr(attrInfo->name, attrInfo->nameLen);
+#endif
         CrashAlwaysIf(Attr_NotFound == attr);
         if (!IsAllowedAttr(allowedAttributes, attr))
             continue;
@@ -544,6 +570,7 @@ static void EmitTagP(Vec<uint8_t>* out, HtmlToken *t)
         // TODO: should I generate both start and end tags?
         return;
     }
+
     if (t->IsEndTag()) {
         EmitTag(out, Tag_P, t->IsEndTag(), false);
     } else {
@@ -555,6 +582,27 @@ static void EmitTagP(Vec<uint8_t>* out, HtmlToken *t)
             out->Append(attrs.LendData(), attrs.Count());
     }
 }
+
+#if 0
+static void EmitTag(Vec<uint8_t>* out, HtmlTag tag, HtmlToken *t)
+{
+    static HtmlAttr validAttrs[] = { Attr_NotFound };
+    if (t->IsEmptyElementEndTag()) {
+        // TODO: should I generate both start and end tags?
+        return;
+    }
+    if (t->IsEndTag()) {
+        EmitTag(out, tag, t->IsEndTag(), false);
+    } else {
+        CrashAlwaysIf(!t->IsStartTag());
+        Vec<uint8_t> attrs;
+        bool hasAttributes = EmitAttributes(&attrs, t, validAttrs);
+        EmitTag(out, tag, t->IsEndTag(), hasAttributes);
+        if (hasAttributes)
+            out->Append(attrs.LendData(), attrs.Count());
+    }
+}
+#endif
 
 struct ConverterState {
     Vec<uint8_t> *out;
@@ -622,6 +670,7 @@ static void HandleTag(ConverterState *state, HtmlToken *t)
     }
     // TODO: handle other tags
     EmitTag(state->out, tag, t->IsEndTag(), false);
+    //EmitTag(state->out, tag, t);
 }
 
 static void HtmlAddWithNesting(Vec<uint8_t>* html, HtmlTag tag, bool isStartTag, size_t nesting, uint8_t *s, size_t sLen)
