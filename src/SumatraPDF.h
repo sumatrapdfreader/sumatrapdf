@@ -79,6 +79,7 @@ LRESULT CALLBACK WndProcCloseButton(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
 bool  HasPermission(int permission);
 bool  IsUIRightToLeft();
 bool  LaunchBrowser(const TCHAR *url);
+bool  OpenFileExternally(const TCHAR *path);
 void  AssociateExeWithPdfExtension();
 void  FindTextOnThread(WindowInfo* win, TextSearchDirection direction=FIND_FORWARD);
 void  CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose=false);

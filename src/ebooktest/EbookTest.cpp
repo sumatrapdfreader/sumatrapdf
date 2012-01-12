@@ -44,16 +44,12 @@ Color gColBgTop(0xfa, 0xfa, 0xfa); // this is lightish gray
 struct EbookWindowInfo 
 {
     MobiParse * mb;
-    uint8_t *   forLayout;
-    size_t      forLayoutLen;
+    Vec<uint8_t> *forLayout;
 
-    EbookWindowInfo() : mb(NULL), forLayout(NULL), forLayoutLen(0)
-    {
-    }
-
+    EbookWindowInfo() : mb(NULL), forLayout(NULL) { }
     ~EbookWindowInfo() {
-        free(forLayout);
         delete mb;
+        delete forLayout;
     }
 
 };
@@ -116,7 +112,7 @@ EbookWindowInfo *LoadEbook(const TCHAR *fileName)
 
     size_t sLen;
     char *s = wi->mb->GetBookHtmlData(sLen);
-    wi->forLayout = MobiHtmlToDisplay((uint8_t*)s, sLen, wi->forLayoutLen);
+    wi->forLayout = MobiHtmlToDisplay((uint8_t*)s, sLen, false);
     if (!wi->forLayout)
         goto Error;
 
@@ -130,7 +126,7 @@ Error:
 Vec<Page*> *LayoutMobiFile(EbookWindowInfo *wi, Graphics *gfx, Font *defaultFont, int pageDx, int pageDy)
 {
     PageLayout layouter(pageDx, pageDy);
-    Vec<Page*> *pages = layouter.LayoutInternal(gfx, defaultFont, wi->forLayout, wi->forLayoutLen);
+    Vec<Page*> *pages = layouter.LayoutInternal(gfx, defaultFont, wi->forLayout->LendData(), wi->forLayout->Count());
     return pages;
 }
 

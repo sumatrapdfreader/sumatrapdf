@@ -229,7 +229,7 @@ void LinkHandler::GotoLink(PageDestination *link)
     }
     else if (str::Eq(type, "LaunchFile") && path) {
         // LaunchFile only opens files inside SumatraPDF
-        // (except for registered media files)
+        // (except for allowed perceived file types)
         LaunchFile(path, link);
     }
     // predefined named actions
@@ -321,8 +321,8 @@ void LinkHandler::ScrollTo(PageDestination *dest)
 void LinkHandler::LaunchFile(const TCHAR *path, PageDestination *link)
 {
     // for safety, only handle relative paths and only open them in SumatraPDF
-    // (unless they're of a registered audio or video type) and never launch any
-    // external file in plugin mode (where documents are supposed to be self-contained)
+    // (unless they're of an allowed perceived type) and never launch any external
+    // file in plugin mode (where documents are supposed to be self-contained)
     TCHAR drive;
     if (str::StartsWith(path, _T("\\")) || str::Parse(path, _T("%c:\\"), &drive) || gPluginMode) {
         return;
@@ -334,27 +334,24 @@ void LinkHandler::LaunchFile(const TCHAR *path, PageDestination *link)
     // TODO: respect link->ld.gotor.new_window for PDF documents ?
     WindowInfo *newWin = FindWindowInfoByFile(fullPath);
     // TODO: don't show window until it's certain that there was no error
-    if (!newWin)
+    if (!newWin) {
         newWin = LoadDocument(fullPath, owner);
+        if (!newWin)
+            return;
+    }
 
-    bool errorLoading = newWin && !newWin->IsDocLoaded();
-    if (errorLoading) {
+    if (!newWin->IsDocLoaded()) {
         CloseWindow(newWin, true);
-        newWin = NULL;
-    }
-    if (errorLoading && HasPermission(Perm_DiskAccess)) {
-        const TCHAR *ext = path::GetExt(fullPath);
-        ScopedMem<TCHAR> value(ReadRegStr(HKEY_CLASSES_ROOT, ext, _T("PerceivedType")));
-        // TODO: only do this for trusted files (cf. IsUntrustedFile)?
-        if (str::EqI(value, _T("audio")) || str::EqI(value, _T("video")))
-            errorLoading = !::LaunchFile(fullPath);
-    }
-    if (errorLoading) {
-        ScopedMem<TCHAR> msg(str::Format(_TR("Error loading %s"), fullPath));
-        ShowNotification(owner, msg, true /* autoDismiss */, true /* highlight */);
-    }
-    if (!newWin)
+        // OpenFileExternally rejects files we'd otherwise
+        // have to show a notification to be sure (which we
+        // consider bad UI and thus simply don't)
+        bool ok = OpenFileExternally(fullPath);
+        if (!ok) {
+            ScopedMem<TCHAR> msg(str::Format(_TR("Error loading %s"), fullPath));
+            ShowNotification(owner, msg, true /* autoDismiss */, true /* highlight */);
+        }
         return;
+    }
 
     newWin->Focus();
     if (!link)

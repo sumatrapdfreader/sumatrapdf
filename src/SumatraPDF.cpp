@@ -94,6 +94,7 @@ TCHAR *          gPluginURL = NULL; // owned by CommandLineInfo in WinMain
 #define CRASH_DUMP_FILE_NAME         _T("sumatrapdfcrash.dmp")
 
 #define DEFAULT_LINK_PROTOCOLS       _T("http,https,mailto")
+#define DEFAULT_FILE_PERCEIVED_TYPES _T("audio,video")
 
 #define SPLITTER_DX         5
 #define SIDEBAR_MIN_WIDTH   150
@@ -146,6 +147,10 @@ static int                          gPolicyRestrictions = Perm_All;
 // opening in e.g. a browser or an email client (ignored,
 // if gPolicyRestrictions doesn't contain Perm_DiskAccess)
 static StrVec                       gAllowedLinkProtocols;
+// only files of the listed perceived types will be opened
+// externally by LinkHandler::LaunchFile (i.e. when clicking
+// on an in-document link); examples: "audio", "video", ...
+static StrVec                       gAllowedFileTypes;
 
 static void UpdateUITextForLanguage();
 static void UpdateToolbarAndScrollbarState(WindowInfo& win);
@@ -197,15 +202,34 @@ bool LaunchBrowser(const TCHAR *url)
         return false;
 
     // check if this URL's protocol is allowed
-    const TCHAR *colon = str::FindChar(url, ':');
-    if (!colon)
+    ScopedMem<TCHAR> protocol;
+    if (!str::Parse(url, _T("%S:"), &protocol))
         return false;
-    ScopedMem<TCHAR> protocol(str::DupN(url, colon - url));
     str::ToLower(protocol);
     if (gAllowedLinkProtocols.Find(protocol) == -1)
         return false;
 
     return LaunchFile(url, NULL, _T("open"));
+}
+
+// lets the shell open a file of any supported perceived type
+// in the default application for opening such files
+bool OpenFileExternally(const TCHAR *path)
+{
+    if (!HasPermission(Perm_DiskAccess))
+        return false;
+
+    // check if this file's perceived type is allowed
+    const TCHAR *ext = path::GetExt(path);
+    ScopedMem<TCHAR> perceivedType(ReadRegStr(HKEY_CLASSES_ROOT, ext, _T("PerceivedType")));
+    if (str::IsEmpty(perceivedType.Get()))
+        return false;
+    str::ToLower(perceivedType);
+    if (gAllowedFileTypes.Find(perceivedType) == -1 && gAllowedFileTypes.Find(_T("*")) == -1)
+        return false;
+
+    // TODO: only do this for trusted files (cf. IsUntrustedFile)?
+    return LaunchFile(path);
 }
 
 #define DEFINE_GUID_STATIC(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
@@ -512,6 +536,8 @@ static int GetPolicies(bool isRestricted)
         restrictPath.Set(path::GetDir(restrictPath));
         restrictPath.Set(path::Join(restrictPath, RESTRICTIONS_FILE_NAME));
     }
+    gAllowedLinkProtocols.Reset();
+    gAllowedFileTypes.Reset();
     if (file::Exists(restrictPath)) {
         int policy = Perm_RestrictedUse;
         for (size_t i = 0; i < dimof(policies); i++) {
@@ -520,25 +546,29 @@ static int GetPolicies(bool isRestricted)
                 policy = policy | policies[i].perm;
         }
 
-        // determine the list of allowed link protocols
-        gAllowedLinkProtocols.Reset();
+        // determine the list of allowed link protocols and perceived file types
         if ((policy & Perm_DiskAccess)) {
-            TCHAR protocols[200];
-            ZeroMemory(protocols, sizeof(protocols));
-            GetPrivateProfileString(_T("Policies"), _T("LinkProtocols"), DEFAULT_LINK_PROTOCOLS, protocols, dimof(protocols), restrictPath);
+            ScopedMem<TCHAR> protocols(ReadIniString(restrictPath, _T("Policies"), _T("LinkProtocols")));
             str::ToLower(protocols);
             str::TransChars(protocols, _T(":; "), _T(",,,"));
             gAllowedLinkProtocols.Split(protocols, _T(","), true);
+
+            ScopedMem<TCHAR> types(ReadIniString(restrictPath, _T("Policies"), _T("SafeFileTypes")));
+            str::ToLower(types);
+            str::TransChars(types, _T(":; "), _T(",,,"));
+            gAllowedFileTypes.Split(types, _T(","), true);
         }
 
         return policy;
     }
 
-    gAllowedLinkProtocols.Reset();
-    if (!isRestricted)
+    if (!isRestricted) {
         gAllowedLinkProtocols.Split(DEFAULT_LINK_PROTOCOLS, _T(","));
+        gAllowedFileTypes.Split(DEFAULT_FILE_PERCEIVED_TYPES, _T(","));
+        return Perm_All;
+    }
 
-    return isRestricted ? Perm_RestrictedUse : Perm_All;
+    return Perm_RestrictedUse;
 }
 
 void QueueWorkItem(UIThreadWorkItem *wi)

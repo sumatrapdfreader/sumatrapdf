@@ -160,6 +160,18 @@ bool DeleteRegKey(HKEY keySub, const TCHAR *keyName, bool resetACLFirst)
     return ERROR_SUCCESS == res || ERROR_FILE_NOT_FOUND == res;
 }
 
+TCHAR *ReadIniString(const TCHAR *iniPath, const TCHAR *section, const TCHAR *key)
+{
+    DWORD size = 256, read;
+    TCHAR *value = NULL;
+    do {
+        value = (TCHAR *)realloc(value, size * sizeof(TCHAR));
+        read = GetPrivateProfileString(section, key, NULL, value, size, iniPath);
+        size *= 2;
+    } while (read == size - 1 && size < 64 * 1024);
+    return value;
+}
+
 #define PROCESS_EXECUTE_FLAGS 0x22
 
 /*

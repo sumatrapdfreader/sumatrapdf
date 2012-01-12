@@ -46,6 +46,7 @@ bool   WriteRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, cons
 bool   WriteRegDWORD(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, DWORD value);
 bool   CreateRegKey(HKEY keySub, const TCHAR *keyName);
 bool   DeleteRegKey(HKEY keySub, const TCHAR *keyName, bool resetACLFirst=false);
+TCHAR *ReadIniString(const TCHAR *iniPath, const TCHAR *section, const TCHAR *key);
 
 void   EnableNx();
 void   RedirectIOToConsole();
