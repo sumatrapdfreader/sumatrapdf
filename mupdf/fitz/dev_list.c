@@ -225,21 +225,6 @@ fz_free_display_node(fz_context *ctx, fz_display_node *node)
 	fz_free(ctx, node);
 }
 
-/* SumatraPDF: add some fuzz at the edges, as glyph rects are
-   sometimes not actually completely bounding the glyph */
-static fz_rect
-fz_bound_text_fuzz(fz_context *ctx, fz_text *text, fz_matrix ctm)
-{
-	fz_rect rect = fz_bound_text(ctx, text, ctm);
-	if (!fz_is_infinite_rect(rect) && !fz_is_empty_rect(rect))
-	{
-		rect.x0 -= 20; rect.y0 -= 20;
-		rect.x1 += 20; rect.y1 += 20;
-	}
-	return rect;
-}
-#define fz_bound_text(ctx, text, ctm) fz_bound_text_fuzz(ctx, text, ctm)
-
 static void
 fz_list_fill_path(fz_device *dev, fz_path *path, int even_odd, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha)

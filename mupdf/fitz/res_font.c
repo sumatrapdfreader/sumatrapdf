@@ -36,6 +36,7 @@ fz_new_font(fz_context *ctx, char *name, int use_glyph_bbox, int glyph_count)
 	font->t3resources = NULL;
 	font->t3procs = NULL;
 	font->t3widths = NULL;
+	font->t3flags = NULL;
 	font->t3xref = NULL;
 	font->t3run = NULL;
 
@@ -90,6 +91,7 @@ fz_drop_font(fz_context *ctx, fz_font *font)
 					fz_drop_buffer(ctx, font->t3procs[i]);
 			fz_free(ctx, font->t3procs);
 			fz_free(ctx, font->t3widths);
+			fz_free(ctx, font->t3flags);
 		}
 
 		if (font->ft_face)
@@ -478,7 +480,7 @@ fz_render_ft_stroked_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix tr
 	FT_Glyph glyph;
 	FT_BitmapGlyph bitmap;
 	fz_pixmap *pixmap;
-	FT_Stroker_LineJoin line_join; /* SumatraPDF: use proper line join */
+	FT_Stroker_LineJoin line_join;
 
 	trm = fz_adjust_ft_glyph_width(ctx, font, gid, trm);
 
@@ -515,11 +517,19 @@ fz_render_ft_stroked_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix tr
 		return NULL;
 	}
 
-	/* SumatraPDF: use proper line join */
-	line_join = state->linejoin == 0 ? FT_STROKER_LINEJOIN_MITER_FIXED :
-	            state->linejoin == 1 ? FT_STROKER_LINEJOIN_ROUND :
-	            state->linejoin == 2 ? FT_STROKER_LINEJOIN_BEVEL :
-	                                   FT_STROKER_LINEJOIN_MITER_VARIABLE;
+	/* SumatraPDF: we ship a newer FreeType than MuPDF */
+#if 1
+	line_join = state->linejoin == FZ_LINEJOIN_MITER ? FT_STROKER_LINEJOIN_MITER_FIXED :
+		    state->linejoin == FZ_LINEJOIN_ROUND ? FT_STROKER_LINEJOIN_ROUND :
+		    state->linejoin == FZ_LINEJOIN_BEVEL ? FT_STROKER_LINEJOIN_BEVEL :
+							   FT_STROKER_LINEJOIN_MITER_VARIABLE;
+#else
+	/* Until we upgrade freetype */
+	line_join = state->linejoin == FZ_LINEJOIN_MITER ? FT_STROKER_LINEJOIN_MITER :
+		    state->linejoin == FZ_LINEJOIN_ROUND ? FT_STROKER_LINEJOIN_ROUND :
+		    state->linejoin == FZ_LINEJOIN_BEVEL ? FT_STROKER_LINEJOIN_BEVEL :
+							   FT_STROKER_LINEJOIN_MITER;
+#endif
 	FT_Stroker_Set(stroker, linewidth, state->start_cap, line_join, state->miterlimit * 65536);
 
 	fterr = FT_Get_Glyph(face->glyph, &glyph);
@@ -630,12 +640,14 @@ fz_new_type3_font(fz_context *ctx, char *name, fz_matrix matrix)
 	font = fz_new_font(ctx, name, 1, 256);
 	font->t3procs = fz_malloc_array(ctx, 256, sizeof(fz_buffer*));
 	font->t3widths = fz_malloc_array(ctx, 256, sizeof(float));
+	font->t3flags = fz_malloc_array(ctx, 256, sizeof(char));
 
 	font->t3matrix = matrix;
 	for (i = 0; i < 256; i++)
 	{
 		font->t3procs[i] = NULL;
 		font->t3widths[i] = 0;
+		font->t3flags[i] = 0;
 	}
 
 	return font;
@@ -644,9 +656,27 @@ fz_new_type3_font(fz_context *ctx, char *name, fz_matrix matrix)
 static fz_rect
 fz_bound_t3_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm)
 {
-	// TODO: run through bbox device here and set d0/d1 flags
-	trm = fz_concat(font->t3matrix, trm);
-	return fz_transform_rect(trm, font->bbox);
+	fz_matrix ctm;
+	fz_buffer *contents;
+	fz_rect bounds;
+	fz_bbox bbox;
+	fz_device *dev;
+
+	contents = font->t3procs[gid];
+	if (!contents)
+		return fz_transform_rect(trm, fz_empty_rect);
+
+	ctm = fz_concat(font->t3matrix, trm);
+	dev = fz_new_bbox_device(ctx, &bbox);
+	font->t3run(font->t3xref, font->t3resources, contents, dev, ctm);
+	font->t3flags[gid] = dev->flags;
+	fz_free_device(dev);
+
+	bounds.x0 = bbox.x0;
+	bounds.y0 = bbox.y0;
+	bounds.x1 = bbox.x1;
+	bounds.y1 = bbox.y1;
+	return bounds;
 }
 
 fz_pixmap *
@@ -666,18 +696,13 @@ fz_render_t3_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm, fz_co
 	if (!contents)
 		return NULL;
 
-	ctm = fz_concat(font->t3matrix, trm);
-	dev = fz_new_bbox_device(ctx, &bbox);
-	font->t3run(font->t3xref, font->t3resources, contents, dev, ctm);
-	/* RJW: "cannot draw type3 glyph" */
-
-	if (dev->flags & FZ_CHARPROC_MASK)
+	if (font->t3flags[gid] & FZ_CHARPROC_MASK)
 	{
-		if (dev->flags & FZ_CHARPROC_COLOR)
+		if (font->t3flags[gid] & FZ_CHARPROC_COLOR)
 			fz_warn(ctx, "type3 glyph claims to be both masked and colored");
 		model = NULL;
 	}
-	else if (dev->flags & FZ_CHARPROC_COLOR)
+	else if (font->t3flags[gid] & FZ_CHARPROC_COLOR)
 	{
 		if (!model)
 			fz_warn(ctx, "colored type3 glyph wanted in masked context");
@@ -688,8 +713,7 @@ fz_render_t3_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm, fz_co
 		model = NULL; /* Treat as masked */
 	}
 
-	fz_free_device(dev);
-
+	bbox = fz_round_rect(fz_bound_glyph(ctx, font, gid, trm));
 	bbox.x0--;
 	bbox.y0--;
 	bbox.x1++;
@@ -698,6 +722,7 @@ fz_render_t3_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm, fz_co
 	glyph = fz_new_pixmap_with_rect(ctx, model ? model : fz_device_gray, bbox);
 	fz_clear_pixmap(glyph);
 
+	ctm = fz_concat(font->t3matrix, trm);
 	dev = fz_new_draw_device_type3(ctx, glyph);
 	font->t3run(font->t3xref, font->t3resources, contents, dev, ctm);
 	/* RJW: "cannot draw type3 glyph" */

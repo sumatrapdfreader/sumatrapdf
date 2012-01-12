@@ -121,6 +121,22 @@ fz_matrix_expansion(fz_matrix m)
 	return sqrtf(fabsf(m.a * m.d - m.b * m.c));
 }
 
+float
+fz_matrix_max_expansion(fz_matrix m)
+{
+	float max = fabsf(m.a);
+	float x = fabsf(m.b);
+	if (max < x)
+		max = x;
+	x = fabsf(m.c);
+	if (max < x)
+		max = x;
+	x = fabsf(m.d);
+	if (max < x)
+		max = x;
+	return max;
+}
+
 fz_point
 fz_transform_point(fz_matrix m, fz_point p)
 {

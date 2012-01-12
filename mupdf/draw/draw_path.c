@@ -2,9 +2,6 @@
 
 #define MAX_DEPTH 8
 
-/* SumatraPDF: XPS miter joins are clipped instead of converted to bevel joins */
-enum { BUTT = 0, ROUND = 1, SQUARE = 2, TRIANGLE = 3, MITER = 0, BEVEL = 2, MITER_XPS = 3 };
-
 static void
 line(fz_gel *gel, fz_matrix *ctm, float x0, float y0, float x1, float y1)
 {
@@ -219,7 +216,7 @@ fz_add_line_join(struct sctx *s, fz_point a, fz_point b, fz_point c)
 {
 	float miterlimit = s->miterlimit;
 	float linewidth = s->linewidth;
-	int linejoin = s->linejoin;
+	fz_linejoin linejoin = s->linejoin;
 	float dx0, dy0;
 	float dx1, dy1;
 	float dlx0, dly0;
@@ -235,18 +232,20 @@ fz_add_line_join(struct sctx *s, fz_point a, fz_point b, fz_point c)
 	dx1 = c.x - b.x;
 	dy1 = c.y - b.y;
 
-	if (dx0 * dx0 + dy0 * dy0 < FLT_EPSILON)
-		linejoin = BEVEL;
-	if (dx1 * dx1 + dy1 * dy1 < FLT_EPSILON)
-		linejoin = BEVEL;
-
-	/* SumatraPDF: ensure that cross < 0 below for less code duplication */
-	if (dx1 * dy0 - dx0 * dy1 > 0)
+	cross = dx1 * dy0 - dx0 * dy1;
+	/* Ensure that cross >= 0 */
+	if (cross < 0)
 	{
 		float tmp;
 		tmp = dx1; dx1 = -dx0; dx0 = -tmp;
 		tmp = dy1; dy1 = -dy0; dy0 = -tmp;
+		cross = -cross;
 	}
+
+	if (dx0 * dx0 + dy0 * dy0 < FLT_EPSILON)
+		linejoin = FZ_LINEJOIN_BEVEL;
+	if (dx1 * dx1 + dy1 * dy1 < FLT_EPSILON)
+		linejoin = FZ_LINEJOIN_BEVEL;
 
 	scale = linewidth / sqrtf(dx0 * dx0 + dy0 * dy0);
 	dlx0 = dy0 * scale;
@@ -256,27 +255,25 @@ fz_add_line_join(struct sctx *s, fz_point a, fz_point b, fz_point c)
 	dlx1 = dy1 * scale;
 	dly1 = -dx1 * scale;
 
-	cross = dx1 * dy0 - dx0 * dy1;
-
 	dmx = (dlx0 + dlx1) * 0.5f;
 	dmy = (dly0 + dly1) * 0.5f;
 	dmr2 = dmx * dmx + dmy * dmy;
 
 	if (cross * cross < FLT_EPSILON && dx0 * dx1 + dy0 * dy1 >= 0)
-		linejoin = BEVEL;
+		linejoin = FZ_LINEJOIN_BEVEL;
 
-	if (linejoin == MITER)
+	if (linejoin == FZ_LINEJOIN_MITER)
 		if (dmr2 * miterlimit * miterlimit < linewidth * linewidth)
-			linejoin = BEVEL;
+			linejoin = FZ_LINEJOIN_BEVEL;
 
 	/* SumatraPDF: XPS miter joins are clipped instead of converted to bevel joins */
 	/* cf. http://blogs.msdn.com/b/mswanson/archive/2006/03/23/559698.aspx */
-	if (linejoin == MITER_XPS)
+	if (linejoin == FZ_LINEJOIN_MITER_XPS)
 	{
 		if (cross == 0)
-			linejoin = BEVEL;
+			linejoin = FZ_LINEJOIN_BEVEL;
 		else if (dmr2 * miterlimit * miterlimit >= linewidth * linewidth)
-			linejoin = MITER;
+			linejoin = FZ_LINEJOIN_MITER;
 		else
 		{
 			float k;
@@ -285,30 +282,44 @@ fz_add_line_join(struct sctx *s, fz_point a, fz_point b, fz_point c)
 			dmx *= scale;
 			dmy *= scale;
 
-			fz_add_line(s, b.x - dlx0, b.y - dly0, b.x - dlx1, b.y - dly1);
-			fz_add_line(s, b.x + dlx1, b.y + dly1, b.x + dmx - k * (dmx - dlx1), b.y + dmy - k * (dmy - dly1));
-			fz_add_line(s, b.x + dmx - k * (dmx - dlx1), b.y + dmy - k * (dmy - dly1), b.x + dmx - k * (dmx - dlx0), b.y + dmy - k * (dmy - dly0));
-			fz_add_line(s, b.x + dmx - k * (dmx - dlx0), b.y + dmy - k * (dmy - dly0), b.x + dlx0, b.y + dly0);
+			fz_add_line(s, b.x + dlx1, b.y + dly1, b.x + dlx0, b.y + dly0);
+			fz_add_line(s, b.x - dlx0, b.y - dly0, b.x - dmx + k * (dmx - dlx0), b.y - dmy + k * (dmy - dly0));
+			fz_add_line(s, b.x - dmx + k * (dmx - dlx0), b.y - dmy + k * (dmy - dly0), b.x - dmx + k * (dmx - dlx1), b.y - dmy + k * (dmy - dly1));
+			fz_add_line(s, b.x - dmx + k * (dmx - dlx1), b.y - dmy + k * (dmy - dly1), b.x - dlx1, b.y - dly1);
 		}
 	}
 
-	if (linejoin == BEVEL)
+	if (linejoin == FZ_LINEJOIN_BEVEL)
 	{
 		fz_add_line(s, b.x - dlx0, b.y - dly0, b.x - dlx1, b.y - dly1);
 		fz_add_line(s, b.x + dlx1, b.y + dly1, b.x + dlx0, b.y + dly0);
 	}
 
-	if (linejoin == MITER)
+	if (linejoin == FZ_LINEJOIN_MITER)
 	{
 		scale = linewidth * linewidth / dmr2;
 		dmx *= scale;
 		dmy *= scale;
 
-		if (cross < 0)
+		fz_add_line(s, b.x + dlx1, b.y + dly1, b.x + dlx0, b.y + dly0);
+		fz_add_line(s, b.x - dlx0, b.y - dly0, b.x - dmx, b.y - dmy);
+		fz_add_line(s, b.x - dmx, b.y - dmy, b.x - dlx1, b.y - dly1);
+	}
+
+	/* SumatraPDF: use the calculatoins above */
+	if (0)
+	/* XPS miter joins are clipped at miterlength, rather than simply
+	 * being converted to bevelled joins. */
+	if (linejoin == FZ_LINEJOIN_MITER_XPS)
+	{
+		scale = linewidth * linewidth / dmr2;
+		dmx *= scale;
+		dmy *= scale;
+
+		if (cross == 0)
 		{
+			fz_add_line(s, b.x + dlx1, b.y + dly1, b.x + dlx0, b.y + dly0);
 			fz_add_line(s, b.x - dlx0, b.y - dly0, b.x - dlx1, b.y - dly1);
-			fz_add_line(s, b.x + dlx1, b.y + dly1, b.x + dmx, b.y + dmy);
-			fz_add_line(s, b.x + dmx, b.y + dmy, b.x + dlx0, b.y + dly0);
 		}
 		else
 		{
@@ -318,23 +329,15 @@ fz_add_line_join(struct sctx *s, fz_point a, fz_point b, fz_point c)
 		}
 	}
 
-	if (linejoin == ROUND)
+	if (linejoin == FZ_LINEJOIN_ROUND)
 	{
-		if (cross < 0)
-		{
-			fz_add_line(s, b.x - dlx0, b.y - dly0, b.x - dlx1, b.y - dly1);
-			fz_add_arc(s, b.x, b.y, dlx1, dly1, dlx0, dly0);
-		}
-		else
-		{
-			fz_add_line(s, b.x + dlx1, b.y + dly1, b.x + dlx0, b.y + dly0);
-			fz_add_arc(s, b.x, b.y, -dlx0, -dly0, -dlx1, -dly1);
-		}
+		fz_add_line(s, b.x + dlx1, b.y + dly1, b.x + dlx0, b.y + dly0);
+		fz_add_arc(s, b.x, b.y, -dlx0, -dly0, -dlx1, -dly1);
 	}
 }
 
 static void
-fz_add_line_cap(struct sctx *s, fz_point a, fz_point b, int linecap)
+fz_add_line_cap(struct sctx *s, fz_point a, fz_point b, fz_linecap linecap)
 {
 	float flatness = s->flatness;
 	float linewidth = s->linewidth;
@@ -346,10 +349,10 @@ fz_add_line_cap(struct sctx *s, fz_point a, fz_point b, int linecap)
 	float dlx = dy * scale;
 	float dly = -dx * scale;
 
-	if (linecap == BUTT)
+	if (linecap == FZ_LINECAP_BUTT)
 		fz_add_line(s, b.x - dlx, b.y - dly, b.x + dlx, b.y + dly);
 
-	if (linecap == ROUND)
+	if (linecap == FZ_LINECAP_ROUND)
 	{
 		int i;
 		int n = ceilf((float)M_PI / (2.0f * (float)M_SQRT2 * sqrtf(flatness / linewidth)));
@@ -369,7 +372,7 @@ fz_add_line_cap(struct sctx *s, fz_point a, fz_point b, int linecap)
 		fz_add_line(s, ox, oy, b.x + dlx, b.y + dly);
 	}
 
-	if (linecap == SQUARE)
+	if (linecap == FZ_LINECAP_SQUARE)
 	{
 		fz_add_line(s, b.x - dlx, b.y - dly,
 			b.x - dlx - dly, b.y - dly + dlx);
@@ -379,7 +382,7 @@ fz_add_line_cap(struct sctx *s, fz_point a, fz_point b, int linecap)
 			b.x + dlx, b.y + dly);
 	}
 
-	if (linecap == TRIANGLE)
+	if (linecap == FZ_LINECAP_TRIANGLE)
 	{
 		float mx = -dly;
 		float my = dlx;
@@ -414,7 +417,7 @@ fz_add_line_dot(struct sctx *s, fz_point a)
 }
 
 static void
-fz_stroke_flush(struct sctx *s, int start_cap, int end_cap)
+fz_stroke_flush(struct sctx *s, fz_linecap start_cap, fz_linecap end_cap)
 {
 	if (s->sn == 2)
 	{
@@ -445,7 +448,7 @@ fz_stroke_lineto(struct sctx *s, fz_point cur)
 
 	if (dx * dx + dy * dy < FLT_EPSILON)
 	{
-		if (s->cap == ROUND || s->dash_list)
+		if (s->cap == FZ_LINECAP_ROUND || s->dash_list)
 			s->dot = 1;
 		return;
 	}
@@ -618,7 +621,7 @@ fz_flatten_stroke_path(fz_gel *gel, fz_path *path, fz_stroke_state *stroke, fz_m
 }
 
 static void
-fz_dash_moveto(struct sctx *s, fz_point a, int start_cap, int end_cap)
+fz_dash_moveto(struct sctx *s, fz_point a, fz_linecap start_cap, fz_linecap end_cap)
 {
 	s->toggle = 1;
 	s->offset = 0;

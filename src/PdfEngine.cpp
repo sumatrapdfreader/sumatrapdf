@@ -2211,7 +2211,7 @@ RectD PdfLink::GetDestRect() const
     if (link->ld.gotor.page < 0 || link->ld.gotor.page >= engine->PageCount())
         return result;
 
-    pdf_page *page = engine->GetPdfPage(link->ld.gotor.page + 1, true);
+    pdf_page *page = engine->GetPdfPage(link->ld.gotor.page + 1);
     if (!page)
         return result;
     fz_matrix ctm = pdf_get_adjustment(page);

@@ -833,10 +833,10 @@ pdf_init_gstate(pdf_gstate *gs, fz_matrix ctm)
 	gs->ctm = ctm;
 	gs->clip_depth = 0;
 
-	gs->stroke_state.start_cap = 0;
-	gs->stroke_state.dash_cap = 0;
-	gs->stroke_state.end_cap = 0;
-	gs->stroke_state.linejoin = 0;
+	gs->stroke_state.start_cap = FZ_LINECAP_BUTT;
+	gs->stroke_state.dash_cap = FZ_LINECAP_BUTT;
+	gs->stroke_state.end_cap = FZ_LINECAP_BUTT;
+	gs->stroke_state.linejoin = FZ_LINEJOIN_MITER;
 	gs->stroke_state.linewidth = 1;
 	gs->stroke_state.miterlimit = 10;
 	gs->stroke_state.dash_phase = 0;
