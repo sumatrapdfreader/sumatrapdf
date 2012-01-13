@@ -236,6 +236,7 @@ HtmlToken *HtmlPullParser::Next()
 
     if (s == currPos) {
         // at the beginning, we expect a tag
+        // note: could relax it to allow text
         if (*currPos != '<')
             return MakeError(HtmlToken::ExpectedElement, currPos);
     }

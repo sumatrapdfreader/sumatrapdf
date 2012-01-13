@@ -84,7 +84,7 @@ static void OnExit()
     SendMessage(gHwndFrame, WM_CLOSE, 0, 0);
 }
 
-inline void EnableAndShow(HWND hwnd, bool enable)
+static inline void EnableAndShow(HWND hwnd, bool enable)
 {
     ShowWindow(hwnd, enable ? SW_SHOW : SW_HIDE);
     EnableWindow(hwnd, enable);
@@ -92,18 +92,22 @@ inline void EnableAndShow(HWND hwnd, bool enable)
 
 static Font *gFont = NULL;
 
-// A sample text we're laying out
-const char *gTxt = "ClearType is dependent on the orientation and ordering of the LCD stripes. Currently,\nClearType is implemented only for vertical stripes that are ordered RGB. This might be a concern if you are\n using a tablet PC, where the display can be oriented in any direction, or if you are using a screen that\ncan be turned from landscape to portrait.\n\nThe following example draws text with two different quality settings:";
+// A sample text to display if we don't show an actual mobi file
+static const char *gSampleHtml = "<html>ClearType is <b>dependent</b> on the <i>orientation and ordering</i> of the LCD stripes. <hr>Currently,\nClearType is implemented only for vertical stripes that are ordered RGB. This might be a concern if you are\n using a tablet PC, where the display can be oriented in any direction, or if you are using a screen that\ncan be turned from landscape to portrait.\n\nThe following example draws text with two different quality settings:</html>";
 
-Vec<Page*> *gPages;
+static Vec<Page*> *gPages;
 
-Vec<Page*> *LayoutText(Graphics *gfx, Font *defaultFont, int pageDx, int pageDy, const char *s)
+static EbookWindowInfo *LoadSampleHtml()
 {
-    PageLayout layouter(pageDx, pageDy);
-    return layouter.LayoutText(gfx, defaultFont, s);
+    Vec<uint8_t> *forLayout = MobiHtmlToDisplay((uint8_t*)gSampleHtml, sizeof(gSampleHtml) - 1, NULL);
+    if (!forLayout)
+        return NULL;
+    EbookWindowInfo *wi = new EbookWindowInfo();
+    wi->forLayout = forLayout;
+    return wi;
 }
 
-EbookWindowInfo *LoadEbook(const TCHAR *fileName)
+static EbookWindowInfo *LoadEbook(const TCHAR *fileName)
 {
     EbookWindowInfo *wi = new EbookWindowInfo();
     wi->mb = MobiParse::ParseFile(fileName);
@@ -123,7 +127,7 @@ Error:
     return NULL;
 }
 
-Vec<Page*> *LayoutMobiFile(EbookWindowInfo *wi, Graphics *gfx, Font *defaultFont, int pageDx, int pageDy)
+static Vec<Page*> *LayoutMobiFile(EbookWindowInfo *wi, Graphics *gfx, Font *defaultFont, int pageDx, int pageDy)
 {
     PageLayout layouter(pageDx, pageDy);
     Vec<Page*> *pages = layouter.LayoutInternal(gfx, defaultFont, wi->forLayout->LendData(), wi->forLayout->Count());
@@ -148,8 +152,9 @@ static void DrawPage(Graphics *g, Font *f, int pageNo, REAL offX, REAL offY)
         bbox.Y += offY;
         if (Str_Hr == (StrSpecial)(uintptr_t)sp.s) {
             // hr is a line drawn in the middle of bounding box
-            PointF p1(sp.bbox.X, sp.bbox.Y + sp.bbox.Height / 2.f);
-            PointF p2(sp.bbox.X + sp.bbox.Width, sp.bbox.Y + sp.bbox.Height / 2.f);
+            REAL y = bbox.Y + bbox.Height / 2.f;
+            PointF p1(bbox.X, y);
+            PointF p2(bbox.X + bbox.Width, y);
             g->DrawLine(&blackPen, p1, p2);
             continue;
         }
@@ -175,9 +180,6 @@ static void ReLayout(Graphics* gfx, RectI r)
 
     if (gCurrentEbook)
         gPages = LayoutMobiFile(gCurrentEbook, gfx, gFont, pageDx, pageDy);
-
-    if (!gPages) // in case LayoutMobiFile() failed
-        gPages = LayoutText(gfx, gFont, pageDx, pageDy , gTxt);
 }
 
 static void DrawFrame2(Graphics &g, RectI r)
@@ -190,6 +192,9 @@ static void DrawFrame2(Graphics &g, RectI r)
 
     if (!gPages)
         ReLayout(&g, r);
+
+    if (!gPages)
+        return;
 
     //SolidBrush bgBrush(gColBg);
     Gdiplus::Rect r2(r.x-1, r.y-1, r.dx+2, r.dy+2);
@@ -247,16 +252,6 @@ static void OnLButtonDown()
 {
 }
 
-static void OnCreateWindow(HWND hwnd)
-{
-    //gFont = ::new Font(L"Times New Roman", 16, FontStyleRegular);
-    //HDC dc = GetDC(hwnd);
-    //gFont = ::new Font(dc, gFontDefault); 
-    gFont = ::new Font(L"Georgia", 14, FontStyleRegular);
-    HMENU menu = BuildMenu();
-    SetMenu(hwnd, menu);
-}
-
 static void LoadEbookAndTriggerLayout(TCHAR *fileName, HWND hwnd)
 {
     EbookWindowInfo *wi = LoadEbook(fileName);
@@ -267,6 +262,28 @@ static void LoadEbookAndTriggerLayout(TCHAR *fileName, HWND hwnd)
     delete gPages;
     gPages = NULL; // this triggers re-layout
     InvalidateRect(hwnd, NULL, true);
+}
+
+static void LoadSampleAsCurrentDoc()
+{
+    EbookWindowInfo *wi = LoadSampleHtml();
+    if (!wi)
+        return;
+    delete gCurrentEbook;
+    gCurrentEbook = wi;
+    delete gPages;
+    gPages = NULL; // this triggers re-layout
+}
+
+static void OnCreateWindow(HWND hwnd)
+{
+    //gFont = ::new Font(L"Times New Roman", 16, FontStyleRegular);
+    //HDC dc = GetDC(hwnd);
+    //gFont = ::new Font(dc, gFontDefault); 
+    gFont = ::new Font(L"Georgia", 14, FontStyleRegular);
+    HMENU menu = BuildMenu();
+    SetMenu(hwnd, menu);
+    LoadSampleAsCurrentDoc();
 }
 
 static void OnOpen(HWND hwnd)
