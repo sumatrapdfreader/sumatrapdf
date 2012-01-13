@@ -61,8 +61,11 @@ class PageRenderer {
 
     int currPage;
     RenderedBitmap *currBmp;
+    // due to rounding differences, currBmp->Size() and currSize can differ slightly
+    SizeI currSize;
     int reqPage;
     float reqZoom;
+    SizeI reqSize;
 
     CRITICAL_SECTION currAccess;
     HANDLE thread;
@@ -101,11 +104,12 @@ public:
 
     void Render(HDC hdc, RectI target, int pageNo, float zoom) {
         ScopedCritSec scope(&currAccess);
-        if (currPage == pageNo && currBmp && currBmp->Size() == target.Size())
+        if (currBmp && currPage == pageNo && currSize == target.Size())
             currBmp->StretchDIBits(hdc, target);
         else if (!thread) {
             reqPage = pageNo;
             reqZoom = zoom;
+            reqSize = target.Size();
             thread = CreateThread(NULL, 0, RenderThread, this, 0, 0);
         }
     }
@@ -121,7 +125,8 @@ protected:
 
         delete pr->currBmp;
         pr->currBmp = bmp;
-        pr->currPage = pr->reqPage;;
+        pr->currPage = pr->reqPage;
+        pr->currSize = pr->reqSize;
 
         HANDLE thread = pr->thread;
         pr->thread = NULL;
@@ -147,7 +152,7 @@ static LRESULT OnPaint(HWND hwnd)
         RectD page = preview->renderer->GetPageRect(pageNo);
         if (!page.IsEmpty()) {
             rect.Inflate(-PREVIEW_MARGIN, -PREVIEW_MARGIN);
-            float zoom = (float)min(rect.dx / page.dx, rect.dy / page.dy);
+            float zoom = (float)min(rect.dx / page.dx, rect.dy / page.dy) - 0.001f;
             RectI onScreen = RectD(rect.x, rect.y, page.dx * zoom, page.dy * zoom).Round();
             onScreen.Offset((rect.dx - onScreen.dx) / 2, (rect.dy - onScreen.dy) / 2);
 
