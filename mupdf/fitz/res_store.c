@@ -429,10 +429,6 @@ int fz_store_scavenge(fz_context *ctx, unsigned int size, int *phase)
 	if (store == NULL)
 		return 0;
 
-	/* SumatraPDF: prevent integer overflow */
-	if (size > UINT_MAX - store->size)
-		size = UINT_MAX - store->size;
-
 #ifdef DEBUG_SCAVENGING
 	printf("Scavenging: store=%d size=%d phase=%d\n", store->size, size, *phase);
 	fz_debug_store(ctx);
@@ -440,28 +436,34 @@ int fz_store_scavenge(fz_context *ctx, unsigned int size, int *phase)
 #endif
 	do
 	{
-		/* SumatraPDF: scavenging might never find enough objects to free
-		               which could lead to a division by zero below */
+		unsigned int tofree;
+
+		/* Calculate 'max' as the maximum size of the store for this phase */
 		if (*phase >= 16)
 			max = 0;
-		else
-		/* Calculate 'max' as the maximum size of the store for this phase */
-		if (store->max != FZ_STORE_UNLIMITED)
+		else if (store->max != FZ_STORE_UNLIMITED)
 			max = store->max / 16 * (16 - *phase);
 		else
 			max = store->size / (16 - *phase) * (15 - *phase);
 		(*phase)++;
 
-		if (size + store->size > max)
-			if (scavenge(ctx, size + store->size - max))
-			{
+		/* Slightly baroque calculations to avoid overflow */
+		if (size > UINT_MAX - store->size)
+			tofree = UINT_MAX - max;
+		else if (size + store->size > max)
+			continue;
+		else
+			tofree = size + store->size - max;
+
+		if (scavenge(ctx, tofree))
+		{
 #ifdef DEBUG_SCAVENGING
-				printf("scavenged: store=%d\n", store->size);
-				fz_debug_store(ctx);
-				Memento_stats();
+			printf("scavenged: store=%d\n", store->size);
+			fz_debug_store(ctx);
+			Memento_stats();
 #endif
-				return 1;
-			}
+			return 1;
+		}
 	}
 	while (max > 0);
 

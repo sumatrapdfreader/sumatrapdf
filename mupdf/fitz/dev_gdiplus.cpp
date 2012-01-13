@@ -798,10 +798,10 @@ gdiplus_get_pen(Brush *brush, fz_matrix ctm, fz_stroke_state *stroke)
 	pen->SetTransform(&Matrix(ctm.a / me, ctm.b / me, ctm.c / me, ctm.d / me, 0, 0));
 	
 	pen->SetMiterLimit(stroke->miterlimit);
-	pen->SetLineCap(stroke->start_cap == 1 ? LineCapRound : stroke->start_cap == 2 ? LineCapSquare : LineCapFlat,
-		stroke->end_cap == 1 ? LineCapRound : stroke->end_cap == 2 ? LineCapSquare : LineCapFlat,
-		stroke->dash_cap == 1 ? DashCapRound : DashCapFlat);
-	pen->SetLineJoin(stroke->linejoin == 1 ? LineJoinRound : stroke->linejoin == 2 ? LineJoinBevel : stroke->linejoin == 3 ? LineJoinMiter : LineJoinMiterClipped);
+	pen->SetLineCap(stroke->start_cap == FZ_LINECAP_ROUND ? LineCapRound : stroke->start_cap == FZ_LINECAP_SQUARE ? LineCapSquare : stroke->start_cap == FZ_LINECAP_TRIANGLE ? LineCapTriangle : LineCapFlat,
+		stroke->end_cap == FZ_LINECAP_ROUND ? LineCapRound : stroke->end_cap == FZ_LINECAP_SQUARE ? LineCapSquare : stroke->end_cap == FZ_LINECAP_TRIANGLE ? LineCapTriangle : LineCapFlat,
+		stroke->dash_cap == FZ_LINECAP_ROUND ? DashCapRound : stroke->dash_cap == FZ_LINECAP_TRIANGLE ? DashCapTriangle : DashCapFlat);
+	pen->SetLineJoin(stroke->linejoin == FZ_LINEJOIN_ROUND ? LineJoinRound : stroke->linejoin == FZ_LINEJOIN_BEVEL ? LineJoinBevel : stroke->linejoin == FZ_LINEJOIN_MITER_XPS ? LineJoinMiter : LineJoinMiterClipped);
 	
 	if (stroke->dash_len > 0)
 	{
@@ -819,7 +819,7 @@ gdiplus_get_pen(Brush *brush, fz_matrix ctm, fz_stroke_state *stroke)
 			dashCount++;
 		}
 		pen->SetDashPattern(dashlist, dashCount);
-		pen->SetDashOffset(stroke->dash_phase);
+		pen->SetDashOffset(stroke->dash_phase / stroke->linewidth);
 	}
 	
 	return pen;

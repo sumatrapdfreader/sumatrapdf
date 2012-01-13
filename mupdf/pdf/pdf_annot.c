@@ -2,15 +2,15 @@
 #include "mupdf.h"
 
 static fz_obj *
-resolve_dest(pdf_xref *xref, fz_obj *dest)
+resolve_dest_rec(pdf_xref *xref, fz_obj *dest, int depth)
 {
+	if (depth > 10) /* Arbitrary to avoid infinite recursion */
+		return NULL;
+
 	if (fz_is_name(dest) || fz_is_string(dest))
 	{
 		dest = pdf_lookup_dest(xref, dest);
-		/* SumatraPDF: prevent infinite recursion */
-		if (fz_is_name(dest) || fz_is_string(dest))
-			return NULL;
-		return resolve_dest(xref, dest);
+		return resolve_dest_rec(xref, dest, depth+1);
 	}
 
 	else if (fz_is_array(dest))
@@ -20,20 +20,20 @@ resolve_dest(pdf_xref *xref, fz_obj *dest)
 
 	else if (fz_is_dict(dest))
 	{
-		/* SumatraPDF: prevent infinite recursion */
-		fz_obj *odest = dest;
-		if (fz_dict_mark(dest))
-			return NULL;
 		dest = fz_dict_gets(dest, "D");
-		dest = resolve_dest(xref, dest);
-		fz_dict_unmark(odest);
-		return dest;
+		return resolve_dest_rec(xref, dest, depth+1);
 	}
 
 	else if (fz_is_indirect(dest))
 		return dest;
 
 	return NULL;
+}
+
+static fz_obj *
+resolve_dest(pdf_xref *xref, fz_obj *dest)
+{
+	return resolve_dest_rec(xref, dest, 0);
 }
 
 fz_link_dest
@@ -424,43 +424,29 @@ pdf_transform_annot(pdf_annot *annot)
 }
 
 /* SumatraPDF: synthesize appearance streams for a few more annotations */
-static void
-pdf_free_xobject_imp(fz_context *ctx, fz_storable *xobj_)
-{
-	pdf_xobject *xobj = (pdf_xobject *)xobj_;
-
-	if (xobj->colorspace)
-		fz_drop_colorspace(ctx, xobj->colorspace);
-	if (xobj->resources)
-		fz_drop_obj(xobj->resources);
-	if (xobj->contents)
-		fz_drop_buffer(ctx, xobj->contents);
-	fz_free(ctx, xobj);
-}
-
 static pdf_annot *
 pdf_create_annot(fz_context *ctx, fz_rect rect, fz_obj *base_obj, fz_buffer *content, fz_obj *resources, int transparency)
 {
-	pdf_annot *annot;
-	pdf_xobject *form;
+	pdf_annot *annot = NULL;
+	pdf_xobject *form = pdf_create_xobject(ctx, base_obj);
 	int rotate = fz_to_int(fz_dict_gets(fz_dict_gets(base_obj, "MK"), "R")); 
 
-	form = fz_malloc_struct(ctx, pdf_xobject);
-	memset(form, 0, sizeof(pdf_xobject));
-	FZ_INIT_STORABLE(form, 1, pdf_free_xobject_imp);
 	form->matrix = fz_rotate(rotate);
-	form->bbox.x1 = (rotate % 180 == 0) ? rect.x1 - rect.x0 : rect.y1 - rect.y0;
-	form->bbox.y1 = (rotate % 180 == 0) ? rect.y1 - rect.y0 : rect.x1 - rect.x0;
+	form->bbox.x1 = ((rotate % 180) != 90) ? rect.x1 - rect.x0 : rect.y1 - rect.y0;
+	form->bbox.y1 = ((rotate % 180) != 90) ? rect.y1 - rect.y0 : rect.x1 - rect.x0;
 	form->transparency = transparency;
 	form->isolated = !transparency;
 	form->contents = content;
 	form->resources = resources;
 
-	annot = fz_malloc_no_throw(ctx, sizeof(pdf_annot));
-	if (!annot)
+	fz_try(ctx)
 	{
-		fz_free(ctx, form);
-		fz_throw(ctx, "OOM in pdf_create_annot");
+		annot = fz_malloc_struct(ctx, pdf_annot);
+	}
+	fz_catch(ctx)
+	{
+		pdf_drop_xobject(ctx, form);
+		fz_rethrow(ctx);
 	}
 	annot->obj = base_obj;
 	annot->rect = rect;

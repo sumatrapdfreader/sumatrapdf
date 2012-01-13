@@ -643,8 +643,8 @@ fz_execute_display_list(fz_display_list *list, fz_device *dev, fz_matrix top_ctm
 			case FZ_CMD_BEGIN_GROUP:
 				clipped++;
 				continue;
-			/* SumatraPDF: accumulated text clipping is only matched by a single pop */
 			case FZ_CMD_CLIP_TEXT:
+				/* Accumulated text has no extra pops */
 				if (node->flag != 2)
 					clipped++;
 				continue;

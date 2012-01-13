@@ -213,11 +213,14 @@ struct pdf_xobject_s
 	fz_colorspace *colorspace;
 	fz_obj *resources;
 	fz_buffer *contents;
+	fz_obj *me;
 };
 
 pdf_xobject *pdf_load_xobject(pdf_xref *xref, fz_obj *obj);
 pdf_xobject *pdf_keep_xobject(pdf_xobject *xobj);
 void pdf_drop_xobject(fz_context *ctx, pdf_xobject *xobj);
+/* SumatraPDF: allow to synthesize XObjects (cf. pdf_create_annot) */
+pdf_xobject *pdf_create_xobject(fz_context *ctx, fz_obj *dict);
 
 /*
  * CMap

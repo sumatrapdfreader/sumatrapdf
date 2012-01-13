@@ -24,6 +24,7 @@ pdf_free_xobject_imp(fz_context *ctx, fz_storable *xobj_)
 		fz_drop_obj(xobj->resources);
 	if (xobj->contents)
 		fz_drop_buffer(ctx, xobj->contents);
+	fz_drop_obj(xobj->me);
 	fz_free(ctx, xobj);
 }
 
@@ -52,6 +53,7 @@ pdf_load_xobject(pdf_xref *xref, fz_obj *dict)
 	form->resources = NULL;
 	form->contents = NULL;
 	form->colorspace = NULL;
+	form->me = NULL;
 
 	/* Store item immediately, to avoid possible recursion if objects refer back to this one */
 	fz_store_item(ctx, dict, form, pdf_xobject_size(form));
@@ -104,6 +106,21 @@ pdf_load_xobject(pdf_xref *xref, fz_obj *dict)
 		pdf_drop_xobject(ctx, form);
 		fz_throw(ctx, "cannot load xobject content stream (%d %d R)", fz_to_num(dict), fz_to_gen(dict));
 	}
+	form->me = fz_keep_obj(dict);
+
+	return form;
+}
+
+/* SumatraPDF: allow to synthesize XObjects (cf. pdf_create_annot) */
+pdf_xobject *
+pdf_create_xobject(fz_context *ctx, fz_obj *dict)
+{
+	pdf_xobject *form = fz_malloc_struct(ctx, pdf_xobject);
+
+	memset(form, 0, sizeof(pdf_xobject));
+	FZ_INIT_STORABLE(form, 1, pdf_free_xobject_imp);
+	form->matrix = fz_identity;
+	form->me = fz_keep_obj(dict);
 
 	return form;
 }
