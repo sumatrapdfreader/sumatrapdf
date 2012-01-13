@@ -120,7 +120,7 @@ struct userDataStackItem
 	bool luminosity;
 	int blendmode;
 	float xstep, ystep;
-	fz_rect tileArea;
+	fz_bbox tileArea;
 	fz_matrix tileCtm;
 	userDataStackItem *prev;
 
@@ -321,23 +321,27 @@ public:
 		graphics->TranslateTransform(-stack->bounds.X, -stack->bounds.Y);
 		graphics->SetClip(&Region(stack->bounds));
 		
-		area.x0 /= xstep; area.x1 /= xstep;
-		area.y0 /= ystep; area.y1 /= ystep;
-		ctm.e = bbox.x0; ctm.f = bbox.y0;
-		
 		stack->xstep = xstep;
 		stack->ystep = ystep;
-		stack->tileArea = area;
 		stack->tileCtm = ctm;
+		
+		fz_point tl = { bbox.x0, bbox.y0 };
+		stack->tileCtm.e = tl.x;
+		stack->tileCtm.f = tl.y;
+		tl = fz_transform_point(fz_invert_matrix(ctm), tl);
+		stack->tileArea.x0 = floorf((area.x0 - MAX(tl.x, 0)) / xstep);
+		stack->tileArea.y0 = floorf((area.y0 - MAX(tl.y, 0)) / ystep);
+		stack->tileArea.x1 = ceilf((area.x1 - MAX(tl.x, 0)) / xstep);
+		stack->tileArea.y1 = ceilf((area.y1 - MAX(tl.y, 0)) / ystep);
 	}
 
 	void applyTiling()
 	{
 		assert(stack->layer && stack->saveG && stack->xstep && stack->ystep);
 		
-		for (int y = floorf(stack->tileArea.y0); y <= ceilf(stack->tileArea.y1); y++)
+		for (int y = stack->tileArea.y0; y <= stack->tileArea.y1; y++)
 		{
-			for (int x = floorf(stack->tileArea.x0); x <= ceilf(stack->tileArea.x1); x++)
+			for (int x = stack->tileArea.x0; x <= stack->tileArea.x1; x++)
 			{
 				fz_matrix ttm = fz_concat(fz_translate(x * stack->xstep, y * stack->ystep), stack->tileCtm);
 				Rect bounds = stack->bounds;

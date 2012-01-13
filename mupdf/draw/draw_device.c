@@ -1458,6 +1458,8 @@ fz_draw_end_tile(fz_device *devp)
 	int x0, y0, x1, y1, x, y;
 	fz_context *ctx = dev->ctx;
 	fz_draw_state *state;
+	/* SumatraPDF: make sure that the whole area is covered */
+	fz_point tl;
 
 	if (dev->top == 0)
 	{
@@ -1471,10 +1473,13 @@ fz_draw_end_tile(fz_device *devp)
 	area = state[1].area;
 	ctm = state[1].ctm;
 
-	x0 = floorf(area.x0 / xstep);
-	y0 = floorf(area.y0 / ystep);
-	x1 = ceilf(area.x1 / xstep);
-	y1 = ceilf(area.y1 / ystep);
+	/* SumatraPDF: make sure that the whole area is covered */
+	tl.x = state[1].dest->x; tl.y = state[1].dest->y;
+	tl = fz_transform_point(fz_invert_matrix(ctm), tl);
+	x0 = floorf((area.x0 - MAX(tl.x, 0)) / xstep);
+	y0 = floorf((area.y0 - MAX(tl.y, 0)) / ystep);
+	x1 = ceilf((area.x1 - MAX(tl.x, 0)) / xstep);
+	y1 = ceilf((area.y1 - MAX(tl.y, 0)) / ystep);
 
 	ctm.e = state[1].dest->x;
 	ctm.f = state[1].dest->y;
@@ -1483,6 +1488,8 @@ fz_draw_end_tile(fz_device *devp)
 		shapectm = ctm;
 		shapectm.e = state[1].shape->x;
 		shapectm.f = state[1].shape->y;
+		/* SumatraPDF: dest and shape have the same coordinates during tiling */
+		assert(ctm.e == shapectm.e && ctm.f == shapectm.f);
 	}
 
 #ifdef DUMP_GROUP_BLENDS
@@ -1495,9 +1502,10 @@ fz_draw_end_tile(fz_device *devp)
 		fz_dump_blend(dev->ctx, state[0].shape, "/");
 #endif
 
-	for (y = y0; y < y1; y++)
+	/* SumatraPDF: some documents need one additional step */
+	for (y = y0; y <= y1; y++)
 	{
-		for (x = x0; x < x1; x++)
+		for (x = x0; x <= x1; x++)
 		{
 			ttm = fz_concat(fz_translate(x * xstep, y * ystep), ctm);
 			state[1].dest->x = ttm.e;

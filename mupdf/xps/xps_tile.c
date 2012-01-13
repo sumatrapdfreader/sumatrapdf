@@ -127,6 +127,12 @@ xps_parse_tiling_brush(xps_document *doc, fz_matrix ctm, fz_rect area,
 	if (viewport_att)
 		xps_parse_rectangle(doc, viewport_att, &viewport);
 
+	/* SumatraPDF: warn when not drawing anything */
+	if (fabsf(viewport.x1 - viewport.x0) < 0.01f || fabsf(viewport.y1 - viewport.y0) < 0.01f)
+		fz_warn(doc->ctx, "not drawing tile for viewport size %.4f x %.4f", viewport.x1 - viewport.x0, viewport.y1 - viewport.y0);
+	else if (fabsf(viewbox.x1 - viewbox.x0) < 0.01f || fabsf(viewbox.y1 - viewbox.y0) < 0.01f)
+		fz_warn(doc->ctx, "not drawing tile for viewbox size %.4f x %.4f", viewbox.x1 - viewbox.x0, viewbox.y1 - viewbox.y0);
+
 	/* some sanity checks on the viewport/viewbox size */
 	if (fabsf(viewport.x1 - viewport.x0) < 0.01f) return;
 	if (fabsf(viewport.y1 - viewport.y0) < 0.01f) return;
