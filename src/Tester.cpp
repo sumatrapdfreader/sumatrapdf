@@ -13,6 +13,18 @@
 #include "MobiParse.h"
 #include "FileUtil.h"
 #include "MobiHtmlParse.h"
+#include "GdiPlusUtil.h"
+
+// if true, we'll save html content of a mobi ebook as well
+// as pretty-printed html to MOBI_SAVE_DIR. The name will be
+// ${file}.html and ${file}_pp.html
+static bool gMobiSaveHtml = false;
+// if true, we'll also save images in mobi files. The name
+// will be ${file}_img_${imgNo}.[jpg|png]
+// gMobiSaveHtml must be true as well
+static bool gMobiSaveImages = true;
+// directory to which we'll save mobi html and images
+#define MOBI_SAVE_DIR _T("..\\ebooks-converted")
 
 static int Usage()
 {
@@ -21,34 +33,63 @@ static int Usage()
     return 1;
 }
 
-static bool gSaveHtml = true;
-static void TestMobiFile(TCHAR *path)
+static void SaveMobiHtml(const TCHAR *filePathBase, MobiParse *mb)
 {
-    _tprintf(_T("Testing file '%s'\n"), path);
-    MobiParse *mb = MobiParse::ParseFile(path);
+    CrashAlwaysIf(!gMobiSaveHtml);
+
+    ScopedMem<TCHAR> outFile(str::Join(filePathBase, _T("_pp.html")));
+    file::WriteAll(outFile.Get(), (void*)mb->prettyPrintedHtml->LendData(), mb->prettyPrintedHtml->Count());
+
+    outFile.Set(str::Join(filePathBase, _T(".html")));
+    file::WriteAll(outFile.Get(), mb->doc->LendData(), mb->doc->Count());
+}
+
+static void SaveMobiImage(const TCHAR *filePathBase, size_t imgNo, ImageData *img)
+{
+    // it's valid to not have image data at a given index
+    if (!img->imgData)
+        return;
+    const TCHAR *ext = GfxFileExtFromData((char*)img->imgData, img->imgDataLen);
+    CrashAlwaysIf(!ext);
+    ScopedMem<TCHAR> fileName(str::Format(_T("%s_img_%d%s"), filePathBase, imgNo, ext));
+    file::WriteAll(fileName.Get(), img->imgData, img->imgDataLen);
+}
+
+static void SaveMobiImages(const TCHAR *filePathBase, MobiParse *mb)
+{
+    if (!gMobiSaveImages)
+        return;
+    for (size_t i = 0; i < mb->imagesCount; i++) {
+        SaveMobiImage(filePathBase, i, mb->images + i);
+    }
+}
+
+static void TestMobiFile(TCHAR *filePath)
+{
+    _tprintf(_T("Testing file '%s'\n"), filePath);
+    MobiParse *mb = MobiParse::ParseFile(filePath);
     if (!mb) {
         printf(" error: failed to parse the file\n");
         return;
     }
 
-    mb->ConvertToDisplayFormat(gSaveHtml);
-    if (!gSaveHtml)
+    mb->ConvertToDisplayFormat(gMobiSaveHtml);
+    if (!gMobiSaveHtml)
         return;
 
-    TCHAR *dir = _T("..\\ebooks-converted");
+    // Given the name of the name of source mobi file "${srcdir}/${file}.mobi"
+    // construct a base name for extracted html/image files in the form
+    // "${MOBI_SAVE_DIR}/${file}" i.e. change dir to MOBI_SAVE_DIR and
+    // remove the file extension
+    TCHAR *dir = MOBI_SAVE_DIR;
     dir::CreateAll(dir);
-    ScopedMem<TCHAR> fileBase(str::Dup(path::GetBaseName(path)));
-    TCHAR *ext = (TCHAR*)str::FindCharLast(fileBase, '.');
+    ScopedMem<TCHAR> fileName(str::Dup(path::GetBaseName(filePath)));
+    ScopedMem<TCHAR> filePathBase(path::Join(dir, fileName));
+    TCHAR *ext = (TCHAR*)str::FindCharLast(filePathBase.Get(), '.');
     *ext = 0;
-    ScopedMem<TCHAR> outFileHtml(str::Join(fileBase.Get(), _T("_pp.html")));
-    ScopedMem<TCHAR> outFile(path::Join(dir, outFileHtml.Get()));
-    file::WriteAll(outFile.Get(), (void*)mb->prettyPrintedHtml->LendData(), mb->prettyPrintedHtml->Count());
 
-    outFileHtml.Set(str::Join(fileBase.Get(), _T(".html")));
-    outFile.Set(path::Join(dir, outFileHtml.Get()));
-    file::WriteAll(outFile.Get(), mb->doc->LendData(), mb->doc->Count());
-
-    // TODO: write out images
+    SaveMobiHtml(filePathBase, mb);
+    SaveMobiImages(filePathBase, mb);
 
     delete mb;
 }
