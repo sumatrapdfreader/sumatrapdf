@@ -218,6 +218,25 @@ void PageLayout::StartNewLine(bool isParagraphBreak)
         StartNewPage();
 }
 
+// add horizontal line (<hr> in html terms)
+void PageLayout::AddHr()
+{
+    // hr creates an implicit paragraph break
+    StartNewLine(true);
+    x = 0;
+    // height of hr is lineSpacing. If drawing it a current position
+    // would exceede page bounds, go to another page
+    if (y + lineSpacing > pageDy)
+        StartNewPage();
+
+    RectF bbox(x, y, pageDx, lineSpacing);
+    StringPos sp((const char*)Str_Hr, 0, bbox);
+
+    currPage->strings->Append(sp);
+    y += lineSpacing;
+    StartNewLine(true);
+}
+
 void PageLayout::AddWord(WordInfo *wi)
 {
     RectF bbox;
@@ -361,6 +380,9 @@ Vec<Page *> *PageLayout::LayoutInternal(Graphics *graphics, Font *defaultFnt, ui
                 // at the paragraph start (including the beginning)
                 // This is visible in Kafka's Trial.
                 StartNewLine(true);
+            } else if (Tag_Hr == tag) {
+                CrashAlwaysIf(isEndTag);
+                AddHr();
             }
             // TODO: handle more codes
         }

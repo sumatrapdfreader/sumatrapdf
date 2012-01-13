@@ -136,15 +136,23 @@ static void DrawPage(Graphics *g, Font *f, int pageNo, REAL offX, REAL offY)
     SolidBrush br(Color(0,0,0));
     SolidBrush br2(Color(255, 255, 255, 255));
     Pen pen(Color(255, 0, 0), 1);
-    Page *p = gPages->At(pageNo);
-    size_t n = p->strings->Count();
+    Pen blackPen(Color(0, 0, 0), 1);
+    Page *page = gPages->At(pageNo);
+    size_t n = page->strings->Count();
     WCHAR buf[512];
     PointF pos;
     for (size_t i = 0; i < n; i++) {
-        StringPos sp = p->strings->At(i);
+        StringPos sp = page->strings->At(i);
         RectF bbox = sp.bbox;
         bbox.X += offX;
         bbox.Y += offY;
+        if (Str_Hr == (StrSpecial)(uintptr_t)sp.s) {
+            // hr is a line drawn in the middle of bounding box
+            PointF p1(sp.bbox.X, sp.bbox.Y + sp.bbox.Height / 2.f);
+            PointF p2(sp.bbox.X + sp.bbox.Width, sp.bbox.Y + sp.bbox.Height / 2.f);
+            g->DrawLine(&blackPen, p1, p2);
+            continue;
+        }
         size_t strLen = str::Utf8ToWcharBuf(sp.s, sp.len, buf, dimof(buf));
         bbox.GetLocation(&pos);
         if (gShowTextBoundingBoxes) {

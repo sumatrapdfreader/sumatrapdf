@@ -12,11 +12,17 @@ using namespace Gdiplus;
 
 struct WordInfo;
 
+enum StrSpecial {
+    Str_Hr = 0,
+};
+
 struct StringPos {
     StringPos() : s(NULL), len(0) {
     }
     StringPos(const char *s, size_t len, RectF bbox) : s(s), len(len), bbox(bbox) {
     }
+    // is either a pointer to a string or one of the StrSpecial
+    // enumerations
     const char *s;
     size_t len;
     RectF bbox;
@@ -77,6 +83,7 @@ private:
     void StartNewLine(bool isParagraphBreak);
     void RemoveLastPageIfEmpty();
     void AddWord(WordInfo *wi);
+    void AddHr();
 
     // constant during layout process
     REAL pageDx, pageDy;

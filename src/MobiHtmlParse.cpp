@@ -579,6 +579,18 @@ static void EmitTagP(Vec<uint8_t>* out, HtmlToken *t)
     }
 }
 
+static void EmitTagHr(Vec<uint8_t>* out, HtmlToken *t)
+{
+    if (t->IsEndTag()) {
+        // we shouldn't be getting this at all, so ignore it
+        return;
+    }
+    // note: hr tag sometimes has width attribute but
+    // I've only seen it set to 100%, so I just assume
+    // all hr are full page width.
+    EmitTag(out, Tag_Hr, false, false);
+}
+
 #if 0
 static void EmitTag(Vec<uint8_t>* out, HtmlTag tag, HtmlToken *t)
 {
