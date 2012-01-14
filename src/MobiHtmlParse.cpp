@@ -73,9 +73,12 @@ ParsedElement *DecodeNextParsedElement(const uint8_t* &s, const uint8_t *end)
 {
     static ParsedElement res;
     uint32_t v;
+    if (s == end)
+        return NULL;
+    CrashAlwaysIf(s > end);
     const char *sEnd = Varint::Parse32WithLimit((const char*)s, (const char*)end, &v);
     s = (const uint8_t*)sEnd;
-    if (v & 0x1) {
+    if ((v & 0x1) != 0) {
         res.type = ParsedElTag;
         v = v >> 1;
         res.tag = (HtmlTag)v;
@@ -83,9 +86,11 @@ ParsedElement *DecodeNextParsedElement(const uint8_t* &s, const uint8_t *end)
     } else {
         res.type = ParsedElString;
         v = v >> 1;
+        CrashAlwaysIf(v == 0);
         res.sLen = v;
         res.s = s;
         s += res.sLen;
+        CrashAlwaysIf(s > end);
     }
     return &res;
 }
@@ -98,7 +103,7 @@ static void EmitByte(Vec<uint8_t> *out, uint8_t v)
 static void EmitTag(Vec<uint8_t> *out, HtmlTag tag, bool isEndTag, bool hasAttributes)
 {
     CrashAlwaysIf(hasAttributes && isEndTag);
-    out->Append((uint8_t)255-tag);
+    EncodeParsedElementTag(out, tag);
     uint8_t tagPostfix = 0;
     if (isEndTag)
         tagPostfix |= IS_END_TAG_MASK;

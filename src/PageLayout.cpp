@@ -306,13 +306,13 @@ Vec<Page*> *PageLayout::LayoutText(Graphics *graphics, Font *defaultFnt, const c
 // Could have used a union for valEnum/{val/valLen} but there's not much
 // win in that.
 struct DecodedAttr {
-    HtmlAttr attr;
-    int       valEnum;
-    uint8_t * val;
-    size_t    valLen;
+    HtmlAttr        attr;
+    int             valEnum;
+    const uint8_t * val;
+    size_t          valLen;
 };
 
-static void DecodeAttributes(Vec<DecodedAttr> *attrs, uint8_t* &s, size_t& sLen)
+static void DecodeAttributes(Vec<DecodedAttr> *attrs, const uint8_t* &s, size_t& sLen)
 {
     DecodedAttr attr;
     CrashAlwaysIf(sLen < 1);
@@ -344,7 +344,7 @@ static DecodedAttr *FindAttr(Vec<DecodedAttr> *attrs, HtmlAttr attr)
     return NULL;
 }
 
-Vec<Page *> *PageLayout::LayoutInternal(Graphics *graphics, Font *defaultFnt, uint8_t *s, size_t sLen)
+Vec<Page *> *PageLayout::LayoutInternal(Graphics *graphics, Font *defaultFnt, const uint8_t *s, size_t sLen)
 {
     gfx = graphics;
     defaultFont = defaultFnt;
@@ -354,20 +354,22 @@ Vec<Page *> *PageLayout::LayoutInternal(Graphics *graphics, Font *defaultFnt, ui
 
     Vec<DecodedAttr> attrs;
 
-    uint8_t *end = s + sLen;
+    const uint8_t *end = s + sLen;
     // perf: pre-allocate lineStringsDx vector
     size_t estimatedStrings = sLen  / 4;
     lineStringsDx.EnsureCap(estimatedStrings);
-    while (s < end) {
-        uint8_t stringLen = *s++;
-        if (stringLen < Tag_First) {
-            CrashIf(s + stringLen > end);
-            wi.s = (char*)s;
-            wi.len = stringLen;
+    ParsedElement *parsedEl;
+    for (;;) {
+        parsedEl = DecodeNextParsedElement(s, end);
+        if (!parsedEl)
+            break;
+        if (ParsedElString == parsedEl->type) {
+            wi.s = (char*)parsedEl->s;
+            wi.len = parsedEl->sLen;
             AddWord(&wi);
-            s += stringLen;
         } else {
-            HtmlTag tag = (HtmlTag)(255 - stringLen);
+            CrashAlwaysIf(ParsedElTag != parsedEl->type);
+            HtmlTag tag = parsedEl->tag;
             uint8_t b = *s++;
             bool isEndTag = (IS_END_TAG_MASK == (b & IS_END_TAG_MASK));
             bool hasAttr  = (HAS_ATTR_MASK == (b & HAS_ATTR_MASK));

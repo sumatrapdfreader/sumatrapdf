@@ -70,7 +70,7 @@ public:
     }
 
     Vec<Page *> *LayoutText(Graphics *graphics, Font *defaultFnt, const char *s);
-    Vec<Page *> *LayoutInternal(Graphics *graphics, Font *defaultFnt, uint8_t *s, size_t sLen);
+    Vec<Page *> *LayoutInternal(Graphics *graphics, Font *defaultFnt, const uint8_t *s, size_t sLen);
 
 private:
     REAL GetTotalLineDx();
