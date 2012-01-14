@@ -6,6 +6,7 @@
 #include "FileUtil.h"
 #include "HtmlPullParser.h"
 #include "StrUtil.h"
+#include "Varint.h"
 
 /*
 Converts mobi html to our internal format optimized for further layout/display.
@@ -323,8 +324,17 @@ static void HandleTag(ConverterState *state, HtmlToken *t)
     else if (t->IsEndTag())
         RecordEndTag(state->tagNesting, tag);
 
+    // TODO: this could probably be data driven i.e. any special
+    // processing for a given tag can be describes with the following
+    // data:
+    // * should we ignore end tag (e.g. for <hr> tag). This probably is
+    //   the same as IsSelfClosingTag().
+    // * a list of acceptable attributes for this tag
     if (Tag_P == tag) {
         EmitTagP(state->out, t);
+        return;
+    } else if (Tag_Hr == tag) {
+        EmitTagHr(state->out, t);
         return;
     }
     // TODO: handle other tags

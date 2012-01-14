@@ -39,6 +39,9 @@ public:
         delete strings;
     }
     int dx, dy; // used during layout
+    // TODO: replace with binary blob that encodes data in a way
+    // similar to MobiHtmlToDisplay(), because we have many different
+    // types of data other than StringPos
     Vec<StringPos> *strings;
 };
 
