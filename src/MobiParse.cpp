@@ -709,32 +709,41 @@ bool MobiParse::ParseHeader()
     return true;
 }
 
-static uint8_t EOF_REC[4]  = { 0xe9, 0x8e, 0x0d, 0x0a };
-static uint8_t FLIS_REC[4] = { 'F', 'L', 'I', 'S' };
-static uint8_t FCIS_REC[4] = { 'F', 'C', 'I', 'S' };
-static uint8_t FDST_REC[4] = { 'F', 'D', 'S', 'T' };
-static uint8_t DATP_REC[4] = { 'D', 'A', 'T', 'P' };
-static uint8_t SRCS_REC[4] = { 'S', 'R', 'C', 'S' };
-// don't know what VIDE record is, probably some sort
-// of video
-static uint8_t VIDE_REC[4] = { 'V', 'I', 'D', 'E' };
+#define EOF_REC   0xe98e0d0a
+#define FLIS_REC  0x464c4953 // 'FLIS'
+#define FCIS_REC  0x64434953 // 'FCIS
+#define FDST_REC  0x46445354 // 'FDST'
+#define DATP_REC  0x44415450 // 'DATP'
+#define SRCS_REC  0x53524353 // 'SRCS'
+#define VIDE_REC  0x56494445 // 'VIDE'
+
+static uint32_t GetUpToFour(uint8_t*& s, size_t& len)
+{
+    size_t n = 0;
+    uint32_t v = *s++; len--;
+    while ((n < 3) && (len > 0)) {
+        v = v << 8;
+        v = v | *s++;
+        len--; n++;
+    }
+    return v;
+}
 
 static bool IsEofRecord(uint8_t *data, size_t dataLen)
 {
-    return (4 == dataLen) && memeq(data, EOF_REC,  4);
+    return (4 == dataLen) && (EOF_REC == GetUpToFour(data, dataLen));
 }
 
-// TODO: speed up by grabbing 4 bytes as uint32_t and comparing
-// with uint32_t constants instead of 4 byte memeq
 static bool KnownNonImageRec(uint8_t *data, size_t dataLen)
 {
-    if (dataLen < 4) return false;
-    if (memeq(data, FLIS_REC, 4)) return true;
-    if (memeq(data, FCIS_REC, 4)) return true;
-    if (memeq(data, FDST_REC, 4)) return true;
-    if (memeq(data, DATP_REC, 4)) return true;
-    if (memeq(data, SRCS_REC, 4)) return true;
-    if (memeq(data, VIDE_REC, 4)) return true;
+    uint32_t sig = GetUpToFour(data, dataLen);
+
+    if (FLIS_REC == sig) return true;
+    if (FCIS_REC == sig) return true;
+    if (FDST_REC == sig) return true;
+    if (DATP_REC == sig) return true;
+    if (SRCS_REC == sig) return true;
+    if (VIDE_REC == sig) return true;
     return false;
 }
 
