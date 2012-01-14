@@ -18,13 +18,12 @@
 * Robert Prouse (rprouse at gmail.com)
 
 All code under src is licensed as GPL v3 (see COPYING) with the main
-exception of code in src/utils which has a BSD license (see
-src/utils/COPYING).
+exception of code in src/utils which has a BSD license (see COPYING.BSD).
 
 Icons by Zenon, Sonke Tesch, George Georgiou, Robert Hegner,
 FAMFAMFAM and Yusuke Kamiyamane.
 
-Translations by various translators (see src/strings/*.txt)
+Translations by various translators (see strings/*.txt)
 
 External projects are by their various authors:
 

@@ -57,6 +57,8 @@ static AboutLayoutInfoEl gAboutLayoutInfo[] = {
     { _T("programming"),    _T("Krzysztof Kowalczyk"),  _T("http://blog.kowalczyk.info") },
     { _T("programming"),    _T("Simon B\xFCnzli"),      _T("http://www.zeniko.ch/#SumatraPDF") },
     { _T("programming"),    _T("William Blum"),         _T("http://william.famille-blum.org/") },
+    // TODO: replace this link with a better one where license information is nicely collected/linked
+    { _T("license"),        _T("open source"),          _T("http://sumatrapdf.googlecode.com/svn/trunk/AUTHORS") },
 #ifdef SVN_PRE_RELEASE_VER
     { _T("a note"),         _T("Pre-release version, for testing only!"), NULL },
 #endif
@@ -64,14 +66,11 @@ static AboutLayoutInfoEl gAboutLayoutInfo[] = {
     { _T("a note"),         _T("Debug version, for testing only!"), NULL },
 #endif
     { _T("pdf rendering"),  _T("MuPDF"),                _T("http://mupdf.com") },
-    // FreeType's license requires us to advertise that we use it
-    { _T("font rendering"), _T("FreeType"),             _T("http://www.freetype.org/") },
+    // TODO: remove these two lines in favor of the above license link?
     { _T("program icon"),   _T("Zenon"),                _T("http://www.flashvidz.tk/") },
     { _T("toolbar icons"),  _T("Yusuke Kamiyamane"),    _T("http://p.yusukekamiyamane.com/") },
     { _T("translators"),    _T("The Translators"),      _T("http://blog.kowalczyk.info/software/sumatrapdf/translators.html") },
     { _T("translations"),   _T("Contribute translation"), _T("http://blog.kowalczyk.info/software/sumatrapdf/translations.html") },
-    // Note: Must be on the last line, as it's dynamically hidden based on enableTeXEnhancements
-    { _T("synctex"),        _T("J\xE9rome Laurens"),    _T("http://itexmac.sourceforge.net/SyncTeX.html") },
     { NULL, NULL, NULL }
 };
 
@@ -262,13 +261,6 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RectI *rect)
     ScopedFont fontRightTxt(GetSimpleFont(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE));
 
     HGDIOBJ origFont = SelectObject(hdc, fontLeftTxt);
-
-    /* show/hide the SyncTeX attribution line */
-    assert(!gAboutLayoutInfo[dimof(gAboutLayoutInfo) - 2].leftTxt || str::Eq(gAboutLayoutInfo[dimof(gAboutLayoutInfo) - 2].leftTxt, _T("synctex")));
-    if (gGlobalPrefs.enableTeXEnhancements)
-        gAboutLayoutInfo[dimof(gAboutLayoutInfo) - 2].leftTxt = _T("synctex");
-    else
-        gAboutLayoutInfo[dimof(gAboutLayoutInfo) - 2].leftTxt = NULL;
 
     /* calculate minimal top box size */
     SizeI headerSize = CalcSumatraVersionSize(hdc);
