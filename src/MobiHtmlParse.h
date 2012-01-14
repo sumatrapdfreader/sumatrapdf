@@ -14,13 +14,17 @@
 
 enum ParsedElementType {
     ParsedElString = 0,
-    ParsedElTag
+    ParsedElInt
 };
 
 struct ParsedElement {
     ParsedElementType type;
-    // if type == ParsedElTag
-    HtmlTag         tag;
+    // if type == ParsedElInt
+    union {
+        int         n;
+        HtmlTag     tag;
+        HtmlAttr    attr;
+    };
     // if type == ParsedElString
     const uint8_t * s;
     uint32_t        sLen;

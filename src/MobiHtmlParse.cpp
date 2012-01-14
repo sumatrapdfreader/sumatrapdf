@@ -22,20 +22,22 @@ by a html tag (formatting code) like Tag_Font etc., in which case it's elided).
 
 Our format is a sequence of instructions encoded as sequence of bytes.
 
-The last bytes are reserved for formatting code. 
+Conceptually, the first part of an instruction is a 32-bit word.
 
-Bytes smaller than that encode length of the string followed by bytes of the string.
+If first bit of that word is 0, the instruction is a string to
+be drawn. The rest of the word encodes length of the string, followed
+by string bytes (in utf8).
 
-If string length is >= Tag_First, we emit Tag_First followed by
-a 2-byte length (i.e. a string cannot be longer than 65 kB).
-
-Strings are utf8.
+If first bit of the word is 1, the instruction is a tag and the
+rest of the word encodes HtmlTag enum. 
 
 Tag is followed by a byte:
 * if bit 0 is set, it's an end tag, otherwise a start (or self-closing tag)
 * if bit 1 is set, the tag has attributes
 
 If there are attributes, they follow the tag.
+
+The 32-bit word is encoded as a variant.
 
 TODO: this encoding doesn't support a case of formatting code inside a string e.g.
 "partially<i>itallic</i>". We can solve that by introducing a formatting code
@@ -61,12 +63,22 @@ void EncodeParsedElementString(Vec<uint8_t>* out, uint8_t *s, size_t sLen)
     out->Append(s, sLen);
 }
 
-void EncodeParsedElementTag(Vec<uint8_t>* out, HtmlTag tag)
+static void EncodeParsedElementInt(Vec<uint8_t>* out, int n)
 {
     // first bit is 1, followed by tag
-    uint32_t v = (uint32_t)tag;
+    uint32_t v = (uint32_t)n;
     v = (v << 1) | 1;
     EmitVarint(out, v);
+}
+
+static void EncodeParsedElementTag(Vec<uint8_t>* out, HtmlTag tag)
+{
+    EncodeParsedElementInt(out, tag);
+}
+
+static void EncodeParsedElementAttr(Vec<uint8_t>* out, HtmlAttr attr)
+{
+    EncodeParsedElementInt(out, attr);
 }
 
 ParsedElement *DecodeNextParsedElement(const uint8_t* &s, const uint8_t *end)
@@ -79,7 +91,7 @@ ParsedElement *DecodeNextParsedElement(const uint8_t* &s, const uint8_t *end)
     const char *sEnd = Varint::Parse32WithLimit((const char*)s, (const char*)end, &v);
     s = (const uint8_t*)sEnd;
     if ((v & 0x1) != 0) {
-        res.type = ParsedElTag;
+        res.type = ParsedElInt;
         v = v >> 1;
         res.tag = (HtmlTag)v;
         CrashAlwaysIf(res.tag >= Tag_Last);
@@ -95,11 +107,6 @@ ParsedElement *DecodeNextParsedElement(const uint8_t* &s, const uint8_t *end)
     return &res;
 }
 
-static void EmitByte(Vec<uint8_t> *out, uint8_t v)
-{
-    out->Append(v);
-}
-
 static void EmitTag(Vec<uint8_t> *out, HtmlTag tag, bool isEndTag, bool hasAttributes)
 {
     CrashAlwaysIf(hasAttributes && isEndTag);
@@ -110,11 +117,6 @@ static void EmitTag(Vec<uint8_t> *out, HtmlTag tag, bool isEndTag, bool hasAttri
     if (hasAttributes)
         tagPostfix |= HAS_ATTR_MASK;
     out->Append(tagPostfix);
-}
-
-static void EmitString(Vec<uint8_t>* out, uint8_t *s, size_t len)
-{
-    EncodeParsedElementString(out, s, len);
 }
 
 // Tokenize text into words and serialize those words to
@@ -133,7 +135,7 @@ static void EmitText(Vec<uint8_t>* out, HtmlToken *t)
         SkipNonWs(curr, end);
         size_t len = curr - currStart;
         if (len > 0)
-            EmitString(out, currStart, len);
+            EncodeParsedElementString(out, currStart, len);
         SkipWs(curr, end);
     }
 }
@@ -183,15 +185,12 @@ static bool EmitAttribute(Vec<uint8_t> *out, HtmlAttr attr, uint8_t *attrVal, si
         int valIdx = FindStrPos(validValues, (char*)attrVal, attrValLen);
         if (-1 == valIdx)
             return false;
-        out->Append((uint8_t)attr);
-        out->Append((uint8_t)valIdx);
+        EncodeParsedElementAttr(out, attr);
+        EncodeParsedElementInt(out, valIdx);
         return true;
     }
-    // TODO: remove this check when EmitWord() can handle larger strings
-    if (attrValLen > Tag_First)
-        return false;
-    out->Append((uint8_t)attr);
-    EmitString(out, attrVal, attrValLen);
+    EncodeParsedElementAttr(out, attr);
+    EncodeParsedElementString(out, attrVal, attrValLen);
     return true;
 }
 
@@ -249,7 +248,7 @@ static bool EmitAttributes(Vec<uint8_t> *out, HtmlToken *t, HtmlAttr *allowedAtt
     if (0 == attrCount)
         return false;
     CrashAlwaysIf(attributesEncoded.Count() == 0);
-    out->Append((uint8_t)attrCount);
+    EncodeParsedElementInt(out, (int)attrCount);
     out->Append(attributesEncoded.LendData(), attributesEncoded.Count());
     return true;
 }

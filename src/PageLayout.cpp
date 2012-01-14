@@ -301,10 +301,9 @@ Vec<Page*> *PageLayout::LayoutText(Graphics *graphics, Font *defaultFnt, const c
 }
 
 // Describes a html attribute decoded from our internal format
-// Attribute value is either represented by valEnum (if AttrHasEnumVal(attr)
-// is true) or arbitrary string described by val/valLen.
-// Could have used a union for valEnum/{val/valLen} but there's not much
-// win in that.
+// Attribute value is either represented by valEnum or arbitrary string
+// described by val/valLen. Could have used a union for valEnum/{val/valLen}
+// but there's not much win in that.
 struct DecodedAttr {
     HtmlAttr        attr;
     int             valEnum;
@@ -315,20 +314,25 @@ struct DecodedAttr {
 static void DecodeAttributes(Vec<DecodedAttr> *attrs, const uint8_t* &s, size_t& sLen)
 {
     DecodedAttr attr;
+    ParsedElement *parsedEl;
     CrashAlwaysIf(sLen < 1);
 
-    size_t attrCount = *s++; --sLen;
+    const uint8_t *end = s + sLen;
+    parsedEl = DecodeNextParsedElement(s, end);
+    CrashAlwaysIf(ParsedElInt != parsedEl->type);
+    int attrCount = parsedEl->n;
     attrs->Reset();
-    for (size_t i = 0; i < attrCount; i++) {
-        CrashAlwaysIf(sLen < 2);
-        attr.attr = (HtmlAttr)*s++; --sLen;
-        if (AttrHasEnumVal(attr.attr)) {
-            attr.valEnum = (int)*s++; --sLen;
+    for (int i = 0; i < attrCount; i++) {
+        parsedEl = DecodeNextParsedElement(s, end);
+        CrashAlwaysIf(ParsedElInt != parsedEl->type);
+        attr.attr = parsedEl->attr;
+        parsedEl = DecodeNextParsedElement(s, end);
+        if (ParsedElInt == parsedEl->type) {
+            CrashAlwaysIf(!AttrHasEnumVal(attr.attr));
+            attr.valEnum = parsedEl->n;
         } else {
-            // TODO: fix when we change encoding of string in EmitWord()
-            attr.valLen = (size_t)*s++; --sLen;
-            CrashAlwaysIf(sLen < attr.valLen);
-            attr.val = s; sLen -= attr.valLen;
+            attr.valLen = parsedEl->sLen;
+            attr.val = parsedEl->s;
         }
         attrs->Append(attr);
     }
@@ -368,7 +372,7 @@ Vec<Page *> *PageLayout::LayoutInternal(Graphics *graphics, Font *defaultFnt, co
             wi.len = parsedEl->sLen;
             AddWord(&wi);
         } else {
-            CrashAlwaysIf(ParsedElTag != parsedEl->type);
+            CrashAlwaysIf(ParsedElInt != parsedEl->type);
             HtmlTag tag = parsedEl->tag;
             uint8_t b = *s++;
             bool isEndTag = (IS_END_TAG_MASK == (b & IS_END_TAG_MASK));
