@@ -313,7 +313,7 @@ xps_parse_canvas(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri,
 		xps_clip(doc, ctm, dict, clip_att, clip_tag);
 
 	/* SumatraPDF: extended link support */
-	xps_extract_anchor_info(doc, root, area);
+	xps_extract_anchor_info(doc, root, fz_empty_rect, 1);
 
 	xps_begin_opacity(doc, ctm, area, opacity_mask_uri, dict, opacity_att, opacity_mask_tag);
 
@@ -323,6 +323,9 @@ xps_parse_canvas(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri,
 	}
 
 	xps_end_opacity(doc, opacity_mask_uri, dict, opacity_att, opacity_mask_tag);
+
+	/* SumatraPDF: extended link support */
+	xps_extract_anchor_info(doc, root, area, 2);
 
 	if (clip_att || clip_tag)
 		fz_pop_clip(doc->dev);

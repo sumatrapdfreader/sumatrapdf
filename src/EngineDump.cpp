@@ -91,15 +91,15 @@ char *DestRectToStr(BaseEngine *engine, PageDestination *dest)
     RectD rect = dest->GetDestRect();
     if (rect.IsEmpty()) {
         PointD pt = engine->Transform(rect.TL(), pageNo, 1.0, 0);
-        return str::Format("Point=\"%.0f,%.0f\"", pt.x, pt.y);
+        return str::Format("Point=\"%.0f %.0f\"", pt.x, pt.y);
     }
     if (rect.dx != DEST_USE_DEFAULT && rect.dy != DEST_USE_DEFAULT) {
-        RECT rc = engine->Transform(rect, pageNo, 1.0, 0).ToRECT();
-        return str::Format("Rect=\"%d,%d,%d,%d\"", rc.left, rc.top, rc.right, rc.bottom);
+        RectI rc = engine->Transform(rect, pageNo, 1.0, 0).Round();
+        return str::Format("Rect=\"%d %d %d %d\"", rc.x, rc.y, rc.dx, rc.dy);
     }
     if (rect.y != DEST_USE_DEFAULT) {
         PointD pt = engine->Transform(rect.TL(), pageNo, 1.0, 0);
-        return str::Format("Point=\"x,%.0f\"", pt.y);
+        return str::Format("Point=\"x %.0f\"", pt.y);
     }
     return NULL;
 }

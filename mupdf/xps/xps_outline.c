@@ -172,11 +172,11 @@ xps_load_outline(xps_document *doc)
 /* SumatraPDF: extended link support */
 
 void
-xps_extract_anchor_info(xps_document *doc, xml_element *node, fz_rect rect)
+xps_extract_anchor_info(xps_document *doc, xml_element *node, fz_rect rect, int step)
 {
-	char *value;
+	char *value = NULL;
 
-	if (doc->link_root && (value = xml_att(node, "FixedPage.NavigateUri")))
+	if (doc->link_root && (value = xml_att(node, "FixedPage.NavigateUri")) && step != 2)
 	{
 		fz_link_dest ld = { 0 };
 		if (!is_external_target(value))
@@ -195,7 +195,23 @@ xps_extract_anchor_info(xps_document *doc, xml_element *node, fz_rect rect)
 		doc->link_root = doc->link_root->next = fz_new_link(doc->ctx, rect, ld);
 	}
 
-	if ((value = xml_att(node, "Name")))
+	/* canvas bounds estimates for link and target positioning */
+	if (step == 1 && ++doc->_clinks_len <= nelem(doc->_clinks)) // canvas begin
+	{
+		doc->_clinks[doc->_clinks_len-1].rect = fz_empty_rect;
+		doc->_clinks[doc->_clinks_len-1].link = value ? doc->link_root : NULL;
+	}
+	if (step == 2 && doc->_clinks_len-- <= nelem(doc->_clinks)) // canvas end
+	{
+		if (!fz_is_empty_rect(doc->_clinks[doc->_clinks_len].rect))
+			rect = doc->_clinks[doc->_clinks_len].rect;
+		if (doc->_clinks[doc->_clinks_len].link)
+			doc->_clinks[doc->_clinks_len].link->rect = rect;
+	}
+	if (step != 1 && doc->_clinks_len > 0 && doc->_clinks_len <= nelem(doc->_clinks))
+		doc->_clinks[doc->_clinks_len-1].rect = fz_union_rect(doc->_clinks[doc->_clinks_len-1].rect, rect);
+
+	if ((value = xml_att(node, "Name")) && step != 1)
 	{
 		xps_target *target;
 		char *valueId = fz_malloc(doc->ctx, strlen(value) + 2);

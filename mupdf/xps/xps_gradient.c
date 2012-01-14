@@ -276,7 +276,7 @@ xps_draw_one_linear_gradient(xps_document *doc, fz_matrix ctm,
 	shade->mesh[4] = y1;
 	shade->mesh[5] = 0;
 
-	fz_fill_shade(doc->dev, shade, ctm, 1);
+	fz_fill_shade(doc->dev, shade, ctm, doc->opacity[doc->opacity_top]);
 
 	fz_drop_shade(doc->ctx, shade);
 }
