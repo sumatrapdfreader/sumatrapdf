@@ -24,7 +24,7 @@ enum {
     PDFSYNCERR_INVALID_ARGUMENT
 };
 
-class DisplayModel;
+class PdfEngine;
 
 class Synchronizer
 {
@@ -60,7 +60,7 @@ protected:
     ScopedMem<TCHAR> syncfilepath;  // path to the synchronization file
 
 public:
-    static int Create(const TCHAR *pdffilename, DisplayModel *dm, Synchronizer **sync);
+    static int Create(const TCHAR *pdffilename, PdfEngine *engine, Synchronizer **sync);
 };
 
 #endif

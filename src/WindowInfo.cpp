@@ -48,9 +48,9 @@ WindowInfo::~WindowInfo()
 {
     delete stressTest;
 
+    delete pdfsync;
     delete dm;
     delete watcher;
-    delete pdfsync;
     delete linkHandler;
 
     delete buffer;

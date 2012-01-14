@@ -338,7 +338,8 @@ bool OnInverseSearch(WindowInfo *win, int x, int y)
     // On double-clicking error message will be shown to the user
     // if the PDF does not have a synchronization file
     if (!win->pdfsync) {
-        int err = Synchronizer::Create(win->loadedFilePath, win->dm, &win->pdfsync);
+        int err = Synchronizer::Create(win->loadedFilePath,
+            static_cast<PdfEngine *>(win->dm->engine), &win->pdfsync);
         if (err == PDFSYNCERR_SYNCFILE_NOTFOUND) {
             DBG_OUT("Pdfsync: Sync file not found!\n");
             // We used to warn that "No synchronization file found" at this

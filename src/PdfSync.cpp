@@ -4,7 +4,7 @@
 #include "PdfSync.h"
 #include "StrUtil.h"
 #include "FileUtil.h"
-#include "DisplayModel.h"
+#include "PdfEngine.h"
 
 #include <shlwapi.h>
 #include <time.h>
@@ -43,7 +43,11 @@ struct PdfsyncPoint {
 class Pdfsync : public Synchronizer
 {
 public:
-    Pdfsync(const TCHAR* syncfilename) : Synchronizer(syncfilename) { }
+    Pdfsync(const TCHAR* syncfilename, PdfEngine *engine) :
+        Synchronizer(syncfilename), engine(engine)
+    {
+        assert(str::EndsWithI(syncfilename, PDFSYNC_EXTENSION));
+    }
 
     virtual int DocToSource(UINT pageNo, PointI pt, ScopedMem<TCHAR>& filename, UINT *line, UINT *col);
     virtual int SourceToDoc(const TCHAR* srcfilename, UINT line, UINT col, UINT *page, Vec<RectI>& rects);
@@ -52,7 +56,7 @@ private:
     int RebuildIndex();
     UINT SourceToRecord(const TCHAR* srcfilename, UINT line, UINT col, Vec<size_t>& records);
 
-private:
+    PdfEngine *engine;          // needed for converting between coordinate systems
     StrVec srcfiles;            // source file names
     Vec<PdfsyncLine> lines;     // record-to-line mapping
     Vec<PdfsyncPoint> points;   // record-to-point mapping
@@ -64,8 +68,8 @@ private:
 class SyncTex : public Synchronizer
 {
 public:
-    SyncTex(const TCHAR* syncfilename, DisplayModel *dm) :
-        Synchronizer(syncfilename), dm(dm), scanner(NULL)
+    SyncTex(const TCHAR* syncfilename, PdfEngine *engine) :
+        Synchronizer(syncfilename), engine(engine), scanner(NULL)
     {
         assert(str::EndsWithI(syncfilename, SYNCTEX_EXTENSION) ||
                str::EndsWithI(syncfilename, SYNCTEXGZ_EXTENSION));
@@ -81,7 +85,7 @@ public:
 private:
     int RebuildIndex();
 
-    DisplayModel *dm; // needed for converting between coordinate systems
+    PdfEngine *engine; // needed for converting between coordinate systems
     synctex_scanner_t scanner;
 };
 
@@ -127,9 +131,9 @@ TCHAR * Synchronizer::PrependDir(const TCHAR* filename) const
 // Create a Synchronizer object for a PDF file.
 // It creates either a SyncTex or PdfSync object
 // based on the synchronization file found in the folder containing the PDF file.
-int Synchronizer::Create(const TCHAR *pdffilename, DisplayModel *dm, Synchronizer **sync)
+int Synchronizer::Create(const TCHAR *pdffilename, PdfEngine *engine, Synchronizer **sync)
 {
-    if (!sync || !dm)
+    if (!sync || !engine)
         return PDFSYNCERR_INVALID_ARGUMENT;
 
     const TCHAR *fileExt = path::GetExt(pdffilename);
@@ -143,7 +147,7 @@ int Synchronizer::Create(const TCHAR *pdffilename, DisplayModel *dm, Synchronize
     // Check if a PDFSYNC file is present
     ScopedMem<TCHAR> syncFile(str::Join(baseName, PDFSYNC_EXTENSION));
     if (file::Exists(syncFile)) {
-        *sync = new Pdfsync(syncFile);
+        *sync = new Pdfsync(syncFile, engine);
         return *sync ? PDFSYNCERR_SUCCESS : PDFSYNCERR_OUTOFMEMORY;
     }
 
@@ -154,7 +158,7 @@ int Synchronizer::Create(const TCHAR *pdffilename, DisplayModel *dm, Synchronize
     if (file::Exists(texGzFile) || file::Exists(texFile)) {
         // due to a bug with synctex_parser.c, this must always be 
         // the path to the .synctex file (even if a .synctex.gz file is used instead)
-        *sync = new SyncTex(texFile, dm);
+        *sync = new SyncTex(texFile, engine);
         return *sync ? PDFSYNCERR_SUCCESS : PDFSYNCERR_OUTOFMEMORY;
     }
 
@@ -331,8 +335,12 @@ int Pdfsync::DocToSource(UINT pageNo, PointI pt, ScopedMem<TCHAR>& filename, UIN
             return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
 
     // find the entry in the index corresponding to this page
-    if (pageNo < 1 || sheetIndex.Count() <= pageNo)
+    if (pageNo <= 0 || pageNo >= sheetIndex.Count() || pageNo > (UINT)engine->PageCount())
         return PDFSYNCERR_INVALID_PAGE_NUMBER;
+
+    // PdfSync coordinates are y-inversed
+    RectI mbox = engine->PageMediabox(pageNo).Round();
+    pt.y = mbox.dy - pt.y;
 
     // distance to the closest pdf location (in the range <PDFSYNC_EPSILON_SQUARE)
     UINT closest_xydist = (UINT)-1;
@@ -469,11 +477,14 @@ int Pdfsync::SourceToDoc(const TCHAR* srcfilename, UINT line, UINT col, UINT *pa
                 continue;
             }
             firstPage = *page = points.At(i).page;
-            RectI rc((int)SYNC_TO_PDF_COORDINATE(points.At(i).x),
-                     (int)SYNC_TO_PDF_COORDINATE(points.At(i).y),
+            RectD rc(SYNC_TO_PDF_COORDINATE(points.At(i).x),
+                     SYNC_TO_PDF_COORDINATE(points.At(i).y),
                      MARK_SIZE, MARK_SIZE);
-            rects.Push(rc);
-            DBG_OUT("source->pdf: %s:%u -> record:%u -> page:%u, x:%u, y:%u\n",
+            // PdfSync coordinates are y-inversed
+            RectD mbox = engine->PageMediabox(firstPage);
+            rc.y = mbox.dy - (rc.y + rc.dy);
+            rects.Push(rc.Round());
+            DBG_OUT("source->pdf: %s:%u -> record:%u -> page:%u, x:%.0f, y:%.0f\n",
                     srcfilename, line, points.At(i).record, firstPage, rc.x, rc.y);
         }
     }
@@ -508,15 +519,6 @@ int SyncTex::DocToSource(UINT pageNo, PointI pt, ScopedMem<TCHAR>& filename, UIN
         if (RebuildIndex() != PDFSYNCERR_SUCCESS)
             return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
     assert(this->scanner);
-
-    if (!dm->ValidPageNo(pageNo))
-        return PDFSYNCERR_INVALID_PAGE_NUMBER;
-    PageInfo *pageInfo = dm->GetPageInfo(pageNo);
-    if (!pageInfo)
-        return PDFSYNCERR_OUTOFMEMORY;
-
-    // convert from BottomLeft to TopLeft coordinates
-    pt.y = pageInfo->page.Convert<int>().dy - pt.y;
 
     if (synctex_edit_query(this->scanner, pageNo, (float)pt.x, (float)pt.y) < 0)
         return PDFSYNCERR_NO_SYNC_AT_LOCATION;
@@ -587,31 +589,25 @@ TryAgainAnsi:
         return PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD;
 
     synctex_node_t node;
-    PageInfo *pageInfo = NULL;
     int firstpage = -1;
     rects.Reset();
 
     while (node = synctex_next_result(this->scanner)) {
         if (firstpage == -1) {
             firstpage = synctex_node_page(node);
-            *page = (UINT)firstpage;
-            if (dm->ValidPageNo(firstpage))
-                pageInfo = dm->GetPageInfo(firstpage);
-            if (!pageInfo)
+            if (firstpage <= 0 || firstpage > engine->PageCount())
                 continue;
+            *page = (UINT)firstpage;
         }
         if (synctex_node_page(node) != firstpage)
             continue;
 
-        RectI rc;
-        rc.x  = (int)synctex_node_box_visible_h(node);
-        rc.y  = (int)(synctex_node_box_visible_v(node) - synctex_node_box_visible_height(node));
-        rc.dx = (int)synctex_node_box_visible_width(node),
-        rc.dy = (int)(synctex_node_box_visible_height(node) + synctex_node_box_visible_depth(node));
-        // convert from TopLeft to BottomLeft coordinates
-        if (pageInfo)
-            rc.y = pageInfo->page.Convert<int>().dy - (rc.y + rc.dy);
-        rects.Push(rc);
+        RectD rc;
+        rc.x  = synctex_node_box_visible_h(node);
+        rc.y  = synctex_node_box_visible_v(node) - synctex_node_box_visible_height(node);
+        rc.dx = synctex_node_box_visible_width(node),
+        rc.dy = synctex_node_box_visible_height(node) + synctex_node_box_visible_depth(node);
+        rects.Push(rc.Round());
     }
 
     if (firstpage <= 0)

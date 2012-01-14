@@ -495,12 +495,9 @@ $(OS)\PdfPreview.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\PdfPreviewDll.obj: src\BaseEngine.h src\PdfEngine.h src\previewer\PdfPreview.h
 $(OS)\PdfPreviewDll.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\Scopes.h
 $(OS)\PdfPreviewDll.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
-$(OS)\PdfSync.obj: src\BaseEngine.h src\ChmEngine.h src\DisplayModel.h
-$(OS)\PdfSync.obj: src\DisplayState.h src\DjVuEngine.h src\EngineManager.h
-$(OS)\PdfSync.obj: src\EpubEngine.h src\ImagesEngine.h src\PdfEngine.h
-$(OS)\PdfSync.obj: src\PdfSync.h src\PsEngine.h src\TextSearch.h
-$(OS)\PdfSync.obj: src\TextSelection.h src\utils\BaseUtil.h src\utils\FileUtil.h
-$(OS)\PdfSync.obj: src\utils\GeomUtil.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\PdfSync.obj: src\BaseEngine.h src\PdfEngine.h src\PdfSync.h
+$(OS)\PdfSync.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
+$(OS)\PdfSync.obj: src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\Print.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
 $(OS)\Print.obj: src\ChmEngine.h src\DisplayModel.h src\DisplayState.h
 $(OS)\Print.obj: src\DjVuEngine.h src\EngineManager.h src\EpubEngine.h

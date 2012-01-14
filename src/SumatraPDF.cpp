@@ -883,7 +883,8 @@ static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win,
     win::SetText(win.hwndFrame, title);
 
     if (HasPermission(Perm_DiskAccess) && Engine_PDF == win.dm->engineType) {
-        int res = Synchronizer::Create(fileName, win.dm, &win.pdfsync);
+        int res = Synchronizer::Create(fileName,
+            static_cast<PdfEngine *>(win.dm->engine), &win.pdfsync);
         // expose SyncTeX in the UI
         if (PDFSYNCERR_SUCCESS == res)
             gGlobalPrefs.enableTeXEnhancements = true;
