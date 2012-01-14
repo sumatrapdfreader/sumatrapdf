@@ -7,9 +7,27 @@
 #include <stdint.h>
 #include <Vec.h>
 
+#include "HtmlPullParser.h"
+
 #define IS_END_TAG_MASK  0x01
 #define HAS_ATTR_MASK    0x02
 
-Vec<uint8_t> *MobiHtmlToDisplay(uint8_t *s, size_t sLen, Vec<uint8_t> *html);
+enum ParsedElementType {
+    ParsedElString = 0,
+    ParsedElTag
+};
+
+struct ParsedElement {
+    ParsedElementType type;
+    // if type == ParsedElTag
+    HtmlTag         tag;
+    // if type == ParsedElString
+    const uint8_t * s;
+    uint32_t        sLen;
+};
+
+ParsedElement *DecodeNextParsedElement(const uint8_t* &s, const uint8_t *end);
+
+Vec<uint8_t> *MobiHtmlToDisplay(const uint8_t *s, size_t sLen, Vec<uint8_t> *html);
 
 #endif

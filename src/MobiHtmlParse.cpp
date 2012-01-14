@@ -44,6 +44,52 @@ denoting a string with embedded formatting codes. It's length would be 16-bit
 think it happens very often in practice, though.
 */
 
+static inline void EmitVarint(Vec<uint8_t>* out, uint32_t v)
+{
+    uint8_t *data = out->EnsureEndPadding(4);
+    uint8_t *dataEnd = (uint8_t*)Varint::Encode32((char*)data, v);
+    CrashAlwaysIf(dataEnd - data > 4);
+    out->IncreaseLen(dataEnd - data);
+}
+
+void EncodeParsedElementString(Vec<uint8_t>* out, uint8_t *s, size_t sLen)
+{
+    // first bit is 0, followed by sLen
+    uint32_t v = (uint32_t)sLen;
+    v = v << 1;
+    EmitVarint(out, v);
+    out->Append(s, sLen);
+}
+
+void EncodeParsedElementTag(Vec<uint8_t>* out, HtmlTag tag)
+{
+    // first bit is 1, followed by tag
+    uint32_t v = (uint32_t)tag;
+    v = (v << 1) | 1;
+    EmitVarint(out, v);
+}
+
+ParsedElement *DecodeNextParsedElement(const uint8_t* &s, const uint8_t *end)
+{
+    static ParsedElement res;
+    uint32_t v;
+    const char *sEnd = Varint::Parse32WithLimit((const char*)s, (const char*)end, &v);
+    s = (const uint8_t*)sEnd;
+    if (v & 0x1) {
+        res.type = ParsedElTag;
+        v = v >> 1;
+        res.tag = (HtmlTag)v;
+        CrashAlwaysIf(res.tag >= Tag_Last);
+    } else {
+        res.type = ParsedElString;
+        v = v >> 1;
+        res.sLen = v;
+        res.s = s;
+        s += res.sLen;
+    }
+    return &res;
+}
+
 static void EmitByte(Vec<uint8_t> *out, uint8_t v)
 {
     out->Append(v);
@@ -61,17 +107,9 @@ static void EmitTag(Vec<uint8_t> *out, HtmlTag tag, bool isEndTag, bool hasAttri
     out->Append(tagPostfix);
 }
 
-static void EmitWord(Vec<uint8_t>* out, uint8_t *s, size_t len)
+static void EmitString(Vec<uint8_t>* out, uint8_t *s, size_t len)
 {
-    // TODO: convert html entities to text
-    if (len >= Tag_First) {
-        // TODO: emit Tag_First and then len as 2 bytes
-        // TODO: fix EmitAttribute() when this limit is fixed
-        // TODO: fix DecodeAttributes() when this limit is fixed
-        return;
-    }
-    out->Append((uint8_t)len);
-    out->Append(s, len);
+    EncodeParsedElementString(out, s, len);
 }
 
 // Tokenize text into words and serialize those words to
@@ -90,7 +128,7 @@ static void EmitText(Vec<uint8_t>* out, HtmlToken *t)
         SkipNonWs(curr, end);
         size_t len = curr - currStart;
         if (len > 0)
-            EmitWord(out, currStart, len);
+            EmitString(out, currStart, len);
         SkipWs(curr, end);
     }
 }
@@ -148,7 +186,7 @@ static bool EmitAttribute(Vec<uint8_t> *out, HtmlAttr attr, uint8_t *attrVal, si
     if (attrValLen > Tag_First)
         return false;
     out->Append((uint8_t)attr);
-    EmitWord(out, attrVal, attrValLen);
+    EmitString(out, attrVal, attrValLen);
     return true;
 }
 
@@ -398,7 +436,7 @@ static void PrettifyHtml(ConverterState *state, HtmlToken *t)
 
 // convert mobi html to a format optimized for layout/display
 // returns NULL in case of an error
-Vec<uint8_t> *MobiHtmlToDisplay(uint8_t *s, size_t sLen, Vec<uint8_t> *html)
+Vec<uint8_t> *MobiHtmlToDisplay(const uint8_t *s, size_t sLen, Vec<uint8_t> *html)
 {
     Vec<uint8_t> *res = new Vec<uint8_t>(sLen); // avoid re-allocations by pre-allocating expected size
 
@@ -410,7 +448,7 @@ Vec<uint8_t> *MobiHtmlToDisplay(uint8_t *s, size_t sLen, Vec<uint8_t> *html)
 
     ConverterState state = { res, &tagNesting, html };
 
-    HtmlPullParser parser(s);
+    HtmlPullParser parser((uint8_t*)s);
 
     for (;;)
     {
