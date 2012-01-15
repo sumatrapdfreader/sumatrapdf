@@ -297,7 +297,7 @@ static inline float point_inside_circle(float px, float py, float x, float y, fl
 }
 
 static void
-xps_draw_radial_gradient(xps_document *doc, fz_matrix ctm,
+xps_draw_radial_gradient(xps_document *doc, fz_matrix ctm, fz_rect area,
 	struct stop *stops, int count,
 	xml_element *root, int spread)
 {
@@ -306,6 +306,9 @@ xps_draw_radial_gradient(xps_document *doc, fz_matrix ctm,
 	float xrad = 1;
 	float yrad = 1;
 	float invscale;
+	/* SumatraPDF: repeat and reflect gradients */
+	fz_rect rc;
+	int i, ma = 1;
 
 	char *center_att = xml_att(root, "Center");
 	char *origin_att = xml_att(root, "GradientOrigin");
@@ -344,6 +347,28 @@ xps_draw_radial_gradient(xps_document *doc, fz_matrix ctm,
 	r0 = 0;
 	r1 = xrad;
 
+	/* SumatraPDF: repeat and reflect gradients */
+	rc = fz_transform_rect(fz_invert_matrix(ctm), area);
+	ma = MAX(ma, ceilf(_hypotf(rc.x0 - x0, rc.y0 - y0) / xrad));
+	ma = MAX(ma, ceilf(_hypotf(rc.x1 - x0, rc.y0 - y0) / xrad));
+	ma = MAX(ma, ceilf(_hypotf(rc.x0 - x0, rc.y1 - y0) / xrad));
+	ma = MAX(ma, ceilf(_hypotf(rc.x1 - x0, rc.y1 - y0) / xrad));
+	if (spread == SPREAD_REPEAT)
+	{
+		for (i = ma - 1; i >= 0; i--)
+			xps_draw_one_radial_gradient(doc, ctm, stops, count, 0, x0, y0, r0 + i * xrad, x1, y1, r1 + i * xrad);
+	}
+	else if (spread == SPREAD_REFLECT)
+	{
+		if ((ma % 2) != 0)
+			ma++;
+		for (i = ma - 2; i >= 0; i -= 2)
+		{
+			xps_draw_one_radial_gradient(doc, ctm, stops, count, 0, x0, y0, r0 + i * xrad, x1, y1, r1 + i * xrad);
+			xps_draw_one_radial_gradient(doc, ctm, stops, count, 0, x0, y0, r0 + (i + 2) * xrad, x1, y1, r1 + i * xrad);
+		}
+	}
+	else
 	xps_draw_one_radial_gradient(doc, ctm, stops, count, 1, x0, y0, r0, x1, y1, r1);
 }
 
@@ -353,11 +378,15 @@ xps_draw_radial_gradient(xps_document *doc, fz_matrix ctm,
  */
 
 static void
-xps_draw_linear_gradient(xps_document *doc, fz_matrix ctm,
+xps_draw_linear_gradient(xps_document *doc, fz_matrix ctm, fz_rect area,
 	struct stop *stops, int count,
 	xml_element *root, int spread)
 {
 	float x0, y0, x1, y1;
+	/* SumatraPDF: repeat and reflect gradients */
+	int i, mi, ma;
+	float dx, dy, x, y, k;
+	fz_point p1, p2;
 
 	char *start_point_att = xml_att(root, "StartPoint");
 	char *end_point_att = xml_att(root, "EndPoint");
@@ -370,6 +399,36 @@ xps_draw_linear_gradient(xps_document *doc, fz_matrix ctm,
 	if (end_point_att)
 		xps_get_point(end_point_att, &x1, &y1);
 
+	/* SumatraPDF: repeat and reflect gradients */
+	p1.x = x0; p1.y = y0; p2.x = x1; p2.y = y1;
+	p1 = fz_transform_point(ctm, p1); p2 = fz_transform_point(ctm, p2);
+	x = p2.x - p1.x; y = p2.y - p1.y;
+	k = ((area.x0 - p1.x) * x + (area.y0 - p1.y) * y) / (x * x + y * y);
+	mi = floorf(k); ma = ceilf(k);
+	k = ((area.x1 - p1.x) * x + (area.y0 - p1.y) * y) / (x * x + y * y);
+	mi = MIN(mi, floorf(k)); ma = MAX(ma, ceilf(k));
+	k = ((area.x0 - p1.x) * x + (area.y1 - p1.y) * y) / (x * x + y * y);
+	mi = MIN(mi, floorf(k)); ma = MAX(ma, ceilf(k));
+	k = ((area.x1 - p1.x) * x + (area.y1 - p1.y) * y) / (x * x + y * y);
+	mi = MIN(mi, floorf(k)); ma = MAX(ma, ceilf(k));
+	dx = x1 - x0; dy = y1 - y0;
+
+	if (spread == SPREAD_REPEAT)
+	{
+		for (i = mi; i < ma; i++)
+			xps_draw_one_linear_gradient(doc, ctm, stops, count, 0, x0 + i * dx, y0 + i * dy, x1 + i * dx, y1 + i * dy);
+	}
+	else if (spread == SPREAD_REFLECT)
+	{
+		if ((mi % 2) != 0)
+			mi--;
+		for (i = mi; i < ma; i += 2)
+		{
+			xps_draw_one_linear_gradient(doc, ctm, stops, count, 0, x0 + i * dx, y0 + i * dy, x1 + i * dx, y1 + i * dy);
+			xps_draw_one_linear_gradient(doc, ctm, stops, count, 0, x0 + (i + 2) * dx, y0 + (i + 2) * dy, x1 + i * dx, y1 + i * dy);
+		}
+	}
+	else
 	xps_draw_one_linear_gradient(doc, ctm, stops, count, 1, x0, y0, x1, y1);
 }
 
@@ -381,7 +440,7 @@ xps_draw_linear_gradient(xps_document *doc, fz_matrix ctm,
 static void
 xps_parse_gradient_brush(xps_document *doc, fz_matrix ctm, fz_rect area,
 	char *base_uri, xps_resource *dict, xml_element *root,
-	void (*draw)(xps_document *, fz_matrix, struct stop *, int, xml_element *, int))
+	void (*draw)(xps_document *, fz_matrix, fz_rect, struct stop *, int, xml_element *, int))
 {
 	xml_element *node;
 
@@ -451,7 +510,7 @@ xps_parse_gradient_brush(xps_document *doc, fz_matrix ctm, fz_rect area,
 
 	xps_begin_opacity(doc, ctm, area, base_uri, dict, opacity_att, NULL);
 
-	draw(doc, ctm, stop_list, stop_count, root, spread_method);
+	draw(doc, ctm, area, stop_list, stop_count, root, spread_method);
 
 	xps_end_opacity(doc, base_uri, dict, opacity_att, NULL);
 }
