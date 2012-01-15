@@ -108,6 +108,7 @@ static void
 fz_bbox_pop_clip(fz_device *dev)
 {
 	fz_bbox_data *data = dev->user;
+	assert(data->top > 0);
 	data->top--;
 }
 
@@ -132,6 +133,7 @@ fz_bbox_end_group(fz_device *dev)
 static void
 fz_bbox_free_user(fz_device *dev)
 {
+	assert(((fz_bbox_data *)dev->user)->top == 0);
 	fz_free(dev->ctx, dev->user);
 }
 
