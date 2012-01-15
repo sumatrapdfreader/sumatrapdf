@@ -67,22 +67,24 @@ public:
         return pageInstrOffset.Count();
     }
 
-    // TODO: instead of instrCount, return DrawInstr *& end
-    DrawInstr *GetInstructionsForPage(size_t pageNo, size_t *instrCount) const {
+    DrawInstr *GetInstructionsForPage(size_t pageNo, DrawInstr *& endInstr) const {
         CrashAlwaysIf(pageNo >= PageCount());
         size_t start = pageInstrOffset.At(pageNo);
         size_t end = instructions.Count(); // if the last page
         if (pageNo < PageCount() - 1)
             end = pageInstrOffset.At(pageNo + 1);
         CrashAlwaysIf(end < start);
-        *instrCount = end - start;
-        return &instructions.At(start);
+        size_t len = end - start;
+        DrawInstr *ret = &instructions.At(start);
+        endInstr = ret + len;
+        return ret;
     }
 
-    // TODO: instead of instrCount, return DrawInstr *& end
-    DrawInstr *GetInstructionsForCurrentLine(size_t *instrCount) const {
-        *instrCount = instructions.Count() - currLineInstrOffset;
-        return &instructions.At(currLineInstrOffset);
+    DrawInstr *GetInstructionsForCurrentLine(DrawInstr *& endInst) const {
+        size_t len = instructions.Count() - currLineInstrOffset;
+        DrawInstr *ret = &instructions.At(currLineInstrOffset);
+        endInst = ret + len;
+        return ret;
     }
 
     bool IsCurrentLineEmpty() const {
@@ -91,7 +93,7 @@ public:
 
 
 private:
-    REAL GetTotalLineDx();
+    REAL GetCurrentLineDx();
     void LayoutLeftStartingAt(REAL offX);
     void JustifyLineLeft();
     void JustifyLineRight();

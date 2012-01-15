@@ -147,9 +147,9 @@ static void DrawPage(Graphics *g, Font *f, int pageNo, REAL offX, REAL offY)
 
     WCHAR buf[512];
     PointF pos;
-    size_t instrCount;
-    DrawInstr *currInstr = gCurrentEbook->pageLayout->GetInstructionsForPage(pageNo, &instrCount);
-    for (size_t i = 0; i < instrCount; i++) {
+    DrawInstr *end;
+    DrawInstr *currInstr = gCurrentEbook->pageLayout->GetInstructionsForPage(pageNo, end);
+    while (currInstr < end) {
         RectF bbox = currInstr->bbox;
         bbox.X += offX;
         bbox.Y += offY;
@@ -158,17 +158,20 @@ static void DrawPage(Graphics *g, Font *f, int pageNo, REAL offX, REAL offY)
             REAL y = bbox.Y + bbox.Height / 2.f;
             PointF p1(bbox.X, y);
             PointF p2(bbox.X + bbox.Width, y);
+            if (gShowTextBoundingBoxes) {
+                //g->FillRectangle(&br, bbox);
+                g->DrawRectangle(&pen, bbox);
+            }
             g->DrawLine(&blackPen, p1, p2);
-            continue;
+        } else if (InstrTypeString == currInstr->type) {
+            size_t strLen = str::Utf8ToWcharBuf((const char*)currInstr->str.s, currInstr->str.len, buf, dimof(buf));
+            bbox.GetLocation(&pos);
+            if (gShowTextBoundingBoxes) {
+                //g->FillRectangle(&br, bbox);
+                g->DrawRectangle(&pen, bbox);
+            }
+            g->DrawString(buf, strLen, f, pos, NULL, &br);
         }
-        CrashAlwaysIf(InstrTypeString != currInstr->type);
-        size_t strLen = str::Utf8ToWcharBuf((const char*)currInstr->str.s, currInstr->str.len, buf, dimof(buf));
-        bbox.GetLocation(&pos);
-        if (gShowTextBoundingBoxes) {
-            //g->FillRectangle(&br, bbox);
-            g->DrawRectangle(&pen, bbox);
-        }
-        g->DrawString(buf, strLen, f, pos, NULL, &br);
         ++currInstr;
     }
 }

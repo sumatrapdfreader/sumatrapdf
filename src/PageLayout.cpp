@@ -127,13 +127,12 @@ void PageLayout::StartNewPage()
 }
 
 // TODO: returns -spaceDx and not 0 for empty line
-// TODO: rename to GetCurrentLineDx()
-REAL PageLayout::GetTotalLineDx()
+REAL PageLayout::GetCurrentLineDx()
 {
     REAL dx = -spaceDx;
-    size_t instrCount;
-    DrawInstr *currInstr = GetInstructionsForCurrentLine(&instrCount);
-    for (size_t i = 0; i < instrCount; i++) {
+    DrawInstr *end;
+    DrawInstr *currInstr = GetInstructionsForCurrentLine(end);
+    while (currInstr < end) {
         if (InstrTypeString == currInstr->type) {
             dx += currInstr->bbox.Width;
             dx += spaceDx;
@@ -146,9 +145,9 @@ REAL PageLayout::GetTotalLineDx()
 void PageLayout::LayoutLeftStartingAt(REAL offX)
 {
     currX = offX;
-    size_t instrCount;
-    DrawInstr *currInstr = GetInstructionsForCurrentLine(&instrCount);
-    for (size_t i = 0; i < instrCount; i++) {
+    DrawInstr *end;
+    DrawInstr *currInstr = GetInstructionsForCurrentLine(end);
+    while (currInstr < end) {
         if (InstrTypeString == currInstr->type) {
             // currInstr Width and Height are already set
             currInstr->bbox.X = currX;
@@ -166,20 +165,20 @@ void PageLayout::JustifyLineLeft()
 
 void PageLayout::JustifyLineRight()
 {
-    REAL margin = pageDx - GetTotalLineDx();
+    REAL margin = pageDx - GetCurrentLineDx();
     LayoutLeftStartingAt(margin);
 }
 
 void PageLayout::JustifyLineCenter()
 {
-    REAL margin = (pageDx - GetTotalLineDx());
+    REAL margin = (pageDx - GetCurrentLineDx());
     LayoutLeftStartingAt(margin / 2.f);
 }
 
 void PageLayout::JustifyLineBoth()
 {
 #if 0
-    REAL margin = pageDx - GetTotalLineDx();
+    REAL margin = pageDx - GetCurrentLineDx();
     size_t prevCount = currPage->strings->Count();
     LayoutLeftStartingAt(0);
 
@@ -193,7 +192,7 @@ void PageLayout::JustifyLineBoth()
     }
 #endif
 
-    REAL margin = pageDx - GetTotalLineDx();
+    REAL margin = pageDx - GetCurrentLineDx();
     LayoutLeftStartingAt(0);
     // TODO: redistribute margin among strings in current line
 }
