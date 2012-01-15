@@ -43,15 +43,16 @@ Color gColBgTop(0xfa, 0xfa, 0xfa); // this is lightish gray
 
 struct EbookWindowInfo 
 {
-    MobiParse * mb;
-    Vec<uint8_t> *forLayout;
+    MobiParse *         mb;
+    Vec<uint8_t> *      forLayout;
+    PageLayout      *   pageLayout;
 
-    EbookWindowInfo() : mb(NULL), forLayout(NULL) { }
+    EbookWindowInfo() : mb(NULL), forLayout(NULL), pageLayout(NULL) { }
     ~EbookWindowInfo() {
         delete mb;
         delete forLayout;
+        delete pageLayout;
     }
-
 };
 
 static EbookWindowInfo *gCurrentEbook = NULL;
@@ -93,9 +94,7 @@ static inline void EnableAndShow(HWND hwnd, bool enable)
 static Font *gFont = NULL;
 
 // A sample text to display if we don't show an actual mobi file
-static const char *gSampleHtml = "<html>ClearType is <b>dependent</b> on the <i>orientation and ordering</i> of the LCD stripes. <hr>Currently,\nClearType is implemented only for vertical stripes that are ordered RGB. This might be a concern if you are\n using a tablet PC, where the display can be oriented in any direction, or if you are using a screen that\ncan be turned from landscape to portrait.\n\nThe following example draws text with two different quality settings:</html>";
-
-static Vec<Page*> *gPages;
+static const char *gSampleHtml = "<html><p align=left>ClearType is <b>dependent</b> on the <i>orientation and ordering</i> of the LCD stripes.</p> <p align='justify'>Currently, ClearType is implemented <hr> only for vertical stripes that are ordered RGB.</p> <p align=right>This might be a concern if you are using a tablet PC.</p> <p align=center>Where the display can be oriented in any direction, or if you are using a screen that can be turned from landscape to portrait. The following example draws text with two different quality settings.</p></html>";
 
 static EbookWindowInfo *LoadSampleHtml()
 {
@@ -127,11 +126,15 @@ Error:
     return NULL;
 }
 
-static Vec<Page*> *LayoutMobiFile(EbookWindowInfo *wi, Graphics *gfx, Font *defaultFont, int pageDx, int pageDy)
+static PageLayout *LayoutMobiFile(EbookWindowInfo *wi, Graphics *gfx, Font *defaultFont, int pageDx, int pageDy)
 {
-    PageLayout layouter(pageDx, pageDy);
-    Vec<Page*> *pages = layouter.LayoutInternal(gfx, defaultFont, wi->forLayout->LendData(), wi->forLayout->Count());
-    return pages;
+    PageLayout *layout = new PageLayout(pageDx, pageDy);
+    bool ok = layout->LayoutInternal(gfx, defaultFont, wi->forLayout->LendData(), wi->forLayout->Count());
+    if (!ok) {
+        delete layout;
+        return NULL;
+    }
+    return layout;
 }
 
 static void DrawPage(Graphics *g, Font *f, int pageNo, REAL offX, REAL offY)
@@ -141,16 +144,16 @@ static void DrawPage(Graphics *g, Font *f, int pageNo, REAL offX, REAL offY)
     SolidBrush br2(Color(255, 255, 255, 255));
     Pen pen(Color(255, 0, 0), 1);
     Pen blackPen(Color(0, 0, 0), 1);
-    Page *page = gPages->At(pageNo);
-    size_t n = page->strings->Count();
+
     WCHAR buf[512];
     PointF pos;
-    for (size_t i = 0; i < n; i++) {
-        StringPos sp = page->strings->At(i);
-        RectF bbox = sp.bbox;
+    size_t instrCount;
+    DrawInstr *currInstr = gCurrentEbook->pageLayout->GetInstructionsForPage(pageNo, &instrCount);
+    for (size_t i = 0; i < instrCount; i++) {
+        RectF bbox = currInstr->bbox;
         bbox.X += offX;
         bbox.Y += offY;
-        if (Str_Hr == (StrSpecial)(uintptr_t)sp.s) {
+        if (InstrTypeLine == currInstr->type) {
             // hr is a line drawn in the middle of bounding box
             REAL y = bbox.Y + bbox.Height / 2.f;
             PointF p1(bbox.X, y);
@@ -158,13 +161,15 @@ static void DrawPage(Graphics *g, Font *f, int pageNo, REAL offX, REAL offY)
             g->DrawLine(&blackPen, p1, p2);
             continue;
         }
-        size_t strLen = str::Utf8ToWcharBuf(sp.s, sp.len, buf, dimof(buf));
+        CrashAlwaysIf(InstrTypeString != currInstr->type);
+        size_t strLen = str::Utf8ToWcharBuf((const char*)currInstr->str.s, currInstr->str.len, buf, dimof(buf));
         bbox.GetLocation(&pos);
         if (gShowTextBoundingBoxes) {
             //g->FillRectangle(&br, bbox);
             g->DrawRectangle(&pen, bbox);
         }
         g->DrawString(buf, strLen, f, pos, NULL, &br);
+        ++currInstr;
     }
 }
 
@@ -173,13 +178,13 @@ const int pageBorderY = 10;
 
 static void ReLayout(Graphics* gfx, RectI r)
 {
-    CrashAlwaysIf(gPages);
+    CrashAlwaysIf(gCurrentEbook->pageLayout);
 
     int pageDx = r.dx - (pageBorderX * 2);
     int pageDy = r.dy - (pageBorderY * 2);
 
     if (gCurrentEbook)
-        gPages = LayoutMobiFile(gCurrentEbook, gfx, gFont, pageDx, pageDy);
+        gCurrentEbook->pageLayout = LayoutMobiFile(gCurrentEbook, gfx, gFont, pageDx, pageDy);
 }
 
 static void DrawFrame2(Graphics &g, RectI r)
@@ -190,10 +195,10 @@ static void DrawFrame2(Graphics &g, RectI r)
     g.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
     g.SetPageUnit(UnitPixel);
 
-    if (!gPages)
+    if (!gCurrentEbook->pageLayout)
         ReLayout(&g, r);
 
-    if (!gPages)
+    if (!gCurrentEbook->pageLayout)
         return;
 
     //SolidBrush bgBrush(gColBg);
@@ -240,9 +245,9 @@ static void OnPaintFrame(HWND hwnd)
     DrawFrame(hwnd, dc, &ps);
     EndPaint(hwnd, &ps);
 
-    if (!gPages)
+    if (!gCurrentEbook->pageLayout)
         return;
-    size_t pagesCount = gPages->Count();
+    size_t pagesCount = gCurrentEbook->pageLayout->PageCount();
     ScopedMem<TCHAR> s(str::Format(_T("%d pages"), (int)pagesCount));
     win::SetText(hwnd, s.Get());
 
@@ -259,8 +264,6 @@ static void LoadEbookAndTriggerLayout(TCHAR *fileName, HWND hwnd)
         return;
     delete gCurrentEbook;
     gCurrentEbook = wi;
-    delete gPages;
-    gPages = NULL; // this triggers re-layout
     InvalidateRect(hwnd, NULL, true);
 }
 
@@ -271,8 +274,6 @@ static void LoadSampleAsCurrentDoc()
         return;
     delete gCurrentEbook;
     gCurrentEbook = wi;
-    delete gPages;
-    gPages = NULL; // this triggers re-layout
 }
 
 static void OnCreateWindow(HWND hwnd)
@@ -280,7 +281,7 @@ static void OnCreateWindow(HWND hwnd)
     //gFont = ::new Font(L"Times New Roman", 16, FontStyleRegular);
     //HDC dc = GetDC(hwnd);
     //gFont = ::new Font(dc, gFontDefault); 
-    gFont = ::new Font(L"Georgia", 14, FontStyleRegular);
+    gFont = ::new Font(L"Georgia", 10, FontStyleRegular);
     HMENU menu = BuildMenu();
     SetMenu(hwnd, menu);
     LoadSampleAsCurrentDoc();
@@ -466,9 +467,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     ret = RunApp();
 
-    if (gPages)
-        DeleteVecMembers<Page*>(*gPages);
-    delete gPages;
     delete gCurrentEbook;
     ::delete gFont;
     ::delete frameBmp;

@@ -7,42 +7,46 @@
 #include <stdint.h>
 #include "BaseUtil.h"
 #include "Vec.h"
+#include "StrUtil.h"
 
 using namespace Gdiplus;
 
 struct WordInfo;
 
-enum StrSpecial {
-    Str_Hr = 0,
+// Layout information for a given page is a list of
+// draw instructions that define what to draw and where.
+enum DrawInstrType {
+    InstrTypeString = 0,
+    InstrTypeLine,
+    InstrTypeSetFont
 };
 
-struct StringPos {
-    StringPos() : s(NULL), len(0) {
-    }
-    StringPos(const char *s, size_t len, RectF bbox) : s(s), len(len), bbox(bbox) {
-    }
-    // is either a pointer to a string or one of the StrSpecial
-    // enumerations
-    const char *s;
-    size_t len;
-    RectF bbox;
+struct InstrString {
+    const uint8_t *     s;
+    size_t              len;
 };
 
-class Page {
-public:
-    Page() : dx(0), dy(0), strings(NULL) {
+struct InstrSetFont {
+    size_t              fontNo;
+};
+
+struct DrawInstr {
+    DrawInstrType       type;
+    union {
+        // info specific to a given instruction
+        InstrString     str;
+        InstrSetFont    setFont;
+    };
+    RectF bbox; // common to most instructions
+
+    DrawInstr() { }
+
+    DrawInstr(DrawInstrType t)
+    {
+        type = t;
+        bbox.X = 0; bbox.Y = 0;
+        bbox.Width = 0; bbox.Height = 0;
     }
-    Page(int dx, int dy) : dx(dx), dy(dy) {
-        strings = new Vec<StringPos>();
-    }
-    ~Page() {
-        delete strings;
-    }
-    int dx, dy; // used during layout
-    // TODO: replace with binary blob that encodes data in a way
-    // similar to MobiHtmlToDisplay(), because we have many different
-    // types of data other than StringPos
-    Vec<StringPos> *strings;
 };
 
 class PageLayout
@@ -51,26 +55,43 @@ class PageLayout
         Left, Right, Center, Both
     };
 
-    struct StrDx {
-        StrDx() : s(NULL), len(0), dx(0), dy(0) {
-        }
-        StrDx(const char *s, size_t len, REAL dx, REAL dy) : s(s), len(len), dx(dx), dy(dy) {
-        }
-        const char *s;
-        size_t len;
-        REAL dx, dy;
-    };
-
 public:
     PageLayout(int dx, int dy) {
         pageDx = (REAL)dx; pageDy = (REAL)dy;
         lineSpacing = 0; spaceDx = 0;
-        pages = NULL; currPage = NULL;
+        currPageInstrOffset = 0;
         x = y = 0;
     }
 
-    Vec<Page *> *LayoutText(Graphics *graphics, Font *defaultFnt, const char *s);
-    Vec<Page *> *LayoutInternal(Graphics *graphics, Font *defaultFnt, const uint8_t *s, size_t sLen);
+    //Vec<Page *> *LayoutText(Graphics *graphics, Font *defaultFnt, const char *s);
+    bool LayoutInternal(Graphics *graphics, Font *defaultFnt, const uint8_t *s, size_t sLen);
+
+    size_t PageCount() const {
+        return pageInstrOffset.Count();
+    }
+
+    // TODO: instead of instrCount, return DrawInstr *& end
+    DrawInstr *GetInstructionsForPage(size_t pageNo, size_t *instrCount) const {
+        CrashAlwaysIf(pageNo >= PageCount());
+        size_t start = pageInstrOffset.At(pageNo);
+        size_t end = instructions.Count(); // if the last page
+        if (pageNo < PageCount() - 1)
+            end = pageInstrOffset.At(pageNo + 1);
+        CrashAlwaysIf(end < start);
+        *instrCount = end - start;
+        return &instructions.At(start);
+    }
+
+    // TODO: instead of instrCount, return DrawInstr *& end
+    DrawInstr *GetInstructionsForCurrentLine(size_t *instrCount) const {
+        *instrCount = instructions.Count() - currLineInstrOffset;
+        return &instructions.At(currLineInstrOffset);
+    }
+
+    bool IsCurrentLineEmpty() const {
+        return currLineInstrOffset == instructions.Count();
+    }
+
 
 private:
     REAL GetTotalLineDx();
@@ -89,21 +110,33 @@ private:
     void AddHr();
 
     // constant during layout process
-    REAL pageDx, pageDy;
-    REAL lineSpacing;
-    REAL spaceDx;
-    Graphics *gfx;
-    Font *defaultFont;
-    Font *currFont;
+    REAL        pageDx, pageDy;
+    REAL        lineSpacing;
+    REAL        spaceDx;
+    Graphics *  gfx;
+    Font *      defaultFont;
 
     // temporary state during layout process
-    TextJustification justification;
-    Vec<Page *> *pages;
-    Page *currPage; // current page
-    REAL x, y; // current position in a page
-    WCHAR buf[512];
-    int newLinesCount; // consecutive newlines
-    Vec<StrDx> lineStringsDx;
+    TextJustification   currJustification;
+    Font *              currFont;
+    // current position in a page
+    REAL                x, y; 
+    // number of consecutive newlines
+    int                 newLinesCount;
+
+    // drawing instructions for all pages
+    Vec<DrawInstr>      instructions;
+
+    // a page is fully described by list of drawing instructions
+    // This is an array of offsets into instructions array
+    // for each page. The length can be calculating by
+    // substracting this from the offset of the next page
+    Vec<size_t>         pageInstrOffset;
+
+    size_t              currPageInstrOffset;
+    size_t              currLineInstrOffset;
+
+    WCHAR               buf[512];
 };
 
 #endif

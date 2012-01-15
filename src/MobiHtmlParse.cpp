@@ -8,6 +8,11 @@
 #include "StrUtil.h"
 #include "Varint.h"
 
+// TODO: internal format was a bad idea. Instead of re-encoding html into
+// slightly-different-but-almost-the-same format, we should just have an
+// iterator over html that returns consequitive instructions. It'll be
+// less code, less memory used and more convenient api to use
+
 /*
 Converts mobi html to our internal format optimized for further layout/display.
 

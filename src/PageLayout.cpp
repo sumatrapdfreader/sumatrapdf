@@ -109,9 +109,9 @@ WordInfo *WordsIter::Next()
 
 void PageLayout::StartLayout()
 {
-    justification = Both;
-    assert(!pages);
-    pages = new Vec<Page*>();
+    currJustification = Both;
+    CrashAlwaysIf(0 != instructions.Count());
+    CrashAlwaysIf(0 != pageInstrOffset.Count());
     lineSpacing = currFont->GetHeight(gfx);
     spaceDx = GetSpaceDx(gfx, currFont);
     StartNewPage();
@@ -121,17 +121,24 @@ void PageLayout::StartNewPage()
 {
     x = y = 0;
     newLinesCount = 0;
-    currPage = new Page((int)pageDx, (int)pageDy);
-    pages->Append(currPage);
+    currLineInstrOffset = 0;
+    currPageInstrOffset = pageInstrOffset.Count();
+    pageInstrOffset.Append(currPageInstrOffset);
 }
 
+// TODO: returns -spaceDx and not 0 for empty line
+// TODO: rename to GetCurrentLineDx()
 REAL PageLayout::GetTotalLineDx()
 {
     REAL dx = -spaceDx;
-    for (size_t i = 0; i < lineStringsDx.Count(); i++) {
-        StrDx sdx = lineStringsDx.At(i);
-        dx += sdx.dx;
-        dx += spaceDx;
+    size_t instrCount;
+    DrawInstr *currInstr = GetInstructionsForCurrentLine(&instrCount);
+    for (size_t i = 0; i < instrCount; i++) {
+        if (InstrTypeString == currInstr->type) {
+            dx += currInstr->bbox.Width;
+            dx += spaceDx;
+        }
+        ++currInstr;
     }
     return dx;
 }
@@ -139,12 +146,16 @@ REAL PageLayout::GetTotalLineDx()
 void PageLayout::LayoutLeftStartingAt(REAL offX)
 {
     x = offX;
-    for (size_t i = 0; i < lineStringsDx.Count(); i++) {
-        StrDx sdx = lineStringsDx.At(i);
-        RectF bbox(x, y, sdx.dx, sdx.dy);
-        StringPos sp(sdx.s, sdx.len, bbox);
-        currPage->strings->Append(sp);
-        x += (sdx.dx + spaceDx);
+    size_t instrCount;
+    DrawInstr *currInstr = GetInstructionsForCurrentLine(&instrCount);
+    for (size_t i = 0; i < instrCount; i++) {
+        if (InstrTypeString == currInstr->type) {
+            // currInstr Width and Height are already set
+            currInstr->bbox.X = x;
+            currInstr->bbox.Y = y;
+            x += (currInstr->bbox.Width + spaceDx);
+        }
+        ++currInstr;
     }
 }
 
@@ -167,6 +178,7 @@ void PageLayout::JustifyLineCenter()
 
 void PageLayout::JustifyLineBoth()
 {
+#if 0
     REAL margin = pageDx - GetTotalLineDx();
     size_t prevCount = currPage->strings->Count();
     LayoutLeftStartingAt(0);
@@ -179,12 +191,18 @@ void PageLayout::JustifyLineBoth()
     for (size_t i = 1; i < count; i++) {
         currPage->strings->At(prevCount + i).bbox.X += i * extraSpaceDx;
     }
+#endif
+
+    REAL margin = pageDx - GetTotalLineDx();
+    LayoutLeftStartingAt(0);
+    // TODO: redistribute margin among strings in current line
 }
 
 void PageLayout::JustifyLine(TextJustification mode)
 {
-    if (0 == lineStringsDx.Count())
-        return; // nothing to do
+    if (IsCurrentLineEmpty())
+        return;
+
     switch (mode) {
         case Left:
             JustifyLineLeft();
@@ -202,19 +220,19 @@ void PageLayout::JustifyLine(TextJustification mode)
             assert(0);
             break;
     }
-    lineStringsDx.Reset();
+    currLineInstrOffset = instructions.Count();
 }
 
 void PageLayout::StartNewLine(bool isParagraphBreak)
 {
-    if (isParagraphBreak && Both == justification)
+    if (isParagraphBreak && Both == currJustification)
         JustifyLine(Left);
     else
-        JustifyLine(justification);
+        JustifyLine(currJustification);
 
     x = 0;
     y += lineSpacing;
-    lineStringsDx.Reset();
+    currLineInstrOffset = instructions.Count();
     if (y + lineSpacing > pageDy)
         StartNewPage();
 }
@@ -230,10 +248,11 @@ void PageLayout::AddHr()
     if (y + lineSpacing > pageDy)
         StartNewPage();
 
+    DrawInstr di(InstrTypeLine);
     RectF bbox(x, y, pageDx, lineSpacing);
-    StringPos sp((const char*)Str_Hr, 0, bbox);
+    di.bbox = bbox;
+    instructions.Append(di);
 
-    currPage->strings->Append(sp);
     y += lineSpacing;
     StartNewLine(true);
 }
@@ -264,17 +283,26 @@ void PageLayout::AddWord(WordInfo *wi)
         // start new line if the new text would exceed the line length
         StartNewLine(false);
     }
-    StrDx sdx(wi->s, wi->len, dx, bbox.Height);
-    lineStringsDx.Append(sdx);
+    bbox.Y = y;
+    DrawInstr di(InstrTypeString);
+    di.str.s = (uint8_t*)wi->s;
+    di.str.len = wi->len;
+    di.bbox = bbox;
+    instructions.Append(di);
     x += (dx + spaceDx);
 }
 
 void PageLayout::RemoveLastPageIfEmpty()
 {
-    while (pages->Count() > 1 && pages->Last()->strings->Count() == 0)
+    // TODO: write me
+#if 0
+    while (pages->Count() > 1 && pages->Last()->strings->Count() == 0) {
         delete pages->Pop();
+    }
+#endif
 }
 
+#if 0
 // How layout works: 
 // * measure the strings
 // * remember a line's worth of widths
@@ -299,6 +327,7 @@ Vec<Page*> *PageLayout::LayoutText(Graphics *graphics, Font *defaultFnt, const c
     pages = NULL;
     return ret;
 }
+#endif
 
 // Describes a html attribute decoded from our internal format
 // Attribute value is either represented by valEnum or arbitrary string
@@ -348,7 +377,7 @@ static DecodedAttr *FindAttr(Vec<DecodedAttr> *attrs, HtmlAttr attr)
     return NULL;
 }
 
-Vec<Page *> *PageLayout::LayoutInternal(Graphics *graphics, Font *defaultFnt, const uint8_t *s, size_t sLen)
+bool PageLayout::LayoutInternal(Graphics *graphics, Font *defaultFnt, const uint8_t *s, size_t sLen)
 {
     gfx = graphics;
     defaultFont = defaultFnt;
@@ -359,9 +388,7 @@ Vec<Page *> *PageLayout::LayoutInternal(Graphics *graphics, Font *defaultFnt, co
     Vec<DecodedAttr> attrs;
 
     const uint8_t *end = s + sLen;
-    // perf: pre-allocate lineStringsDx vector
-    size_t estimatedStrings = sLen  / 4;
-    lineStringsDx.EnsureCap(estimatedStrings);
+
     ParsedElement *parsedEl;
     for (;;) {
         parsedEl = DecodeNextParsedElement(s, end);
@@ -396,7 +423,5 @@ Vec<Page *> *PageLayout::LayoutInternal(Graphics *graphics, Font *defaultFnt, co
     }
     StartNewLine(true);
     RemoveLastPageIfEmpty();
-    Vec<Page*> *ret = pages;
-    pages = NULL;
-    return ret;
+    return true;
 }
