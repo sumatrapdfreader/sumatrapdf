@@ -492,9 +492,10 @@ extern const fz_bbox fz_unit_bbox;
 extern const fz_bbox fz_empty_bbox;
 extern const fz_bbox fz_infinite_bbox;
 
-#define fz_is_empty_rect(r) ((r).x0 == (r).x1)
+/* SumatraPDF: check both dimensions */
+#define fz_is_empty_rect(r) ((r).x0 == (r).x1 || (r).y0 == (r).y1)
 #define fz_is_infinite_rect(r) ((r).x0 > (r).x1)
-#define fz_is_empty_bbox(b) ((b).x0 == (b).x1)
+#define fz_is_empty_bbox(b) ((b).x0 == (b).x1 || (b).y0 == (b).y1)
 #define fz_is_infinite_bbox(b) ((b).x0 > (b).x1)
 
 struct fz_matrix_s

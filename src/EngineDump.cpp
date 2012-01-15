@@ -162,9 +162,11 @@ void DumpPageData(BaseEngine *engine, int pageNo, bool fullDump)
         ScopedMem<char> label(Escape(engine->GetPageLabel(pageNo)));
         Out("\t\tLabel=\"%s\"\n", label.Get());
     }
-    RectD bbox = engine->PageMediabox(pageNo);
-    if (!bbox.IsEmpty())
-        Out("\t\tMediaBox=\"%.0f %.0f %.0f %.0f\"\n", bbox.x, bbox.y, bbox.dx, bbox.dy);
+    RectI bbox = engine->PageMediabox(pageNo).Round();
+    RectI cbox = engine->PageContentBox(pageNo).Round();
+    Out("\t\tMediaBox=\"%d %d %d %d\"\n", bbox.x, bbox.y, bbox.dx, bbox.dy);
+    if (cbox != bbox)
+        Out("\t\tContentBox=\"%d %d %d %d\"\n", cbox.x, cbox.y, cbox.dx, cbox.dy);
     if (engine->IsImagePage(pageNo))
         Out("\t\tImagePage=\"yes\"\n");
     Out("\t>\n");
