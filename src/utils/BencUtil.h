@@ -15,6 +15,7 @@
          (unless added with AddRaw and retrieved with RawValue()).
 */
 
+#define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 #include "Vec.h"
 
