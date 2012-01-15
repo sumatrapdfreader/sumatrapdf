@@ -126,7 +126,6 @@ void PageLayout::StartNewPage()
     pageInstrOffset.Append(currPageInstrOffset);
 }
 
-// TODO: returns -spaceDx and not 0 for empty line
 REAL PageLayout::GetCurrentLineDx()
 {
     REAL dx = -spaceDx;
@@ -139,6 +138,8 @@ REAL PageLayout::GetCurrentLineDx()
         }
         ++currInstr;
     }
+    if (dx < 0)
+        dx = 0;
     return dx;
 }
 

@@ -21,6 +21,9 @@ using namespace Gdiplus;
 
 #define ET_FRAME_CLASS_NAME    _T("ET_FRAME")
 
+#define FONT_NAME              L"Georgia"
+#define FONT_SIZE              12
+
 #define WIN_DX    640
 #define WIN_DY    480
 
@@ -284,7 +287,7 @@ static void OnCreateWindow(HWND hwnd)
     //gFont = ::new Font(L"Times New Roman", 16, FontStyleRegular);
     //HDC dc = GetDC(hwnd);
     //gFont = ::new Font(dc, gFontDefault); 
-    gFont = ::new Font(L"Georgia", 10, FontStyleRegular);
+    gFont = ::new Font(FONT_NAME, FONT_SIZE, FontStyleRegular);
     HMENU menu = BuildMenu();
     SetMenu(hwnd, menu);
     LoadSampleAsCurrentDoc();
