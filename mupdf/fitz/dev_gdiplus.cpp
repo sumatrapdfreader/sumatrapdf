@@ -1259,20 +1259,21 @@ fz_gdiplus_ignore_text(fz_device *dev, fz_text *text, fz_matrix ctm)
 extern "C" static void
 fz_gdiplus_fill_shade(fz_device *dev, fz_shade *shade, fz_matrix ctm, float alpha)
 {
-	Rect clipRect;
+	RectF clipRect;
 	((userData *)dev->user)->graphics->GetClipBounds(&clipRect);
-	fz_bbox clip = { clipRect.X, clipRect.Y, clipRect.X + clipRect.Width, clipRect.Y + clipRect.Height };
+	fz_rect clip = { clipRect.X, clipRect.Y, clipRect.X + clipRect.Width, clipRect.Y + clipRect.Height };
 	
 	fz_rect bounds = fz_bound_shade(shade, ctm);
-	fz_bbox bbox = fz_intersect_bbox(fz_round_rect(bounds), clip);
+	clip = fz_intersect_rect(bounds, clip);
 	
 	if (!fz_is_empty_rect(shade->bbox))
 	{
 		bounds = fz_transform_rect(fz_concat(shade->matrix, ctm), shade->bbox);
-		bbox = fz_intersect_bbox(fz_round_rect(bounds), bbox);
+		clip = fz_intersect_rect(bounds, clip);
 	}
+	fz_bbox bbox = fz_round_rect(clip);
 	
-	if (fz_is_empty_rect(bbox))
+	if (fz_is_empty_bbox(bbox))
 		return;
 	
 	fz_pixmap *dest = fz_new_pixmap_with_rect(dev->ctx, fz_device_rgb, bbox);
@@ -1294,6 +1295,7 @@ fz_gdiplus_fill_shade(fz_device *dev, fz_shade *shade, fz_matrix ctm, float alph
 	}
 	
 	fz_paint_shade(dev->ctx, shade, ctm, dest, bbox);
+	fz_unmultiply_pixmap(dest);
 	
 	ctm = fz_concat(fz_scale(dest->w, -dest->h), fz_translate(dest->x, dest->y + dest->h));
 	((userData *)dev->user)->drawPixmap(dest, ctm, alpha);
