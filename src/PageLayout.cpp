@@ -119,7 +119,7 @@ void PageLayout::StartLayout()
 
 void PageLayout::StartNewPage()
 {
-    x = y = 0;
+    currX = currY = 0;
     newLinesCount = 0;
     currLineInstrOffset = 0;
     currPageInstrOffset = pageInstrOffset.Count();
@@ -145,15 +145,15 @@ REAL PageLayout::GetTotalLineDx()
 
 void PageLayout::LayoutLeftStartingAt(REAL offX)
 {
-    x = offX;
+    currX = offX;
     size_t instrCount;
     DrawInstr *currInstr = GetInstructionsForCurrentLine(&instrCount);
     for (size_t i = 0; i < instrCount; i++) {
         if (InstrTypeString == currInstr->type) {
             // currInstr Width and Height are already set
-            currInstr->bbox.X = x;
-            currInstr->bbox.Y = y;
-            x += (currInstr->bbox.Width + spaceDx);
+            currInstr->bbox.X = currX;
+            currInstr->bbox.Y = currY;
+            currX += (currInstr->bbox.Width + spaceDx);
         }
         ++currInstr;
     }
@@ -230,10 +230,10 @@ void PageLayout::StartNewLine(bool isParagraphBreak)
     else
         JustifyLine(currJustification);
 
-    x = 0;
-    y += lineSpacing;
+    currX = 0;
+    currY += lineSpacing;
     currLineInstrOffset = instructions.Count();
-    if (y + lineSpacing > pageDy)
+    if (currY + lineSpacing > pageDy)
         StartNewPage();
 }
 
@@ -242,18 +242,18 @@ void PageLayout::AddHr()
 {
     // hr creates an implicit paragraph break
     StartNewLine(true);
-    x = 0;
+    currX = 0;
     // height of hr is lineSpacing. If drawing it a current position
     // would exceede page bounds, go to another page
-    if (y + lineSpacing > pageDy)
+    if (currY + lineSpacing > pageDy)
         StartNewPage();
 
     DrawInstr di(InstrTypeLine);
-    RectF bbox(x, y, pageDx, lineSpacing);
+    RectF bbox(currX, currY, pageDx, lineSpacing);
     di.bbox = bbox;
     instructions.Append(di);
 
-    y += lineSpacing;
+    currY += lineSpacing;
     StartNewLine(true);
 }
 
@@ -266,7 +266,7 @@ void PageLayout::AddWord(WordInfo *wi)
         // single paragraph break
         newLinesCount++;
         if (2 == newLinesCount) {
-            bool needsTwo = (x != 0);
+            bool needsTwo = (currX != 0);
             StartNewLine(true);
             if (needsTwo)
                 StartNewLine(true);
@@ -279,17 +279,17 @@ void PageLayout::AddWord(WordInfo *wi)
     // TODO: handle a case where a single word is bigger than the whole
     // line, in which case it must be split into multiple lines
     REAL dx = bbox.Width;
-    if (x + dx > pageDx) {
+    if (currX + dx > pageDx) {
         // start new line if the new text would exceed the line length
         StartNewLine(false);
     }
-    bbox.Y = y;
+    bbox.Y = currY;
     DrawInstr di(InstrTypeString);
     di.str.s = (uint8_t*)wi->s;
     di.str.len = wi->len;
     di.bbox = bbox;
     instructions.Append(di);
-    x += (dx + spaceDx);
+    currX += (dx + spaceDx);
 }
 
 void PageLayout::RemoveLastPageIfEmpty()

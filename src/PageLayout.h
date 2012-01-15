@@ -58,9 +58,6 @@ class PageLayout
 public:
     PageLayout(int dx, int dy) {
         pageDx = (REAL)dx; pageDy = (REAL)dy;
-        lineSpacing = 0; spaceDx = 0;
-        currPageInstrOffset = 0;
-        x = y = 0;
     }
 
     //Vec<Page *> *LayoutText(Graphics *graphics, Font *defaultFnt, const char *s);
@@ -120,7 +117,7 @@ private:
     TextJustification   currJustification;
     Font *              currFont;
     // current position in a page
-    REAL                x, y; 
+    REAL                currX, currY; 
     // number of consecutive newlines
     int                 newLinesCount;
 
