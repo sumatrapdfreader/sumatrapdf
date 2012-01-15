@@ -178,24 +178,22 @@ void PageLayout::JustifyLineCenter()
 
 void PageLayout::JustifyLineBoth()
 {
-#if 0
-    REAL margin = pageDx - GetCurrentLineDx();
-    size_t prevCount = currPage->strings->Count();
-    LayoutLeftStartingAt(0);
-
     // move all words proportionally to the right so that the
     // spacing remains uniform and the last word touches the
     // right page border
-    size_t count = currPage->strings->Count() - prevCount;
-    REAL extraSpaceDx = count > 1 ? margin / (count - 1) : margin;
-    for (size_t i = 1; i < count; i++) {
-        currPage->strings->At(prevCount + i).bbox.X += i * extraSpaceDx;
-    }
-#endif
-
     REAL margin = pageDx - GetCurrentLineDx();
     LayoutLeftStartingAt(0);
-    // TODO: redistribute margin among strings in current line
+    DrawInstr *end;
+    DrawInstr *c = GetInstructionsForCurrentLine(end);
+    size_t count = end - c;
+    REAL extraSpaceDx = count > 1 ? margin / (count - 1) : margin;
+    ++c;
+    size_t n = 1;
+    while (c < end) {
+        c->bbox.X += n * extraSpaceDx;
+        ++n;
+        ++c;
+    }
 }
 
 void PageLayout::JustifyLine(TextJustification mode)
@@ -252,8 +250,6 @@ void PageLayout::AddHr()
     RectF bbox(currX, currY, pageDx, lineSpacing);
     di.bbox = bbox;
     instructions.Append(di);
-
-    currY += lineSpacing;
     StartNewLine(true);
 }
 
@@ -294,12 +290,8 @@ void PageLayout::AddWord(WordInfo *wi)
 
 void PageLayout::RemoveLastPageIfEmpty()
 {
-    // TODO: write me
-#if 0
-    while (pages->Count() > 1 && pages->Last()->strings->Count() == 0) {
-        delete pages->Pop();
-    }
-#endif
+    if (currPageInstrOffset == instructions.Count())
+        instructions.Pop();
 }
 
 #if 0
