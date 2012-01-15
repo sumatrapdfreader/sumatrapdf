@@ -1295,6 +1295,8 @@ void DisplayModel::ZoomTo(float zoomLevel, PointI *fixPt)
 {
     if (!IsValidZoom(zoomLevel))
         return;
+    if (ZoomVirtual() == zoomLevel)
+        return;
 
     ScrollState ss = GetScrollState();
 
