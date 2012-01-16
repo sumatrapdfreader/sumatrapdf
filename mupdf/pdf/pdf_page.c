@@ -66,10 +66,8 @@ pdf_load_page_tree_node(pdf_xref *xref, fz_obj *node, struct info info)
 				pdf_load_page_tree_node(xref, obj, info);
 			}
 		}
-		else if (fz_is_dict(node))
+		else if ((dict = fz_to_dict(node)) != NULL)
 		{
-			dict = fz_resolve_indirect(node);
-
 			if (info.resources && !fz_dict_gets(dict, "Resources"))
 				fz_dict_puts(dict, "Resources", info.resources);
 			if (info.mediabox && !fz_dict_gets(dict, "MediaBox"))

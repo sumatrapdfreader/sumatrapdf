@@ -108,6 +108,7 @@ EXPORTS
 	fz_to_real
 	fz_to_name
 	fz_to_str_buf
+	fz_to_dict
 	fz_to_str_len
 	fz_to_num
 	fz_to_gen

@@ -303,30 +303,14 @@ fz_obj *xps_extract_doc_props(xps_document *doc)
 	char path[1024];
 	xps_part *part;
 	fz_obj *dict = NULL;
-
+	fz_var(part);
 	fz_var(dict);
 
-	fz_try(doc->ctx)
-	{
-		xps_find_doc_props_path(doc, path);
-	}
-	fz_catch(doc->ctx)
-	{
-		fz_warn(doc->ctx, "ignore broken part '/_rels/.rels'");
-		return NULL;
-	}
+	xps_find_doc_props_path(doc, path);
 	if (!*path)
 		return NULL;
 
-	fz_try(doc->ctx)
-	{
-		part = xps_read_part(doc, path);
-	}
-	fz_catch(doc->ctx)
-	{
-		fz_warn(doc->ctx, "cannot read zip part '%s'", path);
-		return NULL;
-	}
+	part = xps_read_part(doc, path);
 
 	fz_try(doc->ctx)
 	{
@@ -337,14 +321,15 @@ fz_obj *xps_extract_doc_props(xps_document *doc)
 		xps_hacky_get_prop(doc->ctx, part->data, dict, "CreationDate", "dcterms:created");
 		xps_hacky_get_prop(doc->ctx, part->data, dict, "ModDate", "dcterms:modified");
 	}
-	fz_catch(doc->ctx)
+	fz_always(doc->ctx)
 	{
 		fz_drop_obj(dict);
-		dict = NULL;
-		fz_warn(doc->ctx, "cannot read zip part '%s'", path);
+		xps_free_part(doc, part);
 	}
-
-	xps_free_part(doc, part);
+	fz_catch(doc->ctx)
+	{
+		fz_rethrow(doc->ctx);
+	}
 
 	return dict;
 }

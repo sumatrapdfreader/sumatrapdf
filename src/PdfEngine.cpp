@@ -208,15 +208,9 @@ unsigned char *fz_extract_stream_data(fz_stream *stream, size_t *cbCount)
 {
     fz_seek(stream, 0, 2);
     int fileLen = fz_tell(stream);
-
-    fz_buffer *buffer;
     fz_seek(stream, 0, 0);
-    fz_try(stream->ctx) {
-        buffer = fz_read_all(stream, fileLen);
-    }
-    fz_catch(stream->ctx) {
-        return NULL;
-    }
+
+    fz_buffer *buffer = fz_read_all(stream, fileLen);
     assert(fileLen == buffer->len);
 
     unsigned char *data = (unsigned char *)memdup(buffer->data, buffer->len);
@@ -225,17 +219,20 @@ unsigned char *fz_extract_stream_data(fz_stream *stream, size_t *cbCount)
 
     fz_drop_buffer(stream->ctx, buffer);
 
+    if (!data)
+        fz_throw(stream->ctx, "OOM in fz_extract_stream_data");
     return data;
 }
 
 void fz_stream_fingerprint(fz_stream *file, unsigned char digest[16])
 {
-    fz_seek(file, 0, 2);
-    int fileLen = fz_tell(file);
-
+    int fileLen;
     fz_buffer *buffer;
-    fz_seek(file, 0, 0);
+
     fz_try(file->ctx) {
+        fz_seek(file, 0, 2);
+        fileLen = fz_tell(file);
+        fz_seek(file, 0, 0);
         buffer = fz_read_all(file, fileLen);
     }
     fz_catch(file->ctx) {
@@ -743,17 +740,13 @@ TCHAR *FormatPageLabel(const char *type, int pageNo, const TCHAR *prefix)
     return str::Dup(prefix);
 }
 
-void BuildPageLabelRec(fz_context *ctx, fz_obj *node, int pageCount, Vec<PageLabelInfo>& data)
+void BuildPageLabelRec(fz_obj *node, int pageCount, Vec<PageLabelInfo>& data)
 {
     fz_obj *obj;
-    if ((obj = fz_dict_gets(node, "Kids")) && !fz_dict_gets(node, ".seen")) {
-        fz_obj *flag = fz_new_null(ctx);
-        fz_dict_puts(node, ".seen", flag);
-        fz_drop_obj(flag);
-
+    if ((obj = fz_dict_gets(node, "Kids")) && !fz_dict_mark(node)) {
         for (int i = 0; i < fz_array_len(obj); i++)
-            BuildPageLabelRec(ctx, fz_array_get(obj, i), pageCount, data);
-        fz_dict_dels(node, ".seen");
+            BuildPageLabelRec(fz_array_get(obj, i), pageCount, data);
+        fz_dict_unmark(node);
     }
     else if ((obj = fz_dict_gets(node, "Nums"))) {
         for (int i = 0; i < fz_array_len(obj); i += 2) {
@@ -773,10 +766,10 @@ void BuildPageLabelRec(fz_context *ctx, fz_obj *node, int pageCount, Vec<PageLab
     }
 }
 
-StrVec *BuildPageLabelVec(fz_context *ctx, fz_obj *root, int pageCount)
+StrVec *BuildPageLabelVec(fz_obj *root, int pageCount)
 {
     Vec<PageLabelInfo> data;
-    BuildPageLabelRec(ctx, root, pageCount, data);
+    BuildPageLabelRec(root, pageCount, data);
     data.Sort(CmpPageLabelInfo);
 
     if (data.Count() == 0)
@@ -852,6 +845,8 @@ public:
 
     virtual const TCHAR *FileName() const { return _fileName; };
     virtual int PageCount() const {
+        // make sure that pdf_load_page_tree is called as soon as
+        // _xref is defined, so that pdf_count_pages can't throw
         return _xref ? pdf_count_pages(_xref) : 0;
     }
 
@@ -1093,13 +1088,12 @@ CPdfEngine::~CPdfEngine()
         DropPageRun(runCache.Last(), true);
     }
 
-    fz_flush_warnings(ctx);
-    fz_free_context(ctx);
-
     delete[] _mediaboxes;
     delete _pagelabels;
     free((void*)_fileName);
     free(_decryptionKey);
+
+    fz_free_context(ctx);
 
     LeaveCriticalSection(&ctxAccess);
     DeleteCriticalSection(&ctxAccess);
@@ -1293,10 +1287,12 @@ bool CPdfEngine::LoadFromStream(fz_stream *stm, PasswordUI *pwdUI)
         }
 
         ScopedMem<WCHAR> wstr(str::conv::ToWStr(pwd));
-        char *pwd_doc = pdf_from_ucs2(ctx, (unsigned short *)wstr.Get());
-        ok = pwd_doc && pdf_authenticate_password(_xref, pwd_doc);
-        fz_free(ctx, pwd_doc);
-
+        fz_try(ctx) {
+            char *pwd_doc = pdf_from_ucs2(ctx, (unsigned short *)wstr.Get());
+            ok = pwd_doc && pdf_authenticate_password(_xref, pwd_doc);
+            fz_free(ctx, pwd_doc);
+        }
+        fz_catch(ctx) { }
         // try the UTF-8 password, if the PDFDocEncoding one doesn't work
         if (!ok) {
             ScopedMem<char> pwd_utf8(str::conv::ToUtf8(pwd));
@@ -1343,23 +1339,40 @@ bool CPdfEngine::FinishLoading()
 
     fz_try(ctx) {
         outline = pdf_load_outline(_xref);
-        // silently ignore errors from pdf_loadoutline()
+    }
+    fz_catch(ctx) {
+        // ignore errors from pdf_loadoutline()
         // this information is not critical and checking the
         // error might prevent loading some pdfs that would
         // otherwise get displayed
+        fz_warn(ctx, "Couldn't load outline");
+    }
+    fz_try(ctx) {
         attachments = pdf_loadattachments(_xref);
+    }
+    fz_catch(ctx) {
+        fz_warn(ctx, "Couldn't load attachments");
+    }
+    fz_try(ctx) {
         // keep a copy of the Info dictionary, as accessing the original
         // isn't thread safe and we don't want to block for this when
         // displaying document properties
         _info = fz_dict_gets(_xref->trailer, "Info");
         if (_info)
             _info = fz_copy_str_dict(ctx, pdf_resolve_indirect(_info));
-        fz_obj *pagelabels = fz_dict_gets(fz_dict_gets(_xref->trailer, "Root"), "PageLabels");
-        if (pagelabels)
-            _pagelabels = BuildPageLabelVec(ctx, pagelabels, PageCount());
     }
     fz_catch(ctx) {
-        return false;
+        fz_warn(ctx, "Couldn't load Info dictionary");
+        fz_drop_obj(_info);
+        _info = NULL;
+    }
+    fz_try(ctx) {
+        fz_obj *pagelabels = fz_dict_gets(fz_dict_gets(_xref->trailer, "Root"), "PageLabels");
+        if (pagelabels)
+            _pagelabels = BuildPageLabelVec(pagelabels, PageCount());
+    }
+    fz_catch(ctx) {
+        fz_warn(ctx, "Couldn't load page labels");
     }
 
     return true;
@@ -1409,13 +1422,25 @@ PageDestination *CPdfEngine::GetNamedDest(const TCHAR *name)
     ScopedCritSec scope(&ctxAccess);
 
     ScopedMem<char> name_utf8(str::conv::ToUtf8(name));
-    fz_obj *nameobj = fz_new_string(ctx, (char *)name_utf8, (int)str::Len(name_utf8));
-    fz_obj *dest = pdf_lookup_dest(_xref, nameobj);
-    fz_drop_obj(nameobj);
+    fz_obj *dest;
+    fz_try(ctx) {
+        fz_obj *nameobj = fz_new_string(ctx, (char *)name_utf8, (int)str::Len(name_utf8));
+        dest = pdf_lookup_dest(_xref, nameobj);
+        fz_drop_obj(nameobj);
+    }
+    fz_catch(ctx) {
+        return NULL;
+    }
 
     PageDestination *pageDest = NULL;
+    fz_link_dest ld = { FZ_LINK_NONE, 0 };
+    fz_try(ctx) {
+        ld = pdf_parse_link_dest(_xref, dest);
+    }
+    fz_catch(ctx) {
+        return NULL;
+    }
 
-    fz_link_dest ld = pdf_parse_link_dest(_xref, dest);
     if (FZ_LINK_GOTO == ld.kind) {
         // create a SimpleDest because we have to
         // free the fz_link_dest before returning
@@ -1620,19 +1645,24 @@ RectD CPdfEngine::PageMediabox(int pageNo)
     ScopedCritSec scope(&ctxAccess);
 
     // cf. pdf_page.c's pdf_load_page
-    fz_rect mbox = pdf_to_rect(ctx, fz_dict_gets(page, "MediaBox"));
+    fz_rect mbox = fz_empty_rect, cbox = fz_empty_rect;
+    int rotate = 0;
+    fz_try(ctx) {
+        mbox = pdf_to_rect(ctx, fz_dict_gets(page, "MediaBox"));
+        cbox = pdf_to_rect(ctx, fz_dict_gets(page, "CropBox"));
+        rotate = fz_to_int(fz_dict_gets(page, "Rotate"));
+    }
+    fz_catch(ctx) { }
     if (fz_is_empty_rect(mbox)) {
         fz_warn(ctx, "cannot find page size for page %d", pageNo);
         mbox.x0 = 0; mbox.y0 = 0;
         mbox.x1 = 612; mbox.y1 = 792;
     }
-    fz_rect cbox = pdf_to_rect(ctx, fz_dict_gets(page, "CropBox"));
     if (!fz_is_empty_rect(cbox)) {
         mbox = fz_intersect_rect(mbox, cbox);
         if (fz_is_empty_rect(mbox))
             return RectD();
     }
-    int rotate = fz_to_int(fz_dict_gets(page, "Rotate"));
     if ((rotate % 90) != 0)
         rotate = 0;
 
@@ -1651,9 +1681,17 @@ RectD CPdfEngine::PageContentBox(int pageNo, RenderTarget target)
         return RectD();
 
     fz_bbox bbox;
+    fz_device *dev;
     EnterCriticalSection(&ctxAccess);
-    fz_device *dev = fz_new_bbox_device(ctx, &bbox);
-    LeaveCriticalSection(&ctxAccess);
+    fz_try(ctx) {
+        dev = fz_new_bbox_device(ctx, &bbox);
+    }
+    fz_always(ctx) {
+        LeaveCriticalSection(&ctxAccess);
+    }
+    fz_catch(ctx) {
+        return RectD();
+    }
 
     fz_bbox mediabox = fz_round_rect(pdf_bound_page(_xref, page));
     bool ok = RunPage(page, dev, fz_identity, target, mediabox, false);
@@ -1706,9 +1744,17 @@ bool CPdfEngine::RenderPage(HDC hDC, pdf_page *page, RectI screenRect, fz_matrix
     DeleteObject(bgBrush);
 
     fz_bbox clipbox = fz_RectI_to_bbox(screenRect);
+    fz_device *dev = NULL;
     EnterCriticalSection(&ctxAccess);
-    fz_device *dev = fz_new_gdiplus_device(ctx, hDC, clipbox);
-    LeaveCriticalSection(&ctxAccess);
+    fz_try(ctx) {
+        dev = fz_new_gdiplus_device(ctx, hDC, clipbox);
+    }
+    fz_always(ctx) {
+        LeaveCriticalSection(&ctxAccess);
+    }
+    fz_catch(ctx) {
+        return false;
+    }
 
     return RunPage(page, dev, ctm2, target, clipbox);
 }
@@ -1763,19 +1809,30 @@ RenderedBitmap *CPdfEngine::RenderBitmap(int pageNo, float zoom, int rotation, R
         return new RenderedBitmap(hbmp, SizeI(w, h));
     }
 
-    EnterCriticalSection(&ctxAccess);
     fz_pixmap *image;
+    EnterCriticalSection(&ctxAccess);
     fz_try(ctx) {
         image = fz_new_pixmap_with_rect(ctx, fz_find_device_colorspace("DeviceRGB"), bbox);
+        fz_clear_pixmap_with_color(image, 0xFF); // initialize white background
+    }
+    fz_always(ctx) {
+        LeaveCriticalSection(&ctxAccess);
     }
     fz_catch(ctx) {
-        LeaveCriticalSection(&ctxAccess);
         return NULL;
     }
 
-    fz_clear_pixmap_with_color(image, 0xFF); // initialize white background
-    fz_device *dev = fz_new_draw_device(ctx, image);
-    LeaveCriticalSection(&ctxAccess);
+    fz_device *dev;
+    EnterCriticalSection(&ctxAccess);
+    fz_try(ctx) {
+        dev = fz_new_draw_device(ctx, image);
+    }
+    fz_always(ctx) {
+        LeaveCriticalSection(&ctxAccess);
+    }
+    fz_catch(ctx) {
+        return NULL;
+    }
 
     bool ok = RunPage(page, dev, ctm, target, bbox);
 
@@ -1946,9 +2003,18 @@ RenderedBitmap *CPdfEngine::GetPageImage(int pageNo, RectD rect, size_t imageIx)
 
     Vec<FitzImagePos> positions;
     ListInspectionData data = { &positions, false, 0 };
+    fz_device *dev;
+
     EnterCriticalSection(&ctxAccess);
-    fz_device *dev = fz_new_inspection_device(ctx, &data);
-    LeaveCriticalSection(&ctxAccess);
+    fz_try(ctx) {
+        dev = fz_new_inspection_device(ctx, &data);
+    }
+    fz_always(ctx) {
+        LeaveCriticalSection(&ctxAccess);
+    }
+    fz_catch(ctx) {
+        return NULL;
+    }
 
     RunPage(page, dev, fz_identity);
 
@@ -1966,10 +2032,22 @@ TCHAR *CPdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, RectI **coord
     if (!page)
         return NULL;
 
+    fz_text_span *text = NULL;
+    fz_device *dev;
+    fz_var(text);
+
     EnterCriticalSection(&ctxAccess);
-    fz_text_span *text = fz_new_text_span(ctx);
-    fz_device *dev = fz_new_text_device(ctx, text);
-    LeaveCriticalSection(&ctxAccess);
+    fz_try(ctx) {
+        text = fz_new_text_span(ctx);
+        dev = fz_new_text_device(ctx, text);
+    }
+    fz_always(ctx) {
+        LeaveCriticalSection(&ctxAccess);
+    }
+    fz_catch(ctx) {
+        fz_free_text_span(ctx, text);
+        return NULL;
+    }
 
     // use an infinite rectangle as bounds (instead of pdf_bound_page) to ensure that
     // the extracted text is consistent between cached runs using a list device and
@@ -1993,14 +2071,15 @@ TCHAR *CPdfEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_ou
         return ExtractPageText(page, lineSep, coords_out, target);
 
     EnterCriticalSection(&ctxAccess);
-    fz_var(page);
     fz_try(ctx) {
         page = pdf_load_page(_xref, pageNo - 1);
     }
-    fz_catch(ctx) { }
-    LeaveCriticalSection(&ctxAccess);
-    if (!page)
+    fz_always(ctx) {
+        LeaveCriticalSection(&ctxAccess);
+    }
+    fz_catch(ctx) {
         return NULL;
+    }
 
     TCHAR *result = ExtractPageText(page, lineSep, coords_out, target);
 
@@ -2044,27 +2123,45 @@ PageLayoutType CPdfEngine::PreferredLayout()
     PageLayoutType layout = Layout_Single;
 
     ScopedCritSec scope(&ctxAccess);
-    fz_obj *root = fz_dict_gets(_xref->trailer, "Root");
+    fz_obj *root;
+    fz_try(ctx) {
+        root = fz_dict_gets(_xref->trailer, "Root");
+    }
+    fz_catch(ctx) {
+        return layout;
+    }
 
-    char *name = fz_to_name(fz_dict_gets(root, "PageLayout"));
-    if (str::EndsWith(name, "Right"))
-        layout = Layout_Book;
-    else if (str::StartsWith(name, "Two"))
-        layout = Layout_Facing;
+    fz_try(ctx) {
+        char *name = fz_to_name(fz_dict_gets(root, "PageLayout"));
+        if (str::EndsWith(name, "Right"))
+            layout = Layout_Book;
+        else if (str::StartsWith(name, "Two"))
+            layout = Layout_Facing;
+    }
+    fz_catch(ctx) { }
 
-    fz_obj *prefs = fz_dict_gets(root, "ViewerPreferences");
-    char *direction = fz_to_name(fz_dict_gets(prefs, "Direction"));
-    if (str::Eq(direction, "R2L"))
-        layout = (PageLayoutType)(layout | Layout_R2L);
+    fz_try(ctx) {
+        fz_obj *prefs = fz_dict_gets(root, "ViewerPreferences");
+        char *direction = fz_to_name(fz_dict_gets(prefs, "Direction"));
+        if (str::Eq(direction, "R2L"))
+            layout = (PageLayoutType)(layout | Layout_R2L);
+    }
+    fz_catch(ctx) { }
 
     return layout;
 }
 
 unsigned char *CPdfEngine::GetFileData(size_t *cbCount)
 {
+    unsigned char *data;
     ScopedCritSec scope(&ctxAccess);
-    unsigned char *data = fz_extract_stream_data(_xref->file, cbCount);
-    return data ? data : (unsigned char *)file::ReadAll(_fileName, cbCount);
+    fz_try(ctx) {
+        data = fz_extract_stream_data(_xref->file, cbCount);
+    }
+    fz_catch(ctx) {
+        return _fileName ? (unsigned char *)file::ReadAll(_fileName, cbCount) : NULL;
+    }
+    return data;
 }
 
 bool CPdfEngine::SaveEmbedded(fz_obj *obj, LinkSaverUI& saveUI)
@@ -2139,9 +2236,14 @@ TCHAR *PdfLink::GetValue() const
     case FZ_LINK_URI:
         path = str::conv::FromUtf8(link->ld.uri.uri);
         if (IsRelativeURI(path)) {
-            fz_obj *obj = fz_dict_gets(engine->_xref->trailer, "Root");
-            obj = fz_dict_gets(fz_dict_gets(obj, "URI"), "Base");
-            ScopedMem<TCHAR> base(obj ? str::conv::FromPdf(obj) : NULL);
+            ScopedMem<TCHAR> base;
+            fz_try(engine->ctx) {
+                fz_obj *obj = fz_dict_gets(engine->_xref->trailer, "Root");
+                obj = fz_dict_gets(fz_dict_gets(obj, "URI"), "Base");
+                if (obj)
+                    base.Set(str::conv::FromPdf(obj));
+            }
+            fz_catch(engine->ctx) { }
             if (!str::IsEmpty(base.Get())) {
                 ScopedMem<TCHAR> uri(str::Join(base, path));
                 free(path);
@@ -2526,10 +2628,9 @@ CXpsEngine::~CXpsEngine()
         DropPageRun(runCache.Last(), true);
     }
 
-    fz_flush_warnings(ctx);
-    fz_free_context(ctx);
-
     free((void*)_fileName);
+
+    fz_free_context(ctx);
 
     LeaveCriticalSection(&ctxAccess);
     DeleteCriticalSection(&ctxAccess);
@@ -2626,10 +2727,23 @@ bool CXpsEngine::LoadFromStream(fz_stream *stm)
     _mediaboxes = new RectD[PageCount()];
     imageRects = SAZA(fz_rect *, PageCount());
 
-    _outline = xps_load_outline(_doc);
-    _info = xps_extract_doc_props(_doc);
+    if (!_pages || !_links || !_mediaboxes || !imageRects)
+        return false;
 
-    return _pages != NULL && _links != NULL && _mediaboxes != NULL && imageRects != NULL;
+    fz_try(ctx) {
+        _outline = xps_load_outline(_doc);
+    }
+    fz_catch(ctx) {
+        fz_warn(ctx, "Couldn't load outline");
+    }
+    fz_try(ctx) {
+        _info = xps_extract_doc_props(_doc);
+    }
+    fz_catch(ctx) {
+        fz_warn(ctx, "Couldn't load Info dictionary");
+    }
+
+    return true;
 }
 
 xps_page *CXpsEngine::GetXpsPage(int pageNo, bool failIfBusy)
@@ -2843,19 +2957,23 @@ static RectD xps_extract_mediabox_quick_and_dirty(xps_document *doc, int pageNo)
             // xml_parse_document ignores the length argument for UTF-8 data
             *(++end) = '\0';
     }
+    if (!end) {
+        xps_free_part(doc, part);
+        return RectD();
+    }
+
     // we depend on the parser not validating its input (else we'd
     // have to append a closing "</FixedPage>" to the byte data)
-    xml_element *root = NULL;
-    if (end) {
-        fz_var(root);
-        fz_try(doc->ctx) {
-            root = xml_parse_document(doc->ctx, part->data, (int)(end - part->data));
-        }
-        fz_catch(doc->ctx) { }
+    xml_element *root;
+    fz_try(doc->ctx) {
+        root = xml_parse_document(doc->ctx, part->data, (int)(end - part->data));
     }
-    xps_free_part(doc, part);
-    if (!root)
-        return RectD();
+    fz_always(doc->ctx) {
+        xps_free_part(doc, part);
+    }
+    fz_catch(doc->ctx) {
+        fz_rethrow(doc->ctx);
+    }
 
     RectD rect;
     if (str::Eq(xml_tag(root), "FixedPage")) {
@@ -2884,7 +3002,10 @@ RectD CXpsEngine::PageMediabox(int pageNo)
     xps_page *page = GetXpsPage(pageNo, true);
     if (!page) {
         ScopedCritSec scope(&ctxAccess);
-        mbox = xps_extract_mediabox_quick_and_dirty(_doc, pageNo);
+        fz_try(ctx) {
+            mbox = xps_extract_mediabox_quick_and_dirty(_doc, pageNo);
+        }
+        fz_catch(ctx) { }
         if (!mbox.IsEmpty()) {
             _mediaboxes[pageNo-1] = mbox;
             return _mediaboxes[pageNo-1];
@@ -2905,9 +3026,17 @@ RectD CXpsEngine::PageContentBox(int pageNo, RenderTarget target)
         return RectD();
 
     fz_bbox bbox;
+    fz_device *dev;
     EnterCriticalSection(&ctxAccess);
-    fz_device *dev = fz_new_bbox_device(ctx, &bbox);
-    LeaveCriticalSection(&ctxAccess);
+    fz_try(ctx) {
+        dev = fz_new_bbox_device(ctx, &bbox);
+    }
+    fz_always(ctx) {
+        LeaveCriticalSection(&ctxAccess);
+    }
+    fz_catch(ctx) {
+        return RectD();
+    }
 
     fz_bbox mediabox = fz_round_rect(xps_bound_page(_doc, page));
     bool ok = RunPage(page, dev, fz_identity, mediabox, false);
@@ -2960,9 +3089,17 @@ bool CXpsEngine::RenderPage(HDC hDC, xps_page *page, RectI screenRect, fz_matrix
     DeleteObject(bgBrush);
 
     fz_bbox clipbox = fz_RectI_to_bbox(screenRect);
+    fz_device *dev;
     EnterCriticalSection(&ctxAccess);
-    fz_device *dev = fz_new_gdiplus_device(ctx, hDC, clipbox);
-    LeaveCriticalSection(&ctxAccess);
+    fz_try(ctx) {
+        dev = fz_new_gdiplus_device(ctx, hDC, clipbox);
+    }
+    fz_always(ctx) {
+        LeaveCriticalSection(&ctxAccess);
+    }
+    fz_catch(ctx) {
+        return false;
+    }
 
     return RunPage(page, dev, ctm2, clipbox);
 }
@@ -2999,25 +3136,38 @@ RenderedBitmap *CXpsEngine::RenderBitmap(int pageNo, float zoom, int rotation, R
         return new RenderedBitmap(hbmp, SizeI(w, h));
     }
 
-    EnterCriticalSection(&ctxAccess);
     fz_pixmap *image;
+    EnterCriticalSection(&ctxAccess);
     fz_try(ctx) {
         image = fz_new_pixmap_with_rect(ctx, fz_find_device_colorspace("DeviceRGB"), bbox);
+        fz_clear_pixmap_with_color(image, 0xFF); // initialize white background
+    }
+    fz_always(ctx) {
+        LeaveCriticalSection(&ctxAccess);
     }
     fz_catch(ctx) {
-        LeaveCriticalSection(&ctxAccess);
         return NULL;
     }
 
-    fz_clear_pixmap_with_color(image, 0xFF); // initialize white background
-    fz_device *dev = fz_new_draw_device(ctx, image);
-    LeaveCriticalSection(&ctxAccess);
+    fz_device *dev;
+    EnterCriticalSection(&ctxAccess);
+    fz_try(ctx) {
+        dev = fz_new_draw_device(ctx, image);
+    }
+    fz_always(ctx) {
+        LeaveCriticalSection(&ctxAccess);
+    }
+    fz_catch(ctx) {
+        return NULL;
+    }
 
-    RunPage(page, dev, ctm, bbox);
+    bool ok = RunPage(page, dev, ctm, bbox);
 
     ScopedCritSec scope(&ctxAccess);
 
-    RenderedBitmap *bitmap = new RenderedFitzBitmap(ctx, image);
+    RenderedBitmap *bitmap = NULL;
+    if (ok)
+        bitmap = new RenderedFitzBitmap(ctx, image);
     fz_drop_pixmap(ctx, image);
     return bitmap;
 }
@@ -3027,10 +3177,22 @@ TCHAR *CXpsEngine::ExtractPageText(xps_page *page, TCHAR *lineSep, RectI **coord
     if (!page)
         return NULL;
 
+    fz_text_span *text = NULL;
+    fz_device *dev;
+    fz_var(text);
+
     EnterCriticalSection(&ctxAccess);
-    fz_text_span *text = fz_new_text_span(ctx);
-    fz_device *dev = fz_new_text_device(ctx, text);
-    LeaveCriticalSection(&ctxAccess);
+    fz_try(ctx) {
+        text = fz_new_text_span(ctx);
+        dev = fz_new_text_device(ctx, text);
+    }
+    fz_always(ctx) {
+        LeaveCriticalSection(&ctxAccess);
+    }
+    fz_catch(ctx) {
+        fz_free_text_span(ctx, text);
+        return NULL;
+    }
 
     // use an infinite rectangle as bounds (instead of a mediabox) to ensure that
     // the extracted text is consistent between cached runs using a list device and
@@ -3056,10 +3218,12 @@ TCHAR *CXpsEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_ou
     fz_try(ctx) {
         page = xps_load_page(_doc, pageNo - 1);
     }
-    fz_catch(ctx) { }
-    LeaveCriticalSection(&ctxAccess);
-    if (!page)
+    fz_always(ctx) {
+        LeaveCriticalSection(&ctxAccess);
+    }
+    fz_catch(ctx) {
         return NULL;
+    }
 
     TCHAR *result = ExtractPageText(page, lineSep, coords_out);
 
@@ -3072,9 +3236,15 @@ TCHAR *CXpsEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_ou
 
 unsigned char *CXpsEngine::GetFileData(size_t *cbCount)
 {
+    unsigned char *data;
     ScopedCritSec scope(&ctxAccess);
-    unsigned char *data = fz_extract_stream_data(_doc->file, cbCount);
-    return data ? data : (unsigned char *)file::ReadAll(_fileName, cbCount);
+    fz_try(ctx) {
+        data = fz_extract_stream_data(_doc->file, cbCount);
+    }
+    fz_catch(ctx) {
+        return _fileName ? (unsigned char *)file::ReadAll(_fileName, cbCount) : NULL;
+    }
+    return data;
 }
 
 TCHAR *CXpsEngine::GetProperty(char *name)
@@ -3175,9 +3345,18 @@ RenderedBitmap *CXpsEngine::GetPageImage(int pageNo, RectD rect, size_t imageIx)
 
     Vec<FitzImagePos> positions;
     ListInspectionData data = { &positions, false, 0 };
+    fz_device *dev;
+
     EnterCriticalSection(&ctxAccess);
-    fz_device *dev = fz_new_inspection_device(ctx, &data);
-    LeaveCriticalSection(&ctxAccess);
+    fz_try(ctx) {
+        dev = fz_new_inspection_device(ctx, &data);
+    }
+    fz_always(ctx) {
+        LeaveCriticalSection(&ctxAccess);
+    }
+    fz_catch(ctx) {
+        return NULL;
+    }
 
     RunPage(page, dev, fz_identity);
 
