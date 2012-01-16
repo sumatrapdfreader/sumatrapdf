@@ -1313,6 +1313,10 @@ fz_scale_pixmap(fz_context *ctx, fz_pixmap *src, float x, float y, float w, floa
 	output->x = dst_x_int;
 	output->y = dst_y_int;
 
+	/* SumatraPDF: prevent crash at very low zoom levels */
+	if (output->w == 0 || output->h == 0)
+		goto cleanup;
+
 	/* Step 2: Apply the weights */
 #ifdef SINGLE_PIXEL_SPECIALS
 	if (!contrib_rows)
