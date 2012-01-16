@@ -47,13 +47,12 @@ Color gColBgTop(0xfa, 0xfa, 0xfa); // this is lightish gray
 struct EbookWindowInfo 
 {
     MobiParse *         mb;
-    Vec<uint8_t> *      forLayout;
+    const char *        html;
     PageLayout      *   pageLayout;
 
-    EbookWindowInfo() : mb(NULL), forLayout(NULL), pageLayout(NULL) { }
+    EbookWindowInfo() : mb(NULL), html(NULL), pageLayout(NULL) { }
     ~EbookWindowInfo() {
         delete mb;
-        delete forLayout;
         delete pageLayout;
     }
 };
@@ -101,11 +100,8 @@ static const char *gSampleHtml = "<html><p align=left>ClearType is <b>dependent<
 
 static EbookWindowInfo *LoadSampleHtml()
 {
-    Vec<uint8_t> *forLayout = MobiHtmlToDisplay((uint8_t*)gSampleHtml, sizeof(gSampleHtml) - 1, NULL);
-    if (!forLayout)
-        return NULL;
     EbookWindowInfo *wi = new EbookWindowInfo();
-    wi->forLayout = forLayout;
+    wi->html = gSampleHtml;
     return wi;
 }
 
@@ -113,26 +109,24 @@ static EbookWindowInfo *LoadEbook(const TCHAR *fileName)
 {
     EbookWindowInfo *wi = new EbookWindowInfo();
     wi->mb = MobiParse::ParseFile(fileName);
-    if (!wi->mb)
-        goto Error;
-
-    size_t sLen;
-    char *s = wi->mb->GetBookHtmlData(sLen);
-    wi->forLayout = MobiHtmlToDisplay((uint8_t*)s, sLen, false);
-    if (!wi->forLayout)
-        goto Error;
-
+    if (!wi->mb) {
+        delete wi;
+        return NULL;
+    }
     return wi;
-
-Error:
-    delete wi;
-    return NULL;
 }
 
 static PageLayout *LayoutMobiFile(EbookWindowInfo *wi, Graphics *gfx, Font *defaultFont, int pageDx, int pageDy)
 {
     PageLayout *layout = new PageLayout(pageDx, pageDy);
-    bool ok = layout->LayoutInternal(gfx, defaultFont, wi->forLayout->LendData(), wi->forLayout->Count());
+    const uint8_t *html = (const uint8_t*)wi->html;
+    size_t len;
+    if (html) {
+        len = strlen(wi->html);
+    } else {
+        html = (const uint8_t*)wi->mb->GetBookHtmlData(len);
+    }
+    bool ok = layout->LayoutHtml(gfx, defaultFont, html, len);
     if (!ok) {
         delete layout;
         return NULL;

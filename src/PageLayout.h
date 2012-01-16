@@ -8,6 +8,7 @@
 #include "BaseUtil.h"
 #include "Vec.h"
 #include "StrUtil.h"
+#include "HtmlPullParser.h"
 
 using namespace Gdiplus;
 
@@ -62,6 +63,11 @@ public:
 
     //Vec<Page *> *LayoutText(Graphics *graphics, Font *defaultFnt, const char *s);
     bool LayoutInternal(Graphics *graphics, Font *defaultFnt, const uint8_t *s, size_t sLen);
+
+    void HandleHtmlTag(HtmlToken *t);
+    void EmitText(HtmlToken *t);
+
+    bool LayoutHtml(Graphics *graphics, Font *defaultFnt, const uint8_t *s, size_t sLen);
 
     size_t PageCount() const {
         return pageInstrOffset.Count();

@@ -369,6 +369,52 @@ static DecodedAttr *FindAttr(Vec<DecodedAttr> *attrs, HtmlAttr attr)
     return NULL;
 }
 
+void PageLayout::HandleHtmlTag(HtmlToken *t)
+{
+
+}
+
+void PageLayout::EmitText(HtmlToken *t)
+{
+    CrashIf(!t->IsText());
+    uint8_t *end = t->s + t->sLen;
+    uint8_t *curr = t->s;
+    SkipWs(curr, end);
+    while (curr < end) {
+        uint8_t *currStart = curr;
+        SkipNonWs(curr, end);
+        size_t len = curr - currStart;
+        if (len > 0) {
+            WordInfo wi = { (const char*)currStart, len };
+            AddWord(&wi);
+        }
+        SkipWs(curr, end);
+    }
+}
+
+bool PageLayout::LayoutHtml(Graphics *graphics, Font *defaultFnt, const uint8_t *s, size_t sLen)
+{
+    gfx = graphics;
+    defaultFont = defaultFnt;
+    currFont = defaultFnt;
+    StartLayout();
+
+    Vec<HtmlTag> tagNesting(256);
+
+    HtmlPullParser parser((uint8_t*)s);
+    for (;;)
+    {
+        HtmlToken *t = parser.Next();
+        if (!t || t->IsError())
+            break;
+        if (t->IsTag())
+            HandleHtmlTag(t);
+        else
+            EmitText(t);
+    }
+    return true;
+}
+
 bool PageLayout::LayoutInternal(Graphics *graphics, Font *defaultFnt, const uint8_t *s, size_t sLen)
 {
     gfx = graphics;
