@@ -5,24 +5,7 @@
 #include "BaseUtil.h"
 #include "StrUtil.h"
 
-// TODO: share this and other such functions with TrivialHtmlParser.cpp
-static bool SkipUntil(char **sPtr, char c)
-{
-    char *s = *sPtr;
-    while (*s && (*s != c)) {
-        ++s;
-    }
-    *sPtr = s;
-    return *s == c;
-}
-
-// *sPtr must be zero-terminated
-static bool SkipUntil(uint8_t **sPtr, char c)
-{
-    return SkipUntil((char**)sPtr, c);
-}
-
-static bool SkipUntil(uint8_t*& s, uint8_t *end, uint8_t c)
+static bool SkipUntil(const uint8_t*& s, const uint8_t *end, uint8_t c)
 {
     while ((s < end) && (*s != c)) {
         ++s;
@@ -34,21 +17,21 @@ static bool IsWs(uint8_t c) {
     return (' ' == c) || ('\t' == c) || ('\n' == c) || ('\r' == c);
 }
 
-void SkipWs(uint8_t*& s, uint8_t *end)
+void SkipWs(const uint8_t*& s, const uint8_t *end)
 {
     while ((s < end) && IsWs(*s)) {
         ++s;
     }
 }
 
-void SkipNonWs(uint8_t*& s, uint8_t *end)
+void SkipNonWs(const uint8_t*& s, const uint8_t *end)
 {
     while ((s < end) && !IsWs(*s)) {
         ++s;
     }
 }
 
-static int IsName(int c)
+static int IsNameChar(int c)
 {
     return c == '.' || c == '-' || c == '_' || c == ':' ||
         (c >= '0' && c <= '9') ||
@@ -57,17 +40,17 @@ static int IsName(int c)
 }
 
 // skip all html tag or attribute chatacters
-static void SkipName(uint8_t*& s, uint8_t *end)
+static void SkipName(const uint8_t*& s, const uint8_t *end)
 {
-    while ((s < end) && IsName(*s)) {
+    while ((s < end) && IsNameChar(*s)) {
         s++;
     }
 }
 
 // return true if s consists of only spaces
-static bool IsSpaceOnly(uint8_t *s, size_t len)
+static bool IsSpaceOnly(const uint8_t *s, size_t len)
 {
-    uint8_t *end = s + len;
+    const uint8_t *end = s + len;
     while (s < end) {
         if (*s++ != ' ')
             return false;
@@ -82,7 +65,7 @@ static bool IsSpaceOnly(uint8_t *s, size_t len)
 // where both attribute name and attribute value can
 // be quoted
 // Not multi-thread safe (uses static buffer)
-AttrInfo *GetNextAttr(uint8_t *&s, uint8_t *end)
+AttrInfo *GetNextAttr(const uint8_t *&s, const uint8_t *end)
 {
     static AttrInfo attrInfo;
 
@@ -130,9 +113,9 @@ AttrInfo *GetNextAttr(uint8_t *&s, uint8_t *end)
 // Returns next part of html or NULL if finished
 HtmlToken *HtmlPullParser::Next()
 {
-    uint8_t *start;
+    const uint8_t *start;
  
-    if (!*currPos)
+    if (currPos >= end)
         return NULL;
 
     if (s == currPos) {
@@ -146,7 +129,7 @@ Next:
     start = currPos;
     if (*currPos != '<') {
         // this must text between tags
-        if (!SkipUntil(&currPos, '<')) {
+        if (!SkipUntil(currPos, end, '<')) {
             // text cannot be at the end
             return MakeError(HtmlToken::NonTagAtEnd, start);
         }
@@ -162,7 +145,7 @@ Next:
     // '<' - tag begins
     ++start;
 
-    if (!SkipUntil(&currPos, '>'))
+    if (!SkipUntil(currPos, end, '>'))
         return MakeError(HtmlToken::UnclosedTag, start);
 
     CrashIf('>' != *currPos);
@@ -206,10 +189,10 @@ Next:
 // strings is an array of 0-separated strings consequitevely laid out
 // in memory. This functions find the position of str in this array,
 // -1 means not found. The search is case-insensitive
-int FindStrPos(const char *strings, char *str, size_t len)
+int FindStrPos(const char *strings, const char *str, size_t len)
 {
     const char *curr = strings;
-    char *end = str + len;
+    const char *end = str + len;
     char firstChar = tolower(*str);
     int n = 0;
     for (;;) {
@@ -220,7 +203,7 @@ int FindStrPos(const char *strings, char *str, size_t len)
             // can quit if current str is > tastringg
             return -1;
         }
-        char *s = str;
+        const char *s = str;
         while (*curr && (s < end)) {
             char c = tolower(*s++);
             if (c != *curr++)
@@ -256,17 +239,17 @@ void DumpTag(HtmlToken *t)
 }
 #endif
 
-HtmlTag FindTag(char *tag, size_t len)
+HtmlTag FindTag(const char *tag, size_t len)
 {
     return (HtmlTag)FindStrPos(HTML_TAGS_STRINGS, tag, len);
 }
 
-HtmlAttr FindAttr(char *attr, size_t len)
+HtmlAttr FindAttr(const char *attr, size_t len)
 {
     return (HtmlAttr)FindStrPos(HTML_ATTRS_STRINGS, attr, len);
 }
 
-static AlignAttr FindAlignAttr(char *attr, size_t len)
+AlignAttr FindAlignAttr(const char *attr, size_t len)
 {
     return (AlignAttr)FindStrPos(ALIGN_ATTRS_STRINGS, attr, len);
 }
@@ -283,12 +266,12 @@ bool IsSelfClosingTag(HtmlTag tag)
     return false;
 }
 
-size_t GetTagLen(uint8_t *s, size_t len)
+size_t GetTagLen(const uint8_t *s, size_t len)
 {
-    uint8_t *end = s + len;
-    uint8_t *curr = s;
+    const uint8_t *end = s + len;
+    const uint8_t *curr = s;
     while (curr < end) {
-        if (!IsName(*curr))
+        if (!IsNameChar(*curr))
             return curr - s;
         ++curr;
     }

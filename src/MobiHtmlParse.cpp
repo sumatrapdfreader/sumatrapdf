@@ -59,13 +59,13 @@ static inline void EmitVarint(Vec<uint8_t>* out, uint32_t v)
     out->IncreaseLen(dataEnd - data);
 }
 
-void EncodeParsedElementString(Vec<uint8_t>* out, uint8_t *s, size_t sLen)
+void EncodeParsedElementString(Vec<uint8_t>* out, const uint8_t *s, size_t sLen)
 {
     // first bit is 0, followed by sLen
     uint32_t v = (uint32_t)sLen;
     v = v << 1;
     EmitVarint(out, v);
-    out->Append(s, sLen);
+    out->Append((uint8_t*)s, sLen);
 }
 
 static void EncodeParsedElementInt(Vec<uint8_t>* out, int n)
@@ -132,11 +132,11 @@ static void EmitTag(Vec<uint8_t> *out, HtmlTag tag, bool isEndTag, bool hasAttri
 static void EmitText(Vec<uint8_t>* out, HtmlToken *t)
 {
     CrashIf(!t->IsText());
-    uint8_t *end = t->s + t->sLen;
-    uint8_t *curr = t->s;
+    const uint8_t *end = t->s + t->sLen;
+    const uint8_t *curr = t->s;
     SkipWs(curr, end);
     while (curr < end) {
-        uint8_t *currStart = curr;
+        const uint8_t *currStart = curr;
         SkipNonWs(curr, end);
         size_t len = curr - currStart;
         if (len > 0)
@@ -176,7 +176,7 @@ bool AttrHasEnumVal(HtmlAttr attr)
 // as a string.
 // Returns false if we couldn't emit the attribute (e.g. because we expected
 // a known attribute value and it didn' match any).
-static bool EmitAttribute(Vec<uint8_t> *out, HtmlAttr attr, uint8_t *attrVal, size_t attrValLen)
+static bool EmitAttribute(Vec<uint8_t> *out, HtmlAttr attr, const uint8_t *attrVal, size_t attrValLen)
 {
     const char *validValues = NULL;
     for (size_t i = 0; i < dimof(gValidAttrValues); i++) {
@@ -187,7 +187,7 @@ static bool EmitAttribute(Vec<uint8_t> *out, HtmlAttr attr, uint8_t *attrVal, si
     }
 
     if (NULL != validValues) {
-        int valIdx = FindStrPos(validValues, (char*)attrVal, attrValLen);
+        int valIdx = FindStrPos(validValues, (const char*)attrVal, attrValLen);
         if (-1 == valIdx)
             return false;
         EncodeParsedElementAttr(out, attr);
@@ -225,8 +225,8 @@ static bool EmitAttributes(Vec<uint8_t> *out, HtmlToken *t, HtmlAttr *allowedAtt
 {
     AttrInfo *attrInfo;
     HtmlAttr attr;
-    uint8_t *s = t->s;
-    uint8_t *end = s + t->sLen;
+    const uint8_t *s = t->s;
+    const uint8_t *end = s + t->sLen;
     s += GetTagLen(s, t->sLen);
 
     // we need to cache attribute info because we first
@@ -341,7 +341,7 @@ static void RecordEndTag(Vec<HtmlTag> *tagNesting, HtmlTag tag)
 // tags that I want to explicitly ignore and not define
 // HtmlTag enums for them
 // One file has a bunch of st1:* tags (st1:city, st1:place etc.)
-static bool IgnoreTag(uint8_t *s, size_t sLen)
+static bool IgnoreTag(const uint8_t *s, size_t sLen)
 {
     if (sLen >= 4 && s[3] == ':' && s[0] == 's' && s[1] == 't' && s[2] == '1')
         return true;
@@ -389,7 +389,7 @@ static void HandleTag(ConverterState *state, HtmlToken *t)
     //EmitTag(state->out, tag, t);
 }
 
-static void HtmlAddWithNesting(Vec<uint8_t>* html, HtmlTag tag, bool isStartTag, size_t nesting, uint8_t *s, size_t sLen)
+static void HtmlAddWithNesting(Vec<uint8_t>* html, HtmlTag tag, bool isStartTag, size_t nesting, const uint8_t *s, size_t sLen)
 {
     static HtmlTag inlineTags[] = {Tag_Font, Tag_B, Tag_I, Tag_U};
     bool isInline = false;
@@ -404,7 +404,7 @@ static void HtmlAddWithNesting(Vec<uint8_t>* html, HtmlTag tag, bool isStartTag,
             html->Append(' ');
         }
     }
-    html->Append(s, sLen);
+    html->Append((uint8_t*)s, sLen);
     if (isInline || isStartTag)
         return;
     html->Append('\n');
@@ -417,7 +417,7 @@ static void PrettifyHtml(ConverterState *state, HtmlToken *t)
 
     size_t nesting = state->tagNesting->Count();
     if (t->IsText()) {
-        state->html->Append(t->s, t->sLen);
+        state->html->Append((uint8_t*)t->s, t->sLen);
         //HtmlAddWithNesting(state->html, t->tag, nesting, t->s, t->sLen);
         return;
     }
@@ -457,7 +457,7 @@ Vec<uint8_t> *MobiHtmlToDisplay(const uint8_t *s, size_t sLen, Vec<uint8_t> *htm
 
     ConverterState state = { res, &tagNesting, html };
 
-    HtmlPullParser parser((uint8_t*)s);
+    HtmlPullParser parser(s, strlen((const char*)s));
 
     for (;;)
     {

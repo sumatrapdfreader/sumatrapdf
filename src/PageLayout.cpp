@@ -377,11 +377,11 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
 void PageLayout::EmitText(HtmlToken *t)
 {
     CrashIf(!t->IsText());
-    uint8_t *end = t->s + t->sLen;
-    uint8_t *curr = t->s;
+    const uint8_t *end = t->s + t->sLen;
+    const uint8_t *curr = t->s;
     SkipWs(curr, end);
     while (curr < end) {
-        uint8_t *currStart = curr;
+        const uint8_t *currStart = curr;
         SkipNonWs(curr, end);
         size_t len = curr - currStart;
         if (len > 0) {
@@ -401,7 +401,7 @@ bool PageLayout::LayoutHtml(Graphics *graphics, Font *defaultFnt, const uint8_t 
 
     Vec<HtmlTag> tagNesting(256);
 
-    HtmlPullParser parser((uint8_t*)s);
+    HtmlPullParser parser(s, sLen);
     for (;;)
     {
         HtmlToken *t = parser.Next();
