@@ -323,11 +323,11 @@ fz_obj *xps_extract_doc_props(xps_document *doc)
 	}
 	fz_always(doc->ctx)
 	{
-		fz_drop_obj(dict);
 		xps_free_part(doc, part);
 	}
 	fz_catch(doc->ctx)
 	{
+		fz_drop_obj(dict);
 		fz_rethrow(doc->ctx);
 	}
 

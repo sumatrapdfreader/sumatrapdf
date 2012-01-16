@@ -422,6 +422,7 @@ $(OS)\FileWatch.obj: src\utils\StrUtil.h
 $(OS)\GdiPlusUtil.obj: src\utils\BaseUtil.h src\utils\GdiPlusUtil.h src\utils\GeomUtil.h
 $(OS)\GdiPlusUtil.obj: src\utils\Scopes.h src\utils\StrUtil.h src\utils\WinUtil.h
 $(OS)\HtmlPullParser.obj: src\utils\BaseUtil.h src\utils\HtmlPullParser.h src\utils\StrUtil.h
+$(OS)\HtmlPullParser.obj: src\utils\Vec.h
 $(OS)\HtmlWindow.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\HtmlWindow.h
 $(OS)\HtmlWindow.obj: src\utils\Scopes.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\HtmlWindow.obj: src\utils\WinUtil.h

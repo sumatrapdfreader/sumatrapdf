@@ -230,10 +230,6 @@ fz_bound_path(fz_path *path, fz_stroke_state *stroke, fz_matrix ctm)
 	if (path->len == 0)
 		return fz_empty_rect;
 
-	/* SumatraPDF: ignore single MoveTo instructions */
-	if (i + 3 == path->len && path->items[i].k == FZ_MOVETO)
-		return fz_empty_rect;
-
 	p.x = path->items[1].v;
 	p.y = path->items[2].v;
 	p = fz_transform_point(ctm, p);
@@ -256,6 +252,9 @@ fz_bound_path(fz_path *path, fz_stroke_state *stroke, fz_matrix ctm)
 			r = bound_expand(r, fz_transform_point(ctm, p));
 			break;
 		case FZ_MOVETO:
+			/* SumatraPDF: ignore trailing MoveTo instructions */
+			if (i + 3 == path->len && path->items[i].k == FZ_MOVETO)
+				break;
 		case FZ_LINETO:
 			p.x = path->items[i++].v;
 			p.y = path->items[i++].v;
