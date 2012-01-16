@@ -73,10 +73,11 @@ static void TestMobiFile(TCHAR *filePath)
         return;
     }
 
-    mb->ConvertToDisplayFormat(gMobiSaveHtml);
+    mb->ConvertToDisplayFormat();
     if (!gMobiSaveHtml)
         return;
 
+#if 0 // TODO: use PrettyPrintHtml()
     // Given the name of the name of source mobi file "${srcdir}/${file}.mobi"
     // construct a base name for extracted html/image files in the form
     // "${MOBI_SAVE_DIR}/${file}" i.e. change dir to MOBI_SAVE_DIR and
@@ -90,6 +91,7 @@ static void TestMobiFile(TCHAR *filePath)
 
     SaveMobiHtml(filePathBase, mb);
     SaveMobiImages(filePathBase, mb);
+#endif
 
     delete mb;
 }

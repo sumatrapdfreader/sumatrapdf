@@ -32,6 +32,6 @@ struct ParsedElement {
 
 ParsedElement *DecodeNextParsedElement(const uint8_t* &s, const uint8_t *end);
 
-Vec<uint8_t> *MobiHtmlToDisplay(const uint8_t *s, size_t sLen, Vec<uint8_t> *html);
+Vec<uint8_t> *MobiHtmlToDisplay(const uint8_t *s, size_t sLen);
 
 #endif

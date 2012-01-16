@@ -314,7 +314,6 @@ static void EmitTag(Vec<uint8_t>* out, HtmlTag tag, HtmlToken *t)
 struct ConverterState {
     Vec<uint8_t> *out;
     Vec<HtmlTag> *tagNesting;
-    Vec<uint8_t> *html; // prettified html
 };
 
 // record the tag for the purpose of building current state
@@ -389,63 +388,9 @@ static void HandleTag(ConverterState *state, HtmlToken *t)
     //EmitTag(state->out, tag, t);
 }
 
-static void HtmlAddWithNesting(Vec<uint8_t>* html, HtmlTag tag, bool isStartTag, size_t nesting, const uint8_t *s, size_t sLen)
-{
-    static HtmlTag inlineTags[] = {Tag_Font, Tag_B, Tag_I, Tag_U};
-    bool isInline = false;
-    for (size_t i = 0; i < dimof(inlineTags); i++) {
-        if (tag == inlineTags[i]) {
-            isInline = true;
-            break;
-        }
-    }
-    if (!isInline && isStartTag) {
-        for (size_t i = 0; i < nesting; i++) {
-            html->Append(' ');
-        }
-    }
-    html->Append((uint8_t*)s, sLen);
-    if (isInline || isStartTag)
-        return;
-    html->Append('\n');
-}
-
-static void PrettifyHtml(ConverterState *state, HtmlToken *t)
-{
-    if (!state->html)
-        return;
-
-    size_t nesting = state->tagNesting->Count();
-    if (t->IsText()) {
-        state->html->Append((uint8_t*)t->s, t->sLen);
-        //HtmlAddWithNesting(state->html, t->tag, nesting, t->s, t->sLen);
-        return;
-    }
-
-    if (!t->IsTag())
-        return;
-
-    HtmlTag tag = FindTag((char*)t->s, t->sLen);
-    if (t->IsEmptyElementEndTag()) {
-        HtmlAddWithNesting(state->html, tag, false, nesting, t->s - 1, t->sLen + 3);
-        return;
-    }
-
-    if (t->IsStartTag()) {
-        HtmlAddWithNesting(state->html, tag, true, nesting, t->s - 1, t->sLen + 2);
-        return;
-    }
-
-    if (t->IsEndTag()) {
-        if (nesting > 0)
-            --nesting;
-        HtmlAddWithNesting(state->html, tag, false, nesting, t->s - 2, t->sLen + 3);
-    }
-}
-
 // convert mobi html to a format optimized for layout/display
 // returns NULL in case of an error
-Vec<uint8_t> *MobiHtmlToDisplay(const uint8_t *s, size_t sLen, Vec<uint8_t> *html)
+Vec<uint8_t> *MobiHtmlToDisplay(const uint8_t *s, size_t sLen)
 {
     Vec<uint8_t> *res = new Vec<uint8_t>(sLen); // avoid re-allocations by pre-allocating expected size
 
@@ -455,7 +400,7 @@ Vec<uint8_t> *MobiHtmlToDisplay(const uint8_t *s, size_t sLen, Vec<uint8_t> *htm
     // its closing tag.
     Vec<HtmlTag> tagNesting(256);
 
-    ConverterState state = { res, &tagNesting, html };
+    ConverterState state = { res, &tagNesting };
 
     HtmlPullParser parser(s, strlen((const char*)s));
 
@@ -468,7 +413,6 @@ Vec<uint8_t> *MobiHtmlToDisplay(const uint8_t *s, size_t sLen, Vec<uint8_t> *htm
             delete res;
             return NULL;
         }
-        PrettifyHtml(&state, t);
         // TODO: interpret the tag
         if (t->IsTag()) {
             HandleTag(&state, t);

@@ -407,6 +407,7 @@ bool PageLayout::LayoutHtml(Graphics *graphics, Font *defaultFnt, const uint8_t 
         HtmlToken *t = parser.Next();
         if (!t || t->IsError())
             break;
+
         if (t->IsTag())
             HandleHtmlTag(t);
         else

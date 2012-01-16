@@ -277,3 +277,122 @@ size_t GetTagLen(const uint8_t *s, size_t len)
     }
     return len;
 }
+
+static void HtmlAddWithNesting(Vec<uint8_t>* out, HtmlTag tag, bool isStartTag, size_t nesting, const uint8_t *s, size_t sLen)
+{
+    static HtmlTag inlineTags[] = {Tag_Font, Tag_B, Tag_I, Tag_U};
+    bool isInline = false;
+    for (size_t i = 0; i < dimof(inlineTags); i++) {
+        if (tag == inlineTags[i]) {
+            isInline = true;
+            break;
+        }
+    }
+    if (!isInline && isStartTag) {
+        for (size_t i = 0; i < nesting; i++) {
+            out->Append(' ');
+        }
+    }
+    out->Append((uint8_t*)s, sLen);
+    if (isInline || isStartTag)
+        return;
+    out->Append('\n');
+}
+
+// record the tag for the purpose of building current state
+// of html tree
+static void RecordStartTag(Vec<HtmlTag>* tagNesting, HtmlTag tag)
+{
+    if (IsSelfClosingTag(tag))
+        return;
+    tagNesting->Append(tag);
+}
+
+// remove the tag from state of html tree
+static void RecordEndTag(Vec<HtmlTag> *tagNesting, HtmlTag tag)
+{
+    // TODO: this logic might need to be a bit more complicated
+    // e.g. when closing a tag, if the top tag doesn't match
+    // but there are only potentially self-closing tags
+    // on the stack between the matching tag, we should pop
+    // all of them
+    if (tagNesting->Count() > 0)
+        tagNesting->Pop();
+}
+
+static void PrettifyHtmlToken(HtmlToken *t, Vec<HtmlTag> *tagNesting, Vec<uint8_t>* out)
+{
+    size_t nesting = tagNesting->Count();
+    if (t->IsText()) {
+        out->Append((uint8_t*)t->s, t->sLen);
+        //HtmlAddWithNesting(state->html, t->tag, nesting, t->s, t->sLen);
+        return;
+    }
+
+    if (!t->IsTag())
+        return;
+
+    HtmlTag tag = FindTag((char*)t->s, t->sLen);
+    if (t->IsEmptyElementEndTag()) {
+        HtmlAddWithNesting(out, tag, false, nesting, t->s - 1, t->sLen + 3);
+        return;
+    }
+
+    if (t->IsStartTag()) {
+        HtmlAddWithNesting(out, tag, true, nesting, t->s - 1, t->sLen + 2);
+        return;
+    }
+
+    if (t->IsEndTag()) {
+        if (nesting > 0)
+            --nesting;
+        HtmlAddWithNesting(out, tag, false, nesting, t->s - 2, t->sLen + 3);
+    }
+}
+
+// tags that I want to explicitly ignore and not define
+// HtmlTag enums for them
+// One file has a bunch of st1:* tags (st1:city, st1:place etc.)
+static bool IgnoreTag(const uint8_t *s, size_t sLen)
+{
+    if (sLen >= 4 && s[3] == ':' && s[0] == 's' && s[1] == 't' && s[2] == '1')
+        return true;
+    // no idea what "o:p" is
+    if (sLen == 3 && s[1] == ':' && s[0] == 'o'  && s[2] == 'p')
+        return true;
+    return false;
+}
+
+Vec<uint8_t> *PrettyPrintHtml(const char *s, size_t len)
+{
+    Vec<uint8_t> *res = new Vec<uint8_t>(len);
+    Vec<HtmlTag> tagNesting(256);
+    HtmlPullParser parser((const uint8_t*)s, len);
+    for (;;)
+    {
+        HtmlToken *t = parser.Next();
+        if (!t || t->IsError())
+            break;
+
+        PrettifyHtmlToken(t, &tagNesting, res);
+        if (!t->IsTag())
+            continue;
+
+        // HtmlToken string includes potential attributes,
+        // get the length of just the tag
+        size_t tagLen = GetTagLen(t->s, t->sLen);
+        if (IgnoreTag(t->s, tagLen))
+            continue;
+
+        HtmlTag tag = FindTag((const char*)t->s, tagLen);
+        if (Tag_NotFound == tag)
+            continue;
+        // update the current state of html tree
+        if (t->IsStartTag())
+            RecordStartTag(&tagNesting, tag);
+        else if (t->IsEndTag())
+            RecordEndTag(&tagNesting, tag);
+    }
+    return res;
+}
+

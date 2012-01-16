@@ -5,6 +5,7 @@
 #define HtmlPullParser_h
 
 #include <stdint.h>
+#include "Vec.h"
 
 // enums must match HTML_TAGS_STRINGS order
 enum HtmlTag {
@@ -176,5 +177,7 @@ bool        IsSelfClosingTag(HtmlTag tag);
 AttrInfo *  GetNextAttr(const uint8_t *&s, const uint8_t *end);
 HtmlAttr    FindAttr(const char *attr, size_t len);
 AlignAttr   FindAlignAttr(const char *attr, size_t len);
+
+Vec<uint8_t> *PrettyPrintHtml(const char *s, size_t len);
 
 #endif

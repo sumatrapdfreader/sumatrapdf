@@ -109,7 +109,7 @@ public:
 
     static MobiParse *ParseFile(const TCHAR *fileName);
 
-    void ConvertToDisplayFormat(bool generatePrettyPrintedHtml);
+    void ConvertToDisplayFormat();
 
     char *GetBookHtmlData(size_t& lenOut) {
         lenOut = doc->Size();
