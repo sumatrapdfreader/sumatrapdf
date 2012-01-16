@@ -413,6 +413,8 @@ bool PageLayout::LayoutHtml(Graphics *graphics, Font *defaultFnt, const uint8_t 
         else
             EmitText(t);
     }
+    // force layout of the last line
+    StartNewLine(true);
     return true;
 }
 
