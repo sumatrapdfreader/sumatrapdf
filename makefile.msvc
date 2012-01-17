@@ -172,7 +172,7 @@ ET_OBJS = \
 	$(OS)\MobiParse.obj $(ET_RES)
 
 TESTER_OBJS = \
-	$(OS)\Tester.obj $(OS)\MobiParse.obj $(OS)\MobiHtmlParse.obj
+	$(OS)\Tester.obj $(OS)\MobiParse.obj
 
 PDFFILTER_OBJS = \
 	$(OS)\PdfFilterDll.obj $(OS)\CPdfFilter.obj $(PDFFILTER_RES) \
