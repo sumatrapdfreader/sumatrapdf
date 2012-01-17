@@ -223,6 +223,10 @@ void PageLayout::JustifyLine(TextJustification mode)
 
 void PageLayout::StartNewLine(bool isParagraphBreak)
 {
+    // don't put empty lines at the top of the page
+    if ((0 == currY) && IsCurrentLineEmpty())
+        return;
+
     if (isParagraphBreak && Both == currJustification)
         JustifyLine(Left);
     else
