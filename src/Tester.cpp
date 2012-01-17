@@ -12,7 +12,6 @@
 #include "DirIter.h"
 #include "MobiParse.h"
 #include "FileUtil.h"
-#include "MobiHtmlParse.h"
 #include "GdiPlusUtil.h"
 
 // if true, we'll save html content of a mobi ebook as well
@@ -73,7 +72,6 @@ static void TestMobiFile(TCHAR *filePath)
         return;
     }
 
-    mb->ConvertToDisplayFormat();
     if (!gMobiSaveHtml)
         return;
 
