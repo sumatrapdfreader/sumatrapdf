@@ -71,7 +71,6 @@
   <ItemGroup>
     <ClCompile Include="src\ebooktest\EbookTest.cpp" />
     <ClCompile Include="src\ebooktest\EbookTestMenu.cpp" />
-    <ClCompile Include="src\MobiHtmlParse.cpp" />
     <ClCompile Include="src\MobiParse.cpp" />
     <ClCompile Include="src\PageLayout.cpp" />
     <ClCompile Include="src\utils\FileUtil.cpp" />
@@ -82,7 +81,6 @@
     <ClInclude Include="src\ebooktest\EbookTestMenu.h" />
     <ClInclude Include="src\ebooktest\Resource.h" />
     <ClInclude Include="src\installer\Version.h" />
-    <ClInclude Include="src\MobiHtmlParse.h" />
     <ClInclude Include="src\MobiParse.h" />
     <ClInclude Include="src\PageLayout.h" />
     <ClInclude Include="src\utils\FileUtil.h" />

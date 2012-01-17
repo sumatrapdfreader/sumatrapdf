@@ -43,6 +43,5 @@ CHMLIB         ext/CHMLib/COPYING     <LGPL>  http://www.jedrea.com/chmlib/
 msinttypes     src/utils/inttypes.h    <BSD>  http://code.google.com/p/msinttypes/
 NPAPI          src/browserplugin/npapi <MPL>  http://code.google.com/p/npapi-sdk/
 ezgdi          mupdf/pdf/pdf_ft_tools.c<GPL>  http://code.google.com/p/ezgdi/
-snappy         src/utils/Varint.h      <BSD>  http://code.google.com/p/snappy/
 
 Fugue Icons    CC BY 3.0                      http://p.yusukekamiyamane.com/

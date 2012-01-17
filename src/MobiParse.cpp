@@ -8,7 +8,6 @@
 #include "FileUtil.h"
 #include "GdiPlusUtil.h"
 #include "StrUtil.h"
-#include "MobiHtmlParse.h"
 
 // Parse mobi format http://wiki.mobileread.com/wiki/MOBI
 

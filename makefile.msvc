@@ -380,12 +380,12 @@ $(OS)\DisplayModel.obj: src\utils\Vec.h
 $(OS)\DjVuEngine.obj: src\BaseEngine.h src\DjVuEngine.h src\utils\BaseUtil.h
 $(OS)\DjVuEngine.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scopes.h
 $(OS)\DjVuEngine.obj: src\utils\StrUtil.h src\utils\Vec.h
-$(OS)\EbookTest.obj: src\ebooktest\EbookTestMenu.h src\ebooktest\Resource.h src\MobiHtmlParse.h
-$(OS)\EbookTest.obj: src\MobiParse.h src\PageLayout.h src\utils\BaseUtil.h
-$(OS)\EbookTest.obj: src\utils\CmdLineParser.h src\utils\FileUtil.h src\utils\FrameTimeoutCalculator.h
-$(OS)\EbookTest.obj: src\utils\GeomUtil.h src\utils\HtmlPullParser.h src\utils\Scopes.h
-$(OS)\EbookTest.obj: src\utils\StrUtil.h src\utils\Transactions.h src\utils\Vec.h
-$(OS)\EbookTest.obj: src\utils\WinUtil.h src\Version.h
+$(OS)\EbookTest.obj: src\ebooktest\EbookTestMenu.h src\ebooktest\Resource.h src\MobiParse.h
+$(OS)\EbookTest.obj: src\PageLayout.h src\utils\BaseUtil.h src\utils\CmdLineParser.h
+$(OS)\EbookTest.obj: src\utils\FileUtil.h src\utils\FrameTimeoutCalculator.h src\utils\GeomUtil.h
+$(OS)\EbookTest.obj: src\utils\HtmlPullParser.h src\utils\Scopes.h src\utils\StrUtil.h
+$(OS)\EbookTest.obj: src\utils\Transactions.h src\utils\Vec.h src\utils\WinUtil.h
+$(OS)\EbookTest.obj: src\Version.h
 $(OS)\EbookTestMenu.obj: src\ebooktest\EbookTestMenu.h src\ebooktest\Resource.h src\utils\BaseUtil.h
 $(OS)\EbookTestMenu.obj: src\utils\StrUtil.h
 $(OS)\EngineDump.obj: src\BaseEngine.h src\ChmEngine.h src\DjVuEngine.h
@@ -456,12 +456,9 @@ $(OS)\Menu.obj: src\SumatraDialogs.h src\SumatraPDF.h src\TextSearch.h
 $(OS)\Menu.obj: src\TextSelection.h src\translations.h src\utils\BaseUtil.h
 $(OS)\Menu.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\StrUtil.h
 $(OS)\Menu.obj: src\utils\Vec.h src\utils\WinUtil.h src\WindowInfo.h
-$(OS)\MobiHtmlParse.obj: src\MobiHtmlParse.h src\utils\BaseUtil.h src\utils\FileUtil.h
-$(OS)\MobiHtmlParse.obj: src\utils\HtmlPullParser.h src\utils\StrUtil.h src\utils\Varint.h
-$(OS)\MobiHtmlParse.obj: src\utils\Vec.h
-$(OS)\MobiParse.obj: src\MobiHtmlParse.h src\MobiParse.h src\utils\BaseUtil.h
-$(OS)\MobiParse.obj: src\utils\BitReader.h src\utils\FileUtil.h src\utils\GdiPlusUtil.h
-$(OS)\MobiParse.obj: src\utils\HtmlPullParser.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\MobiParse.obj: src\MobiParse.h src\utils\BaseUtil.h src\utils\BitReader.h
+$(OS)\MobiParse.obj: src\utils\FileUtil.h src\utils\GdiPlusUtil.h src\utils\StrUtil.h
+$(OS)\MobiParse.obj: src\utils\Vec.h
 $(OS)\MuPDF_Exports.obj: mupdf\fitz\fitz.h
 $(OS)\Notifications.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
 $(OS)\Notifications.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
@@ -475,9 +472,8 @@ $(OS)\npPdfViewer.obj: src\browserplugin\npapi\nptypes.h src\utils\BaseUtil.h sr
 $(OS)\npPdfViewer.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scopes.h
 $(OS)\npPdfViewer.obj: src\utils\SimpleLog.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\npPdfViewer.obj: src\utils\WinUtil.h
-$(OS)\PageLayout.obj: src\MobiHtmlParse.h src\PageLayout.h src\utils\BaseUtil.h
-$(OS)\PageLayout.obj: src\utils\GdiPlusUtil.h src\utils\HtmlPullParser.h src\utils\StrUtil.h
-$(OS)\PageLayout.obj: src\utils\Vec.h
+$(OS)\PageLayout.obj: src\PageLayout.h src\utils\BaseUtil.h src\utils\GdiPlusUtil.h
+$(OS)\PageLayout.obj: src\utils\HtmlPullParser.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\ParseCommandLine.obj: src\AppPrefs.h src\BaseEngine.h src\DisplayState.h
 $(OS)\ParseCommandLine.obj: src\ParseCommandLine.h src\StressTesting.h src\SumatraPDF.h
 $(OS)\ParseCommandLine.obj: src\TextSearch.h src\TextSelection.h src\utils\BaseUtil.h
@@ -597,9 +593,9 @@ $(OS)\TableOfContents.obj: src\TextSearch.h src\TextSelection.h src\translations
 $(OS)\TableOfContents.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\Scopes.h
 $(OS)\TableOfContents.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\TableOfContents.obj: src\WindowInfo.h
-$(OS)\Tester.obj: src\MobiHtmlParse.h src\MobiParse.h src\utils\BaseUtil.h
-$(OS)\Tester.obj: src\utils\DirIter.h src\utils\FileUtil.h src\utils\GdiPlusUtil.h
-$(OS)\Tester.obj: src\utils\HtmlPullParser.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\Tester.obj: src\MobiParse.h src\utils\BaseUtil.h src\utils\DirIter.h
+$(OS)\Tester.obj: src\utils\FileUtil.h src\utils\GdiPlusUtil.h src\utils\StrUtil.h
+$(OS)\Tester.obj: src\utils\Vec.h
 $(OS)\TextSearch.obj: src\BaseEngine.h src\TextSearch.h src\TextSelection.h
 $(OS)\TextSearch.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\StrUtil.h
 $(OS)\TextSearch.obj: src\utils\Vec.h

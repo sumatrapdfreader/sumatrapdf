@@ -4,7 +4,6 @@
 #include "PageLayout.h"
 #include "GdiPlusUtil.h"
 #include "StrUtil.h"
-#include "MobiHtmlParse.h"
 #include "HtmlPullParser.h"
 
 using namespace Gdiplus;

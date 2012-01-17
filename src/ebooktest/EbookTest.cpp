@@ -14,7 +14,6 @@
 #include "Scopes.h"
 #include "PageLayout.h"
 #include "MobiParse.h"
-#include "MobiHtmlParse.h"
 #include "EbookTestMenu.h"
 
 using namespace Gdiplus;
