@@ -97,7 +97,6 @@ public:
         return currLineInstrOffset == instructions.Count();
     }
 
-
 private:
     REAL GetCurrentLineDx();
     void LayoutLeftStartingAt(REAL offX);
@@ -131,6 +130,9 @@ private:
 
     // drawing instructions for all pages
     Vec<DrawInstr>      instructions;
+
+    // current nesting of html tree during html parsing
+    Vec<HtmlTag>        tagNesting;
 
     // a page is fully described by list of drawing instructions
     // This is an array of offsets into instructions array

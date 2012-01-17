@@ -178,6 +178,8 @@ AttrInfo *  GetNextAttr(const uint8_t *&s, const uint8_t *end);
 HtmlAttr    FindAttr(const char *attr, size_t len);
 AlignAttr   FindAlignAttr(const char *attr, size_t len);
 
+void RecordEndTag(Vec<HtmlTag> *tagNesting, HtmlTag tag);
+void RecordStartTag(Vec<HtmlTag>* tagNesting, HtmlTag tag);
 Vec<uint8_t> *PrettyPrintHtml(const char *s, size_t len);
 
 #endif

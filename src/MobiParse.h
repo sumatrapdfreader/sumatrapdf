@@ -100,7 +100,6 @@ class MobiParse
 
 public:
     str::Str<char> *    doc;
-    Vec<uint8_t> *      displayFormat;
     Vec<uint8_t> *      prettyPrintedHtml;
 
     size_t              imagesCount;
@@ -108,8 +107,6 @@ public:
     ImageData *         images;
 
     static MobiParse *ParseFile(const TCHAR *fileName);
-
-    void ConvertToDisplayFormat();
 
     char *GetBookHtmlData(size_t& lenOut) {
         lenOut = doc->Size();

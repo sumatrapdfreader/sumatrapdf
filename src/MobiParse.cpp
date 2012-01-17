@@ -520,7 +520,6 @@ static bool IsValidCompression(int comprType)
 MobiParse::MobiParse() : 
     fileName(NULL), fileHandle(0), recHeaders(NULL), firstRecData(NULL), isMobi(false),
     docRecCount(0), compressionType(0), docUncompressedSize(0), doc(NULL),
-    displayFormat(NULL),
     multibyte(false), trailersCount(0), imageFirstRec(0), imagesCount(0), validImagesCount(0),
     images(NULL), bufDynamic(NULL), bufDynamicSize(0), huffDic(NULL)
 {
@@ -536,7 +535,6 @@ MobiParse::~MobiParse()
     free(images);
     delete huffDic;
     delete doc;
-    delete displayFormat;
 }
 
 bool MobiParse::ParseHeader()
@@ -933,10 +931,4 @@ MobiParse *MobiParse::ParseFile(const TCHAR *fileName)
 Error:
     delete mb;
     return NULL;
-}
-
-void MobiParse::ConvertToDisplayFormat()
-{
-    displayFormat = MobiHtmlToDisplay((uint8_t*)doc->LendData(), doc->Count());
-
 }

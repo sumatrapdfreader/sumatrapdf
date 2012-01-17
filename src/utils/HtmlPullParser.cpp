@@ -301,7 +301,7 @@ static void HtmlAddWithNesting(Vec<uint8_t>* out, HtmlTag tag, bool isStartTag, 
 
 // record the tag for the purpose of building current state
 // of html tree
-static void RecordStartTag(Vec<HtmlTag>* tagNesting, HtmlTag tag)
+void RecordStartTag(Vec<HtmlTag>* tagNesting, HtmlTag tag)
 {
     if (IsSelfClosingTag(tag))
         return;
@@ -309,7 +309,7 @@ static void RecordStartTag(Vec<HtmlTag>* tagNesting, HtmlTag tag)
 }
 
 // remove the tag from state of html tree
-static void RecordEndTag(Vec<HtmlTag> *tagNesting, HtmlTag tag)
+void RecordEndTag(Vec<HtmlTag> *tagNesting, HtmlTag tag)
 {
     // TODO: this logic might need to be a bit more complicated
     // e.g. when closing a tag, if the top tag doesn't match
