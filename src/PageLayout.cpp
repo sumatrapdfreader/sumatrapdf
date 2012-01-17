@@ -325,53 +325,27 @@ Vec<Page*> *PageLayout::LayoutText(Graphics *graphics, Font *defaultFnt, const c
 }
 #endif
 
-// Describes a html attribute decoded from our internal format
-// Attribute value is either represented by valEnum or arbitrary string
-// described by val/valLen. Could have used a union for valEnum/{val/valLen}
-// but there's not much win in that.
-struct DecodedAttr {
-    HtmlAttr        attr;
-    int             valEnum;
-    const uint8_t * val;
-    size_t          valLen;
-};
-
-static void DecodeAttributes(Vec<DecodedAttr> *attrs, const uint8_t* &s, size_t& sLen)
+#if 0
+void DumpAttr(uint8_t *s, size_t sLen)
 {
-    DecodedAttr attr;
-    ParsedElement *parsedEl;
-    CrashAlwaysIf(sLen < 1);
-
-    const uint8_t *end = s + sLen;
-    parsedEl = DecodeNextParsedElement(s, end);
-    CrashAlwaysIf(ParsedElInt != parsedEl->type);
-    int attrCount = parsedEl->n;
-    attrs->Reset();
-    for (int i = 0; i < attrCount; i++) {
-        parsedEl = DecodeNextParsedElement(s, end);
-        CrashAlwaysIf(ParsedElInt != parsedEl->type);
-        attr.attr = parsedEl->attr;
-        parsedEl = DecodeNextParsedElement(s, end);
-        if (ParsedElInt == parsedEl->type) {
-            CrashAlwaysIf(!AttrHasEnumVal(attr.attr));
-            attr.valEnum = parsedEl->n;
-        } else {
-            attr.valLen = parsedEl->sLen;
-            attr.val = parsedEl->s;
+    static Vec<char *> seen;
+    char *sCopy = str::DupN((char*)s, sLen);
+    bool didSee = false;
+    for (size_t i = 0; i < seen.Count(); i++) {
+        char *tmp = seen.At(i);
+        if (str::EqI(sCopy, tmp)) {
+            didSee = true;
+            break;
         }
-        attrs->Append(attr);
     }
-}
-
-static DecodedAttr *FindAttr(Vec<DecodedAttr> *attrs, HtmlAttr attr)
-{
-    for (size_t i = 0; i < attrs->Count(); i++) {
-        DecodedAttr a = attrs->At(i);
-        if (a.attr == attr)
-            return &attrs->At(i);
+    if (didSee) {
+        free(sCopy);
+        return;
     }
-    return NULL;
+    seen.Append(sCopy);
+    printf("%s\n", sCopy);
 }
+#endif
 
 // tags that I want to explicitly ignore and not define
 // HtmlTag enums for them
@@ -439,6 +413,11 @@ void PageLayout::EmitText(HtmlToken *t)
     }
 }
 
+// note: maybe this should be part of a separate object so that don't have
+// tight coupling between PageLayout, which represents a final result of
+// layout process, and code that converts a given format into PageLayout.
+// In the future we might add support for other source formats, in which
+// case it would be nice to have them in separate implementation files.
 bool PageLayout::LayoutHtml(Graphics *graphics, Font *defaultFnt, const uint8_t *s, size_t sLen)
 {
     gfx = graphics;
@@ -462,54 +441,7 @@ bool PageLayout::LayoutHtml(Graphics *graphics, Font *defaultFnt, const uint8_t 
     }
     // force layout of the last line
     StartNewLine(true);
-    return true;
-}
-
-bool PageLayout::LayoutInternal(Graphics *graphics, Font *defaultFnt, const uint8_t *s, size_t sLen)
-{
-    gfx = graphics;
-    defaultFont = defaultFnt;
-    currFont = defaultFnt;
-    StartLayout();
-    WordInfo wi;
-
-    Vec<DecodedAttr> attrs;
-
-    const uint8_t *end = s + sLen;
-
-    ParsedElement *parsedEl;
-    for (;;) {
-        parsedEl = DecodeNextParsedElement(s, end);
-        if (!parsedEl)
-            break;
-        if (ParsedElString == parsedEl->type) {
-            wi.s = (char*)parsedEl->s;
-            wi.len = parsedEl->sLen;
-            AddWord(&wi);
-        } else {
-            CrashAlwaysIf(ParsedElInt != parsedEl->type);
-            HtmlTag tag = parsedEl->tag;
-            uint8_t b = *s++;
-            bool isEndTag = (IS_END_TAG_MASK == (b & IS_END_TAG_MASK));
-            bool hasAttr  = (HAS_ATTR_MASK == (b & HAS_ATTR_MASK));
-            if (hasAttr) {
-                size_t sLen = end - s;
-                DecodeAttributes(&attrs, s, sLen);
-            }
-            if ((Tag_P == tag) && isEndTag) {
-                // TODO: collapse multiple line breaks into one
-                // i.e. don't start a new paragraph if we're already
-                // at the paragraph start (including the beginning)
-                // This is visible in Kafka's Trial.
-                StartNewLine(true);
-            } else if (Tag_Hr == tag) {
-                CrashAlwaysIf(isEndTag);
-                AddHr();
-            }
-            // TODO: handle more codes
-        }
-    }
-    StartNewLine(true);
     RemoveLastPageIfEmpty();
     return true;
 }
+

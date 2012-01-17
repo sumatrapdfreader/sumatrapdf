@@ -199,28 +199,6 @@ static bool EmitAttribute(Vec<uint8_t> *out, HtmlAttr attr, const uint8_t *attrV
     return true;
 }
 
-#if 0
-void DumpAttr(uint8_t *s, size_t sLen)
-{
-    static Vec<char *> seen;
-    char *sCopy = str::DupN((char*)s, sLen);
-    bool didSee = false;
-    for (size_t i = 0; i < seen.Count(); i++) {
-        char *tmp = seen.At(i);
-        if (str::EqI(sCopy, tmp)) {
-            didSee = true;
-            break;
-        }
-    }
-    if (didSee) {
-        free(sCopy);
-        return;
-    }
-    seen.Append(sCopy);
-    printf("%s\n", sCopy);
-}
-#endif
-
 static bool EmitAttributes(Vec<uint8_t> *out, HtmlToken *t, HtmlAttr *allowedAttributes)
 {
     AttrInfo *attrInfo;

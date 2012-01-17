@@ -62,7 +62,6 @@ public:
     }
 
     //Vec<Page *> *LayoutText(Graphics *graphics, Font *defaultFnt, const char *s);
-    bool LayoutInternal(Graphics *graphics, Font *defaultFnt, const uint8_t *s, size_t sLen);
 
     void HandleHtmlTag(HtmlToken *t);
     void EmitText(HtmlToken *t);
