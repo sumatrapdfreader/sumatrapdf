@@ -104,6 +104,8 @@ private:
     void JustifyLineBoth();
     void JustifyLine(TextJustification mode);
 
+    TextJustification AlignAttrToJustification(AlignAttr align);
+
     void StartLayout();
     void StartNewPage();
     void StartNewLine(bool isParagraphBreak);

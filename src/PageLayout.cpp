@@ -238,6 +238,40 @@ void PageLayout::StartNewLine(bool isParagraphBreak)
         StartNewPage();
 }
 
+struct KnownAttrInfo {
+    HtmlAttr        attr;
+    const char *    val;
+    size_t          valLen;
+};
+
+static bool IsAllowedAttribute(HtmlAttr* allowedAttributes, HtmlAttr attr)
+{
+    while (Attr_NotFound != *allowedAttributes) {
+        if (attr == *allowedAttributes++)
+            return true;
+    }
+    return false;
+}
+
+static void GetKnownAttributes(HtmlToken *t, HtmlAttr *allowedAttributes, Vec<KnownAttrInfo> *out)
+{
+    out->Reset();
+    AttrInfo *attrInfo;
+    size_t tagLen = GetTagLen(t->s, t->sLen);
+    const char *curr = t->s + tagLen;
+    const char *end = t->s + t->sLen;
+    for (;;) {
+        attrInfo = GetNextAttr(curr, end);
+        if (NULL == attrInfo)
+            break;
+        HtmlAttr attr = FindAttr(attrInfo->name, attrInfo->nameLen);
+        if (!IsAllowedAttribute(allowedAttributes, attr))
+            continue;
+        KnownAttrInfo knownAttr = { attr, attrInfo->val, attrInfo->valLen };
+        out->Append(knownAttr);
+    }
+}
+
 // add horizontal line (<hr> in html terms)
 void PageLayout::AddHr()
 {
@@ -359,8 +393,25 @@ static bool IgnoreTag(const char *s, size_t sLen)
     return false;
 }
 
+PageLayout::TextJustification PageLayout::AlignAttrToJustification(AlignAttr align)
+{
+    switch (align) {
+        case Align_Center: 
+            return Center;
+        case Align_Justify:
+            return Both;
+        case Align_Left:
+            return Left;
+        case Align_Right:
+            return Right;
+        default:
+            return Both;
+    }
+}
+
 void PageLayout::HandleHtmlTag(HtmlToken *t)
 {
+    Vec<KnownAttrInfo> attrs;
     CrashAlwaysIf(!t->IsTag());
 
     // HtmlToken string includes potential attributes,
@@ -380,11 +431,20 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
         RecordEndTag(&tagNesting, tag);
 
     if (Tag_P == tag) {
-        if (t->IsStartTag() || t->IsEmptyElementEndTag())
+        TextJustification newJustification = Both;
+        if (t->IsStartTag() || t->IsEmptyElementEndTag()) {
             StartNewLine(true);
-        else if (t->IsEndTag()) {
+            static HtmlAttr validAttrs[] = { Attr_Align, Attr_NotFound };
+            GetKnownAttributes(t, validAttrs, &attrs);
+            if (attrs.Count() > 0) {
+                KnownAttrInfo attr = attrs.At(0);
+                AlignAttr alignAttr = FindAlignAttr(attr.val, attr.valLen);
+                newJustification = AlignAttrToJustification(alignAttr);
+            }
+        } else if (t->IsEndTag()) {
             StartNewLine(false);
         }
+        currJustification = newJustification;
         return;
     }
 
