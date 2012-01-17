@@ -4,7 +4,6 @@
 #ifndef HtmlPullParser_h
 #define HtmlPullParser_h
 
-#include <stdint.h>
 #include "Vec.h"
 
 // enums must match HTML_TAGS_STRINGS order
@@ -101,9 +100,9 @@ enum AlignAttr {
 #define Tag_First (255 - Tag_Last)
 
 struct AttrInfo {
-    const uint8_t *   name;
+    const char *      name;
     size_t            nameLen;
-    const uint8_t *   val;
+    const char *      val;
     size_t            valLen;
 };
 
@@ -130,7 +129,7 @@ struct HtmlToken {
     bool IsText() const { return type == Text; }
     bool IsError() const { return type == Error; }
 
-    void SetError(ParsingError err, const uint8_t *errContext) {
+    void SetError(ParsingError err, const char *errContext) {
         type = Error;
         error = err;
         s = errContext;
@@ -138,7 +137,7 @@ struct HtmlToken {
 
     TokenType        type;
     ParsingError     error;
-    const uint8_t *  s;
+    const char *     s;
     size_t           sLen;
 };
 
@@ -146,19 +145,19 @@ struct HtmlToken {
 html, which can be one one of 3 tag types or error. If a tag has attributes,
 the caller has to parse them out. */
 class HtmlPullParser {
-    const uint8_t *   s;
-    const uint8_t *   end;
-    const uint8_t *   currPos;
+    const char *   s;
+    const char *   end;
+    const char *   currPos;
 
-    HtmlToken   currToken;
+    HtmlToken      currToken;
 
-    HtmlToken * MakeError(HtmlToken::ParsingError err, const uint8_t *errContext) {
+    HtmlToken * MakeError(HtmlToken::ParsingError err, const char *errContext) {
         currToken.SetError(err, errContext);
         return &currToken;
     }
 
 public:
-    HtmlPullParser(const uint8_t *s, size_t len) : s(s), currPos(s) {
+    HtmlPullParser(const char *s, size_t len) : s(s), currPos(s) {
         end = s + len;
     }
 
@@ -166,20 +165,20 @@ public:
 };
 
 bool        AttrHasEnumVal(HtmlAttr attr);
-void        SkipWs(const uint8_t*& s, const uint8_t *end);
-void        SkipNonWs(const uint8_t*& s, const uint8_t *end);
+void        SkipWs(const char*& s, const char *end);
+void        SkipNonWs(const char*& s, const char *end);
 int         FindStrPos(const char *strings, const char *str, size_t len);
 
 HtmlTag     FindTag(const char *tag, size_t len);
-size_t      GetTagLen(const uint8_t *s, size_t len);
+size_t      GetTagLen(const char *s, size_t len);
 bool        IsSelfClosingTag(HtmlTag tag);
 
-AttrInfo *  GetNextAttr(const uint8_t *&s, const uint8_t *end);
+AttrInfo *  GetNextAttr(const char *&s, const char *end);
 HtmlAttr    FindAttr(const char *attr, size_t len);
 AlignAttr   FindAlignAttr(const char *attr, size_t len);
 
 void RecordEndTag(Vec<HtmlTag> *tagNesting, HtmlTag tag);
 void RecordStartTag(Vec<HtmlTag>* tagNesting, HtmlTag tag);
-Vec<uint8_t> *PrettyPrintHtml(const char *s, size_t len);
+Vec<char> *PrettyPrintHtml(const char *s, size_t len);
 
 #endif

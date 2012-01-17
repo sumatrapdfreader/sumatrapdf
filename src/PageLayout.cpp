@@ -284,7 +284,7 @@ void PageLayout::AddWord(WordInfo *wi)
     }
     bbox.Y = currY;
     DrawInstr di(InstrTypeString);
-    di.str.s = (uint8_t*)wi->s;
+    di.str.s = wi->s;
     di.str.len = wi->len;
     di.bbox = bbox;
     instructions.Append(di);
@@ -349,7 +349,7 @@ void DumpAttr(uint8_t *s, size_t sLen)
 // tags that I want to explicitly ignore and not define
 // HtmlTag enums for them
 // One file has a bunch of st1:* tags (st1:city, st1:place etc.)
-static bool IgnoreTag(const uint8_t *s, size_t sLen)
+static bool IgnoreTag(const char *s, size_t sLen)
 {
     if (sLen >= 4 && s[3] == ':' && s[0] == 's' && s[1] == 't' && s[2] == '1')
         return true;
@@ -397,15 +397,15 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
 void PageLayout::EmitText(HtmlToken *t)
 {
     CrashIf(!t->IsText());
-    const uint8_t *end = t->s + t->sLen;
-    const uint8_t *curr = t->s;
+    const char *end = t->s + t->sLen;
+    const char *curr = t->s;
     SkipWs(curr, end);
     while (curr < end) {
-        const uint8_t *currStart = curr;
+        const char *currStart = curr;
         SkipNonWs(curr, end);
         size_t len = curr - currStart;
         if (len > 0) {
-            WordInfo wi = { (const char*)currStart, len };
+            WordInfo wi = { currStart, len };
             AddWord(&wi);
         }
         SkipWs(curr, end);
@@ -417,7 +417,7 @@ void PageLayout::EmitText(HtmlToken *t)
 // layout process, and code that converts a given format into PageLayout.
 // In the future we might add support for other source formats, in which
 // case it would be nice to have them in separate implementation files.
-bool PageLayout::LayoutHtml(Graphics *graphics, Font *defaultFnt, const uint8_t *s, size_t sLen)
+bool PageLayout::LayoutHtml(Graphics *graphics, Font *defaultFnt, const char *s, size_t sLen)
 {
     gfx = graphics;
     defaultFont = defaultFnt;

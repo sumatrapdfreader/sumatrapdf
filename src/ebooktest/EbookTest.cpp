@@ -118,12 +118,12 @@ static EbookWindowInfo *LoadEbook(const TCHAR *fileName)
 static PageLayout *LayoutMobiFile(EbookWindowInfo *wi, Graphics *gfx, Font *defaultFont, int pageDx, int pageDy)
 {
     PageLayout *layout = new PageLayout(pageDx, pageDy);
-    const uint8_t *html = (const uint8_t*)wi->html;
+    const char *html = wi->html;
     size_t len;
     if (html) {
         len = strlen(wi->html);
     } else {
-        html = (const uint8_t*)wi->mb->GetBookHtmlData(len);
+        html = wi->mb->GetBookHtmlData(len);
     }
     bool ok = layout->LayoutHtml(gfx, defaultFont, html, len);
     if (!ok) {

@@ -5,7 +5,7 @@
 #include "BaseUtil.h"
 #include "StrUtil.h"
 
-static bool SkipUntil(const uint8_t*& s, const uint8_t *end, uint8_t c)
+static bool SkipUntil(const char*& s, const char *end, char c)
 {
     while ((s < end) && (*s != c)) {
         ++s;
@@ -13,18 +13,18 @@ static bool SkipUntil(const uint8_t*& s, const uint8_t *end, uint8_t c)
     return *s == c;
 }
 
-static bool IsWs(uint8_t c) {
+static bool IsWs(int c) {
     return (' ' == c) || ('\t' == c) || ('\n' == c) || ('\r' == c);
 }
 
-void SkipWs(const uint8_t*& s, const uint8_t *end)
+void SkipWs(const char* & s, const char *end)
 {
     while ((s < end) && IsWs(*s)) {
         ++s;
     }
 }
 
-void SkipNonWs(const uint8_t*& s, const uint8_t *end)
+void SkipNonWs(const char* & s, const char *end)
 {
     while ((s < end) && !IsWs(*s)) {
         ++s;
@@ -40,7 +40,7 @@ static int IsNameChar(int c)
 }
 
 // skip all html tag or attribute chatacters
-static void SkipName(const uint8_t*& s, const uint8_t *end)
+static void SkipName(const char*& s, const char *end)
 {
     while ((s < end) && IsNameChar(*s)) {
         s++;
@@ -48,9 +48,9 @@ static void SkipName(const uint8_t*& s, const uint8_t *end)
 }
 
 // return true if s consists of only spaces
-static bool IsSpaceOnly(const uint8_t *s, size_t len)
+static bool IsSpaceOnly(const char *s, size_t len)
 {
-    const uint8_t *end = s + len;
+    const char *end = s + len;
     while (s < end) {
         if (*s++ != ' ')
             return false;
@@ -65,7 +65,7 @@ static bool IsSpaceOnly(const uint8_t *s, size_t len)
 // where both attribute name and attribute value can
 // be quoted
 // Not multi-thread safe (uses static buffer)
-AttrInfo *GetNextAttr(const uint8_t *&s, const uint8_t *end)
+AttrInfo *GetNextAttr(const char *&s, const char *end)
 {
     static AttrInfo attrInfo;
 
@@ -88,7 +88,7 @@ AttrInfo *GetNextAttr(const uint8_t *&s, const uint8_t *end)
     SkipWs(s, end);
     if (s == end)
         return NULL;
-    uint8_t quoteChar = *s;
+    char quoteChar = *s;
     if (('\'' == quoteChar) || ('\"' == quoteChar)) {
         ++s;
         attrInfo.val = s;
@@ -113,7 +113,7 @@ AttrInfo *GetNextAttr(const uint8_t *&s, const uint8_t *end)
 // Returns next part of html or NULL if finished
 HtmlToken *HtmlPullParser::Next()
 {
-    const uint8_t *start;
+    const char *start;
  
     if (currPos >= end)
         return NULL;
@@ -266,10 +266,10 @@ bool IsSelfClosingTag(HtmlTag tag)
     return false;
 }
 
-size_t GetTagLen(const uint8_t *s, size_t len)
+size_t GetTagLen(const char *s, size_t len)
 {
-    const uint8_t *end = s + len;
-    const uint8_t *curr = s;
+    const char *end = s + len;
+    const char *curr = s;
     while (curr < end) {
         if (!IsNameChar(*curr))
             return curr - s;
@@ -278,7 +278,7 @@ size_t GetTagLen(const uint8_t *s, size_t len)
     return len;
 }
 
-static void HtmlAddWithNesting(Vec<uint8_t>* out, HtmlTag tag, bool isStartTag, size_t nesting, const uint8_t *s, size_t sLen)
+static void HtmlAddWithNesting(Vec<char>* out, HtmlTag tag, bool isStartTag, size_t nesting, const char *s, size_t sLen)
 {
     static HtmlTag inlineTags[] = {Tag_Font, Tag_B, Tag_I, Tag_U};
     bool isInline = false;
@@ -293,7 +293,7 @@ static void HtmlAddWithNesting(Vec<uint8_t>* out, HtmlTag tag, bool isStartTag, 
             out->Append(' ');
         }
     }
-    out->Append((uint8_t*)s, sLen);
+    out->Append(s, sLen);
     if (isInline || isStartTag)
         return;
     out->Append('\n');
@@ -320,11 +320,11 @@ void RecordEndTag(Vec<HtmlTag> *tagNesting, HtmlTag tag)
         tagNesting->Pop();
 }
 
-static void PrettifyHtmlToken(HtmlToken *t, Vec<HtmlTag> *tagNesting, Vec<uint8_t>* out)
+static void PrettifyHtmlToken(HtmlToken *t, Vec<HtmlTag> *tagNesting, Vec<char>* out)
 {
     size_t nesting = tagNesting->Count();
     if (t->IsText()) {
-        out->Append((uint8_t*)t->s, t->sLen);
+        out->Append((char*)t->s, t->sLen);
         //HtmlAddWithNesting(state->html, t->tag, nesting, t->s, t->sLen);
         return;
     }
@@ -332,7 +332,7 @@ static void PrettifyHtmlToken(HtmlToken *t, Vec<HtmlTag> *tagNesting, Vec<uint8_
     if (!t->IsTag())
         return;
 
-    HtmlTag tag = FindTag((char*)t->s, t->sLen);
+    HtmlTag tag = FindTag(t->s, t->sLen);
     if (t->IsEmptyElementEndTag()) {
         HtmlAddWithNesting(out, tag, false, nesting, t->s - 1, t->sLen + 3);
         return;
@@ -353,7 +353,7 @@ static void PrettifyHtmlToken(HtmlToken *t, Vec<HtmlTag> *tagNesting, Vec<uint8_
 // tags that I want to explicitly ignore and not define
 // HtmlTag enums for them
 // One file has a bunch of st1:* tags (st1:city, st1:place etc.)
-static bool IgnoreTag(const uint8_t *s, size_t sLen)
+static bool IgnoreTag(const char *s, size_t sLen)
 {
     if (sLen >= 4 && s[3] == ':' && s[0] == 's' && s[1] == 't' && s[2] == '1')
         return true;
@@ -363,11 +363,11 @@ static bool IgnoreTag(const uint8_t *s, size_t sLen)
     return false;
 }
 
-Vec<uint8_t> *PrettyPrintHtml(const char *s, size_t len)
+Vec<char> *PrettyPrintHtml(const char *s, size_t len)
 {
-    Vec<uint8_t> *res = new Vec<uint8_t>(len);
+    Vec<char> *res = new Vec<char>(len);
     Vec<HtmlTag> tagNesting(256);
-    HtmlPullParser parser((const uint8_t*)s, len);
+    HtmlPullParser parser(s, len);
     for (;;)
     {
         HtmlToken *t = parser.Next();
@@ -384,7 +384,7 @@ Vec<uint8_t> *PrettyPrintHtml(const char *s, size_t len)
         if (IgnoreTag(t->s, tagLen))
             continue;
 
-        HtmlTag tag = FindTag((const char*)t->s, tagLen);
+        HtmlTag tag = FindTag(t->s, tagLen);
         if (Tag_NotFound == tag)
             continue;
         // update the current state of html tree

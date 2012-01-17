@@ -198,7 +198,7 @@ public:
         InsertAt(len, el);
     }
 
-    void Append(T* src, size_t count) {
+    void Append(const T* src, size_t count) {
         T* dst = AppendBlanks(count);
         memcpy(dst, src, count * sizeof(T));
     }

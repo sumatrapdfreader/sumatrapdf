@@ -4,7 +4,6 @@
 #ifndef PageLayout_h
 #define PageLayout_h
 
-#include <stdint.h>
 #include "BaseUtil.h"
 #include "Vec.h"
 #include "StrUtil.h"
@@ -23,7 +22,7 @@ enum DrawInstrType {
 };
 
 struct InstrString {
-    const uint8_t *     s;
+    const char *        s;
     size_t              len;
 };
 
@@ -66,7 +65,7 @@ public:
     void HandleHtmlTag(HtmlToken *t);
     void EmitText(HtmlToken *t);
 
-    bool LayoutHtml(Graphics *graphics, Font *defaultFnt, const uint8_t *s, size_t sLen);
+    bool LayoutHtml(Graphics *graphics, Font *defaultFnt, const char *s, size_t sLen);
 
     size_t PageCount() const {
         return pageInstrOffset.Count();
