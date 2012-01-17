@@ -117,12 +117,12 @@ void PageLayout::ClearFontCache()
 
 static Font *CreateFontByStyle(WCHAR *name, REAL size, FontStyle style)
 {
-    Gdiplus::FontStyle fs = FontStyleRegular;
-    return ::new Font(name, size, FontStyleRegular);
+    return ::new Font(name, size, style);
 }
 
 void PageLayout::SetCurrentFont(FontStyle fs)
 {
+    currFontStyle = fs;
     for (size_t i = 0; i < fontCache.Size(); i++) {
         FontInfo fi = fontCache.At(i);
         if (fi.style == fs) {
@@ -134,10 +134,43 @@ void PageLayout::SetCurrentFont(FontStyle fs)
     }
 
     currFontIdx = fontCache.Size();
-    currFont = CreateFontByStyle(fontName.Get(), fontSize, fs);
-    // TODO: switch to first if failed
-    FontInfo fi = { fs, currFont };
+    Font *newFont = CreateFontByStyle(fontName.Get(), fontSize, fs);
+    // TODO: handle a failure to create a font. Use fontCache[0] if exists
+    // or try to fallback to a known font like Times New Roman
+    FontInfo fi = { fs, newFont };
     fontCache.Append(fi);
+    currFont = newFont;
+}
+
+static bool ValidFontStyleForChangeFont(FontStyle fs)
+{
+    if ((FontStyleBold == fs) ||
+        (FontStyleItalic == fs) ||
+        (FontStyleUnderline == fs) ||
+        (FontStyleStrikeout == fs)) {
+            return true;
+    }
+    return false;
+}
+
+// change the current font by adding (if addStyle is true) or removing
+// a given font style from current font style
+// TODO: it doesn't support the case where the same style is nested
+// like "<b>fo<b>oo</b>bar</b>" - "bar" should still be bold but wont
+// We would have to maintain counts for each style to do it fully right
+void PageLayout::ChangeFont(FontStyle fs, bool addStyle)
+{
+    CrashAlwaysIf(!ValidFontStyleForChangeFont(fs));
+    FontStyle newFontStyle = currFontStyle;
+    if (addStyle) {
+        newFontStyle = (FontStyle) (newFontStyle | fs);
+    } else {
+        newFontStyle = (FontStyle) (newFontStyle & ~fs);
+    }
+    if (newFontStyle == currFontStyle)
+        return; // a no-op
+    SetCurrentFont(newFontStyle);
+    AddSetFontInstr(currFontIdx);
 }
 
 PageLayout::~PageLayout()
@@ -313,6 +346,30 @@ static void GetKnownAttributes(HtmlToken *t, HtmlAttr *allowedAttributes, Vec<Kn
     }
 }
 
+void PageLayout::AddLineInstr(RectF bbox)
+{
+    DrawInstr di(InstrTypeLine);
+    di.bbox = bbox;
+    instructions.Append(di);
+}
+
+void PageLayout::AddSetFontInstr(size_t fontIdx)
+{
+    CrashAlwaysIf(fontIdx >= fontCache.Size());
+    DrawInstr di(InstrTypeSetFont);
+    di.setFont.fontIdx = fontIdx;
+    instructions.Append(di);
+}
+
+void PageLayout::AddStrInstr(const char *s, size_t len, RectF bbox)
+{
+    DrawInstr di(InstrTypeString);
+    di.str.s = s;
+    di.str.len = len;
+    di.bbox = bbox;
+    instructions.Append(di);
+}
+
 // add horizontal line (<hr> in html terms)
 void PageLayout::AddHr()
 {
@@ -324,10 +381,8 @@ void PageLayout::AddHr()
     if (currY + lineSpacing > pageDy)
         StartNewPage();
 
-    DrawInstr di(InstrTypeLine);
     RectF bbox(currX, currY, pageDx, lineSpacing);
-    di.bbox = bbox;
-    instructions.Append(di);
+    AddLineInstr(bbox);
     StartNewLine(true);
 }
 
@@ -358,11 +413,7 @@ void PageLayout::AddWord(WordInfo *wi)
         StartNewLine(false);
     }
     bbox.Y = currY;
-    DrawInstr di(InstrTypeString);
-    di.str.s = wi->s;
-    di.str.len = wi->len;
-    di.bbox = bbox;
-    instructions.Append(di);
+    AddStrInstr(wi->s, wi->len, bbox);
     currX += (dx + spaceDx);
 }
 
@@ -491,6 +542,26 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
 
     if (Tag_Hr == tag) {
         AddHr();
+        return;
+    }
+
+    if (Tag_B == tag) {
+        ChangeFont(FontStyleBold, t->IsStartTag());
+        return;
+    }
+
+    if (Tag_I == tag) {
+        ChangeFont(FontStyleItalic, t->IsStartTag());
+        return;
+    }
+
+    if (Tag_U == tag) {
+        ChangeFont(FontStyleUnderline, t->IsStartTag());
+        return;
+    }
+
+    if (Tag_Strike == tag) {
+        ChangeFont(FontStyleStrikeout, t->IsStartTag());
         return;
     }
 }

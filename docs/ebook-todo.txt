@@ -1,9 +1,7 @@
 Things to do for the first version of ebook (mobi) support:
-* mobi: read images
 * mobi: read codepage and other metadata
 * mobi: parse table of content (<html><head><guide><reference type="toc" title="Table of Contents", filepos=$N />)
 * layout: support images
-* layout: support bold/italic/underline
 * layout: support different fonts
 * layout: indent first line of a paragraph
 * layout: links
@@ -13,6 +11,10 @@ Things to do for the first version of ebook (mobi) support:
 * layout: do layout on a thread, send laid out pages incrementally. Laying out
   a whole book takes a while, the idea is to be able to display the current
   page as soon as it's available
+
+Done:
+* layout: support bold/italic/underline
+* mobi: read images
 
 Things nice to have but can wait for future:
 * ui: double page display

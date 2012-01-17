@@ -124,11 +124,17 @@ private:
     void StartNewPage();
     void StartNewLine(bool isParagraphBreak);
     void RemoveLastPageIfEmpty();
-    void AddWord(WordInfo *wi);
+
+    void AddStrInstr(const char *s, size_t len, RectF bbox);
+    void AddLineInstr(RectF bbox);
+    void AddSetFontInstr(size_t fontIdx);
+
     void AddHr();
+    void AddWord(WordInfo *wi);
 
     void ClearFontCache();
     void SetCurrentFont(FontStyle fs);
+    void ChangeFont(FontStyle fs, bool isStart);
     FontStyle           currFontStyle;
     Vec<FontInfo>       fontCache;
     ScopedMem<WCHAR>    fontName;
