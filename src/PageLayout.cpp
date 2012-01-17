@@ -109,6 +109,12 @@ WordInfo *WordsIter::Next()
 void PageLayout::StartLayout()
 {
     currJustification = Both;
+    FontStyle fontStyleRegular = { 0, 0, 0 };
+    currFontStyle = fontStyleRegular;
+
+    FontInfo fi = { currFontStyle, defaultFont };
+    fontCache.Append(fi);
+
     CrashAlwaysIf(0 != instructions.Count());
     CrashAlwaysIf(0 != pageInstrOffset.Count());
     lineSpacing = currFont->GetHeight(gfx);

@@ -55,6 +55,17 @@ class PageLayout
         Left, Right, Center, Both
     };
 
+    struct FontStyle {
+        unsigned short bold : 1;
+        unsigned short italic : 1;
+        unsigned short underlined : 1;
+    };
+
+    struct FontInfo {
+        FontStyle   style;
+        Font *      font;
+    };
+
 public:
     PageLayout(int dx, int dy) {
         pageDx = (REAL)dx; pageDy = (REAL)dy;
@@ -127,6 +138,9 @@ private:
     REAL                currX, currY; 
     // number of consecutive newlines
     int                 newLinesCount;
+
+    FontStyle           currFontStyle;
+    Vec<FontInfo>       fontCache;
 
     // drawing instructions for all pages
     Vec<DrawInstr>      instructions;
