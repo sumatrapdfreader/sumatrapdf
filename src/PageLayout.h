@@ -27,7 +27,7 @@ struct InstrString {
 };
 
 struct InstrSetFont {
-    size_t              fontNo;
+    size_t              fontIdx;
 };
 
 struct DrawInstr {
@@ -55,12 +55,6 @@ class PageLayout
         Left, Right, Center, Both
     };
 
-    struct FontStyle {
-        unsigned short bold : 1;
-        unsigned short italic : 1;
-        unsigned short underlined : 1;
-    };
-
     struct FontInfo {
         FontStyle   style;
         Font *      font;
@@ -71,12 +65,14 @@ public:
         pageDx = (REAL)dx; pageDy = (REAL)dy;
     }
 
+    ~PageLayout();
+
     //Vec<Page *> *LayoutText(Graphics *graphics, Font *defaultFnt, const char *s);
 
     void HandleHtmlTag(HtmlToken *t);
     void EmitText(HtmlToken *t);
 
-    bool LayoutHtml(Graphics *graphics, Font *defaultFnt, const char *s, size_t sLen);
+    bool LayoutHtml(Graphics *graphics, WCHAR *fontName, float fontSize, const char *s, size_t sLen);
 
     size_t PageCount() const {
         return pageInstrOffset.Count();
@@ -106,6 +102,13 @@ public:
         return currLineInstrOffset == instructions.Count();
     }
 
+    Font *GetFontByIdx(size_t idx) {
+        CrashAlwaysIf(idx >= fontCache.Size());
+        FontInfo fi = fontCache.At(idx);
+        CrashAlwaysIf(NULL == fi.font);
+        return fi.font;
+    }
+
 private:
     REAL GetCurrentLineDx();
     void LayoutLeftStartingAt(REAL offX);
@@ -124,23 +127,27 @@ private:
     void AddWord(WordInfo *wi);
     void AddHr();
 
+    void ClearFontCache();
+    void SetCurrentFont(FontStyle fs);
+    FontStyle           currFontStyle;
+    Vec<FontInfo>       fontCache;
+    ScopedMem<WCHAR>    fontName;
+    float               fontSize;
+    Font *              currFont;
+    size_t              currFontIdx; // within fontcache
+
     // constant during layout process
     REAL        pageDx, pageDy;
     REAL        lineSpacing;
     REAL        spaceDx;
     Graphics *  gfx;
-    Font *      defaultFont;
 
     // temporary state during layout process
     TextJustification   currJustification;
-    Font *              currFont;
     // current position in a page
     REAL                currX, currY; 
     // number of consecutive newlines
     int                 newLinesCount;
-
-    FontStyle           currFontStyle;
-    Vec<FontInfo>       fontCache;
 
     // drawing instructions for all pages
     Vec<DrawInstr>      instructions;

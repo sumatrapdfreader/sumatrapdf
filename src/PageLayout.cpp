@@ -106,14 +106,49 @@ WordInfo *WordsIter::Next()
     return &wi;
 }
 
+void PageLayout::ClearFontCache()
+{
+    for (size_t i = 0; i < fontCache.Size(); i++) {
+        FontInfo fi = fontCache.At(i);
+        ::delete fi.font;
+    }
+    fontCache.Reset();
+}
+
+static Font *CreateFontByStyle(WCHAR *name, REAL size, FontStyle style)
+{
+    Gdiplus::FontStyle fs = FontStyleRegular;
+    return ::new Font(name, size, FontStyleRegular);
+}
+
+void PageLayout::SetCurrentFont(FontStyle fs)
+{
+    for (size_t i = 0; i < fontCache.Size(); i++) {
+        FontInfo fi = fontCache.At(i);
+        if (fi.style == fs) {
+            CrashAlwaysIf(NULL == fi.font);
+            currFont = fi.font;
+            currFontIdx = i;
+            return;
+        }
+    }
+
+    currFontIdx = fontCache.Size();
+    currFont = CreateFontByStyle(fontName.Get(), fontSize, fs);
+    // TODO: switch to first if failed
+    FontInfo fi = { fs, currFont };
+    fontCache.Append(fi);
+}
+
+PageLayout::~PageLayout()
+{
+    ClearFontCache();
+}
+
 void PageLayout::StartLayout()
 {
     currJustification = Both;
-    FontStyle fontStyleRegular = { 0, 0, 0 };
-    currFontStyle = fontStyleRegular;
-
-    FontInfo fi = { currFontStyle, defaultFont };
-    fontCache.Append(fi);
+    SetCurrentFont(FontStyleRegular);
 
     CrashAlwaysIf(0 != instructions.Count());
     CrashAlwaysIf(0 != pageInstrOffset.Count());
@@ -483,11 +518,14 @@ void PageLayout::EmitText(HtmlToken *t)
 // layout process, and code that converts a given format into PageLayout.
 // In the future we might add support for other source formats, in which
 // case it would be nice to have them in separate implementation files.
-bool PageLayout::LayoutHtml(Graphics *graphics, Font *defaultFnt, const char *s, size_t sLen)
+bool PageLayout::LayoutHtml(Graphics *graphics, WCHAR *fontName, float fontSize, const char *s, size_t sLen)
 {
     gfx = graphics;
-    defaultFont = defaultFnt;
-    currFont = defaultFnt;
+    CrashAlwaysIf(NULL == fontName);
+    this->fontName.Set(str::Dup(fontName));
+    this->fontSize = fontSize;
+
+
     StartLayout();
 
     Vec<HtmlTag> tagNesting(256);
