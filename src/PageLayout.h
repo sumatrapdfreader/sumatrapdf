@@ -109,6 +109,9 @@ public:
         return fi.font;
     }
 
+    // constant during layout process
+    REAL        pageDx, pageDy;
+
 private:
     REAL GetCurrentLineDx();
     void LayoutLeftStartingAt(REAL offX);
@@ -143,7 +146,6 @@ private:
     size_t              currFontIdx; // within fontcache
 
     // constant during layout process
-    REAL        pageDx, pageDy;
     REAL        lineSpacing;
     REAL        spaceDx;
     Graphics *  gfx;

@@ -22,11 +22,15 @@ public:
         this->parent = parent;
     }
 
+    void AddChild(VirtWnd *wnd, int pos);
+
     size_t GetChildCount() const {
         return children.Count();
     }
 
     HWND GetHwndParent() const;
+
+    virtual void Draw(Graphics *gfx, float offX, float offY) const ;
 
     VirtWnd *       parent;
     Vec<VirtWnd*>   children;
@@ -36,6 +40,8 @@ public:
 
     // position and size (relative to parent, might be outside of parent's bounds)
     RectF           pos;
+
+    bool            isVisible;
 
 };
 

@@ -39,6 +39,8 @@ namespace mui {
 VirtWnd::VirtWnd(VirtWnd *parent)
 {
     SetParent(parent);
+    isVisible = true;
+    pos = RectF();
 }
 
 VirtWnd::~VirtWnd()
@@ -57,6 +59,25 @@ HWND VirtWnd::GetHwndParent() const
         curr = curr->parent;
     }
     return NULL;
+}
+
+void VirtWnd::AddChild(VirtWnd *wnd, int pos)
+{
+    CrashAlwaysIf(NULL == wnd);
+    if ((pos < 0) || (pos >= (int)children.Count()))
+        children.Append(wnd);
+    else
+        children.InsertAt(pos, wnd);
+    wnd->SetParent(this);
+}
+
+// Requests the window to draw itself on a Graphics canvas.
+// offX and offY is a position of this window within
+// Graphics canvas (pos is relative to that offset)
+void VirtWnd::Draw(Graphics *gfx, float offX, float offY) const
+{
+    if (!isVisible)
+        return;
 }
 
 }

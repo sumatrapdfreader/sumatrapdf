@@ -8,6 +8,7 @@
 #include "WinUtil.h"
 #include "Version.h"
 #include "Vec.h"
+#include "mui.h"
 #include "CmdLineParser.h"
 #include "FrameTimeoutCalculator.h"
 #include "Transactions.h"
@@ -29,8 +30,6 @@ using namespace Gdiplus;
 static HINSTANCE        ghinst;
 static HWND             gHwndFrame = NULL;
 
-static HFONT            gFontDefault;
-
 static bool gShowTextBoundingBoxes = false;
 
 Color gCol1(196, 64, 50); Color gCol1Shadow(134, 48, 39);
@@ -50,6 +49,7 @@ struct EbookWindowInfo
     PageLayout      *   pageLayout;
 
     EbookWindowInfo() : mb(NULL), html(NULL), pageLayout(NULL) { }
+
     ~EbookWindowInfo() {
         delete mb;
         delete pageLayout;
@@ -178,15 +178,18 @@ static void DrawPage(Graphics *g, int pageNo, REAL offX, REAL offY)
 const int pageBorderX = 10;
 const int pageBorderY = 10;
 
-static void ReLayout(Graphics* gfx, RectI r)
+static void ReLayout(Graphics* gfx, int dx, int dy)
 {
-    CrashAlwaysIf(gCurrentEbook->pageLayout);
-
-    int pageDx = r.dx - (pageBorderX * 2);
-    int pageDy = r.dy - (pageBorderY * 2);
-
-    if (gCurrentEbook)
-        gCurrentEbook->pageLayout = LayoutMobiFile(gCurrentEbook, gfx, pageDx, pageDy);
+    int pageDx = dx - (pageBorderX * 2);
+    int pageDy = dy - (pageBorderY * 2);
+    if (gCurrentEbook->pageLayout)
+    {
+        int currPageDx = (int)gCurrentEbook->pageLayout->pageDx;
+        int currPageDy = (int)gCurrentEbook->pageLayout->pageDy;
+        if ((pageDx == currPageDx) && (pageDy == currPageDy))
+            return;
+    }
+    gCurrentEbook->pageLayout = LayoutMobiFile(gCurrentEbook, gfx, pageDx, pageDy);
 }
 
 static void DrawFrame2(Graphics &g, RectI r)
@@ -198,7 +201,7 @@ static void DrawFrame2(Graphics &g, RectI r)
     g.SetPageUnit(UnitPixel);
 
     if (!gCurrentEbook->pageLayout)
-        ReLayout(&g, r);
+        ReLayout(&g, r.dx, r.dy);
 
     if (!gCurrentEbook->pageLayout)
         return;
@@ -232,7 +235,7 @@ static void DrawFrame(HWND hwnd, HDC dc, PAINTSTRUCT *ps)
     Graphics g(dc);
     ClientRect rc2(hwnd);
     if (!BitmapSizeEquals(frameBmp, rc2.dx, rc2.dy)) {
-        delete frameBmp;
+        ::delete frameBmp;
         frameBmp = ::new Bitmap(rc2.dx, rc2.dy, &g);
     }
     Graphics g2((Image*)frameBmp);
@@ -252,7 +255,6 @@ static void OnPaintFrame(HWND hwnd)
     size_t pagesCount = gCurrentEbook->pageLayout->PageCount();
     ScopedMem<TCHAR> s(str::Format(_T("%d pages"), (int)pagesCount));
     win::SetText(hwnd, s.Get());
-
 }
 
 static void OnLButtonDown()
@@ -278,13 +280,25 @@ static void LoadSampleAsCurrentDoc()
     gCurrentEbook = wi;
 }
 
+static void RelayoutByHwnd(HWND hwnd, int dx = -1, int dy = -1)
+{
+    if ((-1 == dx) || (-1 == dy))
+    {
+        ClientRect hwndRect(hwnd);
+        dx = hwndRect.dx;
+        dy = hwndRect.dy;
+    }
+    HDC dc = GetDC(hwnd);
+    Graphics gfx(dc);
+    ReLayout(&gfx, dx, dy);
+}
+
 static void OnCreateWindow(HWND hwnd)
 {
-    //HDC dc = GetDC(hwnd);
-    //gFont = ::new Font(dc, gFontDefault); 
+    LoadSampleAsCurrentDoc();
     HMENU menu = BuildMenu();
     SetMenu(hwnd, menu);
-    LoadSampleAsCurrentDoc();
+    RelayoutByHwnd(hwnd);
 }
 
 static void OnOpen(HWND hwnd)
@@ -348,6 +362,11 @@ static LRESULT OnCommand(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
+static void OnSize(HWND hwnd, int dx, int dy)
+{
+    RelayoutByHwnd(hwnd, dx, dy);
+}
+
 static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)
@@ -359,6 +378,14 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
         case WM_DESTROY:
             PostQuitMessage(0);
             break;
+
+        case WM_SIZE:
+            {
+                int dx = LOWORD(lParam);
+                int dy = HIWORD(lParam);
+                OnSize(hwnd, dx, dy);
+                break;
+            }
 
         case WM_ERASEBKGND:
             return TRUE;
@@ -398,12 +425,11 @@ static BOOL RegisterWinClass(HINSTANCE hInstance)
 static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
 {
     ghinst = hInstance;
-    gFontDefault = CreateDefaultGuiFont();
     win::GetHwndDpi(NULL, &gUiDPIFactor);
 
     gHwndFrame = CreateWindow(
             ET_FRAME_CLASS_NAME, _T("Ebook Test ") CURR_VERSION_STR,
-            WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
+            WS_OVERLAPPEDWINDOW,
             CW_USEDEFAULT, CW_USEDEFAULT,
             dpiAdjust(WIN_DX), dpiAdjust(WIN_DY),
             NULL, NULL,
