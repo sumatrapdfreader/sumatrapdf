@@ -6,8 +6,11 @@
 
 #include "BitReader.h"
 #include "FileUtil.h"
-#include "GdiPlusUtil.h"
+
 #include "StrUtil.h"
+
+using namespace Gdiplus;
+#include "GdiPlusUtil.h"
 
 // Parse mobi format http://wiki.mobileread.com/wiki/MOBI
 

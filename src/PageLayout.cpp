@@ -2,11 +2,11 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "PageLayout.h"
-#include "GdiPlusUtil.h"
 #include "StrUtil.h"
 #include "HtmlPullParser.h"
 
 using namespace Gdiplus;
+#include "GdiPlusUtil.h"
 
 struct WordInfo {
     const char *s;
