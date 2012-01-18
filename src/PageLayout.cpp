@@ -194,9 +194,13 @@ void PageLayout::StartNewPage()
 {
     currX = currY = 0;
     newLinesCount = 0;
-    currLineInstrOffset = 0;
-    currPageInstrOffset = pageInstrOffset.Count();
+    currPageInstrOffset = instructions.Count();
     pageInstrOffset.Append(currPageInstrOffset);
+    // instructions for each page need to be self-contained
+    // so we have to carry over some state like the current font
+    if (currFontIdx != 0)
+        AddSetFontInstr(currFontIdx);
+    currLineInstrOffset = instructions.Count();
 }
 
 REAL PageLayout::GetCurrentLineDx()
@@ -545,7 +549,7 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
         return;
     }
 
-    if (Tag_B == tag) {
+    if ((Tag_B == tag) || (Tag_Em == tag)) {
         ChangeFont(FontStyleBold, t->IsStartTag());
         return;
     }
@@ -562,6 +566,12 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
 
     if (Tag_Strike == tag) {
         ChangeFont(FontStyleStrikeout, t->IsStartTag());
+        return;
+    }
+
+    if (Tag_Mbp_Pagebreak == tag) {
+        JustifyLine(currJustification);
+        StartNewPage();
         return;
     }
 }
@@ -595,7 +605,6 @@ bool PageLayout::LayoutHtml(Graphics *graphics, WCHAR *fontName, float fontSize,
     CrashAlwaysIf(NULL == fontName);
     this->fontName.Set(str::Dup(fontName));
     this->fontSize = fontSize;
-
 
     StartLayout();
 
