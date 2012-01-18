@@ -1,4 +1,4 @@
-/* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2006-2012 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
 #include "ImagesEngine.h"
@@ -7,7 +7,6 @@
 #include "WinUtil.h"
 #include "Vec.h"
 #include "Scopes.h"
-#include "GdiPlusUtil.h"
 
 // mini(un)zip
 #include <ioapi.h>
@@ -15,6 +14,9 @@
 #include <unzip.h>
 
 #include "../ext/unrar/dll.hpp"
+
+using namespace Gdiplus;
+#include "GdiPlusUtil.h"
 
 extern "C" {
 // needed because we compile bzip2 with #define BZ_NO_STDIO
@@ -24,8 +26,6 @@ void bz_internal_error(int errcode) { /* do nothing */ }
 // disable warning C4250 which is wrongly issued due to a compiler bug; cf.
 // http://connect.microsoft.com/VisualStudio/feedback/details/101259/disable-warning-c4250-class1-inherits-class2-member-via-dominance-when-weak-member-is-a-pure-virtual-function
 #pragma warning( disable: 4250 ) /* 'class1' : inherits 'class2::member' via dominance */
-
-using namespace Gdiplus;
 
 ///// Helper methods for handling image files of the most common types /////
 

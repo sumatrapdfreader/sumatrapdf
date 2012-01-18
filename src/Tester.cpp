@@ -12,6 +12,8 @@
 #include "DirIter.h"
 #include "MobiParse.h"
 #include "FileUtil.h"
+
+using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 
 // if true, we'll save html content of a mobi ebook as well
