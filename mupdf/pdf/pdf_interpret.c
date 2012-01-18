@@ -589,8 +589,6 @@ pdf_flush_text(pdf_csi *csi)
 
 	fz_try(ctx)
 	{
-		/* SumatraPDF: this regresses more than it fixes */
-		csi->text_bbox = fz_bound_text(ctx, text, gstate->ctm);
 		pdf_begin_group(csi, csi->text_bbox);
 
 		if (doinvisible)
@@ -733,8 +731,7 @@ pdf_show_char(pdf_csi *csi, int cid)
 	bbox.x1 += 1;
 	bbox.y1 += 1;
 
-	/* SumatraPDF: this regresses more than it fixes */
-	render_direct = 0; // !fz_glyph_cacheable(fontdesc->font, gid);
+	render_direct = !fz_glyph_cacheable(fontdesc->font, gid);
 
 	/* flush buffered text if face or matrix or rendermode has changed */
 	if (!csi->text ||
@@ -764,8 +761,12 @@ pdf_show_char(pdf_csi *csi, int cid)
 		fz_matrix composed = fz_concat(trm, gstate->ctm);
 		fz_render_t3_glyph_direct(ctx, csi->dev, fontdesc->font, gid, composed, gstate);
 	}
-	else
+	/* SumatraPDF: still allow text extraction */
+	if (render_direct)
+		csi->text_mode = 3 /* invisible */;
 	{
+		/* SumatraPDF: text_bbox is in device space */
+		bbox = fz_transform_rect(gstate->ctm, bbox);
 		csi->text_bbox = fz_union_rect(csi->text_bbox, bbox);
 
 		/* add glyph to textobject */

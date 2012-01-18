@@ -496,20 +496,6 @@ fz_draw_fill_text(fz_device *devp, fz_text *text, fz_matrix ctm,
 		glyph = fz_render_glyph(dev->ctx, text->font, gid, trm, model);
 		if (glyph)
 		{
-			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1746 */
-			if (glyph->n > 1 && text->font->t3procs)
-			{
-				float light;
-				fz_convert_color(dev->ctx, colorspace, color, fz_device_gray, &light);
-				if (light != 0)
-				{
-					fz_pixmap *gray = fz_new_pixmap_with_rect(dev->ctx, fz_device_gray, fz_bound_pixmap(glyph));
-					fz_convert_pixmap(dev->ctx, glyph, gray);
-					fz_drop_pixmap(dev->ctx, glyph);
-					glyph = fz_alpha_from_gray(dev->ctx, gray, 0);
-					fz_drop_pixmap(dev->ctx, gray);
-				}
-			}
 			if (glyph->n == 1)
 			{
 				draw_glyph(colorbv, state->dest, glyph, x, y, state->scissor);
