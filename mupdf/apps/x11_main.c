@@ -68,6 +68,8 @@ static Atom XA_TARGETS;
 static Atom XA_TIMESTAMP;
 static Atom XA_UTF8_STRING;
 static Atom WM_DELETE_WINDOW;
+static Atom NET_WM_STATE;
+static Atom NET_WM_STATE_FULLSCREEN;
 static int x11fd;
 static int xscr;
 static Window xwin;
@@ -133,6 +135,8 @@ static void winopen(void)
 	XA_TIMESTAMP = XInternAtom(xdpy, "TIMESTAMP", False);
 	XA_UTF8_STRING = XInternAtom(xdpy, "UTF8_STRING", False);
 	WM_DELETE_WINDOW = XInternAtom(xdpy, "WM_DELETE_WINDOW", False);
+	NET_WM_STATE = XInternAtom(xdpy, "_NET_WM_STATE", False);
+	NET_WM_STATE_FULLSCREEN = XInternAtom(xdpy, "_NET_WM_STATE_FULLSCREEN", False);
 
 	xscr = DefaultScreen(xdpy);
 
@@ -154,7 +158,7 @@ static void winopen(void)
 	XAllocColor(xdpy, DefaultColormap(xdpy, xscr), &xshcolor);
 
 	xwin = XCreateWindow(xdpy, DefaultRootWindow(xdpy),
-		10, 10, 200, 100, 1,
+		10, 10, 200, 100, 0,
 		ximage_get_depth(),
 		InputOutput,
 		ximage_get_visual(),
@@ -280,6 +284,23 @@ void winresize(pdfapp_t *app, int w, int h)
 
 		mapped = 1;
 	}
+}
+
+void winfullscreen(pdfapp_t *app, int state)
+{
+	XEvent xev;
+	xev.xclient.type = ClientMessage;
+	xev.xclient.serial = 0;
+	xev.xclient.send_event = True;
+	xev.xclient.window = xwin;
+	xev.xclient.message_type = NET_WM_STATE;
+	xev.xclient.format = 32;
+	xev.xclient.data.l[0] = state;
+	xev.xclient.data.l[1] = NET_WM_STATE_FULLSCREEN;
+	xev.xclient.data.l[2] = 0;
+	XSendEvent(xdpy, DefaultRootWindow(xdpy), False,
+		SubstructureRedirectMask | SubstructureNotifyMask,
+		&xev);
 }
 
 static void fillrect(int x, int y, int w, int h)

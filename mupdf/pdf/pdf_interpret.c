@@ -88,6 +88,7 @@ struct pdf_csi_s
 
 	/* text object state */
 	fz_text *text;
+	fz_rect text_bbox;
 	fz_matrix tlm;
 	fz_matrix tm;
 	int text_mode;
@@ -432,6 +433,19 @@ pdf_show_path(pdf_csi *csi, int doclose, int dofill, int dostroke, int even_odd)
 	fz_path *path;
 	fz_rect bbox;
 
+	if (dostroke) {
+		if (csi->dev->flags & (FZ_DEVFLAG_STROKECOLOR_UNDEFINED | FZ_DEVFLAG_LINEJOIN_UNDEFINED | FZ_DEVFLAG_LINEWIDTH_UNDEFINED))
+			csi->dev->flags |= FZ_DEVFLAG_UNCACHEABLE;
+		else if (gstate->stroke_state.dash_len != 0 && csi->dev->flags & (FZ_DEVFLAG_STARTCAP_UNDEFINED | FZ_DEVFLAG_DASHCAP_UNDEFINED | FZ_DEVFLAG_ENDCAP_UNDEFINED))
+			csi->dev->flags |= FZ_DEVFLAG_UNCACHEABLE;
+		else if (gstate->stroke_state.linejoin == FZ_LINEJOIN_MITER && (csi->dev->flags & FZ_DEVFLAG_MITERLIMIT_UNDEFINED))
+			csi->dev->flags |= FZ_DEVFLAG_UNCACHEABLE;
+	}
+	if (dofill) {
+		if (csi->dev->flags & FZ_DEVFLAG_FILLCOLOR_UNDEFINED)
+			csi->dev->flags |= FZ_DEVFLAG_UNCACHEABLE;
+	}
+
 	path = csi->path;
 	csi->path = fz_new_path(ctx);
 
@@ -550,7 +564,6 @@ pdf_flush_text(pdf_csi *csi)
 	int dostroke = 0;
 	int doclip = 0;
 	int doinvisible = 0;
-	fz_rect bbox;
 	fz_context *ctx = csi->dev->ctx;
 
 	if (!csi->text)
@@ -576,9 +589,9 @@ pdf_flush_text(pdf_csi *csi)
 
 	fz_try(ctx)
 	{
-		bbox = fz_bound_text(ctx, text, gstate->ctm);
-
-		pdf_begin_group(csi, bbox);
+		/* SumatraPDF: this regresses more than it fixes */
+		csi->text_bbox = fz_bound_text(ctx, text, gstate->ctm);
+		pdf_begin_group(csi, csi->text_bbox);
 
 		if (doinvisible)
 			fz_ignore_text(csi->dev, text, gstate->ctm);
@@ -605,7 +618,7 @@ pdf_flush_text(pdf_csi *csi)
 				if (gstate->fill.pattern)
 				{
 					fz_clip_text(csi->dev, text, gstate->ctm, 0);
-					pdf_show_pattern(csi, gstate->fill.pattern, bbox, PDF_FILL);
+					pdf_show_pattern(csi, gstate->fill.pattern, csi->text_bbox, PDF_FILL);
 					fz_pop_clip(csi->dev);
 				}
 				break;
@@ -634,7 +647,7 @@ pdf_flush_text(pdf_csi *csi)
 				if (gstate->stroke.pattern)
 				{
 					fz_clip_stroke_text(csi->dev, text, &gstate->stroke_state, gstate->ctm);
-					pdf_show_pattern(csi, gstate->stroke.pattern, bbox, PDF_STROKE);
+					pdf_show_pattern(csi, gstate->stroke.pattern, csi->text_bbox, PDF_STROKE);
 					fz_pop_clip(csi->dev);
 				}
 				break;
@@ -674,6 +687,8 @@ pdf_show_char(pdf_csi *csi, int cid)
 	int ucsbuf[8];
 	int ucslen;
 	int i;
+	fz_rect bbox;
+	int render_direct;
 
 	tsm.a = gstate->size * gstate->scale;
 	tsm.b = 0;
@@ -711,6 +726,16 @@ pdf_show_char(pdf_csi *csi, int cid)
 
 	trm = fz_concat(tsm, csi->tm);
 
+	bbox = fz_bound_glyph(ctx, fontdesc->font, gid, trm);
+	/* Compensate for the glyph cache limited positioning precision */
+	bbox.x0 -= 1;
+	bbox.y0 -= 1;
+	bbox.x1 += 1;
+	bbox.y1 += 1;
+
+	/* SumatraPDF: this regresses more than it fixes */
+	render_direct = 0; // !fz_glyph_cacheable(fontdesc->font, gid);
+
 	/* flush buffered text if face or matrix or rendermode has changed */
 	if (!csi->text ||
 		fontdesc->font != csi->text->font ||
@@ -719,7 +744,8 @@ pdf_show_char(pdf_csi *csi, int cid)
 		fabsf(trm.b - csi->text->trm.b) > FLT_EPSILON ||
 		fabsf(trm.c - csi->text->trm.c) > FLT_EPSILON ||
 		fabsf(trm.d - csi->text->trm.d) > FLT_EPSILON ||
-		gstate->render != csi->text_mode)
+		gstate->render != csi->text_mode ||
+		render_direct)
 	{
 		pdf_flush_text(csi);
 
@@ -727,14 +753,28 @@ pdf_show_char(pdf_csi *csi, int cid)
 		csi->text->trm.e = 0;
 		csi->text->trm.f = 0;
 		csi->text_mode = gstate->render;
+		csi->text_bbox = fz_empty_rect;
 	}
 
-	/* add glyph to textobject */
-	fz_add_text(ctx, csi->text, gid, ucsbuf[0], trm.e, trm.f);
+	if (render_direct)
+	{
+		/* Render the glyph stream direct here (only happens for
+		 * type3 glyphs that seem to inherit current graphics
+		 * attributes) */
+		fz_matrix composed = fz_concat(trm, gstate->ctm);
+		fz_render_t3_glyph_direct(ctx, csi->dev, fontdesc->font, gid, composed, gstate);
+	}
+	else
+	{
+		csi->text_bbox = fz_union_rect(csi->text_bbox, bbox);
 
-	/* add filler glyphs for one-to-many unicode mapping */
-	for (i = 1; i < ucslen; i++)
-		fz_add_text(ctx, csi->text, -1, ucsbuf[i], trm.e, trm.f);
+		/* add glyph to textobject */
+		fz_add_text(ctx, csi->text, gid, ucsbuf[0], trm.e, trm.f);
+
+		/* add filler glyphs for one-to-many unicode mapping */
+		for (i = 1; i < ucslen; i++)
+			fz_add_text(ctx, csi->text, -1, ucsbuf[i], trm.e, trm.f);
+	}
 
 	if (fontdesc->wmode == 0)
 	{
@@ -872,8 +912,49 @@ pdf_init_gstate(pdf_gstate *gs, fz_matrix ctm)
 	gs->luminosity = 0;
 }
 
+static pdf_material *
+pdf_keep_material(pdf_material *mat)
+{
+	if (mat->colorspace)
+		fz_keep_colorspace(mat->colorspace);
+	if (mat->pattern)
+		pdf_keep_pattern(mat->pattern);
+	if (mat->shade)
+		fz_keep_shade(mat->shade);
+	return mat;
+}
+
+static pdf_material *
+pdf_drop_material(fz_context *ctx, pdf_material *mat)
+{
+	if (mat->colorspace)
+		fz_drop_colorspace(ctx, mat->colorspace);
+	if (mat->pattern)
+		pdf_drop_pattern(ctx, mat->pattern);
+	if (mat->shade)
+		fz_drop_shade(ctx, mat->shade);
+	return mat;
+}
+
+static void
+copy_state(pdf_gstate *gs, pdf_gstate *old)
+{
+	gs->stroke = old->stroke;
+	gs->fill = old->fill;
+	gs->font = old->font;
+	gs->softmask = old->softmask;
+
+	pdf_keep_material(&gs->stroke);
+	pdf_keep_material(&gs->fill);
+	if (gs->font)
+		pdf_keep_font(gs->font);
+	if (gs->softmask)
+		pdf_keep_xobject(gs->softmask);
+}
+
+
 static pdf_csi *
-pdf_new_csi(pdf_xref *xref, fz_device *dev, fz_matrix ctm, char *event, fz_cookie *cookie)
+pdf_new_csi(pdf_xref *xref, fz_device *dev, fz_matrix ctm, char *event, fz_cookie *cookie, pdf_gstate *gstate)
 {
 	pdf_csi *csi;
 	fz_context *ctx = dev->ctx;
@@ -910,6 +991,8 @@ pdf_new_csi(pdf_xref *xref, fz_device *dev, fz_matrix ctm, char *event, fz_cooki
 
 		csi->top_ctm = ctm;
 		pdf_init_gstate(&csi->gstate[0], ctm);
+		if (gstate)
+			copy_state(&csi->gstate[0], gstate);
 		csi->gtop = 0;
 
 		csi->cookie = cookie;
@@ -941,30 +1024,6 @@ pdf_clear_stack(pdf_csi *csi)
 	csi->top = 0;
 }
 
-static pdf_material *
-pdf_keep_material(pdf_material *mat)
-{
-	if (mat->colorspace)
-		fz_keep_colorspace(mat->colorspace);
-	if (mat->pattern)
-		pdf_keep_pattern(mat->pattern);
-	if (mat->shade)
-		fz_keep_shade(mat->shade);
-	return mat;
-}
-
-static pdf_material *
-pdf_drop_material(fz_context *ctx, pdf_material *mat)
-{
-	if (mat->colorspace)
-		fz_drop_colorspace(ctx, mat->colorspace);
-	if (mat->pattern)
-		pdf_drop_pattern(ctx, mat->pattern);
-	if (mat->shade)
-		fz_drop_shade(ctx, mat->shade);
-	return mat;
-}
-
 static void
 pdf_gsave(pdf_csi *csi)
 {
@@ -976,12 +1035,11 @@ pdf_gsave(pdf_csi *csi)
 		csi->gstate = fz_resize_array(ctx, csi->gstate, csi->gcap*2, sizeof(pdf_gstate));
 		csi->gcap *= 2;
 	}
-	gs = csi->gstate + csi->gtop;
 
 	memcpy(&csi->gstate[csi->gtop + 1], &csi->gstate[csi->gtop], sizeof(pdf_gstate));
 
-	csi->gtop ++;
-
+	csi->gtop++;
+	gs = &csi->gstate[csi->gtop];
 	pdf_keep_material(&gs->stroke);
 	pdf_keep_material(&gs->fill);
 	if (gs->font)
@@ -1433,16 +1491,26 @@ pdf_run_extgstate(pdf_csi *csi, fz_obj *rdb, fz_obj *extgstate)
 
 		else if (!strcmp(s, "LC"))
 		{
+			csi->dev->flags &= ~(FZ_DEVFLAG_STARTCAP_UNDEFINED | FZ_DEVFLAG_DASHCAP_UNDEFINED | FZ_DEVFLAG_ENDCAP_UNDEFINED);
 			gstate->stroke_state.start_cap = fz_to_int(val);
 			gstate->stroke_state.dash_cap = fz_to_int(val);
 			gstate->stroke_state.end_cap = fz_to_int(val);
 		}
 		else if (!strcmp(s, "LW"))
+		{
+			csi->dev->flags &= ~FZ_DEVFLAG_LINEWIDTH_UNDEFINED;
 			gstate->stroke_state.linewidth = fz_to_real(val);
+		}
 		else if (!strcmp(s, "LJ"))
+		{
+			csi->dev->flags &= ~FZ_DEVFLAG_LINEJOIN_UNDEFINED;
 			gstate->stroke_state.linejoin = fz_to_int(val);
+		}
 		else if (!strcmp(s, "ML"))
+		{
+			csi->dev->flags &= ~FZ_DEVFLAG_MITERLIMIT_UNDEFINED;
 			gstate->stroke_state.miterlimit = fz_to_real(val);
+		}
 
 		else if (!strcmp(s, "D"))
 		{
@@ -1669,12 +1737,16 @@ static void pdf_run_cs_imp(pdf_csi *csi, fz_obj *rdb, int what)
 
 static void pdf_run_CS(pdf_csi *csi, fz_obj *rdb)
 {
+	csi->dev->flags &= ~FZ_DEVFLAG_STROKECOLOR_UNDEFINED;
+
 	pdf_run_cs_imp(csi, rdb, PDF_STROKE);
 	/* RJW: "cannot set colorspace" */
 }
 
 static void pdf_run_cs(pdf_csi *csi, fz_obj *rdb)
 {
+	csi->dev->flags &= ~FZ_DEVFLAG_FILLCOLOR_UNDEFINED;
+
 	pdf_run_cs_imp(csi, rdb, PDF_FILL);
 	/* RJW: "cannot set colorspace" */
 }
@@ -1788,6 +1860,7 @@ static void pdf_run_F(pdf_csi *csi)
 
 static void pdf_run_G(pdf_csi *csi)
 {
+	csi->dev->flags &= ~FZ_DEVFLAG_STROKECOLOR_UNDEFINED;
 	pdf_set_colorspace(csi, PDF_STROKE, fz_device_gray);
 	pdf_set_color(csi, PDF_STROKE, csi->stack);
 }
@@ -1795,6 +1868,7 @@ static void pdf_run_G(pdf_csi *csi)
 static void pdf_run_J(pdf_csi *csi)
 {
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
+	csi->dev->flags &= ~(FZ_DEVFLAG_STARTCAP_UNDEFINED | FZ_DEVFLAG_DASHCAP_UNDEFINED | FZ_DEVFLAG_ENDCAP_UNDEFINED);
 	gstate->stroke_state.start_cap = csi->stack[0];
 	gstate->stroke_state.dash_cap = csi->stack[0];
 	gstate->stroke_state.end_cap = csi->stack[0];
@@ -1802,6 +1876,7 @@ static void pdf_run_J(pdf_csi *csi)
 
 static void pdf_run_K(pdf_csi *csi)
 {
+	csi->dev->flags &= ~FZ_DEVFLAG_STROKECOLOR_UNDEFINED;
 	pdf_set_colorspace(csi, PDF_STROKE, fz_device_cmyk);
 	pdf_set_color(csi, PDF_STROKE, csi->stack);
 }
@@ -1809,6 +1884,7 @@ static void pdf_run_K(pdf_csi *csi)
 static void pdf_run_M(pdf_csi *csi)
 {
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
+	csi->dev->flags &= ~FZ_DEVFLAG_MITERLIMIT_UNDEFINED;
 	gstate->stroke_state.miterlimit = csi->stack[0];
 }
 
@@ -1823,6 +1899,7 @@ static void pdf_run_Q(pdf_csi *csi)
 
 static void pdf_run_RG(pdf_csi *csi)
 {
+	csi->dev->flags &= ~FZ_DEVFLAG_STROKECOLOR_UNDEFINED;
 	pdf_set_colorspace(csi, PDF_STROKE, fz_device_rgb);
 	pdf_set_color(csi, PDF_STROKE, csi->stack);
 }
@@ -1894,6 +1971,7 @@ static void pdf_run_SC_imp(pdf_csi *csi, fz_obj *rdb, int what, pdf_material *ma
 static void pdf_run_SC(pdf_csi *csi, fz_obj *rdb)
 {
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
+	csi->dev->flags &= ~FZ_DEVFLAG_STROKECOLOR_UNDEFINED;
 	pdf_run_SC_imp(csi, rdb, PDF_STROKE, &gstate->stroke);
 	/* RJW: "cannot set color and colorspace" */
 }
@@ -1901,6 +1979,7 @@ static void pdf_run_SC(pdf_csi *csi, fz_obj *rdb)
 static void pdf_run_sc(pdf_csi *csi, fz_obj *rdb)
 {
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
+	csi->dev->flags &= ~FZ_DEVFLAG_FILLCOLOR_UNDEFINED;
 	pdf_run_SC_imp(csi, rdb, PDF_FILL, &gstate->fill);
 	/* RJW: "cannot set color and colorspace" */
 }
@@ -2084,12 +2163,20 @@ static void pdf_run_d(pdf_csi *csi)
 
 static void pdf_run_d0(pdf_csi *csi)
 {
-	csi->dev->flags |= FZ_CHARPROC_COLOR;
+	csi->dev->flags |= FZ_DEVFLAG_COLOR;
 }
 
 static void pdf_run_d1(pdf_csi *csi)
 {
-	csi->dev->flags |= FZ_CHARPROC_MASK;
+	csi->dev->flags |= FZ_DEVFLAG_MASK;
+	csi->dev->flags &= ~(FZ_DEVFLAG_FILLCOLOR_UNDEFINED |
+				FZ_DEVFLAG_STROKECOLOR_UNDEFINED |
+				FZ_DEVFLAG_STARTCAP_UNDEFINED |
+				FZ_DEVFLAG_DASHCAP_UNDEFINED |
+				FZ_DEVFLAG_ENDCAP_UNDEFINED |
+				FZ_DEVFLAG_LINEJOIN_UNDEFINED |
+				FZ_DEVFLAG_MITERLIMIT_UNDEFINED |
+				FZ_DEVFLAG_LINEWIDTH_UNDEFINED);
 }
 
 static void pdf_run_f(pdf_csi *csi)
@@ -2104,6 +2191,7 @@ static void pdf_run_fstar(pdf_csi *csi)
 
 static void pdf_run_g(pdf_csi *csi)
 {
+	csi->dev->flags &= ~FZ_DEVFLAG_FILLCOLOR_UNDEFINED;
 	pdf_set_colorspace(csi, PDF_FILL, fz_device_gray);
 	pdf_set_color(csi, PDF_FILL, csi->stack);
 }
@@ -2138,11 +2226,13 @@ static void pdf_run_i(pdf_csi *csi)
 static void pdf_run_j(pdf_csi *csi)
 {
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
+	csi->dev->flags &= ~FZ_DEVFLAG_LINEJOIN_UNDEFINED;
 	gstate->stroke_state.linejoin = csi->stack[0];
 }
 
 static void pdf_run_k(pdf_csi *csi)
 {
+	csi->dev->flags &= ~FZ_DEVFLAG_FILLCOLOR_UNDEFINED;
 	pdf_set_colorspace(csi, PDF_FILL, fz_device_cmyk);
 	pdf_set_color(csi, PDF_FILL, csi->stack);
 }
@@ -2192,6 +2282,7 @@ static void pdf_run_re(pdf_csi *csi)
 
 static void pdf_run_rg(pdf_csi *csi)
 {
+	csi->dev->flags &= ~FZ_DEVFLAG_FILLCOLOR_UNDEFINED;
 	pdf_set_colorspace(csi, PDF_FILL, fz_device_rgb);
 	pdf_set_color(csi, PDF_FILL, csi->stack);
 }
@@ -2251,6 +2342,7 @@ static void pdf_run_w(pdf_csi *csi)
 {
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
 	pdf_flush_text(csi); /* linewidth affects stroked text rendering mode */
+	csi->dev->flags &= ~FZ_DEVFLAG_LINEWIDTH_UNDEFINED;
 	gstate->stroke_state.linewidth = csi->stack[0];
 }
 
@@ -2621,7 +2713,7 @@ pdf_run_page_with_usage(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matri
 	if (page->transparency)
 		fz_begin_group(dev, fz_transform_rect(ctm, page->mediabox), 1, 0, 0, 1);
 
-	csi = pdf_new_csi(xref, dev, ctm, event, cookie);
+	csi = pdf_new_csi(xref, dev, ctm, event, cookie, NULL);
 	fz_try(ctx)
 	{
 		pdf_run_buffer(csi, page->resources, page->contents);
@@ -2663,7 +2755,7 @@ pdf_run_page_with_usage(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matri
 		if (!strcmp(event, "View") && (flags & (1 << 5))) /* NoView */
 			continue;
 
-		csi = pdf_new_csi(xref, dev, ctm, event, cookie);
+		csi = pdf_new_csi(xref, dev, ctm, event, cookie, NULL);
 		if (!pdf_is_hidden_ocg(fz_dict_gets(annot->obj, "OC"), csi, page->resources))
 		{
 			fz_try(ctx)
@@ -2690,9 +2782,9 @@ pdf_run_page(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matrix ctm, fz_c
 }
 
 void
-pdf_run_glyph(pdf_xref *xref, fz_obj *resources, fz_buffer *contents, fz_device *dev, fz_matrix ctm)
+pdf_run_glyph(pdf_xref *xref, fz_obj *resources, fz_buffer *contents, fz_device *dev, fz_matrix ctm, void *gstate)
 {
-	pdf_csi *csi = pdf_new_csi(xref, dev, ctm, "View", NULL);
+	pdf_csi *csi = pdf_new_csi(xref, dev, ctm, "View", NULL, gstate);
 	fz_context *ctx = xref->ctx;
 
 	fz_try(ctx)

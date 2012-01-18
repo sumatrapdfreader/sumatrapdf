@@ -25,6 +25,7 @@ extern void winreloadfile(pdfapp_t*);
 extern void windrawstring(pdfapp_t*, int x, int y, char *s);
 extern void winclose(pdfapp_t*);
 extern void winhelp(pdfapp_t*);
+extern void winfullscreen(pdfapp_t*, int state);
 
 struct pdfapp_s
 {
@@ -58,6 +59,7 @@ struct pdfapp_s
 	int winw, winh;
 	int scrw, scrh;
 	int shrinkwrap;
+	int fullscreen;
 
 	/* event handling state */
 	char number[256];

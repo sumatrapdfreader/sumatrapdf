@@ -670,7 +670,15 @@ fz_bound_t3_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm)
 
 	ctm = fz_concat(font->t3matrix, trm);
 	dev = fz_new_bbox_device(ctx, &bbox);
-	font->t3run(font->t3xref, font->t3resources, contents, dev, ctm);
+	dev->flags = FZ_DEVFLAG_FILLCOLOR_UNDEFINED |
+			FZ_DEVFLAG_STROKECOLOR_UNDEFINED |
+			FZ_DEVFLAG_STARTCAP_UNDEFINED |
+			FZ_DEVFLAG_DASHCAP_UNDEFINED |
+			FZ_DEVFLAG_ENDCAP_UNDEFINED |
+			FZ_DEVFLAG_LINEJOIN_UNDEFINED |
+			FZ_DEVFLAG_MITERLIMIT_UNDEFINED |
+			FZ_DEVFLAG_LINEWIDTH_UNDEFINED;
+	font->t3run(font->t3xref, font->t3resources, contents, dev, ctm, NULL);
 	font->t3flags[gid] = dev->flags;
 	fz_free_device(dev);
 
@@ -698,13 +706,13 @@ fz_render_t3_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm, fz_co
 	if (!contents)
 		return NULL;
 
-	if (font->t3flags[gid] & FZ_CHARPROC_MASK)
+	if (font->t3flags[gid] & FZ_DEVFLAG_MASK)
 	{
-		if (font->t3flags[gid] & FZ_CHARPROC_COLOR)
+		if (font->t3flags[gid] & FZ_DEVFLAG_COLOR)
 			fz_warn(ctx, "type3 glyph claims to be both masked and colored");
 		model = NULL;
 	}
-	else if (font->t3flags[gid] & FZ_CHARPROC_COLOR)
+	else if (font->t3flags[gid] & FZ_DEVFLAG_COLOR)
 	{
 		if (!model)
 			fz_warn(ctx, "colored type3 glyph wanted in masked context");
@@ -726,7 +734,7 @@ fz_render_t3_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm, fz_co
 
 	ctm = fz_concat(font->t3matrix, trm);
 	dev = fz_new_draw_device_type3(ctx, glyph);
-	font->t3run(font->t3xref, font->t3resources, contents, dev, ctm);
+	font->t3run(font->t3xref, font->t3resources, contents, dev, ctm, NULL);
 	/* RJW: "cannot draw type3 glyph" */
 	fz_free_device(dev);
 
@@ -739,6 +747,37 @@ fz_render_t3_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm, fz_co
 		result = glyph;
 
 	return result;
+}
+
+void
+fz_render_t3_glyph_direct(fz_context *ctx, fz_device *dev, fz_font *font, int gid, fz_matrix trm, void *gstate)
+{
+	fz_matrix ctm;
+	fz_buffer *contents;
+
+	if (gid < 0 || gid > 255)
+		return;
+
+	contents = font->t3procs[gid];
+	if (!contents)
+		return;
+
+	if (font->t3flags[gid] & FZ_DEVFLAG_MASK)
+	{
+		if (font->t3flags[gid] & FZ_DEVFLAG_COLOR)
+			fz_warn(ctx, "type3 glyph claims to be both masked and colored");
+	}
+	else if (font->t3flags[gid] & FZ_DEVFLAG_COLOR)
+	{
+	}
+	else
+	{
+		fz_warn(ctx, "type3 glyph doesn't specify masked or colored");
+	}
+
+	ctm = fz_concat(font->t3matrix, trm);
+	font->t3run(font->t3xref, font->t3resources, contents, dev, ctm, gstate);
+	/* RJW: "cannot draw type3 glyph" */
 }
 
 void
@@ -786,4 +825,11 @@ fz_bound_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm)
 
 	/* fall back to font bbox */
 	return fz_transform_rect(trm, font->bbox);
+}
+
+int fz_glyph_cacheable(fz_font *font, int gid)
+{
+	if (!font->t3procs || !font->t3flags || gid < 0 || gid >= font->bbox_count)
+		return 1;
+	return (font->t3flags[gid] & FZ_DEVFLAG_UNCACHEABLE) == 0;
 }

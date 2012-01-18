@@ -942,7 +942,7 @@ pdf_get_string_width(pdf_xref *xref, fz_obj *res, fz_buffer *base, unsigned shor
 	fz_buffer_printf(xref->ctx, base, "ET Q EMC");
 	fz_try(xref->ctx)
 	{
-		pdf_run_glyph(xref, res, base, dev, fz_identity);
+		pdf_run_glyph(xref, res, base, dev, fz_identity, NULL);
 		width = bbox.x1 - bbox.x0;
 	}
 	fz_catch(xref->ctx)

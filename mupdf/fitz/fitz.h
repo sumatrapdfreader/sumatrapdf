@@ -205,9 +205,9 @@ The macro based nature of this system has 3 main limitations:
 	start of fz_try and something in fz_try throwing an exception may become
 	undefined as part of the process of throwing that exception.
 
-As a way of mitigating this problem, we provide an fz_var() macro that
-tells the compiler to ensure that that variable is not unset by the
-act of throwing the exception.
+	As a way of mitigating this problem, we provide an fz_var() macro that
+	tells the compiler to ensure that that variable is not unset by the
+	act of throwing the exception.
 
 A model piece of code using these macros then might be:
 
@@ -1069,7 +1069,7 @@ struct fz_font_s
 	char *t3flags; /* has 256 entries if used */
 	void *t3xref; /* a pdf_xref for the callback */
 	void (*t3run)(void *xref, fz_obj *resources, fz_buffer *contents,
-		struct fz_device_s *dev, fz_matrix ctm);
+		struct fz_device_s *dev, fz_matrix ctm, void *gstate);
 
 	fz_rect bbox;	/* font bbox is used only for t3 fonts */
 
@@ -1080,7 +1080,7 @@ struct fz_font_s
 
 	/* substitute metrics */
 	int width_count;
-	int *width_table; // in 1000 units
+	int *width_table; /* in 1000 units */
 };
 
 void fz_new_font_context(fz_context *ctx);
@@ -1098,6 +1098,7 @@ void fz_debug_font(fz_font *font);
 
 void fz_set_font_bbox(fz_font *font, float xmin, float ymin, float xmax, float ymax);
 fz_rect fz_bound_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm);
+int fz_glyph_cacheable(fz_font *font, int gid);
 
 /*
  * Vector path buffer.
@@ -1181,6 +1182,8 @@ void fz_debug_path(fz_path *, int indent);
  * Glyph cache
  */
 
+typedef struct fz_device_s fz_device;
+
 void fz_new_glyph_cache_context(fz_context *ctx);
 void fz_free_glyph_cache_context(fz_context *ctx);
 
@@ -1189,6 +1192,7 @@ fz_pixmap *fz_render_t3_glyph(fz_context *ctx, fz_font *font, int cid, fz_matrix
 fz_pixmap *fz_render_ft_stroked_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm, fz_matrix ctm, fz_stroke_state *state);
 fz_pixmap *fz_render_glyph(fz_context *ctx, fz_font*, int, fz_matrix, fz_colorspace *model);
 fz_pixmap *fz_render_stroked_glyph(fz_context *ctx, fz_font*, int, fz_matrix, fz_matrix, fz_stroke_state *stroke);
+void fz_render_t3_glyph_direct(fz_context *ctx, fz_device *dev, fz_font *font, int gid, fz_matrix trm, void *gstate);
 
 /*
  * Text buffer.
@@ -1305,11 +1309,21 @@ enum
 	FZ_IGNORE_SHADE = 2,
 
 	/* Flags */
-	FZ_CHARPROC_MASK = 1,
-	FZ_CHARPROC_COLOR = 2,
+	FZ_DEVFLAG_MASK = 1,
+	FZ_DEVFLAG_COLOR = 2,
+	FZ_DEVFLAG_UNCACHEABLE = 4,
+	FZ_DEVFLAG_FILLCOLOR_UNDEFINED = 8,
+	FZ_DEVFLAG_STROKECOLOR_UNDEFINED = 16,
+	FZ_DEVFLAG_STARTCAP_UNDEFINED = 32,
+	FZ_DEVFLAG_DASHCAP_UNDEFINED = 64,
+	FZ_DEVFLAG_ENDCAP_UNDEFINED = 128,
+	FZ_DEVFLAG_LINEJOIN_UNDEFINED = 256,
+	FZ_DEVFLAG_MITERLIMIT_UNDEFINED = 512,
+	FZ_DEVFLAG_LINEWIDTH_UNDEFINED = 1024,
+	/* Arguably we should have a bit for the dash pattern itself being
+	 * undefined, but that causes problems; do we assume that it should
+	 * always be set to non-dashing at the start of every glyph? */
 };
-
-typedef struct fz_device_s fz_device;
 
 struct fz_device_s
 {

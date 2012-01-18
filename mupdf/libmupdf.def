@@ -231,6 +231,7 @@ EXPORTS
 	fz_debug_font
 	fz_set_font_bbox
 	fz_bound_glyph
+	fz_glyph_cacheable
 	fz_new_path
 	fz_moveto
 	fz_lineto
@@ -250,6 +251,7 @@ EXPORTS
 	fz_render_ft_stroked_glyph
 	fz_render_glyph
 	fz_render_stroked_glyph
+	fz_render_t3_glyph_direct
 	fz_new_text
 	fz_add_text
 	fz_free_text

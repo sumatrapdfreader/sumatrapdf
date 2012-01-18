@@ -553,6 +553,27 @@ void winrepaintsearch(pdfapp_t *app)
 	InvalidateRect(hwndview, NULL, 0);
 }
 
+void winfullscreen(pdfapp_t *app, int state)
+{
+	static WINDOWPLACEMENT savedplace;
+	static int isfullscreen = 0;
+	if (state && !isfullscreen)
+	{
+		GetWindowPlacement(hwndframe, &savedplace);
+		SetWindowLong(hwndframe, GWL_STYLE, WS_POPUP | WS_VISIBLE);
+		SetWindowPos(hwndframe, NULL, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED);
+		ShowWindow(hwndframe, SW_SHOWMAXIMIZED);
+		isfullscreen = 1;
+	}
+	if (!state && isfullscreen)
+	{
+		SetWindowLong(hwndframe, GWL_STYLE, WS_OVERLAPPEDWINDOW);
+		SetWindowPos(hwndframe, NULL, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED);
+		SetWindowPlacement(hwndframe, &savedplace);
+		isfullscreen = 0;
+	}
+}
+
 /*
  * Event handling
  */

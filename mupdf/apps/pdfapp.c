@@ -789,7 +789,18 @@ void pdfapp_onkey(pdfapp_t *app, int c)
 	 * Pan view, but don't need to repaint image
 	 */
 
+	case 'f':
+		app->shrinkwrap = 0;
+		winfullscreen(app, !app->fullscreen);
+		app->fullscreen = !app->fullscreen;
+		break;
+
 	case 'w':
+		if (app->fullscreen)
+		{
+			winfullscreen(app, 0);
+			app->fullscreen = 0;
+		}
 		app->shrinkwrap = 1;
 		app->panx = app->pany = 0;
 		pdfapp_showpage(app, 0, 0, 1);

@@ -2,9 +2,9 @@
 #include "mupdf.h"
 
 static void
-pdf_run_glyph_func(void *xref, fz_obj *rdb, fz_buffer *contents, fz_device *dev, fz_matrix ctm)
+pdf_run_glyph_func(void *xref, fz_obj *rdb, fz_buffer *contents, fz_device *dev, fz_matrix ctm, void *gstate)
 {
-	pdf_run_glyph(xref, rdb, contents, dev, ctm);
+	pdf_run_glyph(xref, rdb, contents, dev, ctm, gstate);
 }
 
 pdf_font_desc *
