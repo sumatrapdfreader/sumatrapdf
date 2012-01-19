@@ -42,7 +42,22 @@ public:
     RectF           pos;
 
     bool            isVisible;
+};
 
+// Manages painting process of VirtWnd window and all its children.
+// Automatically does double-buffering for less flicker.
+// Create one object for each HWND-backed VirtWnd and keep it around.
+class VirtWndPainter
+{
+    // bitmap for double-buffering
+    Bitmap *cacheBmp;
+
+public:
+    VirtWndPainter() : cacheBmp(NULL)
+    {
+    }
+
+    void OnPaint(HWND hwnd, VirtWnd *hwndWnd);
 };
 
 }

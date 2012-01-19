@@ -18,6 +18,7 @@
 #include "EbookTestMenu.h"
 
 using namespace Gdiplus;
+using namespace mui;
 
 #define ET_FRAME_CLASS_NAME    _T("ET_FRAME")
 
@@ -29,6 +30,8 @@ using namespace Gdiplus;
 
 static HINSTANCE        ghinst;
 static HWND             gHwndFrame = NULL;
+static VirtWnd *        gVirtWndFrame = NULL;
+static VirtWndPainter * gVirtWndPainterFrame = NULL;
 
 static bool gShowTextBoundingBoxes = false;
 
@@ -175,6 +178,13 @@ static void DrawPage(Graphics *g, int pageNo, REAL offX, REAL offY)
     }
 }
 
+static void UpdatePageCount()
+{
+    size_t pagesCount = gCurrentEbook->pageLayout->PageCount();
+    ScopedMem<TCHAR> s(str::Format(_T("%d pages"), (int)pagesCount));
+    win::SetText(gHwndFrame, s.Get());
+}
+
 const int pageBorderX = 10;
 const int pageBorderY = 10;
 
@@ -190,6 +200,7 @@ static void ReLayout(Graphics* gfx, int dx, int dy)
             return;
     }
     gCurrentEbook->pageLayout = LayoutMobiFile(gCurrentEbook, gfx, pageDx, pageDy);
+    UpdatePageCount();
 }
 
 static void DrawFrame2(Graphics &g, RectI r)
@@ -252,23 +263,19 @@ static void OnPaintFrame(HWND hwnd)
 
     if (!gCurrentEbook->pageLayout)
         return;
-    size_t pagesCount = gCurrentEbook->pageLayout->PageCount();
-    ScopedMem<TCHAR> s(str::Format(_T("%d pages"), (int)pagesCount));
-    win::SetText(hwnd, s.Get());
 }
 
 static void OnLButtonDown()
 {
 }
 
-static void LoadEbookAndTriggerLayout(TCHAR *fileName, HWND hwnd)
+static void LoadEbook(TCHAR *fileName, HWND hwnd)
 {
     EbookWindowInfo *wi = LoadEbook(fileName);
     if (!wi)
         return;
     delete gCurrentEbook;
     gCurrentEbook = wi;
-    InvalidateRect(hwnd, NULL, true);
 }
 
 static void LoadSampleAsCurrentDoc()
@@ -298,6 +305,9 @@ static void OnCreateWindow(HWND hwnd)
     LoadSampleAsCurrentDoc();
     HMENU menu = BuildMenu();
     SetMenu(hwnd, menu);
+    gVirtWndFrame = new VirtWnd();
+    gVirtWndFrame->hwndParent = hwnd;
+    gVirtWndPainterFrame = new VirtWndPainter();
     RelayoutByHwnd(hwnd);
 }
 
@@ -327,7 +337,7 @@ static void OnOpen(HWND hwnd)
     TCHAR *fileName = ofn.lpstrFile + ofn.nFileOffset;
     if (*(fileName - 1)) {
         // special case: single filename without NULL separator
-        LoadEbookAndTriggerLayout(ofn.lpstrFile, hwnd);
+        LoadEbook(ofn.lpstrFile, hwnd);
         return;
     }
     // this is just a test app, no need to support multiple files
@@ -494,6 +504,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     ret = RunApp();
 
     delete gCurrentEbook;
+    delete gVirtWndFrame;
+    delete gVirtWndPainterFrame;
     ::delete frameBmp;
 
 Exit:

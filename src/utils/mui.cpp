@@ -80,5 +80,18 @@ void VirtWnd::Draw(Graphics *gfx, float offX, float offY) const
         return;
 }
 
+// Should be called from WM_PAINT. Recursively paints a given window and
+// all its children. VirtWnd must be the top-level window associated
+// with HWND.
+void VirtWndPainter::OnPaint(HWND hwnd, VirtWnd *hwndWnd)
+{
+    CrashAlwaysIf(hwnd != hwndWnd->hwndParent);
+
+    PAINTSTRUCT ps;
+    HDC dc = BeginPaint(hwnd, &ps);
+
+    EndPaint(hwnd, &ps);
+}
+
 }
 

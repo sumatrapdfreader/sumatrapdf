@@ -594,6 +594,11 @@ void PageLayout::EmitText(HtmlToken *t)
     }
 }
 
+// TODO: figure out a way to not need Graphics object be passed in. It's
+// only used for measuring text. There should be a way to construct
+// Graphics object that will return the same font metrics data as
+// Graphics object based on HWND's DC.
+//
 // note: maybe this should be part of a separate object so that don't have
 // tight coupling between PageLayout, which represents a final result of
 // layout process, and code that converts a given format into PageLayout.
