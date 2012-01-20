@@ -54,9 +54,6 @@ static void InitGraphicsMode(Graphics *g)
     //g.SetSmoothingMode(SmoothingModeHighQuality);
     g->SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
     g->SetPageUnit(UnitPixel);
-
-    gDefaultFont = ::new Font(FontFamily::GenericSansSerif(), 12, FontStyleBold);
-    //gDefaultFont = ::new Font(L"Times New Roman", 18, FontStyleBold);
 }
 
 void Initialize()
@@ -73,6 +70,9 @@ void Initialize()
     gGraphicsForFontMeasure = ::new Graphics((Image*)gBitmapForFontMeasureGraphics);
     CrashIf(!gGraphicsForFontMeasure);
     InitGraphicsMode(gGraphicsForFontMeasure);
+
+    gDefaultFont = ::new Font(FontFamily::GenericSansSerif(), 12, FontStyleBold);
+    //gDefaultFont = ::new Font(L"Times New Roman", 18, FontStyleBold);
 }
 
 void Destroy()
