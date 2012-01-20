@@ -35,7 +35,6 @@ JNIEXPORT int JNICALL
 Java_com_artifex_mupdf_MuPDFCore_openFile(JNIEnv * env, jobject thiz, jstring jfilename)
 {
 	const char *filename;
-	char *password = "";
 	int accelerate = 1;
 	int pages = 0;
 
@@ -65,7 +64,7 @@ Java_com_artifex_mupdf_MuPDFCore_openFile(JNIEnv * env, jobject thiz, jstring jf
 		LOGE("Opening document...");
 		fz_try(ctx)
 		{
-			xref = pdf_open_xref(ctx, filename, password);
+			xref = pdf_open_xref(ctx, filename);
 		}
 		fz_catch(ctx)
 		{

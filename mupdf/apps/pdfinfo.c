@@ -993,7 +993,10 @@ int main(int argc, char **argv)
 
 			filename = argv[fz_optind];
 			printf("%s:\n", filename);
-			xref = pdf_open_xref(ctx, filename, password);
+			xref = pdf_open_xref(ctx, filename);
+			if (pdf_needs_password(xref))
+				if (!pdf_authenticate_password(xref, password))
+					fz_throw(ctx, "cannot authenticate password: %s\n", filename);
 			pagecount = pdf_count_pages(xref);
 
 			showglobalinfo();

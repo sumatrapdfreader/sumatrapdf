@@ -205,26 +205,35 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	xref = pdf_open_xref(ctx, filename, password);
-
-	if (fz_optind == argc)
-		showtrailer();
-
-	while (fz_optind < argc)
+	fz_var(xref);
+	fz_try(ctx)
 	{
-		switch (argv[fz_optind][0])
+		xref = pdf_open_xref(ctx, filename);
+		if (pdf_needs_password(xref))
+			if (!pdf_authenticate_password(xref, password))
+				fz_throw(ctx, "cannot authenticate password: %s", filename);
+
+		if (fz_optind == argc)
+			showtrailer();
+
+		while (fz_optind < argc)
 		{
-		case 't': showtrailer(); break;
-		case 'x': showxref(); break;
-		case 'p': showpagetree(); break;
-		case 'g': showgrep(filename); break;
-		default: showobject(atoi(argv[fz_optind]), 0); break;
+			switch (argv[fz_optind][0])
+			{
+			case 't': showtrailer(); break;
+			case 'x': showxref(); break;
+			case 'p': showpagetree(); break;
+			case 'g': showgrep(filename); break;
+			default: showobject(atoi(argv[fz_optind]), 0); break;
+			}
+			fz_optind++;
 		}
-		fz_optind++;
+	}
+	fz_catch(ctx)
+	{
 	}
 
 	pdf_free_xref(xref);
-	fz_flush_warnings(ctx);
 	fz_free_context(ctx);
 	return 0;
 }

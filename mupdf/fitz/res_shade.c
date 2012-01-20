@@ -1,9 +1,9 @@
 #include "fitz.h"
 
 fz_shade *
-fz_keep_shade(fz_shade *shade)
+fz_keep_shade(fz_context *ctx, fz_shade *shade)
 {
-	return (fz_shade *)fz_keep_storable(&shade->storable);
+	return (fz_shade *)fz_keep_storable(ctx, &shade->storable);
 }
 
 void

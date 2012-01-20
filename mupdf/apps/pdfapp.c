@@ -113,7 +113,7 @@ static void pdfapp_open_pdf(pdfapp_t *app, char *filename, int fd)
 	fz_try(ctx)
 	{
 		file = fz_open_fd(ctx, fd);
-		app->xref = pdf_open_xref_with_stream(file, NULL);
+		app->xref = pdf_open_xref_with_stream(file);
 		fz_close(file);
 	}
 	fz_catch(ctx)
@@ -132,7 +132,7 @@ static void pdfapp_open_pdf(pdfapp_t *app, char *filename, int fd)
 		{
 			password = winpassword(app, filename);
 			if (!password)
-				exit(1);
+				pdfapp_error(app, "Needs a password.");
 			okay = pdf_authenticate_password(app->xref, password);
 			if (!okay)
 				pdfapp_warn(app, "Invalid password.");

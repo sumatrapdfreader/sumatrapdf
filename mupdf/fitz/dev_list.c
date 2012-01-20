@@ -80,7 +80,7 @@ fz_new_display_node(fz_context *ctx, fz_display_command cmd, fz_matrix ctm,
 	node->ctm = ctm;
 	if (colorspace)
 	{
-		node->colorspace = fz_keep_colorspace(colorspace);
+		node->colorspace = fz_keep_colorspace(ctx, colorspace);
 		if (color)
 		{
 			for (i = 0; i < node->colorspace->n; i++)
@@ -430,7 +430,7 @@ fz_list_fill_shade(fz_device *dev, fz_shade *shade, fz_matrix ctm, float alpha)
 	fz_context *ctx = dev->ctx;
 	node = fz_new_display_node(ctx, FZ_CMD_FILL_SHADE, ctm, NULL, NULL, alpha);
 	node->rect = fz_bound_shade(shade, ctm);
-	node->item.shade = fz_keep_shade(shade);
+	node->item.shade = fz_keep_shade(ctx, shade);
 	fz_append_display_node(dev->user, node);
 }
 
@@ -440,7 +440,7 @@ fz_list_fill_image(fz_device *dev, fz_pixmap *image, fz_matrix ctm, float alpha)
 	fz_display_node *node;
 	node = fz_new_display_node(dev->ctx, FZ_CMD_FILL_IMAGE, ctm, NULL, NULL, alpha);
 	node->rect = fz_transform_rect(ctm, fz_unit_rect);
-	node->item.image = fz_keep_pixmap(image);
+	node->item.image = fz_keep_pixmap(dev->ctx, image);
 	fz_append_display_node(dev->user, node);
 }
 
@@ -451,7 +451,7 @@ fz_list_fill_image_mask(fz_device *dev, fz_pixmap *image, fz_matrix ctm,
 	fz_display_node *node;
 	node = fz_new_display_node(dev->ctx, FZ_CMD_FILL_IMAGE_MASK, ctm, colorspace, color, alpha);
 	node->rect = fz_transform_rect(ctm, fz_unit_rect);
-	node->item.image = fz_keep_pixmap(image);
+	node->item.image = fz_keep_pixmap(dev->ctx, image);
 	fz_append_display_node(dev->user, node);
 }
 
@@ -463,7 +463,7 @@ fz_list_clip_image_mask(fz_device *dev, fz_pixmap *image, fz_rect *rect, fz_matr
 	node->rect = fz_transform_rect(ctm, fz_unit_rect);
 	if (rect)
 		node->rect = fz_intersect_rect(node->rect, *rect);
-	node->item.image = fz_keep_pixmap(image);
+	node->item.image = fz_keep_pixmap(dev->ctx, image);
 	fz_append_display_node(dev->user, node);
 }
 

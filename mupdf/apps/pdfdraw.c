@@ -555,12 +555,16 @@ int main(int argc, char **argv)
 
 			fz_try(ctx)
 			{
-				xref = pdf_open_xref(ctx, filename, password);
+				xref = pdf_open_xref(ctx, filename);
 			}
 			fz_catch(ctx)
 			{
 				fz_throw(ctx, "cannot open document: %s", filename);
 			}
+
+			if (pdf_needs_password(xref))
+				if (!pdf_authenticate_password(xref, password))
+					fz_throw(ctx, "cannot authenticate password: %s", filename);
 
 			if (showxml)
 				printf("<document name=\"%s\">\n", filename);

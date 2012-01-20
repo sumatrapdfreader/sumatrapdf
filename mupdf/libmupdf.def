@@ -141,6 +141,7 @@ EXPORTS
 	fz_grow_buffer
 	fz_new_store_context
 	fz_free_store_context
+	fz_store_keep
 	fz_debug_store
 	fz_keep_storable
 	fz_drop_storable
@@ -454,7 +455,6 @@ EXPORTS
 	pdf_lookup_name
 	pdf_load_name_tree
 	pdf_load_outline
-	pdf_load_link
 	pdf_load_links
 	pdf_load_annots
 	pdf_free_annot

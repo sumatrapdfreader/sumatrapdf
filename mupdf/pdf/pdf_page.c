@@ -304,12 +304,12 @@ pdf_load_page_contents(pdf_xref *xref, fz_obj *obj)
 pdf_page *
 pdf_load_page(pdf_xref *xref, int number)
 {
+	fz_context *ctx = xref->ctx;
 	pdf_page *page;
 	pdf_annot *annot;
-	fz_obj *pageobj, *pageref;
-	fz_obj *obj;
-	fz_rect mediabox, cropbox;
-	fz_context *ctx = xref->ctx;
+	fz_obj *pageobj, *pageref, *obj;
+	fz_rect mediabox, cropbox, realbox;
+	fz_matrix ctm;
 
 	pdf_load_page_tree(xref);
 	if (number < 0 || number >= xref->page_len)
@@ -352,11 +352,15 @@ pdf_load_page(pdf_xref *xref, int number)
 
 	page->rotate = fz_to_int(fz_dict_gets(pageobj, "Rotate"));
 
+	ctm = fz_concat(fz_rotate(-page->rotate), fz_scale(1, -1));
+	realbox = fz_transform_rect(ctm, page->mediabox);
+	page->ctm = fz_concat(ctm, fz_translate(-realbox.x0, -realbox.y0));
+
 	obj = fz_dict_gets(pageobj, "Annots");
 	if (obj)
 	{
-		pdf_load_links(&page->links, xref, obj);
-		pdf_load_annots(&page->annots, xref, obj);
+		page->links = pdf_load_links(xref, obj, page->ctm);
+		page->annots = pdf_load_annots(xref, obj);
 	}
 
 	page->resources = fz_dict_gets(pageobj, "Resources");

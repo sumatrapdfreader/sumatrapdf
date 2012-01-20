@@ -28,9 +28,9 @@ fz_new_colorspace(fz_context *ctx, char *name, int n)
 }
 
 fz_colorspace *
-fz_keep_colorspace(fz_colorspace *cs)
+fz_keep_colorspace(fz_context *ctx, fz_colorspace *cs)
 {
-	return (fz_colorspace *)fz_keep_storable(&cs->storable);
+	return (fz_colorspace *)fz_keep_storable(ctx, &cs->storable);
 }
 
 void
@@ -507,7 +507,7 @@ fz_convert_pixmap(fz_context *ctx, fz_pixmap *sp, fz_pixmap *dp)
 	assert(ss && ds);
 
 	if (sp->mask)
-		dp->mask = fz_keep_pixmap(sp->mask);
+		dp->mask = fz_keep_pixmap(ctx, sp->mask);
 	dp->interpolate = sp->interpolate;
 
 	if (ss == fz_device_gray)

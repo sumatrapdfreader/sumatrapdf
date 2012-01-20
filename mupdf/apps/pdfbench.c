@@ -89,23 +89,18 @@ double timeinms(mstimer *timer)
 
 #endif
 
-pdf_xref *openxref(fz_context *ctx, char *filename, char *password)
+pdf_xref *openxref(fz_context *ctx, char *filename)
 {
-	pdf_xref *xref = pdf_open_xref(ctx, filename, password);
-
-	if (pdf_needs_password(xref))
-	{
-		int okay = pdf_authenticate_password(xref, password);
-		if (!okay)
-		{
-			pdf_free_xref(xref);
-			logbench("Warning: pdf_setpassword() failed, incorrect password\n");
-			fz_throw(ctx, "invalid password");
-		}
-	}
+	pdf_xref *xref = pdf_open_xref(ctx, filename);
 
 	fz_try(ctx)
 	{
+		if (pdf_needs_password(xref))
+		{
+			logbench("Warning: password protected document\n");
+			fz_throw(ctx, "document requires password");
+		}
+
 		pdf_count_pages(xref);
 	}
 	fz_catch(ctx)
@@ -179,7 +174,7 @@ void benchfile(char *pdffilename, int loadonly, int pageNo)
 	timerstart(&timer);
 	fz_var(xref);
 	fz_try(ctx) {
-		xref = openxref(ctx, pdffilename, "");
+		xref = openxref(ctx, pdffilename);
 	}
 	fz_catch(ctx) {
 		goto Exit;

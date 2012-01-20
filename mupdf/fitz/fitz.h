@@ -125,6 +125,8 @@ struct fz_alloc_context_s
 	void *(*malloc)(void *, unsigned int);
 	void *(*realloc)(void *, void *, unsigned int);
 	void (*free)(void *, void *);
+	void (*lock)(void *);
+	void (*unlock)(void *);
 };
 
 /* Default allocator */
@@ -384,6 +386,20 @@ void fz_free_context(fz_context *ctx);
 
 void fz_new_aa_context(fz_context *ctx);
 void fz_free_aa_context(fz_context *ctx);
+
+static inline void
+fz_lock(fz_context *ctx)
+{
+	if (ctx->alloc->lock)
+		ctx->alloc->lock(ctx->alloc->user);
+}
+
+static inline void
+fz_unlock(fz_context *ctx)
+{
+	if (ctx->alloc->unlock)
+		ctx->alloc->unlock(ctx->alloc->user);
+}
 
 /*
  * Basic runtime and utility functions
@@ -747,9 +763,10 @@ enum {
 
 void fz_new_store_context(fz_context *ctx, unsigned int max);
 void fz_free_store_context(fz_context *ctx);
+fz_store *fz_store_keep(fz_context *ctx);
 void fz_debug_store(fz_context *ctx);
 
-void *fz_keep_storable(fz_storable *);
+void *fz_keep_storable(fz_context *, fz_storable *);
 void fz_drop_storable(fz_context *, fz_storable *);
 
 void fz_store_item(fz_context *ctx, fz_obj *key, void *val, unsigned int itemsize);
@@ -938,7 +955,7 @@ fz_pixmap *fz_new_pixmap_with_data(fz_context *ctx, fz_colorspace *colorspace, i
 fz_pixmap *fz_new_pixmap_with_rect(fz_context *ctx, fz_colorspace *, fz_bbox bbox);
 fz_pixmap *fz_new_pixmap_with_rect_and_data(fz_context *ctx, fz_colorspace *, fz_bbox bbox, unsigned char *samples);
 fz_pixmap *fz_new_pixmap(fz_context *ctx, fz_colorspace *, int w, int h);
-fz_pixmap *fz_keep_pixmap(fz_pixmap *pix);
+fz_pixmap *fz_keep_pixmap(fz_context *ctx, fz_pixmap *pix);
 void fz_drop_pixmap(fz_context *ctx, fz_pixmap *pix);
 void fz_free_pixmap_imp(fz_context *ctx, fz_storable *pix);
 void fz_clear_pixmap(fz_pixmap *pix);
@@ -953,7 +970,7 @@ void fz_invert_pixmap(fz_pixmap *pix);
 void fz_gamma_pixmap(fz_pixmap *pix, float gamma);
 unsigned int fz_pixmap_size(fz_pixmap *pix);
 
-fz_pixmap *fz_scale_pixmap(fz_context *ctx, fz_pixmap *src, float x, float y, float w, float h);
+fz_pixmap *fz_scale_pixmap(fz_context *ctx, fz_pixmap *src, float x, float y, float w, float h, fz_bbox *clip);
 
 void fz_write_pnm(fz_context *ctx, fz_pixmap *pixmap, char *filename);
 void fz_write_pam(fz_context *ctx, fz_pixmap *pixmap, char *filename, int savealpha);
@@ -1026,7 +1043,7 @@ struct fz_colorspace_s
 };
 
 fz_colorspace *fz_new_colorspace(fz_context *ctx, char *name, int n);
-fz_colorspace *fz_keep_colorspace(fz_colorspace *colorspace);
+fz_colorspace *fz_keep_colorspace(fz_context *ctx, fz_colorspace *colorspace);
 void fz_drop_colorspace(fz_context *ctx, fz_colorspace *colorspace);
 void fz_free_colorspace_imp(fz_context *ctx, fz_storable *colorspace);
 
@@ -1267,7 +1284,7 @@ struct fz_shade_s
 	float *mesh; /* [x y 0], [x y r], [x y t] or [x y c1 ... cn] */
 };
 
-fz_shade *fz_keep_shade(fz_shade *shade);
+fz_shade *fz_keep_shade(fz_context *ctx, fz_shade *shade);
 void fz_drop_shade(fz_context *ctx, fz_shade *shade);
 void fz_free_shade_imp(fz_context *ctx, fz_storable *shade);
 void fz_debug_shade(fz_shade *shade);

@@ -36,13 +36,13 @@ fz_free_context(fz_context *ctx)
 	ctx->alloc->free(ctx->alloc->user, ctx);
 }
 
-fz_context *
-fz_new_context(fz_alloc_context *alloc, unsigned int max_store)
+/* Allocate new context structure, and initialise allocator, and sections
+ * that aren't shared between contexts.
+ */
+static fz_context *
+new_context_phase1(fz_alloc_context *alloc)
 {
 	fz_context *ctx;
-
-	if (!alloc)
-		alloc = &fz_alloc_default;
 
 	ctx = alloc->malloc(alloc->user, sizeof(fz_context));
 	if (!ctx)
@@ -69,7 +69,6 @@ fz_new_context(fz_alloc_context *alloc, unsigned int max_store)
 	{
 		fz_new_font_context(ctx);
 		fz_new_aa_context(ctx);
-		fz_new_store_context(ctx, max_store);
 	}
 	fz_catch(ctx)
 	{
@@ -79,14 +78,46 @@ fz_new_context(fz_alloc_context *alloc, unsigned int max_store)
 	return ctx;
 
 cleanup:
-	fprintf(stderr, "cannot create context\n");
+	fprintf(stderr, "cannot create context (phase 1)\n");
 	fz_free_context(ctx);
 	return NULL;
 }
 
 fz_context *
+fz_new_context(fz_alloc_context *alloc, unsigned int max_store)
+{
+	fz_context *ctx;
+
+	if (!alloc)
+		alloc = &fz_alloc_default;
+
+	ctx = new_context_phase1(alloc);
+
+	/* Now initialise sections that are shared */
+	fz_try(ctx)
+	{
+		fz_new_store_context(ctx, max_store);
+	}
+	fz_catch(ctx)
+	{
+		fprintf(stderr, "cannot create context (phase 2)\n");
+		fz_free_context(ctx);
+		return NULL;
+	}
+	return ctx;
+}
+
+fz_context *
 fz_clone_context(fz_context *ctx)
 {
-	/* FIXME: Should be sharing store */
-	return fz_new_context(ctx->alloc, 256<<20);
+	fz_context *new_ctx;
+
+	/* We cannot safely clone the context without having locking/
+	 * unlocking functions. */
+	if (ctx == NULL || ctx->alloc == NULL || ctx->alloc->lock == NULL || ctx->alloc->unlock == NULL)
+		return NULL;
+
+	new_ctx = new_context_phase1(ctx->alloc);
+	new_ctx->store = fz_store_keep(ctx);
+	return ctx;
 }

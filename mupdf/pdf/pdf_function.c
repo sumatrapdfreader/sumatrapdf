@@ -1295,9 +1295,9 @@ eval_stitching_func(fz_context *ctx, pdf_function *func, float in, float *out)
  */
 
 pdf_function *
-pdf_keep_function(pdf_function *func)
+pdf_keep_function(fz_context *ctx, pdf_function *func)
 {
-	return (pdf_function *)fz_keep_storable(&func->storable);
+	return (pdf_function *)fz_keep_storable(ctx, &func->storable);
 }
 
 void

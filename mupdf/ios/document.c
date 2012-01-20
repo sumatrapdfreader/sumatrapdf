@@ -19,7 +19,7 @@ open_document(fz_context *ctx, char *filename)
 	{
 		if (strstr(filename, ".pdf") || strstr(filename, ".PDF"))
 		{
-			doc->pdf = pdf_open_xref(ctx, filename, NULL);
+			doc->pdf = pdf_open_xref(ctx, filename);
 			pdf_load_page_tree(doc->pdf);
 		}
 		else if (strstr(filename, ".xps") || strstr(filename, ".XPS"))

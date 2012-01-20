@@ -20,6 +20,8 @@ struct refkey
 
 struct fz_store_s
 {
+	int refs;
+
 	/* Every item in the store is kept in a doubly linked list, ordered
 	 * by usage (so LRU entries are at the end). */
 	fz_item *head;
@@ -48,6 +50,7 @@ fz_new_store_context(fz_context *ctx, unsigned int max)
 		fz_free(ctx, store);
 		fz_rethrow(ctx);
 	}
+	store->refs = 1;
 	store->head = NULL;
 	store->tail = NULL;
 	store->size = 0;
@@ -56,14 +59,14 @@ fz_new_store_context(fz_context *ctx, unsigned int max)
 }
 
 void *
-fz_keep_storable(fz_storable *s)
+fz_keep_storable(fz_context *ctx, fz_storable *s)
 {
 	if (s == NULL)
 		return NULL;
-	/* LOCK */
+	fz_lock(ctx);
 	if (s->refs > 0)
 		s->refs++;
-	/* UNLOCK */
+	fz_unlock(ctx);
 	return s;
 }
 
@@ -72,7 +75,7 @@ fz_drop_storable(fz_context *ctx, fz_storable *s)
 {
 	if (s == NULL)
 		return;
-	/* LOCK */
+	fz_lock(ctx);
 	if (s->refs < 0)
 	{
 		/* It's a static object. Dropping does nothing. */
@@ -86,7 +89,7 @@ fz_drop_storable(fz_context *ctx, fz_storable *s)
 		 * itself without any operations on the fz_store. */
 		s->free(ctx, s);
 	}
-	/* UNLOCK */
+	fz_unlock(ctx);
 }
 
 static void
@@ -189,12 +192,12 @@ fz_store_item(fz_context *ctx, fz_obj *key, void *val_, unsigned int itemsize)
 		return;
 	}
 
-	/* LOCK */
+	fz_lock(ctx);
 	size = store->size + itemsize;
 	if (store->max != FZ_STORE_UNLIMITED && size > store->max && ensure_space(ctx, size - store->max))
 	{
 		fz_free(ctx, item);
-		/* UNLOCK */
+		fz_unlock(ctx);
 		return;
 	}
 	store->size += itemsize;
@@ -218,7 +221,7 @@ fz_store_item(fz_context *ctx, fz_obj *key, void *val_, unsigned int itemsize)
 		fz_catch(ctx)
 		{
 			fz_free(ctx, item);
-			/* UNLOCK */
+			fz_unlock(ctx);
 			return;
 		}
 	}
@@ -233,7 +236,7 @@ fz_store_item(fz_context *ctx, fz_obj *key, void *val_, unsigned int itemsize)
 		store->tail = item;
 	store->head = item;
 	item->prev = NULL;
-	/* UNLOCK */
+	fz_unlock(ctx);
 }
 
 void *
@@ -249,7 +252,7 @@ fz_find_item(fz_context *ctx, fz_store_free_fn *free, fz_obj *key)
 	if (!key)
 		return NULL;
 
-	/* LOCK */
+	fz_lock(ctx);
 	if (fz_is_indirect(key))
 	{
 		/* We can find objects keyed on indirected objects quickly */
@@ -290,10 +293,10 @@ fz_find_item(fz_context *ctx, fz_store_free_fn *free, fz_obj *key)
 		/* And bump the refcount before returning */
 		if (item->val->refs > 0)
 			item->val->refs++;
-		/* UNLOCK */
+		fz_unlock(ctx);
 		return (void *)item->val;
 	}
-	/* UNLOCK */
+	fz_unlock(ctx);
 
 	return NULL;
 }
@@ -305,7 +308,7 @@ fz_remove_item(fz_context *ctx, fz_store_free_fn *free, fz_obj *key)
 	fz_item *item;
 	fz_store *store = ctx->store;
 
-	/* LOCK */
+	fz_lock(ctx);
 	if (fz_is_indirect(key))
 	{
 		/* We can find objects keyed on indirect objects quickly */
@@ -338,7 +341,7 @@ fz_remove_item(fz_context *ctx, fz_store_free_fn *free, fz_obj *key)
 		fz_drop_obj(item->key);
 		fz_free(ctx, item);
 	}
-	/* UNLOCK */
+	fz_unlock(ctx);
 }
 
 void
@@ -350,21 +353,39 @@ fz_empty_store(fz_context *ctx)
 	if (store == NULL)
 		return;
 
-	/* LOCK */
+	fz_lock(ctx);
 	/* Run through all the items in the store */
 	for (item = store->head; item; item = next)
 	{
 		next = item->next;
 		evict(ctx, item);
 	}
-	/* UNLOCK */
+	fz_unlock(ctx);
+}
+
+fz_store *
+fz_store_keep(fz_context *ctx)
+{
+	if (ctx == NULL || ctx->store == NULL)
+		return NULL;
+	fz_lock(ctx);
+	ctx->store->refs++;
+	fz_unlock(ctx);
+	return ctx->store;
 }
 
 void
 fz_free_store_context(fz_context *ctx)
 {
+	int refs;
 	if (ctx == NULL || ctx->store == NULL)
 		return;
+	fz_lock(ctx);
+	refs = --ctx->store->refs;
+	fz_unlock(ctx);
+	if (refs != 0)
+		return;
+
 	fz_empty_store(ctx);
 	fz_free_hash(ctx->store->hash);
 	fz_free(ctx, ctx->store);
@@ -379,7 +400,7 @@ fz_debug_store(fz_context *ctx)
 
 	printf("-- resource store contents --\n");
 
-	/* LOCK */
+	fz_lock(ctx);
 	for (item = store->head; item; item = item->next)
 	{
 		printf("store[*][refs=%d][size=%d] ", item->val->refs, item->size);
@@ -390,7 +411,7 @@ fz_debug_store(fz_context *ctx)
 			fz_debug_obj(item->key);
 		printf(" = %p\n", item->val);
 	}
-	/* UNLOCK */
+	fz_unlock(ctx);
 }
 
 static int

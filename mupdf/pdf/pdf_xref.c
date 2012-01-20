@@ -639,7 +639,7 @@ pdf_free_ocg(fz_context *ctx, pdf_ocg_descriptor *desc)
  */
 
 pdf_xref *
-pdf_open_xref_with_stream(fz_stream *file, char *password)
+pdf_open_xref_with_stream(fz_stream *file)
 {
 	pdf_xref *xref;
 	fz_obj *encrypt, *id;
@@ -692,18 +692,8 @@ pdf_open_xref_with_stream(fz_stream *file, char *password)
 		if (fz_is_dict(encrypt))
 			xref->crypt = pdf_new_crypt(ctx, encrypt, id);
 
-		if (pdf_needs_password(xref))
-		{
-			/* Only care if we have a password */
-			if (password)
-			{
-				int okay = pdf_authenticate_password(xref, password);
-				if (!okay)
-				{
-					fz_throw(ctx, "invalid password");
-				}
-			}
-		}
+		/* Allow lazy clients to read encrypted files with a blank password */
+		pdf_authenticate_password(xref, "");
 
 		if (repaired)
 		{
@@ -1086,7 +1076,7 @@ pdf_update_object(pdf_xref *xref, int num, int gen, fz_obj *newobj)
  */
 
 pdf_xref *
-pdf_open_xref(fz_context *ctx, const char *filename, char *password)
+pdf_open_xref(fz_context *ctx, const char *filename)
 {
 	fz_stream *file = NULL;
 	pdf_xref *xref;
@@ -1095,7 +1085,7 @@ pdf_open_xref(fz_context *ctx, const char *filename, char *password)
 	fz_try(ctx)
 	{
 		file = fz_open_file(ctx, filename);
-		xref = pdf_open_xref_with_stream(file, password);
+		xref = pdf_open_xref_with_stream(file);
 	}
 	fz_catch(ctx)
 	{

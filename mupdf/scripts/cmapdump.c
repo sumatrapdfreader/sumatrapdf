@@ -178,7 +178,7 @@ void fz_free_aa_context(fz_context *ctx)
 {
 }
 
-void *fz_keep_storable(fz_storable *s)
+void *fz_keep_storable(fz_context *ctx, fz_storable *s)
 {
 	return s;
 }
@@ -193,6 +193,11 @@ void fz_new_store_context(fz_context *ctx, unsigned int max)
 
 void fz_free_store_context(fz_context *ctx)
 {
+}
+
+fz_store *fz_store_keep(fz_context *ctx)
+{
+	return NULL;
 }
 
 int fz_store_scavenge(fz_context *ctx, unsigned int size, int *phase)

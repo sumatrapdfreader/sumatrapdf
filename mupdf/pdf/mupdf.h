@@ -108,8 +108,8 @@ fz_stream *pdf_open_raw_stream(pdf_xref *, int num, int gen);
 fz_stream *pdf_open_stream(pdf_xref *, int num, int gen);
 fz_stream *pdf_open_stream_at(pdf_xref *xref, int num, int gen, fz_obj *dict, int stm_ofs);
 
-pdf_xref *pdf_open_xref_with_stream(fz_stream *file, char *password);
-pdf_xref *pdf_open_xref(fz_context *ctx, const char *filename, char *password);
+pdf_xref *pdf_open_xref_with_stream(fz_stream *file);
+pdf_xref *pdf_open_xref(fz_context *ctx, const char *filename);
 void pdf_free_xref(pdf_xref *);
 
 /* private */
@@ -161,7 +161,7 @@ typedef struct pdf_function_s pdf_function;
 
 pdf_function *pdf_load_function(pdf_xref *xref, fz_obj *ref);
 void pdf_eval_function(fz_context *ctx, pdf_function *func, float *in, int inlen, float *out, int outlen);
-pdf_function *pdf_keep_function(pdf_function *func);
+pdf_function *pdf_keep_function(fz_context *ctx, pdf_function *func);
 void pdf_drop_function(fz_context *ctx, pdf_function *func);
 unsigned int pdf_function_size(pdf_function *func);
 
@@ -193,7 +193,7 @@ struct pdf_pattern_s
 };
 
 pdf_pattern *pdf_load_pattern(pdf_xref *xref, fz_obj *obj);
-pdf_pattern *pdf_keep_pattern(pdf_pattern *pat);
+pdf_pattern *pdf_keep_pattern(fz_context *ctx, pdf_pattern *pat);
 void pdf_drop_pattern(fz_context *ctx, pdf_pattern *pat);
 
 /*
@@ -217,7 +217,7 @@ struct pdf_xobject_s
 };
 
 pdf_xobject *pdf_load_xobject(pdf_xref *xref, fz_obj *obj);
-pdf_xobject *pdf_keep_xobject(pdf_xobject *xobj);
+pdf_xobject *pdf_keep_xobject(fz_context *ctx, pdf_xobject *xobj);
 void pdf_drop_xobject(fz_context *ctx, pdf_xobject *xobj);
 /* SumatraPDF: allow to synthesize XObjects (cf. pdf_create_annot) */
 pdf_xobject *pdf_create_xobject(fz_context *ctx, fz_obj *dict);
@@ -267,7 +267,7 @@ struct pdf_cmap_s
 };
 
 pdf_cmap *pdf_new_cmap(fz_context *ctx);
-pdf_cmap *pdf_keep_cmap(pdf_cmap *cmap);
+pdf_cmap *pdf_keep_cmap(fz_context *ctx, pdf_cmap *cmap);
 void pdf_drop_cmap(fz_context *ctx, pdf_cmap *cmap);
 void pdf_free_cmap_imp(fz_context *ctx, fz_storable *cmap);
 unsigned int pdf_cmap_size(pdf_cmap *cmap);
@@ -412,7 +412,7 @@ pdf_font_desc *pdf_load_type3_font(pdf_xref *xref, fz_obj *rdb, fz_obj *obj);
 pdf_font_desc *pdf_load_font(pdf_xref *xref, fz_obj *rdb, fz_obj *obj);
 
 pdf_font_desc *pdf_new_font_desc(fz_context *ctx);
-pdf_font_desc *pdf_keep_font(pdf_font_desc *fontdesc);
+pdf_font_desc *pdf_keep_font(fz_context *ctx, pdf_font_desc *fontdesc);
 void pdf_drop_font(fz_context *ctx, pdf_font_desc *font);
 
 void pdf_debug_font(pdf_font_desc *fontdesc);
@@ -446,10 +446,9 @@ fz_obj *pdf_load_name_tree(pdf_xref *xref, char *which);
 
 fz_outline *pdf_load_outline(pdf_xref *xref);
 
-fz_link *pdf_load_link(pdf_xref *xref, fz_obj *dict);
-void pdf_load_links(fz_link **, pdf_xref *, fz_obj *annots);
+fz_link *pdf_load_links(pdf_xref *, fz_obj *annots, fz_matrix page_ctm);
 
-void pdf_load_annots(pdf_annot **, pdf_xref *, fz_obj *annots);
+pdf_annot *pdf_load_annots(pdf_xref *, fz_obj *annots);
 void pdf_free_annot(fz_context *ctx, pdf_annot *link);
 
 /*
@@ -460,6 +459,7 @@ typedef struct pdf_page_s pdf_page;
 
 struct pdf_page_s
 {
+	fz_matrix ctm; /* calculated from mediabox and rotate */
 	fz_rect mediabox;
 	int rotate;
 	int transparency;

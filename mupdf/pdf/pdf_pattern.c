@@ -2,9 +2,9 @@
 #include "mupdf.h"
 
 pdf_pattern *
-pdf_keep_pattern(pdf_pattern *pat)
+pdf_keep_pattern(fz_context *ctx, pdf_pattern *pat)
 {
-	return (pdf_pattern *)fz_keep_storable(&pat->storable);
+	return (pdf_pattern *)fz_keep_storable(ctx, &pat->storable);
 }
 
 void

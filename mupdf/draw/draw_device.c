@@ -821,7 +821,7 @@ fz_draw_fill_shade(fz_device *devp, fz_shade *shade, fz_matrix ctm, float alpha)
 }
 
 static fz_pixmap *
-fz_transform_pixmap(fz_context *ctx, fz_pixmap *image, fz_matrix *ctm, int x, int y, int dx, int dy, int gridfit)
+fz_transform_pixmap(fz_context *ctx, fz_pixmap *image, fz_matrix *ctm, int x, int y, int dx, int dy, int gridfit, fz_bbox *clip)
 {
 	fz_pixmap *scaled;
 
@@ -831,7 +831,7 @@ fz_transform_pixmap(fz_context *ctx, fz_pixmap *image, fz_matrix *ctm, int x, in
 		fz_matrix m = *ctm;
 		if (gridfit)
 			fz_gridfit_matrix(&m);
-		scaled = fz_scale_pixmap(ctx, image, m.e, m.f, m.a, m.d);
+		scaled = fz_scale_pixmap(ctx, image, m.e, m.f, m.a, m.d, clip);
 		if (!scaled)
 			return NULL;
 		ctm->a = scaled->w;
@@ -845,9 +845,17 @@ fz_transform_pixmap(fz_context *ctx, fz_pixmap *image, fz_matrix *ctm, int x, in
 	{
 		/* Other orthogonal flip/rotation cases */
 		fz_matrix m = *ctm;
+		fz_bbox rclip;
 		if (gridfit)
 			fz_gridfit_matrix(&m);
-		scaled = fz_scale_pixmap(ctx, image, m.f, m.e, m.b, m.c);
+		if (clip)
+		{
+			rclip.x0 = clip->y0;
+			rclip.y0 = clip->x0;
+			rclip.x1 = clip->y1;
+			rclip.y1 = clip->x1;
+		}
+		scaled = fz_scale_pixmap(ctx, image, m.f, m.e, m.b, m.c, (clip ? &rclip : 0));
 		if (!scaled)
 			return NULL;
 		ctm->b = scaled->w;
@@ -860,7 +868,7 @@ fz_transform_pixmap(fz_context *ctx, fz_pixmap *image, fz_matrix *ctm, int x, in
 	/* Downscale, non rectilinear case */
 	if (dx > 0 && dy > 0)
 	{
-		scaled = fz_scale_pixmap(ctx, image, 0, 0, (float)dx, (float)dy);
+		scaled = fz_scale_pixmap(ctx, image, 0, 0, (float)dx, (float)dy, NULL);
 		return scaled;
 	}
 
@@ -878,6 +886,9 @@ fz_draw_fill_image(fz_device *devp, fz_pixmap *image, fz_matrix ctm, float alpha
 	fz_context *ctx = dev->ctx;
 	fz_draw_state *state = &dev->stack[dev->top];
 	fz_colorspace *model = state->dest->colorspace;
+	fz_bbox clip = fz_bound_pixmap(state->dest);
+
+	clip = fz_intersect_bbox(clip, state->scissor);
 
 	fz_var(scaled);
 
@@ -915,14 +926,14 @@ fz_draw_fill_image(fz_device *devp, fz_pixmap *image, fz_matrix ctm, float alpha
 		if (dx < image->w && dy < image->h)
 		{
 			int gridfit = alpha == 1.0f && !(dev->flags & FZ_DRAWDEV_FLAGS_TYPE3);
-			scaled = fz_transform_pixmap(ctx, image, &ctm, state->dest->x, state->dest->y, dx, dy, gridfit);
+			scaled = fz_transform_pixmap(ctx, image, &ctm, state->dest->x, state->dest->y, dx, dy, gridfit, &clip);
 			if (!scaled)
 			{
 				if (dx < 1)
 					dx = 1;
 				if (dy < 1)
 					dy = 1;
-				scaled = fz_scale_pixmap(ctx, image, image->x, image->y, dx, dy);
+				scaled = fz_scale_pixmap(ctx, image, image->x, image->y, dx, dy, NULL);
 			}
 			if (scaled)
 				image = scaled;
@@ -973,6 +984,9 @@ fz_draw_fill_image_mask(fz_device *devp, fz_pixmap *image, fz_matrix ctm,
 	int i;
 	fz_draw_state *state = &dev->stack[dev->top];
 	fz_colorspace *model = state->dest->colorspace;
+	fz_bbox clip = fz_bound_pixmap(state->dest);
+
+	clip = fz_intersect_bbox(clip, state->scissor);
 
 	if (image->w == 0 || image->h == 0)
 		return;
@@ -985,14 +999,14 @@ fz_draw_fill_image_mask(fz_device *devp, fz_pixmap *image, fz_matrix ctm,
 	if (dx < image->w && dy < image->h)
 	{
 		int gridfit = alpha == 1.0f && !(dev->flags & FZ_DRAWDEV_FLAGS_TYPE3);
-		scaled = fz_transform_pixmap(dev->ctx, image, &ctm, state->dest->x, state->dest->y, dx, dy, gridfit);
+		scaled = fz_transform_pixmap(dev->ctx, image, &ctm, state->dest->x, state->dest->y, dx, dy, gridfit, &clip);
 		if (!scaled)
 		{
 			if (dx < 1)
 				dx = 1;
 			if (dy < 1)
 				dy = 1;
-			scaled = fz_scale_pixmap(dev->ctx, image, image->x, image->y, dx, dy);
+			scaled = fz_scale_pixmap(dev->ctx, image, image->x, image->y, dx, dy, NULL);
 		}
 		if (scaled)
 			image = scaled;
@@ -1025,6 +1039,9 @@ fz_draw_clip_image_mask(fz_device *devp, fz_pixmap *image, fz_rect *rect, fz_mat
 	int dx, dy;
 	fz_draw_state *state = push_stack(dev);
 	fz_colorspace *model = state->dest->colorspace;
+	fz_bbox clip = fz_bound_pixmap(state->dest);
+
+	clip = fz_intersect_bbox(clip, state->scissor);
 
 	fz_var(mask);
 	fz_var(dest);
@@ -1066,14 +1083,14 @@ fz_draw_clip_image_mask(fz_device *devp, fz_pixmap *image, fz_rect *rect, fz_mat
 		if (dx < image->w && dy < image->h)
 		{
 			int gridfit = !(dev->flags & FZ_DRAWDEV_FLAGS_TYPE3);
-			scaled = fz_transform_pixmap(dev->ctx, image, &ctm, state->dest->x, state->dest->y, dx, dy, gridfit);
+			scaled = fz_transform_pixmap(dev->ctx, image, &ctm, state->dest->x, state->dest->y, dx, dy, gridfit, &clip);
 			if (!scaled)
 			{
 				if (dx < 1)
 					dx = 1;
 				if (dy < 1)
 					dy = 1;
-				scaled = fz_scale_pixmap(dev->ctx, image, image->x, image->y, dx, dy);
+				scaled = fz_scale_pixmap(dev->ctx, image, image->x, image->y, dx, dy, NULL);
 			}
 			if (scaled)
 				image = scaled;

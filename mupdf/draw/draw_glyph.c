@@ -116,7 +116,7 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix ctm, fz_color
 
 	val = fz_hash_find(cache->hash, &key);
 	if (val)
-		return fz_keep_pixmap(val);
+		return fz_keep_pixmap(ctx, val);
 
 	ctm.e = floorf(ctm.e) + key.e / 256.0f;
 	ctm.f = floorf(ctm.f) + key.f / 256.0f;
@@ -145,7 +145,7 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix ctm, fz_color
 			{
 				fz_hash_insert(cache->hash, &key, val);
 				fz_keep_font(key.font);
-				val = fz_keep_pixmap(val);
+				val = fz_keep_pixmap(ctx, val);
 			}
 			fz_catch(ctx)
 			{

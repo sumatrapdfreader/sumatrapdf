@@ -258,8 +258,7 @@ USHORT RenderCache::GetTileRes(DisplayModel *dm, int pageNo)
 
     // use larger tiles when fitting page or width or when a page is smaller
     // than the visible canvas width/height or when rendering pages
-    // containing a single image (MuPDF isn't that much faster for rendering
-    // individual tiles than for rendering the whole image in a single pass)
+    // containing a single image
     if (dm->ZoomVirtual() == ZOOM_FIT_PAGE || dm->ZoomVirtual() == ZOOM_FIT_WIDTH ||
         pixelbox.dx <= dm->viewPort.dx || pixelbox.dy < dm->viewPort.dy ||
         dm->engine->IsImagePage(pageNo)) {

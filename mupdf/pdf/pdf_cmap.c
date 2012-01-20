@@ -68,9 +68,9 @@ pdf_new_cmap(fz_context *ctx)
 
 /* Could be a macro for speed */
 pdf_cmap *
-pdf_keep_cmap(pdf_cmap *cmap)
+pdf_keep_cmap(fz_context *ctx, pdf_cmap *cmap)
 {
-	return (pdf_cmap *)fz_keep_storable(&cmap->storable);
+	return (pdf_cmap *)fz_keep_storable(ctx, &cmap->storable);
 }
 
 /* Could be a macro for speed */
@@ -87,7 +87,7 @@ pdf_set_usecmap(fz_context *ctx, pdf_cmap *cmap, pdf_cmap *usecmap)
 
 	if (cmap->usecmap)
 		pdf_drop_cmap(ctx, cmap->usecmap);
-	cmap->usecmap = pdf_keep_cmap(usecmap);
+	cmap->usecmap = pdf_keep_cmap(ctx, usecmap);
 
 	if (cmap->codespace_len == 0)
 	{

@@ -579,6 +579,8 @@ pdf_authenticate_password(pdf_xref *xref, char *password)
 {
 	if (xref->crypt)
 	{
+		if (!password)
+			password = "";
 		if (pdf_authenticate_user_password(xref->crypt, (unsigned char *)password, strlen(password)))
 			return 1;
 		if (pdf_authenticate_owner_password(xref->crypt, (unsigned char *)password, strlen(password)))

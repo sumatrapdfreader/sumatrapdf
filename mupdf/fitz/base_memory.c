@@ -11,13 +11,13 @@ do_scavenging_malloc(fz_context *ctx, unsigned int size)
 	void *p;
 	int phase = 0;
 
-	/* LOCK */
+	fz_lock(ctx);
 	do {
 		p = ctx->alloc->malloc(ctx->alloc->user, size);
 		if (p != NULL)
 			return p;
 	} while (fz_store_scavenge(ctx, size, &phase));
-	/* UNLOCK */
+	fz_unlock(ctx);
 
 	return NULL;
 }
@@ -28,13 +28,13 @@ do_scavenging_realloc(fz_context *ctx, void *p, unsigned int size)
 	void *q;
 	int phase = 0;
 
-	/* LOCK */
+	fz_lock(ctx);
 	do {
 		q = ctx->alloc->realloc(ctx->alloc->user, p, size);
 		if (q != NULL)
 			return q;
 	} while (fz_store_scavenge(ctx, size, &phase));
-	/* UNLOCK */
+	fz_unlock(ctx);
 
 	return NULL;
 }
@@ -176,9 +176,9 @@ fz_resize_array_no_throw(fz_context *ctx, void *p, unsigned int count, unsigned 
 void
 fz_free(fz_context *ctx, void *p)
 {
-	/* LOCK */
+	fz_lock(ctx);
 	ctx->alloc->free(ctx->alloc->user, p);
-	/* UNLOCK */
+	fz_unlock(ctx);
 }
 
 char *

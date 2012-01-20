@@ -2,9 +2,9 @@
 #include "mupdf.h"
 
 pdf_xobject *
-pdf_keep_xobject(pdf_xobject *xobj)
+pdf_keep_xobject(fz_context *ctx, pdf_xobject *xobj)
 {
-	return (pdf_xobject *)fz_keep_storable(&xobj->storable);
+	return (pdf_xobject *)fz_keep_storable(ctx, &xobj->storable);
 }
 
 void

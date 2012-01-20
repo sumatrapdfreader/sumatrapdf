@@ -1,9 +1,9 @@
 #include "fitz.h"
 
 fz_pixmap *
-fz_keep_pixmap(fz_pixmap *pix)
+fz_keep_pixmap(fz_context *ctx, fz_pixmap *pix)
 {
-	return (fz_pixmap *)fz_keep_storable(&pix->storable);
+	return (fz_pixmap *)fz_keep_storable(ctx, &pix->storable);
 }
 
 void
@@ -47,7 +47,7 @@ fz_new_pixmap_with_data(fz_context *ctx, fz_colorspace *colorspace, int w, int h
 
 	if (colorspace)
 	{
-		pix->colorspace = fz_keep_colorspace(colorspace);
+		pix->colorspace = fz_keep_colorspace(ctx, colorspace);
 		pix->n = 1 + colorspace->n;
 	}
 

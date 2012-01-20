@@ -885,14 +885,14 @@ pdf_init_gstate(pdf_gstate *gs, fz_matrix ctm)
 	memset(gs->stroke_state.dash_list, 0, sizeof(gs->stroke_state.dash_list));
 
 	gs->stroke.kind = PDF_MAT_COLOR;
-	gs->stroke.colorspace = fz_keep_colorspace(fz_device_gray);
+	gs->stroke.colorspace = fz_device_gray; /* No fz_keep_colorspace as static */
 	gs->stroke.v[0] = 0;
 	gs->stroke.pattern = NULL;
 	gs->stroke.shade = NULL;
 	gs->stroke.alpha = 1;
 
 	gs->fill.kind = PDF_MAT_COLOR;
-	gs->fill.colorspace = fz_keep_colorspace(fz_device_gray);
+	gs->fill.colorspace = fz_device_gray; /* No fz_keep_colorspace as static */
 	gs->fill.v[0] = 0;
 	gs->fill.pattern = NULL;
 	gs->fill.shade = NULL;
@@ -914,14 +914,14 @@ pdf_init_gstate(pdf_gstate *gs, fz_matrix ctm)
 }
 
 static pdf_material *
-pdf_keep_material(pdf_material *mat)
+pdf_keep_material(fz_context *ctx, pdf_material *mat)
 {
 	if (mat->colorspace)
-		fz_keep_colorspace(mat->colorspace);
+		fz_keep_colorspace(ctx, mat->colorspace);
 	if (mat->pattern)
-		pdf_keep_pattern(mat->pattern);
+		pdf_keep_pattern(ctx, mat->pattern);
 	if (mat->shade)
-		fz_keep_shade(mat->shade);
+		fz_keep_shade(ctx, mat->shade);
 	return mat;
 }
 
@@ -938,19 +938,19 @@ pdf_drop_material(fz_context *ctx, pdf_material *mat)
 }
 
 static void
-copy_state(pdf_gstate *gs, pdf_gstate *old)
+copy_state(fz_context *ctx, pdf_gstate *gs, pdf_gstate *old)
 {
 	gs->stroke = old->stroke;
 	gs->fill = old->fill;
 	gs->font = old->font;
 	gs->softmask = old->softmask;
 
-	pdf_keep_material(&gs->stroke);
-	pdf_keep_material(&gs->fill);
+	pdf_keep_material(ctx, &gs->stroke);
+	pdf_keep_material(ctx, &gs->fill);
 	if (gs->font)
-		pdf_keep_font(gs->font);
+		pdf_keep_font(ctx, gs->font);
 	if (gs->softmask)
-		pdf_keep_xobject(gs->softmask);
+		pdf_keep_xobject(ctx, gs->softmask);
 }
 
 
@@ -993,7 +993,7 @@ pdf_new_csi(pdf_xref *xref, fz_device *dev, fz_matrix ctm, char *event, fz_cooki
 		csi->top_ctm = ctm;
 		pdf_init_gstate(&csi->gstate[0], ctm);
 		if (gstate)
-			copy_state(&csi->gstate[0], gstate);
+			copy_state(ctx, &csi->gstate[0], gstate);
 		csi->gtop = 0;
 
 		csi->cookie = cookie;
@@ -1041,12 +1041,12 @@ pdf_gsave(pdf_csi *csi)
 
 	csi->gtop++;
 	gs = &csi->gstate[csi->gtop];
-	pdf_keep_material(&gs->stroke);
-	pdf_keep_material(&gs->fill);
+	pdf_keep_material(ctx, &gs->stroke);
+	pdf_keep_material(ctx, &gs->fill);
 	if (gs->font)
-		pdf_keep_font(gs->font);
+		pdf_keep_font(ctx, gs->font);
 	if (gs->softmask)
-		pdf_keep_xobject(gs->softmask);
+		pdf_keep_xobject(ctx, gs->softmask);
 }
 
 static void
@@ -1132,7 +1132,7 @@ pdf_set_colorspace(pdf_csi *csi, int what, fz_colorspace *colorspace)
 	fz_drop_colorspace(ctx, mat->colorspace);
 
 	mat->kind = PDF_MAT_COLOR;
-	mat->colorspace = fz_keep_colorspace(colorspace);
+	mat->colorspace = fz_keep_colorspace(ctx, colorspace);
 
 	mat->v[0] = 0;
 	mat->v[1] = 0;
@@ -1185,7 +1185,7 @@ pdf_set_shade(pdf_csi *csi, int what, fz_shade *shade)
 		fz_drop_shade(ctx, mat->shade);
 
 	mat->kind = PDF_MAT_SHADE;
-	mat->shade = fz_keep_shade(shade);
+	mat->shade = fz_keep_shade(ctx, shade);
 }
 
 static void
@@ -1204,7 +1204,7 @@ pdf_set_pattern(pdf_csi *csi, int what, pdf_pattern *pat, float *v)
 
 	mat->kind = PDF_MAT_PATTERN;
 	if (pat)
-		mat->pattern = pdf_keep_pattern(pat);
+		mat->pattern = pdf_keep_pattern(ctx, pat);
 	else
 		mat->pattern = NULL;
 
@@ -1252,13 +1252,13 @@ pdf_show_pattern(pdf_csi *csi, pdf_pattern *pat, fz_rect area, int what)
 		if (what == PDF_FILL)
 		{
 			pdf_drop_material(ctx, &gstate->stroke);
-			pdf_keep_material(&gstate->fill);
+			pdf_keep_material(ctx, &gstate->fill);
 			gstate->stroke = gstate->fill;
 		}
 		if (what == PDF_STROKE)
 		{
 			pdf_drop_material(ctx, &gstate->fill);
-			pdf_keep_material(&gstate->stroke);
+			pdf_keep_material(ctx, &gstate->stroke);
 			gstate->fill = gstate->stroke;
 		}
 	}
@@ -1713,11 +1713,11 @@ static void pdf_run_cs_imp(pdf_csi *csi, fz_obj *rdb, int what)
 	else
 	{
 		if (!strcmp(csi->name, "DeviceGray"))
-			colorspace = fz_keep_colorspace(fz_device_gray);
+			colorspace = fz_device_gray; /* No fz_keep_colorspace as static */
 		else if (!strcmp(csi->name, "DeviceRGB"))
-			colorspace = fz_keep_colorspace(fz_device_rgb);
+			colorspace = fz_device_rgb; /* No fz_keep_colorspace as static */
 		else if (!strcmp(csi->name, "DeviceCMYK"))
-			colorspace = fz_keep_colorspace(fz_device_cmyk);
+			colorspace = fz_device_cmyk; /* No fz_keep_colorspace as static */
 		else
 		{
 			dict = fz_dict_gets(rdb, "ColorSpace");
@@ -2705,11 +2705,7 @@ pdf_run_page_with_usage(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matri
 	pdf_annot *annot;
 	int flags;
 
-	/* Adjust CTM for rotation */
-	fz_matrix page_ctm = fz_concat(fz_rotate(-page->rotate), fz_scale(1, -1));
-	fz_rect mediabox = fz_transform_rect(page_ctm, page->mediabox);
-	page_ctm = fz_concat(page_ctm, fz_translate(-mediabox.x0, -mediabox.y0));
-	ctm = fz_concat(page_ctm, ctm);
+	ctm = fz_concat(page->ctm, ctm);
 
 	if (page->transparency)
 		fz_begin_group(dev, fz_transform_rect(ctm, page->mediabox), 1, 0, 0, 1);

@@ -189,7 +189,10 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	xref = pdf_open_xref(ctx, infile, password);
+	xref = pdf_open_xref(ctx, infile);
+	if (pdf_needs_password(xref))
+		if (!pdf_authenticate_password(xref, password))
+			fz_throw(ctx, "cannot authenticate password: %s\n", infile);
 
 	if (fz_optind == argc)
 	{
