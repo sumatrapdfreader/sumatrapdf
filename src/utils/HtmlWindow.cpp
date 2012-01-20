@@ -1307,7 +1307,7 @@ HBITMAP HtmlWindow::TakeScreenshot(RectI area, SizeI finalSize)
     Bitmap imageRes(finalSize.dx, finalSize.dy, PixelFormat24bppRGB);
     Graphics g2(&imageRes);
     g2.SetInterpolationMode(InterpolationModeHighQualityBicubic);
-    g2.DrawImage(&image, Gdiplus::Rect(0, 0, finalSize.dx, finalSize.dy),
+    g2.DrawImage(&image, Rect(0, 0, finalSize.dx, finalSize.dy),
                  area.x, area.y, area.dx, area.dy, UnitPixel);
 
     HBITMAP hbmp;

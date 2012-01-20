@@ -3433,19 +3433,11 @@ void DrawCloseButton(DRAWITEMSTRUCT *dis)
     c.SetFromCOLORREF(onHover ? COL_CLOSE_X_HOVER : COL_CLOSE_X);
     Pen p(c, 2);
     if (onHover) {
-        Gdiplus::Point p1(4,      4);
-        Gdiplus::Point p2(r.dx-6, r.dy-6);
-        Gdiplus::Point p3(r.dx-6, 4);
-        Gdiplus::Point p4(4,      r.dy-6);
-        g.DrawLine(&p, p1, p2);
-        g.DrawLine(&p, p3, p4);
+        g.DrawLine(&p, Point(4,      4), Point(r.dx-6, r.dy-6));
+        g.DrawLine(&p, Point(r.dx-6, 4), Point(4,      r.dy-6));
     } else {
-        Gdiplus::Point p1(4,      5);
-        Gdiplus::Point p2(r.dx-6, r.dy-5);
-        Gdiplus::Point p3(r.dx-6, 5);
-        Gdiplus::Point p4(4,      r.dy-5);
-        g.DrawLine(&p, p1, p2);
-        g.DrawLine(&p, p3, p4);
+        g.DrawLine(&p, Point(4,      5), Point(r.dx-6, r.dy-5));
+        g.DrawLine(&p, Point(r.dx-6, 5), Point(4,      r.dy-5));
     }
 }
 

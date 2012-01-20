@@ -300,7 +300,7 @@ bool ImagesEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom,
     g.SetPageUnit(UnitPixel);
 
     Color white(0xFF, 0xFF, 0xFF);
-    Gdiplus::Rect screenR(screenRect.x, screenRect.y, screenRect.dx, screenRect.dy);
+    Rect screenR(screenRect.x, screenRect.y, screenRect.dx, screenRect.dy);
     g.SetClip(screenR);
     g.FillRectangle(&SolidBrush(white), screenR);
 

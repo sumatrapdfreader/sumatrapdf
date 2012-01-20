@@ -78,7 +78,7 @@ void PaintTransparentRectangles(HDC hdc, RectI screenRc, Vec<RectI>& rects, COLO
     for (size_t i = 0; i < rects.Count(); i++) {
         RectI rc = rects.At(i).Intersect(screenRc);
         if (!rc.IsEmpty())
-            path.AddRectangle(Gdiplus::Rect(rc.x, rc.y, rc.dx, rc.dy));
+            path.AddRectangle(Rect(rc.x, rc.y, rc.dx, rc.dy));
     }
 
     // fill path (and draw optional outline margin)
