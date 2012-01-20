@@ -58,10 +58,12 @@ RectF MeasureTextAccurate(Graphics *g, Font *f, const WCHAR *s, size_t len)
     CharacterRange cr(0, len);
     sf.SetMeasurableCharacterRanges(1, &cr);
     Region r;
-    g->MeasureCharacterRanges(s, len, f, layoutRect, &sf, 1, &r);
+    Status status = g->MeasureCharacterRanges(s, len, f, layoutRect, &sf, 1, &r);
+    CrashIf(status != Ok);
     RectF bbox;
     r.GetBounds(&bbox, g);
-    bbox.Width += 4.5f; // TODO: total magic, but seems to produce better results
+    if (bbox.Width != 0)
+        bbox.Width += 4.5f; // TODO: total magic, but seems to produce better results
     return bbox;
 }
 
@@ -76,6 +78,8 @@ RectF MeasureTextStandard(Graphics *g, Font *f, const WCHAR *s, size_t len)
 
 RectF MeasureText(Graphics *g, Font *f, const WCHAR *s, size_t len)
 {
+    if (-1 == len)
+        len = str::Len(s);
     //RectF bbox = MeasureTextStandard(g, f, s, len);
     RectF bbox = MeasureTextAccurate(g, f, s, len);
     //RectF bbox = MeasureTextAccurate2(g, f, s, len);

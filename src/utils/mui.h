@@ -10,12 +10,39 @@
 namespace mui {
 
 using namespace Gdiplus;
-#include "GdiPlusUtil.h"
 
 class VirtWnd;
 
 #define InfiniteDx ((INT)-1)
 #define InfintieDy ((INT)-1)
+
+void Initialize();
+void Destroy();
+
+Rect MeasureTextWithFont(Font *f, const TCHAR *s);
+
+struct Padding {
+    Padding() : left(0), right(0), top(0), bottom(0) {
+    }
+
+    Padding(int n) {
+        left = right = top = bottom;
+    }
+
+    Padding(int x, int y) {
+        left = right = x;
+        top = bottom = y;
+    }
+
+    void operator =(const Padding& other) {
+        left = other.left;
+        right = other.right;
+        top = other.top;
+        bottom = other.bottom;
+    }
+
+    int left, right, top, bottom;
+};
 
 // Layout can be optionally set on VirtWnd. If set, it'll be
 // used to layout this window. This effectively over-rides Measure()/Arrange()
@@ -76,6 +103,8 @@ public:
     Rect            pos;
 
     bool            isVisible;
+
+    Padding         padding;
 };
 
 class VirtWndButton : public VirtWnd
@@ -83,6 +112,7 @@ class VirtWndButton : public VirtWnd
 public:
     VirtWndButton(const TCHAR *s) {
         text = NULL;
+        padding = Padding(8, 4);
         SetText(s);
     }
 

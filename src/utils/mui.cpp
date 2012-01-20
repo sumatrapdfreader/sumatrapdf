@@ -35,7 +35,63 @@ messages and paints child windows on WM_PAINT.
 
 #include "mui.h"
 
+using namespace Gdiplus;
+#include "GdiPlusUtil.h"
+
 namespace mui {
+
+// Graphics object that can be used at any time to measure text
+static Graphics *   gGraphicsForFontMeasure = NULL;
+static Bitmap *     gBitmapForFontMeasureGraphics = NULL;
+static BYTE *       gBitmapDataForFontMeasureGraphics = NULL;
+
+static Font *       gDefaultFont = NULL;
+
+static void InitGraphicsMode(Graphics *g)
+{
+    g->SetCompositingQuality(CompositingQualityHighQuality);
+    g->SetSmoothingMode(SmoothingModeAntiAlias);
+    //g.SetSmoothingMode(SmoothingModeHighQuality);
+    g->SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
+    g->SetPageUnit(UnitPixel);
+
+    gDefaultFont = ::new Font(FontFamily::GenericSansSerif(), 12, FontStyleBold);
+    //gDefaultFont = ::new Font(L"Times New Roman", 18, FontStyleBold);
+}
+
+void Initialize()
+{
+    CrashIf(gBitmapForFontMeasureGraphics || gGraphicsForFontMeasure);
+    // using a small bitmap under assumption that Graphics used only
+    // for measuring text doesn't need the actual bitmap
+    const int bmpDx = 32;
+    const int bmpDy = 4;
+    const int stride = bmpDx * 4;
+    gBitmapDataForFontMeasureGraphics = (BYTE*)malloc(bmpDx * bmpDy * 4);
+    gBitmapForFontMeasureGraphics = ::new Bitmap(bmpDx, bmpDy, stride, PixelFormat32bppARGB, gBitmapDataForFontMeasureGraphics);
+    CrashIf(!gBitmapForFontMeasureGraphics);
+    gGraphicsForFontMeasure = ::new Graphics((Image*)gBitmapForFontMeasureGraphics);
+    CrashIf(!gGraphicsForFontMeasure);
+    InitGraphicsMode(gGraphicsForFontMeasure);
+}
+
+void Destroy()
+{
+    ::delete gGraphicsForFontMeasure;
+    ::delete gBitmapForFontMeasureGraphics;
+    free(gBitmapDataForFontMeasureGraphics);
+    ::delete gDefaultFont;
+}
+
+// When doing layout we need to measure strings even
+// at times when we don't have a convenient access
+// to Graphics object hence this function
+Rect MeasureTextWithFont(Font *f, const TCHAR *s)
+{
+    RectF r = MeasureText(gGraphicsForFontMeasure, f, s);
+    Rect res((int)r.X, (int)r.Y, (int)r.Width, (int)r.Height);
+    return res;
+}
 
 VirtWnd::VirtWnd(VirtWnd *parent)
 {
@@ -102,8 +158,13 @@ void VirtWnd::Paint(Graphics *gfx, int offX, int offY)
 
 void VirtWndButton::RecalculateSize()
 {
-    // TODO: write me
-    desiredSize = Size(100, 18);
+    desiredSize = Size(120,28);
+    if (!text)
+        return;
+    Rect bbox = MeasureTextWithFont(gDefaultFont, text);
+    bbox.GetSize(&desiredSize);
+    desiredSize.Width  += (padding.left + padding.right);
+    desiredSize.Height += (padding.top  + padding.bottom);
 }
 
 void VirtWndButton::SetText(const TCHAR *s)
@@ -134,9 +195,9 @@ void VirtWndButton::Paint(Graphics *gfx, int offX, int offY)
     if (!text)
         return;
 
-    //Font font(gfx->GetHDC());
-    Font font(L"Times New Roman", 12, FontStyleBold);
-    gfx->DrawString(text, str::Len(text), &font, PointF((REAL)offX, (REAL)offY), NULL, &br);
+    int x = offX + padding.left;
+    int y = offY + padding.bottom;
+    gfx->DrawString(text, str::Len(text), gDefaultFont, PointF((REAL)x, (REAL)y), NULL, &br);
 }
 
 static bool BitmapSizeEquals(Bitmap *bmp, int dx, int dy)
@@ -201,11 +262,7 @@ void VirtWndPainter::OnPaint(HWND hwnd, VirtWnd *hwndWnd)
     }
 
     Graphics g((Image*)cacheBmp);
-    g.SetCompositingQuality(CompositingQualityHighQuality);
-    g.SetSmoothingMode(SmoothingModeAntiAlias);
-    //g.SetSmoothingMode(SmoothingModeHighQuality);
-    g.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
-    g.SetPageUnit(UnitPixel);
+    InitGraphicsMode(&g);
 
     Rect r(rc2.x, rc2.y, rc2.dx, rc2.dy);
     PaintBackground(&g, r);

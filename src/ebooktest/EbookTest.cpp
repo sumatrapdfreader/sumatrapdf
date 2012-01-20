@@ -87,26 +87,35 @@ void EbookLayout::Measure(Size availableSize, VirtWnd *wnd)
 
 void EbookLayout::Arrange(Rect finalSize, VirtWnd *wnd)
 {
+    int btnDx, btnDy, btnY, btnX;
+
     if (2 != wnd->GetChildCount())
         return;
-    VirtWnd *next = wnd->children.At(0);
+
     int rectDy = finalSize.Height;
     int rectDx = finalSize.Width;
-    int nextPosY = (rectDy - next->desiredSize.Height) / 2;
-    if (nextPosY < 0)
-        nextPosY = 0;
 
-    int dx = next->desiredSize.Width;
-    Rect nextPos(0, nextPosY, next->desiredSize.Width, next->desiredSize.Height);
-    next->Arrange(nextPos);
+    // prev is on the left size
+    VirtWnd *btn = wnd->children.At(1);
+    btnDy = btn->desiredSize.Height;
+    btnY = (rectDy - btnDy) / 2;
+    if (btnY < 0)
+        btnY = 0;
 
-    VirtWnd *prev = wnd->children.At(1);
-    int prevPosY = (rectDy - prev->desiredSize.Height) / 2;
-    if (prevPosY < 0)
-        prevPosY = 0;
+    Rect prevPos(0, btnY, btn->desiredSize.Width, btnDy);
+    btn->Arrange(prevPos);
 
-    Rect prevPos(rectDx - dx, prevPosY, prev->desiredSize.Width, prev->desiredSize.Height);
-    prev->Arrange(prevPos);
+    // next is on the right size
+    btn = wnd->children.At(0);
+    btnDy = btn->desiredSize.Height;
+    btnY = (rectDy - btnDy) / 2;
+    if (btnY < 0)
+        btnY = 0;
+
+    btnDx = btn->desiredSize.Width;
+    btnX = rectDx - btnDx;
+    Rect nextPos(btnX, btnY, btnDx, btnDy);
+    btn->Arrange(nextPos);
 
     wnd->pos = finalSize;
 }
@@ -423,7 +432,7 @@ static LRESULT OnCommand(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 void MainLayout(VirtWnd *wnd, Size windowSize)
 {
     if (windowSize.Height > pageBorderX * 2)
-        windowSize.Height -= (pageBorderX * 2);
+        windowSize.Width -= (pageBorderX * 2);
     if (windowSize.Width > pageBorderY * 2)
         windowSize.Height -= (pageBorderY * 2);
 
@@ -557,6 +566,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     InitAllCommonControls();
     ScopedGdiPlus gdi;
 
+    mui::Initialize();
+
     //ParseCommandLine(GetCommandLine());
     if (!RegisterWinClass(hInstance))
         goto Exit;
@@ -571,5 +582,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     delete gVirtWndPainterFrame;
 
 Exit:
+    mui::Destroy();
     return ret;
 }
