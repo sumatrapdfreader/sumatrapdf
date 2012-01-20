@@ -130,7 +130,7 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
             StartPage(hdc);
             RectD *clipRegion = &pd.sel.At(i).rect;
 
-            Size<float> sSize = clipRegion->Size().Convert<float>();
+            SizeT<float> sSize = clipRegion->Size().Convert<float>();
             float zoom = min((float)printableWidth / sSize.dx,
                              (float)printableHeight / sSize.dy);
             // use the correct zoom values, if the page fits otherwise
@@ -184,7 +184,7 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
             // MM_TEXT: Each logical unit is mapped to one device pixel.
             // Positive x is to the right; positive y is down.
 
-            Size<float> pSize = engine.PageMediabox(pageNo).Size().Convert<float>();
+            SizeT<float> pSize = engine.PageMediabox(pageNo).Size().Convert<float>();
             int rotation = 0;
             // Turn the document by 90 deg if it isn't in portrait mode
             if (pSize.dx > pSize.dy) {
@@ -213,7 +213,7 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
                 // make sure to fit all content into the printable area when scaling
                 // and the whole document page on the physical paper
                 RectD rect = engine.PageContentBox(pageNo, Target_Print);
-                Rect<float> cbox = engine.Transform(rect, pageNo, 1.0, rotation).Convert<float>();
+                RectT<float> cbox = engine.Transform(rect, pageNo, 1.0, rotation).Convert<float>();
                 zoom = min((float)printableWidth / cbox.dx,
                        min((float)printableHeight / cbox.dy,
                        min((float)paperWidth / pSize.dx,
@@ -223,7 +223,7 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
                 if (PrintScaleShrink == pd.scaleAdv && dpiFactor < zoom)
                     zoom = dpiFactor;
                 // make sure that no content lies in the non-printable paper margins
-                Rect<float> onPaper((paperWidth - pSize.dx * zoom) / 2 + cbox.x * zoom + horizOffset,
+                RectT<float> onPaper((paperWidth - pSize.dx * zoom) / 2 + cbox.x * zoom + horizOffset,
                                     (paperHeight - pSize.dy * zoom) / 2 + cbox.y * zoom + vertOffset,
                                     cbox.dx * zoom, cbox.dy * zoom);
                 if (leftMargin > onPaper.x)

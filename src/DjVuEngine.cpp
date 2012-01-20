@@ -654,7 +654,7 @@ TCHAR *CDjVuEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_o
         for (size_t i = 0; i < coords.Count(); i++) {
             if (!coords.At(i).IsEmpty()) {
                 if (dpiFactor != 1.0) {
-                    Rect<float> pageF = coords.At(i).Convert<float>();
+                    RectT<float> pageF = coords.At(i).Convert<float>();
                     pageF.x *= dpiFactor; pageF.dx *= dpiFactor;
                     pageF.y *= dpiFactor; pageF.dy *= dpiFactor;
                     coords.At(i) = pageF.Round();

@@ -8,97 +8,97 @@
 #include <math.h>
 
 template <typename T>
-class Point
+class PointT
 {
 public:
     T x, y;
 
-    Point() : x(0), y(0) { }
-    Point(T x, T y) : x(x), y(y) { }
+    PointT() : x(0), y(0) { }
+    PointT(T x, T y) : x(x), y(y) { }
 
     template <typename S>
-    Point<S> Convert() const {
-        return Point<S>((S)x, (S)y);
+    PointT<S> Convert() const {
+        return PointT<S>((S)x, (S)y);
     }
     template <>
-    Point<int> Convert() const {
-        return Point<int>((int)floor(x + 0.5), (int)floor(y + 0.5));
+    PointT<int> Convert() const {
+        return PointT<int>((int)floor(x + 0.5), (int)floor(y + 0.5));
     }
 
-    bool operator==(Point<T>& other) {
+    bool operator==(PointT<T>& other) {
         return this->x == other.x && this->y == other.y;
     }
-    bool operator!=(Point<T>& other) {
+    bool operator!=(PointT<T>& other) {
         return !this->operator==(other);
     }
 };
 
-typedef Point<int> PointI;
-typedef Point<double> PointD;
+typedef PointT<int> PointI;
+typedef PointT<double> PointD;
 
 template <typename T>
-class Size
+class SizeT
 {
 public :
     T dx, dy;
 
-    Size() : dx(0), dy(0) { }
-    Size(T dx, T dy) : dx(dx), dy(dy) { }
+    SizeT() : dx(0), dy(0) { }
+    SizeT(T dx, T dy) : dx(dx), dy(dy) { }
 
     template <typename S>
-    Size<S> Convert() const {
-        return Size<S>((S)dx, (S)dy);
+    SizeT<S> Convert() const {
+        return SizeT<S>((S)dx, (S)dy);
     }
     template <>
-    Size<int> Convert() const {
-        return Size<int>((int)floor(dx + 0.5), (int)floor(dy + 0.5));
+    SizeT<int> Convert() const {
+        return SizeT<int>((int)floor(dx + 0.5), (int)floor(dy + 0.5));
     }
 
-    bool operator==(Size<T>& other) {
+    bool operator==(SizeT<T>& other) {
         return this->dx == other.dx && this->dy == other.dy;
     }
-    bool operator!=(Size<T>& other) {
+    bool operator!=(SizeT<T>& other) {
         return !this->operator==(other);
     }
 };
 
-typedef Size<int> SizeI;
-typedef Size<double> SizeD;
+typedef SizeT<int> SizeI;
+typedef SizeT<double> SizeD;
 
 template <typename T>
-class Rect
+class RectT
 {
 public:
     T x, y;
     T dx, dy;
 
-    Rect() : x(0), y(0), dx(0), dy(0) { }
-    Rect(T x, T y, T dx, T dy) : x(x), y(y), dx(dx), dy(dy) { }
-    Rect(Point<T> pt, Size<T> size) : x(pt.x), y(pt.y), dx(size.dx), dy(size.dy) { }
+    RectT() : x(0), y(0), dx(0), dy(0) { }
+    RectT(T x, T y, T dx, T dy) : x(x), y(y), dx(dx), dy(dy) { }
+    RectT(PointT<T> pt, SizeT<T> size) : x(pt.x), y(pt.y), dx(size.dx), dy(size.dy) { }
 
-    static Rect FromXY(T xs, T ys, T xe, T ye) {
+    static RectT FromXY(T xs, T ys, T xe, T ye) {
         if (xs > xe)
             swap(xs, xe);
         if (ys > ye)
             swap(ys, ye);
-        return Rect(xs, ys, xe - xs, ye - ys);
+        return RectT(xs, ys, xe - xs, ye - ys);
     }
-    static Rect FromXY(Point<T> TL, Point<T> BR) {
+    static RectT FromXY(PointT<T> TL, PointT<T> BR) {
         return FromXY(TL.x, TL.y, BR.x, BR.y);
     }
 
     template <typename S>
-    Rect<S> Convert() const {
-        return Rect<S>((S)x, (S)y, (S)dx, (S)dy);
+    RectT<S> Convert() const {
+        return RectT<S>((S)x, (S)y, (S)dx, (S)dy);
     }
     template <>
-    Rect<int> Convert() const {
-        return Rect<int>((int)floor(x + 0.5), (int)floor(y + 0.5),
+    RectT<int> Convert() const {
+        return RectT<int>((int)floor(x + 0.5), (int)floor(y + 0.5),
                          (int)floor(dx + 0.5), (int)floor(dy + 0.5));
     }
     // cf. fz_roundrect in mupdf/fitz/base_geometry.c
-    Rect<int> Round() const {
-        return Rect<int>::FromXY((int)floor(x + 0.001),
+    RectT<int> Round() const {
+        return RectT<int>::FromXY((int)floor(x + 0.001),
                                  (int)floor(y + 0.001),
                                  (int)ceil(x + dx - 0.001),
                                  (int)ceil(y + dy - 0.001));
@@ -108,7 +108,7 @@ public:
         return dx == 0 || dy == 0;
     }
 
-    bool Inside(Point<T> pt) const {
+    bool Inside(PointT<T> pt) const {
         if (pt.x < this->x)
             return false;
         if (pt.x > this->x + this->dx)
@@ -121,7 +121,7 @@ public:
     }
 
     /* Returns an empty rectangle if there's no intersection (see IsEmpty). */
-    Rect Intersect(Rect other) const {
+    RectT Intersect(RectT other) const {
         /* The intersection starts with the larger of the start
            coordinates and ends with the smaller of the end coordinates */
         T x = max(this->x, other.x);
@@ -131,11 +131,11 @@ public:
 
         /* return an empty rectangle if the dimensions aren't positive */
         if (dx <= 0 || dy <= 0)
-            return Rect();
-        return Rect(x, y, dx, dy);
+            return RectT();
+        return RectT(x, y, dx, dy);
     }
 
-    Rect Union(Rect other) const {
+    RectT Union(RectT other) const {
         if (this->dx <= 0 && this->dy <= 0)
             return other;
         if (other.dx <= 0 && other.dy <= 0)
@@ -146,7 +146,7 @@ public:
         T dx = max(this->x + this->dx, other.x + other.dx) - x;
         T dy = max(this->y + this->dy, other.y + other.dy) - y;
 
-        return Rect(x, y, dx, dy);
+        return RectT(x, y, dx, dy);
     }
 
     void Offset(T _x, T _y) {
@@ -159,32 +159,32 @@ public:
         y -= _y; dy += 2 * _y;
     }
 
-    Point<T> TL() const { return Point<T>(x, y); }
-    Point<T> BR() const { return Point<T>(x + dx, y + dy); }
-    Size<T> Size() const { return ::Size<T>(dx, dy); }
+    PointT<T> TL() const { return PointT<T>(x, y); }
+    PointT<T> BR() const { return PointT<T>(x + dx, y + dy); }
+    SizeT<T> Size() const { return ::SizeT<T>(dx, dy); }
 
 #ifdef _WIN32
     RECT ToRECT() const {
-        Rect<int> rectI(this->Convert<int>());
+        RectT<int> rectI(this->Convert<int>());
         RECT result = { rectI.x, rectI.y, rectI.x + rectI.dx, rectI.y + rectI.dy };
         return result;
     }
-    static Rect FromRECT(RECT& rect) {
+    static RectT FromRECT(RECT& rect) {
         return FromXY(rect.left, rect.top, rect.right, rect.bottom);
     }
 #endif
 
-    bool operator==(Rect<T>& other) {
+    bool operator==(RectT<T>& other) {
         return this->x == other.x && this->y == other.y &&
                this->dx == other.dx && this->dy == other.dy;
     }
-    bool operator!=(Rect<T>& other) {
+    bool operator!=(RectT<T>& other) {
         return !this->operator==(other);
     }
 };
 
-typedef Rect<int> RectI;
-typedef Rect<double> RectD;
+typedef RectT<int> RectI;
+typedef RectT<double> RectD;
 
 #ifdef _WIN32
 
