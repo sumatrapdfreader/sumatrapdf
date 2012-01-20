@@ -647,8 +647,7 @@ fz_paint_image_imp(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *shape, fz_pixmap 
 	h -= y;
 
 	/* map from screen space (x,y) to image space (u,v) */
-	inv = fz_scale(1.0f / img->w, -1.0f / img->h);
-	inv = fz_concat(inv, fz_translate(0, 1));
+	inv = fz_scale(1.0f / img->w, 1.0f / img->h);
 	inv = fz_concat(inv, ctm);
 	inv = fz_invert_matrix(inv);
 

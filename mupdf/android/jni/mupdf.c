@@ -70,16 +70,6 @@ Java_com_artifex_mupdf_MuPDFCore_openFile(JNIEnv * env, jobject thiz, jstring jf
 		{
 			fz_throw(ctx, "Cannot open document: '%s'\n", filename);
 		}
-
-		LOGE("Loading page tree...");
-		fz_try(ctx)
-		{
-			pdf_load_page_tree(xref);
-		}
-		fz_catch(ctx)
-		{
-			fz_throw(ctx, "Cannot load page tree: '%s'\n", filename);
-		}
 		pages = pdf_count_pages(xref);
 		LOGE("Done! %d pages", pages);
 	}

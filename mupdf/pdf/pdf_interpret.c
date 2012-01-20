@@ -364,19 +364,24 @@ static void
 pdf_show_image(pdf_csi *csi, fz_pixmap *image)
 {
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
+	fz_matrix image_ctm;
 	fz_rect bbox;
 
 	if (csi->in_hidden_ocg > 0)
 		return;
 
-	bbox = fz_transform_rect(gstate->ctm, fz_unit_rect);
+	/* PDF has images bottom-up, so flip them right side up here */
+	image_ctm = fz_concat(fz_scale(1, -1), fz_translate(0, 1));
+	image_ctm = fz_concat(image_ctm, gstate->ctm);
+
+	bbox = fz_transform_rect(image_ctm, fz_unit_rect);
 
 	if (image->mask)
 	{
 		/* apply blend group even though we skip the softmask */
 		if (gstate->blendmode)
 			fz_begin_group(csi->dev, bbox, 0, 0, gstate->blendmode, 1);
-		fz_clip_image_mask(csi->dev, image->mask, &bbox, gstate->ctm);
+		fz_clip_image_mask(csi->dev, image->mask, &bbox, image_ctm);
 	}
 	else
 		pdf_begin_group(csi, bbox);
@@ -389,13 +394,13 @@ pdf_show_image(pdf_csi *csi, fz_pixmap *image)
 		case PDF_MAT_NONE:
 			break;
 		case PDF_MAT_COLOR:
-			fz_fill_image_mask(csi->dev, image, gstate->ctm,
+			fz_fill_image_mask(csi->dev, image, image_ctm,
 				gstate->fill.colorspace, gstate->fill.v, gstate->fill.alpha);
 			break;
 		case PDF_MAT_PATTERN:
 			if (gstate->fill.pattern)
 			{
-				fz_clip_image_mask(csi->dev, image, &bbox, gstate->ctm);
+				fz_clip_image_mask(csi->dev, image, &bbox, image_ctm);
 				pdf_show_pattern(csi, gstate->fill.pattern, bbox, PDF_FILL);
 				fz_pop_clip(csi->dev);
 			}
@@ -403,7 +408,7 @@ pdf_show_image(pdf_csi *csi, fz_pixmap *image)
 		case PDF_MAT_SHADE:
 			if (gstate->fill.shade)
 			{
-				fz_clip_image_mask(csi->dev, image, &bbox, gstate->ctm);
+				fz_clip_image_mask(csi->dev, image, &bbox, image_ctm);
 				fz_fill_shade(csi->dev, gstate->fill.shade, gstate->ctm, gstate->fill.alpha);
 				fz_pop_clip(csi->dev);
 			}
@@ -412,7 +417,7 @@ pdf_show_image(pdf_csi *csi, fz_pixmap *image)
 	}
 	else
 	{
-		fz_fill_image(csi->dev, image, gstate->ctm, gstate->fill.alpha);
+		fz_fill_image(csi->dev, image, image_ctm, gstate->fill.alpha);
 	}
 
 	if (image->mask)

@@ -15,7 +15,10 @@ do_scavenging_malloc(fz_context *ctx, unsigned int size)
 	do {
 		p = ctx->alloc->malloc(ctx->alloc->user, size);
 		if (p != NULL)
+		{
+			fz_unlock(ctx);
 			return p;
+		}
 	} while (fz_store_scavenge(ctx, size, &phase));
 	fz_unlock(ctx);
 
@@ -32,7 +35,10 @@ do_scavenging_realloc(fz_context *ctx, void *p, unsigned int size)
 	do {
 		q = ctx->alloc->realloc(ctx->alloc->user, p, size);
 		if (q != NULL)
+		{
+			fz_unlock(ctx);
 			return q;
+		}
 	} while (fz_store_scavenge(ctx, size, &phase));
 	fz_unlock(ctx);
 

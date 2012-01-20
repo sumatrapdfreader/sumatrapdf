@@ -29,15 +29,12 @@ xps_paint_image_brush(xps_document *doc, fz_matrix ctm, fz_rect area, char *base
 {
 	fz_pixmap *pixmap = vimage;
 	float xs, ys;
-	fz_matrix im;
 
 	if (pixmap->xres == 0 || pixmap->yres == 0)
 		return;
 	xs = pixmap->w * 96 / pixmap->xres;
 	ys = pixmap->h * 96 / pixmap->yres;
-	im = fz_scale(xs, -ys);
-	im.f = ys;
-	ctm = fz_concat(im, ctm);
+	ctm = fz_concat(fz_scale(xs, ys), ctm);
 	fz_fill_image(doc->dev, pixmap, ctm, doc->opacity[doc->opacity_top]);
 }
 

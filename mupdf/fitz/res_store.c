@@ -196,8 +196,8 @@ fz_store_item(fz_context *ctx, fz_obj *key, void *val_, unsigned int itemsize)
 	size = store->size + itemsize;
 	if (store->max != FZ_STORE_UNLIMITED && size > store->max && ensure_space(ctx, size - store->max))
 	{
-		fz_free(ctx, item);
 		fz_unlock(ctx);
+		fz_free(ctx, item);
 		return;
 	}
 	store->size += itemsize;
@@ -220,8 +220,8 @@ fz_store_item(fz_context *ctx, fz_obj *key, void *val_, unsigned int itemsize)
 		}
 		fz_catch(ctx)
 		{
-			fz_free(ctx, item);
 			fz_unlock(ctx);
+			fz_free(ctx, item);
 			return;
 		}
 	}
