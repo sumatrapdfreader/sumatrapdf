@@ -1302,18 +1302,18 @@ fz_scale_pixmap(fz_context *ctx, fz_pixmap *src, float x, float y, float w, floa
 		if (!contrib_cols)
 		{
 			/* Only 1 pixel in the entire image! */
-			duplicate_single_pixel(output->samples, src->samples, src->n, dst_w_int, dst_h_int);
+			duplicate_single_pixel(output->samples, src->samples, src->n, output->w, output->h);
 		}
 		else
 		{
 			/* Scale the row once, then copy it. */
-			scale_single_row(output->samples, src->samples, contrib_cols, src->w, dst_h_int);
+			scale_single_row(output->samples, src->samples, contrib_cols, src->w, output->h);
 		}
 	}
 	else if (!contrib_cols)
 	{
 		/* Only 1 source pixel wide. Scale the col and duplicate. */
-		scale_single_col(output->samples, src->samples, contrib_rows, src->h, src->n, dst_w_int, flip_y);
+		scale_single_col(output->samples, src->samples, contrib_rows, src->h, src->n, output->w, flip_y);
 	}
 	else
 #endif /* SINGLE_PIXEL_SPECIALS */
