@@ -3755,13 +3755,18 @@ static LRESULT CanvasOnMouseWheel(WindowInfo& win, UINT message, WPARAM wParam, 
     if (gDeltaPerLine == 0)
        return 0;
 
+    bool horizontal = (LOWORD(wParam) & MK_ALT) || IsAltPressed();
+
     if (gDeltaPerLine < 0) {
         // scroll by (fraction of a) page
         SCROLLINFO si = { 0 };
         si.cbSize = sizeof(si);
         si.fMask  = SIF_PAGE;
-        GetScrollInfo(win.hwndCanvas, SB_VERT, &si);
-        win.dm->ScrollYBy(-MulDiv(si.nPage, delta, WHEEL_DELTA), true);
+        GetScrollInfo(win.hwndCanvas, horizontal ? SB_HORZ : SB_VERT, &si);
+        if (horizontal)
+            win.dm->ScrollXBy(-MulDiv(si.nPage, delta, WHEEL_DELTA));
+        else
+            win.dm->ScrollYBy(-MulDiv(si.nPage, delta, WHEEL_DELTA), true);
         return 0;
     }
 
@@ -3769,15 +3774,21 @@ static LRESULT CanvasOnMouseWheel(WindowInfo& win, UINT message, WPARAM wParam, 
     int currentScrollPos = GetScrollPos(win.hwndCanvas, SB_VERT);
 
     while (win.wheelAccumDelta >= gDeltaPerLine) {
-        SendMessage(win.hwndCanvas, WM_VSCROLL, SB_LINEUP, 0);
+        if (horizontal)
+            SendMessage(win.hwndCanvas, WM_HSCROLL, SB_LINELEFT, 0);
+        else
+            SendMessage(win.hwndCanvas, WM_VSCROLL, SB_LINEUP, 0);
         win.wheelAccumDelta -= gDeltaPerLine;
     }
     while (win.wheelAccumDelta <= -gDeltaPerLine) {
-        SendMessage(win.hwndCanvas, WM_VSCROLL, SB_LINEDOWN, 0);
+        if (horizontal)
+            SendMessage(win.hwndCanvas, WM_HSCROLL, SB_LINERIGHT, 0);
+        else
+            SendMessage(win.hwndCanvas, WM_VSCROLL, SB_LINEDOWN, 0);
         win.wheelAccumDelta += gDeltaPerLine;
     }
 
-    if (!displayModeContinuous(win.dm->displayMode()) &&
+    if (!horizontal && !displayModeContinuous(win.dm->displayMode()) &&
         GetScrollPos(win.hwndCanvas, SB_VERT) == currentScrollPos) {
         if (delta > 0)
             win.dm->GoToPrevPage(-1);
