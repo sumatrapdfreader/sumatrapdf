@@ -41,12 +41,13 @@ VirtWnd::VirtWnd(VirtWnd *parent)
 {
     SetParent(parent);
     isVisible = true;
+    layout = NULL;
     pos = Rect();
 }
 
 VirtWnd::~VirtWnd()
 {
-
+    delete layout;
 }
 
 // traverse tree upwards to find HWND that is ultimately backing
@@ -72,6 +73,24 @@ void VirtWnd::AddChild(VirtWnd *wnd, int pos)
     wnd->SetParent(this);
 }
 
+void VirtWnd::Measure(Size availableSize)
+{
+    if (layout) {
+        layout->Measure(availableSize, this);
+    } else {
+        desiredSize = Size();
+    }
+}
+
+void VirtWnd::Arrange(Rect finalRect)
+{
+    if (layout) {
+        layout->Arrange(finalRect, this);
+    } else {
+        pos = finalRect;
+    }
+}
+
 // Requests the window to draw itself on a Graphics canvas.
 // offX and offY is a position of this window within
 // Graphics canvas (pos is relative to that offset)
@@ -79,6 +98,45 @@ void VirtWnd::Paint(Graphics *gfx, int offX, int offY)
 {
     if (!isVisible)
         return;
+}
+
+void VirtWndButton::RecalculateSize()
+{
+    // TODO: write me
+    desiredSize = Size(100, 18);
+}
+
+void VirtWndButton::SetText(const TCHAR *s)
+{
+    str::ReplacePtr(&text, s);
+    RecalculateSize();
+    // TODO: this should trigger repaint and relayout
+}
+
+void VirtWndButton::Measure(Size availableSize)
+{
+    // desiredSize is calculated when we change the
+    // text, font or other attributes that influence
+    // the size so it doesn't have to be calculated
+    // here
+}
+
+void VirtWndButton::Paint(Graphics *gfx, int offX, int offY)
+{
+    if (!isVisible)
+        return;
+
+    SolidBrush br(Color(255,0,0));
+    SolidBrush bgBr(Color(180, 255, 255, 255)); // semi-transparent white
+    RectF bbox((REAL)offX, (REAL)offY, (REAL)pos.Width, (REAL)pos.Height);
+    gfx->FillRectangle(&bgBr, bbox);
+
+    if (!text)
+        return;
+
+    //Font font(gfx->GetHDC());
+    Font font(L"Times New Roman", 12, FontStyleBold);
+    gfx->DrawString(text, str::Len(text), &font, PointF((REAL)offX, (REAL)offY), NULL, &br);
 }
 
 static bool BitmapSizeEquals(Bitmap *bmp, int dx, int dy)

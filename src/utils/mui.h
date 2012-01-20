@@ -12,7 +12,29 @@ namespace mui {
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 
-class VirtWnd 
+class VirtWnd;
+
+#define InfiniteDx ((INT)-1)
+#define InfintieDy ((INT)-1)
+
+// Layout can be optionally set on VirtWnd. If set, it'll be
+// used to layout this window. This effectively over-rides Measure()/Arrange()
+// calls of VirtWnd. This allows to decouple layout logic from VirtWnd class
+// and implement generic layout algorithms.
+class Layout
+{
+public:
+    Layout() {
+    }
+
+    virtual ~Layout() {
+    }
+
+    virtual void Measure(Size availableSize, VirtWnd *wnd) = 0;
+    virtual void Arrange(Rect finalSize, VirtWnd *wnd) = 0;
+};
+
+class VirtWnd
 {
 public:
     VirtWnd(VirtWnd *parent=NULL);
@@ -32,6 +54,18 @@ public:
 
     virtual void Paint(Graphics *gfx, int offX, int offY);
 
+    // WPF-like layout system. Measure() should update desiredSize
+    // Then the parent uses it to calculate the size of its children
+    // and uses Arrange() to set it.
+
+    // availableSize can have InfiniteDx or InfiniteDy to allow
+    // using as much space as the window wants
+    virtual void Measure(Size availableSize);
+    virtual void Arrange(Rect finalRect);
+    Size            desiredSize;
+
+    Layout *        layout;
+
     VirtWnd *       parent;
     Vec<VirtWnd*>   children;
 
@@ -42,6 +76,28 @@ public:
     Rect            pos;
 
     bool            isVisible;
+};
+
+class VirtWndButton : public VirtWnd
+{
+public:
+    VirtWndButton(const TCHAR *s) {
+        text = NULL;
+        SetText(s);
+    }
+
+    virtual ~VirtWndButton() {
+        free(text);
+    }
+
+    void SetText(const TCHAR *s);
+
+    void RecalculateSize();
+
+    virtual void Measure(Size availableSize);
+    virtual void Paint(Graphics *gfx, int offX, int offY);
+
+    TCHAR *         text;
 };
 
 // Manages painting process of VirtWnd window and all its children.

@@ -61,18 +61,79 @@ struct EbookWindowInfo
     }
 };
 
+class EbookLayout : public Layout
+{
+public:
+    EbookLayout() {
+    }
+
+    virtual ~EbookLayout() {
+    }
+
+    virtual void Measure(Size availableSize, VirtWnd *wnd);
+    virtual void Arrange(Rect finalSize, VirtWnd *wnd);
+};
+
+void EbookLayout::Measure(Size availableSize, VirtWnd *wnd)
+{
+    if (2 != wnd->GetChildCount())
+        return;
+    wnd->desiredSize = availableSize;
+    VirtWnd *next = wnd->children.At(0);
+    VirtWnd *prev = wnd->children.At(1);
+    next->Measure(availableSize);
+    prev->Measure(availableSize);
+}
+
+void EbookLayout::Arrange(Rect finalSize, VirtWnd *wnd)
+{
+    if (2 != wnd->GetChildCount())
+        return;
+    VirtWnd *next = wnd->children.At(0);
+    int rectDy = finalSize.Height;
+    int rectDx = finalSize.Width;
+    int nextPosY = (rectDy - next->desiredSize.Height) / 2;
+    if (nextPosY < 0)
+        nextPosY = 0;
+
+    int dx = next->desiredSize.Width;
+    Rect nextPos(0, nextPosY, next->desiredSize.Width, next->desiredSize.Height);
+    next->Arrange(nextPos);
+
+    VirtWnd *prev = wnd->children.At(1);
+    int prevPosY = (rectDy - prev->desiredSize.Height) / 2;
+    if (prevPosY < 0)
+        prevPosY = 0;
+
+    Rect prevPos(rectDx - dx, prevPosY, prev->desiredSize.Width, prev->desiredSize.Height);
+    prev->Arrange(prevPos);
+
+    wnd->pos = finalSize;
+}
+
 class VirtWndEbook : public VirtWnd
 {
 public:
-    VirtWndEbook() {
-    }
+    VirtWndEbook();
+
     virtual ~VirtWndEbook() {
+    }
+
+    virtual void Measure(Size availableSize) {
+        desiredSize = availableSize;
     }
 
     PageLayout *    pageLayout;
 
     virtual void Paint(Graphics *gfx, int offX, int offY);
 };
+
+VirtWndEbook::VirtWndEbook()
+{
+    layout = new EbookLayout();
+    children.Append(new VirtWndButton(_T("Next")));
+    children.Append(new VirtWndButton(_T("Prev")));
+}
 
 static EbookWindowInfo *gCurrentEbook = NULL;
 
@@ -359,11 +420,24 @@ static LRESULT OnCommand(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
+void MainLayout(VirtWnd *wnd, Size windowSize)
+{
+    if (windowSize.Height > pageBorderX * 2)
+        windowSize.Height -= (pageBorderX * 2);
+    if (windowSize.Width > pageBorderY * 2)
+        windowSize.Height -= (pageBorderY * 2);
+
+    wnd->Measure(windowSize);
+    Size s = wnd->desiredSize;
+    Rect r(pageBorderX, pageBorderY, s.Width, s.Height);
+    wnd->Arrange(r);
+}
+
 static void OnSize(HWND hwnd, int dx, int dy)
 {
     RelayoutByHwnd(hwnd, dx, dy);
-    Rect r = EbookPosFromWindowSize(hwnd, dx, dy);
-    gVirtWndFrame->pos = r;
+    Size s(dx, dy);
+    MainLayout(gVirtWndFrame, Size(dx, dy));
 }
 
 static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
