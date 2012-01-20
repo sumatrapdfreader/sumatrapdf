@@ -83,6 +83,11 @@ void Destroy()
     ::delete gDefaultFont;
 }
 
+Graphics *GetGraphicsForMeasureText()
+{
+    return gGraphicsForFontMeasure;
+}
+
 // When doing layout we need to measure strings even
 // at times when we don't have a convenient access
 // to Graphics object hence this function

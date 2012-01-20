@@ -201,7 +201,7 @@ static EbookWindowInfo *LoadEbook(const TCHAR *fileName)
     return wi;
 }
 
-static PageLayout *LayoutMobiFile(EbookWindowInfo *wi, Graphics *gfx, int pageDx, int pageDy)
+static PageLayout *LayoutMobiFile(EbookWindowInfo *wi, int pageDx, int pageDy)
 {
     PageLayout *layout = new PageLayout(pageDx, pageDy);
     const char *html = wi->html;
@@ -211,7 +211,7 @@ static PageLayout *LayoutMobiFile(EbookWindowInfo *wi, Graphics *gfx, int pageDx
     } else {
         html = wi->mb->GetBookHtmlData(len);
     }
-    bool ok = layout->LayoutHtml(gfx, FONT_NAME, FONT_SIZE, html, len);
+    bool ok = layout->LayoutHtml(FONT_NAME, FONT_SIZE, html, len);
     if (!ok) {
         delete layout;
         return NULL;
@@ -279,7 +279,7 @@ static void UpdatePageCount()
 const int pageBorderX = 10;
 const int pageBorderY = 10;
 
-static void ReLayout(Graphics* gfx, int pageDx, int pageDy)
+static void ReLayout(int pageDx, int pageDy)
 {
     if (gCurrentEbook->pageLayout)
     {
@@ -288,7 +288,7 @@ static void ReLayout(Graphics* gfx, int pageDx, int pageDy)
         if ((pageDx == currPageDx) && (pageDy == currPageDy))
             return;
     }
-    gCurrentEbook->pageLayout = LayoutMobiFile(gCurrentEbook, gfx, pageDx, pageDy);
+    gCurrentEbook->pageLayout = LayoutMobiFile(gCurrentEbook, pageDx, pageDy);
     gVirtWndFrame->pageLayout = gCurrentEbook->pageLayout;
     UpdatePageCount();
 }
@@ -346,10 +346,8 @@ Rect EbookPosFromWindowSize(HWND hwnd, int dx = -1, int dy = -1)
 
 static void RelayoutByHwnd(HWND hwnd, int dx = -1, int dy = -1)
 {
-    HDC dc = GetDC(hwnd);
-    Graphics gfx(dc);
     Rect r = EbookPosFromWindowSize(hwnd, dx, dy);
-    ReLayout(&gfx, r.Width, r.Height);
+    ReLayout(r.Width, r.Height);
 }
 
 static void OnCreateWindow(HWND hwnd)

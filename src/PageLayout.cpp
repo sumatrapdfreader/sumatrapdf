@@ -4,6 +4,7 @@
 #include "PageLayout.h"
 #include "StrUtil.h"
 #include "HtmlPullParser.h"
+#include "mui.h"
 
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
@@ -594,19 +595,14 @@ void PageLayout::EmitText(HtmlToken *t)
     }
 }
 
-// TODO: figure out a way to not need Graphics object be passed in. It's
-// only used for measuring text. There should be a way to construct
-// Graphics object that will return the same font metrics data as
-// Graphics object based on HWND's DC.
-//
 // note: maybe this should be part of a separate object so that don't have
 // tight coupling between PageLayout, which represents a final result of
 // layout process, and code that converts a given format into PageLayout.
 // In the future we might add support for other source formats, in which
 // case it would be nice to have them in separate implementation files.
-bool PageLayout::LayoutHtml(Graphics *graphics, WCHAR *fontName, float fontSize, const char *s, size_t sLen)
+bool PageLayout::LayoutHtml(WCHAR *fontName, float fontSize, const char *s, size_t sLen)
 {
-    gfx = graphics;
+    gfx = mui::GetGraphicsForMeasureText();
     CrashAlwaysIf(NULL == fontName);
     this->fontName.Set(str::Dup(fontName));
     this->fontSize = fontSize;

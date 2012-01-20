@@ -19,6 +19,7 @@ class VirtWnd;
 void Initialize();
 void Destroy();
 
+Graphics *GetGraphicsForMeasureText();
 Rect MeasureTextWithFont(Font *f, const TCHAR *s);
 
 struct Padding {

@@ -72,7 +72,7 @@ public:
     void HandleHtmlTag(HtmlToken *t);
     void EmitText(HtmlToken *t);
 
-    bool LayoutHtml(Graphics *graphics, WCHAR *fontName, float fontSize, const char *s, size_t sLen);
+    bool LayoutHtml(WCHAR *fontName, float fontSize, const char *s, size_t sLen);
 
     size_t PageCount() const {
         return pageInstrOffset.Count();
