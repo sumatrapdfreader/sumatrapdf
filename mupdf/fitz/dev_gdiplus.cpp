@@ -434,9 +434,9 @@ public:
 		}
 		
 		PointF corners[3] = {
-			gdiplus_transform_point(ctm, 0, 1),
-			gdiplus_transform_point(ctm, 1, 1),
-			gdiplus_transform_point(ctm, 0, 0)
+			gdiplus_transform_point(ctm, 0, 0),
+			gdiplus_transform_point(ctm, 1, 0),
+			gdiplus_transform_point(ctm, 0, 1)
 		};
 		
 		float scale = _hypotf(_hypotf(ctm.a, ctm.b), _hypotf(ctm.c, ctm.d)) / _hypotf(image->w, image->h);
@@ -1298,7 +1298,7 @@ fz_gdiplus_fill_shade(fz_device *dev, fz_shade *shade, fz_matrix ctm, float alph
 	fz_paint_shade(dev->ctx, shade, ctm, dest, bbox);
 	fz_unmultiply_pixmap(dest);
 	
-	ctm = fz_concat(fz_scale(dest->w, -dest->h), fz_translate(dest->x, dest->y + dest->h));
+	ctm = fz_concat(fz_scale(dest->w, dest->h), fz_translate(dest->x, dest->y));
 	((userData *)dev->user)->drawPixmap(dest, ctm, alpha);
 	
 	fz_drop_pixmap(dev->ctx, dest);
