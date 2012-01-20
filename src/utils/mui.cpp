@@ -109,6 +109,7 @@ VirtWnd::VirtWnd(VirtWnd *parent)
 VirtWnd::~VirtWnd()
 {
     delete layout;
+    DeleteVecMembers(children);
 }
 
 // traverse tree upwards to find HWND that is ultimately backing
