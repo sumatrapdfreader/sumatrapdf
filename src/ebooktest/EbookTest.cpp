@@ -137,8 +137,8 @@ VirtWndEbook::VirtWndEbook()
 {
     VirtWndButton *next = new VirtWndButton(_T("Next"));
     VirtWndButton *prev = new VirtWndButton(_T("Prev"));
-    children.Append(next);
-    children.Append(prev);
+    AddChild(next);
+    AddChild(prev);
     layout = new EbookLayout(next, prev);
 }
 

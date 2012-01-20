@@ -72,7 +72,10 @@ public:
         this->parent = parent;
     }
 
-    void AddChild(VirtWnd *wnd, int pos);
+    void AddChild(VirtWnd *wnd, int pos = -1);
+    VirtWnd *GetChild(size_t idx) {
+        return children.At(idx);
+    }
 
     size_t GetChildCount() const {
         return children.Count();
@@ -95,7 +98,6 @@ public:
     Layout *        layout;
 
     VirtWnd *       parent;
-    Vec<VirtWnd*>   children;
 
     // can be backed by a HWND
     HWND            hwndParent;
@@ -106,6 +108,9 @@ public:
     bool            isVisible;
 
     Padding         padding;
+private:
+    Vec<VirtWnd*>   children;
+
 };
 
 class VirtWndButton : public VirtWnd

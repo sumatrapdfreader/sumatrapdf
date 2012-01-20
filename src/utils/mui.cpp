@@ -236,7 +236,7 @@ void VirtWndPainter::PaintRecursively(Graphics *g, VirtWnd *wnd, int offX, int o
     wnd->Paint(g, offX, offY);
 
     for (size_t i = 0; i < wnd->GetChildCount(); i++) {
-        VirtWnd *w = wnd->children.At(i);
+        VirtWnd *w = wnd->GetChild(i);
         PaintRecursively(g, w, offX, offY);
     }
 }
