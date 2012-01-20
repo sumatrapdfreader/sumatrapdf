@@ -30,7 +30,7 @@ public:
 
     HWND GetHwndParent() const;
 
-    virtual void Draw(Graphics *gfx, float offX, float offY) const ;
+    virtual void Paint(Graphics *gfx, int offX, int offY);
 
     VirtWnd *       parent;
     Vec<VirtWnd*>   children;
@@ -39,7 +39,7 @@ public:
     HWND            hwndParent;
 
     // position and size (relative to parent, might be outside of parent's bounds)
-    RectF           pos;
+    Rect            pos;
 
     bool            isVisible;
 };
@@ -52,6 +52,9 @@ class VirtWndPainter
     // bitmap for double-buffering
     Bitmap *cacheBmp;
 
+    void PaintRecursively(Graphics *g, VirtWnd *wnd, int offX, int offY);
+
+    virtual void PaintBackground(Graphics *g, Rect r);
 public:
     VirtWndPainter() : cacheBmp(NULL)
     {

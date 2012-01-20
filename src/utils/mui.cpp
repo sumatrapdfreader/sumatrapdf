@@ -4,6 +4,7 @@
 #include "mui.h"
 #include "BaseUtil.h"
 #include "Vec.h"
+#include "GeomUtil.h"
 
 /*
 MUI is a simple UI library for win32.
@@ -40,7 +41,7 @@ VirtWnd::VirtWnd(VirtWnd *parent)
 {
     SetParent(parent);
     isVisible = true;
-    pos = RectF();
+    pos = Rect();
 }
 
 VirtWnd::~VirtWnd()
@@ -74,15 +75,52 @@ void VirtWnd::AddChild(VirtWnd *wnd, int pos)
 // Requests the window to draw itself on a Graphics canvas.
 // offX and offY is a position of this window within
 // Graphics canvas (pos is relative to that offset)
-void VirtWnd::Draw(Graphics *gfx, float offX, float offY) const
+void VirtWnd::Paint(Graphics *gfx, int offX, int offY)
 {
     if (!isVisible)
         return;
 }
 
+static bool BitmapSizeEquals(Bitmap *bmp, int dx, int dy)
+{
+    if (NULL == bmp)
+        return false;
+    return ((dx == bmp->GetWidth()) && (dy == bmp->GetHeight()));
+}
+
+// we paint the background in VirtWndPainter() because I don't
+// want to add an artificial VirtWnd window just to cover
+// the whole HWND and paint the background.
+// It can be over-ridden for easy customization.
+// TODO: I wish there was less involved way of over-ridding
+// single functions. Chrome has an implementation of callbacks
+// for C++ which we might investigate.
+void VirtWndPainter::PaintBackground(Graphics *g, Rect r)
+{
+    LinearGradientBrush bgBrush(RectF(0, 0, (REAL)r.Width, (REAL)r.Height), Color(0xd0,0xd0,0xd0), Color(0xff,0xff,0xff), LinearGradientModeVertical);
+    r.Inflate(1, 1);
+    g->FillRectangle(&bgBrush, r);
+}
+
+void VirtWndPainter::PaintRecursively(Graphics *g, VirtWnd *wnd, int offX, int offY)
+{
+    if (!wnd->isVisible)
+        return;
+    offX += wnd->pos.GetLeft();
+    offY += wnd->pos.GetTop();
+    wnd->Paint(g, offX, offY);
+
+    for (size_t i = 0; i < wnd->GetChildCount(); i++) {
+        VirtWnd *w = wnd->children.At(i);
+        PaintRecursively(g, w, offX, offY);
+    }
+}
+
 // Should be called from WM_PAINT. Recursively paints a given window and
 // all its children. VirtWnd must be the top-level window associated
 // with HWND.
+// Note: maybe should be split into BeginPaint()/Paint()/EndPaint()
+// calls so that the caller can do more drawing after Paint()
 void VirtWndPainter::OnPaint(HWND hwnd, VirtWnd *hwndWnd)
 {
     CrashAlwaysIf(hwnd != hwndWnd->hwndParent);
@@ -90,6 +128,33 @@ void VirtWndPainter::OnPaint(HWND hwnd, VirtWnd *hwndWnd)
     PAINTSTRUCT ps;
     HDC dc = BeginPaint(hwnd, &ps);
 
+    RECT rc;
+    GetClientRect(hwnd, &rc);
+
+    // TODO: be intelligent about only repainting changed
+    // parts for perf. Note: if cacheBmp changes, we need
+    // to repaint everything
+    Graphics gDC(dc);
+    ClientRect rc2(hwnd);
+    if (!BitmapSizeEquals(cacheBmp, rc2.dx, rc2.dy)) {
+        // note: could only re-allocate when the size increases
+        ::delete cacheBmp;
+        cacheBmp = ::new Bitmap(rc2.dx, rc2.dy, &gDC);
+    }
+
+    Graphics g((Image*)cacheBmp);
+    g.SetCompositingQuality(CompositingQualityHighQuality);
+    g.SetSmoothingMode(SmoothingModeAntiAlias);
+    //g.SetSmoothingMode(SmoothingModeHighQuality);
+    g.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
+    g.SetPageUnit(UnitPixel);
+
+    Rect r(rc2.x, rc2.y, rc2.dx, rc2.dy);
+    PaintBackground(&g, r);
+
+    PaintRecursively(&g, hwndWnd, 0, 0);
+
+    gDC.DrawImage(cacheBmp, 0, 0);
     EndPaint(hwnd, &ps);
 }
 

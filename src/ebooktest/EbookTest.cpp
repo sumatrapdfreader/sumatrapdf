@@ -20,6 +20,8 @@
 using namespace Gdiplus;
 using namespace mui;
 
+class VirtWndEbook;
+
 #define ET_FRAME_CLASS_NAME    _T("ET_FRAME")
 
 #define FONT_NAME              L"Georgia"
@@ -30,7 +32,7 @@ using namespace mui;
 
 static HINSTANCE        ghinst;
 static HWND             gHwndFrame = NULL;
-static VirtWnd *        gVirtWndFrame = NULL;
+static VirtWndEbook *   gVirtWndFrame = NULL;
 static VirtWndPainter * gVirtWndPainterFrame = NULL;
 
 static bool gShowTextBoundingBoxes = false;
@@ -57,6 +59,19 @@ struct EbookWindowInfo
         delete mb;
         delete pageLayout;
     }
+};
+
+class VirtWndEbook : public VirtWnd
+{
+public:
+    VirtWndEbook() {
+    }
+    virtual ~VirtWndEbook() {
+    }
+
+    PageLayout *    pageLayout;
+
+    virtual void Paint(Graphics *gfx, int offX, int offY);
 };
 
 static EbookWindowInfo *gCurrentEbook = NULL;
@@ -134,7 +149,7 @@ static PageLayout *LayoutMobiFile(EbookWindowInfo *wi, Graphics *gfx, int pageDx
     return layout;
 }
 
-static void DrawPage(Graphics *g, int pageNo, REAL offX, REAL offY)
+static void DrawPageLayout(Graphics *g, PageLayout *pg, int pageNo, REAL offX, REAL offY)
 {
     StringFormat sf(StringFormat::GenericTypographic());
     SolidBrush br(Color(0,0,0));
@@ -142,7 +157,6 @@ static void DrawPage(Graphics *g, int pageNo, REAL offX, REAL offY)
     Pen pen(Color(255, 0, 0), 1);
     Pen blackPen(Color(0, 0, 0), 1);
 
-    PageLayout *pg = gCurrentEbook->pageLayout;
     Font *font = pg->GetFontByIdx(0);
 
     WCHAR buf[512];
@@ -178,6 +192,13 @@ static void DrawPage(Graphics *g, int pageNo, REAL offX, REAL offY)
     }
 }
 
+void VirtWndEbook::Paint(Graphics *gfx, int offX, int offY)
+{
+    if (!pageLayout)
+        return;
+    DrawPageLayout(gfx, pageLayout, 0, (REAL)offX, (REAL)offY);
+}
+
 static void UpdatePageCount()
 {
     size_t pagesCount = gCurrentEbook->pageLayout->PageCount();
@@ -188,10 +209,8 @@ static void UpdatePageCount()
 const int pageBorderX = 10;
 const int pageBorderY = 10;
 
-static void ReLayout(Graphics* gfx, int dx, int dy)
+static void ReLayout(Graphics* gfx, int pageDx, int pageDy)
 {
-    int pageDx = dx - (pageBorderX * 2);
-    int pageDy = dy - (pageBorderY * 2);
     if (gCurrentEbook->pageLayout)
     {
         int currPageDx = (int)gCurrentEbook->pageLayout->pageDx;
@@ -200,69 +219,24 @@ static void ReLayout(Graphics* gfx, int dx, int dy)
             return;
     }
     gCurrentEbook->pageLayout = LayoutMobiFile(gCurrentEbook, gfx, pageDx, pageDy);
+    gVirtWndFrame->pageLayout = gCurrentEbook->pageLayout;
     UpdatePageCount();
 }
 
+#if 0
 static void DrawFrame2(Graphics &g, RectI r)
 {
-    g.SetCompositingQuality(CompositingQualityHighQuality);
-    g.SetSmoothingMode(SmoothingModeAntiAlias);
-    //g.SetSmoothingMode(SmoothingModeHighQuality);
-    g.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
-    g.SetPageUnit(UnitPixel);
-
-    if (!gCurrentEbook->pageLayout)
-        ReLayout(&g, r.dx, r.dy);
-
-    if (!gCurrentEbook->pageLayout)
-        return;
-
-    //SolidBrush bgBrush(gColBg);
-    Gdiplus::Rect r2(r.x-1, r.y-1, r.dx+2, r.dy+2);
-    LinearGradientBrush bgBrush(RectF(0, 0, (REAL)r.dx, (REAL)r.dy), Color(0xd0,0xd0,0xd0), Color(0xff,0xff,0xff), LinearGradientModeVertical);
-    g.FillRectangle(&bgBrush, r2);
-
     DrawPage(&g, 0, (REAL)pageBorderX, (REAL)pageBorderY);
     if (gShowTextBoundingBoxes) {
         Pen p(Color(0,0,255), 1);
         g.DrawRectangle(&p, pageBorderX, pageBorderY, r.dx - (pageBorderX * 2), r.dy - (pageBorderY * 2));
     }
 }
-
-static bool BitmapSizeEquals(Bitmap *bmp, int dx, int dy)
-{
-    if (NULL == bmp)
-        return false;
-    return ((dx == bmp->GetWidth()) && (dy == bmp->GetHeight()));
-}
-
-static Bitmap *frameBmp = NULL;
-
-static void DrawFrame(HWND hwnd, HDC dc, PAINTSTRUCT *ps)
-{
-    RECT rc;
-    GetClientRect(hwnd, &rc);
-
-    Graphics g(dc);
-    ClientRect rc2(hwnd);
-    if (!BitmapSizeEquals(frameBmp, rc2.dx, rc2.dy)) {
-        ::delete frameBmp;
-        frameBmp = ::new Bitmap(rc2.dx, rc2.dy, &g);
-    }
-    Graphics g2((Image*)frameBmp);
-    DrawFrame2(g2, rc2);
-    g.DrawImage(frameBmp, 0, 0);
-}
+#endif
 
 static void OnPaintFrame(HWND hwnd)
 {
-    PAINTSTRUCT ps;
-    HDC dc = BeginPaint(hwnd, &ps);
-    DrawFrame(hwnd, dc, &ps);
-    EndPaint(hwnd, &ps);
-
-    if (!gCurrentEbook->pageLayout)
-        return;
+    gVirtWndPainterFrame->OnPaint(hwnd, gVirtWndFrame);
 }
 
 static void OnLButtonDown()
@@ -287,7 +261,7 @@ static void LoadSampleAsCurrentDoc()
     gCurrentEbook = wi;
 }
 
-static void RelayoutByHwnd(HWND hwnd, int dx = -1, int dy = -1)
+Rect EbookPosFromWindowSize(HWND hwnd, int dx = -1, int dy = -1)
 {
     if ((-1 == dx) || (-1 == dy))
     {
@@ -295,20 +269,33 @@ static void RelayoutByHwnd(HWND hwnd, int dx = -1, int dy = -1)
         dx = hwndRect.dx;
         dy = hwndRect.dy;
     }
+    Rect r = Rect(0, 0, dx, dy);
+    r.Inflate(-pageBorderX, -pageBorderY);
+    return r;
+}
+
+static void RelayoutByHwnd(HWND hwnd, int dx = -1, int dy = -1)
+{
     HDC dc = GetDC(hwnd);
     Graphics gfx(dc);
-    ReLayout(&gfx, dx, dy);
+    Rect r = EbookPosFromWindowSize(hwnd, dx, dy);
+    ReLayout(&gfx, r.Width, r.Height);
 }
 
 static void OnCreateWindow(HWND hwnd)
 {
     LoadSampleAsCurrentDoc();
-    HMENU menu = BuildMenu();
-    SetMenu(hwnd, menu);
-    gVirtWndFrame = new VirtWnd();
+    gVirtWndFrame = new VirtWndEbook();
     gVirtWndFrame->hwndParent = hwnd;
     gVirtWndPainterFrame = new VirtWndPainter();
+    Rect r = EbookPosFromWindowSize(hwnd);
+    gVirtWndFrame->pos = r;
     RelayoutByHwnd(hwnd);
+
+    HMENU menu = BuildMenu();
+    // triggers OnSize(), so must be called after we
+    // have things set up to handle OnSize()
+    SetMenu(hwnd, menu);
 }
 
 static void OnOpen(HWND hwnd)
@@ -375,6 +362,8 @@ static LRESULT OnCommand(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 static void OnSize(HWND hwnd, int dx, int dy)
 {
     RelayoutByHwnd(hwnd, dx, dy);
+    Rect r = EbookPosFromWindowSize(hwnd, dx, dy);
+    gVirtWndFrame->pos = r;
 }
 
 static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -506,7 +495,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     delete gCurrentEbook;
     delete gVirtWndFrame;
     delete gVirtWndPainterFrame;
-    ::delete frameBmp;
 
 Exit:
     return ret;
