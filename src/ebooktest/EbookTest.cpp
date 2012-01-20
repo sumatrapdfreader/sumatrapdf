@@ -64,11 +64,16 @@ struct EbookWindowInfo
 class EbookLayout : public Layout
 {
 public:
-    EbookLayout() {
+    EbookLayout(VirtWndButton *next, VirtWndButton *prev) :
+      next(next), prev(prev)
+    {
     }
 
     virtual ~EbookLayout() {
     }
+
+    VirtWndButton *next;
+    VirtWndButton *prev;
 
     virtual void Measure(Size availableSize, VirtWnd *wnd);
     virtual void Arrange(Rect finalSize, VirtWnd *wnd);
@@ -76,11 +81,7 @@ public:
 
 void EbookLayout::Measure(Size availableSize, VirtWnd *wnd)
 {
-    if (2 != wnd->GetChildCount())
-        return;
     wnd->desiredSize = availableSize;
-    VirtWnd *next = wnd->children.At(0);
-    VirtWnd *prev = wnd->children.At(1);
     next->Measure(availableSize);
     prev->Measure(availableSize);
 }
@@ -89,33 +90,28 @@ void EbookLayout::Arrange(Rect finalSize, VirtWnd *wnd)
 {
     int btnDx, btnDy, btnY, btnX;
 
-    if (2 != wnd->GetChildCount())
-        return;
-
     int rectDy = finalSize.Height;
     int rectDx = finalSize.Width;
 
     // prev is on the left size
-    VirtWnd *btn = wnd->children.At(1);
-    btnDy = btn->desiredSize.Height;
+    btnDy = prev->desiredSize.Height;
     btnY = (rectDy - btnDy) / 2;
     if (btnY < 0)
         btnY = 0;
 
-    Rect prevPos(0, btnY, btn->desiredSize.Width, btnDy);
-    btn->Arrange(prevPos);
+    Rect prevPos(0, btnY, prev->desiredSize.Width, btnDy);
+    prev->Arrange(prevPos);
 
     // next is on the right size
-    btn = wnd->children.At(0);
-    btnDy = btn->desiredSize.Height;
+    btnDy = next->desiredSize.Height;
     btnY = (rectDy - btnDy) / 2;
     if (btnY < 0)
         btnY = 0;
 
-    btnDx = btn->desiredSize.Width;
+    btnDx = next->desiredSize.Width;
     btnX = rectDx - btnDx;
     Rect nextPos(btnX, btnY, btnDx, btnDy);
-    btn->Arrange(nextPos);
+    next->Arrange(nextPos);
 
     wnd->pos = finalSize;
 }
@@ -139,9 +135,11 @@ public:
 
 VirtWndEbook::VirtWndEbook()
 {
-    layout = new EbookLayout();
-    children.Append(new VirtWndButton(_T("Next")));
-    children.Append(new VirtWndButton(_T("Prev")));
+    VirtWndButton *next = new VirtWndButton(_T("Next"));
+    VirtWndButton *prev = new VirtWndButton(_T("Prev"));
+    children.Append(next);
+    children.Append(prev);
+    layout = new EbookLayout(next, prev);
 }
 
 static EbookWindowInfo *gCurrentEbook = NULL;
