@@ -51,6 +51,13 @@ TODO:
  - some claim GDI+ text drawing is slower than GDI, so we could try
    to use GDI instead
  - optimize repainting by cliping to dirty regions
+ - add size to content option to VirtWndHwnd (a bool flag, if set instead
+   of using window's size as available area, use infinite and size the
+   window to the result of the layout process). Alternatively (or in
+   addition) could have a way to only do "size to content" on first layout
+   and then do regular layout
+ - ability to specify minimum window size and enforce it during layout and
+   resizing (WM_GETMINMAXINFO)
 */
 
 #include "mui.h"

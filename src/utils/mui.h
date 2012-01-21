@@ -8,6 +8,7 @@
 #include "BaseUtil.h"
 #include "Vec.h"
 #include "BitManip.h"
+#include "GeomUtil.h"
 
 namespace mui {
 
@@ -228,10 +229,27 @@ public:
         painter = new VirtWndPainter(this);
     }
 
-    void OnPaint(HWND hwnd)
-    {
+    void OnPaint(HWND hwnd) {
         CrashIf(hwnd != hwndParent);
         painter->OnPaint(hwnd);
+    }
+
+    // called when either the window size changed (as a result
+    // of WM_SIZE) or when window tree changes
+    virtual void TopLevelLayout() {
+        CrashIf(!hwndParent);
+        ClientRect rc(hwndParent);
+        Size availableSize(rc.dx, rc.dy);
+        Measure(availableSize);
+        Size s = desiredSize;
+        // TODO: a hack, center the window based on size
+        // should have some other way of doing this, like a margin
+        // alternatively, can make adjustments in custom Arrange()
+        // (although that would be hacky too)
+        int x = (rc.dx - s.Width) / 2;
+        int y = (rc.dy - s.Height) / 2;
+        Rect r(x, y, s.Width, s.Height);
+        Arrange(r);
     }
 };
 

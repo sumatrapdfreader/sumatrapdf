@@ -49,6 +49,39 @@ Color gColBgTop(0xfa, 0xfa, 0xfa); // this is lightish gray
 // A sample text to display if we don't show an actual mobi file
 static const char *gSampleHtml = "<html><p align=justify>ClearType is <b>dependent</b> on the <i>orientation and ordering</i> of the LCD stripes.</p> <p align='right'><em>Currently</em>, ClearType is implemented <hr> only for vertical stripes that are ordered RGB.</p> <p align=center>This might be a concern if you are using a tablet PC.</p> <p>Where the display can be oriented in any direction, or if you are using a screen that can be turned from landscape to portrait. The <strike>following example</strike> draws text with two <u>different quality</u> settings.</p> On to the <b>next<mbp:pagebreak>page</b></html>";
 
+const int pageBorderX = 10;
+const int pageBorderY = 10;
+
+class VirtWndEbook : public VirtWndHwnd, public IClickHandler
+{
+    void AdvancePage(int dist);
+public:
+    MobiParse *     mb;
+    const char *    html;
+    PageLayout *    pageLayout;
+    int             currPageNo;
+
+    VirtWndButton * next;
+    VirtWndButton * prev;
+
+    VirtWndEbook(HWND hwnd);
+
+    virtual ~VirtWndEbook() {
+        delete mb;
+        delete pageLayout;
+    }
+
+    virtual void Paint(Graphics *gfx, int offX, int offY);
+
+    // IClickHandler
+    virtual void Clicked(VirtWnd *w);
+
+    void SetHtml(const char *html);
+    void LoadMobi(const TCHAR *fileName);
+
+    void DoPageLayout(int dx, int dy);
+};
+
 class EbookLayout : public Layout
 {
 public:
@@ -69,6 +102,12 @@ public:
 
 void EbookLayout::Measure(Size availableSize, VirtWnd *wnd)
 {
+    int marginX = (pageBorderX * 2);
+    if (availableSize.Width > marginX)
+        availableSize.Width -= marginX;
+    int marginY = (pageBorderY * 2);
+    if (availableSize.Height > marginY)
+        availableSize.Height -= marginY;
     wnd->desiredSize = availableSize;
     next->Measure(availableSize);
     prev->Measure(availableSize);
@@ -102,47 +141,9 @@ void EbookLayout::Arrange(Rect finalRect, VirtWnd *wnd)
     next->Arrange(nextPos);
 
     wnd->pos = finalRect;
+    VirtWndEbook *wndEbook = (VirtWndEbook*)wnd;
+    wndEbook->DoPageLayout(finalRect.Width, finalRect.Height);
 }
-
-class VirtWndEbook : public VirtWndHwnd, public IClickHandler
-{
-    void DoPageLayout(int dx, int dy);
-    void AdvancePage(int dist);
-public:
-    MobiParse *     mb;
-    const char *    html;
-    PageLayout *    pageLayout;
-    int             currPageNo;
-
-    VirtWndButton * next;
-    VirtWndButton * prev;
-
-    VirtWndEbook(HWND hwnd);
-
-    virtual ~VirtWndEbook() {
-        delete mb;
-        delete pageLayout;
-    }
-
-    virtual void Measure(Size availableSize) {
-        layout->Measure(availableSize, this);
-        desiredSize = availableSize;
-    }
-
-    virtual void Arrange(Rect finalRect) {
-        layout->Arrange(finalRect, this);
-        pos = finalRect;
-        DoPageLayout(pos.Width, pos.Height);
-    }
-
-    virtual void Paint(Graphics *gfx, int offX, int offY);
-
-    // IClickHandler
-    virtual void Clicked(VirtWnd *w);
-
-    void SetHtml(const char *html);
-    void LoadMobi(const TCHAR *fileName);
-};
 
 void VirtWndEbook::AdvancePage(int dist)
 {
@@ -306,9 +307,6 @@ static void UpdatePageCount()
     win::SetText(gHwndFrame, s.Get());
 }
 
-const int pageBorderX = 10;
-const int pageBorderY = 10;
-
 #if 0
 static void DrawFrame2(Graphics &g, RectI r)
 {
@@ -320,35 +318,10 @@ static void DrawFrame2(Graphics &g, RectI r)
 }
 #endif
 
-static void OnPaintFrame(HWND hwnd)
-{
-    gVirtWndFrame->OnPaint(hwnd);
-}
-
-static void OnLButtonDown()
-{
-}
-
-Rect EbookPosFromWindowSize(HWND hwnd, int dx = -1, int dy = -1)
-{
-    if ((-1 == dx) || (-1 == dy))
-    {
-        ClientRect hwndRect(hwnd);
-        dx = hwndRect.dx;
-        dy = hwndRect.dy;
-    }
-    Rect r = Rect(0, 0, dx, dy);
-    r.Inflate(-pageBorderX, -pageBorderY);
-    return r;
-}
-
 static void OnCreateWindow(HWND hwnd)
 {
     gVirtWndFrame = new VirtWndEbook(hwnd);
     gVirtWndFrame->SetHtml(gSampleHtml);
-
-    Rect r = EbookPosFromWindowSize(hwnd);
-    gVirtWndFrame->pos = r;
 
     HMENU menu = BuildMenu();
     // triggers OnSize(), so must be called after we
@@ -417,25 +390,6 @@ static LRESULT OnCommand(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
-void MainLayout(VirtWnd *wnd, Size windowSize)
-{
-    if (windowSize.Height > pageBorderX * 2)
-        windowSize.Width -= (pageBorderX * 2);
-    if (windowSize.Width > pageBorderY * 2)
-        windowSize.Height -= (pageBorderY * 2);
-
-    wnd->Measure(windowSize);
-    Size s = wnd->desiredSize;
-    Rect r(pageBorderX, pageBorderY, s.Width, s.Height);
-    wnd->Arrange(r);
-}
-
-static void OnSize(HWND hwnd, int dx, int dy)
-{
-   Size s(dx, dy);
-   MainLayout(gVirtWndFrame, Size(dx, dy));
-}
-
 static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     if (gVirtWndFrame) {
@@ -456,22 +410,14 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
             break;
 
         case WM_SIZE:
-            {
-                int dx = LOWORD(lParam);
-                int dy = HIWORD(lParam);
-                OnSize(hwnd, dx, dy);
-                break;
-            }
+            gVirtWndFrame->TopLevelLayout();
+            break;
 
         case WM_ERASEBKGND:
             return TRUE;
 
         case WM_PAINT:
-            OnPaintFrame(hwnd);
-            break;
-
-        case WM_LBUTTONDOWN:
-            OnLButtonDown();
+            gVirtWndFrame->OnPaint(hwnd);
             break;
 
         case WM_COMMAND:
