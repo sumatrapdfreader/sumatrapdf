@@ -6,6 +6,7 @@
 
 #include "BaseUtil.h"
 #include "Vec.h"
+#include "BitManip.h"
 
 namespace mui {
 
@@ -16,11 +17,12 @@ class VirtWnd;
 #define InfiniteDx ((INT)-1)
 #define InfintieDy ((INT)-1)
 
-void Initialize();
-void Destroy();
+void        Initialize();
+void        Destroy();
 
-Graphics *GetGraphicsForMeasureText();
-Rect MeasureTextWithFont(Font *f, const TCHAR *s);
+Graphics *  GetGraphicsForMeasureText();
+Rect        MeasureTextWithFont(Font *f, const TCHAR *s);
+void        RequestRepaint(VirtWnd *w);
 
 struct Padding {
     Padding() : left(0), right(0), top(0), bottom(0) {
@@ -95,6 +97,12 @@ public:
     virtual void Arrange(Rect finalRect);
     Size            desiredSize;
 
+    // used e.g. by a button to change the look when mouse.The intention
+    // is that in response to those a window should only do minimal processing
+    // that affects the window itself, not the rest of the system
+    virtual void NotifyMouseEnter() {}
+    virtual void NotifyMouseLeave() {}
+
     Layout *        layout;
 
     VirtWnd *       parent;
@@ -115,9 +123,19 @@ private:
 
 class VirtWndButton : public VirtWnd
 {
+    // button state flags that influence how a button looks
+    enum StateBits : int {
+        MouseOverBit = 0,
+        IsPressedBit = 1
+        // IsDefaultBit = 2 (?)
+    };
+
+    short state; // StateBits
+
 public:
     VirtWndButton(const TCHAR *s) {
         text = NULL;
+        state = 0;
         padding = Padding(8, 4);
         SetText(s);
     }
@@ -132,6 +150,16 @@ public:
 
     virtual void Measure(Size availableSize);
     virtual void Paint(Graphics *gfx, int offX, int offY);
+
+    virtual void NotifyMouseEnter() {
+        bit::Set(state, MouseOverBit);
+        RequestRepaint(this);
+    }
+
+    virtual void NotifyMouseLeave() {
+        bit::Clear(state, MouseOverBit);
+        RequestRepaint(this);
+    }
 
     TCHAR *         text;
 };
@@ -153,6 +181,31 @@ public:
     }
 
     void OnPaint(HWND hwnd, VirtWnd *hwndWnd);
+};
+
+class EventMgr
+{
+    VirtWnd *   rootWnd;
+    // current window over which mouse is
+    VirtWnd *   currOver;
+
+    LRESULT OnMouseMove(WPARAM keys, int x, int y, bool& handledOut);
+public:
+    EventMgr(VirtWnd *rootWnd = NULL) {
+        currOver = NULL;
+        SetRootWindow(rootWnd);
+    }
+    ~EventMgr() {}
+
+    void SetRootWindow(VirtWnd *root) {
+        rootWnd = root;
+        if (rootWnd) {
+            // must be window backed by HWND
+            CrashIf(!rootWnd->hwndParent);
+        }
+    }
+
+    LRESULT OnMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& handledOut);
 };
 
 }

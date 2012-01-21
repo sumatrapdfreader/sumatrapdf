@@ -34,6 +34,7 @@ static HINSTANCE        ghinst;
 static HWND             gHwndFrame = NULL;
 static VirtWndEbook *   gVirtWndFrame = NULL;
 static VirtWndPainter * gVirtWndPainterFrame = NULL;
+static EventMgr *       gEventMgrFrame = NULL;
 
 static bool gShowTextBoundingBoxes = false;
 
@@ -353,6 +354,7 @@ static void OnCreateWindow(HWND hwnd)
     LoadSampleAsCurrentDoc();
     gVirtWndFrame = new VirtWndEbook();
     gVirtWndFrame->hwndParent = hwnd;
+    gEventMgrFrame = new EventMgr(gVirtWndFrame);
     gVirtWndPainterFrame = new VirtWndPainter();
     Rect r = EbookPosFromWindowSize(hwnd);
     gVirtWndFrame->pos = r;
@@ -447,6 +449,14 @@ static void OnSize(HWND hwnd, int dx, int dy)
 
 static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+
+    if (gEventMgrFrame) {
+        bool handled;
+        LRESULT res = gEventMgrFrame->OnMessage(msg, wParam, lParam, handled);
+        if (handled)
+            return res;
+    }
+
     switch (msg)
     {
         case WM_CREATE:
@@ -576,6 +586,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     delete gCurrentEbook;
     delete gVirtWndFrame;
     delete gVirtWndPainterFrame;
+    delete gEventMgrFrame;
 
 Exit:
     mui::Destroy();

@@ -5,6 +5,7 @@
 #include "BaseUtil.h"
 #include "Vec.h"
 #include "GeomUtil.h"
+#include <Windowsx.h>
 
 /*
 MUI is a simple UI library for win32.
@@ -31,6 +32,18 @@ be positioned outside of parent's bounds.
 
 There must be a parent window backed by HWND which handles windows
 messages and paints child windows on WM_PAINT.
+
+TODO:
+ - event management (mouse move, mouse click etc.)
+ - repaint when the look of the window changes
+ - css-like styling of windows
+ - a way to easily do text selection in generic way in EventMgr
+   by giving windows a way to declare they have selectable text
+ - generic way to handle tooltips
+ - generic way to handle cursor changes
+ - add a notion of z-order so that we can paint/respond to
+   events in a more flexible order than the one dictated
+   by parent-child relantionship (?)
 */
 
 #include "mui.h"
@@ -96,6 +109,12 @@ Rect MeasureTextWithFont(Font *f, const TCHAR *s)
     RectF r = MeasureText(gGraphicsForFontMeasure, f, s);
     Rect res((int)r.X, (int)r.Y, (int)r.Width, (int)r.Height);
     return res;
+}
+
+void RequestRepaint(VirtWnd *w)
+{
+
+
 }
 
 VirtWnd::VirtWnd(VirtWnd *parent)
@@ -177,7 +196,8 @@ void VirtWndButton::SetText(const TCHAR *s)
 {
     str::ReplacePtr(&text, s);
     RecalculateSize();
-    // TODO: this should trigger repaint and relayout
+    RequestRepaint(this);
+    // TODO: this should trigger relayout
 }
 
 void VirtWndButton::Measure(Size availableSize)
@@ -195,6 +215,9 @@ void VirtWndButton::Paint(Graphics *gfx, int offX, int offY)
 
     SolidBrush br(Color(255,0,0));
     SolidBrush bgBr(Color(180, 255, 255, 255)); // semi-transparent white
+    if (bit::IsSet(state, MouseOverBit))
+        bgBr.SetColor(Color(180, 0, 0, 255)); // semi-transparent blue
+
     RectF bbox((REAL)offX, (REAL)offY, (REAL)pos.Width, (REAL)pos.Height);
     gfx->FillRectangle(&bgBr, bbox);
 
@@ -277,6 +300,66 @@ void VirtWndPainter::OnPaint(HWND hwnd, VirtWnd *hwndWnd)
 
     gDC.DrawImage(cacheBmp, 0, 0);
     EndPaint(hwnd, &ps);
+}
+
+// TODO: build an iterator for (VirtWnd *, Rect) to make such logic reusable
+// in more places and eliminate recursion (?)
+static void FindWindowsAtRecur(VirtWnd *w, int x, int y, int offX, int offY, Vec<VirtWnd*> *windows)
+{
+    if (!w->isVisible)
+        return;
+    offX += w->pos.X;
+    offY += w->pos.Y;
+    Rect r = Rect(offX, offY, w->pos.Width, w->pos.Height);
+    if (r.Contains(x, y))
+        windows->Append(w);
+    size_t children = w->GetChildCount();
+    for (size_t i = 0; i < children; i++) {
+        FindWindowsAtRecur(w->GetChild(i), x, y, offX, offY, windows);
+    }
+}
+
+// Find all windows containing a given point (x, y). We have to traverse all windows
+// because children are not guaranteed to be bounded by their parent.
+// It's very likely to return more than one window because our window hierarchy
+// is a tree. Because we traverse the tree breadth-first, parent windows will be
+// in windows array before child windows. In most cases caller can use the last
+// window in returned array (but can use a custom logic as well).
+// Returns number of matched windows as a convenience.
+static size_t FindWindowsAt(VirtWnd *root, int x, int y, Vec<VirtWnd*> *windows)
+{
+    windows->Reset();
+    FindWindowsAtRecur(root, x, y, 0, 0, windows);
+    return windows->Count();
+}
+
+LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& handledOut)
+{
+    Vec<VirtWnd*> windows;
+    size_t count = FindWindowsAt(rootWnd, x, y, &windows);
+    if (0 == count)
+        return 0;
+    VirtWnd *w = windows.Last();
+    if (w != currOver) {
+        if (currOver)
+            currOver->NotifyMouseLeave();
+        currOver = w;
+        currOver->NotifyMouseEnter();
+    }
+    return 0;
+}
+
+// TODO: not sure if handledOut serves any purpose (what exactly should it mean?)
+LRESULT EventMgr::OnMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& handledOut)
+{
+    handledOut = false;
+    if (WM_MOUSEMOVE == msg) {
+        int x = GET_X_LPARAM(lParam);
+        int y = GET_Y_LPARAM(lParam);
+        return OnMouseMove(wParam, x, y, handledOut);
+    }
+
+    return 0;
 }
 
 }

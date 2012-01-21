@@ -84,6 +84,7 @@
     <ClInclude Include="src\installer\Version.h" />
     <ClInclude Include="src\MobiParse.h" />
     <ClInclude Include="src\PageLayout.h" />
+    <ClInclude Include="src\utils\BitManip.h" />
     <ClInclude Include="src\utils\FileUtil.h" />
     <ClInclude Include="src\utils\FrameTimeoutCalculator.h" />
     <ClInclude Include="src\utils\GdiPlusUtil.h" />
