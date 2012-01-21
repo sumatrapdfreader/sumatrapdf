@@ -44,6 +44,9 @@ TODO:
  - add a notion of z-order so that we can paint/respond to
    events in a more flexible order than the one dictated
    by parent-child relantionship (?)
+ - create VirtWndHwnd and put EventMgr() and VirtWndPainter() in
+   it to simplify usage? Those don't make much sense outside of
+   VirtWnd that is not backed by Hwnd
 */
 
 #include "mui.h"
@@ -111,10 +114,22 @@ Rect MeasureTextWithFont(Font *f, const TCHAR *s)
     return res;
 }
 
+#define RECTFromRect(r) { r.GetLeft(), r.GetTop(), r.GetRight(), r.GetBottom() }
+
 void RequestRepaint(VirtWnd *w)
 {
+    if (w->pos.IsEmptyArea())
+        return;
 
-
+    Rect r(w->pos);
+    while (w->parent) {
+        w = w->parent;
+        r.X += w->pos.X;
+        r.Y += w->pos.Y;
+    }
+    CrashIf(!w->hwndParent);
+    RECT rc = RECTFromRect(r);
+    InvalidateRect(w->hwndParent, &rc, TRUE);
 }
 
 VirtWnd::VirtWnd(VirtWnd *parent)
