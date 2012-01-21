@@ -214,7 +214,7 @@ PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_XPS_PREVIEW"
 PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_CBZ_PREVIEW"
 PDFPREVIEW_OBJS = $(PDFPREVIEW_OBJS) \
 	$(OS)\ImagesEngine.obj $(OS)\GdiPlusUtil.obj \
-	$(MINIZIP_OBJS) $(UNRAR_OBJS) $(BZIP2_OBJS)
+	$(MINIZIP_OBJS) $(BZIP2_OBJS)
 !endif
 
 ##### SumatraPDF-specific build rules #####
@@ -493,10 +493,10 @@ $(OS)\PdfEngine.obj: src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\PdfFilterDll.obj: src\ifilter\CPdfFilter.h src\ifilter\CTeXFilter.h src\ifilter\FilterBase.h
 $(OS)\PdfFilterDll.obj: src\ifilter\PdfFilter.h src\utils\BaseUtil.h src\utils\GeomUtil.h
 $(OS)\PdfFilterDll.obj: src\utils\Scopes.h src\utils\StrUtil.h src\utils\WinUtil.h
-$(OS)\PdfPreview.obj: src\BaseEngine.h src\ImagesEngine.h src\PdfEngine.h
-$(OS)\PdfPreview.obj: src\previewer\PdfPreview.h src\utils\BaseUtil.h src\utils\GeomUtil.h
-$(OS)\PdfPreview.obj: src\utils\Scopes.h src\utils\StrUtil.h src\utils\Vec.h
-$(OS)\PdfPreview.obj: src\utils\WinUtil.h
+$(OS)\PdfPreview.obj: ext\unrar\dll.hpp src\BaseEngine.h src\ImagesEngine.h
+$(OS)\PdfPreview.obj: src\PdfEngine.h src\previewer\PdfPreview.h src\utils\BaseUtil.h
+$(OS)\PdfPreview.obj: src\utils\GeomUtil.h src\utils\Scopes.h src\utils\StrUtil.h
+$(OS)\PdfPreview.obj: src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\PdfPreviewDll.obj: src\BaseEngine.h src\previewer\PdfPreview.h src\utils\BaseUtil.h
 $(OS)\PdfPreviewDll.obj: src\utils\GeomUtil.h src\utils\Scopes.h src\utils\StrUtil.h
 $(OS)\PdfPreviewDll.obj: src\utils\Vec.h src\utils\WinUtil.h

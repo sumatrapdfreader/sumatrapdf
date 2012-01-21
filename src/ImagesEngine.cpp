@@ -968,7 +968,7 @@ bool CCbxEngine::LoadCbrFile(const TCHAR *file)
     arcData.OpenMode = RAR_OM_EXTRACT;
 
     HANDLE hArc = RAROpenArchiveEx(&arcData);
-    if (arcData.OpenResult != 0)
+    if (!hArc || arcData.OpenResult != 0)
         return false;
 
     // UnRAR does not seem to support extracting a single file by name,

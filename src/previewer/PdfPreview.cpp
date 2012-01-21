@@ -306,4 +306,13 @@ BaseEngine *CCbzPreview::LoadEngine(IStream *stream)
 {
     return CbxEngine::CreateFromStream(stream);
 }
+
+// allow to build PdfPreview.dll without UnRAR
+#include "../ext/unrar/dll.hpp"
+HANDLE PASCAL   RAROpenArchiveEx(struct RAROpenArchiveDataEx *) { return NULL; }
+int    PASCAL   RARReadHeaderEx(HANDLE, struct RARHeaderDataEx *) { return -1; }
+void   PASCAL   RARSetCallback(HANDLE, UNRARCALLBACK, LPARAM) { }
+int    PASCAL   RARProcessFile(HANDLE, int, char *, char *) { return -1; }
+int    PASCAL   RARCloseArchive(HANDLE) { return -1; }
+
 #endif
