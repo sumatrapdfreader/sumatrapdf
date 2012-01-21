@@ -401,16 +401,7 @@ public:
 			alpha = getAlpha(alpha);
 		}
 		
-		// grid fit the image similar to draw_affine.c's fz_paint_image_imp
-		if (fz_is_rectilinear(ctm))
-		{
-			ctm.a = roundup(ctm.a);
-			ctm.b = roundup(ctm.b);
-			ctm.c = roundup(ctm.c);
-			ctm.d = roundup(ctm.d);
-			ctm.e = round(ctm.e);
-			ctm.f = round(ctm.f);
-		}
+		fz_gridfit_matrix(&ctm);
 		
 		if (_hasSingleColor(image))
 		{
@@ -453,7 +444,7 @@ public:
 			graphics->DrawImage(&PixmapBitmap(ctx, image), corners, 3, 0, 0, image->w, image->h, UnitPixel, &DrawImageAttributes(alpha));
 			graphics->Restore(state);
 		}
-		else if (scale < 1.0 && MIN(image->w, image->h) > 10)
+		else if (scale < 1.0 && MIN(image->w, image->h) > 100)
 		{
 			int w = round(image->w * scale);
 			int h = round(image->h * scale);

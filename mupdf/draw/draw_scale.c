@@ -23,7 +23,7 @@ and then positioning it at (frac(x),frac(y)).
  */
 #ifdef ARCH_ARM
 #ifdef ARCH_THUMB
-#define ENTER_ARM   ".balign 4\nmov r12,pc\nbx r12\n0:.arm\n"
+#define ENTER_ARM ".balign 4\nmov r12,pc\nbx r12\n0:.arm\n"
 #define ENTER_THUMB "9:.thumb\n"
 #else
 #define ENTER_ARM
@@ -617,7 +617,7 @@ scale_row_to_temp1(int *dst, unsigned char *src, fz_weights *weights)
 	"@ r2 = weights						\n"
 	"ldr	r12,[r2],#4		@ r12= flip		\n"
 	"ldr	r3, [r2],#16		@ r3 = count r2 = &index\n"
-	"ldr    r4, [r2]		@ r4 = index[0]		\n"
+	"ldr	r4, [r2]		@ r4 = index[0]		\n"
 	"cmp	r12,#0			@ if (flip)		\n"
 	"beq	4f			@ {			\n"
 	"add	r2, r2, r4, LSL #2	@ r2 = &index[index[0]] \n"
@@ -677,7 +677,7 @@ scale_row_to_temp2(int *dst, unsigned char *src, fz_weights *weights)
 	"@ r2 = weights						\n"
 	"ldr	r12,[r2],#4		@ r12= flip		\n"
 	"ldr	r3, [r2],#16		@ r3 = count r2 = &index\n"
-	"ldr    r4, [r2]		@ r4 = index[0]		\n"
+	"ldr	r4, [r2]		@ r4 = index[0]		\n"
 	"cmp	r12,#0			@ if (flip)		\n"
 	"beq	4f			@ {			\n"
 	"add	r2, r2, r4, LSL #2	@ r2 = &index[index[0]] \n"
@@ -741,7 +741,7 @@ scale_row_to_temp4(int *dst, unsigned char *src, fz_weights *weights)
 	"@ r2 = weights						\n"
 	"ldr	r12,[r2],#4		@ r12= flip		\n"
 	"ldr	r3, [r2],#16		@ r3 = count r2 = &index\n"
-	"ldr    r4, [r2]		@ r4 = index[0]		\n"
+	"ldr	r4, [r2]		@ r4 = index[0]		\n"
 	"cmp	r12,#0			@ if (flip)		\n"
 	"beq	4f			@ {			\n"
 	"add	r2, r2, r4, LSL #2	@ r2 = &index[index[0]] \n"
@@ -821,7 +821,7 @@ scale_row_from_temp(unsigned char *dst, int *src, fz_weights *weights, int width
 	"@ r2 = &weights->index[0]				\n"
 	"@ r3 = width						\n"
 	"@ r12= row						\n"
-	"ldr    r4, [r2, r12, LSL #2]	@ r4 = index[row]	\n"
+	"ldr	r4, [r2, r12, LSL #2]	@ r4 = index[row]	\n"
 	"add	r2, r2, #4		@ r2 = &index[1]	\n"
 	"mov	r6, r3			@ r6 = x = width	\n"
 	"ldr	r14,[r2, r4, LSL #2]!	@ r2 = contrib = index[index[row]+1]\n"
@@ -844,7 +844,7 @@ scale_row_from_temp(unsigned char *dst, int *src, fz_weights *weights, int width
 	"movlt	r7, #0			@ if (r7 < 0) r7 = 0	\n"
 	"cmp	r7, #255		@ if (r7 > 255)		\n"
 	"add	r1, r1, #4		@ src++			\n"
-	"movgt	r7, #255		@     r7 = 255		\n"
+	"movgt	r7, #255		@ r7 = 255		\n"
 	"subs	r6, r6, #1		@ x--			\n"
 	"strb	r7, [r0], #1		@ *dst++ = val		\n"
 	"bgt	1b			@ 			\n"
@@ -1214,15 +1214,13 @@ fz_scale_pixmap(fz_context *ctx, fz_pixmap *src, float x, float y, float w, floa
 
 	/* Find the destination bbox, width/height, and sub pixel offset,
 	 * allowing for whether we're flipping or not. */
-	/* Note that the x and y sub pixel offsets here are different.
-	 * The (x,y) position given describes where the bottom left corner
-	 * of the source image should be mapped to (i.e. where (0,h) in image
-	 * space ends up, not the more logical and sane (0,0)). Also there
-	 * are differences in the way we scale horizontally and vertically.
-	 * When scaling rows horizontally, we always read forwards through
-	 * the source, and store either forwards or in reverse as required.
-	 * When scaling vertically, we always store out forwards, but may
-	 * feed source rows in in a different order.
+	/* The (x,y) position given describes where the top left corner
+	 * of the source image should be mapped to (i.e. where (0,0) in image
+	 * space ends up). Also there are differences in the way we scale
+	 * horizontally and vertically. When scaling rows horizontally, we
+	 * always read forwards through the source, and store either forwards
+	 * or in reverse as required. When scaling vertically, we always store
+	 * out forwards, but may feed source rows in in a different order.
 	 *
 	 * Consider the image rectangle 'r' to which the image is mapped,
 	 * and the (possibly) larger rectangle 'R', given by expanding 'r' to
@@ -1240,7 +1238,7 @@ fz_scale_pixmap(fz_context *ctx, fz_pixmap *src, float x, float y, float w, floa
 	{
 		float tmp;
 		w = -w;
-		dst_x_int = floor(x-w);
+		dst_x_int = floorf(x-w);
 		tmp = ceilf(x);
 		dst_w_int = (int)tmp;
 		x = tmp - x;
@@ -1248,27 +1246,29 @@ fz_scale_pixmap(fz_context *ctx, fz_pixmap *src, float x, float y, float w, floa
 	}
 	else
 	{
-		dst_x_int = floor(x);
+		dst_x_int = floorf(x);
 		x -= (float)dst_x_int;
 		dst_w_int = (int)ceilf(x + w);
 	}
 	flip_y = (h < 0);
-	/* dst_y_int is calculated to be the bottom of the scaled image, but
-	 * y (the sub pixel offset) has to end up being the value at the top.
+	/* dst_y_int is calculated to be the top of the scaled image, and
+	 * y (the sub pixel offset) is the distance in from either the top
+	 * or bottom pixel expanded edge.
 	 */
 	if (flip_y)
 	{
+		float tmp;
 		h = -h;
-		dst_y_int = floor(y-h);
-		dst_h_int = (int)ceilf(y) - dst_y_int;
+		dst_y_int = floorf(y-h);
+		tmp = ceilf(y);
+		dst_h_int = (int)tmp;
+		y = tmp - y;
+		dst_h_int -= dst_y_int;
 	} else {
-		dst_y_int = floor(y);
-		y += h;
-		dst_h_int = (int)ceilf(y) - dst_y_int;
+		dst_y_int = floorf(y);
+		y -= (float)dst_y_int;
+		dst_h_int = (int)ceilf(y + h);
 	}
-	/* y is the top edge position in floats. We want it to be the
-	 * distance down from the next pixel boundary. */
-	y = ceilf(y) - y;
 
 	DBUG(("Result image: (%d,%d) at (%d,%d) (subpix=%g,%g)\n", dst_w_int, dst_h_int, dst_x_int, dst_y_int, x, y));
 

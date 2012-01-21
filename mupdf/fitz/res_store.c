@@ -73,6 +73,8 @@ fz_keep_storable(fz_context *ctx, fz_storable *s)
 void
 fz_drop_storable(fz_context *ctx, fz_storable *s)
 {
+	int do_free = 0;
+
 	if (s == NULL)
 		return;
 	fz_lock(ctx);
@@ -87,9 +89,11 @@ fz_drop_storable(fz_context *ctx, fz_storable *s)
 		 * keeps a ref to everything in it, and doesn't drop via
 		 * this method. So we can simply drop the storable object
 		 * itself without any operations on the fz_store. */
-		s->free(ctx, s);
+		do_free = 1;
 	}
 	fz_unlock(ctx);
+	if (do_free)
+		s->free(ctx, s);
 }
 
 static void
