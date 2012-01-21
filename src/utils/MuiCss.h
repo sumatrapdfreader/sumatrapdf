@@ -18,7 +18,7 @@ enum PropType {
 };
 
 struct FontNameData {
-    TCHAR * name;
+    const TCHAR * name;
 };
 
 struct FontSizeData {
@@ -45,6 +45,8 @@ public:
     };
 
     ~Prop();
+
+    bool Eq(Prop *other);
 
     static Prop *AllocFontName(const TCHAR *name);
     static Prop *AllocFontSize(float size);

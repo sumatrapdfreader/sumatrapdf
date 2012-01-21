@@ -65,37 +65,79 @@ void Destroy()
 Prop::~Prop()
 {
     if (PropFontName == type) {
-        free(fontName.name);
+        free((void*)fontName.name);
     }
 }
 
-Prop *Prop::AllocFontName(const TCHAR *name)
+bool Prop::Eq(Prop *other)
 {
-    // TODO: a saner way to do this, it's going to be tedious
-    // to repeat all this code for each property type
+    if (type != other->type)
+        return false;
+    switch (type) {
+    case PropFontName:
+        return str::Eq(fontName.name, other->fontName.name);
+    case PropFontSize:
+        return fontSize.size == other->fontSize.size;
+    case PropFontWeight:
+        return fontWeight.style == other->fontWeight.style;
+    default:
+        CrashIf(true);
+        break;
+    }
+    return false;
+}
+
+// TODO: could speed up this at the expense of insert speed by
+// sorting gAllProps by prop->type, so that we only need to
+// search a subset of gAllProps. We could either explicitly
+// maintain an index of PropType -> index in gAllProps of
+// first property of this type or do binary search.
+static Prop *FindExistingProp(Prop *prop)
+{
     for (size_t i = 0; i < gAllProps->Count(); i++) {
         Prop *p = gAllProps->At(i);
-        if (PropFontName != p->type)
-            continue;
-        if (!str::Eq(p->fontName.name, name))
-            continue;
-        return p;
+        if (p->Eq(prop))
+            return p;
     }
-    Prop *np = new Prop(PropFontName);
-    np->fontName.name = str::Dup(name);
-    gAllProps->Append(np);
-    return np;
+    return NULL;
 }
+
+// can't use ALLOC_BODY() because it has to create a copy of name
+Prop *Prop::AllocFontName(const TCHAR *name)
+{
+    Prop p(PropFontName);
+    p.fontName.name = name;
+    Prop *newProp = FindExistingProp(&p);
+    if (newProp)
+        return newProp;
+    newProp = new Prop(PropFontName);
+    newProp->fontName.name = str::Dup(name);
+    gAllProps->Append(newProp);
+    return newProp;
+}
+
+#define ALLOC_BODY(propType, structName, argName) \
+    Prop p(propType); \
+    p.structName.argName = argName; \
+    Prop *newProp = FindExistingProp(&p); \
+    if (newProp) \
+        return newProp; \
+    newProp = new Prop(propType); \
+    newProp->structName.argName = argName; \
+    gAllProps->Append(newProp); \
+    return newProp
 
 Prop *Prop::AllocFontSize(float size)
 {
-    return NULL;
+    ALLOC_BODY(PropFontSize, fontSize, size);
 }
 
 Prop *Prop::AllocFontWeight(FontStyle style)
 {
-    return NULL;
+    ALLOC_BODY(PropFontWeight, fontWeight, style);
 }
+
+#undef ALLOC_BODY
 
 // Add a property to a set, if a given PropType doesn't exist,
 // replace if a given PropType already exists in the set.
