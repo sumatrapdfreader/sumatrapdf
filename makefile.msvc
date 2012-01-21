@@ -141,7 +141,7 @@ UTILS_OBJS = \
 	$(OS)\DialogSizer.obj $(OS)\Transactions.obj $(OS)\Touch.obj \
 	$(OS)\TrivialHtmlParser.obj $(OS)\HtmlWindow.obj $(OS)\GdiPlusUtil.obj \
 	$(OS)\DirIter.obj $(OS)\BitReader.obj $(OS)\HtmlPullParser.obj \
-	$(OS)\mui.obj
+	$(OS)\mui.obj $(OS)\MuiCss.obj
 
 ENGINE_OBJS = \
 	$(OS)\PdfEngine.obj $(OS)\ImagesEngine.obj $(OS)\PsEngine.obj \
@@ -463,6 +463,8 @@ $(OS)\MobiParse.obj: src\utils\Vec.h
 $(OS)\mui.obj: src\utils\BaseUtil.h src\utils\BitManip.h src\utils\GdiPlusUtil.h
 $(OS)\mui.obj: src\utils\GeomUtil.h src\utils\mui.h src\utils\StrUtil.h
 $(OS)\mui.obj: src\utils\Vec.h
+$(OS)\MuiCss.obj: src\utils\BaseUtil.h src\utils\MuiCss.h src\utils\StrUtil.h
+$(OS)\MuiCss.obj: src\utils\Vec.h
 $(OS)\MuPDF_Exports.obj: mupdf\fitz\fitz.h
 $(OS)\Notifications.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
 $(OS)\Notifications.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
@@ -477,8 +479,8 @@ $(OS)\npPdfViewer.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scope
 $(OS)\npPdfViewer.obj: src\utils\SimpleLog.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\npPdfViewer.obj: src\utils\WinUtil.h
 $(OS)\PageLayout.obj: src\PageLayout.h src\utils\BaseUtil.h src\utils\BitManip.h
-$(OS)\PageLayout.obj: src\utils\GdiPlusUtil.h src\utils\HtmlPullParser.h src\utils\mui.h
-$(OS)\PageLayout.obj: src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\PageLayout.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\HtmlPullParser.h
+$(OS)\PageLayout.obj: src\utils\mui.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\ParseCommandLine.obj: src\AppPrefs.h src\BaseEngine.h src\DisplayState.h
 $(OS)\ParseCommandLine.obj: src\ParseCommandLine.h src\StressTesting.h src\SumatraPDF.h
 $(OS)\ParseCommandLine.obj: src\TextSearch.h src\TextSelection.h src\utils\BaseUtil.h

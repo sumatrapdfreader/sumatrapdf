@@ -77,6 +77,7 @@
     <ClCompile Include="src\utils\GdiPlusUtil.cpp" />
     <ClCompile Include="src\utils\HtmlPullParser.cpp" />
     <ClCompile Include="src\utils\mui.cpp" />
+    <ClCompile Include="src\utils\MuiCss.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ebooktest\EbookTestMenu.h" />
@@ -90,6 +91,7 @@
     <ClInclude Include="src\utils\GdiPlusUtil.h" />
     <ClInclude Include="src\utils\HtmlPullParser.h" />
     <ClInclude Include="src\utils\mui.h" />
+    <ClInclude Include="src\utils\MuiCss.h" />
     <ClInclude Include="src\utils\Vec.h" />
   </ItemGroup>
   <ItemGroup>
