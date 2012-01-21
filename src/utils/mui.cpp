@@ -34,8 +34,8 @@ There must be a parent window backed by HWND which handles windows
 messages and paints child windows on WM_PAINT.
 
 TODO:
- - repaint when the look of the window changes
- - css-like styling of windows
+ - css-like styling of buttons etc.
+ - relayout when necessary
  - a way to easily do text selection in generic way in EventMgr
    by giving windows a way to declare they have selectable text
  - generic way to handle tooltips
@@ -43,6 +43,14 @@ TODO:
  - add a notion of z-order so that we can paint/respond to
    events in a more flexible order than the one dictated
    by parent-child relantionship (?)
+ - when registering for events and such we use VirtWnd * to identify
+   a window which leaves small (but non-zero) chance that the window
+   has been destoryed or a pointer was re-used for another window.
+   We could fix that by automatically assigning unique id for each
+   VirtWnd and identify windows by that
+ - some claim GDI+ text drawing is slower than GDI, so we could try
+   to use GDI instead
+ - optimize repainting by cliping to dirty regions
 */
 
 #include "mui.h"

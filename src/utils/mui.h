@@ -73,7 +73,7 @@ public:
     }
 
     virtual void Measure(Size availableSize, VirtWnd *wnd) = 0;
-    virtual void Arrange(Rect finalSize, VirtWnd *wnd) = 0;
+    virtual void Arrange(Rect finalRect, VirtWnd *wnd) = 0;
 };
 
 // Manages painting process of VirtWnd window and all its children.
