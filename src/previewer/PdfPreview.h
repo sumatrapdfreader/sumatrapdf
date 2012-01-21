@@ -26,13 +26,14 @@ class PreviewBase : public IThumbnailProvider, public IInitializeWithStream,
 {
 public:
     PreviewBase(long *plRefCount) : m_lRef(1), m_plModuleRef(plRefCount),
-        m_pStream(NULL), m_engine(NULL), renderer(NULL),
+        m_pStream(NULL), m_engine(NULL), renderer(NULL), m_gdiScope(NULL),
         m_site(NULL), m_hwnd(NULL), m_hwndParent(NULL) {
         InterlockedIncrement(m_plModuleRef);
     }
 
     virtual ~PreviewBase() {
         Unload();
+        delete m_gdiScope;
         InterlockedDecrement(m_plModuleRef);
     }
 
@@ -157,6 +158,8 @@ protected:
     long m_lRef, * m_plModuleRef;
     ScopedComPtr<IStream> m_pStream;
     BaseEngine *m_engine;
+    // engines based on ImagesEngine require GDI+ to be preloaded
+    ScopedGdiPlus *m_gdiScope;
     // state for IPreviewHandler
     ScopedComPtr<IUnknown> m_site;
     HWND        m_hwnd, m_hwndParent;
@@ -185,11 +188,10 @@ protected:
 
 #ifdef BUILD_CBZ_PREVIEW
 class CCbzPreview : public PreviewBase {
-    // engines based on ImagesEngine require GDI+ to be preloaded
-    ScopedGdiPlus gdiScope;
-
 public:
-    CCbzPreview(long *plRefCount) : PreviewBase(plRefCount) { }
+    CCbzPreview(long *plRefCount) : PreviewBase(plRefCount) {
+        m_gdiScope = new ScopedGdiPlus();
+    }
 
 protected:
     virtual BaseEngine *LoadEngine(IStream *stream);
