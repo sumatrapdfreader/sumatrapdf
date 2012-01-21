@@ -44,9 +44,6 @@ TODO:
  - add a notion of z-order so that we can paint/respond to
    events in a more flexible order than the one dictated
    by parent-child relantionship (?)
- - create VirtWndHwnd and put EventMgr() and VirtWndPainter() in
-   it to simplify usage? Those don't make much sense outside of
-   VirtWnd that is not backed by Hwnd
 */
 
 #include "mui.h"
@@ -134,10 +131,11 @@ void RequestRepaint(VirtWnd *w)
 
 VirtWnd::VirtWnd(VirtWnd *parent)
 {
-    SetParent(parent);
+    hwndParent = NULL;
     isVisible = true;
     layout = NULL;
     pos = Rect();
+    SetParent(parent);
 }
 
 VirtWnd::~VirtWnd()
@@ -284,9 +282,9 @@ void VirtWndPainter::PaintRecursively(Graphics *g, VirtWnd *wnd, int offX, int o
 // with HWND.
 // Note: maybe should be split into BeginPaint()/Paint()/EndPaint()
 // calls so that the caller can do more drawing after Paint()
-void VirtWndPainter::OnPaint(HWND hwnd, VirtWnd *hwndWnd)
+void VirtWndPainter::OnPaint(HWND hwnd)
 {
-    CrashAlwaysIf(hwnd != hwndWnd->hwndParent);
+    CrashAlwaysIf(hwnd != wnd->hwndParent);
 
     PAINTSTRUCT ps;
     HDC dc = BeginPaint(hwnd, &ps);
@@ -311,7 +309,7 @@ void VirtWndPainter::OnPaint(HWND hwnd, VirtWnd *hwndWnd)
     Rect r(rc2.x, rc2.y, rc2.dx, rc2.dy);
     PaintBackground(&g, r);
 
-    PaintRecursively(&g, hwndWnd, 0, 0);
+    PaintRecursively(&g, wnd, 0, 0);
 
     gDC.DrawImage(cacheBmp, 0, 0);
     EndPaint(hwnd, &ps);

@@ -33,8 +33,6 @@ class VirtWndEbook;
 static HINSTANCE        ghinst;
 static HWND             gHwndFrame = NULL;
 static VirtWndEbook *   gVirtWndFrame = NULL;
-static VirtWndPainter * gVirtWndPainterFrame = NULL;
-static EventMgr *       gEventMgrFrame = NULL;
 
 static bool gShowTextBoundingBoxes = false;
 
@@ -117,7 +115,7 @@ void EbookLayout::Arrange(Rect finalSize, VirtWnd *wnd)
     wnd->pos = finalSize;
 }
 
-class VirtWndEbook : public VirtWnd
+class VirtWndEbook : public VirtWndHwnd
 {
 public:
     VirtWndEbook();
@@ -305,7 +303,7 @@ static void DrawFrame2(Graphics &g, RectI r)
 
 static void OnPaintFrame(HWND hwnd)
 {
-    gVirtWndPainterFrame->OnPaint(hwnd, gVirtWndFrame);
+    gVirtWndFrame->OnPaint(hwnd);
 }
 
 static void OnLButtonDown()
@@ -353,9 +351,8 @@ static void OnCreateWindow(HWND hwnd)
 {
     LoadSampleAsCurrentDoc();
     gVirtWndFrame = new VirtWndEbook();
-    gVirtWndFrame->hwndParent = hwnd;
-    gEventMgrFrame = new EventMgr(gVirtWndFrame);
-    gVirtWndPainterFrame = new VirtWndPainter();
+    gVirtWndFrame->SetHwnd(hwnd);
+
     Rect r = EbookPosFromWindowSize(hwnd);
     gVirtWndFrame->pos = r;
     RelayoutByHwnd(hwnd);
@@ -449,10 +446,9 @@ static void OnSize(HWND hwnd, int dx, int dy)
 
 static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-
-    if (gEventMgrFrame) {
+    if (gVirtWndFrame) {
         bool handled;
-        LRESULT res = gEventMgrFrame->OnMessage(msg, wParam, lParam, handled);
+        LRESULT res = gVirtWndFrame->OnMessage(msg, wParam, lParam, handled);
         if (handled)
             return res;
     }
@@ -585,8 +581,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     delete gCurrentEbook;
     delete gVirtWndFrame;
-    delete gVirtWndPainterFrame;
-    delete gEventMgrFrame;
 
 Exit:
     mui::Destroy();

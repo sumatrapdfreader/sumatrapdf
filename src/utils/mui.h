@@ -13,6 +13,7 @@ namespace mui {
 using namespace Gdiplus;
 
 class VirtWnd;
+class VirtWndHwnd;
 
 #define InfiniteDx ((INT)-1)
 #define InfintieDy ((INT)-1)
@@ -64,6 +65,44 @@ public:
     virtual void Arrange(Rect finalSize, VirtWnd *wnd) = 0;
 };
 
+// Manages painting process of VirtWnd window and all its children.
+// Automatically does double-buffering for less flicker.
+// Create one object for each HWND-backed VirtWnd and keep it around.
+class VirtWndPainter
+{
+    VirtWndHwnd *wnd;
+    // bitmap for double-buffering
+    Bitmap *cacheBmp;
+
+    void PaintRecursively(Graphics *g, VirtWnd *wnd, int offX, int offY);
+
+    virtual void PaintBackground(Graphics *g, Rect r);
+public:
+    VirtWndPainter(VirtWndHwnd *wnd) : wnd(wnd), cacheBmp(NULL)
+    {
+    }
+
+    void OnPaint(HWND hwnd);
+};
+
+class EventMgr
+{
+    VirtWndHwnd *   rootWnd;
+    // current window over which the mouse is
+    VirtWnd *       currOver;
+
+    LRESULT OnMouseMove(WPARAM keys, int x, int y, bool& handledOut);
+public:
+    EventMgr(VirtWndHwnd *rootWnd) : rootWnd(rootWnd), currOver(NULL)
+    {
+        CrashIf(!rootWnd);
+        //CrashIf(rootWnd->hwnd);
+    }
+    ~EventMgr() {}
+
+    LRESULT OnMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& handledOut);
+};
+
 class VirtWnd
 {
 public:
@@ -82,8 +121,6 @@ public:
     size_t GetChildCount() const {
         return children.Count();
     }
-
-    HWND GetHwndParent() const;
 
     virtual void Paint(Graphics *gfx, int offX, int offY);
 
@@ -107,8 +144,9 @@ public:
 
     VirtWnd *       parent;
 
-    // can be backed by a HWND
+    // only used by VirtWndHwnd but we need it here
     HWND            hwndParent;
+    HWND            GetHwndParent() const;
 
     // position and size (relative to parent, might be outside of parent's bounds)
     Rect            pos;
@@ -119,6 +157,42 @@ public:
 private:
     Vec<VirtWnd*>   children;
 
+};
+
+// VirtWnd that has to be the root of window tree and is
+// backed by a HWND. It combines a painter and event
+// manager for this HWND
+class VirtWndHwnd : public VirtWnd
+{
+    VirtWndPainter *    painter;
+    EventMgr *          evtMgr;
+
+public:
+    VirtWndHwnd() : painter(NULL), evtMgr(NULL) {
+    }
+
+    virtual ~VirtWndHwnd() {
+        delete evtMgr;
+        delete painter;
+    }
+
+    void SetHwnd(HWND hwnd) {
+        CrashIf(NULL != hwndParent);
+        hwndParent = hwnd;
+        evtMgr = new EventMgr(this);
+        painter = new VirtWndPainter(this);
+    }
+
+    void OnPaint(HWND hwnd)
+    {
+        CrashIf(hwnd != hwndParent);
+        painter->OnPaint(hwnd);
+    }
+
+    LRESULT OnMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& handledOut)
+    {
+        return evtMgr->OnMessage(msg, wParam, lParam, handledOut);
+    }
 };
 
 class VirtWndButton : public VirtWnd
@@ -162,50 +236,6 @@ public:
     }
 
     TCHAR *         text;
-};
-
-// Manages painting process of VirtWnd window and all its children.
-// Automatically does double-buffering for less flicker.
-// Create one object for each HWND-backed VirtWnd and keep it around.
-class VirtWndPainter
-{
-    // bitmap for double-buffering
-    Bitmap *cacheBmp;
-
-    void PaintRecursively(Graphics *g, VirtWnd *wnd, int offX, int offY);
-
-    virtual void PaintBackground(Graphics *g, Rect r);
-public:
-    VirtWndPainter() : cacheBmp(NULL)
-    {
-    }
-
-    void OnPaint(HWND hwnd, VirtWnd *hwndWnd);
-};
-
-class EventMgr
-{
-    VirtWnd *   rootWnd;
-    // current window over which mouse is
-    VirtWnd *   currOver;
-
-    LRESULT OnMouseMove(WPARAM keys, int x, int y, bool& handledOut);
-public:
-    EventMgr(VirtWnd *rootWnd = NULL) {
-        currOver = NULL;
-        SetRootWindow(rootWnd);
-    }
-    ~EventMgr() {}
-
-    void SetRootWindow(VirtWnd *root) {
-        rootWnd = root;
-        if (rootWnd) {
-            // must be window backed by HWND
-            CrashIf(!rootWnd->hwndParent);
-        }
-    }
-
-    LRESULT OnMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& handledOut);
 };
 
 }
