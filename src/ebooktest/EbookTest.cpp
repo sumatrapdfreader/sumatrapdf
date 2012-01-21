@@ -115,10 +115,10 @@ void EbookLayout::Arrange(Rect finalSize, VirtWnd *wnd)
     wnd->pos = finalSize;
 }
 
-class VirtWndEbook : public VirtWndHwnd
+class VirtWndEbook : public VirtWndHwnd, public IClickHandler
 {
 public:
-    VirtWndEbook();
+    VirtWndEbook(HWND hwnd);
 
     virtual ~VirtWndEbook() {
     }
@@ -128,17 +128,33 @@ public:
     }
 
     PageLayout *    pageLayout;
+    VirtWndButton * next;
+    VirtWndButton * prev;
 
     virtual void Paint(Graphics *gfx, int offX, int offY);
+
+    virtual void Clicked(VirtWnd *w);
 };
 
-VirtWndEbook::VirtWndEbook()
+VirtWndEbook::VirtWndEbook(HWND hwnd)
 {
-    VirtWndButton *next = new VirtWndButton(_T("Next"));
-    VirtWndButton *prev = new VirtWndButton(_T("Prev"));
+    SetHwnd(hwnd);
+    next = new VirtWndButton(_T("Next"));
+    prev = new VirtWndButton(_T("Prev"));
     AddChild(next);
     AddChild(prev);
     layout = new EbookLayout(next, prev);
+    RegisterForClickEvent(next, this);
+    RegisterForClickEvent(prev, this);
+}
+
+void VirtWndEbook::Clicked(VirtWnd *w)
+{
+    if (w == next) {
+    } else if (w == prev) {
+    } else {
+        CrashAlwaysIf(true);
+    }
 }
 
 static EbookWindowInfo *gCurrentEbook = NULL;
@@ -350,8 +366,7 @@ static void RelayoutByHwnd(HWND hwnd, int dx = -1, int dy = -1)
 static void OnCreateWindow(HWND hwnd)
 {
     LoadSampleAsCurrentDoc();
-    gVirtWndFrame = new VirtWndEbook();
-    gVirtWndFrame->SetHwnd(hwnd);
+    gVirtWndFrame = new VirtWndEbook(hwnd);
 
     Rect r = EbookPosFromWindowSize(hwnd);
     gVirtWndFrame->pos = r;
@@ -448,7 +463,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 {
     if (gVirtWndFrame) {
         bool handled;
-        LRESULT res = gVirtWndFrame->OnMessage(msg, wParam, lParam, handled);
+        LRESULT res = gVirtWndFrame->evtMgr->OnMessage(msg, wParam, lParam, handled);
         if (handled)
             return res;
     }

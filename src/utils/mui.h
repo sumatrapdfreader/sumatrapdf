@@ -15,6 +15,7 @@ using namespace Gdiplus;
 
 class VirtWnd;
 class VirtWndHwnd;
+class IClickHandler;
 
 #define InfiniteDx ((INT)-1)
 #define InfintieDy ((INT)-1)
@@ -25,6 +26,7 @@ void        Destroy();
 Graphics *  GetGraphicsForMeasureText();
 Rect        MeasureTextWithFont(Font *f, const TCHAR *s);
 void        RequestRepaint(VirtWnd *w);
+void        RegisterForClickEvent(VirtWnd *w, IClickHandler *clickHandlers);
 
 struct Padding {
     Padding() : left(0), right(0), top(0), bottom(0) {
@@ -47,6 +49,14 @@ struct Padding {
     }
 
     int left, right, top, bottom;
+};
+
+class IClickHandler
+{
+public:
+    IClickHandler() {
+    };
+    virtual void Clicked(VirtWnd *w) = 0;
 };
 
 // Layout can be optionally set on VirtWnd. If set, it'll be
@@ -92,7 +102,15 @@ class EventMgr
     // current window over which the mouse is
     VirtWnd *       currOver;
 
+    struct ClickHandler {
+        VirtWnd *        wndSource;
+        IClickHandler *  clickHandler;
+    };
+
+    Vec<ClickHandler> clickHandlers;
+
     LRESULT OnMouseMove(WPARAM keys, int x, int y, bool& handledOut);
+    LRESULT OnLButtonUp(WPARAM keys, int x, int y, bool& handledOut);
 public:
     EventMgr(VirtWndHwnd *rootWnd) : rootWnd(rootWnd), currOver(NULL)
     {
@@ -102,6 +120,9 @@ public:
     ~EventMgr() {}
 
     LRESULT OnMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& handledOut);
+
+    void RegisterForClickEvent(VirtWnd *wndSource, IClickHandler *clickeEvent);
+    IClickHandler *GetClickHandlerFor(VirtWnd *wndSource);
 };
 
 class VirtWnd
@@ -110,8 +131,10 @@ public:
     // allows windows to opt-out from being notified about
     // input events
     enum WndWantedInputBits : int {
-        WantsMouseOver = 0,
-        WantsMousePress = 1,
+        WantsMouseOverBit   = 0,
+        WantsMouseDownBit   = 1,
+        WantsMouseUpBit     = 2,
+        WantsMouseClickBit  = 3,
     };
 
     enum WndStateBits : int {
@@ -154,6 +177,11 @@ public:
     virtual void NotifyMouseLeave() {}
 
     uint32_t        wantedInput; // WndWantedInputBits
+
+    bool WantsMouseClick() {
+        return bit::IsSet(wantedInput, WantsMouseClickBit);
+    }
+
     uint32_t        state;       // WndStateBits
 
     Layout *        layout;
@@ -172,7 +200,6 @@ public:
     Padding         padding;
 private:
     Vec<VirtWnd*>   children;
-
 };
 
 // VirtWnd that has to be the root of window tree and is
@@ -180,11 +207,13 @@ private:
 // manager for this HWND
 class VirtWndHwnd : public VirtWnd
 {
+public:
     VirtWndPainter *    painter;
     EventMgr *          evtMgr;
 
-public:
-    VirtWndHwnd() : painter(NULL), evtMgr(NULL) {
+    VirtWndHwnd(HWND hwnd = NULL) : painter(NULL), evtMgr(NULL) {
+        if (hwnd)
+            SetHwnd(hwnd);
     }
 
     virtual ~VirtWndHwnd() {
@@ -203,11 +232,6 @@ public:
     {
         CrashIf(hwnd != hwndParent);
         painter->OnPaint(hwnd);
-    }
-
-    LRESULT OnMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& handledOut)
-    {
-        return evtMgr->OnMessage(msg, wParam, lParam, handledOut);
     }
 };
 

@@ -34,7 +34,6 @@ There must be a parent window backed by HWND which handles windows
 messages and paints child windows on WM_PAINT.
 
 TODO:
- - event management (mouse move, mouse click etc.)
  - repaint when the look of the window changes
  - css-like styling of windows
  - a way to easily do text selection in generic way in EventMgr
@@ -159,6 +158,16 @@ HWND VirtWnd::GetHwndParent() const
     return NULL;
 }
 
+static VirtWndHwnd *GetRootHwndWnd(VirtWnd *w)
+{
+    while (w->parent) {
+        w = w->parent;
+    }
+    if (!w->hwndParent)
+        return NULL;
+    return (VirtWndHwnd*)w;
+}
+
 void VirtWnd::AddChild(VirtWnd *wnd, int pos)
 {
     CrashAlwaysIf(NULL == wnd);
@@ -199,7 +208,7 @@ void VirtWnd::Paint(Graphics *gfx, int offX, int offY)
 VirtWndButton::VirtWndButton(const TCHAR *s)
 {
     text = NULL;
-    bit::Set(wantedInput, WantsMouseOver, WantsMousePress);
+    wantedInput = (uint32_t)-1; // wants everything
     padding = Padding(8, 4);
     SetText(s);
 }
@@ -351,10 +360,6 @@ VirtWnd *IterWindows::Next()
 }
 #endif
 
-static bool WantsInput(VirtWnd *w, uint32_t wantedInput)
-{
-}
-
 // TODO: build an iterator for (VirtWnd *, Rect) to make such logic reusable
 // in more places and eliminate recursion (?)
 static void FindWindowsAtRecur(Vec<VirtWnd*> *windows, VirtWnd *w,  int offX, int offY, int x, int y, uint32_t wantedInputMask)
@@ -392,10 +397,26 @@ static size_t FindWindowsAt(Vec<VirtWnd*> *windows, VirtWnd *root, int x, int y,
     return windows->Count();
 }
 
+void EventMgr::RegisterForClickEvent(VirtWnd *wndSource, IClickHandler *clickHandler)
+{
+    ClickHandler ch = { wndSource, clickHandler };
+    clickHandlers.Append(ch);
+}
+
+IClickHandler *EventMgr::GetClickHandlerFor(VirtWnd *wndSource)
+{
+    for (size_t i = 0; i < clickHandlers.Count(); i++) {
+        ClickHandler ch = clickHandlers.At(i);
+        if (ch.wndSource == wndSource)
+            return ch.clickHandler;
+    }
+    return NULL;
+}
+
 LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& handledOut)
 {
     Vec<VirtWnd*> windows;
-    uint32_t wantedInputMask = bit::FromBit<uint32_t>(VirtWnd::WantsMouseOver);
+    uint32_t wantedInputMask = bit::FromBit<uint32_t>(VirtWnd::WantsMouseOverBit);
     size_t count = FindWindowsAt(&windows, rootWnd, x, y, wantedInputMask);
     if (0 == count) {
         if (currOver) {
@@ -415,17 +436,45 @@ LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& handledOut)
     return 0;
 }
 
+// TODO: quite possibly the real logic for generating "click" events is
+// more complicated
+LRESULT EventMgr::OnLButtonUp(WPARAM keys, int x, int y, bool& handledOut)
+{
+    Vec<VirtWnd*> windows;
+    uint32_t wantedInputMask = bit::FromBit<uint32_t>(VirtWnd::WantsMouseClickBit);
+    size_t count = FindWindowsAt(&windows, rootWnd, x, y, wantedInputMask);
+    if (0 == count)
+        return 0;
+    VirtWnd *w = windows.Last();
+    IClickHandler *clickHandler = GetClickHandlerFor(w);
+    if (clickHandler)
+        clickHandler->Clicked(w);
+    return 0;
+}
+
 // TODO: not sure if handledOut serves any purpose (what exactly should it mean?)
 LRESULT EventMgr::OnMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& handledOut)
 {
     handledOut = false;
+    int x = GET_X_LPARAM(lParam);
+    int y = GET_Y_LPARAM(lParam);
+
     if (WM_MOUSEMOVE == msg) {
-        int x = GET_X_LPARAM(lParam);
-        int y = GET_Y_LPARAM(lParam);
         return OnMouseMove(wParam, x, y, handledOut);
     }
 
+    if (WM_LBUTTONUP == msg) {
+        return OnLButtonUp(wParam, x, y, handledOut);
+    }
     return 0;
+}
+
+void RegisterForClickEvent(VirtWnd *wndSource, IClickHandler *clickEvent)
+{
+    CrashIf(!wndSource->WantsMouseClick());
+    VirtWndHwnd *wHwnd = GetRootHwndWnd(wndSource);
+    CrashIf(!wHwnd);
+    wHwnd->evtMgr->RegisterForClickEvent(wndSource, clickEvent);
 }
 
 }
