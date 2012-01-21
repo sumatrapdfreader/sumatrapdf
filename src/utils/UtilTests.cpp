@@ -616,24 +616,22 @@ static void WinUtilTest()
     ScopedCom comScope;
 
     {
-        char *string = "abcde", *data;
+        char *string = "abcde";
         size_t stringSize = 5, len;
         ScopedComPtr<IStream> stream(CreateStreamFromData(string, stringSize));
         assert(stream);
-        HRESULT res = GetDataFromStream(stream, (void **)&data, &len);
-        assert(SUCCEEDED(res));
-        assert(stringSize == len && str::Eq(data, string));
+        char *data = (char *)GetDataFromStream(stream, &len);
+        assert(data && stringSize == len && str::Eq(data, string));
         free(data);
     }
 
     {
-        WCHAR *string = L"abcde", *data;
+        WCHAR *string = L"abcde";
         size_t stringSize = 10, len;
         ScopedComPtr<IStream> stream(CreateStreamFromData(string, stringSize));
         assert(stream);
-        HRESULT res = GetDataFromStream(stream, (void **)&data, &len);
-        assert(SUCCEEDED(res));
-        assert(stringSize == len && str::Eq(data, string));
+        WCHAR *data = (WCHAR *)GetDataFromStream(stream, &len);
+        assert(data && stringSize == len && str::Eq(data, string));
         free(data);
     }
 

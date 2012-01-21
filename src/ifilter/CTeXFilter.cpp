@@ -10,10 +10,10 @@ HRESULT CTeXFilter::OnInit()
 {
     if (!m_pData) {
         // load content of LaTeX file into m_pData
-        void *data;
+        HRESULT res;
         size_t len;
-        HRESULT res = GetDataFromStream(m_pStream, &data, &len);
-        if (FAILED(res))
+        void *data = GetDataFromStream(m_pStream, &len, &res);
+        if (!data)
             return res;
 
         m_pData = str::ToWideChar((char *)data, CP_ACP);

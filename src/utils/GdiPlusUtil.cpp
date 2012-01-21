@@ -138,5 +138,3 @@ Bitmap *BitmapFromData(void *data, size_t len)
 
     return bmp;
 }
-
-

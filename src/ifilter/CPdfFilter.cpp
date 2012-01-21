@@ -27,10 +27,10 @@ HRESULT CPdfFilter::OnInit()
     //       m_pStream instead of a clone - why?
 
     // load content of PDF document into a seekable stream
-    void *data;
+    HRESULT res;
     size_t len;
-    HRESULT res = GetDataFromStream(m_pStream, &data, &len);
-    if (FAILED(res))
+    void *data = GetDataFromStream(m_pStream, &len, &res);
+    if (!data)
         return res;
 
     ScopedComPtr<IStream> stream(CreateStreamFromData(data, len));

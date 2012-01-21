@@ -185,6 +185,9 @@ protected:
 
 #ifdef BUILD_CBZ_PREVIEW
 class CCbzPreview : public PreviewBase {
+    // engines based on ImagesEngine require GDI+ to be preloaded
+    ScopedGdiPlus gdiScope;
+
 public:
     CCbzPreview(long *plRefCount) : PreviewBase(plRefCount) { }
 

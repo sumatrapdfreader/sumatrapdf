@@ -31,9 +31,9 @@ void bz_internal_error(int errcode) { /* do nothing */ }
 ///// Helper methods for handling image files of the most common types /////
 
 // adapted from http://cpansearch.perl.org/src/RJRAY/Image-Size-3.230/lib/Image/Size.pm
-SizeI SizeFromData(char *data, size_t len)
+RectI SizeFromData(char *data, size_t len)
 {
-    SizeI result;
+    RectI result;
     // too short to contain magic number and image dimensions
     if (len < 8) {
     }
@@ -43,7 +43,7 @@ SizeI SizeFromData(char *data, size_t len)
             BITMAPINFOHEADER *bmi = (BITMAPINFOHEADER *)(data + sizeof(BITMAPFILEHEADER));
             DWORD width = LEtoHl(bmi->biWidth);
             DWORD height = LEtoHl(bmi->biHeight);
-            result = SizeI(width, height);
+            result = RectI(0, 0, width, height);
         }
     }
     // PNG
@@ -51,7 +51,7 @@ SizeI SizeFromData(char *data, size_t len)
         if (len >= 24 && str::StartsWith(data + 12, "IHDR")) {
             DWORD width = BEtoHl(*(DWORD *)(data + 16));
             DWORD height = BEtoHl(*(DWORD *)(data + 20));
-            result = SizeI(width, height);
+            result = RectI(0, 0, width, height);
         }
     }
     // JPEG
@@ -61,7 +61,7 @@ SizeI SizeFromData(char *data, size_t len)
             if ('\xC0' <= data[ix + 1] && data[ix + 1] <= '\xC3') {
                 WORD width = BEtoHs(*(WORD *)(data + ix + 7));
                 WORD height = BEtoHs(*(WORD *)(data + ix + 5));
-                result = SizeI(width, height);
+                result = RectI(0, 0, width, height);
             }
             ix += BEtoHs(*(WORD *)(data + ix + 2)) + 2;
         }
@@ -79,7 +79,7 @@ SizeI SizeFromData(char *data, size_t len)
                 if (data[ix] == '\x2c') {
                     WORD width = LEtoHs(*(WORD *)(data + ix + 5));
                     WORD height = LEtoHs(*(WORD *)(data + ix + 7));
-                    result = SizeI(width, height);
+                    result = RectI(0, 0, width, height);
                     break;
                 }
                 else if (data[ix] == '\x21' && data[ix + 1] == '\xF9')
@@ -106,12 +106,12 @@ SizeI SizeFromData(char *data, size_t len)
         // TODO: speed this up (if necessary)
     }
 
-    if (0 == result.dx || 0 == result.dy) {
+    if (result.IsEmpty()) {
         // let GDI+ extract the image size if we've failed
         // (currently happens for animated GIFs and for all TIFFs)
         Bitmap *bmp = BitmapFromData(data, len);
         if (bmp)
-            result = SizeI(bmp->GetWidth(), bmp->GetHeight());
+            result = RectI(0, 0, bmp->GetWidth(), bmp->GetHeight());
         delete bmp;
     }
 
@@ -397,9 +397,8 @@ PageElement *ImagesEngine::GetElementAtPos(int pageNo, PointD pt)
 unsigned char *ImagesEngine::GetFileData(size_t *cbCount)
 {
     if (fileStream) {
-        void *data = NULL;
-        HRESULT res = GetDataFromStream(fileStream, &data, cbCount);
-        if (SUCCEEDED(res))
+        void *data = GetDataFromStream(fileStream, cbCount);
+        if (data)
             return (unsigned char *)data;
     }
     if (fileName)
@@ -418,6 +417,7 @@ public:
 protected:
     bool LoadSingleFile(const TCHAR *fileName);
     bool LoadFromStream(IStream *stream);
+    bool FinishLoading(Bitmap *bmp);
 };
 
 ImageEngine *CImageEngine::Clone()
@@ -439,39 +439,42 @@ ImageEngine *CImageEngine::Clone()
 
 bool CImageEngine::LoadSingleFile(const TCHAR *file)
 {
-    size_t len = 0;
-    ScopedMem<char> bmpData(file::ReadAll(file, &len));
-    if (!bmpData)
+    if (!file)
         return false;
-
-    pages.Append(BitmapFromData(bmpData, len));
-
     fileName = str::Dup(file);
-    fileExt = GfxFileExtFromData(bmpData, len);
-    assert(fileExt);
-    if (!fileExt) fileExt = _T(".png");
 
-    return pages.At(0) != NULL;
+    char header[8];
+    if (file::ReadAll(file, header, sizeof(header)))
+        fileExt = GfxFileExtFromData(header, sizeof(header));
+
+    Bitmap *bmp = Bitmap::FromFile(AsWStrQ(file));
+    return FinishLoading(bmp);
 }
 
 bool CImageEngine::LoadFromStream(IStream *stream)
 {
     if (!stream)
         return false;
-
-    pages.Append(Bitmap::FromStream(stream));
     fileStream = stream;
     fileStream->AddRef();
 
-    size_t len;
-    ScopedMem<unsigned char> data(GetFileData(&len));
-    if (!data)
-        return false;
-    fileExt = GfxFileExtFromData((char *)data.Get(), len);
-    if (!fileExt)
-        return false;
+    char header[8];
+    if (ReadDataFromStream(stream, header, sizeof(header)))
+        fileExt = GfxFileExtFromData(header, sizeof(header));
 
-    return pages.At(0) != NULL;
+    Bitmap *bmp = Bitmap::FromStream(stream);
+    return FinishLoading(bmp);
+}
+
+bool CImageEngine::FinishLoading(Bitmap *bmp)
+{
+    if (!bmp)
+        return false;
+    pages.Append(bmp);
+    assert(pages.Count() == 1);
+
+    assert(fileExt);
+    return fileExt != NULL;
 }
 
 bool ImageEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
@@ -576,8 +579,8 @@ RectD CImageDirEngine::PageMediabox(int pageNo)
     size_t len;
     ScopedMem<char> bmpData(file::ReadAll(pageFileNames.At(pageNo - 1), &len));
     if (bmpData) {
-        SizeI size = SizeFromData(bmpData, len);
-        mediaboxes.At(pageNo - 1) = RectI(PointI(), size).Convert<double>();
+        RectI rect = SizeFromData(bmpData, len);
+        mediaboxes.At(pageNo - 1) = rect.Convert<double>();
     }
     return mediaboxes.At(pageNo - 1);
 }
@@ -715,8 +718,8 @@ RectD CCbxEngine::PageMediabox(int pageNo)
     size_t len;
     ScopedMem<char> bmpData(GetImageData(pageNo, len));
     if (bmpData) {
-        SizeI size = SizeFromData(bmpData, len);
-        mediaboxes.At(pageNo - 1) = RectI(PointI(), size).Convert<double>();
+        RectI rect = SizeFromData(bmpData, len);
+        mediaboxes.At(pageNo - 1) = rect.Convert<double>();
     }
     return mediaboxes.At(pageNo - 1);
 }

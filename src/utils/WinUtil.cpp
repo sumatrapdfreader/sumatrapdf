@@ -683,6 +683,9 @@ HFONT GetSimpleFont(HDC hdc, TCHAR *fontName, int fontSize)
 
 IStream *CreateStreamFromData(void *data, size_t len)
 {
+    if (!data)
+        return NULL;
+
     ScopedComPtr<IStream> stream;
     if (FAILED(CreateStreamOnHGlobal(NULL, TRUE, &stream)))
         return NULL;
@@ -698,9 +701,10 @@ IStream *CreateStreamFromData(void *data, size_t len)
     return stream;
 }
 
-HRESULT GetDataFromStream(IStream *stream, void **data, size_t *len)
+static HRESULT GetDataFromStream(IStream *stream, void **data, ULONG *len)
 {
-    if (!data || !len) return E_INVALIDARG;
+    if (!stream)
+        return E_INVALIDARG;
 
     STATSTG stat;
     HRESULT res = stream->Stat(&stat, STATFLAG_NONAME);
@@ -730,6 +734,34 @@ HRESULT GetDataFromStream(IStream *stream, void **data, size_t *len)
     ((char *)*data)[*len + 1] = '\0';
 
     return S_OK;
+}
+
+void *GetDataFromStream(IStream *stream, size_t *len, HRESULT *res_opt)
+{
+    void *data;
+    ULONG size;
+    HRESULT res = GetDataFromStream(stream, &data, &size);
+    if (len)
+        *len = size;
+    if (res_opt)
+        *res_opt = res;
+    if (FAILED(res))
+        return NULL;
+    return data;
+}
+
+bool ReadDataFromStream(IStream *stream, void *buffer, size_t len, size_t offset)
+{
+    LARGE_INTEGER off;
+    off.QuadPart = offset;
+    HRESULT res = stream->Seek(off, STREAM_SEEK_SET, NULL);
+    if (FAILED(res))
+        return false;
+    ULONG read;
+    res = stream->Read(buffer, len, &read);
+    if (read < len)
+        ((char *)buffer)[read] = '\0';
+    return SUCCEEDED(res);
 }
 
 namespace win {
