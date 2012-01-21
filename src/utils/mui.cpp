@@ -357,14 +357,14 @@ static bool WantsInput(VirtWnd *w, uint32_t wantedInput)
 
 // TODO: build an iterator for (VirtWnd *, Rect) to make such logic reusable
 // in more places and eliminate recursion (?)
-static void FindWindowsAtRecur(Vec<VirtWnd*> *windows, VirtWnd *w,  int offX, int offY, int x, int y, uint32_t wantedInput)
+static void FindWindowsAtRecur(Vec<VirtWnd*> *windows, VirtWnd *w,  int offX, int offY, int x, int y, uint32_t wantedInputMask)
 {
     if (!w->isVisible)
         return;
 
     offX += w->pos.X;
     offY += w->pos.Y;
-    if ((w->wantedInput & wantedInput) != 0) {
+    if ((w->wantedInput & wantedInputMask) != 0) {
         Rect r = Rect(offX, offY, w->pos.Width, w->pos.Height);
 
         if (r.Contains(x, y))
@@ -373,29 +373,30 @@ static void FindWindowsAtRecur(Vec<VirtWnd*> *windows, VirtWnd *w,  int offX, in
 
     size_t children = w->GetChildCount();
     for (size_t i = 0; i < children; i++) {
-        FindWindowsAtRecur(windows, w->GetChild(i), offX, offY, x, y, wantedInput);
+        FindWindowsAtRecur(windows, w->GetChild(i), offX, offY, x, y, wantedInputMask);
     }
 }
 
-// Find all windows containing a given point (x, y). We have to traverse all windows
+// Find all windows containing a given point (x, y) and interested in at least
+// one of the input evens in wantedInputMask. We have to traverse all windows
 // because children are not guaranteed to be bounded by their parent.
 // It's very likely to return more than one window because our window hierarchy
 // is a tree. Because we traverse the tree breadth-first, parent windows will be
 // in windows array before child windows. In most cases caller can use the last
 // window in returned array (but can use a custom logic as well).
 // Returns number of matched windows as a convenience.
-static size_t FindWindowsAt(Vec<VirtWnd*> *windows, VirtWnd *root, int x, int y, uint32_t wantedInput=(uint32_t)-1)
+static size_t FindWindowsAt(Vec<VirtWnd*> *windows, VirtWnd *root, int x, int y, uint32_t wantedInputMask=(uint32_t)-1)
 {
     windows->Reset();
-    FindWindowsAtRecur(windows, root, 0, 0, x, y, wantedInput);
+    FindWindowsAtRecur(windows, root, 0, 0, x, y, wantedInputMask);
     return windows->Count();
 }
 
 LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& handledOut)
 {
     Vec<VirtWnd*> windows;
-    uint32_t wantedInput = bit::FromBit<uint32_t>(VirtWnd::WantsMouseOver);
-    size_t count = FindWindowsAt(&windows, rootWnd, x, y, wantedInput);
+    uint32_t wantedInputMask = bit::FromBit<uint32_t>(VirtWnd::WantsMouseOver);
+    size_t count = FindWindowsAt(&windows, rootWnd, x, y, wantedInputMask);
     if (0 == count) {
         if (currOver) {
             currOver->NotifyMouseLeave();
