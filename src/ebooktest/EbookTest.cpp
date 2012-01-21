@@ -63,6 +63,7 @@ public:
 
     VirtWndButton * next;
     VirtWndButton * prev;
+    VirtWndButton * test;
 
     VirtWndEbook(HWND hwnd);
 
@@ -85,8 +86,8 @@ public:
 class EbookLayout : public Layout
 {
 public:
-    EbookLayout(VirtWndButton *next, VirtWndButton *prev) :
-      next(next), prev(prev)
+    EbookLayout(VirtWndButton *next, VirtWndButton *prev, VirtWndButton *test) :
+      next(next), prev(prev), test(test)
     {
     }
 
@@ -95,6 +96,7 @@ public:
 
     VirtWndButton *next;
     VirtWndButton *prev;
+    VirtWndButton *test;
 
     virtual void Measure(Size availableSize, VirtWnd *wnd);
     virtual void Arrange(Rect finalRect, VirtWnd *wnd);
@@ -111,6 +113,7 @@ void EbookLayout::Measure(Size availableSize, VirtWnd *wnd)
     wnd->desiredSize = availableSize;
     next->Measure(availableSize);
     prev->Measure(availableSize);
+    test->Measure(availableSize);
 }
 
 void EbookLayout::Arrange(Rect finalRect, VirtWnd *wnd)
@@ -120,7 +123,7 @@ void EbookLayout::Arrange(Rect finalRect, VirtWnd *wnd)
     int rectDy = finalRect.Height;
     int rectDx = finalRect.Width;
 
-    // prev is on the left size
+    // prev is on the left, y-middle
     btnDy = prev->desiredSize.Height;
     btnY = (rectDy - btnDy) / 2;
     if (btnY < 0)
@@ -129,7 +132,7 @@ void EbookLayout::Arrange(Rect finalRect, VirtWnd *wnd)
     Rect prevPos(0, btnY, prev->desiredSize.Width, btnDy);
     prev->Arrange(prevPos);
 
-    // next is on the right size
+    // next is on the right, y-middle
     btnDy = next->desiredSize.Height;
     btnY = (rectDy - btnDy) / 2;
     if (btnY < 0)
@@ -139,6 +142,14 @@ void EbookLayout::Arrange(Rect finalRect, VirtWnd *wnd)
     btnX = rectDx - btnDx;
     Rect nextPos(btnX, btnY, btnDx, btnDy);
     next->Arrange(nextPos);
+
+    // test is at the bottom, x-middle
+    btnDx = test->desiredSize.Width;
+    btnDy = test->desiredSize.Height;
+    btnX = (rectDx - btnDx) / 2;
+    btnY = rectDy - btnDy;
+    Rect testPos(btnX, btnY, btnDx, btnDy);
+    test->Arrange(testPos);
 
     wnd->pos = finalRect;
     VirtWndEbook *wndEbook = (VirtWndEbook*)wnd;
@@ -213,22 +224,36 @@ VirtWndEbook::VirtWndEbook(HWND hwnd)
     SetHwnd(hwnd);
     next = new VirtWndButton(_T("Next"));
     prev = new VirtWndButton(_T("Prev"));
+    test = new VirtWndButton(_T("test"));
+
     AddChild(next);
     AddChild(prev);
-    layout = new EbookLayout(next, prev);
+    AddChild(test);
+    layout = new EbookLayout(next, prev, test);
     RegisterForClickEvent(next, this);
     RegisterForClickEvent(prev, this);
+    RegisterForClickEvent(test, this);
 }
 
 void VirtWndEbook::Clicked(VirtWnd *w)
 {
     if (w == next) {
         AdvancePage(1);
-    } else if (w == prev) {
-        AdvancePage(-1);
-    } else {
-        CrashAlwaysIf(true);
+        return;
     }
+
+    if (w == prev) {
+        AdvancePage(-1);
+        return;
+    }
+
+    if (w == test) {
+        ScopedMem<TCHAR> s(str::Join(test->text, _T("0")));
+        test->SetText(s.Get());
+        return;
+    }
+
+    CrashAlwaysIf(true);
 }
 
 #define TEN_SECONDS_IN_MS 10*1000

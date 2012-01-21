@@ -27,6 +27,7 @@ void        Destroy();
 Graphics *  GetGraphicsForMeasureText();
 Rect        MeasureTextWithFont(Font *f, const TCHAR *s);
 void        RequestRepaint(VirtWnd *w);
+void        RequestLayout(VirtWnd *w);
 void        RegisterForClickEvent(VirtWnd *w, IClickHandler *clickHandlers);
 
 struct Padding {
@@ -99,7 +100,7 @@ public:
 
 class EventMgr
 {
-    VirtWndHwnd *   rootWnd;
+    VirtWndHwnd *   wndRoot;
     // current window over which the mouse is
     VirtWnd *       currOver;
 
@@ -113,10 +114,10 @@ class EventMgr
     LRESULT OnMouseMove(WPARAM keys, int x, int y, bool& handledOut);
     LRESULT OnLButtonUp(WPARAM keys, int x, int y, bool& handledOut);
 public:
-    EventMgr(VirtWndHwnd *rootWnd) : rootWnd(rootWnd), currOver(NULL)
+    EventMgr(VirtWndHwnd *wndRoot) : wndRoot(wndRoot), currOver(NULL)
     {
-        CrashIf(!rootWnd);
-        //CrashIf(rootWnd->hwnd);
+        CrashIf(!wndRoot);
+        //CrashIf(wndRoot->hwnd);
     }
     ~EventMgr() {}
 
@@ -208,11 +209,13 @@ private:
 // manager for this HWND
 class VirtWndHwnd : public VirtWnd
 {
+    bool                layoutRequested;
+
 public:
     VirtWndPainter *    painter;
     EventMgr *          evtMgr;
 
-    VirtWndHwnd(HWND hwnd = NULL) : painter(NULL), evtMgr(NULL) {
+    VirtWndHwnd(HWND hwnd = NULL) : painter(NULL), evtMgr(NULL), layoutRequested(false) {
         if (hwnd)
             SetHwnd(hwnd);
     }
@@ -220,6 +223,16 @@ public:
     virtual ~VirtWndHwnd() {
         delete evtMgr;
         delete painter;
+    }
+
+    // mark for re-layout at the earliest convenience
+    void RequestLayout() {
+        layoutRequested = true;
+    }
+
+    void LayoutIfRequested() {
+        if (layoutRequested)
+            TopLevelLayout();
     }
 
     void SetHwnd(HWND hwnd) {
@@ -250,7 +263,9 @@ public:
         int y = (rc.dy - s.Height) / 2;
         Rect r(x, y, s.Width, s.Height);
         Arrange(r);
+        layoutRequested = false;
     }
+
 };
 
 class VirtWndButton : public VirtWnd

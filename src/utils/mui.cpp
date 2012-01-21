@@ -33,9 +33,14 @@ be positioned outside of parent's bounds.
 There must be a parent window backed by HWND which handles windows
 messages and paints child windows on WM_PAINT.
 
+Event handling tries to be loosly coupled. The traditional way of
+providing e.g. a virtual OnClick() on a button class forces creating
+lots of subclasses and forcing logic into a button class. We provide
+a way to subscribe any class implementing IClickHandler interface
+to register for click evens from any window that generates thems.
+
 TODO:
  - css-like styling of buttons etc.
- - relayout when necessary
  - a way to easily do text selection in generic way in EventMgr
    by giving windows a way to declare they have selectable text
  - generic way to handle tooltips
@@ -127,6 +132,16 @@ Rect MeasureTextWithFont(Font *f, const TCHAR *s)
 
 #define RECTFromRect(r) { r.GetLeft(), r.GetTop(), r.GetRight(), r.GetBottom() }
 
+static VirtWndHwnd *GetRootHwndWnd(VirtWnd *w)
+{
+    while (w->parent) {
+        w = w->parent;
+    }
+    if (!w->hwndParent)
+        return NULL;
+    return (VirtWndHwnd*)w;
+}
+
 void RequestRepaint(VirtWnd *w)
 {
     if (w->pos.IsEmptyArea())
@@ -141,6 +156,13 @@ void RequestRepaint(VirtWnd *w)
     CrashIf(!w->hwndParent);
     RECT rc = RECTFromRect(r);
     InvalidateRect(w->hwndParent, &rc, TRUE);
+}
+
+void RequestLayout(VirtWnd *w)
+{
+    VirtWndHwnd *wnd = GetRootHwndWnd(w);
+    if (wnd)
+        wnd->RequestLayout();
 }
 
 VirtWnd::VirtWnd(VirtWnd *parent)
@@ -171,16 +193,6 @@ HWND VirtWnd::GetHwndParent() const
         curr = curr->parent;
     }
     return NULL;
-}
-
-static VirtWndHwnd *GetRootHwndWnd(VirtWnd *w)
-{
-    while (w->parent) {
-        w = w->parent;
-    }
-    if (!w->hwndParent)
-        return NULL;
-    return (VirtWndHwnd*)w;
 }
 
 void VirtWnd::AddChild(VirtWnd *wnd, int pos)
@@ -230,7 +242,6 @@ VirtWndButton::VirtWndButton(const TCHAR *s)
 
 void VirtWndButton::RecalculateSize()
 {
-    desiredSize = Size(120,28);
     if (!text)
         return;
     Rect bbox = MeasureTextWithFont(gDefaultFont, text);
@@ -243,8 +254,8 @@ void VirtWndButton::SetText(const TCHAR *s)
 {
     str::ReplacePtr(&text, s);
     RecalculateSize();
+    RequestLayout(this);
     RequestRepaint(this);
-    // TODO: this should trigger relayout
 }
 
 void VirtWndButton::Measure(Size availableSize)
@@ -405,10 +416,10 @@ static void FindWindowsAtRecur(Vec<VirtWnd*> *windows, VirtWnd *w,  int offX, in
 // in windows array before child windows. In most cases caller can use the last
 // window in returned array (but can use a custom logic as well).
 // Returns number of matched windows as a convenience.
-static size_t FindWindowsAt(Vec<VirtWnd*> *windows, VirtWnd *root, int x, int y, uint32_t wantedInputMask=(uint32_t)-1)
+static size_t FindWindowsAt(Vec<VirtWnd*> *windows, VirtWnd *wndRoot, int x, int y, uint32_t wantedInputMask=(uint32_t)-1)
 {
     windows->Reset();
-    FindWindowsAtRecur(windows, root, 0, 0, x, y, wantedInputMask);
+    FindWindowsAtRecur(windows, wndRoot, 0, 0, x, y, wantedInputMask);
     return windows->Count();
 }
 
@@ -432,7 +443,7 @@ LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& handledOut)
 {
     Vec<VirtWnd*> windows;
     uint32_t wantedInputMask = bit::FromBit<uint32_t>(VirtWnd::WantsMouseOverBit);
-    size_t count = FindWindowsAt(&windows, rootWnd, x, y, wantedInputMask);
+    size_t count = FindWindowsAt(&windows, wndRoot, x, y, wantedInputMask);
     if (0 == count) {
         if (currOver) {
             currOver->NotifyMouseLeave();
@@ -457,7 +468,7 @@ LRESULT EventMgr::OnLButtonUp(WPARAM keys, int x, int y, bool& handledOut)
 {
     Vec<VirtWnd*> windows;
     uint32_t wantedInputMask = bit::FromBit<uint32_t>(VirtWnd::WantsMouseClickBit);
-    size_t count = FindWindowsAt(&windows, rootWnd, x, y, wantedInputMask);
+    size_t count = FindWindowsAt(&windows, wndRoot, x, y, wantedInputMask);
     if (0 == count)
         return 0;
     VirtWnd *w = windows.Last();
@@ -470,6 +481,8 @@ LRESULT EventMgr::OnLButtonUp(WPARAM keys, int x, int y, bool& handledOut)
 // TODO: not sure if handledOut serves any purpose (what exactly should it mean?)
 LRESULT EventMgr::OnMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& handledOut)
 {
+    wndRoot->LayoutIfRequested();
+
     handledOut = false;
     int x = GET_X_LPARAM(lParam);
     int y = GET_Y_LPARAM(lParam);
