@@ -211,6 +211,12 @@ PDFFILTER_CFLAGS = $(PDFFILTER_CFLAGS) /D "BUILD_TEX_IFILTER"
 !if "$(BUILD_XPS_PREVIEW)"!=""
 PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_XPS_PREVIEW"
 !endif
+!if "$(BUILD_CBZ_PREVIEW)"!=""
+PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_CBZ_PREVIEW"
+PDFPREVIEW_OBJS = $(PDFPREVIEW_OBJS) \
+	$(OS)\ImagesEngine.obj $(OS)\GdiPlusUtil.obj \
+	$(MINIZIP_OBJS) $(UNRAR_OBJS) $(BZIP2_OBJS)
+!endif
 
 ##### SumatraPDF-specific build rules #####
 
@@ -435,18 +441,16 @@ $(OS)\ImagesEngine.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GdiP
 $(OS)\ImagesEngine.obj: src\utils\GeomUtil.h src\utils\Scopes.h src\utils\StrUtil.h
 $(OS)\ImagesEngine.obj: src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\Install.obj: src\BaseEngine.h src\ifilter\PdfFilter.h src\previewer\PdfPreview.h
-$(OS)\Install.obj: src\installer\Installer.h src\installer\Resource.h src\PdfEngine.h
-$(OS)\Install.obj: src\utils\BaseUtil.h src\utils\CmdLineParser.h src\utils\FileUtil.h
-$(OS)\Install.obj: src\utils\GeomUtil.h src\utils\Scopes.h src\utils\StrUtil.h
-$(OS)\Install.obj: src\utils\Transactions.h src\utils\Vec.h src\utils\WinUtil.h
-$(OS)\Install.obj: src\Version.h
+$(OS)\Install.obj: src\installer\Installer.h src\installer\Resource.h src\utils\BaseUtil.h
+$(OS)\Install.obj: src\utils\CmdLineParser.h src\utils\FileUtil.h src\utils\GeomUtil.h
+$(OS)\Install.obj: src\utils\Scopes.h src\utils\StrUtil.h src\utils\Transactions.h
+$(OS)\Install.obj: src\utils\Vec.h src\utils\WinUtil.h src\Version.h
 $(OS)\Installer.obj: src\BaseEngine.h src\ifilter\PdfFilter.h src\previewer\PdfPreview.h
 $(OS)\Installer.obj: src\installer\Install.cpp src\installer\Installer.h src\installer\Resource.h
-$(OS)\Installer.obj: src\installer\Uninstall.cpp src\PdfEngine.h src\utils\BaseUtil.h
-$(OS)\Installer.obj: src\utils\CmdLineParser.h src\utils\FileUtil.h src\utils\FrameTimeoutCalculator.h
-$(OS)\Installer.obj: src\utils\GeomUtil.h src\utils\Scopes.h src\utils\StrUtil.h
-$(OS)\Installer.obj: src\utils\Transactions.h src\utils\Vec.h src\utils\WinUtil.h
-$(OS)\Installer.obj: src\Version.h
+$(OS)\Installer.obj: src\installer\Uninstall.cpp src\utils\BaseUtil.h src\utils\CmdLineParser.h
+$(OS)\Installer.obj: src\utils\FileUtil.h src\utils\FrameTimeoutCalculator.h src\utils\GeomUtil.h
+$(OS)\Installer.obj: src\utils\Scopes.h src\utils\StrUtil.h src\utils\Transactions.h
+$(OS)\Installer.obj: src\utils\Vec.h src\utils\WinUtil.h src\Version.h
 $(OS)\Menu.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
 $(OS)\Menu.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
 $(OS)\Menu.obj: src\EngineManager.h src\EpubEngine.h src\ExternalPdfViewer.h
@@ -493,12 +497,13 @@ $(OS)\PdfEngine.obj: src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\PdfFilterDll.obj: src\ifilter\CPdfFilter.h src\ifilter\CTeXFilter.h src\ifilter\FilterBase.h
 $(OS)\PdfFilterDll.obj: src\ifilter\PdfFilter.h src\utils\BaseUtil.h src\utils\GeomUtil.h
 $(OS)\PdfFilterDll.obj: src\utils\Scopes.h src\utils\StrUtil.h src\utils\WinUtil.h
-$(OS)\PdfPreview.obj: src\BaseEngine.h src\PdfEngine.h src\previewer\PdfPreview.h
-$(OS)\PdfPreview.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\Scopes.h
-$(OS)\PdfPreview.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
-$(OS)\PdfPreviewDll.obj: src\BaseEngine.h src\PdfEngine.h src\previewer\PdfPreview.h
-$(OS)\PdfPreviewDll.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\Scopes.h
-$(OS)\PdfPreviewDll.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
+$(OS)\PdfPreview.obj: src\BaseEngine.h src\ImagesEngine.h src\PdfEngine.h
+$(OS)\PdfPreview.obj: src\previewer\PdfPreview.h src\utils\BaseUtil.h src\utils\GeomUtil.h
+$(OS)\PdfPreview.obj: src\utils\Scopes.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\PdfPreview.obj: src\utils\WinUtil.h
+$(OS)\PdfPreviewDll.obj: src\BaseEngine.h src\previewer\PdfPreview.h src\utils\BaseUtil.h
+$(OS)\PdfPreviewDll.obj: src\utils\GeomUtil.h src\utils\Scopes.h src\utils\StrUtil.h
+$(OS)\PdfPreviewDll.obj: src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\PdfSync.obj: src\BaseEngine.h src\PdfEngine.h src\PdfSync.h
 $(OS)\PdfSync.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\PdfSync.obj: src\utils\StrUtil.h src\utils\Vec.h

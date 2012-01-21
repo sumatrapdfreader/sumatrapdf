@@ -23,6 +23,7 @@ class CbxEngine : public virtual BaseEngine {
 public:
     static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
     static CbxEngine *CreateFromFileName(const TCHAR *fileName);
+    static CbxEngine *CreateFromStream(IStream *stream);
 };
 
 RenderedBitmap *LoadRenderedBitmap(const TCHAR *filePath);

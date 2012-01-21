@@ -11,6 +11,7 @@
 // mini(un)zip
 #include <ioapi.h>
 #include <iowin32.h>
+#include <iowin32s.h>
 #include <unzip.h>
 
 #include "../ext/unrar/dll.hpp"
@@ -232,9 +233,7 @@ public:
     virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false);
     virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false);
 
-    virtual unsigned char *GetFileData(size_t *cbCount) {
-        return (unsigned char *)file::ReadAll(fileName, cbCount);
-    }
+    virtual unsigned char *GetFileData(size_t *cbCount);
     virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View) { return NULL; }
     virtual bool IsImagePage(int pageNo) { return true; }
@@ -251,6 +250,7 @@ public:
 protected:
     const TCHAR *fileName;
     const TCHAR *fileExt;
+    ScopedComPtr<IStream> fileStream;
 
     Vec<Bitmap *> pages;
 
@@ -394,6 +394,19 @@ PageElement *ImagesEngine::GetElementAtPos(int pageNo, PointD pt)
     return new ImageElement(pageNo, LoadImage(pageNo));
 }
 
+unsigned char *ImagesEngine::GetFileData(size_t *cbCount)
+{
+    if (fileStream) {
+        void *data = NULL;
+        HRESULT res = GetDataFromStream(fileStream, &data, cbCount);
+        if (SUCCEEDED(res))
+            return (unsigned char *)data;
+    }
+    if (fileName)
+        return (unsigned char *)file::ReadAll(fileName, cbCount);
+    return NULL;
+}
+
 ///// ImageEngine handles a single image file /////
 
 class CImageEngine : public ImagesEngine, public ImageEngine {
@@ -401,8 +414,6 @@ class CImageEngine : public ImagesEngine, public ImageEngine {
 
 public:
     virtual ImageEngine *Clone();
-
-    virtual unsigned char *GetFileData(size_t *cbCount);
 
 protected:
     bool LoadSingleFile(const TCHAR *fileName);
@@ -419,7 +430,9 @@ ImageEngine *CImageEngine::Clone()
     CImageEngine *clone = new CImageEngine();
     clone->pages.Append(bmp);
     clone->fileName = fileName ? str::Dup(fileName) : NULL;
-    clone->fileExt = clone->fileName ? path::GetExt(clone->fileName) : _T(".png");
+    clone->fileExt = fileExt;
+    if (fileStream)
+        fileStream->Clone(&clone->fileStream);
 
     return clone;
 }
@@ -447,18 +460,18 @@ bool CImageEngine::LoadFromStream(IStream *stream)
         return false;
 
     pages.Append(Bitmap::FromStream(stream));
-    // could sniff instead, but GDI+ allows us to convert the image format anyway
-    fileExt = _T(".png");
+    fileStream = stream;
+    fileStream->AddRef();
+
+    size_t len;
+    ScopedMem<unsigned char> data(GetFileData(&len));
+    if (!data)
+        return false;
+    fileExt = GfxFileExtFromData((char *)data.Get(), len);
+    if (!fileExt)
+        return false;
 
     return pages.At(0) != NULL;
-}
-
-unsigned char *CImageEngine::GetFileData(size_t *cbCount) {
-    if (fileName)
-        return (unsigned char *)file::ReadAll(fileName, cbCount);
-
-    // TODO: convert Bitmap to PNG and return its data (saving to/reading from a stream)
-    return NULL;
 }
 
 bool ImageEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
@@ -653,11 +666,23 @@ public:
     }
     virtual ~CCbxEngine();
 
-    virtual CbxEngine *Clone() { return CreateFromFileName(fileName); }
+    virtual CbxEngine *Clone() {
+        if (fileStream) {
+            ScopedComPtr<IStream> stm;
+            HRESULT res = fileStream->Clone(&stm);
+            if (SUCCEEDED(res))
+                return CreateFromStream(stm);
+        }
+        if (fileName)
+            return CreateFromFileName(fileName);
+        return NULL;
+    }
     virtual RectD PageMediabox(int pageNo);
 
 protected:
     bool LoadCbzFile(const TCHAR *fileName);
+    bool LoadCbzStream(IStream *stream);
+    bool FinishLoadingCbz();
     bool LoadCbrFile(const TCHAR *fileName);
 
     virtual Bitmap *LoadImage(int pageNo);
@@ -763,16 +788,39 @@ bool CCbxEngine::LoadCbzFile(const TCHAR *file)
     if (!file)
         return false;
     fileName = str::Dup(file);
-    fileExt = _T(".cbz");
 
     cbzData = new CbzFileAccess;
 
-    // only extract all image filenames for now
     fill_win32_filefunc64(&cbzData->ffunc);
     cbzData->uf = unzOpen2_64(fileName, &cbzData->ffunc);
     if (!cbzData->uf)
         return false;
 
+    return FinishLoadingCbz();
+}
+
+bool CCbxEngine::LoadCbzStream(IStream *stream)
+{
+    if (!stream)
+        return false;
+    fileStream = stream;
+    fileStream->AddRef();
+
+    cbzData = new CbzFileAccess;
+
+    fill_win32s_filefunc64(&cbzData->ffunc);
+    cbzData->uf = unzOpen2_64(stream, &cbzData->ffunc);
+    if (!cbzData->uf)
+        return false;
+
+    return FinishLoadingCbz();
+}
+
+bool CCbxEngine::FinishLoadingCbz()
+{
+    fileExt = _T(".cbz");
+
+    // only extract all image filenames for now
     unz_global_info64 ginfo;
     int err = unzGetGlobalInfo64(cbzData->uf, &ginfo);
     if (err != UNZ_OK)
@@ -989,6 +1037,17 @@ CbxEngine *CbxEngine::CreateFromFileName(const TCHAR *fileName)
         ok = engine->LoadCbrFile(fileName);
     }
     if (!ok) {
+        delete engine;
+        return NULL;
+    }
+    return engine;
+}
+
+CbxEngine *CbxEngine::CreateFromStream(IStream *stream)
+{
+    CCbxEngine *engine = new CCbxEngine();
+    // TODO: UnRAR doesn't support reading from arbitrary data streams
+    if (!engine->LoadCbzStream(stream)) {
         delete engine;
         return NULL;
     }

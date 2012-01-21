@@ -3,7 +3,6 @@
 
 #include "PdfPreview.h"
 #include "WinUtil.h"
-#include "Scopes.h"
 
 IFACEMETHODIMP PreviewBase::GetThumbnail(UINT cx, HBITMAP *phbmp, WTS_ALPHATYPE *pdwAlpha)
 {
@@ -285,3 +284,26 @@ IFACEMETHODIMP PreviewBase::DoPreview()
     ShowWindow(m_hwnd, SW_SHOW);
     return S_OK;
 }
+
+#include "PdfEngine.h"
+
+BaseEngine *CPdfPreview::LoadEngine(IStream *stream)
+{
+    return PdfEngine::CreateFromStream(stream);
+}
+
+#ifdef BUILD_XPS_PREVIEW
+BaseEngine *CXpsPreview::LoadEngine(IStream *stream)
+{
+    return XpsEngine::CreateFromStream(stream);
+}
+#endif
+
+#ifdef BUILD_CBZ_PREVIEW
+#include "ImagesEngine.h"
+
+BaseEngine *CCbzPreview::LoadEngine(IStream *stream)
+{
+    return CbxEngine::CreateFromStream(stream);
+}
+#endif

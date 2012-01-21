@@ -8,10 +8,13 @@
 #ifdef BUILD_XPS_PREVIEW
 #define SZ_XPS_PREVIEW_CLSID    _T("{D427A82C-6545-4fbe-8E87-030EDB3BE46D}")
 #endif
+#ifdef BUILD_CBZ_PREVIEW
+#define SZ_CBZ_PREVIEW_CLSID    _T("{C29D3E2B-8FF6-4033-A4E8-54221D859D74}")
+#endif
 
 #include "BaseUtil.h"
 #include "Scopes.h"
-#include "PdfEngine.h"
+#include "BaseEngine.h"
 
 #include <shlwapi.h>
 #include <Thumbcache.h>
@@ -167,9 +170,7 @@ public:
     CPdfPreview(long *plRefCount) : PreviewBase(plRefCount) { }
 
 protected:
-    virtual BaseEngine *LoadEngine(IStream *stream) {
-        return PdfEngine::CreateFromStream(stream);
-    }
+    virtual BaseEngine *LoadEngine(IStream *stream);
 };
 
 #ifdef BUILD_XPS_PREVIEW
@@ -178,9 +179,17 @@ public:
     CXpsPreview(long *plRefCount) : PreviewBase(plRefCount) { }
 
 protected:
-    virtual BaseEngine *LoadEngine(IStream *stream) {
-        return XpsEngine::CreateFromStream(stream);
-    }
+    virtual BaseEngine *LoadEngine(IStream *stream);
+};
+#endif
+
+#ifdef BUILD_CBZ_PREVIEW
+class CCbzPreview : public PreviewBase {
+public:
+    CCbzPreview(long *plRefCount) : PreviewBase(plRefCount) { }
+
+protected:
+    virtual BaseEngine *LoadEngine(IStream *stream);
 };
 #endif
 

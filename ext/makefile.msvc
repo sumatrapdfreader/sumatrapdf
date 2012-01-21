@@ -50,7 +50,7 @@ BZIP2_OBJS = \
 	$(OBZ)\decompress.obj $(OBZ)\huffman.obj $(OBZ)\randtable.obj
 
 MINIZIP_OBJS = \
-	$(OZ)\unzip.obj $(OZ)\ioapi.obj $(OZ)\iowin32.obj
+	$(OZ)\unzip.obj $(OZ)\ioapi.obj $(OZ)\iowin32.obj $(OZ)\iowin32s.obj
 
 UNRAR_OBJS = \
 	$(OR)\archive.obj $(OR)\arcread.obj $(OR)\cmddata.obj \
