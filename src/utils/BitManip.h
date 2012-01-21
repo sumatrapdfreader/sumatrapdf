@@ -16,6 +16,22 @@ void Set(T& v, int bitNo)
 }
 
 template <typename T>
+void Set(T& v, int bit1, int bit2)
+{
+    T mask = 1 << bit1;
+    v |= mask;
+    mask = 1 << bit2;
+    v |= mask;
+}
+
+template <typename T>
+T FromBit(int bitNo)
+{
+    T v = (T)(1 << bitNo);
+    return v;
+}
+
+template <typename T>
 void Clear(T& v, int bitNo)
 {
     T mask = 1 << bitNo;

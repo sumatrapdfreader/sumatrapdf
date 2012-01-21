@@ -131,6 +131,8 @@ void RequestRepaint(VirtWnd *w)
 
 VirtWnd::VirtWnd(VirtWnd *parent)
 {
+    wantedInput = 0;
+    state = 0;
     hwndParent = NULL;
     isVisible = true;
     layout = NULL;
@@ -192,6 +194,14 @@ void VirtWnd::Paint(Graphics *gfx, int offX, int offY)
 {
     if (!isVisible)
         return;
+}
+
+VirtWndButton::VirtWndButton(const TCHAR *s)
+{
+    text = NULL;
+    bit::Set(wantedInput, WantsMouseOver, WantsMousePress);
+    padding = Padding(8, 4);
+    SetText(s);
 }
 
 void VirtWndButton::RecalculateSize()
@@ -315,20 +325,55 @@ void VirtWndPainter::OnPaint(HWND hwnd)
     EndPaint(hwnd, &ps);
 }
 
+#if 0
+struct IterWindows
+{
+    VirtWnd *   curr;
+    size_t      currChild;
+    int         offX;
+    int         offY;
+
+    Rect        currPos;
+
+    IterWindows(VirtWnd *root) {
+        curr = root;
+        currChild = 0;
+        offX = 0;
+        offY = 0;
+    }
+
+    VirtWnd *Next();
+};
+
+VirtWnd *IterWindows::Next()
+{
+
+}
+#endif
+
+static bool WantsInput(VirtWnd *w, uint32_t wantedInput)
+{
+}
+
 // TODO: build an iterator for (VirtWnd *, Rect) to make such logic reusable
 // in more places and eliminate recursion (?)
-static void FindWindowsAtRecur(VirtWnd *w, int x, int y, int offX, int offY, Vec<VirtWnd*> *windows)
+static void FindWindowsAtRecur(Vec<VirtWnd*> *windows, VirtWnd *w,  int offX, int offY, int x, int y, uint32_t wantedInput)
 {
     if (!w->isVisible)
         return;
+
     offX += w->pos.X;
     offY += w->pos.Y;
-    Rect r = Rect(offX, offY, w->pos.Width, w->pos.Height);
-    if (r.Contains(x, y))
-        windows->Append(w);
+    if ((w->wantedInput & wantedInput) != 0) {
+        Rect r = Rect(offX, offY, w->pos.Width, w->pos.Height);
+
+        if (r.Contains(x, y))
+            windows->Append(w);
+    }
+
     size_t children = w->GetChildCount();
     for (size_t i = 0; i < children; i++) {
-        FindWindowsAtRecur(w->GetChild(i), x, y, offX, offY, windows);
+        FindWindowsAtRecur(windows, w->GetChild(i), offX, offY, x, y, wantedInput);
     }
 }
 
@@ -339,19 +384,26 @@ static void FindWindowsAtRecur(VirtWnd *w, int x, int y, int offX, int offY, Vec
 // in windows array before child windows. In most cases caller can use the last
 // window in returned array (but can use a custom logic as well).
 // Returns number of matched windows as a convenience.
-static size_t FindWindowsAt(VirtWnd *root, int x, int y, Vec<VirtWnd*> *windows)
+static size_t FindWindowsAt(Vec<VirtWnd*> *windows, VirtWnd *root, int x, int y, uint32_t wantedInput=(uint32_t)-1)
 {
     windows->Reset();
-    FindWindowsAtRecur(root, x, y, 0, 0, windows);
+    FindWindowsAtRecur(windows, root, 0, 0, x, y, wantedInput);
     return windows->Count();
 }
 
 LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& handledOut)
 {
     Vec<VirtWnd*> windows;
-    size_t count = FindWindowsAt(rootWnd, x, y, &windows);
-    if (0 == count)
+    uint32_t wantedInput = bit::FromBit<uint32_t>(VirtWnd::WantsMouseOver);
+    size_t count = FindWindowsAt(&windows, rootWnd, x, y, wantedInput);
+    if (0 == count) {
+        if (currOver) {
+            currOver->NotifyMouseLeave();
+            currOver = NULL;
+        }
         return 0;
+    }
+
     VirtWnd *w = windows.Last();
     if (w != currOver) {
         if (currOver)

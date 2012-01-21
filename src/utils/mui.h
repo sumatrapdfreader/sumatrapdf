@@ -4,6 +4,7 @@
 #ifndef mui_h
 #define mui_h
 
+#include <stdint.h>
 #include "BaseUtil.h"
 #include "Vec.h"
 #include "BitManip.h"
@@ -106,6 +107,18 @@ public:
 class VirtWnd
 {
 public:
+    // allows windows to opt-out from being notified about
+    // input events
+    enum WndWantedInputBits : int {
+        WantsMouseOver = 0,
+        WantsMousePress = 1,
+    };
+
+    enum WndStateBits : int {
+        MouseOverBit = 0,
+        IsPressedBit = 1,
+    };
+
     VirtWnd(VirtWnd *parent=NULL);
     virtual ~VirtWnd();
 
@@ -139,6 +152,9 @@ public:
     // that affects the window itself, not the rest of the system
     virtual void NotifyMouseEnter() {}
     virtual void NotifyMouseLeave() {}
+
+    uint32_t        wantedInput; // WndWantedInputBits
+    uint32_t        state;       // WndStateBits
 
     Layout *        layout;
 
@@ -197,22 +213,8 @@ public:
 
 class VirtWndButton : public VirtWnd
 {
-    // button state flags that influence how a button looks
-    enum StateBits : int {
-        MouseOverBit = 0,
-        IsPressedBit = 1
-        // IsDefaultBit = 2 (?)
-    };
-
-    short state; // StateBits
-
 public:
-    VirtWndButton(const TCHAR *s) {
-        text = NULL;
-        state = 0;
-        padding = Padding(8, 4);
-        SetText(s);
-    }
+    VirtWndButton(const TCHAR *s);
 
     virtual ~VirtWndButton() {
         free(text);
