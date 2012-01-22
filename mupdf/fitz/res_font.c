@@ -113,13 +113,13 @@ fz_drop_font(fz_context *ctx, fz_font *font)
 void
 fz_set_font_bbox(fz_font *font, float xmin, float ymin, float xmax, float ymax)
 {
-	/* SumatraPDF: some fonts seem to use oversized bboxes */
-	if (xmin == 0 && xmax == 1000 && ymin == 0 && ymax == 1000)
-		xmax = ymax = 1;
 	font->bbox.x0 = xmin;
 	font->bbox.y0 = ymin;
 	font->bbox.x1 = xmax;
 	font->bbox.y1 = ymax;
+	/* SumatraPDF: some fonts seem to use oversized bboxes (Ghostscript issue?) */
+	if (xmax - xmin == 1000 && ymax - ymin == 1000)
+		font->bbox = fz_transform_rect(fz_scale(0.001f, 0.001f), font->bbox);
 }
 
 /*
