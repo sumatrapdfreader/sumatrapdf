@@ -138,11 +138,16 @@ public:
         WantsMouseDownBit   = 1,
         WantsMouseUpBit     = 2,
         WantsMouseClickBit  = 3,
+        WndWantedInputBitLast
     };
 
+    // we use uint16_t for those
     enum WndStateBits : int {
         MouseOverBit = 0,
         IsPressedBit = 1,
+        // using IsHidden and not IsVisible so that 0 is default, visible state
+        IsHiddenBit  = 2,
+        WndStateBitLast
     };
 
     VirtWnd(VirtWnd *parent=NULL);
@@ -179,13 +184,30 @@ public:
     virtual void NotifyMouseEnter() {}
     virtual void NotifyMouseLeave() {}
 
-    uint32_t        wantedInput; // WndWantedInputBits
+    uint16_t        wantedInputBits; // WndWantedInputBits
+    uint16_t        stateBits;       // WndStateBits
 
-    bool WantsMouseClick() {
-        return bit::IsSet(wantedInput, WantsMouseClickBit);
+    bool WantsMouseClick() const {
+        return bit::IsSet(wantedInputBits, WantsMouseClickBit);
     }
 
-    uint32_t        state;       // WndStateBits
+    bool IsVisible() const {
+        return !bit::IsSet(stateBits, IsHiddenBit);
+    }
+
+    void Show() {
+        if (IsVisible())
+            return; // perf: avoid unnecessary repaints
+        bit::Clear(stateBits, IsHiddenBit);
+        RequestRepaint(this);
+    }
+
+    void Hide() {
+        if (!IsVisible())
+            return;
+        RequestRepaint(this); // request repaint before hiding, to trigger repaint
+        bit::Set(stateBits, IsHiddenBit);
+    }
 
     Layout *        layout;
 
@@ -197,8 +219,6 @@ public:
 
     // position and size (relative to parent, might be outside of parent's bounds)
     Rect            pos;
-
-    bool            isVisible;
 
     Padding         padding;
 private:
@@ -285,12 +305,12 @@ public:
     virtual void Paint(Graphics *gfx, int offX, int offY);
 
     virtual void NotifyMouseEnter() {
-        bit::Set(state, MouseOverBit);
+        bit::Set(stateBits, MouseOverBit);
         RequestRepaint(this);
     }
 
     virtual void NotifyMouseLeave() {
-        bit::Clear(state, MouseOverBit);
+        bit::Clear(stateBits, MouseOverBit);
         RequestRepaint(this);
     }
 

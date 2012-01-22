@@ -40,30 +40,42 @@ lots of subclasses and forcing logic into a button class. We provide
 a way to subscribe any class implementing IClickHandler interface
 to register for click evens from any window that generates thems.
 
-TODO:
- - css-like styling of buttons etc.
- - a way to easily do text selection in generic way in EventMgr
-   by giving windows a way to declare they have selectable text
- - generic way to handle tooltips
- - generic way to handle cursor changes
- - add a notion of z-order so that we can paint/respond to
-   events in a more flexible order than the one dictated
-   by parent-child relantionship (?)
- - when registering for events and such we use VirtWnd * to identify
-   a window which leaves small (but non-zero) chance that the window
-   has been destoryed or a pointer was re-used for another window.
-   We could fix that by automatically assigning unique id for each
-   VirtWnd and identify windows by that
- - some claim GDI+ text drawing is slower than GDI, so we could try
-   to use GDI instead
- - optimize repainting by cliping to dirty regions
- - add size to content option to VirtWndHwnd (a bool flag, if set instead
-   of using window's size as available area, use infinite and size the
-   window to the result of the layout process). Alternatively (or in
-   addition) could have a way to only do "size to content" on first layout
-   and then do regular layout
- - ability to specify minimum window size and enforce it during layout and
-   resizing (WM_GETMINMAXINFO)
+TODO: a way to easily do text selection in generic way in EventMgr
+by giving windows a way to declare they have selectable text
+
+TODO: generic way to handle tooltips
+
+TODO: generic way to handle cursor changes
+
+TODO: optimize repainting by cliping to dirty regions
+
+TODO: add a notion of z-order so that we can paint/respond to
+events in a more flexible order than the one dictated
+by parent-child relantionship (?)
+
+TODO: when registering for events and such we use VirtWnd * to identify
+a window which leaves small (but non-zero) chance that the window
+has been destoryed or a pointer was re-used for another window.
+We could fix that by automatically assigning unique id for each
+VirtWnd and identify windows by that
+
+TODO: some claim GDI+ text drawing is slower than GDI, so we could try
+to use GDI instead
+
+TODO: add size to content option to VirtWndHwnd (a bool flag, if set instead
+of using window's size as available area, use infinite and size the
+window to the result of the layout process). Alternatively (or in
+addition) could have a way to only do "size to content" on first layout
+and then do regular layout
+
+TODO: ability to specify minimum window size and enforce it during layout and
+resizing (WM_GETMINMAXINFO)
+
+TODO: optimize size of VirtWnd. One idea is that instead of embedding rarely used
+properties (like e.g. VirtWnd::hwndParent), we could maintain separate mapping
+from VirtWnd * to such properties e.g. in an array. Another idea is to move
+rarely used fields into a separate struct linked from VirtWnd. If none of rarely
+used fields was set, we wouldn't have to allocate that struct.
 */
 
 #include "mui.h"
@@ -72,6 +84,10 @@ using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 
 namespace mui {
+
+// we use uint16_t for those
+STATIC_ASSERT(VirtWnd::WndWantedInputBitLast < 16, max16bitsForWantedIntputBits);
+STATIC_ASSERT(VirtWnd::WndStateBitLast < 16, max16bitsForWndStateuBits);
 
 // Graphics object that can be used at any time to measure text
 static Graphics *   gGraphicsForFontMeasure = NULL;
@@ -141,7 +157,7 @@ static VirtWndHwnd *GetRootHwndWnd(VirtWnd *w)
 
 void RequestRepaint(VirtWnd *w)
 {
-    if (!w->isVisible)
+    if (!w->IsVisible())
         return;
 
     if (w->pos.IsEmptyArea())
@@ -160,7 +176,7 @@ void RequestRepaint(VirtWnd *w)
 
 void RequestLayout(VirtWnd *w)
 {
-    if (!w->isVisible)
+    if (!w->IsVisible())
         return;
 
     VirtWndHwnd *wnd = GetRootHwndWnd(w);
@@ -170,10 +186,9 @@ void RequestLayout(VirtWnd *w)
 
 VirtWnd::VirtWnd(VirtWnd *parent)
 {
-    wantedInput = 0;
-    state = 0;
+    wantedInputBits = 0;
+    stateBits = 0;
     hwndParent = NULL;
-    isVisible = true;
     layout = NULL;
     pos = Rect();
     SetParent(parent);
@@ -231,7 +246,7 @@ void VirtWnd::Arrange(Rect finalRect)
 // Graphics canvas (pos is relative to that offset)
 void VirtWnd::Paint(Graphics *gfx, int offX, int offY)
 {
-    if (!isVisible)
+    if (!IsVisible())
         return;
 }
 
@@ -240,14 +255,14 @@ VirtWndButton::VirtWndButton(const TCHAR *s)
     text = NULL;
     cssRegular = NULL;
     cssMouseOver = NULL;
-    wantedInput = (uint32_t)-1; // wants everything
+    wantedInputBits = (uint16_t)-1; // wants everything
     padding = Padding(8, 4);
     SetText(s);
 }
 
 Font *VirtWndButton::GetFont()
 {
-    if (bit::IsSet(state, MouseOverBit))
+    if (bit::IsSet(stateBits, MouseOverBit))
         return css::CachedFontFromProps(cssMouseOver, css::gPropSetButtonMouseOver);
     else
         return css::CachedFontFromProps(cssRegular, css::gPropSetButtonRegular);
@@ -285,12 +300,12 @@ void VirtWndButton::Measure(Size availableSize)
 
 void VirtWndButton::Paint(Graphics *gfx, int offX, int offY)
 {
-    if (!isVisible)
+    if (!IsVisible())
         return;
 
     SolidBrush br(Color(255,0,0));
     SolidBrush bgBr(Color(180, 255, 255, 255)); // semi-transparent white
-    if (bit::IsSet(state, MouseOverBit))
+    if (bit::IsSet(stateBits, MouseOverBit))
         bgBr.SetColor(Color(180, 0, 0, 255)); // semi-transparent blue
 
     RectF bbox((REAL)offX, (REAL)offY, (REAL)pos.Width, (REAL)pos.Height);
@@ -327,7 +342,7 @@ void VirtWndPainter::PaintBackground(Graphics *g, Rect r)
 
 void VirtWndPainter::PaintRecursively(Graphics *g, VirtWnd *wnd, int offX, int offY)
 {
-    if (!wnd->isVisible)
+    if (!wnd->IsVisible())
         return;
     offX += wnd->pos.GetLeft();
     offY += wnd->pos.GetTop();
@@ -407,12 +422,12 @@ VirtWnd *IterWindows::Next()
 // in more places and eliminate recursion (?)
 static void FindWindowsAtRecur(Vec<VirtWnd*> *windows, VirtWnd *w,  int offX, int offY, int x, int y, uint32_t wantedInputMask)
 {
-    if (!w->isVisible)
+    if (!w->IsVisible())
         return;
 
     offX += w->pos.X;
     offY += w->pos.Y;
-    if ((w->wantedInput & wantedInputMask) != 0) {
+    if ((w->wantedInputBits & wantedInputMask) != 0) {
         Rect r = Rect(offX, offY, w->pos.Width, w->pos.Height);
 
         if (r.Contains(x, y))

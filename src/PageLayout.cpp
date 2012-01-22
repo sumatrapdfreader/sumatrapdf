@@ -6,6 +6,12 @@
 #include "HtmlPullParser.h"
 #include "mui.h"
 
+/*
+TODO: instead of generating list of DrawInstr objects, we could add neccessary
+support to mui and use list of VirtWnd objects instead (especially if slim down
+VirtWnd objects further to make allocating hundreds of them cheaper).
+*/
+
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 
