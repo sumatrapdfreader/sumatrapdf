@@ -653,13 +653,9 @@ static const char *ParseLimitedNumber(const char *str, const char *format,
     char f2[] = "% ";
     const char *endF = Parse(format, "%u%c", &width, &f2[1]);
     if (endF && FindChar("udx", f2[1]) && width <= Len(str)) {
-        ScopedMem<char> limited;
-        char buf[5];
-        if (width < dimof(buf))
-            str::BufSet(buf, width + 1, str);
-        else
-            limited.Set(DupN(str, width));
-        const char *end = Parse(limited ? limited : buf, f2, valueOut);
+        char limited[16]; // 32-bit integers are at most 11 characters long
+        str::BufSet(limited, min(width + 1, dimof(limited)), str);
+        const char *end = Parse(limited, f2, valueOut);
         if (end && !*end)
             *endOut = (char *)str + width;
     }
@@ -673,13 +669,9 @@ static const WCHAR *ParseLimitedNumber(const WCHAR *str, const WCHAR *format,
     WCHAR f2[] = L"% ";
     const WCHAR *endF = Parse(format, L"%u%c", &width, &f2[1]);
     if (endF && FindChar(L"udx", f2[1]) && width <= Len(str)) {
-        ScopedMem<WCHAR> limited;
-        WCHAR buf[5];
-        if (width < dimof(buf))
-            str::BufSet(buf, width + 1, str);
-        else
-            limited.Set(DupN(str, width));
-        const WCHAR *end = Parse(limited ? limited : buf, f2, valueOut);
+        WCHAR limited[16]; // 32-bit integers are at most 11 characters long
+        str::BufSet(limited, min(width + 1, dimof(limited)), str);
+        const WCHAR *end = Parse(limited, f2, valueOut);
         if (end && !*end)
             *endOut = (WCHAR *)str + width;
     }
@@ -705,7 +697,7 @@ static const WCHAR *ParseLimitedNumber(const WCHAR *str, const WCHAR *format,
    %u, %d and %x accept an optional width argument, indicating exactly how many
    characters must be read for parsing the number (e.g. "%4d" parses -123 out of "-12345"
    and doesn't parse "123" at all).
-   */
+*/
 const char *Parse(const char *str, const char *format, ...)
 {
     if (!str)
