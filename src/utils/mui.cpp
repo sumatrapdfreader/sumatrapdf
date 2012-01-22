@@ -259,35 +259,42 @@ VirtWndButton::VirtWndButton(const TCHAR *s)
     SetText(s);
 }
 
-void VirtWndButton::GetPropSetsForState(css::PropSet **set1, css::PropSet **set2) const
+void VirtWndButton::GetPropSetsForState(PropSet **set1, PropSet **set2) const
 {
     if (bit::IsSet(stateBits, MouseOverBit)) {
         *set1 = cssMouseOver;
-        *set2 = css::gPropSetButtonMouseOver;
+        *set2 = gPropSetButtonMouseOver;
     } else {
         *set1 = cssRegular;
-        *set2 =  css::gPropSetButtonRegular;
+        *set2 = gPropSetButtonRegular;
     }
 }
 
-css::Prop *VirtWndButton::GetPropForState(css::PropType type) const
+Prop *VirtWndButton::GetPropForState(PropType type) const
 {
-    css::PropSet *s1, *s2;
+    PropSet *s1, *s2;
     GetPropSetsForState(&s1, &s2);
     return FindProp(s1, s2, type);
 }
 
+void VirtWndButton::GetPropsForState(PropToFind *propsToFind, size_t propsToFindCount) const
+{
+    PropSet *s1, *s2;
+    GetPropSetsForState(&s1, &s2);
+    FindProps(s1, s2, propsToFind, propsToFindCount);
+}
+
 Font *VirtWndButton::GetFontForState() const
 {
-    css::PropSet *s1, *s2;
+    PropSet *s1, *s2;
     GetPropSetsForState(&s1, &s2);
-    return css::CachedFontFromProps(s1, s2);
+    return CachedFontFromProps(s1, s2);
 }
 
 void VirtWndButton::RecalculateSize()
 {
-    css::Prop *prop = GetPropForState(css::PropPadding);
-    css::PaddingData padding = prop->padding;
+    Prop *prop = GetPropForState(PropPadding);
+    PaddingData padding = prop->padding;
 
     if (!text) {
         desiredSize.Width = padding.left + padding.right;
@@ -319,25 +326,30 @@ void VirtWndButton::Measure(Size availableSize)
 
 void VirtWndButton::Paint(Graphics *gfx, int offX, int offY)
 {
+    struct PropToFind props[] = {
+        { PropColor, NULL },
+        { PropBgColor, NULL },
+        { PropPadding, NULL }
+    };
+
     if (!IsVisible())
         return;
 
     // TODO: would probably be faster if we get all properties in one go
-    css::Prop *propCol   = GetPropForState(css::PropColor);
-    css::Prop *propBgCol = GetPropForState(css::PropBgColor);
+    Prop *propCol   = GetPropForState(PropColor);
+    Prop *propBgCol = GetPropForState(PropBgColor);
 
-    SolidBrush brColor(propCol->color.color);
     SolidBrush brBgColor(propBgCol->color.color);
-
     RectF bbox((REAL)offX, (REAL)offY, (REAL)pos.Width, (REAL)pos.Height);
     gfx->FillRectangle(&brBgColor, bbox);
 
     if (!text)
         return;
 
-    css::Prop *prop = GetPropForState(css::PropPadding);
-    css::PaddingData padding = prop->padding;
+    Prop *prop = GetPropForState(PropPadding);
+    PaddingData padding = prop->padding;
 
+    SolidBrush brColor(propCol->color.color);
     int x = offX + padding.left;
     int y = offY + padding.bottom;
     gfx->DrawString(text, str::Len(text), GetFontForState(), PointF((REAL)x, (REAL)y), NULL, &brColor);

@@ -14,6 +14,7 @@
 namespace mui {
 
 using namespace Gdiplus;
+using namespace css;
 
 class VirtWnd;
 class VirtWndHwnd;
@@ -290,15 +291,16 @@ public:
         RequestRepaint(this);
     }
 
-    void GetPropSetsForState(css::PropSet **set1, css::PropSet **set2) const;
-    css::Prop *GetPropForState(css::PropType type) const;
+    void GetPropSetsForState(PropSet **set1, PropSet **set2) const;
+    Prop *GetPropForState(PropType type) const;
+    void GetPropsForState(PropToFind *propsToFind, size_t propsToFindCount) const;
 
     Font *GetFontForState() const;
 
     TCHAR *         text;
 
-    css::PropSet *  cssRegular; // gPropSetButtonRegular if NULL
-    css::PropSet *  cssMouseOver; // gPropSetButtonMouseOver if NULL
+    PropSet *       cssRegular;   // gPropSetButtonRegular if NULL
+    PropSet *       cssMouseOver; // gPropSetButtonMouseOver if NULL
 };
 
 }

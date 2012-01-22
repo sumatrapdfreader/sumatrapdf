@@ -12,12 +12,12 @@ namespace css {
 using namespace Gdiplus;
 
 enum PropType {
-    PropFontName,
-    PropFontSize,
-    PropFontWeight,
-    PropPadding,
-    PropColor,
-    PropBgColor,
+    PropFontName,       // font-family
+    PropFontSize,       // font-size
+    PropFontWeight,     // font-weight
+    PropPadding,        // padding
+    PropColor,          // color
+    PropBgColor,        // background-color
 };
 
 struct FontNameData {
