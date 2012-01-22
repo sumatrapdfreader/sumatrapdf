@@ -131,6 +131,10 @@ struct PropSet {
     PropSet *   inheritsFrom;
 
     void Set(Prop *prop);
+
+    // shortcuts for setting multiple properties at a time
+    void SetBorderWidth(float width);
+    void SetBorderColor(ARGB color);
 };
 
 void Initialize();

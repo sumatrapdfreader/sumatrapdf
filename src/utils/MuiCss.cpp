@@ -75,14 +75,9 @@ void Initialize()
     ARGB c1 = MKRGB(0xf5, 0xf6, 0xf6);
     ARGB c2 = MKRGB(0xe4, 0xe4, 0xe3);
     gDefaults->Set(Prop::AllocColorLinearGradient(PropBgColor, LinearGradientModeVertical, c1, c2));
-    gDefaults->Set(Prop::AllocWidth(PropBorderTopWidth, 1));
-    gDefaults->Set(Prop::AllocWidth(PropBorderRightWidth, 1));
-    gDefaults->Set(Prop::AllocWidth(PropBorderBottomWidth, 1));
-    gDefaults->Set(Prop::AllocWidth(PropBorderLeftWidth, 1));
-    gDefaults->Set(Prop::AllocColorSolid(PropBorderTopColor, 0x99, 0x99, 0x99));
-    gDefaults->Set(Prop::AllocColorSolid(PropBorderRightColor, 0x99, 0x99, 0x99));
+    gDefaults->SetBorderWidth(1);
+    gDefaults->SetBorderColor(MKRGB(0x99, 0x99, 0x99));
     gDefaults->Set(Prop::AllocColorSolid(PropBorderBottomColor, 0x88, 0x88, 0x88));
-    gDefaults->Set(Prop::AllocColorSolid(PropBorderLeftColor, 0x99, 0x99, 0x99));
 
     gPropSetButtonRegular = new PropSet();
     gPropSetButtonRegular->Set(Prop::AllocPadding(4, 8, 4, 8));
@@ -358,6 +353,22 @@ void PropSet::Set(Prop *prop)
         }
     }
     props.Append(prop);
+}
+
+void PropSet::SetBorderWidth(float width)
+{
+    Set(Prop::AllocWidth(PropBorderTopWidth, width));
+    Set(Prop::AllocWidth(PropBorderRightWidth, width));
+    Set(Prop::AllocWidth(PropBorderBottomWidth, width));
+    Set(Prop::AllocWidth(PropBorderLeftWidth, width));
+}
+
+void PropSet::SetBorderColor(ARGB color)
+{
+    Set(Prop::AllocColorSolid(PropBorderTopColor, color));
+    Set(Prop::AllocColorSolid(PropBorderRightColor, color));
+    Set(Prop::AllocColorSolid(PropBorderBottomColor, color));
+    Set(Prop::AllocColorSolid(PropBorderLeftColor, color));
 }
 
 static bool FoundAllProps(PropToFind *props, size_t propsCount)
