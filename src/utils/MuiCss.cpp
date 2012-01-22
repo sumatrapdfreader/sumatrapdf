@@ -81,16 +81,22 @@ void Initialize()
     gDefaults->Set(Prop::AllocWidth(PropBorderLeftWidth, 1));
     gDefaults->Set(Prop::AllocColorSolid(PropBorderTopColor, 0x99, 0x99, 0x99));
     gDefaults->Set(Prop::AllocColorSolid(PropBorderRightColor, 0x99, 0x99, 0x99));
-    gDefaults->Set(Prop::AllocColorSolid(PropBorderBottomColor, 0x99, 0x99, 0x99));
+    gDefaults->Set(Prop::AllocColorSolid(PropBorderBottomColor, 0x88, 0x88, 0x88));
     gDefaults->Set(Prop::AllocColorSolid(PropBorderLeftColor, 0x99, 0x99, 0x99));
 
     gPropSetButtonRegular = new PropSet();
     gPropSetButtonRegular->Set(Prop::AllocPadding(4, 8, 4, 8));
+    gDefaults->Set(Prop::AllocFontName(L"Lucida Grande"));
+    gDefaults->Set(Prop::AllocFontSize(8));
+    gDefaults->Set(Prop::AllocFontWeight(FontStyleBold));
     gPropSetButtonRegular->inheritsFrom = gDefaults;
 
     gPropSetButtonMouseOver = new PropSet();
+    gPropSetButtonMouseOver->Set(Prop::AllocColorSolid(PropBorderTopColor, 0x77, 0x77, 0x77));
+    gPropSetButtonMouseOver->Set(Prop::AllocColorSolid(PropBorderRightColor, 0x77, 0x77, 0x77));
+    gPropSetButtonMouseOver->Set(Prop::AllocColorSolid(PropBorderBottomColor, 0x66, 0x66, 0x66));
     //gPropSetButtonMouseOver->Set(Prop::AllocColorSolid(PropBgColor, 180, 0, 0, 255));
-    gPropSetButtonMouseOver->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
+    //gPropSetButtonMouseOver->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
     gPropSetButtonMouseOver->inheritsFrom = gPropSetButtonRegular;
 }
 
@@ -114,7 +120,7 @@ void Destroy()
     DeleteCachedFonts();
 }
 
-static bool IsWidthProp(PropType type)
+bool IsWidthProp(PropType type)
 {
     return (PropBorderTopWidth == type) ||
            (PropBorderRightWidth == type) ||
@@ -122,7 +128,7 @@ static bool IsWidthProp(PropType type)
            (PropBorderLeftWidth == type);
 }
 
-static bool IsColorProp(PropType type)
+bool IsColorProp(PropType type)
 {
     return (PropColor == type) ||
            (PropBgColor == type) ||
@@ -154,8 +160,6 @@ Prop::~Prop()
 {
     if (PropFontName == type)
         free((void*)fontName.name);
-    else if (IsColorProp(type))
-        ::delete color.brush;
 }
 
 bool Prop::Eq(Prop *other) const
@@ -256,43 +260,20 @@ Prop *Prop::AllocPadding(int top, int right, int bottom, int left)
     return newProp;
 }
 
-static Prop *CreateBrush(Prop *p)
-{
-    if (p->color.brush)
-        return p;
-    Brush *brush = NULL;
-    if (ColorSolid == p->color.type) {
-        brush = ::new SolidBrush(Color(p->color.solid.color));
-    } else if (ColorGradientLinear == p->color.type) {
-        Color c1(p->color.gradientLinear.startColor);
-        Color c2(p->color.gradientLinear.endColor);
-        RectF r(0, 0, 1, 1);
-        brush = ::new LinearGradientBrush(r, c1, c2, p->color.gradientLinear.mode);
-    } else {
-        CrashIf(true);
-    }
-    p->color.brush = brush;
-    return p;
-}
-
 Prop *Prop::AllocColorSolid(PropType type, ARGB color)
 {
     CrashIf(!IsColorProp(type));
     Prop p(type);
     p.color.type = ColorSolid;
     p.color.solid.color = color;
-    p.color.brush = NULL;
     Prop *newProp = FindExistingProp(&p);
-    if (newProp) {
-        CrashIf(!newProp->color.brush);
+    if (newProp)
         return newProp;
-    }
     newProp = new Prop(type);
     newProp->color.type = ColorSolid;
     newProp->color.solid.color = color;
-    newProp->color.brush = NULL;
     gAllProps->Append(newProp);
-    return CreateBrush(newProp);
+    return newProp;
 }
 
 Prop *Prop::AllocColorSolid(PropType type, int a, int r, int g, int b)
@@ -312,20 +293,16 @@ Prop *Prop::AllocColorLinearGradient(PropType type, LinearGradientMode mode, ARG
     p.color.gradientLinear.mode = mode;
     p.color.gradientLinear.startColor = startColor;
     p.color.gradientLinear.endColor = endColor;
-    p.color.brush = NULL;
     Prop *newProp = FindExistingProp(&p);
-    if (newProp) {
-        CrashIf(!newProp->color.brush);
+    if (newProp)
         return newProp;
-    }
     newProp = new Prop(type);
     newProp->color.type = ColorGradientLinear;
     newProp->color.gradientLinear.mode = mode;
     newProp->color.gradientLinear.startColor = startColor;
     newProp->color.gradientLinear.endColor = endColor;
-    newProp->color.brush = NULL;
     gAllProps->Append(newProp);
-    return CreateBrush(newProp);
+    return newProp;
 }
 
 // based on https://developer.mozilla.org/en/CSS/color_value

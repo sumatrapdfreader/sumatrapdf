@@ -174,7 +174,11 @@ void RequestRepaint(VirtWnd *w)
     }
     CrashIf(!w->hwndParent);
     RECT rc = RECTFromRect(r);
-    InvalidateRect(w->hwndParent, &rc, TRUE);
+    // TODO: use just rc when we make calculating affected
+    // rect more precise (when state changes we need to
+    // invalidate both before and after rectangles)
+    //InvalidateRect(w->hwndParent, &rc, TRUE);
+    InvalidateRect(w->hwndParent, NULL, TRUE);
 }
 
 void RequestLayout(VirtWnd *w)
@@ -327,6 +331,38 @@ void VirtWndButton::Measure(Size availableSize)
     // here
 }
 
+static Brush *CreateBrush(Prop *p, const Rect& r)
+{
+    CrashIf(!IsColorProp(p->type));
+    if (ColorSolid == p->color.type)
+        return ::new SolidBrush(p->color.solid.color);
+
+    if (ColorGradientLinear == p->color.type) {
+        Color c1 = p->color.gradientLinear.startColor;
+        Color c2 = p->color.gradientLinear.endColor;
+        LinearGradientMode mode = p->color.gradientLinear.mode;
+        return ::new LinearGradientBrush(r, c1, c2, mode);
+    }
+    CrashIf(true);
+    return NULL;
+}
+
+static Brush *CreateBrush(Prop *p, const RectF& r)
+{
+    CrashIf(!IsColorProp(p->type));
+    if (ColorSolid == p->color.type)
+        return ::new SolidBrush(p->color.solid.color);
+
+    if (ColorGradientLinear == p->color.type) {
+        Color c1 = p->color.gradientLinear.startColor;
+        Color c2 = p->color.gradientLinear.endColor;
+        LinearGradientMode mode = p->color.gradientLinear.mode;
+        return ::new LinearGradientBrush(r, c1, c2, mode);
+    }
+    CrashIf(true);
+    return NULL;
+}
+
 struct BorderProps {
     Prop *  topWidth, *topColor;
     Prop *  rightWidth, *rightColor;
@@ -352,29 +388,33 @@ static void DrawBorder(Graphics *gfx, const Rect r, const BorderProps& bp)
     p1.X = r.X; p1.Y = r.Y;
     p2.X = r.X + r.Width; p2.Y = p1.Y;
     width = bp.topWidth->width.width;
-    br = bp.topColor->color.brush;
+    br = CreateBrush(bp.topColor, r);
     DrawLine(gfx, p1, p2, width, br);
+    ::delete br;
 
     // right
     p1 = p2;
     p2.X = p1.X; p2.Y = p1.Y + r.Height;
     width = bp.rightWidth->width.width;
-    br = bp.rightColor->color.brush;
+    br = CreateBrush(bp.rightColor, r);
     DrawLine(gfx, p1, p2, width, br);
+    ::delete br;
 
     // bottom
     p1 = p2;
     p2.X = r.X; p2.Y = p1.Y;
     width = bp.bottomWidth->width.width;
-    br = bp.bottomColor->color.brush;
+    br = CreateBrush(bp.bottomColor, r);
     DrawLine(gfx, p1, p2, width, br);
+    ::delete br;
 
     // left
     p1 = p2;
     p2.X = p1.X; p2.Y = r.Y;
     width = bp.leftWidth->width.width;
-    br = bp.leftColor->color.brush;
+    br = CreateBrush(bp.leftColor, r);
     DrawLine(gfx, p1, p2, width, br);
+    ::delete br;
 }
 
 void VirtWndButton::Paint(Graphics *gfx, int offX, int offY)
@@ -401,10 +441,10 @@ void VirtWndButton::Paint(Graphics *gfx, int offX, int offY)
     Prop *propBgCol = props[1].prop;
     Prop *propPadding = props[2].prop;
 
-    // TODO: if this is a gradient brush, should set the rectangle
-    Brush *brBgColor = propBgCol->color.brush;
     RectF bbox((REAL)offX, (REAL)offY, (REAL)pos.Width, (REAL)pos.Height);
+    Brush *brBgColor = CreateBrush(propBgCol, bbox);
     gfx->FillRectangle(brBgColor, bbox);
+    ::delete brBgColor;
 
     BorderProps bp = {
         props[3].prop, props[4].prop,
@@ -421,8 +461,9 @@ void VirtWndButton::Paint(Graphics *gfx, int offX, int offY)
 
     int x = offX + padding.left;
     int y = offY + padding.bottom;
-    Brush *brColor = propCol->color.brush;
+    Brush *brColor = CreateBrush(propCol, bbox); // restrict bbox to just the text?
     gfx->DrawString(text, str::Len(text), GetFontForState(), PointF((REAL)x, (REAL)y), NULL, brColor);
+    ::delete brColor;
 }
 
 static bool BitmapSizeEquals(Bitmap *bmp, int dx, int dy)

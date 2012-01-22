@@ -30,6 +30,9 @@ enum PropType {
     PropBorderLeftColor,    // border-left-color
 };
 
+bool IsWidthProp(PropType type);
+bool IsColorProp(PropType type);
+
 struct FontNameData {
     const TCHAR * name;
 };
@@ -68,9 +71,6 @@ struct ColorData {
         ColorDataSolid          solid;
         ColorDataGradientLinear gradientLinear;
     };
-
-    // we cache brush for convenience
-    Brush *     brush;
 
     bool Eq(ColorData *other) const;
 };
