@@ -335,24 +335,23 @@ void VirtWndButton::Paint(Graphics *gfx, int offX, int offY)
     if (!IsVisible())
         return;
 
-    // TODO: would probably be faster if we get all properties in one go
-    Prop *propCol   = GetPropForState(PropColor);
-    Prop *propBgCol = GetPropForState(PropBgColor);
+    GetPropsForState(props, dimof(props));
+    Prop *propCol   = props[0].prop;
+    Prop *propBgCol = props[1].prop;
+    Prop *propPadding = props[2].prop;
 
-    SolidBrush brBgColor(propBgCol->color.color);
+    Brush *brBgColor = propBgCol->color.brush;
     RectF bbox((REAL)offX, (REAL)offY, (REAL)pos.Width, (REAL)pos.Height);
-    gfx->FillRectangle(&brBgColor, bbox);
+    gfx->FillRectangle(brBgColor, bbox);
 
     if (!text)
         return;
 
-    Prop *prop = GetPropForState(PropPadding);
-    PaddingData padding = prop->padding;
-
-    SolidBrush brColor(propCol->color.color);
+    PaddingData padding = propPadding->padding;
+    Brush *brColor = propCol->color.brush;
     int x = offX + padding.left;
     int y = offY + padding.bottom;
-    gfx->DrawString(text, str::Len(text), GetFontForState(), PointF((REAL)x, (REAL)y), NULL, &brColor);
+    gfx->DrawString(text, str::Len(text), GetFontForState(), PointF((REAL)x, (REAL)y), NULL, brColor);
 }
 
 static bool BitmapSizeEquals(Bitmap *bmp, int dx, int dy)

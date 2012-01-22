@@ -32,13 +32,38 @@ struct FontWeightData {
     FontStyle style;
 };
 
+enum ColorType {
+    ColorSolid,
+    ColorGradientLinear,
+    // TODO: other gradient types?
+};
+
+struct ColorDataSolid {
+    ARGB color;
+};
+
+struct ColorDataGradientLinear {
+    LinearGradientMode  mode;
+    ARGB                startColor;
+    ARGB                endColor;
+};
+
 struct ColorData {
-    ARGB    color;
+    ColorType   type;
+    union {
+        ColorDataSolid          solid;
+        ColorDataGradientLinear gradientLinear;
+    };
+
+    // we cache brush for convenience
+    Brush *     brush;
+
+    bool Eq(ColorData *other) const;
 };
 
 struct PaddingData {
     int top, right, bottom, left;
-    bool operator ==(PaddingData& other) {
+    bool operator ==(PaddingData& other) const {
         return (top == other.top) &&
                (right == other.right) &&
                (bottom == other.bottom) &&
@@ -65,16 +90,17 @@ public:
 
     ~Prop();
 
-    bool Eq(Prop *other);
+    bool Eq(Prop *other) const;
 
     static Prop *AllocFontName(const TCHAR *name);
     static Prop *AllocFontSize(float size);
     static Prop *AllocFontWeight(FontStyle style);
     static Prop *AllocPadding(int top, int right, int bottom, int left);
-    static Prop *AllocColor(PropType type, ARGB color);
-    static Prop *AllocColor(PropType type, int a, int r, int g, int b);
-    static Prop *AllocColor(PropType type, int r, int g, int b);
-    static Prop *AllocColor(PropType type, const char *color);
+    static Prop *AllocColorSolid(PropType type, ARGB color);
+    static Prop *AllocColorSolid(PropType type, int a, int r, int g, int b);
+    static Prop *AllocColorSolid(PropType type, int r, int g, int b);
+    static Prop *AllocColorSolid(PropType type, const char *color);
+    static Prop *AllocColorLinearGradient(PropType type, LinearGradientMode mode, ARGB startColor, ARGB endColor);
 };
 
 struct PropSet {

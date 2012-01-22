@@ -32,6 +32,9 @@ that we don't pay OS's malloc() per-object overhead.
 namespace mui {
 namespace css {
 
+#define MKARGB(a, r, g, b) (((ARGB) (b)) | ((ARGB) (g) << 8) | ((ARGB) (r) << 16) | ((ARGB) (a) << 24))
+#define MKRGB(r, g, b) (((ARGB) (b)) | ((ARGB) (g) << 8) | ((ARGB) (r) << 16) | ((ARGB)(0xff) << 24))
+
 struct FontCacheEntry {
     Prop *fontName;
     Prop *fontSize;
@@ -40,13 +43,12 @@ struct FontCacheEntry {
 
     // Prop objects are interned, so if the pointer is
     // the same, the value is the same too
-    bool Eq(FontCacheEntry *other) {
+    bool Eq(FontCacheEntry *other) const {
         return ((fontName == other->fontName) &&
                 (fontSize == other->fontSize) &&
                 (fontWeight == other->fontWeight));
     }
 };
-
 
 Vec<Prop*> *gAllProps = NULL;
 
@@ -68,15 +70,18 @@ void Initialize()
     gDefaults->Set(Prop::AllocFontName(L"Times New Roman"));
     gDefaults->Set(Prop::AllocFontSize(14));
     gDefaults->Set(Prop::AllocFontWeight(FontStyleBold));
-    gDefaults->Set(Prop::AllocColor(PropColor, "black"));
-    gDefaults->Set(Prop::AllocColor(PropBgColor, 0xff, 0xff, 0xff));
+    gDefaults->Set(Prop::AllocColorSolid(PropColor, "black"));
+    //gDefaults->Set(Prop::AllocColorSolid(PropBgColor, 0xff, 0xff, 0xff));
+    ARGB c1 = MKRGB(0xf5, 0xf6, 0xf6);
+    ARGB c2 = MKRGB(0xe4, 0xe4, 0xe3);
+    gDefaults->Set(Prop::AllocColorLinearGradient(PropBgColor, LinearGradientModeVertical, c1, c2));
 
     gPropSetButtonRegular = new PropSet();
     gPropSetButtonRegular->Set(Prop::AllocPadding(4, 8, 4, 8));
     gPropSetButtonRegular->inheritsFrom = gDefaults;
 
     gPropSetButtonMouseOver = new PropSet();
-    gPropSetButtonMouseOver->Set(Prop::AllocColor(PropBgColor, 180, 0, 0, 255));
+    gPropSetButtonMouseOver->Set(Prop::AllocColorSolid(PropBgColor, 180, 0, 0, 255));
     gPropSetButtonMouseOver->inheritsFrom = gPropSetButtonRegular;
 }
 
@@ -100,14 +105,39 @@ void Destroy()
     DeleteCachedFonts();
 }
 
-Prop::~Prop()
+bool ColorData::Eq(ColorData *other) const
 {
-    if (PropFontName == type) {
-        free((void*)fontName.name);
+    if (type != other->type)
+        return false;
+
+    if (ColorSolid == type)
+        return solid.color == other->solid.color;
+
+    if (ColorGradientLinear == type)
+    {
+        return (gradientLinear.mode       == other->gradientLinear.mode) &&
+               (gradientLinear.startColor == other->gradientLinear.startColor) &&
+               (gradientLinear.endColor   == other->gradientLinear.endColor);
     }
+    CrashIf(true);
+    return false;
 }
 
-bool Prop::Eq(Prop *other)
+static bool IsColorProp(PropType type)
+{
+    return ((PropColor == type) ||
+            (PropBgColor == type));
+}
+
+Prop::~Prop()
+{
+    if (PropFontName == type)
+        free((void*)fontName.name);
+    else if (IsColorProp(type))
+        ::delete color.brush;
+}
+
+bool Prop::Eq(Prop *other) const
 {
     if (type != other->type)
         return false;
@@ -122,7 +152,7 @@ bool Prop::Eq(Prop *other)
         return padding == other->padding;
     case PropColor:
     case PropBgColor:
-        return color.color == other->color.color;
+        return color.Eq(&other->color);
     default:
         CrashIf(true);
         break;
@@ -197,31 +227,77 @@ Prop *Prop::AllocPadding(int top, int right, int bottom, int left)
     return newProp;
 }
 
-static bool IsColorProp(PropType type)
+static Prop *CreateBrush(Prop *p)
 {
-    return ((PropColor == type) ||
-            (PropBgColor == type));
+    if (p->color.brush)
+        return p;
+    Brush *brush = NULL;
+    if (ColorSolid == p->color.type) {
+        brush = ::new SolidBrush(Color(p->color.solid.color));
+    } else if (ColorGradientLinear == p->color.type) {
+        Color c1(p->color.gradientLinear.startColor);
+        Color c2(p->color.gradientLinear.endColor);
+        RectF r(0, 0, 1, 1);
+        brush = ::new LinearGradientBrush(r, c1, c2, p->color.gradientLinear.mode);
+    } else {
+        CrashIf(true);
+    }
+    p->color.brush = brush;
+    return p;
 }
 
-Prop *Prop::AllocColor(PropType type, ARGB color)
+Prop *Prop::AllocColorSolid(PropType type, ARGB color)
 {
     CrashIf(!IsColorProp(type));
-    ALLOC_BODY(type, color, color);
+    Prop p(type);
+    p.color.type = ColorSolid;
+    p.color.solid.color = color;
+    p.color.brush = NULL;
+    Prop *newProp = FindExistingProp(&p);
+    if (newProp) {
+        CrashIf(!newProp->color.brush);
+        return newProp;
+    }
+    newProp = new Prop(type);
+    newProp->color.type = ColorSolid;
+    newProp->color.solid.color = color;
+    newProp->color.brush = NULL;
+    gAllProps->Append(newProp);
+    return CreateBrush(newProp);
 }
 
-Prop *Prop::AllocColor(PropType type, int a, int r, int g, int b)
+Prop *Prop::AllocColorSolid(PropType type, int a, int r, int g, int b)
 {
-    return AllocColor(type, Color::MakeARGB(a, r, g, b));
+    return AllocColorSolid(type, MKARGB(a, r, g, b));
 }
 
-Prop *Prop::AllocColor(PropType type, int r, int g, int b)
+Prop *Prop::AllocColorSolid(PropType type, int r, int g, int b)
 {
-    return AllocColor(type, Color::MakeARGB(0xff, r, g, b));
+    return AllocColorSolid(type, MKARGB(0xff, r, g, b));
 }
 
-#define MKARGB(a, r, g, b) (((ARGB) (b)) | ((ARGB) (g) << 8) | ((ARGB) (r) << 16) | ((ARGB) (a) << 24))
-
-#define MKRGB(r, g, b) (((ARGB) (b)) | ((ARGB) (g) << 8) | ((ARGB) (r) << 16) | ((ARGB)(0xff) << 24))
+Prop *Prop::AllocColorLinearGradient(PropType type, LinearGradientMode mode, ARGB startColor, ARGB endColor)
+{
+    Prop p(type);
+    p.color.type = ColorGradientLinear;
+    p.color.gradientLinear.mode = mode;
+    p.color.gradientLinear.startColor = startColor;
+    p.color.gradientLinear.endColor = endColor;
+    p.color.brush = NULL;
+    Prop *newProp = FindExistingProp(&p);
+    if (newProp) {
+        CrashIf(!newProp->color.brush);
+        return newProp;
+    }
+    newProp = new Prop(type);
+    newProp->color.type = ColorGradientLinear;
+    newProp->color.gradientLinear.mode = mode;
+    newProp->color.gradientLinear.startColor = startColor;
+    newProp->color.gradientLinear.endColor = endColor;
+    newProp->color.brush = NULL;
+    gAllProps->Append(newProp);
+    return CreateBrush(newProp);
+}
 
 // based on https://developer.mozilla.org/en/CSS/color_value
 // TODO: add more colors
@@ -248,14 +324,14 @@ static bool FindKnownColor(const char *name, ARGB *colorOut)
     return false;
 }
 
-Prop *Prop::AllocColor(PropType type, const char *color)
+Prop *Prop::AllocColorSolid(PropType type, const char *color)
 {
     // TODO: implement parsing rgb(r,g,b), rgba(a,r,g,b), #rrggbb,
     // #rgb, known color names (https://developer.mozilla.org/en/CSS/color_value)
     ARGB colorValue;
     bool found = FindKnownColor(color, &colorValue);
     if (found)
-        return AllocColor(type, colorValue);
+        return AllocColorSolid(type, colorValue);
 
     CrashIf(true);
     return NULL;
