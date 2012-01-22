@@ -256,27 +256,46 @@ VirtWndButton::VirtWndButton(const TCHAR *s)
     cssRegular = NULL;
     cssMouseOver = NULL;
     wantedInputBits = (uint16_t)-1; // wants everything
-    padding = Padding(8, 4);
     SetText(s);
 }
 
-Font *VirtWndButton::GetFont()
+void VirtWndButton::GetPropSetsForState(css::PropSet **set1, css::PropSet **set2) const
 {
-    if (bit::IsSet(stateBits, MouseOverBit))
-        return css::CachedFontFromProps(cssMouseOver, css::gPropSetButtonMouseOver);
-    else
-        return css::CachedFontFromProps(cssRegular, css::gPropSetButtonRegular);
+    if (bit::IsSet(stateBits, MouseOverBit)) {
+        *set1 = cssMouseOver;
+        *set2 = css::gPropSetButtonMouseOver;
+    } else {
+        *set1 = cssRegular;
+        *set2 =  css::gPropSetButtonRegular;
+    }
+}
+
+css::Prop *VirtWndButton::GetPropForState(css::PropType type) const
+{
+    css::PropSet *s1, *s2;
+    GetPropSetsForState(&s1, &s2);
+    return FindProp(s1, s2, css::PropPadding);
+}
+
+Font *VirtWndButton::GetFontForState() const
+{
+    css::PropSet *s1, *s2;
+    GetPropSetsForState(&s1, &s2);
+    return css::CachedFontFromProps(s1, s2);
 }
 
 void VirtWndButton::RecalculateSize()
 {
+    css::Prop *prop = GetPropForState(css::PropPadding);
+    css::PaddingData padding = prop->padding;
+
     if (!text) {
         desiredSize.Width = padding.left + padding.right;
         desiredSize.Height = padding.top  + padding.bottom;
         return;
     }
 
-    Rect bbox = MeasureTextWithFont(GetFont(), text);
+    Rect bbox = MeasureTextWithFont(GetFontForState(), text);
     bbox.GetSize(&desiredSize);
     desiredSize.Width  += (padding.left + padding.right);
     desiredSize.Height += (padding.top  + padding.bottom);
@@ -314,9 +333,12 @@ void VirtWndButton::Paint(Graphics *gfx, int offX, int offY)
     if (!text)
         return;
 
+    css::Prop *prop = GetPropForState(css::PropPadding);
+    css::PaddingData padding = prop->padding;
+
     int x = offX + padding.left;
     int y = offY + padding.bottom;
-    gfx->DrawString(text, str::Len(text), GetFont(), PointF((REAL)x, (REAL)y), NULL, &br);
+    gfx->DrawString(text, str::Len(text), GetFontForState(), PointF((REAL)x, (REAL)y), NULL, &br);
 }
 
 static bool BitmapSizeEquals(Bitmap *bmp, int dx, int dy)

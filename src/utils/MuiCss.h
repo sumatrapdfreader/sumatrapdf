@@ -15,6 +15,7 @@ enum PropType {
     PropFontName,
     PropFontSize,
     PropFontWeight,
+    PropPadding,
 };
 
 struct FontNameData {
@@ -27,6 +28,16 @@ struct FontSizeData {
 
 struct FontWeightData {
     FontStyle style;
+};
+
+struct PaddingData {
+    int top, right, bottom, left;
+    bool operator ==(PaddingData& other) {
+        return (top == other.top) &&
+               (right == other.right) &&
+               (bottom == other.bottom) &&
+               (left == other.left);
+    }
 };
 
 class Prop {
@@ -42,6 +53,7 @@ public:
         FontNameData    fontName;
         FontSizeData    fontSize;
         FontWeightData  fontWeight;
+        PaddingData     padding;
     };
 
     ~Prop();
@@ -51,6 +63,7 @@ public:
     static Prop *AllocFontName(const TCHAR *name);
     static Prop *AllocFontSize(float size);
     static Prop *AllocFontWeight(FontStyle style);
+    static Prop *AllocPadding(int top, int right, int bottom, int left);
 };
 
 struct PropSet {
@@ -71,6 +84,19 @@ void Initialize();
 void Destroy();
 
 Font *CachedFontFromProps(PropSet *propsFirst, PropSet *propsSecond);
+
+struct PropToFind {
+    // provided by the caller
+    PropType    type;
+    // filled-out by FindProps(). Must be set to NULL by
+    // caller to enable being called twice with different
+    // PropSet objects
+    Prop *      prop;
+};
+
+void FindProps(PropSet *props, PropToFind *propsToFind, size_t propsToFindCount);
+void FindProps(PropSet *propsFirst, PropSet *propsSecond, PropToFind *propsToFind, size_t propsToFindCount);
+Prop *FindProp(PropSet *propsFirst, PropSet *propsSecond, PropType type);
 
 // globally known properties for elements we know about
 // we fill them with default values and they can be

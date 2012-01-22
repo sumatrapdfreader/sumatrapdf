@@ -31,29 +31,6 @@ void        RequestRepaint(VirtWnd *w);
 void        RequestLayout(VirtWnd *w);
 void        RegisterForClickEvent(VirtWnd *w, IClickHandler *clickHandlers);
 
-struct Padding {
-    Padding() : left(0), right(0), top(0), bottom(0) {
-    }
-
-    Padding(int n) {
-        left = right = top = bottom;
-    }
-
-    Padding(int x, int y) {
-        left = right = x;
-        top = bottom = y;
-    }
-
-    void operator =(const Padding& other) {
-        left = other.left;
-        right = other.right;
-        top = other.top;
-        bottom = other.bottom;
-    }
-
-    int left, right, top, bottom;
-};
-
 class IClickHandler
 {
 public:
@@ -220,7 +197,6 @@ public:
     // position and size (relative to parent, might be outside of parent's bounds)
     Rect            pos;
 
-    Padding         padding;
 private:
     Vec<VirtWnd*>   children;
 };
@@ -314,7 +290,10 @@ public:
         RequestRepaint(this);
     }
 
-    Font *GetFont();
+    void GetPropSetsForState(css::PropSet **set1, css::PropSet **set2) const;
+    css::Prop *GetPropForState(css::PropType type) const;
+
+    Font *GetFontForState() const;
 
     TCHAR *         text;
 

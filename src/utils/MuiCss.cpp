@@ -71,10 +71,11 @@ void Initialize()
     gDefaults->Set(Prop::AllocFontWeight(FontStyleBold));
 
     gPropSetButtonRegular = new PropSet();
+    gPropSetButtonRegular->Set(Prop::AllocPadding(4, 8, 4, 8));
     gPropSetButtonRegular->inheritsFrom = gDefaults;
 
     gPropSetButtonMouseOver = new PropSet();
-    gPropSetButtonMouseOver->inheritsFrom = gDefaults;
+    gPropSetButtonMouseOver->inheritsFrom = gPropSetButtonRegular;
 }
 
 static void DeleteCachedFonts()
@@ -115,6 +116,9 @@ bool Prop::Eq(Prop *other)
         return fontSize.size == other->fontSize.size;
     case PropFontWeight:
         return fontWeight.style == other->fontWeight.style;
+    case PropPadding:
+        return padding == other->padding;
+
     default:
         CrashIf(true);
         break;
@@ -175,6 +179,20 @@ Prop *Prop::AllocFontWeight(FontStyle style)
     ALLOC_BODY(PropFontWeight, fontWeight, style);
 }
 
+Prop *Prop::AllocPadding(int top, int right, int bottom, int left)
+{
+    PaddingData pd = { top, right, bottom, left };
+    Prop p(PropPadding);
+    p.padding = pd;
+    Prop *newProp = FindExistingProp(&p);
+    if (newProp)
+        return newProp;
+    newProp = new Prop(PropPadding);
+    newProp->padding = pd;
+    gAllProps->Append(newProp);
+    return newProp;
+}
+
 #undef ALLOC_BODY
 
 // Add a property to a set, if a given PropType doesn't exist,
@@ -191,25 +209,58 @@ void PropSet::Set(Prop *prop)
     props.Append(prop);
 }
 
-static void FindFontProps(PropSet *props, Prop **fontNameOut, Prop **fontSizeOut, Prop **fontWeightOut)
+static bool FoundAllProps(PropToFind *props, size_t propsCount)
+{
+    for (size_t i = 0; i < propsCount; i++) {
+        if (props[i].prop == NULL)
+            return false;
+    }
+    return true;
+}
+
+// returns true if set
+static bool SetPropIfFound(Prop *prop, PropToFind *propsToFind, size_t propsToFindCount)
+{
+    for (size_t i = 0; i < propsToFindCount; i++) {
+        if (propsToFind[i].type == prop->type) {
+            if (NULL == propsToFind[i].prop) {
+                propsToFind[i].prop = prop;
+                return true;
+            }
+            return false;
+        }
+    }
+    return false;
+}
+
+void FindProps(PropSet *props, PropToFind *propsToFind, size_t propsToFindCount)
 {
     Prop *p;
-
     PropSet *curr = props;
     while (curr) {
         for (size_t i = 0; i < curr->props.Count(); i++) {
             p = curr->props.At(i);
-            if ((PropFontName == p->type) && (NULL == *fontNameOut))
-                *fontNameOut = p;
-            if ((PropFontSize == p->type) && (NULL == *fontSizeOut))
-                *fontSizeOut = p;
-            if ((PropFontWeight == p->type) && (NULL == *fontWeightOut))
-                *fontWeightOut = p;
-            if (*fontNameOut && *fontSizeOut && *fontWeightOut)
-                return; // found them all
+            bool didSet = SetPropIfFound(p, propsToFind, propsToFindCount);
+            if (didSet && FoundAllProps(propsToFind, propsToFindCount))
+                return;
         }
         curr = curr->inheritsFrom;
     }
+}
+
+void FindProps(PropSet *propsFirst, PropSet *propsSecond, PropToFind *propsToFind, size_t propsToFindCount)
+{
+    FindProps(propsFirst, propsToFind, propsToFindCount);
+    FindProps(propsSecond, propsToFind, propsToFindCount);
+}
+
+Prop *FindProp(PropSet *propsFirst, PropSet *propsSecond, PropType type)
+{
+    PropToFind propsToFind[1] = {
+        { type, NULL }
+    };
+    FindProps(propsFirst, propsSecond, propsToFind, dimof(propsToFind));
+    return propsToFind[0].prop;
 }
 
 // convenience function: given 2 set of properties, find font-related
@@ -222,9 +273,15 @@ static void FindFontProps(PropSet *props, Prop **fontNameOut, Prop **fontSizeOut
 // in DeleteCachedFonts()
 Font *CachedFontFromProps(PropSet *propsFirst, PropSet *propsSecond)
 {
-    Prop *fontName = NULL, *fontSize = NULL, *fontWeight = NULL;
-    FindFontProps(propsFirst, &fontName, &fontSize, &fontWeight);
-    FindFontProps(propsSecond, &fontName, &fontSize, &fontWeight);
+    PropToFind propsToFind[3] = {
+        { PropFontName, NULL },
+        { PropFontSize, NULL },
+        { PropFontWeight, NULL }
+    };
+    FindProps(propsFirst, propsSecond, propsToFind, dimof(propsToFind));
+    Prop *fontName   = propsToFind[0].prop;
+    Prop *fontSize   = propsToFind[1].prop;
+    Prop *fontWeight = propsToFind[2].prop;
     CrashIf(!fontName || !fontSize || !fontWeight);
     FontCacheEntry c = { fontName, fontSize, fontWeight, NULL };
     for (size_t i = 0; i < gCachedFonts->Count(); i++) {
