@@ -9,6 +9,7 @@
 #include "Vec.h"
 #include "BitManip.h"
 #include "GeomUtil.h"
+#include "MuiCss.h"
 
 namespace mui {
 
@@ -265,7 +266,6 @@ public:
         Arrange(r);
         layoutRequested = false;
     }
-
 };
 
 class VirtWndButton : public VirtWnd
@@ -294,7 +294,12 @@ public:
         RequestRepaint(this);
     }
 
+    Font *GetFont();
+
     TCHAR *         text;
+
+    css::PropSet *  cssRegular; // gPropSetButtonRegular if NULL
+    css::PropSet *  cssMouseOver; // gPropSetButtonMouseOver if NULL
 };
 
 }

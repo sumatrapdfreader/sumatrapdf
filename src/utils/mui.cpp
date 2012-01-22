@@ -6,6 +6,7 @@
 #include "Vec.h"
 #include "GeomUtil.h"
 #include <Windowsx.h>
+#include "MuiCss.h"
 
 /*
 MUI is a simple UI library for win32.
@@ -77,8 +78,6 @@ static Graphics *   gGraphicsForFontMeasure = NULL;
 static Bitmap *     gBitmapForFontMeasureGraphics = NULL;
 static BYTE *       gBitmapDataForFontMeasureGraphics = NULL;
 
-static Font *       gDefaultFont = NULL;
-
 static void InitGraphicsMode(Graphics *g)
 {
     g->SetCompositingQuality(CompositingQualityHighQuality);
@@ -90,6 +89,7 @@ static void InitGraphicsMode(Graphics *g)
 
 void Initialize()
 {
+    css::Initialize();
     CrashIf(gBitmapForFontMeasureGraphics || gGraphicsForFontMeasure);
     // using a small bitmap under assumption that Graphics used only
     // for measuring text doesn't need the actual bitmap
@@ -102,9 +102,6 @@ void Initialize()
     gGraphicsForFontMeasure = ::new Graphics((Image*)gBitmapForFontMeasureGraphics);
     CrashIf(!gGraphicsForFontMeasure);
     InitGraphicsMode(gGraphicsForFontMeasure);
-
-    gDefaultFont = ::new Font(FontFamily::GenericSansSerif(), 12, FontStyleBold);
-    //gDefaultFont = ::new Font(L"Times New Roman", 18, FontStyleBold);
 }
 
 void Destroy()
@@ -112,7 +109,7 @@ void Destroy()
     ::delete gGraphicsForFontMeasure;
     ::delete gBitmapForFontMeasureGraphics;
     free(gBitmapDataForFontMeasureGraphics);
-    ::delete gDefaultFont;
+    css::Destroy();
 }
 
 Graphics *GetGraphicsForMeasureText()
@@ -144,6 +141,9 @@ static VirtWndHwnd *GetRootHwndWnd(VirtWnd *w)
 
 void RequestRepaint(VirtWnd *w)
 {
+    if (!w->isVisible)
+        return;
+
     if (w->pos.IsEmptyArea())
         return;
 
@@ -160,6 +160,9 @@ void RequestRepaint(VirtWnd *w)
 
 void RequestLayout(VirtWnd *w)
 {
+    if (!w->isVisible)
+        return;
+
     VirtWndHwnd *wnd = GetRootHwndWnd(w);
     if (wnd)
         wnd->RequestLayout();
@@ -235,16 +238,30 @@ void VirtWnd::Paint(Graphics *gfx, int offX, int offY)
 VirtWndButton::VirtWndButton(const TCHAR *s)
 {
     text = NULL;
+    cssRegular = NULL;
+    cssMouseOver = NULL;
     wantedInput = (uint32_t)-1; // wants everything
     padding = Padding(8, 4);
     SetText(s);
 }
 
+Font *VirtWndButton::GetFont()
+{
+    if (bit::IsSet(state, MouseOverBit))
+        return css::CachedFontFromProps(cssMouseOver, css::gPropSetButtonMouseOver);
+    else
+        return css::CachedFontFromProps(cssRegular, css::gPropSetButtonRegular);
+}
+
 void VirtWndButton::RecalculateSize()
 {
-    if (!text)
+    if (!text) {
+        desiredSize.Width = padding.left + padding.right;
+        desiredSize.Height = padding.top  + padding.bottom;
         return;
-    Rect bbox = MeasureTextWithFont(gDefaultFont, text);
+    }
+
+    Rect bbox = MeasureTextWithFont(GetFont(), text);
     bbox.GetSize(&desiredSize);
     desiredSize.Width  += (padding.left + padding.right);
     desiredSize.Height += (padding.top  + padding.bottom);
@@ -284,7 +301,7 @@ void VirtWndButton::Paint(Graphics *gfx, int offX, int offY)
 
     int x = offX + padding.left;
     int y = offY + padding.bottom;
-    gfx->DrawString(text, str::Len(text), gDefaultFont, PointF((REAL)x, (REAL)y), NULL, &br);
+    gfx->DrawString(text, str::Len(text), GetFont(), PointF((REAL)x, (REAL)y), NULL, &br);
 }
 
 static bool BitmapSizeEquals(Bitmap *bmp, int dx, int dy)

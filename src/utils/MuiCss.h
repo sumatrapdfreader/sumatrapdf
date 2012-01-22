@@ -54,12 +54,29 @@ public:
 };
 
 struct PropSet {
-    Vec<Prop*> props;
+
+    PropSet() : inheritsFrom(NULL) {
+    }
+
+    Vec<Prop*>  props;
+
+    // if property is not found here, we'll search the
+    // inheritance chain
+    PropSet *   inheritsFrom;
+
     void Set(Prop *prop);
 };
 
 void Initialize();
 void Destroy();
+
+Font *CachedFontFromProps(PropSet *propsFirst, PropSet *propsSecond);
+
+// globally known properties for elements we know about
+// we fill them with default values and they can be
+// modified by an app for global visual makeover
+extern PropSet *gPropSetButtonRegular;
+extern PropSet *gPropSetButtonMouseOver;
 
 } // namespace css
 } // namespace mui
