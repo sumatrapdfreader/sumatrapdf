@@ -75,6 +75,10 @@ void Initialize()
     ARGB c1 = MKRGB(0xf5, 0xf6, 0xf6);
     ARGB c2 = MKRGB(0xe4, 0xe4, 0xe3);
     gDefaults->Set(Prop::AllocColorLinearGradient(PropBgColor, LinearGradientModeVertical, c1, c2));
+    gDefaults->Set(Prop::AllocWidth(PropBorderTopWidth, 1));
+    gDefaults->Set(Prop::AllocWidth(PropBorderRightWidth, 1));
+    gDefaults->Set(Prop::AllocWidth(PropBorderBottomWidth, 0));
+    gDefaults->Set(Prop::AllocWidth(PropBorderLeftWidth, 1));
 
     gPropSetButtonRegular = new PropSet();
     gPropSetButtonRegular->Set(Prop::AllocPadding(4, 8, 4, 8));
@@ -105,6 +109,20 @@ void Destroy()
     DeleteCachedFonts();
 }
 
+static bool IsWidthProp(PropType type)
+{
+    return (PropBorderTopWidth == type) ||
+           (PropBorderRightWidth == type) ||
+           (PropBorderBottomWidth == type) ||
+           (PropBorderLeftWidth == type);
+}
+
+static bool IsColorProp(PropType type)
+{
+    return ((PropColor == type) ||
+            (PropBgColor == type));
+}
+
 bool ColorData::Eq(ColorData *other) const
 {
     if (type != other->type)
@@ -123,12 +141,6 @@ bool ColorData::Eq(ColorData *other) const
     return false;
 }
 
-static bool IsColorProp(PropType type)
-{
-    return ((PropColor == type) ||
-            (PropBgColor == type));
-}
-
 Prop::~Prop()
 {
     if (PropFontName == type)
@@ -141,6 +153,7 @@ bool Prop::Eq(Prop *other) const
 {
     if (type != other->type)
         return false;
+
     switch (type) {
     case PropFontName:
         return str::Eq(fontName.name, other->fontName.name);
@@ -150,13 +163,15 @@ bool Prop::Eq(Prop *other) const
         return fontWeight.style == other->fontWeight.style;
     case PropPadding:
         return padding == other->padding;
-    case PropColor:
-    case PropBgColor:
-        return color.Eq(&other->color);
-    default:
-        CrashIf(true);
-        break;
     }
+
+    if (IsColorProp(type))
+        return color.Eq(&other->color);
+
+    if (IsWidthProp(type))
+        return width.width == other->width.width;
+
+    CrashIf(true);
     return false;
 }
 
@@ -211,6 +226,11 @@ Prop *Prop::AllocFontSize(float size)
 Prop *Prop::AllocFontWeight(FontStyle style)
 {
     ALLOC_BODY(PropFontWeight, fontWeight, style);
+}
+
+Prop *Prop::AllocWidth(PropType type, float width)
+{
+    ALLOC_BODY(type, width, width);
 }
 
 Prop *Prop::AllocPadding(int top, int right, int bottom, int left)
@@ -362,17 +382,17 @@ static bool FoundAllProps(PropToFind *props, size_t propsCount)
     return true;
 }
 
-// returns true if set
+// returns true if set, false if was already set or didn't find the prop
 static bool SetPropIfFound(Prop *prop, PropToFind *propsToFind, size_t propsToFindCount)
 {
     for (size_t i = 0; i < propsToFindCount; i++) {
-        if (propsToFind[i].type == prop->type) {
-            if (NULL == propsToFind[i].prop) {
-                propsToFind[i].prop = prop;
-                return true;
-            }
-            return false;
+        if (propsToFind[i].type != prop->type)
+            continue;
+        if (NULL == propsToFind[i].prop) {
+            propsToFind[i].prop = prop;
+            return true;
         }
+        return false;
     }
     return false;
 }

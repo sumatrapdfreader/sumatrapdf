@@ -40,6 +40,9 @@ lots of subclasses and forcing logic into a button class. We provide
 a way to subscribe any class implementing IClickHandler interface
 to register for click evens from any window that generates thems.
 
+TODO: probably should take border widths into account when measuring
+buttons.
+
 TODO: a way to easily do text selection in generic way in EventMgr
 by giving windows a way to declare they have selectable text
 
@@ -324,12 +327,62 @@ void VirtWndButton::Measure(Size availableSize)
     // here
 }
 
+struct BorderProps {
+    Prop *  topWidth;
+    Prop *  rightWidth;
+    Prop *  bottomWidth;
+    Prop *  leftWidth;
+};
+
+static void DrawLine(Graphics *gfx, const Point& p1, const Point& p2, float width)
+{
+    if (0 == width)
+        return;
+    Color c(0, 0, 0);
+    Pen p(c, width);
+    gfx->DrawLine(&p, p1, p2);
+}
+
+static void DrawBorder(Graphics *gfx, const Rect r, const BorderProps& bp)
+{
+    Point p1, p2;
+    float width;
+
+    // top
+    p1.X = r.X; p1.Y = r.Y;
+    p2.X = r.X + r.Width; p2.Y = p1.Y;
+    width = bp.topWidth->width.width;
+    DrawLine(gfx, p1, p2, width);
+
+    // right
+    p1 = p2;
+    p2.X = p1.X; p2.Y = p1.Y + r.Height;
+    width = bp.rightWidth->width.width;
+    DrawLine(gfx, p1, p2, width);
+
+    // bottom
+    p1 = p2;
+    p2.X = r.X; p2.Y = p1.Y;
+    width = bp.bottomWidth->width.width;
+    DrawLine(gfx, p1, p2, width);
+
+    // left
+    p1 = p2;
+    p2.X = p1.X; p2.Y = r.Y;
+    width = bp.leftWidth->width.width;
+    DrawLine(gfx, p1, p2, width);
+}
+
 void VirtWndButton::Paint(Graphics *gfx, int offX, int offY)
 {
     struct PropToFind props[] = {
         { PropColor, NULL },
         { PropBgColor, NULL },
-        { PropPadding, NULL }
+        { PropPadding, NULL },
+        { PropBorderTopWidth, NULL },
+        { PropBorderRightWidth, NULL },
+        { PropBorderBottomWidth, NULL },
+        { PropBorderLeftWidth, NULL },
     };
 
     if (!IsVisible())
@@ -340,17 +393,27 @@ void VirtWndButton::Paint(Graphics *gfx, int offX, int offY)
     Prop *propBgCol = props[1].prop;
     Prop *propPadding = props[2].prop;
 
+    // TODO: if this is a gradient brush, should set the rectangle
     Brush *brBgColor = propBgCol->color.brush;
     RectF bbox((REAL)offX, (REAL)offY, (REAL)pos.Width, (REAL)pos.Height);
     gfx->FillRectangle(brBgColor, bbox);
 
+    BorderProps bp = {
+        props[3].prop,
+        props[4].prop,
+        props[5].prop,
+        props[6].prop,
+    };
+
+    PaddingData padding = propPadding->padding;
+    Rect r(offX, offY, pos.Width, pos.Height);
+    DrawBorder(gfx, r, bp);
     if (!text)
         return;
 
-    PaddingData padding = propPadding->padding;
-    Brush *brColor = propCol->color.brush;
     int x = offX + padding.left;
     int y = offY + padding.bottom;
+    Brush *brColor = propCol->color.brush;
     gfx->DrawString(text, str::Len(text), GetFontForState(), PointF((REAL)x, (REAL)y), NULL, brColor);
 }
 
@@ -426,32 +489,6 @@ void VirtWndPainter::OnPaint(HWND hwnd)
     gDC.DrawImage(cacheBmp, 0, 0);
     EndPaint(hwnd, &ps);
 }
-
-#if 0
-struct IterWindows
-{
-    VirtWnd *   curr;
-    size_t      currChild;
-    int         offX;
-    int         offY;
-
-    Rect        currPos;
-
-    IterWindows(VirtWnd *root) {
-        curr = root;
-        currChild = 0;
-        offX = 0;
-        offY = 0;
-    }
-
-    VirtWnd *Next();
-};
-
-VirtWnd *IterWindows::Next()
-{
-
-}
-#endif
 
 // TODO: build an iterator for (VirtWnd *, Rect) to make such logic reusable
 // in more places and eliminate recursion (?)

@@ -12,12 +12,17 @@ namespace css {
 using namespace Gdiplus;
 
 enum PropType {
-    PropFontName,       // font-family
-    PropFontSize,       // font-size
-    PropFontWeight,     // font-weight
-    PropPadding,        // padding
-    PropColor,          // color
-    PropBgColor,        // background-color
+    PropFontName,           // font-family
+    PropFontSize,           // font-size
+    PropFontWeight,         // font-weight
+    PropPadding,            // padding
+    PropColor,              // color
+    PropBgColor,            // background-color
+
+    PropBorderTopWidth,     // border-top-width
+    PropBorderRightWidth,   // border-right-width
+    PropBorderBottomWidth,  // border-bottom-width
+    PropBorderLeftWidth,    // border-left-width
 };
 
 struct FontNameData {
@@ -30,6 +35,10 @@ struct FontSizeData {
 
 struct FontWeightData {
     FontStyle style;
+};
+
+struct WidthData {
+    float width;
 };
 
 enum ColorType {
@@ -86,6 +95,7 @@ public:
         FontWeightData  fontWeight;
         PaddingData     padding;
         ColorData       color;
+        WidthData       width;
     };
 
     ~Prop();
@@ -101,6 +111,7 @@ public:
     static Prop *AllocColorSolid(PropType type, int r, int g, int b);
     static Prop *AllocColorSolid(PropType type, const char *color);
     static Prop *AllocColorLinearGradient(PropType type, LinearGradientMode mode, ARGB startColor, ARGB endColor);
+    static Prop *AllocWidth(PropType type, float width);
 };
 
 struct PropSet {
