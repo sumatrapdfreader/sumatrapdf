@@ -149,47 +149,33 @@ static struct {
     { "yellow", MKRGB(255,255,0) },
 };
 
-static bool FindKnownColor(const char *name, ARGB *colorOut)
-{
-    for (size_t i = 0; i < dimof(gKnownColors); i++) {
-        if (str::EqI(gKnownColors[i].name, name)) {
-            *colorOut = gKnownColors[i].color;
-            return true;
-        }
-    }
-    return false;
-}
-
-// parse #rrggbb and #rgb formats of CSS colors
-// returns transparent if color is not in proper format
-// TODO: still needs #rgb
-static ARGB ParseHashCssColor(const char *color)
-{
-    CrashIf('#' != *color);
-    ++color;
-    size_t len = str::Len(color);
-    ARGB col = MKARGB(0,0,0,0); // transparent
-    if (3 == len) {
-        // TODO: parse #rgb
-    } else if (6 == len) {
-        unsigned char buf[3];
-        bool ok = str::HexToMem(color, buf, dimof(buf));
-        if (ok)
-            col = MKRGB(buf[0], buf[1], buf[2]); 
-    }
-    return col;
-}
-
+// cf. https://developer.mozilla.org/en/CSS/color_value
 static ARGB ParseCssColor(const char *color)
 {
-    // TODO: implement parsing rgb(r,g,b), rgba(a,r,g,b), 
-    // #rgb, known color names (https://developer.mozilla.org/en/CSS/color_value)
-    ARGB colorValue;
-    if ('#' == *color)
-        return ParseHashCssColor(color);
-    bool found = FindKnownColor(color, &colorValue);
-    if (found)
-        return colorValue;
+    ScopedMem<TCHAR> col(str::conv::FromAnsi(color));
+    // parse #RRGGBB and #RGB and rgb(R,G,B)
+    int a, r, g, b;
+    if (str::Parse(col, _T("#%2x%2x%2x%$"), &r, &g, &b) ||
+        str::Parse(col, _T("#%1x%1x%1x%$"), &r, &g, &b) ||
+        str::Parse(col, _T("rgb(%d,%d,%d)"), &r, &g, &b)) {
+        return MKRGB(r, g, b);
+    }
+    // parse rgba(R,G,B,A)
+    if (str::Parse(col, _T("rgba(%d,%d,%d,%d)"), &r, &g, &b, &a)) {
+        return MKARGB(a, r, g, b);
+    }
+    // parse rgb(R%,G%,B%) and rgba(R%,G%,B%,A%)
+    float fa = 1.0f, fr, fg, fb;
+    if (str::Parse(col, _T("rgb(%f%%,%f%%,%f%%)"), &fr, &fg, &fb) ||
+        str::Parse(col, _T("rgba(%f%%,%f%%,%f%%,%f%%)"), &fr, &fg, &fb, &fa)) {
+        return MKARGB((int)(fa * 2.55f), (int)(fr * 2.55f), (int)(fg * 2.55f), (int)(fb * 2.55f));
+    }
+    // parse color names
+    for (size_t i = 0; i < dimof(gKnownColors); i++) {
+        if (str::EqI(gKnownColors[i].name, color)) {
+            return gKnownColors[i].color;
+        }
+    }
     return MKARGB(0,0,0,0); // transparent
 }
 
