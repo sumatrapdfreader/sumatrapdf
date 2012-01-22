@@ -653,8 +653,13 @@ static const char *ParseLimitedNumber(const char *str, const char *format,
     char f2[] = "% ";
     const char *endF = Parse(format, "%u%c", &width, &f2[1]);
     if (endF && FindChar("udx", f2[1]) && width <= Len(str)) {
-        ScopedMem<char> limited(DupN(str, width));
-        const char *end = Parse(limited, f2, valueOut);
+        ScopedMem<char> limited;
+        char buf[5];
+        if (width < dimof(buf))
+            str::BufSet(buf, width + 1, str);
+        else
+            limited.Set(DupN(str, width));
+        const char *end = Parse(limited ? limited : buf, f2, valueOut);
         if (end && !*end)
             *endOut = (char *)str + width;
     }
@@ -668,8 +673,13 @@ static const WCHAR *ParseLimitedNumber(const WCHAR *str, const WCHAR *format,
     WCHAR f2[] = L"% ";
     const WCHAR *endF = Parse(format, L"%u%c", &width, &f2[1]);
     if (endF && FindChar(L"udx", f2[1]) && width <= Len(str)) {
-        ScopedMem<WCHAR> limited(DupN(str, width));
-        const WCHAR *end = Parse(limited, f2, valueOut);
+        ScopedMem<WCHAR> limited;
+        WCHAR buf[5];
+        if (width < dimof(buf))
+            str::BufSet(buf, width + 1, str);
+        else
+            limited.Set(DupN(str, width));
+        const WCHAR *end = Parse(limited ? limited : buf, f2, valueOut);
         if (end && !*end)
             *endOut = (WCHAR *)str + width;
     }
