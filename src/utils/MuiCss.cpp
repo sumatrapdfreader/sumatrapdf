@@ -77,7 +77,7 @@ void Initialize()
     gDefaults->Set(Prop::AllocColorLinearGradient(PropBgColor, LinearGradientModeVertical, c1, c2));
     gDefaults->SetBorderWidth(1);
     gDefaults->SetBorderColor(MKRGB(0x99, 0x99, 0x99));
-    gDefaults->Set(Prop::AllocColorSolid(PropBorderBottomColor, 0x88, 0x88, 0x88));
+    gDefaults->Set(Prop::AllocColorSolid(PropBorderBottomColor, "#888"));
 
     gPropSetButtonRegular = new PropSet();
     gPropSetButtonRegular->Set(Prop::AllocPadding(4, 8, 4, 8));
@@ -87,9 +87,9 @@ void Initialize()
     gPropSetButtonRegular->inheritsFrom = gDefaults;
 
     gPropSetButtonMouseOver = new PropSet();
-    gPropSetButtonMouseOver->Set(Prop::AllocColorSolid(PropBorderTopColor, 0x77, 0x77, 0x77));
-    gPropSetButtonMouseOver->Set(Prop::AllocColorSolid(PropBorderRightColor, 0x77, 0x77, 0x77));
-    gPropSetButtonMouseOver->Set(Prop::AllocColorSolid(PropBorderBottomColor, 0x66, 0x66, 0x66));
+    gPropSetButtonMouseOver->Set(Prop::AllocColorSolid(PropBorderTopColor, "#777"));
+    gPropSetButtonMouseOver->Set(Prop::AllocColorSolid(PropBorderRightColor, "#777"));
+    gPropSetButtonMouseOver->Set(Prop::AllocColorSolid(PropBorderBottomColor, "#666"));
     //gPropSetButtonMouseOver->Set(Prop::AllocColorSolid(PropBgColor, 180, 0, 0, 255));
     //gPropSetButtonMouseOver->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
     gPropSetButtonMouseOver->inheritsFrom = gPropSetButtonRegular;
@@ -135,6 +135,8 @@ bool IsColorProp(PropType type)
 
 // based on https://developer.mozilla.org/en/CSS/color_value
 // TODO: add more colors
+// TODO: change strings into linear string format, similar to how we store names
+// html tags
 static struct {
     const char *name;
     ARGB        color;
@@ -149,13 +151,24 @@ static struct {
     { "yellow", MKRGB(255,255,0) },
 };
 
+// Parses css-like color formats:
+// #rgb, #rrggbb, rgb(r,g,b), rgba(r,g,b,a)
+// rgb(r%, g%, b%), rgba(r%, g%, b%, a%)
 // cf. https://developer.mozilla.org/en/CSS/color_value
 static ARGB ParseCssColor(const char *color)
 {
     // parse #RRGGBB and #RGB and rgb(R,G,B)
     int a, r, g, b;
+
+    // #rgb is shorthand for #rrggbb
+    if (str::Parse(color, "#%1x%1x%1x%$", &r, &g, &b)) {
+        r |= (r << 4);
+        g |= (g << 4);
+        b |= (b << 4);
+        return MKRGB(r, g, b);
+    }
+
     if (str::Parse(color, "#%2x%2x%2x%$", &r, &g, &b) ||
-        str::Parse(color, "#%1x%1x%1x%$", &r, &g, &b) ||
         str::Parse(color, "rgb(%d,%d,%d)", &r, &g, &b)) {
         return MKRGB(r, g, b);
     }
