@@ -328,49 +328,53 @@ void VirtWndButton::Measure(Size availableSize)
 }
 
 struct BorderProps {
-    Prop *  topWidth;
-    Prop *  rightWidth;
-    Prop *  bottomWidth;
-    Prop *  leftWidth;
+    Prop *  topWidth, *topColor;
+    Prop *  rightWidth, *rightColor;
+    Prop *  bottomWidth, *bottomColor;
+    Prop *  leftWidth, *leftColor;
 };
 
-static void DrawLine(Graphics *gfx, const Point& p1, const Point& p2, float width)
+static void DrawLine(Graphics *gfx, const Point& p1, const Point& p2, float width, Brush *br)
 {
     if (0 == width)
         return;
-    Color c(0, 0, 0);
-    Pen p(c, width);
+    Pen p(br, width);
     gfx->DrawLine(&p, p1, p2);
 }
 
 static void DrawBorder(Graphics *gfx, const Rect r, const BorderProps& bp)
 {
-    Point p1, p2;
-    float width;
+    Point   p1, p2;
+    float   width;
+    Brush * br;
 
     // top
     p1.X = r.X; p1.Y = r.Y;
     p2.X = r.X + r.Width; p2.Y = p1.Y;
     width = bp.topWidth->width.width;
-    DrawLine(gfx, p1, p2, width);
+    br = bp.topColor->color.brush;
+    DrawLine(gfx, p1, p2, width, br);
 
     // right
     p1 = p2;
     p2.X = p1.X; p2.Y = p1.Y + r.Height;
     width = bp.rightWidth->width.width;
-    DrawLine(gfx, p1, p2, width);
+    br = bp.rightColor->color.brush;
+    DrawLine(gfx, p1, p2, width, br);
 
     // bottom
     p1 = p2;
     p2.X = r.X; p2.Y = p1.Y;
     width = bp.bottomWidth->width.width;
-    DrawLine(gfx, p1, p2, width);
+    br = bp.bottomColor->color.brush;
+    DrawLine(gfx, p1, p2, width, br);
 
     // left
     p1 = p2;
     p2.X = p1.X; p2.Y = r.Y;
     width = bp.leftWidth->width.width;
-    DrawLine(gfx, p1, p2, width);
+    br = bp.leftColor->color.brush;
+    DrawLine(gfx, p1, p2, width, br);
 }
 
 void VirtWndButton::Paint(Graphics *gfx, int offX, int offY)
@@ -380,9 +384,13 @@ void VirtWndButton::Paint(Graphics *gfx, int offX, int offY)
         { PropBgColor, NULL },
         { PropPadding, NULL },
         { PropBorderTopWidth, NULL },
+        { PropBorderTopColor, NULL },
         { PropBorderRightWidth, NULL },
+        { PropBorderRightColor, NULL },
         { PropBorderBottomWidth, NULL },
+        { PropBorderBottomColor, NULL },
         { PropBorderLeftWidth, NULL },
+        { PropBorderLeftColor, NULL },
     };
 
     if (!IsVisible())
@@ -399,10 +407,10 @@ void VirtWndButton::Paint(Graphics *gfx, int offX, int offY)
     gfx->FillRectangle(brBgColor, bbox);
 
     BorderProps bp = {
-        props[3].prop,
-        props[4].prop,
-        props[5].prop,
-        props[6].prop,
+        props[3].prop, props[4].prop,
+        props[5].prop, props[6].prop,
+        props[7].prop, props[8].prop,
+        props[9].prop, props[10].prop,
     };
 
     PaddingData padding = propPadding->padding;

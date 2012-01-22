@@ -23,6 +23,11 @@ enum PropType {
     PropBorderRightWidth,   // border-right-width
     PropBorderBottomWidth,  // border-bottom-width
     PropBorderLeftWidth,    // border-left-width
+
+    PropBorderTopColor,     // border-top-color
+    PropBorderRightColor,   // border-right-color
+    PropBorderBottomColor,  // border-bottom-color
+    PropBorderLeftColor,    // border-left-color
 };
 
 struct FontNameData {

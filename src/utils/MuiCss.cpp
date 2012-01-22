@@ -77,15 +77,20 @@ void Initialize()
     gDefaults->Set(Prop::AllocColorLinearGradient(PropBgColor, LinearGradientModeVertical, c1, c2));
     gDefaults->Set(Prop::AllocWidth(PropBorderTopWidth, 1));
     gDefaults->Set(Prop::AllocWidth(PropBorderRightWidth, 1));
-    gDefaults->Set(Prop::AllocWidth(PropBorderBottomWidth, 0));
+    gDefaults->Set(Prop::AllocWidth(PropBorderBottomWidth, 1));
     gDefaults->Set(Prop::AllocWidth(PropBorderLeftWidth, 1));
+    gDefaults->Set(Prop::AllocColorSolid(PropBorderTopColor, 0x99, 0x99, 0x99));
+    gDefaults->Set(Prop::AllocColorSolid(PropBorderRightColor, 0x99, 0x99, 0x99));
+    gDefaults->Set(Prop::AllocColorSolid(PropBorderBottomColor, 0x99, 0x99, 0x99));
+    gDefaults->Set(Prop::AllocColorSolid(PropBorderLeftColor, 0x99, 0x99, 0x99));
 
     gPropSetButtonRegular = new PropSet();
     gPropSetButtonRegular->Set(Prop::AllocPadding(4, 8, 4, 8));
     gPropSetButtonRegular->inheritsFrom = gDefaults;
 
     gPropSetButtonMouseOver = new PropSet();
-    gPropSetButtonMouseOver->Set(Prop::AllocColorSolid(PropBgColor, 180, 0, 0, 255));
+    //gPropSetButtonMouseOver->Set(Prop::AllocColorSolid(PropBgColor, 180, 0, 0, 255));
+    gPropSetButtonMouseOver->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
     gPropSetButtonMouseOver->inheritsFrom = gPropSetButtonRegular;
 }
 
@@ -119,8 +124,12 @@ static bool IsWidthProp(PropType type)
 
 static bool IsColorProp(PropType type)
 {
-    return ((PropColor == type) ||
-            (PropBgColor == type));
+    return (PropColor == type) ||
+           (PropBgColor == type) ||
+           (PropBorderTopColor == type) ||
+           (PropBorderRightColor == type) ||
+           (PropBorderBottomColor == type) ||
+           (PropBorderLeftColor == type);
 }
 
 bool ColorData::Eq(ColorData *other) const
@@ -331,6 +340,7 @@ static struct {
     { "red",    MKRGB(255,0,0) },
     { "green",  MKRGB(0,128,0) },
     { "blue",   MKRGB(0,0,255) },
+    { "transparent", MKARGB(0,0,0,0) },
 };
 
 static bool FindKnownColor(const char *name, ARGB *colorOut)
