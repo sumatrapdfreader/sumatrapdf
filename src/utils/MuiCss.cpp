@@ -152,22 +152,21 @@ static struct {
 // cf. https://developer.mozilla.org/en/CSS/color_value
 static ARGB ParseCssColor(const char *color)
 {
-    ScopedMem<TCHAR> col(str::conv::FromAnsi(color));
     // parse #RRGGBB and #RGB and rgb(R,G,B)
     int a, r, g, b;
-    if (str::Parse(col, _T("#%2x%2x%2x%$"), &r, &g, &b) ||
-        str::Parse(col, _T("#%1x%1x%1x%$"), &r, &g, &b) ||
-        str::Parse(col, _T("rgb(%d,%d,%d)"), &r, &g, &b)) {
+    if (str::Parse(color, "#%2x%2x%2x%$", &r, &g, &b) ||
+        str::Parse(color, "#%1x%1x%1x%$", &r, &g, &b) ||
+        str::Parse(color, "rgb(%d,%d,%d)", &r, &g, &b)) {
         return MKRGB(r, g, b);
     }
     // parse rgba(R,G,B,A)
-    if (str::Parse(col, _T("rgba(%d,%d,%d,%d)"), &r, &g, &b, &a)) {
+    if (str::Parse(color, "rgba(%d,%d,%d,%d)", &r, &g, &b, &a)) {
         return MKARGB(a, r, g, b);
     }
     // parse rgb(R%,G%,B%) and rgba(R%,G%,B%,A%)
     float fa = 1.0f, fr, fg, fb;
-    if (str::Parse(col, _T("rgb(%f%%,%f%%,%f%%)"), &fr, &fg, &fb) ||
-        str::Parse(col, _T("rgba(%f%%,%f%%,%f%%,%f%%)"), &fr, &fg, &fb, &fa)) {
+    if (str::Parse(color, "rgb(%f%%,%f%%,%f%%)", &fr, &fg, &fb) ||
+        str::Parse(color, "rgba(%f%%,%f%%,%f%%,%f%%)", &fr, &fg, &fb, &fa)) {
         return MKARGB((int)(fa * 2.55f), (int)(fr * 2.55f), (int)(fg * 2.55f), (int)(fb * 2.55f));
     }
     // parse color names

@@ -637,7 +637,8 @@ void DbgOut(const TCHAR *format, ...)
     va_end(args);
 }
 
-static TCHAR *ExtractUntil(const TCHAR *pos, TCHAR c, const TCHAR **endOut)
+template <typename T>
+static T *ExtractUntil(const T *pos, T c, const T **endOut)
 {
     *endOut = FindChar(pos, c);
     if (!*endOut)
@@ -645,17 +646,32 @@ static TCHAR *ExtractUntil(const TCHAR *pos, TCHAR c, const TCHAR **endOut)
     return str::DupN(pos, *endOut - pos);
 }
 
-static const TCHAR *ParseLimitedNumber(const TCHAR *str, const TCHAR *format,
-                                       TCHAR **endOut, void *valueOut)
+static const char *ParseLimitedNumber(const char *str, const char *format,
+                                      char **endOut, void *valueOut)
 {
     UINT width;
-    TCHAR f2[] = _T("% ");
-    const TCHAR *endF = Parse(format, _T("%u%c"), &width, &f2[1]);
-    if (endF && FindChar(_T("udx"), f2[1]) && width <= Len(str)) {
-        ScopedMem<TCHAR> limited(DupN(str, width));
-        const TCHAR *end = Parse(limited, f2, valueOut);
+    char f2[] = "% ";
+    const char *endF = Parse(format, "%u%c", &width, &f2[1]);
+    if (endF && FindChar("udx", f2[1]) && width <= Len(str)) {
+        ScopedMem<char> limited(DupN(str, width));
+        const char *end = Parse(limited, f2, valueOut);
         if (end && !*end)
-            *endOut = (TCHAR *)str + width;
+            *endOut = (char *)str + width;
+    }
+    return endF;
+}
+
+static const WCHAR *ParseLimitedNumber(const WCHAR *str, const WCHAR *format,
+                                       WCHAR **endOut, void *valueOut)
+{
+    UINT width;
+    WCHAR f2[] = L"% ";
+    const WCHAR *endF = Parse(format, L"%u%c", &width, &f2[1]);
+    if (endF && FindChar(L"udx", f2[1]) && width <= Len(str)) {
+        ScopedMem<WCHAR> limited(DupN(str, width));
+        const WCHAR *end = Parse(limited, f2, valueOut);
+        if (end && !*end)
+            *endOut = (WCHAR *)str + width;
     }
     return endF;
 }
@@ -680,13 +696,13 @@ static const TCHAR *ParseLimitedNumber(const TCHAR *str, const TCHAR *format,
    characters must be read for parsing the number (e.g. "%4d" parses -123 out of "-12345"
    and doesn't parse "123" at all).
    */
-const TCHAR *Parse(const TCHAR *str, const TCHAR *format, ...)
+const char *Parse(const char *str, const char *format, ...)
 {
     if (!str)
         return NULL;
     va_list args;
     va_start(args, format);
-    for (const TCHAR *f = format; *f; f++) {
+    for (const char *f = format; *f; f++) {
         if (*f != '%') {
             if (*f != *str)
                 goto Failure;
@@ -695,31 +711,86 @@ const TCHAR *Parse(const TCHAR *str, const TCHAR *format, ...)
         }
         f++;
 
-        TCHAR *end = NULL;
+        char *end = NULL;
         if ('u' == *f)
-            *va_arg(args, unsigned int *) = _tcstoul(str, &end, 10);
+            *va_arg(args, unsigned int *) = strtoul(str, &end, 10);
         else if ('d' == *f)
-            *va_arg(args, int *) = _tcstol(str, &end, 10);
+            *va_arg(args, int *) = strtol(str, &end, 10);
         else if ('x' == *f)
-            *va_arg(args, unsigned int *) = _tcstoul(str, &end, 16);
+            *va_arg(args, unsigned int *) = strtoul(str, &end, 16);
         else if ('f' == *f)
-            *va_arg(args, float *) = (float)_tcstod(str, &end);
+            *va_arg(args, float *) = (float)strtod(str, &end);
         else if ('c' == *f)
-            *va_arg(args, TCHAR *) = *str, end = (TCHAR *)str + 1;
+            *va_arg(args, char *) = *str, end = (char *)str + 1;
         else if ('s' == *f)
-            *va_arg(args, TCHAR **) = ExtractUntil(str, *(f + 1), (const TCHAR **)&end);
+            *va_arg(args, char **) = ExtractUntil(str, *(f + 1), (const char **)&end);
         else if ('S' == *f)
-            va_arg(args, ScopedMem<TCHAR> *)->Set(ExtractUntil(str, *(f + 1), (const TCHAR **)&end));
+            va_arg(args, ScopedMem<char> *)->Set(ExtractUntil(str, *(f + 1), (const char **)&end));
         else if ('$' == *f && !*str)
             continue; // don't fail, if we're indeed at the end of the string
         else if ('%' == *f && *f == *str)
-            end = (TCHAR *)str + 1;
+            end = (char *)str + 1;
         else if ('?' == *f && *(f + 1)) {
             // skip the next format character, advance the string,
             // if it the optional character is the next character to parse
             if (*str != *++f)
                 continue;
-            end = (TCHAR *)str + 1;
+            end = (char *)str + 1;
+        }
+        else if (ChrIsDigit(*f))
+            f = ParseLimitedNumber(str, f, &end, va_arg(args, void *)) - 1;
+        if (!end || end == str)
+            goto Failure;
+        str = end;
+    }
+    va_end(args);
+    return str;
+
+Failure:
+    va_end(args);
+    return NULL;
+}
+
+const WCHAR *Parse(const WCHAR *str, const WCHAR *format, ...)
+{
+    if (!str)
+        return NULL;
+    va_list args;
+    va_start(args, format);
+    for (const WCHAR *f = format; *f; f++) {
+        if (*f != '%') {
+            if (*f != *str)
+                goto Failure;
+            str++;
+            continue;
+        }
+        f++;
+
+        WCHAR *end = NULL;
+        if ('u' == *f)
+            *va_arg(args, unsigned int *) = wcstoul(str, &end, 10);
+        else if ('d' == *f)
+            *va_arg(args, int *) = wcstol(str, &end, 10);
+        else if ('x' == *f)
+            *va_arg(args, unsigned int *) = wcstoul(str, &end, 16);
+        else if ('f' == *f)
+            *va_arg(args, float *) = (float)wcstod(str, &end);
+        else if ('c' == *f)
+            *va_arg(args, WCHAR *) = *str, end = (WCHAR *)str + 1;
+        else if ('s' == *f)
+            *va_arg(args, WCHAR **) = ExtractUntil(str, *(f + 1), (const WCHAR **)&end);
+        else if ('S' == *f)
+            va_arg(args, ScopedMem<WCHAR> *)->Set(ExtractUntil(str, *(f + 1), (const WCHAR **)&end));
+        else if ('$' == *f && !*str)
+            continue; // don't fail, if we're indeed at the end of the string
+        else if ('%' == *f && *f == *str)
+            end = (WCHAR *)str + 1;
+        else if ('?' == *f && *(f + 1)) {
+            // skip the next format character, advance the string,
+            // if it the optional character is the next character to parse
+            if (*str != *++f)
+                continue;
+            end = (WCHAR *)str + 1;
         }
         else if (ChrIsDigit(*f))
             f = ParseLimitedNumber(str, f, &end, va_arg(args, void *)) - 1;

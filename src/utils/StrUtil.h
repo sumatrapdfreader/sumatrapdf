@@ -126,7 +126,8 @@ int     CmpNatural(const TCHAR *a, const TCHAR *b);
 void    DbgOut(const TCHAR *format, ...);
 #endif
 
-const TCHAR *   Parse(const TCHAR *str, const TCHAR *format, ...);
+const char  *   Parse(const char *str, const char *format, ...);
+const WCHAR *   Parse(const WCHAR *str, const WCHAR *format, ...);
 
 size_t Utf8ToWcharBuf(const char *s, size_t sLen, WCHAR *bufOut, size_t bufOutMax);
 

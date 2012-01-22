@@ -211,6 +211,21 @@ static void TStrTest()
         free(str1);
     }
 
+    {
+        ScopedMem<char> str;
+        int i, j;
+        float f;
+        assert(str::Parse("ansi string, -30-20 1.5%", "%S,%d%?-%u%f%%%$", &str, &i, &j, &f));
+        assert(str::Eq(str, "ansi string") && i == -30 && j == 20 && f == 1.5f);
+    }
+    {
+        ScopedMem<WCHAR> str;
+        int i, j;
+        float f;
+        assert(str::Parse(L"wide string, -30-20 1.5%", L"%S,%d%?-%u%f%%%$", &str, &i, &j, &f));
+        assert(str::Eq(str, L"wide string") && i == -30 && j == 20 && f == 1.5f);
+    }
+
     // the test string should only contain ASCII characters,
     // as all others might not be available in all code pages
 #define TEST_STRING "aBc"
