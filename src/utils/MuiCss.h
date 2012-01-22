@@ -16,6 +16,8 @@ enum PropType {
     PropFontSize,
     PropFontWeight,
     PropPadding,
+    PropColor,
+    PropBgColor,
 };
 
 struct FontNameData {
@@ -28,6 +30,10 @@ struct FontSizeData {
 
 struct FontWeightData {
     FontStyle style;
+};
+
+struct ColorData {
+    ARGB    color;
 };
 
 struct PaddingData {
@@ -54,6 +60,7 @@ public:
         FontSizeData    fontSize;
         FontWeightData  fontWeight;
         PaddingData     padding;
+        ColorData       color;
     };
 
     ~Prop();
@@ -64,6 +71,10 @@ public:
     static Prop *AllocFontSize(float size);
     static Prop *AllocFontWeight(FontStyle style);
     static Prop *AllocPadding(int top, int right, int bottom, int left);
+    static Prop *AllocColor(PropType type, ARGB color);
+    static Prop *AllocColor(PropType type, int a, int r, int g, int b);
+    static Prop *AllocColor(PropType type, int r, int g, int b);
+    static Prop *AllocColor(PropType type, const char *color);
 };
 
 struct PropSet {

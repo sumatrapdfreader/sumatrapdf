@@ -274,7 +274,7 @@ css::Prop *VirtWndButton::GetPropForState(css::PropType type) const
 {
     css::PropSet *s1, *s2;
     GetPropSetsForState(&s1, &s2);
-    return FindProp(s1, s2, css::PropPadding);
+    return FindProp(s1, s2, type);
 }
 
 Font *VirtWndButton::GetFontForState() const
@@ -322,13 +322,15 @@ void VirtWndButton::Paint(Graphics *gfx, int offX, int offY)
     if (!IsVisible())
         return;
 
-    SolidBrush br(Color(255,0,0));
-    SolidBrush bgBr(Color(180, 255, 255, 255)); // semi-transparent white
-    if (bit::IsSet(stateBits, MouseOverBit))
-        bgBr.SetColor(Color(180, 0, 0, 255)); // semi-transparent blue
+    // TODO: would probably be faster if we get all properties in one go
+    css::Prop *propCol   = GetPropForState(css::PropColor);
+    css::Prop *propBgCol = GetPropForState(css::PropBgColor);
+
+    SolidBrush brColor(propCol->color.color);
+    SolidBrush brBgColor(propBgCol->color.color);
 
     RectF bbox((REAL)offX, (REAL)offY, (REAL)pos.Width, (REAL)pos.Height);
-    gfx->FillRectangle(&bgBr, bbox);
+    gfx->FillRectangle(&brBgColor, bbox);
 
     if (!text)
         return;
@@ -338,7 +340,7 @@ void VirtWndButton::Paint(Graphics *gfx, int offX, int offY)
 
     int x = offX + padding.left;
     int y = offY + padding.bottom;
-    gfx->DrawString(text, str::Len(text), GetFontForState(), PointF((REAL)x, (REAL)y), NULL, &br);
+    gfx->DrawString(text, str::Len(text), GetFontForState(), PointF((REAL)x, (REAL)y), NULL, &brColor);
 }
 
 static bool BitmapSizeEquals(Bitmap *bmp, int dx, int dy)

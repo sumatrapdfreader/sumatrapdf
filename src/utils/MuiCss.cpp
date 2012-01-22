@@ -27,7 +27,6 @@ the same data.
 
 TODO: Prop allocations should come from block allocator, so
 that we don't pay OS's malloc() per-object overhead.
-
 */
 
 namespace mui {
@@ -69,12 +68,15 @@ void Initialize()
     gDefaults->Set(Prop::AllocFontName(L"Times New Roman"));
     gDefaults->Set(Prop::AllocFontSize(14));
     gDefaults->Set(Prop::AllocFontWeight(FontStyleBold));
+    gDefaults->Set(Prop::AllocColor(PropColor, "black"));
+    gDefaults->Set(Prop::AllocColor(PropBgColor, 0xff, 0xff, 0xff));
 
     gPropSetButtonRegular = new PropSet();
     gPropSetButtonRegular->Set(Prop::AllocPadding(4, 8, 4, 8));
     gPropSetButtonRegular->inheritsFrom = gDefaults;
 
     gPropSetButtonMouseOver = new PropSet();
+    gPropSetButtonMouseOver->Set(Prop::AllocColor(PropBgColor, 180, 0, 0, 255));
     gPropSetButtonMouseOver->inheritsFrom = gPropSetButtonRegular;
 }
 
@@ -118,7 +120,9 @@ bool Prop::Eq(Prop *other)
         return fontWeight.style == other->fontWeight.style;
     case PropPadding:
         return padding == other->padding;
-
+    case PropColor:
+    case PropBgColor:
+        return color.color == other->color.color;
     default:
         CrashIf(true);
         break;
@@ -191,6 +195,70 @@ Prop *Prop::AllocPadding(int top, int right, int bottom, int left)
     newProp->padding = pd;
     gAllProps->Append(newProp);
     return newProp;
+}
+
+static bool IsColorProp(PropType type)
+{
+    return ((PropColor == type) ||
+            (PropBgColor == type));
+}
+
+Prop *Prop::AllocColor(PropType type, ARGB color)
+{
+    CrashIf(!IsColorProp(type));
+    ALLOC_BODY(type, color, color);
+}
+
+Prop *Prop::AllocColor(PropType type, int a, int r, int g, int b)
+{
+    return AllocColor(type, Color::MakeARGB(a, r, g, b));
+}
+
+Prop *Prop::AllocColor(PropType type, int r, int g, int b)
+{
+    return AllocColor(type, Color::MakeARGB(0xff, r, g, b));
+}
+
+#define MKARGB(a, r, g, b) (((ARGB) (b)) | ((ARGB) (g) << 8) | ((ARGB) (r) << 16) | ((ARGB) (a) << 24))
+
+#define MKRGB(r, g, b) (((ARGB) (b)) | ((ARGB) (g) << 8) | ((ARGB) (r) << 16) | ((ARGB)(0xff) << 24))
+
+// based on https://developer.mozilla.org/en/CSS/color_value
+// TODO: add more colors
+static struct {
+    const char *name;
+    ARGB        color;
+} gKnownColors[] = {
+    { "black",  MKRGB(0, 0, 0) },
+    { "white",  MKRGB(255,255,255) },
+    { "gray",   MKRGB(128,128,128) },
+    { "red",    MKRGB(255,0,0) },
+    { "green",  MKRGB(0,128,0) },
+    { "blue",   MKRGB(0,0,255) },
+};
+
+static bool FindKnownColor(const char *name, ARGB *colorOut)
+{
+    for (size_t i = 0; i < dimof(gKnownColors); i++) {
+        if (str::EqI(gKnownColors[i].name, name)) {
+            *colorOut = gKnownColors[i].color;
+            return true;
+        }
+    }
+    return false;
+}
+
+Prop *Prop::AllocColor(PropType type, const char *color)
+{
+    // TODO: implement parsing rgb(r,g,b), rgba(a,r,g,b), #rrggbb,
+    // #rgb, known color names (https://developer.mozilla.org/en/CSS/color_value)
+    ARGB colorValue;
+    bool found = FindKnownColor(color, &colorValue);
+    if (found)
+        return AllocColor(type, colorValue);
+
+    CrashIf(true);
+    return NULL;
 }
 
 #undef ALLOC_BODY
@@ -298,4 +366,3 @@ Font *CachedFontFromProps(PropSet *propsFirst, PropSet *propsSecond)
 
 } // namespace css
 } // namespace mui
-
