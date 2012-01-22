@@ -116,6 +116,7 @@ public:
     static Prop *AllocColorSolid(PropType type, int r, int g, int b);
     static Prop *AllocColorSolid(PropType type, const char *color);
     static Prop *AllocColorLinearGradient(PropType type, LinearGradientMode mode, ARGB startColor, ARGB endColor);
+    static Prop *AllocColorLinearGradient(PropType type, LinearGradientMode mode, const char *startColor, const char *endColor);
     static Prop *AllocWidth(PropType type, float width);
 };
 

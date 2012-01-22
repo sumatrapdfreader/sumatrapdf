@@ -67,9 +67,14 @@ public:
 
     VirtWndEbook(HWND hwnd);
 
+    PropSet *       facebookButtonRegular;
+    PropSet *       facebookButtonOver;
+
     virtual ~VirtWndEbook() {
         delete mb;
         delete pageLayout;
+        delete facebookButtonRegular;
+        delete facebookButtonOver;
     }
 
     virtual void Paint(Graphics *gfx, int offX, int offY);
@@ -222,9 +227,23 @@ VirtWndEbook::VirtWndEbook(HWND hwnd)
     pageLayout = NULL;
     currPageNo = 0;
     SetHwnd(hwnd);
+    facebookButtonRegular = new PropSet();
+    facebookButtonRegular->Set(Prop::AllocColorSolid(PropColor, "white"));
+    //facebookButtonRegular->Set(Prop::AllocColorLinearGradient(PropBgColor, LinearGradientModeVertical, "#75ae5c", "#67a54b"));
+    facebookButtonRegular->Set(Prop::AllocColorLinearGradient(PropBgColor, LinearGradientModeVertical, "#647bad", "#5872a7"));
+    facebookButtonRegular->Set(Prop::AllocColorSolid(PropBorderTopColor, "#29447E"));
+    facebookButtonRegular->Set(Prop::AllocColorSolid(PropBorderRightColor, "#29447E"));
+    facebookButtonRegular->Set(Prop::AllocColorSolid(PropBorderBottomColor, "#1A356E"));
+
+    facebookButtonOver = new PropSet();
+    facebookButtonOver->Set(Prop::AllocColorSolid(PropColor, "yellow"));
+    facebookButtonOver->inheritsFrom = facebookButtonRegular;
+
     next = new VirtWndButton(_T("Next"));
     prev = new VirtWndButton(_T("Prev"));
     test = new VirtWndButton(_T("test"));
+    test->cssRegular = facebookButtonRegular;
+    test->cssMouseOver = facebookButtonOver;
 
     AddChild(next);
     AddChild(prev);

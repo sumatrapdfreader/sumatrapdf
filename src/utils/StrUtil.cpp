@@ -485,8 +485,9 @@ char *MemToHex(const unsigned char *buf, int len)
 }
 
 /* Reverse of MemToHex. Convert a 0-terminatd hex-encoded string <s> to
-   binary data pointed by <buf> of max sisze bufLen.
-   Returns false if size of <s> doesn't match <bufLen>. */
+   binary data pointed by <buf> of max size bufLen.
+   Returns false if size of <s> doesn't match bufLen or is not a valid
+   hex string. */
 bool HexToMem(const char *s, unsigned char *buf, int bufLen)
 {
     for (; bufLen > 0; bufLen--) {

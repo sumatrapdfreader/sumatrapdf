@@ -133,6 +133,66 @@ bool IsColorProp(PropType type)
            (PropBorderLeftColor == type);
 }
 
+// based on https://developer.mozilla.org/en/CSS/color_value
+// TODO: add more colors
+static struct {
+    const char *name;
+    ARGB        color;
+} gKnownColors[] = {
+    { "black",  MKRGB(0, 0, 0) },
+    { "white",  MKRGB(255,255,255) },
+    { "gray",   MKRGB(128,128,128) },
+    { "red",    MKRGB(255,0,0) },
+    { "green",  MKRGB(0,128,0) },
+    { "blue",   MKRGB(0,0,255) },
+    { "transparent", MKARGB(0,0,0,0) },
+    { "yellow", MKRGB(255,255,0) },
+};
+
+static bool FindKnownColor(const char *name, ARGB *colorOut)
+{
+    for (size_t i = 0; i < dimof(gKnownColors); i++) {
+        if (str::EqI(gKnownColors[i].name, name)) {
+            *colorOut = gKnownColors[i].color;
+            return true;
+        }
+    }
+    return false;
+}
+
+// parse #rrggbb and #rgb formats of CSS colors
+// returns transparent if color is not in proper format
+// TODO: still needs #rgb
+static ARGB ParseHashCssColor(const char *color)
+{
+    CrashIf('#' != *color);
+    ++color;
+    size_t len = str::Len(color);
+    ARGB col = MKARGB(0,0,0,0); // transparent
+    if (3 == len) {
+        // TODO: parse #rgb
+    } else if (6 == len) {
+        unsigned char buf[3];
+        bool ok = str::HexToMem(color, buf, dimof(buf));
+        if (ok)
+            col = MKRGB(buf[0], buf[1], buf[2]); 
+    }
+    return col;
+}
+
+static ARGB ParseCssColor(const char *color)
+{
+    // TODO: implement parsing rgb(r,g,b), rgba(a,r,g,b), 
+    // #rgb, known color names (https://developer.mozilla.org/en/CSS/color_value)
+    ARGB colorValue;
+    if ('#' == *color)
+        return ParseHashCssColor(color);
+    bool found = FindKnownColor(color, &colorValue);
+    if (found)
+        return colorValue;
+    return MKARGB(0,0,0,0); // transparent
+}
+
 bool ColorData::Eq(ColorData *other) const
 {
     if (type != other->type)
@@ -300,43 +360,17 @@ Prop *Prop::AllocColorLinearGradient(PropType type, LinearGradientMode mode, ARG
     return newProp;
 }
 
-// based on https://developer.mozilla.org/en/CSS/color_value
-// TODO: add more colors
-static struct {
-    const char *name;
-    ARGB        color;
-} gKnownColors[] = {
-    { "black",  MKRGB(0, 0, 0) },
-    { "white",  MKRGB(255,255,255) },
-    { "gray",   MKRGB(128,128,128) },
-    { "red",    MKRGB(255,0,0) },
-    { "green",  MKRGB(0,128,0) },
-    { "blue",   MKRGB(0,0,255) },
-    { "transparent", MKARGB(0,0,0,0) },
-};
-
-static bool FindKnownColor(const char *name, ARGB *colorOut)
+Prop *Prop::AllocColorLinearGradient(PropType type, LinearGradientMode mode, const char *startColor, const char *endColor)
 {
-    for (size_t i = 0; i < dimof(gKnownColors); i++) {
-        if (str::EqI(gKnownColors[i].name, name)) {
-            *colorOut = gKnownColors[i].color;
-            return true;
-        }
-    }
-    return false;
+    ARGB c1 = ParseCssColor(startColor);
+    ARGB c2 = ParseCssColor(endColor);
+    return AllocColorLinearGradient(type, mode, c1, c2);
 }
 
 Prop *Prop::AllocColorSolid(PropType type, const char *color)
 {
-    // TODO: implement parsing rgb(r,g,b), rgba(a,r,g,b), #rrggbb,
-    // #rgb, known color names (https://developer.mozilla.org/en/CSS/color_value)
-    ARGB colorValue;
-    bool found = FindKnownColor(color, &colorValue);
-    if (found)
-        return AllocColorSolid(type, colorValue);
-
-    CrashIf(true);
-    return NULL;
+    ARGB col = ParseCssColor(color);
+    return AllocColorSolid(type, col);
 }
 
 #undef ALLOC_BODY
