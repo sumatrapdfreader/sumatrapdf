@@ -9,6 +9,7 @@
 Lang: ja Japanese (日本語)
 
 Contributor: Nardog (nardog.takoweb.com)
+Contributor: kobachi
 
 &About
 バージョン情報(&A)
@@ -22,8 +23,14 @@ Contributor: Nardog (nardog.takoweb.com)
 &Back\tAlt+Left Arrow
 前に戻る(&B)\tAlt+←
 
+&Book View\tCtrl+8
+ブック ビュー&(B)\tCtrl+B
+
 &Close\tCtrl+W
 閉じる(&C)\tCtrl+W
+
+&Copy Selection
+選択範囲をコピー(&C)
 
 &Copy Selection\tCtrl+C
 選択範囲のコピー(&C)\tCtrl+C
@@ -33,6 +40,9 @@ Contributor: Nardog (nardog.takoweb.com)
 
 &Even pages only
 偶数ページのみ(&E)
+
+&Facing\tCtrl+7
+見返し表示(&F)\tCtrl+7
 
 &File
 ファイル(&F)
@@ -82,14 +92,23 @@ Contributor: Nardog (nardog.takoweb.com)
 &Open\tCtrl+O
 開く(&O)\tCtrl+O
 
+&Open Document
+ドキュメントを開く(&O)
+
 &Options...
 オプション(&O)...
 
 &Password:
 パスワード(&P):
 
+&Pin Document
+ドキュメントをピンする&(P)
+
 &Previous Page\tLeft Arrow
 前のページ(&P)\t←
+
+&Print...
+印刷(&P)...
 
 &Print...\tCtrl+P
 印刷(&P)...\tCtrl+P
@@ -103,6 +122,12 @@ Contributor: Nardog (nardog.takoweb.com)
 &Remember these settings for each document
 ドキュメントごとにこれらの設定を記憶する(&R)
 
+&Remove Document
+ドキュメントの削除(&R)
+
+&Save As...
+名前を付けて保存(&S)...
+
 &Save As...\tCtrl+S
 名前を付けて保存(&S)...\tCtrl+S
 
@@ -110,7 +135,10 @@ Contributor: Nardog (nardog.takoweb.com)
 設定(&S)
 
 &Shrink pages to printable area (if necessary)
-ページを印刷可能領域に縮小する (必要なら)(&S)
+必要な場合はページを印刷可能領域に縮小する(&S)
+
+&Single Page\tCtrl+6
+単一ページ(&S)\tCtrl+6
 
 &Skip this version
 このバージョンをスキップする(&S)
@@ -130,8 +158,23 @@ Contributor: Nardog (nardog.takoweb.com)
 (of %d)
 (%d 中)
 
+(page %s)
+(ページ %s)
+
 About SumatraPDF
 SumatraPDF のバージョン情報
+
+Add Favorite
+お気に入りに追加
+
+Add page %s to favorites
+ページ %s を追加
+
+Add page %s to favorites with (optional) name:
+ページ %s に名前を付けて追加
+
+Add to favorites
+お気に入りに追加
 
 Advanced
 詳細設定
@@ -139,11 +182,14 @@ Advanced
 All files
 すべてのファイル
 
+All supported documents
+すべての対応ドキュメント
+
 Application:
 アプリケーション:
 
 Associate with PDF files?
-PDF ファイルと関連付けますか?
+PDF ファイルと関連付けますか？
 
 Attachment: %s
 添付: %s
@@ -163,11 +209,20 @@ Book View
 Book&marks\tF12
 ブックマーク(&M)\tF12
 
+Bookmark Shortcuts
+ショートカットをブックマーク
+
+Bookmark shortcut to page %s of %s
+ページ %s、ファイル %s に対するショートカットをブックマーク
+
 Bookmarks
 ブックマーク
 
 Bytes
 バイト
+
+CHM documents
+CHM ドキュメント
 
 Can't connect to the Internet (error %#x).
 インターネットへ接続できません (エラー %#x)。
@@ -187,6 +242,9 @@ Change Language
 Check for &Updates
 更新のチェック(&U)
 
+Comic books
+マンガ本
+
 Continuous
 連続
 
@@ -199,8 +257,17 @@ Continuous Facing
 Contribute Translation
 翻訳の提供
 
+Copy &Link Address
+リンク先のアドレスをコピー(&L)
+
+Copy Co&mment
+コメントをコピー(&M)
+
 Copying text was denied (copying as image only)
 テキストのコピーは拒否されました (イメージとしてのコピーのみ)
+
+Could not obtain Printer properties
+プリンターのプロパティを開けませんでした
 
 Could not open Printer
 プリンターを開くことができませんでした
@@ -214,6 +281,9 @@ Couldn't render the page
 Created:
 作成日時:
 
+Current file
+現在のファイル
+
 Custom &Zoom...\tCtrl+Y
 拡大率の指定(&Z)...\tCtrl+Y
 
@@ -224,10 +294,13 @@ Default &Zoom:
 既定の拡大率(&Z):
 
 Default PDF reader can't be changed in portable mode
-メイン PDF リーダーはポータブル モードでは変更できません
+ポータブル モードでは変更できません
 
 Denied Permissions:
 拒否された権限:
+
+DjVu documents
+DjVu ドキュメント
 
 Document Properties
 ドキュメントのプロパティ
@@ -245,7 +318,13 @@ Enter password for %s
 %s のパスワードを入力します
 
 Enter the command-line to invoke when you double-click on the PDF document:
-PDF ドキュメント上でダブルクリックしたときに呼び出すコマンドラインを入力します:
+PDF ドキュメント上でダブルクリックしたときに呼び出すコマンドラインを入力:
+
+Error loading %s
+%s の読み込みに失敗
+
+F&avorites
+お気に入り(&A)
 
 F&orward\tAlt+Right Arrow
 次に進む(&O)\tAlt+→
@@ -258,6 +337,12 @@ Facing
 
 Failed to save a file
 ファイルの保存に失敗しました
+
+Favorites
+お気に入り
+
+File %s not found
+ファイル %s が見つかりません
 
 File Size:
 ファイル サイズ:
@@ -307,14 +392,26 @@ Fit a Single Page
 Found text at page %s
 ページ %s でテキストが見つかりました
 
+Found text at page %s (again)
+%s ページに指定された文字列が見つかりました（一週）
+
+Frequently Read
+よく読むファイル
+
 GB
 GB
 
 Go to page
 ページへ移動
 
+Hide frequently read
+よく読むファイルを表示しない
+
 Hint: Use the F3 key for finding again
 ヒント: 再び検索するには F3 キーを使用します
+
+Image files (*.%s)
+画像ファイル (*.%s)
 
 KB
 KB
@@ -326,7 +423,7 @@ Make SumatraPDF default application for PDF files?
 SumatraPDF を PDF ファイルの既定のアプリケーションにしますか?
 
 Make SumatraPDF my default PDF reader
-SumatraPDF をメイン PDF リーダーにする
+SumatraPDF を規定の PDF リーダーにする
 
 Match Case
 大文字と小文字を区別する
@@ -343,11 +440,14 @@ Next Page
 No matches were found
 一致が見つかりませんでした
 
+No result found around line %u in file %s
+行 %u はファイル %s に見つかりません
+
 No synchronization file found
-同期化ファイルが見つかりません
+同期ファイルが見つかりません
 
 No synchronization info at this position
-この位置に同期化情報がありません
+この位置に同期情報がありません
 
 Number of Pages:
 ページ数:
@@ -358,17 +458,20 @@ OK
 Open
 開く
 
+Open a document...
+ドキュメントを開く...
+
 Open in &Adobe Reader
 Adobe Reader で開く(&A)
 
 Open in &Foxit Reader
-Foxit Reader で開く
-
-Open in Microsoft XPS-Viewer
-Microsoft XPS-Viewer で開く
+Foxit Reader で開く(&A)
 
 Open in PDF-XChange
-PDF-XChange で開く
+PDF-XChange で開く(&A)
+
+P&roperties
+プロパティ(&R)
 
 P&roperties\tCtrl+D
 プロパティ(&R)\tCtrl+D
@@ -388,6 +491,9 @@ PDF ドキュメント
 Pa&ge...\tCtrl+G
 ページ指定(&G)...\tCtrl+G
 
+Page %s
+ページ %s
+
 Page Size:
 ページ サイズ:
 
@@ -401,7 +507,10 @@ Page:
 ページ:
 
 Please wait - rendering...
-お待ちください - 描画しています...
+描画中...
+
+Postscript documents
+PostScript ドキュメント
 
 Pr&esentation\tCtrl+L
 プレゼンテーション(&E)\tCtrl+L
@@ -409,14 +518,32 @@ Pr&esentation\tCtrl+L
 Previous Page
 前のページ
 
+Print
+印刷
+
 Print range
 印刷範囲
+
+Printer with given name doesn't exist
+指定されたプリンタが見つかりません
+
+Printing is still in progress. Abort and start over?
+印刷は既に実行されています。中止または再実行しますか？
+
+Printing page %d of %d...
+%d / %d ページ目を印刷中...
 
 Printing problem.
 印刷の問題です。
 
 Remember &opened files
 開かれたファイルを記憶する(&O)
+
+Remove from favorites
+お気に入りから削除
+
+Remove page %s from favorites
+ページ %s をお気に入りから削除
 
 Rotate &Left\tCtrl+Shift+-
 左に回転(&L)\tCtrl+Shift+-
@@ -427,8 +554,17 @@ Rotate &Right\tCtrl+Shift++
 Save As
 名前を付けて保存
 
+Save S&hortcut...\tCtrl+Shift+S
+ショートカットを作成(&H)...\tCtrl+Shift+S
+
 Searching %d of %d...
 %d (%d 中) を検索しています...
+
+Select &All
+すべて選択(&A)
+
+Select &All\tCtrl+A
+すべて選択(&A)\tCtrl+A
 
 Select content with Ctrl+left mouse button
 Ctrl+左マウス ボタンで内容を選択します
@@ -445,14 +581,23 @@ Show &Toolbar
 Show &pages continuously
 連続してページを表示(&P)
 
+Show Favorites
+お気に入りの表示
+
+Show frequently read
+よく読むファイル一覧を表示
+
 Show the &bookmarks sidebar when available
-利用可能ならブックマーク サイド バーを表示する(&B)
+利用可能ならブックマーク サイド バーを表示(&B)
 
 Single Page
 単一のページ
 
+Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+謎のエラーが発生しました！\n\n「キャンセル」をクリックして、このエラーが起こった状況を報告して下さると助かります。
+
 Source file %s has no synchronization point
-ソース ファイル %s には同期化ポイントがありません
+ソース ファイル %s には同期ポイントがありません
 
 Subject:
 題名:
@@ -467,10 +612,10 @@ SumatraPDF crashed
 SumatraPDF がクラッシュしました
 
 SumatraPDF is your default PDF reader
-SumatraPDF はメイン PDF リーダーです
+SumatraPDF は規定の PDF リーダーです
 
 SumatraPDF should now be your default PDF reader
-SumatraPDF はメイン PDF リーダーになりました
+SumatraPDF は規定の PDF リーダーになりました
 
 Synchronization file cannot be opened
 同期化ファイルが開けません
@@ -493,6 +638,9 @@ Web サイトの訪問(&W)
 Warning
 警告
 
+XPS documents
+XPS ドキュメント
+
 You have the latest version.
 最新のバージョンです。
 
@@ -512,7 +660,7 @@ Zoom factor
 拡大率
 
 [Changes detected; refreshing] %s
-[変更が検出されました。更新しています] %s
+[変更を検出: 更新中] %s
 
 copying text
 コピーするテキスト
@@ -521,55 +669,6 @@ printing document
 印刷するドキュメント
 
 # Untranslated:
-#&Book View\tCtrl+8
-#&Copy Selection
-#&Facing\tCtrl+7
-#&Open Document
-#&Pin Document
-#&Print...
-#&Remove Document
-#&Save As...
-#&Single Page\tCtrl+6
-#(page %s)
-#Add Favorite
-#Add page %s to favorites
-#Add page %s to favorites with (optional) name:
-#Add to favorites
-#All supported documents
-#Bookmark Shortcuts
-#Bookmark shortcut to page %s of %s
-#CHM documents
-#Comic books
 #Copy &Image
-#Copy &Link Address
-#Copy Co&mment
-#Could not obtain Printer properties
-#Current file
-#DjVu documents
-#Error loading %s
-#F&avorites
-#Favorites
-#File %s not found
-#Found text at page %s (again)
-#Frequently Read
-#Hide frequently read
-#Image files (*.%s)
-#No result found around line %u in file %s
-#Open a document...
-#P&roperties
-#Page %s
-#Postscript documents
-#Print
-#Printer with given name doesn't exist
-#Printing is still in progress. Abort and start over?
-#Printing page %d of %d...
-#Remove from favorites
-#Remove page %s from favorites
-#Save S&hortcut...\tCtrl+Shift+S
-#Select &All
-#Select &All\tCtrl+A
-#Show Favorites
-#Show frequently read
-#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
-#XPS documents
+#Open in Microsoft XPS-Viewer
 
