@@ -473,15 +473,12 @@ static bool BitmapSizeEquals(Bitmap *bmp, int dx, int dy)
 // we paint the background in VirtWndPainter() because I don't
 // want to add an artificial VirtWnd window just to cover
 // the whole HWND and paint the background.
-// It can be overriden for easy customization.
-// TODO: I wish there was less involved way of overriding
-// single functions. Chrome has an implementation of callbacks
-// for C++ which we might investigate.
 void VirtWndPainter::PaintBackground(Graphics *g, Rect r)
 {
-    LinearGradientBrush bgBrush(RectF(0, 0, (REAL)r.Width, (REAL)r.Height), Color(0xd0,0xd0,0xd0), Color(0xff,0xff,0xff), LinearGradientModeVertical);
-    r.Inflate(1, 1);
-    g->FillRectangle(&bgBrush, r);
+    Prop *bgProp = FindProp(wnd->styleDefault, gStyleDefault, PropBgColor);
+    Brush *br = CreateBrush(bgProp, r);
+    g->FillRectangle(br, r);
+    ::delete br;
 }
 
 struct WndAndOffset {
