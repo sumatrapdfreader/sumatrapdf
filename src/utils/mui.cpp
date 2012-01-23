@@ -194,6 +194,7 @@ VirtWnd::VirtWnd(VirtWnd *parent)
     zOrder = 0;
     hwndParent = NULL;
     layout = NULL;
+    styleDefault = NULL;
     pos = Rect();
     SetParent(parent);
 }
@@ -257,8 +258,7 @@ void VirtWnd::Paint(Graphics *gfx, int offX, int offY)
 VirtWndButton::VirtWndButton(const TCHAR *s)
 {
     text = NULL;
-    cssRegular = NULL;
-    cssMouseOver = NULL;
+    styleMouseOver = NULL;
     wantedInputBits = (uint16_t)-1; // wants everything
     SetText(s);
 }
@@ -266,11 +266,11 @@ VirtWndButton::VirtWndButton(const TCHAR *s)
 void VirtWndButton::GetPropSetsForState(PropSet **set1, PropSet **set2) const
 {
     if (bit::IsSet(stateBits, MouseOverBit)) {
-        *set1 = cssMouseOver;
-        *set2 = gPropSetButtonMouseOver;
+        *set1 = styleMouseOver;
+        *set2 = gStyleButtonMouseOver;
     } else {
-        *set1 = cssRegular;
-        *set2 = gPropSetButtonRegular;
+        *set1 = styleDefault;
+        *set2 = gStyleButtonDefault;
     }
 }
 

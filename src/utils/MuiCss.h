@@ -159,8 +159,9 @@ Prop *FindProp(PropSet *propsFirst, PropSet *propsSecond, PropType type);
 // globally known properties for elements we know about
 // we fill them with default values and they can be
 // modified by an app for global visual makeover
-extern PropSet *gPropSetButtonRegular;
-extern PropSet *gPropSetButtonMouseOver;
+extern PropSet *gStyleDefault;
+extern PropSet *gStyleButtonDefault;
+extern PropSet *gStyleButtonMouseOver;
 
 } // namespace css
 } // namespace mui

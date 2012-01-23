@@ -75,6 +75,7 @@ public:
         delete pageLayout;
         delete facebookButtonRegular;
         delete facebookButtonOver;
+        delete styleDefault;
     }
 
     virtual void Paint(Graphics *gfx, int offX, int offY);
@@ -109,12 +110,10 @@ public:
 
 void EbookLayout::Measure(Size availableSize, VirtWnd *wnd)
 {
-    int marginX = (pageBorderX * 2);
-    if (availableSize.Width > marginX)
-        availableSize.Width -= marginX;
-    int marginY = (pageBorderY * 2);
-    if (availableSize.Height > marginY)
-        availableSize.Height -= marginY;
+    if (SizeInfinite == availableSize.Width)
+        availableSize.Width = 320;
+    if (SizeInfinite == availableSize.Height)
+        availableSize.Height = 200;
     wnd->desiredSize = availableSize;
     next->Measure(availableSize);
     prev->Measure(availableSize);
@@ -125,8 +124,14 @@ void EbookLayout::Arrange(Rect finalRect, VirtWnd *wnd)
 {
     int btnDx, btnDy, btnY, btnX;
 
-    int rectDy = finalRect.Height;
-    int rectDx = finalRect.Width;
+    Prop *propPadding = FindProp(wnd->styleDefault, gStyleDefault, PropPadding);
+    int padLeft = propPadding->padding.left;
+    int padRight = propPadding->padding.right;
+    int padTop = propPadding->padding.top;
+    int padBottom = propPadding->padding.bottom;
+
+    int rectDy = finalRect.Height - (padTop + padBottom);
+    int rectDx = finalRect.Width - (padLeft + padRight);
 
     // prev is on the left, y-middle
     btnDy = prev->desiredSize.Height;
@@ -134,7 +139,7 @@ void EbookLayout::Arrange(Rect finalRect, VirtWnd *wnd)
     if (btnY < 0)
         btnY = 0;
 
-    Rect prevPos(0, btnY, prev->desiredSize.Width, btnDy);
+    Rect prevPos(padLeft, btnY, prev->desiredSize.Width, btnDy);
     prev->Arrange(prevPos);
 
     // next is on the right, y-middle
@@ -145,7 +150,7 @@ void EbookLayout::Arrange(Rect finalRect, VirtWnd *wnd)
 
     btnDx = next->desiredSize.Width;
     btnX = rectDx - btnDx;
-    Rect nextPos(btnX, btnY, btnDx, btnDy);
+    Rect nextPos(padLeft + btnX, btnY, btnDx, btnDy);
     next->Arrange(nextPos);
 
     // test is at the bottom, x-middle
@@ -153,12 +158,12 @@ void EbookLayout::Arrange(Rect finalRect, VirtWnd *wnd)
     btnDy = test->desiredSize.Height;
     btnX = (rectDx - btnDx) / 2;
     btnY = rectDy - btnDy;
-    Rect testPos(btnX, btnY, btnDx, btnDy);
+    Rect testPos(btnX, btnY - padBottom, btnDx, btnDy);
     test->Arrange(testPos);
 
     wnd->pos = finalRect;
     VirtWndEbook *wndEbook = (VirtWndEbook*)wnd;
-    wndEbook->DoPageLayout(finalRect.Width, finalRect.Height);
+    wndEbook->DoPageLayout(rectDx, rectDy);
 }
 
 void VirtWndEbook::AdvancePage(int dist)
@@ -226,6 +231,8 @@ VirtWndEbook::VirtWndEbook(HWND hwnd)
     html = NULL;
     pageLayout = NULL;
     currPageNo = 0;
+    styleDefault = new PropSet();
+    styleDefault->Set(Prop::AllocPadding(pageBorderY, pageBorderX, pageBorderY, pageBorderX));
     SetHwnd(hwnd);
     facebookButtonRegular = new PropSet();
     facebookButtonRegular->Set(Prop::AllocColorSolid(PropColor, "white"));
@@ -243,8 +250,8 @@ VirtWndEbook::VirtWndEbook(HWND hwnd)
     prev = new VirtWndButton(_T("Prev"));
     test = new VirtWndButton(_T("test"));
     test->zOrder = 1;
-    test->cssRegular = facebookButtonRegular;
-    test->cssMouseOver = facebookButtonOver;
+    test->styleDefault = facebookButtonRegular;
+    test->styleMouseOver = facebookButtonOver;
 
     AddChild(next);
     AddChild(prev);
@@ -342,6 +349,9 @@ void VirtWndEbook::Paint(Graphics *gfx, int offX, int offY)
 {
     if (!pageLayout)
         return;
+    Prop *propPadding = FindProp(styleDefault, gStyleDefault, PropPadding);
+    offX += propPadding->padding.left;
+    offY += propPadding->padding.top;
     DrawPageLayout(gfx, pageLayout, currPageNo - 1, (REAL)offX, (REAL)offY);
 }
 

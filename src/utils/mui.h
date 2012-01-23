@@ -20,8 +20,7 @@ class VirtWnd;
 class VirtWndHwnd;
 class IClickHandler;
 
-#define InfiniteDx ((INT)-1)
-#define InfintieDy ((INT)-1)
+#define SizeInfinite ((INT)-1)
 
 void        Initialize();
 void        Destroy();
@@ -190,6 +189,11 @@ public:
 
     VirtWnd *       parent;
 
+    // VirtWnd doesn't own this object to allow sharing the same
+    // instance among multiple windows. Whoever allocates them
+    // must delete them
+    PropSet *       styleDefault;
+
     // only used by VirtWndHwnd but we need it here
     HWND            hwndParent;
     HWND            GetHwndParent() const;
@@ -298,8 +302,8 @@ public:
 
     TCHAR *         text;
 
-    PropSet *       cssRegular;   // gPropSetButtonRegular if NULL
-    PropSet *       cssMouseOver; // gPropSetButtonMouseOver if NULL
+    // gStyleButtonDefault if styleDefault is NULL
+    PropSet *       styleMouseOver; // gStyleButtonMouseOver if NULL
 };
 
 }

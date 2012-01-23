@@ -52,10 +52,9 @@ struct FontCacheEntry {
 
 Vec<Prop*> *gAllProps = NULL;
 
-PropSet *gDefaults = NULL;
-
-PropSet *gPropSetButtonRegular = NULL;
-PropSet *gPropSetButtonMouseOver = NULL;
+PropSet *gStyleDefault = NULL;
+PropSet *gStyleButtonDefault = NULL;
+PropSet *gStyleButtonMouseOver = NULL;
 
 static Vec<FontCacheEntry> *gCachedFonts = NULL;
 
@@ -66,33 +65,34 @@ void Initialize()
     gCachedFonts = new Vec<FontCacheEntry>();
 
     // gDefaults is the very basic set shared by everyone
-    gDefaults = new PropSet();
-    gDefaults->Set(Prop::AllocFontName(L"Times New Roman"));
-    gDefaults->Set(Prop::AllocFontSize(14));
-    gDefaults->Set(Prop::AllocFontWeight(FontStyleBold));
-    gDefaults->Set(Prop::AllocColorSolid(PropColor, "black"));
+    gStyleDefault = new PropSet();
+    gStyleDefault->Set(Prop::AllocFontName(L"Times New Roman"));
+    gStyleDefault->Set(Prop::AllocFontSize(14));
+    gStyleDefault->Set(Prop::AllocFontWeight(FontStyleBold));
+    gStyleDefault->Set(Prop::AllocColorSolid(PropColor, "black"));
     //gDefaults->Set(Prop::AllocColorSolid(PropBgColor, 0xff, 0xff, 0xff));
     ARGB c1 = MKRGB(0xf5, 0xf6, 0xf6);
     ARGB c2 = MKRGB(0xe4, 0xe4, 0xe3);
-    gDefaults->Set(Prop::AllocColorLinearGradient(PropBgColor, LinearGradientModeVertical, c1, c2));
-    gDefaults->SetBorderWidth(1);
-    gDefaults->SetBorderColor(MKRGB(0x99, 0x99, 0x99));
-    gDefaults->Set(Prop::AllocColorSolid(PropBorderBottomColor, "#888"));
+    gStyleDefault->Set(Prop::AllocColorLinearGradient(PropBgColor, LinearGradientModeVertical, c1, c2));
+    gStyleDefault->SetBorderWidth(1);
+    gStyleDefault->SetBorderColor(MKRGB(0x99, 0x99, 0x99));
+    gStyleDefault->Set(Prop::AllocColorSolid(PropBorderBottomColor, "#888"));
+    gStyleDefault->Set(Prop::AllocPadding(0, 0, 0, 0));
 
-    gPropSetButtonRegular = new PropSet();
-    gPropSetButtonRegular->Set(Prop::AllocPadding(4, 8, 4, 8));
-    gDefaults->Set(Prop::AllocFontName(L"Lucida Grande"));
-    gDefaults->Set(Prop::AllocFontSize(8));
-    gDefaults->Set(Prop::AllocFontWeight(FontStyleBold));
-    gPropSetButtonRegular->inheritsFrom = gDefaults;
+    gStyleButtonDefault = new PropSet();
+    gStyleButtonDefault->Set(Prop::AllocPadding(4, 8, 4, 8));
+    gStyleButtonDefault->Set(Prop::AllocFontName(L"Lucida Grande"));
+    gStyleButtonDefault->Set(Prop::AllocFontSize(8));
+    gStyleButtonDefault->Set(Prop::AllocFontWeight(FontStyleBold));
+    gStyleButtonDefault->inheritsFrom = gStyleDefault;
 
-    gPropSetButtonMouseOver = new PropSet();
-    gPropSetButtonMouseOver->Set(Prop::AllocColorSolid(PropBorderTopColor, "#777"));
-    gPropSetButtonMouseOver->Set(Prop::AllocColorSolid(PropBorderRightColor, "#777"));
-    gPropSetButtonMouseOver->Set(Prop::AllocColorSolid(PropBorderBottomColor, "#666"));
-    //gPropSetButtonMouseOver->Set(Prop::AllocColorSolid(PropBgColor, 180, 0, 0, 255));
-    //gPropSetButtonMouseOver->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
-    gPropSetButtonMouseOver->inheritsFrom = gPropSetButtonRegular;
+    gStyleButtonMouseOver = new PropSet();
+    gStyleButtonMouseOver->Set(Prop::AllocColorSolid(PropBorderTopColor, "#777"));
+    gStyleButtonMouseOver->Set(Prop::AllocColorSolid(PropBorderRightColor, "#777"));
+    gStyleButtonMouseOver->Set(Prop::AllocColorSolid(PropBorderBottomColor, "#666"));
+    //gStyleButtonMouseOver->Set(Prop::AllocColorSolid(PropBgColor, 180, 0, 0, 255));
+    //gStyleButtonMouseOver->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
+    gStyleButtonMouseOver->inheritsFrom = gStyleButtonDefault;
 }
 
 static void DeleteCachedFonts()
@@ -109,8 +109,8 @@ void Destroy()
     DeleteVecMembers(*gAllProps);
     delete gAllProps;
 
-    delete gPropSetButtonRegular;
-    delete gPropSetButtonMouseOver;
+    delete gStyleButtonDefault;
+    delete gStyleButtonMouseOver;
 
     DeleteCachedFonts();
 }
@@ -462,7 +462,7 @@ Prop *FindProp(PropSet *propsFirst, PropSet *propsSecond, PropType type)
 // Providing 2 sets of props is an optimization: conceptually it's equivalent
 // to setting propsFirst->inheritsFrom = propsSecond, but this way allows
 // us to have global properties for known cases and not create dummy PropSets just
-// to link them (e.g. if VirtWndButton::cssRegular is NULL, we'll use gPropSetButtonRegular)
+// to link them (e.g. if VirtWndButton::styleDefault is NULL, we'll use gStyleButtonDefault)
 // Caller should not delete the font - it's cached for performance and deleted at exit
 // in DeleteCachedFonts()
 Font *CachedFontFromProps(PropSet *propsFirst, PropSet *propsSecond)
