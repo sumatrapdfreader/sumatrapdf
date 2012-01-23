@@ -18,38 +18,32 @@ public:
     virtual void *Realloc(void *mem, size_t size) = 0;
     virtual void Free(void *mem) = 0;
 
-    void *Dup(void *mem, size_t size, size_t padding=0) {
-        void *newMem = Alloc(size + padding);
-        if (newMem)
-            memcpy(newMem, mem, size);
-        return newMem;
-    }
-
+    // helper functions that fallback to malloc()/free() if allocator is NULL
+    // helps write clients where allocator is optional
     static void *Alloc(Allocator *a, size_t size) {
         if (!a)
             return malloc(size);
         return a->Alloc(size);
     }
+
     static void Free(Allocator *a, void *p) {
         if (!a)
             free(p);
         else
-            return a->Free(p);
+            a->Free(p);
     }
-};
 
-class MallocAllocator : public Allocator {
-public:
-    MallocAllocator() {}
-    virtual ~MallocAllocator() {}
-    virtual void *Alloc(size_t size) {
-        return malloc(size);
+    static void* Realloc(Allocator *a, void *mem, size_t size) {
+        if (!a)
+            return realloc(mem, size);
+        return a->Realloc(a, mem, size);
     }
-    virtual void *Realloc(void *mem, size_t size) {
-        return realloc(mem, size);
-    }
-    virtual void Free(void *mem) {
-        free(mem);
+
+    static void *Dup(Allocator *a, void *mem, size_t size, size_t padding=0) {
+        void *newMem = Allocator::Alloc(a, size + padding);
+        if (newMem)
+            memcpy(newMem, mem, size);
+        return newMem;
     }
 };
 
@@ -74,7 +68,6 @@ protected:
     T *         els;
     T           buf[INTERNAL_BUF_SIZE];
     Allocator * allocator;
-    MallocAllocator mallocAllocator;
 
     T* MakeSpaceAt(size_t idx, size_t count) {
         EnsureCap(len + count);
@@ -90,7 +83,7 @@ protected:
 
     void FreeEls() {
         if (els != buf)
-            allocator->Free(els);
+            Allocator::Free(allocator, els);
     }
 
 public:
@@ -99,8 +92,6 @@ public:
         : initialCap(initCap), allocator(allocator)
     {
         els = buf;
-        if (!allocator)
-            this->allocator = &mallocAllocator;
         Reset();
     }
 
@@ -114,7 +105,7 @@ public:
         els = buf;
         // note: we don't inherit allocator as it's not needed for
         // our use cases
-        allocator = &mallocAllocator;
+        allocator = NULL;
         Reset();
         EnsureCap(orig.cap);
         // use memcpy, as Vec only supports POD types
@@ -155,9 +146,9 @@ public:
         size_t allocSize = newElCount * sizeof(T);
         size_t newPadding = allocSize - len * sizeof(T);
         if (buf == els)
-            els = (T *)allocator->Dup(buf, len * sizeof(T), newPadding);
+            els = (T *)Allocator::Dup(allocator, buf, len * sizeof(T), newPadding);
         else
-            els = (T *)allocator->Realloc(els, allocSize);
+            els = (T *)Allocator::Realloc(allocator, els, allocSize);
         CrashAlwaysIf(!els);
         memset(els + len, 0, newPadding);
         cap = newCap;
@@ -242,7 +233,7 @@ public:
     T *StealData() {
         T* res = els;
         if (els == buf)
-            res = (T *)allocator->Dup(buf, (len + PADDING) * sizeof(T));
+            res = (T *)Allocator::Dup(allocator, buf, (len + PADDING) * sizeof(T));
         els = buf;
         Reset();
         return res;
