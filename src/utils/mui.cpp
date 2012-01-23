@@ -52,10 +52,6 @@ TODO: generic way to handle cursor changes
 
 TODO: optimize repainting by cliping to dirty regions
 
-TODO: add a notion of z-order so that we can paint/respond to
-events in a more flexible order than the one dictated
-by parent-child relantionship (?)
-
 TODO: when registering for events and such we use VirtWnd * to identify
 a window which leaves small (but non-zero) chance that the window
 has been destoryed or a pointer was re-used for another window.
@@ -195,6 +191,7 @@ VirtWnd::VirtWnd(VirtWnd *parent)
 {
     wantedInputBits = 0;
     stateBits = 0;
+    zOrder = 0;
     hwndParent = NULL;
     layout = NULL;
     pos = Rect();
@@ -476,8 +473,8 @@ static bool BitmapSizeEquals(Bitmap *bmp, int dx, int dy)
 // we paint the background in VirtWndPainter() because I don't
 // want to add an artificial VirtWnd window just to cover
 // the whole HWND and paint the background.
-// It can be over-ridden for easy customization.
-// TODO: I wish there was less involved way of over-ridding
+// It can be overriden for easy customization.
+// TODO: I wish there was less involved way of overriding
 // single functions. Chrome has an implementation of callbacks
 // for C++ which we might investigate.
 void VirtWndPainter::PaintBackground(Graphics *g, Rect r)
@@ -487,17 +484,65 @@ void VirtWndPainter::PaintBackground(Graphics *g, Rect r)
     g->FillRectangle(&bgBrush, r);
 }
 
-void VirtWndPainter::PaintRecursively(Graphics *g, VirtWnd *wnd, int offX, int offY)
+struct WndAndOffset {
+    VirtWnd *wnd;
+    int offX, offY;
+};
+
+// TODO: should traverse tree breadth-first, we do depth-first here
+void CollectWindowsToPaint(Graphics *g, VirtWnd *wnd, int offX, int offY, Vec<WndAndOffset> *windowsToPaint)
 {
     if (!wnd->IsVisible())
         return;
     offX += wnd->pos.GetLeft();
     offY += wnd->pos.GetTop();
+    WndAndOffset woff = { wnd, offX, offY };
+    windowsToPaint->Append(woff);
     wnd->Paint(g, offX, offY);
 
     for (size_t i = 0; i < wnd->GetChildCount(); i++) {
         VirtWnd *w = wnd->GetChild(i);
-        PaintRecursively(g, w, offX, offY);
+        CollectWindowsToPaint(g, w, offX, offY, windowsToPaint);
+    }
+}
+
+#define MIN_INT16  -32768
+#define MAX_INT16   32767
+
+// Paint windows in zOrder by first collecting the windows
+// and then paint consequitive layers with the same zOrder,
+// starting with the lowest zOrder.
+// We don't sort because we want to preserve the order of
+// containment within zOrder and non-stable sort could
+// mess that up. Also, this should be faster in common
+// case where most windows are in the same zOrder.
+void PaintWindowsInZOrder(Graphics *g, VirtWnd *wnd)
+{
+    Vec<WndAndOffset> windowsToPaint;
+    CollectWindowsToPaint(g, wnd, 0, 0, &windowsToPaint);
+    size_t paintedCount = 0;
+    int16_t lastPaintedZOrder = MIN_INT16;
+    size_t winCount = windowsToPaint.Count();
+    for (;;) {
+        // find which zOrder should we paint now
+        int16_t minUnpaintedZOrder = MAX_INT16;
+        for (size_t i = 0; i < winCount; i++) {
+            WndAndOffset woff = windowsToPaint.At(i);
+            int16_t zOrder = woff.wnd->zOrder;
+            if ((zOrder > lastPaintedZOrder) && (zOrder < minUnpaintedZOrder))
+                minUnpaintedZOrder = zOrder;
+        }
+        for (size_t i = 0; i < winCount; i++) {
+            WndAndOffset woff = windowsToPaint.At(i);
+            if (minUnpaintedZOrder == woff.wnd->zOrder) {
+                woff.wnd->Paint(g, woff.offX, woff.offY);
+                ++paintedCount;
+            }
+        }
+        if (paintedCount == winCount)
+            return;
+        CrashIf(paintedCount > winCount);
+        lastPaintedZOrder = minUnpaintedZOrder;
     }
 }
 
@@ -533,7 +578,7 @@ void VirtWndPainter::OnPaint(HWND hwnd)
     Rect r(rc2.x, rc2.y, rc2.dx, rc2.dy);
     PaintBackground(&g, r);
 
-    PaintRecursively(&g, wnd, 0, 0);
+    PaintWindowsInZOrder(&g, wnd);
 
     gDC.DrawImage(cacheBmp, 0, 0);
     EndPaint(hwnd, &ps);

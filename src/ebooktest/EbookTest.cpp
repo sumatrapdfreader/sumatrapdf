@@ -242,6 +242,7 @@ VirtWndEbook::VirtWndEbook(HWND hwnd)
     next = new VirtWndButton(_T("Next"));
     prev = new VirtWndButton(_T("Prev"));
     test = new VirtWndButton(_T("test"));
+    test->zOrder = 1;
     test->cssRegular = facebookButtonRegular;
     test->cssMouseOver = facebookButtonOver;
 

@@ -66,12 +66,9 @@ class VirtWndPainter
     // bitmap for double-buffering
     Bitmap *cacheBmp;
 
-    void PaintRecursively(Graphics *g, VirtWnd *wnd, int offX, int offY);
-
     virtual void PaintBackground(Graphics *g, Rect r);
 public:
-    VirtWndPainter(VirtWndHwnd *wnd) : wnd(wnd), cacheBmp(NULL)
-    {
+    VirtWndPainter(VirtWndHwnd *wnd) : wnd(wnd), cacheBmp(NULL) {
     }
 
     void OnPaint(HWND hwnd);
@@ -164,6 +161,8 @@ public:
 
     uint16_t        wantedInputBits; // WndWantedInputBits
     uint16_t        stateBits;       // WndStateBits
+    // windows with biger zOrder are painted on top, 0 is default
+    int16_t         zOrder;
 
     bool WantsMouseClick() const {
         return bit::IsSet(wantedInputBits, WantsMouseClickBit);
