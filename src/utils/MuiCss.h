@@ -120,16 +120,16 @@ public:
     static Prop *AllocWidth(PropType type, float width);
 };
 
-struct PropSet {
+struct Style {
 
-    PropSet() : inheritsFrom(NULL) {
+    Style() : inheritsFrom(NULL) {
     }
 
     Vec<Prop*>  props;
 
     // if property is not found here, we'll search the
     // inheritance chain
-    PropSet *   inheritsFrom;
+    Style *     inheritsFrom;
 
     void Set(Prop *prop);
 
@@ -141,27 +141,27 @@ struct PropSet {
 void Initialize();
 void Destroy();
 
-Font *CachedFontFromProps(PropSet *propsFirst, PropSet *propsSecond);
+Font *CachedFontFromProps(Style *first, Style *second);
 
 struct PropToFind {
     // provided by the caller
     PropType    type;
     // filled-out by FindProps(). Must be set to NULL by
     // caller to enable being called twice with different
-    // PropSet objects
+    // Style objects
     Prop *      prop;
 };
 
-void FindProps(PropSet *props, PropToFind *propsToFind, size_t propsToFindCount);
-void FindProps(PropSet *propsFirst, PropSet *propsSecond, PropToFind *propsToFind, size_t propsToFindCount);
-Prop *FindProp(PropSet *propsFirst, PropSet *propsSecond, PropType type);
+void FindProps(Style *props, PropToFind *propsToFind, size_t propsToFindCount);
+void FindProps(Style *first, Style *second, PropToFind *propsToFind, size_t propsToFindCount);
+Prop *FindProp(Style *first, Style *second, PropType type);
 
 // globally known properties for elements we know about
 // we fill them with default values and they can be
 // modified by an app for global visual makeover
-extern PropSet *gStyleDefault;
-extern PropSet *gStyleButtonDefault;
-extern PropSet *gStyleButtonMouseOver;
+extern Style *gStyleDefault;
+extern Style *gStyleButtonDefault;
+extern Style *gStyleButtonMouseOver;
 
 } // namespace css
 } // namespace mui

@@ -263,35 +263,35 @@ VirtWndButton::VirtWndButton(const TCHAR *s)
     SetText(s);
 }
 
-void VirtWndButton::GetPropSetsForState(PropSet **set1, PropSet **set2) const
+void VirtWndButton::GetStyleForState(Style **first, Style **second) const
 {
     if (bit::IsSet(stateBits, MouseOverBit)) {
-        *set1 = styleMouseOver;
-        *set2 = gStyleButtonMouseOver;
+        *first = styleMouseOver;
+        *second = gStyleButtonMouseOver;
     } else {
-        *set1 = styleDefault;
-        *set2 = gStyleButtonDefault;
+        *first = styleDefault;
+        *second = gStyleButtonDefault;
     }
 }
 
 Prop *VirtWndButton::GetPropForState(PropType type) const
 {
-    PropSet *s1, *s2;
-    GetPropSetsForState(&s1, &s2);
+    Style *s1, *s2;
+    GetStyleForState(&s1, &s2);
     return FindProp(s1, s2, type);
 }
 
 void VirtWndButton::GetPropsForState(PropToFind *propsToFind, size_t propsToFindCount) const
 {
-    PropSet *s1, *s2;
-    GetPropSetsForState(&s1, &s2);
+    Style *s1, *s2;
+    GetStyleForState(&s1, &s2);
     FindProps(s1, s2, propsToFind, propsToFindCount);
 }
 
 Font *VirtWndButton::GetFontForState() const
 {
-    PropSet *s1, *s2;
-    GetPropSetsForState(&s1, &s2);
+    Style *s1, *s2;
+    GetStyleForState(&s1, &s2);
     return CachedFontFromProps(s1, s2);
 }
 

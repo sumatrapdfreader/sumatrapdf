@@ -192,7 +192,7 @@ public:
     // VirtWnd doesn't own this object to allow sharing the same
     // instance among multiple windows. Whoever allocates them
     // must delete them
-    PropSet *       styleDefault;
+    Style *         styleDefault;
 
     // only used by VirtWndHwnd but we need it here
     HWND            hwndParent;
@@ -294,7 +294,7 @@ public:
         RequestRepaint(this);
     }
 
-    void GetPropSetsForState(PropSet **set1, PropSet **set2) const;
+    void GetStyleForState(Style **first, Style **second) const;
     Prop *GetPropForState(PropType type) const;
     void GetPropsForState(PropToFind *propsToFind, size_t propsToFindCount) const;
 
@@ -303,7 +303,7 @@ public:
     TCHAR *         text;
 
     // gStyleButtonDefault if styleDefault is NULL
-    PropSet *       styleMouseOver; // gStyleButtonMouseOver if NULL
+    Style *         styleMouseOver; // gStyleButtonMouseOver if NULL
 };
 
 }

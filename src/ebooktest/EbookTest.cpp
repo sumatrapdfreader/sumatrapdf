@@ -67,8 +67,8 @@ public:
 
     VirtWndEbook(HWND hwnd);
 
-    PropSet *       facebookButtonRegular;
-    PropSet *       facebookButtonOver;
+    Style *         facebookButtonRegular;
+    Style *         facebookButtonOver;
 
     virtual ~VirtWndEbook() {
         delete mb;
@@ -231,10 +231,10 @@ VirtWndEbook::VirtWndEbook(HWND hwnd)
     html = NULL;
     pageLayout = NULL;
     currPageNo = 0;
-    styleDefault = new PropSet();
+    styleDefault = new Style();
     styleDefault->Set(Prop::AllocPadding(pageBorderY, pageBorderX, pageBorderY, pageBorderX));
     SetHwnd(hwnd);
-    facebookButtonRegular = new PropSet();
+    facebookButtonRegular = new Style();
     facebookButtonRegular->Set(Prop::AllocColorSolid(PropColor, "white"));
     //facebookButtonRegular->Set(Prop::AllocColorLinearGradient(PropBgColor, LinearGradientModeVertical, "#75ae5c", "#67a54b"));
     facebookButtonRegular->Set(Prop::AllocColorLinearGradient(PropBgColor, LinearGradientModeVertical, "#647bad", "#5872a7"));
@@ -242,7 +242,7 @@ VirtWndEbook::VirtWndEbook(HWND hwnd)
     facebookButtonRegular->Set(Prop::AllocColorSolid(PropBorderRightColor, "#29447E"));
     facebookButtonRegular->Set(Prop::AllocColorSolid(PropBorderBottomColor, "#1A356E"));
 
-    facebookButtonOver = new PropSet();
+    facebookButtonOver = new Style();
     facebookButtonOver->Set(Prop::AllocColorSolid(PropColor, "yellow"));
     facebookButtonOver->inheritsFrom = facebookButtonRegular;
 

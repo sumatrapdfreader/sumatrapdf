@@ -10,15 +10,15 @@ A css-like way to style controls/windows.
 
 We define a bunch of css-like properties.
 
-We have a PropSet, which is a logical group of properties.
+We have a Style, which is a logical group of properties.
 
-Each control can have one or more PropSets that define how
+Each control can have one or more styles that define how
 a control looks like. A window has only one set of properties
 but a button has several, one for each visual state of
 the button (normal, on hover, pressed, default).
 
-We define a bunch of default PropSet so that if e.g. button
-doesn't have PropSet explicitly set, it'll get all the necessary
+We define a bunch of default style so that if e.g. button
+doesn't have style explicitly set, it'll get all the necessary
 properties from our default set and have a consistent look.
 
 Prop objects are never freed. To conserve memory, they are
@@ -52,9 +52,9 @@ struct FontCacheEntry {
 
 Vec<Prop*> *gAllProps = NULL;
 
-PropSet *gStyleDefault = NULL;
-PropSet *gStyleButtonDefault = NULL;
-PropSet *gStyleButtonMouseOver = NULL;
+Style *gStyleDefault = NULL;
+Style *gStyleButtonDefault = NULL;
+Style *gStyleButtonMouseOver = NULL;
 
 static Vec<FontCacheEntry> *gCachedFonts = NULL;
 
@@ -65,7 +65,7 @@ void Initialize()
     gCachedFonts = new Vec<FontCacheEntry>();
 
     // gDefaults is the very basic set shared by everyone
-    gStyleDefault = new PropSet();
+    gStyleDefault = new Style();
     gStyleDefault->Set(Prop::AllocFontName(L"Times New Roman"));
     gStyleDefault->Set(Prop::AllocFontSize(14));
     gStyleDefault->Set(Prop::AllocFontWeight(FontStyleBold));
@@ -79,14 +79,14 @@ void Initialize()
     gStyleDefault->Set(Prop::AllocColorSolid(PropBorderBottomColor, "#888"));
     gStyleDefault->Set(Prop::AllocPadding(0, 0, 0, 0));
 
-    gStyleButtonDefault = new PropSet();
+    gStyleButtonDefault = new Style();
     gStyleButtonDefault->Set(Prop::AllocPadding(4, 8, 4, 8));
     gStyleButtonDefault->Set(Prop::AllocFontName(L"Lucida Grande"));
     gStyleButtonDefault->Set(Prop::AllocFontSize(8));
     gStyleButtonDefault->Set(Prop::AllocFontWeight(FontStyleBold));
     gStyleButtonDefault->inheritsFrom = gStyleDefault;
 
-    gStyleButtonMouseOver = new PropSet();
+    gStyleButtonMouseOver = new Style();
     gStyleButtonMouseOver->Set(Prop::AllocColorSolid(PropBorderTopColor, "#777"));
     gStyleButtonMouseOver->Set(Prop::AllocColorSolid(PropBorderRightColor, "#777"));
     gStyleButtonMouseOver->Set(Prop::AllocColorSolid(PropBorderBottomColor, "#666"));
@@ -375,7 +375,7 @@ Prop *Prop::AllocColorSolid(PropType type, const char *color)
 
 // Add a property to a set, if a given PropType doesn't exist,
 // replace if a given PropType already exists in the set.
-void PropSet::Set(Prop *prop)
+void Style::Set(Prop *prop)
 {
     for (size_t i = 0; i < props.Count(); i++) {
         Prop *p = props.At(i);
@@ -387,7 +387,7 @@ void PropSet::Set(Prop *prop)
     props.Append(prop);
 }
 
-void PropSet::SetBorderWidth(float width)
+void Style::SetBorderWidth(float width)
 {
     Set(Prop::AllocWidth(PropBorderTopWidth, width));
     Set(Prop::AllocWidth(PropBorderRightWidth, width));
@@ -395,7 +395,7 @@ void PropSet::SetBorderWidth(float width)
     Set(Prop::AllocWidth(PropBorderLeftWidth, width));
 }
 
-void PropSet::SetBorderColor(ARGB color)
+void Style::SetBorderColor(ARGB color)
 {
     Set(Prop::AllocColorSolid(PropBorderTopColor, color));
     Set(Prop::AllocColorSolid(PropBorderRightColor, color));
@@ -427,10 +427,10 @@ static bool SetPropIfFound(Prop *prop, PropToFind *propsToFind, size_t propsToFi
     return false;
 }
 
-void FindProps(PropSet *props, PropToFind *propsToFind, size_t propsToFindCount)
+void FindProps(Style *props, PropToFind *propsToFind, size_t propsToFindCount)
 {
     Prop *p;
-    PropSet *curr = props;
+    Style *curr = props;
     while (curr) {
         for (size_t i = 0; i < curr->props.Count(); i++) {
             p = curr->props.At(i);
@@ -442,18 +442,18 @@ void FindProps(PropSet *props, PropToFind *propsToFind, size_t propsToFindCount)
     }
 }
 
-void FindProps(PropSet *propsFirst, PropSet *propsSecond, PropToFind *propsToFind, size_t propsToFindCount)
+void FindProps(Style *first, Style *second, PropToFind *propsToFind, size_t propsToFindCount)
 {
-    FindProps(propsFirst, propsToFind, propsToFindCount);
-    FindProps(propsSecond, propsToFind, propsToFindCount);
+    FindProps(first, propsToFind, propsToFindCount);
+    FindProps(second, propsToFind, propsToFindCount);
 }
 
-Prop *FindProp(PropSet *propsFirst, PropSet *propsSecond, PropType type)
+Prop *FindProp(Style *first, Style *second, PropType type)
 {
     PropToFind propsToFind[1] = {
         { type, NULL }
     };
-    FindProps(propsFirst, propsSecond, propsToFind, dimof(propsToFind));
+    FindProps(first, second, propsToFind, dimof(propsToFind));
     return propsToFind[0].prop;
 }
 
@@ -461,18 +461,18 @@ Prop *FindProp(PropSet *propsFirst, PropSet *propsSecond, PropType type)
 // properties and construct a font object.
 // Providing 2 sets of props is an optimization: conceptually it's equivalent
 // to setting propsFirst->inheritsFrom = propsSecond, but this way allows
-// us to have global properties for known cases and not create dummy PropSets just
+// us to have global properties for known cases and not create dummy Style just
 // to link them (e.g. if VirtWndButton::styleDefault is NULL, we'll use gStyleButtonDefault)
 // Caller should not delete the font - it's cached for performance and deleted at exit
 // in DeleteCachedFonts()
-Font *CachedFontFromProps(PropSet *propsFirst, PropSet *propsSecond)
+Font *CachedFontFromProps(Style *first, Style *second)
 {
     PropToFind propsToFind[3] = {
         { PropFontName, NULL },
         { PropFontSize, NULL },
         { PropFontWeight, NULL }
     };
-    FindProps(propsFirst, propsSecond, propsToFind, dimof(propsToFind));
+    FindProps(first, second, propsToFind, dimof(propsToFind));
     Prop *fontName   = propsToFind[0].prop;
     Prop *fontSize   = propsToFind[1].prop;
     Prop *fontWeight = propsToFind[2].prop;
