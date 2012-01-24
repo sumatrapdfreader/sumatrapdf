@@ -733,25 +733,21 @@ void VirtWndPainter::OnPaint(HWND hwnd)
     PAINTSTRUCT ps;
     HDC dc = BeginPaint(hwnd, &ps);
 
-    RECT rc;
-    GetClientRect(hwnd, &rc);
-
     // TODO: be intelligent about only repainting changed
     // parts for perf. Note: if cacheBmp changes, we need
     // to repaint everything
     Graphics gDC(dc);
-    ClientRect rc2(hwnd);
-    if (!BitmapSizeEquals(cacheBmp, rc2.dx, rc2.dy)) {
+    ClientRect r(hwnd);
+    if (!BitmapSizeEquals(cacheBmp, r.dx, r.dy)) {
         // note: could only re-allocate when the size increases
         ::delete cacheBmp;
-        cacheBmp = ::new Bitmap(rc2.dx, rc2.dy, &gDC);
+        cacheBmp = ::new Bitmap(r.dx, r.dy, &gDC);
     }
 
     Graphics g((Image*)cacheBmp);
     InitGraphicsMode(&g);
 
-    Rect r(rc2.x, rc2.y, rc2.dx, rc2.dy);
-    PaintBackground(&g, r);
+    PaintBackground(&g, Rect(0, 0, r.dx, r.dy));
 
     PaintWindowsInZOrder(&g, wnd);
 
