@@ -105,8 +105,8 @@ public:
 class VirtWnd
 {
 public:
-    // allows windows to opt-out from being notified about
-    // input events
+    // allows a window to opt-out from being notified about
+    // input events, stored in wantedInputBits
     enum WndWantedInputBits : int {
         WantsMouseOverBit   = 0,
         WantsMouseDownBit   = 1,
@@ -115,7 +115,7 @@ public:
         WndWantedInputBitLast
     };
 
-    // we use uint16_t for those
+    // describes current state of a window, stored in stateBits
     enum WndStateBits : int {
         MouseOverBit = 0,
         IsPressedBit = 1,
@@ -146,7 +146,7 @@ public:
     // Then the parent uses it to calculate the size of its children
     // and uses Arrange() to set it.
 
-    // availableSize can have InfiniteDx or InfiniteDy to allow
+    // availableSize can have SizeInfinite as dx or dy to allow
     // using as much space as the window wants
     virtual void Measure(Size availableSize);
     virtual void Arrange(Rect finalRect);
@@ -160,7 +160,7 @@ public:
 
     uint16_t        wantedInputBits; // WndWantedInputBits
     uint16_t        stateBits;       // WndStateBits
-    // windows with biger zOrder are painted on top, 0 is default
+    // windows with bigger z-order are painted on top, 0 is default
     int16_t         zOrder;
 
     bool WantsMouseClick() const {

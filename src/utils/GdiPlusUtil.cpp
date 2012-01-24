@@ -48,7 +48,8 @@ RectF MeasureTextAccurate2(Graphics *g, Font *f, const WCHAR *s, size_t len)
 // Adding a magic 4.5f to the width seems to make it more or less right
 RectF MeasureTextAccurate(Graphics *g, Font *f, const WCHAR *s, size_t len)
 {
-    assert(len > 0);
+    if (0 == len)
+        return RectF(0, 0, 0, 0); // TODO: should set height to font's height
     // note: frankly, I don't see a difference between those StringFormat variations
     StringFormat sf(StringFormat::GenericTypographic());
     sf.SetFormatFlags(sf.GetFormatFlags() | StringFormatFlagsMeasureTrailingSpaces);

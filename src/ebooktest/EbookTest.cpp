@@ -17,6 +17,12 @@
 #include "MobiParse.h"
 #include "EbookTestMenu.h"
 
+/*
+TODO: when we resize and window becomes bigger, there are black bands
+drawn briefly on the right and bottom. I don't understand why - this
+doesn't happen in Sumatra.
+*/
+
 using namespace Gdiplus;
 using namespace mui;
 
@@ -52,6 +58,15 @@ static const char *gSampleHtml = "<html><p align=justify>ClearType is <b>depende
 const int pageBorderX = 10;
 const int pageBorderY = 10;
 
+/* The layout is:
+___________________
+|                 |
+| next       prev |
+|                 |
+|[    status     ]|
+___________________
+*/
+
 class VirtWndEbook : public VirtWndHwnd, public IClickHandler
 {
     void AdvancePage(int dist);
@@ -63,19 +78,21 @@ public:
 
     VirtWndButton * next;
     VirtWndButton * prev;
+    VirtWndButton * status;
     VirtWndButton * test;
 
     VirtWndEbook(HWND hwnd);
 
-    Style *         facebookButtonRegular;
+    Style *         statusDefault;
+    Style *         facebookButtonDefault;
     Style *         facebookButtonOver;
 
     virtual ~VirtWndEbook() {
         delete mb;
         delete pageLayout;
-        delete facebookButtonRegular;
+        delete statusDefault;
+        delete facebookButtonDefault;
         delete facebookButtonOver;
-        delete styleDefault;
     }
 
     virtual void Paint(Graphics *gfx, int offX, int offY);
@@ -86,14 +103,15 @@ public:
     void SetHtml(const char *html);
     void LoadMobi(const TCHAR *fileName);
 
+    void SetStatusText() const;
     void DoPageLayout(int dx, int dy);
 };
 
 class EbookLayout : public Layout
 {
 public:
-    EbookLayout(VirtWndButton *next, VirtWndButton *prev, VirtWndButton *test) :
-      next(next), prev(prev), test(test)
+    EbookLayout(VirtWndButton *next, VirtWndButton *prev, VirtWndButton *status, VirtWndButton *test) :
+      next(next), prev(prev), status(status), test(test)
     {
     }
 
@@ -102,6 +120,7 @@ public:
 
     VirtWndButton *next;
     VirtWndButton *prev;
+    VirtWndButton *status;
     VirtWndButton *test;
 
     virtual void Measure(Size availableSize, VirtWnd *wnd);
@@ -114,15 +133,37 @@ void EbookLayout::Measure(Size availableSize, VirtWnd *wnd)
         availableSize.Width = 320;
     if (SizeInfinite == availableSize.Height)
         availableSize.Height = 200;
+
+    for (size_t i = 0; i < wnd->GetChildCount(); i++) {
+        wnd->GetChild(i)->Measure(availableSize);
+    }
     wnd->desiredSize = availableSize;
-    next->Measure(availableSize);
-    prev->Measure(availableSize);
-    test->Measure(availableSize);
+}
+
+static Size SizeFromRect(Rect& r)
+{
+    return Size(r.Width, r.Height);
+}
+
+// sets y position of toCenter rectangle so that it's centered
+// within container of a given size. Doesn't change x position or size.
+// note: it might produce negative position and that's fine
+static void CenterRectY(Rect& toCenter, Size& container)
+{
+    toCenter.Y = (container.Height - toCenter.Height) / 2;
+}
+
+// sets x position of toCenter rectangle so that it's centered
+// within container of a given size. Doesn't change y position or size.
+// note: it might produce negative position and that's fine
+static void CenterRectX(Rect& toCenter, Size& container)
+{
+    toCenter.X = (container.Width - toCenter.Width) / 2;
 }
 
 void EbookLayout::Arrange(Rect finalRect, VirtWnd *wnd)
 {
-    int btnDx, btnDy, btnY, btnX;
+    int btnDy, btnY, btnDx;
 
     Prop *propPadding = FindProp(wnd->styleDefault, gStyleDefault, PropPadding);
     int padLeft = propPadding->padding.left;
@@ -134,36 +175,42 @@ void EbookLayout::Arrange(Rect finalRect, VirtWnd *wnd)
     int rectDx = finalRect.Width - (padLeft + padRight);
 
     // prev is on the left, y-middle
-    btnDy = prev->desiredSize.Height;
-    btnY = (rectDy - btnDy) / 2;
-    if (btnY < 0)
-        btnY = 0;
-
-    Rect prevPos(padLeft, btnY, prev->desiredSize.Width, btnDy);
+    Rect prevPos(Point(padLeft, 0), prev->desiredSize);
+    CenterRectY(prevPos, Size(rectDx, rectDy));
     prev->Arrange(prevPos);
 
     // next is on the right, y-middle
-    btnDy = next->desiredSize.Height;
-    btnY = (rectDy - btnDy) / 2;
-    if (btnY < 0)
-        btnY = 0;
-
     btnDx = next->desiredSize.Width;
-    btnX = rectDx - btnDx;
-    Rect nextPos(padLeft + btnX, btnY, btnDx, btnDy);
+    Rect nextPos(Point(rectDx - btnDx + padLeft, 0), next->desiredSize);
+    CenterRectY(nextPos, Size(rectDx, rectDy));
     next->Arrange(nextPos);
 
     // test is at the bottom, x-middle
-    btnDx = test->desiredSize.Width;
     btnDy = test->desiredSize.Height;
-    btnX = (rectDx - btnDx) / 2;
     btnY = rectDy - btnDy;
-    Rect testPos(btnX, btnY - padBottom, btnDx, btnDy);
+    Rect testPos(Point(0, btnY - padBottom), test->desiredSize);
+    CenterRectX(testPos, Size(rectDx, rectDy));
     test->Arrange(testPos);
+
+    btnY = finalRect.Height - status->desiredSize.Height;
+    Rect statusPos(Point(0, btnY), status->desiredSize);
+    statusPos.Width = finalRect.Width;
+    status->Arrange(statusPos);
 
     wnd->pos = finalRect;
     VirtWndEbook *wndEbook = (VirtWndEbook*)wnd;
     wndEbook->DoPageLayout(rectDx, rectDy);
+}
+
+void VirtWndEbook::SetStatusText() const
+{
+    if (!pageLayout) {
+        status->SetText(_T(""));
+        return;
+    }
+    size_t pageCount = pageLayout->PageCount();
+    ScopedMem<TCHAR> s(str::Format(_T("Page %d out of %d"), currPageNo, (int)pageCount));
+    status->SetText(s.Get());
 }
 
 void VirtWndEbook::AdvancePage(int dist)
@@ -176,6 +223,7 @@ void VirtWndEbook::AdvancePage(int dist)
     if (newPageNo > (int)pageLayout->PageCount())
         return;
     currPageNo = newPageNo;
+    SetStatusText();
     RequestRepaint(this);
 }
 
@@ -207,6 +255,7 @@ void VirtWndEbook::DoPageLayout(int dx, int dy)
     delete pageLayout;
     pageLayout = newLayout;
     currPageNo = 1;
+    SetStatusText();
     RequestRepaint(this);
 }
 
@@ -234,29 +283,44 @@ VirtWndEbook::VirtWndEbook(HWND hwnd)
     styleDefault = new Style();
     styleDefault->Set(Prop::AllocPadding(pageBorderY, pageBorderX, pageBorderY, pageBorderX));
     SetHwnd(hwnd);
-    facebookButtonRegular = new Style();
-    facebookButtonRegular->Set(Prop::AllocColorSolid(PropColor, "white"));
-    //facebookButtonRegular->Set(Prop::AllocColorLinearGradient(PropBgColor, LinearGradientModeVertical, "#75ae5c", "#67a54b"));
-    facebookButtonRegular->Set(Prop::AllocColorLinearGradient(PropBgColor, LinearGradientModeVertical, "#647bad", "#5872a7"));
-    facebookButtonRegular->Set(Prop::AllocColorSolid(PropBorderTopColor, "#29447E"));
-    facebookButtonRegular->Set(Prop::AllocColorSolid(PropBorderRightColor, "#29447E"));
-    facebookButtonRegular->Set(Prop::AllocColorSolid(PropBorderBottomColor, "#1A356E"));
+
+    facebookButtonDefault = new Style();
+    facebookButtonDefault->Set(Prop::AllocColorSolid(PropColor, "white"));
+    //facebookButtonDefault->Set(Prop::AllocColorLinearGradient(PropBgColor, LinearGradientModeVertical, "#75ae5c", "#67a54b"));
+    facebookButtonDefault->Set(Prop::AllocColorLinearGradient(PropBgColor, LinearGradientModeVertical, "#647bad", "#5872a7"));
+    facebookButtonDefault->Set(Prop::AllocColorSolid(PropBorderTopColor, "#29447E"));
+    facebookButtonDefault->Set(Prop::AllocColorSolid(PropBorderRightColor, "#29447E"));
+    facebookButtonDefault->Set(Prop::AllocColorSolid(PropBorderBottomColor, "#1A356E"));
 
     facebookButtonOver = new Style();
     facebookButtonOver->Set(Prop::AllocColorSolid(PropColor, "yellow"));
-    facebookButtonOver->inheritsFrom = facebookButtonRegular;
+    facebookButtonOver->inheritsFrom = facebookButtonDefault;
+
+    statusDefault = new Style();
+    statusDefault->Set(Prop::AllocColorSolid(PropBgColor, "white"));
+    statusDefault->Set(Prop::AllocColorSolid(PropColor, "black"));
+    statusDefault->Set(Prop::AllocFontSize(8));
+    statusDefault->Set(Prop::AllocFontWeight(FontStyleRegular));
+    statusDefault->Set(Prop::AllocPadding(2, 0, 2, 0));
+    statusDefault->SetBorderWidth(0);
 
     next = new VirtWndButton(_T("Next"));
     prev = new VirtWndButton(_T("Prev"));
+
     test = new VirtWndButton(_T("test"));
     test->zOrder = 1;
-    test->styleDefault = facebookButtonRegular;
+    test->styleDefault = facebookButtonDefault;
     test->styleMouseOver = facebookButtonOver;
+
+    status = new VirtWndButton(_T(""));
+    status->styleDefault = statusDefault;
+    status->styleMouseOver = statusDefault;
 
     AddChild(next);
     AddChild(prev);
+    AddChild(status);
     AddChild(test);
-    layout = new EbookLayout(next, prev, test);
+    layout = new EbookLayout(next, prev, status, test);
     RegisterForClickEvent(next, this);
     RegisterForClickEvent(prev, this);
     RegisterForClickEvent(test, this);

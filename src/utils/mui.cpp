@@ -557,13 +557,13 @@ void VirtWndPainter::PaintBackground(Graphics *g, Rect r)
 #define MIN_INT16  -32768
 #define MAX_INT16   32767
 
-// Paint windows in zOrder by first collecting the windows
-// and then paint consequitive layers with the same zOrder,
-// starting with the lowest zOrder.
+// Paint windows in z-order by first collecting the windows
+// and then paint consequitive layers with the same z-order,
+// starting with the lowest z-order.
 // We don't sort because we want to preserve the order of
-// containment within zOrder and non-stable sort could
+// containment within z-order and non-stable sort could
 // mess that up. Also, this should be faster in common
-// case where most windows are in the same zOrder.
+// case where most windows are in the same z-order.
 void PaintWindowsInZOrder(Graphics *g, VirtWnd *wnd)
 {
     Vec<WndAndOffset> windowsToPaint;
@@ -573,7 +573,7 @@ void PaintWindowsInZOrder(Graphics *g, VirtWnd *wnd)
     int16_t lastPaintedZOrder = MIN_INT16;
     size_t winCount = windowsToPaint.Count();
     for (;;) {
-        // find which zOrder should we paint now
+        // find which z-order should we paint now
         int16_t minUnpaintedZOrder = MAX_INT16;
         for (size_t i = 0; i < winCount; i++) {
             WndAndOffset woff = windowsToPaint.At(i);
