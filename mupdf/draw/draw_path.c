@@ -225,6 +225,7 @@ fz_add_line_join(struct sctx *s, fz_point a, fz_point b, fz_point c)
 	float dmr2;
 	float scale;
 	float cross;
+	float len0, len1;
 
 	dx0 = b.x - a.x;
 	dy0 = b.y - a.y;
@@ -242,16 +243,18 @@ fz_add_line_join(struct sctx *s, fz_point a, fz_point b, fz_point c)
 		cross = -cross;
 	}
 
-	if (dx0 * dx0 + dy0 * dy0 < FLT_EPSILON)
+	len0 = dx0 * dx0 + dy0 * dy0;
+	if (len0 < FLT_EPSILON)
 		linejoin = FZ_LINEJOIN_BEVEL;
-	if (dx1 * dx1 + dy1 * dy1 < FLT_EPSILON)
+	len1 = dx1 * dx1 + dy1 * dy1;
+	if (len1 < FLT_EPSILON)
 		linejoin = FZ_LINEJOIN_BEVEL;
 
-	scale = linewidth / sqrtf(dx0 * dx0 + dy0 * dy0);
+	scale = linewidth / sqrtf(len0);
 	dlx0 = dy0 * scale;
 	dly0 = -dx0 * scale;
 
-	scale = linewidth / sqrtf(dx1 * dx1 + dy1 * dy1);
+	scale = linewidth / sqrtf(len1);
 	dlx1 = dy1 * scale;
 	dly1 = -dx1 * scale;
 
@@ -262,12 +265,8 @@ fz_add_line_join(struct sctx *s, fz_point a, fz_point b, fz_point c)
 	if (cross * cross < FLT_EPSILON && dx0 * dx1 + dy0 * dy1 >= 0)
 		linejoin = FZ_LINEJOIN_BEVEL;
 
-	if (linejoin == FZ_LINEJOIN_MITER)
-		if (dmr2 * miterlimit * miterlimit < linewidth * linewidth)
-			linejoin = FZ_LINEJOIN_BEVEL;
-
-	/* SumatraPDF: XPS miter joins are clipped instead of converted to bevel joins */
-	/* cf. http://blogs.msdn.com/b/mswanson/archive/2006/03/23/559698.aspx */
+	/* XPS miter joins are clipped at miterlength, rather than simply
+	 * being converted to bevelled joins. */
 	if (linejoin == FZ_LINEJOIN_MITER_XPS)
 	{
 		if (cross == 0)
@@ -276,24 +275,25 @@ fz_add_line_join(struct sctx *s, fz_point a, fz_point b, fz_point c)
 			linejoin = FZ_LINEJOIN_MITER;
 		else
 		{
-			float k;
+			float k, t0x, t0y, t1x, t1y;
 			scale = linewidth * linewidth / dmr2;
-			k = (scale - linewidth * miterlimit / sqrtf(dmr2)) / (scale - 1);
 			dmx *= scale;
 			dmy *= scale;
+			k = (scale - linewidth * miterlimit / sqrtf(dmr2)) / (scale - 1);
+			t0x = b.x - dmx + k * (dmx - dlx0);
+			t0y = b.y - dmy + k * (dmy - dly0);
+			t1x = b.x - dmx + k * (dmx - dlx1);
+			t1y = b.y - dmy + k * (dmy - dly1);
 
 			fz_add_line(s, b.x + dlx1, b.y + dly1, b.x + dlx0, b.y + dly0);
-			fz_add_line(s, b.x - dlx0, b.y - dly0, b.x - dmx + k * (dmx - dlx0), b.y - dmy + k * (dmy - dly0));
-			fz_add_line(s, b.x - dmx + k * (dmx - dlx0), b.y - dmy + k * (dmy - dly0), b.x - dmx + k * (dmx - dlx1), b.y - dmy + k * (dmy - dly1));
-			fz_add_line(s, b.x - dmx + k * (dmx - dlx1), b.y - dmy + k * (dmy - dly1), b.x - dlx1, b.y - dly1);
+			fz_add_line(s, b.x - dlx0, b.y - dly0, t0x, t0y);
+			fz_add_line(s, t0x, t0y, t1x, t1y);
+			fz_add_line(s, t1x, t1y, b.x - dlx1, b.y - dly1);
 		}
 	}
-
-	if (linejoin == FZ_LINEJOIN_BEVEL)
-	{
-		fz_add_line(s, b.x - dlx0, b.y - dly0, b.x - dlx1, b.y - dly1);
-		fz_add_line(s, b.x + dlx1, b.y + dly1, b.x + dlx0, b.y + dly0);
-	}
+	else if (linejoin == FZ_LINEJOIN_MITER)
+		if (dmr2 * miterlimit * miterlimit < linewidth * linewidth)
+			linejoin = FZ_LINEJOIN_BEVEL;
 
 	if (linejoin == FZ_LINEJOIN_MITER)
 	{
@@ -306,28 +306,13 @@ fz_add_line_join(struct sctx *s, fz_point a, fz_point b, fz_point c)
 		fz_add_line(s, b.x - dmx, b.y - dmy, b.x - dlx1, b.y - dly1);
 	}
 
-	/* SumatraPDF: use the calculatoins above */
-	if (0)
-	/* XPS miter joins are clipped at miterlength, rather than simply
-	 * being converted to bevelled joins. */
-	if (linejoin == FZ_LINEJOIN_MITER_XPS)
-	{
-		scale = linewidth * linewidth / dmr2;
-		dmx *= scale;
-		dmy *= scale;
 
-		if (cross == 0)
-		{
-			fz_add_line(s, b.x + dlx1, b.y + dly1, b.x + dlx0, b.y + dly0);
-			fz_add_line(s, b.x - dlx0, b.y - dly0, b.x - dlx1, b.y - dly1);
-		}
-		else
-		{
-			fz_add_line(s, b.x + dlx1, b.y + dly1, b.x + dlx0, b.y + dly0);
-			fz_add_line(s, b.x - dlx0, b.y - dly0, b.x - dmx, b.y - dmy);
-			fz_add_line(s, b.x - dmx, b.y - dmy, b.x - dlx1, b.y - dly1);
-		}
+	if (linejoin == FZ_LINEJOIN_BEVEL)
+	{
+		fz_add_line(s, b.x - dlx0, b.y - dly0, b.x - dlx1, b.y - dly1);
+		fz_add_line(s, b.x + dlx1, b.y + dly1, b.x + dlx0, b.y + dly0);
 	}
+
 
 	if (linejoin == FZ_LINEJOIN_ROUND)
 	{

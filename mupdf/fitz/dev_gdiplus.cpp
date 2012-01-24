@@ -20,44 +20,80 @@ static ULONG_PTR m_gdiplusToken;
 static LONG m_gdiplusUsage = 0;
 
 static ColorPalette *
-gdiplus_create_grayscale_palette(fz_context *ctx)
+gdiplus_create_grayscale_palette(fz_context *ctx, int depth)
 {
-	ColorPalette * pal8bit = (ColorPalette *)fz_malloc(ctx, sizeof(ColorPalette) + 255 * sizeof(ARGB));
+	ColorPalette * palette = (ColorPalette *)fz_malloc(ctx, sizeof(ColorPalette) + (1 << depth) * sizeof(ARGB));
 	
-	pal8bit->Flags = PaletteFlagsGrayScale;
-	pal8bit->Count = 256;
-	for (int i = 0; i < 256; i++)
-		pal8bit->Entries[i] = Color::MakeARGB(255, i, i, i);
+	palette->Flags = PaletteFlagsGrayScale;
+	palette->Count = 1 << depth;
+	for (unsigned int i = 0; i < palette->Count; i++)
+	{
+		int val = i * 255 / (palette->Count - 1);
+		palette->Entries[i] = Color::MakeARGB(255, val, val, val);
+	}
 	
-	return pal8bit;
+	return palette;
 }
 
 class PixmapBitmap : public Bitmap
 {
-	ColorPalette *pal8bit;
+	ColorPalette *palette;
 	fz_context *ctx;
 
 public:
 	PixmapBitmap(fz_context *ctx, fz_pixmap *pixmap) : Bitmap(pixmap->w, pixmap->h,
-		pixmap->has_alpha ? PixelFormat32bppARGB : pixmap->colorspace != fz_device_gray ? PixelFormat24bppRGB : PixelFormat8bppIndexed),
-		pal8bit(NULL), ctx(ctx)
+		pixmap->has_alpha ? PixelFormat32bppARGB :
+		pixmap->colorspace != fz_device_gray ? PixelFormat24bppRGB :
+		pixmap->single_bit ? PixelFormat1bppIndexed : PixelFormat8bppIndexed),
+		palette(NULL), ctx(ctx)
 	{
 		BitmapData data;
+		// 1-bit pixmap (black and white)
+		if (pixmap->single_bit)
+		{
+			assert(pixmap->colorspace == fz_device_gray && !pixmap->has_alpha);
+			SetPalette((palette = gdiplus_create_grayscale_palette(ctx, 1)));
+			
+			Status status = LockBits(&Rect(0, 0, pixmap->w, pixmap->h), ImageLockModeWrite, PixelFormat1bppIndexed, &data);
+			if (status == Ok)
+			{
+				for (int y = 0; y < pixmap->h; y++)
+				{
+					for (int x = 0; x < pixmap->w; x += 8)
+					{
+						unsigned char byte = 0;
+						for (int i = 0; i < 8 && i < pixmap->w - x; i++)
+						{
+							if (pixmap->samples[(y * pixmap->w + x + i) * 2])
+								byte |= 1 << (7 - i);
+						}
+						((unsigned char *)data.Scan0)[y * data.Stride + x / 8] = byte;
+					}
+				}
+				UnlockBits(&data);
+			}
+			return;
+		}
+		// 8-bit pixmap (grayscale)
 		if (pixmap->colorspace == fz_device_gray && !pixmap->has_alpha)
 		{
-			SetPalette((pal8bit = gdiplus_create_grayscale_palette(ctx)));
+			SetPalette((palette = gdiplus_create_grayscale_palette(ctx, 8)));
 			
 			Status status = LockBits(&Rect(0, 0, pixmap->w, pixmap->h), ImageLockModeWrite, PixelFormat8bppIndexed, &data);
 			if (status == Ok)
 			{
 				for (int y = 0; y < pixmap->h; y++)
+				{
 					for (int x = 0; x < pixmap->w; x++)
+					{
 						((unsigned char *)data.Scan0)[y * data.Stride + x] = pixmap->samples[(y * pixmap->w + x) * 2];
+					}
+				}
 				UnlockBits(&data);
 			}
 			return;
 		}
-		
+		// color pixmaps (24-bit or 32-bit)
 		fz_pixmap *pix;
 		if (pixmap->colorspace != fz_device_bgr)
 		{
@@ -72,14 +108,22 @@ public:
 			}
 			
 			if (!pixmap->colorspace)
+			{
 				for (int i = 0; i < pix->w * pix->h; i++)
+				{
 					pix->samples[i * 4 + 3] = pixmap->samples[i];
+				}
+			}
 			else
+			{
 				fz_convert_pixmap(ctx, pixmap, pix);
+			}
 		}
 		else
+		{
 			pix = fz_keep_pixmap(ctx, pixmap);
-		
+		}
+		// 32-bit pixmap (color and alpha)
 		if (pixmap->has_alpha)
 		{
 			Status status = LockBits(&Rect(0, 0, pix->w, pix->h), ImageLockModeWrite, PixelFormat32bppARGB, &data);
@@ -89,15 +133,22 @@ public:
 				UnlockBits(&data);
 			}
 		}
+		// 24-bit pixmap (color without alpha)
 		else
 		{
 			Status status = LockBits(&Rect(0, 0, pix->w, pix->h), ImageLockModeWrite, PixelFormat24bppRGB, &data);
 			if (status == Ok)
 			{
 				for (int y = 0; y < pix->h; y++)
+				{
 					for (int x = 0; x < pix->w; x++)
+					{
 						for (int n = 0; n < 3; n++)
+						{
 							((unsigned char *)data.Scan0)[y * data.Stride + x * 3 + n] = pix->samples[(y * pix->w + x) * 4 + n];
+						}
+					}
+				}
 				UnlockBits(&data);
 			}
 		}
@@ -106,7 +157,7 @@ public:
 	}
 	virtual ~PixmapBitmap()
 	{
-		fz_free(ctx, pal8bit);
+		fz_free(ctx, palette);
 	}
 };
 
@@ -184,8 +235,6 @@ gdiplus_transform_point(fz_matrix ctm, float x, float y)
 	return PointF(point.x, point.y);
 }
 
-inline float round(float x) { return floorf(x + 0.5); }
-inline float roundup(float x) { return x < 0 ? floorf(x) : ceilf(x); }
 inline BYTE BlendScreen(BYTE s, BYTE bg) { return 255 - (255 - s) * (255 - bg) / 255; }
 
 class userData
@@ -444,41 +493,23 @@ public:
 			graphics->DrawImage(&PixmapBitmap(ctx, image), corners, 3, 0, 0, image->w, image->h, UnitPixel, &DrawImageAttributes(alpha));
 			graphics->Restore(state);
 		}
-		else if (scale < 1.0 && MIN(image->w, image->h) > 100)
+		else if (scale < 1.0 && MIN(image->w, image->h) > 100 && !image->has_alpha)
 		{
-			int w = round(image->w * scale);
-			int h = round(image->h * scale);
-			
-			Bitmap *scaled = new Bitmap(w, h, image->has_alpha ? PixelFormat32bppARGB : PixelFormat24bppRGB);
-			ColorPalette *pal8bit = NULL;
-			if (!image->has_alpha && image->colorspace == fz_device_gray && w * h > (1 << 18))
+			fz_try(ctx)
 			{
-				delete scaled;
-				scaled = new Bitmap(w, h, PixelFormat8bppIndexed);
-				scaled->SetPalette((pal8bit = gdiplus_create_grayscale_palette(ctx)));
+				int w = floorf(image->w * scale + 0.5f);
+				int h = floorf(image->h * scale + 0.5f);
+				fz_pixmap *scaledPixmap = fz_scale_pixmap(ctx, image, 0, 0, w, h, NULL);
+				if (scaledPixmap)
+					graphics->DrawImage(&PixmapBitmap(ctx, scaledPixmap), corners, 3, 0, 0, w, h, UnitPixel, &DrawImageAttributes(alpha));
+				fz_drop_pixmap(ctx, scaledPixmap);
 			}
-			Graphics g2(scaled);
-			_setup(&g2);
-			Status status = g2.DrawImage(&PixmapBitmap(ctx, image), Rect(0, 0, w, h), 0, 0, image->w, image->h, UnitPixel, &DrawImageAttributes(1.0f));
-			if (status == Ok)
-				status = graphics->DrawImage(scaled, corners, 3, 0, 0, w, h, UnitPixel, &DrawImageAttributes(alpha));
-			delete scaled;
-			fz_free(ctx, pal8bit);
-			
-			if (status == OutOfMemory)
-			{
-				fz_try(ctx)
-				{
-					fz_pixmap *scaledPixmap = fz_scale_pixmap(ctx, image, 0, 0, w, h, NULL);
-					if (scaledPixmap)
-						graphics->DrawImage(&PixmapBitmap(ctx, scaledPixmap), corners, 3, 0, 0, w, h, UnitPixel, &DrawImageAttributes(alpha));
-					fz_drop_pixmap(ctx, scaledPixmap);
-				}
-				fz_catch(ctx) { }
-			}
+			fz_catch(ctx) { }
 		}
 		else
+		{
 			graphics->DrawImage(&PixmapBitmap(ctx, image), corners, 3, 0, 0, image->w, image->h, UnitPixel, &DrawImageAttributes(alpha));
+		}
 	}
 
 	float getAlpha(float alpha=1.0) const { return stack->alpha * alpha; }

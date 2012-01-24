@@ -260,6 +260,8 @@ leave enough space) and then reordering afterwards.
 
 typedef struct fz_weights_s fz_weights;
 
+/* This structure is accessed from ARM code - bear this in mind before
+ * altering it! */
 struct fz_weights_s
 {
 	int flip;	/* true if outputting reversed */
@@ -616,7 +618,7 @@ scale_row_to_temp1(int *dst, unsigned char *src, fz_weights *weights)
 	"@ r1 = src						\n"
 	"@ r2 = weights						\n"
 	"ldr	r12,[r2],#4		@ r12= flip		\n"
-	"ldr	r3, [r2],#16		@ r3 = count r2 = &index\n"
+	"ldr	r3, [r2],#20		@ r3 = count r2 = &index\n"
 	"ldr	r4, [r2]		@ r4 = index[0]		\n"
 	"cmp	r12,#0			@ if (flip)		\n"
 	"beq	4f			@ {			\n"
@@ -676,7 +678,7 @@ scale_row_to_temp2(int *dst, unsigned char *src, fz_weights *weights)
 	"@ r1 = src						\n"
 	"@ r2 = weights						\n"
 	"ldr	r12,[r2],#4		@ r12= flip		\n"
-	"ldr	r3, [r2],#16		@ r3 = count r2 = &index\n"
+	"ldr	r3, [r2],#20		@ r3 = count r2 = &index\n"
 	"ldr	r4, [r2]		@ r4 = index[0]		\n"
 	"cmp	r12,#0			@ if (flip)		\n"
 	"beq	4f			@ {			\n"
@@ -740,7 +742,7 @@ scale_row_to_temp4(int *dst, unsigned char *src, fz_weights *weights)
 	"@ r1 = src						\n"
 	"@ r2 = weights						\n"
 	"ldr	r12,[r2],#4		@ r12= flip		\n"
-	"ldr	r3, [r2],#16		@ r3 = count r2 = &index\n"
+	"ldr	r3, [r2],#20		@ r3 = count r2 = &index\n"
 	"ldr	r4, [r2]		@ r4 = index[0]		\n"
 	"cmp	r12,#0			@ if (flip)		\n"
 	"beq	4f			@ {			\n"
@@ -814,7 +816,7 @@ scale_row_from_temp(unsigned char *dst, int *src, fz_weights *weights, int width
 	asm volatile(
 	ENTER_ARM
 	"ldr	r12,[r13]		@ r12= row		\n"
-	"add	r2, r2, #20		@ r2 = weights->index	\n"
+	"add	r2, r2, #24		@ r2 = weights->index	\n"
 	"stmfd	r13!,{r4-r11,r14}				\n"
 	"@ r0 = dst						\n"
 	"@ r1 = src						\n"
@@ -1350,6 +1352,7 @@ fz_scale_pixmap(fz_context *ctx, fz_pixmap *src, float x, float y, float w, floa
 	}
 	output->x = dst_x_int;
 	output->y = dst_y_int;
+	output->has_alpha = src->has_alpha; /* SumatraPDF: allow optimizing non-alpha pixmaps */
 
 	/* Step 2: Apply the weights */
 #ifdef SINGLE_PIXEL_SPECIALS

@@ -216,6 +216,8 @@ leave enough space) and then reordering afterwards.
 
 typedef struct fz_weights_s fz_weights;
 
+/* This structure is accessed from ARM code - bear this in mind before
+ * altering it! */
 struct fz_weights_s
 {
 	int flip;	/* true if outputting reversed */
@@ -583,7 +585,7 @@ scale_row_to_temp1(unsigned char *dst, unsigned char *src, fz_weights *weights)
 	"@ r1 = src						\n"
 	"@ r2 = weights						\n"
 	"ldr	r12,[r2],#4		@ r12= flip		\n"
-	"ldr	r3, [r2],#16		@ r3 = count r2 = &index\n"
+	"ldr	r3, [r2],#20		@ r3 = count r2 = &index\n"
 	"ldr	r4, [r2]		@ r4 = index[0]		\n"
 	"cmp	r12,#0			@ if (flip)		\n"
 	"beq	4f			@ {			\n"
@@ -645,7 +647,7 @@ scale_row_to_temp2(unsigned char *dst, unsigned char *src, fz_weights *weights)
 	"@ r1 = src						\n"
 	"@ r2 = weights						\n"
 	"ldr	r12,[r2],#4		@ r12= flip		\n"
-	"ldr	r3, [r2],#16		@ r3 = count r2 = &index\n"
+	"ldr	r3, [r2],#20		@ r3 = count r2 = &index\n"
 	"ldr	r4, [r2]		@ r4 = index[0]		\n"
 	"cmp	r12,#0			@ if (flip)		\n"
 	"beq	4f			@ {			\n"
@@ -715,7 +717,7 @@ scale_row_to_temp4(unsigned char *dst, unsigned char *src, fz_weights *weights)
 	"@ r1 = src						\n"
 	"@ r2 = weights						\n"
 	"ldr	r12,[r2],#4		@ r12= flip		\n"
-	"ldr	r3, [r2],#16		@ r3 = count r2 = &index\n"
+	"ldr	r3, [r2],#20		@ r3 = count r2 = &index\n"
 	"ldr	r4, [r2]		@ r4 = index[0]		\n"
 	"ldr	r5,=0x00800080		@ r5 = rounding		\n"
 	"ldr	r6,=0x00FF00FF		@ r7 = 0x00FF00FF	\n"
@@ -785,7 +787,7 @@ scale_row_from_temp(unsigned char *dst, unsigned char *src, fz_weights *weights,
 	asm volatile(
 	ENTER_ARM
 	"ldr	r12,[r13]		@ r12= row		\n"
-	"add	r2, r2, #20		@ r2 = weights->index	\n"
+	"add	r2, r2, #24		@ r2 = weights->index	\n"
 	"stmfd	r13!,{r4-r11,r14}				\n"
 	"@ r0 = dst						\n"
 	"@ r1 = src						\n"

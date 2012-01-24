@@ -949,6 +949,7 @@ struct fz_pixmap_s
 	unsigned char *samples;
 	int free_samples;
 	int has_alpha; /* SumatraPDF: allow optimizing non-alpha pixmaps */
+	int single_bit; /* SumatraPDF: allow optimizing 1-bit pixmaps */
 };
 
 fz_pixmap *fz_new_pixmap_with_data(fz_context *ctx, fz_colorspace *colorspace, int w, int h, unsigned char *samples);

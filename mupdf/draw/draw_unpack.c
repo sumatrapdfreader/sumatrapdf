@@ -55,6 +55,8 @@ fz_unpack_tile(fz_pixmap *dst, unsigned char * restrict src, int n, int depth, i
 	if (dst->n > n)
 		pad = 255;
 	dst->has_alpha = !pad; /* SumatraPDF: allow optimizing non-alpha pixmaps */
+	/* SumatraPDF: allow optimizing 1-bit pixmaps */
+	dst->single_bit = n == 1 && depth == 1 && (scale == 255 || scale == 0) && !dst->has_alpha;
 
 	if (depth == 1)
 		init_get1_tables();
@@ -239,4 +241,6 @@ fz_decode_tile(fz_pixmap *pix, float *decode)
 		}
 		p += pix->n;
 	}
+
+	pix->single_bit = 0; /* SumatraPDF: allow optimizing 1-bit pixmaps */
 }
