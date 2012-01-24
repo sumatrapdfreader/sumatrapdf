@@ -154,6 +154,79 @@ static VirtWndHwnd *GetRootHwndWnd(VirtWnd *w)
     return (VirtWndHwnd*)w;
 }
 
+class WndFilter
+{
+public:
+    bool skipInvisibleSubtrees;
+
+    WndFilter() : skipInvisibleSubtrees(true) {}
+
+    virtual ~WndFilter() {}
+
+    virtual bool Matches(VirtWnd *w, int offX, int offY) {
+        return true;
+    }
+};
+
+class WndInputWantedFilter : public WndFilter
+{
+    int x, y;
+    uint16_t wantedInputMask;
+
+public:
+    WndInputWantedFilter(int x, int y, uint16_t wantedInputMask) :
+        x(x), y(y), wantedInputMask(wantedInputMask)
+    {
+    }
+    virtual ~WndInputWantedFilter() {}
+    virtual bool Matches(VirtWnd *w, int offX, int offY) {
+        if ((w->wantedInputBits & wantedInputMask) != 0) {
+            Rect r = Rect(offX, offY, w->pos.Width, w->pos.Height);
+            return r.Contains(x, y);
+        }
+        return false;
+    }
+};
+
+struct WndAndOffset {
+    VirtWnd *wnd;
+    int offX, offY;
+};
+
+static void CollectWindowsBreathFirst(VirtWnd *w, int offX, int offY, WndFilter *wndFilter, Vec<WndAndOffset> *windows)
+{
+    if (wndFilter->skipInvisibleSubtrees && !w->IsVisible())
+        return;
+
+    offX += w->pos.X;
+    offY += w->pos.Y;
+    if (wndFilter->Matches(w, offX, offY)) {
+        WndAndOffset wnd = { w, offX, offY };
+        windows->Append(wnd);
+    }
+
+    size_t children = w->GetChildCount();
+    for (size_t i = 0; i < children; i++) {
+        CollectWindowsBreathFirst(w->GetChild(i), offX, offY, wndFilter, windows);
+    }
+}
+
+// Find all windows containing a given point (x, y) and interested in at least
+// one of the input evens in wantedInputMask. We have to traverse all windows
+// because children are not guaranteed to be bounded by their parent.
+// It's very likely to return more than one window because our window hierarchy
+// is a tree. Because we traverse the tree breadth-first, parent windows will be
+// in windows array before child windows. In most cases caller can use the last
+// window in returned array (but can use a custom logic as well).
+// Returns number of matched windows as a convenience.
+static size_t CollectWindowsAt(VirtWnd *wndRoot, int x, int y, uint16_t wantedInputMask, Vec<WndAndOffset> *windows)
+{
+    WndInputWantedFilter filter(x, y, wantedInputMask);
+    windows->Reset();
+    CollectWindowsBreathFirst(wndRoot, 0, 0, &filter, windows);
+    return windows->Count();
+}
+
 void RequestRepaint(VirtWnd *w)
 {
     if (!w->IsVisible())
@@ -481,28 +554,6 @@ void VirtWndPainter::PaintBackground(Graphics *g, Rect r)
     ::delete br;
 }
 
-struct WndAndOffset {
-    VirtWnd *wnd;
-    int offX, offY;
-};
-
-// TODO: should traverse tree breadth-first, we do depth-first here
-void CollectWindowsToPaint(Graphics *g, VirtWnd *wnd, int offX, int offY, Vec<WndAndOffset> *windowsToPaint)
-{
-    if (!wnd->IsVisible())
-        return;
-    offX += wnd->pos.GetLeft();
-    offY += wnd->pos.GetTop();
-    WndAndOffset woff = { wnd, offX, offY };
-    windowsToPaint->Append(woff);
-    wnd->Paint(g, offX, offY);
-
-    for (size_t i = 0; i < wnd->GetChildCount(); i++) {
-        VirtWnd *w = wnd->GetChild(i);
-        CollectWindowsToPaint(g, w, offX, offY, windowsToPaint);
-    }
-}
-
 #define MIN_INT16  -32768
 #define MAX_INT16   32767
 
@@ -516,7 +567,8 @@ void CollectWindowsToPaint(Graphics *g, VirtWnd *wnd, int offX, int offY, Vec<Wn
 void PaintWindowsInZOrder(Graphics *g, VirtWnd *wnd)
 {
     Vec<WndAndOffset> windowsToPaint;
-    CollectWindowsToPaint(g, wnd, 0, 0, &windowsToPaint);
+    WndFilter wndFilter;
+    CollectWindowsBreathFirst(wnd, 0, 0, &wndFilter, &windowsToPaint);
     size_t paintedCount = 0;
     int16_t lastPaintedZOrder = MIN_INT16;
     size_t winCount = windowsToPaint.Count();
@@ -581,43 +633,6 @@ void VirtWndPainter::OnPaint(HWND hwnd)
     EndPaint(hwnd, &ps);
 }
 
-// TODO: build an iterator for (VirtWnd *, Rect) to make such logic reusable
-// in more places and eliminate recursion (?)
-static void FindWindowsAtRecur(Vec<VirtWnd*> *windows, VirtWnd *w,  int offX, int offY, int x, int y, uint32_t wantedInputMask)
-{
-    if (!w->IsVisible())
-        return;
-
-    offX += w->pos.X;
-    offY += w->pos.Y;
-    if ((w->wantedInputBits & wantedInputMask) != 0) {
-        Rect r = Rect(offX, offY, w->pos.Width, w->pos.Height);
-
-        if (r.Contains(x, y))
-            windows->Append(w);
-    }
-
-    size_t children = w->GetChildCount();
-    for (size_t i = 0; i < children; i++) {
-        FindWindowsAtRecur(windows, w->GetChild(i), offX, offY, x, y, wantedInputMask);
-    }
-}
-
-// Find all windows containing a given point (x, y) and interested in at least
-// one of the input evens in wantedInputMask. We have to traverse all windows
-// because children are not guaranteed to be bounded by their parent.
-// It's very likely to return more than one window because our window hierarchy
-// is a tree. Because we traverse the tree breadth-first, parent windows will be
-// in windows array before child windows. In most cases caller can use the last
-// window in returned array (but can use a custom logic as well).
-// Returns number of matched windows as a convenience.
-static size_t FindWindowsAt(Vec<VirtWnd*> *windows, VirtWnd *wndRoot, int x, int y, uint32_t wantedInputMask=(uint32_t)-1)
-{
-    windows->Reset();
-    FindWindowsAtRecur(windows, wndRoot, 0, 0, x, y, wantedInputMask);
-    return windows->Count();
-}
-
 void EventMgr::RegisterForClickEvent(VirtWnd *wndSource, IClickHandler *clickHandler)
 {
     ClickHandler ch = { wndSource, clickHandler };
@@ -636,9 +651,9 @@ IClickHandler *EventMgr::GetClickHandlerFor(VirtWnd *wndSource)
 
 LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& handledOut)
 {
-    Vec<VirtWnd*> windows;
+    Vec<WndAndOffset> windows;
     uint32_t wantedInputMask = bit::FromBit<uint32_t>(VirtWnd::WantsMouseOverBit);
-    size_t count = FindWindowsAt(&windows, wndRoot, x, y, wantedInputMask);
+    size_t count = CollectWindowsAt(wndRoot, x, y, wantedInputMask, &windows);
     if (0 == count) {
         if (currOver) {
             currOver->NotifyMouseLeave();
@@ -647,7 +662,8 @@ LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& handledOut)
         return 0;
     }
 
-    VirtWnd *w = windows.Last();
+    // TODO: should this take zOrder into account ?
+    VirtWnd *w = windows.Last().wnd;
     if (w != currOver) {
         if (currOver)
             currOver->NotifyMouseLeave();
@@ -661,12 +677,13 @@ LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& handledOut)
 // more complicated
 LRESULT EventMgr::OnLButtonUp(WPARAM keys, int x, int y, bool& handledOut)
 {
-    Vec<VirtWnd*> windows;
-    uint32_t wantedInputMask = bit::FromBit<uint32_t>(VirtWnd::WantsMouseClickBit);
-    size_t count = FindWindowsAt(&windows, wndRoot, x, y, wantedInputMask);
+    Vec<WndAndOffset> windows;
+    uint16_t wantedInputMask = bit::FromBit<uint16_t>(VirtWnd::WantsMouseClickBit);
+    size_t count = CollectWindowsAt(wndRoot, x, y, wantedInputMask, &windows);
     if (0 == count)
         return 0;
-    VirtWnd *w = windows.Last();
+    // TODO: should this take zOrder into account?
+    VirtWnd *w = windows.Last().wnd;
     IClickHandler *clickHandler = GetClickHandlerFor(w);
     if (clickHandler)
         clickHandler->Clicked(w);
