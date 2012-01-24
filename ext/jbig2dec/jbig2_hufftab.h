@@ -63,7 +63,7 @@ jbig2_huffman_lines_C[] = {
   { 5, 6, 11 },
   { 8, 32, -257 }, /* low */
   { 7, 32, 75 },   /* high */
-  { 6, 0, 0 } /* OOB */
+  { 6, 0, 0 }      /* OOB */
 };
 
 const Jbig2HuffmanParams
@@ -139,7 +139,7 @@ jbig2_huffman_lines_G[] = {
 	{3, 9, 512},
 	{3, 10, 1024},
 	{5, 32, -1025}, /* low */
-	{5, 32, 2048}  /* high */
+	{5, 32, 2048}   /* high */
 };
 
 const Jbig2HuffmanParams
@@ -166,9 +166,9 @@ jbig2_huffman_lines_H[] = {
 	{6, 7, 262},
 	{7, 8, 390},
 	{6, 10, 646},
-	{9, 32, -16}, /* low */
+	{9, 32, -16},  /* low */
 	{9, 32, 1670}, /* high */
-	{2, 0, 0}  /* OOB */
+	{2, 0, 0}      /* OOB */
 };
 
 const Jbig2HuffmanParams
@@ -310,7 +310,7 @@ jbig2_huffman_lines_N[] = {
   { 3, 0, 1 },
   { 3, 0, 2 },
   { 0, 32, -1 }, /* low */
-  { 0, 32, 3 }, /* high */
+  { 0, 32, 3 },  /* high */
 };
 
 const Jbig2HuffmanParams

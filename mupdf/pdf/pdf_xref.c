@@ -358,16 +358,16 @@ pdf_read_new_xref(pdf_xref *xref, char *buf, int cap)
 			}
 		}
 	}
-	fz_catch(ctx)
+	fz_always(ctx)
 	{
 		fz_close(stm);
+	}
+	fz_catch(ctx)
+	{
 		fz_drop_obj(trailer);
 		fz_drop_obj(index);
-		fz_drop_obj(obj);
 		fz_rethrow(ctx);
 	}
-
-	fz_close(stm);
 
 	return trailer;
 }

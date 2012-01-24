@@ -59,7 +59,7 @@ struct _Jbig2HuffmanState {
 Jbig2HuffmanState *
 jbig2_huffman_new (Jbig2Ctx *ctx, Jbig2WordStream *ws)
 {
-  Jbig2HuffmanState *result;
+  Jbig2HuffmanState *result = NULL;
 
   result = jbig2_new(ctx, Jbig2HuffmanState, 1);
 
@@ -68,8 +68,10 @@ jbig2_huffman_new (Jbig2Ctx *ctx, Jbig2WordStream *ws)
       result->offset_bits = 0;
       result->this_word = ws->get_next_word (ws, 0);
       result->next_word = ws->get_next_word (ws, 4);
-
       result->ws = ws;
+  } else {
+      jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
+          "failed to allocate new huffman coding state");
   }
 
   return result;
@@ -370,8 +372,20 @@ jbig2_build_huffman_table (Jbig2Ctx *ctx, const Jbig2HuffmanParams *params)
   max_j = 1 << log_table_size;
 
   result = jbig2_new(ctx, Jbig2HuffmanTable, 1);
+  if (result == NULL)
+  {
+    jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
+        "couldn't allocate result storage in jbig2_build_huffman_table");
+    return NULL;
+  }
   result->log_table_size = log_table_size;
   entries = jbig2_new(ctx, Jbig2HuffmanEntry, max_j);
+  if (entries == NULL)
+  {
+    jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
+        "couldn't allocate entries storage in jbig2_build_huffman_table");
+    return NULL;
+  }
   result->entries = entries;
 
   LENCOUNT[0] = 0;
@@ -572,8 +586,8 @@ jbig2_table(Jbig2Ctx *ctx, Jbig2Segment *segment, const byte *segment_data)
             NTEMP++;
         }
         if (NTEMP != lines_max) {
-            Jbig2HuffmanLine *new_line = (Jbig2HuffmanLine *)jbig2_realloc(ctx->allocator,
-                                                    line, sizeof(Jbig2HuffmanLine) * NTEMP);
+            Jbig2HuffmanLine *new_line = jbig2_renew(ctx, line,
+                Jbig2HuffmanLine, NTEMP);
             if ( new_line == NULL ) {
                 jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
                                 "Could not reallocate Huffman Table Lines");

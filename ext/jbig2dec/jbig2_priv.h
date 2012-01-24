@@ -73,8 +73,14 @@ struct _Jbig2Ctx {
   Jbig2Page *pages;
 };
 
+uint32_t
+jbig2_get_uint32(const byte *bptr);
+
 int32_t
 jbig2_get_int32 (const byte *buf);
+
+uint16_t
+jbig2_get_uint16(const byte *bptr);
 
 int16_t
 jbig2_get_int16 (const byte *buf);

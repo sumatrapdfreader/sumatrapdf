@@ -188,7 +188,7 @@ static void fz_knockout_end(fz_draw_device *dev)
 
 #ifdef DUMP_GROUP_BLENDS
 	dump_spaces(dev->top, "");
-	fz_dump_blend(dev->ctx, state[1].dest, "Blending ");
+	fz_dump_blend(dev->ctx, state[1].dest, "Knockout end: blending ");
 	if (state[1].shape)
 		fz_dump_blend(dev->ctx, state[1].shape, "/");
 	fz_dump_blend(dev->ctx, state[0].dest, " onto ");
@@ -688,6 +688,7 @@ fz_draw_clip_stroke_text(fz_device *devp, fz_text *text, fz_stroke_state *stroke
 	state[1].scissor = bbox;
 	state[1].dest = dest;
 	state[1].shape = shape;
+	state[1].mask = mask;
 #ifdef DUMP_GROUP_BLENDS
 	dump_spaces(dev->top-1, "Clip (stroke text) begin\n");
 #endif
@@ -1023,7 +1024,7 @@ fz_draw_fill_image_mask(fz_device *devp, fz_pixmap *image, fz_matrix ctm,
 		fz_drop_pixmap(dev->ctx, scaled);
 
 	if (state->blendmode & FZ_BLEND_KNOCKOUT)
-		fz_knockout_begin(dev);
+		fz_knockout_end(dev);
 }
 
 static void
@@ -1163,7 +1164,7 @@ fz_draw_pop_clip(fz_device *devp)
 	else
 	{
 #ifdef DUMP_GROUP_BLENDS
-		dump_spaces(dev->top, "Clip End\n");
+		dump_spaces(dev->top, "Clip end\n");
 #endif
 	}
 }
@@ -1324,7 +1325,7 @@ fz_draw_begin_group(fz_device *devp, fz_rect rect, int isolated, int knockout, i
 
 	state[1].alpha = alpha;
 #ifdef DUMP_GROUP_BLENDS
-	dump_spaces(dev->top-1, "Group Begin\n");
+	dump_spaces(dev->top-1, "Group begin\n");
 #endif
 
 	state[1].scissor = bbox;
@@ -1355,7 +1356,7 @@ fz_draw_end_group(fz_device *devp)
 	isolated = state[1].blendmode & FZ_BLEND_ISOLATED;
 #ifdef DUMP_GROUP_BLENDS
 	dump_spaces(dev->top, "");
-	fz_dump_blend(dev->ctx, state[1].dest, "Blending ");
+	fz_dump_blend(dev->ctx, state[1].dest, "Group end: blending ");
 	if (state[1].shape)
 		fz_dump_blend(dev->ctx, state[1].shape, "/");
 	fz_dump_blend(dev->ctx, state[0].dest, " onto ");
@@ -1545,7 +1546,7 @@ fz_draw_free_user(fz_device *devp)
 	if (dev->top > 0)
 	{
 		fz_draw_state *state = &dev->stack[--dev->top];
-		fz_warn(ctx, "items left on stack in draw device: %d", dev->top);
+		fz_warn(ctx, "items left on stack in draw device: %d", dev->top+1);
 
 		do
 		{

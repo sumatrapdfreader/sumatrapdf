@@ -212,7 +212,7 @@ JBIG2_OBJS = \
 	$(OJB)\jbig2_arith_iaid.obj $(OJB)\jbig2_huffman.obj $(OJB)\jbig2_segment.obj \
 	$(OJB)\jbig2_page.obj $(OJB)\jbig2_symbol_dict.obj $(OJB)\jbig2_text.obj \
 	$(OJB)\jbig2_generic.obj $(OJB)\jbig2_refinement.obj $(OJB)\jbig2_mmr.obj \
-	$(OJB)\jbig2_image.obj $(OJB)\jbig2_metadata.obj
+	$(OJB)\jbig2_image.obj $(OJB)\jbig2_metadata.obj $(OJB)\jbig2_halftone.obj
 
 OPENJPEG_OBJS = \
 	$(OOJ)\bio.obj $(OOJ)\cio.obj $(OOJ)\dwt.obj $(OOJ)\event.obj $(OOJ)\image.obj \

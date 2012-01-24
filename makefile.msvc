@@ -462,10 +462,10 @@ $(OS)\MobiParse.obj: src\MobiParse.h src\utils\BaseUtil.h src\utils\BitReader.h
 $(OS)\MobiParse.obj: src\utils\FileUtil.h src\utils\GdiPlusUtil.h src\utils\StrUtil.h
 $(OS)\MobiParse.obj: src\utils\Vec.h
 $(OS)\mui.obj: src\utils\BaseUtil.h src\utils\BitManip.h src\utils\GdiPlusUtil.h
-$(OS)\mui.obj: src\utils\GeomUtil.h src\utils\mui.h src\utils\MuiCss.h
-$(OS)\mui.obj: src\utils\StrUtil.h src\utils\Vec.h
-$(OS)\MuiCss.obj: src\utils\BaseUtil.h src\utils\MuiCss.h src\utils\StrUtil.h
-$(OS)\MuiCss.obj: src\utils\Vec.h
+$(OS)\mui.obj: src\utils\GeomUtil.h src\utils\HtmlPullParser.h src\utils\mui.h
+$(OS)\mui.obj: src\utils\MuiCss.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\MuiCss.obj: src\utils\BaseUtil.h src\utils\HtmlPullParser.h src\utils\MuiCss.h
+$(OS)\MuiCss.obj: src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\MuPDF_Exports.obj: mupdf\fitz\fitz.h
 $(OS)\Notifications.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
 $(OS)\Notifications.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h

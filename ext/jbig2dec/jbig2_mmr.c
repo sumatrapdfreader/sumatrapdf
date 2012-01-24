@@ -996,3 +996,48 @@ jbig2_decode_generic_mmr(Jbig2Ctx *ctx,
 	return 0;
 }
 
+/**
+ * jbig2_decode_halftone_mmr: decode mmr region inside of halftones
+ * 
+ * @ctx: jbig2 decoder context
+ * @params: parameters for decoding  
+ * @data: pointer to text region data to be decoded
+ * @size: length of text region data
+ * @image: return of decoded image 
+ * @consumed_bytes: return of consumed bytes from @data
+ *
+ * MMR decoding that consumes EOFB and returns consumed bytes (@consumed_bytes)
+ *
+ * returns: 0 
+ **/
+int
+jbig2_decode_halftone_mmr(Jbig2Ctx *ctx,
+	const Jbig2GenericRegionParams *params,
+	const byte *data, size_t size,
+	Jbig2Image *image, size_t* consumed_bytes)
+{
+	Jbig2MmrCtx mmr;
+	const int rowstride = image->stride;
+	byte *dst = image->data;
+	byte *ref = NULL;
+	int y;
+	const uint32_t EOFB = 0x001001;
+
+	jbig2_decode_mmr_init(&mmr, image->width, image->height, data, size);
+
+	for (y = 0; y < image->height; y++) {
+		memset(dst, 0, rowstride);
+		jbig2_decode_mmr_line(&mmr, ref, dst);
+		ref = dst;
+		dst += rowstride;
+	}
+
+	/* test for EOFB (see section 6.2.6) */
+	if (mmr.word >> 8 == EOFB) {
+		mmr.data_index += 3;
+	}
+
+	*consumed_bytes += mmr.data_index + (mmr.bit_index >> 3) + 
+                       (mmr.bit_index > 0 ? 1 : 0);
+	return 0;
+}

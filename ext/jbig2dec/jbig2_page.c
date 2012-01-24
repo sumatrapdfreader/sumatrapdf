@@ -68,7 +68,6 @@ jbig2_page_info (Jbig2Ctx *ctx, Jbig2Segment *segment, const uint8_t *segment_da
     /* a new page info segment implies the previous page is finished */
     page = &(ctx->pages[ctx->current_page]);
     if ((page->number != 0) &&
-            page->image /* cf. http://ghostscript.com/pipermail/jbig2-dev/2011-December/000127.html */ &&
             ((page->state == JBIG2_PAGE_NEW) || (page->state == JBIG2_PAGE_FREE))) {
         page->state = JBIG2_PAGE_COMPLETE;
         jbig2_error(ctx, JBIG2_SEVERITY_WARNING, segment->number,
@@ -83,8 +82,8 @@ jbig2_page_info (Jbig2Ctx *ctx, Jbig2Segment *segment, const uint8_t *segment_da
             index++;
             if (index >= ctx->max_page_index) {
                 /* grow the list */
-		ctx->pages = (Jbig2Page*)jbig2_realloc(ctx->allocator, ctx->pages,
-			(ctx->max_page_index <<= 2) * sizeof(Jbig2Page));
+		ctx->pages = jbig2_renew(ctx, ctx->pages, Jbig2Page,
+                    (ctx->max_page_index <<= 2));
                 for (j=index; j < ctx->max_page_index; j++) {
                     ctx->pages[j].state = JBIG2_PAGE_FREE;
                     ctx->pages[j].number = 0;
@@ -106,11 +105,11 @@ jbig2_page_info (Jbig2Ctx *ctx, Jbig2Segment *segment, const uint8_t *segment_da
     }
 
     /* 7.4.8.x */
-    page->width = jbig2_get_int32(segment_data);
-    page->height = jbig2_get_int32(segment_data + 4);
+    page->width = jbig2_get_uint32(segment_data);
+    page->height = jbig2_get_uint32(segment_data + 4);
 
-    page->x_resolution = jbig2_get_int32(segment_data + 8);
-    page->y_resolution = jbig2_get_int32(segment_data + 12);
+    page->x_resolution = jbig2_get_uint32(segment_data + 8);
+    page->y_resolution = jbig2_get_uint32(segment_data + 12);
     page->flags = segment_data[16];
 
     /* 7.4.8.6 */
@@ -146,7 +145,7 @@ jbig2_page_info (Jbig2Ctx *ctx, Jbig2Segment *segment, const uint8_t *segment_da
         page->image = jbig2_image_new(ctx, page->width, page->height);
     }
     if (page->image == NULL) {
-        return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
+        return jbig2_error(ctx, JBIG2_SEVERITY_WARNING, segment->number,
             "failed to allocate buffer for page image");
     } else {
 	/* 8.2 (3) fill the page with the default pixel value */
@@ -196,11 +195,11 @@ jbig2_end_of_stripe(Jbig2Ctx *ctx, Jbig2Segment *segment, const uint8_t *segment
 int
 jbig2_complete_page (Jbig2Ctx *ctx)
 {
+    int code = 0;
 
     /* check for unfinished segments */
     if (ctx->segment_index != ctx->n_segments) {
       Jbig2Segment *segment = ctx->segments[ctx->segment_index];
-      int code = 0;
       /* Some versions of Xerox Workcentre generate PDF files
          with the segment data length field of the last segment
          set to -1. Try to cope with this here. */
@@ -214,10 +213,14 @@ jbig2_complete_page (Jbig2Ctx *ctx)
         ctx->segment_index++;
       }
     }
-    if (ctx->pages[ctx->current_page].image) /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=691958 */
-    ctx->pages[ctx->current_page].state = JBIG2_PAGE_COMPLETE;
 
-    return 0;
+    /* ensure image exists before marking page as complete */
+    if (ctx->pages[ctx->current_page].image != NULL)
+    {
+        ctx->pages[ctx->current_page].state = JBIG2_PAGE_COMPLETE;
+    }
+
+    return code;
 }
 
 /**
@@ -293,10 +296,19 @@ Jbig2Image *jbig2_page_out(Jbig2Ctx *ctx)
     /* search for a completed page */
     for (index=0; index < ctx->max_page_index; index++) {
         if (ctx->pages[index].state == JBIG2_PAGE_COMPLETE) {
+            Jbig2Image *img = ctx->pages[index].image;
+            uint32_t page_number = ctx->pages[index].number;
             ctx->pages[index].state = JBIG2_PAGE_RETURNED;
-            jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, -1,
-                "page %d returned to the client", ctx->pages[index].number);
-            return jbig2_image_clone(ctx, ctx->pages[index].image);
+            if (img != NULL) {
+                jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, -1,
+                            "page %d returned to the client", page_number);
+                return jbig2_image_clone(ctx, img);
+            } else {
+                jbig2_error(ctx, JBIG2_SEVERITY_WARNING, -1,
+                            "page %d returned with no associated image",
+                            page_number);
+                ; /* continue */
+            }
         }
     }
 

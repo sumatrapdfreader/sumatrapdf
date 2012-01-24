@@ -143,11 +143,24 @@ jbig2_ctx_new (Jbig2Allocator *allocator,
   result->n_segments = 0;
   result->n_segments_max = 16;
   result->segments = jbig2_new(result, Jbig2Segment*, result->n_segments_max);
+  if (result->segments == NULL) {
+    error_callback(error_callback_data, "initial segments allocation failed!",
+        JBIG2_SEVERITY_FATAL, -1);
+    jbig2_free(allocator, result);
+    return result;
+  }
   result->segment_index = 0;
 
   result->current_page = 0;
   result->max_page_index = 4;
   result->pages = jbig2_new(result, Jbig2Page, result->max_page_index);
+  if (result->pages == NULL) {
+    error_callback(error_callback_data, "initial pages allocation failed!",
+        JBIG2_SEVERITY_FATAL, -1);
+    jbig2_free(allocator, result->segments);
+    jbig2_free(allocator, result);
+    return result;
+  }
   {
     int index;
     for (index = 0; index < result->max_page_index; index++) {
@@ -160,16 +173,33 @@ jbig2_ctx_new (Jbig2Allocator *allocator,
   return result;
 }
 
-int32_t
-jbig2_get_int32 (const byte *buf)
-{
-  return (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
-}
+#define get_uint16(bptr)\
+  (((bptr)[0] << 8) | (bptr)[1])
+#define get_int16(bptr)\
+  (((int)get_uint16(bptr) ^ 0x8000) - 0x8000)
 
 int16_t
-jbig2_get_int16 (const byte *buf)
-{
-  return (buf[0] << 8) | buf[1];
+jbig2_get_int16(const byte *bptr)
+{	
+    return get_int16(bptr);
+}
+
+uint16_t
+jbig2_get_uint16(const byte *bptr)
+{	
+    return get_uint16(bptr);
+}
+
+int32_t
+jbig2_get_int32(const byte *bptr)
+{	
+    return ((int32_t)get_int16(bptr) << 16) | get_uint16(bptr + 2);
+}
+
+uint32_t
+jbig2_get_uint32(const byte *bptr)
+{	
+    return ((uint32_t)get_uint16(bptr) << 16) | get_uint16(bptr + 2);
 }
 
 
@@ -199,6 +229,11 @@ jbig2_data_in (Jbig2Ctx *ctx, const unsigned char *data, size_t size)
 	buf_size <<= 1;
       while (buf_size < size);
       ctx->buf = jbig2_new(ctx, byte, buf_size);
+      if (ctx->buf == NULL)
+      {
+          return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
+              "failed to allocate ctx->buf in jbig2_data_in");
+      }
       ctx->buf_size = buf_size;
       ctx->buf_rd_ix = 0;
       ctx->buf_wr_ix = 0;
@@ -220,6 +255,11 @@ jbig2_data_in (Jbig2Ctx *ctx, const unsigned char *data, size_t size)
 	    buf_size <<= 1;
 	  while (buf_size < ctx->buf_wr_ix - ctx->buf_rd_ix + size);
 	  buf = jbig2_new(ctx, byte, buf_size);
+      if (buf == NULL)
+      {
+          return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
+              "failed to allocate buf in jbig2_data_in");
+      }
 	  memcpy(buf, ctx->buf + ctx->buf_rd_ix,
 		  ctx->buf_wr_ix - ctx->buf_rd_ix);
 	  jbig2_free(ctx->allocator, ctx->buf);
@@ -296,8 +336,8 @@ jbig2_data_in (Jbig2Ctx *ctx, const unsigned char *data, size_t size)
 	  ctx->buf_rd_ix += header_size;
 
 	  if (ctx->n_segments == ctx->n_segments_max)
-	    ctx->segments = (Jbig2Segment **)jbig2_realloc(ctx->allocator,
-                ctx->segments, (ctx->n_segments_max <<= 2) * sizeof(Jbig2Segment *));
+              ctx->segments = jbig2_renew(ctx, ctx->segments, Jbig2Segment*,
+                  (ctx->n_segments_max <<= 2));
 
 	  ctx->segments[ctx->n_segments++] = segment;
 	  if (ctx->state == JBIG2_FILE_RANDOM_HEADERS)
@@ -413,6 +453,12 @@ Jbig2WordStream *
 jbig2_word_stream_buf_new(Jbig2Ctx *ctx, const byte *data, size_t size)
 {
   Jbig2WordStreamBuf *result = jbig2_new(ctx, Jbig2WordStreamBuf, 1);
+  if (result == NULL)
+  {
+      jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
+          "failed to allocate Jbig2WordStreamBuf in jbig2_word_stream_buf_new");
+      return NULL;
+  }
 
   result->super.get_next_word = jbig2_word_stream_buf_get_next_word;
   result->data = data;

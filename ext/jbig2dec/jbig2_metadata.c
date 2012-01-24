@@ -37,9 +37,14 @@ Jbig2Metadata *jbig2_metadata_new(Jbig2Ctx *ctx, Jbig2Encoding encoding)
         md->keys = jbig2_new(ctx, char*, md->max_entries);
         md->values = jbig2_new(ctx, char*, md->max_entries);
         if (md->keys == NULL || md->values == NULL) {
+            jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
+                "failed to allocate storage for metadata keys/values");
             jbig2_metadata_free(ctx, md);
             md = NULL;
         }
+    } else {
+        jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
+            "failed to allocate storage for metadata");
     }
     return md;
 }

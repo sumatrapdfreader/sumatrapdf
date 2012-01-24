@@ -769,10 +769,10 @@ jbig2_immediate_generic_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
   int offset;
   int gbat_bytes = 0;
   Jbig2GenericRegionParams params;
-  int code;
-  Jbig2Image *image;
-  Jbig2WordStream *ws;
-  Jbig2ArithState *as;
+  int code = 0;
+  Jbig2Image *image = NULL;
+  Jbig2WordStream *ws = NULL;
+  Jbig2ArithState *as = NULL;
   Jbig2ArithCx *GB_stats = NULL;
 
   /* 7.4.6 */
@@ -816,7 +816,7 @@ jbig2_immediate_generic_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
 
   image = jbig2_image_new(ctx, rsi.width, rsi.height);
   if (image == NULL)
-    return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
+    return jbig2_error(ctx, JBIG2_SEVERITY_WARNING, segment->number,
              "unable to allocate generic image");
   jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, segment->number,
     "allocated %d x %d image buffer for region decode results",
@@ -825,29 +825,46 @@ jbig2_immediate_generic_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
   if (params.MMR)
     {
       code = jbig2_decode_generic_mmr(ctx, segment, &params,
-				      segment_data + offset, segment->data_length - offset,
-				      image);
+          segment_data + offset, segment->data_length - offset, image);
     }
   else
     {
       int stats_size = jbig2_generic_stats_size(ctx, params.GBTEMPLATE);
       GB_stats = jbig2_new(ctx, Jbig2ArithCx, stats_size);
+      if (GB_stats == NULL)
+      {
+          code = jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
+              "unable to allocate GB_stats in jbig2_immediate_generic_region");
+          goto cleanup;
+      }
       memset(GB_stats, 0, stats_size);
 
-      ws = jbig2_word_stream_buf_new(ctx,
-				     segment_data + offset,
-				     segment->data_length - offset);
+      ws = jbig2_word_stream_buf_new(ctx, segment_data + offset,
+          segment->data_length - offset);
+      if (ws == NULL)
+      {
+          code = jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
+              "unable to allocate ws in jbig2_immediate_generic_region");
+          goto cleanup;
+      }
       as = jbig2_arith_new(ctx, ws);
+      if (as == NULL)
+      {
+          code = jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
+              "unable to allocate as in jbig2_immediate_generic_region");
+          goto cleanup;
+      }
       code = jbig2_decode_generic_region(ctx, segment, &params,
 					 as, image, GB_stats);
-      jbig2_free(ctx->allocator, as);
-      jbig2_word_stream_buf_free(ctx, ws);
-
-      jbig2_free(ctx->allocator, GB_stats);
     }
 
   jbig2_page_add_result(ctx, &ctx->pages[ctx->current_page],
 			image, rsi.x, rsi.y, JBIG2_COMPOSE_OR);
+
+cleanup:
+  jbig2_free(ctx->allocator, as);
+  jbig2_word_stream_buf_free(ctx, ws);
+  jbig2_free(ctx->allocator, GB_stats);
   jbig2_image_release(ctx, image);
 
   return code;

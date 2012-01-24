@@ -393,11 +393,11 @@ jbig2_refinement_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
   params.DX = 0;
   params.DY = 0;
   {
-    Jbig2WordStream *ws;
-    Jbig2ArithState *as;
+    Jbig2WordStream *ws = NULL;
+    Jbig2ArithState *as = NULL;
     Jbig2ArithCx *GR_stats = NULL;
     int stats_size;
-    Jbig2Image *image;
+    Jbig2Image *image = NULL;
     int code;
 
     image = jbig2_image_new(ctx, rsi.width, rsi.height);
@@ -410,17 +410,33 @@ jbig2_refinement_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
 
     stats_size = params.GRTEMPLATE ? 1 << 10 : 1 << 13;
     GR_stats = jbig2_new(ctx, Jbig2ArithCx, stats_size);
+    if (GR_stats == NULL)
+    {
+        jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
+            "failed to allocate GR-stats in jbig2_refinement_region");
+        goto cleanup;
+    }
     memset(GR_stats, 0, stats_size);
 
     ws = jbig2_word_stream_buf_new(ctx, segment_data + offset,
            segment->data_length - offset);
+    if (ws == NULL)
+    {
+        jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
+            "failed to allocate ws in jbig2_refinement_region");
+        goto cleanup;
+    }
+
     as = jbig2_arith_new(ctx, ws);
+    if (as == NULL)
+    {
+        jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
+            "failed to allocate as in jbig2_refinement_region");
+        goto cleanup;
+    }
+
     code = jbig2_decode_refinement_region(ctx, segment, &params,
                               as, image, GR_stats);
-
-    jbig2_free(ctx->allocator, as);
-    jbig2_word_stream_buf_free(ctx, ws);
-    jbig2_free(ctx->allocator, GR_stats);
 
     if ((segment->flags & 63) == 40) {
         /* intermediate region. save the result for later */
@@ -434,6 +450,11 @@ jbig2_refinement_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
           image, rsi.x, rsi.y, rsi.op);
         jbig2_image_release(ctx, image);
     }
+
+cleanup:
+    jbig2_free(ctx->allocator, as);
+    jbig2_word_stream_buf_free(ctx, ws);
+    jbig2_free(ctx->allocator, GR_stats);
   }
 
   return 0;
