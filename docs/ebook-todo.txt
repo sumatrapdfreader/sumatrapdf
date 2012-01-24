@@ -16,6 +16,7 @@ Done:
 * ui: turn pages
 * support resizing the window
 * ui: show position status like in Kindle app ("n% Page N out of M * Location X of Y")
+* ui: support text-align attribute for buttons
 
 Things nice to have but can wait for future:
 * ui: double page display

@@ -150,8 +150,8 @@ def enum_name_from_name(name, prefix):
 def gen_enum_str_list(strings, prefix):
     strings = [t.lower() for t in strings.split(" ")]
     strings.sort()
-    strings.append("last")
     strings_c = string.join(strings, "\\0") + "\\0"
+    strings.append("last")
     # el[0] is tag, el[1] is 0-based position of the tag
     enums = [(enum_name_from_name(el[0], prefix), el[1]) for el in zip(strings, range(len(strings)))]
     enums = [(prefix + "_NotFound", -1)] + enums

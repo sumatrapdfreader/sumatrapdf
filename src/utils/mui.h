@@ -272,6 +272,7 @@ public:
     void SetStyles(Style *def, Style *mouseOver);
 
     TCHAR *         text;
+    size_t          textDx; // cached measured text width
 
     // gStyleButtonDefault if styleDefault is NULL
     Style *         styleMouseOver; // gStyleButtonMouseOver if NULL

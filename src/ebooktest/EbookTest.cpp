@@ -335,6 +335,8 @@ VirtWndEbook::VirtWndEbook(HWND hwnd)
     statusDefault->Set(Prop::AllocFontWeight(FontStyleRegular));
     statusDefault->Set(Prop::AllocPadding(2, 0, 2, 0));
     statusDefault->SetBorderWidth(0);
+    statusDefault->Set(Prop::AllocTextAlign(Align_Center));
+
     status->styleDefault = statusDefault;
     status->styleMouseOver = statusDefault;
 

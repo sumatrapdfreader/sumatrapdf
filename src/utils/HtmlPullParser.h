@@ -50,7 +50,7 @@ enum HtmlTag {
     Tag_Video = 38,
     Tag_Last = 39
 };
-#define HTML_TAGS_STRINGS "a\0b\0blockquote\0body\0br\0div\0em\0font\0guide\0h1\0h2\0h3\0h4\0h5\0head\0hr\0html\0i\0img\0li\0mbp:pagebreak\0ol\0p\0reference\0s\0small\0span\0strike\0strong\0sub\0sup\0table\0td\0th\0tr\0tt\0u\0ul\0video\0last\0"
+#define HTML_TAGS_STRINGS "a\0b\0blockquote\0body\0br\0div\0em\0font\0guide\0h1\0h2\0h3\0h4\0h5\0head\0hr\0html\0i\0img\0li\0mbp:pagebreak\0ol\0p\0reference\0s\0small\0span\0strike\0strong\0sub\0sup\0table\0td\0th\0tr\0tt\0u\0ul\0video\0"
 
 // enums must match HTML_ATTRS_STRINGS order
 enum HtmlAttr {
@@ -84,7 +84,7 @@ enum HtmlAttr {
     Attr_Xmlns_Dc = 26,
     Attr_Last = 27
 };
-#define HTML_ATTRS_STRINGS "align\0bgcolor\0border\0class\0clear\0color\0colspan\0controls\0face\0filepos\0height\0href\0id\0lang\0link\0mediarecindex\0recindex\0rowspan\0size\0style\0title\0valign\0value\0vlink\0width\0xmlns\0xmlns:dc\0last\0"
+#define HTML_ATTRS_STRINGS "align\0bgcolor\0border\0class\0clear\0color\0colspan\0controls\0face\0filepos\0height\0href\0id\0lang\0link\0mediarecindex\0recindex\0rowspan\0size\0style\0title\0valign\0value\0vlink\0width\0xmlns\0xmlns:dc\0"
 
 // enums must match ALIGN_ATTRS_STRINGS order
 enum AlignAttr {
@@ -95,7 +95,7 @@ enum AlignAttr {
     Align_Right = 3,
     Align_Last = 4
 };
-#define ALIGN_ATTRS_STRINGS "center\0justify\0left\0right\0last\0"
+#define ALIGN_ATTRS_STRINGS "center\0justify\0left\0right\0"
 
 #define Tag_First (255 - Tag_Last)
 

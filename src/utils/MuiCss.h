@@ -5,6 +5,7 @@
 #define MuiCss_h
 
 #include "Vec.h"
+#include "HtmlPullParser.h"
 
 namespace mui {
 namespace css {
@@ -28,6 +29,8 @@ enum PropType {
     PropBorderRightColor,   // border-right-color
     PropBorderBottomColor,  // border-bottom-color
     PropBorderLeftColor,    // border-left-color
+
+    PropTextAlign,          // text-align
 };
 
 bool IsWidthProp(PropType type);
@@ -47,6 +50,10 @@ struct FontWeightData {
 
 struct WidthData {
     float width;
+};
+
+struct TextAlignData {
+    AlignAttr   align;
 };
 
 enum ColorType {
@@ -101,6 +108,7 @@ public:
         PaddingData     padding;
         ColorData       color;
         WidthData       width;
+        TextAlignData   align;
     };
 
     ~Prop();
@@ -114,6 +122,8 @@ public:
     static Prop *AllocFontName(const TCHAR *name);
     static Prop *AllocFontSize(float size);
     static Prop *AllocFontWeight(FontStyle style);
+    // TODO: add AllocTextAlign(const char *s);
+    static Prop *AllocTextAlign(AlignAttr align);
     static Prop *AllocPadding(int top, int right, int bottom, int left);
     static Prop *AllocColorSolid(PropType type, ARGB color);
     static Prop *AllocColorSolid(PropType type, int a, int r, int g, int b);

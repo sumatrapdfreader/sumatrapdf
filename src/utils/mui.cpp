@@ -542,9 +542,11 @@ void VirtWndButton::RecalculateSize(bool repaintIfSizeDidntChange)
     Size prevSize = desiredSize;
 
     desiredSize = GetBorderAndPaddingSize();
+    textDx = 0;
     if (text) {
         Rect bbox = MeasureTextWithFont(GetFontForState(), text);
-        desiredSize.Width  += bbox.Width;
+        textDx = bbox.Width;
+        desiredSize.Width  += textDx;
         desiredSize.Height += bbox.Height;
     }
 
@@ -575,6 +577,16 @@ void VirtWndButton::SetStyles(Style *def, Style *mouseOver)
     RecalculateSize(true);
 }
 
+int AlignedOffset(int containerDx, int elDx, AlignAttr align)
+{
+    if (Align_Left == align)
+        return 0;
+    if (Align_Right == align)
+        return containerDx - elDx;
+    // Align_Center or Align_Justify
+    return (containerDx - elDx) / 2;
+}
+
 void VirtWndButton::Paint(Graphics *gfx, int offX, int offY)
 {
     struct PropToGet props[] = {
@@ -589,20 +601,22 @@ void VirtWndButton::Paint(Graphics *gfx, int offX, int offY)
         { PropBorderBottomColor, NULL },
         { PropBorderLeftWidth, NULL },
         { PropBorderLeftColor, NULL },
+        { PropTextAlign, NULL },
     };
 
     if (!IsVisible())
         return;
 
     GetPropsForState(props, dimof(props));
-    Prop *propCol   = props[0].prop;
-    Prop *propBgCol = props[1].prop;
-    Prop *propPadding = props[2].prop;
-    Prop *propTopWidth = props[3].prop;
-    Prop *propLeftWidth = props[9].prop;
+    Prop *col   = props[0].prop;
+    Prop *bgCol = props[1].prop;
+    Prop *padding = props[2].prop;
+    Prop *topWidth = props[3].prop;
+    Prop *leftWidth = props[9].prop;
+    Prop *textAlign = props[10].prop;
 
     RectF bbox((REAL)offX, (REAL)offY, (REAL)pos.Width, (REAL)pos.Height);
-    Brush *brBgColor = CreateBrush(propBgCol, bbox);
+    Brush *brBgColor = CreateBrush(bgCol, bbox);
     gfx->FillRectangle(brBgColor, bbox);
     ::delete brBgColor;
 
@@ -618,10 +632,11 @@ void VirtWndButton::Paint(Graphics *gfx, int offX, int offY)
     if (str::IsEmpty(text))
         return;
 
-    PaddingData padding = propPadding->padding;
-    int x = offX + padding.left + (int)propLeftWidth->width.width;
-    int y = offY + padding.top + (int)propTopWidth->width.width;
-    Brush *brColor = CreateBrush(propCol, bbox); // restrict bbox to just the text?
+    PaddingData pad = padding->padding;
+    int alignedOffX = AlignedOffset(pos.Width - pad.left - pad.right, textDx, textAlign->align.align);
+    int x = offX + alignedOffX + pad.left + (int)leftWidth->width.width;
+    int y = offY + pad.top + (int)topWidth->width.width;
+    Brush *brColor = CreateBrush(col, bbox); // restrict bbox to just the text?
     gfx->DrawString(text, str::Len(text), GetFontForState(), PointF((REAL)x, (REAL)y), NULL, brColor);
     ::delete brColor;
 }

@@ -78,21 +78,20 @@ void Initialize()
     gStyleDefault->SetBorderColor(MKRGB(0x99, 0x99, 0x99));
     gStyleDefault->Set(Prop::AllocColorSolid(PropBorderBottomColor, "#888"));
     gStyleDefault->Set(Prop::AllocPadding(0, 0, 0, 0));
+    gStyleDefault->Set(Prop::AllocTextAlign(Align_Left));
 
-    gStyleButtonDefault = new Style();
+    gStyleButtonDefault = new Style(gStyleDefault);
     gStyleButtonDefault->Set(Prop::AllocPadding(4, 8, 4, 8));
     gStyleButtonDefault->Set(Prop::AllocFontName(L"Lucida Grande"));
     gStyleButtonDefault->Set(Prop::AllocFontSize(8));
     gStyleButtonDefault->Set(Prop::AllocFontWeight(FontStyleBold));
-    gStyleButtonDefault->inheritsFrom = gStyleDefault;
 
-    gStyleButtonMouseOver = new Style();
+    gStyleButtonMouseOver = new Style(gStyleButtonDefault);
     gStyleButtonMouseOver->Set(Prop::AllocColorSolid(PropBorderTopColor, "#777"));
     gStyleButtonMouseOver->Set(Prop::AllocColorSolid(PropBorderRightColor, "#777"));
     gStyleButtonMouseOver->Set(Prop::AllocColorSolid(PropBorderBottomColor, "#666"));
     //gStyleButtonMouseOver->Set(Prop::AllocColorSolid(PropBgColor, 180, 0, 0, 255));
     //gStyleButtonMouseOver->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
-    gStyleButtonMouseOver->inheritsFrom = gStyleButtonDefault;
 }
 
 static void DeleteCachedFonts()
@@ -229,6 +228,8 @@ bool Prop::operator==(const Prop& other) const
         return fontWeight.style == other.fontWeight.style;
     case PropPadding:
         return padding == other.padding;
+    case PropTextAlign:
+        return align.align == other.align.align;
     }
 
     if (IsColorProp(type))
@@ -297,6 +298,11 @@ Prop *Prop::AllocFontWeight(FontStyle style)
 Prop *Prop::AllocWidth(PropType type, float width)
 {
     ALLOC_BODY(type, width, width);
+}
+
+Prop *Prop::AllocTextAlign(AlignAttr align)
+{
+    ALLOC_BODY(PropTextAlign, align, align);
 }
 
 Prop *Prop::AllocPadding(int top, int right, int bottom, int left)
