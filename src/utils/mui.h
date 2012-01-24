@@ -132,7 +132,8 @@ public:
     }
 
     void AddChild(VirtWnd *wnd, int pos = -1);
-    VirtWnd *GetChild(size_t idx) {
+
+    VirtWnd *GetChild(size_t idx) const {
         return children.At(idx);
     }
 
@@ -184,6 +185,8 @@ public:
         RequestRepaint(this); // request repaint before hiding, to trigger repaint
         bit::Set(stateBits, IsHiddenBit);
     }
+
+    void MeasureChildren(Size availableSize) const;
 
     Layout *        layout;
 

@@ -310,6 +310,13 @@ void VirtWnd::Measure(Size availableSize)
     }
 }
 
+void VirtWnd::MeasureChildren(Size availableSize) const
+{
+    for (size_t i = 0; i < GetChildCount(); i++) {
+        GetChild(i)->Measure(availableSize);
+    }
+}
+
 void VirtWnd::Arrange(Rect finalRect)
 {
     if (layout) {

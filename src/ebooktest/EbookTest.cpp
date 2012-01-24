@@ -134,9 +134,7 @@ void EbookLayout::Measure(Size availableSize, VirtWnd *wnd)
     if (SizeInfinite == availableSize.Height)
         availableSize.Height = 200;
 
-    for (size_t i = 0; i < wnd->GetChildCount(); i++) {
-        wnd->GetChild(i)->Measure(availableSize);
-    }
+    wnd->MeasureChildren(availableSize);
     wnd->desiredSize = availableSize;
 }
 
