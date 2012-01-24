@@ -133,19 +133,20 @@ public:
     VirtWndButton *status;
     VirtWndButton *test;
 
-    virtual void Measure(Size availableSize, VirtWnd *wnd);
-    virtual void Arrange(Rect finalRect, VirtWnd *wnd);
+    virtual void Measure(const Size availableSize, VirtWnd *wnd);
+    virtual void Arrange(const Rect finalRect, VirtWnd *wnd);
 };
 
-void EbookLayout::Measure(Size availableSize, VirtWnd *wnd)
+void EbookLayout::Measure(const Size availableSize, VirtWnd *wnd)
 {
-    if (SizeInfinite == availableSize.Width)
-        availableSize.Width = 320;
-    if (SizeInfinite == availableSize.Height)
-        availableSize.Height = 200;
+    Size s(availableSize);
+    if (SizeInfinite == s.Width)
+        s.Width = 320;
+    if (SizeInfinite == s.Height)
+        s.Height = 200;
 
-    wnd->MeasureChildren(availableSize);
-    wnd->desiredSize = availableSize;
+    wnd->MeasureChildren(s);
+    wnd->desiredSize = s;
 }
 
 static Size SizeFromRect(Rect& r)
@@ -169,7 +170,7 @@ static void CenterRectX(Rect& toCenter, Size& container)
     toCenter.X = (container.Width - toCenter.Width) / 2;
 }
 
-void EbookLayout::Arrange(Rect finalRect, VirtWnd *wnd)
+void EbookLayout::Arrange(const Rect finalRect, VirtWnd *wnd)
 {
     int btnDy, btnY, btnDx;
 
@@ -205,7 +206,7 @@ void EbookLayout::Arrange(Rect finalRect, VirtWnd *wnd)
     statusPos.Width = finalRect.Width;
     status->Arrange(statusPos);
 
-    wnd->pos = finalRect;
+    wnd->SetPosition(finalRect);
     VirtWndEbook *wndEbook = (VirtWndEbook*)wnd;
     wndEbook->DoPageLayout(rectDx, rectDy);
 }

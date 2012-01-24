@@ -27,7 +27,7 @@ void        Destroy();
 
 Graphics *  GetGraphicsForMeasureText();
 Rect        MeasureTextWithFont(Font *f, const TCHAR *s);
-void        RequestRepaint(VirtWnd *w);
+void        RequestRepaint(VirtWnd *w, const Rect *r1 = NULL, const Rect *r2 = NULL);
 void        RequestLayout(VirtWnd *w);
 void        RegisterForClickEvent(VirtWnd *w, IClickHandler *clickHandlers);
 
@@ -52,8 +52,8 @@ public:
     virtual ~Layout() {
     }
 
-    virtual void Measure(Size availableSize, VirtWnd *wnd) = 0;
-    virtual void Arrange(Rect finalRect, VirtWnd *wnd) = 0;
+    virtual void Measure(const Size availableSize, VirtWnd *wnd) = 0;
+    virtual void Arrange(const Rect finalRect, VirtWnd *wnd) = 0;
 };
 
 // Manages painting process of VirtWnd window and all its children.
@@ -149,8 +149,8 @@ public:
 
     // availableSize can have SizeInfinite as dx or dy to allow
     // using as much space as the window wants
-    virtual void Measure(Size availableSize);
-    virtual void Arrange(Rect finalRect);
+    virtual void Measure(const Size availableSize);
+    virtual void Arrange(const Rect finalRect);
     Size            desiredSize;
 
     // used e.g. by a button to change the look when mouse.The intention
@@ -172,19 +172,8 @@ public:
         return !bit::IsSet(stateBits, IsHiddenBit);
     }
 
-    void Show() {
-        if (IsVisible())
-            return; // perf: avoid unnecessary repaints
-        bit::Clear(stateBits, IsHiddenBit);
-        RequestRepaint(this);
-    }
-
-    void Hide() {
-        if (!IsVisible())
-            return;
-        RequestRepaint(this); // request repaint before hiding, to trigger repaint
-        bit::Set(stateBits, IsHiddenBit);
-    }
+    void Hide();
+    void Show();
 
     void MeasureChildren(Size availableSize) const;
 
@@ -203,6 +192,8 @@ public:
 
     // position and size (relative to parent, might be outside of parent's bounds)
     Rect            pos;
+
+    void SetPosition(const Rect& p);
 
 private:
     Vec<VirtWnd*>   children;
@@ -232,6 +223,8 @@ public:
     // mark for re-layout at the earliest convenience
     void RequestLayout() {
         layoutRequested = true;
+        // trigger message queue so that the layout request is processed
+        PostMessage(hwndParent, WM_NULL, 0, 0);
     }
 
     void LayoutIfRequested() {
@@ -239,36 +232,14 @@ public:
             TopLevelLayout();
     }
 
-    void SetHwnd(HWND hwnd) {
-        CrashIf(NULL != hwndParent);
-        hwndParent = hwnd;
-        evtMgr = new EventMgr(this);
-        painter = new VirtWndPainter(this);
-    }
+    void SetHwnd(HWND hwnd);
 
     void OnPaint(HWND hwnd) {
         CrashIf(hwnd != hwndParent);
         painter->OnPaint(hwnd);
     }
 
-    // called when either the window size changed (as a result
-    // of WM_SIZE) or when window tree changes
-    virtual void TopLevelLayout() {
-        CrashIf(!hwndParent);
-        ClientRect rc(hwndParent);
-        Size availableSize(rc.dx, rc.dy);
-        Measure(availableSize);
-        Size s = desiredSize;
-        // TODO: a hack, center the window based on size
-        // should have some other way of doing this, like a margin
-        // alternatively, can make adjustments in custom Arrange()
-        // (although that would be hacky too)
-        int x = (rc.dx - s.Width) / 2;
-        int y = (rc.dy - s.Height) / 2;
-        Rect r(x, y, s.Width, s.Height);
-        Arrange(r);
-        layoutRequested = false;
-    }
+    virtual void TopLevelLayout();
 };
 
 class VirtWndButton : public VirtWnd
@@ -282,24 +253,13 @@ public:
 
     void SetText(const TCHAR *s);
 
-    void RecalculateSize();
+    void RecalculateSize(bool repaintIfSizeDidntChange);
 
-    virtual void Measure(Size availableSize);
+    virtual void Measure(const Size availableSize);
     virtual void Paint(Graphics *gfx, int offX, int offY);
 
-    virtual void NotifyMouseEnter() {
-        bit::Set(stateBits, MouseOverBit);
-        RecalculateSize();
-        RequestLayout(this);
-        RequestRepaint(this);
-    }
-
-    virtual void NotifyMouseLeave() {
-        bit::Clear(stateBits, MouseOverBit);
-        RecalculateSize();
-        RequestLayout(this);
-        RequestRepaint(this);
-    }
+    virtual void NotifyMouseEnter();
+    virtual void NotifyMouseLeave();
 
     Size GetBorderAndPaddingSize() const;
 

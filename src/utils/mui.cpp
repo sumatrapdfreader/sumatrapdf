@@ -40,9 +40,6 @@ lots of subclasses and forcing logic into a button class. We provide
 a way to subscribe any class implementing IClickHandler interface
 to register for click evens from any window that generates thems.
 
-TODO: probably should take border widths into account when measuring
-buttons.
-
 TODO: a way to easily do text selection in generic way in EventMgr
 by giving windows a way to declare they have selectable text
 
@@ -313,27 +310,40 @@ static void DrawBorder(Graphics *gfx, const Rect r, const BorderProps& bp)
     ::delete br;
 }
 
-void RequestRepaint(VirtWnd *w)
+static void InvalidateAtOff(HWND hwnd, const Rect *r, int offX, int offY)
 {
-    if (!w->IsVisible())
-        return;
+    RECT rc = RECTFromRect((*r));
+    rc.left += offX; rc.top += offY;
+    InvalidateRect(hwnd, &rc, TRUE);
+}
 
-    if (w->pos.IsEmptyArea())
-        return;
-
-    Rect r(w->pos);
+void RequestRepaint(VirtWnd *w, const Rect *r1, const Rect *r2)
+{
+    int offX = 0, offY = 0;
     while (w->parent) {
         w = w->parent;
-        r.X += w->pos.X;
-        r.Y += w->pos.Y;
+        offX += w->pos.X;
+        offY += w->pos.Y;
     }
-    CrashIf(!w->hwndParent);
-    RECT rc = RECTFromRect(r);
-    // TODO: use just rc when we make calculating affected
-    // rect more precise (when state changes we need to
-    // invalidate both before and after rectangles)
-    //InvalidateRect(w->hwndParent, &rc, TRUE);
-    InvalidateRect(w->hwndParent, NULL, TRUE);
+    HWND hwnd = w->hwndParent;
+    CrashIf(!hwnd);
+
+    // if we have r1 or r2, invalidate those, else invalidate w
+    bool didInvalidate = false;
+    if (r1) {
+        InvalidateAtOff(hwnd, r1, offX, offY);
+        didInvalidate = true;
+    }
+
+    if (r2) {
+        InvalidateAtOff(hwnd, r2, offX, offY);
+        didInvalidate = true;
+    }
+
+    if (didInvalidate)
+        return;
+
+    InvalidateAtOff(hwnd, &w->pos, offX, offY);
 }
 
 void RequestLayout(VirtWnd *w)
@@ -387,7 +397,7 @@ void VirtWnd::AddChild(VirtWnd *wnd, int pos)
     wnd->SetParent(this);
 }
 
-void VirtWnd::Measure(Size availableSize)
+void VirtWnd::Measure(const Size availableSize)
 {
     if (layout) {
         layout->Measure(availableSize, this);
@@ -403,13 +413,43 @@ void VirtWnd::MeasureChildren(Size availableSize) const
     }
 }
 
-void VirtWnd::Arrange(Rect finalRect)
+void VirtWnd::Arrange(const Rect finalRect)
 {
     if (layout) {
         layout->Arrange(finalRect, this);
     } else {
-        pos = finalRect;
+        SetPosition(finalRect);
     }
+}
+
+void VirtWnd::Show()
+{
+    if (IsVisible())
+        return; // perf: avoid unnecessary repaints
+    bit::Clear(stateBits, IsHiddenBit);
+    RequestRepaint(this);
+}
+
+void VirtWnd::Hide()
+{
+    if (!IsVisible())
+        return;
+    RequestRepaint(this); // request repaint before hiding, to trigger repaint
+    bit::Set(stateBits, IsHiddenBit);
+}
+
+void VirtWnd::SetPosition(const Rect& p)
+{
+    if (p.Equals(pos))
+        return;  // perf optimization
+    // when changing position we need to invalidate both
+    // before and after position
+    // TODO: not sure why I need this, but without it there
+    // are drawing artifacts
+    Rect p1(p); p1.Inflate(1,1);
+    Rect p2(pos); p2.Inflate(1,1);
+    RequestRepaint(this, &p1, &p2);
+    pos = p;
 }
 
 // Requests the window to draw itself on a Graphics canvas.
@@ -482,26 +522,45 @@ Size VirtWndButton::GetBorderAndPaddingSize() const
     return Size(dx, dy);
 }
 
-void VirtWndButton::RecalculateSize()
+void VirtWndButton::NotifyMouseEnter()
 {
-    desiredSize = GetBorderAndPaddingSize();
-    if (!text)
-        return;
+    bit::Set(stateBits, MouseOverBit);
+    RecalculateSize(true);
+}
 
-    Rect bbox = MeasureTextWithFont(GetFontForState(), text);
-    desiredSize.Width  += bbox.Width;
-    desiredSize.Height += bbox.Height;
+void VirtWndButton::NotifyMouseLeave()
+{
+    bit::Clear(stateBits, MouseOverBit);
+    RecalculateSize(true);
+}
+
+// Update desired size of the button.
+// If the size changes, trigger layout (which will in
+// turn request repaints of affected areas)
+void VirtWndButton::RecalculateSize(bool repaintIfSizeDidntChange)
+{
+    Size prevSize = desiredSize;
+
+    desiredSize = GetBorderAndPaddingSize();
+    if (text) {
+        Rect bbox = MeasureTextWithFont(GetFontForState(), text);
+        desiredSize.Width  += bbox.Width;
+        desiredSize.Height += bbox.Height;
+    }
+
+    if (!prevSize.Equals(desiredSize))
+        RequestLayout(this);
+    else if (repaintIfSizeDidntChange)
+        RequestRepaint(this);
 }
 
 void VirtWndButton::SetText(const TCHAR *s)
 {
     str::ReplacePtr(&text, s);
-    RecalculateSize();
-    RequestLayout(this);
-    RequestRepaint(this);
+    RecalculateSize(true);
 }
 
-void VirtWndButton::Measure(Size availableSize)
+void VirtWndButton::Measure(const Size availableSize)
 {
     // desiredSize is calculated when we change the
     // text, font or other attributes that influence
@@ -513,7 +572,7 @@ void VirtWndButton::SetStyles(Style *def, Style *mouseOver)
 {
     styleDefault = def;
     styleMouseOver = mouseOver;
-    RecalculateSize();
+    RecalculateSize(true);
 }
 
 void VirtWndButton::Paint(Graphics *gfx, int offX, int offY)
@@ -572,6 +631,27 @@ static bool BitmapSizeEquals(Bitmap *bmp, int dx, int dy)
     if (NULL == bmp)
         return false;
     return ((dx == bmp->GetWidth()) && (dy == bmp->GetHeight()));
+}
+
+void VirtWndHwnd::SetHwnd(HWND hwnd)
+{
+    CrashIf(NULL != hwndParent);
+    hwndParent = hwnd;
+    evtMgr = new EventMgr(this);
+    painter = new VirtWndPainter(this);
+}
+
+// called when either the window size changed (as a result
+// of WM_SIZE) or when window tree changes
+void VirtWndHwnd::TopLevelLayout()
+{
+    CrashIf(!hwndParent);
+    ClientRect rc(hwndParent);
+    Size availableSize(rc.dx, rc.dy);
+    Measure(availableSize);
+    Rect r(0, 0, desiredSize.Width, desiredSize.Height);
+    Arrange(r);
+    layoutRequested = false;
 }
 
 // we paint the background in VirtWndPainter() because I don't
@@ -737,6 +817,11 @@ LRESULT EventMgr::OnMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& handle
     if (WM_LBUTTONUP == msg) {
         return OnLButtonUp(wParam, x, y, handledOut);
     }
+
+    if (WM_NULL == msg) {
+        return 0;
+    }
+
     return 0;
 }
 
