@@ -72,12 +72,12 @@ struct ColorData {
         ColorDataGradientLinear gradientLinear;
     };
 
-    bool Eq(ColorData *other) const;
+    bool operator==(const ColorData& other) const;
 };
 
 struct PaddingData {
     int top, right, bottom, left;
-    bool operator ==(PaddingData& other) const {
+    bool operator ==(const PaddingData& other) const {
         return (top == other.top) &&
                (right == other.right) &&
                (bottom == other.bottom) &&
@@ -105,7 +105,7 @@ public:
 
     ~Prop();
 
-    bool Eq(Prop *other) const;
+    bool operator==(const Prop& other) const;
 
     float GetWidth() const {
         return width.width;

@@ -43,10 +43,10 @@ struct FontCacheEntry {
 
     // Prop objects are interned, so if the pointer is
     // the same, the value is the same too
-    bool Eq(FontCacheEntry *other) const {
-        return ((fontName == other->fontName) &&
-                (fontSize == other->fontSize) &&
-                (fontWeight == other->fontWeight));
+    bool operator==(FontCacheEntry& other) const {
+        return ((fontName == other.fontName) &&
+                (fontSize == other.fontSize) &&
+                (fontWeight == other.fontWeight));
     }
 };
 
@@ -191,19 +191,19 @@ static ARGB ParseCssColor(const char *color)
     return MKARGB(0,0,0,0); // transparent
 }
 
-bool ColorData::Eq(ColorData *other) const
+bool ColorData::operator==(const ColorData& other) const
 {
-    if (type != other->type)
+    if (type != other.type)
         return false;
 
     if (ColorSolid == type)
-        return solid.color == other->solid.color;
+        return solid.color == other.solid.color;
 
     if (ColorGradientLinear == type)
     {
-        return (gradientLinear.mode       == other->gradientLinear.mode) &&
-               (gradientLinear.startColor == other->gradientLinear.startColor) &&
-               (gradientLinear.endColor   == other->gradientLinear.endColor);
+        return (gradientLinear.mode       == other.gradientLinear.mode) &&
+               (gradientLinear.startColor == other.gradientLinear.startColor) &&
+               (gradientLinear.endColor   == other.gradientLinear.endColor);
     }
     CrashIf(true);
     return false;
@@ -215,27 +215,27 @@ Prop::~Prop()
         free((void*)fontName.name);
 }
 
-bool Prop::Eq(Prop *other) const
+bool Prop::operator==(const Prop& other) const
 {
-    if (type != other->type)
+    if (type != other.type)
         return false;
 
     switch (type) {
     case PropFontName:
-        return str::Eq(fontName.name, other->fontName.name);
+        return str::Eq(fontName.name, other.fontName.name);
     case PropFontSize:
-        return fontSize.size == other->fontSize.size;
+        return fontSize.size == other.fontSize.size;
     case PropFontWeight:
-        return fontWeight.style == other->fontWeight.style;
+        return fontWeight.style == other.fontWeight.style;
     case PropPadding:
-        return padding == other->padding;
+        return padding == other.padding;
     }
 
     if (IsColorProp(type))
-        return color.Eq(&other->color);
+        return color == other.color;
 
     if (IsWidthProp(type))
-        return width.width == other->width.width;
+        return width.width == other.width.width;
 
     CrashIf(true);
     return false;
@@ -250,7 +250,7 @@ static Prop *FindExistingProp(Prop *prop)
 {
     for (size_t i = 0; i < gAllProps->Count(); i++) {
         Prop *p = gAllProps->At(i);
-        if (p->Eq(prop))
+        if (*p == *prop)
             return p;
     }
     return NULL;
@@ -480,7 +480,7 @@ Font *CachedFontFromProps(Style *first, Style *second)
     FontCacheEntry c = { fontName, fontSize, fontWeight, NULL };
     for (size_t i = 0; i < gCachedFonts->Count(); i++) {
         FontCacheEntry c2 = gCachedFonts->At(i);
-        if (c2.Eq(&c)) {
+        if (c2 == c) {
             CrashIf(NULL == c2.font);
             return c2.font;
         }
