@@ -403,7 +403,7 @@ void Style::SetBorderColor(ARGB color)
     Set(Prop::AllocColorSolid(PropBorderLeftColor, color));
 }
 
-static bool FoundAllProps(PropToFind *props, size_t propsCount)
+static bool FoundAllProps(PropToGet *props, size_t propsCount)
 {
     for (size_t i = 0; i < propsCount; i++) {
         if (props[i].prop == NULL)
@@ -413,13 +413,13 @@ static bool FoundAllProps(PropToFind *props, size_t propsCount)
 }
 
 // returns true if set, false if was already set or didn't find the prop
-static bool SetPropIfFound(Prop *prop, PropToFind *propsToFind, size_t propsToFindCount)
+static bool SetPropIfFound(Prop *prop, PropToGet *props, size_t propsCount)
 {
-    for (size_t i = 0; i < propsToFindCount; i++) {
-        if (propsToFind[i].type != prop->type)
+    for (size_t i = 0; i < propsCount; i++) {
+        if (props[i].type != prop->type)
             continue;
-        if (NULL == propsToFind[i].prop) {
-            propsToFind[i].prop = prop;
+        if (NULL == props[i].prop) {
+            props[i].prop = prop;
             return true;
         }
         return false;
@@ -427,34 +427,34 @@ static bool SetPropIfFound(Prop *prop, PropToFind *propsToFind, size_t propsToFi
     return false;
 }
 
-void FindProps(Style *props, PropToFind *propsToFind, size_t propsToFindCount)
+void GetProps(Style *style, PropToGet *props, size_t propsCount)
 {
     Prop *p;
-    Style *curr = props;
+    Style *curr = style;
     while (curr) {
         for (size_t i = 0; i < curr->props.Count(); i++) {
             p = curr->props.At(i);
-            bool didSet = SetPropIfFound(p, propsToFind, propsToFindCount);
-            if (didSet && FoundAllProps(propsToFind, propsToFindCount))
+            bool didSet = SetPropIfFound(p, props, propsCount);
+            if (didSet && FoundAllProps(props, propsCount))
                 return;
         }
         curr = curr->inheritsFrom;
     }
 }
 
-void FindProps(Style *first, Style *second, PropToFind *propsToFind, size_t propsToFindCount)
+void GetProps(Style *first, Style *second, PropToGet *props, size_t propsCount)
 {
-    FindProps(first, propsToFind, propsToFindCount);
-    FindProps(second, propsToFind, propsToFindCount);
+    GetProps(first, props, propsCount);
+    GetProps(second, props, propsCount);
 }
 
-Prop *FindProp(Style *first, Style *second, PropType type)
+Prop *GetProp(Style *first, Style *second, PropType type)
 {
-    PropToFind propsToFind[1] = {
+    PropToGet props[1] = {
         { type, NULL }
     };
-    FindProps(first, second, propsToFind, dimof(propsToFind));
-    return propsToFind[0].prop;
+    GetProps(first, second, props, dimof(props));
+    return props[0].prop;
 }
 
 // convenience function: given 2 set of properties, find font-related
@@ -467,15 +467,15 @@ Prop *FindProp(Style *first, Style *second, PropType type)
 // in DeleteCachedFonts()
 Font *CachedFontFromProps(Style *first, Style *second)
 {
-    PropToFind propsToFind[3] = {
+    PropToGet props[3] = {
         { PropFontName, NULL },
         { PropFontSize, NULL },
         { PropFontWeight, NULL }
     };
-    FindProps(first, second, propsToFind, dimof(propsToFind));
-    Prop *fontName   = propsToFind[0].prop;
-    Prop *fontSize   = propsToFind[1].prop;
-    Prop *fontWeight = propsToFind[2].prop;
+    GetProps(first, second, props, dimof(props));
+    Prop *fontName   = props[0].prop;
+    Prop *fontSize   = props[1].prop;
+    Prop *fontWeight = props[2].prop;
     CrashIf(!fontName || !fontSize || !fontWeight);
     FontCacheEntry c = { fontName, fontSize, fontWeight, NULL };
     for (size_t i = 0; i < gCachedFonts->Count(); i++) {

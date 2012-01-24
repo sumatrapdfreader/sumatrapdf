@@ -484,14 +484,14 @@ Prop *VirtWndButton::GetPropForState(PropType type) const
 {
     Style *s1, *s2;
     GetStyleForState(&s1, &s2);
-    return FindProp(s1, s2, type);
+    return GetProp(s1, s2, type);
 }
 
-void VirtWndButton::GetPropsForState(PropToFind *propsToFind, size_t propsToFindCount) const
+void VirtWndButton::GetPropsForState(PropToGet *props, size_t propsCount) const
 {
     Style *s1, *s2;
     GetStyleForState(&s1, &s2);
-    FindProps(s1, s2, propsToFind, propsToFindCount);
+    GetProps(s1, s2, props, propsCount);
 }
 
 Font *VirtWndButton::GetFontForState() const
@@ -503,7 +503,7 @@ Font *VirtWndButton::GetFontForState() const
 
 Size VirtWndButton::GetBorderAndPaddingSize() const
 {
-    PropToFind props[] = {
+    PropToGet props[] = {
         { PropPadding, NULL },
         { PropBorderLeftWidth, NULL },
         { PropBorderRightWidth, NULL },
@@ -577,7 +577,7 @@ void VirtWndButton::SetStyles(Style *def, Style *mouseOver)
 
 void VirtWndButton::Paint(Graphics *gfx, int offX, int offY)
 {
-    struct PropToFind props[] = {
+    struct PropToGet props[] = {
         { PropColor, NULL },
         { PropBgColor, NULL },
         { PropPadding, NULL },
@@ -659,7 +659,7 @@ void VirtWndHwnd::TopLevelLayout()
 // the whole HWND and paint the background.
 void VirtWndPainter::PaintBackground(Graphics *g, Rect r)
 {
-    Prop *bgProp = FindProp(wnd->styleDefault, gStyleDefault, PropBgColor);
+    Prop *bgProp = GetProp(wnd->styleDefault, gStyleDefault, PropBgColor);
     Brush *br = CreateBrush(bgProp, r);
     g->FillRectangle(br, r);
     ::delete br;

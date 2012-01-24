@@ -174,7 +174,7 @@ void EbookLayout::Arrange(const Rect finalRect, VirtWnd *wnd)
 {
     int btnDy, btnY, btnDx;
 
-    Prop *propPadding = FindProp(wnd->styleDefault, gStyleDefault, PropPadding);
+    Prop *propPadding = GetProp(wnd->styleDefault, gStyleDefault, PropPadding);
     int padLeft = propPadding->padding.left;
     int padRight = propPadding->padding.right;
     int padTop = propPadding->padding.top;
@@ -435,7 +435,7 @@ void VirtWndEbook::Paint(Graphics *gfx, int offX, int offY)
 {
     if (!pageLayout)
         return;
-    Prop *propPadding = FindProp(styleDefault, gStyleDefault, PropPadding);
+    Prop *propPadding = GetProp(styleDefault, gStyleDefault, PropPadding);
     offX += propPadding->padding.left;
     offY += propPadding->padding.top;
     DrawPageLayout(gfx, pageLayout, currPageNo - 1, (REAL)offX, (REAL)offY);

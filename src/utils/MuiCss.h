@@ -147,18 +147,18 @@ void Destroy();
 
 Font *CachedFontFromProps(Style *first, Style *second);
 
-struct PropToFind {
+struct PropToGet {
     // provided by the caller
     PropType    type;
-    // filled-out by FindProps(). Must be set to NULL by
+    // filled-out by GetProps(). Must be set to NULL by
     // caller to enable being called twice with different
     // Style objects
     Prop *      prop;
 };
 
-void FindProps(Style *props, PropToFind *propsToFind, size_t propsToFindCount);
-void FindProps(Style *first, Style *second, PropToFind *propsToFind, size_t propsToFindCount);
-Prop *FindProp(Style *first, Style *second, PropType type);
+void GetProps(Style *style, PropToGet *props, size_t propsCount);
+void GetProps(Style *first, Style *second, PropToGet *props, size_t propsCount);
+Prop *GetProp(Style *first, Style *second, PropType type);
 
 // globally known properties for elements we know about
 // we fill them with default values and they can be

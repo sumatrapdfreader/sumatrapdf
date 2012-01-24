@@ -265,7 +265,7 @@ public:
 
     void GetStyleForState(Style **first, Style **second) const;
     Prop *GetPropForState(PropType type) const;
-    void GetPropsForState(PropToFind *propsToFind, size_t propsToFindCount) const;
+    void GetPropsForState(PropToGet *props, size_t propsCount) const;
 
     Font *GetFontForState() const;
 
