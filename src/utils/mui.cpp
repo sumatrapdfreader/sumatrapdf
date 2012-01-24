@@ -227,6 +227,92 @@ static size_t CollectWindowsAt(VirtWnd *wndRoot, int x, int y, uint16_t wantedIn
     return windows->Count();
 }
 
+static Brush *CreateBrush(Prop *p, const Rect& r)
+{
+    CrashIf(!IsColorProp(p->type));
+    if (ColorSolid == p->color.type)
+        return ::new SolidBrush(p->color.solid.color);
+
+    if (ColorGradientLinear == p->color.type) {
+        Color c1 = p->color.gradientLinear.startColor;
+        Color c2 = p->color.gradientLinear.endColor;
+        LinearGradientMode mode = p->color.gradientLinear.mode;
+        return ::new LinearGradientBrush(r, c1, c2, mode);
+    }
+    CrashIf(true);
+    return NULL;
+}
+
+static Brush *CreateBrush(Prop *p, const RectF& r)
+{
+    CrashIf(!IsColorProp(p->type));
+    if (ColorSolid == p->color.type)
+        return ::new SolidBrush(p->color.solid.color);
+
+    if (ColorGradientLinear == p->color.type) {
+        Color c1 = p->color.gradientLinear.startColor;
+        Color c2 = p->color.gradientLinear.endColor;
+        LinearGradientMode mode = p->color.gradientLinear.mode;
+        return ::new LinearGradientBrush(r, c1, c2, mode);
+    }
+    CrashIf(true);
+    return NULL;
+}
+
+struct BorderProps {
+    Prop *  topWidth, *topColor;
+    Prop *  rightWidth, *rightColor;
+    Prop *  bottomWidth, *bottomColor;
+    Prop *  leftWidth, *leftColor;
+};
+
+static void DrawLine(Graphics *gfx, const Point& p1, const Point& p2, float width, Brush *br)
+{
+    if (0 == width)
+        return;
+    Pen p(br, width);
+    gfx->DrawLine(&p, p1, p2);
+}
+
+static void DrawBorder(Graphics *gfx, const Rect r, const BorderProps& bp)
+{
+    Point   p1, p2;
+    float   width;
+    Brush * br;
+
+    // top
+    p1.X = r.X; p1.Y = r.Y;
+    p2.X = r.X + r.Width; p2.Y = p1.Y;
+    width = bp.topWidth->width.width;
+    br = CreateBrush(bp.topColor, r);
+    DrawLine(gfx, p1, p2, width, br);
+    ::delete br;
+
+    // right
+    p1 = p2;
+    p2.X = p1.X; p2.Y = p1.Y + r.Height;
+    width = bp.rightWidth->width.width;
+    br = CreateBrush(bp.rightColor, r);
+    DrawLine(gfx, p1, p2, width, br);
+    ::delete br;
+
+    // bottom
+    p1 = p2;
+    p2.X = r.X; p2.Y = p1.Y;
+    width = bp.bottomWidth->width.width;
+    br = CreateBrush(bp.bottomColor, r);
+    DrawLine(gfx, p1, p2, width, br);
+    ::delete br;
+
+    // left
+    p1 = p2;
+    p2.X = p1.X; p2.Y = r.Y;
+    width = bp.leftWidth->width.width;
+    br = CreateBrush(bp.leftColor, r);
+    DrawLine(gfx, p1, p2, width, br);
+    ::delete br;
+}
+
 void RequestRepaint(VirtWnd *w)
 {
     if (!w->IsVisible())
@@ -375,21 +461,36 @@ Font *VirtWndButton::GetFontForState() const
     return CachedFontFromProps(s1, s2);
 }
 
+Size VirtWndButton::GetBorderAndPaddingSize() const
+{
+    PropToFind props[] = {
+        { PropPadding, NULL },
+        { PropBorderLeftWidth, NULL },
+        { PropBorderRightWidth, NULL },
+        { PropBorderTopWidth, NULL },
+        { PropBorderBottomWidth, NULL },
+    };
+
+    GetPropsForState(props, dimof(props));
+    PaddingData pad = props[0].prop->padding;
+    int dx = pad.left + pad.right;
+    int dy = pad.top  + pad.bottom;
+
+    // note: width is a float, not sure how I should round them
+    dx += (int)(props[1].prop->GetWidth() + props[2].prop->GetWidth());
+    dy += (int)(props[3].prop->GetWidth() + props[4].prop->GetWidth());
+    return Size(dx, dy);
+}
+
 void VirtWndButton::RecalculateSize()
 {
-    Prop *prop = GetPropForState(PropPadding);
-    PaddingData padding = prop->padding;
-
-    if (!text) {
-        desiredSize.Width = padding.left + padding.right;
-        desiredSize.Height = padding.top  + padding.bottom;
+    desiredSize = GetBorderAndPaddingSize();
+    if (!text)
         return;
-    }
 
     Rect bbox = MeasureTextWithFont(GetFontForState(), text);
-    bbox.GetSize(&desiredSize);
-    desiredSize.Width  += (padding.left + padding.right);
-    desiredSize.Height += (padding.top  + padding.bottom);
+    desiredSize.Width  += bbox.Width;
+    desiredSize.Height += bbox.Height;
 }
 
 void VirtWndButton::SetText(const TCHAR *s)
@@ -408,90 +509,11 @@ void VirtWndButton::Measure(Size availableSize)
     // here
 }
 
-static Brush *CreateBrush(Prop *p, const Rect& r)
+void VirtWndButton::SetStyles(Style *def, Style *mouseOver)
 {
-    CrashIf(!IsColorProp(p->type));
-    if (ColorSolid == p->color.type)
-        return ::new SolidBrush(p->color.solid.color);
-
-    if (ColorGradientLinear == p->color.type) {
-        Color c1 = p->color.gradientLinear.startColor;
-        Color c2 = p->color.gradientLinear.endColor;
-        LinearGradientMode mode = p->color.gradientLinear.mode;
-        return ::new LinearGradientBrush(r, c1, c2, mode);
-    }
-    CrashIf(true);
-    return NULL;
-}
-
-static Brush *CreateBrush(Prop *p, const RectF& r)
-{
-    CrashIf(!IsColorProp(p->type));
-    if (ColorSolid == p->color.type)
-        return ::new SolidBrush(p->color.solid.color);
-
-    if (ColorGradientLinear == p->color.type) {
-        Color c1 = p->color.gradientLinear.startColor;
-        Color c2 = p->color.gradientLinear.endColor;
-        LinearGradientMode mode = p->color.gradientLinear.mode;
-        return ::new LinearGradientBrush(r, c1, c2, mode);
-    }
-    CrashIf(true);
-    return NULL;
-}
-
-struct BorderProps {
-    Prop *  topWidth, *topColor;
-    Prop *  rightWidth, *rightColor;
-    Prop *  bottomWidth, *bottomColor;
-    Prop *  leftWidth, *leftColor;
-};
-
-static void DrawLine(Graphics *gfx, const Point& p1, const Point& p2, float width, Brush *br)
-{
-    if (0 == width)
-        return;
-    Pen p(br, width);
-    gfx->DrawLine(&p, p1, p2);
-}
-
-static void DrawBorder(Graphics *gfx, const Rect r, const BorderProps& bp)
-{
-    Point   p1, p2;
-    float   width;
-    Brush * br;
-
-    // top
-    p1.X = r.X; p1.Y = r.Y;
-    p2.X = r.X + r.Width; p2.Y = p1.Y;
-    width = bp.topWidth->width.width;
-    br = CreateBrush(bp.topColor, r);
-    DrawLine(gfx, p1, p2, width, br);
-    ::delete br;
-
-    // right
-    p1 = p2;
-    p2.X = p1.X; p2.Y = p1.Y + r.Height;
-    width = bp.rightWidth->width.width;
-    br = CreateBrush(bp.rightColor, r);
-    DrawLine(gfx, p1, p2, width, br);
-    ::delete br;
-
-    // bottom
-    p1 = p2;
-    p2.X = r.X; p2.Y = p1.Y;
-    width = bp.bottomWidth->width.width;
-    br = CreateBrush(bp.bottomColor, r);
-    DrawLine(gfx, p1, p2, width, br);
-    ::delete br;
-
-    // left
-    p1 = p2;
-    p2.X = p1.X; p2.Y = r.Y;
-    width = bp.leftWidth->width.width;
-    br = CreateBrush(bp.leftColor, r);
-    DrawLine(gfx, p1, p2, width, br);
-    ::delete br;
+    styleDefault = def;
+    styleMouseOver = mouseOver;
+    RecalculateSize();
 }
 
 void VirtWndButton::Paint(Graphics *gfx, int offX, int offY)
@@ -517,6 +539,8 @@ void VirtWndButton::Paint(Graphics *gfx, int offX, int offY)
     Prop *propCol   = props[0].prop;
     Prop *propBgCol = props[1].prop;
     Prop *propPadding = props[2].prop;
+    Prop *propTopWidth = props[3].prop;
+    Prop *propLeftWidth = props[9].prop;
 
     RectF bbox((REAL)offX, (REAL)offY, (REAL)pos.Width, (REAL)pos.Height);
     Brush *brBgColor = CreateBrush(propBgCol, bbox);
@@ -530,14 +554,14 @@ void VirtWndButton::Paint(Graphics *gfx, int offX, int offY)
         props[9].prop, props[10].prop,
     };
 
-    PaddingData padding = propPadding->padding;
     Rect r(offX, offY, pos.Width, pos.Height);
     DrawBorder(gfx, r, bp);
-    if (!text)
+    if (str::IsEmpty(text))
         return;
 
-    int x = offX + padding.left;
-    int y = offY + padding.bottom;
+    PaddingData padding = propPadding->padding;
+    int x = offX + padding.left + (int)propLeftWidth->width.width;
+    int y = offY + padding.top + (int)propTopWidth->width.width;
     Brush *brColor = CreateBrush(propCol, bbox); // restrict bbox to just the text?
     gfx->DrawString(text, str::Len(text), GetFontForState(), PointF((REAL)x, (REAL)y), NULL, brColor);
     ::delete brColor;

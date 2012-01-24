@@ -107,6 +107,10 @@ public:
 
     bool Eq(Prop *other) const;
 
+    float GetWidth() const {
+        return width.width;
+    }
+
     static Prop *AllocFontName(const TCHAR *name);
     static Prop *AllocFontSize(float size);
     static Prop *AllocFontWeight(FontStyle style);
@@ -122,7 +126,7 @@ public:
 
 struct Style {
 
-    Style() : inheritsFrom(NULL) {
+    Style(Style *inheritsFrom=NULL) : inheritsFrom(inheritsFrom) {
     }
 
     Vec<Prop*>  props;

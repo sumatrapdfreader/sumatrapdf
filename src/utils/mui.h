@@ -289,19 +289,27 @@ public:
 
     virtual void NotifyMouseEnter() {
         bit::Set(stateBits, MouseOverBit);
+        RecalculateSize();
+        RequestLayout(this);
         RequestRepaint(this);
     }
 
     virtual void NotifyMouseLeave() {
         bit::Clear(stateBits, MouseOverBit);
+        RecalculateSize();
+        RequestLayout(this);
         RequestRepaint(this);
     }
+
+    Size GetBorderAndPaddingSize() const;
 
     void GetStyleForState(Style **first, Style **second) const;
     Prop *GetPropForState(PropType type) const;
     void GetPropsForState(PropToFind *propsToFind, size_t propsToFindCount) const;
 
     Font *GetFontForState() const;
+
+    void SetStyles(Style *def, Style *mouseOver);
 
     TCHAR *         text;
 

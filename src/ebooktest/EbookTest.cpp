@@ -87,12 +87,22 @@ public:
     Style *         facebookButtonDefault;
     Style *         facebookButtonOver;
 
+    // TODO: for testing
+    Style *         nextDefault;
+    Style *         nextMouseOver;
+    Style *         prevDefault;
+    Style *         prevMouseOver;
+
     virtual ~VirtWndEbook() {
         delete mb;
         delete pageLayout;
         delete statusDefault;
         delete facebookButtonDefault;
         delete facebookButtonOver;
+        delete nextDefault;
+        delete nextMouseOver;
+        delete prevDefault;
+        delete prevMouseOver;
     }
 
     virtual void Paint(Graphics *gfx, int offX, int offY);
@@ -278,9 +288,28 @@ VirtWndEbook::VirtWndEbook(HWND hwnd)
     html = NULL;
     pageLayout = NULL;
     currPageNo = 0;
+    SetHwnd(hwnd);
+
     styleDefault = new Style();
     styleDefault->Set(Prop::AllocPadding(pageBorderY, pageBorderX, pageBorderY, pageBorderX));
-    SetHwnd(hwnd);
+
+    prev = new VirtWndButton(_T("Prev"));
+    prevDefault = new Style(gStyleButtonDefault);
+    prevDefault->Set(Prop::AllocPadding(12, 16, 4, 8));
+    prevMouseOver = new Style(gStyleButtonMouseOver);
+    prevMouseOver->Set(Prop::AllocPadding(4, 16, 4, 8));
+    prev->SetStyles(prevDefault, prevMouseOver);
+
+    next = new VirtWndButton(_T("Next"));
+    nextDefault = new Style(gStyleButtonDefault);
+    nextDefault->Set(Prop::AllocPadding(4, 8, 12, 16));
+    nextMouseOver = new Style(gStyleButtonMouseOver);
+    nextMouseOver->Set(Prop::AllocPadding(12, 8, 4, 16));
+    nextMouseOver->Set(Prop::AllocColorSolid(PropBgColor, "white"));
+    next->SetStyles(nextDefault, nextMouseOver);
+
+    test = new VirtWndButton(_T("test"));
+    test->zOrder = 1;
 
     facebookButtonDefault = new Style();
     facebookButtonDefault->Set(Prop::AllocColorSolid(PropColor, "white"));
@@ -294,6 +323,10 @@ VirtWndEbook::VirtWndEbook(HWND hwnd)
     facebookButtonOver->Set(Prop::AllocColorSolid(PropColor, "yellow"));
     facebookButtonOver->inheritsFrom = facebookButtonDefault;
 
+    test->styleDefault = facebookButtonDefault;
+    test->styleMouseOver = facebookButtonOver;
+
+    status = new VirtWndButton(_T(""));
     statusDefault = new Style();
     statusDefault->Set(Prop::AllocColorSolid(PropBgColor, "white"));
     statusDefault->Set(Prop::AllocColorSolid(PropColor, "black"));
@@ -301,16 +334,6 @@ VirtWndEbook::VirtWndEbook(HWND hwnd)
     statusDefault->Set(Prop::AllocFontWeight(FontStyleRegular));
     statusDefault->Set(Prop::AllocPadding(2, 0, 2, 0));
     statusDefault->SetBorderWidth(0);
-
-    next = new VirtWndButton(_T("Next"));
-    prev = new VirtWndButton(_T("Prev"));
-
-    test = new VirtWndButton(_T("test"));
-    test->zOrder = 1;
-    test->styleDefault = facebookButtonDefault;
-    test->styleMouseOver = facebookButtonOver;
-
-    status = new VirtWndButton(_T(""));
     status->styleDefault = statusDefault;
     status->styleMouseOver = statusDefault;
 
