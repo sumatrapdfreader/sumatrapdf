@@ -749,10 +749,14 @@ void VirtWndPainter::OnPaint(HWND hwnd)
     PAINTSTRUCT ps;
     HDC dc = BeginPaint(hwnd, &ps);
 
+    Region clip;
+
     // TODO: be intelligent about only repainting changed
     // parts for perf. Note: if cacheBmp changes, we need
     // to repaint everything
     Graphics gDC(dc);
+    gDC.GetClip(&clip);
+
     ClientRect r(hwnd);
     if (!BitmapSizeEquals(cacheBmp, r.dx, r.dy)) {
         // note: could only re-allocate when the size increases
@@ -760,13 +764,19 @@ void VirtWndPainter::OnPaint(HWND hwnd)
         cacheBmp = ::new Bitmap(r.dx, r.dy, &gDC);
     }
 
+    //TODO: log clipBounds for debugging
+    //Rect clipBounds;
+    //clip.GetBounds(&cliBounds)
+
     Graphics g((Image*)cacheBmp);
     InitGraphicsMode(&g);
+    g.SetClip(&clip, CombineModeReplace);
 
     PaintBackground(&g, Rect(0, 0, r.dx, r.dy));
-
     PaintWindowsInZOrder(&g, wnd);
 
+    // TODO: try to manually draw only the part that falls within
+    // clipBounds or is it done automatically by DrawImage() ?
     gDC.DrawImage(cacheBmp, 0, 0);
     EndPaint(hwnd, &ps);
 }
