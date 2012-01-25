@@ -29,7 +29,8 @@ Graphics *  GetGraphicsForMeasureText();
 Rect        MeasureTextWithFont(Font *f, const TCHAR *s);
 void        RequestRepaint(VirtWnd *w, const Rect *r1 = NULL, const Rect *r2 = NULL);
 void        RequestLayout(VirtWnd *w);
-void        RegisterForClickEvent(VirtWnd *w, IClickHandler *clickHandlers);
+void        RegisterForClickEvent(VirtWnd *w, IClickHandler *clickHandler);
+Brush *     CreateBrush(Prop *p, const Rect& r);
 
 class IClickHandler
 {
@@ -98,7 +99,7 @@ public:
 
     LRESULT OnMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& handledOut);
 
-    void RegisterForClickEvent(VirtWnd *wndSource, IClickHandler *clickeEvent);
+    void RegisterForClickEvent(VirtWnd *wndSource, IClickHandler *clickHandler);
     IClickHandler *GetClickHandlerFor(VirtWnd *wndSource);
 };
 
@@ -154,11 +155,21 @@ public:
     virtual void Arrange(const Rect finalRect);
     Size            desiredSize;
 
-    // used e.g. by a button to change the look when mouse.The intention
-    // is that in response to those a window should only do minimal processing
-    // that affects the window itself, not the rest of the system
-    virtual void NotifyMouseEnter() {}
-    virtual void NotifyMouseLeave() {}
+    // mouse enter/leave are used e.g. by a button to change the look when mouse
+    // is over them. The intention is that in response to those a window should
+    // only do minimal processing that affects the window itself, not the rest
+    // of the system
+
+    // subclassess must call it to properly keep track of mouse over status
+    virtual void NotifyMouseEnter() {
+        bit::Set(stateBits, MouseOverBit);
+    }
+
+    // subclassess must call it to properly keep track of mouse over status
+    virtual void NotifyMouseLeave() {
+        bit::Clear(stateBits, MouseOverBit);
+    }
+
     virtual void NotifyMouseMove(int x, int y) {}
 
     uint16_t        wantedInputBits; // WndWantedInputBits
@@ -171,6 +182,10 @@ public:
     }
     bool WantsMouseMove() const {
         return bit::IsSet(wantedInputBits, WantsMouseMoveBit);
+    }
+
+    bool IsMouseOver() const {
+        return bit::IsSet(stateBits, MouseOverBit);
     }
 
     bool IsVisible() const {

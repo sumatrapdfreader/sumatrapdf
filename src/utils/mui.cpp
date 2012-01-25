@@ -224,7 +224,7 @@ static size_t CollectWindowsAt(VirtWnd *wndRoot, int x, int y, uint16_t wantedIn
     return windows->Count();
 }
 
-static Brush *CreateBrush(Prop *p, const Rect& r)
+Brush *CreateBrush(Prop *p, const Rect& r)
 {
     CrashIf(!IsColorProp(p->type));
     if (ColorSolid == p->color.type)
@@ -319,7 +319,7 @@ static void InvalidateAtOff(HWND hwnd, const Rect *r, int offX, int offY)
 
 void RequestRepaint(VirtWnd *w, const Rect *r1, const Rect *r2)
 {
-    int offX = 0, offY = 0;
+    int offX = w->pos.X, offY = w->pos.Y;
     while (w->parent) {
         w = w->parent;
         offX += w->pos.X;
@@ -540,13 +540,13 @@ Size VirtWndButton::GetBorderAndPaddingSize() const
 
 void VirtWndButton::NotifyMouseEnter()
 {
-    bit::Set(stateBits, MouseOverBit);
+    VirtWnd::NotifyMouseEnter();
     RecalculateSize(true);
 }
 
 void VirtWndButton::NotifyMouseLeave()
 {
-    bit::Clear(stateBits, MouseOverBit);
+    VirtWnd::NotifyMouseLeave();
     RecalculateSize(true);
 }
 
@@ -852,6 +852,9 @@ LRESULT EventMgr::OnLButtonUp(WPARAM keys, int x, int y, bool& handledOut)
 // TODO: not sure if handledOut serves any purpose (what exactly should it mean?)
 LRESULT EventMgr::OnMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& handledOut)
 {
+    if (WM_SIZE == msg)
+        wndRoot->RequestLayout();
+
     wndRoot->LayoutIfRequested();
 
     handledOut = false;
@@ -873,12 +876,12 @@ LRESULT EventMgr::OnMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& handle
     return 0;
 }
 
-void RegisterForClickEvent(VirtWnd *wndSource, IClickHandler *clickEvent)
+void RegisterForClickEvent(VirtWnd *wndSource, IClickHandler *clickHandler)
 {
     CrashIf(!wndSource->WantsMouseClick());
     VirtWndHwnd *wHwnd = GetRootHwndWnd(wndSource);
     CrashIf(!wHwnd);
-    wHwnd->evtMgr->RegisterForClickEvent(wndSource, clickEvent);
+    wHwnd->evtMgr->RegisterForClickEvent(wndSource, clickHandler);
 }
 
 }

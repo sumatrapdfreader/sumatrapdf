@@ -42,30 +42,160 @@ static VirtWndEbook *   gVirtWndFrame = NULL;
 
 static bool gShowTextBoundingBoxes = false;
 
-Color gCol1(196, 64, 50); Color gCol1Shadow(134, 48, 39);
-Color gCol2(227, 107, 35); Color gCol2Shadow(155, 77, 31);
-Color gCol3(93,  160, 40); Color gCol3Shadow(51, 87, 39);
-Color gCol4(69, 132, 190); Color gCol4Shadow(47, 89, 127);
-Color gCol5(112, 115, 207); Color gCol5Shadow(66, 71, 118);
-
-//Color gColBg(0xff, 0xf2, 0); // this is yellow
-Color gColBg(0xe9, 0xe9, 0xe9); // this is darkish gray
-Color gColBgTop(0xfa, 0xfa, 0xfa); // this is lightish gray
-
 // A sample text to display if we don't show an actual mobi file
 static const char *gSampleHtml = "<html><p align=justify>ClearType is <b>dependent</b> on the <i>orientation and ordering</i> of the LCD stripes.</p> <p align='right'><em>Currently</em>, ClearType is implemented <hr> only for vertical stripes that are ordered RGB.</p> <p align=center>This might be a concern if you are using a tablet PC.</p> <p>Where the display can be oriented in any direction, or if you are using a screen that can be turned from landscape to portrait. The <strike>following example</strike> draws text with two <u>different quality</u> settings.</p> On to the <b>next<mbp:pagebreak>page</b></html>";
-
-const int pageBorderX = 10;
-const int pageBorderY = 10;
 
 /* The layout is:
 ___________________
 |                 |
 | next       prev |
 |                 |
+|[ position bar  ]|
 |[    status     ]|
 ___________________
 */
+
+// Horizontal progress bar is a horizontal rectangle that visually
+// represents percentage progress of some activity.
+// It can also report clicks within itself.
+// The background is drawn with PropBgColor and the part that represents
+// percentage with PropColor.
+// It has a fixed height, provided by a caller, but the width can vary
+// depending on layout.
+// For a bit of an extra effect, it has 2 heights: one when mouse is over
+// the control and another when mouse is not over.
+// For the purpose of layout, we use the bigger of the to as the real
+// height of the control
+// TODO: we don't take padding int account yet
+class HorizontalProgressBar : public VirtWnd, public IClickHandler
+{
+    // onOverDy and inactiveDy include padding
+    int     onOverDy;    // when mouse is over
+    int     inactiveDy;  // when mouse is not over
+
+    // what percentage of the rectangle is filled with PropColor
+    // (the rest is filled with PropBgColor).
+    // The range is from 0 to 1
+    float   filledPerc;
+
+public:
+    HorizontalProgressBar(VirtWnd *parent, int onOverDy = 12, int inactiveDy = 5);
+    ~HorizontalProgressBar() {
+        // TODO: unregister as click handler for itself
+    }
+    virtual void Measure(const Size availableSize);
+    virtual void NotifyMouseEnter();
+    virtual void NotifyMouseLeave();
+
+    virtual void Paint(Graphics *gfx, int offX, int offY);
+
+    // IClickHandler
+    virtual void Clicked(VirtWnd *w);
+
+    void SetFilled(float perc);
+};
+
+HorizontalProgressBar::HorizontalProgressBar(VirtWnd *parent, int onOverDy, int inactiveDy)
+        : onOverDy(onOverDy), inactiveDy(inactiveDy)
+{
+    SetParent(parent);
+    filledPerc = 0.f;
+    bit::Set(wantedInputBits, WantsMouseOverBit, WantsMouseClickBit);
+    // TODO: lame that I need to know the parent here in order to register
+    // for an event. Plus I need to re-register with new event manager
+    // if parent changes. One way to solve it generically:
+    // - add virtual VirtWnd::RegisterEventHandlers(EventMgr *), called
+    //   from SetParent()
+    // - add virtual VirtWnd::UnRegisterEventHandlers(EventMgr *), called
+    //   from destructor and from SetParent() (for old parent)
+    RegisterForClickEvent(this, this);
+}
+
+void HorizontalProgressBar::Measure(const Size availableSize)
+{
+    // dx is max available
+    desiredSize.Width = availableSize.Width;
+
+    // dy is bigger of inactiveDy and onHoverDy but 
+    // smaller than availableSize.Height
+    int dy = inactiveDy;
+    if (onOverDy > dy)
+        dy = onOverDy;
+    if (dy > availableSize.Height)
+        dy = availableSize.Height;
+
+    desiredSize.Height = dy;
+}
+
+int IntFromPerc(int total, float perc) {
+    return (int)(total * perc);
+}
+
+void HorizontalProgressBar::NotifyMouseEnter()
+{
+    VirtWnd::NotifyMouseEnter();
+    if (inactiveDy != onOverDy)
+        RequestRepaint(this);
+}
+
+void HorizontalProgressBar::NotifyMouseLeave()
+{
+    VirtWnd::NotifyMouseLeave();
+    if (inactiveDy != onOverDy)
+        RequestRepaint(this);
+}
+
+void HorizontalProgressBar::SetFilled(float perc)
+{
+    CrashIf((perc < 0.f) || (perc > 1.f));
+    int prev = IntFromPerc(pos.Width, filledPerc);
+    int curr = IntFromPerc(pos.Width, perc);
+    filledPerc = perc;
+    if (prev != curr)
+        RequestRepaint(this);
+}
+
+void HorizontalProgressBar::Paint(Graphics *gfx, int offX, int offY)
+{
+    if (!IsVisible())
+        return;
+
+    // TODO: take padding into account
+    struct PropToGet props[] = {
+        { PropColor, NULL },
+        { PropBgColor, NULL },
+    };
+
+    GetProps(styleDefault, gStyleDefault, props, dimof(props));
+    Prop *col   = props[0].prop;
+    Prop *bgCol = props[1].prop;
+
+    Rect r(offX, offY, pos.Width, pos.Height);
+    Brush *br = CreateBrush(bgCol, r);
+    gfx->FillRectangle(br, r);
+    ::delete br;
+
+    int filledDx = IntFromPerc(pos.Width, filledPerc);
+    if (0 == filledDx)
+        return;
+
+    r.Width = filledDx;
+    int dy = inactiveDy;
+    if (IsMouseOver())
+        dy = onOverDy;
+
+    r.Y += (r.Height - dy);
+    r.Height = dy;
+    br = CreateBrush(col, r);
+    gfx->FillRectangle(br, r);
+    ::delete br;
+}
+
+void HorizontalProgressBar::Clicked(VirtWnd *w)
+{
+    CrashIf(w != this);
+    // TODO: generate a notification about a click
+}
 
 class VirtWndEbook : public VirtWndHwnd, public IClickHandler
 {
@@ -83,12 +213,14 @@ public:
 
     VirtWndButton * next;
     VirtWndButton * prev;
+    HorizontalProgressBar *horizProgress;
     VirtWndButton * status;
     VirtWndButton * test;
 
     VirtWndEbook(HWND hwnd);
 
     Style *         statusDefault;
+    Style *         horizProgressDefault;
     Style *         facebookButtonDefault;
     Style *         facebookButtonOver;
 
@@ -108,6 +240,7 @@ public:
         delete nextMouseOver;
         delete prevDefault;
         delete prevMouseOver;
+        delete horizProgressDefault;
     }
 
     virtual void Paint(Graphics *gfx, int offX, int offY);
@@ -127,18 +260,19 @@ public:
 class EbookLayout : public Layout
 {
 public:
-    EbookLayout(VirtWndButton *next, VirtWndButton *prev, VirtWndButton *status, VirtWndButton *test) :
-      next(next), prev(prev), status(status), test(test)
+    EbookLayout(VirtWndButton *next, VirtWnd *prev, VirtWnd *status, VirtWnd *horizProgress, VirtWnd *test) :
+      next(next), prev(prev), status(status), horizProgress(horizProgress), test(test)
     {
     }
 
     virtual ~EbookLayout() {
     }
 
-    VirtWndButton *next;
-    VirtWndButton *prev;
-    VirtWndButton *status;
-    VirtWndButton *test;
+    VirtWnd *next;
+    VirtWnd *prev;
+    VirtWnd *status;
+    VirtWnd *horizProgress;
+    VirtWnd *test;
 
     virtual void Measure(const Size availableSize, VirtWnd *wnd);
     virtual void Arrange(const Rect finalRect, VirtWnd *wnd);
@@ -179,7 +313,7 @@ static void CenterRectX(Rect& toCenter, Size& container)
 
 void EbookLayout::Arrange(const Rect finalRect, VirtWnd *wnd)
 {
-    int btnDy, btnY, btnDx;
+    int y, dx, dy;
 
     Prop *propPadding = GetProp(wnd->styleDefault, gStyleDefault, PropPadding);
     int padLeft = propPadding->padding.left;
@@ -196,37 +330,57 @@ void EbookLayout::Arrange(const Rect finalRect, VirtWnd *wnd)
     prev->Arrange(prevPos);
 
     // next is on the right, y-middle
-    btnDx = next->desiredSize.Width;
-    Rect nextPos(Point(rectDx - btnDx + padLeft, 0), next->desiredSize);
+    dx = next->desiredSize.Width;
+    Rect nextPos(Point(rectDx - dx + padLeft, 0), next->desiredSize);
     CenterRectY(nextPos, Size(rectDx, rectDy));
     next->Arrange(nextPos);
 
     // test is at the bottom, x-middle
-    btnDy = test->desiredSize.Height;
-    btnY = rectDy - btnDy;
-    Rect testPos(Point(0, btnY - padBottom), test->desiredSize);
+    dy = test->desiredSize.Height;
+    y = rectDy - dy;
+    Rect testPos(Point(0, y - padBottom), test->desiredSize);
     CenterRectX(testPos, Size(rectDx, rectDy));
     test->Arrange(testPos);
 
-    btnY = finalRect.Height - status->desiredSize.Height;
-    Rect statusPos(Point(0, btnY), status->desiredSize);
+    // status is at the bottom
+    y = finalRect.Height - status->desiredSize.Height;
+    Rect statusPos(Point(0, y), status->desiredSize);
     statusPos.Width = finalRect.Width;
     status->Arrange(statusPos);
 
+    // horizProgress is at the bottom, right above the status
+    y -= horizProgress->desiredSize.Height;
+    Rect horizPos(Point(0, y), horizProgress->desiredSize);
+    horizPos.Width = finalRect.Width;
+    horizProgress->Arrange(horizPos);
+
     wnd->SetPosition(finalRect);
     VirtWndEbook *wndEbook = (VirtWndEbook*)wnd;
+    rectDy -= (statusPos.Height + horizPos.Height);
+    if (rectDy < 0)
+        rectDy = 0;
     wndEbook->DoPageLayout(rectDx, rectDy);
+}
+
+static float PercFromInt(int total, int n)
+{
+    CrashIf(n > total);
+    if (0 == total)
+        return 0.f;
+    return (float)n / (float)total;
 }
 
 void VirtWndEbook::SetStatusText() const
 {
     if (!pageLayout) {
         status->SetText(_T(""));
+        horizProgress->SetFilled(0.f);
         return;
     }
     size_t pageCount = pageLayout->PageCount();
     ScopedMem<TCHAR> s(str::Format(_T("Page %d out of %d"), currPageNo, (int)pageCount));
     status->SetText(s.Get());
+    horizProgress->SetFilled(PercFromInt(pageCount, currPageNo));
 }
 
 void VirtWndEbook::AdvancePage(int dist)
@@ -313,7 +467,10 @@ VirtWndEbook::VirtWndEbook(HWND hwnd)
     currPageNo = 0;
     SetHwnd(hwnd);
 
-    cursorX = 20; cursorY = 20;
+    cursorX = -1; cursorY = -1;
+
+    const int pageBorderX = 10;
+    const int pageBorderY = 10;
 
     bit::Set(wantedInputBits, WantsMouseMoveBit);
     styleDefault = new Style();
@@ -365,11 +522,18 @@ VirtWndEbook::VirtWndEbook(HWND hwnd)
     status->styleDefault = statusDefault;
     status->styleMouseOver = statusDefault;
 
+    horizProgress = new HorizontalProgressBar(this);
+    horizProgressDefault = new Style();
+    horizProgressDefault->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
+    horizProgressDefault->Set(Prop::AllocColorSolid(PropColor, "yellow"));
+    horizProgress->styleDefault = horizProgressDefault;
+
     AddChild(next);
     AddChild(prev);
+    AddChild(horizProgress);
     AddChild(status);
     AddChild(test);
-    layout = new EbookLayout(next, prev, status, test);
+    layout = new EbookLayout(next, prev, status, horizProgress, test);
     RegisterForClickEvent(next, this);
     RegisterForClickEvent(prev, this);
     RegisterForClickEvent(test, this);
@@ -477,13 +641,6 @@ void VirtWndEbook::Paint(Graphics *gfx, int offX, int offY)
     DrawPageLayout(gfx, pageLayout, currPageNo - 1, (REAL)offX, (REAL)offY);
 }
 
-static void UpdatePageCount()
-{
-    size_t pagesCount = gVirtWndFrame->pageLayout->PageCount();
-    ScopedMem<TCHAR> s(str::Format(_T("%d pages"), (int)pagesCount));
-    win::SetText(gHwndFrame, s.Get());
-}
-
 #if 0
 static void DrawFrame2(Graphics &g, RectI r)
 {
@@ -584,10 +741,6 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 
         case WM_DESTROY:
             PostQuitMessage(0);
-            break;
-
-        case WM_SIZE:
-            gVirtWndFrame->TopLevelLayout();
             break;
 
         case WM_ERASEBKGND:
