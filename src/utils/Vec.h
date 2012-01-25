@@ -36,7 +36,7 @@ public:
     static void* Realloc(Allocator *a, void *mem, size_t size) {
         if (!a)
             return realloc(mem, size);
-        return a->Realloc(a, mem, size);
+        return a->Realloc(mem, size);
     }
 
     static void *Dup(Allocator *a, void *mem, size_t size, size_t padding=0) {
