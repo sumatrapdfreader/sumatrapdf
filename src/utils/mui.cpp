@@ -897,11 +897,6 @@ IClickHandler *EventMgr::GetClickHandlerFor(VirtWnd *wndSource)
     return NULL;
 }
 
-static void SetDefaultCursor()
-{
-    SetCursor(LoadCursor(NULL, IDC_ARROW));
-}
-
 // TODO: optimize by getting both mouse over and mouse move windows in one call
 // x, y is a position in the root window
 LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& wasHandled)
@@ -916,7 +911,6 @@ LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& wasHandled)
             currOver->SetIsMouseOver(false);
             currOver->NotifyMouseLeave();
             currOver = NULL;
-            SetDefaultCursor();
         }
     } else {
         // TODO: should this take z-order into account ?
@@ -929,10 +923,6 @@ LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& wasHandled)
             currOver = w;
             currOver->SetIsMouseOver(true);
             currOver->NotifyMouseEnter();
-            if (currOver->hCursor)
-                SetCursor(currOver->hCursor);
-            else
-                SetDefaultCursor();
         }
     }
 
@@ -967,11 +957,9 @@ LRESULT EventMgr::OnLButtonUp(WPARAM keys, int x, int y, bool& wasHandled)
 
 LRESULT EventMgr::OnSetCursor(int x, int y, bool& wasHandled)
 {
-    wasHandled = true;
     if (currOver && currOver->hCursor) {
         SetCursor(currOver->hCursor);
-    } else {
-        SetDefaultCursor();
+        wasHandled = true;
     }
     return TRUE;
 }
