@@ -526,19 +526,23 @@ VirtWndEbook::VirtWndEbook(HWND hwnd)
     AddChild(status);
     AddChild(test);
     layout = new EbookLayout(next, prev, status, horizProgress, test);
+
+    // special case for classes that derive from VirtWndHwnd
+    // that don't trigger this from SetParent()
+    RegisterEventHandlers(evtMgr);
 }
 
 void VirtWndEbook::RegisterEventHandlers(EventMgr *evtMgr) 
 {
-    evtMgr->RegisterForClickEvent(next, this);
-    evtMgr->RegisterForClickEvent(prev, this);
-    evtMgr->RegisterForClickEvent(horizProgress, this);
-    evtMgr->RegisterForClickEvent(test, this);
+    evtMgr->RegisterClickHandler(next, this);
+    evtMgr->RegisterClickHandler(prev, this);
+    evtMgr->RegisterClickHandler(horizProgress, this);
+    evtMgr->RegisterClickHandler(test, this);
 }
 
 void VirtWndEbook::UnRegisterEventHandlers(EventMgr *evtMgr)
 {
-    // TODO: write me
+    evtMgr->UnRegisterClickHandlers(this);
 }
 
 void VirtWndEbook::Clicked(VirtWnd *w)

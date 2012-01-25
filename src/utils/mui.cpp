@@ -357,6 +357,19 @@ void RequestLayout(VirtWnd *w)
         wnd->RequestLayout();
 }
 
+// traverse tree upwards to find HWND that is ultimately backing
+// this window
+HWND GetHwndParent(VirtWnd *w)
+{
+    const VirtWnd *curr = w;
+    while (curr) {
+        if (curr->hwndParent)
+            return curr->hwndParent;
+        curr = curr->parent;
+    }
+    return NULL;
+}
+
 VirtWnd::VirtWnd(VirtWnd *newParent)
 {
     wantedInputBits = 0;
@@ -375,19 +388,6 @@ VirtWnd::~VirtWnd()
 {
     delete layout;
     DeleteVecMembers(children);
-}
-
-// traverse tree upwards to find HWND that is ultimately backing
-// this window
-HWND VirtWnd::GetHwndParent() const
-{
-    const VirtWnd *curr = this;
-    while (curr) {
-        if (curr->hwndParent)
-            return curr->hwndParent;
-        curr = curr->parent;
-    }
-    return NULL;
 }
 
 void VirtWnd::SetParent(VirtWnd *newParent)
@@ -798,7 +798,19 @@ void VirtWndPainter::OnPaint(HWND hwnd)
     EndPaint(hwnd, &ps);
 }
 
-void EventMgr::RegisterForClickEvent(VirtWnd *wndSource, IClickHandler *clickHandler)
+void EventMgr::UnRegisterClickHandlers(IClickHandler *clickHandler)
+{
+    size_t i = 0;
+    while (i < clickHandlers.Count()) {
+        ClickHandler h = clickHandlers.At(i);
+        if (h.clickHandler == clickHandler)
+            clickHandlers.RemoveAt(i);
+        else
+            i++;
+    }
+}
+
+void EventMgr::RegisterClickHandler(VirtWnd *wndSource, IClickHandler *clickHandler)
 {
     ClickHandler ch = { wndSource, clickHandler };
     clickHandlers.Append(ch);

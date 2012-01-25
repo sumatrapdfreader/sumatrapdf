@@ -98,7 +98,8 @@ public:
 
     LRESULT OnMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& handledOut);
 
-    void RegisterForClickEvent(VirtWnd *wndSource, IClickHandler *clickHandler);
+    void UnRegisterClickHandlers(IClickHandler *clickHandler);
+    void RegisterClickHandler(VirtWnd *wndSource, IClickHandler *clickHandler);
     IClickHandler *GetClickHandlerFor(VirtWnd *wndSource);
 };
 
@@ -208,7 +209,6 @@ public:
 
     // only used by VirtWndHwnd but we need it here
     HWND            hwndParent;
-    HWND            GetHwndParent() const;
 
     // position and size (relative to parent, might be outside of parent's bounds)
     Rect            pos;
