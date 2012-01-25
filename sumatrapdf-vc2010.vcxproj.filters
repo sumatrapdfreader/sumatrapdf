@@ -42,6 +42,9 @@
     <Filter Include="zlib\minizip">
       <UniqueIdentifier>{6cc62844-e2e6-47cd-bdbf-4724dc28da51}</UniqueIdentifier>
     </Filter>
+    <Filter Include="mupdf\draw">
+      <UniqueIdentifier>{bdd43343-e63b-467d-b5e5-ba10a0e94337}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ext\jbig2dec\jbig2.c">
@@ -748,6 +751,39 @@
     </ClCompile>
     <ClCompile Include="mupdf\fitz\res_store.c">
       <Filter>mupdf\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\draw\draw_affine.c">
+      <Filter>mupdf\draw</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\draw\draw_blend.c">
+      <Filter>mupdf\draw</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\draw\draw_device.c">
+      <Filter>mupdf\draw</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\draw\draw_edge.c">
+      <Filter>mupdf\draw</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\draw\draw_glyph.c">
+      <Filter>mupdf\draw</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\draw\draw_mesh.c">
+      <Filter>mupdf\draw</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\draw\draw_paint.c">
+      <Filter>mupdf\draw</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\draw\draw_path.c">
+      <Filter>mupdf\draw</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\draw\draw_scale.c">
+      <Filter>mupdf\draw</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\draw\draw_simple_scale.c">
+      <Filter>mupdf\draw</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\draw\draw_unpack.c">
+      <Filter>mupdf\draw</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

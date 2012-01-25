@@ -141,6 +141,17 @@
     <ClCompile Include="ext\zlib-1.2.5\trees.c" />
     <ClCompile Include="ext\zlib-1.2.5\uncompr.c" />
     <ClCompile Include="ext\zlib-1.2.5\zutil.c" />
+    <ClCompile Include="mupdf\draw\draw_affine.c" />
+    <ClCompile Include="mupdf\draw\draw_blend.c" />
+    <ClCompile Include="mupdf\draw\draw_device.c" />
+    <ClCompile Include="mupdf\draw\draw_edge.c" />
+    <ClCompile Include="mupdf\draw\draw_glyph.c" />
+    <ClCompile Include="mupdf\draw\draw_mesh.c" />
+    <ClCompile Include="mupdf\draw\draw_paint.c" />
+    <ClCompile Include="mupdf\draw\draw_path.c" />
+    <ClCompile Include="mupdf\draw\draw_scale.c" />
+    <ClCompile Include="mupdf\draw\draw_simple_scale.c" />
+    <ClCompile Include="mupdf\draw\draw_unpack.c" />
     <ClCompile Include="mupdf\fitz\base_context.c" />
     <ClCompile Include="mupdf\fitz\base_geometry.c" />
     <ClCompile Include="mupdf\fitz\base_getopt.c" />
