@@ -53,6 +53,10 @@ static float PercFromInt(int total, int n)
     return (float)n / (float)total;
 }
 
+int IntFromPerc(int total, float perc) {
+    return (int)(total * perc);
+}
+
 /* The layout is:
 ___________________
 |                 |
@@ -123,10 +127,6 @@ void HorizontalProgressBar::Measure(const Size availableSize)
     desiredSize.Height = dy;
 }
 
-int IntFromPerc(int total, float perc) {
-    return (int)(total * perc);
-}
-
 void HorizontalProgressBar::NotifyMouseEnter()
 {
     if (inactiveDy != onOverDy)
@@ -195,6 +195,7 @@ class VirtWndEbook : public VirtWndHwnd, public IClickHandler
     static const int CircleR = 10;
 
     void AdvancePage(int dist);
+    void SetPage(int newPageNo);
 
 public:
     MobiParse *     mb;
@@ -375,6 +376,14 @@ void VirtWndEbook::SetStatusText() const
     horizProgress->SetFilled(PercFromInt(pageCount, currPageNo));
 }
 
+void VirtWndEbook::SetPage(int newPageNo)
+{
+    CrashIf((newPageNo < 1) || (newPageNo > (int)pageLayout->PageCount()));
+    currPageNo = newPageNo;
+    SetStatusText();
+    RequestRepaint(this);
+}
+
 void VirtWndEbook::AdvancePage(int dist)
 {
     if (!pageLayout)
@@ -384,9 +393,7 @@ void VirtWndEbook::AdvancePage(int dist)
         return;
     if (newPageNo > (int)pageLayout->PageCount())
         return;
-    currPageNo = newPageNo;
-    SetStatusText();
-    RequestRepaint(this);
+    SetPage(newPageNo);
 }
 
 PageLayout *LayoutHtmlOrMobi(const char *html, MobiParse *mb, int dx, int dy)
@@ -565,6 +572,12 @@ void VirtWndEbook::Clicked(VirtWnd *w, int x, int y)
     }
 
     if (w == horizProgress) {
+        float perc = horizProgress->GetPercAt(x);
+        if (pageLayout) {
+            int pageCount = pageLayout->PageCount();
+            int pageNo = IntFromPerc(pageCount, perc);
+            SetPage(pageNo + 1);
+        }
         return;
     }
 

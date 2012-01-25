@@ -5,7 +5,6 @@ Things to do for the first version of ebook (mobi) support:
 * layout: support different fonts
 * layout: indent first line of a paragraph
 * layout: links
-* ui: show scrollbar at the bottom and react to it
 * layout: do layout on a thread, send laid out pages infcrementally. Laying out
   a whole book takes a while, the idea is to be able to display the current
   page as soon as it's available
@@ -17,6 +16,7 @@ Done:
 * support resizing the window
 * ui: show position status like in Kindle app ("n% Page N out of M * Location X of Y")
 * ui: support text-align attribute for buttons
+* ui: show scrollbar at the bottom and react to it
 
 Things nice to have but can wait for future:
 * ui: double page display
