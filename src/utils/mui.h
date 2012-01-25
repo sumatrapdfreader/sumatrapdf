@@ -29,7 +29,6 @@ Graphics *  GetGraphicsForMeasureText();
 Rect        MeasureTextWithFont(Font *f, const TCHAR *s);
 void        RequestRepaint(VirtWnd *w, const Rect *r1 = NULL, const Rect *r2 = NULL);
 void        RequestLayout(VirtWnd *w);
-void        RegisterForClickEvent(VirtWnd *w, IClickHandler *clickHandler);
 Brush *     CreateBrush(Prop *p, const Rect& r);
 
 class IClickHandler
@@ -126,12 +125,10 @@ public:
         WndStateBitLast
     };
 
-    VirtWnd(VirtWnd *parent=NULL);
+    VirtWnd(VirtWnd *newParent=NULL);
     virtual ~VirtWnd();
 
-    void SetParent(VirtWnd *parent) {
-        this->parent = parent;
-    }
+    void SetParent(VirtWnd *newParent);
 
     void AddChild(VirtWnd *wnd, int pos = -1);
 
@@ -159,11 +156,7 @@ public:
     // is over them. The intention is that in response to those a window should
     // only do minimal processing that affects the window itself, not the rest
     // of the system
-
-    // subclassess must call it to properly keep track of mouse over status
     virtual void NotifyMouseEnter() {}
-
-    // subclassess must call it to properly keep track of mouse over status
     virtual void NotifyMouseLeave() {}
 
     void SetIsMouseOver(bool isOver) {
@@ -174,6 +167,9 @@ public:
     }
 
     virtual void NotifyMouseMove(int x, int y) {}
+
+    virtual void RegisterEventHandlers(EventMgr *evtMgr) {}
+    virtual void UnRegisterEventHandlers(EventMgr *evtMgr) {}
 
     uint16_t        wantedInputBits; // WndWantedInputBits
     uint16_t        stateBits;       // WndStateBits

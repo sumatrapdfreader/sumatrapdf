@@ -357,16 +357,18 @@ void RequestLayout(VirtWnd *w)
         wnd->RequestLayout();
 }
 
-VirtWnd::VirtWnd(VirtWnd *parent)
+VirtWnd::VirtWnd(VirtWnd *newParent)
 {
     wantedInputBits = 0;
     stateBits = 0;
     zOrder = 0;
+    parent = NULL;
     hwndParent = NULL;
     layout = NULL;
     styleDefault = NULL;
     pos = Rect();
-    SetParent(parent);
+    if (newParent)
+        SetParent(newParent);
 }
 
 VirtWnd::~VirtWnd()
@@ -386,6 +388,22 @@ HWND VirtWnd::GetHwndParent() const
         curr = curr->parent;
     }
     return NULL;
+}
+
+void VirtWnd::SetParent(VirtWnd *newParent)
+{
+    VirtWndHwnd *prevRoot = NULL;
+    if (parent)
+        prevRoot = GetRootHwndWnd(parent);
+    VirtWndHwnd *newRoot = GetRootHwndWnd(newParent);
+    CrashIf(!newRoot);
+
+    parent = newParent;
+
+    if (prevRoot)
+        UnRegisterEventHandlers(prevRoot->evtMgr);
+
+    RegisterEventHandlers(newRoot->evtMgr);
 }
 
 void VirtWnd::AddChild(VirtWnd *wnd, int pos)
@@ -877,14 +895,6 @@ LRESULT EventMgr::OnMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& handle
     }
 
     return 0;
-}
-
-void RegisterForClickEvent(VirtWnd *wndSource, IClickHandler *clickHandler)
-{
-    CrashIf(!wndSource->WantsMouseClick());
-    VirtWndHwnd *wHwnd = GetRootHwndWnd(wndSource);
-    CrashIf(!wHwnd);
-    wHwnd->evtMgr->RegisterForClickEvent(wndSource, clickHandler);
 }
 
 }

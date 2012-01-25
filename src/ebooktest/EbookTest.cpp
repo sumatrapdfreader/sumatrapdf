@@ -79,7 +79,7 @@ class HorizontalProgressBar : public VirtWnd, public IClickHandler
     float   filledPerc;
 
 public:
-    HorizontalProgressBar(VirtWnd *parent, int onOverDy = 12, int inactiveDy = 5);
+    HorizontalProgressBar(int onOverDy = 12, int inactiveDy = 5);
     ~HorizontalProgressBar() {
         // TODO: unregister as click handler for itself
     }
@@ -95,20 +95,11 @@ public:
     void SetFilled(float perc);
 };
 
-HorizontalProgressBar::HorizontalProgressBar(VirtWnd *parent, int onOverDy, int inactiveDy)
+HorizontalProgressBar::HorizontalProgressBar(int onOverDy, int inactiveDy)
         : onOverDy(onOverDy), inactiveDy(inactiveDy)
 {
-    SetParent(parent);
     filledPerc = 0.f;
     bit::Set(wantedInputBits, WantsMouseOverBit, WantsMouseClickBit);
-    // TODO: lame that I need to know the parent here in order to register
-    // for an event. Plus I need to re-register with new event manager
-    // if parent changes. One way to solve it generically:
-    // - add virtual VirtWnd::RegisterEventHandlers(EventMgr *), called
-    //   from SetParent()
-    // - add virtual VirtWnd::UnRegisterEventHandlers(EventMgr *), called
-    //   from destructor and from SetParent() (for old parent)
-    RegisterForClickEvent(this, this);
 }
 
 void HorizontalProgressBar::Measure(const Size availableSize)
@@ -240,6 +231,9 @@ public:
         delete prevMouseOver;
         delete horizProgressDefault;
     }
+
+    virtual void RegisterEventHandlers(EventMgr *evtMgr);
+    virtual void UnRegisterEventHandlers(EventMgr *evtMgr);
 
     virtual void Paint(Graphics *gfx, int offX, int offY);
 
@@ -520,7 +514,7 @@ VirtWndEbook::VirtWndEbook(HWND hwnd)
     status->styleDefault = statusDefault;
     status->styleMouseOver = statusDefault;
 
-    horizProgress = new HorizontalProgressBar(this);
+    horizProgress = new HorizontalProgressBar();
     horizProgressDefault = new Style();
     horizProgressDefault->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
     horizProgressDefault->Set(Prop::AllocColorSolid(PropColor, "yellow"));
@@ -532,9 +526,19 @@ VirtWndEbook::VirtWndEbook(HWND hwnd)
     AddChild(status);
     AddChild(test);
     layout = new EbookLayout(next, prev, status, horizProgress, test);
-    RegisterForClickEvent(next, this);
-    RegisterForClickEvent(prev, this);
-    RegisterForClickEvent(test, this);
+}
+
+void VirtWndEbook::RegisterEventHandlers(EventMgr *evtMgr) 
+{
+    evtMgr->RegisterForClickEvent(next, this);
+    evtMgr->RegisterForClickEvent(prev, this);
+    evtMgr->RegisterForClickEvent(horizProgress, this);
+    evtMgr->RegisterForClickEvent(test, this);
+}
+
+void VirtWndEbook::UnRegisterEventHandlers(EventMgr *evtMgr)
+{
+    // TODO: write me
 }
 
 void VirtWndEbook::Clicked(VirtWnd *w)
