@@ -792,7 +792,7 @@ void VirtWndPainter::PaintBackground(Graphics *g, Rect r)
 #define MAX_INT16   32767
 
 // Paint windows in z-order by first collecting the windows
-// and then paint consequitive layers with the same z-order,
+// and then paint consecutive layers with the same z-order,
 // starting with the lowest z-order.
 // We don't sort because we want to preserve the order of
 // containment within z-order and non-stable sort could
