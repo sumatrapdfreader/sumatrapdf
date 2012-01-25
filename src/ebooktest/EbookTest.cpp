@@ -220,6 +220,10 @@ public:
     Style *         prevMouseOver;
 
     virtual ~VirtWndEbook() {
+        // special case for classes that derive from VirtWndHwnd
+        // that don't trigger this from the destructor
+        UnRegisterEventHandlers(evtMgr);
+
         delete mb;
         delete pageLayout;
         delete statusDefault;

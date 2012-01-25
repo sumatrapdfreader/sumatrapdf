@@ -141,7 +141,7 @@ Rect MeasureTextWithFont(Font *f, const TCHAR *s)
 
 #define RECTFromRect(r) { r.GetLeft(), r.GetTop(), r.GetRight(), r.GetBottom() }
 
-static VirtWndHwnd *GetRootHwndWnd(VirtWnd *w)
+static VirtWndHwnd *GetRootHwndWnd(const VirtWnd *w)
 {
     while (w->parent) {
         w = w->parent;
@@ -149,6 +149,16 @@ static VirtWndHwnd *GetRootHwndWnd(VirtWnd *w)
     if (!w->hwndParent)
         return NULL;
     return (VirtWndHwnd*)w;
+}
+
+// traverse tree upwards to find HWND that is ultimately backing
+// this window
+HWND GetHwndParent(const VirtWnd *w)
+{
+    VirtWndHwnd *wHwnd = GetRootHwndWnd(w);
+    if (wHwnd)
+        return wHwnd->hwndParent;
+    return NULL;
 }
 
 class WndFilter
@@ -357,19 +367,6 @@ void RequestLayout(VirtWnd *w)
         wnd->RequestLayout();
 }
 
-// traverse tree upwards to find HWND that is ultimately backing
-// this window
-HWND GetHwndParent(VirtWnd *w)
-{
-    const VirtWnd *curr = w;
-    while (curr) {
-        if (curr->hwndParent)
-            return curr->hwndParent;
-        curr = curr->parent;
-    }
-    return NULL;
-}
-
 VirtWnd::VirtWnd(VirtWnd *newParent)
 {
     wantedInputBits = 0;
@@ -388,6 +385,11 @@ VirtWnd::~VirtWnd()
 {
     delete layout;
     DeleteVecMembers(children);
+    if (!parent)
+        return;
+    VirtWndHwnd *root = GetRootHwndWnd(parent);
+    CrashIf(!root);
+    UnRegisterEventHandlers(root->evtMgr);
 }
 
 void VirtWnd::SetParent(VirtWnd *newParent)
