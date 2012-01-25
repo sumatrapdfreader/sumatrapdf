@@ -319,7 +319,8 @@ static void InvalidateAtOff(HWND hwnd, const Rect *r, int offX, int offY)
 
 void RequestRepaint(VirtWnd *w, const Rect *r1, const Rect *r2)
 {
-    int offX = w->pos.X, offY = w->pos.Y;
+    // calculate the offset of window w within its root window
+    int offX = 0, offY = 0;
     while (w->parent) {
         w = w->parent;
         offX += w->pos.X;
@@ -487,7 +488,7 @@ VirtWndButton::VirtWndButton(const TCHAR *s)
 
 void VirtWndButton::GetStyleForState(Style **first, Style **second) const
 {
-    if (bit::IsSet(stateBits, MouseOverBit)) {
+    if (IsMouseOver()) {
         *first = styleMouseOver;
         *second = gStyleButtonMouseOver;
     } else {
@@ -540,13 +541,11 @@ Size VirtWndButton::GetBorderAndPaddingSize() const
 
 void VirtWndButton::NotifyMouseEnter()
 {
-    VirtWnd::NotifyMouseEnter();
     RecalculateSize(true);
 }
 
 void VirtWndButton::NotifyMouseLeave()
 {
-    VirtWnd::NotifyMouseLeave();
     RecalculateSize(true);
 }
 
@@ -808,6 +807,7 @@ LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& handledOut)
     size_t count = CollectWindowsAt(wndRoot, x, y, wantedInputMask, &windows);
     if (0 == count) {
         if (currOver) {
+            currOver->SetIsMouseOver(false);
             currOver->NotifyMouseLeave();
             currOver = NULL;
         }
@@ -815,9 +815,12 @@ LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& handledOut)
         // TODO: should this take z-order into account ?
         w = windows.Last().wnd;
         if (w != currOver) {
-            if (currOver)
+            if (currOver) {
+                currOver->SetIsMouseOver(false);
                 currOver->NotifyMouseLeave();
+            }
             currOver = w;
+            currOver->SetIsMouseOver(true);
             currOver->NotifyMouseEnter();
         }
     }

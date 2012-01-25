@@ -133,14 +133,12 @@ int IntFromPerc(int total, float perc) {
 
 void HorizontalProgressBar::NotifyMouseEnter()
 {
-    VirtWnd::NotifyMouseEnter();
     if (inactiveDy != onOverDy)
         RequestRepaint(this);
 }
 
 void HorizontalProgressBar::NotifyMouseLeave()
 {
-    VirtWnd::NotifyMouseLeave();
     if (inactiveDy != onOverDy)
         RequestRepaint(this);
 }
@@ -455,7 +453,7 @@ void VirtWndEbook::NotifyMouseMove(int x, int y)
     Rect r1 = RectForCircle(cursorX, cursorY, CircleR);
     Rect r2 = RectForCircle(x, y, CircleR);
     cursorX = x; cursorY = y;
-
+    r1.Inflate(1,1); r2.Inflate(1,1);
     RequestRepaint(this, &r1, &r2);
 }
 

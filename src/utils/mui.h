@@ -161,13 +161,16 @@ public:
     // of the system
 
     // subclassess must call it to properly keep track of mouse over status
-    virtual void NotifyMouseEnter() {
-        bit::Set(stateBits, MouseOverBit);
-    }
+    virtual void NotifyMouseEnter() {}
 
     // subclassess must call it to properly keep track of mouse over status
-    virtual void NotifyMouseLeave() {
-        bit::Clear(stateBits, MouseOverBit);
+    virtual void NotifyMouseLeave() {}
+
+    void SetIsMouseOver(bool isOver) {
+        if (isOver)
+            bit::Set(stateBits, MouseOverBit);
+        else
+            bit::Clear(stateBits, MouseOverBit);
     }
 
     virtual void NotifyMouseMove(int x, int y) {}
