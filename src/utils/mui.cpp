@@ -234,7 +234,7 @@ static size_t CollectWindowsAt(VirtWnd *wndRoot, int x, int y, uint16_t wantedIn
     return windows->Count();
 }
 
-Brush *CreateBrush(Prop *p, const Rect& r)
+Brush *BrushFromProp(Prop *p, const Rect& r)
 {
     CrashIf(!IsColorProp(p->type));
     if (ColorSolid == p->color.type)
@@ -250,7 +250,7 @@ Brush *CreateBrush(Prop *p, const Rect& r)
     return NULL;
 }
 
-static Brush *CreateBrush(Prop *p, const RectF& r)
+static Brush *BrushFromProp(Prop *p, const RectF& r)
 {
     CrashIf(!IsColorProp(p->type));
     if (ColorSolid == p->color.type)
@@ -291,7 +291,7 @@ static void DrawBorder(Graphics *gfx, const Rect r, const BorderProps& bp)
     p1.X = r.X; p1.Y = r.Y;
     p2.X = r.X + r.Width; p2.Y = p1.Y;
     width = bp.topWidth->width.width;
-    br = CreateBrush(bp.topColor, r);
+    br = BrushFromProp(bp.topColor, r);
     DrawLine(gfx, p1, p2, width, br);
     ::delete br;
 
@@ -299,7 +299,7 @@ static void DrawBorder(Graphics *gfx, const Rect r, const BorderProps& bp)
     p1 = p2;
     p2.X = p1.X; p2.Y = p1.Y + r.Height;
     width = bp.rightWidth->width.width;
-    br = CreateBrush(bp.rightColor, r);
+    br = BrushFromProp(bp.rightColor, r);
     DrawLine(gfx, p1, p2, width, br);
     ::delete br;
 
@@ -307,7 +307,7 @@ static void DrawBorder(Graphics *gfx, const Rect r, const BorderProps& bp)
     p1 = p2;
     p2.X = r.X; p2.Y = p1.Y;
     width = bp.bottomWidth->width.width;
-    br = CreateBrush(bp.bottomColor, r);
+    br = BrushFromProp(bp.bottomColor, r);
     DrawLine(gfx, p1, p2, width, br);
     ::delete br;
 
@@ -315,7 +315,7 @@ static void DrawBorder(Graphics *gfx, const Rect r, const BorderProps& bp)
     p1 = p2;
     p2.X = p1.X; p2.Y = r.Y;
     width = bp.leftWidth->width.width;
-    br = CreateBrush(bp.leftColor, r);
+    br = BrushFromProp(bp.leftColor, r);
     DrawLine(gfx, p1, p2, width, br);
     ::delete br;
 }
@@ -406,6 +406,44 @@ void VirtWnd::SetParent(VirtWnd *newParent)
         UnRegisterEventHandlers(prevRoot->evtMgr);
 
     RegisterEventHandlers(newRoot->evtMgr);
+}
+
+VirtWnd *VirtWnd::GetChild(size_t idx) const
+{
+    return children.At(idx);
+}
+
+size_t VirtWnd::GetChildCount() const
+{
+    return children.Count();
+}
+
+bool VirtWnd::WantsMouseClick() const
+{
+    return bit::IsSet(wantedInputBits, WantsMouseClickBit);
+}
+
+bool VirtWnd::WantsMouseMove() const
+{
+    return bit::IsSet(wantedInputBits, WantsMouseMoveBit);
+}
+
+bool VirtWnd::IsMouseOver() const
+{
+    return bit::IsSet(stateBits, MouseOverBit);
+}
+
+bool VirtWnd::IsVisible() const
+{
+    return !bit::IsSet(stateBits, IsHiddenBit);
+}
+
+void VirtWnd::SetIsMouseOver(bool isOver)
+{
+    if (isOver)
+        bit::Set(stateBits, MouseOverBit);
+    else
+        bit::Clear(stateBits, MouseOverBit);
 }
 
 void VirtWnd::AddChild(VirtWnd *wnd, int pos)
@@ -651,7 +689,7 @@ void VirtWndButton::Paint(Graphics *gfx, int offX, int offY)
     Prop *textAlign = props[10].prop;
 
     RectF bbox((REAL)offX, (REAL)offY, (REAL)pos.Width, (REAL)pos.Height);
-    Brush *brBgColor = CreateBrush(bgCol, bbox);
+    Brush *brBgColor = BrushFromProp(bgCol, bbox);
     gfx->FillRectangle(brBgColor, bbox);
     ::delete brBgColor;
 
@@ -671,7 +709,7 @@ void VirtWndButton::Paint(Graphics *gfx, int offX, int offY)
     int alignedOffX = AlignedOffset(pos.Width - pad.left - pad.right, textDx, textAlign->align.align);
     int x = offX + alignedOffX + pad.left + (int)leftWidth->width.width;
     int y = offY + pad.top + (int)topWidth->width.width;
-    Brush *brColor = CreateBrush(col, bbox); // restrict bbox to just the text?
+    Brush *brColor = BrushFromProp(col, bbox); // restrict bbox to just the text?
     gfx->DrawString(text, str::Len(text), GetFontForState(), PointF((REAL)x, (REAL)y), NULL, brColor);
     ::delete brColor;
 }
@@ -704,13 +742,46 @@ void VirtWndHwnd::TopLevelLayout()
     layoutRequested = false;
 }
 
+VirtWndHwnd::VirtWndHwnd(HWND hwnd) 
+    : painter(NULL), evtMgr(NULL), layoutRequested(false)
+{
+    if (hwnd)
+        SetHwnd(hwnd);
+}
+
+VirtWndHwnd::~VirtWndHwnd()
+{
+    delete evtMgr;
+    delete painter;
+}
+
+// mark for re-layout at the earliest convenience
+void VirtWndHwnd::RequestLayout()
+{
+    layoutRequested = true;
+    // trigger message queue so that the layout request is processed
+    PostMessage(hwndParent, WM_NULL, 0, 0);
+}
+
+void VirtWndHwnd::LayoutIfRequested()
+{
+    if (layoutRequested)
+        TopLevelLayout();
+}
+
+void VirtWndHwnd::OnPaint(HWND hwnd)
+{
+    CrashIf(hwnd != hwndParent);
+    painter->OnPaint(hwnd);
+}
+
 // we paint the background in VirtWndPainter() because I don't
 // want to add an artificial VirtWnd window just to cover
 // the whole HWND and paint the background.
 void VirtWndPainter::PaintBackground(Graphics *g, Rect r)
 {
     Prop *bgProp = GetProp(wnd->styleDefault, gStyleDefault, PropBgColor);
-    Brush *br = CreateBrush(bgProp, r);
+    Brush *br = BrushFromProp(bgProp, r);
     g->FillRectangle(br, r);
     ::delete br;
 }

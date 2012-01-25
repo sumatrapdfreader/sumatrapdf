@@ -29,13 +29,13 @@ Graphics *  GetGraphicsForMeasureText();
 Rect        MeasureTextWithFont(Font *f, const TCHAR *s);
 void        RequestRepaint(VirtWnd *w, const Rect *r1 = NULL, const Rect *r2 = NULL);
 void        RequestLayout(VirtWnd *w);
-Brush *     CreateBrush(Prop *p, const Rect& r);
+Brush *     BrushFromProp(Prop *p, const Rect& r);
 
 class IClickHandler
 {
 public:
-    IClickHandler() {
-    };
+    IClickHandler() {}
+    virtual ~IClickHandler() {}
     virtual void Clicked(VirtWnd *w, int x, int y) = 0;
 };
 
@@ -129,17 +129,12 @@ public:
     VirtWnd(VirtWnd *newParent=NULL);
     virtual ~VirtWnd();
 
-    void SetParent(VirtWnd *newParent);
+    void        SetParent(VirtWnd *newParent);
+    void        AddChild(VirtWnd *wnd, int pos = -1);
+    VirtWnd *   GetChild(size_t idx) const;
+    size_t      GetChildCount() const;
 
-    void AddChild(VirtWnd *wnd, int pos = -1);
-
-    VirtWnd *GetChild(size_t idx) const {
-        return children.At(idx);
-    }
-
-    size_t GetChildCount() const {
-        return children.Count();
-    }
+    void        SetPosition(const Rect& p);
 
     virtual void Paint(Graphics *gfx, int offX, int offY);
 
@@ -151,7 +146,6 @@ public:
     // using as much space as the window wants
     virtual void Measure(const Size availableSize);
     virtual void Arrange(const Rect finalRect);
-    Size            desiredSize;
 
     // mouse enter/leave are used e.g. by a button to change the look when mouse
     // is over them. The intention is that in response to those a window should
@@ -160,46 +154,29 @@ public:
     virtual void NotifyMouseEnter() {}
     virtual void NotifyMouseLeave() {}
 
-    void SetIsMouseOver(bool isOver) {
-        if (isOver)
-            bit::Set(stateBits, MouseOverBit);
-        else
-            bit::Clear(stateBits, MouseOverBit);
-    }
-
     virtual void NotifyMouseMove(int x, int y) {}
 
     virtual void RegisterEventHandlers(EventMgr *evtMgr) {}
     virtual void UnRegisterEventHandlers(EventMgr *evtMgr) {}
 
-    uint16_t        wantedInputBits; // WndWantedInputBits
-    uint16_t        stateBits;       // WndStateBits
-    // windows with bigger z-order are painted on top, 0 is default
-    int16_t         zOrder;
+    bool WantsMouseClick() const;
+    bool WantsMouseMove() const;
+    bool IsMouseOver() const;
+    void SetIsMouseOver(bool isOver);
 
-    bool WantsMouseClick() const {
-        return bit::IsSet(wantedInputBits, WantsMouseClickBit);
-    }
-    bool WantsMouseMove() const {
-        return bit::IsSet(wantedInputBits, WantsMouseMoveBit);
-    }
-
-    bool IsMouseOver() const {
-        return bit::IsSet(stateBits, MouseOverBit);
-    }
-
-    bool IsVisible() const {
-        return !bit::IsSet(stateBits, IsHiddenBit);
-    }
-
+    bool IsVisible() const;
     void Hide();
     void Show();
 
     void MeasureChildren(Size availableSize) const;
     void MapRootToMyPos(int& x, int& y) const;
 
-    Layout *        layout;
+    uint16_t        wantedInputBits; // WndWantedInputBits
+    uint16_t        stateBits;       // WndStateBits
+    // windows with bigger z-order are painted on top, 0 is default
+    int16_t         zOrder;
 
+    Layout *        layout;
     VirtWnd *       parent;
 
     // VirtWnd doesn't own this object to allow sharing the same
@@ -213,7 +190,7 @@ public:
     // position and size (relative to parent, might be outside of parent's bounds)
     Rect            pos;
 
-    void SetPosition(const Rect& p);
+    Size            desiredSize;
 
 private:
     Vec<VirtWnd*>   children;
@@ -230,36 +207,15 @@ public:
     VirtWndPainter *    painter;
     EventMgr *          evtMgr;
 
-    VirtWndHwnd(HWND hwnd = NULL) : painter(NULL), evtMgr(NULL), layoutRequested(false) {
-        if (hwnd)
-            SetHwnd(hwnd);
-    }
+    VirtWndHwnd(HWND hwnd = NULL);
+    virtual ~VirtWndHwnd();
 
-    virtual ~VirtWndHwnd() {
-        delete evtMgr;
-        delete painter;
-    }
+    void            RequestLayout();
+    void            LayoutIfRequested();
+    void            SetHwnd(HWND hwnd);
+    void            OnPaint(HWND hwnd);
 
-    // mark for re-layout at the earliest convenience
-    void RequestLayout() {
-        layoutRequested = true;
-        // trigger message queue so that the layout request is processed
-        PostMessage(hwndParent, WM_NULL, 0, 0);
-    }
-
-    void LayoutIfRequested() {
-        if (layoutRequested)
-            TopLevelLayout();
-    }
-
-    void SetHwnd(HWND hwnd);
-
-    void OnPaint(HWND hwnd) {
-        CrashIf(hwnd != hwndParent);
-        painter->OnPaint(hwnd);
-    }
-
-    virtual void TopLevelLayout();
+    virtual void    TopLevelLayout();
 };
 
 class VirtWndButton : public VirtWnd

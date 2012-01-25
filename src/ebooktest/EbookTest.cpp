@@ -170,7 +170,7 @@ void HorizontalProgressBar::Paint(Graphics *gfx, int offX, int offY)
     Prop *bgCol = props[1].prop;
 
     Rect r(offX, offY, pos.Width, pos.Height);
-    Brush *br = CreateBrush(bgCol, r);
+    Brush *br = BrushFromProp(bgCol, r);
     gfx->FillRectangle(br, r);
     ::delete br;
 
@@ -185,7 +185,7 @@ void HorizontalProgressBar::Paint(Graphics *gfx, int offX, int offY)
 
     r.Y += (r.Height - dy);
     r.Height = dy;
-    br = CreateBrush(col, r);
+    br = BrushFromProp(col, r);
     gfx->FillRectangle(br, r);
     ::delete br;
 }
