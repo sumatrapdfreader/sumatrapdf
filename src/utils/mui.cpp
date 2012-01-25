@@ -778,6 +778,10 @@ void VirtWndHwnd::OnPaint(HWND hwnd)
 // the whole HWND and paint the background.
 void VirtWndPainter::PaintBackground(Graphics *g, Rect r)
 {
+    // TODO: don't quite get why I need to expand the rectangle, but
+    // sometimes there's a seemingly 1 pixel artifact on the left and
+    // at the top if I don't do this
+    r.Inflate(1,1);
     Prop *bgProp = GetProp(wnd->styleDefault, gStyleDefault, PropBgColor);
     Brush *br = BrushFromProp(bgProp, r);
     g->FillRectangle(br, r);
