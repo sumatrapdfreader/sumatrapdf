@@ -86,8 +86,9 @@ class EventMgr
 
     Vec<ClickHandler> clickHandlers;
 
-    LRESULT OnMouseMove(WPARAM keys, int x, int y, bool& handledOut);
-    LRESULT OnLButtonUp(WPARAM keys, int x, int y, bool& handledOut);
+    LRESULT OnSetCursor(int x, int y, bool& wasHandled);
+    LRESULT OnMouseMove(WPARAM keys, int x, int y, bool& wasHandled);
+    LRESULT OnLButtonUp(WPARAM keys, int x, int y, bool& wasHandled);
 public:
     EventMgr(VirtWndHwnd *wndRoot) : wndRoot(wndRoot), currOver(NULL)
     {
@@ -187,9 +188,14 @@ public:
     // only used by VirtWndHwnd but we need it here
     HWND            hwndParent;
 
+    // the object doesn't own hCursor in order to enable easy 
+    // sharing of cursor among many windows
+    HCURSOR         hCursor;
+
     // position and size (relative to parent, might be outside of parent's bounds)
     Rect            pos;
 
+    // desired size calculated in Measure()
     Size            desiredSize;
 
 private:

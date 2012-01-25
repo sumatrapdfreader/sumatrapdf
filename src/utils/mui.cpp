@@ -40,23 +40,15 @@ lots of subclasses and forcing logic into a button class. We provide
 a way to subscribe any class implementing IClickHandler interface
 to register for click evens from any window that generates thems.
 
-TODO: a way to easily do text selection in generic way in EventMgr
-by giving windows a way to declare they have selectable text
-
 TODO: generic way to handle tooltips
 
-TODO: generic way to handle cursor changes
+TODO: ability to specify minimum window size and enforce it during layout and
+resizing (WM_GETMINMAXINFO)
 
-TODO: optimize repainting by cliping to dirty regions
-
-TODO: when registering for events and such we use VirtWnd * to identify
-a window which leaves small (but non-zero) chance that the window
-has been destoryed or a pointer was re-used for another window.
-We could fix that by automatically assigning unique id for each
-VirtWnd and identify windows by that
-
-TODO: some claim GDI+ text drawing is slower than GDI, so we could try
-to use GDI instead
+TODO: generic, flexible layout where I can just add windows. See
+http://www.codeproject.com/Articles/194173/QuickDialogs-a-library-for-creating-dialogs-quickl
+for how it could look like, syntax-wise. Layout itself could implement
+something similar to html box model (http://marlongrech.wordpress.com/2012/01/23/thinking-in-boxes/) or maybe like Rebol/View (http://www.rebol.com/docs/view-system.html)
 
 TODO: add size to content option to VirtWndHwnd (a bool flag, if set instead
 of using window's size as available area, use infinite and size the
@@ -64,14 +56,19 @@ window to the result of the layout process). Alternatively (or in
 addition) could have a way to only do "size to content" on first layout
 and then do regular layout
 
-TODO: ability to specify minimum window size and enforce it during layout and
-resizing (WM_GETMINMAXINFO)
+TODO: a way to easily do text selection in generic way in EventMgr
+by giving windows a way to declare they have selectable text
+
+TODO: some claim GDI+ text drawing is slower than GDI, so we could try
+to use GDI instead
 
 TODO: optimize size of VirtWnd. One idea is that instead of embedding rarely used
 properties (like e.g. VirtWnd::hwndParent), we could maintain separate mapping
 from VirtWnd * to such properties e.g. in an array. Another idea is to move
 rarely used fields into a separate struct linked from VirtWnd. If none of rarely
 used fields was set, we wouldn't have to allocate that struct.
+
+TODO: optimize repainting by cliping to dirty regions (?)
 */
 
 #include "mui.h"
@@ -375,6 +372,7 @@ VirtWnd::VirtWnd(VirtWnd *newParent)
     parent = NULL;
     hwndParent = NULL;
     layout = NULL;
+    hCursor = NULL;
     styleDefault = NULL;
     pos = Rect();
     if (newParent)
@@ -899,9 +897,14 @@ IClickHandler *EventMgr::GetClickHandlerFor(VirtWnd *wndSource)
     return NULL;
 }
 
+static void SetDefaultCursor()
+{
+    SetCursor(LoadCursor(NULL, IDC_ARROW));
+}
+
 // TODO: optimize by getting both mouse over and mouse move windows in one call
 // x, y is a position in the root window
-LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& handledOut)
+LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& wasHandled)
 {
     Vec<WndAndOffset> windows;
     VirtWnd *w;
@@ -913,6 +916,7 @@ LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& handledOut)
             currOver->SetIsMouseOver(false);
             currOver->NotifyMouseLeave();
             currOver = NULL;
+            SetDefaultCursor();
         }
     } else {
         // TODO: should this take z-order into account ?
@@ -925,6 +929,10 @@ LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& handledOut)
             currOver = w;
             currOver->SetIsMouseOver(true);
             currOver->NotifyMouseEnter();
+            if (currOver->hCursor)
+                SetCursor(currOver->hCursor);
+            else
+                SetDefaultCursor();
         }
     }
 
@@ -941,7 +949,7 @@ LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& handledOut)
 // TODO: quite possibly the real logic for generating "click" events is
 // more complicated
 // (x, y) is in the coordinates of the root window
-LRESULT EventMgr::OnLButtonUp(WPARAM keys, int x, int y, bool& handledOut)
+LRESULT EventMgr::OnLButtonUp(WPARAM keys, int x, int y, bool& wasHandled)
 {
     Vec<WndAndOffset> windows;
     uint16_t wantedInputMask = bit::FromBit<uint16_t>(VirtWnd::WantsMouseClickBit);
@@ -957,24 +965,41 @@ LRESULT EventMgr::OnLButtonUp(WPARAM keys, int x, int y, bool& handledOut)
     return 0;
 }
 
-// TODO: not sure if handledOut serves any purpose (what exactly should it mean?)
-LRESULT EventMgr::OnMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& handledOut)
+LRESULT EventMgr::OnSetCursor(int x, int y, bool& wasHandled)
+{
+    wasHandled = true;
+    if (currOver && currOver->hCursor) {
+        SetCursor(currOver->hCursor);
+    } else {
+        SetDefaultCursor();
+    }
+    return TRUE;
+}
+
+LRESULT EventMgr::OnMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& wasHandled)
 {
     if (WM_SIZE == msg)
         wndRoot->RequestLayout();
 
     wndRoot->LayoutIfRequested();
 
-    handledOut = false;
+    wasHandled = false;
     int x = GET_X_LPARAM(lParam);
     int y = GET_Y_LPARAM(lParam);
 
+    if (WM_SETCURSOR == msg) {
+        POINT pt;
+        if (GetCursorPos(&pt) && ScreenToClient(wndRoot->hwndParent, &pt)) {
+            return OnSetCursor(pt.x, pt.y, wasHandled);
+        }
+    }
+
     if (WM_MOUSEMOVE == msg) {
-        return OnMouseMove(wParam, x, y, handledOut);
+        return OnMouseMove(wParam, x, y, wasHandled);
     }
 
     if (WM_LBUTTONUP == msg) {
-        return OnLButtonUp(wParam, x, y, handledOut);
+        return OnLButtonUp(wParam, x, y, wasHandled);
     }
 
     if (WM_NULL == msg) {

@@ -39,6 +39,7 @@ class VirtWndEbook;
 static HINSTANCE        ghinst;
 static HWND             gHwndFrame = NULL;
 static VirtWndEbook *   gVirtWndFrame = NULL;
+static HCURSOR          gCursorHand = NULL;
 
 static bool gShowTextBoundingBoxes = false;
 
@@ -522,6 +523,7 @@ VirtWndEbook::VirtWndEbook(HWND hwnd)
     status->styleMouseOver = statusDefault;
 
     horizProgress = new HorizontalProgressBar();
+    horizProgress->hCursor = gCursorHand;
     horizProgressDefault = new Style();
     horizProgressDefault->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
     horizProgressDefault->Set(Prop::AllocColorSolid(PropColor, "yellow"));
@@ -751,9 +753,9 @@ static LRESULT OnCommand(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     if (gVirtWndFrame) {
-        bool handled;
-        LRESULT res = gVirtWndFrame->evtMgr->OnMessage(msg, wParam, lParam, handled);
-        if (handled)
+        bool wasHandled;
+        LRESULT res = gVirtWndFrame->evtMgr->OnMessage(msg, wParam, lParam, wasHandled);
+        if (wasHandled)
             return res;
     }
 
@@ -861,6 +863,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     ScopedGdiPlus gdi;
 
     mui::Initialize();
+
+    gCursorHand  = LoadCursor(NULL, IDC_HAND);
 
     //ParseCommandLine(GetCommandLine());
     if (!RegisterWinClass(hInstance))
