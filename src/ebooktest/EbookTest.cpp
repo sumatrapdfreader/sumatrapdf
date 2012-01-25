@@ -69,12 +69,17 @@ ___________________
 
 class VirtWndEbook : public VirtWndHwnd, public IClickHandler
 {
+    static const int CircleR = 10;
+
     void AdvancePage(int dist);
+
 public:
     MobiParse *     mb;
     const char *    html;
     PageLayout *    pageLayout;
     int             currPageNo;
+
+    int             cursorX, cursorY;
 
     VirtWndButton * next;
     VirtWndButton * prev;
@@ -106,6 +111,8 @@ public:
     }
 
     virtual void Paint(Graphics *gfx, int offX, int offY);
+
+    virtual void NotifyMouseMove(int x, int y);
 
     // IClickHandler
     virtual void Clicked(VirtWnd *w);
@@ -283,6 +290,21 @@ void VirtWndEbook::LoadMobi(const TCHAR *fileName)
     pageLayout = NULL;
 }
 
+static Rect RectForCircle(int x, int y, int r)
+{
+    return Rect(x - r, y - r, r * 2, r * 2);
+}
+
+// This is just to test mouse move handling
+void VirtWndEbook::NotifyMouseMove(int x, int y)
+{
+    Rect r1 = RectForCircle(cursorX, cursorY, CircleR);
+    Rect r2 = RectForCircle(x, y, CircleR);
+    cursorX = x; cursorY = y;
+
+    RequestRepaint(this, &r1, &r2);
+}
+
 VirtWndEbook::VirtWndEbook(HWND hwnd)
 {
     mb = NULL;
@@ -291,6 +313,9 @@ VirtWndEbook::VirtWndEbook(HWND hwnd)
     currPageNo = 0;
     SetHwnd(hwnd);
 
+    cursorX = 20; cursorY = 20;
+
+    bit::Set(wantedInputBits, WantsMouseMoveBit);
     styleDefault = new Style();
     styleDefault->Set(Prop::AllocPadding(pageBorderY, pageBorderX, pageBorderY, pageBorderX));
 
@@ -435,6 +460,15 @@ static void DrawPageLayout(Graphics *g, PageLayout *pg, int pageNo, REAL offX, R
 
 void VirtWndEbook::Paint(Graphics *gfx, int offX, int offY)
 {
+    // for testing mouse move, paint a blue circle at current cursor position
+    if ((-1 != cursorX) && (-1 != cursorY)) {
+        SolidBrush br(Color(180, 0, 0, 255));
+        int x = offX + cursorX;
+        int y = offY + cursorY;
+        Rect r(RectForCircle(x, y, CircleR));
+        gfx->FillEllipse(&br, r);
+    }
+
     if (!pageLayout)
         return;
     Prop *propPadding = GetProp(styleDefault, gStyleDefault, PropPadding);

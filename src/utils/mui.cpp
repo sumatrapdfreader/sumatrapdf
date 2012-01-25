@@ -452,6 +452,22 @@ void VirtWnd::SetPosition(const Rect& p)
     pos = p;
 }
 
+// convert position (x,y) int coordiantes of root window
+// to position in this window's coordinates
+void VirtWnd::MapRootToMyPos(int& x, int& y) const
+{
+    int offX = pos.X;
+    int offY = pos.Y;
+    const VirtWnd *w = this;
+    while (w->parent) {
+        w = w->parent;
+        offX += w->pos.X;
+        offY += w->pos.Y;
+    }
+    x -= offX;
+    y -= offY;
+}
+
 // Requests the window to draw itself on a Graphics canvas.
 // offX and offY is a position of this window within
 // Graphics canvas (pos is relative to that offset)
@@ -771,9 +787,13 @@ IClickHandler *EventMgr::GetClickHandlerFor(VirtWnd *wndSource)
     return NULL;
 }
 
+// TODO: optimize by getting both mouse over and mouse move windows in one call
+// x, y is a position in the root window
 LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& handledOut)
 {
     Vec<WndAndOffset> windows;
+    VirtWnd *w;
+
     uint32_t wantedInputMask = bit::FromBit<uint32_t>(VirtWnd::WantsMouseOverBit);
     size_t count = CollectWindowsAt(wndRoot, x, y, wantedInputMask, &windows);
     if (0 == count) {
@@ -781,17 +801,24 @@ LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& handledOut)
             currOver->NotifyMouseLeave();
             currOver = NULL;
         }
-        return 0;
+    } else {
+        // TODO: should this take z-order into account ?
+        w = windows.Last().wnd;
+        if (w != currOver) {
+            if (currOver)
+                currOver->NotifyMouseLeave();
+            currOver = w;
+            currOver->NotifyMouseEnter();
+        }
     }
 
-    // TODO: should this take zOrder into account ?
-    VirtWnd *w = windows.Last().wnd;
-    if (w != currOver) {
-        if (currOver)
-            currOver->NotifyMouseLeave();
-        currOver = w;
-        currOver->NotifyMouseEnter();
-    }
+    wantedInputMask = bit::FromBit<uint32_t>(VirtWnd::WantsMouseMoveBit);
+    count = CollectWindowsAt(wndRoot, x, y, wantedInputMask, &windows);
+    if (0 == count)
+        return 0;
+    w = windows.Last().wnd;
+    w->MapRootToMyPos(x, y);
+    w->NotifyMouseMove(x, y);
     return 0;
 }
 

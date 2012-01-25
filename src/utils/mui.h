@@ -112,6 +112,7 @@ public:
         WantsMouseDownBit   = 1,
         WantsMouseUpBit     = 2,
         WantsMouseClickBit  = 3,
+        WantsMouseMoveBit   = 4,
         WndWantedInputBitLast
     };
 
@@ -158,6 +159,7 @@ public:
     // that affects the window itself, not the rest of the system
     virtual void NotifyMouseEnter() {}
     virtual void NotifyMouseLeave() {}
+    virtual void NotifyMouseMove(int x, int y) {}
 
     uint16_t        wantedInputBits; // WndWantedInputBits
     uint16_t        stateBits;       // WndStateBits
@@ -166,6 +168,9 @@ public:
 
     bool WantsMouseClick() const {
         return bit::IsSet(wantedInputBits, WantsMouseClickBit);
+    }
+    bool WantsMouseMove() const {
+        return bit::IsSet(wantedInputBits, WantsMouseMoveBit);
     }
 
     bool IsVisible() const {
@@ -176,6 +181,7 @@ public:
     void Show();
 
     void MeasureChildren(Size availableSize) const;
+    void MapRootToMyPos(int& x, int& y) const;
 
     Layout *        layout;
 
