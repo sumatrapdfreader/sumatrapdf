@@ -45,6 +45,14 @@ static bool gShowTextBoundingBoxes = false;
 // A sample text to display if we don't show an actual mobi file
 static const char *gSampleHtml = "<html><p align=justify>ClearType is <b>dependent</b> on the <i>orientation and ordering</i> of the LCD stripes.</p> <p align='right'><em>Currently</em>, ClearType is implemented <hr> only for vertical stripes that are ordered RGB.</p> <p align=center>This might be a concern if you are using a tablet PC.</p> <p>Where the display can be oriented in any direction, or if you are using a screen that can be turned from landscape to portrait. The <strike>following example</strike> draws text with two <u>different quality</u> settings.</p> On to the <b>next<mbp:pagebreak>page</b></html>";
 
+static float PercFromInt(int total, int n)
+{
+    CrashIf(n > total);
+    if (0 == total)
+        return 0.f;
+    return (float)n / (float)total;
+}
+
 /* The layout is:
 ___________________
 |                 |
@@ -67,9 +75,10 @@ ___________________
 // For the purpose of layout, we use the bigger of the to as the real
 // height of the control
 // TODO: we don't take padding int account yet
-class HorizontalProgressBar : public VirtWnd, public IClickHandler
+// Clients can register fo IClickEvent events for this window to implement
+// interactivity
+class HorizontalProgressBar : public VirtWnd
 {
-    // onOverDy and inactiveDy include padding
     int     onOverDy;    // when mouse is over
     int     inactiveDy;  // when mouse is not over
 
@@ -80,19 +89,15 @@ class HorizontalProgressBar : public VirtWnd, public IClickHandler
 
 public:
     HorizontalProgressBar(int onOverDy = 12, int inactiveDy = 5);
-    ~HorizontalProgressBar() {
-        // TODO: unregister as click handler for itself
-    }
+    ~HorizontalProgressBar() { }
     virtual void Measure(const Size availableSize);
     virtual void NotifyMouseEnter();
     virtual void NotifyMouseLeave();
 
     virtual void Paint(Graphics *gfx, int offX, int offY);
 
-    // IClickHandler
-    virtual void Clicked(VirtWnd *w);
-
     void SetFilled(float perc);
+    float GetPercAt(int x);
 };
 
 HorizontalProgressBar::HorizontalProgressBar(int onOverDy, int inactiveDy)
@@ -144,6 +149,11 @@ void HorizontalProgressBar::SetFilled(float perc)
         RequestRepaint(this);
 }
 
+float HorizontalProgressBar::GetPercAt(int x)
+{
+    return PercFromInt(pos.Width, x);
+}
+
 void HorizontalProgressBar::Paint(Graphics *gfx, int offX, int offY)
 {
     if (!IsVisible())
@@ -178,12 +188,6 @@ void HorizontalProgressBar::Paint(Graphics *gfx, int offX, int offY)
     br = CreateBrush(col, r);
     gfx->FillRectangle(br, r);
     ::delete br;
-}
-
-void HorizontalProgressBar::Clicked(VirtWnd *w)
-{
-    CrashIf(w != this);
-    // TODO: generate a notification about a click
 }
 
 class VirtWndEbook : public VirtWndHwnd, public IClickHandler
@@ -244,7 +248,7 @@ public:
     virtual void NotifyMouseMove(int x, int y);
 
     // IClickHandler
-    virtual void Clicked(VirtWnd *w);
+    virtual void Clicked(VirtWnd *w, int x, int y);
 
     void SetHtml(const char *html);
     void LoadMobi(const TCHAR *fileName);
@@ -356,14 +360,6 @@ void EbookLayout::Arrange(const Rect finalRect, VirtWnd *wnd)
     if (rectDy < 0)
         rectDy = 0;
     wndEbook->DoPageLayout(rectDx, rectDy);
-}
-
-static float PercFromInt(int total, int n)
-{
-    CrashIf(n > total);
-    if (0 == total)
-        return 0.f;
-    return (float)n / (float)total;
 }
 
 void VirtWndEbook::SetStatusText() const
@@ -549,7 +545,8 @@ void VirtWndEbook::UnRegisterEventHandlers(EventMgr *evtMgr)
     evtMgr->UnRegisterClickHandlers(this);
 }
 
-void VirtWndEbook::Clicked(VirtWnd *w)
+// (x, y) is in the coordinates of w
+void VirtWndEbook::Clicked(VirtWnd *w, int x, int y)
 {
     if (w == next) {
         AdvancePage(1);
@@ -564,6 +561,10 @@ void VirtWndEbook::Clicked(VirtWnd *w)
     if (w == test) {
         ScopedMem<TCHAR> s(str::Join(test->text, _T("0")));
         test->SetText(s.Get());
+        return;
+    }
+
+    if (w == horizProgress) {
         return;
     }
 

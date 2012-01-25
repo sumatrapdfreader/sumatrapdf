@@ -36,7 +36,7 @@ class IClickHandler
 public:
     IClickHandler() {
     };
-    virtual void Clicked(VirtWnd *w) = 0;
+    virtual void Clicked(VirtWnd *w, int x, int y) = 0;
 };
 
 // Layout can be optionally set on VirtWnd. If set, it'll be

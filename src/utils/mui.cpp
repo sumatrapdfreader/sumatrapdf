@@ -869,6 +869,7 @@ LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& handledOut)
 
 // TODO: quite possibly the real logic for generating "click" events is
 // more complicated
+// (x, y) is in the coordinates of the root window
 LRESULT EventMgr::OnLButtonUp(WPARAM keys, int x, int y, bool& handledOut)
 {
     Vec<WndAndOffset> windows;
@@ -876,11 +877,12 @@ LRESULT EventMgr::OnLButtonUp(WPARAM keys, int x, int y, bool& handledOut)
     size_t count = CollectWindowsAt(wndRoot, x, y, wantedInputMask, &windows);
     if (0 == count)
         return 0;
-    // TODO: should this take zOrder into account?
+    // TODO: should this take z-order into account?
     VirtWnd *w = windows.Last().wnd;
+    w->MapRootToMyPos(x, y);
     IClickHandler *clickHandler = GetClickHandlerFor(w);
     if (clickHandler)
-        clickHandler->Clicked(w);
+        clickHandler->Clicked(w, x, y);
     return 0;
 }
 
