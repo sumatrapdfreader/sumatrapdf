@@ -16,12 +16,21 @@ def verify_path_exists(p):
 		print("Path %s doesn't exists" % p)
 		sys.exit(1)
 
-def ensure_dir_exists(p):
+def ensure_dir(p):
     if not os.path.exists(p):
         os.makedirs(p)
 
+def ensure_dir_for_file(f):
+    d = os.path.dirname(f)
+    if not os.path.exists(d):
+        os.makedirs(d)
+
 gRejectedIncludes = {}
 
+def is_h_file(fp): return fp.endswith(".h")
+
+# try to reject includes that are not in chrome source tree,
+# like system or stl includes
 def is_chrome_include(fp):
 	s = fp
 	d = ""
@@ -41,13 +50,9 @@ def extract_includes(fp):
 	print("Includes in %s: %s" % (fp, includes))
 	return includes
 
-def is_h_file(fp): return fp.endswith(".h")
-
-# TODO: tracked_objects.cc includes "valgrind.h" which is in
-# base/third_party/valgrind/ but it doesn't use the full path, as it should
-# maybe I can just add /I
+# some files shouldn't be copied even if our heuristic flags it as needed
 def is_cpp_blaclisted(fp):
-	for s in ["file_descriptor_shuffle.cc", "string16.cc", "tracked_objects.cc"]:
+	for s in ["file_descriptor_shuffle.cc", "string16.cc", "dtoa.cc"]:
 		if fp.endswith(s): return True
 	return False
 
@@ -71,6 +76,8 @@ def matching_cpp_win_file(dir, fp):
 		return fname
 	return None
 
+# find .cc files matching .h files e.g. foo.cc matches foo.h
+# (assuming it exists)
 def get_cpp_matching_h(dir, files):
 	additional = []
 	for f in files:
@@ -91,13 +98,7 @@ def not_win_file(f):
 	if pj("base", "mac") in f: return True
 	if pj("base", "nix") in f: return True
 	if pj("base", "android") in f: return True
-	#if pj("base", "third_party", "valgrind") in f: return True
 	return False
-
-def ensure_dir_for_file(f):
-    d = os.path.dirname(f)
-    if not os.path.exists(d):
-        os.makedirs(d)
 
 def copy_files(srcDir, dstDir, files):
 	for f in files:
@@ -141,24 +142,45 @@ def unique_dirs(files):
 			dirs[d] = True
 	return dirs.keys()
 
+def get_license_files(srcDir, files):
+	dirs = unique_dirs(files)
+	license_files = []
+	for d in dirs:
+		fp = pj(d, "LICENSE")
+		if os.path.exists(pj(srcDir, fp)):
+			license_files.append(fp)
+	return license_files
+
 def cpp_rules(dirs):
 	rules = [DIR_TMPL % d for d in dirs]
 	return string.join(rules, "")
 
-def chrome_inc(dirs):
-	return "/I$(EXTDIR)\\chrome"
-	#strings = ["/I$(EXTDIR)\chrome\%s" % d for d in dirs]
-	#return string.join(strings, " ")
+def chrome_inc():
+	return "/I$(EXTDIR)\\chrome /I$(EXTDIR)\\chrome\\base\\third_party\\valgrind/"
+
+def objname_from_cname(s):
+	if s.endswith(".c"): return s[:-1] + "obj"
+	if s.endswith(".cc"): return s[:-2] + "obj"
+	print("%s is not .c or .cc file!!!" % s)
+	sys.exit(1)
 
 def write_makefile(dstDir, files):
 	makefile_filename = pj(dstDir, "makefile.msvc")
-	cpp_files = [f.replace("/", "\\") for f in files if f.endswith(".cc")]
+	cpp_files = [f.replace("/", "\\") for f in files if f.endswith(".cc") or f.endswith(".c")]
 	dirs = unique_dirs(cpp_files)
 	cpp_files = [os.path.basename(f) for f in cpp_files]
-	obj = ["$(OCH)\\%sobj" % f[:-2] for f in cpp_files]
+ 	# a special case, dtoa.cc is #included in dtoa_wrapper.cc, so we need to copy
+ 	# it but not compile it
+ 	cpp_files.remove("dtoa.cc")
+	obj = ["$(OCH)\\%s" % objname_from_cname(f) for f in cpp_files]
 	objs = string.join(obj, " ")
 	rules = cpp_rules(dirs)
-	inc = chrome_inc(dirs)
+	# all rules are for .cc files, this is a single exception
+	rules += """
+{$(EXTDIR)\\chrome\\base\\third_party\\dynamic_annotations}.c{$(OCH)}.obj::
+	$(CC) $(CHROME_CFLAGS) /Fo$(OCH)\\ /Fd$(O)\\vc80.pdb $<
+	"""
+	inc = chrome_inc()
 	s = MAKEFILE_TMPL % (inc, objs, rules)
 	print(s)
 	#print(dirs)
@@ -168,8 +190,13 @@ def main():
 	srcDir = get_src_dir()
 	dstDir = get_dst_dir()
 
-	ensure_dir_exists(dstDir)
-	bootstrapFiles = [pj("base", "bind.h")]
+	ensure_dir(dstDir)
+	bootstrapFiles = [
+		pj("base", "bind.h"),
+		pj("base", "third_party", "dmg_fp", "dtoa_wrapper.cc"),
+		pj("base", "third_party", "dmg_fp", "g_fmt.cc"),
+		pj("base", "third_party", "valgrind", "valgrind.h"),
+		pj("base", "third_party", "dynamic_annotations", "dynamic_annotations.c")]
 	for f in bootstrapFiles: verify_path_exists(pj(srcDir, f))
 	visited = {}
 	toVisit = [el for el in bootstrapFiles]
@@ -177,16 +204,18 @@ def main():
 		f = toVisit.pop(0)
 		if f in visited or not_win_file(f): continue
 		newToVisit = extract_includes(pj(srcDir, f))
-		matchinCpp = get_cpp_matching_h(srcDir, newToVisit)
+		matchingCpp = get_cpp_matching_h(srcDir, newToVisit)
 		toVisit.extend(newToVisit)
-		toVisit.extend(matchinCpp)
+		toVisit.extend(matchingCpp)
 		visited[f] = True
 
 	print("Rejected includes: %s" % gRejectedIncludes.keys())
 	files = visited.keys()
 	files.sort()
-	copy_files(srcDir, dstDir, files)
 	write_makefile(dstDir, files)
+	files.extend(get_license_files(srcDir, files))
+	files.extend(["AUTHORS", "LICENSE"]) # known files to copy
+	copy_files(srcDir, dstDir, files)
 	#for f in files: print(f)
 
 if __name__ == "__main__":

@@ -16,6 +16,7 @@
 #   also probably wouldn't work for 64-bit builds due to ...?
 #   trick: using /verbose option to the linker helps understand what it does
 #   also I'm probably mixing dll support with non-dll support
+WITH_CHROME=yes
 
 # Set default configuration
 !if "$(CFG)"==""
@@ -57,7 +58,9 @@ CFLAGSOPT = $(CFLAGSOPT) /Isrc/utils/msvc
 # include build data for the remaining third-party libraries
 !INCLUDE $(EXTDIR)\makefile.msvc
 
-# !INCLUDE $(EXTDIR)\chrome\makefile.msvc
+!if "$(WITH_CHROME)" == "yes"
+!INCLUDE $(EXTDIR)\chrome\makefile.msvc
+!endif
 
 # Modify the following defines if you have to target a platform prior to the ones specified below.
 # Their meaning: http://msdn.microsoft.com/en-us/library/aa383745(VS.85).aspx
@@ -105,7 +108,7 @@ INSTALLER_RES   = $(OS)\Installer.res
 UNINSTALLER_APP = $(O)\uninstall.exe
 UNINSTALLER_RES = $(OS)\Uninstaller.res
 
-ET_APP          = $(OCH) $(O)\EbookTest.exe
+ET_APP          = $(O)\EbookTest.exe
 ET_RES          = $(OS)\EbookTest.res
 ET_CFLAGS       = $(SUMATRA_CFLAGS) $(CHROME_INC)
 
@@ -241,7 +244,7 @@ EngineDump:    $(OS) $(ENGINEDUMP_APP)
 et:            $(OS) $(ET_APP)
 tester:        $(OS) $(TESTER_APP)
 
-$(OS): $(O) $(OE)
+$(OS): $(O) $(OE) $(OCH)
 	@if not exist $(OS) mkdir $(OS)
 
 $(SUMATRA_RES): src\SumatraPDF.rc src\Resource.h src\Version.h
@@ -271,11 +274,13 @@ $(UNINSTALLER_APP): $(UTILS_OBJS) $(UNINSTALLER_OBJS)
 $(ET_RES): src\ebooktest\EbookTest.rc src\ebooktest\Resource.h src\Version.h
 	rc /r /fo$@ $(EXTCFLAGS) src\ebooktest\EbookTest.rc
 
-#$(ET_APP): $(UTILS_OBJS) $(CHROME_OBJS) $(ET_OBJS)
-#	$(LD) $(LDFLAGS) $** $(LIBS) dbghelp.lib /PDB:$*.pdb /OUT:$@
-
+!if "$(WITH_CHROME)" == "yes"
+$(ET_APP): $(UTILS_OBJS) $(CHROME_OBJS) $(ET_OBJS)
+	$(LD) $(LDFLAGS) $** $(LIBS) dbghelp.lib psapi.lib /PDB:$*.pdb /OUT:$@
+!else
 $(ET_APP): $(UTILS_OBJS) $(ET_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
+!endif
 
 $(TESTER_APP): $(UTILS_OBJS) $(TESTER_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
