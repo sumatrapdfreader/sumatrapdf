@@ -57,7 +57,7 @@ CFLAGSOPT = $(CFLAGSOPT) /Isrc/utils/msvc
 # include build data for the remaining third-party libraries
 !INCLUDE $(EXTDIR)\makefile.msvc
 
-!INCLUDE $(EXTDIR)\chrome\makefile.msvc
+# !INCLUDE $(EXTDIR)\chrome\makefile.msvc
 
 # Modify the following defines if you have to target a platform prior to the ones specified below.
 # Their meaning: http://msdn.microsoft.com/en-us/library/aa383745(VS.85).aspx

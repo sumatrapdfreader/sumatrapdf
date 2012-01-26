@@ -347,22 +347,28 @@ add_weight(fz_weights *weights, int j, int i, fz_scale_filter *filter,
 		dist = -dist;
 	f = filter->fn(filter, dist)*F;
 	weight = (int)(256*f+0.5f);
-	if (weight == 0)
-		return;
 
 	/* Ensure i is in range */
 	if (i < 0)
 	{
 		i = 0;
-		weight = 0;
+		return;
 	}
 	else if (i >= src_w)
 	{
 		i = src_w-1;
-		weight = 0;
+		return;
 	}
 	if (weight == 0)
-		return;
+	{
+		/* We add a fudge factor here to allow for extreme downscales
+		 * where all the weights round to 0. Ensure that at least one
+		 * (arbitrarily the first one) is non zero. */
+		if (weights->new_line && f > 0)
+			weight = 1;
+		else
+			return;
+	}
 
 	DBUG(("add_weight[%d][%d] = %d(%g) dist=%g\n",j,i,weight,f,dist));
 

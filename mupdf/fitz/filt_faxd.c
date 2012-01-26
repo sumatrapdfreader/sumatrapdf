@@ -211,8 +211,7 @@ find_changing_color(const unsigned char *line, int x, int w, int color)
 	if (!line)
 		return w;
 
-	/* SumatraPDF: x (== fax->a) is 0 when it should be of -1 at the start of a line */
-	x = find_changing(line, x > 0 || !color ? x : -1, w);
+	x = find_changing(line, (x > 0 || !color) ? x : -1, w);
 
 	if (x < w && getbit(line, x) != color)
 		x = find_changing(line, x, w);
