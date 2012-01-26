@@ -57,6 +57,8 @@ CFLAGSOPT = $(CFLAGSOPT) /Isrc/utils/msvc
 # include build data for the remaining third-party libraries
 !INCLUDE $(EXTDIR)\makefile.msvc
 
+!INCLUDE $(EXTDIR)\chrome\makefile.msvc
+
 # Modify the following defines if you have to target a platform prior to the ones specified below.
 # Their meaning: http://msdn.microsoft.com/en-us/library/aa383745(VS.85).aspx
 # and http://blogs.msdn.com/oldnewthing/archive/2007/04/11/2079137.aspx
@@ -103,9 +105,9 @@ INSTALLER_RES   = $(OS)\Installer.res
 UNINSTALLER_APP = $(O)\uninstall.exe
 UNINSTALLER_RES = $(OS)\Uninstaller.res
 
-ET_APP          = $(O)\EbookTest.exe
+ET_APP          = $(OCH) $(O)\EbookTest.exe
 ET_RES          = $(OS)\EbookTest.res
-ET_CFLAGS       = $(SUMATRA_CFLAGS)
+ET_CFLAGS       = $(SUMATRA_CFLAGS) $(CHROME_INC)
 
 TESTER_APP          = $(O)\tester.exe
 TESTER_CFLAGS       = $(SUMATRA_CFLAGS)
@@ -268,6 +270,9 @@ $(UNINSTALLER_APP): $(UTILS_OBJS) $(UNINSTALLER_OBJS)
 
 $(ET_RES): src\ebooktest\EbookTest.rc src\ebooktest\Resource.h src\Version.h
 	rc /r /fo$@ $(EXTCFLAGS) src\ebooktest\EbookTest.rc
+
+#$(ET_APP): $(UTILS_OBJS) $(CHROME_OBJS) $(ET_OBJS)
+#	$(LD) $(LDFLAGS) $** $(LIBS) dbghelp.lib /PDB:$*.pdb /OUT:$@
 
 $(ET_APP): $(UTILS_OBJS) $(ET_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@

@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 
 """
-Copy source files from chrome sources to ext/chrome directory in Sumatra's
-sources. We need a script because I don't to just copy everything (it's a lot)
-and chrome files are a maze of dependencies so doing it manually is tedious.
+Copy source files from Chrome sources to ext/chrome directory.
+We need a script because I don't want to copy everything (it's a lot)
+and Chrome files are a maze of dependencies so doing it manually is tedious.
 """
 
-import os, os.path, sys, re, shutil
+import os, os.path, sys, re, shutil, string
+from chrome_makefile_tmpl import *
 
 pj = os.path.join
-#def pj(*args): return os.path.join(*args)
 
 def verify_path_exists(p):
 	if not os.path.exists(p):
@@ -30,7 +30,7 @@ def is_chrome_include(fp):
 		if "" == h:
 			break
 		s = h
-	if d in ["base", "build"]: return True
+	if d in ["base", "build", "testing"]: return True
 	gRejectedIncludes[fp] = True
 	return False
 
@@ -43,12 +43,20 @@ def extract_includes(fp):
 
 def is_h_file(fp): return fp.endswith(".h")
 
+# TODO: tracked_objects.cc includes "valgrind.h" which is in
+# base/third_party/valgrind/ but it doesn't use the full path, as it should
+# maybe I can just add /I
+def is_cpp_blaclisted(fp):
+	for s in ["file_descriptor_shuffle.cc", "string16.cc", "tracked_objects.cc"]:
+		if fp.endswith(s): return True
+	return False
+
 # see if we have foo.cc matching foo.h
 def matching_cpp_file(dir, fp):
 	if not is_h_file(fp): return None
 	fname = fp[:-2] + ".cc"
 	s = pj(dir, fname)
-	if os.path.exists(s):
+	if os.path.exists(s) and not is_cpp_blaclisted(s):
 		print("Found %s matching %s" % (fname, fp))
 		return fname
 	return None
@@ -83,7 +91,7 @@ def not_win_file(f):
 	if pj("base", "mac") in f: return True
 	if pj("base", "nix") in f: return True
 	if pj("base", "android") in f: return True
-	if pj("base", "third_party", "valgrind") in f: return True
+	#if pj("base", "third_party", "valgrind") in f: return True
 	return False
 
 def ensure_dir_for_file(f):
@@ -101,22 +109,64 @@ def copy_files(srcDir, dstDir, files):
 		#m = stat.S_IROTH | stat.S_IRGRP | stat.S_IRUSR | stat.S_IWUSR
 		#os.chmod(dst, m)
 
-def main():
-	if os.path.exists("build-pre-release.bat"):
+def get_src_dir():
+	if os.path.exists(r"z:\src\chrome\src"):
+		srcDir = r"z:\src\chrome\src"
+	elif os.path.exists("build-pre-release.bat"):
 		srcDir = pj("..", "..", "chrome", "src")
-		verify_path_exists(pj(srcDir, "base"))
-		dstDir = pj("..", "ext")
-		verify_path_exists(pj(dstDir, "freetype2"))
-		dstDir = pj(dstDir, "chrome")
 	elif os.path.exists("scripts"):
 		srcDir = pj("..", "chrome", "src")
-		verify_path_exists(pj(srcDir, "base"))
-		dstDir = "ext"
-		verify_path_exists(pj(dstDir, "freetype2"))
-		dstDir = pj(dstDir, "chrome")
 	else:
 		print("Current directory is not sumatra's dir or script dir")
 		sys.exit(1)
+	verify_path_exists(pj(srcDir, "base"))
+	return srcDir
+
+def get_dst_dir():
+	if os.path.exists("build-pre-release.bat"):
+		dstDir = pj("..", "ext")
+	elif os.path.exists("scripts"):
+		dstDir = "ext"
+	else:
+		print("Current directory is not sumatra's dir or script dir")
+		sys.exit(1)
+	verify_path_exists(pj(dstDir, "freetype2"))
+	return pj(dstDir, "chrome")
+
+def unique_dirs(files):
+	dirs = {}
+	for f in files:
+		(d, f) = os.path.split(f)
+		if d not in dirs:
+			dirs[d] = True
+	return dirs.keys()
+
+def cpp_rules(dirs):
+	rules = [DIR_TMPL % d for d in dirs]
+	return string.join(rules, "")
+
+def chrome_inc(dirs):
+	return "/I$(EXTDIR)\\chrome"
+	#strings = ["/I$(EXTDIR)\chrome\%s" % d for d in dirs]
+	#return string.join(strings, " ")
+
+def write_makefile(dstDir, files):
+	makefile_filename = pj(dstDir, "makefile.msvc")
+	cpp_files = [f.replace("/", "\\") for f in files if f.endswith(".cc")]
+	dirs = unique_dirs(cpp_files)
+	cpp_files = [os.path.basename(f) for f in cpp_files]
+	obj = ["$(OCH)\\%sobj" % f[:-2] for f in cpp_files]
+	objs = string.join(obj, " ")
+	rules = cpp_rules(dirs)
+	inc = chrome_inc(dirs)
+	s = MAKEFILE_TMPL % (inc, objs, rules)
+	print(s)
+	#print(dirs)
+	open(makefile_filename, "wb").write(s.replace("\n", "\r\n"))
+
+def main():
+	srcDir = get_src_dir()
+	dstDir = get_dst_dir()
 
 	ensure_dir_exists(dstDir)
 	bootstrapFiles = [pj("base", "bind.h")]
@@ -136,7 +186,8 @@ def main():
 	files = visited.keys()
 	files.sort()
 	copy_files(srcDir, dstDir, files)
-	for f in files: print(f)
+	write_makefile(dstDir, files)
+	#for f in files: print(f)
 
 if __name__ == "__main__":
 	main()
