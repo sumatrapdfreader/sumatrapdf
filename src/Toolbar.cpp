@@ -226,6 +226,13 @@ static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT message, WPARAM wParam, L
             return 0;
         }
     }
+    if (WM_COMMAND == message) {
+        HWND hEdit = (HWND)lParam;
+        WindowInfo *win = FindWindowInfoByHwnd(hEdit);
+        // "find as you type"
+        if (EN_UPDATE == HIWORD(wParam) && hEdit == win->hwndFindBox && gGlobalPrefs.toolbarVisible)
+            FindTextOnThread(win, FIND_FORWARD, true);
+    }
     return CallWindowProc(DefWndProcToolbar, hwnd, message, wParam, lParam);
 }
 
@@ -278,7 +285,8 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
         WM_PASTE == message ||
         WM_CUT   == message ||
         WM_CLEAR == message ||
-        WM_UNDO  == message) {
+        WM_UNDO  == message ||
+        WM_KEYUP == message) {
         ToolbarUpdateStateForWindow(win, false);
     }
 
