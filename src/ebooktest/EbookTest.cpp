@@ -21,10 +21,6 @@
 TODO: by hooking into mouse move events in HorizontalProgress control, we
 could show a window telling the user which page would we go to if he was
 to click there.
-
-TODO: when we resize and window becomes bigger, there are black bands
-drawn briefly on the right and bottom. I don't understand why - this
-doesn't happen in Sumatra.
 */
 
 using namespace Gdiplus;
@@ -731,7 +727,7 @@ static void OnOpen(HWND hwnd)
 static void OnToggleBbox(HWND hwnd)
 {
     gShowTextBoundingBoxes = !gShowTextBoundingBoxes;
-    InvalidateRect(hwnd, NULL, TRUE);
+    InvalidateRect(hwnd, NULL, FALSE);
 }
 
 static LRESULT OnCommand(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -775,8 +771,11 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
             PostQuitMessage(0);
             break;
 
+        // if we return 0, during WM_PAINT we can check
+        // PAINTSTRUCT.fErase to see if WM_ERASEBKGND
+        // was sent before WM_PAINT
         case WM_ERASEBKGND:
-            return TRUE;
+            return 0;
 
         case WM_PAINT:
             gVirtWndFrame->OnPaint(hwnd);
@@ -798,6 +797,9 @@ static BOOL RegisterWinClass(HINSTANCE hInstance)
     WNDCLASSEX  wcex;
 
     FillWndClassEx(wcex, hInstance);
+    // clear out CS_HREDRAW | CS_VREDRAW style so that resizing doesn't
+    // cause the whole window redraw
+    wcex.style = 0;
     wcex.lpszClassName  = ET_FRAME_CLASS_NAME;
     wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SUMATRAPDF));
     wcex.lpfnWndProc    = WndProcFrame;

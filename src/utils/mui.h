@@ -63,14 +63,15 @@ class VirtWndPainter
 {
     VirtWndHwnd *wnd;
     // bitmap for double-buffering
-    Bitmap *cacheBmp;
+    Bitmap *    cacheBmp;
+    Size        sizeDuringLastPaint;
 
-    virtual void PaintBackground(Graphics *g, Rect r);
+    void PaintBackground(Graphics *g, Rect r);
+
 public:
-    VirtWndPainter(VirtWndHwnd *wnd) : wnd(wnd), cacheBmp(NULL) {
-    }
+    VirtWndPainter(VirtWndHwnd *wnd);
 
-    void OnPaint(HWND hwnd);
+    void Paint(HWND hwnd);
 };
 
 // A single EventMgr is associated with a single VirtWndHwnd
