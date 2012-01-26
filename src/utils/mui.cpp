@@ -42,9 +42,6 @@ to register for click evens from any window that generates thems.
 
 TODO: generic way to handle tooltips
 
-TODO: ability to specify minimum window size and enforce it during layout and
-resizing (WM_GETMINMAXINFO)
-
 TODO: generic, flexible layout where I can just add windows. See
 http://www.codeproject.com/Articles/194173/QuickDialogs-a-library-for-creating-dialogs-quickl
 for how it could look like, syntax-wise. Layout itself could implement
@@ -719,6 +716,26 @@ static bool BitmapSizeEquals(Bitmap *bmp, int dx, int dy)
     return ((dx == bmp->GetWidth()) && (dy == bmp->GetHeight()));
 }
 
+// Set minimum size for the HWND represented by this VirtWndHwnd.
+// It is enforced in EventManager.
+// Default size is (0,0) which is unlimited.
+// For top-level windows it's the size of the whole window, including
+// non-client area like borders, title area etc.
+void VirtWndHwnd::SetMinSize(Size s)
+{
+    evtMgr->SetMinSize(s);
+}
+
+// Set maximum size for the HWND represented by this VirtWndHwnd.
+// It is enforced in EventManager.
+// Default size is (0,0) which is unlimited.
+// For top-level windows it's the size of the whole window, including
+// non-client area like borders, title area etc.
+void VirtWndHwnd::SetMaxSize(Size s)
+{
+    evtMgr->SetMaxSize(s);
+}
+
 void VirtWndHwnd::SetHwnd(HWND hwnd)
 {
     CrashIf(NULL != hwndParent);
@@ -873,6 +890,31 @@ void VirtWndPainter::OnPaint(HWND hwnd)
     EndPaint(hwnd, &ps);
 }
 
+EventMgr::EventMgr(VirtWndHwnd *wndRoot)
+    : wndRoot(wndRoot), currOver(NULL)
+{
+    CrashIf(!wndRoot);
+    //CrashIf(wndRoot->hwnd);
+}
+
+EventMgr::~EventMgr()
+{
+}
+
+// Set minimum size that will be enforced by handling WM_GETMINMAXINFO
+// Default is (0,0), which is unlimited
+void EventMgr::SetMinSize(Size s)
+{
+    minSize = s;
+}
+
+// Set maximum size that will be enforced by handling WM_GETMINMAXINFO
+// Default is (0,0), which is unlimited
+void EventMgr::SetMaxSize(Size s)
+{
+    maxSize = s;
+}
+
 void EventMgr::UnRegisterClickHandlers(IClickHandler *clickHandler)
 {
     size_t i = 0;
@@ -959,6 +1001,23 @@ LRESULT EventMgr::OnLButtonUp(WPARAM keys, int x, int y, bool& wasHandled)
     return 0;
 }
 
+static void SetIfNotZero(LONG& l, int i, bool& didSet)
+{
+    if (i != 0) {
+        l = i;
+        didSet = true;
+    }
+}
+
+LRESULT EventMgr::OnGetMinMaxInfo(MINMAXINFO *info, bool& wasHandled)
+{
+    SetIfNotZero(info->ptMinTrackSize.x, minSize.Width,  wasHandled);
+    SetIfNotZero(info->ptMinTrackSize.y, minSize.Height, wasHandled);
+    SetIfNotZero(info->ptMaxTrackSize.x, maxSize.Width,  wasHandled);
+    SetIfNotZero(info->ptMaxTrackSize.y, maxSize.Height, wasHandled);
+    return 0;
+}
+
 LRESULT EventMgr::OnSetCursor(int x, int y, bool& wasHandled)
 {
     if (currOver && currOver->hCursor) {
@@ -981,25 +1040,21 @@ LRESULT EventMgr::OnMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& wasHan
 
     if (WM_SETCURSOR == msg) {
         POINT pt;
-        if (GetCursorPos(&pt) && ScreenToClient(wndRoot->hwndParent, &pt)) {
+        if (GetCursorPos(&pt) && ScreenToClient(wndRoot->hwndParent, &pt))
             return OnSetCursor(pt.x, pt.y, wasHandled);
-        }
-    }
-
-    if (WM_MOUSEMOVE == msg) {
-        return OnMouseMove(wParam, x, y, wasHandled);
-    }
-
-    if (WM_LBUTTONUP == msg) {
-        return OnLButtonUp(wParam, x, y, wasHandled);
-    }
-
-    if (WM_NULL == msg) {
         return 0;
     }
+
+    if (WM_MOUSEMOVE == msg)
+        return OnMouseMove(wParam, x, y, wasHandled);
+
+    if (WM_LBUTTONUP == msg)
+        return OnLButtonUp(wParam, x, y, wasHandled);
+
+    if (WM_GETMINMAXINFO == msg)
+        return OnGetMinMaxInfo((MINMAXINFO*)lParam, wasHandled);
 
     return 0;
 }
 
 }
-

@@ -73,11 +73,18 @@ public:
     void OnPaint(HWND hwnd);
 };
 
+// A single EventMgr is associated with a single VirtWndHwnd
+// (which itself is associated with single HWND) and handles
+// win32 messages for that HWND needed to make the whole system
+// work.
 class EventMgr
 {
     VirtWndHwnd *   wndRoot;
     // current window over which the mouse is
     VirtWnd *       currOver;
+
+    Size    minSize;
+    Size    maxSize;
 
     struct ClickHandler {
         VirtWnd *        wndSource;
@@ -89,19 +96,20 @@ class EventMgr
     LRESULT OnSetCursor(int x, int y, bool& wasHandled);
     LRESULT OnMouseMove(WPARAM keys, int x, int y, bool& wasHandled);
     LRESULT OnLButtonUp(WPARAM keys, int x, int y, bool& wasHandled);
+    LRESULT OnGetMinMaxInfo(MINMAXINFO *info, bool& wasHandled);
+
 public:
-    EventMgr(VirtWndHwnd *wndRoot) : wndRoot(wndRoot), currOver(NULL)
-    {
-        CrashIf(!wndRoot);
-        //CrashIf(wndRoot->hwnd);
-    }
-    ~EventMgr() {}
+    EventMgr(VirtWndHwnd *wndRoot);
+    ~EventMgr();
 
     LRESULT OnMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& handledOut);
 
     void UnRegisterClickHandlers(IClickHandler *clickHandler);
     void RegisterClickHandler(VirtWnd *wndSource, IClickHandler *clickHandler);
     IClickHandler *GetClickHandlerFor(VirtWnd *wndSource);
+
+    void SetMinSize(Size s);
+    void SetMaxSize(Size s);
 };
 
 class VirtWnd
@@ -205,11 +213,12 @@ private:
 };
 
 // VirtWnd that has to be the root of window tree and is
-// backed by a HWND. It combines a painter and event
-// manager for this HWND
+// backed by a HWND. It combines a painter and EventManager
+// for this HWND. In your message loop you must call
+// VirtWndHwnd::evtMgr->OnMessage()
 class VirtWndHwnd : public VirtWnd
 {
-    bool                layoutRequested;
+    bool    layoutRequested;
 
 public:
     VirtWndPainter *    painter;
@@ -217,6 +226,9 @@ public:
 
     VirtWndHwnd(HWND hwnd = NULL);
     virtual ~VirtWndHwnd();
+
+    void            SetMinSize(Size minSize);
+    void            SetMaxSize(Size maxSize);
 
     void            RequestLayout();
     void            LayoutIfRequested();
@@ -245,15 +257,15 @@ public:
     virtual void NotifyMouseEnter();
     virtual void NotifyMouseLeave();
 
-    Size GetBorderAndPaddingSize() const;
+    Size    GetBorderAndPaddingSize() const;
 
-    void GetStyleForState(Style **first, Style **second) const;
-    Prop *GetPropForState(PropType type) const;
-    void GetPropsForState(PropToGet *props, size_t propsCount) const;
+    void    GetStyleForState(Style **first, Style **second) const;
+    Prop *  GetPropForState(PropType type) const;
+    void    GetPropsForState(PropToGet *props, size_t propsCount) const;
 
-    Font *GetFontForState() const;
+    Font *  GetFontForState() const;
 
-    void SetStyles(Style *def, Style *mouseOver);
+    void    SetStyles(Style *def, Style *mouseOver);
 
     TCHAR *         text;
     size_t          textDx; // cached measured text width

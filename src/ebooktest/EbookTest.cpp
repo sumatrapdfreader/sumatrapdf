@@ -18,6 +18,10 @@
 #include "EbookTestMenu.h"
 
 /*
+TODO: by hooking into mouse move events in HorizontalProgress control, we
+could show a window telling the user which page would we go to if he was
+to click there.
+
 TODO: when we resize and window becomes bigger, there are black bands
 drawn briefly on the right and bottom. I don't understand why - this
 doesn't happen in Sumatra.
@@ -682,6 +686,8 @@ static void OnCreateWindow(HWND hwnd)
 {
     gVirtWndFrame = new VirtWndEbook(hwnd);
     gVirtWndFrame->SetHtml(gSampleHtml);
+    gVirtWndFrame->SetMinSize(Size(320, 200));
+    gVirtWndFrame->SetMaxSize(Size(1024, 800));
 
     HMENU menu = BuildMenu();
     // triggers OnSize(), so must be called after we
