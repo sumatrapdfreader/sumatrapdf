@@ -23,8 +23,9 @@ using std::max;
 #include "MobiParse.h"
 #include "EbookTestMenu.h"
 
-#include "base/message_loop.h"
+#include "base/threading/thread.h"
 #include "base/bind.h"
+
 /*
 TODO: by hooking into mouse move events in HorizontalProgress control, we
 could show a window telling the user which page would we go to if he was
@@ -50,6 +51,9 @@ static HINSTANCE        ghinst;
 static HWND             gHwndFrame = NULL;
 static VirtWndEbook *   gVirtWndFrame = NULL;
 static HCURSOR          gCursorHand = NULL;
+
+// for convenience so that we don't have to pass it around
+static MessageLoop *    gMessageLoopUI = NULL;
 
 static bool gShowTextBoundingBoxes = false;
 
@@ -201,7 +205,9 @@ void HorizontalProgressBar::Paint(Graphics *gfx, int offX, int offY)
     ::delete br;
 }
 
-class VirtWndEbook : public VirtWndHwnd, public IClickHandler
+class VirtWndEbook 
+    : public VirtWndHwnd,
+      public IClickHandler
 {
     static const int CircleR = 10;
 
@@ -215,14 +221,13 @@ public:
     int             currPageNo;
 
     int             cursorX, cursorY;
+    base::Thread *  mobiLoadThread;
 
     VirtWndButton * next;
     VirtWndButton * prev;
     HorizontalProgressBar *horizProgress;
     VirtWndButton * status;
     VirtWndButton * test;
-
-    VirtWndEbook(HWND hwnd);
 
     Style *         statusDefault;
     Style *         horizProgressDefault;
@@ -235,22 +240,8 @@ public:
     Style *         prevDefault;
     Style *         prevMouseOver;
 
-    virtual ~VirtWndEbook() {
-        // special case for classes that derive from VirtWndHwnd
-        // that don't trigger this from the destructor
-        UnRegisterEventHandlers(evtMgr);
-
-        delete mb;
-        delete pageLayout;
-        delete statusDefault;
-        delete facebookButtonDefault;
-        delete facebookButtonOver;
-        delete nextDefault;
-        delete nextMouseOver;
-        delete prevDefault;
-        delete prevMouseOver;
-        delete horizProgressDefault;
-    }
+    VirtWndEbook(HWND hwnd);
+    virtual ~VirtWndEbook();
 
     virtual void RegisterEventHandlers(EventMgr *evtMgr);
     virtual void UnRegisterEventHandlers(EventMgr *evtMgr);
@@ -267,6 +258,11 @@ public:
 
     void SetStatusText() const;
     void DoPageLayout(int dx, int dy);
+
+    void MobiLoaded(MobiParse *mb);
+    void VirtWndEbook::MobiFailedToLoad(const TCHAR *fileName);
+    void LoadMobiBackground(const TCHAR *fileName);
+    void StopMobiLoadThread();
 };
 
 class EbookLayout : public Layout
@@ -439,25 +435,79 @@ void VirtWndEbook::DoPageLayout(int dx, int dy)
     RequestRepaint(this);
 }
 
-void VirtWndEbook::SetHtml(const char *html)
+void VirtWndEbook::SetHtml(const char *newHtml)
 {
-    this->html = html;
+    html = newHtml;
 }
 
-void foo() {
-    l("hello from foo");
+void VirtWndEbook::StopMobiLoadThread()
+{
+    if (!mobiLoadThread)
+        return;
+    mobiLoadThread->Stop();
+    delete mobiLoadThread;
+    mobiLoadThread = NULL;
+}
+
+// called on UI thread from background thread after
+// mobi file has been loaded
+void VirtWndEbook::MobiLoaded(MobiParse *newMobi)
+{
+    CrashIf(gMessageLoopUI != MessageLoop::current());
+    delete mb;
+    mb = newMobi;
+    html = NULL;
+    delete pageLayout;
+    pageLayout = NULL;
+    RequestRepaint(this);
+}
+
+// called on UI thread from backgroudn thread if we tried
+// to load mobi file but failed
+void VirtWndEbook::MobiFailedToLoad(const TCHAR *fileName)
+{
+    CrashIf(gMessageLoopUI != MessageLoop::current());
+    // TODO: this should show up in a different place, reusing status
+    // for convenience
+    ScopedMem<TCHAR> s(str::Format(_T("Failed to load %s!"), fileName));
+    status->SetText(s.Get());
+    free((void*)fileName);
+}
+
+// Method executed on background thread that tries to load
+// a given mobi file and either calls MobiLoaded() or 
+// MobiFailedToLoad() on ui thread
+void VirtWndEbook::LoadMobiBackground(const TCHAR *fileName)
+{
+    CrashIf(gMessageLoopUI == MessageLoop::current());
+    MobiParse *mb = MobiParse::ParseFile(fileName);
+    if (!mb)
+        gMessageLoopUI->PostTask(FROM_HERE, 
+            base::Bind(&VirtWndEbook::MobiFailedToLoad, 
+                       base::Unretained(this), fileName));
+    else
+        gMessageLoopUI->PostTask(FROM_HERE,
+            base::Bind(&VirtWndEbook::MobiLoaded, 
+                       base::Unretained(this), mb));
+    free((void*)fileName);
 }
 
 void VirtWndEbook::LoadMobi(const TCHAR *fileName)
 {
-    MessageLoop *loop = MessageLoop::current();
-    loop->PostTask(FROM_HERE, base::Bind(&foo));
-    mb = MobiParse::ParseFile(fileName);
-    if (!mb)
-        return;
-    html = NULL;
-    delete pageLayout;
-    pageLayout = NULL;
+    // TODO: not sure if that's enough to handle user chosing
+    // to load another mobi file while loading of the previous
+    // hasn't finished yet
+    StopMobiLoadThread();
+    mobiLoadThread = new base::Thread("VirtWndEbook::LoadMobi");
+    mobiLoadThread->Start();
+    // TODO: use some refcounted version of fileName
+    mobiLoadThread->message_loop()->PostTask(FROM_HERE, 
+        base::Bind(&VirtWndEbook::LoadMobiBackground, 
+                    base::Unretained(this), str::Dup(fileName)));
+    // TODO: this should show up in a different place, reusing status
+    // for convenience
+    ScopedMem<TCHAR> s(str::Format(_T("Please wait, loading %s"), fileName));
+    status->SetText(s.Get());
 }
 
 static Rect RectForCircle(int x, int y, int r)
@@ -477,6 +527,7 @@ void VirtWndEbook::NotifyMouseMove(int x, int y)
 
 VirtWndEbook::VirtWndEbook(HWND hwnd)
 {
+    mobiLoadThread = NULL;
     mb = NULL;
     html = NULL;
     pageLayout = NULL;
@@ -555,6 +606,26 @@ VirtWndEbook::VirtWndEbook(HWND hwnd)
     // special case for classes that derive from VirtWndHwnd
     // that don't trigger this from SetParent()
     RegisterEventHandlers(evtMgr);
+}
+
+VirtWndEbook::~VirtWndEbook()
+{
+    StopMobiLoadThread();
+
+    // special case for classes that derive from VirtWndHwnd
+    // that don't trigger this from the destructor
+    UnRegisterEventHandlers(evtMgr);
+
+    delete mb;
+    delete pageLayout;
+    delete statusDefault;
+    delete facebookButtonDefault;
+    delete facebookButtonOver;
+    delete nextDefault;
+    delete nextMouseOver;
+    delete prevDefault;
+    delete prevMouseOver;
+    delete horizProgressDefault;
 }
 
 void VirtWndEbook::RegisterEventHandlers(EventMgr *evtMgr) 
@@ -892,7 +963,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     // start per-thread MessageLoop, this one is for our UI thread
     // You can use it via static MessageLoop::current()
-    MessageLoop uiMsgPump(MessageLoop::TYPE_UI);
+    MessageLoop uiMsgLoop(MessageLoop::TYPE_UI);
+
+    gMessageLoopUI = MessageLoop::current();
+    CrashIf(gMessageLoopUI != &uiMsgLoop);
 
     //ParseCommandLine(GetCommandLine());
     if (!RegisterWinClass(hInstance))
