@@ -1526,7 +1526,7 @@ PdfPageRun *CPdfEngine::GetPageRun(pdf_page *page, bool tryOnly)
         for (size_t i = 0; i < runCache.Count(); i++) {
             // drop page runs that take up too much memory due to huge images
             // (except for the very recently used ones)
-            if (i >= 4 && mem + runCache.At(i)->size_est >= MAX_PAGE_RUN_MEMORY)
+            if (i >= 2 && mem + runCache.At(i)->size_est >= MAX_PAGE_RUN_MEMORY)
                 DropPageRun(runCache.At(i--), true);
             else
                 mem += runCache.At(i)->size_est;
@@ -2810,7 +2810,7 @@ XpsPageRun *CXpsEngine::GetPageRun(xps_page *page, bool tryOnly, int firstForPag
         for (size_t i = 0; i < runCache.Count(); i++) {
             // drop page runs that take up too much memory due to huge images
             // (except for the very recently used ones)
-            if (i >= 4 && mem + runCache.At(i)->size_est >= MAX_PAGE_RUN_MEMORY)
+            if (i >= 2 && mem + runCache.At(i)->size_est >= MAX_PAGE_RUN_MEMORY)
                 DropPageRun(runCache.At(i--), true);
             else
                 mem += runCache.At(i)->size_est;
