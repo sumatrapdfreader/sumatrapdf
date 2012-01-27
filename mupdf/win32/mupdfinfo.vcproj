@@ -2,8 +2,8 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="pdfclean"
-	ProjectGUID="{923D7C3D-A5CD-47F1-9BB3-F716531DCCCE}"
+	Name="mupdfinfo"
+	ProjectGUID="{E7578F65-AA5B-43A3-981A-D3632C2A3C04}"
 	RootNamespace="mupdf"
 	>
 	<Platforms>
@@ -237,7 +237,7 @@
 	</References>
 	<Files>
 		<File
-			RelativePath="..\apps\pdfclean.c"
+			RelativePath="..\apps\mupdfinfo.c"
 			>
 		</File>
 	</Files>

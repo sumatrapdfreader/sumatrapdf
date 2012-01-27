@@ -226,8 +226,9 @@ int jbig2_image_compose(Jbig2Ctx *ctx, Jbig2Image *dst, Jbig2Image *src,
 
     /* general OR case */
     s = ss;
-    if (leftbyte > dst->stride * dst->height)
-      return 0;
+    /* SumatraPDF: prevent heap overflow */
+    if (leftbyte > dst->height * dst->stride)
+      return -1;
     d = dd = dst->data + y*dst->stride + leftbyte;
     if (leftbyte == rightbyte) {
 	mask = 0x100 - (0x100 >> w);

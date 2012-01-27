@@ -1,2 +1,2 @@
 #define MUPDF_COMBINED_EXE
-#include "pdfshow.c"
+#include "mupdfshow.c"

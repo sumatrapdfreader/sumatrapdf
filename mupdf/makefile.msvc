@@ -275,8 +275,8 @@ LIBS_OBJS = \
 	$(MUXPS_OBJS)
 
 MUAPPS_OBJS = \
-	$(OA)\win_main.obj $(OA)\pdfapp.obj $(OA)\xpsdraw.obj $(OA)\pdfdraw.obj \
-	$(OA)\pdfshow.obj $(OA)\pdfclean.obj $(OA)\pdfinfo.obj $(OA)\pdfextract.obj \
+	$(OA)\win_main.obj $(OA)\pdfapp.obj $(OA)\muxpsdraw.obj $(OA)\mupdfdraw.obj \
+	$(OA)\mupdfshow.obj $(OA)\mupdfclean.obj $(OA)\mupdfinfo.obj $(OA)\mupdfextract.obj \
 	$(OA)\pdfbench.obj
 
 PDFAPP_RES = $(OA)\pdfview.res
@@ -286,25 +286,25 @@ PDFAPP_APP = $(O)\pdfview.exe
 PDFBENCH_OBJS = $(LIBS_OBJS) $(OA)\pdfbench.obj
 PDFBENCH_APP = $(O)\pdfbench.exe
 
-PDFDRAW_OBJS = $(LIBS_OBJS) $(OA)\pdfdraw.obj
+PDFDRAW_OBJS = $(LIBS_OBJS) $(OA)\mupdfdraw.obj
 PDFDRAW_APP = $(O)\pdfdraw.exe
 
-PDFSHOW_OBJS = $(LIBS_OBJS) $(OA)\pdfshow.obj
+PDFSHOW_OBJS = $(LIBS_OBJS) $(OA)\mupdfshow.obj
 PDFSHOW_APP = $(O)\pdfshow.exe
 
-PDFCLEAN_OBJS = $(LIBS_OBJS) $(OA)\pdfclean.obj
+PDFCLEAN_OBJS = $(LIBS_OBJS) $(OA)\mupdfclean.obj
 PDFCLEAN_APP = $(O)\pdfclean.exe
 
-PDFINFO_OBJS = $(LIBS_OBJS) $(OA)\pdfinfo.obj
+PDFINFO_OBJS = $(LIBS_OBJS) $(OA)\mupdfinfo.obj
 PDFINFO_APP = $(O)\pdfinfo.exe
 
-PDFEXTRACT_OBJS = $(LIBS_OBJS) $(OA)\pdfextract.obj
+PDFEXTRACT_OBJS = $(LIBS_OBJS) $(OA)\mupdfextract.obj
 PDFEXTRACT_APP = $(O)\pdfextract.exe
 
 FONTDUMP_OBJS = $(OP)\fontdump.obj
 FONTDUMP_APP = $(O)\fontdump.exe
 
-XPSDRAW_OBJS = $(LIBS_OBJS) $(OA)\xpsdraw.obj
+XPSDRAW_OBJS = $(LIBS_OBJS) $(OA)\muxpsdraw.obj
 XPSDRAW_APP = $(O)\xpsdraw.exe
 
 LIBMUPDF_LIB = $(O)\libmupdf.lib

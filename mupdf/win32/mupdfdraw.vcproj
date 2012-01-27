@@ -2,8 +2,8 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="pdfshow"
-	ProjectGUID="{50644121-C85F-4EE9-9C54-F7D1BDFAE354}"
+	Name="mupdfdraw"
+	ProjectGUID="{26C5D7C3-BEE9-4886-9CDB-846D26F5BCDB}"
 	RootNamespace="mupdf"
 	>
 	<Platforms>
@@ -237,7 +237,7 @@
 	</References>
 	<Files>
 		<File
-			RelativePath="..\apps\pdfshow.c"
+			RelativePath="..\apps\mupdfdraw.c"
 			>
 		</File>
 	</Files>

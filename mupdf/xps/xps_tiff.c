@@ -153,7 +153,7 @@ xps_decode_tiff_packbits(struct tiff *tiff, fz_stream *chain, byte *wp, int wlen
 static void
 xps_decode_tiff_lzw(struct tiff *tiff, fz_stream *chain, byte *wp, int wlen)
 {
-	fz_stream *stm = fz_open_lzwd(chain, NULL);
+	fz_stream *stm = fz_open_lzwd(chain, 1);
 	fz_read(stm, wp, wlen);
 	fz_close(stm);
 }
@@ -169,40 +169,21 @@ xps_decode_tiff_flate(struct tiff *tiff, fz_stream *chain, byte *wp, int wlen)
 static void
 xps_decode_tiff_fax(struct tiff *tiff, int comp, fz_stream *chain, byte *wp, int wlen)
 {
-	fz_context *ctx = tiff->ctx;
 	fz_stream *stm;
-	fz_obj *params;
-	fz_obj *columns, *rows, *black_is_1, *k, *encoded_byte_align;
-
-	columns = fz_new_int(ctx, tiff->imagewidth);
-	rows = fz_new_int(ctx, tiff->imagelength);
-	black_is_1 = fz_new_bool(ctx, tiff->photometric == 0);
-	k = fz_new_int(ctx, comp == 4 ? -1 : 0);
-	encoded_byte_align = fz_new_bool(ctx, comp == 2);
-
-	params = fz_new_dict(ctx, 5);
-	fz_dict_puts(params, "Columns", columns);
-	fz_dict_puts(params, "Rows", rows);
-	fz_dict_puts(params, "BlackIs1", black_is_1);
-	fz_dict_puts(params, "K", k);
-	fz_dict_puts(params, "EncodedByteAlign", encoded_byte_align);
-
-	fz_drop_obj(columns);
-	fz_drop_obj(rows);
-	fz_drop_obj(black_is_1);
-	fz_drop_obj(k);
-	fz_drop_obj(encoded_byte_align);
-
-	stm = fz_open_faxd(chain, params);
+	int black_is_1 = tiff->photometric == 0;
+	int k = comp == 4 ? -1 : 0;
+	int encoded_byte_align = comp == 2;
+	stm = fz_open_faxd(chain,
+			k, 0, encoded_byte_align,
+			tiff->imagewidth, tiff->imagelength, 0, black_is_1);
 	fz_read(stm, wp, wlen);
 	fz_close(stm);
-	fz_drop_obj(params);
 }
 
 static void
 xps_decode_tiff_jpeg(struct tiff *tiff, fz_stream *chain, byte *wp, int wlen)
 {
-	fz_stream *stm = fz_open_dctd(chain, NULL);
+	fz_stream *stm = fz_open_dctd(chain, -1);
 	fz_read(stm, wp, wlen);
 	fz_close(stm);
 }

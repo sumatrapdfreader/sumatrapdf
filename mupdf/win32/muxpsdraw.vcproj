@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="xpsdraw"
+	Name="muxpsdraw"
 	ProjectGUID="{E6A93617-41BD-45B2-BF61-4F7ED263CDF2}"
 	RootNamespace="mupdf"
 	>
@@ -237,7 +237,7 @@
 	</References>
 	<Files>
 		<File
-			RelativePath="..\apps\xpsdraw.c"
+			RelativePath="..\apps\muxpsdraw.c"
 			>
 		</File>
 	</Files>

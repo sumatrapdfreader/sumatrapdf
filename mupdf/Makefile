@@ -122,8 +122,8 @@ $(OUT)/cmapdump.o : pdf/pdf_cmap.c pdf/pdf_cmap_parse.c
 
 # --- Tools and Apps ---
 
-PDF_APPS := $(addprefix $(OUT)/, pdfdraw pdfclean pdfextract pdfinfo pdfshow)
-XPS_APPS := $(addprefix $(OUT)/, xpsdraw)
+PDF_APPS := $(addprefix $(OUT)/, mupdfdraw mupdfclean mupdfextract mupdfinfo mupdfshow)
+XPS_APPS := $(addprefix $(OUT)/, muxpsdraw)
 BUSY_APP := $(addprefix $(OUT)/, mubusy)
 BUSY_SRC := $(notdir $(wildcard apps/mubusy_*.c))
 BUSY_LIBS := $(addprefix $(OUT)/, $(BUSY_SRC:%.c=%.o))

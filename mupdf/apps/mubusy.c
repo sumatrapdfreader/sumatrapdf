@@ -33,6 +33,19 @@ int main(int argc, char **argv)
 		end++;
 	if ((end-4 >= start) && (end[-4] == '.') && (end[-3] == 'e') && (end[-2] == 'x') && (end[-1] == 'e'))
 		end = end-4;
+	if (namematch(end, start, "mupdfdraw", 9))
+		return pdfdraw_main(argc, argv);
+	if (namematch(end, start, "mupdfclean", 10))
+		return pdfclean_main(argc, argv);
+	if (namematch(end, start, "mupdfextract", 12))
+		return pdfextract_main(argc, argv);
+	if (namematch(end, start, "mupdfshow", 9))
+		return pdfshow_main(argc, argv);
+	if (namematch(end, start, "mupdfinfo", 9))
+		return pdfinfo_main(argc, argv);
+	if (namematch(end, start, "muxpsdraw", 9))
+		return xpsdraw_main(argc, argv);
+	/* And include old names for backward compatibility */
 	if (namematch(end, start, "pdfdraw", 7))
 		return pdfdraw_main(argc, argv);
 	if (namematch(end, start, "pdfclean", 8))

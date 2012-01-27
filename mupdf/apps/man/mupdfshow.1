@@ -1,9 +1,9 @@
-.TH PDFSHOW 1 "July 19, 2010"
+.TH PDFSHOW 1 "January 27, 2012"
 .\" Please adjust this date whenever revising the manpage.
 .SH NAME
-pdfshow \- show objects and streams that make up a PDF document
+mupdfshow \- show objects and streams that make up a PDF document
 .SH SYNOPSIS
-.B pdfshow
+.B mupdfshow
 .RI [ options ]
 .RI file.pdf
 .RI [ xref ]
@@ -12,7 +12,7 @@ pdfshow \- show objects and streams that make up a PDF document
 .RI [ grep ]
 .RI [ object-number... ]
 .SH DESCRIPTION
-.B pdfshow
+.B mupdfshow
 pretty prints the objects and streams specified on the command line.
 Streams are decoded and non-printable characters are represented
 with a period.
@@ -35,8 +35,8 @@ Print streams in their original encoded form.
 Use the specified password if the file is encrypted.
 .SH SEE ALSO
 .BR mupdf (1),
-.BR pdfclean (1).
-.BR pdfdraw (1).
+.BR mupdfclean (1).
+.BR mupdfdraw (1).
 .SH AUTHOR
 MuPDF was written by Tor Andersson <tor@ghostscript.com>.
-MuPDF is copyright 2006-2010 Artifex Software, Inc.
+MuPDF is copyright 2006-2012 Artifex Software, Inc.

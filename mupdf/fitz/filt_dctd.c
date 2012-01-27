@@ -212,12 +212,12 @@ skip:
 	fz_free(ctx, state);
 }
 
+/* Default: color_transform = -1 (unset) */
 fz_stream *
-fz_open_dctd(fz_stream *chain, fz_obj *params)
+fz_open_dctd(fz_stream *chain, int color_transform)
 {
-	fz_dctd *state = NULL;
-	fz_obj *obj;
 	fz_context *ctx = chain->ctx;
+	fz_dctd *state = NULL;
 
 	fz_var(state);
 
@@ -227,12 +227,8 @@ fz_open_dctd(fz_stream *chain, fz_obj *params)
 		memset(state, 0, sizeof(fz_dctd));
 		state->ctx = ctx;
 		state->chain = chain;
-		state->color_transform = -1; /* unset */
+		state->color_transform = color_transform;
 		state->init = 0;
-
-		obj = fz_dict_gets(params, "ColorTransform");
-		if (obj)
-			state->color_transform = fz_to_int(obj);
 	}
 	fz_catch(ctx)
 	{

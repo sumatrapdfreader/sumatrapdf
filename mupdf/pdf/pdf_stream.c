@@ -51,10 +51,18 @@ pdf_stream_has_crypt(fz_context *ctx, fz_obj *stm)
 static fz_stream *
 build_filter(fz_stream *chain, pdf_document * xref, fz_obj * f, fz_obj * p, int num, int gen)
 {
-	char *s;
+	char *s = fz_to_name(f);
 	fz_context *ctx = chain->ctx;
 
-	s = fz_to_name(f);
+	int predictor = fz_to_int(fz_dict_gets(p, "Predictor"));
+	int columns = fz_to_int(fz_dict_gets(p, "Columns"));
+	int colors = fz_to_int(fz_dict_gets(p, "Colors"));
+	int bpc = fz_to_int(fz_dict_gets(p, "BitsPerComponent"));
+
+	if (predictor == 0) predictor = 1;
+	if (columns == 0) columns = 1;
+	if (colors == 0) colors = 1;
+	if (bpc == 0) bpc = 8;
 
 	if (!strcmp(s, "ASCIIHexDecode") || !strcmp(s, "AHx"))
 		return fz_open_ahxd(chain);
@@ -63,28 +71,48 @@ build_filter(fz_stream *chain, pdf_document * xref, fz_obj * f, fz_obj * p, int 
 		return fz_open_a85d(chain);
 
 	else if (!strcmp(s, "CCITTFaxDecode") || !strcmp(s, "CCF"))
-		return fz_open_faxd(chain, p);
+	{
+		fz_obj *k = fz_dict_gets(p, "K");
+		fz_obj *eol = fz_dict_gets(p, "EndOfLine");
+		fz_obj *eba = fz_dict_gets(p, "EncodedByteAlign");
+		fz_obj *columns = fz_dict_gets(p, "Columns");
+		fz_obj *rows = fz_dict_gets(p, "Rows");
+		fz_obj *eob = fz_dict_gets(p, "EndOfBlock");
+		fz_obj *bi1 = fz_dict_gets(p, "BlackIs1");
+		return fz_open_faxd(chain,
+				k ? fz_to_int(k) : 0,
+				eol ? fz_to_bool(eol) : 0,
+				eba ? fz_to_bool(eba) : 0,
+				columns ? fz_to_int(columns) : 1728,
+				rows ? fz_to_int(rows) : 0,
+				eob ? fz_to_bool(eob) : 1,
+				bi1 ? fz_to_bool(bi1) : 0);
+	}
 
 	else if (!strcmp(s, "DCTDecode") || !strcmp(s, "DCT"))
-		return fz_open_dctd(chain, p);
+	{
+		fz_obj *ct = fz_dict_gets(p, "ColorTransform");
+		return fz_open_dctd(chain, ct ? fz_to_int(ct) : -1);
+	}
 
 	else if (!strcmp(s, "RunLengthDecode") || !strcmp(s, "RL"))
 		return fz_open_rld(chain);
 
 	else if (!strcmp(s, "FlateDecode") || !strcmp(s, "Fl"))
 	{
-		fz_obj *obj = fz_dict_gets(p, "Predictor");
-		if (fz_to_int(obj) > 1)
-			return fz_open_predict(fz_open_flated(chain), p);
-		return fz_open_flated(chain);
+		chain = fz_open_flated(chain);
+		if (predictor > 1)
+			chain = fz_open_predict(chain, predictor, columns, colors, bpc);
+		return chain;
 	}
 
 	else if (!strcmp(s, "LZWDecode") || !strcmp(s, "LZW"))
 	{
-		fz_obj *obj = fz_dict_gets(p, "Predictor");
-		if (fz_to_int(obj) > 1)
-			return fz_open_predict(fz_open_lzwd(chain, p), p);
-		return fz_open_lzwd(chain, p);
+		fz_obj *ec = fz_dict_gets(p, "EarlyChange");
+		chain = fz_open_lzwd(chain, ec ? fz_to_int(ec) : 1);
+		if (predictor > 1)
+			chain = fz_open_predict(chain, predictor, columns, colors, bpc);
+		return chain;
 	}
 
 	else if (!strcmp(s, "JBIG2Decode"))

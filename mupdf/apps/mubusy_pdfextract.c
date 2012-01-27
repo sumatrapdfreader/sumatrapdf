@@ -1,2 +1,2 @@
 #define MUPDF_COMBINED_EXE
-#include "pdfextract.c"
+#include "mupdfextract.c"

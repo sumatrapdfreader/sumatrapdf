@@ -9,9 +9,9 @@ LOCAL_CFLAGS += -DARCH_ARM -DARCH_THUMB -DARCH_ARM_CAN_LOAD_UNALIGNED
 LOCAL_C_INCLUDES := \
 	../thirdparty/jbig2dec \
 	../thirdparty/openjpeg-1.4/libopenjpeg \
-	../thirdparty/jpeg-8c \
+	../thirdparty/jpeg-8d \
 	../thirdparty/zlib-1.2.5 \
-	../thirdparty/freetype-2.4.4/include \
+	../thirdparty/freetype-2.4.8/include \
 	../draw \
 	../fitz \
 	../pdf \
