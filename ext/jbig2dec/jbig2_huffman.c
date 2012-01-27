@@ -254,7 +254,7 @@ jbig2_huffman_get (Jbig2HuffmanState *hs,
       flags = entry->flags;
       PREFLEN = entry->PREFLEN;
       /* SumatraPDF: handle missing JBIG2Globals */
-      if (entry->u.RANGELOW == -1)
+      if (entry->u.RANGELOW == -1 && PREFLEN == (byte)-1 && flags == (byte)-1)
 	{
 	  if (oob)
 	    *oob = -1;
