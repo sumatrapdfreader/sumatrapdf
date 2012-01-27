@@ -19,7 +19,7 @@ CHROME_INC = %s
 CHROME_CFLAGS = $(CFLAGSOPT) /wd4244 /wd4530 /wd4018 /wd4355 /D "NO_TCMALLOC" /D "NOMINMAX" $(CHROME_INC)
 
 CHROME_OBJS = \\
-%s
+	%s
 
 $(OCH): force
 	@if not exist $(OCH) mkdir $(OCH)

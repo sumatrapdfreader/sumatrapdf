@@ -172,8 +172,16 @@ def write_makefile(dstDir, files):
  	# a special case, dtoa.cc is #included in dtoa_wrapper.cc, so we need to copy
  	# it but not compile it
  	cpp_files.remove("dtoa.cc")
-	obj = ["$(OCH)\\%s" % objname_from_cname(f) for f in cpp_files]
-	objs = string.join(obj, " ")
+ 	cpp_files = list(set(cpp_files)) # remove duplicates
+ 	cpp_files.sort()
+
+	objs = ["$(OCH)\\%s" % objname_from_cname(f) for f in cpp_files]
+	objs_grouped = []
+	while len(objs) > 0:
+		part = objs[:2]
+		objs_grouped.append(string.join(part, " "))
+		objs = objs[2:]
+	objs = string.join(objs_grouped, " \\\n\t")
 	rules = cpp_rules(dirs)
 	# all rules are for .cc files, this is a single exception
 	rules += """
