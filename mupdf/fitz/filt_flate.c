@@ -57,6 +57,13 @@ read_flated(fz_stream *stm, unsigned char *outbuf, int outlen)
 			fz_warn(stm->ctx, "ignoring zlib error: %s", zp->msg);
 			return outlen - zp->avail_out;
 		}
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1798 */
+		else if (code == Z_DATA_ERROR && zp->avail_in <= 8)
+		{
+			fz_warn(stm->ctx, "ignoring zlib error: %s", zp->msg);
+			chain->rp = chain->wp;
+			return outlen - zp->avail_out;
+		}
 		else if (code != Z_OK)
 		{
 			fz_throw(stm->ctx, "zlib error: %s", zp->msg);
