@@ -20,7 +20,7 @@
 
 #include <setjmp.h>
 
-/* SumatraPDF: memento isn't distributed under GPLv3 */
+/* SumatraPDF: memento's license header can be read as being non-GPLv3 */
 #ifndef MEMENTO
 #define Memento_label(ptr, label) (ptr)
 #else

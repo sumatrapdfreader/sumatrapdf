@@ -207,8 +207,6 @@ void xps_parse_element(xps_document *doc, fz_matrix ctm, fz_rect area, char *bas
 xml_element *xps_find_alternate_content(xml_element *node);
 
 void xps_clip(xps_document *doc, fz_matrix ctm, xps_resource *dict, char *clip_att, xml_element *clip_tag);
-/* SumatraPDF: better whitespace parsing */
-char *xps_get_point(char *s, float *x, float *y);
 
 /*
  * The interpreter context.

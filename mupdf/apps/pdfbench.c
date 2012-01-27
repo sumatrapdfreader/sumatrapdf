@@ -201,7 +201,6 @@ void benchfile(char *pdffilename, int loadonly, int pageNo)
 Exit:
 	logbench("Finished: %s\n", pdffilename);
 	pdf_close_document(xref);
-	fz_flush_warnings(ctx);
 	fz_free_context(ctx);
 }
 
