@@ -1,6 +1,12 @@
 /* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// Hack: we need NOMINMAX to make chrome code compile but we also need
+// min/max for gdi+ headers, so we import min/max from stl
+#include <algorithm>
+using std::min;
+using std::max;
+
 #include "Resource.h"
 
 #include "EbookTestMenu.h"
