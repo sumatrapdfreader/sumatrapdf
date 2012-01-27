@@ -16,9 +16,6 @@
 #   also probably wouldn't work for 64-bit builds due to ...?
 #   trick: using /verbose option to the linker helps understand what it does
 #   also I'm probably mixing dll support with non-dll support
-WITH_CHROME=yes
-#   WITH_CHROME fails under VS2008 Express and the V6.0A SDK
-#   (ET_APP doesn't even build with the V7.1 SDK)
 
 # Set default configuration
 !if "$(CFG)"==""
@@ -46,7 +43,7 @@ EXTDIR=ext
 LIBMUPDF_RES = $(O)\libmupdf.res
 
 # default target
-all_sumatrapdf: SumatraPDF Uninstaller PDFFilter PdfPreview BrowserPlugin EngineDump PdfBench tester
+all_sumatrapdf: SumatraPDF Uninstaller PDFFilter PdfPreview BrowserPlugin EngineDump PdfBench tester et
 
 ##### add configuration changes that should also affect MuPDF before this line #####
 
@@ -59,10 +56,7 @@ CFLAGSOPT = $(CFLAGSOPT) /Isrc/utils/msvc
 
 # include build data for the remaining third-party libraries
 !INCLUDE $(EXTDIR)\makefile.msvc
-
-!if "$(WITH_CHROME)" == "yes"
 !INCLUDE $(EXTDIR)\chrome\makefile.msvc
-!endif
 
 # Modify the following defines if you have to target a platform prior to the ones specified below.
 # Their meaning: http://msdn.microsoft.com/en-us/library/aa383745(VS.85).aspx
@@ -276,13 +270,8 @@ $(UNINSTALLER_APP): $(UTILS_OBJS) $(UNINSTALLER_OBJS)
 $(ET_RES): src\ebooktest\EbookTest.rc src\ebooktest\Resource.h src\Version.h
 	rc /r /fo$@ $(EXTCFLAGS) src\ebooktest\EbookTest.rc
 
-!if "$(WITH_CHROME)" == "yes"
 $(ET_APP): $(UTILS_OBJS) $(CHROME_OBJS) $(ET_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) dbghelp.lib psapi.lib /PDB:$*.pdb /OUT:$@
-!else
-$(ET_APP): $(UTILS_OBJS) $(ET_OBJS)
-	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
-!endif
 
 $(TESTER_APP): $(UTILS_OBJS) $(TESTER_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE

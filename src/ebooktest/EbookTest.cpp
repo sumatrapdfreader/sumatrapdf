@@ -7,6 +7,10 @@
 using std::min;
 using std::max;
 
+// include anything that might (re)define operator new before BaseUtil.h
+#include "base/threading/thread.h"
+#include "base/bind.h"
+
 #include "Resource.h"
 #include "BaseUtil.h"
 #include "StrUtil.h"
@@ -22,9 +26,6 @@ using std::max;
 #include "PageLayout.h"
 #include "MobiParse.h"
 #include "EbookTestMenu.h"
-
-#include "base/threading/thread.h"
-#include "base/bind.h"
 
 /*
 TODO: by hooking into mouse move events in HorizontalProgress control, we
