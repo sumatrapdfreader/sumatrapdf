@@ -37,11 +37,6 @@
 
 #include "base/third_party/dynamic_annotations/dynamic_annotations.h"
 
-#ifdef __GNUC__
-/* valgrind.h uses gcc extensions so it won't build with other compilers */
-# include "base/third_party/valgrind/valgrind.h"
-#endif
-
 /* Each function is empty and called (via a macro) only in debug mode.
    The arguments are captured by dynamic tools at runtime. */
 
@@ -215,43 +210,3 @@ void DYNAMIC_ANNOTATIONS_NAME(AnnotateFlushState)(
 {DYNAMIC_ANNOTATIONS_IMPL}
 
 #endif  /* DYNAMIC_ANNOTATIONS_ENABLED == 1 */
-
-#if DYNAMIC_ANNOTATIONS_PROVIDE_RUNNING_ON_VALGRIND == 1
-static int GetRunningOnValgrind(void) {
-#ifdef RUNNING_ON_VALGRIND
-  if (RUNNING_ON_VALGRIND) return 1;
-#endif
-
-#ifndef _MSC_VER
-  char *running_on_valgrind_str = getenv("RUNNING_ON_VALGRIND");
-  if (running_on_valgrind_str) {
-    return strcmp(running_on_valgrind_str, "0") != 0;
-  }
-#else
-  /* Visual Studio issues warnings if we use getenv,
-   * so we use GetEnvironmentVariableA instead.
-   */
-  char value[100] = "1";
-  int res = GetEnvironmentVariableA("RUNNING_ON_VALGRIND",
-                                    value, sizeof(value));
-  /* value will remain "1" if res == 0 or res >= sizeof(value). The latter
-   * can happen only if the given value is long, in this case it can't be "0".
-   */
-  if (res > 0 && strcmp(value, "0") != 0)
-    return 1;
-#endif
-  return 0;
-}
-
-/* See the comments in dynamic_annotations.h */
-int RunningOnValgrind(void) {
-  static volatile int running_on_valgrind = -1;
-  /* C doesn't have thread-safe initialization of statics, and we
-     don't want to depend on pthread_once here, so hack it. */
-  int local_running_on_valgrind = running_on_valgrind;
-  if (local_running_on_valgrind == -1)
-    running_on_valgrind = local_running_on_valgrind = GetRunningOnValgrind();
-  return local_running_on_valgrind;
-}
-
-#endif /* DYNAMIC_ANNOTATIONS_PROVIDE_RUNNING_ON_VALGRIND == 1 */

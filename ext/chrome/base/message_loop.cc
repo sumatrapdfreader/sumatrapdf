@@ -516,9 +516,6 @@ bool MessageLoop::DeletePendingTasks() {
   //
 #if defined(USE_HEAPCHECKER)
   should_leak_tasks_ = false;
-#else
-      if (RunningOnValgrind())
-        should_leak_tasks_ = false;
 #endif  // defined(OS_POSIX)
   while (!work_queue_.empty()) {
     PendingTask pending_task = work_queue_.front();
