@@ -889,6 +889,8 @@ static BOOL RegisterWinClass(HINSTANCE hInstance)
     wcex.style = 0;
     wcex.lpszClassName  = ET_FRAME_CLASS_NAME;
     wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SUMATRAPDF));
+    wcex.hbrBackground  = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
+
     wcex.lpfnWndProc    = WndProcFrame;
 
     ATOM atom = RegisterClassEx(&wcex);
