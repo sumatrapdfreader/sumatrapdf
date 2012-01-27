@@ -16,7 +16,9 @@
 #   also probably wouldn't work for 64-bit builds due to ...?
 #   trick: using /verbose option to the linker helps understand what it does
 #   also I'm probably mixing dll support with non-dll support
-WITH_CHROME=yes
+#WITH_CHROME=yes
+#   WITH_CHROME fails under VS2008 Express and the V6.0A SDK
+#   (ET_APP doesn't even build with the V7.1 SDK)
 
 # Set default configuration
 !if "$(CFG)"==""
@@ -44,7 +46,7 @@ EXTDIR=ext
 LIBMUPDF_RES = $(O)\libmupdf.res
 
 # default target
-all_sumatrapdf: SumatraPDF Uninstaller PDFFilter PdfPreview BrowserPlugin EngineDump PdfBench et tester
+all_sumatrapdf: SumatraPDF Uninstaller PDFFilter PdfPreview BrowserPlugin EngineDump PdfBench tester
 
 ##### add configuration changes that should also affect MuPDF before this line #####
 
