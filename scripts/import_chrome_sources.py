@@ -193,6 +193,7 @@ def main():
 	ensure_dir(dstDir)
 	bootstrapFiles = [
 		pj("base", "bind.h"),
+		pj("base", "threading", "thread.cc"),
 		pj("base", "third_party", "dmg_fp", "dtoa_wrapper.cc"),
 		pj("base", "third_party", "dmg_fp", "g_fmt.cc"),
 		pj("base", "third_party", "valgrind", "valgrind.h"),

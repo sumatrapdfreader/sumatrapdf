@@ -67,6 +67,22 @@
 // the Pass() function to signify a destructive transfer of state. CreateFoo()
 // is different though because we are constructing a temporary on the return
 // line and thus can avoid needing to call Pass().
+//
+// Pass() properly handles upcast in assignment, i.e. you can assign
+// scoped_ptr<Child> to scoped_ptr<Parent>:
+//
+//   scoped_ptr<Foo> foo(new Foo());
+//   scoped_ptr<FooParent> parent = foo.Pass();
+//
+// PassAs<>() should be used to upcast return value in return statement:
+//
+//   scoped_ptr<Foo> CreateFoo() {
+//     scoped_ptr<FooChild> result(new FooChild());
+//     return result.PassAs<Foo>();
+//   }
+//
+// Note that PassAs<>() is implemented only for scoped_ptr, but not for
+// scoped_array. This is because casting array pointers may not be safe.
 
 #ifndef BASE_MEMORY_SCOPED_PTR_H_
 #define BASE_MEMORY_SCOPED_PTR_H_
@@ -180,6 +196,11 @@ class scoped_ptr {
     C* retVal = ptr_;
     ptr_ = NULL;
     return retVal;
+  }
+
+  template <typename PassAsType>
+  scoped_ptr<PassAsType> PassAs() {
+    return scoped_ptr<PassAsType>(release());
   }
 
  private:

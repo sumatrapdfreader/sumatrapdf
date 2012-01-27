@@ -1,4 +1,4 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -10,17 +10,15 @@
 
 // We need two locks because they're sometimes grabbed at the same time.
 // A single lock would lead to an attempted recursive grab.
-static base::LazyInstance<base::Lock,
-                          base::LeakyLazyInstanceTraits<base::Lock> >
+static base::LazyInstance<base::Lock>::Leaky
     dtoa_lock_0 = LAZY_INSTANCE_INITIALIZER;
-static base::LazyInstance<base::Lock,
-                          base::LeakyLazyInstanceTraits<base::Lock> >
+static base::LazyInstance<base::Lock>::Leaky
     dtoa_lock_1 = LAZY_INSTANCE_INITIALIZER;
 
 /*
  * This define and the code below is to trigger thread-safe behavior
  * in dtoa.cc, per this comment from the file:
- * 
+ *
  * #define MULTIPLE_THREADS if the system offers preemptively scheduled
  *	multiple threads.  In this case, you must provide (or suitably
  *	#define) two locks, acquired by ACQUIRE_DTOA_LOCK(n) and freed

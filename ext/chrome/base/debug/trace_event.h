@@ -442,12 +442,21 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Implementation specific tracing API definitions.
 
+// Get a pointer to the enabled state of the given trace category. Only
+// long-lived literal strings should be given as the category name. The returned
+// pointer can be held permanently in a local static for example. If the
+// unsigned char is non-zero, tracing is enabled. If tracing is enabled,
+// TRACE_EVENT_API_ADD_TRACE_EVENT can be called. It's OK if tracing is disabled
+// between the load of the tracing state and the call to
+// TRACE_EVENT_API_ADD_TRACE_EVENT, because this flag only provides an early out
+// for best performance when tracing is disabled.
 // const unsigned char*
 //     TRACE_EVENT_API_GET_CATEGORY_ENABLED(const char* category_name)
 #define TRACE_EVENT_API_GET_CATEGORY_ENABLED \
     base::debug::TraceLog::GetCategoryEnabled
 
-// Returns the threshold_begin_id used by TRACE_IF_LONGER_THAN macros.
+// Add a trace event to the platform tracing system. Returns thresholdBeginId
+// for use in a corresponding end TRACE_EVENT_API_ADD_TRACE_EVENT call.
 // int TRACE_EVENT_API_ADD_TRACE_EVENT(
 //                    char phase,
 //                    const unsigned char* category_enabled,
@@ -463,18 +472,9 @@
 #define TRACE_EVENT_API_ADD_TRACE_EVENT \
     base::debug::TraceLog::GetInstance()->AddTraceEvent
 
-// void TRACE_EVENT_API_ADD_COUNTER_EVENT(
-//                    const unsigned char* category_enabled,
-//                    const char* name,
-//                    unsigned long long id,
-//                    const char* arg1_name, int arg1_val,
-//                    const char* arg2_name, int arg2_val,
-//                    unsigned char flags)
-#define TRACE_EVENT_API_ADD_COUNTER_EVENT \
-    base::debug::TraceLog::GetInstance()->AddCounterEvent
-
-// Mangle |pointer| with a process ID hash so that if |pointer| occurs on more
-// than one process, it will not collide in the trace data.
+// Mangle pointer with a hash so that if it occurs on more than one process,
+// it will not collide in the trace data. Pass the returned value to
+// TRACE_EVENT_API_ADD_TRACE_EVENT as the id parameter.
 // unsigned long long TRACE_EVENT_API_GET_ID_FROM_POINTER(void* pointer)
 #define TRACE_EVENT_API_GET_ID_FROM_POINTER \
     base::debug::TraceLog::GetInstance()->GetInterProcessID
@@ -600,7 +600,7 @@ const unsigned long long kNoEventId = 0;
 // TraceID encapsulates an ID that can either be an integer or pointer. Pointers
 // are mangled with the Process ID so that they are unlikely to collide when the
 // same pointer is used on different processes.
-class BASE_EXPORT TraceID {
+class TraceID {
  public:
   explicit TraceID(void* rhs) :
       data_(TRACE_EVENT_API_GET_ID_FROM_POINTER(rhs)) {}

@@ -1,4 +1,4 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -61,8 +61,15 @@ BASE_EXPORT std::string DoubleToString(double value);
 //  - Empty string.  |*output| will be set to 0.
 BASE_EXPORT bool StringToInt(const StringPiece& input, int* output);
 BASE_EXPORT bool StringToInt(const StringPiece16& input, int* output);
+
+BASE_EXPORT bool StringToUint(const StringPiece& input, unsigned* output);
+BASE_EXPORT bool StringToUint(const StringPiece16& input, unsigned* output);
+
 BASE_EXPORT bool StringToInt64(const StringPiece& input, int64* output);
 BASE_EXPORT bool StringToInt64(const StringPiece16& input, int64* output);
+
+BASE_EXPORT bool StringToUint64(const StringPiece& input, uint64* output);
+BASE_EXPORT bool StringToUint64(const StringPiece16& input, uint64* output);
 
 // For floating-point conversions, only conversions of input strings in decimal
 // form are defined to work.  Behavior with strings representing floating-point
