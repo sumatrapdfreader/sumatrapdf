@@ -59,6 +59,14 @@ by giving windows a way to declare they have selectable text
 TODO: some claim GDI+ text drawing is slower than GDI, so we could try
 to use GDI instead
 
+TODO: since we already paint to a cached bitmap, we could do rendering
+on a background thread and then just blit the bitmap to a window in
+WM_PAINT, assuming rendering on a non-ui thread is ok with gdi+.
+Technicall in WM_PAINT we could just start a thread to do the painting
+and when it's finished we would bilt the bitmap on ui thread. If there
+were WM_PAINT messages sent in-between, we would note that and start
+painting again when the in-progress painting has finished.
+
 TODO: optimize size of VirtWnd. One idea is that instead of embedding rarely used
 properties (like e.g. VirtWnd::hwndParent), we could maintain separate mapping
 from VirtWnd * to such properties e.g. in an array. Another idea is to move

@@ -467,8 +467,8 @@ void VirtWndEbook::MobiLoaded(MobiParse *newMobi)
 void VirtWndEbook::MobiFailedToLoad(const TCHAR *fileName)
 {
     CrashIf(gMessageLoopUI != MessageLoop::current());
-    // TODO: this should show up in a different place, reusing status
-    // for convenience
+    // TODO: this message should show up in a different place, 
+    // reusing status for convenience
     ScopedMem<TCHAR> s(str::Format(_T("Failed to load %s!"), fileName));
     status->SetText(s.Get());
     free((void*)fileName);
@@ -504,8 +504,8 @@ void VirtWndEbook::LoadMobi(const TCHAR *fileName)
     mobiLoadThread->message_loop()->PostTask(FROM_HERE, 
         base::Bind(&VirtWndEbook::LoadMobiBackground, 
                     base::Unretained(this), str::Dup(fileName)));
-    // TODO: this should show up in a different place, reusing status
-    // for convenience
+    // TODO: this message should show up in a different place, 
+    // reusing status for convenience
     ScopedMem<TCHAR> s(str::Format(_T("Please wait, loading %s"), fileName));
     status->SetText(s.Get());
 }
