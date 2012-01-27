@@ -110,7 +110,7 @@ UNINSTALLER_RES = $(OS)\Uninstaller.res
 
 ET_APP          = $(O)\EbookTest.exe
 ET_RES          = $(OS)\EbookTest.res
-ET_CFLAGS       = $(SUMATRA_CFLAGS) $(CHROME_INC)
+ET_CFLAGS       = $(SUMATRA_CFLAGS) /wd4530 /D "NOMINMAX" $(CHROME_INC)
 
 TESTER_APP          = $(O)\tester.exe
 TESTER_CFLAGS       = $(SUMATRA_CFLAGS)

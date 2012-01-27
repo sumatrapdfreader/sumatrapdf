@@ -1,6 +1,12 @@
 /* Copyright 2010-2012 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// Hack: we need NOMINMAX to make chrome code compile but we also need
+// min/max for gdi+ headers, so we import min/max from stl
+#include <algorithm>
+using std::min;
+using std::max;
+
 #include "Resource.h"
 #include "BaseUtil.h"
 #include "StrUtil.h"
@@ -17,6 +23,8 @@
 #include "MobiParse.h"
 #include "EbookTestMenu.h"
 
+#include "base/message_loop.h"
+#include "base/bind.h"
 /*
 TODO: by hooking into mouse move events in HorizontalProgress control, we
 could show a window telling the user which page would we go to if he was
@@ -27,6 +35,8 @@ using namespace Gdiplus;
 using namespace mui;
 
 class VirtWndEbook;
+
+#define l(s) OutputDebugStringA(s)
 
 #define ET_FRAME_CLASS_NAME    _T("ET_FRAME")
 
@@ -434,8 +444,14 @@ void VirtWndEbook::SetHtml(const char *html)
     this->html = html;
 }
 
+void foo() {
+    l("hello from foo");
+}
+
 void VirtWndEbook::LoadMobi(const TCHAR *fileName)
 {
+    MessageLoop *loop = MessageLoop::current();
+    loop->PostTask(FROM_HERE, base::Bind(&foo));
     mb = MobiParse::ParseFile(fileName);
     if (!mb)
         return;
@@ -874,6 +890,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     gCursorHand  = LoadCursor(NULL, IDC_HAND);
 
+    // start per-thread MessageLoop, this one is for our UI thread
+    // You can use it via static MessageLoop::current()
+    MessageLoop uiMsgPump(MessageLoop::TYPE_UI);
+
     //ParseCommandLine(GetCommandLine());
     if (!RegisterWinClass(hInstance))
         goto Exit;
@@ -881,7 +901,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     if (!InstanceInit(hInstance, nCmdShow))
         goto Exit;
 
-    ret = RunApp();
+     MessageLoopForUI::current()->RunWithDispatcher(NULL);
+
+     //ret = RunApp();
 
     delete gVirtWndFrame;
 
