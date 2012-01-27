@@ -1,0 +1,545 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="src\ebooktest\EbookTest.cpp" />
+    <ClCompile Include="src\ebooktest\EbookTestMenu.cpp" />
+    <ClCompile Include="src\MobiParse.cpp" />
+    <ClCompile Include="src\PageLayout.cpp" />
+    <ClCompile Include="src\utils\FileUtil.cpp" />
+    <ClCompile Include="src\utils\GdiPlusUtil.cpp" />
+    <ClCompile Include="src\utils\HtmlPullParser.cpp" />
+    <ClCompile Include="src\utils\mui.cpp" />
+    <ClCompile Include="src\utils\MuiCss.cpp" />
+    <ClCompile Include="ext\chrome\base\at_exit.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\base_switches.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\bind_helpers.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\callback_internal.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\command_line.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\cpu.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\file_path.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\file_util.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\file_util_win.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\lazy_instance.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\location.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\logging.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\logging_win.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\message_loop.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\message_loop_proxy.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\message_loop_proxy_impl.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\message_pump.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\message_pump_default.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\message_pump_win.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\pending_task.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\pickle.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\platform_file.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\platform_file_win.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\process_util.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\process_util_win.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\process_win.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\string_number_conversions.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\string_piece.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\string_split.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\string_util.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\stringprintf.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\sys_info_win.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\sys_string_conversions_win.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\time.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\time_win.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\timer.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\tracked_objects.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\tracking_info.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\utf_string_conversion_utils.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\utf_string_conversions.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\values.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\vlog.cc">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\win\event_trace_provider.cc">
+      <Filter>base\win</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\win\object_watcher.cc">
+      <Filter>base\win</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\win\pe_image.cc">
+      <Filter>base\win</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\win\registry.cc">
+      <Filter>base\win</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\win\win_util.cc">
+      <Filter>base\win</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\win\windows_version.cc">
+      <Filter>base\win</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\win\wrapped_window_proc.cc">
+      <Filter>base\win</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\threading\platform_thread_win.cc">
+      <Filter>base\threading</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\threading\post_task_and_reply_impl.cc">
+      <Filter>base\threading</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\threading\thread_checker_impl.cc">
+      <Filter>base\threading</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\threading\thread_collision_warner.cc">
+      <Filter>base\threading</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\threading\thread_local_storage_win.cc">
+      <Filter>base\threading</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\threading\thread_local_win.cc">
+      <Filter>base\threading</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\threading\thread_restrictions.cc">
+      <Filter>base\threading</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\debug\alias.cc">
+      <Filter>base\debug</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\debug\debugger.cc">
+      <Filter>base\debug</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\debug\debugger_win.cc">
+      <Filter>base\debug</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\debug\stack_trace.cc">
+      <Filter>base\debug</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\debug\stack_trace_win.cc">
+      <Filter>base\debug</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\debug\trace_event.cc">
+      <Filter>base\debug</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\debug\trace_event_impl.cc">
+      <Filter>base\debug</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\debug\trace_event_win.cc">
+      <Filter>base\debug</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\synchronization\lock.cc">
+      <Filter>base\synchronization</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\synchronization\lock_impl_win.cc">
+      <Filter>base\synchronization</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\synchronization\waitable_event_win.cc">
+      <Filter>base\synchronization</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\ebooktest\EbookTestMenu.h" />
+    <ClInclude Include="src\ebooktest\Resource.h" />
+    <ClInclude Include="src\installer\Version.h" />
+    <ClInclude Include="src\MobiParse.h" />
+    <ClInclude Include="src\PageLayout.h" />
+    <ClInclude Include="src\utils\BitManip.h" />
+    <ClInclude Include="src\utils\FileUtil.h" />
+    <ClInclude Include="src\utils\FrameTimeoutCalculator.h" />
+    <ClInclude Include="src\utils\GdiPlusUtil.h" />
+    <ClInclude Include="src\utils\HtmlPullParser.h" />
+    <ClInclude Include="src\utils\mui.h" />
+    <ClInclude Include="src\utils\MuiCss.h" />
+    <ClInclude Include="src\utils\Vec.h" />
+    <ClInclude Include="ext\chrome\base\at_exit.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\atomic_ref_count.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\atomicops.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\atomicops_internals_atomicword_compat.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\atomicops_internals_x86_msvc.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\base_export.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\base_switches.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\basictypes.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\bind.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\bind_helpers.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\bind_internal.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\bind_internal_win.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\callback.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\callback_forward.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\callback_internal.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\command_line.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\compiler_specific.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\cpu.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\eintr_wrapper.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\event_types.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\file_descriptor_shuffle.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\file_path.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\file_util.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\file_util_deprecated.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\float_util.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\format_macros.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\gtest_prod_util.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\hash_tables.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\lazy_instance.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\location.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\logging.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\logging_win.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\message_loop.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\message_loop_helpers.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\message_loop_proxy.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\message_loop_proxy_impl.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\message_pump.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\message_pump_default.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\message_pump_observer.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\message_pump_win.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\move.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\observer_list.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\pending_task.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\pickle.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\platform_file.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\port.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\process.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\process_util.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\stl_util.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\string_number_conversions.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\string_piece.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\string_split.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\string_tokenizer.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\string_util.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\string_util_win.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\string16.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\stringprintf.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\sys_info.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\sys_string_conversions.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\template_util.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\time.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\timer.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\tracked_objects.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\tracking_info.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\tuple.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\utf_string_conversion_utils.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\utf_string_conversions.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\values.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\vlog.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\win\event_trace_provider.h">
+      <Filter>base\win</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\win\object_watcher.h">
+      <Filter>base\win</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\win\pe_image.h">
+      <Filter>base\win</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\win\registry.h">
+      <Filter>base\win</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\win\scoped_comptr.h">
+      <Filter>base\win</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\win\scoped_handle.h">
+      <Filter>base\win</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\win\win_util.h">
+      <Filter>base\win</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\win\windows_version.h">
+      <Filter>base\win</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\win\wrapped_window_proc.h">
+      <Filter>base\win</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\threading\platform_thread.h">
+      <Filter>base\threading</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\threading\post_task_and_reply_impl.h">
+      <Filter>base\threading</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\threading\thread_checker.h">
+      <Filter>base\threading</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\threading\thread_checker_impl.h">
+      <Filter>base\threading</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\threading\thread_collision_warner.h">
+      <Filter>base\threading</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\threading\thread_local.h">
+      <Filter>base\threading</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\threading\thread_local_storage.h">
+      <Filter>base\threading</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\threading\thread_restrictions.h">
+      <Filter>base\threading</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\debug\alias.h">
+      <Filter>base\debug</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\debug\debugger.h">
+      <Filter>base\debug</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\debug\leak_annotations.h">
+      <Filter>base\debug</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\debug\stack_trace.h">
+      <Filter>base\debug</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\debug\trace_event.h">
+      <Filter>base\debug</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\debug\trace_event_impl.h">
+      <Filter>base\debug</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\debug\trace_event_win.h">
+      <Filter>base\debug</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\synchronization\lock.h">
+      <Filter>base\synchronization</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\synchronization\lock_impl.h">
+      <Filter>base\synchronization</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\synchronization\waitable_event.h">
+      <Filter>base\synchronization</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="src\ebooktest\EbookTest.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="docs\ebook-todo.txt" />
+    <None Include="docs\ebooks-impl-notes.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="src\ebooktest\EbookTest.exe.manifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="base">
+      <UniqueIdentifier>{6c905551-ac52-414f-bd02-46f60272feb0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="base\win">
+      <UniqueIdentifier>{961fac53-8745-4d7d-9356-5e223cd69a43}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="base\threading">
+      <UniqueIdentifier>{c7341c48-41e7-48c4-8f30-1f50a8ef1e9f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="base\debug">
+      <UniqueIdentifier>{6bcfefbf-d49a-4c4f-8b73-1c51f4e4c10c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="base\synchronization">
+      <UniqueIdentifier>{62c29652-a41f-426d-a7a1-0576a5491387}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
