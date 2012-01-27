@@ -1204,7 +1204,7 @@ gdiplus_run_t3_text(fz_device *dev, fz_text *text, fz_matrix ctm,
 		ctm2 = fz_concat(text->trm, ctm2);
 		ctm2 = fz_concat(font->t3matrix, ctm2);
 		
-		font->t3run((void *)font->t3xref, font->t3resources, font->t3procs[gid], dev, ctm2, NULL);
+		font->t3run((void *)font->t3doc, font->t3resources, font->t3procs[gid], dev, ctm2, NULL);
 	}
 	
 	((userData *)dev->user)->t3color = NULL;

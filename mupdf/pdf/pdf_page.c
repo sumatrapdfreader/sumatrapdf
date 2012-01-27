@@ -28,7 +28,7 @@ put_marker_bool(fz_context *ctx, fz_obj *rdb, char *marker, int val)
 }
 
 static void
-pdf_load_page_tree_node(pdf_xref *xref, fz_obj *node, struct info info)
+pdf_load_page_tree_node(pdf_document *xref, fz_obj *node, struct info info)
 {
 	fz_obj *dict, *kids, *count;
 	fz_obj *obj;
@@ -99,7 +99,7 @@ pdf_load_page_tree_node(pdf_xref *xref, fz_obj *node, struct info info)
 }
 
 static void
-pdf_load_page_tree(pdf_xref *xref)
+pdf_load_page_tree(pdf_document *xref)
 {
 	fz_context *ctx = xref->ctx;
 	fz_obj *catalog;
@@ -133,14 +133,14 @@ pdf_load_page_tree(pdf_xref *xref)
 }
 
 int
-pdf_count_pages(pdf_xref *xref)
+pdf_count_pages(pdf_document *xref)
 {
 	pdf_load_page_tree(xref);
 	return xref->page_len;
 }
 
 int
-pdf_find_page_number(pdf_xref *xref, fz_obj *page)
+pdf_find_page_number(pdf_document *xref, fz_obj *page)
 {
 	int i, num = fz_to_num(page);
 
@@ -239,7 +239,7 @@ found:
 /* we need to combine all sub-streams into one for the content stream interpreter */
 
 static fz_buffer *
-pdf_load_page_contents_array(pdf_xref *xref, fz_obj *list)
+pdf_load_page_contents_array(pdf_document *xref, fz_obj *list)
 {
 	fz_buffer *big;
 	fz_buffer *one;
@@ -282,7 +282,7 @@ pdf_load_page_contents_array(pdf_xref *xref, fz_obj *list)
 }
 
 static fz_buffer *
-pdf_load_page_contents(pdf_xref *xref, fz_obj *obj)
+pdf_load_page_contents(pdf_document *xref, fz_obj *obj)
 {
 	fz_context *ctx = xref->ctx;
 
@@ -302,7 +302,7 @@ pdf_load_page_contents(pdf_xref *xref, fz_obj *obj)
 }
 
 pdf_page *
-pdf_load_page(pdf_xref *xref, int number)
+pdf_load_page(pdf_document *xref, int number)
 {
 	fz_context *ctx = xref->ctx;
 	pdf_page *page;
@@ -389,7 +389,7 @@ pdf_load_page(pdf_xref *xref, int number)
 }
 
 fz_rect
-pdf_bound_page(pdf_xref *xref, pdf_page *page)
+pdf_bound_page(pdf_document *xref, pdf_page *page)
 {
 	fz_rect bounds, mediabox = fz_transform_rect(fz_rotate(page->rotate), page->mediabox);
 	bounds.x0 = bounds.y0 = 0;

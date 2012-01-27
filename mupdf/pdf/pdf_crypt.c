@@ -575,7 +575,7 @@ pdf_authenticate_owner_password(pdf_crypt *crypt, unsigned char *ownerpass, int 
 }
 
 int
-pdf_authenticate_password(pdf_xref *xref, char *password)
+pdf_authenticate_password(pdf_document *xref, char *password)
 {
 	if (xref->crypt)
 	{
@@ -591,7 +591,7 @@ pdf_authenticate_password(pdf_xref *xref, char *password)
 }
 
 int
-pdf_needs_password(pdf_xref *xref)
+pdf_needs_password(pdf_document *xref)
 {
 	if (!xref->crypt)
 		return 0;
@@ -601,7 +601,7 @@ pdf_needs_password(pdf_xref *xref)
 }
 
 int
-pdf_has_permission(pdf_xref *xref, int p)
+pdf_has_permission(pdf_document *xref, int p)
 {
 	if (!xref->crypt)
 		return 1;
@@ -609,7 +609,7 @@ pdf_has_permission(pdf_xref *xref, int p)
 }
 
 unsigned char *
-pdf_get_crypt_key(pdf_xref *xref)
+pdf_get_crypt_key(pdf_document *xref)
 {
 	if (xref->crypt)
 		return xref->crypt->key;
@@ -617,7 +617,7 @@ pdf_get_crypt_key(pdf_xref *xref)
 }
 
 int
-pdf_get_crypt_revision(pdf_xref *xref)
+pdf_get_crypt_revision(pdf_document *xref)
 {
 	if (xref->crypt)
 		return xref->crypt->v;
@@ -625,7 +625,7 @@ pdf_get_crypt_revision(pdf_xref *xref)
 }
 
 char *
-pdf_get_crypt_method(pdf_xref *xref)
+pdf_get_crypt_method(pdf_document *xref)
 {
 	if (xref->crypt)
 	{
@@ -642,7 +642,7 @@ pdf_get_crypt_method(pdf_xref *xref)
 }
 
 int
-pdf_get_crypt_length(pdf_xref *xref)
+pdf_get_crypt_length(pdf_document *xref)
 {
 	if (xref->crypt)
 		return xref->crypt->length;

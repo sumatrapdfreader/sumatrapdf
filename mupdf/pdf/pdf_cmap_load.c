@@ -16,7 +16,7 @@ pdf_cmap_size(pdf_cmap *cmap)
  * Load CMap stream in PDF file
  */
 pdf_cmap *
-pdf_load_embedded_cmap(pdf_xref *xref, fz_obj *stmobj)
+pdf_load_embedded_cmap(pdf_document *xref, fz_obj *stmobj)
 {
 	fz_stream *file = NULL;
 	pdf_cmap *cmap = NULL;

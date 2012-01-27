@@ -4,7 +4,7 @@
 /* TODO: store JPEG compressed samples */
 /* TODO: store flate compressed samples */
 
-static fz_pixmap *pdf_load_jpx_image(pdf_xref *xref, fz_obj *dict);
+static fz_pixmap *pdf_load_jpx_image(pdf_document *xref, fz_obj *dict);
 
 static void
 pdf_mask_color_key(fz_pixmap *pix, int n, int *colorkey)
@@ -28,7 +28,7 @@ pdf_mask_color_key(fz_pixmap *pix, int n, int *colorkey)
 }
 
 static fz_pixmap *
-pdf_load_image_imp(pdf_xref *xref, fz_obj *rdb, fz_obj *dict, fz_stream *cstm, int forcemask)
+pdf_load_image_imp(pdf_document *xref, fz_obj *rdb, fz_obj *dict, fz_stream *cstm, int forcemask)
 {
 	fz_stream *stm = NULL;
 	fz_pixmap *tile = NULL;
@@ -277,7 +277,7 @@ pdf_load_image_imp(pdf_xref *xref, fz_obj *rdb, fz_obj *dict, fz_stream *cstm, i
 }
 
 fz_pixmap *
-pdf_load_inline_image(pdf_xref *xref, fz_obj *rdb, fz_obj *dict, fz_stream *file)
+pdf_load_inline_image(pdf_document *xref, fz_obj *rdb, fz_obj *dict, fz_stream *file)
 {
 	return pdf_load_image_imp(xref, rdb, dict, file, 0);
 	/* RJW: "cannot load inline image" */
@@ -300,7 +300,7 @@ pdf_is_jpx_image(fz_context *ctx, fz_obj *dict)
 }
 
 static fz_pixmap *
-pdf_load_jpx_image(pdf_xref *xref, fz_obj *dict)
+pdf_load_jpx_image(pdf_document *xref, fz_obj *dict)
 {
 	fz_buffer *buf = NULL;
 	fz_colorspace *colorspace = NULL;
@@ -369,7 +369,7 @@ pdf_load_jpx_image(pdf_xref *xref, fz_obj *dict)
 }
 
 fz_pixmap *
-pdf_load_image(pdf_xref *xref, fz_obj *dict)
+pdf_load_image(pdf_document *xref, fz_obj *dict)
 {
 	fz_context *ctx = xref->ctx;
 	fz_pixmap *pix;

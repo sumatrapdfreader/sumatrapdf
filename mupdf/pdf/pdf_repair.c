@@ -141,7 +141,7 @@ atobjend:
 }
 
 static void
-pdf_repair_obj_stm(pdf_xref *xref, int num, int gen)
+pdf_repair_obj_stm(pdf_document *xref, int num, int gen)
 {
 	fz_obj *obj;
 	fz_stream *stm = NULL;
@@ -193,7 +193,7 @@ pdf_repair_obj_stm(pdf_xref *xref, int num, int gen)
 }
 
 void
-pdf_repair_xref(pdf_xref *xref, char *buf, int bufsize)
+pdf_repair_xref(pdf_document *xref, char *buf, int bufsize)
 {
 	fz_obj *dict, *obj;
 	fz_obj *length;
@@ -475,7 +475,7 @@ pdf_repair_xref(pdf_xref *xref, char *buf, int bufsize)
 }
 
 void
-pdf_repair_obj_stms(pdf_xref *xref)
+pdf_repair_obj_stms(pdf_document *xref)
 {
 	fz_obj *dict;
 	int i;

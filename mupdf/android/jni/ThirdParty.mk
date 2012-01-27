@@ -21,6 +21,7 @@ LOCAL_SRC_FILES := \
 	$(MY_ROOT)/thirdparty/jbig2dec/jbig2_arith.c \
 	$(MY_ROOT)/thirdparty/jbig2dec/jbig2_arith_int.c \
 	$(MY_ROOT)/thirdparty/jbig2dec/jbig2_arith_iaid.c \
+	$(MY_ROOT)/thirdparty/jbig2dec/jbig2_halftone.c \
 	$(MY_ROOT)/thirdparty/jbig2dec/jbig2_huffman.c \
 	$(MY_ROOT)/thirdparty/jbig2dec/jbig2_segment.c \
 	$(MY_ROOT)/thirdparty/jbig2dec/jbig2_page.c \

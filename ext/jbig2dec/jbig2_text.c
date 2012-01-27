@@ -309,26 +309,32 @@ cleanup1:
 		int32_t RDW, RDH, RDX, RDY;
 		Jbig2Image *refimage;
 		int BMSIZE = 0;
+		int code1 = 0;
+		int code2 = 0;
+		int code3 = 0;
+		int code4 = 0;
+		int code5 = 0;
 
 		/* 6.4.11 (1, 2, 3, 4) */
 		if (!params->SBHUFF) {
-		  int code1 = jbig2_arith_int_decode(params->IARDW, as, &RDW);
-		  int code2 = jbig2_arith_int_decode(params->IARDH, as, &RDH);
-		  int code3 = jbig2_arith_int_decode(params->IARDX, as, &RDX);
-		  int code4 = jbig2_arith_int_decode(params->IARDY, as, &RDY);
-          if ((code1 < 0) || (code2 < 0) || (code3 < 0) || (code4 < 0))
-          {
-              code = jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
-                  "failed to decode data");
-              goto cleanup2;
-          }
+		  code1 = jbig2_arith_int_decode(params->IARDW, as, &RDW);
+		  code2 = jbig2_arith_int_decode(params->IARDH, as, &RDH);
+		  code3 = jbig2_arith_int_decode(params->IARDX, as, &RDX);
+		  code4 = jbig2_arith_int_decode(params->IARDY, as, &RDY);
 		} else {
-		  RDW = jbig2_huffman_get(hs, params->SBHUFFRDW, &code);
-		  RDH = jbig2_huffman_get(hs, params->SBHUFFRDH, &code);
-		  RDX = jbig2_huffman_get(hs, params->SBHUFFRDX, &code);
-		  RDY = jbig2_huffman_get(hs, params->SBHUFFRDY, &code);
-		  BMSIZE = jbig2_huffman_get(hs, params->SBHUFFRSIZE, &code);
+		  RDW = jbig2_huffman_get(hs, params->SBHUFFRDW, &code1);
+		  RDH = jbig2_huffman_get(hs, params->SBHUFFRDH, &code2);
+		  RDX = jbig2_huffman_get(hs, params->SBHUFFRDX, &code3);
+		  RDY = jbig2_huffman_get(hs, params->SBHUFFRDY, &code4);
+		  BMSIZE = jbig2_huffman_get(hs, params->SBHUFFRSIZE, &code5);
 		  jbig2_huffman_skip(hs);
+		}
+
+		if ((code1 < 0) || (code2 < 0) || (code3 < 0) || (code4 < 0) || (code5 < 0))
+		{
+		    code = jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
+		        "failed to decode data");
+		    goto cleanup2;
 		}
 
 		/* 6.4.11 (6) */

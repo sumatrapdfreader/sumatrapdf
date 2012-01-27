@@ -39,7 +39,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\scripts;..\thirdparty\jbig2dec;..\thirdparty\jpeg-8c;..\thirdparty\openjpeg-1.4\libopenjpeg;..\thirdparty\zlib-1.2.5;..\thirdparty\freetype-2.4.4\include"
+				AdditionalIncludeDirectories="..\scripts;..\thirdparty\jbig2dec;..\thirdparty\jpeg-8d;..\thirdparty\openjpeg-1.4\libopenjpeg;..\thirdparty\zlib-1.2.5;..\thirdparty\freetype-2.4.8\include"
 				PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;FT_CONFIG_MODULES_H=\&quot;slimftmodules.h\&quot;;FT_CONFIG_OPTIONS_H=\&quot;slimftoptions.h\&quot;;DEBUG=1"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -102,7 +102,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\scripts;..\thirdparty\jbig2dec;..\thirdparty\jpeg-8c;..\thirdparty\openjpeg-1.4\libopenjpeg;..\thirdparty\zlib-1.2.5;..\thirdparty\freetype-2.4.4\include"
+				AdditionalIncludeDirectories="..\scripts;..\thirdparty\jbig2dec;..\thirdparty\jpeg-8d;..\thirdparty\openjpeg-1.4\libopenjpeg;..\thirdparty\zlib-1.2.5;..\thirdparty\freetype-2.4.8\include"
 				PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;FT_CONFIG_MODULES_H=\&quot;slimftmodules.h\&quot;;FT_CONFIG_OPTIONS_H=\&quot;slimftoptions.h\&quot;"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
@@ -162,7 +162,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\scripts;..\thirdparty\jbig2dec;..\thirdparty\jpeg-8c;..\thirdparty\openjpeg-1.4\libopenjpeg;..\thirdparty\zlib-1.2.5;..\thirdparty\freetype-2.4.4\include"
+				AdditionalIncludeDirectories="..\scripts;..\thirdparty\jbig2dec;..\thirdparty\jpeg-8d;..\thirdparty\openjpeg-1.4\libopenjpeg;..\thirdparty\zlib-1.2.5;..\thirdparty\freetype-2.4.8\include"
 				PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;FT_CONFIG_MODULES_H=\&quot;slimftmodules.h\&quot;;FT_CONFIG_OPTIONS_H=\&quot;slimftoptions.h\&quot;;MEMENTO=1;DEBUG=1"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -206,127 +206,127 @@
 			Name="libjpeg"
 			>
 			<File
-				RelativePath="..\thirdparty\jpeg-8c\jaricom.c"
+				RelativePath="..\thirdparty\jpeg-8d\jaricom.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\jpeg-8c\jcomapi.c"
+				RelativePath="..\thirdparty\jpeg-8d\jcomapi.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\jpeg-8c\jdapimin.c"
+				RelativePath="..\thirdparty\jpeg-8d\jdapimin.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\jpeg-8c\jdapistd.c"
+				RelativePath="..\thirdparty\jpeg-8d\jdapistd.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\jpeg-8c\jdarith.c"
+				RelativePath="..\thirdparty\jpeg-8d\jdarith.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\jpeg-8c\jdatadst.c"
+				RelativePath="..\thirdparty\jpeg-8d\jdatadst.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\jpeg-8c\jdatasrc.c"
+				RelativePath="..\thirdparty\jpeg-8d\jdatasrc.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\jpeg-8c\jdcoefct.c"
+				RelativePath="..\thirdparty\jpeg-8d\jdcoefct.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\jpeg-8c\jdcolor.c"
+				RelativePath="..\thirdparty\jpeg-8d\jdcolor.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\jpeg-8c\jddctmgr.c"
+				RelativePath="..\thirdparty\jpeg-8d\jddctmgr.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\jpeg-8c\jdhuff.c"
+				RelativePath="..\thirdparty\jpeg-8d\jdhuff.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\jpeg-8c\jdinput.c"
+				RelativePath="..\thirdparty\jpeg-8d\jdinput.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\jpeg-8c\jdmainct.c"
+				RelativePath="..\thirdparty\jpeg-8d\jdmainct.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\jpeg-8c\jdmarker.c"
+				RelativePath="..\thirdparty\jpeg-8d\jdmarker.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\jpeg-8c\jdmaster.c"
+				RelativePath="..\thirdparty\jpeg-8d\jdmaster.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\jpeg-8c\jdmerge.c"
+				RelativePath="..\thirdparty\jpeg-8d\jdmerge.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\jpeg-8c\jdpostct.c"
+				RelativePath="..\thirdparty\jpeg-8d\jdpostct.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\jpeg-8c\jdsample.c"
+				RelativePath="..\thirdparty\jpeg-8d\jdsample.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\jpeg-8c\jdtrans.c"
+				RelativePath="..\thirdparty\jpeg-8d\jdtrans.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\jpeg-8c\jerror.c"
+				RelativePath="..\thirdparty\jpeg-8d\jerror.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\jpeg-8c\jfdctflt.c"
+				RelativePath="..\thirdparty\jpeg-8d\jfdctflt.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\jpeg-8c\jfdctfst.c"
+				RelativePath="..\thirdparty\jpeg-8d\jfdctfst.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\jpeg-8c\jfdctint.c"
+				RelativePath="..\thirdparty\jpeg-8d\jfdctint.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\jpeg-8c\jidctflt.c"
+				RelativePath="..\thirdparty\jpeg-8d\jidctflt.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\jpeg-8c\jidctfst.c"
+				RelativePath="..\thirdparty\jpeg-8d\jidctfst.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\jpeg-8c\jidctint.c"
+				RelativePath="..\thirdparty\jpeg-8d\jidctint.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\jpeg-8c\jmemansi.c"
+				RelativePath="..\thirdparty\jpeg-8d\jmemansi.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\jpeg-8c\jmemmgr.c"
+				RelativePath="..\thirdparty\jpeg-8d\jmemmgr.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\jpeg-8c\jquant1.c"
+				RelativePath="..\thirdparty\jpeg-8d\jquant1.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\jpeg-8c\jquant2.c"
+				RelativePath="..\thirdparty\jpeg-8d\jquant2.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\jpeg-8c\jutils.c"
+				RelativePath="..\thirdparty\jpeg-8d\jutils.c"
 				>
 			</File>
 		</Filter>
@@ -351,6 +351,10 @@
 			</File>
 			<File
 				RelativePath="..\thirdparty\jbig2dec\jbig2_generic.c"
+				>
+			</File>
+			<File
+				RelativePath="..\thirdparty\jbig2dec\jbig2_halftone.c"
 				>
 			</File>
 			<File
@@ -514,90 +518,90 @@
 			Name="libfreetype"
 			>
 			<File
-				RelativePath="..\thirdparty\freetype-2.4.4\src\cff\cff.c"
+				RelativePath="..\thirdparty\freetype-2.4.8\src\cff\cff.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\freetype-2.4.4\src\psaux\psaux.c"
+				RelativePath="..\thirdparty\freetype-2.4.8\src\psaux\psaux.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\freetype-2.4.4\src\pshinter\pshinter.c"
+				RelativePath="..\thirdparty\freetype-2.4.8\src\pshinter\pshinter.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\freetype-2.4.4\src\psnames\psnames.c"
+				RelativePath="..\thirdparty\freetype-2.4.8\src\psnames\psnames.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\freetype-2.4.4\src\raster\raster.c"
+				RelativePath="..\thirdparty\freetype-2.4.8\src\raster\raster.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\freetype-2.4.4\src\sfnt\sfnt.c"
+				RelativePath="..\thirdparty\freetype-2.4.8\src\sfnt\sfnt.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\freetype-2.4.4\src\smooth\smooth.c"
+				RelativePath="..\thirdparty\freetype-2.4.8\src\smooth\smooth.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\freetype-2.4.4\src\truetype\truetype.c"
+				RelativePath="..\thirdparty\freetype-2.4.8\src\truetype\truetype.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\freetype-2.4.4\src\type1\type1.c"
+				RelativePath="..\thirdparty\freetype-2.4.8\src\type1\type1.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\freetype-2.4.4\src\cid\type1cid.c"
+				RelativePath="..\thirdparty\freetype-2.4.8\src\cid\type1cid.c"
 				>
 			</File>
 			<Filter
 				Name="base"
 				>
 				<File
-					RelativePath="..\thirdparty\freetype-2.4.4\src\base\ftbase.c"
+					RelativePath="..\thirdparty\freetype-2.4.8\src\base\ftbase.c"
 					>
 				</File>
 				<File
-					RelativePath="..\thirdparty\freetype-2.4.4\src\base\ftbbox.c"
+					RelativePath="..\thirdparty\freetype-2.4.8\src\base\ftbbox.c"
 					>
 				</File>
 				<File
-					RelativePath="..\thirdparty\freetype-2.4.4\src\base\ftbitmap.c"
+					RelativePath="..\thirdparty\freetype-2.4.8\src\base\ftbitmap.c"
 					>
 				</File>
 				<File
-					RelativePath="..\thirdparty\freetype-2.4.4\src\base\ftgasp.c"
+					RelativePath="..\thirdparty\freetype-2.4.8\src\base\ftgasp.c"
 					>
 				</File>
 				<File
-					RelativePath="..\thirdparty\freetype-2.4.4\src\base\ftglyph.c"
+					RelativePath="..\thirdparty\freetype-2.4.8\src\base\ftglyph.c"
 					>
 				</File>
 				<File
-					RelativePath="..\thirdparty\freetype-2.4.4\src\base\ftinit.c"
+					RelativePath="..\thirdparty\freetype-2.4.8\src\base\ftinit.c"
 					>
 				</File>
 				<File
-					RelativePath="..\thirdparty\freetype-2.4.4\src\base\ftstroke.c"
+					RelativePath="..\thirdparty\freetype-2.4.8\src\base\ftstroke.c"
 					>
 				</File>
 				<File
-					RelativePath="..\thirdparty\freetype-2.4.4\src\base\ftsynth.c"
+					RelativePath="..\thirdparty\freetype-2.4.8\src\base\ftsynth.c"
 					>
 				</File>
 				<File
-					RelativePath="..\thirdparty\freetype-2.4.4\src\base\ftsystem.c"
+					RelativePath="..\thirdparty\freetype-2.4.8\src\base\ftsystem.c"
 					>
 				</File>
 				<File
-					RelativePath="..\thirdparty\freetype-2.4.4\src\base\fttype1.c"
+					RelativePath="..\thirdparty\freetype-2.4.8\src\base\fttype1.c"
 					>
 				</File>
 				<File
-					RelativePath="..\thirdparty\freetype-2.4.4\src\base\ftxf86.c"
+					RelativePath="..\thirdparty\freetype-2.4.8\src\base\ftxf86.c"
 					>
 				</File>
 			</Filter>

@@ -4,7 +4,7 @@
 /* ICCBased */
 
 static fz_colorspace *
-load_icc_based(pdf_xref *xref, fz_obj *dict)
+load_icc_based(pdf_document *xref, fz_obj *dict)
 {
 	int n;
 
@@ -91,7 +91,7 @@ free_separation(fz_context *ctx, fz_colorspace *cs)
 }
 
 static fz_colorspace *
-load_separation(pdf_xref *xref, fz_obj *array)
+load_separation(pdf_document *xref, fz_obj *array)
 {
 	fz_colorspace *cs;
 	struct separation *sep = NULL;
@@ -218,7 +218,7 @@ pdf_expand_indexed_pixmap(fz_context *ctx, fz_pixmap *src)
 }
 
 static fz_colorspace *
-load_indexed(pdf_xref *xref, fz_obj *array)
+load_indexed(pdf_document *xref, fz_obj *array)
 {
 	struct indexed *idx = NULL;
 	fz_context *ctx = xref->ctx;
@@ -304,7 +304,7 @@ load_indexed(pdf_xref *xref, fz_obj *array)
 /* Parse and create colorspace from PDF object */
 
 static fz_colorspace *
-pdf_load_colorspace_imp(pdf_xref *xref, fz_obj *obj)
+pdf_load_colorspace_imp(pdf_document *xref, fz_obj *obj)
 {
 	if (fz_is_name(obj))
 	{
@@ -390,7 +390,7 @@ pdf_load_colorspace_imp(pdf_xref *xref, fz_obj *obj)
 }
 
 fz_colorspace *
-pdf_load_colorspace(pdf_xref *xref, fz_obj *obj)
+pdf_load_colorspace(pdf_document *xref, fz_obj *obj)
 {
 	fz_context *ctx = xref->ctx;
 	fz_colorspace *cs;

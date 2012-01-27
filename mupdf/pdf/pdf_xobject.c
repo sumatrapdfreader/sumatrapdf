@@ -37,7 +37,7 @@ pdf_xobject_size(pdf_xobject *xobj)
 }
 
 pdf_xobject *
-pdf_load_xobject(pdf_xref *xref, fz_obj *dict)
+pdf_load_xobject(pdf_document *xref, fz_obj *dict)
 {
 	pdf_xobject *form;
 	fz_obj *obj;

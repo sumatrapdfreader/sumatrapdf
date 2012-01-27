@@ -13,7 +13,7 @@ static inline int iswhite(int ch)
  */
 
 static void
-pdf_load_version(pdf_xref *xref)
+pdf_load_version(pdf_document *xref)
 {
 	char buf[20];
 
@@ -26,7 +26,7 @@ pdf_load_version(pdf_xref *xref)
 }
 
 static void
-pdf_read_start_xref(pdf_xref *xref)
+pdf_read_start_xref(pdf_document *xref)
 {
 	unsigned char buf[1024];
 	int t, n;
@@ -63,7 +63,7 @@ pdf_read_start_xref(pdf_xref *xref)
  */
 
 static void
-pdf_read_old_trailer(pdf_xref *xref, char *buf, int cap)
+pdf_read_old_trailer(pdf_document *xref, char *buf, int cap)
 {
 	int len;
 	char *s;
@@ -119,7 +119,7 @@ pdf_read_old_trailer(pdf_xref *xref, char *buf, int cap)
 }
 
 static void
-pdf_read_new_trailer(pdf_xref *xref, char *buf, int cap)
+pdf_read_new_trailer(pdf_document *xref, char *buf, int cap)
 {
 	fz_try(xref->ctx)
 	{
@@ -132,7 +132,7 @@ pdf_read_new_trailer(pdf_xref *xref, char *buf, int cap)
 }
 
 static void
-pdf_read_trailer(pdf_xref *xref, char *buf, int cap)
+pdf_read_trailer(pdf_document *xref, char *buf, int cap)
 {
 	int c;
 
@@ -162,7 +162,7 @@ pdf_read_trailer(pdf_xref *xref, char *buf, int cap)
  */
 
 void
-pdf_resize_xref(pdf_xref *xref, int newlen)
+pdf_resize_xref(pdf_document *xref, int newlen)
 {
 	int i;
 
@@ -179,7 +179,7 @@ pdf_resize_xref(pdf_xref *xref, int newlen)
 }
 
 static fz_obj *
-pdf_read_old_xref(pdf_xref *xref, char *buf, int cap)
+pdf_read_old_xref(pdf_document *xref, char *buf, int cap)
 {
 	int ofs, len;
 	char *s;
@@ -260,7 +260,7 @@ pdf_read_old_xref(pdf_xref *xref, char *buf, int cap)
 }
 
 static void
-pdf_read_new_xref_section(pdf_xref *xref, fz_stream *stm, int i0, int i1, int w0, int w1, int w2)
+pdf_read_new_xref_section(pdf_document *xref, fz_stream *stm, int i0, int i1, int w0, int w1, int w2)
 {
 	int i, n;
 
@@ -294,7 +294,7 @@ pdf_read_new_xref_section(pdf_xref *xref, fz_stream *stm, int i0, int i1, int w0
 }
 
 static fz_obj *
-pdf_read_new_xref(pdf_xref *xref, char *buf, int cap)
+pdf_read_new_xref(pdf_document *xref, char *buf, int cap)
 {
 	fz_stream *stm = NULL;
 	fz_obj *trailer = NULL;
@@ -373,7 +373,7 @@ pdf_read_new_xref(pdf_xref *xref, char *buf, int cap)
 }
 
 static fz_obj *
-pdf_read_xref(pdf_xref *xref, int ofs, char *buf, int cap)
+pdf_read_xref(pdf_document *xref, int ofs, char *buf, int cap)
 {
 	int c;
 	fz_context *ctx = xref->ctx;
@@ -402,7 +402,7 @@ pdf_read_xref(pdf_xref *xref, int ofs, char *buf, int cap)
 }
 
 static void
-pdf_read_xref_sections(pdf_xref *xref, int ofs, char *buf, int cap)
+pdf_read_xref_sections(pdf_document *xref, int ofs, char *buf, int cap)
 {
 	fz_obj *trailer = NULL;
 	fz_obj *xrefstm = NULL;
@@ -436,7 +436,7 @@ pdf_read_xref_sections(pdf_xref *xref, int ofs, char *buf, int cap)
  */
 
 static void
-pdf_load_xref(pdf_xref *xref, char *buf, int bufsize)
+pdf_load_xref(pdf_document *xref, char *buf, int bufsize)
 {
 	fz_obj *size;
 	int i;
@@ -473,7 +473,7 @@ pdf_load_xref(pdf_xref *xref, char *buf, int bufsize)
 }
 
 void
-pdf_ocg_set_config(pdf_xref *xref, int config)
+pdf_ocg_set_config(pdf_document *xref, int config)
 {
 	int i, j, len, len2;
 	pdf_ocg_descriptor *desc = xref->ocg;
@@ -578,7 +578,7 @@ pdf_ocg_set_config(pdf_xref *xref, int config)
 }
 
 static void
-pdf_read_ocg(pdf_xref *xref)
+pdf_read_ocg(pdf_document *xref)
 {
 	fz_obj *obj, *ocg;
 	int len, i;
@@ -638,10 +638,10 @@ pdf_free_ocg(fz_context *ctx, pdf_ocg_descriptor *desc)
  * If password is not null, try to decrypt.
  */
 
-pdf_xref *
-pdf_open_xref_with_stream(fz_stream *file)
+pdf_document *
+pdf_open_document_with_stream(fz_stream *file)
 {
-	pdf_xref *xref;
+	pdf_document *xref;
 	fz_obj *encrypt, *id;
 	fz_obj *dict = NULL;
 	fz_obj *obj;
@@ -655,7 +655,7 @@ pdf_open_xref_with_stream(fz_stream *file)
 	/* install pdf specific callback */
 	fz_resolve_indirect = pdf_resolve_indirect;
 
-	xref = fz_calloc(ctx, 1, sizeof(pdf_xref));
+	xref = fz_calloc(ctx, 1, sizeof(pdf_document));
 	xref->file = fz_keep_stream(file);
 	xref->ctx = ctx;
 
@@ -749,7 +749,7 @@ pdf_open_xref_with_stream(fz_stream *file)
 	{
 		fz_drop_obj(dict);
 		fz_drop_obj(nobj);
-		pdf_free_xref(xref);
+		pdf_close_document(xref);
 		fz_throw(ctx, "cannot open document");
 	}
 
@@ -766,7 +766,7 @@ pdf_open_xref_with_stream(fz_stream *file)
 }
 
 void
-pdf_free_xref(pdf_xref *xref)
+pdf_close_document(pdf_document *xref)
 {
 	int i;
 	fz_context *ctx;
@@ -817,7 +817,7 @@ pdf_free_xref(pdf_xref *xref)
 }
 
 void
-pdf_debug_xref(pdf_xref *xref)
+pdf_debug_xref(pdf_document *xref)
 {
 	int i;
 	printf("xref\n0 %d\n", xref->len);
@@ -836,7 +836,7 @@ pdf_debug_xref(pdf_xref *xref)
  */
 
 static void
-pdf_load_obj_stm(pdf_xref *xref, int num, int gen, char *buf, int cap)
+pdf_load_obj_stm(pdf_document *xref, int num, int gen, char *buf, int cap)
 {
 	fz_stream *stm = NULL;
 	fz_obj *objstm = NULL;
@@ -925,7 +925,7 @@ pdf_load_obj_stm(pdf_xref *xref, int num, int gen, char *buf, int cap)
  */
 
 void
-pdf_cache_object(pdf_xref *xref, int num, int gen)
+pdf_cache_object(pdf_document *xref, int num, int gen)
 {
 	pdf_xref_entry *x;
 	int rnum, rgen;
@@ -991,7 +991,7 @@ pdf_cache_object(pdf_xref *xref, int num, int gen)
 }
 
 fz_obj *
-pdf_load_object(pdf_xref *xref, int num, int gen)
+pdf_load_object(pdf_document *xref, int num, int gen)
 {
 	fz_context *ctx = xref->ctx;
 
@@ -1016,7 +1016,7 @@ pdf_resolve_indirect(fz_obj *ref)
 	int num;
 	int gen;
 	fz_context *ctx = NULL; /* Avoid warning for stupid compilers */
-	pdf_xref *xref;
+	pdf_document *xref;
 
 	while (fz_is_indirect(ref))
 	{
@@ -1026,7 +1026,7 @@ pdf_resolve_indirect(fz_obj *ref)
 			fz_warn(ctx, "Too many indirections (possible indirection cycle involving %d %d R)", num, gen);
 			return NULL;
 		}
-		xref = fz_get_indirect_xref(ref);
+		xref = fz_get_indirect_document(ref);
 		if (!xref)
 			return NULL;
 		ctx = xref->ctx;
@@ -1051,7 +1051,7 @@ pdf_resolve_indirect(fz_obj *ref)
 
 /* Replace numbered object -- for use by pdfclean and similar tools */
 void
-pdf_update_object(pdf_xref *xref, int num, int gen, fz_obj *newobj)
+pdf_update_object(pdf_document *xref, int num, int gen, fz_obj *newobj)
 {
 	pdf_xref_entry *x;
 
@@ -1072,20 +1072,20 @@ pdf_update_object(pdf_xref *xref, int num, int gen, fz_obj *newobj)
 }
 
 /*
- * Convenience function to open a file then call pdf_open_xref_with_stream.
+ * Convenience function to open a file then call pdf_open_document_with_stream.
  */
 
-pdf_xref *
-pdf_open_xref(fz_context *ctx, const char *filename)
+pdf_document *
+pdf_open_document(fz_context *ctx, const char *filename)
 {
 	fz_stream *file = NULL;
-	pdf_xref *xref;
+	pdf_document *xref;
 
 	fz_var(file);
 	fz_try(ctx)
 	{
 		file = fz_open_file(ctx, filename);
-		xref = pdf_open_xref_with_stream(file);
+		xref = pdf_open_document_with_stream(file);
 	}
 	fz_catch(ctx)
 	{

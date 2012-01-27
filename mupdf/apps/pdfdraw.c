@@ -92,7 +92,7 @@ static int isrange(char *s)
 }
 
 #ifdef GDI_PLUS_BMP_RENDERER
-static void drawbmp(pdf_xref *xref, pdf_page *page, fz_display_list *list, int pagenum)
+static void drawbmp(pdf_document *xref, pdf_page *page, fz_display_list *list, int pagenum)
 {
 	float zoom;
 	fz_matrix ctm;
@@ -190,13 +190,13 @@ static void drawbmp(pdf_xref *xref, pdf_page *page, fz_display_list *list, int p
 }
 #endif
 
-static void drawpage(pdf_xref *xref, int pagenum)
+static void drawpage(pdf_document *doc, int pagenum)
 {
 	pdf_page *page;
 	fz_display_list *list = NULL;
 	fz_device *dev = NULL;
 	int start;
-	fz_context *ctx = xref->ctx;
+	fz_context *ctx = doc->ctx;
 
 	fz_var(list);
 	fz_var(dev);
@@ -208,7 +208,7 @@ static void drawpage(pdf_xref *xref, int pagenum)
 
 	fz_try(ctx)
 	{
-		page = pdf_load_page(xref, pagenum - 1);
+		page = pdf_load_page(doc, pagenum - 1);
 	}
 	fz_catch(ctx)
 	{
@@ -221,7 +221,7 @@ static void drawpage(pdf_xref *xref, int pagenum)
 		{
 			list = fz_new_display_list(ctx);
 			dev = fz_new_list_device(ctx, list);
-			pdf_run_page(xref, page, dev, fz_identity, NULL);
+			pdf_run_page(doc, page, dev, fz_identity, NULL);
 		}
 		fz_catch(ctx)
 		{
@@ -243,7 +243,7 @@ static void drawpage(pdf_xref *xref, int pagenum)
 			if (list)
 				fz_execute_display_list(list, dev, fz_identity, fz_infinite_bbox, NULL);
 			else
-				pdf_run_page(xref, page, dev, fz_identity, NULL);
+				pdf_run_page(doc, page, dev, fz_identity, NULL);
 			printf("</page>\n");
 		}
 		fz_catch(ctx)
@@ -270,7 +270,7 @@ static void drawpage(pdf_xref *xref, int pagenum)
 			if (list)
 				fz_execute_display_list(list, dev, fz_identity, fz_infinite_bbox, NULL);
 			else
-				pdf_run_page(xref, page, dev, fz_identity, NULL);
+				pdf_run_page(doc, page, dev, fz_identity, NULL);
 			fz_free_device(dev);
 			dev = NULL;
 			printf("[Page %d]\n", pagenum);
@@ -296,7 +296,7 @@ static void drawpage(pdf_xref *xref, int pagenum)
 
 #ifdef GDI_PLUS_BMP_RENDERER
 	if (output && strstr(output, ".bmp"))
-		drawbmp(xref, page, list, pagenum);
+		drawbmp(doc, page, list, pagenum);
 	else
 #endif
 	if (output || showmd5 || showtime)
@@ -309,7 +309,7 @@ static void drawpage(pdf_xref *xref, int pagenum)
 
 		fz_var(pix);
 
-		bounds = pdf_bound_page(xref, page);
+		bounds = pdf_bound_page(doc, page);
 		zoom = resolution / 72;
 		ctm = fz_scale(zoom, zoom);
 		ctm = fz_concat(ctm, fz_rotate(rotation));
@@ -330,7 +330,7 @@ static void drawpage(pdf_xref *xref, int pagenum)
 			if (list)
 				fz_execute_display_list(list, dev, ctm, bbox, NULL);
 			else
-				pdf_run_page(xref, page, dev, ctm, NULL);
+				pdf_run_page(doc, page, dev, ctm, NULL);
 			fz_free_device(dev);
 			dev = NULL;
 
@@ -420,7 +420,7 @@ static void drawpage(pdf_xref *xref, int pagenum)
 	fz_flush_warnings(ctx);
 }
 
-static void drawrange(pdf_xref *xref, char *range)
+static void drawrange(pdf_document *doc, char *range)
 {
 	int page, spage, epage;
 	char *spec, *dash;
@@ -431,7 +431,7 @@ static void drawrange(pdf_xref *xref, char *range)
 		dash = strchr(spec, '-');
 
 		if (dash == spec)
-			spage = epage = pdf_count_pages(xref);
+			spage = epage = pdf_count_pages(doc);
 		else
 			spage = epage = atoi(spec);
 
@@ -440,26 +440,26 @@ static void drawrange(pdf_xref *xref, char *range)
 			if (strlen(dash) > 1)
 				epage = atoi(dash + 1);
 			else
-				epage = pdf_count_pages(xref);
+				epage = pdf_count_pages(doc);
 		}
 
-		spage = CLAMP(spage, 1, pdf_count_pages(xref));
-		epage = CLAMP(epage, 1, pdf_count_pages(xref));
+		spage = CLAMP(spage, 1, pdf_count_pages(doc));
+		epage = CLAMP(epage, 1, pdf_count_pages(doc));
 
 		if (spage < epage)
 			for (page = spage; page <= epage; page++)
-				drawpage(xref, page);
+				drawpage(doc, page);
 		else
 			for (page = spage; page >= epage; page--)
-				drawpage(xref, page);
+				drawpage(doc, page);
 
 		spec = fz_strsep(&range, ",");
 	}
 }
 
-static void drawoutline(pdf_xref *xref)
+static void drawoutline(pdf_document *doc)
 {
-	fz_outline *outline = pdf_load_outline(xref);
+	fz_outline *outline = pdf_load_outline(doc);
 	if (showoutline > 1)
 		fz_debug_outline_xml(outline, 0);
 	else
@@ -476,11 +476,11 @@ int main(int argc, char **argv)
 	char *password = "";
 	int grayscale = 0;
 	int accelerate = 1;
-	pdf_xref *xref = NULL;
+	pdf_document *doc = NULL;
 	int c;
 	fz_context *ctx;
 
-	fz_var(xref);
+	fz_var(doc);
 
 	while ((c = fz_getopt(argc, argv, "lo:p:r:R:Aab:dgmtx5G:I")) != -1)
 	{
@@ -555,41 +555,41 @@ int main(int argc, char **argv)
 
 			fz_try(ctx)
 			{
-				xref = pdf_open_xref(ctx, filename);
+				doc = pdf_open_document(ctx, filename);
 			}
 			fz_catch(ctx)
 			{
 				fz_throw(ctx, "cannot open document: %s", filename);
 			}
 
-			if (pdf_needs_password(xref))
-				if (!pdf_authenticate_password(xref, password))
+			if (pdf_needs_password(doc))
+				if (!pdf_authenticate_password(doc, password))
 					fz_throw(ctx, "cannot authenticate password: %s", filename);
 
 			if (showxml)
 				printf("<document name=\"%s\">\n", filename);
 
 			if (showoutline)
-				drawoutline(xref);
+				drawoutline(doc);
 
 			if (showtext || showxml || showtime || showmd5 || output)
 			{
 				if (fz_optind == argc || !isrange(argv[fz_optind]))
-					drawrange(xref, "1-");
+					drawrange(doc, "1-");
 				if (fz_optind < argc && isrange(argv[fz_optind]))
-					drawrange(xref, argv[fz_optind++]);
+					drawrange(doc, argv[fz_optind++]);
 			}
 
 			if (showxml)
 				printf("</document>\n");
 
-			pdf_free_xref(xref);
-			xref = NULL;
+			pdf_close_document(doc);
+			doc = NULL;
 		}
 	}
 	fz_catch(ctx)
 	{
-		pdf_free_xref(xref);
+		pdf_close_document(doc);
 	}
 
 	if (showtime)

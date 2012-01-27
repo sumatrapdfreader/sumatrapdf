@@ -270,9 +270,15 @@ struct xps_document_s
 	int _clinks_len;
 };
 
-xps_document *xps_open_file(fz_context *ctx, char *filename);
-xps_document *xps_open_stream(fz_stream *file);
-void xps_free_context(xps_document *doc);
+xps_document *xps_open_document(fz_context *ctx, char *filename);
+xps_document *xps_open_document_with_stream(fz_stream *file);
+void xps_close_document(xps_document *doc);
+
+/*
+ * Parsing helper functions
+ */
+char *xps_get_real_params(char *s, int num, float *x);
+char *xps_get_point(char *s_in, float *x, float *y);
 
 /* SumatraPDF: extended link support */
 void xps_extract_anchor_info(xps_document *doc, xml_element *node, fz_rect rect, int step);

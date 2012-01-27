@@ -5,7 +5,7 @@
 #include "fitz.h"
 #include "mupdf.h"
 
-static pdf_xref *xref = NULL;
+static pdf_document *doc = NULL;
 static fz_context *ctx = NULL;
 static int showbinary = 0;
 static int showdecode = 1;
@@ -22,18 +22,18 @@ static void usage(void)
 
 static void showtrailer(void)
 {
-	if (!xref)
+	if (!doc)
 		fz_throw(ctx, "no file specified");
 	printf("trailer\n");
-	fz_debug_obj(xref->trailer);
+	fz_debug_obj(doc->trailer);
 	printf("\n");
 }
 
 static void showxref(void)
 {
-	if (!xref)
+	if (!doc)
 		fz_throw(ctx, "no file specified");
-	pdf_debug_xref(xref);
+	pdf_debug_xref(doc);
 	printf("\n");
 }
 
@@ -43,13 +43,13 @@ static void showpagetree(void)
 	int count;
 	int i;
 
-	if (!xref)
+	if (!doc)
 		fz_throw(ctx, "no file specified");
 
-	count = pdf_count_pages(xref);
+	count = pdf_count_pages(doc);
 	for (i = 0; i < count; i++)
 	{
-		ref = xref->page_refs[i];
+		ref = doc->page_refs[i];
 		printf("page %d = %d %d R\n", i + 1, fz_to_num(ref), fz_to_gen(ref));
 	}
 	printf("\n");
@@ -87,9 +87,9 @@ static void showstream(int num, int gen)
 	showcolumn = 0;
 
 	if (showdecode)
-		stm = pdf_open_stream(xref, num, gen);
+		stm = pdf_open_stream(doc, num, gen);
 	else
-		stm = pdf_open_raw_stream(xref, num, gen);
+		stm = pdf_open_raw_stream(doc, num, gen);
 
 	while (1)
 	{
@@ -109,12 +109,12 @@ static void showobject(int num, int gen)
 {
 	fz_obj *obj;
 
-	if (!xref)
+	if (!doc)
 		fz_throw(ctx, "no file specified");
 
-	obj = pdf_load_object(xref, num, gen);
+	obj = pdf_load_object(doc, num, gen);
 
-	if (pdf_is_stream(xref, num, gen))
+	if (pdf_is_stream(doc, num, gen))
 	{
 		if (showbinary)
 		{
@@ -145,13 +145,13 @@ static void showgrep(char *filename)
 	fz_obj *obj;
 	int i;
 
-	for (i = 0; i < xref->len; i++)
+	for (i = 0; i < doc->len; i++)
 	{
-		if (xref->table[i].type == 'n' || xref->table[i].type == 'o')
+		if (doc->table[i].type == 'n' || doc->table[i].type == 'o')
 		{
 			fz_try(ctx)
 			{
-				obj = pdf_load_object(xref, i, 0);
+				obj = pdf_load_object(doc, i, 0);
 			}
 			fz_catch(ctx)
 			{
@@ -169,7 +169,7 @@ static void showgrep(char *filename)
 	}
 
 	printf("%s:trailer: ", filename);
-	fz_fprint_obj(stdout, xref->trailer, 1);
+	fz_fprint_obj(stdout, doc->trailer, 1);
 }
 
 #ifdef MUPDF_COMBINED_EXE
@@ -205,12 +205,12 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	fz_var(xref);
+	fz_var(doc);
 	fz_try(ctx)
 	{
-		xref = pdf_open_xref(ctx, filename);
-		if (pdf_needs_password(xref))
-			if (!pdf_authenticate_password(xref, password))
+		doc = pdf_open_document(ctx, filename);
+		if (pdf_needs_password(doc))
+			if (!pdf_authenticate_password(doc, password))
 				fz_throw(ctx, "cannot authenticate password: %s", filename);
 
 		if (fz_optind == argc)
@@ -233,7 +233,7 @@ int main(int argc, char **argv)
 	{
 	}
 
-	pdf_free_xref(xref);
+	pdf_close_document(doc);
 	fz_free_context(ctx);
 	return 0;
 }

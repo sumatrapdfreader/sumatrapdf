@@ -16,7 +16,7 @@
 struct document
 {
 	fz_context *ctx;
-	pdf_xref *pdf;
+	pdf_document *pdf;
 	xps_document *xps;
 	int number;
 	pdf_page *pdf_page;

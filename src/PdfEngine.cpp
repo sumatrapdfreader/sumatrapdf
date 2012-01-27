@@ -669,7 +669,7 @@ inline TCHAR *FromPdf(fz_obj *obj)
 }
 
 // Note: make sure to only call with ctxAccess
-fz_outline *pdf_loadattachments(pdf_xref *xref)
+fz_outline *pdf_loadattachments(pdf_document *xref)
 {
     fz_obj *dict = pdf_load_name_tree(xref, "EmbeddedFiles");
     if (!dict)
@@ -838,8 +838,8 @@ public:
     virtual const TCHAR *FileName() const { return _fileName; };
     virtual int PageCount() const {
         // make sure that pdf_load_page_tree is called as soon as
-        // _xref is defined, so that pdf_count_pages can't throw
-        return _xref ? pdf_count_pages(_xref) : 0;
+        // _doc is defined, so that pdf_count_pages can't throw
+        return _doc ? pdf_count_pages(_doc) : 0;
     }
 
     virtual RectD PageMediabox(int pageNo);
@@ -864,10 +864,10 @@ public:
     virtual TCHAR *GetProperty(char *name);
 
     virtual bool IsPrintingAllowed() {
-        return pdf_has_permission(_xref, PDF_PERM_PRINT);
+        return pdf_has_permission(_doc, PDF_PERM_PRINT);
     }
     virtual bool IsCopyingTextAllowed() {
-        return pdf_has_permission(_xref, PDF_PERM_COPY);
+        return pdf_has_permission(_doc, PDF_PERM_COPY);
     }
 
     virtual float GetFileDPI() const { return 72.0f; }
@@ -900,7 +900,7 @@ protected:
     // protected critical section in order to avoid deadlocks
     CRITICAL_SECTION ctxAccess;
     fz_context *    ctx;
-    pdf_xref *      _xref;
+    pdf_document *  _doc;
 
     CRITICAL_SECTION pagesAccess;
     pdf_page **     _pages;
@@ -916,7 +916,7 @@ protected:
         return fz_create_view_ctm(fz_RectD_to_rect(PageMediabox(pageNo)), zoom, rotation);
     }
     fz_matrix       viewctm(pdf_page *page, float zoom, int rotation) {
-        return fz_create_view_ctm(pdf_bound_page(_xref, page), zoom, rotation);
+        return fz_create_view_ctm(pdf_bound_page(_doc, page), zoom, rotation);
     }
     bool            RenderPage(HDC hDC, pdf_page *page, RectI screenRect,
                                fz_matrix *ctm, float zoom, int rotation,
@@ -1027,7 +1027,7 @@ public:
     }
 };
 
-CPdfEngine::CPdfEngine() : _fileName(NULL), _xref(NULL),
+CPdfEngine::CPdfEngine() : _fileName(NULL), _doc(NULL),
     _pages(NULL), _mediaboxes(NULL), _info(NULL),
     outline(NULL), attachments(NULL), _pagelabels(NULL),
     _decryptionKey(NULL), isProtected(false),
@@ -1070,9 +1070,9 @@ CPdfEngine::~CPdfEngine()
         free(imageRects);
     }
 
-    if (_xref) {
-        pdf_free_xref(_xref);
-        _xref = NULL;
+    if (_doc) {
+        pdf_close_document(_doc);
+        _doc = NULL;
     }
 
     while (runCache.Count() > 0) {
@@ -1114,11 +1114,11 @@ CPdfEngine *CPdfEngine::Clone()
 
     // use this document's encryption key (if any) to load the clone
     PasswordCloner *pwdUI = NULL;
-    if (_xref->crypt)
-        pwdUI = new PasswordCloner(pdf_get_crypt_key(_xref));
+    if (_doc->crypt)
+        pwdUI = new PasswordCloner(pdf_get_crypt_key(_doc));
 
     CPdfEngine *clone = new CPdfEngine();
-    if (!clone || !clone->Load(_xref->file, pwdUI)) {
+    if (!clone || !clone->Load(_doc->file, pwdUI)) {
         delete clone;
         delete pwdUI;
         return NULL;
@@ -1127,7 +1127,7 @@ CPdfEngine *CPdfEngine::Clone()
 
     if (_fileName)
         clone->_fileName = str::Dup(_fileName);
-    if (!_decryptionKey && _xref->crypt) {
+    if (!_decryptionKey && _doc->crypt) {
         delete clone->_decryptionKey;
         clone->_decryptionKey = NULL;
     }
@@ -1156,7 +1156,7 @@ static const TCHAR *findEmbedMarks(const TCHAR *fileName)
 
 bool CPdfEngine::Load(const TCHAR *fileName, PasswordUI *pwdUI)
 {
-    assert(!_fileName && !_xref && ctx);
+    assert(!_fileName && !_doc && ctx);
     _fileName = str::Dup(fileName);
     if (!_fileName || !ctx)
         return false;
@@ -1186,13 +1186,13 @@ OpenEmbeddedFile:
     int num, gen;
     embedMarks = (TCHAR *)str::Parse(embedMarks, _T(":%d:%d"), &num, &gen);
     assert(embedMarks);
-    if (!embedMarks || !pdf_is_stream(_xref, num, gen))
+    if (!embedMarks || !pdf_is_stream(_doc, num, gen))
         return false;
 
     fz_buffer *buffer = NULL;
     fz_var(buffer);
     fz_try(ctx) {
-        buffer = pdf_load_stream(_xref, num, gen);
+        buffer = pdf_load_stream(_doc, num, gen);
         file = fz_open_buffer(ctx, buffer);
     }
     fz_always(ctx) {
@@ -1202,15 +1202,15 @@ OpenEmbeddedFile:
         return false;
     }
 
-    pdf_free_xref(_xref);
-    _xref = NULL;
+    pdf_close_document(_doc);
+    _doc = NULL;
 
     goto OpenEmbeddedFile;
 }
 
 bool CPdfEngine::Load(IStream *stream, PasswordUI *pwdUI)
 {
-    assert(!_fileName && !_xref && ctx);
+    assert(!_fileName && !_doc && ctx);
     if (!ctx)
         return false;
 
@@ -1228,7 +1228,7 @@ bool CPdfEngine::Load(IStream *stream, PasswordUI *pwdUI)
 
 bool CPdfEngine::Load(fz_stream *stm, PasswordUI *pwdUI)
 {
-    assert(!_fileName && !_xref && ctx);
+    assert(!_fileName && !_doc && ctx);
     if (!ctx)
         return false;
 
@@ -1249,7 +1249,7 @@ bool CPdfEngine::LoadFromStream(fz_stream *stm, PasswordUI *pwdUI)
         return false;
 
     fz_try(ctx) {
-        _xref = pdf_open_xref_with_stream(stm);
+        _doc = pdf_open_document_with_stream(stm);
     }
     fz_always(ctx) {
         fz_close(stm);
@@ -1258,7 +1258,7 @@ bool CPdfEngine::LoadFromStream(fz_stream *stm, PasswordUI *pwdUI)
         return false;
     }
 
-    isProtected = pdf_needs_password(_xref);
+    isProtected = pdf_needs_password(_doc);
     if (!isProtected)
         return true;
 
@@ -1266,11 +1266,11 @@ bool CPdfEngine::LoadFromStream(fz_stream *stm, PasswordUI *pwdUI)
         return false;
 
     unsigned char digest[16 + 32] = { 0 };
-    fz_stream_fingerprint(_xref->file, digest);
+    fz_stream_fingerprint(_doc->file, digest);
 
     bool ok = false, saveKey = false;
     for (int i = 0; !ok && i < 3; i++) {
-        ScopedMem<TCHAR> pwd(pwdUI->GetPassword(_fileName, digest, pdf_get_crypt_key(_xref), &saveKey));
+        ScopedMem<TCHAR> pwd(pwdUI->GetPassword(_fileName, digest, pdf_get_crypt_key(_doc), &saveKey));
         if (!pwd) {
             // password not given or encryption key has been remembered
             ok = saveKey;
@@ -1280,24 +1280,24 @@ bool CPdfEngine::LoadFromStream(fz_stream *stm, PasswordUI *pwdUI)
         ScopedMem<WCHAR> wstr(str::conv::ToWStr(pwd));
         fz_try(ctx) {
             char *pwd_doc = pdf_from_ucs2(ctx, (unsigned short *)wstr.Get());
-            ok = pwd_doc && pdf_authenticate_password(_xref, pwd_doc);
+            ok = pwd_doc && pdf_authenticate_password(_doc, pwd_doc);
             fz_free(ctx, pwd_doc);
         }
         fz_catch(ctx) { }
         // try the UTF-8 password, if the PDFDocEncoding one doesn't work
         if (!ok) {
             ScopedMem<char> pwd_utf8(str::conv::ToUtf8(pwd));
-            ok = pwd_utf8 && pdf_authenticate_password(_xref, pwd_utf8);
+            ok = pwd_utf8 && pdf_authenticate_password(_doc, pwd_utf8);
         }
         // fall back to an ANSI-encoded password as a last measure
         if (!ok) {
             ScopedMem<char> pwd_ansi(str::conv::ToAnsi(pwd));
-            ok = pwd_ansi && pdf_authenticate_password(_xref, pwd_ansi);
+            ok = pwd_ansi && pdf_authenticate_password(_doc, pwd_ansi);
         }
     }
 
     if (ok && saveKey) {
-        memcpy(digest + 16, pdf_get_crypt_key(_xref), 32);
+        memcpy(digest + 16, pdf_get_crypt_key(_doc), 32);
         _decryptionKey = _MemToHex(&digest);
     }
 
@@ -1308,7 +1308,7 @@ bool CPdfEngine::FinishLoading()
 {
     fz_try(ctx) {
         // this calls pdf_load_page_tree(xref) which may throw
-        pdf_count_pages(_xref);
+        pdf_count_pages(_doc);
     }
     fz_catch(ctx) {
         return false;
@@ -1329,7 +1329,7 @@ bool CPdfEngine::FinishLoading()
     ScopedCritSec scope(&ctxAccess);
 
     fz_try(ctx) {
-        outline = pdf_load_outline(_xref);
+        outline = pdf_load_outline(_doc);
     }
     fz_catch(ctx) {
         // ignore errors from pdf_loadoutline()
@@ -1339,7 +1339,7 @@ bool CPdfEngine::FinishLoading()
         fz_warn(ctx, "Couldn't load outline");
     }
     fz_try(ctx) {
-        attachments = pdf_loadattachments(_xref);
+        attachments = pdf_loadattachments(_doc);
     }
     fz_catch(ctx) {
         fz_warn(ctx, "Couldn't load attachments");
@@ -1348,7 +1348,7 @@ bool CPdfEngine::FinishLoading()
         // keep a copy of the Info dictionary, as accessing the original
         // isn't thread safe and we don't want to block for this when
         // displaying document properties
-        _info = fz_dict_gets(_xref->trailer, "Info");
+        _info = fz_dict_gets(_doc->trailer, "Info");
         if (_info)
             _info = fz_copy_str_dict(ctx, pdf_resolve_indirect(_info));
     }
@@ -1358,7 +1358,7 @@ bool CPdfEngine::FinishLoading()
         _info = NULL;
     }
     fz_try(ctx) {
-        fz_obj *pagelabels = fz_dict_gets(fz_dict_gets(_xref->trailer, "Root"), "PageLabels");
+        fz_obj *pagelabels = fz_dict_gets(fz_dict_gets(_doc->trailer, "Root"), "PageLabels");
         if (pagelabels)
             _pagelabels = BuildPageLabelVec(pagelabels, PageCount());
     }
@@ -1416,7 +1416,7 @@ PageDestination *CPdfEngine::GetNamedDest(const TCHAR *name)
     fz_obj *dest;
     fz_try(ctx) {
         fz_obj *nameobj = fz_new_string(ctx, (char *)name_utf8, (int)str::Len(name_utf8));
-        dest = pdf_lookup_dest(_xref, nameobj);
+        dest = pdf_lookup_dest(_doc, nameobj);
         fz_drop_obj(nameobj);
     }
     fz_catch(ctx) {
@@ -1426,7 +1426,7 @@ PageDestination *CPdfEngine::GetNamedDest(const TCHAR *name)
     PageDestination *pageDest = NULL;
     fz_link_dest ld = { FZ_LINK_NONE, 0 };
     fz_try(ctx) {
-        ld = pdf_parse_link_dest(_xref, dest);
+        ld = pdf_parse_link_dest(_doc, dest);
     }
     fz_catch(ctx) {
         return NULL;
@@ -1457,7 +1457,7 @@ pdf_page *CPdfEngine::GetPdfPage(int pageNo, bool failIfBusy)
         fz_var(page);
         EnterCriticalSection(&ctxAccess);
         fz_try(ctx) {
-            page = pdf_load_page(_xref, pageNo - 1);
+            page = pdf_load_page(_doc, pageNo - 1);
             _pages[pageNo-1] = page;
             LinkifyPageText(page);
             pageComments[pageNo-1] = ProcessPageAnnotations(page);
@@ -1545,7 +1545,7 @@ PdfPageRun *CPdfEngine::GetPageRun(pdf_page *page, bool tryOnly)
         fz_try(ctx) {
             list = fz_new_display_list(ctx);
             dev = fz_new_list_device(ctx, list);
-            pdf_run_page(_xref, page, dev, fz_identity, NULL);
+            pdf_run_page(_doc, page, dev, fz_identity, NULL);
         }
         fz_catch(ctx) {
             fz_free_display_list(ctx, list);
@@ -1590,7 +1590,7 @@ bool CPdfEngine::RunPage(pdf_page *page, fz_device *dev, fz_matrix ctm, RenderTa
                            target == Target_Export ? "Export" : "View";
         EnterCriticalSection(&ctxAccess);
         fz_try(ctx) {
-            pdf_run_page_with_usage(_xref, page, dev, ctm, targetName, NULL);
+            pdf_run_page_with_usage(_doc, page, dev, ctm, targetName, NULL);
         }
         fz_catch(ctx) {
             ok = false;
@@ -1629,7 +1629,7 @@ RectD CPdfEngine::PageMediabox(int pageNo)
     if (!_mediaboxes[pageNo-1].IsEmpty())
         return _mediaboxes[pageNo-1];
 
-    fz_obj *page = _xref->page_objs[pageNo-1];
+    fz_obj *page = _doc->page_objs[pageNo-1];
     if (!page)
         return RectD();
 
@@ -1684,7 +1684,7 @@ RectD CPdfEngine::PageContentBox(int pageNo, RenderTarget target)
         return RectD();
     }
 
-    fz_bbox mediabox = fz_round_rect(pdf_bound_page(_xref, page));
+    fz_bbox mediabox = fz_round_rect(pdf_bound_page(_doc, page));
     bool ok = RunPage(page, dev, fz_identity, target, mediabox, false);
     if (!ok)
         return PageMediabox(pageNo);
@@ -1723,7 +1723,7 @@ bool CPdfEngine::RenderPage(HDC hDC, pdf_page *page, RectI screenRect, fz_matrix
     fz_matrix ctm2;
     if (!ctm) {
         ctm2 = viewctm(page, zoom, rotation);
-        fz_rect pRect = pageRect ? fz_RectD_to_rect(*pageRect) : pdf_bound_page(_xref, page);
+        fz_rect pRect = pageRect ? fz_RectD_to_rect(*pageRect) : pdf_bound_page(_doc, page);
         fz_bbox bbox = fz_round_rect(fz_transform_rect(ctm2, pRect));
         ctm2 = fz_concat(ctm2, fz_translate((float)screenRect.x - bbox.x0, (float)screenRect.y - bbox.y0));
     }
@@ -1773,7 +1773,7 @@ RenderedBitmap *CPdfEngine::RenderBitmap(int pageNo, float zoom, int rotation, R
     if (!page)
         return NULL;
 
-    fz_rect pRect = pageRect ? fz_RectD_to_rect(*pageRect) : pdf_bound_page(_xref, page);
+    fz_rect pRect = pageRect ? fz_RectD_to_rect(*pageRect) : pdf_bound_page(_doc, page);
     fz_matrix ctm = viewctm(page, zoom, rotation);
     fz_bbox bbox = fz_round_rect(fz_transform_rect(ctm, pRect));
 
@@ -2056,7 +2056,7 @@ TCHAR *CPdfEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_ou
 
     EnterCriticalSection(&ctxAccess);
     fz_try(ctx) {
-        page = pdf_load_page(_xref, pageNo - 1);
+        page = pdf_load_page(_doc, pageNo - 1);
     }
     fz_always(ctx) {
         LeaveCriticalSection(&ctxAccess);
@@ -2076,12 +2076,12 @@ TCHAR *CPdfEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_ou
 
 TCHAR *CPdfEngine::GetProperty(char *name)
 {
-    if (!_xref)
+    if (!_doc)
         return NULL;
 
     if (str::Eq(name, "PdfVersion")) {
-        int major = _xref->version / 10, minor = _xref->version % 10;
-        if (1 == major && 7 == minor && 5 == pdf_get_crypt_revision(_xref))
+        int major = _doc->version / 10, minor = _doc->version % 10;
+        if (1 == major && 7 == minor && 5 == pdf_get_crypt_revision(_doc))
             return str::Format(_T("%d.%d Adobe Extension Level %d"), major, minor, 3);
         return str::Format(_T("%d.%d"), major, minor);
     }
@@ -2109,7 +2109,7 @@ PageLayoutType CPdfEngine::PreferredLayout()
     ScopedCritSec scope(&ctxAccess);
     fz_obj *root;
     fz_try(ctx) {
-        root = fz_dict_gets(_xref->trailer, "Root");
+        root = fz_dict_gets(_doc->trailer, "Root");
     }
     fz_catch(ctx) {
         return layout;
@@ -2140,7 +2140,7 @@ unsigned char *CPdfEngine::GetFileData(size_t *cbCount)
     unsigned char *data;
     ScopedCritSec scope(&ctxAccess);
     fz_try(ctx) {
-        data = fz_extract_stream_data(_xref->file, cbCount);
+        data = fz_extract_stream_data(_doc->file, cbCount);
     }
     fz_catch(ctx) {
         return _fileName ? (unsigned char *)file::ReadAll(_fileName, cbCount) : NULL;
@@ -2154,7 +2154,7 @@ bool CPdfEngine::SaveEmbedded(fz_obj *obj, LinkSaverUI& saveUI)
 
     fz_buffer *data = NULL;
     fz_try(ctx) {
-        data = pdf_load_stream(_xref, fz_to_num(obj), fz_to_gen(obj));
+        data = pdf_load_stream(_doc, fz_to_num(obj), fz_to_gen(obj));
     }
     fz_catch(ctx) {
         return false;
@@ -2222,7 +2222,7 @@ TCHAR *PdfLink::GetValue() const
         if (IsRelativeURI(path)) {
             ScopedMem<TCHAR> base;
             fz_try(engine->ctx) {
-                fz_obj *obj = fz_dict_gets(engine->_xref->trailer, "Root");
+                fz_obj *obj = fz_dict_gets(engine->_doc->trailer, "Root");
                 obj = fz_dict_gets(fz_dict_gets(obj, "URI"), "Base");
                 if (obj)
                     base.Set(str::conv::FromPdf(obj));
@@ -2600,7 +2600,7 @@ CXpsEngine::~CXpsEngine()
     }
 
     if (_doc) {
-        xps_free_context(_doc);
+        xps_close_document(_doc);
         _doc = NULL;
     }
     if (_info)
@@ -2691,7 +2691,7 @@ bool CXpsEngine::LoadFromStream(fz_stream *stm)
         return false;
 
     fz_try(ctx) {
-        _doc = xps_open_stream(stm);
+        _doc = xps_open_document_with_stream(stm);
     }
     fz_always(ctx) {
         fz_close(stm);

@@ -4,7 +4,7 @@
 /* Load or synthesize ToUnicode map for fonts */
 
 void
-pdf_load_to_unicode(pdf_font_desc *font, pdf_xref *xref,
+pdf_load_to_unicode(pdf_font_desc *font, pdf_document *xref,
 	char **strings, char *collection, fz_obj *cmapstm)
 {
 	pdf_cmap *cmap;

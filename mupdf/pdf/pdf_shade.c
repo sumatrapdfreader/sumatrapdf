@@ -363,7 +363,7 @@ pdf_sample_shade_function(fz_context *ctx, fz_shade *shade, int funcs, pdf_funct
 /* Type 1-3 -- Function-based, axial and radial shadings */
 
 static void
-pdf_load_function_based_shading(fz_shade *shade, pdf_xref *xref, fz_obj *dict, pdf_function *func)
+pdf_load_function_based_shading(fz_shade *shade, pdf_document *xref, fz_obj *dict, pdf_function *func)
 {
 	fz_obj *obj;
 	float x0, y0, x1, y1;
@@ -428,7 +428,7 @@ pdf_load_function_based_shading(fz_shade *shade, pdf_xref *xref, fz_obj *dict, p
 }
 
 static void
-pdf_load_axial_shading(fz_shade *shade, pdf_xref *xref, fz_obj *dict, int funcs, pdf_function **func)
+pdf_load_axial_shading(fz_shade *shade, pdf_document *xref, fz_obj *dict, int funcs, pdf_function **func)
 {
 	fz_obj *obj;
 	float d0, d1;
@@ -479,7 +479,7 @@ pdf_load_axial_shading(fz_shade *shade, pdf_xref *xref, fz_obj *dict, int funcs,
 }
 
 static void
-pdf_load_radial_shading(fz_shade *shade, pdf_xref *xref, fz_obj *dict, int funcs, pdf_function **func)
+pdf_load_radial_shading(fz_shade *shade, pdf_document *xref, fz_obj *dict, int funcs, pdf_function **func)
 {
 	fz_obj *obj;
 	float d0, d1;
@@ -553,7 +553,7 @@ struct mesh_params
 };
 
 static void
-pdf_load_mesh_params(pdf_xref *xref, fz_obj *dict, struct mesh_params *p)
+pdf_load_mesh_params(pdf_document *xref, fz_obj *dict, struct mesh_params *p)
 {
 	fz_obj *obj;
 	int i, n;
@@ -603,7 +603,7 @@ pdf_load_mesh_params(pdf_xref *xref, fz_obj *dict, struct mesh_params *p)
 }
 
 static void
-pdf_load_type4_shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict,
+pdf_load_type4_shade(fz_shade *shade, pdf_document *xref, fz_obj *dict,
 	int funcs, pdf_function **func, fz_stream *stream)
 {
 	fz_context *ctx = xref->ctx;
@@ -668,7 +668,7 @@ pdf_load_type4_shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict,
 }
 
 static void
-pdf_load_type5_shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict,
+pdf_load_type5_shade(fz_shade *shade, pdf_document *xref, fz_obj *dict,
 	int funcs, pdf_function **func, fz_stream *stream)
 {
 	fz_context *ctx = xref->ctx;
@@ -718,7 +718,7 @@ pdf_load_type5_shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict,
 /* Type 6 & 7 -- Patch mesh shadings */
 
 static void
-pdf_load_type6_shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict,
+pdf_load_type6_shade(fz_shade *shade, pdf_document *xref, fz_obj *dict,
 	int funcs, pdf_function **func, fz_stream *stream)
 {
 	fz_context *ctx = xref->ctx;
@@ -837,7 +837,7 @@ pdf_load_type6_shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict,
 }
 
 static void
-pdf_load_type7_shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict,
+pdf_load_type7_shade(fz_shade *shade, pdf_document *xref, fz_obj *dict,
 	int funcs, pdf_function **func, fz_stream *stream)
 {
 	fz_context *ctx = xref->ctx;
@@ -958,7 +958,7 @@ pdf_load_type7_shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict,
 /* Load all of the shading dictionary parameters, then switch on the shading type. */
 
 static fz_shade *
-pdf_load_shading_dict(pdf_xref *xref, fz_obj *dict, fz_matrix transform)
+pdf_load_shading_dict(pdf_document *xref, fz_obj *dict, fz_matrix transform)
 {
 	fz_shade *shade = NULL;
 	pdf_function *func[FZ_MAX_COLORS] = { NULL };
@@ -1089,7 +1089,7 @@ fz_shade_size(fz_shade *s)
 }
 
 fz_shade *
-pdf_load_shading(pdf_xref *xref, fz_obj *dict)
+pdf_load_shading(pdf_document *xref, fz_obj *dict)
 {
 	fz_matrix mat;
 	fz_obj *obj;

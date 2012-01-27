@@ -200,7 +200,7 @@ pdf_to_utf8_name(fz_context *ctx, fz_obj *src)
 }
 
 fz_obj *
-pdf_parse_array(pdf_xref *xref, fz_stream *file, char *buf, int cap)
+pdf_parse_array(pdf_document *xref, fz_stream *file, char *buf, int cap)
 {
 	fz_obj *ary = NULL;
 	fz_obj *obj = NULL;
@@ -341,7 +341,7 @@ end:
 }
 
 fz_obj *
-pdf_parse_dict(pdf_xref *xref, fz_stream *file, char *buf, int cap)
+pdf_parse_dict(pdf_document *xref, fz_stream *file, char *buf, int cap)
 {
 	fz_obj *dict = NULL;
 	fz_obj *key = NULL;
@@ -462,7 +462,7 @@ pdf_parse_dict(pdf_xref *xref, fz_stream *file, char *buf, int cap)
 }
 
 fz_obj *
-pdf_parse_stm_obj(pdf_xref *xref, fz_stream *file, char *buf, int cap)
+pdf_parse_stm_obj(pdf_document *xref, fz_stream *file, char *buf, int cap)
 {
 	int tok;
 	int len;
@@ -492,7 +492,7 @@ pdf_parse_stm_obj(pdf_xref *xref, fz_stream *file, char *buf, int cap)
 }
 
 fz_obj *
-pdf_parse_ind_obj(pdf_xref *xref,
+pdf_parse_ind_obj(pdf_document *xref,
 	fz_stream *file, char *buf, int cap,
 	int *onum, int *ogen, int *ostmofs)
 {

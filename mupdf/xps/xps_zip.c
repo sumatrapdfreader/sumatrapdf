@@ -555,7 +555,7 @@ xps_has_part(xps_document *doc, char *partname)
 }
 
 static xps_document *
-xps_open_directory(fz_context *ctx, char *directory)
+xps_open_document_with_directory(fz_context *ctx, char *directory)
 {
 	xps_document *doc;
 
@@ -571,7 +571,7 @@ xps_open_directory(fz_context *ctx, char *directory)
 	}
 	fz_catch(ctx)
 	{
-		xps_free_context(doc);
+		xps_close_document(doc);
 		fz_rethrow(ctx);
 	}
 
@@ -579,7 +579,7 @@ xps_open_directory(fz_context *ctx, char *directory)
 }
 
 xps_document *
-xps_open_stream(fz_stream *file)
+xps_open_document_with_stream(fz_stream *file)
 {
 	fz_context *ctx = file->ctx;
 	xps_document *doc;
@@ -597,7 +597,7 @@ xps_open_stream(fz_stream *file)
 	}
 	fz_catch(ctx)
 	{
-		xps_free_context(doc);
+		xps_close_document(doc);
 		fz_rethrow(ctx);
 	}
 
@@ -605,7 +605,7 @@ xps_open_stream(fz_stream *file)
 }
 
 xps_document *
-xps_open_file(fz_context *ctx, char *filename)
+xps_open_document(fz_context *ctx, char *filename)
 {
 	char buf[2048];
 	fz_stream *file;
@@ -619,7 +619,7 @@ xps_open_file(fz_context *ctx, char *filename)
 		if (!p)
 			p = strstr(buf, "\\_rels\\.rels");
 		*p = 0;
-		return xps_open_directory(ctx, buf);
+		return xps_open_document_with_directory(ctx, buf);
 	}
 
 	file = fz_open_file(ctx, filename);
@@ -628,7 +628,7 @@ xps_open_file(fz_context *ctx, char *filename)
 
 	fz_try(ctx)
 	{
-		doc = xps_open_stream(file);
+		doc = xps_open_document_with_stream(file);
 	}
 	fz_catch(ctx)
 	{
@@ -640,7 +640,7 @@ xps_open_file(fz_context *ctx, char *filename)
 }
 
 void
-xps_free_context(xps_document *doc)
+xps_close_document(xps_document *doc)
 {
 	xps_font_cache *font, *next;
 	int i;

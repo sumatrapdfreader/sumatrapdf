@@ -107,13 +107,13 @@ static void pdfapp_open_pdf(pdfapp_t *app, char *filename, int fd)
 	fz_context *ctx = app->ctx;
 
 	/*
-	 * Open PDF and load xref table
+	 * Open PDF document
 	 */
 
 	fz_try(ctx)
 	{
 		file = fz_open_fd(ctx, fd);
-		app->xref = pdf_open_xref_with_stream(file);
+		app->pdf = pdf_open_document_with_stream(file);
 		fz_close(file);
 	}
 	fz_catch(ctx)
@@ -125,15 +125,15 @@ static void pdfapp_open_pdf(pdfapp_t *app, char *filename, int fd)
 	 * Handle encrypted PDF files
 	 */
 
-	if (pdf_needs_password(app->xref))
+	if (pdf_needs_password(app->pdf))
 	{
-		int okay = pdf_authenticate_password(app->xref, password);
+		int okay = pdf_authenticate_password(app->pdf, password);
 		while (!okay)
 		{
 			password = winpassword(app, filename);
 			if (!password)
 				pdfapp_error(app, "Needs a password.");
-			okay = pdf_authenticate_password(app->xref, password);
+			okay = pdf_authenticate_password(app->pdf, password);
 			if (!okay)
 				pdfapp_warn(app, "Invalid password.");
 		}
@@ -143,7 +143,7 @@ static void pdfapp_open_pdf(pdfapp_t *app, char *filename, int fd)
 	 * Load meta information
 	 */
 
-	info = fz_dict_gets(app->xref->trailer, "Info");
+	info = fz_dict_gets(app->pdf->trailer, "Info");
 	if (info)
 	{
 		obj = fz_dict_gets(info, "Title");
@@ -164,9 +164,9 @@ static void pdfapp_open_pdf(pdfapp_t *app, char *filename, int fd)
 	 * Start at first page
 	 */
 
-	app->pagecount = pdf_count_pages(app->xref);
+	app->pagecount = pdf_count_pages(app->pdf);
 
-	app->outline = pdf_load_outline(app->xref);
+	app->outline = pdf_load_outline(app->pdf);
 }
 
 static void pdfapp_open_xps(pdfapp_t *app, char *filename, int fd)
@@ -176,7 +176,7 @@ static void pdfapp_open_xps(pdfapp_t *app, char *filename, int fd)
 	file = fz_open_fd(app->ctx, fd);
 	fz_try(app->ctx)
 	{
-		app->xps = xps_open_stream(file);
+		app->xps = xps_open_document_with_stream(file);
 	}
 	fz_catch(app->ctx)
 	{
@@ -242,15 +242,15 @@ void pdfapp_close(pdfapp_t *app)
 		fz_free_outline(app->outline);
 	app->outline = NULL;
 
-	if (app->xref)
+	if (app->pdf)
 	{
-		pdf_free_xref(app->xref);
-		app->xref = NULL;
+		pdf_close_document(app->pdf);
+		app->pdf = NULL;
 	}
 
 	if (app->xps)
 	{
-		xps_free_context(app->xps);
+		xps_close_document(app->xps);
 		app->xps = NULL;
 	}
 
@@ -296,14 +296,14 @@ static void pdfapp_loadpage_pdf(pdfapp_t *app)
 
 	fz_try(app->ctx)
 	{
-		page = pdf_load_page(app->xref, app->pageno - 1);
+		page = pdf_load_page(app->pdf, app->pageno - 1);
 	}
 	fz_catch(app->ctx)
 	{
 		pdfapp_error(app, "cannot load page");
 	}
 
-	app->page_bbox = pdf_bound_page(app->xref, page);
+	app->page_bbox = pdf_bound_page(app->pdf, page);
 	app->page_links = page->links;
 	page->links = NULL;
 
@@ -312,7 +312,7 @@ static void pdfapp_loadpage_pdf(pdfapp_t *app)
 	mdev = fz_new_list_device(app->ctx, app->page_list);
 	fz_try(app->ctx)
 	{
-		pdf_run_page(app->xref, page, mdev, fz_identity, NULL);
+		pdf_run_page(app->pdf, page, mdev, fz_identity, NULL);
 	}
 	fz_catch(app->ctx)
 	{
@@ -369,7 +369,7 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 		if (app->page_links)
 			fz_free_link(app->ctx, app->page_links);
 
-		if (app->xref)
+		if (app->pdf)
 			pdfapp_loadpage_pdf(app);
 		if (app->xps)
 			pdfapp_loadpage_xps(app);

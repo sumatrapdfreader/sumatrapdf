@@ -30,7 +30,7 @@ static int dogarbage = 0;
 static int doexpand = 0;
 static int doascii = 0;
 
-static pdf_xref *xref = NULL;
+static pdf_document *xref = NULL;
 static fz_context *ctx = NULL;
 
 static void usage(void)
@@ -775,7 +775,7 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	xref = pdf_open_xref(ctx, infile);
+	xref = pdf_open_document(ctx, infile);
 	if (pdf_needs_password(xref))
 		if (!pdf_authenticate_password(xref, password))
 			fz_throw(ctx, "cannot authenticate password: %s\n", infile);
@@ -836,7 +836,7 @@ int main(int argc, char **argv)
 	fz_free(xref->ctx, genlist);
 	fz_free(xref->ctx, renumbermap);
 
-	pdf_free_xref(xref);
+	pdf_close_document(xref);
 	fz_free_context(ctx);
 	return 0;
 }

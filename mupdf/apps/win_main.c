@@ -168,7 +168,7 @@ INT CALLBACK
 dloginfoproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	char buf[256];
-	pdf_xref *xref = gapp.xref;
+	pdf_document *doc = gapp.pdf;
 	fz_obj *info, *obj;
 
 	switch(message)
@@ -177,7 +177,7 @@ dloginfoproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 		SetDlgItemTextW(hwnd, 0x10, wbuf);
 
-		if (!xref)
+		if (!doc)
 		{
 			SetDlgItemTextA(hwnd, 0x11, "XPS");
 			SetDlgItemTextA(hwnd, 0x12, "None");
@@ -185,22 +185,22 @@ dloginfoproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			return TRUE;
 		}
 
-		sprintf(buf, "PDF %d.%d", xref->version / 10, xref->version % 10);
+		sprintf(buf, "PDF %d.%d", doc->version / 10, doc->version % 10);
 		SetDlgItemTextA(hwnd, 0x11, buf);
 
-		if (xref->crypt)
+		if (doc->crypt)
 		{
-			sprintf(buf, "Standard V%d %d-bit %s", pdf_get_crypt_revision(xref),
-				pdf_get_crypt_length(xref), pdf_get_crypt_method(xref));
+			sprintf(buf, "Standard V%d %d-bit %s", pdf_get_crypt_revision(doc),
+				pdf_get_crypt_length(doc), pdf_get_crypt_method(doc));
 			SetDlgItemTextA(hwnd, 0x12, buf);
 			strcpy(buf, "");
-			if (pdf_has_permission(xref, PDF_PERM_PRINT))
+			if (pdf_has_permission(doc, PDF_PERM_PRINT))
 				strcat(buf, "print, ");
-			if (pdf_has_permission(xref, PDF_PERM_CHANGE))
+			if (pdf_has_permission(doc, PDF_PERM_CHANGE))
 				strcat(buf, "modify, ");
-			if (pdf_has_permission(xref, PDF_PERM_COPY))
+			if (pdf_has_permission(doc, PDF_PERM_COPY))
 				strcat(buf, "copy, ");
-			if (pdf_has_permission(xref, PDF_PERM_NOTES))
+			if (pdf_has_permission(doc, PDF_PERM_NOTES))
 				strcat(buf, "annotate, ");
 			if (strlen(buf) > 2)
 				buf[strlen(buf)-2] = 0;
@@ -214,14 +214,14 @@ dloginfoproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			SetDlgItemTextA(hwnd, 0x13, "n/a");
 		}
 
-		info = fz_dict_gets(xref->trailer, "Info");
+		info = fz_dict_gets(doc->trailer, "Info");
 		if (!info)
 			return TRUE;
 
 #define SETUCS(ID) \
 		{ \
 			unsigned short *ucs; \
-			ucs = pdf_to_ucs2(xref->ctx, obj); \
+			ucs = pdf_to_ucs2(doc->ctx, obj); \
 			SetDlgItemTextW(hwnd, ID, ucs); \
 			fz_free(context, ucs); \
 		}

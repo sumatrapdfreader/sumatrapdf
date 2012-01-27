@@ -1,31 +1,39 @@
 #include "fitz.h"
 #include "muxps.h"
 
-/* SumatraPDF: better whitespace parsing */
-#include <ctype.h>
-/* cf. http://git.ghostscript.com/?p=ghostpdl.git;h=91dc74950f0a9ce391de0f0f1f0be5220a68db04 */
 char *
-xps_get_point(char *s, float *x, float *y)
+xps_get_real_params(char *s, int num, float *x)
 {
-	double dx, dy;
-	char *end;
+	int k = 0;
 
-	for (; isspace(*s); s++);
-	dx = strtod(s, &end);
-	if (!end || end == s)
-		return NULL;
-	for (s = end; isspace(*s); s++);
-	if (*s != ',')
+	if (s == NULL || *s == 0)
 		return NULL;
 
-	for (s++; isspace(*s); s++);
-	dy = strtod(s, &end);
-	if (!end || end == s)
-		return NULL;
+	while (*s)
+	{
+		while (*s == 0x0d || *s == '\t' || *s == ' ' || *s == 0x0a)
+			s++;
+		x[k] = (float)strtod(s, &s);
+		while (*s == 0x0d || *s == '\t' || *s == ' ' || *s == 0x0a)
+			s++;
+		if (*s == ',')
+			s++;
+		if (++k == num)
+			break;
+	}
+	return s;
+}
 
-	*x = (float)dx;
-	*y = (float)dy;
-	return end;
+char *
+xps_get_point(char *s_in, float *x, float *y)
+{
+	char *s_out = s_in;
+	float xy[2];
+
+	s_out = xps_get_real_params(s_out, 2, &xy[0]);
+	*x = xy[0];
+	*y = xy[1];
+	return s_out;
 }
 
 static fz_point
@@ -120,21 +128,27 @@ angle_between(const fz_point u, const fz_point v)
 	return sign * acosf(t);
 }
 
-/* Some explaination of the parameters here is warranted. See:
- *     http://www.w3.org/TR/SVG11/implnote.html#ArcImplementationNotes
- * Add an arc segment to path, that describes a section of an elliptical arc
- * from the current point of path to (point_x,point_y), such that:
- *   the arc segment is taken from an elliptical arc of semi major radius
- *     size_x, semi minor radius size_y, where the semi major axis of the
- *     ellipse is rotated by rotation_angle.
- *   if is_large_arc, then the arc segment is selected to be > 180 degrees.
- *   if is_clockwise, then the arc sweeps clockwise.
- */
+/*
+	Some explaination of the parameters here is warranted. See:
+
+	http://www.w3.org/TR/SVG11/implnote.html#ArcImplementationNotes
+
+	Add an arc segment to path, that describes a section of an elliptical
+	arc from the current point of path to (point_x,point_y), such that:
+
+	The arc segment is taken from an elliptical arc of semi major radius
+	size_x, semi minor radius size_y, where the semi major axis of the
+	ellipse is rotated by rotation_angle.
+
+	If is_large_arc, then the arc segment is selected to be > 180 degrees.
+
+	If is_clockwise, then the arc sweeps clockwise.
+*/
 static void
 xps_draw_arc(fz_context *doc, fz_path *path,
-		float size_x, float size_y, float rotation_angle,
-		int is_large_arc, int is_clockwise,
-		float point_x, float point_y)
+	float size_x, float size_y, float rotation_angle,
+	int is_large_arc, int is_clockwise,
+	float point_x, float point_y)
 {
 	fz_matrix rotmat, revmat;
 	fz_matrix mtx;
@@ -565,10 +579,8 @@ xps_parse_poly_quadratic_bezier_segment(fz_context *doc, fz_path *path, xml_elem
 	n = 0;
 	while (*s != 0)
 	{
-		/* SumatraPDF: better whitespace parsing */
+		while (*s == ' ') s++;
 		s = xps_get_point(s, &x[n], &y[n]);
-		if (!s)
-			break;
 		n ++;
 		if (n == 2)
 		{
@@ -615,10 +627,8 @@ xps_parse_poly_bezier_segment(fz_context *doc, fz_path *path, xml_element *root,
 	n = 0;
 	while (*s != 0)
 	{
-		/* SumatraPDF: better whitespace parsing */
+		while (*s == ' ') s++;
 		s = xps_get_point(s, &x[n], &y[n]);
-		if (!s)
-			break;
 		n ++;
 		if (n == 3)
 		{
@@ -655,10 +665,8 @@ xps_parse_poly_line_segment(fz_context *doc, fz_path *path, xml_element *root, i
 	s = points_att;
 	while (*s != 0)
 	{
-		/* SumatraPDF: better whitespace parsing */
+		while (*s == ' ') s++;
 		s = xps_get_point(s, &x, &y);
-		if (!s)
-			break;
 		if (stroking && !is_stroked)
 			fz_moveto(doc, path, x, y);
 		else
@@ -962,7 +970,6 @@ xps_parse_path(xps_document *doc, fz_matrix ctm, char *base_uri, xps_resource *d
 		{
 			while (*s == ' ')
 				s++;
-			/* cf. http://git.ghostscript.com/?p=ghostpdl.git;h=856eedc584a224bd311fa7688fc29ba487521dfb */
 			if (*s) /* needed in case of a space before the last quote */
 				stroke.dash_list[stroke.dash_len++] = fz_atof(s) * stroke.linewidth;
 			while (*s && *s != ' ')

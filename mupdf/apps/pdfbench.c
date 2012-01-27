@@ -89,9 +89,9 @@ double timeinms(mstimer *timer)
 
 #endif
 
-pdf_xref *openxref(fz_context *ctx, char *filename)
+pdf_document *openxref(fz_context *ctx, char *filename)
 {
-	pdf_xref *xref = pdf_open_xref(ctx, filename);
+	pdf_document *xref = pdf_open_document(ctx, filename);
 
 	fz_try(ctx)
 	{
@@ -105,14 +105,14 @@ pdf_xref *openxref(fz_context *ctx, char *filename)
 	}
 	fz_catch(ctx)
 	{
-		pdf_free_xref(xref);
+		pdf_close_document(xref);
 		fz_rethrow(ctx);
 	}
 
 	return xref;
 }
 
-pdf_page *benchloadpage(pdf_xref *xref, int pagenum)
+pdf_page *benchloadpage(pdf_document *xref, int pagenum)
 {
 	pdf_page *page;
 	mstimer timer;
@@ -131,7 +131,7 @@ pdf_page *benchloadpage(pdf_xref *xref, int pagenum)
 	return page;
 }
 
-void benchrenderpage(pdf_xref *xref, pdf_page *page, int pagenum)
+void benchrenderpage(pdf_document *xref, pdf_page *page, int pagenum)
 {
 	fz_device *dev;
 	fz_pixmap *pix;
@@ -159,7 +159,7 @@ void benchrenderpage(pdf_xref *xref, pdf_page *page, int pagenum)
 
 void benchfile(char *pdffilename, int loadonly, int pageNo)
 {
-	pdf_xref *xref = NULL;
+	pdf_document *xref = NULL;
 	mstimer timer;
 	int page_count;
 	int curpage;
@@ -200,7 +200,7 @@ void benchfile(char *pdffilename, int loadonly, int pageNo)
 
 Exit:
 	logbench("Finished: %s\n", pdffilename);
-	pdf_free_xref(xref);
+	pdf_close_document(xref);
 	fz_flush_warnings(ctx);
 	fz_free_context(ctx);
 }

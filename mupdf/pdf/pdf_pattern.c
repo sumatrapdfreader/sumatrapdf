@@ -34,7 +34,7 @@ pdf_pattern_size(pdf_pattern *pat)
 }
 
 pdf_pattern *
-pdf_load_pattern(pdf_xref *xref, fz_obj *dict)
+pdf_load_pattern(pdf_document *xref, fz_obj *dict)
 {
 	pdf_pattern *pat;
 	fz_obj *obj;

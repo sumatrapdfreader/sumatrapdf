@@ -156,7 +156,7 @@ int fz_is_indirect(fz_obj *obj)
 
 #define RESOLVE(obj) \
 	do { if (obj && obj->kind == FZ_INDIRECT) \
-		obj = fz_resolve_indirect(obj);   \
+		obj = fz_resolve_indirect(obj); \
 	} while (0)
 
 int fz_is_null(fz_obj *obj)
@@ -294,7 +294,7 @@ int fz_to_gen(fz_obj *obj)
 	return obj->u.r.gen;
 }
 
-void *fz_get_indirect_xref(fz_obj *obj)
+void *fz_get_indirect_document(fz_obj *obj)
 {
 	if (!obj || obj->kind != FZ_INDIRECT)
 		return NULL;

@@ -71,7 +71,7 @@ pdf_lookup_name_imp(fz_context *ctx, fz_obj *node, fz_obj *needle)
 }
 
 fz_obj *
-pdf_lookup_name(pdf_xref *xref, char *which, fz_obj *needle)
+pdf_lookup_name(pdf_document *xref, char *which, fz_obj *needle)
 {
 	fz_context *ctx = xref->ctx;
 
@@ -82,7 +82,7 @@ pdf_lookup_name(pdf_xref *xref, char *which, fz_obj *needle)
 }
 
 fz_obj *
-pdf_lookup_dest(pdf_xref *xref, fz_obj *needle)
+pdf_lookup_dest(pdf_document *xref, fz_obj *needle)
 {
 	fz_context *ctx = xref->ctx;
 
@@ -111,7 +111,7 @@ pdf_lookup_dest(pdf_xref *xref, fz_obj *needle)
 }
 
 static void
-pdf_load_name_tree_imp(fz_obj *dict, pdf_xref *xref, fz_obj *node)
+pdf_load_name_tree_imp(fz_obj *dict, pdf_document *xref, fz_obj *node)
 {
 	fz_context *ctx = xref->ctx;
 	fz_obj *kids = fz_dict_gets(node, "Kids");
@@ -146,7 +146,7 @@ pdf_load_name_tree_imp(fz_obj *dict, pdf_xref *xref, fz_obj *node)
 }
 
 fz_obj *
-pdf_load_name_tree(pdf_xref *xref, char *which)
+pdf_load_name_tree(pdf_document *xref, char *which)
 {
 	fz_context *ctx = xref->ctx;
 

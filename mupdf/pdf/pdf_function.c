@@ -816,7 +816,7 @@ parse_code(pdf_function *func, fz_stream *stream, int *codeptr)
 }
 
 static void
-load_postscript_func(pdf_function *func, pdf_xref *xref, fz_obj *dict, int num, int gen)
+load_postscript_func(pdf_function *func, pdf_document *xref, fz_obj *dict, int num, int gen)
 {
 	fz_stream *stream = NULL;
 	int codeptr;
@@ -884,7 +884,7 @@ eval_postscript_func(fz_context *ctx, pdf_function *func, float *in, float *out)
  */
 
 static void
-load_sample_func(pdf_function *func, pdf_xref *xref, fz_obj *dict, int num, int gen)
+load_sample_func(pdf_function *func, pdf_document *xref, fz_obj *dict, int num, int gen)
 {
 	fz_context *ctx = xref->ctx;
 	fz_stream *stream;
@@ -1169,7 +1169,7 @@ eval_exponential_func(fz_context *ctx, pdf_function *func, float in, float *out)
  */
 
 static void
-load_stitching_func(pdf_function *func, pdf_xref *xref, fz_obj *dict)
+load_stitching_func(pdf_function *func, pdf_document *xref, fz_obj *dict)
 {
 	fz_context *ctx = xref->ctx;
 	pdf_function **funcs;
@@ -1340,7 +1340,7 @@ pdf_function_size(pdf_function *func)
 }
 
 pdf_function *
-pdf_load_function(pdf_xref *xref, fz_obj *dict)
+pdf_load_function(pdf_document *xref, fz_obj *dict)
 {
 	fz_context *ctx = xref->ctx;
 	pdf_function *func;
@@ -1425,11 +1425,12 @@ pdf_load_function(pdf_xref *xref, fz_obj *dict)
 		int type = func->type;
 		pdf_drop_function(ctx, func);
 		fz_throw(ctx, "cannot load %s function (%d %d R)",
-				(type == SAMPLE ? "sampled" :
-				 (type == EXPONENTIAL ? "exponential" :
-				  (type == STITCHING ? "stitching" :
-				   (type == POSTSCRIPT ? "calculator" :
-				    "unknown")))), fz_to_num(dict), fz_to_gen(dict));
+				type == SAMPLE ? "sampled" :
+				type == EXPONENTIAL ? "exponential" :
+				type == STITCHING ? "stitching" :
+				type == POSTSCRIPT ? "calculator" :
+				"unknown",
+				fz_to_num(dict), fz_to_gen(dict));
 	}
 
 	return func;

@@ -449,7 +449,7 @@ int main(int argc, char **argv)
 
 		fz_try(ctx)
 		{
-			doc = xps_open_file(ctx, filename);
+			doc = xps_open_document(ctx, filename);
 
 			if (showxml)
 				printf("<document name=\"%s\">\n", filename);
@@ -468,11 +468,11 @@ int main(int argc, char **argv)
 			if (showxml)
 				printf("</document>\n");
 
-			xps_free_context(doc);
+			xps_close_document(doc);
 		}
 		fz_catch(ctx)
 		{
-			xps_free_context(doc);
+			xps_close_document(doc);
 		}
 	}
 

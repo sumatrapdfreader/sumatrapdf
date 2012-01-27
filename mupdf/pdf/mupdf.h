@@ -5,7 +5,7 @@
 #error "fitz.h must be included before mupdf.h"
 #endif
 
-typedef struct pdf_xref_s pdf_xref;
+typedef struct pdf_document_s pdf_document;
 
 /*
  * tokenizer and low-level object parser
@@ -27,10 +27,10 @@ enum
 
 int pdf_lex(fz_stream *f, char *buf, int n, int *len);
 
-fz_obj *pdf_parse_array(pdf_xref *xref, fz_stream *f, char *buf, int cap);
-fz_obj *pdf_parse_dict(pdf_xref *xref, fz_stream *f, char *buf, int cap);
-fz_obj *pdf_parse_stm_obj(pdf_xref *xref, fz_stream *f, char *buf, int cap);
-fz_obj * pdf_parse_ind_obj(pdf_xref *xref, fz_stream *f, char *buf, int cap, int *num, int *gen, int *stm_ofs);
+fz_obj *pdf_parse_array(pdf_document *doc, fz_stream *f, char *buf, int cap);
+fz_obj *pdf_parse_dict(pdf_document *doc, fz_stream *f, char *buf, int cap);
+fz_obj *pdf_parse_stm_obj(pdf_document *doc, fz_stream *f, char *buf, int cap);
+fz_obj * pdf_parse_ind_obj(pdf_document *doc, fz_stream *f, char *buf, int cap, int *num, int *gen, int *stm_ofs);
 
 fz_rect pdf_to_rect(fz_context *ctx, fz_obj *array);
 fz_matrix pdf_to_matrix(fz_context *ctx, fz_obj *array);
@@ -73,7 +73,7 @@ struct pdf_ocg_descriptor_s
 	fz_obj *intent;
 };
 
-struct pdf_xref_s
+struct pdf_document_s
 {
 	fz_context *ctx;
 	fz_stream *file;
@@ -96,27 +96,27 @@ struct pdf_xref_s
 };
 
 fz_obj *pdf_resolve_indirect(fz_obj *ref);
-void pdf_cache_object(pdf_xref *, int num, int gen);
-fz_obj *pdf_load_object(pdf_xref *, int num, int gen);
-void pdf_update_object( pdf_xref *xref, int num, int gen, fz_obj *newobj);
+void pdf_cache_object(pdf_document *doc, int num, int gen);
+fz_obj *pdf_load_object(pdf_document *doc, int num, int gen);
+void pdf_update_object( pdf_document *doc, int num, int gen, fz_obj *newobj);
 
-int pdf_is_stream(pdf_xref *xref, int num, int gen);
-fz_stream *pdf_open_inline_stream(fz_stream *chain, pdf_xref *xref, fz_obj *stmobj, int length);
-fz_buffer *pdf_load_raw_stream(pdf_xref *xref, int num, int gen);
-fz_buffer *pdf_load_stream(pdf_xref *xref, int num, int gen);
-fz_stream *pdf_open_raw_stream(pdf_xref *, int num, int gen);
-fz_stream *pdf_open_stream(pdf_xref *, int num, int gen);
-fz_stream *pdf_open_stream_at(pdf_xref *xref, int num, int gen, fz_obj *dict, int stm_ofs);
+int pdf_is_stream(pdf_document *doc, int num, int gen);
+fz_stream *pdf_open_inline_stream(fz_stream *chain, pdf_document *doc, fz_obj *stmobj, int length);
+fz_buffer *pdf_load_raw_stream(pdf_document *doc, int num, int gen);
+fz_buffer *pdf_load_stream(pdf_document *doc, int num, int gen);
+fz_stream *pdf_open_raw_stream(pdf_document *doc, int num, int gen);
+fz_stream *pdf_open_stream(pdf_document *doc, int num, int gen);
+fz_stream *pdf_open_stream_at(pdf_document *doc, int num, int gen, fz_obj *dict, int stm_ofs);
 
-pdf_xref *pdf_open_xref_with_stream(fz_stream *file);
-pdf_xref *pdf_open_xref(fz_context *ctx, const char *filename);
-void pdf_free_xref(pdf_xref *);
+pdf_document *pdf_open_document_with_stream(fz_stream *file);
+pdf_document *pdf_open_document(fz_context *ctx, const char *filename);
+void pdf_close_document(pdf_document *doc);
 
 /* private */
-void pdf_repair_xref(pdf_xref *xref, char *buf, int bufsize);
-void pdf_repair_obj_stms(pdf_xref *xref);
-void pdf_debug_xref(pdf_xref *);
-void pdf_resize_xref(pdf_xref *xref, int newcap);
+void pdf_repair_xref(pdf_document *doc, char *buf, int bufsize);
+void pdf_repair_obj_stms(pdf_document *doc);
+void pdf_debug_xref(pdf_document *);
+void pdf_resize_xref(pdf_document *doc, int newcap);
 
 /*
  * Encryption
@@ -142,14 +142,14 @@ void pdf_crypt_obj(fz_context *ctx, pdf_crypt *crypt, fz_obj *obj, int num, int 
 fz_stream *pdf_open_crypt(fz_stream *chain, pdf_crypt *crypt, int num, int gen);
 fz_stream *pdf_open_crypt_with_filter(fz_stream *chain, pdf_crypt *crypt, char *name, int num, int gen);
 
-int pdf_needs_password(pdf_xref *xref);
-int pdf_authenticate_password(pdf_xref *xref, char *pw);
-int pdf_has_permission(pdf_xref *xref, int p);
+int pdf_needs_password(pdf_document *doc);
+int pdf_authenticate_password(pdf_document *doc, char *pw);
+int pdf_has_permission(pdf_document *doc, int p);
 
-int pdf_get_crypt_revision(pdf_xref *xref);
-char *pdf_get_crypt_method(pdf_xref *xref);
-int pdf_get_crypt_length(pdf_xref *xref);
-unsigned char *pdf_get_crypt_key(pdf_xref *xref);
+int pdf_get_crypt_revision(pdf_document *doc);
+char *pdf_get_crypt_method(pdf_document *doc);
+int pdf_get_crypt_length(pdf_document *doc);
+unsigned char *pdf_get_crypt_key(pdf_document *doc);
 
 void pdf_debug_crypt(pdf_crypt *crypt);
 
@@ -159,19 +159,19 @@ void pdf_debug_crypt(pdf_crypt *crypt);
 
 typedef struct pdf_function_s pdf_function;
 
-pdf_function *pdf_load_function(pdf_xref *xref, fz_obj *ref);
+pdf_function *pdf_load_function(pdf_document *doc, fz_obj *ref);
 void pdf_eval_function(fz_context *ctx, pdf_function *func, float *in, int inlen, float *out, int outlen);
 pdf_function *pdf_keep_function(fz_context *ctx, pdf_function *func);
 void pdf_drop_function(fz_context *ctx, pdf_function *func);
 unsigned int pdf_function_size(pdf_function *func);
 
-fz_colorspace *pdf_load_colorspace(pdf_xref *xref, fz_obj *obj);
+fz_colorspace *pdf_load_colorspace(pdf_document *doc, fz_obj *obj);
 fz_pixmap *pdf_expand_indexed_pixmap(fz_context *ctx, fz_pixmap *src);
 
-fz_shade *pdf_load_shading(pdf_xref *xref, fz_obj *obj);
+fz_shade *pdf_load_shading(pdf_document *doc, fz_obj *obj);
 
-fz_pixmap *pdf_load_inline_image(pdf_xref *xref, fz_obj *rdb, fz_obj *dict, fz_stream *file);
-fz_pixmap *pdf_load_image(pdf_xref *xref, fz_obj *obj);
+fz_pixmap *pdf_load_inline_image(pdf_document *doc, fz_obj *rdb, fz_obj *dict, fz_stream *file);
+fz_pixmap *pdf_load_image(pdf_document *doc, fz_obj *obj);
 int pdf_is_jpx_image(fz_context *ctx, fz_obj *dict);
 
 /*
@@ -192,7 +192,7 @@ struct pdf_pattern_s
 	fz_buffer *contents;
 };
 
-pdf_pattern *pdf_load_pattern(pdf_xref *xref, fz_obj *obj);
+pdf_pattern *pdf_load_pattern(pdf_document *doc, fz_obj *obj);
 pdf_pattern *pdf_keep_pattern(fz_context *ctx, pdf_pattern *pat);
 void pdf_drop_pattern(fz_context *ctx, pdf_pattern *pat);
 
@@ -216,7 +216,7 @@ struct pdf_xobject_s
 	fz_obj *me;
 };
 
-pdf_xobject *pdf_load_xobject(pdf_xref *xref, fz_obj *obj);
+pdf_xobject *pdf_load_xobject(pdf_document *doc, fz_obj *obj);
 pdf_xobject *pdf_keep_xobject(fz_context *ctx, pdf_xobject *xobj);
 void pdf_drop_xobject(fz_context *ctx, pdf_xobject *xobj);
 /* SumatraPDF: allow to synthesize XObjects (cf. pdf_create_annot) */
@@ -289,7 +289,7 @@ unsigned char *pdf_decode_cmap(pdf_cmap *cmap, unsigned char *s, int *cpt);
 
 pdf_cmap *pdf_new_identity_cmap(fz_context *ctx, int wmode, int bytes);
 pdf_cmap *pdf_parse_cmap(fz_stream *file);
-pdf_cmap *pdf_load_embedded_cmap(pdf_xref *xref, fz_obj *ref);
+pdf_cmap *pdf_load_embedded_cmap(pdf_document *doc, fz_obj *ref);
 pdf_cmap *pdf_load_system_cmap(fz_context *ctx, char *name);
 pdf_cmap *pdf_find_builtin_cmap(char *cmap_name);
 
@@ -396,7 +396,7 @@ void pdf_end_vmtx(pdf_font_desc *font);
 pdf_hmtx pdf_get_hmtx(pdf_font_desc *font, int cid);
 pdf_vmtx pdf_get_vmtx(pdf_font_desc *font, int cid);
 
-void pdf_load_to_unicode(pdf_font_desc *font, pdf_xref *xref, char **strings, char *collection, fz_obj *cmapstm);
+void pdf_load_to_unicode(pdf_font_desc *font, pdf_document *doc, char **strings, char *collection, fz_obj *cmapstm);
 
 int pdf_font_cid_to_gid(pdf_font_desc *fontdesc, int cid);
 
@@ -408,8 +408,8 @@ unsigned char *pdf_find_substitute_cjk_font(int ros, int serif, unsigned int *le
 void pdf_load_windows_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontname);
 void pdf_load_similar_cjk_font(fz_context *ctx, pdf_font_desc *fontdesc, int ros, int serif);
 
-pdf_font_desc *pdf_load_type3_font(pdf_xref *xref, fz_obj *rdb, fz_obj *obj);
-pdf_font_desc *pdf_load_font(pdf_xref *xref, fz_obj *rdb, fz_obj *obj);
+pdf_font_desc *pdf_load_type3_font(pdf_document *doc, fz_obj *rdb, fz_obj *obj);
+pdf_font_desc *pdf_load_font(pdf_document *doc, fz_obj *rdb, fz_obj *obj);
 
 pdf_font_desc *pdf_new_font_desc(fz_context *ctx);
 pdf_font_desc *pdf_keep_font(fz_context *ctx, pdf_font_desc *fontdesc);
@@ -436,19 +436,19 @@ struct pdf_annot_s
 	pdf_annot *next;
 };
 
-fz_link_dest pdf_parse_link_dest(pdf_xref *xref, fz_obj *dest);
+fz_link_dest pdf_parse_link_dest(pdf_document *doc, fz_obj *dest);
 /* SumatraPDF: parse full file specifications */
 char *pdf_file_spec_to_str(fz_context *ctx, fz_obj *file_spec);
-fz_link_dest pdf_parse_action(pdf_xref *xref, fz_obj *action);
-fz_obj *pdf_lookup_dest(pdf_xref *xref, fz_obj *needle);
-fz_obj *pdf_lookup_name(pdf_xref *xref, char *which, fz_obj *needle);
-fz_obj *pdf_load_name_tree(pdf_xref *xref, char *which);
+fz_link_dest pdf_parse_action(pdf_document *doc, fz_obj *action);
+fz_obj *pdf_lookup_dest(pdf_document *doc, fz_obj *needle);
+fz_obj *pdf_lookup_name(pdf_document *doc, char *which, fz_obj *needle);
+fz_obj *pdf_load_name_tree(pdf_document *doc, char *which);
 
-fz_outline *pdf_load_outline(pdf_xref *xref);
+fz_outline *pdf_load_outline(pdf_document *doc);
 
-fz_link *pdf_load_links(pdf_xref *, fz_obj *annots, fz_matrix page_ctm);
+fz_link *pdf_load_links(pdf_document *, fz_obj *annots, fz_matrix page_ctm);
 
-pdf_annot *pdf_load_annots(pdf_xref *, fz_obj *annots);
+pdf_annot *pdf_load_annots(pdf_document *, fz_obj *annots);
 void pdf_free_annot(fz_context *ctx, pdf_annot *link);
 
 /*
@@ -469,19 +469,19 @@ struct pdf_page_s
 	pdf_annot *annots;
 };
 
-int pdf_find_page_number(pdf_xref *xref, fz_obj *pageobj);
-int pdf_count_pages(pdf_xref *xref);
+int pdf_find_page_number(pdf_document *doc, fz_obj *pageobj);
+int pdf_count_pages(pdf_document *doc);
 
-pdf_page *pdf_load_page(pdf_xref *xref, int number);
-fz_rect pdf_bound_page(pdf_xref *xref, pdf_page *page);
+pdf_page *pdf_load_page(pdf_document *doc, int number);
+fz_rect pdf_bound_page(pdf_document *doc, pdf_page *page);
 void pdf_free_page(fz_context *ctx, pdf_page *page);
 
 /*
  * Content stream parsing
  */
 
-void pdf_run_page_with_usage(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matrix ctm, char *event, fz_cookie *cookie);
-void pdf_run_page(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matrix ctm, fz_cookie *cookie);
-void pdf_run_glyph(pdf_xref *xref, fz_obj *resources, fz_buffer *contents, fz_device *dev, fz_matrix ctm, void *gstate);
+void pdf_run_page_with_usage(pdf_document *doc, pdf_page *page, fz_device *dev, fz_matrix ctm, char *event, fz_cookie *cookie);
+void pdf_run_page(pdf_document *doc, pdf_page *page, fz_device *dev, fz_matrix ctm, fz_cookie *cookie);
+void pdf_run_glyph(pdf_document *doc, fz_obj *resources, fz_buffer *contents, fz_device *dev, fz_matrix ctm, void *gstate);
 
 #endif

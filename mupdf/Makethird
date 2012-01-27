@@ -86,6 +86,7 @@ JBIG2DEC_SRC := \
 	jbig2_arith_iaid.c \
 	jbig2_arith_int.c \
 	jbig2_generic.c \
+	jbig2_halftone.c \
 	jbig2_huffman.c \
 	jbig2_image.c \
 	jbig2_metadata.c \

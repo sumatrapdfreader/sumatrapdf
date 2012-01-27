@@ -6,7 +6,7 @@
 #include "fitz.h"
 #include "mupdf.h"
 
-pdf_xref *xref;
+pdf_document *xref;
 fz_context *ctx;
 int pagecount;
 
@@ -94,7 +94,7 @@ void closexref(void)
 	int i;
 	if (xref)
 	{
-		pdf_free_xref(xref);
+		pdf_close_document(xref);
 		xref = NULL;
 	}
 
@@ -993,7 +993,7 @@ int main(int argc, char **argv)
 
 			filename = argv[fz_optind];
 			printf("%s:\n", filename);
-			xref = pdf_open_xref(ctx, filename);
+			xref = pdf_open_document(ctx, filename);
 			if (pdf_needs_password(xref))
 				if (!pdf_authenticate_password(xref, password))
 					fz_throw(ctx, "cannot authenticate password: %s\n", filename);

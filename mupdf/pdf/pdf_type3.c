@@ -2,13 +2,13 @@
 #include "mupdf.h"
 
 static void
-pdf_run_glyph_func(void *xref, fz_obj *rdb, fz_buffer *contents, fz_device *dev, fz_matrix ctm, void *gstate)
+pdf_run_glyph_func(void *doc, fz_obj *rdb, fz_buffer *contents, fz_device *dev, fz_matrix ctm, void *gstate)
 {
-	pdf_run_glyph(xref, rdb, contents, dev, ctm, gstate);
+	pdf_run_glyph(doc, rdb, contents, dev, ctm, gstate);
 }
 
 pdf_font_desc *
-pdf_load_type3_font(pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
+pdf_load_type3_font(pdf_document *xref, fz_obj *rdb, fz_obj *dict)
 {
 	char buf[256];
 	char *estrings[256];
@@ -134,7 +134,7 @@ pdf_load_type3_font(pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
 		if (!fontdesc->font->t3resources)
 			fz_warn(ctx, "no resource dictionary for type 3 font!");
 
-		fontdesc->font->t3xref = xref;
+		fontdesc->font->t3doc = xref;
 		fontdesc->font->t3run = pdf_run_glyph_func;
 
 		/* CharProcs */

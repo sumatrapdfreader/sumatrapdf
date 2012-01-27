@@ -2,7 +2,7 @@
 #include "mupdf.h"
 
 static fz_obj *
-resolve_dest_rec(pdf_xref *xref, fz_obj *dest, int depth)
+resolve_dest_rec(pdf_document *xref, fz_obj *dest, int depth)
 {
 	if (depth > 10) /* Arbitrary to avoid infinite recursion */
 		return NULL;
@@ -31,13 +31,13 @@ resolve_dest_rec(pdf_xref *xref, fz_obj *dest, int depth)
 }
 
 static fz_obj *
-resolve_dest(pdf_xref *xref, fz_obj *dest)
+resolve_dest(pdf_document *xref, fz_obj *dest)
 {
 	return resolve_dest_rec(xref, dest, 0);
 }
 
 fz_link_dest
-pdf_parse_link_dest(pdf_xref *xref, fz_obj *dest)
+pdf_parse_link_dest(pdf_document *xref, fz_obj *dest)
 {
 	fz_link_dest ld;
 	fz_obj *obj;
@@ -241,7 +241,7 @@ pdf_file_spec_to_str(fz_context *ctx, fz_obj *file_spec)
 }
 
 fz_link_dest
-pdf_parse_action(pdf_xref *xref, fz_obj *action)
+pdf_parse_action(pdf_document *xref, fz_obj *action)
 {
 	fz_link_dest ld;
 	fz_obj *obj, *dest;
@@ -310,7 +310,7 @@ pdf_parse_action(pdf_xref *xref, fz_obj *action)
 }
 
 static fz_link *
-pdf_load_link(pdf_xref *xref, fz_obj *dict, fz_matrix page_ctm)
+pdf_load_link(pdf_document *xref, fz_obj *dict, fz_matrix page_ctm)
 {
 	fz_obj *dest = NULL;
 	fz_obj *action;
@@ -350,7 +350,7 @@ pdf_load_link(pdf_xref *xref, fz_obj *dict, fz_matrix page_ctm)
 }
 
 fz_link *
-pdf_load_links(pdf_xref *xref, fz_obj *annots, fz_matrix page_ctm)
+pdf_load_links(pdf_document *xref, fz_obj *annots, fz_matrix page_ctm)
 {
 	fz_link *link, *head, *tail;
 	fz_obj *obj;
@@ -456,7 +456,7 @@ pdf_create_annot(fz_context *ctx, fz_rect rect, fz_obj *base_obj, fz_buffer *con
 }
 
 static fz_obj *
-pdf_dict_from_string(pdf_xref *xref, char *string)
+pdf_dict_from_string(pdf_document *xref, char *string)
 {
 	fz_obj *result;
 	fz_stream *stream = fz_open_memory(xref->ctx, string, strlen(string));
@@ -480,7 +480,7 @@ pdf_dict_from_string(pdf_xref *xref, char *string)
 	"<< /OCGs << /Usage << /Print << /PrintState /OFF >> /Export << /ExportState /OFF >> >> >> >>"
 
 static fz_obj *
-pdf_clone_for_view_only(pdf_xref *xref, fz_obj *obj)
+pdf_clone_for_view_only(pdf_document *xref, fz_obj *obj)
 {
 	fz_obj *ocgs = pdf_dict_from_string(xref, ANNOT_OC_VIEW_ONLY);
 
@@ -519,7 +519,7 @@ pdf_get_annot_color(fz_obj *obj, float rgb[3])
 
 /* SumatraPDF: partial support for link borders */
 static pdf_annot *
-pdf_create_link_annot(pdf_xref *xref, fz_obj *obj)
+pdf_create_link_annot(pdf_document *xref, fz_obj *obj)
 {
 	fz_obj *border, *dashes;
 	fz_buffer *content;
@@ -620,7 +620,7 @@ pdf_create_link_annot(pdf_xref *xref, fz_obj *obj)
 
 /* SumatraPDF: partial support for text icons */
 static pdf_annot *
-pdf_create_text_annot(pdf_xref *xref, fz_obj *obj)
+pdf_create_text_annot(pdf_document *xref, fz_obj *obj)
 {
 	fz_buffer *content = fz_new_buffer(xref->ctx, 512);
 	fz_rect rect = pdf_to_rect(xref->ctx, fz_dict_gets(obj, "Rect"));
@@ -699,7 +699,7 @@ pdf_create_text_annot(pdf_xref *xref, fz_obj *obj)
 
 /* SumatraPDF: partial support for file attachment icons */
 static pdf_annot *
-pdf_create_file_annot(pdf_xref *xref, fz_obj *obj)
+pdf_create_file_annot(pdf_document *xref, fz_obj *obj)
 {
 	fz_buffer *content = fz_new_buffer(xref->ctx, 512);
 	fz_rect rect = pdf_to_rect(xref->ctx, fz_dict_gets(obj, "Rect"));
@@ -747,7 +747,7 @@ pdf_get_quadrilaterals(fz_obj *quad_points, int i, fz_rect *a, fz_rect *b)
 	"<< /ExtGState << /GS << /Type/ExtGState /ca 0.8 /AIS false /BM /Multiply >> >> >>"
 
 static pdf_annot *
-pdf_create_highlight_annot(pdf_xref *xref, fz_obj *obj)
+pdf_create_highlight_annot(pdf_document *xref, fz_obj *obj)
 {
 	fz_buffer *content = fz_new_buffer(xref->ctx, 512);
 	fz_rect rect = pdf_to_rect(xref->ctx, fz_dict_gets(obj, "Rect"));
@@ -782,7 +782,7 @@ pdf_create_highlight_annot(pdf_xref *xref, fz_obj *obj)
 }
 
 static pdf_annot *
-pdf_create_markup_annot(pdf_xref *xref, fz_obj *obj, char *type)
+pdf_create_markup_annot(pdf_document *xref, fz_obj *obj, char *type)
 {
 	fz_buffer *content = fz_new_buffer(xref->ctx, 512);
 	fz_rect rect = pdf_to_rect(xref->ctx, fz_dict_gets(obj, "Rect"));
@@ -819,7 +819,7 @@ pdf_create_markup_annot(pdf_xref *xref, fz_obj *obj, char *type)
 
 /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692078 */
 static fz_obj *
-pdf_dict_get_inheritable(pdf_xref *xref, fz_obj *obj, char *key)
+pdf_dict_get_inheritable(pdf_document *xref, fz_obj *obj, char *key)
 {
 	while (obj)
 	{
@@ -832,7 +832,7 @@ pdf_dict_get_inheritable(pdf_xref *xref, fz_obj *obj, char *key)
 }
 
 static float
-pdf_extract_font_size(pdf_xref *xref, char *appearance, char **font_name)
+pdf_extract_font_size(pdf_document *xref, char *appearance, char **font_name)
 {
 	fz_stream *stream = fz_open_memory(xref->ctx, appearance, strlen(appearance));
 	float font_size = 0;
@@ -870,7 +870,7 @@ pdf_extract_font_size(pdf_xref *xref, char *appearance, char **font_name)
 }
 
 static fz_obj *
-pdf_get_ap_stream(pdf_xref *xref, fz_obj *obj)
+pdf_get_ap_stream(pdf_document *xref, fz_obj *obj)
 {
 	fz_obj *ap = fz_dict_gets(obj, "AP");
 	if (!fz_is_dict(ap))
@@ -886,7 +886,7 @@ pdf_get_ap_stream(pdf_xref *xref, fz_obj *obj)
 }
 
 static void
-pdf_prepend_ap_background(fz_buffer *content, pdf_xref *xref, fz_obj *obj)
+pdf_prepend_ap_background(fz_buffer *content, pdf_document *xref, fz_obj *obj)
 {
 	pdf_xobject *form;
 	int i;
@@ -929,7 +929,7 @@ pdf_string_to_Tj(fz_context *ctx, fz_buffer *content, unsigned short *ucs2, unsi
 }
 
 static int
-pdf_get_string_width(pdf_xref *xref, fz_obj *res, fz_buffer *base, unsigned short *string, unsigned short *end)
+pdf_get_string_width(pdf_document *xref, fz_obj *res, fz_buffer *base, unsigned short *string, unsigned short *end)
 {
 	fz_bbox bbox;
 	int width, old_len = base->len;
@@ -955,7 +955,7 @@ pdf_get_string_width(pdf_xref *xref, fz_obj *res, fz_buffer *base, unsigned shor
 #define iswspace(c) ((c) == 32 || 9 <= (c) && (c) <= 13)
 
 static unsigned short *
-pdf_append_line(pdf_xref *xref, fz_obj *res, fz_buffer *content, fz_buffer *base_ap,
+pdf_append_line(pdf_document *xref, fz_obj *res, fz_buffer *content, fz_buffer *base_ap,
 	unsigned short *ucs2, float font_size, int align, float width, int is_multiline, float *x)
 {
 	unsigned short *end, *keep;
@@ -1000,7 +1000,7 @@ pdf_append_line(pdf_xref *xref, fz_obj *res, fz_buffer *content, fz_buffer *base
 }
 
 static void
-pdf_append_combed_line(pdf_xref *xref, fz_obj *res, fz_buffer *content, fz_buffer *base_ap,
+pdf_append_combed_line(pdf_document *xref, fz_obj *res, fz_buffer *content, fz_buffer *base_ap,
 	unsigned short *ucs2, float font_size, float width, int max_len)
 {
 	float comb_width = max_len > 0 ? width / max_len : 0;
@@ -1018,7 +1018,7 @@ pdf_append_combed_line(pdf_xref *xref, fz_obj *res, fz_buffer *content, fz_buffe
 }
 
 static pdf_annot *
-pdf_update_tx_widget_annot(pdf_xref *xref, fz_obj *obj)
+pdf_update_tx_widget_annot(pdf_document *xref, fz_obj *obj)
 {
 	fz_obj *ap, *res, *value;
 	fz_rect rect;
@@ -1119,7 +1119,7 @@ pdf_update_tx_widget_annot(pdf_xref *xref, fz_obj *obj)
 	"<< /Font << /Default << /Type /Font /BaseFont /Helvetica /Subtype /Type1 >> >> >>"
 
 static pdf_annot *
-pdf_create_freetext_annot(pdf_xref *xref, fz_obj *obj)
+pdf_create_freetext_annot(pdf_document *xref, fz_obj *obj)
 {
 	fz_buffer *content = fz_new_buffer(xref->ctx, 256);
 	fz_buffer *base_ap = fz_new_buffer(xref->ctx, 256);
@@ -1176,7 +1176,7 @@ pdf_create_freetext_annot(pdf_xref *xref, fz_obj *obj)
 }
 
 static pdf_annot *
-pdf_create_annot_with_appearance(pdf_xref *xref, fz_obj *obj)
+pdf_create_annot_with_appearance(pdf_document *xref, fz_obj *obj)
 {
 	char *type = fz_to_name(fz_dict_gets(obj, "Subtype"));
 
@@ -1198,7 +1198,7 @@ pdf_create_annot_with_appearance(pdf_xref *xref, fz_obj *obj)
 }
 
 pdf_annot *
-pdf_load_annots(pdf_xref *xref, fz_obj *annots)
+pdf_load_annots(pdf_document *xref, fz_obj *annots)
 {
 	pdf_annot *annot, *head, *tail;
 	fz_obj *obj, *ap, *as, *n, *rect;

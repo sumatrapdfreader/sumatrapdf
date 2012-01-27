@@ -503,6 +503,20 @@ xps_decode_tiff_strips(struct tiff *tiff)
 			p += tiff->stride;
 		}
 	}
+
+	/* Premultiplied transparency */
+	if (tiff->extrasamples == 1)
+	{
+		/* In GhostXPS we undo the premultiplication here; muxps holds
+		 * all our images premultiplied by default, so nothing to do.
+		 */
+	}
+
+	/* Non-premultiplied transparency */
+	if (tiff->extrasamples == 2)
+	{
+		/* Premultiplied files are corrected for elsewhere */
+	}
 }
 
 static inline int readbyte(struct tiff *tiff)
@@ -765,66 +779,58 @@ xps_decode_tiff(fz_context *ctx, byte *buf, int len)
 	fz_pixmap *image;
 	struct tiff tiff;
 
-	xps_decode_tiff_header(ctx, &tiff, buf, len);
-
-	/* Decode the image strips */
-
-	if (tiff.rowsperstrip > tiff.imagelength)
-		tiff.rowsperstrip = tiff.imagelength;
-
-	xps_decode_tiff_strips(&tiff);
-
-	/* Byte swap 16-bit images to big endian if necessary */
-	if (tiff.bitspersample == 16)
-		if (tiff.order == TII)
-			xps_swap_byte_order(tiff.samples, tiff.imagewidth * tiff.imagelength * tiff.samplesperpixel);
-
-	/* Expand into fz_pixmap struct */
-
 	fz_try(ctx)
 	{
+		xps_decode_tiff_header(ctx, &tiff, buf, len);
+
+		/* Decode the image strips */
+
+		if (tiff.rowsperstrip > tiff.imagelength)
+			tiff.rowsperstrip = tiff.imagelength;
+
+		xps_decode_tiff_strips(&tiff);
+
+		/* Byte swap 16-bit images to big endian if necessary */
+		if (tiff.bitspersample == 16)
+			if (tiff.order == TII)
+				xps_swap_byte_order(tiff.samples, tiff.imagewidth * tiff.imagelength * tiff.samplesperpixel);
+
+		/* Expand into fz_pixmap struct */
 		image = fz_new_pixmap(tiff.ctx, tiff.colorspace, tiff.imagewidth, tiff.imagelength);
+		image->xres = tiff.xresolution;
+		image->yres = tiff.yresolution;
+
+		fz_unpack_tile(image, tiff.samples, tiff.samplesperpixel, tiff.bitspersample, tiff.stride, 0);
+
+		/* We should only do this on non-pre-multiplied images, but files in the wild are bad */
+		if (tiff.extrasamples /* == 2 */)
+		{
+			/* CMYK is a subtractive colorspace, we want additive for premul alpha */
+			if (image->n == 5)
+			{
+				fz_pixmap *rgb = fz_new_pixmap(tiff.ctx, fz_device_rgb, image->w, image->h);
+				fz_convert_pixmap(tiff.ctx, image, rgb);
+				rgb->xres = image->xres;
+				rgb->yres = image->yres;
+				fz_drop_pixmap(ctx, image);
+				image = rgb;
+			}
+			fz_premultiply_pixmap(image);
+		}
 	}
-	fz_catch(ctx)
+	fz_always(ctx)
 	{
+		/* Clean up scratch memory */
 		if (tiff.colormap) fz_free(ctx, tiff.colormap);
 		if (tiff.stripoffsets) fz_free(ctx, tiff.stripoffsets);
 		if (tiff.stripbytecounts) fz_free(ctx, tiff.stripbytecounts);
 		if (tiff.samples) fz_free(ctx, tiff.samples);
-		/* SumatraPDF: fix memory leak */
 		if (tiff.profile) fz_free(ctx, tiff.profile);
+	}
+	fz_catch(ctx)
+	{
 		fz_throw(ctx, "out of memory");
 	}
-
-	image->xres = tiff.xresolution;
-	image->yres = tiff.yresolution;
-
-	fz_unpack_tile(image, tiff.samples, tiff.samplesperpixel, tiff.bitspersample, tiff.stride, 0);
-
-	/* We should only do this on non-pre-multiplied images, but files in the wild are bad */
-	if (tiff.extrasamples /* == 2 */)
-	{
-		/* CMYK is a subtractive colorspace, we want additive for premul alpha */
-		if (image->n == 5)
-		{
-			fz_pixmap *rgb = fz_new_pixmap(tiff.ctx, fz_device_rgb, image->w, image->h);
-			fz_convert_pixmap(tiff.ctx, image, rgb);
-			rgb->xres = image->xres;
-			rgb->yres = image->yres;
-			fz_drop_pixmap(ctx, image);
-			image = rgb;
-		}
-		fz_premultiply_pixmap(image);
-	}
-
-	/* Clean up scratch memory */
-
-	if (tiff.colormap) fz_free(ctx, tiff.colormap);
-	if (tiff.stripoffsets) fz_free(ctx, tiff.stripoffsets);
-	if (tiff.stripbytecounts) fz_free(ctx, tiff.stripbytecounts);
-	if (tiff.samples) fz_free(ctx, tiff.samples);
-	/* SumatraPDF: fix memory leak */
-	if (tiff.profile) fz_free(ctx, tiff.profile);
 
 	return image;
 }

@@ -5,7 +5,7 @@
 #include "fitz.h"
 #include "mupdf.h"
 
-static pdf_xref *xref = NULL;
+static pdf_document *doc = NULL;
 static fz_context *ctx = NULL;
 static int dorgb = 0;
 
@@ -35,11 +35,11 @@ static void saveimage(int num)
 	fz_obj *ref;
 	char name[1024];
 
-	ref = fz_new_indirect(ctx, num, 0, xref);
+	ref = fz_new_indirect(ctx, num, 0, doc);
 
 	/* TODO: detect DCTD and save as jpeg */
 
-	img = pdf_load_image(xref, ref);
+	img = pdf_load_image(doc, ref);
 
 	if (dorgb && img->colorspace && img->colorspace != fz_device_rgb)
 	{
@@ -121,7 +121,7 @@ static void savefont(fz_obj *dict, int num)
 		return;
 	}
 
-	buf = pdf_load_stream(xref, fz_to_num(stream), fz_to_gen(stream));
+	buf = pdf_load_stream(doc, fz_to_num(stream), fz_to_gen(stream));
 
 	sprintf(name, "%s-%04d.%s", fontname, num, ext);
 	printf("extracting font %s\n", name);
@@ -144,10 +144,10 @@ static void showobject(int num)
 {
 	fz_obj *obj;
 
-	if (!xref)
+	if (!doc)
 		fz_throw(ctx, "no file specified");
 
-	obj = pdf_load_object(xref, num, 0);
+	obj = pdf_load_object(doc, num, 0);
 
 	if (isimage(obj))
 		saveimage(num);
@@ -189,14 +189,14 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	xref = pdf_open_xref(ctx, infile);
-	if (pdf_needs_password(xref))
-		if (!pdf_authenticate_password(xref, password))
+	doc = pdf_open_document(ctx, infile);
+	if (pdf_needs_password(doc))
+		if (!pdf_authenticate_password(doc, password))
 			fz_throw(ctx, "cannot authenticate password: %s\n", infile);
 
 	if (fz_optind == argc)
 	{
-		for (o = 0; o < xref->len; o++)
+		for (o = 0; o < doc->len; o++)
 			showobject(o);
 	}
 	else
@@ -208,7 +208,7 @@ int main(int argc, char **argv)
 		}
 	}
 
-	pdf_free_xref(xref);
+	pdf_close_document(doc);
 	fz_flush_warnings(ctx);
 	fz_free_context(ctx);
 	return 0;

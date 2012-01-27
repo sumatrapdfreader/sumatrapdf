@@ -18,18 +18,11 @@ open_document(fz_context *ctx, char *filename)
 	fz_try(ctx)
 	{
 		if (strstr(filename, ".pdf") || strstr(filename, ".PDF"))
-		{
-			doc->pdf = pdf_open_xref(ctx, filename);
-			pdf_load_page_tree(doc->pdf);
-		}
+			doc->pdf = pdf_open_document(ctx, filename);
 		else if (strstr(filename, ".xps") || strstr(filename, ".XPS"))
-		{
-			doc->xps = xps_open_file(ctx, filename);
-		}
+			doc->xps = xps_open_document(ctx, filename);
 		else
-		{
 			fz_throw(ctx, "unknown document format");
-		}
 	}
 	fz_catch(ctx)
 	{
@@ -264,12 +257,12 @@ close_document(struct document *doc)
 	if (doc->pdf) {
 		if (doc->pdf_page)
 			pdf_free_page(doc->ctx, doc->pdf_page);
-		pdf_free_xref(doc->pdf);
+		pdf_close_document(doc->pdf);
 	}
 	if (doc->xps) {
 		if (doc->xps_page)
 			xps_free_page(doc->xps, doc->xps_page);
-		xps_free_context(doc->xps);
+		xps_close_document(doc->xps);
 	}
 	fz_flush_warnings(doc->ctx);
 	fz_free(doc->ctx, doc);

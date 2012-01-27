@@ -5,7 +5,7 @@
  * Check if an object is a stream or not.
  */
 int
-pdf_is_stream(pdf_xref *xref, int num, int gen)
+pdf_is_stream(pdf_document *xref, int num, int gen)
 {
 	if (num < 0 || num >= xref->len)
 		return 0;
@@ -49,7 +49,7 @@ pdf_stream_has_crypt(fz_context *ctx, fz_obj *stm)
  * Create a filter given a name and param dictionary.
  */
 static fz_stream *
-build_filter(fz_stream *chain, pdf_xref * xref, fz_obj * f, fz_obj * p, int num, int gen)
+build_filter(fz_stream *chain, pdf_document * xref, fz_obj * f, fz_obj * p, int num, int gen)
 {
 	char *s;
 	fz_context *ctx = chain->ctx;
@@ -127,7 +127,7 @@ build_filter(fz_stream *chain, pdf_xref * xref, fz_obj * f, fz_obj * p, int num,
  * Assume ownership of head.
  */
 static fz_stream *
-build_filter_chain(fz_stream *chain, pdf_xref *xref, fz_obj *fs, fz_obj *ps, int num, int gen)
+build_filter_chain(fz_stream *chain, pdf_document *xref, fz_obj *fs, fz_obj *ps, int num, int gen)
 {
 	fz_obj *f;
 	fz_obj *p;
@@ -150,7 +150,7 @@ build_filter_chain(fz_stream *chain, pdf_xref *xref, fz_obj *fs, fz_obj *ps, int
  * stream length, followed by a decryption filter.
  */
 static fz_stream *
-pdf_open_raw_filter(fz_stream *chain, pdf_xref *xref, fz_obj *stmobj, int num, int gen)
+pdf_open_raw_filter(fz_stream *chain, pdf_document *xref, fz_obj *stmobj, int num, int gen)
 {
 	int hascrypt;
 	int len;
@@ -182,7 +182,7 @@ pdf_open_raw_filter(fz_stream *chain, pdf_xref *xref, fz_obj *stmobj, int num, i
  * to stream length and decrypting.
  */
 static fz_stream *
-pdf_open_filter(fz_stream *chain, pdf_xref *xref, fz_obj *stmobj, int num, int gen)
+pdf_open_filter(fz_stream *chain, pdf_document *xref, fz_obj *stmobj, int num, int gen)
 {
 	fz_obj *filters;
 	fz_obj *params;
@@ -205,7 +205,7 @@ pdf_open_filter(fz_stream *chain, pdf_xref *xref, fz_obj *stmobj, int num, int g
  * constraining to stream length, and without decryption.
  */
 fz_stream *
-pdf_open_inline_stream(fz_stream *chain, pdf_xref *xref, fz_obj *stmobj, int length)
+pdf_open_inline_stream(fz_stream *chain, pdf_document *xref, fz_obj *stmobj, int length)
 {
 	fz_obj *filters;
 	fz_obj *params;
@@ -229,7 +229,7 @@ pdf_open_inline_stream(fz_stream *chain, pdf_xref *xref, fz_obj *stmobj, int len
  * Using xref->file while this is open is a bad idea.
  */
 fz_stream *
-pdf_open_raw_stream(pdf_xref *xref, int num, int gen)
+pdf_open_raw_stream(pdf_document *xref, int num, int gen)
 {
 	pdf_xref_entry *x;
 	fz_stream *stm;
@@ -258,7 +258,7 @@ pdf_open_raw_stream(pdf_xref *xref, int num, int gen)
  * Using xref->file while a stream is open is a Bad idea.
  */
 fz_stream *
-pdf_open_stream(pdf_xref *xref, int num, int gen)
+pdf_open_stream(pdf_document *xref, int num, int gen)
 {
 	pdf_xref_entry *x;
 	fz_stream *stm;
@@ -280,7 +280,7 @@ pdf_open_stream(pdf_xref *xref, int num, int gen)
 }
 
 fz_stream *
-pdf_open_stream_at(pdf_xref *xref, int num, int gen, fz_obj *dict, int stm_ofs)
+pdf_open_stream_at(pdf_document *xref, int num, int gen, fz_obj *dict, int stm_ofs)
 {
 	fz_stream *stm;
 
@@ -296,7 +296,7 @@ pdf_open_stream_at(pdf_xref *xref, int num, int gen, fz_obj *dict, int stm_ofs)
  * Load raw (compressed but decrypted) contents of a stream into buf.
  */
 fz_buffer *
-pdf_load_raw_stream(pdf_xref *xref, int num, int gen)
+pdf_load_raw_stream(pdf_document *xref, int num, int gen)
 {
 	fz_stream *stm;
 	fz_obj *dict;
@@ -340,7 +340,7 @@ pdf_guess_filter_length(int len, char *filter)
  * Load uncompressed contents of a stream into buf.
  */
 fz_buffer *
-pdf_load_stream(pdf_xref *xref, int num, int gen)
+pdf_load_stream(pdf_document *xref, int num, int gen)
 {
 	fz_context *ctx = xref->ctx;
 	fz_stream *stm = NULL;

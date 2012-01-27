@@ -64,7 +64,7 @@ struct pdf_gstate_s
 struct pdf_csi_s
 {
 	fz_device *dev;
-	pdf_xref *xref;
+	pdf_document *xref;
 
 	/* usage mode for optional content groups */
 	char *event; /* "View", "Print", "Export" */
@@ -960,7 +960,7 @@ copy_state(fz_context *ctx, pdf_gstate *gs, pdf_gstate *old)
 
 
 static pdf_csi *
-pdf_new_csi(pdf_xref *xref, fz_device *dev, fz_matrix ctm, char *event, fz_cookie *cookie, pdf_gstate *gstate)
+pdf_new_csi(pdf_document *xref, fz_device *dev, fz_matrix ctm, char *event, fz_cookie *cookie, pdf_gstate *gstate)
 {
 	pdf_csi *csi;
 	fz_context *ctx = dev->ctx;
@@ -2703,7 +2703,7 @@ pdf_run_buffer(pdf_csi *csi, fz_obj *rdb, fz_buffer *contents)
 }
 
 void
-pdf_run_page_with_usage(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matrix ctm, char *event, fz_cookie *cookie)
+pdf_run_page_with_usage(pdf_document *xref, pdf_page *page, fz_device *dev, fz_matrix ctm, char *event, fz_cookie *cookie)
 {
 	fz_context *ctx = dev->ctx;
 	pdf_csi *csi;
@@ -2778,13 +2778,13 @@ pdf_run_page_with_usage(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matri
 }
 
 void
-pdf_run_page(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matrix ctm, fz_cookie *cookie)
+pdf_run_page(pdf_document *xref, pdf_page *page, fz_device *dev, fz_matrix ctm, fz_cookie *cookie)
 {
 	pdf_run_page_with_usage(xref, page, dev, ctm, "View", cookie);
 }
 
 void
-pdf_run_glyph(pdf_xref *xref, fz_obj *resources, fz_buffer *contents, fz_device *dev, fz_matrix ctm, void *gstate)
+pdf_run_glyph(pdf_document *xref, fz_obj *resources, fz_buffer *contents, fz_device *dev, fz_matrix ctm, void *gstate)
 {
 	pdf_csi *csi = pdf_new_csi(xref, dev, ctm, "View", NULL, gstate);
 	fz_context *ctx = xref->ctx;

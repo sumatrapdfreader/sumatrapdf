@@ -5,7 +5,7 @@
 #include FT_FREETYPE_H
 #include FT_XFREE86_H
 
-static void pdf_load_font_descriptor(pdf_font_desc *fontdesc, pdf_xref *xref, fz_obj *dict, char *collection, char *basefont, int has_encoding);
+static void pdf_load_font_descriptor(pdf_font_desc *fontdesc, pdf_document *xref, fz_obj *dict, char *collection, char *basefont, int has_encoding);
 
 static char *base_font_names[14][7] =
 {
@@ -330,7 +330,7 @@ use_standard_font:
 }
 
 static void
-pdf_load_embedded_font(pdf_font_desc *fontdesc, pdf_xref *xref, fz_obj *stmref)
+pdf_load_embedded_font(pdf_font_desc *fontdesc, pdf_document *xref, fz_obj *stmref)
 {
 	fz_buffer *buf;
 	fz_context *ctx = xref->ctx;
@@ -461,7 +461,7 @@ pdf_new_font_desc(fz_context *ctx)
  */
 
 static pdf_font_desc *
-pdf_load_simple_font(pdf_xref *xref, fz_obj *dict)
+pdf_load_simple_font(pdf_document *xref, fz_obj *dict)
 {
 	fz_obj *descriptor;
 	fz_obj *encoding;
@@ -812,7 +812,7 @@ pdf_load_simple_font(pdf_xref *xref, fz_obj *dict)
  */
 
 static pdf_font_desc *
-load_cid_font(pdf_xref *xref, fz_obj *dict, fz_obj *encoding, fz_obj *to_unicode)
+load_cid_font(pdf_document *xref, fz_obj *dict, fz_obj *encoding, fz_obj *to_unicode)
 {
 	fz_obj *widths;
 	fz_obj *descriptor;
@@ -1045,7 +1045,7 @@ load_cid_font(pdf_xref *xref, fz_obj *dict, fz_obj *encoding, fz_obj *to_unicode
 }
 
 static pdf_font_desc *
-pdf_load_type0_font(pdf_xref *xref, fz_obj *dict)
+pdf_load_type0_font(pdf_document *xref, fz_obj *dict)
 {
 	fz_obj *dfonts;
 	fz_obj *dfont;
@@ -1078,7 +1078,7 @@ pdf_load_type0_font(pdf_xref *xref, fz_obj *dict)
  */
 
 static void
-pdf_load_font_descriptor(pdf_font_desc *fontdesc, pdf_xref *xref, fz_obj *dict, char *collection, char *basefont, int has_encoding)
+pdf_load_font_descriptor(pdf_font_desc *fontdesc, pdf_document *xref, fz_obj *dict, char *collection, char *basefont, int has_encoding)
 {
 	fz_obj *obj1, *obj2, *obj3, *obj;
 	char *fontname;
@@ -1191,7 +1191,7 @@ pdf_make_width_table(fz_context *ctx, pdf_font_desc *fontdesc)
 }
 
 pdf_font_desc *
-pdf_load_font(pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
+pdf_load_font(pdf_document *xref, fz_obj *rdb, fz_obj *dict)
 {
 	char *subtype;
 	fz_obj *dfonts;

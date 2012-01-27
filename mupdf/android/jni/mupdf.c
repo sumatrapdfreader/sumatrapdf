@@ -22,7 +22,7 @@
 
 /* Globals */
 fz_colorspace *colorspace;
-pdf_xref *xref;
+pdf_document *xref;
 int pagenum = 1;
 int resolution = 160;
 float pageWidth = 100;
@@ -64,7 +64,7 @@ Java_com_artifex_mupdf_MuPDFCore_openFile(JNIEnv * env, jobject thiz, jstring jf
 		LOGE("Opening document...");
 		fz_try(ctx)
 		{
-			xref = pdf_open_xref(ctx, filename);
+			xref = pdf_open_document(ctx, filename);
 		}
 		fz_catch(ctx)
 		{
@@ -76,7 +76,7 @@ Java_com_artifex_mupdf_MuPDFCore_openFile(JNIEnv * env, jobject thiz, jstring jf
 	fz_catch(ctx)
 	{
 		LOGE("Failed: %s", ctx->error->message);
-		pdf_free_xref(xref);
+		pdf_close_document(xref);
 		xref = NULL;
 		fz_free_context(ctx);
 		ctx = NULL;
@@ -247,6 +247,6 @@ Java_com_artifex_mupdf_MuPDFCore_destroying(JNIEnv * env, jobject thiz)
 {
 	fz_free_display_list(ctx, currentPageList);
 	currentPageList = NULL;
-	pdf_free_xref(xref);
+	pdf_close_document(xref);
 	xref = NULL;
 }

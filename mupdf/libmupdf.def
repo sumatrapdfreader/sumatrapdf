@@ -133,7 +133,7 @@ EXPORTS
 	fz_debug_obj
 	fz_debug_ref
 	fz_set_str_len
-	fz_get_indirect_xref
+	fz_get_indirect_document
 	fz_new_buffer
 	fz_keep_buffer
 	fz_drop_buffer
@@ -362,9 +362,9 @@ EXPORTS
 	pdf_open_raw_stream
 	pdf_open_stream
 	pdf_open_stream_at
-	pdf_open_xref_with_stream
-	pdf_open_xref
-	pdf_free_xref
+	pdf_open_document_with_stream
+	pdf_open_document
+	pdf_close_document
 	pdf_repair_xref
 	pdf_repair_obj_stms
 	pdf_debug_xref
@@ -526,9 +526,11 @@ EXPORTS
 	xps_find_alternate_content
 	xps_clip
 	xps_get_point
-	xps_open_file
-	xps_open_stream
-	xps_free_context
+	xps_open_document
+	xps_open_document_with_stream
+	xps_close_document
+	xps_get_real_params
+	xps_get_point
 	xps_extract_anchor_info
 	xps_extract_doc_props
 
