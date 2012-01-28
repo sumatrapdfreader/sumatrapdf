@@ -103,7 +103,6 @@
     <ClCompile Include="ext\chrome\base\synchronization\lock.cc" />
     <ClCompile Include="ext\chrome\base\synchronization\lock_impl_win.cc" />
     <ClCompile Include="ext\chrome\base\synchronization\waitable_event_win.cc" />
-    <ClCompile Include="ext\chrome\base\sys_info_win.cc" />
     <ClCompile Include="ext\chrome\base\sys_string_conversions_win.cc" />
     <ClCompile Include="ext\chrome\base\threading\platform_thread_win.cc" />
     <ClCompile Include="ext\chrome\base\threading\post_task_and_reply_impl.cc" />
@@ -193,7 +192,6 @@
     <ClInclude Include="ext\chrome\base\synchronization\lock.h" />
     <ClInclude Include="ext\chrome\base\synchronization\lock_impl.h" />
     <ClInclude Include="ext\chrome\base\synchronization\waitable_event.h" />
-    <ClInclude Include="ext\chrome\base\sys_info.h" />
     <ClInclude Include="ext\chrome\base\sys_string_conversions.h" />
     <ClInclude Include="ext\chrome\base\template_util.h" />
     <ClInclude Include="ext\chrome\base\threading\platform_thread.h" />

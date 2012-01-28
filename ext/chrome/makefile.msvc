@@ -43,7 +43,7 @@ CHROME_OBJS = \
 	$(OCH)\stack_trace.obj $(OCH)\stack_trace_win.obj \
 	$(OCH)\string_number_conversions.obj $(OCH)\string_piece.obj \
 	$(OCH)\string_split.obj $(OCH)\string_util.obj \
-	$(OCH)\stringprintf.obj $(OCH)\sys_info_win.obj \
+	$(OCH)\stringprintf.obj \
 	$(OCH)\sys_string_conversions_win.obj $(OCH)\thread.obj \
 	$(OCH)\thread_checker_impl.obj $(OCH)\thread_collision_warner.obj \
 	$(OCH)\thread_local_storage_win.obj $(OCH)\thread_local_win.obj \
