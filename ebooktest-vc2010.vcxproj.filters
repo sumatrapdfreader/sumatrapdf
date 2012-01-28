@@ -22,9 +22,6 @@
     <ClCompile Include="ext\chrome\base\callback_internal.cc">
       <Filter>base</Filter>
     </ClCompile>
-    <ClCompile Include="ext\chrome\base\command_line.cc">
-      <Filter>base</Filter>
-    </ClCompile>
     <ClCompile Include="ext\chrome\base\cpu.cc">
       <Filter>base</Filter>
     </ClCompile>
@@ -271,22 +268,13 @@
     <ClInclude Include="ext\chrome\base\callback_internal.h">
       <Filter>base</Filter>
     </ClInclude>
-    <ClInclude Include="ext\chrome\base\command_line.h">
-      <Filter>base</Filter>
-    </ClInclude>
     <ClInclude Include="ext\chrome\base\compiler_specific.h">
       <Filter>base</Filter>
     </ClInclude>
     <ClInclude Include="ext\chrome\base\cpu.h">
       <Filter>base</Filter>
     </ClInclude>
-    <ClInclude Include="ext\chrome\base\eintr_wrapper.h">
-      <Filter>base</Filter>
-    </ClInclude>
     <ClInclude Include="ext\chrome\base\event_types.h">
-      <Filter>base</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\chrome\base\file_descriptor_shuffle.h">
       <Filter>base</Filter>
     </ClInclude>
     <ClInclude Include="ext\chrome\base\file_path.h">

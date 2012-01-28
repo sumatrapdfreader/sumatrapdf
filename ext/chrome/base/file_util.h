@@ -32,12 +32,6 @@
 #include "base/platform_file.h"
 #include "base/string16.h"
 
-#if defined(OS_POSIX)
-#include "base/eintr_wrapper.h"
-#include "base/file_descriptor_posix.h"
-#include "base/logging.h"
-#endif
-
 namespace base {
 class Time;
 }

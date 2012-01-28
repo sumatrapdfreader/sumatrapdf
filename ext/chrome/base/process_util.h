@@ -37,11 +37,8 @@ typedef struct _malloc_zone_t malloc_zone_t;
 #include <vector>
 
 #include "base/base_export.h"
-#include "base/file_descriptor_shuffle.h"
 #include "base/file_path.h"
 #include "base/process.h"
-
-class CommandLine;
 
 namespace base {
 
@@ -359,21 +356,6 @@ BASE_EXPORT void LaunchSynchronize(LaunchSynchronizationHandle handle);
 // be terminated.
 BASE_EXPORT bool SetJobObjectAsKillOnJobClose(HANDLE job_object);
 #endif  // defined(OS_WIN)
-
-#if defined(OS_POSIX)
-// A restricted version of |GetAppOutput()| which (a) clears the environment,
-// and (b) stores at most |max_output| bytes; also, it doesn't search the path
-// for the command.
-BASE_EXPORT bool GetAppOutputRestricted(const CommandLine& cl,
-                                        std::string* output, size_t max_output);
-
-// A version of |GetAppOutput()| which also returns the exit code of the
-// executed command. Returns true if the application runs and exits cleanly. If
-// this is the case the exit code of the application is available in
-// |*exit_code|.
-BASE_EXPORT bool GetAppOutputWithExitCode(const CommandLine& cl,
-                                          std::string* output, int* exit_code);
-#endif  // defined(OS_POSIX)
 
 // Used to filter processes by process ID.
 class ProcessFilter {

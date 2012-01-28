@@ -73,7 +73,6 @@
     <ClCompile Include="ext\chrome\base\base_switches.cc" />
     <ClCompile Include="ext\chrome\base\bind_helpers.cc" />
     <ClCompile Include="ext\chrome\base\callback_internal.cc" />
-    <ClCompile Include="ext\chrome\base\command_line.cc" />
     <ClCompile Include="ext\chrome\base\cpu.cc" />
     <ClCompile Include="ext\chrome\base\debug\alias.cc" />
     <ClCompile Include="ext\chrome\base\debug\debugger.cc" />
@@ -162,7 +161,6 @@
     <ClInclude Include="ext\chrome\base\callback.h" />
     <ClInclude Include="ext\chrome\base\callback_forward.h" />
     <ClInclude Include="ext\chrome\base\callback_internal.h" />
-    <ClInclude Include="ext\chrome\base\command_line.h" />
     <ClInclude Include="ext\chrome\base\compiler_specific.h" />
     <ClInclude Include="ext\chrome\base\cpu.h" />
     <ClInclude Include="ext\chrome\base\debug\alias.h" />
@@ -172,9 +170,7 @@
     <ClInclude Include="ext\chrome\base\debug\trace_event.h" />
     <ClInclude Include="ext\chrome\base\debug\trace_event_impl.h" />
     <ClInclude Include="ext\chrome\base\debug\trace_event_win.h" />
-    <ClInclude Include="ext\chrome\base\eintr_wrapper.h" />
     <ClInclude Include="ext\chrome\base\event_types.h" />
-    <ClInclude Include="ext\chrome\base\file_descriptor_shuffle.h" />
     <ClInclude Include="ext\chrome\base\file_path.h" />
     <ClInclude Include="ext\chrome\base\file_util.h" />
     <ClInclude Include="ext\chrome\base\file_util_deprecated.h" />

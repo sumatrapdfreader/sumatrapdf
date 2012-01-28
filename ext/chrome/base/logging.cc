@@ -46,7 +46,6 @@ typedef pthread_mutex_t* MutexHandle;
 
 #include "base/debug/debugger.h"
 #include "base/debug/stack_trace.h"
-#include "base/eintr_wrapper.h"
 #include "base/string_piece.h"
 #include "base/synchronization/lock_impl.h"
 #include "base/threading/platform_thread.h"
@@ -791,9 +790,8 @@ void RawLog(int level, const char* message) {
     const size_t message_len = strlen(message);
     int rv;
     while (bytes_written < message_len) {
-      rv = HANDLE_EINTR(
-          write(STDERR_FILENO, message + bytes_written,
-                message_len - bytes_written));
+      rv = write(STDERR_FILENO, message + bytes_written,
+                message_len - bytes_written);
       if (rv < 0) {
         // Give up, nothing we can do now.
         break;
@@ -803,7 +801,7 @@ void RawLog(int level, const char* message) {
 
     if (message_len > 0 && message[message_len - 1] != '\n') {
       do {
-        rv = HANDLE_EINTR(write(STDERR_FILENO, "\n", 1));
+        rv = write(STDERR_FILENO, "\n", 1);
         if (rv < 0) {
           // Give up, nothing we can do now.
           break;
