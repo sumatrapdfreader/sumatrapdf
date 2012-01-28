@@ -490,6 +490,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\utils\ThreadUtil.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\utils\ThreadUtil.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\utils\Touch.cpp"
 				>
 			</File>

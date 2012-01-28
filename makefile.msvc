@@ -106,7 +106,7 @@ UNINSTALLER_RES = $(OS)\Uninstaller.res
 
 ET_APP          = $(O)\EbookTest.exe
 ET_RES          = $(OS)\EbookTest.res
-ET_CFLAGS       = $(SUMATRA_CFLAGS) /wd4530 /D "NOMINMAX" $(CHROME_INC)
+ET_CFLAGS       = $(SUMATRA_CFLAGS)
 
 TESTER_APP          = $(O)\tester.exe
 TESTER_CFLAGS       = $(SUMATRA_CFLAGS)
@@ -142,7 +142,7 @@ UTILS_OBJS = \
 	$(OS)\DialogSizer.obj $(OS)\Transactions.obj $(OS)\Touch.obj \
 	$(OS)\TrivialHtmlParser.obj $(OS)\HtmlWindow.obj $(OS)\GdiPlusUtil.obj \
 	$(OS)\DirIter.obj $(OS)\BitReader.obj $(OS)\HtmlPullParser.obj \
-	$(OS)\mui.obj $(OS)\MuiCss.obj
+	$(OS)\mui.obj $(OS)\MuiCss.obj $(OS)\ThreadUtil.obj
 
 ENGINE_OBJS = \
 	$(OS)\PdfEngine.obj $(OS)\ImagesEngine.obj $(OS)\PsEngine.obj \
@@ -270,7 +270,7 @@ $(UNINSTALLER_APP): $(UTILS_OBJS) $(UNINSTALLER_OBJS)
 $(ET_RES): src\ebooktest\EbookTest.rc src\ebooktest\Resource.h src\Version.h
 	rc /r /fo$@ $(EXTCFLAGS) src\ebooktest\EbookTest.rc
 
-$(ET_APP): $(UTILS_OBJS) $(CHROME_OBJS) $(ET_OBJS)
+$(ET_APP): $(UTILS_OBJS) $(ET_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) dbghelp.lib psapi.lib /PDB:$*.pdb /OUT:$@
 
 $(TESTER_APP): $(UTILS_OBJS) $(TESTER_OBJS)
@@ -391,8 +391,8 @@ $(OS)\EbookTest.obj: src\PageLayout.h src\utils\BaseUtil.h src\utils\BitManip.h
 $(OS)\EbookTest.obj: src\utils\CmdLineParser.h src\utils\FileUtil.h src\utils\FrameTimeoutCalculator.h
 $(OS)\EbookTest.obj: src\utils\GeomUtil.h src\utils\HtmlPullParser.h src\utils\mui.h
 $(OS)\EbookTest.obj: src\utils\MuiCss.h src\utils\Scopes.h src\utils\StrUtil.h
-$(OS)\EbookTest.obj: src\utils\Transactions.h src\utils\Vec.h src\utils\WinUtil.h
-$(OS)\EbookTest.obj: src\Version.h
+$(OS)\EbookTest.obj: src\utils\ThreadUtil.h src\utils\Transactions.h src\utils\Vec.h
+$(OS)\EbookTest.obj: src\utils\WinUtil.h src\Version.h
 $(OS)\EbookTestMenu.obj: src\ebooktest\EbookTestMenu.h src\ebooktest\Resource.h src\utils\BaseUtil.h
 $(OS)\EbookTestMenu.obj: src\utils\StrUtil.h
 $(OS)\EngineDump.obj: src\BaseEngine.h src\ChmEngine.h src\DjVuEngine.h
@@ -608,6 +608,8 @@ $(OS)\TextSearch.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\StrUti
 $(OS)\TextSearch.obj: src\utils\Vec.h
 $(OS)\TextSelection.obj: src\BaseEngine.h src\TextSelection.h src\utils\BaseUtil.h
 $(OS)\TextSelection.obj: src\utils\GeomUtil.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\ThreadUtil.obj: src\utils\BaseUtil.h src\utils\Scopes.h src\utils\StrUtil.h
+$(OS)\ThreadUtil.obj: src\utils\ThreadUtil.h src\utils\Vec.h
 $(OS)\Toolbar.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
 $(OS)\Toolbar.obj: src\ChmEngine.h src\DisplayModel.h src\DisplayState.h
 $(OS)\Toolbar.obj: src\DjVuEngine.h src\EngineManager.h src\ImagesEngine.h

@@ -1,16 +1,6 @@
 /* Copyright 2010-2012 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// Hack: we need NOMINMAX to make chrome code compile but we also need
-// min/max for gdi+ headers, so we import min/max from stl
-#include <algorithm>
-using std::min;
-using std::max;
-
-// include anything that might (re)define operator new before BaseUtil.h
-#include "base/threading/thread.h"
-#include "base/bind.h"
-
 #include "Resource.h"
 #include "BaseUtil.h"
 #include "StrUtil.h"
@@ -26,6 +16,7 @@ using std::max;
 #include "PageLayout.h"
 #include "MobiParse.h"
 #include "EbookTestMenu.h"
+#include "ThreadUtil.h"
 
 /*
 TODO: by hooking into mouse move events in HorizontalProgress control, we
@@ -54,7 +45,7 @@ static VirtWndEbook *   gVirtWndFrame = NULL;
 static HCURSOR          gCursorHand = NULL;
 
 // for convenience so that we don't have to pass it around
-static MessageLoop *    gMessageLoopUI = NULL;
+static UiMessageLoop *  gUiMessageLoop = NULL;
 
 static bool gShowTextBoundingBoxes = false;
 
@@ -222,7 +213,7 @@ public:
     int             currPageNo;
 
     int             cursorX, cursorY;
-    base::Thread *  mobiLoadThread;
+    WorkerThread    mobiLoadThread;
 
     VirtWndButton * next;
     VirtWndButton * prev;
@@ -263,7 +254,6 @@ public:
     void MobiLoaded(MobiParse *mb);
     void VirtWndEbook::MobiFailedToLoad(const TCHAR *fileName);
     void LoadMobiBackground(const TCHAR *fileName);
-    void StopMobiLoadThread();
 };
 
 class EbookLayout : public Layout
@@ -441,20 +431,11 @@ void VirtWndEbook::SetHtml(const char *newHtml)
     html = newHtml;
 }
 
-void VirtWndEbook::StopMobiLoadThread()
-{
-    if (!mobiLoadThread)
-        return;
-    mobiLoadThread->Stop();
-    delete mobiLoadThread;
-    mobiLoadThread = NULL;
-}
-
 // called on UI thread from background thread after
 // mobi file has been loaded
 void VirtWndEbook::MobiLoaded(MobiParse *newMobi)
 {
-    CrashIf(gMessageLoopUI != MessageLoop::current());
+    CrashIf(!gUiMessageLoop->IsUiThread());
     delete mb;
     mb = newMobi;
     html = NULL;
@@ -463,11 +444,17 @@ void VirtWndEbook::MobiLoaded(MobiParse *newMobi)
     RequestRepaint(this);
 }
 
+// TODO: make Bind accept __thiscall methods instead of __cdecl functions
+void MobiLoaded(VirtWndEbook *self, MobiParse *newMobi)
+{
+    self->MobiLoaded(newMobi);
+}
+
 // called on UI thread from backgroudn thread if we tried
 // to load mobi file but failed
 void VirtWndEbook::MobiFailedToLoad(const TCHAR *fileName)
 {
-    CrashIf(gMessageLoopUI != MessageLoop::current());
+    CrashIf(!gUiMessageLoop->IsUiThread());
     // TODO: this message should show up in a different place, 
     // reusing status for convenience
     ScopedMem<TCHAR> s(str::Format(_T("Failed to load %s!"), fileName));
@@ -475,36 +462,34 @@ void VirtWndEbook::MobiFailedToLoad(const TCHAR *fileName)
     free((void*)fileName);
 }
 
+void MobiFailedToLoad(VirtWndEbook *self, const TCHAR *fileName)
+{
+    self->MobiFailedToLoad(fileName);
+}
+
 // Method executed on background thread that tries to load
 // a given mobi file and either calls MobiLoaded() or 
 // MobiFailedToLoad() on ui thread
 void VirtWndEbook::LoadMobiBackground(const TCHAR *fileName)
 {
-    CrashIf(gMessageLoopUI == MessageLoop::current());
+    CrashIf(gUiMessageLoop->IsUiThread());
     MobiParse *mb = MobiParse::ParseFile(fileName);
     if (!mb)
-        gMessageLoopUI->PostTask(FROM_HERE, 
-            base::Bind(&VirtWndEbook::MobiFailedToLoad, 
-                       base::Unretained(this), fileName));
+        gUiMessageLoop->AddTask(Bind(&::MobiFailedToLoad, this, str::Dup(fileName)));
     else
-        gMessageLoopUI->PostTask(FROM_HERE,
-            base::Bind(&VirtWndEbook::MobiLoaded, 
-                       base::Unretained(this), mb));
+        gUiMessageLoop->AddTask(Bind(&::MobiLoaded, this, mb));
     free((void*)fileName);
+}
+
+void LoadMobiBackground(VirtWndEbook *self, const TCHAR *fileName)
+{
+    self->LoadMobiBackground(fileName);
 }
 
 void VirtWndEbook::LoadMobi(const TCHAR *fileName)
 {
-    // TODO: not sure if that's enough to handle user chosing
-    // to load another mobi file while loading of the previous
-    // hasn't finished yet
-    StopMobiLoadThread();
-    mobiLoadThread = new base::Thread("VirtWndEbook::LoadMobi");
-    mobiLoadThread->Start();
     // TODO: use some refcounted version of fileName
-    mobiLoadThread->message_loop()->PostTask(FROM_HERE, 
-        base::Bind(&VirtWndEbook::LoadMobiBackground, 
-                    base::Unretained(this), str::Dup(fileName)));
+    mobiLoadThread.AddTask(Bind(&::LoadMobiBackground, this, str::Dup(fileName)));
     // TODO: this message should show up in a different place, 
     // reusing status for convenience
     ScopedMem<TCHAR> s(str::Format(_T("Please wait, loading %s"), fileName));
@@ -528,7 +513,6 @@ void VirtWndEbook::NotifyMouseMove(int x, int y)
 
 VirtWndEbook::VirtWndEbook(HWND hwnd)
 {
-    mobiLoadThread = NULL;
     mb = NULL;
     html = NULL;
     pageLayout = NULL;
@@ -611,8 +595,6 @@ VirtWndEbook::VirtWndEbook(HWND hwnd)
 
 VirtWndEbook::~VirtWndEbook()
 {
-    StopMobiLoadThread();
-
     // special case for classes that derive from VirtWndHwnd
     // that don't trigger this from the destructor
     UnRegisterEventHandlers(evtMgr);
@@ -965,11 +947,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     gCursorHand  = LoadCursor(NULL, IDC_HAND);
 
     // start per-thread MessageLoop, this one is for our UI thread
-    // You can use it via static MessageLoop::current()
-    MessageLoop uiMsgLoop(MessageLoop::TYPE_UI);
-
-    gMessageLoopUI = MessageLoop::current();
-    CrashIf(gMessageLoopUI != &uiMsgLoop);
+    UiMessageLoop msgLoop;
+    gUiMessageLoop = &msgLoop;
 
     //ParseCommandLine(GetCommandLine());
     if (!RegisterWinClass(hInstance))
@@ -978,9 +957,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     if (!InstanceInit(hInstance, nCmdShow))
         goto Exit;
 
-     MessageLoopForUI::current()->RunWithDispatcher(NULL);
-
-     //ret = RunApp();
+    ret = msgLoop.Run();
+    // ret = RunApp();
 
     delete gVirtWndFrame;
 
