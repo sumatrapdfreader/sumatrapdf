@@ -8,7 +8,6 @@
 
 #include "base/bind.h"
 #include "base/debug/trace_event.h"
-#include "base/file_util.h"
 #include "base/format_macros.h"
 #include "base/lazy_instance.h"
 #include "base/memory/singleton.h"
@@ -633,42 +632,6 @@ void TraceLog::AddTraceEventEtw(char phase,
 }
 
 void TraceLog::AddClockSyncMetadataEvents() {
-#if defined(OS_ANDROID)
-  // Since Android does not support sched_setaffinity, we cannot establish clock
-  // sync unless the scheduler clock is set to global. If the trace_clock file
-  // can't be read, we will assume the kernel doesn't support tracing and do
-  // nothing.
-  std::string clock_mode;
-  if (!file_util::ReadFileToString(
-          FilePath("/sys/kernel/debug/tracing/trace_clock"),
-          &clock_mode))
-    return;
-
-  if (clock_mode != "local [global]\n") {
-    DLOG(WARNING) <<
-        "The kernel's tracing clock must be set to global in order for " <<
-        "trace_event to be synchronized with . Do this by\n" <<
-        "  echo global > /sys/kerel/debug/tracing/trace_clock";
-    return;
-  }
-
-  // Android's kernel trace system has a trace_marker feature: this is a file on
-  // debugfs that takes the written data and pushes it onto the trace
-  // buffer. So, to establish clock sync, we write our monotonic clock into that
-  // trace buffer.
-  TimeTicks now = TimeTicks::HighResNow();
-
-  double now_in_seconds = now.ToInternalValue() / 1000000.0;
-  std::string marker =
-      StringPrintf("trace_event_clock_sync: parent_ts=%f\n",
-                   now_in_seconds);
-  if (file_util::WriteFile(
-          FilePath("/sys/kernel/debug/tracing/trace_marker"),
-          marker.c_str(), marker.size()) == -1) {
-    DLOG(WARNING) << "Couldn't write to /sys/kernel/debug/tracing/trace_marker";
-    return;
-  }
-#endif
 }
 
 void TraceLog::AddThreadNameMetadataEvents() {

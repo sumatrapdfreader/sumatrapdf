@@ -83,8 +83,6 @@
     <ClCompile Include="ext\chrome\base\debug\trace_event_impl.cc" />
     <ClCompile Include="ext\chrome\base\debug\trace_event_win.cc" />
     <ClCompile Include="ext\chrome\base\file_path.cc" />
-    <ClCompile Include="ext\chrome\base\file_util.cc" />
-    <ClCompile Include="ext\chrome\base\file_util_win.cc" />
     <ClCompile Include="ext\chrome\base\lazy_instance.cc" />
     <ClCompile Include="ext\chrome\base\location.cc" />
     <ClCompile Include="ext\chrome\base\logging.cc" />
@@ -172,8 +170,6 @@
     <ClInclude Include="ext\chrome\base\debug\trace_event_win.h" />
     <ClInclude Include="ext\chrome\base\event_types.h" />
     <ClInclude Include="ext\chrome\base\file_path.h" />
-    <ClInclude Include="ext\chrome\base\file_util.h" />
-    <ClInclude Include="ext\chrome\base\file_util_deprecated.h" />
     <ClInclude Include="ext\chrome\base\float_util.h" />
     <ClInclude Include="ext\chrome\base\format_macros.h" />
     <ClInclude Include="ext\chrome\base\gtest_prod_util.h" />

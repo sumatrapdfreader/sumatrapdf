@@ -25,8 +25,7 @@ CHROME_OBJS = \
 	$(OCH)\cpu.obj $(OCH)\debugger.obj \
 	$(OCH)\debugger_win.obj $(OCH)\dtoa_wrapper.obj \
 	$(OCH)\event_trace_provider.obj \
-	$(OCH)\file_path.obj $(OCH)\file_util.obj \
-	$(OCH)\file_util_win.obj $(OCH)\g_fmt.obj \
+	$(OCH)\file_path.obj $(OCH)\g_fmt.obj \
 	$(OCH)\histogram.obj $(OCH)\icu_utf.obj \
 	$(OCH)\lazy_instance.obj $(OCH)\location.obj \
 	$(OCH)\lock.obj $(OCH)\lock_impl_win.obj \

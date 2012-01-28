@@ -28,12 +28,6 @@
     <ClCompile Include="ext\chrome\base\file_path.cc">
       <Filter>base</Filter>
     </ClCompile>
-    <ClCompile Include="ext\chrome\base\file_util.cc">
-      <Filter>base</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\chrome\base\file_util_win.cc">
-      <Filter>base</Filter>
-    </ClCompile>
     <ClCompile Include="ext\chrome\base\lazy_instance.cc">
       <Filter>base</Filter>
     </ClCompile>
@@ -278,12 +272,6 @@
       <Filter>base</Filter>
     </ClInclude>
     <ClInclude Include="ext\chrome\base\file_path.h">
-      <Filter>base</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\chrome\base\file_util.h">
-      <Filter>base</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\chrome\base\file_util_deprecated.h">
       <Filter>base</Filter>
     </ClInclude>
     <ClInclude Include="ext\chrome\base\float_util.h">
