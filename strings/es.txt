@@ -38,7 +38,7 @@ Atrás\tAlt+<-
 &Copiar selección
 
 &Copy Selection\tCtrl+C
-Copiar Selección\tCtrl+C
+&Copiar Selección\tCtrl+C
 
 &Don't ask me again
 &No volver a preguntar
@@ -98,7 +98,7 @@ Página siguiente\t->
 &Abrir\tCtrl+O
 
 &Open Document
-Abrir Documento
+&Abrir Documento
 
 &Options...
 &Opciones...
@@ -188,7 +188,7 @@ All files
 Todos los archivos
 
 All supported documents
-Todos los documentos leíbles
+Todos los documentos legibles
 
 Application:
 Aplicación:
@@ -206,7 +206,7 @@ Automatic
 Automático
 
 Automatically check for &updates
-Revisar &actualizaciones automáticamente
+Revisar &actualizaciones de forma automática
 
 Book View
 Vista de libro
@@ -266,7 +266,7 @@ Copy &Image
 Copiar &Imagen
 
 Copy &Link Address
-Copiar dirección de enlace
+Copiar dirección del enlace
 
 Copy Co&mment
 Copiar co&mentario
@@ -275,7 +275,7 @@ Copying text was denied (copying as image only)
 Copiado de texto no permitido (copiando como imagen)
 
 Could not obtain Printer properties
-Imposible obtener propierades de la impresiora
+Imposible obtener propiedades de la impresora
 
 Could not open Printer
 Impresora no disponible
@@ -338,7 +338,7 @@ F&orward\tAlt+Right Arrow
 Adelante\tAlt+->
 
 F&ullscreen\tCtrl+Shift+L
-Pantalla completa\tCtrl+Mayus-L
+Pantalla completa\tCtrl+Mayús+L
 
 Facing
 Página doble
@@ -383,7 +383,7 @@ Fit &Width\tCtrl+2
 &Ancho de Página\tCtrl+2
 
 Fit Content
-Ajustar contenido
+Ajustar al contenido
 
 Fit Page
 Ajustar Página
@@ -401,7 +401,7 @@ Found text at page %s
 Se encontró el texto en la página %s
 
 Found text at page %s (again)
-Buscar texto en la pagina %s (de nuevo)
+Se encontró el texto en la pagina %s (de nuevo)
 
 Frequently Read
 Lo más leído
@@ -491,7 +491,7 @@ PDF Document
 Documento PDF
 
 PDF Producer:
-Productor PDF:
+Generador de PDF:
 
 PDF Version:
 Versión PDF:
@@ -536,7 +536,7 @@ Print range
 Rango de impresión
 
 Printer with given name doesn't exist
-La impresorna con el nombre especificado no existe
+La impresora con el nombre especificado no existe
 
 Printing is still in progress. Abort and start over?
 Se esta imprimiendo. ¿Abortar y empezar de nuevo?
@@ -557,19 +557,19 @@ Remove page %s from favorites
 Eliminar página %s de favoritos
 
 Rotate &Left\tCtrl+Shift+-
-Girar a la izquierda\tCtrl+Mayus--
+Girar a la izquierda\tCtrl+Mayús+-
 
 Rotate &Right\tCtrl+Shift++
-Girar a la derecha\tCtrl+Mayus-+
+Girar a la derecha\tCtrl+Mayús++
 
 Save As
 Guardar como
 
 Save S&hortcut...\tCtrl+Shift+S
-Guardar A&cceso directo...\tCtrl+Mayus-S
+Guardar A&cceso directo...\tCtrl+Mayús+S
 
 Searching %d of %d...
-Buscando %d de %d…
+Buscando %d de %d...
 
 Select &All
 Seleccionar &todo
@@ -578,13 +578,13 @@ Select &All\tCtrl+A
 Seleccionar &todo\tCtrl+A
 
 Select content with Ctrl+left mouse button
-Seleccionar con Ctrl+B. Izq. ratón
+Seleccionar con Ctrl+Botón. Izq. del ratón
 
 Send by &E-mail...
 Enviar por correo electrónico
 
 Set inverse search command-line
-Establecer búsqueda inversa
+Establecer línea de comando para búsqueda inversa
 
 Show &Toolbar
 Mostrar barra de herramientas
@@ -605,7 +605,7 @@ Single Page
 Página única
 
 Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
-Lo sentimos, ¡eso no debería haber pasado!\n\nPresione 'Cancelar', si quiere ayudarnos a arreglar la causa del fallo.
+Lo sentimos, ¡eso no debería haber sucedido!\n\nPresione 'Cancelar', si quiere ayudarnos a arreglar la causa del fallo.
 
 Source file %s has no synchronization point
 El archivo fuente %s no posee un punto de sincronización
