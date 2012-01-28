@@ -360,8 +360,6 @@ static void EnableMatchingCategory(int category_index,
     if (is_match)
       break;
   }
-  ANNOTATE_BENIGN_RACE(&g_category_enabled[category_index],
-                       "trace_event category enabled");
   g_category_enabled[category_index] = is_match ?
       is_included : (is_included ^ 1);
 }
@@ -400,8 +398,6 @@ const unsigned char* TraceLog::GetCategoryEnabledInternal(const char* name) {
       else
         EnableMatchingCategory(new_index, excluded_categories_, 0);
     } else {
-      ANNOTATE_BENIGN_RACE(&g_category_enabled[new_index],
-                           "trace_event category enabled");
       g_category_enabled[new_index] = 0;
     }
     return &g_category_enabled[new_index];

@@ -6,7 +6,6 @@
 
 #include "base/bind.h"
 #include "base/lazy_instance.h"
-#include "base/third_party/dynamic_annotations/dynamic_annotations.h"
 #include "base/threading/thread_local.h"
 #include "base/synchronization/waitable_event.h"
 
@@ -111,10 +110,6 @@ void Thread::Stop() {
 void Thread::StopSoon() {
   // We should only be called on the same thread that started us.
 
-  // Reading thread_id_ without a lock can lead to a benign data race
-  // with ThreadMain, so we annotate it to stay silent under ThreadSanitizer.
-  DCHECK_NE(ANNOTATE_UNPROTECTED_READ(thread_id_), PlatformThread::CurrentId());
-
   if (stopping_ || !message_loop_)
     return;
 
@@ -146,7 +141,6 @@ void Thread::ThreadMain() {
     // Complete the initialization of our Thread object.
     thread_id_ = PlatformThread::CurrentId();
     PlatformThread::SetName(name_.c_str());
-    ANNOTATE_THREAD_NAME(name_.c_str());  // Tell the name to race detector.
     message_loop.set_thread_name(name_);
     message_loop_ = &message_loop;
 

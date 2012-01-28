@@ -24,7 +24,7 @@ CHROME_OBJS = \
 	$(OCH)\callback_internal.obj $(OCH)\command_line.obj \
 	$(OCH)\cpu.obj $(OCH)\debugger.obj \
 	$(OCH)\debugger_win.obj $(OCH)\dtoa_wrapper.obj \
-	$(OCH)\dynamic_annotations.obj $(OCH)\event_trace_provider.obj \
+	$(OCH)\event_trace_provider.obj \
 	$(OCH)\file_path.obj $(OCH)\file_util.obj \
 	$(OCH)\file_util_win.obj $(OCH)\g_fmt.obj \
 	$(OCH)\histogram.obj $(OCH)\icu_utf.obj \
@@ -87,9 +87,6 @@ $(OCH): force
 {$(EXTDIR)\chrome\base}.cc{$(OCH)}.obj::
 	$(CC) $(CHROME_CFLAGS) /Fo$(OCH)\ /Fd$(O)\vc80.pdb $<
 
-{$(EXTDIR)\chrome\base\third_party\dynamic_annotations}.cc{$(OCH)}.obj::
-	$(CC) $(CHROME_CFLAGS) /Fo$(OCH)\ /Fd$(O)\vc80.pdb $<
-
 {$(EXTDIR)\chrome\base\memory}.cc{$(OCH)}.obj::
 	$(CC) $(CHROME_CFLAGS) /Fo$(OCH)\ /Fd$(O)\vc80.pdb $<
 
@@ -97,8 +94,5 @@ $(OCH): force
 	$(CC) $(CHROME_CFLAGS) /Fo$(OCH)\ /Fd$(O)\vc80.pdb $<
 
 {$(EXTDIR)\chrome\base\third_party\dmg_fp}.cc{$(OCH)}.obj::
-	$(CC) $(CHROME_CFLAGS) /Fo$(OCH)\ /Fd$(O)\vc80.pdb $<
-
-{$(EXTDIR)\chrome\base\third_party\dynamic_annotations}.c{$(OCH)}.obj::
 	$(CC) $(CHROME_CFLAGS) /Fo$(OCH)\ /Fd$(O)\vc80.pdb $<
 	

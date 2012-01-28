@@ -42,7 +42,6 @@
 #include "base/base_export.h"
 #include "base/basictypes.h"
 #include "base/logging.h"
-#include "base/third_party/dynamic_annotations/dynamic_annotations.h"
 #include "base/threading/thread_restrictions.h"
 
 // LazyInstance uses its own struct initializer-list style static

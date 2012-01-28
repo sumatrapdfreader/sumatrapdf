@@ -495,8 +495,6 @@
 // - ANNOTATE_BENIGN_RACE, see Thread Safety above.
 #define INTERNAL_TRACE_EVENT_GET_CATEGORY_INFO(category) \
     static const unsigned char* INTERNAL_TRACE_EVENT_UID(catstatic) = NULL; \
-    ANNOTATE_BENIGN_RACE(&INTERNAL_TRACE_EVENT_UID(catstatic), \
-                         "trace_event category"); \
     if (!INTERNAL_TRACE_EVENT_UID(catstatic)) \
       INTERNAL_TRACE_EVENT_UID(catstatic) = \
           TRACE_EVENT_API_GET_CATEGORY_ENABLED(category);
