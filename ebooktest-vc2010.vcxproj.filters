@@ -46,22 +46,13 @@
     <ClCompile Include="ext\chrome\base\pending_task.cc">
       <Filter>base</Filter>
     </ClCompile>
-    <ClCompile Include="ext\chrome\base\string_number_conversions.cc">
-      <Filter>base</Filter>
-    </ClCompile>
     <ClCompile Include="ext\chrome\base\string_piece.cc">
-      <Filter>base</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\chrome\base\string_split.cc">
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="ext\chrome\base\string_util.cc">
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="ext\chrome\base\stringprintf.cc">
-      <Filter>base</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\chrome\base\sys_string_conversions_win.cc">
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="ext\chrome\base\time.cc">
@@ -86,9 +77,6 @@
       <Filter>base\win</Filter>
     </ClCompile>
     <ClCompile Include="ext\chrome\base\win\registry.cc">
-      <Filter>base\win</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\chrome\base\win\win_util.cc">
       <Filter>base\win</Filter>
     </ClCompile>
     <ClCompile Include="ext\chrome\base\win\windows_version.cc">
@@ -253,16 +241,7 @@
     <ClInclude Include="ext\chrome\base\stl_util.h">
       <Filter>base</Filter>
     </ClInclude>
-    <ClInclude Include="ext\chrome\base\string_number_conversions.h">
-      <Filter>base</Filter>
-    </ClInclude>
     <ClInclude Include="ext\chrome\base\string_piece.h">
-      <Filter>base</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\chrome\base\string_split.h">
-      <Filter>base</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\chrome\base\string_tokenizer.h">
       <Filter>base</Filter>
     </ClInclude>
     <ClInclude Include="ext\chrome\base\string_util.h">
@@ -275,9 +254,6 @@
       <Filter>base</Filter>
     </ClInclude>
     <ClInclude Include="ext\chrome\base\stringprintf.h">
-      <Filter>base</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\chrome\base\sys_string_conversions.h">
       <Filter>base</Filter>
     </ClInclude>
     <ClInclude Include="ext\chrome\base\template_util.h">
@@ -311,9 +287,6 @@
       <Filter>base\win</Filter>
     </ClInclude>
     <ClInclude Include="ext\chrome\base\win\scoped_handle.h">
-      <Filter>base\win</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\chrome\base\win\win_util.h">
       <Filter>base\win</Filter>
     </ClInclude>
     <ClInclude Include="ext\chrome\base\win\windows_version.h">

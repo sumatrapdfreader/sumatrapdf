@@ -36,17 +36,15 @@ CHROME_OBJS = \
 	$(OCH)\prtime.obj \
 	$(OCH)\ref_counted.obj $(OCH)\ref_counted_memory.obj \
 	$(OCH)\registry.obj $(OCH)\singleton.obj \
-	$(OCH)\string_number_conversions.obj $(OCH)\string_piece.obj \
-	$(OCH)\string_split.obj $(OCH)\string_util.obj \
-	$(OCH)\stringprintf.obj \
-	$(OCH)\sys_string_conversions_win.obj $(OCH)\thread.obj \
+	$(OCH)\string_piece.obj $(OCH)\string_util.obj \
+	$(OCH)\stringprintf.obj $(OCH)\thread.obj \
 	$(OCH)\thread_collision_warner.obj \
 	$(OCH)\thread_local_storage_win.obj $(OCH)\thread_local_win.obj \
 	$(OCH)\thread_restrictions.obj $(OCH)\time.obj \
 	$(OCH)\time_win.obj $(OCH)\timer.obj \
 	$(OCH)\utf_string_conversion_utils.obj $(OCH)\utf_string_conversions.obj \
 	$(OCH)\waitable_event_win.obj $(OCH)\weak_ptr.obj \
-	$(OCH)\win_util.obj $(OCH)\windows_version.obj \
+	$(OCH)\windows_version.obj \
 	$(OCH)\wrapped_window_proc.obj
 
 $(OCH): force

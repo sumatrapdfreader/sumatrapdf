@@ -87,14 +87,11 @@
     <ClCompile Include="ext\chrome\base\message_pump_win.cc" />
     <ClCompile Include="ext\chrome\base\pending_task.cc" />
     <ClCompile Include="ext\chrome\base\stringprintf.cc" />
-    <ClCompile Include="ext\chrome\base\string_number_conversions.cc" />
     <ClCompile Include="ext\chrome\base\string_piece.cc" />
-    <ClCompile Include="ext\chrome\base\string_split.cc" />
     <ClCompile Include="ext\chrome\base\string_util.cc" />
     <ClCompile Include="ext\chrome\base\synchronization\lock.cc" />
     <ClCompile Include="ext\chrome\base\synchronization\lock_impl_win.cc" />
     <ClCompile Include="ext\chrome\base\synchronization\waitable_event_win.cc" />
-    <ClCompile Include="ext\chrome\base\sys_string_conversions_win.cc" />
     <ClCompile Include="ext\chrome\base\threading\platform_thread_win.cc" />
     <ClCompile Include="ext\chrome\base\threading\post_task_and_reply_impl.cc" />
     <ClCompile Include="ext\chrome\base\threading\thread_collision_warner.cc" />
@@ -110,7 +107,6 @@
     <ClCompile Include="ext\chrome\base\win\pe_image.cc" />
     <ClCompile Include="ext\chrome\base\win\registry.cc" />
     <ClCompile Include="ext\chrome\base\win\windows_version.cc" />
-    <ClCompile Include="ext\chrome\base\win\win_util.cc" />
     <ClCompile Include="ext\chrome\base\win\wrapped_window_proc.cc" />
     <ClCompile Include="src\ebooktest\EbookTest.cpp" />
     <ClCompile Include="src\ebooktest\EbookTestMenu.cpp" />
@@ -166,16 +162,12 @@
     <ClInclude Include="ext\chrome\base\stl_util.h" />
     <ClInclude Include="ext\chrome\base\string16.h" />
     <ClInclude Include="ext\chrome\base\stringprintf.h" />
-    <ClInclude Include="ext\chrome\base\string_number_conversions.h" />
     <ClInclude Include="ext\chrome\base\string_piece.h" />
-    <ClInclude Include="ext\chrome\base\string_split.h" />
-    <ClInclude Include="ext\chrome\base\string_tokenizer.h" />
     <ClInclude Include="ext\chrome\base\string_util.h" />
     <ClInclude Include="ext\chrome\base\string_util_win.h" />
     <ClInclude Include="ext\chrome\base\synchronization\lock.h" />
     <ClInclude Include="ext\chrome\base\synchronization\lock_impl.h" />
     <ClInclude Include="ext\chrome\base\synchronization\waitable_event.h" />
-    <ClInclude Include="ext\chrome\base\sys_string_conversions.h" />
     <ClInclude Include="ext\chrome\base\template_util.h" />
     <ClInclude Include="ext\chrome\base\threading\platform_thread.h" />
     <ClInclude Include="ext\chrome\base\threading\post_task_and_reply_impl.h" />
@@ -194,7 +186,6 @@
     <ClInclude Include="ext\chrome\base\win\scoped_comptr.h" />
     <ClInclude Include="ext\chrome\base\win\scoped_handle.h" />
     <ClInclude Include="ext\chrome\base\win\windows_version.h" />
-    <ClInclude Include="ext\chrome\base\win\win_util.h" />
     <ClInclude Include="ext\chrome\base\win\wrapped_window_proc.h" />
     <ClInclude Include="src\ebooktest\EbookTestMenu.h" />
     <ClInclude Include="src\ebooktest\Resource.h" />
