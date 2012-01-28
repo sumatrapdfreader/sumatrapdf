@@ -52,8 +52,6 @@
 #include "base/logging.h"
 #include "base/time.h"
 
-class Pickle;
-
 namespace base {
 
 class Lock;
@@ -402,9 +400,6 @@ class BASE_EXPORT Histogram {
     void Add(const SampleSet& other);
     void Subtract(const SampleSet& other);
 
-    bool Serialize(Pickle* pickle) const;
-    bool Deserialize(void** iter, const Pickle& pickle);
-
    protected:
     // Actual histogram data is stored in buckets, showing the count of values
     // that fit into each bucket.
@@ -476,22 +471,6 @@ class BASE_EXPORT Histogram {
   void ClearFlags(Flags flags) { flags_ = static_cast<Flags>(flags_ & ~flags); }
   int flags() const { return flags_; }
 
-  // Convenience methods for serializing/deserializing the histograms.
-  // Histograms from Renderer process are serialized and sent to the browser.
-  // Browser process reconstructs the histogram from the pickled version
-  // accumulates the browser-side shadow copy of histograms (that mirror
-  // histograms created in the renderer).
-
-  // Serialize the given snapshot of a Histogram into a String. Uses
-  // Pickle class to flatten the object.
-  static std::string SerializeHistogramInfo(const Histogram& histogram,
-                                            const SampleSet& snapshot);
-
-  // The following method accepts a list of pickled histograms and
-  // builds a histogram and updates shadow copy of histogram data in the
-  // browser process.
-  static bool DeserializeHistogramInfo(const std::string& histogram_info);
-
   // Check to see if bucket ranges, counts and tallies in the snapshot are
   // consistent with the bucket ranges and checksums in our histogram.  This can
   // produce a false-alarm if a race occurred in the reading of the data during
@@ -534,12 +513,6 @@ class BASE_EXPORT Histogram {
             TimeDelta maximum, size_t bucket_count);
 
   virtual ~Histogram();
-
-  // Serialize the histogram's ranges to |*pickle|, returning true on success.
-  // Most subclasses can leave this no-op implementation, but some will want to
-  // override it, especially if the ranges cannot be re-derived from other
-  // serialized parameters.
-  virtual bool SerializeRanges(Pickle* pickle) const;
 
   // Initialize ranges_ mapping in cached_ranges_.
   void InitializeBucketRange();
@@ -745,17 +718,9 @@ class BASE_EXPORT CustomHistogram : public Histogram {
   static std::vector<Sample> ArrayToCustomRanges(const Sample* values,
                                                  size_t num_values);
 
-  // Helper for deserializing CustomHistograms.  |*ranges| should already be
-  // correctly sized before this call.  Return true on success.
-  static bool DeserializeRanges(void** iter, const Pickle& pickle,
-                                std::vector<Histogram::Sample>* ranges);
-
-
  protected:
   CustomHistogram(const std::string& name,
                   const std::vector<Sample>& custom_ranges);
-
-  virtual bool SerializeRanges(Pickle* pickle) const OVERRIDE;
 
   // Initialize ranges_ mapping in cached_ranges_.
   void InitializedCustomBucketRange(const std::vector<Sample>& custom_ranges);

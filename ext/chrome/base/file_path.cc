@@ -9,7 +9,6 @@
 
 #include "base/basictypes.h"
 #include "base/logging.h"
-#include "base/pickle.h"
 
 // These includes are just for the *Hack functions, and should be removed
 // when those functions are removed.
@@ -577,26 +576,6 @@ FilePath FilePath::FromUTF8Unsafe(const std::string& utf8) {
   return FilePath(UTF8ToWide(utf8));
 }
 #endif
-
-void FilePath::WriteToPickle(Pickle* pickle) {
-#if defined(OS_WIN)
-  pickle->WriteString16(path_);
-#else
-  pickle->WriteString(path_);
-#endif
-}
-
-bool FilePath::ReadFromPickle(Pickle* pickle, void** iter) {
-#if defined(OS_WIN)
-  if (!pickle->ReadString16(iter, &path_))
-    return false;
-#else
-  if (!pickle->ReadString(iter, &path_))
-    return false;
-#endif
-
-  return true;
-}
 
 #if defined(OS_WIN)
 // Windows specific implementation of file string comparisons

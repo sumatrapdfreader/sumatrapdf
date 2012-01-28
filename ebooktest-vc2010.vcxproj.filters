@@ -55,9 +55,6 @@
     <ClCompile Include="ext\chrome\base\pending_task.cc">
       <Filter>base</Filter>
     </ClCompile>
-    <ClCompile Include="ext\chrome\base\pickle.cc">
-      <Filter>base</Filter>
-    </ClCompile>
     <ClCompile Include="ext\chrome\base\platform_file.cc">
       <Filter>base</Filter>
     </ClCompile>
@@ -181,6 +178,9 @@
     <ClCompile Include="ext\chrome\base\synchronization\waitable_event_win.cc">
       <Filter>base\synchronization</Filter>
     </ClCompile>
+    <ClCompile Include="ext\chrome\base\metrics\histogram.cc">
+      <Filter>base\metrics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ebooktest\EbookTestMenu.h" />
@@ -296,9 +296,6 @@
       <Filter>base</Filter>
     </ClInclude>
     <ClInclude Include="ext\chrome\base\pending_task.h">
-      <Filter>base</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\chrome\base\pickle.h">
       <Filter>base</Filter>
     </ClInclude>
     <ClInclude Include="ext\chrome\base\platform_file.h">
@@ -442,6 +439,9 @@
     <ClInclude Include="ext\chrome\base\synchronization\waitable_event.h">
       <Filter>base\synchronization</Filter>
     </ClInclude>
+    <ClInclude Include="ext\chrome\base\metrics\histogram.h">
+      <Filter>base\metrics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="src\ebooktest\EbookTest.rc" />
@@ -468,6 +468,9 @@
     </Filter>
     <Filter Include="base\synchronization">
       <UniqueIdentifier>{62c29652-a41f-426d-a7a1-0576a5491387}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="base\metrics">
+      <UniqueIdentifier>{5ec3091e-278c-4db1-bca4-c90157bc83b3}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

@@ -33,7 +33,7 @@ CHROME_OBJS = \
 	$(OCH)\message_loop_proxy_impl.obj $(OCH)\message_pump.obj \
 	$(OCH)\message_pump_default.obj $(OCH)\message_pump_win.obj \
 	$(OCH)\object_watcher.obj $(OCH)\pe_image.obj \
-	$(OCH)\pending_task.obj $(OCH)\pickle.obj \
+	$(OCH)\pending_task.obj \
 	$(OCH)\platform_file.obj $(OCH)\platform_file_win.obj \
 	$(OCH)\platform_thread_win.obj $(OCH)\post_task_and_reply_impl.obj \
 	$(OCH)\process_util.obj $(OCH)\process_util_win.obj \

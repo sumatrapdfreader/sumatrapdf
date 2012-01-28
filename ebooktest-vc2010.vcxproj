@@ -88,8 +88,8 @@
     <ClCompile Include="ext\chrome\base\message_pump.cc" />
     <ClCompile Include="ext\chrome\base\message_pump_default.cc" />
     <ClCompile Include="ext\chrome\base\message_pump_win.cc" />
+    <ClCompile Include="ext\chrome\base\metrics\histogram.cc" />
     <ClCompile Include="ext\chrome\base\pending_task.cc" />
-    <ClCompile Include="ext\chrome\base\pickle.cc" />
     <ClCompile Include="ext\chrome\base\platform_file.cc" />
     <ClCompile Include="ext\chrome\base\platform_file_win.cc" />
     <ClCompile Include="ext\chrome\base\process_util.cc" />
@@ -172,10 +172,10 @@
     <ClInclude Include="ext\chrome\base\message_pump_default.h" />
     <ClInclude Include="ext\chrome\base\message_pump_observer.h" />
     <ClInclude Include="ext\chrome\base\message_pump_win.h" />
+    <ClInclude Include="ext\chrome\base\metrics\histogram.h" />
     <ClInclude Include="ext\chrome\base\move.h" />
     <ClInclude Include="ext\chrome\base\observer_list.h" />
     <ClInclude Include="ext\chrome\base\pending_task.h" />
-    <ClInclude Include="ext\chrome\base\pickle.h" />
     <ClInclude Include="ext\chrome\base\platform_file.h" />
     <ClInclude Include="ext\chrome\base\port.h" />
     <ClInclude Include="ext\chrome\base\process.h" />

@@ -121,8 +121,6 @@
 #define FILE_PATH_USES_WIN_SEPARATORS
 #endif  // OS_WIN
 
-class Pickle;
-
 // An abstraction to isolate users from the differences between native
 // pathnames on different platforms.
 class BASE_EXPORT FilePath {
@@ -337,9 +335,6 @@ class BASE_EXPORT FilePath {
   // and Chrome OS, to mitigate the encoding issue. See the comment at
   // AsUTF8Unsafe() for details.
   static FilePath FromUTF8Unsafe(const std::string& utf8);
-
-  void WriteToPickle(Pickle* pickle);
-  bool ReadFromPickle(Pickle* pickle, void** iter);
 
 #if defined(FILE_PATH_USES_WIN_SEPARATORS)
   // Normalize all path separators to backslash.
