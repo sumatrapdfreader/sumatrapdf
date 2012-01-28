@@ -3231,8 +3231,7 @@ static void UpdateUITextForLanguage()
 static void ResizeSidebar(WindowInfo *win)
 {
     POINT pcur;
-    GetCursorPos(&pcur);
-    ScreenToClient(win->hwndFrame, &pcur);
+    GetCursorPosInHwnd(win->hwndFrame, pcur);
     int sidebarDx = pcur.x; // without splitter
 
     ClientRect rToc(win->hwndTocBox);
@@ -3281,8 +3280,7 @@ static void ResizeSidebar(WindowInfo *win)
 static void ResizeFav(WindowInfo *win)
 {
     POINT pcur;
-    GetCursorPos(&pcur);
-    ScreenToClient(win->hwndTocBox, &pcur);
+    GetCursorPosInHwnd(win->hwndTocBox, pcur);
     int tocDy = pcur.y; // without splitter
 
     ClientRect rToc(win->hwndTocBox);
@@ -3584,7 +3582,7 @@ static LRESULT OnSetCursor(WindowInfo& win, HWND hwnd)
     POINT pt;
 
     if (win.IsAboutWindow()) {
-        if (GetCursorPos(&pt) && ScreenToClient(hwnd, &pt)) {
+        if (GetCursorPosInHwnd(hwnd, pt)) {
             StaticLinkInfo linkInfo;
             if (GetStaticLink(win.staticLinks, pt.x, pt.y, &linkInfo)) {
                 win.CreateInfotip(linkInfo.infotip, linkInfo.rect);
@@ -3615,7 +3613,7 @@ static LRESULT OnSetCursor(WindowInfo& win, HWND hwnd)
         case MA_SELECTING:
             break;
         case MA_IDLE:
-            if (GetCursor() && GetCursorPos(&pt) && ScreenToClient(hwnd, &pt)) {
+            if (GetCursor() && GetCursorPosInHwnd(hwnd, pt)) {
                 PointI pti(pt.x, pt.y);
                 PageElement *pageEl = win.dm->GetElementAtPos(pti);
                 if (pageEl) {
@@ -3661,8 +3659,7 @@ static void OnTimer(WindowInfo& win, HWND hwnd, WPARAM timerId)
         if (MA_SCROLLING == win.mouseAction)
             win.MoveDocBy(win.xScrollSpeed, win.yScrollSpeed);
         else if (MA_SELECTING == win.mouseAction || MA_SELECTING_TEXT == win.mouseAction) {
-            GetCursorPos(&pt);
-            ScreenToClient(win.hwndCanvas, &pt);
+            GetCursorPosInHwnd(win.hwndCanvas, pt);
             OnMouseMove(win, pt.x, pt.y, MK_CONTROL);
         }
         else {
@@ -3728,8 +3725,7 @@ static LRESULT CanvasOnMouseWheel(WindowInfo& win, UINT message, WPARAM wParam, 
     // Note: not all mouse drivers correctly report the Ctrl key's state
     if ((LOWORD(wParam) & MK_CONTROL) || IsCtrlPressed() || (LOWORD(wParam) & MK_RBUTTON)) {
         POINT pt;
-        GetCursorPos(&pt);
-        ScreenToClient(win.hwndCanvas, &pt);
+        GetCursorPosInHwnd(win.hwndCanvas, pt);
 
         float factor = delta < 0 ? ZOOM_OUT_FACTOR : ZOOM_IN_FACTOR;
         win.dm->ZoomBy(factor, &PointI(pt.x, pt.y));

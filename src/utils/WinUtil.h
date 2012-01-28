@@ -83,6 +83,7 @@ void    DrawCenteredText(HDC hdc, RectI& r, const TCHAR *txt, bool isRTL=false);
 SizeI   TextSizeInHwnd(HWND hwnd, const TCHAR *txt);
 
 bool    IsCursorOverWindow(HWND hwnd);
+bool    GetCursorPosInHwnd(HWND hwnd, POINT& posOut);
 void    CenterDialog(HWND hDlg, HWND hParent=NULL);
 TCHAR * GetDefaultPrinterName();
 bool    CopyTextToClipboard(const TCHAR *text, bool appendOnly=false);

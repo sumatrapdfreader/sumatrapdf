@@ -491,6 +491,15 @@ bool IsCursorOverWindow(HWND hwnd)
     return rcWnd.Contains(PointI(pt.x, pt.y));
 }
 
+bool GetCursorPosInHwnd(HWND hwnd, POINT& posOut)
+{
+    if (!GetCursorPos(&posOut))
+        return false;
+    if (!ScreenToClient(hwnd, &posOut))
+        return false;
+    return true;
+}
+
 void CenterDialog(HWND hDlg, HWND hParent)
 {
     if (!hParent)

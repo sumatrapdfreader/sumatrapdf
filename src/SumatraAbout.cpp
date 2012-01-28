@@ -449,7 +449,7 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
             break;
 
         case WM_SETCURSOR:
-            if (GetCursorPos(&pt) && ScreenToClient(hwnd, &pt)) {
+            if (GetCursorPosInHwnd(hwnd, pt)) {
                 StaticLinkInfo linkInfo;
                 if (GetStaticLink(gLinkInfo, pt.x, pt.y, &linkInfo)) {
                     CreateInfotipForLink(linkInfo);
