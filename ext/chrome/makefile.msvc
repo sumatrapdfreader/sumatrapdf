@@ -22,8 +22,7 @@ CHROME_OBJS = \
 	$(OCH)\alias.obj $(OCH)\at_exit.obj \
 	$(OCH)\bind_helpers.obj \
 	$(OCH)\callback_internal.obj \
-	$(OCH)\cpu.obj $(OCH)\debugger.obj \
-	$(OCH)\debugger_win.obj $(OCH)\dtoa_wrapper.obj \
+	$(OCH)\cpu.obj $(OCH)\dtoa_wrapper.obj \
 	$(OCH)\g_fmt.obj \
 	$(OCH)\histogram.obj $(OCH)\icu_utf.obj \
 	$(OCH)\lazy_instance.obj $(OCH)\location.obj \

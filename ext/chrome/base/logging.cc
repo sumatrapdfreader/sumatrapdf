@@ -13,29 +13,6 @@ typedef HANDLE MutexHandle;
 #define write(fd, buf, count) _write(fd, buf, static_cast<unsigned int>(count))
 // Windows doesn't define STDERR_FILENO.  Define it here.
 #define STDERR_FILENO 2
-#elif defined(OS_MACOSX)
-#include <mach/mach.h>
-#include <mach/mach_time.h>
-#include <mach-o/dyld.h>
-#elif defined(OS_POSIX)
-#if defined(OS_NACL)
-#include <sys/time.h> // timespec doesn't seem to be in <time.h>
-#else
-#include <sys/syscall.h>
-#endif
-#include <time.h>
-#endif
-
-#if defined(OS_POSIX)
-#include <errno.h>
-#include <pthread.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-#define MAX_PATH PATH_MAX
-typedef FILE* FileHandle;
-typedef pthread_mutex_t* MutexHandle;
 #endif
 
 #include <algorithm>
@@ -44,20 +21,12 @@ typedef pthread_mutex_t* MutexHandle;
 #include <iomanip>
 #include <ostream>
 
-#include "base/debug/debugger.h"
 #include "base/debug/stack_trace.h"
 #include "base/string_piece.h"
 #include "base/synchronization/lock_impl.h"
 #include "base/threading/platform_thread.h"
 #include "base/utf_string_conversions.h"
 #include "base/vlog.h"
-#if defined(OS_POSIX)
-#include "base/safe_strerror_posix.h"
-#endif
-
-#if defined(OS_ANDROID)
-#include <android/log.h>
-#endif
 
 namespace logging {
 
@@ -612,26 +581,6 @@ LogMessage::~LogMessage() {
   }
 
   if (severity_ == LOG_FATAL) {
-    // display a message or break into the debugger on a fatal error
-    if (base::debug::BeingDebugged()) {
-      base::debug::BreakDebugger();
-    } else {
-      if (log_assert_handler) {
-        // make a copy of the string for the handler out of paranoia
-        log_assert_handler(std::string(stream_.str()));
-      } else {
-        // Don't use the string with the newline, get a fresh version to send to
-        // the debug message process. We also don't display assertions to the
-        // user in release mode. The enduser can't do anything with this
-        // information, and displaying message boxes when the application is
-        // hosed can cause additional problems.
-#ifndef NDEBUG
-        DisplayDebugMessageInDialog(stream_.str());
-#endif
-        // Crash the process to generate a dump.
-        base::debug::BreakDebugger();
-      }
-    }
   } else if (severity_ == LOG_ERROR_REPORT) {
     // We are here only if the user runs with --enable-dcheck in release mode.
     if (log_report_handler) {
@@ -809,9 +758,6 @@ void RawLog(int level, const char* message) {
       } while (rv != 1);
     }
   }
-
-  if (level == LOG_FATAL)
-    base::debug::BreakDebugger();
 }
 
 // This was defined at the beginning of this file.

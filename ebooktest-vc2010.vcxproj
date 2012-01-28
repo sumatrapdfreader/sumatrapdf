@@ -78,7 +78,6 @@
     <ClCompile Include="ext\chrome\base\debug\debugger_win.cc" />
     <ClCompile Include="ext\chrome\base\debug\stack_trace.cc" />
     <ClCompile Include="ext\chrome\base\debug\stack_trace_win.cc" />
-    <ClCompile Include="ext\chrome\base\file_path.cc" />
     <ClCompile Include="ext\chrome\base\lazy_instance.cc" />
     <ClCompile Include="ext\chrome\base\location.cc" />
     <ClCompile Include="ext\chrome\base\logging.cc" />
@@ -90,8 +89,6 @@
     <ClCompile Include="ext\chrome\base\message_pump_win.cc" />
     <ClCompile Include="ext\chrome\base\metrics\histogram.cc" />
     <ClCompile Include="ext\chrome\base\pending_task.cc" />
-    <ClCompile Include="ext\chrome\base\platform_file.cc" />
-    <ClCompile Include="ext\chrome\base\platform_file_win.cc" />
     <ClCompile Include="ext\chrome\base\stringprintf.cc" />
     <ClCompile Include="ext\chrome\base\string_number_conversions.cc" />
     <ClCompile Include="ext\chrome\base\string_piece.cc" />
@@ -154,7 +151,6 @@
     <ClInclude Include="ext\chrome\base\debug\debugger.h" />
     <ClInclude Include="ext\chrome\base\debug\leak_annotations.h" />
     <ClInclude Include="ext\chrome\base\debug\stack_trace.h" />
-    <ClInclude Include="ext\chrome\base\file_path.h" />
     <ClInclude Include="ext\chrome\base\float_util.h" />
     <ClInclude Include="ext\chrome\base\format_macros.h" />
     <ClInclude Include="ext\chrome\base\hash_tables.h" />
@@ -173,7 +169,6 @@
     <ClInclude Include="ext\chrome\base\move.h" />
     <ClInclude Include="ext\chrome\base\observer_list.h" />
     <ClInclude Include="ext\chrome\base\pending_task.h" />
-    <ClInclude Include="ext\chrome\base\platform_file.h" />
     <ClInclude Include="ext\chrome\base\port.h" />
     <ClInclude Include="ext\chrome\base\stl_util.h" />
     <ClInclude Include="ext\chrome\base\string16.h" />
