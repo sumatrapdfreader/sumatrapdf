@@ -92,9 +92,6 @@
     <ClCompile Include="ext\chrome\base\pending_task.cc" />
     <ClCompile Include="ext\chrome\base\platform_file.cc" />
     <ClCompile Include="ext\chrome\base\platform_file_win.cc" />
-    <ClCompile Include="ext\chrome\base\process_util.cc" />
-    <ClCompile Include="ext\chrome\base\process_util_win.cc" />
-    <ClCompile Include="ext\chrome\base\process_win.cc" />
     <ClCompile Include="ext\chrome\base\stringprintf.cc" />
     <ClCompile Include="ext\chrome\base\string_number_conversions.cc" />
     <ClCompile Include="ext\chrome\base\string_piece.cc" />
@@ -178,8 +175,6 @@
     <ClInclude Include="ext\chrome\base\pending_task.h" />
     <ClInclude Include="ext\chrome\base\platform_file.h" />
     <ClInclude Include="ext\chrome\base\port.h" />
-    <ClInclude Include="ext\chrome\base\process.h" />
-    <ClInclude Include="ext\chrome\base\process_util.h" />
     <ClInclude Include="ext\chrome\base\stl_util.h" />
     <ClInclude Include="ext\chrome\base\string16.h" />
     <ClInclude Include="ext\chrome\base\stringprintf.h" />

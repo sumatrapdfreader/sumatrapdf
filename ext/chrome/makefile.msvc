@@ -36,8 +36,7 @@ CHROME_OBJS = \
 	$(OCH)\pending_task.obj \
 	$(OCH)\platform_file.obj $(OCH)\platform_file_win.obj \
 	$(OCH)\platform_thread_win.obj $(OCH)\post_task_and_reply_impl.obj \
-	$(OCH)\process_util.obj $(OCH)\process_util_win.obj \
-	$(OCH)\process_win.obj $(OCH)\prtime.obj \
+	$(OCH)\prtime.obj \
 	$(OCH)\ref_counted.obj $(OCH)\ref_counted_memory.obj \
 	$(OCH)\registry.obj $(OCH)\singleton.obj \
 	$(OCH)\stack_trace.obj $(OCH)\stack_trace_win.obj \
