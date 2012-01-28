@@ -30,12 +30,11 @@ CHROME_OBJS = \
 	$(OCH)\object_watcher.obj $(OCH)\pending_task.obj \
 	$(OCH)\platform_thread_win.obj $(OCH)\post_task_and_reply_impl.obj \
 	$(OCH)\ref_counted.obj $(OCH)\ref_counted_memory.obj \
-	$(OCH)\singleton.obj $(OCH)\string_piece.obj \
-	$(OCH)\thread.obj \
+	$(OCH)\singleton.obj $(OCH)\thread.obj \
 	$(OCH)\thread_collision_warner.obj \
 	$(OCH)\thread_local_storage_win.obj $(OCH)\thread_local_win.obj \
 	$(OCH)\thread_restrictions.obj $(OCH)\time.obj \
-	$(OCH)\time_win.obj $(OCH)\timer.obj \
+	$(OCH)\time_win.obj \
 	$(OCH)\waitable_event_win.obj $(OCH)\weak_ptr.obj \
 	$(OCH)\windows_version.obj \
 	$(OCH)\wrapped_window_proc.obj

@@ -46,16 +46,10 @@
     <ClCompile Include="ext\chrome\base\pending_task.cc">
       <Filter>base</Filter>
     </ClCompile>
-    <ClCompile Include="ext\chrome\base\string_piece.cc">
-      <Filter>base</Filter>
-    </ClCompile>
     <ClCompile Include="ext\chrome\base\time.cc">
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="ext\chrome\base\time_win.cc">
-      <Filter>base</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\chrome\base\timer.cc">
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="ext\chrome\base\win\object_watcher.cc">
@@ -172,15 +166,6 @@
     <ClInclude Include="ext\chrome\base\cpu.h">
       <Filter>base</Filter>
     </ClInclude>
-    <ClInclude Include="ext\chrome\base\float_util.h">
-      <Filter>base</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\chrome\base\format_macros.h">
-      <Filter>base</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\chrome\base\hash_tables.h">
-      <Filter>base</Filter>
-    </ClInclude>
     <ClInclude Include="ext\chrome\base\lazy_instance.h">
       <Filter>base</Filter>
     </ClInclude>
@@ -220,22 +205,10 @@
     <ClInclude Include="ext\chrome\base\port.h">
       <Filter>base</Filter>
     </ClInclude>
-    <ClInclude Include="ext\chrome\base\stl_util.h">
-      <Filter>base</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\chrome\base\string_piece.h">
-      <Filter>base</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\chrome\base\string16.h">
-      <Filter>base</Filter>
-    </ClInclude>
     <ClInclude Include="ext\chrome\base\template_util.h">
       <Filter>base</Filter>
     </ClInclude>
     <ClInclude Include="ext\chrome\base\time.h">
-      <Filter>base</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\chrome\base\timer.h">
       <Filter>base</Filter>
     </ClInclude>
     <ClInclude Include="ext\chrome\base\tuple.h">
