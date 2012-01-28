@@ -4,7 +4,6 @@
 
 #include "base/message_loop_proxy_impl.h"
 
-#include "base/location.h"
 #include "base/threading/thread_restrictions.h"
 
 namespace base {

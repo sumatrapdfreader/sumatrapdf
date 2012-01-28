@@ -5,7 +5,6 @@
 #include "base/threading/post_task_and_reply_impl.h"
 
 #include "base/bind.h"
-#include "base/location.h"
 #include "base/message_loop_proxy.h"
 
 namespace base {

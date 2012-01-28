@@ -49,7 +49,6 @@
 // should be able to tell the difference.
 
 #include "base/base_export.h"
-#include "base/location.h"
 #include "base/logging.h"
 #include "base/time.h"
 
@@ -88,15 +87,12 @@ class BASE_EXPORT BaseTimer_Helper {
   // We have access to the timer_ member so we can orphan this task.
   class TimerTask {
    public:
-    TimerTask(const tracked_objects::Location& posted_from,
-              TimeDelta delay)
-        : posted_from_(posted_from),
-          timer_(NULL),
+    TimerTask(TimeDelta delay)
+        : timer_(NULL),
           delay_(delay) {
     }
     virtual ~TimerTask() {}
     virtual void Run() = 0;
-    tracked_objects::Location posted_from_;
     BaseTimer_Helper* timer_;
     TimeDelta delay_;
   };
@@ -123,12 +119,11 @@ class BaseTimer : public BaseTimer_Helper {
 
   // Call this method to start the timer.  It is an error to call this method
   // while the timer is already running.
-  void Start(const tracked_objects::Location& posted_from,
-             TimeDelta delay,
+  void Start(TimeDelta delay,
              Receiver* receiver,
              ReceiverMethod method) {
     DCHECK(!IsRunning());
-    InitiateDelayedTask(new TimerTask(posted_from, delay, receiver, method));
+    InitiateDelayedTask(new TimerTask(delay, receiver, method));
   }
 
   // Call this method to stop the timer.  It is a no-op if the timer is not
@@ -148,11 +143,10 @@ class BaseTimer : public BaseTimer_Helper {
 
   class TimerTask : public BaseTimer_Helper::TimerTask {
    public:
-    TimerTask(const tracked_objects::Location& posted_from,
-              TimeDelta delay,
+    TimerTask(TimeDelta delay,
               Receiver* receiver,
               ReceiverMethod method)
-        : BaseTimer_Helper::TimerTask(posted_from, delay),
+        : BaseTimer_Helper::TimerTask(delay),
           receiver_(receiver),
           method_(method) {
     }
@@ -175,7 +169,7 @@ class BaseTimer : public BaseTimer_Helper {
     }
 
     TimerTask* Clone() const {
-      return new TimerTask(posted_from_, delay_, receiver_, method_);
+      return new TimerTask(delay_, receiver_, method_);
     }
 
    private:
@@ -234,12 +228,10 @@ class DelayTimer {
  public:
   typedef void (Receiver::*ReceiverMethod)();
 
-  DelayTimer(const tracked_objects::Location& posted_from,
-             TimeDelta delay,
+  DelayTimer(TimeDelta delay,
              Receiver* receiver,
              ReceiverMethod method)
-      : posted_from_(posted_from),
-        receiver_(receiver),
+      : receiver_(receiver),
         method_(method),
         delay_(delay) {
   }
@@ -276,7 +268,6 @@ class DelayTimer {
     (receiver_->*method_)();
   }
 
-  tracked_objects::Location posted_from_;
   Receiver *const receiver_;
   const ReceiverMethod method_;
   const TimeDelta delay_;

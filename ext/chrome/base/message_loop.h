@@ -12,7 +12,6 @@
 #include "base/base_export.h"
 #include "base/basictypes.h"
 #include "base/callback_forward.h"
-#include "base/location.h"
 #include "base/memory/ref_counted.h"
 #include "base/message_loop_helpers.h"
 #include "base/message_loop_proxy.h"

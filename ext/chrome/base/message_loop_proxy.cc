@@ -6,7 +6,6 @@
 
 #include "base/bind.h"
 #include "base/compiler_specific.h"
-#include "base/location.h"
 #include "base/threading/post_task_and_reply_impl.h"
 
 namespace base {

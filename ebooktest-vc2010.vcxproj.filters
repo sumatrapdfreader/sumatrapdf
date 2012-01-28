@@ -25,9 +25,6 @@
     <ClCompile Include="ext\chrome\base\lazy_instance.cc">
       <Filter>base</Filter>
     </ClCompile>
-    <ClCompile Include="ext\chrome\base\location.cc">
-      <Filter>base</Filter>
-    </ClCompile>
     <ClCompile Include="ext\chrome\base\message_loop.cc">
       <Filter>base</Filter>
     </ClCompile>
@@ -80,9 +77,6 @@
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="ext\chrome\base\utf_string_conversions.cc">
-      <Filter>base</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\chrome\base\values.cc">
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="ext\chrome\base\win\object_watcher.cc">
@@ -220,9 +214,6 @@
     <ClInclude Include="ext\chrome\base\lazy_instance.h">
       <Filter>base</Filter>
     </ClInclude>
-    <ClInclude Include="ext\chrome\base\location.h">
-      <Filter>base</Filter>
-    </ClInclude>
     <ClInclude Include="ext\chrome\base\message_loop.h">
       <Filter>base</Filter>
     </ClInclude>
@@ -305,9 +296,6 @@
       <Filter>base</Filter>
     </ClInclude>
     <ClInclude Include="ext\chrome\base\utf_string_conversions.h">
-      <Filter>base</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\chrome\base\values.h">
       <Filter>base</Filter>
     </ClInclude>
     <ClInclude Include="ext\chrome\base\win\object_watcher.h">

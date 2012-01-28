@@ -75,7 +75,6 @@
     <ClCompile Include="ext\chrome\base\cpu.cc" />
     <ClCompile Include="ext\chrome\base\debug\alias.cc" />
     <ClCompile Include="ext\chrome\base\lazy_instance.cc" />
-    <ClCompile Include="ext\chrome\base\location.cc" />
     <ClCompile Include="ext\chrome\base\memory\ref_counted.cc" />
     <ClCompile Include="ext\chrome\base\memory\ref_counted_memory.cc" />
     <ClCompile Include="ext\chrome\base\memory\singleton.cc" />
@@ -107,7 +106,6 @@
     <ClCompile Include="ext\chrome\base\time_win.cc" />
     <ClCompile Include="ext\chrome\base\utf_string_conversions.cc" />
     <ClCompile Include="ext\chrome\base\utf_string_conversion_utils.cc" />
-    <ClCompile Include="ext\chrome\base\values.cc" />
     <ClCompile Include="ext\chrome\base\win\object_watcher.cc" />
     <ClCompile Include="ext\chrome\base\win\pe_image.cc" />
     <ClCompile Include="ext\chrome\base\win\registry.cc" />
@@ -146,7 +144,6 @@
     <ClInclude Include="ext\chrome\base\format_macros.h" />
     <ClInclude Include="ext\chrome\base\hash_tables.h" />
     <ClInclude Include="ext\chrome\base\lazy_instance.h" />
-    <ClInclude Include="ext\chrome\base\location.h" />
     <ClInclude Include="ext\chrome\base\logging.h" />
     <ClInclude Include="ext\chrome\base\memory\raw_scoped_refptr_mismatch_checker.h" />
     <ClInclude Include="ext\chrome\base\memory\ref_counted.h" />
@@ -191,7 +188,6 @@
     <ClInclude Include="ext\chrome\base\tuple.h" />
     <ClInclude Include="ext\chrome\base\utf_string_conversions.h" />
     <ClInclude Include="ext\chrome\base\utf_string_conversion_utils.h" />
-    <ClInclude Include="ext\chrome\base\values.h" />
     <ClInclude Include="ext\chrome\base\win\object_watcher.h" />
     <ClInclude Include="ext\chrome\base\win\pe_image.h" />
     <ClInclude Include="ext\chrome\base\win\registry.h" />

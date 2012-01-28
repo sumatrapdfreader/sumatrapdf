@@ -25,7 +25,7 @@ CHROME_OBJS = \
 	$(OCH)\cpu.obj $(OCH)\dtoa_wrapper.obj \
 	$(OCH)\g_fmt.obj \
 	$(OCH)\icu_utf.obj \
-	$(OCH)\lazy_instance.obj $(OCH)\location.obj \
+	$(OCH)\lazy_instance.obj \
 	$(OCH)\lock.obj $(OCH)\lock_impl_win.obj \
 	$(OCH)\message_loop.obj $(OCH)\message_loop_proxy.obj \
 	$(OCH)\message_loop_proxy_impl.obj $(OCH)\message_pump.obj \
@@ -45,7 +45,6 @@ CHROME_OBJS = \
 	$(OCH)\thread_restrictions.obj $(OCH)\time.obj \
 	$(OCH)\time_win.obj $(OCH)\timer.obj \
 	$(OCH)\utf_string_conversion_utils.obj $(OCH)\utf_string_conversions.obj \
-	$(OCH)\values.obj \
 	$(OCH)\waitable_event_win.obj $(OCH)\weak_ptr.obj \
 	$(OCH)\win_util.obj $(OCH)\windows_version.obj \
 	$(OCH)\wrapped_window_proc.obj

@@ -10,7 +10,6 @@
 #pragma once
 
 #include "base/callback_forward.h"
-#include "base/location.h"
 
 namespace base {
 namespace internal {
