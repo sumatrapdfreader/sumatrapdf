@@ -36,7 +36,6 @@ CHROME_OBJS = \
 	$(OCH)\prtime.obj \
 	$(OCH)\ref_counted.obj $(OCH)\ref_counted_memory.obj \
 	$(OCH)\registry.obj $(OCH)\singleton.obj \
-	$(OCH)\stack_trace.obj $(OCH)\stack_trace_win.obj \
 	$(OCH)\string_number_conversions.obj $(OCH)\string_piece.obj \
 	$(OCH)\string_split.obj $(OCH)\string_util.obj \
 	$(OCH)\stringprintf.obj \

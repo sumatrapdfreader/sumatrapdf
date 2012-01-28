@@ -115,9 +115,6 @@
     <ClCompile Include="ext\chrome\base\threading\post_task_and_reply_impl.cc">
       <Filter>base\threading</Filter>
     </ClCompile>
-    <ClCompile Include="ext\chrome\base\threading\thread_checker_impl.cc">
-      <Filter>base\threading</Filter>
-    </ClCompile>
     <ClCompile Include="ext\chrome\base\threading\thread_collision_warner.cc">
       <Filter>base\threading</Filter>
     </ClCompile>
@@ -131,12 +128,6 @@
       <Filter>base\threading</Filter>
     </ClCompile>
     <ClCompile Include="ext\chrome\base\debug\alias.cc">
-      <Filter>base\debug</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\chrome\base\debug\stack_trace.cc">
-      <Filter>base\debug</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\chrome\base\debug\stack_trace_win.cc">
       <Filter>base\debug</Filter>
     </ClCompile>
     <ClCompile Include="ext\chrome\base\synchronization\lock.cc">
@@ -361,12 +352,6 @@
     <ClInclude Include="ext\chrome\base\threading\post_task_and_reply_impl.h">
       <Filter>base\threading</Filter>
     </ClInclude>
-    <ClInclude Include="ext\chrome\base\threading\thread_checker.h">
-      <Filter>base\threading</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\chrome\base\threading\thread_checker_impl.h">
-      <Filter>base\threading</Filter>
-    </ClInclude>
     <ClInclude Include="ext\chrome\base\threading\thread_collision_warner.h">
       <Filter>base\threading</Filter>
     </ClInclude>
@@ -380,9 +365,6 @@
       <Filter>base\threading</Filter>
     </ClInclude>
     <ClInclude Include="ext\chrome\base\debug\alias.h">
-      <Filter>base\debug</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\chrome\base\debug\stack_trace.h">
       <Filter>base\debug</Filter>
     </ClInclude>
     <ClInclude Include="ext\chrome\base\synchronization\lock.h">

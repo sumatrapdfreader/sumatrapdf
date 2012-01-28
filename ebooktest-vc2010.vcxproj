@@ -74,8 +74,6 @@
     <ClCompile Include="ext\chrome\base\callback_internal.cc" />
     <ClCompile Include="ext\chrome\base\cpu.cc" />
     <ClCompile Include="ext\chrome\base\debug\alias.cc" />
-    <ClCompile Include="ext\chrome\base\debug\stack_trace.cc" />
-    <ClCompile Include="ext\chrome\base\debug\stack_trace_win.cc" />
     <ClCompile Include="ext\chrome\base\lazy_instance.cc" />
     <ClCompile Include="ext\chrome\base\location.cc" />
     <ClCompile Include="ext\chrome\base\memory\ref_counted.cc" />
@@ -100,7 +98,6 @@
     <ClCompile Include="ext\chrome\base\sys_string_conversions_win.cc" />
     <ClCompile Include="ext\chrome\base\threading\platform_thread_win.cc" />
     <ClCompile Include="ext\chrome\base\threading\post_task_and_reply_impl.cc" />
-    <ClCompile Include="ext\chrome\base\threading\thread_checker_impl.cc" />
     <ClCompile Include="ext\chrome\base\threading\thread_collision_warner.cc" />
     <ClCompile Include="ext\chrome\base\threading\thread_local_storage_win.cc" />
     <ClCompile Include="ext\chrome\base\threading\thread_local_win.cc" />
@@ -147,7 +144,6 @@
     <ClInclude Include="ext\chrome\base\compiler_specific.h" />
     <ClInclude Include="ext\chrome\base\cpu.h" />
     <ClInclude Include="ext\chrome\base\debug\alias.h" />
-    <ClInclude Include="ext\chrome\base\debug\stack_trace.h" />
     <ClInclude Include="ext\chrome\base\float_util.h" />
     <ClInclude Include="ext\chrome\base\format_macros.h" />
     <ClInclude Include="ext\chrome\base\hash_tables.h" />
@@ -188,8 +184,6 @@
     <ClInclude Include="ext\chrome\base\template_util.h" />
     <ClInclude Include="ext\chrome\base\threading\platform_thread.h" />
     <ClInclude Include="ext\chrome\base\threading\post_task_and_reply_impl.h" />
-    <ClInclude Include="ext\chrome\base\threading\thread_checker.h" />
-    <ClInclude Include="ext\chrome\base\threading\thread_checker_impl.h" />
     <ClInclude Include="ext\chrome\base\threading\thread_collision_warner.h" />
     <ClInclude Include="ext\chrome\base\threading\thread_local.h" />
     <ClInclude Include="ext\chrome\base\threading\thread_local_storage.h" />
