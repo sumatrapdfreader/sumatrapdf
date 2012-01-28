@@ -17,9 +17,9 @@ WorkerThread::~WorkerThread()
     CloseHandle(thread);
 }
 
-bool WorkerThread::Join(DWORD ms)
+bool WorkerThread::Join(DWORD waitMs)
 {
-    return WaitForSingleObject(thread, ms) == WAIT_OBJECT_0;
+    return WaitForSingleObject(thread, waitMs) == WAIT_OBJECT_0;
 }
 
 DWORD WINAPI WorkerThread::ThreadProc(LPVOID data)

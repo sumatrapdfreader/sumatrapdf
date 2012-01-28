@@ -71,7 +71,7 @@ public:
     WorkerThread(Functor *f);
     ~WorkerThread();
 
-    bool Join(DWORD ms=INFINITE);
+    bool Join(DWORD waitMs=INFINITE);
 };
 
 class UiMessageLoop {

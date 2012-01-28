@@ -149,8 +149,15 @@ public:
        : UIThreadWorkItem(win), wnd(wnd), current(current), total(total) { }
 
    virtual void Execute() {
-       if (WindowInfoStillValid(win) && !win->findCanceled && win->notifications->Contains(wnd))
-           wnd->UpdateProgress(current, total);
+       if (WindowInfoStillValid(win) && !win->findCanceled) {
+           if (win->notifications->Contains(wnd)) {
+               wnd->UpdateProgress(current, total);
+           }
+           else {
+               // the search has been canceled by closing the notification
+               win->findCanceled = true;
+           }
+       }
    }
 };
 
@@ -158,22 +165,21 @@ struct FindThreadData : public ProgressUpdateUI {
    WindowInfo *win;
    TextSearchDirection direction;
    bool wasModified;
-   TCHAR *text;
-   bool showProgress;
+   ScopedMem<TCHAR> text;
+   // owned by win->notifications, as FindThreadData
+   // can be deleted before the notification times out
+   NotificationWnd *wnd;
 
-   FindThreadData(WindowInfo& win, TextSearchDirection direction, HWND findBox, bool showProgress) :
-       win(&win), direction(direction), showProgress(showProgress) {
-       text = win::GetText(findBox);
-       wasModified = Edit_GetModify(findBox);
-   }
-   ~FindThreadData() { free(text); }
+   FindThreadData(WindowInfo& win, TextSearchDirection direction, HWND findBox) :
+       win(&win), direction(direction), text(win::GetText(findBox)),
+       wasModified(Edit_GetModify(findBox)), wnd(NULL) { }
 
-   void ShowUI() const {
+   void ShowUI(bool showProgress) {
        const LPARAM disable = (LPARAM)MAKELONG(0, 0);
 
        if (showProgress) {
-           NotificationWnd *wnd = new NotificationWnd(win->hwndCanvas, _T(""), _TR("Searching %d of %d..."), win->notifications);
-           // let win->messages own the NotificationWnd (FindThreadData might get deleted before)
+           wnd = new NotificationWnd(win->hwndCanvas, _T(""),
+                                     _TR("Searching %d of %d..."), win->notifications);
            win->notifications->Add(wnd, NG_FIND_PROGRESS);
        }
 
@@ -182,17 +188,16 @@ struct FindThreadData : public ProgressUpdateUI {
        SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_MATCH, disable);
    }
 
-   void HideUI(bool success, bool loopedAround) const {
+   void HideUI(bool success, bool loopedAround) {
        LPARAM enable = (LPARAM)MAKELONG(1, 0);
 
        SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_PREV, enable);
        SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_NEXT, enable);
        SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_MATCH, enable);
 
-       NotificationWnd *wnd = win->notifications->GetFirstInGroup(NG_FIND_PROGRESS);
-       if (!showProgress)
-           win->notifications->RemoveNotification(wnd);
-       else if (!success && !loopedAround || !wnd) // i.e. canceled
+       if (!win->notifications->Contains(wnd))
+           /* our notification has been replaced or closed (or never created) */;
+       else if (!success && !loopedAround) // i.e. canceled
            win->notifications->RemoveNotification(wnd);
        else if (!success && loopedAround)
            wnd->UpdateMessage(_TR("No matches were found"), 3000);
@@ -206,11 +211,12 @@ struct FindThreadData : public ProgressUpdateUI {
    }
 
    virtual bool UpdateProgress(int current, int total) {
-       if (!WindowInfoStillValid(win) || win->findCanceled || 
-           showProgress && !win->notifications->GetFirstInGroup(NG_FIND_PROGRESS)) {
+       if (!WindowInfoStillValid(win) || win->findCanceled) {
            return false;
        }
-       QueueWorkItem(new UpdateFindStatusWorkItem(win, win->notifications->GetFirstInGroup(NG_FIND_PROGRESS), current, total));
+       if (wnd) {
+           QueueWorkItem(new UpdateFindStatusWorkItem(win, wnd, current, total));
+       }
        return true;
    }
 };
@@ -297,15 +303,15 @@ void FindTextOnThread(WindowInfo* win, TextSearchDirection direction, bool FAYT)
 {
    AbortFinding(win, true);
 
-   FindThreadData *ftd = new FindThreadData(*win, direction, win->hwndFindBox, !FAYT);
+   FindThreadData *ftd = new FindThreadData(*win, direction, win->hwndFindBox);
    Edit_SetModify(win->hwndFindBox, FALSE);
 
-   if (str::IsEmpty(ftd->text)) {
+   if (str::IsEmpty(ftd->text.Get())) {
        delete ftd;
        return;
    }
 
-   ftd->ShowUI();
+   ftd->ShowUI(!FAYT);
    win->findThread = CreateThread(NULL, 0, FindThread, ftd, 0, 0);
 }
 

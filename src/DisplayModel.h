@@ -138,6 +138,7 @@ public:
     EngineType      engineType;
 
     TextSelection * textSelection;
+    // access only from Search thread
     TextSearch *    textSearch;
 
     PageInfo *      GetPageInfo(int pageNo) const;

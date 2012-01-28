@@ -155,7 +155,7 @@ public:
     int             wheelAccumDelta;
     UINT_PTR        delayedRepaintTimer;
 
-    Notifications * notifications;
+    Notifications * notifications; // only access from UI thread
 
     WorkerThread *  printThread;
     bool            printCanceled;
