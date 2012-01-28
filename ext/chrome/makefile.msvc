@@ -44,8 +44,6 @@ CHROME_OBJS = \
 	$(OCH)\thread_local_storage_win.obj $(OCH)\thread_local_win.obj \
 	$(OCH)\thread_restrictions.obj $(OCH)\time.obj \
 	$(OCH)\time_win.obj $(OCH)\timer.obj \
-	$(OCH)\tracked_objects.obj \
-	$(OCH)\tracked_time.obj $(OCH)\tracking_info.obj \
 	$(OCH)\utf_string_conversion_utils.obj $(OCH)\utf_string_conversions.obj \
 	$(OCH)\values.obj \
 	$(OCH)\waitable_event_win.obj $(OCH)\weak_ptr.obj \

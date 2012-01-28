@@ -105,8 +105,6 @@
     <ClCompile Include="ext\chrome\base\time.cc" />
     <ClCompile Include="ext\chrome\base\timer.cc" />
     <ClCompile Include="ext\chrome\base\time_win.cc" />
-    <ClCompile Include="ext\chrome\base\tracked_objects.cc" />
-    <ClCompile Include="ext\chrome\base\tracking_info.cc" />
     <ClCompile Include="ext\chrome\base\utf_string_conversions.cc" />
     <ClCompile Include="ext\chrome\base\utf_string_conversion_utils.cc" />
     <ClCompile Include="ext\chrome\base\values.cc" />
@@ -190,8 +188,6 @@
     <ClInclude Include="ext\chrome\base\threading\thread_restrictions.h" />
     <ClInclude Include="ext\chrome\base\time.h" />
     <ClInclude Include="ext\chrome\base\timer.h" />
-    <ClInclude Include="ext\chrome\base\tracked_objects.h" />
-    <ClInclude Include="ext\chrome\base\tracking_info.h" />
     <ClInclude Include="ext\chrome\base\tuple.h" />
     <ClInclude Include="ext\chrome\base\utf_string_conversions.h" />
     <ClInclude Include="ext\chrome\base\utf_string_conversion_utils.h" />

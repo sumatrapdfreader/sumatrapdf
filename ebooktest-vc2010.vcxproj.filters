@@ -76,12 +76,6 @@
     <ClCompile Include="ext\chrome\base\timer.cc">
       <Filter>base</Filter>
     </ClCompile>
-    <ClCompile Include="ext\chrome\base\tracked_objects.cc">
-      <Filter>base</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\chrome\base\tracking_info.cc">
-      <Filter>base</Filter>
-    </ClCompile>
     <ClCompile Include="ext\chrome\base\utf_string_conversion_utils.cc">
       <Filter>base</Filter>
     </ClCompile>
@@ -302,12 +296,6 @@
       <Filter>base</Filter>
     </ClInclude>
     <ClInclude Include="ext\chrome\base\timer.h">
-      <Filter>base</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\chrome\base\tracked_objects.h">
-      <Filter>base</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\chrome\base\tracking_info.h">
       <Filter>base</Filter>
     </ClInclude>
     <ClInclude Include="ext\chrome\base\tuple.h">

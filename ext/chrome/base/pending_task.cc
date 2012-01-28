@@ -4,8 +4,6 @@
 
 #include "base/pending_task.h"
 
-#include "base/tracked_objects.h"
-
 namespace base {
 
 PendingTask::PendingTask(const base::Closure& task)
