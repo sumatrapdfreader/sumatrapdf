@@ -86,7 +86,6 @@
     <ClCompile Include="ext\chrome\base\message_pump_default.cc" />
     <ClCompile Include="ext\chrome\base\message_pump_win.cc" />
     <ClCompile Include="ext\chrome\base\pending_task.cc" />
-    <ClCompile Include="ext\chrome\base\stringprintf.cc" />
     <ClCompile Include="ext\chrome\base\string_piece.cc" />
     <ClCompile Include="ext\chrome\base\string_util.cc" />
     <ClCompile Include="ext\chrome\base\synchronization\lock.cc" />
@@ -159,7 +158,6 @@
     <ClInclude Include="ext\chrome\base\port.h" />
     <ClInclude Include="ext\chrome\base\stl_util.h" />
     <ClInclude Include="ext\chrome\base\string16.h" />
-    <ClInclude Include="ext\chrome\base\stringprintf.h" />
     <ClInclude Include="ext\chrome\base\string_piece.h" />
     <ClInclude Include="ext\chrome\base\string_util.h" />
     <ClInclude Include="ext\chrome\base\string_util_win.h" />

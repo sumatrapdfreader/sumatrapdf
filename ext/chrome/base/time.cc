@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 #include "base/time.h"
-#include "base/third_party/nspr/prtime.h"
+//#include "base/third_party/nspr/prtime.h"
 
 #include "base/logging.h"
 
@@ -94,24 +94,6 @@ Time Time::LocalMidnight() const {
   exploded.second = 0;
   exploded.millisecond = 0;
   return FromLocalExploded(exploded);
-}
-
-// static
-bool Time::FromString(const char* time_string, Time* parsed_time) {
-  DCHECK((time_string != NULL) && (parsed_time != NULL));
-
-  if (time_string[0] == '\0')
-    return false;
-
-  PRTime result_time = 0;
-  PRStatus result = PR_ParseTimeString(time_string, PR_FALSE,
-                                       &result_time);
-  if (PR_SUCCESS != result)
-    return false;
-
-  result_time += kTimeTToMicrosecondsOffset;
-  *parsed_time = Time(result_time);
-  return true;
 }
 
 // Time::Exploded -------------------------------------------------------------

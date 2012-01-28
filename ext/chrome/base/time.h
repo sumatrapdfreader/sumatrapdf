@@ -320,14 +320,6 @@ class BASE_EXPORT Time {
     return Time(us);
   }
 
-  // Converts a string representation of time to a Time object.
-  // An example of a time string which is converted is as below:-
-  // "Tue, 15 Nov 1994 12:45:26 GMT". If the timezone is not specified
-  // in the input string, we assume local time.
-  // TODO(iyengar) Move the FromString/FromTimeT/ToTimeT/FromFileTime to
-  // a new time converter class.
-  static bool FromString(const char* time_string, Time* parsed_time);
-
   // For serializing, use FromInternalValue to reconstitute. Please don't use
   // this and do arithmetic on it, as it is more error prone than using the
   // provided operators.

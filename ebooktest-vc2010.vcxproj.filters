@@ -52,9 +52,6 @@
     <ClCompile Include="ext\chrome\base\string_util.cc">
       <Filter>base</Filter>
     </ClCompile>
-    <ClCompile Include="ext\chrome\base\stringprintf.cc">
-      <Filter>base</Filter>
-    </ClCompile>
     <ClCompile Include="ext\chrome\base\time.cc">
       <Filter>base</Filter>
     </ClCompile>
@@ -245,9 +242,6 @@
       <Filter>base</Filter>
     </ClInclude>
     <ClInclude Include="ext\chrome\base\string16.h">
-      <Filter>base</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\chrome\base\stringprintf.h">
       <Filter>base</Filter>
     </ClInclude>
     <ClInclude Include="ext\chrome\base\template_util.h">
