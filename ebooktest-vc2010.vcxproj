@@ -87,7 +87,6 @@
     <ClCompile Include="ext\chrome\base\message_pump_win.cc" />
     <ClCompile Include="ext\chrome\base\pending_task.cc" />
     <ClCompile Include="ext\chrome\base\string_piece.cc" />
-    <ClCompile Include="ext\chrome\base\string_util.cc" />
     <ClCompile Include="ext\chrome\base\synchronization\lock.cc" />
     <ClCompile Include="ext\chrome\base\synchronization\lock_impl_win.cc" />
     <ClCompile Include="ext\chrome\base\synchronization\waitable_event_win.cc" />
@@ -100,8 +99,6 @@
     <ClCompile Include="ext\chrome\base\time.cc" />
     <ClCompile Include="ext\chrome\base\timer.cc" />
     <ClCompile Include="ext\chrome\base\time_win.cc" />
-    <ClCompile Include="ext\chrome\base\utf_string_conversions.cc" />
-    <ClCompile Include="ext\chrome\base\utf_string_conversion_utils.cc" />
     <ClCompile Include="ext\chrome\base\win\object_watcher.cc" />
     <ClCompile Include="ext\chrome\base\win\windows_version.cc" />
     <ClCompile Include="ext\chrome\base\win\wrapped_window_proc.cc" />
@@ -159,8 +156,6 @@
     <ClInclude Include="ext\chrome\base\stl_util.h" />
     <ClInclude Include="ext\chrome\base\string16.h" />
     <ClInclude Include="ext\chrome\base\string_piece.h" />
-    <ClInclude Include="ext\chrome\base\string_util.h" />
-    <ClInclude Include="ext\chrome\base\string_util_win.h" />
     <ClInclude Include="ext\chrome\base\synchronization\lock.h" />
     <ClInclude Include="ext\chrome\base\synchronization\lock_impl.h" />
     <ClInclude Include="ext\chrome\base\synchronization\waitable_event.h" />
@@ -174,8 +169,6 @@
     <ClInclude Include="ext\chrome\base\time.h" />
     <ClInclude Include="ext\chrome\base\timer.h" />
     <ClInclude Include="ext\chrome\base\tuple.h" />
-    <ClInclude Include="ext\chrome\base\utf_string_conversions.h" />
-    <ClInclude Include="ext\chrome\base\utf_string_conversion_utils.h" />
     <ClInclude Include="ext\chrome\base\win\object_watcher.h" />
     <ClInclude Include="ext\chrome\base\win\scoped_comptr.h" />
     <ClInclude Include="ext\chrome\base\win\scoped_handle.h" />

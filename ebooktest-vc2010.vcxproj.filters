@@ -49,9 +49,6 @@
     <ClCompile Include="ext\chrome\base\string_piece.cc">
       <Filter>base</Filter>
     </ClCompile>
-    <ClCompile Include="ext\chrome\base\string_util.cc">
-      <Filter>base</Filter>
-    </ClCompile>
     <ClCompile Include="ext\chrome\base\time.cc">
       <Filter>base</Filter>
     </ClCompile>
@@ -59,12 +56,6 @@
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="ext\chrome\base\timer.cc">
-      <Filter>base</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\chrome\base\utf_string_conversion_utils.cc">
-      <Filter>base</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\chrome\base\utf_string_conversions.cc">
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="ext\chrome\base\win\object_watcher.cc">
@@ -235,12 +226,6 @@
     <ClInclude Include="ext\chrome\base\string_piece.h">
       <Filter>base</Filter>
     </ClInclude>
-    <ClInclude Include="ext\chrome\base\string_util.h">
-      <Filter>base</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\chrome\base\string_util_win.h">
-      <Filter>base</Filter>
-    </ClInclude>
     <ClInclude Include="ext\chrome\base\string16.h">
       <Filter>base</Filter>
     </ClInclude>
@@ -254,12 +239,6 @@
       <Filter>base</Filter>
     </ClInclude>
     <ClInclude Include="ext\chrome\base\tuple.h">
-      <Filter>base</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\chrome\base\utf_string_conversion_utils.h">
-      <Filter>base</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\chrome\base\utf_string_conversions.h">
       <Filter>base</Filter>
     </ClInclude>
     <ClInclude Include="ext\chrome\base\win\object_watcher.h">
