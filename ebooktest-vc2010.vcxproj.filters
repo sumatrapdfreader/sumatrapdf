@@ -13,9 +13,6 @@
     <ClCompile Include="ext\chrome\base\at_exit.cc">
       <Filter>base</Filter>
     </ClCompile>
-    <ClCompile Include="ext\chrome\base\base_switches.cc">
-      <Filter>base</Filter>
-    </ClCompile>
     <ClCompile Include="ext\chrome\base\bind_helpers.cc">
       <Filter>base</Filter>
     </ClCompile>
@@ -235,9 +232,6 @@
     <ClInclude Include="ext\chrome\base\base_export.h">
       <Filter>base</Filter>
     </ClInclude>
-    <ClInclude Include="ext\chrome\base\base_switches.h">
-      <Filter>base</Filter>
-    </ClInclude>
     <ClInclude Include="ext\chrome\base\basictypes.h">
       <Filter>base</Filter>
     </ClInclude>
@@ -278,9 +272,6 @@
       <Filter>base</Filter>
     </ClInclude>
     <ClInclude Include="ext\chrome\base\format_macros.h">
-      <Filter>base</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\chrome\base\gtest_prod_util.h">
       <Filter>base</Filter>
     </ClInclude>
     <ClInclude Include="ext\chrome\base\hash_tables.h">

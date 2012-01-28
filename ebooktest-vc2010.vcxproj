@@ -70,7 +70,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ext\chrome\base\at_exit.cc" />
-    <ClCompile Include="ext\chrome\base\base_switches.cc" />
     <ClCompile Include="ext\chrome\base\bind_helpers.cc" />
     <ClCompile Include="ext\chrome\base\callback_internal.cc" />
     <ClCompile Include="ext\chrome\base\cpu.cc" />
@@ -150,7 +149,6 @@
     <ClInclude Include="ext\chrome\base\atomic_ref_count.h" />
     <ClInclude Include="ext\chrome\base\at_exit.h" />
     <ClInclude Include="ext\chrome\base\base_export.h" />
-    <ClInclude Include="ext\chrome\base\base_switches.h" />
     <ClInclude Include="ext\chrome\base\basictypes.h" />
     <ClInclude Include="ext\chrome\base\bind.h" />
     <ClInclude Include="ext\chrome\base\bind_helpers.h" />
@@ -172,7 +170,6 @@
     <ClInclude Include="ext\chrome\base\file_path.h" />
     <ClInclude Include="ext\chrome\base\float_util.h" />
     <ClInclude Include="ext\chrome\base\format_macros.h" />
-    <ClInclude Include="ext\chrome\base\gtest_prod_util.h" />
     <ClInclude Include="ext\chrome\base\hash_tables.h" />
     <ClInclude Include="ext\chrome\base\lazy_instance.h" />
     <ClInclude Include="ext\chrome\base\location.h" />

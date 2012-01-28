@@ -49,7 +49,6 @@
 #include "base/atomicops.h"
 #include "base/base_export.h"
 #include "base/compiler_specific.h"
-#include "base/gtest_prod_util.h"
 #include "base/logging.h"
 #include "base/time.h"
 
@@ -416,9 +415,6 @@ class BASE_EXPORT Histogram {
     int64 sum_;         // sum of samples.
 
    private:
-    // Allow tests to corrupt our innards for testing purposes.
-    FRIEND_TEST_ALL_PREFIXES(HistogramTest, CorruptSampleCounts);
-
     // To help identify memory corruption, we reduntantly save the number of
     // samples we've accumulated into all of our buckets.  We can compare this
     // count to the sum of the counts in all buckets, and detect problems.  Note
@@ -586,12 +582,6 @@ class BASE_EXPORT Histogram {
   virtual uint32 CalculateRangeChecksum() const;
 
  private:
-  // Allow tests to corrupt our innards for testing purposes.
-  FRIEND_TEST_ALL_PREFIXES(HistogramTest, CorruptBucketBounds);
-  FRIEND_TEST_ALL_PREFIXES(HistogramTest, CorruptSampleCounts);
-  FRIEND_TEST_ALL_PREFIXES(HistogramTest, Crc32SampleHash);
-  FRIEND_TEST_ALL_PREFIXES(HistogramTest, Crc32TableTest);
-
   friend class StatisticsRecorder;  // To allow it to delete duplicates.
 
   // Post constructor initialization.
@@ -880,9 +870,6 @@ class BASE_EXPORT CachedRanges {
   bool Equals(CachedRanges* other) const;
 
  private:
-  // Allow tests to corrupt our innards for testing purposes.
-  FRIEND_TEST_ALL_PREFIXES(HistogramTest, CorruptBucketBounds);
-
   // A monotonically increasing list of values which determine which bucket to
   // put a sample into.  For each index, show the smallest sample that can be
   // added to the corresponding bucket.
