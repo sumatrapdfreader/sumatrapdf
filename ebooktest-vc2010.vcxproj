@@ -144,7 +144,6 @@
     <ClInclude Include="ext\chrome\base\compiler_specific.h" />
     <ClInclude Include="ext\chrome\base\cpu.h" />
     <ClInclude Include="ext\chrome\base\debug\alias.h" />
-    <ClInclude Include="ext\chrome\base\debug\leak_annotations.h" />
     <ClInclude Include="ext\chrome\base\debug\stack_trace.h" />
     <ClInclude Include="ext\chrome\base\float_util.h" />
     <ClInclude Include="ext\chrome\base\format_macros.h" />

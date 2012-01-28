@@ -14,7 +14,6 @@
 #include <algorithm>
 #include <string>
 
-#include "base/debug/leak_annotations.h"
 #include "base/logging.h"
 #include "base/stringprintf.h"
 #include "base/synchronization/lock.h"
@@ -858,12 +857,10 @@ Histogram* StatisticsRecorder::RegisterOrDeleteDuplicate(Histogram* histogram) {
   // Callers are responsible for not calling RegisterOrDeleteDuplicate(ptr)
   // twice if (lock_ == NULL) || (!histograms_).
   if (lock_ == NULL) {
-    ANNOTATE_LEAKING_OBJECT_PTR(histogram);  // see crbug.com/79322
     return histogram;
   }
   base::AutoLock auto_lock(*lock_);
   if (!histograms_) {
-    ANNOTATE_LEAKING_OBJECT_PTR(histogram);  // see crbug.com/79322
     return histogram;
   }
   const std::string name = histogram->histogram_name();
@@ -871,7 +868,6 @@ Histogram* StatisticsRecorder::RegisterOrDeleteDuplicate(Histogram* histogram) {
   // Avoid overwriting a previous registration.
   if (histograms_->end() == it) {
     (*histograms_)[name] = histogram;
-    ANNOTATE_LEAKING_OBJECT_PTR(histogram);  // see crbug.com/79322
     RegisterOrDeleteDuplicateRanges(histogram);
     ++number_of_histograms_;
   } else {
