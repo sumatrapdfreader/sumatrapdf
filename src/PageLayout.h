@@ -41,11 +41,27 @@ struct DrawInstr {
 
     DrawInstr() { }
 
-    DrawInstr(DrawInstrType t)
+    DrawInstr(DrawInstrType t, RectF bbox = RectF()) :
+        type(t), bbox(bbox)
     {
-        type = t;
-        bbox.X = 0; bbox.Y = 0;
-        bbox.Width = 0; bbox.Height = 0;
+    }
+
+    static DrawInstr Str(const char *s, size_t len, RectF bbox) {
+        DrawInstr di(InstrTypeString, bbox);
+        di.str.s = s;
+        di.str.len = len;
+        return di;
+    }
+
+    static DrawInstr SetFont(size_t fontIdx) {
+        DrawInstr di(InstrTypeSetFont);
+        di.setFont.fontIdx = fontIdx;
+        return di;
+    }
+
+    static DrawInstr Line(RectF bbox) {
+        DrawInstr di(InstrTypeLine, bbox);
+        return di;
     }
 };
 
@@ -128,8 +144,6 @@ private:
     void StartNewLine(bool isParagraphBreak);
     void RemoveLastPageIfEmpty();
 
-    void AddStrInstr(const char *s, size_t len, RectF bbox);
-    void AddLineInstr(RectF bbox);
     void AddSetFontInstr(size_t fontIdx);
 
     void AddHr();

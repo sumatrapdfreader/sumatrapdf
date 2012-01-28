@@ -8,7 +8,7 @@
 
 /*
 TODO: instead of generating list of DrawInstr objects, we could add neccessary
-support to mui and use list of VirtWnd objects instead (especially if slim down
+support to mui and use list of VirtWnd objects instead (especially if we slim down
 VirtWnd objects further to make allocating hundreds of them cheaper).
 */
 
@@ -357,28 +357,10 @@ static void GetKnownAttributes(HtmlToken *t, HtmlAttr *allowedAttributes, Vec<Kn
     }
 }
 
-void PageLayout::AddLineInstr(RectF bbox)
-{
-    DrawInstr di(InstrTypeLine);
-    di.bbox = bbox;
-    instructions.Append(di);
-}
-
 void PageLayout::AddSetFontInstr(size_t fontIdx)
 {
-    CrashAlwaysIf(fontIdx >= fontCache.Size());
-    DrawInstr di(InstrTypeSetFont);
-    di.setFont.fontIdx = fontIdx;
-    instructions.Append(di);
-}
-
-void PageLayout::AddStrInstr(const char *s, size_t len, RectF bbox)
-{
-    DrawInstr di(InstrTypeString);
-    di.str.s = s;
-    di.str.len = len;
-    di.bbox = bbox;
-    instructions.Append(di);
+    CrashIf(fontIdx >= fontCache.Size());
+    instructions.Append(DrawInstr::SetFont(fontIdx));
 }
 
 // add horizontal line (<hr> in html terms)
@@ -393,7 +375,7 @@ void PageLayout::AddHr()
         StartNewPage();
 
     RectF bbox(currX, currY, pageDx, lineSpacing);
-    AddLineInstr(bbox);
+    instructions.Append(DrawInstr::Line(bbox));
     StartNewLine(true);
 }
 
@@ -424,7 +406,7 @@ void PageLayout::AddWord(WordInfo *wi)
         StartNewLine(false);
     }
     bbox.Y = currY;
-    AddStrInstr(wi->s, wi->len, bbox);
+    instructions.Append(DrawInstr::Str(wi->s, wi->len, bbox));
     currX += (dx + spaceDx);
 }
 
