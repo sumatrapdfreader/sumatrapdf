@@ -9,7 +9,6 @@
 #include "base/format_macros.h"
 #include "base/message_loop.h"
 #include "base/stringprintf.h"
-#include "base/third_party/valgrind/memcheck.h"
 #include "base/threading/thread_restrictions.h"
 #include "build/build_config.h"
 #include "base/port.h"
@@ -225,9 +224,6 @@ ThreadData::ThreadData(int thread_number)
 ThreadData::~ThreadData() {}
 
 void ThreadData::PushToHeadOfList() {
-  // Toss in a hint of randomness (atop the uniniitalized value).
-  (void)VALGRIND_MAKE_MEM_DEFINED_IF_ADDRESSABLE(&random_number_,
-                                                 sizeof(random_number_));
   random_number_ += static_cast<int32>(this - static_cast<ThreadData*>(0));
   random_number_ ^= (Now() - TrackedTime()).InMilliseconds();
 

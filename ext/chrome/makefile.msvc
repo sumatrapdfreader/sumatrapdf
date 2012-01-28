@@ -9,7 +9,7 @@
 
 OCH = $(O)\chrome
 
-CHROME_INC = /I$(EXTDIR)\chrome /I$(EXTDIR)\chrome\base\third_party\valgrind/
+CHROME_INC = /I$(EXTDIR)\chrome
 
 # /wd4244 - conversion from 'x' to 'y', possible loss of data
 # /wd4530 - C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
