@@ -14,7 +14,6 @@
 
 #include "base/bind.h"
 #include "base/bind_helpers.h"
-#include "base/command_line.h"
 #include "base/debug/stack_trace.h"
 #include "base/logging.h"
 #include "base/memory/scoped_ptr.h"
@@ -287,85 +286,6 @@ bool GetProcessIntegrityLevel(ProcessHandle process, IntegrityLevel *level) {
   return true;
 }
 
-bool LaunchProcess(const string16& cmdline,
-                   const LaunchOptions& options,
-                   ProcessHandle* process_handle) {
-  STARTUPINFO startup_info = {};
-  startup_info.cb = sizeof(startup_info);
-  if (options.empty_desktop_name)
-    startup_info.lpDesktop = L"";
-  startup_info.dwFlags = STARTF_USESHOWWINDOW;
-  startup_info.wShowWindow = options.start_hidden ? SW_HIDE : SW_SHOW;
-  PROCESS_INFORMATION process_info;
-
-  DWORD flags = 0;
-
-  if (options.job_handle) {
-    flags |= CREATE_SUSPENDED;
-
-    // If this code is run under a debugger, the launched process is
-    // automatically associated with a job object created by the debugger.
-    // The CREATE_BREAKAWAY_FROM_JOB flag is used to prevent this.
-    flags |= CREATE_BREAKAWAY_FROM_JOB;
-  }
-
-  if (options.as_user) {
-    flags |= CREATE_UNICODE_ENVIRONMENT;
-    void* enviroment_block = NULL;
-
-    if (!CreateEnvironmentBlock(&enviroment_block, options.as_user, FALSE))
-      return false;
-
-    BOOL launched =
-        CreateProcessAsUser(options.as_user, NULL,
-                            const_cast<wchar_t*>(cmdline.c_str()),
-                            NULL, NULL, options.inherit_handles, flags,
-                            enviroment_block, NULL, &startup_info,
-                            &process_info);
-    DestroyEnvironmentBlock(enviroment_block);
-    if (!launched)
-      return false;
-  } else {
-    if (!CreateProcess(NULL,
-                       const_cast<wchar_t*>(cmdline.c_str()), NULL, NULL,
-                       options.inherit_handles, flags, NULL, NULL,
-                       &startup_info, &process_info)) {
-      return false;
-    }
-  }
-
-  if (options.job_handle) {
-    if (0 == AssignProcessToJobObject(options.job_handle,
-                                      process_info.hProcess)) {
-      DLOG(ERROR) << "Could not AssignProcessToObject.";
-      KillProcess(process_info.hProcess, kProcessKilledExitCode, true);
-      return false;
-    }
-
-    ResumeThread(process_info.hThread);
-  }
-
-  // Handles must be closed or they will leak.
-  CloseHandle(process_info.hThread);
-
-  if (options.wait)
-    WaitForSingleObject(process_info.hProcess, INFINITE);
-
-  // If the caller wants the process handle, we won't close it.
-  if (process_handle) {
-    *process_handle = process_info.hProcess;
-  } else {
-    CloseHandle(process_info.hProcess);
-  }
-  return true;
-}
-
-bool LaunchProcess(const CommandLine& cmdline,
-                   const LaunchOptions& options,
-                   ProcessHandle* process_handle) {
-  return LaunchProcess(cmdline.GetCommandLineString(), options, process_handle);
-}
-
 bool SetJobObjectAsKillOnJobClose(HANDLE job_object) {
   JOBOBJECT_EXTENDED_LIMIT_INFORMATION limit_info = {0};
   limit_info.BasicLimitInformation.LimitFlags =
@@ -392,80 +312,6 @@ bool KillProcessById(ProcessId process_id, int exit_code, bool wait) {
   bool ret = KillProcess(process, exit_code, wait);
   CloseHandle(process);
   return ret;
-}
-
-bool GetAppOutput(const CommandLine& cl, std::string* output) {
-  HANDLE out_read = NULL;
-  HANDLE out_write = NULL;
-
-  SECURITY_ATTRIBUTES sa_attr;
-  // Set the bInheritHandle flag so pipe handles are inherited.
-  sa_attr.nLength = sizeof(SECURITY_ATTRIBUTES);
-  sa_attr.bInheritHandle = TRUE;
-  sa_attr.lpSecurityDescriptor = NULL;
-
-  // Create the pipe for the child process's STDOUT.
-  if (!CreatePipe(&out_read, &out_write, &sa_attr, 0)) {
-    NOTREACHED() << "Failed to create pipe";
-    return false;
-  }
-
-  // Ensure we don't leak the handles.
-  win::ScopedHandle scoped_out_read(out_read);
-  win::ScopedHandle scoped_out_write(out_write);
-
-  // Ensure the read handle to the pipe for STDOUT is not inherited.
-  if (!SetHandleInformation(out_read, HANDLE_FLAG_INHERIT, 0)) {
-    NOTREACHED() << "Failed to disabled pipe inheritance";
-    return false;
-  }
-
-  std::wstring writable_command_line_string(cl.GetCommandLineString());
-
-  PROCESS_INFORMATION proc_info = { 0 };
-  STARTUPINFO start_info = { 0 };
-
-  start_info.cb = sizeof(STARTUPINFO);
-  start_info.hStdOutput = out_write;
-  // Keep the normal stdin and stderr.
-  start_info.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
-  start_info.hStdError = GetStdHandle(STD_ERROR_HANDLE);
-  start_info.dwFlags |= STARTF_USESTDHANDLES;
-
-  // Create the child process.
-  if (!CreateProcess(NULL,
-                     &writable_command_line_string[0],
-                     NULL, NULL,
-                     TRUE,  // Handles are inherited.
-                     0, NULL, NULL, &start_info, &proc_info)) {
-    NOTREACHED() << "Failed to start process";
-    return false;
-  }
-
-  // We don't need the thread handle, close it now.
-  CloseHandle(proc_info.hThread);
-
-  // Close our writing end of pipe now. Otherwise later read would not be able
-  // to detect end of child's output.
-  scoped_out_write.Close();
-
-  // Read output from the child process's pipe for STDOUT
-  const int kBufferSize = 1024;
-  char buffer[kBufferSize];
-
-  for (;;) {
-    DWORD bytes_read = 0;
-    BOOL success = ReadFile(out_read, buffer, kBufferSize, &bytes_read, NULL);
-    if (!success || bytes_read == 0)
-      break;
-    output->append(buffer, bytes_read);
-  }
-
-  // Let's wait for the process to finish.
-  WaitForSingleObject(proc_info.hProcess, INFINITE);
-  CloseHandle(proc_info.hProcess);
-
-  return true;
 }
 
 bool KillProcess(ProcessHandle process, int exit_code, bool wait) {

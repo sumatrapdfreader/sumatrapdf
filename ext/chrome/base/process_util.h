@@ -315,26 +315,6 @@ struct LaunchOptions {
 #endif  // !defined(OS_WIN)
 };
 
-// Launch a process via the command line |cmdline|.
-// See the documentation of LaunchOptions for details on |options|.
-//
-// If |process_handle| is non-NULL, it will be filled in with the
-// handle of the launched process.  NOTE: In this case, the caller is
-// responsible for closing the handle so that it doesn't leak!
-// Otherwise, the process handle will be implicitly closed.
-//
-// Unix-specific notes:
-// - All file descriptors open in the parent process will be closed in the
-//   child process except for any preserved by options::fds_to_remap, and
-//   stdin, stdout, and stderr. If not remapped by options::fds_to_remap,
-//   stdin is reopened as /dev/null, and the child is allowed to inherit its
-//   parent's stdout and stderr.
-// - If the first argument on the command line does not contain a slash,
-//   PATH will be searched.  (See man execvp.)
-BASE_EXPORT bool LaunchProcess(const CommandLine& cmdline,
-                               const LaunchOptions& options,
-                               ProcessHandle* process_handle);
-
 #if defined(OS_WIN)
 
 enum IntegrityLevel {
@@ -349,28 +329,7 @@ enum IntegrityLevel {
 BASE_EXPORT bool GetProcessIntegrityLevel(ProcessHandle process,
                                           IntegrityLevel *level);
 
-// Windows-specific LaunchProcess that takes the command line as a
-// string.  Useful for situations where you need to control the
-// command line arguments directly, but prefer the CommandLine version
-// if launching Chrome itself.
-//
-// The first command line argument should be the path to the process,
-// and don't forget to quote it.
-//
-// Example (including literal quotes)
-//  cmdline = "c:\windows\explorer.exe" -foo "c:\bar\"
-BASE_EXPORT bool LaunchProcess(const string16& cmdline,
-                               const LaunchOptions& options,
-                               ProcessHandle* process_handle);
-
 #elif defined(OS_POSIX)
-// A POSIX-specific version of LaunchProcess that takes an argv array
-// instead of a CommandLine.  Useful for situations where you need to
-// control the command line arguments directly, but prefer the
-// CommandLine version if launching Chrome itself.
-BASE_EXPORT bool LaunchProcess(const std::vector<std::string>& argv,
-                               const LaunchOptions& options,
-                               ProcessHandle* process_handle);
 
 // AlterEnvironment returns a modified environment vector, constructed from the
 // given environment and the list of changes given in |changes|. Each key in
@@ -400,12 +359,6 @@ BASE_EXPORT void LaunchSynchronize(LaunchSynchronizationHandle handle);
 // be terminated.
 BASE_EXPORT bool SetJobObjectAsKillOnJobClose(HANDLE job_object);
 #endif  // defined(OS_WIN)
-
-// Executes the application specified by |cl| and wait for it to exit. Stores
-// the output (stdout) in |output|. Redirects stderr to /dev/null. Returns true
-// on success (application launched and exited cleanly, with exit code
-// indicating success).
-BASE_EXPORT bool GetAppOutput(const CommandLine& cl, std::string* output);
 
 #if defined(OS_POSIX)
 // A restricted version of |GetAppOutput()| which (a) clears the environment,

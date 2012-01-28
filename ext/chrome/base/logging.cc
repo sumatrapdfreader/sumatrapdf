@@ -45,7 +45,6 @@ typedef pthread_mutex_t* MutexHandle;
 #include <ostream>
 
 #include "base/base_switches.h"
-#include "base/command_line.h"
 #include "base/debug/debugger.h"
 #include "base/debug/stack_trace.h"
 #include "base/eintr_wrapper.h"
@@ -347,24 +346,7 @@ bool BaseInitLoggingImpl(const PathChar* new_log_file,
                          LogLockingState lock_log,
                          OldFileDeletionState delete_old,
                          DcheckState dcheck_state) {
-  CommandLine* command_line = CommandLine::ForCurrentProcess();
   g_dcheck_state = dcheck_state;
-
-  // Don't bother initializing g_vlog_info unless we use one of the
-  // vlog switches.
-  if (command_line->HasSwitch(switches::kV) ||
-      command_line->HasSwitch(switches::kVModule)) {
-    // NOTE: If g_vlog_info has already been initialized, it might be in use
-    // by another thread. Don't delete the old VLogInfo, just create a second
-    // one. We keep track of both to avoid memory leak warnings.
-    CHECK(!g_vlog_info_prev);
-    g_vlog_info_prev = g_vlog_info;
-
-    g_vlog_info =
-        new VlogInfo(command_line->GetSwitchValueASCII(switches::kV),
-                     command_line->GetSwitchValueASCII(switches::kVModule),
-                     &min_log_level);
-  }
 
   LoggingLock::Init(lock_log, new_log_file);
 

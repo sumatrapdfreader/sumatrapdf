@@ -21,7 +21,7 @@ CHROME_CFLAGS = $(CFLAGSOPT) /wd4244 /wd4530 /wd4018 /wd4355 /D "NO_TCMALLOC" /D
 CHROME_OBJS = \
 	$(OCH)\alias.obj $(OCH)\at_exit.obj \
 	$(OCH)\base_switches.obj $(OCH)\bind_helpers.obj \
-	$(OCH)\callback_internal.obj $(OCH)\command_line.obj \
+	$(OCH)\callback_internal.obj \
 	$(OCH)\cpu.obj $(OCH)\debugger.obj \
 	$(OCH)\debugger_win.obj $(OCH)\dtoa_wrapper.obj \
 	$(OCH)\event_trace_provider.obj \
