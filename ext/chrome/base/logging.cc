@@ -44,7 +44,6 @@ typedef pthread_mutex_t* MutexHandle;
 #include <iomanip>
 #include <ostream>
 
-#include "base/base_switches.h"
 #include "base/debug/debugger.h"
 #include "base/debug/stack_trace.h"
 #include "base/eintr_wrapper.h"
