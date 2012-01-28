@@ -69,7 +69,6 @@ bool Thread::StartWithOptions(const Options& options) {
   startup_data_ = &startup_data;
 
   if (!PlatformThread::Create(options.stack_size, this, &thread_)) {
-    DLOG(ERROR) << "failed to create thread";
     startup_data_ = NULL;
     return false;
   }

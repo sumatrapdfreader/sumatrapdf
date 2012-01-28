@@ -188,8 +188,7 @@ FundamentalValue::FundamentalValue(int in_value)
 FundamentalValue::FundamentalValue(double in_value)
     : Value(TYPE_DOUBLE), double_value_(in_value) {
   if (!IsFinite(double_value_)) {
-    NOTREACHED() << "Non-finite (i.e. NaN or positive/negative infinity) "
-                 << "values cannot be represented in JSON";
+    NOTREACHED();
     double_value_ = 0.0;
   }
 }
@@ -435,14 +434,12 @@ void DictionaryValue::SetWithoutPathExpansion(const std::string& key,
   std::pair<ValueMap::iterator, bool> ins_res =
       dictionary_.insert(std::make_pair(key, in_value));
   if (!ins_res.second) {
-    DCHECK_NE(ins_res.first->second, in_value);  // This would be bogus
     delete ins_res.first->second;
     ins_res.first->second = in_value;
   }
 }
 
 bool DictionaryValue::Get(const std::string& path, Value** out_value) const {
-  DCHECK(IsStringUTF8(path));
   std::string current_path(path);
   const DictionaryValue* current_dictionary = this;
   for (size_t delimiter_position = current_path.find('.');

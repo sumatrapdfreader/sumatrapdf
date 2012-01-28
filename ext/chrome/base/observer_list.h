@@ -120,7 +120,7 @@ class ObserverListBase
   void AddObserver(ObserverType* obs) {
     if (std::find(observers_.begin(), observers_.end(), obs)
         != observers_.end()) {
-      NOTREACHED() << "Observers can only be added once!";
+      NOTREACHED(); // << "Observers can only be added once!";
       return;
     }
     observers_.push_back(obs);
@@ -195,7 +195,6 @@ class ObserverList : public ObserverListBase<ObserverType> {
     // When check_empty is true, assert that the list is empty on destruction.
     if (check_empty) {
       ObserverListBase<ObserverType>::Compact();
-      DCHECK_EQ(ObserverListBase<ObserverType>::size(), 0U);
     }
   }
 

@@ -25,7 +25,7 @@ ObjectWatcher::~ObjectWatcher() {
 
 bool ObjectWatcher::StartWatching(HANDLE object, Delegate* delegate) {
   if (wait_object_) {
-    NOTREACHED() << "Already watching an object";
+    NOTREACHED(); // << "Already watching an object";
     return false;
   }
 
@@ -42,7 +42,7 @@ bool ObjectWatcher::StartWatching(HANDLE object, Delegate* delegate) {
 
   if (!RegisterWaitForSingleObject(&wait_object_, object, DoneWaiting,
                                    this, INFINITE, wait_flags)) {
-    NOTREACHED() << "RegisterWaitForSingleObject failed: " << GetLastError();
+    NOTREACHED(); // << "RegisterWaitForSingleObject failed: " << GetLastError();
     object_ = NULL;
     wait_object_ = NULL;
     return false;
@@ -58,13 +58,10 @@ bool ObjectWatcher::StopWatching() {
   if (!wait_object_)
     return false;
 
-  // Make sure ObjectWatcher is used in a single-threaded fashion.
-  DCHECK(origin_loop_ == MessageLoop::current());
-
   // Blocking call to cancel the wait. Any callbacks already in progress will
   // finish before we return from this call.
   if (!UnregisterWaitEx(wait_object_, INVALID_HANDLE_VALUE)) {
-    NOTREACHED() << "UnregisterWaitEx failed: " << GetLastError();
+    NOTREACHED(); // << "UnregisterWaitEx failed: " << GetLastError();
     return false;
   }
 
@@ -82,8 +79,6 @@ HANDLE ObjectWatcher::GetWatchedObject() {
 
 // static
 void CALLBACK ObjectWatcher::DoneWaiting(void* param, BOOLEAN timed_out) {
-  DCHECK(!timed_out);
-
   // The destructor blocks on any callbacks that are in flight, so we know that
   // that is always a pointer to a valid ObjectWater.
   ObjectWatcher* that = static_cast<ObjectWatcher*>(param);

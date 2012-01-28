@@ -54,7 +54,6 @@ void MessagePumpWin::RunWithDispatcher(
 }
 
 void MessagePumpWin::Quit() {
-  DCHECK(state_);
   state_->should_quit = true;
 }
 
@@ -123,7 +122,6 @@ void MessagePumpForUI::ScheduleDelayedWork(const TimeTicks& delayed_work_time) {
   delayed_work_time_ = delayed_work_time;
 
   int delay_msec = GetCurrentDelay();
-  DCHECK_GE(delay_msec, 0);
   if (delay_msec < USER_TIMER_MINIMUM)
     delay_msec = USER_TIMER_MINIMUM;
 
@@ -241,7 +239,6 @@ void MessagePumpForUI::InitMessageWnd() {
 
   message_hwnd_ =
       CreateWindow(kWndClass, 0, 0, 0, 0, 0, 0, HWND_MESSAGE, 0, hinst, 0);
-  DCHECK(message_hwnd_);
 }
 
 void MessagePumpForUI::WaitForWork() {
@@ -274,8 +271,6 @@ void MessagePumpForUI::WaitForWork() {
     }
     return;
   }
-
-  DCHECK_NE(WAIT_FAILED, result) << GetLastError();
 }
 
 void MessagePumpForUI::HandleWorkMessage() {
@@ -385,12 +380,8 @@ bool MessagePumpForUI::ProcessPumpReplacementMessage() {
     have_message = (0 != PeekMessage(&msg, NULL, 0, 0, PM_REMOVE));
   }
 
-  DCHECK(!have_message || kMsgHaveWork != msg.message ||
-         msg.hwnd != message_hwnd_);
-
   // Since we discarded a kMsgHaveWork message, we must update the flag.
   int old_have_work = InterlockedExchange(&have_work_, 0);
-  DCHECK(old_have_work);
 
   // We don't need a special time slice if we didn't have_message to process.
   if (!have_message)
@@ -409,7 +400,6 @@ bool MessagePumpForUI::ProcessPumpReplacementMessage() {
 
 MessagePumpForIO::MessagePumpForIO() {
   port_.Set(CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, 1));
-  DCHECK(port_.IsValid());
 }
 
 void MessagePumpForIO::ScheduleWork() {
@@ -417,10 +407,9 @@ void MessagePumpForIO::ScheduleWork() {
     return;  // Someone else continued the pumping.
 
   // Make sure the MessagePump does some work for us.
-  BOOL ret = PostQueuedCompletionStatus(port_, 0,
+  PostQueuedCompletionStatus(port_, 0,
                                         reinterpret_cast<ULONG_PTR>(this),
                                         reinterpret_cast<OVERLAPPED*>(this));
-  DCHECK(ret);
 }
 
 void MessagePumpForIO::ScheduleDelayedWork(const TimeTicks& delayed_work_time) {
@@ -434,7 +423,6 @@ void MessagePumpForIO::RegisterIOHandler(HANDLE file_handle,
                                          IOHandler* handler) {
   ULONG_PTR key = reinterpret_cast<ULONG_PTR>(handler);
   HANDLE port = CreateIoCompletionPort(file_handle, port_, key, 1);
-  DPCHECK(port);
 }
 
 //-----------------------------------------------------------------------------
@@ -481,9 +469,6 @@ void MessagePumpForIO::DoRunLoop() {
 // Wait until IO completes, up to the time needed by the timer manager to fire
 // the next set of timers.
 void MessagePumpForIO::WaitForWork() {
-  // We do not support nested IO message loops. This is to avoid messy
-  // recursion problems.
-  DCHECK_EQ(1, state_->run_depth) << "Cannot nest an IO message loop!";
 
   int timeout = GetCurrentDelay();
   if (timeout < 0)  // Negative value means no timers waiting.
@@ -508,7 +493,6 @@ bool MessagePumpForIO::WaitForIOCompletion(DWORD timeout, IOHandler* filter) {
       // Save this item for later
       completed_io_.push_back(item);
     } else {
-      DCHECK_EQ(item.context->handler, item.handler);
       WillProcessIOEvent();
       item.handler->OnIOCompleted(item.context, item.bytes_transfered,
                                   item.error);
@@ -543,7 +527,6 @@ bool MessagePumpForIO::ProcessInternalIOItem(const IOItem& item) {
   if (this == reinterpret_cast<MessagePumpForIO*>(item.context) &&
       this == reinterpret_cast<MessagePumpForIO*>(item.handler)) {
     // This is our internal completion.
-    DCHECK(!item.bytes_transfered);
     InterlockedExchange(&have_work_, 0);
     return true;
   }
@@ -552,7 +535,6 @@ bool MessagePumpForIO::ProcessInternalIOItem(const IOItem& item) {
 
 // Returns a completion item that was previously received.
 bool MessagePumpForIO::MatchCompletedIOItem(IOHandler* filter, IOItem* item) {
-  DCHECK(!completed_io_.empty());
   for (std::list<IOItem>::iterator it = completed_io_.begin();
        it != completed_io_.end(); ++it) {
     if (!filter || it->handler == filter) {

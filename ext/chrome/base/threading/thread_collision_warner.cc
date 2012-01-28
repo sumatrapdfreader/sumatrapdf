@@ -10,7 +10,7 @@
 namespace base {
 
 void DCheckAsserter::warn() {
-  NOTREACHED() << "Thread Collision";
+  NOTREACHED(); // << "Thread Collision";
 }
 
 static subtle::Atomic32 CurrentThread() {

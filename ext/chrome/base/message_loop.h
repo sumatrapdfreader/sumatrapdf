@@ -249,7 +249,6 @@ class BASE_EXPORT MessageLoop : public base::MessagePump::Delegate {
 
   // Optional call to connect the thread name with this loop.
   void set_thread_name(const std::string& thread_name) {
-    DCHECK(thread_name_.empty()) << "Should not rename this thread!";
     thread_name_ = thread_name;
   }
   const std::string& thread_name() const { return thread_name_; }
@@ -553,7 +552,6 @@ class BASE_EXPORT MessageLoopForUI : public MessageLoop {
   // Returns the MessageLoopForUI of the current thread.
   static MessageLoopForUI* current() {
     MessageLoop* loop = MessageLoop::current();
-    DCHECK_EQ(MessageLoop::TYPE_UI, loop->type());
     return static_cast<MessageLoopForUI*>(loop);
   }
 
@@ -621,7 +619,6 @@ class BASE_EXPORT MessageLoopForIO : public MessageLoop {
   // Returns the MessageLoopForIO of the current thread.
   static MessageLoopForIO* current() {
     MessageLoop* loop = MessageLoop::current();
-    DCHECK_EQ(MessageLoop::TYPE_IO, loop->type());
     return static_cast<MessageLoopForIO*>(loop);
   }
 

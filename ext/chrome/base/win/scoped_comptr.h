@@ -69,7 +69,6 @@ class ScopedComPtr : public scoped_refptr<Interface> {
 
   // Accepts an interface pointer that has already been addref-ed.
   void Attach(Interface* p) {
-    DCHECK(!ptr_);
     ptr_ = p;
   }
 
@@ -78,7 +77,6 @@ class ScopedComPtr : public scoped_refptr<Interface> {
   // The function DCHECKs on the current value being NULL.
   // Usage: Foo(p.Receive());
   Interface** Receive() {
-    DCHECK(!ptr_) << "Object leak. Pointer must be NULL";
     return &ptr_;
   }
 
@@ -89,8 +87,6 @@ class ScopedComPtr : public scoped_refptr<Interface> {
 
   template <class Query>
   HRESULT QueryInterface(Query** p) {
-    DCHECK(p != NULL);
-    DCHECK(ptr_ != NULL);
     // IUnknown already has a template version of QueryInterface
     // so the iid parameter is implicit here. The only thing this
     // function adds are the DCHECKs.
@@ -99,22 +95,18 @@ class ScopedComPtr : public scoped_refptr<Interface> {
 
   // QI for times when the IID is not associated with the type.
   HRESULT QueryInterface(const IID& iid, void** obj) {
-    DCHECK(obj != NULL);
-    DCHECK(ptr_ != NULL);
     return ptr_->QueryInterface(iid, obj);
   }
 
   // Queries |other| for the interface this object wraps and returns the
   // error code from the other->QueryInterface operation.
   HRESULT QueryFrom(IUnknown* object) {
-    DCHECK(object != NULL);
     return object->QueryInterface(Receive());
   }
 
   // Convenience wrapper around CoCreateInstance
   HRESULT CreateInstance(const CLSID& clsid, IUnknown* outer = NULL,
                          DWORD context = CLSCTX_ALL) {
-    DCHECK(!ptr_);
     HRESULT hr = ::CoCreateInstance(clsid, outer, context, *interface_id,
                                     reinterpret_cast<void**>(&ptr_));
     return hr;
@@ -149,7 +141,6 @@ class ScopedComPtr : public scoped_refptr<Interface> {
   // by statically casting the ScopedComPtr instance to the wrapped interface
   // and then making the call... but generally that shouldn't be necessary.
   BlockIUnknownMethods* operator->() const {
-    DCHECK(ptr_ != NULL);
     return reinterpret_cast<BlockIUnknownMethods*>(ptr_);
   }
 

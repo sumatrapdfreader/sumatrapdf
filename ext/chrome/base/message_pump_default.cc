@@ -18,8 +18,6 @@ MessagePumpDefault::MessagePumpDefault()
 }
 
 void MessagePumpDefault::Run(Delegate* delegate) {
-  DCHECK(keep_running_) << "Quit must have been called outside of Run!";
-
   for (;;) {
 #if defined(OS_MACOSX)
     mac::ScopedNSAutoreleasePool autorelease_pool;

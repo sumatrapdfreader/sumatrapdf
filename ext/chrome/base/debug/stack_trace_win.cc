@@ -124,7 +124,6 @@ class SymbolContext {
       // When it fails, we should not call debugbreak since it kills the current
       // process (prevents future tests from running or kills the browser
       // process).
-      DLOG(ERROR) << "SymInitialize failed: " << init_error_;
     }
   }
 

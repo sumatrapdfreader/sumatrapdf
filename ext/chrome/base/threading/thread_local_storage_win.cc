@@ -52,7 +52,6 @@ long ThreadLocalStorage::tls_max_ = 1;
 void** ThreadLocalStorage::Initialize() {
   if (tls_key_ == TLS_OUT_OF_INDEXES) {
     long value = TlsAlloc();
-    DCHECK(value != TLS_OUT_OF_INDEXES);
 
     // Atomically test-and-set the tls_key.  If the key is TLS_OUT_OF_INDEXES,
     // go ahead and set it.  Otherwise, do nothing, as another
@@ -64,7 +63,6 @@ void** ThreadLocalStorage::Initialize() {
       TlsFree(value);
     }
   }
-  DCHECK(!TlsGetValue(tls_key_));
 
   // Some allocators, such as TCMalloc, make use of thread local storage.
   // As a result, any attempt to call new (or malloc) will lazily cause such a
@@ -98,7 +96,6 @@ bool ThreadLocalStorage::Slot::Initialize(TLSDestructorFunc destructor) {
 
   // Grab a new slot.
   slot_ = InterlockedIncrement(&tls_max_) - 1;
-  DCHECK_GT(slot_, 0);
   if (slot_ >= kThreadLocalStorageSize) {
     NOTREACHED();
     return false;
@@ -113,8 +110,6 @@ bool ThreadLocalStorage::Slot::Initialize(TLSDestructorFunc destructor) {
 void ThreadLocalStorage::Slot::Free() {
   // At this time, we don't reclaim old indices for TLS slots.
   // So all we need to do is wipe the destructor.
-  DCHECK_GT(slot_, 0);
-  DCHECK_LT(slot_, kThreadLocalStorageSize);
   g_tls_destructors[slot_] = NULL;
   slot_ = 0;
   initialized_ = false;
@@ -124,8 +119,6 @@ void* ThreadLocalStorage::Slot::Get() const {
   void** tls_data = static_cast<void**>(TlsGetValue(tls_key_));
   if (!tls_data)
     tls_data = ThreadLocalStorage::Initialize();
-  DCHECK_GT(slot_, 0);
-  DCHECK_LT(slot_, kThreadLocalStorageSize);
   return tls_data[slot_];
 }
 
@@ -133,8 +126,6 @@ void ThreadLocalStorage::Slot::Set(void* value) {
   void** tls_data = static_cast<void**>(TlsGetValue(tls_key_));
   if (!tls_data)
     tls_data = ThreadLocalStorage::Initialize();
-  DCHECK_GT(slot_, 0);
-  DCHECK_LT(slot_, kThreadLocalStorageSize);
   tls_data[slot_] = value;
 }
 

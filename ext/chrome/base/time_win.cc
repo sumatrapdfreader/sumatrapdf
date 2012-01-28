@@ -62,9 +62,6 @@ int64 FileTimeToMicroseconds(const FILETIME& ft) {
 }
 
 void MicrosecondsToFileTime(int64 us, FILETIME* ft) {
-  DCHECK_GE(us, 0LL) << "Time is less than 0, negative values are not "
-      "representable in FILETIME";
-
   // Multiply by 10 to convert milliseconds to 100-nanoseconds. Bit_cast will
   // handle alignment problems. This only works on little-endian machines.
   *ft = bit_cast<FILETIME, int64>(us * 10);
@@ -218,7 +215,7 @@ Time Time::FromExploded(bool is_local, const Exploded& exploded) {
   }
 
   if (!success) {
-    NOTREACHED() << "Unable to convert time";
+    NOTREACHED();; // << "Unable to convert time";
     return Time(0);
   }
   return Time(FileTimeToMicroseconds(ft));
@@ -252,7 +249,7 @@ void Time::Explode(bool is_local, Exploded* exploded) const {
   }
 
   if (!success) {
-    NOTREACHED() << "Unable to convert time, don't know why";
+    NOTREACHED(); // << "Unable to convert time, don't know why";
     ZeroMemory(exploded, sizeof(*exploded));
     return;
   }

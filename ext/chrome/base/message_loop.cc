@@ -133,7 +133,6 @@ MessageLoop::MessageLoop(Type type)
       os_modal_loop_(false),
 #endif  // OS_WIN
       next_sequence_num_(0) {
-  DCHECK(!current()) << "should only have one message loop per thread";
   lazy_tls_ptr.Pointer()->Set(this);
 
   message_loop_proxy_ = new base::MessageLoopProxyImpl();
@@ -165,16 +164,11 @@ MessageLoop::MessageLoop(Type type)
   } else if (type_ == TYPE_IO) {
     pump_ = MESSAGE_PUMP_IO;
   } else {
-    DCHECK_EQ(TYPE_DEFAULT, type_);
     pump_ = new base::MessagePumpDefault();
   }
 }
 
 MessageLoop::~MessageLoop() {
-  DCHECK_EQ(this, current());
-
-  DCHECK(!state_);
-
   // Clean up any unprocessed tasks, but take care: deleting a task could
   // result in the addition of more tasks (e.g., via DeleteSoon).  We set a
   // limit on the number of times we will allow a deleted task to generate more
@@ -190,7 +184,6 @@ MessageLoop::~MessageLoop() {
     if (!did_work)
       break;
   }
-  DCHECK(!did_work);
 
   // Let interested parties have one last shot at accessing this.
   FOR_EACH_OBSERVER(DestructionObserver, destruction_observers_,
@@ -217,9 +210,6 @@ MessageLoop::~MessageLoop() {
 
 // static
 MessageLoop* MessageLoop::current() {
-  // TODO(darin): sadly, we cannot enable this yet since people call us even
-  // when they have no intention of using us.
-  // DCHECK(loop) << "Ouch, did you forget to initialize me?";
   return lazy_tls_ptr.Pointer()->Get();
 }
 
@@ -230,25 +220,21 @@ void MessageLoop::EnableHistogrammer(bool enable) {
 
 // static
 void MessageLoop::InitMessagePumpForUIFactory(MessagePumpFactory* factory) {
-  DCHECK(!message_pump_for_ui_factory_);
   message_pump_for_ui_factory_ = factory;
 }
 
 void MessageLoop::AddDestructionObserver(
     DestructionObserver* destruction_observer) {
-  DCHECK_EQ(this, current());
   destruction_observers_.AddObserver(destruction_observer);
 }
 
 void MessageLoop::RemoveDestructionObserver(
     DestructionObserver* destruction_observer) {
-  DCHECK_EQ(this, current());
   destruction_observers_.RemoveObserver(destruction_observer);
 }
 
 void MessageLoop::PostTask(
     const tracked_objects::Location& from_here, const base::Closure& task) {
-  DCHECK(!task.is_null()) << from_here.ToString();
   PendingTask pending_task(from_here, task, CalculateDelayedRuntime(0), true);
   AddToIncomingQueue(&pending_task);
 }
@@ -257,7 +243,6 @@ void MessageLoop::PostDelayedTask(
     const tracked_objects::Location& from_here,
     const base::Closure& task,
     int64 delay_ms) {
-  DCHECK(!task.is_null()) << from_here.ToString();
   PendingTask pending_task(from_here, task,
                            CalculateDelayedRuntime(delay_ms), true);
   AddToIncomingQueue(&pending_task);
@@ -272,7 +257,6 @@ void MessageLoop::PostDelayedTask(
 
 void MessageLoop::PostNonNestableTask(
     const tracked_objects::Location& from_here, const base::Closure& task) {
-  DCHECK(!task.is_null()) << from_here.ToString();
   PendingTask pending_task(from_here, task, CalculateDelayedRuntime(0), false);
   AddToIncomingQueue(&pending_task);
 }
@@ -280,7 +264,6 @@ void MessageLoop::PostNonNestableTask(
 void MessageLoop::PostNonNestableDelayedTask(
     const tracked_objects::Location& from_here, const base::Closure& task,
     int64 delay_ms) {
-  DCHECK(!task.is_null()) << from_here.ToString();
   PendingTask pending_task(from_here, task,
                            CalculateDelayedRuntime(delay_ms), false);
   AddToIncomingQueue(&pending_task);
@@ -305,20 +288,18 @@ void MessageLoop::RunAllPending() {
 }
 
 void MessageLoop::Quit() {
-  DCHECK_EQ(this, current());
   if (state_) {
     state_->quit_received = true;
   } else {
-    NOTREACHED() << "Must be inside Run to call Quit";
+    NOTREACHED(); // "Must be inside Run to call Quit";
   }
 }
 
 void MessageLoop::QuitNow() {
-  DCHECK_EQ(this, current());
   if (state_) {
     pump_->Quit();
   } else {
-    NOTREACHED() << "Must be inside Run to call Quit";
+    NOTREACHED(); // "Must be inside Run to call Quit";
   }
 }
 
@@ -350,23 +331,19 @@ bool MessageLoop::IsNested() {
 }
 
 void MessageLoop::AddTaskObserver(TaskObserver* task_observer) {
-  DCHECK_EQ(this, current());
   task_observers_.AddObserver(task_observer);
 }
 
 void MessageLoop::RemoveTaskObserver(TaskObserver* task_observer) {
-  DCHECK_EQ(this, current());
   task_observers_.RemoveObserver(task_observer);
 }
 
 void MessageLoop::AssertIdle() const {
   // We only check |incoming_queue_|, since we don't want to lock |work_queue_|.
   base::AutoLock lock(incoming_queue_lock_);
-  DCHECK(incoming_queue_.empty());
 }
 
 bool MessageLoop::is_running() const {
-  DCHECK_EQ(this, current());
   return state_ != NULL;
 }
 
@@ -400,9 +377,8 @@ __declspec(noinline) void MessageLoop::RunInternalInSEHFrame() {
 #endif
 
 void MessageLoop::RunInternal() {
-  DCHECK_EQ(this, current());
 
-  StartHistogrammer();
+    StartHistogrammer();
 
 #if !defined(OS_MACOSX) && !defined(OS_ANDROID)
   if (state_->dispatcher && type() == TYPE_UI) {
@@ -430,7 +406,6 @@ bool MessageLoop::ProcessNextDelayedNonNestableTask() {
 }
 
 void MessageLoop::RunTask(const PendingTask& pending_task) {
-  DCHECK(nestable_tasks_allowed_);
   // Execute the task and assume the worst: It is probably not reentrant.
   nestable_tasks_allowed_ = false;
 
@@ -498,20 +473,11 @@ void MessageLoop::ReloadWorkQueue() {
     if (incoming_queue_.empty())
       return;
     incoming_queue_.Swap(&work_queue_);  // Constant time
-    DCHECK(incoming_queue_.empty());
   }
 }
 
 bool MessageLoop::DeletePendingTasks() {
   bool did_work = !work_queue_.empty();
-  // TODO(darin): Delete all tasks once it is safe to do so.
-  // Until it is totally safe, just do it when running Valgrind.
-  //
-  // See http://crbug.com/61131
-  //
-#if defined(USE_HEAPCHECKER)
-  should_leak_tasks_ = false;
-#endif  // defined(OS_POSIX)
   while (!work_queue_.empty()) {
     PendingTask pending_task = work_queue_.front();
     work_queue_.pop();
@@ -565,7 +531,7 @@ TimeTicks MessageLoop::CalculateDelayedRuntime(int64 delay_ms) {
     }
 #endif
   } else {
-    DCHECK_EQ(delay_ms, 0) << "delay should not be negative";
+    // DCHECK_EQ(delay_ms, 0) << "delay should not be negative";
   }
 
 #if defined(OS_WIN)
@@ -613,7 +579,6 @@ void MessageLoop::AddToIncomingQueue(PendingTask* pending_task) {
 void MessageLoop::StartHistogrammer() {
   if (enable_histogrammer_ && !message_histogram_
       && base::StatisticsRecorder::IsActive()) {
-    DCHECK(!thread_name_.empty());
     message_histogram_ = base::LinearHistogram::FactoryGet(
         "MsgLoop:" + thread_name_,
         kLeastNonZeroMessageId, kMaxMessageId,

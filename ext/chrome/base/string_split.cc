@@ -38,17 +38,12 @@ static void SplitStringT(const STR& str,
 void SplitString(const string16& str,
                  char16 c,
                  std::vector<string16>* r) {
-  DCHECK(CBU16_IS_SINGLE(c));
   SplitStringT(str, c, true, r);
 }
 
 void SplitString(const std::string& str,
                  char c,
                  std::vector<std::string>* r) {
-#if CHAR_MIN < 0
-  DCHECK(c >= 0);
-#endif
-  DCHECK(c < 0x7F);
   SplitStringT(str, c, true, r);
 }
 
@@ -62,7 +57,6 @@ bool SplitStringIntoKeyValues(
   // Find the key string.
   size_t end_key_pos = line.find_first_of(key_value_delimiter);
   if (end_key_pos == std::string::npos) {
-    DVLOG(1) << "cannot parse key from line: " << line;
     return false;    // no key
   }
   key->assign(line, 0, end_key_pos);
@@ -71,7 +65,6 @@ bool SplitStringIntoKeyValues(
   std::string remains(line, end_key_pos, line.size() - end_key_pos);
   size_t begin_values_pos = remains.find_first_not_of(key_value_delimiter);
   if (begin_values_pos == std::string::npos) {
-    DVLOG(1) << "cannot parse value from line: " << line;
     return false;   // no value
   }
   std::string values_string(remains, begin_values_pos,
@@ -108,7 +101,6 @@ bool SplitStringIntoKeyValuePairs(
       // values; just record that our split failed.
       success = false;
     }
-    DCHECK_LE(value.size(), 1U);
     kv_pairs->push_back(make_pair(key, value.empty()? "" : value[0]));
   }
   return success;

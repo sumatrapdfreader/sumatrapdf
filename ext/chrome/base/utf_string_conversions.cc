@@ -176,11 +176,9 @@ std::string UTF16ToUTF8(const string16& utf16) {
 #endif
 
 std::wstring ASCIIToWide(const base::StringPiece& ascii) {
-  DCHECK(IsStringASCII(ascii)) << ascii;
   return std::wstring(ascii.begin(), ascii.end());
 }
 
 string16 ASCIIToUTF16(const base::StringPiece& ascii) {
-  DCHECK(IsStringASCII(ascii)) << ascii;
   return string16(ascii.begin(), ascii.end());
 }

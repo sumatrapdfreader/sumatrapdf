@@ -27,16 +27,13 @@ namespace win {
     SIZEOF_STRUCT_WITH_SPECIFIED_LAST_MEMBER(NONCLIENTMETRICS, lfMessageFont)
 
 void GetNonClientMetrics(NONCLIENTMETRICS* metrics) {
-  DCHECK(metrics);
-
   static const UINT SIZEOF_NONCLIENTMETRICS =
       (base::win::GetVersion() >= base::win::VERSION_VISTA) ?
       sizeof(NONCLIENTMETRICS) : NONCLIENTMETRICS_SIZE_PRE_VISTA;
   metrics->cbSize = SIZEOF_NONCLIENTMETRICS;
-  const bool success = !!SystemParametersInfo(SPI_GETNONCLIENTMETRICS,
+  SystemParametersInfo(SPI_GETNONCLIENTMETRICS,
                                               SIZEOF_NONCLIENTMETRICS, metrics,
                                               0);
-  DCHECK(success);
 }
 
 bool GetUserSidString(std::wstring* user_sid) {
@@ -100,8 +97,6 @@ bool UserAccountControlIsEnabled() {
 bool SetStringValueForPropertyStore(IPropertyStore* property_store,
                                     const PROPERTYKEY& property_key,
                                     const wchar_t* property_string_value) {
-  DCHECK(property_store);
-
   PROPVARIANT property_value;
   if (FAILED(InitPropVariantFromString(property_string_value, &property_value)))
     return false;
@@ -119,7 +114,6 @@ bool SetAppIdForPropertyStore(IPropertyStore* property_store,
   // App id should be less than 128 chars and contain no space. And recommended
   // format is CompanyName.ProductName[.SubProduct.ProductNumber].
   // See http://msdn.microsoft.com/en-us/library/dd378459%28VS.85%29.aspx
-  DCHECK(lstrlen(app_id) < 128 && wcschr(app_id, L' ') == NULL);
 
   return SetStringValueForPropertyStore(property_store,
                                         PKEY_AppUserModel_ID,

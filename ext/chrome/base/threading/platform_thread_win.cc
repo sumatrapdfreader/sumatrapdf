@@ -139,7 +139,6 @@ const char* PlatformThread::GetName() {
 // static
 bool PlatformThread::Create(size_t stack_size, Delegate* delegate,
                             PlatformThreadHandle* thread_handle) {
-  DCHECK(thread_handle);
   return CreateThreadInternal(stack_size, delegate, thread_handle);
 }
 
@@ -150,7 +149,6 @@ bool PlatformThread::CreateNonJoinable(size_t stack_size, Delegate* delegate) {
 
 // static
 void PlatformThread::Join(PlatformThreadHandle thread_handle) {
-  DCHECK(thread_handle);
   // TODO(willchan): Enable this check once I can get it to work for Windows
   // shutdown.
   // Joining another thread may block the current thread for a long time, since
@@ -163,7 +161,6 @@ void PlatformThread::Join(PlatformThreadHandle thread_handle) {
   // Wait for the thread to exit.  It should already have terminated but make
   // sure this assumption is valid.
   DWORD result = WaitForSingleObject(thread_handle, INFINITE);
-  DCHECK_EQ(WAIT_OBJECT_0, result);
 
   CloseHandle(thread_handle);
 }

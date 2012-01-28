@@ -32,7 +32,6 @@ class PostTaskAndReplyRelay {
   }
 
   ~PostTaskAndReplyRelay() {
-    DCHECK(origin_loop_->BelongsToCurrentThread());
     task_.Reset();
     reply_.Reset();
   }
@@ -47,7 +46,6 @@ class PostTaskAndReplyRelay {
 
  private:
   void RunReplyAndSelfDestruct() {
-    DCHECK(origin_loop_->BelongsToCurrentThread());
 
     // Force |task_| to be released before |reply_| is to ensure that no one
     // accidentally depends on |task_| keeping one of its arguments alive while

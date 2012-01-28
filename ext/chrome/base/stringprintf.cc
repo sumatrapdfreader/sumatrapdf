@@ -71,7 +71,6 @@ static void StringAppendVT(StringType* dst,
 #endif
       {
         // If an error other than overflow occurred, it's never going to work.
-        DLOG(WARNING) << "Unable to printf the requested string due to error.";
         return;
       }
       // Try doubling the buffer size.
@@ -85,7 +84,6 @@ static void StringAppendVT(StringType* dst,
       // That should be plenty, don't try anything larger.  This protects
       // against huge allocations when using vsnprintfT implementations that
       // return -1 for reasons other than overflow without setting errno.
-      DLOG(WARNING) << "Unable to printf the requested string due to size.";
       return;
     }
 

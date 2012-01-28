@@ -28,9 +28,6 @@
     <ClCompile Include="ext\chrome\base\location.cc">
       <Filter>base</Filter>
     </ClCompile>
-    <ClCompile Include="ext\chrome\base\logging.cc">
-      <Filter>base</Filter>
-    </ClCompile>
     <ClCompile Include="ext\chrome\base\message_loop.cc">
       <Filter>base</Filter>
     </ClCompile>
@@ -94,9 +91,6 @@
     <ClCompile Include="ext\chrome\base\values.cc">
       <Filter>base</Filter>
     </ClCompile>
-    <ClCompile Include="ext\chrome\base\vlog.cc">
-      <Filter>base</Filter>
-    </ClCompile>
     <ClCompile Include="ext\chrome\base\win\object_watcher.cc">
       <Filter>base\win</Filter>
     </ClCompile>
@@ -137,12 +131,6 @@
       <Filter>base\threading</Filter>
     </ClCompile>
     <ClCompile Include="ext\chrome\base\debug\alias.cc">
-      <Filter>base\debug</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\chrome\base\debug\debugger.cc">
-      <Filter>base\debug</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\chrome\base\debug\debugger_win.cc">
       <Filter>base\debug</Filter>
     </ClCompile>
     <ClCompile Include="ext\chrome\base\debug\stack_trace.cc">
@@ -241,9 +229,6 @@
     <ClInclude Include="ext\chrome\base\location.h">
       <Filter>base</Filter>
     </ClInclude>
-    <ClInclude Include="ext\chrome\base\logging.h">
-      <Filter>base</Filter>
-    </ClInclude>
     <ClInclude Include="ext\chrome\base\message_loop.h">
       <Filter>base</Filter>
     </ClInclude>
@@ -337,9 +322,6 @@
     <ClInclude Include="ext\chrome\base\values.h">
       <Filter>base</Filter>
     </ClInclude>
-    <ClInclude Include="ext\chrome\base\vlog.h">
-      <Filter>base</Filter>
-    </ClInclude>
     <ClInclude Include="ext\chrome\base\win\object_watcher.h">
       <Filter>base\win</Filter>
     </ClInclude>
@@ -391,9 +373,6 @@
     <ClInclude Include="ext\chrome\base\debug\alias.h">
       <Filter>base\debug</Filter>
     </ClInclude>
-    <ClInclude Include="ext\chrome\base\debug\debugger.h">
-      <Filter>base\debug</Filter>
-    </ClInclude>
     <ClInclude Include="ext\chrome\base\debug\leak_annotations.h">
       <Filter>base\debug</Filter>
     </ClInclude>
@@ -411,6 +390,9 @@
     </ClInclude>
     <ClInclude Include="ext\chrome\base\metrics\histogram.h">
       <Filter>base\metrics</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\logging.h">
+      <Filter>base</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

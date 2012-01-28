@@ -265,12 +265,10 @@ bool TrimString(const std::string& input,
 void TruncateUTF8ToByteSize(const std::string& input,
                             const size_t byte_size,
                             std::string* output) {
-  DCHECK(output);
   if (byte_size > input.length()) {
     *output = input;
     return;
   }
-  DCHECK_LE(byte_size, static_cast<uint32>(kint32max));
   // Note: This cast is necessary because CBU8_NEXT uses int32s.
   int32 truncation_length = static_cast<int32>(byte_size);
   int32 char_index = truncation_length - 1;
@@ -420,12 +418,10 @@ bool ContainsOnlyChars(const std::string& input,
 }
 
 std::string WideToASCII(const std::wstring& wide) {
-  DCHECK(IsStringASCII(wide)) << wide;
   return std::string(wide.begin(), wide.end());
 }
 
 std::string UTF16ToASCII(const string16& utf16) {
-  DCHECK(IsStringASCII(utf16)) << utf16;
   return std::string(utf16.begin(), utf16.end());
 }
 
@@ -799,7 +795,6 @@ OutStringType DoReplaceStringPlaceholders(const FormatStringType& format_string,
     if ('$' == *i) {
       if (i + 1 != format_string.end()) {
         ++i;
-        DCHECK('$' == *i || '1' <= *i) << "Invalid placeholder: " << *i;
         if ('$' == *i) {
           while (i != format_string.end() && '$' == *i) {
             formatted.push_back('$');
