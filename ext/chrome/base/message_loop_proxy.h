@@ -39,15 +39,11 @@ class BASE_EXPORT MessageLoopProxy
   // example the target loop may already be quitting, or in the case of a
   // delayed task a Quit message may preempt it in the message loop queue.
   // Conversely, a return value of false is a guarantee the task will not run.
-  virtual bool PostTask(const tracked_objects::Location& from_here,
-                        const base::Closure& task) = 0;
-  virtual bool PostDelayedTask(const tracked_objects::Location& from_here,
-                               const base::Closure& task,
+  virtual bool PostTask(const base::Closure& task) = 0;
+  virtual bool PostDelayedTask(const base::Closure& task,
                                int64 delay_ms) = 0;
-  virtual bool PostNonNestableTask(const tracked_objects::Location& from_here,
-                                   const base::Closure& task) = 0;
+  virtual bool PostNonNestableTask(const base::Closure& task) = 0;
   virtual bool PostNonNestableDelayedTask(
-      const tracked_objects::Location& from_here,
       const base::Closure& task,
       int64 delay_ms) = 0;
 
@@ -96,21 +92,18 @@ class BASE_EXPORT MessageLoopProxy
   //   * The DataLoader object can be deleted while |task| is still running,
   //     and the reply will cancel itself safely because it is bound to a
   //     WeakPtr<>.
-  bool PostTaskAndReply(const tracked_objects::Location& from_here,
-                        const Closure& task,
+  bool PostTaskAndReply(const Closure& task,
                         const Closure& reply);
 
   template <class T>
-  bool DeleteSoon(const tracked_objects::Location& from_here,
-                  const T* object) {
+  bool DeleteSoon(const T* object) {
     return subtle::DeleteHelperInternal<T, bool>::DeleteOnMessageLoop(
-        this, from_here, object);
+        this, object);
   }
   template <class T>
-  bool ReleaseSoon(const tracked_objects::Location& from_here,
-                   T* object) {
+  bool ReleaseSoon(T* object) {
     return subtle::ReleaseHelperInternal<T, bool>::ReleaseOnMessageLoop(
-        this, from_here, object);
+        this, object);
   }
 
   // Gets the MessageLoopProxy for the current message loop, creating one if
@@ -131,11 +124,9 @@ class BASE_EXPORT MessageLoopProxy
  private:
   template <class T, class R> friend class subtle::DeleteHelperInternal;
   template <class T, class R> friend class subtle::ReleaseHelperInternal;
-  bool DeleteSoonInternal(const tracked_objects::Location& from_here,
-                          void(*deleter)(const void*),
+  bool DeleteSoonInternal(void(*deleter)(const void*),
                           const void* object);
-  bool ReleaseSoonInternal(const tracked_objects::Location& from_here,
-                           void(*releaser)(const void*),
+  bool ReleaseSoonInternal(void(*releaser)(const void*),
                            const void* object);
 };
 

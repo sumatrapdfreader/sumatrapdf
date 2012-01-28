@@ -483,13 +483,11 @@ void VirtWndEbook::LoadMobiBackground(const TCHAR *fileName)
     CrashIf(gMessageLoopUI == MessageLoop::current());
     MobiParse *mb = MobiParse::ParseFile(fileName);
     if (!mb)
-        gMessageLoopUI->PostTask(FROM_HERE, 
-            base::Bind(&VirtWndEbook::MobiFailedToLoad, 
-                       base::Unretained(this), fileName));
+        gMessageLoopUI->PostTask(base::Bind(&VirtWndEbook::MobiFailedToLoad, 
+                                 base::Unretained(this), fileName));
     else
-        gMessageLoopUI->PostTask(FROM_HERE,
-            base::Bind(&VirtWndEbook::MobiLoaded, 
-                       base::Unretained(this), mb));
+        gMessageLoopUI->PostTask(base::Bind(&VirtWndEbook::MobiLoaded, 
+                                 base::Unretained(this), mb));
     free((void*)fileName);
 }
 
@@ -502,9 +500,8 @@ void VirtWndEbook::LoadMobi(const TCHAR *fileName)
     mobiLoadThread = new base::Thread("VirtWndEbook::LoadMobi");
     mobiLoadThread->Start();
     // TODO: use some refcounted version of fileName
-    mobiLoadThread->message_loop()->PostTask(FROM_HERE, 
-        base::Bind(&VirtWndEbook::LoadMobiBackground, 
-                    base::Unretained(this), str::Dup(fileName)));
+    mobiLoadThread->message_loop()->PostTask(base::Bind(&VirtWndEbook::LoadMobiBackground, 
+                                             base::Unretained(this), str::Dup(fileName)));
     // TODO: this message should show up in a different place, 
     // reusing status for convenience
     ScopedMem<TCHAR> s(str::Format(_T("Please wait, loading %s"), fileName));

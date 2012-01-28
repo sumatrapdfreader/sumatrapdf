@@ -28,13 +28,11 @@ class PostTaskAndReplyImpl {
  public:
   // Implementation for MessageLoopProxy::PostTaskAndReply and
   // WorkerPool::PostTaskAndReply.
-  bool PostTaskAndReply(const tracked_objects::Location& from_here,
-                        const Closure& task,
+  bool PostTaskAndReply(const Closure& task,
                         const Closure& reply);
 
  private:
-  virtual bool PostTask(const tracked_objects::Location& from_here,
-                        const Closure& task) = 0;
+  virtual bool PostTask(const Closure& task) = 0;
 };
 
 }  // namespace internal

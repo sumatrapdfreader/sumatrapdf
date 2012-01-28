@@ -8,7 +8,6 @@
 #include "base/logging.h"
 #include "base/threading/thread_local.h"
 #include "base/threading/thread_restrictions.h"
-#include "base/tracked_objects.h"
 
 #include "base/win/windows_version.h"
 
@@ -121,7 +120,6 @@ void PlatformThread::Sleep(TimeDelta duration) {
 // static
 void PlatformThread::SetName(const char* name) {
   current_thread_name.Set(const_cast<char*>(name));
-  tracked_objects::ThreadData::InitializeThreadContext(name);
 
   // The debugger needs to be around to catch the name in the exception.  If
   // there isn't a debugger, we are just needlessly throwing an exception.

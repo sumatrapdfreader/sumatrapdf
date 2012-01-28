@@ -12,28 +12,24 @@ namespace base {
 MessageLoopProxyImpl::~MessageLoopProxyImpl() {
 }
 
-bool MessageLoopProxyImpl::PostTask(const tracked_objects::Location& from_here,
-                                    const base::Closure& task) {
-  return PostTaskHelper(from_here, task, 0, true);
+bool MessageLoopProxyImpl::PostTask(const base::Closure& task) {
+  return PostTaskHelper(task, 0, true);
 }
 
 bool MessageLoopProxyImpl::PostDelayedTask(
-    const tracked_objects::Location& from_here,
     const base::Closure& task,
     int64 delay_ms) {
-  return PostTaskHelper(from_here, task, delay_ms, true);
+  return PostTaskHelper(task, delay_ms, true);
 }
 
-bool MessageLoopProxyImpl::PostNonNestableTask(
-    const tracked_objects::Location& from_here, const base::Closure& task) {
-  return PostTaskHelper(from_here, task, 0, false);
+bool MessageLoopProxyImpl::PostNonNestableTask(const base::Closure& task) {
+  return PostTaskHelper(task, 0, false);
 }
 
 bool MessageLoopProxyImpl::PostNonNestableDelayedTask(
-    const tracked_objects::Location& from_here,
     const base::Closure& task,
     int64 delay_ms) {
-  return PostTaskHelper(from_here, task, delay_ms, false);
+  return PostTaskHelper(task, delay_ms, false);
 }
 
 bool MessageLoopProxyImpl::BelongsToCurrentThread() {
@@ -64,7 +60,7 @@ void MessageLoopProxyImpl::OnDestruct() const {
     AutoLock lock(message_loop_lock_);
     if (target_message_loop_ &&
         (MessageLoop::current() != target_message_loop_)) {
-      target_message_loop_->DeleteSoon(FROM_HERE, this);
+      target_message_loop_->DeleteSoon(this);
       delete_later = true;
     }
   }
@@ -76,16 +72,14 @@ MessageLoopProxyImpl::MessageLoopProxyImpl()
     : target_message_loop_(MessageLoop::current()) {
 }
 
-bool MessageLoopProxyImpl::PostTaskHelper(
-    const tracked_objects::Location& from_here, const base::Closure& task,
+bool MessageLoopProxyImpl::PostTaskHelper(const base::Closure& task,
     int64 delay_ms, bool nestable) {
   AutoLock lock(message_loop_lock_);
   if (target_message_loop_) {
     if (nestable) {
-      target_message_loop_->PostDelayedTask(from_here, task, delay_ms);
+      target_message_loop_->PostDelayedTask(task, delay_ms);
     } else {
-      target_message_loop_->PostNonNestableDelayedTask(from_here, task,
-                                                       delay_ms);
+      target_message_loop_->PostNonNestableDelayedTask(task, delay_ms);
     }
     return true;
   }

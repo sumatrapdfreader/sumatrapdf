@@ -12,17 +12,14 @@
 #include "base/callback.h"
 #include "base/location.h"
 #include "base/time.h"
-#include "base/tracking_info.h"
 
 namespace base {
 
 // Contains data about a pending task. Stored in TaskQueue and DelayedTaskQueue
 // for use by classes that queue and execute tasks.
-struct BASE_EXPORT PendingTask : public TrackingInfo {
-  PendingTask(const tracked_objects::Location& posted_from,
-              const Closure& task);
-  PendingTask(const tracked_objects::Location& posted_from,
-              const Closure& task,
+struct BASE_EXPORT PendingTask {
+  PendingTask(const Closure& task);
+  PendingTask(const Closure& task,
               TimeTicks delayed_run_time,
               bool nestable);
   ~PendingTask();
@@ -33,8 +30,11 @@ struct BASE_EXPORT PendingTask : public TrackingInfo {
   // The task to run.
   Closure task;
 
-  // The site this PendingTask was posted from.
-  tracked_objects::Location posted_from;
+  // Time when the related task was posted.
+  base::TimeTicks time_posted;
+
+  // The time when the task should be run.
+  base::TimeTicks delayed_run_time;
 
   // Secondary sort key for run time.
   int sequence_num;

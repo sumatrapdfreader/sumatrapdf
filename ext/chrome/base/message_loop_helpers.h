@@ -69,10 +69,8 @@ class DeleteHelperInternal {
   template <class MessageLoopType>
   static ReturnType DeleteOnMessageLoop(
       MessageLoopType* message_loop,
-      const tracked_objects::Location& from_here,
       const T* object) {
-    return message_loop->DeleteSoonInternal(from_here,
-                                            &DeleteHelper<T>::DoDelete,
+    return message_loop->DeleteSoonInternal(&DeleteHelper<T>::DoDelete,
                                             object);
   }
 
@@ -86,10 +84,8 @@ class ReleaseHelperInternal {
   template <class MessageLoopType>
   static ReturnType ReleaseOnMessageLoop(
       MessageLoopType* message_loop,
-      const tracked_objects::Location& from_here,
       const T* object) {
-    return message_loop->ReleaseSoonInternal(from_here,
-                                             &ReleaseHelper<T>::DoRelease,
+    return message_loop->ReleaseSoonInternal(&ReleaseHelper<T>::DoRelease,
                                              object);
   }
 

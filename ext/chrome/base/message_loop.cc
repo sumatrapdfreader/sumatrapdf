@@ -16,7 +16,6 @@
 #include "base/message_pump_default.h"
 #include "base/threading/thread_local.h"
 #include "base/time.h"
-#include "base/tracked_objects.h"
 
 using base::PendingTask;
 using base::TimeDelta;
@@ -82,7 +81,6 @@ MessageLoop::MessageLoop(Type type)
     : type_(type),
       nestable_tasks_allowed_(true),
       exception_restoration_(false),
-      message_histogram_(NULL),
       state_(NULL),
       should_leak_tasks_(true),
 #ifdef OS_WIN
@@ -184,47 +182,41 @@ void MessageLoop::RemoveDestructionObserver(
   destruction_observers_.RemoveObserver(destruction_observer);
 }
 
-void MessageLoop::PostTask(
-    const tracked_objects::Location& from_here, const base::Closure& task) {
-  PendingTask pending_task(from_here, task, CalculateDelayedRuntime(0), true);
+void MessageLoop::PostTask(const base::Closure& task) {
+  PendingTask pending_task(task, CalculateDelayedRuntime(0), true);
   AddToIncomingQueue(&pending_task);
 }
 
 void MessageLoop::PostDelayedTask(
-    const tracked_objects::Location& from_here,
     const base::Closure& task,
     int64 delay_ms) {
-  PendingTask pending_task(from_here, task,
+  PendingTask pending_task(task,
                            CalculateDelayedRuntime(delay_ms), true);
   AddToIncomingQueue(&pending_task);
 }
 
 void MessageLoop::PostDelayedTask(
-    const tracked_objects::Location& from_here,
     const base::Closure& task,
     base::TimeDelta delay) {
-  PostDelayedTask(from_here, task, delay.InMillisecondsRoundedUp());
+  PostDelayedTask(task, delay.InMillisecondsRoundedUp());
 }
 
-void MessageLoop::PostNonNestableTask(
-    const tracked_objects::Location& from_here, const base::Closure& task) {
-  PendingTask pending_task(from_here, task, CalculateDelayedRuntime(0), false);
+void MessageLoop::PostNonNestableTask(const base::Closure& task) {
+  PendingTask pending_task(task, CalculateDelayedRuntime(0), false);
   AddToIncomingQueue(&pending_task);
 }
 
-void MessageLoop::PostNonNestableDelayedTask(
-    const tracked_objects::Location& from_here, const base::Closure& task,
+void MessageLoop::PostNonNestableDelayedTask(const base::Closure& task,
     int64 delay_ms) {
-  PendingTask pending_task(from_here, task,
+  PendingTask pending_task(task,
                            CalculateDelayedRuntime(delay_ms), false);
   AddToIncomingQueue(&pending_task);
 }
 
 void MessageLoop::PostNonNestableDelayedTask(
-    const tracked_objects::Location& from_here,
     const base::Closure& task,
     base::TimeDelta delay) {
-  PostNonNestableDelayedTask(from_here, task, delay.InMillisecondsRoundedUp());
+  PostNonNestableDelayedTask(task, delay.InMillisecondsRoundedUp());
 }
 
 void MessageLoop::Run() {
@@ -358,26 +350,11 @@ void MessageLoop::RunTask(const PendingTask& pending_task) {
   // Execute the task and assume the worst: It is probably not reentrant.
   nestable_tasks_allowed_ = false;
 
-  // Before running the task, store the program counter where it was posted
-  // and deliberately alias it to ensure it is on the stack if the task
-  // crashes. Be careful not to assume that the variable itself will have the
-  // expected value when displayed by the optimizer in an optimized build.
-  // Look at a memory dump of the stack.
-  const void* program_counter =
-      pending_task.posted_from.program_counter();
-  base::debug::Alias(&program_counter);
-
-  tracked_objects::TrackedTime start_time =
-      tracked_objects::ThreadData::NowForStartOfRun(pending_task.birth_tally);
-
   FOR_EACH_OBSERVER(TaskObserver, task_observers_,
                     WillProcessTask(pending_task.time_posted));
   pending_task.task.Run();
   FOR_EACH_OBSERVER(TaskObserver, task_observers_,
                     DidProcessTask(pending_task.time_posted));
-
-  tracked_objects::ThreadData::TallyRunOnNamedThreadIfTracking(pending_task,
-      start_time, tracked_objects::ThreadData::NowForEndOfRun());
 
   nestable_tasks_allowed_ = true;
 }
@@ -591,17 +568,15 @@ bool MessageLoop::DoIdleWork() {
   return false;
 }
 
-void MessageLoop::DeleteSoonInternal(const tracked_objects::Location& from_here,
-                                     void(*deleter)(const void*),
+void MessageLoop::DeleteSoonInternal(void(*deleter)(const void*),
                                      const void* object) {
-  PostNonNestableTask(from_here, base::Bind(deleter, object));
+  PostNonNestableTask(base::Bind(deleter, object));
 }
 
 void MessageLoop::ReleaseSoonInternal(
-    const tracked_objects::Location& from_here,
     void(*releaser)(const void*),
     const void* object) {
-  PostNonNestableTask(from_here, base::Bind(releaser, object));
+  PostNonNestableTask(base::Bind(releaser, object));
 }
 
 //------------------------------------------------------------------------------

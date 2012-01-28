@@ -113,7 +113,7 @@ void Thread::StopSoon() {
     return;
 
   stopping_ = true;
-  message_loop_->PostTask(FROM_HERE, base::Bind(&ThreadQuitHelper));
+  message_loop_->PostTask(base::Bind(&ThreadQuitHelper));
 }
 
 void Thread::Run(MessageLoop* message_loop) {

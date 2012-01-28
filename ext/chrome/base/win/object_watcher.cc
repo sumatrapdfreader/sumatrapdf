@@ -82,7 +82,7 @@ void CALLBACK ObjectWatcher::DoneWaiting(void* param, BOOLEAN timed_out) {
   // The destructor blocks on any callbacks that are in flight, so we know that
   // that is always a pointer to a valid ObjectWater.
   ObjectWatcher* that = static_cast<ObjectWatcher*>(param);
-  that->origin_loop_->PostTask(FROM_HERE, that->callback_);
+  that->origin_loop_->PostTask(that->callback_);
   that->callback_.Reset();
 }
 

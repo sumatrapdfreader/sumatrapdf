@@ -20,9 +20,8 @@ class PostTaskAndReplyMessageLoopProxy : public internal::PostTaskAndReplyImpl {
   }
 
  private:
-  virtual bool PostTask(const tracked_objects::Location& from_here,
-                        const base::Closure& task) OVERRIDE {
-    return destination_->PostTask(from_here, task);
+  virtual bool PostTask(const base::Closure& task) OVERRIDE {
+    return destination_->PostTask(task);
   }
 
   // Non-owning.
@@ -38,11 +37,10 @@ MessageLoopProxy::~MessageLoopProxy() {
 }
 
 bool MessageLoopProxy::PostTaskAndReply(
-    const tracked_objects::Location& from_here,
     const Closure& task,
     const Closure& reply) {
   return PostTaskAndReplyMessageLoopProxy(this).PostTaskAndReply(
-      from_here, task, reply);
+      task, reply);
 }
 
 void MessageLoopProxy::OnDestruct() const {
@@ -50,17 +48,15 @@ void MessageLoopProxy::OnDestruct() const {
 }
 
 bool MessageLoopProxy::DeleteSoonInternal(
-    const tracked_objects::Location& from_here,
     void(*deleter)(const void*),
     const void* object) {
-  return PostNonNestableTask(from_here, base::Bind(deleter, object));
+  return PostNonNestableTask(base::Bind(deleter, object));
 }
 
 bool MessageLoopProxy::ReleaseSoonInternal(
-    const tracked_objects::Location& from_here,
     void(*releaser)(const void*),
     const void* object) {
-  return PostNonNestableTask(from_here, base::Bind(releaser, object));
+  return PostNonNestableTask(base::Bind(releaser, object));
 }
 
 }  // namespace base

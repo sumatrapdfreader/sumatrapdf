@@ -22,15 +22,11 @@ class BASE_EXPORT MessageLoopProxyImpl
   virtual ~MessageLoopProxyImpl();
 
   // MessageLoopProxy implementation
-  virtual bool PostTask(const tracked_objects::Location& from_here,
-                        const base::Closure& task) OVERRIDE;
-  virtual bool PostDelayedTask(const tracked_objects::Location& from_here,
-                               const base::Closure& task,
+  virtual bool PostTask(const base::Closure& task) OVERRIDE;
+  virtual bool PostDelayedTask(const base::Closure& task,
                                int64 delay_ms) OVERRIDE;
-  virtual bool PostNonNestableTask(const tracked_objects::Location& from_here,
-                                   const base::Closure& task) OVERRIDE;
+  virtual bool PostNonNestableTask(const base::Closure& task) OVERRIDE;
   virtual bool PostNonNestableDelayedTask(
-      const tracked_objects::Location& from_here,
       const base::Closure& task,
       int64 delay_ms) OVERRIDE;
   virtual bool BelongsToCurrentThread() OVERRIDE;
@@ -47,8 +43,7 @@ class BASE_EXPORT MessageLoopProxyImpl
   virtual void WillDestroyCurrentMessageLoop();
 
 
-  bool PostTaskHelper(const tracked_objects::Location& from_here,
-                      const base::Closure& task,
+  bool PostTaskHelper(const base::Closure& task,
                       int64 delay_ms,
                       bool nestable);
 

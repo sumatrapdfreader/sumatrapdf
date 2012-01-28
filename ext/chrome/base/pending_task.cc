@@ -8,22 +8,18 @@
 
 namespace base {
 
-PendingTask::PendingTask(const tracked_objects::Location& posted_from,
-                         const base::Closure& task)
-    : base::TrackingInfo(posted_from, TimeTicks()),
-      task(task),
-      posted_from(posted_from),
+PendingTask::PendingTask(const base::Closure& task)
+    : task(task),
       sequence_num(0),
       nestable(true) {
 }
 
-PendingTask::PendingTask(const tracked_objects::Location& posted_from,
-                         const base::Closure& task,
+PendingTask::PendingTask(const base::Closure& task,
                          TimeTicks delayed_run_time,
                          bool nestable)
-    : base::TrackingInfo(posted_from, delayed_run_time),
-      task(task),
-      posted_from(posted_from),
+    : task(task),
+      time_posted(TimeTicks::Now()),
+      delayed_run_time(delayed_run_time),
       sequence_num(0),
       nestable(nestable) {
 }

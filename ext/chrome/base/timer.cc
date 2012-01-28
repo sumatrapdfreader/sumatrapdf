@@ -23,7 +23,6 @@ void BaseTimer_Helper::InitiateDelayedTask(TimerTask* timer_task) {
   delayed_task_ = timer_task;
   delayed_task_->timer_ = this;
   MessageLoop::current()->PostDelayedTask(
-      timer_task->posted_from_,
       base::Bind(&TimerTask::Run, base::Owned(timer_task)),
       static_cast<int>(timer_task->delay_.InMillisecondsRoundedUp()));
 }

@@ -20,31 +20,13 @@
 #include "base/observer_list.h"
 #include "base/pending_task.h"
 #include "base/synchronization/lock.h"
-#include "base/tracking_info.h"
 #include "base/time.h"
 
 #if defined(OS_WIN)
 // We need this to declare base::MessagePumpWin::Dispatcher, which we should
 // really just eliminate.
 #include "base/message_pump_win.h"
-#elif defined(OS_POSIX)
-#include "base/message_pump_libevent.h"
-#if !defined(OS_MACOSX) && !defined(OS_ANDROID)
-
-#if defined(USE_WAYLAND)
-#include "base/message_pump_wayland.h"
-#elif defined(USE_AURA)
-#include "base/message_pump_x.h"
-#else
-#include "base/message_pump_gtk.h"
 #endif
-
-#endif
-#endif
-
-namespace base {
-class Histogram;
-}
 
 // A MessageLoop is used to process events for a particular thread.  There is
 // at most one MessageLoop instance per thread.
@@ -159,30 +141,19 @@ class BASE_EXPORT MessageLoop : public base::MessagePump::Delegate {
   //
   // NOTE: These methods may be called on any thread.  The Task will be invoked
   // on the thread that executes MessageLoop::Run().
-  void PostTask(
-      const tracked_objects::Location& from_here,
-      const base::Closure& task);
+  void PostTask(const base::Closure& task);
+
+  void PostDelayedTask(const base::Closure& task, int64 delay_ms);
 
   void PostDelayedTask(
-      const tracked_objects::Location& from_here,
-      const base::Closure& task, int64 delay_ms);
-
-  void PostDelayedTask(
-      const tracked_objects::Location& from_here,
       const base::Closure& task,
       base::TimeDelta delay);
 
-  void PostNonNestableTask(
-      const tracked_objects::Location& from_here,
-      const base::Closure& task);
+  void PostNonNestableTask(const base::Closure& task);
 
-  void PostNonNestableDelayedTask(
-      const tracked_objects::Location& from_here,
-      const base::Closure& task, int64 delay_ms);
+  void PostNonNestableDelayedTask(const base::Closure& task, int64 delay_ms);
 
-  void PostNonNestableDelayedTask(
-      const tracked_objects::Location& from_here,
-      const base::Closure& task,
+  void PostNonNestableDelayedTask(const base::Closure& task,
       base::TimeDelta delay);
 
   // A variant on PostTask that deletes the given object.  This is useful
@@ -195,9 +166,9 @@ class BASE_EXPORT MessageLoop : public base::MessagePump::Delegate {
   // as the thread that calls PostDelayedTask(FROM_HERE, ), then T MUST inherit
   // from RefCountedThreadSafe<T>!
   template <class T>
-  void DeleteSoon(const tracked_objects::Location& from_here, const T* object) {
+  void DeleteSoon(const T* object) {
     base::subtle::DeleteHelperInternal<T, void>::DeleteOnMessageLoop(
-        this, from_here, object);
+        this, object);
   }
 
   // A variant on PostTask that releases the given reference counted object
@@ -211,10 +182,9 @@ class BASE_EXPORT MessageLoop : public base::MessagePump::Delegate {
   // PostDelayedTask(FROM_HERE, ), then T MUST inherit from
   // RefCountedThreadSafe<T>!
   template <class T>
-  void ReleaseSoon(const tracked_objects::Location& from_here,
-                   const T* object) {
+  void ReleaseSoon(const T* object) {
     base::subtle::ReleaseHelperInternal<T, void>::ReleaseOnMessageLoop(
-        this, from_here, object);
+        this, object);
   }
 
   // Run the message loop.
@@ -479,8 +449,6 @@ class BASE_EXPORT MessageLoop : public base::MessagePump::Delegate {
   bool exception_restoration_;
 
   std::string thread_name_;
-  // A profiling histogram showing the counts of various messages and events.
-  base::Histogram* message_histogram_;
 
   // A null terminated list which creates an incoming_queue of tasks that are
   // acquired under a mutex for processing on this instance's thread. These
@@ -515,11 +483,9 @@ class BASE_EXPORT MessageLoop : public base::MessagePump::Delegate {
   template <class T, class R> friend class base::subtle::DeleteHelperInternal;
   template <class T, class R> friend class base::subtle::ReleaseHelperInternal;
 
-  void DeleteSoonInternal(const tracked_objects::Location& from_here,
-                          void(*deleter)(const void*),
+  void DeleteSoonInternal(void(*deleter)(const void*),
                           const void* object);
-  void ReleaseSoonInternal(const tracked_objects::Location& from_here,
-                           void(*releaser)(const void*),
+  void ReleaseSoonInternal(void(*releaser)(const void*),
                            const void* object);
 
 

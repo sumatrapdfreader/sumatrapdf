@@ -23,10 +23,8 @@ namespace {
 // invoking the Closure destructor on the wrong thread.
 class PostTaskAndReplyRelay {
  public:
-  PostTaskAndReplyRelay(const tracked_objects::Location& from_here,
-                        const Closure& task, const Closure& reply)
-      : from_here_(from_here),
-        origin_loop_(MessageLoopProxy::current()) {
+  PostTaskAndReplyRelay(const Closure& task, const Closure& reply)
+      : origin_loop_(MessageLoopProxy::current()) {
     task_ = task;
     reply_ = reply;
   }
@@ -39,7 +37,6 @@ class PostTaskAndReplyRelay {
   void Run() {
     task_.Run();
     origin_loop_->PostTask(
-        from_here_,
         Bind(&PostTaskAndReplyRelay::RunReplyAndSelfDestruct,
              base::Unretained(this)));
   }
@@ -58,7 +55,6 @@ class PostTaskAndReplyRelay {
     delete this;
   }
 
-  tracked_objects::Location from_here_;
   scoped_refptr<MessageLoopProxy> origin_loop_;
   Closure reply_;
   Closure task_;
@@ -69,12 +65,11 @@ class PostTaskAndReplyRelay {
 namespace internal {
 
 bool PostTaskAndReplyImpl::PostTaskAndReply(
-    const tracked_objects::Location& from_here,
     const Closure& task,
     const Closure& reply) {
   PostTaskAndReplyRelay* relay =
-      new PostTaskAndReplyRelay(from_here, task, reply);
-  if (!PostTask(from_here, Bind(&PostTaskAndReplyRelay::Run,
+      new PostTaskAndReplyRelay(task, reply);
+  if (!PostTask(Bind(&PostTaskAndReplyRelay::Run,
                                 Unretained(relay)))) {
     delete relay;
     return false;
