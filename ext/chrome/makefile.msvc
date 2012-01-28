@@ -24,7 +24,7 @@ CHROME_OBJS = \
 	$(OCH)\callback_internal.obj \
 	$(OCH)\cpu.obj $(OCH)\dtoa_wrapper.obj \
 	$(OCH)\g_fmt.obj \
-	$(OCH)\histogram.obj $(OCH)\icu_utf.obj \
+	$(OCH)\icu_utf.obj \
 	$(OCH)\lazy_instance.obj $(OCH)\location.obj \
 	$(OCH)\lock.obj $(OCH)\lock_impl_win.obj \
 	$(OCH)\message_loop.obj $(OCH)\message_loop_proxy.obj \

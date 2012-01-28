@@ -114,8 +114,6 @@ class BASE_EXPORT MessageLoop : public base::MessagePump::Delegate {
   // Returns the MessageLoop object for the current thread, or null if none.
   static MessageLoop* current();
 
-  static void EnableHistogrammer(bool enable_histogrammer);
-
   typedef base::MessagePump* (MessagePumpFactory)();
   // Using the given base::MessagePumpForUIFactory to override the default
   // MessagePump implementation for 'TYPE_UI'.
@@ -447,15 +445,6 @@ class BASE_EXPORT MessageLoop : public base::MessagePump::Delegate {
 
   // Calculates the time at which a PendingTask should run.
   base::TimeTicks CalculateDelayedRuntime(int64 delay_ms);
-
-  // Start recording histogram info about events and action IF it was enabled
-  // and IF the statistics recorder can accept a registration of our histogram.
-  void StartHistogrammer();
-
-  // Add occurrence of event to our histogram, so that we can see what is being
-  // done in a specific MessageLoop instance (i.e., specific thread).
-  // If message_histogram_ is NULL, this is a no-op.
-  void HistogramEvent(int event);
 
   // base::MessagePump::Delegate methods:
   virtual bool DoWork() OVERRIDE;

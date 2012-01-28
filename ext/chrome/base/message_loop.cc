@@ -14,24 +14,9 @@
 #include "base/memory/scoped_ptr.h"
 #include "base/message_loop_proxy_impl.h"
 #include "base/message_pump_default.h"
-#include "base/metrics/histogram.h"
 #include "base/threading/thread_local.h"
 #include "base/time.h"
 #include "base/tracked_objects.h"
-
-#if defined(OS_MACOSX)
-#include "base/message_pump_mac.h"
-#endif
-#if defined(OS_POSIX)
-#include "base/message_pump_libevent.h"
-#endif
-#if defined(OS_ANDROID)
-#include "base/message_pump_android.h"
-#endif
-#if defined(TOOLKIT_USES_GTK)
-#include <gdk/gdk.h>
-#include <gdk/gdkx.h>
-#endif  // defined(OS_POSIX) && !defined(OS_MACOSX)
 
 using base::PendingTask;
 using base::TimeDelta;
@@ -53,35 +38,6 @@ const int kTimerEvent = 0x2;
 const int kLeastNonZeroMessageId = 1;
 const int kMaxMessageId = 1099;
 const int kNumberOfDistinctMessagesDisplayed = 1100;
-
-// Provide a macro that takes an expression (such as a constant, or macro
-// constant) and creates a pair to initalize an array of pairs.  In this case,
-// our pair consists of the expressions value, and the "stringized" version
-// of the expression (i.e., the exrpression put in quotes).  For example, if
-// we have:
-//    #define FOO 2
-//    #define BAR 5
-// then the following:
-//    VALUE_TO_NUMBER_AND_NAME(FOO + BAR)
-// will expand to:
-//   {7, "FOO + BAR"}
-// We use the resulting array as an argument to our histogram, which reads the
-// number as a bucket identifier, and proceeds to use the corresponding name
-// in the pair (i.e., the quoted string) when printing out a histogram.
-#define VALUE_TO_NUMBER_AND_NAME(name) {name, #name},
-
-const base::LinearHistogram::DescriptionPair event_descriptions_[] = {
-  // Provide some pretty print capability in our histogram for our internal
-  // messages.
-
-  // A few events we handle (kindred to messages), and used to profile actions.
-  VALUE_TO_NUMBER_AND_NAME(kTaskRunEvent)
-  VALUE_TO_NUMBER_AND_NAME(kTimerEvent)
-
-  {-1, NULL}  // The list must be null terminated, per API to histogram.
-};
-
-bool enable_histogrammer_ = false;
 
 MessageLoop::MessagePumpFactory* message_pump_for_ui_factory_ = NULL;
 
@@ -211,11 +167,6 @@ MessageLoop::~MessageLoop() {
 // static
 MessageLoop* MessageLoop::current() {
   return lazy_tls_ptr.Pointer()->Get();
-}
-
-// static
-void MessageLoop::EnableHistogrammer(bool enable) {
-  enable_histogrammer_ = enable;
 }
 
 // static
@@ -378,8 +329,6 @@ __declspec(noinline) void MessageLoop::RunInternalInSEHFrame() {
 
 void MessageLoop::RunInternal() {
 
-    StartHistogrammer();
-
 #if !defined(OS_MACOSX) && !defined(OS_ANDROID)
   if (state_->dispatcher && type() == TYPE_UI) {
     static_cast<base::MessagePumpForUI*>(pump_.get())->
@@ -417,8 +366,6 @@ void MessageLoop::RunTask(const PendingTask& pending_task) {
   const void* program_counter =
       pending_task.posted_from.program_counter();
   base::debug::Alias(&program_counter);
-
-  HistogramEvent(kTaskRunEvent);
 
   tracked_objects::TrackedTime start_time =
       tracked_objects::ThreadData::NowForStartOfRun(pending_task.birth_tally);
@@ -570,27 +517,6 @@ void MessageLoop::AddToIncomingQueue(PendingTask* pending_task) {
   // ScheduleWork outside of incoming_queue_lock_.
 
   pump->ScheduleWork();
-}
-
-//------------------------------------------------------------------------------
-// Method and data for histogramming events and actions taken by each instance
-// on each thread.
-
-void MessageLoop::StartHistogrammer() {
-  if (enable_histogrammer_ && !message_histogram_
-      && base::StatisticsRecorder::IsActive()) {
-    message_histogram_ = base::LinearHistogram::FactoryGet(
-        "MsgLoop:" + thread_name_,
-        kLeastNonZeroMessageId, kMaxMessageId,
-        kNumberOfDistinctMessagesDisplayed,
-        message_histogram_->kHexRangePrintingFlag);
-    message_histogram_->SetRangeDescriptions(event_descriptions_);
-  }
-}
-
-void MessageLoop::HistogramEvent(int event) {
-  if (message_histogram_)
-    message_histogram_->Add(event);
 }
 
 bool MessageLoop::DoWork() {

@@ -7,7 +7,6 @@
 #include <math.h>
 
 #include "base/message_loop.h"
-#include "base/metrics/histogram.h"
 #include "base/win/wrapped_window_proc.h"
 
 namespace base {
@@ -150,8 +149,6 @@ void MessagePumpForUI::PumpOutPendingPaintMessages() {
     if (state_->should_quit)  // Handle WM_QUIT.
       break;
   }
-  // Histogram what was really being used, to help to adjust kMaxPeekCount.
-  DHISTOGRAM_COUNTS("Loop.PumpOutPendingPaintMessages Peeks", peek_count);
 }
 
 //-----------------------------------------------------------------------------

@@ -84,7 +84,6 @@
     <ClCompile Include="ext\chrome\base\message_pump.cc" />
     <ClCompile Include="ext\chrome\base\message_pump_default.cc" />
     <ClCompile Include="ext\chrome\base\message_pump_win.cc" />
-    <ClCompile Include="ext\chrome\base\metrics\histogram.cc" />
     <ClCompile Include="ext\chrome\base\pending_task.cc" />
     <ClCompile Include="ext\chrome\base\stringprintf.cc" />
     <ClCompile Include="ext\chrome\base\string_number_conversions.cc" />
@@ -159,7 +158,6 @@
     <ClInclude Include="ext\chrome\base\message_pump_default.h" />
     <ClInclude Include="ext\chrome\base\message_pump_observer.h" />
     <ClInclude Include="ext\chrome\base\message_pump_win.h" />
-    <ClInclude Include="ext\chrome\base\metrics\histogram.h" />
     <ClInclude Include="ext\chrome\base\move.h" />
     <ClInclude Include="ext\chrome\base\observer_list.h" />
     <ClInclude Include="ext\chrome\base\pending_task.h" />
