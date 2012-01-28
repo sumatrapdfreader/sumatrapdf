@@ -389,7 +389,7 @@ Vec<PageElement *> *ImagesEngine::GetElements(int pageNo)
 
 PageElement *ImagesEngine::GetElementAtPos(int pageNo, PointD pt)
 {
-    if (!PageMediabox(pageNo).Inside(pt))
+    if (!PageMediabox(pageNo).Contains(pt))
         return NULL;
     return new ImageElement(pageNo, LoadImage(pageNo));
 }

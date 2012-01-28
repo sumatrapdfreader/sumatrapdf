@@ -831,9 +831,6 @@ void VirtWndPainter::PaintBackground(Graphics *g, Rect r)
     ::delete br;
 }
 
-#define MIN_INT16  -32768
-#define MAX_INT16   32767
-
 // Paint windows in z-order by first collecting the windows
 // and then paint consecutive layers with the same z-order,
 // starting with the lowest z-order.
@@ -847,11 +844,11 @@ void PaintWindowsInZOrder(Graphics *g, VirtWnd *wnd)
     WndFilter wndFilter;
     CollectWindowsBreathFirst(wnd, 0, 0, &wndFilter, &windowsToPaint);
     size_t paintedCount = 0;
-    int16_t lastPaintedZOrder = MIN_INT16;
+    int16_t lastPaintedZOrder = INT16_MIN;
     size_t winCount = windowsToPaint.Count();
     for (;;) {
         // find which z-order should we paint now
-        int16_t minUnpaintedZOrder = MAX_INT16;
+        int16_t minUnpaintedZOrder = INT16_MAX;
         for (size_t i = 0; i < winCount; i++) {
             WndAndOffset woff = windowsToPaint.At(i);
             int16_t zOrder = woff.wnd->zOrder;

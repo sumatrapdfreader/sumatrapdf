@@ -168,13 +168,13 @@ LRESULT CALLBACK NotificationWnd::WndProc(HWND hwnd, UINT message, WPARAM wParam
     if (WM_SETCURSOR == message && wnd->hasCancel) {
         POINT pt;
         if (GetCursorPos(&pt) && ScreenToClient(hwnd, &pt) &&
-            GetCancelRect(hwnd).Inside(PointI(pt.x, pt.y))) {
+            GetCancelRect(hwnd).Contains(PointI(pt.x, pt.y))) {
             SetCursor(LoadCursor(NULL, IDC_HAND));
             return TRUE;
         }
     }
     if (WM_LBUTTONUP == message && wnd->hasCancel) {
-        if (GetCancelRect(hwnd).Inside(PointI(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)))) {
+        if (GetCancelRect(hwnd).Contains(PointI(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)))) {
             if (wnd->notificationCb)
                 wnd->notificationCb->RemoveNotification(wnd);
             else

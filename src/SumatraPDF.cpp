@@ -1866,7 +1866,7 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
 
     if (didDragMouse)
         /* pass */;
-    else if (win.linkOnLastButtonDown && win.linkOnLastButtonDown->GetRect().Inside(ptPage)) {
+    else if (win.linkOnLastButtonDown && win.linkOnLastButtonDown->GetRect().Contains(ptPage)) {
         win.linkHandler->GotoLink(win.linkOnLastButtonDown->AsLink());
         SetCursor(gCursorArrow);
     }

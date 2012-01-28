@@ -796,7 +796,7 @@ int DisplayModel::GetPageNoByPoint(PointI pt)
         if (!pageInfo->shown)
             continue;
 
-        if (pageInfo->pageOnScreen.Inside(pt))
+        if (pageInfo->pageOnScreen.Contains(pt))
             return pageNo;
     }
 
@@ -817,7 +817,7 @@ int DisplayModel::GetPageNextToPoint(PointI pt)
         if (!pageInfo->shown)
             continue;
 
-        if (pageInfo->pageOnScreen.Inside(pt))
+        if (pageInfo->pageOnScreen.Contains(pt))
             return pageNo;
 
         double dist = _hypot(pt.x - pageInfo->pageOnScreen.x - 0.5 * pageInfo->pageOnScreen.dx,
@@ -882,7 +882,7 @@ PageElement *DisplayModel::GetElementAtPos(PointI pt)
     if (!ValidPageNo(pageNo))
         return NULL;
     // only return visible elements (for cursor interaction)
-    if (!RectI(PointI(), viewPort.Size()).Inside(pt))
+    if (!RectI(PointI(), viewPort.Size()).Contains(pt))
         return NULL;
 
     PointD pos = CvtFromScreen(pt, pageNo);
@@ -895,7 +895,7 @@ bool DisplayModel::IsOverText(PointI pt)
     if (!ValidPageNo(pageNo))
         return false;
     // only return visible elements (for cursor interaction)
-    if (!RectI(PointI(), viewPort.Size()).Inside(pt))
+    if (!RectI(PointI(), viewPort.Size()).Contains(pt))
         return false;
 
     PointD pos = CvtFromScreen(pt, pageNo);

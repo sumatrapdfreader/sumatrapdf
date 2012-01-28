@@ -132,11 +132,11 @@ bool TextSelection::IsOverGlyph(int pageNo, double x, double y)
     RectI *_coords = coords[pageNo - 1];
     // when over the right half of a glyph, FindClosestGlyph returns the
     // index of the next glyph, in which case glyphIx must be decremented
-    if (glyphIx == lens[pageNo - 1] || !_coords[glyphIx].Inside(pt))
+    if (glyphIx == lens[pageNo - 1] || !_coords[glyphIx].Contains(pt))
         glyphIx--;
     if (-1 == glyphIx)
         return false;
-    return _coords[glyphIx].Inside(pt);
+    return _coords[glyphIx].Contains(pt);
 }
 
 void TextSelection::StartAt(int pageNo, int glyphIx)

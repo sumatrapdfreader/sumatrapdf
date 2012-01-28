@@ -4,6 +4,7 @@
 #ifndef mui_h
 #define mui_h
 
+#define __STDC_LIMIT_MACROS
 #include <stdint.h>
 #include "BaseUtil.h"
 #include "Vec.h"

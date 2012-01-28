@@ -94,21 +94,24 @@ public:
     template <>
     RectT<int> Convert() const {
         return RectT<int>((int)floor(x + 0.5), (int)floor(y + 0.5),
-                         (int)floor(dx + 0.5), (int)floor(dy + 0.5));
+                          (int)floor(dx + 0.5), (int)floor(dy + 0.5));
     }
     // cf. fz_roundrect in mupdf/fitz/base_geometry.c
+#ifndef FLT_EPSILON
+#define FLT_EPSILON 1.192092896e-07f
+#endif
     RectT<int> Round() const {
-        return RectT<int>::FromXY((int)floor(x + 0.001),
-                                 (int)floor(y + 0.001),
-                                 (int)ceil(x + dx - 0.001),
-                                 (int)ceil(y + dy - 0.001));
+        return RectT<int>::FromXY((int)floor(x + FLT_EPSILON),
+                                  (int)floor(y + FLT_EPSILON),
+                                  (int)ceil(x + dx - FLT_EPSILON),
+                                  (int)ceil(y + dy - FLT_EPSILON));
     }
 
     bool IsEmpty() const {
         return dx == 0 || dy == 0;
     }
 
-    bool Inside(PointT<T> pt) const {
+    bool Contains(PointT<T> pt) const {
         if (pt.x < this->x)
             return false;
         if (pt.x > this->x + this->dx)
@@ -161,7 +164,7 @@ public:
 
     PointT<T> TL() const { return PointT<T>(x, y); }
     PointT<T> BR() const { return PointT<T>(x + dx, y + dy); }
-    SizeT<T> Size() const { return ::SizeT<T>(dx, dy); }
+    SizeT<T> Size() const { return SizeT<T>(dx, dy); }
 
 #ifdef _WIN32
     RECT ToRECT() const {

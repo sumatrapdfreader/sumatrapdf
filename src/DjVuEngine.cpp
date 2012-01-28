@@ -754,7 +754,7 @@ PageElement *CDjVuEngine::GetElementAtPos(int pageNo, PointD pt)
 
     PageElement *el = NULL;
     for (size_t i = 0; i < els->Count() && !el; i++)
-        if (els->At(i)->GetRect().Inside(pt))
+        if (els->At(i)->GetRect().Contains(pt))
             el = els->At(i);
 
     if (el)

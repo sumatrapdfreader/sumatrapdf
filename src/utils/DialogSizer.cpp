@@ -80,7 +80,7 @@ public:
 
     bool InsideGripper(PointI pt)
     {
-        return bShowSizingGrip && rcGrip.Inside(pt);
+        return bShowSizingGrip && rcGrip.Contains(pt);
     }
 
     // The previous window procedure

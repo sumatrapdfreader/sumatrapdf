@@ -351,7 +351,7 @@ const TCHAR *GetStaticLink(Vec<StaticLinkInfo>& linkInfo, int x, int y, StaticLi
 
     PointI pt(x, y);
     for (size_t i = 0; i < linkInfo.Count(); i++) {
-        if (linkInfo.At(i).rect.Inside(pt)) {
+        if (linkInfo.At(i).rect.Contains(pt)) {
             if (info)
                 *info = linkInfo.At(i);
             return linkInfo.At(i).target;

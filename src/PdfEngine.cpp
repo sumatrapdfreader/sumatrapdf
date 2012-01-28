@@ -76,7 +76,7 @@ inline fz_bbox fz_RectI_to_bbox(RectI bbox)
 
 inline bool fz_is_pt_in_rect(fz_rect rect, fz_point pt)
 {
-    return fz_rect_to_RectD(rect).Inside(PointD(pt.x, pt.y));
+    return fz_rect_to_RectD(rect).Contains(PointD(pt.x, pt.y));
 }
 
 inline float fz_calc_overlap(fz_rect r1, fz_rect r2)
@@ -2236,7 +2236,7 @@ TCHAR *PdfLink::GetValue() const
         }
         if (link->ld.uri.is_map) {
             int x = 0, y = 0;
-            if (rect.Inside(pt)) {
+            if (rect.Contains(pt)) {
                 x = (int)(pt.x - rect.x + 0.5);
                 y = (int)(pt.y - rect.y + 0.5);
             }

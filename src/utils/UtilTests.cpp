@@ -77,10 +77,10 @@ static void GeomTest()
         urect = rx1.Union(rx2);
         assert(RectI::FromXY(curr->u_xs, curr->u_ys, curr->u_xe, curr->u_ye) == urect);
 
-        assert(!rx1.Inside(PointI(-2, -2)));
-        assert(rx1.Inside(rx1.TL()));
-        assert(!rx1.Inside(PointI(rx1.x, INT_MAX)));
-        assert(!rx1.Inside(PointI(INT_MIN, rx1.y)));
+        assert(!rx1.Contains(PointI(-2, -2)));
+        assert(rx1.Contains(rx1.TL()));
+        assert(!rx1.Contains(PointI(rx1.x, INT_MAX)));
+        assert(!rx1.Contains(PointI(INT_MIN, rx1.y)));
     }
 }
 
