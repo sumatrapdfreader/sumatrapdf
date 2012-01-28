@@ -441,13 +441,7 @@ void VirtWndEbook::MobiLoaded(MobiParse *newMobi)
     html = NULL;
     delete pageLayout;
     pageLayout = NULL;
-    RequestRepaint(this);
-}
-
-// TODO: make Bind accept __thiscall methods instead of __cdecl functions
-void MobiLoaded(VirtWndEbook *self, MobiParse *newMobi)
-{
-    self->MobiLoaded(newMobi);
+    RequestLayout();
 }
 
 // called on UI thread from backgroudn thread if we tried
@@ -462,11 +456,6 @@ void VirtWndEbook::MobiFailedToLoad(const TCHAR *fileName)
     free((void*)fileName);
 }
 
-void MobiFailedToLoad(VirtWndEbook *self, const TCHAR *fileName)
-{
-    self->MobiFailedToLoad(fileName);
-}
-
 // Method executed on background thread that tries to load
 // a given mobi file and either calls MobiLoaded() or 
 // MobiFailedToLoad() on ui thread
@@ -475,21 +464,16 @@ void VirtWndEbook::LoadMobiBackground(const TCHAR *fileName)
     CrashIf(gUiMessageLoop->IsUiThread());
     MobiParse *mb = MobiParse::ParseFile(fileName);
     if (!mb)
-        gUiMessageLoop->AddTask(Bind(&::MobiFailedToLoad, this, str::Dup(fileName)));
+        gUiMessageLoop->AddTask(Bind(&VirtWndEbook::MobiFailedToLoad, this, str::Dup(fileName)));
     else
-        gUiMessageLoop->AddTask(Bind(&::MobiLoaded, this, mb));
+        gUiMessageLoop->AddTask(Bind(&VirtWndEbook::MobiLoaded, this, mb));
     free((void*)fileName);
-}
-
-void LoadMobiBackground(VirtWndEbook *self, const TCHAR *fileName)
-{
-    self->LoadMobiBackground(fileName);
 }
 
 void VirtWndEbook::LoadMobi(const TCHAR *fileName)
 {
     // TODO: use some refcounted version of fileName
-    mobiLoadThread.AddTask(Bind(&::LoadMobiBackground, this, str::Dup(fileName)));
+    mobiLoadThread.AddTask(Bind(&VirtWndEbook::LoadMobiBackground, this, str::Dup(fileName)));
     // TODO: this message should show up in a different place, 
     // reusing status for convenience
     ScopedMem<TCHAR> s(str::Format(_T("Please wait, loading %s"), fileName));
