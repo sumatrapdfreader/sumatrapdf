@@ -34,9 +34,6 @@
     <ClCompile Include="ext\chrome\base\logging.cc">
       <Filter>base</Filter>
     </ClCompile>
-    <ClCompile Include="ext\chrome\base\logging_win.cc">
-      <Filter>base</Filter>
-    </ClCompile>
     <ClCompile Include="ext\chrome\base\message_loop.cc">
       <Filter>base</Filter>
     </ClCompile>
@@ -124,9 +121,6 @@
     <ClCompile Include="ext\chrome\base\vlog.cc">
       <Filter>base</Filter>
     </ClCompile>
-    <ClCompile Include="ext\chrome\base\win\event_trace_provider.cc">
-      <Filter>base\win</Filter>
-    </ClCompile>
     <ClCompile Include="ext\chrome\base\win\object_watcher.cc">
       <Filter>base\win</Filter>
     </ClCompile>
@@ -179,15 +173,6 @@
       <Filter>base\debug</Filter>
     </ClCompile>
     <ClCompile Include="ext\chrome\base\debug\stack_trace_win.cc">
-      <Filter>base\debug</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\chrome\base\debug\trace_event.cc">
-      <Filter>base\debug</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\chrome\base\debug\trace_event_impl.cc">
-      <Filter>base\debug</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\chrome\base\debug\trace_event_win.cc">
       <Filter>base\debug</Filter>
     </ClCompile>
     <ClCompile Include="ext\chrome\base\synchronization\lock.cc">
@@ -262,9 +247,6 @@
     <ClInclude Include="ext\chrome\base\cpu.h">
       <Filter>base</Filter>
     </ClInclude>
-    <ClInclude Include="ext\chrome\base\event_types.h">
-      <Filter>base</Filter>
-    </ClInclude>
     <ClInclude Include="ext\chrome\base\file_path.h">
       <Filter>base</Filter>
     </ClInclude>
@@ -284,9 +266,6 @@
       <Filter>base</Filter>
     </ClInclude>
     <ClInclude Include="ext\chrome\base\logging.h">
-      <Filter>base</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\chrome\base\logging_win.h">
       <Filter>base</Filter>
     </ClInclude>
     <ClInclude Include="ext\chrome\base\message_loop.h">
@@ -400,9 +379,6 @@
     <ClInclude Include="ext\chrome\base\vlog.h">
       <Filter>base</Filter>
     </ClInclude>
-    <ClInclude Include="ext\chrome\base\win\event_trace_provider.h">
-      <Filter>base\win</Filter>
-    </ClInclude>
     <ClInclude Include="ext\chrome\base\win\object_watcher.h">
       <Filter>base\win</Filter>
     </ClInclude>
@@ -461,15 +437,6 @@
       <Filter>base\debug</Filter>
     </ClInclude>
     <ClInclude Include="ext\chrome\base\debug\stack_trace.h">
-      <Filter>base\debug</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\chrome\base\debug\trace_event.h">
-      <Filter>base\debug</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\chrome\base\debug\trace_event_impl.h">
-      <Filter>base\debug</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\chrome\base\debug\trace_event_win.h">
       <Filter>base\debug</Filter>
     </ClInclude>
     <ClInclude Include="ext\chrome\base\synchronization\lock.h">

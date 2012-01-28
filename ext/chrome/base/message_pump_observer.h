@@ -6,8 +6,6 @@
 #define BASE_MESSAGE_PUMP_OBSERVER_H
 #pragma once
 
-#include "base/event_types.h"
-
 namespace base {
 
 enum EventStatus {
@@ -27,16 +25,16 @@ enum EventStatus {
 // info about how this is invoked in this environment.
 class BASE_EXPORT MessagePumpObserver {
  public:
-  // This method is called before processing a NativeEvent. If the
+  // This method is called before processing a MSG. If the
   // method returns EVENT_HANDLED, it indicates the event has already
   // been handled, so the event is not processed any farther. If the
   // method returns EVENT_CONTINUE, the event dispatching proceeds as
   // normal.
-  virtual EventStatus WillProcessEvent(const NativeEvent& event) = 0;
+  virtual EventStatus WillProcessEvent(const MSG& event) = 0;
 
   // This method is called after processing a message. This method
   // will not be called if WillProcessEvent returns EVENT_HANDLED.
-  virtual void DidProcessEvent(const NativeEvent& event) = 0;
+  virtual void DidProcessEvent(const MSG& event) = 0;
 
  protected:
   virtual ~MessagePumpObserver() {}

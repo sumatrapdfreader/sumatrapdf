@@ -24,12 +24,11 @@ CHROME_OBJS = \
 	$(OCH)\callback_internal.obj \
 	$(OCH)\cpu.obj $(OCH)\debugger.obj \
 	$(OCH)\debugger_win.obj $(OCH)\dtoa_wrapper.obj \
-	$(OCH)\event_trace_provider.obj \
 	$(OCH)\file_path.obj $(OCH)\g_fmt.obj \
 	$(OCH)\histogram.obj $(OCH)\icu_utf.obj \
 	$(OCH)\lazy_instance.obj $(OCH)\location.obj \
 	$(OCH)\lock.obj $(OCH)\lock_impl_win.obj \
-	$(OCH)\logging.obj $(OCH)\logging_win.obj \
+	$(OCH)\logging.obj \
 	$(OCH)\message_loop.obj $(OCH)\message_loop_proxy.obj \
 	$(OCH)\message_loop_proxy_impl.obj $(OCH)\message_pump.obj \
 	$(OCH)\message_pump_default.obj $(OCH)\message_pump_win.obj \
@@ -50,8 +49,7 @@ CHROME_OBJS = \
 	$(OCH)\thread_local_storage_win.obj $(OCH)\thread_local_win.obj \
 	$(OCH)\thread_restrictions.obj $(OCH)\time.obj \
 	$(OCH)\time_win.obj $(OCH)\timer.obj \
-	$(OCH)\trace_event.obj $(OCH)\trace_event_impl.obj \
-	$(OCH)\trace_event_win.obj $(OCH)\tracked_objects.obj \
+	$(OCH)\tracked_objects.obj \
 	$(OCH)\tracked_time.obj $(OCH)\tracking_info.obj \
 	$(OCH)\utf_string_conversion_utils.obj $(OCH)\utf_string_conversions.obj \
 	$(OCH)\values.obj $(OCH)\vlog.obj \
