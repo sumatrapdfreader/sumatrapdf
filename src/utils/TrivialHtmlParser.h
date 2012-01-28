@@ -12,19 +12,22 @@ static inline size_t RoundUpTo8(size_t n)
 }
 
 class BlockAllocator {
+
     struct MemBlockNode {
         struct MemBlockNode *next;
+        // data follows here
     };
 
-    size_t remainsInBlock;
-    char *currMem;
-    MemBlockNode *currBlock;
+    size_t          remainsInBlock;
+    char *          currMem;
+    MemBlockNode *  currBlock;
 
     void Init() {
         currBlock = NULL;
         currMem = NULL;
         remainsInBlock = 0;
     }
+
 public:
     size_t  blockSize;
 

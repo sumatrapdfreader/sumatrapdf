@@ -237,7 +237,7 @@ private:
 
     DrawInstr *GetInstructionsForCurrentLine(DrawInstr *& endInst) const {
         size_t len = currPage->Count() - currLineInstrOffset;
-        DrawInstr *ret = &currPage->At(currLineInstrOffset);
+        DrawInstr *ret = &currPage->drawInstructions.At(currLineInstrOffset);
         endInst = ret + len;
         return ret;
     }
@@ -267,8 +267,7 @@ private:
     // number of consecutive newlines
     int                 newLinesCount;
 
-    // drawing instructions for all pages
-    Vec<DrawInstr>      *currPage;
+    PageData *          currPage;
 
     // current nesting of html tree during html parsing
     Vec<HtmlTag>        tagNesting;
@@ -343,7 +342,7 @@ void PageLayout::StartNewPage()
     if (currPage)
         pageObserver->NewPage(currPage);
 
-    currPage = new Vec<DrawInstr>();
+    currPage = new PageData;
     currX = currY = 0;
     newLinesCount = 0;
     // instructions for each page need to be self-contained
@@ -739,7 +738,7 @@ bool PageLayout::LayoutHtml(struct LayoutInfo& layoutInfo, INewPageObserver *pag
 
     Vec<HtmlTag> tagNesting(256);
 
-    HtmlPullParser parser(layoutInfo.s, layoutInfo.sLen);
+    HtmlPullParser parser(layoutInfo.htmlStr, layoutInfo.htmlStrLen);
     for (;;)
     {
         HtmlToken *t = parser.Next();
@@ -753,6 +752,8 @@ bool PageLayout::LayoutHtml(struct LayoutInfo& layoutInfo, INewPageObserver *pag
     }
     // force layout of the last line
     StartNewLine(true);
+
+    // only send the last page if not empty
     if (currPage && currPage->Count() > 0)
         pageObserver->NewPage(currPage);
     return true;

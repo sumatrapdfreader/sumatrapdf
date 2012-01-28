@@ -103,6 +103,11 @@
     <ClCompile Include="ext\chrome\base\memory\weak_ptr.cc">
       <Filter>base\memory</Filter>
     </ClCompile>
+    <ClCompile Include="src\utils\StrUtil.cpp" />
+    <ClCompile Include="src\utils\Http.cpp" />
+    <ClCompile Include="src\utils\TrivialHtmlParser.cpp" />
+    <ClCompile Include="src\utils\Touch.cpp" />
+    <ClCompile Include="src\utils\Transactions.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ebooktest\EbookTestMenu.h" />
@@ -280,6 +285,12 @@
     <ClInclude Include="ext\chrome\base\memory\weak_ptr.h">
       <Filter>base\memory</Filter>
     </ClInclude>
+    <ClInclude Include="src\utils\BaseUtil.h" />
+    <ClInclude Include="src\utils\StrUtil.h" />
+    <ClInclude Include="src\utils\Http.h" />
+    <ClInclude Include="src\utils\TrivialHtmlParser.h" />
+    <ClInclude Include="src\utils\Touch.h" />
+    <ClInclude Include="src\utils\Transactions.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="src\ebooktest\EbookTest.rc" />

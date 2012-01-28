@@ -107,8 +107,13 @@
     <ClCompile Include="src\utils\FileUtil.cpp" />
     <ClCompile Include="src\utils\GdiPlusUtil.cpp" />
     <ClCompile Include="src\utils\HtmlPullParser.cpp" />
+    <ClCompile Include="src\utils\Http.cpp" />
     <ClCompile Include="src\utils\mui.cpp" />
     <ClCompile Include="src\utils\MuiCss.cpp" />
+    <ClCompile Include="src\utils\StrUtil.cpp" />
+    <ClCompile Include="src\utils\Touch.cpp" />
+    <ClCompile Include="src\utils\Transactions.cpp" />
+    <ClCompile Include="src\utils\TrivialHtmlParser.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\chrome\base\atomicops.h" />
@@ -170,13 +175,19 @@
     <ClInclude Include="src\installer\Version.h" />
     <ClInclude Include="src\MobiParse.h" />
     <ClInclude Include="src\PageLayout.h" />
+    <ClInclude Include="src\utils\BaseUtil.h" />
     <ClInclude Include="src\utils\BitManip.h" />
     <ClInclude Include="src\utils\FileUtil.h" />
     <ClInclude Include="src\utils\FrameTimeoutCalculator.h" />
     <ClInclude Include="src\utils\GdiPlusUtil.h" />
     <ClInclude Include="src\utils\HtmlPullParser.h" />
+    <ClInclude Include="src\utils\Http.h" />
     <ClInclude Include="src\utils\mui.h" />
     <ClInclude Include="src\utils\MuiCss.h" />
+    <ClInclude Include="src\utils\StrUtil.h" />
+    <ClInclude Include="src\utils\Touch.h" />
+    <ClInclude Include="src\utils\Transactions.h" />
+    <ClInclude Include="src\utils\TrivialHtmlParser.h" />
     <ClInclude Include="src\utils\Vec.h" />
   </ItemGroup>
   <ItemGroup>

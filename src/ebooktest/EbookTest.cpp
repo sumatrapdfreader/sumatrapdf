@@ -206,9 +206,6 @@ void HorizontalProgressBar::Paint(Graphics *gfx, int offX, int offY)
     ::delete br;
 }
 
-// TODO: should be Vec<DrawInstr> PageInstructions
-typedef Vec<DrawInstr> * PageInfo;
-
 class VirtWndEbook 
     : public VirtWndHwnd,
       public IClickHandler
@@ -221,7 +218,8 @@ class VirtWndEbook
 public:
     MobiParse *     mb;
     const char *    html;
-    Vec<PageInfo> * pages;
+
+    Vec<PageData*>* pages;
     int             currPageNo;
 
     int             cursorX, cursorY;
@@ -379,18 +377,18 @@ void EbookLayout::Arrange(const Rect finalRect, VirtWnd *wnd)
 
 class NewPageObserver : public INewPageObserver {
 public:
-    Vec<PageInfo> *pages;
+    Vec<PageData*> *pages;
 
     NewPageObserver() {
-        pages = new Vec<PageInfo>();
+        pages = new Vec<PageData*>();
     }
 
     virtual ~NewPageObserver() {
         delete pages;
     }
 
-    virtual void NewPage(Vec<DrawInstr> *pageInstructions) {
-        pages->Append(pageInstructions);
+    virtual void NewPage(PageData *pageData) {
+        pages->Append(pageData);
     }
 };
 
@@ -502,7 +500,7 @@ VirtWndEbook::~VirtWndEbook()
 void VirtWndEbook::DeletePages()
 {
     if (pages)
-        DeleteVecMembers<PageInfo>(*pages);
+        DeleteVecMembers<PageData*>(*pages);
     delete pages;
     pages = NULL;
 }
@@ -540,7 +538,7 @@ void VirtWndEbook::AdvancePage(int dist)
     SetPage(newPageNo);
 }
 
-Vec<PageInfo>* LayoutHtmlOrMobi(const char *html, MobiParse *mb, int dx, int dy)
+Vec<PageData*>* LayoutHtmlOrMobi(const char *html, MobiParse *mb, int dx, int dy)
 {
     size_t len;
     if (html)
@@ -553,14 +551,14 @@ Vec<PageInfo>* LayoutHtmlOrMobi(const char *html, MobiParse *mb, int dx, int dy)
 
     li.fontName = FONT_NAME;
     li.fontSize = FONT_SIZE;
-    li.s = html;
-    li.sLen = len;
+    li.htmlStr = html;
+    li.htmlStrLen = len;
     li.pageDx = dx; li.pageDy = dy;
 
     LayoutHtml(li, &pageObserver);
     if (0 == pageObserver.pages->Count())
         return false;
-    Vec<PageInfo> *res = pageObserver.pages;
+    Vec<PageData*> *res = pageObserver.pages;
     pageObserver.pages = NULL;
     return res;
 }
@@ -569,7 +567,7 @@ void VirtWndEbook::DoPageLayout(int dx, int dy)
 {
     if (pages && (lastDx == dx) && (lastDy == dy))
         return;
-    Vec<PageInfo> *newPages = LayoutHtmlOrMobi(html, mb, dx, dy);
+    Vec<PageData*> *newPages = LayoutHtmlOrMobi(html, mb, dx, dy);
     if (!newPages)
         return;
     lastDx = dx;
@@ -731,7 +729,7 @@ static inline void EnableAndShow(HWND hwnd, bool enable)
     EnableWindow(hwnd, enable);
 }
 
-static void DrawPageLayout(Graphics *g, PageInfo pageInfo, REAL offX, REAL offY)
+static void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY)
 {
     StringFormat sf(StringFormat::GenericTypographic());
     SolidBrush br(Color(0,0,0));
@@ -744,8 +742,8 @@ static void DrawPageLayout(Graphics *g, PageInfo pageInfo, REAL offX, REAL offY)
 
     WCHAR buf[512];
     PointF pos;
-    DrawInstr *currInstr = &pageInfo->At(0);
-    DrawInstr *end = currInstr + pageInfo->Count();
+    DrawInstr *currInstr = &drawInstructions->At(0);
+    DrawInstr *end = currInstr + drawInstructions->Count();
     while (currInstr < end) {
         RectF bbox = currInstr->bbox;
         bbox.X += offX;
@@ -793,8 +791,8 @@ void VirtWndEbook::Paint(Graphics *gfx, int offX, int offY)
     offX += propPadding->padding.left;
     offY += propPadding->padding.top;
 
-    PageInfo pageInfo = pages->At(currPageNo - 1);
-    DrawPageLayout(gfx, pageInfo, (REAL)offX, (REAL)offY);
+    PageData *pageData = pages->At(currPageNo - 1);
+    DrawPageLayout(gfx, &pageData->drawInstructions, (REAL)offX, (REAL)offY);
 }
 
 #if 0

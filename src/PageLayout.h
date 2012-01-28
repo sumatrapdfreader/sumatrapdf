@@ -97,15 +97,26 @@ struct DrawInstr {
     }
 };
 
+struct PageData {
+    Vec<DrawInstr>  drawInstructions;
+    void Append(DrawInstr& di) {
+        drawInstructions.Append(di);
+    }
+    size_t Count() const {
+        return drawInstructions.Count();
+    }
+};
+
 // Called by LayoutHtml with instructions for each page. Caller
 // must remember them as LayoutHtml doesn't retain them.
 class INewPageObserver {
 public:
     virtual ~INewPageObserver() {
     }
-    virtual void NewPage(Vec<DrawInstr> *pageInstructions) = 0;
+    virtual void NewPage(PageData *pageData) = 0;
 };
 
+// just to pack args to LayoutHtml
 struct LayoutInfo {
     int             pageDx;
     int             pageDy;
@@ -113,8 +124,8 @@ struct LayoutInfo {
     const WCHAR *   fontName;
     float           fontSize;
 
-    const char *    s;
-    size_t          sLen;
+    const char *    htmlStr;
+    size_t          htmlStrLen;
 };
 
 void LayoutHtml(struct LayoutInfo& li, INewPageObserver *observer);
