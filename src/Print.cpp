@@ -5,6 +5,7 @@
 #include "StrUtil.h"
 #include "WinUtil.h"
 #include "FileUtil.h"
+#include "ThreadUtil.h"
 #include <shlwapi.h>
 
 #include "Print.h"
@@ -280,16 +281,15 @@ public:
     }
 };
 
-class PrintThreadData : public ProgressUpdateUI, public NotificationWndCallback {
+class PrintThreadData : public ProgressUpdateUI, public NotificationWndCallback, public UIThreadWorkItem {
     NotificationWnd *wnd;
     bool isCanceled;
 
 public:
     PrintData *data;
-    WindowInfo *win;
 
     PrintThreadData(WindowInfo *win, PrintData *data) :
-        win(win), data(data), isCanceled(false) { 
+        UIThreadWorkItem(win), data(data), isCanceled(false) {
         wnd = new NotificationWnd(win->hwndCanvas, _T(""), _TR("Printing page %d of %d..."), this);
         win->notifications->Add(wnd);
     }
@@ -311,47 +311,35 @@ public:
         if (WindowInfoStillValid(win))
             win->notifications->RemoveNotification(wnd);
     }
-};
 
-class ClosePrintThreadWorkItem : public UIThreadWorkItem {
-    PrintThreadData *data;
-
-public:
-    ClosePrintThreadWorkItem(PrintThreadData *data)
-        : UIThreadWorkItem(data->win), data(data) { }
+    void PrintThread()
+    {
+        PrintToDevice(*data, this);
+        QueueWorkItem(this);
+    }
 
     virtual void Execute() {
-        delete data;
         if (!WindowInfoStillValid(win))
             return;
 
-        HANDLE thread = win->printThread;
+        WorkerThread *thread = win->printThread;
         win->printThread = NULL;
-        CloseHandle(thread);
+        delete thread;
     }
 };
 
-static DWORD WINAPI PrintThread(LPVOID data)
-{
-    PrintThreadData *threadData = (PrintThreadData *)data;
-    assert(threadData && threadData->data);
-    if (threadData->data)
-        PrintToDevice(*threadData->data, threadData);
-    QueueWorkItem(new ClosePrintThreadWorkItem(threadData));
-    return 0;
-}
-
 static void PrintToDeviceOnThread(WindowInfo *win, PrintData *data)
 {
+    assert(!win->printThread);
     PrintThreadData *threadData = new PrintThreadData(win, data);
-    win->printThread = CreateThread(NULL, 0, PrintThread, threadData, 0, NULL);
+    win->printThread = new WorkerThread(Bind(&PrintThreadData::PrintThread, threadData));
 }
 
 void AbortPrinting(WindowInfo *win)
 {
     if (win->printThread) {
         win->printCanceled = true;
-        WaitForSingleObject(win->printThread, INFINITE);
+        win->printThread->Join();
     }
     win->printCanceled = false;
 }

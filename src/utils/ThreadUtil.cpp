@@ -5,68 +5,40 @@
 #include "ThreadUtil.h"
 #include "Scopes.h"
 
-FunctorQueue::FunctorQueue()
+
+WorkerThread::WorkerThread(Functor *f)
 {
-    InitializeCriticalSection(&cs);
-}
-
-FunctorQueue::~FunctorQueue()
-{
-    DeleteVecMembers(tasks);
-    DeleteCriticalSection(&cs);
-}
-
-void FunctorQueue::AddTask(Functor *f)
-{
-    ScopedCritSec scope(&cs);
-    tasks.Append(f);
-}
-
-Functor *FunctorQueue::GetNextTask()
-{
-    if (tasks.Count() == 0)
-        return NULL;
-
-    ScopedCritSec scope(&cs);
-
-    Functor *task = tasks.At(0);
-    tasks.Remove(task);
-    return task;
-}
-
-WorkerThread::WorkerThread()
-{
-    event = CreateEvent(NULL, FALSE, FALSE, NULL);
-    thread = CreateThread(NULL, 0, ThreadProc, this, 0, 0);
+    thread = CreateThread(NULL, 0, ThreadProc, f, 0, 0);
 }
 
 WorkerThread::~WorkerThread()
 {
     TerminateThread(thread, 1);
     CloseHandle(thread);
-    CloseHandle(event);
 }
 
-void WorkerThread::AddTask(Functor *f)
+bool WorkerThread::Join(DWORD ms)
 {
-    FunctorQueue::AddTask(f);
-    SetEvent(event);
+    return WaitForSingleObject(thread, ms) == WAIT_OBJECT_0;
 }
 
 DWORD WINAPI WorkerThread::ThreadProc(LPVOID data)
 {
-    WorkerThread *wt = (WorkerThread *)data;
-    for (;;) {
-        Functor *task = wt->GetNextTask();
-        if (task) {
-            (*task)();
-            delete task;
-        }
-        else {
-            WaitForSingleObject(wt->event, INFINITE);
-        }
-    }
+    Functor *f = (Functor *)data;
+    (*f)();
+    delete f;
     return 0;
+}
+
+UiMessageLoop::UiMessageLoop() : threadId(GetCurrentThreadId())
+{
+    InitializeCriticalSection(&cs);
+}
+
+UiMessageLoop::~UiMessageLoop()
+{
+    DeleteVecMembers(queue);
+    DeleteCriticalSection(&cs);
 }
 
 int UiMessageLoop::Run()
@@ -77,7 +49,12 @@ int UiMessageLoop::Run()
         TranslateMessage(&msg);
         DispatchMessage(&msg);
 
-        Functor *task = GetNextTask();
+        Functor *task = NULL;
+        if (queue.Count() > 0) {
+            ScopedCritSec scope(&cs);
+            task = queue.At(0);
+            queue.Remove(task);
+        }
         if (task) {
             (*task)();
             delete task;
@@ -89,7 +66,8 @@ int UiMessageLoop::Run()
 
 void UiMessageLoop::AddTask(Functor *f)
 {
-    FunctorQueue::AddTask(f);
+    ScopedCritSec scope(&cs);
+    queue.Append(f);
     // make sure that the message queue isn't empty
     PostThreadMessage(threadId, WM_NULL, 0, 0);
 }

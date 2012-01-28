@@ -391,8 +391,8 @@ $(OS)\EbookTest.obj: src\PageLayout.h src\utils\BaseUtil.h src\utils\BitManip.h
 $(OS)\EbookTest.obj: src\utils\CmdLineParser.h src\utils\FileUtil.h src\utils\FrameTimeoutCalculator.h
 $(OS)\EbookTest.obj: src\utils\GeomUtil.h src\utils\HtmlPullParser.h src\utils\mui.h
 $(OS)\EbookTest.obj: src\utils\MuiCss.h src\utils\Scopes.h src\utils\StrUtil.h
-$(OS)\EbookTest.obj: src\utils\ThreadUtil.h src\utils\Transactions.h src\utils\Vec.h
-$(OS)\EbookTest.obj: src\utils\WinUtil.h src\Version.h
+$(OS)\EbookTest.obj: src\utils\Transactions.h src\utils\Vec.h src\utils\WinUtil.h
+$(OS)\EbookTest.obj: src\Version.h
 $(OS)\EbookTestMenu.obj: src\ebooktest\EbookTestMenu.h src\ebooktest\Resource.h src\utils\BaseUtil.h
 $(OS)\EbookTestMenu.obj: src\utils\StrUtil.h
 $(OS)\EngineDump.obj: src\BaseEngine.h src\ChmEngine.h src\DjVuEngine.h
@@ -432,8 +432,8 @@ $(OS)\HtmlWindow.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\HtmlWi
 $(OS)\HtmlWindow.obj: src\utils\Scopes.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\HtmlWindow.obj: src\utils\WinUtil.h
 $(OS)\Http.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
-$(OS)\Http.obj: src\utils\Http.h src\utils\StrUtil.h src\utils\Vec.h
-$(OS)\Http.obj: src\utils\WinUtil.h
+$(OS)\Http.obj: src\utils\Http.h src\utils\StrUtil.h src\utils\ThreadUtil.h
+$(OS)\Http.obj: src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\ImagesEngine.obj: ext\unrar\dll.hpp src\BaseEngine.h src\ImagesEngine.h
 $(OS)\ImagesEngine.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GdiPlusUtil.h
 $(OS)\ImagesEngine.obj: src\utils\GeomUtil.h src\utils\Scopes.h src\utils\StrUtil.h
@@ -514,7 +514,8 @@ $(OS)\Print.obj: src\PsEngine.h src\Selection.h src\SumatraDialogs.h
 $(OS)\Print.obj: src\SumatraPDF.h src\TextSearch.h src\TextSelection.h
 $(OS)\Print.obj: src\translations.h src\utils\BaseUtil.h src\utils\FileUtil.h
 $(OS)\Print.obj: src\utils\GeomUtil.h src\utils\Scopes.h src\utils\StrUtil.h
-$(OS)\Print.obj: src\utils\Vec.h src\utils\WinUtil.h src\WindowInfo.h
+$(OS)\Print.obj: src\utils\ThreadUtil.h src\utils\Vec.h src\utils\WinUtil.h
+$(OS)\Print.obj: src\WindowInfo.h
 $(OS)\PsEngine.obj: src\BaseEngine.h src\PdfEngine.h src\PsEngine.h
 $(OS)\PsEngine.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\PsEngine.obj: src\utils\Scopes.h src\utils\StrUtil.h src\utils\Vec.h

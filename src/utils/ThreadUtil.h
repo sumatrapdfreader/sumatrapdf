@@ -62,34 +62,26 @@ inline Functor *Bind(Func func, Cls cls, Arg1 arg1, Arg2 arg2)
     return new Functor2<Func, Cls, Arg1, Arg2>(func, cls, arg1, arg2);
 }
 
-class FunctorQueue {
-    Vec<Functor *> tasks;
-    CRITICAL_SECTION cs;
-
-protected:
-    FunctorQueue();
-    ~FunctorQueue();
-
-    void AddTask(Functor *f);
-    Functor *GetNextTask();
-};
-
-class WorkerThread : FunctorQueue {
-    HANDLE thread, event;
+class WorkerThread {
+    HANDLE thread;
 
     static DWORD WINAPI ThreadProc(LPVOID data);
 
 public:
-    WorkerThread();
+    WorkerThread(Functor *f);
     ~WorkerThread();
 
-    void AddTask(Functor *f);
+    bool Join(DWORD ms=INFINITE);
 };
 
-class UiMessageLoop : FunctorQueue {
+class UiMessageLoop {
     DWORD threadId;
+    Vec<Functor *> queue;
+    CRITICAL_SECTION cs;
+
 public:
-    UiMessageLoop() : threadId(GetCurrentThreadId()) { }
+    UiMessageLoop();
+    ~UiMessageLoop();
 
     int Run();
     void AddTask(Functor *f);
