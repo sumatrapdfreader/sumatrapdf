@@ -291,6 +291,7 @@
     <ClInclude Include="src\utils\TrivialHtmlParser.h" />
     <ClInclude Include="src\utils\Touch.h" />
     <ClInclude Include="src\utils\Transactions.h" />
+    <ClInclude Include="src\utils\Allocator.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="src\ebooktest\EbookTest.rc" />

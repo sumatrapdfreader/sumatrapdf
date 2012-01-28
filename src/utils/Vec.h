@@ -6,46 +6,7 @@
 
 #include "BaseUtil.h"
 #include "StrUtil.h"
-
-// Base class for allocators that can be provided to Vec class
-// (and potentially others). Needed because e.g. in crash handler
-// we want to use Vec but not use standard malloc()/free() functions
-class Allocator {
-public:
-    Allocator() {}
-    virtual ~Allocator() { };
-    virtual void *Alloc(size_t size) = 0;
-    virtual void *Realloc(void *mem, size_t size) = 0;
-    virtual void Free(void *mem) = 0;
-
-    // helper functions that fallback to malloc()/free() if allocator is NULL
-    // helps write clients where allocator is optional
-    static void *Alloc(Allocator *a, size_t size) {
-        if (!a)
-            return malloc(size);
-        return a->Alloc(size);
-    }
-
-    static void Free(Allocator *a, void *p) {
-        if (!a)
-            free(p);
-        else
-            a->Free(p);
-    }
-
-    static void* Realloc(Allocator *a, void *mem, size_t size) {
-        if (!a)
-            return realloc(mem, size);
-        return a->Realloc(mem, size);
-    }
-
-    static void *Dup(Allocator *a, void *mem, size_t size, size_t padding=0) {
-        void *newMem = Allocator::Alloc(a, size + padding);
-        if (newMem)
-            memcpy(newMem, mem, size);
-        return newMem;
-    }
-};
+#include "Allocator.h"
 
 /* Simple but also optimized for small sizes vector/array class that can
 store pointer types or POD types

@@ -175,6 +175,7 @@
     <ClInclude Include="src\installer\Version.h" />
     <ClInclude Include="src\MobiParse.h" />
     <ClInclude Include="src\PageLayout.h" />
+    <ClInclude Include="src\utils\Allocator.h" />
     <ClInclude Include="src\utils\BaseUtil.h" />
     <ClInclude Include="src\utils\BitManip.h" />
     <ClInclude Include="src\utils\FileUtil.h" />
