@@ -2025,13 +2025,12 @@ TCHAR *CPdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, RectI **coord
         text = fz_new_text_span(ctx);
         dev = fz_new_text_device(ctx, text);
     }
-    fz_always(ctx) {
-        LeaveCriticalSection(&ctxAccess);
-    }
     fz_catch(ctx) {
         fz_free_text_span(ctx, text);
+        LeaveCriticalSection(&ctxAccess);
         return NULL;
     }
+    LeaveCriticalSection(&ctxAccess);
 
     // use an infinite rectangle as bounds (instead of pdf_bound_page) to ensure that
     // the extracted text is consistent between cached runs using a list device and
@@ -3169,13 +3168,12 @@ TCHAR *CXpsEngine::ExtractPageText(xps_page *page, TCHAR *lineSep, RectI **coord
         text = fz_new_text_span(ctx);
         dev = fz_new_text_device(ctx, text);
     }
-    fz_always(ctx) {
-        LeaveCriticalSection(&ctxAccess);
-    }
     fz_catch(ctx) {
         fz_free_text_span(ctx, text);
+        LeaveCriticalSection(&ctxAccess);
         return NULL;
     }
+    LeaveCriticalSection(&ctxAccess);
 
     // use an infinite rectangle as bounds (instead of a mediabox) to ensure that
     // the extracted text is consistent between cached runs using a list device and
