@@ -148,6 +148,18 @@
     <ClCompile Include="ext\chrome\base\synchronization\waitable_event_win.cc">
       <Filter>base\synchronization</Filter>
     </ClCompile>
+    <ClCompile Include="ext\chrome\base\memory\ref_counted.cc">
+      <Filter>base\memory</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\memory\ref_counted_memory.cc">
+      <Filter>base\memory</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\memory\singleton.cc">
+      <Filter>base\memory</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\chrome\base\memory\weak_ptr.cc">
+      <Filter>base\memory</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ebooktest\EbookTestMenu.h" />
@@ -385,6 +397,24 @@
     <ClInclude Include="ext\chrome\base\logging.h">
       <Filter>base</Filter>
     </ClInclude>
+    <ClInclude Include="ext\chrome\base\memory\raw_scoped_refptr_mismatch_checker.h">
+      <Filter>base\memory</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\memory\ref_counted.h">
+      <Filter>base\memory</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\memory\ref_counted_memory.h">
+      <Filter>base\memory</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\memory\scoped_ptr.h">
+      <Filter>base\memory</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\memory\singleton.h">
+      <Filter>base\memory</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\chrome\base\memory\weak_ptr.h">
+      <Filter>base\memory</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="src\ebooktest\EbookTest.rc" />
@@ -411,6 +441,9 @@
     </Filter>
     <Filter Include="base\synchronization">
       <UniqueIdentifier>{62c29652-a41f-426d-a7a1-0576a5491387}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="base\memory">
+      <UniqueIdentifier>{63720b1e-4a37-4813-8f13-6d25c4f0c4a3}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

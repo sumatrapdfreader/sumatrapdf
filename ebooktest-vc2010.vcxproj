@@ -78,6 +78,10 @@
     <ClCompile Include="ext\chrome\base\debug\stack_trace_win.cc" />
     <ClCompile Include="ext\chrome\base\lazy_instance.cc" />
     <ClCompile Include="ext\chrome\base\location.cc" />
+    <ClCompile Include="ext\chrome\base\memory\ref_counted.cc" />
+    <ClCompile Include="ext\chrome\base\memory\ref_counted_memory.cc" />
+    <ClCompile Include="ext\chrome\base\memory\singleton.cc" />
+    <ClCompile Include="ext\chrome\base\memory\weak_ptr.cc" />
     <ClCompile Include="ext\chrome\base\message_loop.cc" />
     <ClCompile Include="ext\chrome\base\message_loop_proxy.cc" />
     <ClCompile Include="ext\chrome\base\message_loop_proxy_impl.cc" />
@@ -150,6 +154,12 @@
     <ClInclude Include="ext\chrome\base\lazy_instance.h" />
     <ClInclude Include="ext\chrome\base\location.h" />
     <ClInclude Include="ext\chrome\base\logging.h" />
+    <ClInclude Include="ext\chrome\base\memory\raw_scoped_refptr_mismatch_checker.h" />
+    <ClInclude Include="ext\chrome\base\memory\ref_counted.h" />
+    <ClInclude Include="ext\chrome\base\memory\ref_counted_memory.h" />
+    <ClInclude Include="ext\chrome\base\memory\scoped_ptr.h" />
+    <ClInclude Include="ext\chrome\base\memory\singleton.h" />
+    <ClInclude Include="ext\chrome\base\memory\weak_ptr.h" />
     <ClInclude Include="ext\chrome\base\message_loop.h" />
     <ClInclude Include="ext\chrome\base\message_loop_helpers.h" />
     <ClInclude Include="ext\chrome\base\message_loop_proxy.h" />

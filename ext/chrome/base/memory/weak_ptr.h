@@ -62,7 +62,6 @@
 #include "base/base_export.h"
 #include "base/logging.h"
 #include "base/memory/ref_counted.h"
-#include "base/threading/thread_checker.h"
 
 namespace base {
 
@@ -81,14 +80,13 @@ class BASE_EXPORT WeakReference {
     void Invalidate();
     bool IsValid() const;
 
-    void DetachFromThread() { thread_checker_.DetachFromThread(); }
+    void DetachFromThread() { }
 
    private:
     friend class base::RefCountedThreadSafe<Flag>;
 
     ~Flag();
 
-    ThreadChecker thread_checker_;
     bool is_valid_;
   };
 

@@ -41,7 +41,7 @@ CHROME_OBJS = \
 	$(OCH)\string_split.obj $(OCH)\string_util.obj \
 	$(OCH)\stringprintf.obj \
 	$(OCH)\sys_string_conversions_win.obj $(OCH)\thread.obj \
-	$(OCH)\thread_checker_impl.obj $(OCH)\thread_collision_warner.obj \
+	$(OCH)\thread_collision_warner.obj \
 	$(OCH)\thread_local_storage_win.obj $(OCH)\thread_local_win.obj \
 	$(OCH)\thread_restrictions.obj $(OCH)\time.obj \
 	$(OCH)\time_win.obj $(OCH)\timer.obj \
