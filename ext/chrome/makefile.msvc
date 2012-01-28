@@ -24,7 +24,7 @@ CHROME_OBJS = \
 	$(OCH)\callback_internal.obj \
 	$(OCH)\cpu.obj $(OCH)\debugger.obj \
 	$(OCH)\debugger_win.obj $(OCH)\dtoa_wrapper.obj \
-	$(OCH)\file_path.obj $(OCH)\g_fmt.obj \
+	$(OCH)\g_fmt.obj \
 	$(OCH)\histogram.obj $(OCH)\icu_utf.obj \
 	$(OCH)\lazy_instance.obj $(OCH)\location.obj \
 	$(OCH)\lock.obj $(OCH)\lock_impl_win.obj \
@@ -34,7 +34,6 @@ CHROME_OBJS = \
 	$(OCH)\message_pump_default.obj $(OCH)\message_pump_win.obj \
 	$(OCH)\object_watcher.obj $(OCH)\pe_image.obj \
 	$(OCH)\pending_task.obj \
-	$(OCH)\platform_file.obj $(OCH)\platform_file_win.obj \
 	$(OCH)\platform_thread_win.obj $(OCH)\post_task_and_reply_impl.obj \
 	$(OCH)\prtime.obj \
 	$(OCH)\ref_counted.obj $(OCH)\ref_counted_memory.obj \
