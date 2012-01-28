@@ -331,7 +331,10 @@ void PageLayout::StartLayout()
 
     CrashIf(currPage);
     lineSpacing = currFont->GetHeight(gfx);
-    spaceDx = GetSpaceDx(gfx, currFont);
+    // note: this is heuristic that seems to work better than
+    //  GetSpaceDx(gfx, currFont) (which seems way too big and is
+    // bigger than what Kindle app uses)
+    spaceDx = fontSize / 2.5f;
     StartNewPage();
 }
 
