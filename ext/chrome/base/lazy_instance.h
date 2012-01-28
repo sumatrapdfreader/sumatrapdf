@@ -160,12 +160,6 @@ class LazyInstance {
                                      Traits::kRegisterOnExit ? OnExit : NULL);
     }
 
-    // This annotation helps race detectors recognize correct lock-less
-    // synchronization between different threads calling Pointer().
-    // We suggest dynamic race detection tool that "Traits::New" above
-    // and CompleteLazyInstance(...) happens before "return instance()" below.
-    // See the corresponding HAPPENS_BEFORE in CompleteLazyInstance(...).
-    ANNOTATE_HAPPENS_AFTER(&private_instance_);
     return instance();
   }
 

@@ -141,12 +141,6 @@
   #define ANNOTATE_CONDVAR_SIGNAL_ALL(cv) \
     DYNAMIC_ANNOTATIONS_NAME(AnnotateCondVarSignalAll)(__FILE__, __LINE__, cv)
 
-  /* Annotations for user-defined synchronization mechanisms. */
-  #define ANNOTATE_HAPPENS_BEFORE(obj) \
-    DYNAMIC_ANNOTATIONS_NAME(AnnotateHappensBefore)(__FILE__, __LINE__, obj)
-  #define ANNOTATE_HAPPENS_AFTER(obj) \
-    DYNAMIC_ANNOTATIONS_NAME(AnnotateHappensAfter)(__FILE__, __LINE__, obj)
-
   /* DEPRECATED. Don't use it. */
   #define ANNOTATE_PUBLISH_MEMORY_RANGE(pointer, size) \
     DYNAMIC_ANNOTATIONS_NAME(AnnotatePublishMemoryRange)(__FILE__, __LINE__, \
@@ -391,8 +385,6 @@
   #define ANNOTATE_CONDVAR_WAIT(cv) /* empty */
   #define ANNOTATE_CONDVAR_SIGNAL(cv) /* empty */
   #define ANNOTATE_CONDVAR_SIGNAL_ALL(cv) /* empty */
-  #define ANNOTATE_HAPPENS_BEFORE(obj) /* empty */
-  #define ANNOTATE_HAPPENS_AFTER(obj) /* empty */
   #define ANNOTATE_PUBLISH_MEMORY_RANGE(address, size) /* empty */
   #define ANNOTATE_UNPUBLISH_MEMORY_RANGE(address, size)  /* empty */
   #define ANNOTATE_SWAP_MEMORY_RANGE(address, size)  /* empty */

@@ -42,9 +42,6 @@ void CompleteLazyInstance(subtle::AtomicWord* state,
                           subtle::AtomicWord new_instance,
                           void* lazy_instance,
                           void (*dtor)(void*)) {
-  // See the comment to the corresponding HAPPENS_AFTER in Pointer().
-  ANNOTATE_HAPPENS_BEFORE(state);
-
   // Instance is created, go from CREATING to CREATED.
   // Releases visibility over private_buf_ to readers. Pairing Acquire_Load's
   // are in NeedsInstance() and Pointer().

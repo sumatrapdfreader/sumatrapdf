@@ -13,7 +13,6 @@
 #pragma once
 
 #include "base/atomicops.h"
-#include "base/third_party/dynamic_annotations/dynamic_annotations.h"
 
 namespace base {
 
@@ -31,11 +30,7 @@ inline void AtomicRefCountIncN(volatile AtomicRefCount *ptr,
 // became zero will be visible to a thread that has just made the count zero.
 inline bool AtomicRefCountDecN(volatile AtomicRefCount *ptr,
                                AtomicRefCount decrement) {
-  ANNOTATE_HAPPENS_BEFORE(ptr);
   bool res = (subtle::Barrier_AtomicIncrement(ptr, -decrement) != 0);
-  if (!res) {
-    ANNOTATE_HAPPENS_AFTER(ptr);
-  }
   return res;
 }
 
@@ -59,9 +54,6 @@ inline bool AtomicRefCountDec(volatile AtomicRefCount *ptr) {
 // exclusive access to the object.
 inline bool AtomicRefCountIsOne(volatile AtomicRefCount *ptr) {
   bool res = (subtle::Acquire_Load(ptr) == 1);
-  if (res) {
-    ANNOTATE_HAPPENS_AFTER(ptr);
-  }
   return res;
 }
 
@@ -70,9 +62,6 @@ inline bool AtomicRefCountIsOne(volatile AtomicRefCount *ptr) {
 // should never be zero.  Hence this is generally used for a debug check.
 inline bool AtomicRefCountIsZero(volatile AtomicRefCount *ptr) {
   bool res = (subtle::Acquire_Load(ptr) == 0);
-  if (res) {
-    ANNOTATE_HAPPENS_AFTER(ptr);
-  }
   return res;
 }
 
