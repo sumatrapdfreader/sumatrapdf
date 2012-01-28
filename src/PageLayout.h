@@ -6,12 +6,43 @@
 
 #include "BaseUtil.h"
 #include "Vec.h"
-#include "StrUtil.h"
-#include "HtmlPullParser.h"
 
 using namespace Gdiplus;
 
-struct WordInfo;
+struct FontCacheEntry {
+    WCHAR *     name;
+    float       size;
+    FontStyle   style;
+
+    Font *      font;
+
+    bool SameAs(const WCHAR *name, float size, FontStyle style);
+};
+
+// fontId is index inside ThreadSafeFontCache::fontCache
+struct FontInfo {
+    Font *      font;
+    size_t      fontId;
+};
+
+// Font cache shared by layout process and drawing process.
+// Must be thread safe because layout and drawing can be done
+// at different threads. There's only global object.
+// Font objects are alive as long as this object is alive
+class ThreadSafeFontCache {
+    CRITICAL_SECTION    cs;
+    Vec<FontCacheEntry> fonts;
+public:
+    ThreadSafeFontCache();
+    ~ThreadSafeFontCache();
+
+    FontInfo GetExistingOrCreateNew(const WCHAR *name, float size, FontStyle style);
+    FontInfo GetById(size_t fontId);
+    bool IsValidId(size_t fontId);
+};
+
+// Create at start of the program and destroy at the end
+extern ThreadSafeFontCache *gFontCache;
 
 // Layout information for a given page is a list of
 // draw instructions that define what to draw and where.
@@ -27,7 +58,8 @@ struct InstrString {
 };
 
 struct InstrSetFont {
-    size_t              fontIdx;
+    // id within gFontCache
+    size_t              fontId;
 };
 
 struct DrawInstr {
@@ -53,9 +85,9 @@ struct DrawInstr {
         return di;
     }
 
-    static DrawInstr SetFont(size_t fontIdx) {
+    static DrawInstr SetFont(size_t fontId) {
         DrawInstr di(InstrTypeSetFont);
-        di.setFont.fontIdx = fontIdx;
+        di.setFont.fontId = fontId;
         return di;
     }
 
@@ -65,128 +97,25 @@ struct DrawInstr {
     }
 };
 
-class PageLayout
-{
-    enum TextJustification {
-        Left, Right, Center, Both
-    };
-
-    struct FontInfo {
-        FontStyle   style;
-        Font *      font;
-    };
-
+// Called by LayoutHtml with instructions for each page. Caller
+// must remember them as LayoutHtml doesn't retain them.
+class INewPageObserver {
 public:
-    PageLayout(int dx, int dy) {
-        pageDx = (REAL)dx; pageDy = (REAL)dy;
+    virtual ~INewPageObserver() {
     }
-
-    ~PageLayout();
-
-    //Vec<Page *> *LayoutText(Graphics *graphics, Font *defaultFnt, const char *s);
-
-    void HandleHtmlTag(HtmlToken *t);
-    void EmitText(HtmlToken *t);
-
-    bool LayoutHtml(WCHAR *fontName, float fontSize, const char *s, size_t sLen);
-
-    size_t PageCount() const {
-        return pageInstrOffset.Count();
-    }
-
-    DrawInstr *GetInstructionsForPage(size_t pageNo, DrawInstr *& endInstr) const {
-        CrashAlwaysIf(pageNo >= PageCount());
-        size_t start = pageInstrOffset.At(pageNo);
-        size_t end = instructions.Count(); // if the last page
-        if (pageNo < PageCount() - 1)
-            end = pageInstrOffset.At(pageNo + 1);
-        CrashAlwaysIf(end < start);
-        size_t len = end - start;
-        DrawInstr *ret = &instructions.At(start);
-        endInstr = ret + len;
-        return ret;
-    }
-
-    DrawInstr *GetInstructionsForCurrentLine(DrawInstr *& endInst) const {
-        size_t len = instructions.Count() - currLineInstrOffset;
-        DrawInstr *ret = &instructions.At(currLineInstrOffset);
-        endInst = ret + len;
-        return ret;
-    }
-
-    bool IsCurrentLineEmpty() const {
-        return currLineInstrOffset == instructions.Count();
-    }
-
-    Font *GetFontByIdx(size_t idx) {
-        CrashAlwaysIf(idx >= fontCache.Size());
-        FontInfo fi = fontCache.At(idx);
-        CrashAlwaysIf(NULL == fi.font);
-        return fi.font;
-    }
-
-    // constant during layout process
-    REAL        pageDx, pageDy;
-
-private:
-    REAL GetCurrentLineDx();
-    void LayoutLeftStartingAt(REAL offX);
-    void JustifyLineLeft();
-    void JustifyLineRight();
-    void JustifyLineCenter();
-    void JustifyLineBoth();
-    void JustifyLine(TextJustification mode);
-
-    TextJustification AlignAttrToJustification(AlignAttr align);
-
-    void StartLayout();
-    void StartNewPage();
-    void StartNewLine(bool isParagraphBreak);
-    void RemoveLastPageIfEmpty();
-
-    void AddSetFontInstr(size_t fontIdx);
-
-    void AddHr();
-    void AddWord(WordInfo *wi);
-
-    void ClearFontCache();
-    void SetCurrentFont(FontStyle fs);
-    void ChangeFont(FontStyle fs, bool isStart);
-    FontStyle           currFontStyle;
-    Vec<FontInfo>       fontCache;
-    ScopedMem<WCHAR>    fontName;
-    float               fontSize;
-    Font *              currFont;
-    size_t              currFontIdx; // within fontcache
-
-    // constant during layout process
-    REAL        lineSpacing;
-    REAL        spaceDx;
-    Graphics *  gfx;
-
-    // temporary state during layout process
-    TextJustification   currJustification;
-    // current position in a page
-    REAL                currX, currY; 
-    // number of consecutive newlines
-    int                 newLinesCount;
-
-    // drawing instructions for all pages
-    Vec<DrawInstr>      instructions;
-
-    // current nesting of html tree during html parsing
-    Vec<HtmlTag>        tagNesting;
-
-    // a page is fully described by list of drawing instructions
-    // This is an array of offsets into instructions array
-    // for each page. The length can be calculating by
-    // substracting this from the offset of the next page
-    Vec<size_t>         pageInstrOffset;
-
-    size_t              currPageInstrOffset;
-    size_t              currLineInstrOffset;
-
-    WCHAR               buf[512];
+    virtual void NewPage(Vec<DrawInstr> *pageInstructions) = 0;
 };
 
+struct LayoutInfo {
+    int             pageDx;
+    int             pageDy;
+
+    const WCHAR *   fontName;
+    float           fontSize;
+
+    const char *    s;
+    size_t          sLen;
+};
+
+void LayoutHtml(struct LayoutInfo& li, INewPageObserver *observer);
 #endif

@@ -206,6 +206,9 @@ void HorizontalProgressBar::Paint(Graphics *gfx, int offX, int offY)
     ::delete br;
 }
 
+// TODO: should be Vec<DrawInstr> PageInstructions
+typedef Vec<DrawInstr> * PageInfo;
+
 class VirtWndEbook 
     : public VirtWndHwnd,
       public IClickHandler
@@ -218,10 +221,11 @@ class VirtWndEbook
 public:
     MobiParse *     mb;
     const char *    html;
-    PageLayout *    pageLayout;
+    Vec<PageInfo> * pages;
     int             currPageNo;
 
     int             cursorX, cursorY;
+    int             lastDx, lastDy;
     base::Thread *  mobiLoadThread;
 
     VirtWndButton * next;
@@ -259,6 +263,8 @@ public:
 
     void SetStatusText() const;
     void DoPageLayout(int dx, int dy);
+
+    void DeletePages();
 
     void MobiLoaded(MobiParse *mb);
     void VirtWndEbook::MobiFailedToLoad(const TCHAR *fileName);
@@ -371,165 +377,32 @@ void EbookLayout::Arrange(const Rect finalRect, VirtWnd *wnd)
     wndEbook->DoPageLayout(rectDx, rectDy);
 }
 
-void VirtWndEbook::SetStatusText() const
-{
-    if (!pageLayout) {
-        status->SetText(_T(""));
-        horizProgress->SetFilled(0.f);
-        return;
+class NewPageObserver : public INewPageObserver {
+public:
+    Vec<PageInfo> *pages;
+
+    NewPageObserver() {
+        pages = new Vec<PageInfo>();
     }
-    size_t pageCount = pageLayout->PageCount();
-    ScopedMem<TCHAR> s(str::Format(_T("Page %d out of %d"), currPageNo, (int)pageCount));
-    status->SetText(s.Get());
-    horizProgress->SetFilled(PercFromInt(pageCount, currPageNo));
-}
 
-void VirtWndEbook::SetPage(int newPageNo)
-{
-    CrashIf((newPageNo < 1) || (newPageNo > (int)pageLayout->PageCount()));
-    currPageNo = newPageNo;
-    SetStatusText();
-    RequestRepaint(this);
-}
+    virtual ~NewPageObserver() {
+        delete pages;
+    }
 
-void VirtWndEbook::AdvancePage(int dist)
-{
-    if (!pageLayout)
-        return;
-    int newPageNo = currPageNo + dist;
-    if (newPageNo < 1)
-        return;
-    if (newPageNo > (int)pageLayout->PageCount())
-        return;
-    SetPage(newPageNo);
-}
+    virtual void NewPage(Vec<DrawInstr> *pageInstructions) {
+        pages->Append(pageInstructions);
+    }
+};
 
-PageLayout *LayoutHtmlOrMobi(const char *html, MobiParse *mb, int dx, int dy)
-{
-    PageLayout *layout = new PageLayout(dx, dy);
-    size_t len;
-    if (html)
-        len = strlen(html);
-    else
-        html = mb->GetBookHtmlData(len);
-
-    bool ok = layout->LayoutHtml(FONT_NAME, FONT_SIZE, html, len);
-    if (ok)
-        return layout;
-
-    delete layout;
-    return NULL;
-}
-
-void VirtWndEbook::DoPageLayout(int dx, int dy)
-{
-    if (pageLayout && (pageLayout->pageDx == dx) && (pageLayout->pageDy == dy))
-        return;
-
-    PageLayout *newLayout = LayoutHtmlOrMobi(html, mb, dx, dy);
-    if (!newLayout)
-        return;
-    delete pageLayout;
-    pageLayout = newLayout;
-    currPageNo = 1;
-    SetStatusText();
-    RequestRepaint(this);
-}
-
-void VirtWndEbook::SetHtml(const char *newHtml)
-{
-    html = newHtml;
-}
-
-void VirtWndEbook::StopMobiLoadThread()
-{
-    if (!mobiLoadThread)
-        return;
-    mobiLoadThread->Stop();
-    delete mobiLoadThread;
-    mobiLoadThread = NULL;
-}
-
-// called on UI thread from background thread after
-// mobi file has been loaded
-void VirtWndEbook::MobiLoaded(MobiParse *newMobi)
-{
-    CrashIf(gMessageLoopUI != MessageLoop::current());
-    delete mb;
-    mb = newMobi;
-    html = NULL;
-    delete pageLayout;
-    pageLayout = NULL;
-    RequestLayout();
-}
-
-// called on UI thread from backgroudn thread if we tried
-// to load mobi file but failed
-void VirtWndEbook::MobiFailedToLoad(const TCHAR *fileName)
-{
-    CrashIf(gMessageLoopUI != MessageLoop::current());
-    // TODO: this message should show up in a different place, 
-    // reusing status for convenience
-    ScopedMem<TCHAR> s(str::Format(_T("Failed to load %s!"), fileName));
-    status->SetText(s.Get());
-    free((void*)fileName);
-}
-
-// Method executed on background thread that tries to load
-// a given mobi file and either calls MobiLoaded() or 
-// MobiFailedToLoad() on ui thread
-void VirtWndEbook::LoadMobiBackground(const TCHAR *fileName)
-{
-    CrashIf(gMessageLoopUI == MessageLoop::current());
-    MobiParse *mb = MobiParse::ParseFile(fileName);
-    if (!mb)
-        gMessageLoopUI->PostTask(base::Bind(&VirtWndEbook::MobiFailedToLoad, 
-                                 base::Unretained(this), fileName));
-    else
-        gMessageLoopUI->PostTask(base::Bind(&VirtWndEbook::MobiLoaded, 
-                                 base::Unretained(this), mb));
-    free((void*)fileName);
-}
-
-void VirtWndEbook::LoadMobi(const TCHAR *fileName)
-{
-    // TODO: not sure if that's enough to handle user chosing
-    // to load another mobi file while loading of the previous
-    // hasn't finished yet
-    StopMobiLoadThread();
-    mobiLoadThread = new base::Thread("VirtWndEbook::LoadMobi");
-    mobiLoadThread->Start();
-    // TODO: use some refcounted version of fileName
-    mobiLoadThread->message_loop()->PostTask(base::Bind(&VirtWndEbook::LoadMobiBackground, 
-                                             base::Unretained(this), str::Dup(fileName)));
-    // TODO: this message should show up in a different place, 
-    // reusing status for convenience
-    ScopedMem<TCHAR> s(str::Format(_T("Please wait, loading %s"), fileName));
-    status->SetText(s.Get());
-}
-
-static Rect RectForCircle(int x, int y, int r)
-{
-    return Rect(x - r, y - r, r * 2, r * 2);
-}
-
-// This is just to test mouse move handling
-void VirtWndEbook::NotifyMouseMove(int x, int y)
-{
-    Rect r1 = RectForCircle(cursorX, cursorY, CircleR);
-    Rect r2 = RectForCircle(x, y, CircleR);
-    cursorX = x; cursorY = y;
-    r1.Inflate(1,1); r2.Inflate(1,1);
-    RequestRepaint(this, &r1, &r2);
-}
 
 VirtWndEbook::VirtWndEbook(HWND hwnd)
 {
     mobiLoadThread = NULL;
     mb = NULL;
     html = NULL;
-    pageLayout = NULL;
+    pages = NULL;
     currPageNo = 0;
+    lastDx = 0; lastDy = 0;
     SetHwnd(hwnd);
 
     cursorX = -1; cursorY = -1;
@@ -614,8 +487,8 @@ VirtWndEbook::~VirtWndEbook()
     // that don't trigger this from the destructor
     UnRegisterEventHandlers(evtMgr);
 
+    DeletePages();
     delete mb;
-    delete pageLayout;
     delete statusDefault;
     delete facebookButtonDefault;
     delete facebookButtonOver;
@@ -626,6 +499,174 @@ VirtWndEbook::~VirtWndEbook()
     delete horizProgressDefault;
 }
 
+void VirtWndEbook::DeletePages()
+{
+    if (pages)
+        DeleteVecMembers<PageInfo>(*pages);
+    delete pages;
+    pages = NULL;
+}
+
+void VirtWndEbook::SetStatusText() const
+{
+    if (!pages) {
+        status->SetText(_T(""));
+        horizProgress->SetFilled(0.f);
+        return;
+    }
+    size_t pageCount = pages->Count();
+    ScopedMem<TCHAR> s(str::Format(_T("Page %d out of %d"), currPageNo, (int)pageCount));
+    status->SetText(s.Get());
+    horizProgress->SetFilled(PercFromInt(pageCount, currPageNo));
+}
+
+void VirtWndEbook::SetPage(int newPageNo)
+{
+    CrashIf((newPageNo < 1) || (newPageNo > (int)pages->Count()));
+    currPageNo = newPageNo;
+    SetStatusText();
+    RequestRepaint(this);
+}
+
+void VirtWndEbook::AdvancePage(int dist)
+{
+    if (!pages)
+        return;
+    int newPageNo = currPageNo + dist;
+    if (newPageNo < 1)
+        return;
+    if (newPageNo > (int)pages->Count())
+        return;
+    SetPage(newPageNo);
+}
+
+Vec<PageInfo>* LayoutHtmlOrMobi(const char *html, MobiParse *mb, int dx, int dy)
+{
+    size_t len;
+    if (html)
+        len = strlen(html);
+    else
+        html = mb->GetBookHtmlData(len);
+
+    NewPageObserver pageObserver;
+    struct LayoutInfo li;
+
+    li.fontName = FONT_NAME;
+    li.fontSize = FONT_SIZE;
+    li.s = html;
+    li.sLen = len;
+    li.pageDx = dx; li.pageDy = dy;
+
+    LayoutHtml(li, &pageObserver);
+    if (0 == pageObserver.pages->Count())
+        return false;
+    Vec<PageInfo> *res = pageObserver.pages;
+    pageObserver.pages = NULL;
+    return res;
+}
+
+void VirtWndEbook::DoPageLayout(int dx, int dy)
+{
+    if (pages && (lastDx == dx) && (lastDy == dy))
+        return;
+    Vec<PageInfo> *newPages = LayoutHtmlOrMobi(html, mb, dx, dy);
+    if (!newPages)
+        return;
+    lastDx = dx;
+    lastDy = dy;
+    DeletePages();
+    pages = newPages;
+    currPageNo = 1;
+    SetStatusText();
+    RequestRepaint(this);
+}
+
+void VirtWndEbook::SetHtml(const char *newHtml)
+{
+    html = newHtml;
+}
+
+void VirtWndEbook::StopMobiLoadThread()
+{
+    if (!mobiLoadThread)
+        return;
+    mobiLoadThread->Stop();
+    delete mobiLoadThread;
+    mobiLoadThread = NULL;
+}
+
+// called on UI thread from background thread after
+// mobi file has been loaded
+void VirtWndEbook::MobiLoaded(MobiParse *newMobi)
+{
+    CrashIf(gMessageLoopUI != MessageLoop::current());
+    delete mb;
+    mb = newMobi;
+    html = NULL;
+    delete pages;
+    pages = NULL;
+    RequestLayout();
+}
+
+// called on UI thread from backgroudn thread if we tried
+// to load mobi file but failed
+void VirtWndEbook::MobiFailedToLoad(const TCHAR *fileName)
+{
+    CrashIf(gMessageLoopUI != MessageLoop::current());
+    // TODO: this message should show up in a different place, 
+    // reusing status for convenience
+    ScopedMem<TCHAR> s(str::Format(_T("Failed to load %s!"), fileName));
+    status->SetText(s.Get());
+    free((void*)fileName);
+}
+
+// Method executed on background thread that tries to load
+// a given mobi file and either calls MobiLoaded() or 
+// MobiFailedToLoad() on ui thread
+void VirtWndEbook::LoadMobiBackground(const TCHAR *fileName)
+{
+    CrashIf(gMessageLoopUI == MessageLoop::current());
+    MobiParse *mb = MobiParse::ParseFile(fileName);
+    if (!mb)
+        gMessageLoopUI->PostTask(base::Bind(&VirtWndEbook::MobiFailedToLoad, 
+                                 base::Unretained(this), fileName));
+    else
+        gMessageLoopUI->PostTask(base::Bind(&VirtWndEbook::MobiLoaded, 
+                                 base::Unretained(this), mb));
+    free((void*)fileName);
+}
+
+void VirtWndEbook::LoadMobi(const TCHAR *fileName)
+{
+    // TODO: not sure if that's enough to handle user chosing
+    // to load another mobi file while loading of the previous
+    // hasn't finished yet
+    StopMobiLoadThread();
+    mobiLoadThread = new base::Thread("VirtWndEbook::LoadMobi");
+    mobiLoadThread->Start();
+    // TODO: use some refcounted version of fileName
+    mobiLoadThread->message_loop()->PostTask(base::Bind(&VirtWndEbook::LoadMobiBackground, 
+                                             base::Unretained(this), str::Dup(fileName)));
+    // TODO: this message should show up in a different place, 
+    // reusing status for convenience
+    ScopedMem<TCHAR> s(str::Format(_T("Please wait, loading %s"), fileName));
+    status->SetText(s.Get());
+}
+
+static Rect RectForCircle(int x, int y, int r)
+{
+    return Rect(x - r, y - r, r * 2, r * 2);
+}
+
+// This is just to test mouse move handling
+void VirtWndEbook::NotifyMouseMove(int x, int y)
+{
+    Rect r1 = RectForCircle(cursorX, cursorY, CircleR);
+    Rect r2 = RectForCircle(x, y, CircleR);
+    cursorX = x; cursorY = y;
+    r1.Inflate(1,1); r2.Inflate(1,1);
+    RequestRepaint(this, &r1, &r2);
+}
 void VirtWndEbook::RegisterEventHandlers(EventMgr *evtMgr) 
 {
     evtMgr->RegisterClickHandler(next, this);
@@ -660,8 +701,8 @@ void VirtWndEbook::Clicked(VirtWnd *w, int x, int y)
 
     if (w == horizProgress) {
         float perc = horizProgress->GetPercAt(x);
-        if (pageLayout) {
-            int pageCount = pageLayout->PageCount();
+        if (pages) {
+            int pageCount = pages->Count();
             int pageNo = IntFromPerc(pageCount, perc);
             SetPage(pageNo + 1);
         }
@@ -690,7 +731,7 @@ static inline void EnableAndShow(HWND hwnd, bool enable)
     EnableWindow(hwnd, enable);
 }
 
-static void DrawPageLayout(Graphics *g, PageLayout *pg, int pageNo, REAL offX, REAL offY)
+static void DrawPageLayout(Graphics *g, PageInfo pageInfo, REAL offX, REAL offY)
 {
     StringFormat sf(StringFormat::GenericTypographic());
     SolidBrush br(Color(0,0,0));
@@ -698,12 +739,13 @@ static void DrawPageLayout(Graphics *g, PageLayout *pg, int pageNo, REAL offX, R
     Pen pen(Color(255, 0, 0), 1);
     Pen blackPen(Color(0, 0, 0), 1);
 
-    Font *font = pg->GetFontByIdx(0);
+    FontInfo fi = gFontCache->GetById(0);
+    Font *font = fi.font;
 
     WCHAR buf[512];
     PointF pos;
-    DrawInstr *end;
-    DrawInstr *currInstr = pg->GetInstructionsForPage(pageNo, end);
+    DrawInstr *currInstr = &pageInfo->At(0);
+    DrawInstr *end = currInstr + pageInfo->Count();
     while (currInstr < end) {
         RectF bbox = currInstr->bbox;
         bbox.X += offX;
@@ -727,7 +769,8 @@ static void DrawPageLayout(Graphics *g, PageLayout *pg, int pageNo, REAL offX, R
             }
             g->DrawString(buf, strLen, font, pos, NULL, &br);
         } else if (InstrTypeSetFont == currInstr->type) {
-            font = pg->GetFontByIdx(currInstr->setFont.fontIdx);
+            fi = gFontCache->GetById(currInstr->setFont.fontId);
+            font = fi.font;
         }
         ++currInstr;
     }
@@ -744,12 +787,14 @@ void VirtWndEbook::Paint(Graphics *gfx, int offX, int offY)
         gfx->FillEllipse(&br, r);
     }
 
-    if (!pageLayout)
+    if (!pages)
         return;
     Prop *propPadding = GetProp(styleDefault, gStyleDefault, PropPadding);
     offX += propPadding->padding.left;
     offY += propPadding->padding.top;
-    DrawPageLayout(gfx, pageLayout, currPageNo - 1, (REAL)offX, (REAL)offY);
+
+    PageInfo pageInfo = pages->At(currPageNo - 1);
+    DrawPageLayout(gfx, pageInfo, (REAL)offX, (REAL)offY);
 }
 
 #if 0
@@ -960,6 +1005,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     mui::Initialize();
 
     gCursorHand  = LoadCursor(NULL, IDC_HAND);
+    gFontCache = new ThreadSafeFontCache();
 
     // start per-thread MessageLoop, this one is for our UI thread
     // You can use it via static MessageLoop::current()
@@ -981,6 +1027,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     delete gVirtWndFrame;
 
 Exit:
+    delete gFontCache;
     mui::Destroy();
     return ret;
 }

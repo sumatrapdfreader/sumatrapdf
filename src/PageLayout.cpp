@@ -5,6 +5,12 @@
 #include "StrUtil.h"
 #include "HtmlPullParser.h"
 #include "mui.h"
+#include "StrUtil.h"
+#include "HtmlPullParser.h"
+#include "Scopes.h"
+
+using namespace Gdiplus;
+#include "GdiPlusUtil.h"
 
 /*
 TODO: instead of generating list of DrawInstr objects, we could add neccessary
@@ -12,8 +18,69 @@ support to mui and use list of VirtWnd objects instead (especially if we slim do
 VirtWnd objects further to make allocating hundreds of them cheaper).
 */
 
-using namespace Gdiplus;
-#include "GdiPlusUtil.h"
+ThreadSafeFontCache *gFontCache = NULL;
+
+static Font *CreateFontByStyle(const WCHAR *name, REAL size, FontStyle style)
+{
+    return ::new Font(name, size, style);
+}
+
+bool FontCacheEntry::SameAs(const WCHAR *name, float size, FontStyle style)
+{
+    if (this->size != size)
+        return false;
+    if (this->style != style)
+        return false;
+    return str::Eq(this->name, name);
+}
+
+ThreadSafeFontCache::ThreadSafeFontCache()
+{
+    InitializeCriticalSection(&cs);
+}
+
+ThreadSafeFontCache::~ThreadSafeFontCache()
+{
+    for (size_t i = 0; i < fonts.Count(); i++) {
+        FontCacheEntry f = fonts.At(i);
+        free(f.name);
+        ::delete f.font;
+    }
+    DeleteCriticalSection(&cs);
+}
+
+FontInfo ThreadSafeFontCache::GetExistingOrCreateNew(const WCHAR *name, float size, FontStyle style)
+{
+    ScopedCritSec scope(&cs);
+    for (size_t i = 0; i < fonts.Count(); i++) {
+        FontCacheEntry f = fonts.At(i);
+        if (f.SameAs(name, size, style)) {
+            FontInfo fi = { f.font, i };
+            return fi;
+        }
+    }
+    FontCacheEntry f = { str::Dup(name), size, style, NULL };
+    // TODO: handle a failure to create a font. Use fontCache[0] if exists
+    // or try to fallback to a known font like Times New Roman
+    f.font = CreateFontByStyle(name, size, style);
+    fonts.Append(f);
+    FontInfo fi = { f.font, fonts.Count() - 1 };
+    return fi;
+}
+
+FontInfo ThreadSafeFontCache::GetById(size_t fontId)
+{
+    ScopedCritSec scope(&cs);
+    FontCacheEntry f = fonts.At(fontId);
+    FontInfo fi = { f.font, fontId };
+    return fi;
+}
+
+bool ThreadSafeFontCache::IsValidId(size_t fontId)
+{
+    ScopedCritSec scope(&cs);
+    return fontId < fonts.Count();
+}
 
 struct WordInfo {
     const char *s;
@@ -113,40 +180,117 @@ WordInfo *WordsIter::Next()
     return &wi;
 }
 
-void PageLayout::ClearFontCache()
+class PageLayout
 {
-    for (size_t i = 0; i < fontCache.Size(); i++) {
-        FontInfo fi = fontCache.At(i);
-        ::delete fi.font;
+    enum TextJustification {
+        Left, Right, Center, Both
+    };
+
+public:
+    PageLayout();
+    ~PageLayout();
+    bool LayoutHtml(struct LayoutInfo& layoutInfo, INewPageObserver *pageObserver);
+#if 0
+    size_t PageCount() const {
+        return pageInstrOffset.Count();
     }
-    fontCache.Reset();
+
+    DrawInstr *GetInstructionsForPage(size_t pageNo, DrawInstr *& endInstr) const {
+        CrashIf(pageNo >= PageCount());
+        size_t start = pageInstrOffset.At(pageNo);
+        size_t end = instructions.Count(); // if the last page
+        if (pageNo < PageCount() - 1)
+            end = pageInstrOffset.At(pageNo + 1);
+        CrashIf(end < start);
+        size_t len = end - start;
+        DrawInstr *ret = &instructions.At(start);
+        endInstr = ret + len;
+        return ret;
+    }
+#endif
+
+private:
+    void HandleHtmlTag(HtmlToken *t);
+    void EmitText(HtmlToken *t);
+
+    REAL GetCurrentLineDx();
+    void LayoutLeftStartingAt(REAL offX);
+    void JustifyLineLeft();
+    void JustifyLineRight();
+    void JustifyLineCenter();
+    void JustifyLineBoth();
+    void JustifyLine(TextJustification mode);
+
+    TextJustification AlignAttrToJustification(AlignAttr align);
+
+    void StartLayout();
+    void StartNewPage();
+    void StartNewLine(bool isParagraphBreak);
+
+    void AddSetFontInstr(size_t fontIdx);
+
+    void AddHr();
+    void AddWord(WordInfo *wi);
+
+    void SetCurrentFont(FontStyle fs);
+    void ChangeFont(FontStyle fs, bool isStart);
+
+    DrawInstr *GetInstructionsForCurrentLine(DrawInstr *& endInst) const {
+        size_t len = currPage->Count() - currLineInstrOffset;
+        DrawInstr *ret = &currPage->At(currLineInstrOffset);
+        endInst = ret + len;
+        return ret;
+    }
+
+    bool IsCurrentLineEmpty() const {
+        return currLineInstrOffset == currPage->Count();
+    }
+
+    // constant during layout process
+    INewPageObserver *  pageObserver;
+    REAL                pageDx;
+    REAL                pageDy;
+    REAL                lineSpacing;
+    REAL                spaceDx;
+    Graphics *          gfx;
+    ScopedMem<WCHAR>    fontName;
+    float               fontSize;
+
+    // temporary state during layout process
+    FontStyle           currFontStyle;
+    Font *              currFont;
+    size_t              currFontId; // within gFontCache
+
+    TextJustification   currJustification;
+    // current position in a page
+    REAL                currX, currY; 
+    // number of consecutive newlines
+    int                 newLinesCount;
+
+    // drawing instructions for all pages
+    Vec<DrawInstr>      *currPage;
+
+    // current nesting of html tree during html parsing
+    Vec<HtmlTag>        tagNesting;
+
+    size_t              currLineInstrOffset;
+    WCHAR               buf[512];
+};
+
+PageLayout::PageLayout() : currPage(NULL)
+{
 }
 
-static Font *CreateFontByStyle(WCHAR *name, REAL size, FontStyle style)
+PageLayout::~PageLayout()
 {
-    return ::new Font(name, size, style);
 }
 
 void PageLayout::SetCurrentFont(FontStyle fs)
 {
     currFontStyle = fs;
-    for (size_t i = 0; i < fontCache.Size(); i++) {
-        FontInfo fi = fontCache.At(i);
-        if (fi.style == fs) {
-            CrashAlwaysIf(NULL == fi.font);
-            currFont = fi.font;
-            currFontIdx = i;
-            return;
-        }
-    }
-
-    currFontIdx = fontCache.Size();
-    Font *newFont = CreateFontByStyle(fontName.Get(), fontSize, fs);
-    // TODO: handle a failure to create a font. Use fontCache[0] if exists
-    // or try to fallback to a known font like Times New Roman
-    FontInfo fi = { fs, newFont };
-    fontCache.Append(fi);
-    currFont = newFont;
+    FontInfo fi = gFontCache->GetExistingOrCreateNew(fontName.Get(), fontSize, fs);
+    currFont = fi.font;
+    currFontId = fi.fontId;
 }
 
 static bool ValidFontStyleForChangeFont(FontStyle fs)
@@ -169,20 +313,15 @@ void PageLayout::ChangeFont(FontStyle fs, bool addStyle)
 {
     CrashAlwaysIf(!ValidFontStyleForChangeFont(fs));
     FontStyle newFontStyle = currFontStyle;
-    if (addStyle) {
+    if (addStyle)
         newFontStyle = (FontStyle) (newFontStyle | fs);
-    } else {
+    else
         newFontStyle = (FontStyle) (newFontStyle & ~fs);
-    }
+
     if (newFontStyle == currFontStyle)
         return; // a no-op
     SetCurrentFont(newFontStyle);
-    AddSetFontInstr(currFontIdx);
-}
-
-PageLayout::~PageLayout()
-{
-    ClearFontCache();
+    AddSetFontInstr(currFontId);
 }
 
 void PageLayout::StartLayout()
@@ -190,8 +329,7 @@ void PageLayout::StartLayout()
     currJustification = Both;
     SetCurrentFont(FontStyleRegular);
 
-    CrashAlwaysIf(0 != instructions.Count());
-    CrashAlwaysIf(0 != pageInstrOffset.Count());
+    CrashIf(currPage);
     lineSpacing = currFont->GetHeight(gfx);
     spaceDx = GetSpaceDx(gfx, currFont);
     StartNewPage();
@@ -199,15 +337,17 @@ void PageLayout::StartLayout()
 
 void PageLayout::StartNewPage()
 {
+    if (currPage)
+        pageObserver->NewPage(currPage);
+
+    currPage = new Vec<DrawInstr>();
     currX = currY = 0;
     newLinesCount = 0;
-    currPageInstrOffset = instructions.Count();
-    pageInstrOffset.Append(currPageInstrOffset);
     // instructions for each page need to be self-contained
     // so we have to carry over some state like the current font
-    if (currFontIdx != 0)
-        AddSetFontInstr(currFontIdx);
-    currLineInstrOffset = instructions.Count();
+    if (currFontId != 0)
+        AddSetFontInstr(currFontId);
+    currLineInstrOffset = currPage->Count();
 }
 
 REAL PageLayout::GetCurrentLineDx()
@@ -302,7 +442,7 @@ void PageLayout::JustifyLine(TextJustification mode)
             assert(0);
             break;
     }
-    currLineInstrOffset = instructions.Count();
+    currLineInstrOffset = currPage->Count();
 }
 
 void PageLayout::StartNewLine(bool isParagraphBreak)
@@ -318,7 +458,7 @@ void PageLayout::StartNewLine(bool isParagraphBreak)
 
     currX = 0;
     currY += lineSpacing;
-    currLineInstrOffset = instructions.Count();
+    currLineInstrOffset = currPage->Count();
     if (currY + lineSpacing > pageDy)
         StartNewPage();
 }
@@ -357,10 +497,10 @@ static void GetKnownAttributes(HtmlToken *t, HtmlAttr *allowedAttributes, Vec<Kn
     }
 }
 
-void PageLayout::AddSetFontInstr(size_t fontIdx)
+void PageLayout::AddSetFontInstr(size_t fontId)
 {
-    CrashIf(fontIdx >= fontCache.Size());
-    instructions.Append(DrawInstr::SetFont(fontIdx));
+    CrashIf(!gFontCache->IsValidId(fontId));
+    currPage->Append(DrawInstr::SetFont(fontId));
 }
 
 // add horizontal line (<hr> in html terms)
@@ -375,7 +515,7 @@ void PageLayout::AddHr()
         StartNewPage();
 
     RectF bbox(currX, currY, pageDx, lineSpacing);
-    instructions.Append(DrawInstr::Line(bbox));
+    currPage->Append(DrawInstr::Line(bbox));
     StartNewLine(true);
 }
 
@@ -396,6 +536,11 @@ void PageLayout::AddWord(WordInfo *wi)
         return;
     }
     newLinesCount = 0;
+
+    // TODO: check if the string contains html entities. If it does,
+    // decode the entity, create a copy of decoded string in memory
+    // that will packaged with pages information
+
     size_t strLen = str::Utf8ToWcharBuf(wi->s, wi->len, buf, dimof(buf));
     bbox = MeasureText(gfx, currFont, buf, strLen);
     // TODO: handle a case where a single word is bigger than the whole
@@ -406,14 +551,8 @@ void PageLayout::AddWord(WordInfo *wi)
         StartNewLine(false);
     }
     bbox.Y = currY;
-    instructions.Append(DrawInstr::Str(wi->s, wi->len, bbox));
+    currPage->Append(DrawInstr::Str(wi->s, wi->len, bbox));
     currX += (dx + spaceDx);
-}
-
-void PageLayout::RemoveLastPageIfEmpty()
-{
-    if (currPageInstrOffset == instructions.Count())
-        instructions.Pop();
 }
 
 #if 0
@@ -583,23 +722,21 @@ void PageLayout::EmitText(HtmlToken *t)
     }
 }
 
-// note: maybe this should be part of a separate object so that don't have
-// tight coupling between PageLayout, which represents a final result of
-// layout process, and code that converts a given format into PageLayout.
-// In the future we might add support for other source formats, in which
-// case it would be nice to have them in separate implementation files.
-bool PageLayout::LayoutHtml(WCHAR *fontName, float fontSize, const char *s, size_t sLen)
+bool PageLayout::LayoutHtml(struct LayoutInfo& layoutInfo, INewPageObserver *pageObserver)
 {
+    this->pageObserver = pageObserver;
+    pageDx = (REAL)layoutInfo.pageDx;
+    pageDy = (REAL)layoutInfo.pageDy;
+
     gfx = mui::GetGraphicsForMeasureText();
-    CrashAlwaysIf(NULL == fontName);
-    this->fontName.Set(str::Dup(fontName));
-    this->fontSize = fontSize;
+    fontName.Set(str::Dup(layoutInfo.fontName));
+    fontSize = layoutInfo.fontSize;
 
     StartLayout();
 
     Vec<HtmlTag> tagNesting(256);
 
-    HtmlPullParser parser(s, sLen);
+    HtmlPullParser parser(layoutInfo.s, layoutInfo.sLen);
     for (;;)
     {
         HtmlToken *t = parser.Next();
@@ -613,7 +750,14 @@ bool PageLayout::LayoutHtml(WCHAR *fontName, float fontSize, const char *s, size
     }
     // force layout of the last line
     StartNewLine(true);
-    RemoveLastPageIfEmpty();
+    if (currPage && currPage->Count() > 0)
+        pageObserver->NewPage(currPage);
     return true;
+}
+
+void LayoutHtml(struct LayoutInfo& li, INewPageObserver *observer)
+{
+    PageLayout pg;
+    pg.LayoutHtml(li, observer);
 }
 
