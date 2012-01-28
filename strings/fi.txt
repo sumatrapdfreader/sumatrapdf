@@ -258,6 +258,9 @@ Peräkkäin ja rinnakkain
 Contribute Translation
 Osallistu suomennosprojektiin
 
+Copy &Image
+Kopioi &kuva
+
 Copy &Link Address
 Kopioi &linkin osoite
 
@@ -671,7 +674,4 @@ Kopioidaan tekstiä
 
 printing document
 tulostetaan asiakirjaa
-
-# Untranslated:
-#Copy &Image
 

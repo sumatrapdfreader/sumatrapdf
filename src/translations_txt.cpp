@@ -3497,7 +3497,7 @@ const char *gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "Jatkuva kirjan\303\244kym\303\244",
   "Per\303\244kk\303\244in ja rinnakkain",
   "Osallistu suomennosprojektiin",
-  NULL,
+  "Kopioi &kuva",
   "Kopioi &linkin osoite",
   "Kopioi kommentti",
   "Tekstin kopioiminen kiellettiin (kopioidaan vain kuvana)",
