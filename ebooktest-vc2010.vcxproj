@@ -104,8 +104,6 @@
     <ClCompile Include="ext\chrome\base\utf_string_conversions.cc" />
     <ClCompile Include="ext\chrome\base\utf_string_conversion_utils.cc" />
     <ClCompile Include="ext\chrome\base\win\object_watcher.cc" />
-    <ClCompile Include="ext\chrome\base\win\pe_image.cc" />
-    <ClCompile Include="ext\chrome\base\win\registry.cc" />
     <ClCompile Include="ext\chrome\base\win\windows_version.cc" />
     <ClCompile Include="ext\chrome\base\win\wrapped_window_proc.cc" />
     <ClCompile Include="src\ebooktest\EbookTest.cpp" />
@@ -181,8 +179,6 @@
     <ClInclude Include="ext\chrome\base\utf_string_conversions.h" />
     <ClInclude Include="ext\chrome\base\utf_string_conversion_utils.h" />
     <ClInclude Include="ext\chrome\base\win\object_watcher.h" />
-    <ClInclude Include="ext\chrome\base\win\pe_image.h" />
-    <ClInclude Include="ext\chrome\base\win\registry.h" />
     <ClInclude Include="ext\chrome\base\win\scoped_comptr.h" />
     <ClInclude Include="ext\chrome\base\win\scoped_handle.h" />
     <ClInclude Include="ext\chrome\base\win\windows_version.h" />

@@ -73,12 +73,6 @@
     <ClCompile Include="ext\chrome\base\win\object_watcher.cc">
       <Filter>base\win</Filter>
     </ClCompile>
-    <ClCompile Include="ext\chrome\base\win\pe_image.cc">
-      <Filter>base\win</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\chrome\base\win\registry.cc">
-      <Filter>base\win</Filter>
-    </ClCompile>
     <ClCompile Include="ext\chrome\base\win\windows_version.cc">
       <Filter>base\win</Filter>
     </ClCompile>
@@ -275,12 +269,6 @@
       <Filter>base</Filter>
     </ClInclude>
     <ClInclude Include="ext\chrome\base\win\object_watcher.h">
-      <Filter>base\win</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\chrome\base\win\pe_image.h">
-      <Filter>base\win</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\chrome\base\win\registry.h">
       <Filter>base\win</Filter>
     </ClInclude>
     <ClInclude Include="ext\chrome\base\win\scoped_comptr.h">

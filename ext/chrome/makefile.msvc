@@ -30,12 +30,11 @@ CHROME_OBJS = \
 	$(OCH)\message_loop.obj $(OCH)\message_loop_proxy.obj \
 	$(OCH)\message_loop_proxy_impl.obj $(OCH)\message_pump.obj \
 	$(OCH)\message_pump_default.obj $(OCH)\message_pump_win.obj \
-	$(OCH)\object_watcher.obj $(OCH)\pe_image.obj \
-	$(OCH)\pending_task.obj \
+	$(OCH)\object_watcher.obj $(OCH)\pending_task.obj \
 	$(OCH)\platform_thread_win.obj $(OCH)\post_task_and_reply_impl.obj \
 	$(OCH)\prtime.obj \
 	$(OCH)\ref_counted.obj $(OCH)\ref_counted_memory.obj \
-	$(OCH)\registry.obj $(OCH)\singleton.obj \
+	$(OCH)\singleton.obj \
 	$(OCH)\string_piece.obj $(OCH)\string_util.obj \
 	$(OCH)\stringprintf.obj $(OCH)\thread.obj \
 	$(OCH)\thread_collision_warner.obj \
