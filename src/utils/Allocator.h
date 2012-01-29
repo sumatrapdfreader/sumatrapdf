@@ -51,9 +51,15 @@ static inline size_t RoundUpTo8(size_t n)
     return ((n+8-1)/8)*8;
 }
 
+// BlockAllocator is for the cases where we need to allocate pieces of memory
+// that are meant to be freed together. It simplifies the callers (only need
+// to track this object and not all allocated pieces). Allocation and freeing
+// is faster. The downside is that free() is a no-op i.e. it can't free memory
+// for re-use.
+//
 // Note: we could be a bit more clever here by allocating data in 4K chunks
 // via VirtualAlloc() etc. instead of malloc(), which would lower the overhead
-class BlockAllocator {
+class BlockAllocator : public Allocator {
 
     struct MemBlockNode {
         struct MemBlockNode *next;
@@ -88,7 +94,7 @@ public:
         Init();
     }
 
-    ~BlockAllocator() {
+    virtual ~BlockAllocator() {
         FreeAll();
     }
 
@@ -104,7 +110,19 @@ public:
         currBlock = node;
     }
 
-    void *Alloc(size_t size) {
+    // Allocator methods
+    virtual void *Realloc(void *mem, size_t size) {
+        // TODO: we can't do that because we don't know the original
+        // size of memory piece pointed by mem. We can remember it
+        // within the block that we allocate
+        CrashAlwaysIf(true);
+    }
+
+    virtual void Free(void *mem) {
+        // does nothing, we can't free individual pieces of memory
+    }
+
+    virtual void *Alloc(size_t size) {
         size = RoundUpTo8(size);
         if (remainsInBlock < size)
             AllocBlock(size);
