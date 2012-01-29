@@ -20,7 +20,7 @@ fz_bbox_add_rect(fz_device *dev, fz_rect rect, int clip)
 		rect = fz_intersect_rect(rect, data->stack[data->top-1]);
 	if (!clip && data->top <= STACK_SIZE)
 		*data->result = fz_union_bbox(*data->result, fz_round_rect(rect));
-	if (clip && data->top++ <= STACK_SIZE)
+	if (clip && ++data->top <= STACK_SIZE)
 		data->stack[data->top-1] = rect;
 }
 
