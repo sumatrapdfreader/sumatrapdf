@@ -396,7 +396,7 @@ $(OS)\EbookTest.obj: src\utils\HtmlPullParser.h src\utils\mui.h src\utils\MuiCss
 $(OS)\EbookTest.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\EbookTest.obj: src\utils\WinUtil.h src\Version.h
 $(OS)\EbookTestMenu.obj: src\ebooktest\EbookTestMenu.h src\ebooktest\Resource.h src\utils\BaseUtil.h
-$(OS)\EbookTestMenu.obj: src\utils\StrUtil.h
+$(OS)\EbookTestMenu.obj: src\utils\Scoped.h src\utils\StrUtil.h
 $(OS)\EngineDump.obj: src\BaseEngine.h src\ChmEngine.h src\DjVuEngine.h
 $(OS)\EngineDump.obj: src\EngineManager.h src\ImagesEngine.h src\PdfEngine.h
 $(OS)\EngineDump.obj: src\PsEngine.h src\utils\Allocator.h src\utils\BaseUtil.h

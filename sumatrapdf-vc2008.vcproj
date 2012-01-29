@@ -510,11 +510,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\utils\Transactions.cpp"
+				RelativePath=".\src\utils\FileTransactions.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\src\utils\Transactions.h"
+				RelativePath=".\src\utils\FileTransactions.h"
 				>
 			</File>
 			<File
