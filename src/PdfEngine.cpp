@@ -1454,8 +1454,8 @@ pdf_page *CPdfEngine::GetPdfPage(int pageNo, bool failIfBusy)
 
     pdf_page *page = _pages[pageNo-1];
     if (!page) {
+        ScopedCritSec ctxScope(&ctxAccess);
         fz_var(page);
-        EnterCriticalSection(&ctxAccess);
         fz_try(ctx) {
             page = pdf_load_page(_doc, pageNo - 1);
             _pages[pageNo-1] = page;
@@ -1463,7 +1463,6 @@ pdf_page *CPdfEngine::GetPdfPage(int pageNo, bool failIfBusy)
             pageComments[pageNo-1] = ProcessPageAnnotations(page);
         }
         fz_catch(ctx) { }
-        LeaveCriticalSection(&ctxAccess);
     }
 
     return page;
@@ -1586,16 +1585,15 @@ bool CPdfEngine::RunPage(pdf_page *page, fz_device *dev, fz_matrix ctm, RenderTa
         DropPageRun(run);
     }
     else {
+        ScopedCritSec scope(&ctxAccess);
         char *targetName = target == Target_Print ? "Print" :
                            target == Target_Export ? "Export" : "View";
-        EnterCriticalSection(&ctxAccess);
         fz_try(ctx) {
             pdf_run_page_with_usage(_doc, page, dev, ctm, targetName, NULL);
         }
         fz_catch(ctx) {
             ok = false;
         }
-        LeaveCriticalSection(&ctxAccess);
     }
 
     EnterCriticalSection(&ctxAccess);
@@ -1677,12 +1675,11 @@ RectD CPdfEngine::PageContentBox(int pageNo, RenderTarget target)
     fz_try(ctx) {
         dev = fz_new_bbox_device(ctx, &bbox);
     }
-    fz_always(ctx) {
-        LeaveCriticalSection(&ctxAccess);
-    }
     fz_catch(ctx) {
+        LeaveCriticalSection(&ctxAccess);
         return RectD();
     }
+    LeaveCriticalSection(&ctxAccess);
 
     fz_bbox mediabox = fz_round_rect(pdf_bound_page(_doc, page));
     bool ok = RunPage(page, dev, fz_identity, target, mediabox, false);
@@ -1740,12 +1737,11 @@ bool CPdfEngine::RenderPage(HDC hDC, pdf_page *page, RectI screenRect, fz_matrix
     fz_try(ctx) {
         dev = fz_new_gdiplus_device(ctx, hDC, clipbox);
     }
-    fz_always(ctx) {
-        LeaveCriticalSection(&ctxAccess);
-    }
     fz_catch(ctx) {
+        LeaveCriticalSection(&ctxAccess);
         return false;
     }
+    LeaveCriticalSection(&ctxAccess);
 
     return RunPage(page, dev, ctm2, target, clipbox);
 }
@@ -1806,24 +1802,20 @@ RenderedBitmap *CPdfEngine::RenderBitmap(int pageNo, float zoom, int rotation, R
         image = fz_new_pixmap_with_rect(ctx, fz_find_device_colorspace("DeviceRGB"), bbox);
         fz_clear_pixmap_with_color(image, 0xFF); // initialize white background
     }
-    fz_always(ctx) {
-        LeaveCriticalSection(&ctxAccess);
-    }
     fz_catch(ctx) {
+        LeaveCriticalSection(&ctxAccess);
         return NULL;
     }
 
     fz_device *dev;
-    EnterCriticalSection(&ctxAccess);
     fz_try(ctx) {
         dev = fz_new_draw_device(ctx, image);
     }
-    fz_always(ctx) {
-        LeaveCriticalSection(&ctxAccess);
-    }
     fz_catch(ctx) {
+        LeaveCriticalSection(&ctxAccess);
         return NULL;
     }
+    LeaveCriticalSection(&ctxAccess);
 
     bool ok = RunPage(page, dev, ctm, target, bbox);
 
@@ -1993,12 +1985,11 @@ RenderedBitmap *CPdfEngine::GetPageImage(int pageNo, RectD rect, size_t imageIx)
     fz_try(ctx) {
         dev = fz_new_inspection_device(ctx, &data);
     }
-    fz_always(ctx) {
-        LeaveCriticalSection(&ctxAccess);
-    }
     fz_catch(ctx) {
+        LeaveCriticalSection(&ctxAccess);
         return NULL;
     }
+    LeaveCriticalSection(&ctxAccess);
 
     RunPage(page, dev, fz_identity);
 
@@ -2057,12 +2048,11 @@ TCHAR *CPdfEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_ou
     fz_try(ctx) {
         page = pdf_load_page(_doc, pageNo - 1);
     }
-    fz_always(ctx) {
-        LeaveCriticalSection(&ctxAccess);
-    }
     fz_catch(ctx) {
+        LeaveCriticalSection(&ctxAccess);
         return NULL;
     }
+    LeaveCriticalSection(&ctxAccess);
 
     TCHAR *result = ExtractPageText(page, lineSep, coords_out, target);
 
@@ -2739,8 +2729,8 @@ xps_page *CXpsEngine::GetXpsPage(int pageNo, bool failIfBusy)
 
     xps_page *page = _pages[pageNo-1];
     if (!page) {
-        fz_var(page);
         ScopedCritSec ctxScope(&ctxAccess);
+        fz_var(page);
         fz_try(ctx) {
             page = xps_load_page(_doc, pageNo - 1);
             _pages[pageNo-1] = page;
@@ -3013,12 +3003,11 @@ RectD CXpsEngine::PageContentBox(int pageNo, RenderTarget target)
     fz_try(ctx) {
         dev = fz_new_bbox_device(ctx, &bbox);
     }
-    fz_always(ctx) {
-        LeaveCriticalSection(&ctxAccess);
-    }
     fz_catch(ctx) {
+        LeaveCriticalSection(&ctxAccess);
         return RectD();
     }
+    LeaveCriticalSection(&ctxAccess);
 
     fz_bbox mediabox = fz_round_rect(xps_bound_page(_doc, page));
     bool ok = RunPage(page, dev, fz_identity, mediabox, false);
@@ -3076,12 +3065,11 @@ bool CXpsEngine::RenderPage(HDC hDC, xps_page *page, RectI screenRect, fz_matrix
     fz_try(ctx) {
         dev = fz_new_gdiplus_device(ctx, hDC, clipbox);
     }
-    fz_always(ctx) {
-        LeaveCriticalSection(&ctxAccess);
-    }
     fz_catch(ctx) {
+        LeaveCriticalSection(&ctxAccess);
         return false;
     }
+    LeaveCriticalSection(&ctxAccess);
 
     return RunPage(page, dev, ctm2, clipbox);
 }
@@ -3124,24 +3112,20 @@ RenderedBitmap *CXpsEngine::RenderBitmap(int pageNo, float zoom, int rotation, R
         image = fz_new_pixmap_with_rect(ctx, fz_find_device_colorspace("DeviceRGB"), bbox);
         fz_clear_pixmap_with_color(image, 0xFF); // initialize white background
     }
-    fz_always(ctx) {
-        LeaveCriticalSection(&ctxAccess);
-    }
     fz_catch(ctx) {
+        LeaveCriticalSection(&ctxAccess);
         return NULL;
     }
 
     fz_device *dev;
-    EnterCriticalSection(&ctxAccess);
     fz_try(ctx) {
         dev = fz_new_draw_device(ctx, image);
     }
-    fz_always(ctx) {
-        LeaveCriticalSection(&ctxAccess);
-    }
     fz_catch(ctx) {
+        LeaveCriticalSection(&ctxAccess);
         return NULL;
     }
+    LeaveCriticalSection(&ctxAccess);
 
     bool ok = RunPage(page, dev, ctm, bbox);
 
@@ -3199,12 +3183,11 @@ TCHAR *CXpsEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_ou
     fz_try(ctx) {
         page = xps_load_page(_doc, pageNo - 1);
     }
-    fz_always(ctx) {
-        LeaveCriticalSection(&ctxAccess);
-    }
     fz_catch(ctx) {
+        LeaveCriticalSection(&ctxAccess);
         return NULL;
     }
+    LeaveCriticalSection(&ctxAccess);
 
     TCHAR *result = ExtractPageText(page, lineSep, coords_out);
 
@@ -3332,12 +3315,11 @@ RenderedBitmap *CXpsEngine::GetPageImage(int pageNo, RectD rect, size_t imageIx)
     fz_try(ctx) {
         dev = fz_new_inspection_device(ctx, &data);
     }
-    fz_always(ctx) {
-        LeaveCriticalSection(&ctxAccess);
-    }
     fz_catch(ctx) {
+        LeaveCriticalSection(&ctxAccess);
         return NULL;
     }
+    LeaveCriticalSection(&ctxAccess);
 
     RunPage(page, dev, fz_identity);
 
