@@ -427,8 +427,9 @@ $(OS)\FileUtil.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\Scopes.h
 $(OS)\FileUtil.obj: src\utils\StrUtil.h
 $(OS)\FileWatch.obj: src\FileWatch.h src\utils\BaseUtil.h src\utils\FileUtil.h
 $(OS)\FileWatch.obj: src\utils\StrUtil.h
-$(OS)\GdiPlusUtil.obj: src\utils\BaseUtil.h src\utils\GdiPlusUtil.h src\utils\GeomUtil.h
-$(OS)\GdiPlusUtil.obj: src\utils\Scopes.h src\utils\StrUtil.h src\utils\WinUtil.h
+$(OS)\GdiPlusUtil.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GdiPlusUtil.h
+$(OS)\GdiPlusUtil.obj: src\utils\GeomUtil.h src\utils\Scopes.h src\utils\StrUtil.h
+$(OS)\GdiPlusUtil.obj: src\utils\WinUtil.h
 $(OS)\HtmlPullParser.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\HtmlPullParser.h
 $(OS)\HtmlPullParser.obj: src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\HtmlWindow.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GeomUtil.h
