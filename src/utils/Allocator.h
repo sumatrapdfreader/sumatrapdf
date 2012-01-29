@@ -116,6 +116,7 @@ public:
         // size of memory piece pointed by mem. We can remember it
         // within the block that we allocate
         CrashAlwaysIf(true);
+        return NULL;
     }
 
     virtual void Free(void *mem) {
