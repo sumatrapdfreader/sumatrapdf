@@ -2,6 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
+#include "Allocator.h"
 #include "WinUtil.h"
 
 #include "Scopes.h"

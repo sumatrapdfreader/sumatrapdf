@@ -73,6 +73,37 @@ STATIC_ASSERT(4 == sizeof(uint32),  uint32_is_4_bytes);
 STATIC_ASSERT(8 == sizeof(int64),   int64_is_8_bytes);
 STATIC_ASSERT(8 == sizeof(uint64),  uint64_is_8_bytes);
 
+void CrashMe(); // in StrUtil.cpp
+
+// CrashIf() is like assert() except it crashes in debug and pre-release builds
+// The idea is that assert() indicates "can't possibly happen" situation and if
+// it does happen, we would like to fix the underlying cause.
+// In practice in our testing we rarely get notified when an assert() is triggered
+// and they are disabled in builds running on user's computers.
+// Now that we have crash reporting, we can get notified about such cases if we
+// use CrashIf() instead of assert(), which we should be doing from now on.
+// Conservatively I only enable it for debug and pre-release builds although
+// I would be fine with enabling it all builds.
+// To crash uncoditionally, there is CrashAlwaysIf()
+// Just as with assert(), the condition is not guaranteed to be executed
+// in some builds, so it shouldn't contain the actual logic of the code
+#if defined(SVN_PRE_RELEASE_VER) || defined(DEBUG)
+#define CrashIf(exp) \
+    if (exp) \
+        CrashMe(); \
+    /* prevent CrashIf(...) else ... from compiling accidentally */ \
+    else \
+        NoOp()
+#else
+#define CrashIf(exp) NoOp()
+#endif
+
+#define CrashAlwaysIf(exp) \
+    if (exp) \
+        CrashMe(); \
+    else \
+        NoOp()
+
 template <typename T>
 inline void swap(T& one, T&two)
 {
@@ -122,33 +153,6 @@ public:
         return tmp;
     }
     operator T*() const { return obj; }
-};
-
-// A helper for allocating an array of elements of type T
-// either on stack (if they fit within StackBufInBytes)
-// or in memory. Allocating on stack is a perf optimization
-// note: not the best name
-template <typename T, int StackBufInBytes>
-class FixedArray {
-    T stackBuf[StackBufInBytes / sizeof(T)];
-    T *memBuf;
-public:
-    FixedArray(size_t elCount) {
-        memBuf = NULL;
-        size_t stackEls = StackBufInBytes / sizeof(T);
-        if (elCount > stackEls)
-            memBuf = (T*)malloc(elCount * sizeof(T));
-    }
-
-    ~FixedArray() {
-        free(memBuf);
-    }
-
-    T *Get() {
-        if (memBuf)
-            return memBuf;
-        return &(stackBuf[0]);
-    }
 };
 
 class CallbackFunc {

@@ -38,11 +38,13 @@ static void SaveMobiHtml(const TCHAR *filePathBase, MobiParse *mb)
 {
     CrashAlwaysIf(!gMobiSaveHtml);
 
+#if 0 // TODO: we've changed how pretty-printing works, need to update
     ScopedMem<TCHAR> outFile(str::Join(filePathBase, _T("_pp.html")));
     file::WriteAll(outFile.Get(), (void*)mb->prettyPrintedHtml->LendData(), mb->prettyPrintedHtml->Count());
 
     outFile.Set(str::Join(filePathBase, _T(".html")));
     file::WriteAll(outFile.Get(), mb->doc->LendData(), mb->doc->Count());
+#endif
 }
 
 static void SaveMobiImage(const TCHAR *filePathBase, size_t imgNo, ImageData *img)
