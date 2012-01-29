@@ -4,7 +4,7 @@
 #include "FileTransactions.h"
 #include "FileUtil.h"
 #include "WinUtil.h"
-#include "Scopes.h"
+#include "Scoped.h"
 
 // from Ktmw32.h
 typedef HANDLE (WINAPI * CreateTransactionPtr)(LPSECURITY_ATTRIBUTES lpTransactionAttributes, LPGUID UOW, DWORD CreateOptions, DWORD IsolationLevel, DWORD IsolationFlags, DWORD Timeout, LPWSTR Description);

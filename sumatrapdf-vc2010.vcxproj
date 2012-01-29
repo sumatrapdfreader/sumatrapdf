@@ -395,7 +395,7 @@
     <ClInclude Include="src\utils\SimpleLog.h" />
     <ClInclude Include="src\utils\StrUtil.h" />
     <ClInclude Include="src\utils\TrivialHtmlParser.h" />
-    <ClInclude Include="src\utils\Scopes.h" />
+    <ClInclude Include="src\utils\Scoped.h" />
     <ClInclude Include="src\utils\Vec.h" />
     <ClInclude Include="src\utils\WinUtil.h" />
     <ClInclude Include="src\utils\ZipUtil.h" />

@@ -7,7 +7,7 @@
 #include "mui.h"
 #include "StrUtil.h"
 #include "HtmlPullParser.h"
-#include "Scopes.h"
+#include "Scoped.h"
 
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"

@@ -13,7 +13,7 @@
 #endif
 
 #include "BaseUtil.h"
-#include "Scopes.h"
+#include "Scoped.h"
 #include "BaseEngine.h"
 
 #include <shlwapi.h>

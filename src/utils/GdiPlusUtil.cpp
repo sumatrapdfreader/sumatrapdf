@@ -5,7 +5,7 @@
 #include "Allocator.h"
 #include "WinUtil.h"
 
-#include "Scopes.h"
+#include "Scoped.h"
 #include "StrUtil.h"
 
 using namespace Gdiplus;

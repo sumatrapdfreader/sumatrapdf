@@ -22,7 +22,7 @@ using std::max;
 #include "CmdLineParser.h"
 #include "FrameTimeoutCalculator.h"
 #include "FileTransactions.h"
-#include "Scopes.h"
+#include "Scoped.h"
 #include "PageLayout.h"
 #include "MobiDoc.h"
 #include "EbookTestMenu.h"

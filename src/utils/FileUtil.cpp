@@ -4,7 +4,7 @@
 #include "BaseUtil.h"
 #include "StrUtil.h"
 #include "FileUtil.h"
-#include "Scopes.h"
+#include "Scoped.h"
 
 namespace path {
 

@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "Scoped.h"
 #include "DirIter.h"
 #include "MobiDoc.h"
 #include "FileUtil.h"

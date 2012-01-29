@@ -3,7 +3,7 @@
 
 #include "BaseUtil.h"
 #include "RenderCache.h"
-#include "Scopes.h"
+#include "Scoped.h"
 #include "WinUtil.h"
 
 /* Define if you want to conserve memory by always freeing cached bitmaps

@@ -6,6 +6,28 @@
 
 #include "BaseUtil.h"
 
+// auto-free memory for arbitrary malloc()ed memory of type T*
+template <typename T>
+class ScopedMem
+{
+    T *obj;
+public:
+    ScopedMem() : obj(NULL) {}
+    explicit ScopedMem(T* obj) : obj(obj) {}
+    ~ScopedMem() { free((void*)obj); }
+    void Set(T *o) {
+        free((void*)obj);
+        obj = o;
+    }
+    T *Get() const { return obj; }
+    T *StealData() {
+        T *tmp = obj;
+        obj = NULL;
+        return tmp;
+    }
+    operator T*() const { return obj; }
+};
+
 class ScopedCritSec
 {
     CRITICAL_SECTION *cs;

@@ -5,7 +5,7 @@
 #include "PdfEngine.h"
 #include "FileUtil.h"
 #include "WinUtil.h"
-#include "Scopes.h"
+#include "Scoped.h"
 
 #include <zlib.h>
 extern "C" gzFile ZEXPORT gzwopen(const wchar_t *path, const char *mode);

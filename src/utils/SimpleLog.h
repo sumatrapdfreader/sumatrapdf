@@ -5,7 +5,7 @@
 #define SimpleLog_h
 
 #include "Vec.h"
-#include "Scopes.h"
+#include "Scoped.h"
 
 namespace slog {
 

@@ -3,7 +3,7 @@
 
 #include "BaseUtil.h"
 #include "WinUtil.h"
-#include "Scopes.h"
+#include "Scoped.h"
 #ifndef DEBUG
 #include <new>
 #define NOTHROW (std::nothrow)

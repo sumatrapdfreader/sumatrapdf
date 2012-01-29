@@ -21,7 +21,7 @@
 #include "Vec.h"
 #include "CmdLineParser.h"
 #include "FileTransactions.h"
-#include "Scopes.h"
+#include "Scoped.h"
 
 #define TAPP                _T("SumatraPDF")
 #define EXENAME             TAPP _T(".exe")

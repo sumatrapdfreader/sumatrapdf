@@ -5,6 +5,7 @@
 #define SumatraDialogs_h
 
 #include "AppPrefs.h"
+#include "Scoped.h"
 
 TCHAR * Dialog_GoToPage(HWND hwnd, const TCHAR *currentPageLabel, int pageCount, bool onlyNumeric=true);
 TCHAR * Dialog_Find(HWND hwnd, const TCHAR *previousSearch, bool *matchCase);

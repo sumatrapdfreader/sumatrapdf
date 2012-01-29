@@ -1,7 +1,7 @@
 /* Copyright 2006-2012 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "BaseUtil.h"
+#include "Scoped.h"
 #include "StrUtil.h"
 #include "GeomUtil.h"
 #include "WinUtil.h"

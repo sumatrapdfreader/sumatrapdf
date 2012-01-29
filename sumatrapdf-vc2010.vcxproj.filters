@@ -1057,7 +1057,7 @@
     <ClInclude Include="src\ChmUI.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\utils\Scopes.h">
+    <ClInclude Include="src\utils\Scoped.h">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="src\utils\Touch.h">

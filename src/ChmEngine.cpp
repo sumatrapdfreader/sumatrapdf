@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "ChmEngine.h"
+#include "Scoped.h"
 #include "StrUtil.h"
 #include "FileUtil.h"
 #include "Vec.h"

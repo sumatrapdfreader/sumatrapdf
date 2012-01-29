@@ -478,7 +478,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\utils\Scopes.h"
+				RelativePath=".\src\utils\Scoped.h"
 				>
 			</File>
 			<File

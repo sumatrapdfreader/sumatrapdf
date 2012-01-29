@@ -133,28 +133,6 @@ inline bool memeq(const void *s1, const void *s2, size_t len)
     return 0 == memcmp(s1, s2, len);
 }
 
-// auto-free memory for arbitrary malloc()ed memory of type T*
-template <typename T>
-class ScopedMem
-{
-    T *obj;
-public:
-    ScopedMem() : obj(NULL) {}
-    explicit ScopedMem(T* obj) : obj(obj) {}
-    ~ScopedMem() { free((void*)obj); }
-    void Set(T *o) {
-        free((void*)obj);
-        obj = o;
-    }
-    T *Get() const { return obj; }
-    T *StealData() {
-        T *tmp = obj;
-        obj = NULL;
-        return tmp;
-    }
-    operator T*() const { return obj; }
-};
-
 class CallbackFunc {
 public:
     virtual ~CallbackFunc() { }

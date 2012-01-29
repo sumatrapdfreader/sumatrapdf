@@ -9,7 +9,7 @@
 #include "EpubEngine.h"
 #include "StrUtil.h"
 #include "FileUtil.h"
-#include "Scopes.h"
+#include "Scoped.h"
 
 class CREngineCtx {
     int count;

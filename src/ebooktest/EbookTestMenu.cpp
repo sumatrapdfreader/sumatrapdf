@@ -10,6 +10,7 @@ using std::max;
 #include "Resource.h"
 
 #include "EbookTestMenu.h"
+#include "Scoped.h"
 #include "StrUtil.h"
 
 #define SEP_ITEM "-----"

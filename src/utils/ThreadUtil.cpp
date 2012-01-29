@@ -3,7 +3,7 @@
 
 #include "BaseUtil.h"
 #include "ThreadUtil.h"
-#include "Scopes.h"
+#include "Scoped.h"
 
 
 WorkerThread::WorkerThread(Functor *f)

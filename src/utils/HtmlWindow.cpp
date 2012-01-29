@@ -12,7 +12,7 @@
 #include "StrUtil.h"
 #include "GeomUtil.h"
 #include "WinUtil.h"
-#include "Scopes.h"
+#include "Scoped.h"
 #include "Vec.h"
 
 #pragma comment(lib, "urlmon")

@@ -5,7 +5,7 @@
 #include "FileUtil.h"
 #include "CmdLineParser.h"
 #include "WinUtil.h"
-#include "Scopes.h"
+#include "Scoped.h"
 
 #define Out(msg, ...) printf(msg, __VA_ARGS__)
 

@@ -7,7 +7,7 @@
 #include "translations.h"
 #include "WinUtil.h"
 #include "FileUtil.h"
-#include "Scopes.h"
+#include "Scoped.h"
 
 #define PROPERTIES_LEFT_RIGHT_SPACE_DX 8
 #define PROPERTIES_RECT_PADDING     8

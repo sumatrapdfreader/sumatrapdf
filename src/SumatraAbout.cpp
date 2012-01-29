@@ -7,7 +7,7 @@
 #include "translations.h"
 #include "Version.h"
 #include "WinUtil.h"
-#include "Scopes.h"
+#include "Scoped.h"
 
 #define ABOUT_LINE_OUTER_SIZE       2
 #define ABOUT_LINE_SEP_SIZE         1

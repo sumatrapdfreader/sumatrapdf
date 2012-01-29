@@ -6,7 +6,7 @@
 #include "StrUtil.h"
 #include "Vec.h"
 #include "WinUtil.h"
-#include "Scopes.h"
+#include "Scoped.h"
 
 #include <shlwapi.h>
 #include <shlobj.h>

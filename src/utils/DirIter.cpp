@@ -3,6 +3,7 @@
 
 #include "DirIter.h"
 
+#include "Scoped.h"
 #include "StrUtil.h"
 #include "FileUtil.h"
 

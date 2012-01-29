@@ -5,7 +5,7 @@
 #ifndef PdfSync_h
 #define PdfSync_h
 
-#include "BaseUtil.h"
+#include "Scoped.h"
 #include "GeomUtil.h"
 #include "Vec.h"
 
