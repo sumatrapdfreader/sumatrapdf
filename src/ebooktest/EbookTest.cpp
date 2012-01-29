@@ -24,7 +24,7 @@ using std::max;
 #include "Transactions.h"
 #include "Scopes.h"
 #include "PageLayout.h"
-#include "MobiParse.h"
+#include "MobiDoc.h"
 #include "EbookTestMenu.h"
 
 /*
@@ -238,7 +238,7 @@ class VirtWndEbook
     void SetPage(int newPageNo);
 
 public:
-    MobiParse *     mb;
+    MobiDoc *     mb;
     const char *    html;
 
     Vec<PageData*>* pages;
@@ -301,7 +301,7 @@ public:
     void PageLayout(int dx, int dy);
     void StopPageLayoutThread();
 
-    void MobiLoaded(MobiParse *mb);
+    void MobiLoaded(MobiDoc *mb);
     void MobiFailedToLoad(const TCHAR *fileName);
     void LoadMobiBackground(const TCHAR *fileName);
     void StopMobiLoadThread();
@@ -611,8 +611,8 @@ void VirtWndEbook::NewPageUIThread(PageData *pageData)
 // called on a background thread
 void VirtWndEbook::NewPage(PageData *pageData)
 {
-    gMessageLoopUI->PostTask(base::Bind(&VirtWndEbook::NewPageUIThread, 
-                                        base::Unretained(this), pageData));
+    gMessageLoopUI->PostDelayedTask(base::Bind(&VirtWndEbook::NewPageUIThread, 
+                                        base::Unretained(this), pageData), 100);
 }
 
 // called on a background thread
@@ -681,7 +681,7 @@ void VirtWndEbook::StopMobiLoadThread()
 
 // called on UI thread from background thread after
 // mobi file has been loaded
-void VirtWndEbook::MobiLoaded(MobiParse *newMobi)
+void VirtWndEbook::MobiLoaded(MobiDoc *newMobi)
 {
     CrashIf(gMessageLoopUI != MessageLoop::current());
     delete mb;
@@ -710,7 +710,7 @@ void VirtWndEbook::MobiFailedToLoad(const TCHAR *fileName)
 void VirtWndEbook::LoadMobiBackground(const TCHAR *fileName)
 {
     CrashIf(gMessageLoopUI == MessageLoop::current());
-    MobiParse *mb = MobiParse::ParseFile(fileName);
+    MobiDoc *mb = MobiDoc::ParseFile(fileName);
     if (!mb)
         gMessageLoopUI->PostTask(base::Bind(&VirtWndEbook::MobiFailedToLoad, 
                                  base::Unretained(this), fileName));

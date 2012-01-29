@@ -1,7 +1,7 @@
 /* Copyright 2011-2012 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "MobiParse.h"
+#include "MobiDoc.h"
 #include <time.h>
 
 #include "BitReader.h"
@@ -519,7 +519,7 @@ static bool IsValidCompression(int comprType)
             (COMPRESSION_HUFF == comprType);
 }
 
-MobiParse::MobiParse() : 
+MobiDoc::MobiDoc() : 
     fileName(NULL), fileHandle(0), recHeaders(NULL), firstRecData(NULL), isMobi(false),
     docRecCount(0), compressionType(0), docUncompressedSize(0), doc(NULL),
     multibyte(false), trailersCount(0), imageFirstRec(0), imagesCount(0), validImagesCount(0),
@@ -527,7 +527,7 @@ MobiParse::MobiParse() :
 {
 }
 
-MobiParse::~MobiParse()
+MobiDoc::~MobiDoc()
 {
     CloseHandle(fileHandle);
     free(fileName);
@@ -539,7 +539,7 @@ MobiParse::~MobiParse()
     delete doc;
 }
 
-bool MobiParse::ParseHeader()
+bool MobiDoc::ParseHeader()
 {
     DWORD bytesRead;
     BOOL ok = ReadFile(fileHandle, (void*)&pdbHeader, kPdbHeaderLen, &bytesRead, NULL);
@@ -753,7 +753,7 @@ static bool KnownImageFormat(uint8 *data, size_t dataLen)
 
 // return false if we should stop loading images (because we 
 // encountered eof record or ran out of memory)
-bool MobiParse::LoadImage(size_t imageNo)
+bool MobiDoc::LoadImage(size_t imageNo)
 {
     size_t imageRec = imageFirstRec + imageNo;
     images[imageNo].imgData = 0;
@@ -781,7 +781,7 @@ bool MobiParse::LoadImage(size_t imageNo)
     return true;
 }
 
-void MobiParse::LoadImages()
+void MobiDoc::LoadImages()
 {
     if (0 == imagesCount)
         return;
@@ -792,14 +792,14 @@ void MobiParse::LoadImages()
     }
 }
 
-size_t MobiParse::GetRecordSize(size_t recNo)
+size_t MobiDoc::GetRecordSize(size_t recNo)
 {
     size_t size = recHeaders[recNo + 1].offset - recHeaders[recNo].offset;
     return size;
 }
 
 // returns NULL if error (failed to allocated)
-char *MobiParse::GetBufForRecordData(size_t size)
+char *MobiDoc::GetBufForRecordData(size_t size)
 {
     if (size <= sizeof(bufStatic))
         return bufStatic;
@@ -812,7 +812,7 @@ char *MobiParse::GetBufForRecordData(size_t size)
 }
 
 // read a record and return it's data and size. Return NULL if error
-char* MobiParse::ReadRecord(size_t recNo, size_t& sizeOut)
+char* MobiDoc::ReadRecord(size_t recNo, size_t& sizeOut)
 {
     size_t off = recHeaders[recNo].offset;
     DWORD toRead = GetRecordSize(recNo);
@@ -860,7 +860,7 @@ static size_t ExtraDataSize(uint8 *recData, size_t recLen, size_t trailersCount,
 
 // Load a given record of a document into strOut, uncompressing if necessary.
 // Returns false if error.
-bool MobiParse::LoadDocRecordIntoBuffer(size_t recNo, str::Str<char>& strOut)
+bool MobiDoc::LoadDocRecordIntoBuffer(size_t recNo, str::Str<char>& strOut)
 {
     size_t recSize;
     char *recData = ReadRecord(recNo, recSize);
@@ -903,7 +903,7 @@ bool MobiParse::LoadDocRecordIntoBuffer(size_t recNo, str::Str<char>& strOut)
 }
 
 // assumes that ParseHeader() has been called
-bool MobiParse::LoadDocument()
+bool MobiDoc::LoadDocument()
 {
     assert(docUncompressedSize > 0);
     assert(!doc);
@@ -916,13 +916,13 @@ bool MobiParse::LoadDocument()
     return true;
 }
 
-MobiParse *MobiParse::ParseFile(const TCHAR *fileName)
+MobiDoc *MobiDoc::ParseFile(const TCHAR *fileName)
 {
     HANDLE fh = CreateFile(fileName, GENERIC_READ, FILE_SHARE_READ, NULL,  
                               OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (fh == INVALID_HANDLE_VALUE)
         return NULL;
-    MobiParse *mb = new MobiParse();
+    MobiDoc *mb = new MobiDoc();
     mb->fileName = str::Dup(fileName);
     mb->fileHandle = fh;
     if (!mb->ParseHeader())

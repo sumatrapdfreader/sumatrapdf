@@ -170,10 +170,10 @@ UNINSTALLER_OBJS = \
 
 ET_OBJS = \
 	$(OS)\EbookTest.obj $(OS)\EbookTestMenu.obj $(OS)\PageLayout.obj \
-	$(OS)\MobiParse.obj $(ET_RES) $(CHROME_OBJS)
+	$(OS)\MobiDoc.obj $(ET_RES) $(CHROME_OBJS)
 
 TESTER_OBJS = \
-	$(OS)\Tester.obj $(OS)\MobiParse.obj
+	$(OS)\Tester.obj $(OS)\MobiDoc.obj
 
 PDFFILTER_OBJS = \
 	$(OS)\PdfFilterDll.obj $(OS)\CPdfFilter.obj $(PDFFILTER_RES) \
@@ -387,7 +387,7 @@ $(OS)\DisplayModel.obj: src\utils\Vec.h
 $(OS)\DjVuEngine.obj: src\BaseEngine.h src\DjVuEngine.h src\utils\Allocator.h
 $(OS)\DjVuEngine.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\DjVuEngine.obj: src\utils\Scopes.h src\utils\StrUtil.h src\utils\Vec.h
-$(OS)\EbookTest.obj: src\ebooktest\EbookTestMenu.h src\ebooktest\Resource.h src\MobiParse.h
+$(OS)\EbookTest.obj: src\ebooktest\EbookTestMenu.h src\ebooktest\Resource.h src\MobiDoc.h
 $(OS)\EbookTest.obj: src\PageLayout.h src\utils\Allocator.h src\utils\BaseUtil.h
 $(OS)\EbookTest.obj: src\utils\BitManip.h src\utils\CmdLineParser.h src\utils\FileUtil.h
 $(OS)\EbookTest.obj: src\utils\FrameTimeoutCalculator.h src\utils\GeomUtil.h src\utils\HtmlPullParser.h
@@ -465,9 +465,9 @@ $(OS)\Menu.obj: src\SumatraPDF.h src\TextSearch.h src\TextSelection.h
 $(OS)\Menu.obj: src\translations.h src\utils\Allocator.h src\utils\BaseUtil.h
 $(OS)\Menu.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\StrUtil.h
 $(OS)\Menu.obj: src\utils\Vec.h src\utils\WinUtil.h src\WindowInfo.h
-$(OS)\MobiParse.obj: src\MobiParse.h src\utils\Allocator.h src\utils\BaseUtil.h
-$(OS)\MobiParse.obj: src\utils\BitReader.h src\utils\FileUtil.h src\utils\GdiPlusUtil.h
-$(OS)\MobiParse.obj: src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\MobiDoc.obj: src\MobiDoc.h src\utils\Allocator.h src\utils\BaseUtil.h
+$(OS)\MobiDoc.obj: src\utils\BitReader.h src\utils\FileUtil.h src\utils\GdiPlusUtil.h
+$(OS)\MobiDoc.obj: src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\mui.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\BitManip.h
 $(OS)\mui.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\HtmlPullParser.h
 $(OS)\mui.obj: src\utils\mui.h src\utils\MuiCss.h src\utils\StrUtil.h
@@ -611,9 +611,9 @@ $(OS)\TableOfContents.obj: src\TextSelection.h src\translations.h src\utils\Allo
 $(OS)\TableOfContents.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\Scopes.h
 $(OS)\TableOfContents.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\TableOfContents.obj: src\WindowInfo.h
-$(OS)\Tester.obj: src\MobiParse.h src\utils\Allocator.h src\utils\BaseUtil.h
-$(OS)\Tester.obj: src\utils\DirIter.h src\utils\FileUtil.h src\utils\GdiPlusUtil.h
-$(OS)\Tester.obj: src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\Tester.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\DirIter.h
+$(OS)\Tester.obj: src\utils\FileUtil.h src\utils\GdiPlusUtil.h src\utils\StrUtil.h
+$(OS)\Tester.obj: src\utils\Vec.h
 $(OS)\TextSearch.obj: src\BaseEngine.h src\TextSearch.h src\TextSelection.h
 $(OS)\TextSearch.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GeomUtil.h
 $(OS)\TextSearch.obj: src\utils\StrUtil.h src\utils\Vec.h

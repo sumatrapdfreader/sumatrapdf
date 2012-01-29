@@ -3,7 +3,6 @@
   <ItemGroup>
     <ClCompile Include="src\ebooktest\EbookTest.cpp" />
     <ClCompile Include="src\ebooktest\EbookTestMenu.cpp" />
-    <ClCompile Include="src\MobiParse.cpp" />
     <ClCompile Include="src\PageLayout.cpp" />
     <ClCompile Include="src\utils\mui.cpp" />
     <ClCompile Include="src\utils\MuiCss.cpp" />
@@ -118,12 +117,12 @@
     <ClCompile Include="src\utils\TrivialHtmlParser.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="src\MobiDoc.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ebooktest\EbookTestMenu.h" />
     <ClInclude Include="src\ebooktest\Resource.h" />
     <ClInclude Include="src\installer\Version.h" />
-    <ClInclude Include="src\MobiParse.h" />
     <ClInclude Include="src\PageLayout.h" />
     <ClInclude Include="src\utils\mui.h" />
     <ClInclude Include="src\utils\MuiCss.h" />
@@ -322,6 +321,7 @@
     <ClInclude Include="src\utils\Vec.h">
       <Filter>utils</Filter>
     </ClInclude>
+    <ClInclude Include="src\MobiDoc.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="src\ebooktest\EbookTest.rc" />

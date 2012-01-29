@@ -102,7 +102,7 @@
     <ClCompile Include="ext\chrome\base\win\wrapped_window_proc.cc" />
     <ClCompile Include="src\ebooktest\EbookTest.cpp" />
     <ClCompile Include="src\ebooktest\EbookTestMenu.cpp" />
-    <ClCompile Include="src\MobiParse.cpp" />
+    <ClCompile Include="src\MobiDoc.cpp" />
     <ClCompile Include="src\PageLayout.cpp" />
     <ClCompile Include="src\utils\FileUtil.cpp" />
     <ClCompile Include="src\utils\GdiPlusUtil.cpp" />
@@ -171,7 +171,7 @@
     <ClInclude Include="src\ebooktest\EbookTestMenu.h" />
     <ClInclude Include="src\ebooktest\Resource.h" />
     <ClInclude Include="src\installer\Version.h" />
-    <ClInclude Include="src\MobiParse.h" />
+    <ClInclude Include="src\MobiDoc.h" />
     <ClInclude Include="src\PageLayout.h" />
     <ClInclude Include="src\utils\Allocator.h" />
     <ClInclude Include="src\utils\BaseUtil.h" />

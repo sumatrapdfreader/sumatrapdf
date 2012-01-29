@@ -1,8 +1,8 @@
 /* Copyright 2011-2012 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef MobiParse_h
-#define MobiParse_h
+#ifndef MobiDoc_h
+#define MobiDoc_h
 
 #include "BaseUtil.h"
 #include "Vec.h"
@@ -61,7 +61,7 @@ struct ImageData {
     size_t      imgDataLen;
 };
 
-class MobiParse
+class MobiDoc
 {
     TCHAR *             fileName;
     HANDLE              fileHandle;
@@ -86,7 +86,7 @@ class MobiParse
 
     HuffDicDecompressor *huffDic;
 
-    MobiParse();
+    MobiDoc();
 
     bool    ParseHeader();
     char *  GetBufForRecordData(size_t size);
@@ -103,14 +103,14 @@ public:
     size_t              validImagesCount;
     ImageData *         images;
 
-    static MobiParse *ParseFile(const TCHAR *fileName);
+    static MobiDoc *ParseFile(const TCHAR *fileName);
 
     char *GetBookHtmlData(size_t& lenOut) {
         lenOut = doc->Size();
         return doc->Get();
     }
 
-    ~MobiParse();
+    ~MobiDoc();
     bool LoadDocument();
 };
 
