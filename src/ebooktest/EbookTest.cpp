@@ -28,6 +28,27 @@ using std::max;
 #include "EbookTestMenu.h"
 
 /*
+TODO: doing layout on a background thread needs to be more sophisticated.
+Technically it works but user experience is bad.
+
+The key to supporting fluid resizing is to limit the amount of work tha's done.
+While the window is being resized, we should only calculate a few pages ahead.
+
+Only when the user turns the pages (or, additionally, after some delay since
+the last resize) we should layout everything so that we can show
+number of pages.
+
+Also, we must do the Kindle trick, where resizing preserves the top of
+current page, but on going back it resyncs to show a page the way it
+would be if we came there from the first page. 
+
+One way to do it would be to add another layout which creates a new
+stream of pages based on another stream of pages.
+
+Another option, probably better, is to turn PageLayout into an iterator
+that can give us pages incrementally and from an arbitrary position
+in the html.
+
 TODO: by hooking into mouse move events in HorizontalProgress control, we
 could show a window telling the user which page would we go to if he was
 to click there.
@@ -59,7 +80,7 @@ static MessageLoop *    gMessageLoopUI = NULL;
 static bool gShowTextBoundingBoxes = false;
 
 // A sample text to display if we don't show an actual mobi file
-static const char *gSampleHtml = "<html><p align=justify>ClearType is <b>dependent</b> on the <i>orientation and ordering</i> of the LCD stripes.</p> <p align='right'><em>Currently</em>, ClearType is implemented <hr> only for vertical stripes that are ordered RGB.</p> <p align=center>This might be a concern if you are using a tablet PC.</p> <p>Where the display can be oriented in any direction, or if you are using a screen that can be turned from landscape to portrait. The <strike>following example</strike> draws text with two <u>different quality</u> settings.</p> On to the <b>next<mbp:pagebreak>page</b></html>";
+static const char *gSampleHtml = "<html><p align=justify>ClearType is <b>dependent</b> on the <i>orientation &amp; ordering</i> of the LCD stripes.</p> <p align='right'><em>Currently</em>, ClearType is implemented <hr> only for vertical stripes that are ordered RGB.</p> <p align=center>This might be a concern if you are using a tablet PC.</p> <p>Where the display can be oriented in any direction, or if you are using a screen that can be turned from landscape to portrait. The <strike>following example</strike> draws text with two <u>different quality</u> settings.</p> On to the <b>next<mbp:pagebreak>page</b></html>";
 
 static float PercFromInt(int total, int n)
 {
@@ -208,7 +229,8 @@ void HorizontalProgressBar::Paint(Graphics *gfx, int offX, int offY)
 
 class VirtWndEbook 
     : public VirtWndHwnd,
-      public IClickHandler
+      public IClickHandler,
+      public INewPageObserver
 {
     static const int CircleR = 10;
 
@@ -222,9 +244,14 @@ public:
     Vec<PageData*>* pages;
     int             currPageNo;
 
+    // those are temporary pages sent to us from background
+    // thread during layout
+    Vec<PageData*>* newPages;
+
     int             cursorX, cursorY;
     int             lastDx, lastDy;
     base::Thread *  mobiLoadThread;
+    base::Thread *  pageLayoutThread;
 
     VirtWndButton * next;
     VirtWndButton * prev;
@@ -260,12 +287,22 @@ public:
     void LoadMobi(const TCHAR *fileName);
 
     void SetStatusText() const;
-    void DoPageLayout(int dx, int dy);
 
     void DeletePages();
+    void DeleteNewPages();
+
+    // INewPageObserver
+    virtual void NewPage(PageData *pageData);
+
+    void NewPageUIThread(PageData *pageData);
+    void PageLayoutFinished();
+    void PageLayoutBackground(LayoutInfo *li);
+
+    void PageLayout(int dx, int dy);
+    void StopPageLayoutThread();
 
     void MobiLoaded(MobiParse *mb);
-    void VirtWndEbook::MobiFailedToLoad(const TCHAR *fileName);
+    void MobiFailedToLoad(const TCHAR *fileName);
     void LoadMobiBackground(const TCHAR *fileName);
     void StopMobiLoadThread();
 };
@@ -372,33 +409,17 @@ void EbookLayout::Arrange(const Rect finalRect, VirtWnd *wnd)
     rectDy -= (statusPos.Height + horizPos.Height);
     if (rectDy < 0)
         rectDy = 0;
-    wndEbook->DoPageLayout(rectDx, rectDy);
+    wndEbook->PageLayout(rectDx, rectDy);
 }
-
-class NewPageObserver : public INewPageObserver {
-public:
-    Vec<PageData*> *pages;
-
-    NewPageObserver() {
-        pages = new Vec<PageData*>();
-    }
-
-    virtual ~NewPageObserver() {
-        delete pages;
-    }
-
-    virtual void NewPage(PageData *pageData) {
-        pages->Append(pageData);
-    }
-};
-
 
 VirtWndEbook::VirtWndEbook(HWND hwnd)
 {
     mobiLoadThread = NULL;
+    pageLayoutThread = NULL;
     mb = NULL;
     html = NULL;
     pages = NULL;
+    newPages = NULL;
     currPageNo = 0;
     lastDx = 0; lastDy = 0;
     SetHwnd(hwnd);
@@ -473,18 +494,25 @@ VirtWndEbook::VirtWndEbook(HWND hwnd)
     layout = new EbookLayout(next, prev, status, horizProgress, test);
 
     // special case for classes that derive from VirtWndHwnd
-    // that don't trigger this from SetParent()
+    // as they don't call this from SetParent() (like other VirtWnd derivatives)
     RegisterEventHandlers(evtMgr);
 }
 
 VirtWndEbook::~VirtWndEbook()
 {
+    // TODO: I think that the problem here is that while the thread might
+    // be finished, there still might be in-flight messages sent
+    // to this object. Do we need a way to cancel messages directed
+    // to a given object from the queue? Ref-count the objects so that
+    // their lifetime is managed correctly?
     StopMobiLoadThread();
+    StopPageLayoutThread();
 
     // special case for classes that derive from VirtWndHwnd
-    // that don't trigger this from the destructor
+    // as they don't trigger this from the destructor
     UnRegisterEventHandlers(evtMgr);
 
+    DeleteNewPages();
     DeletePages();
     delete mb;
     delete statusDefault;
@@ -499,10 +527,20 @@ VirtWndEbook::~VirtWndEbook()
 
 void VirtWndEbook::DeletePages()
 {
-    if (pages)
-        DeleteVecMembers<PageData*>(*pages);
+    if (!pages)
+        return;
+    DeleteVecMembers<PageData*>(*pages);
     delete pages;
     pages = NULL;
+}
+
+void VirtWndEbook::DeleteNewPages()
+{
+    if (!newPages)
+        return;
+    DeleteVecMembers<PageData*>(*newPages);
+    delete newPages;
+    newPages = NULL;
 }
 
 void VirtWndEbook::SetStatusText() const
@@ -538,45 +576,87 @@ void VirtWndEbook::AdvancePage(int dist)
     SetPage(newPageNo);
 }
 
-Vec<PageData*>* LayoutHtmlOrMobi(const char *html, MobiParse *mb, int dx, int dy)
+void VirtWndEbook::PageLayoutFinished()
 {
+    if (!newPages)
+        return;
+    DeletePages();
+    pages = newPages;
+    newPages = NULL;
+    if (currPageNo > (int)pages->Count())
+        currPageNo = 1;
+    if (0 == currPageNo)
+        currPageNo = 1;
+    SetStatusText();
+    RequestRepaint(this);
+}
+
+// called on a ui thread from background thread
+void VirtWndEbook::NewPageUIThread(PageData *pageData)
+{
+    if (!newPages)
+        newPages = new Vec<PageData*>();
+
+    newPages->Append(pageData);
+    ScopedMem<TCHAR> s(str::Format(_T("Has %d new pages"), newPages->Count()));
+    status->SetText(s.Get());
+}
+
+// called on a background thread
+void VirtWndEbook::NewPage(PageData *pageData)
+{
+    gMessageLoopUI->PostTask(base::Bind(&VirtWndEbook::NewPageUIThread, 
+                                        base::Unretained(this), pageData));
+}
+
+// called on a background thread
+void VirtWndEbook::PageLayoutBackground(LayoutInfo *li)
+{
+    LayoutHtml(li);
+    gMessageLoopUI->PostTask(base::Bind(&VirtWndEbook::PageLayoutFinished, 
+                                        base::Unretained(this)));
+    delete li;
+}
+
+void VirtWndEbook::PageLayout(int dx, int dy)
+{
+    if ((pages || newPages || pageLayoutThread) && ((lastDx == dx) && (lastDy == dy)))
+        return;
+    StopPageLayoutThread();
+
+    DeleteNewPages();
+    lastDx = dx;
+    lastDy = dy;
+
+    LayoutInfo *li = new LayoutInfo();
+
     size_t len;
     if (html)
         len = strlen(html);
     else
         html = mb->GetBookHtmlData(len);
 
-    NewPageObserver pageObserver;
-    struct LayoutInfo li;
+    li->fontName = FONT_NAME;
+    li->fontSize = FONT_SIZE;
+    li->htmlStr = html;
+    li->htmlStrLen = len;
+    li->pageDx = dx;
+    li->pageDy = dy;
+    li->observer = this;
 
-    li.fontName = FONT_NAME;
-    li.fontSize = FONT_SIZE;
-    li.htmlStr = html;
-    li.htmlStrLen = len;
-    li.pageDx = dx; li.pageDy = dy;
-
-    LayoutHtml(li, &pageObserver);
-    if (0 == pageObserver.pages->Count())
-        return false;
-    Vec<PageData*> *res = pageObserver.pages;
-    pageObserver.pages = NULL;
-    return res;
+    pageLayoutThread = new base::Thread("VirtWndEbook::PageLayoutBackground");
+    pageLayoutThread->Start();
+    pageLayoutThread->message_loop()->PostTask(base::Bind(&VirtWndEbook::PageLayoutBackground, 
+                                             base::Unretained(this), li));
 }
 
-void VirtWndEbook::DoPageLayout(int dx, int dy)
+void VirtWndEbook::StopPageLayoutThread()
 {
-    if (pages && (lastDx == dx) && (lastDy == dy))
+    if (!pageLayoutThread)
         return;
-    Vec<PageData*> *newPages = LayoutHtmlOrMobi(html, mb, dx, dy);
-    if (!newPages)
-        return;
-    lastDx = dx;
-    lastDy = dy;
-    DeletePages();
-    pages = newPages;
-    currPageNo = 1;
-    SetStatusText();
-    RequestRepaint(this);
+    pageLayoutThread->Stop();
+    delete pageLayoutThread;
+    pageLayoutThread = NULL;
 }
 
 void VirtWndEbook::SetHtml(const char *newHtml)
@@ -640,7 +720,7 @@ void VirtWndEbook::LoadMobi(const TCHAR *fileName)
     // to load another mobi file while loading of the previous
     // hasn't finished yet
     StopMobiLoadThread();
-    mobiLoadThread = new base::Thread("VirtWndEbook::LoadMobi");
+    mobiLoadThread = new base::Thread("VirtWndEbook::LoadMobiBackground");
     mobiLoadThread->Start();
     // TODO: use some refcounted version of fileName
     mobiLoadThread->message_loop()->PostTask(base::Bind(&VirtWndEbook::LoadMobiBackground, 

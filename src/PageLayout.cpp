@@ -189,7 +189,7 @@ class PageLayout
 public:
     PageLayout();
     ~PageLayout();
-    bool LayoutHtml(struct LayoutInfo& layoutInfo, INewPageObserver *pageObserver);
+    bool LayoutHtml(LayoutInfo* layoutInfo, INewPageObserver *pageObserver);
 #if 0
     size_t PageCount() const {
         return pageInstrOffset.Count();
@@ -252,6 +252,7 @@ private:
     REAL                pageDy;
     REAL                lineSpacing;
     REAL                spaceDx;
+    mui::GraphicsForMeasureText *gfxForMeasure;
     Graphics *          gfx;
     ScopedMem<WCHAR>    fontName;
     float               fontSize;
@@ -276,12 +277,13 @@ private:
     WCHAR               buf[512];
 };
 
-PageLayout::PageLayout() : currPage(NULL)
+PageLayout::PageLayout() : currPage(NULL), gfxForMeasure(NULL), gfx(NULL)
 {
 }
 
 PageLayout::~PageLayout()
 {
+    delete gfxForMeasure;
 }
 
 void PageLayout::SetCurrentFont(FontStyle fs)
@@ -724,21 +726,22 @@ void PageLayout::EmitText(HtmlToken *t)
     }
 }
 
-bool PageLayout::LayoutHtml(struct LayoutInfo& layoutInfo, INewPageObserver *pageObserver)
+bool PageLayout::LayoutHtml(LayoutInfo* layoutInfo, INewPageObserver *pageObserver)
 {
     this->pageObserver = pageObserver;
-    pageDx = (REAL)layoutInfo.pageDx;
-    pageDy = (REAL)layoutInfo.pageDy;
+    pageDx = (REAL)layoutInfo->pageDx;
+    pageDy = (REAL)layoutInfo->pageDy;
 
-    gfx = mui::GetGraphicsForMeasureText();
-    fontName.Set(str::Dup(layoutInfo.fontName));
-    fontSize = layoutInfo.fontSize;
+    gfxForMeasure = mui::AllocGraphicsForMeasureText();
+    gfx = gfxForMeasure->Get();
+    fontName.Set(str::Dup(layoutInfo->fontName));
+    fontSize = layoutInfo->fontSize;
 
     StartLayout();
 
     Vec<HtmlTag> tagNesting(256);
 
-    HtmlPullParser parser(layoutInfo.htmlStr, layoutInfo.htmlStrLen);
+    HtmlPullParser parser(layoutInfo->htmlStr, layoutInfo->htmlStrLen);
     for (;;)
     {
         HtmlToken *t = parser.Next();
@@ -759,9 +762,9 @@ bool PageLayout::LayoutHtml(struct LayoutInfo& layoutInfo, INewPageObserver *pag
     return true;
 }
 
-void LayoutHtml(struct LayoutInfo& li, INewPageObserver *observer)
+void LayoutHtml(LayoutInfo* li)
 {
     PageLayout pg;
-    pg.LayoutHtml(li, observer);
+    pg.LayoutHtml(li, li->observer);
 }
 

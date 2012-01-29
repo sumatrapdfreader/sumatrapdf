@@ -4,8 +4,6 @@
 #ifndef MobiParse_h
 #define MobiParse_h
 
-#include <stdint.h>
-
 #include "BaseUtil.h"
 #include "Vec.h"
 

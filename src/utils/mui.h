@@ -5,7 +5,6 @@
 #define mui_h
 
 #define __STDC_LIMIT_MACROS
-#include <stdint.h>
 #include "BaseUtil.h"
 #include "Vec.h"
 #include "BitManip.h"
@@ -26,8 +25,31 @@ class IClickHandler;
 void        Initialize();
 void        Destroy();
 
-Graphics *  GetGraphicsForMeasureText();
-Rect        MeasureTextWithFont(Font *f, const TCHAR *s);
+// Graphics objects cannot be used across threads. This class
+// allows an easy allocation of small Graphics objects that
+// can be used for measuring text
+class GraphicsForMeasureText
+{
+    enum {
+        bmpDx = 32,
+        bmpDy = 4,
+        stride = bmpDx * 4,
+    };
+
+    Graphics *  gfx;
+    Bitmap *    bmp;
+    BYTE        data[bmpDx * bmpDy * 4];
+public:
+    GraphicsForMeasureText();
+    ~GraphicsForMeasureText();
+    bool Create();
+    Graphics *Get();
+};
+
+GraphicsForMeasureText *AllocGraphicsForMeasureText();
+
+Graphics *UIThreadGraphicsForMeasureText();
+
 void        RequestRepaint(VirtWnd *w, const Rect *r1 = NULL, const Rect *r2 = NULL);
 void        RequestLayout(VirtWnd *w);
 Brush *     BrushFromProp(Prop *p, const Rect& r);

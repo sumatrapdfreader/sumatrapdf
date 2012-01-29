@@ -87,10 +87,8 @@ namespace mui {
 STATIC_ASSERT(VirtWnd::WndWantedInputBitLast < 16, max16bitsForWantedIntputBits);
 STATIC_ASSERT(VirtWnd::WndStateBitLast < 16, max16bitsForWndStateuBits);
 
-// Graphics object that can be used at any time to measure text
-static Graphics *   gGraphicsForFontMeasure = NULL;
-static Bitmap *     gBitmapForFontMeasureGraphics = NULL;
-static BYTE *       gBitmapDataForFontMeasureGraphics = NULL;
+static GraphicsForMeasureText * uiGraphicsForMeasureText = NULL;
+static Graphics *               uiGfxForMeasure = NULL;
 
 static void InitGraphicsMode(Graphics *g)
 {
@@ -104,40 +102,57 @@ static void InitGraphicsMode(Graphics *g)
 void Initialize()
 {
     css::Initialize();
-    CrashIf(gBitmapForFontMeasureGraphics || gGraphicsForFontMeasure);
-    // using a small bitmap under assumption that Graphics used only
-    // for measuring text doesn't need the actual bitmap
-    const int bmpDx = 32;
-    const int bmpDy = 4;
-    const int stride = bmpDx * 4;
-    gBitmapDataForFontMeasureGraphics = (BYTE*)malloc(bmpDx * bmpDy * 4);
-    gBitmapForFontMeasureGraphics = ::new Bitmap(bmpDx, bmpDy, stride, PixelFormat32bppARGB, gBitmapDataForFontMeasureGraphics);
-    CrashIf(!gBitmapForFontMeasureGraphics);
-    gGraphicsForFontMeasure = ::new Graphics((Image*)gBitmapForFontMeasureGraphics);
-    CrashIf(!gGraphicsForFontMeasure);
-    InitGraphicsMode(gGraphicsForFontMeasure);
+    uiGraphicsForMeasureText = AllocGraphicsForMeasureText();
+    uiGfxForMeasure = uiGraphicsForMeasureText->Get();
 }
 
 void Destroy()
 {
-    ::delete gGraphicsForFontMeasure;
-    ::delete gBitmapForFontMeasureGraphics;
-    free(gBitmapDataForFontMeasureGraphics);
     css::Destroy();
+    delete uiGraphicsForMeasureText;
 }
 
-Graphics *GetGraphicsForMeasureText()
+Graphics *UIThreadGraphicsForMeasureText()
 {
-    return gGraphicsForFontMeasure;
+    return uiGfxForMeasure;
 }
 
-// When doing layout we need to measure strings even
-// at times when we don't have a convenient access
-// to Graphics object hence this function
-Rect MeasureTextWithFont(Font *f, const TCHAR *s)
+GraphicsForMeasureText::GraphicsForMeasureText() : gfx(NULL), bmp(NULL)
 {
-    RectF r = MeasureText(gGraphicsForFontMeasure, f, s);
-    Rect res((int)r.X, (int)r.Y, (int)r.Width, (int)r.Height);
+}
+
+GraphicsForMeasureText::~GraphicsForMeasureText()
+{
+    ::delete gfx;
+    ::delete bmp;
+}
+
+bool GraphicsForMeasureText::Create()
+{
+    // using a small bitmap under assumption that Graphics used only
+    // for measuring text doesn't need the actual bitmap
+    bmp = ::new Bitmap(bmpDx, bmpDy, stride, PixelFormat32bppARGB, data);
+    if (!bmp)
+        return false;
+    gfx = ::new Graphics((Image*)bmp);
+    if (!gfx)
+        return false;
+    InitGraphicsMode(gfx);
+    return true;
+}
+
+Graphics *GraphicsForMeasureText::Get()
+{
+    return gfx;
+}
+
+GraphicsForMeasureText *AllocGraphicsForMeasureText()
+{
+    GraphicsForMeasureText *res = new GraphicsForMeasureText();
+    if (!res->Create()) {
+        delete res;
+        return NULL;
+    }
     return res;
 }
 
@@ -620,10 +635,11 @@ void VirtWndButton::RecalculateSize(bool repaintIfSizeDidntChange)
     desiredSize = GetBorderAndPaddingSize();
     textDx = 0;
     if (text) {
-        Rect bbox = MeasureTextWithFont(GetFontForState(), text);
-        textDx = bbox.Width;
+        Graphics *gfx = UIThreadGraphicsForMeasureText();
+        RectF bbox = MeasureText(gfx, GetFontForState(), text);
+        textDx = (size_t)bbox.Width; // TODO: round up?
         desiredSize.Width  += textDx;
-        desiredSize.Height += bbox.Height;
+        desiredSize.Height += (INT)bbox.Height; // TODO: round up?
     }
 
     if (!prevSize.Equals(desiredSize))

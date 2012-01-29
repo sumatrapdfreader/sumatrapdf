@@ -124,7 +124,14 @@ public:
 };
 
 // just to pack args to LayoutHtml
-struct LayoutInfo {
+class LayoutInfo {
+public:
+    LayoutInfo() : 
+      pageDx(0), pageDy(0), fontName(NULL), fontSize(0),
+      htmlStr(0), htmlStrLen(0), observer(NULL)
+    {
+    }
+
     int             pageDx;
     int             pageDy;
 
@@ -133,7 +140,9 @@ struct LayoutInfo {
 
     const char *    htmlStr;
     size_t          htmlStrLen;
+
+    INewPageObserver *observer;
 };
 
-void LayoutHtml(struct LayoutInfo& li, INewPageObserver *observer);
+void LayoutHtml(LayoutInfo* li);
 #endif
