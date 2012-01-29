@@ -21,7 +21,7 @@ using std::max;
 #include "mui.h"
 #include "CmdLineParser.h"
 #include "FrameTimeoutCalculator.h"
-#include "Transactions.h"
+#include "FileTransactions.h"
 #include "Scopes.h"
 #include "PageLayout.h"
 #include "MobiDoc.h"

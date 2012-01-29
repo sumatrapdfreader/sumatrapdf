@@ -1,7 +1,7 @@
 /* Copyright 2011-2012 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "Transactions.h"
+#include "FileTransactions.h"
 #include "FileUtil.h"
 #include "WinUtil.h"
 #include "Scopes.h"

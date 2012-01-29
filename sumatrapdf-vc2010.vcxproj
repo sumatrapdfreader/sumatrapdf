@@ -249,6 +249,7 @@
     <ClCompile Include="src\TextSearch.cpp" />
     <ClCompile Include="src\TextSelection.cpp" />
     <ClCompile Include="src\Toolbar.cpp" />
+    <ClCompile Include="src\utils\FileTransactions.cpp" />
     <ClCompile Include="src\utils\Touch.cpp" />
     <ClCompile Include="src\translations.cpp" />
     <ClCompile Include="src\translations_txt.cpp" />
@@ -379,6 +380,7 @@
     <ClInclude Include="src\TextSearch.h" />
     <ClInclude Include="src\TextSelection.h" />
     <ClInclude Include="src\Toolbar.h" />
+    <ClInclude Include="src\utils\FileTransactions.h" />
     <ClInclude Include="src\utils\Touch.h" />
     <ClInclude Include="src\translations.h" />
     <ClInclude Include="src\translations_txt.h" />
@@ -394,7 +396,6 @@
     <ClInclude Include="src\utils\StrUtil.h" />
     <ClInclude Include="src\utils\TrivialHtmlParser.h" />
     <ClInclude Include="src\utils\Scopes.h" />
-    <ClInclude Include="src\utils\Transactions.h" />
     <ClInclude Include="src\utils\Vec.h" />
     <ClInclude Include="src\utils\WinUtil.h" />
     <ClInclude Include="src\utils\ZipUtil.h" />

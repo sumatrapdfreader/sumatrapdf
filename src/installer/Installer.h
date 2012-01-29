@@ -20,7 +20,7 @@
 #include "Version.h"
 #include "Vec.h"
 #include "CmdLineParser.h"
-#include "Transactions.h"
+#include "FileTransactions.h"
 #include "Scopes.h"
 
 #define TAPP                _T("SumatraPDF")

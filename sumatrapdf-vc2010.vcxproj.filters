@@ -785,6 +785,9 @@
     <ClCompile Include="mupdf\draw\draw_unpack.c">
       <Filter>mupdf\draw</Filter>
     </ClCompile>
+    <ClCompile Include="src\utils\FileTransactions.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -1060,9 +1063,6 @@
     <ClInclude Include="src\utils\Touch.h">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="src\utils\Transactions.h">
-      <Filter>utils</Filter>
-    </ClInclude>
     <ClInclude Include="src\Toolbar.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -1113,6 +1113,9 @@
     </ClInclude>
     <ClInclude Include="ext\zlib-1.2.5\zutil.h">
       <Filter>zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\FileTransactions.h">
+      <Filter>utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -4,7 +4,7 @@
 #include "BencUtil.h"
 #include "StrUtil.h"
 #include "FileUtil.h"
-#include "Transactions.h"
+#include "FileTransactions.h"
 
 #include "AppPrefs.h"
 #include "DisplayState.h"

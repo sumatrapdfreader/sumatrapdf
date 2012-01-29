@@ -10,7 +10,7 @@
 #include <stdlib.h>
 
 #include "DirIter.h"
-#include "MobiParse.h"
+#include "MobiDoc.h"
 #include "FileUtil.h"
 
 using namespace Gdiplus;
@@ -34,7 +34,7 @@ static int Usage()
     return 1;
 }
 
-static void SaveMobiHtml(const TCHAR *filePathBase, MobiParse *mb)
+static void SaveMobiHtml(const TCHAR *filePathBase, MobiDoc *mb)
 {
     CrashAlwaysIf(!gMobiSaveHtml);
 
@@ -58,7 +58,7 @@ static void SaveMobiImage(const TCHAR *filePathBase, size_t imgNo, ImageData *im
     file::WriteAll(fileName.Get(), img->imgData, img->imgDataLen);
 }
 
-static void SaveMobiImages(const TCHAR *filePathBase, MobiParse *mb)
+static void SaveMobiImages(const TCHAR *filePathBase, MobiDoc *mb)
 {
     if (!gMobiSaveImages)
         return;
@@ -70,7 +70,7 @@ static void SaveMobiImages(const TCHAR *filePathBase, MobiParse *mb)
 static void TestMobiFile(TCHAR *filePath)
 {
     _tprintf(_T("Testing file '%s'\n"), filePath);
-    MobiParse *mb = MobiParse::ParseFile(filePath);
+    MobiDoc *mb = MobiDoc::ParseFile(filePath);
     if (!mb) {
         printf(" error: failed to parse the file\n");
         return;

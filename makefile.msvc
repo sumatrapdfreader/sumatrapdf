@@ -139,7 +139,7 @@ MICROCRT_CONSOLE_OBJS = $(MICROCRT_OBJS) $(OS)\ucrt_console.obj
 UTILS_OBJS = \
 	$(OS)\BencUtil.obj $(OS)\FileUtil.obj $(OS)\Http.obj \
 	$(OS)\StrUtil.obj $(OS)\UtilTests.obj $(OS)\WinUtil.obj \
-	$(OS)\DialogSizer.obj $(OS)\Transactions.obj $(OS)\Touch.obj \
+	$(OS)\DialogSizer.obj $(OS)\FileTransactions.obj $(OS)\Touch.obj \
 	$(OS)\TrivialHtmlParser.obj $(OS)\HtmlWindow.obj $(OS)\GdiPlusUtil.obj \
 	$(OS)\DirIter.obj $(OS)\BitReader.obj $(OS)\HtmlPullParser.obj \
 	$(OS)\mui.obj $(OS)\MuiCss.obj $(OS)\ThreadUtil.obj
@@ -346,9 +346,9 @@ $(OS)\AppPrefs.obj: src\DjVuEngine.h src\EngineManager.h src\Favorites.h
 $(OS)\AppPrefs.obj: src\FileHistory.h src\ImagesEngine.h src\PdfEngine.h
 $(OS)\AppPrefs.obj: src\PsEngine.h src\SumatraPDF.h src\TextSearch.h
 $(OS)\AppPrefs.obj: src\TextSelection.h src\translations.h src\utils\Allocator.h
-$(OS)\AppPrefs.obj: src\utils\BaseUtil.h src\utils\BencUtil.h src\utils\FileUtil.h
-$(OS)\AppPrefs.obj: src\utils\GeomUtil.h src\utils\Scopes.h src\utils\StrUtil.h
-$(OS)\AppPrefs.obj: src\utils\Transactions.h src\utils\Vec.h src\WindowInfo.h
+$(OS)\AppPrefs.obj: src\utils\BaseUtil.h src\utils\BencUtil.h src\utils\FileTransactions.h
+$(OS)\AppPrefs.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scopes.h
+$(OS)\AppPrefs.obj: src\utils\StrUtil.h src\utils\Vec.h src\WindowInfo.h
 $(OS)\AppTools.obj: src\AppTools.h src\translations.h src\utils\Allocator.h
 $(OS)\AppTools.obj: src\utils\BaseUtil.h src\utils\CmdLineParser.h src\utils\FileUtil.h
 $(OS)\AppTools.obj: src\utils\GeomUtil.h src\utils\Scopes.h src\utils\StrUtil.h
@@ -389,10 +389,10 @@ $(OS)\DjVuEngine.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUt
 $(OS)\DjVuEngine.obj: src\utils\Scopes.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\EbookTest.obj: src\ebooktest\EbookTestMenu.h src\ebooktest\Resource.h src\MobiDoc.h
 $(OS)\EbookTest.obj: src\PageLayout.h src\utils\Allocator.h src\utils\BaseUtil.h
-$(OS)\EbookTest.obj: src\utils\BitManip.h src\utils\CmdLineParser.h src\utils\FileUtil.h
-$(OS)\EbookTest.obj: src\utils\FrameTimeoutCalculator.h src\utils\GeomUtil.h src\utils\HtmlPullParser.h
-$(OS)\EbookTest.obj: src\utils\mui.h src\utils\MuiCss.h src\utils\Scopes.h
-$(OS)\EbookTest.obj: src\utils\StrUtil.h src\utils\Transactions.h src\utils\Vec.h
+$(OS)\EbookTest.obj: src\utils\BitManip.h src\utils\CmdLineParser.h src\utils\FileTransactions.h
+$(OS)\EbookTest.obj: src\utils\FileUtil.h src\utils\FrameTimeoutCalculator.h src\utils\GeomUtil.h
+$(OS)\EbookTest.obj: src\utils\HtmlPullParser.h src\utils\mui.h src\utils\MuiCss.h
+$(OS)\EbookTest.obj: src\utils\Scopes.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\EbookTest.obj: src\utils\WinUtil.h src\Version.h
 $(OS)\EbookTestMenu.obj: src\ebooktest\EbookTestMenu.h src\ebooktest\Resource.h src\utils\BaseUtil.h
 $(OS)\EbookTestMenu.obj: src\utils\StrUtil.h
@@ -423,6 +423,8 @@ $(OS)\Favorites.obj: src\TextSelection.h src\translations.h src\utils\Allocator.
 $(OS)\Favorites.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\Favorites.obj: src\utils\Scopes.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\Favorites.obj: src\utils\WinUtil.h src\WindowInfo.h
+$(OS)\FileTransactions.obj: src\utils\BaseUtil.h src\utils\FileTransactions.h src\utils\FileUtil.h
+$(OS)\FileTransactions.obj: src\utils\GeomUtil.h src\utils\Scopes.h src\utils\WinUtil.h
 $(OS)\FileUtil.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\Scopes.h
 $(OS)\FileUtil.obj: src\utils\StrUtil.h
 $(OS)\FileWatch.obj: src\FileWatch.h src\utils\BaseUtil.h src\utils\FileUtil.h
@@ -444,16 +446,16 @@ $(OS)\ImagesEngine.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\S
 $(OS)\ImagesEngine.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\Install.obj: src\BaseEngine.h src\ifilter\PdfFilter.h src\previewer\PdfPreview.h
 $(OS)\Install.obj: src\installer\Installer.h src\installer\Resource.h src\utils\Allocator.h
-$(OS)\Install.obj: src\utils\BaseUtil.h src\utils\CmdLineParser.h src\utils\FileUtil.h
-$(OS)\Install.obj: src\utils\GeomUtil.h src\utils\Scopes.h src\utils\StrUtil.h
-$(OS)\Install.obj: src\utils\Transactions.h src\utils\Vec.h src\utils\WinUtil.h
+$(OS)\Install.obj: src\utils\BaseUtil.h src\utils\CmdLineParser.h src\utils\FileTransactions.h
+$(OS)\Install.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scopes.h
+$(OS)\Install.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\Install.obj: src\Version.h
 $(OS)\Installer.obj: src\BaseEngine.h src\ifilter\PdfFilter.h src\previewer\PdfPreview.h
 $(OS)\Installer.obj: src\installer\Install.cpp src\installer\Installer.h src\installer\Resource.h
 $(OS)\Installer.obj: src\installer\Uninstall.cpp src\utils\Allocator.h src\utils\BaseUtil.h
-$(OS)\Installer.obj: src\utils\CmdLineParser.h src\utils\FileUtil.h src\utils\FrameTimeoutCalculator.h
-$(OS)\Installer.obj: src\utils\GeomUtil.h src\utils\Scopes.h src\utils\StrUtil.h
-$(OS)\Installer.obj: src\utils\Transactions.h src\utils\Vec.h src\utils\WinUtil.h
+$(OS)\Installer.obj: src\utils\CmdLineParser.h src\utils\FileTransactions.h src\utils\FileUtil.h
+$(OS)\Installer.obj: src\utils\FrameTimeoutCalculator.h src\utils\GeomUtil.h src\utils\Scopes.h
+$(OS)\Installer.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\Installer.obj: src\Version.h
 $(OS)\Menu.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
 $(OS)\Menu.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
@@ -633,17 +635,15 @@ $(OS)\Toolbar.obj: src\utils\GeomUtil.h src\utils\Scopes.h src\utils\StrUtil.h
 $(OS)\Toolbar.obj: src\utils\Vec.h src\utils\WinUtil.h src\WindowInfo.h
 $(OS)\Touch.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\Touch.h
 $(OS)\Touch.obj: src\utils\WinUtil.h
-$(OS)\Transactions.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
-$(OS)\Transactions.obj: src\utils\Scopes.h src\utils\Transactions.h src\utils\WinUtil.h
 $(OS)\translations.obj: src\translations.h src\translations_txt.cpp src\utils\BaseUtil.h
 $(OS)\translations.obj: src\utils\StrUtil.h
 $(OS)\TrivialHtmlParser.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\FileUtil.h
 $(OS)\TrivialHtmlParser.obj: src\utils\GeomUtil.h src\utils\StrUtil.h src\utils\TrivialHtmlParser.h
 $(OS)\TrivialHtmlParser.obj: src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\Uninstall.obj: src\installer\Installer.h src\installer\Resource.h src\utils\Allocator.h
-$(OS)\Uninstall.obj: src\utils\BaseUtil.h src\utils\CmdLineParser.h src\utils\FileUtil.h
-$(OS)\Uninstall.obj: src\utils\GeomUtil.h src\utils\Scopes.h src\utils\StrUtil.h
-$(OS)\Uninstall.obj: src\utils\Transactions.h src\utils\Vec.h src\utils\WinUtil.h
+$(OS)\Uninstall.obj: src\utils\BaseUtil.h src\utils\CmdLineParser.h src\utils\FileTransactions.h
+$(OS)\Uninstall.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scopes.h
+$(OS)\Uninstall.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\Uninstall.obj: src\Version.h
 $(OS)\UnitTests.obj: src\AppTools.h src\BaseEngine.h src\DisplayState.h
 $(OS)\UnitTests.obj: src\ParseCommandLine.h src\StressTesting.h src\utils\Allocator.h
