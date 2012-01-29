@@ -578,6 +578,7 @@ void VirtWndEbook::AdvancePage(int dist)
 
 void VirtWndEbook::PageLayoutFinished()
 {
+    StopPageLayoutThread();
     if (!newPages)
         return;
     DeletePages();
@@ -598,8 +599,13 @@ void VirtWndEbook::NewPageUIThread(PageData *pageData)
         newPages = new Vec<PageData*>();
 
     newPages->Append(pageData);
-    ScopedMem<TCHAR> s(str::Format(_T("Has %d new pages"), newPages->Count()));
-    status->SetText(s.Get());
+    // TODO: this really starves the UI thread. Is it because per-item
+    // processing is so high? Would batching things up make UI responsive
+    // during layout?
+    if (newPages->Count() == 1) {
+        ScopedMem<TCHAR> s(str::Format(_T("Layout started. Please wait...")));
+        status->SetText(s.Get());
+    }
 }
 
 // called on a background thread
