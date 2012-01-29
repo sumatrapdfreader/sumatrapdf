@@ -13,7 +13,7 @@ bool  HttpGetToFile(const TCHAR *url, const TCHAR *destFilePath);
 class HttpReqCallback;
 class WorkerThread;
 
-class HttpReqCtx {
+class HttpReq {
     WorkerThread  * thread;
     // the callback to execute when the download is complete
     HttpReqCallback*callback;
@@ -25,13 +25,13 @@ public:
     str::Str<char> *data;
     DWORD           error;
 
-    HttpReqCtx(const TCHAR *url, HttpReqCallback *callback=NULL);
-    ~HttpReqCtx();
+    HttpReq(const TCHAR *url, HttpReqCallback *callback=NULL);
+    ~HttpReq();
 };
 
 class HttpReqCallback {
 public:
-    virtual void Callback(HttpReqCtx *ctx=NULL) = 0;
+    virtual void Callback(HttpReq *ctx=NULL) = 0;
 };
 
 #endif

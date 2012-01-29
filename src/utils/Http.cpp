@@ -177,25 +177,25 @@ Exit:
     return ok;
 }
 
-void HttpReqCtx::DownloadThread()
+void HttpReq::DownloadThread()
 {
     error = HttpGet(url, data);
     callback->Callback(this);
 }
 
-HttpReqCtx::HttpReqCtx(const TCHAR *url, HttpReqCallback *callback)
+HttpReq::HttpReq(const TCHAR *url, HttpReqCallback *callback)
     : thread(NULL), callback(callback), error(0)
 {
     assert(url);
     this->url = str::Dup(url);
     data = new str::Str<char>(256);
     if (callback)
-        thread = new WorkerThread(Bind(&HttpReqCtx::DownloadThread, this));
+        thread = new WorkerThread(Bind(&HttpReq::DownloadThread, this));
     else
         error = HttpGet(url, data);
 }
 
-HttpReqCtx::~HttpReqCtx()
+HttpReq::~HttpReq()
 {
     delete thread;
     free(url);

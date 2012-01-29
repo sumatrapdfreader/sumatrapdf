@@ -1390,7 +1390,7 @@ static void OnDropFiles(HDROP hDrop)
     DragFinish(hDrop);
 }
 
-static DWORD OnUrlDownloaded(HWND hParent, HttpReqCtx *ctx, bool silent)
+static DWORD OnUrlDownloaded(HWND hParent, HttpReq *ctx, bool silent)
 {
     if (ctx->error)
         return ctx->error;
@@ -1440,13 +1440,13 @@ static DWORD OnUrlDownloaded(HWND hParent, HttpReqCtx *ctx, bool silent)
 class UpdateDownloadWorkItem : public UIThreadWorkItem, public HttpReqCallback
 {
     bool autoCheck;
-    HttpReqCtx *ctx;
+    HttpReq *ctx;
 
 public:
     UpdateDownloadWorkItem(WindowInfo *win, bool autoCheck) :
         UIThreadWorkItem(win), autoCheck(autoCheck), ctx(NULL) { }
 
-    virtual void Callback(HttpReqCtx *ctx) {
+    virtual void Callback(HttpReq *ctx) {
         this->ctx = ctx;
         QueueWorkItem(this);
     }
@@ -1490,7 +1490,7 @@ static void DownloadSumatraUpdateInfo(WindowInfo& win, bool autoCheck)
     }
 
     const TCHAR *url = SUMATRA_UPDATE_INFO_URL _T("?v=") UPDATE_CHECK_VER;
-    new HttpReqCtx(url, new UpdateDownloadWorkItem(&win, autoCheck));
+    new HttpReq(url, new UpdateDownloadWorkItem(&win, autoCheck));
 
     FILETIME ft;
     GetSystemTimeAsFileTime(&ft);
