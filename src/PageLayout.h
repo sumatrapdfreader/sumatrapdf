@@ -99,6 +99,13 @@ struct DrawInstr {
 
 struct PageData {
     Vec<DrawInstr>  drawInstructions;
+
+    /* Most of the time string DrawInstr point to original html text
+       that is read-only and outlives us. Sometimes (e.g. when resolving
+       html entities) we need a modified text. This allocator is
+       used to allocate those strings. */
+    BlockAllocator  text;
+
     void Append(DrawInstr& di) {
         drawInstructions.Append(di);
     }
