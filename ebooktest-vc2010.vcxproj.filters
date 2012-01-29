@@ -5,9 +5,6 @@
     <ClCompile Include="src\ebooktest\EbookTestMenu.cpp" />
     <ClCompile Include="src\MobiParse.cpp" />
     <ClCompile Include="src\PageLayout.cpp" />
-    <ClCompile Include="src\utils\FileUtil.cpp" />
-    <ClCompile Include="src\utils\GdiPlusUtil.cpp" />
-    <ClCompile Include="src\utils\HtmlPullParser.cpp" />
     <ClCompile Include="src\utils\mui.cpp" />
     <ClCompile Include="src\utils\MuiCss.cpp" />
     <ClCompile Include="ext\chrome\base\at_exit.cc">
@@ -103,11 +100,24 @@
     <ClCompile Include="ext\chrome\base\memory\weak_ptr.cc">
       <Filter>base\memory</Filter>
     </ClCompile>
-    <ClCompile Include="src\utils\StrUtil.cpp" />
-    <ClCompile Include="src\utils\Http.cpp" />
-    <ClCompile Include="src\utils\TrivialHtmlParser.cpp" />
-    <ClCompile Include="src\utils\Touch.cpp" />
-    <ClCompile Include="src\utils\Transactions.cpp" />
+    <ClCompile Include="src\utils\FileUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\GdiPlusUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\HtmlPullParser.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\StrUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\Touch.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\TrivialHtmlParser.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ebooktest\EbookTestMenu.h" />
@@ -115,14 +125,8 @@
     <ClInclude Include="src\installer\Version.h" />
     <ClInclude Include="src\MobiParse.h" />
     <ClInclude Include="src\PageLayout.h" />
-    <ClInclude Include="src\utils\BitManip.h" />
-    <ClInclude Include="src\utils\FileUtil.h" />
-    <ClInclude Include="src\utils\FrameTimeoutCalculator.h" />
-    <ClInclude Include="src\utils\GdiPlusUtil.h" />
-    <ClInclude Include="src\utils\HtmlPullParser.h" />
     <ClInclude Include="src\utils\mui.h" />
     <ClInclude Include="src\utils\MuiCss.h" />
-    <ClInclude Include="src\utils\Vec.h" />
     <ClInclude Include="ext\chrome\base\at_exit.h">
       <Filter>base</Filter>
     </ClInclude>
@@ -285,13 +289,39 @@
     <ClInclude Include="ext\chrome\base\memory\weak_ptr.h">
       <Filter>base\memory</Filter>
     </ClInclude>
-    <ClInclude Include="src\utils\BaseUtil.h" />
-    <ClInclude Include="src\utils\StrUtil.h" />
-    <ClInclude Include="src\utils\Http.h" />
-    <ClInclude Include="src\utils\TrivialHtmlParser.h" />
-    <ClInclude Include="src\utils\Touch.h" />
-    <ClInclude Include="src\utils\Transactions.h" />
-    <ClInclude Include="src\utils\Allocator.h" />
+    <ClInclude Include="src\utils\Allocator.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\BaseUtil.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\BitManip.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\FileUtil.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\FrameTimeoutCalculator.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\GdiPlusUtil.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\HtmlPullParser.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\Touch.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\StrUtil.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\TrivialHtmlParser.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\Vec.h">
+      <Filter>utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="src\ebooktest\EbookTest.rc" />
@@ -321,6 +351,9 @@
     </Filter>
     <Filter Include="base\memory">
       <UniqueIdentifier>{63720b1e-4a37-4813-8f13-6d25c4f0c4a3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utils">
+      <UniqueIdentifier>{7f9618e1-94f4-4d07-9d59-b27e7519bf1c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

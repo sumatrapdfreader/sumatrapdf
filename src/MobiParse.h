@@ -21,19 +21,19 @@ struct PdbHeader
 {
      /* 31 chars + 1 null terminator */
     char        name[kDBNameLength];
-    uint16_t    attributes;
-    uint16_t    version;
-    uint32_t    createTime;
-    uint32_t    modifyTime;
-    uint32_t    backupTime;
-    uint32_t    modificationNumber;
-    uint32_t    appInfoID;
-    uint32_t    sortInfoID;
+    uint16      attributes;
+    uint16      version;
+    uint32      createTime;
+    uint32      modifyTime;
+    uint32      backupTime;
+    uint32      modificationNumber;
+    uint32      appInfoID;
+    uint32      sortInfoID;
     char        type[4];
     char        creator[4];
-    uint32_t    idSeed;
-    uint32_t    nextRecordList;
-    uint16_t    numRecords;
+    uint32      idSeed;
+    uint32      nextRecordList;
+    uint16      numRecords;
 };
 #pragma pack(pop)
 
@@ -44,12 +44,12 @@ STATIC_ASSERT(kPdbHeaderLen == sizeof(PdbHeader), validPdbHeader);
 #pragma pack(push)
 #pragma pack(1)
 struct PdbRecordHeader {
-    uint32_t offset;
-    uint8_t  deleted   : 1;
-    uint8_t  dirty     : 1;
-    uint8_t  busy      : 1;
-    uint8_t  secret    : 1;
-    uint8_t  category  : 4;
+    uint32   offset;
+    uint8    deleted   : 1;
+    uint8    dirty     : 1;
+    uint8    busy      : 1;
+    uint8    secret    : 1;
+    uint8    category  : 4;
     char     uniqueID[3];
 };
 #pragma pack(pop)
@@ -59,7 +59,7 @@ STATIC_ASSERT(kPdbRecordHeaderLen == sizeof(PdbRecordHeader), validPdbRecordHead
 #define kMaxRecordSize 64*1024
 
 struct ImageData {
-    uint8_t *   imgData;
+    uint8 *     imgData;
     size_t      imgDataLen;
 };
 
@@ -100,7 +100,6 @@ class MobiParse
 
 public:
     str::Str<char> *    doc;
-    Vec<uint8_t> *      prettyPrintedHtml;
 
     size_t              imagesCount;
     size_t              validImagesCount;

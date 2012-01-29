@@ -83,7 +83,7 @@ using namespace Gdiplus;
 
 namespace mui {
 
-// we use uint16_t for those
+// we use uint16 for those
 STATIC_ASSERT(VirtWnd::WndWantedInputBitLast < 16, max16bitsForWantedIntputBits);
 STATIC_ASSERT(VirtWnd::WndStateBitLast < 16, max16bitsForWndStateuBits);
 
@@ -180,10 +180,10 @@ public:
 class WndInputWantedFilter : public WndFilter
 {
     int x, y;
-    uint16_t wantedInputMask;
+    uint16 wantedInputMask;
 
 public:
-    WndInputWantedFilter(int x, int y, uint16_t wantedInputMask) :
+    WndInputWantedFilter(int x, int y, uint16 wantedInputMask) :
         x(x), y(y), wantedInputMask(wantedInputMask)
     {
     }
@@ -228,7 +228,7 @@ static void CollectWindowsBreathFirst(VirtWnd *w, int offX, int offY, WndFilter 
 // in windows array before child windows. In most cases caller can use the last
 // window in returned array (but can use a custom logic as well).
 // Returns number of matched windows as a convenience.
-static size_t CollectWindowsAt(VirtWnd *wndRoot, int x, int y, uint16_t wantedInputMask, Vec<WndAndOffset> *windows)
+static size_t CollectWindowsAt(VirtWnd *wndRoot, int x, int y, uint16 wantedInputMask, Vec<WndAndOffset> *windows)
 {
     WndInputWantedFilter filter(x, y, wantedInputMask);
     windows->Reset();
@@ -543,7 +543,7 @@ VirtWndButton::VirtWndButton(const TCHAR *s)
 {
     text = NULL;
     styleMouseOver = NULL;
-    wantedInputBits = (uint16_t)-1; // wants everything
+    wantedInputBits = (uint16)-1; // wants everything
     SetText(s);
 }
 
@@ -844,14 +844,14 @@ void PaintWindowsInZOrder(Graphics *g, VirtWnd *wnd)
     WndFilter wndFilter;
     CollectWindowsBreathFirst(wnd, 0, 0, &wndFilter, &windowsToPaint);
     size_t paintedCount = 0;
-    int16_t lastPaintedZOrder = INT16_MIN;
+    int16 lastPaintedZOrder = INT16_MIN;
     size_t winCount = windowsToPaint.Count();
     for (;;) {
         // find which z-order should we paint now
-        int16_t minUnpaintedZOrder = INT16_MAX;
+        int16 minUnpaintedZOrder = INT16_MAX;
         for (size_t i = 0; i < winCount; i++) {
             WndAndOffset woff = windowsToPaint.At(i);
-            int16_t zOrder = woff.wnd->zOrder;
+            int16 zOrder = woff.wnd->zOrder;
             if ((zOrder > lastPaintedZOrder) && (zOrder < minUnpaintedZOrder))
                 minUnpaintedZOrder = zOrder;
         }
@@ -996,7 +996,7 @@ LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& wasHandled)
     Vec<WndAndOffset> windows;
     VirtWnd *w;
 
-    uint32_t wantedInputMask = bit::FromBit<uint32_t>(VirtWnd::WantsMouseOverBit);
+    uint16 wantedInputMask = bit::FromBit<uint16>(VirtWnd::WantsMouseOverBit);
     size_t count = CollectWindowsAt(wndRoot, x, y, wantedInputMask, &windows);
     if (0 == count) {
         if (currOver) {
@@ -1018,7 +1018,7 @@ LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& wasHandled)
         }
     }
 
-    wantedInputMask = bit::FromBit<uint32_t>(VirtWnd::WantsMouseMoveBit);
+    wantedInputMask = bit::FromBit<uint16>(VirtWnd::WantsMouseMoveBit);
     count = CollectWindowsAt(wndRoot, x, y, wantedInputMask, &windows);
     if (0 == count)
         return 0;
@@ -1034,7 +1034,7 @@ LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& wasHandled)
 LRESULT EventMgr::OnLButtonUp(WPARAM keys, int x, int y, bool& wasHandled)
 {
     Vec<WndAndOffset> windows;
-    uint16_t wantedInputMask = bit::FromBit<uint16_t>(VirtWnd::WantsMouseClickBit);
+    uint16 wantedInputMask = bit::FromBit<uint16>(VirtWnd::WantsMouseClickBit);
     size_t count = CollectWindowsAt(wndRoot, x, y, wantedInputMask, &windows);
     if (0 == count)
         return 0;

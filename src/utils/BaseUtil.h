@@ -30,6 +30,7 @@
 /* Few most common includes for C stdlib */
 #include <assert.h>
 #include <stdio.h>
+#include <stdint.h>
 
 #ifndef UNICODE
 #include <sys/types.h>
@@ -56,6 +57,21 @@
 #define BEtoHl(x) MAKELONG(BEtoHs(HIWORD(x)), BEtoHs(LOWORD(x)))
 #define LEtoHs(x) (x)
 #define LEtoHl(x) (x)
+
+typedef unsigned char uint8;
+typedef int16_t   int16;
+typedef uint16_t uint16;
+typedef int32_t   int32;
+typedef uint32_t uint32;
+typedef int64_t   int64;
+typedef uint64_t uint64;
+
+STATIC_ASSERT(2 == sizeof(int16),   int16_is_2_bytes);
+STATIC_ASSERT(2 == sizeof(uint16), uint16_is_2_bytes);
+STATIC_ASSERT(4 == sizeof(int32),   int32_is_4_bytes);
+STATIC_ASSERT(4 == sizeof(uint32),  uint32_is_4_bytes);
+STATIC_ASSERT(8 == sizeof(int64),   int64_is_8_bytes);
+STATIC_ASSERT(8 == sizeof(uint64),  uint64_is_8_bytes);
 
 template <typename T>
 inline void swap(T& one, T&two)

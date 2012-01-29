@@ -182,10 +182,10 @@ public:
     void MeasureChildren(Size availableSize) const;
     void MapRootToMyPos(int& x, int& y) const;
 
-    uint16_t        wantedInputBits; // WndWantedInputBits
-    uint16_t        stateBits;       // WndStateBits
+    uint16          wantedInputBits; // WndWantedInputBits
+    uint16          stateBits;       // WndStateBits
     // windows with bigger z-order are painted on top, 0 is default
-    int16_t         zOrder;
+    int16           zOrder;
 
     Layout *        layout;
     VirtWnd *       parent;

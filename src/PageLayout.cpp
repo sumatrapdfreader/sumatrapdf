@@ -585,7 +585,7 @@ Vec<Page*> *PageLayout::LayoutText(Graphics *graphics, Font *defaultFnt, const c
 #endif
 
 #if 0
-void DumpAttr(uint8_t *s, size_t sLen)
+void DumpAttr(uint8 *s, size_t sLen)
 {
     static Vec<char *> seen;
     char *sCopy = str::DupN((char*)s, sLen);
