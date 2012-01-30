@@ -5,7 +5,6 @@
 #include "StrUtil.h"
 #include "WinUtil.h"
 #include "FileUtil.h"
-#include "ThreadUtil.h"
 #include <shlwapi.h>
 
 #include "Print.h"
@@ -312,19 +311,21 @@ public:
             win->notifications->RemoveNotification(wnd);
     }
 
-    void PrintThread()
+    static DWORD WINAPI PrintThread(LPVOID data)
     {
-        PrintToDevice(*data, this);
-        QueueWorkItem(this);
+        PrintThreadData *threadData = (PrintThreadData *)data;
+        PrintToDevice(*threadData->data, threadData);
+        QueueWorkItem(threadData);
+        return 0;
     }
 
     virtual void Execute() {
         if (!WindowInfoStillValid(win))
             return;
 
-        WorkerThread *thread = win->printThread;
+        HANDLE thread = win->printThread;
         win->printThread = NULL;
-        delete thread;
+        CloseHandle(thread);
     }
 };
 
@@ -332,14 +333,14 @@ static void PrintToDeviceOnThread(WindowInfo *win, PrintData *data)
 {
     assert(!win->printThread);
     PrintThreadData *threadData = new PrintThreadData(win, data);
-    win->printThread = new WorkerThread(Bind(&PrintThreadData::PrintThread, threadData));
+    win->printThread = CreateThread(NULL, 0, PrintThreadData::PrintThread, threadData, 0, NULL);
 }
 
 void AbortPrinting(WindowInfo *win)
 {
     if (win->printThread) {
         win->printCanceled = true;
-        win->printThread->Join();
+        WaitForSingleObject(win->printThread, INFINITE);
     }
     win->printCanceled = false;
 }

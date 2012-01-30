@@ -394,8 +394,8 @@ $(OS)\EbookTest.obj: src\PageLayout.h src\utils\Allocator.h src\utils\BaseUtil.h
 $(OS)\EbookTest.obj: src\utils\BitManip.h src\utils\CmdLineParser.h src\utils\FileTransactions.h
 $(OS)\EbookTest.obj: src\utils\FileUtil.h src\utils\FrameTimeoutCalculator.h src\utils\GeomUtil.h
 $(OS)\EbookTest.obj: src\utils\HtmlPullParser.h src\utils\mui.h src\utils\MuiCss.h
-$(OS)\EbookTest.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
-$(OS)\EbookTest.obj: src\utils\WinUtil.h src\Version.h
+$(OS)\EbookTest.obj: src\utils\NoFreeAllocator.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OS)\EbookTest.obj: src\utils\Vec.h src\utils\WinUtil.h src\Version.h
 $(OS)\EbookTestMenu.obj: src\ebooktest\EbookTestMenu.h src\ebooktest\Resource.h src\utils\BaseUtil.h
 $(OS)\EbookTestMenu.obj: src\utils\Scoped.h src\utils\StrUtil.h
 $(OS)\EngineDump.obj: src\BaseEngine.h src\ChmEngine.h src\DjVuEngine.h
@@ -441,7 +441,7 @@ $(OS)\HtmlWindow.obj: src\utils\HtmlWindow.h src\utils\Scoped.h src\utils\StrUti
 $(OS)\HtmlWindow.obj: src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\Http.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\FileUtil.h
 $(OS)\Http.obj: src\utils\GeomUtil.h src\utils\Http.h src\utils\StrUtil.h
-$(OS)\Http.obj: src\utils\ThreadUtil.h src\utils\Vec.h src\utils\WinUtil.h
+$(OS)\Http.obj: src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\ImagesEngine.obj: ext\unrar\dll.hpp src\BaseEngine.h src\ImagesEngine.h
 $(OS)\ImagesEngine.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\FileUtil.h
 $(OS)\ImagesEngine.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
@@ -480,6 +480,7 @@ $(OS)\mui.obj: src\utils\Vec.h
 $(OS)\MuiCss.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\HtmlPullParser.h
 $(OS)\MuiCss.obj: src\utils\MuiCss.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\MuPDF_Exports.obj: mupdf\fitz\fitz.h
+$(OS)\NoFreeAllocator.obj: src\utils\BaseUtil.h src\utils\NoFreeAllocator.h
 $(OS)\Notifications.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
 $(OS)\Notifications.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
 $(OS)\Notifications.obj: src\EngineManager.h src\ImagesEngine.h src\Notifications.h
@@ -528,8 +529,8 @@ $(OS)\Print.obj: src\PsEngine.h src\Selection.h src\SumatraDialogs.h
 $(OS)\Print.obj: src\SumatraPDF.h src\TextSearch.h src\TextSelection.h
 $(OS)\Print.obj: src\translations.h src\utils\Allocator.h src\utils\BaseUtil.h
 $(OS)\Print.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
-$(OS)\Print.obj: src\utils\StrUtil.h src\utils\ThreadUtil.h src\utils\Vec.h
-$(OS)\Print.obj: src\utils\WinUtil.h src\WindowInfo.h
+$(OS)\Print.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
+$(OS)\Print.obj: src\WindowInfo.h
 $(OS)\PsEngine.obj: src\BaseEngine.h src\PdfEngine.h src\PsEngine.h
 $(OS)\PsEngine.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\FileUtil.h
 $(OS)\PsEngine.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h

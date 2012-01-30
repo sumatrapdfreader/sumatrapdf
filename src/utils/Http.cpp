@@ -7,7 +7,6 @@
 #include "Http.h"
 #include "FileUtil.h"
 #include "WinUtil.h"
-#include "ThreadUtil.h"
 
 // per RFC 1945 10.15 and 3.7, a user agent product token shouldn't contain whitespace
 #define USER_AGENT _T("BaseHTTP")
@@ -177,27 +176,28 @@ Exit:
     return ok;
 }
 
-void HttpReq::DownloadThread()
+DWORD WINAPI HttpReq::DownloadThread(LPVOID data)
 {
-    error = HttpGet(url, data);
-    callback->Callback(this);
+    HttpReq *req = (HttpReq *)data;
+    req->error = HttpGet(req->url, req->data);
+    req->callback->Callback(req);
+    return 0;
 }
 
-HttpReq::HttpReq(const TCHAR *url, HttpReqCallback *callback)
-    : thread(NULL), callback(callback), error(0)
+HttpReq::HttpReq(const TCHAR *url, HttpReqCallback *callback) :
+    thread(NULL), callback(callback), error(0),
+    url(str::Dup(url)), data(new str::Str<char>(256))
 {
     assert(url);
-    this->url = str::Dup(url);
-    data = new str::Str<char>(256);
     if (callback)
-        thread = new WorkerThread(Bind(&HttpReq::DownloadThread, this));
+        thread = CreateThread(NULL, 0, DownloadThread, this, 0, 0);
     else
         error = HttpGet(url, data);
 }
 
 HttpReq::~HttpReq()
 {
-    delete thread;
+    CloseHandle(thread);
     free(url);
     delete data;
 }

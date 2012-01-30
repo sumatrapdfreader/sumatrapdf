@@ -14,7 +14,6 @@ class DoubleBuffer;
 class SelectionOnPage;
 class LinkHandler;
 class Notifications;
-class WorkerThread;
 
 /* Describes actions which can be performed by mouse */
 enum MouseAction {
@@ -157,7 +156,7 @@ public:
 
     Notifications * notifications; // only access from UI thread
 
-    WorkerThread *  printThread;
+    HANDLE          printThread;
     bool            printCanceled;
 
     HANDLE          findThread;

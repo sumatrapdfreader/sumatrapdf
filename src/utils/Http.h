@@ -11,14 +11,13 @@ DWORD HttpGet(const TCHAR *url, str::Str<char> *dataOut);
 bool  HttpGetToFile(const TCHAR *url, const TCHAR *destFilePath);
 
 class HttpReqCallback;
-class WorkerThread;
 
 class HttpReq {
-    WorkerThread  * thread;
+    HANDLE          thread;
     // the callback to execute when the download is complete
     HttpReqCallback*callback;
 
-    void DownloadThread();
+    static DWORD WINAPI DownloadThread(LPVOID data);
 
 public:
     TCHAR *         url;
