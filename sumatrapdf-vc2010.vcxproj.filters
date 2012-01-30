@@ -1117,6 +1117,9 @@
     <ClInclude Include="src\utils\FileTransactions.h">
       <Filter>utils</Filter>
     </ClInclude>
+    <ClInclude Include="src\utils\Allocator.h">
+      <Filter>utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\closetoc.bmp">

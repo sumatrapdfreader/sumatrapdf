@@ -380,6 +380,7 @@
     <ClInclude Include="src\TextSearch.h" />
     <ClInclude Include="src\TextSelection.h" />
     <ClInclude Include="src\Toolbar.h" />
+    <ClInclude Include="src\utils\Allocator.h" />
     <ClInclude Include="src\utils\FileTransactions.h" />
     <ClInclude Include="src\utils\Touch.h" />
     <ClInclude Include="src\translations.h" />

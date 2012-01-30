@@ -104,7 +104,7 @@ struct PageData {
        that is read-only and outlives us. Sometimes (e.g. when resolving
        html entities) we need a modified text. This allocator is
        used to allocate those strings. */
-    BlockAllocator  text;
+    PoolAllocator  text;
 
     void Append(DrawInstr& di) {
         drawInstructions.Append(di);

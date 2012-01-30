@@ -51,7 +51,7 @@ static inline size_t RoundUpTo8(size_t n)
     return ((n+8-1)/8)*8;
 }
 
-// BlockAllocator is for the cases where we need to allocate pieces of memory
+// PoolAllocator is for the cases where we need to allocate pieces of memory
 // that are meant to be freed together. It simplifies the callers (only need
 // to track this object and not all allocated pieces). Allocation and freeing
 // is faster. The downside is that free() is a no-op i.e. it can't free memory
@@ -59,7 +59,7 @@ static inline size_t RoundUpTo8(size_t n)
 //
 // Note: we could be a bit more clever here by allocating data in 4K chunks
 // via VirtualAlloc() etc. instead of malloc(), which would lower the overhead
-class BlockAllocator : public Allocator {
+class PoolAllocator : public Allocator {
 
     struct MemBlockNode {
         struct MemBlockNode *next;
@@ -79,7 +79,7 @@ class BlockAllocator : public Allocator {
 public:
     size_t  blockSize;
 
-    BlockAllocator()  {
+    PoolAllocator()  {
         blockSize = 4096;
         Init();
     }
@@ -94,7 +94,7 @@ public:
         Init();
     }
 
-    virtual ~BlockAllocator() {
+    virtual ~PoolAllocator() {
         FreeAll();
     }
 

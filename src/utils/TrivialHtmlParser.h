@@ -30,7 +30,7 @@ struct HtmlElement {
 };
 
 class HtmlParser {
-    BlockAllocator allocator;
+    PoolAllocator allocator;
 
     // text to parse. It can be changed.
     char *html;
