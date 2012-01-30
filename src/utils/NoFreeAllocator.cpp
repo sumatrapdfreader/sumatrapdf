@@ -29,38 +29,40 @@ in the future? NoFreeAllocator has the necessary magic.
 We have a thread-local global object used mallocNF() and other
 no-free functions.
 
-NoFreeAllocatorMark is object that is placed on the stack to mark
+NoFreeAllocatorMark is an object placed on the stack to mark
 a particular position in the allocation sequence. When this
-object goes out of scope, all allocations done with no-free
-allocation function since the moment in was constructed (i.e.
-allocations done in functions called from that point).
+object goes out of scope, we'll free all allocations done with
+no-free allocatora from the moment in was constructed.
 
 Allocation and de-allocation is fast because we allocate memory
 in blocks. Allocation, most of the time, is just bumping a pointer.
-De-allocations involves free-ing the blocks (we can further optimize
-by keeping at least one block past alive).
+De-allocation involves freeing just few blocks.
 
 In the simplest scenario we can put NoFreeAllocatorMark in WinMain.
-The memory would be freed but it would grow used memory without bounds.
+The memory would be freed but we would grow memory used without bounds.
 
-We can tweak speed/memory used by using NoFreeAllocatorMark in more
+We can tweak memory used by using NoFreeAllocatorMark in more
 places. The more often it's used, the lower max memory usage will be.
 A natural place for placing them are window message loops.
 
 They can also be used in threads by placing an object at the
 beginning of a thread function.
 
-We can optimize things by using a genereous initial buffer e.g. 1MB
-is nothing by today's standards and the bigger out memory pool,
+We can optimize things by using a genereously sized blocks e.g. 1MB
+is nothing by today's standards and the bigger our memory block,
 the less mallocs/frees we do.
-
-The downside is that we need to write new versions of functions that
-allocate the memory (mallocNF(), str::DupNF(), str::FormatNF() etc.)
 
 Another advantage is that this generates less executable code: every
 time ScopedMem<T> is used, it adds a few bytes of code.
 
-This idea has some resemblance to NSAutoReleasePool and 
+The downside is that we need to write new versions of functions that
+allocate the memory.
+
+Another downside is that this memory isn't visible to memory profilers
+and doesn't have the debugging features of some allocators (we
+could easily add most of them, like detection of memory over-writes)
+
+This allocator bears some resemblance to NSAutoReleasePool and 
 garbage-collection in general.
 */
 
