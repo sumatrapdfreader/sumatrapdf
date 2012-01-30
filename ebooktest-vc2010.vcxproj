@@ -109,6 +109,7 @@
     <ClCompile Include="src\utils\HtmlPullParser.cpp" />
     <ClCompile Include="src\utils\mui.cpp" />
     <ClCompile Include="src\utils\MuiCss.cpp" />
+    <ClCompile Include="src\utils\NoFreeAllocator.cpp" />
     <ClCompile Include="src\utils\StrUtil.cpp" />
     <ClCompile Include="src\utils\Touch.cpp" />
     <ClCompile Include="src\utils\TrivialHtmlParser.cpp" />
@@ -182,6 +183,7 @@
     <ClInclude Include="src\utils\HtmlPullParser.h" />
     <ClInclude Include="src\utils\mui.h" />
     <ClInclude Include="src\utils\MuiCss.h" />
+    <ClInclude Include="src\utils\NoFreeAllocator.h" />
     <ClInclude Include="src\utils\StrUtil.h" />
     <ClInclude Include="src\utils\Touch.h" />
     <ClInclude Include="src\utils\TrivialHtmlParser.h" />

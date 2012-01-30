@@ -118,6 +118,9 @@
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="src\MobiDoc.cpp" />
+    <ClCompile Include="src\utils\NoFreeAllocator.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ebooktest\EbookTestMenu.h" />
@@ -322,6 +325,9 @@
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="src\MobiDoc.h" />
+    <ClInclude Include="src\utils\NoFreeAllocator.h">
+      <Filter>utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="src\ebooktest\EbookTest.rc" />

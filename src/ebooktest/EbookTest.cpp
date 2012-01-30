@@ -12,7 +12,7 @@ using std::max;
 #include "base/bind.h"
 
 #include "Resource.h"
-#include "BaseUtil.h"
+#include "NoFreeAllocator.h"
 #include "StrUtil.h"
 #include "FileUtil.h"
 #include "WinUtil.h"
