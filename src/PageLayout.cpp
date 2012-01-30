@@ -739,8 +739,6 @@ bool PageLayout::LayoutHtml(LayoutInfo* layoutInfo, INewPageObserver *pageObserv
 
     StartLayout();
 
-    Vec<HtmlTag> tagNesting(256);
-
     HtmlPullParser parser(layoutInfo->htmlStr, layoutInfo->htmlStrLen);
     for (;;)
     {
@@ -766,5 +764,74 @@ void LayoutHtml(LayoutInfo* li)
 {
     PageLayout pg;
     pg.LayoutHtml(li, li->observer);
+}
+
+enum TextJustification {
+    Left, Right, Center, Both
+};
+
+struct PageLayoutState {
+    // temporary state during layout process
+    FontStyle           currFontStyle;
+    Font *              currFont;
+    size_t              currFontId; // within gFontCache
+
+    TextJustification   currJustification;
+
+    const char *s;
+};
+
+class PageLayoutIter {
+
+public:
+    PageLayoutIter();
+    ~PageLayoutIter();
+    void Start();
+    PageData *Next(PageLayoutState *state);
+
+    REAL                pageDx;
+    REAL                pageDy;
+    REAL                lineSpacing;
+    REAL                spaceDx;
+    mui::GraphicsForMeasureText *gfxForMeasure;
+    Graphics *          gfx;
+    ScopedMem<WCHAR>    fontName;
+    float               fontSize;
+
+    PageLayoutState     state;
+
+    // current position in a page
+    REAL                currX, currY; 
+    // number of consecutive newlines
+    int                 newLinesCount;
+
+    PageData *          currPage;
+
+    // current nesting of html tree during html parsing
+    Vec<HtmlTag>        tagNesting;
+
+    size_t              currLineInstrOffset;
+    WCHAR               buf[512];
+
+};
+
+PageLayoutIter::PageLayoutIter()
+{
+
+}
+
+PageLayoutIter::~PageLayoutIter()
+{
+
+}
+
+void PageLayoutIter::Start()
+{
+
+}
+
+PageData *PageLayoutIter::Next(PageLayoutState *state)
+{
+    return NULL;
 }
 
