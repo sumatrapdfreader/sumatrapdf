@@ -1,5 +1,4 @@
 #include "fitz.h"
-#include "muxps.h"
 
 /*
  * TIFF image loader. Should be enough to support TIFF files in XPS.
@@ -15,7 +14,7 @@ struct tiff
 	fz_context *ctx;
 
 	/* "file" */
-	byte *bp, *rp, *ep;
+	unsigned char *bp, *rp, *ep;
 
 	/* byte order */
 	unsigned order;
@@ -48,15 +47,15 @@ struct tiff
 
 	unsigned ycbcrsubsamp[2];
 
-	byte *jpegtables;		/* point into "file" buffer */
+	unsigned char *jpegtables;		/* point into "file" buffer */
 	unsigned jpegtableslen;
 
-	byte *profile;
+	unsigned char *profile;
 	int profilesize;
 
 	/* decoded data */
 	fz_colorspace *colorspace;
-	byte *samples;
+	unsigned char *samples;
 	int stride;
 };
 
@@ -99,7 +98,7 @@ enum
 #define YCbCrSubSampling 520
 #define ICCProfile 34675
 
-static const byte bitrev[256] =
+static const unsigned char bitrev[256] =
 {
 	0x00, 0x80, 0x40, 0xc0, 0x20, 0xa0, 0x60, 0xe0,
 	0x10, 0x90, 0x50, 0xd0, 0x30, 0xb0, 0x70, 0xf0,
@@ -136,14 +135,14 @@ static const byte bitrev[256] =
 };
 
 static void
-xps_decode_tiff_uncompressed(struct tiff *tiff, fz_stream *stm, byte *wp, int wlen)
+fz_decode_tiff_uncompressed(struct tiff *tiff, fz_stream *stm, unsigned char *wp, int wlen)
 {
 	fz_read(stm, wp, wlen);
 	fz_close(stm);
 }
 
 static void
-xps_decode_tiff_packbits(struct tiff *tiff, fz_stream *chain, byte *wp, int wlen)
+fz_decode_tiff_packbits(struct tiff *tiff, fz_stream *chain, unsigned char *wp, int wlen)
 {
 	fz_stream *stm = fz_open_rld(chain);
 	fz_read(stm, wp, wlen);
@@ -151,7 +150,7 @@ xps_decode_tiff_packbits(struct tiff *tiff, fz_stream *chain, byte *wp, int wlen
 }
 
 static void
-xps_decode_tiff_lzw(struct tiff *tiff, fz_stream *chain, byte *wp, int wlen)
+fz_decode_tiff_lzw(struct tiff *tiff, fz_stream *chain, unsigned char *wp, int wlen)
 {
 	fz_stream *stm = fz_open_lzwd(chain, 1);
 	fz_read(stm, wp, wlen);
@@ -159,7 +158,7 @@ xps_decode_tiff_lzw(struct tiff *tiff, fz_stream *chain, byte *wp, int wlen)
 }
 
 static void
-xps_decode_tiff_flate(struct tiff *tiff, fz_stream *chain, byte *wp, int wlen)
+fz_decode_tiff_flate(struct tiff *tiff, fz_stream *chain, unsigned char *wp, int wlen)
 {
 	fz_stream *stm = fz_open_flated(chain);
 	fz_read(stm, wp, wlen);
@@ -167,7 +166,7 @@ xps_decode_tiff_flate(struct tiff *tiff, fz_stream *chain, byte *wp, int wlen)
 }
 
 static void
-xps_decode_tiff_fax(struct tiff *tiff, int comp, fz_stream *chain, byte *wp, int wlen)
+fz_decode_tiff_fax(struct tiff *tiff, int comp, fz_stream *chain, unsigned char *wp, int wlen)
 {
 	fz_stream *stm;
 	int black_is_1 = tiff->photometric == 0;
@@ -181,14 +180,14 @@ xps_decode_tiff_fax(struct tiff *tiff, int comp, fz_stream *chain, byte *wp, int
 }
 
 static void
-xps_decode_tiff_jpeg(struct tiff *tiff, fz_stream *chain, byte *wp, int wlen)
+fz_decode_tiff_jpeg(struct tiff *tiff, fz_stream *chain, unsigned char *wp, int wlen)
 {
 	fz_stream *stm = fz_open_dctd(chain, -1);
 	fz_read(stm, wp, wlen);
 	fz_close(stm);
 }
 
-static inline int getcomp(byte *line, int x, int bpc)
+static inline int getcomp(unsigned char *line, int x, int bpc)
 {
 	switch (bpc)
 	{
@@ -201,7 +200,7 @@ static inline int getcomp(byte *line, int x, int bpc)
 	return 0;
 }
 
-static inline void putcomp(byte *line, int x, int bpc, int value)
+static inline void putcomp(unsigned char *line, int x, int bpc, int value)
 {
 	int maxval = (1 << bpc) - 1;
 
@@ -223,9 +222,9 @@ static inline void putcomp(byte *line, int x, int bpc, int value)
 }
 
 static void
-xps_unpredict_tiff(byte *line, int width, int comps, int bits)
+fz_unpredict_tiff(unsigned char *line, int width, int comps, int bits)
 {
-	byte left[32];
+	unsigned char left[32];
 	int i, k, v;
 
 	for (k = 0; k < comps; k++)
@@ -245,7 +244,7 @@ xps_unpredict_tiff(byte *line, int width, int comps, int bits)
 }
 
 static void
-xps_invert_tiff(byte *line, int width, int comps, int bits, int alpha)
+fz_invert_tiff(unsigned char *line, int width, int comps, int bits, int alpha)
 {
 	int i, k, v;
 	int m = (1 << bits) - 1;
@@ -263,11 +262,11 @@ xps_invert_tiff(byte *line, int width, int comps, int bits, int alpha)
 }
 
 static void
-xps_expand_tiff_colormap(struct tiff *tiff)
+fz_expand_tiff_colormap(struct tiff *tiff)
 {
 	int maxval = 1 << tiff->bitspersample;
-	byte *samples;
-	byte *src, *dst;
+	unsigned char *samples;
+	unsigned char *src, *dst;
 	unsigned int x, y;
 	unsigned int stride;
 
@@ -318,20 +317,20 @@ xps_expand_tiff_colormap(struct tiff *tiff)
 }
 
 static void
-xps_decode_tiff_strips(struct tiff *tiff)
+fz_decode_tiff_strips(struct tiff *tiff)
 {
 	fz_stream *stm;
 
 	/* switch on compression to create a filter */
 	/* feed each strip to the filter */
-	/* read out the data and pack the samples into an xps_image */
+	/* read out the data and pack the samples into a pixmap */
 
 	/* type 32773 / packbits -- nothing special (same row-padding as PDF) */
 	/* type 2 / ccitt rle -- no EOL, no RTC, rows are byte-aligned */
 	/* type 3 and 4 / g3 and g4 -- each strip starts new section */
 	/* type 5 / lzw -- each strip is handled separately */
 
-	byte *wp;
+	unsigned char *wp;
 	unsigned row;
 	unsigned strip;
 	unsigned i;
@@ -401,7 +400,7 @@ xps_decode_tiff_strips(struct tiff *tiff)
 		unsigned offset = tiff->stripoffsets[strip];
 		unsigned rlen = tiff->stripbytecounts[strip];
 		unsigned wlen = tiff->stride * tiff->rowsperstrip;
-		byte *rp = tiff->bp + offset;
+		unsigned char *rp = tiff->bp + offset;
 
 		if (wp + wlen > tiff->samples + tiff->stride * tiff->imagelength)
 			wlen = tiff->samples + tiff->stride * tiff->imagelength - wp;
@@ -420,31 +419,31 @@ xps_decode_tiff_strips(struct tiff *tiff)
 		switch (tiff->compression)
 		{
 		case 1:
-			xps_decode_tiff_uncompressed(tiff, stm, wp, wlen);
+			fz_decode_tiff_uncompressed(tiff, stm, wp, wlen);
 			break;
 		case 2:
-			xps_decode_tiff_fax(tiff, 2, stm, wp, wlen);
+			fz_decode_tiff_fax(tiff, 2, stm, wp, wlen);
 			break;
 		case 3:
-			xps_decode_tiff_fax(tiff, 3, stm, wp, wlen);
+			fz_decode_tiff_fax(tiff, 3, stm, wp, wlen);
 			break;
 		case 4:
-			xps_decode_tiff_fax(tiff, 4, stm, wp, wlen);
+			fz_decode_tiff_fax(tiff, 4, stm, wp, wlen);
 			break;
 		case 5:
-			xps_decode_tiff_lzw(tiff, stm, wp, wlen);
+			fz_decode_tiff_lzw(tiff, stm, wp, wlen);
 			break;
 		case 6:
 			fz_throw(tiff->ctx, "deprecated JPEG in TIFF compression not supported");
 			break;
 		case 7:
-			xps_decode_tiff_jpeg(tiff, stm, wp, wlen);
+			fz_decode_tiff_jpeg(tiff, stm, wp, wlen);
 			break;
 		case 8:
-			xps_decode_tiff_flate(tiff, stm, wp, wlen);
+			fz_decode_tiff_flate(tiff, stm, wp, wlen);
 			break;
 		case 32773:
-			xps_decode_tiff_packbits(tiff, stm, wp, wlen);
+			fz_decode_tiff_packbits(tiff, stm, wp, wlen);
 			break;
 		default:
 			fz_throw(tiff->ctx, "unknown TIFF compression: %d", tiff->compression);
@@ -462,25 +461,25 @@ xps_decode_tiff_strips(struct tiff *tiff)
 	/* Predictor (only for LZW and Flate) */
 	if ((tiff->compression == 5 || tiff->compression == 8) && tiff->predictor == 2)
 	{
-		byte *p = tiff->samples;
+		unsigned char *p = tiff->samples;
 		for (i = 0; i < tiff->imagelength; i++)
 		{
-			xps_unpredict_tiff(p, tiff->imagewidth, tiff->samplesperpixel, tiff->bitspersample);
+			fz_unpredict_tiff(p, tiff->imagewidth, tiff->samplesperpixel, tiff->bitspersample);
 			p += tiff->stride;
 		}
 	}
 
 	/* RGBPal */
 	if (tiff->photometric == 3 && tiff->colormap)
-		xps_expand_tiff_colormap(tiff);
+		fz_expand_tiff_colormap(tiff);
 
 	/* WhiteIsZero .. invert */
 	if (tiff->photometric == 0)
 	{
-		byte *p = tiff->samples;
+		unsigned char *p = tiff->samples;
 		for (i = 0; i < tiff->imagelength; i++)
 		{
-			xps_invert_tiff(p, tiff->imagewidth, tiff->samplesperpixel, tiff->bitspersample, tiff->extrasamples);
+			fz_invert_tiff(p, tiff->imagewidth, tiff->samplesperpixel, tiff->bitspersample, tiff->extrasamples);
 			p += tiff->stride;
 		}
 	}
@@ -528,7 +527,7 @@ static inline unsigned readlong(struct tiff *tiff)
 }
 
 static void
-xps_read_tiff_bytes(unsigned char *p, struct tiff *tiff, unsigned ofs, unsigned n)
+fz_read_tiff_bytes(unsigned char *p, struct tiff *tiff, unsigned ofs, unsigned n)
 {
 	tiff->rp = tiff->bp + ofs;
 	if (tiff->rp > tiff->ep)
@@ -539,7 +538,7 @@ xps_read_tiff_bytes(unsigned char *p, struct tiff *tiff, unsigned ofs, unsigned 
 }
 
 static void
-xps_read_tiff_tag_value(unsigned *p, struct tiff *tiff, unsigned type, unsigned ofs, unsigned n)
+fz_read_tiff_tag_value(unsigned *p, struct tiff *tiff, unsigned type, unsigned ofs, unsigned n)
 {
 	tiff->rp = tiff->bp + ofs;
 	if (tiff->rp > tiff->ep)
@@ -563,7 +562,7 @@ xps_read_tiff_tag_value(unsigned *p, struct tiff *tiff, unsigned type, unsigned 
 }
 
 static void
-xps_read_tiff_tag(struct tiff *tiff, unsigned offset)
+fz_read_tiff_tag(struct tiff *tiff, unsigned offset)
 {
 	unsigned tag;
 	unsigned type;
@@ -586,65 +585,65 @@ xps_read_tiff_tag(struct tiff *tiff, unsigned offset)
 	switch (tag)
 	{
 	case NewSubfileType:
-		xps_read_tiff_tag_value(&tiff->subfiletype, tiff, type, value, 1);
+		fz_read_tiff_tag_value(&tiff->subfiletype, tiff, type, value, 1);
 		break;
 	case ImageWidth:
-		xps_read_tiff_tag_value(&tiff->imagewidth, tiff, type, value, 1);
+		fz_read_tiff_tag_value(&tiff->imagewidth, tiff, type, value, 1);
 		break;
 	case ImageLength:
-		xps_read_tiff_tag_value(&tiff->imagelength, tiff, type, value, 1);
+		fz_read_tiff_tag_value(&tiff->imagelength, tiff, type, value, 1);
 		break;
 	case BitsPerSample:
-		xps_read_tiff_tag_value(&tiff->bitspersample, tiff, type, value, 1);
+		fz_read_tiff_tag_value(&tiff->bitspersample, tiff, type, value, 1);
 		break;
 	case Compression:
-		xps_read_tiff_tag_value(&tiff->compression, tiff, type, value, 1);
+		fz_read_tiff_tag_value(&tiff->compression, tiff, type, value, 1);
 		break;
 	case PhotometricInterpretation:
-		xps_read_tiff_tag_value(&tiff->photometric, tiff, type, value, 1);
+		fz_read_tiff_tag_value(&tiff->photometric, tiff, type, value, 1);
 		break;
 	case FillOrder:
-		xps_read_tiff_tag_value(&tiff->fillorder, tiff, type, value, 1);
+		fz_read_tiff_tag_value(&tiff->fillorder, tiff, type, value, 1);
 		break;
 	case SamplesPerPixel:
-		xps_read_tiff_tag_value(&tiff->samplesperpixel, tiff, type, value, 1);
+		fz_read_tiff_tag_value(&tiff->samplesperpixel, tiff, type, value, 1);
 		break;
 	case RowsPerStrip:
-		xps_read_tiff_tag_value(&tiff->rowsperstrip, tiff, type, value, 1);
+		fz_read_tiff_tag_value(&tiff->rowsperstrip, tiff, type, value, 1);
 		break;
 	case XResolution:
-		xps_read_tiff_tag_value(&tiff->xresolution, tiff, type, value, 1);
+		fz_read_tiff_tag_value(&tiff->xresolution, tiff, type, value, 1);
 		break;
 	case YResolution:
-		xps_read_tiff_tag_value(&tiff->yresolution, tiff, type, value, 1);
+		fz_read_tiff_tag_value(&tiff->yresolution, tiff, type, value, 1);
 		break;
 	case PlanarConfiguration:
-		xps_read_tiff_tag_value(&tiff->planar, tiff, type, value, 1);
+		fz_read_tiff_tag_value(&tiff->planar, tiff, type, value, 1);
 		break;
 	case T4Options:
-		xps_read_tiff_tag_value(&tiff->g3opts, tiff, type, value, 1);
+		fz_read_tiff_tag_value(&tiff->g3opts, tiff, type, value, 1);
 		break;
 	case T6Options:
-		xps_read_tiff_tag_value(&tiff->g4opts, tiff, type, value, 1);
+		fz_read_tiff_tag_value(&tiff->g4opts, tiff, type, value, 1);
 		break;
 	case Predictor:
-		xps_read_tiff_tag_value(&tiff->predictor, tiff, type, value, 1);
+		fz_read_tiff_tag_value(&tiff->predictor, tiff, type, value, 1);
 		break;
 	case ResolutionUnit:
-		xps_read_tiff_tag_value(&tiff->resolutionunit, tiff, type, value, 1);
+		fz_read_tiff_tag_value(&tiff->resolutionunit, tiff, type, value, 1);
 		break;
 	case YCbCrSubSampling:
-		xps_read_tiff_tag_value(tiff->ycbcrsubsamp, tiff, type, value, 2);
+		fz_read_tiff_tag_value(tiff->ycbcrsubsamp, tiff, type, value, 2);
 		break;
 	case ExtraSamples:
-		xps_read_tiff_tag_value(&tiff->extrasamples, tiff, type, value, 1);
+		fz_read_tiff_tag_value(&tiff->extrasamples, tiff, type, value, 1);
 		break;
 
 	case ICCProfile:
 		tiff->profile = fz_malloc(tiff->ctx, count);
 		/* ICC profile data type is set to UNDEFINED.
-		 * TBYTE reading not correct in xps_read_tiff_tag_value */
-		xps_read_tiff_bytes(tiff->profile, tiff, value, count);
+		 * TBYTE reading not correct in fz_read_tiff_tag_value */
+		fz_read_tiff_bytes(tiff->profile, tiff, value, count);
 		tiff->profilesize = count;
 		break;
 
@@ -656,17 +655,17 @@ xps_read_tiff_tag(struct tiff *tiff, unsigned offset)
 
 	case StripOffsets:
 		tiff->stripoffsets = fz_malloc_array(tiff->ctx, count, sizeof(unsigned));
-		xps_read_tiff_tag_value(tiff->stripoffsets, tiff, type, value, count);
+		fz_read_tiff_tag_value(tiff->stripoffsets, tiff, type, value, count);
 		break;
 
 	case StripByteCounts:
 		tiff->stripbytecounts = fz_malloc_array(tiff->ctx, count, sizeof(unsigned));
-		xps_read_tiff_tag_value(tiff->stripbytecounts, tiff, type, value, count);
+		fz_read_tiff_tag_value(tiff->stripbytecounts, tiff, type, value, count);
 		break;
 
 	case ColorMap:
 		tiff->colormap = fz_malloc_array(tiff->ctx, count, sizeof(unsigned));
-		xps_read_tiff_tag_value(tiff->colormap, tiff, type, value, count);
+		fz_read_tiff_tag_value(tiff->colormap, tiff, type, value, count);
 		break;
 
 	case TileWidth:
@@ -682,7 +681,7 @@ xps_read_tiff_tag(struct tiff *tiff, unsigned offset)
 }
 
 static void
-xps_swap_byte_order(byte *buf, int n)
+fz_swap_tiff_byte_order(unsigned char *buf, int n)
 {
 	int i, t;
 	for (i = 0; i < n; i++)
@@ -694,7 +693,7 @@ xps_swap_byte_order(byte *buf, int n)
 }
 
 static void
-xps_decode_tiff_header(fz_context *ctx, struct tiff *tiff, byte *buf, int len)
+fz_decode_tiff_header(fz_context *ctx, struct tiff *tiff, unsigned char *buf, int len)
 {
 	unsigned version;
 	unsigned offset;
@@ -749,32 +748,32 @@ xps_decode_tiff_header(fz_context *ctx, struct tiff *tiff, byte *buf, int len)
 	offset += 2;
 	for (i = 0; i < count; i++)
 	{
-		xps_read_tiff_tag(tiff, offset);
+		fz_read_tiff_tag(tiff, offset);
 		offset += 12;
 	}
 }
 
 fz_pixmap *
-xps_decode_tiff(fz_context *ctx, byte *buf, int len)
+fz_load_tiff(fz_context *ctx, unsigned char *buf, int len)
 {
 	fz_pixmap *image;
 	struct tiff tiff;
 
 	fz_try(ctx)
 	{
-		xps_decode_tiff_header(ctx, &tiff, buf, len);
+		fz_decode_tiff_header(ctx, &tiff, buf, len);
 
 		/* Decode the image strips */
 
 		if (tiff.rowsperstrip > tiff.imagelength)
 			tiff.rowsperstrip = tiff.imagelength;
 
-		xps_decode_tiff_strips(&tiff);
+		fz_decode_tiff_strips(&tiff);
 
 		/* Byte swap 16-bit images to big endian if necessary */
 		if (tiff.bitspersample == 16)
 			if (tiff.order == TII)
-				xps_swap_byte_order(tiff.samples, tiff.imagewidth * tiff.imagelength * tiff.samplesperpixel);
+				fz_swap_tiff_byte_order(tiff.samples, tiff.imagewidth * tiff.imagelength * tiff.samplesperpixel);
 
 		/* Expand into fz_pixmap struct */
 		image = fz_new_pixmap(tiff.ctx, tiff.colorspace, tiff.imagewidth, tiff.imagelength);

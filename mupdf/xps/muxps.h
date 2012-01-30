@@ -121,10 +121,6 @@ xps_target *xps_find_link_target_obj(xps_document *doc, char *target_uri);
  * Images, fonts, and colorspaces.
  */
 
-fz_pixmap *xps_decode_jpeg(fz_context *doc, byte *rbuf, int rlen);
-fz_pixmap *xps_decode_png(fz_context *doc, byte *rbuf, int rlen);
-fz_pixmap *xps_decode_tiff(fz_context *doc, byte *rbuf, int rlen);
-
 typedef struct xps_font_cache_s xps_font_cache;
 
 struct xps_font_cache_s

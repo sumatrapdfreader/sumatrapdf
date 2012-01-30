@@ -1,6 +1,7 @@
 #include "fitz/fitz.h"
 #include "pdf/mupdf.h"
 #include "xps/muxps.h"
+#include "cbz/mucbz.h"
 #include "document.h"
 
 #include <ctype.h> /* for tolower() */
@@ -21,6 +22,8 @@ open_document(fz_context *ctx, char *filename)
 			doc->pdf = pdf_open_document(ctx, filename);
 		else if (strstr(filename, ".xps") || strstr(filename, ".XPS"))
 			doc->xps = xps_open_document(ctx, filename);
+		else if (strstr(filename, ".cbz") || strstr(filename, ".CBZ"))
+			doc->cbz = cbz_open_document(ctx, filename);
 		else
 			fz_throw(ctx, "unknown document format");
 	}
@@ -77,6 +80,8 @@ count_pages(struct document *doc)
 		return pdf_count_pages(doc->pdf);
 	else if (doc->xps)
 		return xps_count_pages(doc->xps);
+	else if (doc->cbz)
+		return cbz_count_pages(doc->cbz);
 	else
 		return 1;
 }
@@ -101,6 +106,12 @@ load_page(struct document *doc, int number)
 			doc->xps_page = NULL;
 			doc->xps_page = xps_load_page(doc->xps, number);
 		}
+		if (doc->cbz) {
+			if (doc->cbz_page)
+				cbz_free_page(doc->cbz, doc->cbz_page);
+			doc->cbz_page = NULL;
+			doc->cbz_page = cbz_load_page(doc->cbz, number);
+		}
 	}
 	fz_catch (doc->ctx)
 	{
@@ -122,6 +133,11 @@ measure_page(struct document *doc, int number, float *w, float *h)
 		*w = bounds.x1 - bounds.x0;
 		*h = bounds.y1 - bounds.y0;
 	}
+	else if (doc->cbz_page) {
+		fz_rect bounds = cbz_bound_page(doc->cbz, doc->cbz_page);
+		*w = bounds.x1 - bounds.x0;
+		*h = bounds.y1 - bounds.y0;
+	}
 	else {
 		*w = *h = 72;
 	}
@@ -134,11 +150,12 @@ draw_page(struct document *doc, int number, fz_device *dev, fz_matrix ctm, fz_co
 	load_page(doc, number);
 	fz_try (doc->ctx)
 	{
-		if (doc->pdf_page) {
+		if (doc->pdf_page)
 			pdf_run_page(doc->pdf, doc->pdf_page, dev, ctm, cookie);
-		} else if (doc->xps_page) {
+		else if (doc->xps_page)
 			xps_run_page(doc->xps, doc->xps_page, dev, ctm, cookie);
-		}
+		else if (doc->cbz_page)
+			cbz_run_page(doc->cbz, doc->cbz_page, dev, ctm, cookie);
 	}
 	fz_catch (doc->ctx)
 	{
@@ -263,6 +280,11 @@ close_document(struct document *doc)
 		if (doc->xps_page)
 			xps_free_page(doc->xps, doc->xps_page);
 		xps_close_document(doc->xps);
+	}
+	if (doc->cbz) {
+		if (doc->cbz_page)
+			cbz_free_page(doc->cbz, doc->cbz_page);
+		cbz_close_document(doc->cbz);
 	}
 	fz_flush_warnings(doc->ctx);
 	fz_free(doc->ctx, doc);

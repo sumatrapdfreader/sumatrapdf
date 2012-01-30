@@ -30,6 +30,10 @@ EXPORTS
 
 %(muxps_exports)s
 
+; MuCBZ exports
+
+%(mucbz_exports)s
+
 ; jpeg exports
 
 	jpeg_resync_to_restart
@@ -67,6 +71,7 @@ def main():
 	fitz_exports = generateExports("fitz/fitz.h", ["fz_accelerate_arch"])
 	mupdf_exports = generateExports("pdf/mupdf.h")
 	muxps_exports = generateExports("xps/muxps.h", ["xps_parse_solid_color_brush", "xps_debug_path"])
+	mucbz_exports = generateExports("cbz/mucbz.h")
 	
 	list = LIBMUPDF_DEF % locals()
 	open("libmupdf.def", "wb").write(list.replace("\n", "\r\n"))

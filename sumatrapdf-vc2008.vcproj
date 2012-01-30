@@ -30,7 +30,7 @@
 				CleanCommandLine="nmake -f makefile.msvc CFG=dbg NASM=$(ProjectDir)bin\nasm.exe clean"
 				Output="obj-dbg\sumatrapdf.exe"
 				PreprocessorDefinitions="WIN32;UNICODE;_UNICODE;_DEBUG;DEBUG;SYNCTEX_FEATURE;BUILD_RIBBON;BUILD_CHM_SUPPORT"
-				IncludeSearchPath="src\utils;mupdf\fitz;mupdf\draw;mupdf\pdf;mupdf\xps"
+				IncludeSearchPath="src\utils;mupdf\fitz;mupdf\draw;mupdf\pdf;mupdf\xps;mupdf\cbz"
 				ForcedIncludes=""
 				AssemblySearchPath=""
 				ForcedUsingAssemblies=""
@@ -51,7 +51,7 @@
 				CleanCommandLine="nmake -f makefile.msvc CFG=rel NASM=$(ProjectDir)bin\nasm.exe clean"
 				Output="obj-rel\sumatrapdf.exe"
 				PreprocessorDefinitions="WIN32;UNICODE;_UNICODE;NDEBUG;SYNCTEX_FEATURE"
-				IncludeSearchPath="src\utils;mupdf\fitz;mupdf\draw;mupdf\pdf;mupdf\xps"
+				IncludeSearchPath="src\utils;mupdf\fitz;mupdf\draw;mupdf\pdf;mupdf\xps;mupdf\cbz"
 				ForcedIncludes=""
 				AssemblySearchPath=""
 				ForcedUsingAssemblies=""
@@ -442,6 +442,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\utils\FileTransactions.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\utils\FileTransactions.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\utils\FileUtil.cpp"
 				>
 			</File>
@@ -507,14 +515,6 @@
 			</File>
 			<File
 				RelativePath=".\src\utils\Touch.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\utils\FileTransactions.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\utils\FileTransactions.h"
 				>
 			</File>
 			<File
@@ -665,10 +665,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\fitz\filt_jpxd.c"
-					>
-				</File>
-				<File
 					RelativePath=".\mupdf\fitz\filt_lzwd.c"
 					>
 				</File>
@@ -682,6 +678,22 @@
 				</File>
 				<File
 					RelativePath=".\mupdf\fitz\fitz.h"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\fitz\image_jpeg.c"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\fitz\image_jpx.c"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\fitz\image_png.c"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\fitz\image_tiff.c"
 					>
 				</File>
 				<File
@@ -945,10 +957,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\xps\xps_jpeg.c"
-					>
-				</File>
-				<File
 					RelativePath=".\mupdf\xps\xps_outline.c"
 					>
 				</File>
@@ -957,15 +965,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\xps\xps_png.c"
-					>
-				</File>
-				<File
 					RelativePath=".\mupdf\xps\xps_resource.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\xps\xps_tiff.c"
 					>
 				</File>
 				<File
@@ -982,6 +982,18 @@
 				</File>
 				<File
 					RelativePath=".\mupdf\xps\xps_zip.c"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="cbz"
+				>
+				<File
+					RelativePath=".\mupdf\cbz\mucbz.c"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\cbz\mucbz.h"
 					>
 				</File>
 			</Filter>

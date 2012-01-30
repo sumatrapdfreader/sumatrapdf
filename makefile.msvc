@@ -224,7 +224,7 @@ PDFPREVIEW_OBJS = $(PDFPREVIEW_OBJS) \
 rebuild: clean SumatraPDF
 
 cleanmupdf: force
-	-del $(FITZ_DRAW_OBJS) $(FITZ_OBJS) $(MUPDF_OBJS) $(MUXPS_OBJS)
+	-del $(FITZ_DRAW_OBJS) $(FITZ_OBJS) $(MUPDF_OBJS) $(MUXPS_OBJS) $(MUCBZ_OBJS)
 
 ## Note: the following command does not work on Windows
 cleanall: force

@@ -46,7 +46,6 @@ xps_parse_document_outline(xps_document *doc, xml_element *root)
 			entry = fz_malloc_struct(doc->ctx, fz_outline);
 			entry->title = fz_strdup(doc->ctx, description);
 			/* SumatraPDF: extended outline actions */
-			entry->ctx = doc->ctx;
 			if (!target)
 				entry->dest.kind = FZ_LINK_NONE;
 			else if (!is_external_target(target))

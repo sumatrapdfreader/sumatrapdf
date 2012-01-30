@@ -435,10 +435,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\fitz\filt_jpxd.c"
-				>
-			</File>
-			<File
 				RelativePath="..\fitz\filt_lzwd.c"
 				>
 			</File>
@@ -448,6 +444,22 @@
 			</File>
 			<File
 				RelativePath="..\fitz\fitz.h"
+				>
+			</File>
+			<File
+				RelativePath="..\fitz\image_jpeg.c"
+				>
+			</File>
+			<File
+				RelativePath="..\fitz\image_jpx.c"
+				>
+			</File>
+			<File
+				RelativePath="..\fitz\image_png.c"
+				>
+			</File>
+			<File
+				RelativePath="..\fitz\image_tiff.c"
 				>
 			</File>
 			<File
@@ -583,10 +595,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\xps\xps_jpeg.c"
-				>
-			</File>
-			<File
 				RelativePath="..\xps\xps_outline.c"
 				>
 			</File>
@@ -595,15 +603,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\xps\xps_png.c"
-				>
-			</File>
-			<File
 				RelativePath="..\xps\xps_resource.c"
-				>
-			</File>
-			<File
-				RelativePath="..\xps\xps_tiff.c"
 				>
 			</File>
 			<File
@@ -620,6 +620,18 @@
 			</File>
 			<File
 				RelativePath="..\xps\xps_zip.c"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="cbz"
+			>
+			<File
+				RelativePath="..\cbz\mucbz.h"
+				>
+			</File>
+			<File
+				RelativePath="..\cbz\mucbz.c"
 				>
 			</File>
 		</Filter>

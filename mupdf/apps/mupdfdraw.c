@@ -464,7 +464,7 @@ static void drawoutline(pdf_document *doc)
 		fz_debug_outline_xml(outline, 0);
 	else
 		fz_debug_outline(outline, 0);
-	fz_free_outline(outline);
+	fz_free_outline(doc->ctx, outline);
 }
 
 #ifdef MUPDF_COMBINED_EXE

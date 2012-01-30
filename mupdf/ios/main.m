@@ -7,6 +7,7 @@
 #include "fitz/fitz.h"
 #include "pdf/mupdf.h"
 #include "xps/muxps.h"
+#include "cbz/mucbz.h"
 
 #include "document.h"
 

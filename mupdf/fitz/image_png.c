@@ -1,5 +1,4 @@
 #include "fitz.h"
-#include "muxps.h"
 
 #include <zlib.h>
 
@@ -525,7 +524,7 @@ png_mask_transparency(struct info *info, fz_pixmap *dst)
 }
 
 fz_pixmap *
-xps_decode_png(fz_context *ctx, byte *p, int total)
+fz_load_png(fz_context *ctx, unsigned char *p, int total)
 {
 	fz_pixmap *image;
 	fz_colorspace *colorspace;

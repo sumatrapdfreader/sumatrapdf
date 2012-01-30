@@ -9,7 +9,7 @@ GEN := generated
 
 default: all
 
-CFLAGS += -Ifitz -Ipdf -Ixps -Iscripts
+CFLAGS += -Ifitz -Ipdf -Ixps -Icbz -Iscripts
 LIBS += -lfreetype -ljbig2dec -ljpeg -lopenjpeg -lz -lm
 
 include Makerules
@@ -54,6 +54,8 @@ $(OUT)/%.o : pdf/%.c fitz/fitz.h pdf/mupdf.h | $(OUT)
 	$(CC_CMD)
 $(OUT)/%.o : xps/%.c fitz/fitz.h xps/muxps.h | $(OUT)
 	$(CC_CMD)
+$(OUT)/%.o : cbz/%.c fitz/fitz.h cbz/mucbz.h | $(OUT)
+	$(CC_CMD)
 $(OUT)/%.o : apps/%.c fitz/fitz.h pdf/mupdf.h xps/muxps.h | $(OUT)
 	$(CC_CMD)
 $(OUT)/%.o : scripts/%.c | $(OUT)
@@ -61,21 +63,25 @@ $(OUT)/%.o : scripts/%.c | $(OUT)
 
 .PRECIOUS : $(OUT)/%.o # Keep intermediates from chained rules
 
-# --- Fitz, MuPDF and MuXPS libraries ---
+# --- Fitz, MuPDF, MuXPS and MuCBZ libraries ---
 
 FITZ_LIB := $(OUT)/libfitz.a
 MUPDF_LIB := $(OUT)/libmupdf.a
 MUXPS_LIB := $(OUT)/libmuxps.a
+MUCBZ_LIB := $(OUT)/libmucbz.a
 
 FITZ_SRC := $(notdir $(wildcard fitz/*.c draw/*.c))
+FITZ_SRC := $(filter-out draw_simple_scale.c, $(FITZ_SRC))
 MUPDF_SRC := $(notdir $(wildcard pdf/*.c))
 MUXPS_SRC := $(notdir $(wildcard xps/*.c))
+MUCBZ_SRC := $(notdir $(wildcard cbz/*.c))
 
 $(FITZ_LIB) : $(addprefix $(OUT)/, $(FITZ_SRC:%.c=%.o))
 $(MUPDF_LIB) : $(addprefix $(OUT)/, $(MUPDF_SRC:%.c=%.o))
 $(MUXPS_LIB) : $(addprefix $(OUT)/, $(MUXPS_SRC:%.c=%.o))
+$(MUCBZ_LIB) : $(addprefix $(OUT)/, $(MUCBZ_SRC:%.c=%.o))
 
-libs: $(MUXPS_LIB) $(MUPDF_LIB) $(FITZ_LIB) $(THIRD_LIBS)
+libs: $(MUCBZ_LIB) $(MUXPS_LIB) $(MUPDF_LIB) $(FITZ_LIB) $(THIRD_LIBS)
 
 # --- Generated CMAP and FONT files ---
 
@@ -133,7 +139,7 @@ $(XPS_APPS) : $(MUXPS_LIB) $(FITZ_LIB) $(THIRD_LIBS)
 $(BUSY_APP) : $(BUSY_LIBS) $(MUPDF_LIB) $(MUXPS_LIB) $(FITZ_LIB) $(THIRD_LIBS)
 
 MUPDF := $(OUT)/mupdf
-$(MUPDF) : $(MUXPS_LIB) $(MUPDF_LIB) $(FITZ_LIB) $(THIRD_LIBS)
+$(MUPDF) : $(MUCBZ_LIB) $(MUXPS_LIB) $(MUPDF_LIB) $(FITZ_LIB) $(THIRD_LIBS)
 ifeq "$(NOX11)" ""
 $(MUPDF) : $(addprefix $(OUT)/, x11_main.o x11_image.o pdfapp.o)
 	$(LINK_CMD) $(X11_LIBS)

@@ -13,14 +13,20 @@
 #error "muxps.h must be included before document.h"
 #endif
 
+#ifndef _MUCBZ_H_
+#error "mucbz.h must be included before document.h"
+#endif
+
 struct document
 {
 	fz_context *ctx;
 	pdf_document *pdf;
 	xps_document *xps;
+	cbz_document *cbz;
 	int number;
 	pdf_page *pdf_page;
 	xps_page *xps_page;
+	cbz_page *cbz_page;
 	fz_bbox hit_bbox[500];
 	int hit_count;
 };

@@ -203,7 +203,10 @@ EXPORTS
 	fz_write_pnm
 	fz_write_pam
 	fz_write_png
-	fz_load_jpx_image
+	fz_load_jpx
+	fz_load_jpeg
+	fz_load_png
+	fz_load_tiff
 	fz_new_bitmap
 	fz_keep_bitmap
 	fz_clear_bitmap
@@ -493,9 +496,6 @@ EXPORTS
 	xps_load_outline
 	xps_find_link_target
 	xps_find_link_target_obj
-	xps_decode_jpeg
-	xps_decode_png
-	xps_decode_tiff
 	xps_count_font_encodings
 	xps_identify_font_encoding
 	xps_select_font_encoding
@@ -525,7 +525,6 @@ EXPORTS
 	xps_parse_element
 	xps_find_alternate_content
 	xps_clip
-	xps_get_point
 	xps_open_document
 	xps_open_document_with_stream
 	xps_close_document
@@ -533,6 +532,17 @@ EXPORTS
 	xps_get_point
 	xps_extract_anchor_info
 	xps_extract_doc_props
+
+; MuCBZ exports
+
+	cbz_open_document
+	cbz_open_document_with_stream
+	cbz_close_document
+	cbz_count_pages
+	cbz_load_page
+	cbz_bound_page
+	cbz_free_page
+	cbz_run_page
 
 ; jpeg exports
 

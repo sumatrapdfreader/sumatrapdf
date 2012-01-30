@@ -51,8 +51,8 @@ pdf_stream_has_crypt(fz_context *ctx, fz_obj *stm)
 static fz_stream *
 build_filter(fz_stream *chain, pdf_document * xref, fz_obj * f, fz_obj * p, int num, int gen)
 {
-	char *s = fz_to_name(f);
 	fz_context *ctx = chain->ctx;
+	char *s = fz_to_name(f);
 
 	int predictor = fz_to_int(fz_dict_gets(p, "Predictor"));
 	int columns = fz_to_int(fz_dict_gets(p, "Columns"));

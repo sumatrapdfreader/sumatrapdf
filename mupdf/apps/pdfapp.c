@@ -1,6 +1,7 @@
 #include "fitz.h"
 #include "mupdf.h"
 #include "muxps.h"
+#include "mucbz.h"
 #include "pdfapp.h"
 
 #include <ctype.h> /* for tolower() */
@@ -189,10 +190,32 @@ static void pdfapp_open_xps(pdfapp_t *app, char *filename, int fd)
 	app->pagecount = xps_count_pages(app->xps);
 }
 
+static void pdfapp_open_cbz(pdfapp_t *app, char *filename, int fd)
+{
+	fz_stream *file;
+
+	file = fz_open_fd(app->ctx, fd);
+	fz_try(app->ctx)
+	{
+		app->cbz = cbz_open_document_with_stream(file);
+	}
+	fz_catch(app->ctx)
+	{
+		pdfapp_error(app, "cannot open document");
+	}
+	fz_close(file);
+
+	app->doctitle = fz_strdup(app->ctx, filename);
+
+	app->pagecount = cbz_count_pages(app->cbz);
+}
+
 void pdfapp_open(pdfapp_t *app, char *filename, int fd, int reload)
 {
 	if (strstr(filename, ".xps") || strstr(filename, ".XPS") || strstr(filename, ".rels"))
 		pdfapp_open_xps(app, filename, fd);
+	else if (strstr(filename, ".cbz") || strstr(filename, ".CBZ"))
+		pdfapp_open_cbz(app, filename, fd);
 	else
 		pdfapp_open_pdf(app, filename, fd);
 
@@ -239,7 +262,7 @@ void pdfapp_close(pdfapp_t *app)
 	app->image = NULL;
 
 	if (app->outline)
-		fz_free_outline(app->outline);
+		fz_free_outline(app->ctx, app->outline);
 	app->outline = NULL;
 
 	if (app->pdf)
@@ -252,6 +275,12 @@ void pdfapp_close(pdfapp_t *app)
 	{
 		xps_close_document(app->xps);
 		app->xps = NULL;
+	}
+
+	if (app->cbz)
+	{
+		cbz_close_document(app->cbz);
+		app->cbz = NULL;
 	}
 
 	fz_flush_warnings(app->ctx);
@@ -349,6 +378,32 @@ static void pdfapp_loadpage_xps(pdfapp_t *app)
 	xps_free_page(app->xps, page);
 }
 
+static void pdfapp_loadpage_cbz(pdfapp_t *app)
+{
+	cbz_page *page;
+	fz_device *mdev;
+
+	fz_try(app->ctx)
+	{
+		page = cbz_load_page(app->cbz, app->pageno - 1);
+	}
+	fz_catch(app->ctx)
+	{
+		pdfapp_error(app, "cannot load page");
+	}
+
+	app->page_bbox = cbz_bound_page(app->cbz, page);
+	app->page_links = NULL;
+
+	/* Create display list */
+	app->page_list = fz_new_display_list(app->ctx);
+	mdev = fz_new_list_device(app->ctx, app->page_list);
+	cbz_run_page(app->cbz, page, mdev, fz_identity, NULL);
+	fz_free_device(mdev);
+
+	cbz_free_page(app->cbz, page);
+}
+
 static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repaint)
 {
 	char buf[256];
@@ -373,6 +428,8 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 			pdfapp_loadpage_pdf(app);
 		if (app->xps)
 			pdfapp_loadpage_xps(app);
+		if (app->cbz)
+			pdfapp_loadpage_cbz(app);
 
 		/* Zero search hit position */
 		app->hit = -1;

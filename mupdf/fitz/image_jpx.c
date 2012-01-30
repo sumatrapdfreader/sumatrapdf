@@ -21,7 +21,7 @@ static void fz_opj_info_callback(const char *msg, void *client_data)
 }
 
 fz_pixmap *
-fz_load_jpx_image(fz_context *ctx, unsigned char *data, int size, fz_colorspace *defcs)
+fz_load_jpx(fz_context *ctx, unsigned char *data, int size, fz_colorspace *defcs)
 {
 	fz_pixmap *img;
 	opj_event_mgr_t evtmgr;

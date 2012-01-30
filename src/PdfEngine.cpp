@@ -685,7 +685,6 @@ fz_outline *pdf_loadattachments(pdf_document *xref)
 
         node = node->next = (fz_outline *)fz_malloc_struct(xref->ctx, fz_outline);
         ZeroMemory(node, sizeof(fz_outline));
-        node->ctx = xref->ctx;
         node->title = fz_strdup(xref->ctx, fz_to_name(name));
         node->dest.kind = FZ_LINK_LAUNCH;
         node->dest.ld.launch.file_spec = pdf_file_spec_to_str(xref->ctx, dest);
@@ -1053,9 +1052,9 @@ CPdfEngine::~CPdfEngine()
     }
 
     if (outline)
-        fz_free_outline(outline);
+        fz_free_outline(ctx, outline);
     if (attachments)
-        fz_free_outline(attachments);
+        fz_free_outline(ctx, attachments);
     if (_info)
         fz_drop_obj(_info);
 
@@ -2579,7 +2578,7 @@ CXpsEngine::~CXpsEngine()
     }
 
     if (_outline)
-        fz_free_outline(_outline);
+        fz_free_outline(ctx, _outline);
     if (_mediaboxes)
         delete[] _mediaboxes;
     if (imageRects) {

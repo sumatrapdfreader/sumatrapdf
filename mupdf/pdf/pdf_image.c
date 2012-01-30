@@ -4,7 +4,7 @@
 /* TODO: store JPEG compressed samples */
 /* TODO: store flate compressed samples */
 
-static fz_pixmap *pdf_load_jpx_image(pdf_document *xref, fz_obj *dict);
+static fz_pixmap *pdf_load_jpx(pdf_document *xref, fz_obj *dict);
 
 static void
 pdf_mask_color_key(fz_pixmap *pix, int n, int *colorkey)
@@ -60,7 +60,7 @@ pdf_load_image_imp(pdf_document *xref, fz_obj *rdb, fz_obj *dict, fz_stream *cst
 		/* special case for JPEG2000 images */
 		if (pdf_is_jpx_image(ctx, dict))
 		{
-			tile = pdf_load_jpx_image(xref, dict);
+			tile = pdf_load_jpx(xref, dict);
 			/* RJW: "cannot load jpx image" */
 			if (forcemask)
 			{
@@ -300,7 +300,7 @@ pdf_is_jpx_image(fz_context *ctx, fz_obj *dict)
 }
 
 static fz_pixmap *
-pdf_load_jpx_image(pdf_document *xref, fz_obj *dict)
+pdf_load_jpx(pdf_document *xref, fz_obj *dict)
 {
 	fz_buffer *buf = NULL;
 	fz_colorspace *colorspace = NULL;
@@ -327,7 +327,7 @@ pdf_load_jpx_image(pdf_document *xref, fz_obj *dict)
 			indexed = !strcmp(colorspace->name, "Indexed");
 		}
 
-		img = fz_load_jpx_image(ctx, buf->data, buf->len, colorspace);
+		img = fz_load_jpx(ctx, buf->data, buf->len, colorspace);
 		/* RJW: "cannot load jpx image" */
 
 		if (colorspace)

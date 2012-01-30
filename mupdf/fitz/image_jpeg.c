@@ -1,5 +1,4 @@
 #include "fitz.h"
-#include "muxps.h"
 
 #include <jpeglib.h>
 #include <setjmp.h>
@@ -48,7 +47,7 @@ static void skip_input_data(j_decompress_ptr cinfo, long num_bytes)
 }
 
 fz_pixmap *
-xps_decode_jpeg(fz_context *ctx, byte *rbuf, int rlen)
+fz_load_jpeg(fz_context *ctx, unsigned char *rbuf, int rlen)
 {
 	struct jpeg_decompress_struct cinfo;
 	struct jpeg_error_mgr_jmp err;

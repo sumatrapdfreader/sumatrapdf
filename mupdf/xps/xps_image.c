@@ -2,7 +2,7 @@
 #include "muxps.h"
 
 static fz_pixmap *
-xps_decode_image(fz_context *ctx, byte *buf, int len)
+xps_load_image(fz_context *ctx, byte *buf, int len)
 {
 	fz_pixmap *image;
 
@@ -10,13 +10,13 @@ xps_decode_image(fz_context *ctx, byte *buf, int len)
 		fz_throw(ctx, "unknown image file format");
 
 	if (buf[0] == 0xff && buf[1] == 0xd8)
-		image = xps_decode_jpeg(ctx, buf, len);
+		image = fz_load_jpeg(ctx, buf, len);
 	else if (memcmp(buf, "\211PNG\r\n\032\n", 8) == 0)
-		image = xps_decode_png(ctx, buf, len);
+		image = fz_load_png(ctx, buf, len);
 	else if (memcmp(buf, "II", 2) == 0 && buf[2] == 0xBC)
 		fz_throw(ctx, "JPEG-XR codec is not available");
 	else if (memcmp(buf, "MM", 2) == 0 || memcmp(buf, "II", 2) == 0)
-		image = xps_decode_tiff(ctx, buf, len);
+		image = fz_load_tiff(ctx, buf, len);
 	else
 		fz_throw(ctx, "unknown image file format");
 
@@ -107,7 +107,7 @@ xps_parse_image_brush(xps_document *doc, fz_matrix ctm, fz_rect area,
 
 	fz_try(doc->ctx)
 	{
-		image = xps_decode_image(doc->ctx, part->data, part->size);
+		image = xps_load_image(doc->ctx, part->data, part->size);
 	}
 	fz_catch(doc->ctx)
 	{

@@ -39,7 +39,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\fitz;..\pdf;..\xps"
+				AdditionalIncludeDirectories="..\fitz;..\pdf;..\xps;..\cbz"
 				PreprocessorDefinitions="FT2_BUILD_LIBRARY;OPJ_STATIC;DEBUG=1"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -113,7 +113,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\fitz;..\pdf;..\xps"
+				AdditionalIncludeDirectories="..\fitz;..\pdf;..\xps;..\cbz"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				WarningLevel="3"
@@ -185,7 +185,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\fitz;..\pdf;..\xps"
+				AdditionalIncludeDirectories="..\fitz;..\pdf;..\xps;..\cbz"
 				PreprocessorDefinitions="FT2_BUILD_LIBRARY;OPJ_STATIC;MEMENTO=1;DEBUG=1"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"

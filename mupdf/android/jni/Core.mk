@@ -45,9 +45,12 @@ LOCAL_SRC_FILES := \
 	$(MY_ROOT)/fitz/filt_faxd.c \
 	$(MY_ROOT)/fitz/filt_flate.c \
 	$(MY_ROOT)/fitz/filt_jbig2d.c \
-	$(MY_ROOT)/fitz/filt_jpxd.c \
 	$(MY_ROOT)/fitz/filt_lzwd.c \
 	$(MY_ROOT)/fitz/filt_predict.c \
+	$(MY_ROOT)/fitz/image_jpx.c \
+	$(MY_ROOT)/fitz/image_jpeg.c \
+	$(MY_ROOT)/fitz/image_png.c \
+	$(MY_ROOT)/fitz/image_tiff.c \
 	$(MY_ROOT)/fitz/res_colorspace.c \
 	$(MY_ROOT)/fitz/res_font.c \
 	$(MY_ROOT)/fitz/res_path.c \

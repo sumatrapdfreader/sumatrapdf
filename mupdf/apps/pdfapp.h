@@ -32,6 +32,7 @@ struct pdfapp_s
 	/* current document params */
 	pdf_document *pdf;
 	xps_document *xps;
+	cbz_document *cbz;
 	char *doctitle;
 	fz_outline *outline;
 

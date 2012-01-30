@@ -1,15 +1,15 @@
 #include "fitz.h"
 
 void
-fz_free_outline(fz_outline *outline)
+fz_free_outline(fz_context *ctx, fz_outline *outline)
 {
 	while (outline)
 	{
 		fz_outline *next = outline->next;
-		fz_free_outline(outline->down);
-		fz_free(outline->ctx, outline->title);
-		fz_free_link_dest(outline->ctx, &outline->dest);
-		fz_free(outline->ctx, outline);
+		fz_free_outline(ctx, outline->down);
+		fz_free(ctx, outline->title);
+		fz_free_link_dest(ctx, &outline->dest);
+		fz_free(ctx, outline);
 		outline = next;
 	}
 }
