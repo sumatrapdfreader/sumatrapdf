@@ -25,13 +25,13 @@ static Font *CreateFontByStyle(const WCHAR *name, REAL size, FontStyle style)
     return ::new Font(name, size, style);
 }
 
-bool FontCacheEntry::SameAs(const WCHAR *name, float size, FontStyle style)
+bool FontCacheEntry::SameAs(const WCHAR *otherName, float otherSize, FontStyle otherStyle)
 {
-    if (this->size != size)
+    if (size != otherSize)
         return false;
-    if (this->style != style)
+    if (style != otherStyle)
         return false;
-    return str::Eq(this->name, name);
+    return str::Eq(name, otherName);
 }
 
 ThreadSafeFontCache::ThreadSafeFontCache()
@@ -189,7 +189,10 @@ class PageLayout
 public:
     PageLayout();
     ~PageLayout();
-    bool LayoutHtml(LayoutInfo* layoutInfo, INewPageObserver *pageObserver);
+    bool LayoutHtml(LayoutInfo* layoutInfo);
+
+    void Start(LayoutInfo* layoutInfo);
+    PageData *Next();
 #if 0
     size_t PageCount() const {
         return pageInstrOffset.Count();
@@ -223,7 +226,7 @@ private:
 
     TextJustification AlignAttrToJustification(AlignAttr align);
 
-    void StartLayout();
+    void StartLayout(LayoutInfo* layoutInfo);
     void StartNewPage();
     void StartNewLine(bool isParagraphBreak);
 
@@ -269,6 +272,12 @@ private:
     int                 newLinesCount;
 
     PageData *          currPage;
+
+    // for iterative parsing
+    HtmlPullParser *    htmlParser;
+    // list of pages constructed 
+    Vec<PageData*>      pagesToSend;
+    bool                finishedParsing;
 
     // current nesting of html tree during html parsing
     Vec<HtmlTag>        tagNesting;
@@ -325,8 +334,19 @@ void PageLayout::ChangeFont(FontStyle fs, bool addStyle)
     AddSetFontInstr(currFontId);
 }
 
-void PageLayout::StartLayout()
+void PageLayout::StartLayout(LayoutInfo* layoutInfo)
 {
+    pageObserver = layoutInfo->observer;
+    pageDx = (REAL)layoutInfo->pageDx;
+    pageDy = (REAL)layoutInfo->pageDy;
+
+    gfxForMeasure = mui::AllocGraphicsForMeasureText();
+    gfx = gfxForMeasure->Get();
+    fontName.Set(str::Dup(layoutInfo->fontName));
+    fontSize = layoutInfo->fontSize;
+    htmlParser = new HtmlPullParser(layoutInfo->htmlStr, layoutInfo->htmlStrLen);
+
+    finishedParsing = false;
     currJustification = Both;
     SetCurrentFont(FontStyleRegular);
 
@@ -726,23 +746,23 @@ void PageLayout::EmitText(HtmlToken *t)
     }
 }
 
-bool PageLayout::LayoutHtml(LayoutInfo* layoutInfo, INewPageObserver *pageObserver)
+// Return the next parsed page. Returns NULL if finished parsing.
+// For simplicity of implementation, we parse xml text node or
+// xml element at a time. This might cause a creation of one
+// or more pages, which we remeber and send to the caller
+// if we detect accumulated pages.
+PageData *PageLayout::Next()
 {
-    this->pageObserver = pageObserver;
-    pageDx = (REAL)layoutInfo->pageDx;
-    pageDy = (REAL)layoutInfo->pageDy;
-
-    gfxForMeasure = mui::AllocGraphicsForMeasureText();
-    gfx = gfxForMeasure->Get();
-    fontName.Set(str::Dup(layoutInfo->fontName));
-    fontSize = layoutInfo->fontSize;
-
-    StartLayout();
-
-    HtmlPullParser parser(layoutInfo->htmlStr, layoutInfo->htmlStrLen);
     for (;;)
     {
-        HtmlToken *t = parser.Next();
+        if (pagesToSend.Count() > 0) {
+            PageData *ret = pagesToSend.At(0);
+            pagesToSend.RemoveAt(0);
+            return ret;
+        }
+        if (finishedParsing)
+            return NULL;
+        HtmlToken *t = htmlParser->Next();
         if (!t || t->IsError())
             break;
 
@@ -754,84 +774,32 @@ bool PageLayout::LayoutHtml(LayoutInfo* layoutInfo, INewPageObserver *pageObserv
     // force layout of the last line
     StartNewLine(true);
 
+    finishedParsing = true;
+
     // only send the last page if not empty
-    if (currPage && currPage->Count() > 0)
-        pageObserver->NewPage(currPage);
+    if (currPage && currPage->Count() > 0) {
+        pagesToSend.Append(currPage);
+        currPage = NULL;
+        return Next();
+    }
+    return NULL;
+}
+
+bool PageLayout::LayoutHtml(LayoutInfo* layoutInfo)
+{
+    StartLayout(layoutInfo);
+    PageData *pd;
+    for (;;) {
+        pd = Next();
+        if (!pd)
+            break;
+        layoutInfo->observer->NewPage(pd);
+    }
     return true;
 }
 
 void LayoutHtml(LayoutInfo* li)
 {
-    PageLayout pg;
-    pg.LayoutHtml(li, li->observer);
+    PageLayout l;
+    l.LayoutHtml(li);
 }
-
-enum TextJustification {
-    Left, Right, Center, Both
-};
-
-struct PageLayoutState {
-    // temporary state during layout process
-    FontStyle           currFontStyle;
-    Font *              currFont;
-    size_t              currFontId; // within gFontCache
-
-    TextJustification   currJustification;
-
-    const char *s;
-};
-
-class PageLayoutIter {
-
-public:
-    PageLayoutIter();
-    ~PageLayoutIter();
-    void Start();
-    PageData *Next(PageLayoutState *state);
-
-    REAL                pageDx;
-    REAL                pageDy;
-    REAL                lineSpacing;
-    REAL                spaceDx;
-    mui::GraphicsForMeasureText *gfxForMeasure;
-    Graphics *          gfx;
-    ScopedMem<WCHAR>    fontName;
-    float               fontSize;
-
-    PageLayoutState     state;
-
-    // current position in a page
-    REAL                currX, currY; 
-    // number of consecutive newlines
-    int                 newLinesCount;
-
-    PageData *          currPage;
-
-    // current nesting of html tree during html parsing
-    Vec<HtmlTag>        tagNesting;
-
-    size_t              currLineInstrOffset;
-    WCHAR               buf[512];
-
-};
-
-PageLayoutIter::PageLayoutIter()
-{
-
-}
-
-PageLayoutIter::~PageLayoutIter()
-{
-
-}
-
-void PageLayoutIter::Start()
-{
-
-}
-
-PageData *PageLayoutIter::Next(PageLayoutState *state)
-{
-    return NULL;
-}
-
