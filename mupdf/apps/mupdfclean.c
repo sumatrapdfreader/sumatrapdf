@@ -90,15 +90,22 @@ static void sweepref(fz_obj *obj)
 	uselist[num] = 1;
 
 	/* Bake in /Length in stream objects */
-	if (pdf_is_stream(xref, num, gen))
+	fz_try(ctx)
 	{
-		fz_obj *len = fz_dict_gets(obj, "Length");
-		if (fz_is_indirect(len))
+		if (pdf_is_stream(xref, num, gen))
 		{
-			uselist[fz_to_num(len)] = 0;
-			len = fz_resolve_indirect(len);
-			fz_dict_puts(obj, "Length", len);
+			fz_obj *len = fz_dict_gets(obj, "Length");
+			if (fz_is_indirect(len))
+			{
+				uselist[fz_to_num(len)] = 0;
+				len = fz_resolve_indirect(len);
+				fz_dict_puts(obj, "Length", len);
+			}
 		}
+	}
+	fz_catch(ctx)
+	{
+		/* Leave broken */
 	}
 
 	sweepobj(fz_resolve_indirect(obj));
@@ -128,8 +135,15 @@ static void removeduplicateobjs(void)
 			 * pdf_is_stream calls pdf_cache_object and ensures
 			 * that the xref table has the objects loaded.
 			 */
-			if (pdf_is_stream(xref, num, 0) || pdf_is_stream(xref, other, 0))
-				continue;
+			fz_try(ctx)
+			{
+				if (pdf_is_stream(xref, num, 0) || pdf_is_stream(xref, other, 0))
+					continue;
+			}
+			fz_catch(ctx)
+			{
+				/* Assume different */
+			}
 
 			a = xref->table[num].obj;
 			b = xref->table[other].obj;

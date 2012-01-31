@@ -285,7 +285,7 @@ void pdf_sort_cmap(fz_context *ctx, pdf_cmap *cmap);
 
 int pdf_lookup_cmap(pdf_cmap *cmap, int cpt);
 int pdf_lookup_cmap_full(pdf_cmap *cmap, int cpt, int *out);
-unsigned char *pdf_decode_cmap(pdf_cmap *cmap, unsigned char *s, int *cpt);
+unsigned char *pdf_decode_cmap(pdf_cmap *cmap, unsigned char *s, int *cpt, int *w);
 
 pdf_cmap *pdf_new_identity_cmap(fz_context *ctx, int wmode, int bytes);
 pdf_cmap *pdf_parse_cmap(fz_stream *file);
