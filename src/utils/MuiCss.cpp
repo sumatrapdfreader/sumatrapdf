@@ -71,7 +71,7 @@ static Vec<FontCacheEntry> *gCachedFonts = NULL;
 struct PropCacheEntry {
     Style *     style1;
     Style *     style2;
-    size_t      propsIdx; // index within gCachedProps
+    Prop **     props; // memory within gCachedProps
 };
 
 static Vec<PropCacheEntry> *    gPropCache = NULL;
@@ -519,7 +519,7 @@ Prop **GetCachedPropsAtIdx(size_t idx)
 }
 
 // TODO: make it thread-safe
-size_t  CachePropsForStyle(Style *style1, Style *style2)
+Prop **CachePropsForStyle(Style *style1, Style *style2)
 {
     static PropToGet propsToGet[PropsCount];
 
@@ -530,7 +530,7 @@ size_t  CachePropsForStyle(Style *style1, Style *style2)
         // a monotonically increasing style generation number that
         // is changed every time we make a change to Style object
         if ((e.style1 == style1) && (e.style2 == style2))
-            return e.propsIdx;
+            return e.props;
     }
 
     for (size_t i = 0; i < PropsCount; i++) {
@@ -539,14 +539,15 @@ size_t  CachePropsForStyle(Style *style1, Style *style2)
     }
     GetProps(style1, style2, propsToGet, PropsCount);
 
-    size_t propsIdx = gCachedProps->Count();
-    for (size_t i = 0; i < PropsCount; i++) {\
-        gCachedProps->Append(propsToGet[i].prop);
+    Prop ** props = gCachedProps->MakeSpaceAtEnd(PropsCount);
+    gCachedProps->IncreaseLen(PropsCount);
+    for (size_t i = 0; i < PropsCount; i++) {
+        props[i] = propsToGet[i].prop;
     }
 
-    PropCacheEntry e = { style1, style2, propsIdx };
+    PropCacheEntry e = { style1, style2, props };
     gPropCache->Append(e);
-    return propsIdx;
+    return props;
 }
 
 } // namespace css

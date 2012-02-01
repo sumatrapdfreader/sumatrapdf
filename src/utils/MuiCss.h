@@ -166,7 +166,7 @@ void   Destroy();
 
 Font * CachedFontFromCachedProps(Prop **props);
 
-size_t  CachePropsForStyle(Style *style1, Style *style2);
+Prop ** CachePropsForStyle(Style *style1, Style *style2);
 Prop ** GetCachedPropsAtIdx(size_t idx);
 
 } // namespace css

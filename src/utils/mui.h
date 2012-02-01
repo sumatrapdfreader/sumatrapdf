@@ -221,7 +221,7 @@ public:
     // For now we cache every prop for each object type. We could limit
     // the set of cached props per-object (but right now it doesn't seem
     // to be enoug of a saving)
-    size_t          cachedPropsIdx;
+    Prop **         cachedProps;
     Prop **         GetCachedProps() const;
     Prop *          GetCachedProp(PropType propType) const;
     void            SetCurrentStyle(Style *style1, Style *style2 = gStyleDefault);

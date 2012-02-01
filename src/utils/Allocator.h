@@ -46,13 +46,6 @@ public:
     }
 };
 
-#if 0
-static inline size_t RoundUpTo8(size_t n)
-{
-    return ((n+8-1)/8)*8;
-}
-#endif
-
 static inline size_t RoundUp(size_t n, size_t rounding)
 {
     return ((n+rounding-1)/rounding)*rounding;

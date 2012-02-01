@@ -21,11 +21,6 @@ protected:
     PoolAllocator allocator;
     size_t        len;
 
-    T* MakeSpaceAtEnd(size_t count = 1) {
-        void *p = allocator.Alloc(count * sizeof(T));
-        return reinterpret_cast<T*>(p);
-    }
-
 public:
     VecSegmented() : len(0) {
         allocator.SetAllocRounding(sizeof(T));
@@ -33,6 +28,11 @@ public:
 
     ~VecSegmented() {
         allocator.FreeAll();
+    }
+
+    T* MakeSpaceAtEnd(size_t count = 1) {
+        void *p = allocator.Alloc(count * sizeof(T));
+        return reinterpret_cast<T*>(p);
     }
 
     void IncreaseLen(size_t count) {

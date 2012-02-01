@@ -393,7 +393,7 @@ Control::Control(Control *newParent)
     hwndParent = NULL;
     layout = NULL;
     hCursor = NULL;
-    cachedPropsIdx = MAX_SIZE_T;
+    cachedProps = NULL;
     SetCurrentStyle(NULL);
     pos = Rect();
     if (newParent)
@@ -557,20 +557,17 @@ void Control::Paint(Graphics *gfx, int offX, int offY)
 
 void Control::SetCurrentStyle(Style *style1, Style *style2)
 {
-    cachedPropsIdx = CachePropsForStyle(style1, style2);
+    cachedProps = CachePropsForStyle(style1, style2);
 }
 
 Prop *Control::GetCachedProp(PropType propType) const
 {
-    CrashIf(propType >= PropsCount);
-    CrashIf(MAX_SIZE_T == cachedPropsIdx);
-    Prop **props = GetCachedPropsAtIdx(cachedPropsIdx);
-    return props[propType];
+    return cachedProps[propType];
 }
 
 Prop **Control::GetCachedProps() const
 {
-    return GetCachedPropsAtIdx(cachedPropsIdx);
+    return cachedProps;
 }
 
 Button::Button(const TCHAR *s)
