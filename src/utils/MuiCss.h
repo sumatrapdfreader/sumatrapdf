@@ -13,7 +13,7 @@ namespace css {
 using namespace Gdiplus;
 
 enum PropType {
-    PropFontName,           // font-family
+    PropFontName = 0,       // font-family
     PropFontSize,           // font-size
     PropFontWeight,         // font-weight
     PropPadding,            // padding
@@ -31,6 +31,8 @@ enum PropType {
     PropBorderLeftColor,    // border-left-color
 
     PropTextAlign,          // text-align
+
+    PropsCount              // must be at the end!
 };
 
 bool IsWidthProp(PropType type);
@@ -152,30 +154,20 @@ struct Style {
     void SetBorderColor(ARGB color);
 };
 
-void Initialize();
-void Destroy();
-
-Font *CachedFontFromProps(Style *first, Style *second);
-
-struct PropToGet {
-    // provided by the caller
-    PropType    type;
-    // filled-out by GetProps(). Must be set to NULL by
-    // caller to enable being called twice with different
-    // Style objects
-    Prop *      prop;
-};
-
-void GetProps(Style *style, PropToGet *props, size_t propsCount);
-void GetProps(Style *first, Style *second, PropToGet *props, size_t propsCount);
-Prop *GetProp(Style *first, Style *second, PropType type);
-
 // globally known properties for elements we know about
 // we fill them with default values and they can be
 // modified by an app for global visual makeover
 extern Style *gStyleDefault;
 extern Style *gStyleButtonDefault;
 extern Style *gStyleButtonMouseOver;
+
+void   Initialize();
+void   Destroy();
+
+Font * CachedFontFromCachedProps(Prop **props);
+
+size_t  CachePropsForStyle(Style *style1, Style *style2);
+Prop ** GetCachedPropsAtIdx(size_t idx);
 
 } // namespace css
 } // namespace mui

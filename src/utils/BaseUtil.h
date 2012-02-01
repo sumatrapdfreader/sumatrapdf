@@ -66,6 +66,9 @@ typedef uint32_t uint32;
 typedef int64_t   int64;
 typedef uint64_t uint64;
 
+// useful for setting an 'invalid' state for size_t variables
+#define MAX_SIZE_T (size_t)(-1)
+
 STATIC_ASSERT(2 == sizeof(int16),   int16_is_2_bytes);
 STATIC_ASSERT(2 == sizeof(uint16), uint16_is_2_bytes);
 STATIC_ASSERT(4 == sizeof(int32),   int32_is_4_bytes);

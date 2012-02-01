@@ -393,7 +393,8 @@ VirtWnd::VirtWnd(VirtWnd *newParent)
     hwndParent = NULL;
     layout = NULL;
     hCursor = NULL;
-    styleDefault = NULL;
+    cachedPropsIdx = MAX_SIZE_T;
+    SetCurrentStyle(NULL);
     pos = Rect();
     if (newParent)
         SetParent(newParent);
@@ -554,74 +555,57 @@ void VirtWnd::Paint(Graphics *gfx, int offX, int offY)
         return;
 }
 
+void VirtWnd::SetCurrentStyle(Style *style1, Style *style2)
+{
+    cachedPropsIdx = CachePropsForStyle(style1, style2);
+}
+
+Prop *VirtWnd::GetCachedProp(PropType propType) const
+{
+    CrashIf(propType >= PropsCount);
+    CrashIf(MAX_SIZE_T == cachedPropsIdx);
+    Prop **props = GetCachedPropsAtIdx(cachedPropsIdx);
+    return props[propType];
+}
+
+Prop **VirtWnd::GetCachedProps() const
+{
+    return GetCachedPropsAtIdx(cachedPropsIdx);
+}
+
 VirtWndButton::VirtWndButton(const TCHAR *s)
 {
     text = NULL;
     styleMouseOver = NULL;
     wantedInputBits = (uint16)-1; // wants everything
+    styleDefault = NULL;
+    styleMouseOver = NULL;
+    SetCurrentStyle(NULL);
     SetText(s);
-}
-
-void VirtWndButton::GetStyleForState(Style **first, Style **second) const
-{
-    if (IsMouseOver()) {
-        *first = styleMouseOver;
-        *second = gStyleButtonMouseOver;
-    } else {
-        *first = styleDefault;
-        *second = gStyleButtonDefault;
-    }
-}
-
-Prop *VirtWndButton::GetPropForState(PropType type) const
-{
-    Style *s1, *s2;
-    GetStyleForState(&s1, &s2);
-    return GetProp(s1, s2, type);
-}
-
-void VirtWndButton::GetPropsForState(PropToGet *props, size_t propsCount) const
-{
-    Style *s1, *s2;
-    GetStyleForState(&s1, &s2);
-    GetProps(s1, s2, props, propsCount);
-}
-
-Font *VirtWndButton::GetFontForState() const
-{
-    Style *s1, *s2;
-    GetStyleForState(&s1, &s2);
-    return CachedFontFromProps(s1, s2);
 }
 
 Size VirtWndButton::GetBorderAndPaddingSize() const
 {
-    PropToGet props[] = {
-        { PropPadding, NULL },
-        { PropBorderLeftWidth, NULL },
-        { PropBorderRightWidth, NULL },
-        { PropBorderTopWidth, NULL },
-        { PropBorderBottomWidth, NULL },
-    };
-
-    GetPropsForState(props, dimof(props));
-    PaddingData pad = props[0].prop->padding;
+    Prop **props = GetCachedProps();
+    PaddingData pad = props[PropPadding]->padding;
     int dx = pad.left + pad.right;
     int dy = pad.top  + pad.bottom;
 
     // note: width is a float, not sure how I should round them
-    dx += (int)(props[1].prop->GetWidth() + props[2].prop->GetWidth());
-    dy += (int)(props[3].prop->GetWidth() + props[4].prop->GetWidth());
+    dx += (int)(props[PropBorderLeftWidth]->GetWidth() + props[PropBorderRightWidth]->GetWidth());
+    dy += (int)(props[PropBorderTopWidth]->GetWidth() + props[PropBorderBottomWidth]->GetWidth());
     return Size(dx, dy);
 }
 
 void VirtWndButton::NotifyMouseEnter()
 {
+    SetCurrentStyle(styleMouseOver, gStyleButtonMouseOver);
     RecalculateSize(true);
 }
 
 void VirtWndButton::NotifyMouseLeave()
 {
+    SetCurrentStyle(styleDefault, gStyleButtonDefault);
     RecalculateSize(true);
 }
 
@@ -636,7 +620,8 @@ void VirtWndButton::RecalculateSize(bool repaintIfSizeDidntChange)
     textDx = 0;
     if (text) {
         Graphics *gfx = UIThreadGraphicsForMeasureText();
-        RectF bbox = MeasureText(gfx, GetFontForState(), text);
+        Font *font = CachedFontFromCachedProps(GetCachedProps());
+        RectF bbox = MeasureText(gfx, font, text);
         textDx = (size_t)bbox.Width; // TODO: round up?
         desiredSize.Width  += textDx;
         desiredSize.Height += (INT)bbox.Height; // TODO: round up?
@@ -666,6 +651,12 @@ void VirtWndButton::SetStyles(Style *def, Style *mouseOver)
 {
     styleDefault = def;
     styleMouseOver = mouseOver;
+
+    if (IsMouseOver())
+        SetCurrentStyle(styleMouseOver, gStyleButtonMouseOver);
+    else
+        SetCurrentStyle(styleDefault, gStyleButtonDefault);
+
     RecalculateSize(true);
 }
 
@@ -684,31 +675,16 @@ static int AlignedOffset(int containerDx, int elDx, AlignAttr align)
 
 void VirtWndButton::Paint(Graphics *gfx, int offX, int offY)
 {
-    struct PropToGet props[] = {
-        { PropColor, NULL },
-        { PropBgColor, NULL },
-        { PropPadding, NULL },
-        { PropBorderTopWidth, NULL },
-        { PropBorderTopColor, NULL },
-        { PropBorderRightWidth, NULL },
-        { PropBorderRightColor, NULL },
-        { PropBorderBottomWidth, NULL },
-        { PropBorderBottomColor, NULL },
-        { PropBorderLeftWidth, NULL },
-        { PropBorderLeftColor, NULL },
-        { PropTextAlign, NULL },
-    };
-
     if (!IsVisible())
         return;
 
-    GetPropsForState(props, dimof(props));
-    Prop *col   = props[0].prop;
-    Prop *bgCol = props[1].prop;
-    Prop *padding = props[2].prop;
-    Prop *topWidth = props[3].prop;
-    Prop *leftWidth = props[9].prop;
-    Prop *textAlign = props[10].prop;
+    Prop **props = GetCachedProps();
+    Prop *col   = props[PropColor];
+    Prop *bgCol = props[PropBgColor];
+    Prop *padding = props[PropPadding];
+    Prop *topWidth = props[PropBorderTopWidth];
+    Prop *leftWidth = props[PropBorderLeftWidth];
+    Prop *textAlign = props[PropTextAlign];
 
     RectF bbox((REAL)offX, (REAL)offY, (REAL)pos.Width, (REAL)pos.Height);
     Brush *brBgColor = BrushFromProp(bgCol, bbox);
@@ -716,10 +692,10 @@ void VirtWndButton::Paint(Graphics *gfx, int offX, int offY)
     ::delete brBgColor;
 
     BorderProps bp = {
-        props[3].prop, props[4].prop,
-        props[5].prop, props[6].prop,
-        props[7].prop, props[8].prop,
-        props[9].prop, props[10].prop,
+        props[PropBorderTopWidth], props[PropBorderTopColor],
+        props[PropBorderRightWidth], props[PropBorderRightColor],
+        props[PropBorderBottomWidth], props[PropBorderBottomColor],
+        props[PropBorderLeftWidth], props[PropBorderLeftColor],
     };
 
     Rect r(offX, offY, pos.Width, pos.Height);
@@ -732,7 +708,8 @@ void VirtWndButton::Paint(Graphics *gfx, int offX, int offY)
     int x = offX + alignedOffX + pad.left + (int)leftWidth->width.width;
     int y = offY + pad.top + (int)topWidth->width.width;
     Brush *brColor = BrushFromProp(col, bbox); // restrict bbox to just the text?
-    gfx->DrawString(text, str::Len(text), GetFontForState(), PointF((REAL)x, (REAL)y), NULL, brColor);
+    Font *font = CachedFontFromCachedProps(props);
+    gfx->DrawString(text, str::Len(text), font, PointF((REAL)x, (REAL)y), NULL, brColor);
     ::delete brColor;
 }
 
@@ -841,7 +818,7 @@ void VirtWndPainter::PaintBackground(Graphics *g, Rect r)
     // sometimes there's a seemingly 1 pixel artifact on the left and
     // at the top if I don't do this
     r.Inflate(1,1);
-    Prop *bgProp = GetProp(wnd->styleDefault, gStyleDefault, PropBgColor);
+    Prop *bgProp = wnd->GetCachedProp(PropBgColor);
     Brush *br = BrushFromProp(bgProp, r);
     g->FillRectangle(br, r);
     ::delete br;

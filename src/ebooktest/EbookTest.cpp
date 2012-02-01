@@ -197,14 +197,9 @@ void HorizontalProgressBar::Paint(Graphics *gfx, int offX, int offY)
         return;
 
     // TODO: take padding into account
-    struct PropToGet props[] = {
-        { PropColor, NULL },
-        { PropBgColor, NULL },
-    };
-
-    GetProps(styleDefault, gStyleDefault, props, dimof(props));
-    Prop *col   = props[0].prop;
-    Prop *bgCol = props[1].prop;
+    Prop **props = GetCachedProps();
+    Prop *col   = props[PropColor];
+    Prop *bgCol = props[PropBgColor];
 
     Rect r(offX, offY, pos.Width, pos.Height);
     Brush *br = BrushFromProp(bgCol, r);
@@ -259,6 +254,7 @@ public:
     VirtWndButton * status;
     VirtWndButton * test;
 
+    Style *         ebookDefault;
     Style *         statusDefault;
     Style *         horizProgressDefault;
     Style *         facebookButtonDefault;
@@ -365,7 +361,8 @@ void EbookLayout::Arrange(const Rect finalRect, VirtWnd *wnd)
 {
     int y, dx, dy;
 
-    Prop *propPadding = GetProp(wnd->styleDefault, gStyleDefault, PropPadding);
+    Prop **props = wnd->GetCachedProps();
+    Prop *propPadding = props[PropPadding];
     int padLeft = propPadding->padding.left;
     int padRight = propPadding->padding.right;
     int padTop = propPadding->padding.top;
@@ -430,8 +427,9 @@ VirtWndEbook::VirtWndEbook(HWND hwnd)
     const int pageBorderY = 10;
 
     bit::Set(wantedInputBits, WantsMouseMoveBit);
-    styleDefault = new Style();
-    styleDefault->Set(Prop::AllocPadding(pageBorderY, pageBorderX, pageBorderY, pageBorderX));
+    ebookDefault = new Style();
+    ebookDefault->Set(Prop::AllocPadding(pageBorderY, pageBorderX, pageBorderY, pageBorderX));
+    SetCurrentStyle(ebookDefault);
 
     prev = new VirtWndButton(_T("Prev"));
     prevDefault = new Style(gStyleButtonDefault);
@@ -463,8 +461,7 @@ VirtWndEbook::VirtWndEbook(HWND hwnd)
     facebookButtonOver->Set(Prop::AllocColorSolid(PropColor, "yellow"));
     facebookButtonOver->inheritsFrom = facebookButtonDefault;
 
-    test->styleDefault = facebookButtonDefault;
-    test->styleMouseOver = facebookButtonOver;
+    test->SetStyles(facebookButtonDefault, facebookButtonOver);
 
     status = new VirtWndButton(_T(""));
     statusDefault = new Style();
@@ -476,15 +473,14 @@ VirtWndEbook::VirtWndEbook(HWND hwnd)
     statusDefault->SetBorderWidth(0);
     statusDefault->Set(Prop::AllocTextAlign(Align_Center));
 
-    status->styleDefault = statusDefault;
-    status->styleMouseOver = statusDefault;
+    status->SetStyles(statusDefault, statusDefault);
 
     horizProgress = new HorizontalProgressBar();
     horizProgress->hCursor = gCursorHand;
     horizProgressDefault = new Style();
     horizProgressDefault->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
     horizProgressDefault->Set(Prop::AllocColorSolid(PropColor, "yellow"));
-    horizProgress->styleDefault = horizProgressDefault;
+    horizProgress->SetCurrentStyle(horizProgressDefault);
 
     AddChild(next);
     AddChild(prev);
@@ -873,7 +869,7 @@ void VirtWndEbook::Paint(Graphics *gfx, int offX, int offY)
 
     if (!pages)
         return;
-    Prop *propPadding = GetProp(styleDefault, gStyleDefault, PropPadding);
+    Prop *propPadding = GetCachedProp(PropPadding);
     offX += propPadding->padding.left;
     offY += propPadding->padding.top;
 

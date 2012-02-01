@@ -35,6 +35,15 @@ namespace css {
 #define MKARGB(a, r, g, b) (((ARGB) (b)) | ((ARGB) (g) << 8) | ((ARGB) (r) << 16) | ((ARGB) (a) << 24))
 #define MKRGB(r, g, b) (((ARGB) (b)) | ((ARGB) (g) << 8) | ((ARGB) (r) << 16) | ((ARGB)(0xff) << 24))
 
+struct PropToGet {
+    // provided by the caller
+    PropType    type;
+    // filled-out by GetProps(). Must be set to NULL by
+    // caller to enable being called twice with different
+    // Style objects
+    Prop *      prop;
+};
+
 struct FontCacheEntry {
     Prop *fontName;
     Prop *fontSize;
@@ -57,6 +66,18 @@ Style *gStyleButtonDefault = NULL;
 Style *gStyleButtonMouseOver = NULL;
 
 static Vec<FontCacheEntry> *gCachedFonts = NULL;
+
+struct PropCacheEntry {
+    Style *     style1;
+    Style *     style2;
+    size_t      propsIdx; // index within gCachedProps
+};
+
+static Vec<PropCacheEntry> *    gPropCache = NULL;
+// TODO: if we used block allocator, we could be retaining pointer to
+// cached props. We can't do that with Vec because when it grows, it
+// can re-allocate its memory
+static Vec<Prop*> *             gCachedProps = NULL;
 
 void Initialize()
 {
@@ -92,6 +113,9 @@ void Initialize()
     gStyleButtonMouseOver->Set(Prop::AllocColorSolid(PropBorderBottomColor, "#666"));
     //gStyleButtonMouseOver->Set(Prop::AllocColorSolid(PropBgColor, 180, 0, 0, 255));
     //gStyleButtonMouseOver->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
+
+    gPropCache = new Vec<PropCacheEntry>();
+    gCachedProps = new Vec<Prop*>();
 }
 
 static void DeleteCachedFonts()
@@ -101,6 +125,9 @@ static void DeleteCachedFonts()
         ::delete c.font;
     }
     delete gCachedFonts;
+
+    delete gPropCache;
+    delete gCachedProps;
 }
 
 void Destroy()
@@ -463,25 +490,15 @@ Prop *GetProp(Style *first, Style *second, PropType type)
     return props[0].prop;
 }
 
-// convenience function: given 2 set of properties, find font-related
-// properties and construct a font object.
-// Providing 2 sets of props is an optimization: conceptually it's equivalent
-// to setting propsFirst->inheritsFrom = propsSecond, but this way allows
-// us to have global properties for known cases and not create dummy Style just
-// to link them (e.g. if VirtWndButton::styleDefault is NULL, we'll use gStyleButtonDefault)
+// convenience function: given cached props, get a Font object matching the font
+// properties. 
 // Caller should not delete the font - it's cached for performance and deleted at exit
 // in DeleteCachedFonts()
-Font *CachedFontFromProps(Style *first, Style *second)
+Font *CachedFontFromCachedProps(Prop **props)
 {
-    PropToGet props[3] = {
-        { PropFontName, NULL },
-        { PropFontSize, NULL },
-        { PropFontWeight, NULL }
-    };
-    GetProps(first, second, props, dimof(props));
-    Prop *fontName   = props[0].prop;
-    Prop *fontSize   = props[1].prop;
-    Prop *fontWeight = props[2].prop;
+    Prop *fontName   = props[PropFontName];
+    Prop *fontSize   = props[PropFontSize];
+    Prop *fontWeight = props[PropFontWeight];
     CrashIf(!fontName || !fontSize || !fontWeight);
     FontCacheEntry c = { fontName, fontSize, fontWeight, NULL };
     for (size_t i = 0; i < gCachedFonts->Count(); i++) {
@@ -494,6 +511,44 @@ Font *CachedFontFromProps(Style *first, Style *second)
     c.font = ::new Font(fontName->fontName.name, fontSize->fontSize.size, fontWeight->fontWeight.style);
     gCachedFonts->Append(c);
     return c.font;
+}
+
+// TODO: make it thread-safe
+Prop **GetCachedPropsAtIdx(size_t idx)
+{
+    CrashIf(MAX_SIZE_T == idx);
+    return &gCachedProps->At(idx);
+}
+
+// TODO: make it thread-safe
+size_t  CachePropsForStyle(Style *style1, Style *style2)
+{
+    static PropToGet propsToGet[PropsCount];
+
+    for (size_t i = 0; i < gPropCache->Count(); i++) {
+        PropCacheEntry e = gPropCache->At(i);
+        // TODO: this assumes style didn't change since. We need to
+        // take into account changes to Style e.g. by maintaining
+        // a monotonically increasing style generation number that
+        // is changed every time we make a change to Style object
+        if ((e.style1 == style1) && (e.style2 == style2))
+            return e.propsIdx;
+    }
+
+    for (size_t i = 0; i < PropsCount; i++) {
+        propsToGet[i].type = (PropType)i;
+        propsToGet[i].prop = NULL;
+    }
+    GetProps(style1, style2, propsToGet, PropsCount);
+
+    size_t propsIdx = gCachedProps->Count();
+    for (size_t i = 0; i < PropsCount; i++) {\
+        gCachedProps->Append(propsToGet[i].prop);
+    }
+
+    PropCacheEntry e = { style1, style2, propsIdx };
+    gPropCache->Append(e);
+    return propsIdx;
 }
 
 } // namespace css
