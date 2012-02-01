@@ -96,13 +96,9 @@ struct PaddingData {
     }
 };
 
-class Prop {
-private:
-    // can only allocate via Alloc*() functions so that we can
-    // optimize allocations
-    Prop(PropType type) : type(type) {}
+struct Prop {
 
-public:
+    Prop(PropType type) : type(type) {}
     PropType    type;
 
     union {
@@ -115,9 +111,7 @@ public:
         TextAlignData   align;
     };
 
-    ~Prop();
-
-    bool operator==(const Prop& other) const;
+    bool Eq(const Prop* other) const;
 
     float GetWidth() const {
         return width.width;

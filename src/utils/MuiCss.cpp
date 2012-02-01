@@ -26,9 +26,6 @@ properties from our default set and have a consistent look.
 Prop objects are never freed. To conserve memory, they are
 internalized i.e. there are never 2 Prop objects with exactly
 the same data.
-
-TODO: Prop allocations should come from block allocator, so
-that we don't pay OS's malloc() per-object overhead.
 */
 
 namespace mui {
@@ -65,7 +62,7 @@ struct FontCacheEntry {
 // we use only one for simplicity as long as contention is not a problem
 CRITICAL_SECTION gMuiCs;
 
-Vec<Prop*> *gAllProps = NULL;
+VecSegmented<Prop> *gAllProps = NULL;
 
 Style *gStyleDefault = NULL;
 Style *gStyleButtonDefault = NULL;
@@ -89,7 +86,7 @@ void Initialize()
     CrashIf(gAllProps);
     InitializeCriticalSection(&gMuiCs);
 
-    gAllProps = new Vec<Prop*>();
+    gAllProps = new VecSegmented<Prop>();
     gCachedFonts = new Vec<FontCacheEntry>();
 
     // gDefaults is the very basic set shared by everyone
@@ -139,7 +136,8 @@ static void DeleteCachedFonts()
 
 void Destroy()
 {
-    DeleteVecMembers(*gAllProps);
+    // TODO: we need to delete allocated parts of Prop, like
+    // Prop::fontName::name
     delete gAllProps;
 
     delete gStyleButtonDefault;
@@ -243,50 +241,39 @@ bool ColorData::operator==(const ColorData& other) const
     return false;
 }
 
-Prop::~Prop()
+bool Prop::Eq(const Prop *other) const
 {
-    if (PropFontName == type)
-        free((void*)fontName.name);
-}
-
-bool Prop::operator==(const Prop& other) const
-{
-    if (type != other.type)
+    if (type != other->type)
         return false;
 
     switch (type) {
     case PropFontName:
-        return str::Eq(fontName.name, other.fontName.name);
+        return str::Eq(fontName.name, other->fontName.name);
     case PropFontSize:
-        return fontSize.size == other.fontSize.size;
+        return fontSize.size == other->fontSize.size;
     case PropFontWeight:
-        return fontWeight.style == other.fontWeight.style;
+        return fontWeight.style == other->fontWeight.style;
     case PropPadding:
-        return padding == other.padding;
+        return padding == other->padding;
     case PropTextAlign:
-        return align.align == other.align.align;
+        return align.align == other->align.align;
     }
 
     if (IsColorProp(type))
-        return color == other.color;
+        return color == other->color;
 
     if (IsWidthProp(type))
-        return width.width == other.width.width;
+        return width.width == other->width.width;
 
     CrashIf(true);
     return false;
 }
 
-// TODO: could speed up this at the expense of insert speed by
-// sorting gAllProps by prop->type, so that we only need to
-// search a subset of gAllProps. We could either explicitly
-// maintain an index of PropType -> index in gAllProps of
-// first property of this type or do binary search.
 static Prop *FindExistingProp(Prop *prop)
 {
     for (size_t i = 0; i < gAllProps->Count(); i++) {
-        Prop *p = gAllProps->At(i);
-        if (*p == *prop)
+        Prop *p = &gAllProps->At(i);
+        if (p->Eq(prop))
             return p;
     }
     return NULL;
@@ -297,28 +284,29 @@ Prop *Prop::AllocFontName(const TCHAR *name)
 {
     Prop p(PropFontName);
     p.fontName.name = name;
-    Prop *newProp = FindExistingProp(&p);
+    Prop *existingProp = FindExistingProp(&p);
     // perf trick: we didn't str::Dup() fontName.name so must NULL
     // it out so that ~Prop() doesn't try to free it
     p.fontName.name = NULL;
-    if (newProp)
-        return newProp;
-    newProp = new Prop(PropFontName);
-    newProp->fontName.name = str::Dup(name);
-    gAllProps->Append(newProp);
-    return newProp;
+    if (existingProp) {
+        p.fontName.name = NULL;
+        return existingProp;
+    }
+    p.fontName.name = str::Dup(name);
+    gAllProps->Append(p);
+    p.fontName.name = NULL;
+    return &gAllProps->Last();
 }
 
 #define ALLOC_BODY(propType, structName, argName) \
     Prop p(propType); \
     p.structName.argName = argName; \
-    Prop *newProp = FindExistingProp(&p); \
-    if (newProp) \
-        return newProp; \
-    newProp = new Prop(propType); \
-    newProp->structName.argName = argName; \
-    gAllProps->Append(newProp); \
-    return newProp
+    Prop *existingProp = FindExistingProp(&p); \
+    if (existingProp) \
+        return existingProp; \
+    p.structName.argName = argName; \
+    gAllProps->Append(p); \
+    return &gAllProps->Last()
 
 Prop *Prop::AllocFontSize(float size)
 {
@@ -345,13 +333,12 @@ Prop *Prop::AllocPadding(int top, int right, int bottom, int left)
     PaddingData pd = { top, right, bottom, left };
     Prop p(PropPadding);
     p.padding = pd;
-    Prop *newProp = FindExistingProp(&p);
-    if (newProp)
-        return newProp;
-    newProp = new Prop(PropPadding);
-    newProp->padding = pd;
-    gAllProps->Append(newProp);
-    return newProp;
+    Prop *existingProp = FindExistingProp(&p);
+    if (existingProp)
+        return existingProp;
+    p.padding = pd;
+    gAllProps->Append(p);
+    return &gAllProps->Last();
 }
 
 Prop *Prop::AllocColorSolid(PropType type, ARGB color)
@@ -360,14 +347,11 @@ Prop *Prop::AllocColorSolid(PropType type, ARGB color)
     Prop p(type);
     p.color.type = ColorSolid;
     p.color.solid.color = color;
-    Prop *newProp = FindExistingProp(&p);
-    if (newProp)
-        return newProp;
-    newProp = new Prop(type);
-    newProp->color.type = ColorSolid;
-    newProp->color.solid.color = color;
-    gAllProps->Append(newProp);
-    return newProp;
+    Prop *existingProp = FindExistingProp(&p);
+    if (existingProp)
+        return existingProp;
+    gAllProps->Append(p);
+    return &gAllProps->Last();
 }
 
 Prop *Prop::AllocColorSolid(PropType type, int a, int r, int g, int b)
@@ -387,16 +371,11 @@ Prop *Prop::AllocColorLinearGradient(PropType type, LinearGradientMode mode, ARG
     p.color.gradientLinear.mode = mode;
     p.color.gradientLinear.startColor = startColor;
     p.color.gradientLinear.endColor = endColor;
-    Prop *newProp = FindExistingProp(&p);
-    if (newProp)
-        return newProp;
-    newProp = new Prop(type);
-    newProp->color.type = ColorGradientLinear;
-    newProp->color.gradientLinear.mode = mode;
-    newProp->color.gradientLinear.startColor = startColor;
-    newProp->color.gradientLinear.endColor = endColor;
-    gAllProps->Append(newProp);
-    return newProp;
+    Prop *existingProp = FindExistingProp(&p);
+    if (existingProp)
+        return existingProp;
+    gAllProps->Append(p);
+    return &gAllProps->Last();
 }
 
 Prop *Prop::AllocColorLinearGradient(PropType type, LinearGradientMode mode, const char *startColor, const char *endColor)
@@ -438,7 +417,7 @@ void Style::Set(Prop *prop)
     for (size_t i = 0; i < props.Count(); i++) {
         Prop *p = props.At(i);
         if (p->type == prop->type) {
-            if (!(*p == *prop))
+            if (!p->Eq(prop))
                 ++gen;
             props.At(i) = prop;
             return;
