@@ -3,6 +3,7 @@
 
 #include "MuiCss.h"
 #include "VecSegmented.h"
+#include "Scoped.h"
 
 using namespace Gdiplus;
 
@@ -60,6 +61,10 @@ struct FontCacheEntry {
     }
 };
 
+// a critical section for everything that needs protecting in mui
+// we use only one for simplicity as long as contention is not a problem
+CRITICAL_SECTION gMuiCs;
+
 Vec<Prop*> *gAllProps = NULL;
 
 Style *gStyleDefault = NULL;
@@ -82,6 +87,8 @@ static VecSegmented<Prop*> *    gCachedProps = NULL;
 void Initialize()
 {
     CrashIf(gAllProps);
+    InitializeCriticalSection(&gMuiCs);
+
     gAllProps = new Vec<Prop*>();
     gCachedFonts = new Vec<FontCacheEntry>();
 
@@ -139,6 +146,7 @@ void Destroy()
     delete gStyleButtonMouseOver;
 
     DeleteCachedFonts();
+    DeleteCriticalSection(&gMuiCs);
 }
 
 bool IsWidthProp(PropType type)
@@ -533,9 +541,9 @@ Font *CachedFontFromCachedProps(Prop **props)
     return c.font;
 }
 
-// TODO: make it thread-safe
 Prop **GetCachedPropsAtIdx(size_t idx)
 {
+    ScopedCritSec cs(&gMuiCs);
     CrashIf(MAX_SIZE_T == idx);
     return &gCachedProps->At(idx);
 }
@@ -546,10 +554,11 @@ static size_t GetStyleId(Style *style) {
     return style->GetIdentity();
 }
 
-// TODO: make it thread-safe
 Prop **CachePropsForStyle(Style *style1, Style *style2)
 {
     static PropToGet propsToGet[PropsCount];
+
+    ScopedCritSec cs(&gMuiCs);
 
     for (size_t i = 0; i < gPropCache->Count(); i++) {
         PropCacheEntry e = gPropCache->At(i);

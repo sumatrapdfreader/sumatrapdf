@@ -10,6 +10,8 @@
 namespace mui {
 namespace css {
 
+extern CRITICAL_SECTION gMuiCs;
+
 using namespace Gdiplus;
 
 enum PropType {

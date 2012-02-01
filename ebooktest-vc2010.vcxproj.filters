@@ -331,6 +331,9 @@
     <ClInclude Include="src\utils\VecSegmented.h">
       <Filter>utils</Filter>
     </ClInclude>
+    <ClInclude Include="src\utils\Scoped.h">
+      <Filter>utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="src\ebooktest\EbookTest.rc" />
