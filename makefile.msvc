@@ -478,7 +478,8 @@ $(OS)\mui.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\HtmlPullPa
 $(OS)\mui.obj: src\utils\mui.h src\utils\MuiCss.h src\utils\StrUtil.h
 $(OS)\mui.obj: src\utils\Vec.h
 $(OS)\MuiCss.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\HtmlPullParser.h
-$(OS)\MuiCss.obj: src\utils\MuiCss.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\MuiCss.obj: src\utils\MuiCss.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OS)\MuiCss.obj: src\utils\Vec.h src\utils\VecSegmented.h
 $(OS)\MuPDF_Exports.obj: mupdf\fitz\fitz.h
 $(OS)\NoFreeAllocator.obj: src\utils\BaseUtil.h src\utils\NoFreeAllocator.h
 $(OS)\Notifications.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
