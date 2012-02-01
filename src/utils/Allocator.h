@@ -61,41 +61,48 @@ static inline size_t RoundUpTo8(size_t n)
 // via VirtualAlloc() etc. instead of malloc(), which would lower the overhead
 class PoolAllocator : public Allocator {
 
-    size_t  blockSize;
+    // we'll allocate block of the minBlockSize unless
+    // asked for a block of bigger size
+    size_t  minBlockSize;
 
     struct MemBlockNode {
         struct MemBlockNode *next;
+        size_t               size;
+        size_t               free;
+
+        size_t               Used() { return size - free; }
+
         // data follows here
     };
 
-    size_t          freeInBlock;
     char *          currMem;
     MemBlockNode *  currBlock;
+    MemBlockNode *  firstBlock;
 
     void Init() {
         currBlock = NULL;
+        firstBlock = NULL;
         currMem = NULL;
-        freeInBlock = 0;
     }
 
 public:
 
     PoolAllocator()  {
-        blockSize = 4096;
+        minBlockSize = 4096;
         Init();
     }
 
-    void SetBlockSize(size_t newBlockSize) {
+    void SetMinBlockSize(size_t newMinBlockSize) {
         CrashIf(currBlock); // can only be changed before first allocation
-        blockSize = newBlockSize;
+        minBlockSize = newMinBlockSize;
     }
 
     void FreeAll() {
-        MemBlockNode *b = currBlock;
-        while (b) {
-            MemBlockNode *next = b->next;
-            free(b);
-            b = next;
+        MemBlockNode *curr = firstBlock;
+        while (curr) {
+            MemBlockNode *next = curr->next;
+            free(curr);
+            curr = next;
         }
         Init();
     }
@@ -106,13 +113,16 @@ public:
 
     void AllocBlock(size_t minSize) {
         minSize = RoundUpTo8(minSize);
-        size_t size = blockSize;
+        size_t size = minBlockSize;
         if (minSize > size)
             size = minSize;
         MemBlockNode *node = (MemBlockNode*)calloc(1, sizeof(MemBlockNode) + size);
+        if (!firstBlock)
+            firstBlock = node;
         currMem = (char*)node + sizeof(MemBlockNode);
-        freeInBlock = size;
-        node->next = currBlock;
+        node->size = size;
+        node->free = size;
+        currBlock->next = node;
         currBlock = node;
     }
 
@@ -131,13 +141,36 @@ public:
 
     virtual void *Alloc(size_t size) {
         size = RoundUpTo8(size);
-        if (freeInBlock < size)
+        if (!currBlock || (currBlock->free < size))
             AllocBlock(size);
 
         void *mem = (void*)currMem;
         currMem += size;
-        freeInBlock -= size;
+        currBlock->free -= size;
         return mem;
+    }
+
+    // assuming allocated memory was for pieces of uniform size,
+    // find the address of n-th piece
+    void *FindNthPieceOfSize(size_t size, size_t n) {
+        size = RoundUpTo8(size);
+        MemBlockNode *curr = firstBlock;
+        while (curr) {
+            size_t piecesInBlock = curr->Used() / n;
+            if (piecesInBlock > n) {
+                char *p = (char*)curr + sizeof(MemBlockNode) + (n * size);
+                    return (void*)p;
+            }
+            n -= piecesInBlock;
+            curr = curr->next;
+        }
+        return NULL;
+    }
+
+    template <typename T>
+    T *GetAtPtr(size_t idx) {
+        void *mem = FindNthPieceOfSize(sizeof(T), idx);
+        return reinterpret_cast<T*>(mem);
     }
 
     // only valid for structs, could alloc objects with
