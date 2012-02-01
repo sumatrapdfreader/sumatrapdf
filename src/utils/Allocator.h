@@ -66,14 +66,14 @@ class PoolAllocator : public Allocator {
         // data follows here
     };
 
-    size_t          remainsInBlock;
+    size_t          freeInBlock;
     char *          currMem;
     MemBlockNode *  currBlock;
 
     void Init() {
         currBlock = NULL;
         currMem = NULL;
-        remainsInBlock = 0;
+        freeInBlock = 0;
     }
 
 public:
@@ -105,7 +105,7 @@ public:
             size = minSize;
         MemBlockNode *node = (MemBlockNode*)calloc(1, sizeof(MemBlockNode) + size);
         currMem = (char*)node + sizeof(MemBlockNode);
-        remainsInBlock = size;
+        freeInBlock = size;
         node->next = currBlock;
         currBlock = node;
     }
@@ -125,12 +125,12 @@ public:
 
     virtual void *Alloc(size_t size) {
         size = RoundUpTo8(size);
-        if (remainsInBlock < size)
+        if (freeInBlock < size)
             AllocBlock(size);
 
         void *mem = (void*)currMem;
         currMem += size;
-        remainsInBlock -= size;
+        freeInBlock -= size;
         return mem;
     }
 
