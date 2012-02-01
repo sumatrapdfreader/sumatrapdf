@@ -188,6 +188,7 @@
     <ClInclude Include="src\utils\Touch.h" />
     <ClInclude Include="src\utils\TrivialHtmlParser.h" />
     <ClInclude Include="src\utils\Vec.h" />
+    <ClInclude Include="src\utils\VecSegmented.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="docs\ebook-todo.txt" />

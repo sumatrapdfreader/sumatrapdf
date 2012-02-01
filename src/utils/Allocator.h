@@ -61,6 +61,8 @@ static inline size_t RoundUpTo8(size_t n)
 // via VirtualAlloc() etc. instead of malloc(), which would lower the overhead
 class PoolAllocator : public Allocator {
 
+    size_t  blockSize;
+
     struct MemBlockNode {
         struct MemBlockNode *next;
         // data follows here
@@ -77,11 +79,15 @@ class PoolAllocator : public Allocator {
     }
 
 public:
-    size_t  blockSize;
 
     PoolAllocator()  {
         blockSize = 4096;
         Init();
+    }
+
+    void SetBlockSize(size_t newBlockSize) {
+        CrashIf(currBlock); // can only be changed before first allocation
+        blockSize = newBlockSize;
     }
 
     void FreeAll() {

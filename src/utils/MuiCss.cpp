@@ -2,6 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "MuiCss.h"
+#include "VecSegmented.h"
 
 using namespace Gdiplus;
 
@@ -74,10 +75,11 @@ struct PropCacheEntry {
 };
 
 static Vec<PropCacheEntry> *    gPropCache = NULL;
-// TODO: if we used block allocator, we could be retaining pointer to
+
+// TODO: use VecSegmented so that we can be retaining pointer to
 // cached props. We can't do that with Vec because when it grows, it
 // can re-allocate its memory
-static Vec<Prop*> *             gCachedProps = NULL;
+static Vec<Prop*> *    gCachedProps = NULL;
 
 void Initialize()
 {
