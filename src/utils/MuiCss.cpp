@@ -75,11 +75,7 @@ struct PropCacheEntry {
 };
 
 static Vec<PropCacheEntry> *    gPropCache = NULL;
-
-// TODO: use VecSegmented so that we can be retaining pointer to
-// cached props. We can't do that with Vec because when it grows, it
-// can re-allocate its memory
-static Vec<Prop*> *    gCachedProps = NULL;
+static VecSegmented<Prop*> *    gCachedProps = NULL;
 
 void Initialize()
 {
@@ -117,7 +113,7 @@ void Initialize()
     //gStyleButtonMouseOver->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
 
     gPropCache = new Vec<PropCacheEntry>();
-    gCachedProps = new Vec<Prop*>();
+    gCachedProps = new VecSegmented<Prop*>();
 }
 
 static void DeleteCachedFonts()

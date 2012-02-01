@@ -46,9 +46,16 @@ public:
     }
 };
 
+#if 0
 static inline size_t RoundUpTo8(size_t n)
 {
     return ((n+8-1)/8)*8;
+}
+#endif
+
+static inline size_t RoundUp(size_t n, size_t rounding)
+{
+    return ((n+rounding-1)/rounding)*rounding;
 }
 
 // PoolAllocator is for the cases where we need to allocate pieces of memory
@@ -64,6 +71,7 @@ class PoolAllocator : public Allocator {
     // we'll allocate block of the minBlockSize unless
     // asked for a block of bigger size
     size_t  minBlockSize;
+    size_t  allocRounding;
 
     struct MemBlockNode {
         struct MemBlockNode *next;
@@ -83,6 +91,7 @@ class PoolAllocator : public Allocator {
         currBlock = NULL;
         firstBlock = NULL;
         currMem = NULL;
+        allocRounding = 8;
     }
 
 public:
@@ -95,6 +104,11 @@ public:
     void SetMinBlockSize(size_t newMinBlockSize) {
         CrashIf(currBlock); // can only be changed before first allocation
         minBlockSize = newMinBlockSize;
+    }
+
+    void SetAllocRounding(size_t newRounding) {
+        CrashIf(currBlock); // can only be changed before first allocation
+        allocRounding = newRounding;
     }
 
     void FreeAll() {
@@ -112,7 +126,7 @@ public:
     }
 
     void AllocBlock(size_t minSize) {
-        minSize = RoundUpTo8(minSize);
+        minSize = RoundUp(minSize, allocRounding);
         size_t size = minBlockSize;
         if (minSize > size)
             size = minSize;
@@ -122,7 +136,8 @@ public:
         currMem = (char*)node + sizeof(MemBlockNode);
         node->size = size;
         node->free = size;
-        currBlock->next = node;
+        if (currBlock)
+            currBlock->next = node;
         currBlock = node;
     }
 
@@ -140,7 +155,7 @@ public:
     }
 
     virtual void *Alloc(size_t size) {
-        size = RoundUpTo8(size);
+        size = RoundUp(size, allocRounding);
         if (!currBlock || (currBlock->free < size))
             AllocBlock(size);
 
@@ -152,11 +167,11 @@ public:
 
     // assuming allocated memory was for pieces of uniform size,
     // find the address of n-th piece
-    void *FindNthPieceOfSize(size_t size, size_t n) {
-        size = RoundUpTo8(size);
+    void *FindNthPieceOfSize(size_t size, size_t n) const {
+        size = RoundUp(size, allocRounding);
         MemBlockNode *curr = firstBlock;
         while (curr) {
-            size_t piecesInBlock = curr->Used() / n;
+            size_t piecesInBlock = curr->Used() / size;
             if (piecesInBlock > n) {
                 char *p = (char*)curr + sizeof(MemBlockNode) + (n * size);
                     return (void*)p;
@@ -168,7 +183,7 @@ public:
     }
 
     template <typename T>
-    T *GetAtPtr(size_t idx) {
+    T *GetAtPtr(size_t idx) const {
         void *mem = FindNthPieceOfSize(sizeof(T), idx);
         return reinterpret_cast<T*>(mem);
     }

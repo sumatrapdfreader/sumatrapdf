@@ -21,39 +21,18 @@ protected:
     PoolAllocator allocator;
     size_t        len;
 
-    T* MakeSpaceAt(size_t idx, size_t count) {
-#if 0
-        EnsureCap(len + count);
-        T* res = &(els[idx]);
-        if (len > idx) {
-            T* src = els + idx;
-            T* dst = els + idx + count;
-            memmove(dst, src, (len - idx) * sizeof(T));
-        }
-        IncreaseLen(count);
-        return res;
-#endif
+    T* MakeSpaceAtEnd(size_t count = 1) {
+        void *p = allocator.Alloc(count * sizeof(T));
+        return reinterpret_cast<T*>(p);
     }
 
 public:
     VecSegmented() : len(0) {
+        allocator.SetAllocRounding(sizeof(T));
     }
 
     ~VecSegmented() {
         allocator.FreeAll();
-    }
-
-    void EnsureCap(size_t needed) {
-    }
-
-    // ensures empty space at the end of the list where items can
-    // be appended through ReadFile or memcpy (don't forget to call
-    // IncreaseLen once you know how many items have been added)
-    // and returns a pointer to the first empty spot
-    // Note: use AppendBlanks if you know the number of items in advance
-    T *EnsureEndPadding(size_t count) {
-        EnsureCap(len + count);
-        return &els[len];
     }
 
     void IncreaseLen(size_t count) {
@@ -62,7 +41,8 @@ public:
 
     // use &At() if you need a pointer to the element (e.g. if T is a struct)
     T& At(size_t idx) const {
-        return els[idx];
+        T *elp = allocator.GetAtPtr<T>(idx);
+        return *elp;
     }
 
     size_t Count() const {
@@ -73,61 +53,26 @@ public:
         return len;
     }
 
-    void InsertAt(size_t idx, const T& el) {
-        MakeSpaceAt(idx, 1)[0] = el;
-    }
-
     void Append(const T& el) {
-        InsertAt(len, el);
+        T *els = MakeSpaceAtEnd();
+        *els = el;
+        len += 1;
     }
 
     void Append(const T* src, size_t count) {
-        T* dst = AppendBlanks(count);
-        memcpy(dst, src, count * sizeof(T));
-    }
-
-    // TODO: bad name, it doesn't append anything; AllocateAtEnd()?
-    // like EnsureEndPadding() but also increases the length
-    T* AppendBlanks(size_t count) {
-        return MakeSpaceAt(len, count);
+        T *els = MakeSpaceAtEnd(count);
+        memcpy(els, src, count * sizeof(T));
+        len += count;
     }
 
     void Push(T el) {
         Append(el);
     }
 
-    T& Pop() {
-        assert(len > 0);
-        if (len > 0)
-            len--;
-        return At(len);
-    }
-
     T& Last() const {
         assert(len > 0);
         return At(len - 1);
     }
-
-#if 0
-    int Find(T el, size_t startAt=0) const {
-        for (size_t i = startAt; i < len; i++) {
-            if (els[i] == el)
-                return (int)i;
-        }
-        return -1;
-    }
-
-    void Sort(int (*cmpFunc)(const void *a, const void *b)) {
-        qsort(els, len, sizeof(T), cmpFunc);
-    }
-
-    void Reverse() {
-        for (size_t i = 0; i < len / 2; i++) {
-            swap(els[i], els[len - i - 1]);
-        }
-    }
-#endif
-
 };
 
 #if 0
