@@ -457,9 +457,8 @@ ControlEbook::ControlEbook(HWND hwnd)
     facebookButtonDefault->Set(Prop::AllocColorSolid(PropBorderRightColor, "#29447E"));
     facebookButtonDefault->Set(Prop::AllocColorSolid(PropBorderBottomColor, "#1A356E"));
 
-    facebookButtonOver = new Style();
+    facebookButtonOver = new Style(facebookButtonDefault);
     facebookButtonOver->Set(Prop::AllocColorSolid(PropColor, "yellow"));
-    facebookButtonOver->inheritsFrom = facebookButtonDefault;
 
     test->SetStyles(facebookButtonDefault, facebookButtonOver);
 

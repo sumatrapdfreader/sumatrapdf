@@ -136,22 +136,28 @@ public:
     static Prop *AllocWidth(PropType type, float width);
 };
 
-struct Style {
-
-    Style(Style *inheritsFrom=NULL) : inheritsFrom(inheritsFrom) {
-    }
-
-    Vec<Prop*>  props;
-
+class Style {
     // if property is not found here, we'll search the
     // inheritance chain
     Style *     inheritsFrom;
+    // generation number, changes every time we change the style
+    size_t      gen;
+
+public:
+    Style(Style *inheritsFrom=NULL) : inheritsFrom(inheritsFrom) {
+        gen = 1; // so that we can use 0 for NULL
+    }
+
+    Vec<Prop*>  props;
 
     void Set(Prop *prop);
 
     // shortcuts for setting multiple properties at a time
     void SetBorderWidth(float width);
     void SetBorderColor(ARGB color);
+
+    Style * GetInheritsFrom() const;
+    size_t GetIdentity() const;
 };
 
 // globally known properties for elements we know about

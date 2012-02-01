@@ -70,7 +70,9 @@ static Vec<FontCacheEntry> *gCachedFonts = NULL;
 
 struct PropCacheEntry {
     Style *     style1;
+    size_t      style1Id;
     Style *     style2;
+    size_t      style2Id;
     Prop **     props; // memory within gCachedProps
 };
 
@@ -404,6 +406,23 @@ Prop *Prop::AllocColorSolid(PropType type, const char *color)
 
 #undef ALLOC_BODY
 
+Style* Style::GetInheritsFrom() const
+{
+    return inheritsFrom;
+}
+
+// Identity is a way to track changes to Style
+size_t Style::GetIdentity() const
+{
+    int identity = gen;
+    Style *curr = inheritsFrom;
+    while (curr) {
+        identity += curr->gen;
+        curr = curr->inheritsFrom;
+    }
+    return identity;
+}
+
 // Add a property to a set, if a given PropType doesn't exist,
 // replace if a given PropType already exists in the set.
 void Style::Set(Prop *prop)
@@ -411,11 +430,14 @@ void Style::Set(Prop *prop)
     for (size_t i = 0; i < props.Count(); i++) {
         Prop *p = props.At(i);
         if (p->type == prop->type) {
+            if (!(*p == *prop))
+                ++gen;
             props.At(i) = prop;
             return;
         }
     }
     props.Append(prop);
+    ++gen;
 }
 
 void Style::SetBorderWidth(float width)
@@ -469,7 +491,7 @@ void GetProps(Style *style, PropToGet *props, size_t propsCount)
             if (didSet && FoundAllProps(props, propsCount))
                 return;
         }
-        curr = curr->inheritsFrom;
+        curr = curr->GetInheritsFrom();
     }
 }
 
@@ -518,6 +540,12 @@ Prop **GetCachedPropsAtIdx(size_t idx)
     return &gCachedProps->At(idx);
 }
 
+static size_t GetStyleId(Style *style) {
+    if (!style)
+        return 0;
+    return style->GetIdentity();
+}
+
 // TODO: make it thread-safe
 Prop **CachePropsForStyle(Style *style1, Style *style2)
 {
@@ -525,12 +553,14 @@ Prop **CachePropsForStyle(Style *style1, Style *style2)
 
     for (size_t i = 0; i < gPropCache->Count(); i++) {
         PropCacheEntry e = gPropCache->At(i);
-        // TODO: this assumes style didn't change since. We need to
-        // take into account changes to Style e.g. by maintaining
-        // a monotonically increasing style generation number that
-        // is changed every time we make a change to Style object
-        if ((e.style1 == style1) && (e.style2 == style2))
-            return e.props;
+        if ((e.style1 == style1) && (e.style2 == style2)) {
+            if ((e.style1Id == GetStyleId(style1)) &&
+                (e.style2Id == GetStyleId(style2))) {
+                return e.props;
+            }
+            // TODO: optimize by updating props in-place
+            break;
+        }
     }
 
     for (size_t i = 0; i < PropsCount; i++) {
@@ -545,7 +575,7 @@ Prop **CachePropsForStyle(Style *style1, Style *style2)
         props[i] = propsToGet[i].prop;
     }
 
-    PropCacheEntry e = { style1, style2, props };
+    PropCacheEntry e = { style1, GetStyleId(style1), style2, GetStyleId(style2), props };
     gPropCache->Append(e);
     return props;
 }
