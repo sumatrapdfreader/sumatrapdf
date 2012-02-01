@@ -16,8 +16,8 @@ namespace mui {
 using namespace Gdiplus;
 using namespace css;
 
-class VirtWnd;
-class VirtWndHwnd;
+class Control;
+class HwndWrapper;
 class IClickHandler;
 
 #define SizeInfinite ((INT)-1)
@@ -50,8 +50,8 @@ GraphicsForMeasureText *AllocGraphicsForMeasureText();
 
 Graphics *UIThreadGraphicsForMeasureText();
 
-void        RequestRepaint(VirtWnd *w, const Rect *r1 = NULL, const Rect *r2 = NULL);
-void        RequestLayout(VirtWnd *w);
+void        RequestRepaint(Control *w, const Rect *r1 = NULL, const Rect *r2 = NULL);
+void        RequestLayout(Control *w);
 Brush *     BrushFromProp(Prop *p, const Rect& r);
 
 class IClickHandler
@@ -59,12 +59,12 @@ class IClickHandler
 public:
     IClickHandler() {}
     virtual ~IClickHandler() {}
-    virtual void Clicked(VirtWnd *w, int x, int y) = 0;
+    virtual void Clicked(Control *w, int x, int y) = 0;
 };
 
-// Layout can be optionally set on VirtWnd. If set, it'll be
+// Layout can be optionally set on Control. If set, it'll be
 // used to layout this window. This effectively over-rides Measure()/Arrange()
-// calls of VirtWnd. This allows to decouple layout logic from VirtWnd class
+// calls of Control. This allows to decouple layout logic from Control class
 // and implement generic layout algorithms.
 class Layout
 {
@@ -75,16 +75,16 @@ public:
     virtual ~Layout() {
     }
 
-    virtual void Measure(const Size availableSize, VirtWnd *wnd) = 0;
-    virtual void Arrange(const Rect finalRect, VirtWnd *wnd) = 0;
+    virtual void Measure(const Size availableSize, Control *wnd) = 0;
+    virtual void Arrange(const Rect finalRect, Control *wnd) = 0;
 };
 
-// Manages painting process of VirtWnd window and all its children.
+// Manages painting process of Control window and all its children.
 // Automatically does double-buffering for less flicker.
-// Create one object for each HWND-backed VirtWnd and keep it around.
-class VirtWndPainter
+// Create one object for each HWND-backed Control and keep it around.
+class Painter
 {
-    VirtWndHwnd *wnd;
+    HwndWrapper *wnd;
     // bitmap for double-buffering
     Bitmap *    cacheBmp;
     Size        sizeDuringLastPaint;
@@ -92,26 +92,26 @@ class VirtWndPainter
     void PaintBackground(Graphics *g, Rect r);
 
 public:
-    VirtWndPainter(VirtWndHwnd *wnd);
+    Painter(HwndWrapper *wnd);
 
     void Paint(HWND hwnd);
 };
 
-// A single EventMgr is associated with a single VirtWndHwnd
+// A single EventMgr is associated with a single HwndWrapper
 // (which itself is associated with single HWND) and handles
 // win32 messages for that HWND needed to make the whole system
 // work.
 class EventMgr
 {
-    VirtWndHwnd *   wndRoot;
+    HwndWrapper *   wndRoot;
     // current window over which the mouse is
-    VirtWnd *       currOver;
+    Control *       currOver;
 
     Size    minSize;
     Size    maxSize;
 
     struct ClickHandler {
-        VirtWnd *        wndSource;
+        Control *        wndSource;
         IClickHandler *  clickHandler;
     };
 
@@ -123,48 +123,48 @@ class EventMgr
     LRESULT OnGetMinMaxInfo(MINMAXINFO *info, bool& wasHandled);
 
 public:
-    EventMgr(VirtWndHwnd *wndRoot);
+    EventMgr(HwndWrapper *wndRoot);
     ~EventMgr();
 
     LRESULT OnMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& handledOut);
 
     void UnRegisterClickHandlers(IClickHandler *clickHandler);
-    void RegisterClickHandler(VirtWnd *wndSource, IClickHandler *clickHandler);
-    IClickHandler *GetClickHandlerFor(VirtWnd *wndSource);
+    void RegisterClickHandler(Control *wndSource, IClickHandler *clickHandler);
+    IClickHandler *GetClickHandlerFor(Control *wndSource);
 
     void SetMinSize(Size s);
     void SetMaxSize(Size s);
 };
 
-class VirtWnd
+class Control
 {
 public:
     // allows a window to opt-out from being notified about
     // input events, stored in wantedInputBits
-    enum WndWantedInputBits : int {
+    enum WantedInputBits : int {
         WantsMouseOverBit   = 0,
         WantsMouseDownBit   = 1,
         WantsMouseUpBit     = 2,
         WantsMouseClickBit  = 3,
         WantsMouseMoveBit   = 4,
-        WndWantedInputBitLast
+        WantedInputBitLast
     };
 
     // describes current state of a window, stored in stateBits
-    enum WndStateBits : int {
+    enum ControlStateBits : int {
         MouseOverBit = 0,
         IsPressedBit = 1,
         // using IsHidden and not IsVisible so that 0 is default, visible state
         IsHiddenBit  = 2,
-        WndStateBitLast
+        StateBitLast
     };
 
-    VirtWnd(VirtWnd *newParent=NULL);
-    virtual ~VirtWnd();
+    Control(Control *newParent=NULL);
+    virtual ~Control();
 
-    void        SetParent(VirtWnd *newParent);
-    void        AddChild(VirtWnd *wnd, int pos = -1);
-    VirtWnd *   GetChild(size_t idx) const;
+    void        SetParent(Control *newParent);
+    void        AddChild(Control *wnd, int pos = -1);
+    Control *   GetChild(size_t idx) const;
     size_t      GetChildCount() const;
 
     void        SetPosition(const Rect& p);
@@ -210,7 +210,7 @@ public:
     int16           zOrder;
 
     Layout *        layout;
-    VirtWnd *       parent;
+    Control *       parent;
 
     // we cache properties for the current style during SetStyle() which
     // makes if fast to access them anywhere without repeating the work
@@ -226,12 +226,12 @@ public:
     Prop *          GetCachedProp(PropType propType) const;
     void            SetCurrentStyle(Style *style1, Style *style2 = gStyleDefault);
 
-    // only used by VirtWndHwnd but we need it here
+    // only used by HwndWrapper but we need it here
     HWND            hwndParent;
 
     // cursor to show when mouse is over this window.
     // only works if the window sets WantsMouseOverBit.
-    // VirtWnd doesn't own hCursor in order to enable easy 
+    // Control doesn't own hCursor in order to enable easy 
     // sharing of cursor among many windows.
     HCURSOR         hCursor;
 
@@ -242,23 +242,23 @@ public:
     Size            desiredSize;
 
 private:
-    Vec<VirtWnd*>   children;
+    Vec<Control*>   children;
 };
 
-// VirtWnd that has to be the root of window tree and is
+// Control that has to be the root of window tree and is
 // backed by a HWND. It combines a painter and EventManager
 // for this HWND. In your message loop you must call
-// VirtWndHwnd::evtMgr->OnMessage()
-class VirtWndHwnd : public VirtWnd
+// HwndWrapper::evtMgr->OnMessage()
+class HwndWrapper : public Control
 {
     bool    layoutRequested;
 
 public:
-    VirtWndPainter *    painter;
+    Painter *    painter;
     EventMgr *          evtMgr;
 
-    VirtWndHwnd(HWND hwnd = NULL);
-    virtual ~VirtWndHwnd();
+    HwndWrapper(HWND hwnd = NULL);
+    virtual ~HwndWrapper();
 
     void            SetMinSize(Size minSize);
     void            SetMaxSize(Size maxSize);
@@ -271,7 +271,7 @@ public:
     virtual void    TopLevelLayout();
 };
 
-class VirtWndButton : public VirtWnd
+class Button : public Control
 {
 
     // use SetStyles() to set
@@ -279,11 +279,9 @@ class VirtWndButton : public VirtWnd
     Style *         styleMouseOver; // gStyleButtonMouseOver if NULL
 
 public:
-    VirtWndButton(const TCHAR *s);
+    Button(const TCHAR *s);
 
-    virtual ~VirtWndButton() {
-        free(text);
-    }
+    virtual ~Button();
 
     void SetText(const TCHAR *s);
 

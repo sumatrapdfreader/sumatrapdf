@@ -57,7 +57,7 @@ to click there.
 using namespace Gdiplus;
 using namespace mui;
 
-class VirtWndEbook;
+class ControlEbook;
 
 #define l(s) OutputDebugStringA(s)
 
@@ -71,7 +71,7 @@ class VirtWndEbook;
 
 static HINSTANCE        ghinst;
 static HWND             gHwndFrame = NULL;
-static VirtWndEbook *   gVirtWndFrame = NULL;
+static ControlEbook *   gControlFrame = NULL;
 static HCURSOR          gCursorHand = NULL;
 
 // for convenience so that we don't have to pass it around
@@ -118,7 +118,7 @@ ___________________
 // TODO: we don't take padding int account yet
 // Clients can register fo IClickEvent events for this window to implement
 // interactivity
-class HorizontalProgressBar : public VirtWnd
+class HorizontalProgressBar : public Control
 {
     int     onOverDy;    // when mouse is over
     int     inactiveDy;  // when mouse is not over
@@ -222,8 +222,8 @@ void HorizontalProgressBar::Paint(Graphics *gfx, int offX, int offY)
     ::delete br;
 }
 
-class VirtWndEbook 
-    : public VirtWndHwnd,
+class ControlEbook 
+    : public HwndWrapper,
       public IClickHandler,
       public INewPageObserver
 {
@@ -248,11 +248,11 @@ public:
     base::Thread *  mobiLoadThread;
     base::Thread *  pageLayoutThread;
 
-    VirtWndButton * next;
-    VirtWndButton * prev;
+    Button * next;
+    Button * prev;
     HorizontalProgressBar *horizProgress;
-    VirtWndButton * status;
-    VirtWndButton * test;
+    Button * status;
+    Button * test;
 
     Style *         ebookDefault;
     Style *         statusDefault;
@@ -266,8 +266,8 @@ public:
     Style *         prevDefault;
     Style *         prevMouseOver;
 
-    VirtWndEbook(HWND hwnd);
-    virtual ~VirtWndEbook();
+    ControlEbook(HWND hwnd);
+    virtual ~ControlEbook();
 
     virtual void RegisterEventHandlers(EventMgr *evtMgr);
     virtual void UnRegisterEventHandlers(EventMgr *evtMgr);
@@ -277,7 +277,7 @@ public:
     virtual void NotifyMouseMove(int x, int y);
 
     // IClickHandler
-    virtual void Clicked(VirtWnd *w, int x, int y);
+    virtual void Clicked(Control *w, int x, int y);
 
     void SetHtml(const char *html);
     void LoadMobi(const TCHAR *fileName);
@@ -306,7 +306,7 @@ public:
 class EbookLayout : public Layout
 {
 public:
-    EbookLayout(VirtWndButton *next, VirtWnd *prev, VirtWnd *status, VirtWnd *horizProgress, VirtWnd *test) :
+    EbookLayout(Button *next, Control *prev, Control *status, Control *horizProgress, Control *test) :
       next(next), prev(prev), status(status), horizProgress(horizProgress), test(test)
     {
     }
@@ -314,17 +314,17 @@ public:
     virtual ~EbookLayout() {
     }
 
-    VirtWnd *next;
-    VirtWnd *prev;
-    VirtWnd *status;
-    VirtWnd *horizProgress;
-    VirtWnd *test;
+    Control *next;
+    Control *prev;
+    Control *status;
+    Control *horizProgress;
+    Control *test;
 
-    virtual void Measure(const Size availableSize, VirtWnd *wnd);
-    virtual void Arrange(const Rect finalRect, VirtWnd *wnd);
+    virtual void Measure(const Size availableSize, Control *wnd);
+    virtual void Arrange(const Rect finalRect, Control *wnd);
 };
 
-void EbookLayout::Measure(const Size availableSize, VirtWnd *wnd)
+void EbookLayout::Measure(const Size availableSize, Control *wnd)
 {
     Size s(availableSize);
     if (SizeInfinite == s.Width)
@@ -357,7 +357,7 @@ static void CenterRectX(Rect& toCenter, Size& container)
     toCenter.X = (container.Width - toCenter.Width) / 2;
 }
 
-void EbookLayout::Arrange(const Rect finalRect, VirtWnd *wnd)
+void EbookLayout::Arrange(const Rect finalRect, Control *wnd)
 {
     int y, dx, dy;
 
@@ -402,14 +402,14 @@ void EbookLayout::Arrange(const Rect finalRect, VirtWnd *wnd)
     horizProgress->Arrange(horizPos);
 
     wnd->SetPosition(finalRect);
-    VirtWndEbook *wndEbook = (VirtWndEbook*)wnd;
+    ControlEbook *wndEbook = (ControlEbook*)wnd;
     rectDy -= (statusPos.Height + horizPos.Height);
     if (rectDy < 0)
         rectDy = 0;
     wndEbook->PageLayout(rectDx, rectDy);
 }
 
-VirtWndEbook::VirtWndEbook(HWND hwnd)
+ControlEbook::ControlEbook(HWND hwnd)
 {
     mobiLoadThread = NULL;
     pageLayoutThread = NULL;
@@ -431,14 +431,14 @@ VirtWndEbook::VirtWndEbook(HWND hwnd)
     ebookDefault->Set(Prop::AllocPadding(pageBorderY, pageBorderX, pageBorderY, pageBorderX));
     SetCurrentStyle(ebookDefault);
 
-    prev = new VirtWndButton(_T("Prev"));
+    prev = new Button(_T("Prev"));
     prevDefault = new Style(gStyleButtonDefault);
     prevDefault->Set(Prop::AllocPadding(12, 16, 4, 8));
     prevMouseOver = new Style(gStyleButtonMouseOver);
     prevMouseOver->Set(Prop::AllocPadding(4, 16, 4, 8));
     prev->SetStyles(prevDefault, prevMouseOver);
 
-    next = new VirtWndButton(_T("Next"));
+    next = new Button(_T("Next"));
     nextDefault = new Style(gStyleButtonDefault);
     nextDefault->Set(Prop::AllocPadding(4, 8, 12, 16));
     nextMouseOver = new Style(gStyleButtonMouseOver);
@@ -446,7 +446,7 @@ VirtWndEbook::VirtWndEbook(HWND hwnd)
     nextMouseOver->Set(Prop::AllocColorSolid(PropBgColor, "white"));
     next->SetStyles(nextDefault, nextMouseOver);
 
-    test = new VirtWndButton(_T("test"));
+    test = new Button(_T("test"));
     test->zOrder = 1;
 
     facebookButtonDefault = new Style();
@@ -463,7 +463,7 @@ VirtWndEbook::VirtWndEbook(HWND hwnd)
 
     test->SetStyles(facebookButtonDefault, facebookButtonOver);
 
-    status = new VirtWndButton(_T(""));
+    status = new Button(_T(""));
     statusDefault = new Style();
     statusDefault->Set(Prop::AllocColorSolid(PropBgColor, "white"));
     statusDefault->Set(Prop::AllocColorSolid(PropColor, "black"));
@@ -489,12 +489,12 @@ VirtWndEbook::VirtWndEbook(HWND hwnd)
     AddChild(test);
     layout = new EbookLayout(next, prev, status, horizProgress, test);
 
-    // special case for classes that derive from VirtWndHwnd
-    // as they don't call this from SetParent() (like other VirtWnd derivatives)
+    // special case for classes that derive from HwndWrapper
+    // as they don't call this from SetParent() (like other Control derivatives)
     RegisterEventHandlers(evtMgr);
 }
 
-VirtWndEbook::~VirtWndEbook()
+ControlEbook::~ControlEbook()
 {
     // TODO: I think that the problem here is that while the thread might
     // be finished, there still might be in-flight messages sent
@@ -504,7 +504,7 @@ VirtWndEbook::~VirtWndEbook()
     StopMobiLoadThread();
     StopPageLayoutThread();
 
-    // special case for classes that derive from VirtWndHwnd
+    // special case for classes that derive from HwndWrapper
     // as they don't trigger this from the destructor
     UnRegisterEventHandlers(evtMgr);
 
@@ -521,7 +521,7 @@ VirtWndEbook::~VirtWndEbook()
     delete horizProgressDefault;
 }
 
-void VirtWndEbook::DeletePages()
+void ControlEbook::DeletePages()
 {
     if (!pages)
         return;
@@ -530,7 +530,7 @@ void VirtWndEbook::DeletePages()
     pages = NULL;
 }
 
-void VirtWndEbook::DeleteNewPages()
+void ControlEbook::DeleteNewPages()
 {
     if (!newPages)
         return;
@@ -539,7 +539,7 @@ void VirtWndEbook::DeleteNewPages()
     newPages = NULL;
 }
 
-void VirtWndEbook::SetStatusText() const
+void ControlEbook::SetStatusText() const
 {
     if (!pages) {
         status->SetText(_T(""));
@@ -552,7 +552,7 @@ void VirtWndEbook::SetStatusText() const
     horizProgress->SetFilled(PercFromInt(pageCount, currPageNo));
 }
 
-void VirtWndEbook::SetPage(int newPageNo)
+void ControlEbook::SetPage(int newPageNo)
 {
     CrashIf((newPageNo < 1) || (newPageNo > (int)pages->Count()));
     currPageNo = newPageNo;
@@ -560,7 +560,7 @@ void VirtWndEbook::SetPage(int newPageNo)
     RequestRepaint(this);
 }
 
-void VirtWndEbook::AdvancePage(int dist)
+void ControlEbook::AdvancePage(int dist)
 {
     if (!pages)
         return;
@@ -572,7 +572,7 @@ void VirtWndEbook::AdvancePage(int dist)
     SetPage(newPageNo);
 }
 
-void VirtWndEbook::PageLayoutFinished()
+void ControlEbook::PageLayoutFinished()
 {
     StopPageLayoutThread();
     if (!newPages)
@@ -589,7 +589,7 @@ void VirtWndEbook::PageLayoutFinished()
 }
 
 // called on a ui thread from background thread
-void VirtWndEbook::NewPageUIThread(PageData *pageData)
+void ControlEbook::NewPageUIThread(PageData *pageData)
 {
     if (!newPages)
         newPages = new Vec<PageData*>();
@@ -605,22 +605,22 @@ void VirtWndEbook::NewPageUIThread(PageData *pageData)
 }
 
 // called on a background thread
-void VirtWndEbook::NewPage(PageData *pageData)
+void ControlEbook::NewPage(PageData *pageData)
 {
-    gMessageLoopUI->PostDelayedTask(base::Bind(&VirtWndEbook::NewPageUIThread, 
+    gMessageLoopUI->PostDelayedTask(base::Bind(&ControlEbook::NewPageUIThread, 
                                         base::Unretained(this), pageData), 100);
 }
 
 // called on a background thread
-void VirtWndEbook::PageLayoutBackground(LayoutInfo *li)
+void ControlEbook::PageLayoutBackground(LayoutInfo *li)
 {
     LayoutHtml(li);
-    gMessageLoopUI->PostTask(base::Bind(&VirtWndEbook::PageLayoutFinished, 
+    gMessageLoopUI->PostTask(base::Bind(&ControlEbook::PageLayoutFinished, 
                                         base::Unretained(this)));
     delete li;
 }
 
-void VirtWndEbook::PageLayout(int dx, int dy)
+void ControlEbook::PageLayout(int dx, int dy)
 {
     if ((pages || newPages || pageLayoutThread) && ((lastDx == dx) && (lastDy == dy)))
         return;
@@ -646,13 +646,13 @@ void VirtWndEbook::PageLayout(int dx, int dy)
     li->pageDy = dy;
     li->observer = this;
 
-    pageLayoutThread = new base::Thread("VirtWndEbook::PageLayoutBackground");
+    pageLayoutThread = new base::Thread("ControlEbook::PageLayoutBackground");
     pageLayoutThread->Start();
-    pageLayoutThread->message_loop()->PostTask(base::Bind(&VirtWndEbook::PageLayoutBackground, 
+    pageLayoutThread->message_loop()->PostTask(base::Bind(&ControlEbook::PageLayoutBackground, 
                                              base::Unretained(this), li));
 }
 
-void VirtWndEbook::StopPageLayoutThread()
+void ControlEbook::StopPageLayoutThread()
 {
     if (!pageLayoutThread)
         return;
@@ -661,12 +661,12 @@ void VirtWndEbook::StopPageLayoutThread()
     pageLayoutThread = NULL;
 }
 
-void VirtWndEbook::SetHtml(const char *newHtml)
+void ControlEbook::SetHtml(const char *newHtml)
 {
     html = newHtml;
 }
 
-void VirtWndEbook::StopMobiLoadThread()
+void ControlEbook::StopMobiLoadThread()
 {
     if (!mobiLoadThread)
         return;
@@ -677,7 +677,7 @@ void VirtWndEbook::StopMobiLoadThread()
 
 // called on UI thread from background thread after
 // mobi file has been loaded
-void VirtWndEbook::MobiLoaded(MobiDoc *newMobi)
+void ControlEbook::MobiLoaded(MobiDoc *newMobi)
 {
     CrashIf(gMessageLoopUI != MessageLoop::current());
     delete mb;
@@ -690,7 +690,7 @@ void VirtWndEbook::MobiLoaded(MobiDoc *newMobi)
 
 // called on UI thread from backgroudn thread if we tried
 // to load mobi file but failed
-void VirtWndEbook::MobiFailedToLoad(const TCHAR *fileName)
+void ControlEbook::MobiFailedToLoad(const TCHAR *fileName)
 {
     CrashIf(gMessageLoopUI != MessageLoop::current());
     // TODO: this message should show up in a different place, 
@@ -703,29 +703,29 @@ void VirtWndEbook::MobiFailedToLoad(const TCHAR *fileName)
 // Method executed on background thread that tries to load
 // a given mobi file and either calls MobiLoaded() or 
 // MobiFailedToLoad() on ui thread
-void VirtWndEbook::LoadMobiBackground(const TCHAR *fileName)
+void ControlEbook::LoadMobiBackground(const TCHAR *fileName)
 {
     CrashIf(gMessageLoopUI == MessageLoop::current());
     MobiDoc *mb = MobiDoc::ParseFile(fileName);
     if (!mb)
-        gMessageLoopUI->PostTask(base::Bind(&VirtWndEbook::MobiFailedToLoad, 
+        gMessageLoopUI->PostTask(base::Bind(&ControlEbook::MobiFailedToLoad, 
                                  base::Unretained(this), fileName));
     else
-        gMessageLoopUI->PostTask(base::Bind(&VirtWndEbook::MobiLoaded, 
+        gMessageLoopUI->PostTask(base::Bind(&ControlEbook::MobiLoaded, 
                                  base::Unretained(this), mb));
     free((void*)fileName);
 }
 
-void VirtWndEbook::LoadMobi(const TCHAR *fileName)
+void ControlEbook::LoadMobi(const TCHAR *fileName)
 {
     // TODO: not sure if that's enough to handle user chosing
     // to load another mobi file while loading of the previous
     // hasn't finished yet
     StopMobiLoadThread();
-    mobiLoadThread = new base::Thread("VirtWndEbook::LoadMobiBackground");
+    mobiLoadThread = new base::Thread("ControlEbook::LoadMobiBackground");
     mobiLoadThread->Start();
     // TODO: use some refcounted version of fileName
-    mobiLoadThread->message_loop()->PostTask(base::Bind(&VirtWndEbook::LoadMobiBackground, 
+    mobiLoadThread->message_loop()->PostTask(base::Bind(&ControlEbook::LoadMobiBackground, 
                                              base::Unretained(this), str::Dup(fileName)));
     // TODO: this message should show up in a different place, 
     // reusing status for convenience
@@ -739,7 +739,7 @@ static Rect RectForCircle(int x, int y, int r)
 }
 
 // This is just to test mouse move handling
-void VirtWndEbook::NotifyMouseMove(int x, int y)
+void ControlEbook::NotifyMouseMove(int x, int y)
 {
     Rect r1 = RectForCircle(cursorX, cursorY, CircleR);
     Rect r2 = RectForCircle(x, y, CircleR);
@@ -747,7 +747,7 @@ void VirtWndEbook::NotifyMouseMove(int x, int y)
     r1.Inflate(1,1); r2.Inflate(1,1);
     RequestRepaint(this, &r1, &r2);
 }
-void VirtWndEbook::RegisterEventHandlers(EventMgr *evtMgr) 
+void ControlEbook::RegisterEventHandlers(EventMgr *evtMgr) 
 {
     evtMgr->RegisterClickHandler(next, this);
     evtMgr->RegisterClickHandler(prev, this);
@@ -755,13 +755,13 @@ void VirtWndEbook::RegisterEventHandlers(EventMgr *evtMgr)
     evtMgr->RegisterClickHandler(test, this);
 }
 
-void VirtWndEbook::UnRegisterEventHandlers(EventMgr *evtMgr)
+void ControlEbook::UnRegisterEventHandlers(EventMgr *evtMgr)
 {
     evtMgr->UnRegisterClickHandlers(this);
 }
 
 // (x, y) is in the coordinates of w
-void VirtWndEbook::Clicked(VirtWnd *w, int x, int y)
+void ControlEbook::Clicked(Control *w, int x, int y)
 {
     if (w == next) {
         AdvancePage(1);
@@ -856,7 +856,7 @@ static void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL o
     }
 }
 
-void VirtWndEbook::Paint(Graphics *gfx, int offX, int offY)
+void ControlEbook::Paint(Graphics *gfx, int offX, int offY)
 {
     // for testing mouse move, paint a blue circle at current cursor position
     if ((-1 != cursorX) && (-1 != cursorY)) {
@@ -890,10 +890,10 @@ static void DrawFrame2(Graphics &g, RectI r)
 
 static void OnCreateWindow(HWND hwnd)
 {
-    gVirtWndFrame = new VirtWndEbook(hwnd);
-    gVirtWndFrame->SetHtml(gSampleHtml);
-    gVirtWndFrame->SetMinSize(Size(320, 200));
-    gVirtWndFrame->SetMaxSize(Size(1024, 800));
+    gControlFrame = new ControlEbook(hwnd);
+    gControlFrame->SetHtml(gSampleHtml);
+    gControlFrame->SetMinSize(Size(320, 200));
+    gControlFrame->SetMaxSize(Size(1024, 800));
 
     HMENU menu = BuildMenu();
     // triggers OnSize(), so must be called after we
@@ -927,7 +927,7 @@ static void OnOpen(HWND hwnd)
     TCHAR *fileName = ofn.lpstrFile + ofn.nFileOffset;
     if (*(fileName - 1)) {
         // special case: single filename without NULL separator
-        gVirtWndFrame->LoadMobi(ofn.lpstrFile);
+        gControlFrame->LoadMobi(ofn.lpstrFile);
         return;
     }
     // this is just a test app, no need to support multiple files
@@ -964,9 +964,9 @@ static LRESULT OnCommand(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    if (gVirtWndFrame) {
+    if (gControlFrame) {
         bool wasHandled;
-        LRESULT res = gVirtWndFrame->evtMgr->OnMessage(msg, wParam, lParam, wasHandled);
+        LRESULT res = gControlFrame->evtMgr->OnMessage(msg, wParam, lParam, wasHandled);
         if (wasHandled)
             return res;
     }
@@ -988,7 +988,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
             return 0;
 
         case WM_PAINT:
-            gVirtWndFrame->OnPaint(hwnd);
+            gControlFrame->OnPaint(hwnd);
             break;
 
         case WM_COMMAND:
@@ -1104,7 +1104,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     MessageLoopForUI::current()->RunWithDispatcher(NULL);
     // ret = RunApp();
 
-    delete gVirtWndFrame;
+    delete gControlFrame;
 
 Exit:
     delete gFontCache;

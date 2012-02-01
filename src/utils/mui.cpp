@@ -47,7 +47,7 @@ http://www.codeproject.com/Articles/194173/QuickDialogs-a-library-for-creating-d
 for how it could look like, syntax-wise. Layout itself could implement
 something similar to html box model (http://marlongrech.wordpress.com/2012/01/23/thinking-in-boxes/) or maybe like Rebol/View (http://www.rebol.com/docs/view-system.html)
 
-TODO: add size to content option to VirtWndHwnd (a bool flag, if set instead
+TODO: add size to content option to HwndWrapper (a bool flag, if set instead
 of using window's size as available area, use infinite and size the
 window to the result of the layout process). Alternatively (or in
 addition) could have a way to only do "size to content" on first layout
@@ -67,10 +67,10 @@ and when it's finished we would bilt the bitmap on ui thread. If there
 were WM_PAINT messages sent in-between, we would note that and start
 painting again when the in-progress painting has finished.
 
-TODO: optimize size of VirtWnd. One idea is that instead of embedding rarely used
-properties (like e.g. VirtWnd::hwndParent), we could maintain separate mapping
-from VirtWnd * to such properties e.g. in an array. Another idea is to move
-rarely used fields into a separate struct linked from VirtWnd. If none of rarely
+TODO: optimize size of Control. One idea is that instead of embedding rarely used
+properties (like e.g. Control::hwndParent), we could maintain separate mapping
+from Control * to such properties e.g. in an array. Another idea is to move
+rarely used fields into a separate struct linked from Control. If none of rarely
 used fields was set, we wouldn't have to allocate that struct.
 
 TODO: optimize repainting by cliping to dirty regions (?)
@@ -84,8 +84,8 @@ using namespace Gdiplus;
 namespace mui {
 
 // we use uint16 for those
-STATIC_ASSERT(VirtWnd::WndWantedInputBitLast < 16, max16bitsForWantedIntputBits);
-STATIC_ASSERT(VirtWnd::WndStateBitLast < 16, max16bitsForWndStateuBits);
+STATIC_ASSERT(Control::WantedInputBitLast < 16, max16bitsForWantedIntputBits);
+STATIC_ASSERT(Control::StateBitLast < 16, max16bitsForStateBits);
 
 static GraphicsForMeasureText * uiGraphicsForMeasureText = NULL;
 static Graphics *               uiGfxForMeasure = NULL;
@@ -158,21 +158,21 @@ GraphicsForMeasureText *AllocGraphicsForMeasureText()
 
 #define RECTFromRect(r) { r.GetLeft(), r.GetTop(), r.GetRight(), r.GetBottom() }
 
-static VirtWndHwnd *GetRootHwndWnd(const VirtWnd *w)
+static HwndWrapper *GetRootHwndWnd(const Control *w)
 {
     while (w->parent) {
         w = w->parent;
     }
     if (!w->hwndParent)
         return NULL;
-    return (VirtWndHwnd*)w;
+    return (HwndWrapper*)w;
 }
 
 // traverse tree upwards to find HWND that is ultimately backing
 // this window
-HWND GetHwndParent(const VirtWnd *w)
+HWND GetHwndParent(const Control *w)
 {
-    VirtWndHwnd *wHwnd = GetRootHwndWnd(w);
+    HwndWrapper *wHwnd = GetRootHwndWnd(w);
     if (wHwnd)
         return wHwnd->hwndParent;
     return NULL;
@@ -187,7 +187,7 @@ public:
 
     virtual ~WndFilter() {}
 
-    virtual bool Matches(VirtWnd *w, int offX, int offY) {
+    virtual bool Matches(Control *w, int offX, int offY) {
         return true;
     }
 };
@@ -203,7 +203,7 @@ public:
     {
     }
     virtual ~WndInputWantedFilter() {}
-    virtual bool Matches(VirtWnd *w, int offX, int offY) {
+    virtual bool Matches(Control *w, int offX, int offY) {
         if ((w->wantedInputBits & wantedInputMask) != 0) {
             Rect r = Rect(offX, offY, w->pos.Width, w->pos.Height);
             return r.Contains(x, y);
@@ -213,11 +213,11 @@ public:
 };
 
 struct WndAndOffset {
-    VirtWnd *wnd;
+    Control *wnd;
     int offX, offY;
 };
 
-static void CollectWindowsBreathFirst(VirtWnd *w, int offX, int offY, WndFilter *wndFilter, Vec<WndAndOffset> *windows)
+static void CollectWindowsBreathFirst(Control *w, int offX, int offY, WndFilter *wndFilter, Vec<WndAndOffset> *windows)
 {
     if (wndFilter->skipInvisibleSubtrees && !w->IsVisible())
         return;
@@ -243,7 +243,7 @@ static void CollectWindowsBreathFirst(VirtWnd *w, int offX, int offY, WndFilter 
 // in windows array before child windows. In most cases caller can use the last
 // window in returned array (but can use a custom logic as well).
 // Returns number of matched windows as a convenience.
-static size_t CollectWindowsAt(VirtWnd *wndRoot, int x, int y, uint16 wantedInputMask, Vec<WndAndOffset> *windows)
+static size_t CollectWindowsAt(Control *wndRoot, int x, int y, uint16 wantedInputMask, Vec<WndAndOffset> *windows)
 {
     WndInputWantedFilter filter(x, y, wantedInputMask);
     windows->Reset();
@@ -344,7 +344,7 @@ static void InvalidateAtOff(HWND hwnd, const Rect *r, int offX, int offY)
     InvalidateRect(hwnd, &rc, FALSE);
 }
 
-void RequestRepaint(VirtWnd *w, const Rect *r1, const Rect *r2)
+void RequestRepaint(Control *w, const Rect *r1, const Rect *r2)
 {
     // calculate the offset of window w within its root window
     int offX = 0, offY = 0;
@@ -374,17 +374,17 @@ void RequestRepaint(VirtWnd *w, const Rect *r1, const Rect *r2)
     InvalidateAtOff(hwnd, &w->pos, offX, offY);
 }
 
-void RequestLayout(VirtWnd *w)
+void RequestLayout(Control *w)
 {
     if (!w->IsVisible())
         return;
 
-    VirtWndHwnd *wnd = GetRootHwndWnd(w);
+    HwndWrapper *wnd = GetRootHwndWnd(w);
     if (wnd)
         wnd->RequestLayout();
 }
 
-VirtWnd::VirtWnd(VirtWnd *newParent)
+Control::Control(Control *newParent)
 {
     wantedInputBits = 0;
     stateBits = 0;
@@ -400,23 +400,23 @@ VirtWnd::VirtWnd(VirtWnd *newParent)
         SetParent(newParent);
 }
 
-VirtWnd::~VirtWnd()
+Control::~Control()
 {
     delete layout;
     DeleteVecMembers(children);
     if (!parent)
         return;
-    VirtWndHwnd *root = GetRootHwndWnd(parent);
+    HwndWrapper *root = GetRootHwndWnd(parent);
     CrashIf(!root);
     UnRegisterEventHandlers(root->evtMgr);
 }
 
-void VirtWnd::SetParent(VirtWnd *newParent)
+void Control::SetParent(Control *newParent)
 {
-    VirtWndHwnd *prevRoot = NULL;
+    HwndWrapper *prevRoot = NULL;
     if (parent)
         prevRoot = GetRootHwndWnd(parent);
-    VirtWndHwnd *newRoot = GetRootHwndWnd(newParent);
+    HwndWrapper *newRoot = GetRootHwndWnd(newParent);
     CrashIf(!newRoot);
 
     parent = newParent;
@@ -427,37 +427,37 @@ void VirtWnd::SetParent(VirtWnd *newParent)
     RegisterEventHandlers(newRoot->evtMgr);
 }
 
-VirtWnd *VirtWnd::GetChild(size_t idx) const
+Control *Control::GetChild(size_t idx) const
 {
     return children.At(idx);
 }
 
-size_t VirtWnd::GetChildCount() const
+size_t Control::GetChildCount() const
 {
     return children.Count();
 }
 
-bool VirtWnd::WantsMouseClick() const
+bool Control::WantsMouseClick() const
 {
     return bit::IsSet(wantedInputBits, WantsMouseClickBit);
 }
 
-bool VirtWnd::WantsMouseMove() const
+bool Control::WantsMouseMove() const
 {
     return bit::IsSet(wantedInputBits, WantsMouseMoveBit);
 }
 
-bool VirtWnd::IsMouseOver() const
+bool Control::IsMouseOver() const
 {
     return bit::IsSet(stateBits, MouseOverBit);
 }
 
-bool VirtWnd::IsVisible() const
+bool Control::IsVisible() const
 {
     return !bit::IsSet(stateBits, IsHiddenBit);
 }
 
-void VirtWnd::SetIsMouseOver(bool isOver)
+void Control::SetIsMouseOver(bool isOver)
 {
     if (isOver)
         bit::Set(stateBits, MouseOverBit);
@@ -465,7 +465,7 @@ void VirtWnd::SetIsMouseOver(bool isOver)
         bit::Clear(stateBits, MouseOverBit);
 }
 
-void VirtWnd::AddChild(VirtWnd *wnd, int pos)
+void Control::AddChild(Control *wnd, int pos)
 {
     CrashAlwaysIf(NULL == wnd);
     if ((pos < 0) || (pos >= (int)children.Count()))
@@ -475,7 +475,7 @@ void VirtWnd::AddChild(VirtWnd *wnd, int pos)
     wnd->SetParent(this);
 }
 
-void VirtWnd::Measure(const Size availableSize)
+void Control::Measure(const Size availableSize)
 {
     if (layout) {
         layout->Measure(availableSize, this);
@@ -484,14 +484,14 @@ void VirtWnd::Measure(const Size availableSize)
     }
 }
 
-void VirtWnd::MeasureChildren(Size availableSize) const
+void Control::MeasureChildren(Size availableSize) const
 {
     for (size_t i = 0; i < GetChildCount(); i++) {
         GetChild(i)->Measure(availableSize);
     }
 }
 
-void VirtWnd::Arrange(const Rect finalRect)
+void Control::Arrange(const Rect finalRect)
 {
     if (layout) {
         layout->Arrange(finalRect, this);
@@ -500,7 +500,7 @@ void VirtWnd::Arrange(const Rect finalRect)
     }
 }
 
-void VirtWnd::Show()
+void Control::Show()
 {
     if (IsVisible())
         return; // perf: avoid unnecessary repaints
@@ -508,7 +508,7 @@ void VirtWnd::Show()
     RequestRepaint(this);
 }
 
-void VirtWnd::Hide()
+void Control::Hide()
 {
     if (!IsVisible())
         return;
@@ -516,7 +516,7 @@ void VirtWnd::Hide()
     bit::Set(stateBits, IsHiddenBit);
 }
 
-void VirtWnd::SetPosition(const Rect& p)
+void Control::SetPosition(const Rect& p)
 {
     if (p.Equals(pos))
         return;  // perf optimization
@@ -532,11 +532,11 @@ void VirtWnd::SetPosition(const Rect& p)
 
 // convert position (x,y) int coordiantes of root window
 // to position in this window's coordinates
-void VirtWnd::MapRootToMyPos(int& x, int& y) const
+void Control::MapRootToMyPos(int& x, int& y) const
 {
     int offX = pos.X;
     int offY = pos.Y;
-    const VirtWnd *w = this;
+    const Control *w = this;
     while (w->parent) {
         w = w->parent;
         offX += w->pos.X;
@@ -549,18 +549,18 @@ void VirtWnd::MapRootToMyPos(int& x, int& y) const
 // Requests the window to draw itself on a Graphics canvas.
 // offX and offY is a position of this window within
 // Graphics canvas (pos is relative to that offset)
-void VirtWnd::Paint(Graphics *gfx, int offX, int offY)
+void Control::Paint(Graphics *gfx, int offX, int offY)
 {
     if (!IsVisible())
         return;
 }
 
-void VirtWnd::SetCurrentStyle(Style *style1, Style *style2)
+void Control::SetCurrentStyle(Style *style1, Style *style2)
 {
     cachedPropsIdx = CachePropsForStyle(style1, style2);
 }
 
-Prop *VirtWnd::GetCachedProp(PropType propType) const
+Prop *Control::GetCachedProp(PropType propType) const
 {
     CrashIf(propType >= PropsCount);
     CrashIf(MAX_SIZE_T == cachedPropsIdx);
@@ -568,12 +568,12 @@ Prop *VirtWnd::GetCachedProp(PropType propType) const
     return props[propType];
 }
 
-Prop **VirtWnd::GetCachedProps() const
+Prop **Control::GetCachedProps() const
 {
     return GetCachedPropsAtIdx(cachedPropsIdx);
 }
 
-VirtWndButton::VirtWndButton(const TCHAR *s)
+Button::Button(const TCHAR *s)
 {
     text = NULL;
     styleMouseOver = NULL;
@@ -584,7 +584,12 @@ VirtWndButton::VirtWndButton(const TCHAR *s)
     SetText(s);
 }
 
-Size VirtWndButton::GetBorderAndPaddingSize() const
+Button::~Button()
+{
+    free(text);
+}
+
+Size Button::GetBorderAndPaddingSize() const
 {
     Prop **props = GetCachedProps();
     PaddingData pad = props[PropPadding]->padding;
@@ -597,13 +602,13 @@ Size VirtWndButton::GetBorderAndPaddingSize() const
     return Size(dx, dy);
 }
 
-void VirtWndButton::NotifyMouseEnter()
+void Button::NotifyMouseEnter()
 {
     SetCurrentStyle(styleMouseOver, gStyleButtonMouseOver);
     RecalculateSize(true);
 }
 
-void VirtWndButton::NotifyMouseLeave()
+void Button::NotifyMouseLeave()
 {
     SetCurrentStyle(styleDefault, gStyleButtonDefault);
     RecalculateSize(true);
@@ -612,7 +617,7 @@ void VirtWndButton::NotifyMouseLeave()
 // Update desired size of the button.
 // If the size changes, trigger layout (which will in
 // turn request repaints of affected areas)
-void VirtWndButton::RecalculateSize(bool repaintIfSizeDidntChange)
+void Button::RecalculateSize(bool repaintIfSizeDidntChange)
 {
     Size prevSize = desiredSize;
 
@@ -633,13 +638,13 @@ void VirtWndButton::RecalculateSize(bool repaintIfSizeDidntChange)
         RequestRepaint(this);
 }
 
-void VirtWndButton::SetText(const TCHAR *s)
+void Button::SetText(const TCHAR *s)
 {
     str::ReplacePtr(&text, s);
     RecalculateSize(true);
 }
 
-void VirtWndButton::Measure(const Size availableSize)
+void Button::Measure(const Size availableSize)
 {
     // desiredSize is calculated when we change the
     // text, font or other attributes that influence
@@ -647,7 +652,7 @@ void VirtWndButton::Measure(const Size availableSize)
     // here
 }
 
-void VirtWndButton::SetStyles(Style *def, Style *mouseOver)
+void Button::SetStyles(Style *def, Style *mouseOver)
 {
     styleDefault = def;
     styleMouseOver = mouseOver;
@@ -673,7 +678,7 @@ static int AlignedOffset(int containerDx, int elDx, AlignAttr align)
     return (containerDx - elDx) / 2;
 }
 
-void VirtWndButton::Paint(Graphics *gfx, int offX, int offY)
+void Button::Paint(Graphics *gfx, int offX, int offY)
 {
     if (!IsVisible())
         return;
@@ -730,37 +735,37 @@ static bool BitmapNotBigEnough(Bitmap *bmp, int dx, int dy)
         return true;
     return false;
 }
-// Set minimum size for the HWND represented by this VirtWndHwnd.
+// Set minimum size for the HWND represented by this HwndWrapper.
 // It is enforced in EventManager.
 // Default size is (0,0) which is unlimited.
 // For top-level windows it's the size of the whole window, including
 // non-client area like borders, title area etc.
-void VirtWndHwnd::SetMinSize(Size s)
+void HwndWrapper::SetMinSize(Size s)
 {
     evtMgr->SetMinSize(s);
 }
 
-// Set maximum size for the HWND represented by this VirtWndHwnd.
+// Set maximum size for the HWND represented by this HwndWrapper.
 // It is enforced in EventManager.
 // Default size is (0,0) which is unlimited.
 // For top-level windows it's the size of the whole window, including
 // non-client area like borders, title area etc.
-void VirtWndHwnd::SetMaxSize(Size s)
+void HwndWrapper::SetMaxSize(Size s)
 {
     evtMgr->SetMaxSize(s);
 }
 
-void VirtWndHwnd::SetHwnd(HWND hwnd)
+void HwndWrapper::SetHwnd(HWND hwnd)
 {
     CrashIf(NULL != hwndParent);
     hwndParent = hwnd;
     evtMgr = new EventMgr(this);
-    painter = new VirtWndPainter(this);
+    painter = new Painter(this);
 }
 
 // called when either the window size changed (as a result
 // of WM_SIZE) or when window tree changes
-void VirtWndHwnd::TopLevelLayout()
+void HwndWrapper::TopLevelLayout()
 {
     CrashIf(!hwndParent);
     ClientRect rc(hwndParent);
@@ -771,48 +776,48 @@ void VirtWndHwnd::TopLevelLayout()
     layoutRequested = false;
 }
 
-VirtWndHwnd::VirtWndHwnd(HWND hwnd) 
+HwndWrapper::HwndWrapper(HWND hwnd) 
     : painter(NULL), evtMgr(NULL), layoutRequested(false)
 {
     if (hwnd)
         SetHwnd(hwnd);
 }
 
-VirtWndHwnd::~VirtWndHwnd()
+HwndWrapper::~HwndWrapper()
 {
     delete evtMgr;
     delete painter;
 }
 
 // mark for re-layout at the earliest convenience
-void VirtWndHwnd::RequestLayout()
+void HwndWrapper::RequestLayout()
 {
     layoutRequested = true;
     // trigger message queue so that the layout request is processed
     PostMessage(hwndParent, WM_NULL, 0, 0);
 }
 
-void VirtWndHwnd::LayoutIfRequested()
+void HwndWrapper::LayoutIfRequested()
 {
     if (layoutRequested)
         TopLevelLayout();
 }
 
-void VirtWndHwnd::OnPaint(HWND hwnd)
+void HwndWrapper::OnPaint(HWND hwnd)
 {
     CrashIf(hwnd != hwndParent);
     painter->Paint(hwnd);
 }
 
-VirtWndPainter::VirtWndPainter(VirtWndHwnd *wnd)
+Painter::Painter(HwndWrapper *wnd)
     : wnd(wnd), cacheBmp(NULL)
 {
 }
 
-// we paint the background in VirtWndPainter() because I don't
-// want to add an artificial VirtWnd window just to cover
+// we paint the background in Painter() because I don't
+// want to add an artificial Control window just to cover
 // the whole HWND and paint the background.
-void VirtWndPainter::PaintBackground(Graphics *g, Rect r)
+void Painter::PaintBackground(Graphics *g, Rect r)
 {
     // TODO: don't quite get why I need to expand the rectangle, but
     // sometimes there's a seemingly 1 pixel artifact on the left and
@@ -831,7 +836,7 @@ void VirtWndPainter::PaintBackground(Graphics *g, Rect r)
 // containment within z-order and non-stable sort could
 // mess that up. Also, this should be faster in common
 // case where most windows are in the same z-order.
-void PaintWindowsInZOrder(Graphics *g, VirtWnd *wnd)
+void PaintWindowsInZOrder(Graphics *g, Control *wnd)
 {
     Vec<WndAndOffset> windowsToPaint;
     WndFilter wndFilter;
@@ -863,11 +868,11 @@ void PaintWindowsInZOrder(Graphics *g, VirtWnd *wnd)
 }
 
 // Should be called from WM_PAINT. Recursively paints a given window and
-// all its children. VirtWnd must be the top-level window associated
+// all its children. Control must be the top-level window associated
 // with HWND.
 // Note: maybe should be split into BeginPaint()/Paint()/EndPaint()
 // calls so that the caller can do more drawing after Paint()
-void VirtWndPainter::Paint(HWND hwnd)
+void Painter::Paint(HWND hwnd)
 {
     CrashAlwaysIf(hwnd != wnd->hwndParent);
 
@@ -929,7 +934,7 @@ void VirtWndPainter::Paint(HWND hwnd)
     EndPaint(hwnd, &ps);
 }
 
-EventMgr::EventMgr(VirtWndHwnd *wndRoot)
+EventMgr::EventMgr(HwndWrapper *wndRoot)
     : wndRoot(wndRoot), currOver(NULL)
 {
     CrashIf(!wndRoot);
@@ -966,13 +971,13 @@ void EventMgr::UnRegisterClickHandlers(IClickHandler *clickHandler)
     }
 }
 
-void EventMgr::RegisterClickHandler(VirtWnd *wndSource, IClickHandler *clickHandler)
+void EventMgr::RegisterClickHandler(Control *wndSource, IClickHandler *clickHandler)
 {
     ClickHandler ch = { wndSource, clickHandler };
     clickHandlers.Append(ch);
 }
 
-IClickHandler *EventMgr::GetClickHandlerFor(VirtWnd *wndSource)
+IClickHandler *EventMgr::GetClickHandlerFor(Control *wndSource)
 {
     for (size_t i = 0; i < clickHandlers.Count(); i++) {
         ClickHandler ch = clickHandlers.At(i);
@@ -987,9 +992,9 @@ IClickHandler *EventMgr::GetClickHandlerFor(VirtWnd *wndSource)
 LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& wasHandled)
 {
     Vec<WndAndOffset> windows;
-    VirtWnd *w;
+    Control *w;
 
-    uint16 wantedInputMask = bit::FromBit<uint16>(VirtWnd::WantsMouseOverBit);
+    uint16 wantedInputMask = bit::FromBit<uint16>(Control::WantsMouseOverBit);
     size_t count = CollectWindowsAt(wndRoot, x, y, wantedInputMask, &windows);
     if (0 == count) {
         if (currOver) {
@@ -1011,7 +1016,7 @@ LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& wasHandled)
         }
     }
 
-    wantedInputMask = bit::FromBit<uint16>(VirtWnd::WantsMouseMoveBit);
+    wantedInputMask = bit::FromBit<uint16>(Control::WantsMouseMoveBit);
     count = CollectWindowsAt(wndRoot, x, y, wantedInputMask, &windows);
     if (0 == count)
         return 0;
@@ -1027,12 +1032,12 @@ LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& wasHandled)
 LRESULT EventMgr::OnLButtonUp(WPARAM keys, int x, int y, bool& wasHandled)
 {
     Vec<WndAndOffset> windows;
-    uint16 wantedInputMask = bit::FromBit<uint16>(VirtWnd::WantsMouseClickBit);
+    uint16 wantedInputMask = bit::FromBit<uint16>(Control::WantsMouseClickBit);
     size_t count = CollectWindowsAt(wndRoot, x, y, wantedInputMask, &windows);
     if (0 == count)
         return 0;
     // TODO: should this take z-order into account?
-    VirtWnd *w = windows.Last().wnd;
+    Control *w = windows.Last().wnd;
     w->MapRootToMyPos(x, y);
     IClickHandler *clickHandler = GetClickHandlerFor(w);
     if (clickHandler)
