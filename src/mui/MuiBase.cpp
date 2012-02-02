@@ -30,24 +30,86 @@ struct FontCacheEntry {
     bool SameAs(const WCHAR *name, float size, FontStyle style);
 };
 
-static Vec<FontCacheEntry> *gFonts = NULL;
+static Vec<FontCacheEntry> *gFontsCache = NULL;
 
+// Graphics objects cannot be used across threads. We have a per-thread
+// cache so that it's easy to grab Graphics object to be used for
+// measuring text
+struct GraphicsCacheEntry
+{
+    enum {
+        bmpDx = 32,
+        bmpDy = 4,
+        stride = bmpDx * 4,
+    };
+
+    DWORD       threadId;
+    Graphics *  gfx;
+    Bitmap *    bmp;
+    BYTE        data[bmpDx * bmpDy * 4];
+
+    bool Create();
+    void Free();
+};
+
+static Vec<GraphicsCacheEntry> *gGraphicsCache = NULL;
+
+// set consistent mode for our graphics objects so that we get
+// the same results when measuring text
+void InitGraphicsMode(Graphics *g)
+{
+    g->SetCompositingQuality(CompositingQualityHighQuality);
+    g->SetSmoothingMode(SmoothingModeAntiAlias);
+    //g.SetSmoothingMode(SmoothingModeHighQuality);
+    g->SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
+    g->SetPageUnit(UnitPixel);
+}
+
+bool GraphicsCacheEntry::Create()
+{
+    // using a small bitmap under assumption that Graphics used only
+    // for measuring text doesn't need the actual bitmap
+    bmp = ::new Bitmap(bmpDx, bmpDy, stride, PixelFormat32bppARGB, data);
+    if (!bmp)
+        return false;
+    gfx = ::new Graphics((Image*)bmp);
+    if (!gfx)
+        return false;
+    InitGraphicsMode(gfx);
+    return true;
+}
+
+void GraphicsCacheEntry::Free()
+{
+    ::delete gfx;
+    ::delete bmp;
+}
 
 void InitializeBase()
 {
     InitializeCriticalSection(&gMuiCs);
-    gFonts = new Vec<FontCacheEntry>();
+    gFontsCache = new Vec<FontCacheEntry>();
+    gGraphicsCache = new Vec<GraphicsCacheEntry>();
 }
 
 void DestroyBase()
 {
-    DeleteCriticalSection(&gMuiCs);
-    for (size_t i = 0; i < gFonts->Count(); i++) {
-        FontCacheEntry e = gFonts->At(i);
+    // if this fires, time to implement cache eviction
+    CrashIf(gGraphicsCache->Count() > 64);
+    for (size_t i = 0; i < gGraphicsCache->Count(); i++) {
+        GraphicsCacheEntry e = gGraphicsCache->At(i);
+        e.Free();
+    }
+    delete gGraphicsCache;
+
+    for (size_t i = 0; i < gFontsCache->Count(); i++) {
+        FontCacheEntry e = gFontsCache->At(i);
         free(e.name);
         ::delete e.font;
     }
-    delete gFonts;
+    delete gFontsCache;
+
+    DeleteCriticalSection(&gMuiCs);
 }
 
 static Font *CreateFontByStyle(const WCHAR *name, REAL size, FontStyle style)
@@ -68,8 +130,8 @@ Font *GetCachedFont(const WCHAR *name, float size, FontStyle style)
 {
     ScopedMuiCritSec muiCs;
 
-    for (size_t i = 0; i < gFonts->Count(); i++) {
-        FontCacheEntry f = gFonts->At(i);
+    for (size_t i = 0; i < gFontsCache->Count(); i++) {
+        FontCacheEntry f = gFontsCache->At(i);
         if (f.SameAs(name, size, style)) {
             return f.font;
         }
@@ -78,9 +140,36 @@ Font *GetCachedFont(const WCHAR *name, float size, FontStyle style)
     // TODO: handle a failure to create a font. Use fontCache[0] if exists
     // or try to fallback to a known font like Times New Roman
     f.font = CreateFontByStyle(name, size, style);
-    gFonts->Append(f);
+    gFontsCache->Append(f);
     return f.font;
 }
 
+Graphics *AllocGraphicsForMeasureText()
+{
+    DWORD threadId = GetCurrentThreadId();
+    for (size_t i = 0; i < gGraphicsCache->Count(); i++) {
+        GraphicsCacheEntry e = gGraphicsCache->At(i);
+        if (e.threadId == threadId)
+            return e.gfx;
+    }
+    GraphicsCacheEntry e;
+    e.Create();
+    gGraphicsCache->Append(e);
+    return e.gfx;
+}
+
+// TODO: we should evict entries if the cache grows too much
+// so that if we often launch threads that allocate their own
+// Graphics objects, we don't use too much memory for them.
+// This should be based on usage (i.e. count 
+void FreeGraphicsForMeasureText(Graphics *gfx)
+{
+    // this is just diagnostic
+    DWORD threadId = GetCurrentThreadId();
+    for (size_t i = 0; i < gGraphicsCache->Count(); i++) {
+        GraphicsCacheEntry e = gGraphicsCache->At(i);
+        CrashIf((e.gfx != gfx) || (e.threadId == threadId));
+    }
+}
 
 }

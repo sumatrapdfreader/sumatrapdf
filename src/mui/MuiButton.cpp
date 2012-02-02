@@ -66,12 +66,13 @@ void Button::RecalculateSize(bool repaintIfSizeDidntChange)
     desiredSize = GetBorderAndPaddingSize();
     textDx = 0;
     if (text) {
-        Graphics *gfx = UIThreadGraphicsForMeasureText();
+        Graphics *gfx = AllocGraphicsForMeasureText();
         Font *font = CachedFontFromCachedProps(GetCachedProps());
         RectF bbox = MeasureText(gfx, font, text);
         textDx = (size_t)bbox.Width; // TODO: round up?
         desiredSize.Width  += textDx;
         desiredSize.Height += (INT)bbox.Height; // TODO: round up?
+        FreeGraphicsForMeasureText(gfx);
     }
 
     if (!prevSize.Equals(desiredSize))

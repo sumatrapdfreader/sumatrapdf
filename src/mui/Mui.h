@@ -67,27 +67,6 @@ public:
     }
 };
 
-// Graphics objects cannot be used across threads. This class
-// allows an easy allocation of small Graphics objects that
-// can be used for measuring text
-class GraphicsForMeasureText
-{
-    enum {
-        bmpDx = 32,
-        bmpDy = 4,
-        stride = bmpDx * 4,
-    };
-
-    Graphics *  gfx;
-    Bitmap *    bmp;
-    BYTE        data[bmpDx * bmpDy * 4];
-public:
-    GraphicsForMeasureText();
-    ~GraphicsForMeasureText();
-    bool Create();
-    Graphics *Get();
-};
-
 struct BorderProps {
     Prop *  topWidth, *topColor;
     Prop *  rightWidth, *rightColor;
@@ -95,17 +74,14 @@ struct BorderProps {
     Prop *  leftWidth, *leftColor;
 };
 
-void                     Initialize();
-void                     Destroy();
-GraphicsForMeasureText * AllocGraphicsForMeasureText();
-Graphics *               UIThreadGraphicsForMeasureText();
-void                     InitGraphicsMode(Graphics *g);
-size_t                   CollectWindowsAt(Control *wndRoot, int x, int y, uint16 wantedInputMask, Vec<WndAndOffset> *windows);
-void                     CollectWindowsBreathFirst(Control *w, int offX, int offY, WndFilter *wndFilter, Vec<WndAndOffset> *windows);
-void                     RequestRepaint(Control *w, const Rect *r1 = NULL, const Rect *r2 = NULL);
-void                     RequestLayout(Control *w);
-HwndWrapper *            GetRootHwndWnd(const Control *w);
-void                     DrawBorder(Graphics *gfx, const Rect r, const BorderProps& bp);
+void        Initialize();
+void        Destroy();
+size_t      CollectWindowsAt(Control *wndRoot, int x, int y, uint16 wantedInputMask, Vec<WndAndOffset> *windows);
+void        CollectWindowsBreathFirst(Control *w, int offX, int offY, WndFilter *wndFilter, Vec<WndAndOffset> *windows);
+void        RequestRepaint(Control *w, const Rect *r1 = NULL, const Rect *r2 = NULL);
+void        RequestLayout(Control *w);
+void        DrawBorder(Graphics *gfx, const Rect r, const BorderProps& bp);
+HwndWrapper *GetRootHwndWnd(const Control *w);
 
 } // namespace mui
 

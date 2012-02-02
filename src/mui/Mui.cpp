@@ -78,80 +78,18 @@ TODO: optimize repainting by cliping to dirty regions (?)
 
 #include "Mui.h"
 
-//using namespace Gdiplus;
-//#include "GdiPlusUtil.h"
-
 namespace mui {
-
-static GraphicsForMeasureText * uiGraphicsForMeasureText = NULL;
-static Graphics *               uiGfxForMeasure = NULL;
-
-void InitGraphicsMode(Graphics *g)
-{
-    g->SetCompositingQuality(CompositingQualityHighQuality);
-    g->SetSmoothingMode(SmoothingModeAntiAlias);
-    //g.SetSmoothingMode(SmoothingModeHighQuality);
-    g->SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
-    g->SetPageUnit(UnitPixel);
-}
 
 void Initialize()
 {
     InitializeBase();
     css::Initialize();
-    uiGraphicsForMeasureText = AllocGraphicsForMeasureText();
-    uiGfxForMeasure = uiGraphicsForMeasureText->Get();
 }
 
 void Destroy()
 {
-    delete uiGraphicsForMeasureText;
     css::Destroy();
     DestroyBase();
-}
-
-Graphics *UIThreadGraphicsForMeasureText()
-{
-    return uiGfxForMeasure;
-}
-
-GraphicsForMeasureText::GraphicsForMeasureText() : gfx(NULL), bmp(NULL)
-{
-}
-
-GraphicsForMeasureText::~GraphicsForMeasureText()
-{
-    ::delete gfx;
-    ::delete bmp;
-}
-
-bool GraphicsForMeasureText::Create()
-{
-    // using a small bitmap under assumption that Graphics used only
-    // for measuring text doesn't need the actual bitmap
-    bmp = ::new Bitmap(bmpDx, bmpDy, stride, PixelFormat32bppARGB, data);
-    if (!bmp)
-        return false;
-    gfx = ::new Graphics((Image*)bmp);
-    if (!gfx)
-        return false;
-    InitGraphicsMode(gfx);
-    return true;
-}
-
-Graphics *GraphicsForMeasureText::Get()
-{
-    return gfx;
-}
-
-GraphicsForMeasureText *AllocGraphicsForMeasureText()
-{
-    GraphicsForMeasureText *res = new GraphicsForMeasureText();
-    if (!res->Create()) {
-        delete res;
-        return NULL;
-    }
-    return res;
 }
 
 #define RECTFromRect(r) { r.GetLeft(), r.GetTop(), r.GetRight(), r.GetBottom() }

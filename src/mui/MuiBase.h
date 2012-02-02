@@ -24,6 +24,9 @@ public:
     }
 };
 
-Font *GetCachedFont(const WCHAR *name, float size, FontStyle style);
+void        InitGraphicsMode(Graphics *g);
+Font *      GetCachedFont(const WCHAR *name, float size, FontStyle style);
+Graphics *  AllocGraphicsForMeasureText();
+void        FreeGraphicsForMeasureText(Graphics *gfx);
 
 #endif

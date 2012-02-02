@@ -191,8 +191,7 @@ private:
     REAL                pageDy;
     REAL                lineSpacing;
     REAL                spaceDx;
-    mui::GraphicsForMeasureText *gfxForMeasure;
-    Graphics *          gfx;
+    Graphics *          gfx; // for measuring text
     ScopedMem<WCHAR>    fontName;
     float               fontSize;
 
@@ -221,13 +220,13 @@ private:
     WCHAR               buf[512];
 };
 
-PageLayout::PageLayout() : currPage(NULL), gfxForMeasure(NULL), gfx(NULL)
+PageLayout::PageLayout() : currPage(NULL), gfx(NULL)
 {
 }
 
 PageLayout::~PageLayout()
 {
-    delete gfxForMeasure;
+    mui::FreeGraphicsForMeasureText(gfx);
 }
 
 void PageLayout::SetCurrentFont(FontStyle fs)
@@ -273,8 +272,7 @@ void PageLayout::StartLayout(LayoutInfo* layoutInfo)
     pageDx = (REAL)layoutInfo->pageDx;
     pageDy = (REAL)layoutInfo->pageDy;
 
-    gfxForMeasure = mui::AllocGraphicsForMeasureText();
-    gfx = gfxForMeasure->Get();
+    gfx = mui::AllocGraphicsForMeasureText();
     fontName.Set(str::Dup(layoutInfo->fontName));
     fontSize = layoutInfo->fontSize;
     htmlParser = new HtmlPullParser(layoutInfo->htmlStr, layoutInfo->htmlStrLen);
