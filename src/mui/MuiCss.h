@@ -4,13 +4,9 @@
 #ifndef MuiCss_h
 #define MuiCss_h
 
-#include "Vec.h"
-#include "HtmlPullParser.h"
+// This is only meant to be included by Mui.h within mui namespace
 
-namespace mui {
 namespace css {
-
-using namespace Gdiplus;
 
 enum PropType {
     PropFontName = 0,       // font-family
@@ -172,7 +168,6 @@ Font * CachedFontFromCachedProps(Prop **props);
 Prop ** CachePropsForStyle(Style *style1, Style *style2);
 
 } // namespace css
-} // namespace mui
 
 #endif
 

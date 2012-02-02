@@ -145,7 +145,9 @@ UTILS_OBJS = \
 	$(OS)\ThreadUtil.obj
 
 MUI_OBJS = \
-	$(OS)\MuiBase.obj $(OS)\Mui.obj $(OS)\MuiCss.obj 
+	$(OS)\MuiBase.obj $(OS)\Mui.obj $(OS)\MuiCss.obj $(OS)\MuiLayout.obj \
+	$(OS)\MuiPainter.obj $(OS)\MuiControl.obj $(OS)\MuiButton.obj \
+	$(OS)\MuiEventMgr.obj $(OS)\MuiHwndWrapper.obj
 
 ENGINE_OBJS = \
 	$(OS)\PdfEngine.obj $(OS)\ImagesEngine.obj $(OS)\PsEngine.obj \
@@ -398,10 +400,10 @@ $(OS)\DjVuEngine.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUt
 $(OS)\DjVuEngine.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\EbookTest.obj: src\ebooktest\EbookTestMenu.h src\ebooktest\Resource.h src\MobiDoc.h
 $(OS)\EbookTest.obj: src\PageLayout.h src\utils\Allocator.h src\utils\BaseUtil.h
-$(OS)\EbookTest.obj: src\utils\CmdLineParser.h src\utils\FileTransactions.h src\utils\FileUtil.h
-$(OS)\EbookTest.obj: src\utils\FrameTimeoutCalculator.h src\utils\GeomUtil.h src\utils\NoFreeAllocator.h
-$(OS)\EbookTest.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
-$(OS)\EbookTest.obj: src\utils\WinUtil.h src\Version.h
+$(OS)\EbookTest.obj: src\utils\CmdLineParser.h src\utils\FileUtil.h src\utils\FrameTimeoutCalculator.h
+$(OS)\EbookTest.obj: src\utils\GeomUtil.h src\utils\NoFreeAllocator.h src\utils\Scoped.h
+$(OS)\EbookTest.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
+$(OS)\EbookTest.obj: src\Version.h
 $(OS)\EbookTestMenu.obj: src\ebooktest\EbookTestMenu.h src\ebooktest\Resource.h src\utils\BaseUtil.h
 $(OS)\EbookTestMenu.obj: src\utils\Scoped.h src\utils\StrUtil.h
 $(OS)\EngineDump.obj: src\BaseEngine.h src\ChmEngine.h src\DjVuEngine.h

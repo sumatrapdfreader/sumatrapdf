@@ -4,9 +4,7 @@
 #ifndef MuiBase_h
 #define MuiBase_h
 
-namespace mui {
-
-using namespace Gdiplus;
+// This is only meant to be included by Mui.h within mui namespace
 
 void InitializeBase();
 void DestroyBase();
@@ -27,7 +25,5 @@ public:
 };
 
 Font *GetCachedFont(const WCHAR *name, float size, FontStyle style);
-
-}
 
 #endif

@@ -17,11 +17,10 @@ using std::max;
 #include "FileUtil.h"
 #include "WinUtil.h"
 #include "Version.h"
-#include "Vec.h"
-#include "mui.h"
+#include "Mui.h"
+
 #include "CmdLineParser.h"
 #include "FrameTimeoutCalculator.h"
-#include "FileTransactions.h"
 #include "Scoped.h"
 #include "PageLayout.h"
 #include "MobiDoc.h"
@@ -54,7 +53,6 @@ could show a window telling the user which page would we go to if he was
 to click there.
 */
 
-using namespace Gdiplus;
 using namespace mui;
 
 class ControlEbook;

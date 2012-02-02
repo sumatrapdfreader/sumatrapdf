@@ -128,6 +128,24 @@
     <ClCompile Include="src\mui\MuiCss.cpp">
       <Filter>mui</Filter>
     </ClCompile>
+    <ClCompile Include="src\mui\MuiControl.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mui\MuiLayout.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mui\MuiPainter.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mui\MuiEventMgr.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mui\MuiHwndWrapper.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mui\MuiButton.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ebooktest\EbookTestMenu.h" />
@@ -346,6 +364,24 @@
       <Filter>mui</Filter>
     </ClInclude>
     <ClInclude Include="src\mui\MuiBase.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mui\MuiControl.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mui\MuiLayout.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mui\MuiPainter.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mui\MuiEventMgr.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mui\MuiHwndWrapper.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mui\MuiButton.h">
       <Filter>mui</Filter>
     </ClInclude>
   </ItemGroup>
