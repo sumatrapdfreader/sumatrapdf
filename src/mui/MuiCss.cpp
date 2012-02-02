@@ -233,6 +233,9 @@ void Prop::Free()
 {
     if (PropFontName == type)
         free((void*)fontName.name);
+
+    if (IsColorProp(type) && (ColorSolid == color.type))
+        ::delete color.solid.cachedBrush;
 }
 
 bool Prop::Eq(const Prop *other) const
@@ -333,6 +336,7 @@ Prop *Prop::AllocColorSolid(PropType type, ARGB color)
     Prop p(type);
     p.color.type = ColorSolid;
     p.color.solid.color = color;
+    p.color.solid.cachedBrush = ::new SolidBrush(color);
     return UniqifyProp(p);
 }
 
@@ -527,6 +531,42 @@ Prop **CachePropsForStyle(Style *style1, Style *style2)
     StyleCacheEntry e = { style1, GetStyleId(style1), style2, GetStyleId(style2), props };
     gStyleCache->Append(e);
     return props;
+}
+
+WrappedBrush BrushFromProp(Prop *p, const Rect& r)
+{
+    CrashIf(!IsColorProp(p->type));
+    if (ColorSolid == p->color.type)
+        return WrappedBrush(p->color.solid.cachedBrush, false);
+
+    if (ColorGradientLinear == p->color.type) {
+        Color c1 = p->color.gradientLinear.startColor;
+        Color c2 = p->color.gradientLinear.endColor;
+        LinearGradientMode mode = p->color.gradientLinear.mode;
+        Brush *br = ::new LinearGradientBrush(r, c1, c2, mode);
+        return WrappedBrush(br, true);
+    }
+
+    CrashIf(true);
+    return WrappedBrush(::new SolidBrush(0), true);
+}
+
+WrappedBrush BrushFromProp(Prop *p, const RectF& r)
+{
+    CrashIf(!IsColorProp(p->type));
+    if (ColorSolid == p->color.type)
+        return WrappedBrush(p->color.solid.cachedBrush, false);
+
+    if (ColorGradientLinear == p->color.type) {
+        Color c1 = p->color.gradientLinear.startColor;
+        Color c2 = p->color.gradientLinear.endColor;
+        LinearGradientMode mode = p->color.gradientLinear.mode;
+        Brush *br = ::new LinearGradientBrush(r, c1, c2, mode);
+        return WrappedBrush(br, true);
+    }
+
+    CrashIf(true);
+    return WrappedBrush(::new SolidBrush(0), true);
 }
 
 } // namespace css

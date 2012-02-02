@@ -200,9 +200,8 @@ void HorizontalProgressBar::Paint(Graphics *gfx, int offX, int offY)
     Prop *bgCol = props[PropBgColor];
 
     Rect r(offX, offY, pos.Width, pos.Height);
-    Brush *br = BrushFromProp(bgCol, r);
-    gfx->FillRectangle(br, r);
-    ::delete br;
+    WrappedBrush br1 = BrushFromProp(bgCol, r);
+    gfx->FillRectangle(br1.brush, r);
 
     int filledDx = IntFromPerc(pos.Width, filledPerc);
     if (0 == filledDx)
@@ -215,9 +214,8 @@ void HorizontalProgressBar::Paint(Graphics *gfx, int offX, int offY)
 
     r.Y += (r.Height - dy);
     r.Height = dy;
-    br = BrushFromProp(col, r);
-    gfx->FillRectangle(br, r);
-    ::delete br;
+    WrappedBrush br2 = BrushFromProp(col, r);
+    gfx->FillRectangle(br2.brush, r);
 }
 
 class ControlEbook 

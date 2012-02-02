@@ -210,38 +210,6 @@ size_t CollectWindowsAt(Control *wndRoot, int x, int y, uint16 wantedInputMask, 
     return windows->Count();
 }
 
-Brush *BrushFromProp(Prop *p, const Rect& r)
-{
-    CrashIf(!IsColorProp(p->type));
-    if (ColorSolid == p->color.type)
-        return ::new SolidBrush(p->color.solid.color);
-
-    if (ColorGradientLinear == p->color.type) {
-        Color c1 = p->color.gradientLinear.startColor;
-        Color c2 = p->color.gradientLinear.endColor;
-        LinearGradientMode mode = p->color.gradientLinear.mode;
-        return ::new LinearGradientBrush(r, c1, c2, mode);
-    }
-    CrashIf(true);
-    return NULL;
-}
-
-Brush *BrushFromProp(Prop *p, const RectF& r)
-{
-    CrashIf(!IsColorProp(p->type));
-    if (ColorSolid == p->color.type)
-        return ::new SolidBrush(p->color.solid.color);
-
-    if (ColorGradientLinear == p->color.type) {
-        Color c1 = p->color.gradientLinear.startColor;
-        Color c2 = p->color.gradientLinear.endColor;
-        LinearGradientMode mode = p->color.gradientLinear.mode;
-        return ::new LinearGradientBrush(r, c1, c2, mode);
-    }
-    CrashIf(true);
-    return NULL;
-}
-
 static void DrawLine(Graphics *gfx, const Point& p1, const Point& p2, float width, Brush *br)
 {
     if (0 == width)
@@ -254,39 +222,34 @@ void DrawBorder(Graphics *gfx, const Rect r, const BorderProps& bp)
 {
     Point   p1, p2;
     float   width;
-    Brush * br;
 
     // top
     p1.X = r.X; p1.Y = r.Y;
     p2.X = r.X + r.Width; p2.Y = p1.Y;
     width = bp.topWidth->width.width;
-    br = BrushFromProp(bp.topColor, r);
-    DrawLine(gfx, p1, p2, width, br);
-    ::delete br;
+    WrappedBrush wb1 = BrushFromProp(bp.topColor, r);
+    DrawLine(gfx, p1, p2, width, wb1.brush);
 
     // right
     p1 = p2;
     p2.X = p1.X; p2.Y = p1.Y + r.Height;
     width = bp.rightWidth->width.width;
-    br = BrushFromProp(bp.rightColor, r);
-    DrawLine(gfx, p1, p2, width, br);
-    ::delete br;
+    WrappedBrush wb2 = BrushFromProp(bp.rightColor, r);
+    DrawLine(gfx, p1, p2, width, wb2.brush);
 
     // bottom
     p1 = p2;
     p2.X = r.X; p2.Y = p1.Y;
     width = bp.bottomWidth->width.width;
-    br = BrushFromProp(bp.bottomColor, r);
-    DrawLine(gfx, p1, p2, width, br);
-    ::delete br;
+    WrappedBrush wb3 = BrushFromProp(bp.bottomColor, r);
+    DrawLine(gfx, p1, p2, width, wb3.brush);
 
     // left
     p1 = p2;
     p2.X = p1.X; p2.Y = r.Y;
     width = bp.leftWidth->width.width;
-    br = BrushFromProp(bp.leftColor, r);
-    DrawLine(gfx, p1, p2, width, br);
-    ::delete br;
+    WrappedBrush wb4 = BrushFromProp(bp.leftColor, r);
+    DrawLine(gfx, p1, p2, width, wb4.brush);
 }
 
 static void InvalidateAtOff(HWND hwnd, const Rect *r, int offX, int offY)

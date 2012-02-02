@@ -61,7 +61,8 @@ enum ColorType {
 };
 
 struct ColorDataSolid {
-    ARGB color;
+    Brush * cachedBrush;
+    ARGB    color;
 };
 
 struct ColorDataGradientLinear {
@@ -153,6 +154,20 @@ public:
     size_t GetIdentity() const;
 };
 
+class WrappedBrush {
+public:
+    bool    shouldDelete;
+    Brush * brush;
+
+    WrappedBrush(Brush *brush, bool shouldDelete) :
+        brush(brush), shouldDelete(shouldDelete) {
+    }
+    ~WrappedBrush() {
+        if (shouldDelete)
+            ::delete brush;
+    }
+};
+
 // globally known properties for elements we know about
 // we fill them with default values and they can be
 // modified by an app for global visual makeover
@@ -166,6 +181,9 @@ void   Destroy();
 Font * CachedFontFromCachedProps(Prop **props);
 
 Prop ** CachePropsForStyle(Style *style1, Style *style2);
+
+WrappedBrush BrushFromProp(Prop *p, const Rect& r);
+WrappedBrush BrushFromProp(Prop *p, const RectF& r);
 
 } // namespace css
 

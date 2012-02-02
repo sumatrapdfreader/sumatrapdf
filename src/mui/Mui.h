@@ -104,8 +104,6 @@ size_t                   CollectWindowsAt(Control *wndRoot, int x, int y, uint16
 void                     CollectWindowsBreathFirst(Control *w, int offX, int offY, WndFilter *wndFilter, Vec<WndAndOffset> *windows);
 void                     RequestRepaint(Control *w, const Rect *r1 = NULL, const Rect *r2 = NULL);
 void                     RequestLayout(Control *w);
-Brush *                  BrushFromProp(Prop *p, const Rect& r);
-Brush *                  BrushFromProp(Prop *p, const RectF& r);
 HwndWrapper *            GetRootHwndWnd(const Control *w);
 void                     DrawBorder(Graphics *gfx, const Rect r, const BorderProps& bp);
 
