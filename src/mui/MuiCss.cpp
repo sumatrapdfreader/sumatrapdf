@@ -64,9 +64,7 @@ Style *gStyleDefault = NULL;
 Style *gStyleButtonDefault = NULL;
 Style *gStyleButtonMouseOver = NULL;
 
-static Vec<FontCacheEntry> *gCachedFonts = NULL;
-
-struct PropCacheEntry {
+struct StyleCacheEntry {
     Style *     style1;
     size_t      style1Id;
     Style *     style2;
@@ -74,7 +72,7 @@ struct PropCacheEntry {
     Prop **     props; // memory within gCachedProps
 };
 
-static Vec<PropCacheEntry> *    gPropCache = NULL;
+static Vec<StyleCacheEntry> *   gStyleCache = NULL;
 static VecSegmented<Prop*> *    gCachedProps = NULL;
 
 void Initialize()
@@ -82,7 +80,6 @@ void Initialize()
     CrashIf(gAllProps);
 
     gAllProps = new VecSegmented<Prop>();
-    gCachedFonts = new Vec<FontCacheEntry>();
 
     // gDefaults is the very basic set shared by everyone
     gStyleDefault = new Style();
@@ -113,19 +110,13 @@ void Initialize()
     //gStyleButtonMouseOver->Set(Prop::AllocColorSolid(PropBgColor, 180, 0, 0, 255));
     //gStyleButtonMouseOver->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
 
-    gPropCache = new Vec<PropCacheEntry>();
+    gStyleCache = new Vec<StyleCacheEntry>();
     gCachedProps = new VecSegmented<Prop*>();
 }
 
 static void DeleteCachedFonts()
 {
-    for (size_t i = 0; i < gCachedFonts->Count(); i++) {
-        FontCacheEntry c = gCachedFonts->At(i);
-        ::delete c.font;
-    }
-    delete gCachedFonts;
-
-    delete gPropCache;
+    delete gStyleCache;
     delete gCachedProps;
 }
 
@@ -494,18 +485,7 @@ Font *CachedFontFromCachedProps(Prop **props)
     Prop *fontName   = props[PropFontName];
     Prop *fontSize   = props[PropFontSize];
     Prop *fontWeight = props[PropFontWeight];
-    CrashIf(!fontName || !fontSize || !fontWeight);
-    FontCacheEntry c = { fontName, fontSize, fontWeight, NULL };
-    for (size_t i = 0; i < gCachedFonts->Count(); i++) {
-        FontCacheEntry c2 = gCachedFonts->At(i);
-        if (c2 == c) {
-            CrashIf(NULL == c2.font);
-            return c2.font;
-        }
-    }
-    c.font = ::new Font(fontName->fontName.name, fontSize->fontSize.size, fontWeight->fontWeight.style);
-    gCachedFonts->Append(c);
-    return c.font;
+    return GetCachedFont(fontName->fontName.name, fontSize->fontSize.size, fontWeight->fontWeight.style);
 }
 
 static size_t GetStyleId(Style *style) {
@@ -520,8 +500,8 @@ Prop **CachePropsForStyle(Style *style1, Style *style2)
 
     ScopedMuiCritSec muiCs;
 
-    for (size_t i = 0; i < gPropCache->Count(); i++) {
-        PropCacheEntry e = gPropCache->At(i);
+    for (size_t i = 0; i < gStyleCache->Count(); i++) {
+        StyleCacheEntry e = gStyleCache->At(i);
         if ((e.style1 == style1) && (e.style2 == style2)) {
             if ((e.style1Id == GetStyleId(style1)) &&
                 (e.style2Id == GetStyleId(style2))) {
@@ -544,8 +524,8 @@ Prop **CachePropsForStyle(Style *style1, Style *style2)
         CrashIf(!props[i]);
     }
 
-    PropCacheEntry e = { style1, GetStyleId(style1), style2, GetStyleId(style2), props };
-    gPropCache->Append(e);
+    StyleCacheEntry e = { style1, GetStyleId(style1), style2, GetStyleId(style2), props };
+    gStyleCache->Append(e);
     return props;
 }
 
