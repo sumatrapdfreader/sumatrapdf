@@ -820,8 +820,7 @@ static void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL o
     Pen pen(Color(255, 0, 0), 1);
     Pen blackPen(Color(0, 0, 0), 1);
 
-    FontInfo fi = gFontCache->GetById(0);
-    Font *font = fi.font;
+    Font *font = NULL;
 
     WCHAR buf[512];
     PointF pos;
@@ -850,8 +849,7 @@ static void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL o
             }
             g->DrawString(buf, strLen, font, pos, NULL, &br);
         } else if (InstrTypeSetFont == currInstr->type) {
-            fi = gFontCache->GetById(currInstr->setFont.fontId);
-            font = fi.font;
+            font = currInstr->setFont.font;
         }
         ++currInstr;
     }
@@ -1086,7 +1084,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     mui::Initialize();
 
     gCursorHand  = LoadCursor(NULL, IDC_HAND);
-    gFontCache = new ThreadSafeFontCache();
 
     // start per-thread MessageLoop, this one is for our UI thread
     // You can use it via static MessageLoop::current()
@@ -1108,7 +1105,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     delete gControlFrame;
 
 Exit:
-    delete gFontCache;
     mui::Destroy();
     return ret;
 }

@@ -80,7 +80,6 @@ static VecSegmented<Prop*> *    gCachedProps = NULL;
 void Initialize()
 {
     CrashIf(gAllProps);
-    mui::InitMuiCriticalSection();
 
     gAllProps = new VecSegmented<Prop>();
     gCachedFonts = new Vec<FontCacheEntry>();
@@ -143,7 +142,6 @@ void Destroy()
     delete gStyleButtonMouseOver;
 
     DeleteCachedFonts();
-    mui::DeleteMuiCriticalSection();
 }
 
 bool IsWidthProp(PropType type)

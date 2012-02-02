@@ -6,10 +6,13 @@
 
 namespace mui {
 
+using namespace Gdiplus;
+
+void InitializeBase();
+void DestroyBase();
+
 void EnterMuiCriticalSection();
 void LeaveMuiCriticalSection();
-void InitMuiCriticalSection();
-void DeleteMuiCriticalSection();
 
 class ScopedMuiCritSec {
 public:
@@ -22,6 +25,8 @@ public:
         LeaveMuiCriticalSection();
     }
 };
+
+Font *GetCachedFont(const WCHAR *name, float size, FontStyle style);
 
 }
 

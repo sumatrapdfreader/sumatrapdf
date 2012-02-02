@@ -18,70 +18,6 @@ support to mui and use list of Control objects instead (especially if we slim do
 Control objects further to make allocating hundreds of them cheaper).
 */
 
-ThreadSafeFontCache *gFontCache = NULL;
-
-static Font *CreateFontByStyle(const WCHAR *name, REAL size, FontStyle style)
-{
-    return ::new Font(name, size, style);
-}
-
-bool FontCacheEntry::SameAs(const WCHAR *otherName, float otherSize, FontStyle otherStyle)
-{
-    if (size != otherSize)
-        return false;
-    if (style != otherStyle)
-        return false;
-    return str::Eq(name, otherName);
-}
-
-ThreadSafeFontCache::ThreadSafeFontCache()
-{
-    InitializeCriticalSection(&cs);
-}
-
-ThreadSafeFontCache::~ThreadSafeFontCache()
-{
-    for (size_t i = 0; i < fonts.Count(); i++) {
-        FontCacheEntry f = fonts.At(i);
-        free(f.name);
-        ::delete f.font;
-    }
-    DeleteCriticalSection(&cs);
-}
-
-FontInfo ThreadSafeFontCache::GetExistingOrCreateNew(const WCHAR *name, float size, FontStyle style)
-{
-    ScopedCritSec scope(&cs);
-    for (size_t i = 0; i < fonts.Count(); i++) {
-        FontCacheEntry f = fonts.At(i);
-        if (f.SameAs(name, size, style)) {
-            FontInfo fi = { f.font, i };
-            return fi;
-        }
-    }
-    FontCacheEntry f = { str::Dup(name), size, style, NULL };
-    // TODO: handle a failure to create a font. Use fontCache[0] if exists
-    // or try to fallback to a known font like Times New Roman
-    f.font = CreateFontByStyle(name, size, style);
-    fonts.Append(f);
-    FontInfo fi = { f.font, fonts.Count() - 1 };
-    return fi;
-}
-
-FontInfo ThreadSafeFontCache::GetById(size_t fontId)
-{
-    ScopedCritSec scope(&cs);
-    FontCacheEntry f = fonts.At(fontId);
-    FontInfo fi = { f.font, fontId };
-    return fi;
-}
-
-bool ThreadSafeFontCache::IsValidId(size_t fontId)
-{
-    ScopedCritSec scope(&cs);
-    return fontId < fonts.Count();
-}
-
 struct WordInfo {
     const char *s;
     size_t len;
@@ -230,7 +166,7 @@ private:
     void StartNewPage();
     void StartNewLine(bool isParagraphBreak);
 
-    void AddSetFontInstr(size_t fontIdx);
+    void AddSetFontInstr(Font *font);
 
     void AddHr();
     void AddWord(WordInfo *wi);
@@ -263,7 +199,6 @@ private:
     // temporary state during layout process
     FontStyle           currFontStyle;
     Font *              currFont;
-    size_t              currFontId; // within gFontCache
 
     TextJustification   currJustification;
     // current position in a page
@@ -298,9 +233,7 @@ PageLayout::~PageLayout()
 void PageLayout::SetCurrentFont(FontStyle fs)
 {
     currFontStyle = fs;
-    FontInfo fi = gFontCache->GetExistingOrCreateNew(fontName.Get(), fontSize, fs);
-    currFont = fi.font;
-    currFontId = fi.fontId;
+    currFont = mui::GetCachedFont(fontName.Get(), fontSize, fs);
 }
 
 static bool ValidFontStyleForChangeFont(FontStyle fs)
@@ -331,7 +264,7 @@ void PageLayout::ChangeFont(FontStyle fs, bool addStyle)
     if (newFontStyle == currFontStyle)
         return; // a no-op
     SetCurrentFont(newFontStyle);
-    AddSetFontInstr(currFontId);
+    AddSetFontInstr(currFont);
 }
 
 void PageLayout::StartLayout(LayoutInfo* layoutInfo)
@@ -369,8 +302,8 @@ void PageLayout::StartNewPage()
     newLinesCount = 0;
     // instructions for each page need to be self-contained
     // so we have to carry over some state like the current font
-    if (currFontId != 0)
-        AddSetFontInstr(currFontId);
+    CrashIf(!currFont);
+    AddSetFontInstr(currFont);
     currLineInstrOffset = currPage->Count();
 }
 
@@ -521,10 +454,9 @@ static void GetKnownAttributes(HtmlToken *t, HtmlAttr *allowedAttributes, Vec<Kn
     }
 }
 
-void PageLayout::AddSetFontInstr(size_t fontId)
+void PageLayout::AddSetFontInstr(Font *font)
 {
-    CrashIf(!gFontCache->IsValidId(fontId));
-    currPage->Append(DrawInstr::SetFont(fontId));
+    currPage->Append(DrawInstr::SetFont(font));
 }
 
 // add horizontal line (<hr> in html terms)

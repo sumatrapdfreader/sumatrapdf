@@ -101,6 +101,7 @@ static void InitGraphicsMode(Graphics *g)
 
 void Initialize()
 {
+    InitializeBase();
     css::Initialize();
     uiGraphicsForMeasureText = AllocGraphicsForMeasureText();
     uiGfxForMeasure = uiGraphicsForMeasureText->Get();
@@ -108,8 +109,9 @@ void Initialize()
 
 void Destroy()
 {
-    css::Destroy();
     delete uiGraphicsForMeasureText;
+    css::Destroy();
+    DestroyBase();
 }
 
 Graphics *UIThreadGraphicsForMeasureText()

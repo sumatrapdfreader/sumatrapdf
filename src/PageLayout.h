@@ -9,41 +9,6 @@
 
 using namespace Gdiplus;
 
-struct FontCacheEntry {
-    WCHAR *     name;
-    float       size;
-    FontStyle   style;
-
-    Font *      font;
-
-    bool SameAs(const WCHAR *name, float size, FontStyle style);
-};
-
-// fontId is index inside ThreadSafeFontCache::fontCache
-struct FontInfo {
-    Font *      font;
-    size_t      fontId;
-};
-
-// Font cache shared by layout process and drawing process.
-// Must be thread safe because layout and drawing can be done
-// at different threads. There's only global object.
-// Font objects are alive as long as this object is alive
-class ThreadSafeFontCache {
-    CRITICAL_SECTION    cs;
-    Vec<FontCacheEntry> fonts;
-public:
-    ThreadSafeFontCache();
-    ~ThreadSafeFontCache();
-
-    FontInfo GetExistingOrCreateNew(const WCHAR *name, float size, FontStyle style);
-    FontInfo GetById(size_t fontId);
-    bool IsValidId(size_t fontId);
-};
-
-// Create at start of the program and destroy at the end
-extern ThreadSafeFontCache *gFontCache;
-
 // Layout information for a given page is a list of
 // draw instructions that define what to draw and where.
 enum DrawInstrType {
@@ -58,8 +23,7 @@ struct InstrString {
 };
 
 struct InstrSetFont {
-    // id within gFontCache
-    size_t              fontId;
+    Font *              font;
 };
 
 struct DrawInstr {
@@ -85,9 +49,9 @@ struct DrawInstr {
         return di;
     }
 
-    static DrawInstr SetFont(size_t fontId) {
+    static DrawInstr SetFont(Font *font) {
         DrawInstr di(InstrTypeSetFont);
-        di.setFont.fontId = fontId;
+        di.setFont.font = font;
         return di;
     }
 
