@@ -298,45 +298,50 @@ static Prop *FindExistingProp(Prop *prop)
     return NULL;
 }
 
-// can't use ALLOC_BODY() because it has to create a copy of name
-Prop *Prop::AllocFontName(const TCHAR *name)
+static Prop *UniqifyProp(Prop& p)
 {
-    Prop p(PropFontName);
-    p.fontName.name = name;
-    Prop *existingProp = FindExistingProp(&p);
-    if (existingProp)
-        return existingProp;
-    p.fontName.name = str::Dup(name);
+    Prop *existing = FindExistingProp(&p);
+    if (existing) {
+        p.Free();
+        return existing;
+    }
     return gAllProps->Append(p);
 }
 
-#define ALLOC_BODY(propType, structName, argName) \
-    Prop p(propType); \
-    p.structName.argName = argName; \
-    Prop *existingProp = FindExistingProp(&p); \
-    if (existingProp) \
-        return existingProp; \
-    p.structName.argName = argName; \
-    return gAllProps->Append(p);
+Prop *Prop::AllocFontName(const TCHAR *name)
+{
+    Prop p(PropFontName);
+    p.fontName.name = str::Dup(name);
+    return UniqifyProp(p);
+}
 
 Prop *Prop::AllocFontSize(float size)
 {
-    ALLOC_BODY(PropFontSize, fontSize, size);
+    Prop p(PropFontSize);
+    p.fontSize.size = size;
+    return UniqifyProp(p);
 }
 
 Prop *Prop::AllocFontWeight(FontStyle style)
 {
-    ALLOC_BODY(PropFontWeight, fontWeight, style);
+    Prop p(PropFontWeight);
+    p.fontWeight.style = style;
+    return UniqifyProp(p);
 }
 
 Prop *Prop::AllocWidth(PropType type, float width)
 {
-    ALLOC_BODY(type, width, width);
+    CrashIf(!IsWidthProp(type));
+    Prop p(type);
+    p.width.width = width;
+    return UniqifyProp(p);
 }
 
 Prop *Prop::AllocTextAlign(AlignAttr align)
 {
-    ALLOC_BODY(PropTextAlign, align, align);
+    Prop p(PropTextAlign);
+    p.align.align = align;
+    return UniqifyProp(p);
 }
 
 Prop *Prop::AllocPadding(int top, int right, int bottom, int left)
@@ -344,11 +349,7 @@ Prop *Prop::AllocPadding(int top, int right, int bottom, int left)
     PaddingData pd = { top, right, bottom, left };
     Prop p(PropPadding);
     p.padding = pd;
-    Prop *existingProp = FindExistingProp(&p);
-    if (existingProp)
-        return existingProp;
-    p.padding = pd;
-    return gAllProps->Append(p);
+    return UniqifyProp(p);
 }
 
 Prop *Prop::AllocColorSolid(PropType type, ARGB color)
@@ -357,10 +358,7 @@ Prop *Prop::AllocColorSolid(PropType type, ARGB color)
     Prop p(type);
     p.color.type = ColorSolid;
     p.color.solid.color = color;
-    Prop *existingProp = FindExistingProp(&p);
-    if (existingProp)
-        return existingProp;
-    return gAllProps->Append(p);
+    return UniqifyProp(p);
 }
 
 Prop *Prop::AllocColorSolid(PropType type, int a, int r, int g, int b)
@@ -380,10 +378,7 @@ Prop *Prop::AllocColorLinearGradient(PropType type, LinearGradientMode mode, ARG
     p.color.gradientLinear.mode = mode;
     p.color.gradientLinear.startColor = startColor;
     p.color.gradientLinear.endColor = endColor;
-    Prop *existingProp = FindExistingProp(&p);
-    if (existingProp)
-        return existingProp;
-    return gAllProps->Append(p);
+    return UniqifyProp(p);
 }
 
 Prop *Prop::AllocColorLinearGradient(PropType type, LinearGradientMode mode, const char *startColor, const char *endColor)
