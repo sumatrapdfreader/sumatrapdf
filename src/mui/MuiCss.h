@@ -10,21 +10,6 @@
 namespace mui {
 namespace css {
 
-void EnterMuiCriticalSection();
-void LeaveMuiCriticalSection();
-
-class ScopedMuiCritSec {
-public:
-
-    ScopedMuiCritSec() {
-        EnterMuiCriticalSection();
-    }
-
-    ~ScopedMuiCritSec() {
-        LeaveMuiCriticalSection();
-    }
-};
-
 using namespace Gdiplus;
 
 enum PropType {

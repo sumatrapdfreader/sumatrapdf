@@ -9,6 +9,7 @@
 #include "Vec.h"
 #include "BitManip.h"
 #include "GeomUtil.h"
+#include "MuiBase.h"
 #include "MuiCss.h"
 
 namespace mui {

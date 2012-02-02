@@ -1,7 +1,7 @@
 /* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "MuiCss.h"
+#include "Mui.h"
 #include "VecSegmented.h"
 #include "Scoped.h"
 
@@ -58,10 +58,6 @@ struct FontCacheEntry {
     }
 };
 
-// a critical section for everything that needs protecting in mui
-// we use only one for simplicity as long as contention is not a problem
-static CRITICAL_SECTION gMuiCs;
-
 VecSegmented<Prop> *gAllProps = NULL;
 
 Style *gStyleDefault = NULL;
@@ -84,7 +80,7 @@ static VecSegmented<Prop*> *    gCachedProps = NULL;
 void Initialize()
 {
     CrashIf(gAllProps);
-    InitializeCriticalSection(&gMuiCs);
+    mui::InitMuiCriticalSection();
 
     gAllProps = new VecSegmented<Prop>();
     gCachedFonts = new Vec<FontCacheEntry>();
@@ -147,17 +143,7 @@ void Destroy()
     delete gStyleButtonMouseOver;
 
     DeleteCachedFonts();
-    DeleteCriticalSection(&gMuiCs);
-}
-
-void EnterMuiCriticalSection()
-{
-    EnterCriticalSection(&gMuiCs);
-}
-
-void LeaveMuiCriticalSection()
-{
-    LeaveCriticalSection(&gMuiCs);
+    mui::DeleteMuiCriticalSection();
 }
 
 bool IsWidthProp(PropType type)

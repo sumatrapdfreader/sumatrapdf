@@ -119,6 +119,15 @@
     <ClCompile Include="src\utils\NoFreeAllocator.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="src\mui\Mui.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mui\MuiBase.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mui\MuiCss.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ebooktest\EbookTestMenu.h" />
@@ -330,6 +339,15 @@
     <ClInclude Include="src\utils\Scoped.h">
       <Filter>utils</Filter>
     </ClInclude>
+    <ClInclude Include="src\mui\MuiCss.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mui\Mui.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mui\MuiBase.h">
+      <Filter>mui</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="src\ebooktest\EbookTest.rc" />
@@ -362,6 +380,9 @@
     </Filter>
     <Filter Include="utils">
       <UniqueIdentifier>{7f9618e1-94f4-4d07-9d59-b27e7519bf1c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mui">
+      <UniqueIdentifier>{dcfe524a-f74a-48cc-9bb7-5da3da7de5a8}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

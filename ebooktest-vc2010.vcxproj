@@ -103,6 +103,9 @@
     <ClCompile Include="src\ebooktest\EbookTest.cpp" />
     <ClCompile Include="src\ebooktest\EbookTestMenu.cpp" />
     <ClCompile Include="src\MobiDoc.cpp" />
+    <ClCompile Include="src\mui\Mui.cpp" />
+    <ClCompile Include="src\mui\MuiBase.cpp" />
+    <ClCompile Include="src\mui\MuiCss.cpp" />
     <ClCompile Include="src\PageLayout.cpp" />
     <ClCompile Include="src\utils\FileUtil.cpp" />
     <ClCompile Include="src\utils\GdiPlusUtil.cpp" />
@@ -171,6 +174,9 @@
     <ClInclude Include="src\ebooktest\Resource.h" />
     <ClInclude Include="src\installer\Version.h" />
     <ClInclude Include="src\MobiDoc.h" />
+    <ClInclude Include="src\mui\Mui.h" />
+    <ClInclude Include="src\mui\MuiBase.h" />
+    <ClInclude Include="src\mui\MuiCss.h" />
     <ClInclude Include="src\PageLayout.h" />
     <ClInclude Include="src\utils\Allocator.h" />
     <ClInclude Include="src\utils\BaseUtil.h" />
