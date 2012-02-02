@@ -146,6 +146,9 @@
     <ClCompile Include="src\mui\MuiButton.cpp">
       <Filter>mui</Filter>
     </ClCompile>
+    <ClCompile Include="src\mui\MuiScrollBar.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ebooktest\EbookTestMenu.h" />
@@ -382,6 +385,9 @@
       <Filter>mui</Filter>
     </ClInclude>
     <ClInclude Include="src\mui\MuiButton.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mui\MuiScrollBar.h">
       <Filter>mui</Filter>
     </ClInclude>
   </ItemGroup>

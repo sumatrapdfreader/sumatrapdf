@@ -80,18 +80,6 @@ static bool gShowTextBoundingBoxes = false;
 // A sample text to display if we don't show an actual mobi file
 static const char *gSampleHtml = "<html><p align=justify>ClearType is <b>dependent</b> on the <i>orientation &amp; ordering</i> of the LCD stripes.</p> <p align='right'><em>Currently</em>, ClearType is implemented <hr> only for vertical stripes that are ordered RGB.</p> <p align=center>This might be a concern if you are using a tablet PC.</p> <p>Where the display can be oriented in any direction, or if you are using a screen that can be turned from landscape to portrait. The <strike>following example</strike> draws text with two <u>different quality</u> settings.</p> On to the <b>next<mbp:pagebreak>page</b></html>";
 
-static float PercFromInt(int total, int n)
-{
-    CrashIf(n > total);
-    if (0 == total)
-        return 0.f;
-    return (float)n / (float)total;
-}
-
-int IntFromPerc(int total, float perc) {
-    return (int)(total * perc);
-}
-
 /* The layout is:
 ___________________
 |                 |
@@ -101,122 +89,6 @@ ___________________
 |[    status     ]|
 ___________________
 */
-
-// Horizontal progress bar is a horizontal rectangle that visually
-// represents percentage progress of some activity.
-// It can also report clicks within itself.
-// The background is drawn with PropBgColor and the part that represents
-// percentage with PropColor.
-// It has a fixed height, provided by a caller, but the width can vary
-// depending on layout.
-// For a bit of an extra effect, it has 2 heights: one when mouse is over
-// the control and another when mouse is not over.
-// For the purpose of layout, we use the bigger of the to as the real
-// height of the control
-// TODO: we don't take padding int account yet
-// Clients can register fo IClickEvent events for this window to implement
-// interactivity
-class HorizontalProgressBar : public Control
-{
-    int     onOverDy;    // when mouse is over
-    int     inactiveDy;  // when mouse is not over
-
-    // what percentage of the rectangle is filled with PropColor
-    // (the rest is filled with PropBgColor).
-    // The range is from 0 to 1
-    float   filledPerc;
-
-public:
-    HorizontalProgressBar(int onOverDy = 12, int inactiveDy = 5);
-    ~HorizontalProgressBar() { }
-    virtual void Measure(const Size availableSize);
-    virtual void NotifyMouseEnter();
-    virtual void NotifyMouseLeave();
-
-    virtual void Paint(Graphics *gfx, int offX, int offY);
-
-    void SetFilled(float perc);
-    float GetPercAt(int x);
-};
-
-HorizontalProgressBar::HorizontalProgressBar(int onOverDy, int inactiveDy)
-        : onOverDy(onOverDy), inactiveDy(inactiveDy)
-{
-    filledPerc = 0.f;
-    bit::Set(wantedInputBits, WantsMouseOverBit, WantsMouseClickBit);
-}
-
-void HorizontalProgressBar::Measure(const Size availableSize)
-{
-    // dx is max available
-    desiredSize.Width = availableSize.Width;
-
-    // dy is bigger of inactiveDy and onHoverDy but 
-    // smaller than availableSize.Height
-    int dy = inactiveDy;
-    if (onOverDy > dy)
-        dy = onOverDy;
-    if (dy > availableSize.Height)
-        dy = availableSize.Height;
-
-    desiredSize.Height = dy;
-}
-
-void HorizontalProgressBar::NotifyMouseEnter()
-{
-    if (inactiveDy != onOverDy)
-        RequestRepaint(this);
-}
-
-void HorizontalProgressBar::NotifyMouseLeave()
-{
-    if (inactiveDy != onOverDy)
-        RequestRepaint(this);
-}
-
-void HorizontalProgressBar::SetFilled(float perc)
-{
-    CrashIf((perc < 0.f) || (perc > 1.f));
-    int prev = IntFromPerc(pos.Width, filledPerc);
-    int curr = IntFromPerc(pos.Width, perc);
-    filledPerc = perc;
-    if (prev != curr)
-        RequestRepaint(this);
-}
-
-float HorizontalProgressBar::GetPercAt(int x)
-{
-    return PercFromInt(pos.Width, x);
-}
-
-void HorizontalProgressBar::Paint(Graphics *gfx, int offX, int offY)
-{
-    if (!IsVisible())
-        return;
-
-    // TODO: take padding into account
-    Prop **props = GetCachedProps();
-    Prop *col   = props[PropColor];
-    Prop *bgCol = props[PropBgColor];
-
-    Rect r(offX, offY, pos.Width, pos.Height);
-    WrappedBrush br1 = BrushFromProp(bgCol, r);
-    gfx->FillRectangle(br1.brush, r);
-
-    int filledDx = IntFromPerc(pos.Width, filledPerc);
-    if (0 == filledDx)
-        return;
-
-    r.Width = filledDx;
-    int dy = inactiveDy;
-    if (IsMouseOver())
-        dy = onOverDy;
-
-    r.Y += (r.Height - dy);
-    r.Height = dy;
-    WrappedBrush br2 = BrushFromProp(col, r);
-    gfx->FillRectangle(br2.brush, r);
-}
 
 class ControlEbook 
     : public HwndWrapper,
@@ -244,11 +116,11 @@ public:
     base::Thread *  mobiLoadThread;
     base::Thread *  pageLayoutThread;
 
-    Button * next;
-    Button * prev;
-    HorizontalProgressBar *horizProgress;
-    Button * status;
-    Button * test;
+    Button *        next;
+    Button *        prev;
+    ScrollBar *     horizProgress;
+    Button *        status;
+    Button *        test;
 
     Style *         ebookDefault;
     Style *         statusDefault;
@@ -464,7 +336,7 @@ ControlEbook::ControlEbook(HWND hwnd)
 
     next = new Button(_T("Next"));
     prev = new Button(_T("Prev"));
-    horizProgress = new HorizontalProgressBar();
+    horizProgress = new ScrollBar();
     horizProgress->hCursor = gCursorHand;
     status = new Button(_T(""));
     test = new Button(_T("test"));

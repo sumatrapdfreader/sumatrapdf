@@ -4,7 +4,7 @@
 #ifndef MuiBase_h
 #define MuiBase_h
 
-// This is only meant to be included by Mui.h within mui namespace
+// This is only meant to be included by Mui.h inside mui namespace
 
 void InitializeBase();
 void DestroyBase();

@@ -1,7 +1,7 @@
 #ifndef MuiLayout_h
 #define MuiLayout_h
 
-// This is only meant to be included by Mui.h within mui namespace
+// This is only meant to be included by Mui.h inside mui namespace
 
 class Control;
 

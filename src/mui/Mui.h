@@ -21,6 +21,7 @@ using namespace Gdiplus;
 using namespace css;
 #include "MuiControl.h"
 #include "MuiButton.h"
+#include "MuiScrollBar.h"
 #include "MuiHwndWrapper.h"
 #include "MuiLayout.h"
 #include "MuiPainter.h"

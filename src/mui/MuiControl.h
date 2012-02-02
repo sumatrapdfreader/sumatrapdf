@@ -4,7 +4,7 @@
 #ifndef MuiControl_h
 #define MuiControl_h
 
-// This is only meant to be included by Mui.h within mui namespace
+// This is only meant to be included by Mui.h inside mui namespace
 
 class Layout;
 class EventMgr;

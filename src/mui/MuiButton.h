@@ -4,7 +4,7 @@
 #ifndef MuiButton_h
 #define MuiButton_h
 
-// This is only meant to be included by Mui.h within mui namespace
+// This is only meant to be included by Mui.h inside mui namespace
 
 class Button : public Control
 {
