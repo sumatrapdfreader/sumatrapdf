@@ -4,7 +4,7 @@
 #include "PageLayout.h"
 #include "StrUtil.h"
 #include "HtmlPullParser.h"
-#include "mui.h"
+#include "Mui.h"
 #include "StrUtil.h"
 #include "HtmlPullParser.h"
 #include "Scoped.h"

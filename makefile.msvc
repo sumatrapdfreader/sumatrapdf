@@ -71,7 +71,7 @@ CFLAGS = $(CFLAGS) /analyze
 !endif
 
 SUMATRA_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
-	/Isrc/utils /Isrc/utils/msvc /I$(MUPDF_DIR)\fitz /I$(MUPDF_DIR)\pdf \
+	/Isrc/utils /Isrc/utils/msvc /Isrc/mui /I$(MUPDF_DIR)\fitz /I$(MUPDF_DIR)\pdf \
 	/I$(MUPDF_DIR)\xps /Isrc /I$(EXTDIR)/synctex /I$(ZLIB_DIR) \
 	/I$(ZLIB_DIR)/minizip /I$(EXTDIR)/libdjvu /I$(EXTDIR)/CHMLib/src
 
@@ -142,7 +142,10 @@ UTILS_OBJS = \
 	$(OS)\DialogSizer.obj $(OS)\FileTransactions.obj $(OS)\Touch.obj \
 	$(OS)\TrivialHtmlParser.obj $(OS)\HtmlWindow.obj $(OS)\GdiPlusUtil.obj \
 	$(OS)\DirIter.obj $(OS)\BitReader.obj $(OS)\HtmlPullParser.obj \
-	$(OS)\mui.obj $(OS)\MuiCss.obj $(OS)\ThreadUtil.obj
+	$(OS)\ThreadUtil.obj
+
+MUI_OBJS = \
+	$(OS)\Mui.obj $(OS)\MuiCss.obj 
 
 ENGINE_OBJS = \
 	$(OS)\PdfEngine.obj $(OS)\ImagesEngine.obj $(OS)\PsEngine.obj \
@@ -271,7 +274,7 @@ $(UNINSTALLER_APP): $(UTILS_OBJS) $(UNINSTALLER_OBJS)
 $(ET_RES): src\ebooktest\EbookTest.rc src\ebooktest\Resource.h src\Version.h
 	rc /r /fo$@ $(EXTCFLAGS) src\ebooktest\EbookTest.rc
 
-$(ET_APP): $(UTILS_OBJS) $(ET_OBJS)
+$(ET_APP): $(UTILS_OBJS) $(MUI_OBJS) $(ET_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) dbghelp.lib psapi.lib /PDB:$*.pdb /OUT:$@
 
 $(TESTER_APP): $(UTILS_OBJS) $(TESTER_OBJS)
@@ -311,6 +314,10 @@ $(ENGINEDUMP_APP): $(ENGINEDUMP_OBJS)
 
 # utils directory
 {src\utils}.cpp{$(OS)}.obj::
+	$(CC) $(SUMATRA_CFLAGS) /Fo$(OS)\ /Fd$(O)\vc80.pdb $<
+
+# mui directory
+{src\mui}.cpp{$(OS)}.obj::
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(OS)\ /Fd$(O)\vc80.pdb $<
 
 # SumatraPDF app directory
@@ -391,11 +398,10 @@ $(OS)\DjVuEngine.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUt
 $(OS)\DjVuEngine.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\EbookTest.obj: src\ebooktest\EbookTestMenu.h src\ebooktest\Resource.h src\MobiDoc.h
 $(OS)\EbookTest.obj: src\PageLayout.h src\utils\Allocator.h src\utils\BaseUtil.h
-$(OS)\EbookTest.obj: src\utils\BitManip.h src\utils\CmdLineParser.h src\utils\FileTransactions.h
-$(OS)\EbookTest.obj: src\utils\FileUtil.h src\utils\FrameTimeoutCalculator.h src\utils\GeomUtil.h
-$(OS)\EbookTest.obj: src\utils\HtmlPullParser.h src\utils\mui.h src\utils\MuiCss.h
-$(OS)\EbookTest.obj: src\utils\NoFreeAllocator.h src\utils\Scoped.h src\utils\StrUtil.h
-$(OS)\EbookTest.obj: src\utils\Vec.h src\utils\WinUtil.h src\Version.h
+$(OS)\EbookTest.obj: src\utils\CmdLineParser.h src\utils\FileTransactions.h src\utils\FileUtil.h
+$(OS)\EbookTest.obj: src\utils\FrameTimeoutCalculator.h src\utils\GeomUtil.h src\utils\NoFreeAllocator.h
+$(OS)\EbookTest.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\EbookTest.obj: src\utils\WinUtil.h src\Version.h
 $(OS)\EbookTestMenu.obj: src\ebooktest\EbookTestMenu.h src\ebooktest\Resource.h src\utils\BaseUtil.h
 $(OS)\EbookTestMenu.obj: src\utils\Scoped.h src\utils\StrUtil.h
 $(OS)\EngineDump.obj: src\BaseEngine.h src\ChmEngine.h src\DjVuEngine.h
@@ -473,13 +479,6 @@ $(OS)\Menu.obj: src\WindowInfo.h
 $(OS)\MobiDoc.obj: src\MobiDoc.h src\utils\Allocator.h src\utils\BaseUtil.h
 $(OS)\MobiDoc.obj: src\utils\BitReader.h src\utils\FileUtil.h src\utils\GdiPlusUtil.h
 $(OS)\MobiDoc.obj: src\utils\StrUtil.h src\utils\Vec.h
-$(OS)\mui.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\BitManip.h
-$(OS)\mui.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\HtmlPullParser.h
-$(OS)\mui.obj: src\utils\mui.h src\utils\MuiCss.h src\utils\StrUtil.h
-$(OS)\mui.obj: src\utils\Vec.h
-$(OS)\MuiCss.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\HtmlPullParser.h
-$(OS)\MuiCss.obj: src\utils\MuiCss.h src\utils\Scoped.h src\utils\StrUtil.h
-$(OS)\MuiCss.obj: src\utils\Vec.h src\utils\VecSegmented.h
 $(OS)\MuPDF_Exports.obj: mupdf\fitz\fitz.h
 $(OS)\NoFreeAllocator.obj: src\utils\BaseUtil.h src\utils\NoFreeAllocator.h
 $(OS)\Notifications.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
@@ -496,9 +495,8 @@ $(OS)\npPdfViewer.obj: src\utils\CmdLineParser.h src\utils\FileUtil.h src\utils\
 $(OS)\npPdfViewer.obj: src\utils\Scoped.h src\utils\SimpleLog.h src\utils\StrUtil.h
 $(OS)\npPdfViewer.obj: src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\PageLayout.obj: src\PageLayout.h src\utils\Allocator.h src\utils\BaseUtil.h
-$(OS)\PageLayout.obj: src\utils\BitManip.h src\utils\GdiPlusUtil.h src\utils\GeomUtil.h
-$(OS)\PageLayout.obj: src\utils\HtmlPullParser.h src\utils\mui.h src\utils\MuiCss.h
-$(OS)\PageLayout.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\PageLayout.obj: src\utils\GdiPlusUtil.h src\utils\HtmlPullParser.h src\utils\Scoped.h
+$(OS)\PageLayout.obj: src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\ParseCommandLine.obj: src\AppPrefs.h src\BaseEngine.h src\DisplayState.h
 $(OS)\ParseCommandLine.obj: src\ParseCommandLine.h src\StressTesting.h src\SumatraPDF.h
 $(OS)\ParseCommandLine.obj: src\TextSearch.h src\TextSelection.h src\utils\Allocator.h
