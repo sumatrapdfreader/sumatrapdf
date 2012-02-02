@@ -261,6 +261,7 @@ xps_parse_canvas(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri,
 	char *clip_att;
 	char *opacity_att;
 	char *opacity_mask_att;
+	char *navigate_uri_att;
 
 	xml_element *transform_tag = NULL;
 	xml_element *clip_tag = NULL;
@@ -272,6 +273,7 @@ xps_parse_canvas(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri,
 	clip_att = xml_att(root, "Clip");
 	opacity_att = xml_att(root, "Opacity");
 	opacity_mask_att = xml_att(root, "OpacityMask");
+	navigate_uri_att = xml_att(root, "FixedPage.NavigateUri");
 
 	for (node = xml_down(root); node; node = xml_next(node))
 	{
@@ -309,11 +311,15 @@ xps_parse_canvas(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri,
 		xps_parse_matrix_transform(doc, transform_tag, &transform);
 	ctm = fz_concat(transform, ctm);
 
+	/* SumatraPDF: extended link support */
+	xps_extract_anchor_info(doc, fz_empty_rect, navigate_uri_att, NULL, 1);
+	navigate_uri_att = NULL;
+
+	if (navigate_uri_att)
+		xps_add_link(doc, area, base_uri, navigate_uri_att);
+
 	if (clip_att || clip_tag)
 		xps_clip(doc, ctm, dict, clip_att, clip_tag);
-
-	/* SumatraPDF: extended link support */
-	xps_extract_anchor_info(doc, root, fz_empty_rect, 1);
 
 	xps_begin_opacity(doc, ctm, area, opacity_mask_uri, dict, opacity_att, opacity_mask_tag);
 
@@ -325,7 +331,7 @@ xps_parse_canvas(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri,
 	xps_end_opacity(doc, opacity_mask_uri, dict, opacity_att, opacity_mask_tag);
 
 	/* SumatraPDF: extended link support */
-	xps_extract_anchor_info(doc, root, area, 2);
+	xps_extract_anchor_info(doc, area, NULL, xml_att(root, "Name"), 2);
 
 	if (clip_att || clip_tag)
 		fz_pop_clip(doc->dev);
@@ -386,4 +392,5 @@ xps_run_page(xps_document *doc, xps_page *page, fz_device *dev, fz_matrix ctm, f
 	xps_parse_fixed_page(doc, ctm, page);
 	doc->cookie = NULL;
 	doc->dev = NULL;
+	page->links_resolved = 1;
 }

@@ -69,6 +69,79 @@ xps_add_fixed_document(xps_document *doc, char *name)
 	}
 }
 
+void
+xps_add_link(xps_document *doc, fz_rect area, char *base_uri, char *target_uri)
+{
+	int len;
+	char *buffer = NULL;
+	char *uri;
+	xps_target *target;
+	fz_link_dest dest;
+	fz_link *link;
+	fz_context *ctx = doc->ctx;
+
+	fz_var(buffer);
+
+	if (doc->current_page == NULL || doc->current_page->links_resolved)
+		return;
+
+	fz_try(ctx)
+	{
+		len = 2 + (base_uri ? strlen(base_uri) : 0) +
+			(target_uri ? strlen(target_uri) : 0);
+		buffer = fz_malloc(doc->ctx, len);
+		xps_resolve_url(buffer, base_uri, target_uri, len);
+		if (xps_url_is_remote(buffer))
+		{
+			dest.kind = FZ_LINK_URI;
+			dest.ld.uri.is_map = 0;
+			dest.ld.uri.uri = buffer;
+			buffer = NULL;
+		}
+		else
+		{
+			uri = buffer;
+
+			/* FIXME: This won't work for remote docs */
+			/* Skip until we find the fragment marker */
+			while (*uri && *uri != '#')
+				uri++;
+			if (*uri == '#')
+				uri++;
+
+			for (target = doc->target; target; target = target->next)
+				if (!strcmp(target->name, uri))
+					break;
+
+			if (target == NULL)
+				break;
+
+			dest.kind = FZ_LINK_GOTO;
+			dest.ld.gotor.flags = 0;
+			dest.ld.gotor.lt.x = 0;
+			dest.ld.gotor.lt.y = 0;
+			dest.ld.gotor.rb.x = 0;
+			dest.ld.gotor.rb.y = 0;
+			dest.ld.gotor.page = target->page;
+			dest.ld.gotor.file_spec = NULL;
+			dest.ld.gotor.new_window = 0;
+		}
+
+		link = fz_new_link(doc->ctx, area, dest);
+		link->next = doc->current_page->links;
+		doc->current_page->links = link;
+	}
+	fz_always(ctx)
+	{
+		fz_free(doc->ctx, buffer);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
+}
+
+
 static void
 xps_add_fixed_page(xps_document *doc, char *name, int width, int height)
 {
@@ -84,6 +157,8 @@ xps_add_fixed_page(xps_document *doc, char *name, int width, int height)
 	page->number = doc->page_count++;
 	page->width = width;
 	page->height = height;
+	page->links = NULL;
+	page->links_resolved = 0;
 	page->root = NULL;
 	page->next = NULL;
 
@@ -201,7 +276,7 @@ xps_parse_metadata_imp(xps_document *doc, xml_element *item, xps_fixdoc *fixdoc)
 			if (target && type)
 			{
 				char tgtbuf[1024];
-				xps_absolute_path(tgtbuf, doc->base_uri, target, sizeof tgtbuf);
+				xps_resolve_url(tgtbuf, doc->base_uri, target, sizeof tgtbuf);
 				if (!strcmp(type, REL_START_PART))
 					doc->start_part = fz_strdup(doc->ctx, tgtbuf);
 				if (!strcmp(type, REL_DOC_STRUCTURE) && fixdoc)
@@ -218,7 +293,7 @@ xps_parse_metadata_imp(xps_document *doc, xml_element *item, xps_fixdoc *fixdoc)
 			if (source)
 			{
 				char srcbuf[1024];
-				xps_absolute_path(srcbuf, doc->base_uri, source, sizeof srcbuf);
+				xps_resolve_url(srcbuf, doc->base_uri, source, sizeof srcbuf);
 				xps_add_fixed_document(doc, srcbuf);
 			}
 		}
@@ -233,7 +308,7 @@ xps_parse_metadata_imp(xps_document *doc, xml_element *item, xps_fixdoc *fixdoc)
 			if (source)
 			{
 				char srcbuf[1024];
-				xps_absolute_path(srcbuf, doc->base_uri, source, sizeof srcbuf);
+				xps_resolve_url(srcbuf, doc->base_uri, source, sizeof srcbuf);
 				xps_add_fixed_page(doc, srcbuf, width, height);
 			}
 		}
@@ -400,6 +475,7 @@ xps_load_page(xps_document *doc, int number)
 	{
 		if (n == number)
 		{
+			doc->current_page = page;
 			if (!page->root)
 				xps_load_fixed_page(doc, page);
 			return page;
@@ -427,5 +503,81 @@ xps_free_page(xps_document *doc, xps_page *page)
 	/* only free the XML contents */
 	if (page->root)
 		xml_free_element(doc->ctx, page->root);
+	fz_free_link(doc->ctx, page->links);
 	page->root = NULL;
+}
+
+/* SumatraPDF: extract page bounds without parsing the entire page content */
+static xps_page *
+xps_get_page(xps_document *doc, int number)
+{
+	int n;
+	xps_page *page = doc->first_page;
+	for (n = 0; n < number && page; n++)
+		page = page->next;
+	return page;
+}
+
+fz_rect
+xps_bound_page_quick_and_dirty(xps_document *doc, int number)
+{
+	fz_rect bounds = fz_empty_rect;
+	byte *end = NULL;
+	xml_element *root;
+
+	xps_page *page = xps_get_page(doc, number);
+	xps_part *part = page ? xps_read_part(doc, page->name) : NULL;
+	if (!part)
+		return fz_empty_rect;
+
+	if (part->data[0] == 0xFF && part->data[1] == 0xFE)
+	{
+		wchar_t *start = wcsstr((wchar_t *)part->data, L"<FixedPage");
+		if (start)
+			end = (byte *)wcschr(start, '>');
+		if (end)
+			end += 2;
+	}
+	else
+	{
+		const char *start = strstr((char *)part->data, "<FixedPage");
+		if (start)
+			end = (byte *)strchr(start, '>');
+		if (end)
+			// xml_parse_document ignores the length argument for UTF-8 data
+			*(++end) = '\0';
+	}
+	if (!end)
+	{
+		xps_free_part(doc, part);
+		return fz_empty_rect;
+	}
+
+	// we depend on the parser not validating its input (else we'd
+	// have to append a closing "</FixedPage>" to the byte data)
+	fz_try(doc->ctx)
+	{
+		root = xml_parse_document(doc->ctx, part->data, (int)(end - part->data));
+	}
+	fz_always(doc->ctx)
+	{
+		xps_free_part(doc, part);
+	}
+	fz_catch(doc->ctx)
+	{
+		fz_rethrow(doc->ctx);
+	}
+
+	if (!strcmp(xml_tag(root), "FixedPage"))
+	{
+		char *value = xml_att(root, "Width");
+		if (value)
+			bounds.x1 = fz_atof(value) * 72.0f / 96.0f;
+		value = xml_att(root, "Height");
+		if (value)
+			bounds.y1 = fz_atof(value) * 72.0f / 96.0f;
+	}
+	xml_free_element(doc->ctx, root);
+
+	return bounds;
 }

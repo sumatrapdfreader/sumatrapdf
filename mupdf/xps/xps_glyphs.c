@@ -387,6 +387,7 @@ xps_parse_glyphs(xps_document *doc, fz_matrix ctm,
 	char *clip_att;
 	char *opacity_att;
 	char *opacity_mask_att;
+	char *navigate_uri_att;
 
 	xml_element *transform_tag = NULL;
 	xml_element *clip_tag = NULL;
@@ -429,6 +430,7 @@ xps_parse_glyphs(xps_document *doc, fz_matrix ctm,
 	clip_att = xml_att(root, "Clip");
 	opacity_att = xml_att(root, "Opacity");
 	opacity_mask_att = xml_att(root, "OpacityMask");
+	navigate_uri_att = xml_att(root, "FixedPage.NavigateUri");
 
 	for (node = xml_down(root); node; node = xml_next(node))
 	{
@@ -472,7 +474,7 @@ xps_parse_glyphs(xps_document *doc, fz_matrix ctm,
 	 * Find and load the font resource
 	 */
 
-	xps_absolute_path(partname, base_uri, font_uri_att, sizeof partname);
+	xps_resolve_url(partname, base_uri, font_uri_att, sizeof partname);
 	subfont = strrchr(partname, '#');
 	if (subfont)
 	{
@@ -572,7 +574,11 @@ xps_parse_glyphs(xps_document *doc, fz_matrix ctm,
 	area = fz_bound_text(doc->ctx, text, ctm);
 
 	/* SumatraPDF: extended link support */
-	xps_extract_anchor_info(doc, root, area, 0);
+	xps_extract_anchor_info(doc, area, navigate_uri_att, xml_att(root, "Name"), 0);
+	navigate_uri_att = NULL;
+
+	if (navigate_uri_att)
+		xps_add_link(doc, area, base_uri, navigate_uri_att);
 
 	xps_begin_opacity(doc, ctm, area, opacity_mask_uri, dict, opacity_att, opacity_mask_tag);
 

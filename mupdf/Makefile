@@ -156,8 +156,8 @@ mandir ?= $(prefix)/share/man
 install: $(MUXPS_LIB) $(MUPDF_LIB) $(FITZ_LIB) $(PDF_APPS) $(XPS_APPS) $(MUPDF)
 	install -d $(bindir) $(libdir) $(incdir) $(mandir)/man1
 	install $(MUXPS_LIB) $(MUPDF_LIB) $(FITZ_LIB) $(libdir)
-	install fitz/fitz.h pdf/mupdf.h xps/muxps.h $(incdir)
-	install $(PDF_APPS) $(XPS_APPS) $(MUPDF) $(bindir)
+	install fitz/memento.h fitz/fitz.h pdf/mupdf.h xps/muxps.h $(incdir)
+	install cbz/mucbz.h $(PDF_APPS) $(XPS_APPS) $(MUPDF) $(bindir)
 	install $(wildcard apps/man/*.1) $(mandir)/man1
 
 # --- Clean and Default ---

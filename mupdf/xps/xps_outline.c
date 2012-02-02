@@ -15,17 +15,6 @@ xps_find_last_outline_at_level(fz_outline *node, int level, int target_level)
 	return xps_find_last_outline_at_level(node->down, level + 1, target_level);
 }
 
-/* SumatraPDF: extended outline actions */
-#define isprotc(c) (('A' <= (c) && (c) <= 'Z') || ('a' <= (c) && (c) <= 'z') || (c) == '-')
-
-static int
-is_external_target(char *target)
-{
-	char *c = target;
-	for (; isprotc(*c); c++);
-	return c > target && *c == ':';
-}
-
 static fz_outline *
 xps_parse_document_outline(xps_document *doc, xml_element *root)
 {
@@ -48,7 +37,7 @@ xps_parse_document_outline(xps_document *doc, xml_element *root)
 			/* SumatraPDF: extended outline actions */
 			if (!target)
 				entry->dest.kind = FZ_LINK_NONE;
-			else if (!is_external_target(target))
+			else if (!xps_url_is_remote(target))
 			{
 				memset(&entry->dest, 0, sizeof(fz_link_dest));
 				entry->dest.kind = FZ_LINK_GOTO;
@@ -171,34 +160,40 @@ xps_load_outline(xps_document *doc)
 /* SumatraPDF: extended link support */
 
 void
-xps_extract_anchor_info(xps_document *doc, xml_element *node, fz_rect rect, int step)
+xps_extract_anchor_info(xps_document *doc, fz_rect rect, char *target_uri, char *anchor_name, int step)
 {
-	char *value = NULL;
+	fz_link *new_link = NULL;
 
-	if (doc->link_root && (value = xml_att(node, "FixedPage.NavigateUri")) && step != 2)
+	if (!doc->current_page || doc->current_page->links_resolved)
+		return;
+	assert((step != 2 || !target_uri) && (step != 1 || !anchor_name));
+
+	if (target_uri)
 	{
 		fz_link_dest ld = { 0 };
-		if (!is_external_target(value))
+		if (!xps_url_is_remote(target_uri))
 		{
 			ld.kind = FZ_LINK_GOTO;
-			ld.ld.gotor.page = xps_find_link_target(doc, value);
+			ld.ld.gotor.page = xps_find_link_target(doc, target_uri);
 			/* for retrieving updated target rectangles */
-			ld.ld.gotor.rname = fz_strdup(doc->ctx, value);
+			ld.ld.gotor.rname = fz_strdup(doc->ctx, target_uri);
 		}
 		else
 		{
 			ld.kind = FZ_LINK_URI;
-			ld.ld.uri.uri = fz_strdup(doc->ctx, value);
+			ld.ld.uri.uri = fz_strdup(doc->ctx, target_uri);
 			ld.ld.uri.is_map = 0;
 		}
-		doc->link_root = doc->link_root->next = fz_new_link(doc->ctx, rect, ld);
+		new_link = fz_new_link(doc->ctx, rect, ld);
+		new_link->next = doc->current_page->links;
+		doc->current_page->links = new_link;
 	}
 
 	/* canvas bounds estimates for link and target positioning */
 	if (step == 1 && ++doc->_clinks_len <= nelem(doc->_clinks)) // canvas begin
 	{
 		doc->_clinks[doc->_clinks_len-1].rect = fz_empty_rect;
-		doc->_clinks[doc->_clinks_len-1].link = value ? doc->link_root : NULL;
+		doc->_clinks[doc->_clinks_len-1].link = new_link;
 	}
 	if (step == 2 && doc->_clinks_len-- <= nelem(doc->_clinks)) // canvas end
 	{
@@ -210,11 +205,11 @@ xps_extract_anchor_info(xps_document *doc, xml_element *node, fz_rect rect, int 
 	if (step != 1 && doc->_clinks_len > 0 && doc->_clinks_len <= nelem(doc->_clinks))
 		doc->_clinks[doc->_clinks_len-1].rect = fz_union_rect(doc->_clinks[doc->_clinks_len-1].rect, rect);
 
-	if ((value = xml_att(node, "Name")) && step != 1)
+	if (anchor_name)
 	{
 		xps_target *target;
-		char *valueId = fz_malloc(doc->ctx, strlen(value) + 2);
-		sprintf(valueId, "#%s", value);
+		char *valueId = fz_malloc(doc->ctx, strlen(anchor_name) + 2);
+		sprintf(valueId, "#%s", anchor_name);
 		target = xps_find_link_target_obj(doc, valueId);
 		if (target)
 			target->rect = rect;
@@ -290,7 +285,7 @@ xps_find_doc_props_path(xps_document *doc, char path[1024])
 		if (!strcmp(xml_tag(item), "Relationship") && xml_att(item, "Type") &&
 			!strcmp(xml_att(item, "Type"), REL_CORE_PROPERTIES) && xml_att(item, "Target"))
 		{
-			xps_absolute_path(path, "", xml_att(item, "Target"), 1024);
+			xps_resolve_url(path, "", xml_att(item, "Target"), 1024);
 		}
 	}
 

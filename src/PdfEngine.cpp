@@ -2461,7 +2461,7 @@ protected:
 
     Vec<XpsPageRun*>runCache; // ordered most recently used first
     XpsPageRun    * CreatePageRun(xps_page *page, fz_display_list *list);
-    XpsPageRun    * GetPageRun(xps_page *page, bool tryOnly=false, int firstForPage=0);
+    XpsPageRun    * GetPageRun(xps_page *page, bool tryOnly=false);
     bool            RunPage(xps_page *page, fz_device *dev, fz_matrix ctm,
                             fz_bbox clipbox=fz_infinite_bbox, bool cacheRun=true);
     void            DropPageRun(XpsPageRun *run, bool forceRemove=false);
@@ -2472,7 +2472,6 @@ protected:
 
     RectD         * _mediaboxes;
     fz_outline    * _outline;
-    fz_link      ** _links;
     fz_obj        * _info;
     fz_rect      ** imageRects;
 };
@@ -2550,7 +2549,7 @@ public:
 };
 
 CXpsEngine::CXpsEngine() : _fileName(NULL), _doc(NULL), _pages(NULL), _mediaboxes(NULL),
-    _outline(NULL), _links(NULL), _info(NULL), imageRects(NULL)
+    _outline(NULL), _info(NULL), imageRects(NULL)
 {
     InitializeCriticalSection(&_pagesAccess);
     InitializeCriticalSection(&ctxAccess);
@@ -2564,19 +2563,10 @@ CXpsEngine::~CXpsEngine()
     EnterCriticalSection(&ctxAccess);
 
     if (_pages) {
-        for (int i = 0; i < PageCount(); i++) {
-            if (_pages[i])
-                xps_free_page(_doc, _pages[i]);
-        }
+        // xps_pages are freed by xps_close_document -> xps_free_page_list
+        assert(_doc);
         free(_pages);
     }
-    if (_links) {
-        for (int i = 0; i < PageCount(); i++)
-            if (_links[i])
-                fz_free_link(ctx, _links[i]);
-        free(_links);
-    }
-
     if (_outline)
         fz_free_outline(ctx, _outline);
     if (_mediaboxes)
@@ -2694,11 +2684,10 @@ bool CXpsEngine::LoadFromStream(fz_stream *stm)
     }
 
     _pages = SAZA(xps_page *, PageCount());
-    _links = SAZA(fz_link *, PageCount());
     _mediaboxes = new RectD[PageCount()];
     imageRects = SAZA(fz_rect *, PageCount());
 
-    if (!_pages || !_links || !_mediaboxes || !imageRects)
+    if (!_pages || !_mediaboxes || !imageRects)
         return false;
 
     fz_try(ctx) {
@@ -2781,7 +2770,7 @@ XpsPageRun *CXpsEngine::CreatePageRun(xps_page *page, fz_display_list *list)
     return (XpsPageRun *)_memdup(&newRun);
 }
 
-XpsPageRun *CXpsEngine::GetPageRun(xps_page *page, bool tryOnly, int firstForPage)
+XpsPageRun *CXpsEngine::GetPageRun(xps_page *page, bool tryOnly)
 {
     ScopedCritSec scope(&_pagesAccess);
 
@@ -2815,8 +2804,6 @@ XpsPageRun *CXpsEngine::GetPageRun(xps_page *page, bool tryOnly, int firstForPag
         fz_link root = { 0 };
         fz_var(list);
         fz_var(dev);
-        if (firstForPage)
-            _doc->link_root = &root;
         fz_try(ctx) {
             list = fz_new_display_list(ctx);
             dev = fz_new_list_device(ctx, list);
@@ -2828,16 +2815,10 @@ XpsPageRun *CXpsEngine::GetPageRun(xps_page *page, bool tryOnly, int firstForPag
             list = NULL;
         }
         fz_free_device(dev);
-        _doc->link_root = NULL;
 
         if (list) {
             result = CreatePageRun(page, list);
             runCache.InsertAt(0, result);
-
-            if (firstForPage) {
-                assert(!_links[firstForPage-1]);
-                _links[firstForPage-1] = root.next;
-            }
         }
     }
     else if (result && result != runCache.At(0)) {
@@ -2899,67 +2880,6 @@ void CXpsEngine::DropPageRun(XpsPageRun *run, bool forceRemove)
     }
 }
 
-// <FixedPage xmlns="http://schemas.microsoft.com/xps/2005/06" Width="816" Height="1056" xml:lang="en-US">
-
-// MuPDF doesn't allow partial parsing of XML content, so try to
-// extract a page's root element manually before feeding it to the parser
-static RectD xps_extract_mediabox_quick_and_dirty(xps_document *doc, int pageNo)
-{
-    xps_part *part = NULL;
-    for (xps_page *page = doc->first_page; page && !part; page = page->next)
-        if (--pageNo == 0)
-            part = xps_read_part(doc, page->name);
-    if (!part)
-        return RectD();
-
-    byte *end = NULL;
-    if (0xFF == part->data[0] && 0xFE == part->data[1]) {
-        const WCHAR *start = str::Find((WCHAR *)part->data, L"<FixedPage");
-        if (start)
-            end = (byte *)str::FindChar(start, '>');
-        if (end)
-            end += 2;
-    }
-    else {
-        const char *start = str::Find((char *)part->data, "<FixedPage");
-        if (start)
-            end = (byte *)str::FindChar(start, '>');
-        if (end)
-            // xml_parse_document ignores the length argument for UTF-8 data
-            *(++end) = '\0';
-    }
-    if (!end) {
-        xps_free_part(doc, part);
-        return RectD();
-    }
-
-    // we depend on the parser not validating its input (else we'd
-    // have to append a closing "</FixedPage>" to the byte data)
-    xml_element *root;
-    fz_try(doc->ctx) {
-        root = xml_parse_document(doc->ctx, part->data, (int)(end - part->data));
-    }
-    fz_always(doc->ctx) {
-        xps_free_part(doc, part);
-    }
-    fz_catch(doc->ctx) {
-        fz_rethrow(doc->ctx);
-    }
-
-    RectD rect;
-    if (str::Eq(xml_tag(root), "FixedPage")) {
-        char *width = xml_att(root, "Width");
-        if (width)
-            rect.dx = atof(width) * 72 / 96;
-        char *height = xml_att(root, "Height");
-        if (height)
-            rect.dy = atof(height) * 72 / 96;
-    }
-
-    xml_free_element(doc->ctx, root);
-    return rect;
-}
-
 RectD CXpsEngine::PageMediabox(int pageNo)
 {
     assert(1 <= pageNo && pageNo <= PageCount());
@@ -2974,7 +2894,7 @@ RectD CXpsEngine::PageMediabox(int pageNo)
     if (!page) {
         ScopedCritSec scope(&ctxAccess);
         fz_try(ctx) {
-            mbox = xps_extract_mediabox_quick_and_dirty(_doc, pageNo);
+            mbox = fz_rect_to_RectD(xps_bound_page_quick_and_dirty(_doc, pageNo-1));
         }
         fz_catch(ctx) { }
         if (!mbox.IsEmpty()) {
@@ -3227,8 +3147,12 @@ TCHAR *CXpsEngine::GetProperty(char *name)
 
 PageElement *CXpsEngine::GetElementAtPos(int pageNo, PointD pt)
 {
+    xps_page *page = GetXpsPage(pageNo, true);
+    if (!page)
+        return NULL;
+
     fz_point p = { (float)pt.x, (float)pt.y };
-    for (fz_link *link = _links[pageNo-1]; link; link = link->next)
+    for (fz_link *link = page->links; link; link = link->next)
         if (fz_is_pt_in_rect(link->rect, p))
             return new XpsLink(this, &link->dest, link->rect, pageNo);
 
@@ -3243,6 +3167,10 @@ PageElement *CXpsEngine::GetElementAtPos(int pageNo, PointD pt)
 
 Vec<PageElement *> *CXpsEngine::GetElements(int pageNo)
 {
+    xps_page *page = GetXpsPage(pageNo, true);
+    if (!page)
+        return NULL;
+
     // since all elements lists are in last-to-first order, append
     // item types in inverse order and reverse the whole list at the end
     Vec<PageElement *> *els = new Vec<PageElement *>();
@@ -3255,7 +3183,7 @@ Vec<PageElement *> *CXpsEngine::GetElements(int pageNo)
         }
     }
 
-    for (fz_link *link = _links[pageNo-1]; link; link = link->next) {
+    for (fz_link *link = page->links; link; link = link->next) {
         els->Append(new XpsLink(this, &link->dest, link->rect, pageNo));
     }
 
@@ -3267,11 +3195,10 @@ void CXpsEngine::LinkifyPageText(xps_page *page, int pageNo)
 {
     // make MuXPS extract all links and named destinations from the page
     assert(!GetPageRun(page, true));
-    XpsPageRun *run = GetPageRun(page, false, pageNo);
+    XpsPageRun *run = GetPageRun(page);
     assert(run);
     if (run)
         DropPageRun(run);
-    _links[pageNo-1] = FixupPageLinks(_links[pageNo-1]);
 
     RectI *coords;
     TCHAR *pageText = ExtractPageText(page, _T("\n"), &coords, true);
@@ -3281,7 +3208,7 @@ void CXpsEngine::LinkifyPageText(xps_page *page, int pageNo)
     LinkRectList *list = LinkifyText(pageText, coords);
     for (size_t i = 0; i < list->links.Count(); i++) {
         bool overlaps = false;
-        for (fz_link *next = _links[pageNo-1]; next && !overlaps; next = next->next)
+        for (fz_link *next = page->links; next && !overlaps; next = next->next)
             overlaps = fz_calc_overlap(next->rect, list->coords.At(i)) >= 0.25f;
         if (!overlaps) {
             ScopedMem<char> uri(str::conv::ToUtf8(list->links.At(i)));
@@ -3290,8 +3217,8 @@ void CXpsEngine::LinkifyPageText(xps_page *page, int pageNo)
             ld.ld.uri.uri = fz_strdup(ctx, uri);
             // add links in top-to-bottom order (i.e. last-to-first)
             fz_link *link = fz_new_link(ctx, list->coords.At(i), ld);
-            link->next = _links[pageNo-1];
-            _links[pageNo-1] = link;
+            link->next = page->links;
+            page->links = link;
         }
     }
 

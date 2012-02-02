@@ -83,7 +83,7 @@ xps_find_image_brush_source_part(xps_document *doc, char *base_uri, xml_element 
 	if (!image_name)
 		fz_throw(doc->ctx, "cannot find image source");
 
-	xps_absolute_path(partname, base_uri, image_name, sizeof partname);
+	xps_resolve_url(partname, base_uri, image_name, sizeof partname);
 
 	return xps_read_part(doc, partname);
 }

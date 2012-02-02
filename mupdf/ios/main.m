@@ -874,7 +874,7 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 			outline = [[MuOutlineController alloc] initWithTarget: self titles: titles pages: pages];
 		[titles release];
 		[pages release];
-		fz_free_outline(root);
+		fz_free_outline(ctx, root);
 	}
 
 	return self;

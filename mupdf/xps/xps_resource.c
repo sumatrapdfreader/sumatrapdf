@@ -63,7 +63,7 @@ xps_parse_remote_resource_dictionary(xps_document *doc, char *base_uri, char *so
 	char *s;
 
 	/* External resource dictionaries MUST NOT reference other resource dictionaries */
-	xps_absolute_path(part_name, base_uri, source_att, sizeof part_name);
+	xps_resolve_url(part_name, base_uri, source_att, sizeof part_name);
 	part = xps_read_part(doc, part_name);
 	xml = xml_parse_document(doc->ctx, part->data, part->size);
 	xps_free_part(doc, part);

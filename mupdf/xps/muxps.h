@@ -32,7 +32,8 @@ typedef struct xps_document_s xps_document;
  */
 
 int xps_strcasecmp(char *a, char *b);
-void xps_absolute_path(char *output, char *base_uri, char *path, int output_size);
+void xps_resolve_url(char *output, char *base_uri, char *path, int output_size);
+int xps_url_is_remote(char *path);
 
 /*
  * XML document model
@@ -91,6 +92,8 @@ struct xps_page_s
 	int width;
 	int height;
 	xml_element *root;
+	int links_resolved;
+	fz_link *links;
 	xps_page *next;
 };
 
@@ -110,10 +113,13 @@ int xps_count_pages(xps_document *doc);
 xps_page *xps_load_page(xps_document *doc, int number);
 fz_rect xps_bound_page(xps_document *doc, xps_page *page);
 void xps_free_page(xps_document *doc, xps_page *page);
+/* SumatraPDF: extract page bounds without parsing the entire page content */
+fz_rect xps_bound_page_quick_and_dirty(xps_document *doc, int number);
 
 fz_outline *xps_load_outline(xps_document *doc);
 
 int xps_find_link_target(xps_document *doc, char *target_uri);
+void xps_add_link(xps_document *doc, fz_rect area, char *base_uri, char *target_uri);
 /* SumatraPDF: extended link support */
 xps_target *xps_find_link_target_obj(xps_document *doc, char *target_uri);
 
@@ -254,8 +260,9 @@ struct xps_document_s
 	fz_cookie *cookie;
 	fz_device *dev;
 
-	/* SumatraPDF: set to non-NULL for link extraction */
-	fz_link *link_root;
+	/* Current page we are loading */
+	xps_page *current_page;
+
 	/* SumatraPDF: better canvas bounds estimates for links/targets */
 	struct {
 		fz_link *link;
@@ -275,7 +282,7 @@ char *xps_get_real_params(char *s, int num, float *x);
 char *xps_get_point(char *s_in, float *x, float *y);
 
 /* SumatraPDF: extended link support */
-void xps_extract_anchor_info(xps_document *doc, xml_element *node, fz_rect rect, int step);
+void xps_extract_anchor_info(xps_document *doc, fz_rect rect, char *target_uri, char *anchor_name, int step);
 /* SumatraPDF: extract document properties (hacky) */
 fz_obj *xps_extract_doc_props(xps_document *doc);
 

@@ -367,13 +367,15 @@ static void pdfapp_loadpage_xps(pdfapp_t *app)
 	}
 
 	app->page_bbox = xps_bound_page(app->xps, page);
-	app->page_links = NULL;
 
 	/* Create display list */
 	app->page_list = fz_new_display_list(app->ctx);
 	mdev = fz_new_list_device(app->ctx, app->page_list);
 	xps_run_page(app->xps, page, mdev, fz_identity, NULL);
 	fz_free_device(mdev);
+
+	app->page_links = page->links;
+	page->links = NULL;
 
 	xps_free_page(app->xps, page);
 }

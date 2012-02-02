@@ -473,7 +473,8 @@ EXPORTS
 ; MuXPS exports
 
 	xps_strcasecmp
-	xps_absolute_path
+	xps_resolve_url
+	xps_url_is_remote
 	xml_parse_document
 	xml_next
 	xml_down
@@ -493,8 +494,10 @@ EXPORTS
 	xps_load_page
 	xps_bound_page
 	xps_free_page
+	xps_bound_page_quick_and_dirty
 	xps_load_outline
 	xps_find_link_target
+	xps_add_link
 	xps_find_link_target_obj
 	xps_count_font_encodings
 	xps_identify_font_encoding
