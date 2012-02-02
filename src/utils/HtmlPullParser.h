@@ -145,9 +145,8 @@ struct HtmlToken {
 html, which can be one one of 3 tag types or error. If a tag has attributes,
 the caller has to parse them out. */
 class HtmlPullParser {
-    const char *   s;
-    const char *   end;
     const char *   currPos;
+    const char *   end;
 
     HtmlToken      currToken;
 
@@ -157,8 +156,26 @@ class HtmlPullParser {
     }
 
 public:
-    HtmlPullParser(const char *s, size_t len) : s(s), currPos(s) {
+    struct State {
+        const char *s;
+        const char *end;
+    };
+
+    HtmlPullParser(const char *s, size_t len) : currPos(s) {
         end = s + len;
+    }
+
+    HtmlPullParser(const char *s, const char *end) : currPos(s), end(end) {
+    }
+
+    HtmlPullParser(const State& state) : currPos(state.s), end(state.end) {
+    }
+
+    // Get the current state of html parsing. Can be used to restart
+    // parsing from that point later on
+    State GetParsingState() {
+        State state = { currPos, end };
+        return state;
     }
 
     HtmlToken *Next();
