@@ -394,7 +394,7 @@ Control::Control(Control *newParent)
     layout = NULL;
     hCursor = NULL;
     cachedProps = NULL;
-    SetCurrentStyle(NULL);
+    SetCurrentStyle(NULL, gStyleDefault);
     pos = Rect();
     if (newParent)
         SetParent(newParent);
@@ -573,11 +573,10 @@ Prop **Control::GetCachedProps() const
 Button::Button(const TCHAR *s)
 {
     text = NULL;
-    styleMouseOver = NULL;
     wantedInputBits = (uint16)-1; // wants everything
     styleDefault = NULL;
     styleMouseOver = NULL;
-    SetCurrentStyle(NULL);
+    SetCurrentStyle(styleDefault, gStyleButtonDefault);
     SetText(s);
 }
 
@@ -586,16 +585,24 @@ Button::~Button()
     free(text);
 }
 
+static void AddBorders(int& dx, int& dy, Prop **props)
+{
+    Prop *p1 = props[PropBorderLeftWidth];
+    Prop *p2 =  props[PropBorderRightWidth];
+    // note: width is a float, not sure how I should round them
+    dx += (int)(p1->GetWidth() + p2->GetWidth());
+    p1 = props[PropBorderTopWidth];
+    p2 =  props[PropBorderBottomWidth];
+    dy += (int)(p1->GetWidth() + p2->GetWidth());
+}
+
 Size Button::GetBorderAndPaddingSize() const
 {
     Prop **props = GetCachedProps();
     PaddingData pad = props[PropPadding]->padding;
     int dx = pad.left + pad.right;
     int dy = pad.top  + pad.bottom;
-
-    // note: width is a float, not sure how I should round them
-    dx += (int)(props[PropBorderLeftWidth]->GetWidth() + props[PropBorderRightWidth]->GetWidth());
-    dy += (int)(props[PropBorderTopWidth]->GetWidth() + props[PropBorderBottomWidth]->GetWidth());
+    AddBorders(dx, dy, props);
     return Size(dx, dy);
 }
 

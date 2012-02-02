@@ -72,22 +72,49 @@ class PoolAllocator : public Allocator {
         size_t               free;
 
         size_t               Used() { return size - free; }
-
+        char *               DataStart() { return (char*)this + sizeof(MemBlockNode); }
         // data follows here
     };
 
-    char *          currMem;
     MemBlockNode *  currBlock;
     MemBlockNode *  firstBlock;
 
     void Init() {
         currBlock = NULL;
         firstBlock = NULL;
-        currMem = NULL;
         allocRounding = 8;
     }
 
 public:
+
+    // Iterator for easily traversing allocated memory as array
+    // of values of type T. The caller has to enforce the fact
+    // that the values stored are indeed values of T
+    template <typename T>
+    struct Iter {
+        MemBlockNode *  curr;
+        size_t          pos;
+
+        Iter(PoolAllocator *allocator) {
+            curr = allocator->firstBlock;
+            pos = 0;
+            // minimum check that the allocated values are of type T
+            CrashIf(curr && (curr->Used() % sizeof(T) != 0));
+        }
+
+        T *Next() {
+            if (!curr)
+                return NULL;
+            if (curr->Used() == pos) {
+                curr = curr->next;
+                if (!curr)
+                    return NULL;
+            }
+            T *elPtr = reinterpret_cast<T*>(curr->DataStart() + pos);
+            pos += sizeof(T);
+            return elPtr;
+        }
+    };
 
     PoolAllocator()  {
         minBlockSize = 4096;
@@ -126,7 +153,6 @@ public:
         MemBlockNode *node = (MemBlockNode*)calloc(1, sizeof(MemBlockNode) + size);
         if (!firstBlock)
             firstBlock = node;
-        currMem = (char*)node + sizeof(MemBlockNode);
         node->size = size;
         node->free = size;
         if (currBlock)
@@ -152,8 +178,7 @@ public:
         if (!currBlock || (currBlock->free < size))
             AllocBlock(size);
 
-        void *mem = (void*)currMem;
-        currMem += size;
+        void *mem = (void*)(currBlock->DataStart() + currBlock->Used());
         currBlock->free -= size;
         return mem;
     }

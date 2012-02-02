@@ -60,7 +60,7 @@ struct FontCacheEntry {
 
 // a critical section for everything that needs protecting in mui
 // we use only one for simplicity as long as contention is not a problem
-CRITICAL_SECTION gMuiCs;
+static CRITICAL_SECTION gMuiCs;
 
 VecSegmented<Prop> *gAllProps = NULL;
 
@@ -136,8 +136,11 @@ static void DeleteCachedFonts()
 
 void Destroy()
 {
-    // TODO: we need to delete allocated parts of Prop, like
-    // Prop::fontName::name
+    VecSegmented<Prop>::Iter iter(gAllProps);
+    for (Prop *p = iter.Next(); p; p = iter.Next()) {
+        p->Free();
+    }
+
     delete gAllProps;
 
     delete gStyleButtonDefault;
@@ -145,6 +148,16 @@ void Destroy()
 
     DeleteCachedFonts();
     DeleteCriticalSection(&gMuiCs);
+}
+
+void EnterMuiCriticalSection()
+{
+    EnterCriticalSection(&gMuiCs);
+}
+
+void LeaveMuiCriticalSection()
+{
+    LeaveCriticalSection(&gMuiCs);
 }
 
 bool IsWidthProp(PropType type)
@@ -241,6 +254,12 @@ bool ColorData::operator==(const ColorData& other) const
     return false;
 }
 
+void Prop::Free()
+{
+    if (PropFontName == type)
+        free((void*)fontName.name);
+}
+
 bool Prop::Eq(const Prop *other) const
 {
     if (type != other->type)
@@ -271,8 +290,8 @@ bool Prop::Eq(const Prop *other) const
 
 static Prop *FindExistingProp(Prop *prop)
 {
-    for (size_t i = 0; i < gAllProps->Count(); i++) {
-        Prop *p = &gAllProps->At(i);
+    VecSegmented<Prop>::Iter iter(gAllProps);
+    for (Prop *p = iter.Next(); p; p = iter.Next()) {
         if (p->Eq(prop))
             return p;
     }
@@ -285,17 +304,11 @@ Prop *Prop::AllocFontName(const TCHAR *name)
     Prop p(PropFontName);
     p.fontName.name = name;
     Prop *existingProp = FindExistingProp(&p);
-    // perf trick: we didn't str::Dup() fontName.name so must NULL
-    // it out so that ~Prop() doesn't try to free it
-    p.fontName.name = NULL;
-    if (existingProp) {
-        p.fontName.name = NULL;
+    if (existingProp)
         return existingProp;
-    }
     p.fontName.name = str::Dup(name);
     gAllProps->Append(p);
-    p.fontName.name = NULL;
-    return &gAllProps->Last();
+    return gAllProps->Last();
 }
 
 #define ALLOC_BODY(propType, structName, argName) \
@@ -306,7 +319,7 @@ Prop *Prop::AllocFontName(const TCHAR *name)
         return existingProp; \
     p.structName.argName = argName; \
     gAllProps->Append(p); \
-    return &gAllProps->Last()
+    return gAllProps->Last()
 
 Prop *Prop::AllocFontSize(float size)
 {
@@ -338,7 +351,7 @@ Prop *Prop::AllocPadding(int top, int right, int bottom, int left)
         return existingProp;
     p.padding = pd;
     gAllProps->Append(p);
-    return &gAllProps->Last();
+    return gAllProps->Last();
 }
 
 Prop *Prop::AllocColorSolid(PropType type, ARGB color)
@@ -351,7 +364,7 @@ Prop *Prop::AllocColorSolid(PropType type, ARGB color)
     if (existingProp)
         return existingProp;
     gAllProps->Append(p);
-    return &gAllProps->Last();
+    return gAllProps->Last();
 }
 
 Prop *Prop::AllocColorSolid(PropType type, int a, int r, int g, int b)
@@ -375,7 +388,7 @@ Prop *Prop::AllocColorLinearGradient(PropType type, LinearGradientMode mode, ARG
     if (existingProp)
         return existingProp;
     gAllProps->Append(p);
-    return &gAllProps->Last();
+    return gAllProps->Last();
 }
 
 Prop *Prop::AllocColorLinearGradient(PropType type, LinearGradientMode mode, const char *startColor, const char *endColor)
@@ -414,6 +427,7 @@ size_t Style::GetIdentity() const
 // replace if a given PropType already exists in the set.
 void Style::Set(Prop *prop)
 {
+    CrashIf(!prop);
     for (size_t i = 0; i < props.Count(); i++) {
         Prop *p = props.At(i);
         if (p->type == prop->type) {
@@ -520,13 +534,6 @@ Font *CachedFontFromCachedProps(Prop **props)
     return c.font;
 }
 
-Prop **GetCachedPropsAtIdx(size_t idx)
-{
-    ScopedCritSec cs(&gMuiCs);
-    CrashIf(MAX_SIZE_T == idx);
-    return &gCachedProps->At(idx);
-}
-
 static size_t GetStyleId(Style *style) {
     if (!style)
         return 0;
@@ -537,7 +544,7 @@ Prop **CachePropsForStyle(Style *style1, Style *style2)
 {
     static PropToGet propsToGet[PropsCount];
 
-    ScopedCritSec cs(&gMuiCs);
+    ScopedMuiCritSec muiCs;
 
     for (size_t i = 0; i < gPropCache->Count(); i++) {
         PropCacheEntry e = gPropCache->At(i);
@@ -557,10 +564,11 @@ Prop **CachePropsForStyle(Style *style1, Style *style2)
     }
     GetProps(style1, style2, propsToGet, PropsCount);
 
-    Prop ** props = gCachedProps->MakeSpaceAtEnd(PropsCount);
+    Prop **props = gCachedProps->MakeSpaceAtEnd(PropsCount);
     gCachedProps->IncreaseLen(PropsCount);
     for (size_t i = 0; i < PropsCount; i++) {
         props[i] = propsToGet[i].prop;
+        CrashIf(!props[i]);
     }
 
     PropCacheEntry e = { style1, GetStyleId(style1), style2, GetStyleId(style2), props };

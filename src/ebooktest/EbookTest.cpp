@@ -429,25 +429,18 @@ ControlEbook::ControlEbook(HWND hwnd)
     bit::Set(wantedInputBits, WantsMouseMoveBit);
     ebookDefault = new Style();
     ebookDefault->Set(Prop::AllocPadding(pageBorderY, pageBorderX, pageBorderY, pageBorderX));
-    SetCurrentStyle(ebookDefault);
+    SetCurrentStyle(ebookDefault, gStyleDefault);
 
-    prev = new Button(_T("Prev"));
     prevDefault = new Style(gStyleButtonDefault);
     prevDefault->Set(Prop::AllocPadding(12, 16, 4, 8));
     prevMouseOver = new Style(gStyleButtonMouseOver);
     prevMouseOver->Set(Prop::AllocPadding(4, 16, 4, 8));
-    prev->SetStyles(prevDefault, prevMouseOver);
 
-    next = new Button(_T("Next"));
     nextDefault = new Style(gStyleButtonDefault);
     nextDefault->Set(Prop::AllocPadding(4, 8, 12, 16));
     nextMouseOver = new Style(gStyleButtonMouseOver);
     nextMouseOver->Set(Prop::AllocPadding(12, 8, 4, 16));
     nextMouseOver->Set(Prop::AllocColorSolid(PropBgColor, "white"));
-    next->SetStyles(nextDefault, nextMouseOver);
-
-    test = new Button(_T("test"));
-    test->zOrder = 1;
 
     facebookButtonDefault = new Style();
     facebookButtonDefault->Set(Prop::AllocColorSolid(PropColor, "white"));
@@ -460,9 +453,6 @@ ControlEbook::ControlEbook(HWND hwnd)
     facebookButtonOver = new Style(facebookButtonDefault);
     facebookButtonOver->Set(Prop::AllocColorSolid(PropColor, "yellow"));
 
-    test->SetStyles(facebookButtonDefault, facebookButtonOver);
-
-    status = new Button(_T(""));
     statusDefault = new Style();
     statusDefault->Set(Prop::AllocColorSolid(PropBgColor, "white"));
     statusDefault->Set(Prop::AllocColorSolid(PropColor, "black"));
@@ -472,14 +462,17 @@ ControlEbook::ControlEbook(HWND hwnd)
     statusDefault->SetBorderWidth(0);
     statusDefault->Set(Prop::AllocTextAlign(Align_Center));
 
-    status->SetStyles(statusDefault, statusDefault);
-
-    horizProgress = new HorizontalProgressBar();
-    horizProgress->hCursor = gCursorHand;
     horizProgressDefault = new Style();
     horizProgressDefault->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
     horizProgressDefault->Set(Prop::AllocColorSolid(PropColor, "yellow"));
-    horizProgress->SetCurrentStyle(horizProgressDefault);
+
+    next = new Button(_T("Next"));
+    prev = new Button(_T("Prev"));
+    horizProgress = new HorizontalProgressBar();
+    horizProgress->hCursor = gCursorHand;
+    status = new Button(_T(""));
+    test = new Button(_T("test"));
+    test->zOrder = 1;
 
     AddChild(next);
     AddChild(prev);
@@ -487,6 +480,15 @@ ControlEbook::ControlEbook(HWND hwnd)
     AddChild(status);
     AddChild(test);
     layout = new EbookLayout(next, prev, status, horizProgress, test);
+
+    // unfortuante sequencing issue: some things trigger a repaint which
+    // only works if the control has been placed in the control tree
+    // via AddChild()
+    next->SetStyles(nextDefault, nextMouseOver);
+    prev->SetStyles(prevDefault, prevMouseOver);
+    horizProgress->SetCurrentStyle(horizProgressDefault, gStyleDefault);
+    status->SetStyles(statusDefault, statusDefault);
+    test->SetStyles(facebookButtonDefault, facebookButtonOver);
 
     // special case for classes that derive from HwndWrapper
     // as they don't call this from SetParent() (like other Control derivatives)

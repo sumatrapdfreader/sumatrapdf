@@ -10,7 +10,20 @@
 namespace mui {
 namespace css {
 
-extern CRITICAL_SECTION gMuiCs;
+void EnterMuiCriticalSection();
+void LeaveMuiCriticalSection();
+
+class ScopedMuiCritSec {
+public:
+
+    ScopedMuiCritSec() {
+        EnterMuiCriticalSection();
+    }
+
+    ~ScopedMuiCritSec() {
+        LeaveMuiCriticalSection();
+    }
+};
 
 using namespace Gdiplus;
 
@@ -99,6 +112,9 @@ struct PaddingData {
 struct Prop {
 
     Prop(PropType type) : type(type) {}
+
+    void Free();
+
     PropType    type;
 
     union {
@@ -169,7 +185,6 @@ void   Destroy();
 Font * CachedFontFromCachedProps(Prop **props);
 
 Prop ** CachePropsForStyle(Style *style1, Style *style2);
-Prop ** GetCachedPropsAtIdx(size_t idx);
 
 } // namespace css
 } // namespace mui

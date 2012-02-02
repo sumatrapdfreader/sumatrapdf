@@ -18,10 +18,20 @@
 template <typename T>
 class VecSegmented {
 protected:
-    PoolAllocator allocator;
     size_t        len;
+    PoolAllocator allocator;
 
 public:
+
+    struct Iter {
+        PoolAllocator::Iter<T> iter;
+        Iter(VecSegmented<T> *vec) : iter(&vec->allocator) {
+        }
+        T *Next() {
+            return iter.Next();
+        }
+    };
+
     VecSegmented() : len(0) {
         allocator.SetAllocRounding(sizeof(T));
     }
@@ -39,10 +49,16 @@ public:
         len += count;
     }
 
+#if 0
     // use &At() if you need a pointer to the element (e.g. if T is a struct)
     T& At(size_t idx) const {
         T *elp = allocator.GetAtPtr<T>(idx);
         return *elp;
+    }
+#endif
+    T* AtPtr(size_t idx) const {
+        T *elp = allocator.GetAtPtr<T>(idx);
+        return elp;
     }
 
     size_t Count() const {
@@ -69,9 +85,9 @@ public:
         Append(el);
     }
 
-    T& Last() const {
-        assert(len > 0);
-        return At(len - 1);
+    T* Last() const {
+        CrashIf(0 == len);
+        return AtPtr(len - 1);
     }
 };
 

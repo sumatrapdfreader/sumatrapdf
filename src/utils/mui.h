@@ -224,7 +224,7 @@ public:
     Prop **         cachedProps;
     Prop **         GetCachedProps() const;
     Prop *          GetCachedProp(PropType propType) const;
-    void            SetCurrentStyle(Style *style1, Style *style2 = gStyleDefault);
+    void            SetCurrentStyle(Style *style1, Style *style2);
 
     // only used by HwndWrapper but we need it here
     HWND            hwndParent;
