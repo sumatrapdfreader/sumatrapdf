@@ -307,8 +307,7 @@ Prop *Prop::AllocFontName(const TCHAR *name)
     if (existingProp)
         return existingProp;
     p.fontName.name = str::Dup(name);
-    gAllProps->Append(p);
-    return gAllProps->Last();
+    return gAllProps->Append(p);
 }
 
 #define ALLOC_BODY(propType, structName, argName) \
@@ -318,8 +317,7 @@ Prop *Prop::AllocFontName(const TCHAR *name)
     if (existingProp) \
         return existingProp; \
     p.structName.argName = argName; \
-    gAllProps->Append(p); \
-    return gAllProps->Last()
+    return gAllProps->Append(p);
 
 Prop *Prop::AllocFontSize(float size)
 {
@@ -350,8 +348,7 @@ Prop *Prop::AllocPadding(int top, int right, int bottom, int left)
     if (existingProp)
         return existingProp;
     p.padding = pd;
-    gAllProps->Append(p);
-    return gAllProps->Last();
+    return gAllProps->Append(p);
 }
 
 Prop *Prop::AllocColorSolid(PropType type, ARGB color)
@@ -363,8 +360,7 @@ Prop *Prop::AllocColorSolid(PropType type, ARGB color)
     Prop *existingProp = FindExistingProp(&p);
     if (existingProp)
         return existingProp;
-    gAllProps->Append(p);
-    return gAllProps->Last();
+    return gAllProps->Append(p);
 }
 
 Prop *Prop::AllocColorSolid(PropType type, int a, int r, int g, int b)
@@ -387,8 +383,7 @@ Prop *Prop::AllocColorLinearGradient(PropType type, LinearGradientMode mode, ARG
     Prop *existingProp = FindExistingProp(&p);
     if (existingProp)
         return existingProp;
-    gAllProps->Append(p);
-    return gAllProps->Last();
+    return gAllProps->Append(p);
 }
 
 Prop *Prop::AllocColorLinearGradient(PropType type, LinearGradientMode mode, const char *startColor, const char *endColor)
@@ -564,8 +559,7 @@ Prop **CachePropsForStyle(Style *style1, Style *style2)
     }
     GetProps(style1, style2, propsToGet, PropsCount);
 
-    Prop **props = gCachedProps->MakeSpaceAtEnd(PropsCount);
-    gCachedProps->IncreaseLen(PropsCount);
+    Prop **props = gCachedProps->AllocAtEnd(PropsCount);
     for (size_t i = 0; i < PropsCount; i++) {
         props[i] = propsToGet[i].prop;
         CrashIf(!props[i]);

@@ -40,13 +40,10 @@ public:
         allocator.FreeAll();
     }
 
-    T* MakeSpaceAtEnd(size_t count = 1) {
+    T* AllocAtEnd(size_t count = 1) {
         void *p = allocator.Alloc(count * sizeof(T));
-        return reinterpret_cast<T*>(p);
-    }
-
-    void IncreaseLen(size_t count) {
         len += count;
+        return reinterpret_cast<T*>(p);
     }
 
 #if 0
@@ -55,11 +52,11 @@ public:
         T *elp = allocator.GetAtPtr<T>(idx);
         return *elp;
     }
-#endif
+
     T* AtPtr(size_t idx) const {
-        T *elp = allocator.GetAtPtr<T>(idx);
-        return elp;
+        return allocator.GetAtPtr<T>(idx);
     }
+#endif
 
     size_t Count() const {
         return len;
@@ -69,26 +66,18 @@ public:
         return len;
     }
 
-    void Append(const T& el) {
-        T *els = MakeSpaceAtEnd();
-        *els = el;
-        len += 1;
+    T* Append(const T& el) {
+        T *elPtr = AllocAtEnd();
+        *elPtr = el;
+        return elPtr;
     }
 
+#if 0
     void Append(const T* src, size_t count) {
-        T *els = MakeSpaceAtEnd(count);
+        T *els = AllocAtEnd(count);
         memcpy(els, src, count * sizeof(T));
-        len += count;
     }
-
-    void Push(T el) {
-        Append(el);
-    }
-
-    T* Last() const {
-        CrashIf(0 == len);
-        return AtPtr(len - 1);
-    }
+#endif
 };
 
 #if 0
