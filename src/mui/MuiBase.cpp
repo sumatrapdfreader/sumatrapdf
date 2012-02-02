@@ -67,6 +67,7 @@ void InitGraphicsMode(Graphics *g)
 
 bool GraphicsCacheEntry::Create()
 {
+    threadId = GetCurrentThreadId();
     // using a small bitmap under assumption that Graphics used only
     // for measuring text doesn't need the actual bitmap
     bmp = ::new Bitmap(bmpDx, bmpDy, stride, PixelFormat32bppARGB, data);
@@ -168,7 +169,7 @@ void FreeGraphicsForMeasureText(Graphics *gfx)
     DWORD threadId = GetCurrentThreadId();
     for (size_t i = 0; i < gGraphicsCache->Count(); i++) {
         GraphicsCacheEntry e = gGraphicsCache->At(i);
-        CrashIf((e.gfx != gfx) || (e.threadId == threadId));
+        CrashIf((e.gfx == gfx) && (e.threadId != threadId));
     }
 }
 

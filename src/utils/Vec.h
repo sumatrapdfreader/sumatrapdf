@@ -171,6 +171,22 @@ public:
         memset(els + len, 0, count * sizeof(T));
     }
 
+    // This is a fast version of RemoveAt() which replaces the element we're
+    // removing with the last element, copying less memory.
+    // It can only be used if order of elements doesn't matter and elements
+    // can be copied via memcpy()
+    // TODO: could be extend to take number of elements to remove
+    void RemoveAtFast(size_t idx) {
+        CrashIf(idx >= len);
+        if (idx >= len) return;
+        T *toRemove = els + idx;
+        T *last = els + len - 1;
+        if (toRemove != last)
+            memcpy(toRemove, last, sizeof(T));
+        memset(last, 0, sizeof(T));
+        --len;
+    }
+
     void Push(T el) {
         Append(el);
     }

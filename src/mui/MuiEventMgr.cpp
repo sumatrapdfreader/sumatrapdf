@@ -37,7 +37,7 @@ void EventMgr::UnRegisterClickHandlers(IClickHandler *clickHandler)
     while (i < clickHandlers.Count()) {
         ClickHandler h = clickHandlers.At(i);
         if (h.clickHandler == clickHandler)
-            clickHandlers.RemoveAt(i);
+            clickHandlers.RemoveAtFast(i);
         else
             i++;
     }
