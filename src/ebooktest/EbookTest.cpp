@@ -693,12 +693,11 @@ static void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL o
 
     WCHAR buf[512];
     PointF pos;
-    Vec<DrawInstr>::Iter iter(drawInstructions);
-    for (DrawInstr *currInstr = iter.Next(); currInstr; currInstr = iter.Next()) {
-        RectF bbox = currInstr->bbox;
+    for (DrawInstr *instr = drawInstructions->IterStart(); instr; instr = drawInstructions->IterNext()) {
+        RectF bbox = instr->bbox;
         bbox.X += offX;
         bbox.Y += offY;
-        if (InstrTypeLine == currInstr->type) {
+        if (InstrTypeLine == instr->type) {
             // hr is a line drawn in the middle of bounding box
             REAL y = bbox.Y + bbox.Height / 2.f;
             PointF p1(bbox.X, y);
@@ -708,18 +707,17 @@ static void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL o
                 g->DrawRectangle(&pen, bbox);
             }
             g->DrawLine(&blackPen, p1, p2);
-        } else if (InstrTypeString == currInstr->type) {
-            size_t strLen = str::Utf8ToWcharBuf((const char*)currInstr->str.s, currInstr->str.len, buf, dimof(buf));
+        } else if (InstrTypeString == instr->type) {
+            size_t strLen = str::Utf8ToWcharBuf(instr->str.s, instr->str.len, buf, dimof(buf));
             bbox.GetLocation(&pos);
             if (gShowTextBoundingBoxes) {
                 //g->FillRectangle(&br, bbox);
                 g->DrawRectangle(&pen, bbox);
             }
             g->DrawString(buf, strLen, font, pos, NULL, &br);
-        } else if (InstrTypeSetFont == currInstr->type) {
-            font = currInstr->setFont.font;
+        } else if (InstrTypeSetFont == instr->type) {
+            font = instr->setFont.font;
         }
-        ++currInstr;
     }
 }
 

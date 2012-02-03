@@ -29,6 +29,7 @@ protected:
     T *         els;
     T           buf[INTERNAL_BUF_SIZE];
     Allocator * allocator;
+    T *         iterCurr;
 
     T* MakeSpaceAt(size_t idx, size_t count) {
         EnsureCap(len + count);
@@ -48,24 +49,6 @@ protected:
     }
 
 public:
-    struct Iter {
-        T * curr;
-        T * end;
-
-        Iter(Vec<T> *vec) {
-            curr = vec->els;
-            end = curr + vec->len;
-        }
-
-        T *Next() {
-            if (end == curr)
-                return NULL;
-            T *res = curr;
-            ++curr;
-            return res;
-        }
-    };
-
     // allocator is not owned by Vec and must outlive it
     Vec(size_t initCap=0, Allocator *allocator=NULL) 
         : initialCap(initCap), allocator(allocator)
@@ -260,6 +243,22 @@ public:
         for (size_t i = 0; i < len / 2; i++) {
             swap(els[i], els[len - i - 1]);
         }
+    }
+
+    // Iteration API that's meant to use in the following way:
+    // for (T *el = vec.IterStart(); el; el = vec.IterNext()) { ... }
+    T *IterStart() {
+        iterCurr = els;
+        return IterNext();
+    }
+
+    T *IterNext() {
+        T *end = els + len;
+        if (end == iterCurr)
+            return NULL;
+        T *res = iterCurr;
+        ++iterCurr;
+        return res;
     }
 };
 
