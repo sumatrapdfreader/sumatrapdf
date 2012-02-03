@@ -292,7 +292,7 @@ void PageLayout::StartLayout(LayoutInfo* layoutInfo)
 
 void PageLayout::StartNewPage()
 {
-    if (currPage)
+    if (currPage && pageObserver)
         pageObserver->NewPage(currPage);
 
     currPage = new PageData;
@@ -723,7 +723,8 @@ bool PageLayout::LayoutHtml(LayoutInfo* layoutInfo)
         pd = Next();
         if (!pd)
             break;
-        layoutInfo->observer->NewPage(pd);
+        if (layoutInfo->observer)
+            layoutInfo->observer->NewPage(pd);
     }
     return true;
 }

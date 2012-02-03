@@ -13,6 +13,9 @@
 #include "DirIter.h"
 #include "MobiDoc.h"
 #include "FileUtil.h"
+#include "WinUtil.h"
+#include "PageLayout.h"
+#include "Mui.h"
 
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
@@ -32,6 +35,7 @@ static int Usage()
 {
     printf("Tester.exe\n");
     printf("  -mobi dirOrFile : run mobi tests in a given directory or for a given file\n");
+    printf("  -mobilayout file : load and layout mobi file\n");
     return 1;
 }
 
@@ -135,6 +139,33 @@ static void MobiTest(char *dirOrFile)
         MobiTestDir(tmp);
 }
 
+// This loads and layouts a given mobi file. Used for profiling layout process.
+static void MobiLayout(char *file)
+{
+    ScopedMem<TCHAR> tmp(str::conv::FromAnsi(file));
+    if (!file::Exists(tmp) || !IsMobiFile(tmp)) {
+        printf("MobiLayout: file %s doesn't exist or not a mobi file", file);
+        return;
+    }
+    printf("Laying out file '%s'\n", file);
+    MobiDoc *mb = MobiDoc::ParseFile(tmp.Get());
+    if (!mb) {
+        printf("MobiLayout: failed to parse the file\n");
+        return;
+    }
+
+    LayoutInfo li;
+    li.pageDx = 640;
+    li.pageDy = 480;
+    li.fontName = L"Tahoma";
+    li.fontSize = 12;
+    li.htmlStr = mb->GetBookHtmlData(li.htmlStrLen);
+
+    LayoutHtml(&li);
+
+    delete mb;
+}
+
 extern "C"
 int main(int argc, char **argv)
 {
@@ -146,9 +177,21 @@ int main(int argc, char **argv)
 
     if (str::Eq(argv[i], "-mobi")) {
         ++i; --left;
-        if (left != 1)
+        if (1 != left)
             return Usage();
         MobiTest(argv[i]);
+        return 0;
+    }
+
+    if (str::Eq(argv[i], "-mobilayout")) {
+        ++i; --left;
+        if (1 != left)
+            return Usage();
+        InitAllCommonControls();
+        ScopedGdiPlus gdi;
+        mui::Initialize();
+        MobiLayout(argv[i]);
+        mui::Destroy();
         return 0;
     }
 

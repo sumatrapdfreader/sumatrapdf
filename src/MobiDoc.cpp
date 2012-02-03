@@ -710,7 +710,7 @@ bool MobiDoc::ParseHeader()
 
 #define EOF_REC   0xe98e0d0a
 #define FLIS_REC  0x464c4953 // 'FLIS'
-#define FCIS_REC  0x64434953 // 'FCIS
+#define FCIS_REC  0x46434953 // 'FCIS
 #define FDST_REC  0x46445354 // 'FDST'
 #define DATP_REC  0x44415450 // 'DATP'
 #define SRCS_REC  0x53524353 // 'SRCS'

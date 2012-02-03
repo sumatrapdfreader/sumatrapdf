@@ -179,7 +179,7 @@ ET_OBJS = \
 	$(OS)\MobiDoc.obj $(ET_RES) $(CHROME_OBJS)
 
 TESTER_OBJS = \
-	$(OS)\Tester.obj $(OS)\MobiDoc.obj
+	$(OS)\Tester.obj $(OS)\MobiDoc.obj $(OS)\PageLayout.obj
 
 PDFFILTER_OBJS = \
 	$(OS)\PdfFilterDll.obj $(OS)\CPdfFilter.obj $(PDFFILTER_RES) \
@@ -279,7 +279,7 @@ $(ET_RES): src\ebooktest\EbookTest.rc src\ebooktest\Resource.h src\Version.h
 $(ET_APP): $(UTILS_OBJS) $(MUI_OBJS) $(ET_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) dbghelp.lib psapi.lib /PDB:$*.pdb /OUT:$@
 
-$(TESTER_APP): $(UTILS_OBJS) $(TESTER_OBJS)
+$(TESTER_APP): $(UTILS_OBJS) $(MUI_OBJS) $(TESTER_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
 
 $(PDFFILTER_RES): src\ifilter\PdfFilter.rc src\Version.h

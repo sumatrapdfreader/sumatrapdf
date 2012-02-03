@@ -69,8 +69,9 @@
     </BuildLog>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\MobiDoc.cpp" />
     <ClCompile Include="src\MobiHtmlParse.cpp" />
-    <ClCompile Include="src\MobiParse.cpp" />
+    <ClCompile Include="src\PageLayout.cpp" />
     <ClCompile Include="src\Tester.cpp" />
     <ClCompile Include="src\utils\BitReader.cpp" />
     <ClCompile Include="src\utils\DirIter.cpp" />
@@ -79,8 +80,9 @@
     <ClCompile Include="src\utils\StrUtil.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\MobiDoc.h" />
     <ClInclude Include="src\MobiHtmlParse.h" />
-    <ClInclude Include="src\MobiParse.h" />
+    <ClInclude Include="src\PageLayout.h" />
     <ClInclude Include="src\utils\BaseUtil.h" />
     <ClInclude Include="src\utils\BitReader.h" />
     <ClInclude Include="src\utils\DirIter.h" />
