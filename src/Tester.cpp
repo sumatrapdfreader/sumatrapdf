@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "NoFreeAllocator.h"
 #include "Scoped.h"
 #include "DirIter.h"
 #include "MobiDoc.h"
@@ -131,7 +132,7 @@ static void MobiTestDir(TCHAR *dir)
 
 static void MobiTest(char *dirOrFile)
 {
-    ScopedMem<TCHAR> tmp(str::conv::FromAnsi(dirOrFile));
+    TCHAR *tmp = str::conv::FromAnsiNF(dirOrFile);
 
     if (file::Exists(tmp) && IsMobiFile(tmp))
         TestMobiFile(tmp);
@@ -142,13 +143,14 @@ static void MobiTest(char *dirOrFile)
 // This loads and layouts a given mobi file. Used for profiling layout process.
 static void MobiLayout(char *file)
 {
-    ScopedMem<TCHAR> tmp(str::conv::FromAnsi(file));
+    NoFreeAllocatorMark mark;
+    TCHAR *tmp = str::conv::FromAnsiNF(file);
     if (!file::Exists(tmp) || !IsMobiFile(tmp)) {
         printf("MobiLayout: file %s doesn't exist or not a mobi file", file);
         return;
     }
     printf("Laying out file '%s'\n", file);
-    MobiDoc *mb = MobiDoc::ParseFile(tmp.Get());
+    MobiDoc *mb = MobiDoc::ParseFile(tmp);
     if (!mb) {
         printf("MobiLayout: failed to parse the file\n");
         return;
@@ -169,6 +171,8 @@ static void MobiLayout(char *file)
 extern "C"
 int main(int argc, char **argv)
 {
+    NoFreeAllocatorMark allocatorMark;
+
     int i = 1;
     int left = argc - 1;
 
@@ -187,6 +191,7 @@ int main(int argc, char **argv)
         ++i; --left;
         if (1 != left)
             return Usage();
+        void *test = mallocNF(50);
         InitAllCommonControls();
         ScopedGdiPlus gdi;
         mui::Initialize();

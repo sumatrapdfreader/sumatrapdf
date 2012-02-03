@@ -142,7 +142,7 @@ UTILS_OBJS = \
 	$(OS)\DialogSizer.obj $(OS)\FileTransactions.obj $(OS)\Touch.obj \
 	$(OS)\TrivialHtmlParser.obj $(OS)\HtmlWindow.obj $(OS)\GdiPlusUtil.obj \
 	$(OS)\DirIter.obj $(OS)\BitReader.obj $(OS)\HtmlPullParser.obj \
-	$(OS)\ThreadUtil.obj
+	$(OS)\ThreadUtil.obj $(OS)\NoFreeAllocator.obj
 
 MUI_OBJS = \
 	$(OS)\MuiBase.obj $(OS)\Mui.obj $(OS)\MuiCss.obj $(OS)\MuiLayout.obj \

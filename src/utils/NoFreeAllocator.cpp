@@ -109,7 +109,6 @@ NoFreeAllocatorMark::~NoFreeAllocatorMark()
             gCurrMemBlock = gCurrMemBlock->next;
             free(toFree);
         }
-        gCurrMemBlock = NULL;
         return;
     }
 
@@ -118,7 +117,8 @@ NoFreeAllocatorMark::~NoFreeAllocatorMark()
         gCurrMemBlock = gCurrMemBlock->next;
         free(toFree);
     }
-    gCurrMemBlock->left = gCurrMemBlock->size - pos;
+    if (gCurrMemBlock)
+        gCurrMemBlock->left = gCurrMemBlock->size - pos;
 }
 
 void *mallocNF(size_t size)
@@ -131,7 +131,7 @@ void *mallocNF(size_t size)
     MemBlock *m = gCurrMemBlock;
 
     if (!m || (size > m->left)) {
-        size_t blockSize = min(MEM_BLOCK_SIZE, size + sizeof(MemBlock));
+        size_t blockSize = max(MEM_BLOCK_SIZE, size + sizeof(MemBlock));
         MemBlock *block = (MemBlock*)malloc(blockSize);
         block->size = blockSize - sizeof(MemBlock);
         block->left = block->size;
@@ -145,6 +145,7 @@ void *mallocNF(size_t size)
         }
         if (currMemUse > gStats->maxMemUse)
             gStats->maxMemUse = currMemUse;
+        m = gCurrMemBlock;
     }
 
     CrashAlwaysIf(!m || (size > m->left));
@@ -157,3 +158,19 @@ void *mallocNF(size_t size)
     return (void*)res;
 }
 
+namespace str {
+
+WCHAR *ToWideCharNF(const char *src, UINT codePage)
+{
+    CrashIf(!src);
+    if (!src) return NULL;
+
+    int requiredBufSize = MultiByteToWideChar(codePage, 0, src, -1, NULL, 0);
+    WCHAR *res = (WCHAR*)mallocNF(sizeof(WCHAR) * requiredBufSize);
+    if (!res)
+        return NULL;
+    MultiByteToWideChar(codePage, 0, src, -1, res, requiredBufSize);
+    return res;
+}
+
+}

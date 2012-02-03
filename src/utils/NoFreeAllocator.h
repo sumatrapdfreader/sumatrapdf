@@ -1,6 +1,9 @@
 /* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+#ifndef NoFreeAllocator_h
+#define NoFreeAllocator_h
+
 #include "BaseUtil.h"
 
 // Per-thread stats for no-free allocator. Knowing them allows
@@ -32,3 +35,19 @@ public:
 
 void *mallocNF(size_t size);
 
+namespace str {
+WCHAR * ToWideCharNF(const char *src, UINT CodePage);
+
+namespace conv {
+#ifdef UNICODE
+inline TCHAR *  FromCodePageNF(const char *src, UINT cp) { return ToWideCharNF(src, cp); }
+#else
+// TODO: not implemented yet
+#endif
+
+inline TCHAR *  FromAnsiNF(const char *src) { return FromCodePageNF(src, CP_ACP); }
+
+} // namespace conv
+} // namespace str
+
+#endif
