@@ -75,8 +75,11 @@ struct pdf_ocg_descriptor_s
 
 struct pdf_document_s
 {
+	fz_document super;
+
 	fz_context *ctx;
 	fz_stream *file;
+
 	int version;
 	int startxref;
 	int file_size;
@@ -446,7 +449,7 @@ fz_obj *pdf_load_name_tree(pdf_document *doc, char *which);
 
 fz_outline *pdf_load_outline(pdf_document *doc);
 
-fz_link *pdf_load_links(pdf_document *, fz_obj *annots, fz_matrix page_ctm);
+fz_link *pdf_load_link_annots(pdf_document *, fz_obj *annots, fz_matrix page_ctm);
 
 pdf_annot *pdf_load_annots(pdf_document *, fz_obj *annots);
 void pdf_free_annot(fz_context *ctx, pdf_annot *link);
@@ -473,8 +476,9 @@ int pdf_find_page_number(pdf_document *doc, fz_obj *pageobj);
 int pdf_count_pages(pdf_document *doc);
 
 pdf_page *pdf_load_page(pdf_document *doc, int number);
+fz_link *pdf_load_links(pdf_document *doc, pdf_page *page);
 fz_rect pdf_bound_page(pdf_document *doc, pdf_page *page);
-void pdf_free_page(fz_context *ctx, pdf_page *page);
+void pdf_free_page(pdf_document *doc, pdf_page *page);
 
 /*
  * Content stream parsing

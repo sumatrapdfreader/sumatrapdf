@@ -50,19 +50,19 @@ fz_evict_glyph_cache(fz_context *ctx)
 	fz_pixmap *pixmap;
 	int i;
 
-	for (i = 0; i < fz_hash_len(cache->hash); i++)
+	for (i = 0; i < fz_hash_len(ctx, cache->hash); i++)
 	{
-		key = fz_hash_get_key(cache->hash, i);
+		key = fz_hash_get_key(ctx, cache->hash, i);
 		if (key->font)
 			fz_drop_font(ctx, key->font);
-		pixmap = fz_hash_get_val(cache->hash, i);
+		pixmap = fz_hash_get_val(ctx, cache->hash, i);
 		if (pixmap)
 			fz_drop_pixmap(ctx, pixmap);
 	}
 
 	cache->total = 0;
 
-	fz_empty_hash(cache->hash);
+	fz_empty_hash(ctx, cache->hash);
 }
 
 void
@@ -72,7 +72,7 @@ fz_free_glyph_cache_context(fz_context *ctx)
 		return;
 
 	fz_evict_glyph_cache(ctx);
-	fz_free_hash(ctx->glyph_cache->hash);
+	fz_free_hash(ctx, ctx->glyph_cache->hash);
 	fz_free(ctx, ctx->glyph_cache);
 	ctx->glyph_cache = NULL;
 }
@@ -114,7 +114,7 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix ctm, fz_color
 	key.e = (ctm.e - floorf(ctm.e)) * 256;
 	key.f = (ctm.f - floorf(ctm.f)) * 256;
 
-	val = fz_hash_find(cache->hash, &key);
+	val = fz_hash_find(ctx, cache->hash, &key);
 	if (val)
 		return fz_keep_pixmap(ctx, val);
 
@@ -143,8 +143,8 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix ctm, fz_color
 				fz_evict_glyph_cache(ctx);
 			fz_try(ctx)
 			{
-				fz_hash_insert(cache->hash, &key, val);
-				fz_keep_font(key.font);
+				fz_hash_insert(ctx, cache->hash, &key, val);
+				fz_keep_font(ctx, key.font);
 				val = fz_keep_pixmap(ctx, val);
 			}
 			fz_catch(ctx)

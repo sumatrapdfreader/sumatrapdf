@@ -359,7 +359,7 @@ pdf_load_page(pdf_document *xref, int number)
 	obj = fz_dict_gets(pageobj, "Annots");
 	if (obj)
 	{
-		page->links = pdf_load_links(xref, obj, page->ctm);
+		page->links = pdf_load_link_annots(xref, obj, page->ctm);
 		page->annots = pdf_load_annots(xref, obj);
 	}
 
@@ -381,7 +381,7 @@ pdf_load_page(pdf_document *xref, int number)
 	}
 	fz_catch(ctx)
 	{
-		pdf_free_page(ctx, page);
+		pdf_free_page(xref, page);
 		fz_throw(ctx, "cannot load page %d contents (%d 0 R)", number + 1, fz_to_num(pageref));
 	}
 
@@ -398,16 +398,22 @@ pdf_bound_page(pdf_document *xref, pdf_page *page)
 	return bounds;
 }
 
+fz_link *
+pdf_load_links(pdf_document *xref, pdf_page *page)
+{
+	return fz_keep_link(xref->ctx, page->links);
+}
+
 void
-pdf_free_page(fz_context *ctx, pdf_page *page)
+pdf_free_page(pdf_document *xref, pdf_page *page)
 {
 	if (page->resources)
 		fz_drop_obj(page->resources);
 	if (page->contents)
-		fz_drop_buffer(ctx, page->contents);
+		fz_drop_buffer(xref->ctx, page->contents);
 	if (page->links)
-		fz_free_link(ctx, page->links);
+		fz_drop_link(xref->ctx, page->links);
 	if (page->annots)
-		pdf_free_annot(ctx, page->annots);
-	fz_free(ctx, page);
+		pdf_free_annot(xref->ctx, page->annots);
+	fz_free(xref->ctx, page);
 }

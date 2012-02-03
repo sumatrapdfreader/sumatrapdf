@@ -24,7 +24,7 @@ fz_drop_shade(fz_context *ctx, fz_shade *shade)
 }
 
 fz_rect
-fz_bound_shade(fz_shade *shade, fz_matrix ctm)
+fz_bound_shade(fz_context *ctx, fz_shade *shade, fz_matrix ctm)
 {
 	float *v;
 	fz_rect r, s;
@@ -68,7 +68,7 @@ fz_bound_shade(fz_shade *shade, fz_matrix ctm)
 }
 
 void
-fz_debug_shade(fz_shade *shade)
+fz_debug_shade(fz_context *ctx, fz_shade *shade)
 {
 	int i, j, n;
 	float *vertex;

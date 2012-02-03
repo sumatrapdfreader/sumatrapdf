@@ -350,7 +350,7 @@ pdf_load_link(pdf_document *xref, fz_obj *dict, fz_matrix page_ctm)
 }
 
 fz_link *
-pdf_load_links(pdf_document *xref, fz_obj *annots, fz_matrix page_ctm)
+pdf_load_link_annots(pdf_document *xref, fz_obj *annots, fz_matrix page_ctm)
 {
 	fz_link *link, *head, *tail;
 	fz_obj *obj;

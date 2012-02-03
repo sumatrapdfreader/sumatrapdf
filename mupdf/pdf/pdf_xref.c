@@ -638,6 +638,8 @@ pdf_free_ocg(fz_context *ctx, pdf_ocg_descriptor *desc)
  * If password is not null, try to decrypt.
  */
 
+static void pdf_init_document(pdf_document *xref);
+
 pdf_document *
 pdf_open_document_with_stream(fz_stream *file)
 {
@@ -655,7 +657,9 @@ pdf_open_document_with_stream(fz_stream *file)
 	/* install pdf specific callback */
 	fz_resolve_indirect = pdf_resolve_indirect;
 
-	xref = fz_calloc(ctx, 1, sizeof(pdf_document));
+	xref = fz_malloc_struct(ctx, pdf_document);
+	pdf_init_document(xref);
+
 	xref->file = fz_keep_stream(file);
 	xref->ctx = ctx;
 
@@ -1095,4 +1099,71 @@ pdf_open_document(fz_context *ctx, const char *filename)
 
 	fz_close(file);
 	return xref;
+}
+
+/* Document interface wrappers */
+
+static void pdf_close_document_shim(fz_document *doc)
+{
+	pdf_close_document((pdf_document*)doc);
+}
+
+static int pdf_needs_password_shim(fz_document *doc)
+{
+	return pdf_needs_password((pdf_document*)doc);
+}
+
+static int pdf_authenticate_password_shim(fz_document *doc, char *password)
+{
+	return pdf_authenticate_password((pdf_document*)doc, password);
+}
+
+static fz_outline *pdf_load_outline_shim(fz_document *doc)
+{
+	return pdf_load_outline((pdf_document*)doc);
+}
+
+static int pdf_count_pages_shim(fz_document *doc)
+{
+	return pdf_count_pages((pdf_document*)doc);
+}
+
+static fz_page *pdf_load_page_shim(fz_document *doc, int number)
+{
+	return (fz_page*) pdf_load_page((pdf_document*)doc, number);
+}
+
+static fz_link *pdf_load_links_shim(fz_document *doc, fz_page *page)
+{
+	return pdf_load_links((pdf_document*)doc, (pdf_page*)page);
+}
+
+static fz_rect pdf_bound_page_shim(fz_document *doc, fz_page *page)
+{
+	return pdf_bound_page((pdf_document*)doc, (pdf_page*)page);
+}
+
+static void pdf_run_page_shim(fz_document *doc, fz_page *page, fz_device *dev, fz_matrix transform, fz_cookie *cookie)
+{
+	pdf_run_page((pdf_document*)doc, (pdf_page*)page, dev, transform, cookie);
+}
+
+static void pdf_free_page_shim(fz_document *doc, fz_page *page)
+{
+	pdf_free_page((pdf_document*)doc, (pdf_page*)page);
+}
+
+static void
+pdf_init_document(pdf_document *doc)
+{
+	doc->super.close = pdf_close_document_shim;
+	doc->super.needs_password = pdf_needs_password_shim;
+	doc->super.authenticate_password = pdf_authenticate_password_shim;
+	doc->super.load_outline = pdf_load_outline_shim;
+	doc->super.count_pages = pdf_count_pages_shim;
+	doc->super.load_page = pdf_load_page_shim;
+	doc->super.load_links = pdf_load_links_shim;
+	doc->super.bound_page = pdf_bound_page_shim;
+	doc->super.run_page = pdf_run_page_shim;
+	doc->super.free_page = pdf_free_page_shim;
 }

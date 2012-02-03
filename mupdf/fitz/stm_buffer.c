@@ -25,9 +25,10 @@ fz_new_buffer(fz_context *ctx, int size)
 }
 
 fz_buffer *
-fz_keep_buffer(fz_buffer *buf)
+fz_keep_buffer(fz_context *ctx, fz_buffer *buf)
 {
-	buf->refs ++;
+	if (buf)
+		buf->refs ++;
 	return buf;
 }
 

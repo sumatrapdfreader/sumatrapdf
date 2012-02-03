@@ -471,7 +471,7 @@ fz_std_conv_pixmap(fz_context *ctx, fz_pixmap *src, fz_pixmap *dst)
 		{
 			for (x = 0; x < src->w; x++)
 			{
-				color = fz_hash_find(lookup, s);
+				color = fz_hash_find(ctx, lookup, s);
 				if (color)
 				{
 					memcpy(d, color, dstn);
@@ -487,14 +487,14 @@ fz_std_conv_pixmap(fz_context *ctx, fz_pixmap *src, fz_pixmap *dst)
 					for (k = 0; k < dstn; k++)
 						*d++ = dstv[k] * 255;
 
-					fz_hash_insert(lookup, s - srcn, d - dstn);
+					fz_hash_insert(ctx, lookup, s - srcn, d - dstn);
 
 					*d++ = *s++;
 				}
 			}
 		}
 
-		fz_free_hash(lookup);
+		fz_free_hash(ctx, lookup);
 	}
 }
 

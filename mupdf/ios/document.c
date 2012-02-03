@@ -22,7 +22,7 @@ open_document(fz_context *ctx, char *filename)
 			doc->pdf = pdf_open_document(ctx, filename);
 		else if (strstr(filename, ".xps") || strstr(filename, ".XPS"))
 			doc->xps = xps_open_document(ctx, filename);
-		else if (strstr(filename, ".cbz") || strstr(filename, ".CBZ"))
+		else if (strstr(filename, ".cbz") || strstr(filename, ".CBZ") || strstr(filename, ".zip") || strstr(filename, ".ZIP"))
 			doc->cbz = cbz_open_document(ctx, filename);
 		else
 			fz_throw(ctx, "unknown document format");

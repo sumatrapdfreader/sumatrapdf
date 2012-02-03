@@ -195,7 +195,7 @@ fz_open_buffer(fz_context *ctx, fz_buffer *buf)
 {
 	fz_stream *stm;
 
-	fz_keep_buffer(buf);
+	fz_keep_buffer(ctx, buf);
 	stm = fz_new_stream(ctx, buf, read_buffer, close_buffer);
 	stm->seek = seek_buffer;
 	stm->reopen = reopen_buffer;

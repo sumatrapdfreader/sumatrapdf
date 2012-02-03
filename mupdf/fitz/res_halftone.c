@@ -16,9 +16,10 @@ fz_new_halftone(fz_context *ctx, int comps)
 }
 
 fz_halftone *
-fz_keep_halftone(fz_halftone *ht)
+fz_keep_halftone(fz_context *ctx, fz_halftone *ht)
 {
-	ht->refs++;
+	if (ht)
+		ht->refs++;
 	return ht;
 }
 

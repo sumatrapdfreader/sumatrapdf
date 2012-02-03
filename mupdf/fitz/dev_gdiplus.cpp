@@ -266,15 +266,15 @@ public:
 		
 		if (outlines)
 		{
-			for (int i = 0; i < fz_hash_len(outlines); i++)
-				delete (GraphicsPath *)fz_hash_get_val(outlines, i);
-			fz_free_hash(outlines);
+			for (int i = 0; i < fz_hash_len(ctx, outlines); i++)
+				delete (GraphicsPath *)fz_hash_get_val(ctx, outlines, i);
+			fz_free_hash(ctx, outlines);
 		}
 		if (fontCollections)
 		{
-			for (int i = 0; i < fz_hash_len(fontCollections); i++)
-				delete (PrivateFontCollection *)fz_hash_get_val(fontCollections, i);
-			fz_free_hash(fontCollections);
+			for (int i = 0; i < fz_hash_len(ctx, fontCollections); i++)
+				delete (PrivateFontCollection *)fz_hash_get_val(ctx, fontCollections, i);
+			fz_free_hash(ctx, fontCollections);
 		}
 		delete tempFiles;
 	}
@@ -859,7 +859,7 @@ gdiplus_get_font(fz_device *dev, fz_font *font, float height, float *out_ascent)
 	
 	if (!user->fontCollections)
 		user->fontCollections = fz_new_hash_table(dev->ctx, 13, sizeof(font->name));
-	PrivateFontCollection *collection = (PrivateFontCollection *)fz_hash_find(user->fontCollections, font->name);
+	PrivateFontCollection *collection = (PrivateFontCollection *)fz_hash_find(dev->ctx, user->fontCollections, font->name);
 	
 	if (!collection)
 	{
@@ -882,7 +882,7 @@ gdiplus_get_font(fz_device *dev, fz_font *font, float height, float *out_ascent)
 			collection->AddFontFile(fontPath);
 		}
 		
-		fz_hash_insert(user->fontCollections, font->name, collection);
+		fz_hash_insert(dev->ctx, user->fontCollections, font->name, collection);
 	}
 	
 	if (collection->GetFamilyCount() == 0)
@@ -1064,7 +1064,7 @@ ft_render_glyph(fz_context *ctx, fz_font *font, int gid, fz_hash_table *outlines
 	FT_Face face = (FT_Face)font->ft_face;
 	ftglyphkey key = { face, gid };
 	
-	GraphicsPath *glyph = (GraphicsPath *)fz_hash_find(outlines, &key);
+	GraphicsPath *glyph = (GraphicsPath *)fz_hash_find(ctx, outlines, &key);
 	if (glyph)
 		return glyph;
 	
@@ -1086,7 +1086,7 @@ ft_render_glyph(fz_context *ctx, fz_font *font, int gid, fz_hash_table *outlines
 	glyph = gdiplus_get_path(path, fz_scale(ft_get_width_scale(font, gid), 1), evenodd);
 	
 	fz_free_path(ctx, path);
-	fz_hash_insert(outlines, &key, glyph);
+	fz_hash_insert(ctx, outlines, &key, glyph);
 	
 	return glyph;
 }
@@ -1286,7 +1286,7 @@ fz_gdiplus_fill_shade(fz_device *dev, fz_shade *shade, fz_matrix ctm, float alph
 	((userData *)dev->user)->graphics->GetClipBounds(&clipRect);
 	fz_rect clip = { clipRect.X, clipRect.Y, clipRect.X + clipRect.Width, clipRect.Y + clipRect.Height };
 	
-	fz_rect bounds = fz_bound_shade(shade, ctm);
+	fz_rect bounds = fz_bound_shade(dev->ctx, shade, ctm);
 	clip = fz_intersect_rect(bounds, clip);
 	
 	if (!fz_is_empty_rect(shade->bbox))
@@ -1300,7 +1300,7 @@ fz_gdiplus_fill_shade(fz_device *dev, fz_shade *shade, fz_matrix ctm, float alph
 		return;
 	
 	fz_pixmap *dest = fz_new_pixmap_with_rect(dev->ctx, fz_device_rgb, bbox);
-	fz_clear_pixmap(dest);
+	fz_clear_pixmap(dev->ctx, dest);
 	
 	if (shade->use_background)
 	{
@@ -1318,7 +1318,7 @@ fz_gdiplus_fill_shade(fz_device *dev, fz_shade *shade, fz_matrix ctm, float alph
 	}
 	
 	fz_paint_shade(dev->ctx, shade, ctm, dest, bbox);
-	fz_unmultiply_pixmap(dest);
+	fz_unmultiply_pixmap(dev->ctx, dest);
 	
 	ctm = fz_concat(fz_scale(dest->w, dest->h), fz_translate(dest->x, dest->y));
 	((userData *)dev->user)->drawPixmap(dest, ctm, alpha);

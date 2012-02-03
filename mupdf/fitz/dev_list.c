@@ -234,7 +234,7 @@ fz_list_fill_path(fz_device *dev, fz_path *path, int even_odd, fz_matrix ctm,
 	node = fz_new_display_node(ctx, FZ_CMD_FILL_PATH, ctm, colorspace, color, alpha);
 	fz_try(ctx)
 	{
-		node->rect = fz_bound_path(path, NULL, ctm);
+		node->rect = fz_bound_path(dev->ctx, path, NULL, ctm);
 		node->item.path = fz_clone_path(dev->ctx, path);
 		node->flag = even_odd;
 	}
@@ -255,7 +255,7 @@ fz_list_stroke_path(fz_device *dev, fz_path *path, fz_stroke_state *stroke, fz_m
 	node = fz_new_display_node(ctx, FZ_CMD_STROKE_PATH, ctm, colorspace, color, alpha);
 	fz_try(ctx)
 	{
-		node->rect = fz_bound_path(path, stroke, ctm);
+		node->rect = fz_bound_path(dev->ctx, path, stroke, ctm);
 		node->item.path = fz_clone_path(dev->ctx, path);
 		node->stroke = fz_clone_stroke_state(dev->ctx, stroke);
 	}
@@ -275,7 +275,7 @@ fz_list_clip_path(fz_device *dev, fz_path *path, fz_rect *rect, int even_odd, fz
 	node = fz_new_display_node(ctx, FZ_CMD_CLIP_PATH, ctm, NULL, NULL, 0);
 	fz_try(ctx)
 	{
-		node->rect = fz_bound_path(path, NULL, ctm);
+		node->rect = fz_bound_path(dev->ctx, path, NULL, ctm);
 		if (rect)
 			node->rect = fz_intersect_rect(node->rect, *rect);
 		node->item.path = fz_clone_path(dev->ctx, path);
@@ -297,7 +297,7 @@ fz_list_clip_stroke_path(fz_device *dev, fz_path *path, fz_rect *rect, fz_stroke
 	node = fz_new_display_node(ctx, FZ_CMD_CLIP_STROKE_PATH, ctm, NULL, NULL, 0);
 	fz_try(ctx)
 	{
-		node->rect = fz_bound_path(path, stroke, ctm);
+		node->rect = fz_bound_path(dev->ctx, path, stroke, ctm);
 		if (rect)
 			node->rect = fz_intersect_rect(node->rect, *rect);
 		node->item.path = fz_clone_path(dev->ctx, path);
@@ -429,7 +429,7 @@ fz_list_fill_shade(fz_device *dev, fz_shade *shade, fz_matrix ctm, float alpha)
 	fz_display_node *node;
 	fz_context *ctx = dev->ctx;
 	node = fz_new_display_node(ctx, FZ_CMD_FILL_SHADE, ctm, NULL, NULL, alpha);
-	node->rect = fz_bound_shade(shade, ctm);
+	node->rect = fz_bound_shade(ctx, shade, ctm);
 	node->item.shade = fz_keep_shade(ctx, shade);
 	fz_append_display_node(dev->user, node);
 }

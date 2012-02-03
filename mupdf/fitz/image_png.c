@@ -561,7 +561,7 @@ fz_load_png(fz_context *ctx, unsigned char *p, int total)
 		png_mask_transparency(&png, image);
 
 	if (png.transparency || png.n == 2 || png.n == 4)
-		fz_premultiply_pixmap(image);
+		fz_premultiply_pixmap(png.ctx, image);
 
 	fz_free(png.ctx, png.samples);
 

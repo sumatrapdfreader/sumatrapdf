@@ -68,7 +68,7 @@ EXPORTS
 """
 
 def main():
-	fitz_exports = generateExports("fitz/fitz.h", ["fz_accelerate_arch"])
+	fitz_exports = generateExports("fitz/fitz.h", ["fz_accelerate_arch", "fz_open_document"])
 	mupdf_exports = generateExports("pdf/mupdf.h")
 	muxps_exports = generateExports("xps/muxps.h", ["xps_parse_solid_color_brush", "xps_debug_path"])
 	mucbz_exports = generateExports("cbz/mucbz.h")

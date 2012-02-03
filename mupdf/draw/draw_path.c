@@ -306,13 +306,11 @@ fz_add_line_join(struct sctx *s, fz_point a, fz_point b, fz_point c)
 		fz_add_line(s, b.x - dmx, b.y - dmy, b.x - dlx1, b.y - dly1);
 	}
 
-
 	if (linejoin == FZ_LINEJOIN_BEVEL)
 	{
 		fz_add_line(s, b.x - dlx0, b.y - dly0, b.x - dlx1, b.y - dly1);
 		fz_add_line(s, b.x + dlx1, b.y + dly1, b.x + dlx0, b.y + dly0);
 	}
-
 
 	if (linejoin == FZ_LINEJOIN_ROUND)
 	{

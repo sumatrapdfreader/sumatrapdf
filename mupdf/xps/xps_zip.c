@@ -3,6 +3,8 @@
 
 #include <zlib.h>
 
+static void xps_init_document(xps_document *doc);
+
 xps_part *
 xps_new_part(xps_document *doc, char *name, int size)
 {
@@ -560,8 +562,7 @@ xps_open_document_with_directory(fz_context *ctx, char *directory)
 	xps_document *doc;
 
 	doc = fz_malloc_struct(ctx, xps_document);
-	memset(doc, 0, sizeof *doc);
-
+	xps_init_document(doc);
 	doc->ctx = ctx;
 	doc->directory = fz_strdup(ctx, directory);
 
@@ -585,8 +586,7 @@ xps_open_document_with_stream(fz_stream *file)
 	xps_document *doc;
 
 	doc = fz_malloc_struct(ctx, xps_document);
-	memset(doc, 0, sizeof *doc);
-
+	xps_init_document(doc);
 	doc->ctx = ctx;
 	doc->file = fz_keep_stream(file);
 
@@ -670,4 +670,61 @@ xps_close_document(xps_document *doc)
 	fz_free(doc->ctx, doc->start_part);
 	fz_free(doc->ctx, doc->directory);
 	fz_free(doc->ctx, doc);
+}
+
+/* Document interface wrappers */
+
+static void xps_close_document_shim(fz_document *doc)
+{
+	xps_close_document((xps_document*)doc);
+}
+
+static fz_outline *xps_load_outline_shim(fz_document *doc)
+{
+	return xps_load_outline((xps_document*)doc);
+}
+
+static int xps_count_pages_shim(fz_document *doc)
+{
+	return xps_count_pages((xps_document*)doc);
+}
+
+static fz_page *xps_load_page_shim(fz_document *doc, int number)
+{
+	return (fz_page*) xps_load_page((xps_document*)doc, number);
+}
+
+static fz_link *xps_load_links_shim(fz_document *doc, fz_page *page)
+{
+	return xps_load_links((xps_document*)doc, (xps_page*)page);
+}
+
+static fz_rect xps_bound_page_shim(fz_document *doc, fz_page *page)
+{
+	return xps_bound_page((xps_document*)doc, (xps_page*)page);
+}
+
+static void xps_run_page_shim(fz_document *doc, fz_page *page, fz_device *dev, fz_matrix transform, fz_cookie *cookie)
+{
+	xps_run_page((xps_document*)doc, (xps_page*)page, dev, transform, cookie);
+}
+
+static void xps_free_page_shim(fz_document *doc, fz_page *page)
+{
+	xps_free_page((xps_document*)doc, (xps_page*)page);
+}
+
+static void
+xps_init_document(xps_document *doc)
+{
+	doc->super.close = xps_close_document_shim;
+	doc->super.needs_password = NULL;
+	doc->super.authenticate_password = NULL;
+	doc->super.load_outline = xps_load_outline_shim;
+	doc->super.count_pages = xps_count_pages_shim;
+	doc->super.load_page = xps_load_page_shim;
+	doc->super.load_links = xps_load_links_shim;
+	doc->super.bound_page = xps_bound_page_shim;
+	doc->super.run_page = xps_run_page_shim;
+	doc->super.free_page = xps_free_page_shim;
 }

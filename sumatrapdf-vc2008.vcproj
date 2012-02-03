@@ -581,10 +581,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\fitz\base_link.c"
-					>
-				</File>
-				<File
 					RelativePath=".\mupdf\fitz\base_memory.c"
 					>
 				</File>
@@ -638,6 +634,14 @@
 				</File>
 				<File
 					RelativePath=".\mupdf\fitz\dev_trace.c"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\fitz\doc_document.c"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\fitz\doc_link.c"
 					>
 				</File>
 				<File

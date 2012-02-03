@@ -15,7 +15,7 @@ fz_free_outline(fz_context *ctx, fz_outline *outline)
 }
 
 void
-fz_debug_outline_xml(fz_outline *outline, int level)
+fz_debug_outline_xml(fz_context *ctx, fz_outline *outline, int level)
 {
 	while (outline)
 	{
@@ -23,7 +23,7 @@ fz_debug_outline_xml(fz_outline *outline, int level)
 		if (outline->down)
 		{
 			printf(">\n");
-			fz_debug_outline_xml(outline->down, level + 1);
+			fz_debug_outline_xml(ctx, outline->down, level + 1);
 			printf("</outline>\n");
 		}
 		else
@@ -35,7 +35,7 @@ fz_debug_outline_xml(fz_outline *outline, int level)
 }
 
 void
-fz_debug_outline(fz_outline *outline, int level)
+fz_debug_outline(fz_context *ctx, fz_outline *outline, int level)
 {
 	int i;
 	while (outline)
@@ -44,7 +44,7 @@ fz_debug_outline(fz_outline *outline, int level)
 			putchar('\t');
 		printf("%s\t%d\n", outline->title, outline->dest.kind == FZ_LINK_GOTO ? outline->dest.ld.gotor.page + 1 : 0);
 		if (outline->down)
-			fz_debug_outline(outline->down, level + 1);
+			fz_debug_outline(ctx, outline->down, level + 1);
 		outline = outline->next;
 	}
 }

@@ -118,7 +118,7 @@ evict(fz_context *ctx, fz_item *item)
 		refkey.free = item->val->free;
 		refkey.num = fz_to_num(item->key);
 		refkey.gen = fz_to_gen(item->key);
-		fz_hash_remove(store->hash, &refkey);
+		fz_hash_remove(ctx, store->hash, &refkey);
 	}
 	/* Drop a reference to the value (freeing if required) */
 	if (item->val->refs > 0 && --item->val->refs == 0)
@@ -220,7 +220,7 @@ fz_store_item(fz_context *ctx, fz_obj *key, void *val_, unsigned int itemsize)
 		refkey.gen = fz_to_gen(key);
 		fz_try(ctx)
 		{
-			fz_hash_insert(store->hash, &refkey, item);
+			fz_hash_insert(ctx, store->hash, &refkey, item);
 		}
 		fz_catch(ctx)
 		{
@@ -263,7 +263,7 @@ fz_find_item(fz_context *ctx, fz_store_free_fn *free, fz_obj *key)
 		refkey.free = free;
 		refkey.num = fz_to_num(key);
 		refkey.gen = fz_to_gen(key);
-		item = fz_hash_find(store->hash, &refkey);
+		item = fz_hash_find(ctx, store->hash, &refkey);
 	}
 	else
 	{
@@ -319,9 +319,9 @@ fz_remove_item(fz_context *ctx, fz_store_free_fn *free, fz_obj *key)
 		refkey.free = free;
 		refkey.num = fz_to_num(key);
 		refkey.gen = fz_to_gen(key);
-		item = fz_hash_find(store->hash, &refkey);
+		item = fz_hash_find(ctx, store->hash, &refkey);
 		if (item)
-			fz_hash_remove(store->hash, &refkey);
+			fz_hash_remove(ctx, store->hash, &refkey);
 	}
 	else
 	{
@@ -391,7 +391,7 @@ fz_free_store_context(fz_context *ctx)
 		return;
 
 	fz_empty_store(ctx);
-	fz_free_hash(ctx->store->hash);
+	fz_free_hash(ctx, ctx->store->hash);
 	fz_free(ctx, ctx->store);
 	ctx->store = NULL;
 }

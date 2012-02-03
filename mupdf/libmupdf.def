@@ -18,8 +18,8 @@ EXPORTS
 	fz_new_aa_context
 	fz_free_aa_context
 	fz_malloc
-	fz_malloc_array
 	fz_calloc
+	fz_malloc_array
 	fz_resize_array
 	fz_strdup
 	fz_free
@@ -181,6 +181,7 @@ EXPORTS
 	fz_open_jbig2d
 	fz_find_blendmode
 	fz_blendmode_name
+	fz_bound_pixmap
 	fz_new_pixmap_with_data
 	fz_new_pixmap_with_rect
 	fz_new_pixmap_with_rect_and_data
@@ -195,7 +196,6 @@ EXPORTS
 	fz_premultiply_pixmap
 	fz_unmultiply_pixmap
 	fz_alpha_from_gray
-	fz_bound_pixmap
 	fz_invert_pixmap
 	fz_gamma_pixmap
 	fz_pixmap_size
@@ -333,11 +333,22 @@ EXPORTS
 	fz_blend_pixmap
 	fz_blend_pixel
 	fz_new_link
-	fz_free_link
+	fz_keep_link
+	fz_drop_link
 	fz_free_link_dest
 	fz_debug_outline_xml
 	fz_debug_outline
 	fz_free_outline
+	fz_close_document
+	fz_needs_password
+	fz_authenticate_password
+	fz_load_outline
+	fz_count_pages
+	fz_load_page
+	fz_load_links
+	fz_bound_page
+	fz_run_page
+	fz_free_page
 	fz_synchronize_begin
 	fz_synchronize_end
 
@@ -458,12 +469,13 @@ EXPORTS
 	pdf_lookup_name
 	pdf_load_name_tree
 	pdf_load_outline
-	pdf_load_links
+	pdf_load_link_annots
 	pdf_load_annots
 	pdf_free_annot
 	pdf_find_page_number
 	pdf_count_pages
 	pdf_load_page
+	pdf_load_links
 	pdf_bound_page
 	pdf_free_page
 	pdf_run_page_with_usage
@@ -492,6 +504,7 @@ EXPORTS
 	xps_free_page_list
 	xps_count_pages
 	xps_load_page
+	xps_load_links
 	xps_bound_page
 	xps_free_page
 	xps_bound_page_quick_and_dirty

@@ -117,7 +117,6 @@ pdf_create_xobject(fz_context *ctx, fz_obj *dict)
 {
 	pdf_xobject *form = fz_malloc_struct(ctx, pdf_xobject);
 
-	memset(form, 0, sizeof(pdf_xobject));
 	FZ_INIT_STORABLE(form, 1, pdf_free_xobject_imp);
 	form->matrix = fz_identity;
 	form->me = fz_keep_obj(dict);

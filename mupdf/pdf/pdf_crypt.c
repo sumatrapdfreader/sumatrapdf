@@ -54,7 +54,6 @@ pdf_new_crypt(fz_context *ctx, fz_obj *dict, fz_obj *id)
 	fz_obj *obj;
 
 	crypt = fz_malloc_struct(ctx, pdf_crypt);
-	memset(crypt, 0, sizeof *crypt);
 
 	/* Common to all security handlers (PDF 1.7 table 3.18) */
 

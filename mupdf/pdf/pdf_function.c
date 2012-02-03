@@ -1365,7 +1365,6 @@ pdf_load_function(pdf_document *xref, fz_obj *dict)
 	}
 
 	func = fz_malloc_struct(ctx, pdf_function);
-	memset(func, 0, sizeof *func);
 	FZ_INIT_STORABLE(func, 1, pdf_free_function_imp);
 	func->size = sizeof(*func);
 

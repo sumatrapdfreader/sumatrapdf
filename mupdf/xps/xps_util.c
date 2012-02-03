@@ -79,7 +79,6 @@ skip_authority(char *path)
 	return p;
 }
 
-
 #define SEP(x)	((x)=='/' || (x) == 0)
 
 static char *

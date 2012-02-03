@@ -78,14 +78,14 @@ fz_add_text_char(fz_context *ctx, fz_text_span **last, fz_font *font, float size
 
 	if (!span->font)
 	{
-		span->font = fz_keep_font(font);
+		span->font = fz_keep_font(ctx, font);
 		span->size = size;
 	}
 
 	if ((span->font != font || span->size != size || span->wmode != wmode) && c != 32)
 	{
 		span = fz_new_text_span(ctx);
-		span->font = fz_keep_font(font);
+		span->font = fz_keep_font(ctx, font);
 		span->size = size;
 		span->wmode = wmode;
 		(*last)->next = span;
@@ -145,7 +145,7 @@ fz_add_text_newline(fz_context *ctx, fz_text_span **last, fz_font *font, float s
 {
 	fz_text_span *span;
 	span = fz_new_text_span(ctx);
-	span->font = fz_keep_font(font);
+	span->font = fz_keep_font(ctx, font);
 	span->size = size;
 	span->wmode = wmode;
 	(*last)->eol = 1;

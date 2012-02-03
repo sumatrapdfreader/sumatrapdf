@@ -25,7 +25,6 @@ LOCAL_SRC_FILES := \
 	$(MY_ROOT)/fitz/base_geometry.c \
 	$(MY_ROOT)/fitz/base_getopt.c \
 	$(MY_ROOT)/fitz/base_hash.c \
-	$(MY_ROOT)/fitz/base_link.c \
 	$(MY_ROOT)/fitz/base_memory.c \
 	$(MY_ROOT)/fitz/base_object.c \
 	$(MY_ROOT)/fitz/base_string.c \
@@ -39,6 +38,8 @@ LOCAL_SRC_FILES := \
 	$(MY_ROOT)/fitz/dev_null.c \
 	$(MY_ROOT)/fitz/dev_text.c \
 	$(MY_ROOT)/fitz/dev_trace.c \
+	$(MY_ROOT)/fitz/doc_document.c \
+	$(MY_ROOT)/fitz/doc_link.c \
 	$(MY_ROOT)/fitz/doc_outline.c \
 	$(MY_ROOT)/fitz/filt_basic.c \
 	$(MY_ROOT)/fitz/filt_dctd.c \

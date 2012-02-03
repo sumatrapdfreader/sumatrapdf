@@ -4,7 +4,6 @@ fz_device *
 fz_new_device(fz_context *ctx, void *user)
 {
 	fz_device *dev = fz_malloc_struct(ctx, fz_device);
-	memset(dev, 0, sizeof *dev);
 	dev->hints = 0;
 	dev->flags = 0;
 	dev->user = user;

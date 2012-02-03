@@ -28,14 +28,14 @@ static void
 fz_bbox_fill_path(fz_device *dev, fz_path *path, int even_odd, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
-	fz_bbox_add_rect(dev, fz_bound_path(path, NULL, ctm), 0);
+	fz_bbox_add_rect(dev, fz_bound_path(dev->ctx, path, NULL, ctm), 0);
 }
 
 static void
 fz_bbox_stroke_path(fz_device *dev, fz_path *path, fz_stroke_state *stroke, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
-	fz_bbox_add_rect(dev, fz_bound_path(path, stroke, ctm), 0);
+	fz_bbox_add_rect(dev, fz_bound_path(dev->ctx, path, stroke, ctm), 0);
 }
 
 static void
@@ -55,7 +55,7 @@ fz_bbox_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *stroke, fz_m
 static void
 fz_bbox_fill_shade(fz_device *dev, fz_shade *shade, fz_matrix ctm, float alpha)
 {
-	fz_bbox_add_rect(dev, fz_bound_shade(shade, ctm), 0);
+	fz_bbox_add_rect(dev, fz_bound_shade(dev->ctx, shade, ctm), 0);
 }
 
 static void
@@ -74,13 +74,13 @@ fz_bbox_fill_image_mask(fz_device *dev, fz_pixmap *image, fz_matrix ctm,
 static void
 fz_bbox_clip_path(fz_device *dev, fz_path *path, fz_rect *rect, int even_odd, fz_matrix ctm)
 {
-	fz_bbox_add_rect(dev, fz_bound_path(path, NULL, ctm), 1);
+	fz_bbox_add_rect(dev, fz_bound_path(dev->ctx, path, NULL, ctm), 1);
 }
 
 static void
 fz_bbox_clip_stroke_path(fz_device *dev, fz_path *path, fz_rect *rect, fz_stroke_state *stroke, fz_matrix ctm)
 {
-	fz_bbox_add_rect(dev, fz_bound_path(path, stroke, ctm), 1);
+	fz_bbox_add_rect(dev, fz_bound_path(dev->ctx, path, stroke, ctm), 1);
 }
 
 static void

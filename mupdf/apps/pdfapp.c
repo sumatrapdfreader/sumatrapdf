@@ -99,125 +99,53 @@ void pdfapp_invert(pdfapp_t *app, fz_bbox rect)
 	}
 }
 
-static void pdfapp_open_pdf(pdfapp_t *app, char *filename, int fd)
+void pdfapp_open(pdfapp_t *app, char *filename, int fd, int reload)
 {
+	fz_context *ctx = app->ctx;
 	fz_stream *file;
 	char *password = "";
-	fz_obj *obj;
-	fz_obj *info;
-	fz_context *ctx = app->ctx;
-
-	/*
-	 * Open PDF document
-	 */
 
 	fz_try(ctx)
 	{
 		file = fz_open_fd(ctx, fd);
-		app->pdf = pdf_open_document_with_stream(file);
+
+		if (strstr(filename, ".xps") || strstr(filename, ".XPS") || strstr(filename, ".rels"))
+			app->doc = (fz_document*) xps_open_document_with_stream(file);
+		else if (strstr(filename, ".cbz") || strstr(filename, ".CBZ") || strstr(filename, ".zip") || strstr(filename, ".ZIP"))
+			app->doc = (fz_document*) cbz_open_document_with_stream(file);
+		else
+			app->doc = (fz_document*) pdf_open_document_with_stream(file);
+
 		fz_close(file);
-	}
-	fz_catch(ctx)
-	{
-		pdfapp_error(app, "cannot open document");
-	}
 
-	/*
-	 * Handle encrypted PDF files
-	 */
-
-	if (pdf_needs_password(app->pdf))
-	{
-		int okay = pdf_authenticate_password(app->pdf, password);
-		while (!okay)
+		if (fz_needs_password(app->doc))
 		{
-			password = winpassword(app, filename);
-			if (!password)
-				pdfapp_error(app, "Needs a password.");
-			okay = pdf_authenticate_password(app->pdf, password);
-			if (!okay)
-				pdfapp_warn(app, "Invalid password.");
+			int okay = fz_authenticate_password(app->doc, password);
+			while (!okay)
+			{
+				password = winpassword(app, filename);
+				if (!password)
+					pdfapp_error(app, "Needs a password.");
+				okay = fz_authenticate_password(app->doc, password);
+				if (!okay)
+					pdfapp_warn(app, "Invalid password.");
+			}
 		}
-	}
 
-	/*
-	 * Load meta information
-	 */
-
-	info = fz_dict_gets(app->pdf->trailer, "Info");
-	if (info)
-	{
-		obj = fz_dict_gets(info, "Title");
-		if (obj)
-			app->doctitle = pdf_to_utf8(ctx, obj);
-	}
-	if (!app->doctitle)
-	{
 		app->doctitle = filename;
 		if (strrchr(app->doctitle, '\\'))
 			app->doctitle = strrchr(app->doctitle, '\\') + 1;
 		if (strrchr(app->doctitle, '/'))
 			app->doctitle = strrchr(app->doctitle, '/') + 1;
 		app->doctitle = fz_strdup(ctx, app->doctitle);
+
+		app->pagecount = fz_count_pages(app->doc);
+		app->outline = fz_load_outline(app->doc);
 	}
-
-	/*
-	 * Start at first page
-	 */
-
-	app->pagecount = pdf_count_pages(app->pdf);
-
-	app->outline = pdf_load_outline(app->pdf);
-}
-
-static void pdfapp_open_xps(pdfapp_t *app, char *filename, int fd)
-{
-	fz_stream *file;
-
-	file = fz_open_fd(app->ctx, fd);
-	fz_try(app->ctx)
-	{
-		app->xps = xps_open_document_with_stream(file);
-	}
-	fz_catch(app->ctx)
+	fz_catch(ctx)
 	{
 		pdfapp_error(app, "cannot open document");
 	}
-	fz_close(file);
-
-	app->doctitle = fz_strdup(app->ctx, filename);
-
-	app->pagecount = xps_count_pages(app->xps);
-}
-
-static void pdfapp_open_cbz(pdfapp_t *app, char *filename, int fd)
-{
-	fz_stream *file;
-
-	file = fz_open_fd(app->ctx, fd);
-	fz_try(app->ctx)
-	{
-		app->cbz = cbz_open_document_with_stream(file);
-	}
-	fz_catch(app->ctx)
-	{
-		pdfapp_error(app, "cannot open document");
-	}
-	fz_close(file);
-
-	app->doctitle = fz_strdup(app->ctx, filename);
-
-	app->pagecount = cbz_count_pages(app->cbz);
-}
-
-void pdfapp_open(pdfapp_t *app, char *filename, int fd, int reload)
-{
-	if (strstr(filename, ".xps") || strstr(filename, ".XPS") || strstr(filename, ".rels"))
-		pdfapp_open_xps(app, filename, fd);
-	else if (strstr(filename, ".cbz") || strstr(filename, ".CBZ"))
-		pdfapp_open_cbz(app, filename, fd);
-	else
-		pdfapp_open_pdf(app, filename, fd);
 
 	if (app->pageno < 1)
 		app->pageno = 1;
@@ -250,7 +178,7 @@ void pdfapp_close(pdfapp_t *app)
 	app->page_text = NULL;
 
 	if (app->page_links)
-		fz_free_link(app->ctx, app->page_links);
+		fz_drop_link(app->ctx, app->page_links);
 	app->page_links = NULL;
 
 	if (app->doctitle)
@@ -265,22 +193,10 @@ void pdfapp_close(pdfapp_t *app)
 		fz_free_outline(app->ctx, app->outline);
 	app->outline = NULL;
 
-	if (app->pdf)
+	if (app->doc)
 	{
-		pdf_close_document(app->pdf);
-		app->pdf = NULL;
-	}
-
-	if (app->xps)
-	{
-		xps_close_document(app->xps);
-		app->xps = NULL;
-	}
-
-	if (app->cbz)
-	{
-		cbz_close_document(app->cbz);
-		app->cbz = NULL;
+		fz_close_document(app->doc);
+		app->doc = NULL;
 	}
 
 	fz_flush_warnings(app->ctx);
@@ -318,92 +234,36 @@ static void pdfapp_panview(pdfapp_t *app, int newx, int newy)
 	app->pany = newy;
 }
 
-static void pdfapp_loadpage_pdf(pdfapp_t *app)
+static void pdfapp_loadpage(pdfapp_t *app)
 {
-	pdf_page *page;
 	fz_device *mdev;
+
+	if (app->page_list)
+		fz_free_display_list(app->ctx, app->page_list);
+	if (app->page_text)
+		fz_free_text_span(app->ctx, app->page_text);
+	if (app->page_links)
+		fz_drop_link(app->ctx, app->page_links);
+	if (app->page)
+		fz_free_page(app->doc, app->page);
 
 	fz_try(app->ctx)
 	{
-		page = pdf_load_page(app->pdf, app->pageno - 1);
+		app->page = fz_load_page(app->doc, app->pageno - 1);
+
+		/* Create display list */
+		app->page_list = fz_new_display_list(app->ctx);
+		mdev = fz_new_list_device(app->ctx, app->page_list);
+		fz_run_page(app->doc, app->page, mdev, fz_identity, NULL);
+		fz_free_device(mdev);
+
+		app->page_bbox = fz_bound_page(app->doc, app->page);
+		app->page_links = fz_load_links(app->doc, app->page);
 	}
 	fz_catch(app->ctx)
 	{
 		pdfapp_error(app, "cannot load page");
 	}
-
-	app->page_bbox = pdf_bound_page(app->pdf, page);
-	app->page_links = page->links;
-	page->links = NULL;
-
-	/* Create display list */
-	app->page_list = fz_new_display_list(app->ctx);
-	mdev = fz_new_list_device(app->ctx, app->page_list);
-	fz_try(app->ctx)
-	{
-		pdf_run_page(app->pdf, page, mdev, fz_identity, NULL);
-	}
-	fz_catch(app->ctx)
-	{
-		pdfapp_error(app, "cannot draw page");
-	}
-	fz_free_device(mdev);
-
-	pdf_free_page(app->ctx, page);
-}
-
-static void pdfapp_loadpage_xps(pdfapp_t *app)
-{
-	xps_page *page;
-	fz_device *mdev;
-
-	fz_try(app->ctx)
-	{
-		page = xps_load_page(app->xps, app->pageno - 1);
-	}
-	fz_catch(app->ctx)
-	{
-		pdfapp_error(app, "cannot load page");
-	}
-
-	app->page_bbox = xps_bound_page(app->xps, page);
-
-	/* Create display list */
-	app->page_list = fz_new_display_list(app->ctx);
-	mdev = fz_new_list_device(app->ctx, app->page_list);
-	xps_run_page(app->xps, page, mdev, fz_identity, NULL);
-	fz_free_device(mdev);
-
-	app->page_links = page->links;
-	page->links = NULL;
-
-	xps_free_page(app->xps, page);
-}
-
-static void pdfapp_loadpage_cbz(pdfapp_t *app)
-{
-	cbz_page *page;
-	fz_device *mdev;
-
-	fz_try(app->ctx)
-	{
-		page = cbz_load_page(app->cbz, app->pageno - 1);
-	}
-	fz_catch(app->ctx)
-	{
-		pdfapp_error(app, "cannot load page");
-	}
-
-	app->page_bbox = cbz_bound_page(app->cbz, page);
-	app->page_links = NULL;
-
-	/* Create display list */
-	app->page_list = fz_new_display_list(app->ctx);
-	mdev = fz_new_list_device(app->ctx, app->page_list);
-	cbz_run_page(app->cbz, page, mdev, fz_identity, NULL);
-	fz_free_device(mdev);
-
-	cbz_free_page(app->cbz, page);
 }
 
 static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repaint)
@@ -419,19 +279,7 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 
 	if (loadpage)
 	{
-		if (app->page_list)
-			fz_free_display_list(app->ctx, app->page_list);
-		if (app->page_text)
-			fz_free_text_span(app->ctx, app->page_text);
-		if (app->page_links)
-			fz_free_link(app->ctx, app->page_links);
-
-		if (app->pdf)
-			pdfapp_loadpage_pdf(app);
-		if (app->xps)
-			pdfapp_loadpage_xps(app);
-		if (app->cbz)
-			pdfapp_loadpage_cbz(app);
+		pdfapp_loadpage(app);
 
 		/* Zero search hit position */
 		app->hit = -1;
@@ -465,7 +313,7 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 			colorspace = fz_device_rgb;
 #endif
 		app->image = fz_new_pixmap_with_rect(app->ctx, colorspace, bbox);
-		fz_clear_pixmap_with_color(app->image, 255);
+		fz_clear_pixmap_with_color(app->ctx, app->image, 255);
 		idev = fz_new_draw_device(app->ctx, app->image);
 		fz_execute_display_list(app->page_list, idev, ctm, bbox, NULL);
 		fz_free_device(idev);

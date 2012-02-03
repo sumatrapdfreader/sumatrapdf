@@ -148,7 +148,7 @@ fz_load_jpx(fz_context *ctx, unsigned char *data, int size, fz_colorspace *defcs
 			fz_drop_pixmap(ctx, img);
 			img = tmp;
 		}
-		fz_premultiply_pixmap(img);
+		fz_premultiply_pixmap(ctx, img);
 	}
 
 	opj_image_destroy(jpx);

@@ -115,7 +115,7 @@ fz_load_jpeg(fz_context *ctx, unsigned char *rbuf, int rlen)
 		image->yres = cinfo.Y_density * 254 / 100;
 	}
 
-	fz_clear_pixmap(image);
+	fz_clear_pixmap(ctx, image);
 
 	row[0] = fz_malloc(ctx, cinfo.output_components * cinfo.output_width);
 	dp = image->samples;

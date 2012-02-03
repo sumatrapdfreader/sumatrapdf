@@ -1046,7 +1046,7 @@ CPdfEngine::~CPdfEngine()
     if (_pages) {
         for (int i = 0; i < PageCount(); i++) {
             if (_pages[i])
-                pdf_free_page(ctx, _pages[i]);
+                pdf_free_page(_doc, _pages[i]);
         }
         free(_pages);
     }
@@ -1795,7 +1795,7 @@ RenderedBitmap *CPdfEngine::RenderBitmap(int pageNo, float zoom, int rotation, R
     EnterCriticalSection(&ctxAccess);
     fz_try(ctx) {
         image = fz_new_pixmap_with_rect(ctx, fz_find_device_colorspace("DeviceRGB"), bbox);
-        fz_clear_pixmap_with_color(image, 0xFF); // initialize white background
+        fz_clear_pixmap_with_color(ctx, image, 0xFF); // initialize white background
     }
     fz_catch(ctx) {
         LeaveCriticalSection(&ctxAccess);
@@ -1898,6 +1898,7 @@ Vec<PageElement *> *CPdfEngine::GetElements(int pageNo)
 void CPdfEngine::LinkifyPageText(pdf_page *page)
 {
     page->links = FixupPageLinks(page->links);
+    assert(!page->links || page->links->refs == 1);
 
     RectI *coords;
     TCHAR *pageText = ExtractPageText(page, _T("\n"), &coords, Target_View, true);
@@ -2052,7 +2053,7 @@ TCHAR *CPdfEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_ou
     TCHAR *result = ExtractPageText(page, lineSep, coords_out, target);
 
     EnterCriticalSection(&ctxAccess);
-    pdf_free_page(ctx, page);
+    pdf_free_page(_doc, page);
     LeaveCriticalSection(&ctxAccess);
 
     return result;
@@ -2802,7 +2803,6 @@ XpsPageRun *CXpsEngine::GetPageRun(xps_page *page, bool tryOnly)
 
         fz_display_list *list = NULL;
         fz_device *dev = NULL;
-        fz_link root = { 0 };
         fz_var(list);
         fz_var(dev);
         fz_try(ctx) {
@@ -2811,7 +2811,6 @@ XpsPageRun *CXpsEngine::GetPageRun(xps_page *page, bool tryOnly)
             xps_run_page(_doc, page, dev, fz_identity, NULL);
         }
         fz_catch(ctx) {
-            fz_free_link(ctx, root.next);
             fz_free_display_list(ctx, list);
             list = NULL;
         }
@@ -3030,7 +3029,7 @@ RenderedBitmap *CXpsEngine::RenderBitmap(int pageNo, float zoom, int rotation, R
     EnterCriticalSection(&ctxAccess);
     fz_try(ctx) {
         image = fz_new_pixmap_with_rect(ctx, fz_find_device_colorspace("DeviceRGB"), bbox);
-        fz_clear_pixmap_with_color(image, 0xFF); // initialize white background
+        fz_clear_pixmap_with_color(ctx, image, 0xFF); // initialize white background
     }
     fz_catch(ctx) {
         LeaveCriticalSection(&ctxAccess);
@@ -3174,6 +3173,7 @@ void CXpsEngine::LinkifyPageText(xps_page *page, int pageNo)
     assert(run);
     if (run)
         DropPageRun(run);
+    assert(!page->links || page->links->refs == 1);
 
     RectI *coords;
     TCHAR *pageText = ExtractPageText(page, _T("\n"), &coords, true);

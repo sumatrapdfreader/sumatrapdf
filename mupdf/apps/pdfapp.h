@@ -30,9 +30,7 @@ extern void winfullscreen(pdfapp_t*, int state);
 struct pdfapp_s
 {
 	/* current document params */
-	pdf_document *pdf;
-	xps_document *xps;
-	cbz_document *cbz;
+	fz_document *doc;
 	char *doctitle;
 	fz_outline *outline;
 
@@ -46,6 +44,7 @@ struct pdfapp_s
 
 	/* current page params */
 	int pageno;
+	fz_page *page;
 	fz_rect page_bbox;
 	fz_display_list *page_list;
 	fz_text_span *page_text;

@@ -6,7 +6,7 @@ fz_new_text(fz_context *ctx, fz_font *font, fz_matrix trm, int wmode)
 	fz_text *text;
 
 	text = fz_malloc_struct(ctx, fz_text);
-	text->font = fz_keep_font(font);
+	text->font = fz_keep_font(ctx, font);
 	text->trm = trm;
 	text->wmode = wmode;
 	text->len = 0;
@@ -44,7 +44,7 @@ fz_clone_text(fz_context *ctx, fz_text *old)
 		fz_rethrow(ctx);
 	}
 	memcpy(text->items, old->items, text->len * sizeof(fz_text_item));
-	text->font = fz_keep_font(old->font);
+	text->font = fz_keep_font(ctx, old->font);
 	text->trm = old->trm;
 	text->wmode = old->wmode;
 	text->cap = text->len;
@@ -123,7 +123,7 @@ static int isxmlmeta(int c)
 	return c < 32 || c >= 128 || c == '&' || c == '<' || c == '>' || c == '\'' || c == '"';
 }
 
-void fz_debug_text(fz_text *text, int indent)
+void fz_debug_text(fz_context *ctx, fz_text *text, int indent)
 {
 	int i, n;
 	for (i = 0; i < text->len; i++)

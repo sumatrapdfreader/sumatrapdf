@@ -224,7 +224,6 @@ fz_open_dctd(fz_stream *chain, int color_transform)
 	fz_try(ctx)
 	{
 		state = fz_malloc_struct(chain->ctx, fz_dctd);
-		memset(state, 0, sizeof(fz_dctd));
 		state->ctx = ctx;
 		state->chain = chain;
 		state->color_transform = color_transform;

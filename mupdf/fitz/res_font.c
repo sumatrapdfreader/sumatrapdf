@@ -68,9 +68,10 @@ fz_new_font(fz_context *ctx, char *name, int use_glyph_bbox, int glyph_count)
 }
 
 fz_font *
-fz_keep_font(fz_font *font)
+fz_keep_font(fz_context *ctx, fz_font *font)
 {
-	font->refs ++;
+	if (font)
+		font->refs ++;
 	return font;
 }
 
@@ -111,7 +112,7 @@ fz_drop_font(fz_context *ctx, fz_font *font)
 }
 
 void
-fz_set_font_bbox(fz_font *font, float xmin, float ymin, float xmax, float ymax)
+fz_set_font_bbox(fz_context *ctx, fz_font *font, float xmin, float ymin, float xmax, float ymax)
 {
 	font->bbox.x0 = xmin;
 	font->bbox.y0 = ymin;
@@ -732,7 +733,7 @@ fz_render_t3_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm, fz_co
 	bbox.y1++;
 
 	glyph = fz_new_pixmap_with_rect(ctx, model ? model : fz_device_gray, bbox);
-	fz_clear_pixmap(glyph);
+	fz_clear_pixmap(ctx, glyph);
 
 	ctm = fz_concat(font->t3matrix, trm);
 	dev = fz_new_draw_device_type3(ctx, glyph);
@@ -783,7 +784,7 @@ fz_render_t3_glyph_direct(fz_context *ctx, fz_device *dev, fz_font *font, int gi
 }
 
 void
-fz_debug_font(fz_font *font)
+fz_debug_font(fz_context *ctx, fz_font *font)
 {
 	printf("font '%s' {\n", font->name);
 
@@ -829,7 +830,7 @@ fz_bound_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm)
 	return fz_transform_rect(trm, font->bbox);
 }
 
-int fz_glyph_cacheable(fz_font *font, int gid)
+int fz_glyph_cacheable(fz_context *ctx, fz_font *font, int gid)
 {
 	if (!font->t3procs || !font->t3flags || gid < 0 || gid >= font->bbox_count)
 		return 1;

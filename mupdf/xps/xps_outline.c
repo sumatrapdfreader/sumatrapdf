@@ -39,7 +39,6 @@ xps_parse_document_outline(xps_document *doc, xml_element *root)
 				entry->dest.kind = FZ_LINK_NONE;
 			else if (!xps_url_is_remote(target))
 			{
-				memset(&entry->dest, 0, sizeof(fz_link_dest));
 				entry->dest.kind = FZ_LINK_GOTO;
 				entry->dest.ld.gotor.page = xps_find_link_target(doc, target);
 				/* for retrieving updated target rectangles */

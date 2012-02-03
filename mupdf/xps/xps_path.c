@@ -784,7 +784,7 @@ xps_parse_path_geometry(xps_document *doc, xps_resource *dict, xml_element *root
 	}
 
 	if (transform_att || transform_tag)
-		fz_transform_path(path, transform);
+		fz_transform_path(doc->ctx, path, transform);
 
 	return path;
 }
@@ -1005,12 +1005,12 @@ xps_parse_path(xps_document *doc, fz_matrix ctm, char *base_uri, xps_resource *d
 	if (stroke_att || stroke_tag)
 	{
 		/* SumatraPDF: fill-path and stroke-path may differ */
-		area = fz_bound_path(stroke_path, &stroke, ctm);
+		area = fz_bound_path(doc->ctx, stroke_path, &stroke, ctm);
 		if (stroke_path != path && (fill_att || fill_tag))
-			area = fz_union_rect(area, fz_bound_path(path, NULL, ctm));
+			area = fz_union_rect(area, fz_bound_path(doc->ctx, path, NULL, ctm));
 	}
 	else
-		area = fz_bound_path(path, NULL, ctm);
+		area = fz_bound_path(doc->ctx, path, NULL, ctm);
 
 	/* SumatraPDF: extended link support */
 	xps_extract_anchor_info(doc, area, navigate_uri_att, xml_att(root, "Name"), 0);

@@ -142,7 +142,7 @@ void benchrenderpage(pdf_document *xref, pdf_page *page, int pagenum)
 
 	bbox = fz_round_rect(pdf_bound_page(xref, page));
 	pix = fz_new_pixmap_with_rect(xref->ctx, fz_device_rgb, bbox);
-	fz_clear_pixmap_with_color(pix, 0xFF);
+	fz_clear_pixmap_with_color(xref->ctx, pix, 0xFF);
 	dev = fz_new_draw_device(xref->ctx, pix);
 	fz_try(xref->ctx) {
 		pdf_run_page(xref, page, dev, fz_identity, NULL);
@@ -194,7 +194,7 @@ void benchfile(char *pdffilename, int loadonly, int pageNo)
 		page = benchloadpage(xref, curpage);
 		if (page) {
 			benchrenderpage(xref, page, curpage);
-			pdf_free_page(xref->ctx, page);
+			pdf_free_page(xref, page);
 		}
 	}
 

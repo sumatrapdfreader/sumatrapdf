@@ -219,7 +219,7 @@ static inline fz_rect bound_expand(fz_rect r, fz_point p)
 }
 
 fz_rect
-fz_bound_path(fz_path *path, fz_stroke_state *stroke, fz_matrix ctm)
+fz_bound_path(fz_context *ctx, fz_path *path, fz_stroke_state *stroke, fz_matrix ctm)
 {
 	fz_point p;
 	fz_rect r;
@@ -292,7 +292,7 @@ fz_bound_path(fz_path *path, fz_stroke_state *stroke, fz_matrix ctm)
 }
 
 void
-fz_transform_path(fz_path *path, fz_matrix ctm)
+fz_transform_path(fz_context *ctx, fz_path *path, fz_matrix ctm)
 {
 	fz_point p;
 	int k, i = 0;
@@ -328,7 +328,7 @@ fz_transform_path(fz_path *path, fz_matrix ctm)
 }
 
 void
-fz_debug_path(fz_path *path, int indent)
+fz_debug_path(fz_context *ctx, fz_path *path, int indent)
 {
 	float x, y;
 	int i = 0;

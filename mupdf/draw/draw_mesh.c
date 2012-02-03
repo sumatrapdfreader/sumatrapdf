@@ -546,7 +546,7 @@ fz_paint_shade(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_pixmap *dest,
 			}
 			conv = fz_new_pixmap_with_rect(ctx, dest->colorspace, bbox);
 			temp = fz_new_pixmap_with_rect(ctx, fz_device_gray, bbox);
-			fz_clear_pixmap(temp);
+			fz_clear_pixmap(ctx, temp);
 		}
 		else
 		{

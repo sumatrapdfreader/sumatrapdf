@@ -114,13 +114,13 @@ fz_bound_pixmap(fz_pixmap *pix)
 }
 
 void
-fz_clear_pixmap(fz_pixmap *pix)
+fz_clear_pixmap(fz_context *ctx, fz_pixmap *pix)
 {
 	memset(pix->samples, 0, pix->w * pix->h * pix->n);
 }
 
 void
-fz_clear_pixmap_with_color(fz_pixmap *pix, int value)
+fz_clear_pixmap_with_color(fz_context *ctx, fz_pixmap *pix, int value)
 {
 	if (value == 255)
 		memset(pix->samples, 255, pix->w * pix->h * pix->n);
@@ -141,7 +141,7 @@ fz_clear_pixmap_with_color(fz_pixmap *pix, int value)
 }
 
 void
-fz_copy_pixmap_rect(fz_pixmap *dest, fz_pixmap *src, fz_bbox r)
+fz_copy_pixmap_rect(fz_context *ctx, fz_pixmap *dest, fz_pixmap *src, fz_bbox r)
 {
 	const unsigned char *srcp;
 	unsigned char *destp;
@@ -169,7 +169,7 @@ fz_copy_pixmap_rect(fz_pixmap *dest, fz_pixmap *src, fz_bbox r)
 }
 
 void
-fz_clear_pixmap_rect_with_color(fz_pixmap *dest, int value, fz_bbox r)
+fz_clear_pixmap_rect_with_color(fz_context *ctx, fz_pixmap *dest, int value, fz_bbox r)
 {
 	unsigned char *destp;
 	int x, y, w, k, destspan;
@@ -205,7 +205,7 @@ fz_clear_pixmap_rect_with_color(fz_pixmap *dest, int value, fz_bbox r)
 }
 
 void
-fz_premultiply_pixmap(fz_pixmap *pix)
+fz_premultiply_pixmap(fz_context *ctx, fz_pixmap *pix)
 {
 	unsigned char *s = pix->samples;
 	unsigned char a;
@@ -224,7 +224,7 @@ fz_premultiply_pixmap(fz_pixmap *pix)
 }
 
 void
-fz_unmultiply_pixmap(fz_pixmap *pix)
+fz_unmultiply_pixmap(fz_context *ctx, fz_pixmap *pix)
 {
 	unsigned char *s = pix->samples;
 	int a, inva;
@@ -269,7 +269,7 @@ fz_alpha_from_gray(fz_context *ctx, fz_pixmap *gray, int luminosity)
 }
 
 void
-fz_invert_pixmap(fz_pixmap *pix)
+fz_invert_pixmap(fz_context *ctx, fz_pixmap *pix)
 {
 	unsigned char *s = pix->samples;
 	int k, x, y;
@@ -286,7 +286,7 @@ fz_invert_pixmap(fz_pixmap *pix)
 }
 
 void
-fz_gamma_pixmap(fz_pixmap *pix, float gamma)
+fz_gamma_pixmap(fz_context *ctx, fz_pixmap *pix, float gamma)
 {
 	unsigned char gamma_map[256];
 	unsigned char *s = pix->samples;
@@ -545,7 +545,7 @@ fz_write_png(fz_context *ctx, fz_pixmap *pixmap, char *filename, int savealpha)
 }
 
 unsigned int
-fz_pixmap_size(fz_pixmap * pix)
+fz_pixmap_size(fz_context *ctx, fz_pixmap * pix)
 {
 	if (pix == NULL)
 		return 0;

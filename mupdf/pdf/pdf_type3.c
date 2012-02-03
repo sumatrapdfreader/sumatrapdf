@@ -45,7 +45,7 @@ pdf_load_type3_font(pdf_document *xref, fz_obj *rdb, fz_obj *dict)
 		fontdesc->font = fz_new_type3_font(ctx, buf, matrix);
 		fontdesc->size += sizeof(fz_font) + 256 * (sizeof(fz_buffer*) + sizeof(float));
 
-		fz_set_font_bbox(fontdesc->font, bbox.x0, bbox.y0, bbox.x1, bbox.y1);
+		fz_set_font_bbox(ctx, fontdesc->font, bbox.x0, bbox.y0, bbox.x1, bbox.y1);
 
 		/* SumatraPDF: expose Type3 FontDescriptor flags */
 		fontdesc->flags = fz_to_int(fz_dict_gets(fz_dict_gets(dict, "FontDescriptor"), "Flags"));

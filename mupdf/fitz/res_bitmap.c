@@ -20,10 +20,11 @@ fz_new_bitmap(fz_context *ctx, int w, int h, int n)
 }
 
 fz_bitmap *
-fz_keep_bitmap(fz_bitmap *pix)
+fz_keep_bitmap(fz_context *ctx, fz_bitmap *bit)
 {
-	pix->refs++;
-	return pix;
+	if (bit)
+		bit->refs++;
+	return bit;
 }
 
 void
@@ -37,7 +38,7 @@ fz_drop_bitmap(fz_context *ctx, fz_bitmap *bit)
 }
 
 void
-fz_clear_bitmap(fz_bitmap *bit)
+fz_clear_bitmap(fz_context *ctx, fz_bitmap *bit)
 {
 	memset(bit->samples, 0, bit->stride * bit->h);
 }
