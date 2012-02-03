@@ -101,7 +101,7 @@ class ControlEbook
     void SetPage(int newPageNo);
 
 public:
-    MobiDoc *     mb;
+    MobiDoc *       mb;
     const char *    html;
 
     Vec<PageData*>* pages;

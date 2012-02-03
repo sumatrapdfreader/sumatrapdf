@@ -4,6 +4,8 @@
 #ifndef MuiHwndWrapper_h
 #define MuiHwndWrapper_h
 
+// This is only meant to be included by Mui.h inside mui namespace
+
 class Painter;
 class EventMgr;
 

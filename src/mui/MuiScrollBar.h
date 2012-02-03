@@ -1,8 +1,8 @@
 /* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef MuiPainter_h
-#define MuiPainter_h
+#ifndef MuiScrollBar_h
+#define MuiScrollBar_h
 
 // This is only meant to be included by Mui.h inside mui namespace
 

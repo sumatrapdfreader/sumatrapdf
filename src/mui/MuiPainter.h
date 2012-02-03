@@ -6,8 +6,6 @@
 
 // This is only meant to be included by Mui.h inside mui namespace
 
-class HwndWrapper;
-
 // Manages painting process of Control window and all its children.
 // Automatically does double-buffering for less flicker.
 // Create one object for each HWND-backed Control and keep it around.

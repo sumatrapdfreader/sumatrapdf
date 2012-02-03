@@ -1,9 +1,10 @@
+/* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
+   License: Simplified BSD (see COPYING.BSD) */
+
 #ifndef MuiLayout_h
 #define MuiLayout_h
 
 // This is only meant to be included by Mui.h inside mui namespace
-
-class Control;
 
 // Layout can be optionally set on Control. If set, it'll be
 // used to layout this window. This effectively over-rides Measure()/Arrange()
