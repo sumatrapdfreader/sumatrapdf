@@ -616,6 +616,7 @@ void ControlEbook::NotifyMouseMove(int x, int y)
     r1.Inflate(1,1); r2.Inflate(1,1);
     RequestRepaint(this, &r1, &r2);
 }
+
 void ControlEbook::RegisterEventHandlers(EventMgr *evtMgr) 
 {
     evtMgr->RegisterClickHandler(next, this);
@@ -692,9 +693,8 @@ static void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL o
 
     WCHAR buf[512];
     PointF pos;
-    DrawInstr *currInstr = &drawInstructions->At(0);
-    DrawInstr *end = currInstr + drawInstructions->Count();
-    while (currInstr < end) {
+    Vec<DrawInstr>::Iter iter(drawInstructions);
+    for (DrawInstr *currInstr = iter.Next(); currInstr; currInstr = iter.Next()) {
         RectF bbox = currInstr->bbox;
         bbox.X += offX;
         bbox.Y += offY;

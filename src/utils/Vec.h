@@ -48,6 +48,24 @@ protected:
     }
 
 public:
+    struct Iter {
+        T * curr;
+        T * end;
+
+        Iter(Vec<T> *vec) {
+            curr = vec->els;
+            end = curr + vec->len;
+        }
+
+        T *Next() {
+            if (end == curr)
+                return NULL;
+            T *res = curr;
+            ++curr;
+            return res;
+        }
+    };
+
     // allocator is not owned by Vec and must outlive it
     Vec(size_t initCap=0, Allocator *allocator=NULL) 
         : initialCap(initCap), allocator(allocator)

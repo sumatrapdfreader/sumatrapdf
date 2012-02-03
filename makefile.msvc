@@ -174,7 +174,6 @@ UNINSTALLER_OBJS = \
 	$(OS)\Uninstaller.obj $(UNINSTALLER_RES)
 
 ET_OBJS = \
-	$(OS)\NoFreeAllocator.obj \
 	$(OS)\EbookTest.obj $(OS)\EbookTestMenu.obj $(OS)\PageLayout.obj \
 	$(OS)\MobiDoc.obj $(ET_RES) $(CHROME_OBJS)
 
