@@ -1745,14 +1745,10 @@ bool CPdfEngine::RenderPage(HDC hDC, pdf_page *page, RectI screenRect, fz_matrix
     return RunPage(page, dev, ctm2, target, clipbox);
 }
 
-// Fitz' draw_device.c currently isn't able to correctly render
+// Fitz' draw_device.c currently isn't able to correctly/quickly render some
 // transparency groups while our dev_gdiplus.cpp gets most of them right
-// cf. http://bugs.ghostscript.com/show_bug.cgi?id=690686
-// cf. http://code.google.com/p/sumatrapdf/issues/detail?id=51
 bool CPdfEngine::RequiresBlending(pdf_page *page)
 {
-    if (!page->transparency)
-        return false;
     PdfPageRun *run = GetPageRun(page);
     if (!run)
         return false;
