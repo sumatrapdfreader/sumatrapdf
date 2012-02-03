@@ -505,6 +505,9 @@ xps_free_page(xps_document *doc, xps_page *page)
 		xml_free_element(doc->ctx, page->root);
 	fz_free_link(doc->ctx, page->links);
 	page->root = NULL;
+	/* SumatraPDF: make sure that links can be reloaded */
+	page->links = NULL;
+	page->links_resolved = 0;
 }
 
 /* SumatraPDF: extract page bounds without parsing the entire page content */

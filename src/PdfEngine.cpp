@@ -2410,7 +2410,9 @@ public:
 
     virtual unsigned char *GetFileData(size_t *cbCount);
     virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out=NULL,
-                                    RenderTarget target=Target_View);
+                                    RenderTarget target=Target_View) {
+        return ExtractPageText(GetXpsPage(pageNo), lineSep, coords_out);
+    }
     virtual bool IsImagePage(int pageNo);
     virtual TCHAR *GetProperty(char *name);
 
@@ -2720,9 +2722,12 @@ xps_page *CXpsEngine::GetXpsPage(int pageNo, bool failIfBusy)
         ScopedCritSec ctxScope(&ctxAccess);
         fz_var(page);
         fz_try(ctx) {
+            // caution: two calls to xps_load_page return the
+            // same xps_page object (without reference counting)
             page = xps_load_page(_doc, pageNo - 1);
             _pages[pageNo-1] = page;
             LinkifyPageText(page, pageNo);
+            assert(page->links_resolved);
         }
         fz_catch(ctx) { }
     }
@@ -3089,32 +3094,6 @@ TCHAR *CXpsEngine::ExtractPageText(xps_page *page, TCHAR *lineSep, RectI **coord
     fz_free_text_span(ctx, text);
 
     return content;
-}
-
-TCHAR *CXpsEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out, RenderTarget target)
-{
-    xps_page *page = GetXpsPage(pageNo, true);
-    if (page)
-        return ExtractPageText(page, lineSep, coords_out);
-
-    EnterCriticalSection(&ctxAccess);
-    fz_var(page);
-    fz_try(ctx) {
-        page = xps_load_page(_doc, pageNo - 1);
-    }
-    fz_catch(ctx) {
-        LeaveCriticalSection(&ctxAccess);
-        return NULL;
-    }
-    LeaveCriticalSection(&ctxAccess);
-
-    TCHAR *result = ExtractPageText(page, lineSep, coords_out);
-
-    EnterCriticalSection(&ctxAccess);
-    xps_free_page(_doc, page);
-    LeaveCriticalSection(&ctxAccess);
-
-    return result;
 }
 
 unsigned char *CXpsEngine::GetFileData(size_t *cbCount)
