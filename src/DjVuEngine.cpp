@@ -298,7 +298,7 @@ static bool ReadBytes(HANDLE h, int offset, void *buffer, int count)
 
 bool CDjVuEngine::LoadMediaboxes()
 {
-    ScopedHandle h(CreateFile(fileName, GENERIC_READ, FILE_SHARE_READ, NULL,  
+    ScopedHandle h(CreateFile(fileName, GENERIC_READ, FILE_SHARE_READ, NULL,
                               OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL));
     if (h == INVALID_HANDLE_VALUE)
         return false;
@@ -852,5 +852,5 @@ DjVuEngine *DjVuEngine::CreateFromFileName(const TCHAR *fileName)
         delete engine;
         return NULL;
     }
-    return engine;    
+    return engine;
 }

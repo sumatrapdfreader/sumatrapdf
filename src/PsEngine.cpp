@@ -346,5 +346,5 @@ PsEngine *PsEngine::CreateFromFileName(const TCHAR *fileName)
         delete engine;
         return NULL;
     }
-    return engine;    
+    return engine;
 }

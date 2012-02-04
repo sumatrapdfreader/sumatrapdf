@@ -46,7 +46,7 @@ static unsigned int ExtractNextNumber(TCHAR **txt)
 
 // compare two version string. Return 0 if they are the same,
 // > 0 if the first is greater than the second and < 0 otherwise.
-// e.g. 
+// e.g.
 //   0.9.3.900 is greater than 0.9.3
 //   1.09.300 is greater than 1.09.3 which is greater than 1.9.1
 //   1.2.0 is the same as 1.2
@@ -358,7 +358,7 @@ bool IsUntrustedFile(const TCHAR *filePath, const TCHAR *fileURL)
 enum EditorPathType {
     BinaryPath,         // full path to the editor's binary file
     BinaryDir,          // directory containing the editor's binary file
-    SiblingPath,        // full path to a sibling file of the editor's binary file    
+    SiblingPath,        // full path to a sibling file of the editor's binary file
 };
 
 static struct {

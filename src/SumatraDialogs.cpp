@@ -426,7 +426,7 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM w
 }
 
 /* Show "Change Language" dialog.
-   Returns language id (an index into gLangData) or -1 if the user 
+   Returns language id (an index into gLangData) or -1 if the user
    choses 'cancel' */
 int Dialog_ChangeLanguge(HWND hwnd, int currLangId)
 {
@@ -637,7 +637,7 @@ bool Dialog_CustomZoom(HWND hwnd, bool forChm, float *currZoomInOut)
                            Dialog_CustomZoom_Proc, (LPARAM)&data);
     if (res == IDCANCEL)
         return false;
-    
+
     *currZoomInOut = data.zoomResult;
     return true;
 }
@@ -718,9 +718,9 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wParam,
             // Try to select a correct default when first showing this dialog
             if (!prefs->inverseSearchCmdLine)
                 prefs->inverseSearchCmdLine = inverseSearch;
-            // Find the index of the active command line    
+            // Find the index of the active command line
             LRESULT ind = SendMessage(GetDlgItem(hDlg, IDC_CMDLINE), CB_FINDSTRINGEXACT, -1, (LPARAM) prefs->inverseSearchCmdLine);
-            if (CB_ERR == ind) {            
+            if (CB_ERR == ind) {
                 // if no existing command was selected then set the user custom command in the combo
                 ComboBox_AddItemData(GetDlgItem(hDlg, IDC_CMDLINE), prefs->inverseSearchCmdLine);
                 SetDlgItemText(hDlg, IDC_CMDLINE, prefs->inverseSearchCmdLine);

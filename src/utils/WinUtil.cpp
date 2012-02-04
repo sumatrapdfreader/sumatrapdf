@@ -39,7 +39,7 @@ FARPROC LoadDllFunc(TCHAR *dllName, const char *funcName)
 bool IsAppThemed()
 {
     FARPROC pIsAppThemed = LoadDllFunc(_T("uxtheme.dll"), "IsAppThemed");
-    if (!pIsAppThemed) 
+    if (!pIsAppThemed)
         return false;
     if (pIsAppThemed())
         return true;
@@ -462,7 +462,7 @@ void PaintLine(HDC hdc, RectI& rect)
 }
 
 void DrawCenteredText(HDC hdc, RectI& r, const TCHAR *txt, bool isRTL)
-{    
+{
     SetBkMode(hdc, TRANSPARENT);
     DrawText(hdc, txt, -1, &r.ToRECT(), DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | (isRTL ? DT_RTLREADING : 0));
 }
@@ -680,7 +680,7 @@ HFONT GetSimpleFont(HDC hdc, TCHAR *fontName, int fontSize)
     lf.lfCharSet = DEFAULT_CHARSET;
     lf.lfOutPrecision = OUT_TT_PRECIS;
     lf.lfQuality = DEFAULT_QUALITY;
-    lf.lfPitchAndFamily = DEFAULT_PITCH;    
+    lf.lfPitchAndFamily = DEFAULT_PITCH;
     str::BufSet(lf.lfFaceName, dimof(lf.lfFaceName), fontName);
     lf.lfWeight = FW_DONTCARE;
     lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;

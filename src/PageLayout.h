@@ -90,7 +90,7 @@ public:
 // just to pack args to LayoutHtml
 class LayoutInfo {
 public:
-    LayoutInfo() : 
+    LayoutInfo() :
       pageDx(0), pageDy(0), fontName(NULL), fontSize(0),
       htmlStr(0), htmlStrLen(0), observer(NULL)
     {

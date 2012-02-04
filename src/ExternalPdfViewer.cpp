@@ -135,7 +135,7 @@ bool ViewWithPDFXChange(WindowInfo *win, TCHAR *args)
         args = _T("");
 
     // PDFXChange cmd-line format:
-    // [/A "param=value [&param2=value ..."] [PDF filename] 
+    // [/A "param=value [&param2=value ..."] [PDF filename]
     // /A params: page=<page number>
     ScopedMem<TCHAR> params;
     if (win->IsDocLoaded())

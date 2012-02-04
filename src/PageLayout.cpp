@@ -201,7 +201,7 @@ private:
 
     TextJustification   currJustification;
     // current position in a page
-    REAL                currX, currY; 
+    REAL                currX, currY;
     // number of consecutive newlines
     int                 newLinesCount;
 
@@ -209,7 +209,7 @@ private:
 
     // for iterative parsing
     HtmlPullParser *    htmlParser;
-    // list of pages constructed 
+    // list of pages constructed
     Vec<PageData*>      pagesToSend;
     bool                finishedParsing;
 
@@ -510,7 +510,7 @@ void PageLayout::AddWord(WordInfo *wi)
 }
 
 #if 0
-// How layout works: 
+// How layout works:
 // * measure the strings
 // * remember a line's worth of widths
 // * when we fill a line we calculate the position of strings in
@@ -574,7 +574,7 @@ static bool IgnoreTag(const char *s, size_t sLen)
 PageLayout::TextJustification PageLayout::AlignAttrToJustification(AlignAttr align)
 {
     switch (align) {
-        case Align_Center: 
+        case Align_Center:
             return Center;
         case Align_Justify:
             return Both;

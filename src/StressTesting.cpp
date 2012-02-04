@@ -234,7 +234,7 @@ static int SystemTimeDiffInSecs(SYSTEMTIME& t1, SYSTEMTIME& t2)
 
 static int SecsSinceSystemTime(SYSTEMTIME& time)
 {
-    SYSTEMTIME currTime;    
+    SYSTEMTIME currTime;
     GetSystemTime(&currTime);
     return SystemTimeDiffInSecs(currTime, time);
 }

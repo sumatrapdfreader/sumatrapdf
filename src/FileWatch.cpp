@@ -21,7 +21,7 @@ void FileWatcher::SynchronousAbort()
         hWatchingThread = NULL;
     }
 
-    CloseHandle(overl.hEvent); 
+    CloseHandle(overl.hEvent);
     overl.hEvent = NULL;
     CloseHandle(hDir);
     hDir = NULL;
@@ -63,7 +63,7 @@ void FileWatcher::Init(LPCTSTR filefullpath)
         NULL, // security descriptor
         OPEN_EXISTING, // how to create
         FILE_FLAG_BACKUP_SEMANTICS  | FILE_FLAG_OVERLAPPED , // file attributes
-        NULL); // file with attributes to copy 
+        NULL); // file with attributes to copy
     free(dirPath);
 
     ZeroMemory(&overl, sizeof(overl));
@@ -117,7 +117,7 @@ bool FileWatcher::CheckForChanges(DWORD waittime)
     return NotifyChange();
 }
 
-// Call the ReadDirectory API and determine if the file being watched has been modified since the last call. 
+// Call the ReadDirectory API and determine if the file being watched has been modified since the last call.
 // Returns true if it is the case.
 bool FileWatcher::NotifyChange()
 {

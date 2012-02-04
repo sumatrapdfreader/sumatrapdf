@@ -5,7 +5,7 @@
 #define BencUtil_h
 
 /* Handling of bencoded format. See:
-   http://www.bittorrent.org/protocol.html or 
+   http://www.bittorrent.org/protocol.html or
    http://en.wikipedia.org/wiki/Bencode or
    http://wiki.theory.org/BitTorrentSpecification
 

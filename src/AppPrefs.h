@@ -11,7 +11,7 @@ bool ParseViewMode(DisplayMode *mode, const TCHAR *txt);
 /* enum from windowState */
 enum {
     WIN_STATE_NORMAL = 1, /* use remebered position and size */
-    WIN_STATE_MAXIMIZED,  /* ignore position and size, maximize the window */    
+    WIN_STATE_MAXIMIZED,  /* ignore position and size, maximize the window */
     WIN_STATE_FULLSCREEN,
     WIN_STATE_MINIMIZED,
 };
@@ -33,7 +33,7 @@ struct SerializableGlobalPrefs {
 
     /* If false, we won't ask the user if he wants Sumatra to handle PDF files */
     bool pdfAssociateDontAskAgain;
-    /* If pdfAssociateDontAskAgain is TRUE, says whether we should 
+    /* If pdfAssociateDontAskAgain is TRUE, says whether we should
        silently associate or not */
     bool pdfAssociateShouldAssociate;
 

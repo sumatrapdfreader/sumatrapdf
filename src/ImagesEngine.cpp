@@ -495,7 +495,7 @@ ImageEngine *ImageEngine::CreateFromFileName(const TCHAR *fileName)
         delete engine;
         return NULL;
     }
-    return engine;    
+    return engine;
 }
 
 ImageEngine *ImageEngine::CreateFromStream(IStream *stream)

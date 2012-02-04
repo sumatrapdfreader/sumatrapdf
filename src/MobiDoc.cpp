@@ -91,8 +91,8 @@ struct MobiHeader {
     uint32       firstNonBookRec;
     uint32       fullNameOffset; // offset in record 0
     uint32       fullNameLen;
-    // Low byte is main language e.g. 09 = English, 
-    // next byte is dialect, 08 = British, 04 = US. 
+    // Low byte is main language e.g. 09 = English,
+    // next byte is dialect, 08 = British, 04 = US.
     // Thus US English is 1033, UK English is 2057
     uint32       locale;
     uint32       inputDictLanguage;
@@ -223,7 +223,7 @@ STATIC_ASSERT(kCdicHeaderLen == sizeof(CdicHeader), validCdicHeader);
 
 #define kCdicsMax 32
 
-class HuffDicDecompressor 
+class HuffDicDecompressor
 {
     // underlying data for cache and baseTable
     // (an optimization to only do one allocation instead of two)
@@ -356,7 +356,7 @@ bool HuffDicDecompressor::DecodeOne(uint32 code, uint8 *& dst, size_t& dstLeft)
         return false;
     }
     uint16 symLen = ReadBeU16(dicts[dict] + offset);
-    uint8 *p = dicts[dict] + offset + 2; 
+    uint8 *p = dicts[dict] + offset + 2;
 
     if (!(symLen & 0x8000)) {
         size_t res = Decompress(p, symLen, dst, dstLeft);
@@ -393,7 +393,7 @@ size_t HuffDicDecompressor::Decompress(uint8 *src, size_t srcSize, uint8 *dst, s
     for (;;) {
         if (bitsConsumed > br.BitsLeft()) {
             l("not enough data\n");
-            return -1; 
+            return -1;
         }
         br.Eat(bitsConsumed);
         if (0 == br.BitsLeft())
@@ -465,7 +465,7 @@ bool HuffDicDecompressor::SetHuffData(uint8 *huffData, size_t huffDataLen)
     huffmanData = (uint8*)memdup(huffData, huffDataLen);
     if (!huffmanData)
         return false;
-    // we conservatively use the big-endian version of the data, 
+    // we conservatively use the big-endian version of the data,
     cacheTable = (uint32*)(huffmanData + huffHdr->cacheOffset);
     for (size_t i = 0; i < 256; i++) {
         SwapU32(cacheTable[i]);
@@ -519,7 +519,7 @@ static bool IsValidCompression(int comprType)
             (COMPRESSION_HUFF == comprType);
 }
 
-MobiDoc::MobiDoc() : 
+MobiDoc::MobiDoc() :
     fileName(NULL), fileHandle(0), recHeaders(NULL), firstRecData(NULL), isMobi(false),
     docRecCount(0), compressionType(0), docUncompressedSize(0), doc(NULL),
     multibyte(false), trailersCount(0), imageFirstRec(0), imagesCount(0), validImagesCount(0),
@@ -751,7 +751,7 @@ static bool KnownImageFormat(uint8 *data, size_t dataLen)
     return NULL != GfxFileExtFromData((char*)data, dataLen);
 }
 
-// return false if we should stop loading images (because we 
+// return false if we should stop loading images (because we
 // encountered eof record or ran out of memory)
 bool MobiDoc::LoadImage(size_t imageNo)
 {
@@ -918,7 +918,7 @@ bool MobiDoc::LoadDocument()
 
 MobiDoc *MobiDoc::ParseFile(const TCHAR *fileName)
 {
-    HANDLE fh = CreateFile(fileName, GENERIC_READ, FILE_SHARE_READ, NULL,  
+    HANDLE fh = CreateFile(fileName, GENERIC_READ, FILE_SHARE_READ, NULL,
                               OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (fh == INVALID_HANDLE_VALUE)
         return NULL;

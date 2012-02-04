@@ -384,7 +384,7 @@ void RenderCache::Render(DisplayModel *dm, int pageNo, int rotation, float zoom,
         callback.Callback();
 }
 
-bool RenderCache::Render(DisplayModel *dm, int pageNo, int rotation, float zoom, 
+bool RenderCache::Render(DisplayModel *dm, int pageNo, int rotation, float zoom,
                          TilePosition *tile, RectD *pageRect, RenderingCallback *renderCb)
 {
     assert(dm);

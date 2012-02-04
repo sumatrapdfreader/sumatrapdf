@@ -528,10 +528,10 @@ static BOOL BrowseForFolder(HWND hwnd, LPCTSTR lpszInitialFolder, LPCTSTR lpszCa
     if (pidlFolder) {
         success = SHGetPathFromIDList(pidlFolder, lpszBuf);
 
-        IMalloc *pMalloc = NULL; 
+        IMalloc *pMalloc = NULL;
         if (SUCCEEDED(SHGetMalloc(&pMalloc)) && pMalloc) {
-            pMalloc->Free(pidlFolder);  
-            pMalloc->Release(); 
+            pMalloc->Free(pidlFolder);
+            pMalloc->Release();
         }
     }
 

@@ -854,7 +854,7 @@ static void BencTestParseArray(const char *benc, size_t expectedLen)
 }
 
 static void BencTestParseArrays()
-{   
+{
     BencObj *obj;
 
     obj = BencObj::Decode("l");
@@ -884,7 +884,7 @@ static void BencTestParseDict(const char *benc, size_t expectedLen)
 }
 
 static void BencTestParseDicts()
-{   
+{
     BencObj *obj;
 
     obj = BencObj::Decode("d");

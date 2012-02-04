@@ -46,7 +46,7 @@ void HwndWrapper::TopLevelLayout()
     layoutRequested = false;
 }
 
-HwndWrapper::HwndWrapper(HWND hwnd) 
+HwndWrapper::HwndWrapper(HWND hwnd)
     : painter(NULL), evtMgr(NULL), layoutRequested(false)
 {
     if (hwnd)

@@ -441,7 +441,7 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
     advanced.scale = defaultScaleAdv;
 
     if (PrintDlgEx(&pd) != S_OK) {
-        if (CommDlgExtendedError() != 0) { 
+        if (CommDlgExtendedError() != 0) {
             /* if PrintDlg was cancelled then
                CommDlgExtendedError is zero, otherwise it returns the
                error code, which we could look at here if we wanted.
@@ -552,7 +552,7 @@ bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool displayErro
         return false;
     }
 
-    // Retrieve the printer, printer driver, and output-port names from WIN.INI. 
+    // Retrieve the printer, printer driver, and output-port names from WIN.INI.
     TCHAR devstring[256];
     GetProfileString(_T("Devices"), printerName, _T(""), devstring, dimof(devstring));
 
@@ -576,10 +576,10 @@ bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool displayErro
     }
 
     DWORD structSize = DocumentProperties(NULL,
-        printer,                /* Handle to our printer. */ 
+        printer,                /* Handle to our printer. */
         (LPTSTR)printerName,    /* Name of the printer. */ 
-        NULL,                   /* Asking for size, so */ 
-        NULL,                   /* these are not used. */ 
+        NULL,                   /* Asking for size, so */
+        NULL,                   /* these are not used. */
         0);                     /* Zero returns buffer size. */
     LPDEVMODE devMode = (LPDEVMODE)malloc(structSize);
     HDC hdcPrint = NULL;
@@ -589,9 +589,9 @@ bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool displayErro
     DWORD returnCode = DocumentProperties(NULL,
         printer,
         (LPTSTR)printerName,
-        devMode,        /* The address of the buffer to fill. */ 
-        NULL,           /* Not using the input buffer. */ 
-        DM_OUT_BUFFER); /* Have the output buffer filled. */ 
+        devMode,        /* The address of the buffer to fill. */
+        NULL,           /* Not using the input buffer. */
+        DM_OUT_BUFFER); /* Have the output buffer filled. */
     if (IDOK != returnCode) {
         // If failure, inform the user, cleanup and return failure.
         if (displayErrors)
@@ -603,18 +603,18 @@ bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool displayErro
      * Merge the new settings with the old.
      * This gives the driver an opportunity to update any private
      * portions of the DevMode structure.
-     */ 
+     */
     DocumentProperties(NULL,
         printer,
         (LPTSTR)printerName,
-        devMode,        /* Reuse our buffer for output. */ 
-        devMode,        /* Pass the driver our changes. */ 
-        DM_IN_BUFFER |  /* Commands to Merge our changes and */ 
-        DM_OUT_BUFFER); /* write the result. */ 
+        devMode,        /* Reuse our buffer for output. */
+        devMode,        /* Pass the driver our changes. */
+        DM_IN_BUFFER |  /* Commands to Merge our changes and */
+        DM_OUT_BUFFER); /* write the result. */
 
     ClosePrinter(printer);
 
-    hdcPrint = CreateDC(driver, printerName, port, devMode); 
+    hdcPrint = CreateDC(driver, printerName, port, devMode);
     if (!hdcPrint) {
         if (displayErrors)
             MessageBox(NULL, _TR("Couldn't initialize printer"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0));

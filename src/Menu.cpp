@@ -330,7 +330,7 @@ void MenuUpdateStateForWindow(WindowInfo* win) {
         IDM_SAVEAS, IDM_SEND_BY_EMAIL
     };
     static UINT menusToEnableIfBrokenPDF[] = {
-        IDM_VIEW_WITH_ACROBAT, IDM_VIEW_WITH_FOXIT, IDM_VIEW_WITH_PDF_XCHANGE, 
+        IDM_VIEW_WITH_ACROBAT, IDM_VIEW_WITH_FOXIT, IDM_VIEW_WITH_PDF_XCHANGE,
     };
 
     assert(IsFileCloseMenuEnabled() == !win->IsAboutWindow());

@@ -39,14 +39,14 @@ bool SupportsGestures()
     return g_pGetGestureInfo && g_pCloseGestureInfoHandle;
 }
 
-BOOL GetGestureInfo(HGESTUREINFO hGestureInfo, PGESTUREINFO pGestureInfo)    
+BOOL GetGestureInfo(HGESTUREINFO hGestureInfo, PGESTUREINFO pGestureInfo)
 {
     if (!g_pGetGestureInfo)
         return FALSE;
     return g_pGetGestureInfo(hGestureInfo, pGestureInfo);
 }
 
-BOOL CloseGestureInfoHandle(HGESTUREINFO hGestureInfo)   
+BOOL CloseGestureInfoHandle(HGESTUREINFO hGestureInfo)
 {
     if (!g_pCloseGestureInfoHandle)
         return FALSE;

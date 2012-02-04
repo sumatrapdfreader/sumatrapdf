@@ -270,7 +270,7 @@ void DisplayModel::SetInitialViewSettings(DisplayMode displayMode, int newStartP
 
 // must call SetInitialViewSettings() after Load()
 bool DisplayModel::Load(const TCHAR *fileName)
-{ 
+{
     assert(fileName);
     engine = EngineManager::CreateEngine(fileName, dmCb, &engineType);
     if (!engine)
@@ -784,7 +784,7 @@ void DisplayModel::RecalcVisibleParts()
     }
 }
 
-int DisplayModel::GetPageNoByPoint(PointI pt) 
+int DisplayModel::GetPageNoByPoint(PointI pt)
 {
     // no reasonable answer possible, if zoom hasn't been set yet
     if (_zoomReal <= 0)

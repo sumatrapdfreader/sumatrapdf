@@ -182,7 +182,7 @@ public:
     CallbackFunc *  stressTest;
     bool            suppressPwdUI;
 
-    // WM_GESTURE handling 
+    // WM_GESTURE handling
     bool    panStarted;
     POINTS  panPos;
     int     panScrollOrigX;

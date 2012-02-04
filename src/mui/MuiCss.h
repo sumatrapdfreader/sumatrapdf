@@ -130,7 +130,7 @@ public:
     size_t GetIdentity() const;
 };
 
-#if 0 // TODO: maybe use that for convenience 
+#if 0 // TODO: maybe use that for convenience
 struct BorderWidth {
     int top, right, bottom, left;
 };
@@ -139,7 +139,7 @@ struct BorderColors {
     ColorData   top, right, bottom, left;
 };
 
-// CachedStyle gathers values of all 
+// CachedStyle gathers values of all
 struct CachedStyle {
     const TCHAR *   fontName;
     float           fontSize;

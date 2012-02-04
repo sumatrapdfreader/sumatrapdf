@@ -22,7 +22,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
     hwndCanvas(NULL), hwndToolbar(NULL), hwndReBar(NULL),
     hwndFindText(NULL), hwndFindBox(NULL), hwndFindBg(NULL),
     hwndPageText(NULL), hwndPageBox(NULL), hwndPageBg(NULL), hwndPageTotal(NULL),
-    hwndTocBox(NULL), hwndTocTree(NULL), 
+    hwndTocBox(NULL), hwndTocTree(NULL),
     hwndSidebarSplitter(NULL), hwndFavSplitter(NULL),
     hwndInfotip(NULL), infotipVisible(false), hwndProperties(NULL),
     findThread(NULL), findCanceled(false), printThread(NULL), printCanceled(false),
@@ -44,7 +44,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
     fwdSearchMark.show = false;
 }
 
-WindowInfo::~WindowInfo() 
+WindowInfo::~WindowInfo()
 {
     delete stressTest;
 

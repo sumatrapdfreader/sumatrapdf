@@ -104,7 +104,7 @@ public:
 
     // cursor to show when mouse is over this window.
     // only works if the window sets WantsMouseOverBit.
-    // Control doesn't own hCursor in order to enable easy 
+    // Control doesn't own hCursor in order to enable easy
     // sharing of cursor among many windows.
     HCURSOR         hCursor;
 

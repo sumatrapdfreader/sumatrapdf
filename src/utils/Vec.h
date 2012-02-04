@@ -50,7 +50,7 @@ protected:
 
 public:
     // allocator is not owned by Vec and must outlive it
-    Vec(size_t initCap=0, Allocator *allocator=NULL) 
+    Vec(size_t initCap=0, Allocator *allocator=NULL)
         : initialCap(initCap), allocator(allocator)
     {
         els = buf;

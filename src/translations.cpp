@@ -8,11 +8,11 @@
 namespace Trans {
 
 /*
-This code relies on the following variables that must be defined in 
-a separate file translations_txt.cpp which is automatically generated 
+This code relies on the following variables that must be defined in
+a separate file translations_txt.cpp which is automatically generated
 from translation files by scripts\update_translations.py.
 
-// array of UTF-8 encoded translated strings. 
+// array of UTF-8 encoded translated strings.
 // it has LANGS_COUNT * STRINGS_COUNT elements
 // (for simplicity). Translation i for language n is at position
 // (n * STRINGS_COUNT) + i

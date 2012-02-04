@@ -479,7 +479,7 @@ Prop *GetProp(Style *first, Style *second, PropType type)
 }
 
 // convenience function: given cached props, get a Font object matching the font
-// properties. 
+// properties.
 // Caller should not delete the font - it's cached for performance and deleted at exit
 // in DeleteCachedFonts()
 Font *CachedFontFromCachedProps(Prop **props)

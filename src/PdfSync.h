@@ -10,7 +10,7 @@
 #include "Vec.h"
 
 // Error codes returned by the synchronization functions
-enum { 
+enum {
     PDFSYNCERR_SUCCESS,                   // the synchronization succeeded
     PDFSYNCERR_SYNCFILE_NOTFOUND,         // no sync file found
     PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED, // sync file cannot be opened

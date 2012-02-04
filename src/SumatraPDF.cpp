@@ -234,7 +234,7 @@ bool OpenFileExternally(const TCHAR *path)
 
 #define DEFINE_GUID_STATIC(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
     static const GUID name = { l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }
-DEFINE_GUID_STATIC(CLSID_SendMail, 0x9E56BE60, 0xC50F, 0x11CF, 0x9A, 0x2C, 0x00, 0xA0, 0xC9, 0x0A, 0x90, 0xCE); 
+DEFINE_GUID_STATIC(CLSID_SendMail, 0x9E56BE60, 0xC50F, 0x11CF, 0x9A, 0x2C, 0x00, 0xA0, 0xC9, 0x0A, 0x90, 0xCE);
 
 bool CanSendAsEmailAttachment(WindowInfo *win)
 {
@@ -324,7 +324,7 @@ bool WindowInfoStillValid(WindowInfo *win)
     return gWindows.Find(win) != -1;
 }
 
-// Find the first window showing a given PDF file 
+// Find the first window showing a given PDF file
 WindowInfo* FindWindowInfoByFile(const TCHAR *file)
 {
     ScopedMem<TCHAR> normFile(path::Normalize(file));
@@ -717,7 +717,7 @@ static void UnsubclassCanvas(HWND hwnd)
     SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)0);
 }
 
-// isNewWindow : if true then 'win' refers to a newly created window that needs 
+// isNewWindow : if true then 'win' refers to a newly created window that needs
 //   to be resized and placed
 // allowFailure : if false then keep displaying the previously loaded document
 //   if the new one is broken
@@ -725,7 +725,7 @@ static void UnsubclassCanvas(HWND hwnd)
 //   to the 'state' information even if the window was already placed
 //   before (isNewWindow=false)
 static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win,
-    DisplayState *state, bool isNewWindow, bool allowFailure, 
+    DisplayState *state, bool isNewWindow, bool allowFailure,
     bool showWin, bool placeWindow)
 {
     ScopedMem<TCHAR> title;
@@ -955,13 +955,13 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
     UpdateSidebarDisplayState(win, &ds);
     // Set the windows state based on the actual window's placement
     ds.windowState =  win->fullScreen ? WIN_STATE_FULLSCREEN
-                    : IsZoomed(win->hwndFrame) ? WIN_STATE_MAXIMIZED 
+                    : IsZoomed(win->hwndFrame) ? WIN_STATE_MAXIMIZED
                     : IsIconic(win->hwndFrame) ? WIN_STATE_MINIMIZED
                     : WIN_STATE_NORMAL ;
 
     // We don't allow PDF-repair if it is an autorefresh because
     // a refresh event can occur before the file is finished being written,
-    // in which case the repair could fail. Instead, if the file is broken, 
+    // in which case the repair could fail. Instead, if the file is broken,
     // we postpone the reload until the next autorefresh event
     bool allowFailure = !autorefresh;
     bool isNewWindow = false;
@@ -1001,11 +1001,11 @@ static void UpdateToolbarAndScrollbarState(WindowInfo& win)
 
 static void CreateSidebar(WindowInfo* win)
 {
-    win->hwndSidebarSplitter = CreateWindow(SIDEBAR_SPLITTER_CLASS_NAME, _T(""), 
+    win->hwndSidebarSplitter = CreateWindow(SIDEBAR_SPLITTER_CLASS_NAME, _T(""),
         WS_CHILDWINDOW, 0, 0, 0, 0, win->hwndFrame, (HMENU)0, ghinst, NULL);
 
     CreateToc(win);
-    win->hwndFavSplitter = CreateWindow(FAV_SPLITTER_CLASS_NAME, _T(""), 
+    win->hwndFavSplitter = CreateWindow(FAV_SPLITTER_CLASS_NAME, _T(""),
         WS_CHILDWINDOW, 0, 0, 0, 0, win->hwndFrame, (HMENU)0, ghinst, NULL);
     CreateFavorites(win);
 
@@ -1041,7 +1041,7 @@ static WindowInfo* CreateWindowInfo()
     WindowInfo *win = new WindowInfo(hwndFrame);
 
     win->hwndCanvas = CreateWindowEx(
-            WS_EX_STATICEDGE, 
+            WS_EX_STATICEDGE,
             CANVAS_CLASS_NAME, NULL,
             WS_CHILD | WS_HSCROLL | WS_VSCROLL,
             0, 0, 0, 0, /* position and size determined in OnSize */
@@ -2873,7 +2873,7 @@ static void EnterFullscreen(WindowInfo& win, bool presentation)
 
 static void ExitFullscreen(WindowInfo& win)
 {
-    if (!win.fullScreen && !win.presentation) 
+    if (!win.fullScreen && !win.presentation)
         return;
 
     bool wasPresentation = PM_DISABLED != win.presentation;
@@ -3223,7 +3223,7 @@ static void UpdateUITextForLanguage()
         UpdateToolbarButtonsToolTipsForWindow(win);
         // also update the sidebar title at this point
         UpdateSidebarTitles(*win);
-    }        
+    }
 }
 
 // TODO: the layout logic here is similar to what we do in SetSidebarVisibility()
@@ -3388,7 +3388,7 @@ void LayoutTreeContainer(HWND hwndContainer, int id)
         size.dy = 16;
     size.dy += 2 * offset;
 
-    WindowRect rc(hwndContainer);   
+    WindowRect rc(hwndContainer);
     MoveWindow(hwndTitle, offset, offset, rc.dx - 2 * offset - 16, size.dy - 2 * offset, TRUE);
     MoveWindow(hwndClose, rc.dx - 16, (size.dy - 16) / 2, 16, 16, TRUE);
     MoveWindow(hwndTree, 0, size.dy, rc.dx, rc.dy - size.dy, TRUE);
@@ -3417,7 +3417,7 @@ void DrawCloseButton(DRAWITEMSTRUCT *dis)
 
     Color c;
     c.SetFromCOLORREF(GetSysColor(COLOR_BTNFACE)); // hoping this is always the right color
-    SolidBrush bgBrush(c); 
+    SolidBrush bgBrush(c);
     g.FillRectangle(&bgBrush, r.x, r.y, r.dx, r.dy);
 
     // in onhover state, background is a red-ish circle
@@ -3749,7 +3749,7 @@ static LRESULT CanvasOnMouseWheel(WindowInfo& win, UINT message, WPARAM wParam, 
     }
 
     if (gDeltaPerLine == 0)
-       return 0;
+        return 0;
 
     bool horizontal = (LOWORD(wParam) & MK_ALT) || IsAltPressed();
 
@@ -3997,7 +3997,7 @@ class RepaintCanvasWorkItem : public UIThreadWorkItem
     UINT delay;
 
 public:
-    RepaintCanvasWorkItem(WindowInfo *win, UINT delay) 
+    RepaintCanvasWorkItem(WindowInfo *win, UINT delay)
         : UIThreadWorkItem(win), delay(delay)
     {}
 
@@ -4732,7 +4732,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     for (size_t n = 0; n < i.fileNames.Count(); n++) {
         if (i.reuseInstance && !i.printDialog) {
-            // delegate file opening to a previously running instance by sending a DDE message 
+            // delegate file opening to a previously running instance by sending a DDE message
             TCHAR fullpath[MAX_PATH];
             GetFullPathName(i.fileNames.At(n), dimof(fullpath), fullpath, NULL);
             ScopedMem<TCHAR> command(str::Format(_T("[") DDECOMMAND_OPEN _T("(\"%s\", 0, 1, 0)]"), fullpath));

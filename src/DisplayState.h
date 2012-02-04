@@ -70,7 +70,7 @@ public:
     int                 windowState;
     RectI               windowPos;
 
-    // hex encoded MD5 fingerprint of file content (32 chars) 
+    // hex encoded MD5 fingerprint of file content (32 chars)
     // followed by crypt key (64 chars) - only applies for PDF documents
     char *              decryptionKey;
 

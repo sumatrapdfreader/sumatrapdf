@@ -55,8 +55,8 @@ bool HttpGetToFile(const TCHAR *url, const TCHAR *destFilePath)
     char buf[1024];
     HINTERNET hFile = NULL, hInet = NULL;
 
-    HANDLE hf = CreateFile(destFilePath, GENERIC_WRITE, FILE_SHARE_READ, NULL,  
-            CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,  NULL); 
+    HANDLE hf = CreateFile(destFilePath, GENERIC_WRITE, FILE_SHARE_READ, NULL,
+            CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,  NULL);
     if (INVALID_HANDLE_VALUE == hf) {
         SeeLastError();
         goto Exit;

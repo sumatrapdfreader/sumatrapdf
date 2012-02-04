@@ -225,7 +225,7 @@ bool Exists(const TCHAR *filePath)
 
 size_t GetSize(const TCHAR *filePath)
 {
-    ScopedHandle h(CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, NULL,  
+    ScopedHandle h(CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, NULL,
                               OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL));
     if (h == INVALID_HANDLE_VALUE)
         return INVALID_FILE_SIZE;
@@ -271,7 +271,7 @@ char *ReadAll(const TCHAR *filePath, size_t *fileSizeOut)
 
 bool ReadAll(const TCHAR *filePath, char *buffer, size_t bufferLen)
 {
-    ScopedHandle h(CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, NULL,  
+    ScopedHandle h(CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, NULL,
                               OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL));
     if (h == INVALID_HANDLE_VALUE)
         return false;
@@ -283,7 +283,7 @@ bool ReadAll(const TCHAR *filePath, char *buffer, size_t bufferLen)
 
 bool WriteAll(const TCHAR *filePath, void *data, size_t dataLen)
 {
-    ScopedHandle h(CreateFile(filePath, GENERIC_WRITE, FILE_SHARE_READ, NULL,  
+    ScopedHandle h(CreateFile(filePath, GENERIC_WRITE, FILE_SHARE_READ, NULL,
                               CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL));
     if (INVALID_HANDLE_VALUE == h)
         return false;
@@ -304,7 +304,7 @@ bool Delete(const TCHAR *filePath)
 FILETIME GetModificationTime(const TCHAR *filePath)
 {
     FILETIME lastMod = { 0 };
-    ScopedHandle h(CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, NULL,  
+    ScopedHandle h(CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, NULL,
                               OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL));
     if (h != INVALID_HANDLE_VALUE)
         GetFileTime(h, NULL, NULL, &lastMod);

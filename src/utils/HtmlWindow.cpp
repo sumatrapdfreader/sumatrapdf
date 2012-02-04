@@ -907,7 +907,7 @@ static LPOLESTR OleStrDup(TCHAR *s)
     return ret;
 }
 
-STDMETHODIMP HtmlMoniker::GetDisplayName(IBindCtx *pbc, IMoniker *pmkToLeft, 
+STDMETHODIMP HtmlMoniker::GetDisplayName(IBindCtx *pbc, IMoniker *pmkToLeft,
     LPOLESTR *ppszDisplayName)
 {
     if (!ppszDisplayName)
@@ -1203,8 +1203,8 @@ int HtmlWindow::GetZoomPercent()
     VARIANT vtOut;
     HRESULT hr = webBrowser->ExecWB(OLECMDID_OPTICAL_ZOOM, OLECMDEXECOPT_DONTPROMPTUSER,
                                     NULL, &vtOut);
-   if (FAILED(hr))
-       return 100;
+    if (FAILED(hr))
+        return 100;
     return vtOut.lVal;
 }
 
@@ -1845,7 +1845,7 @@ HRESULT HW_IOleControlSite::TransformCoords(POINTL *pPtlHimetric,
 }
 
 // IOleCommandTarget
-HRESULT HW_IOleCommandTarget::QueryStatus(const GUID *pguidCmdGroup, 
+HRESULT HW_IOleCommandTarget::QueryStatus(const GUID *pguidCmdGroup,
     ULONG cCmds, OLECMD *prgCmds, OLECMDTEXT *pCmdTet)
 {
     if (prgCmds == NULL)

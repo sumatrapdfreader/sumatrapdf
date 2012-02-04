@@ -151,7 +151,7 @@ FileFavs *Favorites::GetFavByFilePath(const TCHAR *filePath, bool createIfNotExi
     return fav;
 }
 
-bool Favorites::IsPageInFavorites(const TCHAR *filePath, int pageNo) 
+bool Favorites::IsPageInFavorites(const TCHAR *filePath, int pageNo)
 {
     FileFavs *fav = GetFavByFilePath(filePath);
     if (!fav)
@@ -638,7 +638,7 @@ void RememberFavTreeExpansionStateForAllWindows()
 
 static LRESULT OnFavTreeNotify(WindowInfo *win, LPNMTREEVIEW pnmtv)
 {
-    switch (pnmtv->hdr.code) 
+    switch (pnmtv->hdr.code)
     {
         // TVN_SELCHANGED intentionally not implemented (mouse clicks are handled
         // in NM_CLICK, and keyboard navigation in NM_RETURN and TVN_KEYDOWN)

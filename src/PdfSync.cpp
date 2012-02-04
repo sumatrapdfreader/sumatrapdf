@@ -11,9 +11,9 @@
 #include <synctex_parser.h>
 
 // size of the mark highlighting the location calculated by forward-search
-#define MARK_SIZE               10 
+#define MARK_SIZE               10
 // maximum error in the source file line number when doing forward-search
-#define EPSILON_LINE            5  
+#define EPSILON_LINE            5
 // Minimal error distance^2 between a point clicked by the user and a PDF mark
 #define PDFSYNC_EPSILON_SQUARE  800
 // Minimal vertical distance
@@ -156,7 +156,7 @@ int Synchronizer::Create(const TCHAR *pdffilename, PdfEngine *engine, Synchroniz
     ScopedMem<TCHAR> texFile(str::Join(baseName, SYNCTEX_EXTENSION));
 
     if (file::Exists(texGzFile) || file::Exists(texFile)) {
-        // due to a bug with synctex_parser.c, this must always be 
+        // due to a bug with synctex_parser.c, this must always be
         // the path to the .synctex file (even if a .synctex.gz file is used instead)
         *sync = new SyncTex(texFile, engine);
         return *sync ? PDFSYNCERR_SUCCESS : PDFSYNCERR_OUTOFMEMORY;
@@ -346,7 +346,7 @@ int Pdfsync::DocToSource(UINT pageNo, PointI pt, ScopedMem<TCHAR>& filename, UIN
     UINT closest_xydist = (UINT)-1;
     UINT selected_record = (UINT)-1;
     // If no record is found within a distance^2 of PDFSYNC_EPSILON_SQUARE
-    // (selected_record == -1) then we pick up the record that is closest 
+    // (selected_record == -1) then we pick up the record that is closest
     // vertically to the hit-point.
     UINT closest_ydist = (UINT)-1; // vertical distance between the hit point and the vertically-closest record
     UINT closest_xdist = (UINT)-1; // horizontal distance between the hit point and the vertically-closest record
@@ -393,9 +393,9 @@ int Pdfsync::DocToSource(UINT pageNo, PointI pt, ScopedMem<TCHAR>& filename, UIN
 // (at the moment the column parameter is ignored)
 //
 // If there are several *consecutively declared* records for the same line then they are all returned.
-// The list of records is added to the vector 'records' 
+// The list of records is added to the vector 'records'
 //
-// If there is no record for that line, the record corresponding to the nearest line is selected 
+// If there is no record for that line, the record corresponding to the nearest line is selected
 // (within a range of EPSILON_LINE)
 //
 // The function returns PDFSYNCERR_SUCCESS if a matching record was found.
@@ -491,7 +491,7 @@ int Pdfsync::SourceToDoc(const TCHAR* srcfilename, UINT line, UINT col, UINT *pa
 
     if (rects.Count() > 0)
         return PDFSYNCERR_SUCCESS;
-    // the record does not correspond to any point in the PDF: this is possible...  
+    // the record does not correspond to any point in the PDF: this is possible...
     return PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD;
 }
 
@@ -584,7 +584,7 @@ TryAgainAnsi:
     }
 
     if (-1 == ret)
-        return PDFSYNCERR_UNKNOWN_SOURCEFILE;    
+        return PDFSYNCERR_UNKNOWN_SOURCEFILE;
     if (0 == ret)
         return PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD;
 

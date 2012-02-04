@@ -25,7 +25,7 @@
 HMODULE SafeLoadLibrary(const TCHAR *dllName);
 FARPROC LoadDllFunc(TCHAR *dllName, const char *funcName);
 
-inline void FillWndClassEx(WNDCLASSEX &wcex, HINSTANCE hInstance) 
+inline void FillWndClassEx(WNDCLASSEX &wcex, HINSTANCE hInstance)
 {
     ZeroMemory(&wcex, sizeof(WNDCLASSEX));
     wcex.cbSize     = sizeof(WNDCLASSEX);

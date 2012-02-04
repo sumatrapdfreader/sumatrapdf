@@ -139,7 +139,7 @@ static SymGetLineFromAddr64Proc *       _SymGetLineFromAddr64;
 /* Note about memory allocations during handling a crash: we cannot
    use standard malloc()/free()/new()/delete().
    For multi-thread safety, there is a per-heap lock taken inside
-   HeapAlloc() etc. It's possible that a crash originates from 
+   HeapAlloc() etc. It's possible that a crash originates from
    inside such functions after a lock has been taken. If we then
    try to allocate memory from the same heap, we'll deadlock and
    won't send crash report.
@@ -323,20 +323,20 @@ static bool InitializeDbgHelp()
 
 static bool CanStackWalk()
 {
-    return gSymInitializeOk && _SymCleanup && _SymGetOptions 
-        && _SymSetOptions&& _StackWalk64 && _SymFunctionTableAccess64 
+    return gSymInitializeOk && _SymCleanup && _SymGetOptions
+        && _SymSetOptions&& _StackWalk64 && _SymFunctionTableAccess64
         && _SymGetModuleBase64 && _SymFromAddr;
 }
 
 static BOOL CALLBACK OpenMiniDumpCallback(void* /*param*/, PMINIDUMP_CALLBACK_INPUT input, PMINIDUMP_CALLBACK_OUTPUT output)
 {
-    if (!input || !output) 
-        return FALSE; 
+    if (!input || !output)
+        return FALSE;
 
     switch (input->CallbackType) {
     case ModuleCallback:
         if (!(output->ModuleWriteFlags & ModuleReferencedByMemory))
-            output->ModuleWriteFlags &= ~ModuleWriteModule; 
+            output->ModuleWriteFlags &= ~ModuleWriteModule;
         return TRUE;
     case IncludeModuleCallback:
     case IncludeThreadCallback:
@@ -460,9 +460,9 @@ static bool GetStackFrameInfo(str::Str<char>& s, STACKFRAME64 *stackFrame,
                               CONTEXT *ctx, HANDLE hThread)
 {
 #if defined(_WIN64)
-    int machineType = IMAGE_FILE_MACHINE_AMD64;    
+    int machineType = IMAGE_FILE_MACHINE_AMD64;
 #else
-    int machineType = IMAGE_FILE_MACHINE_I386;    
+    int machineType = IMAGE_FILE_MACHINE_I386;
 #endif
     BOOL ok = _StackWalk64(machineType, GetCurrentProcess(), hThread,
         stackFrame, ctx, NULL, _SymFunctionTableAccess64,
@@ -645,7 +645,7 @@ static void GetExceptionInfo(str::Str<char>& s, EXCEPTION_POINTERS *excPointers)
     s.AppendFmt("Faulting IP: ");
     GetAddressInfo(s, (DWORD64)excRecord->ExceptionAddress);
     if ((EXCEPTION_ACCESS_VIOLATION == excCode) ||
-        (EXCEPTION_IN_PAGE_ERROR == excCode)) 
+        (EXCEPTION_IN_PAGE_ERROR == excCode))
     {
         int readWriteFlag = (int)excRecord->ExceptionInformation[0];
         DWORD64 dataVirtAddr = (DWORD64)excRecord->ExceptionInformation[1];
@@ -782,7 +782,7 @@ static bool UnpackLibSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir)
 }
 
 // *.pdb files are on S3 with a known name. Try to download them here to a directory
-// in symbol path to get meaningful callstacks 
+// in symbol path to get meaningful callstacks
 static bool DownloadSymbols(const TCHAR *symDir, const TCHAR *symbolsZipPath)
 {
     if (!symDir || !dir::Exists(symDir))
@@ -877,7 +877,7 @@ static void WriteMiniDump()
     // set the SUMATRAPDF_FULLDUMP environment variable for far more complete minidumps
     if (GetEnvironmentVariableA("SUMATRAPDF_FULLDUMP", NULL, 0))
         type = (MINIDUMP_TYPE)(type | MiniDumpWithDataSegs | MiniDumpWithHandleData | MiniDumpWithPrivateReadWriteMemory);
-    MINIDUMP_CALLBACK_INFORMATION mci = { OpenMiniDumpCallback, NULL }; 
+    MINIDUMP_CALLBACK_INFORMATION mci = { OpenMiniDumpCallback, NULL };
 
     _MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), dumpFile, type, &gMei, NULL, &mci);
 
@@ -936,7 +936,7 @@ static void GetProgramInfo(str::Str<char>& s)
 {
     s.AppendFmt("Ver: %s", QM(CURR_VERSION));
 #ifdef SVN_PRE_RELEASE_VER
-    s.AppendFmt(".%s pre-release", QM(SVN_PRE_RELEASE_VER));   
+    s.AppendFmt(".%s pre-release", QM(SVN_PRE_RELEASE_VER));
 #endif
 #ifdef DEBUG
     s.Append(" dbg");
@@ -1152,7 +1152,7 @@ static bool BuildSymbolPath()
     path.Append(symDir);
 #endif
 #if 0
-    // when running local builds, *.pdb is in the same dir as *.exe 
+    // when running local builds, *.pdb is in the same dir as *.exe
     ScopedMem<TCHAR> exePath(GetExePath());
     path.AppendFmt(L"%s", AsWStrQ(exePath));
 #endif

@@ -162,7 +162,7 @@ Graphics *AllocGraphicsForMeasureText()
 // TODO: we should evict entries if the cache grows too much
 // so that if we often launch threads that allocate their own
 // Graphics objects, we don't use too much memory for them.
-// This should be based on usage (i.e. count 
+// This should be based on usage (i.e. count ...)
 void FreeGraphicsForMeasureText(Graphics *gfx)
 {
     // this is just diagnostic

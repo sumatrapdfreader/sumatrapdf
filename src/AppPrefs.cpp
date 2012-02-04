@@ -43,7 +43,7 @@
 #define PDF_ASSOCIATE_ASSOCIATE_STR "PdfAssociateShouldAssociate"
 #define UI_LANGUAGE_STR             "UILanguage"
 #define FAV_VISIBLE_STR             "FavVisible"
-// for backwards compatibility the string is "ShowToc" and not 
+// for backwards compatibility the string is "ShowToc" and not
 // (more appropriate now) "TocVisible"
 #define TOC_VISIBLE_STR             "ShowToc"
 // for backwards compatibility, the serialized name is "Toc DX" and not
@@ -262,7 +262,7 @@ static BencArray *SerializeFileHistory(FileHistory& fileHistory, bool globalPref
 
 Error:
     delete arr;
-    return NULL;      
+    return NULL;
 }
 
 static inline const TCHAR *NullToEmpty(const TCHAR *s)
@@ -449,7 +449,7 @@ static DisplayState * DeserializeDisplayState(BencDict *dict, bool globalPrefsOn
     return ds;
 }
 
-static void DeserializePrefs(const char *prefsTxt, SerializableGlobalPrefs& globalPrefs, 
+static void DeserializePrefs(const char *prefsTxt, SerializableGlobalPrefs& globalPrefs,
     FileHistory& fh, Favorites **favsOut)
 {
     BencObj *obj = BencObj::Decode(prefsTxt);

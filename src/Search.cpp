@@ -122,169 +122,169 @@ void OnMenuFindMatchCase(WindowInfo *win)
 
 static void ShowSearchResult(WindowInfo& win, TextSel *result, bool addNavPt)
 {
-   assert(result->len > 0);
-   if (addNavPt || !win.dm->PageShown(result->pages[0]) ||
-       (win.dm->ZoomVirtual() == ZOOM_FIT_PAGE || win.dm->ZoomVirtual() == ZOOM_FIT_CONTENT))
-       win.dm->GoToPage(result->pages[0], 0, addNavPt);
+    assert(result->len > 0);
+    if (addNavPt || !win.dm->PageShown(result->pages[0]) ||
+        (win.dm->ZoomVirtual() == ZOOM_FIT_PAGE || win.dm->ZoomVirtual() == ZOOM_FIT_CONTENT))
+        win.dm->GoToPage(result->pages[0], 0, addNavPt);
 
-   win.dm->textSelection->CopySelection(win.dm->textSearch);
+    win.dm->textSelection->CopySelection(win.dm->textSearch);
 
-   UpdateTextSelection(&win, false);
-   win.dm->ShowResultRectToScreen(result);
-   win.RepaintAsync();
+    UpdateTextSelection(&win, false);
+    win.dm->ShowResultRectToScreen(result);
+    win.RepaintAsync();
 }
 
 void ClearSearchResult(WindowInfo *win)
 {
-   DeleteOldSelectionInfo(win, true);
-   win->RepaintAsync();
+    DeleteOldSelectionInfo(win, true);
+    win->RepaintAsync();
 }
 
 class UpdateFindStatusWorkItem : public UIThreadWorkItem {
-   NotificationWnd *wnd;
-   int current, total;
+    NotificationWnd *wnd;
+    int current, total;
 
 public:
-   UpdateFindStatusWorkItem(WindowInfo *win, NotificationWnd *wnd, int current, int total)
-       : UIThreadWorkItem(win), wnd(wnd), current(current), total(total) { }
+    UpdateFindStatusWorkItem(WindowInfo *win, NotificationWnd *wnd, int current, int total)
+        : UIThreadWorkItem(win), wnd(wnd), current(current), total(total) { }
 
-   virtual void Execute() {
-       if (WindowInfoStillValid(win) && !win->findCanceled) {
-           if (win->notifications->Contains(wnd)) {
-               wnd->UpdateProgress(current, total);
-           }
-           else {
-               // the search has been canceled by closing the notification
-               win->findCanceled = true;
-           }
-       }
-   }
+    virtual void Execute() {
+        if (WindowInfoStillValid(win) && !win->findCanceled) {
+            if (win->notifications->Contains(wnd)) {
+                wnd->UpdateProgress(current, total);
+            }
+            else {
+                // the search has been canceled by closing the notification
+                win->findCanceled = true;
+            }
+        }
+    }
 };
 
 struct FindThreadData : public ProgressUpdateUI {
-   WindowInfo *win;
-   TextSearchDirection direction;
-   bool wasModified;
-   ScopedMem<TCHAR> text;
-   // owned by win->notifications, as FindThreadData
-   // can be deleted before the notification times out
-   NotificationWnd *wnd;
+    WindowInfo *win;
+    TextSearchDirection direction;
+    bool wasModified;
+    ScopedMem<TCHAR> text;
+    // owned by win->notifications, as FindThreadData
+    // can be deleted before the notification times out
+    NotificationWnd *wnd;
 
-   FindThreadData(WindowInfo& win, TextSearchDirection direction, HWND findBox) :
-       win(&win), direction(direction), text(win::GetText(findBox)),
-       wasModified(Edit_GetModify(findBox)), wnd(NULL) { }
+    FindThreadData(WindowInfo& win, TextSearchDirection direction, HWND findBox) :
+        win(&win), direction(direction), text(win::GetText(findBox)),
+        wasModified(Edit_GetModify(findBox)), wnd(NULL) { }
 
-   void ShowUI(bool showProgress) {
-       const LPARAM disable = (LPARAM)MAKELONG(0, 0);
+    void ShowUI(bool showProgress) {
+        const LPARAM disable = (LPARAM)MAKELONG(0, 0);
 
-       if (showProgress) {
-           wnd = new NotificationWnd(win->hwndCanvas, _T(""),
-                                     _TR("Searching %d of %d..."), win->notifications);
-           win->notifications->Add(wnd, NG_FIND_PROGRESS);
-       }
+        if (showProgress) {
+            wnd = new NotificationWnd(win->hwndCanvas, _T(""),
+                                      _TR("Searching %d of %d..."), win->notifications);
+            win->notifications->Add(wnd, NG_FIND_PROGRESS);
+        }
 
-       SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_PREV, disable);
-       SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_NEXT, disable);
-       SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_MATCH, disable);
-   }
+        SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_PREV, disable);
+        SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_NEXT, disable);
+        SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_MATCH, disable);
+    }
 
-   void HideUI(bool success, bool loopedAround) {
-       LPARAM enable = (LPARAM)MAKELONG(1, 0);
+    void HideUI(bool success, bool loopedAround) {
+        LPARAM enable = (LPARAM)MAKELONG(1, 0);
 
-       SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_PREV, enable);
-       SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_NEXT, enable);
-       SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_MATCH, enable);
+        SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_PREV, enable);
+        SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_NEXT, enable);
+        SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_MATCH, enable);
 
-       if (!win->notifications->Contains(wnd))
-           /* our notification has been replaced or closed (or never created) */;
-       else if (!success && !loopedAround) // i.e. canceled
-           win->notifications->RemoveNotification(wnd);
-       else if (!success && loopedAround)
-           wnd->UpdateMessage(_TR("No matches were found"), 3000);
-       else {
-           ScopedMem<TCHAR> label(win->dm->engine->GetPageLabel(win->dm->textSearch->GetCurrentPageNo()));
-           ScopedMem<TCHAR> buf(str::Format(_TR("Found text at page %s"), label));
-           if (loopedAround)
-               buf.Set(str::Format(_TR("Found text at page %s (again)"), label));
-           wnd->UpdateMessage(buf, 3000, loopedAround);
-       }
-   }
+        if (!win->notifications->Contains(wnd))
+            /* our notification has been replaced or closed (or never created) */;
+        else if (!success && !loopedAround) // i.e. canceled
+            win->notifications->RemoveNotification(wnd);
+        else if (!success && loopedAround)
+            wnd->UpdateMessage(_TR("No matches were found"), 3000);
+        else {
+            ScopedMem<TCHAR> label(win->dm->engine->GetPageLabel(win->dm->textSearch->GetCurrentPageNo()));
+            ScopedMem<TCHAR> buf(str::Format(_TR("Found text at page %s"), label));
+            if (loopedAround)
+                buf.Set(str::Format(_TR("Found text at page %s (again)"), label));
+            wnd->UpdateMessage(buf, 3000, loopedAround);
+        }
+    }
 
-   virtual bool UpdateProgress(int current, int total) {
-       if (!WindowInfoStillValid(win) || win->findCanceled) {
-           return false;
-       }
-       if (wnd) {
-           QueueWorkItem(new UpdateFindStatusWorkItem(win, wnd, current, total));
-       }
-       return true;
-   }
+    virtual bool UpdateProgress(int current, int total) {
+        if (!WindowInfoStillValid(win) || win->findCanceled) {
+            return false;
+        }
+        if (wnd) {
+            QueueWorkItem(new UpdateFindStatusWorkItem(win, wnd, current, total));
+        }
+        return true;
+    }
 };
 
 class FindEndWorkItem : public UIThreadWorkItem {
-   FindThreadData *ftd;
-   TextSel*textSel;
-   bool    wasModifiedCanceled;
-   bool    loopedAround;
+    FindThreadData *ftd;
+    TextSel*textSel;
+    bool    wasModifiedCanceled;
+    bool    loopedAround;
 
 public:
-   FindEndWorkItem(WindowInfo *win, FindThreadData *ftd, TextSel *textSel,
-                   bool wasModifiedCanceled, bool loopedAround=false) :
-       UIThreadWorkItem(win), ftd(ftd), textSel(textSel),
-       loopedAround(loopedAround), wasModifiedCanceled(wasModifiedCanceled) { }
-   ~FindEndWorkItem() { delete ftd; }
+    FindEndWorkItem(WindowInfo *win, FindThreadData *ftd, TextSel *textSel,
+                    bool wasModifiedCanceled, bool loopedAround=false) :
+        UIThreadWorkItem(win), ftd(ftd), textSel(textSel),
+        loopedAround(loopedAround), wasModifiedCanceled(wasModifiedCanceled) { }
+    ~FindEndWorkItem() { delete ftd; }
 
-   virtual void Execute() {
-       if (!WindowInfoStillValid(win))
-           return;
-       if (!win->IsDocLoaded()) {
-           // the UI has already been disabled and hidden
-       } else if (textSel) {
-           ShowSearchResult(*win, textSel, wasModifiedCanceled);
-           ftd->HideUI(true, loopedAround);
-       } else {
-           // nothing found or search canceled
-           ClearSearchResult(win);
-           ftd->HideUI(false, !wasModifiedCanceled);
-       }
+    virtual void Execute() {
+        if (!WindowInfoStillValid(win))
+            return;
+        if (!win->IsDocLoaded()) {
+            // the UI has already been disabled and hidden
+        } else if (textSel) {
+            ShowSearchResult(*win, textSel, wasModifiedCanceled);
+            ftd->HideUI(true, loopedAround);
+        } else {
+            // nothing found or search canceled
+            ClearSearchResult(win);
+            ftd->HideUI(false, !wasModifiedCanceled);
+        }
 
-       HANDLE hThread = win->findThread;
-       win->findThread = NULL;
-       CloseHandle(hThread);
-   }
+        HANDLE hThread = win->findThread;
+        win->findThread = NULL;
+        CloseHandle(hThread);
+    }
 };
 
 static DWORD WINAPI FindThread(LPVOID data)
 {
-   FindThreadData *ftd = (FindThreadData *)data;
-   assert(ftd && ftd->win && ftd->win->dm);
-   WindowInfo *win = ftd->win;
+    FindThreadData *ftd = (FindThreadData *)data;
+    assert(ftd && ftd->win && ftd->win->dm);
+    WindowInfo *win = ftd->win;
 
-   TextSel *rect;
-   win->dm->textSearch->SetDirection(ftd->direction);
-   if (ftd->wasModified || !win->dm->ValidPageNo(win->dm->textSearch->GetCurrentPageNo()) ||
-       !win->dm->GetPageInfo(win->dm->textSearch->GetCurrentPageNo())->visibleRatio)
-       rect = win->dm->textSearch->FindFirst(win->dm->CurrentPageNo(), ftd->text, ftd);
-   else
-       rect = win->dm->textSearch->FindNext(ftd);
+    TextSel *rect;
+    win->dm->textSearch->SetDirection(ftd->direction);
+    if (ftd->wasModified || !win->dm->ValidPageNo(win->dm->textSearch->GetCurrentPageNo()) ||
+        !win->dm->GetPageInfo(win->dm->textSearch->GetCurrentPageNo())->visibleRatio)
+        rect = win->dm->textSearch->FindFirst(win->dm->CurrentPageNo(), ftd->text, ftd);
+    else
+        rect = win->dm->textSearch->FindNext(ftd);
 
-   bool loopedAround = false;
-   if (!win->findCanceled && !rect) {
-       // With no further findings, start over (unless this was a new search from the beginning)
-       int startPage = (FIND_FORWARD == ftd->direction) ? 1 : win->dm->PageCount();
-       if (!ftd->wasModified || win->dm->CurrentPageNo() != startPage) {
-           loopedAround = true;
-           MessageBeep(MB_ICONINFORMATION);
-           rect = win->dm->textSearch->FindFirst(startPage, ftd->text, ftd);
-       }
-   }
+    bool loopedAround = false;
+    if (!win->findCanceled && !rect) {
+        // With no further findings, start over (unless this was a new search from the beginning)
+        int startPage = (FIND_FORWARD == ftd->direction) ? 1 : win->dm->PageCount();
+        if (!ftd->wasModified || win->dm->CurrentPageNo() != startPage) {
+            loopedAround = true;
+            MessageBeep(MB_ICONINFORMATION);
+            rect = win->dm->textSearch->FindFirst(startPage, ftd->text, ftd);
+        }
+    }
 
-   if (!win->findCanceled && rect)
-       QueueWorkItem(new FindEndWorkItem(win, ftd, rect, ftd->wasModified, loopedAround));
-   else
-       QueueWorkItem(new FindEndWorkItem(win, ftd, NULL, win->findCanceled));
+    if (!win->findCanceled && rect)
+        QueueWorkItem(new FindEndWorkItem(win, ftd, rect, ftd->wasModified, loopedAround));
+    else
+        QueueWorkItem(new FindEndWorkItem(win, ftd, NULL, win->findCanceled));
 
-   return 0;
+    return 0;
 }
 
 void AbortFinding(WindowInfo *win, bool hideMessage)
@@ -301,18 +301,18 @@ void AbortFinding(WindowInfo *win, bool hideMessage)
 
 void FindTextOnThread(WindowInfo* win, TextSearchDirection direction, bool FAYT)
 {
-   AbortFinding(win, true);
+    AbortFinding(win, true);
 
-   FindThreadData *ftd = new FindThreadData(*win, direction, win->hwndFindBox);
-   Edit_SetModify(win->hwndFindBox, FALSE);
+    FindThreadData *ftd = new FindThreadData(*win, direction, win->hwndFindBox);
+    Edit_SetModify(win->hwndFindBox, FALSE);
 
-   if (str::IsEmpty(ftd->text.Get())) {
-       delete ftd;
-       return;
-   }
+    if (str::IsEmpty(ftd->text.Get())) {
+        delete ftd;
+        return;
+    }
 
-   ftd->ShowUI(!FAYT);
-   win->findThread = CreateThread(NULL, 0, FindThread, ftd, 0, 0);
+    ftd->ShowUI(!FAYT);
+    win->findThread = CreateThread(NULL, 0, FindThread, ftd, 0, 0);
 }
 
 void PaintForwardSearchMark(WindowInfo *win, HDC hdc)

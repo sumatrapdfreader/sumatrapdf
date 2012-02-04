@@ -62,7 +62,7 @@ Another downside is that this memory isn't visible to memory profilers
 and doesn't have the debugging features of some allocators (we
 could easily add most of them, like detection of memory over-writes)
 
-This allocator bears some resemblance to NSAutoReleasePool and 
+This allocator bears some resemblance to NSAutoReleasePool and
 garbage-collection in general.
 */
 

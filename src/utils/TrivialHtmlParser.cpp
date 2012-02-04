@@ -321,7 +321,7 @@ HtmlElement *HtmlParser::ParseInPlace(char *s, UINT codepage)
 
 ParseText:
     if (!SkipUntil(&s, '<')) {
-        // Note: I think we can be in an inconsistent state here 
+        // Note: I think we can be in an inconsistent state here
         // (unclosed tags) but not sure if we should care
         return rootElement;
     }
@@ -421,7 +421,7 @@ ParseAttributeName:
 
 ParseExclOrPi: // "<!" or "<?"
     // might be a <!DOCTYPE ..>, a <!-- comment ->, a <? processing instruction >
-    // or really anything. We're very lenient and consider it a success 
+    // or really anything. We're very lenient and consider it a success
     // if we find a terminating '>'
     errorContext = s;
     if (!SkipUntil(&s, '>'))

@@ -29,7 +29,7 @@ void ScrollBar::Measure(const Size availableSize)
     // dx is max available
     desiredSize.Width = availableSize.Width;
 
-    // dy is bigger of inactiveDy and onHoverDy but 
+    // dy is bigger of inactiveDy and onHoverDy but
     // smaller than availableSize.Height
     int dy = inactiveDy;
     if (onOverDy > dy)

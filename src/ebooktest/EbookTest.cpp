@@ -39,7 +39,7 @@ number of pages.
 
 Also, we must do the Kindle trick, where resizing preserves the top of
 current page, but on going back it resyncs to show a page the way it
-would be if we came there from the first page. 
+would be if we came there from the first page.
 
 One way to do it would be to add another layout which creates a new
 stream of pages based on another stream of pages.
@@ -90,7 +90,7 @@ ___________________
 ___________________
 */
 
-class ControlEbook 
+class ControlEbook
     : public HwndWrapper,
       public IClickHandler,
       public INewPageObserver
@@ -476,7 +476,7 @@ void ControlEbook::NewPageUIThread(PageData *pageData)
 // called on a background thread
 void ControlEbook::NewPage(PageData *pageData)
 {
-    gMessageLoopUI->PostDelayedTask(base::Bind(&ControlEbook::NewPageUIThread, 
+    gMessageLoopUI->PostDelayedTask(base::Bind(&ControlEbook::NewPageUIThread,
                                         base::Unretained(this), pageData), 100);
 }
 
@@ -484,7 +484,7 @@ void ControlEbook::NewPage(PageData *pageData)
 void ControlEbook::PageLayoutBackground(LayoutInfo *li)
 {
     LayoutHtml(li);
-    gMessageLoopUI->PostTask(base::Bind(&ControlEbook::PageLayoutFinished, 
+    gMessageLoopUI->PostTask(base::Bind(&ControlEbook::PageLayoutFinished,
                                         base::Unretained(this)));
     delete li;
 }
@@ -517,7 +517,7 @@ void ControlEbook::PageLayout(int dx, int dy)
 
     pageLayoutThread = new base::Thread("ControlEbook::PageLayoutBackground");
     pageLayoutThread->Start();
-    pageLayoutThread->message_loop()->PostTask(base::Bind(&ControlEbook::PageLayoutBackground, 
+    pageLayoutThread->message_loop()->PostTask(base::Bind(&ControlEbook::PageLayoutBackground,
                                              base::Unretained(this), li));
 }
 
@@ -562,7 +562,7 @@ void ControlEbook::MobiLoaded(MobiDoc *newMobi)
 void ControlEbook::MobiFailedToLoad(const TCHAR *fileName)
 {
     CrashIf(gMessageLoopUI != MessageLoop::current());
-    // TODO: this message should show up in a different place, 
+    // TODO: this message should show up in a different place,
     // reusing status for convenience
     ScopedMem<TCHAR> s(str::Format(_T("Failed to load %s!"), fileName));
     status->SetText(s.Get());
@@ -570,17 +570,17 @@ void ControlEbook::MobiFailedToLoad(const TCHAR *fileName)
 }
 
 // Method executed on background thread that tries to load
-// a given mobi file and either calls MobiLoaded() or 
+// a given mobi file and either calls MobiLoaded() or
 // MobiFailedToLoad() on ui thread
 void ControlEbook::LoadMobiBackground(const TCHAR *fileName)
 {
     CrashIf(gMessageLoopUI == MessageLoop::current());
     MobiDoc *mb = MobiDoc::ParseFile(fileName);
     if (!mb)
-        gMessageLoopUI->PostTask(base::Bind(&ControlEbook::MobiFailedToLoad, 
+        gMessageLoopUI->PostTask(base::Bind(&ControlEbook::MobiFailedToLoad,
                                  base::Unretained(this), fileName));
     else
-        gMessageLoopUI->PostTask(base::Bind(&ControlEbook::MobiLoaded, 
+        gMessageLoopUI->PostTask(base::Bind(&ControlEbook::MobiLoaded,
                                  base::Unretained(this), mb));
     free((void*)fileName);
 }
@@ -594,9 +594,9 @@ void ControlEbook::LoadMobi(const TCHAR *fileName)
     mobiLoadThread = new base::Thread("ControlEbook::LoadMobiBackground");
     mobiLoadThread->Start();
     // TODO: use some refcounted version of fileName
-    mobiLoadThread->message_loop()->PostTask(base::Bind(&ControlEbook::LoadMobiBackground, 
+    mobiLoadThread->message_loop()->PostTask(base::Bind(&ControlEbook::LoadMobiBackground,
                                              base::Unretained(this), str::Dup(fileName)));
-    // TODO: this message should show up in a different place, 
+    // TODO: this message should show up in a different place,
     // reusing status for convenience
     ScopedMem<TCHAR> s(str::Format(_T("Please wait, loading %s"), fileName));
     status->SetText(s.Get());
@@ -617,7 +617,7 @@ void ControlEbook::NotifyMouseMove(int x, int y)
     RequestRepaint(this, &r1, &r2);
 }
 
-void ControlEbook::RegisterEventHandlers(EventMgr *evtMgr) 
+void ControlEbook::RegisterEventHandlers(EventMgr *evtMgr)
 {
     evtMgr->RegisterClickHandler(next, this);
     evtMgr->RegisterClickHandler(prev, this);

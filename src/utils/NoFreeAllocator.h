@@ -7,7 +7,7 @@
 #include "BaseUtil.h"
 
 // Per-thread stats for no-free allocator. Knowing them allows
-// tweaking the sizes of memory blocks and frequency of 
+// tweaking the sizes of memory blocks and frequency of
 // NoFreeAllocatorMark placement.
 struct AllocStats {
     size_t  allocsCount;

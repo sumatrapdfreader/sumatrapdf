@@ -627,7 +627,7 @@ fz_inspection_begin_group(fz_device *dev, fz_rect rect, int isolated, int knocko
         ((ListInspectionData *)dev->user)->requiresBlending = true;
 }
 
-extern "C" static void 
+extern "C" static void
 fz_inspection_free(fz_device *dev)
 {
     // images are extracted in bottom-to-top order, but for GetElements
@@ -1030,7 +1030,7 @@ CPdfEngine::CPdfEngine() : _fileName(NULL), _doc(NULL),
     _pages(NULL), _mediaboxes(NULL), _info(NULL),
     outline(NULL), attachments(NULL), _pagelabels(NULL),
     _decryptionKey(NULL), isProtected(false),
-    pageComments(NULL), imageRects(NULL)    
+    pageComments(NULL), imageRects(NULL)
 {
     InitializeCriticalSection(&pagesAccess);
     InitializeCriticalSection(&ctxAccess);
@@ -1759,7 +1759,7 @@ bool CPdfEngine::RequiresBlending(pdf_page *page)
 }
 
 RenderedBitmap *CPdfEngine::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target)
-{    
+{
     pdf_page* page = GetPdfPage(pageNo);
     if (!page)
         return NULL;

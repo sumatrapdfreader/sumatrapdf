@@ -60,7 +60,7 @@ static bool IsSpaceOnly(const char *s, size_t len)
 
 // at this point we're either after tag name or
 // after previous attribute
-// We expect: 
+// We expect:
 // whitespace | attribute name | = | attribute value
 // where both attribute name and attribute value can
 // be quoted
@@ -114,7 +114,7 @@ AttrInfo *GetNextAttr(const char *&s, const char *end)
 HtmlToken *HtmlPullParser::Next()
 {
     const char *start;
- 
+
     if (currPos >= end)
         return NULL;
 
@@ -388,4 +388,3 @@ Vec<char> *PrettyPrintHtml(const char *s, size_t len)
     }
     return res;
 }
-
