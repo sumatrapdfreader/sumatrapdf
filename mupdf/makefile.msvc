@@ -43,7 +43,7 @@ MUPDF_DIR=.
 EXTDIR=..\ext
 !endif
 
-ZLIB_DIR=$(EXTDIR)\zlib-1.2.5
+ZLIB_DIR=$(EXTDIR)\zlib
 FREETYPE_DIR=$(EXTDIR)\freetype2
 JPEG_TURBO_DIR=$(EXTDIR)\libjpeg-turbo
 OPENJPEG_DIR=$(EXTDIR)\openjpeg

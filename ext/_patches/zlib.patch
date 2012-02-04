@@ -1,6 +1,24 @@
-diff -rPu5 zlib-1.2.5.orig\gzwopen.c zlib-1.2.5\gzwopen.c
---- zlib-1.2.5.orig\gzwopen.c	Thu Jan 01 01:00:00 1970
-+++ zlib-1.2.5\gzwopen.c	Sat Feb 04 06:13:51 2012
+diff -rPu5 zlib.orig\gzguts.h zlib\gzguts.h
+--- zlib.orig\gzguts.h	Sun Jan 29 10:13:14 2012
++++ zlib\gzguts.h	Sat Feb 04 07:53:13 2012
+@@ -28,10 +28,14 @@
+ #include <fcntl.h>
+ 
+ #ifdef __TURBOC__
+ #  include <io.h>
+ #endif
++/* SumatraPDF: required for _open */
++#ifdef _MSC_VER
++#  include <io.h>
++#endif
+ 
+ #ifdef NO_DEFLATE       /* for compatibility with old definition */
+ #  define NO_GZCOMPRESS
+ #endif
+ 
+diff -rPu5 zlib.orig\gzwopen.c zlib\gzwopen.c
+--- zlib.orig\gzwopen.c	Thu Jan 01 01:00:00 1970
++++ zlib\gzwopen.c	Sat Feb 04 06:13:51 2012
 @@ -0,0 +1,23 @@
 +/* Copyright 2011 the SumatraPDF project authors (see AUTHORS file).
 +   License: Simplified BSD (see COPYING.BSD) */
@@ -25,9 +43,9 @@ diff -rPu5 zlib-1.2.5.orig\gzwopen.c zlib-1.2.5\gzwopen.c
 +        _close(fd);
 +    return file;
 +}
-diff -rPu5 zlib-1.2.5.orig\minizip\iowin32s.c zlib-1.2.5\minizip\iowin32s.c
---- zlib-1.2.5.orig\minizip\iowin32s.c	Thu Jan 01 01:00:00 1970
-+++ zlib-1.2.5\minizip\iowin32s.c	Sat Jan 21 15:18:29 2012
+diff -rPu5 zlib.orig\minizip\iowin32s.c zlib\minizip\iowin32s.c
+--- zlib.orig\minizip\iowin32s.c	Thu Jan 01 01:00:00 1970
++++ zlib\minizip\iowin32s.c	Sat Jan 21 15:18:29 2012
 @@ -0,0 +1,103 @@
 +/* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
 +   License: Simplified BSD (see COPYING.BSD) */
@@ -132,9 +150,9 @@ diff -rPu5 zlib-1.2.5.orig\minizip\iowin32s.c zlib-1.2.5\minizip\iowin32s.c
 +    pzlib_filefunc_def->zerror_file = win32s_error_file_func;
 +    pzlib_filefunc_def->opaque = NULL;
 +}
-diff -rPu5 zlib-1.2.5.orig\minizip\iowin32s.h zlib-1.2.5\minizip\iowin32s.h
---- zlib-1.2.5.orig\minizip\iowin32s.h	Thu Jan 01 01:00:00 1970
-+++ zlib-1.2.5\minizip\iowin32s.h	Sat Jan 21 15:18:39 2012
+diff -rPu5 zlib.orig\minizip\iowin32s.h zlib\minizip\iowin32s.h
+--- zlib.orig\minizip\iowin32s.h	Thu Jan 01 01:00:00 1970
++++ zlib\minizip\iowin32s.h	Sat Jan 21 15:18:39 2012
 @@ -0,0 +1,14 @@
 +/* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
 +   License: Simplified BSD (see COPYING.BSD) */
@@ -150,9 +168,9 @@ diff -rPu5 zlib-1.2.5.orig\minizip\iowin32s.h zlib-1.2.5\minizip\iowin32s.h
 +#ifdef __cplusplus
 +}
 +#endif
-diff -rPu5 zlib-1.2.5.orig\minizip\unzalloc.c zlib-1.2.5\minizip\unzalloc.c
---- zlib-1.2.5.orig\minizip\unzalloc.c	Thu Jan 01 01:00:00 1970
-+++ zlib-1.2.5\minizip\unzalloc.c	Sat Feb 04 06:36:16 2012
+diff -rPu5 zlib.orig\minizip\unzalloc.c zlib\minizip\unzalloc.c
+--- zlib.orig\minizip\unzalloc.c	Thu Jan 01 01:00:00 1970
++++ zlib\minizip\unzalloc.c	Sat Feb 04 06:36:16 2012
 @@ -0,0 +1,27 @@
 +/* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
 +   License: Simplified BSD (see COPYING.BSD) */
@@ -181,9 +199,9 @@ diff -rPu5 zlib-1.2.5.orig\minizip\unzalloc.c zlib-1.2.5\minizip\unzalloc.c
 +    else
 +        free(p);
 +}
-diff -rPu5 zlib-1.2.5.orig\minizip\unzalloc.h zlib-1.2.5\minizip\unzalloc.h
---- zlib-1.2.5.orig\minizip\unzalloc.h	Thu Jan 01 01:00:00 1970
-+++ zlib-1.2.5\minizip\unzalloc.h	Sat Feb 04 06:42:30 2012
+diff -rPu5 zlib.orig\minizip\unzalloc.h zlib\minizip\unzalloc.h
+--- zlib.orig\minizip\unzalloc.h	Thu Jan 01 01:00:00 1970
++++ zlib\minizip\unzalloc.h	Sat Feb 04 06:42:30 2012
 @@ -0,0 +1,28 @@
 +/* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
 +   License: Simplified BSD (see COPYING.BSD) */
@@ -213,9 +231,9 @@ diff -rPu5 zlib-1.2.5.orig\minizip\unzalloc.h zlib-1.2.5\minizip\unzalloc.h
 +#ifdef __cplusplus
 +}
 +#endif
-diff -rPu5 zlib-1.2.5.orig\minizip\unzip.c zlib-1.2.5\minizip\unzip.c
---- zlib-1.2.5.orig\minizip\unzip.c	Mon Feb 15 04:59:40 2010
-+++ zlib-1.2.5\minizip\unzip.c	Sat Feb 04 07:27:09 2012
+diff -rPu5 zlib.orig\minizip\unzip.c zlib\minizip\unzip.c
+--- zlib.orig\minizip\unzip.c	Sat Jan 21 11:49:30 2012
++++ zlib\minizip\unzip.c	Sat Feb 04 07:41:07 2012
 @@ -91,10 +91,16 @@
  #  define local static
  #endif

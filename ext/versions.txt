@@ -9,5 +9,5 @@ libdjvu         3.5.24  2011-03-06   http://djvu.sourceforge.net/
 openjpeg        r777    2011-05-16   http://code.google.com/p/openjpeg/downloads
 synctex         1.16    2011-06-14   http://itexmac.sourceforge.net/SyncTeX.html
 unrar           4.10.3  2011-11-05   http://www.rarlab.com/rar_add.htm
-zlib            1.2.5   2010-04-19   http://www.zlib.net/
+zlib            1.2.6   2012-01-29   http://www.zlib.net/
 ../mupdf        trunk                http://git.ghostscript.com/?p=mupdf.git

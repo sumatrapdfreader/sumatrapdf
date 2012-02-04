@@ -1,6 +1,6 @@
 diff -rPu5 synctex.orig\synctex_parser.c synctex\synctex_parser.c
 --- synctex.orig\synctex_parser.c	Tue Jun 14 15:40:56 2011
-+++ synctex\synctex_parser.c	Fri Aug 12 23:01:44 2011
++++ synctex\synctex_parser.c	Sat Feb 04 08:06:02 2012
 @@ -1418,10 +1418,13 @@
  			/*  We have current_size+len+1<=UINT_MAX
  			 *  or equivalently new_size<UINT_MAX,
@@ -15,6 +15,19 @@ diff -rPu5 synctex.orig\synctex_parser.c synctex\synctex_parser.c
  					return SYNCTEX_STATUS_OK;
  				}
  				free(* value_ref);
+@@ -4146,11 +4149,11 @@
+ typedef int (*synctex_fprintf_t)(void *, const char * , ...); /*  print formatted to either FILE *  or gzFile */
+ 
+ #   define SYNCTEX_BITS_PER_BYTE 8
+ 
+ struct __synctex_updater_t {
+-    void *file;                 /*  the foo.synctex or foo.synctex.gz I/O identifier  */
++    gzFile file;                /*  the foo.synctex or foo.synctex.gz I/O identifier  */
+ 	synctex_fprintf_t fprintf;  /*  either fprintf or gzprintf */
+ 	int length;                 /*  the number of chars appended */
+     struct _flags {
+         unsigned int no_gz:1;   /*  Whether zlib is used or not */
+         unsigned int reserved:SYNCTEX_BITS_PER_BYTE*sizeof(int)-1; /*  Align */
 diff -rPu5 synctex.orig\synctex_parser_utils.c synctex\synctex_parser_utils.c
 --- synctex.orig\synctex_parser_utils.c	Tue Jun 14 10:23:56 2011
 +++ synctex\synctex_parser_utils.c	Fri Aug 12 23:08:40 2011
