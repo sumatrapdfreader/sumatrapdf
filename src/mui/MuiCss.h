@@ -34,26 +34,6 @@ enum PropType {
 bool IsWidthProp(PropType type);
 bool IsColorProp(PropType type);
 
-struct FontNameData {
-    const TCHAR * name;
-};
-
-struct FontSizeData {
-    float   size;
-};
-
-struct FontWeightData {
-    FontStyle style;
-};
-
-struct WidthData {
-    float width;
-};
-
-struct TextAlignData {
-    AlignAttr   align;
-};
-
 enum ColorType {
     ColorSolid,
     ColorGradientLinear,
@@ -81,9 +61,9 @@ struct ColorData {
     bool operator==(const ColorData& other) const;
 };
 
-struct PaddingData {
+struct Padding {
     int top, right, bottom, left;
-    bool operator ==(const PaddingData& other) const {
+    bool operator ==(const Padding& other) const {
         return (top == other.top) &&
                (right == other.right) &&
                (bottom == other.bottom) &&
@@ -100,20 +80,16 @@ struct Prop {
     PropType    type;
 
     union {
-        FontNameData    fontName;
-        FontSizeData    fontSize;
-        FontWeightData  fontWeight;
-        PaddingData     padding;
+        const WCHAR *   fontName;
+        float           fontSize;
+        FontStyle       fontWeight;
+        Padding         padding;
         ColorData       color;
-        WidthData       width;
-        TextAlignData   align;
+        float           width;
+        AlignAttr       textAlign;
     };
 
     bool Eq(const Prop* other) const;
-
-    float GetWidth() const {
-        return width.width;
-    }
 
     static Prop *AllocFontName(const TCHAR *name);
     static Prop *AllocFontSize(float size);
@@ -153,6 +129,29 @@ public:
     Style * GetInheritsFrom() const;
     size_t GetIdentity() const;
 };
+
+#if 0 // TODO: maybe use that for convenience 
+struct BorderWidth {
+    int top, right, bottom, left;
+};
+
+struct BorderColors {
+    ColorData   top, right, bottom, left;
+};
+
+// CachedStyle gathers values of all 
+struct CachedStyle {
+    const TCHAR *   fontName;
+    float           fontSize;
+    FontStyle       fontWeight;
+    Padding         padding;
+    ColorData       color;
+    ColorData       bgColor;
+    BorderWidth     borderWidth;
+    BorderColors    borderColors;
+    AlignAttr       textAlign;
+};
+#endif
 
 class WrappedBrush {
 public:

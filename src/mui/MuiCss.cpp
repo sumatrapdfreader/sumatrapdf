@@ -231,7 +231,7 @@ bool ColorData::operator==(const ColorData& other) const
 void Prop::Free()
 {
     if (PropFontName == type)
-        free((void*)fontName.name);
+        free((void*)fontName);
 
     if (IsColorProp(type) && (ColorSolid == color.type))
         ::delete color.solid.cachedBrush;
@@ -244,22 +244,22 @@ bool Prop::Eq(const Prop *other) const
 
     switch (type) {
     case PropFontName:
-        return str::Eq(fontName.name, other->fontName.name);
+        return str::Eq(fontName, other->fontName);
     case PropFontSize:
-        return fontSize.size == other->fontSize.size;
+        return fontSize == other->fontSize;
     case PropFontWeight:
-        return fontWeight.style == other->fontWeight.style;
+        return fontWeight == other->fontWeight;
     case PropPadding:
         return padding == other->padding;
     case PropTextAlign:
-        return align.align == other->align.align;
+        return textAlign == other->textAlign;
     }
 
     if (IsColorProp(type))
         return color == other->color;
 
     if (IsWidthProp(type))
-        return width.width == other->width.width;
+        return width == other->width;
 
     CrashIf(true);
     return false;
@@ -287,21 +287,21 @@ static Prop *UniqifyProp(Prop& p)
 Prop *Prop::AllocFontName(const TCHAR *name)
 {
     Prop p(PropFontName);
-    p.fontName.name = str::Dup(name);
+    p.fontName = str::Dup(name);
     return UniqifyProp(p);
 }
 
 Prop *Prop::AllocFontSize(float size)
 {
     Prop p(PropFontSize);
-    p.fontSize.size = size;
+    p.fontSize = size;
     return UniqifyProp(p);
 }
 
 Prop *Prop::AllocFontWeight(FontStyle style)
 {
     Prop p(PropFontWeight);
-    p.fontWeight.style = style;
+    p.fontWeight = style;
     return UniqifyProp(p);
 }
 
@@ -309,20 +309,20 @@ Prop *Prop::AllocWidth(PropType type, float width)
 {
     CrashIf(!IsWidthProp(type));
     Prop p(type);
-    p.width.width = width;
+    p.width = width;
     return UniqifyProp(p);
 }
 
 Prop *Prop::AllocTextAlign(AlignAttr align)
 {
     Prop p(PropTextAlign);
-    p.align.align = align;
+    p.textAlign = align;
     return UniqifyProp(p);
 }
 
 Prop *Prop::AllocPadding(int top, int right, int bottom, int left)
 {
-    PaddingData pd = { top, right, bottom, left };
+    Padding pd = { top, right, bottom, left };
     Prop p(PropPadding);
     p.padding = pd;
     return UniqifyProp(p);
@@ -487,7 +487,7 @@ Font *CachedFontFromCachedProps(Prop **props)
     Prop *fontName   = props[PropFontName];
     Prop *fontSize   = props[PropFontSize];
     Prop *fontWeight = props[PropFontWeight];
-    return GetCachedFont(fontName->fontName.name, fontSize->fontSize.size, fontWeight->fontWeight.style);
+    return GetCachedFont(fontName->fontName, fontSize->fontSize, fontWeight->fontWeight);
 }
 
 static size_t GetStyleId(Style *style) {

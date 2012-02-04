@@ -164,28 +164,28 @@ void DrawBorder(Graphics *gfx, const Rect r, const BorderProps& bp)
     // top
     p1.X = r.X; p1.Y = r.Y;
     p2.X = r.X + r.Width; p2.Y = p1.Y;
-    width = bp.topWidth->width.width;
+    width = bp.topWidth->width;
     WrappedBrush wb1 = BrushFromProp(bp.topColor, r);
     DrawLine(gfx, p1, p2, width, wb1.brush);
 
     // right
     p1 = p2;
     p2.X = p1.X; p2.Y = p1.Y + r.Height;
-    width = bp.rightWidth->width.width;
+    width = bp.rightWidth->width;
     WrappedBrush wb2 = BrushFromProp(bp.rightColor, r);
     DrawLine(gfx, p1, p2, width, wb2.brush);
 
     // bottom
     p1 = p2;
     p2.X = r.X; p2.Y = p1.Y;
-    width = bp.bottomWidth->width.width;
+    width = bp.bottomWidth->width;
     WrappedBrush wb3 = BrushFromProp(bp.bottomColor, r);
     DrawLine(gfx, p1, p2, width, wb3.brush);
 
     // left
     p1 = p2;
     p2.X = p1.X; p2.Y = r.Y;
-    width = bp.leftWidth->width.width;
+    width = bp.leftWidth->width;
     WrappedBrush wb4 = BrushFromProp(bp.leftColor, r);
     DrawLine(gfx, p1, p2, width, wb4.brush);
 }

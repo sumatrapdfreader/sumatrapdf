@@ -28,16 +28,16 @@ static void AddBorders(int& dx, int& dy, Prop **props)
     Prop *p1 = props[PropBorderLeftWidth];
     Prop *p2 =  props[PropBorderRightWidth];
     // note: width is a float, not sure how I should round them
-    dx += (int)(p1->GetWidth() + p2->GetWidth());
+    dx += (int)(p1->width + p2->width);
     p1 = props[PropBorderTopWidth];
     p2 =  props[PropBorderBottomWidth];
-    dy += (int)(p1->GetWidth() + p2->GetWidth());
+    dy += (int)(p1->width + p2->width);
 }
 
 Size Button::GetBorderAndPaddingSize() const
 {
     Prop **props = GetCachedProps();
-    PaddingData pad = props[PropPadding]->padding;
+    Padding pad = props[PropPadding]->padding;
     int dx = pad.left + pad.right;
     int dy = pad.top  + pad.bottom;
     AddBorders(dx, dy, props);
@@ -150,10 +150,10 @@ void Button::Paint(Graphics *gfx, int offX, int offY)
     if (str::IsEmpty(text))
         return;
 
-    PaddingData pad = padding->padding;
-    int alignedOffX = AlignedOffset(pos.Width - pad.left - pad.right, textDx, textAlign->align.align);
-    int x = offX + alignedOffX + pad.left + (int)leftWidth->width.width;
-    int y = offY + pad.top + (int)topWidth->width.width;
+    Padding pad = padding->padding;
+    int alignedOffX = AlignedOffset(pos.Width - pad.left - pad.right, textDx, textAlign->textAlign);
+    int x = offX + alignedOffX + pad.left + (int)leftWidth->width;
+    int y = offY + pad.top + (int)topWidth->width;
     WrappedBrush brColor = BrushFromProp(col, bbox); // restrict bbox to just the text?
     Font *font = CachedFontFromCachedProps(props);
     gfx->DrawString(text, str::Len(text), font, PointF((REAL)x, (REAL)y), NULL, brColor.brush);
