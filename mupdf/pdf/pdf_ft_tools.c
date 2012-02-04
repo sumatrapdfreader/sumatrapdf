@@ -98,7 +98,7 @@ static void scan_Coverage(struct ft2vert_st *ret, const FT_Bytes top)
 	t->CoverageFormat = BYTE2(s);
 	switch (t->CoverageFormat)
 	{
-	case 1: 
+	case 1:
 		t->GlyphCount = BYTE2(s);
 		t->GlyphArray = fz_malloc_array(ret->ctx, t->GlyphCount, sizeof(t->GlyphArray[0]));
 		memset(t->GlyphArray, 0, t->GlyphCount * sizeof(t->GlyphArray[0]));
@@ -236,7 +236,7 @@ static void scan_Script(struct ft2vert_st *ret, const FT_Bytes top, const FT_Tag
 		scan_LangSys(ret, top + DefaultLangSys, ScriptTag);
 	LangSysCount = BYTE2(s);
 
-	for (i = 0; i < LangSysCount; i++) 
+	for (i = 0; i < LangSysCount; i++)
 	{
 		FT_Tag LangSysTag = BYTE4(s);
 		FT_Bytes t = top + BYTE2(s);

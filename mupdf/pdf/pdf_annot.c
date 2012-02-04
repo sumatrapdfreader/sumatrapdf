@@ -426,7 +426,7 @@ pdf_create_annot(fz_context *ctx, fz_rect rect, fz_obj *base_obj, fz_buffer *con
 {
 	pdf_annot *annot = NULL;
 	pdf_xobject *form = pdf_create_xobject(ctx, base_obj);
-	int rotate = fz_to_int(fz_dict_gets(fz_dict_gets(base_obj, "MK"), "R")); 
+	int rotate = fz_to_int(fz_dict_gets(fz_dict_gets(base_obj, "MK"), "R"));
 
 	form->matrix = fz_rotate(rotate);
 	form->bbox.x1 = ((rotate % 180) != 90) ? rect.x1 - rect.x0 : rect.y1 - rect.y0;
