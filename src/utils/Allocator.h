@@ -79,6 +79,10 @@ class PoolAllocator : public Allocator {
     MemBlockNode *  currBlock;
     MemBlockNode *  firstBlock;
 
+    // iteration state
+    MemBlockNode *  currIter;
+    size_t          iterPos;
+
     void Init() {
         currBlock = NULL;
         firstBlock = NULL;
@@ -90,31 +94,30 @@ public:
     // Iterator for easily traversing allocated memory as array
     // of values of type T. The caller has to enforce the fact
     // that the values stored are indeed values of T
+    // Meant to be used in this way:
+    // for (T *el = allocator.IterStart<T>(); el; el = allocator.IterNext<T>()) { ... }
     template <typename T>
-    struct Iter {
-        MemBlockNode *  curr;
-        size_t          pos;
+    T *IterStart() {
+        currIter = firstBlock;
+        iterPos = 0;
+        // minimum check that the allocated values are of type T
+        CrashIf(currIter && (currIter->Used() % sizeof(T) != 0));
+        return IterNext<T>();
+    }
 
-        Iter(PoolAllocator *allocator) {
-            curr = allocator->firstBlock;
-            pos = 0;
-            // minimum check that the allocated values are of type T
-            CrashIf(curr && (curr->Used() % sizeof(T) != 0));
-        }
-
-        T *Next() {
-            if (!curr)
+    template <typename T>
+    T* IterNext() {
+        if (!currIter)
+            return NULL;
+        if (currIter->Used() == iterPos) {
+            currIter = currIter->next;
+            if (!currIter)
                 return NULL;
-            if (curr->Used() == pos) {
-                curr = curr->next;
-                if (!curr)
-                    return NULL;
-            }
-            T *elPtr = reinterpret_cast<T*>(curr->DataStart() + pos);
-            pos += sizeof(T);
-            return elPtr;
         }
-    };
+        T *elPtr = reinterpret_cast<T*>(currIter->DataStart() + iterPos);
+        iterPos += sizeof(T);
+        return elPtr;
+    }
 
     PoolAllocator()  {
         minBlockSize = 4096;

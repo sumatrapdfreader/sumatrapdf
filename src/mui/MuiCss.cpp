@@ -122,8 +122,7 @@ static void DeleteCachedFonts()
 
 void Destroy()
 {
-    VecSegmented<Prop>::Iter iter(gAllProps);
-    for (Prop *p = iter.Next(); p; p = iter.Next()) {
+    for (Prop *p = gAllProps->IterStart(); p; p = gAllProps->IterNext()) {
         p->Free();
     }
 
@@ -268,8 +267,7 @@ bool Prop::Eq(const Prop *other) const
 
 static Prop *FindExistingProp(Prop *prop)
 {
-    VecSegmented<Prop>::Iter iter(gAllProps);
-    for (Prop *p = iter.Next(); p; p = iter.Next()) {
+    for (Prop *p = gAllProps->IterStart(); p; p = gAllProps->IterNext()) {
         if (p->Eq(prop))
             return p;
     }

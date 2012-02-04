@@ -23,14 +23,12 @@ protected:
 
 public:
 
-    struct Iter {
-        PoolAllocator::Iter<T> iter;
-        Iter(VecSegmented<T> *vec) : iter(&vec->allocator) {
-        }
-        T *Next() {
-            return iter.Next();
-        }
-    };
+    T *IterStart() {
+        return allocator.IterStart<T>();
+    }
+    T *IterNext() {
+        return allocator.IterNext<T>();
+    }
 
     VecSegmented() : len(0) {
         allocator.SetAllocRounding(sizeof(T));
