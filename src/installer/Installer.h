@@ -169,7 +169,7 @@ DWORD WINAPI UninstallerThread(LPVOID data);
 #else
 
 extern HWND gHwndButtonRunSumatra;
-BOOL IsValidInstaller();
+bool IsValidInstaller();
 void OnInstallationFinished();
 bool IsBrowserPluginInstalled();
 bool IsPdfFilterInstalled();

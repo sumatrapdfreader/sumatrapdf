@@ -6,10 +6,8 @@
 #endif
 
 #include "Installer.h"
+#include "ZipUtil.h"
 #include <WinSafer.h>
-#include <ioapi.h>
-#include <iowin32.h>
-#include <unzip.h>
 
 #include "../ifilter/PdfFilter.h"
 #include "../previewer/PdfPreview.h"
@@ -58,77 +56,37 @@ static inline void ProgressStep()
         PostMessage(gHwndProgressBar, PBM_STEPIT, 0, 0);
 }
 
-BOOL IsValidInstaller()
+bool IsValidInstaller()
 {
-    zlib_filefunc64_def ffunc;
-    fill_win32_filefunc64(&ffunc);
-    unzFile uf = unzOpen2_64(GetOwnPath(), &ffunc);
-    if (!uf)
-        return FALSE;
-
-    unz_global_info64 ginfo;
-    int err = unzGetGlobalInfo64(uf, &ginfo);
-    unzClose(uf);
-
-    return err == UNZ_OK && ginfo.number_entry > 0;
+    ZipFile archive(GetOwnPath());
+    return archive.GetFileCount() > 0;
 }
 
 static bool InstallCopyFiles()
 {
-    zlib_filefunc64_def ffunc;
-    fill_win32_filefunc64(&ffunc);
-    unzFile uf = unzOpen2_64(GetOwnPath(), &ffunc);
-    if (!uf) {
-        NotifyFailed(_T("Invalid payload format"));
-        return false;
-    }
-
+    // extract all payload files one by one (transacted, if possible)
+    ZipFile archive(GetOwnPath());
     FileTransaction trans;
-    unz_global_info64 ginfo;
-    int err = unzGetGlobalInfo64(uf, &ginfo);
-    if (err != UNZ_OK) {
-        NotifyFailed(_T("Broken payload format (couldn't get global info)"));
-        goto Error;
-    }
 
-    // extract all contained files one by one (transacted, if possible)
-    for (int count = 0; count < ginfo.number_entry; count++) {
-        char filename[MAX_PATH];
-        unz_file_info64 finfo;
-        err = unzGetCurrentFileInfo64(uf, &finfo, filename, dimof(filename), NULL, 0, NULL, 0);
-        if (err != UNZ_OK) {
-            NotifyFailed(_T("Broken payload format (couldn't get file info)"));
-            goto Error;
-        }
+    for (int i = 0; gPayloadData[i].filepath; i++) {
+        // skip files that are only uninstalled
+        if (!gPayloadData[i].install)
+            continue;
 
-        err = unzOpenCurrentFilePassword(uf, NULL);
-        if (err != UNZ_OK) {
-            NotifyFailed(_T("Can't access payload data"));
-            goto Error;
-        }
-
-        char *data = SAZA(char, (size_t)finfo.uncompressed_size);
+        size_t size;
+        ScopedMem<char> data(archive.GetFileData(gPayloadData[i].filepath, &size));
         if (!data) {
-            NotifyFailed(_T("Not enough memory to extract all files"));
-            goto Error;
+            NotifyFailed(_T("Some files to be installed are damaged or missing"));
+            return false;
         }
 
-        err = unzReadCurrentFile(uf, data, (unsigned int)finfo.uncompressed_size);
-        if (err != (int)finfo.uncompressed_size) {
-            NotifyFailed(_T("Payload data was damaged (parts missing)"));
-            free(data);
-            goto Error;
-        }
+        ScopedMem<TCHAR> inpath(str::conv::FromAnsi(gPayloadData[i].filepath));
+        ScopedMem<TCHAR> extpath(path::Join(gGlobalData.installDir, path::GetBaseName(inpath)));
 
-        TCHAR *inpath = str::conv::FromAnsi(filename);
-        TCHAR *extpath = path::Join(gGlobalData.installDir, path::GetBaseName(inpath));
-
-        bool success = trans.WriteAll(extpath, data, (size_t)finfo.uncompressed_size);
-        if (success) {
+        bool ok = trans.WriteAll(extpath, data, size);
+        if (ok) {
             // set modification time to original value
-            FILETIME ftModified, ftLocal;
-            DosDateTimeToFileTime(HIWORD(finfo.dosDate), LOWORD(finfo.dosDate), &ftLocal);
-            LocalFileTimeToFileTime(&ftLocal, &ftModified);
+            FILETIME ftModified = archive.GetFileTime(gPayloadData[i].filepath);
             trans.SetModificationTime(extpath, ftModified);
         }
         else {
@@ -136,45 +94,10 @@ static bool InstallCopyFiles()
             NotifyFailed(msg);
         }
 
-        free(inpath);
-        free(extpath);
-        free(data);
-
-        err = unzCloseCurrentFile(uf);
-        if (err != UNZ_OK) {
-            NotifyFailed(_T("Payload data was damaged (CRC failed)"));
-            goto Error;
-        }
-
-        for (int i = 0; NULL != gPayloadData[i].filepath; i++) {
-            if (success && gPayloadData[i].install && str::EqI(filename, gPayloadData[i].filepath)) {
-                gPayloadData[i].install = false;
-                break;
-            }
-        }
         ProgressStep();
-
-        err = unzGoToNextFile(uf);
-        if (err != UNZ_OK || !success)
-            break;
     }
 
-    unzClose(uf);
-
-    for (int i = 0; NULL != gPayloadData[i].filepath; i++) {
-        if (gPayloadData[i].install) {
-            NotifyFailed(_T("Some files to be installed are missing"));
-            return false;
-        }
-    }
     return trans.Commit();
-
-Error:
-    if (uf) {
-        unzCloseCurrentFile(uf);
-        unzClose(uf);
-    }
-    return false;
 }
 
 /* Caller needs to free() the result. */

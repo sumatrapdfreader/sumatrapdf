@@ -149,11 +149,10 @@ inline char *   ToUtf8(const TCHAR *src) { return ToCodePage(src, CP_UTF8); }
 inline TCHAR *  FromAnsi(const char *src) { return FromCodePage(src, CP_ACP); }
 inline char *   ToAnsi(const TCHAR *src) { return ToCodePage(src, CP_ACP); }
 
-void ToUtf8Buf(char *buf, size_t cbBufSize, const char *s);
-void ToUtf8Buf(char *buf, size_t cbBufSize, const WCHAR *s);
-
-void FromAnsiBuf(char *buf, size_t cchBufSize, const char *s);
-void FromAnsiBuf(WCHAR *buf, size_t cchBufSize, const char *s);
+size_t ToCodePageBuf(char *buf, size_t cbBufSize, const char *s, UINT cp);
+size_t FromCodePageBuf(char *buf, size_t cchBufSize, const char *s, UINT cp);
+size_t ToCodePageBuf(char *buf, size_t cbBufSize, const WCHAR *s, UINT cp);
+size_t FromCodePageBuf(WCHAR *buf, size_t cchBufSize, const char *s, UINT cp);
 
 }
 

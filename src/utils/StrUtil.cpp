@@ -822,25 +822,25 @@ size_t Utf8ToWcharBuf(const char *s, size_t sLen, WCHAR *bufOut, size_t bufOutMa
 
 namespace conv {
 
-// not exactly to utf8, if it's ascii, we just copy it verbatim
-void ToUtf8Buf(char *buf, size_t cbBufSize, const char *s)
+// not exactly a conversion, if it's ANSI, we just copy it verbatim
+size_t ToCodePageBuf(char *buf, size_t cbBufSize, const char *s, UINT cp)
 {
     BufSet(buf, cbBufSize, s);
+    return Len(buf);
 }
-
-void ToUtf8Buf(char *buf, size_t cbBufSize, const WCHAR *s)
-{
-    WideCharToMultiByte(CP_UTF8, 0, s, -1, buf, cbBufSize, NULL, NULL);
-}
-
-void FromAnsiBuf(char *buf, size_t cchBufSize, const char *s)
+size_t FromCodePageBuf(char *buf, size_t cchBufSize, const char *s, UINT cp)
 {
     BufSet(buf, cchBufSize, s);
+    return Len(buf);
 }
 
-void FromAnsiBuf(WCHAR *buf, size_t cchBufSize, const char *s)
+size_t ToCodePageBuf(char *buf, size_t cbBufSize, const WCHAR *s, UINT cp)
 {
-    MultiByteToWideChar(CP_ACP, 0, s, -1, buf, cchBufSize);
+    return WideCharToMultiByte(cp, 0, s, -1, buf, cbBufSize, NULL, NULL);
+}
+size_t FromCodePageBuf(WCHAR *buf, size_t cchBufSize, const char *s, UINT cp)
+{
+    return MultiByteToWideChar(cp, 0, s, -1, buf, cchBufSize);
 }
 
 }

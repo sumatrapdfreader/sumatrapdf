@@ -69,8 +69,6 @@ TCHAR *gSupportedExts[] = {
 // When a file is no longer shipped, just disable the install flag so that the
 // file is still correctly removed when SumatraPDF is eventually uninstalled.
 PayloadInfo gPayloadData[] = {
-    // TODO: extract libmupdf.dll first, so that the installation fails as soon
-    //       as possible, if SumatraPDF.exe or any DLL is currently in use
     { "libmupdf.dll",           true    },
     { "SumatraPDF.exe",         true    },
     { "sumatrapdfprefs.dat",    false   },

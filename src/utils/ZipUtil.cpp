@@ -4,103 +4,180 @@
 #include "ZipUtil.h"
 #include "StrUtil.h"
 #include "FileUtil.h"
-#include "Vec.h"
 
 // mini(un)zip
 #include <ioapi.h>
 #include <iowin32.h>
-#include <unzip.h>
+#include <iowin32s.h>
 
-// returns the FileToUnzip that's been successfully unzipped (or NULL)
-static FileToUnzip *UnzipFile(Allocator *allocator, unzFile& uf,  FileToUnzip *files, const TCHAR *dir)
+ZipFile::ZipFile(const TCHAR *path, Allocator *allocator) :
+    filenames(0, allocator), allocator(allocator)
 {
-    char fileName[MAX_PATH];
-    unz_file_info64 finfo;
+    zlib_filefunc64_def ffunc;
+    fill_win32_filefunc64(&ffunc);
+    uf = unzOpen2_64(path, &ffunc);
+    if (uf)
+        ExtractFilenames();
+}
 
-    int err = unzGetCurrentFileInfo64(uf, &finfo, fileName, dimof(fileName), NULL, 0, NULL, 0);
+ZipFile::ZipFile(IStream *stream, Allocator *allocator) :
+    filenames(0, allocator), allocator(allocator)
+{
+    zlib_filefunc64_def ffunc;
+    fill_win32s_filefunc64(&ffunc);
+    uf = unzOpen2_64(stream, &ffunc);
+    if (uf)
+        ExtractFilenames();
+}
+
+ZipFile::~ZipFile()
+{
+    if (!uf)
+        return;
+    unzClose(uf);
+    for (const char **fn = filenames.IterStart(); fn; fn = filenames.IterNext()) {
+        Allocator::Free(allocator, (void *)*fn);
+    }
+}
+
+void ZipFile::ExtractFilenames()
+{
+    if (!uf)
+        return;
+
+    unz_global_info64 ginfo;
+    int err = unzGetGlobalInfo64(uf, &ginfo);
+    if (err != UNZ_OK)
+        return;
+    unzGoToFirstFile(uf);
+
+    for (int i = 0; i < ginfo.number_entry && UNZ_OK == err; i++) {
+        unz_file_info64 finfo;
+        char fileName[MAX_PATH];
+        err = unzGetCurrentFileInfo64(uf, &finfo, fileName, dimof(fileName), NULL, 0, NULL, 0);
+        if (err == UNZ_OK) {
+            filenames.Append((const char *)Allocator::Dup(allocator, fileName, dimof(fileName)));
+            fileinfo.Append(finfo);
+        }
+        err = unzGoToNextFile(uf);
+    }
+}
+
+size_t ZipFile::GetFileIndex(const char *filename)
+{
+    for (size_t i = 0; i < filenames.Count(); i++) {
+        if (str::Eq(filename, filenames.At(i)))
+            return i;
+    }
+    return (size_t)-1;
+}
+
+size_t ZipFile::GetFileCount() const
+{
+    assert(filenames.Count() == fileinfo.Count());
+    return filenames.Count();
+}
+
+// cf. http://www.pkware.com/documents/casestudies/APPNOTE.TXT Appendix D
+#define CP_ZIP 437
+
+TCHAR *ZipFile::GetFileName(size_t fileindex)
+{
+    // currently not needed for non-default allocators
+    if (allocator)
+        return NULL;
+    if (fileindex >= filenames.Count())
+        return NULL;
+
+    UINT cp = (fileinfo.At(fileindex).flag & (1 << 11)) ? CP_UTF8 : CP_ZIP;
+    return str::conv::FromCodePage(filenames.At(fileindex), cp);
+}
+
+char *ZipFile::GetFileData(const char *filename, size_t *len)
+{
+    return GetFileData(GetFileIndex(filename), len);
+}
+
+char *ZipFile::GetFileData(size_t fileindex, size_t *len)
+{
+    if (!uf)
+        return NULL;
+    if (fileindex >= filenames.Count())
+        return NULL;
+    int err = unzLocateFile(uf, filenames.At(fileindex), 0);
     if (err != UNZ_OK)
         return NULL;
-
-    unsigned len = (unsigned)finfo.uncompressed_size;
-    ZPOS64_T len2 = len;
-    if (len2 != finfo.uncompressed_size) // overflow check
-        return NULL;
-
-    FileToUnzip *file = NULL;
-    for (int i = 0; files[i].fileName; i++) {
-        if (str::EqI(fileName, files[i].fileName)) {
-            file = &files[i];
-            break;
-        }
-    }
-    if (!file)
-        return NULL;
-    str::Str<TCHAR> filePath(256, allocator);
-    filePath.Append(dir);
-    if (!str::EndsWith(filePath.Get(), _T("\\")))
-        filePath.Append(_T("\\"));
-
-    if (file->unzippedName) {
-        filePath.Append(file->unzippedName);
-    } else {
-        TCHAR buf[256] = { 0 };
-        str::conv::FromAnsiBuf(buf, dimof(buf), fileName);  // Note: maybe FromUtf8?
-        filePath.Append(buf);
-    }
-
-    void *data = Allocator::Alloc(allocator, len);
-    if (!data)
-        return NULL;
-
     err = unzOpenCurrentFilePassword(uf, NULL);
     if (err != UNZ_OK)
         return NULL;
 
-    unsigned int readBytes = unzReadCurrentFile(uf, data, len);
-    if (readBytes != len || !file::WriteAll(filePath.Get(), data, len))
-        file = NULL;
+    size_t len2 = (size_t)fileinfo.At(fileindex).uncompressed_size;
+    if (len2 != fileinfo.At(fileindex).uncompressed_size) { // overflow check
+        unzCloseCurrentFile(uf);
+        return NULL;
+    }
 
-    unzCloseCurrentFile(uf); // ignoring error code
+    char *result = (char *)Allocator::Alloc(allocator, len2);
+    if (result) {
+        unsigned int readBytes = unzReadCurrentFile(uf, result, (unsigned int)len2);
+        if (readBytes != len2) {
+            Allocator::Free(allocator, result);
+            result = NULL;
+        }
+        else if (len) {
+            *len = len2;
+        }
+    }
 
-    return file;
-}
-
-static bool WereAllUnzipped(FileToUnzip *files, Vec<FileToUnzip *> unzipped)
-{
-    for (int i = 0; files[i].fileName; i++)
-        if (unzipped.Find(&files[i]) == -1)
-            return false;
-
-    return true;
-}
-
-bool UnzipFiles(Allocator *allocator, const TCHAR *zipFile, FileToUnzip *files, const TCHAR *dir)
-{
-    Vec<FileToUnzip *> unzipped;
-
-    zlib_filefunc64_def ffunc;
-    fill_win32_filefunc64(&ffunc);
-    unzFile uf = unzOpen2_64(zipFile, &ffunc);
-    if (!uf)
-        return false;
-
-    unz_global_info64 ginfo;
-    int err = unzGetGlobalInfo64(uf, &ginfo);
+    err = unzCloseCurrentFile(uf);
     if (err != UNZ_OK) {
-        unzClose(uf);
+        // CRC mismatch, file content is likely damaged
+        Allocator::Free(allocator, result);
+        result = NULL;
+    }
+
+    return result;
+}
+
+FILETIME ZipFile::GetFileTime(const char *filename)
+{
+    return GetFileTime(GetFileIndex(filename));
+}
+
+FILETIME ZipFile::GetFileTime(size_t fileindex)
+{
+    FILETIME ft = { -1, -1 };
+    if (uf && fileindex < fileinfo.Count()) {
+        FILETIME ftLocal;
+        DWORD dosDate = fileinfo.At(fileindex).dosDate;
+        DosDateTimeToFileTime(HIWORD(dosDate), LOWORD(dosDate), &ftLocal);
+        LocalFileTimeToFileTime(&ftLocal, &ft);
+    }
+    return ft;
+}
+
+bool ZipFile::UnzipFile(const char *filename, const TCHAR *dir, const TCHAR *unzippedName)
+{
+    size_t len;
+    char *data = GetFileData(filename, &len);
+    if (!data)
         return false;
+
+    str::Str<TCHAR> filePath(MAX_PATH * 2, allocator);
+    filePath.Append(dir);
+    if (!str::EndsWith(filePath.Get(), _T("\\")))
+        filePath.Append(_T("\\"));
+    if (unzippedName) {
+        filePath.Append(unzippedName);
+    } else {
+        size_t idx = GetFileIndex(filename);
+        UINT cp = (fileinfo.At(idx).flag & (1 << 11)) ? CP_UTF8 : CP_ZIP;
+        TCHAR *buf = filePath.EnsureEndPadding(MAX_PATH);
+        size_t strlen = str::conv::FromCodePageBuf(buf, MAX_PATH, filenames.At(idx), cp);
+        filePath.IncreaseLen(strlen);
     }
 
-    unzGoToFirstFile(uf);
-    for (int n = 0; n < ginfo.number_entry; n++) {
-        FileToUnzip *file = UnzipFile(allocator, uf, files, dir);
-        if (file)
-            unzipped.Append(file);
-        err = unzGoToNextFile(uf);
-        if (err != UNZ_OK)
-            break;
-    }
-    unzClose(uf);
-
-    return WereAllUnzipped(files, unzipped);
+    bool ok = file::WriteAll(filePath.Get(), data, len);
+    Allocator::Free(allocator, data);
+    return ok;
 }

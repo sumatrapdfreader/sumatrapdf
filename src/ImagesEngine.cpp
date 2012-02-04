@@ -7,12 +7,7 @@
 #include "WinUtil.h"
 #include "Vec.h"
 #include "Scoped.h"
-
-// mini(un)zip
-#include <ioapi.h>
-#include <iowin32.h>
-#include <iowin32s.h>
-#include <unzip.h>
+#include "ZipUtil.h"
 
 #include "../ext/unrar/dll.hpp"
 
@@ -655,16 +650,11 @@ ImageDirEngine *ImageDirEngine::CreateFromFileName(const TCHAR *fileName)
 
 ///// CbxEngine handles comic book files (either .cbz or .cbr) /////
 
-struct CbzFileAccess {
-    zlib_filefunc64_def ffunc;
-    unzFile uf;
-};
-
 class CCbxEngine : public ImagesEngine, public CbxEngine {
     friend CbxEngine;
 
 public:
-    CCbxEngine() : cbzData(NULL) {
+    CCbxEngine() : cbzFile(NULL) {
         InitializeCriticalSection(&fileAccess);
     }
     virtual ~CCbxEngine();
@@ -695,16 +685,13 @@ protected:
 
     // used for lazily loading page images (only supported for .cbz files)
     CRITICAL_SECTION fileAccess;
-    StrVec pageFileNames;
-    CbzFileAccess *cbzData;
+    ZipFile *cbzFile;
+    Vec<size_t> fileIdxs;
 };
 
 CCbxEngine::~CCbxEngine()
 {
-    if (cbzData) {
-        unzClose(cbzData->uf);
-        delete cbzData;
-    }
+    delete cbzFile;
 
     DeleteCriticalSection(&fileAccess);
 }
@@ -714,6 +701,12 @@ RectD CCbxEngine::PageMediabox(int pageNo)
     assert(1 <= pageNo && pageNo <= PageCount());
     if (!mediaboxes.At(pageNo - 1).IsEmpty())
         return mediaboxes.At(pageNo - 1);
+
+    if (pages.At(pageNo - 1)) {
+        Bitmap *bmp = pages.At(pageNo - 1);
+        mediaboxes.At(pageNo - 1) = RectD(0, 0, bmp->GetWidth(), bmp->GetHeight());
+        return mediaboxes.At(pageNo - 1);
+    }
 
     size_t len;
     ScopedMem<char> bmpData(GetImageData(pageNo, len));
@@ -738,66 +731,13 @@ Bitmap *CCbxEngine::LoadImage(int pageNo)
     return pages.At(pageNo - 1);
 }
 
-// cf. http://www.pkware.com/documents/casestudies/APPNOTE.TXT Appendix D
-#define CP_ZIP 437
-
-static bool SetCurrentCbzPage(unzFile& uf, const TCHAR *fileName)
-{
-    ScopedMem<char> fileName2(str::conv::ToCodePage(fileName, CP_ZIP));
-    int err = unzLocateFile(uf, fileName2, 0);
-    if (err != UNZ_OK) {
-        fileName2.Set(str::conv::ToUtf8(fileName));
-        err = unzLocateFile(uf, fileName2, 0);
-    }
-    return err == UNZ_OK;
-}
-
-// caller must free() the result
-static char *LoadCurrentCbzData(unzFile& uf, size_t& len)
-{
-    unz_file_info64 finfo;
-    char *bmpData = NULL;
-
-    int err = unzGetCurrentFileInfo64(uf, &finfo, NULL, 0, NULL, 0, NULL, 0);
-    if (err != UNZ_OK)
-        return NULL;
-
-    err = unzOpenCurrentFilePassword(uf, NULL);
-    if (err != UNZ_OK)
-        return NULL;
-
-    len = (size_t)finfo.uncompressed_size;
-    ZPOS64_T len2 = len;
-    if (len2 != finfo.uncompressed_size) // overflow check
-        goto Exit;
-
-    bmpData = SAZA(char, len);
-    if (!bmpData)
-        goto Exit;
-
-    unsigned int readBytes = unzReadCurrentFile(uf, bmpData, (unsigned int)len);
-    if (readBytes != len) {
-        free(bmpData);
-        bmpData = NULL;
-    }
-
-Exit:
-    unzCloseCurrentFile(uf); // ignoring error code
-    return bmpData;
-}
-
 bool CCbxEngine::LoadCbzFile(const TCHAR *file)
 {
     if (!file)
         return false;
     fileName = str::Dup(file);
 
-    cbzData = new CbzFileAccess;
-
-    fill_win32_filefunc64(&cbzData->ffunc);
-    cbzData->uf = unzOpen2_64(fileName, &cbzData->ffunc);
-    if (!cbzData->uf)
-        return false;
+    cbzFile = new ZipFile(fileName);
 
     return FinishLoadingCbz();
 }
@@ -809,12 +749,7 @@ bool CCbxEngine::LoadCbzStream(IStream *stream)
     fileStream = stream;
     fileStream->AddRef();
 
-    cbzData = new CbzFileAccess;
-
-    fill_win32s_filefunc64(&cbzData->ffunc);
-    cbzData->uf = unzOpen2_64(stream, &cbzData->ffunc);
-    if (!cbzData->uf)
-        return false;
+    cbzFile = new ZipFile(stream);
 
     return FinishLoadingCbz();
 }
@@ -823,45 +758,38 @@ bool CCbxEngine::FinishLoadingCbz()
 {
     fileExt = _T(".cbz");
 
-    // only extract all image filenames for now
-    unz_global_info64 ginfo;
-    int err = unzGetGlobalInfo64(cbzData->uf, &ginfo);
-    if (err != UNZ_OK)
-        return false;
-    unzGoToFirstFile(cbzData->uf);
+    Vec<TCHAR *> allFileNames;
+    StrVec pageFileNames;
 
-    for (int n = 0; n < ginfo.number_entry; n++) {
-        unz_file_info64 finfo;
-        char fileName[MAX_PATH];
-        err = unzGetCurrentFileInfo64(cbzData->uf, &finfo, fileName, dimof(fileName), NULL, 0, NULL, 0);
-        if (err == UNZ_OK) {
-            ScopedMem<TCHAR> fileName2;
-            if (!(finfo.flag & (1 << 11)))
-                fileName2.Set(str::conv::FromCodePage(fileName, CP_ZIP));
-            else
-                fileName2.Set(str::conv::FromUtf8(fileName));
-            if (ImageEngine::IsSupportedFile(fileName2) &&
-                // OS X occasionally leaves metadata with image extensions
-                !str::StartsWith(path::GetBaseName(fileName2), _T("."))) {
-                pageFileNames.Append(fileName2.StealData());
-            }
-        }
-        // bail, if we accidentally try loading an XPS file
-        if (str::StartsWith(fileName, "_rels/.rels"))
+    for (size_t idx = 0; idx < cbzFile->GetFileCount(); idx++) {
+        ScopedMem<TCHAR> fileName(cbzFile->GetFileName(idx));
+        // bail, if we accidentally try to load an XPS file
+        if (fileName && str::StartsWith(fileName.Get(), _T("_rels/.rels")))
             return false;
-        err = unzGoToNextFile(cbzData->uf);
-        if (err != UNZ_OK)
-            break;
+        if (fileName && ImageEngine::IsSupportedFile(fileName) &&
+            // OS X occasionally leaves metadata with image extensions
+            !str::StartsWith(path::GetBaseName(fileName), _T("."))) {
+            allFileNames.Append(fileName.Get());
+            pageFileNames.Append(fileName.StealData());
+        }
+        else {
+            allFileNames.Append(NULL);
+        }
     }
+    assert(allFileNames.Count() == cbzFile->GetFileCount());
 
     // TODO: any meta-information available?
 
-    if (pageFileNames.Count() == 0)
-        return false;
     pageFileNames.Sort();
+    for (TCHAR **fn = pageFileNames.IterStart(); fn; fn = pageFileNames.IterNext()) {
+        fileIdxs.Append(allFileNames.Find(*fn));
+    }
+    assert(pageFileNames.Count() == fileIdxs.Count());
+    if (fileIdxs.Count() == 0)
+        return false;
 
-    pages.AppendBlanks(pageFileNames.Count());
-    mediaboxes.AppendBlanks(pageFileNames.Count());
+    pages.AppendBlanks(fileIdxs.Count());
+    mediaboxes.AppendBlanks(fileIdxs.Count());
 
     return true;
 }
@@ -993,9 +921,9 @@ bool CCbxEngine::LoadCbrFile(const TCHAR *file)
 
     for (size_t i = 0; i < found.Count(); i++) {
         pages.Append(found.At(i)->bmp);
-        mediaboxes.Append(RectD(0, 0, pages.At(i)->GetWidth(), pages.At(i)->GetHeight()));
         found.At(i)->bmp = NULL;
     }
+    mediaboxes.AppendBlanks(pages.Count());
 
     DeleteVecMembers(found);
     return true;
@@ -1003,10 +931,9 @@ bool CCbxEngine::LoadCbrFile(const TCHAR *file)
 
 char *CCbxEngine::GetImageData(int pageNo, size_t& len)
 {
-    if (cbzData) {
+    if (cbzFile) {
         ScopedCritSec scope(&fileAccess);
-        if (SetCurrentCbzPage(cbzData->uf, pageFileNames.At(pageNo - 1)))
-            return LoadCurrentCbzData(cbzData->uf, len);
+        return cbzFile->GetFileData(fileIdxs.At(pageNo - 1), &len);
     }
     return NULL;
 }

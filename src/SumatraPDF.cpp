@@ -2096,7 +2096,7 @@ void GetStressTestInfo(str::Str<char>* s)
 
         s->Append("File: ");
         char buf[256];
-        str::conv::ToUtf8Buf(buf, dimof(buf), w->loadedFilePath);
+        str::conv::ToCodePageBuf(buf, dimof(buf), w->loadedFilePath, CP_UTF8);
         s->Append(buf);
         GetStressTestInfo(w->stressTest, s);
         s->Append("\r\n");

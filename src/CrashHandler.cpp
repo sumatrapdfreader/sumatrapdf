@@ -23,7 +23,6 @@
 #include "translations.h"
 
 #include <unzalloc.h>
-#include <unzip.h>
 
 #ifndef CRASH_REPORT_URL
 #define CRASH_REPORT_URL _T("http://blog.kowalczyk.info/software/sumatrapdf/develop.html")
@@ -762,15 +761,13 @@ static bool DeleteSymbolsIfExist()
 // extracted as SumatraPDF.pdb to match the executable name
 static bool UnpackStaticSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir)
 {
-    FileToUnzip filesToUnnpack[] = {
 #ifdef SVN_PRE_RELEASE_VER
-        { "SumatraPDF-prerelease-" QM(SVN_PRE_RELEASE_VER) ".pdb", _T("SumatraPDF.pdb") },
+    char *symbolsName = "SumatraPDF-prerelease-" QM(SVN_PRE_RELEASE_VER) ".pdb";
 #else
-        { "SumatraPDF-" QM(CURR_VERSION) ".pdb", _T("SumatraPDF.pdb") },
+    char *symbolsName = "SumatraPDF-" QM(CURR_VERSION) ".pdb";
 #endif
-        { NULL }
-    };
-    return UnzipFiles(gCrashHandlerAllocator, symbolsZipPath, filesToUnnpack, symDir);
+    ZipFile archive(symbolsZipPath, gCrashHandlerAllocator);
+    return archive.UnzipFile(symbolsName, symDir, _T("SumatraPDF.pdb"));
 }
 
 // In lib (.exe + libmupdf.dll) release and pre-release builds, the pdb files
@@ -779,12 +776,9 @@ static bool UnpackStaticSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir
 // names.
 static bool UnpackLibSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir)
 {
-    FileToUnzip filesToUnnpack[] = {
-        { "libmupdf.pdb", NULL },
-        { "SumatraPDF-no-MuPDF.pdb", _T("SumatraPDF.pdb") },
-        { NULL }
-    };
-    return UnzipFiles(gCrashHandlerAllocator, symbolsZipPath, filesToUnnpack, symDir);
+    ZipFile archive(symbolsZipPath, gCrashHandlerAllocator);
+    return archive.UnzipFile("libmupdf.pdb", symDir) &&
+           archive.UnzipFile("SumatraPDF-no-MuPDF.pdb", symDir, _T("SumatraPDF.pdb"));
 }
 
 // *.pdb files are on S3 with a known name. Try to download them here to a directory
