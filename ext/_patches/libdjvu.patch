@@ -1,0 +1,75 @@
+diff -rPu5 libdjvu.orig\DjVuGlobal.h libdjvu\DjVuGlobal.h
+--- libdjvu.orig\DjVuGlobal.h	Sun Mar 06 18:43:17 2011
++++ libdjvu\DjVuGlobal.h	Fri Apr 29 21:52:08 2011
+@@ -70,11 +70,12 @@
+ # include <new>
+ #else
+ # include <new.h>
+ #endif
+ 
+-#ifdef WIN32
++// SumatraPDF: allow to build as a static library (built-in)
++#ifdef WIN32_AND_NOT_STATIC
+ # ifdef DLL_EXPORT
+ #  define DJVUAPI __declspec(dllexport)
+ # else
+ #  define DJVUAPI __declspec(dllimport)
+ # endif
+diff -rPu5 libdjvu.orig\GString.h libdjvu\GString.h
+--- libdjvu.orig\GString.h	Sun Mar 06 18:43:17 2011
++++ libdjvu\GString.h	Sat Feb 04 06:55:16 2012
+@@ -112,11 +112,13 @@
+ #include <stdarg.h>
+ #ifdef WIN32
+ # include <windows.h>
+ # define HAS_WCHAR 1
+ # define HAS_WCTYPE 1
+-# define HAS_MBSTATE 1
++// SumatraPDF: disable HAS_MBSTATE so that it doesn't use mbrlen() etc.
++// so that we don't have to implement them in ucrt
++# define HAS_MBSTATE 0
+ #endif
+ 
+ #if HAS_WCHAR
+ # if !defined(AUTOCONF) || HAVE_WCHAR_H
+ #  include <wchar.h>
+diff -rPu5 libdjvu.orig\miniexp.cpp libdjvu\miniexp.cpp
+--- libdjvu.orig\miniexp.cpp	Sun Mar 06 18:43:17 2011
++++ libdjvu\miniexp.cpp	Fri Apr 29 21:47:11 2011
+@@ -901,11 +901,12 @@
+ }
+ 
+ int 
+ miniexp_stringp(miniexp_t p)
+ {
+-  return miniexp_isa(p, ministring_t::classname) ? 1 : 0;
++  // SumatraPDF: don't execute code until asked to
++  return miniexp_isa(p, miniexp_symbol("string")) ? 1 : 0;
+ }
+ 
+ const char *
+ miniexp_to_str(miniexp_t p)
+ {
+diff -rPu5 libdjvu.orig\miniexp.h libdjvu\miniexp.h
+--- libdjvu.orig\miniexp.h	Sun Mar 06 18:43:17 2011
++++ libdjvu\miniexp.h	Fri Apr 29 21:49:00 2011
+@@ -616,15 +616,16 @@
+   public: static const miniexp_t classname; \
+           virtual miniexp_t classof() const; \
+           virtual bool isa(miniexp_t) const; 
+ 
+ #define MINIOBJ_IMPLEMENT(cls, supercls, name)\
+-  const miniexp_t cls::classname = miniexp_symbol(name);\
++  /* SumatraPDF: don't execute code until asked to */\
++  const miniexp_t cls::classname = 0;\
+   miniexp_t cls::classof() const {\
+-    return cls::classname; }\
++    return miniexp_symbol(name); }\
+   bool cls::isa(miniexp_t n) const {\
+-    return (cls::classname==n) || (supercls::isa(n)); }
++    return (classof()==n) || (supercls::isa(n)); }
+ 
+ 
+ /* miniexp_to_obj --
+    Returns a pointer to the object represented by an lisp
+    expression. Returns NULL if the expression is not an

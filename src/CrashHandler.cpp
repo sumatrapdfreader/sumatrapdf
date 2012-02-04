@@ -21,7 +21,9 @@
 #include "CrashHandler.h"
 #include "AppTools.h"
 #include "translations.h"
-#include "unzip.h"
+
+#include <unzalloc.h>
+#include <unzip.h>
 
 #ifndef CRASH_REPORT_URL
 #define CRASH_REPORT_URL _T("http://blog.kowalczyk.info/software/sumatrapdf/develop.html")
@@ -204,28 +206,21 @@ static LPTOP_LEVEL_EXCEPTION_FILTER gPrevExceptionFilter = NULL;
 #define LogDbgDetail(msg) NoOp()
 #endif
 
-// alloc/free bzip2/zlib functions to be passed to unzip.c
-static void* bz_alloc(void* opaque, int32_t items, int32_t size)
+// alloc/free functions to be passed to unzip.c
+static void *zip_alloc(void *opaque, size_t items, size_t size)
 {
-    void* v = gCrashHandlerAllocator->Alloc(items * size);
+    void *v = gCrashHandlerAllocator->Alloc(items * size);
     return v;
 }
 
-static void* zip_alloc(void* opaque, uint32_t items, uint32_t size)
-{
-    void* v = gCrashHandlerAllocator->Alloc(items * size);
-    return v;
-}
-
-static void bz_zip_free(void* opaque, void* addr)
+static void zip_free(void *opaque, void *addr)
 {
     gCrashHandlerAllocator->Free(addr);
 }
 
 static UnzipAllocFuncs gUnzipAllocFuncs = {
-    &bz_alloc,
     &zip_alloc,
-    &bz_zip_free
+    &zip_free
 };
 
 static bool LoadDbgHelpFuncs()

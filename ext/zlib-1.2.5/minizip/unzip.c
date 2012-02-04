@@ -93,6 +93,12 @@
 /* compile with -Dlocal if your debugger can't find static symbols */
 
 
+/* SumatraPDF: allow to include a custom allocator */
+#ifdef INC_CUSTOM_ALLOC
+#include INC_CUSTOM_ALLOC
+#endif
+
+
 #ifndef CASESENSITIVITYDEFAULT_NO
 #  if !defined(unix) && !defined(CASESENSITIVITYDEFAULT_YES)
 #    define CASESENSITIVITYDEFAULT_NO
@@ -108,32 +114,12 @@
 #define UNZ_MAXFILENAMEINZIP (256)
 #endif
 
-/* SumatraPDF: allow custom alloc/free functions */
-static UnzipAllocFuncs *gAllocFuncs = NULL;
-
-void unzSetAllocFuncs(UnzipAllocFuncs *funcs)
-{
-    gAllocFuncs = funcs;
-}
-
-static void *unzAlloc(size_t size)
-{
-    if (gAllocFuncs)
-        return gAllocFuncs->zip_alloc(NULL, 1, size);
-    else
-        return malloc(size);
-}
-
-static void unzFree(void *p)
-{
-    if (gAllocFuncs)
-        gAllocFuncs->bz_zip_free(NULL, p);
-    else
-        free(p);
-}
-
-#define ALLOC(size) unzAlloc(size)
-#define TRYFREE(p) unzFree(p)
+#ifndef ALLOC
+# define ALLOC(size) (malloc(size))
+#endif
+#ifndef TRYFREE
+# define TRYFREE(p) {if (p) free(p);}
+#endif
 
 #define SIZECENTRALDIRITEM (0x2e)
 #define SIZEZIPLOCALHEADER (0x1e)
@@ -1395,6 +1381,11 @@ extern int ZEXPORT unzGoToFilePos(
 ///////////////////////////////////////////
 */
 
+/* SumatraPDF: allow to include a custom allocator */
+static void *zlib_cust_alloc(voidpf opaque, uInt count, uInt size) { return ALLOC(count * size); }
+static void *bz_cust_alloc(voidpf opaque, int count, int size) { return ALLOC(count * size); }
+static void zlib_bz_cust_free(voidpf opaque, voidpf p) { TRYFREE(p); }
+
 /*
   Read the local header of the current zipfile
   Check the coherency of the local header and info in the end of central
@@ -1570,13 +1561,15 @@ extern int ZEXPORT unzOpenCurrentFile3 (unzFile file, int* method,
     if ((s->cur_file_info.compression_method==Z_BZIP2ED) && (!raw))
     {
 #ifdef HAVE_BZIP2
-      pfile_in_zip_read_info->bstream.bzalloc = (void *(*) (void *, int, int))0;
-      pfile_in_zip_read_info->bstream.bzfree = (free_func)0;
+      /* SumatraPDF: allow to include a custom allocator */
+      pfile_in_zip_read_info->bstream.bzalloc = bz_cust_alloc;
+      pfile_in_zip_read_info->bstream.bzfree = zlib_bz_cust_free;
       pfile_in_zip_read_info->bstream.opaque = (voidpf)0;
       pfile_in_zip_read_info->bstream.state = (voidpf)0;
 
-      pfile_in_zip_read_info->stream.zalloc = (alloc_func)0;
-      pfile_in_zip_read_info->stream.zfree = (free_func)0;
+      /* SumatraPDF: allow to include a custom allocator */
+      pfile_in_zip_read_info->stream.zalloc = zlib_cust_alloc;
+      pfile_in_zip_read_info->stream.zfree = zlib_bz_cust_free;
       pfile_in_zip_read_info->stream.opaque = (voidpf)0;
       pfile_in_zip_read_info->stream.next_in = (voidpf)0;
       pfile_in_zip_read_info->stream.avail_in = 0;
@@ -1595,8 +1588,9 @@ extern int ZEXPORT unzOpenCurrentFile3 (unzFile file, int* method,
     }
     else if ((s->cur_file_info.compression_method==Z_DEFLATED) && (!raw))
     {
-      pfile_in_zip_read_info->stream.zalloc = (alloc_func)0;
-      pfile_in_zip_read_info->stream.zfree = (free_func)0;
+      /* SumatraPDF: allow to include a custom allocator */
+      pfile_in_zip_read_info->stream.zalloc = zlib_cust_alloc;
+      pfile_in_zip_read_info->stream.zfree = zlib_bz_cust_free;
       pfile_in_zip_read_info->stream.opaque = (voidpf)0;
       pfile_in_zip_read_info->stream.next_in = 0;
       pfile_in_zip_read_info->stream.avail_in = 0;

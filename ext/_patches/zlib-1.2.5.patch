@@ -1,0 +1,291 @@
+diff -rPu5 zlib-1.2.5.orig\gzwopen.c zlib-1.2.5\gzwopen.c
+--- zlib-1.2.5.orig\gzwopen.c	Thu Jan 01 01:00:00 1970
++++ zlib-1.2.5\gzwopen.c	Sat Feb 04 06:13:51 2012
+@@ -0,0 +1,23 @@
++/* Copyright 2011 the SumatraPDF project authors (see AUTHORS file).
++   License: Simplified BSD (see COPYING.BSD) */
++
++#include <string.h>
++#include <io.h>
++#include <fcntl.h>
++
++#include "zlib.h"
++
++/* open files with Unicode paths (for use in a DLL) */
++gzFile ZEXPORT gzwopen(const wchar_t *path, const char *mode)
++{
++    int flags = (strchr(mode, 'r') ? _O_RDONLY :
++                 strchr(mode, 'w') ? _O_WRONLY | _O_CREAT :
++                 strchr(mode, 'a') ? _O_APPEND | _O_CREAT : 0) |
++                (strchr(mode, 'b') ? _O_BINARY : 0);
++    int fd = _wopen(path, flags, 0);
++
++    gzFile file = gzdopen(fd, mode);
++    if (!file)
++        _close(fd);
++    return file;
++}
+diff -rPu5 zlib-1.2.5.orig\minizip\iowin32s.c zlib-1.2.5\minizip\iowin32s.c
+--- zlib-1.2.5.orig\minizip\iowin32s.c	Thu Jan 01 01:00:00 1970
++++ zlib-1.2.5\minizip\iowin32s.c	Sat Jan 21 15:18:29 2012
+@@ -0,0 +1,103 @@
++/* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
++   License: Simplified BSD (see COPYING.BSD) */
++
++#include "zlib.h"
++#include "ioapi.h"
++#define COBJMACROS
++#include "iowin32s.h"
++
++typedef struct {
++    IStream *stream;
++    HRESULT error;
++} Win32sIOState;
++
++uLong ZCALLBACK win32s_read_file_func(voidpf opaque, voidpf stream, void *buf, uLong size)
++{
++    Win32sIOState *state = stream;
++    ULONG cbRead = 0;
++    state->error = IStream_Read(state->stream, buf, size, &cbRead);
++    return cbRead;
++}
++
++uLong ZCALLBACK win32s_write_file_func(voidpf opaque, voidpf stream, const void *buf, uLong size)
++{
++    Win32sIOState *state = stream;
++    ULONG cbWritten = 0;
++    if (!state)
++        return 0;
++    state->error = IStream_Write(state->stream, buf, size, &cbWritten);
++    return cbWritten;
++}
++
++ZPOS64_T ZCALLBACK win32s_tell64_file_func(voidpf opaque, voidpf stream)
++{
++    Win32sIOState *state = stream;
++    ULARGE_INTEGER n;
++    LARGE_INTEGER off;
++    if (!state)
++        return -1;
++    off.QuadPart = 0;
++    n.QuadPart = -1;
++    state->error = IStream_Seek(state->stream, off, STREAM_SEEK_CUR, &n);
++    return n.QuadPart;
++}
++
++long ZCALLBACK win32s_seek64_file_func(voidpf opaque, voidpf stream, ZPOS64_T offset, int origin)
++{
++    Win32sIOState *state = stream;
++    LARGE_INTEGER off;
++    if (!state)
++        return -1;
++    off.QuadPart = offset;
++    state->error = IStream_Seek(state->stream, off, origin, NULL);
++    return FAILED(state->error);
++}
++
++voidpf ZCALLBACK win32s_open64_file_func(voidpf opaque, const void *stream, int mode)
++{
++    Win32sIOState *state = malloc(sizeof(Win32sIOState));
++    if (!state || !stream)
++    {
++        free(state);
++        return NULL;
++    }
++    state->stream = (IStream *)stream;
++    if (win32s_seek64_file_func(opaque, state, 0, ZLIB_FILEFUNC_SEEK_SET) != 0)
++    {
++        free(state);
++        return NULL;
++    }
++    IStream_AddRef(state->stream);
++    state->error = 0;
++    return state;
++}
++
++int ZCALLBACK win32s_close_file_func(voidpf opaque, voidpf stream)
++{
++    Win32sIOState *state = stream;
++    if (!state)
++        return -1;
++    IStream_Release(state->stream);
++    free(state);
++    return 0;
++}
++
++int ZCALLBACK win32s_error_file_func(voidpf opaque, voidpf stream)
++{
++    Win32sIOState *state = stream;
++    if (!state)
++        return -1;
++    return (int)state->error;
++}
++
++void fill_win32s_filefunc64(zlib_filefunc64_def *pzlib_filefunc_def)
++{
++    pzlib_filefunc_def->zopen64_file = win32s_open64_file_func;
++    pzlib_filefunc_def->zread_file = win32s_read_file_func;
++    pzlib_filefunc_def->zwrite_file = win32s_write_file_func;
++    pzlib_filefunc_def->ztell64_file = win32s_tell64_file_func;
++    pzlib_filefunc_def->zseek64_file = win32s_seek64_file_func;
++    pzlib_filefunc_def->zclose_file = win32s_close_file_func;
++    pzlib_filefunc_def->zerror_file = win32s_error_file_func;
++    pzlib_filefunc_def->opaque = NULL;
++}
+diff -rPu5 zlib-1.2.5.orig\minizip\iowin32s.h zlib-1.2.5\minizip\iowin32s.h
+--- zlib-1.2.5.orig\minizip\iowin32s.h	Thu Jan 01 01:00:00 1970
++++ zlib-1.2.5\minizip\iowin32s.h	Sat Jan 21 15:18:39 2012
+@@ -0,0 +1,14 @@
++/* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
++   License: Simplified BSD (see COPYING.BSD) */
++
++#include <windows.h>
++
++#ifdef __cplusplus
++extern "C" {
++#endif
++
++void fill_win32s_filefunc64 OF((zlib_filefunc64_def *pzlib_filefunc_def));
++
++#ifdef __cplusplus
++}
++#endif
+diff -rPu5 zlib-1.2.5.orig\minizip\unzalloc.c zlib-1.2.5\minizip\unzalloc.c
+--- zlib-1.2.5.orig\minizip\unzalloc.c	Thu Jan 01 01:00:00 1970
++++ zlib-1.2.5\minizip\unzalloc.c	Sat Feb 04 06:36:16 2012
+@@ -0,0 +1,27 @@
++/* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
++   License: Simplified BSD (see COPYING.BSD) */
++
++#include "unzalloc.h"
++
++static UnzipAllocFuncs *gAllocFuncs = NULL;
++
++void unzSetAllocFuncs(UnzipAllocFuncs *funcs)
++{
++    gAllocFuncs = funcs;
++}
++
++void *unzAlloc(size_t size)
++{
++    if (gAllocFuncs)
++        return gAllocFuncs->zip_alloc(NULL, 1, size);
++    else
++        return malloc(size);
++}
++
++void unzFree(void *p)
++{
++    if (gAllocFuncs)
++        gAllocFuncs->zip_free(NULL, p);
++    else
++        free(p);
++}
+diff -rPu5 zlib-1.2.5.orig\minizip\unzalloc.h zlib-1.2.5\minizip\unzalloc.h
+--- zlib-1.2.5.orig\minizip\unzalloc.h	Thu Jan 01 01:00:00 1970
++++ zlib-1.2.5\minizip\unzalloc.h	Sat Feb 04 06:42:30 2012
+@@ -0,0 +1,28 @@
++/* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
++   License: Simplified BSD (see COPYING.BSD) */
++
++#include <stdlib.h>
++
++#ifdef __cplusplus
++extern "C" {
++#endif
++
++/* to use a custom allocator, define INC_CUSTOM_ALLOC="unzalloc.h" when
++   compiling zlib and call unzSetAllocFuncs before opening a file */
++
++typedef struct {
++    void* (*zip_alloc)(void *opaque, size_t items, size_t size);
++    void (*zip_free)(void *opaque, void *addr);
++} UnzipAllocFuncs;
++
++void unzSetAllocFuncs(UnzipAllocFuncs *funcs);
++
++void *unzAlloc(size_t size);
++void unzFree(void *p);
++
++#define ALLOC(size) unzAlloc(size)
++#define TRYFREE(p) unzFree(p)
++
++#ifdef __cplusplus
++}
++#endif
+diff -rPu5 zlib-1.2.5.orig\minizip\unzip.c zlib-1.2.5\minizip\unzip.c
+--- zlib-1.2.5.orig\minizip\unzip.c	Mon Feb 15 04:59:40 2010
++++ zlib-1.2.5\minizip\unzip.c	Sat Feb 04 07:27:09 2012
+@@ -91,10 +91,16 @@
+ #  define local static
+ #endif
+ /* compile with -Dlocal if your debugger can't find static symbols */
+ 
+ 
++/* SumatraPDF: allow to include a custom allocator */
++#ifdef INC_CUSTOM_ALLOC
++#include INC_CUSTOM_ALLOC
++#endif
++
++
+ #ifndef CASESENSITIVITYDEFAULT_NO
+ #  if !defined(unix) && !defined(CASESENSITIVITYDEFAULT_YES)
+ #    define CASESENSITIVITYDEFAULT_NO
+ #  endif
+ #endif
+@@ -1373,10 +1379,15 @@
+ /*
+ // Unzip Helper Functions - should be here?
+ ///////////////////////////////////////////
+ */
+ 
++/* SumatraPDF: allow to include a custom allocator */
++static void *zlib_cust_alloc(voidpf opaque, uInt count, uInt size) { return ALLOC(count * size); }
++static void *bz_cust_alloc(voidpf opaque, int count, int size) { return ALLOC(count * size); }
++static void zlib_bz_cust_free(voidpf opaque, voidpf p) { TRYFREE(p); }
++
+ /*
+   Read the local header of the current zipfile
+   Check the coherency of the local header and info in the end of central
+         directory about this file
+   store in *piSizeVar the size of extra info in local header
+@@ -1548,17 +1559,19 @@
+     pfile_in_zip_read_info->stream.total_out = 0;
+ 
+     if ((s->cur_file_info.compression_method==Z_BZIP2ED) && (!raw))
+     {
+ #ifdef HAVE_BZIP2
+-      pfile_in_zip_read_info->bstream.bzalloc = (void *(*) (void *, int, int))0;
+-      pfile_in_zip_read_info->bstream.bzfree = (free_func)0;
++      /* SumatraPDF: allow to include a custom allocator */
++      pfile_in_zip_read_info->bstream.bzalloc = bz_cust_alloc;
++      pfile_in_zip_read_info->bstream.bzfree = zlib_bz_cust_free;
+       pfile_in_zip_read_info->bstream.opaque = (voidpf)0;
+       pfile_in_zip_read_info->bstream.state = (voidpf)0;
+ 
+-      pfile_in_zip_read_info->stream.zalloc = (alloc_func)0;
+-      pfile_in_zip_read_info->stream.zfree = (free_func)0;
++      /* SumatraPDF: allow to include a custom allocator */
++      pfile_in_zip_read_info->stream.zalloc = zlib_cust_alloc;
++      pfile_in_zip_read_info->stream.zfree = zlib_bz_cust_free;
+       pfile_in_zip_read_info->stream.opaque = (voidpf)0;
+       pfile_in_zip_read_info->stream.next_in = (voidpf)0;
+       pfile_in_zip_read_info->stream.avail_in = 0;
+ 
+       err=BZ2_bzDecompressInit(&pfile_in_zip_read_info->bstream, 0, 0);
+@@ -1573,12 +1586,13 @@
+       pfile_in_zip_read_info->raw=1;
+ #endif
+     }
+     else if ((s->cur_file_info.compression_method==Z_DEFLATED) && (!raw))
+     {
+-      pfile_in_zip_read_info->stream.zalloc = (alloc_func)0;
+-      pfile_in_zip_read_info->stream.zfree = (free_func)0;
++      /* SumatraPDF: allow to include a custom allocator */
++      pfile_in_zip_read_info->stream.zalloc = zlib_cust_alloc;
++      pfile_in_zip_read_info->stream.zfree = zlib_bz_cust_free;
+       pfile_in_zip_read_info->stream.opaque = (voidpf)0;
+       pfile_in_zip_read_info->stream.next_in = 0;
+       pfile_in_zip_read_info->stream.avail_in = 0;
+ 
+       err=inflateInit2(&pfile_in_zip_read_info->stream, -MAX_WBITS);

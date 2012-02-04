@@ -1,0 +1,20 @@
+diff -rPu5 libjpeg-turbo.orig\jdmarker.c libjpeg-turbo\jdmarker.c
+--- libjpeg-turbo.orig\jdmarker.c	Wed May 18 04:51:06 2011
++++ libjpeg-turbo\jdmarker.c	Sat Sep 24 01:22:49 2011
+@@ -324,10 +324,16 @@
+ 
+   for (i = 0; i < n; i++) {
+     INPUT_BYTE(cinfo, cc, return FALSE);
+     INPUT_BYTE(cinfo, c, return FALSE);
+     
++    /* SumatraPDF: handle duplicate IDs by index */
++    if (i < cinfo->num_components && cinfo->comp_info[i].component_id == cc) {
++      compptr = cinfo->comp_info + i;
++      goto id_found;
++    }
++    
+     for (ci = 0, compptr = cinfo->comp_info; ci < cinfo->num_components;
+ 	 ci++, compptr++) {
+       if (cc == compptr->component_id)
+ 	goto id_found;
+     }

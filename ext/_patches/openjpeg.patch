@@ -1,0 +1,53 @@
+diff -rPu5 openjpeg.orig\image.c openjpeg\image.c
+--- openjpeg.orig\image.c	Sat Feb 04 07:08:07 2012
++++ openjpeg\image.c	Sat Feb 04 07:09:59 2012
+@@ -81,9 +81,11 @@
+ 					opj_free(image_comp->data);
+ 				}
+ 			}
+ 			opj_free(image->comps);
+ 		}
++		/* SumatraPDF: fix memory leak */
++		if (image->icc_profile_buf) opj_free(image->icc_profile_buf);
+ 		opj_free(image);
+ 	}
+ }
+ 
+diff -rPu5 openjpeg.orig\tcd.c openjpeg\tcd.c
+--- openjpeg.orig\tcd.c	Sat Feb 04 07:08:07 2012
++++ openjpeg\tcd.c	Sat Dec 24 23:47:03 2011
+@@ -1375,10 +1375,16 @@
+ 	t1 = t1_create(tcd->cinfo);
+ 	for (compno = 0; compno < tile->numcomps; ++compno) {
+ 		opj_tcd_tilecomp_t* tilec = &tile->comps[compno];
+ 		/* The +3 is headroom required by the vectorized DWT */
+ 		tilec->data = (int*) opj_aligned_malloc((((tilec->x1 - tilec->x0) * (tilec->y1 - tilec->y0))+3) * sizeof(int));
++		/* SumatraPDF: prevent a potential NULL dereference */
++		if (!tilec->data) {				
++			opj_event_msg(tcd->cinfo, EVT_ERROR, "OOM in tcd_decode_tile!\n");
++			// TODO: this might leak memory
++			return false;
++		}
+ 		t1_decode_cblks(t1, tilec, &tcd->tcp->tccps[compno]);
+ 	}
+ 	t1_destroy(t1);
+ 	t1_time = opj_clock() - t1_time;
+ 	opj_event_msg(tcd->cinfo, EVT_INFO, "- tiers-1 took %f s\n", t1_time);
+@@ -1448,10 +1454,17 @@
+ 		int offset_y = int_ceildivpow2(imagec->y0, imagec->factor);
+ 
+ 		int i, j;
+ 		if(!imagec->data){
+ 			imagec->data = (int*) opj_malloc(imagec->w * imagec->h * sizeof(int));
++			/* SumatraPDF: prevent a potential NULL dereference */
++			if (!imagec->data) {
++				opj_event_msg(tcd->cinfo, EVT_ERROR, "OOM in tcd_decode_tile!\n");
++				opj_aligned_free(tilec->data);
++				// TODO: this might leak memory
++				return false;
++			}
+ 		}
+ 		if(tcd->tcp->tccps[compno].qmfbid == 1) {
+ 			for(j = res->y0; j < res->y1; ++j) {
+ 				for(i = res->x0; i < res->x1; ++i) {
+ 					int v = tilec->data[i - res->x0 + (j - res->y0) * tw];

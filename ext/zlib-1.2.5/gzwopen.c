@@ -1,4 +1,5 @@
-/* gzwopen.c -- open files with Unicode paths (for use in a DLL) */
+/* Copyright 2011 the SumatraPDF project authors (see AUTHORS file).
+   License: Simplified BSD (see COPYING.BSD) */
 
 #include <string.h>
 #include <io.h>
@@ -6,6 +7,7 @@
 
 #include "zlib.h"
 
+/* open files with Unicode paths (for use in a DLL) */
 gzFile ZEXPORT gzwopen(const wchar_t *path, const char *mode)
 {
     int flags = (strchr(mode, 'r') ? _O_RDONLY :
