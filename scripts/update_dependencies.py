@@ -38,14 +38,9 @@ def prependPath(files, basefile=None):
 @memoize
 def extractIncludes(file):
 	content = open(file, "r").read()
+	# filter out multi-line comments (could contain #include lines as examples)
+	content = re.sub(r'(?s)/\*.*?\*/', '/* */', content)
 	includes = re.findall(r'(?m)^#include ["<]([^">]+)[">]', content)
-
-	# avoid circular includes. They are valid because #include can
-	# be in comments and the script isn't smart enough to filter that out
-	base = os.path.basename(file)
-	while base in includes:
-		includes.remove(base)
-		#print("Removed %s include from %s" % (base, file))
 	includes = prependPath(includes, file)
 
 	for inc in includes:
