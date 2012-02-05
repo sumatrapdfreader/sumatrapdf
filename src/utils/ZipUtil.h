@@ -11,7 +11,7 @@
 class ZipFile {
     unzFile uf;
     Allocator *allocator;
-    Vec<const char *> filenames;
+    Vec<const TCHAR *> filenames;
     Vec<unz_file_info64> fileinfo;
 
 public:
@@ -20,21 +20,21 @@ public:
     ~ZipFile();
 
     size_t GetFileCount() const;
-    // caller must free() the result (fails for non-default allocators)
-    TCHAR *GetFileName(size_t fileindex);
+    // the result is owned by ZipFile
+    const TCHAR *GetFileName(size_t fileindex);
 
-    // the result must be Allocator::Free'd with the correct allocator (default: NULL)
-    char *GetFileData(const char *filename, size_t *len);
-    char *GetFileData(size_t fileindex, size_t *len);
+    // caller must free() the result (or rather Allocator::Free it)
+    char *GetFileData(const TCHAR *filename, size_t *len=NULL);
+    char *GetFileData(size_t fileindex, size_t *len=NULL);
 
-    FILETIME GetFileTime(const char *filename);
+    FILETIME GetFileTime(const TCHAR *filename);
     FILETIME GetFileTime(size_t fileindex);
 
-    bool UnzipFile(const char *filename, const TCHAR *dir, const TCHAR *unzippedName=NULL);
+    bool UnzipFile(const TCHAR *filename, const TCHAR *dir, const TCHAR *unzippedName=NULL);
 
 protected:
     void ExtractFilenames();
-    size_t GetFileIndex(const char *filename);
+    size_t GetFileIndex(const TCHAR *filename);
 };
 
 #endif

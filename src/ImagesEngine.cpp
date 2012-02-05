@@ -754,23 +754,26 @@ bool CCbxEngine::LoadCbzStream(IStream *stream)
     return FinishLoadingCbz();
 }
 
+static int cmpAscii(const void *a, const void *b)
+{
+    return _tcscmp(*(const TCHAR **)a, *(const TCHAR **)b);
+}
+
 bool CCbxEngine::FinishLoadingCbz()
 {
     fileExt = _T(".cbz");
 
-    Vec<TCHAR *> allFileNames;
-    StrVec pageFileNames;
+    Vec<const TCHAR *> allFileNames;
 
     for (size_t idx = 0; idx < cbzFile->GetFileCount(); idx++) {
-        ScopedMem<TCHAR> fileName(cbzFile->GetFileName(idx));
+        const TCHAR *fileName = cbzFile->GetFileName(idx);
         // bail, if we accidentally try to load an XPS file
-        if (fileName && str::StartsWith(fileName.Get(), _T("_rels/.rels")))
+        if (fileName && str::StartsWith(fileName, _T("_rels/.rels")))
             return false;
         if (fileName && ImageEngine::IsSupportedFile(fileName) &&
             // OS X occasionally leaves metadata with image extensions
             !str::StartsWith(path::GetBaseName(fileName), _T("."))) {
-            allFileNames.Append(fileName.Get());
-            pageFileNames.Append(fileName.StealData());
+            allFileNames.Append(fileName);
         }
         else {
             allFileNames.Append(NULL);
@@ -780,8 +783,13 @@ bool CCbxEngine::FinishLoadingCbz()
 
     // TODO: any meta-information available?
 
-    pageFileNames.Sort();
-    for (TCHAR **fn = pageFileNames.IterStart(); fn; fn = pageFileNames.IterNext()) {
+    Vec<const TCHAR *> pageFileNames;
+    for (const TCHAR **fn = allFileNames.IterStart(); fn; fn = allFileNames.IterNext()) {
+        if (*fn)
+            pageFileNames.Append(*fn);
+    }
+    pageFileNames.Sort(cmpAscii);
+    for (const TCHAR **fn = pageFileNames.IterStart(); fn; fn = pageFileNames.IterNext()) {
         fileIdxs.Append(allFileNames.Find(*fn));
     }
     assert(pageFileNames.Count() == fileIdxs.Count());

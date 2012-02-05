@@ -177,7 +177,8 @@ UNINSTALLER_OBJS = \
 
 ET_OBJS = \
 	$(OS)\EbookTest.obj $(OS)\EbookTestMenu.obj $(OS)\PageLayout.obj \
-	$(OS)\MobiDoc.obj $(ET_RES) $(CHROME_OBJS)
+	$(OS)\MobiDoc.obj $(ET_RES) $(CHROME_OBJS) \
+	$(OS)\EpubDoc.obj $(OS)\ZipUtil.obj $(ZLIB_OBJS) $(MINIZIP_OBJS) $(BZIP2_OBJS)
 
 TESTER_OBJS = \
 	$(OS)\Tester.obj $(OS)\MobiDoc.obj $(OS)\PageLayout.obj
@@ -417,6 +418,9 @@ $(OS)\EngineDump.obj: src\PsEngine.h src\utils\Allocator.h src\utils\BaseUtil.h
 $(OS)\EngineDump.obj: src\utils\CmdLineParser.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\EngineDump.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\EngineDump.obj: src\utils\WinUtil.h
+$(OS)\EpubDoc.obj: src\EpubDoc.h src\utils\Allocator.h src\utils\BaseUtil.h
+$(OS)\EpubDoc.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\EpubDoc.obj: src\utils\ZipUtil.h
 $(OS)\EpubEngine.obj: src\BaseEngine.h src\EpubEngine.h src\utils\Allocator.h
 $(OS)\EpubEngine.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\EpubEngine.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h

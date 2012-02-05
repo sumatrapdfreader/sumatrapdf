@@ -753,9 +753,9 @@ static bool DeleteSymbolsIfExist()
 static bool UnpackStaticSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir)
 {
 #ifdef SVN_PRE_RELEASE_VER
-    char *symbolsName = "SumatraPDF-prerelease-" QM(SVN_PRE_RELEASE_VER) ".pdb";
+    const TCHAR *symbolsName = _T("SumatraPDF-prerelease-") _T(QM(SVN_PRE_RELEASE_VER)) _T(".pdb");
 #else
-    char *symbolsName = "SumatraPDF-" QM(CURR_VERSION) ".pdb";
+    const TCHAR *symbolsName = _T("SumatraPDF-") _T(QM(CURR_VERSION)) _T(".pdb");
 #endif
     ZipFile archive(symbolsZipPath, gCrashHandlerAllocator);
     return archive.UnzipFile(symbolsName, symDir, _T("SumatraPDF.pdb"));
@@ -768,8 +768,8 @@ static bool UnpackStaticSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir
 static bool UnpackLibSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir)
 {
     ZipFile archive(symbolsZipPath, gCrashHandlerAllocator);
-    return archive.UnzipFile("libmupdf.pdb", symDir) &&
-           archive.UnzipFile("SumatraPDF-no-MuPDF.pdb", symDir, _T("SumatraPDF.pdb"));
+    return archive.UnzipFile(_T("libmupdf.pdb"), symDir) &&
+           archive.UnzipFile(_T("SumatraPDF-no-MuPDF.pdb"), symDir, _T("SumatraPDF.pdb"));
 }
 
 // *.pdb files are on S3 with a known name. Try to download them here to a directory

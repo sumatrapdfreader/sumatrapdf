@@ -72,25 +72,24 @@ static bool InstallCopyFiles()
         // skip files that are only uninstalled
         if (!gPayloadData[i].install)
             continue;
+        ScopedMem<TCHAR> filepathT(str::conv::FromUtf8(gPayloadData[i].filepath));
 
         size_t size;
-        ScopedMem<char> data(archive.GetFileData(gPayloadData[i].filepath, &size));
+        ScopedMem<char> data(archive.GetFileData(filepathT, &size));
         if (!data) {
             NotifyFailed(_T("Some files to be installed are damaged or missing"));
             return false;
         }
 
-        ScopedMem<TCHAR> inpath(str::conv::FromAnsi(gPayloadData[i].filepath));
-        ScopedMem<TCHAR> extpath(path::Join(gGlobalData.installDir, path::GetBaseName(inpath)));
-
+        ScopedMem<TCHAR> extpath(path::Join(gGlobalData.installDir, path::GetBaseName(filepathT)));
         bool ok = trans.WriteAll(extpath, data, size);
         if (ok) {
             // set modification time to original value
-            FILETIME ftModified = archive.GetFileTime(gPayloadData[i].filepath);
+            FILETIME ftModified = archive.GetFileTime(filepathT);
             trans.SetModificationTime(extpath, ftModified);
         }
         else {
-            ScopedMem<TCHAR> msg(str::Format(_T("Couldn't write %s to disk"), inpath));
+            ScopedMem<TCHAR> msg(str::Format(_T("Couldn't write %s to disk"), filepathT));
             NotifyFailed(msg);
         }
 

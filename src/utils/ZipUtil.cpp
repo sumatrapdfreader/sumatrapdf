@@ -35,10 +35,13 @@ ZipFile::~ZipFile()
     if (!uf)
         return;
     unzClose(uf);
-    for (const char **fn = filenames.IterStart(); fn; fn = filenames.IterNext()) {
-        Allocator::Free(allocator, (void *)*fn);
+    for (const TCHAR **fn = filenames.IterStart(); fn; fn = filenames.IterNext()) {
+        Allocator::Free(allocator, (TCHAR *)*fn);
     }
 }
+
+// cf. http://www.pkware.com/documents/casestudies/APPNOTE.TXT Appendix D
+#define CP_ZIP 437
 
 void ZipFile::ExtractFilenames()
 {
@@ -56,14 +59,18 @@ void ZipFile::ExtractFilenames()
         char fileName[MAX_PATH];
         err = unzGetCurrentFileInfo64(uf, &finfo, fileName, dimof(fileName), NULL, 0, NULL, 0);
         if (err == UNZ_OK) {
-            filenames.Append((const char *)Allocator::Dup(allocator, fileName, dimof(fileName)));
+            TCHAR fileNameT[MAX_PATH];
+            UINT cp = (finfo.flag & (1 << 11)) ? CP_UTF8 : CP_ZIP;
+            str::conv::FromCodePageBuf(fileNameT, dimof(fileNameT), fileName, cp);
+            filenames.Append((const TCHAR *)Allocator::Dup(allocator, fileNameT,
+                (str::Len(fileNameT) + 1) * sizeof(TCHAR)));
             fileinfo.Append(finfo);
         }
         err = unzGoToNextFile(uf);
     }
 }
 
-size_t ZipFile::GetFileIndex(const char *filename)
+size_t ZipFile::GetFileIndex(const TCHAR *filename)
 {
     for (size_t i = 0; i < filenames.Count(); i++) {
         if (str::Eq(filename, filenames.At(i)))
@@ -78,22 +85,14 @@ size_t ZipFile::GetFileCount() const
     return filenames.Count();
 }
 
-// cf. http://www.pkware.com/documents/casestudies/APPNOTE.TXT Appendix D
-#define CP_ZIP 437
-
-TCHAR *ZipFile::GetFileName(size_t fileindex)
+const TCHAR *ZipFile::GetFileName(size_t fileindex)
 {
-    // currently not needed for non-default allocators
-    if (allocator)
-        return NULL;
     if (fileindex >= filenames.Count())
         return NULL;
-
-    UINT cp = (fileinfo.At(fileindex).flag & (1 << 11)) ? CP_UTF8 : CP_ZIP;
-    return str::conv::FromCodePage(filenames.At(fileindex), cp);
+    return filenames.At(fileindex);
 }
 
-char *ZipFile::GetFileData(const char *filename, size_t *len)
+char *ZipFile::GetFileData(const TCHAR *filename, size_t *len)
 {
     return GetFileData(GetFileIndex(filename), len);
 }
@@ -104,7 +103,10 @@ char *ZipFile::GetFileData(size_t fileindex, size_t *len)
         return NULL;
     if (fileindex >= filenames.Count())
         return NULL;
-    int err = unzLocateFile(uf, filenames.At(fileindex), 0);
+    char fileNameA[MAX_PATH];
+    UINT cp = (fileinfo.At(fileindex).flag & (1 << 11)) ? CP_UTF8 : CP_ZIP;
+    str::conv::ToCodePageBuf(fileNameA, dimof(fileNameA), filenames.At(fileindex), cp);
+    int err = unzLocateFile(uf, fileNameA, 0);
     if (err != UNZ_OK)
         return NULL;
     err = unzOpenCurrentFilePassword(uf, NULL);
@@ -117,9 +119,11 @@ char *ZipFile::GetFileData(size_t fileindex, size_t *len)
         return NULL;
     }
 
-    char *result = (char *)Allocator::Alloc(allocator, len2);
+    char *result = (char *)Allocator::Alloc(allocator, len2 + 1);
     if (result) {
         unsigned int readBytes = unzReadCurrentFile(uf, result, (unsigned int)len2);
+        // zero-terminate for convenience
+        result[len2] = '\0';
         if (readBytes != len2) {
             Allocator::Free(allocator, result);
             result = NULL;
@@ -139,7 +143,7 @@ char *ZipFile::GetFileData(size_t fileindex, size_t *len)
     return result;
 }
 
-FILETIME ZipFile::GetFileTime(const char *filename)
+FILETIME ZipFile::GetFileTime(const TCHAR *filename)
 {
     return GetFileTime(GetFileIndex(filename));
 }
@@ -156,7 +160,7 @@ FILETIME ZipFile::GetFileTime(size_t fileindex)
     return ft;
 }
 
-bool ZipFile::UnzipFile(const char *filename, const TCHAR *dir, const TCHAR *unzippedName)
+bool ZipFile::UnzipFile(const TCHAR *filename, const TCHAR *dir, const TCHAR *unzippedName)
 {
     size_t len;
     char *data = GetFileData(filename, &len);
@@ -170,11 +174,8 @@ bool ZipFile::UnzipFile(const char *filename, const TCHAR *dir, const TCHAR *unz
     if (unzippedName) {
         filePath.Append(unzippedName);
     } else {
-        size_t idx = GetFileIndex(filename);
-        UINT cp = (fileinfo.At(idx).flag & (1 << 11)) ? CP_UTF8 : CP_ZIP;
-        TCHAR *buf = filePath.EnsureEndPadding(MAX_PATH);
-        size_t strlen = str::conv::FromCodePageBuf(buf, MAX_PATH, filenames.At(idx), cp);
-        filePath.IncreaseLen(strlen);
+        filePath.Append(filename);
+        str::TransChars(filePath.Get(), _T("/"), _T("\\"));
     }
 
     bool ok = file::WriteAll(filePath.Get(), data, len);

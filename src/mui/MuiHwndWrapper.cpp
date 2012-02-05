@@ -64,7 +64,8 @@ void HwndWrapper::RequestLayout()
 {
     layoutRequested = true;
     // trigger message queue so that the layout request is processed
-    PostMessage(hwndParent, WM_NULL, 0, 0);
+    InvalidateRect(hwndParent, NULL, TRUE);
+    UpdateWindow(hwndParent);
 }
 
 void HwndWrapper::LayoutIfRequested()

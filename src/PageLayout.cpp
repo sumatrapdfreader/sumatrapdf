@@ -582,7 +582,7 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
 
     HtmlTag tag = FindTag((char*)t->s, tagLen);
     // TODO: ignore instead of crashing once we're satisfied we covered all the tags
-    CrashIf(tag == Tag_NotFound);
+    // CrashIf(tag == Tag_NotFound);
 
     // update the current state of html tree
     if (t->IsStartTag())
@@ -613,12 +613,12 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
         return;
     }
 
-    if ((Tag_B == tag) || (Tag_Em == tag)) {
+    if ((Tag_B == tag) || (Tag_Strong == tag)) {
         ChangeFont(FontStyleBold, t->IsStartTag());
         return;
     }
 
-    if (Tag_I == tag) {
+    if ((Tag_I == tag) || (Tag_Em == tag)) {
         ChangeFont(FontStyleItalic, t->IsStartTag());
         return;
     }

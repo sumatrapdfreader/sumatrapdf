@@ -346,6 +346,14 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\src\EpubDoc.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\EpubDoc.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\MobiDoc.cpp"
 				>
 			</File>
