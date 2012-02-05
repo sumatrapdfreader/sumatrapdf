@@ -17,6 +17,7 @@ using std::max;
 #include "FrameTimeoutCalculator.h"
 #include "MobiDoc.h"
 #include "EpubDoc.h"
+#include "Fb2Doc.h"
 #include "Mui.h"
 #include "NoFreeAllocator.h"
 #include "Resource.h"
@@ -114,6 +115,7 @@ class ControlEbook
 public:
     MobiDoc *       mb;
     EpubDoc *       epub;
+    Fb2Doc *        fb2;
     const char *    html;
 
     Vec<PageData*>* pages;
@@ -178,6 +180,7 @@ public:
 
     void MobiLoaded(MobiDoc *mb);
     void EpubLoaded(EpubDoc *epub);
+    void Fb2Loaded(Fb2Doc *fb2);
     void MobiFailedToLoad(const TCHAR *fileName);
     void LoadMobiBackground(const TCHAR *fileName);
     void StopMobiLoadThread();
@@ -295,6 +298,7 @@ ControlEbook::ControlEbook(HWND hwnd)
     pageLayoutThread = NULL;
     mb = NULL;
     epub = NULL;
+    fb2 = NULL;
     html = NULL;
     pages = NULL;
     currPageNo = 1;
@@ -393,6 +397,7 @@ ControlEbook::~ControlEbook()
     DeletePages();
     delete mb;
     delete epub;
+    delete fb2;
     delete statusDefault;
     delete facebookButtonDefault;
     delete facebookButtonOver;
@@ -531,8 +536,10 @@ void ControlEbook::PageLayout(int dx, int dy)
         len = strlen(html);
     else if (mb)
         html = mb->GetBookHtmlData(len);
-    else
+    else if (epub)
         html = epub->GetBookHtmlData(len);
+    else
+        html = fb2->GetBookHtmlData(len);
 
     li->fontName = FONT_NAME;
     li->fontSize = FONT_SIZE;
@@ -585,8 +592,10 @@ void ControlEbook::MobiLoaded(MobiDoc *newMobi)
     StopMobiLoadThread();
     delete mb;
     delete epub;
+    delete fb2;
     mb = newMobi;
     epub = NULL;
+    fb2 = NULL;
     html = NULL;
     delete pages;
     pages = NULL;
@@ -602,8 +611,29 @@ void ControlEbook::EpubLoaded(EpubDoc *newEpub)
     StopMobiLoadThread();
     delete mb;
     delete epub;
+    delete fb2;
     mb = NULL;
     epub = newEpub;
+    fb2 = NULL;
+    html = NULL;
+    delete pages;
+    pages = NULL;
+    RequestLayout();
+}
+
+// called on UI thread from background thread after
+// fb2 file has been loaded
+void ControlEbook::Fb2Loaded(Fb2Doc *newFb2)
+{
+    l("ControlEbook::EpubLoaded()");
+    CrashIf(gMessageLoopUI != MessageLoop::current());
+    StopMobiLoadThread();
+    delete mb;
+    delete epub;
+    delete fb2;
+    mb = NULL;
+    epub = NULL;
+    fb2 = newFb2;
     html = NULL;
     delete pages;
     pages = NULL;
@@ -634,21 +664,27 @@ void ControlEbook::LoadMobiBackground(const TCHAR *fileName)
     Timer t(true);
     MobiDoc *mb = NULL;
     EpubDoc *epub = NULL;
+    Fb2Doc *fb2 = NULL;
     if (str::EndsWithI(fileName, _T(".epub")))
         epub = EpubDoc::ParseFile(fileName);
+    else if (str::EndsWithI(fileName, _T(".fb2")))
+        fb2 = Fb2Doc::ParseFile(fileName);
     else
         mb = MobiDoc::ParseFile(fileName);
     lf(_T("Loaded %s in %.2f ms"), fileName, t.GetCurrTimeInMs());
 
-    if (!mb && !epub)
+    if (!mb && !epub && !fb2)
         gMessageLoopUI->PostTask(base::Bind(&ControlEbook::MobiFailedToLoad,
                                  base::Unretained(this), str::Dup(fileName)));
     else if (mb)
         gMessageLoopUI->PostTask(base::Bind(&ControlEbook::MobiLoaded,
                                  base::Unretained(this), mb));
-    else
+    else if (epub)
         gMessageLoopUI->PostTask(base::Bind(&ControlEbook::EpubLoaded,
                                  base::Unretained(this), epub));
+    else
+        gMessageLoopUI->PostTask(base::Bind(&ControlEbook::Fb2Loaded,
+                                 base::Unretained(this), fb2));
     free((void*)fileName);
 }
 
@@ -802,7 +838,7 @@ static void OnOpen(HWND hwnd)
     str::Str<TCHAR> fileFilter;
     fileFilter.Append(_T("All supported documents"));
 
-    ofn.lpstrFilter = _T("All supported documents\0;*.mobi;*.awz;*.epub\0\0");
+    ofn.lpstrFilter = _T("All supported documents\0;*.mobi;*.awz;*.epub;*.fb2\0\0");
     ofn.nFilterIndex = 1;
     ofn.lpstrFileTitle = NULL;
     ofn.nMaxFileTitle = 0;

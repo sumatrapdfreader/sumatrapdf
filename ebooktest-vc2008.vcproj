@@ -370,6 +370,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\Fb2Doc.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\Fb2Doc.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\MobiDoc.cpp"
 				>
 			</File>

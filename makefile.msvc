@@ -144,6 +144,10 @@ UTILS_OBJS = \
 	$(OS)\DirIter.obj $(OS)\BitReader.obj $(OS)\HtmlPullParser.obj \
 	$(OS)\ThreadUtil.obj $(OS)\NoFreeAllocator.obj
 
+# requires either MuPDF/libmupdf or $(ZLIB_OBJS)
+ZIP_OBJS = \
+	$(OS)\ZipUtil.obj $(MINIZIP_OBJS) $(BZIP2_OBJS)
+
 MUI_OBJS = \
 	$(OS)\MuiBase.obj $(OS)\Mui.obj $(OS)\MuiCss.obj $(OS)\MuiLayout.obj \
 	$(OS)\MuiPainter.obj $(OS)\MuiControl.obj $(OS)\MuiButton.obj \
@@ -151,7 +155,7 @@ MUI_OBJS = \
 
 ENGINE_OBJS = \
 	$(OS)\PdfEngine.obj $(OS)\PsEngine.obj \
-	$(OS)\ImagesEngine.obj $(OS)\ZipUtil.obj \
+	$(OS)\ImagesEngine.obj $(ZIP_OBJS) $(UNRAR_OBJS) \
 	$(OS)\DjVuEngine.obj $(DJVU_OBJS) \
 	$(OS)\ChmEngine.obj $(CHMLIB_OBJS)
 
@@ -166,22 +170,22 @@ SUMATRA_OBJS = \
 	$(OS)\Toolbar.obj $(OS)\Print.obj $(OS)\Notifications.obj \
 	$(OS)\Search.obj $(OS)\Menu.obj $(OS)\ExternalPdfViewer.obj \
 	$(OS)\Selection.obj $(SUMATRA_RES) \
-	$(UTILS_OBJS) $(BZIP2_OBJS) $(MINIZIP_OBJS) $(UNRAR_OBJS) \
-	$(SYNCTEX_OBJS) $(ENGINE_OBJS)
+	$(UTILS_OBJS) $(ENGINE_OBJS) $(SYNCTEX_OBJS)
  
 INSTALLER_OBJS = \
-	$(OS)\Installer.obj $(INSTALLER_RES) $(OS)\ZipUtil.obj
+	$(OS)\Installer.obj $(INSTALLER_RES) $(UTILS_OBJS) $(ZIP_OBJS) $(ZLIB_OBJS)
 
 UNINSTALLER_OBJS = \
-	$(OS)\Uninstaller.obj $(UNINSTALLER_RES)
+	$(OS)\Uninstaller.obj $(UNINSTALLER_RES) $(UTILS_OBJS)
 
 ET_OBJS = \
-	$(OS)\EbookTest.obj $(OS)\EbookTestMenu.obj $(OS)\PageLayout.obj \
-	$(OS)\MobiDoc.obj $(ET_RES) $(CHROME_OBJS) \
-	$(OS)\EpubDoc.obj $(OS)\ZipUtil.obj $(ZLIB_OBJS) $(MINIZIP_OBJS) $(BZIP2_OBJS)
+	$(OS)\EbookTest.obj $(OS)\EbookTestMenu.obj $(ET_RES) \
+	$(OS)\PageLayout.obj $(MUI_OBJS) $(UTILS_OBJS) $(CHROME_OBJS) \
+	$(OS)\MobiDoc.obj $(OS)\EpubDoc.obj $(ZIP_OBJS) $(ZLIB_OBJS) $(OS)\Fb2Doc.obj
 
 TESTER_OBJS = \
-	$(OS)\Tester.obj $(OS)\MobiDoc.obj $(OS)\PageLayout.obj
+	$(OS)\Tester.obj $(OS)\MobiDoc.obj $(OS)\PageLayout.obj \
+	$(UTILS_OBJS) $(MUI_OBJS)
 
 PDFFILTER_OBJS = \
 	$(OS)\PdfFilterDll.obj $(OS)\CPdfFilter.obj $(PDFFILTER_RES) \
@@ -198,8 +202,7 @@ BROWSER_PLUGIN_OBJS = \
 	$(OS)\StrUtil.obj $(OS)\FileUtil.obj $(OS)\WinUtil.obj
 
 ENGINEDUMP_OBJS = \
-	$(OS)\EngineDump.obj $(ENGINE_OBJS) $(LIBS_OBJS) \
-	$(UTILS_OBJS) $(BZIP2_OBJS) $(MINIZIP_OBJS) $(UNRAR_OBJS)
+	$(OS)\EngineDump.obj $(ENGINE_OBJS) $(LIBS_OBJS) $(UTILS_OBJS)
 
 !if "$(WITH_MICROCRT)"=="yes"
 ET_OBJS 		 	= $(ET_OBJS) $(MICROCRT_WIN_OBJS)
@@ -221,9 +224,7 @@ PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_XPS_PREVIEW"
 !endif
 !if "$(BUILD_CBZ_PREVIEW)"!=""
 PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_CBZ_PREVIEW"
-PDFPREVIEW_OBJS = $(PDFPREVIEW_OBJS) \
-	$(OS)\ImagesEngine.obj $(OS)\GdiPlusUtil.obj $(OS)\ZipUtil.obj \
-	$(MINIZIP_OBJS) $(BZIP2_OBJS)
+PDFPREVIEW_OBJS = $(PDFPREVIEW_OBJS) $(OS)\ImagesEngine.obj $(OS)\GdiPlusUtil.obj $(ZIP_OBJS)
 !endif
 
 ##### SumatraPDF-specific build rules #####
@@ -269,19 +270,19 @@ $(INSTALLER_RES): src\installer\Installer.rc src\installer\Resource.h src\Versio
 $(UNINSTALLER_RES): src\installer\Installer.rc src\installer\Resource.h src\Version.h
 	rc /r /fo$@ $(EXTCFLAGS) /D "BUILD_UNINSTALLER" src\installer\Installer.rc
 
-$(INSTALLER_APP): $(ZLIB_OBJS) $(MINIZIP_OBJS) $(BZIP2_OBJS) $(UTILS_OBJS) $(INSTALLER_OBJS)
+$(INSTALLER_APP): $(INSTALLER_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
 
-$(UNINSTALLER_APP): $(UTILS_OBJS) $(UNINSTALLER_OBJS)
+$(UNINSTALLER_APP): $(UNINSTALLER_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
 
 $(ET_RES): src\ebooktest\EbookTest.rc src\ebooktest\Resource.h src\Version.h
 	rc /r /fo$@ $(EXTCFLAGS) src\ebooktest\EbookTest.rc
 
-$(ET_APP): $(UTILS_OBJS) $(MUI_OBJS) $(ET_OBJS)
+$(ET_APP): $(ET_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) dbghelp.lib psapi.lib /PDB:$*.pdb /OUT:$@
 
-$(TESTER_APP): $(UTILS_OBJS) $(MUI_OBJS) $(TESTER_OBJS)
+$(TESTER_APP): $(TESTER_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
 
 $(PDFFILTER_RES): src\ifilter\PdfFilter.rc src\Version.h
