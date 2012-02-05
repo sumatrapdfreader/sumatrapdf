@@ -582,7 +582,7 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
 
     HtmlTag tag = FindTag((char*)t->s, tagLen);
     // TODO: ignore instead of crashing once we're satisfied we covered all the tags
-    // CrashIf(tag == Tag_NotFound);
+    CrashIf(tag == Tag_NotFound);
 
     // update the current state of html tree
     if (t->IsStartTag())
@@ -605,38 +605,25 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
             StartNewLine(false);
         }
         currJustification = newJustification;
-        return;
     }
-
-    if (Tag_Hr == tag) {
+    else if (Tag_Hr == tag) {
         AddHr();
-        return;
     }
-
-    if ((Tag_B == tag) || (Tag_Strong == tag)) {
+    else if ((Tag_B == tag) || (Tag_Strong == tag)) {
         ChangeFont(FontStyleBold, t->IsStartTag());
-        return;
     }
-
-    if ((Tag_I == tag) || (Tag_Em == tag)) {
+    else if ((Tag_I == tag) || (Tag_Em == tag)) {
         ChangeFont(FontStyleItalic, t->IsStartTag());
-        return;
     }
-
-    if (Tag_U == tag) {
+    else if (Tag_U == tag) {
         ChangeFont(FontStyleUnderline, t->IsStartTag());
-        return;
     }
-
-    if (Tag_Strike == tag) {
+    else if (Tag_Strike == tag) {
         ChangeFont(FontStyleStrikeout, t->IsStartTag());
-        return;
     }
-
-    if (Tag_Mbp_Pagebreak == tag) {
+    else if ((Tag_Pagebreak == tag) || (Tag_Mbp_Pagebreak == tag)) {
         JustifyLine(currJustification);
         StartNewPage();
-        return;
     }
 }
 

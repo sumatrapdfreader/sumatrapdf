@@ -60,7 +60,7 @@ bool EpubDoc::Load()
         return false;
 
     if (str::FindChar(contentPath, '/'))
-        *(TCHAR *)str::FindCharLast(contentPath, '/') = '\0';
+        *(TCHAR *)(str::FindCharLast(contentPath, '/') + 1) = '\0';
     else
         *contentPath = '\0';
     for (node = node->down; node; node = node->next) {
@@ -69,14 +69,14 @@ bool EpubDoc::Load()
             ScopedMem<TCHAR> htmlPath(node->GetAttribute("href"));
             if (!htmlPath)
                 continue;
-            htmlPath.Set(str::Join(contentPath, _T("/"), htmlPath));
+            htmlPath.Set(str::Join(contentPath, htmlPath));
 
             ScopedMem<char> html(zip.GetFileData(htmlPath));
             if (!html)
                 continue;
             if (htmlData.Count() > 0) {
                 // insert explicit page-breaks between sections
-                htmlData.Append("<mbp:pagebreak />");
+                htmlData.Append("<pagebreak />");
             }
             htmlData.Append(html);
         }
