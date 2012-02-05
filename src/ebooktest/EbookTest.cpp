@@ -497,8 +497,8 @@ void ControlEbook::NewPage(PageData *pageData)
 // called on a background thread
 void ControlEbook::PageLayoutBackground(LayoutInfo *li)
 {
-    Vec<PageData*> pages = LayoutHtml(li);
-    delete pages;
+    Vec<PageData*> *newPages = LayoutHtml(li);
+    delete newPages;
     gMessageLoopUI->PostTask(base::Bind(&ControlEbook::PageLayoutFinished,
                                         base::Unretained(this)));
     delete li;
@@ -507,7 +507,7 @@ void ControlEbook::PageLayoutBackground(LayoutInfo *li)
 void ControlEbook::PageLayout(int dx, int dy)
 {
     lf("ControlEbook::PageLayout: (%d,%d)", dx, dy);
-    if ((dx == pageDx) || (dy == page) && pages)
+    if ((dx == pageDx) && (dy == pageDy) && pages)
         return;
 
     if (pages || pageLayoutThread)

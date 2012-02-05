@@ -127,25 +127,8 @@ public:
     ~PageLayout();
 
     void Start(LayoutInfo* layoutInfo);
+    void StartLayout(LayoutInfo* layoutInfo);
     PageData *Next();
-#if 0
-    size_t PageCount() const {
-        return pageInstrOffset.Count();
-    }
-
-    DrawInstr *GetInstructionsForPage(size_t pageNo, DrawInstr *& endInstr) const {
-        CrashIf(pageNo >= PageCount());
-        size_t start = pageInstrOffset.At(pageNo);
-        size_t end = instructions.Count(); // if the last page
-        if (pageNo < PageCount() - 1)
-            end = pageInstrOffset.At(pageNo + 1);
-        CrashIf(end < start);
-        size_t len = end - start;
-        DrawInstr *ret = &instructions.At(start);
-        endInstr = ret + len;
-        return ret;
-    }
-#endif
 
 private:
     void HandleHtmlTag(HtmlToken *t);
@@ -161,7 +144,6 @@ private:
 
     TextJustification AlignAttrToJustification(AlignAttr align);
 
-    void StartLayout(LayoutInfo* layoutInfo);
     void StartNewPage();
     void StartNewLine(bool isParagraphBreak);
 
@@ -719,10 +701,10 @@ Vec<PageData*> *LayoutHtml(LayoutInfo* li)
 {
     Vec<PageData*> *pages = new Vec<PageData*>();
     PageLayout l;
-    l.StartLayout(layoutInfo);
+    l.StartLayout(li);
     PageData *pd;
     for (;;) {
-        pd = Next();
+        pd = l.Next();
         if (!pd)
             break;
         pages->Append(pd);

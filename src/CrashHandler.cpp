@@ -5,9 +5,6 @@
 #include <dbghelp.h>
 #include <tlhelp32.h>
 
-#include <unzalloc.h>
-#include <unzip.h>
-
 #include "AppTools.h"
 #include "CrashHandler.h"
 #include "FileUtil.h"
