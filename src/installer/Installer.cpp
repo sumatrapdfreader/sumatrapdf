@@ -312,16 +312,6 @@ bool RegisterServerDLL(TCHAR *dllPath, bool unregister=false)
     return ok;
 }
 
-#ifndef BUILD_UNINSTALLER
-extern "C" {
-// needed because we compile bzip2 with #define BZ_NO_STDIO
-void bz_internal_error(int errcode)
-{
-    NotifyFailed(_T("fatal error: bz_internal_error()"));
-}
-}
-#endif
-
 static bool IsUsingInstallation(DWORD procId)
 {
     ScopedHandle snap(CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, procId));
