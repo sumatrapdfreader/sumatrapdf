@@ -31,6 +31,7 @@
 #include "Toolbar.h"
 #include "Print.h"
 #include "Search.h"
+#include "Timer.h"
 #include "ExternalPdfViewer.h"
 #include "Selection.h"
 #include "Menu.h"
@@ -625,7 +626,7 @@ static void CreateChmThumbnail(WindowInfo& win, DisplayState& ds)
     assert(win.IsChm());
     if (!win.IsChm()) return;
 
-    MillisecondTimer t(true);
+    Timer t(true);
 
     ChmEngine *chmEngine = static_cast<ChmEngine *>(win.dm->AsChmEngine()->Clone());
     if (!chmEngine)

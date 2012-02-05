@@ -121,6 +121,7 @@
     <ClCompile Include="src\utils\StrUtil.cpp" />
     <ClCompile Include="src\utils\Touch.cpp" />
     <ClCompile Include="src\utils\TrivialHtmlParser.cpp" />
+    <ClCompile Include="src\utils\WinUtil.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\chrome\base\atomicops.h" />
@@ -195,17 +196,21 @@
     <ClInclude Include="src\utils\Allocator.h" />
     <ClInclude Include="src\utils\BaseUtil.h" />
     <ClInclude Include="src\utils\BitManip.h" />
+    <ClInclude Include="src\utils\DebugLog.h" />
     <ClInclude Include="src\utils\FileUtil.h" />
     <ClInclude Include="src\utils\FrameTimeoutCalculator.h" />
     <ClInclude Include="src\utils\GdiPlusUtil.h" />
     <ClInclude Include="src\utils\HtmlPullParser.h" />
     <ClInclude Include="src\utils\NoFreeAllocator.h" />
     <ClInclude Include="src\utils\Scoped.h" />
+    <ClInclude Include="src\utils\SimpleLog.h" />
     <ClInclude Include="src\utils\StrUtil.h" />
+    <ClInclude Include="src\utils\Timer.h" />
     <ClInclude Include="src\utils\Touch.h" />
     <ClInclude Include="src\utils\TrivialHtmlParser.h" />
     <ClInclude Include="src\utils\Vec.h" />
     <ClInclude Include="src\utils\VecSegmented.h" />
+    <ClInclude Include="src\utils\WinUtil.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="docs\ebook-todo.txt" />

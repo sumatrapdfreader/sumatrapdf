@@ -61,14 +61,24 @@ struct DrawInstr {
     }
 };
 
+struct LayoutState {
+    const char *htmlStart;
+    const char *htmlEnd;
+};
+
 struct PageData {
     Vec<DrawInstr>  drawInstructions;
 
     /* Most of the time string DrawInstr point to original html text
        that is read-only and outlives us. Sometimes (e.g. when resolving
        html entities) we need a modified text. This allocator is
-       used to allocate those strings. */
+       used to allocate this text. */
     PoolAllocator  text;
+
+    /* layoutState at the beginning of this page. It allows us to
+       re-do layout starting exactly where this page starts, which
+       is needed when handling resizing */
+    LayoutState    layoutState;
 
     void Append(DrawInstr& di) {
         drawInstructions.Append(di);
@@ -108,5 +118,8 @@ public:
     INewPageObserver *observer;
 };
 
-void LayoutHtml(LayoutInfo* li);
+Vec<PageData*> *LayoutHtml(LayoutInfo* li);
+
+void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox);
+
 #endif

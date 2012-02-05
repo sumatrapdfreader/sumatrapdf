@@ -9,11 +9,12 @@
 #include <exdispid.h>
 #include <wininet.h>
 
-#include "StrUtil.h"
 #include "GeomUtil.h"
-#include "WinUtil.h"
 #include "Scoped.h"
+#include "StrUtil.h"
+#include "Timer.h"
 #include "Vec.h"
+#include "WinUtil.h"
 
 #pragma comment(lib, "urlmon")
 
@@ -1434,7 +1435,7 @@ static bool LoadedExpectedPage(const TCHAR *expectedUrl, const TCHAR *loadedUrl)
 
 bool HtmlWindow::WaitUntilLoaded(DWORD maxWaitMs, const TCHAR *url)
 {
-    MillisecondTimer timer(true);
+    Timer timer(true);
     // in some cases (like reading chm from network drive without the right permissions)
     // web control might navigate to about:blank instead of the url we asked for, so
     // we stop when navigation is finished but only consider it successful if

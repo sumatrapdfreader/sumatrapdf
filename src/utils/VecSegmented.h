@@ -8,12 +8,13 @@
 #include "StrUtil.h"
 #include "Allocator.h"
 
-/* VecSegmented has (mostly) the same API as Vec but it allocates
+/* VecSegmented has (mostly) the same API as Vec but allocates
    using PoolAllocator. This means it's append only (we have no
    easy way to remove an item). The upside is that we can retain
    pointers to elements within the vector because we never
    reallocate memory, so once the element has been added to the
    array, it forever occupies the same piece of memory.
+   It's also safe to read allocated elements in any thread.
 */
 template <typename T>
 class VecSegmented {

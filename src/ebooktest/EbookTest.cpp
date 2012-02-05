@@ -11,20 +11,23 @@ using std::max;
 #include "base/threading/thread.h"
 #include "base/bind.h"
 
-#include "Resource.h"
-#include "NoFreeAllocator.h"
-#include "StrUtil.h"
-#include "FileUtil.h"
-#include "WinUtil.h"
-#include "Version.h"
-#include "Mui.h"
-
 #include "CmdLineParser.h"
-#include "FrameTimeoutCalculator.h"
-#include "Scoped.h"
-#include "PageLayout.h"
-#include "MobiDoc.h"
 #include "EbookTestMenu.h"
+#include "FileUtil.h"
+#include "FrameTimeoutCalculator.h"
+#include "MobiDoc.h"
+#include "Mui.h"
+#include "NoFreeAllocator.h"
+#include "Resource.h"
+#include "PageLayout.h"
+#include "StrUtil.h"
+#include "Scoped.h"
+#include "Timer.h"
+#include "Version.h"
+#include "WinUtil.h"
+
+#define NOLOG defined(NDEBUG)
+#include "DebugLog.h"
 
 /*
 TODO: doing layout on a background thread needs to be more sophisticated.
@@ -57,8 +60,6 @@ using namespace mui;
 
 class ControlEbook;
 
-#define l(s) OutputDebugStringA(s)
-
 #define ET_FRAME_CLASS_NAME    _T("ET_FRAME")
 
 #define FONT_NAME              L"Georgia"
@@ -90,6 +91,15 @@ ___________________
 ___________________
 */
 
+#if 0
+// Keeps laid out pages for given dimensions
+struct Pages {
+    int             pageDx;
+    int             pageDy;
+    Vec<PageData*>  pages;
+};
+#endif
+
 class ControlEbook
     : public HwndWrapper,
       public IClickHandler,
@@ -105,14 +115,13 @@ public:
     const char *    html;
 
     Vec<PageData*>* pages;
-    int             currPageNo;
+    int             currPageNo; // within pages
+    int             pageDx, pageDy; // size of the page for which pages was generated
 
-    // those are temporary pages sent to us from background
-    // thread during layout
-    Vec<PageData*>* newPages;
+    // pages 
+    Vec<PageData*>* tmpPages;
 
     int             cursorX, cursorY;
-    int             lastDx, lastDy;
     base::Thread *  mobiLoadThread;
     base::Thread *  pageLayoutThread;
 
@@ -284,9 +293,8 @@ ControlEbook::ControlEbook(HWND hwnd)
     mb = NULL;
     html = NULL;
     pages = NULL;
-    newPages = NULL;
     currPageNo = 0;
-    lastDx = 0; lastDy = 0;
+    pageDx = 0; pageDy = 0;
     SetHwnd(hwnd);
 
     cursorX = -1; cursorY = -1;
@@ -401,11 +409,13 @@ void ControlEbook::DeletePages()
 
 void ControlEbook::DeleteNewPages()
 {
+#if 0
     if (!newPages)
         return;
     DeleteVecMembers<PageData*>(*newPages);
     delete newPages;
     newPages = NULL;
+#endif
 }
 
 void ControlEbook::SetStatusText() const
@@ -444,6 +454,7 @@ void ControlEbook::AdvancePage(int dist)
 void ControlEbook::PageLayoutFinished()
 {
     StopPageLayoutThread();
+#if 0
     if (!newPages)
         return;
     DeletePages();
@@ -455,11 +466,13 @@ void ControlEbook::PageLayoutFinished()
         currPageNo = 1;
     SetStatusText();
     RequestRepaint(this);
+#endif
 }
 
 // called on a ui thread from background thread
 void ControlEbook::NewPageUIThread(PageData *pageData)
 {
+#if 0
     if (!newPages)
         newPages = new Vec<PageData*>();
 
@@ -471,6 +484,7 @@ void ControlEbook::NewPageUIThread(PageData *pageData)
         ScopedMem<TCHAR> s(str::Format(_T("Layout started. Please wait...")));
         status->SetText(s.Get());
     }
+#endif
 }
 
 // called on a background thread
@@ -483,7 +497,8 @@ void ControlEbook::NewPage(PageData *pageData)
 // called on a background thread
 void ControlEbook::PageLayoutBackground(LayoutInfo *li)
 {
-    LayoutHtml(li);
+    Vec<PageData*> pages = LayoutHtml(li);
+    delete pages;
     gMessageLoopUI->PostTask(base::Bind(&ControlEbook::PageLayoutFinished,
                                         base::Unretained(this)));
     delete li;
@@ -491,13 +506,18 @@ void ControlEbook::PageLayoutBackground(LayoutInfo *li)
 
 void ControlEbook::PageLayout(int dx, int dy)
 {
-    if ((pages || newPages || pageLayoutThread) && ((lastDx == dx) && (lastDy == dy)))
+    lf("ControlEbook::PageLayout: (%d,%d)", dx, dy);
+    if ((dx == pageDx) || (dy == page) && pages)
         return;
+
+    if (pages || pageLayoutThread)
+        return;
+
     StopPageLayoutThread();
 
     DeleteNewPages();
-    lastDx = dx;
-    lastDy = dy;
+    pageDx = dx;
+    pageDy = dy;
 
     LayoutInfo *li = new LayoutInfo();
 
@@ -514,17 +534,19 @@ void ControlEbook::PageLayout(int dx, int dy)
     li->pageDx = dx;
     li->pageDy = dy;
     li->observer = this;
-
+#if 0
     pageLayoutThread = new base::Thread("ControlEbook::PageLayoutBackground");
     pageLayoutThread->Start();
     pageLayoutThread->message_loop()->PostTask(base::Bind(&ControlEbook::PageLayoutBackground,
                                              base::Unretained(this), li));
+#endif
 }
 
 void ControlEbook::StopPageLayoutThread()
 {
     if (!pageLayoutThread)
         return;
+    l("ControlEbook::StopPageLayoutThread()");
     pageLayoutThread->Stop();
     delete pageLayoutThread;
     pageLayoutThread = NULL;
@@ -539,6 +561,7 @@ void ControlEbook::StopMobiLoadThread()
 {
     if (!mobiLoadThread)
         return;
+    l("Stopping mobi load thread");
     mobiLoadThread->Stop();
     delete mobiLoadThread;
     mobiLoadThread = NULL;
@@ -548,7 +571,9 @@ void ControlEbook::StopMobiLoadThread()
 // mobi file has been loaded
 void ControlEbook::MobiLoaded(MobiDoc *newMobi)
 {
+    l("ControlEbook::MobiLoaded()");
     CrashIf(gMessageLoopUI != MessageLoop::current());
+    StopMobiLoadThread();
     delete mb;
     mb = newMobi;
     html = NULL;
@@ -561,7 +586,9 @@ void ControlEbook::MobiLoaded(MobiDoc *newMobi)
 // to load mobi file but failed
 void ControlEbook::MobiFailedToLoad(const TCHAR *fileName)
 {
+    l("ControlEbook::MobiFailedToLoad()");
     CrashIf(gMessageLoopUI != MessageLoop::current());
+    StopMobiLoadThread();
     // TODO: this message should show up in a different place,
     // reusing status for convenience
     ScopedMem<TCHAR> s(str::Format(_T("Failed to load %s!"), fileName));
@@ -575,7 +602,11 @@ void ControlEbook::MobiFailedToLoad(const TCHAR *fileName)
 void ControlEbook::LoadMobiBackground(const TCHAR *fileName)
 {
     CrashIf(gMessageLoopUI == MessageLoop::current());
+    lf(_T("ControlEbook::LoadMobiBackground(%s)"), fileName);
+    Timer t(true);
     MobiDoc *mb = MobiDoc::ParseFile(fileName);
+    lf(_T("Loaded %s in %.2f ms"), fileName, t.GetCurrTimeInMs());
+
     if (!mb)
         gMessageLoopUI->PostTask(base::Bind(&ControlEbook::MobiFailedToLoad,
                                  base::Unretained(this), fileName));
@@ -681,46 +712,6 @@ static inline void EnableAndShow(HWND hwnd, bool enable)
     EnableWindow(hwnd, enable);
 }
 
-static void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY)
-{
-    StringFormat sf(StringFormat::GenericTypographic());
-    SolidBrush br(Color(0,0,0));
-    SolidBrush br2(Color(255, 255, 255, 255));
-    Pen pen(Color(255, 0, 0), 1);
-    Pen blackPen(Color(0, 0, 0), 1);
-
-    Font *font = NULL;
-
-    WCHAR buf[512];
-    PointF pos;
-    for (DrawInstr *instr = drawInstructions->IterStart(); instr; instr = drawInstructions->IterNext()) {
-        RectF bbox = instr->bbox;
-        bbox.X += offX;
-        bbox.Y += offY;
-        if (InstrTypeLine == instr->type) {
-            // hr is a line drawn in the middle of bounding box
-            REAL y = bbox.Y + bbox.Height / 2.f;
-            PointF p1(bbox.X, y);
-            PointF p2(bbox.X + bbox.Width, y);
-            if (gShowTextBoundingBoxes) {
-                //g->FillRectangle(&br, bbox);
-                g->DrawRectangle(&pen, bbox);
-            }
-            g->DrawLine(&blackPen, p1, p2);
-        } else if (InstrTypeString == instr->type) {
-            size_t strLen = str::Utf8ToWcharBuf(instr->str.s, instr->str.len, buf, dimof(buf));
-            bbox.GetLocation(&pos);
-            if (gShowTextBoundingBoxes) {
-                //g->FillRectangle(&br, bbox);
-                g->DrawRectangle(&pen, bbox);
-            }
-            g->DrawString(buf, strLen, font, pos, NULL, &br);
-        } else if (InstrTypeSetFont == instr->type) {
-            font = instr->setFont.font;
-        }
-    }
-}
-
 void ControlEbook::Paint(Graphics *gfx, int offX, int offY)
 {
     // for testing mouse move, paint a blue circle at current cursor position
@@ -739,7 +730,7 @@ void ControlEbook::Paint(Graphics *gfx, int offX, int offY)
     offY += propPadding->padding.top;
 
     PageData *pageData = pages->At(currPageNo - 1);
-    DrawPageLayout(gfx, &pageData->drawInstructions, (REAL)offX, (REAL)offY);
+    DrawPageLayout(gfx, &pageData->drawInstructions, (REAL)offX, (REAL)offY, gShowTextBoundingBoxes);
 }
 
 #if 0
@@ -912,8 +903,7 @@ static int RunApp()
 {
     MSG msg;
     FrameTimeoutCalculator ftc(60);
-    MillisecondTimer t;
-    t.Start();
+    Timer t(true);
     for (;;) {
         const DWORD timeout = ftc.GetTimeoutInMilliseconds();
         DWORD res = WAIT_TIMEOUT;

@@ -125,7 +125,6 @@ class PageLayout
 public:
     PageLayout();
     ~PageLayout();
-    bool LayoutHtml(LayoutInfo* layoutInfo);
 
     void Start(LayoutInfo* layoutInfo);
     PageData *Next();
@@ -716,22 +715,57 @@ PageData *PageLayout::Next()
     return NULL;
 }
 
-bool PageLayout::LayoutHtml(LayoutInfo* layoutInfo)
+Vec<PageData*> *LayoutHtml(LayoutInfo* li)
 {
-    StartLayout(layoutInfo);
+    Vec<PageData*> *pages = new Vec<PageData*>();
+    PageLayout l;
+    l.StartLayout(layoutInfo);
     PageData *pd;
     for (;;) {
         pd = Next();
         if (!pd)
             break;
-        if (layoutInfo->observer)
-            layoutInfo->observer->NewPage(pd);
+        pages->Append(pd);
     }
-    return true;
+    return pages;
 }
 
-void LayoutHtml(LayoutInfo* li)
+void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox)
 {
-    PageLayout l;
-    l.LayoutHtml(li);
+    StringFormat sf(StringFormat::GenericTypographic());
+    SolidBrush br(Color(0,0,0));
+    SolidBrush br2(Color(255, 255, 255, 255));
+    Pen pen(Color(255, 0, 0), 1);
+    Pen blackPen(Color(0, 0, 0), 1);
+
+    Font *font = NULL;
+
+    WCHAR buf[512];
+    PointF pos;
+    for (DrawInstr *instr = drawInstructions->IterStart(); instr; instr = drawInstructions->IterNext()) {
+        RectF bbox = instr->bbox;
+        bbox.X += offX;
+        bbox.Y += offY;
+        if (InstrTypeLine == instr->type) {
+            // hr is a line drawn in the middle of bounding box
+            REAL y = bbox.Y + bbox.Height / 2.f;
+            PointF p1(bbox.X, y);
+            PointF p2(bbox.X + bbox.Width, y);
+            if (showBbox) {
+                //g->FillRectangle(&br, bbox);
+                g->DrawRectangle(&pen, bbox);
+            }
+            g->DrawLine(&blackPen, p1, p2);
+        } else if (InstrTypeString == instr->type) {
+            size_t strLen = str::Utf8ToWcharBuf(instr->str.s, instr->str.len, buf, dimof(buf));
+            bbox.GetLocation(&pos);
+            if (showBbox) {
+                //g->FillRectangle(&br, bbox);
+                g->DrawRectangle(&pen, bbox);
+            }
+            g->DrawString(buf, strLen, font, pos, NULL, &br);
+        } else if (InstrTypeSetFont == instr->type) {
+            font = instr->setFont.font;
+        }
+    }
 }

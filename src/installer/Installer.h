@@ -4,24 +4,25 @@
 #ifndef Installer_h
 #define Installer_h
 
-#include <windows.h>
-#include <GdiPlus.h>
+#include "BaseUtil.h"
+
 #include <shlobj.h>
 #include <Tlhelp32.h>
 #include <Shlwapi.h>
 #include <objidl.h>
 #include <io.h>
 
-#include "Resource.h"
-#include "BaseUtil.h"
-#include "StrUtil.h"
-#include "FileUtil.h"
-#include "WinUtil.h"
-#include "Version.h"
-#include "Vec.h"
 #include "CmdLineParser.h"
 #include "FileTransactions.h"
+#include "FileUtil.h"
+
+#include "Resource.h"
 #include "Scoped.h"
+#include "StrUtil.h"
+#include "Timer.h"
+#include "Vec.h"
+#include "Version.h"
+#include "WinUtil.h"
 
 #define TAPP                _T("SumatraPDF")
 #define EXENAME             TAPP _T(".exe")

@@ -143,40 +143,6 @@ TCHAR *ToSafeString(const TCHAR *str);
 
 } // namespace win
 
-class MillisecondTimer {
-    LARGE_INTEGER   start;
-    LARGE_INTEGER   end;
-
-    double TimeSince(LARGE_INTEGER t) const
-    {
-        LARGE_INTEGER freq;
-        QueryPerformanceFrequency(&freq);
-        double timeInSecs = (double)(t.QuadPart-start.QuadPart)/(double)freq.QuadPart;
-        return timeInSecs * 1000.0;
-    }
-
-public:
-    MillisecondTimer(bool start=false) {
-        if (start)
-            Start();
-    }
-
-    void Start() { QueryPerformanceCounter(&start); }
-    void Stop() { QueryPerformanceCounter(&end); }
-
-    double GetCurrTimeInMs() const
-    {
-        LARGE_INTEGER curr;
-        QueryPerformanceCounter(&curr);
-        return TimeSince(curr);
-    }
-
-    double GetTimeInMs() const
-    {
-        return TimeSince(end);
-    }
-};
-
 class DoubleBuffer {
     HWND hTarget;
     HDC hdcCanvas, hdcBuffer;

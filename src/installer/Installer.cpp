@@ -855,8 +855,7 @@ static int RunApp()
 {
     MSG msg;
     FrameTimeoutCalculator ftc(60);
-    MillisecondTimer t;
-    t.Start();
+    Timer t(true);
     for (;;) {
         const DWORD timeout = ftc.GetTimeoutInMilliseconds();
         DWORD res = WAIT_TIMEOUT;

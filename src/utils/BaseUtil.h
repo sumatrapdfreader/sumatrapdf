@@ -31,6 +31,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <time.h>
 
 #ifndef UNICODE
 #include <sys/types.h>

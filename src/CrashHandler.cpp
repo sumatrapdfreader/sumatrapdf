@@ -1,26 +1,24 @@
 /* Copyright 2006-2012 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD */
 
-#include <windows.h>
+#include "BaseUtil.h"
 #include <dbghelp.h>
 #include <tlhelp32.h>
-#include <stdint.h>
 
-#include "Version.h"
+#include <unzalloc.h>
+#include <unzip.h>
 
-#include "BaseUtil.h"
-#include "StrUtil.h"
-#include "Vec.h"
-#include "WinUtil.h"
+#include "AppTools.h"
+#include "CrashHandler.h"
 #include "FileUtil.h"
 #include "Http.h"
-#include "ZipUtil.h"
-#include "SimpleLog.h"
-
+#include "StrUtil.h"
 #include "SumatraPDF.h"
-#include "CrashHandler.h"
-#include "AppTools.h"
-#include "translations.h"
+#include "Translations.h"
+#include "Vec.h"
+#include "Version.h"
+#include "WinUtil.h"
+#include "ZipUtil.h"
 
 #include <unzalloc.h>
 
@@ -136,21 +134,17 @@ static SymFromAddrProc *                _SymFromAddr;
 static SymRefreshModuleListProc *       _SymRefreshModuleList;
 static SymGetLineFromAddr64Proc *       _SymGetLineFromAddr64;
 
-/* Note about memory allocations during handling a crash: we cannot
-   use standard malloc()/free()/new()/delete().
-   For multi-thread safety, there is a per-heap lock taken inside
-   HeapAlloc() etc. It's possible that a crash originates from
-   inside such functions after a lock has been taken. If we then
-   try to allocate memory from the same heap, we'll deadlock and
-   won't send crash report.
-   For that reason we create a heap used only for crash handler
-   and must only allocate, directly or indirectly, from that heap.
-   Note: I'm not sure what happens if a Windows function (e.g. http
-   calls) has to allocate memory. I assume it'll use GetProcessHeap()
-   heap and further assume that CRT creates its own heap for
-   malloc()/free() etc. so that while a deadlock is still possible,
-   the probability should be greatly reduced.
-*/
+/* Note: we cannot use standard malloc()/free()/new()/delete() in crash handler.
+For multi-thread safety, there is a per-heap lock taken insid HeapAlloc() etc.
+It's possible that a crash originates from  inside such functions after a lock
+has been taken. If we then try to allocate memory from the same heap, we'll
+deadlock and won't send crash report.
+For that reason we create a heap used only for crash handler and must only
+allocate, directly or indirectly, from that heap.
+I'm not sure what happens if a Windows function (e.g. http calls) has to
+allocate memory. I assume it'll use GetProcessHeap() heap and further assume
+that CRT creates its own heap for malloc()/free() etc. so that while a deadlock
+is still possible, the probability should be greatly reduced. */
 
 class CrashHandlerAllocator : public Allocator {
     HANDLE allocHeap;

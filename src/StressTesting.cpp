@@ -2,18 +2,18 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
-#include <time.h>
-#include "WinUtil.h"
-#include "FileUtil.h"
-#include "SimpleLog.h"
 
-#include "StressTesting.h"
-#include "EngineManager.h"
-#include "WindowInfo.h"
 #include "AppTools.h"
-#include "RenderCache.h"
-#include "SumatraPDF.h"
+#include "EngineManager.h"
+#include "FileUtil.h"
 #include "Notifications.h"
+#include "RenderCache.h"
+#include "SimpleLog.h"
+#include "SumatraPDF.h"
+#include "StressTesting.h"
+#include "Timer.h"
+#include "WindowInfo.h"
+#include "WinUtil.h"
 
 static slog::Logger *gLog;
 #define logbench(msg, ...) gLog->LogFmt(_T(msg), __VA_ARGS__)
@@ -71,9 +71,7 @@ inline bool IsInRange(Vec<PageRange>& ranges, int pageNo)
 
 static void BenchLoadRender(BaseEngine *engine, int pagenum)
 {
-    MillisecondTimer t;
-
-    t.Start();
+    Timer t(true);
     bool ok = engine->BenchLoadPage(pagenum);
     t.Stop();
 
@@ -112,13 +110,10 @@ static void BenchFile(TCHAR *filePath, const TCHAR *pagesSpec)
         return;
     }
 
-    MillisecondTimer total;
-    total.Start();
-
+    Timer total(true);
     logbench("Starting: %s", filePath);
 
-    MillisecondTimer t;
-    t.Start();
+    Timer t(true);
     BaseEngine *engine = EngineManager::CreateEngine(filePath);
     t.Stop();
 
@@ -288,7 +283,7 @@ of PDFs before a release to make sure we're crash proof. */
 class StressTest : public CallbackFunc {
     WindowInfo *      win;
     RenderCache *     renderCache;
-    MillisecondTimer  currPageRenderTime;
+    Timer             currPageRenderTime;
     int               currPage;
     int               pageForSearchStart;
     int               filesCount; // number of files processed so far

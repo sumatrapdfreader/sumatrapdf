@@ -149,6 +149,9 @@
     <ClCompile Include="src\mui\MuiScrollBar.cpp">
       <Filter>mui</Filter>
     </ClCompile>
+    <ClCompile Include="src\utils\WinUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ebooktest\EbookTestMenu.h" />
@@ -389,6 +392,18 @@
     </ClInclude>
     <ClInclude Include="src\mui\MuiScrollBar.h">
       <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\SimpleLog.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\DebugLog.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\WinUtil.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\Timer.h">
+      <Filter>utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

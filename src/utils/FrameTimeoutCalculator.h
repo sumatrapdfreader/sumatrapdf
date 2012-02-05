@@ -1,3 +1,6 @@
+/* Copyright 2006-2012 the SumatraPDF project authors (see AUTHORS file).
+   License: Simplified BSD (see COPYING.BSD) */
+
 #ifndef FrameTimeoutCalculator_h
 #define FrameTimeoutCalculator_h
 

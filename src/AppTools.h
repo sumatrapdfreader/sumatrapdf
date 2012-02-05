@@ -6,6 +6,7 @@
 
 #include "Vec.h"
 #include "Scoped.h"
+#include "GeomUtil.h"
 
 class WindowInfo;
 
