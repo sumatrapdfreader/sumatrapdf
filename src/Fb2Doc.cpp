@@ -16,7 +16,7 @@ Basic FB2 format support:
 - convert basic FB2 markup into HTML
 
 TODO:
-- convert links, styles and images to HTML
+- convert links, images and further tags to HTML
 - extract metadata
 - extract basic document styles from stylesheet
 */
@@ -38,9 +38,10 @@ public:
     }
 };
 
-inline bool IsTag(HtmlToken *tok, const char *tag)
+inline bool IsFb2Tag(HtmlToken *tok, const char *tag)
 {
-    return str::EqN(tok->s, tag, tok->sLen);
+    return tok->sLen == str::Len(tag) &&
+           str::EqN(tok->s, tag, tok->sLen);
 }
 
 bool CFb2Doc::Load()
@@ -62,9 +63,10 @@ bool CFb2Doc::Load()
     int inBody = 0, inTitle = 0;
     int sectionDepth = 1;
     while ((tok = parser.Next())) {
-        if (!inBody && tok->IsStartTag() && IsTag(tok, "body"))
+        HtmlTag tag = tok->IsTag() ? FindTag(tok->s, tok->sLen) : Tag_NotFound;
+        if (!inBody && tok->IsStartTag() && Tag_Body == tag)
             inBody++;
-        else if (inBody && tok->IsEndTag() && IsTag(tok, "body"))
+        else if (inBody && tok->IsEndTag() && Tag_Body == tag)
             inBody--;
         if (!inBody)
             continue;
@@ -73,39 +75,66 @@ bool CFb2Doc::Load()
             htmlData.Append(tok->s, tok->sLen);
         }
         else if (tok->IsStartTag()) {
-            if (IsTag(tok, "section")) {
-                sectionDepth++;
-            }
-            else if (IsTag(tok, "p") && !inTitle) {
+            if (Tag_P == tag && !inTitle) {
                 htmlData.Append("<p>");
             }
-            else if (IsTag(tok, "title")) {
-                if (!inTitle++) {
-                    if (sectionDepth <= 5)
-                        htmlData.AppendFmt("<h%d>", sectionDepth);
-                    else
-                        htmlData.Append("<p><b>");
-                }
+            else if (Tag_Title == tag) {
+                if (inTitle++)
+                    /* ignore nested title tags */;
+                else if (sectionDepth <= 5)
+                    htmlData.AppendFmt("<h%d>", sectionDepth);
+                else
+                    htmlData.Append("<p><b>");
             }
-            else if (IsTag(tok, "body")) {
+            else if (Tag_Body == tag) {
                 if (htmlData.Count() == 0)
                     htmlData.Append("<!doctype html><title></title>");
             }
+            else if (Tag_Strong == tag) {
+                htmlData.Append("<strong>");
+            }
+            else if (IsFb2Tag(tok, "section")) {
+                sectionDepth++;
+            }
+            else if (IsFb2Tag(tok, "emphasis")) {
+                htmlData.Append("<em>");
+            }
+            else if (IsFb2Tag(tok, "epigraph")) {
+                htmlData.Append("<blockquote>");
+            }
+            // TODO: handle Tag_A, <text-author>
         }
         else if (tok->IsEndTag()) {
-            if (IsTag(tok, "section") && sectionDepth > 0) {
-                sectionDepth--;
-            }
-            else if (IsTag(tok, "p") && !inTitle) {
+            if (Tag_P == tag && !inTitle) {
                 htmlData.Append("</p>");
             }
-            else if (IsTag(tok, "title") && inTitle > 0) {
-                if (!--inTitle) {
-                    if (sectionDepth <= 5)
-                        htmlData.AppendFmt("</h%d>", sectionDepth);
-                    else
-                        htmlData.Append("</b></p>");
-                }
+            else if (Tag_Title == tag && inTitle > 0) {
+                if (--inTitle)
+                    /* ignore nested title tags */;
+                else if (sectionDepth <= 5)
+                    htmlData.AppendFmt("</h%d>", sectionDepth);
+                else
+                    htmlData.Append("</b></p>");
+            }
+            else if (Tag_Strong == tag) {
+                htmlData.Append("</strong>");
+            }
+            else if (IsFb2Tag(tok, "section") && sectionDepth > 0) {
+                sectionDepth--;
+            }
+            else if (IsFb2Tag(tok, "emphasis")) {
+                htmlData.Append("</em>");
+            }
+            else if (IsFb2Tag(tok, "epigraph")) {
+                htmlData.Append("</blockquote>");
+            }
+        }
+        else if (tok->IsEmptyElementEndTag()) {
+            if (IsFb2Tag(tok, "image")) {
+                // TODO: extract xlink:href
+            }
+            else if (IsFb2Tag(tok, "empty-line")) {
+                htmlData.Append("<p></p>");
             }
         }
     }
