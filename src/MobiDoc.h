@@ -6,6 +6,7 @@
 
 #include "BaseUtil.h"
 #include "Vec.h"
+#include "BaseEbookDoc.h"
 
 class HuffDicDecompressor;
 
@@ -61,7 +62,7 @@ struct ImageData {
     size_t      imgDataLen;
 };
 
-class MobiDoc
+class MobiDoc : public BaseEbookDoc
 {
     TCHAR *             fileName;
     HANDLE              fileHandle;
@@ -88,6 +89,7 @@ class MobiDoc
 
     MobiDoc();
 
+    bool LoadDocument();
     bool    ParseHeader();
     char *  GetBufForRecordData(size_t size);
     size_t  GetRecordSize(size_t recNo);
@@ -103,15 +105,15 @@ public:
     size_t              validImagesCount;
     ImageData *         images;
 
-    static MobiDoc *ParseFile(const TCHAR *fileName);
-
-    char *GetBookHtmlData(size_t& lenOut) {
+    virtual const char *GetBookHtmlData(size_t& lenOut) {
         lenOut = doc->Size();
         return doc->Get();
     }
 
-    ~MobiDoc();
-    bool LoadDocument();
+    virtual ~MobiDoc();
+
+    static MobiDoc *ParseFile(const TCHAR *fileName);
+    static bool IsSupported(const TCHAR *fileName);
 };
 
 #endif

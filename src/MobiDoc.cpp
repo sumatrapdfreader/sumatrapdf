@@ -934,3 +934,12 @@ Error:
     delete mb;
     return NULL;
 }
+
+bool MobiDoc::IsSupported(const TCHAR *fileName)
+{
+    // TODO: also .pdb?
+    return str::EndsWithI(fileName, _T(".mobi")) ||
+           str::EndsWithI(fileName, _T(".azw"))  ||
+           str::EndsWithI(fileName, _T(".azw1")) ||
+           str::EndsWithI(fileName, _T(".prc"));
+}

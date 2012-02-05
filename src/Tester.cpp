@@ -104,14 +104,6 @@ static void TestMobiFile(TCHAR *filePath)
     delete mb;
 }
 
-static bool IsMobiFile(TCHAR *f)
-{
-    // TODO: also .prc and .pdb ?
-    return str::EndsWithI(f, _T(".mobi")) ||
-           str::EndsWithI(f, _T(".azw")) ||
-           str::EndsWithI(f, _T(".azw1"));
-}
-
 static void MobiTestDir(TCHAR *dir)
 {
     _tprintf(_T("Testing mobi files in '%s'\n"), dir);
@@ -125,7 +117,7 @@ static void MobiTestDir(TCHAR *dir)
         TCHAR *p = di.Next();
         if (NULL == p)
             break;
-        if (IsMobiFile(p))
+        if (MobiDoc::IsSupported(p))
             TestMobiFile(p);
     }
 }
@@ -134,7 +126,7 @@ static void MobiTest(char *dirOrFile)
 {
     TCHAR *tmp = str::conv::FromAnsiNF(dirOrFile);
 
-    if (file::Exists(tmp) && IsMobiFile(tmp))
+    if (file::Exists(tmp) && MobiDoc::IsSupported(tmp))
         TestMobiFile(tmp);
     else
         MobiTestDir(tmp);
@@ -145,7 +137,7 @@ static void MobiLayout(char *file)
 {
     NoFreeAllocatorMark mark;
     TCHAR *tmp = str::conv::FromAnsiNF(file);
-    if (!file::Exists(tmp) || !IsMobiFile(tmp)) {
+    if (!file::Exists(tmp) || !MobiDoc::IsSupported(tmp)) {
         printf("MobiLayout: file %s doesn't exist or not a mobi file", file);
         return;
     }

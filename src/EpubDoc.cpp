@@ -1,9 +1,14 @@
 /* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
-   License: Simplified BSD (see COPYING.BSD) */
+   License: GPLv3 (see COPYING) */
 
-#include "EpubDoc.h"
+#include "BaseUtil.h"
+#include "Vec.h"
+#include "Scoped.h"
+#include "ZipUtil.h"
 #include "StrUtil.h"
 #include "TrivialHtmlParser.h"
+
+#include "EpubDoc.h"
 
 /*
 Basic EPUB format support:
@@ -16,17 +21,25 @@ TODO:
 - create ToC from .opf or .ncx file
 */
 
-EpubDoc::EpubDoc(const TCHAR *fileName) :
-    zip(fileName), fileName(str::Dup(fileName)) {
-}
+class CEpubDoc : public EpubDoc {
+    friend EpubDoc;
 
-char *EpubDoc::GetBookHtmlData(size_t& lenOut)
-{
-    lenOut = htmlData.Size();
-    return htmlData.Get();
-}
+    ScopedMem<TCHAR> fileName;
+    ZipFile zip;
+    str::Str<char> htmlData;
 
-bool EpubDoc::Load()
+    bool Load();
+
+public:
+    CEpubDoc(const TCHAR *fileName) : zip(fileName), fileName(str::Dup(fileName)) { }
+
+    virtual const char *GetBookHtmlData(size_t& lenOut) {
+        lenOut = htmlData.Size();
+        return htmlData.Get();
+    }
+};
+
+bool CEpubDoc::Load()
 {
     ScopedMem<char> firstFileData(zip.GetFileData(_T("mimetype")));
     if (!str::Eq(zip.GetFileName(0), _T("mimetype")) ||
@@ -87,10 +100,15 @@ bool EpubDoc::Load()
 
 EpubDoc *EpubDoc::ParseFile(const TCHAR *fileName)
 {
-    EpubDoc *doc = new EpubDoc(fileName);
+    CEpubDoc *doc = new CEpubDoc(fileName);
     if (doc && !doc->Load()) {
         delete doc;
         doc = NULL;
     }
     return doc;
+}
+
+bool EpubDoc::IsSupported(const TCHAR *fileName)
+{
+    return str::EndsWithI(fileName, _T(".epub"));
 }

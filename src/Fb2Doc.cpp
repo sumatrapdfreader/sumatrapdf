@@ -1,10 +1,14 @@
 /* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
-   License: Simplified BSD (see COPYING.BSD) */
+   License: GPLv3 (see COPYING) */
 
-#include "Fb2Doc.h"
+#include "BaseUtil.h"
+#include "Vec.h"
+#include "Scoped.h"
 #include "StrUtil.h"
 #include "FileUtil.h"
 #include "HtmlPullParser.h"
+
+#include "Fb2Doc.h"
 
 /*
 Basic FB2 format support:
@@ -16,22 +20,29 @@ TODO:
 - extract basic document styles from stylesheet
 */
 
-Fb2Doc::Fb2Doc(const TCHAR *fileName) :
-    fileName(str::Dup(fileName)) {
-}
+class CFb2Doc : public Fb2Doc {
+    friend Fb2Doc;
 
-char *Fb2Doc::GetBookHtmlData(size_t& lenOut)
-{
-    lenOut = htmlData.Size();
-    return htmlData.Get();
-}
+    ScopedMem<TCHAR> fileName;
+    str::Str<char> htmlData;
+
+    bool Load();
+
+public:
+    CFb2Doc(const TCHAR *fileName) : fileName(str::Dup(fileName)) { }
+
+    virtual const char *GetBookHtmlData(size_t& lenOut) {
+        lenOut = htmlData.Size();
+        return htmlData.Get();
+    }
+};
 
 inline bool IsTag(HtmlToken *tok, const char *tag)
 {
     return str::EqN(tok->s, tag, tok->sLen);
 }
 
-bool Fb2Doc::Load()
+bool CFb2Doc::Load()
 {
     size_t len;
     ScopedMem<char> data(file::ReadAll(fileName, &len));
@@ -96,10 +107,15 @@ bool Fb2Doc::Load()
 
 Fb2Doc *Fb2Doc::ParseFile(const TCHAR *fileName)
 {
-    Fb2Doc *doc = new Fb2Doc(fileName);
+    CFb2Doc *doc = new CFb2Doc(fileName);
     if (doc && !doc->Load()) {
         delete doc;
         doc = NULL;
     }
     return doc;
+}
+
+bool Fb2Doc::IsSupported(const TCHAR *fileName)
+{
+    return str::EndsWithI(fileName, _T(".fb2"));
 }

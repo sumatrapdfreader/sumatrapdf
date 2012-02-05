@@ -401,17 +401,17 @@ $(OS)\DisplayModel.obj: src\utils\Vec.h
 $(OS)\DjVuEngine.obj: src\BaseEngine.h src\DjVuEngine.h src\utils\Allocator.h
 $(OS)\DjVuEngine.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\DjVuEngine.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
-$(OS)\EbookTest.obj: src\ebooktest\EbookTestMenu.h src\ebooktest\Resource.h src\EpubDoc.h
-$(OS)\EbookTest.obj: src\MobiDoc.h src\mui\Mui.h src\mui\MuiBase.h
-$(OS)\EbookTest.obj: src\mui\MuiButton.h src\mui\MuiControl.h src\mui\MuiCss.h
-$(OS)\EbookTest.obj: src\mui\MuiEventMgr.h src\mui\MuiHwndWrapper.h src\mui\MuiLayout.h
-$(OS)\EbookTest.obj: src\mui\MuiPainter.h src\mui\MuiScrollBar.h src\PageLayout.h
-$(OS)\EbookTest.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\BitManip.h
-$(OS)\EbookTest.obj: src\utils\CmdLineParser.h src\utils\DebugLog.h src\utils\FileUtil.h
-$(OS)\EbookTest.obj: src\utils\FrameTimeoutCalculator.h src\utils\GeomUtil.h src\utils\HtmlPullParser.h
-$(OS)\EbookTest.obj: src\utils\NoFreeAllocator.h src\utils\Scoped.h src\utils\StrUtil.h
-$(OS)\EbookTest.obj: src\utils\Timer.h src\utils\Vec.h src\utils\WinUtil.h
-$(OS)\EbookTest.obj: src\utils\ZipUtil.h src\Version.h
+$(OS)\EbookTest.obj: src\BaseEbookDoc.h src\ebooktest\EbookTestMenu.h src\ebooktest\Resource.h
+$(OS)\EbookTest.obj: src\EpubDoc.h src\Fb2Doc.h src\MobiDoc.h
+$(OS)\EbookTest.obj: src\mui\Mui.h src\mui\MuiBase.h src\mui\MuiButton.h
+$(OS)\EbookTest.obj: src\mui\MuiControl.h src\mui\MuiCss.h src\mui\MuiEventMgr.h
+$(OS)\EbookTest.obj: src\mui\MuiHwndWrapper.h src\mui\MuiLayout.h src\mui\MuiPainter.h
+$(OS)\EbookTest.obj: src\mui\MuiScrollBar.h src\PageLayout.h src\utils\Allocator.h
+$(OS)\EbookTest.obj: src\utils\BaseUtil.h src\utils\BitManip.h src\utils\CmdLineParser.h
+$(OS)\EbookTest.obj: src\utils\DebugLog.h src\utils\FileUtil.h src\utils\FrameTimeoutCalculator.h
+$(OS)\EbookTest.obj: src\utils\GeomUtil.h src\utils\HtmlPullParser.h src\utils\NoFreeAllocator.h
+$(OS)\EbookTest.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Timer.h
+$(OS)\EbookTest.obj: src\utils\Vec.h src\utils\WinUtil.h src\Version.h
 $(OS)\EbookTestMenu.obj: src\ebooktest\EbookTestMenu.h src\ebooktest\Resource.h src\utils\BaseUtil.h
 $(OS)\EbookTestMenu.obj: src\utils\Scoped.h src\utils\StrUtil.h
 $(OS)\EngineDump.obj: src\BaseEngine.h src\ChmEngine.h src\DjVuEngine.h
@@ -420,9 +420,9 @@ $(OS)\EngineDump.obj: src\PsEngine.h src\utils\Allocator.h src\utils\BaseUtil.h
 $(OS)\EngineDump.obj: src\utils\CmdLineParser.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\EngineDump.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\EngineDump.obj: src\utils\WinUtil.h
-$(OS)\EpubDoc.obj: src\EpubDoc.h src\utils\Allocator.h src\utils\BaseUtil.h
-$(OS)\EpubDoc.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\TrivialHtmlParser.h
-$(OS)\EpubDoc.obj: src\utils\Vec.h src\utils\ZipUtil.h
+$(OS)\EpubDoc.obj: src\BaseEbookDoc.h src\EpubDoc.h src\utils\Allocator.h
+$(OS)\EpubDoc.obj: src\utils\BaseUtil.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OS)\EpubDoc.obj: src\utils\TrivialHtmlParser.h src\utils\Vec.h src\utils\ZipUtil.h
 $(OS)\EpubEngine.obj: src\BaseEngine.h src\EpubEngine.h src\utils\Allocator.h
 $(OS)\EpubEngine.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\EpubEngine.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
@@ -444,6 +444,9 @@ $(OS)\Favorites.obj: src\TextSelection.h src\translations.h src\utils\Allocator.
 $(OS)\Favorites.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\Favorites.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\Favorites.obj: src\utils\WinUtil.h src\WindowInfo.h
+$(OS)\Fb2Doc.obj: src\BaseEbookDoc.h src\Fb2Doc.h src\utils\Allocator.h
+$(OS)\Fb2Doc.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\HtmlPullParser.h
+$(OS)\Fb2Doc.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\FileTransactions.obj: src\utils\BaseUtil.h src\utils\FileTransactions.h src\utils\FileUtil.h
 $(OS)\FileTransactions.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\WinUtil.h
 $(OS)\FileUtil.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\Scoped.h
@@ -490,9 +493,9 @@ $(OS)\Menu.obj: src\translations.h src\utils\Allocator.h src\utils\BaseUtil.h
 $(OS)\Menu.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
 $(OS)\Menu.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\Menu.obj: src\WindowInfo.h
-$(OS)\MobiDoc.obj: src\MobiDoc.h src\utils\Allocator.h src\utils\BaseUtil.h
-$(OS)\MobiDoc.obj: src\utils\BitReader.h src\utils\FileUtil.h src\utils\GdiPlusUtil.h
-$(OS)\MobiDoc.obj: src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\MobiDoc.obj: src\BaseEbookDoc.h src\MobiDoc.h src\utils\Allocator.h
+$(OS)\MobiDoc.obj: src\utils\BaseUtil.h src\utils\BitReader.h src\utils\FileUtil.h
+$(OS)\MobiDoc.obj: src\utils\GdiPlusUtil.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\Mui.obj: src\mui\Mui.h src\mui\mui.h src\mui\MuiBase.h
 $(OS)\Mui.obj: src\mui\MuiButton.h src\mui\MuiControl.h src\mui\MuiCss.h
 $(OS)\Mui.obj: src\mui\MuiEventMgr.h src\mui\MuiHwndWrapper.h src\mui\MuiLayout.h
@@ -699,15 +702,15 @@ $(OS)\TableOfContents.obj: src\TextSelection.h src\translations.h src\utils\Allo
 $(OS)\TableOfContents.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
 $(OS)\TableOfContents.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\TableOfContents.obj: src\WindowInfo.h
-$(OS)\Tester.obj: src\MobiDoc.h src\mui\Mui.h src\mui\MuiBase.h
-$(OS)\Tester.obj: src\mui\MuiButton.h src\mui\MuiControl.h src\mui\MuiCss.h
-$(OS)\Tester.obj: src\mui\MuiEventMgr.h src\mui\MuiHwndWrapper.h src\mui\MuiLayout.h
-$(OS)\Tester.obj: src\mui\MuiPainter.h src\mui\MuiScrollBar.h src\PageLayout.h
-$(OS)\Tester.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\BitManip.h
-$(OS)\Tester.obj: src\utils\DirIter.h src\utils\FileUtil.h src\utils\GdiPlusUtil.h
-$(OS)\Tester.obj: src\utils\GeomUtil.h src\utils\HtmlPullParser.h src\utils\NoFreeAllocator.h
-$(OS)\Tester.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
-$(OS)\Tester.obj: src\utils\WinUtil.h
+$(OS)\Tester.obj: src\BaseEbookDoc.h src\MobiDoc.h src\mui\Mui.h
+$(OS)\Tester.obj: src\mui\MuiBase.h src\mui\MuiButton.h src\mui\MuiControl.h
+$(OS)\Tester.obj: src\mui\MuiCss.h src\mui\MuiEventMgr.h src\mui\MuiHwndWrapper.h
+$(OS)\Tester.obj: src\mui\MuiLayout.h src\mui\MuiPainter.h src\mui\MuiScrollBar.h
+$(OS)\Tester.obj: src\PageLayout.h src\utils\Allocator.h src\utils\BaseUtil.h
+$(OS)\Tester.obj: src\utils\BitManip.h src\utils\DirIter.h src\utils\FileUtil.h
+$(OS)\Tester.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\HtmlPullParser.h
+$(OS)\Tester.obj: src\utils\NoFreeAllocator.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OS)\Tester.obj: src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\TextSearch.obj: src\BaseEngine.h src\TextSearch.h src\TextSelection.h
 $(OS)\TextSearch.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GeomUtil.h
 $(OS)\TextSearch.obj: src\utils\StrUtil.h src\utils\Vec.h
