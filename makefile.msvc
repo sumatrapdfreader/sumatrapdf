@@ -447,6 +447,7 @@ $(OS)\Favorites.obj: src\utils\WinUtil.h src\WindowInfo.h
 $(OS)\Fb2Doc.obj: src\BaseEbookDoc.h src\Fb2Doc.h src\utils\Allocator.h
 $(OS)\Fb2Doc.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\HtmlPullParser.h
 $(OS)\Fb2Doc.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\Fb2Doc.obj: src\utils\ZipUtil.h
 $(OS)\FileTransactions.obj: src\utils\BaseUtil.h src\utils\FileTransactions.h src\utils\FileUtil.h
 $(OS)\FileTransactions.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\WinUtil.h
 $(OS)\FileUtil.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\Scoped.h

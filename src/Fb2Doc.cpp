@@ -6,6 +6,7 @@
 #include "Scoped.h"
 #include "StrUtil.h"
 #include "FileUtil.h"
+#include "ZipUtil.h"
 #include "HtmlPullParser.h"
 
 #include "Fb2Doc.h"
@@ -45,7 +46,14 @@ inline bool IsTag(HtmlToken *tok, const char *tag)
 bool CFb2Doc::Load()
 {
     size_t len;
-    ScopedMem<char> data(file::ReadAll(fileName, &len));
+    ScopedMem<char> data;
+    if (str::EndsWithI(fileName, _T(".zip"))) {
+        ZipFile archive(fileName);
+        data.Set(archive.GetFileData((size_t)0, &len));
+    }
+    else {
+        data.Set(file::ReadAll(fileName, &len));
+    }
     if (!data)
         return false;
 
@@ -117,5 +125,6 @@ Fb2Doc *Fb2Doc::ParseFile(const TCHAR *fileName)
 
 bool Fb2Doc::IsSupported(const TCHAR *fileName)
 {
-    return str::EndsWithI(fileName, _T(".fb2"));
+    return str::EndsWithI(fileName, _T(".fb2")) ||
+           str::EndsWithI(fileName, _T(".fb2.zip"));
 }
