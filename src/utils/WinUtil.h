@@ -25,14 +25,7 @@
 HMODULE SafeLoadLibrary(const TCHAR *dllName);
 FARPROC LoadDllFunc(TCHAR *dllName, const char *funcName);
 
-inline void FillWndClassEx(WNDCLASSEX &wcex, HINSTANCE hInstance)
-{
-    ZeroMemory(&wcex, sizeof(WNDCLASSEX));
-    wcex.cbSize     = sizeof(WNDCLASSEX);
-    wcex.style      = CS_HREDRAW | CS_VREDRAW;
-    wcex.hInstance  = hInstance;
-    wcex.hCursor    = LoadCursor(NULL, IDC_ARROW);
-}
+void    FillWndClassEx(WNDCLASSEX &wcex, HINSTANCE hInstance);
 
 bool   IsAppThemed();
 WORD   GetWindowsVersion();
@@ -157,22 +150,11 @@ public:
     void Flush(HDC hdc);
 };
 
-inline SizeI GetBitmapSize(HBITMAP hbmp)
-{
-    BITMAP bmpInfo;
-    GetObject(hbmp, sizeof(BITMAP), &bmpInfo);
-    return SizeI(bmpInfo.bmWidth, bmpInfo.bmHeight);
-}
-
-void UpdateBitmapColorRange(HBITMAP hbmp, COLORREF range[2]);
+void    InitAllCommonControls();
+SizeI   GetBitmapSize(HBITMAP hbmp);
+void    UpdateBitmapColorRange(HBITMAP hbmp, COLORREF range[2]);
 unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut);
+double  GetProcessRunningTime();
 
-inline void InitAllCommonControls()
-{
-    INITCOMMONCONTROLSEX cex = { 0 };
-    cex.dwSize = sizeof(INITCOMMONCONTROLSEX);
-    cex.dwICC = ICC_WIN95_CLASSES | ICC_DATE_CLASSES | ICC_USEREX_CLASSES | ICC_COOL_CLASSES ;
-    InitCommonControlsEx(&cex);
-}
 
 #endif

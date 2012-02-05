@@ -34,6 +34,23 @@ FARPROC LoadDllFunc(TCHAR *dllName, const char *funcName)
     // was grabbed from a dll that was unloaded in the meantime
 }
 
+void InitAllCommonControls()
+{
+    INITCOMMONCONTROLSEX cex = { 0 };
+    cex.dwSize = sizeof(INITCOMMONCONTROLSEX);
+    cex.dwICC = ICC_WIN95_CLASSES | ICC_DATE_CLASSES | ICC_USEREX_CLASSES | ICC_COOL_CLASSES ;
+    InitCommonControlsEx(&cex);
+}
+
+void FillWndClassEx(WNDCLASSEX &wcex, HINSTANCE hInstance)
+{
+    ZeroMemory(&wcex, sizeof(WNDCLASSEX));
+    wcex.cbSize     = sizeof(WNDCLASSEX);
+    wcex.style      = CS_HREDRAW | CS_VREDRAW;
+    wcex.hInstance  = hInstance;
+    wcex.hCursor    = LoadCursor(NULL, IDC_ARROW);
+}
+
 // Return true if application is themed. Wrapper around IsAppThemed() in uxtheme.dll
 // that is compatible with earlier windows versions.
 bool IsAppThemed()
@@ -225,7 +242,6 @@ void RedirectIOToConsole()
     setvbuf(stdin, NULL, _IONBF, 0);
 }
 
-
 /* Return the full exe path of my own executable.
    Caller needs to free() the result. */
 TCHAR *GetExePath()
@@ -237,7 +253,7 @@ TCHAR *GetExePath()
     return path::Normalize(buf);
 }
 
-static ULARGE_INTEGER FileTimeToLargeInteger(FILETIME& ft)
+static ULARGE_INTEGER FileTimeToLargeInteger(const FILETIME& ft)
 {
     ULARGE_INTEGER res;
     res.LowPart = ft.dwLowDateTime;
@@ -799,6 +815,13 @@ int GetHwndDpi(HWND hwnd, float *uiDPIFactor)
 
 }
 
+SizeI GetBitmapSize(HBITMAP hbmp)
+{
+    BITMAP bmpInfo;
+    GetObject(hbmp, sizeof(BITMAP), &bmpInfo);
+    return SizeI(bmpInfo.bmWidth, bmpInfo.bmHeight);
+}
+
 // cf. fz_mul255 in fitz.h
 inline int mul255(int a, int b)
 {
@@ -882,4 +905,26 @@ unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut)
     if (bmpBytesOut)
         *bmpBytesOut = bmpBytes;
     return bmpData;
+}
+
+// This is meant to measure program startup time from the user perspective.
+// One place to measure it is at the beginning of WinMain().
+// Another place is on the first run of WM_PAINT of the message loop of main window.
+double GetProcessRunningTime()
+{
+    FILETIME currTime, startTime, d1, d2, d3;
+    GetSystemTimeAsFileTime(&currTime);
+    HANDLE hproc = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, GetCurrentProcessId());
+    double timeInMs = 0;
+    if (!hproc)
+        return 0;
+    if (GetProcessTimes(hproc, &startTime, &d1, &d2, &d3)) {
+        ULARGE_INTEGER start = FileTimeToLargeInteger(startTime);
+        ULARGE_INTEGER curr = FileTimeToLargeInteger(currTime);
+        ULONGLONG diff = curr.QuadPart - start.QuadPart;
+        // FILETIME is in 100 ns chunks
+        timeInMs = ((double)(diff * 100)) / (double)1000000;
+    }
+    CloseHandle(hproc);
+    return timeInMs;
 }
