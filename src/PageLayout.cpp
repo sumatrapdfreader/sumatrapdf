@@ -272,6 +272,7 @@ void PageLayout::StartLayout(LayoutInfo* layoutInfo)
     pageDx = (REAL)layoutInfo->pageDx;
     pageDy = (REAL)layoutInfo->pageDy;
 
+    CrashIf(gfx);
     gfx = mui::AllocGraphicsForMeasureText();
     fontName.Set(str::Dup(layoutInfo->fontName));
     fontSize = layoutInfo->fontSize;
