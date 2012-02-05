@@ -88,8 +88,13 @@ void Initialize()
     gStyleDefault->Set(Prop::AllocFontWeight(FontStyleBold));
     gStyleDefault->Set(Prop::AllocColorSolid(PropColor, "black"));
     //gDefaults->Set(Prop::AllocColorSolid(PropBgColor, 0xff, 0xff, 0xff));
+#if 0
+    ARGB c1 = MKRGB(0x00, 0x00, 0x00);
+    ARGB c2 = MKRGB(0xff, 0xff, 0xff);
+#else
     ARGB c1 = MKRGB(0xf5, 0xf6, 0xf6);
     ARGB c2 = MKRGB(0xe4, 0xe4, 0xe3);
+#endif
     gStyleDefault->Set(Prop::AllocColorLinearGradient(PropBgColor, LinearGradientModeVertical, c1, c2));
     gStyleDefault->SetBorderWidth(1);
     gStyleDefault->SetBorderColor(MKRGB(0x99, 0x99, 0x99));
@@ -235,6 +240,10 @@ void Prop::Free()
 
     if (IsColorProp(type) && (ColorSolid == color.type))
         ::delete color.solid.cachedBrush;
+    if (IsColorProp(type) && (ColorGradientLinear == color.type)) {
+        ::delete color.gradientLinear.cachedBrush;
+        ::delete color.gradientLinear.rect;
+    }
 }
 
 bool Prop::Eq(const Prop *other) const
@@ -355,6 +364,9 @@ Prop *Prop::AllocColorLinearGradient(PropType type, LinearGradientMode mode, ARG
     p.color.gradientLinear.mode = mode;
     p.color.gradientLinear.startColor = startColor;
     p.color.gradientLinear.endColor = endColor;
+
+    p.color.gradientLinear.rect = ::new RectF();
+    p.color.gradientLinear.cachedBrush = NULL;
     return UniqifyProp(p);
 }
 
@@ -531,40 +543,39 @@ Prop **CachePropsForStyle(Style *style1, Style *style2)
     return props;
 }
 
-WrappedBrush BrushFromProp(Prop *p, const Rect& r)
+static bool RectEq(const RectF *r1, const RectF *r2)
 {
-    CrashIf(!IsColorProp(p->type));
-    if (ColorSolid == p->color.type)
-        return WrappedBrush(p->color.solid.cachedBrush, false);
-
-    if (ColorGradientLinear == p->color.type) {
-        Color c1 = p->color.gradientLinear.startColor;
-        Color c2 = p->color.gradientLinear.endColor;
-        LinearGradientMode mode = p->color.gradientLinear.mode;
-        Brush *br = ::new LinearGradientBrush(r, c1, c2, mode);
-        return WrappedBrush(br, true);
-    }
-
-    CrashIf(true);
-    return WrappedBrush(::new SolidBrush(0), true);
+    return ((r1->X == r2->X) &&
+            (r1->Y == r2->Y) &&
+            (r1->Width == r2->Width) &&
+            (r1->Height == r2->Height));
 }
 
-WrappedBrush BrushFromProp(Prop *p, const RectF& r)
+Brush *BrushFromProp(Prop *p, const RectF& r)
 {
     CrashIf(!IsColorProp(p->type));
     if (ColorSolid == p->color.type)
-        return WrappedBrush(p->color.solid.cachedBrush, false);
+        return p->color.solid.cachedBrush;
 
     if (ColorGradientLinear == p->color.type) {
-        Color c1 = p->color.gradientLinear.startColor;
-        Color c2 = p->color.gradientLinear.endColor;
-        LinearGradientMode mode = p->color.gradientLinear.mode;
-        Brush *br = ::new LinearGradientBrush(r, c1, c2, mode);
-        return WrappedBrush(br, true);
-    }
+        ColorDataGradientLinear *d = &p->color.gradientLinear;
+        LinearGradientBrush *br = d->cachedBrush;
+        if (!br || !RectEq(&r, d->rect)) {
+            ::delete br;
+            br = ::new LinearGradientBrush(r, d->startColor, d->endColor, d->mode);
+            *d->rect = r;
+            d->cachedBrush = br;
+        }
+        return br;
+   }
 
     CrashIf(true);
-    return WrappedBrush(::new SolidBrush(0), true);
+    return ::new SolidBrush(0);
+}
+
+Brush *BrushFromProp(Prop *p, const Rect& r)
+{
+    return BrushFromProp(p, RectF((float)r.X, (float)r.Y, (float)r.Width, (float)r.Height));
 }
 
 } // namespace css

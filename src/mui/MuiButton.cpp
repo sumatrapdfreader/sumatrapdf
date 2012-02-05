@@ -135,8 +135,8 @@ void Button::Paint(Graphics *gfx, int offX, int offY)
     Prop *textAlign = props[PropTextAlign];
 
     RectF bbox((REAL)offX, (REAL)offY, (REAL)pos.Width, (REAL)pos.Height);
-    WrappedBrush brBgColor = BrushFromProp(bgCol, bbox);
-    gfx->FillRectangle(brBgColor.brush, bbox);
+    Brush *brBgColor = BrushFromProp(bgCol, bbox);
+    gfx->FillRectangle(brBgColor, bbox);
 
     BorderProps bp = {
         props[PropBorderTopWidth], props[PropBorderTopColor],
@@ -154,9 +154,9 @@ void Button::Paint(Graphics *gfx, int offX, int offY)
     int alignedOffX = AlignedOffset(pos.Width - pad.left - pad.right, textDx, textAlign->textAlign);
     int x = offX + alignedOffX + pad.left + (int)leftWidth->width;
     int y = offY + pad.top + (int)topWidth->width;
-    WrappedBrush brColor = BrushFromProp(col, bbox); // restrict bbox to just the text?
+    Brush *brColor = BrushFromProp(col, bbox); // restrict bbox to just the text?
     Font *font = CachedFontFromCachedProps(props);
-    gfx->DrawString(text, str::Len(text), font, PointF((REAL)x, (REAL)y), NULL, brColor.brush);
+    gfx->DrawString(text, str::Len(text), font, PointF((REAL)x, (REAL)y), NULL, brColor);
 }
 
 }

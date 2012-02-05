@@ -95,8 +95,6 @@ void InitializeBase()
 
 void DestroyBase()
 {
-    // if this fires, time to implement cache eviction
-    CrashIf(gGraphicsCache->Count() > 64);
     for (size_t i = 0; i < gGraphicsCache->Count(); i++) {
         GraphicsCacheEntry e = gGraphicsCache->At(i);
         e.Free();
@@ -156,6 +154,8 @@ Graphics *AllocGraphicsForMeasureText()
     GraphicsCacheEntry e;
     e.Create();
     gGraphicsCache->Append(e);
+    // if this fires, time to implement cache eviction
+    CrashIf(gGraphicsCache->Count() > 64);
     return e.gfx;
 }
 

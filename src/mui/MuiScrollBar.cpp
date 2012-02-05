@@ -78,8 +78,8 @@ void ScrollBar::Paint(Graphics *gfx, int offX, int offY)
     Prop *bgCol = props[PropBgColor];
 
     Rect r(offX, offY, pos.Width, pos.Height);
-    WrappedBrush br1 = BrushFromProp(bgCol, r);
-    gfx->FillRectangle(br1.brush, r);
+    Brush *br = BrushFromProp(bgCol, r);
+    gfx->FillRectangle(br, r);
 
     int filledDx = IntFromPerc(pos.Width, filledPerc);
     if (0 == filledDx)
@@ -92,8 +92,8 @@ void ScrollBar::Paint(Graphics *gfx, int offX, int offY)
 
     r.Y += (r.Height - dy);
     r.Height = dy;
-    WrappedBrush br2 = BrushFromProp(col, r);
-    gfx->FillRectangle(br2.brush, r);
+    br = BrushFromProp(col, r);
+    gfx->FillRectangle(br, r);
 }
 
 }

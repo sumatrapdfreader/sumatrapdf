@@ -40,8 +40,8 @@ void Painter::PaintBackground(Graphics *g, Rect r)
     // at the top if I don't do this
     r.Inflate(1,1);
     Prop *bgProp = wnd->GetCachedProp(PropBgColor);
-    WrappedBrush br = BrushFromProp(bgProp, r);
-    g->FillRectangle(br.brush, r);
+    Brush *br = BrushFromProp(bgProp, r);
+    g->FillRectangle(br, r);
 }
 
 // Paint windows in z-order by first collecting the windows

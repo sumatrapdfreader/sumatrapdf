@@ -30,7 +30,7 @@ using std::max;
 TODO: doing layout on a background thread needs to be more sophisticated.
 Technically it works but user experience is bad.
 
-The key to supporting fluid resizing is to limit the amount of work tha's done.
+The key to supporting fluid resizing is to limit the amount of work done on UI thread.
 While the window is being resized, we should only calculate a few pages ahead.
 
 Only when the user turns the pages (or, additionally, after some delay since
