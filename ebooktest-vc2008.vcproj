@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="Installer"
+	Name="EbookTest"
 	ProjectGUID="{BC42DA91-3BE7-410E-8ACE-E5F42DEDF41B}"
-	RootNamespace="Installer"
+	RootNamespace="EbookTest"
 	Keyword="MakeFileProj"
 	TargetFrameworkVersion="196613"
 	>
@@ -25,12 +25,12 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine=".\scripts\build-release.bat -testinst"
-				ReBuildCommandLine=".\scripts\build-release.bat -testinst"
+				BuildCommandLine="nmake -f makefile.msvc CFG=dbg NASM=$(ProjectDir)bin\nasm.exe et"
+				ReBuildCommandLine="nmake -f makefile.msvc CFG=dbg NASM=$(ProjectDir)bin\nasm.exe et"
 				CleanCommandLine="del /s obj-dbg"
-				Output="obj-dbg\Installer.exe"
+				Output="obj-dbg\EbookTest.exe"
 				PreprocessorDefinitions="WIN32;DEBUG;_DEBUG;UNICODE;_UNICODE"
-				IncludeSearchPath="src\utils"
+				IncludeSearchPath="src\utils;src\mui"
 				ForcedIncludes=""
 				AssemblySearchPath=""
 				ForcedUsingAssemblies=""
@@ -46,12 +46,12 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine=".\scripts\build-release.bat -testinst -prerelease -svn-revision 9999"
-				ReBuildCommandLine=".\scripts\build-release.bat -testinst -prerelease -svn-revision 9999"
+				BuildCommandLine="nmake -f makefile.msvc CFG=rel NASM=$(ProjectDir)bin\nasm.exe et"
+				ReBuildCommandLine="nmake -f makefile.msvc CFG=rel NASM=$(ProjectDir)bin\nasm.exe et"
 				CleanCommandLine="del /s obj-rel"
-				Output="obj-rel\Installer.exe"
+				Output="obj-rel\EbookTest.exe"
 				PreprocessorDefinitions="WIN32;NDEBUG;UNICODE;_UNICODE"
-				IncludeSearchPath="src\utils"
+				IncludeSearchPath="src\utils;src\mui"
 				ForcedIncludes=""
 				AssemblySearchPath=""
 				ForcedUsingAssemblies=""
@@ -255,28 +255,136 @@
 			</File>
 		</Filter>
 		<Filter
+			Name="MUI"
+			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
+			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
+			>
+			<File
+				RelativePath=".\src\mui\Mui.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mui\Mui.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mui\MuiBase.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mui\MuiBase.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mui\MuiButton.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mui\MuiButton.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mui\MuiControl.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mui\MuiControl.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mui\MuiCss.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mui\MuiCss.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mui\MuiEventMgr.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mui\MuiEventMgr.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mui\MuiHwndWrapper.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mui\MuiHwndWrapper.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mui\MuiLayout.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mui\MuiLayout.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mui\MuiPainter.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mui\MuiPainter.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mui\MuiScrollBar.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mui\MuiScrollBar.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="File Formats"
+			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
+			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
+			>
+			<File
+				RelativePath=".\src\MobiDoc.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\MobiDoc.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\PageLayout.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\PageLayout.h"
+				>
+			</File>
+		</Filter>
+		<Filter
 			Name="Source Files"
 			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\src\installer\Install.cpp"
+				RelativePath=".\src\ebooktest\EbookTest.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\src\installer\Installer.cpp"
+				RelativePath=".\src\ebooktest\EbookTestMenu.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\src\installer\Installer.h"
+				RelativePath=".\src\ebooktest\EbookTestMenu.h"
 				>
 			</File>
 			<File
-				RelativePath=".\src\installer\Resource.h"
+				RelativePath=".\src\ebooktest\Resource.h"
 				>
 			</File>
 			<File
-				RelativePath=".\src\installer\Uninstall.cpp"
+				RelativePath=".\src\Tester.cpp"
 				>
 			</File>
 		</Filter>
@@ -286,11 +394,11 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 			<File
-				RelativePath=".\src\installer\Installer.exe.manifest"
+				RelativePath=".\src\ebooktest\EbookTest.exe.manifest"
 				>
 			</File>
 			<File
-				RelativePath=".\src\installer\Installer.rc"
+				RelativePath=".\src\ebooktest\EbookTest.rc"
 				>
 			</File>
 		</Filter>

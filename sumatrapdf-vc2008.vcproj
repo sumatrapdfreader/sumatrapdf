@@ -422,6 +422,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\utils\BitManip.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\utils\BitReader.cpp"
 				>
 			</File>
@@ -434,11 +438,23 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\utils\DebugLog.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\utils\DialogSizer.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\src\utils\DialogSizer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\utils\DirIter.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\utils\DirIter.h"
 				>
 			</File>
 			<File
@@ -458,6 +474,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\utils\FrameTimeoutCalculator.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\utils\GdiPlusUtil.cpp"
 				>
 			</File>
@@ -467,6 +487,14 @@
 			</File>
 			<File
 				RelativePath=".\src\utils\GeomUtil.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\utils\HtmlPullParser.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\utils\HtmlPullParser.h"
 				>
 			</File>
 			<File
@@ -483,6 +511,14 @@
 			</File>
 			<File
 				RelativePath=".\src\utils\Http.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\utils\NoFreeAllocator.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\utils\NoFreeAllocator.h"
 				>
 			</File>
 			<File
@@ -510,6 +546,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\utils\Timer.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\utils\Touch.cpp"
 				>
 			</File>
@@ -531,6 +571,10 @@
 			</File>
 			<File
 				RelativePath=".\src\utils\Vec.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\utils\VecSegmented.h"
 				>
 			</File>
 			<File
