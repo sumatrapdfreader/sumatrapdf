@@ -40,6 +40,10 @@ public:
         }
     }
 
+    virtual const TCHAR *GetFilepath() {
+        return fileName;
+    }
+
     virtual const char *GetBookHtmlData(size_t& lenOut) {
         lenOut = htmlData.Size();
         return htmlData.Get();

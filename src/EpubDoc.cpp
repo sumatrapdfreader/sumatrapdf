@@ -27,11 +27,16 @@ class CEpubDoc : public EpubDoc {
     ScopedMem<TCHAR> fileName;
     ZipFile zip;
     str::Str<char> htmlData;
+    Vec<ImageData> images;
 
     bool Load();
 
 public:
     CEpubDoc(const TCHAR *fileName) : zip(fileName), fileName(str::Dup(fileName)) { }
+
+    virtual const TCHAR *GetFilepath() {
+        return fileName;
+    }
 
     virtual const char *GetBookHtmlData(size_t& lenOut) {
         lenOut = htmlData.Size();

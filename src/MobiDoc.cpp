@@ -72,7 +72,7 @@ class CMobiDoc : public MobiDoc {
     PdbRecordHeader *   recHeaders;
     char *              firstRecData;
 
-    str::Str<char> *    doc;
+    str::Str<char>      doc;
 
     bool                isMobi;
     size_t              docRecCount;
@@ -106,9 +106,13 @@ public:
     CMobiDoc(const TCHAR *fileName);
     virtual ~CMobiDoc();
 
+    virtual const TCHAR *GetFilepath() {
+        return fileName;
+    }
+
     virtual const char *GetBookHtmlData(size_t& lenOut) {
-        lenOut = doc->Size();
-        return doc->Get();
+        lenOut = doc.Size();
+        return doc.Get();
     }
 
     virtual ImageData *GetImageData(size_t index) {
@@ -643,7 +647,6 @@ CMobiDoc::CMobiDoc(const TCHAR *fileName) : fileName(str::Dup(fileName)),
 CMobiDoc::~CMobiDoc()
 {
     CloseHandle(fileHandle);
-    free(fileName);
     free(firstRecData);
     free(recHeaders);
     free(bufDynamic);
@@ -652,7 +655,6 @@ CMobiDoc::~CMobiDoc()
         free(images.At(i).id);
     }
     delete huffDic;
-    delete doc;
 }
 
 bool CMobiDoc::ParseHeader()
@@ -1020,13 +1022,12 @@ bool CMobiDoc::LoadDocRecordIntoBuffer(size_t recNo, str::Str<char>& strOut)
 bool CMobiDoc::LoadDocument()
 {
     assert(docUncompressedSize > 0);
-    assert(!doc);
-    doc = new str::Str<char>(docUncompressedSize);
+    doc.EnsureCap(docUncompressedSize);
     for (size_t i = 1; i <= docRecCount; i++) {
-        if (!LoadDocRecordIntoBuffer(i, *doc))
+        if (!LoadDocRecordIntoBuffer(i, doc))
             return false;
     }
-    assert(docUncompressedSize == doc->Size());
+    assert(docUncompressedSize == doc.Size());
     return true;
 }
 

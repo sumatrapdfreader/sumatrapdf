@@ -159,12 +159,12 @@ static void MobiLayout(const TCHAR *file)
         _tprintf(_T("MobiLayout: file %s doesn't exist or not a mobi file"), file);
         return;
     }
-    _tprintf(_T("Laying out file '%s'\n"), file);
     BaseEbookDoc *doc = ParseEbook(file);
     if (!doc) {
         printf("MobiLayout: failed to parse the file\n");
         return;
     }
+    _tprintf(_T("Laying out file '%s'\n"), doc->GetFilepath());
 
     LayoutInfo li;
     li.pageDx = 640;

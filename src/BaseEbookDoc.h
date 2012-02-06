@@ -16,6 +16,9 @@ struct ImageData {
 class BaseEbookDoc {
 public:
     virtual ~BaseEbookDoc() { }
+    // returns the document's path
+    // the result is owned by the class, don't free
+    virtual const TCHAR *GetFilepath() = 0;
     // returns the document's content converted into
     // a single HTML stream for further processing/layout
     // the result is owned by the class, don't free
