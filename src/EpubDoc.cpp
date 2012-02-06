@@ -33,6 +33,12 @@ class CEpubDoc : public EpubDoc {
 
 public:
     CEpubDoc(const TCHAR *fileName) : zip(fileName), fileName(str::Dup(fileName)) { }
+    virtual ~CEpubDoc() {
+        for (size_t i = 0; i < images.Count(); i++) {
+            free(images.At(i).data);
+            free(images.At(i).id);
+        }
+    }
 
     virtual const TCHAR *GetFilepath() {
         return fileName;
@@ -41,6 +47,24 @@ public:
     virtual const char *GetBookHtmlData(size_t& lenOut) {
         lenOut = htmlData.Size();
         return htmlData.Get();
+    }
+
+    virtual ImageData *GetImageData(const char *id) {
+        for (size_t i = 0; i < images.Count(); i++) {
+            if (str::Eq(images.At(i).id, id))
+                return GetImageData(i);
+        }
+        return NULL;
+    }
+
+    virtual ImageData *GetImageData(size_t index) {
+        if (index >= images.Count())
+            return NULL;
+        if (!images.At(index).data) {
+            ScopedMem<TCHAR> idT(str::conv::FromUtf8(images.At(index).id));
+            images.At(index).data = zip.GetFileData(idT, &images.At(index).len);
+        }
+        return &images.At(index);
     }
 };
 
@@ -97,6 +121,18 @@ bool CEpubDoc::Load()
             }
             // TODO: merge/remove <head>s and drop everything else outside of <body>s(?)
             htmlData.Append(html);
+        }
+        else if (str::Eq(mediatype, _T("image/png"))  ||
+                 str::Eq(mediatype, _T("image/jpeg")) ||
+                 str::Eq(mediatype, _T("image/gif"))) {
+            ScopedMem<TCHAR> imgPath(node->GetAttribute("href"));
+            if (!imgPath)
+                continue;
+            imgPath.Set(str::Join(contentPath, imgPath));
+            // load the image lazily
+            ImageData data = { 0 };
+            data.id = str::conv::ToUtf8(imgPath);
+            images.Append(data);
         }
     }
 
