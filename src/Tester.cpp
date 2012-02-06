@@ -6,16 +6,17 @@
    driver which dispatches desired test based on cmd-line arguments.
    Currently it only does one test: mobi file parsing. */
 
-#include <stdio.h>
-#include <stdlib.h>
-
+#include "BaseUtil.h"
 #include "NoFreeAllocator.h"
 #include "Scoped.h"
 #include "DirIter.h"
 #include "MobiDoc.h"
+#include "EpubDoc.h"
+#include "Fb2Doc.h"
 #include "FileUtil.h"
 #include "WinUtil.h"
 #include "PageLayout.h"
+#include "CmdLineParser.h"
 #include "Mui.h"
 
 using namespace Gdiplus;
@@ -35,12 +36,14 @@ static bool gMobiSaveImages = true;
 static int Usage()
 {
     printf("Tester.exe\n");
-    printf("  -mobi dirOrFile : run mobi tests in a given directory or for a given file\n");
-    printf("  -mobilayout file : load and layout mobi file\n");
+    printf("  -doc dirOrFile   : run ebook tests in a given directory or for a given file\n");
+    printf("  -mobi dirOrFile  : run ebook tests only for mobi files\n");
+    printf("  -layout file     : load and layout ebook file\n");
+    printf("  -mobilayout file : same as -layout\n");
     return 1;
 }
 
-static void SaveMobiHtml(const TCHAR *filePathBase, MobiDoc *mb)
+static void SaveMobiHtml(const TCHAR *filePathBase, BaseEbookDoc *mb)
 {
     CrashAlwaysIf(!gMobiSaveHtml);
 
@@ -64,7 +67,7 @@ static void SaveMobiImage(const TCHAR *filePathBase, size_t imgNo, ImageData *im
     file::WriteAll(fileName.Get(), img->data, img->len);
 }
 
-static void SaveMobiImages(const TCHAR *filePathBase, MobiDoc *mb)
+static void SaveMobiImages(const TCHAR *filePathBase, BaseEbookDoc *mb)
 {
     if (!gMobiSaveImages)
         return;
@@ -74,17 +77,36 @@ static void SaveMobiImages(const TCHAR *filePathBase, MobiDoc *mb)
     }
 }
 
-static void TestMobiFile(TCHAR *filePath)
+static bool IsSupported(const TCHAR *filePath, bool allEbooks=true)
+{
+    return MobiDoc::IsSupported(filePath) ||
+           allEbooks && (EpubDoc::IsSupported(filePath) || Fb2Doc::IsSupported(filePath));
+}
+
+static BaseEbookDoc *ParseEbook(const TCHAR *filePath, bool allEbooks=true)
+{
+    if (allEbooks) {
+        if (EpubDoc::IsSupported(filePath))
+            return EpubDoc::ParseFile(filePath);
+        if (Fb2Doc::IsSupported(filePath))
+            return Fb2Doc::ParseFile(filePath);
+    }
+    return MobiDoc::ParseFile(filePath);
+}
+
+static void TestMobiFile(const TCHAR *filePath, bool allEbooks)
 {
     _tprintf(_T("Testing file '%s'\n"), filePath);
-    MobiDoc *mb = MobiDoc::ParseFile(filePath);
+    BaseEbookDoc *mb = ParseEbook(filePath, allEbooks);
     if (!mb) {
         printf(" error: failed to parse the file\n");
         return;
     }
 
-    if (!gMobiSaveHtml)
+    if (!gMobiSaveHtml) {
+        delete mb;
         return;
+    }
 
 #if 0 // TODO: use PrettyPrintHtml()
     // Given the name of the name of source mobi file "${srcdir}/${file}.mobi"
@@ -105,46 +127,41 @@ static void TestMobiFile(TCHAR *filePath)
     delete mb;
 }
 
-static void MobiTestDir(TCHAR *dir)
+static void MobiTestDir(const TCHAR *dir, bool allEbooks)
 {
     _tprintf(_T("Testing mobi files in '%s'\n"), dir);
-    DirIter di(true);
-    if (!di.Start(dir)) {
+    DirIter di;
+    if (!di.Start(dir, true)) {
         _tprintf(_T("Error: invalid directory '%s'\n"), dir);
         return;
     }
 
-    for (;;) {
-        TCHAR *p = di.Next();
-        if (NULL == p)
-            break;
-        if (MobiDoc::IsSupported(p))
-            TestMobiFile(p);
+    const TCHAR *p;
+    while ((p = di.Next())) {
+        if (IsSupported(p, allEbooks))
+            TestMobiFile(p, allEbooks);
     }
 }
 
-static void MobiTest(char *dirOrFile)
+static void MobiTest(const TCHAR *dirOrFile, bool allEbooks=false)
 {
-    TCHAR *tmp = nf::str::conv::FromAnsi(dirOrFile);
-
-    if (file::Exists(tmp) && MobiDoc::IsSupported(tmp))
-        TestMobiFile(tmp);
-    else
-        MobiTestDir(tmp);
+    if (file::Exists(dirOrFile) && IsSupported(dirOrFile, allEbooks))
+        TestMobiFile(dirOrFile, allEbooks);
+    else if (dir::Exists(dirOrFile))
+        MobiTestDir(dirOrFile, allEbooks);
 }
 
 // This loads and layouts a given mobi file. Used for profiling layout process.
-static void MobiLayout(char *file)
+static void MobiLayout(const TCHAR *file)
 {
     nf::AllocatorMark mark;
-    TCHAR *tmp = nf::str::conv::FromAnsi(file);
-    if (!file::Exists(tmp) || !MobiDoc::IsSupported(tmp)) {
-        printf("MobiLayout: file %s doesn't exist or not a mobi file", file);
+    if (!file::Exists(file) || !IsSupported(file)) {
+        _tprintf(_T("MobiLayout: file %s doesn't exist or not a mobi file"), file);
         return;
     }
-    printf("Laying out file '%s'\n", file);
-    MobiDoc *mb = MobiDoc::ParseFile(tmp);
-    if (!mb) {
+    _tprintf(_T("Laying out file '%s'\n"), file);
+    BaseEbookDoc *doc = ParseEbook(file);
+    if (!doc) {
         printf("MobiLayout: failed to parse the file\n");
         return;
     }
@@ -154,44 +171,51 @@ static void MobiLayout(char *file)
     li.pageDy = 480;
     li.fontName = L"Tahoma";
     li.fontSize = 12;
-    li.htmlStr = mb->GetBookHtmlData(li.htmlStrLen);
+    li.htmlStr = doc->GetBookHtmlData(li.htmlStrLen);
 
-    LayoutHtml(&li);
+    Vec<PageData *> *data = LayoutHtml(&li);
+    DeleteVecMembers(*data);
+    delete data;
 
-    delete mb;
+    delete doc;
 }
 
-extern "C"
 int main(int argc, char **argv)
 {
+#ifdef DEBUG
+    // report memory leaks on stderr
+    _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
+    _CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDERR);
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
+
+    CmdLineParser cmdLine(GetCommandLine());
     nf::AllocatorMark allocatorMark;
 
-    int i = 1;
-    int left = argc - 1;
-
-    if (left < 2)
+    if (cmdLine.Count() < 2)
         return Usage();
 
-    if (str::Eq(argv[i], "-mobi")) {
-        ++i; --left;
-        if (1 != left)
+    for (size_t i = 1; i < cmdLine.Count(); i += 2) {
+        if (i + 1 == cmdLine.Count())
             return Usage();
-        MobiTest(argv[i]);
-        return 0;
+        const TCHAR *arg = cmdLine.At(i);
+        const TCHAR *param = cmdLine.At(i + 1);
+        if (str::Eq(arg, _T("-mobi")) || str::Eq(arg, _T("-doc"))) {
+            bool onlyMobi = str::Eq(arg, _T("-mobi"));
+            MobiTest(param, !onlyMobi);
+        }
+        else if (str::Eq(arg, _T("-layout")) || str::Eq(arg, _T("-mobilayout"))) {
+            void *test = nf::alloc(50);
+            InitAllCommonControls();
+            ScopedGdiPlus gdi;
+            mui::Initialize();
+            MobiLayout(param);
+            mui::Destroy();
+        }
+        else {
+            return Usage();
+        }
     }
 
-    if (str::Eq(argv[i], "-mobilayout")) {
-        ++i; --left;
-        if (1 != left)
-            return Usage();
-        void *test = nf::alloc(50);
-        InitAllCommonControls();
-        ScopedGdiPlus gdi;
-        mui::Initialize();
-        MobiLayout(argv[i]);
-        mui::Destroy();
-        return 0;
-    }
-
-    return Usage();
+    return 0;
 }

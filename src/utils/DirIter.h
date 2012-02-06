@@ -6,27 +6,27 @@
 
 #include "BaseUtil.h"
 #include "Vec.h"
+#include "Scoped.h"
 
 class DirIter
 {
     bool            recursive;
 
-    Vec<TCHAR*>     dirsToVisit;
-    TCHAR *         baseDir;
-    TCHAR *         currDir;
-    TCHAR *         currPath;
+    StrVec          dirsToVisit;
+    ScopedMem<TCHAR>currDir;
+    ScopedMem<TCHAR>currPath;
     HANDLE          currFindHandle;
     WIN32_FIND_DATA currFindData;
-    bool            stillIterating;
+    bool            foundNext;
 
-    bool StartDirIter(TCHAR *dir);
-    void TryNextDir();
+    bool StartDirIter(const TCHAR *dir);
+    bool TryNextDir();
+
 public:
-    DirIter(bool recur);
-    ~DirIter();
+    DirIter() : foundNext(false) { }
 
-    bool Start(TCHAR *dir);
-    TCHAR *Next();
+    bool Start(const TCHAR *dir, bool recursive=false);
+    const TCHAR *Next();
 };
 
 #endif

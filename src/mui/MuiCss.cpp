@@ -123,6 +123,7 @@ static void DeleteCachedFonts()
 {
     delete gStyleCache;
     delete gCachedProps;
+    delete gStyleDefault;
 }
 
 void Destroy()

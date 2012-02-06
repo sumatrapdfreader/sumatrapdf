@@ -184,8 +184,8 @@ ET_OBJS = \
 	$(OS)\MobiDoc.obj $(OS)\EpubDoc.obj $(ZIP_OBJS) $(ZLIB_OBJS) $(OS)\Fb2Doc.obj
 
 TESTER_OBJS = \
-	$(OS)\Tester.obj $(OS)\MobiDoc.obj $(OS)\PageLayout.obj \
-	$(UTILS_OBJS) $(MUI_OBJS)
+	$(OS)\Tester.obj $(OS)\PageLayout.obj $(UTILS_OBJS) $(MUI_OBJS) \
+	$(OS)\MobiDoc.obj $(OS)\EpubDoc.obj $(ZIP_OBJS) $(ZLIB_OBJS) $(OS)\Fb2Doc.obj
 
 PDFFILTER_OBJS = \
 	$(OS)\PdfFilterDll.obj $(OS)\CPdfFilter.obj $(PDFFILTER_RES) \
@@ -496,7 +496,8 @@ $(OS)\Menu.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\Menu.obj: src\WindowInfo.h
 $(OS)\MobiDoc.obj: src\BaseEbookDoc.h src\MobiDoc.h src\utils\Allocator.h
 $(OS)\MobiDoc.obj: src\utils\BaseUtil.h src\utils\BitReader.h src\utils\FileUtil.h
-$(OS)\MobiDoc.obj: src\utils\GdiPlusUtil.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\MobiDoc.obj: src\utils\GdiPlusUtil.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OS)\MobiDoc.obj: src\utils\Vec.h
 $(OS)\Mui.obj: src\mui\Mui.h src\mui\mui.h src\mui\MuiBase.h
 $(OS)\Mui.obj: src\mui\MuiButton.h src\mui\MuiControl.h src\mui\MuiCss.h
 $(OS)\Mui.obj: src\mui\MuiEventMgr.h src\mui\MuiHwndWrapper.h src\mui\MuiLayout.h
@@ -703,12 +704,13 @@ $(OS)\TableOfContents.obj: src\TextSelection.h src\translations.h src\utils\Allo
 $(OS)\TableOfContents.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
 $(OS)\TableOfContents.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\TableOfContents.obj: src\WindowInfo.h
-$(OS)\Tester.obj: src\BaseEbookDoc.h src\MobiDoc.h src\mui\Mui.h
-$(OS)\Tester.obj: src\mui\MuiBase.h src\mui\MuiButton.h src\mui\MuiControl.h
-$(OS)\Tester.obj: src\mui\MuiCss.h src\mui\MuiEventMgr.h src\mui\MuiHwndWrapper.h
-$(OS)\Tester.obj: src\mui\MuiLayout.h src\mui\MuiPainter.h src\mui\MuiScrollBar.h
-$(OS)\Tester.obj: src\PageLayout.h src\utils\Allocator.h src\utils\BaseUtil.h
-$(OS)\Tester.obj: src\utils\BitManip.h src\utils\DirIter.h src\utils\FileUtil.h
+$(OS)\Tester.obj: src\BaseEbookDoc.h src\EpubDoc.h src\Fb2Doc.h
+$(OS)\Tester.obj: src\MobiDoc.h src\mui\Mui.h src\mui\MuiBase.h
+$(OS)\Tester.obj: src\mui\MuiButton.h src\mui\MuiControl.h src\mui\MuiCss.h
+$(OS)\Tester.obj: src\mui\MuiEventMgr.h src\mui\MuiHwndWrapper.h src\mui\MuiLayout.h
+$(OS)\Tester.obj: src\mui\MuiPainter.h src\mui\MuiScrollBar.h src\PageLayout.h
+$(OS)\Tester.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\BitManip.h
+$(OS)\Tester.obj: src\utils\CmdLineParser.h src\utils\DirIter.h src\utils\FileUtil.h
 $(OS)\Tester.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\HtmlPullParser.h
 $(OS)\Tester.obj: src\utils\NoFreeAllocator.h src\utils\Scoped.h src\utils\StrUtil.h
 $(OS)\Tester.obj: src\utils\Vec.h src\utils\WinUtil.h

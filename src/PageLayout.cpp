@@ -207,6 +207,7 @@ PageLayout::PageLayout() : currPage(NULL), gfx(NULL)
 
 PageLayout::~PageLayout()
 {
+    delete htmlParser;
     mui::FreeGraphicsForMeasureText(gfx);
 }
 
@@ -274,8 +275,11 @@ void PageLayout::StartLayout(LayoutInfo* layoutInfo)
 
 void PageLayout::StartNewPage()
 {
+    // TODO: who owns currPage?
     if (currPage && pageObserver)
         pageObserver->NewPage(currPage);
+    else
+        delete currPage;
 
     currPage = new PageData;
     currX = currY = 0;
