@@ -6,19 +6,21 @@
 
 #include "BaseUtil.h"
 
+namespace nf {
+
 // Per-thread stats for no-free allocator. Knowing them allows
 // tweaking the sizes of memory blocks and frequency of
-// NoFreeAllocatorMark placement.
+// AllocatorMark placement.
 struct AllocStats {
     size_t  allocsCount;
     size_t  maxMemUse;
     uint64  totalMemAlloced;
 };
 
-class NoFreeAllocatorMark {
+class AllocatorMark {
     // NULL is valid and has a special meaning: it means the first
     // MemBlock. It allows us to delay allocating first MemBlock to
-    // the moment of first mallocNF() calls (useful for threads that
+    // the moment of first nf::alloc() calls (useful for threads that
     // might but not necessarily will allocate)
     struct MemBlock *   block;
     // position within block
@@ -29,27 +31,27 @@ class NoFreeAllocatorMark {
     // the first allocates gStats
     bool                isFirst;
 public:
-    NoFreeAllocatorMark();
-    ~NoFreeAllocatorMark();
+    AllocatorMark();
+    ~AllocatorMark();
 };
 
-void *mallocNF(size_t size);
-void *memdupNF(const void *ptr, size_t size);
+void *alloc(size_t size);
+void *memdup(const void *ptr, size_t size);
 
 namespace str {
 
-inline char *DupNF(const char *s) { return (char *)memdupNF(s, strlen(s) + 1); }
-inline WCHAR *DupNF(const WCHAR *s) { return (WCHAR *)memdupNF(s, (wcslen(s) + 1) * sizeof(WCHAR)); }
-
-namespace convNF {
+inline char *Dup(const char *s) { return (char *)nf::memdup(s, strlen(s) + 1); }
+inline WCHAR *Dup(const WCHAR *s) { return (WCHAR *)nf::memdup(s, (wcslen(s) + 1) * sizeof(WCHAR)); }
 
 char *  ToMultiByte(const WCHAR *txt, UINT CodePage);
 char *  ToMultiByte(const char *src, UINT CodePageSrc, UINT CodePageDest);
 WCHAR * ToWideChar(const char *src, UINT CodePage);
 
+namespace conv {
+
 #ifdef UNICODE
-inline TCHAR *  FromWStr(const WCHAR *src) { return DupNF(src); }
-inline WCHAR *  ToWStr(const TCHAR *src) { return DupNF(src); }
+inline TCHAR *  FromWStr(const WCHAR *src) { return Dup(src); }
+inline WCHAR *  ToWStr(const TCHAR *src) { return Dup(src); }
 inline TCHAR *  FromCodePage(const char *src, UINT cp) { return ToWideChar(src, cp); }
 inline char *   ToCodePage(const TCHAR *src, UINT cp) { return ToMultiByte(src, cp); }
 #else
@@ -63,7 +65,9 @@ inline char *   ToUtf8(const TCHAR *src) { return ToCodePage(src, CP_UTF8); }
 inline TCHAR *  FromAnsi(const char *src) { return FromCodePage(src, CP_ACP); }
 inline char *   ToAnsi(const TCHAR *src) { return ToCodePage(src, CP_ACP); }
 
-} // namespace convNF
+} // namespace conv
 } // namespace str
+
+} // namespace nf
 
 #endif

@@ -124,7 +124,7 @@ static void MobiTestDir(TCHAR *dir)
 
 static void MobiTest(char *dirOrFile)
 {
-    TCHAR *tmp = str::convNF::FromAnsi(dirOrFile);
+    TCHAR *tmp = nf::str::conv::FromAnsi(dirOrFile);
 
     if (file::Exists(tmp) && MobiDoc::IsSupported(tmp))
         TestMobiFile(tmp);
@@ -135,8 +135,8 @@ static void MobiTest(char *dirOrFile)
 // This loads and layouts a given mobi file. Used for profiling layout process.
 static void MobiLayout(char *file)
 {
-    NoFreeAllocatorMark mark;
-    TCHAR *tmp = str::convNF::FromAnsi(file);
+    nf::AllocatorMark mark;
+    TCHAR *tmp = nf::str::conv::FromAnsi(file);
     if (!file::Exists(tmp) || !MobiDoc::IsSupported(tmp)) {
         printf("MobiLayout: file %s doesn't exist or not a mobi file", file);
         return;
@@ -163,7 +163,7 @@ static void MobiLayout(char *file)
 extern "C"
 int main(int argc, char **argv)
 {
-    NoFreeAllocatorMark allocatorMark;
+    nf::AllocatorMark allocatorMark;
 
     int i = 1;
     int left = argc - 1;
@@ -183,7 +183,7 @@ int main(int argc, char **argv)
         ++i; --left;
         if (1 != left)
             return Usage();
-        void *test = mallocNF(50);
+        void *test = nf::alloc(50);
         InitAllCommonControls();
         ScopedGdiPlus gdi;
         mui::Initialize();

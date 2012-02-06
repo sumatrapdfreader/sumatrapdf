@@ -26,10 +26,10 @@ bool NormalizedFileExists(const TCHAR *path)
 What if could guarantee that normapth will be freed at some point
 in the future? NoFreeAllocator has the necessary magic.
 
-We have a thread-local global object used mallocNF() and other
+We have a thread-local global object used nf::alloc() and other
 no-free functions.
 
-NoFreeAllocatorMark is an object placed on the stack to mark
+AllocatorMark is an object placed on the stack to mark
 a particular position in the allocation sequence. When this
 object goes out of scope, we'll free all allocations done with
 no-free allocatora from the moment in was constructed.
@@ -38,10 +38,10 @@ Allocation and de-allocation is fast because we allocate memory
 in blocks. Allocation, most of the time, is just bumping a pointer.
 De-allocation involves freeing just few blocks.
 
-In the simplest scenario we can put NoFreeAllocatorMark in WinMain.
+In the simplest scenario we can put AllocatorMark in WinMain.
 The memory would be freed but we would grow memory used without bounds.
 
-We can tweak memory used by using NoFreeAllocatorMark in more
+We can tweak memory used by using AllocatorMark in more
 places. The more often it's used, the lower max memory usage will be.
 A natural place for placing them are window message loops.
 
@@ -74,6 +74,8 @@ enum {
     MEM_BLOCK_SIZE = 1 * MB
 };
 
+namespace nf {
+
 struct MemBlock {
     struct MemBlock *   next;
     size_t              size;
@@ -85,7 +87,7 @@ struct MemBlock {
 __declspec(thread) MemBlock *    gCurrMemBlock = NULL;
 __declspec(thread) AllocStats *  gStats = NULL;
 
-NoFreeAllocatorMark::NoFreeAllocatorMark()
+AllocatorMark::AllocatorMark()
 {
     isFirst = false;
     if (!gStats) {
@@ -99,7 +101,7 @@ NoFreeAllocatorMark::NoFreeAllocatorMark()
         pos = block->Used();
 }
 
-NoFreeAllocatorMark::~NoFreeAllocatorMark()
+AllocatorMark::~AllocatorMark()
 {
     if (isFirst) {
         free(gStats);
@@ -121,10 +123,10 @@ NoFreeAllocatorMark::~NoFreeAllocatorMark()
         gCurrMemBlock->left = gCurrMemBlock->size - pos;
 }
 
-void *mallocNF(size_t size)
+void *alloc(size_t size)
 {
-    // gStats is created on the first NoFreeAllocatorMark. If it's not
-    // there, we've been incorrectly called without NoFreeAllocatorMark
+    // gStats is created on the first AllocatorMark. If it's not
+    // there, we've been incorrectly called without AllocatorMark
     // somewhere above in the callstack chain
     CrashAlwaysIf(!gStats);
 
@@ -158,16 +160,15 @@ void *mallocNF(size_t size)
     return (void*)res;
 }
 
-void *memdupNF(const void *ptr, size_t size)
+void *memdup(const void *ptr, size_t size)
 {
-    void *res = mallocNF(size);
+    void *res = alloc(size);
     if (res)
         memcpy(res, ptr, size);
     return res;
 }
 
 namespace str {
-namespace convNF {
 
 char *ToMultiByte(const WCHAR *txt, UINT codePage)
 {
@@ -175,7 +176,7 @@ char *ToMultiByte(const WCHAR *txt, UINT codePage)
     if (!txt) return NULL;
 
     int requiredBufSize = WideCharToMultiByte(codePage, 0, txt, -1, NULL, 0, NULL, NULL);
-    char *res = (char *)mallocNF(requiredBufSize);
+    char *res = (char *)alloc(requiredBufSize);
     if (!res)
         return NULL;
     WideCharToMultiByte(codePage, 0, txt, -1, res, requiredBufSize, NULL, NULL);
@@ -188,7 +189,7 @@ char *ToMultiByte(const char *src, UINT codePageSrc, UINT codePageDest)
     if (!src) return NULL;
 
     if (codePageSrc == codePageDest)
-        return DupNF(src);
+        return Dup(src);
 
     return ToMultiByte(ToWideChar(src, codePageSrc), codePageDest);
 }
@@ -199,12 +200,13 @@ WCHAR *ToWideChar(const char *src, UINT codePage)
     if (!src) return NULL;
 
     int requiredBufSize = MultiByteToWideChar(codePage, 0, src, -1, NULL, 0);
-    WCHAR *res = (WCHAR*)mallocNF(sizeof(WCHAR) * requiredBufSize);
+    WCHAR *res = (WCHAR*)alloc(sizeof(WCHAR) * requiredBufSize);
     if (!res)
         return NULL;
     MultiByteToWideChar(codePage, 0, src, -1, res, requiredBufSize);
     return res;
 }
 
-}
-}
+} // namespace str
+
+} // namespace nf
