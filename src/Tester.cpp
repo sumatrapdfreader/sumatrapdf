@@ -51,9 +51,8 @@ static void SaveMobiHtml(const TCHAR *filePathBase, BaseEbookDoc *mb)
     file::WriteAll(fileName.Get(), (char *)html, htmlLen);
 
     fileName.Set(str::Format(_T("%s_pp.html"), filePathBase));
-    Vec<char> *pp = PrettyPrintHtml(html, htmlLen);
-    file::WriteAll(fileName, pp->LendData(), pp->Count());
-    delete pp;
+    ScopedMem<char> pp(PrettyPrintHtml(html, htmlLen, htmlLen));
+    file::WriteAll(fileName, pp, htmlLen);
 }
 
 static void SaveMobiImages(const TCHAR *filePathBase, BaseEbookDoc *mb)

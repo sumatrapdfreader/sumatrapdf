@@ -83,7 +83,7 @@ bool CFb2Doc::Load()
     int inBody = 0, inTitle = 0;
     int sectionDepth = 1;
     while ((tok = parser.Next())) {
-        HtmlTag tag = tok->IsTag() ? FindTag(tok->s, tok->sLen) : Tag_NotFound;
+        HtmlTag tag = tok->IsTag() ? FindTag(tok) : Tag_NotFound;
         if (!inBody && tok->IsStartTag() && Tag_Body == tag)
             inBody++;
         else if (inBody && tok->IsEndTag() && Tag_Body == tag)

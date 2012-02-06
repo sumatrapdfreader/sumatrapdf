@@ -424,7 +424,7 @@ static void GetKnownAttributes(HtmlToken *t, HtmlAttr *allowedAttributes, Vec<Kn
     out->Reset();
     AttrInfo *attrInfo;
     while ((attrInfo = t->NextAttr())) {
-        HtmlAttr attr = FindAttr(attrInfo->name, attrInfo->nameLen);
+        HtmlAttr attr = FindAttr(attrInfo);
         if (!IsAllowedAttribute(allowedAttributes, attr))
             continue;
         KnownAttrInfo knownAttr = { attr, attrInfo->val, attrInfo->valLen };
@@ -541,12 +541,13 @@ void DumpAttr(uint8 *s, size_t sLen)
 // tags that I want to explicitly ignore and not define
 // HtmlTag enums for them
 // One file has a bunch of st1:* tags (st1:city, st1:place etc.)
-static bool IgnoreTag(const char *s, size_t sLen)
+static bool IgnoreTag(HtmlToken *tok)
 {
-    if (sLen >= 4 && s[3] == ':' && s[0] == 's' && s[1] == 't' && s[2] == '1')
+    const char *s = tok->s;
+    if (tok->sLen >= 4 && s[3] == ':' && s[0] == 's' && s[1] == 't' && s[2] == '1')
         return true;
     // no idea what "o:p" is
-    if (sLen == 3 && s[1] == ':' && s[0] == 'o'  && s[2] == 'p')
+    if (tok->sLen == 3 && s[1] == ':' && s[0] == 'o'  && s[2] == 'p')
         return true;
     return false;
 }
@@ -572,13 +573,10 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
     Vec<KnownAttrInfo> attrs;
     CrashAlwaysIf(!t->IsTag());
 
-    // HtmlToken string includes potential attributes,
-    // get the length of just the tag
-    size_t tagLen = GetTagLen(t->s, t->sLen);
-    if (IgnoreTag(t->s, tagLen))
+    if (IgnoreTag(t))
         return;
 
-    HtmlTag tag = FindTag((char*)t->s, tagLen);
+    HtmlTag tag = FindTag(t);
     // TODO: ignore instead of crashing once we're satisfied we covered all the tags
     CrashIf(tag == Tag_NotFound);
 

@@ -123,7 +123,8 @@ struct AttrInfo {
     }
 };
 
-size_t GetTagLen(const char *s, size_t len);
+struct HtmlToken;
+size_t GetTagLen(HtmlToken *tok);
 
 struct HtmlToken {
     enum TokenType {
@@ -166,7 +167,7 @@ struct HtmlToken {
     size_t           sLen;
 
     bool HasName(const char *name) {
-        return str::StartsWith(s, name) && str::Len(name) == GetTagLen(s, sLen);
+        return str::StartsWith(s, name) && str::Len(name) == GetTagLen(this);
     }
 
     AttrInfo *       NextAttr();
@@ -208,14 +209,12 @@ void        SkipWs(const char*& s, const char *end);
 void        SkipNonWs(const char*& s, const char *end);
 int         FindStrPos(const char *strings, const char *str, size_t len);
 
-bool        IsSelfClosingTag(HtmlTag tag);
-
-HtmlTag     FindTag(const char *tag, size_t len);
-HtmlAttr    FindAttr(const char *attr, size_t len);
+HtmlTag     FindTag(HtmlToken *tok);
+HtmlAttr    FindAttr(AttrInfo *attrInfo);
 AlignAttr   FindAlignAttr(const char *attr, size_t len);
 
 void RecordEndTag(Vec<HtmlTag> *tagNesting, HtmlTag tag);
 void RecordStartTag(Vec<HtmlTag>* tagNesting, HtmlTag tag);
-Vec<char> *PrettyPrintHtml(const char *s, size_t len);
+char *PrettyPrintHtml(const char *s, size_t len, size_t& lenOut);
 
 #endif

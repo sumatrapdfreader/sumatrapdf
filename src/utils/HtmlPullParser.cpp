@@ -62,7 +62,7 @@ AttrInfo *HtmlToken::NextAttr()
     // restart after the last attribute (or start from the beginning)
     const char *s = nextAttr;
     if (!s)
-        s = this->s + GetTagLen(this->s, sLen);
+        s = this->s + GetTagLen(this);
     const char *end = this->s + sLen;
 
     // parse attribute name
@@ -206,32 +206,14 @@ Next:
     return -1;
 }
 
-#if 0
-void DumpTag(HtmlToken *t)
+HtmlTag FindTag(HtmlToken *tok)
 {
-    char buf[1024];
-    if (t->sLen + 3 > dimof(buf))
-        return;
-    memcpy(buf, t->s, t->sLen);
-    char *end = buf + t->sLen;
-    char *tmp = buf;
-    while ((tmp < end) && (*tmp != ' ')) {
-        ++tmp;
-    }
-    *tmp++ = '\n';
-    *tmp = 0;
-    printf(buf);
-}
-#endif
-
-HtmlTag FindTag(const char *tag, size_t len)
-{
-    return (HtmlTag)FindStrPos(HTML_TAGS_STRINGS, tag, len);
+    return (HtmlTag)FindStrPos(HTML_TAGS_STRINGS, tok->s, GetTagLen(tok));
 }
 
-HtmlAttr FindAttr(const char *attr, size_t len)
+HtmlAttr FindAttr(AttrInfo *attrInfo)
 {
-    return (HtmlAttr)FindStrPos(HTML_ATTRS_STRINGS, attr, len);
+    return (HtmlAttr)FindStrPos(HTML_ATTRS_STRINGS, attrInfo->name, attrInfo->nameLen);
 }
 
 AlignAttr FindAlignAttr(const char *attr, size_t len)
@@ -243,140 +225,118 @@ bool IsSelfClosingTag(HtmlTag tag)
 {
     // TODO: add more tags
     switch (tag) {
-    case Tag_Br: case Tag_Img: case Tag_Hr: case Tag_Meta:
-    case Tag_Pagebreak: case Tag_Mbp_Pagebreak:
+    case Tag_Br: case Tag_Img: case Tag_Hr: case Tag_Link:
+    case Tag_Meta: case Tag_Pagebreak: case Tag_Mbp_Pagebreak:
         return true;
     default:
         return false;
     }
 }
 
-size_t GetTagLen(const char *s, size_t len)
+size_t GetTagLen(HtmlToken *tok)
 {
-    const char *end = s + len;
-    const char *curr = s;
-    while (curr < end) {
-        if (!IsNameChar(*curr))
-            return curr - s;
-        ++curr;
+    for (size_t i = 0; i < tok->sLen; i++) {
+        if (!IsNameChar(tok->s[i]))
+            return i;
     }
-    return len;
+    return tok->sLen;
 }
 
-static void HtmlAddWithNesting(Vec<char>* out, HtmlTag tag, bool isStartTag, size_t nesting, const char *s, size_t sLen)
+bool IsInlineTag(HtmlTag tag)
 {
-    static HtmlTag inlineTags[] = {Tag_Font, Tag_B, Tag_I, Tag_U};
-    bool isInline = false;
-    for (size_t i = 0; i < dimof(inlineTags); i++) {
-        if (tag == inlineTags[i]) {
-            isInline = true;
-            break;
-        }
+    switch (tag) {
+    case Tag_A: case Tag_Abbr: case Tag_Acronym: case Tag_B:
+    case Tag_Br: case Tag_Em: case Tag_Font: case Tag_I:
+    case Tag_Img: case Tag_S: case Tag_Small: case Tag_Span:
+    case Tag_Strike: case Tag_Strong: case Tag_Sub: case Tag_Sup:
+    case Tag_U:
+        return true;
+    default:
+        return false;
+    };
+}
+
+static void HtmlAddWithNesting(str::Str<char>* out, HtmlToken *tok, HtmlTag tag, size_t nesting)
+{
+    CrashIf(!tok->IsStartTag() && !tok->IsEndTag() && !tok->IsEmptyElementEndTag());
+    bool isInline = IsInlineTag(tag);
+    // add a newline before block start tags (unless there already is one)
+    bool onNewLine = out->Count() == 0 || out->Last() == '\n';
+    if (!onNewLine && !isInline && !tok->IsEndTag()) {
+        out->Append('\n');
+        onNewLine = true;
     }
-    if (!isInline && isStartTag) {
-        for (size_t i = 0; i < nesting; i++) {
-            out->Append(' ');
-        }
+    // indent the tag if it starts on a new line
+    if (onNewLine) {
+        for (size_t i = 0; i < nesting; i++)
+            out->Append('\t');
+        if (tok->IsEndTag() && nesting > 0)
+            out->Pop();
     }
-    out->Append(s, sLen);
-    if (isInline || isStartTag)
-        return;
-    out->Append('\n');
+    // output the tag and all its attributes
+    out->Append('<');
+    if (tok->IsEndTag())
+        out->Append('/');
+    // TODO: normalize whitespace between attributes?
+    out->Append(tok->s, tok->sLen);
+    if (tok->IsEmptyElementEndTag())
+        out->Append('/');
+    out->Append('>');
+    // add a newline after block end tags
+    if (!isInline && !tok->IsStartTag())
+        out->Append('\n');
 }
 
 // record the tag for the purpose of building current state
 // of html tree
 void RecordStartTag(Vec<HtmlTag>* tagNesting, HtmlTag tag)
 {
-    if (IsSelfClosingTag(tag))
-        return;
-    tagNesting->Append(tag);
+    if (!IsSelfClosingTag(tag))
+        tagNesting->Append(tag);
 }
 
 // remove the tag from state of html tree
 void RecordEndTag(Vec<HtmlTag> *tagNesting, HtmlTag tag)
 {
-    // TODO: this logic might need to be a bit more complicated
-    // e.g. when closing a tag, if the top tag doesn't match
-    // but there are only potentially self-closing tags
-    // on the stack between the matching tag, we should pop
-    // all of them
-    if (tagNesting->Count() > 0)
+    // when closing a tag, if the top tag doesn't match but
+    // there are only potentially self-closing tags on the
+    // stack between the matching tag, we pop all of them
+    if (tagNesting->Find(tag)) {
+        while (tagNesting->Count() > 0 && tagNesting->Last() != tag)
+            tagNesting->Pop();
+    }
+    if (tagNesting->Count() > 0) {
+        CrashIf(tagNesting->Last() != tag);
         tagNesting->Pop();
-}
-
-static void PrettifyHtmlToken(HtmlToken *t, Vec<HtmlTag> *tagNesting, Vec<char>* out)
-{
-    size_t nesting = tagNesting->Count();
-    if (t->IsText()) {
-        out->Append((char*)t->s, t->sLen);
-        //HtmlAddWithNesting(state->html, t->tag, nesting, t->s, t->sLen);
-        return;
-    }
-
-    if (!t->IsTag())
-        return;
-
-    HtmlTag tag = FindTag(t->s, t->sLen);
-    if (t->IsEmptyElementEndTag()) {
-        HtmlAddWithNesting(out, tag, false, nesting, t->s - 1, t->sLen + 3);
-        return;
-    }
-
-    if (t->IsStartTag()) {
-        HtmlAddWithNesting(out, tag, true, nesting, t->s - 1, t->sLen + 2);
-        return;
-    }
-
-    if (t->IsEndTag()) {
-        if (nesting > 0)
-            --nesting;
-        HtmlAddWithNesting(out, tag, false, nesting, t->s - 2, t->sLen + 3);
     }
 }
 
-// tags that I want to explicitly ignore and not define
-// HtmlTag enums for them
-// One file has a bunch of st1:* tags (st1:city, st1:place etc.)
-static bool IgnoreTag(const char *s, size_t sLen)
+char *PrettyPrintHtml(const char *s, size_t len, size_t& lenOut)
 {
-    if (sLen >= 4 && s[3] == ':' && s[0] == 's' && s[1] == 't' && s[2] == '1')
-        return true;
-    // no idea what "o:p" is
-    if (sLen == 3 && s[1] == ':' && s[0] == 'o'  && s[2] == 'p')
-        return true;
-    return false;
-}
-
-Vec<char> *PrettyPrintHtml(const char *s, size_t len)
-{
-    Vec<char> *res = new Vec<char>(len);
-    Vec<HtmlTag> tagNesting(256);
+    str::Str<char> res(len);
+    Vec<HtmlTag> tagNesting(32);
     HtmlPullParser parser(s, len);
-    for (;;)
+    HtmlToken *t;
+    while ((t = parser.Next()) && !t->IsError())
     {
-        HtmlToken *t = parser.Next();
-        if (!t || t->IsError())
-            break;
-
-        PrettifyHtmlToken(t, &tagNesting, res);
+        if (t->IsText())
+            res.Append(t->s, t->sLen);
         if (!t->IsTag())
             continue;
 
-        // HtmlToken string includes potential attributes,
-        // get the length of just the tag
-        size_t tagLen = GetTagLen(t->s, t->sLen);
-        if (IgnoreTag(t->s, tagLen))
+        HtmlTag tag = FindTag(t);
+        size_t nesting = tagNesting.Count();
+        HtmlAddWithNesting(&res, t, tag, nesting);
+
+        if (Tag_NotFound == tag || IsInlineTag(tag))
             continue;
 
-        HtmlTag tag = FindTag(t->s, tagLen);
-        if (Tag_NotFound == tag)
-            continue;
         // update the current state of html tree
         if (t->IsStartTag())
             RecordStartTag(&tagNesting, tag);
         else if (t->IsEndTag())
             RecordEndTag(&tagNesting, tag);
     }
-    return res;
+    lenOut = res.Count();
+    return res.StealData();
 }
