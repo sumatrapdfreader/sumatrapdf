@@ -34,20 +34,36 @@ public:
 };
 
 void *mallocNF(size_t size);
+void *memdupNF(const void *ptr, size_t size);
 
 namespace str {
-WCHAR * ToWideCharNF(const char *src, UINT CodePage);
 
-namespace conv {
+inline char *DupNF(const char *s) { return (char *)memdupNF(s, strlen(s) + 1); }
+inline WCHAR *DupNF(const WCHAR *s) { return (WCHAR *)memdupNF(s, (wcslen(s) + 1) * sizeof(WCHAR)); }
+
+namespace convNF {
+
+char *  ToMultiByte(const WCHAR *txt, UINT CodePage);
+char *  ToMultiByte(const char *src, UINT CodePageSrc, UINT CodePageDest);
+WCHAR * ToWideChar(const char *src, UINT CodePage);
+
 #ifdef UNICODE
-inline TCHAR *  FromCodePageNF(const char *src, UINT cp) { return ToWideCharNF(src, cp); }
+inline TCHAR *  FromWStr(const WCHAR *src) { return DupNF(src); }
+inline WCHAR *  ToWStr(const TCHAR *src) { return DupNF(src); }
+inline TCHAR *  FromCodePage(const char *src, UINT cp) { return ToWideChar(src, cp); }
+inline char *   ToCodePage(const TCHAR *src, UINT cp) { return ToMultiByte(src, cp); }
 #else
-// TODO: not implemented yet
+inline TCHAR *  FromWStr(const WCHAR *src) { return ToMultiByte(src, CP_ACP); }
+inline WCHAR *  ToWStr(const TCHAR *src) { return ToWideChar(src, CP_ACP); }
+inline TCHAR *  FromCodePage(const char *src, UINT cp) { return ToMultiByte(src, cp, CP_ACP); }
+inline char *   ToCodePage(const TCHAR *src, UINT cp) { return ToMultiByte(src, CP_ACP, cp); }
 #endif
+inline TCHAR *  FromUtf8(const char *src) { return FromCodePage(src, CP_UTF8); }
+inline char *   ToUtf8(const TCHAR *src) { return ToCodePage(src, CP_UTF8); }
+inline TCHAR *  FromAnsi(const char *src) { return FromCodePage(src, CP_ACP); }
+inline char *   ToAnsi(const TCHAR *src) { return ToCodePage(src, CP_ACP); }
 
-inline TCHAR *  FromAnsiNF(const char *src) { return FromCodePageNF(src, CP_ACP); }
-
-} // namespace conv
+} // namespace convNF
 } // namespace str
 
 #endif

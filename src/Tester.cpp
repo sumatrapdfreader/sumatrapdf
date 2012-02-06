@@ -124,7 +124,7 @@ static void MobiTestDir(TCHAR *dir)
 
 static void MobiTest(char *dirOrFile)
 {
-    TCHAR *tmp = str::conv::FromAnsiNF(dirOrFile);
+    TCHAR *tmp = str::convNF::FromAnsi(dirOrFile);
 
     if (file::Exists(tmp) && MobiDoc::IsSupported(tmp))
         TestMobiFile(tmp);
@@ -136,7 +136,7 @@ static void MobiTest(char *dirOrFile)
 static void MobiLayout(char *file)
 {
     NoFreeAllocatorMark mark;
-    TCHAR *tmp = str::conv::FromAnsiNF(file);
+    TCHAR *tmp = str::convNF::FromAnsi(file);
     if (!file::Exists(tmp) || !MobiDoc::IsSupported(tmp)) {
         printf("MobiLayout: file %s doesn't exist or not a mobi file", file);
         return;

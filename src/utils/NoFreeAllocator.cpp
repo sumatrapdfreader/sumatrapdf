@@ -158,9 +158,42 @@ void *mallocNF(size_t size)
     return (void*)res;
 }
 
-namespace str {
+void *memdupNF(const void *ptr, size_t size)
+{
+    void *res = mallocNF(size);
+    if (res)
+        memcpy(res, ptr, size);
+    return res;
+}
 
-WCHAR *ToWideCharNF(const char *src, UINT codePage)
+namespace str {
+namespace convNF {
+
+char *ToMultiByte(const WCHAR *txt, UINT codePage)
+{
+    CrashIf(txt);
+    if (!txt) return NULL;
+
+    int requiredBufSize = WideCharToMultiByte(codePage, 0, txt, -1, NULL, 0, NULL, NULL);
+    char *res = (char *)mallocNF(requiredBufSize);
+    if (!res)
+        return NULL;
+    WideCharToMultiByte(codePage, 0, txt, -1, res, requiredBufSize, NULL, NULL);
+    return res;
+}
+
+char *ToMultiByte(const char *src, UINT codePageSrc, UINT codePageDest)
+{
+    CrashIf(src);
+    if (!src) return NULL;
+
+    if (codePageSrc == codePageDest)
+        return DupNF(src);
+
+    return ToMultiByte(ToWideChar(src, codePageSrc), codePageDest);
+}
+
+WCHAR *ToWideChar(const char *src, UINT codePage)
 {
     CrashIf(!src);
     if (!src) return NULL;
@@ -173,4 +206,5 @@ WCHAR *ToWideCharNF(const char *src, UINT codePage)
     return res;
 }
 
+}
 }
