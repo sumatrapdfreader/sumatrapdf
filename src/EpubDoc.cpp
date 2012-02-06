@@ -21,7 +21,7 @@ TODO:
 - create ToC from .opf or .ncx file
 */
 
-class CEpubDoc : public EpubDoc {
+class EpubDocImpl : public EpubDoc {
     friend EpubDoc;
 
     ScopedMem<TCHAR> fileName;
@@ -32,8 +32,8 @@ class CEpubDoc : public EpubDoc {
     bool Load();
 
 public:
-    CEpubDoc(const TCHAR *fileName) : zip(fileName), fileName(str::Dup(fileName)) { }
-    virtual ~CEpubDoc() {
+    EpubDocImpl(const TCHAR *fileName) : zip(fileName), fileName(str::Dup(fileName)) { }
+    virtual ~EpubDocImpl() {
         for (size_t i = 0; i < images.Count(); i++) {
             free(images.At(i).data);
             free(images.At(i).id);
@@ -68,7 +68,7 @@ public:
     }
 };
 
-bool CEpubDoc::Load()
+bool EpubDocImpl::Load()
 {
     ScopedMem<char> firstFileData(zip.GetFileData(_T("mimetype")));
     if (!str::Eq(zip.GetFileName(0), _T("mimetype")) ||
@@ -141,7 +141,7 @@ bool CEpubDoc::Load()
 
 EpubDoc *EpubDoc::ParseFile(const TCHAR *fileName)
 {
-    CEpubDoc *doc = new CEpubDoc(fileName);
+    EpubDocImpl *doc = new EpubDocImpl(fileName);
     if (doc && !doc->Load()) {
         delete doc;
         doc = NULL;

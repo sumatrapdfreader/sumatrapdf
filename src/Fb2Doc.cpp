@@ -21,7 +21,7 @@ TODO:
 - extract basic document styles from stylesheet
 */
 
-class CFb2Doc : public Fb2Doc {
+class Fb2DocImpl : public Fb2Doc {
     friend Fb2Doc;
 
     ScopedMem<TCHAR> fileName;
@@ -32,8 +32,8 @@ class CFb2Doc : public Fb2Doc {
     void ExtractImage(HtmlPullParser& parser, HtmlToken *tok);
 
 public:
-    CFb2Doc(const TCHAR *fileName) : fileName(str::Dup(fileName)) { }
-    virtual ~CFb2Doc() {
+    Fb2DocImpl(const TCHAR *fileName) : fileName(str::Dup(fileName)) { }
+    virtual ~Fb2DocImpl() {
         for (size_t i = 0; i < images.Count(); i++) {
             free(images.At(i).data);
             free(images.At(i).id);
@@ -64,7 +64,7 @@ public:
     }
 };
 
-bool CFb2Doc::Load()
+bool Fb2DocImpl::Load()
 {
     size_t len;
     ScopedMem<char> data;
@@ -212,7 +212,7 @@ char *Base64Decode(const char *s, const char *end, size_t *len)
     return result;
 }
 
-void CFb2Doc::ExtractImage(HtmlPullParser& parser, HtmlToken *tok)
+void Fb2DocImpl::ExtractImage(HtmlPullParser& parser, HtmlToken *tok)
 {
     ScopedMem<char> id;
     AttrInfo *attrInfo;
@@ -235,7 +235,7 @@ void CFb2Doc::ExtractImage(HtmlPullParser& parser, HtmlToken *tok)
 
 Fb2Doc *Fb2Doc::ParseFile(const TCHAR *fileName)
 {
-    CFb2Doc *doc = new CFb2Doc(fileName);
+    Fb2DocImpl *doc = new Fb2DocImpl(fileName);
     if (doc && !doc->Load()) {
         delete doc;
         doc = NULL;

@@ -187,19 +187,19 @@ static PdfEngine *psgz2pdf(const TCHAR *fileName)
     return ps2pdf(tmpFile);
 }
 
-// CPsEngine is mostly a proxy for a PdfEngine that's fed whatever
+// PsEngineImpl is mostly a proxy for a PdfEngine that's fed whatever
 // the ps2pdf conversion from Ghostscript returns
-class CPsEngine : public PsEngine {
+class PsEngineImpl : public PsEngine {
     friend PsEngine;
 
 public:
-    CPsEngine() : fileName(NULL), pdfEngine(NULL) { }
-    virtual ~CPsEngine() {
+    PsEngineImpl() : fileName(NULL), pdfEngine(NULL) { }
+    virtual ~PsEngineImpl() {
         free((void *)fileName);
         delete pdfEngine;
     }
-    virtual CPsEngine *Clone() {
-        CPsEngine *clone = new CPsEngine();
+    virtual PsEngineImpl *Clone() {
+        PsEngineImpl *clone = new PsEngineImpl();
         if (fileName)  clone->fileName = str::Dup(fileName);
         if (pdfEngine) clone->pdfEngine = static_cast<PdfEngine *>(pdfEngine->Clone());
         return clone;
@@ -341,7 +341,7 @@ bool PsEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
 
 PsEngine *PsEngine::CreateFromFileName(const TCHAR *fileName)
 {
-    CPsEngine *engine = new CPsEngine();
+    PsEngineImpl *engine = new PsEngineImpl();
     if (!engine->Load(fileName)) {
         delete engine;
         return NULL;

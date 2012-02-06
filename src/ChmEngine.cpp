@@ -108,12 +108,12 @@ public:
     }
 };
 
-class CChmEngine : public ChmEngine, public HtmlWindowCallback {
+class ChmEngineImpl : public ChmEngine, public HtmlWindowCallback {
     friend ChmEngine;
 
 public:
-    CChmEngine();
-    virtual ~CChmEngine();
+    ChmEngineImpl();
+    virtual ~ChmEngineImpl();
     virtual ChmEngine *Clone() {
         return CreateFromFileName(fileName);
     }
@@ -209,13 +209,13 @@ protected:
     void DisplayPage(const TCHAR *pageUrl);
 };
 
-CChmEngine::CChmEngine() :
+ChmEngineImpl::ChmEngineImpl() :
     fileName(NULL), chmHandle(NULL), tocRoot(NULL),
     htmlWindow(NULL), navCb(NULL), currentPageNo(1)
 {
 }
 
-Bytes *CChmEngine::FindDataForUrl(const TCHAR *url)
+Bytes *ChmEngineImpl::FindDataForUrl(const TCHAR *url)
 {
     for (size_t i = 0; i < urlDataCache.Count(); i++) {
         ChmCacheEntry *e = urlDataCache.At(i);
@@ -236,7 +236,7 @@ static TCHAR *ToPlainUrl(const TCHAR *url)
 // Called after html document has been loaded.
 // Sync the state of the ui with the page (show
 // the right page number, select the right item in toc tree)
-void CChmEngine::OnDocumentComplete(const TCHAR *url)
+void ChmEngineImpl::OnDocumentComplete(const TCHAR *url)
 {
     if (*url == _T('/'))
         ++url;
@@ -250,7 +250,7 @@ void CChmEngine::OnDocumentComplete(const TCHAR *url)
 
 // Called before we start loading html for a given url. Will block
 // loading if returns false.
-bool CChmEngine::OnBeforeNavigate(const TCHAR *url, bool newWindow)
+bool ChmEngineImpl::OnBeforeNavigate(const TCHAR *url, bool newWindow)
 {
     // ensure that JavaScript doesn't keep the focus
     // in the HtmlWindow when a new page is loaded
@@ -267,14 +267,14 @@ bool CChmEngine::OnBeforeNavigate(const TCHAR *url, bool newWindow)
     return true;
 }
 
-void CChmEngine::SetParentHwnd(HWND hwnd)
+void ChmEngineImpl::SetParentHwnd(HWND hwnd)
 {
     assert(!htmlWindow);
     delete htmlWindow;
     htmlWindow = new HtmlWindow(hwnd, this);
 }
 
-void CChmEngine::DisplayPage(const TCHAR *pageUrl)
+void ChmEngineImpl::DisplayPage(const TCHAR *pageUrl)
 {
     if (IsExternalUrl(pageUrl)) {
         // open external links in an external browser
@@ -305,7 +305,7 @@ void CChmEngine::DisplayPage(const TCHAR *pageUrl)
         htmlWindow->NavigateToDataUrl(pageUrl);
 }
 
-RenderedBitmap *CChmEngine::CreateThumbnail(SizeI size)
+RenderedBitmap *ChmEngineImpl::CreateThumbnail(SizeI size)
 {
     RenderedBitmap *bmp = NULL;
     // We render twice the size of thumbnail and scale it down
@@ -337,14 +337,14 @@ Exit:
     return bmp;
 }
 
-void CChmEngine::GoToDestination(PageDestination *link)
+void ChmEngineImpl::GoToDestination(PageDestination *link)
 {
     ChmTocItem *item = static_cast<ChmTocItem *>(link);
     if (item && item->url)
         DisplayPage(item->url);
 }
 
-bool CChmEngine::CanNavigate(int dir)
+bool ChmEngineImpl::CanNavigate(int dir)
 {
     if (!htmlWindow)
         return false;
@@ -353,7 +353,7 @@ bool CChmEngine::CanNavigate(int dir)
     return htmlWindow->canGoForward;
 }
 
-void CChmEngine::Navigate(int dir)
+void ChmEngineImpl::Navigate(int dir)
 {
     if (!htmlWindow)
         return;
@@ -366,13 +366,13 @@ void CChmEngine::Navigate(int dir)
     }
 }
 
-void CChmEngine::ZoomTo(float zoomLevel)
+void ChmEngineImpl::ZoomTo(float zoomLevel)
 {
     if (htmlWindow)
         htmlWindow->SetZoomPercent((int)zoomLevel);
 }
 
-CChmEngine::~CChmEngine()
+ChmEngineImpl::~ChmEngineImpl()
 {
     chm_close(chmHandle);
     // TODO: deleting htmlWindow seems to spin a modal loop which
@@ -736,7 +736,7 @@ static ChmTocItem *ParseChmHtmlToc(StrVec& pages, char *html, UINT cp)
     return BuildChmToc(pages, el, cp, idCounter, true);
 }
 
-bool CChmEngine::Load(const TCHAR *fileName)
+bool ChmEngineImpl::Load(const TCHAR *fileName)
 {
     assert(NULL == chmHandle);
 
@@ -771,7 +771,7 @@ bool CChmEngine::Load(const TCHAR *fileName)
 }
 
 // Load and cache data for a given url inside CHM file.
-bool CChmEngine::GetDataForUrl(const TCHAR *url, char **data, size_t *len)
+bool ChmEngineImpl::GetDataForUrl(const TCHAR *url, char **data, size_t *len)
 {
     ScopedMem<TCHAR> plainUrl(ToPlainUrl(url));
     Bytes *b = FindDataForUrl(plainUrl);
@@ -791,7 +791,7 @@ bool CChmEngine::GetDataForUrl(const TCHAR *url, char **data, size_t *len)
     return true;
 }
 
-PageDestination *CChmEngine::GetNamedDest(const TCHAR *name)
+PageDestination *ChmEngineImpl::GetNamedDest(const TCHAR *name)
 {
     ScopedMem<TCHAR> plainUrl(ToPlainUrl(name));
     int pageNo = pages.Find(plainUrl) + 1;
@@ -800,7 +800,7 @@ PageDestination *CChmEngine::GetNamedDest(const TCHAR *name)
     return NULL;
 }
 
-TCHAR *CChmEngine::GetProperty(char *name)
+TCHAR *ChmEngineImpl::GetProperty(char *name)
 {
     if (str::Eq(name, "Title") && chmInfo.title)
         return str::conv::FromCodePage(chmInfo.title, chmInfo.codepage);
@@ -809,7 +809,7 @@ TCHAR *CChmEngine::GetProperty(char *name)
     return NULL;
 }
 
-unsigned char *CChmEngine::GetFileData(size_t *cbCount)
+unsigned char *ChmEngineImpl::GetFileData(size_t *cbCount)
 {
     return (unsigned char *)file::ReadAll(fileName, cbCount);
 }
@@ -824,7 +824,7 @@ bool ChmEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
 
 ChmEngine *ChmEngine::CreateFromFileName(const TCHAR *fileName)
 {
-    CChmEngine *engine = new CChmEngine();
+    ChmEngineImpl *engine = new ChmEngineImpl();
     if (!engine->Load(fileName)) {
         delete engine;
         return NULL;

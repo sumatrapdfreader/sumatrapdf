@@ -398,7 +398,7 @@ unsigned char *ImagesEngine::GetFileData(size_t *cbCount)
 
 ///// ImageEngine handles a single image file /////
 
-class CImageEngine : public ImagesEngine, public ImageEngine {
+class ImageEngineImpl : public ImagesEngine, public ImageEngine {
     friend ImageEngine;
 
 public:
@@ -410,14 +410,14 @@ protected:
     bool FinishLoading(Bitmap *bmp);
 };
 
-ImageEngine *CImageEngine::Clone()
+ImageEngine *ImageEngineImpl::Clone()
 {
     Bitmap *bmp = pages.At(0);
     bmp = bmp->Clone(0, 0, bmp->GetWidth(), bmp->GetHeight(), PixelFormat32bppARGB);
     if (!bmp)
         return NULL;
 
-    CImageEngine *clone = new CImageEngine();
+    ImageEngineImpl *clone = new ImageEngineImpl();
     clone->pages.Append(bmp);
     clone->fileName = fileName ? str::Dup(fileName) : NULL;
     clone->fileExt = fileExt;
@@ -427,7 +427,7 @@ ImageEngine *CImageEngine::Clone()
     return clone;
 }
 
-bool CImageEngine::LoadSingleFile(const TCHAR *file)
+bool ImageEngineImpl::LoadSingleFile(const TCHAR *file)
 {
     if (!file)
         return false;
@@ -441,7 +441,7 @@ bool CImageEngine::LoadSingleFile(const TCHAR *file)
     return FinishLoading(bmp);
 }
 
-bool CImageEngine::LoadFromStream(IStream *stream)
+bool ImageEngineImpl::LoadFromStream(IStream *stream)
 {
     if (!stream)
         return false;
@@ -456,7 +456,7 @@ bool CImageEngine::LoadFromStream(IStream *stream)
     return FinishLoading(bmp);
 }
 
-bool CImageEngine::FinishLoading(Bitmap *bmp)
+bool ImageEngineImpl::FinishLoading(Bitmap *bmp)
 {
     if (!bmp)
         return false;
@@ -485,7 +485,7 @@ bool ImageEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
 ImageEngine *ImageEngine::CreateFromFileName(const TCHAR *fileName)
 {
     assert(IsSupportedFile(fileName) || IsSupportedFile(fileName, true));
-    CImageEngine *engine = new CImageEngine();
+    ImageEngineImpl *engine = new ImageEngineImpl();
     if (!engine->LoadSingleFile(fileName)) {
         delete engine;
         return NULL;
@@ -495,7 +495,7 @@ ImageEngine *ImageEngine::CreateFromFileName(const TCHAR *fileName)
 
 ImageEngine *ImageEngine::CreateFromStream(IStream *stream)
 {
-    CImageEngine *engine = new CImageEngine();
+    ImageEngineImpl *engine = new ImageEngineImpl();
     if (!engine->LoadFromStream(stream)) {
         delete engine;
         return NULL;
@@ -505,7 +505,7 @@ ImageEngine *ImageEngine::CreateFromStream(IStream *stream)
 
 ///// ImageDirEngine handles a directory full of image files /////
 
-class CImageDirEngine : public ImagesEngine, public ImageDirEngine {
+class ImageDirEngineImpl : public ImagesEngine, public ImageDirEngine {
     friend ImageDirEngine;
 
 public:
@@ -531,7 +531,7 @@ protected:
     StrVec pageFileNames;
 };
 
-bool CImageDirEngine::LoadImageDir(const TCHAR *dirName)
+bool ImageDirEngineImpl::LoadImageDir(const TCHAR *dirName)
 {
     fileName = str::Dup(dirName);
     fileExt = _T("");
@@ -560,7 +560,7 @@ bool CImageDirEngine::LoadImageDir(const TCHAR *dirName)
     return true;
 }
 
-RectD CImageDirEngine::PageMediabox(int pageNo)
+RectD ImageDirEngineImpl::PageMediabox(int pageNo)
 {
     assert(1 <= pageNo && pageNo <= PageCount());
     if (!mediaboxes.At(pageNo - 1).IsEmpty())
@@ -575,7 +575,7 @@ RectD CImageDirEngine::PageMediabox(int pageNo)
     return mediaboxes.At(pageNo - 1);
 }
 
-TCHAR *CImageDirEngine::GetPageLabel(int pageNo)
+TCHAR *ImageDirEngineImpl::GetPageLabel(int pageNo)
 {
     if (pageNo < 1 || PageCount() < pageNo)
         return BaseEngine::GetPageLabel(pageNo);
@@ -584,7 +584,7 @@ TCHAR *CImageDirEngine::GetPageLabel(int pageNo)
     return str::DupN(fileName, path::GetExt(fileName) - fileName);
 }
 
-int CImageDirEngine::GetPageByLabel(const TCHAR *label)
+int ImageDirEngineImpl::GetPageByLabel(const TCHAR *label)
 {
     for (size_t i = 0; i < pageFileNames.Count(); i++) {
         const TCHAR *fileName = path::GetBaseName(pageFileNames.At(i));
@@ -597,7 +597,7 @@ int CImageDirEngine::GetPageByLabel(const TCHAR *label)
     return BaseEngine::GetPageByLabel(label);
 }
 
-Bitmap *CImageDirEngine::LoadImage(int pageNo)
+Bitmap *ImageDirEngineImpl::LoadImage(int pageNo)
 {
     assert(1 <= pageNo && pageNo <= PageCount());
     if (pages.At(pageNo - 1))
@@ -618,7 +618,7 @@ public:
     virtual PageDestination *GetLink() { return NULL; }
 };
 
-DocTocItem *CImageDirEngine::GetTocTree()
+DocTocItem *ImageDirEngineImpl::GetTocTree()
 {
     DocTocItem *root = new ImageDirTocItem(GetPageLabel(1), 1);
     for (int i = 2; i <= PageCount(); i++)
@@ -635,7 +635,7 @@ bool ImageDirEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
 ImageDirEngine *ImageDirEngine::CreateFromFileName(const TCHAR *fileName)
 {
     assert(dir::Exists(fileName));
-    CImageDirEngine *engine = new CImageDirEngine();
+    ImageDirEngineImpl *engine = new ImageDirEngineImpl();
     if (!engine->LoadImageDir(fileName)) {
         delete engine;
         return NULL;
@@ -645,14 +645,14 @@ ImageDirEngine *ImageDirEngine::CreateFromFileName(const TCHAR *fileName)
 
 ///// CbxEngine handles comic book files (either .cbz or .cbr) /////
 
-class CCbxEngine : public ImagesEngine, public CbxEngine {
+class CbxEngineImpl : public ImagesEngine, public CbxEngine {
     friend CbxEngine;
 
 public:
-    CCbxEngine() : cbzFile(NULL) {
+    CbxEngineImpl() : cbzFile(NULL) {
         InitializeCriticalSection(&fileAccess);
     }
-    virtual ~CCbxEngine();
+    virtual ~CbxEngineImpl();
 
     virtual CbxEngine *Clone() {
         if (fileStream) {
@@ -684,14 +684,14 @@ protected:
     Vec<size_t> fileIdxs;
 };
 
-CCbxEngine::~CCbxEngine()
+CbxEngineImpl::~CbxEngineImpl()
 {
     delete cbzFile;
 
     DeleteCriticalSection(&fileAccess);
 }
 
-RectD CCbxEngine::PageMediabox(int pageNo)
+RectD CbxEngineImpl::PageMediabox(int pageNo)
 {
     assert(1 <= pageNo && pageNo <= PageCount());
     if (!mediaboxes.At(pageNo - 1).IsEmpty())
@@ -712,7 +712,7 @@ RectD CCbxEngine::PageMediabox(int pageNo)
     return mediaboxes.At(pageNo - 1);
 }
 
-Bitmap *CCbxEngine::LoadImage(int pageNo)
+Bitmap *CbxEngineImpl::LoadImage(int pageNo)
 {
     assert(1 <= pageNo && pageNo <= PageCount());
     if (pages.At(pageNo - 1))
@@ -726,7 +726,7 @@ Bitmap *CCbxEngine::LoadImage(int pageNo)
     return pages.At(pageNo - 1);
 }
 
-bool CCbxEngine::LoadCbzFile(const TCHAR *file)
+bool CbxEngineImpl::LoadCbzFile(const TCHAR *file)
 {
     if (!file)
         return false;
@@ -737,7 +737,7 @@ bool CCbxEngine::LoadCbzFile(const TCHAR *file)
     return FinishLoadingCbz();
 }
 
-bool CCbxEngine::LoadCbzStream(IStream *stream)
+bool CbxEngineImpl::LoadCbzStream(IStream *stream)
 {
     if (!stream)
         return false;
@@ -754,7 +754,7 @@ static int cmpAscii(const void *a, const void *b)
     return _tcscmp(*(const TCHAR **)a, *(const TCHAR **)b);
 }
 
-bool CCbxEngine::FinishLoadingCbz()
+bool CbxEngineImpl::FinishLoadingCbz()
 {
     fileExt = _T(".cbz");
 
@@ -883,7 +883,7 @@ SkipFile:
     return NULL;
  }
 
-bool CCbxEngine::LoadCbrFile(const TCHAR *file)
+bool CbxEngineImpl::LoadCbrFile(const TCHAR *file)
 {
     if (!file)
         return false;
@@ -932,7 +932,7 @@ bool CCbxEngine::LoadCbrFile(const TCHAR *file)
     return true;
 }
 
-char *CCbxEngine::GetImageData(int pageNo, size_t& len)
+char *CbxEngineImpl::GetImageData(int pageNo, size_t& len)
 {
     if (cbzFile) {
         ScopedCritSec scope(&fileAccess);
@@ -958,7 +958,7 @@ bool CbxEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
 CbxEngine *CbxEngine::CreateFromFileName(const TCHAR *fileName)
 {
     assert(IsSupportedFile(fileName) || IsSupportedFile(fileName, true));
-    CCbxEngine *engine = new CCbxEngine();
+    CbxEngineImpl *engine = new CbxEngineImpl();
     bool ok = false;
     if (str::EndsWithI(fileName, _T(".cbz")) ||
         str::EndsWithI(fileName, _T(".zip"))) {
@@ -978,7 +978,7 @@ CbxEngine *CbxEngine::CreateFromFileName(const TCHAR *fileName)
 
 CbxEngine *CbxEngine::CreateFromStream(IStream *stream)
 {
-    CCbxEngine *engine = new CCbxEngine();
+    CbxEngineImpl *engine = new CbxEngineImpl();
     // TODO: UnRAR doesn't support reading from arbitrary data streams
     if (!engine->LoadCbzStream(stream)) {
         delete engine;

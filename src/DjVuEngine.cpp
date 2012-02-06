@@ -184,12 +184,12 @@ public:
 
 static DjVuContext gDjVuContext;
 
-class CDjVuEngine : public DjVuEngine {
+class DjVuEngineImpl : public DjVuEngine {
     friend DjVuEngine;
 
 public:
-    CDjVuEngine();
-    virtual ~CDjVuEngine();
+    DjVuEngineImpl();
+    virtual ~DjVuEngineImpl();
     virtual DjVuEngine *Clone() {
         return CreateFromFileName(fileName);
     }
@@ -252,12 +252,12 @@ protected:
     bool LoadMediaboxes();
 };
 
-CDjVuEngine::CDjVuEngine() : fileName(NULL), pageCount(0), mediaboxes(NULL),
+DjVuEngineImpl::DjVuEngineImpl() : fileName(NULL), pageCount(0), mediaboxes(NULL),
     doc(NULL), outline(miniexp_nil), annos(NULL)
 {
 }
 
-CDjVuEngine::~CDjVuEngine()
+DjVuEngineImpl::~DjVuEngineImpl()
 {
     ScopedCritSec scope(&gDjVuContext.lock);
 
@@ -296,7 +296,7 @@ static bool ReadBytes(HANDLE h, int offset, void *buffer, int count)
 #define DJVU_MARK_DJVU  (*(DWORD *)"DJVU")
 #define DJVU_MARK_INFO  (*(DWORD *)"INFO")
 
-bool CDjVuEngine::LoadMediaboxes()
+bool DjVuEngineImpl::LoadMediaboxes()
 {
     ScopedHandle h(CreateFile(fileName, GENERIC_READ, FILE_SHARE_READ, NULL,
                               OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL));
@@ -335,7 +335,7 @@ bool CDjVuEngine::LoadMediaboxes()
     return true;
 }
 
-bool CDjVuEngine::Load(const TCHAR *fileName)
+bool DjVuEngineImpl::Load(const TCHAR *fileName)
 {
     if (!gDjVuContext.Initialize())
         return false;
@@ -395,7 +395,7 @@ bool CDjVuEngine::Load(const TCHAR *fileName)
     return true;
 }
 
-RenderedBitmap *CDjVuEngine::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target)
+RenderedBitmap *DjVuEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target)
 {
     ScopedCritSec scope(&gDjVuContext.lock);
 
@@ -441,7 +441,7 @@ RenderedBitmap *CDjVuEngine::RenderBitmap(int pageNo, float zoom, int rotation, 
     return bmp;
 }
 
-bool CDjVuEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target)
+bool DjVuEngineImpl::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target)
 {
     bool success = true;
     RectD mediabox = PageMediabox(pageNo);
@@ -471,7 +471,7 @@ bool CDjVuEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, 
     return success;
 }
 
-RectD CDjVuEngine::PageContentBox(int pageNo, RenderTarget target)
+RectD DjVuEngineImpl::PageContentBox(int pageNo, RenderTarget target)
 {
     ScopedCritSec scope(&gDjVuContext.lock);
 
@@ -529,7 +529,7 @@ RectD CDjVuEngine::PageContentBox(int pageNo, RenderTarget target)
     return pageRc;
 }
 
-PointD CDjVuEngine::Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse)
+PointD DjVuEngineImpl::Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse)
 {
     assert(zoom > 0);
     if (zoom <= 0)
@@ -563,19 +563,19 @@ PointD CDjVuEngine::Transform(PointD pt, int pageNo, float zoom, int rotation, b
     return res;
 }
 
-RectD CDjVuEngine::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse)
+RectD DjVuEngineImpl::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse)
 {
     PointD TL = Transform(rect.TL(), pageNo, zoom, rotation, inverse);
     PointD BR = Transform(rect.BR(), pageNo, zoom, rotation, inverse);
     return RectD::FromXY(TL, BR);
 }
 
-unsigned char *CDjVuEngine::GetFileData(size_t *cbCount)
+unsigned char *DjVuEngineImpl::GetFileData(size_t *cbCount)
 {
     return (unsigned char *)file::ReadAll(fileName, cbCount);
 }
 
-bool CDjVuEngine::ExtractPageText(miniexp_t item, const TCHAR *lineSep, str::Str<TCHAR>& extracted, Vec<RectI>& coords)
+bool DjVuEngineImpl::ExtractPageText(miniexp_t item, const TCHAR *lineSep, str::Str<TCHAR>& extracted, Vec<RectI>& coords)
 {
     miniexp_t type = miniexp_car(item);
     if (!miniexp_symbolp(type))
@@ -622,7 +622,7 @@ bool CDjVuEngine::ExtractPageText(miniexp_t item, const TCHAR *lineSep, str::Str
     return !item;
 }
 
-TCHAR *CDjVuEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out, RenderTarget target)
+TCHAR *DjVuEngineImpl::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out, RenderTarget target)
 {
     ScopedCritSec scope(&gDjVuContext.lock);
 
@@ -668,7 +668,7 @@ TCHAR *CDjVuEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_o
     return extracted.StealData();
 }
 
-Vec<PageElement *> *CDjVuEngine::GetElements(int pageNo)
+Vec<PageElement *> *DjVuEngineImpl::GetElements(int pageNo)
 {
     assert(1 <= pageNo && pageNo <= PageCount());
     if (annos && miniexp_dummy == annos[pageNo-1]) {
@@ -742,7 +742,7 @@ Vec<PageElement *> *CDjVuEngine::GetElements(int pageNo)
     return els;
 }
 
-PageElement *CDjVuEngine::GetElementAtPos(int pageNo, PointD pt)
+PageElement *DjVuEngineImpl::GetElementAtPos(int pageNo, PointD pt)
 {
     Vec<PageElement *> *els = GetElements(pageNo);
     if (!els)
@@ -767,7 +767,7 @@ PageElement *CDjVuEngine::GetElementAtPos(int pageNo, PointD pt)
 
 // returns a numeric DjVu link to a named page (if the name resolves)
 // caller needs to free() the result
-char *CDjVuEngine::ResolveNamedDest(const char *name)
+char *DjVuEngineImpl::ResolveNamedDest(const char *name)
 {
     if (!str::StartsWith(name, "#"))
         return NULL;
@@ -777,7 +777,7 @@ char *CDjVuEngine::ResolveNamedDest(const char *name)
     return NULL;
 }
 
-PageDestination *CDjVuEngine::GetNamedDest(const TCHAR *name)
+PageDestination *DjVuEngineImpl::GetNamedDest(const TCHAR *name)
 {
     ScopedMem<char> nameUtf8(str::conv::ToUtf8(name));
     if (!str::StartsWith(nameUtf8.Get(), "#"))
@@ -789,7 +789,7 @@ PageDestination *CDjVuEngine::GetNamedDest(const TCHAR *name)
     return NULL;
 }
 
-DjVuTocItem *CDjVuEngine::BuildTocTree(miniexp_t entry, int& idCounter, bool topLevel)
+DjVuTocItem *DjVuEngineImpl::BuildTocTree(miniexp_t entry, int& idCounter, bool topLevel)
 {
     DjVuTocItem *node = NULL;
 
@@ -827,7 +827,7 @@ DjVuTocItem *CDjVuEngine::BuildTocTree(miniexp_t entry, int& idCounter, bool top
     return node;
 }
 
-DocTocItem *CDjVuEngine::GetTocTree()
+DocTocItem *DjVuEngineImpl::GetTocTree()
 {
     if (!HasTocTree())
         return NULL;
@@ -847,7 +847,7 @@ bool DjVuEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
 
 DjVuEngine *DjVuEngine::CreateFromFileName(const TCHAR *fileName)
 {
-    CDjVuEngine *engine = new CDjVuEngine();
+    DjVuEngineImpl *engine = new DjVuEngineImpl();
     if (!engine->Load(fileName)) {
         delete engine;
         return NULL;

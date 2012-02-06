@@ -40,12 +40,12 @@ public:
 };
 static CREngineCtx gEngineCtx;
 
-class CEpubEngine : public EpubEngine {
+class EpubEngineImpl : public EpubEngine {
     friend EpubEngine;
 
 public:
-    CEpubEngine();
-    virtual ~CEpubEngine();
+    EpubEngineImpl();
+    virtual ~EpubEngineImpl();
     virtual EpubEngine *Clone() {
         return CreateFromFileName(fileName);
     }
@@ -107,12 +107,12 @@ protected:
     bool Load(const TCHAR *fileName);
 };
 
-CEpubEngine::CEpubEngine() : fileName(NULL), docView(NULL),
+EpubEngineImpl::EpubEngineImpl() : fileName(NULL), docView(NULL),
     pageRect(0, 0, 600, 800)
 {
 }
 
-CEpubEngine::~CEpubEngine()
+EpubEngineImpl::~EpubEngineImpl()
 {
     if (docView) {
         delete docView;
@@ -121,7 +121,7 @@ CEpubEngine::~CEpubEngine()
     free((void *)fileName);
 }
 
-bool CEpubEngine::Load(const TCHAR *fileName)
+bool EpubEngineImpl::Load(const TCHAR *fileName)
 {
     this->fileName = str::Dup(fileName);
 
@@ -145,7 +145,7 @@ bool CEpubEngine::Load(const TCHAR *fileName)
     return true;
 }
 
-RenderedBitmap *CEpubEngine::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target)
+RenderedBitmap *EpubEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target)
 {
     RectD pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
     RectI screen = Transform(pageRc, pageNo, zoom, rotation).Round();
@@ -167,7 +167,7 @@ RenderedBitmap *CEpubEngine::RenderBitmap(int pageNo, float zoom, int rotation, 
     return new RenderedBitmap(hbmp, screen.Size());
 }
 
-unsigned char *CEpubEngine::GetFileData(size_t *cbCount)
+unsigned char *EpubEngineImpl::GetFileData(size_t *cbCount)
 {
     return (unsigned char *)file::ReadAll(fileName, cbCount);
 }
@@ -180,7 +180,7 @@ bool EpubEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
 
 EpubEngine *EpubEngine::CreateFromFileName(const TCHAR *fileName)
 {
-    CEpubEngine *engine = new CEpubEngine();
+    EpubEngineImpl *engine = new EpubEngineImpl();
     if (!engine->Load(fileName)) {
         delete engine;
         return NULL;
