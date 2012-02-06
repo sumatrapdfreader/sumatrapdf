@@ -59,6 +59,8 @@ class HtmlParser {
         return NULL;
     }
 
+    void Reset();
+
 public:
     HtmlParseError error;  // parsing error, a static string
     char *errorContext; // pointer within html showing which part we failed to parse

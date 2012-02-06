@@ -50,7 +50,7 @@ bool CEpubDoc::Load()
 
     ScopedMem<char> container(zip.GetFileData(_T("META-INF/container.xml")));
     HtmlParser parser;
-    HtmlElement *node = parser.Parse(container);
+    HtmlElement *node = parser.ParseInPlace(container);
     if (!node)
         return false;
     // only consider the first <rootfile> element (default rendition)
@@ -64,11 +64,10 @@ bool CEpubDoc::Load()
     ScopedMem<char> content(zip.GetFileData(contentPath));
     if (!content)
         return false;
-    HtmlParser parser2;
-    node = parser2.Parse(content);
+    node = parser.ParseInPlace(content);
     if (!node)
         return false;
-    node = parser2.FindElementByName("manifest");
+    node = parser.FindElementByName("manifest");
     if (!node)
         return false;
 
@@ -91,6 +90,7 @@ bool CEpubDoc::Load()
                 // insert explicit page-breaks between sections
                 htmlData.Append("<pagebreak />");
             }
+            // TODO: merge/remove <head>s and drop everything else outside of <body>s(?)
             htmlData.Append(html);
         }
     }

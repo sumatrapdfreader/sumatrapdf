@@ -178,6 +178,19 @@ HtmlParser::~HtmlParser()
         free(html);
 }
 
+void HtmlParser::Reset()
+{
+    if (freeHtml)
+        free(html);
+    html = NULL;
+    freeHtml = false;
+    rootElement = currElement = NULL;
+    elementsCount = attributesCount = 0;
+    error = ErrParsingNoError;
+    errorContext = NULL;
+    allocator.FreeAll();
+}
+
 HtmlAttr *HtmlParser::AllocAttr(char *name, HtmlAttr *next)
 {
     HtmlAttr *attr = allocator.AllocStruct<HtmlAttr>();
@@ -316,6 +329,9 @@ HtmlElement *HtmlParser::ParseInPlace(char *s, UINT codepage)
     char *tagName, *attrName, *attrVal, *tagEnd;
     int tagEndLen;
 
+    if (this->html)
+        Reset();
+
     this->html = s;
     this->codepage = codepage;
 
@@ -432,8 +448,9 @@ ParseExclOrPi: // "<!" or "<?"
 
 HtmlElement *HtmlParser::Parse(const char *s, UINT codepage)
 {
+    HtmlElement *root = ParseInPlace(str::Dup(s), codepage);
     freeHtml = true;
-    return ParseInPlace(str::Dup(s), codepage);
+    return root;
 }
 
 // Does a depth-first search of element tree, looking for an element with
@@ -490,6 +507,11 @@ static void HtmlParser00()
     assert(p.ElementsCount() == 1);
     assert(root);
     assert(str::Eq("a", root->name));
+
+    root = p.Parse("<b></B>");
+    assert(p.ElementsCount() == 1);
+    assert(root);
+    assert(str::Eq("b", root->name));
 }
 
 static void HtmlParser01()
