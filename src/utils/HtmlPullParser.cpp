@@ -39,7 +39,7 @@ static int IsNameChar(int c)
         (c >= 'a' && c <= 'z');
 }
 
-// skip all html tag or attribute chatacters
+// skip all html tag or attribute characters
 static void SkipName(const char*& s, const char *end)
 {
     while ((s < end) && IsNameChar(*s)) {
@@ -47,99 +47,101 @@ static void SkipName(const char*& s, const char *end)
     }
 }
 
-// return true if s consists of only spaces
-static bool IsSpaceOnly(const char *s, size_t len)
+// return true if s consists only of whitespace
+static bool IsSpaceOnly(const char *s, const char *end)
 {
-    const char *end = s + len;
-    while (s < end) {
-        if (*s++ != ' ')
-            return false;
-    }
-    return true;
+    SkipWs(s, end);
+    return s == end;
 }
 
-// at this point we're either after tag name or
-// after previous attribute
 // We expect:
 // whitespace | attribute name | = | attribute value
-// where both attribute name and attribute value can
-// be quoted
-// Not multi-thread safe (uses static buffer)
-AttrInfo *GetNextAttr(const char *&s, const char *end)
+// where attribute value can be quoted
+AttrInfo *HtmlToken::NextAttr()
 {
-    static AttrInfo attrInfo;
+    // restart after the last attribute (or start from the beginning)
+    const char *s = nextAttr;
+    if (!s)
+        s = this->s + GetTagLen(this->s, sLen);
+    const char *end = this->s + sLen;
 
     // parse attribute name
     SkipWs(s, end);
-    if (s == end)
+    if (s == end) {
+NoNextAttr:
+        nextAttr = NULL;
         return NULL;
-
+    }
     attrInfo.name = s;
     SkipName(s, end);
     attrInfo.nameLen = s - attrInfo.name;
     if (0 == attrInfo.nameLen)
-        return NULL;
+        goto NoNextAttr;
     SkipWs(s, end);
-    if ((s == end) || ('=' != *s))
-        return NULL;
+    if ((s == end) || ('=' != *s)) {
+        // attributes without values get their names as value in HTML
+        attrInfo.val = attrInfo.name;
+        attrInfo.valLen = attrInfo.nameLen;
+        nextAttr = s;
+        return &attrInfo;
+    }
 
     // parse attribute value
     ++s; // skip '='
     SkipWs(s, end);
-    if (s == end)
-        return NULL;
-    char quoteChar = *s;
-    if (('\'' == quoteChar) || ('\"' == quoteChar)) {
+    if (s == end) {
+        // attribute with implicit empty value
+        attrInfo.val = s;
+        attrInfo.valLen = 0;
+    } else if (('\'' == *s) || ('\"' == *s)) {
+        // attribute with quoted value
         ++s;
         attrInfo.val = s;
-        if (!SkipUntil(s, end, quoteChar))
-            return NULL;
+        if (!SkipUntil(s, end, *(s - 1)))
+            goto NoNextAttr;
         attrInfo.valLen = s - attrInfo.val;
         ++s;
     } else {
         attrInfo.val = s;
-        while ((s < end) && !IsWs(*s)) {
-            ++s;
-        }
+        SkipNonWs(s, end);
         attrInfo.valLen = s - attrInfo.val;
     }
-
-    // TODO: should I allow empty values?
-    if (0 == attrInfo.valLen)
-        return NULL;
+    nextAttr = s;
     return &attrInfo;
 }
 
 // Returns next part of html or NULL if finished
 HtmlToken *HtmlPullParser::Next()
 {
-    const char *start;
-
     if (currPos >= end)
         return NULL;
 
 Next:
-    start = currPos;
+    const char *start = currPos;
     if (*currPos != '<') {
         // this must text between tags
         if (!SkipUntil(currPos, end, '<')) {
+            // ignore whitespace after the last tag
+            if (IsSpaceOnly(start, currPos))
+                return NULL;
             // text cannot be at the end
-            return MakeError(HtmlToken::NonTagAtEnd, start);
+            currToken.SetError(HtmlToken::NonTagAtEnd, start);
+        } else {
+            // don't report whitespace between tags
+            if (IsSpaceOnly(start, currPos))
+                goto Next;
+            currToken.SetValue(HtmlToken::Text, start, currPos);
         }
-        size_t len = currPos - start;
-        if (IsSpaceOnly(start, len))
-            goto Next;
-        currToken.type = HtmlToken::Text;
-        currToken.s = start;
-        currToken.sLen = len;
         return &currToken;
     }
 
     // '<' - tag begins
     ++start;
 
-    if (!SkipUntil(currPos, end, '>'))
-        return MakeError(HtmlToken::UnclosedTag, start);
+    if (!SkipUntil(currPos, end, '>')) {
+        currToken.SetError(HtmlToken::UnclosedTag, start);
+        return &currToken;
+    }
 
     CrashIf('>' != *currPos);
     if (currPos == start) {
@@ -154,27 +156,16 @@ Next:
         goto Next;
     }
 
-    HtmlToken::TokenType type = HtmlToken::StartTag;
-    if (('/' == *start) && ('/' == currPos[-1])) {
-        // </foo/>
-        return MakeError(HtmlToken::InvalidTag, start);
+    if (('/' == *start) && ('/' == currPos[-1])) { // </foo/>
+        currToken.SetError(HtmlToken::InvalidTag, start);
+    } else if ('/' == *start) { // </foo>
+        currToken.SetValue(HtmlToken::EndTag, start + 1, currPos);
+    } else if ('/' == currPos[-1]) { // <foo/>
+        currToken.SetValue(HtmlToken::EmptyElementTag, start, currPos - 1);
+    } else {
+        currToken.SetValue(HtmlToken::StartTag, start, currPos);
     }
-    size_t len = currPos - start;
-    if ('/' == *start) {
-        // </foo>
-        type = HtmlToken::EndTag;
-        ++start;
-        len -= 1;
-    } else if ('/' == currPos[-1]) {
-        // <foo/>
-        type = HtmlToken::EmptyElementTag;
-        len -= 1;
-    }
-    CrashIf('>' != *currPos);
     ++currPos;
-    currToken.type = type;
-    currToken.s = start;
-    currToken.sLen = len;
     return &currToken;
 }
 
@@ -250,13 +241,13 @@ AlignAttr FindAlignAttr(const char *attr, size_t len)
 bool IsSelfClosingTag(HtmlTag tag)
 {
     // TODO: add more tags
-    // TODO: optimize by sorting selfClosingTags and doing early bailout
-    static HtmlTag selfClosingTags[] = { Tag_Br, Tag_Img, Tag_Hr };
-    for (size_t i = 0; i < dimof(selfClosingTags); i++) {
-        if (tag == selfClosingTags[i])
-            return true;
+    switch (tag) {
+    case Tag_Br: case Tag_Img: case Tag_Hr: case Tag_Meta:
+    case Tag_Pagebreak: case Tag_Mbp_Pagebreak:
+        return true;
+    default:
+        return false;
     }
-    return false;
 }
 
 size_t GetTagLen(const char *s, size_t len)

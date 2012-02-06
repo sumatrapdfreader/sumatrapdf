@@ -112,8 +112,6 @@ enum AlignAttr {
 };
 #define ALIGN_ATTRS_STRINGS "center\0justify\0left\0right\0"
 
-#define Tag_First (255 - Tag_Last)
-
 struct AttrInfo {
     const char *      name;
     size_t            nameLen;
@@ -144,6 +142,12 @@ struct HtmlToken {
     bool IsText() const { return type == Text; }
     bool IsError() const { return type == Error; }
 
+    void SetValue(TokenType new_type, const char *new_s, const char *end) {
+        type = new_type;
+        s = new_s;
+        sLen = end - s;
+        nextAttr = NULL;
+    }
     void SetError(ParsingError err, const char *errContext) {
         type = Error;
         error = err;
@@ -154,21 +158,21 @@ struct HtmlToken {
     ParsingError     error;
     const char *     s;
     size_t           sLen;
+
+    AttrInfo *       NextAttr();
+protected:
+    const char *     nextAttr;
+    AttrInfo         attrInfo;
 };
 
 /* A very simple pull html parser. Simply call Next() to get the next part of
 html, which can be one one of 3 tag types or error. If a tag has attributes,
-the caller has to parse them out. */
+the caller has to parse them out (using HtmlToken::NextAttr()) */
 class HtmlPullParser {
     const char *   currPos;
     const char *   end;
 
     HtmlToken      currToken;
-
-    HtmlToken * MakeError(HtmlToken::ParsingError err, const char *errContext) {
-        currToken.SetError(err, errContext);
-        return &currToken;
-    }
 
 public:
     struct State {
@@ -176,15 +180,9 @@ public:
         const char *end;
     };
 
-    HtmlPullParser(const char *s, size_t len) : currPos(s) {
-        end = s + len;
-    }
-
-    HtmlPullParser(const char *s, const char *end) : currPos(s), end(end) {
-    }
-
-    HtmlPullParser(const State& state) : currPos(state.s), end(state.end) {
-    }
+    HtmlPullParser(const char *s, size_t len) : currPos(s), end(s + len) { }
+    HtmlPullParser(const char *s, const char *end) : currPos(s), end(end) { }
+    HtmlPullParser(const State& state) : currPos(state.s), end(state.end) { }
 
     // Get the current state of html parsing. Can be used to restart
     // parsing from that point later on
@@ -196,16 +194,14 @@ public:
     HtmlToken *Next();
 };
 
-bool        AttrHasEnumVal(HtmlAttr attr);
 void        SkipWs(const char*& s, const char *end);
 void        SkipNonWs(const char*& s, const char *end);
 int         FindStrPos(const char *strings, const char *str, size_t len);
 
-HtmlTag     FindTag(const char *tag, size_t len);
 size_t      GetTagLen(const char *s, size_t len);
 bool        IsSelfClosingTag(HtmlTag tag);
 
-AttrInfo *  GetNextAttr(const char *&s, const char *end);
+HtmlTag     FindTag(const char *tag, size_t len);
 HtmlAttr    FindAttr(const char *attr, size_t len);
 AlignAttr   FindAlignAttr(const char *attr, size_t len);
 

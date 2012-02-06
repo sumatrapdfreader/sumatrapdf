@@ -419,13 +419,7 @@ static void GetKnownAttributes(HtmlToken *t, HtmlAttr *allowedAttributes, Vec<Kn
 {
     out->Reset();
     AttrInfo *attrInfo;
-    size_t tagLen = GetTagLen(t->s, t->sLen);
-    const char *curr = t->s + tagLen;
-    const char *end = t->s + t->sLen;
-    for (;;) {
-        attrInfo = GetNextAttr(curr, end);
-        if (NULL == attrInfo)
-            break;
+    while ((attrInfo = t->NextAttr())) {
         HtmlAttr attr = FindAttr(attrInfo->name, attrInfo->nameLen);
         if (!IsAllowedAttribute(allowedAttributes, attr))
             continue;

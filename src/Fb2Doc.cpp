@@ -40,8 +40,15 @@ public:
 
 inline bool IsFb2Tag(HtmlToken *tok, const char *tag)
 {
-    return tok->sLen == str::Len(tag) &&
-           str::EqN(tok->s, tag, tok->sLen);
+    size_t len = str::Len(tag);
+    return GetTagLen(tok->s, tok->sLen) == len &&
+           str::EqN(tok->s, tag, len);
+}
+
+inline bool IsFb2Attr(AttrInfo *attrInfo, const char *name)
+{
+    size_t len = str::Len(name);
+    return len == attrInfo->nameLen && str::EqN(attrInfo->name, name, len);
 }
 
 bool CFb2Doc::Load()
@@ -131,7 +138,12 @@ bool CFb2Doc::Load()
         }
         else if (tok->IsEmptyElementEndTag()) {
             if (IsFb2Tag(tok, "image")) {
-                // TODO: extract xlink:href
+                AttrInfo *attrInfo;
+                while ((attrInfo = tok->NextAttr())) {
+                    if (IsFb2Attr(attrInfo, "xlink:href")) {
+                        ScopedMem<char> link(str::DupN(attrInfo->val, attrInfo->valLen));
+                    }
+                }
             }
             else if (IsFb2Tag(tok, "empty-line")) {
                 htmlData.Append("<p></p>");
