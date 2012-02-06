@@ -602,7 +602,7 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
                 newJustification = AlignAttrToJustification(alignAttr);
             }
         } else if (t->IsEndTag()) {
-            StartNewLine(false);
+            StartNewLine(true);
         }
         currJustification = newJustification;
     }
