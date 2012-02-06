@@ -138,6 +138,7 @@ Next:
     // '<' - tag begins
     ++start;
 
+    // TODO: this will be confused by <tag attr=">" />
     if (!SkipUntil(currPos, end, '>')) {
         currToken.SetError(HtmlToken::UnclosedTag, start);
         return &currToken;

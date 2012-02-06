@@ -117,7 +117,13 @@ struct AttrInfo {
     size_t            nameLen;
     const char *      val;
     size_t            valLen;
+
+    bool HasName(const char *s) {
+        return str::Len(s) == nameLen && str::StartsWith(name, s);
+    }
 };
+
+size_t GetTagLen(const char *s, size_t len);
 
 struct HtmlToken {
     enum TokenType {
@@ -159,6 +165,10 @@ struct HtmlToken {
     const char *     s;
     size_t           sLen;
 
+    bool HasName(const char *name) {
+        return str::StartsWith(s, name) && str::Len(name) == GetTagLen(s, sLen);
+    }
+
     AttrInfo *       NextAttr();
 protected:
     const char *     nextAttr;
@@ -198,7 +208,6 @@ void        SkipWs(const char*& s, const char *end);
 void        SkipNonWs(const char*& s, const char *end);
 int         FindStrPos(const char *strings, const char *str, size_t len);
 
-size_t      GetTagLen(const char *s, size_t len);
 bool        IsSelfClosingTag(HtmlTag tag);
 
 HtmlTag     FindTag(const char *tag, size_t len);

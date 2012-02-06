@@ -56,20 +56,21 @@ static void SaveMobiHtml(const TCHAR *filePathBase, MobiDoc *mb)
 static void SaveMobiImage(const TCHAR *filePathBase, size_t imgNo, ImageData *img)
 {
     // it's valid to not have image data at a given index
-    if (!img->imgData)
+    if (!img->data)
         return;
-    const TCHAR *ext = GfxFileExtFromData((char*)img->imgData, img->imgDataLen);
+    const TCHAR *ext = GfxFileExtFromData(img->data, img->len);
     CrashAlwaysIf(!ext);
     ScopedMem<TCHAR> fileName(str::Format(_T("%s_img_%d%s"), filePathBase, imgNo, ext));
-    file::WriteAll(fileName.Get(), img->imgData, img->imgDataLen);
+    file::WriteAll(fileName.Get(), img->data, img->len);
 }
 
 static void SaveMobiImages(const TCHAR *filePathBase, MobiDoc *mb)
 {
     if (!gMobiSaveImages)
         return;
-    for (size_t i = 0; i < mb->imagesCount; i++) {
-        SaveMobiImage(filePathBase, i, mb->images + i);
+    ImageData *image;
+    for (size_t i = 0; (image = mb->GetImageData(i)); i++) {
+        SaveMobiImage(filePathBase, i, image);
     }
 }
 

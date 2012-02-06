@@ -26,30 +26,39 @@ class CFb2Doc : public Fb2Doc {
 
     ScopedMem<TCHAR> fileName;
     str::Str<char> htmlData;
+    Vec<ImageData> images;
 
     bool Load();
+    void ExtractImage(HtmlPullParser& parser, HtmlToken *tok);
 
 public:
     CFb2Doc(const TCHAR *fileName) : fileName(str::Dup(fileName)) { }
+    virtual ~CFb2Doc() {
+        for (size_t i = 0; i < images.Count(); i++) {
+            free(images.At(i).data);
+            free(images.At(i).id);
+        }
+    }
 
     virtual const char *GetBookHtmlData(size_t& lenOut) {
         lenOut = htmlData.Size();
         return htmlData.Get();
     }
+
+    virtual ImageData *GetImageData(const char *id) {
+        for (size_t i = 0; i < images.Count(); i++) {
+            if (str::Eq(images.At(i).id, id))
+                return GetImageData(i);
+        }
+        return NULL;
+    }
+
+    virtual ImageData *GetImageData(size_t index) {
+        if (index > images.Count())
+            return NULL;
+        return &images.At(index);
+    }
 };
-
-inline bool IsFb2Tag(HtmlToken *tok, const char *tag)
-{
-    size_t len = str::Len(tag);
-    return GetTagLen(tok->s, tok->sLen) == len &&
-           str::EqN(tok->s, tag, len);
-}
-
-inline bool IsFb2Attr(AttrInfo *attrInfo, const char *name)
-{
-    size_t len = str::Len(name);
-    return len == attrInfo->nameLen && str::EqN(attrInfo->name, name, len);
-}
 
 bool CFb2Doc::Load()
 {
@@ -75,6 +84,8 @@ bool CFb2Doc::Load()
             inBody++;
         else if (inBody && tok->IsEndTag() && Tag_Body == tag)
             inBody--;
+        if (!inBody && tok->IsStartTag() && tok->HasName("binary"))
+            ExtractImage(parser, tok);
         if (!inBody)
             continue;
 
@@ -100,13 +111,13 @@ bool CFb2Doc::Load()
             else if (Tag_Strong == tag) {
                 htmlData.Append("<strong>");
             }
-            else if (IsFb2Tag(tok, "section")) {
+            else if (tok->HasName("section")) {
                 sectionDepth++;
             }
-            else if (IsFb2Tag(tok, "emphasis")) {
+            else if (tok->HasName("emphasis")) {
                 htmlData.Append("<em>");
             }
-            else if (IsFb2Tag(tok, "epigraph")) {
+            else if (tok->HasName("epigraph")) {
                 htmlData.Append("<blockquote>");
             }
             // TODO: handle Tag_A, <text-author>
@@ -126,32 +137,96 @@ bool CFb2Doc::Load()
             else if (Tag_Strong == tag) {
                 htmlData.Append("</strong>");
             }
-            else if (IsFb2Tag(tok, "section") && sectionDepth > 0) {
+            else if (tok->HasName("section") && sectionDepth > 0) {
                 sectionDepth--;
             }
-            else if (IsFb2Tag(tok, "emphasis")) {
+            else if (tok->HasName("emphasis")) {
                 htmlData.Append("</em>");
             }
-            else if (IsFb2Tag(tok, "epigraph")) {
+            else if (tok->HasName("epigraph")) {
                 htmlData.Append("</blockquote>");
             }
         }
         else if (tok->IsEmptyElementEndTag()) {
-            if (IsFb2Tag(tok, "image")) {
+            if (tok->HasName("image")) {
                 AttrInfo *attrInfo;
                 while ((attrInfo = tok->NextAttr())) {
-                    if (IsFb2Attr(attrInfo, "xlink:href")) {
+                    if (attrInfo->HasName("xlink:href")) {
                         ScopedMem<char> link(str::DupN(attrInfo->val, attrInfo->valLen));
+                        htmlData.AppendFmt("<img src=\"%s\">", link);
                     }
                 }
             }
-            else if (IsFb2Tag(tok, "empty-line")) {
+            else if (tok->HasName("empty-line")) {
                 htmlData.Append("<p></p>");
             }
         }
     }
 
     return htmlData.Count() > 0;
+}
+
+inline char decode64(char c)
+{
+    if ('A' <= c && c <= 'Z')
+        return c - 'A';
+    if ('a' <= c && c <= 'z')
+        return c - 'a' + 26;
+    if ('0' <= c && c <= '9')
+        return c - '0' + 52;
+    if ('+' == c)
+        return 62;
+    if ('/' == c)
+        return 63;
+    return -1;
+}
+
+char *Base64Decode(const char *s, const char *end, size_t *len)
+{
+    size_t bound = (end - s) * 3 / 4;
+    char *result = SAZA(char, bound);
+    char *curr = result;
+    unsigned char c = 0;
+    int step = 0;
+    for (; s < end && *s != '='; s++) {
+        char n = decode64(*s);
+        if (-1 == n) {
+            if (isspace(*s))
+                continue;
+            free(result);
+            return NULL;
+        }
+        switch (step++ % 4) {
+        case 0: c = n; break;
+        case 1: *curr++ = (c << 2) | (n >> 4); c = n & 0xF; break;
+        case 2: *curr++ = (c << 4) | (n >> 2); c = n & 0x3; break;
+        case 3: *curr++ = (c << 6) | (n >> 0); break;
+        }
+    }
+    if (len)
+        *len = curr - result;
+    return result;
+}
+
+void CFb2Doc::ExtractImage(HtmlPullParser& parser, HtmlToken *tok)
+{
+    ScopedMem<char> id;
+    AttrInfo *attrInfo;
+    while ((attrInfo = tok->NextAttr())) {
+        if (attrInfo->HasName("id"))
+            id.Set(str::DupN(attrInfo->val, attrInfo->valLen));
+    }
+
+    tok = parser.Next();
+    if (!tok || !tok->IsText())
+        return;
+
+    ImageData data;
+    data.data = Base64Decode(tok->s, tok->s + tok->sLen, &data.len);
+    if (!data.data)
+        return;
+    data.id = str::Join("#", id);
+    images.Append(data);
 }
 
 Fb2Doc *Fb2Doc::ParseFile(const TCHAR *fileName)
