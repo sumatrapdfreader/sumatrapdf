@@ -233,7 +233,7 @@ pdf_open_filter(fz_stream *chain, pdf_document *xref, fz_obj *stmobj, int num, i
  * constraining to stream length, and without decryption.
  */
 fz_stream *
-pdf_open_inline_stream(fz_stream *chain, pdf_document *xref, fz_obj *stmobj, int length)
+pdf_open_inline_stream(pdf_document *xref, fz_obj *stmobj, int length, fz_stream *chain)
 {
 	fz_obj *filters;
 	fz_obj *params;
@@ -308,7 +308,7 @@ pdf_open_stream(pdf_document *xref, int num, int gen)
 }
 
 fz_stream *
-pdf_open_stream_at(pdf_document *xref, int num, int gen, fz_obj *dict, int stm_ofs)
+pdf_open_stream_with_offset(pdf_document *xref, int num, int gen, fz_obj *dict, int stm_ofs)
 {
 	fz_stream *stm;
 

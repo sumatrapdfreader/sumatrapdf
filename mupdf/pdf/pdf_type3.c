@@ -91,9 +91,9 @@ pdf_load_type3_font(pdf_document *xref, fz_obj *rdb, fz_obj *dict)
 		}
 
 		fontdesc->encoding = pdf_new_identity_cmap(ctx, 0, 1);
-		fontdesc->size += pdf_cmap_size(fontdesc->encoding);
+		fontdesc->size += pdf_cmap_size(ctx, fontdesc->encoding);
 
-		pdf_load_to_unicode(fontdesc, xref, estrings, NULL, fz_dict_gets(dict, "ToUnicode"));
+		pdf_load_to_unicode(xref, fontdesc, estrings, NULL, fz_dict_gets(dict, "ToUnicode"));
 
 		/* SumatraPDF: trying to match Adobe Reader's behavior */
 		if (!(fontdesc->flags & PDF_FD_SYMBOLIC) && fontdesc->cid_to_ucs_len >= 128)
@@ -103,7 +103,7 @@ pdf_load_type3_font(pdf_document *xref, fz_obj *rdb, fz_obj *dict)
 
 		/* Widths */
 
-		pdf_set_default_hmtx(fontdesc, 0);
+		pdf_set_default_hmtx(ctx, fontdesc, 0);
 
 		first = fz_to_int(fz_dict_gets(dict, "FirstChar"));
 		last = fz_to_int(fz_dict_gets(dict, "LastChar"));
@@ -122,7 +122,7 @@ pdf_load_type3_font(pdf_document *xref, fz_obj *rdb, fz_obj *dict)
 			pdf_add_hmtx(ctx, fontdesc, i, i, w);
 		}
 
-		pdf_end_hmtx(fontdesc);
+		pdf_end_hmtx(ctx, fontdesc);
 
 		/* Resources -- inherit page resources if the font doesn't have its own */
 

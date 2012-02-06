@@ -4,7 +4,7 @@
 /* Load or synthesize ToUnicode map for fonts */
 
 void
-pdf_load_to_unicode(pdf_font_desc *font, pdf_document *xref,
+pdf_load_to_unicode(pdf_document *xref, pdf_font_desc *font,
 	char **strings, char *collection, fz_obj *cmapstm)
 {
 	pdf_cmap *cmap;
@@ -37,7 +37,7 @@ pdf_load_to_unicode(pdf_font_desc *font, pdf_document *xref,
 		pdf_sort_cmap(ctx, font->to_unicode);
 
 		pdf_drop_cmap(ctx, cmap);
-		font->size += pdf_cmap_size(font->to_unicode);
+		font->size += pdf_cmap_size(ctx, font->to_unicode);
 	}
 
 	else if (collection)

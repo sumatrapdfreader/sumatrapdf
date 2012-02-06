@@ -339,7 +339,7 @@ pdf_read_new_xref(pdf_document *xref, char *buf, int cap)
 
 		index = fz_dict_gets(trailer, "Index");
 
-		stm = pdf_open_stream_at(xref, num, gen, trailer, stm_ofs);
+		stm = pdf_open_stream_with_offset(xref, num, gen, trailer, stm_ofs);
 		/* RJW: Ensure pdf_open_stream does fz_throw(ctx, "cannot open compressed xref stream (%d %d R)", num, gen); */
 
 		if (!index)

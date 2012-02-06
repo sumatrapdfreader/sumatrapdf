@@ -2,14 +2,14 @@
 #include "mupdf.h"
 
 unsigned int
-pdf_cmap_size(pdf_cmap *cmap)
+pdf_cmap_size(fz_context *ctx, pdf_cmap *cmap)
 {
 	if (cmap == NULL)
 		return 0;
 	if (cmap->storable.refs < 0)
 		return 0;
 
-	return cmap->rcap * sizeof(pdf_range) + cmap->tcap * sizeof(short) + pdf_cmap_size(cmap->usecmap);
+	return cmap->rcap * sizeof(pdf_range) + cmap->tcap * sizeof(short) + pdf_cmap_size(ctx, cmap->usecmap);
 }
 
 /*
@@ -41,14 +41,14 @@ pdf_load_embedded_cmap(pdf_document *xref, fz_obj *stmobj)
 
 		file = pdf_open_stream(xref, fz_to_num(stmobj), fz_to_gen(stmobj));
 		phase = 1;
-		cmap = pdf_parse_cmap(file);
+		cmap = pdf_load_cmap(ctx, file);
 		phase = 2;
 		fz_close(file);
 		file = NULL;
 
 		wmode = fz_dict_gets(stmobj, "WMode");
 		if (fz_is_int(wmode))
-			pdf_set_wmode(cmap, fz_to_int(wmode));
+			pdf_set_wmode(ctx, cmap, fz_to_int(wmode));
 		obj = fz_dict_gets(stmobj, "UseCMap");
 		if (fz_is_name(obj))
 		{
@@ -64,7 +64,7 @@ pdf_load_embedded_cmap(pdf_document *xref, fz_obj *stmobj)
 			pdf_drop_cmap(ctx, usecmap);
 		}
 
-		fz_store_item(ctx, stmobj, cmap, pdf_cmap_size(cmap));
+		fz_store_item(ctx, stmobj, cmap, pdf_cmap_size(ctx, cmap));
 	}
 	fz_catch(ctx)
 	{
@@ -98,7 +98,7 @@ pdf_new_identity_cmap(fz_context *ctx, int wmode, int bytes)
 		pdf_add_codespace(ctx, cmap, 0x0000, 0xffff, bytes);
 		pdf_map_range_to_range(ctx, cmap, 0x0000, 0xffff, 0);
 		pdf_sort_cmap(ctx, cmap);
-		pdf_set_wmode(cmap, wmode);
+		pdf_set_wmode(ctx, cmap, wmode);
 	}
 	fz_catch(ctx)
 	{
@@ -117,13 +117,13 @@ pdf_load_system_cmap(fz_context *ctx, char *cmap_name)
 	pdf_cmap *usecmap;
 	pdf_cmap *cmap;
 
-	cmap = pdf_find_builtin_cmap(cmap_name);
+	cmap = pdf_load_builtin_cmap(ctx, cmap_name);
 	if (!cmap)
 		fz_throw(ctx, "no builtin cmap file: %s", cmap_name);
 
 	if (cmap->usecmap_name[0] && !cmap->usecmap)
 	{
-		usecmap = pdf_find_builtin_cmap(cmap->usecmap_name);
+		usecmap = pdf_load_builtin_cmap(ctx, cmap->usecmap_name);
 		if (!usecmap)
 			fz_throw(ctx, "nu builtin cmap file: %s", cmap->usecmap_name);
 		pdf_set_usecmap(ctx, cmap, usecmap);

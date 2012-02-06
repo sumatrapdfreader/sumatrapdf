@@ -193,6 +193,10 @@ void pdfapp_close(pdfapp_t *app)
 		fz_free_outline(app->ctx, app->outline);
 	app->outline = NULL;
 
+	if (app->page)
+		fz_free_page(app->doc, app->page);
+	app->page = NULL;
+
 	if (app->doc)
 	{
 		fz_close_document(app->doc);

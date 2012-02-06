@@ -30,7 +30,7 @@ int pdf_lex(fz_stream *f, char *buf, int n, int *len);
 fz_obj *pdf_parse_array(pdf_document *doc, fz_stream *f, char *buf, int cap);
 fz_obj *pdf_parse_dict(pdf_document *doc, fz_stream *f, char *buf, int cap);
 fz_obj *pdf_parse_stm_obj(pdf_document *doc, fz_stream *f, char *buf, int cap);
-fz_obj * pdf_parse_ind_obj(pdf_document *doc, fz_stream *f, char *buf, int cap, int *num, int *gen, int *stm_ofs);
+fz_obj *pdf_parse_ind_obj(pdf_document *doc, fz_stream *f, char *buf, int cap, int *num, int *gen, int *stm_ofs);
 
 fz_rect pdf_to_rect(fz_context *ctx, fz_obj *array);
 fz_matrix pdf_to_matrix(fz_context *ctx, fz_obj *array);
@@ -101,15 +101,15 @@ struct pdf_document_s
 fz_obj *pdf_resolve_indirect(fz_obj *ref);
 void pdf_cache_object(pdf_document *doc, int num, int gen);
 fz_obj *pdf_load_object(pdf_document *doc, int num, int gen);
-void pdf_update_object( pdf_document *doc, int num, int gen, fz_obj *newobj);
+void pdf_update_object(pdf_document *doc, int num, int gen, fz_obj *newobj);
 
 int pdf_is_stream(pdf_document *doc, int num, int gen);
-fz_stream *pdf_open_inline_stream(fz_stream *chain, pdf_document *doc, fz_obj *stmobj, int length);
+fz_stream *pdf_open_inline_stream(pdf_document *doc, fz_obj *stmobj, int length, fz_stream *chain);
 fz_buffer *pdf_load_raw_stream(pdf_document *doc, int num, int gen);
 fz_buffer *pdf_load_stream(pdf_document *doc, int num, int gen);
 fz_stream *pdf_open_raw_stream(pdf_document *doc, int num, int gen);
 fz_stream *pdf_open_stream(pdf_document *doc, int num, int gen);
-fz_stream *pdf_open_stream_at(pdf_document *doc, int num, int gen, fz_obj *dict, int stm_ofs);
+fz_stream *pdf_open_stream_with_offset(pdf_document *doc, int num, int gen, fz_obj *dict, int stm_ofs);
 
 pdf_document *pdf_open_document_with_stream(fz_stream *file);
 pdf_document *pdf_open_document(fz_context *ctx, const char *filename);
@@ -273,11 +273,11 @@ pdf_cmap *pdf_new_cmap(fz_context *ctx);
 pdf_cmap *pdf_keep_cmap(fz_context *ctx, pdf_cmap *cmap);
 void pdf_drop_cmap(fz_context *ctx, pdf_cmap *cmap);
 void pdf_free_cmap_imp(fz_context *ctx, fz_storable *cmap);
-unsigned int pdf_cmap_size(pdf_cmap *cmap);
+unsigned int pdf_cmap_size(fz_context *ctx, pdf_cmap *cmap);
 
-void pdf_debug_cmap(pdf_cmap *cmap);
-int pdf_get_wmode(pdf_cmap *cmap);
-void pdf_set_wmode(pdf_cmap *cmap, int wmode);
+void pdf_debug_cmap(fz_context *ctx, pdf_cmap *cmap);
+int pdf_get_wmode(fz_context *ctx, pdf_cmap *cmap);
+void pdf_set_wmode(fz_context *ctx, pdf_cmap *cmap, int wmode);
 void pdf_set_usecmap(fz_context *ctx, pdf_cmap *cmap, pdf_cmap *usecmap);
 
 void pdf_add_codespace(fz_context *ctx, pdf_cmap *cmap, int low, int high, int n);
@@ -291,10 +291,10 @@ int pdf_lookup_cmap_full(pdf_cmap *cmap, int cpt, int *out);
 int pdf_decode_cmap(pdf_cmap *cmap, unsigned char *s, int *cpt);
 
 pdf_cmap *pdf_new_identity_cmap(fz_context *ctx, int wmode, int bytes);
-pdf_cmap *pdf_parse_cmap(fz_stream *file);
-pdf_cmap *pdf_load_embedded_cmap(pdf_document *doc, fz_obj *ref);
+pdf_cmap *pdf_load_cmap(fz_context *ctx, fz_stream *file);
 pdf_cmap *pdf_load_system_cmap(fz_context *ctx, char *name);
-pdf_cmap *pdf_find_builtin_cmap(char *cmap_name);
+pdf_cmap *pdf_load_builtin_cmap(fz_context *ctx, char *name);
+pdf_cmap *pdf_load_embedded_cmap(pdf_document *doc, fz_obj *ref);
 
 /*
  * Font
@@ -389,19 +389,19 @@ struct pdf_font_desc_s
 	void *_vsubst;
 };
 
-void pdf_set_font_wmode(pdf_font_desc *font, int wmode);
-void pdf_set_default_hmtx(pdf_font_desc *font, int w);
-void pdf_set_default_vmtx(pdf_font_desc *font, int y, int w);
+void pdf_set_font_wmode(fz_context *ctx, pdf_font_desc *font, int wmode);
+void pdf_set_default_hmtx(fz_context *ctx, pdf_font_desc *font, int w);
+void pdf_set_default_vmtx(fz_context *ctx, pdf_font_desc *font, int y, int w);
 void pdf_add_hmtx(fz_context *ctx, pdf_font_desc *font, int lo, int hi, int w);
 void pdf_add_vmtx(fz_context *ctx, pdf_font_desc *font, int lo, int hi, int x, int y, int w);
-void pdf_end_hmtx(pdf_font_desc *font);
-void pdf_end_vmtx(pdf_font_desc *font);
-pdf_hmtx pdf_get_hmtx(pdf_font_desc *font, int cid);
-pdf_vmtx pdf_get_vmtx(pdf_font_desc *font, int cid);
+void pdf_end_hmtx(fz_context *ctx, pdf_font_desc *font);
+void pdf_end_vmtx(fz_context *ctx, pdf_font_desc *font);
+pdf_hmtx pdf_get_hmtx(fz_context *ctx, pdf_font_desc *font, int cid);
+pdf_vmtx pdf_get_vmtx(fz_context *ctx, pdf_font_desc *font, int cid);
 
-void pdf_load_to_unicode(pdf_font_desc *font, pdf_document *doc, char **strings, char *collection, fz_obj *cmapstm);
+void pdf_load_to_unicode(pdf_document *doc, pdf_font_desc *font, char **strings, char *collection, fz_obj *cmapstm);
 
-int pdf_font_cid_to_gid(pdf_font_desc *fontdesc, int cid);
+int pdf_font_cid_to_gid(fz_context *ctx, pdf_font_desc *fontdesc, int cid);
 
 unsigned char *pdf_find_builtin_font(char *name, unsigned int *len);
 unsigned char *pdf_find_substitute_font(int mono, int serif, int bold, int italic, unsigned int *len);
@@ -418,7 +418,7 @@ pdf_font_desc *pdf_new_font_desc(fz_context *ctx);
 pdf_font_desc *pdf_keep_font(fz_context *ctx, pdf_font_desc *fontdesc);
 void pdf_drop_font(fz_context *ctx, pdf_font_desc *font);
 
-void pdf_debug_font(pdf_font_desc *fontdesc);
+void pdf_debug_font(fz_context *ctx, pdf_font_desc *fontdesc);
 
 /* SumatraPDF */
 int pdf_ft_get_vgid(fz_context *ctx, pdf_font_desc *fontdesc, int gid);

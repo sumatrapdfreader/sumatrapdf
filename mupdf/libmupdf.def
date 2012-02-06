@@ -358,6 +358,7 @@ EXPORTS
 	pdf_parse_array
 	pdf_parse_dict
 	pdf_parse_stm_obj
+	pdf_parse_ind_obj
 	pdf_to_rect
 	pdf_to_matrix
 	pdf_to_utf8
@@ -375,7 +376,7 @@ EXPORTS
 	pdf_load_stream
 	pdf_open_raw_stream
 	pdf_open_stream
-	pdf_open_stream_at
+	pdf_open_stream_with_offset
 	pdf_open_document_with_stream
 	pdf_open_document
 	pdf_close_document
@@ -432,10 +433,10 @@ EXPORTS
 	pdf_lookup_cmap_full
 	pdf_decode_cmap
 	pdf_new_identity_cmap
-	pdf_parse_cmap
-	pdf_load_embedded_cmap
+	pdf_load_cmap
 	pdf_load_system_cmap
-	pdf_find_builtin_cmap
+	pdf_load_builtin_cmap
+	pdf_load_embedded_cmap
 	pdf_load_encoding
 	pdf_lookup_agl
 	pdf_set_font_wmode

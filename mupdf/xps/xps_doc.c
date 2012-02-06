@@ -235,6 +235,7 @@ xps_free_fixed_pages(xps_document *doc)
 	{
 		xps_page *next = page->next;
 		xps_free_page(doc, page);
+		fz_drop_link(doc->ctx, page->links);
 		fz_free(doc->ctx, page->name);
 		fz_free(doc->ctx, page);
 		page = next;
@@ -510,11 +511,7 @@ xps_free_page(xps_document *doc, xps_page *page)
 	/* only free the XML contents */
 	if (page->root)
 		xml_free_element(doc->ctx, page->root);
-	fz_drop_link(doc->ctx, page->links);
 	page->root = NULL;
-	/* SumatraPDF: make sure that links can be reloaded */
-	page->links = NULL;
-	page->links_resolved = 0;
 }
 
 /* SumatraPDF: extract page bounds without parsing the entire page content */

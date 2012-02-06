@@ -254,7 +254,7 @@ void winhelp(pdfapp_t *app)
 void winresize(pdfapp_t *app, int w, int h)
 {
 	XWindowChanges values;
-	int mask;
+	int mask, width, height;
 
 	mask = CWWidth | CWHeight;
 	values.width = w;
@@ -268,6 +268,8 @@ void winresize(pdfapp_t *app, int w, int h)
 	{
 		gapp.winw = w;
 		gapp.winh = h;
+		width = -1;
+		height = -1;
 
 		XMapWindow(xdpy, xwin);
 		XFlush(xdpy);
@@ -275,6 +277,11 @@ void winresize(pdfapp_t *app, int w, int h)
 		while (1)
 		{
 			XNextEvent(xdpy, &xevt);
+			if (xevt.type == ConfigureNotify)
+			{
+				width = xevt.xconfigure.width;
+				height = xevt.xconfigure.height;
+			}
 			if (xevt.type == MapNotify)
 				break;
 		}
@@ -282,6 +289,13 @@ void winresize(pdfapp_t *app, int w, int h)
 		XSetForeground(xdpy, xgc, WhitePixel(xdpy, xscr));
 		XFillRectangle(xdpy, xwin, xgc, 0, 0, gapp.image->w, gapp.image->h);
 		XFlush(xdpy);
+
+		if (width != reqw || height != reqh)
+		{
+			gapp.shrinkwrap = 0;
+			dirty = 1;
+			pdfapp_onresize(&gapp, width, height);
+		}
 
 		mapped = 1;
 	}

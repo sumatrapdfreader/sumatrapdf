@@ -137,7 +137,7 @@ static int ft_cid_to_gid(pdf_font_desc *fontdesc, int cid)
 }
 
 int
-pdf_font_cid_to_gid(pdf_font_desc *fontdesc, int cid)
+pdf_font_cid_to_gid(fz_context *ctx, pdf_font_desc *fontdesc, int cid)
 {
 	if (fontdesc->font->ft_face)
 		return ft_cid_to_gid(fontdesc, cid);
@@ -747,18 +747,18 @@ pdf_load_simple_font(pdf_document *xref, fz_obj *dict)
 					estrings[i] = (char *)pdf_standard[i];
 
 		fontdesc->encoding = pdf_new_identity_cmap(ctx, 0, 1);
-		fontdesc->size += pdf_cmap_size(fontdesc->encoding);
+		fontdesc->size += pdf_cmap_size(ctx, fontdesc->encoding);
 		fontdesc->cid_to_gid_len = 256;
 		fontdesc->cid_to_gid = etable;
 
-		pdf_load_to_unicode(fontdesc, xref, estrings, NULL, fz_dict_gets(dict, "ToUnicode"));
+		pdf_load_to_unicode(xref, fontdesc, estrings, NULL, fz_dict_gets(dict, "ToUnicode"));
 		/* RJW: "cannot load to_unicode" */
 
 	skip_encoding:
 
 		/* Widths */
 
-		pdf_set_default_hmtx(fontdesc, fontdesc->missing_width);
+		pdf_set_default_hmtx(ctx, fontdesc, fontdesc->missing_width);
 
 		widths = fz_dict_gets(dict, "Widths");
 		if (widths)
@@ -795,7 +795,7 @@ pdf_load_simple_font(pdf_document *xref, fz_obj *dict)
 			}
 		}
 
-		pdf_end_hmtx(fontdesc);
+		pdf_end_hmtx(ctx, fontdesc);
 	}
 	fz_catch(ctx)
 	{
@@ -889,9 +889,9 @@ load_cid_font(pdf_document *xref, fz_obj *dict, fz_obj *encoding, fz_obj *to_uni
 		{
 			fz_throw(ctx, "syntaxerror: font missing encoding");
 		}
-		fontdesc->size += pdf_cmap_size(fontdesc->encoding);
+		fontdesc->size += pdf_cmap_size(ctx, fontdesc->encoding);
 
-		pdf_set_font_wmode(fontdesc, pdf_get_wmode(fontdesc->encoding));
+		pdf_set_font_wmode(ctx, fontdesc, pdf_get_wmode(ctx, fontdesc->encoding));
 
 		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1565 */
 		if (kind == TRUETYPE || !strcmp(fz_to_name(fz_dict_gets(dict, "Subtype")), "CIDFontType2"))
@@ -939,7 +939,7 @@ load_cid_font(pdf_document *xref, fz_obj *dict, fz_obj *encoding, fz_obj *to_uni
 			}
 		}
 
-		pdf_load_to_unicode(fontdesc, xref, NULL, collection, to_unicode);
+		pdf_load_to_unicode(xref, fontdesc, NULL, collection, to_unicode);
 		/* RJW: "cannot load to_unicode" */
 
 		/* Horizontal */
@@ -948,7 +948,7 @@ load_cid_font(pdf_document *xref, fz_obj *dict, fz_obj *encoding, fz_obj *to_uni
 		obj = fz_dict_gets(dict, "DW");
 		if (obj)
 			dw = fz_to_int(obj);
-		pdf_set_default_hmtx(fontdesc, dw);
+		pdf_set_default_hmtx(ctx, fontdesc, dw);
 
 		widths = fz_dict_gets(dict, "W");
 		if (widths)
@@ -980,11 +980,11 @@ load_cid_font(pdf_document *xref, fz_obj *dict, fz_obj *encoding, fz_obj *to_uni
 			}
 		}
 
-		pdf_end_hmtx(fontdesc);
+		pdf_end_hmtx(ctx, fontdesc);
 
 		/* Vertical */
 
-		if (pdf_get_wmode(fontdesc->encoding) == 1)
+		if (pdf_get_wmode(ctx, fontdesc->encoding) == 1)
 		{
 			int dw2y = 880;
 			int dw2w = -1000;
@@ -996,7 +996,7 @@ load_cid_font(pdf_document *xref, fz_obj *dict, fz_obj *encoding, fz_obj *to_uni
 				dw2w = fz_to_int(fz_array_get(obj, 1));
 			}
 
-			pdf_set_default_vmtx(fontdesc, dw2y, dw2w);
+			pdf_set_default_vmtx(ctx, fontdesc, dw2y, dw2w);
 
 			widths = fz_dict_gets(dict, "W2");
 			if (widths)
@@ -1032,7 +1032,7 @@ load_cid_font(pdf_document *xref, fz_obj *dict, fz_obj *encoding, fz_obj *to_uni
 				}
 			}
 
-			pdf_end_vmtx(fontdesc);
+			pdf_end_vmtx(ctx, fontdesc);
 		}
 	}
 	fz_catch(ctx)
@@ -1166,7 +1166,7 @@ pdf_make_width_table(fz_context *ctx, pdf_font_desc *fontdesc)
 		for (k = fontdesc->hmtx[i].lo; k <= fontdesc->hmtx[i].hi; k++)
 		{
 			cid = pdf_lookup_cmap(fontdesc->encoding, k);
-			gid = pdf_font_cid_to_gid(fontdesc, cid);
+			gid = pdf_font_cid_to_gid(ctx, fontdesc, cid);
 			if (gid > n)
 				n = gid;
 		}
@@ -1181,7 +1181,7 @@ pdf_make_width_table(fz_context *ctx, pdf_font_desc *fontdesc)
 		for (k = fontdesc->hmtx[i].lo; k <= fontdesc->hmtx[i].hi; k++)
 		{
 			cid = pdf_lookup_cmap(fontdesc->encoding, k);
-			gid = pdf_font_cid_to_gid(fontdesc, cid);
+			gid = pdf_font_cid_to_gid(ctx, fontdesc, cid);
 			/* SumatraPDF: Widths are per cid, so there could be clashes, if two cids
 			               map to the same gid (for now, prefer the non-zero width) */
 			if (gid >= 0 && gid < font->width_count && fontdesc->hmtx[i].w != 0)
@@ -1245,7 +1245,7 @@ pdf_load_font(pdf_document *xref, fz_obj *rdb, fz_obj *dict)
 }
 
 void
-pdf_debug_font(pdf_font_desc *fontdesc)
+pdf_debug_font(fz_context *ctx, pdf_font_desc *fontdesc)
 {
 	int i;
 

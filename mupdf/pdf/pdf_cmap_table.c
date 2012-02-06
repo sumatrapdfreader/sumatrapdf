@@ -165,7 +165,7 @@ static const struct { char *name; pdf_cmap *cmap; } cmap_table[] =
 };
 
 pdf_cmap *
-pdf_find_builtin_cmap(char *cmap_name)
+pdf_load_builtin_cmap(fz_context *ctx, char *cmap_name)
 {
 	int l = 0;
 	int r = nelem(cmap_table) - 1;

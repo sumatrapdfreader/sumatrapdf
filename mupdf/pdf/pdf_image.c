@@ -186,7 +186,7 @@ pdf_load_image_imp(pdf_document *xref, fz_obj *rdb, fz_obj *dict, fz_stream *cst
 
 		if (cstm)
 		{
-			stm = pdf_open_inline_stream(cstm, xref, dict, stride * h);
+			stm = pdf_open_inline_stream(xref, dict, stride * h, cstm);
 		}
 		else
 		{
