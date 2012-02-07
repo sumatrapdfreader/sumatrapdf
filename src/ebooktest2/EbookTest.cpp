@@ -3,6 +3,7 @@
 
 // Hack: we need NOMINMAX to make chrome code compile but we also need
 // min/max for gdi+ headers, so we import min/max from stl
+#define NOMINMAX
 #include <algorithm>
 using std::min;
 using std::max;
@@ -16,6 +17,8 @@ using std::max;
 #include "FileUtil.h"
 #include "FrameTimeoutCalculator.h"
 #include "MobiDoc.h"
+#include "EpubDoc.h"
+#include "Fb2Doc.h"
 #include "Mui.h"
 #include "NoFreeAllocator.h"
 #include "Resource.h"
@@ -78,8 +81,8 @@ static MessageLoop *    gMessageLoopUI = NULL;
 
 static bool gShowTextBoundingBoxes = false;
 
-// A sample text to display if we don't show an actual mobi file
-static const char *gSampleHtml = "<html><p align=justify>ClearType is <b>dependent</b> on the <i>orientation &amp; ordering</i> of the LCD stripes.</p> <p align='right'><em>Currently</em>, ClearType is implemented <hr> only for vertical stripes that are ordered RGB.</p> <p align=center>This might be a concern if you are using a tablet PC.</p> <p>Where the display can be oriented in any direction, or if you are using a screen that can be turned from landscape to portrait. The <strike>following example</strike> draws text with two <u>different quality</u> settings.</p> On to the <b>next<mbp:pagebreak>page</b></html>";
+// A sample text to display if we don't show an actual ebook
+static const char *gSampleHtml = "<html><p align=justify>ClearType is <b>dependent</b> on the <i>orientation &amp; ordering</i> of the LCD stripes.</p> <p align='right'><em>Currently</em>, ClearType is implemented <hr> only for vertical stripes that are ordered RGB.</p> <p align=center>This might be a concern if you are using a tablet PC.</p> <p>Where the display can be oriented in any direction, or if you are using a screen that can be turned from landscape to portrait. The <strike>following example</strike> draws text with two <u>different quality</u> settings.</p> On to the <b>next<mbp:pagebreak>page</b>&#21;</html>";
 
 void LogProcessRunningTime()
 {
@@ -116,7 +119,7 @@ class ControlEbook
     void SetPage(int newPageNo);
 
 public:
-    MobiDoc *       mb;
+    BaseEbookDoc *  doc;
     const char *    html;
 
     Vec<PageData*>* pages;
@@ -127,7 +130,7 @@ public:
     Vec<PageData*>* tmpPages;
 
     int             cursorX, cursorY;
-    base::Thread *  mobiLoadThread;
+    base::Thread *  docLoadThread;
     base::Thread *  pageLayoutThread;
 
     Button *        next;
@@ -162,7 +165,7 @@ public:
     virtual void Clicked(Control *w, int x, int y);
 
     void SetHtml(const char *html);
-    void LoadMobi(const TCHAR *fileName);
+    void LoadDoc(const TCHAR *fileName);
 
     void SetStatusText() const;
 
@@ -179,10 +182,10 @@ public:
     void PageLayout(int dx, int dy);
     void StopPageLayoutThread();
 
-    void MobiLoaded(MobiDoc *mb);
-    void MobiFailedToLoad(const TCHAR *fileName);
-    void LoadMobiBackground(const TCHAR *fileName);
-    void StopMobiLoadThread();
+    void DocLoaded(BaseEbookDoc *doc);
+    void DocFailedToLoad(const TCHAR *fileName);
+    void LoadDocBackground(const TCHAR *fileName);
+    void StopDocLoadThread();
 };
 
 class EbookLayout : public Layout
@@ -293,12 +296,12 @@ void EbookLayout::Arrange(const Rect finalRect, Control *wnd)
 
 ControlEbook::ControlEbook(HWND hwnd)
 {
-    mobiLoadThread = NULL;
+    docLoadThread = NULL;
     pageLayoutThread = NULL;
-    mb = NULL;
+    doc = NULL;
     html = NULL;
     pages = NULL;
-    currPageNo = 0;
+    currPageNo = 1;
     pageDx = 0; pageDy = 0;
     SetHwnd(hwnd);
 
@@ -383,7 +386,7 @@ ControlEbook::~ControlEbook()
     // to this object. Do we need a way to cancel messages directed
     // to a given object from the queue? Ref-count the objects so that
     // their lifetime is managed correctly?
-    StopMobiLoadThread();
+    StopDocLoadThread();
     StopPageLayoutThread();
 
     // special case for classes that derive from HwndWrapper
@@ -392,7 +395,7 @@ ControlEbook::~ControlEbook()
 
     DeleteNewPages();
     DeletePages();
-    delete mb;
+    delete doc;
     delete statusDefault;
     delete facebookButtonDefault;
     delete facebookButtonOver;
@@ -530,7 +533,7 @@ void ControlEbook::PageLayout(int dx, int dy)
     if (html)
         len = strlen(html);
     else
-        html = mb->GetBookHtmlData(len);
+        html = doc->GetBookHtmlData(len);
 
     li->fontName = FONT_NAME;
     li->fontSize = FONT_SIZE;
@@ -544,6 +547,8 @@ void ControlEbook::PageLayout(int dx, int dy)
     pageLayoutThread->Start();
     pageLayoutThread->message_loop()->PostTask(base::Bind(&ControlEbook::PageLayoutBackground,
                                              base::Unretained(this), li));
+#else
+    pages = LayoutHtml(li);
 #endif
 }
 
@@ -562,25 +567,25 @@ void ControlEbook::SetHtml(const char *newHtml)
     html = newHtml;
 }
 
-void ControlEbook::StopMobiLoadThread()
+void ControlEbook::StopDocLoadThread()
 {
-    if (!mobiLoadThread)
+    if (!docLoadThread)
         return;
-    l("Stopping mobi load thread");
-    mobiLoadThread->Stop();
-    delete mobiLoadThread;
-    mobiLoadThread = NULL;
+    l("Stopping doc load thread");
+    docLoadThread->Stop();
+    delete docLoadThread;
+    docLoadThread = NULL;
 }
 
 // called on UI thread from background thread after
-// mobi file has been loaded
-void ControlEbook::MobiLoaded(MobiDoc *newMobi)
+// an ebook file has been loaded
+void ControlEbook::DocLoaded(BaseEbookDoc *newDoc)
 {
-    l("ControlEbook::MobiLoaded()");
+    l("ControlEbook::DocLoaded()");
     CrashIf(gMessageLoopUI != MessageLoop::current());
-    StopMobiLoadThread();
-    delete mb;
-    mb = newMobi;
+    StopDocLoadThread();
+    delete doc;
+    doc = newDoc;
     html = NULL;
     delete pages;
     pages = NULL;
@@ -588,12 +593,12 @@ void ControlEbook::MobiLoaded(MobiDoc *newMobi)
 }
 
 // called on UI thread from backgroudn thread if we tried
-// to load mobi file but failed
-void ControlEbook::MobiFailedToLoad(const TCHAR *fileName)
+// to load an ebook but failed
+void ControlEbook::DocFailedToLoad(const TCHAR *fileName)
 {
-    l("ControlEbook::MobiFailedToLoad()");
+    l("ControlEbook::DocFailedToLoad()");
     CrashIf(gMessageLoopUI != MessageLoop::current());
-    StopMobiLoadThread();
+    StopDocLoadThread();
     // TODO: this message should show up in a different place,
     // reusing status for convenience
     ScopedMem<TCHAR> s(str::Format(_T("Failed to load %s!"), fileName));
@@ -602,36 +607,43 @@ void ControlEbook::MobiFailedToLoad(const TCHAR *fileName)
 }
 
 // Method executed on background thread that tries to load
-// a given mobi file and either calls MobiLoaded() or
-// MobiFailedToLoad() on ui thread
-void ControlEbook::LoadMobiBackground(const TCHAR *fileName)
+// a given ebook file and either calls DocLoaded() or
+// DocFailedToLoad() on ui thread
+void ControlEbook::LoadDocBackground(const TCHAR *fileName)
 {
     CrashIf(gMessageLoopUI == MessageLoop::current());
-    lf(_T("ControlEbook::LoadMobiBackground(%s)"), fileName);
+    lf(_T("ControlEbook::LoadDocBackground(%s)"), fileName);
     Timer t(true);
-    MobiDoc *mb = MobiDoc::ParseFile(fileName);
+    BaseEbookDoc *doc = NULL;
+    if (EpubDoc::IsSupported(fileName))
+        doc = EpubDoc::ParseFile(fileName);
+    else if (Fb2Doc::IsSupported(fileName))
+        doc = Fb2Doc::ParseFile(fileName);
+    else // if (MobiDoc::IsSupported(fileName))
+        doc = MobiDoc::ParseFile(fileName);
     lf(_T("Loaded %s in %.2f ms"), fileName, t.GetCurrTimeInMs());
 
-    if (!mb)
-        gMessageLoopUI->PostTask(base::Bind(&ControlEbook::MobiFailedToLoad,
+    if (!doc) {
+        gMessageLoopUI->PostTask(base::Bind(&ControlEbook::DocFailedToLoad,
                                  base::Unretained(this), fileName));
-    else
-        gMessageLoopUI->PostTask(base::Bind(&ControlEbook::MobiLoaded,
-                                 base::Unretained(this), mb));
-    free((void*)fileName);
+    } else {
+        gMessageLoopUI->PostTask(base::Bind(&ControlEbook::DocLoaded,
+                                 base::Unretained(this), doc));
+        free((void*)fileName);
+    }
 }
 
-void ControlEbook::LoadMobi(const TCHAR *fileName)
+void ControlEbook::LoadDoc(const TCHAR *fileName)
 {
     // TODO: not sure if that's enough to handle user chosing
-    // to load another mobi file while loading of the previous
+    // to load another ebook file while loading of the previous
     // hasn't finished yet
-    StopMobiLoadThread();
-    mobiLoadThread = new base::Thread("ControlEbook::LoadMobiBackground");
-    mobiLoadThread->Start();
+    StopDocLoadThread();
+    docLoadThread = new base::Thread("ControlEbook::LoadDocBackground");
+    docLoadThread->Start();
     // TODO: use some refcounted version of fileName
-    mobiLoadThread->message_loop()->PostTask(base::Bind(&ControlEbook::LoadMobiBackground,
-                                             base::Unretained(this), str::Dup(fileName)));
+    docLoadThread->message_loop()->PostTask(base::Bind(&ControlEbook::LoadDocBackground,
+                                            base::Unretained(this), str::Dup(fileName)));
     // TODO: this message should show up in a different place,
     // reusing status for convenience
     ScopedMem<TCHAR> s(str::Format(_T("Please wait, loading %s"), fileName));
@@ -768,10 +780,7 @@ static void OnOpen(HWND hwnd)
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = hwnd;
 
-    str::Str<TCHAR> fileFilter;
-    fileFilter.Append(_T("All supported documents"));
-
-    ofn.lpstrFilter = _T("All supported documents\0;*.mobi;*.awz;\0\0");
+    ofn.lpstrFilter = _T("All supported documents\0;*.mobi;*.awz;*.prc;*.epub;*.fb2;*.fb2.zip\0\0");
     ofn.nFilterIndex = 1;
     ofn.lpstrFileTitle = NULL;
     ofn.nMaxFileTitle = 0;
@@ -788,7 +797,7 @@ static void OnOpen(HWND hwnd)
     TCHAR *fileName = ofn.lpstrFile + ofn.nFileOffset;
     if (*(fileName - 1)) {
         // special case: single filename without NULL separator
-        gControlFrame->LoadMobi(ofn.lpstrFile);
+        gControlFrame->LoadDoc(ofn.lpstrFile);
         return;
     }
     // this is just a test app, no need to support multiple files

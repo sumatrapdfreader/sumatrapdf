@@ -25,10 +25,10 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="nmake -f makefile.msvc CFG=dbg NASM=$(ProjectDir)bin\nasm.exe et tester"
-				ReBuildCommandLine="nmake -f makefile.msvc CFG=dbg NASM=$(ProjectDir)bin\nasm.exe et tester"
+				BuildCommandLine="nmake -f makefile.msvc CFG=dbg NASM=$(ProjectDir)bin\nasm.exe et2 tester2"
+				ReBuildCommandLine="nmake -f makefile.msvc CFG=dbg NASM=$(ProjectDir)bin\nasm.exe et2 tester2"
 				CleanCommandLine="del /s obj-dbg"
-				Output="obj-dbg\EbookTest.exe"
+				Output="obj-dbg\EbookTest2.exe"
 				PreprocessorDefinitions="WIN32;DEBUG;_DEBUG;UNICODE;_UNICODE"
 				IncludeSearchPath="src\utils;src\mui"
 				ForcedIncludes=""
@@ -46,10 +46,10 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="nmake -f makefile.msvc CFG=rel NASM=$(ProjectDir)bin\nasm.exe et tester"
-				ReBuildCommandLine="nmake -f makefile.msvc CFG=rel NASM=$(ProjectDir)bin\nasm.exe et tester"
+				BuildCommandLine="nmake -f makefile.msvc CFG=rel NASM=$(ProjectDir)bin\nasm.exe et2 tester2"
+				ReBuildCommandLine="nmake -f makefile.msvc CFG=rel NASM=$(ProjectDir)bin\nasm.exe et2 tester2"
 				CleanCommandLine="del /s obj-rel"
-				Output="obj-rel\EbookTest.exe"
+				Output="obj-rel\EbookTest2.exe"
 				PreprocessorDefinitions="WIN32;NDEBUG;UNICODE;_UNICODE"
 				IncludeSearchPath="src\utils;src\mui"
 				ForcedIncludes=""
@@ -271,130 +271,44 @@
 			</Filter>
 		</Filter>
 		<Filter
-			Name="MUI"
-			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
-			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
-			>
-			<File
-				RelativePath=".\src\mui\Mui.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\mui\Mui.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\mui\MuiBase.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\mui\MuiBase.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\mui\MuiButton.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\mui\MuiButton.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\mui\MuiControl.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\mui\MuiControl.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\mui\MuiCss.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\mui\MuiCss.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\mui\MuiEventMgr.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\mui\MuiEventMgr.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\mui\MuiHwndWrapper.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\mui\MuiHwndWrapper.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\mui\MuiLayout.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\mui\MuiLayout.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\mui\MuiPainter.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\mui\MuiPainter.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\mui\MuiScrollBar.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\mui\MuiScrollBar.h"
-				>
-			</File>
-		</Filter>
-		<Filter
 			Name="File Formats"
 			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\src\BaseEbookDoc.h"
+				RelativePath=".\src\ebooktest2\BaseEbookDoc.h"
 				>
 			</File>
 			<File
-				RelativePath=".\src\EpubDoc.cpp"
+				RelativePath=".\src\ebooktest2\EpubDoc.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\src\EpubDoc.h"
+				RelativePath=".\src\ebooktest2\EpubDoc.h"
 				>
 			</File>
 			<File
-				RelativePath=".\src\Fb2Doc.cpp"
+				RelativePath=".\src\ebooktest2\Fb2Doc.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\src\Fb2Doc.h"
+				RelativePath=".\src\ebooktest2\Fb2Doc.h"
 				>
 			</File>
 			<File
-				RelativePath=".\src\MobiDoc.cpp"
+				RelativePath=".\src\ebooktest2\MobiDoc.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\src\MobiDoc.h"
+				RelativePath=".\src\ebooktest2\MobiDoc.h"
 				>
 			</File>
 			<File
-				RelativePath=".\src\PageLayout.cpp"
+				RelativePath=".\src\ebooktest2\PageLayout.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\src\PageLayout.h"
+				RelativePath=".\src\ebooktest2\PageLayout.h"
 				>
 			</File>
 		</Filter>
@@ -404,23 +318,23 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\src\ebooktest\EbookTest.cpp"
+				RelativePath=".\src\ebooktest2\EbookTest.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\src\ebooktest\EbookTestMenu.cpp"
+				RelativePath=".\src\ebooktest2\EbookTestMenu.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\src\ebooktest\EbookTestMenu.h"
+				RelativePath=".\src\ebooktest2\EbookTestMenu.h"
 				>
 			</File>
 			<File
-				RelativePath=".\src\ebooktest\Resource.h"
+				RelativePath=".\src\ebooktest2\Resource.h"
 				>
 			</File>
 			<File
-				RelativePath=".\src\Tester.cpp"
+				RelativePath=".\src\ebooktest2\Tester.cpp"
 				>
 			</File>
 		</Filter>
@@ -430,11 +344,11 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 			<File
-				RelativePath=".\src\ebooktest\EbookTest.exe.manifest"
+				RelativePath=".\src\ebooktest2\EbookTest.exe.manifest"
 				>
 			</File>
 			<File
-				RelativePath=".\src\ebooktest\EbookTest.rc"
+				RelativePath=".\src\ebooktest2\EbookTest.rc"
 				>
 			</File>
 		</Filter>

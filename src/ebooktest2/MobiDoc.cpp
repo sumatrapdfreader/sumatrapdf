@@ -1,16 +1,133 @@
 /* Copyright 2011-2012 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "MobiDoc.h"
-#include <time.h>
-
+#include "BaseUtil.h"
 #include "BitReader.h"
 #include "FileUtil.h"
-
 #include "StrUtil.h"
+#include "Vec.h"
+#include "Scoped.h"
+
+#include "MobiDoc.h"
 
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
+
+class HuffDicDecompressor;
+
+// http://en.wikipedia.org/wiki/PDB_(Palm_OS)
+#define kDBNameLength    32
+#define kPdbHeaderLen    78
+
+#pragma pack(push)
+#pragma pack(1)
+struct PdbHeader
+{
+    /* 31 chars + 1 null terminator */
+    char        name[kDBNameLength];
+    uint16      attributes;
+    uint16      version;
+    uint32      createTime;
+    uint32      modifyTime;
+    uint32      backupTime;
+    uint32      modificationNumber;
+    uint32      appInfoID;
+    uint32      sortInfoID;
+    char        type[4];
+    char        creator[4];
+    uint32      idSeed;
+    uint32      nextRecordList;
+    uint16      numRecords;
+};
+#pragma pack(pop)
+
+STATIC_ASSERT(kPdbHeaderLen == sizeof(PdbHeader), validPdbHeader);
+
+#define kPdbRecordHeaderLen 8
+
+#pragma pack(push)
+#pragma pack(1)
+struct PdbRecordHeader {
+    uint32   offset;
+    uint8    deleted   : 1;
+    uint8    dirty     : 1;
+    uint8    busy      : 1;
+    uint8    secret    : 1;
+    uint8    category  : 4;
+    char     uniqueID[3];
+};
+#pragma pack(pop)
+
+STATIC_ASSERT(kPdbRecordHeaderLen == sizeof(PdbRecordHeader), validPdbRecordHeader);
+
+#define kMaxRecordSize 64*1024
+
+class MobiDocImpl : public MobiDoc {
+    friend MobiDoc;
+
+    ScopedMem<TCHAR>    fileName;
+    HANDLE              fileHandle;
+
+    PdbHeader           pdbHeader;
+    PdbRecordHeader *   recHeaders;
+    char *              firstRecData;
+
+    str::Str<char>      doc;
+
+    bool                isMobi;
+    size_t              docRecCount;
+    int                 compressionType;
+    size_t              docUncompressedSize;
+
+    bool                multibyte;
+    size_t              trailersCount;
+    size_t              imageFirstRec; // 0 if no images
+
+    Vec<ImageData>      images;
+
+    // we use bufStatic if record fits in it, bufDynamic otherwise
+    char                bufStatic[kMaxRecordSize];
+    char *              bufDynamic;
+    size_t              bufDynamicSize;
+
+    HuffDicDecompressor *huffDic;
+
+    bool    Load();
+    bool    LoadDocument();
+    bool    ParseHeader();
+    char *  GetBufForRecordData(size_t size);
+    size_t  GetRecordSize(size_t recNo);
+    char*   ReadRecord(size_t recNo, size_t& sizeOut);
+    bool    LoadDocRecordIntoBuffer(size_t recNo, str::Str<char>& strOut);
+    void    LoadImages(size_t imagesCount);
+    bool    LoadImage(size_t imageNo);
+
+public:
+    MobiDocImpl(const TCHAR *fileName);
+    virtual ~MobiDocImpl();
+
+    virtual const TCHAR *GetFilepath() {
+        return fileName;
+    }
+
+    virtual const char *GetBookHtmlData(size_t& lenOut) {
+        lenOut = doc.Size();
+        return doc.Get();
+    }
+
+    virtual ImageData *GetImageData(size_t index) {
+        if (index > images.Count())
+            return NULL;
+        if (!images.At(index).data)
+            return NULL;
+        return &images.At(index);
+    }
+
+    virtual ImageData *GetImageData(const char *id) {
+        int idx = atoi(id);
+        return GetImageData(idx);
+    }
+};
 
 // Parse mobi format http://wiki.mobileread.com/wiki/MOBI
 
@@ -519,27 +636,28 @@ static bool IsValidCompression(int comprType)
             (COMPRESSION_HUFF == comprType);
 }
 
-MobiDoc::MobiDoc() :
-    fileName(NULL), fileHandle(0), recHeaders(NULL), firstRecData(NULL), isMobi(false),
+MobiDocImpl::MobiDocImpl(const TCHAR *fileName) : fileName(str::Dup(fileName)),
+    fileHandle(NULL), recHeaders(NULL), firstRecData(NULL), isMobi(false),
     docRecCount(0), compressionType(0), docUncompressedSize(0), doc(NULL),
-    multibyte(false), trailersCount(0), imageFirstRec(0), imagesCount(0), validImagesCount(0),
+    multibyte(false), trailersCount(0), imageFirstRec(0),
     images(NULL), bufDynamic(NULL), bufDynamicSize(0), huffDic(NULL)
 {
 }
 
-MobiDoc::~MobiDoc()
+MobiDocImpl::~MobiDocImpl()
 {
     CloseHandle(fileHandle);
-    free(fileName);
     free(firstRecData);
     free(recHeaders);
     free(bufDynamic);
-    free(images);
+    for (size_t i = 0; i < images.Count(); i++) {
+        free(images.At(i).data);
+        free(images.At(i).id);
+    }
     delete huffDic;
-    delete doc;
 }
 
-bool MobiDoc::ParseHeader()
+bool MobiDocImpl::ParseHeader()
 {
     DWORD bytesRead;
     BOOL ok = ReadFile(fileHandle, (void*)&pdbHeader, kPdbHeaderLen, &bytesRead, NULL);
@@ -653,12 +771,11 @@ bool MobiDoc::ParseHeader()
     SwapU32(mobiHdr->huffmanTableLen);
     SwapU32(mobiHdr->exhtFlags);
 
+    size_t imagesCount = 0;
     if (pdbHeader.numRecords > mobiHdr->imageFirstRec) {
         imageFirstRec = mobiHdr->imageFirstRec;
-        if (0 == imageFirstRec) {
-            // I don't think this should ever happen but I've seen it
-            imagesCount = 0;
-        } else
+        // I don't think this should ever happen but I've seen it
+        if (imageFirstRec != 0)
             imagesCount = pdbHeader.numRecords - mobiHdr->imageFirstRec;
     }
     size_t hdrLen = mobiHdr->hdrLen;
@@ -704,7 +821,7 @@ bool MobiDoc::ParseHeader()
         }
     }
 
-    LoadImages();
+    LoadImages(imagesCount);
     return true;
 }
 
@@ -746,60 +863,57 @@ static bool KnownNonImageRec(uint8 *data, size_t dataLen)
     return false;
 }
 
-static bool KnownImageFormat(uint8 *data, size_t dataLen)
+static bool KnownImageFormat(ImageData& data)
 {
-    return NULL != GfxFileExtFromData((char*)data, dataLen);
+    return NULL != GfxFileExtFromData(data.data, data.len);
 }
 
 // return false if we should stop loading images (because we
 // encountered eof record or ran out of memory)
-bool MobiDoc::LoadImage(size_t imageNo)
+bool MobiDocImpl::LoadImage(size_t imageNo)
 {
-    size_t imageRec = imageFirstRec + imageNo;
-    images[imageNo].imgData = 0;
-    images[imageNo].imgDataLen = 0;
-    size_t imgDataLen;
+    ImageData imgData = { 0 };
 
-    uint8 *imgData = (uint8*)ReadRecord(imageRec, imgDataLen);
-    if (!imgData)
-        return true;
-    if (IsEofRecord(imgData, imgDataLen))
-        return false;
-    if (KnownNonImageRec(imgData, imgDataLen)) {
-        imgData[5] = 0;
+    size_t len;
+    char *data = ReadRecord(imageFirstRec + imageNo, len);
+    if (!data) {
+        images.Append(imgData);
         return true;
     }
-    if (!KnownImageFormat(imgData, imgDataLen)) {
+    if (IsEofRecord((uint8 *)data, len))
+        return false;
+    if (KnownNonImageRec((uint8 *)data, len)) {
+        data[5] = 0; // TODO: ???
+        images.Append(imgData);
+        return true;
+    }
+    imgData.len = len;
+    imgData.data = (char *)memdup(data, len);
+    imgData.id = NULL; // recindex
+    if (!imgData.data)
+        return false;
+    if (!KnownImageFormat(imgData))
         l("Unknown image format\n");
-        return true;
-    }
-    images[imageNo].imgData = (uint8*)memdup(imgData, imgDataLen);
-    if (!images[imageNo].imgData)
-        return false;
-    images[imageNo].imgDataLen = imgDataLen;
-    ++validImagesCount;
+    images.Append(imgData);
     return true;
 }
 
-void MobiDoc::LoadImages()
+void MobiDocImpl::LoadImages(size_t imagesCount)
 {
-    if (0 == imagesCount)
-        return;
-    images = SAZA(ImageData, imagesCount);
     for (size_t i = 0; i < imagesCount; i++) {
         if (!LoadImage(i))
             return;
     }
 }
 
-size_t MobiDoc::GetRecordSize(size_t recNo)
+size_t MobiDocImpl::GetRecordSize(size_t recNo)
 {
     size_t size = recHeaders[recNo + 1].offset - recHeaders[recNo].offset;
     return size;
 }
 
 // returns NULL if error (failed to allocated)
-char *MobiDoc::GetBufForRecordData(size_t size)
+char *MobiDocImpl::GetBufForRecordData(size_t size)
 {
     if (size <= sizeof(bufStatic))
         return bufStatic;
@@ -812,7 +926,7 @@ char *MobiDoc::GetBufForRecordData(size_t size)
 }
 
 // read a record and return it's data and size. Return NULL if error
-char* MobiDoc::ReadRecord(size_t recNo, size_t& sizeOut)
+char* MobiDocImpl::ReadRecord(size_t recNo, size_t& sizeOut)
 {
     size_t off = recHeaders[recNo].offset;
     DWORD toRead = GetRecordSize(recNo);
@@ -860,7 +974,7 @@ static size_t ExtraDataSize(uint8 *recData, size_t recLen, size_t trailersCount,
 
 // Load a given record of a document into strOut, uncompressing if necessary.
 // Returns false if error.
-bool MobiDoc::LoadDocRecordIntoBuffer(size_t recNo, str::Str<char>& strOut)
+bool MobiDocImpl::LoadDocRecordIntoBuffer(size_t recNo, str::Str<char>& strOut)
 {
     size_t recSize;
     char *recData = ReadRecord(recNo, recSize);
@@ -903,34 +1017,44 @@ bool MobiDoc::LoadDocRecordIntoBuffer(size_t recNo, str::Str<char>& strOut)
 }
 
 // assumes that ParseHeader() has been called
-bool MobiDoc::LoadDocument()
+bool MobiDocImpl::LoadDocument()
 {
     assert(docUncompressedSize > 0);
-    assert(!doc);
-    doc = new str::Str<char>(docUncompressedSize);
+    doc.EnsureCap(docUncompressedSize);
     for (size_t i = 1; i <= docRecCount; i++) {
-        if (!LoadDocRecordIntoBuffer(i, *doc))
+        if (!LoadDocRecordIntoBuffer(i, doc))
             return false;
     }
-    assert(docUncompressedSize == doc->Size());
+    assert(docUncompressedSize == doc.Size());
     return true;
+}
+
+bool MobiDocImpl::Load()
+{
+    fileHandle = CreateFile(fileName, GENERIC_READ, FILE_SHARE_READ, NULL,
+                            OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (INVALID_HANDLE_VALUE == fileHandle)
+        return false;
+    if (!ParseHeader())
+        return false;
+    return LoadDocument();
 }
 
 MobiDoc *MobiDoc::ParseFile(const TCHAR *fileName)
 {
-    HANDLE fh = CreateFile(fileName, GENERIC_READ, FILE_SHARE_READ, NULL,
-                              OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (fh == INVALID_HANDLE_VALUE)
-        return NULL;
-    MobiDoc *mb = new MobiDoc();
-    mb->fileName = str::Dup(fileName);
-    mb->fileHandle = fh;
-    if (!mb->ParseHeader())
-        goto Error;
-    if (!mb->LoadDocument())
-        goto Error;
+    MobiDocImpl *mb = new MobiDocImpl(fileName);
+    if (!mb || !mb->Load()) {
+        delete mb;
+        mb = NULL;
+    }
     return mb;
-Error:
-    delete mb;
-    return NULL;
+}
+
+bool MobiDoc::IsSupported(const TCHAR *fileName)
+{
+    // TODO: also .pdb?
+    return str::EndsWithI(fileName, _T(".mobi")) ||
+           str::EndsWithI(fileName, _T(".azw"))  ||
+           str::EndsWithI(fileName, _T(".azw1")) ||
+           str::EndsWithI(fileName, _T(".prc"));
 }

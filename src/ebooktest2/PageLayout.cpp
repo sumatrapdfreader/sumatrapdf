@@ -207,6 +207,7 @@ PageLayout::PageLayout() : currPage(NULL), gfx(NULL)
 
 PageLayout::~PageLayout()
 {
+    delete htmlParser;
     mui::FreeGraphicsForMeasureText(gfx);
 }
 
@@ -274,8 +275,11 @@ void PageLayout::StartLayout(LayoutInfo* layoutInfo)
 
 void PageLayout::StartNewPage()
 {
+    // TODO: who owns currPage?
     if (currPage && pageObserver)
         pageObserver->NewPage(currPage);
+    else
+        delete currPage;
 
     currPage = new PageData;
     currX = currY = 0;
@@ -419,13 +423,7 @@ static void GetKnownAttributes(HtmlToken *t, HtmlAttr *allowedAttributes, Vec<Kn
 {
     out->Reset();
     AttrInfo *attrInfo;
-    size_t tagLen = GetTagLen(t);
-    const char *curr = t->s + tagLen;
-    const char *end = t->s + t->sLen;
-    for (;;) {
-        attrInfo = t->NextAttr();
-        if (NULL == attrInfo)
-            break;
+    while ((attrInfo = t->NextAttr())) {
         HtmlAttr attr = FindAttr(attrInfo);
         if (!IsAllowedAttribute(allowedAttributes, attr))
             continue;
@@ -543,12 +541,13 @@ void DumpAttr(uint8 *s, size_t sLen)
 // tags that I want to explicitly ignore and not define
 // HtmlTag enums for them
 // One file has a bunch of st1:* tags (st1:city, st1:place etc.)
-static bool IgnoreTag(const char *s, size_t sLen)
+static bool IgnoreTag(HtmlToken *tok)
 {
-    if (sLen >= 4 && s[3] == ':' && s[0] == 's' && s[1] == 't' && s[2] == '1')
+    const char *s = tok->s;
+    if (tok->sLen >= 4 && s[3] == ':' && s[0] == 's' && s[1] == 't' && s[2] == '1')
         return true;
     // no idea what "o:p" is
-    if (sLen == 3 && s[1] == ':' && s[0] == 'o'  && s[2] == 'p')
+    if (tok->sLen >= 3 && s[1] == ':' && s[0] == 'o'  && s[2] == 'p')
         return true;
     return false;
 }
@@ -574,10 +573,7 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
     Vec<KnownAttrInfo> attrs;
     CrashAlwaysIf(!t->IsTag());
 
-    // HtmlToken string includes potential attributes,
-    // get the length of just the tag
-    size_t tagLen = GetTagLen(t);
-    if (IgnoreTag(t->s, tagLen))
+    if (IgnoreTag(t))
         return;
 
     HtmlTag tag = FindTag(t);
@@ -602,41 +598,28 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
                 newJustification = AlignAttrToJustification(alignAttr);
             }
         } else if (t->IsEndTag()) {
-            StartNewLine(false);
+            StartNewLine(true);
         }
         currJustification = newJustification;
-        return;
     }
-
-    if (Tag_Hr == tag) {
+    else if (Tag_Hr == tag) {
         AddHr();
-        return;
     }
-
-    if ((Tag_B == tag) || (Tag_Em == tag)) {
+    else if ((Tag_B == tag) || (Tag_Strong == tag)) {
         ChangeFont(FontStyleBold, t->IsStartTag());
-        return;
     }
-
-    if (Tag_I == tag) {
+    else if ((Tag_I == tag) || (Tag_Em == tag)) {
         ChangeFont(FontStyleItalic, t->IsStartTag());
-        return;
     }
-
-    if (Tag_U == tag) {
+    else if (Tag_U == tag) {
         ChangeFont(FontStyleUnderline, t->IsStartTag());
-        return;
     }
-
-    if (Tag_Strike == tag) {
+    else if (Tag_Strike == tag) {
         ChangeFont(FontStyleStrikeout, t->IsStartTag());
-        return;
     }
-
-    if (Tag_Mbp_Pagebreak == tag) {
+    else if ((Tag_Pagebreak == tag) || (Tag_Mbp_Pagebreak == tag)) {
         JustifyLine(currJustification);
         StartNewPage();
-        return;
     }
 }
 
