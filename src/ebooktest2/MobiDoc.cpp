@@ -23,7 +23,7 @@ class MobiDoc2Impl : public MobiDoc2 {
             ImageData2 data = { 0 };
             data.data = (char *)mobi->images[i].imgData;
             data.len = mobi->images[i].imgDataLen;
-            data.id = NULL; // recindex
+            data.idx = i; // recindex
             images.Append(data);
         }
         return true;

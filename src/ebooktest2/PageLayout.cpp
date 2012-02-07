@@ -107,13 +107,11 @@ public:
     PageLayout(FontCache *fontCache);
     ~PageLayout();
 
-    void Start(LayoutInfo* layoutInfo);
     void StartLayout(LayoutInfo* layoutInfo);
-    void EndLayout(Vec<PageData*>& pages);
-    PageData *Next();
+    void Process(INewPageObserver *pageObserver, BaseEbookDoc *doc);
 
 private:
-    void HandleHtmlTag(HtmlToken *t);
+    void HandleHtmlTag(HtmlToken *t, BaseEbookDoc *doc);
     void EmitText(HtmlToken *t);
 
     REAL GetCurrentLineDx();
@@ -128,6 +126,7 @@ private:
 
     void AddHr();
     void AddWord(WordInfo *wi);
+    void AddImage(ImageData2 *data);
 
     void SetCurrentFont(FontStyle fs);
     void ChangeFont(FontStyle fs, bool isStart);
@@ -170,9 +169,6 @@ private:
 
     // for iterative parsing
     HtmlPullParser *    htmlParser;
-    // list of pages constructed
-    Vec<PageData*>      pagesToSend;
-    bool                finishedParsing;
 
     // current nesting of html tree during html parsing
     Vec<HtmlTag>        tagNesting;
@@ -182,7 +178,8 @@ private:
 };
 
 PageLayout::PageLayout(FontCache *fontCache) : currPage(NULL),
-    bmp(1, 1, PixelFormat32bppARGB), gfx(&bmp), fontCache(fontCache)
+    bmp(1, 1, PixelFormat32bppARGB), gfx(&bmp), fontCache(fontCache),
+    pageObserver(NULL)
 {
     InitGraphicsMode(&gfx);
 }
@@ -199,17 +196,6 @@ void PageLayout::SetCurrentFont(FontStyle fs)
     currFont = fontCache->GetFont(fontName.Get(), fontSize, fs);
 }
 
-static bool ValidFontStyleForChangeFont(FontStyle fs)
-{
-    switch (fs) {
-    case FontStyleBold: case FontStyleItalic:
-    case FontStyleUnderline: case FontStyleStrikeout:
-        return true;
-    default:
-        return false;
-    }
-}
-
 // change the current font by adding (if addStyle is true) or removing
 // a given font style from current font style
 // TODO: it doesn't support the case where the same style is nested
@@ -217,7 +203,6 @@ static bool ValidFontStyleForChangeFont(FontStyle fs)
 // We would have to maintain counts for each style to do it fully right
 void PageLayout::ChangeFont(FontStyle fs, bool addStyle)
 {
-    CrashAlwaysIf(!ValidFontStyleForChangeFont(fs));
     FontStyle newFontStyle = currFontStyle;
     if (addStyle)
         newFontStyle = (FontStyle) (newFontStyle | fs);
@@ -232,14 +217,12 @@ void PageLayout::ChangeFont(FontStyle fs, bool addStyle)
 
 void PageLayout::StartLayout(LayoutInfo* layoutInfo)
 {
-    pageObserver = layoutInfo->observer;
     pageSize = layoutInfo->pageSize.Convert<REAL>();
 
     fontName.Set(str::Dup(layoutInfo->fontName));
     fontSize = layoutInfo->fontSize;
     htmlParser = new HtmlPullParser(layoutInfo->htmlStr, layoutInfo->htmlStrLen);
 
-    finishedParsing = false;
     currJustification = Align_Justify;
     SetCurrentFont(FontStyleRegular);
 
@@ -250,18 +233,6 @@ void PageLayout::StartLayout(LayoutInfo* layoutInfo)
     // bigger than what Kindle app uses)
     spaceDx = fontSize / 2.5f;
     StartNewPage();
-}
-
-void PageLayout::EndLayout(Vec<PageData*>& pages)
-{
-    while (pages.Count() > 0) {
-        PageData *pd = pages.At(0);
-        if (pd && pageObserver)
-            pageObserver->NewPage(pd);
-        else
-            delete pd;
-        pages.RemoveAt(0);
-    }
 }
 
 void PageLayout::StartNewPage()
@@ -373,34 +344,6 @@ void PageLayout::StartNewLine(bool isParagraphBreak)
         StartNewPage();
 }
 
-struct KnownAttrInfo {
-    HtmlAttr        attr;
-    const char *    val;
-    size_t          valLen;
-};
-
-static bool IsAllowedAttribute(HtmlAttr* allowedAttributes, HtmlAttr attr)
-{
-    while (Attr_NotFound != *allowedAttributes) {
-        if (attr == *allowedAttributes++)
-            return true;
-    }
-    return false;
-}
-
-static void GetKnownAttributes(HtmlToken *t, HtmlAttr *allowedAttributes, Vec<KnownAttrInfo> *out)
-{
-    out->Reset();
-    AttrInfo *attrInfo;
-    while ((attrInfo = t->NextAttr())) {
-        HtmlAttr attr = FindAttr(attrInfo);
-        if (!IsAllowedAttribute(allowedAttributes, attr))
-            continue;
-        KnownAttrInfo knownAttr = { attr, attrInfo->val, attrInfo->valLen };
-        out->Append(knownAttr);
-    }
-}
-
 void PageLayout::AddSetFontInstr(Font *font)
 {
     currPage->Append(DrawInstr::SetFont(font));
@@ -458,9 +401,38 @@ void PageLayout::AddWord(WordInfo *wi)
     curr.x += (dx + spaceDx);
 }
 
-void PageLayout::HandleHtmlTag(HtmlToken *t)
+// add image (<img>)
+// TODO: extract desired dimensions from tag
+void PageLayout::AddImage(ImageData2 *data)
 {
-    Vec<KnownAttrInfo> attrs;
+    // TODO: can be done without creating a bitmap, cf. ImagesEngine::SizeFromData
+    Bitmap *bmp = BitmapFromData(data->data, data->len);
+    if (!bmp)
+        return;
+    // display all images centered on their own lines, for now
+    StartNewLine(false);
+    RectF img(0, 0, (REAL)bmp->GetWidth(), (REAL)bmp->GetHeight());
+    if (pageSize.dy - curr.y < img.Height / 2) {
+        // move overly large images to a new page
+        StartNewPage();
+    }
+    if (img.Width > pageSize.dx || img.Height > pageSize.dy - curr.y) {
+        // resize still too large images to fit a page
+        REAL factor = min(pageSize.dx / img.Width, (pageSize.dy - curr.y) / img.Height);
+        img.Width *= factor;
+        img.Height *= factor;
+    }
+    curr.x += (pageSize.dx - img.Width) / 2;
+    img.X = curr.x;
+    img.Y = curr.y;
+    currPage->Append(DrawInstr::Image(data, img));
+    curr.y += img.Height;
+    StartNewLine(false);
+    delete bmp;
+}
+
+void PageLayout::HandleHtmlTag(HtmlToken *t, BaseEbookDoc *doc)
+{
     CrashAlwaysIf(!t->IsTag());
 
     HtmlTag tag = FindTag(t);
@@ -471,7 +443,8 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
     else if (t->IsEndTag())
         RecordEndTag(&tagNesting, tag);
 
-    if (Tag_P == tag) {
+    switch (tag) {
+    case Tag_P:
         StartNewLine(true);
         currJustification = Align_Justify;
         if (t->IsStartTag()) {
@@ -481,25 +454,43 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
                     currJustification = FindAlignAttr(attrInfo->val, attrInfo->valLen);
             }
         }
-    }
-    else if (Tag_Hr == tag) {
+        break;
+    case Tag_Hr:
         AddHr();
-    }
-    else if ((Tag_B == tag) || (Tag_Strong == tag)) {
+        break;
+    case Tag_B: case Tag_Strong:
         ChangeFont(FontStyleBold, t->IsStartTag());
-    }
-    else if ((Tag_I == tag) || (Tag_Em == tag)) {
+        break;
+    case Tag_I: case Tag_Em:
         ChangeFont(FontStyleItalic, t->IsStartTag());
-    }
-    else if (Tag_U == tag) {
+        break;
+    case Tag_U:
         ChangeFont(FontStyleUnderline, t->IsStartTag());
-    }
-    else if (Tag_Strike == tag) {
+        break;
+    case Tag_Strike:
         ChangeFont(FontStyleStrikeout, t->IsStartTag());
-    }
-    else if ((Tag_Pagebreak == tag) || (Tag_Mbp_Pagebreak == tag)) {
+        break;
+    case Tag_Pagebreak: case Tag_Mbp_Pagebreak:
         JustifyLine(currJustification);
         StartNewPage();
+        break;
+    case Tag_Img:
+        if (t->IsEndTag())
+            /* shouldn't happen, but does */;
+        else if (doc) {
+            AttrInfo *attrInfo;
+            while ((attrInfo = t->NextAttr())) {
+                if (attrInfo->HasName("src") || attrInfo->HasName("recindex")) {
+                    ScopedMem<char> id(str::DupN(attrInfo->val, attrInfo->valLen));
+                    ImageData2 *data = doc->GetImageData(id);
+                    if (data)
+                        AddImage(data);
+                }
+            }
+        }
+        else
+            /* TODO: display "missing image box"? */;
+        break;
     }
 }
 
@@ -528,61 +519,38 @@ void PageLayout::EmitText(HtmlToken *t)
 // Return the next parsed page. Returns NULL if finished parsing.
 // For simplicity of implementation, we parse xml text node or
 // xml element at a time. This might cause a creation of one
-// or more pages, which we remeber and send to the caller
-// if we detect accumulated pages.
-PageData *PageLayout::Next()
+// or more pages, which we send to the caller through pageObserver
+void PageLayout::Process(INewPageObserver *pageObserver, BaseEbookDoc *doc)
 {
-    for (;;)
-    {
-        if (pagesToSend.Count() > 0) {
-            PageData *ret = pagesToSend.At(0);
-            pagesToSend.RemoveAt(0);
-            return ret;
-        }
-        if (finishedParsing)
-            return NULL;
-        HtmlToken *t = htmlParser->Next();
-        if (!t || t->IsError())
-            break;
+    this->pageObserver = pageObserver;
 
+    HtmlToken *t;
+    while ((t = htmlParser->Next()) && !t->IsError()) {
         if (t->IsTag())
-            HandleHtmlTag(t);
+            HandleHtmlTag(t, doc);
         else
             EmitText(t);
     }
     // force layout of the last line
     StartNewLine(true);
-
-    finishedParsing = true;
-
     // only send the last page if not empty
-    if (currPage && currPage->Count() > 0) {
-        pagesToSend.Append(currPage);
-        currPage = NULL;
-        return Next();
-    }
-    return NULL;
+    if (currPage && currPage->Count() > 0)
+        StartNewPage();
 }
 
-void LayoutHtml(LayoutInfo* li, FontCache *fontCache)
+void LayoutHtml(LayoutInfo* li, FontCache *fontCache, INewPageObserver *pageObserver)
 {
     PageLayout l(fontCache);
     l.StartLayout(li);
-    Vec<PageData*> pages;
-    PageData *pd;
-    while ((pd = l.Next()))
-        pages.Append(pd);
-    l.EndLayout(pages);
+    l.Process(pageObserver, li->doc);
 }
 
 void DrawPageLayout(Graphics *g, PageData *pageData, REAL offX, REAL offY, bool showBbox)
 {
     InitGraphicsMode(g);
 
-    StringFormat sf(StringFormat::GenericTypographic());
     SolidBrush br(Color(0,0,0));
-    SolidBrush br2(Color(255, 255, 255, 255));
-    Pen pen(Color(255, 0, 0), 1);
+    Pen redPen(Color(255, 0, 0), 1);
     Pen blackPen(Color(0, 0, 0), 1);
 
     Font *font = NULL;
@@ -598,7 +566,7 @@ void DrawPageLayout(Graphics *g, PageData *pageData, REAL offX, REAL offY, bool 
             PointF p1(bbox.X, y);
             PointF p2(bbox.X + bbox.Width, y);
             if (showBbox)
-                g->DrawRectangle(&pen, bbox);
+                g->DrawRectangle(&redPen, bbox);
             g->DrawLine(&blackPen, p1, p2);
         } else if (InstrTypeString == instr->type) {
             WCHAR buf[512];
@@ -606,10 +574,15 @@ void DrawPageLayout(Graphics *g, PageData *pageData, REAL offX, REAL offY, bool 
             PointF pos;
             bbox.GetLocation(&pos);
             if (showBbox)
-                g->DrawRectangle(&pen, bbox);
+                g->DrawRectangle(&redPen, bbox);
             g->DrawString(buf, strLen, font, pos, NULL, &br);
         } else if (InstrTypeSetFont == instr->type) {
             font = instr->setFont.font;
+        } else if (InstrTypeImage == instr->type) {
+            Bitmap *bmp = BitmapFromData(instr->img.data->data, instr->img.data->len);
+            if (bmp)
+                g->DrawImage(bmp, bbox, 0, 0, (REAL)bmp->GetWidth(), (REAL)bmp->GetHeight(), UnitPixel);
+            delete bmp;
         }
     }
 }

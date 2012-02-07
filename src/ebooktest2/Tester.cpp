@@ -132,10 +132,11 @@ static void LayoutTest(const TCHAR *file)
     _tprintf(_T("Laying out file '%s'\n"), doc->GetFilepath());
 
     LayoutInfo li;
+    li.doc = doc;
+    li.htmlStr = doc->GetBookHtmlData(li.htmlStrLen);
     li.pageSize = SizeI(640, 480);
     li.fontName = L"Tahoma";
     li.fontSize = 12;
-    li.htmlStr = doc->GetBookHtmlData(li.htmlStrLen);
 
     InitAllCommonControls();
     ScopedGdiPlus gdi;

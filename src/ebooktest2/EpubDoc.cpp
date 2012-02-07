@@ -61,8 +61,9 @@ public:
         if (index >= images.Count())
             return NULL;
         if (!images.At(index).data) {
-            ScopedMem<TCHAR> idT(str::conv::FromUtf8(images.At(index).id));
-            images.At(index).data = zip.GetFileData(idT, &images.At(index).len);
+            images.At(index).data = zip.GetFileData(images.At(index).idx, &images.At(index).len);
+            if (!images.At(index).data)
+                return NULL;
         }
         return &images.At(index);
     }
@@ -128,10 +129,11 @@ bool EpubDocImpl::Load()
             ScopedMem<TCHAR> imgPath(node->GetAttribute("href"));
             if (!imgPath)
                 continue;
-            imgPath.Set(str::Join(contentPath, imgPath));
+            ScopedMem<TCHAR> zipPath(str::Join(contentPath, imgPath));
             // load the image lazily
             ImageData2 data = { 0 };
             data.id = str::conv::ToUtf8(imgPath);
+            data.idx = zip.GetFileIndex(zipPath);
             images.Append(data);
         }
     }

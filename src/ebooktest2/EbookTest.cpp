@@ -28,7 +28,7 @@
 // A sample text to display if we don't show an actual ebook
 static const char *gSampleHtml = "<html><p align=justify>ClearType is <b>dependent</b> on the <i>orientation &amp; ordering</i> of the LCD stripes.</p> <p align='right'><em>Currently</em>, ClearType is implemented <hr> only for vertical stripes that are ordered RGB.</p> <p align=center>This might be a concern if you are using a tablet PC.</p> <p>Where the display can be oriented in any direction, or if you are using a screen that can be turned from landscape to portrait. The <strike>following example</strike> draws text with two <u>different quality</u> settings.</p> On to the <b>next<mbp:pagebreak>page</b>&#21;</html>";
 
-class ControlEbook :  public INewPageObserver {
+class ControlEbook : public INewPageObserver {
     BaseEbookDoc *  doc;
     Vec<PageData*>  pages;
     FontCache       fontCache;
@@ -104,6 +104,7 @@ void ControlEbook::PageLayout(SizeI dim)
     currDim = dim;
 
     LayoutInfo li;
+    li.doc = doc;
     if (doc) {
         li.htmlStr = doc->GetBookHtmlData(li.htmlStrLen);
     }
@@ -111,15 +112,14 @@ void ControlEbook::PageLayout(SizeI dim)
         li.htmlStr = gSampleHtml;
         li.htmlStrLen = strlen(gSampleHtml);
     }
-    li.fontName = FONT_NAME;
-    li.fontSize = FONT_SIZE;
     li.pageSize = dim;
     li.pageSize.dx -= 2 * PAGE_BORDER;
     li.pageSize.dy -= 2 * PAGE_BORDER;
-    li.observer = this;
+    li.fontName = FONT_NAME;
+    li.fontSize = FONT_SIZE;
 
     DeletePages();
-    LayoutHtml(&li, &fontCache);
+    LayoutHtml(&li, &fontCache, this);
 }
 
 void ControlEbook::Repaint()

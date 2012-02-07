@@ -225,11 +225,12 @@ void Fb2DocImpl::ExtractImage(HtmlPullParser& parser, HtmlToken *tok)
     if (!tok || !tok->IsText())
         return;
 
-    ImageData2 data;
+    ImageData2 data = { 0 };
     data.data = Base64Decode(tok->s, tok->s + tok->sLen, &data.len);
     if (!data.data)
         return;
     data.id = str::Join("#", id);
+    data.idx = images.Count();
     images.Append(data);
 }
 

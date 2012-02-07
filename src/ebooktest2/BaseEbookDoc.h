@@ -10,7 +10,8 @@
 struct ImageData2 {
     char *  data;
     size_t  len;
-    char *  id;
+    char *  id; // path by which content refers to this image
+    size_t  idx; // document specific index at which to find this image
 };
 
 class BaseEbookDoc {

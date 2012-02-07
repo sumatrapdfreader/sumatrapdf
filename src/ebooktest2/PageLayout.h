@@ -4,6 +4,7 @@
 #ifndef PageLayout_h
 #define PageLayout_h
 
+#include "BaseEbookDoc.h"
 #include "BaseUtil.h"
 #include "Vec.h"
 #include "GeomUtil.h"
@@ -15,7 +16,8 @@ using namespace Gdiplus;
 enum DrawInstrType {
     InstrTypeString = 0,
     InstrTypeLine,
-    InstrTypeSetFont
+    InstrTypeSetFont,
+    InstrTypeImage,
 };
 
 struct InstrString {
@@ -27,12 +29,17 @@ struct InstrSetFont {
     Font *              font;
 };
 
+struct InstrImage {
+    ImageData2 *        data;
+};
+
 struct DrawInstr {
     DrawInstrType       type;
     union {
         // info specific to a given instruction
         InstrString     str;
         InstrSetFont    setFont;
+        InstrImage      img;
     };
     RectF bbox; // common to most instructions
 
@@ -54,6 +61,12 @@ struct DrawInstr {
 
     static DrawInstr Line(RectF bbox) {
         DrawInstr di(InstrTypeLine, bbox);
+        return di;
+    }
+
+    static DrawInstr Image(ImageData2 *data, RectF bbox) {
+        DrawInstr di(InstrTypeImage, bbox);
+        di.img.data = data;
         return di;
     }
 };
@@ -90,8 +103,9 @@ public:
 // just to pack args to LayoutHtml
 class LayoutInfo {
 public:
-    LayoutInfo() : fontName(NULL), fontSize(0),
-        htmlStr(0), htmlStrLen(0), observer(NULL) { }
+    LayoutInfo() : doc(NULL), fontName(NULL), fontSize(0), htmlStr(0), htmlStrLen(0) { }
+
+    BaseEbookDoc *  doc;
 
     SizeI           pageSize;
 
@@ -100,8 +114,6 @@ public:
 
     const char *    htmlStr;
     size_t          htmlStrLen;
-
-    INewPageObserver*observer;
 };
 
 class FontCache {
@@ -125,7 +137,7 @@ public:
     Font *GetFont(const WCHAR *name, float size, FontStyle style);
 };
 
-void LayoutHtml(LayoutInfo* li, FontCache *fontCache);
+void LayoutHtml(LayoutInfo* li, FontCache *fontCache, INewPageObserver *pageObserver=NULL);
 void DrawPageLayout(Graphics *g, PageData *pageData, REAL offX, REAL offY, bool showBbox);
 void InitGraphicsMode(Graphics *g);
 

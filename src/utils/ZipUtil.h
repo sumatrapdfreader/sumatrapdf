@@ -22,6 +22,8 @@ public:
     size_t GetFileCount() const;
     // the result is owned by ZipFile
     const TCHAR *GetFileName(size_t fileindex);
+    // reverts GetFileName
+    size_t GetFileIndex(const TCHAR *filename);
 
     // caller must free() the result (or rather Allocator::Free it)
     char *GetFileData(const TCHAR *filename, size_t *len=NULL);
@@ -34,7 +36,6 @@ public:
 
 protected:
     void ExtractFilenames();
-    size_t GetFileIndex(const TCHAR *filename);
 };
 
 #endif
