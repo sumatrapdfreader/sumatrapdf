@@ -266,9 +266,8 @@ public:
 template <typename T>
 inline void FreeVecMembers(Vec<T>& v)
 {
-    T *data = v.LendData();
-    for (size_t i = 0; i < v.Count(); i++) {
-        free(data[i]);
+    for (T* el = v.IterStart(); el; el = v.IterNext()) {
+        free(el);
     }
     v.Reset();
 }
@@ -277,9 +276,8 @@ inline void FreeVecMembers(Vec<T>& v)
 template <typename T>
 inline void DeleteVecMembers(Vec<T>& v)
 {
-    T *data = v.LendData();
-    for (size_t i = 0; i < v.Count(); i++) {
-        delete data[i];
+    for (T* el = v.IterStart(); el; el = v.IterNext()) {
+        delete el;
     }
     v.Reset();
 }
