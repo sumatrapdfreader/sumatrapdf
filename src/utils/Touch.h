@@ -1,5 +1,5 @@
 /* Copyright 2006-2012 the SumatraPDF project authors (see AUTHORS file).
-   License: GPLv3 */
+   License: Simplified BSD (see COPYING.BSD) */
 
 #ifndef Touch_h
 #define Touch_h
