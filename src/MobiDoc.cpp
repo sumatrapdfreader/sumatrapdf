@@ -534,6 +534,8 @@ MobiDoc::~MobiDoc()
     free(firstRecData);
     free(recHeaders);
     free(bufDynamic);
+    for (size_t i = 0; i < imagesCount; i++)
+        free(images[i].imgData);
     free(images);
     delete huffDic;
     delete doc;

@@ -2,21 +2,45 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "PageLayout.h"
-#include "StrUtil.h"
-#include "HtmlPullParser.h"
-#include "Mui.h"
-#include "StrUtil.h"
-#include "HtmlPullParser.h"
 #include "Scoped.h"
-
-using namespace Gdiplus;
+#include "StrUtil.h"
+#include "HtmlPullParser.h"
 #include "GdiPlusUtil.h"
 
-/*
-TODO: instead of generating list of DrawInstr objects, we could add neccessary
-support to mui and use list of Control objects instead (especially if we slim down
-Control objects further to make allocating hundreds of them cheaper).
-*/
+// set consistent mode for our graphics objects so that we get
+// the same results when measuring text
+void InitGraphicsMode(Graphics *g)
+{
+    g->SetCompositingQuality(CompositingQualityHighQuality);
+    g->SetSmoothingMode(SmoothingModeAntiAlias);
+    //g.SetSmoothingMode(SmoothingModeHighQuality);
+    g->SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
+    g->SetPageUnit(UnitPixel);
+}
+
+FontCache::~FontCache()
+{
+    for (Entry *e = cache.IterStart(); e; e = cache.IterNext()) {
+        free(e->name);
+        ::delete e->font;
+    }
+}
+
+Font *FontCache::GetFont(const WCHAR *name, float size, FontStyle style)
+{
+    Entry f = { (WCHAR *)name, size, style, NULL };
+    for (Entry *e = cache.IterStart(); e; e = cache.IterNext()) {
+        if (f == *e)
+            return e->font;
+    }
+
+    f.name = str::Dup(f.name);
+    // TODO: handle a failure to create a font. Use fontCache[0] if exists
+    // or try to fallback to a known font like Times New Roman
+    f.font = ::new Font(name, size, style);
+    cache.Append(f);
+    return f.font;
+}
 
 struct WordInfo {
     const char *s;
@@ -123,11 +147,12 @@ class PageLayout
     };
 
 public:
-    PageLayout();
+    PageLayout(FontCache *fontCache);
     ~PageLayout();
 
     void Start(LayoutInfo* layoutInfo);
     void StartLayout(LayoutInfo* layoutInfo);
+    void EndLayout(Vec<PageData*>& pages);
     PageData *Next();
 
 private:
@@ -168,13 +193,17 @@ private:
 
     // constant during layout process
     INewPageObserver *  pageObserver;
+    FontCache *         fontCache;
     REAL                pageDx;
     REAL                pageDy;
     REAL                lineSpacing;
     REAL                spaceDx;
-    Graphics *          gfx; // for measuring text
     ScopedMem<WCHAR>    fontName;
     float               fontSize;
+
+    // for measuring text
+    Bitmap              bmp;
+    Graphics            gfx;
 
     // temporary state during layout process
     FontStyle           currFontStyle;
@@ -201,7 +230,8 @@ private:
     WCHAR               buf[512];
 };
 
-PageLayout::PageLayout() : currPage(NULL), gfx(NULL)
+PageLayout::PageLayout(FontCache *fontCache) : currPage(NULL),
+    bmp(1, 1, PixelFormat32bppARGB), gfx(&bmp), fontCache(fontCache)
 {
 }
 
@@ -209,13 +239,12 @@ PageLayout::~PageLayout()
 {
     delete currPage;
     delete htmlParser;
-    mui::FreeGraphicsForMeasureText(gfx);
 }
 
 void PageLayout::SetCurrentFont(FontStyle fs)
 {
     currFontStyle = fs;
-    currFont = mui::GetCachedFont(fontName.Get(), fontSize, fs);
+    currFont = fontCache->GetFont(fontName.Get(), fontSize, fs);
 }
 
 static bool ValidFontStyleForChangeFont(FontStyle fs)
@@ -255,8 +284,6 @@ void PageLayout::StartLayout(LayoutInfo* layoutInfo)
     pageDx = (REAL)layoutInfo->pageDx;
     pageDy = (REAL)layoutInfo->pageDy;
 
-    CrashIf(gfx);
-    gfx = mui::AllocGraphicsForMeasureText();
     fontName.Set(str::Dup(layoutInfo->fontName));
     fontSize = layoutInfo->fontSize;
     htmlParser = new HtmlPullParser(layoutInfo->htmlStr, layoutInfo->htmlStrLen);
@@ -266,12 +293,24 @@ void PageLayout::StartLayout(LayoutInfo* layoutInfo)
     SetCurrentFont(FontStyleRegular);
 
     CrashIf(currPage);
-    lineSpacing = currFont->GetHeight(gfx);
+    lineSpacing = currFont->GetHeight(&gfx);
     // note: this is heuristic that seems to work better than
     //  GetSpaceDx(gfx, currFont) (which seems way too big and is
     // bigger than what Kindle app uses)
     spaceDx = fontSize / 2.5f;
     StartNewPage();
+}
+
+void PageLayout::EndLayout(Vec<PageData*>& pages)
+{
+    while (pages.Count() > 0) {
+        PageData *pd = pages.At(0);
+        if (pd && pageObserver)
+            pageObserver->NewPage(pd);
+        else
+            delete pd;
+        pages.RemoveAt(0);
+    }
 }
 
 void PageLayout::StartNewPage()
@@ -477,7 +516,7 @@ void PageLayout::AddWord(WordInfo *wi)
     // that will packaged with pages information
 
     size_t strLen = str::Utf8ToWcharBuf(wi->s, wi->len, buf, dimof(buf));
-    bbox = MeasureText(gfx, currFont, buf, strLen);
+    bbox = MeasureText(&gfx, currFont, buf, strLen);
     // TODO: handle a case where a single word is bigger than the whole
     // line, in which case it must be split into multiple lines
     REAL dx = bbox.Width;
@@ -489,55 +528,6 @@ void PageLayout::AddWord(WordInfo *wi)
     currPage->Append(DrawInstr::Str(wi->s, wi->len, bbox));
     currX += (dx + spaceDx);
 }
-
-#if 0
-// How layout works:
-// * measure the strings
-// * remember a line's worth of widths
-// * when we fill a line we calculate the position of strings in
-//   a line for a given justification setting (left, right, center, both)
-Vec<Page*> *PageLayout::LayoutText(Graphics *graphics, Font *defaultFnt, const char *s)
-{
-    gfx = graphics;
-    defaultFont = defaultFnt;
-    currFont = defaultFnt;
-    StartLayout();
-    WordsIter iter(s);
-    for (;;) {
-        WordInfo *wi = iter.Next();
-        if (NULL == wi)
-            break;
-        AddWord(wi);
-    }
-    StartNewLine(true);
-    RemoveLastPageIfEmpty();
-    Vec<Page*> *ret = pages;
-    pages = NULL;
-    return ret;
-}
-#endif
-
-#if 0
-void DumpAttr(uint8 *s, size_t sLen)
-{
-    static Vec<char *> seen;
-    char *sCopy = str::DupN((char*)s, sLen);
-    bool didSee = false;
-    for (size_t i = 0; i < seen.Count(); i++) {
-        char *tmp = seen.At(i);
-        if (str::EqI(sCopy, tmp)) {
-            didSee = true;
-            break;
-        }
-    }
-    if (didSee) {
-        free(sCopy);
-        return;
-    }
-    seen.Append(sCopy);
-    printf("%s\n", sCopy);
-}
-#endif
 
 // tags that I want to explicitly ignore and not define
 // HtmlTag enums for them
@@ -681,23 +671,21 @@ PageData *PageLayout::Next()
     return NULL;
 }
 
-Vec<PageData*> *LayoutHtml(LayoutInfo* li)
+void LayoutHtml(LayoutInfo* li, FontCache *fontCache)
 {
-    Vec<PageData*> *pages = new Vec<PageData*>();
-    PageLayout l;
+    PageLayout l(fontCache);
     l.StartLayout(li);
+    Vec<PageData*> pages;
     PageData *pd;
-    for (;;) {
-        pd = l.Next();
-        if (!pd)
-            break;
-        pages->Append(pd);
-    }
-    return pages;
+    while ((pd = l.Next()))
+        pages.Append(pd);
+    l.EndLayout(pages);
 }
 
 void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox)
 {
+    InitGraphicsMode(g);
+
     StringFormat sf(StringFormat::GenericTypographic());
     SolidBrush br(Color(0,0,0));
     SolidBrush br2(Color(255, 255, 255, 255));

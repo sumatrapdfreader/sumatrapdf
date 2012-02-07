@@ -36,11 +36,7 @@ struct DrawInstr {
     RectF bbox; // common to most instructions
 
     DrawInstr() { }
-
-    DrawInstr(DrawInstrType t, RectF bbox = RectF()) :
-        type(t), bbox(bbox)
-    {
-    }
+    DrawInstr(DrawInstrType t, RectF bbox=RectF()) : type(t), bbox(bbox) { }
 
     static DrawInstr Str(const char *s, size_t len, RectF bbox) {
         DrawInstr di(InstrTypeString, bbox);
@@ -92,8 +88,7 @@ struct PageData {
 // must remember them as LayoutHtml doesn't retain them.
 class INewPageObserver {
 public:
-    virtual ~INewPageObserver() {
-    }
+    virtual ~INewPageObserver() { }
     virtual void NewPage(PageData *pageData) = 0;
 };
 
@@ -118,8 +113,29 @@ public:
     INewPageObserver *observer;
 };
 
-Vec<PageData*> *LayoutHtml(LayoutInfo* li);
+class FontCache {
+    struct Entry{
+        WCHAR *     name;
+        float       size;
+        FontStyle   style;
+        Font *      font;
 
+        bool operator==(Entry& other){
+            return size == other.size && style == other.style && str::Eq(name, other.name);
+        }
+    };
+
+    Vec<Entry> cache;
+
+public:
+    FontCache() { }
+    ~FontCache();
+
+    Font *GetFont(const WCHAR *name, float size, FontStyle style);
+};
+
+void LayoutHtml(LayoutInfo* li, FontCache *fontCache);
 void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox);
+void InitGraphicsMode(Graphics *g);
 
 #endif

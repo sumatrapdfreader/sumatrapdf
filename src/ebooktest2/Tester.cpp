@@ -4,19 +4,20 @@
 /* A driver for various tests. The idea is that instead of having a separate
    executable and related makefile additions for each test, we have one test
    driver which dispatches desired test based on cmd-line arguments.
-   Currently it only does one test: mobi file parsing. */
+   Currently it only does one test: ebook file parsing. */
 
 #include "BaseUtil.h"
 #include "Scoped.h"
+#include "FileUtil.h"
+#include "WinUtil.h"
 #include "DirIter.h"
+#include "CmdLineParser.h"
+#include "HtmlPullParser.h"
+
 #include "MobiDoc.h"
 #include "EpubDoc.h"
 #include "Fb2Doc.h"
-#include "FileUtil.h"
-#include "WinUtil.h"
 #include "PageLayout.h"
-#include "CmdLineParser.h"
-#include "Mui.h"
 
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
@@ -151,9 +152,11 @@ static void MobiLayout(const TCHAR *file)
     li.fontSize = 12;
     li.htmlStr = doc->GetBookHtmlData(li.htmlStrLen);
 
-    Vec<PageData *> *data = LayoutHtml(&li);
-    DeleteVecMembers(*data);
-    delete data;
+    InitAllCommonControls();
+    ScopedGdiPlus gdi;
+
+    FontCache fontCache;
+    LayoutHtml(&li, &fontCache);
 
     delete doc;
 }
@@ -177,22 +180,14 @@ int main(int argc, char **argv)
             return Usage();
         const TCHAR *arg = cmdLine.At(i);
         const TCHAR *param = cmdLine.At(i + 1);
-        if (str::Eq(arg, _T("-doc"))) {
+        if (str::Eq(arg, _T("-doc")))
             MobiTest(param);
-        }
-        else if (str::Eq(arg, _T("-layout"))) {
-            InitAllCommonControls();
-            ScopedGdiPlus gdi;
-            mui::Initialize();
+        else if (str::Eq(arg, _T("-layout")))
             MobiLayout(param);
-            mui::Destroy();
-        }
-        else if (str::Eq(arg, _T("-extractto"))) {
+        else if (str::Eq(arg, _T("-extractto")))
             gExtractDir = param;
-        }
-        else {
+        else
             return Usage();
-        }
     }
 
     return 0;
