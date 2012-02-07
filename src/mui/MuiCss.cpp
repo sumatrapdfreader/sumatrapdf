@@ -408,12 +408,11 @@ size_t Style::GetIdentity() const
 void Style::Set(Prop *prop)
 {
     CrashIf(!prop);
-    for (size_t i = 0; i < props.Count(); i++) {
-        Prop *p = props.At(i);
-        if (p->type == prop->type) {
-            if (!p->Eq(prop))
+    for (Prop **p = props.IterStart(); p; p = props.IterNext()) {
+        if ((*p)->type == prop->type) {
+            if (!prop->Eq(*p))
                 ++gen;
-            props.At(i) = prop;
+            *p = prop;
             return;
         }
     }
@@ -463,16 +462,13 @@ static bool SetPropIfFound(Prop *prop, PropToGet *props, size_t propsCount)
 
 void GetProps(Style *style, PropToGet *props, size_t propsCount)
 {
-    Prop *p;
-    Style *curr = style;
-    while (curr) {
-        for (size_t i = 0; i < curr->props.Count(); i++) {
-            p = curr->props.At(i);
-            bool didSet = SetPropIfFound(p, props, propsCount);
+    while (style) {
+        for (Prop **p = style->props.IterStart(); p; p = style->props.IterNext()) {
+            bool didSet = SetPropIfFound(*p, props, propsCount);
             if (didSet && FoundAllProps(props, propsCount))
                 return;
         }
-        curr = curr->GetInheritsFrom();
+        style = style->GetInheritsFrom();
     }
 }
 
@@ -515,12 +511,11 @@ Prop **CachePropsForStyle(Style *style1, Style *style2)
 
     ScopedMuiCritSec muiCs;
 
-    for (size_t i = 0; i < gStyleCache->Count(); i++) {
-        StyleCacheEntry e = gStyleCache->At(i);
-        if ((e.style1 == style1) && (e.style2 == style2)) {
-            if ((e.style1Id == GetStyleId(style1)) &&
-                (e.style2Id == GetStyleId(style2))) {
-                return e.props;
+    for (StyleCacheEntry *e = gStyleCache->IterStart(); e; e = gStyleCache->IterNext()) {
+        if ((e->style1 == style1) && (e->style2 == style2)) {
+            if ((e->style1Id == GetStyleId(style1)) &&
+                (e->style2Id == GetStyleId(style2))) {
+                return e->props;
             }
             // TODO: optimize by updating props in-place
             break;
