@@ -152,8 +152,6 @@
     <ClCompile Include="src\utils\WinUtil.cpp">
       <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="src\EpubDoc.cpp" />
-    <ClCompile Include="src\Fb2Doc.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ebooktest\EbookTestMenu.h" />
@@ -408,8 +406,6 @@
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="src\BaseEbookDoc.h" />
-    <ClInclude Include="src\EpubDoc.h" />
-    <ClInclude Include="src\Fb2Doc.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="src\ebooktest\EbookTest.rc" />

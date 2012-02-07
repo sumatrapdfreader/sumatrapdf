@@ -79,16 +79,21 @@ STATIC_ASSERT(8 == sizeof(uint64),  uint64_is_8_bytes);
 
 void CrashMe(); // in StrUtil.cpp
 
-// CrashIf() is like assert() except it crashes in debug and pre-release builds
+// CrashIf() is like assert() except it crashes in debug and pre-release builds.
 // The idea is that assert() indicates "can't possibly happen" situation and if
 // it does happen, we would like to fix the underlying cause.
 // In practice in our testing we rarely get notified when an assert() is triggered
 // and they are disabled in builds running on user's computers.
 // Now that we have crash reporting, we can get notified about such cases if we
 // use CrashIf() instead of assert(), which we should be doing from now on.
-// Conservatively I only enable it for debug and pre-release builds although
-// I would be fine with enabling it all builds.
-// To crash uncoditionally, there is CrashAlwaysIf()
+//
+// Enabling it in pre-release builds but not in release builds is trade-off between
+// shipping small executables (each CrashIf() adds few bytes of code) and having
+// more testing on user's machines and not only in our personal testing.
+// To crash uncoditionally use CrashAlwaysIf(). It should only be used in
+// rare cases where we really want to know a given condition happens. Before
+// each release we should audit the uses of CrashAlawysIf()
+//
 // Just as with assert(), the condition is not guaranteed to be executed
 // in some builds, so it shouldn't contain the actual logic of the code
 #if defined(SVN_PRE_RELEASE_VER) || defined(DEBUG)

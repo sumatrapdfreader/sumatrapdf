@@ -102,8 +102,6 @@
     <ClCompile Include="ext\chrome\base\win\wrapped_window_proc.cc" />
     <ClCompile Include="src\ebooktest\EbookTest.cpp" />
     <ClCompile Include="src\ebooktest\EbookTestMenu.cpp" />
-    <ClCompile Include="src\EpubDoc.cpp" />
-    <ClCompile Include="src\Fb2Doc.cpp" />
     <ClCompile Include="src\MobiDoc.cpp" />
     <ClCompile Include="src\mui\Mui.cpp" />
     <ClCompile Include="src\mui\MuiBase.cpp" />
@@ -183,8 +181,6 @@
     <ClInclude Include="src\BaseEbookDoc.h" />
     <ClInclude Include="src\ebooktest\EbookTestMenu.h" />
     <ClInclude Include="src\ebooktest\Resource.h" />
-    <ClInclude Include="src\EpubDoc.h" />
-    <ClInclude Include="src\Fb2Doc.h" />
     <ClInclude Include="src\installer\Version.h" />
     <ClInclude Include="src\MobiDoc.h" />
     <ClInclude Include="src\mui\Mui.h" />
