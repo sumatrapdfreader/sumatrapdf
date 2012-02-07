@@ -107,8 +107,7 @@ struct Pages {
 
 class ControlEbook
     : public HwndWrapper,
-      public IClickHandler,
-      public INewPageObserver
+      public IClickHandler
 {
     static const int CircleR = 10;
 
@@ -168,9 +167,6 @@ public:
 
     void DeletePages();
     void DeleteNewPages();
-
-    // INewPageObserver
-    virtual void NewPage(PageData *pageData);
 
     void NewPageUIThread(PageData *pageData);
     void PageLayoutFinished();
@@ -374,6 +370,8 @@ ControlEbook::ControlEbook(HWND hwnd)
     // special case for classes that derive from HwndWrapper
     // as they don't call this from SetParent() (like other Control derivatives)
     RegisterEventHandlers(evtMgr);
+
+    SetStatusText();
 }
 
 ControlEbook::~ControlEbook()
@@ -426,7 +424,7 @@ void ControlEbook::DeleteNewPages()
 void ControlEbook::SetStatusText() const
 {
     if (!pages) {
-        status->SetText(_T(""));
+        status->SetText(_T(" "));
         horizProgress->SetFilled(0.f);
         return;
     }
@@ -492,12 +490,14 @@ void ControlEbook::NewPageUIThread(PageData *pageData)
 #endif
 }
 
+#if 0
 // called on a background thread
 void ControlEbook::NewPage(PageData *pageData)
 {
     gMessageLoopUI->PostDelayedTask(base::Bind(&ControlEbook::NewPageUIThread,
                                         base::Unretained(this), pageData), 100);
 }
+#endif
 
 // called on a background thread
 void ControlEbook::PageLayoutBackground(LayoutInfo *li)
@@ -538,7 +538,6 @@ void ControlEbook::PageLayout(int dx, int dy)
     li->htmlStrLen = len;
     li->pageDx = dx;
     li->pageDy = dy;
-    li->observer = this;
 #if 0
     pageLayoutThread = new base::Thread("ControlEbook::PageLayoutBackground");
     pageLayoutThread->Start();

@@ -88,21 +88,12 @@ struct PageData {
     }
 };
 
-// Called by LayoutHtml with instructions for each page. Caller
-// must remember them as LayoutHtml doesn't retain them.
-class INewPageObserver {
-public:
-    virtual ~INewPageObserver() {
-    }
-    virtual void NewPage(PageData *pageData) = 0;
-};
-
 // just to pack args to LayoutHtml
 class LayoutInfo {
 public:
     LayoutInfo() :
       pageDx(0), pageDy(0), fontName(NULL), fontSize(0),
-      htmlStr(0), htmlStrLen(0), observer(NULL)
+      htmlStr(0), htmlStrLen(0)
     {
     }
 
@@ -114,8 +105,6 @@ public:
 
     const char *    htmlStr;
     size_t          htmlStrLen;
-
-    INewPageObserver *observer;
 };
 
 Vec<PageData*> *LayoutHtml(LayoutInfo* li);

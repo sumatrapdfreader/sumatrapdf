@@ -172,7 +172,6 @@ private:
     }
 
     // constant during layout process
-    INewPageObserver *  pageObserver;
     REAL                pageDx;
     REAL                pageDy;
     REAL                lineSpacing;
@@ -254,7 +253,6 @@ void PageLayout::ChangeFont(FontStyle fs, bool addStyle)
 
 void PageLayout::StartLayout(LayoutInfo* layoutInfo)
 {
-    pageObserver = layoutInfo->observer;
     pageDx = (REAL)layoutInfo->pageDx;
     pageDy = (REAL)layoutInfo->pageDy;
 
@@ -279,9 +277,6 @@ void PageLayout::StartLayout(LayoutInfo* layoutInfo)
 
 void PageLayout::StartNewPage()
 {
-    if (currPage && pageObserver)
-        pageObserver->NewPage(currPage);
-
     currPage = new PageData;
     currX = currY = 0;
     newLinesCount = 0;
