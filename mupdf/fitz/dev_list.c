@@ -591,7 +591,7 @@ fz_free_display_list(fz_context *ctx, fz_display_list *list)
 }
 
 void
-fz_execute_display_list(fz_display_list *list, fz_device *dev, fz_matrix top_ctm, fz_bbox scissor, fz_cookie *cookie)
+fz_run_display_list(fz_display_list *list, fz_device *dev, fz_matrix top_ctm, fz_bbox scissor, fz_cookie *cookie)
 {
 	fz_display_node *node;
 	fz_matrix ctm;

@@ -1485,7 +1485,7 @@ PdfPageRun *PdfEngineImpl::CreatePageRun(pdf_page *page, fz_display_list *list)
     fz_var(dev);
     fz_try(ctx) {
         dev = fz_new_inspection_device(ctx, &data);
-        fz_execute_display_list(list, dev, fz_identity, fz_infinite_bbox, NULL);
+        fz_run_display_list(list, dev, fz_identity, fz_infinite_bbox, NULL);
     }
     fz_catch(ctx) { }
     fz_free_device(dev);
@@ -1575,7 +1575,7 @@ bool PdfEngineImpl::RunPage(pdf_page *page, fz_device *dev, fz_matrix ctm, Rende
     if (Target_View == target && (run = GetPageRun(page, !cacheRun))) {
         EnterCriticalSection(&ctxAccess);
         fz_try(ctx) {
-            fz_execute_display_list(run->list, dev, ctm, clipbox, NULL);
+            fz_run_display_list(run->list, dev, ctm, clipbox, NULL);
         }
         fz_catch(ctx) {
             ok = false;
@@ -1795,7 +1795,7 @@ RenderedBitmap *PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
     EnterCriticalSection(&ctxAccess);
     fz_try(ctx) {
         image = fz_new_pixmap_with_rect(ctx, fz_find_device_colorspace("DeviceRGB"), bbox);
-        fz_clear_pixmap_with_color(ctx, image, 0xFF); // initialize white background
+        fz_clear_pixmap_with_value(ctx, image, 0xFF); // initialize white background
     }
     fz_catch(ctx) {
         LeaveCriticalSection(&ctxAccess);
@@ -2750,7 +2750,7 @@ XpsPageRun *XpsEngineImpl::CreatePageRun(xps_page *page, fz_display_list *list)
     fz_var(dev);
     fz_try(ctx) {
         dev = fz_new_inspection_device(ctx, &data);
-        fz_execute_display_list(list, dev, fz_identity, fz_infinite_bbox, NULL);
+        fz_run_display_list(list, dev, fz_identity, fz_infinite_bbox, NULL);
     }
     fz_catch(ctx) { }
     fz_free_device(dev);
@@ -2840,7 +2840,7 @@ bool XpsEngineImpl::RunPage(xps_page *page, fz_device *dev, fz_matrix ctm, fz_bb
     if (run) {
         EnterCriticalSection(&ctxAccess);
         fz_try(ctx) {
-            fz_execute_display_list(run->list, dev, ctm, clipbox, NULL);
+            fz_run_display_list(run->list, dev, ctm, clipbox, NULL);
         }
         fz_catch(ctx) {
             ok = false;
@@ -3029,7 +3029,7 @@ RenderedBitmap *XpsEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
     EnterCriticalSection(&ctxAccess);
     fz_try(ctx) {
         image = fz_new_pixmap_with_rect(ctx, fz_find_device_colorspace("DeviceRGB"), bbox);
-        fz_clear_pixmap_with_color(ctx, image, 0xFF); // initialize white background
+        fz_clear_pixmap_with_value(ctx, image, 0xFF); // initialize white background
     }
     fz_catch(ctx) {
         LeaveCriticalSection(&ctxAccess);

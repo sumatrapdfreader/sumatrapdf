@@ -128,7 +128,7 @@ static void drawbmp(pdf_document *xref, pdf_page *page, fz_display_list *list, i
 
 	dev = fz_new_gdiplus_device(xref->ctx, hDC, bbox);
 	if (list)
-		fz_execute_display_list(list, dev, ctm, bbox, NULL);
+		fz_run_display_list(list, dev, ctm, bbox, NULL);
 	else
 		pdf_run_page(xref, page, dev, ctm, NULL);
 	fz_free_device(dev);
@@ -241,7 +241,7 @@ static void drawpage(pdf_document *doc, int pagenum)
 			dev = fz_new_trace_device(ctx);
 			printf("<page number=\"%d\">\n", pagenum);
 			if (list)
-				fz_execute_display_list(list, dev, fz_identity, fz_infinite_bbox, NULL);
+				fz_run_display_list(list, dev, fz_identity, fz_infinite_bbox, NULL);
 			else
 				pdf_run_page(doc, page, dev, fz_identity, NULL);
 			printf("</page>\n");
@@ -268,7 +268,7 @@ static void drawpage(pdf_document *doc, int pagenum)
 			text = fz_new_text_span(ctx);
 			dev = fz_new_text_device(ctx, text);
 			if (list)
-				fz_execute_display_list(list, dev, fz_identity, fz_infinite_bbox, NULL);
+				fz_run_display_list(list, dev, fz_identity, fz_infinite_bbox, NULL);
 			else
 				pdf_run_page(doc, page, dev, fz_identity, NULL);
 			fz_free_device(dev);
@@ -324,11 +324,11 @@ static void drawpage(pdf_document *doc, int pagenum)
 			if (savealpha)
 				fz_clear_pixmap(ctx, pix);
 			else
-				fz_clear_pixmap_with_color(ctx, pix, 255);
+				fz_clear_pixmap_with_value(ctx, pix, 255);
 
 			dev = fz_new_draw_device(ctx, pix);
 			if (list)
-				fz_execute_display_list(list, dev, ctm, bbox, NULL);
+				fz_run_display_list(list, dev, ctm, bbox, NULL);
 			else
 				pdf_run_page(doc, page, dev, ctm, NULL);
 			fz_free_device(dev);

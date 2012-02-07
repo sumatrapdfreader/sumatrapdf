@@ -120,7 +120,7 @@ fz_clear_pixmap(fz_context *ctx, fz_pixmap *pix)
 }
 
 void
-fz_clear_pixmap_with_color(fz_context *ctx, fz_pixmap *pix, int value)
+fz_clear_pixmap_with_value(fz_context *ctx, fz_pixmap *pix, int value)
 {
 	if (value == 255)
 		memset(pix->samples, 255, pix->w * pix->h * pix->n);
@@ -169,7 +169,7 @@ fz_copy_pixmap_rect(fz_context *ctx, fz_pixmap *dest, fz_pixmap *src, fz_bbox r)
 }
 
 void
-fz_clear_pixmap_rect_with_color(fz_context *ctx, fz_pixmap *dest, int value, fz_bbox r)
+fz_clear_pixmap_rect_with_value(fz_context *ctx, fz_pixmap *dest, int value, fz_bbox r)
 {
 	unsigned char *destp;
 	int x, y, w, k, destspan;

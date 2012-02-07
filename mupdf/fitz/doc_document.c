@@ -1,5 +1,42 @@
 #include "fitz.h"
 
+/* Yuck! Promiscuous we are. */
+extern struct pdf_document *pdf_open_document(fz_context *ctx, char *filename);
+extern struct xps_document *xps_open_document(fz_context *ctx, char *filename);
+extern struct cbz_document *cbz_open_document(fz_context *ctx, char *filename);
+
+static inline int fz_tolower(int c)
+{
+	if (c >= 'A' && c <= 'Z')
+		return c + 32;
+	return c;
+}
+
+static inline int fz_strcasecmp(char *a, char *b)
+{
+	while (fz_tolower(*a) == fz_tolower(*b))
+	{
+		if (*a++ == 0)
+			return 0;
+		b++;
+	}
+	return fz_tolower(*a) - fz_tolower(*b);
+}
+
+fz_document *
+fz_open_document(fz_context *ctx, char *filename)
+{
+	char *ext = strrchr(filename, '.');
+	if (ext && !fz_strcasecmp(ext, ".pdf"))
+		return (fz_document*) pdf_open_document(ctx, filename);
+	if (ext && !fz_strcasecmp(ext, ".xps"))
+		return (fz_document*) xps_open_document(ctx, filename);
+	if (ext && !fz_strcasecmp(ext, ".cbz"))
+		return (fz_document*) cbz_open_document(ctx, filename);
+	fz_throw(ctx, "unknown document type: '%s'", filename);
+	return NULL;
+}
+
 void
 fz_close_document(fz_document *doc)
 {

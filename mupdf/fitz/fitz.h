@@ -964,8 +964,8 @@ fz_pixmap *fz_keep_pixmap(fz_context *ctx, fz_pixmap *pix);
 void fz_drop_pixmap(fz_context *ctx, fz_pixmap *pix);
 void fz_free_pixmap_imp(fz_context *ctx, fz_storable *pix);
 void fz_clear_pixmap(fz_context *ctx, fz_pixmap *pix);
-void fz_clear_pixmap_with_color(fz_context *ctx, fz_pixmap *pix, int value);
-void fz_clear_pixmap_rect_with_color(fz_context *ctx, fz_pixmap *pix, int value, fz_bbox r);
+void fz_clear_pixmap_with_value(fz_context *ctx, fz_pixmap *pix, int value);
+void fz_clear_pixmap_rect_with_value(fz_context *ctx, fz_pixmap *pix, int value, fz_bbox r);
 void fz_copy_pixmap_rect(fz_context *ctx, fz_pixmap *dest, fz_pixmap *src, fz_bbox r);
 void fz_premultiply_pixmap(fz_context *ctx, fz_pixmap *pix);
 void fz_unmultiply_pixmap(fz_context *ctx, fz_pixmap *pix);
@@ -1469,7 +1469,7 @@ typedef struct fz_display_list_s fz_display_list;
 fz_display_list *fz_new_display_list(fz_context *ctx);
 void fz_free_display_list(fz_context *ctx, fz_display_list *list);
 fz_device *fz_new_list_device(fz_context *ctx, fz_display_list *list);
-void fz_execute_display_list(fz_display_list *list, fz_device *dev, fz_matrix ctm, fz_bbox area, fz_cookie *cookie);
+void fz_run_display_list(fz_display_list *list, fz_device *dev, fz_matrix ctm, fz_bbox area, fz_cookie *cookie);
 
 /*
  * Plotting functions.

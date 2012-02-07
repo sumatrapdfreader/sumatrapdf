@@ -805,7 +805,7 @@ fz_draw_fill_shade(fz_device *devp, fz_shade *shade, fz_matrix ctm, float alpha)
 
 	fz_paint_shade(dev->ctx, shade, ctm, dest, bbox);
 	if (shape)
-		fz_clear_pixmap_rect_with_color(dev->ctx, shape, 255, bbox);
+		fz_clear_pixmap_rect_with_value(dev->ctx, shape, 255, bbox);
 
 	if (alpha < 1)
 	{
@@ -1199,9 +1199,9 @@ fz_draw_begin_mask(fz_device *devp, fz_rect rect, int luminosity, fz_colorspace 
 		if (!colorspace)
 			colorspace = fz_device_gray;
 		fz_convert_color(dev->ctx, colorspace, colorfv, fz_device_gray, &bc);
-		fz_clear_pixmap_with_color(dev->ctx, dest, bc * 255);
+		fz_clear_pixmap_with_value(dev->ctx, dest, bc * 255);
 		if (shape)
-			fz_clear_pixmap_with_color(dev->ctx, shape, 255);
+			fz_clear_pixmap_with_value(dev->ctx, shape, 255);
 	}
 	else
 	{

@@ -195,10 +195,10 @@ Java_com_artifex_mupdf_MuPDFCore_drawPage(JNIEnv *env, jobject thiz, jobject bit
 		pix = fz_new_pixmap_with_rect_and_data(ctx, colorspace, rect, pixels);
 		if (currentPageList == NULL)
 		{
-			fz_clear_pixmap_with_color(pix, 0xd0);
+			fz_clear_pixmap_with_value(pix, 0xd0);
 			break;
 		}
-		fz_clear_pixmap_with_color(pix, 0xff);
+		fz_clear_pixmap_with_value(pix, 0xff);
 
 		zoom = resolution / 72;
 		ctm = fz_scale(zoom, zoom);
@@ -219,7 +219,7 @@ Java_com_artifex_mupdf_MuPDFCore_drawPage(JNIEnv *env, jobject thiz, jobject bit
 			time = clock();
 			for (i=0; i<100;i++) {
 #endif
-				fz_execute_display_list(currentPageList, dev, ctm, bbox, NULL);
+				fz_run_display_list(currentPageList, dev, ctm, bbox, NULL);
 #ifdef TIME_DISPLAY_LIST
 			}
 			time = clock() - time;

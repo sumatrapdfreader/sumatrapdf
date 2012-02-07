@@ -119,5 +119,5 @@ fz_clone_context(fz_context *ctx)
 
 	new_ctx = new_context_phase1(ctx->alloc);
 	new_ctx->store = fz_store_keep(ctx);
-	return ctx;
+	return new_ctx;
 }

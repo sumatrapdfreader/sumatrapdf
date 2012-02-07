@@ -190,8 +190,8 @@ EXPORTS
 	fz_drop_pixmap
 	fz_free_pixmap_imp
 	fz_clear_pixmap
-	fz_clear_pixmap_with_color
-	fz_clear_pixmap_rect_with_color
+	fz_clear_pixmap_with_value
+	fz_clear_pixmap_rect_with_value
 	fz_copy_pixmap_rect
 	fz_premultiply_pixmap
 	fz_unmultiply_pixmap
@@ -316,7 +316,7 @@ EXPORTS
 	fz_new_display_list
 	fz_free_display_list
 	fz_new_list_device
-	fz_execute_display_list
+	fz_run_display_list
 	fz_accelerate
 	fz_decode_tile
 	fz_decode_indexed_tile

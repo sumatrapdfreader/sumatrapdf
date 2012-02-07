@@ -292,7 +292,7 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 		/* Extract text */
 		app->page_text = fz_new_text_span(app->ctx);
 		tdev = fz_new_text_device(app->ctx, app->page_text);
-		fz_execute_display_list(app->page_list, tdev, fz_identity, fz_infinite_bbox, NULL);
+		fz_run_display_list(app->page_list, tdev, fz_identity, fz_infinite_bbox, NULL);
 		fz_free_device(tdev);
 	}
 
@@ -317,9 +317,9 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 			colorspace = fz_device_rgb;
 #endif
 		app->image = fz_new_pixmap_with_rect(app->ctx, colorspace, bbox);
-		fz_clear_pixmap_with_color(app->ctx, app->image, 255);
+		fz_clear_pixmap_with_value(app->ctx, app->image, 255);
 		idev = fz_new_draw_device(app->ctx, app->image);
-		fz_execute_display_list(app->page_list, idev, ctm, bbox, NULL);
+		fz_run_display_list(app->page_list, idev, ctm, bbox, NULL);
 		fz_free_device(idev);
 	}
 
