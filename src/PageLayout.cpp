@@ -214,8 +214,8 @@ PageLayout::PageLayout() : currPage(NULL), gfx(NULL)
 
 PageLayout::~PageLayout()
 {
+    CrashIf(currPage);
     delete htmlParser;
-    delete currPage;
     mui::FreeGraphicsForMeasureText(gfx);
 }
 
@@ -283,7 +283,6 @@ PageData *PageLayout::IterStart(LayoutInfo* layoutInfo)
 
 void PageLayout::StartNewPage()
 {
-    delete currPage;
     currPage = new PageData;
     currX = currY = 0;
     newLinesCount = 0;
@@ -693,11 +692,17 @@ PageData *PageLayout::IterNext()
     finishedParsing = true;
 
     // only send the last page if not empty
-    if (currPage && currPage->Count() > 0) {
-        pagesToSend.Append(currPage);
-        currPage = NULL;
-        return IterNext();
+    if (currPage) {
+        if (currPage->Count() > 0) {
+            pagesToSend.Append(currPage);
+            currPage = NULL;
+            return IterNext();
+        } else {
+            delete currPage;
+            currPage = NULL;
+        }
     }
+
     return NULL;
 }
 

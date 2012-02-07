@@ -406,7 +406,8 @@ void ControlEbook::DeletePages()
 {
     if (!pages)
         return;
-    DeleteVecMembers<PageData*>(*pages);
+    //TODO: why *pages contains ControlEbook object?
+    //DeleteVecMembers<PageData*>(*pages);
     delete pages;
     pages = NULL;
 }
@@ -943,7 +944,6 @@ static int RunApp()
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     int ret = 1;
-    bool destroyed = false;
     LogProcessRunningTime();
 
 #ifdef DEBUG
@@ -977,14 +977,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     MessageLoopForUI::current()->RunWithDispatcher(NULL);
     // ret = RunApp();
-    mui::Destroy();
-    destroyed = true;
 
-    // TODO: why the hell does that terminate the program?
     delete gControlFrame;
 
 Exit:
-    if (!destroyed)
-        mui::Destroy();
+    mui::Destroy();
     return ret;
 }
