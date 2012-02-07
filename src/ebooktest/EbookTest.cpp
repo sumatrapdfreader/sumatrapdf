@@ -943,6 +943,7 @@ static int RunApp()
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     int ret = 1;
+    bool destroyed = false;
     LogProcessRunningTime();
 
 #ifdef DEBUG
@@ -976,10 +977,14 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     MessageLoopForUI::current()->RunWithDispatcher(NULL);
     // ret = RunApp();
+    mui::Destroy();
+    destroyed = true;
 
+    // TODO: why the hell does that terminate the program?
     delete gControlFrame;
 
 Exit:
-    mui::Destroy();
+    if (!destroyed)
+        mui::Destroy();
     return ret;
 }
