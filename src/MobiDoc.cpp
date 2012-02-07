@@ -23,7 +23,7 @@ class HuffDicDecompressor;
 #pragma pack(1)
 struct PdbHeader
 {
-     /* 31 chars + 1 null terminator */
+    /* 31 chars + 1 null terminator */
     char        name[kDBNameLength];
     uint16      attributes;
     uint16      version;
@@ -845,24 +845,22 @@ static uint32 GetUpToFour(uint8*& s, size_t& len)
     return v;
 }
 
-inline bool IsEofRecord(char *data, size_t len)
+static bool IsEofRecord(uint8 *data, size_t dataLen)
 {
-    uint8 *data2 = (uint8 *)data;
-    return (4 == len) && (EOF_REC == GetUpToFour(data2, len));
+    return (4 == dataLen) && (EOF_REC == GetUpToFour(data, dataLen));
 }
 
-static bool KnownNonImageRec(char *data, size_t len)
+static bool KnownNonImageRec(uint8 *data, size_t dataLen)
 {
-    uint8 *data2 = (uint8 *)data;
-    uint32 sig = GetUpToFour(data2, len);
+    uint32 sig = GetUpToFour(data, dataLen);
 
-    switch (sig) {
-    case FLIS_REC: case FCIS_REC: case FDST_REC:
-    case DATP_REC: case SRCS_REC: case VIDE_REC:
-        return true;
-    default:
-        return false;
-    }
+    if (FLIS_REC == sig) return true;
+    if (FCIS_REC == sig) return true;
+    if (FDST_REC == sig) return true;
+    if (DATP_REC == sig) return true;
+    if (SRCS_REC == sig) return true;
+    if (VIDE_REC == sig) return true;
+    return false;
 }
 
 static bool KnownImageFormat(ImageData& data)
@@ -882,9 +880,9 @@ bool MobiDocImpl::LoadImage(size_t imageNo)
         images.Append(imgData);
         return true;
     }
-    if (IsEofRecord(data, len))
+    if (IsEofRecord((uint8 *)data, len))
         return false;
-    if (KnownNonImageRec(data, len)) {
+    if (KnownNonImageRec((uint8 *)data, len)) {
         data[5] = 0; // TODO: ???
         images.Append(imgData);
         return true;
