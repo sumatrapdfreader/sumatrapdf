@@ -46,7 +46,8 @@ class ControlEbook :  public INewPageObserver {
 
 public:
 
-    ControlEbook(HWND hwnd) : hwnd(hwnd), doc(NULL), currPageNo(1), showBboxes(false) {
+    ControlEbook(HWND hwnd) : hwnd(hwnd), doc(NULL),
+        currPageNo(1), showBboxes(false) {
     }
     virtual ~ControlEbook() {
         DeletePages();
@@ -83,6 +84,9 @@ void ControlEbook::GoToPage(int newPageNo)
     currPageNo = newPageNo;
     Repaint();
 
+    if (!doc)
+        return;
+
     ScopedMem<TCHAR> s(str::Format(_T("Page %d out of %d"), currPageNo, (int)pages.Count()));
     SetStatusText(s);
 }
@@ -109,8 +113,9 @@ void ControlEbook::PageLayout(SizeI dim)
     }
     li.fontName = FONT_NAME;
     li.fontSize = FONT_SIZE;
-    li.pageDx = dim.dx - 2 * PAGE_BORDER;
-    li.pageDy = dim.dy - 2 * PAGE_BORDER;
+    li.pageSize = dim;
+    li.pageSize.dx -= 2 * PAGE_BORDER;
+    li.pageSize.dy -= 2 * PAGE_BORDER;
     li.observer = this;
 
     DeletePages();
@@ -156,8 +161,7 @@ void ControlEbook::OnPaint()
         if (currPageNo > (int)pages.Count())
             currPageNo = pages.Count();
         PageData *pageData = pages.At(currPageNo - 1);
-        DrawPageLayout(&Graphics(buf.GetDC()), &pageData->drawInstructions,
-            PAGE_BORDER, PAGE_BORDER, showBboxes);
+        DrawPageLayout(&Graphics(buf.GetDC()), pageData, PAGE_BORDER, PAGE_BORDER, showBboxes);
     }
 
     PAINTSTRUCT ps;

@@ -45,78 +45,37 @@ Font *FontCache::GetFont(const WCHAR *name, float size, FontStyle style)
 struct WordInfo {
     const char *s;
     size_t len;
-    bool IsNewline() {
-        return ((len == 1) && (s[0] == '\n'));
-    }
+
+    bool IsNewline() { return len == 1 && *s == '\n'; }
 };
 
 class WordsIter {
-public:
-    WordsIter(const char *s) : s(s) {
-        Reset();
-    }
-
-    void Reset() {
-        curr = s;
-        len = strlen(s);
-        left = len;
-    }
-
-    WordInfo *Next();
-
-private:
-    WordInfo wi;
-
-    static const char *NewLineStr;
     const char *s;
-    size_t len;
-
+    const char *end;
+    // modified during the iteration
+    WordInfo wi;
     const char *curr;
-    size_t left;
+
+public:
+    WordsIter(const char *s) : s(s), end(s + str::Len(s)), curr(s) { }
+
+    void Reset() { curr = s; }
+    WordInfo *Next();
 };
-
-const char *WordsIter::NewLineStr = "\n";
-
-static void SkipCharInStr(const char *& s, size_t& left, char c)
-{
-    while ((left > 0) && (*s == c)) {
-        ++s; --left;
-    }
-}
-
-static bool IsWordBreak(char c)
-{
-    return (c == ' ') || (c == '\n') || (c == '\r');
-}
-
-static void SkipNonWordBreak(const char *& s, size_t& left)
-{
-    while ((left > 0) && !IsWordBreak(*s)) {
-        ++s; --left;
-    }
-}
 
 // return true if s points to "\n", "\r" or "\r\n"
 // and advance s/left to skip it
 // We don't want to collapse multiple consequitive newlines into
 // one as we want to be able to detect paragraph breaks (i.e. empty
 // newlines i.e. a newline following another newline)
-static bool IsNewlineSkip(const char *& s, size_t& left)
+static bool IsNewlineSkip(const char *& s, const char *end)
 {
-    if (0 == left)
-        return false;
-    if ('\r' == *s) {
-        --left; ++s;
-        if ((left > 0) && ('\n' == *s)) {
-            --left; ++s;
-        }
-        return true;
-    }
-    if ('\n' == *s) {
-        --left; ++s;
-        return true;
-    }
-    return false;
+    const char *os = s;
+    if (s < end && '\r' == *s)
+        s++;
+    if (s < end && '\n' == *s)
+        s++;
+    return s != os;
 }
 
 // iterates words in a string e.g. "foo bar\n" returns "foo", "bar" and "\n"
@@ -124,17 +83,19 @@ static bool IsNewlineSkip(const char *& s, size_t& left)
 // returning NULL means end of iterations
 WordInfo *WordsIter::Next()
 {
-    SkipCharInStr(curr, left, ' ');
-    if (0 == left)
+    while (curr < end && *curr == ' ')
+        curr++;
+    if (curr == end)
         return NULL;
     assert(*curr != 0);
-    if (IsNewlineSkip(curr, left)) {
+    if (IsNewlineSkip(curr, end)) {
         wi.len = 1;
-        wi.s = NewLineStr;
+        wi.s = "\n";
         return &wi;
     }
     wi.s = curr;
-    SkipNonWordBreak(curr, left);
+    while (curr < end && !isspace(*curr))
+        curr++;
     wi.len = curr - wi.s;
     assert(wi.len > 0);
     return &wi;
@@ -142,10 +103,6 @@ WordInfo *WordsIter::Next()
 
 class PageLayout
 {
-    enum TextJustification {
-        Left, Right, Center, Both
-    };
-
 public:
     PageLayout(FontCache *fontCache);
     ~PageLayout();
@@ -161,13 +118,8 @@ private:
 
     REAL GetCurrentLineDx();
     void LayoutLeftStartingAt(REAL offX);
-    void JustifyLineLeft();
-    void JustifyLineRight();
-    void JustifyLineCenter();
     void JustifyLineBoth();
-    void JustifyLine(TextJustification mode);
-
-    TextJustification AlignAttrToJustification(AlignAttr align);
+    void JustifyLine(AlignAttr mode);
 
     void StartNewPage();
     void StartNewLine(bool isParagraphBreak);
@@ -194,8 +146,7 @@ private:
     // constant during layout process
     INewPageObserver *  pageObserver;
     FontCache *         fontCache;
-    REAL                pageDx;
-    REAL                pageDy;
+    SizeT<REAL>         pageSize;
     REAL                lineSpacing;
     REAL                spaceDx;
     ScopedMem<WCHAR>    fontName;
@@ -209,9 +160,9 @@ private:
     FontStyle           currFontStyle;
     Font *              currFont;
 
-    TextJustification   currJustification;
+    AlignAttr           currJustification;
     // current position in a page
-    REAL                currX, currY;
+    PointT<REAL>        curr;
     // number of consecutive newlines
     int                 newLinesCount;
 
@@ -233,6 +184,7 @@ private:
 PageLayout::PageLayout(FontCache *fontCache) : currPage(NULL),
     bmp(1, 1, PixelFormat32bppARGB), gfx(&bmp), fontCache(fontCache)
 {
+    InitGraphicsMode(&gfx);
 }
 
 PageLayout::~PageLayout()
@@ -249,13 +201,13 @@ void PageLayout::SetCurrentFont(FontStyle fs)
 
 static bool ValidFontStyleForChangeFont(FontStyle fs)
 {
-    if ((FontStyleBold == fs) ||
-        (FontStyleItalic == fs) ||
-        (FontStyleUnderline == fs) ||
-        (FontStyleStrikeout == fs)) {
-            return true;
+    switch (fs) {
+    case FontStyleBold: case FontStyleItalic:
+    case FontStyleUnderline: case FontStyleStrikeout:
+        return true;
+    default:
+        return false;
     }
-    return false;
 }
 
 // change the current font by adding (if addStyle is true) or removing
@@ -281,15 +233,14 @@ void PageLayout::ChangeFont(FontStyle fs, bool addStyle)
 void PageLayout::StartLayout(LayoutInfo* layoutInfo)
 {
     pageObserver = layoutInfo->observer;
-    pageDx = (REAL)layoutInfo->pageDx;
-    pageDy = (REAL)layoutInfo->pageDy;
+    pageSize = layoutInfo->pageSize.Convert<REAL>();
 
     fontName.Set(str::Dup(layoutInfo->fontName));
     fontSize = layoutInfo->fontSize;
     htmlParser = new HtmlPullParser(layoutInfo->htmlStr, layoutInfo->htmlStrLen);
 
     finishedParsing = false;
-    currJustification = Both;
+    currJustification = Align_Justify;
     SetCurrentFont(FontStyleRegular);
 
     CrashIf(currPage);
@@ -315,14 +266,13 @@ void PageLayout::EndLayout(Vec<PageData*>& pages)
 
 void PageLayout::StartNewPage()
 {
-    // TODO: who owns currPage?
     if (currPage && pageObserver)
         pageObserver->NewPage(currPage);
     else
         delete currPage;
 
     currPage = new PageData;
-    currX = currY = 0;
+    curr.x = curr.y = 0;
     newLinesCount = 0;
     // instructions for each page need to be self-contained
     // so we have to carry over some state like the current font
@@ -350,35 +300,18 @@ REAL PageLayout::GetCurrentLineDx()
 
 void PageLayout::LayoutLeftStartingAt(REAL offX)
 {
-    currX = offX;
+    curr.x = offX;
     DrawInstr *end;
     DrawInstr *currInstr = GetInstructionsForCurrentLine(end);
     while (currInstr < end) {
         if (InstrTypeString == currInstr->type) {
             // currInstr Width and Height are already set
-            currInstr->bbox.X = currX;
-            currInstr->bbox.Y = currY;
-            currX += (currInstr->bbox.Width + spaceDx);
+            currInstr->bbox.X = curr.x;
+            currInstr->bbox.Y = curr.y;
+            curr.x += (currInstr->bbox.Width + spaceDx);
         }
         ++currInstr;
     }
-}
-
-void PageLayout::JustifyLineLeft()
-{
-    LayoutLeftStartingAt(0);
-}
-
-void PageLayout::JustifyLineRight()
-{
-    REAL margin = pageDx - GetCurrentLineDx();
-    LayoutLeftStartingAt(margin);
-}
-
-void PageLayout::JustifyLineCenter()
-{
-    REAL margin = (pageDx - GetCurrentLineDx());
-    LayoutLeftStartingAt(margin / 2.f);
 }
 
 void PageLayout::JustifyLineBoth()
@@ -386,42 +319,38 @@ void PageLayout::JustifyLineBoth()
     // move all words proportionally to the right so that the
     // spacing remains uniform and the last word touches the
     // right page border
-    REAL margin = pageDx - GetCurrentLineDx();
+    REAL margin = pageSize.dx - GetCurrentLineDx();
     LayoutLeftStartingAt(0);
     DrawInstr *end;
     DrawInstr *c = GetInstructionsForCurrentLine(end);
     size_t count = end - c;
     REAL extraSpaceDx = count > 1 ? margin / (count - 1) : margin;
-    ++c;
-    size_t n = 1;
-    while (c < end) {
+
+    for (size_t n = 1; ++c < end; n++)
         c->bbox.X += n * extraSpaceDx;
-        ++n;
-        ++c;
-    }
 }
 
-void PageLayout::JustifyLine(TextJustification mode)
+void PageLayout::JustifyLine(AlignAttr mode)
 {
     if (IsCurrentLineEmpty())
         return;
 
     switch (mode) {
-        case Left:
-            JustifyLineLeft();
-            break;
-        case Right:
-            JustifyLineRight();
-            break;
-        case Center:
-            JustifyLineCenter();
-            break;
-        case Both:
-            JustifyLineBoth();
-            break;
-        default:
-            assert(0);
-            break;
+    case Align_Left:
+        LayoutLeftStartingAt(0);
+        break;
+    case Align_Right:
+        LayoutLeftStartingAt(pageSize.dx - GetCurrentLineDx());
+        break;
+    case Align_Center:
+        LayoutLeftStartingAt((pageSize.dx - GetCurrentLineDx()) / 2.f);
+        break;
+    case Align_Justify:
+        JustifyLineBoth();
+        break;
+    default:
+        assert(0);
+        break;
     }
     currLineInstrOffset = currPage->Count();
 }
@@ -429,18 +358,18 @@ void PageLayout::JustifyLine(TextJustification mode)
 void PageLayout::StartNewLine(bool isParagraphBreak)
 {
     // don't put empty lines at the top of the page
-    if ((0 == currY) && IsCurrentLineEmpty())
+    if (0 == curr.y && IsCurrentLineEmpty())
         return;
 
-    if (isParagraphBreak && Both == currJustification)
-        JustifyLine(Left);
+    if (isParagraphBreak && Align_Justify == currJustification)
+        JustifyLine(Align_Left);
     else
         JustifyLine(currJustification);
 
-    currX = 0;
-    currY += lineSpacing;
+    curr.x = 0;
+    curr.y += lineSpacing;
     currLineInstrOffset = currPage->Count();
-    if (currY + lineSpacing > pageDy)
+    if (curr.y + lineSpacing > pageSize.dy)
         StartNewPage();
 }
 
@@ -482,13 +411,13 @@ void PageLayout::AddHr()
 {
     // hr creates an implicit paragraph break
     StartNewLine(true);
-    currX = 0;
+    curr.x = 0;
     // height of hr is lineSpacing. If drawing it a current position
     // would exceede page bounds, go to another page
-    if (currY + lineSpacing > pageDy)
+    if (curr.y + lineSpacing > pageSize.dy)
         StartNewPage();
 
-    RectF bbox(currX, currY, pageDx, lineSpacing);
+    RectF bbox(curr.x, curr.y, pageSize.dx, lineSpacing);
     currPage->Append(DrawInstr::Line(bbox));
     StartNewLine(true);
 }
@@ -502,7 +431,7 @@ void PageLayout::AddWord(WordInfo *wi)
         // single paragraph break
         newLinesCount++;
         if (2 == newLinesCount) {
-            bool needsTwo = (currX != 0);
+            bool needsTwo = (curr.x != 0);
             StartNewLine(true);
             if (needsTwo)
                 StartNewLine(true);
@@ -520,43 +449,13 @@ void PageLayout::AddWord(WordInfo *wi)
     // TODO: handle a case where a single word is bigger than the whole
     // line, in which case it must be split into multiple lines
     REAL dx = bbox.Width;
-    if (currX + dx > pageDx) {
+    if (curr.x + dx > pageSize.dx) {
         // start new line if the new text would exceed the line length
         StartNewLine(false);
     }
-    bbox.Y = currY;
+    bbox.Y = curr.y;
     currPage->Append(DrawInstr::Str(wi->s, wi->len, bbox));
-    currX += (dx + spaceDx);
-}
-
-// tags that I want to explicitly ignore and not define
-// HtmlTag enums for them
-// One file has a bunch of st1:* tags (st1:city, st1:place etc.)
-static bool IgnoreTag(HtmlToken *tok)
-{
-    const char *s = tok->s;
-    if (tok->sLen >= 4 && s[3] == ':' && s[0] == 's' && s[1] == 't' && s[2] == '1')
-        return true;
-    // no idea what "o:p" is
-    if (tok->sLen >= 3 && s[1] == ':' && s[0] == 'o'  && s[2] == 'p')
-        return true;
-    return false;
-}
-
-PageLayout::TextJustification PageLayout::AlignAttrToJustification(AlignAttr align)
-{
-    switch (align) {
-        case Align_Center:
-            return Center;
-        case Align_Justify:
-            return Both;
-        case Align_Left:
-            return Left;
-        case Align_Right:
-            return Right;
-        default:
-            return Both;
-    }
+    curr.x += (dx + spaceDx);
 }
 
 void PageLayout::HandleHtmlTag(HtmlToken *t)
@@ -564,12 +463,7 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
     Vec<KnownAttrInfo> attrs;
     CrashAlwaysIf(!t->IsTag());
 
-    if (IgnoreTag(t))
-        return;
-
     HtmlTag tag = FindTag(t);
-    // TODO: ignore instead of crashing once we're satisfied we covered all the tags
-    CrashIf(tag == Tag_NotFound);
 
     // update the current state of html tree
     if (t->IsStartTag())
@@ -578,20 +472,15 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
         RecordEndTag(&tagNesting, tag);
 
     if (Tag_P == tag) {
-        TextJustification newJustification = Both;
-        if (t->IsStartTag() || t->IsEmptyElementEndTag()) {
-            StartNewLine(true);
-            static HtmlAttr validAttrs[] = { Attr_Align, Attr_NotFound };
-            GetKnownAttributes(t, validAttrs, &attrs);
-            if (attrs.Count() > 0) {
-                KnownAttrInfo attr = attrs.At(0);
-                AlignAttr alignAttr = FindAlignAttr(attr.val, attr.valLen);
-                newJustification = AlignAttrToJustification(alignAttr);
+        StartNewLine(true);
+        currJustification = Align_Justify;
+        if (t->IsStartTag()) {
+            AttrInfo *attrInfo;
+            while ((attrInfo = t->NextAttr())) {
+                if (attrInfo->HasName("align"))
+                    currJustification = FindAlignAttr(attrInfo->val, attrInfo->valLen);
             }
-        } else if (t->IsEndTag()) {
-            StartNewLine(true);
         }
-        currJustification = newJustification;
     }
     else if (Tag_Hr == tag) {
         AddHr();
@@ -616,6 +505,10 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
 
 void PageLayout::EmitText(HtmlToken *t)
 {
+    // ignore the content of <style> tags
+    if (tagNesting.Find(Tag_Style) != -1)
+        return;
+
     CrashIf(!t->IsText());
     const char *end = t->s + t->sLen;
     const char *curr = t->s;
@@ -682,7 +575,7 @@ void LayoutHtml(LayoutInfo* li, FontCache *fontCache)
     l.EndLayout(pages);
 }
 
-void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox)
+void DrawPageLayout(Graphics *g, PageData *pageData, REAL offX, REAL offY, bool showBbox)
 {
     InitGraphicsMode(g);
 
@@ -694,9 +587,8 @@ void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, RE
 
     Font *font = NULL;
 
-    WCHAR buf[512];
-    PointF pos;
-    for (DrawInstr *instr = drawInstructions->IterStart(); instr; instr = drawInstructions->IterNext()) {
+    Vec<DrawInstr> *instrs = &pageData->drawInstructions;
+    for (DrawInstr *instr = instrs->IterStart(); instr; instr = instrs->IterNext()) {
         RectF bbox = instr->bbox;
         bbox.X += offX;
         bbox.Y += offY;
@@ -705,18 +597,16 @@ void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, RE
             REAL y = bbox.Y + bbox.Height / 2.f;
             PointF p1(bbox.X, y);
             PointF p2(bbox.X + bbox.Width, y);
-            if (showBbox) {
-                //g->FillRectangle(&br, bbox);
+            if (showBbox)
                 g->DrawRectangle(&pen, bbox);
-            }
             g->DrawLine(&blackPen, p1, p2);
         } else if (InstrTypeString == instr->type) {
+            WCHAR buf[512];
             size_t strLen = str::Utf8ToWcharBuf(instr->str.s, instr->str.len, buf, dimof(buf));
+            PointF pos;
             bbox.GetLocation(&pos);
-            if (showBbox) {
-                //g->FillRectangle(&br, bbox);
+            if (showBbox)
                 g->DrawRectangle(&pen, bbox);
-            }
             g->DrawString(buf, strLen, font, pos, NULL, &br);
         } else if (InstrTypeSetFont == instr->type) {
             font = instr->setFont.font;

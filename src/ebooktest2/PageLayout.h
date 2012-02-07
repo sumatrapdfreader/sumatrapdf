@@ -6,6 +6,7 @@
 
 #include "BaseUtil.h"
 #include "Vec.h"
+#include "GeomUtil.h"
 
 using namespace Gdiplus;
 
@@ -65,12 +66,6 @@ struct LayoutState {
 struct PageData {
     Vec<DrawInstr>  drawInstructions;
 
-    /* Most of the time string DrawInstr point to original html text
-       that is read-only and outlives us. Sometimes (e.g. when resolving
-       html entities) we need a modified text. This allocator is
-       used to allocate this text. */
-    PoolAllocator  text;
-
     /* layoutState at the beginning of this page. It allows us to
        re-do layout starting exactly where this page starts, which
        is needed when handling resizing */
@@ -95,14 +90,10 @@ public:
 // just to pack args to LayoutHtml
 class LayoutInfo {
 public:
-    LayoutInfo() :
-      pageDx(0), pageDy(0), fontName(NULL), fontSize(0),
-      htmlStr(0), htmlStrLen(0), observer(NULL)
-    {
-    }
+    LayoutInfo() : fontName(NULL), fontSize(0),
+        htmlStr(0), htmlStrLen(0), observer(NULL) { }
 
-    int             pageDx;
-    int             pageDy;
+    SizeI           pageSize;
 
     const WCHAR *   fontName;
     float           fontSize;
@@ -110,7 +101,7 @@ public:
     const char *    htmlStr;
     size_t          htmlStrLen;
 
-    INewPageObserver *observer;
+    INewPageObserver*observer;
 };
 
 class FontCache {
@@ -135,7 +126,7 @@ public:
 };
 
 void LayoutHtml(LayoutInfo* li, FontCache *fontCache);
-void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox);
+void DrawPageLayout(Graphics *g, PageData *pageData, REAL offX, REAL offY, bool showBbox);
 void InitGraphicsMode(Graphics *g);
 
 #endif
