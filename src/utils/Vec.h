@@ -267,7 +267,7 @@ template <typename T>
 inline void FreeVecMembers(Vec<T>& v)
 {
     for (T* el = v.IterStart(); el; el = v.IterNext()) {
-        free(el);
+        free(*el);
     }
     v.Reset();
 }
@@ -277,11 +277,10 @@ template <typename T>
 inline void DeleteVecMembers(Vec<T>& v)
 {
     for (T* el = v.IterStart(); el; el = v.IterNext()) {
-        delete el;
+        delete *el;
     }
     v.Reset();
 }
-
 
 namespace str {
 template <typename T>

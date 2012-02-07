@@ -406,8 +406,7 @@ void ControlEbook::DeletePages()
 {
     if (!pages)
         return;
-    //TODO: why *pages contains ControlEbook object?
-    //DeleteVecMembers<PageData*>(*pages);
+    DeleteVecMembers<PageData*>(*pages);
     delete pages;
     pages = NULL;
 }
