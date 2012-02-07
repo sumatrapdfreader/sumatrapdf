@@ -30,6 +30,11 @@ Painter::Painter(HwndWrapper *wnd)
 {
 }
 
+Painter::~Painter()
+{
+    ::delete cacheBmp;
+}
+
 // we paint the background in Painter() because I don't
 // want to add an artificial Control window just to cover
 // the whole HWND and paint the background.

@@ -207,6 +207,7 @@ PageLayout::PageLayout() : currPage(NULL), gfx(NULL)
 
 PageLayout::~PageLayout()
 {
+    delete currPage;
     delete htmlParser;
     mui::FreeGraphicsForMeasureText(gfx);
 }

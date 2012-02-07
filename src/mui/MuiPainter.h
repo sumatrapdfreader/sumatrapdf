@@ -20,6 +20,7 @@ class Painter
 
 public:
     Painter(HwndWrapper *wnd);
+    ~Painter();
 
     void Paint(HWND hwnd);
 };
