@@ -83,6 +83,11 @@ static bool gShowTextBoundingBoxes = false;
 // A sample text to display if we don't show an actual ebook
 static const char *gSampleHtml = "<html><p align=justify>ClearType is <b>dependent</b> on the <i>orientation &amp; ordering</i> of the LCD stripes.</p> <p align='right'><em>Currently</em>, ClearType is implemented <hr> only for vertical stripes that are ordered RGB.</p> <p align=center>This might be a concern if you are using a tablet PC.</p> <p>Where the display can be oriented in any direction, or if you are using a screen that can be turned from landscape to portrait. The <strike>following example</strike> draws text with two <u>different quality</u> settings.</p> On to the <b>next<mbp:pagebreak>page</b>&#21;</html>";
 
+void LogProcessRunningTime()
+{
+    lf("EbookTest startup time: %.2f ms", GetProcessRunningTime());
+}
+
 /* The layout is:
 ___________________
 |                 |
@@ -828,6 +833,8 @@ static LRESULT OnCommand(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+    static bool seenWmPaint = false;
+
     if (gControlFrame) {
         bool wasHandled;
         LRESULT res = gControlFrame->evtMgr->OnMessage(msg, wParam, lParam, wasHandled);
@@ -852,6 +859,10 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
             return 0;
 
         case WM_PAINT:
+            if (!seenWmPaint) {
+                LogProcessRunningTime();
+                seenWmPaint = true;
+            }
             gControlFrame->OnPaint(hwnd);
             break;
 
@@ -938,6 +949,7 @@ static int RunApp()
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     int ret = 1;
+    LogProcessRunningTime();
 
     SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
 
