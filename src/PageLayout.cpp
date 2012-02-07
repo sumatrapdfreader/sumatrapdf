@@ -547,7 +547,7 @@ static bool IgnoreTag(HtmlToken *tok)
     if (tok->sLen >= 4 && s[3] == ':' && s[0] == 's' && s[1] == 't' && s[2] == '1')
         return true;
     // no idea what "o:p" is
-    if (tok->sLen == 3 && s[1] == ':' && s[0] == 'o'  && s[2] == 'p')
+    if (tok->sLen >= 3 && s[1] == ':' && s[0] == 'o'  && s[2] == 'p')
         return true;
     return false;
 }
