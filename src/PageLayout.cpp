@@ -15,7 +15,8 @@ using namespace Gdiplus;
 /*
 TODO: instead of generating list of DrawInstr objects, we could add neccessary
 support to mui and use list of Control objects instead (especially if we slim down
-Control objects further to make allocating hundreds of them cheaper).
+Control objects further to make allocating hundreds of them cheaper or introduce some
+other base element(s) with less functionality and less overhead).
 */
 
 struct WordInfo {
@@ -27,18 +28,22 @@ struct WordInfo {
 };
 
 class WordsIter {
-public:
-    WordsIter(const char *s) : s(s) {
-        Reset();
-    }
-
     void Reset() {
         curr = s;
         len = strlen(s);
         left = len;
     }
 
-    WordInfo *Next();
+public:
+    WordsIter(const char *s) : s(s) {
+    }
+
+    WordInfo *IterStart() {
+        Reset();
+        return IterNext();
+    }
+
+    WordInfo *IterNext();
 
 private:
     WordInfo wi;
@@ -98,7 +103,7 @@ static bool IsNewlineSkip(const char *& s, size_t& left)
 // iterates words in a string e.g. "foo bar\n" returns "foo", "bar" and "\n"
 // also unifies line endings i.e. "\r" and "\r\n" are turned into a single "\n"
 // returning NULL means end of iterations
-WordInfo *WordsIter::Next()
+WordInfo *WordsIter::IterNext()
 {
     SkipCharInStr(curr, left, ' ');
     if (0 == left)
@@ -491,28 +496,25 @@ void PageLayout::AddWord(WordInfo *wi)
     currX += (dx + spaceDx);
 }
 
-#if 0
 // How layout works:
 // * measure the strings
 // * remember a line's worth of widths
 // * when we fill a line we calculate the position of strings in
 //   a line for a given justification setting (left, right, center, both)
-Vec<Page*> *PageLayout::LayoutText(Graphics *graphics, Font *defaultFnt, const char *s)
+#if 0
+Vec<PageData*> *PageLayout::LayoutText(Graphics *graphics, Font *defaultFnt, const char *s)
 {
     gfx = graphics;
     defaultFont = defaultFnt;
     currFont = defaultFnt;
     StartLayout();
-    WordsIter iter(s);
-    for (;;) {
-        WordInfo *wi = iter.Next();
-        if (NULL == wi)
-            break;
+    WordsIter wordsIter(s);
+    for (WordInfo *wi = wordsIter.IterStart(); wi; wi = wordsIter.IterNext()) {
         AddWord(wi);
     }
     StartNewLine(true);
     RemoveLastPageIfEmpty();
-    Vec<Page*> *ret = pages;
+    Vec<PageData*> *ret = pages;
     pages = NULL;
     return ret;
 }
