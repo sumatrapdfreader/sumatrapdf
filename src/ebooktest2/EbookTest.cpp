@@ -1,36 +1,19 @@
 /* Copyright 2010-2012 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// Hack: we need NOMINMAX to make chrome code compile but we also need
-// min/max for gdi+ headers, so we import min/max from stl
-#define NOMINMAX
-#include <algorithm>
-using std::min;
-using std::max;
-
-// include anything that might (re)define operator new before BaseUtil.h
-#include "base/threading/thread.h"
-#include "base/bind.h"
-
+#include "BaseUtil.h"
 #include "CmdLineParser.h"
-#include "EbookTestMenu.h"
 #include "FileUtil.h"
-#include "FrameTimeoutCalculator.h"
 #include "MobiDoc.h"
 #include "EpubDoc.h"
 #include "Fb2Doc.h"
 #include "Mui.h"
-#include "NoFreeAllocator.h"
 #include "Resource.h"
 #include "PageLayout.h"
 #include "StrUtil.h"
 #include "Scoped.h"
-#include "Timer.h"
 #include "Version.h"
 #include "WinUtil.h"
-
-#define NOLOG defined(NDEBUG)
-#include "DebugLog.h"
 
 /*
 TODO: doing layout on a background thread needs to be more sophisticated.
@@ -76,18 +59,10 @@ static HWND             gHwndFrame = NULL;
 static ControlEbook *   gControlFrame = NULL;
 static HCURSOR          gCursorHand = NULL;
 
-// for convenience so that we don't have to pass it around
-static MessageLoop *    gMessageLoopUI = NULL;
-
 static bool gShowTextBoundingBoxes = false;
 
 // A sample text to display if we don't show an actual ebook
 static const char *gSampleHtml = "<html><p align=justify>ClearType is <b>dependent</b> on the <i>orientation &amp; ordering</i> of the LCD stripes.</p> <p align='right'><em>Currently</em>, ClearType is implemented <hr> only for vertical stripes that are ordered RGB.</p> <p align=center>This might be a concern if you are using a tablet PC.</p> <p>Where the display can be oriented in any direction, or if you are using a screen that can be turned from landscape to portrait. The <strike>following example</strike> draws text with two <u>different quality</u> settings.</p> On to the <b>next<mbp:pagebreak>page</b>&#21;</html>";
-
-void LogProcessRunningTime()
-{
-    lf("EbookTest startup time: %.2f ms", GetProcessRunningTime());
-}
 
 /* The layout is:
 ___________________
@@ -120,7 +95,6 @@ class ControlEbook
 
 public:
     BaseEbookDoc *  doc;
-    const char *    html;
 
     Vec<PageData*>* pages;
     int             currPageNo; // within pages
@@ -130,8 +104,6 @@ public:
     Vec<PageData*>* tmpPages;
 
     int             cursorX, cursorY;
-    base::Thread *  docLoadThread;
-    base::Thread *  pageLayoutThread;
 
     Button *        next;
     Button *        prev;
@@ -164,7 +136,6 @@ public:
     // IClickHandler
     virtual void Clicked(Control *w, int x, int y);
 
-    void SetHtml(const char *html);
     void LoadDoc(const TCHAR *fileName);
 
     void SetStatusText() const;
@@ -180,7 +151,6 @@ public:
     void PageLayoutBackground(LayoutInfo *li);
 
     void PageLayout(int dx, int dy);
-    void StopPageLayoutThread();
 
     void DocLoaded(BaseEbookDoc *doc);
     void DocFailedToLoad(const TCHAR *fileName);
@@ -296,10 +266,7 @@ void EbookLayout::Arrange(const Rect finalRect, Control *wnd)
 
 ControlEbook::ControlEbook(HWND hwnd)
 {
-    docLoadThread = NULL;
-    pageLayoutThread = NULL;
     doc = NULL;
-    html = NULL;
     pages = NULL;
     currPageNo = 1;
     pageDx = 0; pageDy = 0;
@@ -381,14 +348,6 @@ ControlEbook::ControlEbook(HWND hwnd)
 
 ControlEbook::~ControlEbook()
 {
-    // TODO: I think that the problem here is that while the thread might
-    // be finished, there still might be in-flight messages sent
-    // to this object. Do we need a way to cancel messages directed
-    // to a given object from the queue? Ref-count the objects so that
-    // their lifetime is managed correctly?
-    StopDocLoadThread();
-    StopPageLayoutThread();
-
     // special case for classes that derive from HwndWrapper
     // as they don't trigger this from the destructor
     UnRegisterEventHandlers(evtMgr);
@@ -461,7 +420,6 @@ void ControlEbook::AdvancePage(int dist)
 
 void ControlEbook::PageLayoutFinished()
 {
-    StopPageLayoutThread();
 #if 0
     if (!newPages)
         return;
@@ -477,8 +435,7 @@ void ControlEbook::PageLayoutFinished()
 #endif
 }
 
-// called on a ui thread from background thread
-void ControlEbook::NewPageUIThread(PageData *pageData)
+void ControlEbook::NewPage(PageData *pageData)
 {
 #if 0
     if (!newPages)
@@ -495,33 +452,13 @@ void ControlEbook::NewPageUIThread(PageData *pageData)
 #endif
 }
 
-// called on a background thread
-void ControlEbook::NewPage(PageData *pageData)
-{
-    gMessageLoopUI->PostDelayedTask(base::Bind(&ControlEbook::NewPageUIThread,
-                                        base::Unretained(this), pageData), 100);
-}
-
-// called on a background thread
-void ControlEbook::PageLayoutBackground(LayoutInfo *li)
-{
-    Vec<PageData*> *newPages = LayoutHtml(li);
-    delete newPages;
-    gMessageLoopUI->PostTask(base::Bind(&ControlEbook::PageLayoutFinished,
-                                        base::Unretained(this)));
-    delete li;
-}
-
 void ControlEbook::PageLayout(int dx, int dy)
 {
-    lf("ControlEbook::PageLayout: (%d,%d)", dx, dy);
     if ((dx == pageDx) && (dy == pageDy) && pages)
         return;
 
-    if (pages || pageLayoutThread)
+    if (pages)
         return;
-
-    StopPageLayoutThread();
 
     DeleteNewPages();
     pageDx = dx;
@@ -529,64 +466,29 @@ void ControlEbook::PageLayout(int dx, int dy)
 
     LayoutInfo *li = new LayoutInfo();
 
-    size_t len;
-    if (html)
-        len = strlen(html);
-    else
-        html = doc->GetBookHtmlData(len);
+    if (doc) {
+        li->htmlStr = doc->GetBookHtmlData(li->htmlStrLen);
+    }
+    else {
+        li->htmlStr = gSampleHtml;
+        li->htmlStrLen = strlen(gSampleHtml);
+    }
 
     li->fontName = FONT_NAME;
     li->fontSize = FONT_SIZE;
-    li->htmlStr = html;
-    li->htmlStrLen = len;
     li->pageDx = dx;
     li->pageDy = dy;
     li->observer = this;
-#if 0
-    pageLayoutThread = new base::Thread("ControlEbook::PageLayoutBackground");
-    pageLayoutThread->Start();
-    pageLayoutThread->message_loop()->PostTask(base::Bind(&ControlEbook::PageLayoutBackground,
-                                             base::Unretained(this), li));
-#else
+
     pages = LayoutHtml(li);
-#endif
-}
-
-void ControlEbook::StopPageLayoutThread()
-{
-    if (!pageLayoutThread)
-        return;
-    l("ControlEbook::StopPageLayoutThread()");
-    pageLayoutThread->Stop();
-    delete pageLayoutThread;
-    pageLayoutThread = NULL;
-}
-
-void ControlEbook::SetHtml(const char *newHtml)
-{
-    html = newHtml;
-}
-
-void ControlEbook::StopDocLoadThread()
-{
-    if (!docLoadThread)
-        return;
-    l("Stopping doc load thread");
-    docLoadThread->Stop();
-    delete docLoadThread;
-    docLoadThread = NULL;
 }
 
 // called on UI thread from background thread after
 // an ebook file has been loaded
 void ControlEbook::DocLoaded(BaseEbookDoc *newDoc)
 {
-    l("ControlEbook::DocLoaded()");
-    CrashIf(gMessageLoopUI != MessageLoop::current());
-    StopDocLoadThread();
     delete doc;
     doc = newDoc;
-    html = NULL;
     delete pages;
     pages = NULL;
     RequestLayout();
@@ -596,9 +498,6 @@ void ControlEbook::DocLoaded(BaseEbookDoc *newDoc)
 // to load an ebook but failed
 void ControlEbook::DocFailedToLoad(const TCHAR *fileName)
 {
-    l("ControlEbook::DocFailedToLoad()");
-    CrashIf(gMessageLoopUI != MessageLoop::current());
-    StopDocLoadThread();
     // TODO: this message should show up in a different place,
     // reusing status for convenience
     ScopedMem<TCHAR> s(str::Format(_T("Failed to load %s!"), fileName));
@@ -611,43 +510,30 @@ void ControlEbook::DocFailedToLoad(const TCHAR *fileName)
 // DocFailedToLoad() on ui thread
 void ControlEbook::LoadDocBackground(const TCHAR *fileName)
 {
-    CrashIf(gMessageLoopUI == MessageLoop::current());
-    lf(_T("ControlEbook::LoadDocBackground(%s)"), fileName);
-    Timer t(true);
     BaseEbookDoc *doc = NULL;
     if (EpubDoc::IsSupported(fileName))
         doc = EpubDoc::ParseFile(fileName);
     else if (Fb2Doc::IsSupported(fileName))
         doc = Fb2Doc::ParseFile(fileName);
-    else // if (MobiDoc::IsSupported(fileName))
-        doc = MobiDoc::ParseFile(fileName);
-    lf(_T("Loaded %s in %.2f ms"), fileName, t.GetCurrTimeInMs());
+    else // if (MobiDoc2::IsSupported(fileName))
+        doc = MobiDoc2::ParseFile(fileName);
 
     if (!doc) {
-        gMessageLoopUI->PostTask(base::Bind(&ControlEbook::DocFailedToLoad,
-                                 base::Unretained(this), fileName));
+        DocFailedToLoad(fileName);
     } else {
-        gMessageLoopUI->PostTask(base::Bind(&ControlEbook::DocLoaded,
-                                 base::Unretained(this), doc));
+        DocLoaded(doc);
         free((void*)fileName);
     }
 }
 
 void ControlEbook::LoadDoc(const TCHAR *fileName)
 {
-    // TODO: not sure if that's enough to handle user chosing
-    // to load another ebook file while loading of the previous
-    // hasn't finished yet
-    StopDocLoadThread();
-    docLoadThread = new base::Thread("ControlEbook::LoadDocBackground");
-    docLoadThread->Start();
-    // TODO: use some refcounted version of fileName
-    docLoadThread->message_loop()->PostTask(base::Bind(&ControlEbook::LoadDocBackground,
-                                            base::Unretained(this), str::Dup(fileName)));
     // TODO: this message should show up in a different place,
     // reusing status for convenience
     ScopedMem<TCHAR> s(str::Format(_T("Please wait, loading %s"), fileName));
     status->SetText(s.Get());
+
+    LoadDocBackground(str::Dup(fileName));
 }
 
 static Rect RectForCircle(int x, int y, int r)
@@ -761,10 +647,52 @@ static void DrawFrame2(Graphics &g, RectI r)
 }
 #endif
 
+#define SEP_ITEM "-----"
+
+struct MenuDef {
+    const char *title;
+    int         id;
+};
+
+MenuDef menuDefFile[] = {
+    { "&Open\tCtrl+O",                IDM_OPEN },
+    //{ "&Close\tCtrl+W",              IDM_CLOSE },
+    { "Toggle bbox",                  IDM_TOGGLE_BBOX },
+    { SEP_ITEM,                       0,       },
+    { "E&xit\tCtrl+Q",                IDM_EXIT }
+};
+
+HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu)
+{
+    assert(menu);
+
+    for (int i = 0; i < menuLen; i++) {
+        MenuDef md = menuDefs[i];
+        const char *title = md.title;
+
+        if (str::Eq(title, SEP_ITEM)) {
+            AppendMenu(menu, MF_SEPARATOR, 0, NULL);
+        } else {
+            ScopedMem<TCHAR> tmp(str::conv::FromUtf8(title));
+            AppendMenu(menu, MF_STRING, (UINT_PTR)md.id, tmp);
+        }
+    }
+
+    return menu;
+}
+
+HMENU BuildMenu()
+{
+    HMENU mainMenu = CreateMenu();
+    HMENU m;
+    m = BuildMenuFromMenuDef(menuDefFile, dimof(menuDefFile), CreateMenu());
+    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _T("&File"));
+    return mainMenu;
+}
+
 static void OnCreateWindow(HWND hwnd)
 {
     gControlFrame = new ControlEbook(hwnd);
-    gControlFrame->SetHtml(gSampleHtml);
     gControlFrame->SetMinSize(Size(320, 200));
     gControlFrame->SetMaxSize(Size(1024, 800));
 
@@ -834,8 +762,6 @@ static LRESULT OnCommand(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    static bool seenWmPaint = false;
-
     if (gControlFrame) {
         bool wasHandled;
         LRESULT res = gControlFrame->evtMgr->OnMessage(msg, wParam, lParam, wasHandled);
@@ -860,10 +786,6 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
             return 0;
 
         case WM_PAINT:
-            if (!seenWmPaint) {
-                LogProcessRunningTime();
-                seenWmPaint = true;
-            }
             gControlFrame->OnPaint(hwnd);
             break;
 
@@ -918,39 +840,10 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
     return TRUE;
 }
 
-// inspired by http://engineering.imvu.com/2010/11/24/how-to-write-an-interactive-60-hz-desktop-application/
-static int RunApp()
-{
-    MSG msg;
-    FrameTimeoutCalculator ftc(60);
-    Timer t(true);
-    for (;;) {
-        const DWORD timeout = ftc.GetTimeoutInMilliseconds();
-        DWORD res = WAIT_TIMEOUT;
-        if (timeout > 0) {
-            res = MsgWaitForMultipleObjects(0, 0, TRUE, timeout, QS_ALLEVENTS);
-        }
-        if (res == WAIT_TIMEOUT) {
-            //AnimStep();
-            ftc.Step();
-        }
-
-        while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-            if (msg.message == WM_QUIT) {
-                return (int)msg.wParam;
-            }
-            if (!IsDialogMessage(gHwndFrame, &msg)) {
-                TranslateMessage(&msg);
-                DispatchMessage(&msg);
-            }
-        }
-    }
-}
-
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-    int ret = 1;
-    LogProcessRunningTime();
+    MSG msg;
+    msg.wParam = 1;
 
     SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
 
@@ -962,26 +855,20 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     gCursorHand  = LoadCursor(NULL, IDC_HAND);
 
-    // start per-thread MessageLoop, this one is for our UI thread
-    // You can use it via static MessageLoop::current()
-    MessageLoop uiMsgLoop(MessageLoop::TYPE_UI);
-
-    gMessageLoopUI = MessageLoop::current();
-    CrashIf(gMessageLoopUI != &uiMsgLoop);
-
-    //ParseCommandLine(GetCommandLine());
     if (!RegisterWinClass(hInstance))
         goto Exit;
 
     if (!InstanceInit(hInstance, nCmdShow))
         goto Exit;
 
-    MessageLoopForUI::current()->RunWithDispatcher(NULL);
-    // ret = RunApp();
+    while (GetMessage(&msg, NULL, 0, 0)) {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
 
     delete gControlFrame;
 
 Exit:
     mui::Destroy();
-    return ret;
+    return msg.wParam;
 }

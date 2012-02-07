@@ -1,14 +1,14 @@
 /* Copyright 2011-2012 the SumatraPDF project authors (see AUTHORS file).
-   License: Simplified BSD (see COPYING.BSD) */
+   License: GPLv3 */
 
-#ifndef MobiDoc_h
-#define MobiDoc_h
+#ifndef MobiDoc2_h
+#define MobiDoc2_h
 
 #include "BaseEbookDoc.h"
 
-class MobiDoc : public BaseEbookDoc {
+class MobiDoc2 : public BaseEbookDoc {
 public:
-    static MobiDoc *ParseFile(const TCHAR *fileName);
+    static MobiDoc2 *ParseFile(const TCHAR *fileName);
     static bool IsSupported(const TCHAR *fileName);
 };
 

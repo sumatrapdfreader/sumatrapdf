@@ -26,7 +26,7 @@ class Fb2DocImpl : public Fb2Doc {
 
     ScopedMem<TCHAR> fileName;
     str::Str<char> htmlData;
-    Vec<ImageData> images;
+    Vec<ImageData2> images;
 
     bool Load();
     void ExtractImage(HtmlPullParser& parser, HtmlToken *tok);
@@ -49,7 +49,7 @@ public:
         return htmlData.Get();
     }
 
-    virtual ImageData *GetImageData(const char *id) {
+    virtual ImageData2 *GetImageData(const char *id) {
         for (size_t i = 0; i < images.Count(); i++) {
             if (str::Eq(images.At(i).id, id))
                 return GetImageData(i);
@@ -57,7 +57,7 @@ public:
         return NULL;
     }
 
-    virtual ImageData *GetImageData(size_t index) {
+    virtual ImageData2 *GetImageData(size_t index) {
         if (index > images.Count())
             return NULL;
         return &images.At(index);
@@ -225,7 +225,7 @@ void Fb2DocImpl::ExtractImage(HtmlPullParser& parser, HtmlToken *tok)
     if (!tok || !tok->IsText())
         return;
 
-    ImageData data;
+    ImageData2 data;
     data.data = Base64Decode(tok->s, tok->s + tok->sLen, &data.len);
     if (!data.data)
         return;

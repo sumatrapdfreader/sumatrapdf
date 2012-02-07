@@ -7,7 +7,7 @@
 #include "BaseUtil.h"
 
 // TODO: use Gdiplus::Bitmap instead?
-struct ImageData {
+struct ImageData2 {
     char *  data;
     size_t  len;
     char *  id;
@@ -28,11 +28,11 @@ public:
 
     // returns the data for an image by ID
     // the result is owned by the class, don't free
-    virtual ImageData *GetImageData(const char *id) = 0;
+    virtual ImageData2 *GetImageData(const char *id) = 0;
 
     // returns the data for an image by (arbitrary) index
     // the result is owned by the class, don't free
-    virtual ImageData *GetImageData(size_t index) = 0;
+    virtual ImageData2 *GetImageData(size_t index) = 0;
 };
 
 #endif

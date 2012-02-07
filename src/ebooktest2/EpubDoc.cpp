@@ -27,7 +27,7 @@ class EpubDocImpl : public EpubDoc {
     ScopedMem<TCHAR> fileName;
     ZipFile zip;
     str::Str<char> htmlData;
-    Vec<ImageData> images;
+    Vec<ImageData2> images;
 
     bool Load();
 
@@ -49,7 +49,7 @@ public:
         return htmlData.Get();
     }
 
-    virtual ImageData *GetImageData(const char *id) {
+    virtual ImageData2 *GetImageData(const char *id) {
         for (size_t i = 0; i < images.Count(); i++) {
             if (str::Eq(images.At(i).id, id))
                 return GetImageData(i);
@@ -57,7 +57,7 @@ public:
         return NULL;
     }
 
-    virtual ImageData *GetImageData(size_t index) {
+    virtual ImageData2 *GetImageData(size_t index) {
         if (index >= images.Count())
             return NULL;
         if (!images.At(index).data) {
@@ -130,7 +130,7 @@ bool EpubDocImpl::Load()
                 continue;
             imgPath.Set(str::Join(contentPath, imgPath));
             // load the image lazily
-            ImageData data = { 0 };
+            ImageData2 data = { 0 };
             data.id = str::conv::ToUtf8(imgPath);
             images.Append(data);
         }

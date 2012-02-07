@@ -118,7 +118,7 @@ TESTER_CFLAGS   = $(SUMATRA_CFLAGS)
 
 ET2_APP         = $(O)\EbookTest2.exe
 ET2_RES         = $(OE2)\EbookTest2.res
-ET2_CFLAGS      = $(SUMATRA_CFLAGS) /wd4530 $(CHROME_INC)
+ET2_CFLAGS      = $(SUMATRA_CFLAGS)
 
 TESTER2_APP     = $(O)\tester2.exe
 TESTER2_CFLAGS  = $(SUMATRA_CFLAGS)
@@ -198,8 +198,7 @@ TESTER_OBJS = \
 	$(OEB)\Tester.obj $(OEB)\PageLayout.obj $(UTILS_OBJS) $(MUI_OBJS) $(OEB)\MobiDoc.obj
 
 ET2_OBJS = \
-	$(OE2)\EbookTest.obj $(OE2)\EbookTestMenu.obj $(ET_RES) \
-	$(OE2)\PageLayout.obj $(MUI_OBJS) $(UTILS_OBJS) $(CHROME_OBJS) \
+	$(OE2)\EbookTest.obj $(ET_RES) $(OE2)\PageLayout.obj $(MUI_OBJS) $(UTILS_OBJS) \
 	$(OE2)\MobiDoc.obj $(OE2)\EpubDoc.obj $(ZIP_OBJS) $(ZLIB_OBJS) $(OE2)\Fb2Doc.obj
 
 TESTER2_OBJS = \

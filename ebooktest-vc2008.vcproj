@@ -322,14 +322,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\ebooktest2\EbookTestMenu.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\ebooktest2\EbookTestMenu.h"
-				>
-			</File>
-			<File
 				RelativePath=".\src\ebooktest2\Resource.h"
 				>
 			</File>

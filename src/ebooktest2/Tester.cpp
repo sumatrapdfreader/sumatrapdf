@@ -7,7 +7,6 @@
    Currently it only does one test: mobi file parsing. */
 
 #include "BaseUtil.h"
-#include "NoFreeAllocator.h"
 #include "Scoped.h"
 #include "DirIter.h"
 #include "MobiDoc.h"
@@ -27,18 +26,13 @@ using namespace Gdiplus;
 // gExtractDir. The names will be ${file}.html, ${file}_pp.html
 // and ${file}_img_${id}.[jpg|png|gif]
 const TCHAR *gExtractDir = NULL;
-// value to use for gExtractDir for -mobi (which used to be the default)
-// TODO: remove when no longer needed
-#define MOBI_SAVE_DIR _T("..\\ebooks-converted")
 
 static int Usage()
 {
     printf("Tester.exe\n");
     printf("  -doc dirOrFile   : run ebook tests in a given directory or for a given file\n");
-    printf("  -mobi dirOrFile  : run ebook tests only for mobi files\n");
     printf("  -extractto dir   : extract the contents of all -doc/-mobi tests to dir\n");
     printf("  -layout file     : load and layout ebook file\n");
-    printf("  -mobilayout file : same as -layout\n");
     return 1;
 }
 
@@ -57,7 +51,7 @@ static void SaveMobiHtml(const TCHAR *filePathBase, BaseEbookDoc *mb)
 
 static void SaveMobiImages(const TCHAR *filePathBase, BaseEbookDoc *mb)
 {
-    ImageData *img;
+    ImageData2 *img;
     for (size_t i = 0; (img = mb->GetImageData(i)); i++) {
         // it's valid to not have image data at a given index
         if (!img->data)
@@ -72,38 +66,36 @@ static void SaveMobiImages(const TCHAR *filePathBase, BaseEbookDoc *mb)
     }
 }
 
-static bool IsSupported(const TCHAR *filePath, bool allEbooks=true)
+static bool IsSupported(const TCHAR *filePath)
 {
-    return MobiDoc::IsSupported(filePath) ||
-           allEbooks && (EpubDoc::IsSupported(filePath) || Fb2Doc::IsSupported(filePath));
+    return MobiDoc2::IsSupported(filePath) ||
+           EpubDoc::IsSupported(filePath)  ||
+           Fb2Doc::IsSupported(filePath);
 }
 
-static BaseEbookDoc *ParseEbook(const TCHAR *filePath, bool allEbooks=true)
+static BaseEbookDoc *ParseEbook(const TCHAR *filePath)
 {
-    if (allEbooks) {
-        if (EpubDoc::IsSupported(filePath))
-            return EpubDoc::ParseFile(filePath);
-        if (Fb2Doc::IsSupported(filePath))
-            return Fb2Doc::ParseFile(filePath);
-    }
-    return MobiDoc::ParseFile(filePath);
+    if (EpubDoc::IsSupported(filePath))
+        return EpubDoc::ParseFile(filePath);
+    if (Fb2Doc::IsSupported(filePath))
+        return Fb2Doc::ParseFile(filePath);
+    return MobiDoc2::ParseFile(filePath);
 }
 
-static void TestMobiFile(const TCHAR *filePath, bool allEbooks)
+static void TestMobiFile(const TCHAR *filePath)
 {
     _tprintf(_T("Testing file '%s'\n"), filePath);
-    BaseEbookDoc *mb = ParseEbook(filePath, allEbooks);
+    BaseEbookDoc *mb = ParseEbook(filePath);
     if (!mb) {
         printf(" error: failed to parse the file\n");
         return;
     }
 
-    if (!str::IsEmpty(gExtractDir) || !allEbooks) {
+    if (!str::IsEmpty(gExtractDir)) {
         // Given the name of the name of source mobi file "${srcdir}/${file}.mobi"
         // construct a base name for extracted html/image files in the form
         // "${gExtractDir}/${file}"
-        const TCHAR *saveDir = !str::IsEmpty(gExtractDir) ? gExtractDir : MOBI_SAVE_DIR;
-        ScopedMem<TCHAR> filePathBase(path::Join(saveDir, path::GetBaseName(mb->GetFilepath())));
+        ScopedMem<TCHAR> filePathBase(path::Join(gExtractDir, path::GetBaseName(mb->GetFilepath())));
         *(TCHAR *)path::GetExt(filePathBase) = '\0';
 
         dir::CreateAll(gExtractDir);
@@ -114,7 +106,7 @@ static void TestMobiFile(const TCHAR *filePath, bool allEbooks)
     delete mb;
 }
 
-static void MobiTestDir(const TCHAR *dir, bool allEbooks)
+static void MobiTestDir(const TCHAR *dir)
 {
     _tprintf(_T("Testing mobi files in '%s'\n"), dir);
     DirIter di;
@@ -125,23 +117,22 @@ static void MobiTestDir(const TCHAR *dir, bool allEbooks)
 
     const TCHAR *p;
     while ((p = di.Next())) {
-        if (IsSupported(p, allEbooks))
-            TestMobiFile(p, allEbooks);
+        if (IsSupported(p))
+            TestMobiFile(p);
     }
 }
 
-static void MobiTest(const TCHAR *dirOrFile, bool allEbooks=false)
+static void MobiTest(const TCHAR *dirOrFile)
 {
-    if (file::Exists(dirOrFile) && IsSupported(dirOrFile, allEbooks))
-        TestMobiFile(dirOrFile, allEbooks);
+    if (file::Exists(dirOrFile) && IsSupported(dirOrFile))
+        TestMobiFile(dirOrFile);
     else if (dir::Exists(dirOrFile))
-        MobiTestDir(dirOrFile, allEbooks);
+        MobiTestDir(dirOrFile);
 }
 
 // This loads and layouts a given mobi file. Used for profiling layout process.
 static void MobiLayout(const TCHAR *file)
 {
-    nf::AllocatorMark mark;
     if (!file::Exists(file) || !IsSupported(file)) {
         _tprintf(_T("MobiLayout: file %s doesn't exist or not a mobi file"), file);
         return;
@@ -177,7 +168,6 @@ int main(int argc, char **argv)
 #endif
 
     CmdLineParser cmdLine(GetCommandLine());
-    nf::AllocatorMark allocatorMark;
 
     if (cmdLine.Count() < 2)
         return Usage();
@@ -187,12 +177,10 @@ int main(int argc, char **argv)
             return Usage();
         const TCHAR *arg = cmdLine.At(i);
         const TCHAR *param = cmdLine.At(i + 1);
-        if (str::Eq(arg, _T("-mobi")) || str::Eq(arg, _T("-doc"))) {
-            bool onlyMobi = str::Eq(arg, _T("-mobi"));
-            MobiTest(param, !onlyMobi);
+        if (str::Eq(arg, _T("-doc"))) {
+            MobiTest(param);
         }
-        else if (str::Eq(arg, _T("-layout")) || str::Eq(arg, _T("-mobilayout"))) {
-            void *test = nf::alloc(50);
+        else if (str::Eq(arg, _T("-layout"))) {
             InitAllCommonControls();
             ScopedGdiPlus gdi;
             mui::Initialize();
