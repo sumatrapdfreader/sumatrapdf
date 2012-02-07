@@ -398,6 +398,7 @@ ControlEbook::~ControlEbook()
     delete nextMouseOver;
     delete prevDefault;
     delete prevMouseOver;
+    delete ebookDefault;
     delete horizProgressDefault;
 }
 
@@ -538,6 +539,8 @@ void ControlEbook::PageLayout(int dx, int dy)
     li->htmlStrLen = len;
     li->pageDx = dx;
     li->pageDy = dy;
+    pages = LayoutHtml(li);
+    delete li;
 #if 0
     pageLayoutThread = new base::Thread("ControlEbook::PageLayoutBackground");
     pageLayoutThread->Start();
@@ -941,6 +944,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 {
     int ret = 1;
     LogProcessRunningTime();
+
+#ifdef DEBUG
+    // report memory leaks on DbgOut
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
 
     SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
 

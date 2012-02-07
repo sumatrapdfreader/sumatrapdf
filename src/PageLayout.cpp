@@ -13,6 +13,10 @@ using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 
 /*
+TODO: PageLayout could be split into DrawInstrBuilder which knows pageDx, pageDy
+and generates DrawInstr and splits them into pages and a better named class that
+does the parsing of the document builds pages by invoking methods on DrawInstrBuilders.
+
 TODO: instead of generating list of DrawInstr objects, we could add neccessary
 support to mui and use list of Control objects instead (especially if we slim down
 Control objects further to make allocating hundreds of them cheaper or introduce some
@@ -131,9 +135,8 @@ public:
     PageLayout();
     ~PageLayout();
 
-    void Start(LayoutInfo* layoutInfo);
-    void StartLayout(LayoutInfo* layoutInfo);
-    PageData *Next();
+    PageData *IterStart(LayoutInfo* layoutInfo);
+    PageData *IterNext();
 
 private:
     void HandleHtmlTag(HtmlToken *t);
@@ -211,6 +214,7 @@ PageLayout::PageLayout() : currPage(NULL), gfx(NULL)
 
 PageLayout::~PageLayout()
 {
+    delete currPage;
     mui::FreeGraphicsForMeasureText(gfx);
 }
 
@@ -251,7 +255,7 @@ void PageLayout::ChangeFont(FontStyle fs, bool addStyle)
     AddSetFontInstr(currFont);
 }
 
-void PageLayout::StartLayout(LayoutInfo* layoutInfo)
+PageData *PageLayout::IterStart(LayoutInfo* layoutInfo)
 {
     pageDx = (REAL)layoutInfo->pageDx;
     pageDy = (REAL)layoutInfo->pageDy;
@@ -273,6 +277,7 @@ void PageLayout::StartLayout(LayoutInfo* layoutInfo)
     // bigger than what Kindle app uses)
     spaceDx = fontSize / 2.5f;
     StartNewPage();
+    return IterNext();
 }
 
 void PageLayout::StartNewPage()
@@ -660,7 +665,7 @@ void PageLayout::EmitText(HtmlToken *t)
 // xml element at a time. This might cause a creation of one
 // or more pages, which we remeber and send to the caller
 // if we detect accumulated pages.
-PageData *PageLayout::Next()
+PageData *PageLayout::IterNext()
 {
     for (;;)
     {
@@ -689,7 +694,7 @@ PageData *PageLayout::Next()
     if (currPage && currPage->Count() > 0) {
         pagesToSend.Append(currPage);
         currPage = NULL;
-        return Next();
+        return IterNext();
     }
     return NULL;
 }
@@ -698,12 +703,7 @@ Vec<PageData*> *LayoutHtml(LayoutInfo* li)
 {
     Vec<PageData*> *pages = new Vec<PageData*>();
     PageLayout l;
-    l.StartLayout(li);
-    PageData *pd;
-    for (;;) {
-        pd = l.Next();
-        if (!pd)
-            break;
+    for (PageData *pd = l.IterStart(li); pd; pd = l.IterNext()) {
         pages->Append(pd);
     }
     return pages;
