@@ -10,6 +10,7 @@ pjoin = os.path.join
 
 DIRS = ["src", pjoin("src", "utils"), pjoin("src", "installer"), pjoin("src", "ifilter"), pjoin("src", "browserplugin"), pjoin("src", "previewer"), pjoin("src", "ebooktest"), pjoin("src", "mui")]
 INCLUDE_DIRS = DIRS + [pjoin("mupdf", "fitz"), pjoin("mupdf", "pdf"), pjoin("mupdf", "xps")]
+OBJECT_DIRS = { "src\\utils": "$(OU)", "src\\browserplugin": "$(ODLL)", "src\\ifilter": "$(ODLL)", "src\\previewer": "$(ODLL)", "src\\ebooktest": "$(OEB)", "src\\ebooktest2": "$(OE2)", "src\\mui": "$(OMUI)" } # default: "$(OS)"
 MAKEFILE = "makefile.msvc"
 DEPENDENCIES_PER_LINE = 3
 
@@ -34,6 +35,13 @@ def prependPath(files, basefile=None):
 				result.append(path)
 				break
 	return result
+
+def getObjectPath(file):
+	file = file.replace("/", "\\")
+	for (path, odir) in OBJECT_DIRS.items():
+		if file.startswith(path + "\\"):
+			return odir
+	return "$(OS)"
 
 @memoize
 def extractIncludes(file):
@@ -60,10 +68,11 @@ def flattenDependencyList(dependencies):
 	flatlist = []
 	for file in dependencies.keys():
 		if dependencies[file]:
+			opath = getObjectPath(file)
 			filename = os.path.splitext(os.path.split(file)[1])[0]
 			deplist = sorted(dependencies[file], key=str.lower)
 			for depgroup in group(deplist, DEPENDENCIES_PER_LINE):
-				flatlist.append("$(OS)\\%s.obj: %s" % (filename, " ".join(depgroup)))
+				flatlist.append("%s\\%s.obj: %s" % (opath, filename, " ".join(depgroup)))
 	return flatlist
 
 def normalizePaths(paths):
