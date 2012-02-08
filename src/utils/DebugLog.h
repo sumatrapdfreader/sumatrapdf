@@ -25,30 +25,8 @@ for an easy switch for turning logging on/off in a given .cpp file.
 
 namespace dbglog {
 
-void lognewline()
-{
-    OutputDebugStringA("\n");
-}
-
-void lf(const char *fmt, ...)
-{
-    va_list args;
-    va_start(args, fmt);
-    ScopedMem<char> s(str::FmtV(fmt, args));
-    OutputDebugStringA(s.Get());
-    va_end(args);
-    lognewline();
-}
-
-void lf(const WCHAR *fmt, ...)
-{
-    va_list args;
-    va_start(args, fmt);
-    ScopedMem<WCHAR> s(str::FmtV(fmt, args));
-    OutputDebugStringW(s.Get());
-    va_end(args);
-    lognewline();
-}
+void lf(const char *fmt, ...);
+void lf(const WCHAR *fmt, ...);
 
 } // namespace dbglog
 
@@ -60,12 +38,12 @@ inline void l(const WCHAR *s) { }
 #else
 inline void l(const char *s) {
     OutputDebugStringA(s);
-    dbglog::lognewline();
+    OutputDebugStringA("\n");
 }
 
 inline void l(const WCHAR *s) {
     OutputDebugStringW(s);
-    dbglog::lognewline();
+    OutputDebugStringA("\n");
 }
 
 #define lf(fmt, ...) dbglog::lf(fmt, __VA_ARGS__)
