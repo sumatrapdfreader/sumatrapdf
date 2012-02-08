@@ -168,7 +168,7 @@ void ControlEbook::OnPaint()
 
 static ControlEbook *gControlFrame = NULL;
 
-static void OnCreateWindow(HWND hwnd)
+static LRESULT OnCreateWindow(HWND hwnd)
 {
     gControlFrame = new ControlEbook(hwnd);
 
@@ -182,6 +182,15 @@ static void OnCreateWindow(HWND hwnd)
     // triggers OnSize(), so must be called after we
     // have things set up to handle OnSize()
     SetMenu(hwnd, mainMenu);
+
+    return 0;
+}
+
+static LRESULT OnDestroyWindow(HWND hwnd)
+{
+    delete gControlFrame;
+    PostQuitMessage(0);
+    return 0;
 }
 
 static void OnOpen(HWND hwnd)
@@ -266,19 +275,15 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 {
     switch (msg)
     {
-    case WM_CREATE: OnCreateWindow(hwnd); break;
-    case WM_DESTROY: PostQuitMessage(0); delete gControlFrame; break;
-    // if we return 0, during WM_PAINT we can check
-    // PAINTSTRUCT.fErase to see if WM_ERASEBKGND
-    // was sent before WM_PAINT
-    case WM_ERASEBKGND: break;
-    case WM_PAINT: gControlFrame->OnPaint(); break;
-    case WM_COMMAND: return OnCommand(hwnd, msg, wParam, lParam);
-    case WM_KEYDOWN: return OnKeyDown(hwnd, msg, wParam, lParam);
-    case WM_SIZE: return OnSize(hwnd, msg, wParam, lParam);
-    default: return DefWindowProc(hwnd, msg, wParam, lParam);
+    case WM_CREATE:     return OnCreateWindow(hwnd);
+    case WM_DESTROY:    return OnDestroyWindow(hwnd);
+    case WM_ERASEBKGND: return TRUE; // do nothing, helps to avoid flicker
+    case WM_PAINT:      gControlFrame->OnPaint(); return 0;
+    case WM_COMMAND:    return OnCommand(hwnd, msg, wParam, lParam);
+    case WM_KEYDOWN:    return OnKeyDown(hwnd, msg, wParam, lParam);
+    case WM_SIZE:       return OnSize(hwnd, msg, wParam, lParam);
+    default:            return DefWindowProc(hwnd, msg, wParam, lParam);
     }
-    return 0;
 }
 
 static bool InstanceInit(HINSTANCE hInstance, int nCmdShow)
