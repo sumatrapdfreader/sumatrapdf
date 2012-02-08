@@ -3,10 +3,9 @@
 
 #include "BaseUtil.h"
 #include "Allocator.h"
-#include "WinUtil.h"
-
 #include "Scoped.h"
 #include "StrUtil.h"
+#include "WinUtil.h"
 
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
@@ -16,7 +15,9 @@ using namespace Gdiplus;
 // underreports the width
 RectF MeasureTextAccurate2(Graphics *g, Font *f, const WCHAR *s, size_t len)
 {
-    assert(len > 0);
+    CrashIf(0 == len);
+    FixedArray<Region, 1024> regionBuf(len);
+    Region *r = regionBuf.Get();
     StringFormat sf(StringFormat::GenericTypographic());
     sf.SetFormatFlags(sf.GetFormatFlags() | StringFormatFlagsMeasureTrailingSpaces);
     RectF layoutRect;
@@ -27,9 +28,8 @@ RectF MeasureTextAccurate2(Graphics *g, Font *f, const WCHAR *s, size_t len)
         charRanges[i].Length = 1;
     }
     sf.SetMeasurableCharacterRanges(len, charRanges);
-    FixedArray<Region, 1024> regionBuf(len);
-    Region *r = regionBuf.Get();
-    g->MeasureCharacterRanges(s, len, f, layoutRect, &sf, len, r);
+    Status status = g->MeasureCharacterRanges(s, len, f, layoutRect, &sf, len, r);
+    CrashIf(status != Ok);
     RectF bbox;
     REAL maxDy = 0;
     REAL totalDx = 0;
@@ -42,6 +42,51 @@ RectF MeasureTextAccurate2(Graphics *g, Font *f, const WCHAR *s, size_t len)
     bbox.Width = totalDx;
     bbox.Height = maxDy;
     return bbox;
+}
+
+void InitFontMetricsCache(FontMetricsCache *metrics, Graphics *gfx, Font *font)
+{
+    WCHAR s[2] = { 0 };
+    metrics->font = font;
+    RectF bbox;
+    for (size_t i = 0; i < 256-32; i++) {
+        s[0] = i + 32;
+        bbox = MeasureTextAccurate2(gfx, font, s, 1);
+        metrics->dx[i] = bbox.Width;
+        metrics->dy[i] = bbox.Height;
+    }
+}
+
+static bool MeasureTextUsingMetricsCache(FontMetricsCache *fontMetrics, const WCHAR *s, size_t len, RectF& bboxOut)
+{
+    float totalDx = 0;
+    float maxDy = 0;
+    for (size_t i = 0; i < len; i++) {
+        int n = s[i];
+        if ((n < 32) || (n > 256))
+            return false;
+        totalDx += fontMetrics->dx[n];
+        float dy = fontMetrics->dy[n];
+        if (dy > maxDy)
+            maxDy = dy;
+    }
+    bboxOut.X = 0; bboxOut.Y = 0;
+    bboxOut.Width = totalDx; bboxOut.Height = maxDy;
+    return true;
+}
+
+// Measure text using optional FontMetricsCache. The caller must ensure that the
+// Font matches fontMetrics as they are updated lazily.
+RectF MeasureText(Graphics *g, Font *f, FontMetricsCache *fontMetrics, const WCHAR *s, size_t len)
+{
+    RectF bbox;
+    CrashIf(f != fontMetrics->font);
+    if (MeasureTextUsingMetricsCache(fontMetrics, s, len, bbox)) {
+        if (bbox.Width != 0)
+            bbox.Width += 4.5f;
+        return bbox;
+    }
+    return MeasureTextAccurate2(g, f, s, len);
 }
 
 // http://www.codeproject.com/KB/GDI-plus/measurestring.aspx

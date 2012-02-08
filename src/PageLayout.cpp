@@ -1,13 +1,12 @@
 /* Copyright 2011-2012 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "PageLayout.h"
-#include "StrUtil.h"
+#include "DebugLog.h"
 #include "HtmlPullParser.h"
 #include "Mui.h"
-#include "StrUtil.h"
-#include "HtmlPullParser.h"
+#include "PageLayout.h"
 #include "Scoped.h"
+#include "StrUtil.h"
 
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
@@ -206,6 +205,8 @@ private:
 
     size_t              currLineInstrOffset;
     WCHAR               buf[512];
+
+    FontMetricsCache    fontMetrics;
 };
 
 PageLayout::PageLayout() : currPage(NULL), gfx(NULL)
@@ -270,6 +271,7 @@ PageData *PageLayout::IterStart(LayoutInfo* layoutInfo)
     finishedParsing = false;
     currJustification = Both;
     SetCurrentFont(FontStyleRegular);
+    InitFontMetricsCache(&fontMetrics, gfx, currFont);
 
     CrashIf(currPage);
     lineSpacing = currFont->GetHeight(gfx);
@@ -484,7 +486,15 @@ void PageLayout::AddWord(WordInfo *wi)
     // that will packaged with pages information
 
     size_t strLen = str::Utf8ToWcharBuf(wi->s, wi->len, buf, dimof(buf));
+#if 1
+    // with fontMetrics cache
+    if (currFont == fontMetrics.font)
+        bbox = MeasureText(gfx, currFont, &fontMetrics, buf, strLen);
+    else
+        bbox = MeasureText(gfx, currFont, buf, strLen);
+#else
     bbox = MeasureText(gfx, currFont, buf, strLen);
+#endif
     // TODO: handle a case where a single word is bigger than the whole
     // line, in which case it must be split into multiple lines
     REAL dx = bbox.Width;

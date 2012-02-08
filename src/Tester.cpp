@@ -9,14 +9,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "NoFreeAllocator.h"
-#include "Scoped.h"
 #include "DirIter.h"
-#include "MobiDoc.h"
+#include "DebugLog.h"
 #include "FileUtil.h"
-#include "WinUtil.h"
-#include "PageLayout.h"
+#include "MobiDoc.h"
 #include "Mui.h"
+#include "NoFreeAllocator.h"
+#include "PageLayout.h"
+#include "Scoped.h"
+#include "Timer.h"
+#include "WinUtil.h"
 
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
@@ -163,8 +165,9 @@ static void MobiLayout(char *file)
     li.fontSize = 12;
     li.htmlStr = mb->GetBookHtmlData(li.htmlStrLen);
 
-    LayoutHtml(&li);
-
+    Vec<PageData*> *pages = LayoutHtml(&li);
+    DeleteVecMembers<PageData*>(*pages);
+    delete pages;
     delete mb;
 }
 
@@ -195,7 +198,9 @@ int main(int argc, char **argv)
         InitAllCommonControls();
         ScopedGdiPlus gdi;
         mui::Initialize();
+        Timer t(true);
         MobiLayout(argv[i]);
+        lf("Spent %.2f ms laying out %s", t.GetCurrTimeInMs(), argv[i]);
         mui::Destroy();
         return 0;
     }
