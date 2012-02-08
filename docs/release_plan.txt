@@ -9,3 +9,68 @@ Things to do before 2.0 release:
   control captures the focus. I tried hack it by detecting frame window loosing focus (via WM_KILLFOCUS) and
   doing delayed re-capture of focus to frame window, but it doesn't work and it's not the right time to do
   it (it might kill the pop-up menu on the button).
+
+The shortest path to ebook support in sumatra:
+1. Make UI responsive during layout process and allow re-layout (when resizing a window)
+   which maintains a fixed top of current page when moving forward but re-syncs with
+   natural layout when going back. This is what Kindle app does and is important to minimize
+   user disorientation in that case. The issue here is that when changing size of the page,
+   if we re-layout from the beginning, the part that is currently at the top of the page
+   would end up somewher in the middle of another page, which would be disorienting.
+   Keeping fixed top of current page requires being able to do layout from arbitrary point
+   in the document i.e. top of current page so each page needs enough information to be
+   able to do that. At the same time, it's not feasible to re-layout pages before that
+   for a different page size, so we effectively need to have 2 layouts: one from the
+   beginning and one from current page. As long as we only move forward by a page, we
+   use the layout from current page. When going backwards or skipping ahead, we re-sync
+   with layout from the beginning and can drop the layout from current page.
+   This might also involve speeding up text measure by caching widths of the most
+   common letters for the most common font.
+
+2. Small tweaks to UI: next/prev buttons are graphics (> and <) taking its own space
+   on the left and right of ebook window (as opposed to textual buttons on top of it)
+   This could be a good opportunity to introduce VerticalLayout, HorizontalLayout
+   and CompositeLayout (?) classes deriving from Layout and implementing generic
+   veritical/horizontal layout logic and composite layout (layout that simply
+   combines several layouts and invokes them in sequence (as an alternative
+   to use dummy Controls whose only purpose is to host child controls for
+   the purpose of layout process).
+
+3. Support more of the mobi format
+3.1 images
+3.2 first page should be cover page if there are images (it seems the convention is
+    that first two images are two versions of the cover page (at different resolution).
+    depends on 3.1
+3.3 links
+3.4 lists (ul, li)
+3.5 probably more
+
+4. Integrate the code into Sumatra. The way I'm thinking about doing it to minimize
+   changing existing code:
+
+a) rename WindowInfo to EngineWindowInfo and introduce EbookWindowInfo
+b) 
+struct WindowInfo {
+  enum WindowInfoType { Engine, Ebook };
+  WindowInfoType type;
+  union {
+    EngineWindowInfo engineWindowInfo;
+    EbookWindowInfo ebookWindowInfo;
+}};
+
+In that scheme, about window (or whatever we'll call it), could be its own type (as opposed
+to sharing logic with engine window).
+
+This is introduce the distinction between the thing that is in gWindows array (WindowInfo)
+and the thing that current code uses to act upon (EngineWindowInfo). In most cases we
+would just fish out EngineWindowInfo from WindowInfo and pass to other functions.
+
+In some cases, like LoadDocument(), we need to take into account the type and do dispatch
+based on that. The most difficulat part here is transitioning between types of a window e.g.
+when opening an ebook in what is currently engine window (and vice versa).
+
+The simplest way is to create a completely new window with desired type on top of existing
+window and close the old one. Another possibility is to write code that transitions from one
+type to another e.g. transitioning from engine window to ebook window would involve destroying
+all its hwnd windows etc.
+
