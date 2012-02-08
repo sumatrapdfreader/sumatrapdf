@@ -24,8 +24,6 @@ The shortest path to ebook support in sumatra:
    beginning and one from current page. As long as we only move forward by a page, we
    use the layout from current page. When going backwards or skipping ahead, we re-sync
    with layout from the beginning and can drop the layout from current page.
-   This might also involve speeding up text measure by caching widths of the most
-   common letters for the most common font.
 
 2. Small tweaks to UI: next/prev buttons are graphics (> and <) taking its own space
    on the left and right of ebook window (as opposed to textual buttons on top of it)
