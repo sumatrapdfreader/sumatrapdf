@@ -50,8 +50,9 @@ public:
     }
 
     virtual ImageData2 *GetImageData(const char *id) {
+        // TODO: paths are relative from the html document to the image
         for (size_t i = 0; i < images.Count(); i++) {
-            if (str::Eq(images.At(i).id, id))
+            if (str::EndsWith(id, images.At(i).id))
                 return GetImageData(i);
         }
         return NULL;
@@ -68,6 +69,20 @@ public:
         return &images.At(index);
     }
 };
+
+static void UrlDecode(TCHAR *url)
+{
+    for (TCHAR *src = url; *src; src++, url++) {
+        int val;
+        if (*src == '%' && str::Parse(src, _T("%%%2x"), &val)) {
+            *url = (char)val;
+            src += 2;
+        } else {
+            *url = *src;
+        }
+    }
+    *url = '\0';
+}
 
 bool EpubDocImpl::Load()
 {
@@ -130,6 +145,7 @@ bool EpubDocImpl::Load()
             if (!imgPath)
                 continue;
             ScopedMem<TCHAR> zipPath(str::Join(contentPath, imgPath));
+            UrlDecode(zipPath);
             // load the image lazily
             ImageData2 data = { 0 };
             data.id = str::conv::ToUtf8(imgPath);

@@ -491,6 +491,22 @@ void PageLayout::HandleHtmlTag(HtmlToken *t, BaseEbookDoc *doc)
         else
             /* TODO: display "missing image box"? */;
         break;
+    case Tag_H1: case Tag_H2: case Tag_H3: case Tag_H4: case Tag_H5:
+        // TODO: also adjust font size
+        ChangeFont(FontStyleBold, t->IsStartTag());
+        currJustification = Align_Left;
+        break;
+    case Tag_Br:
+        if (!t->IsEndTag())
+            StartNewLine(false);
+        break;
+    case Tag_Ul: case Tag_Ol: case Tag_Dl:
+        currJustification = Align_Left;
+        break;
+    case Tag_Li: case Tag_Dd: case Tag_Dt:
+        // TODO: indent text
+        StartNewLine(false);
+        break;
     }
 }
 

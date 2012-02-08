@@ -55,6 +55,7 @@ public:
     }
 
     void LoadDoc(const TCHAR *fileName);
+    size_t PageCount() { return pages.Count(); }
 
     void SetStatusText(const TCHAR *text);
     void GoToPage(int newPageNo);
@@ -228,13 +229,32 @@ static LRESULT OnCommand(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 static LRESULT OnKeyDown(HWND hwnd, UINT msg, WPARAM key, LPARAM lParam)
 {
     switch (key) {
-    case VK_LEFT: gControlFrame->AdvancePage(-1); break;
-    case VK_RIGHT: gControlFrame->AdvancePage(1); break;
-    case 'O': OnOpen(hwnd); break;
-    case VK_SPACE: gControlFrame->AdvancePage(IsShiftPressed() ? -1 : 1); break;
-    case VK_ESCAPE: case 'Q': OnExit(hwnd); break;
-    case VK_F1: OnToggleBbox(hwnd); break;
-    default: return DefWindowProc(hwnd, msg, key, lParam);
+    case VK_LEFT: case VK_PRIOR: case 'P':
+        gControlFrame->AdvancePage(-1);
+        break;
+    case VK_RIGHT: case VK_NEXT: case 'N':
+        gControlFrame->AdvancePage(1);
+        break;
+    case 'O':
+        OnOpen(hwnd);
+        break;
+    case VK_SPACE:
+        gControlFrame->AdvancePage(IsShiftPressed() ? -1 : 1);
+        break;
+    case VK_ESCAPE: case 'Q':
+        OnExit(hwnd);
+        break;
+    case VK_F1:
+        OnToggleBbox(hwnd);
+        break;
+    case VK_HOME:
+        gControlFrame->GoToPage(1);
+        break;
+    case VK_END:
+        gControlFrame->GoToPage(gControlFrame->PageCount());
+        break;
+    default:
+        return DefWindowProc(hwnd, msg, key, lParam);
     }
     return 0;
 }
