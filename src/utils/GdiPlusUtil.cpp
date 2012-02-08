@@ -140,3 +140,91 @@ Bitmap *BitmapFromData(void *data, size_t len)
 
     return bmp;
 }
+
+// adapted from http://cpansearch.perl.org/src/RJRAY/Image-Size-3.230/lib/Image/Size.pm
+Rect BitmapSizeFromData(char *data, size_t len)
+{
+    Rect result;
+    // too short to contain magic number and image dimensions
+    if (len < 8) {
+    }
+    // Bitmap
+    else if (str::StartsWith(data, "BM")) {
+        if (len >= sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER)) {
+            BITMAPINFOHEADER *bmi = (BITMAPINFOHEADER *)(data + sizeof(BITMAPFILEHEADER));
+            DWORD width = LEtoHl(bmi->biWidth);
+            DWORD height = LEtoHl(bmi->biHeight);
+            result = Rect(0, 0, width, height);
+        }
+    }
+    // PNG
+    else if (str::StartsWith(data, "\x89PNG\x0D\x0A\x1A\x0A")) {
+        if (len >= 24 && str::StartsWith(data + 12, "IHDR")) {
+            DWORD width = BEtoHl(*(DWORD *)(data + 16));
+            DWORD height = BEtoHl(*(DWORD *)(data + 20));
+            result = Rect(0, 0, width, height);
+        }
+    }
+    // JPEG
+    else if (str::StartsWith(data, "\xFF\xD8")) {
+        // find the last start of frame marker for non-differential Huffman coding
+        for (size_t ix = 2; ix + 9 < len && data[ix] == '\xFF'; ) {
+            if ('\xC0' <= data[ix + 1] && data[ix + 1] <= '\xC3') {
+                WORD width = BEtoHs(*(WORD *)(data + ix + 7));
+                WORD height = BEtoHs(*(WORD *)(data + ix + 5));
+                result = Rect(0, 0, width, height);
+            }
+            ix += BEtoHs(*(WORD *)(data + ix + 2)) + 2;
+        }
+    }
+    // GIF
+    else if (str::StartsWith(data, "GIF87a") || str::StartsWith(data, "GIF89a")) {
+        if (len >= 13) {
+            // find the first image's actual size instead of using the
+            // "logical screen" size which is sometimes too large
+            size_t ix = 13;
+            // skip the global color table
+            if ((data[10] & 0x80))
+                ix += 3 * (1 << ((data[10] & 0x07) + 1));
+            while (ix + 8 < len) {
+                if (data[ix] == '\x2c') {
+                    WORD width = LEtoHs(*(WORD *)(data + ix + 5));
+                    WORD height = LEtoHs(*(WORD *)(data + ix + 7));
+                    result = Rect(0, 0, width, height);
+                    break;
+                }
+                else if (data[ix] == '\x21' && data[ix + 1] == '\xF9')
+                    ix += 8;
+                else if (data[ix] == '\x21' && data[ix + 1] == '\xFE') {
+                    char *commentEnd = (char *)memchr(data + ix + 2, '\0', len - ix - 2);
+                    ix = commentEnd ? commentEnd - data + 1 : len;
+                }
+                else if (data[ix] == '\x21' && data[ix + 1] == '\x01' && ix + 15 < len) {
+                    char *textDataEnd = (char *)memchr(data + ix + 15, '\0', len - ix - 15);
+                    ix = textDataEnd ? textDataEnd - data + 1 : len;
+                }
+                else if (data[ix] == '\x21' && data[ix + 1] == '\xFF' && ix + 14 < len) {
+                    char *applicationDataEnd = (char *)memchr(data + ix + 14, '\0', len - ix - 14);
+                    ix = applicationDataEnd ? applicationDataEnd - data + 1 : len;
+                }
+                else
+                    break;
+            }
+        }
+    }
+    // TIFF
+    else if (memeq(data, "MM\x00\x2A", 4) || memeq(data, "II\x2A\x00", 4)) {
+        // TODO: speed this up (if necessary)
+    }
+
+    if (result.IsEmptyArea()) {
+        // let GDI+ extract the image size if we've failed
+        // (currently happens for animated GIFs and for all TIFFs)
+        Bitmap *bmp = BitmapFromData(data, len);
+        if (bmp)
+            result = Rect(0, 0, bmp->GetWidth(), bmp->GetHeight());
+        delete bmp;
+    }
+
+    return result;
+}

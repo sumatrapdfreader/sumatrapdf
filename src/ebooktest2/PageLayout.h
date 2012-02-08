@@ -11,107 +11,81 @@
 
 using namespace Gdiplus;
 
-// Layout information for a given page is a list of
-// draw instructions that define what to draw and where.
-enum DrawInstrType {
-    InstrTypeString = 0,
-    InstrTypeLine,
-    InstrTypeSetFont,
-    InstrTypeImage,
-};
+struct WordInfo {
+    const char *    s;
+    size_t          len;
 
-struct InstrString {
-    const char *        s;
-    size_t              len;
-};
-
-struct InstrSetFont {
-    Font *              font;
-};
-
-struct InstrImage {
-    ImageData2 *        data;
+    bool IsNewline() { return len == 1 && *s == '\n'; }
 };
 
 struct DrawInstr {
-    DrawInstrType       type;
+    // Layout information for a given page is a list of
+    // draw instructions that define what to draw and where.
+    enum Type { TypeString, TypeLine, TypeSetFont, TypeImage };
+
+    Type                type;
     union {
         // info specific to a given instruction
-        InstrString     str;
-        InstrSetFont    setFont;
-        InstrImage      img;
+        WordInfo        str;
+        Font *          font;
+        ImageData2 *    img;
     };
     RectF bbox; // common to most instructions
 
     DrawInstr() { }
-    DrawInstr(DrawInstrType t, RectF bbox=RectF()) : type(t), bbox(bbox) { }
+    DrawInstr(Type t, RectF bbox=RectF()) : type(t), bbox(bbox) { }
 
     static DrawInstr Str(const char *s, size_t len, RectF bbox) {
-        DrawInstr di(InstrTypeString, bbox);
+        DrawInstr di(TypeString, bbox);
         di.str.s = s;
         di.str.len = len;
         return di;
     }
 
     static DrawInstr SetFont(Font *font) {
-        DrawInstr di(InstrTypeSetFont);
-        di.setFont.font = font;
+        DrawInstr di(TypeSetFont);
+        di.font = font;
         return di;
     }
 
     static DrawInstr Line(RectF bbox) {
-        DrawInstr di(InstrTypeLine, bbox);
+        DrawInstr di(TypeLine, bbox);
         return di;
     }
 
     static DrawInstr Image(ImageData2 *data, RectF bbox) {
-        DrawInstr di(InstrTypeImage, bbox);
-        di.img.data = data;
+        DrawInstr di(TypeImage, bbox);
+        di.img = data;
         return di;
     }
 };
 
-struct LayoutState {
-    const char *htmlStart;
-    const char *htmlEnd;
-};
+class PageData {
+    Vec<DrawInstr> drawInstructions;
 
-struct PageData {
-    Vec<DrawInstr>  drawInstructions;
-
-    /* layoutState at the beginning of this page. It allows us to
-       re-do layout starting exactly where this page starts, which
-       is needed when handling resizing */
-    LayoutState    layoutState;
-
-    void Append(DrawInstr& di) {
-        drawInstructions.Append(di);
-    }
-    size_t Count() const {
-        return drawInstructions.Count();
-    }
+public:
+    DrawInstr& Instr(size_t idx) { return drawInstructions.At(idx); }
+    void Append(DrawInstr di) { drawInstructions.Append(di); }
+    size_t Count() const { return drawInstructions.Count(); }
 };
 
 // Called by LayoutHtml with instructions for each page. Caller
 // must remember them as LayoutHtml doesn't retain them.
 class INewPageObserver {
 public:
-    virtual ~INewPageObserver() { }
     virtual void NewPage(PageData *pageData) = 0;
 };
 
 // just to pack args to LayoutHtml
 class LayoutInfo {
 public:
-    LayoutInfo() : doc(NULL), fontName(NULL), fontSize(0), htmlStr(0), htmlStrLen(0) { }
+    LayoutInfo() : doc(NULL), htmlStr(0), htmlStrLen(0) { }
 
+    // BaseEbookDoc is required for accessing file images
     BaseEbookDoc *  doc;
-
+    // pageSize indicates the maximum size of a single page (without margins)
     SizeI           pageSize;
-
-    const WCHAR *   fontName;
-    float           fontSize;
-
+    // usually: htmlStr = doc->GetBookHtmlData(li.htmlStrLen);
     const char *    htmlStr;
     size_t          htmlStrLen;
 };
@@ -137,8 +111,8 @@ public:
     Font *GetFont(const WCHAR *name, float size, FontStyle style);
 };
 
-void LayoutHtml(LayoutInfo* li, FontCache *fontCache, INewPageObserver *pageObserver=NULL);
-void DrawPageLayout(Graphics *g, PageData *pageData, REAL offX, REAL offY, bool showBbox);
-void InitGraphicsMode(Graphics *g);
+// the fontCache must outlive any PageData the INewPageObserver receives
+void LayoutHtml(LayoutInfo li, FontCache *fontCache, INewPageObserver *pageObserver=NULL);
+void DrawPageLayout(Graphics *g, PageData *pageData, REAL offX, REAL offY, bool debugBboxes=false);
 
 #endif

@@ -16,5 +16,6 @@ REAL     GetSpaceDx(Graphics *g, Font *f);
 
 const TCHAR *GfxFileExtFromData(char *data, size_t len);
 Bitmap * BitmapFromData(void *data, size_t len);
+Rect BitmapSizeFromData(char *data, size_t len);
 
 #endif

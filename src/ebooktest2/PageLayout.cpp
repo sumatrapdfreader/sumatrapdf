@@ -7,6 +7,9 @@
 #include "HtmlPullParser.h"
 #include "GdiPlusUtil.h"
 
+#define DEFAULT_FONT_NAME   L"Georgia"
+#define DEFAULT_FONT_SIZE   12
+
 // set consistent mode for our graphics objects so that we get
 // the same results when measuring text
 void InitGraphicsMode(Graphics *g)
@@ -34,71 +37,19 @@ Font *FontCache::GetFont(const WCHAR *name, float size, FontStyle style)
             return e->font;
     }
 
-    f.name = str::Dup(f.name);
-    // TODO: handle a failure to create a font. Use fontCache[0] if exists
-    // or try to fallback to a known font like Times New Roman
     f.font = ::new Font(name, size, style);
+    if (!f.font) {
+        // fall back to the default font, if a desired font can't be created
+        f.font = ::new Font(DEFAULT_FONT_NAME, size, style);
+        if (!f.font) {
+            if (cache.Count() > 0)
+                return cache.At(0).font;
+            return NULL;
+        }
+    }
+    f.name = str::Dup(f.name);
     cache.Append(f);
     return f.font;
-}
-
-struct WordInfo {
-    const char *s;
-    size_t len;
-
-    bool IsNewline() { return len == 1 && *s == '\n'; }
-};
-
-class WordsIter {
-    const char *s;
-    const char *end;
-    // modified during the iteration
-    WordInfo wi;
-    const char *curr;
-
-public:
-    WordsIter(const char *s) : s(s), end(s + str::Len(s)), curr(s) { }
-
-    void Reset() { curr = s; }
-    WordInfo *Next();
-};
-
-// return true if s points to "\n", "\r" or "\r\n"
-// and advance s/left to skip it
-// We don't want to collapse multiple consequitive newlines into
-// one as we want to be able to detect paragraph breaks (i.e. empty
-// newlines i.e. a newline following another newline)
-static bool IsNewlineSkip(const char *& s, const char *end)
-{
-    const char *os = s;
-    if (s < end && '\r' == *s)
-        s++;
-    if (s < end && '\n' == *s)
-        s++;
-    return s != os;
-}
-
-// iterates words in a string e.g. "foo bar\n" returns "foo", "bar" and "\n"
-// also unifies line endings i.e. "\r" and "\r\n" are turned into a single "\n"
-// returning NULL means end of iterations
-WordInfo *WordsIter::Next()
-{
-    while (curr < end && *curr == ' ')
-        curr++;
-    if (curr == end)
-        return NULL;
-    assert(*curr != 0);
-    if (IsNewlineSkip(curr, end)) {
-        wi.len = 1;
-        wi.s = "\n";
-        return &wi;
-    }
-    wi.s = curr;
-    while (curr < end && !isspace(*curr))
-        curr++;
-    wi.len = curr - wi.s;
-    assert(wi.len > 0);
-    return &wi;
 }
 
 class PageLayout
@@ -107,7 +58,7 @@ public:
     PageLayout(FontCache *fontCache);
     ~PageLayout();
 
-    void StartLayout(LayoutInfo* layoutInfo);
+    void StartLayout(LayoutInfo layoutInfo);
     void Process(INewPageObserver *pageObserver, BaseEbookDoc *doc);
 
 private:
@@ -133,7 +84,7 @@ private:
 
     DrawInstr *GetInstructionsForCurrentLine(DrawInstr *& endInst) const {
         size_t len = currPage->Count() - currLineInstrOffset;
-        DrawInstr *ret = &currPage->drawInstructions.At(currLineInstrOffset);
+        DrawInstr *ret = &currPage->Instr(currLineInstrOffset);
         endInst = ret + len;
         return ret;
     }
@@ -215,13 +166,13 @@ void PageLayout::ChangeFont(FontStyle fs, bool addStyle)
     AddSetFontInstr(currFont);
 }
 
-void PageLayout::StartLayout(LayoutInfo* layoutInfo)
+void PageLayout::StartLayout(LayoutInfo layoutInfo)
 {
-    pageSize = layoutInfo->pageSize.Convert<REAL>();
+    pageSize = layoutInfo.pageSize.Convert<REAL>();
 
-    fontName.Set(str::Dup(layoutInfo->fontName));
-    fontSize = layoutInfo->fontSize;
-    htmlParser = new HtmlPullParser(layoutInfo->htmlStr, layoutInfo->htmlStrLen);
+    fontName.Set(str::Dup(DEFAULT_FONT_NAME));
+    fontSize = DEFAULT_FONT_SIZE;
+    htmlParser = new HtmlPullParser(layoutInfo.htmlStr, layoutInfo.htmlStrLen);
 
     currJustification = Align_Justify;
     SetCurrentFont(FontStyleRegular);
@@ -258,7 +209,7 @@ REAL PageLayout::GetCurrentLineDx()
     DrawInstr *end;
     DrawInstr *currInstr = GetInstructionsForCurrentLine(end);
     while (currInstr < end) {
-        if (InstrTypeString == currInstr->type) {
+        if (DrawInstr::TypeString == currInstr->type) {
             dx += currInstr->bbox.Width;
             dx += spaceDx;
         }
@@ -275,7 +226,7 @@ void PageLayout::LayoutLeftStartingAt(REAL offX)
     DrawInstr *end;
     DrawInstr *currInstr = GetInstructionsForCurrentLine(end);
     while (currInstr < end) {
-        if (InstrTypeString == currInstr->type) {
+        if (DrawInstr::TypeString == currInstr->type) {
             // currInstr Width and Height are already set
             currInstr->bbox.X = curr.x;
             currInstr->bbox.Y = curr.y;
@@ -405,13 +356,13 @@ void PageLayout::AddWord(WordInfo *wi)
 // TODO: extract desired dimensions from tag
 void PageLayout::AddImage(ImageData2 *data)
 {
-    // TODO: can be done without creating a bitmap, cf. ImagesEngine::SizeFromData
-    Bitmap *bmp = BitmapFromData(data->data, data->len);
-    if (!bmp)
+    Rect imgSize = BitmapSizeFromData(data->data, data->len);
+    if (imgSize.IsEmptyArea())
         return;
+
     // display all images centered on their own lines, for now
     StartNewLine(false);
-    RectF img(0, 0, (REAL)bmp->GetWidth(), (REAL)bmp->GetHeight());
+    RectF img(0, 0, (REAL)imgSize.Width, (REAL)imgSize.Height);
     if (pageSize.dy - curr.y < img.Height / 2) {
         // move overly large images to a new page
         StartNewPage();
@@ -428,7 +379,6 @@ void PageLayout::AddImage(ImageData2 *data)
     currPage->Append(DrawInstr::Image(data, img));
     curr.y += img.Height;
     StartNewLine(false);
-    delete bmp;
 }
 
 void PageLayout::HandleHtmlTag(HtmlToken *t, BaseEbookDoc *doc)
@@ -532,10 +482,9 @@ void PageLayout::EmitText(HtmlToken *t)
     }
 }
 
-// Return the next parsed page. Returns NULL if finished parsing.
-// For simplicity of implementation, we parse xml text node or
-// xml element at a time. This might cause a creation of one
-// or more pages, which we send to the caller through pageObserver
+// For simplicity of implementation, we parse all xml text node or
+// xml element at the same time. This might cause a creation of one
+// or more pages, which we send to the caller through pageObserver.
 void PageLayout::Process(INewPageObserver *pageObserver, BaseEbookDoc *doc)
 {
     this->pageObserver = pageObserver;
@@ -554,14 +503,14 @@ void PageLayout::Process(INewPageObserver *pageObserver, BaseEbookDoc *doc)
         StartNewPage();
 }
 
-void LayoutHtml(LayoutInfo* li, FontCache *fontCache, INewPageObserver *pageObserver)
+void LayoutHtml(LayoutInfo li, FontCache *fontCache, INewPageObserver *pageObserver)
 {
     PageLayout l(fontCache);
     l.StartLayout(li);
-    l.Process(pageObserver, li->doc);
+    l.Process(pageObserver, li.doc);
 }
 
-void DrawPageLayout(Graphics *g, PageData *pageData, REAL offX, REAL offY, bool showBbox)
+void DrawPageLayout(Graphics *g, PageData *pageData, REAL offX, REAL offY, bool debugBboxes)
 {
     InitGraphicsMode(g);
 
@@ -571,34 +520,33 @@ void DrawPageLayout(Graphics *g, PageData *pageData, REAL offX, REAL offY, bool 
 
     Font *font = NULL;
 
-    Vec<DrawInstr> *instrs = &pageData->drawInstructions;
-    for (DrawInstr *instr = instrs->IterStart(); instr; instr = instrs->IterNext()) {
+    for (size_t i = 0; i < pageData->Count(); i++) {
+        DrawInstr *instr = &pageData->Instr(i);
         RectF bbox = instr->bbox;
         bbox.X += offX;
         bbox.Y += offY;
-        if (InstrTypeLine == instr->type) {
+        if (DrawInstr::TypeLine == instr->type) {
             // hr is a line drawn in the middle of bounding box
             REAL y = bbox.Y + bbox.Height / 2.f;
             PointF p1(bbox.X, y);
             PointF p2(bbox.X + bbox.Width, y);
-            if (showBbox)
-                g->DrawRectangle(&redPen, bbox);
             g->DrawLine(&blackPen, p1, p2);
-        } else if (InstrTypeString == instr->type) {
+        } else if (DrawInstr::TypeString == instr->type) {
             WCHAR buf[512];
             size_t strLen = str::Utf8ToWcharBuf(instr->str.s, instr->str.len, buf, dimof(buf));
             PointF pos;
             bbox.GetLocation(&pos);
-            if (showBbox)
-                g->DrawRectangle(&redPen, bbox);
             g->DrawString(buf, strLen, font, pos, NULL, &br);
-        } else if (InstrTypeSetFont == instr->type) {
-            font = instr->setFont.font;
-        } else if (InstrTypeImage == instr->type) {
-            Bitmap *bmp = BitmapFromData(instr->img.data->data, instr->img.data->len);
+        } else if (DrawInstr::TypeSetFont == instr->type) {
+            font = instr->font;
+        } else if (DrawInstr::TypeImage == instr->type) {
+            Bitmap *bmp = BitmapFromData(instr->img->data, instr->img->len);
             if (bmp)
                 g->DrawImage(bmp, bbox, 0, 0, (REAL)bmp->GetWidth(), (REAL)bmp->GetHeight(), UnitPixel);
             delete bmp;
         }
+
+        if (debugBboxes && !bbox.IsEmptyArea())
+            g->DrawRectangle(&redPen, bbox);
     }
 }

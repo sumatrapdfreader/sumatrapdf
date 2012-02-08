@@ -431,9 +431,10 @@ $(OE2)\MobiDoc.obj: src\MobiDoc.cpp src\MobiDoc.h src\ebooktest2\BaseEbookDoc.h
 $(OE2)\MobiDoc.obj: src\ebooktest2\MobiDoc.h src\utils\Allocator.h src\utils\BaseUtil.h
 $(OE2)\MobiDoc.obj: src\utils\BitReader.h src\utils\FileUtil.h src\utils\GdiPlusUtil.h
 $(OE2)\MobiDoc.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
-$(OE2)\PageLayout.obj: src\ebooktest2\PageLayout.h src\utils\Allocator.h src\utils\BaseUtil.h
-$(OE2)\PageLayout.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\HtmlPullParser.h
-$(OE2)\PageLayout.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
+$(OE2)\PageLayout.obj: src\ebooktest2\BaseEbookDoc.h src\ebooktest2\PageLayout.h src\utils\Allocator.h
+$(OE2)\PageLayout.obj: src\utils\BaseUtil.h src\utils\GdiPlusUtil.h src\utils\GeomUtil.h
+$(OE2)\PageLayout.obj: src\utils\HtmlPullParser.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OE2)\PageLayout.obj: src\utils\Vec.h
 $(OE2)\Tester.obj: src\ebooktest2\BaseEbookDoc.h src\ebooktest2\EpubDoc.h src\ebooktest2\Fb2Doc.h
 $(OE2)\Tester.obj: src\ebooktest2\MobiDoc.h src\ebooktest2\PageLayout.h src\utils\Allocator.h
 $(OE2)\Tester.obj: src\utils\BaseUtil.h src\utils\CmdLineParser.h src\utils\DirIter.h

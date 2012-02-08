@@ -18,8 +18,6 @@
 #define ET_FRAME_CLASS_NAME    _T("ET_FRAME")
 #define ET_FRAME_TITLE         _T("Ebook Test ") CURR_VERSION_STR
 
-#define FONT_NAME              L"Georgia"
-#define FONT_SIZE              12
 #define PAGE_BORDER            10
 
 #define WIN_DX    640
@@ -116,11 +114,9 @@ void ControlEbook::PageLayout(SizeI dim)
     li.pageSize = dim;
     li.pageSize.dx -= 2 * PAGE_BORDER;
     li.pageSize.dy -= 2 * PAGE_BORDER;
-    li.fontName = FONT_NAME;
-    li.fontSize = FONT_SIZE;
 
     DeletePages();
-    LayoutHtml(&li, &fontCache, this);
+    LayoutHtml(li, &fontCache, this);
 }
 
 void ControlEbook::Repaint()
