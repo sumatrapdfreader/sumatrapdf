@@ -185,6 +185,7 @@ static bool ParseSvgPathData(const char * s, VecSegmented<SvgPathInstr>& instr)
         SvgPathInstr i(type);
         switch (type) {
         case Close:
+        case Close2:
             break;
         case HLineAbs:
         case HLineRel:

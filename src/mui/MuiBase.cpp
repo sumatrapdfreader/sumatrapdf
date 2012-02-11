@@ -111,6 +111,7 @@ void DestroyBase()
     delete gGraphicsCache;
 
     for (FontCacheEntry *e = gFontsCache->IterStart(); e; e = gFontsCache->IterNext()) {
+        // TODO: why do we crash here?
         free(e->name);
         ::delete e->font;
     }

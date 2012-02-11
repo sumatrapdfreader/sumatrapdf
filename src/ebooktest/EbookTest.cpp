@@ -20,6 +20,7 @@ using std::max;
 #include "NoFreeAllocator.h"
 #include "Resource.h"
 #include "PageLayout.h"
+#include "SvgPath.h"
 #include "StrUtil.h"
 #include "Scoped.h"
 #include "Timer.h"
@@ -129,8 +130,8 @@ public:
     base::Thread *  mobiLoadThread;
     base::Thread *  pageLayoutThread;
 
-    Button *        next;
-    Button *        prev;
+    ButtonVector *  next;
+    ButtonVector *  prev;
     ScrollBar *     horizProgress;
     Button *        status;
     Button *        test;
@@ -144,8 +145,6 @@ public:
     // TODO: for testing
     Style *         nextDefault;
     Style *         nextMouseOver;
-    Style *         prevDefault;
-    Style *         prevMouseOver;
 
     ControlEbook(HWND hwnd);
     virtual ~ControlEbook();
@@ -184,7 +183,7 @@ public:
 class EbookLayout : public Layout
 {
 public:
-    EbookLayout(Button *next, Control *prev, Control *status, Control *horizProgress, Control *test) :
+    EbookLayout(Control *next, Control *prev, Control *status, Control *horizProgress, Control *test) :
       next(next), prev(prev), status(status), horizProgress(horizProgress), test(test)
     {
     }
@@ -308,15 +307,12 @@ ControlEbook::ControlEbook(HWND hwnd)
     ebookDefault->Set(Prop::AllocPadding(pageBorderY, pageBorderX, pageBorderY, pageBorderX));
     SetCurrentStyle(ebookDefault, gStyleDefault);
 
-    prevDefault = new Style(gStyleButtonDefault);
-    prevDefault->Set(Prop::AllocPadding(12, 16, 4, 8));
-    prevMouseOver = new Style(gStyleButtonMouseOver);
-    prevMouseOver->Set(Prop::AllocPadding(4, 16, 4, 8));
-
     nextDefault = new Style(gStyleButtonDefault);
-    nextDefault->Set(Prop::AllocPadding(4, 8, 12, 16));
+    nextDefault->Set(Prop::AllocPadding(4, 4, 4, 4));
+    //nextDefault->Set(Prop::AllocPadding(4, 8, 12, 16));
     nextMouseOver = new Style(gStyleButtonMouseOver);
-    nextMouseOver->Set(Prop::AllocPadding(12, 8, 4, 16));
+    //nextMouseOver->Set(Prop::AllocPadding(12, 8, 4, 16));
+    nextMouseOver->Set(Prop::AllocPadding(4, 4, 4, 4));
     nextMouseOver->Set(Prop::AllocColorSolid(PropBgColor, "white"));
 
     facebookButtonDefault = new Style();
@@ -343,14 +339,14 @@ ControlEbook::ControlEbook(HWND hwnd)
     horizProgressDefault->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
     horizProgressDefault->Set(Prop::AllocColorSolid(PropColor, "yellow"));
 
-    next = new Button(_T("Next"));
-    prev = new Button(_T("Prev"));
+    next = new ButtonVector(svg::GraphicsPathFromPathData("M0 0  L10 13 L0 ,26 Z"));
+    prev = new ButtonVector(svg::GraphicsPathFromPathData("M10 0 L0,  13 L10 26 z"));
     horizProgress = new ScrollBar();
     horizProgress->hCursor = gCursorHand;
     status = new Button(_T(""));
     test = new Button(_T("test"));
     test->zOrder = 1;
-
+    
     AddChild(next);
     AddChild(prev);
     AddChild(horizProgress);
@@ -362,7 +358,7 @@ ControlEbook::ControlEbook(HWND hwnd)
     // only works if the control has been placed in the control tree
     // via AddChild()
     next->SetStyles(nextDefault, nextMouseOver);
-    prev->SetStyles(prevDefault, prevMouseOver);
+    prev->SetStyles(nextDefault, nextMouseOver);
     horizProgress->SetCurrentStyle(horizProgressDefault, gStyleDefault);
     status->SetStyles(statusDefault, statusDefault);
     test->SetStyles(facebookButtonDefault, facebookButtonOver);
@@ -396,8 +392,6 @@ ControlEbook::~ControlEbook()
     delete facebookButtonOver;
     delete nextDefault;
     delete nextMouseOver;
-    delete prevDefault;
-    delete prevMouseOver;
     delete ebookDefault;
     delete horizProgressDefault;
 }
