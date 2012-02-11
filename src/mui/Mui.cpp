@@ -1,12 +1,12 @@
 /* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "mui.h"
 #include "BaseUtil.h"
-#include "Vec.h"
-#include "GeomUtil.h"
 #include <Windowsx.h>
-#include "MuiCss.h"
+
+#include "mui.h"
+#include "GeomUtil.h"
+#include "Vec.h"
 
 /*
 MUI is a simple UI library for win32.

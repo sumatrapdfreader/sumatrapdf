@@ -194,6 +194,7 @@
     <ClInclude Include="src\mui\MuiLayout.h" />
     <ClInclude Include="src\mui\MuiPainter.h" />
     <ClInclude Include="src\mui\MuiScrollBar.h" />
+    <ClInclude Include="src\mui\SvgPath.h" />
     <ClInclude Include="src\PageLayout.h" />
     <ClInclude Include="src\utils\Allocator.h" />
     <ClInclude Include="src\utils\BaseUtil.h" />

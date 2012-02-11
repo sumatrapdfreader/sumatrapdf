@@ -2,7 +2,6 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 /*
-
 Parser for SVG path string (also used in WPF). The idea is
 to have an easy way to use vector graphics. Parsed path can
 be converted to Gdiplus::GraphicsPath which then can be used
@@ -14,6 +13,7 @@ https://developer.mozilla.org/en/SVG/Tutorial/Paths
 */
 
 #include "BaseUtil.h"
+#include "SvgPath.h"
 #include "StrUtil.h"
 #include "VecSegmented.h"
 
@@ -168,7 +168,7 @@ static bool ParseArc(const char *&s, struct SvgPathInstr *pi)
     return true;
 }
 
-bool ParseSvgPath(const char * s, VecSegmented<SvgPathInstr>& instr)
+static bool ParseSvgPathData(const char * s, VecSegmented<SvgPathInstr>& instr)
 {
     char c;
     bool ok;
@@ -224,6 +224,76 @@ bool ParseSvgPath(const char * s, VecSegmented<SvgPathInstr>& instr)
         instr.Append(i);
     }
     return true;
+}
+
+static void RelPointToAbs(const PointF& lastEnd, float *xy)
+{
+    xy[0] = lastEnd.X + xy[0];
+    xy[1] = lastEnd.Y + xy[1];
+}
+
+static void RelXToAbs(const PointF& lastEnd, float *x)
+{
+    *x = lastEnd.X + *x;
+}
+
+static void RelYToAbs(const PointF& lastEnd, float *y)
+{
+    *y = lastEnd.Y + *y;
+}
+
+GraphicsPath *GraphicsPathFromPathData(const char *s)
+{
+    VecSegmented<SvgPathInstr> instr;
+    if (!ParseSvgPathData(s, instr))
+        return NULL;
+    GraphicsPath *gp = ::new GraphicsPath();
+    PointF prevEnd(0.f, 0.f);
+    for (SvgPathInstr *i = instr.IterStart(); i; i = instr.IterNext())
+    {
+        PathInstrType type = i->type;
+
+        // convert relative coordinates to absolute based on end position of
+        // previous element
+        if (MoveRel == type) {
+            RelPointToAbs(prevEnd, i->v);
+            type = MoveAbs;
+        } else if (LineToRel == type) {
+            RelPointToAbs(prevEnd, i->v);
+            type = LineToAbs;
+        } else if (HLineRel == type) {
+            RelXToAbs(prevEnd, i->v);
+            type = HLineAbs;
+        } else if (VLineRel == type) {
+            RelYToAbs(prevEnd, i->v);
+            type = VLineAbs;
+        }
+
+        if (MoveAbs == type) {
+            PointF p(i->v[0], i->v[1]);
+            prevEnd = p;
+            gp->StartFigure();
+        } else if (LineToAbs == type) {
+            PointF p(i->v[0], i->v[1]);
+            gp->AddLine(prevEnd, p);
+            prevEnd = p;
+        } else if (HLineAbs == type) {
+            PointF p(prevEnd);
+            p.X = i->v[0];
+            gp->AddLine(prevEnd, p);
+            prevEnd = p;
+        } else if (VLineAbs == type) {
+            PointF p(prevEnd);
+            p.Y = i->v[0];
+            gp->AddLine(prevEnd, p);
+            prevEnd = p;
+        } else if ((Close == type) || (Close2 == type)) {
+            gp->CloseFigure();
+        } else {
+            CrashIf(true);
+        }
+    }
+    return gp;
 }
 
 }

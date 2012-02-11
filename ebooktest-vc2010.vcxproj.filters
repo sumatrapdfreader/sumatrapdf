@@ -409,6 +409,9 @@
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="src\BaseEbookDoc.h" />
+    <ClInclude Include="src\mui\SvgPath.h">
+      <Filter>mui</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="src\ebooktest\EbookTest.rc" />
