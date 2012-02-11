@@ -34,9 +34,8 @@ static void AddBorders(int& dx, int& dy, Prop **props)
     dy += (int)(p1->width + p2->width);
 }
 
-Size Button::GetBorderAndPaddingSize() const
+static Size GetBorderAndPaddingSize(Prop **props)
 {
-    Prop **props = GetCachedProps();
     Padding pad = props[PropPadding]->padding;
     int dx = pad.left + pad.right;
     int dy = pad.top  + pad.bottom;
@@ -63,7 +62,7 @@ void Button::RecalculateSize(bool repaintIfSizeDidntChange)
 {
     Size prevSize = desiredSize;
 
-    desiredSize = GetBorderAndPaddingSize();
+    desiredSize = GetBorderAndPaddingSize(GetCachedProps());
     textDx = 0;
     if (text) {
         Graphics *gfx = AllocGraphicsForMeasureText();
@@ -158,5 +157,121 @@ void Button::Paint(Graphics *gfx, int offX, int offY)
     Font *font = CachedFontFromCachedProps(props);
     gfx->DrawString(text, str::Len(text), font, PointF((REAL)x, (REAL)y), NULL, brColor);
 }
+
+
+ButtonVector::ButtonVector(GraphicsPath *gp)
+{
+    wantedInputBits = (uint16)-1; // wants everything
+    styleDefault = NULL;
+    styleMouseOver = NULL;
+    graphicsPath = NULL;
+    SetCurrentStyle(styleDefault, gStyleButtonDefault);
+    SetGraphicsPath(gp);
+}
+
+ButtonVector::~ButtonVector()
+{
+    ::delete graphicsPath;
+}
+
+void ButtonVector::NotifyMouseEnter()
+{
+    SetCurrentStyle(styleMouseOver, gStyleButtonMouseOver);
+    RecalculateSize(true);
+}
+
+void ButtonVector::NotifyMouseLeave()
+{
+    SetCurrentStyle(styleDefault, gStyleButtonDefault);
+    RecalculateSize(true);
+}
+
+void ButtonVector::SetGraphicsPath(GraphicsPath *gp)
+{
+    ::delete graphicsPath;
+    graphicsPath = gp;
+    RecalculateSize(true);
+}
+
+void ButtonVector::RecalculateSize(bool repaintIfSizeDidntChange)
+{
+    Size prevSize = desiredSize;
+
+    desiredSize = GetBorderAndPaddingSize(GetCachedProps());
+    Rect bbox;
+    graphicsPath->GetBounds(&bbox);
+    desiredSize.Width  += bbox.Width;
+    desiredSize.Height += bbox.Height;
+
+    if (!prevSize.Equals(desiredSize))
+        RequestLayout(this);
+    else if (repaintIfSizeDidntChange)
+        RequestRepaint(this);
+}
+
+void ButtonVector::Measure(const Size availableSize)
+{
+    // do nothing: calculated in RecalculateSize()
+}
+
+void ButtonVector::Paint(Graphics *gfx, int offX, int offY)
+{
+    if (!IsVisible())
+        return;
+
+    Prop **props = GetCachedProps();
+    Prop *col   = props[PropColor];
+    Prop *bgCol = props[PropBgColor];
+    Prop *padding = props[PropPadding];
+    Prop *topWidth = props[PropBorderTopWidth];
+    Prop *leftWidth = props[PropBorderLeftWidth];
+    Prop *textAlign = props[PropTextAlign];
+
+    RectF bbox((REAL)offX, (REAL)offY, (REAL)pos.Width, (REAL)pos.Height);
+    Brush *brBgColor = BrushFromProp(bgCol, bbox);
+    gfx->FillRectangle(brBgColor, bbox);
+
+    BorderProps bp = {
+        props[PropBorderTopWidth], props[PropBorderTopColor],
+        props[PropBorderRightWidth], props[PropBorderRightColor],
+        props[PropBorderBottomWidth], props[PropBorderBottomColor],
+        props[PropBorderLeftWidth], props[PropBorderLeftColor],
+    };
+
+    Rect r(offX, offY, pos.Width, pos.Height);
+    DrawBorder(gfx, r, bp);
+    if (!graphicsPath)
+        return;
+
+    // TODO: center the path both vertically and horizontally
+    Brush *brColor = BrushFromProp(col, bbox); // restrict bbox to just the text?
+    Pen pen(brColor, 1.f);
+
+    Padding pad = padding->padding;
+    //int alignedOffX = AlignedOffset(pos.Width - pad.left - pad.right, desiredSize.Width, Align_Center);
+    int x = offX + pad.left + (int)leftWidth->width;
+    int y = offY + pad.top + (int)topWidth->width;
+
+    // TODO: can I avoid making a copy of GraphicsPath?
+    GraphicsPath *tmp = graphicsPath->Clone();
+    Matrix m;
+    m.Translate((float)x, (float)y);
+    tmp->Transform(&m);
+    gfx->DrawPath(&pen, tmp);
+}
+
+void ButtonVector::SetStyles(Style *def, Style *mouseOver)
+{
+    styleDefault = def;
+    styleMouseOver = mouseOver;
+
+    if (IsMouseOver())
+        SetCurrentStyle(styleMouseOver, gStyleButtonMouseOver);
+    else
+        SetCurrentStyle(styleDefault, gStyleButtonDefault);
+
+    RecalculateSize(true);
+}
+
 
 }

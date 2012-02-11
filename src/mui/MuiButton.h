@@ -27,13 +27,39 @@ public:
     virtual void NotifyMouseEnter();
     virtual void NotifyMouseLeave();
 
-    Size    GetBorderAndPaddingSize() const;
-
     void    SetStyles(Style *def, Style *mouseOver);
 
     TCHAR *         text;
     size_t          textDx; // cached measured text width
 };
+
+// TODO: maybe should combine Button and ButtonVector into one
+class ButtonVector : public Control
+{
+    // use SetStyles() to set
+    Style *         styleDefault;    // gStyleButtonDefault if styleDefault is NULL
+    Style *         styleMouseOver;  // gStyleButtonMouseOver if NULL
+
+    GraphicsPath *  graphicsPath;
+
+public:
+    ButtonVector(GraphicsPath *gp);
+
+    virtual ~ButtonVector();
+
+    void SetGraphicsPath(GraphicsPath *gp);
+
+    void RecalculateSize(bool repaintIfSizeDidntChange);
+
+    virtual void Measure(const Size availableSize);
+    virtual void Paint(Graphics *gfx, int offX, int offY);
+
+    virtual void NotifyMouseEnter();
+    virtual void NotifyMouseLeave();
+
+    void    SetStyles(Style *def, Style *mouseOver);
+};
+
 
 #endif
 
