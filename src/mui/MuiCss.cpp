@@ -16,12 +16,12 @@ We have a Style, which is a logical group of properties.
 
 Each control can have one or more styles that define how
 a control looks like. A window has only one set of properties
-but a button has several, one for each visual state of
-the button (normal, on hover, pressed, default).
+but e.g. a button has two (one for normal look and one for
+mouse hover look).
 
 We define a bunch of default style so that if e.g. button
-doesn't have style explicitly set, it'll get all the necessary
-properties from our default set and have a consistent look.
+doesn't have a style explicitly set, it'll get all the necessary
+properties from our default set.
 
 Prop objects are never freed. To conserve memory, they are
 internalized i.e. there are never 2 Prop objects with exactly
@@ -373,8 +373,6 @@ Prop *Prop::AllocColorSolid(PropType type, const char *color)
     ARGB col = ParseCssColor(color);
     return AllocColorSolid(type, col);
 }
-
-#undef ALLOC_BODY
 
 Style* Style::GetInheritsFrom() const
 {
