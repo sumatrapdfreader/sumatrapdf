@@ -198,8 +198,14 @@ void ButtonVector::RecalculateSize(bool repaintIfSizeDidntChange)
     Size prevSize = desiredSize;
 
     desiredSize = GetBorderAndPaddingSize(GetCachedProps());
+
+    Prop **props = GetCachedProps();
+    Prop *stroke = props[PropStroke];
+    Prop *strokeWidth = props[PropStrokeWidth];
     Rect bbox;
-    graphicsPath->GetBounds(&bbox);
+    Brush *brStroke = BrushFromProp(stroke, bbox);
+    Pen pen(brStroke, strokeWidth->width);
+    graphicsPath->GetBounds(&bbox, NULL, &pen);
     desiredSize.Width  += bbox.Width;
     desiredSize.Height += bbox.Height;
 
@@ -225,7 +231,9 @@ void ButtonVector::Paint(Graphics *gfx, int offX, int offY)
     Prop *padding = props[PropPadding];
     Prop *topWidth = props[PropBorderTopWidth];
     Prop *leftWidth = props[PropBorderLeftWidth];
-    Prop *textAlign = props[PropTextAlign];
+    Prop *fill = props[PropFill];
+    Prop *stroke = props[PropStroke];
+    Prop *strokeWidth = props[PropStrokeWidth];
 
     RectF bbox((REAL)offX, (REAL)offY, (REAL)pos.Width, (REAL)pos.Height);
     Brush *brBgColor = BrushFromProp(bgCol, bbox);
@@ -244,8 +252,6 @@ void ButtonVector::Paint(Graphics *gfx, int offX, int offY)
         return;
 
     // TODO: center the path both vertically and horizontally
-    Brush *brColor = BrushFromProp(col, bbox); // restrict bbox to just the text?
-    Pen pen(brColor, 1.f);
 
     Padding pad = padding->padding;
     //int alignedOffX = AlignedOffset(pos.Width - pad.left - pad.right, desiredSize.Width, Align_Center);
@@ -257,6 +263,10 @@ void ButtonVector::Paint(Graphics *gfx, int offX, int offY)
     Matrix m;
     m.Translate((float)x, (float)y);
     tmp->Transform(&m);
+    Brush *brStroke = BrushFromProp(stroke, bbox);
+    Brush *brFill = BrushFromProp(fill, bbox);
+    gfx->FillPath(brFill, tmp);
+    Pen pen(brStroke, strokeWidth->width);
     gfx->DrawPath(&pen, tmp);
 }
 

@@ -28,6 +28,10 @@ enum PropType {
 
     PropTextAlign,          // text-align
 
+    PropFill,               // fill, used for svg::path
+    PropStroke,             // stroke, used for svg::path
+    PropStrokeWidth,        // stroke-width, used for svg::path
+
     PropsCount              // must be at the end!
 };
 

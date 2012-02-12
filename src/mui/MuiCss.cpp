@@ -101,6 +101,9 @@ void Initialize()
     gStyleDefault->Set(Prop::AllocColorSolid(PropBorderBottomColor, "#888"));
     gStyleDefault->Set(Prop::AllocPadding(0, 0, 0, 0));
     gStyleDefault->Set(Prop::AllocTextAlign(Align_Left));
+    gStyleDefault->Set(Prop::AllocColorSolid(PropFill, "white"));
+    gStyleDefault->Set(Prop::AllocColorSolid(PropStroke, "black"));
+    gStyleDefault->Set(Prop::AllocWidth(PropStrokeWidth, 2.f));
 
     gStyleButtonDefault = new Style(gStyleDefault);
     gStyleButtonDefault->Set(Prop::AllocPadding(4, 8, 4, 8));
@@ -119,13 +122,6 @@ void Initialize()
     gCachedProps = new VecSegmented<Prop*>();
 }
 
-static void DeleteCachedFonts()
-{
-    delete gStyleCache;
-    delete gCachedProps;
-    delete gStyleDefault;
-}
-
 void Destroy()
 {
     for (Prop *p = gAllProps->IterStart(); p; p = gAllProps->IterNext()) {
@@ -137,7 +133,9 @@ void Destroy()
     delete gStyleButtonDefault;
     delete gStyleButtonMouseOver;
 
-    DeleteCachedFonts();
+    delete gStyleCache;
+    delete gCachedProps;
+    delete gStyleDefault;
 }
 
 bool IsWidthProp(PropType type)
@@ -145,7 +143,8 @@ bool IsWidthProp(PropType type)
     return (PropBorderTopWidth == type) ||
            (PropBorderRightWidth == type) ||
            (PropBorderBottomWidth == type) ||
-           (PropBorderLeftWidth == type);
+           (PropBorderLeftWidth == type) ||
+           (PropStrokeWidth == type);
 }
 
 bool IsColorProp(PropType type)
@@ -155,7 +154,9 @@ bool IsColorProp(PropType type)
            (PropBorderTopColor == type) ||
            (PropBorderRightColor == type) ||
            (PropBorderBottomColor == type) ||
-           (PropBorderLeftColor == type);
+           (PropBorderLeftColor == type) ||
+           (PropFill == type) ||
+           (PropStroke == type);
 }
 
 // based on https://developer.mozilla.org/en/CSS/color_value
@@ -490,7 +491,6 @@ Prop *GetProp(Style *first, Style *second, PropType type)
 // convenience function: given cached props, get a Font object matching the font
 // properties.
 // Caller should not delete the font - it's cached for performance and deleted at exit
-// in DeleteCachedFonts()
 Font *CachedFontFromCachedProps(Prop **props)
 {
     Prop *fontName   = props[PropFontName];
