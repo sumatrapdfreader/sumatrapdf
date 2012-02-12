@@ -307,11 +307,13 @@ ControlEbook::ControlEbook(HWND hwnd)
     SetCurrentStyle(ebookDefault, gStyleDefault);
 
     nextDefault = new Style(gStyleButtonDefault);
-    nextDefault->Set(Prop::AllocPadding(4, 4, 4, 4));
+    nextDefault->Set(Prop::AllocPadding(1, 1, 1, 4));
+    nextDefault->Set(Prop::AllocWidth(PropStrokeWidth, 0.5f));
     //nextDefault->Set(Prop::AllocPadding(4, 8, 12, 16));
     nextMouseOver = new Style(gStyleButtonMouseOver);
     //nextMouseOver->Set(Prop::AllocPadding(12, 8, 4, 16));
-    nextMouseOver->Set(Prop::AllocPadding(4, 4, 4, 4));
+    nextMouseOver->Set(Prop::AllocPadding(1, 1, 1, 4));
+    nextMouseOver->Set(Prop::AllocWidth(PropStrokeWidth, 0.5f));
     nextMouseOver->Set(Prop::AllocColorSolid(PropBgColor, "white"));
 
     facebookButtonDefault = new Style();

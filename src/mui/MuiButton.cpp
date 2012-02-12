@@ -177,6 +177,7 @@ void ButtonVector::SetGraphicsPath(GraphicsPath *gp)
     RecalculateSize(true);
 }
 
+// TODO: the position still seems a bit off wrt. padding
 void ButtonVector::RecalculateSize(bool repaintIfSizeDidntChange)
 {
     Size prevSize = desiredSize;
@@ -186,7 +187,11 @@ void ButtonVector::RecalculateSize(bool repaintIfSizeDidntChange)
 
     Rect bbox;
     Brush *brStroke = BrushFromColorData(s->stroke, bbox);
+    // pen widith is multiplied by MiterLimit(), which is 10 by default
+    // so set it explicitly to 1 for more precise size
     Pen pen(brStroke, s->strokeWidth);
+    pen.SetMiterLimit(1.f);
+    pen.SetAlignment(PenAlignmentInset);
     graphicsPath->GetBounds(&bbox, NULL, &pen);
     desiredSize.Width  += bbox.Width;
     desiredSize.Height += bbox.Height;
@@ -218,22 +223,28 @@ void ButtonVector::Paint(Graphics *gfx, int offX, int offY)
     if (!graphicsPath)
         return;
 
+    // graphicsPath bbox can have non-zero X,Y, so must take that
+    // into account
+    Brush *brStroke = BrushFromColorData(s->stroke, bbox);
+    Brush *brFill = BrushFromColorData(s->fill, bbox);
+    Pen pen(brStroke, s->strokeWidth);
+    pen.SetMiterLimit(1.f);
+    pen.SetAlignment(PenAlignmentInset);
+    graphicsPath->GetBounds(&bbox, NULL, &pen);
+
     // TODO: center the path both vertically and horizontally
 
     Padding pad = s->padding;
     //int alignedOffX = AlignedOffset(pos.Width - pad.left - pad.right, desiredSize.Width, Align_Center);
-    int x = offX + pad.left + (int)s->borderWidth.left;
-    int y = offY + pad.top + (int)s->borderWidth.top;
+    int x = offX + pad.left + (int)(s->borderWidth.left - bbox.X);
+    int y = offY + pad.top + (int)(s->borderWidth.top - bbox.Y);
 
     // TODO: can I avoid making a copy of GraphicsPath?
     GraphicsPath *tmp = graphicsPath->Clone();
     Matrix m;
     m.Translate((float)x, (float)y);
     tmp->Transform(&m);
-    Brush *brStroke = BrushFromColorData(s->stroke, bbox);
-    Brush *brFill = BrushFromColorData(s->fill, bbox);
     gfx->FillPath(brFill, tmp);
-    Pen pen(brStroke, s->strokeWidth);
     gfx->DrawPath(&pen, tmp);
 }
 
