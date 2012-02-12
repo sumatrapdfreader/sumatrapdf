@@ -480,12 +480,15 @@ CachedStyle *CacheStyle(Style *style1, Style *style2)
 {
     ScopedMuiCritSec muiCs;
 
-    for (StyleCacheEntry *e = gStyleCache->IterStart(); e; e = gStyleCache->IterNext()) {
+    StyleCacheEntry *e;
+    bool updateEntry = false;
+    for (e = gStyleCache->IterStart(); e; e = gStyleCache->IterNext()) {
         if ((e->style1 == style1) && (e->style2 == style2)) {
             if ((e->style1Id == GetStyleId(style1)) &&
                 (e->style2Id == GetStyleId(style2))) {
                 return &e->cachedStyle;
             }
+            updateEntry = true;
             break;
         }
     }
@@ -513,9 +516,14 @@ CachedStyle *CacheStyle(Style *style1, Style *style2)
     s.stroke               = &(props[PropStroke]->color);
     s.strokeWidth          = props[PropStrokeWidth]->width;
 
-    StyleCacheEntry e = { style1, GetStyleId(style1), style2, GetStyleId(style2), s };
-    StyleCacheEntry *res = gStyleCache->Append(e);
-    return &res->cachedStyle;
+    if (updateEntry) {
+        e->cachedStyle = s;
+        return &e->cachedStyle;
+    }
+
+    StyleCacheEntry newEntry = { style1, GetStyleId(style1), style2, GetStyleId(style2), s };
+    e = gStyleCache->Append(newEntry);
+    return &e->cachedStyle;
 }
 
 static bool RectEq(const RectF *r1, const RectF *r2)

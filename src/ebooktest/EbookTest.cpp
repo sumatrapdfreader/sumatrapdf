@@ -362,6 +362,10 @@ ControlEbook::ControlEbook(HWND hwnd)
     status->SetStyles(statusDefault, statusDefault);
     test->SetStyles(facebookButtonDefault, facebookButtonOver);
 
+    // note: this is just to test in-place update in CacheStyle()
+    facebookButtonDefault->Set(Prop::AllocColorSolid(PropBorderLeftColor, "#1A356E"));
+    test->SetStyles(facebookButtonDefault, facebookButtonOver);
+
     // special case for classes that derive from HwndWrapper
     // as they don't call this from SetParent() (like other Control derivatives)
     RegisterEventHandlers(evtMgr);
