@@ -34,15 +34,6 @@ namespace css {
 #define MKARGB(a, r, g, b) (((ARGB) (b)) | ((ARGB) (g) << 8) | ((ARGB) (r) << 16) | ((ARGB) (a) << 24))
 #define MKRGB(r, g, b) (((ARGB) (b)) | ((ARGB) (g) << 8) | ((ARGB) (r) << 16) | ((ARGB)(0xff) << 24))
 
-struct PropToGet {
-    // provided by the caller
-    PropType    type;
-    // filled-out by GetProps(). Must be set to NULL by
-    // caller to enable being called twice with different
-    // Style objects
-    Prop *      prop;
-};
-
 struct FontCacheEntry {
     Prop *fontName;
     Prop *fontSize;
@@ -435,55 +426,40 @@ void Style::SetBorderColor(ARGB color)
     Set(Prop::AllocColorSolid(PropBorderLeftColor, color));
 }
 
-static bool FoundAllProps(PropToGet *props, size_t propsCount)
+static bool FoundAllProps(Prop **props)
 {
-    for (size_t i = 0; i < propsCount; i++) {
-        if (props[i].prop == NULL)
+    for (size_t i = 0; i < (int)PropsCount; i++) {
+        if (props[i] == NULL)
             return false;
     }
     return true;
 }
 
-// returns true if set, false if was already set or didn't find the prop
-static bool SetPropIfFound(Prop *prop, PropToGet *props, size_t propsCount)
+static bool GetAllProps(Style *style, Prop **props)
 {
-    for (size_t i = 0; i < propsCount; i++) {
-        if (props[i].type != prop->type)
-            continue;
-        if (NULL == props[i].prop) {
-            props[i].prop = prop;
-            return true;
+    while (style) {
+        for (Prop **p = style->props.IterStart(); p; p = style->props.IterNext()) {
+            int propIdx = (int)(*p)->type;
+            CrashIf(propIdx >= (int)PropsCount);
+            bool didSet = false;
+            if (!props[propIdx]) {
+                props[propIdx] = *p;
+                didSet = true;
+            }
+            if (didSet && FoundAllProps(props))
+                return true;
         }
-        return false;
+        style = style->GetInheritsFrom();
     }
     return false;
 }
 
-void GetProps(Style *style, PropToGet *props, size_t propsCount)
+static void GetAllProps(Style *first, Style *second, Prop **props)
 {
-    while (style) {
-        for (Prop **p = style->props.IterStart(); p; p = style->props.IterNext()) {
-            bool didSet = SetPropIfFound(*p, props, propsCount);
-            if (didSet && FoundAllProps(props, propsCount))
-                return;
-        }
-        style = style->GetInheritsFrom();
-    }
-}
-
-void GetProps(Style *first, Style *second, PropToGet *props, size_t propsCount)
-{
-    GetProps(first, props, propsCount);
-    GetProps(second, props, propsCount);
-}
-
-Prop *GetProp(Style *first, Style *second, PropType type)
-{
-    PropToGet props[1] = {
-        { type, NULL }
-    };
-    GetProps(first, second, props, dimof(props));
-    return props[0].prop;
+    if (GetAllProps(first, props))
+        return;
+    GetAllProps(second, props);
+    CrashIf(!FoundAllProps(props));
 }
 
 // convenience function: given cached style, get a Font object matching the font
@@ -514,32 +490,28 @@ CachedStyle *CacheStyle(Style *style1, Style *style2)
         }
     }
 
-    PropToGet props[PropsCount];
-    for (size_t i = 0; i < PropsCount; i++) {
-        props[i].type = (PropType)i;
-        props[i].prop = NULL;
-    }
-    GetProps(style1, style2, props, PropsCount);
+    Prop* props[PropsCount] = { 0 };
+    GetAllProps(style1, style2, props);
 
     CachedStyle s;
-    s.fontName             = props[PropFontName].prop->fontName;
-    s.fontSize             = props[PropFontSize].prop->fontSize;
-    s.fontWeight           = props[PropFontWeight].prop->fontWeight;
-    s.padding              = props[PropPadding].prop->padding;
-    s.color                = &(props[PropColor].prop->color);
-    s.bgColor              = &(props[PropBgColor].prop->color);
-    s.borderWidth.top      = props[PropBorderTopWidth].prop->width;
-    s.borderWidth.right    = props[PropBorderRightWidth].prop->width;
-    s.borderWidth.bottom   = props[PropBorderBottomWidth].prop->width;
-    s.borderWidth.left     = props[PropBorderLeftWidth].prop->width;
-    s.borderColors.top     = &(props[PropBorderTopColor].prop->color);
-    s.borderColors.right   = &(props[PropBorderRightColor].prop->color);
-    s.borderColors.bottom  = &(props[PropBorderBottomColor].prop->color);
-    s.borderColors.left    = &(props[PropBorderLeftColor].prop->color);
-    s.textAlign            = props[PropTextAlign].prop->textAlign;
-    s.fill                 = &(props[PropFill].prop->color);
-    s.stroke               = &(props[PropStroke].prop->color);
-    s.strokeWidth          = props[PropStrokeWidth].prop->width;
+    s.fontName             = props[PropFontName]->fontName;
+    s.fontSize             = props[PropFontSize]->fontSize;
+    s.fontWeight           = props[PropFontWeight]->fontWeight;
+    s.padding              = props[PropPadding]->padding;
+    s.color                = &(props[PropColor]->color);
+    s.bgColor              = &(props[PropBgColor]->color);
+    s.borderWidth.top      = props[PropBorderTopWidth]->width;
+    s.borderWidth.right    = props[PropBorderRightWidth]->width;
+    s.borderWidth.bottom   = props[PropBorderBottomWidth]->width;
+    s.borderWidth.left     = props[PropBorderLeftWidth]->width;
+    s.borderColors.top     = &(props[PropBorderTopColor]->color);
+    s.borderColors.right   = &(props[PropBorderRightColor]->color);
+    s.borderColors.bottom  = &(props[PropBorderBottomColor]->color);
+    s.borderColors.left    = &(props[PropBorderLeftColor]->color);
+    s.textAlign            = props[PropTextAlign]->textAlign;
+    s.fill                 = &(props[PropFill]->color);
+    s.stroke               = &(props[PropStroke]->color);
+    s.strokeWidth          = props[PropStrokeWidth]->width;
 
     StyleCacheEntry e = { style1, GetStyleId(style1), style2, GetStyleId(style2), s };
     StyleCacheEntry *res = gStyleCache->Append(e);
