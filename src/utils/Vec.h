@@ -132,7 +132,13 @@ public:
 
     // use &At() if you need a pointer to the element (e.g. if T is a struct)
     T& At(size_t idx) const {
+        CrashIf(idx >= len);
         return els[idx];
+    }
+
+    T* AtPtr(size_t idx) const {
+        CrashIf(idx >= len);
+        return &els[idx];
     }
 
     size_t Count() const {
@@ -193,14 +199,14 @@ public:
     }
 
     T& Pop() {
-        assert(len > 0);
-        if (len > 0)
-            len--;
-        return At(len);
+        CrashIf(0 == len);
+        T *el = AtPtr(len - 1);
+        len--;
+        return *el;
     }
 
     T& Last() const {
-        assert(len > 0);
+        CrashIf(0 == len);
         return At(len - 1);
     }
 

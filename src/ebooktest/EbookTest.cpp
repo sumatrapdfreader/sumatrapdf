@@ -726,6 +726,11 @@ void ControlEbook::Paint(Graphics *gfx, int offX, int offY)
 
     if (!pages)
         return;
+
+    // TODO: temporary, to prevent crash below
+    if (currPageNo == 0)
+        return;
+
     Prop *propPadding = GetCachedProp(PropPadding);
     offX += propPadding->padding.left;
     offY += propPadding->padding.top;
