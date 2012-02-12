@@ -18,7 +18,7 @@ Control::Control(Control *newParent)
     hwndParent = NULL;
     layout = NULL;
     hCursor = NULL;
-    cachedProps = NULL;
+    cachedStyle = NULL;
     SetCurrentStyle(NULL, gStyleDefault);
     pos = Rect();
     if (newParent)
@@ -182,17 +182,7 @@ void Control::Paint(Graphics *gfx, int offX, int offY)
 
 void Control::SetCurrentStyle(Style *style1, Style *style2)
 {
-    cachedProps = CachePropsForStyle(style1, style2);
-}
-
-Prop *Control::GetCachedProp(PropType propType) const
-{
-    return cachedProps[propType];
-}
-
-Prop **Control::GetCachedProps() const
-{
-    return cachedProps;
+    cachedStyle = CacheStyle(style1, style2);
 }
 
 }

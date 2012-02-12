@@ -136,28 +136,32 @@ public:
     size_t GetIdentity() const;
 };
 
-#if 0 // TODO: maybe use that for convenience
 struct BorderWidth {
-    int top, right, bottom, left;
+    float top, right, bottom, left;
 };
 
 struct BorderColors {
-    ColorData   top, right, bottom, left;
+    ColorData *top;
+    ColorData *right;
+    ColorData *bottom;
+    ColorData *left;
 };
 
-// CachedStyle gathers values of all
+// CachedStyle combines values of all properties for easier use by clients
 struct CachedStyle {
     const TCHAR *   fontName;
     float           fontSize;
     FontStyle       fontWeight;
     Padding         padding;
-    ColorData       color;
-    ColorData       bgColor;
+    ColorData *     color;
+    ColorData *     bgColor;
     BorderWidth     borderWidth;
     BorderColors    borderColors;
     AlignAttr       textAlign;
+    ColorData *     fill;
+    ColorData *     stroke;
+    float           strokeWidth;
 };
-#endif
 
 // globally known properties for elements we know about
 // we fill them with default values and they can be
@@ -169,12 +173,12 @@ extern Style *gStyleButtonMouseOver;
 void   Initialize();
 void   Destroy();
 
-Font * CachedFontFromCachedProps(Prop **props);
+Font * CachedFontFromCachedStyle(CachedStyle *s);
 
-Prop ** CachePropsForStyle(Style *style1, Style *style2);
+CachedStyle* CacheStyle(Style *style1, Style *style2);
 
-Brush *BrushFromProp(Prop *p, const Rect& r);
-Brush *BrushFromProp(Prop *p, const RectF& r);
+Brush *BrushFromColorData(ColorData *color, const Rect& r);
+Brush *BrushFromColorData(ColorData *color, const RectF& r);
 
 } // namespace css
 

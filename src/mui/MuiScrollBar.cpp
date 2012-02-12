@@ -73,12 +73,10 @@ void ScrollBar::Paint(Graphics *gfx, int offX, int offY)
         return;
 
     // TODO: take padding into account
-    Prop **props = GetCachedProps();
-    Prop *col   = props[PropColor];
-    Prop *bgCol = props[PropBgColor];
+    CachedStyle *s = cachedStyle;
 
     Rect r(offX, offY, pos.Width, pos.Height);
-    Brush *br = BrushFromProp(bgCol, r);
+    Brush *br = BrushFromColorData(s->bgColor, r);
     gfx->FillRectangle(br, r);
 
     int filledDx = IntFromPerc(pos.Width, filledPerc);
@@ -92,7 +90,7 @@ void ScrollBar::Paint(Graphics *gfx, int offX, int offY)
 
     r.Y += (r.Height - dy);
     r.Height = dy;
-    br = BrushFromProp(col, r);
+    br = BrushFromColorData(s->color, r);
     gfx->FillRectangle(br, r);
 }
 

@@ -44,8 +44,8 @@ void Painter::PaintBackground(Graphics *g, Rect r)
     // sometimes there's a seemingly 1 pixel artifact on the left and
     // at the top if I don't do this
     r.Inflate(1,1);
-    Prop *bgProp = wnd->GetCachedProp(PropBgColor);
-    Brush *br = BrushFromProp(bgProp, r);
+    ColorData *bgColor = wnd->cachedStyle->bgColor;
+    Brush *br = BrushFromColorData(bgColor, r);
     g->FillRectangle(br, r);
 }
 

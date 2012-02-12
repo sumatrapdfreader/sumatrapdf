@@ -58,8 +58,6 @@ struct FontCacheEntry {
     }
 };
 
-VecSegmented<Prop> *gAllProps = NULL;
-
 Style *gStyleDefault = NULL;
 Style *gStyleButtonDefault = NULL;
 Style *gStyleButtonMouseOver = NULL;
@@ -69,11 +67,13 @@ struct StyleCacheEntry {
     size_t      style1Id;
     Style *     style2;
     size_t      style2Id;
-    Prop **     props; // memory within gCachedProps
+    CachedStyle cachedStyle;
 };
 
-static Vec<StyleCacheEntry> *   gStyleCache = NULL;
-static VecSegmented<Prop*> *    gCachedProps = NULL;
+// Those must be VecSegmented so that code can retain pointers to
+// their elements (we can't move the memory)
+static VecSegmented<Prop> *            gAllProps = NULL;
+static VecSegmented<StyleCacheEntry> * gStyleCache = NULL;
 
 void Initialize()
 {
@@ -118,8 +118,7 @@ void Initialize()
     //gStyleButtonMouseOver->Set(Prop::AllocColorSolid(PropBgColor, 180, 0, 0, 255));
     //gStyleButtonMouseOver->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
 
-    gStyleCache = new Vec<StyleCacheEntry>();
-    gCachedProps = new VecSegmented<Prop*>();
+    gStyleCache = new VecSegmented<StyleCacheEntry>();
 }
 
 void Destroy()
@@ -134,7 +133,6 @@ void Destroy()
     delete gStyleButtonMouseOver;
 
     delete gStyleCache;
-    delete gCachedProps;
     delete gStyleDefault;
 }
 
@@ -488,15 +486,12 @@ Prop *GetProp(Style *first, Style *second, PropType type)
     return props[0].prop;
 }
 
-// convenience function: given cached props, get a Font object matching the font
+// convenience function: given cached style, get a Font object matching the font
 // properties.
 // Caller should not delete the font - it's cached for performance and deleted at exit
-Font *CachedFontFromCachedProps(Prop **props)
+Font *CachedFontFromCachedStyle(CachedStyle *s)
 {
-    Prop *fontName   = props[PropFontName];
-    Prop *fontSize   = props[PropFontSize];
-    Prop *fontWeight = props[PropFontWeight];
-    return GetCachedFont(fontName->fontName, fontSize->fontSize, fontWeight->fontWeight);
+    return GetCachedFont(s->fontName, s->fontSize, s->fontWeight);
 }
 
 static size_t GetStyleId(Style *style) {
@@ -505,38 +500,50 @@ static size_t GetStyleId(Style *style) {
     return style->GetIdentity();
 }
 
-Prop **CachePropsForStyle(Style *style1, Style *style2)
+CachedStyle *CacheStyle(Style *style1, Style *style2)
 {
-    static PropToGet propsToGet[PropsCount];
-
     ScopedMuiCritSec muiCs;
 
     for (StyleCacheEntry *e = gStyleCache->IterStart(); e; e = gStyleCache->IterNext()) {
         if ((e->style1 == style1) && (e->style2 == style2)) {
             if ((e->style1Id == GetStyleId(style1)) &&
                 (e->style2Id == GetStyleId(style2))) {
-                return e->props;
+                return &e->cachedStyle;
             }
-            // TODO: optimize by updating props in-place
             break;
         }
     }
 
+    PropToGet props[PropsCount];
     for (size_t i = 0; i < PropsCount; i++) {
-        propsToGet[i].type = (PropType)i;
-        propsToGet[i].prop = NULL;
+        props[i].type = (PropType)i;
+        props[i].prop = NULL;
     }
-    GetProps(style1, style2, propsToGet, PropsCount);
+    GetProps(style1, style2, props, PropsCount);
 
-    Prop **props = gCachedProps->AllocAtEnd(PropsCount);
-    for (size_t i = 0; i < PropsCount; i++) {
-        props[i] = propsToGet[i].prop;
-        CrashIf(!props[i]);
-    }
+    CachedStyle s;
+    s.fontName             = props[PropFontName].prop->fontName;
+    s.fontSize             = props[PropFontSize].prop->fontSize;
+    s.fontWeight           = props[PropFontWeight].prop->fontWeight;
+    s.padding              = props[PropPadding].prop->padding;
+    s.color                = &(props[PropColor].prop->color);
+    s.bgColor              = &(props[PropBgColor].prop->color);
+    s.borderWidth.top      = props[PropBorderTopWidth].prop->width;
+    s.borderWidth.right    = props[PropBorderRightWidth].prop->width;
+    s.borderWidth.bottom   = props[PropBorderBottomWidth].prop->width;
+    s.borderWidth.left     = props[PropBorderLeftWidth].prop->width;
+    s.borderColors.top     = &(props[PropBorderTopColor].prop->color);
+    s.borderColors.right   = &(props[PropBorderRightColor].prop->color);
+    s.borderColors.bottom  = &(props[PropBorderBottomColor].prop->color);
+    s.borderColors.left    = &(props[PropBorderLeftColor].prop->color);
+    s.textAlign            = props[PropTextAlign].prop->textAlign;
+    s.fill                 = &(props[PropFill].prop->color);
+    s.stroke               = &(props[PropStroke].prop->color);
+    s.strokeWidth          = props[PropStrokeWidth].prop->width;
 
-    StyleCacheEntry e = { style1, GetStyleId(style1), style2, GetStyleId(style2), props };
-    gStyleCache->Append(e);
-    return props;
+    StyleCacheEntry e = { style1, GetStyleId(style1), style2, GetStyleId(style2), s };
+    StyleCacheEntry *res = gStyleCache->Append(e);
+    return &res->cachedStyle;
 }
 
 static bool RectEq(const RectF *r1, const RectF *r2)
@@ -547,14 +554,13 @@ static bool RectEq(const RectF *r1, const RectF *r2)
             (r1->Height == r2->Height));
 }
 
-Brush *BrushFromProp(Prop *p, const RectF& r)
+Brush *BrushFromColorData(ColorData *color, const RectF& r)
 {
-    CrashIf(!IsColorProp(p->type));
-    if (ColorSolid == p->color.type)
-        return p->color.solid.cachedBrush;
+    if (ColorSolid == color->type)
+        return color->solid.cachedBrush;
 
-    if (ColorGradientLinear == p->color.type) {
-        ColorDataGradientLinear *d = &p->color.gradientLinear;
+    if (ColorGradientLinear == color->type) {
+        ColorDataGradientLinear *d = &color->gradientLinear;
         LinearGradientBrush *br = d->cachedBrush;
         if (!br || !RectEq(&r, d->rect)) {
             ::delete br;
@@ -569,9 +575,9 @@ Brush *BrushFromProp(Prop *p, const RectF& r)
     return ::new SolidBrush(0);
 }
 
-Brush *BrushFromProp(Prop *p, const Rect& r)
+Brush *BrushFromColorData(ColorData *color, const Rect& r)
 {
-    return BrushFromProp(p, RectF((float)r.X, (float)r.Y, (float)r.Width, (float)r.Height));
+    return BrushFromColorData(color, RectF((float)r.X, (float)r.Y, (float)r.Width, (float)r.Height));
 }
 
 } // namespace css

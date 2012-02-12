@@ -238,12 +238,11 @@ void EbookLayout::Arrange(const Rect finalRect, Control *wnd)
 {
     int y, dx, dy;
 
-    Prop **props = wnd->GetCachedProps();
-    Prop *propPadding = props[PropPadding];
-    int padLeft = propPadding->padding.left;
-    int padRight = propPadding->padding.right;
-    int padTop = propPadding->padding.top;
-    int padBottom = propPadding->padding.bottom;
+    CachedStyle *s = wnd->cachedStyle;
+    int padLeft = s->padding.left;
+    int padRight = s->padding.right;
+    int padTop = s->padding.top;
+    int padBottom = s->padding.bottom;
 
     int rectDy = finalRect.Height - (padTop + padBottom);
     int rectDx = finalRect.Width - (padLeft + padRight);
@@ -731,9 +730,8 @@ void ControlEbook::Paint(Graphics *gfx, int offX, int offY)
     if (currPageNo == 0)
         return;
 
-    Prop *propPadding = GetCachedProp(PropPadding);
-    offX += propPadding->padding.left;
-    offY += propPadding->padding.top;
+    offX += cachedStyle->padding.left;
+    offY += cachedStyle->padding.top;
 
     PageData *pageData = pages->At(currPageNo - 1);
     DrawPageLayout(gfx, &pageData->drawInstructions, (REAL)offX, (REAL)offY, gShowTextBoundingBoxes);

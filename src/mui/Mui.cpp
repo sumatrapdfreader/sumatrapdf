@@ -156,7 +156,7 @@ static void DrawLine(Graphics *gfx, const Point& p1, const Point& p2, float widt
     gfx->DrawLine(&p, p1, p2);
 }
 
-void DrawBorder(Graphics *gfx, const Rect r, const BorderProps& bp)
+void DrawBorder(Graphics *gfx, const Rect r, CachedStyle *s)
 {
     Point   p1, p2;
     float   width;
@@ -164,29 +164,29 @@ void DrawBorder(Graphics *gfx, const Rect r, const BorderProps& bp)
     // top
     p1.X = r.X; p1.Y = r.Y;
     p2.X = r.X + r.Width; p2.Y = p1.Y;
-    width = bp.topWidth->width;
-    Brush *br = BrushFromProp(bp.topColor, r);
+    width = s->borderWidth.top;
+    Brush *br = BrushFromColorData(s->borderColors.top, r);
     DrawLine(gfx, p1, p2, width, br);
 
     // right
     p1 = p2;
     p2.X = p1.X; p2.Y = p1.Y + r.Height;
-    width = bp.rightWidth->width;
-    br = BrushFromProp(bp.rightColor, r);
+    width = s->borderWidth.right;
+    br = BrushFromColorData(s->borderColors.right, r);
     DrawLine(gfx, p1, p2, width, br);
 
     // bottom
     p1 = p2;
     p2.X = r.X; p2.Y = p1.Y;
-    width = bp.bottomWidth->width;
-    br = BrushFromProp(bp.bottomColor, r);
+    width = s->borderWidth.bottom;
+    br = BrushFromColorData(s->borderColors.bottom, r);
     DrawLine(gfx, p1, p2, width, br);
 
     // left
     p1 = p2;
     p2.X = p1.X; p2.Y = r.Y;
-    width = bp.leftWidth->width;
-    br = BrushFromProp(bp.leftColor, r);
+    width = s->borderWidth.left;
+    br = BrushFromColorData(s->borderColors.left, r);
     DrawLine(gfx, p1, p2, width, br);
 }
 

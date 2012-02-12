@@ -68,20 +68,13 @@ public:
     }
 };
 
-struct BorderProps {
-    Prop *  topWidth, *topColor;
-    Prop *  rightWidth, *rightColor;
-    Prop *  bottomWidth, *bottomColor;
-    Prop *  leftWidth, *leftColor;
-};
-
 void        Initialize();
 void        Destroy();
 size_t      CollectWindowsAt(Control *wndRoot, int x, int y, uint16 wantedInputMask, Vec<WndAndOffset> *windows);
 void        CollectWindowsBreathFirst(Control *w, int offX, int offY, WndFilter *wndFilter, Vec<WndAndOffset> *windows);
 void        RequestRepaint(Control *w, const Rect *r1 = NULL, const Rect *r2 = NULL);
 void        RequestLayout(Control *w);
-void        DrawBorder(Graphics *gfx, const Rect r, const BorderProps& bp);
+void        DrawBorder(Graphics *gfx, const Rect r, CachedStyle *s);
 HwndWrapper *GetRootHwndWnd(const Control *w);
 
 } // namespace mui

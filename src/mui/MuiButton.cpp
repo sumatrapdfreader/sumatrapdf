@@ -23,23 +23,20 @@ Button::~Button()
     free(text);
 }
 
-static void AddBorders(int& dx, int& dy, Prop **props)
+static void AddBorders(int& dx, int& dy, CachedStyle *s)
 {
-    Prop *p1 = props[PropBorderLeftWidth];
-    Prop *p2 =  props[PropBorderRightWidth];
+    const BorderWidth& bw = s->borderWidth;
     // note: width is a float, not sure how I should round them
-    dx += (int)(p1->width + p2->width);
-    p1 = props[PropBorderTopWidth];
-    p2 =  props[PropBorderBottomWidth];
-    dy += (int)(p1->width + p2->width);
+    dx += (int)(bw.left + bw.right);
+    dy += (int)(bw.top + bw.bottom);
 }
 
-static Size GetBorderAndPaddingSize(Prop **props)
+static Size GetBorderAndPaddingSize(CachedStyle *s)
 {
-    Padding pad = props[PropPadding]->padding;
+    Padding pad = s->padding;
     int dx = pad.left + pad.right;
     int dy = pad.top  + pad.bottom;
-    AddBorders(dx, dy, props);
+    AddBorders(dx, dy, s);
     return Size(dx, dy);
 }
 
@@ -62,11 +59,11 @@ void Button::RecalculateSize(bool repaintIfSizeDidntChange)
 {
     Size prevSize = desiredSize;
 
-    desiredSize = GetBorderAndPaddingSize(GetCachedProps());
+    desiredSize = GetBorderAndPaddingSize(cachedStyle);
     textDx = 0;
     if (text) {
         Graphics *gfx = AllocGraphicsForMeasureText();
-        Font *font = CachedFontFromCachedProps(GetCachedProps());
+        Font *font = CachedFontFromCachedStyle(cachedStyle);
         RectF bbox = MeasureText(gfx, font, text);
         textDx = (size_t)bbox.Width; // TODO: round up?
         desiredSize.Width  += textDx;
@@ -125,36 +122,23 @@ void Button::Paint(Graphics *gfx, int offX, int offY)
     if (!IsVisible())
         return;
 
-    Prop **props = GetCachedProps();
-    Prop *col   = props[PropColor];
-    Prop *bgCol = props[PropBgColor];
-    Prop *padding = props[PropPadding];
-    Prop *topWidth = props[PropBorderTopWidth];
-    Prop *leftWidth = props[PropBorderLeftWidth];
-    Prop *textAlign = props[PropTextAlign];
+    CachedStyle *s = cachedStyle;
 
     RectF bbox((REAL)offX, (REAL)offY, (REAL)pos.Width, (REAL)pos.Height);
-    Brush *brBgColor = BrushFromProp(bgCol, bbox);
+    Brush *brBgColor = BrushFromColorData(s->bgColor, bbox);
     gfx->FillRectangle(brBgColor, bbox);
 
-    BorderProps bp = {
-        props[PropBorderTopWidth], props[PropBorderTopColor],
-        props[PropBorderRightWidth], props[PropBorderRightColor],
-        props[PropBorderBottomWidth], props[PropBorderBottomColor],
-        props[PropBorderLeftWidth], props[PropBorderLeftColor],
-    };
-
     Rect r(offX, offY, pos.Width, pos.Height);
-    DrawBorder(gfx, r, bp);
+    DrawBorder(gfx, r, s);
     if (str::IsEmpty(text))
         return;
 
-    Padding pad = padding->padding;
-    int alignedOffX = AlignedOffset(pos.Width - pad.left - pad.right, textDx, textAlign->textAlign);
-    int x = offX + alignedOffX + pad.left + (int)leftWidth->width;
-    int y = offY + pad.top + (int)topWidth->width;
-    Brush *brColor = BrushFromProp(col, bbox); // restrict bbox to just the text?
-    Font *font = CachedFontFromCachedProps(props);
+    Padding pad = s->padding;
+    int alignedOffX = AlignedOffset(pos.Width - pad.left - pad.right, textDx, s->textAlign);
+    int x = offX + alignedOffX + pad.left + (int)s->borderWidth.left;
+    int y = offY + pad.top + (int)s->borderWidth.top;
+    Brush *brColor = BrushFromColorData(s->color, bbox); // restrict bbox to just the text?
+    Font *font = CachedFontFromCachedStyle(s);
     gfx->DrawString(text, str::Len(text), font, PointF((REAL)x, (REAL)y), NULL, brColor);
 }
 
@@ -197,14 +181,12 @@ void ButtonVector::RecalculateSize(bool repaintIfSizeDidntChange)
 {
     Size prevSize = desiredSize;
 
-    desiredSize = GetBorderAndPaddingSize(GetCachedProps());
+    CachedStyle *s = cachedStyle;
+    desiredSize = GetBorderAndPaddingSize(s);
 
-    Prop **props = GetCachedProps();
-    Prop *stroke = props[PropStroke];
-    Prop *strokeWidth = props[PropStrokeWidth];
     Rect bbox;
-    Brush *brStroke = BrushFromProp(stroke, bbox);
-    Pen pen(brStroke, strokeWidth->width);
+    Brush *brStroke = BrushFromColorData(s->stroke, bbox);
+    Pen pen(brStroke, s->strokeWidth);
     graphicsPath->GetBounds(&bbox, NULL, &pen);
     desiredSize.Width  += bbox.Width;
     desiredSize.Height += bbox.Height;
@@ -225,48 +207,33 @@ void ButtonVector::Paint(Graphics *gfx, int offX, int offY)
     if (!IsVisible())
         return;
 
-    Prop **props = GetCachedProps();
-    Prop *col   = props[PropColor];
-    Prop *bgCol = props[PropBgColor];
-    Prop *padding = props[PropPadding];
-    Prop *topWidth = props[PropBorderTopWidth];
-    Prop *leftWidth = props[PropBorderLeftWidth];
-    Prop *fill = props[PropFill];
-    Prop *stroke = props[PropStroke];
-    Prop *strokeWidth = props[PropStrokeWidth];
+    CachedStyle *s = cachedStyle;
 
     RectF bbox((REAL)offX, (REAL)offY, (REAL)pos.Width, (REAL)pos.Height);
-    Brush *brBgColor = BrushFromProp(bgCol, bbox);
+    Brush *brBgColor = BrushFromColorData(s->bgColor, bbox);
     gfx->FillRectangle(brBgColor, bbox);
 
-    BorderProps bp = {
-        props[PropBorderTopWidth], props[PropBorderTopColor],
-        props[PropBorderRightWidth], props[PropBorderRightColor],
-        props[PropBorderBottomWidth], props[PropBorderBottomColor],
-        props[PropBorderLeftWidth], props[PropBorderLeftColor],
-    };
-
     Rect r(offX, offY, pos.Width, pos.Height);
-    DrawBorder(gfx, r, bp);
+    DrawBorder(gfx, r, s);
     if (!graphicsPath)
         return;
 
     // TODO: center the path both vertically and horizontally
 
-    Padding pad = padding->padding;
+    Padding pad = s->padding;
     //int alignedOffX = AlignedOffset(pos.Width - pad.left - pad.right, desiredSize.Width, Align_Center);
-    int x = offX + pad.left + (int)leftWidth->width;
-    int y = offY + pad.top + (int)topWidth->width;
+    int x = offX + pad.left + (int)s->borderWidth.left;
+    int y = offY + pad.top + (int)s->borderWidth.top;
 
     // TODO: can I avoid making a copy of GraphicsPath?
     GraphicsPath *tmp = graphicsPath->Clone();
     Matrix m;
     m.Translate((float)x, (float)y);
     tmp->Transform(&m);
-    Brush *brStroke = BrushFromProp(stroke, bbox);
-    Brush *brFill = BrushFromProp(fill, bbox);
+    Brush *brStroke = BrushFromColorData(s->stroke, bbox);
+    Brush *brFill = BrushFromColorData(s->fill, bbox);
     gfx->FillPath(brFill, tmp);
-    Pen pen(brStroke, strokeWidth->width);
+    Pen pen(brStroke, s->strokeWidth);
     gfx->DrawPath(&pen, tmp);
 }
 

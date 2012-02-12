@@ -88,15 +88,7 @@ public:
     // we cache properties for the current style during SetStyle() which
     // makes if fast to access them anywhere without repeating the work
     // of searching the style inheritance chain
-    // properties are cached in a separate cache and not in each object
-    // as it allows us to save per-object memory by sharing those properties
-    // (we expect many objects of the same type to have the same style).
-    // For now we cache every prop for each object type. We could limit
-    // the set of cached props per-object (but right now it doesn't seem
-    // to be enoug of a saving)
-    Prop **         cachedProps;
-    Prop **         GetCachedProps() const;
-    Prop *          GetCachedProp(PropType propType) const;
+    CachedStyle *   cachedStyle;
     void            SetCurrentStyle(Style *style1, Style *style2);
 
     // only used by HwndWrapper but we need it here
