@@ -62,7 +62,6 @@ LOCAL_SRC_FILES := \
 	$(MY_ROOT)/fitz/stm_buffer.c \
 	$(MY_ROOT)/fitz/stm_open.c \
 	$(MY_ROOT)/fitz/stm_read.c \
-	$(MY_ROOT)/draw/arch_port.c \
 	$(MY_ROOT)/draw/draw_affine.c \
 	$(MY_ROOT)/draw/draw_blend.c \
 	$(MY_ROOT)/draw/draw_device.c \

@@ -221,7 +221,7 @@ OPENJPEG_OBJS = \
 	$(OOJ)\t2.obj $(OOJ)\tcd.obj $(OOJ)\tgt.obj
 
 FITZ_DRAW_OBJS = \
-	$(OFZ)\arch_port.obj $(OFZ)\draw_affine.obj $(OFZ)\draw_blend.obj $(OFZ)\draw_edge.obj \
+	$(OFZ)\draw_affine.obj $(OFZ)\draw_blend.obj $(OFZ)\draw_edge.obj \
 	$(OFZ)\draw_glyph.obj $(OFZ)\draw_mesh.obj $(OFZ)\draw_paint.obj $(OFZ)\draw_path.obj \
 	$(OFZ)\draw_scale.obj $(OFZ)\draw_unpack.obj $(OFZ)\draw_device.obj
 

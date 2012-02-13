@@ -149,7 +149,6 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				Description=""
 				CommandLine=""
 			/>
 			<Tool
@@ -526,10 +525,6 @@
 		<Filter
 			Name="draw"
 			>
-			<File
-				RelativePath="..\draw\arch_port.c"
-				>
-			</File>
 			<File
 				RelativePath="..\draw\draw_affine.c"
 				>

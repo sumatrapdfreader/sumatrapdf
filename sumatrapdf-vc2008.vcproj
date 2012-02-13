@@ -817,10 +817,6 @@
 				Name="draw"
 				>
 				<File
-					RelativePath=".\mupdf\draw\arch_port.c"
-					>
-				</File>
-				<File
 					RelativePath=".\mupdf\draw\draw_affine.c"
 					>
 				</File>
