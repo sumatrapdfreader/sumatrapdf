@@ -148,23 +148,17 @@ bool IsColorProp(PropType type)
            (PropStroke == type);
 }
 
-// based on https://developer.mozilla.org/en/CSS/color_value
-// TODO: add more colors
-// TODO: change strings into linear string format, similar to how we store names
-// html tags
-static struct {
-    const char *name;
-    ARGB        color;
-} gKnownColors[] = {
-    { "black",  MKRGB(0, 0, 0) },
-    { "white",  MKRGB(255,255,255) },
-    { "gray",   MKRGB(128,128,128) },
-    { "red",    MKRGB(255,0,0) },
-    { "green",  MKRGB(0,128,0) },
-    { "blue",   MKRGB(0,0,255) },
-    { "transparent", MKARGB(0,0,0,0) },
-    { "yellow", MKRGB(255,255,0) },
-};
+static const char *gCssKnownColorsStrings = "black\0blue\0gray\0green\0red\0transparent\0white\0yellow\0";
+static ARGB gCssKnownColorsValues[] = { MKRGB(0, 0, 0), MKRGB(0,0,255), MKRGB(128,128,128), MKRGB(0,128,0), MKRGB(255,0,0), MKARGB(0,0,0,0), MKRGB(255,255,255), MKRGB(255,255,0) };
+
+static bool GetKnownCssColor(const char *name, ARGB& colOut)
+{
+    int pos = str::FindStrPos(gCssKnownColorsStrings, name, str::Len(name));
+    if (-1 == pos)
+        return false;
+    colOut = gCssKnownColorsValues[pos];
+    return true;
+}
 
 // Parses css-like color formats:
 // #rgb, #rrggbb, rgb(r,g,b), rgba(r,g,b,a)
@@ -198,12 +192,9 @@ static ARGB ParseCssColor(const char *color)
         return MKARGB((int)(fa * 2.55f), (int)(fr * 2.55f), (int)(fg * 2.55f), (int)(fb * 2.55f));
     }
     // parse color names
-    for (size_t i = 0; i < dimof(gKnownColors); i++) {
-        if (str::EqI(gKnownColors[i].name, color)) {
-            return gKnownColors[i].color;
-        }
-    }
-    return MKARGB(0,0,0,0); // transparent
+    ARGB colVal = MKARGB(0,0,0,0); // transparent if not known
+    GetKnownCssColor(color, colVal);
+    return colVal;
 }
 
 bool ColorData::operator==(const ColorData& other) const

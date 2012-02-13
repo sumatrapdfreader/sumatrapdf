@@ -195,7 +195,6 @@ public:
 
 void        SkipWs(const char*& s, const char *end);
 void        SkipNonWs(const char*& s, const char *end);
-int         FindStrPos(const char *strings, const char *str, size_t len);
 
 HtmlTag     FindTag(HtmlToken *tok);
 HtmlAttr    FindAttr(AttrInfo *attrInfo);

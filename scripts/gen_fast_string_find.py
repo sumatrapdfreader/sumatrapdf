@@ -69,6 +69,48 @@ g_tags_str = "a abbr acronym audio b blockquote body br center code dd div dl dt
 g_attrs_str = "size href color filepos border valign rowspan colspan link vlink style face value bgcolor class id mediarecindex controls recindex title lang clear xmlns xmlns:dc width align height"
 g_align_attr_str = "left right center justify"
 
+# array of name/value for css colors, value is what goes inside MKRGB()
+# based on https://developer.mozilla.org/en/CSS/color_value
+# TODO: add more colors
+g_css_colors = [
+    ["black",        "0, 0, 0"],
+    ["white",        "255,255,255"],
+    ["gray",         "128,128,128"],
+    ["red",          "255,0,0"],
+    ["green",        "0,128,0"],
+    ["blue",         "0,0,255"],
+    ["transparent",  "0,0,0,0"],
+    ["yellow",       "255,255,0"],
+    ];
+
+css_colors_c = """
+static const char *gCssKnownColorsStrings = "%s";
+static ARGB gCssKnownColorsValues[] = { %s };
+
+static bool GetKnownCssColor(const char *name, ARGB& colOut)
+{
+    int pos = str::FindStrPos(gCssKnownColorsStrings, name, str::Len(name));
+    if (-1 == pos)
+        return false;
+    colOut = gCssKnownColorsValues[pos];
+    return true;
+}
+"""
+
+def mrgb(col):
+    els = col.split(",")
+    if 3 == len(els): return "MKRGB(%s)" % col
+    if 4 == len(els): return "MKARGB(%s)" % col
+    assert 0
+
+def gen_css_colors():
+    g_css_colors.sort(key=lambda a: a[0])
+    names = [v[0] for v in g_css_colors]
+    vals = [mrgb(v[1]) for v in g_css_colors]
+    names_c = string.join(names, "\\0") + "\\0"
+    vals_c = string.join(vals, ", ")
+    return css_colors_c % (names_c, vals_c)
+
 find_simple_c = """
 // enums must match HTML_TAGS_STRINGS order
 enum HtmlTag {
@@ -165,6 +207,7 @@ def main():
     (align_attrs_enum_str, align_strings) = gen_enum_str_list(g_align_attr_str, "Align")
 
     print(find_simple_c % (tags_enum_str, tags_strings, attrs_enum_str, attrs_strings, align_attrs_enum_str, align_strings))
+    print(gen_css_colors())
     #print(tags_str)
 
 if __name__ == "__main__":

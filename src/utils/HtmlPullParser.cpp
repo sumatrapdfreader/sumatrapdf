@@ -226,55 +226,19 @@ Next:
     return &currToken;
 }
 
-
-// strings is an array of 0-separated strings consequitevely laid out
-// in memory. This functions find the position of str in this array,
-// -1 means not found. The search is case-insensitive
-int FindStrPos(const char *strings, const char *str, size_t len)
-{
-    const char *curr = strings;
-    const char *end = str + len;
-    char firstChar = tolower(*str);
-    int n = 0;
-    for (;;) {
-        // we're at the start of the next tag
-        char c = *curr;
-        if ((0 == c) || (c > firstChar)) {
-            // strings are sorted alphabetically, so we
-            // can quit if current str is > tastringg
-            return -1;
-        }
-        const char *s = str;
-        while (*curr && (s < end)) {
-            char c = tolower(*s++);
-            if (c != *curr++)
-                goto Next;
-        }
-        if ((s == end) && (0 == *curr))
-            return n;
-Next:
-        while (*curr) {
-            ++curr;
-        }
-        ++curr;
-        ++n;
-    }
-    return -1;
-}
-
 HtmlTag FindTag(HtmlToken *tok)
 {
-    return (HtmlTag)FindStrPos(HTML_TAGS_STRINGS, tok->s, GetTagLen(tok));
+    return (HtmlTag)str::FindStrPos(HTML_TAGS_STRINGS, tok->s, GetTagLen(tok));
 }
 
 HtmlAttr FindAttr(AttrInfo *attrInfo)
 {
-    return (HtmlAttr)FindStrPos(HTML_ATTRS_STRINGS, attrInfo->name, attrInfo->nameLen);
+    return (HtmlAttr)str::FindStrPos(HTML_ATTRS_STRINGS, attrInfo->name, attrInfo->nameLen);
 }
 
 AlignAttr FindAlignAttr(const char *attr, size_t len)
 {
-    return (AlignAttr)FindStrPos(ALIGN_ATTRS_STRINGS, attr, len);
+    return (AlignAttr)str::FindStrPos(ALIGN_ATTRS_STRINGS, attr, len);
 }
 
 bool IsSelfClosingTag(HtmlTag tag)
