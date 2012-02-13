@@ -74,6 +74,10 @@ rarely used fields into a separate struct linked from Control. If none of rarely
 used fields was set, we wouldn't have to allocate that struct.
 
 TODO: optimize repainting by cliping to dirty regions (?)
+
+TODO: could switch to layout units like in https://trac.webkit.org/wiki/LayoutUnit,
+https://wiki.mozilla.org/Mozilla2:Units, https://bugzilla.mozilla.org/show_bug.cgi?id=177805
+
 */
 
 #include "Mui.h"
