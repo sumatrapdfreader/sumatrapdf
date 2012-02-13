@@ -155,6 +155,9 @@
     <ClCompile Include="src\mui\SvgPath.cpp">
       <Filter>mui</Filter>
     </ClCompile>
+    <ClCompile Include="src\utils\ThreadUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ebooktest\EbookTestMenu.h" />
@@ -411,6 +414,9 @@
     <ClInclude Include="src\BaseEbookDoc.h" />
     <ClInclude Include="src\mui\SvgPath.h">
       <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\ThreadUtil.h">
+      <Filter>utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

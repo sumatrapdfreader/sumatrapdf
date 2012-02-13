@@ -120,6 +120,7 @@
     <ClCompile Include="src\utils\HtmlPullParser.cpp" />
     <ClCompile Include="src\utils\NoFreeAllocator.cpp" />
     <ClCompile Include="src\utils\StrUtil.cpp" />
+    <ClCompile Include="src\utils\ThreadUtil.cpp" />
     <ClCompile Include="src\utils\Touch.cpp" />
     <ClCompile Include="src\utils\TrivialHtmlParser.cpp" />
     <ClCompile Include="src\utils\WinUtil.cpp" />
@@ -208,6 +209,7 @@
     <ClInclude Include="src\utils\Scoped.h" />
     <ClInclude Include="src\utils\SimpleLog.h" />
     <ClInclude Include="src\utils\StrUtil.h" />
+    <ClInclude Include="src\utils\ThreadUtil.h" />
     <ClInclude Include="src\utils\Timer.h" />
     <ClInclude Include="src\utils\Touch.h" />
     <ClInclude Include="src\utils\TrivialHtmlParser.h" />

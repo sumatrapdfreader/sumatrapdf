@@ -7,9 +7,13 @@
 using std::min;
 using std::max;
 
+#if defined(WITH_CHROME)
 // include anything that might (re)define operator new before BaseUtil.h
 #include "base/threading/thread.h"
 #include "base/bind.h"
+#else
+#include "ThreadUtil.h"
+#endif
 
 #include "CmdLineParser.h"
 #include "EbookTestMenu.h"
@@ -74,8 +78,12 @@ static HWND             gHwndFrame = NULL;
 static ControlEbook *   gControlFrame = NULL;
 static HCURSOR          gCursorHand = NULL;
 
+#if defined(WITH_CHROME)
 // for convenience so that we don't have to pass it around
 static MessageLoop *    gMessageLoopUI = NULL;
+#else
+static UiMessageLoop *  gMessageLoopUI = NULL;
+#endif
 
 static bool gShowTextBoundingBoxes = false;
 
@@ -127,6 +135,7 @@ public:
     Vec<PageData*>* tmpPages;
 
     int             cursorX, cursorY;
+
     base::Thread *  mobiLoadThread;
     base::Thread *  pageLayoutThread;
 

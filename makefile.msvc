@@ -16,6 +16,7 @@
 #   also probably wouldn't work for 64-bit builds due to ...?
 #   trick: using /verbose option to the linker helps understand what it does
 #   also I'm probably mixing dll support with non-dll support
+WITH_CHROME=yes
 
 # Set default configuration
 !if "$(CFG)"==""
@@ -111,7 +112,11 @@ UNINSTALLER_RES = $(OS)\Uninstaller.res
 
 ET_APP          = $(O)\EbookTest.exe
 ET_RES          = $(OEB)\EbookTest.res
-ET_CFLAGS       = $(SUMATRA_CFLAGS) /wd4530 /D "NOMINMAX" $(CHROME_INC)
+ET_CFLAGS       = $(SUMATRA_CFLAGS) /wd4530 /D "NOMINMAX" 
+
+!if "$(WITH_CHROME)"=="yes"
+ET_CFLAGS       = $(ET_CFLAGS) /D "WITH_CHROME" $(CHROME_INC)
+!endif
 
 TESTER_APP      = $(O)\tester.exe
 TESTER_CFLAGS   = $(SUMATRA_CFLAGS)
@@ -193,7 +198,11 @@ UNINSTALLER_OBJS = \
 
 ET_OBJS = \
 	$(OEB)\EbookTest.obj $(OEB)\EbookTestMenu.obj $(ET_RES) \
-	$(OEB)\PageLayout.obj $(MUI_OBJS) $(UTILS_OBJS) $(CHROME_OBJS) $(OEB)\MobiDoc.obj
+	$(OEB)\PageLayout.obj $(MUI_OBJS) $(UTILS_OBJS) $(OEB)\MobiDoc.obj
+
+!if "$(WITH_CHROME)"=="yes"
+ET_OBJS = $(ET_OBJS) $(CHROME_OBJS)
+!endif
 
 TESTER_OBJS = \
 	$(OEB)\Tester.obj $(OEB)\PageLayout.obj $(UTILS_OBJS) $(MUI_OBJS) $(OEB)\MobiDoc.obj
