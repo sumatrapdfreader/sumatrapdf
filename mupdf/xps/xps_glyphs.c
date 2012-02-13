@@ -539,7 +539,7 @@ xps_parse_glyphs(xps_document *doc, fz_matrix ctm,
 
 		xps_select_best_font_encoding(doc, font);
 
-		xps_insert_font(doc, partname, font);
+		xps_insert_font(doc, part->name, font);
 
 		/* NOTE: we keep part->data in the font */
 		font->ft_data = part->data;

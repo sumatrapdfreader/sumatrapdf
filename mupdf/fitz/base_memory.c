@@ -11,16 +11,19 @@ do_scavenging_malloc(fz_context *ctx, unsigned int size)
 	void *p;
 	int phase = 0;
 
-	fz_lock(ctx);
+	fz_lock(ctx, FZ_LOCK_STORE);
+	fz_lock(ctx, FZ_LOCK_ALLOC);
 	do {
 		p = ctx->alloc->malloc(ctx->alloc->user, size);
 		if (p != NULL)
 		{
-			fz_unlock(ctx);
+			fz_unlock(ctx, FZ_LOCK_ALLOC);
+			fz_unlock(ctx, FZ_LOCK_STORE);
 			return p;
 		}
 	} while (fz_store_scavenge(ctx, size, &phase));
-	fz_unlock(ctx);
+	fz_unlock(ctx, FZ_LOCK_ALLOC);
+	fz_unlock(ctx, FZ_LOCK_STORE);
 
 	return NULL;
 }
@@ -31,16 +34,19 @@ do_scavenging_realloc(fz_context *ctx, void *p, unsigned int size)
 	void *q;
 	int phase = 0;
 
-	fz_lock(ctx);
+	fz_lock(ctx, FZ_LOCK_STORE);
+	fz_lock(ctx, FZ_LOCK_ALLOC);
 	do {
 		q = ctx->alloc->realloc(ctx->alloc->user, p, size);
 		if (q != NULL)
 		{
-			fz_unlock(ctx);
+			fz_unlock(ctx, FZ_LOCK_ALLOC);
+			fz_unlock(ctx, FZ_LOCK_STORE);
 			return q;
 		}
 	} while (fz_store_scavenge(ctx, size, &phase));
-	fz_unlock(ctx);
+	fz_unlock(ctx, FZ_LOCK_ALLOC);
+	fz_unlock(ctx, FZ_LOCK_STORE);
 
 	return NULL;
 }
@@ -182,9 +188,9 @@ fz_resize_array_no_throw(fz_context *ctx, void *p, unsigned int count, unsigned 
 void
 fz_free(fz_context *ctx, void *p)
 {
-	fz_lock(ctx);
+	fz_lock(ctx, FZ_LOCK_ALLOC);
 	ctx->alloc->free(ctx->alloc->user, p);
-	fz_unlock(ctx);
+	fz_unlock(ctx, FZ_LOCK_ALLOC);
 }
 
 char *
@@ -236,3 +242,105 @@ fz_alloc_context fz_alloc_default =
 	fz_realloc_default,
 	fz_free_default
 };
+
+static void
+fz_lock_default(void *user, int lock)
+{
+}
+
+static void
+fz_unlock_default(void *user, int lock)
+{
+}
+
+fz_locks_context fz_locks_default =
+{
+	NULL,
+	fz_lock_default,
+	fz_unlock_default
+};
+
+#ifdef FITZ_DEBUG_LOCKING
+
+enum
+{
+	FZ_LOCK_DEBUG_CONTEXT_MAX = 100
+};
+
+fz_context *fz_lock_debug_contexts[FZ_LOCK_DEBUG_CONTEXT_MAX];
+int fz_locks_debug[FZ_LOCK_DEBUG_CONTEXT_MAX][FZ_LOCK_MAX];
+
+static int find_context(fz_context *ctx)
+{
+	int i;
+
+	for (i = 0; i < FZ_LOCK_DEBUG_CONTEXT_MAX; i++)
+	{
+		if (fz_lock_debug_contexts[i] == ctx)
+			return i;
+		if (fz_lock_debug_contexts[i] == NULL)
+		{
+			fz_lock_debug_contexts[i] = ctx;
+			return i;
+		}
+	}
+	return -1;
+}
+
+void
+fz_assert_lock_held(fz_context *ctx, int lock)
+{
+	int idx = find_context(ctx);
+	if (idx < 0)
+		return;
+
+	if (fz_locks_debug[idx][lock] == 0)
+		fprintf(stderr, "Lock %d not held when expected\n", lock);
+}
+
+void
+fz_assert_lock_not_held(fz_context *ctx, int lock)
+{
+	int idx = find_context(ctx);
+	if (idx < 0)
+		return;
+
+	if (fz_locks_debug[idx][lock] != 0)
+		fprintf(stderr, "Lock %d held when not expected\n", lock);
+}
+
+void fz_lock_debug_lock(fz_context *ctx, int lock)
+{
+	int i;
+	int idx = find_context(ctx);
+	if (idx < 0)
+		return;
+
+	if (fz_locks_debug[idx][lock] != 0)
+	{
+		fprintf(stderr, "Attempt to take lock %d when held already!\n", lock);
+	}
+	for (i = lock-1; i >= 0; i--)
+	{
+		if (fz_locks_debug[idx][i] != 0)
+		{
+			fprintf(stderr, "Lock ordering violation: Attempt to take lock %d when %d held already!\n", lock, i);
+		}
+	}
+	fz_locks_debug[idx][lock] = 1;
+}
+
+void fz_lock_debug_unlock(fz_context *ctx, int lock)
+{
+	int idx = find_context(ctx);
+	if (idx < 0)
+		return;
+
+	if (fz_locks_debug[idx][lock] == 0)
+	{
+		fprintf(stderr, "Attempt to release lock %d when not held!\n", lock);
+	}
+	fz_locks_debug[idx][lock] = 0;
+}
+
+#endif

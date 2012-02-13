@@ -49,7 +49,6 @@ static void usage(void)
 #endif
 		"\t-p -\tpassword\n"
 		"\t-r -\tresolution in dpi (default: 72)\n"
-		"\t-A\tdisable accelerated functions\n"
 		"\t-a\tsave alpha channel (only pam and png)\n"
 		"\t-b -\tnumber of bits of antialiasing (0 to 8)\n"
 		"\t-g\trender in grayscale\n"
@@ -475,14 +474,13 @@ int main(int argc, char **argv)
 {
 	char *password = "";
 	int grayscale = 0;
-	int accelerate = 1;
 	pdf_document *doc = NULL;
 	int c;
 	fz_context *ctx;
 
 	fz_var(doc);
 
-	while ((c = fz_getopt(argc, argv, "lo:p:r:R:Aab:dgmtx5G:I")) != -1)
+	while ((c = fz_getopt(argc, argv, "lo:p:r:R:ab:dgmtx5G:I")) != -1)
 	{
 		switch (c)
 		{
@@ -490,7 +488,6 @@ int main(int argc, char **argv)
 		case 'p': password = fz_optarg; break;
 		case 'r': resolution = atof(fz_optarg); break;
 		case 'R': rotation = atof(fz_optarg); break;
-		case 'A': accelerate = 0; break;
 		case 'a': savealpha = 1; break;
 		case 'b': alphabits = atoi(fz_optarg); break;
 		case 'l': showoutline++; break;
@@ -515,10 +512,7 @@ int main(int argc, char **argv)
 		exit(0);
 	}
 
-	if (accelerate)
-		fz_accelerate();
-
-	ctx = fz_new_context(NULL, FZ_STORE_DEFAULT);
+	ctx = fz_new_context(NULL, NULL, FZ_STORE_DEFAULT);
 	if (!ctx)
 	{
 		fprintf(stderr, "cannot initialise context\n");

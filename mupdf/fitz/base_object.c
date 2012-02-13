@@ -155,8 +155,12 @@ int fz_is_indirect(fz_obj *obj)
 }
 
 #define RESOLVE(obj) \
-	do { if (obj && obj->kind == FZ_INDIRECT) \
-		obj = fz_resolve_indirect(obj); \
+	do { \
+		if (obj && obj->kind == FZ_INDIRECT) \
+		{\
+			fz_assert_lock_not_held(obj->ctx, FZ_LOCK_FILE); \
+			obj = fz_resolve_indirect(obj); \
+		} \
 	} while (0)
 
 int fz_is_null(fz_obj *obj)

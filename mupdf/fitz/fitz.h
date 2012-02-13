@@ -115,6 +115,7 @@ typedef struct fz_error_context_s fz_error_context;
 typedef struct fz_warn_context_s fz_warn_context;
 typedef struct fz_font_context_s fz_font_context;
 typedef struct fz_aa_context_s fz_aa_context;
+typedef struct fz_locks_context_s fz_locks_context;
 typedef struct fz_store_s fz_store;
 typedef struct fz_glyph_cache_s fz_glyph_cache;
 typedef struct fz_context_s fz_context;
@@ -125,8 +126,6 @@ struct fz_alloc_context_s
 	void *(*malloc)(void *, unsigned int);
 	void *(*realloc)(void *, void *, unsigned int);
 	void (*free)(void *, void *);
-	void (*lock)(void *);
-	void (*unlock)(void *);
 };
 
 /* Default allocator */
@@ -372,6 +371,7 @@ void fz_flush_warnings(fz_context *ctx);
 struct fz_context_s
 {
 	fz_alloc_context *alloc;
+	fz_locks_context *locks;
 	fz_error_context *error;
 	fz_warn_context *warn;
 	fz_font_context *font;
@@ -380,26 +380,84 @@ struct fz_context_s
 	fz_glyph_cache *glyph_cache;
 };
 
-fz_context *fz_new_context(fz_alloc_context *alloc, unsigned int max_store);
+fz_context *fz_new_context(fz_alloc_context *alloc, fz_locks_context *locks, unsigned int max_store);
 fz_context *fz_clone_context(fz_context *ctx);
 void fz_free_context(fz_context *ctx);
 
 void fz_new_aa_context(fz_context *ctx);
 void fz_free_aa_context(fz_context *ctx);
 
-static inline void
-fz_lock(fz_context *ctx)
+/* Locking functions
+ *
+ * MuPDF is kept deliberately free of any knowledge of particular threading
+ * systems. As such, in order for safe multi-threaded operation, we rely on
+ * callbacks to client provided functions.
+ *
+ * A client is expected to provide FZ_LOCK_MAX mutexes, and a function to
+ * lock/unlock each of them. These may be recursive mutexes, but do not have
+ * to be.
+ *
+ * If a client does not intend to use multiple threads, then it may pass
+ * NULL instead of the address of a lock structure.
+ *
+ * In order to avoid deadlocks, we have 1 simple rules internally as to how
+ * we use locks: We can never take lock n when we already hold any lock i,
+ * where 0 <= i <= n. In order to verify this, we have some debugging code
+ * built in, that is enabled by defining FITZ_DEBUG_LOCKING.
+ */
+
+#if defined(MEMENTO) || defined(DEBUG)
+#define FITZ_DEBUG_LOCKING
+#endif
+
+struct fz_locks_context_s
 {
-	if (ctx->alloc->lock)
-		ctx->alloc->lock(ctx->alloc->user);
+	void *user;
+	void (*lock)(void *, int);
+	void (*unlock)(void *, int);
+};
+
+enum {
+	FZ_LOCK_ALLOC = 0,
+	FZ_LOCK_STORE,
+	FZ_LOCK_FILE,
+	FZ_LOCK_GLYPHCACHE,
+	FZ_LOCK_MAX
+};
+
+/* Default locks */
+extern fz_locks_context fz_locks_default;
+
+#ifdef FITZ_DEBUG_LOCKING
+
+void fz_assert_lock_held(fz_context *ctx, int lock);
+void fz_assert_lock_not_held(fz_context *ctx, int lock);
+void fz_lock_debug_lock(fz_context *ctx, int lock);
+void fz_lock_debug_unlock(fz_context *ctx, int lock);
+
+#else
+
+#define fz_assert_lock_held(A,B) do { } while (0)
+#define fz_assert_lock_not_held(A,B) do { } while (0)
+#define fz_lock_debug_lock(A,B) do { } while (0)
+#define fz_lock_debug_unlock(A,B) do { } while (0)
+
+#endif /* !FITZ_DEBUG_LOCKING */
+
+static inline void
+fz_lock(fz_context *ctx, int lock)
+{
+	fz_lock_debug_lock(ctx, lock);
+	ctx->locks->lock(ctx->locks->user, lock);
 }
 
 static inline void
-fz_unlock(fz_context *ctx)
+fz_unlock(fz_context *ctx, int lock)
 {
-	if (ctx->alloc->unlock)
-		ctx->alloc->unlock(ctx->alloc->user);
+	fz_lock_debug_unlock(ctx, lock);
+	ctx->locks->unlock(ctx->locks->user, lock);
 }
+
 
 /*
  * Basic runtime and utility functions
@@ -460,7 +518,7 @@ void fz_empty_hash(fz_context *ctx, fz_hash_table *table);
 void fz_free_hash(fz_context *ctx, fz_hash_table *table);
 
 void *fz_hash_find(fz_context *ctx, fz_hash_table *table, void *key);
-void fz_hash_insert(fz_context *ctx, fz_hash_table *table, void *key, void *val);
+void *fz_hash_insert(fz_context *ctx, fz_hash_table *table, void *key, void *val);
 void fz_hash_remove(fz_context *ctx, fz_hash_table *table, void *key);
 
 int fz_hash_len(fz_context *ctx, fz_hash_table *table);
@@ -791,6 +849,7 @@ struct fz_stream_s
 	int pos;
 	int avail;
 	int bits;
+	int locked;
 	unsigned char *bp, *rp, *wp, *ep;
 	void *state;
 	int (*read)(fz_stream *stm, unsigned char *buf, int len);
@@ -807,6 +866,7 @@ fz_stream *fz_open_file_w(fz_context *ctx, const wchar_t *filename); /* only on 
 fz_stream *fz_open_buffer(fz_context *ctx, fz_buffer *buf);
 fz_stream *fz_open_memory(fz_context *ctx, unsigned char *data, int len);
 void fz_close(fz_stream *stm);
+void fz_lock_stream(fz_stream *stm);
 /* SumatraPDF: allow to clone a stream */
 fz_stream *fz_clone_stream(fz_context *ctx, fz_stream *stm);
 
@@ -1206,6 +1266,7 @@ void fz_debug_path(fz_context *ctx, fz_path *, int indent);
  */
 
 void fz_new_glyph_cache_context(fz_context *ctx);
+fz_glyph_cache *fz_glyph_cache_keep(fz_context *ctx);
 void fz_free_glyph_cache_context(fz_context *ctx);
 
 fz_pixmap *fz_render_ft_glyph(fz_context *ctx, fz_font *font, int cid, fz_matrix trm);
@@ -1474,9 +1535,6 @@ void fz_run_display_list(fz_display_list *list, fz_device *dev, fz_matrix ctm, f
 /*
  * Plotting functions.
  */
-
-void fz_accelerate(void);
-void fz_accelerate_arch(void);
 
 void fz_decode_tile(fz_pixmap *pix, float *decode);
 void fz_decode_indexed_tile(fz_pixmap *pix, float *decode, int maxval);

@@ -38,7 +38,6 @@ pdf_load_embedded_cmap(pdf_document *xref, fz_obj *stmobj)
 
 	fz_try(ctx)
 	{
-
 		file = pdf_open_stream(xref, fz_to_num(stmobj), fz_to_gen(stmobj));
 		phase = 1;
 		cmap = pdf_load_cmap(ctx, file);

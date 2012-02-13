@@ -293,6 +293,8 @@ pdf_read_new_xref_section(pdf_document *xref, fz_stream *stm, int i0, int i1, in
 	}
 }
 
+/* Entered with file locked. Drops the lock in the middle, but then picks
+ * it up again before exiting. */
 static fz_obj *
 pdf_read_new_xref(pdf_document *xref, char *buf, int cap)
 {
@@ -319,6 +321,7 @@ pdf_read_new_xref(pdf_document *xref, char *buf, int cap)
 
 	fz_try(ctx)
 	{
+		fz_unlock(ctx, FZ_LOCK_FILE);
 		obj = fz_dict_gets(trailer, "Size");
 		if (!obj)
 			fz_throw(ctx, "xref stream missing Size entry (%d %d R)", num, gen);
@@ -368,10 +371,12 @@ pdf_read_new_xref(pdf_document *xref, char *buf, int cap)
 		fz_drop_obj(index);
 		fz_rethrow(ctx);
 	}
+	fz_lock(ctx, FZ_LOCK_FILE);
 
 	return trailer;
 }
 
+/* File is locked on entry, and exit (but may be dropped in the middle) */
 static fz_obj *
 pdf_read_xref(pdf_document *xref, int ofs, char *buf, int cap)
 {
@@ -649,10 +654,12 @@ pdf_open_document_with_stream(fz_stream *file)
 	fz_obj *obj;
 	fz_obj *nobj = NULL;
 	int i, repaired = 0;
+	int locked;
 	fz_context *ctx = file->ctx;
 
 	fz_var(dict);
 	fz_var(nobj);
+	fz_var(locked);
 
 	/* install pdf specific callback */
 	fz_resolve_indirect = pdf_resolve_indirect;
@@ -662,6 +669,9 @@ pdf_open_document_with_stream(fz_stream *file)
 
 	xref->file = fz_keep_stream(file);
 	xref->ctx = ctx;
+
+	fz_lock(ctx, FZ_LOCK_FILE);
+	locked = 1;
 
 	fz_try(ctx)
 	{
@@ -690,6 +700,9 @@ pdf_open_document_with_stream(fz_stream *file)
 
 		if (repaired)
 			pdf_repair_xref(xref, xref->scratch, sizeof xref->scratch);
+
+		fz_unlock(ctx, FZ_LOCK_FILE);
+		locked = 0;
 
 		encrypt = fz_dict_gets(xref->trailer, "Encrypt");
 		id = fz_dict_gets(xref->trailer, "ID");
@@ -748,6 +761,11 @@ pdf_open_document_with_stream(fz_stream *file)
 				dict = NULL;
 			}
 		}
+	}
+	fz_always(ctx)
+	{
+		if (locked)
+			fz_unlock(ctx, FZ_LOCK_FILE);
 	}
 	fz_catch(ctx)
 	{
@@ -910,18 +928,17 @@ pdf_load_obj_stm(pdf_document *xref, int num, int gen, char *buf, int cap)
 			}
 		}
 	}
-	fz_catch(ctx)
+	fz_always(ctx)
 	{
 		fz_close(stm);
 		fz_free(xref->ctx, ofsbuf);
 		fz_free(xref->ctx, numbuf);
 		fz_drop_obj(objstm);
+	}
+	fz_catch(ctx)
+	{
 		fz_throw(ctx, "cannot open object stream (%d %d R)", num, gen);
 	}
-	fz_close(stm);
-	fz_free(xref->ctx, ofsbuf);
-	fz_free(xref->ctx, numbuf);
-	fz_drop_obj(objstm);
 }
 
 /*
@@ -950,6 +967,7 @@ pdf_cache_object(pdf_document *xref, int num, int gen)
 	}
 	else if (x->type == 'n')
 	{
+		fz_lock(ctx, FZ_LOCK_FILE);
 		fz_seek(xref->file, x->ofs, 0);
 
 		fz_try(ctx)
@@ -959,6 +977,7 @@ pdf_cache_object(pdf_document *xref, int num, int gen)
 		}
 		fz_catch(ctx)
 		{
+			fz_unlock(ctx, FZ_LOCK_FILE);
 			fz_throw(ctx, "cannot parse object (%d %d R)", num, gen);
 		}
 
@@ -966,11 +985,13 @@ pdf_cache_object(pdf_document *xref, int num, int gen)
 		{
 			fz_drop_obj(x->obj);
 			x->obj = NULL;
+			fz_unlock(ctx, FZ_LOCK_FILE);
 			fz_throw(ctx, "found object (%d %d R) instead of (%d %d R)", rnum, rgen, num, gen);
 		}
 
 		if (xref->crypt)
 			pdf_crypt_obj(ctx, xref->crypt, x->obj, num, gen);
+		fz_unlock(ctx, FZ_LOCK_FILE);
 	}
 	else if (x->type == 'o')
 	{

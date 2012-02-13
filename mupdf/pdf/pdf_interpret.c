@@ -960,6 +960,7 @@ copy_state(fz_context *ctx, pdf_gstate *gs, pdf_gstate *old)
 		pdf_keep_xobject(ctx, gs->softmask);
 }
 
+
 static pdf_csi *
 pdf_new_csi(pdf_document *xref, fz_device *dev, fz_matrix ctm, char *event, fz_cookie *cookie, pdf_gstate *gstate)
 {
@@ -2535,6 +2536,7 @@ pdf_run_keyword(pdf_csi *csi, fz_obj *rdb, fz_stream *file, char *buf)
 			fz_warn(ctx, "unknown keyword: '%s'", buf);
 		break;
 	}
+	fz_assert_lock_not_held(ctx, FZ_LOCK_FILE);
 }
 
 static void

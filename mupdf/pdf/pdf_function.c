@@ -836,8 +836,10 @@ load_postscript_func(pdf_function *func, pdf_document *xref, fz_obj *dict, int n
 	int tok;
 	int len;
 	fz_context *ctx = xref->ctx;
+	int locked = 0;
 
 	fz_var(stream);
+	fz_var(locked);
 
 	fz_try(ctx)
 	{
@@ -856,15 +858,16 @@ load_postscript_func(pdf_function *func, pdf_document *xref, fz_obj *dict, int n
 		codeptr = 0;
 		parse_code(func, stream, &codeptr);
 	}
-	fz_catch(ctx)
+	fz_always(ctx)
 	{
 		fz_close(stream);
+	}
+	fz_catch(ctx)
+	{
 		fz_throw(ctx, "cannot parse calculator function (%d %d R)", num, gen);
 	}
 
 	func->size += func->u.p.cap * sizeof(psobj);
-
-	fz_close(stream);
 }
 
 static void

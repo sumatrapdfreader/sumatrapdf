@@ -20,7 +20,6 @@
 #endif
 
 #define ID_ABOUT	0x1000
-#define ID_DOCINFO	0x1001
 
 static HWND hwndframe = NULL;
 static HWND hwndview = NULL;
@@ -166,100 +165,6 @@ char *winpassword(pdfapp_t *app, char *filename)
 }
 
 INT CALLBACK
-dloginfoproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-	char buf[256];
-	pdf_document *doc = gapp.doc->needs_password ? (pdf_document *)gapp.doc : NULL;
-	fz_obj *info, *obj;
-
-	switch(message)
-	{
-	case WM_INITDIALOG:
-
-		SetDlgItemTextW(hwnd, 0x10, wbuf);
-
-		if (!doc)
-		{
-			SetDlgItemTextA(hwnd, 0x11, "XPS");
-			SetDlgItemTextA(hwnd, 0x12, "None");
-			SetDlgItemTextA(hwnd, 0x13, "n/a");
-			return TRUE;
-		}
-
-		sprintf(buf, "PDF %d.%d", doc->version / 10, doc->version % 10);
-		SetDlgItemTextA(hwnd, 0x11, buf);
-
-		if (doc->crypt)
-		{
-			sprintf(buf, "Standard V%d %d-bit %s", pdf_get_crypt_revision(doc),
-				pdf_get_crypt_length(doc), pdf_get_crypt_method(doc));
-			SetDlgItemTextA(hwnd, 0x12, buf);
-			strcpy(buf, "");
-			if (pdf_has_permission(doc, PDF_PERM_PRINT))
-				strcat(buf, "print, ");
-			if (pdf_has_permission(doc, PDF_PERM_CHANGE))
-				strcat(buf, "modify, ");
-			if (pdf_has_permission(doc, PDF_PERM_COPY))
-				strcat(buf, "copy, ");
-			if (pdf_has_permission(doc, PDF_PERM_NOTES))
-				strcat(buf, "annotate, ");
-			if (strlen(buf) > 2)
-				buf[strlen(buf)-2] = 0;
-			else
-				strcpy(buf, "none");
-			SetDlgItemTextA(hwnd, 0x13, buf);
-		}
-		else
-		{
-			SetDlgItemTextA(hwnd, 0x12, "None");
-			SetDlgItemTextA(hwnd, 0x13, "n/a");
-		}
-
-		info = fz_dict_gets(doc->trailer, "Info");
-		if (!info)
-			return TRUE;
-
-#define SETUCS(ID) \
-		{ \
-			unsigned short *ucs; \
-			ucs = pdf_to_ucs2(doc->ctx, obj); \
-			SetDlgItemTextW(hwnd, ID, ucs); \
-			fz_free(context, ucs); \
-		}
-
-		if ((obj = fz_dict_gets(info, "Title")))
-			SETUCS(0x20);
-		if ((obj = fz_dict_gets(info, "Author")))
-			SETUCS(0x21);
-		if ((obj = fz_dict_gets(info, "Subject")))
-			SETUCS(0x22);
-		if ((obj = fz_dict_gets(info, "Keywords")))
-			SETUCS(0x23);
-		if ((obj = fz_dict_gets(info, "Creator")))
-			SETUCS(0x24);
-		if ((obj = fz_dict_gets(info, "Producer")))
-			SETUCS(0x25);
-		if ((obj = fz_dict_gets(info, "CreationDate")))
-			SETUCS(0x26);
-		if ((obj = fz_dict_gets(info, "ModDate")))
-			SETUCS(0x27);
-		return TRUE;
-
-	case WM_COMMAND:
-		EndDialog(hwnd, 1);
-		return TRUE;
-	}
-	return FALSE;
-}
-
-void info()
-{
-	int code = DialogBoxW(NULL, L"IDD_DLOGINFO", hwndframe, dloginfoproc);
-	if (code <= 0)
-		winerror(&gapp, "cannot create info dialog");
-}
-
-INT CALLBACK
 dlogaboutproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch(message)
@@ -382,7 +287,6 @@ void winopen()
 	menu = GetSystemMenu(hwndframe, 0);
 	AppendMenuW(menu, MF_SEPARATOR, 0, NULL);
 	AppendMenuW(menu, MF_STRING, ID_ABOUT, L"About MuPDF...");
-	AppendMenuW(menu, MF_STRING, ID_DOCINFO, L"Document Properties...");
 
 	SetCursor(arrowcurs);
 }
@@ -692,11 +596,6 @@ frameproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			winhelp(&gapp);
 			return 0;
 		}
-		if (wParam == ID_DOCINFO)
-		{
-			info();
-			return 0;
-		}
 		if (wParam == SC_MAXIMIZE)
 			gapp.shrinkwrap = 0;
 		break;
@@ -851,9 +750,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShow
 	int code;
 	fz_context *ctx;
 
-	fz_accelerate();
-
-	ctx = fz_new_context(NULL, FZ_STORE_DEFAULT);
+	ctx = fz_new_context(NULL, NULL, FZ_STORE_DEFAULT);
 	if (!ctx)
 	{
 		fprintf(stderr, "cannot initialise context\n");

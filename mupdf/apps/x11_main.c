@@ -598,7 +598,6 @@ static void usage(void)
 	fprintf(stderr, "\t-b -\tset anti-aliasing quality in bits (0=off, 8=best)\n");
 	fprintf(stderr, "\t-p -\tpassword\n");
 	fprintf(stderr, "\t-r -\tresolution\n");
-	fprintf(stderr, "\t-A\tdisable accelerated functions\n");
 	exit(1);
 }
 
@@ -612,7 +611,6 @@ int main(int argc, char **argv)
 	int oldy = 0;
 	int resolution = -1;
 	int pageno = 1;
-	int accelerate = 1;
 	int fd;
 	fd_set fds;
 	int width = -1;
@@ -623,20 +621,19 @@ int main(int argc, char **argv)
 	struct timeval tmo;
 	struct timeval *timeout;
 
-	ctx = fz_new_context(NULL, FZ_STORE_DEFAULT);
+	ctx = fz_new_context(NULL, NULL, FZ_STORE_DEFAULT);
 	if (!ctx)
 	{
 		fprintf(stderr, "cannot initialise context\n");
 		exit(1);
 	}
 
-	while ((c = fz_getopt(argc, argv, "p:r:b:A")) != -1)
+	while ((c = fz_getopt(argc, argv, "p:r:b:")) != -1)
 	{
 		switch (c)
 		{
 		case 'p': password = fz_optarg; break;
 		case 'r': resolution = atoi(fz_optarg); break;
-		case 'A': accelerate = 0; break;
 		case 'b': fz_set_aa_level(ctx, atoi(fz_optarg)); break;
 		default: usage();
 		}
@@ -649,9 +646,6 @@ int main(int argc, char **argv)
 
 	if (argc - fz_optind == 1)
 		pageno = atoi(argv[fz_optind++]);
-
-	if (accelerate)
-		fz_accelerate();
 
 	winopen();
 

@@ -164,7 +164,7 @@ void benchfile(char *pdffilename, int loadonly, int pageNo)
 	int page_count;
 	int curpage;
 
-	fz_context *ctx = fz_new_context(NULL, FZ_STORE_DEFAULT);
+	fz_context *ctx = fz_new_context(NULL, NULL, FZ_STORE_DEFAULT);
 	if (!ctx) {
 		logbench("Error: fz_new_context() failed\n");
 		return;

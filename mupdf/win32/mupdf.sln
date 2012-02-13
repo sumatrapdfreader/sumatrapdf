@@ -10,9 +10,13 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libthirdparty", "libthirdparty.vcproj", "{5EDCF4FD-0291-4FB9-8D96-D58957CA5E3C}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libmupdf", "libmupdf.vcproj", "{5F615F91-DFF8-4F05-BF48-6222B7D86519}"
+	ProjectSection(ProjectDependencies) = postProject
+		{A5053AA7-02E5-4903-B596-04F17AEB1526} = {A5053AA7-02E5-4903-B596-04F17AEB1526}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mupdfdraw", "mupdfdraw.vcproj", "{26C5D7C3-BEE9-4886-9CDB-846D26F5BCDB}"
 	ProjectSection(ProjectDependencies) = postProject
+		{A5053AA7-02E5-4903-B596-04F17AEB1526} = {A5053AA7-02E5-4903-B596-04F17AEB1526}
 		{5F615F91-DFF8-4F05-BF48-6222B7D86519} = {5F615F91-DFF8-4F05-BF48-6222B7D86519}
 		{5EDCF4FD-0291-4FB9-8D96-D58957CA5E3C} = {5EDCF4FD-0291-4FB9-8D96-D58957CA5E3C}
 	EndProjectSection
@@ -52,6 +56,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mubusy", "mubusy.vcproj", "
 		{5F615F91-DFF8-4F05-BF48-6222B7D86519} = {5F615F91-DFF8-4F05-BF48-6222B7D86519}
 		{5EDCF4FD-0291-4FB9-8D96-D58957CA5E3C} = {5EDCF4FD-0291-4FB9-8D96-D58957CA5E3C}
 	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "generated", "generated.vcproj", "{A5053AA7-02E5-4903-B596-04F17AEB1526}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -120,6 +126,12 @@ Global
 		{00811970-815B-4F64-BC9D-219078B1F3AA}.Memento|Win32.Build.0 = Memento|Win32
 		{00811970-815B-4F64-BC9D-219078B1F3AA}.Release|Win32.ActiveCfg = Release|Win32
 		{00811970-815B-4F64-BC9D-219078B1F3AA}.Release|Win32.Build.0 = Release|Win32
+		{A5053AA7-02E5-4903-B596-04F17AEB1526}.Debug|Win32.ActiveCfg = Debug|Win32
+		{A5053AA7-02E5-4903-B596-04F17AEB1526}.Debug|Win32.Build.0 = Debug|Win32
+		{A5053AA7-02E5-4903-B596-04F17AEB1526}.Memento|Win32.ActiveCfg = Memento|Win32
+		{A5053AA7-02E5-4903-B596-04F17AEB1526}.Memento|Win32.Build.0 = Memento|Win32
+		{A5053AA7-02E5-4903-B596-04F17AEB1526}.Release|Win32.ActiveCfg = Release|Win32
+		{A5053AA7-02E5-4903-B596-04F17AEB1526}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

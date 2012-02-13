@@ -225,6 +225,7 @@ pdf_open_filter(fz_stream *chain, pdf_document *xref, fz_obj *stmobj, int num, i
 	else if (fz_array_len(filters) > 0)
 		chain = build_filter_chain(chain, xref, filters, params, num, gen);
 
+	fz_lock_stream(chain);
 	return chain;
 }
 
@@ -276,6 +277,7 @@ pdf_open_raw_stream(pdf_document *xref, int num, int gen)
 		fz_throw(xref->ctx, "object is not a stream");
 
 	stm = pdf_open_raw_filter(xref->file, xref, x->obj, num, gen);
+	fz_lock_stream(stm);
 	fz_seek(xref->file, x->stm_ofs, 0);
 	return stm;
 }
@@ -378,9 +380,6 @@ pdf_load_stream(pdf_document *xref, int num, int gen)
 
 	fz_var(buf);
 
-	stm = pdf_open_stream(xref, num, gen);
-	/* RJW: "cannot open stream (%d %d R)", num, gen */
-
 	dict = pdf_load_object(xref, num, gen);
 	/* RJW: "cannot load stream dictionary (%d %d R)", num, gen */
 
@@ -393,17 +392,21 @@ pdf_load_stream(pdf_document *xref, int num, int gen)
 
 	fz_drop_obj(dict);
 
+	stm = pdf_open_stream(xref, num, gen);
+	/* RJW: "cannot open stream (%d %d R)", num, gen */
+
 	fz_try(ctx)
 	{
-		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692260 */
-		buf = fz_read_all2(stm, len, 0);
+		buf = fz_read_all(stm, len);
+	}
+	fz_always(ctx)
+	{
+		fz_close(stm);
 	}
 	fz_catch(ctx)
 	{
-		fz_close(stm);
 		fz_throw(ctx, "cannot read raw stream (%d %d R)", num, gen);
 	}
 
-	fz_close(stm);
 	return buf;
 }

@@ -381,19 +381,17 @@ int main(int argc, char **argv)
 #endif
 {
 	int grayscale = 0;
-	int accelerate = 1;
 	xps_document *doc = NULL;
 	int c;
 
 	fz_var(doc);
 
-	while ((c = fz_getopt(argc, argv, "o:p:r:Aadglmtx5")) != -1)
+	while ((c = fz_getopt(argc, argv, "o:p:r:adglmtx5")) != -1)
 	{
 		switch (c)
 		{
 		case 'o': output = fz_optarg; break;
 		case 'r': resolution = atof(fz_optarg); break;
-		case 'A': accelerate = 0; break;
 		case 'a': savealpha = 1; break;
 		case 'l': showoutline++; break;
 		case 'm': showtime++; break;
@@ -415,10 +413,7 @@ int main(int argc, char **argv)
 		exit(0);
 	}
 
-	if (accelerate)
-		fz_accelerate();
-
-	ctx = fz_new_context(NULL, FZ_STORE_DEFAULT);
+	ctx = fz_new_context(NULL, NULL, FZ_STORE_DEFAULT);
 	if (!ctx)
 	{
 		fprintf(stderr, "cannot initialise context\n");

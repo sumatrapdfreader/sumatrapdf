@@ -67,7 +67,7 @@ pdf_repair_obj(fz_stream *file, char *buf, int cap, int *stmofsp, int *stmlenp, 
 		}
 
 		obj = fz_dict_gets(dict, "Length");
-		if (fz_is_int(obj))
+		if (!fz_is_indirect(obj) && fz_is_int(obj))
 			stm_len = fz_to_int(obj);
 
 		fz_drop_obj(dict);
@@ -184,12 +184,14 @@ pdf_repair_obj_stm(pdf_document *xref, int num, int gen)
 				fz_throw(ctx, "corrupt object stream (%d %d R)", num, gen);
 		}
 	}
-	fz_catch(ctx)
+	fz_always(ctx)
 	{
 		fz_close(stm);
+	}
+	fz_catch(ctx)
+	{
 		fz_throw(ctx, "cannot load object stream object (%d %d R)", num, gen);
 	}
-	fz_close(stm);
 }
 
 void
@@ -386,7 +388,9 @@ pdf_repair_xref(pdf_document *xref, char *buf, int bufsize)
 			/* corrected stream length */
 			if (list[i].stm_len >= 0)
 			{
+				fz_unlock(ctx, FZ_LOCK_FILE);
 				dict = pdf_load_object(xref, list[i].num, list[i].gen);
+				fz_lock(ctx, FZ_LOCK_FILE);
 				/* RJW: "cannot load stream object (%d %d R)", list[i].num, list[i].gen */
 
 				length = fz_new_int(ctx, list[i].stm_len);

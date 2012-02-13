@@ -149,8 +149,8 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				Description="Generate CMap and Font source files"
-				CommandLine="generate.bat"
+				Description=""
+				CommandLine=""
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -355,10 +355,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\fitz\base_link.c"
-				>
-			</File>
-			<File
 				RelativePath="..\fitz\base_memory.c"
 				>
 			</File>
@@ -408,6 +404,14 @@
 			</File>
 			<File
 				RelativePath="..\fitz\dev_trace.c"
+				>
+			</File>
+			<File
+				RelativePath="..\fitz\doc_document.c"
+				>
+			</File>
+			<File
+				RelativePath="..\fitz\doc_link.c"
 				>
 			</File>
 			<File
@@ -627,11 +631,11 @@
 			Name="cbz"
 			>
 			<File
-				RelativePath="..\cbz\mucbz.h"
+				RelativePath="..\cbz\mucbz.c"
 				>
 			</File>
 			<File
-				RelativePath="..\cbz\mucbz.c"
+				RelativePath="..\cbz\mucbz.h"
 				>
 			</File>
 		</Filter>

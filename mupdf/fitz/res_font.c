@@ -379,6 +379,7 @@ fz_copy_ft_bitmap(fz_context *ctx, int left, int top, FT_Bitmap *bitmap)
 	return pixmap;
 }
 
+/* The glyph cache lock is always taken when this is called. */
 fz_pixmap *
 fz_render_ft_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm)
 {

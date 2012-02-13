@@ -40,7 +40,7 @@ fz_free_context(fz_context *ctx)
  * that aren't shared between contexts.
  */
 static fz_context *
-new_context_phase1(fz_alloc_context *alloc)
+new_context_phase1(fz_alloc_context *alloc, fz_locks_context *locks)
 {
 	fz_context *ctx;
 
@@ -49,6 +49,7 @@ new_context_phase1(fz_alloc_context *alloc)
 		return NULL;
 	memset(ctx, 0, sizeof *ctx);
 	ctx->alloc = alloc;
+	ctx->locks = locks;
 
 	ctx->glyph_cache = NULL;
 
@@ -84,19 +85,23 @@ cleanup:
 }
 
 fz_context *
-fz_new_context(fz_alloc_context *alloc, unsigned int max_store)
+fz_new_context(fz_alloc_context *alloc, fz_locks_context *locks, unsigned int max_store)
 {
 	fz_context *ctx;
 
 	if (!alloc)
 		alloc = &fz_alloc_default;
 
-	ctx = new_context_phase1(alloc);
+	if (!locks)
+		locks = &fz_locks_default;
+
+	ctx = new_context_phase1(alloc, locks);
 
 	/* Now initialise sections that are shared */
 	fz_try(ctx)
 	{
 		fz_new_store_context(ctx, max_store);
+		fz_new_glyph_cache_context(ctx);
 	}
 	fz_catch(ctx)
 	{
@@ -114,10 +119,11 @@ fz_clone_context(fz_context *ctx)
 
 	/* We cannot safely clone the context without having locking/
 	 * unlocking functions. */
-	if (ctx == NULL || ctx->alloc == NULL || ctx->alloc->lock == NULL || ctx->alloc->unlock == NULL)
+	if (ctx == NULL || ctx->alloc == NULL || ctx->locks == &fz_locks_default)
 		return NULL;
 
-	new_ctx = new_context_phase1(ctx->alloc);
+	new_ctx = new_context_phase1(ctx->alloc, ctx->locks);
 	new_ctx->store = fz_store_keep(ctx);
+	new_ctx->glyph_cache = fz_glyph_cache_keep(ctx);
 	return new_ctx;
 }

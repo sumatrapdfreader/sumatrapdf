@@ -147,7 +147,7 @@ fz_hash_find(fz_context *ctx, fz_hash_table *table, void *key)
 	}
 }
 
-void
+void *
 fz_hash_insert(fz_context *ctx, fz_hash_table *table, void *key, void *val)
 {
 	fz_hash_entry *ents;
@@ -170,11 +170,14 @@ fz_hash_insert(fz_context *ctx, fz_hash_table *table, void *key, void *val)
 			memcpy(ents[pos].key, key, table->keylen);
 			ents[pos].val = val;
 			table->load ++;
-			return;
+			return NULL;
 		}
 
 		if (memcmp(key, ents[pos].key, table->keylen) == 0)
+		{
 			fz_warn(ctx, "assert: overwrite hash slot");
+			return ents[pos].val;
+		}
 
 		pos = (pos + 1) % size;
 	}

@@ -647,10 +647,6 @@ static fz_device *fz_new_inspection_device(fz_context *ctx, ListInspectionData *
     return dev;
 }
 
-// Ensure that fz_accelerate is called before using Fitz the first time.
-class FitzAccelerator { public: FitzAccelerator() { fz_accelerate(); } };
-FitzAccelerator _globalAccelerator;
-
 extern "C" {
 #include <mupdf.h>
 }
@@ -1035,7 +1031,7 @@ PdfEngineImpl::PdfEngineImpl() : _fileName(NULL), _doc(NULL),
     InitializeCriticalSection(&pagesAccess);
     InitializeCriticalSection(&ctxAccess);
 
-    ctx = fz_new_context(NULL, MAX_CONTEXT_MEMORY);
+    ctx = fz_new_context(NULL, NULL, MAX_CONTEXT_MEMORY);
 }
 
 PdfEngineImpl::~PdfEngineImpl()
@@ -2553,7 +2549,7 @@ XpsEngineImpl::XpsEngineImpl() : _fileName(NULL), _doc(NULL), _pages(NULL), _med
     InitializeCriticalSection(&_pagesAccess);
     InitializeCriticalSection(&ctxAccess);
 
-    ctx = fz_new_context(NULL, MAX_CONTEXT_MEMORY);
+    ctx = fz_new_context(NULL, NULL, MAX_CONTEXT_MEMORY);
 }
 
 XpsEngineImpl::~XpsEngineImpl()

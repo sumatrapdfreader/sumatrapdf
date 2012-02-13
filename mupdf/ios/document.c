@@ -96,7 +96,7 @@ load_page(struct document *doc, int number)
 		doc->number = number;
 		if (doc->pdf) {
 			if (doc->pdf_page)
-				pdf_free_page(doc->ctx, doc->pdf_page);
+				pdf_free_page(doc->pdf, doc->pdf_page);
 			doc->pdf_page = NULL;
 			doc->pdf_page = pdf_load_page(doc->pdf, number);
 		}
@@ -273,7 +273,7 @@ close_document(struct document *doc)
 {
 	if (doc->pdf) {
 		if (doc->pdf_page)
-			pdf_free_page(doc->ctx, doc->pdf_page);
+			pdf_free_page(doc->pdf, doc->pdf_page);
 		pdf_close_document(doc->pdf);
 	}
 	if (doc->xps) {

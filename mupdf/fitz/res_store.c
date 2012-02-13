@@ -63,10 +63,10 @@ fz_keep_storable(fz_context *ctx, fz_storable *s)
 {
 	if (s == NULL)
 		return NULL;
-	fz_lock(ctx);
+	fz_lock(ctx, FZ_LOCK_ALLOC);
 	if (s->refs > 0)
 		s->refs++;
-	fz_unlock(ctx);
+	fz_unlock(ctx, FZ_LOCK_ALLOC);
 	return s;
 }
 
@@ -77,7 +77,7 @@ fz_drop_storable(fz_context *ctx, fz_storable *s)
 
 	if (s == NULL)
 		return;
-	fz_lock(ctx);
+	fz_lock(ctx, FZ_LOCK_ALLOC);
 	if (s->refs < 0)
 	{
 		/* It's a static object. Dropping does nothing. */
@@ -91,7 +91,7 @@ fz_drop_storable(fz_context *ctx, fz_storable *s)
 		 * itself without any operations on the fz_store. */
 		do_free = 1;
 	}
-	fz_unlock(ctx);
+	fz_unlock(ctx, FZ_LOCK_ALLOC);
 	if (do_free)
 		s->free(ctx, s);
 }
@@ -100,6 +100,7 @@ static void
 evict(fz_context *ctx, fz_item *item)
 {
 	fz_store *store = ctx->store;
+	int drop;
 
 	store->size -= item->size;
 	/* Unlink from the linked list */
@@ -121,7 +122,10 @@ evict(fz_context *ctx, fz_item *item)
 		fz_hash_remove(ctx, store->hash, &refkey);
 	}
 	/* Drop a reference to the value (freeing if required) */
-	if (item->val->refs > 0 && --item->val->refs == 0)
+	fz_lock(ctx, FZ_LOCK_ALLOC);
+	drop = (item->val->refs > 0 && --item->val->refs == 0);
+	fz_unlock(ctx, FZ_LOCK_ALLOC);
+	if (drop)
 		item->val->free(ctx, item->val);
 	/* Always drops the key and free the item */
 	fz_drop_obj(item->key);
@@ -135,6 +139,7 @@ ensure_space(fz_context *ctx, unsigned int tofree)
 	unsigned int count;
 	fz_store *store = ctx->store;
 
+	fz_lock(ctx, FZ_LOCK_ALLOC);
 	/* First check that we *can* free tofree; if not, we'd rather not
 	 * cache this. */
 	count = 0;
@@ -150,7 +155,10 @@ ensure_space(fz_context *ctx, unsigned int tofree)
 
 	/* If we ran out of items to search, then we can never free enough */
 	if (item == NULL)
+	{
+		fz_unlock(ctx, FZ_LOCK_ALLOC);
 		return 1;
+	}
 
 	/* Actually free the items */
 	count = 0;
@@ -161,12 +169,15 @@ ensure_space(fz_context *ctx, unsigned int tofree)
 		{
 			/* Free this item */
 			count += item->size;
+			fz_unlock(ctx, FZ_LOCK_ALLOC);
 			evict(ctx, item);
 
 			if (count >= tofree)
-				break;
+				return 0;
+			fz_lock(ctx, FZ_LOCK_ALLOC);
 		}
 	}
+	fz_unlock(ctx, FZ_LOCK_ALLOC);
 
 	return 0;
 }
@@ -196,11 +207,11 @@ fz_store_item(fz_context *ctx, fz_obj *key, void *val_, unsigned int itemsize)
 		return;
 	}
 
-	fz_lock(ctx);
+	fz_lock(ctx, FZ_LOCK_STORE);
 	size = store->size + itemsize;
 	if (store->max != FZ_STORE_UNLIMITED && size > store->max && ensure_space(ctx, size - store->max))
 	{
-		fz_unlock(ctx);
+		fz_unlock(ctx, FZ_LOCK_STORE);
 		fz_free(ctx, item);
 		return;
 	}
@@ -224,14 +235,16 @@ fz_store_item(fz_context *ctx, fz_obj *key, void *val_, unsigned int itemsize)
 		}
 		fz_catch(ctx)
 		{
-			fz_unlock(ctx);
+			fz_unlock(ctx, FZ_LOCK_STORE);
 			fz_free(ctx, item);
 			return;
 		}
 	}
 	/* Now we can never fail, bump the ref */
+	fz_lock(ctx, FZ_LOCK_ALLOC);
 	if (val->refs > 0)
 		val->refs++;
+	fz_unlock(ctx, FZ_LOCK_ALLOC);
 	/* Regardless of whether it's indexed, it goes into the linked list */
 	item->next = store->head;
 	if (item->next)
@@ -240,7 +253,7 @@ fz_store_item(fz_context *ctx, fz_obj *key, void *val_, unsigned int itemsize)
 		store->tail = item;
 	store->head = item;
 	item->prev = NULL;
-	fz_unlock(ctx);
+	fz_unlock(ctx, FZ_LOCK_STORE);
 }
 
 void *
@@ -256,7 +269,7 @@ fz_find_item(fz_context *ctx, fz_store_free_fn *free, fz_obj *key)
 	if (!key)
 		return NULL;
 
-	fz_lock(ctx);
+	fz_lock(ctx, FZ_LOCK_STORE);
 	if (fz_is_indirect(key))
 	{
 		/* We can find objects keyed on indirected objects quickly */
@@ -295,12 +308,14 @@ fz_find_item(fz_context *ctx, fz_store_free_fn *free, fz_obj *key)
 		item->prev = NULL;
 		store->head = item;
 		/* And bump the refcount before returning */
+		fz_lock(ctx, FZ_LOCK_ALLOC);
 		if (item->val->refs > 0)
 			item->val->refs++;
-		fz_unlock(ctx);
+		fz_unlock(ctx, FZ_LOCK_ALLOC);
+		fz_unlock(ctx, FZ_LOCK_STORE);
 		return (void *)item->val;
 	}
-	fz_unlock(ctx);
+	fz_unlock(ctx, FZ_LOCK_STORE);
 
 	return NULL;
 }
@@ -311,8 +326,9 @@ fz_remove_item(fz_context *ctx, fz_store_free_fn *free, fz_obj *key)
 	struct refkey refkey;
 	fz_item *item;
 	fz_store *store = ctx->store;
+	int drop;
 
-	fz_lock(ctx);
+	fz_lock(ctx, FZ_LOCK_STORE);
 	if (fz_is_indirect(key))
 	{
 		/* We can find objects keyed on indirect objects quickly */
@@ -340,12 +356,15 @@ fz_remove_item(fz_context *ctx, fz_store_free_fn *free, fz_obj *key)
 			item->prev->next = item->next;
 		else
 			store->head = item->next;
-		if (item->val->refs > 0 && --item->val->refs == 0)
+		fz_lock(ctx, FZ_LOCK_ALLOC);
+		drop = (item->val->refs > 0 && --item->val->refs == 0);
+		fz_unlock(ctx, FZ_LOCK_ALLOC);
+		if (drop)
 			item->val->free(ctx, item->val);
 		fz_drop_obj(item->key);
 		fz_free(ctx, item);
 	}
-	fz_unlock(ctx);
+	fz_unlock(ctx, FZ_LOCK_STORE);
 }
 
 void
@@ -357,14 +376,14 @@ fz_empty_store(fz_context *ctx)
 	if (store == NULL)
 		return;
 
-	fz_lock(ctx);
+	fz_lock(ctx, FZ_LOCK_STORE);
 	/* Run through all the items in the store */
 	for (item = store->head; item; item = next)
 	{
 		next = item->next;
 		evict(ctx, item);
 	}
-	fz_unlock(ctx);
+	fz_unlock(ctx, FZ_LOCK_STORE);
 }
 
 fz_store *
@@ -372,9 +391,9 @@ fz_store_keep(fz_context *ctx)
 {
 	if (ctx == NULL || ctx->store == NULL)
 		return NULL;
-	fz_lock(ctx);
+	fz_lock(ctx, FZ_LOCK_ALLOC);
 	ctx->store->refs++;
-	fz_unlock(ctx);
+	fz_unlock(ctx, FZ_LOCK_ALLOC);
 	return ctx->store;
 }
 
@@ -384,9 +403,9 @@ fz_free_store_context(fz_context *ctx)
 	int refs;
 	if (ctx == NULL || ctx->store == NULL)
 		return;
-	fz_lock(ctx);
+	fz_lock(ctx, FZ_LOCK_ALLOC);
 	refs = --ctx->store->refs;
-	fz_unlock(ctx);
+	fz_unlock(ctx, FZ_LOCK_ALLOC);
 	if (refs != 0)
 		return;
 
@@ -404,10 +423,12 @@ fz_debug_store(fz_context *ctx)
 
 	printf("-- resource store contents --\n");
 
-	fz_lock(ctx);
+	fz_lock(ctx, FZ_LOCK_STORE);
 	for (item = store->head; item; item = item->next)
 	{
+		fz_lock(ctx, FZ_LOCK_ALLOC);
 		printf("store[*][refs=%d][size=%d] ", item->val->refs, item->size);
+		fz_unlock(ctx, FZ_LOCK_ALLOC);
 		if (fz_is_indirect(item->key))
 		{
 			printf("(%d %d R) ", fz_to_num(item->key), fz_to_gen(item->key));
@@ -415,7 +436,7 @@ fz_debug_store(fz_context *ctx)
 			fz_debug_obj(item->key);
 		printf(" = %p\n", item->val);
 	}
-	fz_unlock(ctx);
+	fz_unlock(ctx, FZ_LOCK_STORE);
 }
 
 static int

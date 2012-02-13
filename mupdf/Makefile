@@ -56,19 +56,16 @@ $(OUT)/%.o : xps/%.c fitz/fitz.h xps/muxps.h | $(OUT)
 	$(CC_CMD)
 $(OUT)/%.o : cbz/%.c fitz/fitz.h cbz/mucbz.h | $(OUT)
 	$(CC_CMD)
-$(OUT)/%.o : apps/%.c fitz/fitz.h pdf/mupdf.h xps/muxps.h | $(OUT)
+$(OUT)/%.o : apps/%.c fitz/fitz.h pdf/mupdf.h xps/muxps.h cbz/mucbz.h | $(OUT)
 	$(CC_CMD)
 $(OUT)/%.o : scripts/%.c | $(OUT)
 	$(CC_CMD)
 
 .PRECIOUS : $(OUT)/%.o # Keep intermediates from chained rules
 
-# --- Fitz, MuPDF, MuXPS and MuCBZ libraries ---
+# --- Fitz, MuPDF, MuXPS and MuCBZ library ---
 
 FITZ_LIB := $(OUT)/libfitz.a
-MUPDF_LIB := $(OUT)/libmupdf.a
-MUXPS_LIB := $(OUT)/libmuxps.a
-MUCBZ_LIB := $(OUT)/libmucbz.a
 
 FITZ_SRC := $(notdir $(wildcard fitz/*.c draw/*.c))
 FITZ_SRC := $(filter-out draw_simple_scale.c, $(FITZ_SRC))
@@ -77,11 +74,11 @@ MUXPS_SRC := $(notdir $(wildcard xps/*.c))
 MUCBZ_SRC := $(notdir $(wildcard cbz/*.c))
 
 $(FITZ_LIB) : $(addprefix $(OUT)/, $(FITZ_SRC:%.c=%.o))
-$(MUPDF_LIB) : $(addprefix $(OUT)/, $(MUPDF_SRC:%.c=%.o))
-$(MUXPS_LIB) : $(addprefix $(OUT)/, $(MUXPS_SRC:%.c=%.o))
-$(MUCBZ_LIB) : $(addprefix $(OUT)/, $(MUCBZ_SRC:%.c=%.o))
+$(FITZ_LIB) : $(addprefix $(OUT)/, $(MUPDF_SRC:%.c=%.o))
+$(FITZ_LIB) : $(addprefix $(OUT)/, $(MUXPS_SRC:%.c=%.o))
+$(FITZ_LIB) : $(addprefix $(OUT)/, $(MUCBZ_SRC:%.c=%.o))
 
-libs: $(MUCBZ_LIB) $(MUXPS_LIB) $(MUPDF_LIB) $(FITZ_LIB) $(THIRD_LIBS)
+libs: $(FITZ_LIB) $(THIRD_LIBS)
 
 # --- Generated CMAP and FONT files ---
 
@@ -130,17 +127,18 @@ $(OUT)/cmapdump.o : pdf/pdf_cmap.c pdf/pdf_cmap_parse.c
 
 PDF_APPS := $(addprefix $(OUT)/, mupdfdraw mupdfclean mupdfextract mupdfinfo mupdfshow)
 XPS_APPS := $(addprefix $(OUT)/, muxpsdraw)
-BUSY_APP := $(addprefix $(OUT)/, mubusy)
+
+$(PDF_APPS) : $(FITZ_LIB) $(THIRD_LIBS)
+$(XPS_APPS) : $(FITZ_LIB) $(THIRD_LIBS)
+
 BUSY_SRC := $(notdir $(wildcard apps/mubusy_*.c))
-BUSY_LIBS := $(addprefix $(OUT)/, $(BUSY_SRC:%.c=%.o))
+BUSY_APP := $(addprefix $(OUT)/, mubusy)
+$(BUSY_APP) : $(addprefix $(OUT)/, $(BUSY_SRC:%.c=%.o))
+$(BUSY_APP) : $(FITZ_LIB) $(THIRD_LIBS)
 
-$(PDF_APPS) : $(MUPDF_LIB) $(FITZ_LIB) $(THIRD_LIBS)
-$(XPS_APPS) : $(MUXPS_LIB) $(FITZ_LIB) $(THIRD_LIBS)
-$(BUSY_APP) : $(BUSY_LIBS) $(MUPDF_LIB) $(MUXPS_LIB) $(FITZ_LIB) $(THIRD_LIBS)
-
-MUPDF := $(OUT)/mupdf
-$(MUPDF) : $(MUCBZ_LIB) $(MUXPS_LIB) $(MUPDF_LIB) $(FITZ_LIB) $(THIRD_LIBS)
 ifeq "$(NOX11)" ""
+MUPDF := $(OUT)/mupdf
+$(MUPDF) : $(FITZ_LIB) $(THIRD_LIBS)
 $(MUPDF) : $(addprefix $(OUT)/, x11_main.o x11_image.o pdfapp.o)
 	$(LINK_CMD) $(X11_LIBS)
 endif
@@ -153,11 +151,11 @@ libdir ?= $(prefix)/lib
 incdir ?= $(prefix)/include
 mandir ?= $(prefix)/share/man
 
-install: $(MUXPS_LIB) $(MUPDF_LIB) $(FITZ_LIB) $(PDF_APPS) $(XPS_APPS) $(MUPDF)
+install: $(FITZ_LIB) $(PDF_APPS) $(XPS_APPS) $(MUPDF)
 	install -d $(bindir) $(libdir) $(incdir) $(mandir)/man1
-	install $(MUXPS_LIB) $(MUPDF_LIB) $(FITZ_LIB) $(libdir)
-	install fitz/memento.h fitz/fitz.h pdf/mupdf.h xps/muxps.h $(incdir)
-	install cbz/mucbz.h $(PDF_APPS) $(XPS_APPS) $(MUPDF) $(bindir)
+	install $(FITZ_LIB) $(libdir)
+	install fitz/memento.h fitz/fitz.h pdf/mupdf.h xps/muxps.h cbz/mucbz.h $(incdir)
+	install $(PDF_APPS) $(XPS_APPS) $(MUPDF) $(bindir)
 	install $(wildcard apps/man/*.1) $(mandir)/man1
 
 # --- Clean and Default ---
