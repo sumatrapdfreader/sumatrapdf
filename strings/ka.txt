@@ -14,7 +14,7 @@ Contributor: Beqa Arabuli (arabulibeqa@yahoo.com)
 &პროგრამის შესახებ...
 
 &Actual Size\tCtrl+1
-&ნამდვილი ზომა\tCtrl+1
+&თავდაპირველი ზომა\tCtrl+1
 
 &All selected pages
 &ყველა მონიშნული გვერდი
@@ -119,7 +119,7 @@ Contributor: Beqa Arabuli (arabulibeqa@yahoo.com)
 ამ დოკუმენტისთვის პაროლის და&მახსოვრება
 
 &Remember these settings for each document
-ყველა დოკუმენტზე ამ პარამეტრების &მორგება
+ამ პარამეტრების ყველა დოკუმენტზე &მორგება
 
 &Remove Document
 დოკუმენტის &წაშლა
@@ -137,7 +137,7 @@ Contributor: Beqa Arabuli (arabulibeqa@yahoo.com)
 გვერდების შემცირება ბეჭდვად არეში ჩასატევად (თუ საჭიროა)
 
 &Single Page\tCtrl+6
-&ერთი გვერდი\tCtrl+6
+&თითო გვერდად\tCtrl+6
 
 &Skip this version
 ამ ვერსიის გამოტოვება
@@ -167,7 +167,7 @@ Add Favorite
 რჩეულებში დამატება
 
 Add page %s to favorites
-%s გვერდის დამატება რჩეულებში
+%s გვერდის რჩეულებში დამატება
 
 Add page %s to favorites with (optional) name:
 %s გვერდის დამატება რჩეულებში (არასავალდებულო) სახელწოდებით:
@@ -209,7 +209,7 @@ Book&marks\tF12
 &სანიშნები\tF12
 
 Bookmark Shortcuts
-მალსახმობების ჩანიშვნა
+მალსახმობები
 
 Bookmark shortcut to page %s of %s
 %s-იდან %s გვერდის მალსახმობის ჩანიშვნა
@@ -257,13 +257,13 @@ Contribute Translation
 თარგმნაში მონაწილეობა
 
 Copy &Link Address
-&ბმულის დაკოპირება
+&ბმულის კოპირება
 
 Copy Co&mment
-კო&მენტარის დაკოპირება
+კო&მენტარის კოპირება
 
 Copying text was denied (copying as image only)
-ტექსტის დაკოპირება აკრძალულია (კოპირდება როგორც სურათი)
+ტექსტის კოპირება აკრძალულია (კოპირდება როგორც სურათი)
 
 Could not obtain Printer properties
 პრინტერის თვისებების მიღება ვერ მოხერხდა
@@ -293,7 +293,7 @@ Default &Zoom:
 ნაგულისხმევი &მასშტაბი
 
 Default PDF reader can't be changed in portable mode
-პორტატულ რეჟიმში, PDF-ის ძირითად წამკითხველად დაყენება შეუძლებელია
+პორტატულ რეჟიმში, PDF-ის წამკითხველად დაყენება შეუძლებელია
 
 Denied Permissions:
 თქვენ არ გაქვთ საჭირო უფლებები:
@@ -395,16 +395,16 @@ Found text at page %s (again)
 ტექსტი ნაპოვნია %s გვერდზე (ხელახლა)
 
 Frequently Read
-ხშირად წაკითხული დოკუმენტები
+ბოლოს წაკითხული დოკუმენტები
 
 GB
 გბ
 
 Go to page
-გვერდზე გადასვლა
+გვერდის მითითება
 
 Hide frequently read
-ხშირად წაკითხული დოკუმენტების დამალვა
+ბოლოს წაკითხული დოკუმენტების დამალვა
 
 Hint: Use the F3 key for finding again
 ქარაგმა: ძებნის განმეორებისთვის გამოიყენეთ ღიალკი "F3"
@@ -488,7 +488,7 @@ PDF documents
 PDF დოკუმენტები
 
 Pa&ge...\tCtrl+G
-&გვერდზე გადასვლა...\tCtrl+G
+&გვერდის მითითება...\tCtrl+G
 
 Page %s
 %s გვერდი
@@ -512,7 +512,7 @@ Postscript documents
 Postscript დოკუმენტები
 
 Pr&esentation\tCtrl+L
-პრ&ეზენტაცია\tCtrl+L
+წარმოდგ&ენა\tCtrl+L
 
 Previous Page
 წინა გვერდი
@@ -536,7 +536,7 @@ Printing problem.
 ამობეჭდვის პრობლემა.
 
 Remember &opened files
-&გახსნილი ფაილების დამახსოვრება
+&ფაილის პოზიციის დამახსოვრება
 
 Remove from favorites
 რჩეულებიდან წაშლა
@@ -545,16 +545,16 @@ Remove page %s from favorites
 %s გვერდის წაშლა რჩეულებიდან
 
 Rotate &Left\tCtrl+Shift+-
-გადატრიალება მარ&ცხნივ\tCtrl+Shift+-
+მარ&ცხნივ გადაბრუნება\tCtrl+Shift+-
 
 Rotate &Right\tCtrl+Shift++
-გადატრიალება მარ&ჯვნივ\tCtrl+Shift++
+მარ&ჯვნივ გადაბრუნება\tCtrl+Shift++
 
 Save As
 შენახვა როგორც
 
 Save S&hortcut...\tCtrl+Shift+S
-&მალსახმობის შენახვა…\tCtrl+Shift+S
+&ჩანიშვნა…\tCtrl+Shift+S
 
 Searching %d of %d...
 მიმდინარეობს ძებნა %d %d-იდან...
@@ -569,7 +569,7 @@ Select content with Ctrl+left mouse button
 აირჩიეთ შიგთავსი, Ctrl და მაუსის მარცხენა ღილაკზე დაჭერით
 
 Send by &E-mail...
-&ელ-ფოსტით გაგზავნა...
+&ელ.ფოსტით გაგზავნა...
 
 Set inverse search command-line
 შებრუნებული ძებნის ბრძანების სტრიქონის დაყენება
@@ -587,7 +587,7 @@ Show frequently read
 ხშირად წაკითხულების ჩვენება
 
 Show the &bookmarks sidebar when available
-&სანიშნების ზოლის ჩვენება (როცა შესაძლებელია)
+&სანიშნეთა ზოლის ჩვენება (თუ შესაძლებელია)
 
 Single Page
 ერთ-გვერდიანი
