@@ -400,7 +400,7 @@ void PageLayout::HandleHtmlTag(HtmlToken *t, BaseEbookDoc *doc)
         if (t->IsStartTag()) {
             AttrInfo *attrInfo;
             while ((attrInfo = t->NextAttr())) {
-                if (attrInfo->HasName("align"))
+                if (attrInfo->NameIs("align"))
                     currJustification = FindAlignAttr(attrInfo->val, attrInfo->valLen);
             }
         }
@@ -430,7 +430,7 @@ void PageLayout::HandleHtmlTag(HtmlToken *t, BaseEbookDoc *doc)
         else if (doc) {
             AttrInfo *attrInfo;
             while ((attrInfo = t->NextAttr())) {
-                if (attrInfo->HasName("src") || attrInfo->HasName("recindex")) {
+                if (attrInfo->NameIs("src") || attrInfo->NameIs("recindex")) {
                     ScopedMem<char> id(str::DupN(attrInfo->val, attrInfo->valLen));
                     ImageData2 *data = doc->GetImageData(id);
                     if (data)

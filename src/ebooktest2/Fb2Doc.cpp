@@ -88,7 +88,7 @@ bool Fb2DocImpl::Load()
             inBody++;
         else if (inBody && tok->IsEndTag() && Tag_Body == tag)
             inBody--;
-        if (!inBody && tok->IsStartTag() && tok->HasName("binary"))
+        if (!inBody && tok->IsStartTag() && tok->NameIs("binary"))
             ExtractImage(parser, tok);
         if (!inBody)
             continue;
@@ -115,13 +115,13 @@ bool Fb2DocImpl::Load()
             else if (Tag_Strong == tag) {
                 htmlData.Append("<strong>");
             }
-            else if (tok->HasName("section")) {
+            else if (tok->NameIs("section")) {
                 sectionDepth++;
             }
-            else if (tok->HasName("emphasis")) {
+            else if (tok->NameIs("emphasis")) {
                 htmlData.Append("<em>");
             }
-            else if (tok->HasName("epigraph")) {
+            else if (tok->NameIs("epigraph")) {
                 htmlData.Append("<blockquote>");
             }
             // TODO: handle Tag_A, <text-author>
@@ -141,27 +141,27 @@ bool Fb2DocImpl::Load()
             else if (Tag_Strong == tag) {
                 htmlData.Append("</strong>");
             }
-            else if (tok->HasName("section") && sectionDepth > 0) {
+            else if (tok->NameIs("section") && sectionDepth > 0) {
                 sectionDepth--;
             }
-            else if (tok->HasName("emphasis")) {
+            else if (tok->NameIs("emphasis")) {
                 htmlData.Append("</em>");
             }
-            else if (tok->HasName("epigraph")) {
+            else if (tok->NameIs("epigraph")) {
                 htmlData.Append("</blockquote>");
             }
         }
         else if (tok->IsEmptyElementEndTag()) {
-            if (tok->HasName("image")) {
+            if (tok->NameIs("image")) {
                 AttrInfo *attrInfo;
                 while ((attrInfo = tok->NextAttr())) {
-                    if (attrInfo->HasName("xlink:href")) {
+                    if (attrInfo->NameIs("xlink:href")) {
                         ScopedMem<char> link(str::DupN(attrInfo->val, attrInfo->valLen));
                         htmlData.AppendFmt("<img src=\"%s\">", link);
                     }
                 }
             }
-            else if (tok->HasName("empty-line")) {
+            else if (tok->NameIs("empty-line")) {
                 htmlData.Append("<p></p>");
             }
         }
@@ -217,7 +217,7 @@ void Fb2DocImpl::ExtractImage(HtmlPullParser& parser, HtmlToken *tok)
     ScopedMem<char> id;
     AttrInfo *attrInfo;
     while ((attrInfo = tok->NextAttr())) {
-        if (attrInfo->HasName("id"))
+        if (attrInfo->NameIs("id"))
             id.Set(str::DupN(attrInfo->val, attrInfo->valLen));
     }
 

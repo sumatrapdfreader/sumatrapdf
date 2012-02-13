@@ -250,6 +250,7 @@
     <ClCompile Include="src\TextSelection.cpp" />
     <ClCompile Include="src\Toolbar.cpp" />
     <ClCompile Include="src\utils\FileTransactions.cpp" />
+    <ClCompile Include="src\utils\HtmlPullParser.cpp" />
     <ClCompile Include="src\utils\Touch.cpp" />
     <ClCompile Include="src\translations.cpp" />
     <ClCompile Include="src\translations_txt.cpp" />
@@ -382,6 +383,7 @@
     <ClInclude Include="src\Toolbar.h" />
     <ClInclude Include="src\utils\Allocator.h" />
     <ClInclude Include="src\utils\FileTransactions.h" />
+    <ClInclude Include="src\utils\HtmlPullParser.h" />
     <ClInclude Include="src\utils\Touch.h" />
     <ClInclude Include="src\translations.h" />
     <ClInclude Include="src\translations_txt.h" />

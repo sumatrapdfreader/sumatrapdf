@@ -54,6 +54,41 @@ static bool IsSpaceOnly(const char *s, const char *end)
     return s == end;
 }
 
+static bool StrLenIs(const char *s, size_t len, const char *s2)
+{
+    return str::Len(s2) == len && str::StartsWith(s, s2);
+}
+
+bool AttrInfo::NameIs(const char *s) const
+{
+    return StrLenIs(name, nameLen, s);
+}
+
+bool AttrInfo::ValIs(const char *s) const
+{
+    return StrLenIs(val, valLen, s);
+}
+
+void HtmlToken::SetValue(TokenType new_type, const char *new_s, const char *end)
+{
+    type = new_type;
+    s = new_s;
+    sLen = end - s;
+    nextAttr = NULL;
+}
+
+void HtmlToken::SetError(ParsingError err, const char *errContext)
+{
+    type = Error;
+    error = err;
+    s = errContext;
+}
+
+bool HtmlToken::NameIs(const char *name) const
+{
+    return  (str::Len(name) == GetTagLen(this)) && str::StartsWith(s, name);
+}
+
 // We expect:
 // whitespace | attribute name | = | attribute value
 // where attribute value can be quoted
@@ -110,6 +145,28 @@ NoNextAttr:
     return &attrInfo;
 }
 
+// Given a tag like e.g.:
+// <tag attr=">" />
+// tries to find the closing '>' and not be confused by '>' that
+// are part of attribute value. We're not very strict here
+// Returns false if didn't find 
+static bool SkipUntilTagEnd(const char*& s, const char *end)
+{
+    while (s < end) {
+        char c = *s++;
+        if ('>' == c) {
+            --s;
+            return true;
+        }
+        if (('\'' == c) || ('"' == c)) {
+            if (!SkipUntil(s, end, c))
+                return false;
+            ++s;
+        }
+    }
+    return false;
+}
+
 // Returns next part of html or NULL if finished
 HtmlToken *HtmlPullParser::Next()
 {
@@ -138,8 +195,7 @@ Next:
     // '<' - tag begins
     ++start;
 
-    // TODO: this will be confused by <tag attr=">" />
-    if (!SkipUntil(currPos, end, '>')) {
+    if (!SkipUntilTagEnd(currPos, end)) {
         currToken.SetError(HtmlToken::UnclosedTag, start);
         return &currToken;
     }
@@ -233,7 +289,7 @@ bool IsSelfClosingTag(HtmlTag tag)
     }
 }
 
-size_t GetTagLen(HtmlToken *tok)
+size_t GetTagLen(const HtmlToken *tok)
 {
     for (size_t i = 0; i < tok->sLen; i++) {
         if (!IsNameChar(tok->s[i]))
@@ -242,7 +298,7 @@ size_t GetTagLen(HtmlToken *tok)
     return tok->sLen;
 }
 
-bool IsInlineTag(HtmlTag tag)
+static bool IsInlineTag(HtmlTag tag)
 {
     switch (tag) {
     case Tag_A: case Tag_Abbr: case Tag_Acronym: case Tag_B:
@@ -340,3 +396,38 @@ char *PrettyPrintHtml(const char *s, size_t len, size_t& lenOut)
     lenOut = res.Count();
     return res.StealData();
 }
+
+#ifdef DEBUG
+#include <assert.h>
+
+namespace unittests {
+
+void Test00(const char *s, HtmlToken::TokenType expectedType = HtmlToken::EmptyElementTag) {
+    HtmlPullParser parser(s, str::Len(s));
+    HtmlToken *t = parser.Next();
+    assert(t->type == expectedType);
+    assert(t->NameIs("p"));
+    HtmlTag tag = FindTag(t);
+    assert(Tag_P == tag);
+    AttrInfo *a = t->NextAttr();
+    assert(a->NameIs("a1"));
+    assert(a->ValIs(">"));
+    a = t->NextAttr();
+    assert(a->NameIs("foo"));
+    assert(a->ValIs("bar"));
+    a = t->NextAttr();
+    assert(!a);
+    t = parser.Next();
+    assert(!t);
+}
+
+}
+
+void HtmlPullParser_UnitTests()
+{
+    unittests::Test00("<p a1='>' foo=bar />");
+    unittests::Test00("<p a1 ='>'     foo=\"bar\"/>");
+    unittests::Test00("<p a1=  '>' foo=bar>", HtmlToken::StartTag);
+}
+
+#endif

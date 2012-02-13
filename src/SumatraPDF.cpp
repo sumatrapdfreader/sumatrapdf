@@ -4606,6 +4606,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 #ifdef DEBUG
     extern void BaseUtils_UnitTests();
     BaseUtils_UnitTests();
+    extern void HtmlPullParser_UnitTests();
+    HtmlPullParser_UnitTests();
     extern void TrivialHtmlParser_UnitTests();
     TrivialHtmlParser_UnitTests();
     extern void SumatraPDF_UnitTests();

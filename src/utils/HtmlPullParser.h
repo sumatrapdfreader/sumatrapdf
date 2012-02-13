@@ -118,13 +118,12 @@ struct AttrInfo {
     const char *      val;
     size_t            valLen;
 
-    bool HasName(const char *s) {
-        return str::Len(s) == nameLen && str::StartsWith(name, s);
-    }
+    bool NameIs(const char *s) const;
+    bool ValIs(const char *s) const;
 };
 
 struct HtmlToken;
-size_t GetTagLen(HtmlToken *tok);
+size_t GetTagLen(const HtmlToken *tok);
 
 struct HtmlToken {
     enum TokenType {
@@ -149,28 +148,17 @@ struct HtmlToken {
     bool IsText() const { return type == Text; }
     bool IsError() const { return type == Error; }
 
-    void SetValue(TokenType new_type, const char *new_s, const char *end) {
-        type = new_type;
-        s = new_s;
-        sLen = end - s;
-        nextAttr = NULL;
-    }
-    void SetError(ParsingError err, const char *errContext) {
-        type = Error;
-        error = err;
-        s = errContext;
-    }
+    void SetValue(TokenType new_type, const char *new_s, const char *end);
+    void SetError(ParsingError err, const char *errContext);
 
     TokenType        type;
     ParsingError     error;
     const char *     s;
     size_t           sLen;
 
-    bool HasName(const char *name) {
-        return str::StartsWith(s, name) && str::Len(name) == GetTagLen(this);
-    }
-
+    bool             NameIs(const char *name) const;
     AttrInfo *       NextAttr();
+
 protected:
     const char *     nextAttr;
     AttrInfo         attrInfo;
