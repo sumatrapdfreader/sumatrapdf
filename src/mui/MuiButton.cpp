@@ -142,7 +142,6 @@ void Button::Paint(Graphics *gfx, int offX, int offY)
     gfx->DrawString(text, str::Len(text), font, PointF((REAL)x, (REAL)y), NULL, brColor);
 }
 
-
 ButtonVector::ButtonVector(GraphicsPath *gp)
 {
     wantedInputBits = (uint16)-1; // wants everything
@@ -187,12 +186,16 @@ void ButtonVector::RecalculateSize(bool repaintIfSizeDidntChange)
 
     Rect bbox;
     Brush *brStroke = BrushFromColorData(s->stroke, bbox);
-    // pen widith is multiplied by MiterLimit(), which is 10 by default
-    // so set it explicitly to 1 for more precise size
-    Pen pen(brStroke, s->strokeWidth);
-    pen.SetMiterLimit(1.f);
-    pen.SetAlignment(PenAlignmentInset);
-    graphicsPath->GetBounds(&bbox, NULL, &pen);
+    if (0.f == s->strokeWidth) {
+        graphicsPath->GetBounds(&bbox);
+    } else {
+        Pen pen(brStroke, s->strokeWidth);
+        // pen widith is multiplied by MiterLimit(), which is 10 by default
+        // so set it explicitly to 1 for the size we expect
+        pen.SetMiterLimit(1.f);
+        pen.SetAlignment(PenAlignmentInset);
+        graphicsPath->GetBounds(&bbox, NULL, &pen);
+    }
     desiredSize.Width  += bbox.Width;
     desiredSize.Height += bbox.Height;
 
@@ -225,12 +228,16 @@ void ButtonVector::Paint(Graphics *gfx, int offX, int offY)
 
     // graphicsPath bbox can have non-zero X,Y, so must take that
     // into account
-    Brush *brStroke = BrushFromColorData(s->stroke, bbox);
+
     Brush *brFill = BrushFromColorData(s->fill, bbox);
+    Brush *brStroke = BrushFromColorData(s->stroke, bbox);
     Pen pen(brStroke, s->strokeWidth);
     pen.SetMiterLimit(1.f);
     pen.SetAlignment(PenAlignmentInset);
-    graphicsPath->GetBounds(&bbox, NULL, &pen);
+    if (0.f == s->strokeWidth)
+        graphicsPath->GetBounds(&bbox);
+    else
+        graphicsPath->GetBounds(&bbox, NULL, &pen);
 
     // TODO: center the path both vertically and horizontally
 
@@ -245,7 +252,8 @@ void ButtonVector::Paint(Graphics *gfx, int offX, int offY)
     m.Translate((float)x, (float)y);
     tmp->Transform(&m);
     gfx->FillPath(brFill, tmp);
-    gfx->DrawPath(&pen, tmp);
+    if (0.f != s->strokeWidth)
+        gfx->DrawPath(&pen, tmp);
 }
 
 void ButtonVector::SetStyles(Style *def, Style *mouseOver)

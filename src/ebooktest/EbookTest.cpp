@@ -307,14 +307,19 @@ ControlEbook::ControlEbook(HWND hwnd)
     SetCurrentStyle(ebookDefault, gStyleDefault);
 
     nextDefault = new Style(gStyleButtonDefault);
+    nextDefault->SetBorderWidth(0.f);
     nextDefault->Set(Prop::AllocPadding(1, 1, 1, 4));
-    nextDefault->Set(Prop::AllocWidth(PropStrokeWidth, 0.5f));
+    nextDefault->Set(Prop::AllocWidth(PropStrokeWidth, 0.f));
+    nextDefault->Set(Prop::AllocColorSolid(PropFill, "gray"));
+    nextDefault->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
     //nextDefault->Set(Prop::AllocPadding(4, 8, 12, 16));
     nextMouseOver = new Style(gStyleButtonMouseOver);
+    nextMouseOver->SetBorderWidth(0.f);
     //nextMouseOver->Set(Prop::AllocPadding(12, 8, 4, 16));
     nextMouseOver->Set(Prop::AllocPadding(1, 1, 1, 4));
-    nextMouseOver->Set(Prop::AllocWidth(PropStrokeWidth, 0.5f));
-    nextMouseOver->Set(Prop::AllocColorSolid(PropBgColor, "white"));
+    nextMouseOver->Set(Prop::AllocWidth(PropStrokeWidth, 0.f));
+    nextMouseOver->Set(Prop::AllocColorSolid(PropFill, "black"));
+    nextMouseOver->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
 
     facebookButtonDefault = new Style();
     facebookButtonDefault->Set(Prop::AllocColorSolid(PropColor, "white"));

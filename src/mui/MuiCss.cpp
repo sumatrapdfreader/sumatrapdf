@@ -94,7 +94,7 @@ void Initialize()
     gStyleDefault->Set(Prop::AllocTextAlign(Align_Left));
     gStyleDefault->Set(Prop::AllocColorSolid(PropFill, "white"));
     gStyleDefault->Set(Prop::AllocColorSolid(PropStroke, "black"));
-    gStyleDefault->Set(Prop::AllocWidth(PropStrokeWidth, 2.f));
+    gStyleDefault->Set(Prop::AllocWidth(PropStrokeWidth, 0.5f));
 
     gStyleButtonDefault = new Style(gStyleDefault);
     gStyleButtonDefault->Set(Prop::AllocPadding(4, 8, 4, 8));
