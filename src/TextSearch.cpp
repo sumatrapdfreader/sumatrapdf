@@ -104,6 +104,9 @@ int TextSearch::MatchLen(TCHAR *start)
     if (matchWordStart && start > pageText && iswordchar(start[-1]) && iswordchar(start[0]))
         return -1;
 
+    if (!match)
+        return -1;
+
     while (*match) {
         if (!*end)
             return -1;
