@@ -397,7 +397,8 @@ pdf_load_stream(pdf_document *xref, int num, int gen)
 
 	fz_try(ctx)
 	{
-		buf = fz_read_all(stm, len);
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1587 */
+		buf = fz_read_all2(stm, len, 0);
 	}
 	fz_always(ctx)
 	{

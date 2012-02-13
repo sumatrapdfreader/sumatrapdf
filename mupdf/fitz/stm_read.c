@@ -87,7 +87,7 @@ fz_fill_buffer(fz_stream *stm)
 	}
 }
 
-/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692260 */
+/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1587 */
 fz_buffer *
 fz_read_all2(fz_stream *stm, int initial, int fail_on_error)
 {
@@ -112,7 +112,7 @@ fz_read_all2(fz_stream *stm, int initial, int fail_on_error)
 			if (buf->len / 200 > initial)
 				fz_throw(ctx, "compression bomb detected");
 
-			/* http://bugs.ghostscript.com/show_bug.cgi?id=692260 */
+			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1587 */
 			fz_try(ctx)
 			{
 				n = fz_read(stm, buf->data + buf->len, buf->cap - buf->len);

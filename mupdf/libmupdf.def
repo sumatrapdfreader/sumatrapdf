@@ -156,6 +156,7 @@ EXPORTS
 	fz_open_buffer
 	fz_open_memory
 	fz_close
+	fz_lock_stream
 	fz_clone_stream
 	fz_new_stream
 	fz_keep_stream
@@ -249,6 +250,7 @@ EXPORTS
 	fz_bound_path
 	fz_debug_path
 	fz_new_glyph_cache_context
+	fz_glyph_cache_keep
 	fz_free_glyph_cache_context
 	fz_render_ft_glyph
 	fz_render_t3_glyph
@@ -317,7 +319,6 @@ EXPORTS
 	fz_free_display_list
 	fz_new_list_device
 	fz_run_display_list
-	fz_accelerate
 	fz_decode_tile
 	fz_decode_indexed_tile
 	fz_unpack_tile
@@ -339,6 +340,7 @@ EXPORTS
 	fz_debug_outline_xml
 	fz_debug_outline
 	fz_free_outline
+	fz_open_document
 	fz_close_document
 	fz_needs_password
 	fz_authenticate_password
