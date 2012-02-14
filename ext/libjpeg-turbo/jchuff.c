@@ -2,6 +2,7 @@
  * jchuff.c
  *
  * Copyright (C) 1991-1997, Thomas G. Lane.
+ * Copyright (C) 2009-2011, D. R. Commander.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -14,33 +15,19 @@
  * permanent JPEG objects only upon successful completion of an MCU.
  */
 
-/* Modifications:
- * Copyright (C)2007 Sun Microsystems, Inc.
- * Copyright (C)2009 D. R. Commander
- *
- * This library is free software and may be redistributed and/or modified under
- * the terms of the wxWindows Library License, Version 3.1 or (at your option)
- * any later version.  The full license is in the LICENSE.txt file included
- * with this distribution.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * wxWindows Library License for more details.
- */
-
 #define JPEG_INTERNALS
 #include "jinclude.h"
 #include "jpeglib.h"
 #include "jchuff.h"		/* Declarations shared with jcphuff.c */
 #include <limits.h>
 
-static unsigned char jpeg_first_bit_table[65536];
-static int jpeg_first_bit_table_init=0;
+static unsigned char jpeg_nbits_table[65536];
+static int jpeg_nbits_table_init = 0;
 
 #ifndef min
  #define min(a,b) ((a)<(b)?(a):(b))
 #endif
+
 
 /* Expanded entropy encoder object for Huffman encoding.
  *
@@ -181,7 +168,6 @@ start_pass_huff (j_compress_ptr cinfo, boolean gather_statistics)
   }
 
   /* Initialize bit buffer to empty */
-
   entropy->saved.put_buffer = 0;
   entropy->saved.put_bits = 0;
 
@@ -285,13 +271,13 @@ jpeg_make_c_derived_tbl (j_compress_ptr cinfo, boolean isDC, int tblno,
     dtbl->ehufsi[i] = huffsize[p];
   }
 
-  if(!jpeg_first_bit_table_init) {
+  if(!jpeg_nbits_table_init) {
     for(i = 0; i < 65536; i++) {
-      int bit = 0, val = i;
-      while (val) {val >>= 1;  bit++;}
-      jpeg_first_bit_table[i] = bit;
+      int nbits = 0, temp = i;
+      while (temp) {temp >>= 1;  nbits++;}
+      jpeg_nbits_table[i] = nbits;
     }
-    jpeg_first_bit_table_init = 1;
+    jpeg_nbits_table_init = 1;
   }
 }
 
@@ -325,168 +311,123 @@ dump_buffer (working_state * state)
 
 /* Outputting bits to the file */
 
-/* Only the right 24 bits of put_buffer are used; the valid bits are
- * left-justified in this part.  At most 16 bits can be passed to emit_bits
- * in one call, and we never retain more than 7 bits in put_buffer
- * between calls, so 24 bits are sufficient.
+/* These macros perform the same task as the emit_bits() function in the
+ * original libjpeg code.  In addition to reducing overhead by explicitly
+ * inlining the code, additional performance is achieved by taking into
+ * account the size of the bit buffer and waiting until it is almost full
+ * before emptying it.  This mostly benefits 64-bit platforms, since 6
+ * bytes can be stored in a 64-bit bit buffer before it has to be emptied.
  */
 
-/***************************************************************/
-
-#define EMIT_BYTE() {                                           \
-  if (0xFF == (*buffer++ =  (unsigned char)(put_buffer >> (put_bits -= 8))))  \
-    *buffer++ = 0;                                              \
+#define EMIT_BYTE() { \
+  JOCTET c; \
+  put_bits -= 8; \
+  c = (JOCTET)GETJOCTET(put_buffer >> put_bits); \
+  *buffer++ = c; \
+  if (c == 0xFF)  /* need to stuff a zero byte? */ \
+    *buffer++ = 0; \
  }
 
-/***************************************************************/
-
-#define DUMP_BITS_(code, size) {                                \
-  put_bits += size;                                             \
-  put_buffer = (put_buffer << size) | code;                     \
-  if (put_bits > 7)                                             \
-    while(put_bits > 7)                                         \
-      EMIT_BYTE()                                               \
- }
-
-/***************************************************************/
-
-#define CHECKBUF15() {                                          \
-  if (put_bits > 15) {                                          \
-    EMIT_BYTE()                                                 \
-    EMIT_BYTE()                                                 \
-  }                                                             \
+#define PUT_BITS(code, size) { \
+  put_bits += size; \
+  put_buffer = (put_buffer << size) | code; \
 }
 
-#define CHECKBUF47() {                                          \
-  if (put_bits > 47) {                                          \
-    EMIT_BYTE()                                                 \
-    EMIT_BYTE()                                                 \
-    EMIT_BYTE()                                                 \
-    EMIT_BYTE()                                                 \
-    EMIT_BYTE()                                                 \
-    EMIT_BYTE()                                                 \
-  }                                                             \
+#define CHECKBUF15() { \
+  if (put_bits > 15) { \
+    EMIT_BYTE() \
+    EMIT_BYTE() \
+  } \
 }
 
-#define CHECKBUF31() {                                          \
-  if (put_bits > 31) {                                          \
-    EMIT_BYTE()                                                 \
-    EMIT_BYTE()                                                 \
-    EMIT_BYTE()                                                 \
-    EMIT_BYTE()                                                 \
-  }                                                             \
+#define CHECKBUF31() { \
+  if (put_bits > 31) { \
+    EMIT_BYTE() \
+    EMIT_BYTE() \
+    EMIT_BYTE() \
+    EMIT_BYTE() \
+  } \
 }
 
-/***************************************************************/
-
-#define DUMP_BITS_NOCHECK(code, size) {                         \
-  put_bits += size;                                             \
-  put_buffer = (put_buffer << size) | code;                     \
- }
+#define CHECKBUF47() { \
+  if (put_bits > 47) { \
+    EMIT_BYTE() \
+    EMIT_BYTE() \
+    EMIT_BYTE() \
+    EMIT_BYTE() \
+    EMIT_BYTE() \
+    EMIT_BYTE() \
+  } \
+}
 
 #if __WORDSIZE==64 || defined(_WIN64)
 
-#define DUMP_BITS(code, size) {                                 \
-  CHECKBUF47()                                                  \
-  put_bits += size;                                             \
-  put_buffer = (put_buffer << size) | code;                     \
+#define EMIT_BITS(code, size) { \
+  CHECKBUF47() \
+  PUT_BITS(code, size) \
+}
+
+#define EMIT_CODE(code, size) { \
+  temp2 &= (((INT32) 1)<<nbits) - 1; \
+  CHECKBUF31() \
+  PUT_BITS(code, size) \
+  PUT_BITS(temp2, nbits) \
  }
 
 #else
 
-#define DUMP_BITS(code, size) {                                 \
-  put_bits += size;                                             \
-  put_buffer = (put_buffer << size) | code;                     \
-  CHECKBUF15()                                                  \
+#define EMIT_BITS(code, size) { \
+  PUT_BITS(code, size) \
+  CHECKBUF15() \
+}
+
+#define EMIT_CODE(code, size) { \
+  temp2 &= (((INT32) 1)<<nbits) - 1; \
+  PUT_BITS(code, size) \
+  CHECKBUF15() \
+  PUT_BITS(temp2, nbits) \
+  CHECKBUF15() \
  }
 
 #endif
 
-/***************************************************************/
-
-#define DUMP_SINGLE_VALUE(ht, codevalue) { \
-  size = ht->ehufsi[codevalue];            \
-  code = ht->ehufco[codevalue];            \
-                                           \
-  DUMP_BITS(code, size)                    \
- }
-
-/***************************************************************/
-
-#define DUMP_VALUE_SLOW(ht, codevalue, t, nbits) { \
-  size = ht->ehufsi[codevalue];               \
-  code = ht->ehufco[codevalue];               \
-  t &= ~(-1 << nbits);                        \
-  DUMP_BITS_NOCHECK(code, size)               \
-  CHECKBUF15()                                \
-  DUMP_BITS_NOCHECK(t, nbits)                 \
-  CHECKBUF15()                                \
- }
-
-#if __WORDSIZE==64 || defined(_WIN64)
-
-#define DUMP_VALUE(ht, codevalue, t, nbits) { \
-  size = ht->ehufsi[codevalue];               \
-  code = ht->ehufco[codevalue];               \
-  t &= ~(-1 << nbits);                        \
-  CHECKBUF31()                                \
-  DUMP_BITS_NOCHECK(code, size)               \
-  DUMP_BITS_NOCHECK(t, nbits)                 \
- }
-
-#else
-
-#define DUMP_VALUE(ht, codevalue, t, nbits) { \
-  size = ht->ehufsi[codevalue];               \
-  code = ht->ehufco[codevalue];               \
-  t &= ~(-1 << nbits);                        \
-  DUMP_BITS_NOCHECK(code, size)               \
-  CHECKBUF15()                                \
-  DUMP_BITS_NOCHECK(t, nbits)                 \
-  CHECKBUF15()                                \
- }
-
-#endif
-
-/***************************************************************/
 
 #define BUFSIZE (DCTSIZE2 * 2)
 
-#define LOAD_BUFFER() {                                           \
-  if (state->free_in_buffer < BUFSIZE) {                          \
-    localbuf = 1;                                                 \
-    buffer = _buffer;                                             \
-  }                                                               \
-  else buffer = state->next_output_byte;                          \
+#define LOAD_BUFFER() { \
+  if (state->free_in_buffer < BUFSIZE) { \
+    localbuf = 1; \
+    buffer = _buffer; \
+  } \
+  else buffer = state->next_output_byte; \
  }
 
-#define STORE_BUFFER() {                                          \
-  if (localbuf) {                                                 \
-    bytes = buffer - _buffer;                                     \
-    buffer = _buffer;                                             \
-    while (bytes > 0) {                                           \
-      bytestocopy = min(bytes, state->free_in_buffer);            \
-      MEMCOPY(state->next_output_byte, buffer, bytestocopy);      \
-      state->next_output_byte += bytestocopy;                     \
-      buffer += bytestocopy;                                      \
-      state->free_in_buffer -= bytestocopy;                       \
-      if (state->free_in_buffer == 0)                             \
-        if (! dump_buffer(state)) return FALSE;                   \
-      bytes -= bytestocopy;                                       \
-    }                                                             \
-  }                                                               \
-  else {                                                          \
-    state->free_in_buffer -= (buffer - state->next_output_byte);  \
-    state->next_output_byte = buffer;                             \
-  }                                                               \
+#define STORE_BUFFER() { \
+  if (localbuf) { \
+    bytes = buffer - _buffer; \
+    buffer = _buffer; \
+    while (bytes > 0) { \
+      bytestocopy = min(bytes, state->free_in_buffer); \
+      MEMCOPY(state->next_output_byte, buffer, bytestocopy); \
+      state->next_output_byte += bytestocopy; \
+      buffer += bytestocopy; \
+      state->free_in_buffer -= bytestocopy; \
+      if (state->free_in_buffer == 0) \
+        if (! dump_buffer(state)) return FALSE; \
+      bytes -= bytestocopy; \
+    } \
+  } \
+  else { \
+    state->free_in_buffer -= (buffer - state->next_output_byte); \
+    state->next_output_byte = buffer; \
+  } \
  }
 
-/***************************************************************/
 
 LOCAL(boolean)
 flush_bits (working_state * state)
 {
-  unsigned char _buffer[BUFSIZE], *buffer;
+  JOCTET _buffer[BUFSIZE], *buffer;
   size_t put_buffer;  int put_bits;
   size_t bytes, bytestocopy;  int localbuf = 0;
 
@@ -494,7 +435,9 @@ flush_bits (working_state * state)
   put_bits = state->cur.put_bits;
   LOAD_BUFFER()
 
-  DUMP_BITS_(0x7F, 7)
+  /* fill any partial byte with ones */
+  PUT_BITS(0x7F, 7)
+  while (put_bits >= 8) EMIT_BYTE()
 
   state->cur.put_buffer = 0;	/* and reset bit-buffer to empty */
   state->cur.put_bits = 0;
@@ -503,16 +446,17 @@ flush_bits (working_state * state)
   return TRUE;
 }
 
+
 /* Encode a single block's worth of coefficients */
 
 LOCAL(boolean)
 encode_one_block (working_state * state, JCOEFPTR block, int last_dc_val,
 		  c_derived_tbl *dctbl, c_derived_tbl *actbl)
 {
-  int temp, temp2;
+  int temp, temp2, temp3;
   int nbits;
-  int r, sflag, size, code;
-  unsigned char _buffer[BUFSIZE], *buffer;
+  int r, code, size;
+  JOCTET _buffer[BUFSIZE], *buffer;
   size_t put_buffer;  int put_bits;
   int code_0xf0 = actbl->ehufco[0xf0], size_0xf0 = actbl->ehufsi[0xf0];
   size_t bytes, bytestocopy;  int localbuf = 0;
@@ -525,50 +469,88 @@ encode_one_block (working_state * state, JCOEFPTR block, int last_dc_val,
   
   temp = temp2 = block[0] - last_dc_val;
 
-  sflag = temp >> 31;
-  temp -= ((temp + temp) & sflag);
-  temp2 += sflag;
-  nbits = jpeg_first_bit_table[temp];
-  DUMP_VALUE_SLOW(dctbl, nbits, temp2, nbits)
+ /* This is a well-known technique for obtaining the absolute value without a
+  * branch.  It is derived from an assembly language technique presented in
+  * "How to Optimize for the Pentium Processors", Copyright (c) 1996, 1997 by
+  * Agner Fog.
+  */
+  temp3 = temp >> (CHAR_BIT * sizeof(int) - 1);
+  temp ^= temp3;
+  temp -= temp3;
+
+  /* For a negative input, want temp2 = bitwise complement of abs(input) */
+  /* This code assumes we are on a two's complement machine */
+  temp2 += temp3;
+
+  /* Find the number of bits needed for the magnitude of the coefficient */
+  nbits = jpeg_nbits_table[temp];
+
+  /* Emit the Huffman-coded symbol for the number of bits */
+  code = dctbl->ehufco[nbits];
+  size = dctbl->ehufsi[nbits];
+  PUT_BITS(code, size)
+  CHECKBUF15()
+
+  /* Mask off any extra bits in code */
+  temp2 &= (((INT32) 1)<<nbits) - 1;
+
+  /* Emit that number of bits of the value, if positive, */
+  /* or the complement of its magnitude, if negative. */
+  PUT_BITS(temp2, nbits)
+  CHECKBUF15()
 
   /* Encode the AC coefficients per section F.1.2.2 */
   
   r = 0;			/* r = run length of zeros */
 
-#define innerloop(order) {  \
-  temp2  = *(JCOEF*)((unsigned char*)block + order);  \
-  if(temp2 == 0) r++;  \
-  else {  \
-    temp = (JCOEF)temp2;  \
-    sflag = temp >> 31;  \
-    temp = (temp ^ sflag) - sflag;  \
-    temp2 += sflag;  \
-    nbits = jpeg_first_bit_table[temp];  \
-    for(; r > 15; r -= 16) DUMP_BITS(code_0xf0, size_0xf0)  \
-    sflag = (r << 4) + nbits;  \
-    DUMP_VALUE(actbl, sflag, temp2, nbits)  \
+/* Manually unroll the k loop to eliminate the counter variable.  This
+ * improves performance greatly on systems with a limited number of
+ * registers (such as x86.)
+ */
+#define kloop(jpeg_natural_order_of_k) {  \
+  if ((temp = block[jpeg_natural_order_of_k]) == 0) { \
+    r++; \
+  } else { \
+    temp2 = temp; \
+    /* Branch-less absolute value, bitwise complement, etc., same as above */ \
+    temp3 = temp >> (CHAR_BIT * sizeof(int) - 1); \
+    temp ^= temp3; \
+    temp -= temp3; \
+    temp2 += temp3; \
+    nbits = jpeg_nbits_table[temp]; \
+    /* if run length > 15, must emit special run-length-16 codes (0xF0) */ \
+    while (r > 15) { \
+      EMIT_BITS(code_0xf0, size_0xf0) \
+      r -= 16; \
+    } \
+    /* Emit Huffman symbol for run length / number of bits */ \
+    temp3 = (r << 4) + nbits;  \
+    code = actbl->ehufco[temp3]; \
+    size = actbl->ehufsi[temp3]; \
+    EMIT_CODE(code, size) \
     r = 0;  \
-  }}
+  } \
+}
 
-  innerloop(2*1);   innerloop(2*8);   innerloop(2*16);  innerloop(2*9);
-  innerloop(2*2);   innerloop(2*3);   innerloop(2*10);  innerloop(2*17);
-  innerloop(2*24);  innerloop(2*32);  innerloop(2*25);  innerloop(2*18);
-  innerloop(2*11);  innerloop(2*4);   innerloop(2*5);   innerloop(2*12);
-  innerloop(2*19);  innerloop(2*26);  innerloop(2*33);  innerloop(2*40);
-  innerloop(2*48);  innerloop(2*41);  innerloop(2*34);  innerloop(2*27);
-  innerloop(2*20);  innerloop(2*13);  innerloop(2*6);   innerloop(2*7);
-  innerloop(2*14);  innerloop(2*21);  innerloop(2*28);  innerloop(2*35);
-  innerloop(2*42);  innerloop(2*49);  innerloop(2*56);  innerloop(2*57);
-  innerloop(2*50);  innerloop(2*43);  innerloop(2*36);  innerloop(2*29);
-  innerloop(2*22);  innerloop(2*15);  innerloop(2*23);  innerloop(2*30);
-  innerloop(2*37);  innerloop(2*44);  innerloop(2*51);  innerloop(2*58);
-  innerloop(2*59);  innerloop(2*52);  innerloop(2*45);  innerloop(2*38);
-  innerloop(2*31);  innerloop(2*39);  innerloop(2*46);  innerloop(2*53);
-  innerloop(2*60);  innerloop(2*61);  innerloop(2*54);  innerloop(2*47);
-  innerloop(2*55);  innerloop(2*62);  innerloop(2*63);
+  /* One iteration for each value in jpeg_natural_order[] */
+  kloop(1);   kloop(8);   kloop(16);  kloop(9);   kloop(2);   kloop(3);
+  kloop(10);  kloop(17);  kloop(24);  kloop(32);  kloop(25);  kloop(18);
+  kloop(11);  kloop(4);   kloop(5);   kloop(12);  kloop(19);  kloop(26);
+  kloop(33);  kloop(40);  kloop(48);  kloop(41);  kloop(34);  kloop(27);
+  kloop(20);  kloop(13);  kloop(6);   kloop(7);   kloop(14);  kloop(21);
+  kloop(28);  kloop(35);  kloop(42);  kloop(49);  kloop(56);  kloop(57);
+  kloop(50);  kloop(43);  kloop(36);  kloop(29);  kloop(22);  kloop(15);
+  kloop(23);  kloop(30);  kloop(37);  kloop(44);  kloop(51);  kloop(58);
+  kloop(59);  kloop(52);  kloop(45);  kloop(38);  kloop(31);  kloop(39);
+  kloop(46);  kloop(53);  kloop(60);  kloop(61);  kloop(54);  kloop(47);
+  kloop(55);  kloop(62);  kloop(63);
 
   /* If the last coef(s) were zero, emit an end-of-block code */
-  if (r > 0) DUMP_SINGLE_VALUE(actbl, 0x0)
+  if (r > 0) {
+    code = actbl->ehufco[0];
+    size = actbl->ehufsi[0];
+    EMIT_BITS(code, size)
+  }
 
   state->cur.put_buffer = put_buffer;
   state->cur.put_bits = put_bits;

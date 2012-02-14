@@ -20,8 +20,6 @@
 %include "jcolsamp.inc"
 				
 ; --------------------------------------------------------------------------
-	SECTION	SEG_TEXT
-	BITS	64
 ;
 ; Upsample and color convert for the case of 2:1 horizontal and 1:1 vertical.
 ;
@@ -296,6 +294,41 @@ EXTN(jsimd_h2v1_merged_upsample_sse2):
 	movdqa	xmmA,xmmD
 	sub	rcx, byte SIZEOF_XMMWORD
 .column_st15:
+%ifdef STRICT_MEMORY_ACCESS
+	; Store the lower 8 bytes of xmmA to the output when it has enough
+	; space.
+	cmp	rcx, byte SIZEOF_MMWORD
+	jb	short .column_st7
+	movq	MMWORD [rdi], xmmA
+	add	rdi, byte SIZEOF_MMWORD
+	sub	rcx, byte SIZEOF_MMWORD
+	psrldq	xmmA, SIZEOF_MMWORD
+.column_st7:
+	; Store the lower 4 bytes of xmmA to the output when it has enough
+	; space.
+	cmp	rcx, byte SIZEOF_DWORD
+	jb	short .column_st3
+	movd	DWORD [rdi], xmmA
+	add	rdi, byte SIZEOF_DWORD
+	sub	rcx, byte SIZEOF_DWORD
+	psrldq	xmmA, SIZEOF_DWORD
+.column_st3:
+	; Store the lower 2 bytes of rax to the output when it has enough
+	; space.
+	movd	eax, xmmA
+	cmp	rcx, byte SIZEOF_WORD
+	jb	short .column_st1
+	mov	WORD [rdi], ax
+	add	rdi, byte SIZEOF_WORD
+	sub	rcx, byte SIZEOF_WORD
+	shr	rax, 16
+.column_st1:
+	; Store the lower 1 byte of rax to the output when it has enough
+	; space.
+	test	rcx, rcx
+	jz	short .endcolumn
+	mov	BYTE [rdi], al
+%else
 	mov	rax,rcx
 	xor	rcx, byte 0x0F
 	shl	rcx, 2
@@ -335,6 +368,7 @@ EXTN(jsimd_h2v1_merged_upsample_sse2):
 	por	xmmE,xmmC
 .adj0:	; ----------------
 	maskmovdqu xmmA,xmmE			; movntdqu XMMWORD [edi], xmmA
+%endif ; STRICT_MEMORY_ACCESS ; ---------------
 
 %else ; RGB_PIXELSIZE == 4 ; -----------
 
@@ -422,6 +456,22 @@ EXTN(jsimd_h2v1_merged_upsample_sse2):
 	movdqa	xmmA,xmmD
 	sub	rcx, byte SIZEOF_XMMWORD/4
 .column_st15:
+%ifdef STRICT_MEMORY_ACCESS
+	; Store two pixels (8 bytes) of xmmA to the output when it has enough
+	; space.
+	cmp	rcx, byte SIZEOF_XMMWORD/8
+	jb	short .column_st7
+	movq	MMWORD [rdi], xmmA
+	add	rdi, byte SIZEOF_XMMWORD/8*4
+	sub	rcx, byte SIZEOF_XMMWORD/8
+	psrldq	xmmA, SIZEOF_XMMWORD/8*4
+.column_st7:
+	; Store one pixel (4 bytes) of xmmA to the output when it has enough
+	; space.
+	test	rcx, rcx
+	jz	short .endcolumn
+	movd	DWORD [rdi], xmmA
+%else
 	cmp	rcx, byte SIZEOF_XMMWORD/16
 	jb	near .endcolumn
 	mov	rax,rcx
@@ -461,6 +511,7 @@ EXTN(jsimd_h2v1_merged_upsample_sse2):
 	por	xmmE,xmmG
 .adj0:	; ----------------
 	maskmovdqu xmmA,xmmE			; movntdqu XMMWORD [edi], xmmA
+%endif ; STRICT_MEMORY_ACCESS ; ---------------
 
 %endif ; RGB_PIXELSIZE ; ---------------
 

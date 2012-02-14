@@ -19,8 +19,6 @@
 %include "jcolsamp.inc"
 
 ; --------------------------------------------------------------------------
-	SECTION	SEG_TEXT
-	BITS	32
 ;
 ; Upsample and color convert for the case of 2:1 horizontal and 1:1 vertical.
 ;

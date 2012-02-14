@@ -78,14 +78,14 @@ usage (void)
   fprintf(stderr, "  -trim          Drop non-transformable edge blocks\n");
 #endif
   fprintf(stderr, "Switches for advanced users:\n");
+#ifdef C_ARITH_CODING_SUPPORTED
+  fprintf(stderr, "  -arithmetic    Use arithmetic coding\n");
+#endif
   fprintf(stderr, "  -restart N     Set restart interval in rows, or in blocks with B\n");
   fprintf(stderr, "  -maxmemory N   Maximum memory to use (in kbytes)\n");
   fprintf(stderr, "  -outfile name  Specify name for output file\n");
   fprintf(stderr, "  -verbose  or  -debug   Emit debug output\n");
   fprintf(stderr, "Switches for wizards:\n");
-#ifdef C_ARITH_CODING_SUPPORTED
-  fprintf(stderr, "  -arithmetic    Use arithmetic coding\n");
-#endif
 #ifdef C_MULTISCAN_FILES_SUPPORTED
   fprintf(stderr, "  -scans file    Create multi-scan JPEG per script file\n");
 #endif
@@ -142,6 +142,7 @@ parse_switches (j_compress_ptr cinfo, int argc, char **argv,
   transformoption.trim = FALSE;
   transformoption.force_grayscale = FALSE;
   transformoption.crop = FALSE;
+  transformoption.slow_hflip = FALSE;
   cinfo->err->trace_level = 0;
 
   /* Scan command line options, adjust parameters */
@@ -203,9 +204,9 @@ parse_switches (j_compress_ptr cinfo, int argc, char **argv,
       if (! printed_version) {
 	fprintf(stderr, "%s version %s (build %s)\n",
 		PACKAGE_NAME, VERSION, BUILD);
-	fprintf(stderr, "%s\n\n", LJTCOPYRIGHT);
-	fprintf(stderr, "Based on Independent JPEG Group's libjpeg, version %s\n%s\n\n",
-		JVERSION, JCOPYRIGHT);
+	fprintf(stderr, "%s\n\n", JCOPYRIGHT);
+	fprintf(stderr, "Emulating The Independent JPEG Group's libjpeg, version %s\n\n",
+		JVERSION);
 	printed_version = TRUE;
       }
       cinfo->err->trace_level++;

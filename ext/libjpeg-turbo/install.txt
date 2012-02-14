@@ -534,17 +534,17 @@ In general, it's worth trying the maximum optimization level of your compiler,
 and experimenting with any optional optimizations such as loop unrolling.
 (Unfortunately, far too many compilers have optimizer bugs ... be prepared to
 back off if the code fails self-test.)  If you do any experimentation along
-these lines, please report the optimal settings to jpeg-info@uc.ag so we
-can mention them in future releases.  Be sure to specify your machine
-and compiler version.
+these lines, please report the optimal settings to jpeg-info@jpegclub.org so
+we can mention them in future releases.  Be sure to specify your machine and
+compiler version.
 
 
 HINTS FOR SPECIFIC SYSTEMS
 ==========================
 
 We welcome reports on changes needed for systems not mentioned here.  Submit
-'em to jpeg-info@uc.ag.  Also, if configure or ckconfig.c is wrong about how
-to configure the JPEG software for your system, please let us know.
+'em to jpeg-info@jpegclub.org.  Also, if configure or ckconfig.c is wrong
+about how to configure the JPEG software for your system, please let us know.
 
 
 Acorn RISC OS:

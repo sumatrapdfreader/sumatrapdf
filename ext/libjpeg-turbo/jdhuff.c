@@ -2,7 +2,7 @@
  * jdhuff.c
  *
  * Copyright (C) 1991-1997, Thomas G. Lane.
- * Copyright (C) 2010, D. R. Commander.
+ * Copyright (C) 2009-2011, D. R. Commander.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -13,21 +13,6 @@
  * up to the start of the current MCU.  To do this, we copy state variables
  * into local working storage, and update them back to the permanent
  * storage only upon successful completion of an MCU.
- */
-
-/* Performance enhancements:
- * Copyright (C)2007 Sun Microsystems, Inc.
- * Copyright (C)2009-2010 D. R. Commander
- *
- * This library is free software and may be redistributed and/or modified under
- * the terms of the wxWindows Library License, Version 3.1 or (at your option)
- * any later version.  The full license is in the LICENSE.txt file included
- * with this distribution.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * wxWindows Library License for more details.
  */
 
 #define JPEG_INTERNALS
@@ -407,6 +392,50 @@ jpeg_fill_bit_buffer (bitread_working_state * state,
 }
 
 
+/* Macro version of the above, which performs much better but does not
+   handle markers.  We have to hand off any blocks with markers to the
+   slower routines. */
+
+#define GET_BYTE \
+{ \
+  register int c0, c1; \
+  c0 = GETJOCTET(*buffer++); \
+  c1 = GETJOCTET(*buffer); \
+  /* Pre-execute most common case */ \
+  get_buffer = (get_buffer << 8) | c0; \
+  bits_left += 8; \
+  if (c0 == 0xFF) { \
+    /* Pre-execute case of FF/00, which represents an FF data byte */ \
+    buffer++; \
+    if (c1 != 0) { \
+      /* Oops, it's actually a marker indicating end of compressed data. */ \
+      cinfo->unread_marker = c1; \
+      /* Back out pre-execution and fill the buffer with zero bits */ \
+      buffer -= 2; \
+      get_buffer &= ~0xFF; \
+    } \
+  } \
+}
+
+#if __WORDSIZE == 64 || defined(_WIN64)
+
+/* Pre-fetch 48 bytes, because the holding register is 64-bit */
+#define FILL_BIT_BUFFER_FAST \
+  if (bits_left < 16) { \
+    GET_BYTE GET_BYTE GET_BYTE GET_BYTE GET_BYTE GET_BYTE \
+  }
+
+#else
+
+/* Pre-fetch 16 bytes, because the holding register is 32-bit */
+#define FILL_BIT_BUFFER_FAST \
+  if (bits_left < 16) { \
+    GET_BYTE GET_BYTE \
+  }
+
+#endif
+
+
 /*
  * Out-of-line code for Huffman code decoding.
  * See jdhuff.h for info about usage.
@@ -612,61 +641,6 @@ decode_mcu_slow (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
 }
 
 
-/***************************************************************/
-
-#define ADD_BYTE  {                                     \
-  int val0 = *(buffer++);                               \
-  int val1 = *(buffer);                                 \
-                                                        \
-  bits_left += 8;                                       \
-  get_buffer = (get_buffer << 8) | (val0);              \
-  if (val0 == 0xFF) {                                   \
-    buffer++;                                           \
-    if (val1 != 0) {                                    \
-      cinfo->unread_marker = val1;                      \
-      buffer   -= 2;                                    \
-      get_buffer      &= ~0xFF;                         \
-    }                                                   \
-  }                                                     \
-}
-
-/***************************************************************/
-
-#if __WORDSIZE == 64 || defined(_WIN64)
-
-#define ENSURE_SHORT \
-  if (bits_left < 16) { \
-    ADD_BYTE ADD_BYTE ADD_BYTE ADD_BYTE ADD_BYTE ADD_BYTE \
-  }
-
-#else
-
-#define ENSURE_SHORT  if (bits_left < 16) { ADD_BYTE ADD_BYTE }
-
-#endif
-
-/***************************************************************/
-
-#define HUFF_DECODE_FAST(symbol, size, htbl) { \
-  ENSURE_SHORT \
-  symbol = PEEK_BITS(HUFF_LOOKAHEAD); \
-  symbol = htbl->lookup[symbol]; \
-  size = symbol >> 8; \
-  bits_left -= size; \
-  symbol = symbol & ((1 << HUFF_LOOKAHEAD) - 1); \
-  if (size == HUFF_LOOKAHEAD + 1) { \
-    symbol = (get_buffer >> bits_left) & ((1 << (size)) - 1); \
-    while (symbol > htbl->maxcode[size]) { \
-      symbol <<= 1; \
-      symbol |= GET_BITS(1); \
-      size++; \
-    } \
-    symbol = htbl->pub->huffval[ (int) (symbol + htbl->valoffset[size]) & 0xFF ]; \
-  } \
-}
-
-/***************************************************************/
-
 LOCAL(boolean)
 decode_mcu_fast (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
 {
@@ -690,7 +664,7 @@ decode_mcu_fast (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
 
     HUFF_DECODE_FAST(s, l, dctbl);
     if (s) {
-      ENSURE_SHORT
+      FILL_BIT_BUFFER_FAST
       r = GET_BITS(s);
       s = HUFF_EXTEND(r, s);
     }
@@ -711,7 +685,7 @@ decode_mcu_fast (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
       
         if (s) {
           k += r;
-          ENSURE_SHORT
+          FILL_BIT_BUFFER_FAST
           r = GET_BITS(s);
           s = HUFF_EXTEND(r, s);
           (*block)[jpeg_natural_order[k]] = (JCOEF) s;
@@ -730,7 +704,7 @@ decode_mcu_fast (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
 
         if (s) {
           k += r;
-          ENSURE_SHORT
+          FILL_BIT_BUFFER_FAST
           DROP_BITS(s);
         } else {
           if (r != 15) break;
@@ -784,7 +758,7 @@ decode_mcu (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
     usefast = 0;
   }
 
-  if (cinfo->src->bytes_in_buffer < BUFSIZE * cinfo->blocks_in_MCU
+  if (cinfo->src->bytes_in_buffer < BUFSIZE * (size_t)cinfo->blocks_in_MCU
     || cinfo->unread_marker != 0)
     usefast = 0;
 

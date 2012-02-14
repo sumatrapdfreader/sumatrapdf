@@ -850,8 +850,9 @@ int jpeg_quality_scaling (int quality)
 	premise of this routine collapses.  Caveat user.
 
 jpeg_default_qtables (j_compress_ptr cinfo, boolean force_baseline)
-	[libjpeg v7/v8 only] Set default quantization tables with linear
-	q_scale_factor[] values (see below).
+	[libjpeg v7+ API/ABI emulation only]
+	Set default quantization tables with linear q_scale_factor[] values
+	(see below).
 
 jpeg_add_quant_table (j_compress_ptr cinfo, int which_tbl,
 		      const unsigned int *basic_table,
@@ -976,12 +977,13 @@ JQUANT_TBL * quant_tbl_ptrs[NUM_QUANT_TBLS]
 	slot 1 for chrominance.
 
 int q_scale_factor[NUM_QUANT_TBLS]
-	[libjpeg v7+ only] Linear quantization scaling factors (0-100, default
-	100) for use with jpeg_default_qtables().
+	[libjpeg v7+ API/ABI emulation only]
+	Linear quantization scaling factors (0-100, default 100)
+	for use with jpeg_default_qtables().
 	See rdswitch.c and cjpeg.c for an example of usage.
 	Note that the q_scale_factor[] values use "linear" scales, so JPEG
 	quality levels chosen by the user must be converted to these scales
-	using jpeg_quality_scaling().  Here is an example which corresponds to
+	using jpeg_quality_scaling().  Here is an example that corresponds to
 	cjpeg -quality 90,70:
 
 		jpeg_set_defaults(cinfo);
@@ -1012,11 +1014,12 @@ JHUFF_TBL * ac_huff_tbl_ptrs[NUM_HUFF_TBLS]
 	any need to mess with providing your own Huffman tables.
 
 
-[libjpeg v7+ only] The actual dimensions of the JPEG image that will be written
-to the file are given by the following fields.  These are computed from the
-input image dimensions and the compression parameters by jpeg_start_compress().
-You can also call jpeg_calc_jpeg_dimensions() to obtain the values that will
-result from the current parameter settings.
+[libjpeg v7+ API/ABI emulation only]
+The actual dimensions of the JPEG image that will be written to the file are
+given by the following fields.  These are computed from the input image
+dimensions and the compression parameters by jpeg_start_compress().  You can
+also call jpeg_calc_jpeg_dimensions() to obtain the values that will result
+from the current parameter settings.
 
 JDIMENSION jpeg_width		Actual dimensions of output image.
 JDIMENSION jpeg_height

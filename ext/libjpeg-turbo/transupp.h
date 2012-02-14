@@ -128,6 +128,13 @@ typedef struct {
   boolean trim;			/* if TRUE, trim partial MCUs as needed */
   boolean force_grayscale;	/* if TRUE, convert color image to grayscale */
   boolean crop;			/* if TRUE, crop source image */
+  boolean slow_hflip;  /* For best performance, the JXFORM_FLIP_H transform
+                          normally modifies the source coefficients in place.
+                          Setting this to TRUE will instead use a slower,
+                          double-buffered algorithm, which leaves the source
+                          coefficients in tact (necessary if other transformed
+                          images must be generated from the same set of
+                          coefficients. */
 
   /* Crop parameters: application need not set these unless crop is TRUE.
    * These can be filled in by jtransform_parse_crop_spec().

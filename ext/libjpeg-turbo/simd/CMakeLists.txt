@@ -1,5 +1,5 @@
 if(NOT DEFINED NASM)
-  set(NASM nasm)
+  set(NASM nasm CACHE PATH "Path to NASM/YASM executable")
 endif()
 
 if(SIMD_X86_64)
@@ -18,16 +18,16 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug"
 endif()
 
 if(SIMD_X86_64)
-  set(SIMD_BASENAMES jfsseflt-64 jccolss2-64 jdcolss2-64 jcsamss2-64
-    jdsamss2-64 jdmerss2-64 jcqnts2i-64 jfss2fst-64 jfss2int-64 jiss2red-64
-    jiss2int-64 jiss2fst-64 jcqnts2f-64 jiss2flt-64)
+  set(SIMD_BASENAMES jfsseflt-64 jccolss2-64 jdcolss2-64 jcgrass2-64
+    jcsamss2-64 jdsamss2-64 jdmerss2-64 jcqnts2i-64 jfss2fst-64 jfss2int-64
+    jiss2red-64 jiss2int-64 jiss2fst-64 jcqnts2f-64 jiss2flt-64)
   message(STATUS "Building x86_64 SIMD extensions")
 else()
-  set(SIMD_BASENAMES jsimdcpu jccolmmx jdcolmmx jcsammmx jdsammmx jdmermmx
-    jcqntmmx jfmmxfst jfmmxint jimmxred jimmxint jimmxfst jcqnt3dn jf3dnflt
-    ji3dnflt jcqntsse jfsseflt jisseflt jccolss2 jdcolss2 jcsamss2 jdsamss2
-    jdmerss2 jcqnts2i jfss2fst jfss2int jiss2red jiss2int jiss2fst jcqnts2f
-    jiss2flt)
+  set(SIMD_BASENAMES jsimdcpu jccolmmx jcgrammx jdcolmmx jcsammmx jdsammmx
+    jdmermmx jcqntmmx jfmmxfst jfmmxint jimmxred jimmxint jimmxfst jcqnt3dn
+    jf3dnflt ji3dnflt jcqntsse jfsseflt jisseflt jccolss2 jcgrass2 jdcolss2
+    jcsamss2 jdsamss2 jdmerss2 jcqnts2i jfss2fst jfss2int jiss2red jiss2int
+    jiss2fst jcqnts2f jiss2flt)
   message(STATUS "Building i386 SIMD extensions")
 endif()
 
@@ -47,6 +47,10 @@ foreach(file ${SIMD_BASENAMES})
   if(${file} MATCHES mer)
     set(DEPFILE ${SIMD_SRC})
     string(REGEX REPLACE "mer" "mrg" DEPFILE ${DEPFILE})
+  endif()
+  if(${file} MATCHES gra)
+    set(DEPFILE ${SIMD_SRC})
+    string(REGEX REPLACE "gra" "gry" DEPFILE ${DEPFILE})
   endif()
   set(SIMD_OBJ ${OBJDIR}/${file}.obj)
   add_custom_command(OUTPUT ${SIMD_OBJ} DEPENDS ${SIMD_SRC} ${DEPFILE} *.inc

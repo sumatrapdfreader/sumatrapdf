@@ -51,16 +51,19 @@ PD_ONEHALF	times 2 dd  (1 << (SCALEBITS-1))
 	alignz	16
 
 ; --------------------------------------------------------------------------
+	SECTION	SEG_TEXT
+	BITS	32
+
 %include "jcclrmmx.asm"
 
 %undef RGB_RED
 %undef RGB_GREEN
 %undef RGB_BLUE
 %undef RGB_PIXELSIZE
-%define RGB_RED 0
-%define RGB_GREEN 1
-%define RGB_BLUE 2
-%define RGB_PIXELSIZE 3
+%define RGB_RED EXT_RGB_RED
+%define RGB_GREEN EXT_RGB_GREEN
+%define RGB_BLUE EXT_RGB_BLUE
+%define RGB_PIXELSIZE EXT_RGB_PIXELSIZE
 %define jsimd_rgb_ycc_convert_mmx jsimd_extrgb_ycc_convert_mmx
 %include "jcclrmmx.asm"
 
@@ -68,10 +71,10 @@ PD_ONEHALF	times 2 dd  (1 << (SCALEBITS-1))
 %undef RGB_GREEN
 %undef RGB_BLUE
 %undef RGB_PIXELSIZE
-%define RGB_RED 0
-%define RGB_GREEN 1
-%define RGB_BLUE 2
-%define RGB_PIXELSIZE 4
+%define RGB_RED EXT_RGBX_RED
+%define RGB_GREEN EXT_RGBX_GREEN
+%define RGB_BLUE EXT_RGBX_BLUE
+%define RGB_PIXELSIZE EXT_RGBX_PIXELSIZE
 %define jsimd_rgb_ycc_convert_mmx jsimd_extrgbx_ycc_convert_mmx
 %include "jcclrmmx.asm"
 
@@ -79,10 +82,10 @@ PD_ONEHALF	times 2 dd  (1 << (SCALEBITS-1))
 %undef RGB_GREEN
 %undef RGB_BLUE
 %undef RGB_PIXELSIZE
-%define RGB_RED 2
-%define RGB_GREEN 1
-%define RGB_BLUE 0
-%define RGB_PIXELSIZE 3
+%define RGB_RED EXT_BGR_RED
+%define RGB_GREEN EXT_BGR_GREEN
+%define RGB_BLUE EXT_BGR_BLUE
+%define RGB_PIXELSIZE EXT_BGR_PIXELSIZE
 %define jsimd_rgb_ycc_convert_mmx jsimd_extbgr_ycc_convert_mmx
 %include "jcclrmmx.asm"
 
@@ -90,10 +93,10 @@ PD_ONEHALF	times 2 dd  (1 << (SCALEBITS-1))
 %undef RGB_GREEN
 %undef RGB_BLUE
 %undef RGB_PIXELSIZE
-%define RGB_RED 2
-%define RGB_GREEN 1
-%define RGB_BLUE 0
-%define RGB_PIXELSIZE 4
+%define RGB_RED EXT_BGRX_RED
+%define RGB_GREEN EXT_BGRX_GREEN
+%define RGB_BLUE EXT_BGRX_BLUE
+%define RGB_PIXELSIZE EXT_BGRX_PIXELSIZE
 %define jsimd_rgb_ycc_convert_mmx jsimd_extbgrx_ycc_convert_mmx
 %include "jcclrmmx.asm"
 
@@ -101,10 +104,10 @@ PD_ONEHALF	times 2 dd  (1 << (SCALEBITS-1))
 %undef RGB_GREEN
 %undef RGB_BLUE
 %undef RGB_PIXELSIZE
-%define RGB_RED 3
-%define RGB_GREEN 2
-%define RGB_BLUE 1
-%define RGB_PIXELSIZE 4
+%define RGB_RED EXT_XBGR_RED
+%define RGB_GREEN EXT_XBGR_GREEN
+%define RGB_BLUE EXT_XBGR_BLUE
+%define RGB_PIXELSIZE EXT_XBGR_PIXELSIZE
 %define jsimd_rgb_ycc_convert_mmx jsimd_extxbgr_ycc_convert_mmx
 %include "jcclrmmx.asm"
 
@@ -112,9 +115,9 @@ PD_ONEHALF	times 2 dd  (1 << (SCALEBITS-1))
 %undef RGB_GREEN
 %undef RGB_BLUE
 %undef RGB_PIXELSIZE
-%define RGB_RED 1
-%define RGB_GREEN 2
-%define RGB_BLUE 3
-%define RGB_PIXELSIZE 4
+%define RGB_RED EXT_XRGB_RED
+%define RGB_GREEN EXT_XRGB_GREEN
+%define RGB_BLUE EXT_XRGB_BLUE
+%define RGB_PIXELSIZE EXT_XRGB_PIXELSIZE
 %define jsimd_rgb_ycc_convert_mmx jsimd_extxrgb_ycc_convert_mmx
 %include "jcclrmmx.asm"

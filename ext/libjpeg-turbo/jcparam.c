@@ -3,7 +3,7 @@
  *
  * Copyright (C) 1991-1998, Thomas G. Lane.
  * Modified 2003-2008 by Guido Vollbeding.
- * Copyright (C) 2009-2010, D. R. Commander.
+ * Copyright (C) 2009-2011, D. R. Commander.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -398,6 +398,10 @@ jpeg_default_colorspace (j_compress_ptr cinfo)
   case JCS_EXT_BGRX:
   case JCS_EXT_XBGR:
   case JCS_EXT_XRGB:
+  case JCS_EXT_RGBA:
+  case JCS_EXT_BGRA:
+  case JCS_EXT_ABGR:
+  case JCS_EXT_ARGB:
     jpeg_set_colorspace(cinfo, JCS_YCbCr);
     break;
   case JCS_YCbCr:

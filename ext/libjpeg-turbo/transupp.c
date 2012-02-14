@@ -1022,7 +1022,7 @@ jtransform_request_workspace (j_decompress_ptr srcinfo,
   case JXFORM_FLIP_H:
     if (info->trim)
       trim_right_edge(info, srcinfo->output_width);
-    if (info->y_crop_offset != 0)
+    if (info->y_crop_offset != 0 || info->slow_hflip)
       need_workspace = TRUE;
     /* do_flip_h_no_crop doesn't need a workspace array */
     break;
@@ -1448,7 +1448,7 @@ jtransform_execute_transform (j_decompress_ptr srcinfo,
 	      src_coef_arrays, dst_coef_arrays);
     break;
   case JXFORM_FLIP_H:
-    if (info->y_crop_offset != 0)
+    if (info->y_crop_offset != 0 || info->slow_hflip)
       do_flip_h(srcinfo, dstinfo, info->x_crop_offset, info->y_crop_offset,
 		src_coef_arrays, dst_coef_arrays);
     else

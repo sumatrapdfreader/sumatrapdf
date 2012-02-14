@@ -1,0 +1,55 @@
+TURBOJPEG_1.0
+{
+	global:
+		tjInitCompress;
+		tjCompress;
+		TJBUFSIZE;
+		tjInitDecompress;
+		tjDecompressHeader;
+		tjDecompress;
+		tjDestroy;
+		tjGetErrorStr;
+	local:
+		*;
+};
+
+TURBOJPEG_1.1
+{
+	global:
+		TJBUFSIZEYUV;
+		tjDecompressHeader2;
+		tjDecompressToYUV;
+		tjEncodeYUV;
+} TURBOJPEG_1.0;
+
+TURBOJPEG_1.2
+{
+	global:
+		tjAlloc;
+		tjBufSize;
+		tjBufSizeYUV;
+		tjCompress2;
+		tjDecompress2;
+		tjEncodeYUV2;
+		tjFree;
+		tjGetScalingFactors;
+		tjInitTransform;
+		tjTransform;
+		Java_org_libjpegturbo_turbojpeg_TJ_bufSize;
+		Java_org_libjpegturbo_turbojpeg_TJ_bufSizeYUV;
+		Java_org_libjpegturbo_turbojpeg_TJ_getScalingFactors;
+		Java_org_libjpegturbo_turbojpeg_TJCompressor_init;
+		Java_org_libjpegturbo_turbojpeg_TJCompressor_compress___3BIIII_3BIII;
+		Java_org_libjpegturbo_turbojpeg_TJCompressor_compress___3IIIII_3BIII;
+		Java_org_libjpegturbo_turbojpeg_TJCompressor_encodeYUV___3BIIII_3BII;
+		Java_org_libjpegturbo_turbojpeg_TJCompressor_encodeYUV___3IIIII_3BII;
+		Java_org_libjpegturbo_turbojpeg_TJCompressor_destroy;
+		Java_org_libjpegturbo_turbojpeg_TJDecompressor_init;
+		Java_org_libjpegturbo_turbojpeg_TJDecompressor_decompressHeader;
+		Java_org_libjpegturbo_turbojpeg_TJDecompressor_decompress___3BI_3BIIIII;
+		Java_org_libjpegturbo_turbojpeg_TJDecompressor_decompress___3BI_3IIIIII;
+		Java_org_libjpegturbo_turbojpeg_TJDecompressor_decompressToYUV;
+		Java_org_libjpegturbo_turbojpeg_TJDecompressor_destroy;		
+		Java_org_libjpegturbo_turbojpeg_TJTransformer_init;
+		Java_org_libjpegturbo_turbojpeg_TJTransformer_transform;
+} TURBOJPEG_1.1;

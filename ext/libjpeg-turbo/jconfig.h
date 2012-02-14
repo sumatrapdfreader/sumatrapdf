@@ -1,37 +1,43 @@
-/* Version ID for the JPEG library.
- * Might be useful for tests like "#if JPEG_LIB_VERSION >= 60".
- */
-#define JPEG_LIB_VERSION  80
- 
-#define C_ARITH_CODING_SUPPORTED  1
-#define D_ARITH_CODING_SUPPORTED  1
+/* jconfig.vc --- jconfig.h for Microsoft Visual C++ on Windows 95 or NT. */
+/* see jconfig.txt for explanations */
 
-#define HAVE_PROTOTYPES           1
-#define HAVE_UNSIGNED_CHAR        1
-#define HAVE_UNSIGNED_SHORT       1
-#undef __CHAR_UNSIGNED__
-#define HAVE_STDDEF_H             1
-#define HAVE_STDLIB_H             1
+#define JPEG_LIB_VERSION 80
+#define LIBJPEG_TURBO_VERSION 1.2.0
+#define C_ARITH_CODING_SUPPORTED
+#define D_ARITH_CODING_SUPPORTED
 
+#define HAVE_PROTOTYPES
+#define HAVE_UNSIGNED_CHAR
+#define HAVE_UNSIGNED_SHORT
+/* #define void char */
+/* #define const */
+#undef CHAR_IS_UNSIGNED
+#define HAVE_STDDEF_H
+#define HAVE_STDLIB_H
 #undef NEED_BSD_STRINGS
 #undef NEED_SYS_TYPES_H
+#undef NEED_FAR_POINTERS	/* we presume a 32-bit flat memory model */
 #undef NEED_SHORT_EXTERNAL_NAMES
-
 #undef INCOMPLETE_TYPES_BROKEN
 
-#define WITH_SIMD                 1
+/* Define "boolean" as unsigned char, not int, per Windows custom */
+#ifndef __RPCNDR_H__		/* don't conflict if rpcndr.h already read */
+typedef unsigned char boolean;
+#endif
+#define HAVE_BOOLEAN		/* prevent jmorecfg.h from redefining it */
 
-/* Define if shift is unsigned */
+/* Define "INT32" as int, not long, per Windows custom */
+#if !(defined(_BASETSD_H_) || defined(_BASETSD_H))   /* don't conflict if basetsd.h already read */
+typedef short INT16;
+typedef signed int INT32;
+#endif
+#define XMD_H                   /* prevent jmorecfg.h from redefining it */
+
+#ifdef JPEG_INTERNALS
+
 #undef RIGHT_SHIFT_IS_UNSIGNED
 
-/* Define to empty if `const' does not conform to ANSI C. */
-#undef const
+#endif /* JPEG_INTERNALS */
 
-/* Define to `__inline__' or `__inline' if that's what the C compiler
-   calls it, or to nothing if 'inline' is not supported under any name.  */
-#ifndef __cplusplus
-#undef inline
-#endif
-
-/* Define to `unsigned int' if <sys/types.h> does not define. */
-#undef size_t
+/* SumatraPDF: enable SIMD under Win32 */
+#define WITH_SIMD

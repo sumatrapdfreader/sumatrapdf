@@ -182,7 +182,7 @@ compute_reciprocal (UINT16 divisor, DCTELEM * dtbl)
     /* fq will be one bit too large to fit in DCTELEM, so adjust */
     fq >>= 1;
     r--;
-  } else if (fr <= (divisor / 2)) { /* fractional part is < 0.5 */
+  } else if (fr <= (divisor / 2U)) { /* fractional part is < 0.5 */
     c++;
   } else { /* fractional part is > 0.5 */
     fq++;

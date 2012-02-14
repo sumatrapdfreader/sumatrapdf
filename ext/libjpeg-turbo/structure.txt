@@ -1,6 +1,6 @@
 IJG JPEG LIBRARY:  SYSTEM ARCHITECTURE
 
-Copyright (C) 1991-2009, Thomas G. Lane, Guido Vollbeding.
+Copyright (C) 1991-2012, Thomas G. Lane, Guido Vollbeding.
 This file is part of the Independent JPEG Group's software.
 For conditions of distribution and use, see the accompanying README file.
 
@@ -385,8 +385,9 @@ objects:
 
 * Data destination manager: writes the output JPEG datastream to its final
   destination (e.g., a file).  The destination manager supplied with the
-  library knows how to write to a stdio stream; for other behaviors, the
-  surrounding application may provide its own destination manager.
+  library knows how to write to a stdio stream or to a memory buffer;
+  for other behaviors, the surrounding application may provide its own
+  destination manager.
 
 * Memory manager: allocates and releases memory, controls virtual arrays
   (with backing store management, where required).
@@ -504,9 +505,9 @@ objects:
 * Marker reading: decodes JPEG markers (except for RSTn).
 
 * Data source manager: supplies the input JPEG datastream.  The source
-  manager supplied with the library knows how to read from a stdio stream;
-  for other behaviors, the surrounding application may provide its own source
-  manager.
+  manager supplied with the library knows how to read from a stdio stream
+  or from a memory buffer;  for other behaviors, the surrounding application
+  may provide its own source manager.
 
 * Memory manager: same as for compression library.
 
@@ -586,8 +587,7 @@ as "((value) & 0xFF)" on signed-char machines and "((int) (value))" elsewhere.
 With these conventions, JSAMPLE values can be assumed to be >= 0.  This helps
 simplify correct rounding during downsampling, etc.  The JPEG standard's
 specification that sample values run from -128..127 is accommodated by
-subtracting 128 just as the sample value is copied into the source array for
-the DCT step (this will be an array of signed ints).  Similarly, during
+subtracting 128 from the sample value in the DCT step.  Similarly, during
 decompression the output of the IDCT step will be immediately shifted back to
 0..255.  (NB: different values are required when 12-bit samples are in use.
 The code is written in terms of MAXJSAMPLE and CENTERJSAMPLE, which will be

@@ -2,7 +2,7 @@
  * jmorecfg.h
  *
  * Copyright (C) 1991-1997, Thomas G. Lane.
- * Copyright (C) 2009, D. R. Commander.
+ * Copyright (C) 2009, 2011, D. R. Commander.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -313,22 +313,60 @@ typedef int boolean;
 #define RGB_BLUE	2	/* Offset of Blue */
 #define RGB_PIXELSIZE	3	/* JSAMPLEs per RGB scanline element */
 
-#define JPEG_NUMCS 12
+#define JPEG_NUMCS 16
+
+#define EXT_RGB_RED        0
+#define EXT_RGB_GREEN      1
+#define EXT_RGB_BLUE       2
+#define EXT_RGB_PIXELSIZE  3
+
+#define EXT_RGBX_RED       0
+#define EXT_RGBX_GREEN     1
+#define EXT_RGBX_BLUE      2
+#define EXT_RGBX_PIXELSIZE 4
+
+#define EXT_BGR_RED        2
+#define EXT_BGR_GREEN      1
+#define EXT_BGR_BLUE       0
+#define EXT_BGR_PIXELSIZE  3
+
+#define EXT_BGRX_RED       2
+#define EXT_BGRX_GREEN     1
+#define EXT_BGRX_BLUE      0
+#define EXT_BGRX_PIXELSIZE 4
+
+#define EXT_XBGR_RED       3
+#define EXT_XBGR_GREEN     2
+#define EXT_XBGR_BLUE      1
+#define EXT_XBGR_PIXELSIZE 4
+
+#define EXT_XRGB_RED       1
+#define EXT_XRGB_GREEN     2
+#define EXT_XRGB_BLUE      3
+#define EXT_XRGB_PIXELSIZE 4
 
 static const int rgb_red[JPEG_NUMCS] = {
-	-1, -1, RGB_RED, -1, -1, -1, 0, 0, 2, 2, 3, 1
+  -1, -1, RGB_RED, -1, -1, -1, EXT_RGB_RED, EXT_RGBX_RED,
+  EXT_BGR_RED, EXT_BGRX_RED, EXT_XBGR_RED, EXT_XRGB_RED,
+  EXT_RGBX_RED, EXT_BGRX_RED, EXT_XBGR_RED, EXT_XRGB_RED
 };
 
 static const int rgb_green[JPEG_NUMCS] = {
-	-1, -1, RGB_GREEN, -1, -1, -1, 1, 1, 1, 1, 2, 2
+  -1, -1, RGB_GREEN, -1, -1, -1, EXT_RGB_GREEN, EXT_RGBX_GREEN,
+  EXT_BGR_GREEN, EXT_BGRX_GREEN, EXT_XBGR_GREEN, EXT_XRGB_GREEN,
+  EXT_RGBX_GREEN, EXT_BGRX_GREEN, EXT_XBGR_GREEN, EXT_XRGB_GREEN
 };
 
 static const int rgb_blue[JPEG_NUMCS] = {
-	-1, -1, RGB_BLUE, -1, -1, -1, 2, 2, 0, 0, 1, 3
+  -1, -1, RGB_BLUE, -1, -1, -1, EXT_RGB_BLUE, EXT_RGBX_BLUE,
+  EXT_BGR_BLUE, EXT_BGRX_BLUE, EXT_XBGR_BLUE, EXT_XRGB_BLUE,
+  EXT_RGBX_BLUE, EXT_BGRX_BLUE, EXT_XBGR_BLUE, EXT_XRGB_BLUE
 };
 
 static const int rgb_pixelsize[JPEG_NUMCS] = {
-	-1, -1, RGB_PIXELSIZE, -1, -1, -1, 3, 4, 3, 4, 4, 4
+  -1, -1, RGB_PIXELSIZE, -1, -1, -1, EXT_RGB_PIXELSIZE, EXT_RGBX_PIXELSIZE,
+  EXT_BGR_PIXELSIZE, EXT_BGRX_PIXELSIZE, EXT_XBGR_PIXELSIZE, EXT_XRGB_PIXELSIZE,
+  EXT_RGBX_PIXELSIZE, EXT_BGRX_PIXELSIZE, EXT_XBGR_PIXELSIZE, EXT_XRGB_PIXELSIZE
 };
 
 /* Definitions for speed-related optimizations. */

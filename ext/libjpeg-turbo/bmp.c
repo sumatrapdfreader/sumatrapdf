@@ -1,370 +1,274 @@
-/* Copyright (C)2004 Landmark Graphics Corporation
- * Copyright (C)2005 Sun Microsystems, Inc.
+/*
+ * Copyright (C)2011 D. R. Commander.  All Rights Reserved.
  *
- * This library is free software and may be redistributed and/or modified under
- * the terms of the wxWindows Library License, Version 3.1 or (at your option)
- * any later version.  The full license is in the LICENSE.txt file included
- * with this distribution.
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * wxWindows Library License for more details.
-*/
+ * - Redistributions of source code must retain the above copyright notice,
+ *   this list of conditions and the following disclaimer.
+ * - Redistributions in binary form must reproduce the above copyright notice,
+ *   this list of conditions and the following disclaimer in the documentation
+ *   and/or other materials provided with the distribution.
+ * - Neither the name of the libjpeg-turbo Project nor the names of its
+ *   contributors may be used to endorse or promote products derived from this
+ *   software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS",
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
 
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <errno.h>
-#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#ifdef _WIN32
- #include <io.h>
-#else
- #include <unistd.h>
-#endif
-#include "./rrutil.h"
-#include "./bmp.h"
+#include <setjmp.h>
+#include <errno.h>
+#include "cdjpeg.h"
+#include <jpeglib.h>
+#include <jpegint.h>
+#include "tjutil.h"
+#include "bmp.h"
 
-#ifndef BI_BITFIELDS
-#define BI_BITFIELDS 3L
-#endif
-#ifndef BI_RGB
-#define BI_RGB 0L
-#endif
 
-#define BMPHDRSIZE 54
-typedef struct _bmphdr
+/* This duplicates the functionality of the VirtualGL bitmap library using
+   the components from cjpeg and djpeg */
+
+
+/* Error handling (based on example in example.c) */
+
+static char errStr[JMSG_LENGTH_MAX]="No error";
+
+struct my_error_mgr
 {
-	unsigned short bfType;
-	unsigned int bfSize;
-	unsigned short bfReserved1, bfReserved2;
-	unsigned int bfOffBits;
+	struct jpeg_error_mgr pub;
+	jmp_buf setjmp_buffer;
+};
+typedef struct my_error_mgr *my_error_ptr;
 
-	unsigned int biSize;
-	int biWidth, biHeight;
-	unsigned short biPlanes, biBitCount;
-	unsigned int biCompression, biSizeImage;
-	int biXPelsPerMeter, biYPelsPerMeter;
-	unsigned int biClrUsed, biClrImportant;
-} bmphdr;
-
-static const char *__bmperr="No error";
-
-static const int ps[BMPPIXELFORMATS]={3, 4, 3, 4, 4, 4};
-static const int roffset[BMPPIXELFORMATS]={0, 0, 2, 2, 3, 1};
-static const int goffset[BMPPIXELFORMATS]={1, 1, 1, 1, 2, 2};
-static const int boffset[BMPPIXELFORMATS]={2, 2, 0, 0, 1, 3};
-
-#define _throw(m) {__bmperr=m;  retcode=-1;  goto finally;}
-#define _unix(f) {if((f)==-1) _throw(strerror(errno));}
-#define _catch(f) {if((f)==-1) {retcode=-1;  goto finally;}}
-
-#define readme(fd, addr, size) \
-	if((bytesread=read(fd, addr, (size)))==-1) _throw(strerror(errno)); \
-	if(bytesread!=(size)) _throw("Read error");
-
-void pixelconvert(unsigned char *srcbuf, enum BMPPIXELFORMAT srcformat,
-	int srcpitch, unsigned char *dstbuf, enum BMPPIXELFORMAT dstformat, int dstpitch,
-	int w, int h, int flip)
+static void my_error_exit(j_common_ptr cinfo)
 {
-	unsigned char *srcptr, *srcptr0, *dstptr, *dstptr0;
-	int i, j;
-
-	srcptr=flip? &srcbuf[srcpitch*(h-1)]:srcbuf;
-	for(j=0, dstptr=dstbuf; j<h; j++,
-		srcptr+=flip? -srcpitch:srcpitch, dstptr+=dstpitch)
-	{
-		for(i=0, srcptr0=srcptr, dstptr0=dstptr; i<w; i++,
-			srcptr0+=ps[srcformat], dstptr0+=ps[dstformat])
-		{
-			dstptr0[roffset[dstformat]]=srcptr0[roffset[srcformat]];
-			dstptr0[goffset[dstformat]]=srcptr0[goffset[srcformat]];
-			dstptr0[boffset[dstformat]]=srcptr0[boffset[srcformat]];
-		}
-	}
+	my_error_ptr myerr=(my_error_ptr)cinfo->err;
+	(*cinfo->err->output_message)(cinfo);
+	longjmp(myerr->setjmp_buffer, 1);
 }
 
-int loadppm(int *fd, unsigned char **buf, int *w, int *h,
-	enum BMPPIXELFORMAT f, int align, int dstbottomup, int ascii)
+/* Based on output_message() in jerror.c */
+
+static void my_output_message(j_common_ptr cinfo)
 {
-	FILE *fs=NULL;  int retcode=0, scalefactor, dstpitch;
-	unsigned char *tempbuf=NULL;  char temps[255], temps2[255];
-	int numread=0, totalread=0, pixel[3], i, j;
+	(*cinfo->err->format_message)(cinfo, errStr);
+}
 
-	if((fs=fdopen(*fd, "r"))==NULL) _throw(strerror(errno));
+#define _throw(m) {snprintf(errStr, JMSG_LENGTH_MAX, "%s", m);  \
+	retval=-1;  goto bailout;}
+#define _throwunix(m) {snprintf(errStr, JMSG_LENGTH_MAX, "%s\n%s", m,  \
+	strerror(errno));  retval=-1;  goto bailout;}
 
-	do
+
+static void pixelconvert(unsigned char *srcbuf, int srcpf, int srcbottomup,
+	unsigned char *dstbuf, int dstpf, int dstbottomup, int w, int h)
+{
+	unsigned char *srcptr=srcbuf, *srcptr2;
+	int srcps=tjPixelSize[srcpf];
+	int srcstride=srcbottomup? -w*srcps:w*srcps;
+	unsigned char *dstptr=dstbuf, *dstptr2;
+	int dstps=tjPixelSize[dstpf];
+	int dststride=dstbottomup? -w*dstps:w*dstps;
+	int row, col;
+
+	if(srcbottomup) srcptr=&srcbuf[w*srcps*(h-1)];
+	if(dstbottomup) dstptr=&dstbuf[w*dstps*(h-1)];
+	for(row=0; row<h; row++, srcptr+=srcstride, dstptr+=dststride)
 	{
-		if(!fgets(temps, 255, fs)) _throw("Read error");
-		if(strlen(temps)==0 || temps[0]=='\n') continue;
-		if(sscanf(temps, "%s", temps2)==1 && temps2[1]=='#') continue;
-		switch(totalread)
+		for(col=0, srcptr2=srcptr, dstptr2=dstptr; col<w; col++, srcptr2+=srcps,
+			dstptr2+=dstps)
 		{
-			case 0:
-				if((numread=sscanf(temps, "%d %d %d", w, h, &scalefactor))==EOF)
-					_throw("Read error");
-				break;
-			case 1:
-				if((numread=sscanf(temps, "%d %d", h, &scalefactor))==EOF)
-					_throw("Read error");
-				break;
-			case 2:
-				if((numread=sscanf(temps, "%d", &scalefactor))==EOF)
-					_throw("Read error");
-				break;
-		}
-		totalread+=numread;
-	} while(totalread<3);
-	if((*w)<1 || (*h)<1 || scalefactor<1) _throw("Corrupt PPM header");
-
-	dstpitch=(((*w)*ps[f])+(align-1))&(~(align-1));
-	if((*buf=(unsigned char *)malloc(dstpitch*(*h)))==NULL)
-		_throw("Memory allocation error");
-	if(ascii)
-	{
-		for(j=0; j<*h; j++)
-		{
-			for(i=0; i<*w; i++)
-			{
-				if(fscanf(fs, "%d%d%d", &pixel[0], &pixel[1], &pixel[2])!=3)
-					_throw("Read error");
-				(*buf)[j*dstpitch+i*ps[f]+roffset[f]]=(unsigned char)(pixel[0]*255/scalefactor);
-				(*buf)[j*dstpitch+i*ps[f]+goffset[f]]=(unsigned char)(pixel[1]*255/scalefactor);
-				(*buf)[j*dstpitch+i*ps[f]+boffset[f]]=(unsigned char)(pixel[2]*255/scalefactor);
-			}
+			dstptr2[tjRedOffset[dstpf]]=srcptr2[tjRedOffset[srcpf]];
+			dstptr2[tjGreenOffset[dstpf]]=srcptr2[tjGreenOffset[srcpf]];
+			dstptr2[tjBlueOffset[dstpf]]=srcptr2[tjBlueOffset[srcpf]];
 		}
 	}
-	else
-	{
-		if(scalefactor!=255)
-			_throw("Binary PPMs must have 8-bit components");
-		if((tempbuf=(unsigned char *)malloc((*w)*(*h)*3))==NULL)
-			_throw("Memory allocation error");
-		if(fread(tempbuf, (*w)*(*h)*3, 1, fs)!=1) _throw("Read error");
-		pixelconvert(tempbuf, BMP_RGB, (*w)*3, *buf, f, dstpitch, *w, *h, dstbottomup);
-	}
-
-	finally:
-	if(fs) {fclose(fs);  *fd=-1;}
-	if(tempbuf) free(tempbuf);
-	return retcode;
 }
 
 
 int loadbmp(char *filename, unsigned char **buf, int *w, int *h, 
-	enum BMPPIXELFORMAT f, int align, int dstbottomup)
+	int dstpf, int bottomup)
 {
-	int fd=-1, bytesread, srcpitch, srcbottomup=1, srcps, dstpitch,
-		retcode=0;
-	unsigned char *tempbuf=NULL;
-	bmphdr bh;  int flags=O_RDONLY;
+	int retval=0, dstps, srcpf, tempc;
+	struct jpeg_compress_struct cinfo;
+	struct my_error_mgr jerr;
+	cjpeg_source_ptr src;
+	FILE *file=NULL;
 
-	dstbottomup=dstbottomup? 1:0;
-	#ifdef _WIN32
-	flags|=O_BINARY;
-	#endif
-	if(!filename || !buf || !w || !h || f<0 || f>BMPPIXELFORMATS-1 || align<1)
-		_throw("invalid argument to loadbmp()");
-	if((align&(align-1))!=0)
-		_throw("Alignment must be a power of 2");
-	_unix(fd=open(filename, flags));
+	memset(&cinfo, 0, sizeof(struct jpeg_compress_struct));
 
-	readme(fd, &bh.bfType, sizeof(unsigned short));
-	if(!littleendian())	bh.bfType=byteswap16(bh.bfType);
+	if(!filename || !buf || !w || !h || dstpf<0 || dstpf>=TJ_NUMPF)
+		_throw("loadbmp(): Invalid argument");
 
-	if(bh.bfType==0x3650)
+	if((file=fopen(filename, "rb"))==NULL)
+		_throwunix("loadbmp(): Cannot open input file");
+
+	cinfo.err=jpeg_std_error(&jerr.pub);
+	jerr.pub.error_exit=my_error_exit;
+	jerr.pub.output_message=my_output_message;
+
+	if(setjmp(jerr.setjmp_buffer))
 	{
-		_catch(loadppm(&fd, buf, w, h, f, align, dstbottomup, 0));
-		goto finally;
-	}
-	if(bh.bfType==0x3350)
-	{
-		_catch(loadppm(&fd, buf, w, h, f, align, dstbottomup, 1));
-		goto finally;
+		/* If we get here, the JPEG code has signaled an error. */
+		retval=-1;  goto bailout;
 	}
 
-	readme(fd, &bh.bfSize, sizeof(unsigned int));
-	readme(fd, &bh.bfReserved1, sizeof(unsigned short));
-	readme(fd, &bh.bfReserved2, sizeof(unsigned short));
-	readme(fd, &bh.bfOffBits, sizeof(unsigned int));
-	readme(fd, &bh.biSize, sizeof(unsigned int));
-	readme(fd, &bh.biWidth, sizeof(int));
-	readme(fd, &bh.biHeight, sizeof(int));
-	readme(fd, &bh.biPlanes, sizeof(unsigned short));
-	readme(fd, &bh.biBitCount, sizeof(unsigned short));
-	readme(fd, &bh.biCompression, sizeof(unsigned int));
-	readme(fd, &bh.biSizeImage, sizeof(unsigned int));
-	readme(fd, &bh.biXPelsPerMeter, sizeof(int));
-	readme(fd, &bh.biYPelsPerMeter, sizeof(int));
-	readme(fd, &bh.biClrUsed, sizeof(unsigned int));
-	readme(fd, &bh.biClrImportant, sizeof(unsigned int));
+	jpeg_create_compress(&cinfo);
+	if((tempc=getc(file))<0 || ungetc(tempc, file)==EOF)
+		_throwunix("loadbmp(): Could not read input file")
+	else if(tempc==EOF) _throw("loadbmp(): Input file contains no data");
 
-	if(!littleendian())
+	if(tempc=='B')
 	{
-		bh.bfSize=byteswap(bh.bfSize);
-		bh.bfOffBits=byteswap(bh.bfOffBits);
-		bh.biSize=byteswap(bh.biSize);
-		bh.biWidth=byteswap(bh.biWidth);
-		bh.biHeight=byteswap(bh.biHeight);
-		bh.biPlanes=byteswap16(bh.biPlanes);
-		bh.biBitCount=byteswap16(bh.biBitCount);
-		bh.biCompression=byteswap(bh.biCompression);
-		bh.biSizeImage=byteswap(bh.biSizeImage);
-		bh.biXPelsPerMeter=byteswap(bh.biXPelsPerMeter);
-		bh.biYPelsPerMeter=byteswap(bh.biYPelsPerMeter);
-		bh.biClrUsed=byteswap(bh.biClrUsed);
-		bh.biClrImportant=byteswap(bh.biClrImportant);
+		if((src=jinit_read_bmp(&cinfo))==NULL)
+			_throw("loadbmp(): Could not initialize bitmap loader");
 	}
+	else if(tempc=='P')
+	{
+		if((src=jinit_read_ppm(&cinfo))==NULL)
+			_throw("loadbmp(): Could not initialize bitmap loader");
+	}
+	else _throw("loadbmp(): Unsupported file type");
 
-	if(bh.bfType!=0x4d42 || bh.bfOffBits<BMPHDRSIZE
-	|| bh.biWidth<1 || bh.biHeight==0)
-		_throw("Corrupt bitmap header");
-	if((bh.biBitCount!=24 && bh.biBitCount!=32) || bh.biCompression!=BI_RGB)
-		_throw("Only uncompessed RGB bitmaps are supported");
+	src->input_file=file;
+	(*src->start_input)(&cinfo, src);
+	(*cinfo.mem->realize_virt_arrays)((j_common_ptr)&cinfo);
 
-	*w=bh.biWidth;  *h=bh.biHeight;  srcps=bh.biBitCount/8;
-	if(*h<0) {*h=-(*h);  srcbottomup=0;}
-	srcpitch=(((*w)*srcps)+3)&(~3);
-	dstpitch=(((*w)*ps[f])+(align-1))&(~(align-1));
+	*w=cinfo.image_width;  *h=cinfo.image_height;
 
-	if(srcpitch*(*h)+bh.bfOffBits!=bh.bfSize) _throw("Corrupt bitmap header");
-	if((tempbuf=(unsigned char *)malloc(srcpitch*(*h)))==NULL
-	|| (*buf=(unsigned char *)malloc(dstpitch*(*h)))==NULL)
-		_throw("Memory allocation error");
-	if(lseek(fd, (long)bh.bfOffBits, SEEK_SET)!=(long)bh.bfOffBits)
-		_throw(strerror(errno));
-	_unix(bytesread=read(fd, tempbuf, srcpitch*(*h)));
-	if(bytesread!=srcpitch*(*h)) _throw("Read error");
+	if(cinfo.input_components==1 && cinfo.in_color_space==JCS_RGB)
+		srcpf=TJPF_GRAY;
+	else srcpf=TJPF_RGB;
 
-	pixelconvert(tempbuf, BMP_BGR, srcpitch, *buf, f, dstpitch, *w, *h, 
-		srcbottomup!=dstbottomup);
+	dstps=tjPixelSize[dstpf];
+	if((*buf=(unsigned char *)malloc((*w)*(*h)*dstps))==NULL)
+		_throw("loadbmp(): Memory allocation failure");
 
-	finally:
-	if(tempbuf) free(tempbuf);
-	if(fd!=-1) close(fd);
-	return retcode;
+	while(cinfo.next_scanline<cinfo.image_height)
+	{
+		int i, nlines=(*src->get_pixel_rows)(&cinfo, src);
+		for(i=0; i<nlines; i++)
+		{
+			unsigned char *outbuf;  int row;
+			row=cinfo.next_scanline+i;
+			if(bottomup) outbuf=&(*buf)[((*h)-row-1)*(*w)*dstps];
+			else outbuf=&(*buf)[row*(*w)*dstps];
+			pixelconvert(src->buffer[i], srcpf, 0, outbuf, dstpf, bottomup, *w,
+				nlines);
+		}
+		cinfo.next_scanline+=nlines;
+  }
+
+	(*src->finish_input)(&cinfo, src);
+
+	bailout:
+	jpeg_destroy_compress(&cinfo);
+	if(file) fclose(file);
+	if(retval<0 && buf && *buf) {free(*buf);  *buf=NULL;}
+	return retval;
 }
 
-#define writeme(fd, addr, size) \
-	if((byteswritten=write(fd, addr, (size)))==-1) _throw(strerror(errno)); \
-	if(byteswritten!=(size)) _throw("Write error");
 
-int saveppm(char *filename, unsigned char *buf, int w, int h,
-	enum BMPPIXELFORMAT f, int srcpitch, int srcbottomup)
+int savebmp(char *filename, unsigned char *buf, int w, int h, int srcpf,
+	int bottomup)
 {
-	FILE *fs=NULL;  int retcode=0;
-	unsigned char *tempbuf=NULL;
+	int retval=0, srcps, dstpf;
+	struct jpeg_decompress_struct dinfo;
+	struct my_error_mgr jerr;
+	djpeg_dest_ptr dst;
+	FILE *file=NULL;
+	char *ptr=NULL;
 
-	if((fs=fopen(filename, "wb"))==NULL) _throw(strerror(errno));
-	if(fprintf(fs, "P6\n")<1) _throw("Write error");
-	if(fprintf(fs, "%d %d\n", w, h)<1) _throw("Write error");
-	if(fprintf(fs, "255\n")<1) _throw("Write error");
+	memset(&dinfo, 0, sizeof(struct jpeg_decompress_struct));
 
-	if((tempbuf=(unsigned char *)malloc(w*h*3))==NULL)
-		_throw("Memory allocation error");
+	if(!filename || !buf || w<1 || h<1 || srcpf<0 || srcpf>=TJ_NUMPF)
+		_throw("savebmp(): Invalid argument");
 
-	pixelconvert(buf, f, srcpitch, tempbuf, BMP_RGB, w*3, w, h, 
-		srcbottomup);
+	if((file=fopen(filename, "wb"))==NULL)
+		_throwunix("savebmp(): Cannot open output file");
 
-	if((fwrite(tempbuf, w*h*3, 1, fs))!=1) _throw("Write error");
+	dinfo.err=jpeg_std_error(&jerr.pub);
+	jerr.pub.error_exit=my_error_exit;
+	jerr.pub.output_message=my_output_message;
 
-	finally:
-	if(tempbuf) free(tempbuf);
-	if(fs) fclose(fs);
-	return retcode;
-}
-
-int savebmp(char *filename, unsigned char *buf, int w, int h,
-	enum BMPPIXELFORMAT f, int srcpitch, int srcbottomup)
-{
-	int fd=-1, byteswritten, dstpitch, retcode=0;
-	int flags=O_RDWR|O_CREAT|O_TRUNC;
-	unsigned char *tempbuf=NULL;  char *temp;
-	bmphdr bh;  int mode;
-
-	#ifdef _WIN32
-	flags|=O_BINARY;  mode=_S_IREAD|_S_IWRITE;
-	#else
-	mode=S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH;
-	#endif
-	if(!filename || !buf || w<1 || h<1 || f<0 || f>BMPPIXELFORMATS-1 || srcpitch<0)
-		_throw("bad argument to savebmp()");
-
-	if(srcpitch==0) srcpitch=w*ps[f];
-
-	if((temp=strrchr(filename, '.'))!=NULL)
+	if(setjmp(jerr.setjmp_buffer))
 	{
-		if(!stricmp(temp, ".ppm"))
-			return saveppm(filename, buf, w, h, f, srcpitch, srcbottomup);
+		/* If we get here, the JPEG code has signaled an error. */
+		retval=-1;  goto bailout;
 	}
 
-	_unix(fd=open(filename, flags, mode));
-	dstpitch=((w*3)+3)&(~3);
-
-	bh.bfType=0x4d42;
-	bh.bfSize=BMPHDRSIZE+dstpitch*h;
-	bh.bfReserved1=0;  bh.bfReserved2=0;
-	bh.bfOffBits=BMPHDRSIZE;
-	bh.biSize=40;
-	bh.biWidth=w;  bh.biHeight=h;
-	bh.biPlanes=0;  bh.biBitCount=24;
-	bh.biCompression=BI_RGB;  bh.biSizeImage=0;
-	bh.biXPelsPerMeter=0;  bh.biYPelsPerMeter=0;
-	bh.biClrUsed=0;  bh.biClrImportant=0;
-
-	if(!littleendian())
+	jpeg_create_decompress(&dinfo);
+	if(srcpf==TJPF_GRAY)
 	{
-		bh.bfType=byteswap16(bh.bfType);
-		bh.bfSize=byteswap(bh.bfSize);
-		bh.bfOffBits=byteswap(bh.bfOffBits);
-		bh.biSize=byteswap(bh.biSize);
-		bh.biWidth=byteswap(bh.biWidth);
-		bh.biHeight=byteswap(bh.biHeight);
-		bh.biPlanes=byteswap16(bh.biPlanes);
-		bh.biBitCount=byteswap16(bh.biBitCount);
-		bh.biCompression=byteswap(bh.biCompression);
-		bh.biSizeImage=byteswap(bh.biSizeImage);
-		bh.biXPelsPerMeter=byteswap(bh.biXPelsPerMeter);
-		bh.biYPelsPerMeter=byteswap(bh.biYPelsPerMeter);
-		bh.biClrUsed=byteswap(bh.biClrUsed);
-		bh.biClrImportant=byteswap(bh.biClrImportant);
+		dinfo.out_color_components=dinfo.output_components=1;
+		dinfo.out_color_space=JCS_GRAYSCALE;
+	}
+	else
+	{
+		dinfo.out_color_components=dinfo.output_components=3;
+		dinfo.out_color_space=JCS_RGB;
+	}
+	dinfo.image_width=w;  dinfo.image_height=h;
+	dinfo.global_state=DSTATE_READY;
+	dinfo.scale_num=dinfo.scale_denom=1;
+
+	ptr=strrchr(filename, '.');
+	if(ptr && !strcasecmp(ptr, ".bmp"))
+	{
+		if((dst=jinit_write_bmp(&dinfo, 0))==NULL)
+			_throw("savebmp(): Could not initialize bitmap writer");
+	}
+	else
+	{
+		if((dst=jinit_write_ppm(&dinfo))==NULL)
+			_throw("savebmp(): Could not initialize PPM writer");
 	}
 
-	writeme(fd, &bh.bfType, sizeof(unsigned short));
-	writeme(fd, &bh.bfSize, sizeof(unsigned int));
-	writeme(fd, &bh.bfReserved1, sizeof(unsigned short));
-	writeme(fd, &bh.bfReserved2, sizeof(unsigned short));
-	writeme(fd, &bh.bfOffBits, sizeof(unsigned int));
-	writeme(fd, &bh.biSize, sizeof(unsigned int));
-	writeme(fd, &bh.biWidth, sizeof(int));
-	writeme(fd, &bh.biHeight, sizeof(int));
-	writeme(fd, &bh.biPlanes, sizeof(unsigned short));
-	writeme(fd, &bh.biBitCount, sizeof(unsigned short));
-	writeme(fd, &bh.biCompression, sizeof(unsigned int));
-	writeme(fd, &bh.biSizeImage, sizeof(unsigned int));
-	writeme(fd, &bh.biXPelsPerMeter, sizeof(int));
-	writeme(fd, &bh.biYPelsPerMeter, sizeof(int));
-	writeme(fd, &bh.biClrUsed, sizeof(unsigned int));
-	writeme(fd, &bh.biClrImportant, sizeof(unsigned int));
+  dst->output_file=file;
+	(*dst->start_output)(&dinfo, dst);
+	(*dinfo.mem->realize_virt_arrays)((j_common_ptr)&dinfo);
 
-	if((tempbuf=(unsigned char *)malloc(dstpitch*h))==NULL)
-		_throw("Memory allocation error");
+	if(srcpf==TJPF_GRAY) dstpf=srcpf;
+	else dstpf=TJPF_RGB;
+	srcps=tjPixelSize[srcpf];
 
-	pixelconvert(buf, f, srcpitch, tempbuf, BMP_BGR, dstpitch, w, h, 
-		!srcbottomup);
+	while(dinfo.output_scanline<dinfo.output_height)
+	{
+		int i, nlines=dst->buffer_height;
+		for(i=0; i<nlines; i++)
+		{
+			unsigned char *inbuf;  int row;
+			row=dinfo.output_scanline+i;
+			if(bottomup) inbuf=&buf[(h-row-1)*w*srcps];
+			else inbuf=&buf[row*w*srcps];
+			pixelconvert(inbuf, srcpf, bottomup, dst->buffer[i], dstpf, 0, w,
+				nlines);
+		}
+		(*dst->put_pixel_rows)(&dinfo, dst, nlines);
+		dinfo.output_scanline+=nlines;
+  }
 
-	if((byteswritten=write(fd, tempbuf, dstpitch*h))!=dstpitch*h)
-		_throw(strerror(errno));
+	(*dst->finish_output)(&dinfo, dst);
 
-	finally:
-	if(tempbuf) free(tempbuf);
-	if(fd!=-1) close(fd);
-	return retcode;
+	bailout:
+	jpeg_destroy_decompress(&dinfo);
+	if(file) fclose(file);
+	return retval;
 }
 
 const char *bmpgeterr(void)
 {
-	return __bmperr;
+	return errStr;
 }

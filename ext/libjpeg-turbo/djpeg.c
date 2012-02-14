@@ -2,7 +2,7 @@
  * djpeg.c
  *
  * Copyright (C) 1991-1997, Thomas G. Lane.
- * Copyright (C) 2010, D. R. Commander.
+ * Copyright (C) 2010-2011, D. R. Commander.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -103,6 +103,7 @@ usage (void)
   fprintf(stderr, "  -colors N      Reduce image to no more than N colors\n");
   fprintf(stderr, "  -fast          Fast, low-quality processing\n");
   fprintf(stderr, "  -grayscale     Force grayscale output\n");
+  fprintf(stderr, "  -rgb           Force RGB output\n");
 #ifdef IDCT_SCALING_SUPPORTED
   fprintf(stderr, "  -scale M/N     Scale output image by fraction M/N, eg, 1/8\n");
 #endif
@@ -244,9 +245,9 @@ parse_switches (j_decompress_ptr cinfo, int argc, char **argv,
       if (! printed_version) {
 	fprintf(stderr, "%s version %s (build %s)\n",
 		PACKAGE_NAME, VERSION, BUILD);
-	fprintf(stderr, "%s\n\n", LJTCOPYRIGHT);
-	fprintf(stderr, "Based on Independent JPEG Group's libjpeg, version %s\n%s\n\n",
-		JVERSION, JCOPYRIGHT);
+	fprintf(stderr, "%s\n\n", JCOPYRIGHT);
+	fprintf(stderr, "Emulating The Independent JPEG Group's libjpeg, version %s\n\n",
+		JVERSION);
 	printed_version = TRUE;
       }
       cinfo->err->trace_level++;
@@ -267,6 +268,10 @@ parse_switches (j_decompress_ptr cinfo, int argc, char **argv,
     } else if (keymatch(arg, "grayscale", 2) || keymatch(arg, "greyscale",2)) {
       /* Force monochrome output. */
       cinfo->out_color_space = JCS_GRAYSCALE;
+
+    } else if (keymatch(arg, "rgb", 2)) {
+      /* Force RGB output. */
+      cinfo->out_color_space = JCS_RGB;
 
     } else if (keymatch(arg, "map", 3)) {
       /* Quantize to a color map taken from an input file. */

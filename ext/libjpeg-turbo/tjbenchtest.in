@@ -1,0 +1,162 @@
+#!/bin/bash
+
+set -u
+set -e
+trap onexit INT
+trap onexit TERM
+trap onexit EXIT
+
+onexit()
+{
+	if [ -d $OUTDIR ]; then
+		rm -rf $OUTDIR
+	fi
+}
+
+runme()
+{
+	echo \*\*\* $*
+	$*
+}
+
+EXT=bmp
+IMAGES="vgl_5674_0098.${EXT} vgl_6434_0018a.${EXT} vgl_6548_0026a.${EXT} nightshot_iso_100.${EXT}"
+IMGDIR=@srcdir@/testimages
+OUTDIR=__tjbenchtest_output
+EXEDIR=.
+BMPARG=
+if [ "$EXT" = "bmp" ]; then BMPARG=-bmp; fi
+
+if [ -d $OUTDIR ]; then
+	rm -rf $OUTDIR
+fi
+mkdir -p $OUTDIR
+
+exec >$EXEDIR/tjbenchtest.log
+
+# Standard tests
+for image in $IMAGES; do
+
+	cp $IMGDIR/$image $OUTDIR
+	basename=`basename $image .${EXT}`
+	$EXEDIR/cjpeg -quality 95 -dct fast -grayscale $IMGDIR/${basename}.${EXT} >$OUTDIR/${basename}_GRAY_cjpeg.jpg
+	$EXEDIR/cjpeg -quality 95 -dct fast -sample 2x2 $IMGDIR/${basename}.${EXT} >$OUTDIR/${basename}_420_cjpeg.jpg
+	$EXEDIR/cjpeg -quality 95 -dct fast -sample 2x1 $IMGDIR/${basename}.${EXT} >$OUTDIR/${basename}_422_cjpeg.jpg
+	$EXEDIR/cjpeg -quality 95 -dct fast -sample 1x1 $IMGDIR/${basename}.${EXT} >$OUTDIR/${basename}_444_cjpeg.jpg
+	for samp in GRAY 420 422 444; do
+		$EXEDIR/djpeg -rgb $BMPARG $OUTDIR/${basename}_${samp}_cjpeg.jpg >$OUTDIR/${basename}_${samp}_djpeg.${EXT}
+	done
+	for samp in 420 422; do
+		$EXEDIR/djpeg -nosmooth $BMPARG $OUTDIR/${basename}_${samp}_cjpeg.jpg >$OUTDIR/${basename}_${samp}_djpeg_nosmooth.${EXT}
+	done
+
+	# Compression
+	runme $EXEDIR/tjbench $OUTDIR/$image 95 -rgb -quiet -benchtime 0.01
+	for s in GRAY 420 422 444; do
+		runme cmp $OUTDIR/${basename}_${s}_Q95.jpg $OUTDIR/${basename}_${s}_cjpeg.jpg
+	done
+
+	# Tiled compression & decompression
+	runme $EXEDIR/tjbench $OUTDIR/$image 95 -rgb -tile -quiet -benchtime 0.01
+	for samp in GRAY 444; do
+		for i in $OUTDIR/${basename}_${samp}_Q95_[0-9]*[0-9]x[0-9]*[0-9].${EXT} \
+			$OUTDIR/${basename}_${samp}_Q95_full.${EXT}; do
+			runme cmp $i $OUTDIR/${basename}_${samp}_djpeg.${EXT}
+			rm $i
+		done
+	done
+	runme $EXEDIR/tjbench $OUTDIR/$image 95 -rgb -tile -quiet -benchtime 0.01 -fastupsample
+	for samp in 420 422; do
+		for i in $OUTDIR/${basename}_${samp}_Q95_[0-9]*[0-9]x[0-9]*[0-9].${EXT} \
+			$OUTDIR/${basename}_${samp}_Q95_full.${EXT}; do
+			runme cmp $i $OUTDIR/${basename}_${samp}_djpeg_nosmooth.${EXT}
+			rm $i
+		done
+	done
+
+	# Tiled decompression
+	for samp in GRAY 444; do
+		runme $EXEDIR/tjbench $OUTDIR/${basename}_${samp}_Q95.jpg $BMPARG -tile -quiet -benchtime 0.01
+		for i in $OUTDIR/${basename}_${samp}_Q95_[0-9]*[0-9]x[0-9]*[0-9].${EXT} \
+			$OUTDIR/${basename}_${samp}_Q95_full.${EXT}; do
+			runme cmp $i $OUTDIR/${basename}_${samp}_djpeg.${EXT}
+			rm $i
+		done
+	done
+	for samp in 420 422; do
+		runme $EXEDIR/tjbench $OUTDIR/${basename}_${samp}_Q95.jpg $BMPARG -tile -quiet -benchtime 0.01 -fastupsample
+		for i in $OUTDIR/${basename}_${samp}_Q95_[0-9]*[0-9]x[0-9]*[0-9].${EXT} \
+			$OUTDIR/${basename}_${samp}_Q95_full.${EXT}; do
+			runme cmp $i $OUTDIR/${basename}_${samp}_djpeg_nosmooth.${EXT}
+			rm $i
+		done
+	done
+
+	# Scaled decompression
+	for scale in 2 4 8; do
+		for samp in GRAY 420 422 444; do
+			$EXEDIR/djpeg -rgb -scale 1/${scale} $BMPARG $OUTDIR/${basename}_${samp}_cjpeg.jpg >$OUTDIR/${basename}_${samp}_1_${scale}_djpeg.${EXT}
+			runme $EXEDIR/tjbench $OUTDIR/${basename}_${samp}_Q95.jpg $BMPARG -scale 1/${scale} -quiet -benchtime 0.01
+			runme cmp $OUTDIR/${basename}_${samp}_Q95_1_${scale}.${EXT} $OUTDIR/${basename}_${samp}_1_${scale}_djpeg.${EXT}
+			rm $OUTDIR/${basename}_${samp}_Q95_1_${scale}.${EXT}
+		done
+	done
+
+	# Transforms
+	for samp in GRAY 420 422 444; do
+		$EXEDIR/jpegtran -flip horizontal -trim $OUTDIR/${basename}_${samp}_Q95.jpg >$OUTDIR/${basename}_${samp}_hflip_jpegtran.jpg
+		$EXEDIR/jpegtran -flip vertical -trim $OUTDIR/${basename}_${samp}_Q95.jpg >$OUTDIR/${basename}_${samp}_vflip_jpegtran.jpg
+		$EXEDIR/jpegtran -transpose -trim $OUTDIR/${basename}_${samp}_Q95.jpg >$OUTDIR/${basename}_${samp}_transpose_jpegtran.jpg
+		$EXEDIR/jpegtran -transverse -trim $OUTDIR/${basename}_${samp}_Q95.jpg >$OUTDIR/${basename}_${samp}_transverse_jpegtran.jpg
+		$EXEDIR/jpegtran -rotate 90 -trim $OUTDIR/${basename}_${samp}_Q95.jpg >$OUTDIR/${basename}_${samp}_rot90_jpegtran.jpg
+		$EXEDIR/jpegtran -rotate 180 -trim $OUTDIR/${basename}_${samp}_Q95.jpg >$OUTDIR/${basename}_${samp}_rot180_jpegtran.jpg
+		$EXEDIR/jpegtran -rotate 270 -trim $OUTDIR/${basename}_${samp}_Q95.jpg >$OUTDIR/${basename}_${samp}_rot270_jpegtran.jpg
+	done
+	for xform in hflip vflip transpose transverse rot90 rot180 rot270; do
+		for samp in GRAY 444; do
+			$EXEDIR/djpeg -rgb $BMPARG $OUTDIR/${basename}_${samp}_${xform}_jpegtran.jpg >$OUTDIR/${basename}_${samp}_${xform}_jpegtran.${EXT}
+			runme $EXEDIR/tjbench $OUTDIR/${basename}_${samp}_Q95.jpg $BMPARG -$xform -tile -quiet -benchtime 0.01
+			for i in $OUTDIR/${basename}_${samp}_Q95_[0-9]*[0-9]x[0-9]*[0-9].${EXT} \
+				$OUTDIR/${basename}_${samp}_Q95_full.${EXT}; do
+				runme cmp $i $OUTDIR/${basename}_${samp}_${xform}_jpegtran.${EXT}
+				rm $i
+			done
+		done
+		for samp in 420 422; do
+			$EXEDIR/djpeg -nosmooth -rgb $BMPARG $OUTDIR/${basename}_${samp}_${xform}_jpegtran.jpg >$OUTDIR/${basename}_${samp}_${xform}_jpegtran.${EXT}
+			runme $EXEDIR/tjbench $OUTDIR/${basename}_${samp}_Q95.jpg $BMPARG -$xform -tile -quiet -benchtime 0.01 -fastupsample
+			for i in $OUTDIR/${basename}_${samp}_Q95_[0-9]*[0-9]x[0-9]*[0-9].${EXT} \
+				$OUTDIR/${basename}_${samp}_Q95_full.${EXT}; do
+				runme cmp $i $OUTDIR/${basename}_${samp}_${xform}_jpegtran.${EXT}
+				rm $i
+			done
+		done
+	done
+
+	# Grayscale transform
+	for xform in hflip vflip transpose transverse rot90 rot180 rot270; do
+		for samp in GRAY 444 422 420; do
+			runme $EXEDIR/tjbench $OUTDIR/${basename}_${samp}_Q95.jpg $BMPARG -$xform -tile -quiet -benchtime 0.01 -grayscale
+			for i in $OUTDIR/${basename}_${samp}_Q95_[0-9]*[0-9]x[0-9]*[0-9].${EXT} \
+				$OUTDIR/${basename}_${samp}_Q95_full.${EXT}; do
+				runme cmp $i $OUTDIR/${basename}_GRAY_${xform}_jpegtran.${EXT}
+				rm $i
+			done
+		done
+	done
+
+	# Transforms with scaling
+	for xform in hflip vflip transpose transverse rot90 rot180 rot270; do
+		for samp in GRAY 444 422 420; do
+			for scale in 2 4 8; do
+				$EXEDIR/djpeg -rgb -scale 1/${scale} $BMPARG $OUTDIR/${basename}_${samp}_${xform}_jpegtran.jpg >$OUTDIR/${basename}_${samp}_${xform}_1_${scale}_jpegtran.${EXT}
+				runme $EXEDIR/tjbench $OUTDIR/${basename}_${samp}_Q95.jpg $BMPARG -$xform -scale 1/${scale} -quiet -benchtime 0.01
+				runme cmp $OUTDIR/${basename}_${samp}_Q95_1_${scale}.${EXT} $OUTDIR/${basename}_${samp}_${xform}_1_${scale}_jpegtran.${EXT}
+				rm $OUTDIR/${basename}_${samp}_Q95_1_${scale}.${EXT}
+			done
+		done
+	done
+
+done
+
+echo SUCCESS!

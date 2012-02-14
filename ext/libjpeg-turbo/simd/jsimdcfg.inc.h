@@ -32,8 +32,39 @@ definev(DCTSIZE2)
 definev(RGB_RED)
 definev(RGB_GREEN)
 definev(RGB_BLUE)
-
 definev(RGB_PIXELSIZE)
+
+definev(EXT_RGB_RED)
+definev(EXT_RGB_GREEN)
+definev(EXT_RGB_BLUE)
+definev(EXT_RGB_PIXELSIZE)
+
+definev(EXT_RGBX_RED)
+definev(EXT_RGBX_GREEN)
+definev(EXT_RGBX_BLUE)
+definev(EXT_RGBX_PIXELSIZE)
+
+definev(EXT_BGR_RED)
+definev(EXT_BGR_GREEN)
+definev(EXT_BGR_BLUE)
+definev(EXT_BGR_PIXELSIZE)
+
+definev(EXT_BGRX_RED)
+definev(EXT_BGRX_GREEN)
+definev(EXT_BGRX_BLUE)
+definev(EXT_BGRX_PIXELSIZE)
+
+definev(EXT_XBGR_RED)
+definev(EXT_XBGR_GREEN)
+definev(EXT_XBGR_BLUE)
+definev(EXT_XBGR_PIXELSIZE)
+
+definev(EXT_XRGB_RED)
+definev(EXT_XRGB_GREEN)
+definev(EXT_XRGB_BLUE)
+definev(EXT_XRGB_PIXELSIZE)
+
+%define RGBX_FILLER_0XFF        1
 
 ; Representation of a single sample (pixel element value).
 ; On this SIMD implementation, this must be 'unsigned char'.

@@ -2,6 +2,7 @@
 /* see jconfig.txt for explanations */
 
 #define JPEG_LIB_VERSION @JPEG_LIB_VERSION@
+#define LIBJPEG_TURBO_VERSION @VERSION@
 #cmakedefine C_ARITH_CODING_SUPPORTED
 #cmakedefine D_ARITH_CODING_SUPPORTED
 
@@ -25,7 +26,12 @@ typedef unsigned char boolean;
 #endif
 #define HAVE_BOOLEAN		/* prevent jmorecfg.h from redefining it */
 
-#define inline __inline
+/* Define "INT32" as int, not long, per Windows custom */
+#if !(defined(_BASETSD_H_) || defined(_BASETSD_H))   /* don't conflict if basetsd.h already read */
+typedef short INT16;
+typedef signed int INT32;
+#endif
+#define XMD_H                   /* prevent jmorecfg.h from redefining it */
 
 #ifdef JPEG_INTERNALS
 

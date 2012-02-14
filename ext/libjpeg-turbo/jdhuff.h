@@ -2,7 +2,7 @@
  * jdhuff.h
  *
  * Copyright (C) 1991-1997, Thomas G. Lane.
- * Copyright (C) 2010, D. R. Commander.
+ * Copyright (C) 2010-2011, D. R. Commander.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -207,6 +207,26 @@ slowlabel: \
     get_buffer = state.get_buffer; bits_left = state.bits_left; \
   } \
 }
+
+#define HUFF_DECODE_FAST(s,nb,htbl) \
+  FILL_BIT_BUFFER_FAST; \
+  s = PEEK_BITS(HUFF_LOOKAHEAD); \
+  s = htbl->lookup[s]; \
+  nb = s >> HUFF_LOOKAHEAD; \
+  /* Pre-execute the common case of nb <= HUFF_LOOKAHEAD */ \
+  DROP_BITS(nb); \
+  s = s & ((1 << HUFF_LOOKAHEAD) - 1); \
+  if (nb > HUFF_LOOKAHEAD) { \
+    /* Equivalent of jpeg_huff_decode() */ \
+    /* Don't use GET_BITS() here because we don't want to modify bits_left */ \
+    s = (get_buffer >> bits_left) & ((1 << (nb)) - 1); \
+    while (s > htbl->maxcode[nb]) { \
+      s <<= 1; \
+      s |= GET_BITS(1); \
+      nb++; \
+    } \
+    s = htbl->pub->huffval[ (int) (s + htbl->valoffset[nb]) & 0xFF ]; \
+  }
 
 /* Out-of-line case for Huffman code fetching */
 EXTERN(int) jpeg_huff_decode

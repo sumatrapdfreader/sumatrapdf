@@ -187,15 +187,15 @@ JPEG_TURBO_OBJS = \
 	$(OT)\jdmerge.obj $(OT)\jdpostct.obj $(OT)\jdsample.obj $(OT)\jdtrans.obj $(OT)\jerror.obj \
 	$(OT)\jfdctflt.obj $(OT)\jfdctint.obj $(OT)\jidctflt.obj $(OT)\jidctfst.obj $(OT)\jidctint.obj \
 	$(OT)\jquant1.obj $(OT)\jquant2.obj $(OT)\jutils.obj $(OT)\jmemmgr.obj $(OT)\jmemnobs.obj \
-	$(OT)\jaricom.obj $(OT)\jdarith.obj $(OT)\jfdctfst.obj $(OT)\jdphuff.obj \
-	$(OT)\jidctred.obj
+	$(OT)\jaricom.obj $(OT)\jdarith.obj $(OT)\jfdctfst.obj $(OT)\jdphuff.obj $(OT)\jidctred.obj \
+	$(OT)\jcgrammx.obj
 
 !if "$(PLATFORM)"=="X64"
 JPEG_TURBO_OBJS = $(JPEG_TURBO_OBJS) \
 	$(OT)\jfsseflt-64.obj $(OT)\jccolss2-64.obj $(OT)\jdcolss2-64.obj $(OT)\jcsamss2-64.obj \
 	$(OT)\jdsamss2-64.obj $(OT)\jdmerss2-64.obj $(OT)\jcqnts2i-64.obj $(OT)\jfss2fst-64.obj \
 	$(OT)\jfss2int-64.obj $(OT)\jiss2red-64.obj $(OT)\jiss2int-64.obj $(OT)\jiss2fst-64.obj \
-	$(OT)\jcqnts2f-64.obj $(OT)\jiss2flt-64.obj $(OT)\jsimd_x86_64.obj
+	$(OT)\jcqnts2f-64.obj $(OT)\jiss2flt-64.obj $(OT)\jsimd_x86_64.obj $(OT)\jcgrass2-64.obj
 !else
 JPEG_TURBO_OBJS = $(JPEG_TURBO_OBJS) \
 	$(OT)\jsimdcpu.obj $(OT)\jccolmmx.obj $(OT)\jdcolmmx.obj $(OT)\jcsammmx.obj \
@@ -204,7 +204,7 @@ JPEG_TURBO_OBJS = $(JPEG_TURBO_OBJS) \
 	$(OT)\ji3dnflt.obj $(OT)\jcqntsse.obj $(OT)\jfsseflt.obj $(OT)\jisseflt.obj $(OT)\jccolss2.obj \
 	$(OT)\jdcolss2.obj $(OT)\jcsamss2.obj $(OT)\jdsamss2.obj $(OT)\jdmerss2.obj $(OT)\jcqnts2i.obj \
 	$(OT)\jfss2fst.obj $(OT)\jfss2int.obj $(OT)\jiss2red.obj $(OT)\jiss2int.obj $(OT)\jiss2fst.obj \
-	$(OT)\jcqnts2f.obj $(OT)\jiss2flt.obj $(OT)\jsimd_i386.obj
+	$(OT)\jcqnts2f.obj $(OT)\jiss2flt.obj $(OT)\jsimd_i386.obj $(OT)\jcgrass2.obj
 !endif
 
 JBIG2_OBJS = \

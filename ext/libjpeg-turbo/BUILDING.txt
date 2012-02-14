@@ -11,7 +11,7 @@ Build Requirements
 -- automake 1.7 or later
 -- libtool 1.4 or later
 
--- NASM
+-- NASM (if building x86 or x86-64 SIMD extensions)
    * 0.98, or 2.01 or later is required for a 32-bit build
    * NASM 2.00 or later is required for a 64-bit build
    * NASM 2.07 or later is required for a 64-bit build on OS X.  This can be
@@ -33,6 +33,14 @@ Build Requirements
    NOTE: the NASM build will fail if texinfo is not installed.
 
 -- GCC v4.1 or later recommended for best performance
+
+-- If building the TurboJPEG/OSS Java wrapper, JDK or OpenJDK 1.5 or later is
+   required.  Some systems, such as OS X 10.4, Solaris 10 and later, and Red
+   Hat Enterprise Linux 5 and later, have this pre-installed.  On OS X 10.5 and
+   later, it will be necessary to install the Java Developer Package, which can
+   be downloaded from http://connect.apple.com.  For systems that do not have a
+   JDK installed, you can obtain the Oracle Java Development Kit from
+   http://www.java.com.
 
 
 ==================
@@ -99,14 +107,14 @@ This will generate the following files under .libs/
 62, 7, or 8.
 
 
-libjpeg v7 or v8 Emulation
---------------------------
+libjpeg v7 or v8 API/ABI Emulation
+----------------------------------
 
 Add --with-jpeg7 to the configure command line to build a version of
-libjpeg-turbo that is compatible with libjpeg v7.  Add --with-jpeg8 to the
-configure command to build a version of libjpeg-turbo that is compatible with
-libjpeg v8.  See README-turbo.txt for more information on libjpeg v7 and v8
-emulation.
+libjpeg-turbo that is API/ABI-compatible with libjpeg v7.  Add --with-jpeg8 to
+the configure command to build a version of libjpeg-turbo that is
+API/ABI-compatible with libjpeg v8.  See README-turbo.txt for more information
+on libjpeg v7 and v8 emulation.
 
 
 Arithmetic Coding Support
@@ -119,6 +127,22 @@ v7 or v6b as well.  The default is to enable both arithmetic encoding and
 decoding, but those who have philosophical objections to arithmetic coding can
 add --without-arith-enc or --without-arith-dec to the configure command line to
 disable encoding or decoding (respectively.)
+
+
+TurboJPEG/OSS Java Wrapper
+--------------------------
+Add --with-java to the configure command line to incorporate an optional Java
+Native Interface wrapper into the TurboJPEG/OSS dynamic library and build the
+Java front-end classes to support it.  This allows the TurboJPEG/OSS dynamic
+library to be used directly from Java applications.  See java/README for more
+details.
+
+You can set the JAVAC, JAR, and JAVA configure variables to specify
+alternate commands for javac, jar, and java (respectively.)  You can also
+set the JAVACFLAGS configure variable to specify arguments that should be
+passed to the Java compiler when building the front-end classes, and JNI_CFLAGS
+to specify arguments that should be passed to the C compiler when building the
+JNI wrapper.  Run 'configure --help' for more details.
 
 
 ========================
@@ -257,6 +281,55 @@ MinGW Build on Cygwin
 Use CMake (see recipes below)
 
 
+===========
+ARM Support
+===========
+
+This release of libjpeg-turbo can use ARM NEON SIMD instructions to accelerate
+JPEG compression/decompression by approximately 2-4x on ARMv7 and later
+platforms.  If libjpeg-turbo is configured on an ARM Linux platform, then the
+build system will automatically include the NEON SIMD routines, if they are
+supported.
+
+
+Building libjpeg-turbo for iOS
+------------------------------
+
+iOS platforms, such as the iPhone and iPad, also use ARM processors, some of
+which support NEON instructions.  Additional steps are required to build
+libjpeg-turbo for these platforms.  The steps below assume iOS SDK v4.3.  If
+you are using a different SDK version, then you will need to modify the
+examples accordingly.
+
+Additional build requirements:
+
+  gas-preprocessor.pl (https://github.com/yuvi/gas-preprocessor) should be
+  installed in your PATH.
+
+Set the following shell variables for simplicity:
+
+  IOS_PLATFORMDIR="/Developer/Platforms/iPhoneOS.platform"
+  IOS_SYSROOT="$IOS_PLATFORMDIR/Developer/SDKs/iPhoneOS4.3.sdk"
+  IOS_GCC="$IOS_PLATFORMDIR/Developer/usr/bin/arm-apple-darwin10-llvm-gcc-4.2"
+
+  ARM v6 only (up to and including iPhone 3G):
+  IOS_CFLAGS="-march=armv6 -mcpu=arm1176jzf-s -mfpu=vfp"
+
+  ARM v7 only (iPhone 3GS and newer, iPad):
+  IOS_CFLAGS="-march=armv7 -mcpu=cortex-a8 -mtune=cortex-a8 -mfpu=neon"
+
+Follow the procedure under "Building libjpeg-turbo" above, adding
+
+  --host arm-apple-darwin10 --enable-static --disable-shared \
+    CC="$IOS_GCC" LD="$IOS_GCC" \
+    CFLAGS="-mfloat-abi=softfp -isysroot $IOS_SYSROOT -O3 $IOS_CFLAGS" \
+    LDFLAGS="-mfloat-abi=softfp -isysroot $IOS_SYSROOT $IOS_CFLAGS"
+
+to the configure command line.
+
+Once built, lipo can be used to combine the ARM v6 and v7 variants into a
+universal library.
+
 
 *******************************************************************************
 **     Building on Windows (Visual C++ or MinGW)
@@ -298,6 +371,9 @@ Build Requirements
 
 -- NASM (http://www.nasm.us/) 0.98 or later (NASM 2.05 or later is required for
    a 64-bit build)
+
+-- If building the TurboJPEG/OSS Java wrapper, JDK 1.5 or later is required.
+   This can be downloaded from http://www.java.com.
 
 
 ==================
@@ -416,14 +492,14 @@ NMake, remove "-DCMAKE_BUILD_TYPE=Release" (Debug builds are the default with
 NMake.)
 
 
-libjpeg v7 or v8 Emulation
---------------------------
+libjpeg v7 or v8 API/ABI Emulation
+-----------------------------------
 
 Add "-DWITH_JPEG7=1" to the cmake command line to build a version of
-libjpeg-turbo that is compatible with libjpeg v7.  Add "-DWITH_JPEG8=1" to the
-cmake command to build a version of libjpeg-turbo that is compatible with
-libjpeg v8.  See README-turbo.txt for more information on libjpeg v7 and v8
-emulation.
+libjpeg-turbo that is API/ABI-compatible with libjpeg v7.  Add "-DWITH_JPEG8=1"
+to the cmake command to build a version of libjpeg-turbo that is
+API/ABI-compatible with libjpeg v8.  See README-turbo.txt for more information
+on libjpeg v7 and v8 emulation.
 
 
 Arithmetic Coding Support
@@ -436,6 +512,22 @@ v7 or v6b as well.  The default is to enable both arithmetic encoding and
 decoding, but those who have philosophical objections to arithmetic coding can
 add "-DWITH_ARITH_ENC=0" or "-DWITH_ARITH_DEC=0" to the cmake command line to
 disable encoding or decoding (respectively.)
+
+
+TurboJPEG/OSS Java Wrapper
+--------------------------
+Add "-DWITH_JAVA=1" to the cmake command line to incorporate an optional Java
+Native Interface wrapper into the TurboJPEG/OSS dynamic library and build the
+Java front-end classes to support it.  This allows the TurboJPEG/OSS dynamic
+library to be used directly from Java applications.  See java/README for more
+details.
+
+If you are using CMake 2.8, you can set the Java_JAVAC_EXECUTABLE,
+Java_JAVA_EXECUTABLE, and Java_JAR_EXECUTABLE CMake variables to specify
+alternate commands or locations for javac, jar, and java (respectively.)  If
+you are using CMake 2.6, set JAVA_COMPILE, JAVA_RUNTIME, and JAVA_ARCHIVE
+instead.  You can also set the JAVACFLAGS CMake variable to specify arguments
+that should be passed to the Java compiler when building the front-end classes.
 
 
 ========================
@@ -552,13 +644,32 @@ make dmg
 
 make udmg [BUILDDIR32={32-bit build directory}]
 
-  On 64-bit OS X systems, this creates a version of the Macintosh package and
-  disk image which contains universal i386/x86-64 binaries.  You should first
-  configure a 32-bit out-of-tree build of libjpeg-turbo, then configure a
-  64-bit out-of-tree build, then run 'make udmg' from the 64-bit build
-  directory.  The build system will look for the 32-bit build under
-  {source_directory}/osxx86 by default, but you can override this by setting
-  the BUILDDIR32 variable on the make command line as shown above.
+  On 64-bit OS X systems, this creates a Macintosh package and disk image that
+  contains universal i386/x86-64 binaries.  You should first configure a 32-bit
+  out-of-tree build of libjpeg-turbo, then configure a 64-bit out-of-tree
+  build, then run 'make udmg' from the 64-bit build directory.  The build
+  system will look for the 32-bit build under {source_directory}/osxx86 by
+  default, but you can override this by setting the BUILDDIR32 variable on the
+  make command line as shown above.
+
+make iosdmg [BUILDDIR32={32-bit build directory}] \
+  [BUILDDIRARMV6={ARM v6 build directory}] \
+  [BUILDDIRARMV7={ARM v7 build directory}] \
+
+  On OS X systems, this creates a Macintosh package and disk image in which the
+  libjpeg-turbo static libraries contain ARM architectures necessary to build
+  iOS applications.  If building on an x86-64 system, the binaries will also
+  contain the i386 architecture, as with 'make udmg' above.  You should first
+  configure ARM v6 and ARM v7 out-of-tree builds of libjpeg-turbo (see
+  "Building libjpeg-turbo for iOS" above.)  If you are building an x86-64
+  version of libjpeg-turbo, you should configure a 32-bit out-of-tree build as
+  well.  Next, build libjpeg-turbo as you would normally, using an out-of-tree
+  build.  When it is built, run 'make iosdmg' from the build directory.  The
+  build system will look for the ARM v6 build under {source_directory}/iosarmv6
+  by default, the ARM v7 build under {source_directory}/iosarmv7 by default,
+  and (if applicable) the 32-bit build under {source_directory}/osxx86 by
+  default, but you can override this by setting the BUILDDIR32, BUILDDIRARMV6,
+  and/or BUILDDIRARMV7 variables on the make command line as shown above.
 
 make sunpkg
 
@@ -566,7 +677,7 @@ make sunpkg
 
 make csunpkg [BUILDDIR32={32-bit build directory}]
 
-  On 64-bit Solaris systems, this creates a combined package which contains
+  On 64-bit Solaris systems, this creates a combined package that contains
   both 32-bit and 64-bit libraries.  You should first configure a 32-bit
   out-of-tree build of libjpeg-turbo, then configure a 64-bit out-of-tree
   build, then run 'make csunpkg' from the 64-bit build directory.  The build
@@ -602,3 +713,30 @@ configuration you built (such as {build_directory}\Debug\ or
 
 Building a Windows installer requires the Nullsoft Install System
 (http://nsis.sourceforge.net/.)  makensis.exe should be in your PATH.
+
+
+*******************************************************************************
+**     Regression testing
+*******************************************************************************
+
+The most common way to test libjpeg-turbo is by invoking 'make test' on
+Unix/Linux platforms or 'ctest' on Windows platforms, once the build has
+completed.  This runs a series of tests to ensure that mathematical
+compatibility has been maintained between libjpeg-turbo and libjpeg v6b.  This
+also invokes the TurboJPEG unit tests, which ensure that the colorspace
+extensions, YUV encoding, decompression scaling, and other features of the
+TurboJPEG C and Java APIs are working properly (and, by extension, that the
+equivalent features of the underlying libjpeg API are also working.)
+
+Invoking 'make testclean' or 'nmake testclean' (if using NMake) or building
+the 'testclean' target (if using the Visual Studio IDE) will clean up the
+output images generated by 'make test'.
+
+On Unix/Linux platforms, more extensive tests of the TurboJPEG/OSS C and Java
+wrappers can be run by invoking 'make tjtest'.  These extended TurboJPEG tests
+essentially iterate through all of the available features of the TurboJPEG APIs
+that are not covered by the TurboJPEG unit tests (this includes the lossless
+transform options) and compare the images generated by each feature to images
+generated using the equivalent feature in the libjpeg API.  The extended
+TurboJPEG tests are meant to test for regressions in the TurboJPEG wrappers,
+not in the underlying libjpeg-turbo library.

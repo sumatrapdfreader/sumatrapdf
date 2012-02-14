@@ -1,44 +1,41 @@
-/* Copyright (C)2004 Landmark Graphics Corporation
- * Copyright (C)2005 Sun Microsystems, Inc.
- * Copyright (C)2011 D. R. Commander
+/*
+ * Copyright (C)2011 D. R. Commander.  All Rights Reserved.
  *
- * This library is free software and may be redistributed and/or modified under
- * the terms of the wxWindows Library License, Version 3.1 or (at your option)
- * any later version.  The full license is in the LICENSE.txt file included
- * with this distribution.
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * wxWindows Library License for more details.
-*/
-
-// This provides rudimentary facilities for loading and saving true color
-// BMP and PPM files
+ * - Redistributions of source code must retain the above copyright notice,
+ *   this list of conditions and the following disclaimer.
+ * - Redistributions in binary form must reproduce the above copyright notice,
+ *   this list of conditions and the following disclaimer in the documentation
+ *   and/or other materials provided with the distribution.
+ * - Neither the name of the libjpeg-turbo Project nor the names of its
+ *   contributors may be used to endorse or promote products derived from this
+ *   software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS",
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
 
 #ifndef __BMP_H__
 #define __BMP_H__
 
-#define BMPPIXELFORMATS 6
-enum BMPPIXELFORMAT {BMP_RGB=0, BMP_RGBX, BMP_BGR, BMP_BGRX, BMP_XBGR, BMP_XRGB};
+#include "./turbojpeg.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+int loadbmp(char *filename, unsigned char **buf, int *w, int *h, int pf,
+	int bottomup);
 
-// This will load a Windows bitmap from a file and return a buffer with the
-// specified pixel format, scanline alignment, and orientation.  The width and
-// height are returned in w and h.
-
-int loadbmp(char *filename, unsigned char **buf, int *w, int *h,
-	enum BMPPIXELFORMAT f, int align, int dstbottomup);
-
-// This will save a buffer with the specified pixel format, pitch, orientation,
-// width, and height as a 24-bit Windows bitmap or PPM (the filename determines
-// which format to use)
-
-int savebmp(char *filename, unsigned char *buf, int w, int h,
-	enum BMPPIXELFORMAT f, int srcpitch, int srcbottomup);
+int savebmp(char *filename, unsigned char *buf, int w, int h, int pf,
+	int bottomup);
 
 const char *bmpgeterr(void);
 

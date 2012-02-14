@@ -1,7 +1,8 @@
-libjpeg-turbo note:  This file is mostly taken from the libjpeg v8b README
-file, and it is included only for reference.  Some parts of it may not apply to
-libjpeg-turbo.  Please see README-turbo.txt for information specific to the
-turbo version.
+libjpeg-turbo note:  This file contains portions of the libjpeg v6b and v8
+README files, with additional wordsmithing by The libjpeg-turbo Project.
+It is included only for reference, as some parts of it may not apply to
+libjpeg-turbo.  Please see README-turbo.txt for information specific to
+libjpeg-turbo.
 
 
 The Independent JPEG Group's JPEG software
@@ -62,7 +63,7 @@ OVERVIEW
 This package contains C software to implement JPEG image encoding, decoding,
 and transcoding.  JPEG (pronounced "jay-peg") is a standardized compression
 method for full-color and gray-scale images.  JPEG's strong suit is compressing
-photographic images or other types of images which have smooth color and
+photographic images or other types of images that have smooth color and
 brightness transitions between neighboring pixels.  Images with sharp lines or
 other abrupt features may not compress well with JPEG, and a higher JPEG
 quality may have to be used to avoid visible compression artifacts with such
@@ -256,8 +257,8 @@ ARCHIVE LOCATIONS
 The "official" archive site for this software is www.ijg.org.
 The most recent released version can always be found there in
 directory "files".  This particular version will be archived as
-http://www.ijg.org/files/jpegsrc.v8b.tar.gz, and in Windows-compatible
-"zip" archive format as http://www.ijg.org/files/jpegsr8b.zip.
+http://www.ijg.org/files/jpegsrc.v8d.tar.gz, and in Windows-compatible
+"zip" archive format as http://www.ijg.org/files/jpegsr8d.zip.
 
 The JPEG FAQ (Frequently Asked Questions) article is a source of some
 general information about JPEG.
@@ -274,7 +275,7 @@ FILE FORMAT WARS
 ================
 
 The ISO JPEG standards committee actually promotes different formats like
-"JPEG 2000" or "JPEG XR" which are incompatible with original DCT-based
+"JPEG 2000" or "JPEG XR", which are incompatible with original DCT-based
 JPEG.  IJG therefore does not support these formats (see REFERENCES).  Indeed,
 one of the original reasons for developing this free software was to help
 force convergence on common, interoperable format standards for JPEG files.
@@ -286,4 +287,4 @@ image files indefinitely.)
 TO DO
 =====
 
-Please send bug reports, offers of help, etc. to jpeg-info@uc.ag.
+Please send bug reports, offers of help, etc. to jpeg-info@jpegclub.org.

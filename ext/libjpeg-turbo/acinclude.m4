@@ -3,7 +3,7 @@
 # Check that NASM exists and determine flags
 AC_DEFUN([AC_PROG_NASM],[
 
-AC_CHECK_PROGS(NASM, [nasm nasmw])
+AC_CHECK_PROGS(NASM, [nasm nasmw yasm])
 test -z "$NASM" && AC_MSG_ERROR([no nasm (Netwide Assembler) found])
 
 AC_MSG_CHECKING([for object file format of host system])
@@ -133,4 +133,50 @@ else
   AC_MSG_ERROR([configuration problem: maybe object file format mismatch.])
 fi
 
+])
+
+# AC_CHECK_COMPATIBLE_ARM_ASSEMBLER_IFELSE
+# --------------------------
+# Test whether the assembler is suitable and supports NEON instructions
+AC_DEFUN([AC_CHECK_COMPATIBLE_ARM_ASSEMBLER_IFELSE],[
+  ac_good_gnu_arm_assembler=no
+  ac_save_CC="$CC"
+  ac_save_CFLAGS="$CFLAGS"
+  CFLAGS="$CCASFLAGS -x assembler-with-cpp"
+  CC="$CCAS"
+  AC_COMPILE_IFELSE([[
+    .text
+    .fpu neon
+    .arch armv7a
+    .object_arch armv4
+    .arm
+    pld [r0]
+    vmovn.u16 d0, q0]], ac_good_gnu_arm_assembler=yes)
+
+  ac_use_gas_preprocessor=no
+  if test "x$ac_good_gnu_arm_assembler" = "xno" ; then
+    CC="gas-preprocessor.pl $CCAS"
+    AC_COMPILE_IFELSE([[
+      .text
+      .fpu neon
+      .arch armv7a
+      .object_arch armv4
+      .arm
+      pld [r0]
+      vmovn.u16 d0, q0]], ac_use_gas_preprocessor=yes)
+  fi
+  CFLAGS="$ac_save_CFLAGS"
+  CC="$ac_save_CC"
+
+  if test "x$ac_use_gas_preprocessor" = "xyes" ; then
+    CCAS="gas-preprocessor.pl $CCAS"
+    AC_SUBST([CCAS])
+    ac_good_gnu_arm_assembler=yes
+  fi
+
+  if test "x$ac_good_gnu_arm_assembler" = "xyes" ; then
+    $1
+  else
+    $2
+  fi
 ])
