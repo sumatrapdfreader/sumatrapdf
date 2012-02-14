@@ -64,6 +64,7 @@ to click there.
 using namespace mui;
 
 class ControlEbook;
+class EbookModel;
 
 #define ET_FRAME_CLASS_NAME    _T("ET_FRAME")
 
@@ -89,6 +90,7 @@ static ButtonVector *  next = NULL;
 static ButtonVector *  prev = NULL;
 static ScrollBar *     horizProgress = NULL;
 static Button *        status = NULL;
+static EbookModel *    ebookModel = NULL;
 
 #if defined(WITH_CHROME)
 // for convenience so that we don't have to pass it around
@@ -216,12 +218,9 @@ void EbookLayout::Arrange(const Rect finalRect, Control *wnd)
     horizProgress->Arrange(horizPos);
 }
 
-class ControlEbook : public Control, public IClickHandler
+class ControlEbook : public Control
 {
     static const int CircleR = 10;
-
-    void AdvancePage(int dist);
-    void SetPage(int newPageNo);
 
 public:
     MobiDoc *       mb;
@@ -242,15 +241,9 @@ public:
     ControlEbook();
     virtual ~ControlEbook();
 
-    virtual void RegisterEventHandlers(EventMgr *evtMgr);
-    virtual void UnRegisterEventHandlers(EventMgr *evtMgr);
-
     virtual void Paint(Graphics *gfx, int offX, int offY);
 
     virtual void NotifyMouseMove(int x, int y);
-
-    // IClickHandler
-    virtual void Clicked(Control *w, int x, int y);
 
     void SetHtml(const char *html);
     void LoadMobi(const TCHAR *fileName);
@@ -271,6 +264,9 @@ public:
     void MobiFailedToLoad(const TCHAR *fileName);
     void LoadMobiBackground(const TCHAR *fileName);
     void StopMobiLoadThread();
+
+    void AdvancePage(int dist);
+    void SetPage(int newPageNo);
 };
 
 ControlEbook::ControlEbook()
@@ -558,37 +554,66 @@ void ControlEbook::NotifyMouseMove(int x, int y)
     RequestRepaint(this, &r1, &r2);
 }
 
-void ControlEbook::RegisterEventHandlers(EventMgr *evtMgr)
+void ControlEbook::Paint(Graphics *gfx, int offX, int offY)
 {
-    gMainWnd->evtMgr->RegisterClickHandler(next, this);
-    gMainWnd->evtMgr->RegisterClickHandler(prev, this);
-    gMainWnd->evtMgr->RegisterClickHandler(horizProgress, this);
+    // for testing mouse move, paint a blue circle at current cursor position
+    if ((-1 != cursorX) && (-1 != cursorY)) {
+        SolidBrush br(Color(180, 0, 0, 255));
+        int x = offX + cursorX;
+        int y = offY + cursorY;
+        Rect r(RectForCircle(x, y, CircleR));
+        gfx->FillEllipse(&br, r);
+    }
+
+    if (!pages)
+        return;
+
+    // TODO: temporary, to prevent crash below
+    if (currPageNo == 0)
+        return;
+
+    offX += cachedStyle->padding.left;
+    offY += cachedStyle->padding.top;
+
+    PageData *pageData = pages->At(currPageNo - 1);
+    DrawPageLayout(gfx, &pageData->drawInstructions, (REAL)offX, (REAL)offY, gShowTextBoundingBoxes);
 }
 
-void ControlEbook::UnRegisterEventHandlers(EventMgr *evtMgr)
+class EbookModel : public IClickHandler
 {
-    gMainWnd->evtMgr->UnRegisterClickHandlers(this);
-}
+public:
+    EbookModel() {
+        gMainWnd->evtMgr->RegisterClickHandler(next, this);
+        gMainWnd->evtMgr->RegisterClickHandler(prev, this);
+        gMainWnd->evtMgr->RegisterClickHandler(horizProgress, this);
+    }
+    ~EbookModel() {
+        gMainWnd->evtMgr->UnRegisterClickHandlers(this);
+    }
+
+    // IClickHandler
+    virtual void Clicked(Control *w, int x, int y);
+};
 
 // (x, y) is in the coordinates of w
-void ControlEbook::Clicked(Control *w, int x, int y)
+void EbookModel::Clicked(Control *w, int x, int y)
 {
     if (w == next) {
-        AdvancePage(1);
+        ebook->AdvancePage(1);
         return;
     }
 
     if (w == prev) {
-        AdvancePage(-1);
+        ebook->AdvancePage(-1);
         return;
     }
 
     if (w == horizProgress) {
         float perc = horizProgress->GetPercAt(x);
-        if (pages) {
-            int pageCount = pages->Count();
+        if (ebook->pages) {
+            int pageCount = ebook->pages->Count();
             int pageNo = IntFromPerc(pageCount, perc);
-            SetPage(pageNo + 1);
+            ebook->SetPage(pageNo + 1);
         }
         return;
     }
@@ -613,31 +638,6 @@ static inline void EnableAndShow(HWND hwnd, bool enable)
 {
     ShowWindow(hwnd, enable ? SW_SHOW : SW_HIDE);
     EnableWindow(hwnd, enable);
-}
-
-void ControlEbook::Paint(Graphics *gfx, int offX, int offY)
-{
-    // for testing mouse move, paint a blue circle at current cursor position
-    if ((-1 != cursorX) && (-1 != cursorY)) {
-        SolidBrush br(Color(180, 0, 0, 255));
-        int x = offX + cursorX;
-        int y = offY + cursorY;
-        Rect r(RectForCircle(x, y, CircleR));
-        gfx->FillEllipse(&br, r);
-    }
-
-    if (!pages)
-        return;
-
-    // TODO: temporary, to prevent crash below
-    if (currPageNo == 0)
-        return;
-
-    offX += cachedStyle->padding.left;
-    offY += cachedStyle->padding.top;
-
-    PageData *pageData = pages->At(currPageNo - 1);
-    DrawPageLayout(gfx, &pageData->drawInstructions, (REAL)offX, (REAL)offY, gShowTextBoundingBoxes);
 }
 
 static void CreateStyles()
@@ -716,6 +716,8 @@ static void CreateWindows(HWND hwnd)
     gMainWnd->AddChild(status);
 
     gMainWnd->layout = new EbookLayout();
+
+    ebookModel = new EbookModel();
 }
 
 static void OnCreateWindow(HWND hwnd)
@@ -940,8 +942,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     MessageLoopForUI::current()->RunWithDispatcher(NULL);
     // ret = RunApp();
 
+    delete ebookModel;
     delete gMainWnd;
-
 Exit:
     DeleteStyles();
     mui::Destroy();
