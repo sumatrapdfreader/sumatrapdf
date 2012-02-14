@@ -22,4 +22,25 @@ public:
     virtual void Measure(const Size availableSize, Control *wnd) = 0;
     virtual void Arrange(const Rect finalRect, Control *wnd) = 0;
 };
+
+struct VerticalLayoutData {
+    Control *   control;
+};
+
+class VerticalLayout : Layout
+{
+    Vec<VerticalLayoutData> controls;
+
+public:
+    VerticalLayout() {
+    }
+
+    VerticalLayout& Add(Control *c);
+    virtual ~VerticalLayout() {
+    }
+
+    virtual void Measure(const Size availableSize, Control *wnd);
+    virtual void Arrange(const Rect finalRect, Control *wnd);
+};
+
 #endif

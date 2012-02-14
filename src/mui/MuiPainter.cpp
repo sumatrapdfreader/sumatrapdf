@@ -50,16 +50,16 @@ void Painter::PaintBackground(Graphics *g, Rect r)
 }
 
 // Paint windows in z-order by first collecting the windows
-// and then paint consecutive layers with the same z-order,
+// and then painting consecutive layers with the same z-order,
 // starting with the lowest z-order.
 // We don't sort because we want to preserve the order of
-// containment within z-order and non-stable sort could
-// mess that up. Also, this should be faster in common
-// case where most windows are in the same z-order.
+// containment of windows with the same z-order and non-stable
+// sort could change it.
 static void PaintWindowsInZOrder(Graphics *g, Control *wnd)
 {
     Vec<WndAndOffset> windowsToPaint;
     WndFilter wndFilter;
+    Pen debugPen(Color(255, 0, 0), 1);
     CollectWindowsBreathFirst(wnd, 0, 0, &wndFilter, &windowsToPaint);
     size_t paintedCount = 0;
     int16 lastPaintedZOrder = INT16_MIN;
@@ -77,6 +77,10 @@ static void PaintWindowsInZOrder(Graphics *g, Control *wnd)
             WndAndOffset woff = windowsToPaint.At(i);
             if (minUnpaintedZOrder == woff.wnd->zOrder) {
                 woff.wnd->Paint(g, woff.offX, woff.offY);
+                if (IsDebugPaint()) {
+                    Rect bbox(woff.offX, woff.offY, woff.wnd->pos.Width, woff.wnd->pos.Height);
+                    g->DrawRectangle(&debugPen, bbox);
+                }
                 ++paintedCount;
             }
         }

@@ -35,7 +35,7 @@ using std::max;
 #include "DebugLog.h"
 
 /*
-TODO: doing layout on a background thread needs to be more sophisticated.
+TODO: doing page layout on a background thread needs to be more sophisticated.
 Technically it works but user experience is bad.
 
 The key to supporting fluid resizing is to limit the amount of work done on UI thread.
@@ -75,8 +75,20 @@ class ControlEbook;
 
 static HINSTANCE        ghinst;
 static HWND             gHwndFrame = NULL;
-static ControlEbook *   gControlFrame = NULL;
 static HCURSOR          gCursorHand = NULL;
+
+static Style *         ebookDefault = NULL;
+static Style *         statusDefault = NULL;
+static Style *         horizProgressDefault = NULL;
+static Style *         nextDefault = NULL;
+static Style *         nextMouseOver = NULL;
+
+static HwndWrapper *   gMainWnd = NULL;
+static ControlEbook *  ebook = NULL;
+static ButtonVector *  next = NULL;
+static ButtonVector *  prev = NULL;
+static ScrollBar *     horizProgress = NULL;
+static Button *        status = NULL;
 
 #if defined(WITH_CHROME)
 // for convenience so that we don't have to pass it around
@@ -114,9 +126,97 @@ struct Pages {
 };
 #endif
 
-class ControlEbook
-    : public HwndWrapper,
-      public IClickHandler
+// I'm lazy, EbookLayout uses global variables of known controls
+class EbookLayout : public Layout
+{
+    //VerticalLayout top;
+
+public:
+    EbookLayout()
+    {
+        //top.Add(next).Add(prev);
+    }
+
+    virtual ~EbookLayout() {
+    }
+
+    virtual void Measure(const Size availableSize, Control *wnd);
+    virtual void Arrange(const Rect finalRect, Control *wnd);
+};
+
+void EbookLayout::Measure(const Size availableSize, Control *wnd)
+{
+    Size s(availableSize);
+    if (SizeInfinite == s.Width)
+        s.Width = 320;
+    if (SizeInfinite == s.Height)
+        s.Height = 200;
+
+    next->Measure(s);
+    prev->Measure(s);
+    // we don't need to measure ebook
+    status->Measure(s);
+    horizProgress->Measure(s);
+}
+
+static Size SizeFromRect(Rect& r)
+{
+    return Size(r.Width, r.Height);
+}
+
+// sets y position of toCenter rectangle so that it's centered
+// within container of a given size. Doesn't change x position or size.
+// note: it might produce negative position and that's fine
+static void CenterRectY(Rect& toCenter, Size& container)
+{
+    toCenter.Y = (container.Height - toCenter.Height) / 2;
+}
+
+// sets x position of toCenter rectangle so that it's centered
+// within container of a given size. Doesn't change y position or size.
+// note: it might produce negative position and that's fine
+static void CenterRectX(Rect& toCenter, Size& container)
+{
+    toCenter.X = (container.Width - toCenter.Width) / 2;
+}
+
+void EbookLayout::Arrange(const Rect finalRect, Control *wnd)
+{
+    int y, dx;
+
+    int rectDy = finalRect.Height;
+    int rectDx = finalRect.Width;
+
+    // prev is on the left, y-middle
+    Rect prevPos(Point(0, 0), prev->desiredSize);
+    CenterRectY(prevPos, Size(rectDx, rectDy));
+    prev->Arrange(prevPos);
+
+    // next is on the right, y-middle
+    dx = next->desiredSize.Width;
+    Rect nextPos(Point(rectDx - dx, 0), next->desiredSize);
+    CenterRectY(nextPos, Size(rectDx, rectDy));
+    next->Arrange(nextPos);
+
+    // ebook is between prev and next
+    Size ebookSize(rectDx - nextPos.Width - prevPos.Width, rectDy - status->desiredSize.Height - horizProgress->desiredSize.Height);
+    Rect ebookPos(Point(prevPos.Width, 0), ebookSize);
+    ((Control*)ebook)->Arrange(ebookPos);
+
+    // status is at the bottom
+    y = finalRect.Height - status->desiredSize.Height;
+    Rect statusPos(Point(0, y), status->desiredSize);
+    statusPos.Width = finalRect.Width;
+    status->Arrange(statusPos);
+
+    // horizProgress is at the bottom, right above the status
+    y -= horizProgress->desiredSize.Height;
+    Rect horizPos(Point(0, y), horizProgress->desiredSize);
+    horizPos.Width = finalRect.Width;
+    horizProgress->Arrange(horizPos);
+}
+
+class ControlEbook : public Control, public IClickHandler
 {
     static const int CircleR = 10;
 
@@ -139,23 +239,7 @@ public:
     base::Thread *  mobiLoadThread;
     base::Thread *  pageLayoutThread;
 
-    ButtonVector *  next;
-    ButtonVector *  prev;
-    ScrollBar *     horizProgress;
-    Button *        status;
-    Button *        test;
-
-    Style *         ebookDefault;
-    Style *         statusDefault;
-    Style *         horizProgressDefault;
-    Style *         facebookButtonDefault;
-    Style *         facebookButtonOver;
-
-    // TODO: for testing
-    Style *         nextDefault;
-    Style *         nextMouseOver;
-
-    ControlEbook(HWND hwnd);
+    ControlEbook();
     virtual ~ControlEbook();
 
     virtual void RegisterEventHandlers(EventMgr *evtMgr);
@@ -189,112 +273,7 @@ public:
     void StopMobiLoadThread();
 };
 
-class EbookLayout : public Layout
-{
-public:
-    EbookLayout(Control *next, Control *prev, Control *status, Control *horizProgress, Control *test) :
-      next(next), prev(prev), status(status), horizProgress(horizProgress), test(test)
-    {
-    }
-
-    virtual ~EbookLayout() {
-    }
-
-    Control *next;
-    Control *prev;
-    Control *status;
-    Control *horizProgress;
-    Control *test;
-
-    virtual void Measure(const Size availableSize, Control *wnd);
-    virtual void Arrange(const Rect finalRect, Control *wnd);
-};
-
-void EbookLayout::Measure(const Size availableSize, Control *wnd)
-{
-    Size s(availableSize);
-    if (SizeInfinite == s.Width)
-        s.Width = 320;
-    if (SizeInfinite == s.Height)
-        s.Height = 200;
-
-    wnd->MeasureChildren(s);
-    wnd->desiredSize = s;
-}
-
-static Size SizeFromRect(Rect& r)
-{
-    return Size(r.Width, r.Height);
-}
-
-// sets y position of toCenter rectangle so that it's centered
-// within container of a given size. Doesn't change x position or size.
-// note: it might produce negative position and that's fine
-static void CenterRectY(Rect& toCenter, Size& container)
-{
-    toCenter.Y = (container.Height - toCenter.Height) / 2;
-}
-
-// sets x position of toCenter rectangle so that it's centered
-// within container of a given size. Doesn't change y position or size.
-// note: it might produce negative position and that's fine
-static void CenterRectX(Rect& toCenter, Size& container)
-{
-    toCenter.X = (container.Width - toCenter.Width) / 2;
-}
-
-void EbookLayout::Arrange(const Rect finalRect, Control *wnd)
-{
-    int y, dx, dy;
-
-    CachedStyle *s = wnd->cachedStyle;
-    int padLeft = s->padding.left;
-    int padRight = s->padding.right;
-    int padTop = s->padding.top;
-    int padBottom = s->padding.bottom;
-
-    int rectDy = finalRect.Height - (padTop + padBottom);
-    int rectDx = finalRect.Width - (padLeft + padRight);
-
-    // prev is on the left, y-middle
-    Rect prevPos(Point(padLeft, 0), prev->desiredSize);
-    CenterRectY(prevPos, Size(rectDx, rectDy));
-    prev->Arrange(prevPos);
-
-    // next is on the right, y-middle
-    dx = next->desiredSize.Width;
-    Rect nextPos(Point(rectDx - dx + padLeft, 0), next->desiredSize);
-    CenterRectY(nextPos, Size(rectDx, rectDy));
-    next->Arrange(nextPos);
-
-    // test is at the bottom, x-middle
-    dy = test->desiredSize.Height;
-    y = rectDy - dy;
-    Rect testPos(Point(0, y - padBottom), test->desiredSize);
-    CenterRectX(testPos, Size(rectDx, rectDy));
-    test->Arrange(testPos);
-
-    // status is at the bottom
-    y = finalRect.Height - status->desiredSize.Height;
-    Rect statusPos(Point(0, y), status->desiredSize);
-    statusPos.Width = finalRect.Width;
-    status->Arrange(statusPos);
-
-    // horizProgress is at the bottom, right above the status
-    y -= horizProgress->desiredSize.Height;
-    Rect horizPos(Point(0, y), horizProgress->desiredSize);
-    horizPos.Width = finalRect.Width;
-    horizProgress->Arrange(horizPos);
-
-    wnd->SetPosition(finalRect);
-    ControlEbook *wndEbook = (ControlEbook*)wnd;
-    rectDy -= (statusPos.Height + horizPos.Height);
-    if (rectDy < 0)
-        rectDy = 0;
-    wndEbook->PageLayout(rectDx, rectDy);
-}
-
-ControlEbook::ControlEbook(HWND hwnd)
+ControlEbook::ControlEbook()
 {
     mobiLoadThread = NULL;
     pageLayoutThread = NULL;
@@ -303,88 +282,10 @@ ControlEbook::ControlEbook(HWND hwnd)
     pages = NULL;
     currPageNo = 0;
     pageDx = 0; pageDy = 0;
-    SetHwnd(hwnd);
 
     cursorX = -1; cursorY = -1;
 
-    const int pageBorderX = 10;
-    const int pageBorderY = 10;
-
     bit::Set(wantedInputBits, WantsMouseMoveBit);
-    ebookDefault = new Style();
-    ebookDefault->Set(Prop::AllocPadding(pageBorderY, pageBorderX, pageBorderY, pageBorderX));
-    SetCurrentStyle(ebookDefault, gStyleDefault);
-
-    nextDefault = new Style(gStyleButtonDefault);
-    nextDefault->SetBorderWidth(0.f);
-    nextDefault->Set(Prop::AllocPadding(1, 1, 1, 4));
-    nextDefault->Set(Prop::AllocWidth(PropStrokeWidth, 0.f));
-    nextDefault->Set(Prop::AllocColorSolid(PropFill, "gray"));
-    nextDefault->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
-    //nextDefault->Set(Prop::AllocPadding(4, 8, 12, 16));
-    nextMouseOver = new Style(gStyleButtonMouseOver);
-    nextMouseOver->SetBorderWidth(0.f);
-    //nextMouseOver->Set(Prop::AllocPadding(12, 8, 4, 16));
-    nextMouseOver->Set(Prop::AllocPadding(1, 1, 1, 4));
-    nextMouseOver->Set(Prop::AllocWidth(PropStrokeWidth, 0.f));
-    nextMouseOver->Set(Prop::AllocColorSolid(PropFill, "black"));
-    nextMouseOver->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
-
-    facebookButtonDefault = new Style();
-    facebookButtonDefault->Set(Prop::AllocColorSolid(PropColor, "white"));
-    //facebookButtonDefault->Set(Prop::AllocColorLinearGradient(PropBgColor, LinearGradientModeVertical, "#75ae5c", "#67a54b"));
-    facebookButtonDefault->Set(Prop::AllocColorLinearGradient(PropBgColor, LinearGradientModeVertical, "#647bad", "#5872a7"));
-    facebookButtonDefault->Set(Prop::AllocColorSolid(PropBorderTopColor, "#29447E"));
-    facebookButtonDefault->Set(Prop::AllocColorSolid(PropBorderRightColor, "#29447E"));
-    facebookButtonDefault->Set(Prop::AllocColorSolid(PropBorderBottomColor, "#1A356E"));
-
-    facebookButtonOver = new Style(facebookButtonDefault);
-    facebookButtonOver->Set(Prop::AllocColorSolid(PropColor, "yellow"));
-
-    statusDefault = new Style();
-    statusDefault->Set(Prop::AllocColorSolid(PropBgColor, "white"));
-    statusDefault->Set(Prop::AllocColorSolid(PropColor, "black"));
-    statusDefault->Set(Prop::AllocFontSize(8));
-    statusDefault->Set(Prop::AllocFontWeight(FontStyleRegular));
-    statusDefault->Set(Prop::AllocPadding(2, 0, 2, 0));
-    statusDefault->SetBorderWidth(0);
-    statusDefault->Set(Prop::AllocTextAlign(Align_Center));
-
-    horizProgressDefault = new Style();
-    horizProgressDefault->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
-    horizProgressDefault->Set(Prop::AllocColorSolid(PropColor, "yellow"));
-
-    next = new ButtonVector(svg::GraphicsPathFromPathData("M0 0  L10 13 L0 ,26 Z"));
-    prev = new ButtonVector(svg::GraphicsPathFromPathData("M10 0 L0,  13 L10 26 z"));
-    horizProgress = new ScrollBar();
-    horizProgress->hCursor = gCursorHand;
-    status = new Button(_T(""));
-    test = new Button(_T("test"));
-    test->zOrder = 1;
-    
-    AddChild(next);
-    AddChild(prev);
-    AddChild(horizProgress);
-    AddChild(status);
-    AddChild(test);
-    layout = new EbookLayout(next, prev, status, horizProgress, test);
-
-    // unfortuante sequencing issue: some things trigger a repaint which
-    // only works if the control has been placed in the control tree
-    // via AddChild()
-    next->SetStyles(nextDefault, nextMouseOver);
-    prev->SetStyles(nextDefault, nextMouseOver);
-    horizProgress->SetCurrentStyle(horizProgressDefault, gStyleDefault);
-    status->SetStyles(statusDefault, statusDefault);
-    test->SetStyles(facebookButtonDefault, facebookButtonOver);
-
-    // note: this is just to test in-place update in CacheStyle()
-    facebookButtonDefault->Set(Prop::AllocColorSolid(PropBorderLeftColor, "#1A356E"));
-    test->SetStyles(facebookButtonDefault, facebookButtonOver);
-
-    // special case for classes that derive from HwndWrapper
-    // as they don't call this from SetParent() (like other Control derivatives)
-    RegisterEventHandlers(evtMgr);
 
     SetStatusText();
 }
@@ -399,20 +300,9 @@ ControlEbook::~ControlEbook()
     StopMobiLoadThread();
     StopPageLayoutThread();
 
-    // special case for classes that derive from HwndWrapper
-    // as they don't trigger this from the destructor
-    UnRegisterEventHandlers(evtMgr);
-
     DeleteNewPages();
     DeletePages();
     delete mb;
-    delete statusDefault;
-    delete facebookButtonDefault;
-    delete facebookButtonOver;
-    delete nextDefault;
-    delete nextMouseOver;
-    delete ebookDefault;
-    delete horizProgressDefault;
 }
 
 void ControlEbook::DeletePages()
@@ -599,7 +489,7 @@ void ControlEbook::MobiLoaded(MobiDoc *newMobi)
     html = NULL;
     delete pages;
     pages = NULL;
-    RequestLayout();
+    RequestLayout(this);
 }
 
 // called on UI thread from backgroudn thread if we tried
@@ -670,15 +560,14 @@ void ControlEbook::NotifyMouseMove(int x, int y)
 
 void ControlEbook::RegisterEventHandlers(EventMgr *evtMgr)
 {
-    evtMgr->RegisterClickHandler(next, this);
-    evtMgr->RegisterClickHandler(prev, this);
-    evtMgr->RegisterClickHandler(horizProgress, this);
-    evtMgr->RegisterClickHandler(test, this);
+    gMainWnd->evtMgr->RegisterClickHandler(next, this);
+    gMainWnd->evtMgr->RegisterClickHandler(prev, this);
+    gMainWnd->evtMgr->RegisterClickHandler(horizProgress, this);
 }
 
 void ControlEbook::UnRegisterEventHandlers(EventMgr *evtMgr)
 {
-    evtMgr->UnRegisterClickHandlers(this);
+    gMainWnd->evtMgr->UnRegisterClickHandlers(this);
 }
 
 // (x, y) is in the coordinates of w
@@ -691,12 +580,6 @@ void ControlEbook::Clicked(Control *w, int x, int y)
 
     if (w == prev) {
         AdvancePage(-1);
-        return;
-    }
-
-    if (w == test) {
-        ScopedMem<TCHAR> s(str::Join(test->text, _T("0")));
-        test->SetText(s.Get());
         return;
     }
 
@@ -757,28 +640,89 @@ void ControlEbook::Paint(Graphics *gfx, int offX, int offY)
     DrawPageLayout(gfx, &pageData->drawInstructions, (REAL)offX, (REAL)offY, gShowTextBoundingBoxes);
 }
 
-#if 0
-static void DrawFrame2(Graphics &g, RectI r)
+static void CreateStyles()
 {
-    DrawPage(&g, 0, (REAL)pageBorderX, (REAL)pageBorderY);
-    if (gShowTextBoundingBoxes) {
-        Pen p(Color(0,0,255), 1);
-        g.DrawRectangle(&p, pageBorderX, pageBorderY, r.dx - (pageBorderX * 2), r.dy - (pageBorderY * 2));
-    }
+    const int pageBorderX = 10;
+    const int pageBorderY = 10;
+
+    ebookDefault = new Style();
+    ebookDefault->Set(Prop::AllocPadding(pageBorderY, pageBorderX, pageBorderY, pageBorderX));
+
+    nextDefault = new Style(gStyleButtonDefault);
+    nextDefault->SetBorderWidth(0.f);
+    nextDefault->Set(Prop::AllocPadding(1, 1, 1, 4));
+    nextDefault->Set(Prop::AllocWidth(PropStrokeWidth, 0.f));
+    nextDefault->Set(Prop::AllocColorSolid(PropFill, "gray"));
+    nextDefault->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
+    //nextDefault->Set(Prop::AllocPadding(4, 8, 12, 16));
+    nextMouseOver = new Style(gStyleButtonMouseOver);
+    nextMouseOver->SetBorderWidth(0.f);
+    //nextMouseOver->Set(Prop::AllocPadding(12, 8, 4, 16));
+    nextMouseOver->Set(Prop::AllocPadding(1, 1, 1, 4));
+    nextMouseOver->Set(Prop::AllocWidth(PropStrokeWidth, 0.f));
+    nextMouseOver->Set(Prop::AllocColorSolid(PropFill, "black"));
+    nextMouseOver->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
+
+    statusDefault = new Style();
+    statusDefault->Set(Prop::AllocColorSolid(PropBgColor, "white"));
+    statusDefault->Set(Prop::AllocColorSolid(PropColor, "black"));
+    statusDefault->Set(Prop::AllocFontSize(8));
+    statusDefault->Set(Prop::AllocFontWeight(FontStyleRegular));
+    statusDefault->Set(Prop::AllocPadding(2, 0, 2, 0));
+    statusDefault->SetBorderWidth(0);
+    statusDefault->Set(Prop::AllocTextAlign(Align_Center));
+
+    horizProgressDefault = new Style();
+    horizProgressDefault->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
+    horizProgressDefault->Set(Prop::AllocColorSolid(PropColor, "yellow"));
 }
-#endif
+
+static void DeleteStyles()
+{
+    delete statusDefault;
+    delete nextDefault;
+    delete nextMouseOver;
+    delete ebookDefault;
+    delete horizProgressDefault;
+}
+
+static void CreateWindows(HWND hwnd)
+{
+    next = new ButtonVector(svg::GraphicsPathFromPathData("M0 0  L10 13 L0 ,26 Z"));
+    next->SetStyles(nextDefault, nextMouseOver);
+
+    prev = new ButtonVector(svg::GraphicsPathFromPathData("M10 0 L0,  13 L10 26 z"));
+    prev->SetStyles(nextDefault, nextMouseOver);
+
+    horizProgress = new ScrollBar();
+    horizProgress->hCursor = gCursorHand;
+    horizProgress->SetCurrentStyle(horizProgressDefault, gStyleDefault);
+
+    status = new Button(_T(""));
+    status->SetStyles(statusDefault, statusDefault);
+
+    ebook = new ControlEbook();
+    ebook->SetHtml(gSampleHtml);
+    ebook->SetCurrentStyle(ebookDefault, gStyleDefault);
+
+    gMainWnd = new HwndWrapper(hwnd);
+    gMainWnd->SetMinSize(Size(320, 200));
+    gMainWnd->SetMaxSize(Size(1024, 800));
+
+    gMainWnd->AddChild(ebook);
+    gMainWnd->AddChild(next);
+    gMainWnd->AddChild(prev);
+    gMainWnd->AddChild(horizProgress);
+    gMainWnd->AddChild(status);
+
+    gMainWnd->layout = new EbookLayout();
+}
 
 static void OnCreateWindow(HWND hwnd)
 {
-    gControlFrame = new ControlEbook(hwnd);
-    gControlFrame->SetHtml(gSampleHtml);
-    gControlFrame->SetMinSize(Size(320, 200));
-    gControlFrame->SetMaxSize(Size(1024, 800));
-
     HMENU menu = BuildMenu();
-    // triggers OnSize(), so must be called after we
-    // have things set up to handle OnSize()
     SetMenu(hwnd, menu);
+    CreateWindows(hwnd);
 }
 
 static void OnOpen(HWND hwnd)
@@ -807,7 +751,7 @@ static void OnOpen(HWND hwnd)
     TCHAR *fileName = ofn.lpstrFile + ofn.nFileOffset;
     if (*(fileName - 1)) {
         // special case: single filename without NULL separator
-        gControlFrame->LoadMobi(ofn.lpstrFile);
+        ebook->LoadMobi(ofn.lpstrFile);
         return;
     }
     // this is just a test app, no need to support multiple files
@@ -817,6 +761,7 @@ static void OnOpen(HWND hwnd)
 static void OnToggleBbox(HWND hwnd)
 {
     gShowTextBoundingBoxes = !gShowTextBoundingBoxes;
+    SetDebugPaint(gShowTextBoundingBoxes);
     InvalidateRect(hwnd, NULL, FALSE);
 }
 
@@ -846,9 +791,9 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 {
     static bool seenWmPaint = false;
 
-    if (gControlFrame) {
+    if (gMainWnd) {
         bool wasHandled;
-        LRESULT res = gControlFrame->evtMgr->OnMessage(msg, wParam, lParam, wasHandled);
+        LRESULT res = gMainWnd->evtMgr->OnMessage(msg, wParam, lParam, wasHandled);
         if (wasHandled)
             return res;
     }
@@ -874,7 +819,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
                 LogProcessRunningTime();
                 seenWmPaint = true;
             }
-            gControlFrame->OnPaint(hwnd);
+            gMainWnd->OnPaint(hwnd);
             break;
 
         case WM_COMMAND:
@@ -974,6 +919,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     ScopedGdiPlus gdi;
 
     mui::Initialize();
+    CreateStyles();
 
     gCursorHand  = LoadCursor(NULL, IDC_HAND);
 
@@ -994,9 +940,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     MessageLoopForUI::current()->RunWithDispatcher(NULL);
     // ret = RunApp();
 
-    delete gControlFrame;
+    delete gMainWnd;
 
 Exit:
+    DeleteStyles();
     mui::Destroy();
     return ret;
 }

@@ -8,6 +8,8 @@
 #include "GeomUtil.h"
 #include "Vec.h"
 
+#include "DebugLog.h"
+
 /*
 MUI is a simple UI library for win32.
 MUI stands for nothing, it's just ui and gui are overused.
@@ -84,6 +86,9 @@ https://wiki.mozilla.org/Mozilla2:Units, https://bugzilla.mozilla.org/show_bug.c
 
 namespace mui {
 
+// if true, shows the bounding box of each control with red outline
+static bool gDebugPaint = false;
+
 void Initialize()
 {
     InitializeBase();
@@ -94,6 +99,18 @@ void Destroy()
 {
     css::Destroy();
     DestroyBase();
+}
+
+// the caller needs to manually invalidate all windows
+// for this to take place
+void SetDebugPaint(bool debug)
+{
+    gDebugPaint = debug;
+}
+
+bool IsDebugPaint()
+{
+    return gDebugPaint;
 }
 
 #define RECTFromRect(r) { r.GetLeft(), r.GetTop(), r.GetRight(), r.GetBottom() }
@@ -197,18 +214,30 @@ void DrawBorder(Graphics *gfx, const Rect r, CachedStyle *s)
 static void InvalidateAtOff(HWND hwnd, const Rect *r, int offX, int offY)
 {
     RECT rc = RECTFromRect((*r));
-    rc.left += offX; rc.top += offY;
+    rc.left += offX; rc.right += offX;
+    rc.top += offY; rc.bottom += offY;
     InvalidateRect(hwnd, &rc, FALSE);
 }
 
+// r1 and r2 are relative to w. If both are NULL, we invalidate the whole w
 void RequestRepaint(Control *w, const Rect *r1, const Rect *r2)
 {
+    // we might be called when the control hasn't yet been
+    // placed in the window hierarchy
+    if (!w->parent)
+        return;
+
+    Rect wRect(0, 0, w->pos.Width, w->pos.Height);
+
     // calculate the offset of window w within its root window
-    int offX = 0, offY = 0;
-    while (w->parent) {
+    int offX = w->pos.X;
+    int offY = w->pos.Y;
+    if (w->parent)
         w = w->parent;
+    while (!w->hwndParent) {
         offX += w->pos.X;
         offY += w->pos.Y;
+        w = w->parent;
     }
     HWND hwnd = w->hwndParent;
     CrashIf(!hwnd);
@@ -228,14 +257,11 @@ void RequestRepaint(Control *w, const Rect *r1, const Rect *r2)
     if (didInvalidate)
         return;
 
-    InvalidateAtOff(hwnd, &w->pos, offX, offY);
+    InvalidateAtOff(hwnd, &wRect, offX, offY);
 }
 
 void RequestLayout(Control *w)
 {
-    if (!w->IsVisible())
-        return;
-
     HwndWrapper *wnd = GetRootHwndWnd(w);
     if (wnd)
         wnd->RequestLayout();

@@ -5,4 +5,22 @@
 
 namespace mui {
 
+VerticalLayout& VerticalLayout::Add(Control *c)
+{
+    VerticalLayoutData d;
+    d.control = c;
+    controls.Append(d);
+    return *this;
+}
+
+void VerticalLayout::Measure(const Size availableSize, Control *wnd)
+{
+
+}
+
+void VerticalLayout::Arrange(const Rect finalRect, Control *wnd)
+{
+
+}
+
 }

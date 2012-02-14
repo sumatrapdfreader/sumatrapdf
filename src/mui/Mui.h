@@ -70,6 +70,8 @@ public:
 
 void        Initialize();
 void        Destroy();
+void        SetDebugPaint(bool debug);
+bool        IsDebugPaint();
 size_t      CollectWindowsAt(Control *wndRoot, int x, int y, uint16 wantedInputMask, Vec<WndAndOffset> *windows);
 void        CollectWindowsBreathFirst(Control *w, int offX, int offY, WndFilter *wndFilter, Vec<WndAndOffset> *windows);
 void        RequestRepaint(Control *w, const Rect *r1 = NULL, const Rect *r2 = NULL);
