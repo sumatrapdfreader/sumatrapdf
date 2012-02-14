@@ -4,7 +4,7 @@ bzip2           1.0.6   2010-09-06   http://bzip.org/downloads.html
 CHMLib          0.40a   2009-07-02   https://github.com/jedwing/CHMLib
 freetype2       2.4.8   2011-11-15   http://sourceforge.net/projects/freetype/files/freetype2/
 jbig2dec        0.11git 2012-01-24   http://git.ghostscript.com/?p=jbig2dec.git
-libjpeg-turbo   1.1.1   2011-05-18   http://sourceforge.net/projects/libjpeg-turbo/files/
+libjpeg-turbo   1.2.0   2011-02-10   http://sourceforge.net/projects/libjpeg-turbo/files/
 libdjvu         3.5.24  2011-03-06   http://djvu.sourceforge.net/
 openjpeg        r777    2011-05-16   http://code.google.com/p/openjpeg/downloads
 synctex         1.16    2011-06-14   http://itexmac.sourceforge.net/SyncTeX.html
