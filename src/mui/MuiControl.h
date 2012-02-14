@@ -37,6 +37,7 @@ public:
 
     void        SetParent(Control *newParent);
     void        AddChild(Control *wnd, int pos = -1);
+    void        AddChild(Control *wnd1, Control *wnd2, Control *wnd3 = NULL);
     Control *   GetChild(size_t idx) const;
     size_t      GetChildCount() const;
 

@@ -709,11 +709,8 @@ static void CreateWindows(HWND hwnd)
     gMainWnd->SetMinSize(Size(320, 200));
     gMainWnd->SetMaxSize(Size(1024, 800));
 
-    gMainWnd->AddChild(ebook);
-    gMainWnd->AddChild(next);
-    gMainWnd->AddChild(prev);
-    gMainWnd->AddChild(horizProgress);
-    gMainWnd->AddChild(status);
+    gMainWnd->AddChild(next, prev, ebook);
+    gMainWnd->AddChild(horizProgress, status);
 
     gMainWnd->layout = new EbookLayout();
 

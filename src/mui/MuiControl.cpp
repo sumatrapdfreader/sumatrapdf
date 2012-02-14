@@ -100,6 +100,13 @@ void Control::AddChild(Control *wnd, int pos)
     wnd->SetParent(this);
 }
 
+void Control::AddChild(Control *wnd1, Control *wnd2, Control *wnd3)
+{
+    AddChild(wnd1);
+    AddChild(wnd2);
+    if (wnd3) AddChild(wnd3);
+}
+
 void Control::Measure(const Size availableSize)
 {
     if (layout) {
