@@ -13,12 +13,12 @@ VerticalLayout& VerticalLayout::Add(Control *c)
     return *this;
 }
 
-void VerticalLayout::Measure(const Size availableSize, Control *wnd)
+void VerticalLayout::Measure(const Size availableSize)
 {
 
 }
 
-void VerticalLayout::Arrange(const Rect finalRect, Control *wnd)
+void VerticalLayout::Arrange(const Rect finalRect)
 {
 
 }

@@ -19,8 +19,8 @@ public:
     virtual ~Layout() {
     }
 
-    virtual void Measure(const Size availableSize, Control *wnd) = 0;
-    virtual void Arrange(const Rect finalRect, Control *wnd) = 0;
+    virtual void Measure(const Size availableSize) = 0;
+    virtual void Arrange(const Rect finalRect) = 0;
 };
 
 struct VerticalLayoutData {
@@ -39,8 +39,8 @@ public:
     virtual ~VerticalLayout() {
     }
 
-    virtual void Measure(const Size availableSize, Control *wnd);
-    virtual void Arrange(const Rect finalRect, Control *wnd);
+    virtual void Measure(const Size availableSize);
+    virtual void Arrange(const Rect finalRect);
 };
 
 #endif

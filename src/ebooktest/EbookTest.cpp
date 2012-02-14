@@ -142,11 +142,11 @@ public:
     virtual ~EbookLayout() {
     }
 
-    virtual void Measure(const Size availableSize, Control *wnd);
-    virtual void Arrange(const Rect finalRect, Control *wnd);
+    virtual void Measure(const Size availableSize);
+    virtual void Arrange(const Rect finalRect);
 };
 
-void EbookLayout::Measure(const Size availableSize, Control *wnd)
+void EbookLayout::Measure(const Size availableSize)
 {
     Size s(availableSize);
     if (SizeInfinite == s.Width)
@@ -182,7 +182,7 @@ static void CenterRectX(Rect& toCenter, Size& container)
     toCenter.X = (container.Width - toCenter.Width) / 2;
 }
 
-void EbookLayout::Arrange(const Rect finalRect, Control *wnd)
+void EbookLayout::Arrange(const Rect finalRect)
 {
     int y, dx;
 

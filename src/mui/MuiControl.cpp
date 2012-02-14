@@ -110,7 +110,7 @@ void Control::AddChild(Control *wnd1, Control *wnd2, Control *wnd3)
 void Control::Measure(const Size availableSize)
 {
     if (layout) {
-        layout->Measure(availableSize, this);
+        layout->Measure(availableSize);
     } else {
         desiredSize = Size();
     }
@@ -126,7 +126,7 @@ void Control::MeasureChildren(Size availableSize) const
 void Control::Arrange(const Rect finalRect)
 {
     if (layout) {
-        layout->Arrange(finalRect, this);
+        layout->Arrange(finalRect);
     } else {
         SetPosition(finalRect);
     }
