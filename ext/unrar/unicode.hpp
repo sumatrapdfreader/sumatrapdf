@@ -40,7 +40,7 @@ bool CharToWide(const char *Src,wchar *Dest,size_t DestSize=0x1000000);
 byte* WideToRaw(const wchar *Src,byte *Dest,size_t SrcSize=0x1000000);
 wchar* RawToWide(const byte *Src,wchar *Dest,size_t DestSize=0x1000000);
 void WideToUtf(const wchar *Src,char *Dest,size_t DestSize);
-void UtfToWide(const char *Src,wchar *Dest,size_t DestSize);
+bool UtfToWide(const char *Src,wchar *Dest,size_t DestSize);
 bool UnicodeEnabled();
 
 int wcsicomp(const wchar *s1,const wchar *s2);

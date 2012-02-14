@@ -71,7 +71,7 @@
 #define  LHD_SALT           0x0400U
 #define  LHD_VERSION        0x0800U
 #define  LHD_EXTTIME        0x1000U
-#define  LHD_EXTFLAGS       0x2000U
+#define  LHD_EXTAREA        0x2000U
 
 #define  SKIP_IF_UNKNOWN    0x4000U
 #define  LONG_BLOCK         0x8000U

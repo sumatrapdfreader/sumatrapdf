@@ -180,7 +180,8 @@ void WideToUtf(const wchar *Src,char *Dest,size_t DestSize)
 }
 
 
-void UtfToWide(const char *Src,wchar *Dest,size_t DestSize)
+// Dest can be NULL if we only need to check validity of Src.
+bool UtfToWide(const char *Src,wchar *Dest,size_t DestSize)
 {
   long dsize=(long)DestSize;
   dsize--;
@@ -215,19 +216,25 @@ void UtfToWide(const char *Src,wchar *Dest,size_t DestSize)
           }
           else
             break;
-    if (--dsize<0)
+    if (Dest!=NULL && --dsize<0)
       break;
     if (d>0xffff)
     {
-      if (--dsize<0 || d>0x10ffff)
+      if (Dest!=NULL && --dsize<0 || d>0x10ffff)
         break;
-      *(Dest++)=((d-0x10000)>>10)+0xd800;
-      *(Dest++)=(d&0x3ff)+0xdc00;
+      if (Dest!=NULL)
+      {
+        *(Dest++)=((d-0x10000)>>10)+0xd800;
+        *(Dest++)=(d&0x3ff)+0xdc00;
+      }
     }
     else
-      *(Dest++)=d;
+      if (Dest!=NULL)
+        *(Dest++)=d;
   }
-  *Dest=0;
+  if (Dest!=NULL)
+    *Dest=0;
+  return *Src==0; // Return success if we reached the end of source string.
 }
 
 
