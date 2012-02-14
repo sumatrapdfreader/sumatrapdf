@@ -159,7 +159,8 @@ UTILS_OBJS = \
 	$(OU)\DialogSizer.obj $(OU)\FileTransactions.obj $(OU)\Touch.obj \
 	$(OU)\TrivialHtmlParser.obj $(OU)\HtmlWindow.obj $(OU)\GdiPlusUtil.obj \
 	$(OU)\DirIter.obj $(OU)\BitReader.obj $(OU)\HtmlPullParser.obj \
-	$(OU)\ThreadUtil.obj $(OU)\NoFreeAllocator.obj $(OU)\DebugLog.obj
+	$(OU)\ThreadUtil.obj $(OU)\NoFreeAllocator.obj $(OU)\DebugLog.obj \
+	$(OU)\UiMsg.obj
 
 # requires either MuPDF/libmupdf or $(ZLIB_OBJS)
 ZIP_OBJS = \

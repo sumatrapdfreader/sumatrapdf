@@ -198,6 +198,8 @@ public:
         Append(el);
     }
 
+    // TODO: this doesn't preserve 0-padding at the end. Should zero out the memory
+    // for the last element
     T& Pop() {
         CrashIf(0 == len);
         T *el = AtPtr(len - 1);
@@ -251,7 +253,7 @@ public:
         }
     }
 
-    // Iteration API that's meant to use in the following way:
+    // Iteration API meant to be used in the following way:
     // for (T *el = vec.IterStart(); el; el = vec.IterNext()) { ... }
     T *IterStart() {
         iterCurr = els;

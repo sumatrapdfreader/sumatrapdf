@@ -158,6 +158,9 @@
     <ClCompile Include="src\utils\ThreadUtil.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="src\utils\UiMsg.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ebooktest\EbookTestMenu.h" />
@@ -416,6 +419,9 @@
       <Filter>mui</Filter>
     </ClInclude>
     <ClInclude Include="src\utils\ThreadUtil.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\UiMsg.h">
       <Filter>utils</Filter>
     </ClInclude>
   </ItemGroup>
