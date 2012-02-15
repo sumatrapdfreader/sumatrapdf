@@ -729,6 +729,7 @@ static void CreateLayout()
     ld.Set(ebook, 1.f, 1.f, ElInContainerAlign());
     topPart->Add(ld);
     ld.Set(prev, SizeSelf, SizeSelf, ElInContainerAlign());
+    topPart->Add(ld);
 
     VerticalLayout *l = new VerticalLayout();
     ld.Set(topPart, 1.f, 1.f, ElInContainerAlign());

@@ -131,7 +131,7 @@ struct DirectionalLayoutData {
 
 class HorizontalLayout : public ILayout
 {
-    Vec<DirectionalLayoutData>  elements;
+    Vec<DirectionalLayoutData>  els;
     Size                        desiredSize;
 
 public:
@@ -148,7 +148,7 @@ public:
 
 class VerticalLayout : public ILayout
 {
-    Vec<DirectionalLayoutData>  elements;
+    Vec<DirectionalLayoutData>  els;
     Size                        desiredSize;
 
 public:
