@@ -125,10 +125,10 @@ void Control::MeasureChildren(Size availableSize) const
 
 void Control::Arrange(const Rect finalRect)
 {
+    SetPosition(finalRect);
     if (layout) {
+        // might over-write position if our layout knows about us
         layout->Arrange(finalRect);
-    } else {
-        SetPosition(finalRect);
     }
 }
 

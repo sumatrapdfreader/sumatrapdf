@@ -129,7 +129,7 @@ struct Pages {
 #endif
 
 // I'm lazy, EbookLayout uses global variables of known controls
-class EbookLayout : public Layout
+class EbookLayout : public ILayout
 {
     //VerticalLayout top;
 

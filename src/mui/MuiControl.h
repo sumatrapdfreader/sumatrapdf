@@ -5,11 +5,11 @@
 #define MuiControl_h
 
 // This is only meant to be included by Mui.h inside mui namespace
+// Must be included after Layout.h
 
-class Layout;
 class EventMgr;
 
-class Control
+class Control : public ILayout
 {
 public:
     // allows a window to opt-out from being notified about
@@ -45,12 +45,7 @@ public:
 
     virtual void Paint(Graphics *gfx, int offX, int offY);
 
-    // WPF-like layout system. Measure() should update desiredSize
-    // Then the parent uses it to calculate the size of its children
-    // and uses Arrange() to set it.
-
-    // availableSize can have SizeInfinite as dx or dy to allow
-    // using as much space as the window wants
+    // ILayout
     virtual void Measure(const Size availableSize);
     virtual void Arrange(const Rect finalRect);
 
@@ -83,7 +78,7 @@ public:
     // windows with bigger z-order are painted on top, 0 is default
     int16           zOrder;
 
-    Layout *        layout;
+    ILayout *       layout;
     Control *       parent;
 
     // we cache properties for the current style during SetStyle() which

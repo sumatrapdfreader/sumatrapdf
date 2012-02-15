@@ -6,28 +6,29 @@
 
 // This is only meant to be included by Mui.h inside mui namespace
 
-// Layout can be optionally set on Control. If set, it'll be
-// used to layout this window. This effectively over-rides Measure()/Arrange()
-// calls of Control. This allows to decouple layout logic from Control class
-// and implement generic layout algorithms.
-class Layout
+// WPF-like layout system. Measure() should update desiredSize
+// Then the parent uses it to calculate the size of its children
+// and uses Arrange() to set it.
+// availableSize can have SizeInfinite as dx or dy to allow
+// using as much space as the window wants
+// Every Control implements ILayout for calculating their desired
+// size but can also have independent ILayout (which is for controls
+// that contain other controls). This allows decoupling layout logic
+// from controls and implementing generic layouts.
+class ILayout
 {
 public:
-    Layout() {
-    }
-
-    virtual ~Layout() {
-    }
-
     virtual void Measure(const Size availableSize) = 0;
     virtual void Arrange(const Rect finalRect) = 0;
 };
+
+class Control;
 
 struct VerticalLayoutData {
     Control *   control;
 };
 
-class VerticalLayout : Layout
+class VerticalLayout : ILayout
 {
     Vec<VerticalLayoutData> controls;
 
