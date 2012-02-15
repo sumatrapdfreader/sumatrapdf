@@ -29,6 +29,18 @@ public:
 
 class Control;
 
+// Align is aname  common so to avoid potential conflicts, use ElAlign
+// which stands for Element Align.
+// Top/Left and Bottom/Right are represented by the same ElInContainerAlign
+// values but they're semantically different, so we given them unique names
+enum ElAlign {
+    ElAlignCenter,
+    ElAlignTop,
+    ElAlignBottom,
+    ElAlignLeft,
+    ElAlignRight
+};
+
 // A generalized way of specifying alignment (on a single axis,
 // vertical or horizontal) of an element relative to its container.
 // Each point of both the container and element can be represented
@@ -49,16 +61,15 @@ class Control;
 //       to make spacing between elements easier?
 struct ElInContainerAlign {
 
-    float containerPoint;
     float elementPoint;
+    float containerPoint;
 
-    ElInContainerAlign() : containerPoint(0.5f), elementPoint(0.5f) { }
-    ElInContainerAlign(float cp, float ep) : containerPoint(cp), elementPoint(ep) { }
+    ElInContainerAlign() : elementPoint(.5f), containerPoint(.5f) { } // default alignment is center
+    ElInContainerAlign(float ep, float cp) :  elementPoint(ep), containerPoint(cp) { }
+    ElInContainerAlign(ElAlign align) { Set(align); }
+    ElInContainerAlign(const ElInContainerAlign& other);
 
-    ElInContainerAlign(const ElInContainerAlign& other) {
-        containerPoint = other.containerPoint;
-        elementPoint = other.elementPoint;
-    }
+    void Set(ElAlign align);
 };
 
 #define SizeSelf    666.f
