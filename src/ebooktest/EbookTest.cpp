@@ -64,7 +64,7 @@ to click there.
 using namespace mui;
 
 class ControlEbook;
-class EbookModel;
+class EbookController;
 
 #define ET_FRAME_CLASS_NAME    _T("ET_FRAME")
 
@@ -90,7 +90,7 @@ static ButtonVector *  next = NULL;
 static ButtonVector *  prev = NULL;
 static ScrollBar *     horizProgress = NULL;
 static Button *        status = NULL;
-static EbookModel *    ebookModel = NULL;
+static EbookController *ebookController = NULL;
 
 #if defined(WITH_CHROME)
 // for convenience so that we don't have to pass it around
@@ -583,15 +583,16 @@ void ControlEbook::Paint(Graphics *gfx, int offX, int offY)
     DrawPageLayout(gfx, &pageData->drawInstructions, (REAL)offX, (REAL)offY, gShowTextBoundingBoxes);
 }
 
-class EbookModel : public IClickHandler
+// a feeble attempt at MVC split
+class EbookController : public IClickHandler
 {
 public:
-    EbookModel() {
+    EbookController() {
         gMainWnd->evtMgr->RegisterClickHandler(next, this);
         gMainWnd->evtMgr->RegisterClickHandler(prev, this);
         gMainWnd->evtMgr->RegisterClickHandler(horizProgress, this);
     }
-    ~EbookModel() {
+    ~EbookController() {
         gMainWnd->evtMgr->UnRegisterClickHandlers(this);
     }
 
@@ -600,7 +601,7 @@ public:
 };
 
 // (x, y) is in the coordinates of w
-void EbookModel::Clicked(Control *w, int x, int y)
+void EbookController::Clicked(Control *w, int x, int y)
 {
     if (w == next) {
         ebook->AdvancePage(1);
@@ -718,7 +719,7 @@ static void CreateWindows(HWND hwnd)
 
     gMainWnd->layout = new EbookLayout();
 
-    ebookModel = new EbookModel();
+    ebookController = new EbookController();
 }
 
 static void OnCreateWindow(HWND hwnd)
@@ -943,7 +944,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     MessageLoopForUI::current()->RunWithDispatcher(NULL);
     // ret = RunApp();
 
-    delete ebookModel;
+    delete ebookController;
     delete gMainWnd;
 Exit:
     DeleteStyles();
