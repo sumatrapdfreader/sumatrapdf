@@ -28,6 +28,26 @@ void DirectionalLayout::Measure(const Size availableSize)
     }
 }
 
+#if 0
+class VertAccessor
+{
+public:
+    int& Size(Rect& r) { return r.Height; }
+    int& Pos (Rect& r) { return r.Y; }
+    int& Size(Size& s) { return s.Height; }
+    int& Pos (Size& s) { return s.Y; }
+};
+
+class HorizAccessor
+{
+public:
+    int& Size(Rect& r) { return r.Width; }
+    int& Pos (Rect& r) { return r.X; }
+    int& Size(Size& s) { return s.Width; }
+    int& Pos (Size& s) { return s.Y; }
+};
+#endif
+
 void HorizontalLayout::Arrange(const Rect finalRect)
 {
     DirectionalLayoutData *e;
@@ -62,9 +82,13 @@ void HorizontalLayout::Arrange(const Rect finalRect)
         e->finalPos.Y = 0;
         // TODO: use sizeNonLayoutAxis and alignNonLayoutAxis to calculate
         // the y position and height
-        elSize = e->desiredSize.Height;
-        if (finalRect.Height > elSize)
+        if (SizeSelf == e->sizeNonLayoutAxis)
+            elSize = e->desiredSize.Height;
+        else
+            elSize = (int)((float)finalRect.Height * e->sizeNonLayoutAxis);
+        if (elSize > finalRect.Height)
             elSize = finalRect.Height;
+
         e->finalPos.Height = elSize;
     }
 
@@ -109,9 +133,13 @@ void VerticalLayout::Arrange(const Rect finalRect)
         e->finalPos.X = 0;
         // TODO: use sizeNonLayoutAxis and alignNonLayoutAxis to calculate
         // the x position and width
-        elSize = e->desiredSize.Width;
-        if (finalRect.Width > elSize)
+        if (SizeSelf == e->sizeNonLayoutAxis)
+            elSize = e->desiredSize.Width;
+        else
+            elSize = (int)((float)finalRect.Width * e->sizeNonLayoutAxis);
+        if (elSize > finalRect.Width)
             elSize = finalRect.Width;
+
         e->finalPos.Width = elSize;
     }
 

@@ -629,9 +629,9 @@ static void CreateLayout()
     VerticalLayout *l = new VerticalLayout();
     ld.Set(topPart, 1.f, 1.f, ElInContainerAlign());
     l->Add(ld, true);
-    ld.Set(horizProgress, SizeSelf, 1.f, ElInContainerAlign());
+    ld.Set(horizProgress, SizeSelf, .5f, ElInContainerAlign());
     l->Add(ld);
-    ld.Set(status, SizeSelf, 1.f, ElInContainerAlign());
+    ld.Set(status, SizeSelf, .5f, ElInContainerAlign());
     l->Add(ld);
     gMainWnd->layout = l;
 }
