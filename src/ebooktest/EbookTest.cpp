@@ -131,8 +131,8 @@ struct Pages {
 // I'm lazy, EbookLayout uses global variables of known controls
 class EbookLayout : public ILayout
 {
-    //VerticalLayout top;
-
+    //HorizontalLayout top;
+    Size desiredSize;
 public:
     EbookLayout()
     {
@@ -144,6 +144,9 @@ public:
 
     virtual void Measure(const Size availableSize);
     virtual void Arrange(const Rect finalRect);
+    virtual Size DesiredSize() {
+        return desiredSize;
+    }
 };
 
 void EbookLayout::Measure(const Size availableSize)
@@ -153,6 +156,7 @@ void EbookLayout::Measure(const Size availableSize)
         s.Width = 320;
     if (SizeInfinite == s.Height)
         s.Height = 200;
+    desiredSize = s;
 
     next->Measure(s);
     prev->Measure(s);
@@ -190,30 +194,30 @@ void EbookLayout::Arrange(const Rect finalRect)
     int rectDx = finalRect.Width;
 
     // prev is on the left, y-middle
-    Rect prevPos(Point(0, 0), prev->desiredSize);
+    Rect prevPos(Point(0, 0), prev->DesiredSize());
     CenterRectY(prevPos, Size(rectDx, rectDy));
     prev->Arrange(prevPos);
 
     // next is on the right, y-middle
-    dx = next->desiredSize.Width;
-    Rect nextPos(Point(rectDx - dx, 0), next->desiredSize);
+    dx = next->DesiredSize().Width;
+    Rect nextPos(Point(rectDx - dx, 0), next->DesiredSize());
     CenterRectY(nextPos, Size(rectDx, rectDy));
     next->Arrange(nextPos);
 
     // ebook is between prev and next
-    Size ebookSize(rectDx - nextPos.Width - prevPos.Width, rectDy - status->desiredSize.Height - horizProgress->desiredSize.Height);
+    Size ebookSize(rectDx - nextPos.Width - prevPos.Width, rectDy - status->DesiredSize().Height - horizProgress->DesiredSize().Height);
     Rect ebookPos(Point(prevPos.Width, 0), ebookSize);
     ((Control*)ebook)->Arrange(ebookPos);
 
     // status is at the bottom
-    y = finalRect.Height - status->desiredSize.Height;
-    Rect statusPos(Point(0, y), status->desiredSize);
+    y = finalRect.Height - status->DesiredSize().Height;
+    Rect statusPos(Point(0, y), status->DesiredSize());
     statusPos.Width = finalRect.Width;
     status->Arrange(statusPos);
 
     // horizProgress is at the bottom, right above the status
-    y -= horizProgress->desiredSize.Height;
-    Rect horizPos(Point(0, y), horizProgress->desiredSize);
+    y -= horizProgress->DesiredSize().Height;
+    Rect horizPos(Point(0, y), horizProgress->DesiredSize());
     horizPos.Width = finalRect.Width;
     horizProgress->Arrange(horizPos);
 }

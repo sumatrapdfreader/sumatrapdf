@@ -116,6 +116,11 @@ void Control::Measure(const Size availableSize)
     }
 }
 
+Size Control::DesiredSize()
+{
+    return desiredSize;
+}
+
 void Control::MeasureChildren(Size availableSize) const
 {
     for (size_t i = 0; i < GetChildCount(); i++) {

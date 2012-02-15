@@ -51,6 +51,7 @@ public:
     // ILayout
     virtual void Measure(const Size availableSize);
     virtual void Arrange(const Rect finalRect);
+    virtual Size DesiredSize();
 
     // mouse enter/leave are used e.g. by a button to change the look when mouse
     // is over them. The intention is that in response to those a window should
@@ -102,10 +103,10 @@ public:
     // position and size (relative to parent, might be outside of parent's bounds)
     Rect            pos;
 
+protected:
+    Vec<Control*>   children;
+
     // desired size calculated in Measure()
     Size            desiredSize;
-
-private:
-    Vec<Control*>   children;
 };
 

@@ -5,12 +5,36 @@
 
 namespace mui {
 
-VerticalLayout& VerticalLayout::Add(Control *c)
+HorizontalLayout& HorizontalLayout::Add(DirectionalLayoutData& ld)
 {
-    VerticalLayoutData d;
-    d.control = c;
-    controls.Append(d);
+    elements.Append(ld);
     return *this;
+}
+
+Size HorizontalLayout::DesiredSize()
+{
+    return desiredSize;
+}
+
+void HorizontalLayout::Measure(const Size availableSize)
+{
+
+}
+
+void HorizontalLayout::Arrange(const Rect finalRect)
+{
+
+}
+
+VerticalLayout& VerticalLayout::Add(DirectionalLayoutData& ld)
+{
+    elements.Append(ld);
+    return *this;
+}
+
+Size VerticalLayout::DesiredSize()
+{
+    return desiredSize;
 }
 
 void VerticalLayout::Measure(const Size availableSize)
