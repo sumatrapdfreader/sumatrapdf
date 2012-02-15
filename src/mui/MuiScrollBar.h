@@ -1,10 +1,13 @@
 /* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef MuiScrollBar_h
+#ifndef Mui_h
+#error "this is only meant to be included by Mui.h inside mui namespace"
+#endif
+#ifdef MuiScrollBar_h
+#error "dont include twice!"
+#endif
 #define MuiScrollBar_h
-
-// This is only meant to be included by Mui.h inside mui namespace
 
 // TODO: this is meant to evolve into a scroll bar (which can also serve
 // as a non-scrollable rectangle bar for e.g. indicating progress) but
@@ -52,5 +55,3 @@ public:
 
 float PercFromInt(int total, int n);
 int   IntFromPerc(int total, float perc);
-
-#endif

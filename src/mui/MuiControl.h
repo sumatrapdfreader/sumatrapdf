@@ -1,11 +1,14 @@
 /* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef MuiControl_h
-#define MuiControl_h
-
-// This is only meant to be included by Mui.h inside mui namespace
 // Must be included after Layout.h
+#ifndef Mui_h
+#error "this is only meant to be included by Mui.h inside mui namespace"
+#endif
+#ifdef MuiControl_h
+#error "dont include twice!"
+#endif
+#define MuiControl_h
 
 class EventMgr;
 
@@ -106,4 +109,3 @@ private:
     Vec<Control*>   children;
 };
 
-#endif

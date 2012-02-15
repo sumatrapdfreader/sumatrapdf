@@ -1,10 +1,13 @@
 /* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef MuiPainter_h
+#ifndef Mui_h
+#error "this is only meant to be included by Mui.h inside mui namespace"
+#endif
+#ifdef MuiPainter_h
+#error "dont include twice!"
+#endif
 #define MuiPainter_h
-
-// This is only meant to be included by Mui.h inside mui namespace
 
 // Manages painting process of Control window and all its children.
 // Automatically does double-buffering for less flicker.
@@ -25,5 +28,3 @@ public:
     void Paint(HWND hwnd);
 };
 
-
-#endif

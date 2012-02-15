@@ -1,10 +1,13 @@
 /* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef MuiButton_h
+#ifndef Mui_h
+#error "this is only meant to be included by Mui.h inside mui namespace"
+#endif
+#ifdef MuiButton_h
+#error "dont include twice!"
+#endif
 #define MuiButton_h
-
-// This is only meant to be included by Mui.h inside mui namespace
 
 class Button : public Control
 {
@@ -59,7 +62,4 @@ public:
 
     void    SetStyles(Style *def, Style *mouseOver);
 };
-
-
-#endif
 

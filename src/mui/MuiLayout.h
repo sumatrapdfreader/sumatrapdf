@@ -1,10 +1,13 @@
 /* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef MuiLayout_h
+#ifndef Mui_h
+#error "this is only meant to be included by Mui.h inside mui namespace"
+#endif
+#ifdef MuiLayout_h
+#error "dont include twice!"
+#endif
 #define MuiLayout_h
-
-// This is only meant to be included by Mui.h inside mui namespace
 
 // WPF-like layout system. Measure() should update desiredSize
 // Then the parent uses it to calculate the size of its children
@@ -44,4 +47,3 @@ public:
     virtual void Arrange(const Rect finalRect);
 };
 
-#endif

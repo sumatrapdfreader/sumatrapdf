@@ -1,10 +1,13 @@
 /* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef MuiEventMgr_h
+#ifndef Mui_h
+#error "this is only meant to be included by Mui.h inside mui namespace"
+#endif
+#ifdef MuiEventMgr_h
+#error "dont include twice!"
+#endif
 #define MuiEventMgr_h
-
-// This is only meant to be included by Mui.h inside mui namespace
 
 class HwndWrapper;
 class Control;
@@ -55,6 +58,4 @@ public:
     void SetMinSize(Size s);
     void SetMaxSize(Size s);
 };
-
-#endif
 

@@ -1,10 +1,13 @@
 /* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef MuiCss_h
+#ifndef Mui_h
+#error "this is only meant to be included by Mui.h inside mui namespace"
+#endif
+#ifdef MuiCss_h
+#error "dont include twice!"
+#endif
 #define MuiCss_h
-
-// This is only meant to be included by Mui.h inside mui namespace
 
 namespace css {
 
@@ -181,6 +184,4 @@ Brush *BrushFromColorData(ColorData *color, const Rect& r);
 Brush *BrushFromColorData(ColorData *color, const RectF& r);
 
 } // namespace css
-
-#endif
 
