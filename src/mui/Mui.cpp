@@ -4,7 +4,7 @@
 #include "BaseUtil.h"
 #include <Windowsx.h>
 
-#include "mui.h"
+#include "Mui.h"
 #include "GeomUtil.h"
 #include "Vec.h"
 

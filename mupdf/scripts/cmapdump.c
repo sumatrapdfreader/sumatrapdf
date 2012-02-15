@@ -164,8 +164,13 @@ void fz_new_font_context(fz_context *ctx)
 {
 }
 
-void fz_free_font_context(fz_context *ctx)
+void fz_drop_font_context(fz_context *ctx)
 {
+}
+
+fz_font_context *fz_keep_font_context(fz_context *ctx)
+{
+	return NULL;
 }
 
 void fz_new_aa_context(fz_context *ctx)
@@ -189,7 +194,7 @@ void fz_new_store_context(fz_context *ctx, unsigned int max)
 {
 }
 
-void fz_free_store_context(fz_context *ctx)
+void fz_drop_store_context(fz_context *ctx)
 {
 }
 
@@ -207,11 +212,11 @@ void fz_new_glyph_cache_context(fz_context *ctx)
 {
 }
 
-void fz_free_glyph_cache_context(fz_context *ctx)
+void fz_drop_glyph_cache_context(fz_context *ctx)
 {
 }
 
-fz_glyph_cache *fz_glyph_cache_keep(fz_context *ctx)
+fz_glyph_cache *fz_keep_glyph_cache(fz_context *ctx)
 {
 	return NULL;
 }

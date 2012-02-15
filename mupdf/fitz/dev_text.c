@@ -424,6 +424,7 @@ fz_text_extract_span(fz_context *ctx, fz_text_span **last, fz_text *text, fz_mat
 	if (text->len == 0)
 		return;
 
+	fz_lock(ctx, FZ_LOCK_FREETYPE);
 	if (font->ft_face)
 	{
 		err = FT_Set_Char_Size(font->ft_face, 64, 64, 72, 72);
@@ -547,6 +548,7 @@ fz_text_extract_span(fz_context *ctx, fz_text_span **last, fz_text *text, fz_mat
 
 		fz_add_text_char(ctx, last, font, size, text->wmode, text->items[i].ucs, fz_round_rect(rect));
 	}
+	fz_unlock(ctx, FZ_LOCK_FREETYPE);
 }
 
 static void

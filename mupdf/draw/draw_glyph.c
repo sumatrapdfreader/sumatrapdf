@@ -69,7 +69,7 @@ fz_evict_glyph_cache(fz_context *ctx)
 }
 
 void
-fz_free_glyph_cache_context(fz_context *ctx)
+fz_drop_glyph_cache_context(fz_context *ctx)
 {
 	if (!ctx->glyph_cache)
 		return;
@@ -87,7 +87,7 @@ fz_free_glyph_cache_context(fz_context *ctx)
 }
 
 fz_glyph_cache *
-fz_glyph_cache_keep(fz_context *ctx)
+fz_keep_glyph_cache(fz_context *ctx)
 {
 	fz_lock(ctx, FZ_LOCK_GLYPHCACHE);
 	ctx->glyph_cache->refs++;

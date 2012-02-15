@@ -15,10 +15,10 @@ fz_free_context(fz_context *ctx)
 		return;
 
 	/* Other finalisation calls go here (in reverse order) */
-	fz_free_glyph_cache_context(ctx);
-	fz_free_store_context(ctx);
+	fz_drop_glyph_cache_context(ctx);
+	fz_drop_store_context(ctx);
 	fz_free_aa_context(ctx);
-	fz_free_font_context(ctx);
+	fz_drop_font_context(ctx);
 
 	if (ctx->warn)
 	{
@@ -68,7 +68,6 @@ new_context_phase1(fz_alloc_context *alloc, fz_locks_context *locks)
 	/* New initialisation calls for context entries go here */
 	fz_try(ctx)
 	{
-		fz_new_font_context(ctx);
 		fz_new_aa_context(ctx);
 	}
 	fz_catch(ctx)
@@ -102,6 +101,7 @@ fz_new_context(fz_alloc_context *alloc, fz_locks_context *locks, unsigned int ma
 	{
 		fz_new_store_context(ctx, max_store);
 		fz_new_glyph_cache_context(ctx);
+		fz_new_font_context(ctx);
 	}
 	fz_catch(ctx)
 	{
@@ -115,15 +115,23 @@ fz_new_context(fz_alloc_context *alloc, fz_locks_context *locks, unsigned int ma
 fz_context *
 fz_clone_context(fz_context *ctx)
 {
-	fz_context *new_ctx;
-
 	/* We cannot safely clone the context without having locking/
 	 * unlocking functions. */
-	if (ctx == NULL || ctx->alloc == NULL || ctx->locks == &fz_locks_default)
+	if (ctx == NULL || ctx->locks == &fz_locks_default)
 		return NULL;
+	return fz_clone_context_internal(ctx);
+}
 
+fz_context *
+fz_clone_context_internal(fz_context *ctx)
+{
+	fz_context *new_ctx;
+
+	if (ctx == NULL || ctx->alloc == NULL)
+		return NULL;
 	new_ctx = new_context_phase1(ctx->alloc, ctx->locks);
 	new_ctx->store = fz_store_keep(ctx);
-	new_ctx->glyph_cache = fz_glyph_cache_keep(ctx);
+	new_ctx->glyph_cache = fz_keep_glyph_cache(ctx);
+	new_ctx->font = fz_keep_font_context(ctx);
 	return new_ctx;
 }

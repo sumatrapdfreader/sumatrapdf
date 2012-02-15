@@ -68,7 +68,7 @@ EXPORTS
 """
 
 def main():
-	fitz_exports = generateExports("fitz/fitz.h", ["fz_assert_lock_held", "fz_assert_lock_not_held", "fz_lock_debug_lock", "fz_lock_debug_unlock"])
+	fitz_exports = generateExports("fitz/fitz.h", ["fz_assert_lock_held", "fz_assert_lock_not_held", "fz_lock_debug_lock", "fz_lock_debug_unlock", "fz_purge_glyph_cache"])
 	mupdf_exports = generateExports("pdf/mupdf.h")
 	muxps_exports = generateExports("xps/muxps.h", ["xps_parse_solid_color_brush", "xps_debug_path"])
 	mucbz_exports = generateExports("cbz/mucbz.h")

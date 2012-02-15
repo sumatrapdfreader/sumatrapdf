@@ -125,7 +125,7 @@ $(OUT)/cmapdump.o : pdf/pdf_cmap.c pdf/pdf_cmap_parse.c
 
 # --- Tools and Apps ---
 
-PDF_APPS := $(addprefix $(OUT)/, mupdfdraw mupdfclean mupdfextract mupdfinfo mupdfshow)
+PDF_APPS := $(addprefix $(OUT)/, mudraw mupdfdraw mupdfclean mupdfextract mupdfinfo mupdfshow)
 XPS_APPS := $(addprefix $(OUT)/, muxpsdraw)
 
 $(PDF_APPS) : $(FITZ_LIB) $(THIRD_LIBS)

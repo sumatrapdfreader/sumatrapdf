@@ -11,19 +11,16 @@ do_scavenging_malloc(fz_context *ctx, unsigned int size)
 	void *p;
 	int phase = 0;
 
-	fz_lock(ctx, FZ_LOCK_STORE);
 	fz_lock(ctx, FZ_LOCK_ALLOC);
 	do {
 		p = ctx->alloc->malloc(ctx->alloc->user, size);
 		if (p != NULL)
 		{
 			fz_unlock(ctx, FZ_LOCK_ALLOC);
-			fz_unlock(ctx, FZ_LOCK_STORE);
 			return p;
 		}
 	} while (fz_store_scavenge(ctx, size, &phase));
 	fz_unlock(ctx, FZ_LOCK_ALLOC);
-	fz_unlock(ctx, FZ_LOCK_STORE);
 
 	return NULL;
 }
@@ -34,19 +31,16 @@ do_scavenging_realloc(fz_context *ctx, void *p, unsigned int size)
 	void *q;
 	int phase = 0;
 
-	fz_lock(ctx, FZ_LOCK_STORE);
 	fz_lock(ctx, FZ_LOCK_ALLOC);
 	do {
 		q = ctx->alloc->realloc(ctx->alloc->user, p, size);
 		if (q != NULL)
 		{
 			fz_unlock(ctx, FZ_LOCK_ALLOC);
-			fz_unlock(ctx, FZ_LOCK_STORE);
 			return q;
 		}
 	} while (fz_store_scavenge(ctx, size, &phase));
 	fz_unlock(ctx, FZ_LOCK_ALLOC);
-	fz_unlock(ctx, FZ_LOCK_STORE);
 
 	return NULL;
 }

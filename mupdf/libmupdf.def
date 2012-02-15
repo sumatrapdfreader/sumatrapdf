@@ -14,6 +14,7 @@ EXPORTS
 	fz_flush_warnings
 	fz_new_context
 	fz_clone_context
+	fz_clone_context_internal
 	fz_free_context
 	fz_new_aa_context
 	fz_free_aa_context
@@ -140,7 +141,7 @@ EXPORTS
 	fz_resize_buffer
 	fz_grow_buffer
 	fz_new_store_context
-	fz_free_store_context
+	fz_drop_store_context
 	fz_store_keep
 	fz_debug_store
 	fz_keep_storable
@@ -227,7 +228,8 @@ EXPORTS
 	fz_find_device_colorspace
 	ft_error_string
 	fz_new_font_context
-	fz_free_font_context
+	fz_keep_font_context
+	fz_drop_font_context
 	fz_new_type3_font
 	fz_new_font_from_memory
 	fz_new_font_from_file
@@ -250,8 +252,8 @@ EXPORTS
 	fz_bound_path
 	fz_debug_path
 	fz_new_glyph_cache_context
-	fz_glyph_cache_keep
-	fz_free_glyph_cache_context
+	fz_keep_glyph_cache
+	fz_drop_glyph_cache_context
 	fz_render_ft_glyph
 	fz_render_t3_glyph
 	fz_render_ft_stroked_glyph
