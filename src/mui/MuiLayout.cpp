@@ -79,17 +79,21 @@ void HorizontalLayout::Arrange(const Rect finalRect)
     }
 
     for (e = els.IterStart(); e; e = els.IterNext()) {
-        e->finalPos.Y = 0;
-        // TODO: use sizeNonLayoutAxis and alignNonLayoutAxis to calculate
-        // the y position and height
+        // calc the height of the element
         if (SizeSelf == e->sizeNonLayoutAxis)
             elSize = e->desiredSize.Height;
         else
             elSize = (int)((float)finalRect.Height * e->sizeNonLayoutAxis);
         if (elSize > finalRect.Height)
             elSize = finalRect.Height;
-
         e->finalPos.Height = elSize;
+
+        // calc y position of the element
+        float tmp = (float)finalRect.Height * e->alignNonLayoutAxis.containerPoint;
+        int containerPoint = (int)tmp;
+        tmp = (float)elSize * e->alignNonLayoutAxis.elementPoint;
+        int elementPoint = (int)tmp;
+        e->finalPos.Y = containerPoint - elementPoint;
     }
 
     for (e = els.IterStart(); e; e = els.IterNext()) {
@@ -130,17 +134,21 @@ void VerticalLayout::Arrange(const Rect finalRect)
     }
 
     for (e = els.IterStart(); e; e = els.IterNext()) {
-        e->finalPos.X = 0;
-        // TODO: use sizeNonLayoutAxis and alignNonLayoutAxis to calculate
-        // the x position and width
+        // calc the height of the element
         if (SizeSelf == e->sizeNonLayoutAxis)
             elSize = e->desiredSize.Width;
         else
             elSize = (int)((float)finalRect.Width * e->sizeNonLayoutAxis);
         if (elSize > finalRect.Width)
             elSize = finalRect.Width;
-
         e->finalPos.Width = elSize;
+
+        // calc x position of the element
+        float tmp = (float)finalRect.Width * e->alignNonLayoutAxis.containerPoint;
+        int containerPoint = (int)tmp;
+        tmp = (float)elSize * e->alignNonLayoutAxis.elementPoint;
+        int elementPoint = (int)tmp;
+        e->finalPos.X = containerPoint - elementPoint;
     }
 
     for (e = els.IterStart(); e; e = els.IterNext()) {
