@@ -45,6 +45,8 @@ class Control;
 //    i.e. |container||el|
 // This is more flexible than, say, VerticalAlignment property in WPF.
 // Note: this can be extended for values outside of <0.f - 1.f> range.
+// Note: should I add the notion of margin (via virtual Margin ILayout::Margin()) ?
+//       to make spacing between elements easier?
 struct ElInContainerAlign {
 
     float containerPoint;
@@ -129,37 +131,34 @@ struct DirectionalLayoutData {
     }
 };
 
-class HorizontalLayout : public ILayout
+class DirectionalLayout : public ILayout
 {
+protected:
     Vec<DirectionalLayoutData>  els;
     Size                        desiredSize;
-
 public:
-    HorizontalLayout() {
-    }
-    virtual ~HorizontalLayout();
+    virtual ~DirectionalLayout();
+    virtual Size DesiredSize() { return desiredSize; }
 
-    HorizontalLayout& Add(DirectionalLayoutData& ld, bool ownsElement=false);
+    DirectionalLayout& Add(DirectionalLayoutData& ld, bool ownsElement=false);
 
     virtual void Measure(const Size availableSize);
-    virtual void Arrange(const Rect finalRect);
-    virtual Size DesiredSize();
+    virtual void Arrange(const Rect finalRect) { CrashIf(true); }
 };
 
-class VerticalLayout : public ILayout
+class HorizontalLayout : public DirectionalLayout
 {
-    Vec<DirectionalLayoutData>  els;
-    Size                        desiredSize;
-
 public:
-    VerticalLayout() {
-    }
-    virtual ~VerticalLayout();
+    HorizontalLayout() { }
 
-    VerticalLayout& Add(DirectionalLayoutData& ld, bool ownsElement=false);
-
-    virtual void Measure(const Size availableSize);
     virtual void Arrange(const Rect finalRect);
-    virtual Size DesiredSize();
+};
+
+class VerticalLayout : public DirectionalLayout
+{
+public:
+    VerticalLayout() { }
+
+    virtual void Arrange(const Rect finalRect);
 };
 

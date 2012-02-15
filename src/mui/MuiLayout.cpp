@@ -5,19 +5,22 @@
 
 namespace mui {
 
-HorizontalLayout& HorizontalLayout::Add(DirectionalLayoutData& ld, bool ownsElement)
+DirectionalLayout::~DirectionalLayout()
+{
+    for (DirectionalLayoutData *e = els.IterStart(); e; e = els.IterNext()) {
+        if (e->ownsElement)
+            delete e->element;
+    }
+}
+
+DirectionalLayout& DirectionalLayout::Add(DirectionalLayoutData& ld, bool ownsElement)
 {
     ld.ownsElement = ownsElement;
     els.Append(ld);
     return *this;
 }
 
-Size HorizontalLayout::DesiredSize()
-{
-    return desiredSize;
-}
-
-void HorizontalLayout::Measure(const Size availableSize)
+void DirectionalLayout::Measure(const Size availableSize)
 {
     for (DirectionalLayoutData *e = els.IterStart(); e; e = els.IterNext()) {
         e->element->Measure(availableSize);
@@ -70,42 +73,8 @@ void HorizontalLayout::Arrange(const Rect finalRect)
     }
 }
 
-HorizontalLayout::~HorizontalLayout()
-{
-    for (DirectionalLayoutData *e = els.IterStart(); e; e = els.IterNext()) {
-        if (e->ownsElement)
-            delete e->element;
-    }
-}
-
-VerticalLayout::~VerticalLayout()
-{
-    for (DirectionalLayoutData *e = els.IterStart(); e; e = els.IterNext()) {
-        if (e->ownsElement)
-            delete e->element;
-    }
-}
-
-VerticalLayout& VerticalLayout::Add(DirectionalLayoutData& ld, bool ownsElement)
-{
-    ld.ownsElement = ownsElement;
-    els.Append(ld);
-    return *this;
-}
-
-Size VerticalLayout::DesiredSize()
-{
-    return desiredSize;
-}
-
-void VerticalLayout::Measure(const Size availableSize)
-{
-    for (DirectionalLayoutData *e = els.IterStart(); e; e = els.IterNext()) {
-        e->element->Measure(availableSize);
-        e->desiredSize = e->element->DesiredSize();
-    }
-}
-
+// TODO: this is almost identical to HorizontalLayout::Arrange().
+// Is there a clever way to parametrize this to have only one implementation?
 void VerticalLayout::Arrange(const Rect finalRect)
 {
     DirectionalLayoutData *e;
