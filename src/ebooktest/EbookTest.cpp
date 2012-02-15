@@ -128,6 +128,7 @@ struct Pages {
 };
 #endif
 
+#if 0
 // I'm lazy, EbookLayout uses global variables of known controls
 class EbookLayout : public ILayout
 {
@@ -221,6 +222,7 @@ void EbookLayout::Arrange(const Rect finalRect)
     horizPos.Width = finalRect.Width;
     horizProgress->Arrange(horizPos);
 }
+#endif
 
 class ControlEbook : public Control
 {
@@ -716,10 +718,26 @@ static void CreateWindows(HWND hwnd)
 
     gMainWnd->AddChild(next, prev, ebook);
     gMainWnd->AddChild(horizProgress, status);
+}
 
-    gMainWnd->layout = new EbookLayout();
+static void CreateLayout()
+{
+    HorizontalLayout *topPart = new HorizontalLayout();
+    DirectionalLayoutData ld;
+    ld.Set(next, SizeSelf, SizeSelf, ElInContainerAlign());
+    topPart->Add(ld);
+    ld.Set(ebook, 1.f, 1.f, ElInContainerAlign());
+    topPart->Add(ld);
+    ld.Set(prev, SizeSelf, SizeSelf, ElInContainerAlign());
 
-    ebookController = new EbookController();
+    VerticalLayout *l = new VerticalLayout();
+    ld.Set(topPart, 1.f, 1.f, ElInContainerAlign());
+    l->Add(ld, true);
+    ld.Set(horizProgress, SizeSelf, 1.f, ElInContainerAlign());
+    l->Add(ld);
+    ld.Set(status, SizeSelf, 1.f, ElInContainerAlign());
+    l->Add(ld);
+    gMainWnd->layout = l;
 }
 
 static void OnCreateWindow(HWND hwnd)
@@ -727,6 +745,8 @@ static void OnCreateWindow(HWND hwnd)
     HMENU menu = BuildMenu();
     SetMenu(hwnd, menu);
     CreateWindows(hwnd);
+    CreateLayout();
+    ebookController = new EbookController();
 }
 
 static void OnOpen(HWND hwnd)

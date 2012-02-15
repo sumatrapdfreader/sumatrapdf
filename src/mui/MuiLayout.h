@@ -21,6 +21,7 @@
 class ILayout
 {
 public:
+    virtual ~ILayout() {};
     virtual void Measure(const Size availableSize) = 0;
     virtual Size DesiredSize() = 0;
     virtual void Arrange(const Rect finalRect) = 0;
@@ -45,11 +46,20 @@ class Control;
 // This is more flexible than, say, VerticalAlignment property in WPF.
 // Note: this can be extended for values outside of <0.f - 1.f> range.
 struct ElInContainerAlign {
+
     float containerPoint;
     float elementPoint;
+
+    ElInContainerAlign() : containerPoint(0.5f), elementPoint(0.5f) { }
+    ElInContainerAlign(float cp, float ep) : containerPoint(cp), elementPoint(ep) { }
+
+    ElInContainerAlign(const ElInContainerAlign& other) {
+        containerPoint = other.containerPoint;
+        elementPoint = other.elementPoint;
+    }
 };
 
-#define SizeSelf    666f
+#define SizeSelf    666.f
 
 // Defines how we layout a single element within a container
 // using either horizontal or vertical layout. Vertical/Horizontal
@@ -77,13 +87,49 @@ struct DirectionalLayoutData {
     // within container in the other axis
     ElInContainerAlign alignNonLayoutAxis;
 
+    // if owns element, it'll delete it when is deleted itself
+    // useful for embeding other layouts (controls are usually
+    // deleted by their parent controls)
+    bool               ownsElement;
+
     // data to be used during layout process
 
     // desiredSize of the element after Measure() step
     Size               desiredSize;
+
+    // position we calculated for this element
+    Rect               finalPos;
+
+    DirectionalLayoutData() {
+        element = 0;
+        sizeLayoutAxis = 0.f;
+        sizeNonLayoutAxis = 0.f;
+        alignNonLayoutAxis = ElInContainerAlign();
+        ownsElement = false;
+        desiredSize = Size();
+        finalPos = Rect();
+    }
+
+    DirectionalLayoutData(const DirectionalLayoutData& other)
+    {
+        element = other.element;
+        sizeLayoutAxis = other.sizeLayoutAxis;
+        sizeNonLayoutAxis = other.sizeNonLayoutAxis;
+        alignNonLayoutAxis = other.alignNonLayoutAxis;
+        ownsElement = other.ownsElement;
+        desiredSize = other.desiredSize;
+        finalPos = other.finalPos;
+    }
+
+    void Set(ILayout *el, float sla, float snla, ElInContainerAlign& a) {
+        element = el;
+        sizeLayoutAxis = sla;
+        sizeNonLayoutAxis = snla;
+        alignNonLayoutAxis = a;
+    }
 };
 
-class HorizontalLayout : ILayout
+class HorizontalLayout : public ILayout
 {
     Vec<DirectionalLayoutData>  elements;
     Size                        desiredSize;
@@ -91,17 +137,16 @@ class HorizontalLayout : ILayout
 public:
     HorizontalLayout() {
     }
-    virtual ~HorizontalLayout() {
-    }
+    virtual ~HorizontalLayout();
 
-    HorizontalLayout& Add(DirectionalLayoutData& ld);
+    HorizontalLayout& Add(DirectionalLayoutData& ld, bool ownsElement=false);
 
     virtual void Measure(const Size availableSize);
     virtual void Arrange(const Rect finalRect);
     virtual Size DesiredSize();
 };
 
-class VerticalLayout : ILayout
+class VerticalLayout : public ILayout
 {
     Vec<DirectionalLayoutData>  elements;
     Size                        desiredSize;
@@ -109,10 +154,9 @@ class VerticalLayout : ILayout
 public:
     VerticalLayout() {
     }
-    virtual ~VerticalLayout() {
-    }
+    virtual ~VerticalLayout();
 
-    VerticalLayout& Add(DirectionalLayoutData& ld);
+    VerticalLayout& Add(DirectionalLayoutData& ld, bool ownsElement=false);
 
     virtual void Measure(const Size availableSize);
     virtual void Arrange(const Rect finalRect);
