@@ -57,9 +57,11 @@ void Painter::PaintBackground(Graphics *g, Rect r)
 // sort could change it.
 static void PaintWindowsInZOrder(Graphics *g, Control *wnd)
 {
-    Vec<WndAndOffset> windowsToPaint;
-    WndFilter wndFilter;
-    Pen debugPen(Color(255, 0, 0), 1);
+    Vec<WndAndOffset>   windowsToPaint;
+    WndFilter           wndFilter;
+    WndAndOffset *      woff;
+    Pen                 debugPen(Color(255, 0, 0), 1);
+
     CollectWindowsBreathFirst(wnd, 0, 0, &wndFilter, &windowsToPaint);
     size_t paintedCount = 0;
     int16 lastPaintedZOrder = INT16_MIN;
@@ -67,18 +69,16 @@ static void PaintWindowsInZOrder(Graphics *g, Control *wnd)
     for (;;) {
         // find which z-order should we paint now
         int16 minUnpaintedZOrder = INT16_MAX;
-        for (size_t i = 0; i < winCount; i++) {
-            WndAndOffset woff = windowsToPaint.At(i);
-            int16 zOrder = woff.wnd->zOrder;
+        for (woff = windowsToPaint.IterStart(); woff; woff = windowsToPaint.IterNext()) {
+            int16 zOrder = woff->wnd->zOrder;
             if ((zOrder > lastPaintedZOrder) && (zOrder < minUnpaintedZOrder))
                 minUnpaintedZOrder = zOrder;
         }
-        for (size_t i = 0; i < winCount; i++) {
-            WndAndOffset woff = windowsToPaint.At(i);
-            if (minUnpaintedZOrder == woff.wnd->zOrder) {
-                woff.wnd->Paint(g, woff.offX, woff.offY);
+        for (woff = windowsToPaint.IterStart(); woff; woff = windowsToPaint.IterNext()) {
+            if (minUnpaintedZOrder == woff->wnd->zOrder) {
+                woff->wnd->Paint(g, woff->offX, woff->offY);
                 if (IsDebugPaint()) {
-                    Rect bbox(woff.offX, woff.offY, woff.wnd->pos.Width, woff.wnd->pos.Height);
+                    Rect bbox(woff->offX, woff->offY, woff->wnd->pos.Width, woff->wnd->pos.Height);
                     g->DrawRectangle(&debugPen, bbox);
                 }
                 ++paintedCount;

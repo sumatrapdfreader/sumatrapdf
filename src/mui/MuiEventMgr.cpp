@@ -51,10 +51,9 @@ void EventMgr::RegisterClickHandler(Control *wndSource, IClickHandler *clickHand
 
 IClickHandler *EventMgr::GetClickHandlerFor(Control *wndSource)
 {
-    for (size_t i = 0; i < clickHandlers.Count(); i++) {
-        ClickHandler ch = clickHandlers.At(i);
-        if (ch.wndSource == wndSource)
-            return ch.clickHandler;
+    for (ClickHandler *ch = clickHandlers.IterStart(); ch; ch = clickHandlers.IterNext()) {
+        if (ch->wndSource == wndSource)
+            return ch->clickHandler;
     }
     return NULL;
 }
