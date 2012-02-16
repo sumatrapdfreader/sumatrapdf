@@ -241,11 +241,11 @@
 			>
 		</File>
 		<File
-			RelativePath="..\apps\mubusy_pdfclean.c"
+			RelativePath="..\apps\mubusy_draw.c"
 			>
 		</File>
 		<File
-			RelativePath="..\apps\mubusy_pdfdraw.c"
+			RelativePath="..\apps\mubusy_pdfclean.c"
 			>
 		</File>
 		<File
@@ -258,10 +258,6 @@
 		</File>
 		<File
 			RelativePath="..\apps\mubusy_pdfshow.c"
-			>
-		</File>
-		<File
-			RelativePath="..\apps\mubusy_xpsdraw.c"
 			>
 		</File>
 	</Files>

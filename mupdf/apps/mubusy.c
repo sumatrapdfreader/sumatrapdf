@@ -7,11 +7,10 @@
 #include <string.h>
 
 int pdfclean_main(int argc, char *argv[]);
-int pdfdraw_main(int argc, char *argv[]);
+int draw_main(int argc, char *argv[]);
 int pdfextract_main(int argc, char *argv[]);
 int pdfinfo_main(int argc, char *argv[]);
 int pdfshow_main(int argc, char *argv[]);
-int xpsdraw_main(int argc, char *argv[]);
 
 static int
 namematch(const char *end, const char *start, const char *match, int len)
@@ -33,8 +32,8 @@ int main(int argc, char **argv)
 		end++;
 	if ((end-4 >= start) && (end[-4] == '.') && (end[-3] == 'e') && (end[-2] == 'x') && (end[-1] == 'e'))
 		end = end-4;
-	if (namematch(end, start, "mupdfdraw", 9))
-		return pdfdraw_main(argc, argv);
+	if (namematch(end, start, "mupdfdraw", 9) || namematch(end, start, "muxpsdraw", 9) || namematch(end, start, "mudraw", 6))
+		return draw_main(argc, argv);
 	if (namematch(end, start, "mupdfclean", 10))
 		return pdfclean_main(argc, argv);
 	if (namematch(end, start, "mupdfextract", 12))
@@ -43,11 +42,9 @@ int main(int argc, char **argv)
 		return pdfshow_main(argc, argv);
 	if (namematch(end, start, "mupdfinfo", 9))
 		return pdfinfo_main(argc, argv);
-	if (namematch(end, start, "muxpsdraw", 9))
-		return xpsdraw_main(argc, argv);
 	/* And include old names for backward compatibility */
-	if (namematch(end, start, "pdfdraw", 7))
-		return pdfdraw_main(argc, argv);
+	if (namematch(end, start, "pdfdraw", 7) || namematch(end, start, "xpsdraw", 7))
+		return draw_main(argc, argv);
 	if (namematch(end, start, "pdfclean", 8))
 		return pdfclean_main(argc, argv);
 	if (namematch(end, start, "pdfextract", 10))
@@ -56,12 +53,10 @@ int main(int argc, char **argv)
 		return pdfshow_main(argc, argv);
 	if (namematch(end, start, "pdfinfo", 7))
 		return pdfinfo_main(argc, argv);
-	if (namematch(end, start, "xpsdraw", 7))
-		return xpsdraw_main(argc, argv);
 
-	fprintf(stderr, "mubusy: Combined build of mupdf/muxps tools.\n\n");
+	fprintf(stderr, "mubusy: Combined build of mupdf/mudraw tools.\n\n");
 	fprintf(stderr, "Invoke as one of the following:\n");
-	fprintf(stderr, "\tpdfclean, pdfdraw, pdfextract, pdfinfo, pdfshow, xpsdraw.\n");
+	fprintf(stderr, "\tmupdfclean, mudraw, mupdfextract, mupdfinfo, mupdfshow.\n");
 
 	return 0;
 }

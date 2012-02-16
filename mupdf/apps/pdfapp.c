@@ -358,6 +358,9 @@ static void pdfapp_gotouri(pdfapp_t *app, char *uri)
 
 static void pdfapp_gotopage(pdfapp_t *app, int number)
 {
+	app->isediting = 0;
+	winrepaint(app);
+
 	if (app->histlen + 1 == 256)
 	{
 		memmove(app->hist, app->hist + 1, sizeof(int) * 255);

@@ -125,11 +125,9 @@ $(OUT)/cmapdump.o : pdf/pdf_cmap.c pdf/pdf_cmap_parse.c
 
 # --- Tools and Apps ---
 
-PDF_APPS := $(addprefix $(OUT)/, mudraw mupdfdraw mupdfclean mupdfextract mupdfinfo mupdfshow)
-XPS_APPS := $(addprefix $(OUT)/, muxpsdraw)
+MU_APPS := $(addprefix $(OUT)/, mudraw mupdfclean mupdfextract mupdfinfo mupdfshow)
 
-$(PDF_APPS) : $(FITZ_LIB) $(THIRD_LIBS)
-$(XPS_APPS) : $(FITZ_LIB) $(THIRD_LIBS)
+$(MU_APPS) : $(FITZ_LIB) $(THIRD_LIBS)
 
 BUSY_SRC := $(notdir $(wildcard apps/mubusy_*.c))
 BUSY_APP := $(addprefix $(OUT)/, mubusy)
@@ -151,16 +149,16 @@ libdir ?= $(prefix)/lib
 incdir ?= $(prefix)/include
 mandir ?= $(prefix)/share/man
 
-install: $(FITZ_LIB) $(PDF_APPS) $(XPS_APPS) $(MUPDF)
+install: $(FITZ_LIB) $(MU_APPS) $(MUPDF)
 	install -d $(bindir) $(libdir) $(incdir) $(mandir)/man1
 	install $(FITZ_LIB) $(libdir)
 	install fitz/memento.h fitz/fitz.h pdf/mupdf.h xps/muxps.h cbz/mucbz.h $(incdir)
-	install $(PDF_APPS) $(XPS_APPS) $(MUPDF) $(bindir)
+	install $(MU_APPS) $(MUPDF) $(bindir)
 	install $(wildcard apps/man/*.1) $(mandir)/man1
 
 # --- Clean and Default ---
 
-all: $(THIRD_LIBS) $(FITZ_LIB) $(PDF_APPS) $(XPS_APPS) $(MUPDF) $(BUSY_APP)
+all: $(THIRD_LIBS) $(FITZ_LIB) $(MU_APPS) $(MUPDF) $(BUSY_APP)
 
 clean:
 	rm -rf $(OUT)

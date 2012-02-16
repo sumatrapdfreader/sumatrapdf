@@ -97,15 +97,20 @@ fz_translate(float tx, float ty)
 fz_matrix
 fz_invert_matrix(fz_matrix src)
 {
-	fz_matrix dst;
-	float rdet = 1 / (src.a * src.d - src.b * src.c);
-	dst.a = src.d * rdet;
-	dst.b = -src.b * rdet;
-	dst.c = -src.c * rdet;
-	dst.d = src.a * rdet;
-	dst.e = -src.e * dst.a - src.f * dst.c;
-	dst.f = -src.e * dst.b - src.f * dst.d;
-	return dst;
+	float det = src.a * src.d - src.b * src.c;
+	if (det < -FLT_EPSILON || det > FLT_EPSILON)
+	{
+		fz_matrix dst;
+		float rdet = 1 / det;
+		dst.a = src.d * rdet;
+		dst.b = -src.b * rdet;
+		dst.c = -src.c * rdet;
+		dst.d = src.a * rdet;
+		dst.e = -src.e * dst.a - src.f * dst.c;
+		dst.f = -src.e * dst.b - src.f * dst.d;
+		return dst;
+	}
+	return src;
 }
 
 int

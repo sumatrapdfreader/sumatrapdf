@@ -279,9 +279,8 @@ LIBS_OBJS = \
 	$(MUCBZ_OBJS)
 
 MUAPPS_OBJS = \
-	$(OA)\win_main.obj $(OA)\pdfapp.obj $(OA)\muxpsdraw.obj $(OA)\mupdfdraw.obj \
-	$(OA)\mupdfshow.obj $(OA)\mupdfclean.obj $(OA)\mupdfinfo.obj $(OA)\mupdfextract.obj \
-	$(OA)\pdfbench.obj
+	$(OA)\win_main.obj $(OA)\pdfapp.obj $(OA)\mudraw.obj $(OA)\pdfbench.obj \
+	$(OA)\mupdfshow.obj $(OA)\mupdfclean.obj $(OA)\mupdfinfo.obj $(OA)\mupdfextract.obj
 
 PDFAPP_RES = $(OA)\pdfview.res
 PDFAPP_OBJS = $(LIBS_OBJS) $(OA)\win_main.obj $(OA)\pdfapp.obj $(PDFAPP_RES)
@@ -289,9 +288,6 @@ PDFAPP_APP = $(O)\pdfview.exe
 
 PDFBENCH_OBJS = $(LIBS_OBJS) $(OA)\pdfbench.obj
 PDFBENCH_APP = $(O)\pdfbench.exe
-
-PDFDRAW_OBJS = $(LIBS_OBJS) $(OA)\mupdfdraw.obj
-PDFDRAW_APP = $(O)\pdfdraw.exe
 
 PDFSHOW_OBJS = $(LIBS_OBJS) $(OA)\mupdfshow.obj
 PDFSHOW_APP = $(O)\pdfshow.exe
@@ -308,9 +304,6 @@ PDFEXTRACT_APP = $(O)\pdfextract.exe
 FONTDUMP_OBJS = $(OP)\fontdump.obj
 FONTDUMP_APP = $(O)\fontdump.exe
 
-XPSDRAW_OBJS = $(LIBS_OBJS) $(OA)\muxpsdraw.obj
-XPSDRAW_APP = $(O)\xpsdraw.exe
-
 MUDRAW_OBJS = $(LIBS_OBJS) $(OA)\mudraw.obj
 MUDRAW_APP = $(O)\mudraw.exe
 
@@ -318,7 +311,7 @@ LIBMUPDF_LIB = $(O)\libmupdf.lib
 LIBMUPDF_DEF = $(MUPDF_DIR)\libmupdf.def
 LIBMUPDF_DLL = $(O)\libmupdf.dll
 
-all: $(O) $(PDFDRAW_APP) $(PDFSHOW_APP) $(PDFCLEAN_APP) $(PDFINFO_APP) $(PDFEXTRACT_APP) $(PDFAPP_APP) $(XPSDRAW_APP) $(MUDRAW_APP) $(PDFBENCH_APP)
+all: $(O) $(PDFSHOW_APP) $(PDFCLEAN_APP) $(PDFINFO_APP) $(PDFEXTRACT_APP) $(PDFAPP_APP) $(MUDRAW_APP) $(PDFBENCH_APP)
 
 clean: force
 	-rmdir /S /Q $(O)
@@ -348,9 +341,6 @@ $(PDFBENCH_APP): $(PDFBENCH_OBJS)
 $(FONTDUMP_APP): $(FONTDUMP_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
 
-$(PDFDRAW_APP): $(PDFDRAW_OBJS)
-	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
-
 $(PDFSHOW_APP): $(PDFSHOW_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
 
@@ -364,9 +354,6 @@ $(PDFAPP_APP): $(PDFAPP_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:WINDOWS
 
 $(PDFEXTRACT_APP): $(PDFEXTRACT_OBJS)
-	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
-
-$(XPSDRAW_APP): $(XPSDRAW_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
 
 $(MUDRAW_APP): $(MUDRAW_OBJS)
