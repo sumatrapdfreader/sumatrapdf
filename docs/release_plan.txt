@@ -2,7 +2,6 @@ Things to do before 2.0 release:
 * (?) ebook support
 * installer and settings: UI for registering other supported file types http://code.google.com/p/sumatrapdf/issues/detail?id=1365
 * switch to ucrt
-* fix crashes during stress test
 * bug: focus captured by web control when clicking on "Related Topics" button in 010Editor.chm from
   http://code.google.com/p/sumatrapdf/issues/detail?id=1579
   I don't know how to fix this. It seems that the problem really is that a button window inside browser
@@ -25,25 +24,16 @@ The shortest path to ebook support in sumatra:
    use the layout from current page. When going backwards or skipping ahead, we re-sync
    with layout from the beginning and can drop the layout from current page.
 
-2. Small tweaks to UI: next/prev buttons are graphics (> and <) taking its own space
-   on the left and right of ebook window (as opposed to textual buttons on top of it)
-   This could be a good opportunity to introduce VerticalLayout, HorizontalLayout
-   and CompositeLayout (?) classes deriving from Layout and implementing generic
-   veritical/horizontal layout logic and composite layout (layout that simply
-   combines several layouts and invokes them in sequence (as an alternative
-   to use dummy Controls whose only purpose is to host child controls for
-   the purpose of layout process).
-
-3. Support more of the mobi format
-3.1 images
-3.2 first page should be cover page if there are images (it seems the convention is
+2. Support more of the mobi format
+2.1 images
+2.2 first page should be cover page if there are images (it seems the convention is
     that first two images are two versions of the cover page (at different resolution).
     depends on 3.1
-3.3 links
-3.4 lists (ul, li)
-3.5 probably more
+2.3 links
+2.4 lists (ul, li)
+2.5 probably more
 
-4. Integrate the code into Sumatra. The way I'm thinking about doing it to minimize
+3. Integrate the code into Sumatra. The way I'm thinking about doing it to minimize
    changing existing code:
 
 a) rename WindowInfo to EngineWindowInfo and introduce EbookWindowInfo

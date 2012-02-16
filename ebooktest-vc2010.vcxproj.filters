@@ -431,6 +431,7 @@
   <ItemGroup>
     <None Include="docs\ebook-todo.txt" />
     <None Include="docs\ebooks-impl-notes.txt" />
+    <None Include="docs\release_plan.txt" />
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="src\ebooktest\EbookTest.exe.manifest" />
