@@ -83,6 +83,7 @@ struct ElAlignData {
     bool operator==(const ElAlignData& other) const;
 
     void Set(ElAlign align);
+    int CalcOffset(int elSize, int containerSize);
 };
 
 // we can't have constructors in ElInContainerAlign, so those are

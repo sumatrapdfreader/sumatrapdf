@@ -243,6 +243,14 @@ void ElAlignData::Set(ElAlign align)
     }
 }
 
+// calculates the offset of an element within container
+int ElAlignData::CalcOffset(int elSize, int containerSize)
+{
+    int ep = (int)((float)elSize        * elementPoint  );
+    int cp = (int)((float)containerSize * containerPoint);
+    return cp - ep;
+}
+
 void Prop::Free()
 {
     if (PropFontName == type)

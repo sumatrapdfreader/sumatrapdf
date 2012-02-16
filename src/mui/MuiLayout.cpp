@@ -28,25 +28,15 @@ void DirectionalLayout::Measure(const Size availableSize)
     }
 }
 
-#if 0
-class VertAccessor
+static int CalcScaledClippedSize(int size, float scale, int selfSize)
 {
-public:
-    int& Size(Rect& r) { return r.Height; }
-    int& Pos (Rect& r) { return r.Y; }
-    int& Size(Size& s) { return s.Height; }
-    int& Pos (Size& s) { return s.Y; }
-};
-
-class HorizAccessor
-{
-public:
-    int& Size(Rect& r) { return r.Width; }
-    int& Pos (Rect& r) { return r.X; }
-    int& Size(Size& s) { return s.Width; }
-    int& Pos (Size& s) { return s.Y; }
-};
-#endif
+    int scaledSize = selfSize;
+    if (SizeSelf != scale)
+        scaledSize = (int)((float)size * scale);
+    if (scaledSize > size)
+        scaledSize = size;
+    return scaledSize;
+}
 
 void HorizontalLayout::Arrange(const Rect finalRect)
 {
@@ -79,30 +69,12 @@ void HorizontalLayout::Arrange(const Rect finalRect)
     }
 
     for (e = els.IterStart(); e; e = els.IterNext()) {
-        // calc the height of the element
-        if (SizeSelf == e->sizeNonLayoutAxis)
-            elSize = e->desiredSize.Height;
-        else
-            elSize = (int)((float)finalRect.Height * e->sizeNonLayoutAxis);
-        if (elSize > finalRect.Height)
-            elSize = finalRect.Height;
-        e->finalPos.Height = elSize;
-
-        // calc y position of the element
-        float tmp = (float)finalRect.Height * e->alignNonLayoutAxis.containerPoint;
-        int containerPoint = (int)tmp;
-        tmp = (float)elSize * e->alignNonLayoutAxis.elementPoint;
-        int elementPoint = (int)tmp;
-        e->finalPos.Y = containerPoint - elementPoint;
-    }
-
-    for (e = els.IterStart(); e; e = els.IterNext()) {
+        e->finalPos.Height = CalcScaledClippedSize(finalRect.Height, e->sizeNonLayoutAxis, e->desiredSize.Height);
+        e->finalPos.Y = e->alignNonLayoutAxis.CalcOffset(e->finalPos.Height, finalRect.Height);
         e->element->Arrange(e->finalPos);
     }
 }
 
-// TODO: this is almost identical to HorizontalLayout::Arrange().
-// Is there a clever way to parametrize this to have only one implementation?
 void VerticalLayout::Arrange(const Rect finalRect)
 {
     DirectionalLayoutData *e;
@@ -134,24 +106,8 @@ void VerticalLayout::Arrange(const Rect finalRect)
     }
 
     for (e = els.IterStart(); e; e = els.IterNext()) {
-        // calc the height of the element
-        if (SizeSelf == e->sizeNonLayoutAxis)
-            elSize = e->desiredSize.Width;
-        else
-            elSize = (int)((float)finalRect.Width * e->sizeNonLayoutAxis);
-        if (elSize > finalRect.Width)
-            elSize = finalRect.Width;
-        e->finalPos.Width = elSize;
-
-        // calc x position of the element
-        float tmp = (float)finalRect.Width * e->alignNonLayoutAxis.containerPoint;
-        int containerPoint = (int)tmp;
-        tmp = (float)elSize * e->alignNonLayoutAxis.elementPoint;
-        int elementPoint = (int)tmp;
-        e->finalPos.X = containerPoint - elementPoint;
-    }
-
-    for (e = els.IterStart(); e; e = els.IterNext()) {
+        e->finalPos.Width = CalcScaledClippedSize(finalRect.Width, e->sizeNonLayoutAxis, e->desiredSize.Width);
+        e->finalPos.X = e->alignNonLayoutAxis.CalcOffset(e->finalPos.Width, finalRect.Width);
         e->element->Arrange(e->finalPos);
     }
 }
