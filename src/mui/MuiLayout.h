@@ -67,9 +67,6 @@ struct DirectionalLayoutData {
     // desiredSize of the element after Measure() step
     Size               desiredSize;
 
-    // position we calculated for this element
-    Rect               finalPos;
-
     DirectionalLayoutData() {
         element = 0;
         sizeLayoutAxis = 0.f;
@@ -77,7 +74,6 @@ struct DirectionalLayoutData {
         alignNonLayoutAxis = GetElAlignCenter();
         ownsElement = false;
         desiredSize = Size();
-        finalPos = Rect();
     }
 
     DirectionalLayoutData(const DirectionalLayoutData& other)
@@ -88,7 +84,6 @@ struct DirectionalLayoutData {
         alignNonLayoutAxis = other.alignNonLayoutAxis;
         ownsElement = other.ownsElement;
         desiredSize = other.desiredSize;
-        finalPos = other.finalPos;
     }
 
     void Set(ILayout *el, float sla, float snla, ElAlignData& a) {

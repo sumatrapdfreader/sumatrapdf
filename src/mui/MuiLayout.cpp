@@ -89,17 +89,15 @@ void HorizontalLayout::Arrange(const Rect finalRect)
     RedistributeSizes(sizes.LendData(), sizes.Count(), finalRect.Width);
 
     for (e = els.IterStart(), si = sizes.IterStart(); e; e = els.IterNext(), si = sizes.IterNext()) {
-        e->finalPos.X       = si->finalPos;
-        e->finalPos.Width   = si->finalSize;
-        e->finalPos.Height  = CalcScaledClippedSize(finalRect.Height, e->sizeNonLayoutAxis, e->desiredSize.Height);
-        e->finalPos.Y       = e->alignNonLayoutAxis.CalcOffset(e->finalPos.Height, finalRect.Height);
-        e->element->Arrange(e->finalPos);
+        int dy = CalcScaledClippedSize(finalRect.Height, e->sizeNonLayoutAxis, e->desiredSize.Height);
+        int y  = e->alignNonLayoutAxis.CalcOffset(dy, finalRect.Height);
+        e->element->Arrange(Rect(si->finalPos, y, si->finalSize, dy));
     }
 }
 
 void VerticalLayout::Arrange(const Rect finalRect)
 {
-    DirectionalLayoutData *e;
+    DirectionalLayoutData * e;
     SizeInfo *              si;
     Vec<SizeInfo>           sizes;
 
@@ -110,11 +108,9 @@ void VerticalLayout::Arrange(const Rect finalRect)
     RedistributeSizes(sizes.LendData(), sizes.Count(), finalRect.Height);
 
     for (e = els.IterStart(), si = sizes.IterStart(); e; e = els.IterNext(), si = sizes.IterNext()) {
-        e->finalPos.Y      = si->finalPos;
-        e->finalPos.Height = si->finalSize;
-        e->finalPos.Width  = CalcScaledClippedSize(finalRect.Width, e->sizeNonLayoutAxis, e->desiredSize.Width);
-        e->finalPos.X      = e->alignNonLayoutAxis.CalcOffset(e->finalPos.Width, finalRect.Width);
-        e->element->Arrange(e->finalPos);
+        int dx = CalcScaledClippedSize(finalRect.Width, e->sizeNonLayoutAxis, e->desiredSize.Width);
+        int x  = e->alignNonLayoutAxis.CalcOffset(dx, finalRect.Width);
+        e->element->Arrange(Rect(x, si->finalPos, dx, si->finalSize));
     }
 }
 
