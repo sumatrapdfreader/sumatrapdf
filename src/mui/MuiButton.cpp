@@ -228,23 +228,27 @@ void ButtonVector::Paint(Graphics *gfx, int offX, int offY)
 
     // graphicsPath bbox can have non-zero X,Y, so must take that
     // into account
-
+    Rect gpBbox;
     Brush *brFill = BrushFromColorData(s->fill, bbox);
     Brush *brStroke = BrushFromColorData(s->stroke, bbox);
     Pen pen(brStroke, s->strokeWidth);
     pen.SetMiterLimit(1.f);
     pen.SetAlignment(PenAlignmentInset);
     if (0.f == s->strokeWidth)
-        graphicsPath->GetBounds(&bbox);
+        graphicsPath->GetBounds(&gpBbox);
     else
-        graphicsPath->GetBounds(&bbox, NULL, &pen);
+        graphicsPath->GetBounds(&gpBbox, NULL, &pen);
 
-    // TODO: center the path both vertically and horizontally
+    // calculate the position of graphics path within given button position, size
+    // and desired vertical/horizontal alignment.
+    // Note: alignment is calculated against the size after substracting 
+    // ncSize is the size of the non-client parts i.e. border and padding, on both sides
+    Size ncSize = GetBorderAndPaddingSize(s);
+    int elOffY = s->vertAlign.CalcOffset( gpBbox.Height, pos.Height - ncSize.Height);
+    int elOffX = s->horizAlign.CalcOffset(gpBbox.Width,  pos.Width  - ncSize.Width );
 
-    Padding pad = s->padding;
-    //int alignedOffX = AlignedOffset(pos.Width - pad.left - pad.right, desiredSize.Width, Align_Center);
-    int x = offX + pad.left + (int)(s->borderWidth.left - bbox.X);
-    int y = offY + pad.top + (int)(s->borderWidth.top - bbox.Y);
+    int x = offX + elOffX + s->padding.left + (int)s->borderWidth.left + gpBbox.X;
+    int y = offY + elOffY + s->padding.top  + (int)s->borderWidth.top  + gpBbox.Y;
 
     // TODO: can I avoid making a copy of GraphicsPath?
     GraphicsPath *tmp = graphicsPath->Clone();

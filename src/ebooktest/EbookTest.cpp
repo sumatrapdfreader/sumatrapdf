@@ -556,7 +556,9 @@ static void CreateStyles()
     nextDefault->Set(Prop::AllocWidth(PropStrokeWidth, 0.f));
     nextDefault->Set(Prop::AllocColorSolid(PropFill, "gray"));
     nextDefault->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
+    nextDefault->Set(Prop::AllocAlign(PropVertAlign, ElAlignTop));
     //nextDefault->Set(Prop::AllocPadding(4, 8, 12, 16));
+
     nextMouseOver = new Style(gStyleButtonMouseOver);
     nextMouseOver->SetBorderWidth(0.f);
     //nextMouseOver->Set(Prop::AllocPadding(12, 8, 4, 16));
@@ -564,6 +566,7 @@ static void CreateStyles()
     nextMouseOver->Set(Prop::AllocWidth(PropStrokeWidth, 0.f));
     nextMouseOver->Set(Prop::AllocColorSolid(PropFill, "black"));
     nextMouseOver->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
+    nextMouseOver->Set(Prop::AllocAlign(PropVertAlign, ElAlignBottom));
 
     statusDefault = new Style();
     statusDefault->Set(Prop::AllocColorSolid(PropBgColor, "white"));
