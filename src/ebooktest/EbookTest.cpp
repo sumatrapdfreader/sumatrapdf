@@ -619,19 +619,19 @@ static void CreateLayout()
 {
     HorizontalLayout *topPart = new HorizontalLayout();
     DirectionalLayoutData ld;
-    ld.Set(prev, SizeSelf, 1.f, ElInContainerAlign(ElAlignCenter));
+    ld.Set(prev, SizeSelf, 1.f, GetElAlignCenter());
     topPart->Add(ld);
-    ld.Set(ebook, 1.f, 1.f, ElInContainerAlign(ElAlignTop));
+    ld.Set(ebook, 1.f, 1.f, GetElAlignTop());
     topPart->Add(ld);
-    ld.Set(next, SizeSelf, 1.f, ElInContainerAlign(ElAlignBottom));
+    ld.Set(next, SizeSelf, 1.f, GetElAlignBottom());
     topPart->Add(ld);
 
     VerticalLayout *l = new VerticalLayout();
-    ld.Set(topPart, 1.f, 1.f, ElInContainerAlign(ElAlignTop));
+    ld.Set(topPart, 1.f, 1.f, GetElAlignTop());
     l->Add(ld, true);
-    ld.Set(horizProgress, SizeSelf, .5f, ElInContainerAlign(ElAlignRight));
+    ld.Set(horizProgress, SizeSelf, .5f, GetElAlignRight());
     l->Add(ld);
-    ld.Set(status, SizeSelf, .5f, ElInContainerAlign(ElAlignLeft));
+    ld.Set(status, SizeSelf, .5f, GetElAlignLeft());
     l->Add(ld);
     gMainWnd->layout = l;
 }

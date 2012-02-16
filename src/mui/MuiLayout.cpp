@@ -5,28 +5,6 @@
 
 namespace mui {
 
-ElInContainerAlign::ElInContainerAlign(const ElInContainerAlign& other)
-{
-    elementPoint = other.elementPoint;
-    containerPoint = other.containerPoint;
-}
-
-void ElInContainerAlign::Set(ElAlign align)
-{
-    if (ElAlignCenter == align) {
-        elementPoint   = .5f;
-        containerPoint = .5f;
-    } else if ((ElAlignTop == align) || (ElAlignLeft == align)) {
-        elementPoint   = 0.f;
-        containerPoint = 0.f;
-    } else if ((ElAlignBottom == align) || (ElAlignRight == align)) {
-        elementPoint   = 1.f;
-        containerPoint = 1.f;
-    } else {
-        CrashIf(true);
-    }
-}
-
 DirectionalLayout::~DirectionalLayout()
 {
     for (DirectionalLayoutData *e = els.IterStart(); e; e = els.IterNext()) {

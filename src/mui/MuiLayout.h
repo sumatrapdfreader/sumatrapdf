@@ -29,49 +29,6 @@ public:
 
 class Control;
 
-// Align is aname  common so to avoid potential conflicts, use ElAlign
-// which stands for Element Align.
-// Top/Left and Bottom/Right are represented by the same ElInContainerAlign
-// values but they're semantically different, so we given them unique names
-enum ElAlign {
-    ElAlignCenter,
-    ElAlignTop,
-    ElAlignBottom,
-    ElAlignLeft,
-    ElAlignRight
-};
-
-// A generalized way of specifying alignment (on a single axis,
-// vertical or horizontal) of an element relative to its container.
-// Each point of both the container and element can be represented
-// as a float in the <0.f - 1.f> range.
-// O.f represents left (in horizontal case) or top (in vertical) case point.
-// 1.f represents right/bottom point and 0.5f represents a middle.
-// We define a point inside cotainer and point inside element and layout
-// positions element so that those points are the same.
-// For example:
-//  - (0.5f, 0.5f) centers element inside of the container.
-//  - (0.f, 0.f) makes left edge of the element align with left edge of the container
-//    i.e. ||el| container|
-//  - (1.f, 0.f) makes left edge of the element align with right edge of the container
-//    i.e. |container||el|
-// This is more flexible than, say, VerticalAlignment property in WPF.
-// Note: this can be extended for values outside of <0.f - 1.f> range.
-// Note: should I add the notion of margin (via virtual Margin ILayout::Margin()) ?
-//       to make spacing between elements easier?
-struct ElInContainerAlign {
-
-    float elementPoint;
-    float containerPoint;
-
-    ElInContainerAlign() : elementPoint(.5f), containerPoint(.5f) { } // default alignment is center
-    ElInContainerAlign(float ep, float cp) :  elementPoint(ep), containerPoint(cp) { }
-    ElInContainerAlign(ElAlign align) { Set(align); }
-    ElInContainerAlign(const ElInContainerAlign& other);
-
-    void Set(ElAlign align);
-};
-
 #define SizeSelf    666.f
 
 // Defines how we layout a single element within a container
@@ -98,7 +55,7 @@ struct DirectionalLayoutData {
     // within layout axis, elements are laid out sequentially.
     // alignNonLayoutAxis determines how to align the element
     // within container in the other axis
-    ElInContainerAlign alignNonLayoutAxis;
+    ElAlignData        alignNonLayoutAxis;
 
     // if owns element, it'll delete it when is deleted itself
     // useful for embeding other layouts (controls are usually
@@ -117,7 +74,7 @@ struct DirectionalLayoutData {
         element = 0;
         sizeLayoutAxis = 0.f;
         sizeNonLayoutAxis = 0.f;
-        alignNonLayoutAxis = ElInContainerAlign();
+        alignNonLayoutAxis = GetElAlignCenter();
         ownsElement = false;
         desiredSize = Size();
         finalPos = Rect();
@@ -134,7 +91,7 @@ struct DirectionalLayoutData {
         finalPos = other.finalPos;
     }
 
-    void Set(ILayout *el, float sla, float snla, ElInContainerAlign& a) {
+    void Set(ILayout *el, float sla, float snla, ElAlignData& a) {
         element = el;
         sizeLayoutAxis = sla;
         sizeNonLayoutAxis = snla;

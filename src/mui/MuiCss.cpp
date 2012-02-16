@@ -92,6 +92,8 @@ void Initialize()
     gStyleDefault->Set(Prop::AllocColorSolid(PropBorderBottomColor, "#888"));
     gStyleDefault->Set(Prop::AllocPadding(0, 0, 0, 0));
     gStyleDefault->Set(Prop::AllocTextAlign(Align_Left));
+    gStyleDefault->Set(Prop::AllocAlign(PropVertAlign, ElAlignCenter));
+    gStyleDefault->Set(Prop::AllocAlign(PropHorizAlign, ElAlignCenter));
     gStyleDefault->Set(Prop::AllocColorSolid(PropFill, "white"));
     gStyleDefault->Set(Prop::AllocColorSolid(PropStroke, "black"));
     gStyleDefault->Set(Prop::AllocWidth(PropStrokeWidth, 0.5f));
@@ -146,6 +148,11 @@ bool IsColorProp(PropType type)
            (PropBorderLeftColor == type) ||
            (PropFill == type) ||
            (PropStroke == type);
+}
+
+bool IsAlignProp(PropType type)
+{
+    return ((PropVertAlign == type) || (PropHorizAlign == type));
 }
 
 static const char *gCssKnownColorsStrings = "black\0blue\0gray\0green\0red\0transparent\0white\0yellow\0";
@@ -215,6 +222,27 @@ bool ColorData::operator==(const ColorData& other) const
     return false;
 }
 
+bool ElAlignData::operator==(const ElAlignData& other) const
+{
+    return ((elementPoint == other.elementPoint) && (containerPoint == other.containerPoint));
+}
+
+void ElAlignData::Set(ElAlign align)
+{
+    if (ElAlignCenter == align) {
+        elementPoint   = .5f;
+        containerPoint = .5f;
+    } else if ((ElAlignTop == align) || (ElAlignLeft == align)) {
+        elementPoint   = 0.f;
+        containerPoint = 0.f;
+    } else if ((ElAlignBottom == align) || (ElAlignRight == align)) {
+        elementPoint   = 1.f;
+        containerPoint = 1.f;
+    } else {
+        CrashIf(true);
+    }
+}
+
 void Prop::Free()
 {
     if (PropFontName == type)
@@ -251,6 +279,9 @@ bool Prop::Eq(const Prop *other) const
 
     if (IsWidthProp(type))
         return width == other->width;
+
+    if (IsAlignProp(type))
+        return elAlign == other->elAlign;
 
     CrashIf(true);
     return false;
@@ -308,6 +339,22 @@ Prop *Prop::AllocTextAlign(AlignAttr align)
 {
     Prop p(PropTextAlign);
     p.textAlign = align;
+    return UniqifyProp(p);
+}
+
+Prop *Prop::AllocAlign(PropType type, float elPoint, float containerPoint)
+{
+    CrashIf(!IsAlignProp(type));
+    Prop p(type);
+    p.elAlign = GetElAlign(elPoint, containerPoint);
+    return UniqifyProp(p);
+}
+
+Prop *Prop::AllocAlign(PropType type, ElAlign align)
+{
+    CrashIf(!IsAlignProp(type));
+    Prop p(type);
+    p.elAlign.Set(align);
     return UniqifyProp(p);
 }
 
@@ -501,6 +548,8 @@ CachedStyle *CacheStyle(Style *style1, Style *style2)
     s.borderColors.bottom  = &(props[PropBorderBottomColor]->color);
     s.borderColors.left    = &(props[PropBorderLeftColor]->color);
     s.textAlign            = props[PropTextAlign]->textAlign;
+    s.vertAlign            = props[PropVertAlign]->elAlign;
+    s.horizAlign           = props[PropHorizAlign]->elAlign;
     s.fill                 = &(props[PropFill]->color);
     s.stroke               = &(props[PropStroke]->color);
     s.strokeWidth          = props[PropStrokeWidth]->width;

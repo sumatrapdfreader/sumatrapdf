@@ -31,6 +31,11 @@ enum PropType {
 
     PropTextAlign,          // text-align
 
+    // used to define horizontal/vertical alignment of an element
+    // inside a container. Used e.g. for a ButtonVector
+    PropVertAlign,
+    PropHorizAlign,
+
     PropFill,               // fill, used for svg::path
     PropStroke,             // stroke, used for svg::path
     PropStrokeWidth,        // stroke-width, used for svg::path
@@ -40,6 +45,77 @@ enum PropType {
 
 bool IsWidthProp(PropType type);
 bool IsColorProp(PropType type);
+bool IsAlignProp(PropType type);
+
+// Align is aname  common so to avoid potential conflicts, use ElAlign
+// which stands for Element Align.
+// Top/Left and Bottom/Right are represented by the same ElAlignData
+// values but they're semantically different, so we given them unique names
+enum ElAlign {
+    ElAlignCenter,
+    ElAlignTop,
+    ElAlignBottom,
+    ElAlignLeft,
+    ElAlignRight
+};
+
+// A generalized way of specifying alignment (on a single axis,
+// vertical or horizontal) of an element relative to its container.
+// Each point of both the container and element can be represented
+// as a float in the <0.f - 1.f> range.
+// O.f represents left (in horizontal case) or top (in vertical) case point.
+// 1.f represents right/bottom point and 0.5f represents a middle.
+// We define a point inside cotainer and point inside element and layout
+// positions element so that those points are the same.
+// For example:
+//  - (0.5f, 0.5f) centers element inside of the container.
+//  - (0.f, 0.f) makes left edge of the element align with left edge of the container
+//    i.e. ||el| container|
+//  - (1.f, 0.f) makes left edge of the element align with right edge of the container
+//    i.e. |container||el|
+// This is more flexible than, say, VerticalAlignment property in WPF.
+// Note: this can be extended for values outside of <0.f - 1.f> range.
+struct ElAlignData {
+
+    float elementPoint;
+    float containerPoint;
+
+    bool operator==(const ElAlignData& other) const;
+
+    void Set(ElAlign align);
+};
+
+// we can't have constructors in ElInContainerAlign, so those are
+// helper methods for constructing them
+static inline ElAlignData GetElAlignCenter() {
+    ElAlignData align = { .5f, .5f };
+    return align;
+}
+
+static inline ElAlignData GetElAlignTop() {
+    ElAlignData align = { 0.f, 0.f };
+    return align;
+}
+
+static inline ElAlignData GetElAlignLeft() {
+    ElAlignData align = { 0.f, 0.f };
+    return align;
+}
+
+static inline ElAlignData GetElAlignBottom() {
+    ElAlignData align = { 1.f, 1.f };
+    return align;
+}
+
+static inline ElAlignData GetElAlignRight() {
+    ElAlignData align = { 1.f, 1.f };
+    return align;
+}
+
+static inline ElAlignData GetElAlign(float ep, float cp) {
+    ElAlignData align = { ep, cp };
+    return align;
+}
 
 enum ColorType {
     ColorSolid,
@@ -96,6 +172,7 @@ struct Prop {
         ColorData       color;
         float           width;
         AlignAttr       textAlign;
+        ElAlignData     elAlign;
     };
 
     bool Eq(const Prop* other) const;
@@ -105,6 +182,8 @@ struct Prop {
     static Prop *AllocFontWeight(FontStyle style);
     // TODO: add AllocTextAlign(const char *s);
     static Prop *AllocTextAlign(AlignAttr align);
+    static Prop *AllocAlign(PropType type, float elPoint, float containerPoint);
+    static Prop *AllocAlign(PropType type, ElAlign align);
     static Prop *AllocPadding(int top, int right, int bottom, int left);
     static Prop *AllocColorSolid(PropType type, ARGB color);
     static Prop *AllocColorSolid(PropType type, int a, int r, int g, int b);
@@ -161,6 +240,8 @@ struct CachedStyle {
     BorderWidth     borderWidth;
     BorderColors    borderColors;
     AlignAttr       textAlign;
+    ElAlignData     vertAlign;
+    ElAlignData     horizAlign;
     ColorData *     fill;
     ColorData *     stroke;
     float           strokeWidth;
