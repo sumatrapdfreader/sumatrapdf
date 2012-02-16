@@ -22,8 +22,8 @@ using namespace Gdiplus;
 
 RectI SizeFromData(char *data, size_t len)
 {
-	Rect rect = BitmapSizeFromData(data, len);
-	return RectI(rect.X, rect.Y, rect.Width, rect.Height);
+    Rect rect = BitmapSizeFromData(data, len);
+    return RectI(rect.X, rect.Y, rect.Width, rect.Height);
 }
 
 RenderedBitmap *LoadRenderedBitmap(const TCHAR *filePath)

@@ -148,7 +148,7 @@ static int ft_width(fz_context *ctx, pdf_font_desc *fontdesc, int cid)
 {
 	int gid = ft_cid_to_gid(fontdesc, cid);
 	int fterr;
-	
+
 	fterr = FT_Load_Glyph(fontdesc->font->ft_face, gid,
 			FT_LOAD_NO_HINTING | FT_LOAD_NO_BITMAP | FT_LOAD_IGNORE_TRANSFORM);
 	if (fterr)

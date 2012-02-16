@@ -82,7 +82,7 @@ public:
         return 0;
     }
     virtual RectD GetDestRect() const {
-        return RectD();
+        return RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
     }
     virtual TCHAR *GetDestValue() const {
         if (str::Eq(GetDestType(), "LaunchURL"))

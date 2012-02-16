@@ -55,7 +55,9 @@ public:
         return "ScrollTo";
     }
     virtual int GetDestPageNo() const { return pageNo; }
-    virtual RectD GetDestRect() const { return RectD(); }
+    virtual RectD GetDestRect() const {
+        return RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
+    }
     virtual TCHAR *GetDestValue() const {
         if (url && IsExternalUrl(url))
             return str::Dup(url);
@@ -696,23 +698,29 @@ ChmTocItem *BuildChmToc(StrVec& pages, HtmlElement *list, UINT cp, int& idCounte
     assert(str::Eq("ul", list->name));
     ChmTocItem *node = NULL;
 
-    for (HtmlElement *el = list->down; el; el = el->next) {
-        if (!str::Eq(el->name, "li"))
-            continue; // ignore unexpected elements
-        ChmTocItem *item = TocItemFromLi(pages, el, cp);
-        if (!item)
-            continue; // skip incomplete elements and all their children
-        item->id = ++idCounter;
+    // some broken ToCs wrap every <li> into its own <ul>
+    for (; list && str::Eq(list->name, "ul"); list = list->next) {
+        for (HtmlElement *el = list->down; el; el = el->next) {
+            if (!str::Eq(el->name, "li"))
+                continue; // ignore unexpected elements
+            ChmTocItem *item = TocItemFromLi(pages, el, cp);
+            if (!item)
+                continue; // skip incomplete elements and all their children
+            item->id = ++idCounter;
 
-        HtmlElement *nested = el->GetChildByName("ul");
-        if (nested)
-            item->child = BuildChmToc(pages, nested, cp, idCounter, false);
-        item->open = topLevel;
+            HtmlElement *nested = el->GetChildByName("ul");
+            // some broken ToCs have the <ul> follow right *after* a <li>
+            if (!nested && el->next && str::Eq(el->next->name, "ul"))
+                nested = el->next;
+            if (nested)
+                item->child = BuildChmToc(pages, nested, cp, idCounter, false);
+            item->open = topLevel;
 
-        if (!node)
-            node = item;
-        else
-            node->AddSibling(item);
+            if (!node)
+                node = item;
+            else
+                node->AddSibling(item);
+        }
     }
 
     return node;
@@ -721,6 +729,11 @@ ChmTocItem *BuildChmToc(StrVec& pages, HtmlElement *list, UINT cp, int& idCounte
 static ChmTocItem *ParseChmHtmlToc(StrVec& pages, char *html, UINT cp)
 {
     HtmlParser p;
+    // detect UTF-8 content by BOM
+    if (str::StartsWith(html, "\xEF\xBB\xBF")) {
+        html += 3;
+        cp = CP_UTF8;
+    }
     // enforce the default codepage, so that pre-encoded text and
     // entities are in the same codepage and TocItemFromLi yields
     // consistent results
