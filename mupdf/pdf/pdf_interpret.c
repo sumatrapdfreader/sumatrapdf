@@ -1302,7 +1302,8 @@ pdf_show_pattern(pdf_csi *csi, pdf_pattern *pat, fz_rect area, int what)
 	oldtop = csi->gtop;
 
 #ifdef TILE
-	if ((x1 - x0) * (y1 - y0) > 1)
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1807 */
+	if ((x1 - x0) * (y1 - y0) > 1 && fz_matrix_max_expansion(ptm) < 50)
 #else
 	if (0)
 #endif

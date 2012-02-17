@@ -182,7 +182,8 @@ xps_parse_tiling_brush(xps_document *doc, fz_matrix ctm, fz_rect area,
 		y1 = ceilf(area.y1 / ystep);
 
 #ifdef TILE
-		if ((x1 - x0) * (y1 - y0) > 1)
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1807 */
+		if ((x1 - x0) * (y1 - y0) > 1 && fz_matrix_max_expansion(ctm) < 50)
 #else
 		if (0)
 #endif
