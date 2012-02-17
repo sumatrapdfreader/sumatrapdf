@@ -55,38 +55,37 @@ void Painter::PaintBackground(Graphics *g, Rect r)
 // We don't sort because we want to preserve the order of
 // containment of windows with the same z-order and non-stable
 // sort could change it.
-static void PaintWindowsInZOrder(Graphics *g, Control *wnd)
+static void PaintWindowsInZOrder(Graphics *g, Control *c)
 {
-    Vec<WndAndOffset>   windowsToPaint;
+    Vec<CtrlAndOffset>  toPaint;
     WndFilter           wndFilter;
-    WndAndOffset *      woff;
+    CtrlAndOffset *     coff;
     Pen                 debugPen(Color(255, 0, 0), 1);
 
-    CollectWindowsBreathFirst(wnd, 0, 0, &wndFilter, &windowsToPaint);
+    CollectWindowsBreathFirst(c, 0, 0, &wndFilter, &toPaint);
     size_t paintedCount = 0;
     int16 lastPaintedZOrder = INT16_MIN;
-    size_t winCount = windowsToPaint.Count();
     for (;;) {
         // find which z-order should we paint now
         int16 minUnpaintedZOrder = INT16_MAX;
-        for (woff = windowsToPaint.IterStart(); woff; woff = windowsToPaint.IterNext()) {
-            int16 zOrder = woff->wnd->zOrder;
+        for (coff = toPaint.IterStart(); coff; coff = toPaint.IterNext()) {
+            int16 zOrder = coff->c->zOrder;
             if ((zOrder > lastPaintedZOrder) && (zOrder < minUnpaintedZOrder))
                 minUnpaintedZOrder = zOrder;
         }
-        for (woff = windowsToPaint.IterStart(); woff; woff = windowsToPaint.IterNext()) {
-            if (minUnpaintedZOrder == woff->wnd->zOrder) {
-                woff->wnd->Paint(g, woff->offX, woff->offY);
+        for (coff = toPaint.IterStart(); coff; coff = toPaint.IterNext()) {
+            if (minUnpaintedZOrder == coff->c->zOrder) {
+                coff->c->Paint(g, coff->offX, coff->offY);
                 if (IsDebugPaint()) {
-                    Rect bbox(woff->offX, woff->offY, woff->wnd->pos.Width, woff->wnd->pos.Height);
+                    Rect bbox(coff->offX, coff->offY, coff->c->pos.Width, coff->c->pos.Height);
                     g->DrawRectangle(&debugPen, bbox);
                 }
                 ++paintedCount;
             }
         }
-        if (paintedCount == winCount)
+        if (paintedCount == toPaint.Count())
             return;
-        CrashIf(paintedCount > winCount);
+        CrashIf(paintedCount > toPaint.Count());
         lastPaintedZOrder = minUnpaintedZOrder;
     }
 }

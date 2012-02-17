@@ -29,8 +29,8 @@ using namespace css;
 
 #define SizeInfinite ((INT)-1)
 
-struct WndAndOffset {
-    Control *wnd;
+struct CtrlAndOffset {
+    Control *c;
     int offX, offY;
 };
 
@@ -72,12 +72,12 @@ void        Initialize();
 void        Destroy();
 void        SetDebugPaint(bool debug);
 bool        IsDebugPaint();
-size_t      CollectWindowsAt(Control *wndRoot, int x, int y, uint16 wantedInputMask, Vec<WndAndOffset> *windows);
-void        CollectWindowsBreathFirst(Control *w, int offX, int offY, WndFilter *wndFilter, Vec<WndAndOffset> *windows);
-void        RequestRepaint(Control *w, const Rect *r1 = NULL, const Rect *r2 = NULL);
-void        RequestLayout(Control *w);
+size_t      CollectWindowsAt(Control *wndRoot, int x, int y, uint16 wantedInputMask, Vec<CtrlAndOffset> *ctrls);
+void        CollectWindowsBreathFirst(Control *c, int offX, int offY, WndFilter *wndFilter, Vec<CtrlAndOffset> *ctrls);
+void        RequestRepaint(Control *c, const Rect *r1 = NULL, const Rect *r2 = NULL);
+void        RequestLayout(Control *c);
 void        DrawBorder(Graphics *gfx, const Rect r, CachedStyle *s);
-HwndWrapper *GetRootHwndWnd(const Control *w);
+HwndWrapper *GetRootHwndWnd(const Control *c);
 
 } // namespace mui
 

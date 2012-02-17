@@ -31,39 +31,73 @@ void EventMgr::SetMaxSize(Size s)
     maxSize = s;
 }
 
-void EventMgr::UnRegisterClickHandlers(IClickHandler *clickHandler)
+void EventMgr::UnRegisterEventHandler(EventHandler::Type type, void *handler)
 {
     size_t i = 0;
-    while (i < clickHandlers.Count()) {
-        ClickHandler h = clickHandlers.At(i);
-        if (h.clickHandler == clickHandler)
-            clickHandlers.RemoveAtFast(i);
+    while (i < eventHandlers.Count()) {
+        EventHandler h = eventHandlers.At(i);
+        if (h.type != type) {
+            i++;
+            continue;
+        }
+        if (handler == h.handler)
+            eventHandlers.RemoveAtFast(i);
         else
             i++;
     }
 }
 
-void EventMgr::RegisterClickHandler(Control *wndSource, IClickHandler *clickHandler)
+void EventMgr::UnRegisterClicked(IClicked *handler)
 {
-    ClickHandler ch = { wndSource, clickHandler };
-    clickHandlers.Append(ch);
+    void *tmp = reinterpret_cast<void*>(handler);
+    UnRegisterEventHandler(EventHandler::Clicked, tmp);
 }
 
-IClickHandler *EventMgr::GetClickHandlerFor(Control *wndSource)
+void EventMgr::RegisterClicked(Control *ctrlSource, IClicked *handler)
 {
-    for (ClickHandler *ch = clickHandlers.IterStart(); ch; ch = clickHandlers.IterNext()) {
-        if (ch->wndSource == wndSource)
-            return ch->clickHandler;
+    EventHandler h = { EventHandler::Clicked, ctrlSource, handler };
+    eventHandlers.Append(h);
+}
+
+void EventMgr::NotifyClicked(Control *c, int x, int y)
+{
+    EventHandler *h;
+    for (h = eventHandlers.IterStart(); h; h = eventHandlers.IterNext()) {
+        if ((h->ctrlSource == c) && (h->type == EventHandler::Clicked)) {
+            h->clicked->Clicked(c, x, y);
+        }
     }
-    return NULL;
+}
+
+void EventMgr::UnRegisterSizeChanged(ISizeChanged *handler)
+{
+    void *tmp = reinterpret_cast<void*>(handler);
+    UnRegisterEventHandler(EventHandler::SizeChanged, tmp);
+}
+
+void EventMgr::RegisterSizeChanged(Control *ctrlSource, ISizeChanged *handler)
+{
+    EventHandler h = { EventHandler::SizeChanged, ctrlSource, NULL };
+    h.sizeChanged = handler;
+    eventHandlers.Append(h);
+}
+
+void EventMgr::NotifySizeChanged(Control *c, int dx, int dy)
+{
+    EventHandler *h;
+    for (h = eventHandlers.IterStart(); h; h = eventHandlers.IterNext()) {
+        if ((h->ctrlSource == c) && (h->type == EventHandler::SizeChanged)) {
+            h->sizeChanged->SizeChanged(c, dx, dy);
+        }
+    }
 }
 
 // TODO: optimize by getting both mouse over and mouse move windows in one call
 // x, y is a position in the root window
 LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& wasHandled)
 {
-    Vec<WndAndOffset> windows;
-    Control *w;
+    Vec<CtrlAndOffset> windows;
+    Control *c;
 
     uint16 wantedInputMask = bit::FromBit<uint16>(Control::WantsMouseOverBit);
     size_t count = CollectWindowsAt(wndRoot, x, y, wantedInputMask, &windows);
@@ -75,13 +109,13 @@ LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& wasHandled)
         }
     } else {
         // TODO: should this take z-order into account ?
-        w = windows.Last().wnd;
-        if (w != currOver) {
+        c = windows.Last().c;
+        if (c != currOver) {
             if (currOver) {
                 currOver->SetIsMouseOver(false);
                 currOver->NotifyMouseLeave();
             }
-            currOver = w;
+            currOver = c;
             currOver->SetIsMouseOver(true);
             currOver->NotifyMouseEnter();
         }
@@ -91,9 +125,9 @@ LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& wasHandled)
     count = CollectWindowsAt(wndRoot, x, y, wantedInputMask, &windows);
     if (0 == count)
         return 0;
-    w = windows.Last().wnd;
-    w->MapRootToMyPos(x, y);
-    w->NotifyMouseMove(x, y);
+    c = windows.Last().c;
+    c->MapRootToMyPos(x, y);
+    c->NotifyMouseMove(x, y);
     return 0;
 }
 
@@ -102,17 +136,15 @@ LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& wasHandled)
 // (x, y) is in the coordinates of the root window
 LRESULT EventMgr::OnLButtonUp(WPARAM keys, int x, int y, bool& wasHandled)
 {
-    Vec<WndAndOffset> windows;
+    Vec<CtrlAndOffset> controls;
     uint16 wantedInputMask = bit::FromBit<uint16>(Control::WantsMouseClickBit);
-    size_t count = CollectWindowsAt(wndRoot, x, y, wantedInputMask, &windows);
+    size_t count = CollectWindowsAt(wndRoot, x, y, wantedInputMask, &controls);
     if (0 == count)
         return 0;
     // TODO: should this take z-order into account?
-    Control *w = windows.Last().wnd;
-    w->MapRootToMyPos(x, y);
-    IClickHandler *clickHandler = GetClickHandlerFor(w);
-    if (clickHandler)
-        clickHandler->Clicked(w, x, y);
+    Control *c = controls.Last().c;
+    c->MapRootToMyPos(x, y);
+    NotifyClicked(c, x, y);
     return 0;
 }
 

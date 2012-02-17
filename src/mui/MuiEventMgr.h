@@ -12,12 +12,16 @@
 class HwndWrapper;
 class Control;
 
-class IClickHandler
+class IClicked
 {
 public:
-    IClickHandler() {}
-    virtual ~IClickHandler() {}
-    virtual void Clicked(Control *w, int x, int y) = 0;
+    virtual void Clicked(Control *c, int x, int y) = 0;
+};
+
+class ISizeChanged
+{
+public:
+    virtual void SizeChanged(Control *c, int newDx, int newDy) = 0;
 };
 
 // A single EventMgr is associated with a single HwndWrapper
@@ -33,17 +37,27 @@ class EventMgr
     Size    minSize;
     Size    maxSize;
 
-    struct ClickHandler {
-        Control *        wndSource;
-        IClickHandler *  clickHandler;
+    struct EventHandler {
+        enum Type {
+            Clicked, SizeChanged
+        };
+        Type            type;
+        Control *       ctrlSource;
+        union {
+            IClicked *      clicked;
+            ISizeChanged *  sizeChanged;
+            void *          handler;
+        };
     };
 
-    Vec<ClickHandler> clickHandlers;
+    Vec<EventHandler> eventHandlers;
 
     LRESULT OnSetCursor(int x, int y, bool& wasHandled);
     LRESULT OnMouseMove(WPARAM keys, int x, int y, bool& wasHandled);
     LRESULT OnLButtonUp(WPARAM keys, int x, int y, bool& wasHandled);
     LRESULT OnGetMinMaxInfo(MINMAXINFO *info, bool& wasHandled);
+
+    void UnRegisterEventHandler(EventHandler::Type type, void *handler);
 
 public:
     EventMgr(HwndWrapper *wndRoot);
@@ -51,9 +65,13 @@ public:
 
     LRESULT OnMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& handledOut);
 
-    void UnRegisterClickHandlers(IClickHandler *clickHandler);
-    void RegisterClickHandler(Control *wndSource, IClickHandler *clickHandler);
-    IClickHandler *GetClickHandlerFor(Control *wndSource);
+    void           UnRegisterClicked(IClicked *handler);
+    void           RegisterClicked(Control *ctrlSource, IClicked *handler);
+    void           NotifyClicked(Control *c, int x, int y);
+
+    void           UnRegisterSizeChanged(ISizeChanged *handler);
+    void           RegisterSizeChanged(Control *ctrlSource, ISizeChanged *handler);
+    void           NotifySizeChanged(Control *c, int dx, int dy);
 
     void SetMinSize(Size s);
     void SetMaxSize(Size s);

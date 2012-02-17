@@ -59,14 +59,16 @@ EbookController::EbookController(EbookControls *ctrls) : ctrls(ctrls)
 
     SetStatusText();
 
-    ctrls->mainWnd->evtMgr->RegisterClickHandler(ctrls->next, this);
-    ctrls->mainWnd->evtMgr->RegisterClickHandler(ctrls->prev, this);
-    ctrls->mainWnd->evtMgr->RegisterClickHandler(ctrls->horizProgress, this);
+    ctrls->mainWnd->evtMgr->RegisterClicked(ctrls->next, this);
+    ctrls->mainWnd->evtMgr->RegisterClicked(ctrls->prev, this);
+    ctrls->mainWnd->evtMgr->RegisterClicked(ctrls->horizProgress, this);
+    ctrls->mainWnd->evtMgr->RegisterSizeChanged(ctrls->page, this);
 }
 
 EbookController::~EbookController()
 {
-    ctrls->mainWnd->evtMgr->UnRegisterClickHandlers(this);
+    ctrls->mainWnd->evtMgr->UnRegisterClicked(this);
+    ctrls->mainWnd->evtMgr->UnRegisterSizeChanged(this);
     DeletePages();
     delete mb;
 }
@@ -80,20 +82,25 @@ void EbookController::DeletePages()
     pages = NULL;
 }
 
-// (x, y) is in the coordinates of w
-void EbookController::Clicked(Control *w, int x, int y)
+void EbookController::SizeChanged(Control *c, int dx, int dy)
 {
-    if (w == ctrls->next) {
+    lf("Page size changed to (%d, %d)", dx, dy);
+}
+
+// (x, y) is in the coordinates of w
+void EbookController::Clicked(Control *c, int x, int y)
+{
+    if (c == ctrls->next) {
         AdvancePage(1);
         return;
     }
 
-    if (w == ctrls->prev) {
+    if (c == ctrls->prev) {
         AdvancePage(-1);
         return;
     }
 
-    if (w == ctrls->horizProgress) {
+    if (c == ctrls->horizProgress) {
         float perc = ctrls->horizProgress->GetPercAt(x);
         if (pages) {
             int pageCount = pages->Count();

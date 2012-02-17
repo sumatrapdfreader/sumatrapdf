@@ -1,7 +1,6 @@
 /* Copyright 2010-2012 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "CmdLineParser.h"
 #include "EbookController.h"
 #include "EbookControls.h"
 #include "EbookTestMenu.h"
@@ -75,51 +74,6 @@ void LogProcessRunningTime()
 }
 
 #if 0
-void ControlEbook::PageLayoutFinished()
-{
-    StopPageLayoutThread();
-    if (!newPages)
-        return;
-    DeletePages();
-    pages = newPages;
-    newPages = NULL;
-    if (currPageNo > (int)pages->Count())
-        currPageNo = 1;
-    if (0 == currPageNo)
-        currPageNo = 1;
-    SetStatusText();
-    RequestRepaint(this);
-}
-#endif
-
-#if 0
-// called on a ui thread from background thread
-void ControlEbook::NewPageUIThread(PageData *pageData)
-{
-    if (!newPages)
-        newPages = new Vec<PageData*>();
-
-    newPages->Append(pageData);
-    // TODO: this really starves the UI thread. Is it because per-item
-    // processing is so high? Would batching things up make UI responsive
-    // during layout?
-    if (newPages->Count() == 1) {
-        ScopedMem<TCHAR> s(str::Format(_T("Layout started. Please wait...")));
-        status->SetText(s.Get());
-    }
-}
-#endif
-
-#if 0
-// called on a background thread
-void ControlEbook::NewPage(PageData *pageData)
-{
-    gMessageLoopUI->PostDelayedTask(base::Bind(&ControlEbook::NewPageUIThread,
-                                        base::Unretained(this), pageData), 100);
-}
-#endif
-
-#if 0
 // called on a background thread
 void ControlEbook::PageLayoutBackground(LayoutInfo *li)
 {
@@ -128,19 +82,6 @@ void ControlEbook::PageLayoutBackground(LayoutInfo *li)
     gMessageLoopUI->PostTask(base::Bind(&ControlEbook::PageLayoutFinished,
                                         base::Unretained(this)));
     delete li;
-}
-#endif
-
-
-#if 0
-void ControlEbook::StopPageLayoutThread()
-{
-    if (!pageLayoutThread)
-        return;
-    l("ControlEbook::StopPageLayoutThread()");
-    pageLayoutThread->Stop();
-    delete pageLayoutThread;
-    pageLayoutThread = NULL;
 }
 #endif
 
@@ -387,15 +328,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     mui::Initialize();
 
-#if 0
-    // start per-thread MessageLoop, this one is for our UI thread
-    // You can use it via static MessageLoop::current()
-    MessageLoop uiMsgLoop(MessageLoop::TYPE_UI);
-    gMessageLoopUI = MessageLoop::current();
-    CrashIf(gMessageLoopUI != &uiMsgLoop);
-#endif
-
-    //ParseCommandLine(GetCommandLine());
     if (!RegisterWinClass(hInstance))
         goto Exit;
 
@@ -403,7 +335,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         goto Exit;
 
     uimsg::Initialize();
-    //MessageLoopForUI::current()->RunWithDispatcher(NULL);
     ret = RunApp();
 
 Exit:

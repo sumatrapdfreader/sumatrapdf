@@ -15,7 +15,7 @@ struct  PageData;
 class   UiMsg;
 class   MobiDoc;
 
-class EbookController : public IClickHandler
+class EbookController : public IClicked, ISizeChanged
 {
     EbookControls * ctrls;
 
@@ -33,7 +33,10 @@ class EbookController : public IClickHandler
     void SetPage(int newPageNo);
 
     // IClickHandler
-    virtual void Clicked(Control *w, int x, int y);
+    virtual void Clicked(Control *c, int x, int y);
+
+    // ISizeChanged
+    virtual void SizeChanged(Control *c, int dx, int dy);
 
 public:
     EbookController(EbookControls *ctrls);

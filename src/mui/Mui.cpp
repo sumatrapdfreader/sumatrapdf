@@ -39,7 +39,7 @@ messages and paints child windows on WM_PAINT.
 Event handling tries to be loosly coupled. The traditional way of
 providing e.g. a virtual OnClick() on a button class forces creating
 lots of subclasses and forcing logic into a button class. We provide
-a way to subscribe any class implementing IClickHandler interface
+a way to subscribe any class implementing IClicked interface
 to register for click evens from any window that generates thems.
 
 TODO: generic way to handle tooltips
@@ -135,21 +135,21 @@ HWND GetHwndParent(const Control *w)
     return NULL;
 }
 
-void CollectWindowsBreathFirst(Control *w, int offX, int offY, WndFilter *wndFilter, Vec<WndAndOffset> *windows)
+void CollectWindowsBreathFirst(Control *c, int offX, int offY, WndFilter *wndFilter, Vec<CtrlAndOffset> *ctrls)
 {
-    if (wndFilter->skipInvisibleSubtrees && !w->IsVisible())
+    if (wndFilter->skipInvisibleSubtrees && !c->IsVisible())
         return;
 
-    offX += w->pos.X;
-    offY += w->pos.Y;
-    if (wndFilter->Matches(w, offX, offY)) {
-        WndAndOffset wnd = { w, offX, offY };
-        windows->Append(wnd);
+    offX += c->pos.X;
+    offY += c->pos.Y;
+    if (wndFilter->Matches(c, offX, offY)) {
+        CtrlAndOffset coff = { c, offX, offY };
+        ctrls->Append(coff);
     }
 
-    size_t children = w->GetChildCount();
+    size_t children = c->GetChildCount();
     for (size_t i = 0; i < children; i++) {
-        CollectWindowsBreathFirst(w->GetChild(i), offX, offY, wndFilter, windows);
+        CollectWindowsBreathFirst(c->GetChild(i), offX, offY, wndFilter, ctrls);
     }
 }
 
@@ -161,12 +161,12 @@ void CollectWindowsBreathFirst(Control *w, int offX, int offY, WndFilter *wndFil
 // in windows array before child windows. In most cases caller can use the last
 // window in returned array (but can use a custom logic as well).
 // Returns number of matched windows as a convenience.
-size_t CollectWindowsAt(Control *wndRoot, int x, int y, uint16 wantedInputMask, Vec<WndAndOffset> *windows)
+size_t CollectWindowsAt(Control *wndRoot, int x, int y, uint16 wantedInputMask, Vec<CtrlAndOffset> *controls)
 {
     WndInputWantedFilter filter(x, y, wantedInputMask);
-    windows->Reset();
-    CollectWindowsBreathFirst(wndRoot, 0, 0, &filter, windows);
-    return windows->Count();
+    controls->Reset();
+    CollectWindowsBreathFirst(wndRoot, 0, 0, &filter, controls);
+    return controls->Count();
 }
 
 static void DrawLine(Graphics *gfx, const Point& p1, const Point& p2, float width, Brush *br)

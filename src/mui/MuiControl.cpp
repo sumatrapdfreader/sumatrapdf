@@ -155,6 +155,7 @@ void Control::Hide()
 
 void Control::SetPosition(const Rect& p)
 {
+    bool sizeChanged = (p.Width != pos.Width) || (p.Height != pos.Height);
     if (p.Equals(pos))
         return;  // perf optimization
     // when changing position we need to invalidate both
@@ -165,6 +166,10 @@ void Control::SetPosition(const Rect& p)
     Rect p2(pos); p2.Inflate(1,1);
     RequestRepaint(this, &p1, &p2);
     pos = p;
+    if (!sizeChanged)
+        return;
+    HwndWrapper *hwnd = GetRootHwndWnd(this);
+    hwnd->evtMgr->NotifySizeChanged(this, p.Width, p.Height);
 }
 
 // convert position (x,y) int coordiantes of root window
