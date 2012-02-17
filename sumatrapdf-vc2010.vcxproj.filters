@@ -650,15 +650,6 @@
     <ClCompile Include="src\Toolbar.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ext\zlib-1.2.5\minizip\ioapi.c">
-      <Filter>zlib\minizip</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\zlib-1.2.5\minizip\iowin32.c">
-      <Filter>zlib\minizip</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\zlib-1.2.5\minizip\unzip.c">
-      <Filter>zlib\minizip</Filter>
-    </ClCompile>
     <ClCompile Include="ext\bzip2\blocksort.c">
       <Filter>bzip2</Filter>
     </ClCompile>
@@ -679,54 +670,6 @@
     </ClCompile>
     <ClCompile Include="ext\bzip2\randtable.c">
       <Filter>bzip2</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\zlib-1.2.5\adler32.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\zlib-1.2.5\compress.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\zlib-1.2.5\crc32.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\zlib-1.2.5\deflate.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\zlib-1.2.5\gzclose.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\zlib-1.2.5\gzlib.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\zlib-1.2.5\gzread.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\zlib-1.2.5\gzwopen.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\zlib-1.2.5\gzwrite.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\zlib-1.2.5\infback.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\zlib-1.2.5\inffast.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\zlib-1.2.5\inflate.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\zlib-1.2.5\inftrees.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\zlib-1.2.5\trees.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\zlib-1.2.5\uncompr.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\zlib-1.2.5\zutil.c">
-      <Filter>zlib</Filter>
     </ClCompile>
     <ClCompile Include="mupdf\fitz\base_context.c">
       <Filter>mupdf\fitz</Filter>
@@ -790,6 +733,69 @@
     </ClCompile>
     <ClCompile Include="src\utils\HtmlPullParser.cpp">
       <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\zlib\minizip\ioapi.c">
+      <Filter>zlib\minizip</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\zlib\minizip\iowin32.c">
+      <Filter>zlib\minizip</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\zlib\minizip\iowin32s.c">
+      <Filter>zlib\minizip</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\zlib\minizip\unzalloc.c">
+      <Filter>zlib\minizip</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\zlib\minizip\unzip.c">
+      <Filter>zlib\minizip</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\zlib\adler32.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\zlib\compress.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\zlib\crc32.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\zlib\deflate.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\zlib\gzclose.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\zlib\gzlib.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\zlib\gzread.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\zlib\gzwopen.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\zlib\gzwrite.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\zlib\infback.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\zlib\inffast.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\zlib\inflate.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\zlib\inftrees.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\zlib\trees.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\zlib\uncompr.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\zlib\zutil.c">
+      <Filter>zlib</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1069,53 +1075,11 @@
     <ClInclude Include="src\Toolbar.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="ext\zlib-1.2.5\minizip\ioapi.h">
-      <Filter>zlib\minizip</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\zlib-1.2.5\minizip\iowin32.h">
-      <Filter>zlib\minizip</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\zlib-1.2.5\minizip\unzip.h">
-      <Filter>zlib\minizip</Filter>
-    </ClInclude>
     <ClInclude Include="ext\bzip2\bzlib.h">
       <Filter>bzip2</Filter>
     </ClInclude>
     <ClInclude Include="ext\bzip2\bzlib_private.h">
       <Filter>bzip2</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\zlib-1.2.5\crc32.h">
-      <Filter>zlib</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\zlib-1.2.5\deflate.h">
-      <Filter>zlib</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\zlib-1.2.5\gzguts.h">
-      <Filter>zlib</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\zlib-1.2.5\inffast.h">
-      <Filter>zlib</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\zlib-1.2.5\inffixed.h">
-      <Filter>zlib</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\zlib-1.2.5\inflate.h">
-      <Filter>zlib</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\zlib-1.2.5\inftrees.h">
-      <Filter>zlib</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\zlib-1.2.5\trees.h">
-      <Filter>zlib</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\zlib-1.2.5\zconf.h">
-      <Filter>zlib</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\zlib-1.2.5\zlib.h">
-      <Filter>zlib</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\zlib-1.2.5\zutil.h">
-      <Filter>zlib</Filter>
     </ClInclude>
     <ClInclude Include="src\utils\FileTransactions.h">
       <Filter>utils</Filter>
@@ -1125,6 +1089,54 @@
     </ClInclude>
     <ClInclude Include="src\utils\HtmlPullParser.h">
       <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\zlib\minizip\ioapi.h">
+      <Filter>zlib\minizip</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\zlib\minizip\iowin32.h">
+      <Filter>zlib\minizip</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\zlib\minizip\iowin32s.h">
+      <Filter>zlib\minizip</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\zlib\minizip\unzalloc.h">
+      <Filter>zlib\minizip</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\zlib\minizip\unzip.h">
+      <Filter>zlib\minizip</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\zlib\crc32.h">
+      <Filter>zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\zlib\deflate.h">
+      <Filter>zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\zlib\gzguts.h">
+      <Filter>zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\zlib\inffast.h">
+      <Filter>zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\zlib\inffixed.h">
+      <Filter>zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\zlib\inflate.h">
+      <Filter>zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\zlib\inftrees.h">
+      <Filter>zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\zlib\trees.h">
+      <Filter>zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\zlib\zconf.h">
+      <Filter>zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\zlib\zlib.h">
+      <Filter>zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\zlib\zutil.h">
+      <Filter>zlib</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
