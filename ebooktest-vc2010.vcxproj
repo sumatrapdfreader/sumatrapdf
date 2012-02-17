@@ -100,6 +100,8 @@
     <ClCompile Include="ext\chrome\base\win\object_watcher.cc" />
     <ClCompile Include="ext\chrome\base\win\windows_version.cc" />
     <ClCompile Include="ext\chrome\base\win\wrapped_window_proc.cc" />
+    <ClCompile Include="src\ebooktest\EbookController.cpp" />
+    <ClCompile Include="src\ebooktest\EbookControls.cpp" />
     <ClCompile Include="src\ebooktest\EbookTest.cpp" />
     <ClCompile Include="src\ebooktest\EbookTestMenu.cpp" />
     <ClCompile Include="src\MobiDoc.cpp" />
@@ -183,6 +185,8 @@
     <ClInclude Include="ext\chrome\base\win\windows_version.h" />
     <ClInclude Include="ext\chrome\base\win\wrapped_window_proc.h" />
     <ClInclude Include="src\BaseEbookDoc.h" />
+    <ClInclude Include="src\ebooktest\EbookController.h" />
+    <ClInclude Include="src\ebooktest\EbookControls.h" />
     <ClInclude Include="src\ebooktest\EbookTestMenu.h" />
     <ClInclude Include="src\ebooktest\EbookUiMsg.h" />
     <ClInclude Include="src\ebooktest\Resource.h" />

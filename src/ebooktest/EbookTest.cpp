@@ -2,6 +2,8 @@
    License: GPLv3 */
 
 #include "CmdLineParser.h"
+#include "EbookController.h"
+#include "EbookControls.h"
 #include "EbookTestMenu.h"
 #include "FileUtil.h"
 #include "FrameTimeoutCalculator.h"
@@ -13,7 +15,6 @@
 #include "SvgPath.h"
 #include "StrUtil.h"
 #include "Scoped.h"
-#include "ThreadUtil.h"
 #include "Timer.h"
 #include "EbookUiMsg.h"
 #include "UiMsg.h"
@@ -52,34 +53,16 @@ to click there.
 
 using namespace mui;
 
-class ControlEbook;
-class EbookController;
-
 #define ET_FRAME_CLASS_NAME    _T("ET_FRAME")
-
-#define FONT_NAME              L"Georgia"
-#define FONT_SIZE              12
 
 #define WIN_DX    640
 #define WIN_DY    480
 
-static HINSTANCE        ghinst;
-static HWND             gHwndFrame = NULL;
-static HCURSOR          gCursorHand = NULL;
-
-static Style *         ebookDefault = NULL;
-static Style *         statusDefault = NULL;
-static Style *         horizProgressDefault = NULL;
-static Style *         nextDefault = NULL;
-static Style *         nextMouseOver = NULL;
-
-static HwndWrapper *   gMainWnd = NULL;
-static ControlEbook *  ebook = NULL;
-static ButtonVector *  next = NULL;
-static ButtonVector *  prev = NULL;
-static ScrollBar *     horizProgress = NULL;
-static Button *        status = NULL;
-static EbookController *ebookController = NULL;
+static HINSTANCE            ghinst = NULL;
+static HWND                 gHwndFrame = NULL;
+static EbookControls *      gEbookControls = NULL;
+static HwndWrapper *        gMainWnd = NULL;
+static EbookController *    gEbookController = NULL;
 
 static bool gShowTextBoundingBoxes = false;
 
@@ -89,139 +72,6 @@ static const char *gSampleHtml = "<html><p align=justify>ClearType is <b>depende
 void LogProcessRunningTime()
 {
     lf("EbookTest startup time: %.2f ms", GetProcessRunningTime());
-}
-
-/* The layout is:
-___________________
-|                 |
-| next       prev |
-|                 |
-|[ position bar  ]|
-|[    status     ]|
-___________________
-*/
-
-class ControlEbook : public Control
-{
-    static const int CircleR = 10;
-
-public:
-    MobiDoc *       mb;
-    const char *    html;
-
-    Vec<PageData*>* pages;
-    int             currPageNo; // within pages
-    int             pageDx, pageDy; // size of the page for which pages was generated
-
-    int             cursorX, cursorY;
-
-    ControlEbook();
-    virtual ~ControlEbook();
-
-    virtual void Paint(Graphics *gfx, int offX, int offY);
-
-    virtual void NotifyMouseMove(int x, int y);
-
-    void SetHtml(const char *html);
-    void LoadMobi(const TCHAR *fileName);
-
-    void SetStatusText() const;
-
-    void DeletePages();
-
-    void PageLayout(int dx, int dy);
-    //void StopPageLayoutThread();
-
-    void MobiFinishedLoading(UiMsg *msg);
-
-    void AdvancePage(int dist);
-    void SetPage(int newPageNo);
-};
-
-ControlEbook::ControlEbook()
-{
-    //mobiLoadThread = NULL;
-    //pageLayoutThread = NULL;
-    mb = NULL;
-    html = NULL;
-    pages = NULL;
-    currPageNo = 0;
-    pageDx = 0; pageDy = 0;
-
-    cursorX = -1; cursorY = -1;
-
-    bit::Set(wantedInputBits, WantsMouseMoveBit);
-
-    SetStatusText();
-}
-
-ControlEbook::~ControlEbook()
-{
-#if 0
-    // TODO: I think that the problem here is that while the thread might
-    // be finished, there still might be in-flight messages sent
-    // to this object. Do we need a way to cancel messages directed
-    // to a given object from the queue? Ref-count the objects so that
-    // their lifetime is managed correctly?
-    StopMobiLoadThread();
-    StopPageLayoutThread();
-#endif
-
-    DeletePages();
-    delete mb;
-}
-
-void ControlEbook::DeletePages()
-{
-    if (!pages)
-        return;
-    DeleteVecMembers<PageData*>(*pages);
-    delete pages;
-    pages = NULL;
-}
-
-#if 0
-void ControlEbook::DeleteNewPages()
-{
-    if (!newPages)
-        return;
-    DeleteVecMembers<PageData*>(*newPages);
-    delete newPages;
-    newPages = NULL;
-}
-#endif
-
-void ControlEbook::SetStatusText() const
-{
-    if (!pages) {
-        status->SetText(_T(" "));
-        horizProgress->SetFilled(0.f);
-        return;
-    }
-    size_t pageCount = pages->Count();
-    ScopedMem<TCHAR> s(str::Format(_T("Page %d out of %d"), currPageNo, (int)pageCount));
-    status->SetText(s.Get());
-    horizProgress->SetFilled(PercFromInt(pageCount, currPageNo));
-}
-
-void ControlEbook::SetPage(int newPageNo)
-{
-    CrashIf((newPageNo < 1) || (newPageNo > (int)pages->Count()));
-    currPageNo = newPageNo;
-    SetStatusText();
-    RequestRepaint(this);
-}
-
-void ControlEbook::AdvancePage(int dist)
-{
-    if (!pages)
-        return;
-    int newPageNo = currPageNo + dist;
-    if (newPageNo < 1)
-        return;
-    if (newPageNo > (int)pages->Count())
-        return;
-    SetPage(newPageNo);
 }
 
 #if 0
@@ -281,41 +131,6 @@ void ControlEbook::PageLayoutBackground(LayoutInfo *li)
 }
 #endif
 
-void ControlEbook::PageLayout(int dx, int dy)
-{
-    lf("ControlEbook::PageLayout: (%d,%d)", dx, dy);
-    if ((dx == pageDx) && (dy == pageDy) && pages)
-        return;
-
-    if (pages)
-        return;
-
-    pageDx = dx;
-    pageDy = dy;
-
-    LayoutInfo *li = new LayoutInfo();
-
-    size_t len;
-    if (html)
-        len = strlen(html);
-    else
-        html = mb->GetBookHtmlData(len);
-
-    li->fontName = FONT_NAME;
-    li->fontSize = FONT_SIZE;
-    li->htmlStr = html;
-    li->htmlStrLen = len;
-    li->pageDx = dx;
-    li->pageDy = dy;
-    pages = LayoutHtml(li);
-    delete li;
-#if 0
-    pageLayoutThread = new base::Thread("ControlEbook::PageLayoutBackground");
-    pageLayoutThread->Start();
-    pageLayoutThread->message_loop()->PostTask(base::Bind(&ControlEbook::PageLayoutBackground,
-                                             base::Unretained(this), li));
-#endif
-}
 
 #if 0
 void ControlEbook::StopPageLayoutThread()
@@ -328,159 +143,6 @@ void ControlEbook::StopPageLayoutThread()
     pageLayoutThread = NULL;
 }
 #endif
-
-void ControlEbook::SetHtml(const char *newHtml)
-{
-    html = newHtml;
-}
-
-void ControlEbook::MobiFinishedLoading(UiMsg *msg)
-{
-    CrashIf(UiMsg::FinishedMobiLoading != msg->type);
-    delete mb;
-    html = NULL;
-    if (NULL == msg->finishedMobiLoading.mobiDoc) {
-        l("ControlEbook::MobiFinishedLoading(): failed to load");
-        // TODO: a better way to notify about this
-        ScopedMem<TCHAR> s(str::Format(_T("Failed to load %s!"), msg->finishedMobiLoading.fileName));
-        status->SetText(s.Get());
-    } else {
-        delete pages;
-        pages = NULL;
-        mb = msg->finishedMobiLoading.mobiDoc;
-        msg->finishedMobiLoading.mobiDoc = NULL;
-        RequestLayout(this);
-    }
-}
-
-// TODO: embed ControlEbook object to notify when finished, we use the current one now.
-class ThreadLoadMobi : public ThreadBase {
-public:
-    TCHAR *     fileName; // thread owns this memory
-
-    ThreadLoadMobi(const TCHAR *fileName);
-    virtual ~ThreadLoadMobi() { free(fileName); }
-
-    // ThreadBase
-    virtual void Run();
-};
-
-ThreadLoadMobi::ThreadLoadMobi(const TCHAR *fn)
-{
-    autoDeleteSelf = true;
-    fileName = str::Dup(fn);
-}
-
-void ThreadLoadMobi::Run()
-{
-    lf(_T("ControlEbook::LoadMobiBackground(%s)"), fileName);
-    Timer t(true);
-    MobiDoc *mobiDoc = MobiDoc::ParseFile(fileName);
-    double loadingTimeMs = t.GetCurrTimeInMs();
-    lf(_T("Loaded %s in %.2f ms"), fileName, t.GetCurrTimeInMs());
-
-    UiMsg *msg = new UiMsg(UiMsg::FinishedMobiLoading);
-    msg->finishedMobiLoading.mobiDoc = mobiDoc;
-    msg->finishedMobiLoading.fileName = fileName;
-    fileName = NULL;
-    uimsg::Post(msg);
-}
-
-void ControlEbook::LoadMobi(const TCHAR *fileName)
-{
-    // note: ThreadLoadMobi object will get automatically deleted, so no
-    // need to keep it aroun
-    ThreadLoadMobi *loadThread = new ThreadLoadMobi(fileName);
-    loadThread->Start();
-
-    // TODO: this message should show up in a different place,
-    // reusing status for convenience
-    ScopedMem<TCHAR> s(str::Format(_T("Please wait, loading %s"), fileName));
-    status->SetText(s.Get());
-}
-
-static Rect RectForCircle(int x, int y, int r)
-{
-    return Rect(x - r, y - r, r * 2, r * 2);
-}
-
-// This is just to test mouse move handling
-void ControlEbook::NotifyMouseMove(int x, int y)
-{
-    Rect r1 = RectForCircle(cursorX, cursorY, CircleR);
-    Rect r2 = RectForCircle(x, y, CircleR);
-    cursorX = x; cursorY = y;
-    r1.Inflate(1,1); r2.Inflate(1,1);
-    RequestRepaint(this, &r1, &r2);
-}
-
-void ControlEbook::Paint(Graphics *gfx, int offX, int offY)
-{
-    // for testing mouse move, paint a blue circle at current cursor position
-    if ((-1 != cursorX) && (-1 != cursorY)) {
-        SolidBrush br(Color(180, 0, 0, 255));
-        int x = offX + cursorX;
-        int y = offY + cursorY;
-        Rect r(RectForCircle(x, y, CircleR));
-        gfx->FillEllipse(&br, r);
-    }
-
-    if (!pages)
-        return;
-
-    // TODO: temporary, to prevent crash below
-    if (currPageNo == 0)
-        return;
-
-    offX += cachedStyle->padding.left;
-    offY += cachedStyle->padding.top;
-
-    PageData *pageData = pages->At(currPageNo - 1);
-    DrawPageLayout(gfx, &pageData->drawInstructions, (REAL)offX, (REAL)offY, gShowTextBoundingBoxes);
-}
-
-// a feeble attempt at MVC split
-class EbookController : public IClickHandler
-{
-public:
-    EbookController() {
-        gMainWnd->evtMgr->RegisterClickHandler(next, this);
-        gMainWnd->evtMgr->RegisterClickHandler(prev, this);
-        gMainWnd->evtMgr->RegisterClickHandler(horizProgress, this);
-    }
-    ~EbookController() {
-        gMainWnd->evtMgr->UnRegisterClickHandlers(this);
-    }
-
-    // IClickHandler
-    virtual void Clicked(Control *w, int x, int y);
-};
-
-// (x, y) is in the coordinates of w
-void EbookController::Clicked(Control *w, int x, int y)
-{
-    if (w == next) {
-        ebook->AdvancePage(1);
-        return;
-    }
-
-    if (w == prev) {
-        ebook->AdvancePage(-1);
-        return;
-    }
-
-    if (w == horizProgress) {
-        float perc = horizProgress->GetPercAt(x);
-        if (ebook->pages) {
-            int pageCount = ebook->pages->Count();
-            int pageNo = IntFromPerc(pageCount, perc);
-            ebook->SetPage(pageNo + 1);
-        }
-        return;
-    }
-
-    CrashAlwaysIf(true);
-}
 
 #define TEN_SECONDS_IN_MS 10*1000
 
@@ -501,110 +163,13 @@ static inline void EnableAndShow(HWND hwnd, bool enable)
     EnableWindow(hwnd, enable);
 }
 
-static void CreateStyles()
-{
-    const int pageBorderX = 10;
-    const int pageBorderY = 10;
-
-    ebookDefault = new Style();
-    ebookDefault->Set(Prop::AllocPadding(pageBorderY, pageBorderX, pageBorderY, pageBorderX));
-
-    nextDefault = new Style(gStyleButtonDefault);
-    nextDefault->SetBorderWidth(0.f);
-    nextDefault->Set(Prop::AllocPadding(1, 1, 1, 4));
-    nextDefault->Set(Prop::AllocWidth(PropStrokeWidth, 0.f));
-    nextDefault->Set(Prop::AllocColorSolid(PropFill, "gray"));
-    nextDefault->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
-    nextDefault->Set(Prop::AllocAlign(PropVertAlign, ElAlignTop));
-    //nextDefault->Set(Prop::AllocPadding(4, 8, 12, 16));
-
-    nextMouseOver = new Style(gStyleButtonMouseOver);
-    nextMouseOver->SetBorderWidth(0.f);
-    //nextMouseOver->Set(Prop::AllocPadding(12, 8, 4, 16));
-    nextMouseOver->Set(Prop::AllocPadding(1, 1, 1, 4));
-    nextMouseOver->Set(Prop::AllocWidth(PropStrokeWidth, 0.f));
-    nextMouseOver->Set(Prop::AllocColorSolid(PropFill, "black"));
-    nextMouseOver->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
-    nextMouseOver->Set(Prop::AllocAlign(PropVertAlign, ElAlignBottom));
-
-    statusDefault = new Style();
-    statusDefault->Set(Prop::AllocColorSolid(PropBgColor, "white"));
-    statusDefault->Set(Prop::AllocColorSolid(PropColor, "black"));
-    statusDefault->Set(Prop::AllocFontSize(8));
-    statusDefault->Set(Prop::AllocFontWeight(FontStyleRegular));
-    statusDefault->Set(Prop::AllocPadding(2, 0, 2, 0));
-    statusDefault->SetBorderWidth(0);
-    statusDefault->Set(Prop::AllocTextAlign(Align_Center));
-
-    horizProgressDefault = new Style();
-    horizProgressDefault->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
-    horizProgressDefault->Set(Prop::AllocColorSolid(PropColor, "yellow"));
-}
-
-static void DeleteStyles()
-{
-    delete statusDefault;
-    delete nextDefault;
-    delete nextMouseOver;
-    delete ebookDefault;
-    delete horizProgressDefault;
-}
-
-static void CreateWindows(HWND hwnd)
-{
-    next = new ButtonVector(svg::GraphicsPathFromPathData("M0 0  L10 13 L0 ,26 Z"));
-    next->SetStyles(nextDefault, nextMouseOver);
-
-    prev = new ButtonVector(svg::GraphicsPathFromPathData("M10 0 L0,  13 L10 26 z"));
-    prev->SetStyles(nextDefault, nextMouseOver);
-
-    horizProgress = new ScrollBar();
-    horizProgress->hCursor = gCursorHand;
-    horizProgress->SetCurrentStyle(horizProgressDefault, gStyleDefault);
-
-    status = new Button(_T(""));
-    status->SetStyles(statusDefault, statusDefault);
-
-    ebook = new ControlEbook();
-    ebook->SetHtml(gSampleHtml);
-    ebook->SetCurrentStyle(ebookDefault, gStyleDefault);
-
-    gMainWnd = new HwndWrapper(hwnd);
-    gMainWnd->SetMinSize(Size(320, 200));
-    gMainWnd->SetMaxSize(Size(1024, 800));
-
-    gMainWnd->AddChild(next, prev, ebook);
-    gMainWnd->AddChild(horizProgress, status);
-}
-
-static void CreateLayout()
-{
-    HorizontalLayout *topPart = new HorizontalLayout();
-    DirectionalLayoutData ld;
-    ld.Set(prev, SizeSelf, 1.f, GetElAlignCenter());
-    topPart->Add(ld);
-    ld.Set(ebook, 1.f, 1.f, GetElAlignTop());
-    topPart->Add(ld);
-    ld.Set(next, SizeSelf, 1.f, GetElAlignBottom());
-    topPart->Add(ld);
-
-    VerticalLayout *l = new VerticalLayout();
-    ld.Set(topPart, 1.f, 1.f, GetElAlignTop());
-    l->Add(ld, true);
-    ld.Set(horizProgress, SizeSelf, .5f, GetElAlignRight());
-    l->Add(ld);
-    ld.Set(status, SizeSelf, .5f, GetElAlignLeft());
-    l->Add(ld);
-    gMainWnd->layout = l;
-}
-
 static void OnCreateWindow(HWND hwnd)
 {
     HMENU menu = BuildMenu();
     SetMenu(hwnd, menu);
-    CreateWindows(hwnd);
-    CreateLayout();
-    ebookController = new EbookController();
+    gEbookControls = CreateEbookControls(hwnd);
+    gMainWnd = gEbookControls->mainWnd;
+    gEbookController = new EbookController(gEbookControls);
 }
 
 static void OnOpen(HWND hwnd)
@@ -633,7 +198,7 @@ static void OnOpen(HWND hwnd)
     TCHAR *fileName = ofn.lpstrFile + ofn.nFileOffset;
     if (*(fileName - 1)) {
         // special case: single filename without NULL separator
-        ebook->LoadMobi(ofn.lpstrFile);
+        gEbookController->LoadMobi(ofn.lpstrFile);
         return;
     }
     // this is just a test app, no need to support multiple files
@@ -758,7 +323,7 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
 void DispatchUiMsg(UiMsg *msg)
 {
     if (UiMsg::FinishedMobiLoading == msg->type) {
-        ebook->MobiFinishedLoading(msg);
+        gEbookController->MobiFinishedLoading(msg);
     } else {
         CrashIf(true);
     }
@@ -821,9 +386,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     ScopedGdiPlus gdi;
 
     mui::Initialize();
-    CreateStyles();
-
-    gCursorHand  = LoadCursor(NULL, IDC_HAND);
 
 #if 0
     // start per-thread MessageLoop, this one is for our UI thread
@@ -844,10 +406,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     //MessageLoopForUI::current()->RunWithDispatcher(NULL);
     ret = RunApp();
 
-    delete ebookController;
-    delete gMainWnd;
 Exit:
-    DeleteStyles();
+    delete gEbookController;
+    DestroyEbookControls(gEbookControls);
     mui::Destroy();
 
     DrainUiMsgQueu();

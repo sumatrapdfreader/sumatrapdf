@@ -164,6 +164,8 @@
     <ClCompile Include="src\utils\Http.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="src\ebooktest\EbookControls.cpp" />
+    <ClCompile Include="src\ebooktest\EbookController.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ebooktest\EbookTestMenu.h" />
@@ -431,6 +433,8 @@
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="src\ebooktest\EbookUiMsg.h" />
+    <ClInclude Include="src\ebooktest\EbookControls.h" />
+    <ClInclude Include="src\ebooktest\EbookController.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="src\ebooktest\EbookTest.rc" />

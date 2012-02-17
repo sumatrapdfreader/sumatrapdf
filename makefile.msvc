@@ -194,7 +194,8 @@ UNINSTALLER_OBJS = \
 
 ET_OBJS = \
 	$(OEB)\EbookTest.obj $(OEB)\EbookTestMenu.obj $(ET_RES) \
-	$(OEB)\PageLayout.obj $(MUI_OBJS) $(UTILS_OBJS) $(OEB)\MobiDoc.obj
+	$(OEB)\PageLayout.obj $(MUI_OBJS) $(UTILS_OBJS) $(OEB)\MobiDoc.obj \
+	$(OEB)\EbookControls.obj $(OEB)\EbookController.obj
 
 TESTER_OBJS = \
 	$(OEB)\Tester.obj $(OEB)\PageLayout.obj $(UTILS_OBJS) $(MUI_OBJS) $(OEB)\MobiDoc.obj
