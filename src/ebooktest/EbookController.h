@@ -44,7 +44,7 @@ public:
 
     void SetHtml(const char *html);
     void LoadMobi(const TCHAR *fileName);
-    void MobiFinishedLoading(UiMsg *msg);
+    void FinishedMobiLoading(UiMsg *msg);
 };
 
 #endif

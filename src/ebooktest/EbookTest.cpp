@@ -264,7 +264,7 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
 void DispatchUiMsg(UiMsg *msg)
 {
     if (UiMsg::FinishedMobiLoading == msg->type) {
-        gEbookController->MobiFinishedLoading(msg);
+        gEbookController->FinishedMobiLoading(msg);
     } else {
         CrashIf(true);
     }

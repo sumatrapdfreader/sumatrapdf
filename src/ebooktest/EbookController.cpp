@@ -19,7 +19,7 @@
 // TODO: embed EbookController object to notify when finished, we use the current one now.
 class ThreadLoadMobi : public ThreadBase {
 public:
-    TCHAR *     fileName; // thread owns this memory
+    TCHAR *     fileName; // we own this memory
 
     ThreadLoadMobi(const TCHAR *fileName);
     virtual ~ThreadLoadMobi() { free(fileName); }
@@ -187,13 +187,13 @@ void EbookController::SetHtml(const char *newHtml)
     html = newHtml;
 }
 
-void EbookController::MobiFinishedLoading(UiMsg *msg)
+void EbookController::FinishedMobiLoading(UiMsg *msg)
 {
     CrashIf(UiMsg::FinishedMobiLoading != msg->type);
     delete mb;
     html = NULL;
     if (NULL == msg->finishedMobiLoading.mobiDoc) {
-        l("ControlEbook::MobiFinishedLoading(): failed to load");
+        l("ControlEbook::FinishedMobiLoading(): failed to load");
         // TODO: a better way to notify about this
         ScopedMem<TCHAR> s(str::Format(_T("Failed to load %s!"), msg->finishedMobiLoading.fileName));
         ctrls->status->SetText(s.Get());
