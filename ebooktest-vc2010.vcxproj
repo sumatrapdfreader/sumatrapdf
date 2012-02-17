@@ -118,6 +118,7 @@
     <ClCompile Include="src\utils\FileUtil.cpp" />
     <ClCompile Include="src\utils\GdiPlusUtil.cpp" />
     <ClCompile Include="src\utils\HtmlPullParser.cpp" />
+    <ClCompile Include="src\utils\Http.cpp" />
     <ClCompile Include="src\utils\NoFreeAllocator.cpp" />
     <ClCompile Include="src\utils\StrUtil.cpp" />
     <ClCompile Include="src\utils\ThreadUtil.cpp" />
@@ -183,6 +184,7 @@
     <ClInclude Include="ext\chrome\base\win\wrapped_window_proc.h" />
     <ClInclude Include="src\BaseEbookDoc.h" />
     <ClInclude Include="src\ebooktest\EbookTestMenu.h" />
+    <ClInclude Include="src\ebooktest\EbookUiMsg.h" />
     <ClInclude Include="src\ebooktest\Resource.h" />
     <ClInclude Include="src\installer\Version.h" />
     <ClInclude Include="src\MobiDoc.h" />
@@ -206,6 +208,7 @@
     <ClInclude Include="src\utils\FrameTimeoutCalculator.h" />
     <ClInclude Include="src\utils\GdiPlusUtil.h" />
     <ClInclude Include="src\utils\HtmlPullParser.h" />
+    <ClInclude Include="src\utils\Http.h" />
     <ClInclude Include="src\utils\NoFreeAllocator.h" />
     <ClInclude Include="src\utils\Scoped.h" />
     <ClInclude Include="src\utils\SimpleLog.h" />

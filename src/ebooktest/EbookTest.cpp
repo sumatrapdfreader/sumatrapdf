@@ -1,20 +1,6 @@
 /* Copyright 2010-2012 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// Hack: we need NOMINMAX to make chrome code compile but we also need
-// min/max for gdi+ headers, so we import min/max from stl
-#include <algorithm>
-using std::min;
-using std::max;
-
-#if defined(WITH_CHROME)
-// include anything that might (re)define operator new before BaseUtil.h
-#include "base/threading/thread.h"
-#include "base/bind.h"
-#else
-#include "ThreadUtil.h"
-#endif
-
 #include "CmdLineParser.h"
 #include "EbookTestMenu.h"
 #include "FileUtil.h"
@@ -27,7 +13,10 @@ using std::max;
 #include "SvgPath.h"
 #include "StrUtil.h"
 #include "Scoped.h"
+#include "ThreadUtil.h"
 #include "Timer.h"
+#include "EbookUiMsg.h"
+#include "UiMsg.h"
 #include "Version.h"
 #include "WinUtil.h"
 
@@ -92,13 +81,6 @@ static ScrollBar *     horizProgress = NULL;
 static Button *        status = NULL;
 static EbookController *ebookController = NULL;
 
-#if defined(WITH_CHROME)
-// for convenience so that we don't have to pass it around
-static MessageLoop *    gMessageLoopUI = NULL;
-#else
-static UiMessageLoop *  gMessageLoopUI = NULL;
-#endif
-
 static bool gShowTextBoundingBoxes = false;
 
 // A sample text to display if we don't show an actual mobi file
@@ -131,13 +113,7 @@ public:
     int             currPageNo; // within pages
     int             pageDx, pageDy; // size of the page for which pages was generated
 
-    // pages 
-    Vec<PageData*>* tmpPages;
-
     int             cursorX, cursorY;
-
-    base::Thread *  mobiLoadThread;
-    base::Thread *  pageLayoutThread;
 
     ControlEbook();
     virtual ~ControlEbook();
@@ -152,19 +128,11 @@ public:
     void SetStatusText() const;
 
     void DeletePages();
-    void DeleteNewPages();
-
-    void NewPageUIThread(PageData *pageData);
-    void PageLayoutFinished();
-    void PageLayoutBackground(LayoutInfo *li);
 
     void PageLayout(int dx, int dy);
-    void StopPageLayoutThread();
+    //void StopPageLayoutThread();
 
-    void MobiLoaded(MobiDoc *mb);
-    void MobiFailedToLoad(const TCHAR *fileName);
-    void LoadMobiBackground(const TCHAR *fileName);
-    void StopMobiLoadThread();
+    void MobiFinishedLoading(UiMsg *msg);
 
     void AdvancePage(int dist);
     void SetPage(int newPageNo);
@@ -172,8 +140,8 @@ public:
 
 ControlEbook::ControlEbook()
 {
-    mobiLoadThread = NULL;
-    pageLayoutThread = NULL;
+    //mobiLoadThread = NULL;
+    //pageLayoutThread = NULL;
     mb = NULL;
     html = NULL;
     pages = NULL;
@@ -189,6 +157,7 @@ ControlEbook::ControlEbook()
 
 ControlEbook::~ControlEbook()
 {
+#if 0
     // TODO: I think that the problem here is that while the thread might
     // be finished, there still might be in-flight messages sent
     // to this object. Do we need a way to cancel messages directed
@@ -196,8 +165,8 @@ ControlEbook::~ControlEbook()
     // their lifetime is managed correctly?
     StopMobiLoadThread();
     StopPageLayoutThread();
+#endif
 
-    DeleteNewPages();
     DeletePages();
     delete mb;
 }
@@ -211,16 +180,16 @@ void ControlEbook::DeletePages()
     pages = NULL;
 }
 
+#if 0
 void ControlEbook::DeleteNewPages()
 {
-#if 0
     if (!newPages)
         return;
     DeleteVecMembers<PageData*>(*newPages);
     delete newPages;
     newPages = NULL;
-#endif
 }
+#endif
 
 void ControlEbook::SetStatusText() const
 {
@@ -255,10 +224,10 @@ void ControlEbook::AdvancePage(int dist)
     SetPage(newPageNo);
 }
 
+#if 0
 void ControlEbook::PageLayoutFinished()
 {
     StopPageLayoutThread();
-#if 0
     if (!newPages)
         return;
     DeletePages();
@@ -270,13 +239,13 @@ void ControlEbook::PageLayoutFinished()
         currPageNo = 1;
     SetStatusText();
     RequestRepaint(this);
-#endif
 }
+#endif
 
+#if 0
 // called on a ui thread from background thread
 void ControlEbook::NewPageUIThread(PageData *pageData)
 {
-#if 0
     if (!newPages)
         newPages = new Vec<PageData*>();
 
@@ -288,8 +257,8 @@ void ControlEbook::NewPageUIThread(PageData *pageData)
         ScopedMem<TCHAR> s(str::Format(_T("Layout started. Please wait...")));
         status->SetText(s.Get());
     }
-#endif
 }
+#endif
 
 #if 0
 // called on a background thread
@@ -300,6 +269,7 @@ void ControlEbook::NewPage(PageData *pageData)
 }
 #endif
 
+#if 0
 // called on a background thread
 void ControlEbook::PageLayoutBackground(LayoutInfo *li)
 {
@@ -309,6 +279,7 @@ void ControlEbook::PageLayoutBackground(LayoutInfo *li)
                                         base::Unretained(this)));
     delete li;
 }
+#endif
 
 void ControlEbook::PageLayout(int dx, int dy)
 {
@@ -316,12 +287,9 @@ void ControlEbook::PageLayout(int dx, int dy)
     if ((dx == pageDx) && (dy == pageDy) && pages)
         return;
 
-    if (pages || pageLayoutThread)
+    if (pages)
         return;
 
-    StopPageLayoutThread();
-
-    DeleteNewPages();
     pageDx = dx;
     pageDy = dy;
 
@@ -349,6 +317,7 @@ void ControlEbook::PageLayout(int dx, int dy)
 #endif
 }
 
+#if 0
 void ControlEbook::StopPageLayoutThread()
 {
     if (!pageLayoutThread)
@@ -358,82 +327,72 @@ void ControlEbook::StopPageLayoutThread()
     delete pageLayoutThread;
     pageLayoutThread = NULL;
 }
+#endif
 
 void ControlEbook::SetHtml(const char *newHtml)
 {
     html = newHtml;
 }
 
-void ControlEbook::StopMobiLoadThread()
+void ControlEbook::MobiFinishedLoading(UiMsg *msg)
 {
-    if (!mobiLoadThread)
-        return;
-    l("Stopping mobi load thread");
-    mobiLoadThread->Stop();
-    delete mobiLoadThread;
-    mobiLoadThread = NULL;
-}
-
-// called on UI thread from background thread after
-// mobi file has been loaded
-void ControlEbook::MobiLoaded(MobiDoc *newMobi)
-{
-    l("ControlEbook::MobiLoaded()");
-    CrashIf(gMessageLoopUI != MessageLoop::current());
-    StopMobiLoadThread();
+    CrashIf(UiMsg::FinishedMobiLoading != msg->type);
     delete mb;
-    mb = newMobi;
     html = NULL;
-    delete pages;
-    pages = NULL;
-    RequestLayout(this);
+    if (NULL == msg->finishedMobiLoading.mobiDoc) {
+        l("ControlEbook::MobiFinishedLoading(): failed to load");
+        // TODO: a better way to notify about this
+        ScopedMem<TCHAR> s(str::Format(_T("Failed to load %s!"), msg->finishedMobiLoading.fileName));
+        status->SetText(s.Get());
+    } else {
+        delete pages;
+        pages = NULL;
+        mb = msg->finishedMobiLoading.mobiDoc;
+        msg->finishedMobiLoading.mobiDoc = NULL;
+        RequestLayout(this);
+    }
 }
 
-// called on UI thread from backgroudn thread if we tried
-// to load mobi file but failed
-void ControlEbook::MobiFailedToLoad(const TCHAR *fileName)
+// TODO: embed ControlEbook object to notify when finished, we use the current one now.
+class ThreadLoadMobi : public ThreadBase {
+public:
+    TCHAR *     fileName; // thread owns this memory
+
+    ThreadLoadMobi(const TCHAR *fileName);
+    virtual ~ThreadLoadMobi() { free(fileName); }
+
+    // ThreadBase
+    virtual void Run();
+};
+
+ThreadLoadMobi::ThreadLoadMobi(const TCHAR *fn)
 {
-    l("ControlEbook::MobiFailedToLoad()");
-    CrashIf(gMessageLoopUI != MessageLoop::current());
-    StopMobiLoadThread();
-    // TODO: this message should show up in a different place,
-    // reusing status for convenience
-    ScopedMem<TCHAR> s(str::Format(_T("Failed to load %s!"), fileName));
-    status->SetText(s.Get());
-    free((void*)fileName);
+    autoDeleteSelf = true;
+    fileName = str::Dup(fn);
 }
 
-// Method executed on background thread that tries to load
-// a given mobi file and either calls MobiLoaded() or
-// MobiFailedToLoad() on ui thread
-void ControlEbook::LoadMobiBackground(const TCHAR *fileName)
+void ThreadLoadMobi::Run()
 {
-    CrashIf(gMessageLoopUI == MessageLoop::current());
     lf(_T("ControlEbook::LoadMobiBackground(%s)"), fileName);
     Timer t(true);
-    MobiDoc *mb = MobiDoc::ParseFile(fileName);
+    MobiDoc *mobiDoc = MobiDoc::ParseFile(fileName);
+    double loadingTimeMs = t.GetCurrTimeInMs();
     lf(_T("Loaded %s in %.2f ms"), fileName, t.GetCurrTimeInMs());
 
-    if (!mb)
-        gMessageLoopUI->PostTask(base::Bind(&ControlEbook::MobiFailedToLoad,
-                                 base::Unretained(this), fileName));
-    else
-        gMessageLoopUI->PostTask(base::Bind(&ControlEbook::MobiLoaded,
-                                 base::Unretained(this), mb));
-    free((void*)fileName);
+    UiMsg *msg = new UiMsg(UiMsg::FinishedMobiLoading);
+    msg->finishedMobiLoading.mobiDoc = mobiDoc;
+    msg->finishedMobiLoading.fileName = fileName;
+    fileName = NULL;
+    uimsg::Post(msg);
 }
 
 void ControlEbook::LoadMobi(const TCHAR *fileName)
 {
-    // TODO: not sure if that's enough to handle user chosing
-    // to load another mobi file while loading of the previous
-    // hasn't finished yet
-    StopMobiLoadThread();
-    mobiLoadThread = new base::Thread("ControlEbook::LoadMobiBackground");
-    mobiLoadThread->Start();
-    // TODO: use some refcounted version of fileName
-    mobiLoadThread->message_loop()->PostTask(base::Bind(&ControlEbook::LoadMobiBackground,
-                                             base::Unretained(this), str::Dup(fileName)));
+    // note: ThreadLoadMobi object will get automatically deleted, so no
+    // need to keep it aroun
+    ThreadLoadMobi *loadThread = new ThreadLoadMobi(fileName);
+    loadThread->Start();
+
     // TODO: this message should show up in a different place,
     // reusing status for convenience
     ScopedMem<TCHAR> s(str::Format(_T("Please wait, loading %s"), fileName));
@@ -796,6 +755,23 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
     return TRUE;
 }
 
+void DispatchUiMsg(UiMsg *msg)
+{
+    if (UiMsg::FinishedMobiLoading == msg->type) {
+        ebook->MobiFinishedLoading(msg);
+    } else {
+        CrashIf(true);
+    }
+    delete msg;
+}
+
+void DrainUiMsgQueu()
+{
+    for (UiMsg *msg = uimsg::RetriveNext(); msg; msg = uimsg::RetriveNext()) {
+        delete msg;
+    }
+}
+
 // inspired by http://engineering.imvu.com/2010/11/24/how-to-write-an-interactive-60-hz-desktop-application/
 static int RunApp()
 {
@@ -820,6 +796,9 @@ static int RunApp()
             if (!IsDialogMessage(gHwndFrame, &msg)) {
                 TranslateMessage(&msg);
                 DispatchMessage(&msg);
+            }
+            for (UiMsg *msg = uimsg::RetriveNext(); msg; msg = uimsg::RetriveNext()) {
+                DispatchUiMsg(msg);
             }
         }
     }
@@ -846,12 +825,13 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     gCursorHand  = LoadCursor(NULL, IDC_HAND);
 
+#if 0
     // start per-thread MessageLoop, this one is for our UI thread
     // You can use it via static MessageLoop::current()
     MessageLoop uiMsgLoop(MessageLoop::TYPE_UI);
-
     gMessageLoopUI = MessageLoop::current();
     CrashIf(gMessageLoopUI != &uiMsgLoop);
+#endif
 
     //ParseCommandLine(GetCommandLine());
     if (!RegisterWinClass(hInstance))
@@ -860,13 +840,17 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     if (!InstanceInit(hInstance, nCmdShow))
         goto Exit;
 
-    MessageLoopForUI::current()->RunWithDispatcher(NULL);
-    // ret = RunApp();
+    uimsg::Initialize();
+    //MessageLoopForUI::current()->RunWithDispatcher(NULL);
+    ret = RunApp();
 
     delete ebookController;
     delete gMainWnd;
 Exit:
     DeleteStyles();
     mui::Destroy();
+
+    DrainUiMsgQueu();
+    uimsg::Destroy();
     return ret;
 }

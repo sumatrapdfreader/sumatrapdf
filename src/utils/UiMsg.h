@@ -49,7 +49,7 @@ namespace uimsg {
 
 // call Initialize() at program startup and Destroy() at the end
 void    Initialize();
-void    Destrory();
+void    Destroy();
 
 // Called from any thread, posts a message to a queue, to be processed by ui thread
 void    Post(UiMsg *msg);

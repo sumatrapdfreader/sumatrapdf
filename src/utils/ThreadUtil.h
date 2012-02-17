@@ -89,4 +89,63 @@ public:
     bool IsUiThread() { return GetCurrentThreadId() == threadId; }
 };
 
+class ThreadBase;
+// experiment: a way for an object to be notified
+// about events in a thread.
+class IThreadObserver {
+public:
+    // called after ThreadBase::Run() finished running but before
+    // ThreadBase has been deleted. One use for that is to extract
+    // data that a thread has accumulated
+    virtual void ThreadFinished(ThreadBase *) = 0;
+};
+
+/* A very simple thread class that provides for stopping a thread */
+// TODO: ThreadBase::Kill(DWORD waitMs) which will ask the thread
+// to stop, but if it doesn't stop after waitMs, it'll be terminated.
+class ThreadBase {
+protected:
+    HANDLE              hThread;
+    IThreadObserver *   observer;
+
+    // should we delete the object when the thread function finishes?
+    // useful for "fire and forget" threads.
+    bool                autoDeleteSelf;
+
+    // it's a bool but we're using LONG as this is operated on with
+    // IterlockedIncrement() etc. functions.
+    LONG               cancelRequested;
+
+    static DWORD WINAPI ThreadProc(void* data);
+
+public:
+    ThreadBase() : hThread(NULL), observer(NULL), autoDeleteSelf(false), cancelRequested(0) {
+    }
+
+    // Name is for debugging purposes, can be NULL.
+    // if autoDeleteSelf is true, the object will be deleted after
+    // Run() finishes. In this case don't retain this object and act
+    // on it in any way after calling Execute() as you can't know
+    // if the object has been deleted
+    ThreadBase(IThreadObserver *threadObserver, const char *name, bool autoDeleteSelf);
+
+    virtual ~ThreadBase() { }
+
+    void SetObserver(IThreadObserver *threadObserver) { observer = threadObserver; }
+
+    // TODO: do I need to use some Interlocked*() funtion like InterlockedCompareExchange()
+    // for this to be safe? It's only ever changed via RequestCancel()
+    bool WasCancelRequested() { return 0 != cancelRequested; }
+
+    // request the thread to stop. It's up to Run() function
+    // to call WasCancelRequested() and stop processing if it returns true.
+    void RequestCancel() { InterlockedIncrement(&cancelRequested); }
+
+    // call this to start executing Run() function.
+    void Start();
+
+    // over-write this to implement the actual thread functionality
+    virtual void Run() = 0;
+};
+
 #endif

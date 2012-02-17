@@ -5,7 +5,6 @@
 #include "ThreadUtil.h"
 #include "Scoped.h"
 
-
 WorkerThread::WorkerThread(Functor *f)
 {
     thread = CreateThread(NULL, 0, ThreadProc, f, 0, 0);
@@ -71,3 +70,30 @@ void UiMessageLoop::AddTask(Functor *f)
     // make sure that the message queue isn't empty
     PostThreadMessage(threadId, WM_NULL, 0, 0);
 }
+
+ThreadBase::ThreadBase(IThreadObserver *threadObserver, const char *name, bool autoDeleteSelf) :
+    observer(threadObserver), autoDeleteSelf(autoDeleteSelf)
+{
+    // TODO: name is supposed to be a name of the thread, used for debugging purposes
+    cancelRequested = 0;
+    hThread = NULL;
+}
+
+DWORD WINAPI ThreadBase::ThreadProc(void *data)
+{
+    ThreadBase *thread = reinterpret_cast<ThreadBase*>(data);
+    thread->Run();
+    CloseHandle(thread->hThread);
+    thread->hThread = NULL;
+    if (thread->observer)
+        thread->observer->ThreadFinished(thread);
+    if (thread->autoDeleteSelf)
+        delete thread;
+    return 0;
+}
+
+void ThreadBase::Start()
+{
+    hThread = CreateThread(NULL, 0, ThreadProc, this, 0, 0);
+}
+

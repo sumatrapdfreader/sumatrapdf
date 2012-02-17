@@ -16,7 +16,6 @@
 #   also probably wouldn't work for 64-bit builds due to ...?
 #   trick: using /verbose option to the linker helps understand what it does
 #   also I'm probably mixing dll support with non-dll support
-WITH_CHROME=yes
 
 # Set default configuration
 !if "$(CFG)"==""
@@ -112,11 +111,7 @@ UNINSTALLER_RES = $(OS)\Uninstaller.res
 
 ET_APP          = $(O)\EbookTest.exe
 ET_RES          = $(OEB)\EbookTest.res
-ET_CFLAGS       = $(SUMATRA_CFLAGS) /wd4530 /D "NOMINMAX" 
-
-!if "$(WITH_CHROME)"=="yes"
-ET_CFLAGS       = $(ET_CFLAGS) /D "WITH_CHROME" $(CHROME_INC)
-!endif
+ET_CFLAGS       = $(SUMATRA_CFLAGS) /wd4530
 
 TESTER_APP      = $(O)\tester.exe
 TESTER_CFLAGS   = $(SUMATRA_CFLAGS)
@@ -200,10 +195,6 @@ UNINSTALLER_OBJS = \
 ET_OBJS = \
 	$(OEB)\EbookTest.obj $(OEB)\EbookTestMenu.obj $(ET_RES) \
 	$(OEB)\PageLayout.obj $(MUI_OBJS) $(UTILS_OBJS) $(OEB)\MobiDoc.obj
-
-!if "$(WITH_CHROME)"=="yes"
-ET_OBJS = $(ET_OBJS) $(CHROME_OBJS)
-!endif
 
 TESTER_OBJS = \
 	$(OEB)\Tester.obj $(OEB)\PageLayout.obj $(UTILS_OBJS) $(MUI_OBJS) $(OEB)\MobiDoc.obj
@@ -452,17 +443,18 @@ $(OE2)\Tester.obj: src\utils\BaseUtil.h src\utils\CmdLineParser.h src\utils\DirI
 $(OE2)\Tester.obj: src\utils\FileUtil.h src\utils\GdiPlusUtil.h src\utils\GeomUtil.h
 $(OE2)\Tester.obj: src\utils\HtmlPullParser.h src\utils\Scoped.h src\utils\StrUtil.h
 $(OE2)\Tester.obj: src\utils\Vec.h src\utils\WinUtil.h
-$(OEB)\EbookTest.obj: src\ebooktest\EbookTestMenu.h src\ebooktest\Resource.h src\MobiDoc.h
-$(OEB)\EbookTest.obj: src\mui\Mui.h src\mui\MuiBase.h src\mui\MuiButton.h
-$(OEB)\EbookTest.obj: src\mui\MuiControl.h src\mui\MuiCss.h src\mui\MuiEventMgr.h
-$(OEB)\EbookTest.obj: src\mui\MuiHwndWrapper.h src\mui\MuiLayout.h src\mui\MuiPainter.h
-$(OEB)\EbookTest.obj: src\mui\MuiScrollBar.h src\mui\SvgPath.h src\PageLayout.h
-$(OEB)\EbookTest.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\BitManip.h
-$(OEB)\EbookTest.obj: src\utils\CmdLineParser.h src\utils\DebugLog.h src\utils\FileUtil.h
-$(OEB)\EbookTest.obj: src\utils\FrameTimeoutCalculator.h src\utils\GdiPlusUtil.h src\utils\GeomUtil.h
-$(OEB)\EbookTest.obj: src\utils\HtmlPullParser.h src\utils\NoFreeAllocator.h src\utils\Scoped.h
-$(OEB)\EbookTest.obj: src\utils\StrUtil.h src\utils\ThreadUtil.h src\utils\Timer.h
-$(OEB)\EbookTest.obj: src\utils\Vec.h src\utils\WinUtil.h src\Version.h
+$(OEB)\EbookTest.obj: src\ebooktest\EbookTestMenu.h src\ebooktest\EbookUiMsg.h src\ebooktest\Resource.h
+$(OEB)\EbookTest.obj: src\MobiDoc.h src\mui\Mui.h src\mui\MuiBase.h
+$(OEB)\EbookTest.obj: src\mui\MuiButton.h src\mui\MuiControl.h src\mui\MuiCss.h
+$(OEB)\EbookTest.obj: src\mui\MuiEventMgr.h src\mui\MuiHwndWrapper.h src\mui\MuiLayout.h
+$(OEB)\EbookTest.obj: src\mui\MuiPainter.h src\mui\MuiScrollBar.h src\mui\SvgPath.h
+$(OEB)\EbookTest.obj: src\PageLayout.h src\utils\Allocator.h src\utils\BaseUtil.h
+$(OEB)\EbookTest.obj: src\utils\BitManip.h src\utils\CmdLineParser.h src\utils\DebugLog.h
+$(OEB)\EbookTest.obj: src\utils\FileUtil.h src\utils\FrameTimeoutCalculator.h src\utils\GdiPlusUtil.h
+$(OEB)\EbookTest.obj: src\utils\GeomUtil.h src\utils\HtmlPullParser.h src\utils\NoFreeAllocator.h
+$(OEB)\EbookTest.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\ThreadUtil.h
+$(OEB)\EbookTest.obj: src\utils\Timer.h src\utils\UiMsg.h src\utils\Vec.h
+$(OEB)\EbookTest.obj: src\utils\WinUtil.h src\Version.h
 $(OEB)\EbookTestMenu.obj: src\ebooktest\EbookTestMenu.h src\ebooktest\Resource.h src\utils\BaseUtil.h
 $(OEB)\EbookTestMenu.obj: src\utils\Scoped.h src\utils\StrUtil.h
 $(OMUI)\Mui.obj: src\mui\Mui.h src\mui\MuiBase.h src\mui\MuiButton.h
