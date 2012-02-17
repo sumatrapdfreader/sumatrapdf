@@ -115,21 +115,21 @@ bool IsDebugPaint()
 
 #define RECTFromRect(r) { r.GetLeft(), r.GetTop(), r.GetRight(), r.GetBottom() }
 
-HwndWrapper *GetRootHwndWnd(const Control *w)
+HwndWrapper *GetRootHwndWnd(const Control *c)
 {
-    while (w->parent) {
-        w = w->parent;
+    while (c->parent) {
+        c = c->parent;
     }
-    if (!w->hwndParent)
+    if (!c->hwndParent)
         return NULL;
-    return (HwndWrapper*)w;
+    return (HwndWrapper*)c;
 }
 
 // traverse tree upwards to find HWND that is ultimately backing
 // this window
-HWND GetHwndParent(const Control *w)
+HWND GetHwndParent(const Control *c)
 {
-    HwndWrapper *wHwnd = GetRootHwndWnd(w);
+    HwndWrapper *wHwnd = GetRootHwndWnd(c);
     if (wHwnd)
         return wHwnd->hwndParent;
     return NULL;
@@ -220,26 +220,26 @@ static void InvalidateAtOff(HWND hwnd, const Rect *r, int offX, int offY)
 }
 
 // r1 and r2 are relative to w. If both are NULL, we invalidate the whole w
-void RequestRepaint(Control *w, const Rect *r1, const Rect *r2)
+void RequestRepaint(Control *c, const Rect *r1, const Rect *r2)
 {
     // we might be called when the control hasn't yet been
     // placed in the window hierarchy
-    if (!w->parent)
+    if (!c->parent)
         return;
 
-    Rect wRect(0, 0, w->pos.Width, w->pos.Height);
+    Rect wRect(0, 0, c->pos.Width, c->pos.Height);
 
     // calculate the offset of window w within its root window
-    int offX = w->pos.X;
-    int offY = w->pos.Y;
-    if (w->parent)
-        w = w->parent;
-    while (!w->hwndParent) {
-        offX += w->pos.X;
-        offY += w->pos.Y;
-        w = w->parent;
+    int offX = c->pos.X;
+    int offY = c->pos.Y;
+    if (c->parent)
+        c = c->parent;
+    while (!c->hwndParent) {
+        offX += c->pos.X;
+        offY += c->pos.Y;
+        c = c->parent;
     }
-    HWND hwnd = w->hwndParent;
+    HWND hwnd = c->hwndParent;
     CrashIf(!hwnd);
 
     // if we have r1 or r2, invalidate those, else invalidate w
@@ -260,9 +260,9 @@ void RequestRepaint(Control *w, const Rect *r1, const Rect *r2)
     InvalidateAtOff(hwnd, &wRect, offX, offY);
 }
 
-void RequestLayout(Control *w)
+void RequestLayout(Control *c)
 {
-    HwndWrapper *wnd = GetRootHwndWnd(w);
+    HwndWrapper *wnd = GetRootHwndWnd(c);
     if (wnd)
         wnd->RequestLayout();
 }

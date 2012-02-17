@@ -59,9 +59,9 @@ public:
     {
     }
     virtual ~WndInputWantedFilter() {}
-    virtual bool Matches(Control *w, int offX, int offY) {
-        if ((w->wantedInputBits & wantedInputMask) != 0) {
-            Rect r = Rect(offX, offY, w->pos.Width, w->pos.Height);
+    virtual bool Matches(Control *c, int offX, int offY) {
+        if ((c->wantedInputBits & wantedInputMask) != 0) {
+            Rect r = Rect(offX, offY, c->pos.Width, c->pos.Height);
             return r.Contains(x, y);
         }
         return false;

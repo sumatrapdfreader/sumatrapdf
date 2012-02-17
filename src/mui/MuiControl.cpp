@@ -90,21 +90,21 @@ void Control::SetIsMouseOver(bool isOver)
         bit::Clear(stateBits, MouseOverBit);
 }
 
-void Control::AddChild(Control *wnd, int pos)
+void Control::AddChild(Control *c, int pos)
 {
-    CrashAlwaysIf(NULL == wnd);
+    CrashIf(NULL == c);
     if ((pos < 0) || (pos >= (int)children.Count()))
-        children.Append(wnd);
+        children.Append(c);
     else
-        children.InsertAt(pos, wnd);
-    wnd->SetParent(this);
+        children.InsertAt(pos, c);
+    c->SetParent(this);
 }
 
-void Control::AddChild(Control *wnd1, Control *wnd2, Control *wnd3)
+void Control::AddChild(Control *c1, Control *c2, Control *c3)
 {
-    AddChild(wnd1);
-    AddChild(wnd2);
-    if (wnd3) AddChild(wnd3);
+    AddChild(c1);
+    AddChild(c2);
+    if (c3) AddChild(c3);
 }
 
 void Control::Measure(const Size availableSize)
@@ -178,11 +178,11 @@ void Control::MapRootToMyPos(int& x, int& y) const
 {
     int offX = pos.X;
     int offY = pos.Y;
-    const Control *w = this;
-    while (w->parent) {
-        w = w->parent;
-        offX += w->pos.X;
-        offY += w->pos.Y;
+    const Control *c = this;
+    while (c->parent) {
+        c = c->parent;
+        offX += c->pos.X;
+        offY += c->pos.Y;
     }
     x -= offX;
     y -= offY;
