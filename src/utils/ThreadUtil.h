@@ -106,8 +106,8 @@ public:
 class ThreadBase {
 protected:
     HANDLE              hThread;
-    IThreadObserver *   observer;
 
+    IThreadObserver *   observer;
     // should we delete the object when the thread function finishes?
     // useful for "fire and forget" threads.
     bool                autoDeleteSelf;
@@ -115,6 +115,8 @@ protected:
     // it's a bool but we're using LONG as this is operated on with
     // IterlockedIncrement() etc. functions.
     LONG               cancelRequested;
+
+    char *             threadName;
 
     static DWORD WINAPI ThreadProc(void* data);
 
@@ -129,7 +131,7 @@ public:
     // if the object has been deleted
     ThreadBase(IThreadObserver *threadObserver, const char *name, bool autoDeleteSelf);
 
-    virtual ~ThreadBase() { }
+    virtual ~ThreadBase() { free(threadName); }
 
     void SetObserver(IThreadObserver *threadObserver) { observer = threadObserver; }
 
