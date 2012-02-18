@@ -71,21 +71,16 @@ static void CreateStyles()
 
     nextDefault = new Style(gStyleButtonDefault);
     nextDefault->SetBorderWidth(0.f);
-    nextDefault->Set(Prop::AllocPadding(1, 1, 1, 4));
+    //nextDefault->Set(Prop::AllocPadding(1, 1, 1, 4));
+    nextDefault->Set(Prop::AllocPadding(0, 4, 0, 4));
     nextDefault->Set(Prop::AllocWidth(PropStrokeWidth, 0.f));
     nextDefault->Set(Prop::AllocColorSolid(PropFill, "gray"));
     nextDefault->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
-    nextDefault->Set(Prop::AllocAlign(PropVertAlign, ElAlignTop));
-    //nextDefault->Set(Prop::AllocPadding(4, 8, 12, 16));
+    nextDefault->Set(Prop::AllocAlign(PropVertAlign, ElAlignCenter));
 
-    nextMouseOver = new Style(gStyleButtonMouseOver);
-    nextMouseOver->SetBorderWidth(0.f);
-    //nextMouseOver->Set(Prop::AllocPadding(12, 8, 4, 16));
-    nextMouseOver->Set(Prop::AllocPadding(1, 1, 1, 4));
-    nextMouseOver->Set(Prop::AllocWidth(PropStrokeWidth, 0.f));
+    nextMouseOver = new Style(nextDefault);
     nextMouseOver->Set(Prop::AllocColorSolid(PropFill, "black"));
-    nextMouseOver->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
-    nextMouseOver->Set(Prop::AllocAlign(PropVertAlign, ElAlignBottom));
+    nextMouseOver->Set(Prop::AllocColorSolid(PropBgColor, "#80FFFFFF"));
 
     statusDefault = new Style();
     statusDefault->Set(Prop::AllocColorSolid(PropBgColor, "white"));
@@ -124,9 +119,9 @@ static void CreateLayout(EbookControls *ctrls)
     VerticalLayout *l = new VerticalLayout();
     ld.Set(topPart, 1.f, 1.f, GetElAlignTop());
     l->Add(ld, true);
-    ld.Set(ctrls->horizProgress, SizeSelf, .5f, GetElAlignRight());
+    ld.Set(ctrls->horizProgress, SizeSelf, 1.f, GetElAlignCenter());
     l->Add(ld);
-    ld.Set(ctrls->status, SizeSelf, .5f, GetElAlignLeft());
+    ld.Set(ctrls->status, SizeSelf, 1.f, GetElAlignCenter());
     l->Add(ld);
     ctrls->mainWnd->layout = l;
 }
