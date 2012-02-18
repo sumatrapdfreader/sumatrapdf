@@ -77,14 +77,65 @@ void EbookController::DeletePages()
 {
     if (!pages)
         return;
+    ctrls->page->SetPage(NULL);
     DeleteVecMembers<PageData*>(*pages);
     delete pages;
     pages = NULL;
 }
 
+static LayoutInfo *GetLayoutInfo(const char *html, MobiDoc *mb, int dx, int dy)
+{
+    LayoutInfo *li = new LayoutInfo();
+
+    size_t len;
+    if (html)
+        len = strlen(html);
+    else
+        html = mb->GetBookHtmlData(len);
+
+    li->fontName = FONT_NAME;
+    li->fontSize = FONT_SIZE;
+    li->htmlStr = html;
+    li->htmlStrLen = len;
+    li->pageDx = dx;
+    li->pageDy = dy;
+    return li;
+}
+
+// a special-case: html is just for testing so we don't do it on a thread
+void EbookController::LayoutHtml(int dx, int dy)
+{
+    LayoutInfo *li = GetLayoutInfo(html, NULL, dx, dy);
+    Vec<PageData*> *htmlPages = ::LayoutHtml(li);
+    delete li;
+    pageDx = dx;
+    pageDy = dy;
+    DeletePages();
+    pages = htmlPages;
+    SetPage(1);
+}
+
+void EbookController::TriggerLayout()
+{
+    Size s = ctrls->page->GetDrawableSize();
+    int dx = s.Width; int dy = s.Height;
+    if ((0 == dx) || (0 == dy)) {
+        // we haven't yet been sized, so quit
+        return;
+    }
+    lf("EbookController::TriggerLayout (%d, %d)", dx, dy);
+    CrashIf((dx < 100) || (dy < 40));
+    if (html) {
+        LayoutHtml(dx, dy);
+        return;
+    }
+    // TODO: layout mobi on a background thread
+}
+
 void EbookController::SizeChanged(Control *c, int dx, int dy)
 {
-    lf("Page size changed to (%d, %d)", dx, dy);
+    CrashIf(c != ctrls->page);
+    TriggerLayout();
 }
 
 // (x, y) is in the coordinates of w
@@ -131,7 +182,8 @@ void EbookController::SetPage(int newPageNo)
     CrashIf((newPageNo < 1) || (newPageNo > (int)pages->Count()));
     currPageNo = newPageNo;
     SetStatusText();
-    ctrls->page->SetPage(pages->At(currPageNo));
+    PageData *pageData = pages->At(currPageNo-1);
+    ctrls->page->SetPage(pageData);
 }
 
 void EbookController::AdvancePage(int dist)
@@ -155,25 +207,12 @@ void EbookController::PageLayout(int dx, int dy)
     if (pages)
         return;
 
+    LayoutInfo *li = GetLayoutInfo(NULL, mb, dx, dy);
+    pages = ::LayoutHtml(li);
+    delete li;
     pageDx = dx;
     pageDy = dy;
 
-    LayoutInfo *li = new LayoutInfo();
-
-    size_t len;
-    if (html)
-        len = strlen(html);
-    else
-        html = mb->GetBookHtmlData(len);
-
-    li->fontName = FONT_NAME;
-    li->fontSize = FONT_SIZE;
-    li->htmlStr = html;
-    li->htmlStrLen = len;
-    li->pageDx = dx;
-    li->pageDy = dy;
-    pages = LayoutHtml(li);
-    delete li;
 #if 0
     pageLayoutThread = new base::Thread("ControlEbook::PageLayoutBackground");
     pageLayoutThread->Start();
@@ -185,6 +224,7 @@ void EbookController::PageLayout(int dx, int dy)
 void EbookController::SetHtml(const char *newHtml)
 {
     html = newHtml;
+    TriggerLayout();
 }
 
 void EbookController::FinishedMobiLoading(UiMsg *msg)
@@ -194,14 +234,14 @@ void EbookController::FinishedMobiLoading(UiMsg *msg)
     html = NULL;
     if (NULL == msg->finishedMobiLoading.mobiDoc) {
         l("ControlEbook::FinishedMobiLoading(): failed to load");
-        // TODO: a better way to notify about this
+        // TODO: a better way to notify about this, should be a transient message
         ScopedMem<TCHAR> s(str::Format(_T("Failed to load %s!"), msg->finishedMobiLoading.fileName));
         ctrls->status->SetText(s.Get());
     } else {
-        delete pages;
-        pages = NULL;
+        DeletePages();
         mb = msg->finishedMobiLoading.mobiDoc;
         msg->finishedMobiLoading.mobiDoc = NULL;
+        TriggerLayout();
     }
 }
 
@@ -212,8 +252,7 @@ void EbookController::LoadMobi(const TCHAR *fileName)
     ThreadLoadMobi *loadThread = new ThreadLoadMobi(fileName);
     loadThread->Start();
 
-    // TODO: this message should show up in a different place,
-    // reusing status for convenience
+    // TODO: better way to show this message
     ScopedMem<TCHAR> s(str::Format(_T("Please wait, loading %s"), fileName));
     ctrls->status->SetText(s.Get());
 }

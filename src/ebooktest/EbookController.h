@@ -31,6 +31,8 @@ class EbookController : public IClicked, ISizeChanged
     void PageLayout(int dx, int dy);
     void AdvancePage(int dist);
     void SetPage(int newPageNo);
+    void TriggerLayout();
+    void LayoutHtml(int dx, int dy);
 
     // IClickHandler
     virtual void Clicked(Control *c, int x, int y);

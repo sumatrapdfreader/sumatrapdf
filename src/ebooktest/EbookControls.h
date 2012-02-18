@@ -10,6 +10,7 @@
 class PageControl;
 using namespace mui;
 
+// controls managed by EbookController
 struct EbookControls {
     HwndWrapper *   mainWnd;
     PageControl *   page;
@@ -36,6 +37,8 @@ public:
     void SetPage(PageData *newPage) { page = newPage; RequestRepaint(this); }
 
     PageControl() : page(NULL), cursorX(-1), cursorY(-1) { bit::Set(wantedInputBits, WantsMouseMoveBit); }
+
+    Size GetDrawableSize();
 
     virtual ~PageControl() { }
 

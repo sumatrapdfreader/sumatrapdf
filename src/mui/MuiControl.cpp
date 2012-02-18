@@ -155,9 +155,9 @@ void Control::Hide()
 
 void Control::SetPosition(const Rect& p)
 {
-    bool sizeChanged = (p.Width != pos.Width) || (p.Height != pos.Height);
     if (p.Equals(pos))
         return;  // perf optimization
+    bool sizeChanged = (p.Width != pos.Width) || (p.Height != pos.Height);
     // when changing position we need to invalidate both
     // before and after position
     // TODO: not sure why I need this, but without it there

@@ -285,6 +285,8 @@ PageData *PageLayout::IterStart(LayoutInfo* layoutInfo)
 
 void PageLayout::StartNewPage()
 {
+    if (currPage)
+        pagesToSend.Append(currPage);
     currPage = new PageData;
     currX = currY = 0;
     newLinesCount = 0;
@@ -486,7 +488,7 @@ void PageLayout::AddWord(WordInfo *wi)
     // that will packaged with pages information
 
     size_t strLen = str::Utf8ToWcharBuf(wi->s, wi->len, buf, dimof(buf));
-#if 1
+#if 0 // TODO: cache disabled because produces bad metrics
     // with fontMetrics cache
     if (currFont == fontMetrics.font)
         bbox = MeasureText(gfx, currFont, &fontMetrics, buf, strLen);
@@ -671,6 +673,27 @@ void PageLayout::EmitText(HtmlToken *t)
     }
 }
 
+// The first instruction in a page is always SetFont() instruction
+// so to determine if a page is empty, we check if there's at least
+// one "visible" instruction.
+static bool IsEmptyPage(PageData *p)
+{
+    if (!p)
+        return true;
+    DrawInstr *i;
+    for (i = p->drawInstructions.IterStart(); i; i = p->drawInstructions.IterNext()) {
+        switch (i->type) {
+            case InstrTypeSetFont:
+                // those are "invisible" instruction
+                break;
+            default:
+                return false;
+        }
+    }
+    // all instructions were invisible
+    return true;
+}
+
 // Return the next parsed page. Returns NULL if finished parsing.
 // For simplicity of implementation, we parse xml text node or
 // xml element at a time. This might cause a creation of one
@@ -680,11 +703,15 @@ PageData *PageLayout::IterNext()
 {
     for (;;)
     {
+        // first send out all pages accumulated so far
         if (pagesToSend.Count() > 0) {
             PageData *ret = pagesToSend.At(0);
             pagesToSend.RemoveAt(0);
             return ret;
         }
+        // we can call ourselves recursively to send outstanding
+        // pages after parsing has finished so this is to detect
+        // that case and really end parsing
         if (finishedParsing)
             return NULL;
         HtmlToken *t = htmlParser->Next();
@@ -699,21 +726,15 @@ PageData *PageLayout::IterNext()
     // force layout of the last line
     StartNewLine(true);
 
-    finishedParsing = true;
-
     // only send the last page if not empty
-    if (currPage) {
-        if (currPage->Count() > 0) {
-            pagesToSend.Append(currPage);
-            currPage = NULL;
-            return IterNext();
-        } else {
-            delete currPage;
-            currPage = NULL;
-        }
-    }
-
-    return NULL;
+    if (!IsEmptyPage(currPage))
+        pagesToSend.Append(currPage);
+    else
+        delete currPage;
+    currPage = NULL;
+    // call ourselves recursively to return accumulated pages
+    finishedParsing = true;
+    return IterNext();
 }
 
 Vec<PageData*> *LayoutHtml(LayoutInfo* li)
@@ -738,11 +759,12 @@ void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, RE
 
     WCHAR buf[512];
     PointF pos;
-    for (DrawInstr *instr = drawInstructions->IterStart(); instr; instr = drawInstructions->IterNext()) {
-        RectF bbox = instr->bbox;
+    DrawInstr *i;
+    for (i = drawInstructions->IterStart(); i; i = drawInstructions->IterNext()) {
+        RectF bbox = i->bbox;
         bbox.X += offX;
         bbox.Y += offY;
-        if (InstrTypeLine == instr->type) {
+        if (InstrTypeLine == i->type) {
             // hr is a line drawn in the middle of bounding box
             REAL y = bbox.Y + bbox.Height / 2.f;
             PointF p1(bbox.X, y);
@@ -752,16 +774,16 @@ void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, RE
                 g->DrawRectangle(&pen, bbox);
             }
             g->DrawLine(&blackPen, p1, p2);
-        } else if (InstrTypeString == instr->type) {
-            size_t strLen = str::Utf8ToWcharBuf(instr->str.s, instr->str.len, buf, dimof(buf));
+        } else if (InstrTypeString == i->type) {
+            size_t strLen = str::Utf8ToWcharBuf(i->str.s, i->str.len, buf, dimof(buf));
             bbox.GetLocation(&pos);
             if (showBbox) {
                 //g->FillRectangle(&br, bbox);
                 g->DrawRectangle(&pen, bbox);
             }
             g->DrawString(buf, strLen, font, pos, NULL, &br);
-        } else if (InstrTypeSetFont == instr->type) {
-            font = instr->setFont.font;
+        } else if (InstrTypeSetFont == i->type) {
+            font = i->setFont.font;
         }
     }
 }

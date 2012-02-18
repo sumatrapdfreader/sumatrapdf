@@ -28,6 +28,19 @@ void PageControl::NotifyMouseMove(int x, int y)
     RequestRepaint(this, &r1, &r2);
 }
 
+// size of the drawable area i.e. size minus padding
+Size PageControl::GetDrawableSize()
+{
+    Size s;
+    pos.GetSize(&s);
+    Padding pad = cachedStyle->padding;
+    s.Width  -= (pad.left + pad.right);
+    s.Height -= (pad.top + pad.bottom);
+    if ((s.Width <= 0) || (s.Height <= 0))
+        return Size();
+    return s;
+}
+
 void PageControl::Paint(Graphics *gfx, int offX, int offY)
 {
     // for testing mouse move, paint a blue circle at current cursor position
