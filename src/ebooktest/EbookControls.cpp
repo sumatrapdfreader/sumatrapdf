@@ -21,11 +21,13 @@ static Rect RectForCircle(int x, int y, int r)
 // This is just to test mouse move handling
 void PageControl::NotifyMouseMove(int x, int y)
 {
+#if 0
     Rect r1 = RectForCircle(cursorX, cursorY, CircleR);
     Rect r2 = RectForCircle(x, y, CircleR);
     cursorX = x; cursorY = y;
     r1.Inflate(1,1); r2.Inflate(1,1);
     RequestRepaint(this, &r1, &r2);
+#endif
 }
 
 // size of the drawable area i.e. size minus padding
@@ -43,6 +45,7 @@ Size PageControl::GetDrawableSize()
 
 void PageControl::Paint(Graphics *gfx, int offX, int offY)
 {
+#if 0
     // for testing mouse move, paint a blue circle at current cursor position
     if ((-1 != cursorX) && (-1 != cursorY)) {
         SolidBrush br(Color(180, 0, 0, 255));
@@ -51,6 +54,7 @@ void PageControl::Paint(Graphics *gfx, int offX, int offY)
         Rect r(RectForCircle(x, y, CircleR));
         gfx->FillEllipse(&br, r);
     }
+#endif
 
     if (!page)
         return;
@@ -72,7 +76,7 @@ static void CreateStyles()
     nextDefault = new Style(gStyleButtonDefault);
     nextDefault->SetBorderWidth(0.f);
     //nextDefault->Set(Prop::AllocPadding(1, 1, 1, 4));
-    nextDefault->Set(Prop::AllocPadding(0, 4, 0, 4));
+    nextDefault->Set(Prop::AllocPadding(0, 8, 0, 8));
     nextDefault->Set(Prop::AllocWidth(PropStrokeWidth, 0.f));
     nextDefault->Set(Prop::AllocColorSolid(PropFill, "gray"));
     nextDefault->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
@@ -80,7 +84,6 @@ static void CreateStyles()
 
     nextMouseOver = new Style(nextDefault);
     nextMouseOver->Set(Prop::AllocColorSolid(PropFill, "black"));
-    nextMouseOver->Set(Prop::AllocColorSolid(PropBgColor, "#80FFFFFF"));
 
     statusDefault = new Style();
     statusDefault->Set(Prop::AllocColorSolid(PropBgColor, "white"));

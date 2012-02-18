@@ -115,12 +115,13 @@ DWORD WINAPI ThreadBase::ThreadProc(void *data)
     if (thread->threadName)
         SetThreadName(GetCurrentThreadId(), thread->threadName);
     thread->Run();
-    CloseHandle(thread->hThread);
+    HANDLE hThread = thread->hThread;
     thread->hThread = NULL;
     if (thread->observer)
         thread->observer->ThreadFinished(thread);
     if (thread->autoDeleteSelf)
         delete thread;
+    CloseHandle(hThread);
     return 0;
 }
 

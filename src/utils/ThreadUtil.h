@@ -121,7 +121,9 @@ protected:
     static DWORD WINAPI ThreadProc(void* data);
 
 public:
-    ThreadBase() : hThread(NULL), observer(NULL), autoDeleteSelf(false), cancelRequested(0) {
+    ThreadBase() :
+      hThread(NULL), observer(NULL), autoDeleteSelf(false),
+      cancelRequested(0), threadName(NULL) {
     }
 
     // Name is for debugging purposes, can be NULL.
