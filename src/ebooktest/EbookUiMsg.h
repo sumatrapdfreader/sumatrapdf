@@ -3,7 +3,9 @@
 #ifndef EbookUiMsg_h
 #define EbookUiMsg_h
 
-class MobiDoc;
+struct PageData;
+class  MobiDoc;
+class  ThreadLayoutMobi;
 
 struct FinishedMobiLoadingData {
     TCHAR *     fileName;
@@ -15,15 +17,22 @@ struct FinishedMobiLoadingData {
     }
 };
 
+struct FinishedMobiLayoutData {
+    Vec<PageData*> *    pages;
+    ThreadLayoutMobi *  thread;
+};
+
 class UiMsg {
 public:
     enum Type {
-        FinishedMobiLoading
+        FinishedMobiLoading,
+        FinishedMobiLayout
     };
 
     Type type;
     union {
         FinishedMobiLoadingData finishedMobiLoading;
+        FinishedMobiLayoutData  finishedMobiLayout;
     };
 
     UiMsg(Type type) : type(type) {

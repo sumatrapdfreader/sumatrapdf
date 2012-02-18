@@ -101,8 +101,7 @@ static void SetThreadName(DWORD dwThreadID, char* threadName)
    }
 }
 
-ThreadBase::ThreadBase(IThreadObserver *threadObserver, const char *name, bool autoDeleteSelf) :
-    observer(threadObserver), autoDeleteSelf(autoDeleteSelf)
+ThreadBase::ThreadBase(const char *name, bool autoDeleteSelf) : autoDeleteSelf(autoDeleteSelf)
 {
     threadName = str::Dup(name);
     cancelRequested = 0;
@@ -117,8 +116,6 @@ DWORD WINAPI ThreadBase::ThreadProc(void *data)
     thread->Run();
     HANDLE hThread = thread->hThread;
     thread->hThread = NULL;
-    if (thread->observer)
-        thread->observer->ThreadFinished(thread);
     if (thread->autoDeleteSelf)
         delete thread;
     CloseHandle(hThread);

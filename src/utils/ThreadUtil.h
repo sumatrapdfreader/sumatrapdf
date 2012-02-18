@@ -89,17 +89,6 @@ public:
     bool IsUiThread() { return GetCurrentThreadId() == threadId; }
 };
 
-class ThreadBase;
-// experiment: a way for an object to be notified
-// about events in a thread.
-class IThreadObserver {
-public:
-    // called after ThreadBase::Run() finished running but before
-    // ThreadBase has been deleted. One use for that is to extract
-    // data that a thread has accumulated
-    virtual void ThreadFinished(ThreadBase *) = 0;
-};
-
 /* A very simple thread class that provides for stopping a thread */
 // TODO: ThreadBase::Kill(DWORD waitMs) which will ask the thread
 // to stop, but if it doesn't stop after waitMs, it'll be terminated.
@@ -107,7 +96,6 @@ class ThreadBase {
 protected:
     HANDLE              hThread;
 
-    IThreadObserver *   observer;
     // should we delete the object when the thread function finishes?
     // useful for "fire and forget" threads.
     bool                autoDeleteSelf;
@@ -122,7 +110,7 @@ protected:
 
 public:
     ThreadBase() :
-      hThread(NULL), observer(NULL), autoDeleteSelf(false),
+      hThread(NULL), autoDeleteSelf(false),
       cancelRequested(0), threadName(NULL) {
     }
 
@@ -131,11 +119,9 @@ public:
     // Run() finishes. In this case don't retain this object and act
     // on it in any way after calling Execute() as you can't know
     // if the object has been deleted
-    ThreadBase(IThreadObserver *threadObserver, const char *name, bool autoDeleteSelf);
+    ThreadBase(const char *name, bool autoDeleteSelf);
 
     virtual ~ThreadBase() { free(threadName); }
-
-    void SetObserver(IThreadObserver *threadObserver) { observer = threadObserver; }
 
     // TODO: do I need to use some Interlocked*() funtion like InterlockedCompareExchange()
     // for this to be safe? It's only ever changed via RequestCancel()

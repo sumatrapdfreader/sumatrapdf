@@ -5,9 +5,12 @@
 #define PageLayout_h
 
 #include "BaseUtil.h"
+#include "HtmlPullParser.h"
+#include "Scoped.h"
 #include "Vec.h"
 
 using namespace Gdiplus;
+#include "GdiPlusUtil.h"
 
 // Layout information for a given page is a list of
 // draw instructions that define what to draw and where.
@@ -105,6 +108,99 @@ public:
 
     const char *    htmlStr;
     size_t          htmlStrLen;
+};
+
+struct WordInfo {
+    const char *s;
+    size_t len;
+    bool IsNewline() {
+        return ((len == 1) && (s[0] == '\n'));
+    }
+};
+
+class PageLayout
+{
+    enum TextJustification {
+        Left, Right, Center, Both
+    };
+
+public:
+    PageLayout();
+    ~PageLayout();
+
+    PageData *IterStart(LayoutInfo* layoutInfo);
+    PageData *IterNext();
+
+private:
+    void HandleHtmlTag(HtmlToken *t);
+    void EmitText(HtmlToken *t);
+
+    REAL GetCurrentLineDx();
+    void LayoutLeftStartingAt(REAL offX);
+    void JustifyLineLeft();
+    void JustifyLineRight();
+    void JustifyLineCenter();
+    void JustifyLineBoth();
+    void JustifyLine(TextJustification mode);
+
+    TextJustification AlignAttrToJustification(AlignAttr align);
+
+    void StartNewPage();
+    void StartNewLine(bool isParagraphBreak);
+
+    void AddSetFontInstr(Font *font);
+
+    void AddHr();
+    void AddWord(WordInfo *wi);
+
+    void SetCurrentFont(FontStyle fs);
+    void ChangeFont(FontStyle fs, bool isStart);
+
+    DrawInstr *GetInstructionsForCurrentLine(DrawInstr *& endInst) const {
+        size_t len = currPage->Count() - currLineInstrOffset;
+        DrawInstr *ret = &currPage->drawInstructions.At(currLineInstrOffset);
+        endInst = ret + len;
+        return ret;
+    }
+
+    bool IsCurrentLineEmpty() const {
+        return currLineInstrOffset == currPage->Count();
+    }
+
+    // constant during layout process
+    REAL                pageDx;
+    REAL                pageDy;
+    REAL                lineSpacing;
+    REAL                spaceDx;
+    Graphics *          gfx; // for measuring text
+    ScopedMem<WCHAR>    fontName;
+    float               fontSize;
+
+    // temporary state during layout process
+    FontStyle           currFontStyle;
+    Font *              currFont;
+
+    TextJustification   currJustification;
+    // current position in a page
+    REAL                currX, currY;
+    // number of consecutive newlines
+    int                 newLinesCount;
+
+    PageData *          currPage;
+
+    // for iterative parsing
+    HtmlPullParser *    htmlParser;
+    // list of pages constructed
+    Vec<PageData*>      pagesToSend;
+    bool                finishedParsing;
+
+    // current nesting of html tree during html parsing
+    Vec<HtmlTag>        tagNesting;
+
+    size_t              currLineInstrOffset;
+    WCHAR               buf[512];
+
+    FontMetricsCache    fontMetrics;
 };
 
 Vec<PageData*> *LayoutHtml(LayoutInfo* li);

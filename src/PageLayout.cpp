@@ -2,14 +2,9 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "DebugLog.h"
-#include "HtmlPullParser.h"
 #include "Mui.h"
 #include "PageLayout.h"
-#include "Scoped.h"
 #include "StrUtil.h"
-
-using namespace Gdiplus;
-#include "GdiPlusUtil.h"
 
 /*
 TODO: PageLayout could be split into DrawInstrBuilder which knows pageDx, pageDy
@@ -21,14 +16,6 @@ support to mui and use list of Control objects instead (especially if we slim do
 Control objects further to make allocating hundreds of them cheaper or introduce some
 other base element(s) with less functionality and less overhead).
 */
-
-struct WordInfo {
-    const char *s;
-    size_t len;
-    bool IsNewline() {
-        return ((len == 1) && (s[0] == '\n'));
-    }
-};
 
 class WordsIter {
     void Reset() {
@@ -124,98 +111,17 @@ WordInfo *WordsIter::IterNext()
     return &wi;
 }
 
-class PageLayout
-{
-    enum TextJustification {
-        Left, Right, Center, Both
-    };
-
-public:
-    PageLayout();
-    ~PageLayout();
-
-    PageData *IterStart(LayoutInfo* layoutInfo);
-    PageData *IterNext();
-
-private:
-    void HandleHtmlTag(HtmlToken *t);
-    void EmitText(HtmlToken *t);
-
-    REAL GetCurrentLineDx();
-    void LayoutLeftStartingAt(REAL offX);
-    void JustifyLineLeft();
-    void JustifyLineRight();
-    void JustifyLineCenter();
-    void JustifyLineBoth();
-    void JustifyLine(TextJustification mode);
-
-    TextJustification AlignAttrToJustification(AlignAttr align);
-
-    void StartNewPage();
-    void StartNewLine(bool isParagraphBreak);
-
-    void AddSetFontInstr(Font *font);
-
-    void AddHr();
-    void AddWord(WordInfo *wi);
-
-    void SetCurrentFont(FontStyle fs);
-    void ChangeFont(FontStyle fs, bool isStart);
-
-    DrawInstr *GetInstructionsForCurrentLine(DrawInstr *& endInst) const {
-        size_t len = currPage->Count() - currLineInstrOffset;
-        DrawInstr *ret = &currPage->drawInstructions.At(currLineInstrOffset);
-        endInst = ret + len;
-        return ret;
-    }
-
-    bool IsCurrentLineEmpty() const {
-        return currLineInstrOffset == currPage->Count();
-    }
-
-    // constant during layout process
-    REAL                pageDx;
-    REAL                pageDy;
-    REAL                lineSpacing;
-    REAL                spaceDx;
-    Graphics *          gfx; // for measuring text
-    ScopedMem<WCHAR>    fontName;
-    float               fontSize;
-
-    // temporary state during layout process
-    FontStyle           currFontStyle;
-    Font *              currFont;
-
-    TextJustification   currJustification;
-    // current position in a page
-    REAL                currX, currY;
-    // number of consecutive newlines
-    int                 newLinesCount;
-
-    PageData *          currPage;
-
-    // for iterative parsing
-    HtmlPullParser *    htmlParser;
-    // list of pages constructed
-    Vec<PageData*>      pagesToSend;
-    bool                finishedParsing;
-
-    // current nesting of html tree during html parsing
-    Vec<HtmlTag>        tagNesting;
-
-    size_t              currLineInstrOffset;
-    WCHAR               buf[512];
-
-    FontMetricsCache    fontMetrics;
-};
-
 PageLayout::PageLayout() : currPage(NULL), gfx(NULL)
 {
 }
 
 PageLayout::~PageLayout()
 {
-    CrashIf(currPage);
+    // delete all pages that were not consumed by the caller
+    for (PageData **p = pagesToSend.IterStart(); p; p = pagesToSend.IterNext()) {
+        delete *p;
+    }
+    delete currPage;
     delete htmlParser;
     mui::FreeGraphicsForMeasureText(gfx);
 }
@@ -727,10 +633,10 @@ PageData *PageLayout::IterNext()
     StartNewLine(true);
 
     // only send the last page if not empty
-    if (!IsEmptyPage(currPage))
-        pagesToSend.Append(currPage);
-    else
+    if (IsEmptyPage(currPage))
         delete currPage;
+    else
+        pagesToSend.Append(currPage);
     currPage = NULL;
     // call ourselves recursively to return accumulated pages
     finishedParsing = true;

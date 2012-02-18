@@ -73,18 +73,6 @@ void LogProcessRunningTime()
     lf("EbookTest startup time: %.2f ms", GetProcessRunningTime());
 }
 
-#if 0
-// called on a background thread
-void ControlEbook::PageLayoutBackground(LayoutInfo *li)
-{
-    Vec<PageData*> *newPages = LayoutHtml(li);
-    delete newPages;
-    gMessageLoopUI->PostTask(base::Bind(&ControlEbook::PageLayoutFinished,
-                                        base::Unretained(this)));
-    delete li;
-}
-#endif
-
 #define TEN_SECONDS_IN_MS 10*1000
 
 static float gUiDPIFactor = 1.0f;
@@ -266,6 +254,8 @@ void DispatchUiMsg(UiMsg *msg)
 {
     if (UiMsg::FinishedMobiLoading == msg->type) {
         gEbookController->FinishedMobiLoading(msg);
+    } else if (UiMsg::FinishedMobiLayout == msg->type) {
+        gEbookController->FinishedMobiLayout(msg);
     } else {
         CrashIf(true);
     }
@@ -292,7 +282,6 @@ static int RunApp()
             res = MsgWaitForMultipleObjects(0, 0, TRUE, timeout, QS_ALLEVENTS);
         }
         if (res == WAIT_TIMEOUT) {
-            //AnimStep();
             ftc.Step();
         }
 
