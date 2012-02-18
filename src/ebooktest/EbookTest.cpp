@@ -262,6 +262,13 @@ void DispatchUiMsg(UiMsg *msg)
     delete msg;
 }
 
+void DispatchUiMessages()
+{
+    for (UiMsg *msg = uimsg::RetriveNext(); msg; msg = uimsg::RetriveNext()) {
+        DispatchUiMsg(msg);
+    }
+}
+
 void DrainUiMsgQueu()
 {
     for (UiMsg *msg = uimsg::RetriveNext(); msg; msg = uimsg::RetriveNext()) {
@@ -274,16 +281,28 @@ static int RunApp()
 {
     MSG msg;
     FrameTimeoutCalculator ftc(60);
-    Timer t(true);
     for (;;) {
-        const DWORD timeout = ftc.GetTimeoutInMilliseconds();
+        DWORD timeout = ftc.GetTimeoutInMilliseconds();
         DWORD res = WAIT_TIMEOUT;
-        if (timeout > 0) {
-            res = MsgWaitForMultipleObjects(0, 0, TRUE, timeout, QS_ALLEVENTS);
+        HANDLE handles[MAXIMUM_WAIT_OBJECTS];
+        DWORD handleCount = 0;
+        handles[handleCount++] = uimsg::GetQueueEvent();
+        CrashIf(handleCount >= MAXIMUM_WAIT_OBJECTS);
+        if ((timeout > 0) || (handleCount > 0)) {
+            if (0 == timeout)
+                timeout = 1000;
+            res = MsgWaitForMultipleObjects(handleCount, handles, FALSE, timeout, QS_ALLEVENTS);
         }
-        if (res == WAIT_TIMEOUT) {
+
+        if (res == WAIT_OBJECT_0) {
+            DispatchUiMessages();
+        }
+
+#if 0
+         if (res == WAIT_TIMEOUT) {
             ftc.Step();
         }
+#endif
 
         while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
             if (msg.message == WM_QUIT) {
@@ -293,10 +312,8 @@ static int RunApp()
                 TranslateMessage(&msg);
                 DispatchMessage(&msg);
             }
-            for (UiMsg *msg = uimsg::RetriveNext(); msg; msg = uimsg::RetriveNext()) {
-                DispatchUiMsg(msg);
-            }
         }
+        DispatchUiMessages();
     }
 }
 

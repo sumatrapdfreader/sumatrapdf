@@ -200,7 +200,7 @@ int main(int argc, char **argv)
         mui::Initialize();
         Timer t(true);
         MobiLayout(argv[i]);
-        lf("Spent %.2f ms laying out %s", t.GetCurrTimeInMs(), argv[i]);
+        lf("Spent %.2f ms laying out %s", t.GetTimeInMs(), argv[i]);
         mui::Destroy();
         return 0;
     }

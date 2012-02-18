@@ -20,6 +20,7 @@ class Timer {
 
 public:
     Timer(bool start=false) {
+        end.QuadPart = 0;
         if (start)
             Start();
     }
@@ -27,15 +28,15 @@ public:
     void Start() { QueryPerformanceCounter(&start); }
     void Stop() { QueryPerformanceCounter(&end); }
 
-    double GetCurrTimeInMs() const
+    // If stopped, get the time at point it was stopped,
+    // otherwise get current time
+    double GetTimeInMs()
     {
-        LARGE_INTEGER curr;
-        QueryPerformanceCounter(&curr);
-        return TimeSince(curr);
-    }
-
-    double GetTimeInMs() const
-    {
+        if (0 == end.QuadPart) {
+            LARGE_INTEGER curr;
+            QueryPerformanceCounter(&curr);
+            return TimeSince(curr);
+        }
         return TimeSince(end);
     }
 };

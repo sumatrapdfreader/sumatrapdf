@@ -869,7 +869,7 @@ static int RunApp()
         // check if there are processes that need to be closed but
         // not more frequently than once per ten seconds and
         // only before (un)installation starts.
-        if (t.GetCurrTimeInMs() > 10000 &&
+        if (t.GetTimeInMs() > 10000 &&
             gHwndButtonInstUninst && IsWindowEnabled(gHwndButtonInstUninst)) {
             CheckInstallUninstallPossible(true);
             t.Start();

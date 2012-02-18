@@ -1442,7 +1442,7 @@ bool HtmlWindow::WaitUntilLoaded(DWORD maxWaitMs, const TCHAR *url)
     // we navigated to the url we asked for
     // TODO: we have a race here: if user chooses e.g. to close the document while we're
     // here, we'll close the ChmEngine etc. and try to use it after we exit.
-    while (!currentURL && (timer.GetCurrTimeInMs() < maxWaitMs)) {
+    while (!currentURL && (timer.GetTimeInMs() < maxWaitMs)) {
         PumpRemainingMessages();
         Sleep(100);
     }

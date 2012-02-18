@@ -39,8 +39,8 @@ void ThreadLoadMobi::Run()
     lf(_T("ThreadLoadMobi::Run(%s)"), fileName);
     Timer t(true);
     MobiDoc *mobiDoc = MobiDoc::ParseFile(fileName);
-    double loadingTimeMs = t.GetCurrTimeInMs();
-    lf(_T("Loaded %s in %.2f ms"), fileName, t.GetCurrTimeInMs());
+    double loadingTimeMs = t.GetTimeInMs();
+    lf(_T("Loaded %s in %.2f ms"), fileName, t.GetTimeInMs());
 
     UiMsg *msg = new UiMsg(UiMsg::FinishedMobiLoading);
     msg->finishedMobiLoading.mobiDoc = mobiDoc;
@@ -108,7 +108,7 @@ void ThreadLayoutMobi::Run()
     }
 
     if (pages)
-        lf("Laying out took %.2f ms", t.GetCurrTimeInMs());
+        lf("Laying out took %.2f ms", t.GetTimeInMs());
     else
         l("ThreadLayoutMobi::Run() interrupted");
 

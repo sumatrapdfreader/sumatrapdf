@@ -480,7 +480,7 @@ bool StressTest::OpenFile(const TCHAR *fileName)
 
 bool StressTest::GoToNextPage()
 {
-    double pageRenderTime = currPageRenderTime.GetCurrTimeInMs();
+    double pageRenderTime = currPageRenderTime.GetTimeInMs();
     ScopedMem<TCHAR> s(str::Format(_T("Page %d rendered in %d milliseconds"), currPage, (int)pageRenderTime));
     ShowNotification(win, s, true, false, NG_STRESS_TEST_BENCHMARK);
 
@@ -550,7 +550,7 @@ void StressTest::OnTimer()
     // has already been rendered.
     bool didRender = renderCache->Exists(win->dm, currPage, win->dm->Rotation());
     if (!didRender && DoCachePageRendering(win, currPage)) {
-        double timeInMs = currPageRenderTime.GetCurrTimeInMs();
+        double timeInMs = currPageRenderTime.GetTimeInMs();
         if (timeInMs > 3.0 * 1000) {
             if (!GoToNextPage())
                 return;
