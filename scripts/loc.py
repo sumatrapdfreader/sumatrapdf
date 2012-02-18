@@ -13,6 +13,7 @@ DIRS = ["src",
 		pj("src", "ifilter"),
 		pj("src", "browserplugin"),
 		pj("src", "previewer"),
+		pj("src", "ebooktest"),
 		]
 
 def is_blacklisted(name):
