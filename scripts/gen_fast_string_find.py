@@ -57,6 +57,7 @@ This code generator isn't smart enough to generate such code yet.
 """
 
 import string
+from html_entitites import html_entities
 
 # first letter upper case, rest lower case
 def capitalize(s):
@@ -110,6 +111,33 @@ def gen_css_colors():
     names_c = string.join(names, "\\0") + "\\0"
     vals_c = string.join(vals, ", ")
     return css_colors_c % (names_c, vals_c)
+
+html_entities_c = """
+// map of entity names to their Unicde codes, based on
+// http://en.wikipedia.org/wiki/List_of_XML_and_HTML_character_entity_references
+// the order of strings in gHtmlEntityNames corresponds to
+// order of Unicode codes in gHtmlEntityCodes
+static const char *gHtmlEntityNames = "%s";
+
+static int gHtmlEntityCodes[] = { %s };
+
+// returns -1 if didn't find
+static int GetHtmlEntityCode(const char *name, size_t nameLen)
+{
+    int c = str::FindStrPos(gHtmlEntityNames, name, nameLen);
+    if (-1 != c)
+        c = gHtmlEntityCodes[c];
+    return c;
+}
+"""
+
+def gen_html_entities():
+    html_entities.sort(key=lambda a: a[0])
+    names = [v[0].lower() for v in html_entities]
+    codes = [str(v[1]) for v in html_entities]
+    names_c = string.join(names, "\\0") + "\\0"
+    codes_c = string.join(codes, ", ")
+    return html_entities_c % (names_c, codes_c)
 
 find_simple_c = """
 // enums must match HTML_TAGS_STRINGS order
@@ -208,6 +236,7 @@ def main():
 
     print(find_simple_c % (tags_enum_str, tags_strings, attrs_enum_str, attrs_strings, align_attrs_enum_str, align_strings))
     print(gen_css_colors())
+    print(gen_html_entities())
     #print(tags_str)
 
 if __name__ == "__main__":
