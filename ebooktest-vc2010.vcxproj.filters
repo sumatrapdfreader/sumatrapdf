@@ -432,9 +432,9 @@
     <ClInclude Include="src\utils\Http.h">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="src\ebooktest\EbookUiMsg.h" />
     <ClInclude Include="src\ebooktest\EbookControls.h" />
     <ClInclude Include="src\ebooktest\EbookController.h" />
+    <ClInclude Include="src\ebooktest\UiMsgEbook.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="src\ebooktest\EbookTest.rc" />

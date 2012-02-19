@@ -8,7 +8,7 @@
 #include "PageLayout.h"
 #include "ThreadUtil.h"
 #include "Timer.h"
-#include "EbookUiMsg.h"
+#include "UiMsgEbook.h"
 #include "UiMsg.h"
 
 #include "DebugLog.h"

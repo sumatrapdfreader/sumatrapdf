@@ -15,7 +15,7 @@
 #include "StrUtil.h"
 #include "Scoped.h"
 #include "Timer.h"
-#include "EbookUiMsg.h"
+#include "UiMsgEbook.h"
 #include "UiMsg.h"
 #include "Version.h"
 #include "WinUtil.h"

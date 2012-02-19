@@ -188,8 +188,8 @@
     <ClInclude Include="src\ebooktest\EbookController.h" />
     <ClInclude Include="src\ebooktest\EbookControls.h" />
     <ClInclude Include="src\ebooktest\EbookTestMenu.h" />
-    <ClInclude Include="src\ebooktest\EbookUiMsg.h" />
     <ClInclude Include="src\ebooktest\Resource.h" />
+    <ClInclude Include="src\ebooktest\UiMsgEbook.h" />
     <ClInclude Include="src\installer\Version.h" />
     <ClInclude Include="src\MobiDoc.h" />
     <ClInclude Include="src\mui\Mui.h" />

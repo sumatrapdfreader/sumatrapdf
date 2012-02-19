@@ -444,24 +444,26 @@ $(OE2)\Tester.obj: src\utils\BaseUtil.h src\utils\CmdLineParser.h src\utils\DirI
 $(OE2)\Tester.obj: src\utils\FileUtil.h src\utils\GdiPlusUtil.h src\utils\GeomUtil.h
 $(OE2)\Tester.obj: src\utils\HtmlPullParser.h src\utils\Scoped.h src\utils\StrUtil.h
 $(OE2)\Tester.obj: src\utils\Vec.h src\utils\WinUtil.h
-$(OEB)\EbookController.obj: src\ebooktest\EbookController.h src\ebooktest\EbookControls.h src\ebooktest\EbookUiMsg.h
+$(OEB)\EbookController.obj: src\ebooktest\EbookController.h src\ebooktest\EbookControls.h src\ebooktest\UiMsgEbook.h
 $(OEB)\EbookController.obj: src\MobiDoc.h src\mui\Mui.h src\mui\MuiBase.h
 $(OEB)\EbookController.obj: src\mui\MuiButton.h src\mui\MuiControl.h src\mui\MuiCss.h
 $(OEB)\EbookController.obj: src\mui\MuiEventMgr.h src\mui\MuiHwndWrapper.h src\mui\MuiLayout.h
 $(OEB)\EbookController.obj: src\mui\MuiPainter.h src\mui\MuiScrollBar.h src\PageLayout.h
 $(OEB)\EbookController.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\BitManip.h
-$(OEB)\EbookController.obj: src\utils\DebugLog.h src\utils\GeomUtil.h src\utils\HtmlPullParser.h
-$(OEB)\EbookController.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\ThreadUtil.h
-$(OEB)\EbookController.obj: src\utils\Timer.h src\utils\UiMsg.h src\utils\Vec.h
+$(OEB)\EbookController.obj: src\utils\DebugLog.h src\utils\GdiPlusUtil.h src\utils\GeomUtil.h
+$(OEB)\EbookController.obj: src\utils\HtmlPullParser.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OEB)\EbookController.obj: src\utils\ThreadUtil.h src\utils\Timer.h src\utils\UiMsg.h
+$(OEB)\EbookController.obj: src\utils\Vec.h
 $(OEB)\EbookControls.obj: src\ebooktest\EbookControls.h src\mui\Mui.h src\mui\MuiBase.h
 $(OEB)\EbookControls.obj: src\mui\MuiButton.h src\mui\MuiControl.h src\mui\MuiCss.h
 $(OEB)\EbookControls.obj: src\mui\MuiEventMgr.h src\mui\MuiHwndWrapper.h src\mui\MuiLayout.h
 $(OEB)\EbookControls.obj: src\mui\MuiPainter.h src\mui\MuiScrollBar.h src\mui\SvgPath.h
 $(OEB)\EbookControls.obj: src\PageLayout.h src\utils\Allocator.h src\utils\BaseUtil.h
 $(OEB)\EbookControls.obj: src\utils\BitManip.h src\utils\GdiPlusUtil.h src\utils\GeomUtil.h
-$(OEB)\EbookControls.obj: src\utils\HtmlPullParser.h src\utils\StrUtil.h src\utils\Vec.h
+$(OEB)\EbookControls.obj: src\utils\HtmlPullParser.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OEB)\EbookControls.obj: src\utils\Vec.h
 $(OEB)\EbookTest.obj: src\ebooktest\EbookController.h src\ebooktest\EbookControls.h src\ebooktest\EbookTestMenu.h
-$(OEB)\EbookTest.obj: src\ebooktest\EbookUiMsg.h src\ebooktest\Resource.h src\MobiDoc.h
+$(OEB)\EbookTest.obj: src\ebooktest\Resource.h src\ebooktest\UiMsgEbook.h src\MobiDoc.h
 $(OEB)\EbookTest.obj: src\mui\Mui.h src\mui\MuiBase.h src\mui\MuiButton.h
 $(OEB)\EbookTest.obj: src\mui\MuiControl.h src\mui\MuiCss.h src\mui\MuiEventMgr.h
 $(OEB)\EbookTest.obj: src\mui\MuiHwndWrapper.h src\mui\MuiLayout.h src\mui\MuiPainter.h
@@ -470,8 +472,8 @@ $(OEB)\EbookTest.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\BitMa
 $(OEB)\EbookTest.obj: src\utils\DebugLog.h src\utils\FileUtil.h src\utils\FrameTimeoutCalculator.h
 $(OEB)\EbookTest.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\HtmlPullParser.h
 $(OEB)\EbookTest.obj: src\utils\NoFreeAllocator.h src\utils\Scoped.h src\utils\StrUtil.h
-$(OEB)\EbookTest.obj: src\utils\Timer.h src\utils\UiMsg.h src\utils\Vec.h
-$(OEB)\EbookTest.obj: src\utils\WinUtil.h src\Version.h
+$(OEB)\EbookTest.obj: src\utils\ThreadUtil.h src\utils\Timer.h src\utils\UiMsg.h
+$(OEB)\EbookTest.obj: src\utils\Vec.h src\utils\WinUtil.h src\Version.h
 $(OEB)\EbookTestMenu.obj: src\ebooktest\EbookTestMenu.h src\ebooktest\Resource.h src\utils\BaseUtil.h
 $(OEB)\EbookTestMenu.obj: src\utils\Scoped.h src\utils\StrUtil.h
 $(OMUI)\Mui.obj: src\mui\Mui.h src\mui\MuiBase.h src\mui\MuiButton.h
