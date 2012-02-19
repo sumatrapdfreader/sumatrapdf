@@ -120,10 +120,6 @@ struct WordInfo {
 
 class PageLayout
 {
-    enum TextJustification {
-        Left, Right, Center, Both
-    };
-
 public:
     PageLayout();
     ~PageLayout();
@@ -138,12 +134,8 @@ private:
     REAL GetCurrentLineDx();
     void LayoutLeftStartingAt(REAL offX);
     void JustifyLineLeft();
-    void JustifyLineRight();
-    void JustifyLineCenter();
     void JustifyLineBoth();
-    void JustifyLine(TextJustification mode);
-
-    TextJustification AlignAttrToJustification(AlignAttr align);
+    void JustifyLine(AlignAttr mode);
 
     void StartNewPage();
     void StartNewLine(bool isParagraphBreak);
@@ -170,6 +162,7 @@ private:
     // constant during layout process
     REAL                pageDx;
     REAL                pageDy;
+    SizeT<REAL>         pageSize;
     REAL                lineSpacing;
     REAL                spaceDx;
     Graphics *          gfx; // for measuring text
@@ -180,7 +173,7 @@ private:
     FontStyle           currFontStyle;
     Font *              currFont;
 
-    TextJustification   currJustification;
+    AlignAttr           currJustification;
     // current position in a page
     REAL                currX, currY;
     // number of consecutive newlines

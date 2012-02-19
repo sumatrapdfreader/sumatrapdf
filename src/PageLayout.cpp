@@ -167,6 +167,8 @@ PageData *PageLayout::IterStart(LayoutInfo* layoutInfo)
 {
     pageDx = (REAL)layoutInfo->pageDx;
     pageDy = (REAL)layoutInfo->pageDy;
+    pageSize.dx = pageDx;
+    pageSize.dy = pageDy;
 
     CrashIf(gfx);
     gfx = mui::AllocGraphicsForMeasureText();
@@ -175,7 +177,7 @@ PageData *PageLayout::IterStart(LayoutInfo* layoutInfo)
     htmlParser = new HtmlPullParser(layoutInfo->htmlStr, layoutInfo->htmlStrLen);
 
     finishedParsing = false;
-    currJustification = Both;
+    currJustification = Align_Justify;
     SetCurrentFont(FontStyleRegular);
     InitFontMetricsCache(&fontMetrics, gfx, currFont);
 
@@ -236,64 +238,43 @@ void PageLayout::LayoutLeftStartingAt(REAL offX)
     }
 }
 
-void PageLayout::JustifyLineLeft()
-{
-    LayoutLeftStartingAt(0);
-}
-
-void PageLayout::JustifyLineRight()
-{
-    REAL margin = pageDx - GetCurrentLineDx();
-    LayoutLeftStartingAt(margin);
-}
-
-void PageLayout::JustifyLineCenter()
-{
-    REAL margin = (pageDx - GetCurrentLineDx());
-    LayoutLeftStartingAt(margin / 2.f);
-}
-
 void PageLayout::JustifyLineBoth()
 {
     // move all words proportionally to the right so that the
     // spacing remains uniform and the last word touches the
     // right page border
-    REAL margin = pageDx - GetCurrentLineDx();
+    REAL margin = pageSize.dx - GetCurrentLineDx();
     LayoutLeftStartingAt(0);
     DrawInstr *end;
     DrawInstr *c = GetInstructionsForCurrentLine(end);
     size_t count = end - c;
     REAL extraSpaceDx = count > 1 ? margin / (count - 1) : margin;
-    ++c;
-    size_t n = 1;
-    while (c < end) {
+
+    for (size_t n = 1; ++c < end; n++)
         c->bbox.X += n * extraSpaceDx;
-        ++n;
-        ++c;
-    }
 }
 
-void PageLayout::JustifyLine(TextJustification mode)
+void PageLayout::JustifyLine(AlignAttr mode)
 {
     if (IsCurrentLineEmpty())
         return;
 
     switch (mode) {
-        case Left:
-            JustifyLineLeft();
-            break;
-        case Right:
-            JustifyLineRight();
-            break;
-        case Center:
-            JustifyLineCenter();
-            break;
-        case Both:
-            JustifyLineBoth();
-            break;
-        default:
-            assert(0);
-            break;
+    case Align_Left:
+        LayoutLeftStartingAt(0);
+        break;
+    case Align_Right:
+        LayoutLeftStartingAt(pageSize.dx - GetCurrentLineDx());
+        break;
+    case Align_Center:
+        LayoutLeftStartingAt((pageSize.dx - GetCurrentLineDx()) / 2.f);
+        break;
+    case Align_Justify:
+        JustifyLineBoth();
+        break;
+    default:
+        CrashIf(true);
+        break;
     }
     currLineInstrOffset = currPage->Count();
 }
@@ -304,8 +285,8 @@ void PageLayout::StartNewLine(bool isParagraphBreak)
     if ((0 == currY) && IsCurrentLineEmpty())
         return;
 
-    if (isParagraphBreak && Both == currJustification)
-        JustifyLine(Left);
+    if (isParagraphBreak && Align_Justify == currJustification)
+        JustifyLine(Align_Left);
     else
         JustifyLine(currJustification);
 
@@ -415,30 +396,6 @@ void PageLayout::AddWord(WordInfo *wi)
     currX += (dx + spaceDx);
 }
 
-// How layout works:
-// * measure the strings
-// * remember a line's worth of widths
-// * when we fill a line we calculate the position of strings in
-//   a line for a given justification setting (left, right, center, both)
-#if 0
-Vec<PageData*> *PageLayout::LayoutText(Graphics *graphics, Font *defaultFnt, const char *s)
-{
-    gfx = graphics;
-    defaultFont = defaultFnt;
-    currFont = defaultFnt;
-    StartLayout();
-    WordsIter wordsIter(s);
-    for (WordInfo *wi = wordsIter.IterStart(); wi; wi = wordsIter.IterNext()) {
-        AddWord(wi);
-    }
-    StartNewLine(true);
-    RemoveLastPageIfEmpty();
-    Vec<PageData*> *ret = pages;
-    pages = NULL;
-    return ret;
-}
-#endif
-
 #if 0
 void DumpAttr(uint8 *s, size_t sLen)
 {
@@ -474,22 +431,6 @@ static bool IgnoreTag(const char *s, size_t sLen)
     return false;
 }
 
-PageLayout::TextJustification PageLayout::AlignAttrToJustification(AlignAttr align)
-{
-    switch (align) {
-        case Align_Center:
-            return Center;
-        case Align_Justify:
-            return Both;
-        case Align_Left:
-            return Left;
-        case Align_Right:
-            return Right;
-        default:
-            return Both;
-    }
-}
-
 void PageLayout::HandleHtmlTag(HtmlToken *t)
 {
     Vec<KnownAttrInfo> attrs;
@@ -512,20 +453,15 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
         RecordEndTag(&tagNesting, tag);
 
     if (Tag_P == tag) {
-        TextJustification newJustification = Both;
+        StartNewLine(true);
+        currJustification = Align_Justify;
         if (t->IsStartTag() || t->IsEmptyElementEndTag()) {
-            StartNewLine(true);
-            static HtmlAttr validAttrs[] = { Attr_Align, Attr_NotFound };
-            GetKnownAttributes(t, validAttrs, &attrs);
-            if (attrs.Count() > 0) {
-                KnownAttrInfo attr = attrs.At(0);
-                AlignAttr alignAttr = FindAlignAttr(attr.val, attr.valLen);
-                newJustification = AlignAttrToJustification(alignAttr);
+            AttrInfo *attrInfo;
+            while ((attrInfo = t->NextAttr())) {
+                if (attrInfo->NameIs("align"))
+                    currJustification = FindAlignAttr(attrInfo->val, attrInfo->valLen);
             }
-        } else if (t->IsEndTag()) {
-            StartNewLine(false);
         }
-        currJustification = newJustification;
         return;
     }
 
@@ -534,12 +470,12 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
         return;
     }
 
-    if ((Tag_B == tag) || (Tag_Em == tag)) {
+    if ((Tag_B == tag) || (Tag_Strong == tag)) {
         ChangeFont(FontStyleBold, t->IsStartTag());
         return;
     }
 
-    if (Tag_I == tag) {
+    if ((Tag_I == tag) || (Tag_Em == tag)) {
         ChangeFont(FontStyleItalic, t->IsStartTag());
         return;
     }
