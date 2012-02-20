@@ -166,6 +166,24 @@ static LRESULT OnCommand(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
+#define LAYOUT_TIMER_ID 1
+
+void RestartLayoutTimer()
+{
+    KillTimer(gHwndFrame, LAYOUT_TIMER_ID);
+    SetTimer(gHwndFrame,  LAYOUT_TIMER_ID, 600, NULL);
+}
+
+static void OnTimer(HWND hwnd, WPARAM timerId)
+{
+    switch (timerId) {
+        case LAYOUT_TIMER_ID:
+            KillTimer(hwnd, LAYOUT_TIMER_ID);
+            gEbookController->OnLayoutTimer();
+            break;
+    }
+}
+
 static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     static bool seenWmPaint = false;
@@ -203,6 +221,10 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 
         case WM_COMMAND:
             OnCommand(hwnd, msg, wParam, lParam);
+            break;
+
+        case WM_TIMER:
+            OnTimer(hwnd, wParam);
             break;
 
         default:

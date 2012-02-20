@@ -29,7 +29,6 @@ class EbookController : public IClicked, ISizeChanged
     int             pageDx, pageDy; // size of the page for which pages was generated
 
     ThreadLayoutMobi *layoutThread;
-
     void SetStatusText() const;
     void DeletePages();
     void AdvancePage(int dist);
@@ -51,6 +50,7 @@ public:
     void LoadMobi(const TCHAR *fileName);
     void FinishedMobiLoading(UiMsg *msg);
     void FinishedMobiLayout(UiMsg *msg);
+    void OnLayoutTimer();
 };
 
 #endif

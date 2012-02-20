@@ -7,9 +7,9 @@ Things to do for the first version of ebook (mobi) support:
 * layout: links
 * layout: improvements to background thread layout. We can't change top of the page
   as a result of the layout as this disorients the use
-* delay trigerring background layout during resize so that we don't overdo it
 
 Done:
+* delay trigerring background layout during resize so that we don't overdo it
 * layout: resolve html entities
 * layout: support bold/italic/underline
 * mobi: read images

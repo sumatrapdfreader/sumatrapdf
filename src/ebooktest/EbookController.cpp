@@ -16,6 +16,9 @@
 #define FONT_NAME              L"Georgia"
 #define FONT_SIZE              12
 
+// in EbookTest.cpp
+void RestartLayoutTimer();
+
 // TODO: embed EbookController object to notify when finished, we use the current one now.
 class ThreadLoadMobi : public ThreadBase {
 public:
@@ -232,10 +235,17 @@ void EbookController::TriggerLayout()
     ctrls->status->SetText(_T("Please wait, laying out the text"));
 }
 
+void EbookController::OnLayoutTimer()
+{
+    TriggerLayout();
+}
+
 void EbookController::SizeChanged(Control *c, int dx, int dy)
 {
     CrashIf(c != ctrls->page);
-    TriggerLayout();
+    // delay re-layout so that we don't unnecessarily do the
+    // work as long as the user is still resizing the window
+    RestartLayoutTimer();
 }
 
 // (x, y) is in the coordinates of w
