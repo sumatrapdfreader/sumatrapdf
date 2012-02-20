@@ -176,22 +176,12 @@ class HtmlPullParser {
 
     HtmlToken      currToken;
 
+
 public:
-    struct State {
-        const char *s;
-        const char *end;
-    };
+    Vec<HtmlTag>   tagNesting;
 
     HtmlPullParser(const char *s, size_t len) : currPos(s), end(s + len) { }
     HtmlPullParser(const char *s, const char *end) : currPos(s), end(end) { }
-    HtmlPullParser(const State& state) : currPos(state.s), end(state.end) { }
-
-    // Get the current state of html parsing. Can be used to restart
-    // parsing from that point later on
-    State GetParsingState() {
-        State state = { currPos, end };
-        return state;
-    }
 
     HtmlToken *Next();
 };
@@ -203,8 +193,6 @@ HtmlTag     FindTag(HtmlToken *tok);
 HtmlAttr    FindAttr(AttrInfo *attrInfo);
 AlignAttr   FindAlignAttr(const char *attr, size_t len);
 
-void RecordEndTag(Vec<HtmlTag> *tagNesting, HtmlTag tag);
-void RecordStartTag(Vec<HtmlTag>* tagNesting, HtmlTag tag);
 char *PrettyPrintHtml(const char *s, size_t len, size_t& lenOut);
 const char *ResolveHtmlEntities(const char *s, const char *end, Allocator *alloc);
 

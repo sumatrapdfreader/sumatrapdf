@@ -454,12 +454,6 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
     // TODO: ignore instead of crashing once we're satisfied we covered all the tags
     CrashIf(tag == Tag_NotFound);
 
-    // update the current state of html tree
-    if (t->IsStartTag())
-        RecordStartTag(&tagNesting, tag);
-    else if (t->IsEndTag())
-        RecordEndTag(&tagNesting, tag);
-
     if (Tag_P == tag) {
         StartNewLine(true);
         currJustification = Align_Justify;

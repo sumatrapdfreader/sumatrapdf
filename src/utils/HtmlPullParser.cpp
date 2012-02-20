@@ -285,6 +285,52 @@ static bool SkipUntilTagEnd(const char*& s, const char *end)
     return false;
 }
 
+static bool IsSelfClosingTag(HtmlTag tag)
+{
+    // TODO: add more tags
+    switch (tag) {
+    case Tag_Br: case Tag_Img: case Tag_Hr: case Tag_Link:
+    case Tag_Meta: case Tag_Pagebreak: case Tag_Mbp_Pagebreak:
+        return true;
+    default:
+        return false;
+    }
+}
+
+// record the tag for the purpose of building current state
+// of html tree
+static void RecordStartTag(Vec<HtmlTag>* tagNesting, HtmlTag tag)
+{
+    if (!IsSelfClosingTag(tag))
+        tagNesting->Append(tag);
+}
+
+// remove the tag from state of html tree
+static void RecordEndTag(Vec<HtmlTag> *tagNesting, HtmlTag tag)
+{
+    // when closing a tag, if the top tag doesn't match but
+    // there are only potentially self-closing tags on the
+    // stack between the matching tag, we pop all of them
+    if (tagNesting->Find(tag)) {
+        while ((tagNesting->Count() > 0) && (tagNesting->Last() != tag))
+            tagNesting->Pop();
+    }
+    if (tagNesting->Count() > 0) {
+        CrashIf(tagNesting->Last() != tag);
+        tagNesting->Pop();
+    }
+}
+
+static void UpdateTagNesting(Vec<HtmlTag> *tagNesting, HtmlToken *t)
+{
+    // update the current state of html tree
+     HtmlTag tag = FindTag(t);
+    if (t->IsStartTag())
+        RecordStartTag(tagNesting, tag);
+    else if (t->IsEndTag())
+        RecordEndTag(tagNesting, tag);
+}
+
 // Returns next part of html or NULL if finished
 HtmlToken *HtmlPullParser::Next()
 {
@@ -341,6 +387,7 @@ Next:
         currToken.SetValue(HtmlToken::StartTag, start, currPos);
     }
     ++currPos;
+    UpdateTagNesting(&tagNesting, &currToken);
     return &currToken;
 }
 
@@ -357,18 +404,6 @@ HtmlAttr FindAttr(AttrInfo *attrInfo)
 AlignAttr FindAlignAttr(const char *attr, size_t len)
 {
     return (AlignAttr)str::FindStrPosI(ALIGN_ATTRS_STRINGS, attr, len);
-}
-
-bool IsSelfClosingTag(HtmlTag tag)
-{
-    // TODO: add more tags
-    switch (tag) {
-    case Tag_Br: case Tag_Img: case Tag_Hr: case Tag_Link:
-    case Tag_Meta: case Tag_Pagebreak: case Tag_Mbp_Pagebreak:
-        return true;
-    default:
-        return false;
-    }
 }
 
 size_t GetTagLen(const HtmlToken *tok)
@@ -425,34 +460,9 @@ static void HtmlAddWithNesting(str::Str<char>* out, HtmlToken *tok, HtmlTag tag,
         out->Append('\n');
 }
 
-// record the tag for the purpose of building current state
-// of html tree
-void RecordStartTag(Vec<HtmlTag>* tagNesting, HtmlTag tag)
-{
-    if (!IsSelfClosingTag(tag))
-        tagNesting->Append(tag);
-}
-
-// remove the tag from state of html tree
-void RecordEndTag(Vec<HtmlTag> *tagNesting, HtmlTag tag)
-{
-    // when closing a tag, if the top tag doesn't match but
-    // there are only potentially self-closing tags on the
-    // stack between the matching tag, we pop all of them
-    if (tagNesting->Find(tag)) {
-        while ((tagNesting->Count() > 0) && (tagNesting->Last() != tag))
-            tagNesting->Pop();
-    }
-    if (tagNesting->Count() > 0) {
-        CrashIf(tagNesting->Last() != tag);
-        tagNesting->Pop();
-    }
-}
-
 char *PrettyPrintHtml(const char *s, size_t len, size_t& lenOut)
 {
     str::Str<char> res(len);
-    Vec<HtmlTag> tagNesting(32);
     HtmlPullParser parser(s, len);
     HtmlToken *t;
     while ((t = parser.Next()) && !t->IsError())
@@ -462,18 +472,16 @@ char *PrettyPrintHtml(const char *s, size_t len, size_t& lenOut)
         if (!t->IsTag())
             continue;
 
+        size_t nesting = 0;
+        for (HtmlTag *tag = parser.tagNesting.IterStart(); tag; tag = parser.tagNesting.IterNext()) {
+            if (Tag_NotFound == *tag || IsInlineTag(*tag))
+                continue;
+            // TODO: skip html, body and possibly more
+            ++nesting;
+        }
         HtmlTag tag = FindTag(t);
-        size_t nesting = tagNesting.Count();
         HtmlAddWithNesting(&res, t, tag, nesting);
 
-        if (Tag_NotFound == tag || IsInlineTag(tag))
-            continue;
-
-        // update the current state of html tree
-        if (t->IsStartTag())
-            RecordStartTag(&tagNesting, tag);
-        else if (t->IsEndTag())
-            RecordEndTag(&tagNesting, tag);
     }
     lenOut = res.Count();
     return res.StealData();
