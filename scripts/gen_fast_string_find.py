@@ -113,28 +113,31 @@ def gen_css_colors():
     return css_colors_c % (names_c, vals_c)
 
 html_entities_c = """
-// map of entity names to their Unicde codes, based on
+// map of entity names to their Unicde runes, based on
 // http://en.wikipedia.org/wiki/List_of_XML_and_HTML_character_entity_references
 // the order of strings in gHtmlEntityNames corresponds to
-// order of Unicode codes in gHtmlEntityCodes
+// order of Unicode runes in gHtmlEntityRunes
 static const char *gHtmlEntityNames = "%s";
 
-static int gHtmlEntityCodes[] = { %s };
+static uint16 gHtmlEntityRunes[] = { %s };
 
 // returns -1 if didn't find
-static int GetHtmlEntityCode(const char *name, size_t nameLen)
+static int HtmlEntityNameToRune(const char *name, size_t nameLen)
 {
-    int c = str::FindStrPos(gHtmlEntityNames, name, nameLen);
-    if (-1 != c)
-        c = gHtmlEntityCodes[c];
-    return c;
+    int pos = str::FindStrPos(gHtmlEntityNames, name, nameLen);
+    if (-1 == pos)
+        return -1;
+    return (int)gHtmlEntityRunes[pos];
 }
 """
 
 def gen_html_entities():
-    html_entities.sort(key=lambda a: a[0])
-    names = [v[0].lower() for v in html_entities]
-    codes = [str(v[1]) for v in html_entities]
+    # lower-case the names of html entities
+    ent = [[v[0].lower(), v[1]] for v in html_entities]
+    # sort by entity names
+    ent.sort(key=lambda a: a[0])
+    names = [v[0] for v in ent]
+    codes = [str(v[1]) for v in ent]
     names_c = string.join(names, "\\0") + "\\0"
     codes_c = string.join(codes, ", ")
     return html_entities_c % (names_c, codes_c)

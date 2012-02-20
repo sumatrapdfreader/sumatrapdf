@@ -1,6 +1,8 @@
 /* Copyright 2010-2012 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+#include <locale.h>
+
 #include "EbookController.h"
 #include "EbookControls.h"
 #include "EbookTestMenu.h"
@@ -328,7 +330,16 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 #endif
 
     SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
+    // ensure that C functions behave consistently under all OS locales
+    // (use Win32 functions where localized input or output is desired)
+    setlocale(LC_ALL, "C");
 
+#ifdef DEBUG
+    extern void BaseUtils_UnitTests();
+    BaseUtils_UnitTests();
+    extern void HtmlPullParser_UnitTests();
+    HtmlPullParser_UnitTests();
+#endif
     ScopedCom com;
     InitAllCommonControls();
     ScopedGdiPlus gdi;

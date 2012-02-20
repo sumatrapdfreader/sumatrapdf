@@ -5,7 +5,6 @@
 #include <shlobj.h>
 #include <wininet.h>
 #include <locale.h>
-#include <time.h>
 
 #include "WinUtil.h"
 #include "Http.h"
