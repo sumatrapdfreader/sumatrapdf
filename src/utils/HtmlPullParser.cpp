@@ -89,59 +89,69 @@ bool HtmlToken::NameIs(const char *name) const
     return  (str::Len(name) == GetTagLen(this)) && str::StartsWith(s, name);
 }
 
+AttrInfo *HtmlToken::GetAttrByName(const char *name)
+{
+    nextAttr = NULL; // start from the beginning
+    for (AttrInfo *a = NextAttr(); a; a = NextAttr()) {
+        if (a->NameIs(name))
+            return a;
+    }
+    return NULL;
+}
+
 // We expect:
 // whitespace | attribute name | = | attribute value
 // where attribute value can be quoted
 AttrInfo *HtmlToken::NextAttr()
 {
-    // restart after the last attribute (or start from the beginning)
-    const char *s = nextAttr;
-    if (!s)
-        s = this->s + GetTagLen(this);
-    const char *end = this->s + sLen;
+    // start after the last attribute found (or the beginning)
+    const char *curr = nextAttr;
+    if (!curr)
+        curr = s + GetTagLen(this);
+    const char *end = s + sLen;
 
     // parse attribute name
-    SkipWs(s, end);
-    if (s == end) {
+    SkipWs(curr, end);
+    if (curr == end) {
 NoNextAttr:
         nextAttr = NULL;
         return NULL;
     }
-    attrInfo.name = s;
-    SkipName(s, end);
-    attrInfo.nameLen = s - attrInfo.name;
+    attrInfo.name = curr;
+    SkipName(curr, end);
+    attrInfo.nameLen = curr - attrInfo.name;
     if (0 == attrInfo.nameLen)
         goto NoNextAttr;
-    SkipWs(s, end);
-    if ((s == end) || ('=' != *s)) {
+    SkipWs(curr, end);
+    if ((curr == end) || ('=' != *curr)) {
         // attributes without values get their names as value in HTML
         attrInfo.val = attrInfo.name;
         attrInfo.valLen = attrInfo.nameLen;
-        nextAttr = s;
+        nextAttr = curr;
         return &attrInfo;
     }
 
     // parse attribute value
-    ++s; // skip '='
-    SkipWs(s, end);
-    if (s == end) {
+    ++curr; // skip '='
+    SkipWs(curr, end);
+    if (curr == end) {
         // attribute with implicit empty value
-        attrInfo.val = s;
+        attrInfo.val = curr;
         attrInfo.valLen = 0;
-    } else if (('\'' == *s) || ('\"' == *s)) {
+    } else if (('\'' == *curr) || ('\"' == *curr)) {
         // attribute with quoted value
-        ++s;
-        attrInfo.val = s;
-        if (!SkipUntil(s, end, *(s - 1)))
+        ++curr;
+        attrInfo.val = curr;
+        if (!SkipUntil(curr, end, *(curr - 1)))
             goto NoNextAttr;
-        attrInfo.valLen = s - attrInfo.val;
-        ++s;
+        attrInfo.valLen = curr - attrInfo.val;
+        ++curr;
     } else {
-        attrInfo.val = s;
-        SkipNonWs(s, end);
-        attrInfo.valLen = s - attrInfo.val;
+        attrInfo.val = curr;
+        SkipNonWs(curr, end);
+        attrInfo.valLen = curr - attrInfo.val;
     }
-    nextAttr = s;
+    nextAttr = curr;
     return &attrInfo;
 }
 
@@ -373,7 +383,12 @@ void Test00(const char *s, HtmlToken::TokenType expectedType = HtmlToken::EmptyE
     assert(t->NameIs("p"));
     HtmlTag tag = FindTag(t);
     assert(Tag_P == tag);
-    AttrInfo *a = t->NextAttr();
+    AttrInfo *a = t->GetAttrByName("a1");
+    assert(a->NameIs("a1"));
+    assert(a->ValIs(">"));
+
+#if 0
+    a = t->NextAttr();
     assert(a->NameIs("a1"));
     assert(a->ValIs(">"));
     a = t->NextAttr();
@@ -381,6 +396,7 @@ void Test00(const char *s, HtmlToken::TokenType expectedType = HtmlToken::EmptyE
     assert(a->ValIs("bar"));
     a = t->NextAttr();
     assert(!a);
+#endif
     t = parser.Next();
     assert(!t);
 }

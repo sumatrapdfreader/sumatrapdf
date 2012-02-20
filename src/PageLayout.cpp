@@ -312,6 +312,7 @@ static bool IsAllowedAttribute(HtmlAttr* allowedAttributes, HtmlAttr attr)
     return false;
 }
 
+#if 0
 static void GetKnownAttributes(HtmlToken *t, HtmlAttr *allowedAttributes, Vec<KnownAttrInfo> *out)
 {
     out->Reset();
@@ -330,6 +331,7 @@ static void GetKnownAttributes(HtmlToken *t, HtmlAttr *allowedAttributes, Vec<Kn
         out->Append(knownAttr);
     }
 }
+#endif
 
 void PageLayout::AddSetFontInstr(Font *font)
 {
@@ -456,11 +458,9 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
         StartNewLine(true);
         currJustification = Align_Justify;
         if (t->IsStartTag() || t->IsEmptyElementEndTag()) {
-            AttrInfo *attrInfo;
-            while ((attrInfo = t->NextAttr())) {
-                if (attrInfo->NameIs("align"))
-                    currJustification = FindAlignAttr(attrInfo->val, attrInfo->valLen);
-            }
+            AttrInfo *attrInfo = t->GetAttrByName("align");
+            if (attrInfo)
+                currJustification = FindAlignAttr(attrInfo->val, attrInfo->valLen);
         }
         return;
     }

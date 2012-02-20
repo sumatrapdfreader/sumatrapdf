@@ -157,9 +157,10 @@ struct HtmlToken {
     size_t           sLen;
 
     bool             NameIs(const char *name) const;
-    AttrInfo *       NextAttr();
+    AttrInfo *       GetAttrByName(const char *name);
 
 protected:
+    AttrInfo *       NextAttr();
     const char *     nextAttr;
     AttrInfo         attrInfo;
 };

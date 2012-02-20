@@ -49,7 +49,6 @@ void ThreadLoadMobi::Run()
     uimsg::Post(msg);
 }
 
-// TODO: embed EbookController object to notify when finished, we use the current one now.
 class ThreadLayoutMobi : public ThreadBase {
 public:
     TCHAR *             fontName;  // we own it
@@ -326,7 +325,7 @@ void EbookController::FinishedMobiLoading(UiMsg *msg)
 void EbookController::LoadMobi(const TCHAR *fileName)
 {
     // note: ThreadLoadMobi object will get automatically deleted, so no
-    // need to keep it aroun
+    // need to keep it around
     ThreadLoadMobi *loadThread = new ThreadLoadMobi(fileName);
     loadThread->Start();
 
