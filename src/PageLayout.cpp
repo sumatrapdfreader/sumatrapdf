@@ -372,11 +372,16 @@ void PageLayout::AddWord(WordInfo *wi)
     }
     newLinesCount = 0;
 
-    // TODO: check if the string contains html entities. If it does,
-    // decode the entity, create a copy of decoded string in memory
-    // that will packaged with pages information
+    // TODO: we should really only one allocator for all pages as text might
+    // end up on another page (which isn't really a problem, because all pages and
+    // their allocators are freed at the same time, but still it would be better
+    // to only have one allocator per PageLayout process)
+    const char *s = ResolveHtmlEntities(wi->s, wi->s + wi->len, &currPage->text);
+    size_t len = wi->len;
+    if (s != wi->s)
+        len = str::Len(s);
 
-    size_t strLen = str::Utf8ToWcharBuf(wi->s, wi->len, buf, dimof(buf));
+    size_t strLen = str::Utf8ToWcharBuf(s, len, buf, dimof(buf));
 #if 0 // TODO: cache disabled because produces bad metrics
     // with fontMetrics cache
     if (currFont == fontMetrics.font)
@@ -394,7 +399,7 @@ void PageLayout::AddWord(WordInfo *wi)
         StartNewLine(false);
     }
     bbox.Y = currY;
-    currPage->Append(DrawInstr::Str(wi->s, wi->len, bbox));
+    currPage->Append(DrawInstr::Str(s, len, bbox));
     currX += (dx + spaceDx);
 }
 

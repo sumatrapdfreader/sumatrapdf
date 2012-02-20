@@ -5,12 +5,12 @@ Things to do for the first version of ebook (mobi) support:
 * layout: support different fonts
 * layout: indent first line of a paragraph
 * layout: links
-* layout: resolve html entities
-* layout: do layout on a thread, send laid out pages incrementally. Laying out
-  a whole book takes a while, the idea is to be able to display the current
-  page as soon as it's available
+* layout: improvements to background thread layout. We can't change top of the page
+  as a result of the layout as this disorients the use
+* delay trigerring background layout during resize so that we don't overdo it
 
 Done:
+* layout: resolve html entities
 * layout: support bold/italic/underline
 * mobi: read images
 * ui: turn pages
@@ -18,6 +18,9 @@ Done:
 * ui: show position status like in Kindle app ("n% Page N out of M * Location X of Y")
 * ui: support text-align attribute for buttons
 * ui: show scrollbar at the bottom and react to it
+* layout: do layout on a thread, send laid out pages incrementally. Laying out
+  a whole book takes a while, the idea is to be able to display the current
+  page as soon as it's available
 
 Things nice to have but can wait for future:
 * ui: double page display

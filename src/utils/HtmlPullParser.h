@@ -6,6 +6,8 @@
 
 #include "Vec.h"
 
+class Allocator;
+
 // enums must match HTML_TAGS_STRINGS order
 enum HtmlTag {
     Tag_NotFound = -1,
@@ -204,5 +206,6 @@ AlignAttr   FindAlignAttr(const char *attr, size_t len);
 void RecordEndTag(Vec<HtmlTag> *tagNesting, HtmlTag tag);
 void RecordStartTag(Vec<HtmlTag>* tagNesting, HtmlTag tag);
 char *PrettyPrintHtml(const char *s, size_t len, size_t& lenOut);
+const char *ResolveHtmlEntities(const char *s, const char *end, Allocator *alloc);
 
 #endif
