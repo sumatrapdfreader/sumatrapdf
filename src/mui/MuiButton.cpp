@@ -14,7 +14,7 @@ Button::Button(const TCHAR *s)
     wantedInputBits = (uint16)-1; // wants everything
     styleDefault = NULL;
     styleMouseOver = NULL;
-    SetCurrentStyle(styleDefault, gStyleButtonDefault);
+    SetStyle(styleDefault);
     SetText(s);
 }
 
@@ -42,13 +42,13 @@ static Size GetBorderAndPaddingSize(CachedStyle *s)
 
 void Button::NotifyMouseEnter()
 {
-    SetCurrentStyle(styleMouseOver, gStyleButtonMouseOver);
+    SetStyle(styleMouseOver);
     RecalculateSize(true);
 }
 
 void Button::NotifyMouseLeave()
 {
-    SetCurrentStyle(styleDefault, gStyleButtonDefault);
+    SetStyle(styleDefault);
     RecalculateSize(true);
 }
 
@@ -97,9 +97,9 @@ void Button::SetStyles(Style *def, Style *mouseOver)
     styleMouseOver = mouseOver;
 
     if (IsMouseOver())
-        SetCurrentStyle(styleMouseOver, gStyleButtonMouseOver);
+        SetStyle(styleMouseOver);
     else
-        SetCurrentStyle(styleDefault, gStyleButtonDefault);
+        SetStyle(styleDefault);
 
     RecalculateSize(true);
 }
@@ -148,7 +148,7 @@ ButtonVector::ButtonVector(GraphicsPath *gp)
     styleDefault = NULL;
     styleMouseOver = NULL;
     graphicsPath = NULL;
-    SetCurrentStyle(styleDefault, gStyleButtonDefault);
+    SetStyle(styleDefault);
     SetGraphicsPath(gp);
 }
 
@@ -159,13 +159,13 @@ ButtonVector::~ButtonVector()
 
 void ButtonVector::NotifyMouseEnter()
 {
-    SetCurrentStyle(styleMouseOver, gStyleButtonMouseOver);
+    SetStyle(styleMouseOver);
     RecalculateSize(true);
 }
 
 void ButtonVector::NotifyMouseLeave()
 {
-    SetCurrentStyle(styleDefault, gStyleButtonDefault);
+    SetStyle(styleDefault);
     RecalculateSize(true);
 }
 
@@ -266,9 +266,9 @@ void ButtonVector::SetStyles(Style *def, Style *mouseOver)
     styleMouseOver = mouseOver;
 
     if (IsMouseOver())
-        SetCurrentStyle(styleMouseOver, gStyleButtonMouseOver);
+        SetStyle(styleMouseOver);
     else
-        SetCurrentStyle(styleDefault, gStyleButtonDefault);
+        SetStyle(styleDefault);
 
     RecalculateSize(true);
 }

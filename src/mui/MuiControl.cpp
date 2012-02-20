@@ -19,7 +19,7 @@ Control::Control(Control *newParent)
     layout = NULL;
     hCursor = NULL;
     cachedStyle = NULL;
-    SetCurrentStyle(NULL, gStyleDefault);
+    SetStyle(NULL);
     pos = Rect();
     if (newParent)
         SetParent(newParent);
@@ -197,9 +197,9 @@ void Control::Paint(Graphics *gfx, int offX, int offY)
         return;
 }
 
-void Control::SetCurrentStyle(Style *style1, Style *style2)
+void Control::SetStyle(Style *style)
 {
-    cachedStyle = CacheStyle(style1, style2);
+    cachedStyle = CacheStyle(style);
 }
 
 }

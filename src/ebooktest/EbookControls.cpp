@@ -69,10 +69,18 @@ void PageControl::Paint(Graphics *gfx, int offX, int offY)
     if (!page)
         return;
 
-    offX += cachedStyle->padding.left;
-    offY += cachedStyle->padding.top;
+    // during resize the page we currently show might be bigger than
+    // our area. To avoid drawing outside our area we clip
+    Region origClipRegion;
+    gfx->GetClip(&origClipRegion);
+    r.X += s->padding.left;
+    r.Y += s->padding.top;
+    r.Width  -= (s->padding.left + s->padding.right);
+    r.Height -= (s->padding.top  + s->padding.bottom);
+    gfx->SetClip(r, CombineModeReplace);
 
-    DrawPageLayout(gfx, &page->drawInstructions, (REAL)offX, (REAL)offY, IsDebugPaint());
+    DrawPageLayout(gfx, &page->drawInstructions, (REAL)r.X, (REAL)r.Y, IsDebugPaint());
+    gfx->SetClip(&origClipRegion, CombineModeReplace);
 }
 
 static void CreateStyles()
@@ -83,7 +91,7 @@ static void CreateStyles()
     styleMainWnd = new Style();
     styleMainWnd->Set(Prop::AllocColorSolid(PropBgColor, COLOR_SEPIA));
 
-    stylePage = new Style(gStyleDefault);
+    stylePage = new Style();
     stylePage->Set(Prop::AllocPadding(pageBorderY, pageBorderX, pageBorderY, pageBorderX));
     stylePage->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
 
@@ -99,12 +107,12 @@ static void CreateStyles()
     styleBtnNextPrevMouseOver = new Style(styleBtnNextPrevDefault);
     styleBtnNextPrevMouseOver->Set(Prop::AllocColorSolid(PropFill, "black"));
 
-    styleStatus = new Style();
+    styleStatus = new Style(gStyleButtonDefault);
     styleStatus->Set(Prop::AllocColorSolid(PropBgColor, COLOR_LIGHT_GRAY));
     styleStatus->Set(Prop::AllocColorSolid(PropColor, "black"));
     styleStatus->Set(Prop::AllocFontSize(8));
     styleStatus->Set(Prop::AllocFontWeight(FontStyleRegular));
-    styleStatus->Set(Prop::AllocPadding(2, 0, 2, 0));
+    styleStatus->Set(Prop::AllocPadding(3, 0, 3, 0));
     styleStatus->SetBorderWidth(0);
     styleStatus->Set(Prop::AllocTextAlign(Align_Center));
 
@@ -161,17 +169,17 @@ EbookControls *CreateEbookControls(HWND hwnd)
 
     ctrls->progress = new ScrollBar();
     ctrls->progress->hCursor = gCursorHand;
-    ctrls->progress->SetCurrentStyle(styleProgress, gStyleDefault);
+    ctrls->progress->SetStyle(styleProgress);
 
     ctrls->status = new Button(_T(""));
     ctrls->status->SetStyles(styleStatus, styleStatus);
 
     ctrls->page = new PageControl();
-    ctrls->page->SetCurrentStyle(stylePage, gStyleDefault);
+    ctrls->page->SetStyle(stylePage);
 
     ctrls->mainWnd = new HwndWrapper(hwnd);
     ctrls->mainWnd->SetMaxSize(Size(1024, 800));
-    ctrls->mainWnd->SetCurrentStyle(styleMainWnd, gStyleDefault);
+    ctrls->mainWnd->SetStyle(styleMainWnd);
 
     ctrls->mainWnd->AddChild(ctrls->next, ctrls->prev, ctrls->page);
     ctrls->mainWnd->AddChild(ctrls->progress, ctrls->status);

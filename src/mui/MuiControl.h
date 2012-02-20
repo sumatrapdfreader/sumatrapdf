@@ -89,7 +89,7 @@ public:
     // makes if fast to access them anywhere without repeating the work
     // of searching the style inheritance chain
     CachedStyle *   cachedStyle;
-    void            SetCurrentStyle(Style *style1, Style *style2);
+    void            SetStyle(Style *style);
 
     // only used by HwndWrapper but we need it here
     HWND            hwndParent;

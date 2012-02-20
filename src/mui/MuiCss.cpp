@@ -49,7 +49,16 @@ struct FontCacheEntry {
     }
 };
 
+// gStyleDefault is a fallback style. It contains a default
+// value for each possible property. If a property is not
+// found in a given style, we use the value from gStyleDefault
+// An app might modify gStyleDefault but it should be done
+// as a first thing to avoid stale props from caching (cache
+// will be correctly refreshed if Control::SetStyle() is called)
 Style *gStyleDefault = NULL;
+// gStyleButtonDefault and gStyleButtonMouseOver are default
+// button styles for convenience. The user must explicitly
+// use them in inheritance chain of their custom button styles
 Style *gStyleButtonDefault = NULL;
 Style *gStyleButtonMouseOver = NULL;
 
@@ -72,13 +81,13 @@ void Initialize()
 
     gAllProps = new VecSegmented<Prop>();
 
-    // gDefaults is the very basic set shared by everyone
+    // gStyleDefault must have values for all properties
     gStyleDefault = new Style();
     gStyleDefault->Set(Prop::AllocFontName(L"Times New Roman"));
     gStyleDefault->Set(Prop::AllocFontSize(14));
     gStyleDefault->Set(Prop::AllocFontWeight(FontStyleBold));
     gStyleDefault->Set(Prop::AllocColorSolid(PropColor, "black"));
-    //gDefaults->Set(Prop::AllocColorSolid(PropBgColor, 0xff, 0xff, 0xff));
+    //gStyleDefault->Set(Prop::AllocColorSolid(PropBgColor, 0xff, 0xff, 0xff));
 #if 0
     ARGB c1 = MKRGB(0x00, 0x00, 0x00);
     ARGB c2 = MKRGB(0xff, 0xff, 0xff);
@@ -478,13 +487,19 @@ void Style::SetBorderColor(ARGB color)
 
 static bool FoundAllProps(Prop **props)
 {
-    for (size_t i = 0; i < (int)PropsCount; i++) {
-        if (props[i] == NULL)
+    for (size_t i = 0; i < (size_t)PropsCount; i++) {
+        if (!props[i])
             return false;
     }
     return true;
 }
 
+// props points to the Prop* array whos size must be PropsCount.
+// This function is designed to be called multiple times with
+// different styles. It only sets a given property in props
+// array if it's not already set (it should be all NULLs the first
+// time).
+// As an optimization it returns true if we got all props
 static bool GetAllProps(Style *style, Prop **props)
 {
     while (style) {
@@ -504,14 +519,6 @@ static bool GetAllProps(Style *style, Prop **props)
     return false;
 }
 
-static void GetAllProps(Style *first, Style *second, Prop **props)
-{
-    if (GetAllProps(first, props))
-        return;
-    GetAllProps(second, props);
-    CrashIf(!FoundAllProps(props));
-}
-
 // convenience function: given cached style, get a Font object matching the font
 // properties.
 // Caller should not delete the font - it's cached for performance and deleted at exit
@@ -526,9 +533,12 @@ static size_t GetStyleId(Style *style) {
     return style->GetIdentity();
 }
 
-CachedStyle *CacheStyle(Style *style1, Style *style2)
+CachedStyle *CacheStyle(Style *style)
 {
     ScopedMuiCritSec muiCs;
+
+    Style *style1 = style;
+    Style *style2 = gStyleDefault;
 
     StyleCacheEntry *e;
     bool updateEntry = false;
@@ -544,7 +554,9 @@ CachedStyle *CacheStyle(Style *style1, Style *style2)
     }
 
     Prop* props[PropsCount] = { 0 };
-    GetAllProps(style1, style2, props);
+    if (!GetAllProps(style1, props))
+        GetAllProps(style2, props);
+    CrashIf(!FoundAllProps(props));
 
     CachedStyle s;
     s.fontName             = props[PropFontName]->fontName;

@@ -260,7 +260,7 @@ void   Destroy();
 
 Font * CachedFontFromCachedStyle(CachedStyle *s);
 
-CachedStyle* CacheStyle(Style *style1, Style *style2);
+CachedStyle* CacheStyle(Style *style);
 
 Brush *BrushFromColorData(ColorData *color, const Rect& r);
 Brush *BrushFromColorData(ColorData *color, const RectF& r);
