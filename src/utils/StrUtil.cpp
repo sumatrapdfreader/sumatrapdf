@@ -251,7 +251,7 @@ const char *FindI(const char *s, const char *find)
 // strings is an array of 0-separated strings consequitevely laid out
 // in memory. This functions find the position of str in this array,
 // -1 means not found. The search is case-insensitive
-int FindStrPos(const char *strings, const char *str, size_t len)
+int FindStrPosI(const char *strings, const char *str, size_t len)
 {
     const char *curr = strings;
     const char *end = str + len;
@@ -267,7 +267,42 @@ int FindStrPos(const char *strings, const char *str, size_t len)
         }
         const char *s = str;
         while (*curr && (s < end)) {
-            char c = tolower(*s++);
+            c = tolower(*s++);
+            if (c != *curr++)
+                goto Next;
+        }
+        if ((s == end) && (0 == *curr))
+            return n;
+Next:
+        while (*curr) {
+            ++curr;
+        }
+        ++curr;
+        ++n;
+    }
+    return -1;
+}
+
+// strings is an array of 0-separated strings consequitevely laid out
+// in memory. This functions find the position of str in this array,
+// -1 means not found. The search is case-sensitive
+int FindStrPos(const char *strings, const char *str, size_t len)
+{
+    const char *curr = strings;
+    const char *end = str + len;
+    char firstChar = *str;
+    int n = 0;
+    for (;;) {
+        // we're at the start of the next tag
+        char c = *curr;
+        if ((0 == c) || (c > firstChar)) {
+            // strings are sorted alphabetically, so we
+            // can quit if current str is > tastringg
+            return -1;
+        }
+        const char *s = str;
+        while (*curr && (s < end)) {
+            c = *s++;
             if (c != *curr++)
                 goto Next;
         }

@@ -160,7 +160,7 @@ static ARGB gCssKnownColorsValues[] = { MKRGB(0, 0, 0), MKRGB(0,0,255), MKRGB(12
 
 static bool GetKnownCssColor(const char *name, ARGB& colOut)
 {
-    int pos = str::FindStrPos(gCssKnownColorsStrings, name, str::Len(name));
+    int pos = str::FindStrPosI(gCssKnownColorsStrings, name, str::Len(name));
     if (-1 == pos)
         return false;
     colOut = gCssKnownColorsValues[pos];

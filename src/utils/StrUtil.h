@@ -93,6 +93,7 @@ inline const WCHAR * Find(const WCHAR *str, const WCHAR *find) {
 
 const char * FindI(const char *s, const char *find);
 
+int     FindStrPosI(const char *strings, const char *str, size_t len);
 int     FindStrPos(const char *strings, const char *str, size_t len);
 
 char *  FmtV(const char *fmt, va_list args);

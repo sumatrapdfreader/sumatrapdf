@@ -10,9 +10,9 @@
 // http://en.wikipedia.org/wiki/List_of_XML_and_HTML_character_entity_references
 // the order of strings in gHtmlEntityNames corresponds to
 // order of Unicode runes in gHtmlEntityRunes
-static const char *gHtmlEntityNames = "aacute\0aacute\0acirc\0acirc\0acute\0aelig\0aelig\0agrave\0agrave\0alefsym\0alpha\0alpha\0amp\0and\0ang\0apos\0aring\0aring\0asymp\0atilde\0atilde\0auml\0auml\0bdquo\0beta\0beta\0brvbar\0bull\0cap\0ccedil\0ccedil\0cedil\0cent\0chi\0chi\0circ\0clubs\0cong\0copy\0crarr\0cup\0curren\0dagger\0dagger\0darr\0darr\0deg\0delta\0delta\0diams\0divide\0eacute\0eacute\0ecirc\0ecirc\0egrave\0egrave\0empty\0emsp\0ensp\0epsilon\0epsilon\0equiv\0eta\0eta\0eth\0eth\0euml\0euml\0euro\0exist\0fnof\0forall\0frac12\0frac14\0frac34\0frasl\0gamma\0gamma\0ge\0gt\0harr\0harr\0hearts\0hellip\0iacute\0iacute\0icirc\0icirc\0iexcl\0igrave\0igrave\0image\0infin\0int\0iota\0iota\0iquest\0isin\0iuml\0iuml\0kappa\0kappa\0lambda\0lambda\0lang\0laquo\0larr\0larr\0lceil\0ldquo\0le\0lfloor\0lowast\0loz\0lrm\0lsaquo\0lsquo\0lt\0macr\0mdash\0micro\0middot\0minus\0mu\0mu\0nabla\0nbsp\0ndash\0ne\0ni\0not\0notin\0nsub\0ntilde\0ntilde\0nu\0nu\0oacute\0oacute\0ocirc\0ocirc\0oelig\0oelig\0ograve\0ograve\0oline\0omega\0omega\0omicron\0omicron\0oplus\0or\0ordf\0ordm\0oslash\0oslash\0otilde\0otilde\0otimes\0ouml\0ouml\0para\0part\0permil\0perp\0phi\0phi\0pi\0pi\0piv\0plusmn\0pound\0prime\0prime\0prod\0prop\0psi\0psi\0quot\0radic\0rang\0raquo\0rarr\0rarr\0rceil\0rdquo\0real\0reg\0rfloor\0rho\0rho\0rlm\0rsaquo\0rsquo\0sbquo\0scaron\0scaron\0sdot\0sect\0shy\0sigma\0sigma\0sigmaf\0sim\0spades\0sub\0sube\0sum\0sup\0sup1\0sup2\0sup3\0supe\0szlig\0tau\0tau\0there4\0theta\0theta\0thetasym\0thinsp\0thorn\0thorn\0tilde\0times\0trade\0uacute\0uacute\0uarr\0uarr\0ucirc\0ucirc\0ugrave\0ugrave\0uml\0upsih\0upsilon\0upsilon\0uuml\0uuml\0weierp\0xi\0xi\0yacute\0yacute\0yen\0yuml\0yuml\0zeta\0zeta\0zwj\0zwnj\0";
+static const char *gHtmlEntityNames = "AElig\0Aacute\0Acirc\0Agrave\0Alpha\0Aring\0Atilde\0Auml\0Beta\0Ccedil\0Chi\0Dagger\0Delta\0ETH\0Eacute\0Ecirc\0Egrave\0Epsilon\0Eta\0Euml\0Gamma\0Iacute\0Icirc\0Igrave\0Iota\0Iuml\0Kappa\0Lambda\0Mu\0Ntilde\0Nu\0OElig\0Oacute\0Ocirc\0Ograve\0Omega\0Omicron\0Oslash\0Otilde\0Ouml\0Phi\0Pi\0Prime\0Psi\0Rho\0Scaron\0Sigma\0THORN\0Tau\0Theta\0Uacute\0Ucirc\0Ugrave\0Upsilon\0Uuml\0Xi\0Yacute\0Yuml\0Zeta\0aacute\0acirc\0acute\0aelig\0agrave\0alefsym\0alpha\0amp\0and\0ang\0apos\0aring\0asymp\0atilde\0auml\0bdquo\0beta\0brvbar\0bull\0cap\0ccedil\0cedil\0cent\0chi\0circ\0clubs\0cong\0copy\0crarr\0cup\0curren\0dArr\0dagger\0darr\0deg\0delta\0diams\0divide\0eacute\0ecirc\0egrave\0empty\0emsp\0ensp\0epsilon\0equiv\0eta\0eth\0euml\0euro\0exist\0fnof\0forall\0frac12\0frac14\0frac34\0frasl\0gamma\0ge\0gt\0hArr\0harr\0hearts\0hellip\0iacute\0icirc\0iexcl\0igrave\0image\0infin\0int\0iota\0iquest\0isin\0iuml\0kappa\0lArr\0lambda\0lang\0laquo\0larr\0lceil\0ldquo\0le\0lfloor\0lowast\0loz\0lrm\0lsaquo\0lsquo\0lt\0macr\0mdash\0micro\0middot\0minus\0mu\0nabla\0nbsp\0ndash\0ne\0ni\0not\0notin\0nsub\0ntilde\0nu\0oacute\0ocirc\0oelig\0ograve\0oline\0omega\0omicron\0oplus\0or\0ordf\0ordm\0oslash\0otilde\0otimes\0ouml\0para\0part\0permil\0perp\0phi\0pi\0piv\0plusmn\0pound\0prime\0prod\0prop\0psi\0quot\0rArr\0radic\0rang\0raquo\0rarr\0rceil\0rdquo\0real\0reg\0rfloor\0rho\0rlm\0rsaquo\0rsquo\0sbquo\0scaron\0sdot\0sect\0shy\0sigma\0sigmaf\0sim\0spades\0sub\0sube\0sum\0sup\0sup1\0sup2\0sup3\0supe\0szlig\0tau\0there4\0theta\0thetasym\0thinsp\0thorn\0tilde\0times\0trade\0uArr\0uacute\0uarr\0ucirc\0ugrave\0uml\0upsih\0upsilon\0uuml\0weierp\0xi\0yacute\0yen\0yuml\0zeta\0zwj\0zwnj\0";
 
-static uint16 gHtmlEntityRunes[] = { 193, 225, 194, 226, 180, 198, 230, 192, 224, 8501, 913, 945, 38, 8743, 8736, 39, 197, 229, 8776, 195, 227, 196, 228, 8222, 914, 946, 166, 8226, 8745, 199, 231, 184, 162, 935, 967, 710, 9827, 8773, 169, 8629, 8746, 164, 8224, 8225, 8595, 8659, 176, 916, 948, 9830, 247, 201, 233, 202, 234, 200, 232, 8709, 8195, 8194, 917, 949, 8801, 919, 951, 208, 240, 203, 235, 8364, 8707, 402, 8704, 189, 188, 190, 8260, 915, 947, 8805, 62, 8596, 8660, 9829, 8230, 205, 237, 206, 238, 161, 204, 236, 8465, 8734, 8747, 921, 953, 191, 8712, 207, 239, 922, 954, 923, 955, 9001, 171, 8592, 8656, 8968, 8220, 8804, 8970, 8727, 9674, 8206, 8249, 8216, 60, 175, 8212, 181, 183, 8722, 924, 956, 8711, 160, 8211, 8800, 8715, 172, 8713, 8836, 209, 241, 925, 957, 211, 243, 212, 244, 338, 339, 210, 242, 8254, 937, 969, 927, 959, 8853, 8744, 170, 186, 216, 248, 213, 245, 8855, 214, 246, 182, 8706, 8240, 8869, 934, 966, 928, 960, 982, 177, 163, 8242, 8243, 8719, 8733, 936, 968, 34, 8730, 9002, 187, 8594, 8658, 8969, 8221, 8476, 174, 8971, 929, 961, 8207, 8250, 8217, 8218, 352, 353, 8901, 167, 173, 931, 963, 962, 8764, 9824, 8834, 8838, 8721, 8835, 185, 178, 179, 8839, 223, 932, 964, 8756, 920, 952, 977, 8201, 222, 254, 732, 215, 8482, 218, 250, 8593, 8657, 219, 251, 217, 249, 168, 978, 933, 965, 220, 252, 8472, 926, 958, 221, 253, 165, 255, 376, 918, 950, 8205, 8204 };
+static uint16 gHtmlEntityRunes[] = { 198, 193, 194, 192, 913, 197, 195, 196, 914, 199, 935, 8225, 916, 208, 201, 202, 200, 917, 919, 203, 915, 205, 206, 204, 921, 207, 922, 923, 924, 209, 925, 338, 211, 212, 210, 937, 927, 216, 213, 214, 934, 928, 8243, 936, 929, 352, 931, 222, 932, 920, 218, 219, 217, 933, 220, 926, 221, 376, 918, 225, 226, 180, 230, 224, 8501, 945, 38, 8743, 8736, 39, 229, 8776, 227, 228, 8222, 946, 166, 8226, 8745, 231, 184, 162, 967, 710, 9827, 8773, 169, 8629, 8746, 164, 8659, 8224, 8595, 176, 948, 9830, 247, 233, 234, 232, 8709, 8195, 8194, 949, 8801, 951, 240, 235, 8364, 8707, 402, 8704, 189, 188, 190, 8260, 947, 8805, 62, 8660, 8596, 9829, 8230, 237, 238, 161, 236, 8465, 8734, 8747, 953, 191, 8712, 239, 954, 8656, 955, 9001, 171, 8592, 8968, 8220, 8804, 8970, 8727, 9674, 8206, 8249, 8216, 60, 175, 8212, 181, 183, 8722, 956, 8711, 160, 8211, 8800, 8715, 172, 8713, 8836, 241, 957, 243, 244, 339, 242, 8254, 969, 959, 8853, 8744, 170, 186, 248, 245, 8855, 246, 182, 8706, 8240, 8869, 966, 960, 982, 177, 163, 8242, 8719, 8733, 968, 34, 8658, 8730, 9002, 187, 8594, 8969, 8221, 8476, 174, 8971, 961, 8207, 8250, 8217, 8218, 353, 8901, 167, 173, 963, 962, 8764, 9824, 8834, 8838, 8721, 8835, 185, 178, 179, 8839, 223, 964, 8756, 952, 977, 8201, 254, 732, 215, 8482, 8657, 250, 8593, 251, 249, 168, 978, 965, 252, 8472, 958, 253, 165, 255, 950, 8205, 8204 };
 
 // returns -1 if didn't find
 static int HtmlEntityNameToRune(const char *name, size_t nameLen)
@@ -346,17 +346,17 @@ Next:
 
 HtmlTag FindTag(HtmlToken *tok)
 {
-    return (HtmlTag)str::FindStrPos(HTML_TAGS_STRINGS, tok->s, GetTagLen(tok));
+    return (HtmlTag)str::FindStrPosI(HTML_TAGS_STRINGS, tok->s, GetTagLen(tok));
 }
 
 HtmlAttr FindAttr(AttrInfo *attrInfo)
 {
-    return (HtmlAttr)str::FindStrPos(HTML_ATTRS_STRINGS, attrInfo->name, attrInfo->nameLen);
+    return (HtmlAttr)str::FindStrPosI(HTML_ATTRS_STRINGS, attrInfo->name, attrInfo->nameLen);
 }
 
 AlignAttr FindAlignAttr(const char *attr, size_t len)
 {
-    return (AlignAttr)str::FindStrPos(ALIGN_ATTRS_STRINGS, attr, len);
+    return (AlignAttr)str::FindStrPosI(ALIGN_ATTRS_STRINGS, attr, len);
 }
 
 bool IsSelfClosingTag(HtmlTag tag)
@@ -511,8 +511,10 @@ static void HtmlEntities()
     struct {
         const char *s; int rune;
     } entities[] = {
-        { "&TIMES;", 215 },
-        { "&aelig;", 198 },
+        { "&Uuml;", 220 },
+        { "&uuml;", 252 },
+        { "&times;", 215 },
+        { "&AElig;", 198 },
         { "&zwnj;", 8204 },
         { "&58;", 58 },
         { "&32783;", 32783 },

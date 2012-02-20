@@ -90,7 +90,7 @@ static ARGB gCssKnownColorsValues[] = { %s };
 
 static bool GetKnownCssColor(const char *name, ARGB& colOut)
 {
-    int pos = str::FindStrPos(gCssKnownColorsStrings, name, str::Len(name));
+    int pos = str::FindStrPosI(gCssKnownColorsStrings, name, str::Len(name));
     if (-1 == pos)
         return false;
     colOut = gCssKnownColorsValues[pos];
@@ -132,8 +132,7 @@ static int HtmlEntityNameToRune(const char *name, size_t nameLen)
 """
 
 def gen_html_entities():
-    # lower-case the names of html entities
-    ent = [[v[0].lower(), v[1]] for v in html_entities]
+    ent = html_entities
     # sort by entity names
     ent.sort(key=lambda a: a[0])
     names = [v[0] for v in ent]
@@ -161,54 +160,19 @@ enum AlignAttr {
 };
 #define ALIGN_ATTRS_STRINGS "%s"
 
-// strings is an array of 0-separated strings consequitevely laid out
-// in memory. This functions find the position of str in this array,
-// -1 means not found. The search is case-insensitive
-static int FindStrPos(const char *strings, char *str, size_t len)
-{
-    const char *curr = strings;
-    char *end = str + len;
-    char firstChar = tolower(*str);
-    int n = 0;
-    for (;;) {
-        // we're at the start of the next tag
-        char c = *curr;
-        if ((0 == c) || (c > firstChar)) {
-            // strings are sorted alphabetically, so we
-            // can quit if current str is > tastringg
-            return -1;
-        }
-        char *s = str;
-        while (*curr && (s < end)) {
-            char c = tolower(*s++);
-            if (c != *curr++)
-                goto Next;
-        }
-        if ((s == end) && (0 == *curr))
-            return n;
-Next:
-        while (*curr) {
-            ++curr;
-        }
-        ++curr;
-        ++n;
-    }
-    return -1;
-}
-
 HtmlTag FindTag(char *tag, size_t len)
 {
-    return (HtmlTag)FindStrPos(HTML_TAGS_STRINGS, tag, len);
+    return (HtmlTag)FindStrPosI(HTML_TAGS_STRINGS, tag, len);
 }
 
 static HtmlAttr FindAttr(char *attr, size_t len)
 {
-    return (HtmlAttr)FindStrPos(HTML_ATTRS_STRINGS, attr, len);
+    return (HtmlAttr)FindStrPosI(HTML_ATTRS_STRINGS, attr, len);
 }
 
 static AlignAttr FindAlignAttr(char *attr, size_t len)
 {
-    return (AlignAttr)FindStrPos(ALIGN_ATTRS_STRINGS, attr, len);
+    return (AlignAttr)FindStrPosI(ALIGN_ATTRS_STRINGS, attr, len);
 }
 """
 
