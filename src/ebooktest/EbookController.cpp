@@ -133,7 +133,7 @@ EbookController::EbookController(EbookControls *ctrls) : ctrls(ctrls)
 
     ctrls->mainWnd->evtMgr->RegisterClicked(ctrls->next, this);
     ctrls->mainWnd->evtMgr->RegisterClicked(ctrls->prev, this);
-    ctrls->mainWnd->evtMgr->RegisterClicked(ctrls->horizProgress, this);
+    ctrls->mainWnd->evtMgr->RegisterClicked(ctrls->progress, this);
     ctrls->mainWnd->evtMgr->RegisterSizeChanged(ctrls->page, this);
 }
 
@@ -261,8 +261,8 @@ void EbookController::Clicked(Control *c, int x, int y)
         return;
     }
 
-    if (c == ctrls->horizProgress) {
-        float perc = ctrls->horizProgress->GetPercAt(x);
+    if (c == ctrls->progress) {
+        float perc = ctrls->progress->GetPercAt(x);
         if (pages) {
             int pageCount = pages->Count();
             int pageNo = IntFromPerc(pageCount, perc);
@@ -278,13 +278,13 @@ void EbookController::SetStatusText() const
 {
     if (!pages) {
         ctrls->status->SetText(_T(" "));
-        ctrls->horizProgress->SetFilled(0.f);
+        ctrls->progress->SetFilled(0.f);
         return;
     }
     size_t pageCount = pages->Count();
     ScopedMem<TCHAR> s(str::Format(_T("Page %d out of %d"), currPageNo, (int)pageCount));
     ctrls->status->SetText(s.Get());
-    ctrls->horizProgress->SetFilled(PercFromInt(pageCount, currPageNo));
+    ctrls->progress->SetFilled(PercFromInt(pageCount, currPageNo));
 }
 
 void EbookController::SetPage(int newPageNo)

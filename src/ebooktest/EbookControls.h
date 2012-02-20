@@ -16,7 +16,7 @@ struct EbookControls {
     PageControl *   page;
     ButtonVector *  next;
     ButtonVector *  prev;
-    ScrollBar *     horizProgress;
+    ScrollBar *     progress;
     Button *        status;
 };
 

@@ -6,12 +6,17 @@
 #include "PageLayout.h"
 #include "SvgPath.h"
 
-static Style *   ebookDefault = NULL;
-static Style *   statusDefault = NULL;
-static Style *   horizProgressDefault = NULL;
-static Style *   nextDefault = NULL;
-static Style *   nextMouseOver = NULL;
+static Style *   styleMainWnd = NULL;
+static Style *   stylePage = NULL;
+static Style *   styleStatus = NULL;
+static Style *   styleProgress = NULL;
+static Style *   styleBtnNextPrevDefault = NULL;
+static Style *   styleBtnNextPrevMouseOver = NULL;
 static HCURSOR   gCursorHand = NULL;
+
+#define COLOR_SEPIA         "FBF0D9"
+#define COLOR_LIGHT_BLUE    "64C7EF"
+#define COLOR_LIGHT_GRAY    "F0F0F0"
 
 static Rect RectForCircle(int x, int y, int r)
 {
@@ -56,6 +61,11 @@ void PageControl::Paint(Graphics *gfx, int offX, int offY)
     }
 #endif
 
+    CachedStyle *s = cachedStyle;
+    Rect r(offX, offY, pos.Width, pos.Height);
+    Brush *br = BrushFromColorData(s->bgColor, r);
+    gfx->FillRectangle(br, r);
+
     if (!page)
         return;
 
@@ -67,45 +77,50 @@ void PageControl::Paint(Graphics *gfx, int offX, int offY)
 
 static void CreateStyles()
 {
-    const int pageBorderX = 10;
-    const int pageBorderY = 10;
+    const int pageBorderX = 16;
+    const int pageBorderY = 32;
 
-    ebookDefault = new Style();
-    ebookDefault->Set(Prop::AllocPadding(pageBorderY, pageBorderX, pageBorderY, pageBorderX));
+    styleMainWnd = new Style();
+    styleMainWnd->Set(Prop::AllocColorSolid(PropBgColor, COLOR_SEPIA));
 
-    nextDefault = new Style(gStyleButtonDefault);
-    nextDefault->SetBorderWidth(0.f);
-    //nextDefault->Set(Prop::AllocPadding(1, 1, 1, 4));
-    nextDefault->Set(Prop::AllocPadding(0, 8, 0, 8));
-    nextDefault->Set(Prop::AllocWidth(PropStrokeWidth, 0.f));
-    nextDefault->Set(Prop::AllocColorSolid(PropFill, "gray"));
-    nextDefault->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
-    nextDefault->Set(Prop::AllocAlign(PropVertAlign, ElAlignCenter));
+    stylePage = new Style(gStyleDefault);
+    stylePage->Set(Prop::AllocPadding(pageBorderY, pageBorderX, pageBorderY, pageBorderX));
+    stylePage->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
 
-    nextMouseOver = new Style(nextDefault);
-    nextMouseOver->Set(Prop::AllocColorSolid(PropFill, "black"));
+    styleBtnNextPrevDefault = new Style(gStyleButtonDefault);
+    styleBtnNextPrevDefault->SetBorderWidth(0.f);
+    //styleBtnNextPrevDefault->Set(Prop::AllocPadding(1, 1, 1, 4));
+    styleBtnNextPrevDefault->Set(Prop::AllocPadding(0, 8, 0, 8));
+    styleBtnNextPrevDefault->Set(Prop::AllocWidth(PropStrokeWidth, 0.f));
+    styleBtnNextPrevDefault->Set(Prop::AllocColorSolid(PropFill, "gray"));
+    styleBtnNextPrevDefault->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
+    styleBtnNextPrevDefault->Set(Prop::AllocAlign(PropVertAlign, ElAlignCenter));
 
-    statusDefault = new Style();
-    statusDefault->Set(Prop::AllocColorSolid(PropBgColor, "white"));
-    statusDefault->Set(Prop::AllocColorSolid(PropColor, "black"));
-    statusDefault->Set(Prop::AllocFontSize(8));
-    statusDefault->Set(Prop::AllocFontWeight(FontStyleRegular));
-    statusDefault->Set(Prop::AllocPadding(2, 0, 2, 0));
-    statusDefault->SetBorderWidth(0);
-    statusDefault->Set(Prop::AllocTextAlign(Align_Center));
+    styleBtnNextPrevMouseOver = new Style(styleBtnNextPrevDefault);
+    styleBtnNextPrevMouseOver->Set(Prop::AllocColorSolid(PropFill, "black"));
 
-    horizProgressDefault = new Style();
-    horizProgressDefault->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
-    horizProgressDefault->Set(Prop::AllocColorSolid(PropColor, "yellow"));
+    styleStatus = new Style();
+    styleStatus->Set(Prop::AllocColorSolid(PropBgColor, COLOR_LIGHT_GRAY));
+    styleStatus->Set(Prop::AllocColorSolid(PropColor, "black"));
+    styleStatus->Set(Prop::AllocFontSize(8));
+    styleStatus->Set(Prop::AllocFontWeight(FontStyleRegular));
+    styleStatus->Set(Prop::AllocPadding(2, 0, 2, 0));
+    styleStatus->SetBorderWidth(0);
+    styleStatus->Set(Prop::AllocTextAlign(Align_Center));
+
+    styleProgress = new Style();
+    styleProgress->Set(Prop::AllocColorSolid(PropBgColor, COLOR_LIGHT_GRAY));
+    styleProgress->Set(Prop::AllocColorSolid(PropColor, COLOR_LIGHT_BLUE));
 }
 
 static void DeleteStyles()
 {
-    delete statusDefault;
-    delete nextDefault;
-    delete nextMouseOver;
-    delete ebookDefault;
-    delete horizProgressDefault;
+    delete styleStatus;
+    delete styleBtnNextPrevDefault;
+    delete styleBtnNextPrevMouseOver;
+    delete stylePage;
+    delete styleProgress;
+    delete styleMainWnd;
 }
 
 static void CreateLayout(EbookControls *ctrls)
@@ -122,7 +137,7 @@ static void CreateLayout(EbookControls *ctrls)
     VerticalLayout *l = new VerticalLayout();
     ld.Set(topPart, 1.f, 1.f, GetElAlignTop());
     l->Add(ld, true);
-    ld.Set(ctrls->horizProgress, SizeSelf, 1.f, GetElAlignCenter());
+    ld.Set(ctrls->progress, SizeSelf, 1.f, GetElAlignCenter());
     l->Add(ld);
     ld.Set(ctrls->status, SizeSelf, 1.f, GetElAlignCenter());
     l->Add(ld);
@@ -139,27 +154,27 @@ EbookControls *CreateEbookControls(HWND hwnd)
     EbookControls *ctrls = new EbookControls;
 
     ctrls->next = new ButtonVector(svg::GraphicsPathFromPathData("M0 0  L10 13 L0 ,26 Z"));
-    ctrls->next->SetStyles(nextDefault, nextMouseOver);
+    ctrls->next->SetStyles(styleBtnNextPrevDefault, styleBtnNextPrevMouseOver);
 
     ctrls->prev = new ButtonVector(svg::GraphicsPathFromPathData("M10 0 L0,  13 L10 26 z"));
-    ctrls->prev->SetStyles(nextDefault, nextMouseOver);
+    ctrls->prev->SetStyles(styleBtnNextPrevDefault, styleBtnNextPrevMouseOver);
 
-    ctrls->horizProgress = new ScrollBar();
-    ctrls->horizProgress->hCursor = gCursorHand;
-    ctrls->horizProgress->SetCurrentStyle(horizProgressDefault, gStyleDefault);
+    ctrls->progress = new ScrollBar();
+    ctrls->progress->hCursor = gCursorHand;
+    ctrls->progress->SetCurrentStyle(styleProgress, gStyleDefault);
 
     ctrls->status = new Button(_T(""));
-    ctrls->status->SetStyles(statusDefault, statusDefault);
+    ctrls->status->SetStyles(styleStatus, styleStatus);
 
     ctrls->page = new PageControl();
-    ctrls->page->SetCurrentStyle(ebookDefault, gStyleDefault);
+    ctrls->page->SetCurrentStyle(stylePage, gStyleDefault);
 
     ctrls->mainWnd = new HwndWrapper(hwnd);
-    ctrls->mainWnd->SetMinSize(Size(320, 200));
     ctrls->mainWnd->SetMaxSize(Size(1024, 800));
+    ctrls->mainWnd->SetCurrentStyle(styleMainWnd, gStyleDefault);
 
     ctrls->mainWnd->AddChild(ctrls->next, ctrls->prev, ctrls->page);
-    ctrls->mainWnd->AddChild(ctrls->horizProgress, ctrls->status);
+    ctrls->mainWnd->AddChild(ctrls->progress, ctrls->status);
     CreateLayout(ctrls);
     return ctrls;
 }
