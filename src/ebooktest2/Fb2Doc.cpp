@@ -153,12 +153,10 @@ bool Fb2DocImpl::Load()
         }
         else if (tok->IsEmptyElementEndTag()) {
             if (tok->NameIs("image")) {
-                AttrInfo *attrInfo;
-                while ((attrInfo = tok->NextAttr())) {
-                    if (attrInfo->NameIs("xlink:href")) {
-                        ScopedMem<char> link(str::DupN(attrInfo->val, attrInfo->valLen));
-                        htmlData.AppendFmt("<img src=\"%s\">", link);
-                    }
+                AttrInfo *attrInfo = tok->GetAttrByName("xlink:href");
+                if (attrInfo) {
+                    ScopedMem<char> link(str::DupN(attrInfo->val, attrInfo->valLen));
+                    htmlData.AppendFmt("<img src=\"%s\">", link);
                 }
             }
             else if (tok->NameIs("empty-line")) {
@@ -215,11 +213,9 @@ char *Base64Decode(const char *s, const char *end, size_t *len)
 void Fb2DocImpl::ExtractImage(HtmlPullParser& parser, HtmlToken *tok)
 {
     ScopedMem<char> id;
-    AttrInfo *attrInfo;
-    while ((attrInfo = tok->NextAttr())) {
-        if (attrInfo->NameIs("id"))
-            id.Set(str::DupN(attrInfo->val, attrInfo->valLen));
-    }
+    AttrInfo *attrInfo = tok->GetAttrByName("id");
+    if (attrInfo)
+        id.Set(str::DupN(attrInfo->val, attrInfo->valLen));
 
     tok = parser.Next();
     if (!tok || !tok->IsText())

@@ -323,6 +323,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 #endif
     SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
 
+#ifdef DEBUG
+    extern void HtmlPullParser_UnitTests();
+    HtmlPullParser_UnitTests();
+#endif
+
     ScopedCom com;
     InitAllCommonControls();
     ScopedGdiPlus gdi;

@@ -398,11 +398,9 @@ void PageLayout::HandleHtmlTag(HtmlToken *t, BaseEbookDoc *doc)
         StartNewLine(true);
         currJustification = Align_Justify;
         if (t->IsStartTag()) {
-            AttrInfo *attrInfo;
-            while ((attrInfo = t->NextAttr())) {
-                if (attrInfo->NameIs("align"))
-                    currJustification = FindAlignAttr(attrInfo->val, attrInfo->valLen);
-            }
+            AttrInfo *attrInfo = t->GetAttrByName("align");
+            if (attrInfo)
+                currJustification = FindAlignAttr(attrInfo->val, attrInfo->valLen);
         }
         break;
     case Tag_Hr:
@@ -428,14 +426,14 @@ void PageLayout::HandleHtmlTag(HtmlToken *t, BaseEbookDoc *doc)
         if (t->IsEndTag())
             /* shouldn't happen, but does */;
         else if (doc) {
-            AttrInfo *attrInfo;
-            while ((attrInfo = t->NextAttr())) {
-                if (attrInfo->NameIs("src") || attrInfo->NameIs("recindex")) {
-                    ScopedMem<char> id(str::DupN(attrInfo->val, attrInfo->valLen));
-                    ImageData2 *data = doc->GetImageData(id);
-                    if (data)
-                        AddImage(data);
-                }
+            AttrInfo *attrInfo = t->GetAttrByName("src");
+            if (!attrInfo)
+                attrInfo = t->GetAttrByName("recindex");
+            if (attrInfo) {
+                ScopedMem<char> id(str::DupN(attrInfo->val, attrInfo->valLen));
+                ImageData2 *data = doc->GetImageData(id);
+                if (data)
+                    AddImage(data);
             }
         }
         else

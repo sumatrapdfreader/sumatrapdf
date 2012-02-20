@@ -495,16 +495,13 @@ static void Test00(const char *s, HtmlToken::TokenType expectedType = HtmlToken:
     assert(a->NameIs("a1"));
     assert(a->ValIs(">"));
 
-#if 0
-    a = t->NextAttr();
-    assert(a->NameIs("a1"));
-    assert(a->ValIs(">"));
-    a = t->NextAttr();
+    a = t->GetAttrByName("foo");
     assert(a->NameIs("foo"));
     assert(a->ValIs("bar"));
-    a = t->NextAttr();
+
+    a = t->GetAttrByName("nope");
     assert(!a);
-#endif
+
     t = parser.Next();
     assert(!t);
 }
