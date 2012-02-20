@@ -532,7 +532,10 @@ static bool IsEmptyPage(PageData *p)
     for (i = p->drawInstructions.IterStart(); i; i = p->drawInstructions.IterNext()) {
         switch (i->type) {
             case InstrTypeSetFont:
-                // those are "invisible" instruction
+            case InstrTypeLine:
+                // those are "invisible" instruction. I consider a line invisible
+                // (which is different to what Kindel app does), but a page
+                // with just lines is not very interesting
                 break;
             default:
                 return false;
@@ -551,11 +554,14 @@ PageData *PageLayout::IterNext()
 {
     for (;;)
     {
-        // first send out all pages accumulated so far
-        if (pagesToSend.Count() > 0) {
+        // send out all pages accumulated so far
+        while (pagesToSend.Count() > 0) {
             PageData *ret = pagesToSend.At(0);
             pagesToSend.RemoveAt(0);
-            return ret;
+            if (!IsEmptyPage(ret))
+                return ret;
+            else
+                delete ret;
         }
         // we can call ourselves recursively to send outstanding
         // pages after parsing has finished so this is to detect
@@ -574,11 +580,7 @@ PageData *PageLayout::IterNext()
     // force layout of the last line
     StartNewLine(true);
 
-    // only send the last page if not empty
-    if (IsEmptyPage(currPage))
-        delete currPage;
-    else
-        pagesToSend.Append(currPage);
+    pagesToSend.Append(currPage);
     currPage = NULL;
     // call ourselves recursively to return accumulated pages
     finishedParsing = true;
