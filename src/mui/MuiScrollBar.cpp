@@ -75,7 +75,11 @@ void ScrollBar::Paint(Graphics *gfx, int offX, int offY)
     // TODO: take padding into account
     CachedStyle *s = cachedStyle;
 
-    Rect r(offX, offY, pos.Width, pos.Height);
+    int dy = inactiveDy;
+    if (IsMouseOver())
+        dy = onOverDy;
+
+    Rect r(offX, offY + pos.Height - dy, pos.Width, dy);
     Brush *br = BrushFromColorData(s->bgColor, r);
     gfx->FillRectangle(br, r);
 
@@ -84,12 +88,6 @@ void ScrollBar::Paint(Graphics *gfx, int offX, int offY)
         return;
 
     r.Width = filledDx;
-    int dy = inactiveDy;
-    if (IsMouseOver())
-        dy = onOverDy;
-
-    r.Y += (r.Height - dy);
-    r.Height = dy;
     br = BrushFromColorData(s->color, r);
     gfx->FillRectangle(br, r);
 }
