@@ -169,6 +169,7 @@ PageData *PageLayout::IterStart(LayoutInfo* layoutInfo)
     pageDy = (REAL)layoutInfo->pageDy;
     pageSize.dx = pageDx;
     pageSize.dy = pageDy;
+    textAllocator = layoutInfo->textAllocator;
 
     CrashIf(gfx);
     gfx = mui::AllocGraphicsForMeasureText();
@@ -297,6 +298,7 @@ void PageLayout::StartNewLine(bool isParagraphBreak)
         StartNewPage();
 }
 
+#if 0
 struct KnownAttrInfo {
     HtmlAttr        attr;
     const char *    val;
@@ -312,7 +314,6 @@ static bool IsAllowedAttribute(HtmlAttr* allowedAttributes, HtmlAttr attr)
     return false;
 }
 
-#if 0
 static void GetKnownAttributes(HtmlToken *t, HtmlAttr *allowedAttributes, Vec<KnownAttrInfo> *out)
 {
     out->Reset();
@@ -376,7 +377,7 @@ void PageLayout::AddWord(WordInfo *wi)
     // end up on another page (which isn't really a problem, because all pages and
     // their allocators are freed at the same time, but still it would be better
     // to only have one allocator per PageLayout process)
-    const char *s = ResolveHtmlEntities(wi->s, wi->s + wi->len, &currPage->text);
+    const char *s = ResolveHtmlEntities(wi->s, wi->s + wi->len, textAllocator);
     size_t len = wi->len;
     if (s != wi->s)
         len = str::Len(s);
@@ -440,7 +441,7 @@ static bool IgnoreTag(const char *s, size_t sLen)
 
 void PageLayout::HandleHtmlTag(HtmlToken *t)
 {
-    Vec<KnownAttrInfo> attrs;
+    //Vec<KnownAttrInfo> attrs;
     CrashAlwaysIf(!t->IsTag());
 
     // HtmlToken string includes potential attributes,

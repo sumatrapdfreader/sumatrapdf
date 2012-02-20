@@ -72,12 +72,6 @@ struct LayoutState {
 struct PageData {
     Vec<DrawInstr>  drawInstructions;
 
-    /* Most of the time string DrawInstr point to original html text
-       that is read-only and outlives us. Sometimes (e.g. when resolving
-       html entities) we need a modified text. This allocator is
-       used to allocate this text. */
-    PoolAllocator  text;
-
     /* layoutState at the beginning of this page. It allows us to
        re-do layout starting exactly where this page starts, which
        is needed when handling resizing */
@@ -96,7 +90,7 @@ class LayoutInfo {
 public:
     LayoutInfo() :
       pageDx(0), pageDy(0), fontName(NULL), fontSize(0),
-      htmlStr(0), htmlStrLen(0)
+      textAllocator(NULL), htmlStr(0), htmlStrLen(0)
     {
     }
 
@@ -105,6 +99,12 @@ public:
 
     const WCHAR *   fontName;
     float           fontSize;
+
+    /* Most of the time string DrawInstr point to original html text
+       that is read-only and outlives us. Sometimes (e.g. when resolving
+       html entities) we need a modified text. This allocator is
+       used to allocate this text. */
+    Allocator *     textAllocator;
 
     const char *    htmlStr;
     size_t          htmlStrLen;
@@ -168,6 +168,7 @@ private:
     Graphics *          gfx; // for measuring text
     ScopedMem<WCHAR>    fontName;
     float               fontSize;
+    Allocator *         textAllocator;
 
     // temporary state during layout process
     FontStyle           currFontStyle;

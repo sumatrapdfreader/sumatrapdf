@@ -24,6 +24,8 @@ class EbookController : public IClicked, ISizeChanged
     MobiDoc *       mobiDoc;
     const char *    html;
 
+    // TODO: this should be recycled along with pages
+    PoolAllocator   textAllocator;
     Vec<PageData*>* pages;
     int             currPageNo; // within pages
     int             pageDx, pageDy; // size of the page for which pages was generated

@@ -57,6 +57,7 @@ public:
     TCHAR *             fontName;  // we own it
     int                 pageDx, pageDy;
     float               fontSize;
+    PoolAllocator *     textAllocator;
     MobiDoc *           mobiDoc;
     EbookController *   controller;
 
@@ -93,6 +94,7 @@ void ThreadLayoutMobi::Run()
     li.fontSize = fontSize;
     li.pageDx = pageDx;
     li.pageDy = pageDy;
+    li.textAllocator = textAllocator;
     li.htmlStr = mobiDoc->GetBookHtmlData(li.htmlStrLen);
 
     l("Started laying out mob");
@@ -152,7 +154,7 @@ void EbookController::DeletePages()
     pages = NULL;
 }
 
-static LayoutInfo *GetLayoutInfo(const char *html, MobiDoc *mb, int dx, int dy)
+static LayoutInfo *GetLayoutInfo(const char *html, MobiDoc *mb, int dx, int dy, PoolAllocator *textAllocator)
 {
     LayoutInfo *li = new LayoutInfo();
 
@@ -168,13 +170,14 @@ static LayoutInfo *GetLayoutInfo(const char *html, MobiDoc *mb, int dx, int dy)
     li->htmlStrLen = len;
     li->pageDx = dx;
     li->pageDy = dy;
+    li->textAllocator = textAllocator;
     return li;
 }
 
 // a special-case: html is just for testing so we don't do it on a thread
 void EbookController::LayoutHtml(int dx, int dy)
 {
-    LayoutInfo *li = GetLayoutInfo(html, NULL, dx, dy);
+    LayoutInfo *li = GetLayoutInfo(html, NULL, dx, dy, &textAllocator);
     Vec<PageData*> *htmlPages = ::LayoutHtml(li);
     delete li;
     pageDx = dx;
@@ -231,6 +234,7 @@ void EbookController::TriggerLayout()
     layoutThread->mobiDoc = mobiDoc;
     layoutThread->pageDx = dx;
     layoutThread->pageDy = dy;
+    layoutThread->textAllocator = &textAllocator;
     layoutThread->Start();
     ctrls->status->SetText(_T("Please wait, laying out the text"));
 }
