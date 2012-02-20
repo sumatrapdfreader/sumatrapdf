@@ -223,6 +223,9 @@ Bookmarks
 Bytes
 بايت
 
+CHM documents
+ملفات CHM
+
 Can't connect to the Internet (error %#x).
 لم يتم التمكن من الإتصال بالإنترنت (%#x خطأ).
 
@@ -255,6 +258,9 @@ Continuous Facing
 
 Contribute Translation
 ساهم في ترجمة البرنامج
+
+Copy &Image
+نسخ الصورة
 
 Copy &Link Address
 نسخ &رابط العنوان
@@ -339,6 +345,9 @@ Failed to save a file
 
 Favorites
 المفضلة
+
+File %s not found
+الملف %s غير موجود
 
 File Size:
 حجم الملف
@@ -666,9 +675,4 @@ copying text
 
 printing document
 تتم حالياً الطباعة
-
-# Untranslated:
-#CHM documents
-#Copy &Image
-#File %s not found
 
