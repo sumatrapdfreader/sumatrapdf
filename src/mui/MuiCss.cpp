@@ -168,8 +168,8 @@ static bool GetKnownCssColor(const char *name, ARGB& colOut)
 }
 
 // Parses css-like color formats:
-// #rgb, #rrggbb, #aarrggbb, rgb(r,g,b), rgba(r,g,b,a)
-// rgb(r%, g%, b%), rgba(r%, g%, b%, a%)
+// rrggbb, #rrggbb, #aarrggbb, #rgb
+// rgb(r,g,b), rgba(r,g,b,a) rgb(r%, g%, b%), rgba(r%, g%, b%, a%)
 // cf. https://developer.mozilla.org/en/CSS/color_value
 static ARGB ParseCssColor(const char *color)
 {
@@ -184,7 +184,9 @@ static ARGB ParseCssColor(const char *color)
         return MKRGB(r, g, b);
     }
 
+    // rrggbb, #rrggbb and rgb(n,n,n)
     if (str::Parse(color, "#%2x%2x%2x%$", &r, &g, &b) ||
+        str::Parse(color, "%2x%2x%2x%$", &r, &g, &b) ||
         str::Parse(color, "rgb(%d,%d,%d)", &r, &g, &b)) {
         return MKRGB(r, g, b);
     }
