@@ -17,13 +17,12 @@ using namespace Gdiplus;
 enum DrawInstrType {
     // a piece of text
     InstrString = 0,
-    // space is not drawn. it's inserted during layout
-    // to mark 
-    InstrSpace,
-    // paragraph stat is not drawn. it's inserted during layout
-    // to mark indentation of first line in the paragraph
-    // (but only if justification is left or justify
-    InstrParagraphStart,
+    // elastic space takes at least spaceDx pixels but can take more
+    // if a line is justified
+    InstrElasticSpace,
+    // a fixed space takes a fixed amount of pixels. It's used e.g.
+    // to implement paragraph indentation
+    InstrFixedSpace,
     // a vertical line
     InstrLine,
     // change current font
@@ -35,16 +34,13 @@ struct InstrStringData {
     size_t              len;
 };
 
-struct InstrSetFontData {
-    Font *              font;
-};
-
 struct DrawInstr {
     DrawInstrType       type;
     union {
         // info specific to a given instruction
         InstrStringData     str;
-        InstrSetFontData    setFont;
+        Font *              font;         // InstrSetFont
+        int                 fixedSpaceDx; // InstrFixedSpace
     };
     RectF bbox; // common to most instructions
 
@@ -52,11 +48,10 @@ struct DrawInstr {
 
     DrawInstr(DrawInstrType t, RectF bbox = RectF()) : type(t), bbox(bbox) { }
 
+    // helper constructors for instructions that need additional arguments
     static DrawInstr Str(const char *s, size_t len, RectF bbox);
     static DrawInstr SetFont(Font *font);
-    static DrawInstr Line(RectF bbox);
-    static DrawInstr Space();
-    static DrawInstr ParagraphStart();
+    static DrawInstr FixedSpace(int dx);
 };
 
 struct PageData {
@@ -115,15 +110,14 @@ private:
     void EmitLine();
     void EmitTextRune(const char *s, const char *end);
     void EmitSpace();
-    void EmitParagraphStart();
+    void EmitParagraphStart(int indent, int topPadding);
 
     void SetCurrentFont(FontStyle fs);
     void ChangeFont(FontStyle fs, bool isStart);
 
-    DrawInstr *InstructionsForCurrLine(DrawInstr *& endInst) const;
+    DrawInstr *CurrLineInstructions(DrawInstr *& endInst) const;
 
-    bool IsCurrentLineEmpty() const;
-    bool IsCurrentLineIndented() const;
+    bool IsCurrLineEmpty() const;
     bool IsLastInstrSpace() const;
 
     // constant during layout process
@@ -150,19 +144,16 @@ private:
 
     PageData *          currPage;
 
-    // for iterative parsing
     HtmlPullParser *    htmlParser;
-    // list of pages constructed
+
+    // list of pages that we've build but haven't yet sent to client
     Vec<PageData*>      pagesToSend;
     bool                finishedParsing;
 
-    // current nesting of html tree during html parsing
-    Vec<HtmlTag>        tagNesting;
-
+    // a page contains multiple lines. This is the offset of the first
+    // instructions for current ilne (offset inside currPage->drawInstructions())
     size_t              currLineInstrOffset;
     WCHAR               buf[512];
-
-    FontMetricsCache    fontMetrics;
 };
 
 Vec<PageData*> *LayoutHtml(LayoutInfo* li);
