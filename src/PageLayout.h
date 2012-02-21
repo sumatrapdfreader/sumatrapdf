@@ -17,9 +17,13 @@ using namespace Gdiplus;
 enum DrawInstrType {
     // a piece of text
     InstrString = 0,
-    // space is not drawn. It's inserted during layout
+    // space is not drawn. it's inserted during layout
     // to mark 
     InstrSpace,
+    // paragraph stat is not drawn. it's inserted during layout
+    // to mark indentation of first line in the paragraph
+    // (but only if justification is left or justify
+    InstrParagraphStart,
     // a vertical line
     InstrLine,
     // change current font
@@ -52,6 +56,7 @@ struct DrawInstr {
     static DrawInstr SetFont(Font *font);
     static DrawInstr Line(RectF bbox);
     static DrawInstr Space();
+    static DrawInstr ParagraphStart();
 };
 
 struct PageData {
@@ -112,6 +117,7 @@ private:
     void EmitLine();
     void EmitTextRune(const char *s, const char *end);
     void EmitSpace();
+    void EmitParagraphStart();
 
     void SetCurrentFont(FontStyle fs);
     void ChangeFont(FontStyle fs, bool isStart);

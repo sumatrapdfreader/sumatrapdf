@@ -56,8 +56,8 @@ using namespace mui;
 
 #define ET_FRAME_CLASS_NAME    _T("ET_FRAME")
 
-#define WIN_DX    640
-#define WIN_DY    480
+#define WIN_DX    720
+#define WIN_DY    640
 
 static HINSTANCE            ghinst = NULL;
 static HWND                 gHwndFrame = NULL;
@@ -184,6 +184,33 @@ static void OnTimer(HWND hwnd, WPARAM timerId)
     }
 }
 
+static LRESULT OnKeyDown(HWND hwnd, UINT msg, WPARAM key, LPARAM lParam)
+{
+    switch (key) {
+    case VK_LEFT: case VK_PRIOR: case 'P':
+        gEbookController->AdvancePage(-1);
+        break;
+    case VK_RIGHT: case VK_NEXT: case 'N':
+        gEbookController->AdvancePage(1);
+        break;
+    case VK_SPACE:
+        gEbookController->AdvancePage(IsShiftPressed() ? -1 : 1);
+        break;
+    case VK_F1:
+        OnToggleBbox(hwnd);
+        break;
+    case VK_HOME:
+        gEbookController->GoToPage(1);
+        break;
+    case VK_END:
+        gEbookController->GoToLastPage();
+        break;
+    default:
+        return DefWindowProc(hwnd, msg, key, lParam);
+    }
+    return 0;
+}
+
 static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     static bool seenWmPaint = false;
@@ -218,6 +245,9 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
             }
             gMainWnd->OnPaint(hwnd);
             break;
+
+        case WM_KEYDOWN:
+            return OnKeyDown(hwnd, msg, wParam, lParam);
 
         case WM_COMMAND:
             OnCommand(hwnd, msg, wParam, lParam);

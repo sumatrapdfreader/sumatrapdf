@@ -75,6 +75,9 @@ static bool MeasureTextUsingMetricsCache(FontMetricsCache *fontMetrics, const WC
     return true;
 }
 
+ // TODO: total magic, but seems to produce better results
+#define MAGIC_DX_ADJUST 1.5f
+
 // Measure text using optional FontMetricsCache. The caller must ensure that the
 // Font matches fontMetrics as they are updated lazily.
 RectF MeasureText(Graphics *g, Font *f, FontMetricsCache *fontMetrics, const WCHAR *s, size_t len)
@@ -83,7 +86,7 @@ RectF MeasureText(Graphics *g, Font *f, FontMetricsCache *fontMetrics, const WCH
     CrashIf(f != fontMetrics->font);
     if (MeasureTextUsingMetricsCache(fontMetrics, s, len, bbox)) {
         if (bbox.Width != 0)
-            bbox.Width += 4.5f;
+            bbox.Width += MAGIC_DX_ADJUST;
         return bbox;
     }
     return MeasureTextAccurate2(g, f, s, len);
@@ -91,7 +94,7 @@ RectF MeasureText(Graphics *g, Font *f, FontMetricsCache *fontMetrics, const WCH
 
 // http://www.codeproject.com/KB/GDI-plus/measurestring.aspx
 // TODO: this seems to sometimes report size that is slightly too small
-// Adding a magic 4.5f to the width seems to make it more or less right
+// Adding a magic MAGIC_DX_ADJUST to the width seems to make it more or less right
 RectF MeasureTextAccurate(Graphics *g, Font *f, const WCHAR *s, size_t len)
 {
     if (0 == len)
@@ -110,7 +113,7 @@ RectF MeasureTextAccurate(Graphics *g, Font *f, const WCHAR *s, size_t len)
     RectF bbox;
     r.GetBounds(&bbox, g);
     if (bbox.Width != 0)
-        bbox.Width += 4.5f; // TODO: total magic, but seems to produce better results
+        bbox.Width += MAGIC_DX_ADJUST;
     return bbox;
 }
 

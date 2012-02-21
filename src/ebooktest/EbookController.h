@@ -33,8 +33,6 @@ class EbookController : public IClicked, ISizeChanged
     ThreadLayoutMobi *layoutThread;
     void SetStatusText() const;
     void DeletePages();
-    void AdvancePage(int dist);
-    void SetPage(int newPageNo);
     void TriggerLayout();
     void LayoutHtml(int dx, int dy);
 
@@ -53,6 +51,9 @@ public:
     void FinishedMobiLoading(UiMsg *msg);
     void FinishedMobiLayout(UiMsg *msg);
     void OnLayoutTimer();
+    void AdvancePage(int dist);
+    void GoToPage(int newPageNo);
+    void GoToLastPage();
 };
 
 #endif

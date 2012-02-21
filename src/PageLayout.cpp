@@ -90,6 +90,11 @@ DrawInstr DrawInstr::Space()
     return DrawInstr(InstrSpace);
 }
 
+DrawInstr DrawInstr::ParagraphStart()
+{
+    return DrawInstr(InstrParagraphStart);
+}
+
 PageLayout::PageLayout() : currPage(NULL), gfx(NULL)
 {
 }
@@ -281,7 +286,8 @@ void PageLayout::StartNewLine(bool isParagraphBreak)
     // don't put empty lines at the top of the page
     if ((0 == currY) && IsCurrentLineEmpty())
         return;
-
+    if (IsCurrentLineEmpty())
+        return;
     if (isParagraphBreak && Align_Justify == currJustification)
         JustifyLine(Align_Left);
     else
@@ -351,6 +357,11 @@ void PageLayout::EmitLine()
     StartNewLine(true);
 }
 
+void PageLayout::EmitParagraphStart()
+{
+    currPage->drawInstructions.Append(DrawInstr::ParagraphStart());
+}
+
 void PageLayout::EmitSpace()
 {
     // don't put spaces at the beginnng of the line
@@ -365,6 +376,7 @@ void PageLayout::EmitSpace()
         StartNewLine(false);
         return;
     }
+    currX += spaceDx;
     currPage->drawInstructions.Append(DrawInstr::Space());
 }
 
@@ -407,15 +419,7 @@ void PageLayout::EmitTextRune(const char *s, const char *end)
     }
 
     size_t strLen = str::Utf8ToWcharBuf(s, end - s, buf, dimof(buf));
-#if 0 // TODO: cache disabled because produces bad metrics
-    // with fontMetrics cache
-    if (currFont == fontMetrics.font)
-        bbox = MeasureText(gfx, currFont, &fontMetrics, buf, strLen);
-    else
-        bbox = MeasureText(gfx, currFont, buf, strLen);
-#else
     RectF bbox = MeasureText(gfx, currFont, buf, strLen);
-#endif
     REAL dx = bbox.Width;
     if (currX + dx > pageDx) {
         // start new line if the new text would exceed the line length

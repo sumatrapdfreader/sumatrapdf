@@ -14,7 +14,7 @@
 #include "DebugLog.h"
 
 #define FONT_NAME              L"Georgia"
-#define FONT_SIZE              12
+#define FONT_SIZE              13
 
 // in EbookTest.cpp
 void RestartLayoutTimer();
@@ -184,7 +184,7 @@ void EbookController::LayoutHtml(int dx, int dy)
     pageDy = dy;
     DeletePages();
     pages = htmlPages;
-    SetPage(1);
+    GoToPage(1);
 }
 
 void EbookController::FinishedMobiLayout(UiMsg *msg)
@@ -202,7 +202,7 @@ void EbookController::FinishedMobiLayout(UiMsg *msg)
     DeletePages();
     pages =  msg->finishedMobiLayout.pages;
     // TODO: should set the page to a page we were on the last time
-    SetPage(1);
+    GoToPage(1);
     delete msg->finishedMobiLayout.thread;
 }
 
@@ -270,7 +270,7 @@ void EbookController::Clicked(Control *c, int x, int y)
         if (pages) {
             int pageCount = pages->Count();
             int pageNo = IntFromPerc(pageCount, perc);
-            SetPage(pageNo + 1);
+            GoToPage(pageNo + 1);
         }
         return;
     }
@@ -291,13 +291,18 @@ void EbookController::SetStatusText() const
     ctrls->progress->SetFilled(PercFromInt(pageCount, currPageNo));
 }
 
-void EbookController::SetPage(int newPageNo)
+void EbookController::GoToPage(int newPageNo)
 {
     CrashIf((newPageNo < 1) || (newPageNo > (int)pages->Count()));
     currPageNo = newPageNo;
     SetStatusText();
     PageData *pageData = pages->At(currPageNo-1);
     ctrls->page->SetPage(pageData);
+}
+
+void EbookController::GoToLastPage()
+{
+    GoToPage(pages->Count());
 }
 
 void EbookController::AdvancePage(int dist)
@@ -309,7 +314,7 @@ void EbookController::AdvancePage(int dist)
         return;
     if (newPageNo > (int)pages->Count())
         return;
-    SetPage(newPageNo);
+    GoToPage(newPageNo);
 }
 
 void EbookController::SetHtml(const char *newHtml)
