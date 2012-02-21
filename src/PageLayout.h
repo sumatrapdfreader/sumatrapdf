@@ -119,6 +119,7 @@ private:
     DrawInstr *GetInstructionsForCurrentLine(DrawInstr *& endInst) const;
 
     bool IsCurrentLineEmpty() const { return currLineInstrOffset == currPage->Count(); }
+    bool LastInstrIsSpace() const;
 
     // constant during layout process
     REAL                pageDx;
@@ -140,9 +141,6 @@ private:
     REAL                currX, currY;
     // number of consecutive newlines
     int                 newLinesCount;
-    // indicates if the last instruction was text
-    // consisting of just spaces
-    bool                hadSpaceBefore;
 
     PageData *          currPage;
 

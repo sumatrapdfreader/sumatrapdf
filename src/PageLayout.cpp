@@ -7,9 +7,6 @@
 #include "StrUtil.h"
 
 /*
-TODO: need to change our justification code as we no longer assume space is
-always between strings.
-
 TODO: PageLayout could be split into DrawInstrBuilder which knows pageDx, pageDy
 and generates DrawInstr and splits them into pages and a better named class that
 does the parsing of the document builds pages by invoking methods on DrawInstrBuilders.
@@ -190,7 +187,6 @@ void PageLayout::StartNewPage()
     currPage = new PageData;
     currX = currY = 0;
     newLinesCount = 0;
-    hadSpaceBefore = false;
     // instructions for each page need to be self-contained
     // so we have to carry over some state like the current font
     CrashIf(!currFont);
@@ -200,18 +196,17 @@ void PageLayout::StartNewPage()
 
 REAL PageLayout::GetCurrentLineDx()
 {
-    REAL dx = -spaceDx;
+    REAL dx = 0;
     DrawInstr *end;
-    DrawInstr *currInstr = GetInstructionsForCurrentLine(end);
-    while (currInstr < end) {
-        if (InstrString == currInstr->type) {
-            dx += currInstr->bbox.Width;
+    DrawInstr *i = GetInstructionsForCurrentLine(end);
+    while (i < end) {
+        if (InstrString == i->type) {
+            dx += i->bbox.Width;
+        } else if (InstrSpace == i->type) {
             dx += spaceDx;
         }
-        ++currInstr;
+        ++i;
     }
-    if (dx < 0)
-        dx = 0;
     return dx;
 }
 
@@ -219,32 +214,41 @@ void PageLayout::LayoutLeftStartingAt(REAL offX)
 {
     currX = offX;
     DrawInstr *end;
-    DrawInstr *currInstr = GetInstructionsForCurrentLine(end);
-    while (currInstr < end) {
-        if (InstrString == currInstr->type) {
+    DrawInstr *i = GetInstructionsForCurrentLine(end);
+    while (i < end) {
+        if (InstrString == i->type) {
             // currInstr Width and Height are already set
-            currInstr->bbox.X = currX;
-            currInstr->bbox.Y = currY;
-            currX += (currInstr->bbox.Width + spaceDx);
+            i->bbox.X = currX;
+            i->bbox.Y = currY;
+            currX += i->bbox.Width;
+        } else if (InstrSpace == i->type) {
+            currX += spaceDx;
         }
-        ++currInstr;
+        ++i;
     }
 }
 
+// Redistribute extra space in the line equally among the spaces
 void PageLayout::JustifyLineBoth()
 {
-    // move all words proportionally to the right so that the
-    // spacing remains uniform and the last word touches the
-    // right page border
     REAL margin = pageSize.dx - GetCurrentLineDx();
     LayoutLeftStartingAt(0);
     DrawInstr *end;
-    DrawInstr *c = GetInstructionsForCurrentLine(end);
-    size_t count = end - c;
-    REAL extraSpaceDx = count > 1 ? margin / (count - 1) : margin;
-
-    for (size_t n = 1; ++c < end; n++)
-        c->bbox.X += n * extraSpaceDx;
+    DrawInstr *start = GetInstructionsForCurrentLine(end);
+    size_t spaces = 0;
+    for (DrawInstr *i = start; i < end; i++) {
+        if (InstrSpace == i->type)
+            ++spaces;
+    }
+    REAL extraSpaceDx = margin;
+    if (spaces > 0)
+        extraSpaceDx = margin / spaces;
+    REAL extraSpaceDxTotal = 0;
+    for (DrawInstr *i = start; i < end; i++) {
+        i->bbox.X += extraSpaceDxTotal;
+        if (InstrSpace == i->type)
+            extraSpaceDxTotal += extraSpaceDx;
+    }
 }
 
 void PageLayout::JustifyLine(AlignAttr mode)
@@ -349,7 +353,27 @@ void PageLayout::EmitLine()
 
 void PageLayout::EmitSpace()
 {
+    // don't put spaces at the beginnng of the line
+    if (0 == currX)
+        return;
+    // don't allow consequitive spaces
+    if (LastInstrIsSpace())
+        return;
+    // don't add a space if it would cause creating a new line, but
+    // do create a new line
+    if (currX + spaceDx > pageDx) {
+        StartNewLine(false);
+        return;
+    }
+    currPage->drawInstructions.Append(DrawInstr::Space());
+}
 
+bool PageLayout::LastInstrIsSpace() const
+{
+    if (0 == currPage->Count())
+        return false;
+    DrawInstr& di = currPage->drawInstructions.Last();
+    return InstrSpace == di.type;
 }
 
 // a text rune is a string of consequitive text with uniform style
@@ -357,7 +381,7 @@ void PageLayout::EmitTextRune(const char *s, const char *end)
 {
     // collapse multiple, consequitive white-spaces into a single space
     if (IsSpaceOnly(s, end)) {
-        hadSpaceBefore = true;
+        EmitSpace();
         return;
     }
 
@@ -381,18 +405,6 @@ void PageLayout::EmitTextRune(const char *s, const char *end)
         s = tmp;
         end = s + str::Len(s);
     }
-
-    if (hadSpaceBefore) {
-        if (currX + spaceDx > pageDx) {
-            // start new line if the new text would exceed the line length
-            StartNewLine(false);
-        } else {
-            // don't put spaces at the beginnng of the line
-            if (0 != currX)
-                currX += spaceDx;
-        }
-    }
-    hadSpaceBefore = false;
 
     size_t strLen = str::Utf8ToWcharBuf(s, end - s, buf, dimof(buf));
 #if 0 // TODO: cache disabled because produces bad metrics
@@ -453,7 +465,6 @@ static bool IgnoreTag(const char *s, size_t sLen)
 
 void PageLayout::HandleHtmlTag(HtmlToken *t)
 {
-    //Vec<KnownAttrInfo> attrs;
     CrashAlwaysIf(!t->IsTag());
 
     // HtmlToken string includes potential attributes,
@@ -474,38 +485,21 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
             if (attrInfo)
                 currJustification = FindAlignAttr(attrInfo->val, attrInfo->valLen);
         }
-        return;
-    }
-
-    if (Tag_Hr == tag) {
+    } else if (Tag_Hr == tag) {
         EmitLine();
-        return;
-    }
-
-    if ((Tag_B == tag) || (Tag_Strong == tag)) {
+    } else if ((Tag_B == tag) || (Tag_Strong == tag)) {
         ChangeFont(FontStyleBold, t->IsStartTag());
-        return;
-    }
-
-    if ((Tag_I == tag) || (Tag_Em == tag)) {
+    } else if ((Tag_I == tag) || (Tag_Em == tag)) {
         ChangeFont(FontStyleItalic, t->IsStartTag());
-        return;
-    }
-
-    if (Tag_U == tag) {
+    } else if (Tag_U == tag) {
         ChangeFont(FontStyleUnderline, t->IsStartTag());
-        return;
-    }
-
-    if (Tag_Strike == tag) {
+    } else if (Tag_Strike == tag) {
         ChangeFont(FontStyleStrikeout, t->IsStartTag());
-        return;
-    }
-
-    if (Tag_Mbp_Pagebreak == tag) {
+    } else if (Tag_Mbp_Pagebreak == tag) {
         JustifyLine(currJustification);
         StartNewPage();
-        return;
+    } else if (Tag_Br == tag) {
+        StartNewLine(false);
     }
 }
 
@@ -643,6 +637,8 @@ void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, RE
             g->DrawString(buf, strLen, font, pos, NULL, &br);
         } else if (InstrSetFont == i->type) {
             font = i->setFont.font;
+        } else if (InstrSpace == i->type) {
+            // ignore
         } else {
             CrashIf(true);
         }
