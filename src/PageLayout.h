@@ -64,18 +64,8 @@ struct DrawInstr {
     }
 };
 
-struct LayoutState {
-    const char *htmlStart;
-    const char *htmlEnd;
-};
-
 struct PageData {
     Vec<DrawInstr>  drawInstructions;
-
-    /* layoutState at the beginning of this page. It allows us to
-       re-do layout starting exactly where this page starts, which
-       is needed when handling resizing */
-    LayoutState    layoutState;
 
     void Append(DrawInstr& di) {
         drawInstructions.Append(di);
@@ -110,14 +100,6 @@ public:
     size_t          htmlStrLen;
 };
 
-struct WordInfo {
-    const char *s;
-    size_t len;
-    bool IsNewline() {
-        return ((len == 1) && (s[0] == '\n'));
-    }
-};
-
 class PageLayout
 {
 public:
@@ -143,7 +125,7 @@ private:
     void AddSetFontInstr(Font *font);
 
     void AddHr();
-    void AddWord(WordInfo *wi);
+    void EmitTextRune(const char *s, const char *end);
 
     void SetCurrentFont(FontStyle fs);
     void ChangeFont(FontStyle fs, bool isStart);
@@ -179,6 +161,9 @@ private:
     REAL                currX, currY;
     // number of consecutive newlines
     int                 newLinesCount;
+    // indicates if the last instruction was text
+    // consisting of just spaces
+    bool                hadSpaceBefore;
 
     PageData *          currPage;
 

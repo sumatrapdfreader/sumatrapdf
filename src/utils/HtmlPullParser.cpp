@@ -66,7 +66,7 @@ static void SkipName(const char*& s, const char *end)
 }
 
 // return true if s consists only of whitespace
-static bool IsSpaceOnly(const char *s, const char *end)
+bool IsSpaceOnly(const char *s, const char *end)
 {
     SkipWs(s, end);
     return s == end;
@@ -348,9 +348,6 @@ Next:
             // text cannot be at the end
             currToken.SetError(HtmlToken::NonTagAtEnd, start);
         } else {
-            // don't report whitespace between tags
-            if (IsSpaceOnly(start, currPos))
-                goto Next;
             currToken.SetValue(HtmlToken::Text, start, currPos);
         }
         return &currToken;

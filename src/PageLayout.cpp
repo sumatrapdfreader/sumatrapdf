@@ -7,6 +7,9 @@
 #include "StrUtil.h"
 
 /*
+TODO: need to change our justification code as we no longer assume space is
+always between strings.
+
 TODO: PageLayout could be split into DrawInstrBuilder which knows pageDx, pageDy
 and generates DrawInstr and splits them into pages and a better named class that
 does the parsing of the document builds pages by invoking methods on DrawInstrBuilders.
@@ -16,37 +19,6 @@ support to mui and use list of Control objects instead (especially if we slim do
 Control objects further to make allocating hundreds of them cheaper or introduce some
 other base element(s) with less functionality and less overhead).
 */
-
-class WordsIter {
-    void Reset() {
-        curr = s;
-        len = strlen(s);
-        left = len;
-    }
-
-public:
-    WordsIter(const char *s) : s(s) {
-    }
-
-    WordInfo *IterStart() {
-        Reset();
-        return IterNext();
-    }
-
-    WordInfo *IterNext();
-
-private:
-    WordInfo wi;
-
-    static const char *NewLineStr;
-    const char *s;
-    size_t len;
-
-    const char *curr;
-    size_t left;
-};
-
-const char *WordsIter::NewLineStr = "\n";
 
 static void SkipCharInStr(const char *& s, size_t& left, char c)
 {
@@ -88,27 +60,6 @@ static bool IsNewlineSkip(const char *& s, size_t& left)
         return true;
     }
     return false;
-}
-
-// iterates words in a string e.g. "foo bar\n" returns "foo", "bar" and "\n"
-// also unifies line endings i.e. "\r" and "\r\n" are turned into a single "\n"
-// returning NULL means end of iterations
-WordInfo *WordsIter::IterNext()
-{
-    SkipCharInStr(curr, left, ' ');
-    if (0 == left)
-        return NULL;
-    assert(*curr != 0);
-    if (IsNewlineSkip(curr, left)) {
-        wi.len = 1;
-        wi.s = NewLineStr;
-        return &wi;
-    }
-    wi.s = curr;
-    SkipNonWordBreak(curr, left);
-    wi.len = curr - wi.s;
-    assert(wi.len > 0);
-    return &wi;
 }
 
 PageLayout::PageLayout() : currPage(NULL), gfx(NULL)
@@ -184,10 +135,11 @@ PageData *PageLayout::IterStart(LayoutInfo* layoutInfo)
 
     CrashIf(currPage);
     lineSpacing = currFont->GetHeight(gfx);
-    // note: this is heuristic that seems to work better than
-    //  GetSpaceDx(gfx, currFont) (which seems way too big and is
-    // bigger than what Kindle app uses)
+    // note: this is a heuristic, using 
     spaceDx = fontSize / 2.5f;
+    float spaceDx2 = GetSpaceDx(gfx, currFont);
+    if (spaceDx2 < spaceDx)
+        spaceDx = spaceDx2;
     StartNewPage();
     return IterNext();
 }
@@ -199,6 +151,7 @@ void PageLayout::StartNewPage()
     currPage = new PageData;
     currX = currY = 0;
     newLinesCount = 0;
+    hadSpaceBefore = false;
     // instructions for each page need to be self-contained
     // so we have to carry over some state like the current font
     CrashIf(!currFont);
@@ -345,8 +298,8 @@ void PageLayout::AddHr()
     // hr creates an implicit paragraph break
     StartNewLine(true);
     currX = 0;
-    // height of hr is lineSpacing. If drawing it a current position
-    // would exceede page bounds, go to another page
+    // height of hr is lineSpacing. If drawing a line would cause
+    // current position to exceed page bounds, go to another page
     if (currY + lineSpacing > pageDy)
         StartNewPage();
 
@@ -355,10 +308,21 @@ void PageLayout::AddHr()
     StartNewLine(true);
 }
 
-void PageLayout::AddWord(WordInfo *wi)
+static bool IsNewline(const char *s, const char *end)
 {
-    RectF bbox;
-    if (wi->IsNewline()) {
+    return (1 == end - s) && ('\n' == s[0]);
+}
+
+// a text rune is a string of consequitive text with uniform style
+void PageLayout::EmitTextRune(const char *s, const char *end)
+{
+    // collapse multiple, consequitive white-spaces into a single space
+    if (IsSpaceOnly(s, end)) {
+        hadSpaceBefore = true;
+        return;
+    }
+
+    if (IsNewline(s, end)) {
         // a single newline is considered "soft" and ignored
         // two or more consequitive newlines are considered a
         // single paragraph break
@@ -373,16 +337,25 @@ void PageLayout::AddWord(WordInfo *wi)
     }
     newLinesCount = 0;
 
-    // TODO: we should really only one allocator for all pages as text might
-    // end up on another page (which isn't really a problem, because all pages and
-    // their allocators are freed at the same time, but still it would be better
-    // to only have one allocator per PageLayout process)
-    const char *s = ResolveHtmlEntities(wi->s, wi->s + wi->len, textAllocator);
-    size_t len = wi->len;
-    if (s != wi->s)
-        len = str::Len(s);
+    const char *tmp = ResolveHtmlEntities(s, end, textAllocator);
+    if (tmp != s) {
+        s = tmp;
+        end = s + str::Len(s);
+    }
 
-    size_t strLen = str::Utf8ToWcharBuf(s, len, buf, dimof(buf));
+    if (hadSpaceBefore) {
+        if (currX + spaceDx > pageDx) {
+            // start new line if the new text would exceed the line length
+            StartNewLine(false);
+        } else {
+            // don't put spaces at the beginnng of the line
+            if (0 != currX)
+                currX += spaceDx;
+        }
+    }
+    hadSpaceBefore = false;
+
+    size_t strLen = str::Utf8ToWcharBuf(s, end - s, buf, dimof(buf));
 #if 0 // TODO: cache disabled because produces bad metrics
     // with fontMetrics cache
     if (currFont == fontMetrics.font)
@@ -390,18 +363,18 @@ void PageLayout::AddWord(WordInfo *wi)
     else
         bbox = MeasureText(gfx, currFont, buf, strLen);
 #else
-    bbox = MeasureText(gfx, currFont, buf, strLen);
+    RectF bbox = MeasureText(gfx, currFont, buf, strLen);
 #endif
-    // TODO: handle a case where a single word is bigger than the whole
-    // line, in which case it must be split into multiple lines
     REAL dx = bbox.Width;
     if (currX + dx > pageDx) {
         // start new line if the new text would exceed the line length
         StartNewLine(false);
+        // TODO: handle a case where a single word is bigger than the whole
+        // line, in which case it must be split into multiple lines
     }
     bbox.Y = currY;
-    currPage->Append(DrawInstr::Str(s, len, bbox));
-    currX += (dx + spaceDx);
+    currPage->Append(DrawInstr::Str(s, end - s, bbox));
+    currX += dx;
 }
 
 #if 0
@@ -502,16 +475,18 @@ void PageLayout::EmitText(HtmlToken *t)
     CrashIf(!t->IsText());
     const char *end = t->s + t->sLen;
     const char *curr = t->s;
-    SkipWs(curr, end);
+    const char *currStart;
+    // break text into runes i.e. chunks taht are either all
+    // whitespace or all non-whitespace
     while (curr < end) {
-        const char *currStart = curr;
-        SkipNonWs(curr, end);
-        size_t len = curr - currStart;
-        if (len > 0) {
-            WordInfo wi = { currStart, len };
-            AddWord(&wi);
-        }
+        currStart = curr;
         SkipWs(curr, end);
+        if (curr > currStart)
+            EmitTextRune(currStart, curr);
+        currStart = curr;
+        SkipNonWs(curr, end);
+        if (curr > currStart)
+            EmitTextRune(currStart, curr);
     }
 }
 

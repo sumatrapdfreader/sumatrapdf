@@ -195,5 +195,6 @@ AlignAttr   FindAlignAttr(const char *attr, size_t len);
 
 char *PrettyPrintHtml(const char *s, size_t len, size_t& lenOut);
 const char *ResolveHtmlEntities(const char *s, const char *end, Allocator *alloc);
+bool IsSpaceOnly(const char *s, const char *end);
 
 #endif

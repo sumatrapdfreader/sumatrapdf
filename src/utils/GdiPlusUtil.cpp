@@ -138,11 +138,13 @@ RectF MeasureText(Graphics *g, Font *f, const WCHAR *s, size_t len)
 REAL GetSpaceDx(Graphics *g, Font *f)
 {
     RectF bbox;
-#if 1
+#if 0
     bbox = MeasureText(g, f, L" ", 1);
     REAL spaceDx1 = bbox.Width;
     return spaceDx1;
 #else
+    // this method seems to return (much) smaller size that measuring
+    // the space itself
     bbox = MeasureText(g, f, L"wa", 2);
     REAL l1 = bbox.Width;
     bbox = MeasureText(g, f, L"w a", 3);
