@@ -181,6 +181,7 @@ PageData *PageLayout::IterStart(LayoutInfo* layoutInfo)
     float spaceDx2 = GetSpaceDx(gfx, currFont);
     if (spaceDx2 < spaceDx)
         spaceDx = spaceDx2;
+    lineIndentDx = spaceDx * 3.f;
     StartNewPage();
     return IterNext();
 }
@@ -209,6 +210,8 @@ REAL PageLayout::GetCurrentLineDx()
             dx += i->bbox.Width;
         } else if (InstrSpace == i->type) {
             dx += spaceDx;
+        } else if (InstrParagraphStart == i->type) {
+            dx += lineIndentDx;
         }
         ++i;
     }
@@ -228,6 +231,8 @@ void PageLayout::LayoutLeftStartingAt(REAL offX)
             currX += i->bbox.Width;
         } else if (InstrSpace == i->type) {
             currX += spaceDx;
+        } else if (InstrParagraphStart == i->type) {
+            currX += lineIndentDx;
         }
         ++i;
     }
@@ -298,6 +303,8 @@ void PageLayout::StartNewLine(bool isParagraphBreak)
     currLineInstrOffset = currPage->Count();
     if (currY + lineSpacing > pageDy)
         StartNewPage();
+    //if (isParagraphBreak)
+    //    EmitParagraphStart();
 }
 
 #if 0
@@ -359,7 +366,11 @@ void PageLayout::EmitLine()
 
 void PageLayout::EmitParagraphStart()
 {
-    currPage->drawInstructions.Append(DrawInstr::ParagraphStart());
+    if ((Align_Left == currJustification) || (Align_Justify == currJustification)) {
+        CrashIf(0 != currX);
+        currX = lineIndentDx;
+        currPage->drawInstructions.Append(DrawInstr::ParagraphStart());
+    }
 }
 
 void PageLayout::EmitSpace()
@@ -540,6 +551,7 @@ static bool IsEmptyPage(PageData *p)
             case InstrSetFont:
             case InstrLine:
             case InstrSpace:
+            case InstrParagraphStart:
                 // those are "invisible" instruction. I consider a line invisible
                 // (which is different to what Kindel app does), but a page
                 // with just lines is not very interesting
@@ -635,7 +647,7 @@ void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, RE
             g->DrawString(buf, strLen, font, pos, NULL, &brText);
         } else if (InstrSetFont == i->type) {
             font = i->setFont.font;
-        } else if (InstrSpace == i->type) {
+        } else if ((InstrSpace == i->type) || (InstrParagraphStart == i->type)) {
             // ignore
         } else {
             CrashIf(true);

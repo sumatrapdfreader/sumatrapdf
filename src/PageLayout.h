@@ -72,8 +72,7 @@ public:
     LayoutInfo() :
       pageDx(0), pageDy(0), fontName(NULL), fontSize(0),
       textAllocator(NULL), htmlStr(0), htmlStrLen(0)
-    {
-    }
+    { }
 
     int             pageDx;
     int             pageDy;
@@ -133,6 +132,7 @@ private:
     SizeT<REAL>         pageSize;
     REAL                lineSpacing;
     REAL                spaceDx;
+    REAL                lineIndentDx;
     Graphics *          gfx; // for measuring text
     ScopedMem<WCHAR>    fontName;
     float               fontSize;
