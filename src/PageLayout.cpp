@@ -603,8 +603,8 @@ Vec<PageData*> *LayoutHtml(LayoutInfo* li)
 void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox)
 {
     StringFormat sf(StringFormat::GenericTypographic());
-    SolidBrush br(Color(0,0,0));
-    SolidBrush br2(Color(255, 255, 255, 255));
+    //SolidBrush br(Color(0,0,0));
+    SolidBrush br(Color(0x5F, 0x4B, 0x32)); // this color matches Kindle app
     Pen pen(Color(255, 0, 0), 1);
     Pen blackPen(Color(0, 0, 0), 1);
 
