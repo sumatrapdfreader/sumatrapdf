@@ -147,7 +147,7 @@ void PageLayout::ChangeFont(FontStyle fs, bool addStyle)
     EmitSetFont(currFont);
 }
 
-DrawInstr *PageLayout::GetInstructionsForCurrentLine(DrawInstr *& endInst) const
+DrawInstr *PageLayout::InstructionsForCurrLine(DrawInstr *& endInst) const
 {
     size_t len = currPage->Count() - currLineInstrOffset;
     DrawInstr *ret = currPage->drawInstructions.AtPtr(currLineInstrOffset);
@@ -181,84 +181,106 @@ PageData *PageLayout::IterStart(LayoutInfo* layoutInfo)
     float spaceDx2 = GetSpaceDx(gfx, currFont);
     if (spaceDx2 < spaceDx)
         spaceDx = spaceDx2;
-    lineIndentDx = spaceDx * 3.f;
-    StartNewPage();
+    // value chosen by expermients. Kindle seems to use 2x width
+    // of an average character, like "e". Maybe should use e.g.
+    // measured width of "ex" string as lineIndentDx
+    lineIndentDx = spaceDx * 5.f;
+    StartNewPage(true);
     return IterNext();
 }
 
-void PageLayout::StartNewPage()
+void PageLayout::StartNewPage(bool isParagraphBreak)
 {
     if (currPage)
         pagesToSend.Append(currPage);
     currPage = new PageData;
     currX = currY = 0;
     newLinesCount = 0;
-    // instructions for each page need to be self-contained
+    // instructions for each page needb to be self-contained
     // so we have to carry over some state like the current font
     CrashIf(!currFont);
     EmitSetFont(currFont);
     currLineInstrOffset = currPage->Count();
+    if (isParagraphBreak)
+        EmitParagraphStart();
 }
 
 REAL PageLayout::GetCurrentLineDx()
 {
     REAL dx = 0;
-    DrawInstr *end;
-    DrawInstr *i = GetInstructionsForCurrentLine(end);
-    while (i < end) {
+    DrawInstr *i, *end;
+    for (i = InstructionsForCurrLine(end); i < end; i++) {
         if (InstrString == i->type) {
             dx += i->bbox.Width;
         } else if (InstrSpace == i->type) {
             dx += spaceDx;
-        } else if (InstrParagraphStart == i->type) {
-            dx += lineIndentDx;
         }
-        ++i;
     }
     return dx;
 }
 
 void PageLayout::LayoutLeftStartingAt(REAL offX)
 {
-    currX = offX;
-    DrawInstr *end;
-    DrawInstr *i = GetInstructionsForCurrentLine(end);
-    while (i < end) {
+    REAL x = offX;
+    DrawInstr *i, *end;
+    for (i = InstructionsForCurrLine(end); i < end; i++) {
         if (InstrString == i->type) {
             // currInstr Width and Height are already set
-            i->bbox.X = currX;
+            i->bbox.X = x;
             i->bbox.Y = currY;
-            currX += i->bbox.Width;
+            x += i->bbox.Width;
         } else if (InstrSpace == i->type) {
-            currX += spaceDx;
-        } else if (InstrParagraphStart == i->type) {
-            currX += lineIndentDx;
+            x += spaceDx;
         }
-        ++i;
     }
 }
 
 // Redistribute extra space in the line equally among the spaces
-void PageLayout::JustifyLineBoth()
+void PageLayout::JustifyLineBoth(REAL offX)
 {
-    REAL margin = pageSize.dx - GetCurrentLineDx();
-    LayoutLeftStartingAt(0);
+    REAL extraSpaceDxTotal = pageSize.dx - GetCurrentLineDx() - offX;
+    LayoutLeftStartingAt(offX);
     DrawInstr *end;
-    DrawInstr *start = GetInstructionsForCurrentLine(end);
+    DrawInstr *start = InstructionsForCurrLine(end);
     size_t spaces = 0;
     for (DrawInstr *i = start; i < end; i++) {
         if (InstrSpace == i->type)
             ++spaces;
     }
-    REAL extraSpaceDx = margin;
-    if (spaces > 0)
-        extraSpaceDx = margin / spaces;
-    REAL extraSpaceDxTotal = 0;
+    if (0 == spaces)
+        return;
+    REAL extraSpaceDx = extraSpaceDxTotal / (float)spaces;
+    offX = 0;
+    DrawInstr *lastStr = NULL;
     for (DrawInstr *i = start; i < end; i++) {
-        i->bbox.X += extraSpaceDxTotal;
+        i->bbox.X += offX;
         if (InstrSpace == i->type)
-            extraSpaceDxTotal += extraSpaceDx;
+            offX += extraSpaceDx;
+        else if (InstrString == i->type)
+            lastStr = i;
     }
+    // align the last element perfectly against the right edge in case
+    // we've accumulated rounding errors
+    if (lastStr)
+        lastStr->bbox.X = pageSize.dx - lastStr->bbox.Width;
+}
+
+bool PageLayout::IsCurrentLineEmpty() const
+{
+    size_t instrCount = currPage->Count()- currLineInstrOffset;
+    if (0 == instrCount)
+        return true;
+    if (1 == instrCount)
+        return InstrParagraphStart == currPage->drawInstructions.At(currLineInstrOffset).type;
+    return false;
+}
+
+bool PageLayout::IsCurrentLineIndented() const
+{
+    size_t instrCount = currPage->Count()- currLineInstrOffset;
+    if (instrCount >= 1)
+        return InstrParagraphStart == currPage->drawInstructions.At(currLineInstrOffset).type;
+    return false;
 }
 
 void PageLayout::JustifyLine(AlignAttr mode)
@@ -266,9 +288,13 @@ void PageLayout::JustifyLine(AlignAttr mode)
     if (IsCurrentLineEmpty())
         return;
 
+    REAL indent = 0;
+    if (IsCurrentLineIndented())
+        indent = lineIndentDx;
+
     switch (mode) {
     case Align_Left:
-        LayoutLeftStartingAt(0);
+        LayoutLeftStartingAt(indent);
         break;
     case Align_Right:
         LayoutLeftStartingAt(pageSize.dx - GetCurrentLineDx());
@@ -277,7 +303,7 @@ void PageLayout::JustifyLine(AlignAttr mode)
         LayoutLeftStartingAt((pageSize.dx - GetCurrentLineDx()) / 2.f);
         break;
     case Align_Justify:
-        JustifyLineBoth();
+        JustifyLineBoth(indent);
         break;
     default:
         CrashIf(true);
@@ -288,11 +314,12 @@ void PageLayout::JustifyLine(AlignAttr mode)
 
 void PageLayout::StartNewLine(bool isParagraphBreak)
 {
-    // don't put empty lines at the top of the page
-    if ((0 == currY) && IsCurrentLineEmpty())
+    // don't create empty lines
+    if (IsCurrentLineEmpty()) {
+        if (isParagraphBreak && !IsCurrentLineIndented())
+            EmitParagraphStart();
         return;
-    if (IsCurrentLineEmpty())
-        return;
+    }
     if (isParagraphBreak && Align_Justify == currJustification)
         JustifyLine(Align_Left);
     else
@@ -302,9 +329,9 @@ void PageLayout::StartNewLine(bool isParagraphBreak)
     currY += lineSpacing;
     currLineInstrOffset = currPage->Count();
     if (currY + lineSpacing > pageDy)
-        StartNewPage();
-    //if (isParagraphBreak)
-    //    EmitParagraphStart();
+        StartNewPage(isParagraphBreak);
+    else if (isParagraphBreak)
+        EmitParagraphStart();
 }
 
 #if 0
@@ -357,7 +384,7 @@ void PageLayout::EmitLine()
     // height of hr is lineSpacing. If drawing a line would cause
     // current position to exceed page bounds, go to another page
     if (currY + lineSpacing > pageDy)
-        StartNewPage();
+        StartNewPage(false);
 
     RectF bbox(currX, currY, pageDx, lineSpacing);
     currPage->Append(DrawInstr::Line(bbox));
@@ -379,7 +406,7 @@ void PageLayout::EmitSpace()
     if (0 == currX)
         return;
     // don't allow consequitive spaces
-    if (LastInstrIsSpace())
+    if (IsLastInstrSpace())
         return;
     // don't add a space if it would cause creating a new line, but
     // do create a new line
@@ -391,12 +418,12 @@ void PageLayout::EmitSpace()
     currPage->drawInstructions.Append(DrawInstr::Space());
 }
 
-bool PageLayout::LastInstrIsSpace() const
+bool PageLayout::IsLastInstrSpace() const
 {
     if (0 == currPage->Count())
         return false;
     DrawInstr& di = currPage->drawInstructions.Last();
-    return InstrSpace == di.type;
+    return (InstrParagraphStart == di.type) || (InstrSpace == di.type);
 }
 
 // a text rune is a string of consequitive text with uniform style
@@ -497,8 +524,11 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
         currJustification = Align_Justify;
         if (t->IsStartTag() || t->IsEmptyElementEndTag()) {
             AttrInfo *attrInfo = t->GetAttrByName("align");
-            if (attrInfo)
-                currJustification = FindAlignAttr(attrInfo->val, attrInfo->valLen);
+            if (attrInfo) {
+                AlignAttr just = GetAlignAttrByName(attrInfo->val, attrInfo->valLen);
+                if (just != Align_NotFound)
+                    currJustification = just;
+            }
         }
     } else if (Tag_Hr == tag) {
         EmitLine();
@@ -512,7 +542,7 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
         ChangeFont(FontStyleStrikeout, t->IsStartTag());
     } else if (Tag_Mbp_Pagebreak == tag) {
         JustifyLine(currJustification);
-        StartNewPage();
+        StartNewPage(true);
     } else if (Tag_Br == tag) {
         StartNewLine(false);
     }

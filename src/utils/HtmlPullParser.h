@@ -150,6 +150,7 @@ struct HtmlToken {
     bool IsText() const { return type == Text; }
     bool IsError() const { return type == Error; }
 
+    const char *GetReparsePoint() const;
     void SetValue(TokenType new_type, const char *new_s, const char *end);
     void SetError(ParsingError err, const char *errContext);
 
@@ -167,15 +168,14 @@ protected:
     AttrInfo         attrInfo;
 };
 
-/* A very simple pull html parser. Simply call Next() to get the next part of
-html, which can be one one of 3 tag types or error. If a tag has attributes,
+/* A very simple pull html parser. Call Next() to get the next HtmlToken,
+which can be one one of 3 tag types or error. If a tag has attributes,
 the caller has to parse them out (using HtmlToken::NextAttr()) */
 class HtmlPullParser {
     const char *   currPos;
     const char *   end;
 
     HtmlToken      currToken;
-
 
 public:
     Vec<HtmlTag>   tagNesting;
@@ -188,13 +188,13 @@ public:
 
 void        SkipWs(const char*& s, const char *end);
 void        SkipNonWs(const char*& s, const char *end);
+bool        IsSpaceOnly(const char *s, const char *end);
 
 HtmlTag     FindTag(HtmlToken *tok);
 HtmlAttr    FindAttr(AttrInfo *attrInfo);
-AlignAttr   FindAlignAttr(const char *attr, size_t len);
+AlignAttr   GetAlignAttrByName(const char *attr, size_t len);
 
-char *PrettyPrintHtml(const char *s, size_t len, size_t& lenOut);
+char *      PrettyPrintHtml(const char *s, size_t len, size_t& lenOut);
 const char *ResolveHtmlEntities(const char *s, const char *end, Allocator *alloc);
-bool IsSpaceOnly(const char *s, const char *end);
 
 #endif

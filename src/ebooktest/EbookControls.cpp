@@ -77,6 +77,7 @@ void PageControl::Paint(Graphics *gfx, int offX, int offY)
     r.Y += s->padding.top;
     r.Width  -= (s->padding.left + s->padding.right);
     r.Height -= (s->padding.top  + s->padding.bottom);
+    r.Inflate(1,0);
     gfx->SetClip(r, CombineModeReplace);
 
     DrawPageLayout(gfx, &page->drawInstructions, (REAL)r.X, (REAL)r.Y, IsDebugPaint());

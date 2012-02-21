@@ -105,11 +105,10 @@ private:
 
     REAL GetCurrentLineDx();
     void LayoutLeftStartingAt(REAL offX);
-    void JustifyLineLeft();
-    void JustifyLineBoth();
+    void JustifyLineBoth(REAL offX);
     void JustifyLine(AlignAttr mode);
 
-    void StartNewPage();
+    void StartNewPage(bool isParagraphBreak);
     void StartNewLine(bool isParagraphBreak);
 
     void EmitSetFont(Font *font);
@@ -121,10 +120,11 @@ private:
     void SetCurrentFont(FontStyle fs);
     void ChangeFont(FontStyle fs, bool isStart);
 
-    DrawInstr *GetInstructionsForCurrentLine(DrawInstr *& endInst) const;
+    DrawInstr *InstructionsForCurrLine(DrawInstr *& endInst) const;
 
-    bool IsCurrentLineEmpty() const { return currLineInstrOffset == currPage->Count(); }
-    bool LastInstrIsSpace() const;
+    bool IsCurrentLineEmpty() const;
+    bool IsCurrentLineIndented() const;
+    bool IsLastInstrSpace() const;
 
     // constant during layout process
     REAL                pageDx;

@@ -197,6 +197,20 @@ bool HtmlToken::NameIs(const char *name) const
     return  (str::Len(name) == GetTagLen(this)) && str::StartsWith(s, name);
 }
 
+// reparse point is an address within html that we can
+// can feed to HtmlPullParser() to start parsing from that point
+const char *HtmlToken::GetReparsePoint() const
+{
+    if (IsStartTag() || IsEmptyElementEndTag())
+        return s - 1;
+    if (IsEndTag())
+        return s - 2;
+    if (IsText())
+        return s;
+    CrashIf(true); // don't call us on error tokens
+    return NULL;
+}
+
 AttrInfo *HtmlToken::GetAttrByName(const char *name)
 {
     nextAttr = NULL; // start from the beginning
@@ -398,7 +412,7 @@ HtmlAttr FindAttr(AttrInfo *attrInfo)
     return (HtmlAttr)str::FindStrPosI(HTML_ATTRS_STRINGS, attrInfo->name, attrInfo->nameLen);
 }
 
-AlignAttr FindAlignAttr(const char *attr, size_t len)
+AlignAttr GetAlignAttrByName(const char *attr, size_t len)
 {
     return (AlignAttr)str::FindStrPosI(ALIGN_ATTRS_STRINGS, attr, len);
 }
