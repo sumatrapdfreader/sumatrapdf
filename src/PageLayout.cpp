@@ -602,12 +602,10 @@ Vec<PageData*> *LayoutHtml(LayoutInfo* li)
 
 void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox)
 {
-    StringFormat sf(StringFormat::GenericTypographic());
-    //SolidBrush br(Color(0,0,0));
-    SolidBrush br(Color(0x5F, 0x4B, 0x32)); // this color matches Kindle app
+    //SolidBrush brText(Color(0,0,0));
+    SolidBrush brText(Color(0x5F, 0x4B, 0x32)); // this color matches Kindle app
     Pen pen(Color(255, 0, 0), 1);
     Pen blackPen(Color(0, 0, 0), 1);
-
     Font *font = NULL;
 
     WCHAR buf[512];
@@ -622,19 +620,15 @@ void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, RE
             REAL y = bbox.Y + bbox.Height / 2.f;
             PointF p1(bbox.X, y);
             PointF p2(bbox.X + bbox.Width, y);
-            if (showBbox) {
-                //g->FillRectangle(&br, bbox);
+            if (showBbox)
                 g->DrawRectangle(&pen, bbox);
-            }
             g->DrawLine(&blackPen, p1, p2);
         } else if (InstrString == i->type) {
             size_t strLen = str::Utf8ToWcharBuf(i->str.s, i->str.len, buf, dimof(buf));
             bbox.GetLocation(&pos);
-            if (showBbox) {
-                //g->FillRectangle(&br, bbox);
+            if (showBbox)
                 g->DrawRectangle(&pen, bbox);
-            }
-            g->DrawString(buf, strLen, font, pos, NULL, &br);
+            g->DrawString(buf, strLen, font, pos, NULL, &brText);
         } else if (InstrSetFont == i->type) {
             font = i->setFont.font;
         } else if (InstrSpace == i->type) {
