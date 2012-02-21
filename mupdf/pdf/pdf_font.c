@@ -587,6 +587,9 @@ pdf_load_simple_font(pdf_document *xref, fz_obj *dict)
 					cmap = test;
 				if (test->platform_id == 3 && test->encoding_id == 1)
 					cmap = test;
+				/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1815 */
+				if (symbolic && test->platform_id == 3 && test->encoding_id == 0)
+					cmap = test;
 			}
 		}
 
@@ -672,7 +675,7 @@ pdf_load_simple_font(pdf_document *xref, fz_obj *dict)
 		}
 
 		/* encode by glyph name where we can */
-		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692090 */
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1310 */
 		if (kind == TRUETYPE || !strcmp(fz_to_name(fz_dict_gets(dict, "Subtype")), "TrueType") && symbolic)
 		{
 			/* Unicode cmap */
@@ -708,8 +711,8 @@ pdf_load_simple_font(pdf_document *xref, fz_obj *dict)
 			}
 
 			/* Symbolic cmap */
-			/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692493 */
-			else if (!symbolic || !face->charmap || face->charmap->encoding != FT_ENCODING_MS_SYMBOL)
+			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1618 */
+			else if (face->num_charmaps != 1 || face->charmaps[0]->encoding != FT_ENCODING_MS_SYMBOL)
 			{
 				for (i = 0; i < 256; i++)
 				{
