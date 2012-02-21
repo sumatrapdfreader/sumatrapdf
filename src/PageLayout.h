@@ -15,17 +15,23 @@ using namespace Gdiplus;
 // Layout information for a given page is a list of
 // draw instructions that define what to draw and where.
 enum DrawInstrType {
-    InstrTypeString = 0,
-    InstrTypeLine,
-    InstrTypeSetFont
+    // a piece of text
+    InstrString = 0,
+    // space is not drawn. It's inserted during layout
+    // to mark 
+    InstrSpace,
+    // a vertical line
+    InstrLine,
+    // change current font
+    InstrSetFont
 };
 
-struct InstrString {
+struct InstrStringData {
     const char *        s;
     size_t              len;
 };
 
-struct InstrSetFont {
+struct InstrSetFontData {
     Font *              font;
 };
 
@@ -33,46 +39,26 @@ struct DrawInstr {
     DrawInstrType       type;
     union {
         // info specific to a given instruction
-        InstrString     str;
-        InstrSetFont    setFont;
+        InstrStringData     str;
+        InstrSetFontData    setFont;
     };
     RectF bbox; // common to most instructions
 
     DrawInstr() { }
 
-    DrawInstr(DrawInstrType t, RectF bbox = RectF()) :
-        type(t), bbox(bbox)
-    {
-    }
+    DrawInstr(DrawInstrType t, RectF bbox = RectF()) : type(t), bbox(bbox) { }
 
-    static DrawInstr Str(const char *s, size_t len, RectF bbox) {
-        DrawInstr di(InstrTypeString, bbox);
-        di.str.s = s;
-        di.str.len = len;
-        return di;
-    }
-
-    static DrawInstr SetFont(Font *font) {
-        DrawInstr di(InstrTypeSetFont);
-        di.setFont.font = font;
-        return di;
-    }
-
-    static DrawInstr Line(RectF bbox) {
-        DrawInstr di(InstrTypeLine, bbox);
-        return di;
-    }
+    static DrawInstr Str(const char *s, size_t len, RectF bbox);
+    static DrawInstr SetFont(Font *font);
+    static DrawInstr Line(RectF bbox);
+    static DrawInstr Space();
 };
 
 struct PageData {
     Vec<DrawInstr>  drawInstructions;
 
-    void Append(DrawInstr& di) {
-        drawInstructions.Append(di);
-    }
-    size_t Count() const {
-        return drawInstructions.Count();
-    }
+    void Append(DrawInstr& di) { drawInstructions.Append(di); }
+    size_t Count() const { return drawInstructions.Count(); }
 };
 
 // just to pack args to LayoutHtml
@@ -122,24 +108,17 @@ private:
     void StartNewPage();
     void StartNewLine(bool isParagraphBreak);
 
-    void AddSetFontInstr(Font *font);
-
-    void AddHr();
+    void EmitSetFont(Font *font);
+    void EmitLine();
     void EmitTextRune(const char *s, const char *end);
+    void EmitSpace();
 
     void SetCurrentFont(FontStyle fs);
     void ChangeFont(FontStyle fs, bool isStart);
 
-    DrawInstr *GetInstructionsForCurrentLine(DrawInstr *& endInst) const {
-        size_t len = currPage->Count() - currLineInstrOffset;
-        DrawInstr *ret = &currPage->drawInstructions.At(currLineInstrOffset);
-        endInst = ret + len;
-        return ret;
-    }
+    DrawInstr *GetInstructionsForCurrentLine(DrawInstr *& endInst) const;
 
-    bool IsCurrentLineEmpty() const {
-        return currLineInstrOffset == currPage->Count();
-    }
+    bool IsCurrentLineEmpty() const { return currLineInstrOffset == currPage->Count(); }
 
     // constant during layout process
     REAL                pageDx;

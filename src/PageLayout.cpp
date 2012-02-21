@@ -39,6 +39,11 @@ static void SkipNonWordBreak(const char *& s, size_t& left)
     }
 }
 
+static bool IsNewline(const char *s, const char *end)
+{
+    return (1 == end - s) && ('\n' == s[0]);
+}
+
 // return true if s points to "\n", "\r" or "\r\n"
 // and advance s/left to skip it
 // We don't want to collapse multiple consequitive newlines into
@@ -60,6 +65,32 @@ static bool IsNewlineSkip(const char *& s, size_t& left)
         return true;
     }
     return false;
+}
+
+DrawInstr DrawInstr::Str(const char *s, size_t len, RectF bbox)
+{
+    DrawInstr di(InstrString, bbox);
+    di.str.s = s;
+    di.str.len = len;
+    return di;
+}
+
+DrawInstr DrawInstr::SetFont(Font *font)
+{
+    DrawInstr di(InstrSetFont);
+    di.setFont.font = font;
+    return di;
+}
+
+DrawInstr DrawInstr::Line(RectF bbox)
+{
+    DrawInstr di(InstrLine, bbox);
+    return di;
+}
+
+DrawInstr DrawInstr::Space()
+{
+    return DrawInstr(InstrSpace);
 }
 
 PageLayout::PageLayout() : currPage(NULL), gfx(NULL)
@@ -111,7 +142,15 @@ void PageLayout::ChangeFont(FontStyle fs, bool addStyle)
     if (newFontStyle == currFontStyle)
         return; // a no-op
     SetCurrentFont(newFontStyle);
-    AddSetFontInstr(currFont);
+    EmitSetFont(currFont);
+}
+
+DrawInstr *PageLayout::GetInstructionsForCurrentLine(DrawInstr *& endInst) const
+{
+    size_t len = currPage->Count() - currLineInstrOffset;
+    DrawInstr *ret = currPage->drawInstructions.AtPtr(currLineInstrOffset);
+    endInst = ret + len;
+    return ret;
 }
 
 PageData *PageLayout::IterStart(LayoutInfo* layoutInfo)
@@ -155,7 +194,7 @@ void PageLayout::StartNewPage()
     // instructions for each page need to be self-contained
     // so we have to carry over some state like the current font
     CrashIf(!currFont);
-    AddSetFontInstr(currFont);
+    EmitSetFont(currFont);
     currLineInstrOffset = currPage->Count();
 }
 
@@ -165,7 +204,7 @@ REAL PageLayout::GetCurrentLineDx()
     DrawInstr *end;
     DrawInstr *currInstr = GetInstructionsForCurrentLine(end);
     while (currInstr < end) {
-        if (InstrTypeString == currInstr->type) {
+        if (InstrString == currInstr->type) {
             dx += currInstr->bbox.Width;
             dx += spaceDx;
         }
@@ -182,7 +221,7 @@ void PageLayout::LayoutLeftStartingAt(REAL offX)
     DrawInstr *end;
     DrawInstr *currInstr = GetInstructionsForCurrentLine(end);
     while (currInstr < end) {
-        if (InstrTypeString == currInstr->type) {
+        if (InstrString == currInstr->type) {
             // currInstr Width and Height are already set
             currInstr->bbox.X = currX;
             currInstr->bbox.Y = currY;
@@ -287,13 +326,13 @@ static void GetKnownAttributes(HtmlToken *t, HtmlAttr *allowedAttributes, Vec<Kn
 }
 #endif
 
-void PageLayout::AddSetFontInstr(Font *font)
+void PageLayout::EmitSetFont(Font *font)
 {
     currPage->Append(DrawInstr::SetFont(font));
 }
 
 // add horizontal line (<hr> in html terms)
-void PageLayout::AddHr()
+void PageLayout::EmitLine()
 {
     // hr creates an implicit paragraph break
     StartNewLine(true);
@@ -308,9 +347,9 @@ void PageLayout::AddHr()
     StartNewLine(true);
 }
 
-static bool IsNewline(const char *s, const char *end)
+void PageLayout::EmitSpace()
 {
-    return (1 == end - s) && ('\n' == s[0]);
+
 }
 
 // a text rune is a string of consequitive text with uniform style
@@ -439,7 +478,7 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
     }
 
     if (Tag_Hr == tag) {
-        AddHr();
+        EmitLine();
         return;
     }
 
@@ -500,8 +539,9 @@ static bool IsEmptyPage(PageData *p)
     DrawInstr *i;
     for (i = p->drawInstructions.IterStart(); i; i = p->drawInstructions.IterNext()) {
         switch (i->type) {
-            case InstrTypeSetFont:
-            case InstrTypeLine:
+            case InstrSetFont:
+            case InstrLine:
+            case InstrSpace:
                 // those are "invisible" instruction. I consider a line invisible
                 // (which is different to what Kindel app does), but a page
                 // with just lines is not very interesting
@@ -583,7 +623,7 @@ void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, RE
         RectF bbox = i->bbox;
         bbox.X += offX;
         bbox.Y += offY;
-        if (InstrTypeLine == i->type) {
+        if (InstrLine == i->type) {
             // hr is a line drawn in the middle of bounding box
             REAL y = bbox.Y + bbox.Height / 2.f;
             PointF p1(bbox.X, y);
@@ -593,7 +633,7 @@ void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, RE
                 g->DrawRectangle(&pen, bbox);
             }
             g->DrawLine(&blackPen, p1, p2);
-        } else if (InstrTypeString == i->type) {
+        } else if (InstrString == i->type) {
             size_t strLen = str::Utf8ToWcharBuf(i->str.s, i->str.len, buf, dimof(buf));
             bbox.GetLocation(&pos);
             if (showBbox) {
@@ -601,8 +641,10 @@ void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, RE
                 g->DrawRectangle(&pen, bbox);
             }
             g->DrawString(buf, strLen, font, pos, NULL, &br);
-        } else if (InstrTypeSetFont == i->type) {
+        } else if (InstrSetFont == i->type) {
             font = i->setFont.font;
+        } else {
+            CrashIf(true);
         }
     }
 }
