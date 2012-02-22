@@ -121,9 +121,14 @@ static const char *gHtmlEntityNames = "%s";
 
 static uint16 gHtmlEntityRunes[] = { %s };
 
+#define MAX_ENTITY_NAME_LEN %d
+#define MAX_ENTITY_CHAR     %d
+
 // returns -1 if didn't find
-static int HtmlEntityNameToRune(const char *name, size_t nameLen)
+int HtmlEntityNameToRune(const char *name, size_t nameLen)
 {
+    if (nameLen > MAX_ENTITY_NAME_LEN)
+        return -1;
     int pos = str::FindStrPos(gHtmlEntityNames, name, nameLen);
     if (-1 == pos)
         return -1;
@@ -136,10 +141,19 @@ def gen_html_entities():
     # sort by entity names
     ent.sort(key=lambda a: a[0])
     names = [v[0] for v in ent]
+    max_name_len = 0
+    max_char = 0
+    for n in names:
+        if len(n) > max_name_len:
+            max_name_len = len(n)
+        for c in n:
+            if ord(c) > max_char:
+                max_char = ord(c)
+
     codes = [str(v[1]) for v in ent]
     names_c = string.join(names, "\\0") + "\\0"
     codes_c = string.join(codes, ", ")
-    return html_entities_c % (names_c, codes_c)
+    return html_entities_c % (names_c, codes_c, max_name_len, max_char)
 
 find_simple_c = """
 // enums must match HTML_TAGS_STRINGS order

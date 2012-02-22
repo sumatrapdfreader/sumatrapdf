@@ -69,6 +69,7 @@ enum HtmlTag {
 };
 #define HTML_TAGS_STRINGS "a\0abbr\0acronym\0audio\0b\0blockquote\0body\0br\0center\0code\0dd\0div\0dl\0dt\0em\0font\0guide\0h1\0h2\0h3\0h4\0h5\0head\0hr\0html\0i\0img\0li\0link\0mbp:pagebreak\0meta\0object\0ol\0p\0pagebreak\0pre\0reference\0s\0small\0span\0strike\0strong\0style\0sub\0sup\0table\0td\0th\0title\0tr\0tt\0u\0ul\0video\0"
 
+#if 0 // TODO: conflicts with HtmlAttr in TrivialHtmlParser.cpp and is not used anywhere (yet?)
 // enums must match HTML_ATTRS_STRINGS order
 enum HtmlAttr {
     Attr_NotFound = -1,
@@ -102,6 +103,8 @@ enum HtmlAttr {
     Attr_Last = 27
 };
 #define HTML_ATTRS_STRINGS "align\0bgcolor\0border\0class\0clear\0color\0colspan\0controls\0face\0filepos\0height\0href\0id\0lang\0link\0mediarecindex\0recindex\0rowspan\0size\0style\0title\0valign\0value\0vlink\0width\0xmlns\0xmlns:dc\0"
+
+#endif
 
 // enums must match ALIGN_ATTRS_STRINGS order
 enum AlignAttr {
@@ -190,8 +193,10 @@ void        SkipWs(const char*& s, const char *end);
 void        SkipNonWs(const char*& s, const char *end);
 bool        IsSpaceOnly(const char *s, const char *end);
 
+int         HtmlEntityNameToRune(const char *name, size_t nameLen);
+
 HtmlTag     FindTag(HtmlToken *tok);
-HtmlAttr    FindAttr(AttrInfo *attrInfo);
+//HtmlAttr    FindAttr(AttrInfo *attrInfo);
 AlignAttr   GetAlignAttrByName(const char *attr, size_t len);
 
 char *      PrettyPrintHtml(const char *s, size_t len, size_t& lenOut);
