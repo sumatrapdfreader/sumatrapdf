@@ -79,7 +79,7 @@ DrawInstr DrawInstr::SetFont(Font *font)
     return di;
 }
 
-DrawInstr DrawInstr::FixedSpace(int dx)
+DrawInstr DrawInstr::FixedSpace(float dx)
 {
     DrawInstr di(InstrFixedSpace);
     di.fixedSpaceDx = dx;
@@ -135,116 +135,111 @@ void PageLayout::ChangeFont(FontStyle fs, bool addStyle)
     if (newFontStyle == currFontStyle)
         return; // a no-op
     SetCurrentFont(newFontStyle);
-    EmitSetFont(currFont);
-}
-
-DrawInstr *PageLayout::CurrLineInstructions(DrawInstr *& endInst) const
-{
-    size_t len = currPage->Count() - currLineInstrOffset;
-    if (0 == len) {
-        endInst = NULL;
-        return NULL;
-    }
-    DrawInstr *ret = currPage->drawInstructions.AtPtr(currLineInstrOffset);
-    endInst = ret + len;
-    return ret;
+    currLineInstr.Append(DrawInstr::SetFont(currFont));
 }
 
 PageData *PageLayout::IterStart(LayoutInfo* layoutInfo)
 {
+    CrashIf(currPage);
+    finishedParsing = false;
     pageDx = (REAL)layoutInfo->pageDx;
     pageDy = (REAL)layoutInfo->pageDy;
-    pageSize.dx = pageDx;
-    pageSize.dy = pageDy;
     textAllocator = layoutInfo->textAllocator;
+    htmlParser = new HtmlPullParser(layoutInfo->htmlStr, layoutInfo->htmlStrLen);
 
     CrashIf(gfx);
     gfx = mui::AllocGraphicsForMeasureText();
     fontName.Set(str::Dup(layoutInfo->fontName));
     fontSize = layoutInfo->fontSize;
-    htmlParser = new HtmlPullParser(layoutInfo->htmlStr, layoutInfo->htmlStrLen);
-
-    finishedParsing = false;
-    currJustification = Align_Justify;
     SetCurrentFont(FontStyleRegular);
 
-    CrashIf(currPage);
     lineSpacing = currFont->GetHeight(gfx);
     // note: this is a heuristic, using 
     spaceDx = fontSize / 2.5f;
     float spaceDx2 = GetSpaceDx(gfx, currFont);
     if (spaceDx2 < spaceDx)
         spaceDx = spaceDx2;
-    // value chosen by expermients. Kindle seems to use 2x width
-    // of an average character, like "e". Maybe should use e.g.
-    // measured width of "ex" string as lineIndentDx
-    lineIndentDx = spaceDx * 5.f;
-    StartNewPage(true);
+
+    currJustification = Align_Justify;
+    currX = 0; currY = 0;
+    currPage = new PageData;
+    currLineTopPadding = 0;
     return IterNext();
 }
 
-void PageLayout::StartNewPage(bool isParagraphBreak)
-{
-    if (currPage)
-        pagesToSend.Append(currPage);
-    currPage = new PageData;
-    currX = currY = 0;
-    newLinesCount = 0;
-    // instructions for each page needb to be self-contained
-    // so we have to carry over some state like the current font
-    CrashIf(!currFont);
-    currLineInstrOffset = currPage->Count();
-    EmitSetFont(currFont);
-}
-
-REAL PageLayout::GetCurrentLineDx()
+// sum of widths of all elements with a fixed size and flexible
+// spaces (using minimum value for its width)
+REAL PageLayout::CurrLineDx()
 {
     REAL dx = 0;
-    DrawInstr *i, *end;
-    for (i = CurrLineInstructions(end); i < end; i++) {
+    for (DrawInstr *i = currLineInstr.IterStart(); i; i = currLineInstr.IterNext()) {
         if (InstrString == i->type) {
             dx += i->bbox.Width;
         } else if (InstrElasticSpace == i->type) {
             dx += spaceDx;
+        } else if (InstrFixedSpace == i->type) {
+            dx += i->fixedSpaceDx;
         }
     }
     return dx;
 }
 
+float PageLayout::CurrLineDy()
+{
+    float dy = lineSpacing;
+    for (DrawInstr *i = currLineInstr.IterStart(); i; i = currLineInstr.IterNext()) {
+        if ((InstrString == i->type) || (InstrLine == i->type)) {
+            if (i->bbox.Height > dy)
+                dy = i->bbox.Height;
+        }
+    }
+    return dy;
+}
+
 void PageLayout::LayoutLeftStartingAt(REAL offX)
 {
     REAL x = offX;
-    DrawInstr *i, *end;
-    for (i = CurrLineInstructions(end); i < end; i++) {
+    for (DrawInstr *i = currLineInstr.IterStart(); i; i = currLineInstr.IterNext()) {
         if (InstrString == i->type) {
             // currInstr Width and Height are already set
             i->bbox.X = x;
-            i->bbox.Y = currY;
             x += i->bbox.Width;
         } else if (InstrElasticSpace == i->type) {
             x += spaceDx;
+        } else if (InstrFixedSpace == i->type) {
+            x += i->fixedSpaceDx;
         }
     }
 }
 
-// Redistribute extra space in the line equally among the spaces
-void PageLayout::JustifyLineBoth(REAL offX)
+// TODO: if elements are of different sizes (e.g. texts using different fonts)
+// we should align them according to the baseline
+static void SetYPos(Vec<DrawInstr>& instr, float y)
 {
-    REAL extraSpaceDxTotal = pageSize.dx - GetCurrentLineDx() - offX;
-    LayoutLeftStartingAt(offX);
-    DrawInstr *end;
-    DrawInstr *start = CurrLineInstructions(end);
+    for (DrawInstr *i = instr.IterStart(); i; i = instr.IterNext()) {
+        CrashIf(0.f != i->bbox.Y);
+        i->bbox.Y = y;
+    }
+}
+
+// Redistribute extra space in the line equally among the spaces
+void PageLayout::JustifyLineBoth()
+{
+    REAL extraSpaceDxTotal = pageDx - CurrLineDx();
+    CrashIf(extraSpaceDxTotal < 0.f);
+    LayoutLeftStartingAt(0.f);
     size_t spaces = 0;
-    for (DrawInstr *i = start; i < end; i++) {
+    for (DrawInstr *i = currLineInstr.IterStart(); i; i = currLineInstr.IterNext()) {
         if (InstrElasticSpace == i->type)
             ++spaces;
     }
     if (0 == spaces)
         return;
+    // redistribute extra dx space among elastic spaces
     REAL extraSpaceDx = extraSpaceDxTotal / (float)spaces;
-    offX = 0;
+    float offX = 0.f;
     DrawInstr *lastStr = NULL;
-    for (DrawInstr *i = start; i < end; i++) {
+    for (DrawInstr *i = currLineInstr.IterStart(); i; i = currLineInstr.IterNext()) {
         i->bbox.X += offX;
         if (InstrElasticSpace == i->type)
             offX += extraSpaceDx;
@@ -254,204 +249,174 @@ void PageLayout::JustifyLineBoth(REAL offX)
     // align the last element perfectly against the right edge in case
     // we've accumulated rounding errors
     if (lastStr)
-        lastStr->bbox.X = pageSize.dx - lastStr->bbox.Width;
+        lastStr->bbox.X = pageDx - lastStr->bbox.Width;
 }
 
 static bool IsVisibleDrawInstr(DrawInstr *i)
 {
     switch (i->type) {
-        case InstrSetFont:
+        case InstrString:
         case InstrLine:
-        case InstrElasticSpace:
-        case InstrFixedSpace:
-            // those are "invisible" instruction. I consider a line invisible
-            // (which is different to what Kindel app does), but a page
-            // with just lines is not very interesting
-            return false;
+            return true;
     }
-    return true;
+    return false;
 }
 
-bool PageLayout::IsCurrLineEmpty() const
+bool PageLayout::IsCurrLineEmpty()
 {
-    DrawInstr *i, *end;
-    for (i = CurrLineInstructions(end); i < end; i++) {
+    for (DrawInstr *i = currLineInstr.IterStart(); i; i = currLineInstr.IterNext()) {
         if (IsVisibleDrawInstr(i))
             return false;
     }
     return true;
 }
 
-void PageLayout::JustifyLine(AlignAttr mode)
+// justifies current line and returns line dy (i.e. height of the tallest element)
+void PageLayout::JustifyCurrLine(AlignAttr align)
 {
-    if (IsCurrLineEmpty())
-        return;
-
-    REAL indent = 0;
-#if 0
-    if (IsCurrentLineIndented())
-        indent = lineIndentDx;
-#endif
-
-    switch (mode) {
+    switch (align) {
     case Align_Left:
-        LayoutLeftStartingAt(indent);
+        LayoutLeftStartingAt(0.f);
         break;
     case Align_Right:
-        LayoutLeftStartingAt(pageSize.dx - GetCurrentLineDx());
+        LayoutLeftStartingAt(pageDx - CurrLineDx());
         break;
     case Align_Center:
-        LayoutLeftStartingAt((pageSize.dx - GetCurrentLineDx()) / 2.f);
+        LayoutLeftStartingAt((pageDx - CurrLineDx()) / 2.f);
         break;
     case Align_Justify:
-        JustifyLineBoth(indent);
+        JustifyLineBoth();
         break;
     default:
         CrashIf(true);
         break;
     }
-    currLineInstrOffset = currPage->Count();
 }
 
-void PageLayout::StartNewLine(bool isParagraphBreak)
+void PageLayout::ForceNewPage()
 {
-    // don't create empty lines
-    if (IsCurrLineEmpty()) {
-        if (isParagraphBreak) // && !IsCurrentLineIndented())
-            EmitParagraphStart(0, 0);
+    bool createdNewPage = FlushCurrLine(true);
+    if (createdNewPage)
         return;
-    }
-    if (isParagraphBreak && Align_Justify == currJustification)
-        JustifyLine(Align_Left);
-    else
-        JustifyLine(currJustification);
+    pagesToSend.Append(currPage);
+    currPage = new PageData();
+    currPage->instructions.Append(DrawInstr::SetFont(currFont));
+    currY = 0.f;
+    currX = 0.f;
+    currJustification = Align_Justify;
+    currLineTopPadding = 0.f;
+}
 
+// returns true if created a new page
+bool PageLayout::FlushCurrLine(bool isParagraphBreak)
+{
+    if (IsCurrLineEmpty())
+        return false;
+    AlignAttr align = currJustification;
+    if (isParagraphBreak && (Align_Justify == align))
+        align = Align_Left;
+    JustifyCurrLine(align);
+
+    // create a new page if necessary
+    float totalLineDy = CurrLineDy() + currLineTopPadding;
+    PageData *newPage = NULL;
+    if (currY + totalLineDy > pageDy) {
+        // current line too big to fit in current page,
+        // so need to start another page
+        currY = 0.f;
+        newPage = new PageData();
+    }
+    SetYPos(currLineInstr, currY + currLineTopPadding);
+    currY += totalLineDy;
+
+    if (newPage) {
+        // instructions for each page need to be self-contained
+        // so we have to carry over some state (like current font)
+        CrashIf(!currFont);
+        newPage->instructions.Append(DrawInstr::SetFont(currFont));
+        pagesToSend.Append(currPage);
+        currPage = newPage;
+    }
+    currPage->instructions.Append(currLineInstr.LendData(), currLineInstr.Count());
+    currLineInstr.Reset();
+    currLineTopPadding = 0;
     currX = 0;
-    currY += lineSpacing;
-    currLineInstrOffset = currPage->Count();
-    if (currY + lineSpacing > pageDy)
-        StartNewPage(isParagraphBreak);
-    else if (isParagraphBreak)
-        EmitParagraphStart(0, 0);
-}
-
-#if 0
-struct KnownAttrInfo {
-    HtmlAttr        attr;
-    const char *    val;
-    size_t          valLen;
-};
-
-static bool IsAllowedAttribute(HtmlAttr* allowedAttributes, HtmlAttr attr)
-{
-    while (Attr_NotFound != *allowedAttributes) {
-        if (attr == *allowedAttributes++)
-            return true;
-    }
-    return false;
-}
-
-static void GetKnownAttributes(HtmlToken *t, HtmlAttr *allowedAttributes, Vec<KnownAttrInfo> *out)
-{
-    out->Reset();
-    AttrInfo *attrInfo;
-    size_t tagLen = GetTagLen(t);
-    const char *curr = t->s + tagLen;
-    const char *end = t->s + t->sLen;
-    for (;;) {
-        attrInfo = t->NextAttr();
-        if (NULL == attrInfo)
-            break;
-        HtmlAttr attr = FindAttr(attrInfo);
-        if (!IsAllowedAttribute(allowedAttributes, attr))
-            continue;
-        KnownAttrInfo knownAttr = { attr, attrInfo->val, attrInfo->valLen };
-        out->Append(knownAttr);
-    }
-}
-#endif
-
-void PageLayout::EmitSetFont(Font *font)
-{
-    currPage->Append(DrawInstr::SetFont(font));
+    return (newPage != NULL);
 }
 
 // add horizontal line (<hr> in html terms)
 void PageLayout::EmitLine()
 {
     // hr creates an implicit paragraph break
-    StartNewLine(true);
-    currX = 0;
-    // height of hr is lineSpacing. If drawing a line would cause
-    // current position to exceed page bounds, go to another page
-    if (currY + lineSpacing > pageDy)
-        StartNewPage(false);
-
-    RectF bbox(currX, currY, pageDx, lineSpacing);
-    currPage->Append(DrawInstr(InstrLine, bbox));
-    StartNewLine(true);
+    FlushCurrLine(true);
+    CrashIf(0 != currX);
+    RectF bbox(0.f, 0.f, pageDx, lineSpacing);
+    currLineInstr.Append(DrawInstr(InstrLine, bbox));
+    FlushCurrLine(true);
 }
 
-void PageLayout::EmitParagraphStart(int indent, int topPadding)
+static bool ShouldAddIndent(float indent, AlignAttr just)
+{
+    if (0.f == indent)
+        return false;
+    return (Align_Left == just) || (Align_Justify == just);
+}
+
+void PageLayout::EmitParagraphStart(float indent, float topPadding)
 {
     CrashIf(0 != currX);
-    if ((Align_Left == currJustification) || (Align_Justify == currJustification)) {
-        currX = (float)indent;
-        currPage->drawInstructions.Append(DrawInstr::FixedSpace(indent));
+    if (ShouldAddIndent(indent, currJustification) && EnsureDx(indent)) {
+        currLineInstr.Append(DrawInstr::FixedSpace(indent));
+        currX += indent;
     }
-    // TODO: use topPadding
+    // remember so that we can use it in FlushCurrLine()
+    currLineTopPadding = topPadding;
+}
+
+// ensure there is enough dx space left in the current line
+// if there isn't, we start a new line
+// returns false if dx is bigger than pageDx
+bool PageLayout::EnsureDx(float dx)
+{
+    if (currX + dx <= pageDx)
+        return true;
+    FlushCurrLine(false);
+    return dx <= pageDx;
+}
+
+static bool CanEmitSpace(Vec<DrawInstr>& currLineInstr)
+{
+    if (0 == currLineInstr.Count())
+        return false;
+    DrawInstr& di = currLineInstr.Last();
+    return (InstrElasticSpace != di.type) && (InstrFixedSpace != di.type);
+}
+
+void PageLayout::EmitNewLine()
+{
+    // a single newline is considered "soft" and ignored
+    // two or more consequitive newlines are considered a
+    // single paragraph break
+    newLinesCount++;
+    if (2 == newLinesCount)
+        FlushCurrLine(true);
 }
 
 void PageLayout::EmitSpace()
 {
-    // don't put spaces at the beginnng of the line
-    if (0 == currX)
-        return;
-    // don't allow consequitive spaces
-    if (IsLastInstrSpace())
-        return;
-    // don't add a space if it would cause creating a new line, but
-    // do create a new line
-    if (currX + spaceDx > pageDx) {
-        StartNewLine(false);
-        return;
+    EnsureDx(spaceDx);
+    // don't put spaces at the beginnng of the line and don't emit
+    // multiple spaces
+    if ((0 != currX) && CanEmitSpace(currLineInstr)) {
+        currX += spaceDx;
+        currLineInstr.Append(DrawInstr(InstrElasticSpace));
     }
-    currX += spaceDx;
-    currPage->drawInstructions.Append(DrawInstr(InstrElasticSpace));
-}
-
-bool PageLayout::IsLastInstrSpace() const
-{
-    if (0 == currPage->Count())
-        return false;
-    DrawInstr& di = currPage->drawInstructions.Last();
-    return (InstrElasticSpace == di.type) || (InstrFixedSpace == di.type);
 }
 
 // a text rune is a string of consequitive text with uniform style
 void PageLayout::EmitTextRune(const char *s, const char *end)
 {
-    // collapse multiple, consequitive white-spaces into a single space
-    if (IsSpaceOnly(s, end)) {
-        EmitSpace();
-        return;
-    }
-
-    if (IsNewline(s, end)) {
-        // a single newline is considered "soft" and ignored
-        // two or more consequitive newlines are considered a
-        // single paragraph break
-        newLinesCount++;
-        if (2 == newLinesCount) {
-            bool needsTwo = (currX != 0);
-            StartNewLine(true);
-            if (needsTwo)
-                StartNewLine(true);
-        }
-        return;
-    }
-    newLinesCount = 0;
-
+    CrashIf(IsSpaceOnly(s, end));
     const char *tmp = ResolveHtmlEntities(s, end, textAllocator);
     if (tmp != s) {
         s = tmp;
@@ -460,16 +425,12 @@ void PageLayout::EmitTextRune(const char *s, const char *end)
 
     size_t strLen = str::Utf8ToWcharBuf(s, end - s, buf, dimof(buf));
     RectF bbox = MeasureText(gfx, currFont, buf, strLen);
-    REAL dx = bbox.Width;
-    if (currX + dx > pageDx) {
-        // start new line if the new text would exceed the line length
-        StartNewLine(false);
-        // TODO: handle a case where a single word is bigger than the whole
-        // line, in which case it must be split into multiple lines
-    }
-    bbox.Y = currY;
-    currPage->Append(DrawInstr::Str(s, end - s, bbox));
-    currX += dx;
+    bbox.Y = 0.f;
+    // TODO: handle a case where a single word is bigger than the whole
+    // line, in which case it must be split into multiple lines
+    EnsureDx(bbox.Width);
+    currLineInstr.Append(DrawInstr::Str(s, end - s, bbox));
+    currX += bbox.Width;
 }
 
 #if 0
@@ -509,7 +470,7 @@ static bool IgnoreTag(const char *s, size_t sLen)
 
 // parses size in the form "1em" or "3pt". To interpret ems we need emInPoints
 // to be passed by the caller
-static int ParseSizeAsPixels(const char *s, size_t len, float emInPoints)
+static float ParseSizeAsPixels(const char *s, size_t len, float emInPoints)
 {
     str::Str<char> sCopy;
     sCopy.Append(s, len);
@@ -523,7 +484,7 @@ static int ParseSizeAsPixels(const char *s, size_t len, float emInPoints)
     }
     // TODO: take dpi into account
     float sizeInPixels = sizeInPoints;
-    return (int)sizeInPixels;
+    return sizeInPixels;
 }
 
 void PageLayout::HandleHtmlTag(HtmlToken *t)
@@ -550,15 +511,19 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
         // best I can tell, in mobi <p width="1em" height="3pt> means that
         // the first line of the paragrap is indented by 1em and there's
         /// 3pt top padding
-        int lineIndent = 0;
-        int topPadding = 0;
+        float lineIndent = 0;
+        float topPadding = 0;
         attr = t->GetAttrByName("width");
         if (attr)
             lineIndent = ParseSizeAsPixels(attr->val, attr->valLen, fontSize);
         attr = t->GetAttrByName("height");
         if (attr)
             topPadding = ParseSizeAsPixels(attr->val, attr->valLen, fontSize);
-        StartNewLine(true);
+        FlushCurrLine(true);
+        EmitParagraphStart(lineIndent, topPadding);
+    } else if ((Tag_P == tag) && (t->IsEndTag())) {
+        FlushCurrLine(true);
+        currJustification = Align_Justify;
     } else if (Tag_Hr == tag) {
         EmitLine();
     } else if ((Tag_B == tag) || (Tag_Strong == tag)) {
@@ -570,14 +535,14 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
     } else if (Tag_Strike == tag) {
         ChangeFont(FontStyleStrikeout, t->IsStartTag());
     } else if (Tag_Mbp_Pagebreak == tag) {
-        JustifyLine(currJustification);
-        StartNewPage(true);
+        ForceNewPage();
     } else if (Tag_Br == tag) {
-        StartNewLine(false);
+        FlushCurrLine(false);
+        // TODO: force empty line unless we're at the beginning of the page
     }
 }
 
-void PageLayout::EmitText(HtmlToken *t)
+void PageLayout::HandleText(HtmlToken *t)
 {
     CrashIf(!t->IsText());
     const char *end = t->s + t->sLen;
@@ -588,24 +553,29 @@ void PageLayout::EmitText(HtmlToken *t)
     while (curr < end) {
         currStart = curr;
         SkipWs(curr, end);
-        if (curr > currStart)
-            EmitTextRune(currStart, curr);
+        // collapse multiple, consequitive white-spaces into a single space
+        if (curr > currStart) {
+            if (IsNewline(currStart, curr))
+                EmitNewLine();
+            else
+                EmitSpace();
+        }
         currStart = curr;
         SkipNonWs(curr, end);
-        if (curr > currStart)
+        if (curr > currStart) {
             EmitTextRune(currStart, curr);
+            newLinesCount = 0;
+        }
     }
 }
 
-// The first instruction in a page is always SetFont() instruction
-// so to determine if a page is empty, we check if there's at least
-// one "visible" instruction.
-static bool IsEmptyPage(PageData *p)
+// empty page is one that consists of only invisible instructions
+bool IsEmptyPage(PageData *p)
 {
     if (!p)
-        return true;
+        return false;
     DrawInstr *i;
-    for (i = p->drawInstructions.IterStart(); i; i = p->drawInstructions.IterNext()) {
+    for (i = p->instructions.IterStart(); i; i = p->instructions.IterNext()) {
         if (IsVisibleDrawInstr(i))
             return false;
     }
@@ -626,10 +596,10 @@ PageData *PageLayout::IterNext()
         while (pagesToSend.Count() > 0) {
             PageData *ret = pagesToSend.At(0);
             pagesToSend.RemoveAt(0);
-            if (!IsEmptyPage(ret))
-                return ret;
-            else
+            if (IsEmptyPage(ret))
                 delete ret;
+            else
+                return ret;
         }
         // we can call ourselves recursively to send outstanding
         // pages after parsing has finished so this is to detect
@@ -643,10 +613,10 @@ PageData *PageLayout::IterNext()
         if (t->IsTag())
             HandleHtmlTag(t);
         else
-            EmitText(t);
+            HandleText(t);
     }
     // force layout of the last line
-    StartNewLine(true);
+    FlushCurrLine(true);
 
     pagesToSend.Append(currPage);
     currPage = NULL;

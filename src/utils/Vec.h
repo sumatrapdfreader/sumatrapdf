@@ -158,6 +158,8 @@ public:
     }
 
     void Append(const T* src, size_t count) {
+        if (0 == count)
+            return;
         T* dst = AppendBlanks(count);
         memcpy(dst, src, count * sizeof(T));
     }

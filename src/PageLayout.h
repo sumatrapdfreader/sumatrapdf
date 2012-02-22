@@ -38,9 +38,9 @@ struct DrawInstr {
     DrawInstrType       type;
     union {
         // info specific to a given instruction
-        InstrStringData     str;
+        InstrStringData     str;          // InstrString
         Font *              font;         // InstrSetFont
-        int                 fixedSpaceDx; // InstrFixedSpace
+        float               fixedSpaceDx; // InstrFixedSpace
     };
     RectF bbox; // common to most instructions
 
@@ -51,14 +51,11 @@ struct DrawInstr {
     // helper constructors for instructions that need additional arguments
     static DrawInstr Str(const char *s, size_t len, RectF bbox);
     static DrawInstr SetFont(Font *font);
-    static DrawInstr FixedSpace(int dx);
+    static DrawInstr FixedSpace(float dx);
 };
 
 struct PageData {
-    Vec<DrawInstr>  drawInstructions;
-
-    void Append(DrawInstr& di) { drawInstructions.Append(di); }
-    size_t Count() const { return drawInstructions.Count(); }
+    Vec<DrawInstr>  instructions;
 };
 
 // just to pack args to LayoutHtml
@@ -96,37 +93,34 @@ public:
 
 private:
     void HandleHtmlTag(HtmlToken *t);
-    void EmitText(HtmlToken *t);
+    void HandleText(HtmlToken *t);
 
-    REAL GetCurrentLineDx();
-    void LayoutLeftStartingAt(REAL offX);
-    void JustifyLineBoth(REAL offX);
-    void JustifyLine(AlignAttr mode);
+    float CurrLineDx();
+    float CurrLineDy();
+    void  LayoutLeftStartingAt(REAL offX);
+    void  JustifyLineBoth();
+    void  JustifyCurrLine(AlignAttr align);
+    bool  FlushCurrLine(bool isParagraphBreak);
 
-    void StartNewPage(bool isParagraphBreak);
-    void StartNewLine(bool isParagraphBreak);
+    void  EmitLine();
+    void  EmitTextRune(const char *s, const char *end);
+    void  EmitNewLine();
+    void  EmitSpace();
+    void  EmitParagraphStart(float indent, float topPadding);
+    void  ForceNewPage();
 
-    void EmitSetFont(Font *font);
-    void EmitLine();
-    void EmitTextRune(const char *s, const char *end);
-    void EmitSpace();
-    void EmitParagraphStart(int indent, int topPadding);
+    bool  EnsureDx(float dx);
 
-    void SetCurrentFont(FontStyle fs);
-    void ChangeFont(FontStyle fs, bool isStart);
+    void  SetCurrentFont(FontStyle fs);
+    void  ChangeFont(FontStyle fs, bool isStart);
 
-    DrawInstr *CurrLineInstructions(DrawInstr *& endInst) const;
-
-    bool IsCurrLineEmpty() const;
-    bool IsLastInstrSpace() const;
+    bool  IsCurrLineEmpty();
 
     // constant during layout process
-    REAL                pageDx;
-    REAL                pageDy;
-    SizeT<REAL>         pageSize;
-    REAL                lineSpacing;
-    REAL                spaceDx;
-    REAL                lineIndentDx;
+    float               pageDx;
+    float               pageDy;
+    float               lineSpacing;
+    float               spaceDx;
     Graphics *          gfx; // for measuring text
     ScopedMem<WCHAR>    fontName;
     float               fontSize;
@@ -138,10 +132,15 @@ private:
 
     AlignAttr           currJustification;
     // current position in a page
-    REAL                currX, currY;
+    float               currX, currY;
+    // remembered when we start a new line, used when we actually
+    // layout a line
+    float               currLineTopPadding;
     // number of consecutive newlines
     int                 newLinesCount;
 
+    // isntructions for the current line
+    Vec<DrawInstr>      currLineInstr;
     PageData *          currPage;
 
     HtmlPullParser *    htmlParser;
@@ -150,9 +149,6 @@ private:
     Vec<PageData*>      pagesToSend;
     bool                finishedParsing;
 
-    // a page contains multiple lines. This is the offset of the first
-    // instructions for current ilne (offset inside currPage->drawInstructions())
-    size_t              currLineInstrOffset;
     WCHAR               buf[512];
 };
 

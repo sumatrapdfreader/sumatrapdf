@@ -80,7 +80,7 @@ void PageControl::Paint(Graphics *gfx, int offX, int offY)
     r.Inflate(1,0);
     gfx->SetClip(r, CombineModeReplace);
 
-    DrawPageLayout(gfx, &page->drawInstructions, (REAL)r.X, (REAL)r.Y, IsDebugPaint());
+    DrawPageLayout(gfx, &page->instructions, (REAL)r.X, (REAL)r.Y, IsDebugPaint());
     gfx->SetClip(&origClipRegion, CombineModeReplace);
 }
 
