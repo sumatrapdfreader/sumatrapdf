@@ -577,8 +577,13 @@ void PageLayout::HandleTagP(HtmlToken *t)
     float lineIndent = 0;
     float topPadding = 0;
     attr = t->GetAttrByName("width");
-    if (attr)
+    if (attr) {
         lineIndent = ParseSizeAsPixels(attr->val, attr->valLen, currFontSize);
+        // there are files with negative width which produces partially invisible
+        // text, so don't allow that
+        if (lineIndent < 0.f)
+            lineIndent = 0.f;
+    }
     attr = t->GetAttrByName("height");
     if (attr)
         topPadding = ParseSizeAsPixels(attr->val, attr->valLen, currFontSize);
