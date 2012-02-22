@@ -21,8 +21,8 @@ class MobiDoc2Impl : public MobiDoc2 {
             return false;
         for (size_t i = 0; i < mobi->imagesCount; i++) {
             ImageData2 data = { 0 };
-            data.data = (char *)mobi->images[i].imgData;
-            data.len = mobi->images[i].imgDataLen;
+            data.data = mobi->images[i].data;
+            data.len = mobi->images[i].len;
             data.idx = i; // recindex
             images.Append(data);
         }

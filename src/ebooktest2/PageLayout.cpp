@@ -121,9 +121,6 @@ private:
     // for iterative parsing
     HtmlPullParser *    htmlParser;
 
-    // current nesting of html tree during html parsing
-    Vec<HtmlTag>        tagNesting;
-
     size_t              currLineInstrOffset;
     WCHAR               buf[512];
 };
@@ -387,12 +384,6 @@ void PageLayout::HandleHtmlTag(HtmlToken *t, BaseEbookDoc *doc)
 
     HtmlTag tag = FindTag(t);
 
-    // update the current state of html tree
-    if (t->IsStartTag())
-        RecordStartTag(&tagNesting, tag);
-    else if (t->IsEndTag())
-        RecordEndTag(&tagNesting, tag);
-
     switch (tag) {
     case Tag_P:
         StartNewLine(true);
@@ -400,7 +391,7 @@ void PageLayout::HandleHtmlTag(HtmlToken *t, BaseEbookDoc *doc)
         if (t->IsStartTag()) {
             AttrInfo *attrInfo = t->GetAttrByName("align");
             if (attrInfo)
-                currJustification = FindAlignAttr(attrInfo->val, attrInfo->valLen);
+                currJustification = GetAlignAttrByName(attrInfo->val, attrInfo->valLen);
         }
         break;
     case Tag_Hr:
@@ -461,7 +452,7 @@ void PageLayout::HandleHtmlTag(HtmlToken *t, BaseEbookDoc *doc)
 void PageLayout::EmitText(HtmlToken *t)
 {
     // ignore the content of <style> tags
-    if (tagNesting.Find(Tag_Style) != -1)
+    if (htmlParser->tagNesting.Find(Tag_Style) != -1)
         return;
 
     CrashIf(!t->IsText());
