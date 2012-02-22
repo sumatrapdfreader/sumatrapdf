@@ -519,14 +519,6 @@ static bool GetAllProps(Style *style, Prop **props)
     return false;
 }
 
-// convenience function: given cached style, get a Font object matching the font
-// properties.
-// Caller should not delete the font - it's cached for performance and deleted at exit
-Font *CachedFontFromCachedStyle(CachedStyle *s)
-{
-    return GetCachedFont(s->fontName, s->fontSize, s->fontWeight);
-}
-
 static size_t GetStyleId(Style *style) {
     if (!style)
         return 0;

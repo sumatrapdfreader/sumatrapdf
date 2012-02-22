@@ -258,8 +258,6 @@ extern Style *gStyleButtonMouseOver;
 void   Initialize();
 void   Destroy();
 
-Font * CachedFontFromCachedStyle(CachedStyle *s);
-
 CachedStyle* CacheStyle(Style *style);
 
 Brush *BrushFromColorData(ColorData *color, const Rect& r);

@@ -105,10 +105,9 @@ private:
     void  EmitLine();
     void  EmitTextRune(const char *s, const char *end);
     void  EmitNewLine();
-    void  EmitSpace();
+    void  EmitElasticSpace();
     void  EmitParagraphStart(float indent, float topPadding);
     void  ForceNewPage();
-
     bool  EnsureDx(float dx);
 
     void  SetCurrentFont(FontStyle fs);
@@ -122,12 +121,13 @@ private:
     float               lineSpacing;
     float               spaceDx;
     Graphics *          gfx; // for measuring text
-    ScopedMem<WCHAR>    fontName;
-    float               fontSize;
+    ScopedMem<WCHAR>    defaultFontName;
+    float               defaultFontSize;
     Allocator *         textAllocator;
 
     // temporary state during layout process
     FontStyle           currFontStyle;
+    float               currFontSize;
     Font *              currFont;
 
     AlignAttr           currJustification;

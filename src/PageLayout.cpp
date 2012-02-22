@@ -104,7 +104,7 @@ PageLayout::~PageLayout()
 void PageLayout::SetCurrentFont(FontStyle fs)
 {
     currFontStyle = fs;
-    currFont = mui::GetCachedFont(fontName.Get(), fontSize, fs);
+    currFont = mui::GetCachedFont(defaultFontName.Get(), currFontSize, fs);
 }
 
 static bool ValidFontStyleForChangeFont(FontStyle fs)
@@ -149,13 +149,14 @@ PageData *PageLayout::IterStart(LayoutInfo* layoutInfo)
 
     CrashIf(gfx);
     gfx = mui::AllocGraphicsForMeasureText();
-    fontName.Set(str::Dup(layoutInfo->fontName));
-    fontSize = layoutInfo->fontSize;
+    defaultFontName.Set(str::Dup(layoutInfo->fontName));
+    defaultFontSize = layoutInfo->fontSize;
+    currFontSize = defaultFontSize;
     SetCurrentFont(FontStyleRegular);
 
     lineSpacing = currFont->GetHeight(gfx);
     // note: this is a heuristic, using 
-    spaceDx = fontSize / 2.5f;
+    spaceDx = currFontSize / 2.5f;
     float spaceDx2 = GetSpaceDx(gfx, currFont);
     if (spaceDx2 < spaceDx)
         spaceDx = spaceDx2;
@@ -385,7 +386,9 @@ bool PageLayout::EnsureDx(float dx)
     return dx <= pageDx;
 }
 
-static bool CanEmitSpace(Vec<DrawInstr>& currLineInstr)
+// don't emit multiple spaces and don't emit spaces
+// at the beginning of the line
+static bool CanEmitElasticSpace(Vec<DrawInstr>& currLineInstr)
 {
     if (0 == currLineInstr.Count())
         return false;
@@ -403,12 +406,12 @@ void PageLayout::EmitNewLine()
         FlushCurrLine(true);
 }
 
-void PageLayout::EmitSpace()
+void PageLayout::EmitElasticSpace()
 {
     EnsureDx(spaceDx);
     // don't put spaces at the beginnng of the line and don't emit
     // multiple spaces
-    if ((0 != currX) && CanEmitSpace(currLineInstr)) {
+    if ((0 != currX) && CanEmitElasticSpace(currLineInstr)) {
         currX += spaceDx;
         currLineInstr.Append(DrawInstr(InstrElasticSpace));
     }
@@ -516,10 +519,10 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
         float topPadding = 0;
         attr = t->GetAttrByName("width");
         if (attr)
-            lineIndent = ParseSizeAsPixels(attr->val, attr->valLen, fontSize);
+            lineIndent = ParseSizeAsPixels(attr->val, attr->valLen, currFontSize);
         attr = t->GetAttrByName("height");
         if (attr)
-            topPadding = ParseSizeAsPixels(attr->val, attr->valLen, fontSize);
+            topPadding = ParseSizeAsPixels(attr->val, attr->valLen, currFontSize);
         FlushCurrLine(true);
         EmitParagraphStart(lineIndent, topPadding);
     } else if ((Tag_P == tag) && (t->IsEndTag())) {
@@ -559,7 +562,7 @@ void PageLayout::HandleText(HtmlToken *t)
             if (IsNewline(currStart, curr))
                 EmitNewLine();
             else
-                EmitSpace();
+                EmitElasticSpace();
         }
         currStart = curr;
         SkipNonWs(curr, end);
@@ -577,6 +580,11 @@ bool IsEmptyPage(PageData *p)
         return false;
     DrawInstr *i;
     for (i = p->instructions.IterStart(); i; i = p->instructions.IterNext()) {
+        // if a line only consits of lines we consider it empty. It's different
+        // than what Kindle does but I don't see the purpose of showing such
+        // page to the user
+        if (InstrLine == i->type)
+            continue;
         if (IsVisibleDrawInstr(i))
             return false;
     }

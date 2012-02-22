@@ -133,6 +133,10 @@ bool FontCacheEntry::SameAs(const WCHAR *otherName, float otherSize, FontStyle o
     return str::Eq(name, otherName);
 }
 
+
+// convenience function: given cached style, get a Font object matching the font
+// properties.
+// Caller should not delete the font - it's cached for performance and deleted at exit
 Font *GetCachedFont(const WCHAR *name, float size, FontStyle style)
 {
     ScopedMuiCritSec muiCs;
