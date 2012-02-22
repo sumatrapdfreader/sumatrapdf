@@ -89,6 +89,7 @@
     <ClCompile Include="src\utils\FileUtil.cpp" />
     <ClCompile Include="src\utils\GdiPlusUtil.cpp" />
     <ClCompile Include="src\utils\HtmlPullParser.cpp" />
+    <ClCompile Include="src\utils\HtmlPullParser_ut.cpp" />
     <ClCompile Include="src\utils\Http.cpp" />
     <ClCompile Include="src\utils\NoFreeAllocator.cpp" />
     <ClCompile Include="src\utils\StrUtil.cpp" />

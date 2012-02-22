@@ -73,6 +73,9 @@
     </ClCompile>
     <ClCompile Include="src\ebooktest\EbookControls.cpp" />
     <ClCompile Include="src\ebooktest\EbookController.cpp" />
+    <ClCompile Include="src\utils\HtmlPullParser_ut.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ebooktest\EbookTestMenu.h" />
