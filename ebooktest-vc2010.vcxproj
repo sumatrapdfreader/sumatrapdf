@@ -88,6 +88,7 @@
     <ClCompile Include="src\PageLayout.cpp" />
     <ClCompile Include="src\utils\FileUtil.cpp" />
     <ClCompile Include="src\utils\GdiPlusUtil.cpp" />
+    <ClCompile Include="src\utils\HtmlPrettyPrint.cpp" />
     <ClCompile Include="src\utils\HtmlPullParser.cpp" />
     <ClCompile Include="src\utils\HtmlPullParser_ut.cpp" />
     <ClCompile Include="src\utils\Http.cpp" />
@@ -127,6 +128,7 @@
     <ClInclude Include="src\utils\FileUtil.h" />
     <ClInclude Include="src\utils\FrameTimeoutCalculator.h" />
     <ClInclude Include="src\utils\GdiPlusUtil.h" />
+    <ClInclude Include="src\utils\HtmlPrettyPrint.h" />
     <ClInclude Include="src\utils\HtmlPullParser.h" />
     <ClInclude Include="src\utils\Http.h" />
     <ClInclude Include="src\utils\NoFreeAllocator.h" />

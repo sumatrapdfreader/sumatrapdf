@@ -10,6 +10,7 @@
 #include "DirIter.h"
 #include "CmdLineParser.h"
 #include "HtmlPullParser.h"
+#include "HtmlPrettyPrint.h"
 
 #include "MobiDoc.h"
 #include "EpubDoc.h"

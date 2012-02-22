@@ -76,6 +76,9 @@
     <ClCompile Include="src\utils\HtmlPullParser_ut.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="src\utils\HtmlPrettyPrint.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ebooktest\EbookTestMenu.h" />
@@ -183,6 +186,9 @@
     <ClInclude Include="src\ebooktest\EbookControls.h" />
     <ClInclude Include="src\ebooktest\EbookController.h" />
     <ClInclude Include="src\ebooktest\UiMsgEbook.h" />
+    <ClInclude Include="src\utils\HtmlPrettyPrint.h">
+      <Filter>utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="src\ebooktest\EbookTest.rc" />

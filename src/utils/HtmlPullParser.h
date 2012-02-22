@@ -165,6 +165,7 @@ void        SkipNonWs(const char*& s, const char *end);
 bool        IsSpaceOnly(const char *s, const char *end);
 bool        IsTagSelfClosing(const char *s, size_t len = -1);
 bool        IsTagSelfClosing(HtmlTag tag);
+bool        IsInlineTag(HtmlTag tag);
 
 int         HtmlEntityNameToRune(const char *name, size_t nameLen);
 
