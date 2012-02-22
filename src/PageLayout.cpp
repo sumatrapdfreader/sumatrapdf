@@ -226,6 +226,7 @@ static void SetYPos(Vec<DrawInstr>& instr, float y)
 void PageLayout::JustifyLineBoth()
 {
     REAL extraSpaceDxTotal = pageDx - CurrLineDx();
+    // TODO: can happen if it's a single long word that hasn't been split into multiple lines
     CrashIf(extraSpaceDxTotal < 0.f);
     LayoutLeftStartingAt(0.f);
     size_t spaces = 0;
