@@ -273,6 +273,25 @@ static bool IsVisibleDrawInstr(DrawInstr *i)
     return false;
 }
 
+// empty page is one that consists of only invisible instructions
+bool IsEmptyPage(PageData *p)
+{
+    if (!p)
+        return false;
+    DrawInstr *i;
+    for (i = p->instructions.IterStart(); i; i = p->instructions.IterNext()) {
+        // if a line only consits of lines we consider it empty. It's different
+        // than what Kindle does but I don't see the purpose of showing such
+        // page to the user
+        if (InstrLine == i->type)
+            continue;
+        if (IsVisibleDrawInstr(i))
+            return false;
+    }
+    // all instructions were invisible
+    return true;
+}
+
 bool PageLayout::IsCurrLineEmpty()
 {
     for (DrawInstr *i = currLineInstr.IterStart(); i; i = currLineInstr.IterNext()) {
@@ -356,8 +375,17 @@ bool PageLayout::FlushCurrLine(bool isParagraphBreak)
     return (newPage != NULL);
 }
 
+void PageLayout::EmitEmptyLine(float lineDy)
+{
+    CrashIf(!IsCurrLineEmpty());
+    currY += lineDy;
+    if (currY <= pageDy)
+        return;
+    ForceNewPage();
+}
+
 // add horizontal line (<hr> in html terms)
-void PageLayout::EmitLine()
+void PageLayout::EmitHr()
 {
     // hr creates an implicit paragraph break
     FlushCurrLine(true);
@@ -511,6 +539,72 @@ static float ParseSizeAsPixels(const char *s, size_t len, float emInPoints)
     return sizeInPixels;
 }
 
+void PageLayout::HandleTagBr()
+{
+    // Trying to match Kindle behavior
+    if (IsCurrLineEmpty())
+        EmitEmptyLine(lineSpacing);
+    else
+        FlushCurrLine(true);
+}
+
+void PageLayout::HandleTagP(HtmlToken *t)
+{
+    if (t->IsEndTag()) {
+        FlushCurrLine(true);
+        currJustification = Align_Justify;
+        return;
+    }
+
+    // handle a start p tag
+    AlignAttr just = Align_NotFound;
+    AttrInfo *attr = t->GetAttrByName("align");
+    if (attr) 
+        just = GetAlignAttrByName(attr->val, attr->valLen);;
+    if (just != Align_NotFound)
+        currJustification = just;
+    // best I can tell, in mobi <p width="1em" height="3pt> means that
+    // the first line of the paragrap is indented by 1em and there's
+    /// 3pt top padding
+    float lineIndent = 0;
+    float topPadding = 0;
+    attr = t->GetAttrByName("width");
+    if (attr)
+        lineIndent = ParseSizeAsPixels(attr->val, attr->valLen, currFontSize);
+    attr = t->GetAttrByName("height");
+    if (attr)
+        topPadding = ParseSizeAsPixels(attr->val, attr->valLen, currFontSize);
+    EmitParagraph(lineIndent, topPadding);
+}
+
+void PageLayout::HandleTagFont(HtmlToken *t)
+{
+    if (t->IsEndTag()) {
+        ChangeFontSize(defaultFontSize);
+        return;
+    }
+
+    AttrInfo *attr = t->GetAttrByName("name");
+    float size;
+    if (attr) {
+        // TODO: also use font name (not sure if mobi documents use that)
+        size = 0; // only so that we can set a breakpoing
+    }
+
+    attr = t->GetAttrByName("size");
+    if (!attr)
+        return;
+    size = ParseFloat(attr->val, attr->valLen);
+    // the sizes seem to be in 3-6 range. I try to convert it to
+    // relative sizes that visually match Kindle app
+    if (size < 1.f)
+        size = 1.f;
+    else if (size > 10.f)
+        size = 10.f;
+    float scale = 1.f + (size/10.f * .4f);
+    ChangeFontSize(defaultFontSize * scale);
+}
+
 void PageLayout::HandleHtmlTag(HtmlToken *t)
 {
     CrashAlwaysIf(!t->IsTag());
@@ -521,35 +615,17 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
     if (IgnoreTag(t->s, tagLen))
         return;
 
-    AttrInfo *attr;
     HtmlTag tag = FindTag(t);
     // TODO: ignore instead of crashing once we're satisfied we covered all the tags
     CrashIf(tag == Tag_NotFound);
 
-    if ((Tag_P == tag) && !t->IsEndTag()) {
-        AlignAttr just = Align_NotFound;
-        attr = t->GetAttrByName("align");
-        if (attr) 
-            just = GetAlignAttrByName(attr->val, attr->valLen);;
-        if (just != Align_NotFound)
-            currJustification = just;
-        // best I can tell, in mobi <p width="1em" height="3pt> means that
-        // the first line of the paragrap is indented by 1em and there's
-        /// 3pt top padding
-        float lineIndent = 0;
-        float topPadding = 0;
-        attr = t->GetAttrByName("width");
-        if (attr)
-            lineIndent = ParseSizeAsPixels(attr->val, attr->valLen, currFontSize);
-        attr = t->GetAttrByName("height");
-        if (attr)
-            topPadding = ParseSizeAsPixels(attr->val, attr->valLen, currFontSize);
-        EmitParagraph(lineIndent, topPadding);
-    } else if ((Tag_P == tag) && (t->IsEndTag())) {
-        FlushCurrLine(true);
-        currJustification = Align_Justify;
+    if (Tag_P == tag) {
+        HandleTagP(t);
     } else if (Tag_Hr == tag) {
-        EmitLine();
+        // imitating Kindle: hr is proceeded by an empty line
+        FlushCurrLine(false);
+        EmitEmptyLine(lineSpacing);
+        EmitHr();
     } else if ((Tag_B == tag) || (Tag_Strong == tag)) {
         ChangeFontStyle(FontStyleBold, t->IsStartTag());
     } else if ((Tag_I == tag) || (Tag_Em == tag)) {
@@ -561,32 +637,14 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
     } else if (Tag_Mbp_Pagebreak == tag) {
         ForceNewPage();
     } else if (Tag_Br == tag) {
-        FlushCurrLine(false);
-        // TODO: force empty line
+        HandleTagBr();
     } else if (Tag_Font == tag) {
-        if (t->IsStartTag()) {
-            attr = t->GetAttrByName("name");
-            float size;
-            if (attr) {
-                // TODO: also use font name (not sure if mobi documents use that)
-                size = 0; // only so that we can set a breakpoing
-            }
-            attr = t->GetAttrByName("size");
-            if (attr) {
-                size = ParseFloat(attr->val, attr->valLen);
-                // the sizes seem to be in 3-6 range. I try to convert it to
-                // relative sizes that visually match Kindle app
-                if (size < 1.f)
-                    size = 1.f;
-                else if (size > 10.f)
-                    size = 10.f;
-                float scale = 1.f + (size/10.f * .4f);
-                ChangeFontSize(defaultFontSize * scale);
-            }
-        } else if (t->IsEndTag()) {
-            ChangeFontSize(defaultFontSize);
-        }
-
+        HandleTagFont(t);
+    } else if (Tag_Img == tag) {
+        // TODO: implement me
+        CrashIf(true);
+    } else if (Tag_A == tag) {
+        // TODO: implement me
     }
 }
 
@@ -615,25 +673,6 @@ void PageLayout::HandleText(HtmlToken *t)
             newLinesCount = 0;
         }
     }
-}
-
-// empty page is one that consists of only invisible instructions
-bool IsEmptyPage(PageData *p)
-{
-    if (!p)
-        return false;
-    DrawInstr *i;
-    for (i = p->instructions.IterStart(); i; i = p->instructions.IterNext()) {
-        // if a line only consits of lines we consider it empty. It's different
-        // than what Kindle does but I don't see the purpose of showing such
-        // page to the user
-        if (InstrLine == i->type)
-            continue;
-        if (IsVisibleDrawInstr(i))
-            return false;
-    }
-    // all instructions were invisible
-    return true;
 }
 
 // Return the next parsed page. Returns NULL if finished parsing.
@@ -693,7 +732,8 @@ void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, RE
     //SolidBrush brText(Color(0,0,0));
     SolidBrush brText(Color(0x5F, 0x4B, 0x32)); // this color matches Kindle app
     Pen pen(Color(255, 0, 0), 1);
-    Pen blackPen(Color(0, 0, 0), 1);
+    //Pen linePen(Color(0, 0, 0), 2.f);
+    Pen linePen(Color(0x5F, 0x4B, 0x32), 2.f);
     Font *font = NULL;
 
     WCHAR buf[512];
@@ -710,7 +750,7 @@ void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, RE
             PointF p2(bbox.X + bbox.Width, y);
             if (showBbox)
                 g->DrawRectangle(&pen, bbox);
-            g->DrawLine(&blackPen, p1, p2);
+            g->DrawLine(&linePen, p1, p2);
         } else if (InstrString == i->type) {
             size_t strLen = str::Utf8ToWcharBuf(i->str.s, i->str.len, buf, dimof(buf));
             bbox.GetLocation(&pos);

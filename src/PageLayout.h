@@ -92,6 +92,9 @@ public:
     PageData *IterNext();
 
 private:
+    void HandleTagBr();
+    void HandleTagP(HtmlToken *t);
+    void HandleTagFont(HtmlToken *t);
     void HandleHtmlTag(HtmlToken *t);
     void HandleText(HtmlToken *t);
 
@@ -102,11 +105,12 @@ private:
     void  JustifyCurrLine(AlignAttr align);
     bool  FlushCurrLine(bool isParagraphBreak);
 
-    void  EmitLine();
+    void  EmitHr();
     void  EmitTextRune(const char *s, const char *end);
     void  EmitNewLine();
     void  EmitElasticSpace();
     void  EmitParagraph(float indent, float topPadding);
+    void  EmitEmptyLine(float lineDy);
     void  ForceNewPage();
     bool  EnsureDx(float dx);
 

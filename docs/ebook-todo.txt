@@ -5,7 +5,7 @@ Things to do for the first version of ebook (mobi) support:
 * layout: support different font names (are those used by mobi?)
 * layout: links
 * layout: improvements to background thread layout. We can't change top of the page
-  as a result of the layout as this disorients the use
+  as a result of the layout as this disorients the user
 
 Done:
 * layout: support different font sizes
