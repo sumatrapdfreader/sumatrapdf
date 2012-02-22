@@ -1,5 +1,11 @@
 MAINTAINERCLEANFILES = Makefile.in
 
+SUBDIRS = .
+
+if WANT_JPWL
+SUBDIRS += jpwl
+endif
+
 includesdir = $(includedir)/openjpeg-$(MAJOR_NR).$(MINOR_NR)
 includes_HEADERS = openjpeg.h
 
@@ -8,11 +14,9 @@ lib_LTLIBRARIES = libopenjpeg.la
 libopenjpeg_la_CPPFLAGS = \
 -I. \
 -I$(top_srcdir)/libopenjpeg \
--I$(top_builddir)/libopenjpeg \
-@LCMS1_CFLAGS@ \
-@LCMS2_CFLAGS@
+-I$(top_builddir)/libopenjpeg
 libopenjpeg_la_CFLAGS =
-libopenjpeg_la_LIBADD = @LCMS1_LIBS@ @LCMS2_LIBS@
+libopenjpeg_la_LIBADD = -lm
 libopenjpeg_la_LDFLAGS = -no-undefined -version-info @lt_version@
 
 libopenjpeg_la_SOURCES = \
@@ -31,15 +35,22 @@ openjpeg.c \
 pi.c \
 raw.c \
 t1.c \
+t1_generate_luts.c \
 t2.c \
 tcd.c \
 tgt.c \
+cidx_manager.c \
+phix_manager.c \
+ppix_manager.c \
+thix_manager.c \
+tpix_manager.c \
 bio.h \
 cio.h \
 dwt.h \
 event.h \
 fix.h \
 image.h \
+indexbox_manager.h \
 int.h \
 j2k.h \
 j2k_lib.h \
@@ -47,6 +58,8 @@ jp2.h \
 jpt.h \
 mct.h \
 mqc.h \
+opj_includes.h \
+opj_malloc.h \
 pi.h \
 raw.h \
 t1.h \
@@ -54,8 +67,7 @@ t1_luts.h \
 t2.h \
 tcd.h \
 tgt.h \
-opj_malloc.h \
-opj_includes.h
+cidx_manager.h
 
 EXTRA_DIST = \
 CMakeLists.txt
@@ -67,8 +79,12 @@ install-data-hook:
 	          openjpeg.h
 	@rm -rf $(top_builddir)/report.txt
 	@echo -e " (LA)\t$(libdir)/libopenjpeg.la" >> $(top_builddir)/report.txt
+if BUILD_SHARED
 	@( $(call solist) ) >> $(top_builddir)/report.txt
+endif
+if BUILD_STATIC
 	@echo -e " (A)\t$(base)/$(a)" >> $(top_builddir)/report.txt
+endif
 	@echo -e " (H)\t$(includedir)/openjpeg-$(MAJOR_NR).$(MINOR_NR)/openjpeg.h" >> $(top_builddir)/report.txt
 	@echo -e " (LN)\t$(includedir)/openjpeg.h" >> $(top_builddir)/report.txt
 

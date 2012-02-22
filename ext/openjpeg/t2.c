@@ -149,8 +149,8 @@ static int t2_encode_packet(opj_tcd_tile_t * tile, opj_tcp_t * tcp, opj_pi_itera
 		c[1] = 145;
 		c[2] = 0;
 		c[3] = 4;
-		c[4] = (tile->packno % 65536) / 256;
-		c[5] = (tile->packno % 65536) % 256;
+		c[4] = (unsigned char)((tile->packno % 65536) / 256);
+		c[5] = (unsigned char)((tile->packno % 65536) % 256);
 		c += 6;
 	}
 	/* </SOP> */
@@ -255,8 +255,8 @@ static int t2_encode_packet(opj_tcd_tile_t * tile, opj_tcp_t * tcp, opj_pi_itera
 	/* </EPH> */
 
 	/* << INDEX */
-	// End of packet header position. Currently only represents the distance to start of packet
-	// Will be updated later by incrementing with packet start value
+	/* End of packet header position. Currently only represents the distance to start of packet
+	// Will be updated later by incrementing with packet start value */
 	if(cstr_info && cstr_info->index_write) {
 		opj_packet_info_t *info_PK = &cstr_info->tile[tileno].packet[cstr_info->packno];
 		info_PK->end_ph_pos = (int)(c - dest);
@@ -403,8 +403,8 @@ static int t2_decode_packet(opj_t2_t* t2, unsigned char *src, int len, opj_tcd_t
 		}
 
 		/* << INDEX */
-		// End of packet header position. Currently only represents the distance to start of packet
-		// Will be updated later by incrementing with packet start value
+		/* End of packet header position. Currently only represents the distance to start of packet
+		// Will be updated later by incrementing with packet start value*/
 		if(pack_info) {
 			pack_info->end_ph_pos = (int)(c - src);
 		}
@@ -503,8 +503,8 @@ static int t2_decode_packet(opj_t2_t* t2, unsigned char *src, int len, opj_tcd_t
 	}
 
 	/* << INDEX */
-	// End of packet header position. Currently only represents the distance to start of packet
-	// Will be updated later by incrementing with packet start value
+	/* End of packet header position. Currently only represents the distance to start of packet
+	// Will be updated later by incrementing with packet start value*/
 	if(pack_info) {
 		pack_info->end_ph_pos = (int)(hd - src);
 	}
@@ -568,7 +568,7 @@ static int t2_decode_packet(opj_t2_t* t2, unsigned char *src, int len, opj_tcd_t
 
 #endif /* USE_JPWL */
 				
-				cblk->data = (unsigned char*) opj_realloc(cblk->data, (cblk->len + seg->newlen) * sizeof(unsigned char*));
+				cblk->data = (unsigned char*) opj_realloc(cblk->data, (cblk->len + seg->newlen) * sizeof(unsigned char));
 				memcpy(cblk->data + cblk->len, c, seg->newlen);
 				if (seg->numpasses == 0) {
 					seg->data = &cblk->data;
@@ -662,8 +662,8 @@ int t2_encode_packets(opj_t2_t* t2,int tileno, opj_tcd_tile_t *tile, int maxlaye
 							info_PK->start_pos = ((cp->tp_on | tcp->POC)&& info_PK->start_pos) ? info_PK->start_pos : info_TL->packet[cstr_info->packno - 1].end_pos + 1;
 						}
 						info_PK->end_pos = info_PK->start_pos + e - 1;
-						info_PK->end_ph_pos += info_PK->start_pos - 1;	// End of packet header which now only represents the distance 
-																														// to start of packet is incremented by value of start of packet
+						info_PK->end_ph_pos += info_PK->start_pos - 1;	/* End of packet header which now only represents the distance 
+																														// to start of packet is incremented by value of start of packet*/
 					}
 					
 					cstr_info->packno++;
@@ -728,8 +728,8 @@ int t2_decode_packets(opj_t2_t *t2, unsigned char *src, int len, int tileno, opj
 				opj_packet_info_t *info_PK = &info_TL->packet[cstr_info->packno];
 				if (!cstr_info->packno) {
 					info_PK->start_pos = info_TL->end_header + 1;
-				} else if (info_TL->packet[cstr_info->packno-1].end_pos >= (int)cstr_info->tile[tileno].tp[curtp].tp_end_pos){ // New tile part
-					info_TL->tp[curtp].tp_numpacks = cstr_info->packno - tp_start_packno; // Number of packets in previous tile-part
+				} else if (info_TL->packet[cstr_info->packno-1].end_pos >= (int)cstr_info->tile[tileno].tp[curtp].tp_end_pos){ /* New tile part*/
+					info_TL->tp[curtp].tp_numpacks = cstr_info->packno - tp_start_packno; /* Number of packets in previous tile-part*/
           info_TL->tp[curtp].tp_start_pack = tp_start_packno;
 					tp_start_packno = cstr_info->packno;
 					curtp++;
@@ -738,8 +738,8 @@ int t2_decode_packets(opj_t2_t *t2, unsigned char *src, int len, int tileno, opj
 					info_PK->start_pos = (cp->tp_on && info_PK->start_pos) ? info_PK->start_pos : info_TL->packet[cstr_info->packno - 1].end_pos + 1;
 				}
 				info_PK->end_pos = info_PK->start_pos + e - 1;
-				info_PK->end_ph_pos += info_PK->start_pos - 1;	// End of packet header which now only represents the distance 
-																												// to start of packet is incremented by value of start of packet
+				info_PK->end_ph_pos += info_PK->start_pos - 1;	/* End of packet header which now only represents the distance 
+																												// to start of packet is incremented by value of start of packet*/
 				cstr_info->packno++;
 			}
 			/* << INDEX */
@@ -753,7 +753,7 @@ int t2_decode_packets(opj_t2_t *t2, unsigned char *src, int len, int tileno, opj
 	}
 	/* INDEX >> */
 	if(cstr_info) {
-		cstr_info->tile[tileno].tp[curtp].tp_numpacks = cstr_info->packno - tp_start_packno; // Number of packets in last tile-part
+		cstr_info->tile[tileno].tp[curtp].tp_numpacks = cstr_info->packno - tp_start_packno; /* Number of packets in last tile-part*/
     cstr_info->tile[tileno].tp[curtp].tp_start_pack = tp_start_packno;
 	}
 	/* << INDEX */

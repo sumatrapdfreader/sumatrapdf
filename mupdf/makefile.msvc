@@ -219,7 +219,8 @@ OPENJPEG_OBJS = \
 	$(OOJ)\bio.obj $(OOJ)\cio.obj $(OOJ)\dwt.obj $(OOJ)\event.obj $(OOJ)\image.obj \
 	$(OOJ)\j2k.obj $(OOJ)\j2k_lib.obj $(OOJ)\jp2.obj $(OOJ)\jpt.obj $(OOJ)\mct.obj \
 	$(OOJ)\mqc.obj $(OOJ)\openjpeg.obj $(OOJ)\pi.obj $(OOJ)\raw.obj $(OOJ)\t1.obj \
-	$(OOJ)\t2.obj $(OOJ)\tcd.obj $(OOJ)\tgt.obj
+	$(OOJ)\t2.obj $(OOJ)\tcd.obj $(OOJ)\tgt.obj $(OOJ)\cidx_manager.obj $(OOJ)\phix_manager.obj \
+	$(OOJ)\ppix_manager.obj $(OOJ)\thix_manager.obj $(OOJ)\tpix_manager.obj
 
 FITZ_DRAW_OBJS = \
 	$(OFZ)\draw_affine.obj $(OFZ)\draw_blend.obj $(OFZ)\draw_edge.obj \

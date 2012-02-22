@@ -122,7 +122,7 @@ Modify the packet iterator for enabling tile part generation
 @param cur_totnum_tp The total number of tile parts in the current tile
 @return Returns true if an error is detected 
 */
-bool pi_create_encode(opj_pi_iterator_t *pi, opj_cp_t *cp,int tileno, int pino,int tpnum, int tppos, J2K_T2_MODE t2_mode,int cur_totnum_tp);
+opj_bool pi_create_encode(opj_pi_iterator_t *pi, opj_cp_t *cp,int tileno, int pino,int tpnum, int tppos, J2K_T2_MODE t2_mode,int cur_totnum_tp);
 /**
 Create a packet iterator for Decoder
 @param image Raw image for which the packets will be listed
@@ -147,7 +147,7 @@ Modify the packet iterator to point to the next packet
 @param pi Packet iterator to modify
 @return Returns false if pi pointed to the last packet or else returns true 
 */
-bool pi_next(opj_pi_iterator_t * pi);
+opj_bool pi_next(opj_pi_iterator_t * pi);
 /* ----------------------------------------------------------------------- */
 /*@}*/
 
