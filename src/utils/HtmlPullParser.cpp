@@ -28,6 +28,26 @@ int HtmlEntityNameToRune(const char *name, size_t nameLen)
     return (int)gHtmlEntityRunes[pos];
 }
 
+static uint8 gSelfClosingTags[] = { Tag_Area, Tag_Base, Tag_Basefont, Tag_Br, Tag_Col, Tag_Frame, Tag_Hr, Tag_Img, Tag_Input, Tag_Link, Tag_Mbp_Pagebreak, Tag_Meta, Tag_Pagebreak, Tag_Param };
+
+bool IsTagSelfClosing(HtmlTag tag)
+{
+    CrashIf(tag > 255);
+    CrashIf(Tag_Last > 255);
+    uint8 tagNo = (uint8)tag;
+    for (size_t i = 0; i < dimof(gSelfClosingTags); i++) {
+        if (tagNo == gSelfClosingTags[i])
+            return true;
+    }
+    return false;
+}
+
+bool IsTagSelfClosing(const char *s, size_t len)
+{
+    HtmlTag tag = FindTag(s, len);
+    return IsTagSelfClosing(tag);
+}
+
 static bool SkipUntil(const char*& s, const char *end, char c)
 {
     while ((s < end) && (*s != c)) {
@@ -304,23 +324,11 @@ static bool SkipUntilTagEnd(const char*& s, const char *end)
     return false;
 }
 
-static bool IsSelfClosingTag(HtmlTag tag)
-{
-    // TODO: add more tags
-    switch (tag) {
-    case Tag_Br: case Tag_Img: case Tag_Hr: case Tag_Link:
-    case Tag_Meta: case Tag_Pagebreak: case Tag_Mbp_Pagebreak:
-        return true;
-    default:
-        return false;
-    }
-}
-
 // record the tag for the purpose of building current state
 // of html tree
 static void RecordStartTag(Vec<HtmlTag>* tagNesting, HtmlTag tag)
 {
-    if (!IsSelfClosingTag(tag))
+    if (!IsTagSelfClosing(tag))
         tagNesting->Append(tag);
 }
 
@@ -407,9 +415,16 @@ Next:
     return &currToken;
 }
 
+HtmlTag FindTag(const char *s, size_t len)
+{
+    if (-1 == len)
+        len = str::Len(s);
+    return (HtmlTag)str::FindStrPosI(HTML_TAGS_STRINGS, s, len);
+}
+
 HtmlTag FindTag(HtmlToken *tok)
 {
-    return (HtmlTag)str::FindStrPosI(HTML_TAGS_STRINGS, tok->s, GetTagLen(tok));
+    return FindTag(tok->s, GetTagLen(tok));
 }
 
 #if 0

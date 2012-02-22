@@ -14,97 +14,68 @@ enum HtmlTag {
     Tag_A = 0,
     Tag_Abbr = 1,
     Tag_Acronym = 2,
-    Tag_Audio = 3,
-    Tag_B = 4,
-    Tag_Blockquote = 5,
-    Tag_Body = 6,
-    Tag_Br = 7,
-    Tag_Center = 8,
-    Tag_Code = 9,
-    Tag_Dd = 10,
-    Tag_Div = 11,
-    Tag_Dl = 12,
-    Tag_Dt = 13,
-    Tag_Em = 14,
-    Tag_Font = 15,
-    Tag_Guide = 16,
-    Tag_H1 = 17,
-    Tag_H2 = 18,
-    Tag_H3 = 19,
-    Tag_H4 = 20,
-    Tag_H5 = 21,
-    Tag_Head = 22,
-    Tag_Hr = 23,
-    Tag_Html = 24,
-    Tag_I = 25,
-    Tag_Img = 26,
-    Tag_Li = 27,
-    Tag_Link = 28,
-    Tag_Mbp_Pagebreak = 29,
-    Tag_Meta = 30,
-    Tag_Object = 31,
-    Tag_Ol = 32,
-    Tag_P = 33,
-    Tag_Pagebreak = 34,
-    Tag_Pre = 35,
-    Tag_Reference = 36,
-    Tag_S = 37,
-    Tag_Small = 38,
-    Tag_Span = 39,
-    Tag_Strike = 40,
-    Tag_Strong = 41,
-    Tag_Style = 42,
-    Tag_Sub = 43,
-    Tag_Sup = 44,
-    Tag_Table = 45,
-    Tag_Td = 46,
-    Tag_Th = 47,
-    Tag_Title = 48,
-    Tag_Tr = 49,
-    Tag_Tt = 50,
-    Tag_U = 51,
-    Tag_Ul = 52,
-    Tag_Video = 53,
-    Tag_Last = 54
+    Tag_Area = 3,
+    Tag_Audio = 4,
+    Tag_B = 5,
+    Tag_Base = 6,
+    Tag_Basefont = 7,
+    Tag_Blockquote = 8,
+    Tag_Body = 9,
+    Tag_Br = 10,
+    Tag_Center = 11,
+    Tag_Code = 12,
+    Tag_Col = 13,
+    Tag_Dd = 14,
+    Tag_Div = 15,
+    Tag_Dl = 16,
+    Tag_Dt = 17,
+    Tag_Em = 18,
+    Tag_Font = 19,
+    Tag_Frame = 20,
+    Tag_Guide = 21,
+    Tag_H1 = 22,
+    Tag_H2 = 23,
+    Tag_H3 = 24,
+    Tag_H4 = 25,
+    Tag_H5 = 26,
+    Tag_Head = 27,
+    Tag_Hr = 28,
+    Tag_Html = 29,
+    Tag_I = 30,
+    Tag_Img = 31,
+    Tag_Input = 32,
+    Tag_Li = 33,
+    Tag_Link = 34,
+    Tag_Mbp_Pagebreak = 35,
+    Tag_Meta = 36,
+    Tag_Object = 37,
+    Tag_Ol = 38,
+    Tag_P = 39,
+    Tag_Pagebreak = 40,
+    Tag_Param = 41,
+    Tag_Pre = 42,
+    Tag_Reference = 43,
+    Tag_S = 44,
+    Tag_Small = 45,
+    Tag_Span = 46,
+    Tag_Strike = 47,
+    Tag_Strong = 48,
+    Tag_Style = 49,
+    Tag_Sub = 50,
+    Tag_Sup = 51,
+    Tag_Table = 52,
+    Tag_Td = 53,
+    Tag_Th = 54,
+    Tag_Title = 55,
+    Tag_Tr = 56,
+    Tag_Tt = 57,
+    Tag_U = 58,
+    Tag_Ul = 59,
+    Tag_Video = 60,
+    Tag_Last = 61
 };
-#define HTML_TAGS_STRINGS "a\0abbr\0acronym\0audio\0b\0blockquote\0body\0br\0center\0code\0dd\0div\0dl\0dt\0em\0font\0guide\0h1\0h2\0h3\0h4\0h5\0head\0hr\0html\0i\0img\0li\0link\0mbp:pagebreak\0meta\0object\0ol\0p\0pagebreak\0pre\0reference\0s\0small\0span\0strike\0strong\0style\0sub\0sup\0table\0td\0th\0title\0tr\0tt\0u\0ul\0video\0"
 
-#if 0 // TODO: conflicts with HtmlAttr in TrivialHtmlParser.cpp and is not used anywhere (yet?)
-// enums must match HTML_ATTRS_STRINGS order
-enum HtmlAttr {
-    Attr_NotFound = -1,
-    Attr_Align = 0,
-    Attr_Bgcolor = 1,
-    Attr_Border = 2,
-    Attr_Class = 3,
-    Attr_Clear = 4,
-    Attr_Color = 5,
-    Attr_Colspan = 6,
-    Attr_Controls = 7,
-    Attr_Face = 8,
-    Attr_Filepos = 9,
-    Attr_Height = 10,
-    Attr_Href = 11,
-    Attr_Id = 12,
-    Attr_Lang = 13,
-    Attr_Link = 14,
-    Attr_Mediarecindex = 15,
-    Attr_Recindex = 16,
-    Attr_Rowspan = 17,
-    Attr_Size = 18,
-    Attr_Style = 19,
-    Attr_Title = 20,
-    Attr_Valign = 21,
-    Attr_Value = 22,
-    Attr_Vlink = 23,
-    Attr_Width = 24,
-    Attr_Xmlns = 25,
-    Attr_Xmlns_Dc = 26,
-    Attr_Last = 27
-};
-#define HTML_ATTRS_STRINGS "align\0bgcolor\0border\0class\0clear\0color\0colspan\0controls\0face\0filepos\0height\0href\0id\0lang\0link\0mediarecindex\0recindex\0rowspan\0size\0style\0title\0valign\0value\0vlink\0width\0xmlns\0xmlns:dc\0"
-
-#endif
+#define HTML_TAGS_STRINGS "a\0abbr\0acronym\0area\0audio\0b\0base\0basefont\0blockquote\0body\0br\0center\0code\0col\0dd\0div\0dl\0dt\0em\0font\0frame\0guide\0h1\0h2\0h3\0h4\0h5\0head\0hr\0html\0i\0img\0input\0li\0link\0mbp:pagebreak\0meta\0object\0ol\0p\0pagebreak\0param\0pre\0reference\0s\0small\0span\0strike\0strong\0style\0sub\0sup\0table\0td\0th\0title\0tr\0tt\0u\0ul\0video\0"
 
 // enums must match ALIGN_ATTRS_STRINGS order
 enum AlignAttr {
@@ -192,11 +163,14 @@ public:
 void        SkipWs(const char*& s, const char *end);
 void        SkipNonWs(const char*& s, const char *end);
 bool        IsSpaceOnly(const char *s, const char *end);
+bool        IsTagSelfClosing(const char *s, size_t len = -1);
+bool        IsTagSelfClosing(HtmlTag tag);
 
 int         HtmlEntityNameToRune(const char *name, size_t nameLen);
 
+HtmlTag     FindTag(const char *s, size_t len = -1);
 HtmlTag     FindTag(HtmlToken *tok);
-//HtmlAttr    FindAttr(AttrInfo *attrInfo);
+
 AlignAttr   GetAlignAttrByName(const char *attr, size_t len);
 
 char *      PrettyPrintHtml(const char *s, size_t len, size_t& lenOut);

@@ -75,20 +75,6 @@ static bool IsUnquotedAttrValEnd(char c) {
     return !c || IsWs(c) || c == '/' || c == '>';
 }
 
-static int cmpCharPtrs(const void *a, const void *b)
-{
-    return strcmp(*(const char **)a, *(const char **)b);
-}
-
-static bool IsTagSelfclosing(const char *name)
-{
-    static const char *tagList[] = {
-        "area", "base", "basefont", "br", "col", "frame",
-        "hr", "img", "input", "link", "meta", "param"
-    };
-    return bsearch(&name, tagList, dimof(tagList), sizeof(const char *), cmpCharPtrs) != NULL;
-}
-
 HtmlElement *HtmlElement::GetChildByName(const char *name, int idx) const
 {
     for (HtmlElement *el = down; el; el = el->next) {
@@ -136,7 +122,7 @@ static TCHAR *DecodeHtmlEntitites(const char *string, UINT codepage=CP_ACP)
 
         // named entities. We rely on the fact that entity names
         // do not contain non-ascii (> 127) characters so we can
-        // ignore codepage without a change to the result
+        // ignore codepage without impact on search results
         size_t stringLen = str::Len(string);
         int rune = HtmlEntityNameToRune(string, stringLen);
         if (-1 != rune) {
@@ -357,7 +343,7 @@ ParseText:
     if (tagEndLen > 0) {
         *tagEnd = 0;
         StartTag(tagName);
-        if (tagEndLen == 2 || IsTagSelfclosing(tagName))
+        if (tagEndLen == 2 || IsTagSelfClosing(tagName))
             CloseTag(tagName);
         s += tagEndLen;
         goto ParseText;
@@ -395,7 +381,7 @@ ParseAttributes:
         return ParseError(ErrParsingAttributes);
 
 FoundElementEnd:
-    if (tagEndLen == 2 || IsTagSelfclosing(tagName))
+    if (tagEndLen == 2 || IsTagSelfClosing(tagName))
         CloseTag(tagName);
     s += tagEndLen;
     goto ParseText;
