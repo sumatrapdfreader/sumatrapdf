@@ -79,6 +79,9 @@
     <ClCompile Include="src\utils\HtmlPrettyPrint.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="src\utils\TrivialHtmlParser_ut.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ebooktest\EbookTestMenu.h" />
