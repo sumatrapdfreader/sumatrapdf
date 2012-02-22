@@ -106,12 +106,13 @@ private:
     void  EmitTextRune(const char *s, const char *end);
     void  EmitNewLine();
     void  EmitElasticSpace();
-    void  EmitParagraphStart(float indent, float topPadding);
+    void  EmitParagraph(float indent, float topPadding);
     void  ForceNewPage();
     bool  EnsureDx(float dx);
 
-    void  SetCurrentFont(FontStyle fs);
-    void  ChangeFont(FontStyle fs, bool isStart);
+    void  SetCurrentFont(FontStyle fs, float fontSize);
+    void  ChangeFontStyle(FontStyle fs, bool isStart);
+    void  ChangeFontSize(float fontSize);
 
     bool  IsCurrLineEmpty();
 

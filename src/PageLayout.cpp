@@ -43,7 +43,7 @@ static bool IsNewline(const char *s, const char *end)
 
 // return true if s points to "\n", "\r" or "\r\n"
 // and advance s/left to skip it
-// We don't want to collapse multiple consequitive newlines into
+// We don't want to collapse multiple consecutive newlines into
 // one as we want to be able to detect paragraph breaks (i.e. empty
 // newlines i.e. a newline following another newline)
 static bool IsNewlineSkip(const char *& s, size_t& left)
@@ -101,13 +101,18 @@ PageLayout::~PageLayout()
     mui::FreeGraphicsForMeasureText(gfx);
 }
 
-void PageLayout::SetCurrentFont(FontStyle fs)
+void PageLayout::SetCurrentFont(FontStyle fontStyle, float fontSize)
 {
-    currFontStyle = fs;
-    currFont = mui::GetCachedFont(defaultFontName.Get(), currFontSize, fs);
+    Font *newFont = mui::GetCachedFont(defaultFontName.Get(), fontSize, fontStyle);
+    if (currFont == newFont)
+        return;
+    currFontStyle = fontStyle;
+    currFontSize = fontSize;
+    currFont = newFont;
+    currLineInstr.Append(DrawInstr::SetFont(currFont));
 }
 
-static bool ValidFontStyleForChangeFont(FontStyle fs)
+static bool ValidStyleForChangeFontStyle(FontStyle fs)
 {
     if ((FontStyleBold == fs) ||
         (FontStyleItalic == fs) ||
@@ -123,19 +128,21 @@ static bool ValidFontStyleForChangeFont(FontStyle fs)
 // TODO: it doesn't support the case where the same style is nested
 // like "<b>fo<b>oo</b>bar</b>" - "bar" should still be bold but wont
 // We would have to maintain counts for each style to do it fully right
-void PageLayout::ChangeFont(FontStyle fs, bool addStyle)
+void PageLayout::ChangeFontStyle(FontStyle fs, bool addStyle)
 {
-    CrashAlwaysIf(!ValidFontStyleForChangeFont(fs));
+    CrashAlwaysIf(!ValidStyleForChangeFontStyle(fs));
     FontStyle newFontStyle = currFontStyle;
     if (addStyle)
         newFontStyle = (FontStyle) (newFontStyle | fs);
     else
         newFontStyle = (FontStyle) (newFontStyle & ~fs);
 
-    if (newFontStyle == currFontStyle)
-        return; // a no-op
-    SetCurrentFont(newFontStyle);
-    currLineInstr.Append(DrawInstr::SetFont(currFont));
+    SetCurrentFont(newFontStyle, currFontSize);
+}
+
+void PageLayout::ChangeFontSize(float fontSize)
+{
+    SetCurrentFont(currFontStyle, fontSize);
 }
 
 PageData *PageLayout::IterStart(LayoutInfo* layoutInfo)
@@ -151,11 +158,10 @@ PageData *PageLayout::IterStart(LayoutInfo* layoutInfo)
     gfx = mui::AllocGraphicsForMeasureText();
     defaultFontName.Set(str::Dup(layoutInfo->fontName));
     defaultFontSize = layoutInfo->fontSize;
-    currFontSize = defaultFontSize;
-    SetCurrentFont(FontStyleRegular);
+    SetCurrentFont(FontStyleRegular, defaultFontSize);
 
     lineSpacing = currFont->GetHeight(gfx);
-    // note: this is a heuristic, using 
+    // note: a heuristic
     spaceDx = currFontSize / 2.5f;
     float spaceDx2 = GetSpaceDx(gfx, currFont);
     if (spaceDx2 < spaceDx)
@@ -185,6 +191,7 @@ REAL PageLayout::CurrLineDx()
     return dx;
 }
 
+// return the height of the tallest element on the line
 float PageLayout::CurrLineDy()
 {
     float dy = lineSpacing;
@@ -197,12 +204,13 @@ float PageLayout::CurrLineDy()
     return dy;
 }
 
+// When this is called, Width and Height of each element is already set
+// We set position x of each visible element
 void PageLayout::LayoutLeftStartingAt(REAL offX)
 {
     REAL x = offX;
     for (DrawInstr *i = currLineInstr.IterStart(); i; i = currLineInstr.IterNext()) {
         if (InstrString == i->type) {
-            // currInstr Width and Height are already set
             i->bbox.X = x;
             x += i->bbox.Width;
         } else if (InstrElasticSpace == i->type) {
@@ -214,7 +222,8 @@ void PageLayout::LayoutLeftStartingAt(REAL offX)
 }
 
 // TODO: if elements are of different sizes (e.g. texts using different fonts)
-// we should align them according to the baseline
+// we should align them according to the baseline (which we would first need to
+// record for each element)
 static void SetYPos(Vec<DrawInstr>& instr, float y)
 {
     for (DrawInstr *i = instr.IterStart(); i; i = instr.IterNext()) {
@@ -277,21 +286,21 @@ bool PageLayout::IsCurrLineEmpty()
 void PageLayout::JustifyCurrLine(AlignAttr align)
 {
     switch (align) {
-    case Align_Left:
-        LayoutLeftStartingAt(0.f);
-        break;
-    case Align_Right:
-        LayoutLeftStartingAt(pageDx - CurrLineDx());
-        break;
-    case Align_Center:
-        LayoutLeftStartingAt((pageDx - CurrLineDx()) / 2.f);
-        break;
-    case Align_Justify:
-        JustifyLineBoth();
-        break;
-    default:
-        CrashIf(true);
-        break;
+        case Align_Left:
+            LayoutLeftStartingAt(0.f);
+            break;
+        case Align_Right:
+            LayoutLeftStartingAt(pageDx - CurrLineDx());
+            break;
+        case Align_Center:
+            LayoutLeftStartingAt((pageDx - CurrLineDx()) / 2.f);
+            break;
+        case Align_Justify:
+            JustifyLineBoth();
+            break;
+        default:
+            CrashIf(true);
+            break;
     }
 }
 
@@ -302,6 +311,7 @@ void PageLayout::ForceNewPage()
         return;
     pagesToSend.Append(currPage);
     currPage = new PageData();
+
     currPage->instructions.Append(DrawInstr::SetFont(currFont));
     currY = 0.f;
     currX = 0.f;
@@ -323,6 +333,7 @@ bool PageLayout::FlushCurrLine(bool isParagraphBreak)
     float totalLineDy = CurrLineDy() + currLineTopPadding;
     PageData *newPage = NULL;
     if (currY + totalLineDy > pageDy) {
+        pagesToSend.Append(currPage);
         // current line too big to fit in current page,
         // so need to start another page
         currY = 0.f;
@@ -336,7 +347,6 @@ bool PageLayout::FlushCurrLine(bool isParagraphBreak)
         // so we have to carry over some state (like current font)
         CrashIf(!currFont);
         newPage->instructions.Append(DrawInstr::SetFont(currFont));
-        pagesToSend.Append(currPage);
         currPage = newPage;
     }
     currPage->instructions.Append(currLineInstr.LendData(), currLineInstr.Count());
@@ -364,8 +374,9 @@ static bool ShouldAddIndent(float indent, AlignAttr just)
     return (Align_Left == just) || (Align_Justify == just);
 }
 
-void PageLayout::EmitParagraphStart(float indent, float topPadding)
+void PageLayout::EmitParagraph(float indent, float topPadding)
 {
+    FlushCurrLine(true);
     CrashIf(0 != currX);
     if (ShouldAddIndent(indent, currJustification) && EnsureDx(indent)) {
         currLineInstr.Append(DrawInstr::FixedSpace(indent));
@@ -388,9 +399,9 @@ bool PageLayout::EnsureDx(float dx)
 
 // don't emit multiple spaces and don't emit spaces
 // at the beginning of the line
-static bool CanEmitElasticSpace(Vec<DrawInstr>& currLineInstr)
+static bool CanEmitElasticSpace(float currX, Vec<DrawInstr>& currLineInstr)
 {
-    if (0 == currLineInstr.Count())
+    if (0 == currX)
         return false;
     DrawInstr& di = currLineInstr.Last();
     return (InstrElasticSpace != di.type) && (InstrFixedSpace != di.type);
@@ -399,7 +410,7 @@ static bool CanEmitElasticSpace(Vec<DrawInstr>& currLineInstr)
 void PageLayout::EmitNewLine()
 {
     // a single newline is considered "soft" and ignored
-    // two or more consequitive newlines are considered a
+    // two or more consecutive newlines are considered a
     // single paragraph break
     newLinesCount++;
     if (2 == newLinesCount)
@@ -408,16 +419,14 @@ void PageLayout::EmitNewLine()
 
 void PageLayout::EmitElasticSpace()
 {
+    if (!CanEmitElasticSpace(currX, currLineInstr))
+        return;
     EnsureDx(spaceDx);
-    // don't put spaces at the beginnng of the line and don't emit
-    // multiple spaces
-    if ((0 != currX) && CanEmitElasticSpace(currLineInstr)) {
-        currX += spaceDx;
-        currLineInstr.Append(DrawInstr(InstrElasticSpace));
-    }
+    currX += spaceDx;
+    currLineInstr.Append(DrawInstr(InstrElasticSpace));
 }
 
-// a text rune is a string of consequitive text with uniform style
+// a text rune is a string of consecutive text with uniform style
 void PageLayout::EmitTextRune(const char *s, const char *end)
 {
     CrashIf(IsSpaceOnly(s, end));
@@ -472,6 +481,17 @@ static bool IgnoreTag(const char *s, size_t sLen)
     return false;
 }
 
+// parse the number in s as a float
+static float ParseFloat(const char *s, size_t len)
+{
+    str::Str<char> sCopy;
+    sCopy.Append(s, len);
+    char *toParse = sCopy.Get();
+    float x = 0;
+    str::Parse(toParse, "%f", &x);
+    return x;
+}
+
 // parses size in the form "1em" or "3pt". To interpret ems we need emInPoints
 // to be passed by the caller
 static float ParseSizeAsPixels(const char *s, size_t len, float emInPoints)
@@ -501,13 +521,14 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
     if (IgnoreTag(t->s, tagLen))
         return;
 
+    AttrInfo *attr;
     HtmlTag tag = FindTag(t);
     // TODO: ignore instead of crashing once we're satisfied we covered all the tags
     CrashIf(tag == Tag_NotFound);
 
     if ((Tag_P == tag) && !t->IsEndTag()) {
         AlignAttr just = Align_NotFound;
-        AttrInfo *attr = t->GetAttrByName("align");
+        attr = t->GetAttrByName("align");
         if (attr) 
             just = GetAlignAttrByName(attr->val, attr->valLen);;
         if (just != Align_NotFound)
@@ -523,26 +544,49 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
         attr = t->GetAttrByName("height");
         if (attr)
             topPadding = ParseSizeAsPixels(attr->val, attr->valLen, currFontSize);
-        FlushCurrLine(true);
-        EmitParagraphStart(lineIndent, topPadding);
+        EmitParagraph(lineIndent, topPadding);
     } else if ((Tag_P == tag) && (t->IsEndTag())) {
         FlushCurrLine(true);
         currJustification = Align_Justify;
     } else if (Tag_Hr == tag) {
         EmitLine();
     } else if ((Tag_B == tag) || (Tag_Strong == tag)) {
-        ChangeFont(FontStyleBold, t->IsStartTag());
+        ChangeFontStyle(FontStyleBold, t->IsStartTag());
     } else if ((Tag_I == tag) || (Tag_Em == tag)) {
-        ChangeFont(FontStyleItalic, t->IsStartTag());
+        ChangeFontStyle(FontStyleItalic, t->IsStartTag());
     } else if (Tag_U == tag) {
-        ChangeFont(FontStyleUnderline, t->IsStartTag());
+        ChangeFontStyle(FontStyleUnderline, t->IsStartTag());
     } else if (Tag_Strike == tag) {
-        ChangeFont(FontStyleStrikeout, t->IsStartTag());
+        ChangeFontStyle(FontStyleStrikeout, t->IsStartTag());
     } else if (Tag_Mbp_Pagebreak == tag) {
         ForceNewPage();
     } else if (Tag_Br == tag) {
         FlushCurrLine(false);
-        // TODO: force empty line unless we're at the beginning of the page
+        // TODO: force empty line
+    } else if (Tag_Font == tag) {
+        if (t->IsStartTag()) {
+            attr = t->GetAttrByName("name");
+            float size;
+            if (attr) {
+                // TODO: also use font name (not sure if mobi documents use that)
+                size = 0; // only so that we can set a breakpoing
+            }
+            attr = t->GetAttrByName("size");
+            if (attr) {
+                size = ParseFloat(attr->val, attr->valLen);
+                // the sizes seem to be in 3-6 range. I try to convert it to
+                // relative sizes that visually match Kindle app
+                if (size < 1.f)
+                    size = 1.f;
+                else if (size > 10.f)
+                    size = 10.f;
+                float scale = 1.f + (size/10.f * .4f);
+                ChangeFontSize(defaultFontSize * scale);
+            }
+        } else if (t->IsEndTag()) {
+            ChangeFontSize(defaultFontSize);
+        }
+
     }
 }
 
@@ -557,7 +601,7 @@ void PageLayout::HandleText(HtmlToken *t)
     while (curr < end) {
         currStart = curr;
         SkipWs(curr, end);
-        // collapse multiple, consequitive white-spaces into a single space
+        // collapse multiple, consecutive white-spaces into a single space
         if (curr > currStart) {
             if (IsNewline(currStart, curr))
                 EmitNewLine();

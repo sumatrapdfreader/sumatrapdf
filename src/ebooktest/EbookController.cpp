@@ -14,7 +14,7 @@
 #include "DebugLog.h"
 
 #define FONT_NAME              L"Georgia"
-#define FONT_SIZE              13
+#define FONT_SIZE              12.5
 
 // in EbookTest.cpp
 void RestartLayoutTimer();

@@ -2,13 +2,14 @@ Things to do for the first version of ebook (mobi) support:
 * mobi: read codepage and other metadata
 * mobi: parse table of content (<html><head><guide><reference type="toc" title="Table of Contents", filepos=$N />)
 * layout: support images
-* layout: support different fonts
-* layout: indent first line of a paragraph
+* layout: support different font names (are those used by mobi?)
 * layout: links
 * layout: improvements to background thread layout. We can't change top of the page
   as a result of the layout as this disorients the use
 
 Done:
+* layout: support different font sizes
+* layout: indent first line of a paragraph
 * delay trigerring background layout during resize so that we don't overdo it
 * layout: resolve html entities
 * layout: support bold/italic/underline

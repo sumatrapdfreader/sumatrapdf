@@ -248,7 +248,7 @@ const char *FindI(const char *s, const char *find)
     return NULL;
 }
 
-// strings is an array of 0-separated strings consequitevely laid out
+// strings is an array of 0-separated strings consecutively laid out
 // in memory. This functions find the position of str in this array,
 // -1 means not found. The search is case-insensitive
 int FindStrPosI(const char *strings, const char *str, size_t len)
@@ -283,7 +283,7 @@ Next:
     return -1;
 }
 
-// strings is an array of 0-separated strings consequitevely laid out
+// strings is an array of 0-separated strings consecutively laid out
 // in memory. This functions find the position of str in this array,
 // -1 means not found. The search is case-sensitive
 int FindStrPos(const char *strings, const char *str, size_t len)
