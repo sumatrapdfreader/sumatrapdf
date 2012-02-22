@@ -95,6 +95,7 @@ void ThreadLayoutMobi::Run()
     li.pageDx = pageDx;
     li.pageDy = pageDy;
     li.textAllocator = textAllocator;
+    li.mobiDoc = mobiDoc;
     li.htmlStr = mobiDoc->GetBookHtmlData(li.htmlStrLen);
 
     l("Started laying out mob");
@@ -170,6 +171,7 @@ static LayoutInfo *GetLayoutInfo(const char *html, MobiDoc *mb, int dx, int dy, 
     li->htmlStrLen = len;
     li->pageDx = dx;
     li->pageDy = dy;
+    li->mobiDoc = mb;
     li->textAllocator = textAllocator;
     return li;
 }

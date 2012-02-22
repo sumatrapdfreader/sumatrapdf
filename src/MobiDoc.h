@@ -57,8 +57,8 @@ STATIC_ASSERT(kPdbRecordHeaderLen == sizeof(PdbRecordHeader), validPdbRecordHead
 #define kMaxRecordSize 64*1024
 
 struct ImageData {
-    uint8 *     imgData;
-    size_t      imgDataLen;
+    char *      data;
+    size_t      len;
 };
 
 class MobiDoc
@@ -103,15 +103,13 @@ public:
     size_t              validImagesCount;
     ImageData *         images;
 
-    static MobiDoc *ParseFile(const TCHAR *fileName);
-
-    char *GetBookHtmlData(size_t& lenOut) {
-        lenOut = doc->Size();
-        return doc->Get();
-    }
-
     ~MobiDoc();
-    bool LoadDocument();
+
+    bool                LoadDocument();
+    char *              GetBookHtmlData(size_t& lenOut) const;
+    ImageData *         GetCoverImage();
+
+    static MobiDoc *    ParseFile(const TCHAR *fileName);
 };
 
 #endif

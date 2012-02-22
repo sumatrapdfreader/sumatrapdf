@@ -6,6 +6,7 @@
 
 #include "BaseUtil.h"
 #include "HtmlPullParser.h"
+#include "MobiDoc.h"
 #include "Scoped.h"
 #include "Vec.h"
 
@@ -26,21 +27,21 @@ enum DrawInstrType {
     // a vertical line
     InstrLine,
     // change current font
-    InstrSetFont
-};
-
-struct InstrStringData {
-    const char *        s;
-    size_t              len;
+    InstrSetFont,
+    InstrImage
 };
 
 struct DrawInstr {
     DrawInstrType       type;
     union {
         // info specific to a given instruction
-        InstrStringData     str;          // InstrString
+        struct {
+            const char *s;
+            size_t      len;
+        }                   str;          // InstrString
         Font *              font;         // InstrSetFont
         float               fixedSpaceDx; // InstrFixedSpace
+        ImageData           img;
     };
     RectF bbox; // common to most instructions
 
@@ -50,6 +51,7 @@ struct DrawInstr {
 
     // helper constructors for instructions that need additional arguments
     static DrawInstr Str(const char *s, size_t len, RectF bbox);
+    static DrawInstr Image(char *data, size_t len, RectF bbox);
     static DrawInstr SetFont(Font *font);
     static DrawInstr FixedSpace(float dx);
 };
@@ -63,7 +65,7 @@ class LayoutInfo {
 public:
     LayoutInfo() :
       pageDx(0), pageDy(0), fontName(NULL), fontSize(0),
-      textAllocator(NULL), htmlStr(0), htmlStrLen(0)
+      textAllocator(NULL), mobiDoc(NULL), htmlStr(0), htmlStrLen(0)
     { }
 
     int             pageDx;
@@ -78,6 +80,7 @@ public:
        used to allocate this text. */
     Allocator *     textAllocator;
 
+    MobiDoc *       mobiDoc;
     const char *    htmlStr;
     size_t          htmlStrLen;
 };
@@ -105,6 +108,7 @@ private:
     void  JustifyCurrLine(AlignAttr align);
     bool  FlushCurrLine(bool isParagraphBreak);
 
+    void  EmitImage(ImageData *img);
     void  EmitHr();
     void  EmitTextRune(const char *s, const char *end);
     void  EmitNewLine();

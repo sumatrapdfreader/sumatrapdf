@@ -535,7 +535,7 @@ MobiDoc::~MobiDoc()
     free(recHeaders);
     free(bufDynamic);
     for (size_t i = 0; i < imagesCount; i++)
-        free(images[i].imgData);
+        free(images[i].data);
     free(images);
     delete huffDic;
     delete doc;
@@ -758,8 +758,8 @@ static bool KnownImageFormat(uint8 *data, size_t dataLen)
 bool MobiDoc::LoadImage(size_t imageNo)
 {
     size_t imageRec = imageFirstRec + imageNo;
-    images[imageNo].imgData = 0;
-    images[imageNo].imgDataLen = 0;
+    images[imageNo].data = 0;
+    images[imageNo].len = 0;
     size_t imgDataLen;
 
     uint8 *imgData = (uint8*)ReadRecord(imageRec, imgDataLen);
@@ -775,10 +775,10 @@ bool MobiDoc::LoadImage(size_t imageNo)
         l("Unknown image format\n");
         return true;
     }
-    images[imageNo].imgData = (uint8*)memdup(imgData, imgDataLen);
-    if (!images[imageNo].imgData)
+    images[imageNo].data = (char*)memdup(imgData, imgDataLen);
+    if (!images[imageNo].data)
         return false;
-    images[imageNo].imgDataLen = imgDataLen;
+    images[imageNo].len = imgDataLen;
     ++validImagesCount;
     return true;
 }
@@ -792,6 +792,28 @@ void MobiDoc::LoadImages()
         if (!LoadImage(i))
             return;
     }
+}
+
+// first two images seem to be the same picture of the cover
+// except at different resolutions
+ImageData *MobiDoc::GetCoverImage()
+{
+    if (0 == validImagesCount)
+        return NULL;
+    size_t coverImage = 0;
+    Rect size;
+    for (size_t i = 0; i < 2; i++) {
+        Rect s = BitmapSizeFromData(images[i].data, images[i].len);
+        int32 prevSize = size.Width * size.Height;
+        int32 currSize = s.Width * s.Height;
+        if (currSize > prevSize) {
+            coverImage = i;
+            size = s;
+        }
+    }
+    if (size.IsEmptyArea())
+        return NULL;
+    return &images[coverImage];
 }
 
 size_t MobiDoc::GetRecordSize(size_t recNo)
@@ -916,6 +938,12 @@ bool MobiDoc::LoadDocument()
     }
     assert(docUncompressedSize == doc->Size());
     return true;
+}
+
+char *MobiDoc::GetBookHtmlData(size_t& lenOut) const
+{
+    lenOut = doc->Size();
+    return doc->Get();
 }
 
 MobiDoc *MobiDoc::ParseFile(const TCHAR *fileName)

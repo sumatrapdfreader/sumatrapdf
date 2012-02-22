@@ -86,6 +86,15 @@ DrawInstr DrawInstr::FixedSpace(float dx)
     return di;
 }
 
+DrawInstr DrawInstr::Image(char *data, size_t len, RectF bbox)
+{
+    DrawInstr di(InstrImage);
+    di.img.data = data;
+    di.img.len = len;
+    di.bbox = bbox;
+    return di;
+}
+
 PageLayout::PageLayout() : currPage(NULL), gfx(NULL)
 {
 }
@@ -143,35 +152,6 @@ void PageLayout::ChangeFontStyle(FontStyle fs, bool addStyle)
 void PageLayout::ChangeFontSize(float fontSize)
 {
     SetCurrentFont(currFontStyle, fontSize);
-}
-
-PageData *PageLayout::IterStart(LayoutInfo* layoutInfo)
-{
-    CrashIf(currPage);
-    finishedParsing = false;
-    pageDx = (REAL)layoutInfo->pageDx;
-    pageDy = (REAL)layoutInfo->pageDy;
-    textAllocator = layoutInfo->textAllocator;
-    htmlParser = new HtmlPullParser(layoutInfo->htmlStr, layoutInfo->htmlStrLen);
-
-    CrashIf(gfx);
-    gfx = mui::AllocGraphicsForMeasureText();
-    defaultFontName.Set(str::Dup(layoutInfo->fontName));
-    defaultFontSize = layoutInfo->fontSize;
-    SetCurrentFont(FontStyleRegular, defaultFontSize);
-
-    lineSpacing = currFont->GetHeight(gfx);
-    // note: a heuristic
-    spaceDx = currFontSize / 2.5f;
-    float spaceDx2 = GetSpaceDx(gfx, currFont);
-    if (spaceDx2 < spaceDx)
-        spaceDx = spaceDx2;
-
-    currJustification = Align_Justify;
-    currX = 0; currY = 0;
-    currPage = new PageData;
-    currLineTopPadding = 0;
-    return IterNext();
 }
 
 // sum of widths of all elements with a fixed size and flexible
@@ -268,6 +248,7 @@ static bool IsVisibleDrawInstr(DrawInstr *i)
     switch (i->type) {
         case InstrString:
         case InstrLine:
+        case InstrImage:
             return true;
     }
     return false;
@@ -381,6 +362,33 @@ void PageLayout::EmitEmptyLine(float lineDy)
     currY += lineDy;
     if (currY <= pageDy)
         return;
+    ForceNewPage();
+}
+
+void PageLayout::EmitImage(ImageData *img)
+{
+    Rect imgSize = BitmapSizeFromData(img->data, img->len);
+    if (imgSize.IsEmptyArea())
+        return;
+
+    FlushCurrLine(true);
+    RectF bbox(0, 0, (REAL)imgSize.Width, (REAL)imgSize.Height);
+    if (currY  + (bbox.Height / 2.f) > pageDy) {
+        // move overly large images to a new page
+        ForceNewPage();
+    }
+
+    if (bbox.Width > pageDx || bbox.Height > pageDy - currY) {
+        // resize still too large images to fit a page
+        REAL scale = min(pageDx / bbox.Width, (pageDy - currY) / bbox.Height);
+        bbox.Width *= scale;
+        bbox.Height *= scale;
+    }
+    currX += (pageDx - bbox.Width) / 2.f;
+    bbox.X = currX;
+    bbox.Y = currY;
+    currPage->instructions.Append(DrawInstr::Image(img->data, img->len, bbox));
+    currY += bbox.Height;
     ForceNewPage();
 }
 
@@ -717,6 +725,40 @@ PageData *PageLayout::IterNext()
     return IterNext();
 }
 
+PageData *PageLayout::IterStart(LayoutInfo* layoutInfo)
+{
+    CrashIf(currPage);
+    finishedParsing = false;
+    pageDx = (REAL)layoutInfo->pageDx;
+    pageDy = (REAL)layoutInfo->pageDy;
+    textAllocator = layoutInfo->textAllocator;
+    htmlParser = new HtmlPullParser(layoutInfo->htmlStr, layoutInfo->htmlStrLen);
+
+    CrashIf(gfx);
+    gfx = mui::AllocGraphicsForMeasureText();
+    defaultFontName.Set(str::Dup(layoutInfo->fontName));
+    defaultFontSize = layoutInfo->fontSize;
+    SetCurrentFont(FontStyleRegular, defaultFontSize);
+
+    lineSpacing = currFont->GetHeight(gfx);
+    // note: a heuristic
+    spaceDx = currFontSize / 2.5f;
+    float spaceDx2 = GetSpaceDx(gfx, currFont);
+    if (spaceDx2 < spaceDx)
+        spaceDx = spaceDx2;
+
+    currJustification = Align_Justify;
+    currX = 0; currY = 0;
+    currPage = new PageData;
+    currLineTopPadding = 0;
+    if (layoutInfo->mobiDoc) {
+        ImageData *img = layoutInfo->mobiDoc->GetCoverImage();
+        if (img)
+            EmitImage(img);
+    }
+    return IterNext();
+}
+
 Vec<PageData*> *LayoutHtml(LayoutInfo* li)
 {
     Vec<PageData*> *pages = new Vec<PageData*>();
@@ -761,6 +803,12 @@ void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, RE
             font = i->font;
         } else if ((InstrElasticSpace == i->type) || (InstrFixedSpace == i->type)) {
             // ignore
+        } else if (InstrImage == i->type) {
+            // TODO: cache the bitmap somewhere ?
+            Bitmap *bmp = BitmapFromData(i->img.data, i->img.len);
+            if (bmp)
+                g->DrawImage(bmp, bbox, 0, 0, (REAL)bmp->GetWidth(), (REAL)bmp->GetHeight(), UnitPixel);
+            delete bmp;
         } else {
             CrashIf(true);
         }
