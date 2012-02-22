@@ -75,8 +75,10 @@ static bool MeasureTextUsingMetricsCache(FontMetricsCache *fontMetrics, const WC
     return true;
 }
 
- // TODO: total magic, but seems to produce better results
-#define MAGIC_DX_ADJUST 1.5f
+// TODO: gdi+ seems to under-report the width, the longer the text, the
+// bigger the difference. I'm trying to correct for that with this magic value
+#define PER_CHAR_DX_ADJUST .2f
+#define PER_STR_DX_ADJUST  1.f
 
 // Measure text using optional FontMetricsCache. The caller must ensure that the
 // Font matches fontMetrics as they are updated lazily.
@@ -86,7 +88,7 @@ RectF MeasureText(Graphics *g, Font *f, FontMetricsCache *fontMetrics, const WCH
     CrashIf(f != fontMetrics->font);
     if (MeasureTextUsingMetricsCache(fontMetrics, s, len, bbox)) {
         if (bbox.Width != 0)
-            bbox.Width += MAGIC_DX_ADJUST;
+            bbox.Width += PER_STR_DX_ADJUST + (PER_CHAR_DX_ADJUST * (float)len);
         return bbox;
     }
     return MeasureTextAccurate2(g, f, s, len);
@@ -113,7 +115,7 @@ RectF MeasureTextAccurate(Graphics *g, Font *f, const WCHAR *s, size_t len)
     RectF bbox;
     r.GetBounds(&bbox, g);
     if (bbox.Width != 0)
-        bbox.Width += MAGIC_DX_ADJUST;
+        bbox.Width += PER_STR_DX_ADJUST + (PER_CHAR_DX_ADJUST * (float)len);
     return bbox;
 }
 
