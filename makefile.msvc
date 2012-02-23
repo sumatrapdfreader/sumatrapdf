@@ -443,8 +443,8 @@ $(OE2)\Tester.obj: src\ebooktest2\BaseEbookDoc.h src\ebooktest2\EpubDoc.h src\eb
 $(OE2)\Tester.obj: src\ebooktest2\MobiDoc.h src\ebooktest2\PageLayout.h src\utils\Allocator.h
 $(OE2)\Tester.obj: src\utils\BaseUtil.h src\utils\CmdLineParser.h src\utils\DirIter.h
 $(OE2)\Tester.obj: src\utils\FileUtil.h src\utils\GdiPlusUtil.h src\utils\GeomUtil.h
-$(OE2)\Tester.obj: src\utils\HtmlPullParser.h src\utils\Scoped.h src\utils\StrUtil.h
-$(OE2)\Tester.obj: src\utils\Vec.h src\utils\WinUtil.h
+$(OE2)\Tester.obj: src\utils\HtmlPrettyPrint.h src\utils\HtmlPullParser.h src\utils\Scoped.h
+$(OE2)\Tester.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(OEB)\EbookController.obj: src\ebooktest\EbookController.h src\ebooktest\EbookControls.h src\ebooktest\UiMsgEbook.h
 $(OEB)\EbookController.obj: src\MobiDoc.h src\mui\Mui.h src\mui\MuiBase.h
 $(OEB)\EbookController.obj: src\mui\MuiButton.h src\mui\MuiControl.h src\mui\MuiCss.h
@@ -826,6 +826,8 @@ $(OU)\FileUtil.obj: src\utils\StrUtil.h
 $(OU)\GdiPlusUtil.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GdiPlusUtil.h
 $(OU)\GdiPlusUtil.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
 $(OU)\GdiPlusUtil.obj: src\utils\WinUtil.h
+$(OU)\HtmlPrettyPrint.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\HtmlPrettyPrint.h
+$(OU)\HtmlPrettyPrint.obj: src\utils\HtmlPullParser.h src\utils\StrUtil.h src\utils\Vec.h
 $(OU)\HtmlPullParser.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\HtmlPullParser.h
 $(OU)\HtmlPullParser.obj: src\utils\HtmlPullParser_ut.cpp src\utils\StrUtil.h src\utils\Vec.h
 $(OU)\HtmlWindow.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GeomUtil.h
