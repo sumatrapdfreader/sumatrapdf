@@ -166,10 +166,8 @@ static void HtmlParser07()
 
 static void HtmlParser08()
 {
-#ifdef UNICODE
-    ScopedMem<TCHAR> val(DecodeHtmlEntitites("&auml&test;", CP_UTF8));
-    assert(str::Eq(val.Get(), _T("\xE4&test;")));
-#endif
+    ScopedMem<TCHAR> val(DecodeHtmlEntitites("&auml&test;&&ouml-"));
+    assert(str::Eq(val.Get(), _T("\xE4&test;&\xF6-")));
 }
 
 static void HtmlParserFile()

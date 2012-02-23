@@ -85,6 +85,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\utils\HtmlPrettyPrint.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\utils\HtmlPrettyPrint.h"
+					>
+				</File>
+				<File
 					RelativePath=".\src\utils\HtmlPullParser.cpp"
 					>
 				</File>
@@ -93,11 +101,19 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\utils\HtmlPullParser_ut.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\src\utils\TrivialHtmlParser.cpp"
 					>
 				</File>
 				<File
 					RelativePath=".\src\utils\TrivialHtmlParser.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\utils\TrivialHtmlParser_ut.cpp"
 					>
 				</File>
 				<File
