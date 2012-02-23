@@ -11,11 +11,6 @@
 #WITH_ANALYZE=yes
 #   use /analyze compiler flag 
 WITH_MICROCRT=yes
-#   set to yes to build with ucrt, to see how much we save
-#   note: doesn't work yet. Doesn't find few libc functions that are not implemented. 
-#   also probably wouldn't work for 64-bit builds due to ...?
-#   trick: using /verbose option to the linker helps understand what it does
-#   also I'm probably mixing dll support with non-dll support
 
 # Set default configuration
 !if "$(CFG)"==""
@@ -24,6 +19,11 @@ CFG=dbg
 
 # O is directory where object and binary files go
 O = obj-$(CFG)
+
+# for now use regular crt in debug builds to get memory leak detection
+!if "$(CFG)"=="dbg"
+WITH_MICROCRT=no
+!endif
 
 # for x86 : obj-dbg and obj-rel ; for x64 : obj-dbg64 and obj-rel64
 !if "$(PLATFORM)"=="X64"
