@@ -443,8 +443,8 @@ $(OE2)\Tester.obj: src\ebooktest2\BaseEbookDoc.h src\ebooktest2\EpubDoc.h src\eb
 $(OE2)\Tester.obj: src\ebooktest2\MobiDoc.h src\ebooktest2\PageLayout.h src\utils\Allocator.h
 $(OE2)\Tester.obj: src\utils\BaseUtil.h src\utils\CmdLineParser.h src\utils\DirIter.h
 $(OE2)\Tester.obj: src\utils\FileUtil.h src\utils\GdiPlusUtil.h src\utils\GeomUtil.h
-$(OE2)\Tester.obj: src\utils\HtmlPrettyPrint.h src\utils\HtmlPullParser.h src\utils\Scoped.h
-$(OE2)\Tester.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
+$(OE2)\Tester.obj: src\utils\HtmlPullParser.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OE2)\Tester.obj: src\utils\Vec.h src\utils\WinUtil.h
 $(OEB)\EbookController.obj: src\ebooktest\EbookController.h src\ebooktest\EbookControls.h src\ebooktest\UiMsgEbook.h
 $(OEB)\EbookController.obj: src\MobiDoc.h src\mui\Mui.h src\mui\MuiBase.h
 $(OEB)\EbookController.obj: src\mui\MuiButton.h src\mui\MuiControl.h src\mui\MuiCss.h
@@ -472,9 +472,9 @@ $(OEB)\EbookTest.obj: src\mui\MuiScrollBar.h src\mui\SvgPath.h src\PageLayout.h
 $(OEB)\EbookTest.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\BitManip.h
 $(OEB)\EbookTest.obj: src\utils\DebugLog.h src\utils\FileUtil.h src\utils\FrameTimeoutCalculator.h
 $(OEB)\EbookTest.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\HtmlPullParser.h
-$(OEB)\EbookTest.obj: src\utils\NoFreeAllocator.h src\utils\Scoped.h src\utils\StrUtil.h
-$(OEB)\EbookTest.obj: src\utils\ThreadUtil.h src\utils\Timer.h src\utils\UiMsg.h
-$(OEB)\EbookTest.obj: src\utils\Vec.h src\utils\WinUtil.h src\Version.h
+$(OEB)\EbookTest.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\ThreadUtil.h
+$(OEB)\EbookTest.obj: src\utils\Timer.h src\utils\UiMsg.h src\utils\Vec.h
+$(OEB)\EbookTest.obj: src\utils\WinUtil.h src\Version.h
 $(OEB)\EbookTestMenu.obj: src\ebooktest\EbookTestMenu.h src\ebooktest\Resource.h src\utils\BaseUtil.h
 $(OEB)\EbookTestMenu.obj: src\utils\Scoped.h src\utils\StrUtil.h
 $(OMUI)\Mui.obj: src\mui\Mui.h src\mui\MuiBase.h src\mui\MuiButton.h
@@ -826,8 +826,6 @@ $(OU)\FileUtil.obj: src\utils\StrUtil.h
 $(OU)\GdiPlusUtil.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GdiPlusUtil.h
 $(OU)\GdiPlusUtil.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
 $(OU)\GdiPlusUtil.obj: src\utils\WinUtil.h
-$(OU)\HtmlPrettyPrint.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\HtmlPrettyPrint.h
-$(OU)\HtmlPrettyPrint.obj: src\utils\HtmlPullParser.h src\utils\StrUtil.h src\utils\Vec.h
 $(OU)\HtmlPullParser.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\HtmlPullParser.h
 $(OU)\HtmlPullParser.obj: src\utils\HtmlPullParser_ut.cpp src\utils\StrUtil.h src\utils\Vec.h
 $(OU)\HtmlWindow.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GeomUtil.h
@@ -844,8 +842,10 @@ $(OU)\Touch.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\Touch.h
 $(OU)\Touch.obj: src\utils\WinUtil.h
 $(OU)\TrivialHtmlParser.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\FileUtil.h
 $(OU)\TrivialHtmlParser.obj: src\utils\GeomUtil.h src\utils\HtmlPullParser.h src\utils\Scoped.h
-$(OU)\TrivialHtmlParser.obj: src\utils\StrUtil.h src\utils\TrivialHtmlParser.h src\utils\Vec.h
-$(OU)\TrivialHtmlParser.obj: src\utils\WinUtil.h
+$(OU)\TrivialHtmlParser.obj: src\utils\StrUtil.h src\utils\TrivialHtmlParser.h src\utils\TrivialHtmlParser_ut.cpp
+$(OU)\TrivialHtmlParser.obj: src\utils\Vec.h src\utils\WinUtil.h
+$(OU)\TrivialHtmlParser_ut.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
+$(OU)\TrivialHtmlParser_ut.obj: src\utils\WinUtil.h
 $(OU)\UiMsg.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\Scoped.h
 $(OU)\UiMsg.obj: src\utils\StrUtil.h src\utils\UiMsg.h src\utils\Vec.h
 $(OU)\UtilTests.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\BencUtil.h
