@@ -89,6 +89,9 @@ static void Test01()
     assert(IsInlineTag(Tag_A));
     assert(IsInlineTag(Tag_U));
     assert(IsInlineTag(Tag_Span));
+    for (size_t i = 0; i < dimof(gInlineTags); i++) {
+        assert(IsInlineTag((HtmlTag)gInlineTags[i]));
+    }
     assert(!IsInlineTag(Tag_P));
     assert(IsTagSelfClosing(Tag_Area));
     assert(IsTagSelfClosing(Tag_Link));
@@ -98,6 +101,9 @@ static void Test01()
     assert(IsTagSelfClosing("link"));
     assert(IsTagSelfClosing("param"));
     assert(!IsTagSelfClosing("p"));
+    for (size_t i = 0; i < dimof(gSelfClosingTags); i++) {
+        assert(IsTagSelfClosing((HtmlTag)gSelfClosingTags[i]));
+    }
 }
 
 }
