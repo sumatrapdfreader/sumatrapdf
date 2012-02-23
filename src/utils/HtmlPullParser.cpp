@@ -28,6 +28,25 @@ int HtmlEntityNameToRune(const char *name, size_t nameLen)
     return (int)gHtmlEntityRunes[pos];
 }
 
+// A unicode version of HtmlEntityNameToRune. It's safe because 
+// entities only contain ascii (<127) characters so if a simplistic
+// conversion from unicode to ascii succeeds, we can use ascii
+// version, otherwise it wouldn't match anyway
+// returns -1 if didn't find
+int HtmlEntityNameToRune(const WCHAR *name, size_t nameLen)
+{
+    char asciiName[MAX_ENTITY_NAME_LEN];
+    if (nameLen > MAX_ENTITY_NAME_LEN)
+        return -1;
+    char *s = asciiName;
+    for (size_t i = 0; i < nameLen; i++) {
+        if (name[i] > MAX_ENTITY_CHAR)
+            return -1;
+        asciiName[i] = (char)name[i];
+    }
+    return HtmlEntityNameToRune(asciiName, nameLen);
+}
+
 static uint8 gSelfClosingTags[] = { Tag_Area, Tag_Base, Tag_Basefont, Tag_Br, Tag_Col, Tag_Frame, Tag_Hr, Tag_Img, Tag_Input, Tag_Link, Tag_Mbp_Pagebreak, Tag_Meta, Tag_Pagebreak, Tag_Param };
 
 STATIC_ASSERT(Tag_Last < 256, too_many_tags);

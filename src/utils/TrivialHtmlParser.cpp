@@ -120,16 +120,15 @@ static TCHAR *DecodeHtmlEntitites(const char *string, UINT codepage=CP_ACP)
             continue;
         }
 
-        // named entities. We rely on the fact that entity names
-        // do not contain non-ascii (> 127) characters so we can
-        // ignore codepage without impact on search results
-        size_t stringLen = str::Len(string);
-        int rune = HtmlEntityNameToRune(string, stringLen);
-        if (-1 != rune) {
-            *dst++ = IntToChar(rune, codepage);
-            src += stringLen;
-            if (*src == ';')
-                src++;
+        // named entities
+        const TCHAR *entityEnd = str::FindChar(src, _T(';'));
+        if (entityEnd) {
+            size_t entityLen = entityEnd - src;
+            int rune = HtmlEntityNameToRune(src, entityLen);
+            if (-1 != rune) {
+                *dst++ = IntToChar(rune, codepage);
+                src = entityEnd + 1;
+            }
         }
         else
             *dst++ = '&';

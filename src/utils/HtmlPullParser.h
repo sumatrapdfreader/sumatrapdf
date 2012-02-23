@@ -168,6 +168,7 @@ bool        IsTagSelfClosing(HtmlTag tag);
 bool        IsInlineTag(HtmlTag tag);
 
 int         HtmlEntityNameToRune(const char *name, size_t nameLen);
+int         HtmlEntityNameToRune(const WCHAR *name, size_t nameLen);
 
 HtmlTag     FindTag(const char *s, size_t len = -1);
 HtmlTag     FindTag(HtmlToken *tok);
