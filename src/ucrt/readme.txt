@@ -96,8 +96,7 @@ same-thing-as-the-generated-destructor/2322314#2322314
 
 TODO
 ----
-* write all the remaining code to support Sumatra
-* build PdfFilter.dll, PdfPreview.dll and npPdfViewer.dll with ucrt
+* implement tls support (needed by NoFreeAllocator.cpp)
 * write a test program that calls all the functions we claim to
   implement and verifies they work as expected
 * test on XP SP2 (maybe earlier). I develop on Win 7 and some functions
@@ -109,4 +108,4 @@ TODO
   ntdll.dll doesn't have _alldiv() and yet everything works. Why
   isn't it there (it is on my other win7 32bit vm)? What gets
   called in et.exe?
-
+* implement _access, _waccess (was used in Sumatra)

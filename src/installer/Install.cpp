@@ -495,8 +495,8 @@ static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT msg, LPARAM lParam, LPARA
     // disable the OK button for non-filesystem and inaccessible folders (and shortcuts to folders)
     case BFFM_SELCHANGED:
         {
-            TCHAR szDir[MAX_PATH];
-            if (SHGetPathFromIDList((LPITEMIDLIST)lParam, szDir) && _taccess(szDir, 00) == 0) {
+            TCHAR path[MAX_PATH];
+            if (SHGetPathFromIDList((LPITEMIDLIST)lParam, path) && file::Exists(path)) {
                 SHFILEINFO sfi;
                 SHGetFileInfo((LPCTSTR)lParam, 0, &sfi, sizeof(sfi), SHGFI_PIDL | SHGFI_ATTRIBUTES);
                 if (!(sfi.dwAttributes & SFGAO_LINK))
