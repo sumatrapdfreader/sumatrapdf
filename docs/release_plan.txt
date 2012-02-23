@@ -1,12 +1,16 @@
 Things to do before 2.0 release:
-* (?) ebook support
-* installer and settings: UI for registering other supported file types http://code.google.com/p/sumatrapdf/issues/detail?id=1365
+* mobi ebook support
 * switch to ucrt
-* bug: focus captured by web control when clicking on "Related Topics" button in 010Editor.chm from
-  http://code.google.com/p/sumatrapdf/issues/detail?id=1579
-  I don't know how to fix this. It seems that the problem really is that a button window inside browser
-  control captures the focus. I tried hack it by detecting frame window loosing focus (via WM_KILLFOCUS) and
-  doing delayed re-capture of focus to frame window, but it doesn't work and it's not the right time to do
+
+Things to do before 2.1 release:
+* installer and settings: UI for registering other supported file types
+  http://code.google.com/p/sumatrapdf/issues/detail?id=1365
+* bug: focus captured by web control when clicking on "Related Topics" button in 
+  010Editor.chm from http://code.google.com/p/sumatrapdf/issues/detail?id=1579
+  I don't know how to fix this. It seems that the problem really is that a button
+  window inside browser control captures the focus. I tried hack it by detecting
+  frame window loosing focus (via WM_KILLFOCUS) and doing delayed re-capture of
+  focus to frame window, but it doesn't work and it's not the right time to do
   it (it might kill the pop-up menu on the button).
 
 The shortest path to ebook support in sumatra:
@@ -26,12 +30,8 @@ The shortest path to ebook support in sumatra:
 
 2. Support more of the mobi format
 2.1 images
-2.2 first page should be cover page if there are images (it seems the convention is
-    that first two images are two versions of the cover page (at different resolution).
-    depends on 3.1
-2.3 links
-2.4 lists (ul, li)
-2.5 probably more
+2.2 links
+2.3 lists (ul, li)
 
 3. Integrate the code into Sumatra. The way I'm thinking about doing it to minimize
    changing existing code:
@@ -61,4 +61,3 @@ The simplest way is to create a completely new window with desired type on top o
 window and close the old one. Another possibility is to write code that transitions from one
 type to another e.g. transitioning from engine window to ebook window would involve destroying
 all its hwnd windows etc.
-
