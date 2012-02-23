@@ -30,22 +30,33 @@ int HtmlEntityNameToRune(const char *name, size_t nameLen)
 
 static uint8 gSelfClosingTags[] = { Tag_Area, Tag_Base, Tag_Basefont, Tag_Br, Tag_Col, Tag_Frame, Tag_Hr, Tag_Img, Tag_Input, Tag_Link, Tag_Mbp_Pagebreak, Tag_Meta, Tag_Pagebreak, Tag_Param };
 
-bool IsTagSelfClosing(HtmlTag tag)
+STATIC_ASSERT(Tag_Last < 256, too_many_tags);
+
+static bool IsInArray(uint8 val, uint8 *arr, size_t arrLen)
 {
-    CrashIf(tag > 255);
-    CrashIf(Tag_Last > 255);
-    uint8 tagNo = (uint8)tag;
-    for (size_t i = 0; i < dimof(gSelfClosingTags); i++) {
-        if (tagNo == gSelfClosingTags[i])
+    while (arrLen-- > 0) {
+        if (val == *arr++)
             return true;
     }
     return false;
+}
+
+bool IsTagSelfClosing(HtmlTag tag)
+{
+    return IsInArray((uint8)tag, gSelfClosingTags, dimof(gSelfClosingTags));
 }
 
 bool IsTagSelfClosing(const char *s, size_t len)
 {
     HtmlTag tag = FindTag(s, len);
     return IsTagSelfClosing(tag);
+}
+
+static uint8 gInlineTags[] = { Tag_A, Tag_Abbr, Tag_Acronym, Tag_B, Tag_Br, Tag_Em, Tag_Font, Tag_I, Tag_Img, Tag_S, Tag_Small, Tag_Span, Tag_Strike, Tag_Strong, Tag_Sub, Tag_Sup, Tag_U };
+
+bool IsInlineTag(HtmlTag tag)
+{
+    return IsInArray((uint8)tag, gInlineTags, dimof(gInlineTags));
 }
 
 static bool SkipUntil(const char*& s, const char *end, char c)
@@ -446,20 +457,6 @@ size_t GetTagLen(const HtmlToken *tok)
             return i;
     }
     return tok->sLen;
-}
-
-bool IsInlineTag(HtmlTag tag)
-{
-    switch (tag) {
-    case Tag_A: case Tag_Abbr: case Tag_Acronym: case Tag_B:
-    case Tag_Br: case Tag_Em: case Tag_Font: case Tag_I:
-    case Tag_Img: case Tag_S: case Tag_Small: case Tag_Span:
-    case Tag_Strike: case Tag_Strong: case Tag_Sub: case Tag_Sup:
-    case Tag_U:
-        return true;
-    default:
-        return false;
-    };
 }
 
 // note: this is a bit unorthodox but allows us to easily separate

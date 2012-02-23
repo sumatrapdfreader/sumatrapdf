@@ -84,6 +84,22 @@ static void HtmlEntities()
     }
 }
 
+static void Test01()
+{
+    assert(IsInlineTag(Tag_A));
+    assert(IsInlineTag(Tag_U));
+    assert(IsInlineTag(Tag_Span));
+    assert(!IsInlineTag(Tag_P));
+    assert(IsTagSelfClosing(Tag_Area));
+    assert(IsTagSelfClosing(Tag_Link));
+    assert(IsTagSelfClosing(Tag_Param));
+    assert(!IsTagSelfClosing(Tag_P));
+    assert(IsTagSelfClosing("area"));
+    assert(IsTagSelfClosing("link"));
+    assert(IsTagSelfClosing("param"));
+    assert(!IsTagSelfClosing("p"));
+}
+
 }
 
 void HtmlPullParser_UnitTests()
@@ -92,4 +108,5 @@ void HtmlPullParser_UnitTests()
     unittests::Test00("<p a1 ='>'     foo=\"bar\"/>");
     unittests::Test00("<p a1=  '>' foo=bar>", HtmlToken::StartTag);
     unittests::HtmlEntities();
+    unittests::Test01();
 }

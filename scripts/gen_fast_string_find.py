@@ -161,23 +161,27 @@ def gen_html_entities():
 
 ################# Self-closing tags
 
-self_closing_c = """
+self_closing_tmpl = """
 static uint8 gSelfClosingTags[] = { %s };
+
+STATIC_ASSERT(Tag_Last < 256, too_many_tags);
 
 //prototypes:
 //bool IsTagSelfClosing(const char *s, size_t len = -1);
 //bool IsTagSelfClosing(HtmlTag tag);
 
-bool IsTagSelfClosing(HtmlTag tag)
+static bool IsInArray(uint8 val, uint8 *arr, size_t arrLen)
 {
-    CrashIf(tag > 255);
-    CrashIf(Tag_Last > 255);
-    uint8 tagNo = (uint8)tag;
-    for (size_t i = 0; i < dimof(gSelfClosingTags); i++) {
-        if (tagNo == gSelfClosingTags[i])
+    while (arrLen-- > 0) {
+        if (val == *arr++)
             return true;
     }
     return false;
+}
+
+bool IsTagSelfClosing(HtmlTag tag)
+{
+    return IsInArray((uint8)tag, gSelfClosingTags, dimof(gSelfClosingTags));
 }
 
 bool IsTagSelfClosing(const char *s, size_t len)
@@ -197,7 +201,33 @@ def gen_self_closing_tags():
     # doing early exit if our value is > curr value in array
     enums = [enum_name_from_name(name, "Tag") for name in names]
     enums_c = string.join(enums, ", ")
-    return self_closing_c % (enums_c)
+    return self_closing_tmpl % (enums_c)
+
+################# Inline tags
+
+g_inline_tags = [ "a", "abbr", "acronym", "b", "br", "em", "font", "i", "img", "s", "small", "span",
+    "strike", "strong", "sub", "sup", "u"]
+
+inlline_tags_tmpl = """
+static uint8 gInlineTags[] = { %s };
+
+//prototypes:
+//bool IsInlineTag(HtmlTag tag);
+
+bool IsInlineTag(HtmlTag tag)
+{
+    return IsInArray((uint8)tag, gInlineTags, dimof(gInlineTags));
+}
+"""
+
+def gen_inline_tags():
+    names = g_inline_tags
+    names.sort()
+    # TODO: could sort enums by their values and optimize IsSelfClosingTag(HtmlTag tag) by
+    # doing early exit if our value is > curr value in array
+    enums = [enum_name_from_name(name, "Tag") for name in names]
+    enums_c = string.join(enums, ", ")
+    return inlline_tags_tmpl % (enums_c)
 
 ################# Html tags and attributes
 
@@ -278,6 +308,7 @@ def main():
     print(gen_tmpl(g_align_attr_str, "Align", html_tags_tmpl))
     print(gen_tmpl(g_tags_str, "Tag", html_tags_tmpl))
     print(gen_self_closing_tags())
+    print(gen_inline_tags())
 
 if __name__ == "__main__":
     main()
