@@ -10,7 +10,6 @@
 #   note: building on X64 isn't officially supported and might unintentionally be broken
 #WITH_ANALYZE=yes
 #   use /analyze compiler flag 
-WITH_MICROCRT=yes
 
 # Set default configuration
 !if "$(CFG)"==""
@@ -21,8 +20,8 @@ CFG=dbg
 O = obj-$(CFG)
 
 # for now use regular crt in debug builds to get memory leak detection
-!if "$(CFG)"=="dbg"
-WITH_MICROCRT=no
+!if "$(WITH_MICROCRT)"=="" && "$(CFG)"!="dbg"
+WITH_MICROCRT=yes
 !endif
 
 # for x86 : obj-dbg and obj-rel ; for x64 : obj-dbg64 and obj-rel64
@@ -227,13 +226,14 @@ ENGINEDUMP_OBJS = \
 	$(OS)\EngineDump.obj $(ENGINE_OBJS) $(LIBS_OBJS) $(UTILS_OBJS)
 
 !if "$(WITH_MICROCRT)"=="yes"
-ET_OBJS 		 	= $(ET_OBJS) $(MICROCRT_WIN_OBJS)
-INSTALLER_OBJS 	 	= $(INSTALLER_OBJS) $(MICROCRT_WIN_OBJS)
-UNINSTALLER_OBJS 	= $(UNINSTALLER_OBJS) $(MICROCRT_WIN_OBJS)
-SUMATRA_OBJS 	 	= $(SUMATRA_OBJS) $(MICROCRT_WIN_OBJS)
-PDFFILTER_OBJS 		= $(PDFFILTER_OBJS) $(MICROCRT_DLL_OBJS)
-PDFPREVIEW_OBJS 	= $(PDFPREVIEW_OBJS) $(MICROCRT_DLL_OBJS)
+ET_OBJS             = $(ET_OBJS) $(MICROCRT_WIN_OBJS)
+INSTALLER_OBJS      = $(INSTALLER_OBJS) $(MICROCRT_WIN_OBJS)
+UNINSTALLER_OBJS    = $(UNINSTALLER_OBJS) $(MICROCRT_WIN_OBJS)
+SUMATRA_OBJS        = $(SUMATRA_OBJS) $(MICROCRT_WIN_OBJS)
+PDFFILTER_OBJS      = $(PDFFILTER_OBJS) $(MICROCRT_DLL_OBJS)
+PDFPREVIEW_OBJS     = $(PDFPREVIEW_OBJS) $(MICROCRT_DLL_OBJS)
 BROWSER_PLUGIN_OBJS = $(BROWSER_PLUGIN_OBJS) $(MICROCRT_DLL_OBJS)
+ENGINEDUMP_OBJS     = $(ENGINEDUMP_OBJS) $(MICROCRT_CONSOLE_OBJS)
 !endif
 
 !if "$(BUILD_TEX_IFILTER)"!=""
