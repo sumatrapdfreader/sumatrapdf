@@ -3,12 +3,20 @@
 
 #include "PdfPreview.h"
 #include "WinUtil.h"
+
+// TODO: ucrt doesn't support new with std::nothrow. I'm not sure why this
+// should be needed since we compile without exceptions anyway
+// Alternatively we could define WITH_UCRT and base NOTHROW on that (since ucrt
+// wouldn't throw an exception from new)
+/*
 #ifndef DEBUG
 #include <new>
 #define NOTHROW (std::nothrow)
 #else
 #define NOTHROW
 #endif
+*/
+#define NOTHROW
 
 HINSTANCE g_hInstance = NULL;
 long g_lRefCount = 0;

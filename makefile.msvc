@@ -10,7 +10,7 @@
 #   note: building on X64 isn't officially supported and might unintentionally be broken
 #WITH_ANALYZE=yes
 #   use /analyze compiler flag 
-#WITH_MICROCRT=yes
+WITH_MICROCRT=yes
 #   set to yes to build with ucrt, to see how much we save
 #   note: doesn't work yet. Doesn't find few libc functions that are not implemented. 
 #   also probably wouldn't work for 64-bit builds due to ...?
@@ -154,8 +154,8 @@ UTILS_OBJS = \
 	$(OU)\DialogSizer.obj $(OU)\FileTransactions.obj $(OU)\Touch.obj \
 	$(OU)\TrivialHtmlParser.obj $(OU)\HtmlWindow.obj $(OU)\GdiPlusUtil.obj \
 	$(OU)\DirIter.obj $(OU)\BitReader.obj $(OU)\HtmlPullParser.obj \
-	$(OU)\HtmlPrettyPrint.obj $(OU)\ThreadUtil.obj $(OU)\NoFreeAllocator.obj \
-	$(OU)\DebugLog.obj $(OU)\UiMsg.obj
+	$(OU)\HtmlPrettyPrint.obj $(OU)\ThreadUtil.obj $(OU)\DebugLog.obj \
+	$(OU)\UiMsg.obj
 
 # requires either MuPDF/libmupdf or $(ZLIB_OBJS)
 ZIP_OBJS = \
@@ -198,7 +198,8 @@ ET_OBJS = \
 	$(OEB)\EbookControls.obj $(OEB)\EbookController.obj
 
 TESTER_OBJS = \
-	$(OEB)\Tester.obj $(OEB)\PageLayout.obj $(UTILS_OBJS) $(MUI_OBJS) $(OEB)\MobiDoc.obj
+	$(UTILS_OBJS) $(MUI_OBJS) $(OEB)\Tester.obj $(OEB)\PageLayout.obj \
+	$(OU)\NoFreeAllocator.obj $(OEB)\MobiDoc.obj
 
 ET2_OBJS = \
 	$(OE2)\EbookTest.obj $(ET_RES) $(OE2)\PageLayout.obj $(UTILS_OBJS) \

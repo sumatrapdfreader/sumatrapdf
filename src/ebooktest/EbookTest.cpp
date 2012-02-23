@@ -10,7 +10,6 @@
 #include "FrameTimeoutCalculator.h"
 #include "MobiDoc.h"
 #include "Mui.h"
-#include "NoFreeAllocator.h"
 #include "Resource.h"
 #include "PageLayout.h"
 #include "SvgPath.h"
