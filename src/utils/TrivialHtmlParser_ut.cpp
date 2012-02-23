@@ -164,6 +164,14 @@ static void HtmlParser07()
     assert(str::Eq(val, _T("\x01??")));
 }
 
+static void HtmlParser08()
+{
+#ifdef UNICODE
+    ScopedMem<TCHAR> val(DecodeHtmlEntitites("&auml&test;", CP_UTF8));
+    assert(str::Eq(val.Get(), _T("\xE4&test;")));
+#endif
+}
+
 static void HtmlParserFile()
 {
     TCHAR *fileName = _T("HtmlParseTest00.html");
@@ -214,12 +222,13 @@ static void HtmlParserFile()
     assert(18 == count);
     free(d);
 }
-
 }
 
-void TrivialHtmlParser_UnitTests()
+
+    void TrivialHtmlParser_UnitTests()
 {
     unittests::HtmlParserFile();
+    unittests::HtmlParser08();
     unittests::HtmlParser07();
     unittests::HtmlParser06();
     unittests::HtmlParser05();

@@ -121,17 +121,21 @@ static TCHAR *DecodeHtmlEntitites(const char *string, UINT codepage=CP_ACP)
         }
 
         // named entities
-        const TCHAR *entityEnd = str::FindChar(src, _T(';'));
-        if (entityEnd) {
+        const TCHAR *entityEnd1 = str::FindChar(src, _T('&'));
+        const TCHAR *entityEnd2 = str::FindChar(src, _T(';'));
+        if (!entityEnd1 && !entityEnd2) {
+            *dst++ = '&';
+        } else {
+            const TCHAR *entityEnd = min(entityEnd1, entityEnd2);
             size_t entityLen = entityEnd - src;
             int rune = HtmlEntityNameToRune(src, entityLen);
             if (-1 != rune) {
                 *dst++ = IntToChar(rune, codepage);
-                src = entityEnd + 1;
+                src = entityEnd;
+                if (*src == _T(';'))
+                    ++src;
             }
         }
-        else
-            *dst++ = '&';
     }
     *dst = '\0';
 
