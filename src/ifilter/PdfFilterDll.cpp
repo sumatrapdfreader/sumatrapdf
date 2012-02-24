@@ -5,20 +5,6 @@
 #include "WinUtil.h"
 #include "Scoped.h"
 
-// TODO: ucrt doesn't support new with std::nothrow. I'm not sure why this
-// should be needed since we compile without exceptions anyway
-// Alternatively we could define WITH_UCRT and base NOTHROW on that (since ucrt
-// wouldn't throw an exception from new)
-/*
-#ifndef DEBUG
-#include <new>
-#define NOTHROW (std::nothrow)
-#else
-#define NOTHROW
-#endif
-*/
-#define NOTHROW
-
 #include "CPdfFilter.h"
 #ifdef BUILD_TEX_IFILTER
 #include "CTeXFilter.h"
@@ -73,10 +59,10 @@ public:
 
         CLSID clsid;
         if (SUCCEEDED(CLSIDFromString(AsWStrQ(SZ_PDF_FILTER_CLSID), &clsid)) && IsEqualCLSID(m_clsid, clsid))
-            pFilter = new NOTHROW CPdfFilter(&g_lRefCount);
+            pFilter = new CPdfFilter(&g_lRefCount);
 #ifdef BUILD_TEX_IFILTER
         else if (SUCCEEDED(CLSIDFromString(AsWStrQ(SZ_TEX_FILTER_CLSID), &clsid)) && IsEqualCLSID(m_clsid, clsid))
-            pFilter = new NOTHROW CTeXFilter(&g_lRefCount);
+            pFilter = new CTeXFilter(&g_lRefCount);
 #endif
         else
             return E_NOINTERFACE;
@@ -118,7 +104,7 @@ STDAPI DllCanUnloadNow(VOID)
 STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 {
     *ppv = NULL;
-    ScopedComPtr<CClassFactory> pClassFactory(new NOTHROW CClassFactory(rclsid));
+    ScopedComPtr<CClassFactory> pClassFactory(new CClassFactory(rclsid));
     if (!pClassFactory)
         return E_OUTOFMEMORY;
     return pClassFactory->QueryInterface(riid, ppv);

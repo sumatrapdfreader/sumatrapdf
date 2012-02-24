@@ -4,20 +4,6 @@
 #include "PdfPreview.h"
 #include "WinUtil.h"
 
-// TODO: ucrt doesn't support new with std::nothrow. I'm not sure why this
-// should be needed since we compile without exceptions anyway
-// Alternatively we could define WITH_UCRT and base NOTHROW on that (since ucrt
-// wouldn't throw an exception from new)
-/*
-#ifndef DEBUG
-#include <new>
-#define NOTHROW (std::nothrow)
-#else
-#define NOTHROW
-#endif
-*/
-#define NOTHROW
-
 HINSTANCE g_hInstance = NULL;
 long g_lRefCount = 0;
 
@@ -67,14 +53,14 @@ public:
 
         CLSID clsid;
         if (SUCCEEDED(CLSIDFromString(AsWStrQ(SZ_PDF_PREVIEW_CLSID), &clsid)) && IsEqualCLSID(m_clsid, clsid))
-            pObject = new NOTHROW CPdfPreview(&g_lRefCount);
+            pObject = new CPdfPreview(&g_lRefCount);
 #ifdef BUILD_XPS_PREVIEW
         else if (SUCCEEDED(CLSIDFromString(AsWStrQ(SZ_XPS_PREVIEW_CLSID), &clsid)) && IsEqualCLSID(m_clsid, clsid))
-            pObject = new NOTHROW CXpsPreview(&g_lRefCount);
+            pObject = new CXpsPreview(&g_lRefCount);
 #endif
 #ifdef BUILD_CBZ_PREVIEW
         else if (SUCCEEDED(CLSIDFromString(AsWStrQ(SZ_CBZ_PREVIEW_CLSID), &clsid)) && IsEqualCLSID(m_clsid, clsid))
-            pObject = new NOTHROW CCbzPreview(&g_lRefCount);
+            pObject = new CCbzPreview(&g_lRefCount);
 #endif
         else
             return E_NOINTERFACE;
@@ -116,7 +102,7 @@ STDAPI DllCanUnloadNow(VOID)
 STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 {
     *ppv = NULL;
-    ScopedComPtr<CClassFactory> pClassFactory(new NOTHROW CClassFactory(rclsid));
+    ScopedComPtr<CClassFactory> pClassFactory(new CClassFactory(rclsid));
     if (!pClassFactory)
         return E_OUTOFMEMORY;
     return pClassFactory->QueryInterface(riid, ppv);
