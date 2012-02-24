@@ -261,9 +261,9 @@ bool IsEmptyPage(PageData *p)
         return false;
     DrawInstr *i;
     for (i = p->instructions.IterStart(); i; i = p->instructions.IterNext()) {
-        // if a line only consits of lines we consider it empty. It's different
+        // if a page only consits of lines we consider it empty. It's different
         // than what Kindle does but I don't see the purpose of showing such
-        // page to the user
+        // pages to the user
         if (InstrLine == i->type)
             continue;
         if (IsVisibleDrawInstr(i))
@@ -463,7 +463,7 @@ void PageLayout::EmitElasticSpace()
 }
 
 // a text rune is a string of consecutive text with uniform style
-void PageLayout::EmitTextRune(const char *s, const char *end)
+void PageLayout::EmitTextRun(const char *s, const char *end)
 {
     CrashIf(IsSpaceOnly(s, end));
     const char *tmp = ResolveHtmlEntities(s, end, textAllocator);
@@ -475,11 +475,22 @@ void PageLayout::EmitTextRune(const char *s, const char *end)
     size_t strLen = str::Utf8ToWcharBuf(s, end - s, buf, dimof(buf));
     RectF bbox = MeasureText(gfx, currFont, buf, strLen);
     bbox.Y = 0.f;
-    // TODO: handle a case where a single word is bigger than the whole
-    // line, in which case it must be split into multiple lines
     EnsureDx(bbox.Width);
-    currLineInstr.Append(DrawInstr::Str(s, end - s, bbox));
-    currX += bbox.Width;
+    if (bbox.Width > pageDx) {
+        int lenThatFits = StringLenForWidth(gfx, currFont, buf, strLen, pageDx);
+        bbox = MeasureText(gfx, currFont, buf, lenThatFits);
+        bbox.Y = 0.f;
+        CrashIf(bbox.Width > pageDx);
+        currLineInstr.Append(DrawInstr::Str(s, lenThatFits, bbox));
+        currX += bbox.Width;
+        const char *newS = s + lenThatFits;
+        if (end == newS)
+            return;
+        EmitTextRun(newS, end);
+    } else {
+        currLineInstr.Append(DrawInstr::Str(s, end - s, bbox));
+        currX += bbox.Width;
+    }
 }
 
 #if 0
@@ -682,7 +693,7 @@ void PageLayout::HandleText(HtmlToken *t)
         currStart = curr;
         SkipNonWs(curr, end);
         if (curr > currStart) {
-            EmitTextRune(currStart, curr);
+            EmitTextRun(currStart, curr);
             newLinesCount = 0;
         }
     }

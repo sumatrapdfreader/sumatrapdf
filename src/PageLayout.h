@@ -110,7 +110,7 @@ private:
 
     void  EmitImage(ImageData *img);
     void  EmitHr();
-    void  EmitTextRune(const char *s, const char *end);
+    void  EmitTextRun(const char *s, const char *end);
     void  EmitNewLine();
     void  EmitElasticSpace();
     void  EmitParagraph(float indent, float topPadding);

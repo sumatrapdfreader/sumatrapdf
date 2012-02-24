@@ -138,6 +138,42 @@ RectF MeasureText(Graphics *g, Font *f, const WCHAR *s, size_t len)
     return bbox;
 }
 
+// returns number of characters of string s that fits in a given width dx
+// note: could be speed up a bit because in our use case we already know
+// the width of the whole string so we could supply it to the function, but
+// this shouldn't happen often, so that's fine. It's also possible that
+// a smarter approach is possible, but this usually only does 3 MeasureText
+// calls, so it's not that bad
+int StringLenForWidth(Graphics *g, Font *f, const WCHAR *s, size_t len, float dx)
+{
+    RectF r = MeasureText(g, f, s, len);
+    if (r.Width <= dx)
+        return len;
+    // make the best guess of the length that fits
+    size_t n = (int)((dx / r.Width) * (float)len);
+    CrashIf((0 == n) || (n > len));
+    r = MeasureText(g, f, s, n);
+    // find the length len of s that fits within dx iff width of len+1 exceeds dx
+    int dir = 1; // increasing length
+    if (r.Width > dx)
+        dir = -1; // decreasing length
+    for (;;) {
+        n += dir;
+        r = MeasureText(g, f, s, n);
+        if (1 == dir) {
+            // if advancing length, we know that previous string did fit, so if
+            // the new one doesn't fit, the previous length was the right one
+            if (r.Width > dx)
+                return n - 1;
+        } else {
+            // if decreasing length, we know that previous string didn't fit, so if
+            // the one one fits, it's of the correct length
+            if (r.Width < dx)
+                return n;
+        }
+    }
+}
+
 // TODO: not quite sure why spaceDx1 != spaceDx2, using spaceDx2 because
 // is smaller and looks as better spacing to me
 REAL GetSpaceDx(Graphics *g, Font *f)

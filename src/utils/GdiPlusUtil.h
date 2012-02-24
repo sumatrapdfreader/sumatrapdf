@@ -27,6 +27,7 @@ RectF    MeasureTextStandard(Graphics *g, Font *f, const WCHAR *s, size_t len);
 RectF    MeasureText(Graphics *g, Font *f, const WCHAR *s, size_t len = -1);
 RectF    MeasureText(Graphics *g, Font *f, FontMetricsCache *fontMetrics, const WCHAR *s, size_t len = -1);
 REAL     GetSpaceDx(Graphics *g, Font *f);
+int      StringLenForWidth(Graphics *g, Font *f, const WCHAR *s, size_t len, float dx);
 
 const TCHAR *GfxFileExtFromData(char *data, size_t len);
 Bitmap * BitmapFromData(void *data, size_t len);
