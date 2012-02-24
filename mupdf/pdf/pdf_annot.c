@@ -203,6 +203,9 @@ pdf_parse_link_dest(pdf_document *xref, fz_obj *dest)
 /* SumatraPDF: parse full file specifications */
 #include <ctype.h>
 #undef iswspace
+#ifndef _WIN32
+#define _vsnprintf(a, b, c, d) vsnprintf(a, b, c, d)
+#endif
 
 char *
 pdf_file_spec_to_str(fz_context *ctx, fz_obj *file_spec)
