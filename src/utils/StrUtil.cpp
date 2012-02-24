@@ -325,7 +325,7 @@ char *FmtV(const char *fmt, va_list args)
     char  * buf = message;
     for (;;)
     {
-        int count = _vsnprintf(buf, bufCchSize, fmt, args);
+        int count = vsnprintf(buf, bufCchSize, fmt, args);
         if ((count >= 0) && ((size_t)count < bufCchSize))
             break;
         /* we have to make the buffer bigger. The algorithm used to calculate

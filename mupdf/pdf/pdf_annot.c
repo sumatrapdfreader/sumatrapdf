@@ -203,9 +203,6 @@ pdf_parse_link_dest(pdf_document *xref, fz_obj *dest)
 /* SumatraPDF: parse full file specifications */
 #include <ctype.h>
 #undef iswspace
-#ifndef _WIN32
-#define _vsnprintf(a, b, c, d) vsnprintf(a, b, c, d)
-#endif
 
 char *
 pdf_file_spec_to_str(fz_context *ctx, fz_obj *file_spec)
@@ -501,7 +498,7 @@ fz_buffer_printf(fz_context *ctx, fz_buffer *buffer, char *fmt, ...)
 	va_list args;
 	va_start(args, fmt);
 retry_larger_buffer:
-	count = _vsnprintf(buffer->data + buffer->len, buffer->cap - buffer->len, fmt, args);
+	count = vsnprintf(buffer->data + buffer->len, buffer->cap - buffer->len, fmt, args);
 	if (count < 0 || count >= buffer->cap - buffer->len)
 	{
 		fz_grow_buffer(ctx, buffer);
