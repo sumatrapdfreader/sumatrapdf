@@ -102,7 +102,7 @@ static void HtmlParser03()
 static void HtmlParser02()
 {
     HtmlParser p;
-    HtmlElement *root = p.Parse("<a><b/><  c></c  ><d at1=\"&lt;quo&amp;ted&gt;\" at2='also quoted'   att3=notquoted att4=&#101;&#x6e;d/></a>");
+    HtmlElement *root = p.Parse("<a><b/><c></c  ><d at1=\"&lt;quo&amp;ted&gt;\" at2='also quoted'   att3=notquoted att4=&#101;&#x6e;d/></a>");
     assert(4 == p.ElementsCount());
     assert(4 == p.TotalAttrCount());
     assert(str::Eq("a", root->name));
@@ -170,6 +170,17 @@ static void HtmlParser08()
     assert(str::Eq(val.Get(), _T("\xE4&test;&\xF6-")));
 }
 
+static void HtmlParser09()
+{
+    HtmlParser p;
+    HtmlElement *root = p.Parse("<?xml version='1.0'?><!-- <html><body></html> --><root attr='<!-- comment -->' />");
+    assert(1 == p.ElementsCount());
+    assert(1 == p.TotalAttrCount());
+    assert(str::Eq("root", root->name));
+    ScopedMem<TCHAR> val(root->GetAttribute("attr"));
+    assert(str::Eq(val, _T("<!-- comment -->")));
+}
+
 static void HtmlParserFile()
 {
     TCHAR *fileName = _T("HtmlParseTest00.html");
@@ -220,12 +231,13 @@ static void HtmlParserFile()
     assert(18 == count);
     free(d);
 }
+
 }
 
-
-    void TrivialHtmlParser_UnitTests()
+void TrivialHtmlParser_UnitTests()
 {
     unittests::HtmlParserFile();
+    unittests::HtmlParser09();
     unittests::HtmlParser08();
     unittests::HtmlParser07();
     unittests::HtmlParser06();

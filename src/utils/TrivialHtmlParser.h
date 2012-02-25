@@ -4,7 +4,7 @@
 #ifndef TrivialHtmlParser_h
 #define TrivialHtmlParser_h
 
-#include "Vec.h"
+#include "Allocator.h"
 
 enum HtmlParseError {
     ErrParsingNoError,
@@ -51,8 +51,8 @@ class HtmlParser {
 
     void CloseTag(char *tagName);
     void StartTag(char *tagName);
-    void StartAttr(char *name);
-    void SetAttrVal(char *val);
+    void AppendAttr(char *name, char *value);
+
     HtmlElement *FindParent(char *tagName);
     HtmlElement *ParseError(HtmlParseError err) {
         error = err;

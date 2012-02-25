@@ -1,9 +1,8 @@
 /* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "Allocator.h"
-
 #include "HtmlPullParser.h"
+#include "Allocator.h"
 #include "StrUtil.h"
 
 // map of entity names to their Unicde runes, based on
@@ -84,6 +83,16 @@ static bool SkipUntil(const char*& s, const char *end, char c)
         ++s;
     }
     return *s == c;
+}
+
+static bool SkipUntil(const char*& s, const char *end, char *term)
+{
+    size_t len = str::Len(term);
+    for (; s < end; s++) {
+        if (s + len < end && str::StartsWith(s, term))
+            return true;
+    }
+    return false;
 }
 
 static bool IsWs(int c) {
@@ -381,7 +390,7 @@ static void RecordEndTag(Vec<HtmlTag> *tagNesting, HtmlTag tag)
         while ((tagNesting->Count() > 0) && (tagNesting->Last() != tag))
             tagNesting->Pop();
     }
-    if (tagNesting->Count() > 0) {
+    if (tagNesting->Count() > 0 && tagNesting->Last() == tag) {
         CrashIf(tagNesting->Last() != tag);
         tagNesting->Pop();
     }
@@ -436,6 +445,14 @@ Next:
 
     // skip <? and <! (processing instructions and comments)
     if (('?' == *start) || ('!' == *start)) {
+        if ('!' == *start && start + 2 < end && str::StartsWith(start, "!--")) {
+            currPos = start + 2;
+            if (!SkipUntil(currPos, end, "-->")) {
+                currToken.SetError(HtmlToken::UnclosedTag, start);
+                return &currToken;
+            }
+            currPos += 2;
+        }
         ++currPos;
         goto Next;
     }

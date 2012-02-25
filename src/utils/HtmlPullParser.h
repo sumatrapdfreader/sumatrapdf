@@ -101,7 +101,12 @@ struct AttrInfo {
 struct HtmlToken;
 size_t GetTagLen(const HtmlToken *tok);
 
+// TrivialHtmlParser needs to enumerate all attributes of an HtmlToken
+class HtmlParser;
+
 struct HtmlToken {
+    friend HtmlParser;
+
     enum TokenType {
         StartTag,           // <foo>
         EndTag,             // </foo>
@@ -178,4 +183,5 @@ AlignAttr   GetAlignAttrByName(const char *attr, size_t len);
 
 char *      PrettyPrintHtml(const char *s, size_t len, size_t& lenOut);
 const char *ResolveHtmlEntities(const char *s, const char *end, Allocator *alloc);
+
 #endif
