@@ -171,6 +171,9 @@ private:
     // for detection of cover image duplicates
     int                 pageCount;
 
+    // for tracking whether we're currently inside <a> tag
+    bool                inLink;
+
     HtmlPullParser *    htmlParser;
 
     // list of pages that we've created but haven't yet sent to client

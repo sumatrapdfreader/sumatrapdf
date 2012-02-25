@@ -587,10 +587,9 @@ void PageLayout::HandleTagBr()
 void PageLayout::HandleTagA(HtmlToken *t)
 {
     if (t->IsEndTag()) {
-        // TODO: we should probably track if there was a matching start tag
-        // as we might rejects links that we don't like/can't make sense out of.
-        // on the other hand, having stray link end markers doesn't hurt
-        currPage->instructions.Append(DrawInstr(InstrLinkEnd));
+        if (inLink)
+            currPage->instructions.Append(DrawInstr(InstrLinkEnd));
+        inLink = false;
         return;
     }
     AttrInfo *attr = t->GetAttrByName("filepos");
@@ -605,7 +604,9 @@ void PageLayout::HandleTagA(HtmlToken *t)
         return;
     if (n < 0)
         return;
-    // TODO: validate its' within the document
+    if ((size_t)n >= layoutInfo->htmlStrLen)
+        return;
+    inLink = true;
     currPage->instructions.Append(DrawInstr::LinkStart((size_t)n));
 }
 
@@ -700,10 +701,22 @@ void PageLayout::HandleTagFont(HtmlToken *t)
 static bool IgnoreThisTag(HtmlTag tag)
 {
     static uint8 tagsToIgnore[] = { Tag_Html, Tag_Body, Tag_Head, Tag_Guide, 
-        Tag_Reference, Tag_Div, Tag_Blockquote, Tag_Span, Tag_H1, Tag_H2, Tag_H3,
-        Tag_H4, Tag_H5, Tag_Sup, Tag_Sub, Tag_Table, Tag_Tr, Tag_Td };
+        Tag_Reference, Tag_Table, Tag_Tr, Tag_Td };
     return IsInArray((uint8)tag, tagsToIgnore, dimof(tagsToIgnore));
 }
+
+static bool IsTagH(HtmlTag tag)
+{
+    switch (tag) {
+        case Tag_H1:
+        case Tag_H2:
+        case Tag_H3:
+        case Tag_H4:
+        case Tag_H5:
+            return true;
+    }
+   return false;
+ }
 
 void PageLayout::HandleHtmlTag(HtmlToken *t)
 {
@@ -744,6 +757,18 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
         HandleTagImg(t);
     } else if (Tag_A == tag) {
         HandleTagA(t);
+    } else if (Tag_Blockquote == tag) {
+        // TODO: implement me
+    } else if (Tag_Div == tag) {
+        // TODO: implement me
+    } else if (IsTagH(tag)) {
+        // TODO: implement me
+    } else if (Tag_Sup == tag) {
+        // TODO: implement me
+    } else if (Tag_Sub == tag) {
+        // TODO: implement me
+    } else if (Tag_Span == tag) {
+        // TODO: implement me
     } else {
         // TODO: temporary debugging
         CrashIf(!IgnoreThisTag(tag));
@@ -837,6 +862,7 @@ PageData *PageLayout::IterStart(LayoutInfo* li)
 
     coverImage = NULL;
     pageCount = 0;
+    inLink = false;
 
     lineSpacing = currFont->GetHeight(gfx);
     spaceDx = currFontSize / 2.5f; // note: a heuristic
