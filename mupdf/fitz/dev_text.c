@@ -218,6 +218,7 @@ fz_debug_text_span(fz_text_span *span)
 }
 
 /***** SumatraPDF: various string fixups *****/
+
 static void
 ensure_span_length(fz_context *ctx, fz_text_span *span, int mincap)
 {
@@ -401,6 +402,13 @@ fixup_delete_duplicates:
 		}
 	}
 }
+
+static int
+fz_maps_into_bbox(fz_matrix ctm, fz_bbox rect)
+{
+	return rect.x0 <= ctm.e && ctm.e <= rect.x1 && rect.y0 <= ctm.f && ctm.f <= rect.y1;
+}
+
 /***** various string fixups *****/
 
 static void
@@ -502,6 +510,10 @@ fz_text_extract_span(fz_context *ctx, fz_text_span **last, fz_text *text, fz_mat
 			}
 			else if (fabsf(dot) > 0.95f && dist > size * SPACE_DIST)
 			{
+				/* SumatraPDF: don't add spaces before spaces */
+				if (text->items[i].ucs != ' ')
+				/* SumatraPDF: don't add spaces for large overlapping glyphs */
+				if ((*last)->len > 0 && !fz_maps_into_bbox(trm, (*last)->text[(*last)->len - 1].bbox))
 				if ((*last)->len > 0 && (*last)->text[(*last)->len - 1].c != ' ')
 				{
 					fz_rect spacerect;
