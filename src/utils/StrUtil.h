@@ -69,6 +69,7 @@ void ToLower(WCHAR *s);
 char *  ToMultiByte(const WCHAR *txt, UINT CodePage);
 char *  ToMultiByte(const char *src, UINT CodePageSrc, UINT CodePageDest);
 WCHAR * ToWideChar(const char *src, UINT CodePage);
+void    Utf8Encode(char *& dst, int c);
 
 inline const char * FindChar(const char *str, const char c) {
     return strchr(str, c);

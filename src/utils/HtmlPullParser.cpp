@@ -144,31 +144,6 @@ void MemAppend(char *& dst, const char *s, size_t len)
     dst += len;
 }
 
-// rune is a unicode character (borrowing terminology from Go)
-// We encode rune as utf8 to dst buffer and advance dst pointer.
-// The caller must ensure there is enough free space (6 bytes)
-// in dst
-static void Utf8Encode(char *& dst, int c)
-{
-    uint8 *tmp = (uint8*)dst;
-    if (c < 0x00080) {
-        *tmp++ = (uint8)(c & 0xFF);
-    } else if (c < 0x00800) {
-        *tmp++ = 0xC0 + (uint8)((c >> 6)&0x1F);
-        *tmp++ = 0x80 + (uint8)(c & 0x3F);
-    } else if (c < 0x10000) {
-        *tmp++ = 0xE0 + (uint8)((c >> 12)&0x0F);
-        *tmp++ = 0x80 + (uint8)((c >> 6) & 0x3F);
-        *tmp++ = 0x80 + (uint8)(c & 0x3F);
-    } else {
-        *tmp++ = 0xF0 + (uint8)((c >> 18) & 0x07);
-        *tmp++ = 0x80 + (uint8)((c >> 12) & 0x3F);
-        *tmp++ = 0x80 + (uint8)((c >> 6) & 0x3F);
-        *tmp++ = 0x80 + (uint8)(c & 0x3F);
-    }
-    dst = (char*)tmp;
-}
-
 // if "&foo;" was the entity, s points at the char
 // after '&' and len is lenght of the string (3 in case of "foo")
 // the caller must ensure that there is terminating ';'
@@ -225,7 +200,7 @@ const char *ResolveHtmlEntities(const char *s, const char *end, Allocator *alloc
             // unknown entity, copy the string verbatim
             MemAppend(dst, curr, colon - curr + 1);
         } else {
-            Utf8Encode(dst, rune);
+            str::Utf8Encode(dst, rune);
         }
         curr = colon + 1;
         s = curr;
