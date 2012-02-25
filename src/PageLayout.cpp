@@ -309,6 +309,7 @@ void PageLayout::ForceNewPage()
     if (createdNewPage)
         return;
     pagesToSend.Append(currPage);
+    pageCount++;
     currPage = new PageData();
 
     currPage->instructions.Append(DrawInstr::SetFont(currFont));
@@ -333,6 +334,7 @@ bool PageLayout::FlushCurrLine(bool isParagraphBreak)
     PageData *newPage = NULL;
     if (currY + totalLineDy > pageDy) {
         pagesToSend.Append(currPage);
+        pageCount++;
         // current line too big to fit in current page,
         // so need to start another page
         currY = 0.f;
@@ -368,6 +370,11 @@ void PageLayout::EmitImage(ImageData *img)
 {
     Rect imgSize = BitmapSizeFromData(img->data, img->len);
     if (imgSize.IsEmptyArea())
+        return;
+
+    // if the image we're adding early on is the same as cover
+    // image, then skip it. 5 is a heuristic
+    if ((img == coverImage) && (pageCount < 5))
         return;
 
     FlushCurrLine(true);
@@ -620,6 +627,7 @@ void PageLayout::HandleTagImg(HtmlToken *t)
     ImageData *img = layoutInfo->mobiDoc->GetImage(n);
     if (!img)
         return;
+
     EmitImage(img);
 }
 
@@ -779,6 +787,9 @@ PageData *PageLayout::IterStart(LayoutInfo* li)
     defaultFontSize = layoutInfo->fontSize;
     SetCurrentFont(FontStyleRegular, defaultFontSize);
 
+    coverImage = NULL;
+    pageCount = 0;
+
     lineSpacing = currFont->GetHeight(gfx);
     // note: a heuristic
     spaceDx = currFontSize / 2.5f;
@@ -792,8 +803,10 @@ PageData *PageLayout::IterStart(LayoutInfo* li)
     currLineTopPadding = 0;
     if (layoutInfo->mobiDoc) {
         ImageData *img = layoutInfo->mobiDoc->GetCoverImage();
-        if (img)
+        if (img) {
             EmitImage(img);
+            coverImage = img; // must do that after EmitImage()
+        }
     }
     return IterNext();
 }

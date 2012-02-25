@@ -154,6 +154,14 @@ private:
     Vec<DrawInstr>      currLineInstr;
     PageData *          currPage;
 
+    // remember cover image if we've generated one, so that we
+    // can avoid adding the same image twice if it's early in
+    // the book
+    ImageData *         coverImage;
+    // number of pages generated so far, approximate. Only used
+    // for detection of cover image duplicates
+    int                 pageCount;
+
     HtmlPullParser *    htmlParser;
 
     // list of pages that we've created but haven't yet sent to client
