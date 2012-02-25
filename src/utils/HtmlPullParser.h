@@ -163,6 +163,7 @@ public:
 void        SkipWs(const char*& s, const char *end);
 void        SkipNonWs(const char*& s, const char *end);
 bool        IsSpaceOnly(const char *s, const char *end);
+bool        IsInArray(uint8 val, uint8 *arr, size_t arrLen);
 bool        IsTagSelfClosing(const char *s, size_t len = -1);
 bool        IsTagSelfClosing(HtmlTag tag);
 bool        IsInlineTag(HtmlTag tag);
@@ -177,5 +178,4 @@ AlignAttr   GetAlignAttrByName(const char *attr, size_t len);
 
 char *      PrettyPrintHtml(const char *s, size_t len, size_t& lenOut);
 const char *ResolveHtmlEntities(const char *s, const char *end, Allocator *alloc);
-
 #endif

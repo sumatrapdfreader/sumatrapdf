@@ -28,7 +28,11 @@ enum DrawInstrType {
     InstrLine,
     // change current font
     InstrSetFont,
-    InstrImage
+    InstrImage,
+    // marks the beginning of a link (<a> tag)
+    InstrLinkStart,
+    // marks end of the link (must have matching InstrLinkStart)
+    InstrLinkEnd
 };
 
 struct DrawInstr {
@@ -42,6 +46,9 @@ struct DrawInstr {
         Font *              font;         // InstrSetFont
         float               fixedSpaceDx; // InstrFixedSpace
         ImageData           img;
+        // in mobi format, links are represented as a file
+        // position to which we should navigate
+        size_t              linkFilePos;  // InstrLinkStart
     };
     RectF bbox; // common to most instructions
 
@@ -54,6 +61,7 @@ struct DrawInstr {
     static DrawInstr Image(char *data, size_t len, RectF bbox);
     static DrawInstr SetFont(Font *font);
     static DrawInstr FixedSpace(float dx);
+    static DrawInstr LinkStart(size_t pos);
 };
 
 struct PageData {
@@ -96,6 +104,7 @@ public:
 
 private:
     void HandleTagBr();
+    void HandleTagA(HtmlToken *t);
     void HandleTagP(HtmlToken *t);
     void HandleTagFont(HtmlToken *t);
     void HandleTagImg(HtmlToken *t);

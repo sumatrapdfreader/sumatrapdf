@@ -95,6 +95,13 @@ DrawInstr DrawInstr::Image(char *data, size_t len, RectF bbox)
     return di;
 }
 
+DrawInstr DrawInstr::LinkStart(size_t pos)
+{
+    DrawInstr di(InstrLinkStart);
+    di.linkFilePos = pos;
+    return di;
+}
+
 PageLayout::PageLayout() : currPage(NULL), gfx(NULL)
 {
 }
@@ -574,6 +581,34 @@ void PageLayout::HandleTagBr()
         FlushCurrLine(true);
 }
 
+// TODO: this only accepts <a> tags with filepos attribute
+// there are files with regular http links etc. - not sure if we should
+// support them. Sometimes they point to suspicious, dead web pages
+void PageLayout::HandleTagA(HtmlToken *t)
+{
+    if (t->IsEndTag()) {
+        // TODO: we should probably track if there was a matching start tag
+        // as we might rejects links that we don't like/can't make sense out of.
+        // on the other hand, having stray link end markers doesn't hurt
+        currPage->instructions.Append(DrawInstr(InstrLinkEnd));
+        return;
+    }
+    AttrInfo *attr = t->GetAttrByName("filepos");
+    if (!attr) 
+        return;
+    // TODO: would be nice to have str::Parse() that can operate on string with a given
+    // length, not only on zero-terminated strings
+    str::Str<char> nStr;
+    nStr.Append(attr->val, attr->valLen);
+    int n = 0;
+    if (!str::Parse(nStr.Get(), "%d", &n))
+        return;
+    if (n < 0)
+        return;
+    // TODO: validate its' within the document
+    currPage->instructions.Append(DrawInstr::LinkStart((size_t)n));
+}
+
 void PageLayout::HandleTagP(HtmlToken *t)
 {
     if (t->IsEndTag()) {
@@ -660,6 +695,16 @@ void PageLayout::HandleTagFont(HtmlToken *t)
     ChangeFontSize(defaultFontSize * scale);
 }
 
+// List of tags that we don't know we don't handle yet (either because we don't want
+// to or because we haven't implemented them yet)
+static bool IgnoreThisTag(HtmlTag tag)
+{
+    static uint8 tagsToIgnore[] = { Tag_Html, Tag_Body, Tag_Head, Tag_Guide, 
+        Tag_Reference, Tag_Div, Tag_Blockquote, Tag_Span, Tag_H1, Tag_H2, Tag_H3,
+        Tag_H4, Tag_H5, Tag_Sup, Tag_Sub, Tag_Table, Tag_Tr, Tag_Td };
+    return IsInArray((uint8)tag, tagsToIgnore, dimof(tagsToIgnore));
+}
+
 void PageLayout::HandleHtmlTag(HtmlToken *t)
 {
     CrashAlwaysIf(!t->IsTag());
@@ -698,7 +743,10 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
     } else if (Tag_Img == tag) {
         HandleTagImg(t);
     } else if (Tag_A == tag) {
-        // TODO: implement me
+        HandleTagA(t);
+    } else {
+        // TODO: temporary debugging
+        CrashIf(!IgnoreThisTag(tag));
     }
 }
 
@@ -791,8 +839,7 @@ PageData *PageLayout::IterStart(LayoutInfo* li)
     pageCount = 0;
 
     lineSpacing = currFont->GetHeight(gfx);
-    // note: a heuristic
-    spaceDx = currFontSize / 2.5f;
+    spaceDx = currFontSize / 2.5f; // note: a heuristic
     float spaceDx2 = GetSpaceDx(gfx, currFont);
     if (spaceDx2 < spaceDx)
         spaceDx = spaceDx2;
@@ -821,6 +868,10 @@ Vec<PageData*> *LayoutHtml(LayoutInfo* li)
     return pages;
 }
 
+// TODO: draw link in the appropriate format (blue text, unerlined, should show hand cursor when
+// mouse is over a link. There's a slight complication here: we only get explicit information about
+// strings, not about the whitespace and we should underline the whitespace as well. Also the text
+// should be underlined at a baseline
 void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox)
 {
     //SolidBrush brText(Color(0,0,0));
@@ -833,6 +884,7 @@ void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, RE
     WCHAR buf[512];
     PointF pos;
     DrawInstr *i;
+    bool insideLink = false;
     for (i = drawInstructions->IterStart(); i; i = drawInstructions->IterNext()) {
         RectF bbox = i->bbox;
         bbox.X += offX;
@@ -856,11 +908,15 @@ void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, RE
         } else if ((InstrElasticSpace == i->type) || (InstrFixedSpace == i->type)) {
             // ignore
         } else if (InstrImage == i->type) {
-            // TODO: cache the bitmap somewhere ?
+            // TODO: cache the bitmap somewhere (?)
             Bitmap *bmp = BitmapFromData(i->img.data, i->img.len);
             if (bmp)
                 g->DrawImage(bmp, bbox, 0, 0, (REAL)bmp->GetWidth(), (REAL)bmp->GetHeight(), UnitPixel);
             delete bmp;
+        } else if (InstrLinkStart == i->type) {
+            insideLink = true;
+        } else if (InstrLinkEnd == i->type) {
+            insideLink = false;
         } else {
             CrashIf(true);
         }

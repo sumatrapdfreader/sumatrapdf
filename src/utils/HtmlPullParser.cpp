@@ -51,7 +51,7 @@ static uint8 gSelfClosingTags[] = { Tag_Area, Tag_Base, Tag_Basefont, Tag_Br, Ta
 
 STATIC_ASSERT(Tag_Last < 256, too_many_tags);
 
-static bool IsInArray(uint8 val, uint8 *arr, size_t arrLen)
+bool IsInArray(uint8 val, uint8 *arr, size_t arrLen)
 {
     while (arrLen-- > 0) {
         if (val == *arr++)
