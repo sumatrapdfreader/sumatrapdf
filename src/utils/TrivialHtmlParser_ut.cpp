@@ -102,7 +102,7 @@ static void HtmlParser03()
 static void HtmlParser02()
 {
     HtmlParser p;
-    HtmlElement *root = p.Parse("<a><b/><  c></c  ><d at1=\"&lt;quo&amp;ted&gt;\" at2='also quoted'   att3=notquoted att4=&101;&#6e;d/></a>");
+    HtmlElement *root = p.Parse("<a><b/><  c></c  ><d at1=\"&lt;quo&amp;ted&gt;\" at2='also quoted'   att3=notquoted att4=&#101;&#x6e;d/></a>");
     assert(4 == p.ElementsCount());
     assert(4 == p.TotalAttrCount());
     assert(str::Eq("a", root->name));
@@ -152,7 +152,7 @@ static void HtmlParser06()
 static void HtmlParser07()
 {
     HtmlParser p;
-    HtmlElement *root = p.Parse("<test umls=&auml;\xC3\xB6&#FC; zero=&1;&0;&-1;>", CP_UTF8);
+    HtmlElement *root = p.Parse("<test umls=&auml;\xC3\xB6&#xFC; zero=&#1;&#0;&#-1;>", CP_UTF8);
     assert(1 == p.ElementsCount());
     ScopedMem<TCHAR> val(root->GetAttribute("umls"));
 #ifdef UNICODE

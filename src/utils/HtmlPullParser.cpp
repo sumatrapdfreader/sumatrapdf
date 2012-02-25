@@ -166,7 +166,7 @@ static void Utf8Encode(char *& dst, int c)
 static int ResolveHtmlEntity(const char *s, size_t len)
 {
     int rune;
-    if (str::Parse(s, "%d;", &rune))
+    if (str::Parse(s, "#%d;", &rune))
         return rune;
     if (str::Parse(s, "#x%x;", &rune))
         return rune;

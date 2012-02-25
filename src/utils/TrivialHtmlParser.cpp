@@ -113,8 +113,8 @@ static TCHAR *DecodeHtmlEntitites(const char *string, UINT codepage=CP_ACP)
         src++;
         // numeric entities
         int unicode;
-        if (str::Parse(src, _T("%d;"), &unicode) ||
-            str::Parse(src, _T("#%x;"), &unicode)) {
+        if (str::Parse(src, _T("#%d;"), &unicode) ||
+            str::Parse(src, _T("#x%x;"), &unicode)) {
             *dst++ = IntToChar(unicode, codepage);
             src = str::FindChar(src, ';') + 1;
             continue;
