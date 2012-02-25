@@ -318,6 +318,7 @@ void PageLayout::ForceNewPage()
     pagesToSend.Append(currPage);
     pageCount++;
     currPage = new PageData();
+    currPage->reparsePoint = currReparsePoint;
 
     currPage->instructions.Append(DrawInstr::SetFont(currFont));
     currY = 0.f;
@@ -346,6 +347,7 @@ bool PageLayout::FlushCurrLine(bool isParagraphBreak)
         // so need to start another page
         currY = 0.f;
         newPage = new PageData();
+        newPage->reparsePoint = currReparsePoint;
     }
     SetYPos(currLineInstr, currY + currLineTopPadding);
     currY += totalLineDy;
@@ -829,6 +831,7 @@ PageData *PageLayout::IterNext()
         if (!t || t->IsError())
             break;
 
+        currReparsePoint = t->GetReparsePoint();
         if (t->IsTag())
             HandleHtmlTag(t);
         else
@@ -873,6 +876,8 @@ PageData *PageLayout::IterStart(LayoutInfo* li)
     currJustification = Align_Justify;
     currX = 0; currY = 0;
     currPage = new PageData;
+    currPage->reparsePoint = currReparsePoint;
+
     currLineTopPadding = 0;
     if (layoutInfo->mobiDoc) {
         ImageData *img = layoutInfo->mobiDoc->GetCoverImage();

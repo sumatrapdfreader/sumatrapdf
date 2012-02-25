@@ -65,6 +65,9 @@ struct DrawInstr {
 };
 
 struct PageData {
+    // if we start parsing html again from reparsePoint, we should
+    // get the same instructions
+    const char *    reparsePoint;
     Vec<DrawInstr>  instructions;
 };
 
@@ -173,6 +176,9 @@ private:
 
     // for tracking whether we're currently inside <a> tag
     bool                inLink;
+
+    // reparse point for the current HtmlToken
+    const char *        currReparsePoint;
 
     HtmlPullParser *    htmlParser;
 
