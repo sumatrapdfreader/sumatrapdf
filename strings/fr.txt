@@ -678,3 +678,6 @@ copie du texte
 printing document
 impression du document
 
+# Untranslated:
+#Replace document &colors with Windows color scheme
+

@@ -287,7 +287,6 @@ bool RegisterNotificationsWndClass(HINSTANCE inst)
     FillWndClassEx(wcex, inst);
     wcex.lpfnWndProc    = NotificationWnd::WndProc;
     wcex.hCursor        = LoadCursor(NULL, IDC_APPSTARTING);
-    wcex.hbrBackground  = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
     wcex.lpszClassName  = NOTIFICATION_WND_CLASS_NAME;
     ATOM atom = RegisterClassEx(&wcex);
     return atom != 0;

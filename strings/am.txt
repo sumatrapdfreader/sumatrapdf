@@ -673,3 +673,6 @@ copying text
 printing document
 ֆայլը տպվում է
 
+# Untranslated:
+#Replace document &colors with Windows color scheme
+

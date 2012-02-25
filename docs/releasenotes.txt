@@ -7,6 +7,8 @@ Next version:
 
 * we can now open CHM documents from network drives
 * images from documents can be copied from the context menu
+* document colors can be replaced with Windows system colors
+  (option hidden if Windows displays text black-on-white)
 
 1.9 (2011-11-23)
 

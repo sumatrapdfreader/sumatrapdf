@@ -682,3 +682,6 @@ tekst kopiëren
 printing document
 bestand afdrukken
 
+# Untranslated:
+#Replace document &colors with Windows color scheme
+

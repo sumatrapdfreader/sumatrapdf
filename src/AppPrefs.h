@@ -10,7 +10,7 @@ bool ParseViewMode(DisplayMode *mode, const TCHAR *txt);
 
 /* enum from windowState */
 enum {
-    WIN_STATE_NORMAL = 1, /* use remebered position and size */
+    WIN_STATE_NORMAL = 1, /* use remembered position and size */
     WIN_STATE_MAXIMIZED,  /* ignore position and size, maximize the window */
     WIN_STATE_FULLSCREEN,
     WIN_STATE_MINIMIZED,
@@ -46,6 +46,8 @@ struct SerializableGlobalPrefs {
        (negative values indicate that the default color will be used) */
     int  bgColor;
     bool escToExit;
+    /* whether to display documents black-on-white or in system colors */
+    bool useSysColors;
 
     /* pattern used to launch the editor when doing inverse search */
     TCHAR *inverseSearchCmdLine;

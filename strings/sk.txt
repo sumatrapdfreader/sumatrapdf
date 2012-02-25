@@ -676,3 +676,6 @@ prebieha kopírovanie textu
 printing document
 prebieha tlač dokumentu
 
+# Untranslated:
+#Replace document &colors with Windows color scheme
+

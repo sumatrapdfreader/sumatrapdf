@@ -1629,8 +1629,7 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
 
         bool renderOutOfDateCue = false;
         UINT renderDelay = 0;
-        if (!DoCachePageRendering(&win, pageNo))
-        {
+        if (!DoCachePageRendering(&win, pageNo)) {
             if (dm->engine)
                 dm->engine->RenderPage(hdc, pageInfo->pageOnScreen, pageNo, dm->ZoomReal(pageNo), dm->Rotation());
         }
@@ -1683,11 +1682,8 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
         DebugShowLinks(*dm, hdc);
 }
 
-static void ToggleGdiDebugging()
+static void RerenderEverything()
 {
-    gUseGdiRenderer = !gUseGdiRenderer;
-    DebugGdiPlusDevice(gUseGdiRenderer);
-
     for (size_t i = 0; i < gWindows.Count(); i++) {
         DisplayModel *dm = gWindows.At(i)->dm;
         if (dm) {
@@ -1696,6 +1692,36 @@ static void ToggleGdiDebugging()
             gWindows.At(i)->RedrawAll(true);
         }
     }
+}
+
+void UpdateDocumentColors()
+{
+    COLORREF fore = WIN_COL_BLACK;
+    COLORREF back = WIN_COL_WHITE;
+    if (gGlobalPrefs.useSysColors) {
+        fore = GetSysColor(COLOR_WINDOWTEXT);
+        back = GetSysColor(COLOR_WINDOW);
+    }
+    // update document color range
+    if (fore != gRenderCache.colorRange[0] ||
+        back != gRenderCache.colorRange[1]) {
+        gRenderCache.colorRange[0] = fore;
+        gRenderCache.colorRange[1] = back;
+        RerenderEverything();
+    }
+    // update document background
+    DeleteObject(gBrushNoDocBg);
+    if (gGlobalPrefs.useSysColors && (fore != WIN_COL_BLACK || back != WIN_COL_WHITE))
+        gBrushNoDocBg = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
+    else
+        gBrushNoDocBg = CreateSolidBrush(COL_WINDOW_BG);
+}
+
+static void ToggleGdiDebugging()
+{
+    gUseGdiRenderer = !gUseGdiRenderer;
+    DebugGdiPlusDevice(gUseGdiRenderer);
+    RerenderEverything();
 }
 
 static void OnDraggingStart(WindowInfo& win, int x, int y, bool right=false)
@@ -2712,6 +2738,8 @@ static void OnMenuSettings(WindowInfo& win)
 {
     if (!HasPermission(Perm_SavePreferences)) return;
 
+    bool useSysColors = gGlobalPrefs.useSysColors;
+
     if (IDOK != Dialog_Settings(win.hwndFrame, &gGlobalPrefs))
         return;
 
@@ -2719,6 +2747,8 @@ static void OnMenuSettings(WindowInfo& win)
         gFileHistory.Clear();
         CleanUpThumbnailCache(gFileHistory);
     }
+    if (useSysColors != gGlobalPrefs.useSysColors)
+        UpdateDocumentColors();
     if (gWindows.Count() > 0 && gWindows.At(0)->IsAboutWindow())
         gWindows.At(0)->RedrawAll(true);
 
@@ -4414,6 +4444,11 @@ InitMouseWheelInfo:
                 gDeltaPerLine = 0;
             return 0;
 
+        case WM_SYSCOLORCHANGE:
+            if (gGlobalPrefs.useSysColors)
+                UpdateDocumentColors();
+            break;
+
         case WM_MOUSEWHEEL:
             if (!win)
                 break;
@@ -4499,7 +4534,7 @@ static bool RegisterWinClass(HINSTANCE hinst)
     FillWndClassEx(wcex, hinst);
     wcex.lpfnWndProc    = WndProcSidebarSplitter;
     wcex.hCursor        = LoadCursor(NULL, IDC_SIZEWE);
-    wcex.hbrBackground  = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
+    wcex.hbrBackground  = (HBRUSH)(COLOR_BTNFACE + 1);
     wcex.lpszClassName  = SIDEBAR_SPLITTER_CLASS_NAME;
     atom = RegisterClassEx(&wcex);
     if (!atom)
@@ -4508,7 +4543,7 @@ static bool RegisterWinClass(HINSTANCE hinst)
     FillWndClassEx(wcex, hinst);
     wcex.lpfnWndProc    = WndProcFavSplitter;
     wcex.hCursor        = LoadCursor(NULL, IDC_SIZENS);
-    wcex.hbrBackground  = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
+    wcex.hbrBackground  = (HBRUSH)(COLOR_BTNFACE + 1);
     wcex.lpszClassName  = FAV_SPLITTER_CLASS_NAME;
     atom = RegisterClassEx(&wcex);
     if (!atom)
@@ -4535,7 +4570,17 @@ static bool InstanceInit(HINSTANCE hInstance, int nCmdShow)
     gCursorSizeWE   = LoadCursor(NULL, IDC_SIZEWE);
     gCursorSizeNS   = LoadCursor(NULL, IDC_SIZENS);
     gCursorNo       = LoadCursor(NULL, IDC_NO);
-    gBrushNoDocBg   = CreateSolidBrush(COL_WINDOW_BG);
+    // use the system background color if the user has non-default
+    // colors for text (not black-on-white) and also wants to use them
+    bool useSysColor = gGlobalPrefs.useSysColors &&
+                       (GetSysColor(COLOR_WINDOWTEXT) != WIN_COL_BLACK ||
+                        GetSysColor(COLOR_WINDOW) != WIN_COL_WHITE);
+    if (useSysColor) {
+        // not using GetSysColorBrush so that gBrushNoDocBg can be deleted
+        gBrushNoDocBg = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
+    }
+    else
+        gBrushNoDocBg = CreateSolidBrush(COL_WINDOW_BG);
     if (ABOUT_BG_COLOR_DEFAULT != gGlobalPrefs.bgColor)
         gBrushAboutBg = CreateSolidBrush(gGlobalPrefs.bgColor);
     else
@@ -4645,6 +4690,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     i.fwdSearch.color = gGlobalPrefs.fwdSearch.color;
     i.fwdSearch.permanent = gGlobalPrefs.fwdSearch.permanent;
     i.escToExit = gGlobalPrefs.escToExit;
+    if (gGlobalPrefs.useSysColors) {
+        i.colorRange[0] = GetSysColor(COLOR_WINDOWTEXT);
+        i.colorRange[1] = GetSysColor(COLOR_WINDOW);
+    }
 
     i.ParseCommandLine(GetCommandLine());
 

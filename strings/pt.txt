@@ -675,3 +675,6 @@ cópia de texto
 printing document
 impressão de documento
 
+# Untranslated:
+#Replace document &colors with Windows color scheme
+

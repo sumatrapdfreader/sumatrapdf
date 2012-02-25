@@ -665,4 +665,5 @@ agiria irarkitzen
 #Copy &Image
 #File %s not found
 #No result found around line %u in file %s
+#Replace document &colors with Windows color scheme
 

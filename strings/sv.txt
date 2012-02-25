@@ -662,4 +662,5 @@ skriver ut dokumentet
 #Copy &Image
 #Could not obtain Printer properties
 #File %s not found
+#Replace document &colors with Windows color scheme
 

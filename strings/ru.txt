@@ -675,3 +675,6 @@ copying text
 printing document
 печатается документ
 
+# Untranslated:
+#Replace document &colors with Windows color scheme
+

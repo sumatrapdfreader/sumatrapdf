@@ -676,3 +676,6 @@ copying text
 printing document
 تتم حالياً الطباعة
 
+# Untranslated:
+#Replace document &colors with Windows color scheme
+

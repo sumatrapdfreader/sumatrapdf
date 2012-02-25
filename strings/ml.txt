@@ -300,6 +300,7 @@ Zoom Out
 #Remember &opened files
 #Remove from favorites
 #Remove page %s from favorites
+#Replace document &colors with Windows color scheme
 #Save S&hortcut...\tCtrl+Shift+S
 #Searching %d of %d...
 #Select &All

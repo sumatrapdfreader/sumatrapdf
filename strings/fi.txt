@@ -675,3 +675,6 @@ Kopioidaan tekstiä
 printing document
 tulostetaan asiakirjaa
 
+# Untranslated:
+#Replace document &colors with Windows color scheme
+

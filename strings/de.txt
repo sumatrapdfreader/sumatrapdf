@@ -554,6 +554,9 @@ Aus Favoriten entfernen
 Remove page %s from favorites
 Seite %s aus Favoriten entfernen
 
+Replace document &colors with Windows color scheme
+Dokumenten&farben durch Windows-Farbschema ersetzen
+
 Rotate &Left\tCtrl+Shift+-
 &Gegen UZS drehen\tStrg+Umschalt+-
 

@@ -586,6 +586,7 @@ ipini-print ang dokumento
 #Printing page %d of %d...
 #Remove from favorites
 #Remove page %s from favorites
+#Replace document &colors with Windows color scheme
 #Save S&hortcut...\tCtrl+Shift+S
 #Show Favorites
 #Show frequently read

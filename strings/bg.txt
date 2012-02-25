@@ -674,3 +674,6 @@ copying text
 printing document
 отпечатване на документ
 
+# Untranslated:
+#Replace document &colors with Windows color scheme
+

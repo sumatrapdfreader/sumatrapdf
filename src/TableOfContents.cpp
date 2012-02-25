@@ -78,9 +78,7 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd)
     // Clear the label
     RECT rcFullWidth = rcItem;
     rcFullWidth.right = ncd->rc.right;
-    HBRUSH brushBg = CreateSolidBrush(GetSysColor(COLOR_WINDOW));
-    FillRect(ncd->hdc, &rcFullWidth, brushBg);
-    DeleteObject(brushBg);
+    FillRect(ncd->hdc, &rcFullWidth, GetSysColorBrush(COLOR_WINDOW));
 
     // Get the label's text
     TCHAR szText[MAX_PATH];
@@ -120,7 +118,7 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd)
     SetBkColor(ncd->hdc, ntvcd->clrTextBk);
 
     // Draw the focus rectangle (including proper background color)
-    brushBg = CreateSolidBrush(ntvcd->clrTextBk);
+    HBRUSH brushBg = CreateSolidBrush(ntvcd->clrTextBk);
     FillRect(ncd->hdc, &rcItem, brushBg);
     DeleteObject(brushBg);
     if ((ncd->uItemState & CDIS_FOCUS))

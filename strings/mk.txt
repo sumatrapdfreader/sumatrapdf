@@ -672,4 +672,5 @@ printing document
 
 # Untranslated:
 #Copy &Image
+#Replace document &colors with Windows color scheme
 

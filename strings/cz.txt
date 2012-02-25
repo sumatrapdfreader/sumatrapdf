@@ -676,3 +676,6 @@ kopírování textu
 printing document
 tisk dokumentu
 
+# Untranslated:
+#Replace document &colors with Windows color scheme
+

@@ -571,7 +571,8 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data)
             req.renderCb = (RenderingCallback *)1; // will crash if accessed again, which should not happen
         }
         else {
-            if (bmp)
+            // don't replace colors for individual images
+            if (bmp && !req.dm->engine->IsImageCollection())
                 UpdateBitmapColorRange(bmp->GetBitmap(), cache->colorRange);
             cache->Add(req, bmp);
 #ifdef CONSERVE_MEMORY

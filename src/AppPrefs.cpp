@@ -53,6 +53,7 @@
 #define TOC_STATE_STR               "TocToggles"
 #define BG_COLOR_STR                "BgColor"
 #define ESC_TO_EXIT_STR             "EscToExit"
+#define USE_SYS_COLORS_STR          "UseSysColors"
 #define INVERSE_SEARCH_COMMANDLINE  "InverseSearchCommandLine"
 #define ENABLE_TEX_ENHANCEMENTS_STR "ExposeInverseSearch"
 #define VERSION_TO_SKIP_STR         "VersionToSkip"
@@ -97,6 +98,7 @@ SerializableGlobalPrefs gGlobalPrefs = {
     true, // bool rememberOpenedFiles
     ABOUT_BG_COLOR_DEFAULT, // int bgColor
     false, // bool escToExit
+    false, // bool useSysColors
     NULL, // TCHAR *inverseSearchCmdLine
     false, // bool enableTeXEnhancements
     NULL, // TCHAR *versionToSkip
@@ -148,6 +150,7 @@ static BencDict* SerializeGlobalPrefs(SerializableGlobalPrefs& globalPrefs)
 
     prefs->Add(BG_COLOR_STR, globalPrefs.bgColor);
     prefs->Add(ESC_TO_EXIT_STR, globalPrefs.escToExit);
+    prefs->Add(USE_SYS_COLORS_STR, globalPrefs.useSysColors);
     prefs->Add(ENABLE_AUTO_UPDATE_STR, globalPrefs.enableAutoUpdate);
     prefs->Add(REMEMBER_OPENED_FILES_STR, globalPrefs.rememberOpenedFiles);
     prefs->Add(GLOBAL_PREFS_ONLY_STR, globalPrefs.globalPrefsOnly);
@@ -469,6 +472,7 @@ static void DeserializePrefs(const char *prefsTxt, SerializableGlobalPrefs& glob
     Retrieve(global, PDF_ASSOCIATE_DONT_ASK_STR, globalPrefs.pdfAssociateDontAskAgain);
     Retrieve(global, PDF_ASSOCIATE_ASSOCIATE_STR, globalPrefs.pdfAssociateShouldAssociate);
     Retrieve(global, ESC_TO_EXIT_STR, globalPrefs.escToExit);
+    Retrieve(global, USE_SYS_COLORS_STR, globalPrefs.useSysColors);
     Retrieve(global, BG_COLOR_STR, globalPrefs.bgColor);
     Retrieve(global, ENABLE_AUTO_UPDATE_STR, globalPrefs.enableAutoUpdate);
     Retrieve(global, REMEMBER_OPENED_FILES_STR, globalPrefs.rememberOpenedFiles);
@@ -704,6 +708,7 @@ bool ReloadPrefs()
 
     const char *currLang = gGlobalPrefs.currentLanguage;
     bool toolbarVisible = gGlobalPrefs.toolbarVisible;
+    bool useSysColors = gGlobalPrefs.useSysColors;
 
     FileHistory fileHistory;
     Favorites *favs = NULL;
@@ -724,6 +729,8 @@ bool ReloadPrefs()
 
     if (gGlobalPrefs.toolbarVisible != toolbarVisible)
         ShowOrHideToolbarGlobally();
+    if (gGlobalPrefs.useSysColors != useSysColors)
+        UpdateDocumentColors();
     UpdateFavoritesTreeForAllWindows();
 
     return true;

@@ -679,3 +679,6 @@ copiado de texto
 printing document
 imprimimendo documento
 
+# Untranslated:
+#Replace document &colors with Windows color scheme
+

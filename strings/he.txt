@@ -669,4 +669,5 @@ printing document
 #CHM documents
 #Copy &Image
 #File %s not found
+#Replace document &colors with Windows color scheme
 

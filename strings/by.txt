@@ -438,6 +438,7 @@ Zoom Out
 #Printing page %d of %d...
 #Remove from favorites
 #Remove page %s from favorites
+#Replace document &colors with Windows color scheme
 #Save S&hortcut...\tCtrl+Shift+S
 #Select &All
 #Select &All\tCtrl+A

@@ -681,3 +681,6 @@ Copia del testo...
 printing document
 Stampa documento...
 
+# Untranslated:
+#Replace document &colors with Windows color scheme
+

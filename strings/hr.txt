@@ -639,5 +639,6 @@ ispisujem dokument
 #Printer with given name doesn't exist
 #Remove from favorites
 #Remove page %s from favorites
+#Replace document &colors with Windows color scheme
 #Show Favorites
 

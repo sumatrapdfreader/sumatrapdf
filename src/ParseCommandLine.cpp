@@ -186,8 +186,8 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
         else if (is_arg("-restrict")) {
             restrictedUse = true;
         }
-        // TODO: remove these two, once colorRange can be set from UI
-        // TODO: or just use GetSysColor(COLOR_WINDOWTEXT) and GetSysColor(COLOR_WINDOW)?
+        // TODO: remove -invert-colors and -set-color-range in favor
+        //       of the UI settable gGlobalPrefs.useSysColors(?)
         else if (is_arg("-invertcolors") || is_arg("-invert-colors")) {
             // -invertcolors is for backwards compat (was used pre-1.3)
             // -invert-colors is for consistency

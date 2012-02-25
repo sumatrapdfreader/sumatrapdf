@@ -676,4 +676,5 @@ mencetak dokumen
 
 # Untranslated:
 #Open in Microsoft XPS-Viewer
+#Replace document &colors with Windows color scheme
 

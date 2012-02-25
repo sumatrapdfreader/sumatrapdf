@@ -642,6 +642,29 @@ bool Dialog_CustomZoom(HWND hwnd, bool forChm, float *currZoomInOut)
     return true;
 }
 
+static void RemoveDialogItem(HWND hDlg, int itemId, int prevId=0)
+{
+    HWND hItem = GetDlgItem(hDlg, itemId);
+    RectI itemRc = MapRectToWindow(WindowRect(hItem), HWND_DESKTOP, hDlg);
+    // shrink by the distance to the previous item
+    HWND hPrev = prevId ? GetDlgItem(hDlg, prevId) : GetWindow(hItem, GW_HWNDPREV);
+    RectI prevRc = MapRectToWindow(WindowRect(hPrev), HWND_DESKTOP, hDlg);
+    int shrink = itemRc.y - prevRc.y + itemRc.dy - prevRc.dy;
+    // move items below up, shrink container items and hide contained items
+    for (HWND item = GetWindow(hDlg, GW_CHILD); item; item = GetWindow(item, GW_HWNDNEXT)) {
+        RectI rc = MapRectToWindow(WindowRect(item), HWND_DESKTOP, hDlg);
+        if (rc.y >= itemRc.y + itemRc.dy) // below
+            MoveWindow(item, rc.x, rc.y - shrink, rc.dx, rc.dy, TRUE);
+        else if (rc.Intersect(itemRc) == rc) // contained (or self)
+            ShowWindow(item, SW_HIDE);
+        else if (itemRc.Intersect(rc) == itemRc) // container
+            MoveWindow(item, rc.x, rc.y, rc.dx, rc.dy - shrink, TRUE);
+    }
+    // shrink the dialog
+    WindowRect dlgRc(hDlg);
+    MoveWindow(hDlg, dlgRc.x, dlgRc.y, dlgRc.dx, dlgRc.dy - shrink, TRUE);
+}
+
 static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     SerializableGlobalPrefs *prefs;
@@ -668,6 +691,7 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wParam,
         CheckDlgButton(hDlg, IDC_DEFAULT_SHOW_TOC, prefs->tocVisible ? BST_CHECKED : BST_UNCHECKED);
         CheckDlgButton(hDlg, IDC_GLOBAL_PREFS_ONLY, !prefs->globalPrefsOnly ? BST_CHECKED : BST_UNCHECKED);
         EnableWindow(GetDlgItem(hDlg, IDC_GLOBAL_PREFS_ONLY), prefs->rememberOpenedFiles);
+        CheckDlgButton(hDlg, IDC_USE_SYS_COLORS, prefs->useSysColors ? BST_CHECKED : BST_UNCHECKED);
         CheckDlgButton(hDlg, IDC_AUTO_UPDATE_CHECKS, prefs->enableAutoUpdate ? BST_CHECKED : BST_UNCHECKED);
         EnableWindow(GetDlgItem(hDlg, IDC_AUTO_UPDATE_CHECKS), HasPermission(Perm_InternetAccess));
         CheckDlgButton(hDlg, IDC_REMEMBER_OPENED_FILES, prefs->rememberOpenedFiles ? BST_CHECKED : BST_UNCHECKED);
@@ -688,33 +712,24 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wParam,
         SetDlgItemText(hDlg, IDC_DEFAULT_ZOOM_LABEL, _TR("Default &Zoom:"));
         SetDlgItemText(hDlg, IDC_DEFAULT_SHOW_TOC, _TR("Show the &bookmarks sidebar when available"));
         SetDlgItemText(hDlg, IDC_GLOBAL_PREFS_ONLY, _TR("&Remember these settings for each document"));
+        SetDlgItemText(hDlg, IDC_USE_SYS_COLORS, _TR("Replace document &colors with Windows color scheme"));
         SetDlgItemText(hDlg, IDC_SECTION_ADVANCED, _TR("Advanced"));
         SetDlgItemText(hDlg, IDC_AUTO_UPDATE_CHECKS, _TR("Automatically check for &updates"));
         SetDlgItemText(hDlg, IDC_REMEMBER_OPENED_FILES, _TR("Remember &opened files"));
+        SetDlgItemText(hDlg, IDC_SECTION_INVERSESEARCH, _TR("Set inverse search command-line"));
+        SetDlgItemText(hDlg, IDC_CMDLINE_LABEL, _TR("Enter the command-line to invoke when you double-click on the PDF document:"));
         SetDlgItemText(hDlg, IDOK, _TR("OK"));
         SetDlgItemText(hDlg, IDCANCEL, _TR("Cancel"));
 
+        if (GetSysColor(COLOR_WINDOWTEXT) == RGB(0, 0, 0) &&
+            GetSysColor(COLOR_WINDOW) == RGB(0xFF, 0xFF, 0xFF)) {
+            // remove the "use system colors" item if it wouldn't change anything
+            RemoveDialogItem(hDlg, IDC_USE_SYS_COLORS);
+        }
+
         if (prefs->enableTeXEnhancements && HasPermission(Perm_DiskAccess)) {
-            // Fit the additional section into the dialog
-            // (this should rather happen in SumatraPDF.rc, but the resource
-            // editor tends to overwrite conditional stuff which isn't its own)
-            RectI rc = WindowRect(GetDlgItem(hDlg, IDC_SECTION_INVERSESEARCH));
-            UINT addHeight = rc.dy + 8;
-            rc = WindowRect(hDlg);
-            MoveWindow(hDlg, rc.x, rc.y, rc.dx, rc.dy + addHeight, TRUE);
-
-            HWND hItem = GetDlgItem(hDlg, IDOK);
-            rc = MapRectToWindow(ClientRect(hItem), hItem, hDlg);
-            MoveWindow(hItem, rc.x, rc.y + addHeight, rc.dx, rc.dy, TRUE);
-
-            hItem = GetDlgItem(hDlg, IDCANCEL);
-            rc = MapRectToWindow(ClientRect(hItem), hItem, hDlg);
-            MoveWindow(hItem, rc.x, rc.y + addHeight, rc.dx, rc.dy, TRUE);
-
-            SetDlgItemText(hDlg, IDC_SECTION_INVERSESEARCH, _TR("Set inverse search command-line"));
-            SetDlgItemText(hDlg, IDC_CMDLINE_LABEL, _TR("Enter the command-line to invoke when you double-click on the PDF document:"));
             // Fill the combo with the list of possible inverse search commands
-            TCHAR *inverseSearch = AutoDetectInverseSearchCommands(GetDlgItem(hDlg, IDC_CMDLINE));
+            ScopedMem<TCHAR> inverseSearch(AutoDetectInverseSearchCommands(GetDlgItem(hDlg, IDC_CMDLINE)));
             // Try to select a correct default when first showing this dialog
             if (!prefs->inverseSearchCmdLine)
                 prefs->inverseSearchCmdLine = inverseSearch;
@@ -731,13 +746,9 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wParam,
             }
             if (prefs->inverseSearchCmdLine == inverseSearch)
                 prefs->inverseSearchCmdLine = NULL;
-            free(inverseSearch);
         }
-        else
-        {
-            ShowWindow(GetDlgItem(hDlg, IDC_SECTION_INVERSESEARCH), SW_HIDE);
-            ShowWindow(GetDlgItem(hDlg, IDC_CMDLINE_LABEL), SW_HIDE);
-            ShowWindow(GetDlgItem(hDlg, IDC_CMDLINE), SW_HIDE);
+        else {
+            RemoveDialogItem(hDlg, IDC_SECTION_INVERSESEARCH, IDC_SECTION_ADVANCED);
         }
 
         CenterDialog(hDlg);
@@ -754,6 +765,7 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wParam,
 
             prefs->tocVisible = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_DEFAULT_SHOW_TOC));
             prefs->globalPrefsOnly = (BST_CHECKED != IsDlgButtonChecked(hDlg, IDC_GLOBAL_PREFS_ONLY));
+            prefs->useSysColors = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_USE_SYS_COLORS));
             prefs->enableAutoUpdate = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_AUTO_UPDATE_CHECKS));
             prefs->rememberOpenedFiles = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_REMEMBER_OPENED_FILES));
             if (prefs->enableTeXEnhancements && HasPermission(Perm_DiskAccess)) {
