@@ -31,6 +31,7 @@ static int isfontdesc(fz_obj *obj)
 
 static void saveimage(int num)
 {
+	fz_image *image;
 	fz_pixmap *img;
 	fz_obj *ref;
 	char name[1024];
@@ -39,7 +40,9 @@ static void saveimage(int num)
 
 	/* TODO: detect DCTD and save as jpeg */
 
-	img = pdf_load_image(doc, ref);
+	image = pdf_load_image(doc, ref);
+	img = fz_image_to_pixmap(ctx, image, 0, 0);
+	fz_drop_image(ctx, image);
 
 	if (dorgb && img->colorspace && img->colorspace != fz_device_rgb)
 	{

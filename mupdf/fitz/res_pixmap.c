@@ -67,6 +67,8 @@ fz_new_pixmap_with_data(fz_context *ctx, fz_colorspace *colorspace, int w, int h
 		}
 		fz_catch(ctx)
 		{
+			if (colorspace)
+				fz_drop_colorspace(ctx, colorspace);
 			fz_free(ctx, pix);
 			fz_rethrow(ctx);
 		}
@@ -550,4 +552,24 @@ fz_pixmap_size(fz_context *ctx, fz_pixmap * pix)
 	if (pix == NULL)
 		return 0;
 	return sizeof(*pix) + pix->n * pix->w * pix->h;
+}
+
+fz_pixmap *
+fz_image_to_pixmap(fz_context *ctx, fz_image *image, int w, int h)
+{
+	if (image == NULL)
+		return NULL;
+	return image->get_pixmap(ctx, image, w, h);
+}
+
+fz_image *
+fz_keep_image(fz_context *ctx, fz_image *image)
+{
+	return (fz_image *)fz_keep_storable(ctx, &image->storable);
+}
+
+void
+fz_drop_image(fz_context *ctx, fz_image *image)
+{
+	fz_drop_storable(ctx, &image->storable);
 }

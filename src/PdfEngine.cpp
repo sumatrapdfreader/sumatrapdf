@@ -578,10 +578,10 @@ public:
 };
 
 struct FitzImagePos {
-    fz_pixmap *image;
+    fz_image *image;
     fz_rect rect;
 
-    FitzImagePos(fz_pixmap *image=NULL, fz_rect rect=fz_unit_rect) :
+    FitzImagePos(fz_image *image=NULL, fz_rect rect=fz_unit_rect) :
         image(image), rect(rect) { }
 };
 
@@ -592,10 +592,10 @@ struct ListInspectionData {
 };
 
 extern "C" static void
-fz_inspection_fill_image(fz_device *dev, fz_pixmap *image, fz_matrix ctm, float alpha)
+fz_inspection_fill_image(fz_device *dev, fz_image *image, fz_matrix ctm, float alpha)
 {
-    if (image && image->free_samples)
-        ((ListInspectionData *)dev->user)->mem_estimate += image->w * image->h * image->n;
+    int n = image->colorspace ? image->colorspace->n + 1 : 1;
+    ((ListInspectionData *)dev->user)->mem_estimate += image->w * image->h * n;
 
     // extract rectangles for images a user might want to extract
     // TODO: try to better distinguish images a user might actually want to extract
@@ -607,17 +607,17 @@ fz_inspection_fill_image(fz_device *dev, fz_pixmap *image, fz_matrix ctm, float 
 }
 
 extern "C" static void
-fz_inspection_fill_image_mask(fz_device *dev, fz_pixmap *image, fz_matrix ctm, fz_colorspace *colorspace, float *color, float alpha)
+fz_inspection_fill_image_mask(fz_device *dev, fz_image *image, fz_matrix ctm, fz_colorspace *colorspace, float *color, float alpha)
 {
-    if (image && image->free_samples)
-        ((ListInspectionData *)dev->user)->mem_estimate += image->w * image->h * image->n;
+    int n = image->colorspace ? image->colorspace->n + 1 : 1;
+    ((ListInspectionData *)dev->user)->mem_estimate += image->w * image->h * n;
 }
 
 extern "C" static void
-fz_inspection_clip_image_mask(fz_device *dev, fz_pixmap *image, fz_rect *rect, fz_matrix ctm)
+fz_inspection_clip_image_mask(fz_device *dev, fz_image *image, fz_rect *rect, fz_matrix ctm)
 {
-    if (image && image->free_samples)
-        ((ListInspectionData *)dev->user)->mem_estimate += image->w * image->h * image->n;
+    int n = image->colorspace ? image->colorspace->n + 1 : 1;
+    ((ListInspectionData *)dev->user)->mem_estimate += image->w * image->h * n;
 }
 
 extern "C" static void
@@ -1991,7 +1991,13 @@ RenderedBitmap *PdfEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
     }
 
     ScopedCritSec scope(&ctxAccess);
-    return new RenderedFitzBitmap(ctx, positions.At(imageIx).image);
+
+    fz_image *image = positions.At(imageIx).image;
+    fz_pixmap *pixmap = fz_image_to_pixmap(ctx, image, image->w, image->h);
+    RenderedFitzBitmap *bmp = new RenderedFitzBitmap(ctx, pixmap);
+    fz_drop_pixmap(ctx, pixmap);
+
+    return bmp;
 }
 
 TCHAR *PdfEngineImpl::ExtractPageText(pdf_page *page, TCHAR *lineSep, RectI **coords_out, RenderTarget target, bool cacheRun)
@@ -3226,7 +3232,13 @@ RenderedBitmap *XpsEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
     }
 
     ScopedCritSec scope(&ctxAccess);
-    return new RenderedFitzBitmap(ctx, positions.At(imageIx).image);
+
+    fz_image *image = positions.At(imageIx).image;
+    fz_pixmap *pixmap = fz_image_to_pixmap(ctx, image, image->w, image->h);
+    RenderedFitzBitmap *bmp = new RenderedFitzBitmap(ctx, pixmap);
+    fz_drop_pixmap(ctx, pixmap);
+
+    return bmp;
 }
 
 fz_rect XpsEngineImpl::FindDestRect(const char *target)

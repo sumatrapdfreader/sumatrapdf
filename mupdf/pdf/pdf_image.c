@@ -1,10 +1,15 @@
 #include "fitz.h"
 #include "mupdf.h"
 
-/* TODO: store JPEG compressed samples */
-/* TODO: store flate compressed samples */
+typedef struct pdf_image_key_s pdf_image_key;
 
-static fz_pixmap *pdf_load_jpx(pdf_document *xref, fz_obj *dict);
+struct pdf_image_key_s {
+	int refs;
+	fz_image *image;
+	int factor;
+};
+
+static void pdf_load_jpx(pdf_document *xref, fz_obj *dict, pdf_image *image);
 
 static void
 pdf_mask_color_key(fz_pixmap *pix, int n, int *colorkey)
@@ -27,49 +32,293 @@ pdf_mask_color_key(fz_pixmap *pix, int n, int *colorkey)
 	pix->single_bit = 0; /* SumatraPDF: allow optimizing 1-bit pixmaps */
 }
 
+static int
+pdf_make_hash_image_key(fz_store_hash *hash, void *key_)
+{
+	pdf_image_key *key = (pdf_image_key *)key_;
+
+	hash->u.pi.ptr = key->image;
+	hash->u.pi.i = key->factor;
+	return 1;
+}
+
+static void *
+pdf_keep_image_key(fz_context *ctx, void *key_)
+{
+	pdf_image_key *key = (pdf_image_key *)key_;
+
+	fz_lock(ctx, FZ_LOCK_ALLOC);
+	key->refs++;
+	fz_unlock(ctx, FZ_LOCK_ALLOC);
+
+	return (void *)key;
+}
+
+static void
+pdf_drop_image_key(fz_context *ctx, void *key_)
+{
+	pdf_image_key *key = (pdf_image_key *)key_;
+	int drop;
+
+	fz_lock(ctx, FZ_LOCK_ALLOC);
+	drop = --key->refs;
+	fz_unlock(ctx, FZ_LOCK_ALLOC);
+	if (drop == 0)
+	{
+		fz_drop_image(ctx, key->image);
+		fz_free(ctx, key);
+	}
+}
+
+static int
+pdf_cmp_image_key(void *k0_, void *k1_)
+{
+	pdf_image_key *k0 = (pdf_image_key *)k0_;
+	pdf_image_key *k1 = (pdf_image_key *)k1_;
+
+	return k0->image == k1->image && k0->factor == k1->factor;
+}
+
+static fz_store_type pdf_image_store_type =
+{
+	pdf_make_hash_image_key,
+	pdf_keep_image_key,
+	pdf_drop_image_key,
+	pdf_cmp_image_key
+};
+
 static fz_pixmap *
+decomp_image_from_stream(fz_context *ctx, fz_stream *stm, pdf_image *image, int in_line, int indexed, int factor)
+{
+	fz_pixmap *tile = NULL;
+	fz_pixmap *existing_tile;
+	int stride, len, i;
+	unsigned char *samples = NULL;
+	int w = (image->base.w + (factor-1)) / factor;
+	int h = (image->base.h + (factor-1)) / factor;
+	pdf_image_key *key;
+
+	fz_var(tile);
+	fz_var(samples);
+
+	fz_try(ctx)
+	{
+		tile = fz_new_pixmap(ctx, image->base.colorspace, w, h);
+		tile->mask = fz_image_to_pixmap(ctx, image->base.mask, w, h);
+		tile->interpolate = image->interpolate;
+
+		stride = (w * image->n * image->bpc + 7) / 8;
+
+		samples = fz_malloc_array(ctx, h, stride);
+
+		len = fz_read(stm, samples, h * stride);
+		if (len < 0)
+		{
+			fz_throw(ctx, "cannot read image data");
+		}
+
+		/* Make sure we read the EOF marker (for inline images only) */
+		if (in_line)
+		{
+			unsigned char tbuf[512];
+			fz_try(ctx)
+			{
+				int tlen = fz_read(stm, tbuf, sizeof tbuf);
+				if (tlen > 0)
+					fz_warn(ctx, "ignoring garbage at end of image");
+			}
+			fz_catch(ctx)
+			{
+				fz_warn(ctx, "ignoring error at end of image");
+			}
+		}
+
+		/* Pad truncated images */
+		if (len < stride * h)
+		{
+			fz_warn(ctx, "padding truncated image");
+			memset(samples + len, 0, stride * h - len);
+		}
+
+		/* Invert 1-bit image masks */
+		if (image->imagemask)
+		{
+			/* 0=opaque and 1=transparent so we need to invert */
+			unsigned char *p = samples;
+			len = h * stride;
+			for (i = 0; i < len; i++)
+				p[i] = ~p[i];
+		}
+
+		fz_unpack_tile(tile, samples, image->n, image->bpc, stride, indexed);
+
+		fz_free(ctx, samples);
+		samples = NULL;
+
+		if (image->usecolorkey)
+			pdf_mask_color_key(tile, image->n, image->colorkey);
+
+		if (indexed)
+		{
+			fz_pixmap *conv;
+			fz_decode_indexed_tile(tile, image->decode, (1 << image->bpc) - 1);
+			conv = pdf_expand_indexed_pixmap(ctx, tile);
+			fz_drop_pixmap(ctx, tile);
+			tile = conv;
+		}
+		else
+		{
+			fz_decode_tile(tile, image->decode);
+		}
+	}
+	fz_always(ctx)
+	{
+		fz_close(stm);
+	}
+	fz_catch(ctx)
+	{
+		if (tile)
+			fz_drop_pixmap(ctx, tile);
+		fz_free(ctx, samples);
+
+		fz_rethrow(ctx);
+	}
+
+	/* Now we try to cache the pixmap. Any failure here will just result
+	 * in us not caching. */
+	fz_try(ctx)
+	{
+		key = fz_malloc_struct(ctx, pdf_image_key);
+		key->refs = 1;
+		key->image = fz_keep_image(ctx, &image->base);
+		key->factor = factor;
+		existing_tile = fz_store_item(ctx, key, tile, fz_pixmap_size(ctx, tile), &pdf_image_store_type);
+		if (existing_tile)
+		{
+			/* We already have a tile. This must have been produced by a
+			 * racing thread. We'll throw away ours and use that one. */
+			fz_drop_pixmap(ctx, tile);
+			fz_free(ctx, key);
+			tile = existing_tile;
+		}
+	}
+	fz_always(ctx)
+	{
+		pdf_drop_image_key(ctx, key);
+	}
+	fz_catch(ctx)
+	{
+		/* Do nothing */
+	}
+
+	return tile;
+}
+
+static void
+pdf_free_image(fz_context *ctx, fz_storable *image_)
+{
+	pdf_image *image = (pdf_image *)image_;
+
+	if (image == NULL)
+		return;
+	fz_drop_pixmap(ctx, image->tile);
+	fz_drop_buffer(ctx, image->buffer);
+	fz_drop_colorspace(ctx, image->base.colorspace);
+	fz_drop_image(ctx, image->base.mask);
+	fz_free(ctx, image);
+}
+
+static fz_pixmap *
+pdf_image_get_pixmap(fz_context *ctx, fz_image *image_, int w, int h)
+{
+	pdf_image *image = (pdf_image *)image_;
+	fz_pixmap *tile;
+	fz_stream *stm;
+	int factor;
+	pdf_image_key key;
+
+	/* Check for 'simple' images which are just pixmaps */
+	if (image->buffer == NULL)
+	{
+		tile = image->tile;
+		if (!tile)
+			return NULL;
+		if (image->base.mask)
+		{
+			fz_drop_pixmap(ctx, tile->mask);
+			tile->mask = fz_image_to_pixmap(ctx, image->base.mask, w, h);
+		}
+		return fz_keep_pixmap(ctx, tile); /* That's all we can give you! */
+	}
+
+	/* Ensure our expectations for tile size are reasonable */
+	if (w > image->base.w)
+		w = image->base.w;
+	if (h > image->base.h)
+		h = image->base.h;
+
+	/* What is our ideal factor? */
+	if (w == 0 || h == 0)
+		factor = 1;
+	else
+		for (factor=1; image->base.w/(2*factor) >= w && image->base.h/(2*factor) >= h && factor < 8; factor *= 2);
+
+	/* Can we find any suitable tiles in the cache? */
+	key.refs = 1;
+	key.image = &image->base;
+	key.factor = factor;
+	do
+	{
+		tile = fz_find_item(ctx, fz_free_pixmap_imp, &key, &pdf_image_store_type);
+		if (tile)
+			return tile;
+		key.factor >>= 1;
+	}
+	while (key.factor > 0);
+
+	/* We need to make a new one. */
+	stm = pdf_open_image_decomp_stream(ctx, image->buffer, &image->params, &factor);
+
+	return decomp_image_from_stream(ctx, stm, image, 0, 0, factor);
+}
+
+static pdf_image *
 pdf_load_image_imp(pdf_document *xref, fz_obj *rdb, fz_obj *dict, fz_stream *cstm, int forcemask)
 {
 	fz_stream *stm = NULL;
-	fz_pixmap *tile = NULL;
+	pdf_image *image = NULL;
 	fz_obj *obj, *res;
 
 	int w, h, bpc, n;
 	int imagemask;
 	int interpolate;
 	int indexed;
-	fz_colorspace *colorspace = NULL;
-	fz_pixmap *mask = NULL; /* explicit mask/softmask image */
+	fz_image *mask = NULL; /* explicit mask/softmask image */
 	int usecolorkey;
-	int colorkey[FZ_MAX_COLORS * 2];
-	float decode[FZ_MAX_COLORS * 2];
 
-	int stride;
-	unsigned char *samples = NULL;
-	int i, len;
+	int i;
 	fz_context *ctx = xref->ctx;
 
 	fz_var(stm);
-	fz_var(tile);
-	fz_var(colorspace);
 	fz_var(mask);
-	fz_var(samples);
+
+	image = fz_malloc_struct(ctx, pdf_image);
 
 	fz_try(ctx)
 	{
 		/* special case for JPEG2000 images */
 		if (pdf_is_jpx_image(ctx, dict))
 		{
-			tile = pdf_load_jpx(xref, dict);
+			pdf_load_jpx(xref, dict, image);
 			/* RJW: "cannot load jpx image" */
 			if (forcemask)
 			{
-				if (tile->n != 2)
+				fz_pixmap *mask_pixmap;
+				if (image->n != 2)
 					fz_throw(ctx, "softmask must be grayscale");
-				mask = fz_alpha_from_gray(ctx, tile, 1);
-				fz_drop_pixmap(ctx, tile);
-				tile = mask;
-				mask = NULL;
+				mask_pixmap = fz_alpha_from_gray(ctx, image->tile, 1);
+				fz_drop_pixmap(ctx, image->tile);
+				image->tile = mask_pixmap;
 			}
 			break; /* Out of fz_try */
 		}
@@ -111,13 +360,13 @@ pdf_load_image_imp(pdf_document *xref, fz_obj *rdb, fz_obj *dict, fz_stream *cst
 					obj = res;
 			}
 
-			colorspace = pdf_load_colorspace(xref, obj);
+			image->base.colorspace = pdf_load_colorspace(xref, obj);
 			/* RJW: "cannot load image colorspace" */
 
-			if (!strcmp(colorspace->name, "Indexed"))
+			if (!strcmp(image->base.colorspace->name, "Indexed"))
 				indexed = 1;
 
-			n = colorspace->n;
+			n = image->base.colorspace->n;
 		}
 		else
 		{
@@ -128,13 +377,13 @@ pdf_load_image_imp(pdf_document *xref, fz_obj *rdb, fz_obj *dict, fz_stream *cst
 		if (obj)
 		{
 			for (i = 0; i < n * 2; i++)
-				decode[i] = fz_to_real(fz_array_get(obj, i));
+				image->decode[i] = fz_to_real(fz_array_get(obj, i));
 		}
 		else
 		{
 			float maxval = indexed ? (1 << bpc) - 1 : 1;
 			for (i = 0; i < n * 2; i++)
-				decode[i] = i & 1 ? maxval : 0;
+				image->decode[i] = i & 1 ? maxval : 0;
 		}
 
 		obj = fz_dict_getsa(dict, "SMask", "Mask");
@@ -143,7 +392,7 @@ pdf_load_image_imp(pdf_document *xref, fz_obj *rdb, fz_obj *dict, fz_stream *cst
 			/* Not allowed for inline images */
 			if (!cstm)
 			{
-				mask = pdf_load_image_imp(xref, rdb, obj, NULL, 1);
+				mask = (fz_image *)pdf_load_image_imp(xref, rdb, obj, NULL, 1);
 				/* RJW: "cannot load image mask/softmask" */
 			}
 		}
@@ -157,36 +406,36 @@ pdf_load_image_imp(pdf_document *xref, fz_obj *rdb, fz_obj *dict, fz_stream *cst
 					fz_warn(ctx, "invalid value in color key mask");
 					usecolorkey = 0;
 				}
-				colorkey[i] = fz_to_int(fz_array_get(obj, i));
+				image->colorkey[i] = fz_to_int(fz_array_get(obj, i));
 			}
 		}
 
-		/* Allocate now, to fail early if we run out of memory */
-		fz_try(ctx)
+		/* Now, do we load a ref, or do we load the actual thing? */
+		image->params.type = PDF_IMAGE_RAW;
+		FZ_INIT_STORABLE(&image->base, 1, pdf_free_image);
+		image->base.get_pixmap = pdf_image_get_pixmap;
+		image->base.w = w;
+		image->base.h = h;
+		image->n = n;
+		image->bpc = bpc;
+		image->interpolate = interpolate;
+		image->imagemask = imagemask;
+		image->usecolorkey = usecolorkey;
+		image->base.mask = mask;
+		image->params.colorspace = image->base.colorspace; /* Uses the same ref as for the base one */
+		if (!indexed && !cstm)
 		{
-			tile = fz_new_pixmap(ctx, colorspace, w, h);
-		}
-		fz_catch(ctx)
-		{
-			fz_drop_colorspace(ctx, colorspace);
-			fz_rethrow(ctx);
+			/* Just load the compressed image data now and we can
+			 * decode it on demand. */
+			image->buffer = pdf_load_image_stream(xref, fz_to_num(dict), fz_to_gen(dict), &image->params);
+			break; /* Out of fz_try */
 		}
 
-		if (colorspace)
-		{
-			fz_drop_colorspace(ctx, colorspace);
-			colorspace = NULL;
-		}
-
-		tile->mask = mask;
-		mask = NULL;
-		tile->interpolate = interpolate;
-
-		stride = (w * n * bpc + 7) / 8;
-
+		/* We need to decompress the image now */
 		if (cstm)
 		{
-			stm = pdf_open_inline_stream(xref, dict, stride * h, cstm);
+			int stride = (w * image->n * image->bpc + 7) / 8;
+			stm = pdf_open_inline_stream(xref, dict, stride * h, cstm, NULL);
 		}
 		else
 		{
@@ -194,92 +443,20 @@ pdf_load_image_imp(pdf_document *xref, fz_obj *rdb, fz_obj *dict, fz_stream *cst
 			/* RJW: "cannot open image data stream (%d 0 R)", fz_to_num(dict) */
 		}
 
-		samples = fz_malloc_array(ctx, h, stride);
-
-		len = fz_read(stm, samples, h * stride);
-		if (len < 0)
-		{
-			fz_throw(ctx, "cannot read image data");
-		}
-
-		/* Make sure we read the EOF marker (for inline images only) */
-		if (cstm)
-		{
-			unsigned char tbuf[512];
-			fz_try(ctx)
-			{
-				int tlen = fz_read(stm, tbuf, sizeof tbuf);
-				if (tlen > 0)
-					fz_warn(ctx, "ignoring garbage at end of image");
-			}
-			fz_catch(ctx)
-			{
-				fz_warn(ctx, "ignoring error at end of image");
-			}
-		}
-
-		fz_close(stm);
-		stm = NULL;
-
-		/* Pad truncated images */
-		if (len < stride * h)
-		{
-			fz_warn(ctx, "padding truncated image (%d 0 R)", fz_to_num(dict));
-			memset(samples + len, 0, stride * h - len);
-		}
-
-		/* Invert 1-bit image masks */
-		if (imagemask)
-		{
-			/* 0=opaque and 1=transparent so we need to invert */
-			unsigned char *p = samples;
-			len = h * stride;
-			for (i = 0; i < len; i++)
-				p[i] = ~p[i];
-		}
-
-		fz_unpack_tile(tile, samples, n, bpc, stride, indexed);
-
-		fz_free(ctx, samples);
-		samples = NULL;
-
-		if (usecolorkey)
-			pdf_mask_color_key(tile, n, colorkey);
-
-		if (indexed)
-		{
-			fz_pixmap *conv;
-			fz_decode_indexed_tile(tile, decode, (1 << bpc) - 1);
-			conv = pdf_expand_indexed_pixmap(ctx, tile);
-			fz_drop_pixmap(ctx, tile);
-			tile = conv;
-		}
-		else
-		{
-			fz_decode_tile(tile, decode);
-		}
+		image->tile = decomp_image_from_stream(ctx, stm, image, cstm != NULL, indexed, 1);
 	}
 	fz_catch(ctx)
 	{
-		if (colorspace)
-			fz_drop_colorspace(ctx, colorspace);
-		if (mask)
-			fz_drop_pixmap(ctx, mask);
-		if (tile)
-			fz_drop_pixmap(ctx, tile);
-		fz_close(stm);
-		fz_free(ctx, samples);
-
+		fz_drop_image(ctx, &image->base);
 		fz_rethrow(ctx);
 	}
-
-	return tile;
+	return image;
 }
 
-fz_pixmap *
+fz_image *
 pdf_load_inline_image(pdf_document *xref, fz_obj *rdb, fz_obj *dict, fz_stream *file)
 {
-	return pdf_load_image_imp(xref, rdb, dict, file, 0);
+	return (fz_image *)pdf_load_image_imp(xref, rdb, dict, file, 0);
 	/* RJW: "cannot load inline image" */
 }
 
@@ -299,8 +476,8 @@ pdf_is_jpx_image(fz_context *ctx, fz_obj *dict)
 	return 0;
 }
 
-static fz_pixmap *
-pdf_load_jpx(pdf_document *xref, fz_obj *dict)
+static void
+pdf_load_jpx(pdf_document *xref, fz_obj *dict, pdf_image *image)
 {
 	fz_buffer *buf = NULL;
 	fz_colorspace *colorspace = NULL;
@@ -330,18 +507,16 @@ pdf_load_jpx(pdf_document *xref, fz_obj *dict)
 		img = fz_load_jpx(ctx, buf->data, buf->len, colorspace);
 		/* RJW: "cannot load jpx image" */
 
-		if (colorspace)
-		{
-			fz_drop_colorspace(ctx, colorspace);
-			colorspace = NULL;
-		}
+		if (img && colorspace == NULL)
+			colorspace = fz_keep_colorspace(ctx, img->colorspace);
+
 		fz_drop_buffer(ctx, buf);
 		buf = NULL;
 
 		obj = fz_dict_getsa(dict, "SMask", "Mask");
 		if (fz_is_dict(obj))
 		{
-			img->mask = pdf_load_image_imp(xref, NULL, obj, NULL, 1);
+			image->base.mask = (fz_image *)pdf_load_image_imp(xref, NULL, obj, NULL, 1);
 			/* RJW: "cannot load image mask/softmask" */
 		}
 
@@ -365,24 +540,44 @@ pdf_load_jpx(pdf_document *xref, fz_obj *dict)
 		fz_drop_pixmap(ctx, img);
 		fz_rethrow(ctx);
 	}
-	return img;
+	image->params.type = PDF_IMAGE_RAW;
+	FZ_INIT_STORABLE(&image->base, 1, pdf_free_image);
+	image->base.get_pixmap = pdf_image_get_pixmap;
+	image->base.w = img->w;
+	image->base.h = img->h;
+	image->base.colorspace = colorspace;
+	image->tile = img;
+	image->n = img->n;
+	image->bpc = 8;
+	image->interpolate = 0;
+	image->imagemask = 0;
+	image->usecolorkey = 0;
+	image->params.colorspace = colorspace; /* Uses the same ref as for the base one */
 }
 
-fz_pixmap *
+static int
+pdf_image_size(fz_context *ctx, pdf_image *im)
+{
+	if (im == NULL)
+		return 0;
+	return sizeof(*im) + fz_pixmap_size(ctx, im->tile) + (im->buffer ? im->buffer->cap : 0);
+}
+
+fz_image *
 pdf_load_image(pdf_document *xref, fz_obj *dict)
 {
 	fz_context *ctx = xref->ctx;
-	fz_pixmap *pix;
+	pdf_image *image;
 
-	if ((pix = fz_find_item(ctx, fz_free_pixmap_imp, dict)))
+	if ((image = pdf_find_item(ctx, pdf_free_image, dict)))
 	{
-		return pix;
+		return (fz_image *)image;
 	}
 
-	pix = pdf_load_image_imp(xref, NULL, dict, NULL, 0);
+	image = pdf_load_image_imp(xref, NULL, dict, NULL, 0);
 	/* RJW: "cannot load image (%d 0 R)", fz_to_num(dict) */
 
-	fz_store_item(ctx, dict, pix, fz_pixmap_size(ctx, pix));
+	pdf_store_item(ctx, dict, image, pdf_image_size(ctx, image));
 
-	return pix;
+	return (fz_image *)image;
 }

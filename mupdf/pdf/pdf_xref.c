@@ -51,6 +51,7 @@ pdf_read_start_xref(pdf_document *xref)
 			while (iswhite(buf[i]) && i < n)
 				i ++;
 			xref->startxref = atoi((char*)(buf + i));
+
 			return;
 		}
 	}
@@ -63,17 +64,16 @@ pdf_read_start_xref(pdf_document *xref)
  */
 
 static void
-pdf_read_old_trailer(pdf_document *xref, char *buf, int cap)
+pdf_read_old_trailer(pdf_document *xref, pdf_lexbuf *buf)
 {
 	int len;
 	char *s;
-	int n;
 	int t;
 	int tok;
 	int c;
 
-	fz_read_line(xref->file, buf, cap);
-	if (strncmp(buf, "xref", 4) != 0)
+	fz_read_line(xref->file, buf->scratch, buf->size);
+	if (strncmp(buf->scratch, "xref", 4) != 0)
 		fz_throw(xref->ctx, "cannot find xref marker");
 
 	while (1)
@@ -82,8 +82,8 @@ pdf_read_old_trailer(pdf_document *xref, char *buf, int cap)
 		if (!(c >= '0' && c <= '9'))
 			break;
 
-		fz_read_line(xref->file, buf, cap);
-		s = buf;
+		fz_read_line(xref->file, buf->scratch, buf->size);
+		s = buf->scratch;
 		fz_strsep(&s, " "); /* ignore ofs */
 		if (!s)
 			fz_throw(xref->ctx, "invalid range marker in xref");
@@ -102,15 +102,15 @@ pdf_read_old_trailer(pdf_document *xref, char *buf, int cap)
 
 	fz_try(xref->ctx)
 	{
-		tok = pdf_lex(xref->file, buf, cap, &n);
+		tok = pdf_lex(xref->file, buf);
 		if (tok != PDF_TOK_TRAILER)
 			fz_throw(xref->ctx, "expected trailer marker");
 
-		tok = pdf_lex(xref->file, buf, cap, &n);
+		tok = pdf_lex(xref->file, buf);
 		if (tok != PDF_TOK_OPEN_DICT)
 			fz_throw(xref->ctx, "expected trailer dictionary");
 
-		xref->trailer = pdf_parse_dict(xref, xref->file, buf, cap);
+		xref->trailer = pdf_parse_dict(xref, xref->file, buf);
 	}
 	fz_catch(xref->ctx)
 	{
@@ -119,11 +119,11 @@ pdf_read_old_trailer(pdf_document *xref, char *buf, int cap)
 }
 
 static void
-pdf_read_new_trailer(pdf_document *xref, char *buf, int cap)
+pdf_read_new_trailer(pdf_document *xref, pdf_lexbuf *buf)
 {
 	fz_try(xref->ctx)
 	{
-		xref->trailer = pdf_parse_ind_obj(xref, xref->file, buf, cap, NULL, NULL, NULL);
+		xref->trailer = pdf_parse_ind_obj(xref, xref->file, buf, NULL, NULL, NULL);
 	}
 	fz_catch(xref->ctx)
 	{
@@ -132,7 +132,7 @@ pdf_read_new_trailer(pdf_document *xref, char *buf, int cap)
 }
 
 static void
-pdf_read_trailer(pdf_document *xref, char *buf, int cap)
+pdf_read_trailer(pdf_document *xref, pdf_lexbuf *buf)
 {
 	int c;
 
@@ -145,9 +145,9 @@ pdf_read_trailer(pdf_document *xref, char *buf, int cap)
 	{
 		c = fz_peek_byte(xref->file);
 		if (c == 'x')
-			pdf_read_old_trailer(xref, buf, cap);
+			pdf_read_old_trailer(xref, buf);
 		else if (c >= '0' && c <= '9')
-			pdf_read_new_trailer(xref, buf, cap);
+			pdf_read_new_trailer(xref, buf);
 		else
 			fz_throw(xref->ctx, "cannot recognize xref format: '%c'", c);
 	}
@@ -179,7 +179,7 @@ pdf_resize_xref(pdf_document *xref, int newlen)
 }
 
 static fz_obj *
-pdf_read_old_xref(pdf_document *xref, char *buf, int cap)
+pdf_read_old_xref(pdf_document *xref, pdf_lexbuf *buf)
 {
 	int ofs, len;
 	char *s;
@@ -189,8 +189,8 @@ pdf_read_old_xref(pdf_document *xref, char *buf, int cap)
 	int c;
 	fz_obj *trailer;
 
-	fz_read_line(xref->file, buf, cap);
-	if (strncmp(buf, "xref", 4) != 0)
+	fz_read_line(xref->file, buf->scratch, buf->size);
+	if (strncmp(buf->scratch, "xref", 4) != 0)
 		fz_throw(xref->ctx, "cannot find xref marker");
 
 	while (1)
@@ -199,8 +199,8 @@ pdf_read_old_xref(pdf_document *xref, char *buf, int cap)
 		if (!(c >= '0' && c <= '9'))
 			break;
 
-		fz_read_line(xref->file, buf, cap);
-		s = buf;
+		fz_read_line(xref->file, buf->scratch, buf->size);
+		s = buf->scratch;
 		ofs = atoi(fz_strsep(&s, " "));
 		len = atoi(fz_strsep(&s, " "));
 
@@ -220,12 +220,12 @@ pdf_read_old_xref(pdf_document *xref, char *buf, int cap)
 
 		for (i = ofs; i < ofs + len; i++)
 		{
-			n = fz_read(xref->file, (unsigned char *) buf, 20);
+			n = fz_read(xref->file, (unsigned char *) buf->scratch, 20);
 			if (n < 0)
 				fz_throw(xref->ctx, "cannot read xref table");
 			if (!xref->table[i].type)
 			{
-				s = buf;
+				s = buf->scratch;
 
 				/* broken pdfs where line start with white space */
 				while (*s != '\0' && iswhite(*s))
@@ -242,15 +242,15 @@ pdf_read_old_xref(pdf_document *xref, char *buf, int cap)
 
 	fz_try(xref->ctx)
 	{
-		tok = pdf_lex(xref->file, buf, cap, &n);
+		tok = pdf_lex(xref->file, buf);
 		if (tok != PDF_TOK_TRAILER)
 			fz_throw(xref->ctx, "expected trailer marker");
 
-		tok = pdf_lex(xref->file, buf, cap, &n);
+		tok = pdf_lex(xref->file, buf);
 		if (tok != PDF_TOK_OPEN_DICT)
 			fz_throw(xref->ctx, "expected trailer dictionary");
 
-		trailer = pdf_parse_dict(xref, xref->file, buf, cap);
+		trailer = pdf_parse_dict(xref, xref->file, buf);
 	}
 	fz_catch(xref->ctx)
 	{
@@ -296,7 +296,7 @@ pdf_read_new_xref_section(pdf_document *xref, fz_stream *stm, int i0, int i1, in
 /* Entered with file locked. Drops the lock in the middle, but then picks
  * it up again before exiting. */
 static fz_obj *
-pdf_read_new_xref(pdf_document *xref, char *buf, int cap)
+pdf_read_new_xref(pdf_document *xref, pdf_lexbuf *buf)
 {
 	fz_stream *stm = NULL;
 	fz_obj *trailer = NULL;
@@ -312,7 +312,7 @@ pdf_read_new_xref(pdf_document *xref, char *buf, int cap)
 
 	fz_try(ctx)
 	{
-		trailer = pdf_parse_ind_obj(xref, xref->file, buf, cap, &num, &gen, &stm_ofs);
+		trailer = pdf_parse_ind_obj(xref, xref->file, buf, &num, &gen, &stm_ofs);
 	}
 	fz_catch(ctx)
 	{
@@ -378,7 +378,7 @@ pdf_read_new_xref(pdf_document *xref, char *buf, int cap)
 
 /* File is locked on entry, and exit (but may be dropped in the middle) */
 static fz_obj *
-pdf_read_xref(pdf_document *xref, int ofs, char *buf, int cap)
+pdf_read_xref(pdf_document *xref, int ofs, pdf_lexbuf *buf)
 {
 	int c;
 	fz_context *ctx = xref->ctx;
@@ -393,9 +393,9 @@ pdf_read_xref(pdf_document *xref, int ofs, char *buf, int cap)
 	{
 		c = fz_peek_byte(xref->file);
 		if (c == 'x')
-			trailer = pdf_read_old_xref(xref, buf, cap);
+			trailer = pdf_read_old_xref(xref, buf);
 		else if (c >= '0' && c <= '9')
-			trailer = pdf_read_new_xref(xref, buf, cap);
+			trailer = pdf_read_new_xref(xref, buf);
 		else
 			fz_throw(ctx, "cannot recognize xref format");
 	}
@@ -407,7 +407,7 @@ pdf_read_xref(pdf_document *xref, int ofs, char *buf, int cap)
 }
 
 static void
-pdf_read_xref_sections(pdf_document *xref, int ofs, char *buf, int cap)
+pdf_read_xref_sections(pdf_document *xref, int ofs, pdf_lexbuf *buf)
 {
 	fz_obj *trailer = NULL;
 	fz_obj *xrefstm = NULL;
@@ -416,16 +416,16 @@ pdf_read_xref_sections(pdf_document *xref, int ofs, char *buf, int cap)
 
 	fz_try(ctx)
 	{
-		trailer = pdf_read_xref(xref, ofs, buf, cap);
+		trailer = pdf_read_xref(xref, ofs, buf);
 
 		/* FIXME: do we overwrite free entries properly? */
 		xrefstm = fz_dict_gets(trailer, "XRefStm");
 		if (xrefstm)
-			pdf_read_xref_sections(xref, fz_to_int(xrefstm), buf, cap);
+			pdf_read_xref_sections(xref, fz_to_int(xrefstm), buf);
 
 		prev = fz_dict_gets(trailer, "Prev");
 		if (prev)
-			pdf_read_xref_sections(xref, fz_to_int(prev), buf, cap);
+			pdf_read_xref_sections(xref, fz_to_int(prev), buf);
 	}
 	fz_catch(ctx)
 	{
@@ -441,7 +441,7 @@ pdf_read_xref_sections(pdf_document *xref, int ofs, char *buf, int cap)
  */
 
 static void
-pdf_load_xref(pdf_document *xref, char *buf, int bufsize)
+pdf_load_xref(pdf_document *xref, pdf_lexbuf *buf)
 {
 	fz_obj *size;
 	int i;
@@ -451,7 +451,7 @@ pdf_load_xref(pdf_document *xref, char *buf, int bufsize)
 
 	pdf_read_start_xref(xref);
 
-	pdf_read_trailer(xref, buf, bufsize);
+	pdf_read_trailer(xref, buf);
 
 	size = fz_dict_gets(xref->trailer, "Size");
 	if (!size)
@@ -459,7 +459,7 @@ pdf_load_xref(pdf_document *xref, char *buf, int bufsize)
 
 	pdf_resize_xref(xref, fz_to_int(size));
 
-	pdf_read_xref_sections(xref, xref->startxref, buf, bufsize);
+	pdf_read_xref_sections(xref, xref->startxref, buf);
 
 	/* broken pdfs where first object is not free */
 	if (xref->table[0].type != 'f')
@@ -672,6 +672,7 @@ pdf_open_document_with_stream(fz_stream *file)
 
 	xref = fz_malloc_struct(ctx, pdf_document);
 	pdf_init_document(xref);
+	xref->lexbuf.base.size = PDF_LEXBUF_LARGE;
 
 	xref->file = fz_keep_stream(file);
 	xref->ctx = ctx;
@@ -681,7 +682,7 @@ pdf_open_document_with_stream(fz_stream *file)
 
 	fz_try(ctx)
 	{
-		pdf_load_xref(xref, xref->scratch, sizeof xref->scratch);
+		pdf_load_xref(xref, &xref->lexbuf.base);
 	}
 	fz_catch(ctx)
 	{
@@ -705,7 +706,7 @@ pdf_open_document_with_stream(fz_stream *file)
 		int hasroot, hasinfo;
 
 		if (repaired)
-			pdf_repair_xref(xref, xref->scratch, sizeof xref->scratch);
+			pdf_repair_xref(xref, &xref->lexbuf.base);
 
 		fz_unlock(ctx, FZ_LOCK_FILE);
 		locked = 0;
@@ -864,7 +865,7 @@ pdf_debug_xref(pdf_document *xref)
  */
 
 static void
-pdf_load_obj_stm(pdf_document *xref, int num, int gen, char *buf, int cap)
+pdf_load_obj_stm(pdf_document *xref, int num, int gen, pdf_lexbuf *buf)
 {
 	fz_stream *stm = NULL;
 	fz_obj *objstm = NULL;
@@ -874,7 +875,7 @@ pdf_load_obj_stm(pdf_document *xref, int num, int gen, char *buf, int cap)
 	fz_obj *obj;
 	int first;
 	int count;
-	int i, n;
+	int i;
 	int tok;
 	fz_context *ctx = xref->ctx;
 
@@ -896,15 +897,15 @@ pdf_load_obj_stm(pdf_document *xref, int num, int gen, char *buf, int cap)
 		stm = pdf_open_stream(xref, num, gen);
 		for (i = 0; i < count; i++)
 		{
-			tok = pdf_lex(stm, buf, cap, &n);
+			tok = pdf_lex(stm, buf);
 			if (tok != PDF_TOK_INT)
 				fz_throw(ctx, "corrupt object stream (%d %d R)", num, gen);
-			numbuf[i] = atoi(buf);
+			numbuf[i] = buf->i;
 
-			tok = pdf_lex(stm, buf, cap, &n);
+			tok = pdf_lex(stm, buf);
 			if (tok != PDF_TOK_INT)
 				fz_throw(ctx, "corrupt object stream (%d %d R)", num, gen);
-			ofsbuf[i] = atoi(buf);
+			ofsbuf[i] = buf->i;
 		}
 
 		fz_seek(stm, first, 0);
@@ -913,7 +914,7 @@ pdf_load_obj_stm(pdf_document *xref, int num, int gen, char *buf, int cap)
 		{
 			fz_seek(stm, first + ofsbuf[i], 0);
 
-			obj = pdf_parse_stm_obj(xref, stm, buf, cap);
+			obj = pdf_parse_stm_obj(xref, stm, buf);
 			/* RJW: Ensure above does fz_throw(ctx, "cannot parse object %d in stream (%d %d R)", i, num, gen); */
 
 			if (numbuf[i] < 1 || numbuf[i] >= xref->len)
@@ -978,7 +979,7 @@ pdf_cache_object(pdf_document *xref, int num, int gen)
 
 		fz_try(ctx)
 		{
-			x->obj = pdf_parse_ind_obj(xref, xref->file, xref->scratch, sizeof xref->scratch,
+			x->obj = pdf_parse_ind_obj(xref, xref->file, &xref->lexbuf.base,
 					&rnum, &rgen, &x->stm_ofs);
 		}
 		fz_catch(ctx)
@@ -1005,7 +1006,7 @@ pdf_cache_object(pdf_document *xref, int num, int gen)
 		{
 			fz_try(ctx)
 			{
-				pdf_load_obj_stm(xref, x->ofs, 0, xref->scratch, sizeof xref->scratch);
+				pdf_load_obj_stm(xref, x->ofs, 0, &xref->lexbuf.base);
 			}
 			fz_catch(ctx)
 			{

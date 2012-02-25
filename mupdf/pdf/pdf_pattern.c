@@ -40,7 +40,7 @@ pdf_load_pattern(pdf_document *xref, fz_obj *dict)
 	fz_obj *obj;
 	fz_context *ctx = xref->ctx;
 
-	if ((pat = fz_find_item(ctx, pdf_free_pattern_imp, dict)))
+	if ((pat = pdf_find_item(ctx, pdf_free_pattern_imp, dict)))
 	{
 		return pat;
 	}
@@ -51,7 +51,7 @@ pdf_load_pattern(pdf_document *xref, fz_obj *dict)
 	pat->contents = NULL;
 
 	/* Store pattern now, to avoid possible recursion if objects refer back to this one */
-	fz_store_item(ctx, dict, pat, pdf_pattern_size(pat));
+	pdf_store_item(ctx, dict, pat, pdf_pattern_size(pat));
 
 	pat->ismask = fz_to_int(fz_dict_gets(dict, "PaintType")) == 2;
 	pat->xstep = fz_to_real(fz_dict_gets(dict, "XStep"));
@@ -76,7 +76,7 @@ pdf_load_pattern(pdf_document *xref, fz_obj *dict)
 	}
 	fz_catch(ctx)
 	{
-		fz_remove_item(ctx, pdf_free_pattern_imp, dict);
+		pdf_remove_item(ctx, pdf_free_pattern_imp, dict);
 		pdf_drop_pattern(ctx, pat);
 		fz_throw(ctx, "cannot load pattern stream (%d %d R)", fz_to_num(dict), fz_to_gen(dict));
 	}

@@ -513,7 +513,7 @@ extern char *fz_optarg;
 
 typedef struct fz_hash_table_s fz_hash_table;
 
-fz_hash_table *fz_new_hash_table(fz_context *ctx, int initialsize, int keylen);
+fz_hash_table *fz_new_hash_table(fz_context *ctx, int initialsize, int keylen, int lock);
 void fz_debug_hash(fz_context *ctx, fz_hash_table *table);
 void fz_empty_hash(fz_context *ctx, fz_hash_table *table);
 void fz_free_hash(fz_context *ctx, fz_hash_table *table);
@@ -794,6 +794,7 @@ void fz_drop_buffer(fz_context *ctx, fz_buffer *buf);
 
 void fz_resize_buffer(fz_context *ctx, fz_buffer *buf, int size);
 void fz_grow_buffer(fz_context *ctx, fz_buffer *buf);
+void fz_trim_buffer(fz_context *ctx, fz_buffer *buf);
 
 /*
  * Resource store
@@ -820,6 +821,36 @@ enum {
 	FZ_STORE_DEFAULT = 256 << 20,
 };
 
+typedef struct fz_store_hash_s fz_store_hash;
+
+struct fz_store_hash_s
+{
+	fz_store_free_fn *free;
+	union
+	{
+		struct
+		{
+			int i0;
+			int i1;
+		} i;
+		struct
+		{
+			void *ptr;
+			int i;
+		} pi;
+	} u;
+};
+
+typedef struct fz_store_type_s fz_store_type;
+
+struct fz_store_type_s
+{
+	int (*make_hash_key)(fz_store_hash *, void *);
+	void *(*keep_key)(fz_context *,void *);
+	void (*drop_key)(fz_context *,void *);
+	int (*cmp_key)(void *, void *);
+};
+
 void fz_new_store_context(fz_context *ctx, unsigned int max);
 void fz_drop_store_context(fz_context *ctx);
 fz_store *fz_store_keep(fz_context *ctx);
@@ -828,9 +859,9 @@ void fz_debug_store(fz_context *ctx);
 void *fz_keep_storable(fz_context *, fz_storable *);
 void fz_drop_storable(fz_context *, fz_storable *);
 
-void fz_store_item(fz_context *ctx, fz_obj *key, void *val, unsigned int itemsize);
-void *fz_find_item(fz_context *ctx, fz_store_free_fn *freefn, fz_obj *key);
-void fz_remove_item(fz_context *ctx, fz_store_free_fn *freefn, fz_obj *key);
+void *fz_store_item(fz_context *ctx, void *key, void *val, unsigned int itemsize, fz_store_type *type);
+void *fz_find_item(fz_context *ctx, fz_store_free_fn *free, void *key, fz_store_type *type);
+void fz_remove_item(fz_context *ctx, fz_store_free_fn *free, void *key, fz_store_type *type);
 void fz_empty_store(fz_context *ctx);
 int fz_store_scavenge(fz_context *ctx, unsigned int size, int *phase);
 
@@ -975,6 +1006,7 @@ fz_stream *fz_open_a85d(fz_stream *chain);
 fz_stream *fz_open_ahxd(fz_stream *chain);
 fz_stream *fz_open_rld(fz_stream *chain);
 fz_stream *fz_open_dctd(fz_stream *chain, int color_transform);
+fz_stream *fz_open_resized_dctd(fz_stream *chain, int color_transform, int factor);
 fz_stream *fz_open_faxd(fz_stream *chain,
 	int k, int end_of_line, int encoded_byte_align,
 	int columns, int rows, int end_of_block, int black_is_1);
@@ -1040,6 +1072,27 @@ fz_pixmap *fz_scale_pixmap(fz_context *ctx, fz_pixmap *src, float x, float y, fl
 void fz_write_pnm(fz_context *ctx, fz_pixmap *pixmap, char *filename);
 void fz_write_pam(fz_context *ctx, fz_pixmap *pixmap, char *filename, int savealpha);
 void fz_write_png(fz_context *ctx, fz_pixmap *pixmap, char *filename, int savealpha);
+
+/*
+ * Images are either a reference to a pixmap, or details of how to make
+ * a pixmap. To know how to make a pixmap we need a block of compressed
+ * data (typically a stream decoded all the way until the image filter)
+ * and then the details of the params for the filter to do the final step.
+ */
+typedef struct fz_image_s fz_image;
+
+struct fz_image_s
+{
+	fz_storable storable;
+	int w, h;
+	fz_image *mask;
+	fz_colorspace *colorspace;
+	fz_pixmap *(*get_pixmap)(fz_context *, fz_image *, int w, int h);
+};
+
+fz_pixmap *fz_image_to_pixmap(fz_context *, fz_image *, int w, int h);
+void fz_drop_image(fz_context *ctx, fz_image *image);
+fz_image *fz_keep_image(fz_context *ctx, fz_image *image);
 
 fz_pixmap *fz_load_jpx(fz_context *ctx, unsigned char *data, int size, fz_colorspace *cs);
 fz_pixmap *fz_load_jpeg(fz_context *doc, unsigned char *data, int size);
@@ -1431,9 +1484,9 @@ struct fz_device_s
 	void (*ignore_text)(fz_device *, fz_text *, fz_matrix);
 
 	void (*fill_shade)(fz_device *, fz_shade *shd, fz_matrix ctm, float alpha);
-	void (*fill_image)(fz_device *, fz_pixmap *img, fz_matrix ctm, float alpha);
-	void (*fill_image_mask)(fz_device *, fz_pixmap *img, fz_matrix ctm, fz_colorspace *, float *color, float alpha);
-	void (*clip_image_mask)(fz_device *, fz_pixmap *img, fz_rect *rect, fz_matrix ctm);
+	void (*fill_image)(fz_device *, fz_image *img, fz_matrix ctm, float alpha);
+	void (*fill_image_mask)(fz_device *, fz_image *img, fz_matrix ctm, fz_colorspace *, float *color, float alpha);
+	void (*clip_image_mask)(fz_device *, fz_image *img, fz_rect *rect, fz_matrix ctm);
 
 	void (*pop_clip)(fz_device *);
 
@@ -1457,9 +1510,9 @@ void fz_clip_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *stroke,
 void fz_ignore_text(fz_device *dev, fz_text *text, fz_matrix ctm);
 void fz_pop_clip(fz_device *dev);
 void fz_fill_shade(fz_device *dev, fz_shade *shade, fz_matrix ctm, float alpha);
-void fz_fill_image(fz_device *dev, fz_pixmap *image, fz_matrix ctm, float alpha);
-void fz_fill_image_mask(fz_device *dev, fz_pixmap *image, fz_matrix ctm, fz_colorspace *colorspace, float *color, float alpha);
-void fz_clip_image_mask(fz_device *dev, fz_pixmap *image, fz_rect *rect, fz_matrix ctm);
+void fz_fill_image(fz_device *dev, fz_image *image, fz_matrix ctm, float alpha);
+void fz_fill_image_mask(fz_device *dev, fz_image *image, fz_matrix ctm, fz_colorspace *colorspace, float *color, float alpha);
+void fz_clip_image_mask(fz_device *dev, fz_image *image, fz_rect *rect, fz_matrix ctm);
 void fz_begin_mask(fz_device *dev, fz_rect area, int luminosity, fz_colorspace *colorspace, float *bc);
 void fz_end_mask(fz_device *dev);
 void fz_begin_group(fz_device *dev, fz_rect area, int isolated, int knockout, int blendmode, float alpha);

@@ -12,6 +12,7 @@ struct fz_dctd_s
 	int color_transform;
 	int init;
 	int stride;
+	int factor;
 	unsigned char *scanline;
 	unsigned char *rp, *wp;
 	struct jpeg_decompress_struct cinfo;
@@ -150,6 +151,9 @@ read_dctd(fz_stream *stm, unsigned char *buf, int len)
 			break;
 		}
 
+		cinfo->scale_num = 8/state->factor;
+		cinfo->scale_denom = 8;
+
 		jpeg_start_decompress(cinfo);
 
 		state->stride = cinfo->output_width * cinfo->output_components;
@@ -216,6 +220,12 @@ skip:
 fz_stream *
 fz_open_dctd(fz_stream *chain, int color_transform)
 {
+	return fz_open_resized_dctd(chain, color_transform, 1);
+}
+
+fz_stream *
+fz_open_resized_dctd(fz_stream *chain, int color_transform, int factor)
+{
 	fz_context *ctx = chain->ctx;
 	fz_dctd *state = NULL;
 
@@ -228,6 +238,7 @@ fz_open_dctd(fz_stream *chain, int color_transform)
 		state->chain = chain;
 		state->color_transform = color_transform;
 		state->init = 0;
+		state->factor = factor;
 	}
 	fz_catch(ctx)
 	{

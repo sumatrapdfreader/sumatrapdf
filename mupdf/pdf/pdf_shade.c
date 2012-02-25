@@ -1100,7 +1100,7 @@ pdf_load_shading(pdf_document *xref, fz_obj *dict)
 	fz_context *ctx = xref->ctx;
 	fz_shade *shade;
 
-	if ((shade = fz_find_item(ctx, fz_free_shade_imp, dict)))
+	if ((shade = pdf_find_item(ctx, fz_free_shade_imp, dict)))
 	{
 		return shade;
 	}
@@ -1138,7 +1138,7 @@ pdf_load_shading(pdf_document *xref, fz_obj *dict)
 		/* RJW: "cannot load shading dictionary (%d %d R)", fz_to_num(dict), fz_to_gen(dict) */
 	}
 
-	fz_store_item(ctx, dict, shade, fz_shade_size(shade));
+	pdf_store_item(ctx, dict, shade, fz_shade_size(shade));
 
 	return shade;
 }

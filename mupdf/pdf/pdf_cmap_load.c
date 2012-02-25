@@ -31,7 +31,7 @@ pdf_load_embedded_cmap(pdf_document *xref, fz_obj *stmobj)
 	fz_var(file);
 	fz_var(cmap);
 
-	if ((cmap = fz_find_item(ctx, pdf_free_cmap_imp, stmobj)))
+	if ((cmap = pdf_find_item(ctx, pdf_free_cmap_imp, stmobj)))
 	{
 		return cmap;
 	}
@@ -63,7 +63,7 @@ pdf_load_embedded_cmap(pdf_document *xref, fz_obj *stmobj)
 			pdf_drop_cmap(ctx, usecmap);
 		}
 
-		fz_store_item(ctx, stmobj, cmap, pdf_cmap_size(ctx, cmap));
+		pdf_store_item(ctx, stmobj, cmap, pdf_cmap_size(ctx, cmap));
 	}
 	fz_catch(ctx)
 	{

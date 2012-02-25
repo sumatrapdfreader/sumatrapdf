@@ -1208,7 +1208,7 @@ pdf_load_font(pdf_document *xref, fz_obj *rdb, fz_obj *dict)
 	fz_context *ctx = xref->ctx;
 	pdf_font_desc *fontdesc;
 
-	if ((fontdesc = fz_find_item(ctx, pdf_free_font_imp, dict)))
+	if ((fontdesc = pdf_find_item(ctx, pdf_free_font_imp, dict)))
 	{
 		return fontdesc;
 	}
@@ -1248,7 +1248,7 @@ pdf_load_font(pdf_document *xref, fz_obj *rdb, fz_obj *dict)
 	if (fontdesc->font->ft_substitute && !fontdesc->to_ttf_cmap)
 		pdf_make_width_table(ctx, fontdesc);
 
-	fz_store_item(ctx, dict, fontdesc, fontdesc->size);
+	pdf_store_item(ctx, dict, fontdesc, fontdesc->size);
 
 	return fontdesc;
 }

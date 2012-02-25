@@ -462,7 +462,7 @@ pdf_dict_from_string(pdf_document *xref, char *string)
 	fz_stream *stream = fz_open_memory(xref->ctx, string, strlen(string));
 	fz_try(xref->ctx)
 	{
-		result = pdf_parse_stm_obj(NULL, stream, xref->scratch, sizeof(xref->scratch));
+		result = pdf_parse_stm_obj(NULL, stream, &xref->lexbuf.base);
 	}
 	fz_always(xref->ctx)
 	{
@@ -835,15 +835,16 @@ static float
 pdf_extract_font_size(pdf_document *xref, char *appearance, char **font_name)
 {
 	fz_stream *stream = fz_open_memory(xref->ctx, appearance, strlen(appearance));
+	pdf_lexbuf *lexbuf = &xref->lexbuf.base;
 	float font_size = 0;
-	int tok, len;
+	int tok;
 
 	*font_name = NULL;
 	do
 	{
 		fz_try(xref->ctx)
 		{
-			tok = pdf_lex(stream, xref->scratch, sizeof(xref->scratch), &len);
+			tok = pdf_lex(stream, lexbuf);
 		}
 		fz_catch(xref->ctx)
 		{
@@ -858,13 +859,17 @@ pdf_extract_font_size(pdf_document *xref, char *appearance, char **font_name)
 		if (tok == PDF_TOK_NAME)
 		{
 			fz_free(xref->ctx, *font_name);
-			*font_name = fz_strdup(xref->ctx, xref->scratch);
+			*font_name = fz_strdup(xref->ctx, lexbuf->scratch);
 		}
-		else if (tok == PDF_TOK_REAL || tok == PDF_TOK_INT)
+		else if (tok == PDF_TOK_REAL)
 		{
-			font_size = fz_atof(xref->scratch);
+			font_size = lexbuf->f;
 		}
-	} while (tok != PDF_TOK_KEYWORD || strcmp(xref->scratch, "Tf") != 0);
+		else if (tok == PDF_TOK_INT)
+		{
+			font_size = lexbuf->i;
+		}
+	} while (tok != PDF_TOK_KEYWORD || strcmp(lexbuf->scratch, "Tf") != 0);
 	fz_close(stream);
 	return font_size;
 }

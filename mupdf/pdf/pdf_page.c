@@ -277,6 +277,7 @@ pdf_load_page_contents_array(pdf_document *xref, fz_obj *list)
 		fz_drop_buffer(ctx, big);
 		fz_throw(ctx, "cannot load content stream");
 	}
+	fz_trim_buffer(ctx, big);
 
 	return big;
 }

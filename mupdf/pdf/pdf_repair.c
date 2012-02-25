@@ -13,11 +13,10 @@ struct entry
 };
 
 static void
-pdf_repair_obj(fz_stream *file, char *buf, int cap, int *stmofsp, int *stmlenp, fz_obj **encrypt, fz_obj **id)
+pdf_repair_obj(fz_stream *file, pdf_lexbuf *buf, int *stmofsp, int *stmlenp, fz_obj **encrypt, fz_obj **id)
 {
 	int tok;
 	int stm_len;
-	int len;
 	int n;
 	fz_context *ctx = file->ctx;
 
@@ -26,7 +25,7 @@ pdf_repair_obj(fz_stream *file, char *buf, int cap, int *stmofsp, int *stmlenp, 
 
 	stm_len = 0;
 
-	tok = pdf_lex(file, buf, cap, &len);
+	tok = pdf_lex(file, buf);
 	/* RJW: "cannot parse object" */
 	if (tok == PDF_TOK_OPEN_DICT)
 	{
@@ -35,7 +34,7 @@ pdf_repair_obj(fz_stream *file, char *buf, int cap, int *stmofsp, int *stmlenp, 
 		/* Send NULL xref so we don't try to resolve references */
 		fz_try(ctx)
 		{
-			dict = pdf_parse_dict(NULL, file, buf, cap);
+			dict = pdf_parse_dict(NULL, file, buf);
 		}
 		fz_catch(ctx)
 		{
@@ -79,13 +78,13 @@ pdf_repair_obj(fz_stream *file, char *buf, int cap, int *stmofsp, int *stmlenp, 
 		tok != PDF_TOK_EOF &&
 		tok != PDF_TOK_INT )
 	{
-		tok = pdf_lex(file, buf, cap, &len);
+		tok = pdf_lex(file, buf);
 		/* RJW: "cannot scan for endobj or stream token" */
 	}
 
 	if (tok == PDF_TOK_INT)
 	{
-		while (len-- > 0)
+		while (buf->len-- > 0)
 			fz_unread_byte(file);
 	}
 	else if (tok == PDF_TOK_STREAM)
@@ -106,7 +105,7 @@ pdf_repair_obj(fz_stream *file, char *buf, int cap, int *stmofsp, int *stmlenp, 
 			fz_seek(file, *stmofsp + stm_len, 0);
 			fz_try(ctx)
 			{
-				tok = pdf_lex(file, buf, cap, &len);
+				tok = pdf_lex(file, buf);
 			}
 			fz_catch(ctx)
 			{
@@ -117,23 +116,23 @@ pdf_repair_obj(fz_stream *file, char *buf, int cap, int *stmofsp, int *stmlenp, 
 			fz_seek(file, *stmofsp, 0);
 		}
 
-		n = fz_read(file, (unsigned char *) buf, 9);
+		n = fz_read(file, (unsigned char *) buf->scratch, 9);
 		if (n < 0)
 			fz_throw(ctx, "cannot read from file");
 
-		while (memcmp(buf, "endstream", 9) != 0)
+		while (memcmp(buf->scratch, "endstream", 9) != 0)
 		{
 			c = fz_read_byte(file);
 			if (c == EOF)
 				break;
-			memmove(buf, buf + 1, 8);
-			buf[8] = c;
+			memmove(&buf->scratch[0], &buf->scratch[1], 8);
+			buf->scratch[8] = c;
 		}
 
 		*stmlenp = fz_tell(file) - *stmofsp - 9;
 
 atobjend:
-		tok = pdf_lex(file, buf, cap, &len);
+		tok = pdf_lex(file, buf);
 		/* RJW: "cannot scan for endobj token" */
 		if (tok != PDF_TOK_ENDOBJ)
 			fz_warn(ctx, "object missing 'endobj' token");
@@ -147,10 +146,12 @@ pdf_repair_obj_stm(pdf_document *xref, int num, int gen)
 	fz_stream *stm = NULL;
 	int tok;
 	int i, n, count;
-	char buf[256];
 	fz_context *ctx = xref->ctx;
+	pdf_lexbuf buf;
 
 	fz_var(stm);
+
+	buf.size = PDF_LEXBUF_SMALL;
 
 	fz_try(ctx)
 	{
@@ -164,11 +165,11 @@ pdf_repair_obj_stm(pdf_document *xref, int num, int gen)
 
 		for (i = 0; i < count; i++)
 		{
-			tok = pdf_lex(stm, buf, sizeof buf, &n);
+			tok = pdf_lex(stm, &buf);
 			if (tok != PDF_TOK_INT)
 				fz_throw(ctx, "corrupt object stream (%d %d R)", num, gen);
 
-			n = atoi(buf);
+			n = buf.i;
 			if (n >= xref->len)
 				pdf_resize_xref(xref, n + 1);
 
@@ -179,7 +180,7 @@ pdf_repair_obj_stm(pdf_document *xref, int num, int gen)
 			xref->table[n].obj = NULL;
 			xref->table[n].type = 'o';
 
-			tok = pdf_lex(stm, buf, sizeof buf, &n);
+			tok = pdf_lex(stm, &buf);
 			if (tok != PDF_TOK_INT)
 				fz_throw(ctx, "corrupt object stream (%d %d R)", num, gen);
 		}
@@ -195,7 +196,7 @@ pdf_repair_obj_stm(pdf_document *xref, int num, int gen)
 }
 
 void
-pdf_repair_xref(pdf_document *xref, char *buf, int bufsize)
+pdf_repair_xref(pdf_document *xref, pdf_lexbuf *buf)
 {
 	fz_obj *dict, *obj;
 	fz_obj *length;
@@ -234,14 +235,14 @@ pdf_repair_xref(pdf_document *xref, char *buf, int bufsize)
 		list = fz_malloc_array(ctx, listcap, sizeof(struct entry));
 
 		/* look for '%PDF' version marker within first kilobyte of file */
-		n = fz_read(xref->file, (unsigned char *)buf, MIN(bufsize, 1024));
+		n = fz_read(xref->file, (unsigned char *)buf->scratch, MIN(buf->size, 1024));
 		if (n < 0)
 			fz_throw(ctx, "cannot read from file");
 
 		fz_seek(xref->file, 0, 0);
 		for (i = 0; i < n - 4; i++)
 		{
-			if (memcmp(buf + i, "%PDF", 4) == 0)
+			if (memcmp(&buf->scratch[i], "%PDF", 4) == 0)
 			{
 				fz_seek(xref->file, i + 8, 0); /* skip "%PDF-X.Y" */
 				break;
@@ -263,7 +264,7 @@ pdf_repair_xref(pdf_document *xref, char *buf, int bufsize)
 
 			fz_try(ctx)
 			{
-				tok = pdf_lex(xref->file, buf, bufsize, &n);
+				tok = pdf_lex(xref->file, buf);
 			}
 			fz_catch(ctx)
 			{
@@ -276,14 +277,14 @@ pdf_repair_xref(pdf_document *xref, char *buf, int bufsize)
 				numofs = genofs;
 				num = gen;
 				genofs = tmpofs;
-				gen = atoi(buf);
+				gen = buf->i;
 			}
 
 			else if (tok == PDF_TOK_OBJ)
 			{
 				fz_try(ctx)
 				{
-					pdf_repair_obj(xref->file, buf, bufsize, &stm_ofs, &stm_len, &encrypt, &id);
+					pdf_repair_obj(xref->file, buf, &stm_ofs, &stm_len, &encrypt, &id);
 				}
 				fz_catch(ctx)
 				{
@@ -318,7 +319,7 @@ pdf_repair_xref(pdf_document *xref, char *buf, int bufsize)
 			{
 				fz_try(ctx)
 				{
-					dict = pdf_parse_dict(xref, xref->file, buf, bufsize);
+					dict = pdf_parse_dict(xref, xref->file, buf);
 				}
 				fz_catch(ctx)
 				{

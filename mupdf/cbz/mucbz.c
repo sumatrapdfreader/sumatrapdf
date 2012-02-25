@@ -19,9 +19,18 @@ static const char *cbz_ext_list[] = {
 	NULL
 };
 
+typedef struct cbz_image_s cbz_image;
+
+struct cbz_image_s
+{
+	fz_image base;
+	int xres, yres;
+	fz_pixmap *pix;
+};
+
 struct cbz_page_s
 {
-	fz_pixmap *image;
+	cbz_image *image;
 };
 
 typedef struct cbz_entry_s cbz_entry;
@@ -346,12 +355,34 @@ cbz_count_pages(cbz_document *doc)
 	return doc->page_count;
 }
 
+static void
+cbz_free_image(fz_context *ctx, fz_storable *image_)
+{
+	cbz_image *image = (cbz_image *)image_;
+
+	if (image == NULL)
+		return;
+	fz_drop_pixmap(ctx, image->pix);
+	fz_free(ctx, image);
+}
+
+static fz_pixmap *
+cbz_image_to_pixmap(fz_context *ctx, fz_image *image_, int x, int w)
+{
+	cbz_image *image = (cbz_image *)image_;
+
+	return fz_keep_pixmap(ctx, image->pix);
+}
+
+
 cbz_page *
 cbz_load_page(cbz_document *doc, int number)
 {
 	fz_context *ctx = doc->ctx;
 	unsigned char *data = NULL;
 	cbz_page *page = NULL;
+	cbz_image *image = NULL;
+	fz_pixmap *pixmap = NULL;
 	int size;
 
 	if (number < 0 || number >= doc->page_count)
@@ -361,19 +392,31 @@ cbz_load_page(cbz_document *doc, int number)
 
 	fz_var(data);
 	fz_var(page);
+	fz_var(image);
+	fz_var(pixmap);
 	fz_try(ctx)
 	{
-		page = fz_malloc_struct(doc->ctx, cbz_page);
+		page = fz_malloc_struct(ctx, cbz_page);
 		page->image = NULL;
 
 		data = cbz_read_zip_entry(doc, doc->entry[number].offset, &size);
 
 		if (data[0] == 0xff && data[1] == 0xd8)
-			page->image = fz_load_jpeg(ctx, data, size);
+			pixmap = fz_load_jpeg(ctx, data, size);
 		else if (memcmp(data, "\211PNG\r\n\032\n", 8) == 0)
-			page->image = fz_load_png(ctx, data, size);
+			pixmap = fz_load_png(ctx, data, size);
 		else
 			fz_throw(ctx, "unknown image format");
+
+		image = fz_malloc_struct(ctx, cbz_image);
+		FZ_INIT_STORABLE(&image->base, 1, cbz_free_image);
+		image->base.w = pixmap->w;
+		image->base.h = pixmap->h;
+		image->base.get_pixmap = cbz_image_to_pixmap;
+		image->xres = pixmap->xres;
+		image->yres = pixmap->yres;
+		image->pix = pixmap;
+		page->image = image;
 	}
 	fz_always(ctx)
 	{
@@ -381,9 +424,7 @@ cbz_load_page(cbz_document *doc, int number)
 	}
 	fz_catch(ctx)
 	{
-		if (page && page->image)
-			fz_drop_pixmap(ctx, page->image);
-		fz_free(ctx, page);
+		cbz_free_page(doc, page);
 		fz_rethrow(ctx);
 	}
 
@@ -393,29 +434,31 @@ cbz_load_page(cbz_document *doc, int number)
 void
 cbz_free_page(cbz_document *doc, cbz_page *page)
 {
-	fz_drop_pixmap(doc->ctx, page->image);
+	if (!page)
+		return;
+	fz_drop_image(doc->ctx, &page->image->base);
 	fz_free(doc->ctx, page);
 }
 
 fz_rect
 cbz_bound_page(cbz_document *doc, cbz_page *page)
 {
-	fz_pixmap *image = page->image;
+	cbz_image *image = page->image;
 	fz_rect bbox;
 	bbox.x0 = bbox.y0 = 0;
-	bbox.x1 = image->w * DPI / image->xres;
-	bbox.y1 = image->h * DPI / image->yres;
+	bbox.x1 = image->base.w * DPI / image->xres;
+	bbox.y1 = image->base.h * DPI / image->yres;
 	return bbox;
 }
 
 void
 cbz_run_page(cbz_document *doc, cbz_page *page, fz_device *dev, fz_matrix ctm, fz_cookie *cookie)
 {
-	fz_pixmap *image = page->image;
-	float w = image->w * DPI / image->xres;
-	float h = image->h * DPI / image->yres;
+	cbz_image *image = page->image;
+	float w = image->base.w * DPI / image->xres;
+	float h = image->base.h * DPI / image->yres;
 	ctm = fz_concat(fz_scale(w, h), ctm);
-	fz_fill_image(dev, image, ctm, 1);
+	fz_fill_image(dev, &image->base, ctm, 1);
 }
 
 /* Document interface wrappers */

@@ -858,7 +858,7 @@ gdiplus_get_font(fz_device *dev, fz_font *font, float height, float *out_ascent)
 		return NULL;
 	
 	if (!user->fontCollections)
-		user->fontCollections = fz_new_hash_table(dev->ctx, 13, sizeof(font->name));
+		user->fontCollections = fz_new_hash_table(dev->ctx, 13, sizeof(font->name), -1);
 	PrivateFontCollection *collection = (PrivateFontCollection *)fz_hash_find(dev->ctx, user->fontCollections, font->name);
 	
 	if (!collection)
@@ -1098,7 +1098,7 @@ gdiplus_render_text(fz_device *dev, fz_text *text, fz_matrix ctm, Brush *brush, 
 	Graphics *graphics = user->graphics;
 	
 	if (!user->outlines)
-		user->outlines = fz_new_hash_table(dev->ctx, 509, sizeof(ftglyphkey));
+		user->outlines = fz_new_hash_table(dev->ctx, 509, sizeof(ftglyphkey), -1);
 	
 	FT_Face face = (FT_Face)text->font->ft_face;
 	FT_UShort charSize = CLAMP(face->units_per_EM, 1000, 65536);
@@ -1326,14 +1326,25 @@ fz_gdiplus_fill_shade(fz_device *dev, fz_shade *shade, fz_matrix ctm, float alph
 	fz_drop_pixmap(dev->ctx, dest);
 }
 
-extern "C" static void
-fz_gdiplus_fill_image(fz_device *dev, fz_pixmap *image, fz_matrix ctm, float alpha)
+static fz_pixmap *
+fz_image_to_pixmap_def(fz_context *ctx, fz_image *image, fz_matrix ctm)
 {
-	((userData *)dev->user)->drawPixmap(image, ctm, alpha);
+	float dx = _hypotf(ctm.a, ctm.b);
+	float dy = _hypotf(ctm.c, ctm.d);
+	// TODO: use dx = image->w and dy = image->h instead?
+	return fz_image_to_pixmap(ctx, image, dx, dy);
 }
 
 extern "C" static void
-fz_gdiplus_fill_image_mask(fz_device *dev, fz_pixmap *image, fz_matrix ctm,
+fz_gdiplus_fill_image(fz_device *dev, fz_image *image, fz_matrix ctm, float alpha)
+{
+	fz_pixmap *pixmap = fz_image_to_pixmap_def(dev->ctx, image, ctm);
+	((userData *)dev->user)->drawPixmap(pixmap, ctm, alpha);
+	fz_drop_pixmap(dev->ctx, pixmap);
+}
+
+extern "C" static void
+fz_gdiplus_fill_image_mask(fz_device *dev, fz_image *image, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
 	float rgb[3];
@@ -1342,25 +1353,29 @@ fz_gdiplus_fill_image_mask(fz_device *dev, fz_pixmap *image, fz_matrix ctm,
 	else
 		memcpy(rgb, ((userData *)dev->user)->t3color, sizeof(rgb));
 	
-	fz_pixmap *img2 = fz_new_pixmap_with_rect(dev->ctx, fz_device_rgb, fz_bound_pixmap(image));
+	fz_pixmap *pixmap = fz_image_to_pixmap_def(dev->ctx, image, ctm);
+	fz_pixmap *img2 = fz_new_pixmap_with_rect(dev->ctx, fz_device_rgb, fz_bound_pixmap(pixmap));
 	for (int i = 0; i < img2->w * img2->h; i++)
 	{
 		img2->samples[i * 4] = rgb[0] * 255;
 		img2->samples[i * 4 + 1] = rgb[1] * 255;
 		img2->samples[i * 4 + 2] = rgb[2] * 255;
-		img2->samples[i * 4 + 3] = image->samples[i];
+		img2->samples[i * 4 + 3] = pixmap->samples[i];
 	}
-	img2->interpolate = image->interpolate;
+	img2->interpolate = pixmap->interpolate;
 	
 	((userData *)dev->user)->drawPixmap(img2, ctm, alpha);
 	
 	fz_drop_pixmap(dev->ctx, img2);
+	fz_drop_pixmap(dev->ctx, pixmap);
 }
 
 extern "C" static void
-fz_gdiplus_clip_image_mask(fz_device *dev, fz_pixmap *image, fz_rect *rect, fz_matrix ctm)
+fz_gdiplus_clip_image_mask(fz_device *dev, fz_image *image, fz_rect *rect, fz_matrix ctm)
 {
-	((userData *)dev->user)->pushClipMask(image, ctm);
+	fz_pixmap *pixmap = fz_image_to_pixmap_def(dev->ctx, image, ctm);
+	((userData *)dev->user)->pushClipMask(pixmap, ctm);
+	fz_drop_pixmap(dev->ctx, pixmap);
 }
 
 extern "C" static void

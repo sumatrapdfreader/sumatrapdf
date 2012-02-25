@@ -140,6 +140,7 @@ EXPORTS
 	fz_drop_buffer
 	fz_resize_buffer
 	fz_grow_buffer
+	fz_trim_buffer
 	fz_new_store_context
 	fz_drop_store_context
 	fz_store_keep
@@ -176,6 +177,7 @@ EXPORTS
 	fz_open_ahxd
 	fz_open_rld
 	fz_open_dctd
+	fz_open_resized_dctd
 	fz_open_faxd
 	fz_open_flated
 	fz_open_lzwd
@@ -205,6 +207,9 @@ EXPORTS
 	fz_write_pnm
 	fz_write_pam
 	fz_write_png
+	fz_image_to_pixmap
+	fz_drop_image
+	fz_keep_image
 	fz_load_jpx
 	fz_load_jpeg
 	fz_load_png
@@ -378,9 +383,12 @@ EXPORTS
 	pdf_open_inline_stream
 	pdf_load_raw_stream
 	pdf_load_stream
+	pdf_load_image_stream
 	pdf_open_raw_stream
+	pdf_open_image_stream
 	pdf_open_stream
 	pdf_open_stream_with_offset
+	pdf_open_image_decomp_stream
 	pdf_open_document_with_stream
 	pdf_open_document
 	pdf_close_document
@@ -486,6 +494,9 @@ EXPORTS
 	pdf_run_page_with_usage
 	pdf_run_page
 	pdf_run_glyph
+	pdf_store_item
+	pdf_find_item
+	pdf_remove_item
 
 ; MuXPS exports
 

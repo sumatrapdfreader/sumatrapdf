@@ -31,7 +31,7 @@ fz_new_glyph_cache_context(fz_context *ctx)
 	cache = fz_malloc_struct(ctx, fz_glyph_cache);
 	fz_try(ctx)
 	{
-		cache->hash = fz_new_hash_table(ctx, 509, sizeof(fz_glyph_key));
+		cache->hash = fz_new_hash_table(ctx, 509, sizeof(fz_glyph_key), FZ_LOCK_GLYPHCACHE);
 	}
 	fz_catch(ctx)
 	{

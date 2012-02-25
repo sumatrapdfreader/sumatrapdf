@@ -37,7 +37,7 @@ struct fz_display_node_s
 		fz_path *path;
 		fz_text *text;
 		fz_shade *shade;
-		fz_pixmap *image;
+		fz_image *image;
 		int blendmode;
 	} item;
 	fz_stroke_state *stroke;
@@ -207,7 +207,7 @@ fz_free_display_node(fz_context *ctx, fz_display_node *node)
 	case FZ_CMD_FILL_IMAGE:
 	case FZ_CMD_FILL_IMAGE_MASK:
 	case FZ_CMD_CLIP_IMAGE_MASK:
-		fz_drop_pixmap(ctx, node->item.image);
+		fz_drop_image(ctx, node->item.image);
 		break;
 	case FZ_CMD_POP_CLIP:
 	case FZ_CMD_BEGIN_MASK:
@@ -435,35 +435,35 @@ fz_list_fill_shade(fz_device *dev, fz_shade *shade, fz_matrix ctm, float alpha)
 }
 
 static void
-fz_list_fill_image(fz_device *dev, fz_pixmap *image, fz_matrix ctm, float alpha)
+fz_list_fill_image(fz_device *dev, fz_image *image, fz_matrix ctm, float alpha)
 {
 	fz_display_node *node;
 	node = fz_new_display_node(dev->ctx, FZ_CMD_FILL_IMAGE, ctm, NULL, NULL, alpha);
 	node->rect = fz_transform_rect(ctm, fz_unit_rect);
-	node->item.image = fz_keep_pixmap(dev->ctx, image);
+	node->item.image = fz_keep_image(dev->ctx, image);
 	fz_append_display_node(dev->user, node);
 }
 
 static void
-fz_list_fill_image_mask(fz_device *dev, fz_pixmap *image, fz_matrix ctm,
+fz_list_fill_image_mask(fz_device *dev, fz_image *image, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
 	fz_display_node *node;
 	node = fz_new_display_node(dev->ctx, FZ_CMD_FILL_IMAGE_MASK, ctm, colorspace, color, alpha);
 	node->rect = fz_transform_rect(ctm, fz_unit_rect);
-	node->item.image = fz_keep_pixmap(dev->ctx, image);
+	node->item.image = fz_keep_image(dev->ctx, image);
 	fz_append_display_node(dev->user, node);
 }
 
 static void
-fz_list_clip_image_mask(fz_device *dev, fz_pixmap *image, fz_rect *rect, fz_matrix ctm)
+fz_list_clip_image_mask(fz_device *dev, fz_image *image, fz_rect *rect, fz_matrix ctm)
 {
 	fz_display_node *node;
 	node = fz_new_display_node(dev->ctx, FZ_CMD_CLIP_IMAGE_MASK, ctm, NULL, NULL, 0);
 	node->rect = fz_transform_rect(ctm, fz_unit_rect);
 	if (rect)
 		node->rect = fz_intersect_rect(node->rect, *rect);
-	node->item.image = fz_keep_pixmap(dev->ctx, image);
+	node->item.image = fz_keep_image(dev->ctx, image);
 	fz_append_display_node(dev->user, node);
 }
 

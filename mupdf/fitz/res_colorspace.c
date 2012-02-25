@@ -465,7 +465,7 @@ fz_std_conv_pixmap(fz_context *ctx, fz_pixmap *src, fz_pixmap *dst)
 		fz_hash_table *lookup;
 		unsigned char *color;
 
-		lookup = fz_new_hash_table(ctx, 509, srcn);
+		lookup = fz_new_hash_table(ctx, 509, srcn, -1);
 
 		for (y = 0; y < src->h; y++)
 		{

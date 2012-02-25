@@ -1,21 +1,14 @@
 #include "fitz.h"
-#include "mupdf.h"
 
 struct fz_item_s
 {
-	fz_obj *key;
+	void *key;
 	fz_storable *val;
 	unsigned int size;
 	fz_item *next;
 	fz_item *prev;
 	fz_store *store;
-};
-
-struct refkey
-{
-	fz_store_free_fn *free;
-	int num;
-	int gen;
+	fz_store_type *type;
 };
 
 struct fz_store_s
@@ -43,7 +36,7 @@ fz_new_store_context(fz_context *ctx, unsigned int max)
 	store = fz_malloc_struct(ctx, fz_store);
 	fz_try(ctx)
 	{
-		store->hash = fz_new_hash_table(ctx, 4096, sizeof(struct refkey));
+		store->hash = fz_new_hash_table(ctx, 4096, sizeof(fz_store_hash), FZ_LOCK_ALLOC);
 	}
 	fz_catch(ctx)
 	{
@@ -114,20 +107,19 @@ evict(fz_context *ctx, fz_item *item)
 		store->head = item->next;
 	/* Drop a reference to the value (freeing if required) */
 	drop = (item->val->refs > 0 && --item->val->refs == 0);
-	fz_unlock(ctx, FZ_LOCK_ALLOC);
 	/* Remove from the hash table */
-	if (fz_is_indirect(item->key))
+	if (item->type->make_hash_key)
 	{
-		struct refkey refkey;
-		refkey.free = item->val->free;
-		refkey.num = fz_to_num(item->key);
-		refkey.gen = fz_to_gen(item->key);
-		fz_hash_remove(ctx, store->hash, &refkey);
+		fz_store_hash hash = { NULL };
+		hash.free = item->val->free;
+		if (item->type->make_hash_key(&hash, item->key))
+			fz_hash_remove(ctx, store->hash, &hash);
 	}
+	fz_unlock(ctx, FZ_LOCK_ALLOC);
 	if (drop)
 		item->val->free(ctx, item->val);
 	/* Always drops the key and free the item */
-	fz_drop_obj(item->key);
+	item->type->drop_key(ctx, item->key);
 	fz_free(ctx, item);
 	fz_lock(ctx, FZ_LOCK_ALLOC);
 }
@@ -194,29 +186,20 @@ ensure_space(fz_context *ctx, unsigned int tofree)
 	return count;
 }
 
-void
-fz_store_item(fz_context *ctx, fz_obj *key, void *val_, unsigned int itemsize)
+void *
+fz_store_item(fz_context *ctx, void *key, void *val_, unsigned int itemsize, fz_store_type *type)
 {
 	fz_item *item = NULL;
 	unsigned int size;
 	fz_storable *val = (fz_storable *)val_;
 	fz_store *store = ctx->store;
-	int indirect;
-	struct refkey refkey;
+	fz_store_hash hash = { NULL };
+	int use_hash = 0;
 
 	if (!store)
-		return;
+		return NULL;
 
 	fz_var(item);
-
-	/* Form the key before we take the lock */ 
-	indirect = fz_is_indirect(key);
-	if (indirect)
-	{
-		refkey.free = val->free;
-		refkey.num = fz_to_num(key);
-		refkey.gen = fz_to_gen(key);
-	}
 
 	/* If we fail for any reason, we swallow the exception and continue.
 	 * All that the above program will see is that we failed to store
@@ -227,9 +210,16 @@ fz_store_item(fz_context *ctx, fz_obj *key, void *val_, unsigned int itemsize)
 	}
 	fz_catch(ctx)
 	{
-		return;
+		return NULL;
 	}
 
+	if (type->make_hash_key)
+	{
+		hash.free = val->free;
+		use_hash = type->make_hash_key(&hash, key);
+	}
+
+	type->keep_key(ctx, key);
 	fz_lock(ctx, FZ_LOCK_ALLOC);
 	if (store->max != FZ_STORE_UNLIMITED)
 	{
@@ -242,34 +232,41 @@ fz_store_item(fz_context *ctx, fz_obj *key, void *val_, unsigned int itemsize)
 				/* Failed to free any space */
 				fz_unlock(ctx, FZ_LOCK_ALLOC);
 				fz_free(ctx, item);
-				return;
+				type->drop_key(ctx, key);
+				return NULL;
 			}
 		}
 	}
 	store->size += itemsize;
 
-	item->key = fz_keep_obj(key);
+	item->key = key;
 	item->val = val;
 	item->size = itemsize;
 	item->next = NULL;
+	item->type = type;
 
 	/* If we can index it fast, put it into the hash table */
-	if (indirect)
+	if (use_hash)
 	{
-		fz_unlock(ctx, FZ_LOCK_ALLOC);
+		fz_pixmap *existing;
+
 		fz_try(ctx)
 		{
-			fz_hash_insert(ctx, store->hash, &refkey, item);
+			/* May drop and retake the lock */
+			existing = fz_hash_insert(ctx, store->hash, &hash, item);
 		}
 		fz_catch(ctx)
 		{
-			fz_free(ctx, item);
-			fz_lock(ctx, FZ_LOCK_ALLOC);
 			store->size -= itemsize;
 			fz_unlock(ctx, FZ_LOCK_ALLOC);
-			return;
+			fz_free(ctx, item);
+			return NULL;
 		}
-		fz_lock(ctx, FZ_LOCK_ALLOC);
+		if (existing)
+		{
+			fz_unlock(ctx, FZ_LOCK_ALLOC);
+			return existing;
+		}
 	}
 	/* Now we can never fail, bump the ref */
 	if (val->refs > 0)
@@ -283,15 +280,17 @@ fz_store_item(fz_context *ctx, fz_obj *key, void *val_, unsigned int itemsize)
 	store->head = item;
 	item->prev = NULL;
 	fz_unlock(ctx, FZ_LOCK_ALLOC);
+
+	return NULL;
 }
 
 void *
-fz_find_item(fz_context *ctx, fz_store_free_fn *free, fz_obj *key)
+fz_find_item(fz_context *ctx, fz_store_free_fn *free, void *key, fz_store_type *type)
 {
-	struct refkey refkey;
 	fz_item *item;
 	fz_store *store = ctx->store;
-	int indirect;
+	fz_store_hash hash = { NULL };
+	int use_hash = 0;
 
 	if (!store)
 		return NULL;
@@ -299,27 +298,24 @@ fz_find_item(fz_context *ctx, fz_store_free_fn *free, fz_obj *key)
 	if (!key)
 		return NULL;
 
-	/* Form the key before we take the lock */
-	indirect = fz_is_indirect(key);
-	if (indirect)
+	if (type->make_hash_key)
 	{
-		refkey.free = free;
-		refkey.num = fz_to_num(key);
-		refkey.gen = fz_to_gen(key);
+		hash.free = free;
+		use_hash = type->make_hash_key(&hash, key);
 	}
 
 	fz_lock(ctx, FZ_LOCK_ALLOC);
-	if (indirect)
+	if (use_hash)
 	{
 		/* We can find objects keyed on indirected objects quickly */
-		item = fz_hash_find(ctx, store->hash, &refkey);
+		item = fz_hash_find(ctx, store->hash, &hash);
 	}
 	else
 	{
 		/* Others we have to hunt for slowly */
 		for (item = store->head; item; item = item->next)
 		{
-			if (item->val->free == free && !fz_objcmp(item->key, key))
+			if (item->val->free == free && !type->cmp_key(item->key, key))
 				break;
 		}
 	}
@@ -355,35 +351,33 @@ fz_find_item(fz_context *ctx, fz_store_free_fn *free, fz_obj *key)
 }
 
 void
-fz_remove_item(fz_context *ctx, fz_store_free_fn *free, fz_obj *key)
+fz_remove_item(fz_context *ctx, fz_store_free_fn *free, void *key, fz_store_type *type)
 {
-	struct refkey refkey;
 	fz_item *item;
 	fz_store *store = ctx->store;
-	int drop, indirect;
+	int drop;
+	fz_store_hash hash;
+	int use_hash = 0;
 
-	/* Form the key before we take the lock */
-	indirect = fz_is_indirect(key);
-	if (indirect)
+	if (type->make_hash_key)
 	{
-		refkey.free = free;
-		refkey.num = fz_to_num(key);
-		refkey.gen = fz_to_gen(key);
+		hash.free = free;
+		use_hash = type->make_hash_key(&hash, key);
 	}
 
 	fz_lock(ctx, FZ_LOCK_ALLOC);
-	if (indirect)
+	if (use_hash)
 	{
 		/* We can find objects keyed on indirect objects quickly */
-		item = fz_hash_find(ctx, store->hash, &refkey);
+		item = fz_hash_find(ctx, store->hash, &hash);
 		if (item)
-			fz_hash_remove(ctx, store->hash, &refkey);
+			fz_hash_remove(ctx, store->hash, &hash);
 	}
 	else
 	{
 		/* Others we have to hunt for slowly */
 		for (item = store->head; item; item = item->next)
-			if (item->val->free == free && !fz_objcmp(item->key, key))
+			if (item->val->free == free && !type->cmp_key(item->key, key))
 				break;
 	}
 	if (item)
@@ -400,7 +394,7 @@ fz_remove_item(fz_context *ctx, fz_store_free_fn *free, fz_obj *key)
 		fz_unlock(ctx, FZ_LOCK_ALLOC);
 		if (drop)
 			item->val->free(ctx, item->val);
-		fz_drop_obj(item->key);
+		type->drop_key(ctx, item->key);
 		fz_free(ctx, item);
 	}
 	else

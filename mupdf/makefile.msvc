@@ -242,7 +242,7 @@ FITZ_OBJS = \
 	$(OFZ)\stm_buffer.obj $(OFZ)\stm_open.obj $(OFZ)\stm_read.obj
 
 MUPDF_OBJS = \
-	$(OP)\pdf_annot.obj $(OP)\pdf_cmap.obj \
+	$(OP)\pdf_annot.obj $(OP)\pdf_cmap.obj $(OP)\pdf_store.obj \
 	$(OP)\pdf_colorspace.obj $(OP)\pdf_crypt.obj $(OP)\pdf_encoding.obj \
 	$(OP)\pdf_font.obj $(OP)\pdf_fontfile.obj $(OP)\pdf_metrics.obj \
 	$(OP)\pdf_function.obj $(OP)\pdf_image.obj $(OP)\pdf_interpret.obj $(OP)\pdf_lex.obj \

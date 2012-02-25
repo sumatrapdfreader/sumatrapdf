@@ -43,7 +43,7 @@ pdf_load_xobject(pdf_document *xref, fz_obj *dict)
 	fz_obj *obj;
 	fz_context *ctx = xref->ctx;
 
-	if ((form = fz_find_item(ctx, pdf_free_xobject_imp, dict)))
+	if ((form = pdf_find_item(ctx, pdf_free_xobject_imp, dict)))
 	{
 		return form;
 	}
@@ -56,7 +56,7 @@ pdf_load_xobject(pdf_document *xref, fz_obj *dict)
 	form->me = NULL;
 
 	/* Store item immediately, to avoid possible recursion if objects refer back to this one */
-	fz_store_item(ctx, dict, form, pdf_xobject_size(form));
+	pdf_store_item(ctx, dict, form, pdf_xobject_size(form));
 
 	obj = fz_dict_gets(dict, "BBox");
 	form->bbox = pdf_to_rect(ctx, obj);
@@ -102,7 +102,7 @@ pdf_load_xobject(pdf_document *xref, fz_obj *dict)
 	}
 	fz_catch(ctx)
 	{
-		fz_remove_item(ctx, pdf_free_xobject_imp, dict);
+		pdf_remove_item(ctx, pdf_free_xobject_imp, dict);
 		pdf_drop_xobject(ctx, form);
 		fz_throw(ctx, "cannot load xobject content stream (%d %d R)", fz_to_num(dict), fz_to_gen(dict));
 	}

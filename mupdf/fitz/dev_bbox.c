@@ -60,13 +60,13 @@ fz_bbox_fill_shade(fz_device *dev, fz_shade *shade, fz_matrix ctm, float alpha)
 }
 
 static void
-fz_bbox_fill_image(fz_device *dev, fz_pixmap *image, fz_matrix ctm, float alpha)
+fz_bbox_fill_image(fz_device *dev, fz_image *image, fz_matrix ctm, float alpha)
 {
 	fz_bbox_add_rect(dev, fz_transform_rect(ctm, fz_unit_rect), 0);
 }
 
 static void
-fz_bbox_fill_image_mask(fz_device *dev, fz_pixmap *image, fz_matrix ctm,
+fz_bbox_fill_image_mask(fz_device *dev, fz_image *image, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
 	fz_bbox_fill_image(dev, image, ctm, alpha);
@@ -100,7 +100,7 @@ fz_bbox_clip_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *stroke,
 }
 
 static void
-fz_bbox_clip_image_mask(fz_device *dev, fz_pixmap *image, fz_rect *rect, fz_matrix ctm)
+fz_bbox_clip_image_mask(fz_device *dev, fz_image *image, fz_rect *rect, fz_matrix ctm)
 {
 	fz_bbox_add_rect(dev, rect ? fz_transform_rect(ctm, *rect) : fz_infinite_rect, 1);
 }

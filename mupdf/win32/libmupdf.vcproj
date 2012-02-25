@@ -310,6 +310,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\pdf\pdf_store.c"
+				>
+			</File>
+			<File
 				RelativePath="..\pdf\pdf_stream.c"
 				>
 			</File>
