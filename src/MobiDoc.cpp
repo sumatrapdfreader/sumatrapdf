@@ -522,7 +522,7 @@ static bool IsValidCompression(int comprType)
 MobiDoc::MobiDoc() :
     fileName(NULL), fileHandle(0), recHeaders(NULL), firstRecData(NULL), isMobi(false),
     docRecCount(0), compressionType(0), docUncompressedSize(0), doc(NULL),
-    multibyte(false), trailersCount(0), imageFirstRec(0), imagesCount(0), validImagesCount(0),
+    multibyte(false), trailersCount(0), imageFirstRec(0), imagesCount(0),
     images(NULL), bufDynamic(NULL), bufDynamicSize(0), huffDic(NULL)
 {
 }
@@ -758,19 +758,15 @@ static bool KnownImageFormat(uint8 *data, size_t dataLen)
 bool MobiDoc::LoadImage(size_t imageNo)
 {
     size_t imageRec = imageFirstRec + imageNo;
-    images[imageNo].data = 0;
-    images[imageNo].len = 0;
     size_t imgDataLen;
 
     uint8 *imgData = (uint8*)ReadRecord(imageRec, imgDataLen);
-    if (!imgData)
+    if (!imgData || (0 == imgDataLen))
         return true;
     if (IsEofRecord(imgData, imgDataLen))
         return false;
-    if (KnownNonImageRec(imgData, imgDataLen)) {
-        imgData[5] = 0;
+    if (KnownNonImageRec(imgData, imgDataLen))
         return true;
-    }
     if (!KnownImageFormat(imgData, imgDataLen)) {
         l("Unknown image format\n");
         return true;
@@ -779,7 +775,6 @@ bool MobiDoc::LoadImage(size_t imageNo)
     if (!images[imageNo].data)
         return false;
     images[imageNo].len = imgDataLen;
-    ++validImagesCount;
     return true;
 }
 
@@ -794,12 +789,27 @@ void MobiDoc::LoadImages()
     }
 }
 
+// imgRecIndex corresponds to recindex attribute of <img> tag
+// as far as I can tell, this means: it starts at 1 
+// returns NULL if there is no image (e.g. it's not a format we
+// recognize)
+ImageData *MobiDoc::GetImage(size_t imgRecIndex) const
+{
+    // TODO: remove this before shipping as it probably can happen
+    // in malfromed mobi files, but for now we want to know if it happens
+    CrashIf((imgRecIndex >= imagesCount) || (imgRecIndex < 1));
+    if ((imgRecIndex >= imagesCount) || (imgRecIndex < 1))
+        return NULL;
+   --imgRecIndex;
+   if (!images[imgRecIndex].data || (0 == images[imgRecIndex].len))
+       return NULL;
+   return &images[imgRecIndex];
+}
+
 // first two images seem to be the same picture of the cover
 // except at different resolutions
 ImageData *MobiDoc::GetCoverImage()
 {
-    if (0 == validImagesCount)
-        return NULL;
     size_t coverImage = 0;
     Rect size;
     for (size_t i = 0; i < 2; i++) {

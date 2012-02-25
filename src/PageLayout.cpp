@@ -371,6 +371,7 @@ void PageLayout::EmitImage(ImageData *img)
         return;
 
     FlushCurrLine(true);
+    // TODO: probably should respect current paragraph justification
     RectF bbox(0, 0, (REAL)imgSize.Width, (REAL)imgSize.Height);
     if (currY  + (bbox.Height / 2.f) > pageDy) {
         // move overly large images to a new page
@@ -600,6 +601,28 @@ void PageLayout::HandleTagP(HtmlToken *t)
     EmitParagraph(lineIndent, topPadding);
 }
 
+// mobi format has image tags in the form:
+// <img recindex="0000n" alt=""/>
+// where recindex is the record number of pdb record
+// that holds the image (within image record array, not a
+// global record)
+// TODO: handle alt attribute (?)
+void PageLayout::HandleTagImg(HtmlToken *t)
+{
+    AttrInfo *attr = t->GetAttrByName("recindex");
+    if (!attr)
+        return;
+    str::Str<char> nStr;
+    nStr.Append(attr->val, attr->valLen);
+    int n = 0;
+    if (!str::Parse(nStr.Get(), "%d", &n))
+        return;
+    ImageData *img = layoutInfo->mobiDoc->GetImage(n);
+    if (!img)
+        return;
+    EmitImage(img);
+}
+
 void PageLayout::HandleTagFont(HtmlToken *t)
 {
     if (t->IsEndTag()) {
@@ -611,6 +634,7 @@ void PageLayout::HandleTagFont(HtmlToken *t)
     float size;
     if (attr) {
         // TODO: also use font name (not sure if mobi documents use that)
+        CrashIf(true);
         size = 0; // only so that we can set a breakpoing
     }
 
@@ -664,8 +688,7 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
     } else if (Tag_Font == tag) {
         HandleTagFont(t);
     } else if (Tag_Img == tag) {
-        // TODO: implement me
-        CrashIf(true);
+        HandleTagImg(t);
     } else if (Tag_A == tag) {
         // TODO: implement me
     }
@@ -740,10 +763,11 @@ PageData *PageLayout::IterNext()
     return IterNext();
 }
 
-PageData *PageLayout::IterStart(LayoutInfo* layoutInfo)
+PageData *PageLayout::IterStart(LayoutInfo* li)
 {
     CrashIf(currPage);
     finishedParsing = false;
+    layoutInfo = li;
     pageDx = (REAL)layoutInfo->pageDx;
     pageDy = (REAL)layoutInfo->pageDy;
     textAllocator = layoutInfo->textAllocator;

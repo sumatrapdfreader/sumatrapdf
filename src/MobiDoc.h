@@ -84,6 +84,8 @@ class MobiDoc
     char *              bufDynamic;
     size_t              bufDynamicSize;
 
+    ImageData *         images;
+
     HuffDicDecompressor *huffDic;
 
     MobiDoc();
@@ -100,14 +102,13 @@ public:
     str::Str<char> *    doc;
 
     size_t              imagesCount;
-    size_t              validImagesCount;
-    ImageData *         images;
 
     ~MobiDoc();
 
     bool                LoadDocument();
     char *              GetBookHtmlData(size_t& lenOut) const;
     ImageData *         GetCoverImage();
+    ImageData *         GetImage(size_t imgRecIndex) const;
 
     static MobiDoc *    ParseFile(const TCHAR *fileName);
 };

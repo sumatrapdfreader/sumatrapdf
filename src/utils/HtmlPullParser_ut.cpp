@@ -42,11 +42,11 @@ static void HtmlEntities()
         { "&zwnj;", 8204 },
         { "&58;", 58 },
         { "&32783;", 32783 },
-        { "&#20;", 32 },
-        { "&#Af34;", 44852 },
+        { "&#x20;", 32 },
+        { "&#xAf34;", 44852 },
         { "&Auml;", 196 },
         { "&a3;", -1 },
-        { "&#z312;", -1 },
+        { "&#xz312;", -1 },
         { "&aer;", -1 }
     };
     for (size_t i = 0; i < dimof(entities); i++ ) {
@@ -72,9 +72,9 @@ static void HtmlEntities()
         { "a&#30", "a&#30" },
 
         { "&32;b", " b" },
-        { "&#20;ra", " ra" },
+        { "&#x20;ra", " ra" },
         { "&lt;", "<" },
-        { "a&amp; &32;to&#20;end", "a&  to end" }
+        { "a&amp; &32;to&#x20;end", "a&  to end" }
     };
     for (size_t i = 0; i < dimof(changed); i++) {
         const char *s = changed[i].s;

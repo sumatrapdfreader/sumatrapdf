@@ -98,6 +98,7 @@ private:
     void HandleTagBr();
     void HandleTagP(HtmlToken *t);
     void HandleTagFont(HtmlToken *t);
+    void HandleTagImg(HtmlToken *t);
     void HandleHtmlTag(HtmlToken *t);
     void HandleText(HtmlToken *t);
 
@@ -125,6 +126,7 @@ private:
     bool  IsCurrLineEmpty();
 
     // constant during layout process
+    LayoutInfo *        layoutInfo;
     float               pageDx;
     float               pageDy;
     float               lineSpacing;
@@ -154,7 +156,7 @@ private:
 
     HtmlPullParser *    htmlParser;
 
-    // list of pages that we've build but haven't yet sent to client
+    // list of pages that we've created but haven't yet sent to client
     Vec<PageData*>      pagesToSend;
     bool                finishedParsing;
 

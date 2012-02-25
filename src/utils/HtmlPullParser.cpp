@@ -139,14 +139,23 @@ void MemAppend(char *& dst, const char *s, size_t len)
 // We encode rune as utf8 to dst buffer and advance dst pointer.
 // The caller must ensure there is enough free space (6 bytes)
 // in dst
-static void Utf8Encode(char *& dst, int rune)
+static void Utf8Encode(char *& dst, int c)
 {
     uint8 *tmp = (uint8*)dst;
-    if (rune <= 0x7f)
-        *tmp++ = (uint8)rune;
-    else {
-        // TODO: implement me
-        CrashIf(true);
+    if (c < 0x00080) {
+        *tmp++ = (uint8)(c & 0xFF);
+    } else if (c < 0x00800) {
+        *tmp++ = 0xC0 + (uint8)((c >> 6)&0x1F);
+        *tmp++ = 0x80 + (uint8)(c & 0x3F);
+    } else if (c < 0x10000) {
+        *tmp++ = 0xE0 + (uint8)((c >> 12)&0x0F);
+        *tmp++ = 0x80 + (uint8)((c >> 6) & 0x3F);
+        *tmp++ = 0x80 + (uint8)(c & 0x3F);
+    } else {
+        *tmp++ = 0xF0 + (uint8)((c >> 18) & 0x07);
+        *tmp++ = 0x80 + (uint8)((c >> 12) & 0x3F);
+        *tmp++ = 0x80 + (uint8)((c >> 6) & 0x3F);
+        *tmp++ = 0x80 + (uint8)(c & 0x3F);
     }
     dst = (char*)tmp;
 }
@@ -159,7 +168,7 @@ static int ResolveHtmlEntity(const char *s, size_t len)
     int rune;
     if (str::Parse(s, "%d;", &rune))
         return rune;
-    if (str::Parse(s, "#%x;", &rune))
+    if (str::Parse(s, "#x%x;", &rune))
         return rune;
     return HtmlEntityNameToRune(s, len);
 }
