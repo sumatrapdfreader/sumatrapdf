@@ -5,6 +5,11 @@
 #include "Allocator.h"
 #include "StrUtil.h"
 
+/* TODO: We could extend the parser to allow navigating the tree (go to a prev/next sibling, go
+to a parent) without explicitly building a tree in memory. I think all we need to do is to extend
+tagNesting to also remember the position in html of the tag. Given this information we should be
+able to navigate the tree by reparsing.*/
+
 // map of entity names to their Unicde runes, based on
 // http://en.wikipedia.org/wiki/List_of_XML_and_HTML_character_entity_references
 // the order of strings in gHtmlEntityNames corresponds to
