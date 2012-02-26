@@ -552,6 +552,9 @@ Remove from favorites
 Remove page %s from favorites
 Удалить стр. %s из избранного
 
+Replace document &colors with Windows color scheme
+Применить к документу цветовую схему Windows
+
 Rotate &Left\tCtrl+Shift+-
 Повернуть в&лево\tCtrl+Shift+-
 
@@ -674,7 +677,4 @@ copying text
 
 printing document
 печатается документ
-
-# Untranslated:
-#Replace document &colors with Windows color scheme
 
