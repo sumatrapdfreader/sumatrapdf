@@ -240,12 +240,6 @@ pdf_file_spec_to_str(fz_context *ctx, pdf_obj *file_spec)
 	return path;
 }
 
-static void
-pdf_drop_embedded(fz_context *ctx, void *embedded)
-{
-	pdf_drop_obj((pdf_obj *)embedded);
-}
-
 fz_link_dest
 pdf_parse_action(pdf_document *xref, pdf_obj *action)
 {
