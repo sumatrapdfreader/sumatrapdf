@@ -273,15 +273,19 @@ int main(int argc, char **argv)
         return 0;
     }
 
+    ScopedMem<TCHAR> filePath;
     WIN32_FIND_DATA fdata;
     HANDLE hfind = FindFirstFile(argList.At(1), &fdata);
-    if (INVALID_HANDLE_VALUE == hfind) {
-        ErrOut("Error: %s not found!\n", path::GetBaseName(argList.At(1)));
-        return 1;
+    if (INVALID_HANDLE_VALUE != hfind) {
+        ScopedMem<TCHAR> dir(path::GetDir(argList.At(1)));
+        filePath.Set(path::Join(dir, fdata.cFileName));
+        FindClose(hfind);
     }
-    FindClose(hfind);
-    ScopedMem<TCHAR> filePath(path::GetDir(argList.At(1)));
-    filePath.Set(path::Join(filePath, fdata.cFileName));
+    else {
+        // embedded documents are referred to by an invalid path
+        // containing more information after a colon (e.g. "C:\file.pdf:3:0")
+        filePath.Set(str::Dup(argList.At(1)));
+    }
 
     ScopedMem<TCHAR> password;
     int pwdIdx = argList.Find(_T("-pwd"));
