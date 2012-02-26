@@ -274,8 +274,40 @@ struct xps_document_s
 	int _clinks_len;
 };
 
+/*
+	xps_open_document: Open a document.
+
+	Open a document for reading so the library is able to locate
+	objects and pages inside the file.
+
+	The returned xps_document should be used when calling most
+	other functions. Note that it wraps the context, so those
+	functions implicitly get access to the global state in
+	context.
+
+	filename: a path to a file as it would be given to open(2).
+*/
 xps_document *xps_open_document(fz_context *ctx, char *filename);
+
+/*
+	xps_open_document_with_stream: Opens a document.
+
+	Same as xps_open_document, but takes a stream instead of a
+	filename to locate the document to open. Increments the
+	reference count of the stream. See fz_open_file,
+	fz_open_file_w or fz_open_fd for opening a stream, and
+	fz_close for closing an open stream.
+*/
 xps_document *xps_open_document_with_stream(fz_stream *file);
+
+/*
+	xps_close_document: Closes and frees an opened document.
+
+	The resource store in the context associated with xps_document
+	is emptied.
+
+	Does not throw exceptions.
+*/
 void xps_close_document(xps_document *doc);
 
 /*
@@ -286,7 +318,16 @@ char *xps_get_point(char *s_in, float *x, float *y);
 
 /* SumatraPDF: extended link support */
 void xps_extract_anchor_info(xps_document *doc, fz_rect rect, char *target_uri, char *anchor_name, int step);
+
 /* SumatraPDF: extract document properties (hacky) */
-fz_obj *xps_extract_doc_props(xps_document *doc);
+typedef struct xps_doc_prop_s xps_doc_prop;
+struct xps_doc_prop_s
+{
+	char *name;
+	char *value;
+	xps_doc_prop *next;
+};
+xps_doc_prop *xps_extract_doc_props(xps_document *doc);
+void xps_free_doc_prop(fz_context *ctx, xps_doc_prop *prop);
 
 #endif

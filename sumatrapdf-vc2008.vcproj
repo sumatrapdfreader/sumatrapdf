@@ -661,10 +661,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\fitz\base_object.c"
-					>
-				</File>
-				<File
 					RelativePath=".\mupdf\fitz\base_string.c"
 					>
 				</File>
@@ -877,6 +873,10 @@
 				Name="pdf"
 				>
 				<File
+					RelativePath=".\mupdf\pdf\base_object.c"
+					>
+				</File>
+				<File
 					RelativePath=".\mupdf\pdf\data_encodings.h"
 					>
 				</File>
@@ -982,6 +982,10 @@
 				</File>
 				<File
 					RelativePath=".\mupdf\pdf\pdf_shade.c"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\pdf\pdf_store.c"
 					>
 				</File>
 				<File

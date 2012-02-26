@@ -1,46 +1,46 @@
 #include "fitz.h"
 #include "mupdf.h"
 
-static fz_obj *
-resolve_dest_rec(pdf_document *xref, fz_obj *dest, int depth)
+static pdf_obj *
+resolve_dest_rec(pdf_document *xref, pdf_obj *dest, int depth)
 {
 	if (depth > 10) /* Arbitrary to avoid infinite recursion */
 		return NULL;
 
-	if (fz_is_name(dest) || fz_is_string(dest))
+	if (pdf_is_name(dest) || pdf_is_string(dest))
 	{
 		dest = pdf_lookup_dest(xref, dest);
 		return resolve_dest_rec(xref, dest, depth+1);
 	}
 
-	else if (fz_is_array(dest))
+	else if (pdf_is_array(dest))
 	{
 		return dest;
 	}
 
-	else if (fz_is_dict(dest))
+	else if (pdf_is_dict(dest))
 	{
-		dest = fz_dict_gets(dest, "D");
+		dest = pdf_dict_gets(dest, "D");
 		return resolve_dest_rec(xref, dest, depth+1);
 	}
 
-	else if (fz_is_indirect(dest))
+	else if (pdf_is_indirect(dest))
 		return dest;
 
 	return NULL;
 }
 
-static fz_obj *
-resolve_dest(pdf_document *xref, fz_obj *dest)
+static pdf_obj *
+resolve_dest(pdf_document *xref, pdf_obj *dest)
 {
 	return resolve_dest_rec(xref, dest, 0);
 }
 
 fz_link_dest
-pdf_parse_link_dest(pdf_document *xref, fz_obj *dest)
+pdf_parse_link_dest(pdf_document *xref, pdf_obj *dest)
 {
 	fz_link_dest ld;
-	fz_obj *obj;
+	pdf_obj *obj;
 
 	int l_from_2 = 0;
 	int b_from_3 = 0;
@@ -51,14 +51,14 @@ pdf_parse_link_dest(pdf_document *xref, fz_obj *dest)
 	int z_from_4 = 0;
 
 	dest = resolve_dest(xref, dest);
-	if (dest == NULL || !fz_is_array(dest))
+	if (dest == NULL || !pdf_is_array(dest))
 	{
 		ld.kind = FZ_LINK_NONE;
 		return ld;
 	}
-	obj = fz_array_get(dest, 0);
-	if (fz_is_int(obj))
-		ld.ld.gotor.page = fz_to_int(obj);
+	obj = pdf_array_get(dest, 0);
+	if (pdf_is_int(obj))
+		ld.ld.gotor.page = pdf_to_int(obj);
 	else
 		ld.ld.gotor.page = pdf_find_page_number(xref, obj);
 
@@ -73,31 +73,31 @@ pdf_parse_link_dest(pdf_document *xref, fz_obj *dest)
 	/* SumatraPDF: allow to resolve against remote documents */
 	ld.ld.gotor.rname = NULL;
 
-	obj = fz_array_get(dest, 1);
-	if (!fz_is_name(obj))
+	obj = pdf_array_get(dest, 1);
+	if (!pdf_is_name(obj))
 		return ld;
 
-	if (!strcmp("XYZ", fz_to_name(obj)))
+	if (!strcmp("XYZ", pdf_to_name(obj)))
 	{
 		l_from_2 = t_from_3 = z_from_4 = 1;
 		ld.ld.gotor.flags |= fz_link_flag_r_is_zoom;
 	}
-	else if ((!strcmp("Fit", fz_to_name(obj))) || (!strcmp("FitB", fz_to_name(obj))))
+	else if ((!strcmp("Fit", pdf_to_name(obj))) || (!strcmp("FitB", pdf_to_name(obj))))
 	{
 		ld.ld.gotor.flags |= fz_link_flag_fit_h;
 		ld.ld.gotor.flags |= fz_link_flag_fit_v;
 	}
-	else if ((!strcmp("FitH", fz_to_name(obj))) || (!strcmp("FitBH", fz_to_name(obj))))
+	else if ((!strcmp("FitH", pdf_to_name(obj))) || (!strcmp("FitBH", pdf_to_name(obj))))
 	{
 		t_from_2 = 1;
 		ld.ld.gotor.flags |= fz_link_flag_fit_h;
 	}
-	else if ((!strcmp("FitV", fz_to_name(obj))) || (!strcmp("FitBV", fz_to_name(obj))))
+	else if ((!strcmp("FitV", pdf_to_name(obj))) || (!strcmp("FitBV", pdf_to_name(obj))))
 	{
 		l_from_2 = 1;
 		ld.ld.gotor.flags |= fz_link_flag_fit_v;
 	}
-	else if (!strcmp("FitR", fz_to_name(obj)))
+	else if (!strcmp("FitR", pdf_to_name(obj)))
 	{
 		l_from_2 = b_from_3 = r_from_4 = t_from_5 = 1;
 		ld.ld.gotor.flags |= fz_link_flag_fit_h;
@@ -106,77 +106,77 @@ pdf_parse_link_dest(pdf_document *xref, fz_obj *dest)
 
 	if (l_from_2)
 	{
-		obj = fz_array_get(dest, 2);
-		if (fz_is_int(obj))
+		obj = pdf_array_get(dest, 2);
+		if (pdf_is_int(obj))
 		{
 			ld.ld.gotor.flags |= fz_link_flag_l_valid;
-			ld.ld.gotor.lt.x = fz_to_int(obj);
+			ld.ld.gotor.lt.x = pdf_to_int(obj);
 		}
-		else if (fz_is_real(obj))
+		else if (pdf_is_real(obj))
 		{
 			ld.ld.gotor.flags |= fz_link_flag_l_valid;
-			ld.ld.gotor.lt.x = fz_to_real(obj);
+			ld.ld.gotor.lt.x = pdf_to_real(obj);
 		}
 	}
 	if (b_from_3)
 	{
-		obj = fz_array_get(dest, 3);
-		if (fz_is_int(obj))
+		obj = pdf_array_get(dest, 3);
+		if (pdf_is_int(obj))
 		{
 			ld.ld.gotor.flags |= fz_link_flag_b_valid;
-			ld.ld.gotor.rb.y = fz_to_int(obj);
+			ld.ld.gotor.rb.y = pdf_to_int(obj);
 		}
-		else if (fz_is_real(obj))
+		else if (pdf_is_real(obj))
 		{
 			ld.ld.gotor.flags |= fz_link_flag_b_valid;
-			ld.ld.gotor.rb.y = fz_to_real(obj);
+			ld.ld.gotor.rb.y = pdf_to_real(obj);
 		}
 	}
 	if (r_from_4)
 	{
-		obj = fz_array_get(dest, 4);
-		if (fz_is_int(obj))
+		obj = pdf_array_get(dest, 4);
+		if (pdf_is_int(obj))
 		{
 			ld.ld.gotor.flags |= fz_link_flag_r_valid;
-			ld.ld.gotor.rb.x = fz_to_int(obj);
+			ld.ld.gotor.rb.x = pdf_to_int(obj);
 		}
-		else if (fz_is_real(obj))
+		else if (pdf_is_real(obj))
 		{
 			ld.ld.gotor.flags |= fz_link_flag_r_valid;
-			ld.ld.gotor.rb.x = fz_to_real(obj);
+			ld.ld.gotor.rb.x = pdf_to_real(obj);
 		}
 	}
 	if (t_from_5 || t_from_3 || t_from_2)
 	{
 		if (t_from_5)
-			obj = fz_array_get(dest, 5);
+			obj = pdf_array_get(dest, 5);
 		else if (t_from_3)
-			obj = fz_array_get(dest, 3);
+			obj = pdf_array_get(dest, 3);
 		else
-			obj = fz_array_get(dest, 2);
-		if (fz_is_int(obj))
+			obj = pdf_array_get(dest, 2);
+		if (pdf_is_int(obj))
 		{
 			ld.ld.gotor.flags |= fz_link_flag_t_valid;
-			ld.ld.gotor.lt.y = fz_to_int(obj);
+			ld.ld.gotor.lt.y = pdf_to_int(obj);
 		}
-		else if (fz_is_real(obj))
+		else if (pdf_is_real(obj))
 		{
 			ld.ld.gotor.flags |= fz_link_flag_t_valid;
-			ld.ld.gotor.lt.y = fz_to_real(obj);
+			ld.ld.gotor.lt.y = pdf_to_real(obj);
 		}
 	}
 	if (z_from_4)
 	{
-		obj = fz_array_get(dest, 4);
-		if (fz_is_int(obj))
+		obj = pdf_array_get(dest, 4);
+		if (pdf_is_int(obj))
 		{
 			ld.ld.gotor.flags |= fz_link_flag_r_valid;
-			ld.ld.gotor.rb.x = fz_to_int(obj);
+			ld.ld.gotor.rb.x = pdf_to_int(obj);
 		}
-		else if (fz_is_real(obj))
+		else if (pdf_is_real(obj))
 		{
 			ld.ld.gotor.flags |= fz_link_flag_r_valid;
-			ld.ld.gotor.rb.x = fz_to_real(obj);
+			ld.ld.gotor.rb.x = pdf_to_real(obj);
 		}
 	}
 
@@ -205,24 +205,24 @@ pdf_parse_link_dest(pdf_document *xref, fz_obj *dest)
 #undef iswspace
 
 char *
-pdf_file_spec_to_str(fz_context *ctx, fz_obj *file_spec)
+pdf_file_spec_to_str(fz_context *ctx, pdf_obj *file_spec)
 {
-	fz_obj *obj = NULL;
+	pdf_obj *obj = NULL;
 	char *path = NULL, *c;
 
-	if (fz_is_string(file_spec))
+	if (pdf_is_string(file_spec))
 		obj = file_spec;
-	else if (fz_is_dict(file_spec))
+	else if (pdf_is_dict(file_spec))
 	{
 #ifdef _WIN32
-		obj = fz_dict_gets(file_spec, "DOS");
+		obj = pdf_dict_gets(file_spec, "DOS");
 #else
-		obj = fz_dict_gets(file_spec, "Unix");
+		obj = pdf_dict_gets(file_spec, "Unix");
 #endif
 		if (!obj)
-			obj = fz_dict_getsa(file_spec, "UF", "F");
+			obj = pdf_dict_getsa(file_spec, "UF", "F");
 	}
-	if (!fz_is_string(obj))
+	if (!pdf_is_string(obj))
 		return NULL;
 
 	path = pdf_to_utf8(ctx, obj);
@@ -240,11 +240,17 @@ pdf_file_spec_to_str(fz_context *ctx, fz_obj *file_spec)
 	return path;
 }
 
+static void
+pdf_drop_embedded(fz_context *ctx, void *embedded)
+{
+	pdf_drop_obj((pdf_obj *)embedded);
+}
+
 fz_link_dest
-pdf_parse_action(pdf_document *xref, fz_obj *action)
+pdf_parse_action(pdf_document *xref, pdf_obj *action)
 {
 	fz_link_dest ld;
-	fz_obj *obj, *dest;
+	pdf_obj *obj, *dest;
 	fz_context *ctx = xref->ctx;
 
 	ld.kind = FZ_LINK_NONE;
@@ -252,56 +258,57 @@ pdf_parse_action(pdf_document *xref, fz_obj *action)
 	if (!action)
 		return ld;
 
-	obj = fz_dict_gets(action, "S");
-	if (!strcmp(fz_to_name(obj), "GoTo"))
+	obj = pdf_dict_gets(action, "S");
+	if (!strcmp(pdf_to_name(obj), "GoTo"))
 	{
-		dest = fz_dict_gets(action, "D");
+		dest = pdf_dict_gets(action, "D");
 		ld = pdf_parse_link_dest(xref, dest);
 	}
-	else if (!strcmp(fz_to_name(obj), "URI"))
+	else if (!strcmp(pdf_to_name(obj), "URI"))
 	{
 		ld.kind = FZ_LINK_URI;
-		ld.ld.uri.is_map = fz_to_bool(fz_dict_gets(action, "IsMap"));
-		ld.ld.uri.uri = pdf_to_utf8(ctx, fz_dict_gets(action, "URI"));
+		ld.ld.uri.is_map = pdf_to_bool(pdf_dict_gets(action, "IsMap"));
+		ld.ld.uri.uri = pdf_to_utf8(ctx, pdf_dict_gets(action, "URI"));
 	}
-	else if (!strcmp(fz_to_name(obj), "Launch"))
+	else if (!strcmp(pdf_to_name(obj), "Launch"))
 	{
 		ld.kind = FZ_LINK_LAUNCH;
 		/* SumatraPDF: parse full file specifications */
-		ld.ld.launch.file_spec = pdf_file_spec_to_str(ctx, fz_dict_gets(action, "F"));
-		ld.ld.launch.new_window = fz_to_int(fz_dict_gets(action, "NewWindow"));
+		ld.ld.launch.file_spec = pdf_file_spec_to_str(ctx, pdf_dict_gets(action, "F"));
+		ld.ld.launch.new_window = pdf_to_int(pdf_dict_gets(action, "NewWindow"));
 		/* SumatraPDF: support launching embedded files */
-		obj = fz_dict_gets(fz_dict_gets(action, "F"), "EF");
+		obj = pdf_dict_gets(pdf_dict_gets(action, "F"), "EF");
 #ifdef _WIN32
-		obj = fz_dict_getsa(obj, "DOS", "F");
+		obj = pdf_dict_getsa(obj, "DOS", "F");
 #else
-		obj = fz_dict_getsa(obj, "Unix", "F");
+		obj = pdf_dict_getsa(obj, "Unix", "F");
 #endif
-		ld.ld.launch.embedded = obj ? fz_keep_obj(obj) : NULL;
+		ld.ld.launch.embeddedNum = pdf_to_num(obj);
+		ld.ld.launch.embeddedGen = pdf_to_gen(obj);
 	}
-	else if (!strcmp(fz_to_name(obj), "Named"))
+	else if (!strcmp(pdf_to_name(obj), "Named"))
 	{
 		ld.kind = FZ_LINK_NAMED;
-		ld.ld.named.named = fz_strdup(ctx, fz_to_name(fz_dict_gets(action, "N")));
+		ld.ld.named.named = fz_strdup(ctx, pdf_to_name(pdf_dict_gets(action, "N")));
 	}
-	else if (!strcmp(fz_to_name(obj), "GoToR"))
+	else if (!strcmp(pdf_to_name(obj), "GoToR"))
 	{
 		/* SumatraPDF: allow to resolve against remote documents */
 		char *rname = NULL;
 		memset(&ld, 0, sizeof(ld));
-		dest = fz_dict_gets(action, "D");
-		if (fz_is_array(dest))
+		dest = pdf_dict_gets(action, "D");
+		if (pdf_is_array(dest))
 			ld = pdf_parse_link_dest(xref, dest);
-		else if (fz_is_name(dest))
-			rname = fz_strdup(ctx, fz_to_name(dest));
-		else if (fz_is_string(dest))
+		else if (pdf_is_name(dest))
+			rname = fz_strdup(ctx, pdf_to_name(dest));
+		else if (pdf_is_string(dest))
 			rname = pdf_to_utf8(ctx, dest);
 		if (rname || ld.kind == FZ_LINK_GOTO && ld.ld.gotor.page >= 0)
 		{
 		ld.kind = FZ_LINK_GOTOR;
 		/* SumatraPDF: parse full file specifications */
-		ld.ld.gotor.file_spec = pdf_file_spec_to_str(ctx, fz_dict_gets(action, "F"));
-		ld.ld.gotor.new_window = fz_to_int(fz_dict_gets(action, "NewWindow"));
+		ld.ld.gotor.file_spec = pdf_file_spec_to_str(ctx, pdf_dict_gets(action, "F"));
+		ld.ld.gotor.new_window = pdf_to_int(pdf_dict_gets(action, "NewWindow"));
 		/* SumatraPDF: allow to resolve against remote documents */
 		ld.ld.gotor.rname = rname;
 		}
@@ -310,18 +317,18 @@ pdf_parse_action(pdf_document *xref, fz_obj *action)
 }
 
 static fz_link *
-pdf_load_link(pdf_document *xref, fz_obj *dict, fz_matrix page_ctm)
+pdf_load_link(pdf_document *xref, pdf_obj *dict, fz_matrix page_ctm)
 {
-	fz_obj *dest = NULL;
-	fz_obj *action;
-	fz_obj *obj;
+	pdf_obj *dest = NULL;
+	pdf_obj *action;
+	pdf_obj *obj;
 	fz_rect bbox;
 	fz_context *ctx = xref->ctx;
 	fz_link_dest ld;
 
 	dest = NULL;
 
-	obj = fz_dict_gets(dict, "Rect");
+	obj = pdf_dict_gets(dict, "Rect");
 	if (obj)
 		bbox = pdf_to_rect(ctx, obj);
 	else
@@ -329,7 +336,7 @@ pdf_load_link(pdf_document *xref, fz_obj *dict, fz_matrix page_ctm)
 
 	bbox = fz_transform_rect(page_ctm, bbox);
 
-	obj = fz_dict_gets(dict, "Dest");
+	obj = pdf_dict_gets(dict, "Dest");
 	if (obj)
 	{
 		dest = resolve_dest(xref, obj);
@@ -337,10 +344,10 @@ pdf_load_link(pdf_document *xref, fz_obj *dict, fz_matrix page_ctm)
 	}
 	else
 	{
-		action = fz_dict_gets(dict, "A");
+		action = pdf_dict_gets(dict, "A");
 		/* fall back to additional action button's down/up action */
 		if (!action)
-			action = fz_dict_getsa(fz_dict_gets(dict, "AA"), "U", "D");
+			action = pdf_dict_getsa(pdf_dict_gets(dict, "AA"), "U", "D");
 
 		ld = pdf_parse_action(xref, action);
 	}
@@ -350,19 +357,19 @@ pdf_load_link(pdf_document *xref, fz_obj *dict, fz_matrix page_ctm)
 }
 
 fz_link *
-pdf_load_link_annots(pdf_document *xref, fz_obj *annots, fz_matrix page_ctm)
+pdf_load_link_annots(pdf_document *xref, pdf_obj *annots, fz_matrix page_ctm)
 {
 	fz_link *link, *head, *tail;
-	fz_obj *obj;
+	pdf_obj *obj;
 	int i, n;
 
 	head = tail = NULL;
 	link = NULL;
 
-	n = fz_array_len(annots);
+	n = pdf_array_len(annots);
 	for (i = 0; i < n; i++)
 	{
-		obj = fz_array_get(annots, i);
+		obj = pdf_array_get(annots, i);
 		link = pdf_load_link(xref, obj, page_ctm);
 		if (link)
 		{
@@ -390,7 +397,7 @@ pdf_free_annot(fz_context *ctx, pdf_annot *annot)
 		if (annot->ap)
 			pdf_drop_xobject(ctx, annot->ap);
 		if (annot->obj)
-			fz_drop_obj(annot->obj);
+			pdf_drop_obj(annot->obj);
 		fz_free(ctx, annot);
 		annot = next;
 	}
@@ -422,11 +429,11 @@ pdf_transform_annot(pdf_annot *annot)
 
 /* SumatraPDF: synthesize appearance streams for a few more annotations */
 static pdf_annot *
-pdf_create_annot(fz_context *ctx, fz_rect rect, fz_obj *base_obj, fz_buffer *content, fz_obj *resources, int transparency)
+pdf_create_annot(fz_context *ctx, fz_rect rect, pdf_obj *base_obj, fz_buffer *content, pdf_obj *resources, int transparency)
 {
 	pdf_annot *annot = NULL;
 	pdf_xobject *form = pdf_create_xobject(ctx, base_obj);
-	int rotate = fz_to_int(fz_dict_gets(fz_dict_gets(base_obj, "MK"), "R"));
+	int rotate = pdf_to_int(pdf_dict_gets(pdf_dict_gets(base_obj, "MK"), "R"));
 
 	form->matrix = fz_rotate(rotate);
 	form->bbox.x1 = ((rotate % 180) != 90) ? rect.x1 - rect.x0 : rect.y1 - rect.y0;
@@ -455,10 +462,10 @@ pdf_create_annot(fz_context *ctx, fz_rect rect, fz_obj *base_obj, fz_buffer *con
 	return annot;
 }
 
-static fz_obj *
+static pdf_obj *
 pdf_dict_from_string(pdf_document *xref, char *string)
 {
-	fz_obj *result;
+	pdf_obj *result;
 	fz_stream *stream = fz_open_memory(xref->ctx, string, strlen(string));
 	fz_try(xref->ctx)
 	{
@@ -479,14 +486,14 @@ pdf_dict_from_string(pdf_document *xref, char *string)
 #define ANNOT_OC_VIEW_ONLY \
 	"<< /OCGs << /Usage << /Print << /PrintState /OFF >> /Export << /ExportState /OFF >> >> >> >>"
 
-static fz_obj *
-pdf_clone_for_view_only(pdf_document *xref, fz_obj *obj)
+static pdf_obj *
+pdf_clone_for_view_only(pdf_document *xref, pdf_obj *obj)
 {
-	fz_obj *ocgs = pdf_dict_from_string(xref, ANNOT_OC_VIEW_ONLY);
+	pdf_obj *ocgs = pdf_dict_from_string(xref, ANNOT_OC_VIEW_ONLY);
 
-	obj = fz_copy_dict(xref->ctx, pdf_resolve_indirect(obj));
-	fz_dict_puts(obj, "OC", ocgs);
-	fz_drop_obj(ocgs);
+	obj = pdf_copy_dict(xref->ctx, pdf_resolve_indirect(obj));
+	pdf_dict_puts(obj, "OC", ocgs);
+	pdf_drop_obj(ocgs);
 
 	return obj;
 }
@@ -509,37 +516,37 @@ retry_larger_buffer:
 }
 
 static void
-pdf_get_annot_color(fz_obj *obj, float rgb[3])
+pdf_get_annot_color(pdf_obj *obj, float rgb[3])
 {
 	int k;
-	obj = fz_dict_gets(obj, "C");
+	obj = pdf_dict_gets(obj, "C");
 	for (k = 0; k < 3; k++)
-		rgb[k] = fz_to_real(fz_array_get(obj, k));
+		rgb[k] = pdf_to_real(pdf_array_get(obj, k));
 }
 
 /* SumatraPDF: partial support for link borders */
 static pdf_annot *
-pdf_create_link_annot(pdf_document *xref, fz_obj *obj)
+pdf_create_link_annot(pdf_document *xref, pdf_obj *obj)
 {
-	fz_obj *border, *dashes;
+	pdf_obj *border, *dashes;
 	fz_buffer *content;
 	fz_rect rect;
 	float rgb[3];
 	int i;
 
-	border = fz_dict_gets(obj, "Border");
-	if (fz_to_real(fz_array_get(border, 2)) <= 0)
+	border = pdf_dict_gets(obj, "Border");
+	if (pdf_to_real(pdf_array_get(border, 2)) <= 0)
 		return NULL;
 
 	pdf_get_annot_color(obj, rgb);
-	dashes = fz_array_get(border, 3);
-	rect = pdf_to_rect(xref->ctx, fz_dict_gets(obj, "Rect"));
+	dashes = pdf_array_get(border, 3);
+	rect = pdf_to_rect(xref->ctx, pdf_dict_gets(obj, "Rect"));
 
 	// TODO: draw rounded rectangles if the first two /Border values are non-zero
 	content = fz_new_buffer(xref->ctx, 128);
-	fz_buffer_printf(xref->ctx, content, "q %.4f w [", fz_to_real(fz_array_get(border, 2)));
-	for (i = 0; i < fz_array_len(dashes); i++)
-		fz_buffer_printf(xref->ctx, content, "%.4f ", fz_to_real(fz_array_get(dashes, i)));
+	fz_buffer_printf(xref->ctx, content, "q %.4f w [", pdf_to_real(pdf_array_get(border, 2)));
+	for (i = 0; i < pdf_array_len(dashes); i++)
+		fz_buffer_printf(xref->ctx, content, "%.4f ", pdf_to_real(pdf_array_get(dashes, i)));
 	fz_buffer_printf(xref->ctx, content, "] 0 d %.4f %.4f %.4f RG 0 0 %.4f %.4f re S Q",
 		rgb[0], rgb[1], rgb[2], rect.x1 - rect.x0, rect.y1 - rect.y0);
 
@@ -620,11 +627,11 @@ pdf_create_link_annot(pdf_document *xref, fz_obj *obj)
 
 /* SumatraPDF: partial support for text icons */
 static pdf_annot *
-pdf_create_text_annot(pdf_document *xref, fz_obj *obj)
+pdf_create_text_annot(pdf_document *xref, pdf_obj *obj)
 {
 	fz_buffer *content = fz_new_buffer(xref->ctx, 512);
-	fz_rect rect = pdf_to_rect(xref->ctx, fz_dict_gets(obj, "Rect"));
-	char *icon_name = fz_to_name(fz_dict_gets(obj, "Name"));
+	fz_rect rect = pdf_to_rect(xref->ctx, pdf_dict_gets(obj, "Rect"));
+	char *icon_name = pdf_to_name(pdf_dict_gets(obj, "Name"));
 	char *content_ap = ANNOT_TEXT_AP_NOTE;
 	float rgb[3];
 
@@ -699,11 +706,11 @@ pdf_create_text_annot(pdf_document *xref, fz_obj *obj)
 
 /* SumatraPDF: partial support for file attachment icons */
 static pdf_annot *
-pdf_create_file_annot(pdf_document *xref, fz_obj *obj)
+pdf_create_file_annot(pdf_document *xref, pdf_obj *obj)
 {
 	fz_buffer *content = fz_new_buffer(xref->ctx, 512);
-	fz_rect rect = pdf_to_rect(xref->ctx, fz_dict_gets(obj, "Rect"));
-	char *icon_name = fz_to_name(fz_dict_gets(obj, "Name"));
+	fz_rect rect = pdf_to_rect(xref->ctx, pdf_dict_gets(obj, "Rect"));
+	char *icon_name = pdf_to_name(pdf_dict_gets(obj, "Name"));
 	char *content_ap = ANNOT_FILE_ATTACHMENT_AP_PUSHPIN;
 	float rgb[3];
 
@@ -731,34 +738,34 @@ pdf_create_file_annot(pdf_document *xref, fz_obj *obj)
 
 /* a: top/left to bottom/right; b: bottom/left to top/right */
 static void
-pdf_get_quadrilaterals(fz_obj *quad_points, int i, fz_rect *a, fz_rect *b)
+pdf_get_quadrilaterals(pdf_obj *quad_points, int i, fz_rect *a, fz_rect *b)
 {
-	a->x0 = fz_to_real(fz_array_get(quad_points, i * 8 + 0));
-	a->y0 = fz_to_real(fz_array_get(quad_points, i * 8 + 1));
-	b->x1 = fz_to_real(fz_array_get(quad_points, i * 8 + 2));
-	b->y1 = fz_to_real(fz_array_get(quad_points, i * 8 + 3));
-	b->x0 = fz_to_real(fz_array_get(quad_points, i * 8 + 4));
-	b->y0 = fz_to_real(fz_array_get(quad_points, i * 8 + 5));
-	a->x1 = fz_to_real(fz_array_get(quad_points, i * 8 + 6));
-	a->y1 = fz_to_real(fz_array_get(quad_points, i * 8 + 7));
+	a->x0 = pdf_to_real(pdf_array_get(quad_points, i * 8 + 0));
+	a->y0 = pdf_to_real(pdf_array_get(quad_points, i * 8 + 1));
+	b->x1 = pdf_to_real(pdf_array_get(quad_points, i * 8 + 2));
+	b->y1 = pdf_to_real(pdf_array_get(quad_points, i * 8 + 3));
+	b->x0 = pdf_to_real(pdf_array_get(quad_points, i * 8 + 4));
+	b->y0 = pdf_to_real(pdf_array_get(quad_points, i * 8 + 5));
+	a->x1 = pdf_to_real(pdf_array_get(quad_points, i * 8 + 6));
+	a->y1 = pdf_to_real(pdf_array_get(quad_points, i * 8 + 7));
 }
 
 #define ANNOT_HIGHLIGHT_AP_RESOURCES \
 	"<< /ExtGState << /GS << /Type/ExtGState /ca 0.8 /AIS false /BM /Multiply >> >> >>"
 
 static pdf_annot *
-pdf_create_highlight_annot(pdf_document *xref, fz_obj *obj)
+pdf_create_highlight_annot(pdf_document *xref, pdf_obj *obj)
 {
 	fz_buffer *content = fz_new_buffer(xref->ctx, 512);
-	fz_rect rect = pdf_to_rect(xref->ctx, fz_dict_gets(obj, "Rect"));
-	fz_obj *quad_points = fz_dict_gets(obj, "QuadPoints");
-	fz_obj *resources = pdf_dict_from_string(xref, ANNOT_HIGHLIGHT_AP_RESOURCES);
+	fz_rect rect = pdf_to_rect(xref->ctx, pdf_dict_gets(obj, "Rect"));
+	pdf_obj *quad_points = pdf_dict_gets(obj, "QuadPoints");
+	pdf_obj *resources = pdf_dict_from_string(xref, ANNOT_HIGHLIGHT_AP_RESOURCES);
 	fz_rect a, b;
 	float rgb[3];
 	float skew;
 	int i;
 
-	for (i = 0; i < fz_array_len(quad_points) / 8; i++)
+	for (i = 0; i < pdf_array_len(quad_points) / 8; i++)
 	{
 		pdf_get_quadrilaterals(quad_points, i, &a, &b);
 		skew = 0.15 * fabs(a.y0 - b.y0);
@@ -769,7 +776,7 @@ pdf_create_highlight_annot(pdf_document *xref, fz_obj *obj)
 
 	fz_buffer_printf(xref->ctx, content, "q /GS gs %.4f %.4f %.4f rg 1 0 0 1 -%.4f -%.4f cm ",
 		rgb[0], rgb[1], rgb[2], rect.x0, rect.y0);
-	for (i = 0; i < fz_array_len(quad_points) / 8; i++)
+	for (i = 0; i < pdf_array_len(quad_points) / 8; i++)
 	{
 		pdf_get_quadrilaterals(quad_points, i, &a, &b);
 		skew = 0.15 * fabs(a.y0 - b.y0);
@@ -778,20 +785,20 @@ pdf_create_highlight_annot(pdf_document *xref, fz_obj *obj)
 	}
 	fz_buffer_printf(xref->ctx, content, "f Q");
 
-	return pdf_create_annot(xref->ctx, rect, fz_keep_obj(obj), content, resources, 1);
+	return pdf_create_annot(xref->ctx, rect, pdf_keep_obj(obj), content, resources, 1);
 }
 
 static pdf_annot *
-pdf_create_markup_annot(pdf_document *xref, fz_obj *obj, char *type)
+pdf_create_markup_annot(pdf_document *xref, pdf_obj *obj, char *type)
 {
 	fz_buffer *content = fz_new_buffer(xref->ctx, 512);
-	fz_rect rect = pdf_to_rect(xref->ctx, fz_dict_gets(obj, "Rect"));
-	fz_obj *quad_points = fz_dict_gets(obj, "QuadPoints");
+	fz_rect rect = pdf_to_rect(xref->ctx, pdf_dict_gets(obj, "Rect"));
+	pdf_obj *quad_points = pdf_dict_gets(obj, "QuadPoints");
 	fz_rect a, b;
 	float rgb[3];
 	int i;
 
-	for (i = 0; i < fz_array_len(quad_points) / 8; i++)
+	for (i = 0; i < pdf_array_len(quad_points) / 8; i++)
 	{
 		pdf_get_quadrilaterals(quad_points, i, &a, &b);
 		b.y0 -= 0.25; a.y1 += 0.25;
@@ -803,7 +810,7 @@ pdf_create_markup_annot(pdf_document *xref, fz_obj *obj, char *type)
 		rgb[0], rgb[1], rgb[2], rect.x0, rect.y0);
 	if (!strcmp(type, "Squiggly"))
 		fz_buffer_printf(xref->ctx, content, "[1 1] d ");
-	for (i = 0; i < fz_array_len(quad_points) / 8; i++)
+	for (i = 0; i < pdf_array_len(quad_points) / 8; i++)
 	{
 		pdf_get_quadrilaterals(quad_points, i, &a, &b);
 		if (!strcmp(type, "StrikeOut"))
@@ -814,21 +821,21 @@ pdf_create_markup_annot(pdf_document *xref, fz_obj *obj, char *type)
 	}
 	fz_buffer_printf(xref->ctx, content, "S Q");
 
-	return pdf_create_annot(xref->ctx, rect, fz_keep_obj(obj), content, NULL, 0);
+	return pdf_create_annot(xref->ctx, rect, pdf_keep_obj(obj), content, NULL, 0);
 }
 
 /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692078 */
-static fz_obj *
-pdf_dict_get_inheritable(pdf_document *xref, fz_obj *obj, char *key)
+static pdf_obj *
+pdf_dict_get_inheritable(pdf_document *xref, pdf_obj *obj, char *key)
 {
 	while (obj)
 	{
-		fz_obj *val = fz_dict_gets(obj, key);
+		pdf_obj *val = pdf_dict_gets(obj, key);
 		if (val)
 			return val;
-		obj = fz_dict_gets(obj, "Parent");
+		obj = pdf_dict_gets(obj, "Parent");
 	}
-	return fz_dict_gets(fz_dict_gets(fz_dict_gets(xref->trailer, "Root"), "AcroForm"), key);
+	return pdf_dict_gets(pdf_dict_gets(pdf_dict_gets(xref->trailer, "Root"), "AcroForm"), key);
 }
 
 static float
@@ -874,28 +881,28 @@ pdf_extract_font_size(pdf_document *xref, char *appearance, char **font_name)
 	return font_size;
 }
 
-static fz_obj *
-pdf_get_ap_stream(pdf_document *xref, fz_obj *obj)
+static pdf_obj *
+pdf_get_ap_stream(pdf_document *xref, pdf_obj *obj)
 {
-	fz_obj *ap = fz_dict_gets(obj, "AP");
-	if (!fz_is_dict(ap))
+	pdf_obj *ap = pdf_dict_gets(obj, "AP");
+	if (!pdf_is_dict(ap))
 		return NULL;
 
-	ap = fz_dict_gets(ap, "N");
-	if (!pdf_is_stream(xref, fz_to_num(ap), fz_to_gen(ap)))
-		ap = fz_dict_get(ap, fz_dict_gets(obj, "AS"));
-	if (!pdf_is_stream(xref, fz_to_num(ap), fz_to_gen(ap)))
+	ap = pdf_dict_gets(ap, "N");
+	if (!pdf_is_stream(xref, pdf_to_num(ap), pdf_to_gen(ap)))
+		ap = pdf_dict_get(ap, pdf_dict_gets(obj, "AS"));
+	if (!pdf_is_stream(xref, pdf_to_num(ap), pdf_to_gen(ap)))
 		return NULL;
 
 	return ap;
 }
 
 static void
-pdf_prepend_ap_background(fz_buffer *content, pdf_document *xref, fz_obj *obj)
+pdf_prepend_ap_background(fz_buffer *content, pdf_document *xref, pdf_obj *obj)
 {
 	pdf_xobject *form;
 	int i;
-	fz_obj *ap = pdf_get_ap_stream(xref, obj);
+	pdf_obj *ap = pdf_get_ap_stream(xref, obj);
 	if (!ap)
 		return;
 	fz_try(xref->ctx)
@@ -934,7 +941,7 @@ pdf_string_to_Tj(fz_context *ctx, fz_buffer *content, unsigned short *ucs2, unsi
 }
 
 static int
-pdf_get_string_width(pdf_document *xref, fz_obj *res, fz_buffer *base, unsigned short *string, unsigned short *end)
+pdf_get_string_width(pdf_document *xref, pdf_obj *res, fz_buffer *base, unsigned short *string, unsigned short *end)
 {
 	fz_bbox bbox;
 	int width, old_len = base->len;
@@ -960,7 +967,7 @@ pdf_get_string_width(pdf_document *xref, fz_obj *res, fz_buffer *base, unsigned 
 #define iswspace(c) ((c) == 32 || 9 <= (c) && (c) <= 13)
 
 static unsigned short *
-pdf_append_line(pdf_document *xref, fz_obj *res, fz_buffer *content, fz_buffer *base_ap,
+pdf_append_line(pdf_document *xref, pdf_obj *res, fz_buffer *content, fz_buffer *base_ap,
 	unsigned short *ucs2, float font_size, int align, float width, int is_multiline, float *x)
 {
 	unsigned short *end, *keep;
@@ -1005,7 +1012,7 @@ pdf_append_line(pdf_document *xref, fz_obj *res, fz_buffer *content, fz_buffer *
 }
 
 static void
-pdf_append_combed_line(pdf_document *xref, fz_obj *res, fz_buffer *content, fz_buffer *base_ap,
+pdf_append_combed_line(pdf_document *xref, pdf_obj *res, fz_buffer *content, fz_buffer *base_ap,
 	unsigned short *ucs2, float font_size, float width, int max_len)
 {
 	float comb_width = max_len > 0 ? width / max_len : 0;
@@ -1023,9 +1030,9 @@ pdf_append_combed_line(pdf_document *xref, fz_obj *res, fz_buffer *content, fz_b
 }
 
 static pdf_annot *
-pdf_update_tx_widget_annot(pdf_document *xref, fz_obj *obj)
+pdf_update_tx_widget_annot(pdf_document *xref, pdf_obj *obj)
 {
-	fz_obj *ap, *res, *value;
+	pdf_obj *ap, *res, *value;
 	fz_rect rect;
 	fz_buffer *content, *base_ap;
 	int flags, align, rotate, is_multiline;
@@ -1033,12 +1040,12 @@ pdf_update_tx_widget_annot(pdf_document *xref, fz_obj *obj)
 	char *font_name;
 	unsigned short *ucs2, *rest;
 
-	if (strcmp(fz_to_name(fz_dict_gets(obj, "Subtype")), "Widget") != 0)
+	if (strcmp(pdf_to_name(pdf_dict_gets(obj, "Subtype")), "Widget") != 0)
 		return NULL;
-	if (!fz_to_bool(pdf_dict_get_inheritable(xref, NULL, "NeedAppearances")) && pdf_get_ap_stream(xref, obj))
+	if (!pdf_to_bool(pdf_dict_get_inheritable(xref, NULL, "NeedAppearances")) && pdf_get_ap_stream(xref, obj))
 		return NULL;
 	value = pdf_dict_get_inheritable(xref, obj, "FT");
-	if (strcmp(fz_to_name(value), "Tx") != 0)
+	if (strcmp(pdf_to_name(value), "Tx") != 0)
 		return NULL;
 
 	ap = pdf_dict_get_inheritable(xref, obj, "DA");
@@ -1047,17 +1054,17 @@ pdf_update_tx_widget_annot(pdf_document *xref, fz_obj *obj)
 		return NULL;
 
 	res = pdf_dict_get_inheritable(xref, obj, "DR");
-	rect = pdf_to_rect(xref->ctx, fz_dict_gets(obj, "Rect"));
-	rotate = fz_to_int(fz_dict_gets(fz_dict_gets(obj, "MK"), "R"));
+	rect = pdf_to_rect(xref->ctx, pdf_dict_gets(obj, "Rect"));
+	rotate = pdf_to_int(pdf_dict_gets(pdf_dict_gets(obj, "MK"), "R"));
 	rect = fz_transform_rect(fz_rotate(rotate), rect);
 
-	flags = fz_to_int(fz_dict_gets(obj, "Ff"));
+	flags = pdf_to_int(pdf_dict_gets(obj, "Ff"));
 	is_multiline = (flags & (1 << 12)) != 0;
 	if ((flags & (1 << 25) /* richtext */))
 		fz_warn(xref->ctx, "missing support for richtext fields");
-	align = fz_to_int(fz_dict_gets(obj, "Q"));
+	align = pdf_to_int(pdf_dict_gets(obj, "Q"));
 
-	font_size = pdf_extract_font_size(xref, fz_to_str_buf(ap), &font_name);
+	font_size = pdf_extract_font_size(xref, pdf_to_str_buf(ap), &font_name);
 	if (!font_size || !font_name)
 		font_size = is_multiline ? 10 /* FIXME */ : floor(rect.y1 - rect.y0 - 2);
 
@@ -1065,22 +1072,22 @@ pdf_update_tx_widget_annot(pdf_document *xref, fz_obj *obj)
 	base_ap = fz_new_buffer(xref->ctx, 256);
 	pdf_prepend_ap_background(content, xref, obj);
 	fz_buffer_printf(xref->ctx, content, "/Tx BMC q 1 1 %.4f %.4f re W n BT %s ",
-		rect.x1 - rect.x0 - 2.0f, rect.y1 - rect.y0 - 2.0f, fz_to_str_buf(ap));
-	fz_buffer_printf(xref->ctx, base_ap, "/Tx BMC q BT %s ", fz_to_str_buf(ap));
+		rect.x1 - rect.x0 - 2.0f, rect.y1 - rect.y0 - 2.0f, pdf_to_str_buf(ap));
+	fz_buffer_printf(xref->ctx, base_ap, "/Tx BMC q BT %s ", pdf_to_str_buf(ap));
 	if (font_name)
 	{
 		pdf_font_desc *fontdesc = NULL;
-		fz_obj *font_obj = fz_dict_gets(fz_dict_gets(res, "Font"), font_name);
+		pdf_obj *font_obj = pdf_dict_gets(pdf_dict_gets(res, "Font"), font_name);
 		if (font_obj)
 			fontdesc = pdf_load_font(xref, res, font_obj);
 		/* TODO: try to reverse the encoding instead of replacing the font */
 		if (fontdesc && fontdesc->cid_to_gid && !fontdesc->cid_to_ucs)
 		{
-			fz_obj *new_font = pdf_dict_from_string(xref, "<< /Type /Font /BaseFont /Helvetica /Subtype /Type1 >>");
+			pdf_obj *new_font = pdf_dict_from_string(xref, "<< /Type /Font /BaseFont /Helvetica /Subtype /Type1 >>");
 			fz_free(xref->ctx, font_name);
 			font_name = fz_strdup(xref->ctx, "Default");
-			fz_dict_puts(fz_dict_gets(res, "Font"), font_name, new_font);
-			fz_drop_obj(new_font);
+			pdf_dict_puts(pdf_dict_gets(res, "Font"), font_name, new_font);
+			pdf_drop_obj(new_font);
 		}
 		pdf_drop_font(xref->ctx, fontdesc);
 		fz_buffer_printf(xref->ctx, content, "/%s %.4f Tf ", font_name, font_size);
@@ -1104,7 +1111,7 @@ pdf_update_tx_widget_annot(pdf_document *xref, fz_obj *obj)
 	rest = ucs2;
 	if ((flags & (1 << 24) /* comb */))
 	{
-		pdf_append_combed_line(xref, res, content, base_ap, ucs2, font_size, rect.x1 - rect.x0, fz_to_int(pdf_dict_get_inheritable(xref, obj, "MaxLen")));
+		pdf_append_combed_line(xref, res, content, base_ap, ucs2, font_size, rect.x1 - rect.x0, pdf_to_int(pdf_dict_get_inheritable(xref, obj, "MaxLen")));
 		rest = L"";
 	}
 	while (*rest)
@@ -1115,7 +1122,7 @@ pdf_update_tx_widget_annot(pdf_document *xref, fz_obj *obj)
 	fz_drop_buffer(xref->ctx, base_ap);
 
 	rect = fz_transform_rect(fz_rotate(-rotate), rect);
-	return pdf_create_annot(xref->ctx, rect, fz_keep_obj(obj), content, res ? fz_keep_obj(res) : NULL, 0);
+	return pdf_create_annot(xref->ctx, rect, pdf_keep_obj(obj), content, res ? pdf_keep_obj(res) : NULL, 0);
 }
 
 /* SumatraPDF: partial support for freetext annotations */
@@ -1124,33 +1131,33 @@ pdf_update_tx_widget_annot(pdf_document *xref, fz_obj *obj)
 	"<< /Font << /Default << /Type /Font /BaseFont /Helvetica /Subtype /Type1 >> >> >>"
 
 static pdf_annot *
-pdf_create_freetext_annot(pdf_document *xref, fz_obj *obj)
+pdf_create_freetext_annot(pdf_document *xref, pdf_obj *obj)
 {
 	fz_buffer *content = fz_new_buffer(xref->ctx, 256);
 	fz_buffer *base_ap = fz_new_buffer(xref->ctx, 256);
-	fz_obj *ap = fz_dict_gets(obj, "DA");
-	fz_obj *value = fz_dict_gets(obj, "Contents");
-	fz_rect rect = pdf_to_rect(xref->ctx, fz_dict_gets(obj, "Rect"));
-	int align = fz_to_int(fz_dict_gets(obj, "Q"));
-	fz_obj *res = pdf_dict_from_string(xref, ANNOT_FREETEXT_AP_RESOURCES);
+	pdf_obj *ap = pdf_dict_gets(obj, "DA");
+	pdf_obj *value = pdf_dict_gets(obj, "Contents");
+	fz_rect rect = pdf_to_rect(xref->ctx, pdf_dict_gets(obj, "Rect"));
+	int align = pdf_to_int(pdf_dict_gets(obj, "Q"));
+	pdf_obj *res = pdf_dict_from_string(xref, ANNOT_FREETEXT_AP_RESOURCES);
 	unsigned short *ucs2, *rest;
 	float x;
 
 	char *font_name = NULL;
-	float font_size = pdf_extract_font_size(xref, fz_to_str_buf(ap), &font_name);
+	float font_size = pdf_extract_font_size(xref, pdf_to_str_buf(ap), &font_name);
 	if (!font_size)
 		font_size = 10;
 	/* TODO: what resource dictionary does this font name refer to? */
 	if (font_name)
 	{
-		fz_obj *font = fz_dict_gets(res, "Font");
-		fz_dict_puts(font, font_name, fz_dict_gets(font, "Default"));
+		pdf_obj *font = pdf_dict_gets(res, "Font");
+		pdf_dict_puts(font, font_name, pdf_dict_gets(font, "Default"));
 		fz_free(xref->ctx, font_name);
 	}
 
 	fz_buffer_printf(xref->ctx, content, "q 1 1 %.4f %.4f re W n BT %s ",
-		rect.x1 - rect.x0 - 2.0f, rect.y1 - rect.y0 - 2.0f, fz_to_str_buf(ap));
-	fz_buffer_printf(xref->ctx, base_ap, "q BT %s ", fz_to_str_buf(ap));
+		rect.x1 - rect.x0 - 2.0f, rect.y1 - rect.y0 - 2.0f, pdf_to_str_buf(ap));
+	fz_buffer_printf(xref->ctx, base_ap, "q BT %s ", pdf_to_str_buf(ap));
 	fz_buffer_printf(xref->ctx, content, "/Default %.4f Tf ", font_size);
 	fz_buffer_printf(xref->ctx, base_ap, "/Default %.4f Tf ", font_size);
 	fz_buffer_printf(xref->ctx, content, "1 0 0 1 2 %.4f Tm ", rect.y1 - rect.y0 - 2);
@@ -1177,13 +1184,13 @@ pdf_create_freetext_annot(pdf_document *xref, fz_obj *obj)
 	fz_buffer_printf(xref->ctx, content, "ET Q");
 	fz_drop_buffer(xref->ctx, base_ap);
 
-	return pdf_create_annot(xref->ctx, rect, fz_keep_obj(obj), content, res, 0);
+	return pdf_create_annot(xref->ctx, rect, pdf_keep_obj(obj), content, res, 0);
 }
 
 static pdf_annot *
-pdf_create_annot_with_appearance(pdf_document *xref, fz_obj *obj)
+pdf_create_annot_with_appearance(pdf_document *xref, pdf_obj *obj)
 {
-	char *type = fz_to_name(fz_dict_gets(obj, "Subtype"));
+	char *type = pdf_to_name(pdf_dict_gets(obj, "Subtype"));
 
 	if (!strcmp(type, "Link"))
 		return pdf_create_link_annot(xref, obj);
@@ -1203,10 +1210,10 @@ pdf_create_annot_with_appearance(pdf_document *xref, fz_obj *obj)
 }
 
 pdf_annot *
-pdf_load_annots(pdf_document *xref, fz_obj *annots)
+pdf_load_annots(pdf_document *xref, pdf_obj *annots)
 {
 	pdf_annot *annot, *head, *tail;
-	fz_obj *obj, *ap, *as, *n, *rect;
+	pdf_obj *obj, *ap, *as, *n, *rect;
 	pdf_xobject *form;
 	int i, len;
 	fz_context *ctx = xref->ctx;
@@ -1214,10 +1221,10 @@ pdf_load_annots(pdf_document *xref, fz_obj *annots)
 	head = tail = NULL;
 	annot = NULL;
 
-	len = fz_array_len(annots);
+	len = pdf_array_len(annots);
 	for (i = 0; i < len; i++)
 	{
-		obj = fz_array_get(annots, i);
+		obj = pdf_array_get(annots, i);
 
 		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692078 */
 		if ((annot = pdf_update_tx_widget_annot(xref, obj)))
@@ -1232,18 +1239,18 @@ pdf_load_annots(pdf_document *xref, fz_obj *annots)
 			continue;
 		}
 
-		rect = fz_dict_gets(obj, "Rect");
-		ap = fz_dict_gets(obj, "AP");
-		as = fz_dict_gets(obj, "AS");
-		if (fz_is_dict(ap))
+		rect = pdf_dict_gets(obj, "Rect");
+		ap = pdf_dict_gets(obj, "AP");
+		as = pdf_dict_gets(obj, "AS");
+		if (pdf_is_dict(ap))
 		{
-			n = fz_dict_gets(ap, "N"); /* normal state */
+			n = pdf_dict_gets(ap, "N"); /* normal state */
 
 			/* lookup current state in sub-dictionary */
-			if (!pdf_is_stream(xref, fz_to_num(n), fz_to_gen(n)))
-				n = fz_dict_get(n, as);
+			if (!pdf_is_stream(xref, pdf_to_num(n), pdf_to_gen(n)))
+				n = pdf_dict_get(n, as);
 
-			if (pdf_is_stream(xref, fz_to_num(n), fz_to_gen(n)))
+			if (pdf_is_stream(xref, pdf_to_num(n), pdf_to_gen(n)))
 			{
 				fz_try(ctx)
 				{
@@ -1256,7 +1263,7 @@ pdf_load_annots(pdf_document *xref, fz_obj *annots)
 				}
 
 				annot = fz_malloc_struct(ctx, pdf_annot);
-				annot->obj = fz_keep_obj(obj);
+				annot->obj = pdf_keep_obj(obj);
 				annot->rect = pdf_to_rect(ctx, rect);
 				annot->ap = form;
 				annot->next = NULL;

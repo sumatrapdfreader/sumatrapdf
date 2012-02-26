@@ -459,17 +459,15 @@ fz_debug_store(fz_context *ctx)
 	for (item = store->head; item; item = next)
 	{
 		next = item->next;
-		next->val->refs++;
+		if (next)
+			next->val->refs++;
 		printf("store[*][refs=%d][size=%d] ", item->val->refs, item->size);
 		fz_unlock(ctx, FZ_LOCK_ALLOC);
-		if (fz_is_indirect(item->key))
-		{
-			printf("(%d %d R) ", fz_to_num(item->key), fz_to_gen(item->key));
-		} else
-			fz_debug_obj(item->key);
+		item->type->debug(item->key);
 		printf(" = %p\n", item->val);
 		fz_lock(ctx, FZ_LOCK_ALLOC);
-		next->val->refs--;
+		if (next)
+			next->val->refs--;
 	}
 	fz_unlock(ctx, FZ_LOCK_ALLOC);
 }

@@ -17,26 +17,26 @@ static void usage(void)
 	exit(1);
 }
 
-static int isimage(fz_obj *obj)
+static int isimage(pdf_obj *obj)
 {
-	fz_obj *type = fz_dict_gets(obj, "Subtype");
-	return fz_is_name(type) && !strcmp(fz_to_name(type), "Image");
+	pdf_obj *type = pdf_dict_gets(obj, "Subtype");
+	return pdf_is_name(type) && !strcmp(pdf_to_name(type), "Image");
 }
 
-static int isfontdesc(fz_obj *obj)
+static int isfontdesc(pdf_obj *obj)
 {
-	fz_obj *type = fz_dict_gets(obj, "Type");
-	return fz_is_name(type) && !strcmp(fz_to_name(type), "FontDescriptor");
+	pdf_obj *type = pdf_dict_gets(obj, "Type");
+	return pdf_is_name(type) && !strcmp(pdf_to_name(type), "FontDescriptor");
 }
 
 static void saveimage(int num)
 {
 	fz_image *image;
 	fz_pixmap *img;
-	fz_obj *ref;
+	pdf_obj *ref;
 	char name[1024];
 
-	ref = fz_new_indirect(ctx, num, 0, doc);
+	ref = pdf_new_indirect(ctx, num, 0, doc);
 
 	/* TODO: detect DCTD and save as jpeg */
 
@@ -67,49 +67,49 @@ static void saveimage(int num)
 	}
 
 	fz_drop_pixmap(ctx, img);
-	fz_drop_obj(ref);
+	pdf_drop_obj(ref);
 }
 
-static void savefont(fz_obj *dict, int num)
+static void savefont(pdf_obj *dict, int num)
 {
 	char name[1024];
 	char *subtype;
 	fz_buffer *buf;
-	fz_obj *stream = NULL;
-	fz_obj *obj;
+	pdf_obj *stream = NULL;
+	pdf_obj *obj;
 	char *ext = "";
 	FILE *f;
 	char *fontname = "font";
 	int n;
 
-	obj = fz_dict_gets(dict, "FontName");
+	obj = pdf_dict_gets(dict, "FontName");
 	if (obj)
-		fontname = fz_to_name(obj);
+		fontname = pdf_to_name(obj);
 
-	obj = fz_dict_gets(dict, "FontFile");
+	obj = pdf_dict_gets(dict, "FontFile");
 	if (obj)
 	{
 		stream = obj;
 		ext = "pfa";
 	}
 
-	obj = fz_dict_gets(dict, "FontFile2");
+	obj = pdf_dict_gets(dict, "FontFile2");
 	if (obj)
 	{
 		stream = obj;
 		ext = "ttf";
 	}
 
-	obj = fz_dict_gets(dict, "FontFile3");
+	obj = pdf_dict_gets(dict, "FontFile3");
 	if (obj)
 	{
 		stream = obj;
 
-		obj = fz_dict_gets(obj, "Subtype");
-		if (obj && !fz_is_name(obj))
+		obj = pdf_dict_gets(obj, "Subtype");
+		if (obj && !pdf_is_name(obj))
 			fz_throw(ctx, "Invalid font descriptor subtype");
 
-		subtype = fz_to_name(obj);
+		subtype = pdf_to_name(obj);
 		if (!strcmp(subtype, "Type1C"))
 			ext = "cff";
 		else if (!strcmp(subtype, "CIDFontType0C"))
@@ -124,7 +124,7 @@ static void savefont(fz_obj *dict, int num)
 		return;
 	}
 
-	buf = pdf_load_stream(doc, fz_to_num(stream), fz_to_gen(stream));
+	buf = pdf_load_stream(doc, pdf_to_num(stream), pdf_to_gen(stream));
 
 	sprintf(name, "%s-%04d.%s", fontname, num, ext);
 	printf("extracting font %s\n", name);
@@ -145,7 +145,7 @@ static void savefont(fz_obj *dict, int num)
 
 static void showobject(int num)
 {
-	fz_obj *obj;
+	pdf_obj *obj;
 
 	if (!doc)
 		fz_throw(ctx, "no file specified");
@@ -157,7 +157,7 @@ static void showobject(int num)
 	else if (isfontdesc(obj))
 		savefont(obj, num);
 
-	fz_drop_obj(obj);
+	pdf_drop_obj(obj);
 }
 
 #ifdef MUPDF_COMBINED_EXE

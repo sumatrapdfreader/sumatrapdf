@@ -2,12 +2,12 @@
 #include "mupdf.h"
 
 static fz_outline *
-pdf_load_outline_imp(pdf_document *xref, fz_obj *dict)
+pdf_load_outline_imp(pdf_document *xref, pdf_obj *dict)
 {
 	fz_context *ctx = xref->ctx;
 	fz_outline *node, **prev, *first;
-	fz_obj *obj;
-	fz_obj *odict = dict;
+	pdf_obj *obj;
+	pdf_obj *odict = dict;
 
 	fz_var(dict);
 
@@ -15,9 +15,9 @@ pdf_load_outline_imp(pdf_document *xref, fz_obj *dict)
 	{
 		first = NULL;
 		prev = &first;
-		while (dict && fz_is_dict(dict))
+		while (dict && pdf_is_dict(dict))
 		{
-			if (fz_dict_mark(dict))
+			if (pdf_dict_mark(dict))
 				break;
 			node = fz_malloc_struct(ctx, fz_outline);
 			node->title = NULL;
@@ -27,34 +27,34 @@ pdf_load_outline_imp(pdf_document *xref, fz_obj *dict)
 			*prev = node;
 			prev = &node->next;
 
-			obj = fz_dict_gets(dict, "Title");
+			obj = pdf_dict_gets(dict, "Title");
 			if (obj)
 				node->title = pdf_to_utf8(ctx, obj);
 
 			/* SumatraPDF: support expansion states */
-			node->is_open = fz_to_int(fz_dict_gets(dict, "Count")) >= 0;
+			node->is_open = pdf_to_int(pdf_dict_gets(dict, "Count")) >= 0;
 
-			if ((obj = fz_dict_gets(dict, "Dest")))
+			if ((obj = pdf_dict_gets(dict, "Dest")))
 				node->dest = pdf_parse_link_dest(xref, obj);
-			else if ((obj = fz_dict_gets(dict, "A")))
+			else if ((obj = pdf_dict_gets(dict, "A")))
 				node->dest = pdf_parse_action(xref, obj);
 
-			obj = fz_dict_gets(dict, "First");
+			obj = pdf_dict_gets(dict, "First");
 			if (obj)
 				node->down = pdf_load_outline_imp(xref, obj);
 
-			dict = fz_dict_gets(dict, "Next");
+			dict = pdf_dict_gets(dict, "Next");
 		}
 	}
 	fz_catch(ctx)
 	{
-		for (dict = odict; dict && fz_dict_marked(dict); dict = fz_dict_gets(dict, "Next"))
-			fz_dict_unmark(dict);
+		for (dict = odict; dict && pdf_dict_marked(dict); dict = pdf_dict_gets(dict, "Next"))
+			pdf_dict_unmark(dict);
 		fz_rethrow(ctx);
 	}
 
-	for (dict = odict; dict && fz_dict_marked(dict); dict = fz_dict_gets(dict, "Next"))
-		fz_dict_unmark(dict);
+	for (dict = odict; dict && pdf_dict_marked(dict); dict = pdf_dict_gets(dict, "Next"))
+		pdf_dict_unmark(dict);
 
 	return first;
 }
@@ -62,11 +62,11 @@ pdf_load_outline_imp(pdf_document *xref, fz_obj *dict)
 fz_outline *
 pdf_load_outline(pdf_document *xref)
 {
-	fz_obj *root, *obj, *first;
+	pdf_obj *root, *obj, *first;
 
-	root = fz_dict_gets(xref->trailer, "Root");
-	obj = fz_dict_gets(root, "Outlines");
-	first = fz_dict_gets(obj, "First");
+	root = pdf_dict_gets(xref->trailer, "Root");
+	obj = pdf_dict_gets(root, "Outlines");
+	first = pdf_dict_gets(obj, "First");
 	if (first)
 		return pdf_load_outline_imp(xref, first);
 

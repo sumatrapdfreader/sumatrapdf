@@ -229,7 +229,7 @@ FITZ_DRAW_OBJS = \
 
 FITZ_OBJS = \
 	$(OFZ)\base_error.obj $(OFZ)\base_geometry.obj $(OFZ)\base_getopt.obj $(OFZ)\base_hash.obj \
-	$(OFZ)\base_memory.obj $(OFZ)\base_string.obj $(OFZ)\base_time.obj $(OFZ)\base_object.obj \
+	$(OFZ)\base_memory.obj $(OFZ)\base_string.obj $(OFZ)\base_time.obj \
 	$(OFZ)\base_context.obj $(OFZ)\crypt_sha2.obj $(OFZ)\dev_gdiplus.obj \
 	$(OFZ)\dev_bbox.obj $(OFZ)\dev_list.obj $(OFZ)\dev_null.obj $(OFZ)\dev_text.obj \
 	$(OFZ)\dev_trace.obj $(OFZ)\crypt_aes.obj $(OFZ)\crypt_arc4.obj $(OFZ)\crypt_md5.obj \
@@ -242,7 +242,7 @@ FITZ_OBJS = \
 	$(OFZ)\stm_buffer.obj $(OFZ)\stm_open.obj $(OFZ)\stm_read.obj
 
 MUPDF_OBJS = \
-	$(OP)\pdf_annot.obj $(OP)\pdf_cmap.obj $(OP)\pdf_store.obj \
+	$(OP)\base_object.obj $(OP)\pdf_annot.obj $(OP)\pdf_cmap.obj $(OP)\pdf_store.obj \
 	$(OP)\pdf_colorspace.obj $(OP)\pdf_crypt.obj $(OP)\pdf_encoding.obj \
 	$(OP)\pdf_font.obj $(OP)\pdf_fontfile.obj $(OP)\pdf_metrics.obj \
 	$(OP)\pdf_function.obj $(OP)\pdf_image.obj $(OP)\pdf_interpret.obj $(OP)\pdf_lex.obj \

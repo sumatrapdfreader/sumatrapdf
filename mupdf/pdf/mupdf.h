@@ -6,6 +6,85 @@
 #endif
 
 /*
+ * Dynamic objects.
+ * The same type of objects as found in PDF and PostScript.
+ * Used by the filters and the mupdf parser.
+ */
+
+typedef struct pdf_obj_s pdf_obj;
+
+pdf_obj *pdf_new_null(fz_context *ctx);
+pdf_obj *pdf_new_bool(fz_context *ctx, int b);
+pdf_obj *pdf_new_int(fz_context *ctx, int i);
+pdf_obj *pdf_new_real(fz_context *ctx, float f);
+pdf_obj *fz_new_name(fz_context *ctx, char *str);
+pdf_obj *pdf_new_string(fz_context *ctx, char *str, int len);
+pdf_obj *pdf_new_indirect(fz_context *ctx, int num, int gen, void *doc);
+
+pdf_obj *pdf_new_array(fz_context *ctx, int initialcap);
+pdf_obj *pdf_new_dict(fz_context *ctx, int initialcap);
+pdf_obj *pdf_copy_array(fz_context *ctx, pdf_obj *array);
+pdf_obj *pdf_copy_dict(fz_context *ctx, pdf_obj *dict);
+
+pdf_obj *pdf_keep_obj(pdf_obj *obj);
+void pdf_drop_obj(pdf_obj *obj);
+
+/* type queries */
+int pdf_is_null(pdf_obj *obj);
+int pdf_is_bool(pdf_obj *obj);
+int pdf_is_int(pdf_obj *obj);
+int pdf_is_real(pdf_obj *obj);
+int pdf_is_name(pdf_obj *obj);
+int pdf_is_string(pdf_obj *obj);
+int pdf_is_array(pdf_obj *obj);
+int pdf_is_dict(pdf_obj *obj);
+int pdf_is_indirect(pdf_obj *obj);
+
+int pdf_objcmp(pdf_obj *a, pdf_obj *b);
+
+/* dict marking and unmarking functions - to avoid infinite recursions */
+int pdf_dict_marked(pdf_obj *obj);
+int pdf_dict_mark(pdf_obj *obj);
+void pdf_dict_unmark(pdf_obj *obj);
+
+/* safe, silent failure, no error reporting on type mismatches */
+int pdf_to_bool(pdf_obj *obj);
+int pdf_to_int(pdf_obj *obj);
+float pdf_to_real(pdf_obj *obj);
+char *pdf_to_name(pdf_obj *obj);
+char *pdf_to_str_buf(pdf_obj *obj);
+pdf_obj *pdf_to_dict(pdf_obj *obj);
+int pdf_to_str_len(pdf_obj *obj);
+int pdf_to_num(pdf_obj *obj);
+int pdf_to_gen(pdf_obj *obj);
+
+int pdf_array_len(pdf_obj *array);
+pdf_obj *pdf_array_get(pdf_obj *array, int i);
+void pdf_array_put(pdf_obj *array, int i, pdf_obj *obj);
+void pdf_array_push(pdf_obj *array, pdf_obj *obj);
+void pdf_array_insert(pdf_obj *array, pdf_obj *obj);
+int pdf_array_contains(pdf_obj *array, pdf_obj *obj);
+
+int pdf_dict_len(pdf_obj *dict);
+pdf_obj *pdf_dict_get_key(pdf_obj *dict, int idx);
+pdf_obj *pdf_dict_get_val(pdf_obj *dict, int idx);
+pdf_obj *pdf_dict_get(pdf_obj *dict, pdf_obj *key);
+pdf_obj *pdf_dict_gets(pdf_obj *dict, char *key);
+pdf_obj *pdf_dict_getsa(pdf_obj *dict, char *key, char *abbrev);
+void fz_dict_put(pdf_obj *dict, pdf_obj *key, pdf_obj *val);
+void pdf_dict_puts(pdf_obj *dict, char *key, pdf_obj *val);
+void pdf_dict_del(pdf_obj *dict, pdf_obj *key);
+void pdf_dict_dels(pdf_obj *dict, char *key);
+void pdf_sort_dict(pdf_obj *dict);
+
+int pdf_fprint_obj(FILE *fp, pdf_obj *obj, int tight);
+void pdf_debug_obj(pdf_obj *obj);
+void pdf_debug_ref(pdf_obj *obj);
+
+void pdf_set_str_len(pdf_obj *obj, int newlen); /* private */
+void *pdf_get_indirect_document(pdf_obj *obj); /* private */
+
+/*
  * PDF Images
  */
 
@@ -128,19 +207,19 @@ struct pdf_lexbuf_large_s
 
 int pdf_lex(fz_stream *f, pdf_lexbuf *lexbuf);
 
-fz_obj *pdf_parse_array(pdf_document *doc, fz_stream *f, pdf_lexbuf *buf);
-fz_obj *pdf_parse_dict(pdf_document *doc, fz_stream *f, pdf_lexbuf *buf);
-fz_obj *pdf_parse_stm_obj(pdf_document *doc, fz_stream *f, pdf_lexbuf *buf);
-fz_obj *pdf_parse_ind_obj(pdf_document *doc, fz_stream *f, pdf_lexbuf *buf, int *num, int *gen, int *stm_ofs);
+pdf_obj *pdf_parse_array(pdf_document *doc, fz_stream *f, pdf_lexbuf *buf);
+pdf_obj *pdf_parse_dict(pdf_document *doc, fz_stream *f, pdf_lexbuf *buf);
+pdf_obj *pdf_parse_stm_obj(pdf_document *doc, fz_stream *f, pdf_lexbuf *buf);
+pdf_obj *pdf_parse_ind_obj(pdf_document *doc, fz_stream *f, pdf_lexbuf *buf, int *num, int *gen, int *stm_ofs);
 
-fz_rect pdf_to_rect(fz_context *ctx, fz_obj *array);
-fz_matrix pdf_to_matrix(fz_context *ctx, fz_obj *array);
-char *pdf_to_utf8(fz_context *ctx, fz_obj *src);
-unsigned short *pdf_to_ucs2(fz_context *ctx, fz_obj *src);
-fz_obj *pdf_to_utf8_name(fz_context *ctx, fz_obj *src);
+fz_rect pdf_to_rect(fz_context *ctx, pdf_obj *array);
+fz_matrix pdf_to_matrix(fz_context *ctx, pdf_obj *array);
+char *pdf_to_utf8(fz_context *ctx, pdf_obj *src);
+unsigned short *pdf_to_ucs2(fz_context *ctx, pdf_obj *src);
+pdf_obj *pdf_to_utf8_name(fz_context *ctx, pdf_obj *src);
 char *pdf_from_ucs2(fz_context *ctx, unsigned short *str);
 /* SumatraPDF: allow to convert to UCS-2 without the need for an fz_context */
-void pdf_to_ucs2_buf(unsigned short *buffer, fz_obj *src);
+void pdf_to_ucs2_buf(unsigned short *buffer, pdf_obj *src);
 
 /*
  * xref and object / stream api
@@ -156,7 +235,7 @@ struct pdf_xref_entry_s
 	int ofs;	/* file offset / objstm object number */
 	int gen;	/* generation / objstm index */
 	int stm_ofs;	/* on-disk stream */
-	fz_obj *obj;	/* stored/cached object */
+	pdf_obj *obj;	/* stored/cached object */
 	int type;	/* 0=unset (f)ree i(n)use (o)bjstm */
 };
 
@@ -171,7 +250,7 @@ struct pdf_ocg_descriptor_s
 {
 	int len;
 	pdf_ocg_entry *ocgs;
-	fz_obj *intent;
+	pdf_obj *intent;
 };
 
 struct pdf_document_s
@@ -185,7 +264,7 @@ struct pdf_document_s
 	int startxref;
 	int file_size;
 	pdf_crypt *crypt;
-	fz_obj *trailer;
+	pdf_obj *trailer;
 	pdf_ocg_descriptor *ocg;
 
 	int len;
@@ -193,30 +272,66 @@ struct pdf_document_s
 
 	int page_len;
 	int page_cap;
-	fz_obj **page_objs;
-	fz_obj **page_refs;
+	pdf_obj **page_objs;
+	pdf_obj **page_refs;
 
 	pdf_lexbuf_large lexbuf;
 };
 
-fz_obj *pdf_resolve_indirect(fz_obj *ref);
+pdf_obj *pdf_resolve_indirect(pdf_obj *ref);
 void pdf_cache_object(pdf_document *doc, int num, int gen);
-fz_obj *pdf_load_object(pdf_document *doc, int num, int gen);
-void pdf_update_object(pdf_document *doc, int num, int gen, fz_obj *newobj);
+pdf_obj *pdf_load_object(pdf_document *doc, int num, int gen);
+void pdf_update_object(pdf_document *doc, int num, int gen, pdf_obj *newobj);
 
 int pdf_is_stream(pdf_document *doc, int num, int gen);
-fz_stream *pdf_open_inline_stream(pdf_document *doc, fz_obj *stmobj, int length, fz_stream *chain, pdf_image_params *params);
+fz_stream *pdf_open_inline_stream(pdf_document *doc, pdf_obj *stmobj, int length, fz_stream *chain, pdf_image_params *params);
 fz_buffer *pdf_load_raw_stream(pdf_document *doc, int num, int gen);
 fz_buffer *pdf_load_stream(pdf_document *doc, int num, int gen);
 fz_buffer *pdf_load_image_stream(pdf_document *doc, int num, int gen, pdf_image_params *params);
 fz_stream *pdf_open_raw_stream(pdf_document *doc, int num, int gen);
 fz_stream *pdf_open_image_stream(pdf_document *doc, int num, int gen, pdf_image_params *params);
 fz_stream *pdf_open_stream(pdf_document *doc, int num, int gen);
-fz_stream *pdf_open_stream_with_offset(pdf_document *doc, int num, int gen, fz_obj *dict, int stm_ofs);
+fz_stream *pdf_open_stream_with_offset(pdf_document *doc, int num, int gen, pdf_obj *dict, int stm_ofs);
 fz_stream *pdf_open_image_decomp_stream(fz_context *ctx, fz_buffer *, pdf_image_params *params, int *factor);
 
-pdf_document *pdf_open_document_with_stream(fz_stream *file);
+/*
+	pdf_open_document: Open a PDF document.
+
+	Open a PDF document by reading its cross reference table, so
+	MuPDF can locate PDF objects inside the file. Upon an broken
+	cross reference table or other parse errors MuPDF will restart
+	parsing the file from the beginning to try to rebuild a
+	(hopefully correct) cross reference table to allow further
+	processing of the file.
+
+	The returned pdf_document should be used when calling most
+	other PDF functions. Note that it wraps the context, so those
+	functions implicitly get access to the global state in
+	context.
+
+	filename: a path to a file as it would be given to open(2).
+*/
 pdf_document *pdf_open_document(fz_context *ctx, const char *filename);
+
+/*
+	pdf_open_document_with_stream: Opens a PDF document.
+
+	Same as pdf_open_document, but takes a stream instead of a
+	filename to locate the PDF document to open. Increments the
+	reference count of the stream. See fz_open_file,
+	fz_open_file_w or fz_open_fd for opening a stream, and
+	fz_close for closing an open stream.
+*/
+pdf_document *pdf_open_document_with_stream(fz_stream *file);
+
+/*
+	pdf_close_document: Closes and frees an opened PDF document.
+
+	The resource store in the context associated with pdf_document
+	is emptied.
+
+	Does not throw exceptions.
+*/
 void pdf_close_document(pdf_document *doc);
 
 /* private */
@@ -242,10 +357,10 @@ enum
 	PDF_DEFAULT_PERM_FLAGS = 0xfffc
 };
 
-pdf_crypt *pdf_new_crypt(fz_context *ctx, fz_obj *enc, fz_obj *id);
+pdf_crypt *pdf_new_crypt(fz_context *ctx, pdf_obj *enc, pdf_obj *id);
 void pdf_free_crypt(fz_context *ctx, pdf_crypt *crypt);
 
-void pdf_crypt_obj(fz_context *ctx, pdf_crypt *crypt, fz_obj *obj, int num, int gen);
+void pdf_crypt_obj(fz_context *ctx, pdf_crypt *crypt, pdf_obj *obj, int num, int gen);
 fz_stream *pdf_open_crypt(fz_stream *chain, pdf_crypt *crypt, int num, int gen);
 fz_stream *pdf_open_crypt_with_filter(fz_stream *chain, pdf_crypt *crypt, char *name, int num, int gen);
 
@@ -266,20 +381,20 @@ void pdf_debug_crypt(pdf_crypt *crypt);
 
 typedef struct pdf_function_s pdf_function;
 
-pdf_function *pdf_load_function(pdf_document *doc, fz_obj *ref);
+pdf_function *pdf_load_function(pdf_document *doc, pdf_obj *ref);
 void pdf_eval_function(fz_context *ctx, pdf_function *func, float *in, int inlen, float *out, int outlen);
 pdf_function *pdf_keep_function(fz_context *ctx, pdf_function *func);
 void pdf_drop_function(fz_context *ctx, pdf_function *func);
 unsigned int pdf_function_size(pdf_function *func);
 
-fz_colorspace *pdf_load_colorspace(pdf_document *doc, fz_obj *obj);
+fz_colorspace *pdf_load_colorspace(pdf_document *doc, pdf_obj *obj);
 fz_pixmap *pdf_expand_indexed_pixmap(fz_context *ctx, fz_pixmap *src);
 
-fz_shade *pdf_load_shading(pdf_document *doc, fz_obj *obj);
+fz_shade *pdf_load_shading(pdf_document *doc, pdf_obj *obj);
 
-fz_image *pdf_load_inline_image(pdf_document *doc, fz_obj *rdb, fz_obj *dict, fz_stream *file);
-fz_image *pdf_load_image(pdf_document *doc, fz_obj *obj);
-int pdf_is_jpx_image(fz_context *ctx, fz_obj *dict);
+fz_image *pdf_load_inline_image(pdf_document *doc, pdf_obj *rdb, pdf_obj *dict, fz_stream *file);
+fz_image *pdf_load_image(pdf_document *doc, pdf_obj *obj);
+int pdf_is_jpx_image(fz_context *ctx, pdf_obj *dict);
 
 /*
  * Pattern
@@ -295,11 +410,11 @@ struct pdf_pattern_s
 	float ystep;
 	fz_matrix matrix;
 	fz_rect bbox;
-	fz_obj *resources;
+	pdf_obj *resources;
 	fz_buffer *contents;
 };
 
-pdf_pattern *pdf_load_pattern(pdf_document *doc, fz_obj *obj);
+pdf_pattern *pdf_load_pattern(pdf_document *doc, pdf_obj *obj);
 pdf_pattern *pdf_keep_pattern(fz_context *ctx, pdf_pattern *pat);
 void pdf_drop_pattern(fz_context *ctx, pdf_pattern *pat);
 
@@ -318,16 +433,16 @@ struct pdf_xobject_s
 	int knockout;
 	int transparency;
 	fz_colorspace *colorspace;
-	fz_obj *resources;
+	pdf_obj *resources;
 	fz_buffer *contents;
-	fz_obj *me;
+	pdf_obj *me;
 };
 
-pdf_xobject *pdf_load_xobject(pdf_document *doc, fz_obj *obj);
+pdf_xobject *pdf_load_xobject(pdf_document *doc, pdf_obj *obj);
 pdf_xobject *pdf_keep_xobject(fz_context *ctx, pdf_xobject *xobj);
 void pdf_drop_xobject(fz_context *ctx, pdf_xobject *xobj);
 /* SumatraPDF: allow to synthesize XObjects (cf. pdf_create_annot) */
-pdf_xobject *pdf_create_xobject(fz_context *ctx, fz_obj *dict);
+pdf_xobject *pdf_create_xobject(fz_context *ctx, pdf_obj *dict);
 
 /*
  * CMap
@@ -398,7 +513,7 @@ pdf_cmap *pdf_new_identity_cmap(fz_context *ctx, int wmode, int bytes);
 pdf_cmap *pdf_load_cmap(fz_context *ctx, fz_stream *file);
 pdf_cmap *pdf_load_system_cmap(fz_context *ctx, char *name);
 pdf_cmap *pdf_load_builtin_cmap(fz_context *ctx, char *name);
-pdf_cmap *pdf_load_embedded_cmap(pdf_document *doc, fz_obj *ref);
+pdf_cmap *pdf_load_embedded_cmap(pdf_document *doc, pdf_obj *ref);
 
 /*
  * Font
@@ -503,7 +618,7 @@ void pdf_end_vmtx(fz_context *ctx, pdf_font_desc *font);
 pdf_hmtx pdf_get_hmtx(fz_context *ctx, pdf_font_desc *font, int cid);
 pdf_vmtx pdf_get_vmtx(fz_context *ctx, pdf_font_desc *font, int cid);
 
-void pdf_load_to_unicode(pdf_document *doc, pdf_font_desc *font, char **strings, char *collection, fz_obj *cmapstm);
+void pdf_load_to_unicode(pdf_document *doc, pdf_font_desc *font, char **strings, char *collection, pdf_obj *cmapstm);
 
 int pdf_font_cid_to_gid(fz_context *ctx, pdf_font_desc *fontdesc, int cid);
 
@@ -515,8 +630,8 @@ unsigned char *pdf_find_substitute_cjk_font(int ros, int serif, unsigned int *le
 void pdf_load_windows_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontname);
 void pdf_load_similar_cjk_font(fz_context *ctx, pdf_font_desc *fontdesc, int ros, int serif);
 
-pdf_font_desc *pdf_load_type3_font(pdf_document *doc, fz_obj *rdb, fz_obj *obj);
-pdf_font_desc *pdf_load_font(pdf_document *doc, fz_obj *rdb, fz_obj *obj);
+pdf_font_desc *pdf_load_type3_font(pdf_document *doc, pdf_obj *rdb, pdf_obj *obj);
+pdf_font_desc *pdf_load_font(pdf_document *doc, pdf_obj *rdb, pdf_obj *obj);
 
 pdf_font_desc *pdf_new_font_desc(fz_context *ctx);
 pdf_font_desc *pdf_keep_font(fz_context *ctx, pdf_font_desc *fontdesc);
@@ -536,26 +651,26 @@ typedef struct pdf_annot_s pdf_annot;
 
 struct pdf_annot_s
 {
-	fz_obj *obj;
+	pdf_obj *obj;
 	fz_rect rect;
 	pdf_xobject *ap;
 	fz_matrix matrix;
 	pdf_annot *next;
 };
 
-fz_link_dest pdf_parse_link_dest(pdf_document *doc, fz_obj *dest);
+fz_link_dest pdf_parse_link_dest(pdf_document *doc, pdf_obj *dest);
 /* SumatraPDF: parse full file specifications */
-char *pdf_file_spec_to_str(fz_context *ctx, fz_obj *file_spec);
-fz_link_dest pdf_parse_action(pdf_document *doc, fz_obj *action);
-fz_obj *pdf_lookup_dest(pdf_document *doc, fz_obj *needle);
-fz_obj *pdf_lookup_name(pdf_document *doc, char *which, fz_obj *needle);
-fz_obj *pdf_load_name_tree(pdf_document *doc, char *which);
+char *pdf_file_spec_to_str(fz_context *ctx, pdf_obj *file_spec);
+fz_link_dest pdf_parse_action(pdf_document *doc, pdf_obj *action);
+pdf_obj *pdf_lookup_dest(pdf_document *doc, pdf_obj *needle);
+pdf_obj *pdf_lookup_name(pdf_document *doc, char *which, pdf_obj *needle);
+pdf_obj *pdf_load_name_tree(pdf_document *doc, char *which);
 
 fz_outline *pdf_load_outline(pdf_document *doc);
 
-fz_link *pdf_load_link_annots(pdf_document *, fz_obj *annots, fz_matrix page_ctm);
+fz_link *pdf_load_link_annots(pdf_document *, pdf_obj *annots, fz_matrix page_ctm);
 
-pdf_annot *pdf_load_annots(pdf_document *, fz_obj *annots);
+pdf_annot *pdf_load_annots(pdf_document *, pdf_obj *annots);
 void pdf_free_annot(fz_context *ctx, pdf_annot *link);
 
 /*
@@ -570,34 +685,73 @@ struct pdf_page_s
 	fz_rect mediabox;
 	int rotate;
 	int transparency;
-	fz_obj *resources;
+	pdf_obj *resources;
 	fz_buffer *contents;
 	fz_link *links;
 	pdf_annot *annots;
 };
 
-int pdf_find_page_number(pdf_document *doc, fz_obj *pageobj);
+int pdf_find_page_number(pdf_document *doc, pdf_obj *pageobj);
 int pdf_count_pages(pdf_document *doc);
 
+/*
+	pdf_load_page: Load a page and its resources.
+
+	Locates the page in the PDF document and loads the page and its
+	resources. After pdf_load_page is it possible to retrieve the size
+	of the page using pdf_bound_page, or to render the page using
+	pdf_run_page_*.
+
+	number: page number, where 0 is the first page of the document.
+*/
 pdf_page *pdf_load_page(pdf_document *doc, int number);
+
 fz_link *pdf_load_links(pdf_document *doc, pdf_page *page);
+
+/*
+	pdf_bound_page: Determine the size of a page.
+
+	Determine the page size in user space units, taking page rotation
+	into account. The page size is taken to be the crop box if it
+	exists (visible area after cropping), otherwise the media box will
+	be used (possibly including printing marks).
+
+	Does not throw exceptions.
+*/
 fz_rect pdf_bound_page(pdf_document *doc, pdf_page *page);
+
+/*
+	pdf_free_page: Frees a page and its resources.
+
+	Does not throw exceptions.
+*/
 void pdf_free_page(pdf_document *doc, pdf_page *page);
 
 /*
  * Content stream parsing
  */
 
-void pdf_run_page_with_usage(pdf_document *doc, pdf_page *page, fz_device *dev, fz_matrix ctm, char *event, fz_cookie *cookie);
+/*
+	pdf_run_page: Interpret a loaded page and render it on a device.
+
+	page: A page loaded by pdf_load_page.
+
+	dev: Device used for rendering, obtained from fz_new_*_device.
+
+	ctm: A transformation matrix applied to the objects on the page,
+	e.g. to scale or rotate the page contents as desired.
+*/
 void pdf_run_page(pdf_document *doc, pdf_page *page, fz_device *dev, fz_matrix ctm, fz_cookie *cookie);
-void pdf_run_glyph(pdf_document *doc, fz_obj *resources, fz_buffer *contents, fz_device *dev, fz_matrix ctm, void *gstate);
+
+void pdf_run_page_with_usage(pdf_document *doc, pdf_page *page, fz_device *dev, fz_matrix ctm, char *event, fz_cookie *cookie);
+void pdf_run_glyph(pdf_document *doc, pdf_obj *resources, fz_buffer *contents, fz_device *dev, fz_matrix ctm, void *gstate);
 
 /*
  * PDF interface to store
  */
 
-void pdf_store_item(fz_context *ctx, fz_obj *key, void *val, unsigned int itemsize);
-void *pdf_find_item(fz_context *ctx, fz_store_free_fn *free, fz_obj *key);
-void pdf_remove_item(fz_context *ctx, fz_store_free_fn *free, fz_obj *key);
+void pdf_store_item(fz_context *ctx, pdf_obj *key, void *val, unsigned int itemsize);
+void *pdf_find_item(fz_context *ctx, fz_store_free_fn *free, pdf_obj *key);
+void pdf_remove_item(fz_context *ctx, fz_store_free_fn *free, pdf_obj *key);
 
 #endif

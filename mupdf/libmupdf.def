@@ -18,6 +18,8 @@ EXPORTS
 	fz_free_context
 	fz_new_aa_context
 	fz_free_aa_context
+	fz_synchronize_begin
+	fz_synchronize_end
 	fz_malloc
 	fz_calloc
 	fz_malloc_array
@@ -58,10 +60,10 @@ EXPORTS
 	fz_matrix_expansion
 	fz_matrix_max_expansion
 	fz_round_rect
-	fz_intersect_bbox
 	fz_intersect_rect
-	fz_union_bbox
+	fz_intersect_bbox
 	fz_union_rect
+	fz_union_bbox
 	fz_transform_point
 	fz_transform_vector
 	fz_transform_rect
@@ -78,63 +80,6 @@ EXPORTS
 	aes_setkey_enc
 	aes_setkey_dec
 	aes_crypt_cbc
-	fz_new_null
-	fz_new_bool
-	fz_new_int
-	fz_new_real
-	fz_new_name
-	fz_new_string
-	fz_new_indirect
-	fz_new_array
-	fz_new_dict
-	fz_copy_array
-	fz_copy_dict
-	fz_keep_obj
-	fz_drop_obj
-	fz_is_null
-	fz_is_bool
-	fz_is_int
-	fz_is_real
-	fz_is_name
-	fz_is_string
-	fz_is_array
-	fz_is_dict
-	fz_is_indirect
-	fz_objcmp
-	fz_dict_marked
-	fz_dict_mark
-	fz_dict_unmark
-	fz_to_bool
-	fz_to_int
-	fz_to_real
-	fz_to_name
-	fz_to_str_buf
-	fz_to_dict
-	fz_to_str_len
-	fz_to_num
-	fz_to_gen
-	fz_array_len
-	fz_array_get
-	fz_array_put
-	fz_array_push
-	fz_array_insert
-	fz_array_contains
-	fz_dict_len
-	fz_dict_get_key
-	fz_dict_get_val
-	fz_dict_get
-	fz_dict_gets
-	fz_dict_getsa
-	fz_dict_put
-	fz_dict_puts
-	fz_dict_del
-	fz_dict_dels
-	fz_sort_dict
-	fz_fprint_obj
-	fz_debug_obj
-	fz_debug_ref
-	fz_set_str_len
-	fz_get_indirect_document
 	fz_new_buffer
 	fz_keep_buffer
 	fz_drop_buffer
@@ -152,9 +97,9 @@ EXPORTS
 	fz_remove_item
 	fz_empty_store
 	fz_store_scavenge
-	fz_open_fd
 	fz_open_file
 	fz_open_file_w
+	fz_open_fd
 	fz_open_buffer
 	fz_open_memory
 	fz_close
@@ -323,9 +268,9 @@ EXPORTS
 	fz_debug_text_span_xml
 	fz_new_text_device
 	fz_new_display_list
-	fz_free_display_list
 	fz_new_list_device
 	fz_run_display_list
+	fz_free_display_list
 	fz_decode_tile
 	fz_decode_indexed_tile
 	fz_unpack_tile
@@ -358,11 +303,66 @@ EXPORTS
 	fz_bound_page
 	fz_run_page
 	fz_free_page
-	fz_synchronize_begin
-	fz_synchronize_end
 
 ; MuPDF exports
 
+	pdf_new_null
+	pdf_new_bool
+	pdf_new_int
+	pdf_new_real
+	fz_new_name
+	pdf_new_string
+	pdf_new_indirect
+	pdf_new_array
+	pdf_new_dict
+	pdf_copy_array
+	pdf_copy_dict
+	pdf_keep_obj
+	pdf_drop_obj
+	pdf_is_null
+	pdf_is_bool
+	pdf_is_int
+	pdf_is_real
+	pdf_is_name
+	pdf_is_string
+	pdf_is_array
+	pdf_is_dict
+	pdf_is_indirect
+	pdf_objcmp
+	pdf_dict_marked
+	pdf_dict_mark
+	pdf_dict_unmark
+	pdf_to_bool
+	pdf_to_int
+	pdf_to_real
+	pdf_to_name
+	pdf_to_str_buf
+	pdf_to_dict
+	pdf_to_str_len
+	pdf_to_num
+	pdf_to_gen
+	pdf_array_len
+	pdf_array_get
+	pdf_array_put
+	pdf_array_push
+	pdf_array_insert
+	pdf_array_contains
+	pdf_dict_len
+	pdf_dict_get_key
+	pdf_dict_get_val
+	pdf_dict_get
+	pdf_dict_gets
+	pdf_dict_getsa
+	fz_dict_put
+	pdf_dict_puts
+	pdf_dict_del
+	pdf_dict_dels
+	pdf_sort_dict
+	pdf_fprint_obj
+	pdf_debug_obj
+	pdf_debug_ref
+	pdf_set_str_len
+	pdf_get_indirect_document
 	pdf_lex
 	pdf_parse_array
 	pdf_parse_dict
@@ -389,8 +389,8 @@ EXPORTS
 	pdf_open_stream
 	pdf_open_stream_with_offset
 	pdf_open_image_decomp_stream
-	pdf_open_document_with_stream
 	pdf_open_document
+	pdf_open_document_with_stream
 	pdf_close_document
 	pdf_repair_xref
 	pdf_repair_obj_stms
@@ -491,8 +491,8 @@ EXPORTS
 	pdf_load_links
 	pdf_bound_page
 	pdf_free_page
-	pdf_run_page_with_usage
 	pdf_run_page
+	pdf_run_page_with_usage
 	pdf_run_glyph
 	pdf_store_item
 	pdf_find_item
@@ -564,6 +564,7 @@ EXPORTS
 	xps_get_point
 	xps_extract_anchor_info
 	xps_extract_doc_props
+	xps_free_doc_prop
 
 ; MuCBZ exports
 

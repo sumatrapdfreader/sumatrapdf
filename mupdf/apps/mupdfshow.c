@@ -25,7 +25,7 @@ static void showtrailer(void)
 	if (!doc)
 		fz_throw(ctx, "no file specified");
 	printf("trailer\n");
-	fz_debug_obj(doc->trailer);
+	pdf_debug_obj(doc->trailer);
 	printf("\n");
 }
 
@@ -39,7 +39,7 @@ static void showxref(void)
 
 static void showpagetree(void)
 {
-	fz_obj *ref;
+	pdf_obj *ref;
 	int count;
 	int i;
 
@@ -50,7 +50,7 @@ static void showpagetree(void)
 	for (i = 0; i < count; i++)
 	{
 		ref = doc->page_refs[i];
-		printf("page %d = %d %d R\n", i + 1, fz_to_num(ref), fz_to_gen(ref));
+		printf("page %d = %d %d R\n", i + 1, pdf_to_num(ref), pdf_to_gen(ref));
 	}
 	printf("\n");
 }
@@ -107,7 +107,7 @@ static void showstream(int num, int gen)
 
 static void showobject(int num, int gen)
 {
-	fz_obj *obj;
+	pdf_obj *obj;
 
 	if (!doc)
 		fz_throw(ctx, "no file specified");
@@ -123,7 +123,7 @@ static void showobject(int num, int gen)
 		else
 		{
 			printf("%d %d obj\n", num, gen);
-			fz_debug_obj(obj);
+			pdf_debug_obj(obj);
 			printf("stream\n");
 			showstream(num, gen);
 			printf("endstream\n");
@@ -133,16 +133,16 @@ static void showobject(int num, int gen)
 	else
 	{
 		printf("%d %d obj\n", num, gen);
-		fz_debug_obj(obj);
+		pdf_debug_obj(obj);
 		printf("endobj\n\n");
 	}
 
-	fz_drop_obj(obj);
+	pdf_drop_obj(obj);
 }
 
 static void showgrep(char *filename)
 {
-	fz_obj *obj;
+	pdf_obj *obj;
 	int i;
 
 	for (i = 0; i < doc->len; i++)
@@ -159,17 +159,17 @@ static void showgrep(char *filename)
 				continue;
 			}
 
-			fz_sort_dict(obj);
+			pdf_sort_dict(obj);
 
 			printf("%s:%d: ", filename, i);
-			fz_fprint_obj(stdout, obj, 1);
+			pdf_fprint_obj(stdout, obj, 1);
 
-			fz_drop_obj(obj);
+			pdf_drop_obj(obj);
 		}
 	}
 
 	printf("%s:trailer: ", filename);
-	fz_fprint_obj(stdout, doc->trailer, 1);
+	pdf_fprint_obj(stdout, doc->trailer, 1);
 }
 
 #ifdef MUPDF_COMBINED_EXE

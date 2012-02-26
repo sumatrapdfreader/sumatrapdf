@@ -244,26 +244,30 @@ xps_open_and_parse(xps_document *doc, char *path)
 
 static inline int iswhite(c) { return c == ' ' || c == '\t' || c == '\n' || c == '\r'; }
 
-static void
-xps_hacky_get_prop(fz_context *ctx, char *data, fz_obj *dict, char *name, char *tag_name)
+static xps_doc_prop *
+xps_hacky_get_prop(fz_context *ctx, char *data, char *name, char *tag_name, xps_doc_prop *prev)
 {
 	char *start, *end;
-	fz_obj *value;
+	xps_doc_prop *prop;
 
 	start = strstr(data, tag_name);
 	if (!start || start == data || start[-1] != '<')
-		return;
+		return prev;
 	end = strstr(start + 1, tag_name);
 	start = strchr(start, '>');
 	if (!start || !end || start >= end || end[-2] != '<' || end[-1] != '/')
-		return;
+		return prev;
 
 	for (start++; iswhite(*start); start++);
 	for (end -= 3; iswhite(*end) && end > start; end--);
 
-	value = fz_new_string(ctx, start, end - start + 1);
-	fz_dict_puts(dict, name, value);
-	fz_drop_obj(value);
+	prop = fz_malloc_struct(ctx, xps_doc_prop);
+	prop->name = fz_strdup(ctx, name);
+	prop->value = fz_malloc(ctx, end - start + 2);
+	fz_strlcpy(prop->value, start, end - start + 2);
+	prop->next = prev;
+
+	return prop;
 }
 
 #define REL_CORE_PROPERTIES \
@@ -291,28 +295,26 @@ xps_find_doc_props_path(xps_document *doc, char path[1024])
 	xml_free_element(doc->ctx, root);
 }
 
-fz_obj *xps_extract_doc_props(xps_document *doc)
+xps_doc_prop *xps_extract_doc_props(xps_document *doc)
 {
 	char path[1024];
 	xps_part *part;
-	fz_obj *dict = NULL;
+	xps_doc_prop *prop = NULL;
 	fz_var(part);
-	fz_var(dict);
+	fz_var(prop);
 
 	xps_find_doc_props_path(doc, path);
 	if (!*path)
 		return NULL;
-
 	part = xps_read_part(doc, path);
 
 	fz_try(doc->ctx)
 	{
-		dict = fz_new_dict(doc->ctx, 8);
-		xps_hacky_get_prop(doc->ctx, part->data, dict, "Title", "dc:title");
-		xps_hacky_get_prop(doc->ctx, part->data, dict, "Subject", "dc:subject");
-		xps_hacky_get_prop(doc->ctx, part->data, dict, "Author", "dc:creator");
-		xps_hacky_get_prop(doc->ctx, part->data, dict, "CreationDate", "dcterms:created");
-		xps_hacky_get_prop(doc->ctx, part->data, dict, "ModDate", "dcterms:modified");
+		prop = xps_hacky_get_prop(doc->ctx, part->data, "Title", "dc:title", prop);
+		prop = xps_hacky_get_prop(doc->ctx, part->data, "Subject", "dc:subject", prop);
+		prop = xps_hacky_get_prop(doc->ctx, part->data, "Author", "dc:creator", prop);
+		prop = xps_hacky_get_prop(doc->ctx, part->data, "CreationDate", "dcterms:created", prop);
+		prop = xps_hacky_get_prop(doc->ctx, part->data, "ModDate", "dcterms:modified", prop);
 	}
 	fz_always(doc->ctx)
 	{
@@ -320,9 +322,22 @@ fz_obj *xps_extract_doc_props(xps_document *doc)
 	}
 	fz_catch(doc->ctx)
 	{
-		fz_drop_obj(dict);
+		xps_free_doc_prop(doc->ctx, prop);
 		fz_rethrow(doc->ctx);
 	}
 
-	return dict;
+	return prop;
+}
+
+void
+xps_free_doc_prop(fz_context *ctx, xps_doc_prop *prop)
+{
+	while (prop)
+	{
+		xps_doc_prop *next = prop->next;
+		fz_free(ctx, prop->name);
+		fz_free(ctx, prop->value);
+		fz_free(ctx, prop);
+		prop = next;
+	}
 }

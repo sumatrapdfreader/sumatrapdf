@@ -1,13 +1,5 @@
 #include "fitz.h"
 
-static fz_obj *
-fz_resolve_indirect_null(fz_obj *ref)
-{
-	return ref;
-}
-
-fz_obj *(*fz_resolve_indirect)(fz_obj*) = fz_resolve_indirect_null;
-
 void
 fz_free_context(fz_context *ctx)
 {

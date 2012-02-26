@@ -16,13 +16,13 @@ pdf_cmap_size(fz_context *ctx, pdf_cmap *cmap)
  * Load CMap stream in PDF file
  */
 pdf_cmap *
-pdf_load_embedded_cmap(pdf_document *xref, fz_obj *stmobj)
+pdf_load_embedded_cmap(pdf_document *xref, pdf_obj *stmobj)
 {
 	fz_stream *file = NULL;
 	pdf_cmap *cmap = NULL;
 	pdf_cmap *usecmap;
-	fz_obj *wmode;
-	fz_obj *obj = NULL;
+	pdf_obj *wmode;
+	pdf_obj *obj = NULL;
 	fz_context *ctx = xref->ctx;
 	int phase = 0;
 
@@ -38,24 +38,24 @@ pdf_load_embedded_cmap(pdf_document *xref, fz_obj *stmobj)
 
 	fz_try(ctx)
 	{
-		file = pdf_open_stream(xref, fz_to_num(stmobj), fz_to_gen(stmobj));
+		file = pdf_open_stream(xref, pdf_to_num(stmobj), pdf_to_gen(stmobj));
 		phase = 1;
 		cmap = pdf_load_cmap(ctx, file);
 		phase = 2;
 		fz_close(file);
 		file = NULL;
 
-		wmode = fz_dict_gets(stmobj, "WMode");
-		if (fz_is_int(wmode))
-			pdf_set_wmode(ctx, cmap, fz_to_int(wmode));
-		obj = fz_dict_gets(stmobj, "UseCMap");
-		if (fz_is_name(obj))
+		wmode = pdf_dict_gets(stmobj, "WMode");
+		if (pdf_is_int(wmode))
+			pdf_set_wmode(ctx, cmap, pdf_to_int(wmode));
+		obj = pdf_dict_gets(stmobj, "UseCMap");
+		if (pdf_is_name(obj))
 		{
-			usecmap = pdf_load_system_cmap(ctx, fz_to_name(obj));
+			usecmap = pdf_load_system_cmap(ctx, pdf_to_name(obj));
 			pdf_set_usecmap(ctx, cmap, usecmap);
 			pdf_drop_cmap(ctx, usecmap);
 		}
-		else if (fz_is_indirect(obj))
+		else if (pdf_is_indirect(obj))
 		{
 			phase = 3;
 			usecmap = pdf_load_embedded_cmap(xref, obj);
@@ -72,13 +72,13 @@ pdf_load_embedded_cmap(pdf_document *xref, fz_obj *stmobj)
 		if (cmap)
 			pdf_drop_cmap(ctx, cmap);
 		if (phase < 1)
-			fz_throw(ctx, "cannot open cmap stream (%d %d R)", fz_to_num(stmobj), fz_to_gen(stmobj));
+			fz_throw(ctx, "cannot open cmap stream (%d %d R)", pdf_to_num(stmobj), pdf_to_gen(stmobj));
 		else if (phase < 2)
-			fz_throw(ctx, "cannot parse cmap stream (%d %d R)", fz_to_num(stmobj), fz_to_gen(stmobj));
+			fz_throw(ctx, "cannot parse cmap stream (%d %d R)", pdf_to_num(stmobj), pdf_to_gen(stmobj));
 		else if (phase < 3)
-			fz_throw(ctx, "cannot load system usecmap '%s'", fz_to_name(obj));
+			fz_throw(ctx, "cannot load system usecmap '%s'", pdf_to_name(obj));
 		else
-			fz_throw(ctx, "cannot load embedded usecmap (%d %d R)", fz_to_num(obj), fz_to_gen(obj));
+			fz_throw(ctx, "cannot load embedded usecmap (%d %d R)", pdf_to_num(obj), pdf_to_gen(obj));
 	}
 
 	return cmap;

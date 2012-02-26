@@ -20,24 +20,24 @@ pdf_is_stream(pdf_document *xref, int num, int gen)
  * Scan stream dictionary for an explicit /Crypt filter
  */
 static int
-pdf_stream_has_crypt(fz_context *ctx, fz_obj *stm)
+pdf_stream_has_crypt(fz_context *ctx, pdf_obj *stm)
 {
-	fz_obj *filters;
-	fz_obj *obj;
+	pdf_obj *filters;
+	pdf_obj *obj;
 	int i;
 
-	filters = fz_dict_getsa(stm, "Filter", "F");
+	filters = pdf_dict_getsa(stm, "Filter", "F");
 	if (filters)
 	{
-		if (!strcmp(fz_to_name(filters), "Crypt"))
+		if (!strcmp(pdf_to_name(filters), "Crypt"))
 			return 1;
-		if (fz_is_array(filters))
+		if (pdf_is_array(filters))
 		{
-			int n = fz_array_len(filters);
+			int n = pdf_array_len(filters);
 			for (i = 0; i < n; i++)
 			{
-				obj = fz_array_get(filters, i);
-				if (!strcmp(fz_to_name(obj), "Crypt"))
+				obj = pdf_array_get(filters, i);
+				if (!strcmp(pdf_to_name(obj), "Crypt"))
 					return 1;
 			}
 		}
@@ -49,15 +49,15 @@ pdf_stream_has_crypt(fz_context *ctx, fz_obj *stm)
  * Create a filter given a name and param dictionary.
  */
 static fz_stream *
-build_filter(fz_stream *chain, pdf_document * xref, fz_obj * f, fz_obj * p, int num, int gen, pdf_image_params *params)
+build_filter(fz_stream *chain, pdf_document * xref, pdf_obj * f, pdf_obj * p, int num, int gen, pdf_image_params *params)
 {
 	fz_context *ctx = chain->ctx;
-	char *s = fz_to_name(f);
+	char *s = pdf_to_name(f);
 
-	int predictor = fz_to_int(fz_dict_gets(p, "Predictor"));
-	int columns = fz_to_int(fz_dict_gets(p, "Columns"));
-	int colors = fz_to_int(fz_dict_gets(p, "Colors"));
-	int bpc = fz_to_int(fz_dict_gets(p, "BitsPerComponent"));
+	int predictor = pdf_to_int(pdf_dict_gets(p, "Predictor"));
+	int columns = pdf_to_int(pdf_dict_gets(p, "Columns"));
+	int colors = pdf_to_int(pdf_dict_gets(p, "Colors"));
+	int bpc = pdf_to_int(pdf_dict_gets(p, "BitsPerComponent"));
 
 	if (predictor == 0) predictor = 1;
 	if (columns == 0) columns = 1;
@@ -72,47 +72,47 @@ build_filter(fz_stream *chain, pdf_document * xref, fz_obj * f, fz_obj * p, int 
 
 	else if (!strcmp(s, "CCITTFaxDecode") || !strcmp(s, "CCF"))
 	{
-		fz_obj *k = fz_dict_gets(p, "K");
-		fz_obj *eol = fz_dict_gets(p, "EndOfLine");
-		fz_obj *eba = fz_dict_gets(p, "EncodedByteAlign");
-		fz_obj *columns = fz_dict_gets(p, "Columns");
-		fz_obj *rows = fz_dict_gets(p, "Rows");
-		fz_obj *eob = fz_dict_gets(p, "EndOfBlock");
-		fz_obj *bi1 = fz_dict_gets(p, "BlackIs1");
+		pdf_obj *k = pdf_dict_gets(p, "K");
+		pdf_obj *eol = pdf_dict_gets(p, "EndOfLine");
+		pdf_obj *eba = pdf_dict_gets(p, "EncodedByteAlign");
+		pdf_obj *columns = pdf_dict_gets(p, "Columns");
+		pdf_obj *rows = pdf_dict_gets(p, "Rows");
+		pdf_obj *eob = pdf_dict_gets(p, "EndOfBlock");
+		pdf_obj *bi1 = pdf_dict_gets(p, "BlackIs1");
 		if (params)
 		{
 			/* We will shortstop here */
 			params->type = PDF_IMAGE_FAX;
-			params->u.fax.k = (k ? fz_to_int(k) : 0);
-			params->u.fax.eol = (eol ? fz_to_bool(eol) : 0);
-			params->u.fax.eba = (eba ? fz_to_bool(eba) : 0);
-			params->u.fax.columns = (columns ? fz_to_int(columns) : 1728);
-			params->u.fax.rows = (rows ? fz_to_int(rows) : 0);
-			params->u.fax.eob = (eob ? fz_to_bool(eob) : 1);
-			params->u.fax.bi1 = (bi1 ? fz_to_bool(bi1) : 0);
+			params->u.fax.k = (k ? pdf_to_int(k) : 0);
+			params->u.fax.eol = (eol ? pdf_to_bool(eol) : 0);
+			params->u.fax.eba = (eba ? pdf_to_bool(eba) : 0);
+			params->u.fax.columns = (columns ? pdf_to_int(columns) : 1728);
+			params->u.fax.rows = (rows ? pdf_to_int(rows) : 0);
+			params->u.fax.eob = (eob ? pdf_to_bool(eob) : 1);
+			params->u.fax.bi1 = (bi1 ? pdf_to_bool(bi1) : 0);
 			return chain;
 		}
 		return fz_open_faxd(chain,
-				k ? fz_to_int(k) : 0,
-				eol ? fz_to_bool(eol) : 0,
-				eba ? fz_to_bool(eba) : 0,
-				columns ? fz_to_int(columns) : 1728,
-				rows ? fz_to_int(rows) : 0,
-				eob ? fz_to_bool(eob) : 1,
-				bi1 ? fz_to_bool(bi1) : 0);
+				k ? pdf_to_int(k) : 0,
+				eol ? pdf_to_bool(eol) : 0,
+				eba ? pdf_to_bool(eba) : 0,
+				columns ? pdf_to_int(columns) : 1728,
+				rows ? pdf_to_int(rows) : 0,
+				eob ? pdf_to_bool(eob) : 1,
+				bi1 ? pdf_to_bool(bi1) : 0);
 	}
 
 	else if (!strcmp(s, "DCTDecode") || !strcmp(s, "DCT"))
 	{
-		fz_obj *ct = fz_dict_gets(p, "ColorTransform");
+		pdf_obj *ct = pdf_dict_gets(p, "ColorTransform");
 		if (params)
 		{
 			/* We will shortstop here */
 			params->type = PDF_IMAGE_JPEG;
-			params->u.jpeg.ct = (ct ? fz_to_int(ct) : -1);
+			params->u.jpeg.ct = (ct ? pdf_to_int(ct) : -1);
 			return chain;
 		}
-		return fz_open_dctd(chain, ct ? fz_to_int(ct) : -1);
+		return fz_open_dctd(chain, ct ? pdf_to_int(ct) : -1);
 	}
 
 	else if (!strcmp(s, "RunLengthDecode") || !strcmp(s, "RL"))
@@ -145,7 +145,7 @@ build_filter(fz_stream *chain, pdf_document * xref, fz_obj * f, fz_obj * p, int 
 
 	else if (!strcmp(s, "LZWDecode") || !strcmp(s, "LZW"))
 	{
-		fz_obj *ec = fz_dict_gets(p, "EarlyChange");
+		pdf_obj *ec = pdf_dict_gets(p, "EarlyChange");
 		if (params)
 		{
 			/* We will shortstop here */
@@ -154,10 +154,10 @@ build_filter(fz_stream *chain, pdf_document * xref, fz_obj * f, fz_obj * p, int 
 			params->u.lzw.columns = columns;
 			params->u.lzw.colors = colors;
 			params->u.lzw.bpc = bpc;
-			params->u.lzw.ec = (ec ? fz_to_int(ec) : 1);
+			params->u.lzw.ec = (ec ? pdf_to_int(ec) : 1);
 			return chain;
 		}
-		chain = fz_open_lzwd(chain, ec ? fz_to_int(ec) : 1);
+		chain = fz_open_lzwd(chain, ec ? pdf_to_int(ec) : 1);
 		if (predictor > 1)
 			chain = fz_open_predict(chain, predictor, columns, colors, bpc);
 		return chain;
@@ -166,9 +166,9 @@ build_filter(fz_stream *chain, pdf_document * xref, fz_obj * f, fz_obj * p, int 
 	else if (!strcmp(s, "JBIG2Decode"))
 	{
 		fz_buffer *globals = NULL;
-		fz_obj *obj = fz_dict_gets(p, "JBIG2Globals");
+		pdf_obj *obj = pdf_dict_gets(p, "JBIG2Globals");
 		if (obj)
-			globals = pdf_load_stream(xref, fz_to_num(obj), fz_to_gen(obj));
+			globals = pdf_load_stream(xref, pdf_to_num(obj), pdf_to_gen(obj));
 		/* fz_open_jbig2d takes possession of globals */
 		return fz_open_jbig2d(chain, globals);
 	}
@@ -178,7 +178,7 @@ build_filter(fz_stream *chain, pdf_document * xref, fz_obj * f, fz_obj * p, int 
 
 	else if (!strcmp(s, "Crypt"))
 	{
-		fz_obj *name;
+		pdf_obj *name;
 
 		if (!xref->crypt)
 		{
@@ -186,9 +186,9 @@ build_filter(fz_stream *chain, pdf_document * xref, fz_obj * f, fz_obj * p, int 
 			return chain;
 		}
 
-		name = fz_dict_gets(p, "Name");
-		if (fz_is_name(name))
-			return pdf_open_crypt_with_filter(chain, xref->crypt, fz_to_name(name), num, gen);
+		name = pdf_dict_gets(p, "Name");
+		if (pdf_is_name(name))
+			return pdf_open_crypt_with_filter(chain, xref->crypt, pdf_to_name(name), num, gen);
 
 		return chain;
 	}
@@ -203,17 +203,17 @@ build_filter(fz_stream *chain, pdf_document * xref, fz_obj * f, fz_obj * p, int 
  * Assume ownership of head.
  */
 static fz_stream *
-build_filter_chain(fz_stream *chain, pdf_document *xref, fz_obj *fs, fz_obj *ps, int num, int gen, pdf_image_params *params)
+build_filter_chain(fz_stream *chain, pdf_document *xref, pdf_obj *fs, pdf_obj *ps, int num, int gen, pdf_image_params *params)
 {
-	fz_obj *f;
-	fz_obj *p;
+	pdf_obj *f;
+	pdf_obj *p;
 	int i, n;
 
-	n = fz_array_len(fs);
+	n = pdf_array_len(fs);
 	for (i = 0; i < n; i++)
 	{
-		f = fz_array_get(fs, i);
-		p = fz_array_get(ps, i);
+		f = pdf_array_get(fs, i);
+		p = pdf_array_get(ps, i);
 		chain = build_filter(chain, xref, f, p, num, gen, (i == n-1 ? params : NULL));
 	}
 
@@ -226,7 +226,7 @@ build_filter_chain(fz_stream *chain, pdf_document *xref, fz_obj *fs, fz_obj *ps,
  * stream length, followed by a decryption filter.
  */
 static fz_stream *
-pdf_open_raw_filter(fz_stream *chain, pdf_document *xref, fz_obj *stmobj, int num, int gen)
+pdf_open_raw_filter(fz_stream *chain, pdf_document *xref, pdf_obj *stmobj, int num, int gen)
 {
 	int hascrypt;
 	int len;
@@ -235,7 +235,7 @@ pdf_open_raw_filter(fz_stream *chain, pdf_document *xref, fz_obj *stmobj, int nu
 	/* don't close chain when we close this filter */
 	fz_keep_stream(chain);
 
-	len = fz_to_int(fz_dict_gets(stmobj, "Length"));
+	len = pdf_to_int(pdf_dict_gets(stmobj, "Length"));
 	chain = fz_open_null(chain, len);
 
 	fz_try(ctx)
@@ -258,19 +258,19 @@ pdf_open_raw_filter(fz_stream *chain, pdf_document *xref, fz_obj *stmobj, int nu
  * to stream length and decrypting.
  */
 static fz_stream *
-pdf_open_filter(fz_stream *chain, pdf_document *xref, fz_obj *stmobj, int num, int gen, pdf_image_params *imparams)
+pdf_open_filter(fz_stream *chain, pdf_document *xref, pdf_obj *stmobj, int num, int gen, pdf_image_params *imparams)
 {
-	fz_obj *filters;
-	fz_obj *params;
+	pdf_obj *filters;
+	pdf_obj *params;
 
-	filters = fz_dict_getsa(stmobj, "Filter", "F");
-	params = fz_dict_getsa(stmobj, "DecodeParms", "DP");
+	filters = pdf_dict_getsa(stmobj, "Filter", "F");
+	params = pdf_dict_getsa(stmobj, "DecodeParms", "DP");
 
 	chain = pdf_open_raw_filter(chain, xref, stmobj, num, gen);
 
-	if (fz_is_name(filters))
+	if (pdf_is_name(filters))
 		chain = build_filter(chain, xref, filters, params, num, gen, imparams);
-	else if (fz_array_len(filters) > 0)
+	else if (pdf_array_len(filters) > 0)
 		chain = build_filter_chain(chain, xref, filters, params, num, gen, imparams);
 
 	fz_lock_stream(chain);
@@ -282,20 +282,20 @@ pdf_open_filter(fz_stream *chain, pdf_document *xref, fz_obj *stmobj, int num, i
  * constraining to stream length, and without decryption.
  */
 fz_stream *
-pdf_open_inline_stream(pdf_document *xref, fz_obj *stmobj, int length, fz_stream *chain, pdf_image_params *imparams)
+pdf_open_inline_stream(pdf_document *xref, pdf_obj *stmobj, int length, fz_stream *chain, pdf_image_params *imparams)
 {
-	fz_obj *filters;
-	fz_obj *params;
+	pdf_obj *filters;
+	pdf_obj *params;
 
-	filters = fz_dict_getsa(stmobj, "Filter", "F");
-	params = fz_dict_getsa(stmobj, "DecodeParms", "DP");
+	filters = pdf_dict_getsa(stmobj, "Filter", "F");
+	params = pdf_dict_getsa(stmobj, "DecodeParms", "DP");
 
 	/* don't close chain when we close this filter */
 	fz_keep_stream(chain);
 
-	if (fz_is_name(filters))
+	if (pdf_is_name(filters))
 		return build_filter(chain, xref, filters, params, 0, 0, imparams);
-	if (fz_array_len(filters) > 0)
+	if (pdf_array_len(filters) > 0)
 		return build_filter_chain(chain, xref, filters, params, 0, 0, imparams);
 
 	return fz_open_null(chain, length);
@@ -408,7 +408,7 @@ pdf_open_image_decomp_stream(fz_context *ctx, fz_buffer *buffer, pdf_image_param
 }
 
 fz_stream *
-pdf_open_stream_with_offset(pdf_document *xref, int num, int gen, fz_obj *dict, int stm_ofs)
+pdf_open_stream_with_offset(pdf_document *xref, int num, int gen, pdf_obj *dict, int stm_ofs)
 {
 	fz_stream *stm;
 
@@ -427,16 +427,16 @@ fz_buffer *
 pdf_load_raw_stream(pdf_document *xref, int num, int gen)
 {
 	fz_stream *stm;
-	fz_obj *dict;
+	pdf_obj *dict;
 	int len;
 	fz_buffer *buf;
 
 	dict = pdf_load_object(xref, num, gen);
 	/* RJW: "cannot load stream dictionary (%d %d R)", num, gen */
 
-	len = fz_to_int(fz_dict_gets(dict, "Length"));
+	len = pdf_to_int(pdf_dict_gets(dict, "Length"));
 
-	fz_drop_obj(dict);
+	pdf_drop_obj(dict);
 
 	stm = pdf_open_raw_stream(xref, num, gen);
 	/* RJW: "cannot open raw stream (%d %d R)", num, gen */
@@ -478,7 +478,7 @@ pdf_load_image_stream(pdf_document *xref, int num, int gen, pdf_image_params *pa
 {
 	fz_context *ctx = xref->ctx;
 	fz_stream *stm = NULL;
-	fz_obj *dict, *obj;
+	pdf_obj *dict, *obj;
 	int i, len, n;
 	fz_buffer *buf;
 
@@ -487,14 +487,14 @@ pdf_load_image_stream(pdf_document *xref, int num, int gen, pdf_image_params *pa
 	dict = pdf_load_object(xref, num, gen);
 	/* RJW: "cannot load stream dictionary (%d %d R)", num, gen */
 
-	len = fz_to_int(fz_dict_gets(dict, "Length"));
-	obj = fz_dict_gets(dict, "Filter");
-	len = pdf_guess_filter_length(len, fz_to_name(obj));
-	n = fz_array_len(obj);
+	len = pdf_to_int(pdf_dict_gets(dict, "Length"));
+	obj = pdf_dict_gets(dict, "Filter");
+	len = pdf_guess_filter_length(len, pdf_to_name(obj));
+	n = pdf_array_len(obj);
 	for (i = 0; i < n; i++)
-		len = pdf_guess_filter_length(len, fz_to_name(fz_array_get(obj, i)));
+		len = pdf_guess_filter_length(len, pdf_to_name(pdf_array_get(obj, i)));
 
-	fz_drop_obj(dict);
+	pdf_drop_obj(dict);
 
 	stm = pdf_open_image_stream(xref, num, gen, params);
 	/* RJW: "cannot open stream (%d %d R)", num, gen */

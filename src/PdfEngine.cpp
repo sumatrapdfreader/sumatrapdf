@@ -354,21 +354,6 @@ fz_stream *fz_open_istream(fz_context *ctx, IStream *stream)
     return stm;
 }
 
-fz_obj *fz_copy_str_dict(fz_context *ctx, fz_obj *dict)
-{
-    fz_obj *copy = fz_copy_dict(ctx, dict);
-    for (int i = 0; i < fz_dict_len(copy); i++) {
-        fz_obj *val = fz_dict_get_val(copy, i);
-        // resolve all indirect references
-        if (fz_is_indirect(val)) {
-            fz_obj *val2 = fz_new_string(ctx, fz_to_str_buf(val), fz_to_str_len(val));
-            fz_dict_put(copy, fz_dict_get_key(copy, i), val2);
-            fz_drop_obj(val2);
-        }
-    }
-    return copy;
-}
-
 fz_matrix fz_create_view_ctm(fz_rect mediabox, float zoom, int rotation)
 {
     fz_matrix ctm = fz_identity;
@@ -654,9 +639,9 @@ extern "C" {
 namespace str {
     namespace conv {
 
-inline TCHAR *FromPdf(fz_obj *obj)
+inline TCHAR *FromPdf(pdf_obj *obj)
 {
-    ScopedMem<WCHAR> str(SAZA(WCHAR, fz_to_str_len(obj) + 1));
+    ScopedMem<WCHAR> str(SAZA(WCHAR, pdf_to_str_len(obj) + 1));
     pdf_to_ucs2_buf((unsigned short *)str.Get(), obj);
     return str::conv::FromWStr(str);
 }
@@ -664,30 +649,46 @@ inline TCHAR *FromPdf(fz_obj *obj)
     }
 }
 
+pdf_obj *pdf_copy_str_dict(fz_context *ctx, pdf_obj *dict)
+{
+    pdf_obj *copy = pdf_copy_dict(ctx, dict);
+    for (int i = 0; i < pdf_dict_len(copy); i++) {
+        pdf_obj *val = pdf_dict_get_val(copy, i);
+        // resolve all indirect references
+        if (pdf_is_indirect(val)) {
+            pdf_obj *val2 = pdf_new_string(ctx, pdf_to_str_buf(val), pdf_to_str_len(val));
+            fz_dict_put(copy, pdf_dict_get_key(copy, i), val2);
+            pdf_drop_obj(val2);
+        }
+    }
+    return copy;
+}
+
 // Note: make sure to only call with ctxAccess
 fz_outline *pdf_loadattachments(pdf_document *xref)
 {
-    fz_obj *dict = pdf_load_name_tree(xref, "EmbeddedFiles");
+    pdf_obj *dict = pdf_load_name_tree(xref, "EmbeddedFiles");
     if (!dict)
         return NULL;
 
     fz_outline root = { 0 }, *node = &root;
-    for (int i = 0; i < fz_dict_len(dict); i++) {
-        fz_obj *name = fz_dict_get_key(dict, i);
-        fz_obj *dest = fz_dict_get_val(dict, i);
-        fz_obj *embedded = fz_dict_getsa(fz_dict_gets(dest, "EF"), "DOS", "F");
+    for (int i = 0; i < pdf_dict_len(dict); i++) {
+        pdf_obj *name = pdf_dict_get_key(dict, i);
+        pdf_obj *dest = pdf_dict_get_val(dict, i);
+        pdf_obj *embedded = pdf_dict_getsa(pdf_dict_gets(dest, "EF"), "DOS", "F");
         if (!embedded)
             continue;
 
         node = node->next = (fz_outline *)fz_malloc_struct(xref->ctx, fz_outline);
         ZeroMemory(node, sizeof(fz_outline));
-        node->title = fz_strdup(xref->ctx, fz_to_name(name));
+        node->title = fz_strdup(xref->ctx, pdf_to_name(name));
         node->dest.kind = FZ_LINK_LAUNCH;
         node->dest.ld.launch.file_spec = pdf_file_spec_to_str(xref->ctx, dest);
         node->dest.ld.launch.new_window = 1;
-        node->dest.ld.launch.embedded = fz_keep_obj(embedded);
+        node->dest.ld.launch.embeddedNum = pdf_to_num(embedded);
+        node->dest.ld.launch.embeddedGen = pdf_to_gen(embedded);
     }
-    fz_drop_obj(dict);
+    pdf_drop_obj(dict);
 
     return root.next;
 }
@@ -695,7 +696,7 @@ fz_outline *pdf_loadattachments(pdf_document *xref)
 struct PageLabelInfo {
     int startAt, countFrom;
     const char *type;
-    fz_obj *prefix;
+    pdf_obj *prefix;
 };
 
 int CmpPageLabelInfo(const void *a, const void *b)
@@ -727,25 +728,25 @@ TCHAR *FormatPageLabel(const char *type, int pageNo, const TCHAR *prefix)
     return str::Dup(prefix);
 }
 
-void BuildPageLabelRec(fz_obj *node, int pageCount, Vec<PageLabelInfo>& data)
+void BuildPageLabelRec(pdf_obj *node, int pageCount, Vec<PageLabelInfo>& data)
 {
-    fz_obj *obj;
-    if ((obj = fz_dict_gets(node, "Kids")) && !fz_dict_mark(node)) {
-        for (int i = 0; i < fz_array_len(obj); i++)
-            BuildPageLabelRec(fz_array_get(obj, i), pageCount, data);
-        fz_dict_unmark(node);
+    pdf_obj *obj;
+    if ((obj = pdf_dict_gets(node, "Kids")) && !pdf_dict_mark(node)) {
+        for (int i = 0; i < pdf_array_len(obj); i++)
+            BuildPageLabelRec(pdf_array_get(obj, i), pageCount, data);
+        pdf_dict_unmark(node);
     }
-    else if ((obj = fz_dict_gets(node, "Nums"))) {
-        for (int i = 0; i < fz_array_len(obj); i += 2) {
-            fz_obj *info = fz_array_get(obj, i + 1);
+    else if ((obj = pdf_dict_gets(node, "Nums"))) {
+        for (int i = 0; i < pdf_array_len(obj); i += 2) {
+            pdf_obj *info = pdf_array_get(obj, i + 1);
             PageLabelInfo pli;
-            pli.startAt = fz_to_int(fz_array_get(obj, i)) + 1;
+            pli.startAt = pdf_to_int(pdf_array_get(obj, i)) + 1;
             if (pli.startAt < 1)
                 continue;
 
-            pli.type = fz_to_name(fz_dict_gets(info, "S"));
-            pli.prefix = fz_dict_gets(info, "P");
-            pli.countFrom = fz_to_int(fz_dict_gets(info, "St"));
+            pli.type = pdf_to_name(pdf_dict_gets(info, "S"));
+            pli.prefix = pdf_dict_gets(info, "P");
+            pli.countFrom = pdf_to_int(pdf_dict_gets(info, "St"));
             if (pli.countFrom < 1)
                 pli.countFrom = 1;
             data.Append(pli);
@@ -753,7 +754,7 @@ void BuildPageLabelRec(fz_obj *node, int pageCount, Vec<PageLabelInfo>& data)
     }
 }
 
-StrVec *BuildPageLabelVec(fz_obj *root, int pageCount)
+StrVec *BuildPageLabelVec(pdf_obj *root, int pageCount)
 {
     Vec<PageLabelInfo> data;
     BuildPageLabelRec(root, pageCount, data);
@@ -933,12 +934,12 @@ protected:
     pdf_annot    ** ProcessPageAnnotations(pdf_page *page);
     RenderedBitmap *GetPageImage(int pageNo, RectD rect, size_t imageIx);
 
-    bool            SaveEmbedded(fz_obj *obj, LinkSaverUI& saveUI);
+    bool            SaveEmbedded(LinkSaverUI& saveUI, int num, int gen);
 
     RectD         * _mediaboxes;
     fz_outline    * outline;
     fz_outline    * attachments;
-    fz_obj        * _info;
+    pdf_obj        * _info;
     StrVec        * _pagelabels;
     pdf_annot   *** pageComments;
     fz_rect      ** imageRects;
@@ -1052,7 +1053,7 @@ PdfEngineImpl::~PdfEngineImpl()
     if (attachments)
         fz_free_outline(ctx, attachments);
     if (_info)
-        fz_drop_obj(_info);
+        pdf_drop_obj(_info);
 
     if (pageComments) {
         for (int i = 0; i < PageCount(); i++)
@@ -1343,17 +1344,17 @@ bool PdfEngineImpl::FinishLoading()
         // keep a copy of the Info dictionary, as accessing the original
         // isn't thread safe and we don't want to block for this when
         // displaying document properties
-        _info = fz_dict_gets(_doc->trailer, "Info");
+        _info = pdf_dict_gets(_doc->trailer, "Info");
         if (_info)
-            _info = fz_copy_str_dict(ctx, pdf_resolve_indirect(_info));
+            _info = pdf_copy_str_dict(ctx, pdf_resolve_indirect(_info));
     }
     fz_catch(ctx) {
         fz_warn(ctx, "Couldn't load Info dictionary");
-        fz_drop_obj(_info);
+        pdf_drop_obj(_info);
         _info = NULL;
     }
     fz_try(ctx) {
-        fz_obj *pagelabels = fz_dict_gets(fz_dict_gets(_doc->trailer, "Root"), "PageLabels");
+        pdf_obj *pagelabels = pdf_dict_gets(pdf_dict_gets(_doc->trailer, "Root"), "PageLabels");
         if (pagelabels)
             _pagelabels = BuildPageLabelVec(pagelabels, PageCount());
     }
@@ -1408,11 +1409,11 @@ PageDestination *PdfEngineImpl::GetNamedDest(const TCHAR *name)
     ScopedCritSec scope(&ctxAccess);
 
     ScopedMem<char> name_utf8(str::conv::ToUtf8(name));
-    fz_obj *dest;
+    pdf_obj *dest;
     fz_try(ctx) {
-        fz_obj *nameobj = fz_new_string(ctx, (char *)name_utf8, (int)str::Len(name_utf8));
+        pdf_obj *nameobj = pdf_new_string(ctx, (char *)name_utf8, (int)str::Len(name_utf8));
         dest = pdf_lookup_dest(_doc, nameobj);
-        fz_drop_obj(nameobj);
+        pdf_drop_obj(nameobj);
     }
     fz_catch(ctx) {
         return NULL;
@@ -1622,7 +1623,7 @@ RectD PdfEngineImpl::PageMediabox(int pageNo)
     if (!_mediaboxes[pageNo-1].IsEmpty())
         return _mediaboxes[pageNo-1];
 
-    fz_obj *page = _doc->page_objs[pageNo-1];
+    pdf_obj *page = _doc->page_objs[pageNo-1];
     if (!page)
         return RectD();
 
@@ -1632,9 +1633,9 @@ RectD PdfEngineImpl::PageMediabox(int pageNo)
     fz_rect mbox = fz_empty_rect, cbox = fz_empty_rect;
     int rotate = 0;
     fz_try(ctx) {
-        mbox = pdf_to_rect(ctx, fz_dict_gets(page, "MediaBox"));
-        cbox = pdf_to_rect(ctx, fz_dict_gets(page, "CropBox"));
-        rotate = fz_to_int(fz_dict_gets(page, "Rotate"));
+        mbox = pdf_to_rect(ctx, pdf_dict_gets(page, "MediaBox"));
+        cbox = pdf_to_rect(ctx, pdf_dict_gets(page, "CropBox"));
+        rotate = pdf_to_int(pdf_dict_gets(page, "Rotate"));
     }
     fz_catch(ctx) { }
     if (fz_is_empty_rect(mbox)) {
@@ -1838,7 +1839,7 @@ PageElement *PdfEngineImpl::GetElementAtPos(int pageNo, PointD pt)
             if (fz_is_pt_in_rect(rect, p)) {
                 ScopedCritSec scope(&ctxAccess);
 
-                ScopedMem<TCHAR> contents(str::conv::FromPdf(fz_dict_gets(annot->obj, "Contents")));
+                ScopedMem<TCHAR> contents(str::conv::FromPdf(pdf_dict_gets(annot->obj, "Contents")));
                 return new PdfComment(contents, fz_rect_to_RectD(rect), pageNo);
             }
         }
@@ -1876,7 +1877,7 @@ Vec<PageElement *> *PdfEngineImpl::GetElements(int pageNo)
         for (size_t i = 0; pageComments[pageNo-1][i]; i++) {
             pdf_annot *annot = pageComments[pageNo-1][i];
             fz_rect rect = fz_transform_rect(page->ctm, annot->rect);
-            ScopedMem<TCHAR> contents(str::conv::FromPdf(fz_dict_gets(annot->obj, "Contents")));
+            ScopedMem<TCHAR> contents(str::conv::FromPdf(pdf_dict_gets(annot->obj, "Contents")));
             els->Append(new PdfComment(contents, fz_rect_to_RectD(rect), pageNo));
         }
     }
@@ -1929,17 +1930,18 @@ pdf_annot **PdfEngineImpl::ProcessPageAnnotations(pdf_page *page)
     Vec<pdf_annot *> comments;
 
     for (pdf_annot *annot = page->annots; annot; annot = annot->next) {
-        char *subtype = fz_to_name(fz_dict_gets(annot->obj, "Subtype"));
+        char *subtype = pdf_to_name(pdf_dict_gets(annot->obj, "Subtype"));
         if (str::Eq(subtype, "FileAttachment")) {
-            fz_obj *file = fz_dict_gets(annot->obj, "FS");
-            fz_rect rect = pdf_to_rect(ctx, fz_dict_gets(annot->obj, "Rect"));
-            fz_obj *embedded = fz_dict_getsa(fz_dict_gets(file, "EF"), "DOS", "F");
+            pdf_obj *file = pdf_dict_gets(annot->obj, "FS");
+            fz_rect rect = pdf_to_rect(ctx, pdf_dict_gets(annot->obj, "Rect"));
+            pdf_obj *embedded = pdf_dict_getsa(pdf_dict_gets(file, "EF"), "DOS", "F");
             if (file && embedded && !fz_is_empty_rect(rect)) {
                 fz_link_dest ld;
                 ld.kind = FZ_LINK_LAUNCH;
                 ld.ld.launch.file_spec = pdf_file_spec_to_str(ctx, file);
                 ld.ld.launch.new_window = 1;
-                ld.ld.launch.embedded = fz_keep_obj(embedded);
+                ld.ld.launch.embeddedNum = pdf_to_num(embedded);
+                ld.ld.launch.embeddedGen = pdf_to_gen(embedded);
                 rect = fz_transform_rect(page->ctm, rect);
                 // add links in top-to-bottom order (i.e. last-to-first)
                 fz_link *link = fz_new_link(ctx, rect, ld);
@@ -1947,7 +1949,7 @@ pdf_annot **PdfEngineImpl::ProcessPageAnnotations(pdf_page *page)
                 page->links = link;
             }
         }
-        if (!str::IsEmpty(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents"))) &&
+        if (!str::IsEmpty(pdf_to_str_buf(pdf_dict_gets(annot->obj, "Contents"))) &&
             !str::Eq(subtype, "FreeText")) {
             comments.Append(annot);
         }
@@ -2075,7 +2077,7 @@ TCHAR *PdfEngineImpl::GetProperty(char *name)
 
     // _info is guaranteed not to contain any indirect references,
     // so no need for ctxAccess
-    fz_obj *obj = fz_dict_gets(_info, name);
+    pdf_obj *obj = pdf_dict_gets(_info, name);
     if (!obj)
         return NULL;
 
@@ -2094,16 +2096,16 @@ PageLayoutType PdfEngineImpl::PreferredLayout()
     PageLayoutType layout = Layout_Single;
 
     ScopedCritSec scope(&ctxAccess);
-    fz_obj *root;
+    pdf_obj *root;
     fz_try(ctx) {
-        root = fz_dict_gets(_doc->trailer, "Root");
+        root = pdf_dict_gets(_doc->trailer, "Root");
     }
     fz_catch(ctx) {
         return layout;
     }
 
     fz_try(ctx) {
-        char *name = fz_to_name(fz_dict_gets(root, "PageLayout"));
+        char *name = pdf_to_name(pdf_dict_gets(root, "PageLayout"));
         if (str::EndsWith(name, "Right"))
             layout = Layout_Book;
         else if (str::StartsWith(name, "Two"))
@@ -2112,8 +2114,8 @@ PageLayoutType PdfEngineImpl::PreferredLayout()
     fz_catch(ctx) { }
 
     fz_try(ctx) {
-        fz_obj *prefs = fz_dict_gets(root, "ViewerPreferences");
-        char *direction = fz_to_name(fz_dict_gets(prefs, "Direction"));
+        pdf_obj *prefs = pdf_dict_gets(root, "ViewerPreferences");
+        char *direction = pdf_to_name(pdf_dict_gets(prefs, "Direction"));
         if (str::Eq(direction, "R2L"))
             layout = (PageLayoutType)(layout | Layout_R2L);
     }
@@ -2135,13 +2137,13 @@ unsigned char *PdfEngineImpl::GetFileData(size_t *cbCount)
     return data;
 }
 
-bool PdfEngineImpl::SaveEmbedded(fz_obj *obj, LinkSaverUI& saveUI)
+bool PdfEngineImpl::SaveEmbedded(LinkSaverUI& saveUI, int num, int gen)
 {
     ScopedCritSec scope(&ctxAccess);
 
     fz_buffer *data = NULL;
     fz_try(ctx) {
-        data = pdf_load_stream(_doc, fz_to_num(obj), fz_to_gen(obj));
+        data = pdf_load_stream(_doc, num, gen);
     }
     fz_catch(ctx) {
         return false;
@@ -2209,8 +2211,8 @@ TCHAR *PdfLink::GetValue() const
         if (IsRelativeURI(path)) {
             ScopedMem<TCHAR> base;
             fz_try(engine->ctx) {
-                fz_obj *obj = fz_dict_gets(engine->_doc->trailer, "Root");
-                obj = fz_dict_gets(fz_dict_gets(obj, "URI"), "Base");
+                pdf_obj *obj = pdf_dict_gets(engine->_doc->trailer, "Root");
+                obj = pdf_dict_gets(pdf_dict_gets(obj, "URI"), "Base");
                 if (obj)
                     base.Set(str::conv::FromPdf(obj));
             }
@@ -2235,10 +2237,10 @@ TCHAR *PdfLink::GetValue() const
     case FZ_LINK_LAUNCH:
         // note: we (intentionally) don't support the /Win specific Launch parameters
         path = str::conv::FromUtf8(link->ld.launch.file_spec);
-        if (path && link->ld.launch.embedded && str::EndsWithI(path, _T(".pdf"))) {
+        if (path && link->ld.launch.embeddedNum && str::EndsWithI(path, _T(".pdf"))) {
             free(path);
             path = str::Format(_T("%s:%d:%d"), engine->FileName(),
-                fz_to_num(link->ld.launch.embedded), fz_to_gen(link->ld.launch.embedded));
+                link->ld.launch.embeddedNum, link->ld.launch.embeddedGen);
         }
         break;
     case FZ_LINK_GOTOR:
@@ -2259,7 +2261,7 @@ const char *PdfLink::GetDestType() const
     case FZ_LINK_URI: return "LaunchURL";
     case FZ_LINK_NAMED: return link->ld.named.named;
     case FZ_LINK_LAUNCH:
-        if (link->ld.launch.embedded)
+        if (link->ld.launch.embeddedNum)
             return "LaunchEmbedded";
         return "LaunchFile";
     case FZ_LINK_GOTOR: return "LaunchFile";
@@ -2324,7 +2326,7 @@ TCHAR *PdfLink::GetDestName() const
 bool PdfLink::SaveEmbedded(LinkSaverUI& saveUI)
 {
     ScopedCritSec scope(&engine->ctxAccess);
-    return engine->SaveEmbedded(link->ld.launch.embedded, saveUI);
+    return engine->SaveEmbedded(saveUI, link->ld.launch.embeddedNum, link->ld.launch.embeddedGen);
 }
 
 bool PdfEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
@@ -2473,7 +2475,7 @@ protected:
 
     RectD         * _mediaboxes;
     fz_outline    * _outline;
-    fz_obj        * _info;
+    xps_doc_prop  * _info;
     fz_rect      ** imageRects;
 };
 
@@ -2583,7 +2585,7 @@ XpsEngineImpl::~XpsEngineImpl()
         _doc = NULL;
     }
     if (_info)
-        fz_drop_obj(_info);
+        xps_free_doc_prop(ctx, _info);
 
     while (runCache.Count() > 0) {
         assert(runCache.Last()->refs == 1);
@@ -3108,17 +3110,11 @@ unsigned char *XpsEngineImpl::GetFileData(size_t *cbCount)
 
 TCHAR *XpsEngineImpl::GetProperty(char *name)
 {
-    // _info is guaranteed not to contain any indirect references,
-    // so no need for ctxAccess
-    fz_obj *obj = fz_dict_gets(_info, name);
-    if (!obj)
-        return NULL;
-
-    char *utf8 = fz_to_str_buf(obj);
-    if (str::IsEmpty(utf8))
-        return NULL;
-
-    return str::conv::FromUtf8(utf8);
+    for (xps_doc_prop *prop = _info; prop; prop = prop->next) {
+        if (str::Eq(prop->name, name) && !str::IsEmpty(prop->value))
+            return str::conv::FromUtf8(prop->value);
+    }
+    return NULL;
 };
 
 PageElement *XpsEngineImpl::GetElementAtPos(int pageNo, PointD pt)

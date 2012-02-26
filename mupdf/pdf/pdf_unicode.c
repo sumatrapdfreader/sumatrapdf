@@ -5,7 +5,7 @@
 
 void
 pdf_load_to_unicode(pdf_document *xref, pdf_font_desc *font,
-	char **strings, char *collection, fz_obj *cmapstm)
+	char **strings, char *collection, pdf_obj *cmapstm)
 {
 	pdf_cmap *cmap;
 	int cid;
@@ -14,10 +14,10 @@ pdf_load_to_unicode(pdf_document *xref, pdf_font_desc *font,
 	int i;
 	fz_context *ctx = xref->ctx;
 
-	if (pdf_is_stream(xref, fz_to_num(cmapstm), fz_to_gen(cmapstm)))
+	if (pdf_is_stream(xref, pdf_to_num(cmapstm), pdf_to_gen(cmapstm)))
 	{
 		cmap = pdf_load_embedded_cmap(xref, cmapstm);
-		/* RJW: "cannot load embedded cmap (%d %d R)", fz_to_num(cmapstm), fz_to_gen(cmapstm) */
+		/* RJW: "cannot load embedded cmap (%d %d R)", pdf_to_num(cmapstm), pdf_to_gen(cmapstm) */
 
 		font->to_unicode = pdf_new_cmap(ctx);
 
