@@ -71,7 +71,7 @@ static void SaveMobiImages(const TCHAR *filePathBase, MobiDoc *mb)
     if (!gMobiSaveImages)
         return;
     for (size_t i = 0; i < mb->imagesCount; i++) {
-        SaveMobiImage(filePathBase, i, mb->images + i);
+        SaveMobiImage(filePathBase, i, mb->GetImage(i+1));
     }
 }
 
