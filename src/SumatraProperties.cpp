@@ -436,7 +436,8 @@ void CopyPropertiesToClipboard(HWND hwnd)
     assert(layoutData);
     if (!layoutData) {
         // TODO: remove once the bug has been fixed (no need to translate)
-        CopyTextToClipboard(_T("Please see http://blog.kowalczyk.info/software/sumatrapdf/develop.html for how to report this bug!"));
+        CopyTextToClipboard(_T("Please see http://code.google.com/p/sumatrapdf/wiki/SubmittingBugReports for how to report this bug!"));
+        CrashIf(true);
         return;
     }
 

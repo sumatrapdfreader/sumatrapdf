@@ -193,7 +193,9 @@ void ZoomToSelection(WindowInfo *win, float factor, bool relative)
 void CopySelectionToClipboard(WindowInfo *win)
 {
     if (!win->selectionOnPage) return;
-    if (!win->dm->engine) return;
+    CrashIf(win->selectionOnPage->Count() == 0 || !win->dm || !win->dm->engine);
+    if (win->selectionOnPage->Count() == 0) return;
+    if (!win->dm || win->dm->engine) return;
 
     if (!OpenClipboard(NULL)) return;
     EmptyClipboard();

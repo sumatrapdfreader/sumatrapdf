@@ -7,9 +7,9 @@
 */
 
 #include "BaseUtil.h"
-
 #include "StrUtil.h"
 #include "WinUtil.h"
+#include "Scoped.h"
 
 #include "Search.h"
 #include "resource.h"
@@ -235,7 +235,8 @@ class FindEndWorkItem : public UIThreadWorkItem {
 public:
     FindEndWorkItem(WindowInfo *win, FindThreadData *ftd, TextSel *textSel,
                     bool wasModifiedCanceled, bool loopedAround=false) :
-        UIThreadWorkItem(win), ftd(ftd), textSel(textSel), thread(win->findThread),
+        UIThreadWorkItem(win), ftd(ftd), textSel(textSel),
+        thread(win->findThread), // close the find thread handle after execution
         loopedAround(loopedAround), wasModifiedCanceled(wasModifiedCanceled) { }
     ~FindEndWorkItem() { delete ftd; }
 
