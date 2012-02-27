@@ -122,13 +122,17 @@ void OnMenuFindMatchCase(WindowInfo *win)
 
 static void ShowSearchResult(WindowInfo& win, TextSel *result, bool addNavPt)
 {
-    assert(result->len > 0);
+    if (!result->pages || !result->rects)
+        return;
+
+    CrashIf(0 == result->len);
     if (addNavPt || !win.dm->PageShown(result->pages[0]) ||
         (win.dm->ZoomVirtual() == ZOOM_FIT_PAGE || win.dm->ZoomVirtual() == ZOOM_FIT_CONTENT))
+    {
         win.dm->GoToPage(result->pages[0], 0, addNavPt);
+    }
 
     win.dm->textSelection->CopySelection(win.dm->textSearch);
-
     UpdateTextSelection(&win, false);
     win.dm->ShowResultRectToScreen(result);
     win.RepaintAsync();
