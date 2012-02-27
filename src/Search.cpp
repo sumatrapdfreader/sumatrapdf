@@ -122,10 +122,10 @@ void OnMenuFindMatchCase(WindowInfo *win)
 
 static void ShowSearchResult(WindowInfo& win, TextSel *result, bool addNavPt)
 {
-    if (!result->pages || !result->rects)
+    CrashIf(0 == result->len || !result->pages || !result->rects);
+    if (0 == result->len || !result->pages || !result->rects)
         return;
 
-    CrashIf(0 == result->len);
     if (addNavPt || !win.dm->PageShown(result->pages[0]) ||
         (win.dm->ZoomVirtual() == ZOOM_FIT_PAGE || win.dm->ZoomVirtual() == ZOOM_FIT_CONTENT))
     {
@@ -228,19 +228,26 @@ struct FindThreadData : public ProgressUpdateUI {
 class FindEndWorkItem : public UIThreadWorkItem {
     FindThreadData *ftd;
     TextSel*textSel;
+    ScopedHandle    thread;
     bool    wasModifiedCanceled;
     bool    loopedAround;
 
 public:
     FindEndWorkItem(WindowInfo *win, FindThreadData *ftd, TextSel *textSel,
                     bool wasModifiedCanceled, bool loopedAround=false) :
-        UIThreadWorkItem(win), ftd(ftd), textSel(textSel),
+        UIThreadWorkItem(win), ftd(ftd), textSel(textSel), thread(win->findThread),
         loopedAround(loopedAround), wasModifiedCanceled(wasModifiedCanceled) { }
     ~FindEndWorkItem() { delete ftd; }
 
     virtual void Execute() {
         if (!WindowInfoStillValid(win))
             return;
+        if (win->findThread != thread) {
+            // Race condition: FindTextOnThread/AbortFinding was
+            // called after the previous find thread ended but
+            // before this FindEndWorkItem could be executed
+            return;
+        }
         if (!win->IsDocLoaded()) {
             // the UI has already been disabled and hidden
         } else if (textSel) {
@@ -251,10 +258,7 @@ public:
             ClearSearchResult(win);
             ftd->HideUI(false, !wasModifiedCanceled);
         }
-
-        HANDLE hThread = win->findThread;
         win->findThread = NULL;
-        CloseHandle(hThread);
     }
 };
 
