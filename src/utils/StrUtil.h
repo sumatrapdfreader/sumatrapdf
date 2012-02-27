@@ -102,6 +102,7 @@ char *  Format(const char *fmt, ...);
 WCHAR * FmtV(const WCHAR *fmt, va_list args);
 WCHAR * Format(const WCHAR *fmt, ...);
 
+inline bool IsWs(char c) { return isspace((unsigned char)c); }
 size_t  TrimWS(TCHAR *s, TrimOpt opt=TrimBoth);
 
 size_t  TransChars(char *str, const char *oldChars, const char *newChars);

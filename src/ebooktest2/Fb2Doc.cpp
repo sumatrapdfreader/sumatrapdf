@@ -58,11 +58,26 @@ public:
     }
 
     virtual ImageData2 *GetImageData(size_t index) {
-        if (index > images.Count())
+        if (index >= images.Count())
             return NULL;
         return &images.At(index);
     }
 };
+
+static void AppendTextNormWS(str::Str<char>& out, const char *s, size_t len)
+{
+    bool wasWs = false;
+    const char *end = s + len;
+    for (; s < end; s++) {
+        if (!str::IsWs(*s)) {
+            out.Append(*s);
+            wasWs = false;
+        } else if (!wasWs) {
+            out.Append(' ');
+            wasWs = true;
+        }
+    }
+}
 
 bool Fb2DocImpl::Load()
 {
@@ -94,7 +109,7 @@ bool Fb2DocImpl::Load()
             continue;
 
         if (tok->IsText()) {
-            htmlData.Append(tok->s, tok->sLen);
+            AppendTextNormWS(htmlData, tok->s, tok->sLen);
         }
         else if (tok->IsStartTag()) {
             if (Tag_P == tag && !inTitle) {

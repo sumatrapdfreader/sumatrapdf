@@ -29,7 +29,7 @@ class MobiDoc2Impl : public MobiDoc2 {
         }
         for (size_t i = 1; i < mobi->imagesCount; i++) {
             ImageData *mobiImg = mobi->GetImage(i);
-            if (!mobiImg)
+            if (!mobiImg || !mobiImg->data)
                 continue;
             ImageData2 data = { 0 };
             data.data = mobiImg->data;
@@ -55,17 +55,21 @@ public:
         return mobi->doc->Get();
     }
 
-    virtual ImageData2 *GetImageData(size_t index) {
+    virtual ImageData2 *GetImageData(const char *id) {
+        int idx = atoi(id);
         for (size_t i = 0; i < images.Count(); i++) {
-            if (images.At(i).idx == index)
+            if (images.At(i).idx == idx)
                 return &images.At(i);
         }
         return NULL;
     }
 
-    virtual ImageData2 *GetImageData(const char *id) {
-        int idx = atoi(id);
-        return GetImageData(idx);
+    virtual ImageData2 *GetImageData(size_t index) {
+        if ((size_t)-1 == index && images.Count() > 0 && images.At(0).idx == (size_t)-1)
+            index = 0; // cover image
+        if (images.Count() >= index)
+            return NULL;
+        return &images.At(index);
     }
 };
 

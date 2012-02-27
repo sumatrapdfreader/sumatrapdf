@@ -100,20 +100,16 @@ static bool SkipUntil(const char*& s, const char *end, char *term)
     return false;
 }
 
-static bool IsWs(int c) {
-    return (' ' == c) || ('\t' == c) || ('\n' == c) || ('\r' == c);
-}
-
 void SkipWs(const char* & s, const char *end)
 {
-    while ((s < end) && IsWs(*s)) {
+    while ((s < end) && str::IsWs(*s)) {
         ++s;
     }
 }
 
 void SkipNonWs(const char* & s, const char *end)
 {
-    while ((s < end) && !IsWs(*s)) {
+    while ((s < end) && !str::IsWs(*s)) {
         ++s;
     }
 }
@@ -366,12 +362,11 @@ static void RecordEndTag(Vec<HtmlTag> *tagNesting, HtmlTag tag)
     // when closing a tag, if the top tag doesn't match but
     // there are only potentially self-closing tags on the
     // stack between the matching tag, we pop all of them
-    if (tagNesting->Find(tag)) {
+    if (tagNesting->Find(tag) != -1) {
         while ((tagNesting->Count() > 0) && (tagNesting->Last() != tag))
             tagNesting->Pop();
     }
     if (tagNesting->Count() > 0 && tagNesting->Last() == tag) {
-        CrashIf(tagNesting->Last() != tag);
         tagNesting->Pop();
     }
 }
@@ -379,7 +374,7 @@ static void RecordEndTag(Vec<HtmlTag> *tagNesting, HtmlTag tag)
 static void UpdateTagNesting(Vec<HtmlTag> *tagNesting, HtmlToken *t)
 {
     // update the current state of html tree
-     HtmlTag tag = FindTag(t);
+    HtmlTag tag = FindTag(t);
     if (t->IsStartTag())
         RecordStartTag(tagNesting, tag);
     else if (t->IsEndTag())

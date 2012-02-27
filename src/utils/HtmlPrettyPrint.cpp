@@ -37,29 +37,36 @@ static void HtmlAddWithNesting(str::Str<char>* out, HtmlToken *tok, HtmlTag tag,
         out->Append('\n');
 }
 
+static bool IsWsText(const char *s, size_t len)
+{
+    const char *end = s + len;
+    for (; s < end && str::IsWs(*s); s++);
+    return s == end;
+}
+
 char *PrettyPrintHtml(const char *s, size_t len, size_t& lenOut)
 {
     str::Str<char> res(len);
     HtmlPullParser parser(s, len);
     HtmlToken *t;
-    while ((t = parser.Next()) && !t->IsError())
-    {
-        if (t->IsText())
-            res.Append(t->s, t->sLen);
+    size_t nesting = 0;
+    while ((t = parser.Next()) && !t->IsError()) {
+        if (t->IsText()) {
+            // TODO: normalize whitespace instead?
+            if (!IsWsText(t->s, t->sLen))
+                res.Append(t->s, t->sLen);
+        }
         if (!t->IsTag())
             continue;
 
-        size_t nesting = 0;
-        for (HtmlTag *tag = parser.tagNesting.IterStart(); tag; tag = parser.tagNesting.IterNext()) {
-            if (Tag_NotFound == *tag || IsInlineTag(*tag))
-                continue;
-            // TODO: skip html, body and possibly more
-            ++nesting;
-        }
         HtmlTag tag = FindTag(t);
         HtmlAddWithNesting(&res, t, tag, nesting);
+
+        // determine the next tag's nesting before the
+        // call to UpdateTagNesting so that the tag
+        // itself is not yet in tagNesting
+        nesting = parser.tagNesting.Count();
     }
     lenOut = res.Count();
     return res.StealData();
 }
-

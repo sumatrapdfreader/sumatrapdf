@@ -27,11 +27,6 @@ struct HtmlAttr {
 
 #ifndef USE_PULL_PARSER
 
-static bool IsWs(int c)
-{
-    return c == ' ' || c == '\r' || c == '\n' || c == '\t';
-}
-
 static int IsName(int c)
 {
     return c == '.' || c == '-' || c == '_' || c == ':' ||
@@ -43,7 +38,7 @@ static int IsName(int c)
 static void SkipWs(char **sPtr)
 {
     char *s = *sPtr;
-    while (IsWs(*s)) {
+    while (str::IsWs(*s)) {
         s++;
     }
     *sPtr = s;
@@ -78,7 +73,7 @@ static int TagEndLen(char *s) {
 }
 
 static bool IsUnquotedAttrValEnd(char c) {
-    return !c || IsWs(c) || c == '/' || c == '>';
+    return !c || str::IsWs(c) || c == '/' || c == '>';
 }
 
 #endif
@@ -282,9 +277,9 @@ static char *ParseAttrValue(char **sPtr)
         while (!IsUnquotedAttrValEnd(*s)) {
             ++s;
         }
-        if (!IsWs(*s) && TagEndLen(s) == 0)
+        if (!str::IsWs(*s) && TagEndLen(s) == 0)
             return NULL;
-        if (IsWs(*s))
+        if (str::IsWs(*s))
             *s = 0;
     }
     *sPtr = s;
@@ -358,7 +353,7 @@ ParseText:
         s += tagEndLen;
         goto ParseText;
     }
-    if (IsWs(*tagEnd)) {
+    if (str::IsWs(*tagEnd)) {
         *tagEnd = 0;
         StartTag(tagName);
         goto ParseAttributes;
