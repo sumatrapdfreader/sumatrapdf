@@ -199,7 +199,7 @@ int jbig2_image_compose(Jbig2Ctx *ctx, Jbig2Image *dst, Jbig2Image *src,
     w = src->width;
     h = src->height;
     ss = src->data;
-    /* FIXME: this isn't sufficient for the < 0 cases */
+
     if (x < 0) { w += x; x = 0; }
     if (y < 0) { h += y; y = 0; }
     w = (x + w < dst->width) ? w : dst->width - x;
@@ -209,6 +209,15 @@ int jbig2_image_compose(Jbig2Ctx *ctx, Jbig2Image *dst, Jbig2Image *src,
       "compositing %dx%d at (%d, %d) after clipping\n",
         w, h, x, y);
 #endif
+
+    /* check for zero clipping region */
+    if ((w <= 0) || (h <= 0))
+    {
+#ifdef JBIG2_DEBUG
+        jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, -1, "zero clipping region");
+#endif
+        return 0;
+    }
 
 #if 0
     /* special case complete/strip replacement */

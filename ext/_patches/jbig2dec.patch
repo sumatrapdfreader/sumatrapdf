@@ -1,5 +1,5 @@
 diff -rPu5 jbig2dec.orig\jbig2_halftone.c jbig2dec\jbig2_halftone.c
---- jbig2dec.orig\jbig2_halftone.c	Tue Jan 24 19:09:05 2012
+--- jbig2dec.orig\jbig2_halftone.c	Mon Feb 27 16:33:25 2012
 +++ jbig2dec\jbig2_halftone.c	Tue Jan 24 19:20:14 2012
 @@ -140,11 +140,11 @@
    /* fill out the generic region decoder parameters */
@@ -15,7 +15,7 @@ diff -rPu5 jbig2dec.orig\jbig2_halftone.c jbig2dec\jbig2_halftone.c
    rparams.gbat[4] = 2;
    rparams.gbat[5] = -2;
 diff -rPu5 jbig2dec.orig\jbig2_huffman.c jbig2dec\jbig2_huffman.c
---- jbig2dec.orig\jbig2_huffman.c	Tue Jan 24 19:09:05 2012
+--- jbig2dec.orig\jbig2_huffman.c	Mon Feb 27 16:33:25 2012
 +++ jbig2dec\jbig2_huffman.c	Fri Jan 27 22:30:00 2012
 @@ -251,10 +251,17 @@
        int PREFLEN;
@@ -49,8 +49,8 @@ diff -rPu5 jbig2dec.orig\jbig2_huffman.c jbig2dec\jbig2_huffman.c
    for (CURLEN = 1; CURLEN <= LENMAX; CURLEN++)
      {
 diff -rPu5 jbig2dec.orig\jbig2_image.c jbig2dec\jbig2_image.c
---- jbig2dec.orig\jbig2_image.c	Tue Jan 24 19:09:05 2012
-+++ jbig2dec\jbig2_image.c	Fri Jan 27 22:29:01 2012
+--- jbig2dec.orig\jbig2_image.c	Mon Feb 27 16:33:25 2012
++++ jbig2dec\jbig2_image.c	Mon Feb 27 22:28:52 2012
 @@ -39,11 +39,12 @@
              "could not allocate image structure in jbig2_image_new");
  		return NULL;
@@ -65,7 +65,7 @@ diff -rPu5 jbig2dec.orig\jbig2_image.c jbig2dec\jbig2_image.c
              "could not allocate image data buffer! [%d bytes]\n", stride*height);
  		jbig2_free(ctx->allocator, image);
  		return NULL;
-@@ -223,10 +224,13 @@
+@@ -232,10 +233,13 @@
      rightbyte = (x + w - 1) >> 3;
      shift = x & 7;
  
