@@ -286,14 +286,16 @@ class PrintThreadData : public ProgressUpdateUI, public NotificationWndCallback,
 
 public:
     PrintData *data;
+    HANDLE thread; // close the print thread handle after execution
 
     PrintThreadData(WindowInfo *win, PrintData *data) :
-        UIThreadWorkItem(win), data(data), isCanceled(false) {
+        UIThreadWorkItem(win), data(data), isCanceled(false), thread(NULL) {
         wnd = new NotificationWnd(win->hwndCanvas, _T(""), _TR("Printing page %d of %d..."), this);
         win->notifications->Add(wnd);
     }
 
     ~PrintThreadData() {
+        CloseHandle(thread);
         delete data;
         RemoveNotification(wnd);
     }
@@ -314,6 +316,7 @@ public:
     static DWORD WINAPI PrintThread(LPVOID data)
     {
         PrintThreadData *threadData = (PrintThreadData *)data;
+        threadData->thread = threadData->win->printThread;
         PrintToDevice(*threadData->data, threadData);
         QueueWorkItem(threadData);
         return 0;
@@ -322,10 +325,9 @@ public:
     virtual void Execute() {
         if (!WindowInfoStillValid(win))
             return;
-
-        HANDLE thread = win->printThread;
+        if (win->printThread != thread)
+            return;
         win->printThread = NULL;
-        CloseHandle(thread);
     }
 };
 
