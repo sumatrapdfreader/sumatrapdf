@@ -577,6 +577,12 @@ struct ListInspectionData {
 };
 
 extern "C" static void
+fz_inspection_fill_shade(fz_device *dev, fz_shade *shade, fz_matrix ctm, float alpha)
+{
+    ((ListInspectionData *)dev->user)->mem_estimate += sizeof(fz_shade);
+}
+
+extern "C" static void
 fz_inspection_fill_image(fz_device *dev, fz_image *image, fz_matrix ctm, float alpha)
 {
     int n = image->colorspace ? image->colorspace->n + 1 : 1;
@@ -624,6 +630,7 @@ fz_inspection_free(fz_device *dev)
 static fz_device *fz_new_inspection_device(fz_context *ctx, ListInspectionData *data)
 {
     fz_device *dev = fz_new_device(ctx, data);
+    dev->fill_shade = fz_inspection_fill_shade;
     dev->fill_image = fz_inspection_fill_image;
     dev->fill_image_mask = fz_inspection_fill_image_mask;
     dev->clip_image_mask = fz_inspection_clip_image_mask;

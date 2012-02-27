@@ -1224,7 +1224,8 @@ fz_stream *fz_open_jbig2d(fz_stream *chain, fz_buffer *global);
  * Resources and other graphics related objects.
  */
 
-enum { FZ_MAX_COLORS = 32 };
+/* SumatraPDF: make fz_shades use less memory */
+enum { FZ_MAX_COLORS = 8 };
 
 int fz_find_blendmode(char *name);
 char *fz_blendmode_name(int blendmode);
