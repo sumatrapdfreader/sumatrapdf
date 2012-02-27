@@ -71,8 +71,7 @@ public:
     SyncTex(const TCHAR* syncfilename, PdfEngine *engine) :
         Synchronizer(syncfilename), engine(engine), scanner(NULL)
     {
-        assert(str::EndsWithI(syncfilename, SYNCTEX_EXTENSION) ||
-               str::EndsWithI(syncfilename, SYNCTEXGZ_EXTENSION));
+        assert(str::EndsWithI(syncfilename, SYNCTEX_EXTENSION));
     }
     virtual ~SyncTex()
     {
@@ -317,7 +316,7 @@ int Pdfsync::RebuildIndex()
     fileIndex.At(0).end = lines.Count();
     assert(filestack.Count() == 1);
 
-    return Synchronizer::RebuildIndex();;
+    return Synchronizer::RebuildIndex();
 }
 
 // convert a coordinate from the sync file into a PDF coordinate
