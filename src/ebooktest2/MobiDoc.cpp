@@ -19,10 +19,21 @@ class MobiDoc2Impl : public MobiDoc2 {
         mobi = MobiDoc::ParseFile(fileName);
         if (!mobi)
             return false;
-        for (size_t i = 0; i < mobi->imagesCount; i++) {
+        ImageData *cover = mobi->GetCoverImage();
+        if (cover) {
             ImageData2 data = { 0 };
-            data.data = mobi->images[i].data;
-            data.len = mobi->images[i].len;
+            data.data = cover->data;
+            data.len = cover->len;
+            data.idx = (size_t)-1; // invalid index for other formats
+            images.Append(data);
+        }
+        for (size_t i = 1; i < mobi->imagesCount; i++) {
+            ImageData *mobiImg = mobi->GetImage(i);
+            if (!mobiImg)
+                continue;
+            ImageData2 data = { 0 };
+            data.data = mobiImg->data;
+            data.len = mobiImg->len;
             data.idx = i; // recindex
             images.Append(data);
         }
@@ -45,11 +56,11 @@ public:
     }
 
     virtual ImageData2 *GetImageData(size_t index) {
-        if (index > images.Count())
-            return NULL;
-        if (!images.At(index).data)
-            return NULL;
-        return &images.At(index);
+        for (size_t i = 0; i < images.Count(); i++) {
+            if (images.At(i).idx == index)
+                return &images.At(i);
+        }
+        return NULL;
     }
 
     virtual ImageData2 *GetImageData(const char *id) {

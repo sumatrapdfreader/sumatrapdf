@@ -18,18 +18,17 @@
 #define ET_FRAME_CLASS_NAME    _T("ET_FRAME")
 #define ET_FRAME_TITLE         _T("Ebook Test ") CURR_VERSION_STR
 
-#define PAGE_BORDER            10
+#define PAGE_BORDER            20
 
 #define WIN_DX    640
 #define WIN_DY    480
 
 // A sample text to display if we don't show an actual ebook
-static const char *gSampleHtml = "<html><p align=justify>ClearType is <b>dependent</b> on the <i>orientation &amp; ordering</i> of the LCD stripes.</p> <p align='right'><em>Currently</em>, ClearType is implemented <hr> only for vertical stripes that are ordered RGB.</p> <p align=center>This might be a concern if you are using a tablet PC.</p> <p>Where the display can be oriented in any direction, or if you are using a screen that can be turned from landscape to portrait. The <strike>following example</strike> draws text with two <u>different quality</u> settings.</p> On to the <b>next<mbp:pagebreak>page</b>&#21;</html>";
+static const char *gSampleHtml = "<html><p align=justify>ClearType is <b>dependent</b> on the <i>orientation &amp; ordering</i> of the LCD stripes.</p> <p align='right'><em>Currently</em>, ClearType is implemented <hr> only for vertical stripes that are ordered RGB.</p> <p align=center>This might be a concern if you are using a tablet PC.</p> <p>Where the display can be oriented in any direction, or if you are using a screen that can be turned from landscape to portrait. The <strike>following example</strike> draws text with two <u>different quality</u> settings.</p> On to the <b>next<mbp:pagebreak>page</b>&#x21;</html>";
 
-class ControlEbook : public INewPageObserver {
+class ControlEbook {
     BaseEbookDoc *  doc;
-    Vec<PageData*>  pages;
-    FontCache       fontCache;
+    Vec<PageData*> *pages;
 
     HWND            hwnd;
 
@@ -37,15 +36,20 @@ class ControlEbook : public INewPageObserver {
     SizeI           currDim;
     bool            showBboxes;
 
+    // needed so that memory allocated by ResolveHtmlEntities isn't leaked
+    PoolAllocator   allocator;
+
     void DeletePages() {
-        DeleteVecMembers(pages);
-        pages.Reset();
+        if (pages)
+            DeleteVecMembers(*pages);
+        delete pages;
+        pages = NULL;
     }
 
 public:
 
     ControlEbook(HWND hwnd) : hwnd(hwnd), doc(NULL),
-        currPageNo(1), showBboxes(false) {
+        pages(NULL), currPageNo(1), showBboxes(false) {
     }
     virtual ~ControlEbook() {
         DeletePages();
@@ -53,7 +57,7 @@ public:
     }
 
     void LoadDoc(const TCHAR *fileName);
-    size_t PageCount() { return pages.Count(); }
+    size_t PageCount() { return pages ? pages->Count() : 0; }
 
     void SetStatusText(const TCHAR *text);
     void GoToPage(int newPageNo);
@@ -64,9 +68,6 @@ public:
     void OnPaint();
 
     void ToggleShowBBoxes() { showBboxes = !showBboxes; }
-
-    // INewPageObserver
-    virtual void NewPage(PageData *pageData) { pages.Append(pageData); }
 };
 
 void ControlEbook::SetStatusText(const TCHAR *text)
@@ -77,7 +78,7 @@ void ControlEbook::SetStatusText(const TCHAR *text)
 
 void ControlEbook::GoToPage(int newPageNo)
 {
-    if (newPageNo < 1 || newPageNo > (int)pages.Count())
+    if (!pages || newPageNo < 1 || newPageNo > (int)pages->Count())
         return;
 
     currPageNo = newPageNo;
@@ -86,24 +87,25 @@ void ControlEbook::GoToPage(int newPageNo)
     if (!doc)
         return;
 
-    ScopedMem<TCHAR> s(str::Format(_T("Page %d out of %d"), currPageNo, (int)pages.Count()));
+    ScopedMem<TCHAR> s(str::Format(_T("Page %d out of %d"), currPageNo, (int)pages->Count()));
     SetStatusText(s);
 }
 
 void ControlEbook::AdvancePage(int dist)
 {
+    if (!pages)
+        return;
     int newPageNo = currPageNo + dist;
-    GoToPage(limitValue(newPageNo, 1, (int)pages.Count()));
+    GoToPage(limitValue(newPageNo, 1, (int)pages->Count()));
 }
 
 void ControlEbook::PageLayout(SizeI dim)
 {
-    if (dim == currDim && pages.Count() > 0)
+    if (dim == currDim && pages && pages->Count() > 0)
         return;
     currDim = dim;
 
     LayoutInfo li;
-    li.doc = doc;
     if (doc) {
         li.htmlStr = doc->GetBookHtmlData(li.htmlStrLen);
     }
@@ -111,12 +113,12 @@ void ControlEbook::PageLayout(SizeI dim)
         li.htmlStr = gSampleHtml;
         li.htmlStrLen = strlen(gSampleHtml);
     }
-    li.pageSize = dim;
-    li.pageSize.dx -= 2 * PAGE_BORDER;
-    li.pageSize.dy -= 2 * PAGE_BORDER;
+    li.pageDx = dim.dx - 2 * PAGE_BORDER;
+    li.pageDy = dim.dy - 2 * PAGE_BORDER;
+    li.textAllocator = &allocator;
 
     DeletePages();
-    LayoutHtml(li, &fontCache, this);
+    pages = LayoutHtml2(li, doc);
 }
 
 void ControlEbook::Repaint()
@@ -141,7 +143,7 @@ void ControlEbook::LoadDoc(const TCHAR *fileName)
         DeletePages();
 
         PageLayout(ClientRect(hwnd).Size());
-        GoToPage(limitValue(currPageNo, 1, (int)pages.Count()));
+        GoToPage(1);
     } else {
         ScopedMem<TCHAR> s(str::Format(_T("Failed to load %s!"), fileName));
         SetStatusText(s);
@@ -154,11 +156,11 @@ void ControlEbook::OnPaint()
     DoubleBuffer buf(hwnd, r);
     FillRect(buf.GetDC(), &r.ToRECT(), GetStockBrush(WHITE_BRUSH));
 
-    if (pages.Count() > 0) {
-        if (currPageNo > (int)pages.Count())
-            currPageNo = pages.Count();
-        PageData *pageData = pages.At(currPageNo - 1);
-        DrawPageLayout(&Graphics(buf.GetDC()), pageData, PAGE_BORDER, PAGE_BORDER, showBboxes);
+    if (pages && pages->Count() > 0) {
+        if (currPageNo > (int)pages->Count())
+            currPageNo = pages->Count();
+        PageData *pageData = pages->At(currPageNo - 1);
+        DrawPageLayout2(&Graphics(buf.GetDC()), pageData, PointF(PAGE_BORDER, PAGE_BORDER), showBboxes);
     }
 
     PAINTSTRUCT ps;

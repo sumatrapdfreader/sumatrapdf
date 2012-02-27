@@ -135,11 +135,13 @@ static void LayoutTest(const TCHAR *file)
     InitAllCommonControls();
     ScopedGdiPlus gdi;
 
+    PoolAllocator allocator;
     LayoutInfo li;
-    li.doc = doc;
     li.htmlStr = doc->GetBookHtmlData(li.htmlStrLen);
-    li.pageSize = SizeI(640, 480);
-    LayoutHtml(li, &FontCache());
+    li.pageDx = 640;
+    li.pageDy = 480;
+    li.textAllocator = &allocator;
+    LayoutHtml2(li, doc);
 
     delete doc;
 }

@@ -338,6 +338,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\ebooktest2\MiniMui.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\ebooktest2\MiniMui.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\ebooktest2\Resource.h"
 				>
 			</File>

@@ -703,7 +703,7 @@ void PageLayout::HandleTagFont(HtmlToken *t)
 static bool IgnoreThisTag(HtmlTag tag)
 {
     static uint8 tagsToIgnore[] = { Tag_Html, Tag_Body, Tag_Head, Tag_Guide, 
-        Tag_Reference, Tag_Table, Tag_Tr, Tag_Td };
+        Tag_Reference, Tag_Table, Tag_Tr, Tag_Td, Tag_Tt };
     return IsInArray((uint8)tag, tagsToIgnore, dimof(tagsToIgnore));
 }
 

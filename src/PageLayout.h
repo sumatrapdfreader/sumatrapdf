@@ -105,7 +105,7 @@ public:
     PageData *IterStart(LayoutInfo* layoutInfo);
     PageData *IterNext();
 
-private:
+protected:
     void HandleTagBr();
     void HandleTagA(HtmlToken *t);
     void HandleTagP(HtmlToken *t);
