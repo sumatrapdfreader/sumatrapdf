@@ -582,14 +582,6 @@ CachedStyle *CacheStyle(Style *style)
     return &e->cachedStyle;
 }
 
-static bool RectEq(const RectF *r1, const RectF *r2)
-{
-    return ((r1->X == r2->X) &&
-            (r1->Y == r2->Y) &&
-            (r1->Width == r2->Width) &&
-            (r1->Height == r2->Height));
-}
-
 Brush *BrushFromColorData(ColorData *color, const RectF& r)
 {
     if (ColorSolid == color->type)
@@ -598,7 +590,7 @@ Brush *BrushFromColorData(ColorData *color, const RectF& r)
     if (ColorGradientLinear == color->type) {
         ColorDataGradientLinear *d = &color->gradientLinear;
         LinearGradientBrush *br = d->cachedBrush;
-        if (!br || !RectEq(&r, d->rect)) {
+        if (!br || !r.Equals(*d->rect)) {
             ::delete br;
             br = ::new LinearGradientBrush(r, d->startColor, d->endColor, d->mode);
             *d->rect = r;

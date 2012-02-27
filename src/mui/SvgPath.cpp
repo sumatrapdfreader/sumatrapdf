@@ -17,6 +17,9 @@ https://developer.mozilla.org/en/SVG/Tutorial/Paths
 #include "StrUtil.h"
 #include "VecSegmented.h"
 
+// define to let str::Parse do most of the parsing
+// #define USE_STR_PARSE
+
 namespace svg {
 
 enum PathInstrType {
@@ -46,6 +49,8 @@ struct SvgPathInstr {
 
 // the order must match order of InstrType enums
 static char *instructions = "MmLlHhVvCcSsQqTtAaZz";
+
+#ifndef USE_STR_PARSE
 
 static bool GetInstructionType(char c, PathInstrType& instrOut)
 {
@@ -226,6 +231,73 @@ static bool ParseSvgPathData(const char * s, VecSegmented<SvgPathInstr>& instr)
     }
     return true;
 }
+
+#else
+
+static PathInstrType GetInstructionType(char c)
+{
+   const char *pos = str::FindChar(instructions, c);
+   if (!pos)
+       return Unknown;
+   return (PathInstrType)(pos - instructions);
+}
+
+static bool ParseSvgPathData(const char * s, VecSegmented<SvgPathInstr>& instr)
+{
+    for (; str::IsWs(*s); s++);
+
+    while (*s) {
+        SvgPathInstr i(GetInstructionType(*s++));
+        switch (i.type) {
+        case Close: case Close2:
+            break;
+
+        case HLineAbs: case HLineRel:
+        case VLineAbs: case VLineRel:
+            s = str::Parse(s, "%f", &i.v[0]);
+            break;
+
+        case MoveAbs: case MoveRel:
+        case LineToAbs: case LineToRel:
+        case BezierTAbs: case BezierTRel:
+            s = str::Parse(s, "%f%_%f", &i.v[0], &i.v[1]);
+            break;
+
+        case BezierSAbs: case BezierSRel:
+        case BezierQAbs: case BezierQRel:
+            s = str::Parse(s, "%f%_%f,%f%_%f",
+                &i.v[0], &i.v[1], &i.v[2], &i.v[3]);
+            break;
+
+        case BezierCAbs: case BezierCRel:
+            s = str::Parse(s, "%f%_%f,%f%_%f,%f%_%f",
+                &i.v[0], &i.v[1], &i.v[2], &i.v[3], &i.v[4], &i.v[5]);
+            break;
+
+        case ArcAbs: case ArcRel:
+            {
+                int largeArc, sweep;
+                s = str::Parse(s, "%f%_%f%?,%f%?,%d%?,%d%?,%f%_%f",
+                    &i.v[0], &i.v[1], &i.v[2], &largeArc, &sweep, &i.v[3], &i.v[4]);
+                i.largeArc = (largeArc != 0); i.sweep = (sweep != 0);
+            }
+            break;
+
+        default:
+            CrashIf(true);
+            return false;
+        }
+        if (!s)
+            return false;
+        instr.Append(i);
+
+        for (; str::IsWs(*s); s++);
+    }
+
+    return true;
+}
+
+#endif
 
 static void RelPointToAbs(const PointF& lastEnd, float *xy)
 {

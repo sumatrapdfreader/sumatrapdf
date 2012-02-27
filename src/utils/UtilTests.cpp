@@ -192,6 +192,8 @@ static void TStrTest()
     assert(str::Parse(_T("abc"), _T("abc%$")));
     assert(str::Parse(_T("abc"), _T("a%?bc%?d%$")));
     assert(!str::Parse(_T("abc"), _T("ab%$")));
+    assert(str::Parse(_T("a \r\n\t b"), _T("a%_b")));
+    assert(!str::Parse(_T("ab"), _T("a%_b")));
 
     {
         float f1, f2;
@@ -224,6 +226,22 @@ static void TStrTest()
         float f;
         assert(str::Parse(L"wide string, -30-20 1.5%", L"%S,%d%?-%2u%f%%%$", &str, &i, &j, &f));
         assert(str::Eq(str, L"wide string") && i == -30 && j == 20 && f == 1.5f);
+    }
+
+    {
+        const char *path = "M10 80 C 40 10, 65\r\n10,\t95\t80 S 150 150, 180 80\nA 45 45, 0, 1, 0, 125 125\nA 1 2 3\n0\n1\n20  -20";
+        float f[6];
+        int b[2];
+        const char *s = str::Parse(path, "M%f%_%f", &f[0], &f[1]);
+        assert(s && f[0] == 10 && f[1] == 80);
+        s = str::Parse(s + 1, "C%f%_%f,%f%_%f,%f%_%f", &f[0], &f[1], &f[2], &f[3], &f[4], &f[5]);
+        assert(s && f[0] == 40 && f[1] == 10 && f[2] == 65 && f[3] == 10 && f[4] == 95 && f[5] == 80);
+        s = str::Parse(s + 1, "S%f%_%f,%f%_%f", &f[0], &f[1], &f[2], &f[3], &f[4]);
+        assert(s && f[0] == 150 && f[1] == 150 && f[2] == 180 && f[3] == 80);
+        s = str::Parse(s + 1, "A%f%_%f%?,%f%?,%d%?,%d%?,%f%_%f", &f[0], &f[1], &f[2], &b[0], &b[1], &f[4], &f[5]);
+        assert(s && f[0] == 45 && f[1] == 45 && f[2] == 0 && b[0] == 1 && b[1] == 0 && f[4] == 125 && f[5] == 125);
+        s = str::Parse(s + 1, "A%f%_%f%?,%f%?,%d%?,%d%?,%f%_%f", &f[0], &f[1], &f[2], &b[0], &b[1], &f[4], &f[5]);
+        assert(s && f[0] == 1 && f[1] == 2 && f[2] == 3 && b[0] == 0 && b[1] == 1 && f[4] == 20 && f[5] == -20);
     }
 
     // the test string should only contain ASCII characters,
