@@ -195,7 +195,7 @@ void CopySelectionToClipboard(WindowInfo *win)
     if (!win->selectionOnPage) return;
     CrashIf(win->selectionOnPage->Count() == 0 || !win->dm || !win->dm->engine);
     if (win->selectionOnPage->Count() == 0) return;
-    if (!win->dm || win->dm->engine) return;
+    if (!win->dm || !win->dm->engine) return;
 
     if (!OpenClipboard(NULL)) return;
     EmptyClipboard();
