@@ -44,59 +44,12 @@ RectF MeasureTextAccurate2(Graphics *g, Font *f, const WCHAR *s, size_t len)
     return bbox;
 }
 
-void InitFontMetricsCache(FontMetricsCache *metrics, Graphics *gfx, Font *font)
-{
-    WCHAR s[2] = { 0 };
-    metrics->font = font;
-    RectF bbox;
-    for (size_t i = 0; i < 256-32; i++) {
-        s[0] = i + 32;
-        bbox = MeasureTextAccurate2(gfx, font, s, 1);
-        metrics->dx[i] = bbox.Width;
-        metrics->dy[i] = bbox.Height;
-    }
-}
-
-static bool MeasureTextUsingMetricsCache(FontMetricsCache *fontMetrics, const WCHAR *s, size_t len, RectF& bboxOut)
-{
-    float totalDx = 0;
-    float maxDy = 0;
-    for (size_t i = 0; i < len; i++) {
-        int n = s[i];
-        if ((n < 32) || (n > 256))
-            return false;
-        totalDx += fontMetrics->dx[n];
-        float dy = fontMetrics->dy[n];
-        if (dy > maxDy)
-            maxDy = dy;
-    }
-    bboxOut.X = 0; bboxOut.Y = 0;
-    bboxOut.Width = totalDx; bboxOut.Height = maxDy;
-    return true;
-}
-
-// TODO: gdi+ seems to under-report the width, the longer the text, the
-// bigger the difference. I'm trying to correct for that with this magic value
+// note: gdi+ seems to under-report the width, the longer the text, the
+// bigger the difference. I'm trying to correct for that with those magic values
 #define PER_CHAR_DX_ADJUST .2f
 #define PER_STR_DX_ADJUST  1.f
 
-// Measure text using optional FontMetricsCache. The caller must ensure that the
-// Font matches fontMetrics as they are updated lazily.
-RectF MeasureText(Graphics *g, Font *f, FontMetricsCache *fontMetrics, const WCHAR *s, size_t len)
-{
-    RectF bbox;
-    CrashIf(f != fontMetrics->font);
-    if (MeasureTextUsingMetricsCache(fontMetrics, s, len, bbox)) {
-        if (bbox.Width != 0)
-            bbox.Width += PER_STR_DX_ADJUST + (PER_CHAR_DX_ADJUST * (float)len);
-        return bbox;
-    }
-    return MeasureTextAccurate2(g, f, s, len);
-}
-
 // http://www.codeproject.com/KB/GDI-plus/measurestring.aspx
-// TODO: this seems to sometimes report size that is slightly too small
-// Adding a magic MAGIC_DX_ADJUST to the width seems to make it more or less right
 RectF MeasureTextAccurate(Graphics *g, Font *f, const WCHAR *s, size_t len)
 {
     if (0 == len)
