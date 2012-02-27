@@ -451,9 +451,13 @@ bool PageLayout::EnsureDx(float dx)
 
 // don't emit multiple spaces and don't emit spaces
 // at the beginning of the line
-static bool CanEmitElasticSpace(float currX, Vec<DrawInstr>& currLineInstr)
+static bool CanEmitElasticSpace(float currX, float maxCurrX, Vec<DrawInstr>& currLineInstr)
 {
     if (0 == currX)
+        return false;
+    // prevent elastic spaces from being flushed to the
+    // beginning of the next line
+    if (currX > maxCurrX)
         return false;
     DrawInstr& di = currLineInstr.Last();
     return (InstrElasticSpace != di.type) && (InstrFixedSpace != di.type);
@@ -471,7 +475,7 @@ void PageLayout::EmitNewLine()
 
 void PageLayout::EmitElasticSpace()
 {
-    if (!CanEmitElasticSpace(currX, currLineInstr))
+    if (!CanEmitElasticSpace(currX, pageDx - spaceDx, currLineInstr))
         return;
     EnsureDx(spaceDx);
     currX += spaceDx;
