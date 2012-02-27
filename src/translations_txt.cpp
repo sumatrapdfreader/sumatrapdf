@@ -5850,7 +5850,7 @@ const char *gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "Ric&orda file aperti",
   "Rimuovi dai Preferiti",
   "Rimuovi la pagina %s dai Preferiti",
-  NULL,
+  "Sostituisci &colori documento con schema colore di Windows",
   "Ruota a &sinistra\t<Ctrl> <Maiusc> -",
   "Ruota a &destra\t<Ctrl> <Maiusc> +",
   "Salva come",

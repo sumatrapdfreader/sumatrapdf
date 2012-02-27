@@ -558,6 +558,9 @@ Rimuovi dai Preferiti
 Remove page %s from favorites
 Rimuovi la pagina %s dai Preferiti
 
+Replace document &colors with Windows color scheme
+Sostituisci &colori documento con schema colore di Windows
+
 Rotate &Left\tCtrl+Shift+-
 Ruota a &sinistra\t<Ctrl> <Maiusc> -
 
@@ -680,7 +683,4 @@ Copia del testo...
 
 printing document
 Stampa documento...
-
-# Untranslated:
-#Replace document &colors with Windows color scheme
 
