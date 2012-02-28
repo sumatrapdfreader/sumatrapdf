@@ -6,6 +6,9 @@
 #include "Scoped.h"
 #include "WinUtil.h"
 
+#define NOLOG defined(NDEBUG)
+#include "DebugLog.h"
+
 /* Define if you want to conserve memory by always freeing cached bitmaps
    for pages not visible. Disabling this might lead to pages not rendering
    due to insufficient (GDI) memory. */
@@ -85,7 +88,7 @@ void RenderCache::Add(PageRenderRequest &req, RenderedBitmap *bitmap)
     assert(req.dm);
 
     req.rotation = normalizeRotation(req.rotation);
-    DBG_OUT("RenderCache::Add(pageNo=%d, rotation=%d, zoom=%.2f%%)\n", req.pageNo, req.rotation, req.zoom);
+    lf("RenderCache::Add(pageNo=%d, rotation=%d, zoom=%.2f%%)", req.pageNo, req.rotation, req.zoom);
     assert(cacheCount <= MAX_BITMAPS_CACHED);
 
     /* It's possible there still is a cached bitmap with different zoom/rotation */
@@ -197,8 +200,8 @@ bool RenderCache::FreePage(DisplayModel *dm, int pageNo, TilePosition *tile)
 
         if (shouldFree) {
             if (!freedSomething)
-                DBG_OUT("RenderCache::FreePage(%#x, %d) ", dm, pageNo);
-            DBG_OUT("freed %d ", entry->pageNo);
+                lf("RenderCache::FreePage(%#x, %d) ", dm, pageNo);
+            lf("freed %d ", entry->pageNo);
             freedSomething = true;
             DropCacheEntry(entry);
             cache[i] = NULL;
@@ -210,9 +213,6 @@ bool RenderCache::FreePage(DisplayModel *dm, int pageNo, TilePosition *tile)
         if (!shouldFree)
             curPos++;
     }
-
-    if (freedSomething)
-        DBG_OUT("\n");
     return freedSomething;
 }
 
@@ -312,7 +312,7 @@ void RenderCache::Render(DisplayModel *dm, int pageNo, RenderingCallback *callba
 /* Render a bitmap for page <pageNo> in <dm>. */
 void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool clearQueue, RenderingCallback *callback)
 {
-    DBG_OUT("RenderCache::Render(pageNo=%d)\n", pageNo);
+    lf("RenderCache::Render(pageNo=%d)", pageNo);
     assert(dm);
 
     ScopedCritSec scope(&requestAccess);
@@ -326,11 +326,11 @@ void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool c
         if ((curReq->zoom != zoom) || (curReq->rotation != rotation)) {
             /* Currently rendered page is for the same page but with different zoom
             or rotation, so abort it */
-            DBG_OUT("  aborting rendering\n");
+            l("  aborting rendering");
             curReq->abort = true;
         } else {
             /* we're already rendering exactly the same page */
-            DBG_OUT("  already rendering this page\n");
+            l("  already rendering this page");
             goto Exit;
         }
     }
@@ -350,12 +350,12 @@ void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool c
                 tmp = requests[requestCount-1];
                 requests[requestCount-1] = *req;
                 *req = tmp;
-                DBG_OUT("  already queued\n");
+                l("  already queued");
                 goto Exit;
             } else {
                 /* There was a request queued for the same page but with different
                    zoom or rotation, so only replace this request */
-                DBG_OUT("Replacing request for page %d with new request\n", req->pageNo);
+                lf("Replacing request for page %d with new request", req->pageNo);
                 req->zoom = zoom;
                 req->rotation = rotation;
 
@@ -481,7 +481,7 @@ bool RenderCache::ClearCurrentRequest()
    user know he has to wait until we finish */
 void RenderCache::CancelRendering(DisplayModel *dm)
 {
-    DBG_OUT("RenderCache::CancelRendering()\n");
+    l("RenderCache::CancelRendering()");
     ClearQueueForDisplayModel(dm);
 
     for (;;) {
@@ -527,27 +527,24 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data)
     PageRenderRequest   req;
     RenderedBitmap *    bmp;
 
-    DBG_OUT("RenderCacheThread() started\n");
     for (;;) {
-        //DBG_OUT("Worker: wait\n");
+        //l("Worker: wait");
         if (cache->ClearCurrentRequest()) {
             DWORD waitResult = WaitForSingleObject(cache->startRendering, INFINITE);
             // Is it not a page render request?
-            if (WAIT_OBJECT_0 != waitResult) {
-                DBG_OUT("  WaitForSingleObject() failed\n");
+            if (WAIT_OBJECT_0 != waitResult)
                 continue;
-            }
         }
 
         if (!cache->GetNextRequest(&req))
             continue;
-        DBG_OUT("RenderCacheThread(): dequeued %d\n", req.pageNo);
+        lf("RenderCacheThread(): dequeued %d", req.pageNo);
         if (!req.dm->PageVisibleNearby(req.pageNo) && !req.renderCb) {
-            DBG_OUT("RenderCacheThread(): not rendering because not visible\n");
+            l("RenderCacheThread(): not rendering because not visible");
             continue;
         }
         if (req.dm->dontRenderFlag) {
-            DBG_OUT("RenderCacheThread(): not rendering because of _dontRenderFlag\n");
+            l("RenderCacheThread(): not rendering because of _dontRenderFlag");
             if (req.renderCb)
                 req.renderCb->Callback();
             continue;
@@ -562,9 +559,9 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data)
         }
 
         if (bmp)
-            DBG_OUT("RenderCacheThread(): finished rendering %d\n", req.pageNo);
+            lf("RenderCacheThread(): finished rendering %d", req.pageNo);
         else
-            DBG_OUT("RenderCacheThread(): failed to render a bitmap of page %d\n", req.pageNo);
+            lf("RenderCacheThread(): failed to render a bitmap of page %d", req.pageNo);
         if (req.renderCb) {
             // the callback must free the RenderedBitmap
             req.renderCb->Callback(bmp);
@@ -582,7 +579,6 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data)
         }
     }
 
-    DBG_OUT("RenderCacheThread() finished\n");
     return 0;
 }
 
@@ -616,7 +612,7 @@ UINT RenderCache::PaintTile(HDC hdc, RectI *bounds, DisplayModel *dm, int pageNo
         return renderDelay;
     }
 
-    DBG_OUT("page %d ", pageNo);
+    lf("page %d ", pageNo);
 
     HDC bmpDC = CreateCompatibleDC(hdc);
     if (bmpDC) {

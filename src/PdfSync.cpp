@@ -10,6 +10,9 @@
 #include <time.h>
 #include <synctex_parser.h>
 
+#define NOLOG defined(NDEBUG)
+#include "DebugLog.h"
+
 // size of the mark highlighting the location calculated by forward-search
 #define MARK_SIZE               10
 // maximum error in the source file line number when doing forward-search
@@ -104,7 +107,7 @@ bool Synchronizer::IsIndexDiscarded() const
     struct _stat newstamp;
     if (_tstat(syncfilepath, &newstamp) == 0 &&
         difftime(newstamp.st_mtime, syncfileTimestamp.st_mtime) > 0) {
-        DBG_OUT("PdfSync:sync file has changed, rebuilding index: %s\n", syncfilepath);
+        lf(_T("PdfSync:sync file has changed, rebuilding index: %s"), syncfilepath);
         // update time stamp
         memcpy((void *)&syncfileTimestamp, &newstamp, sizeof(syncfileTimestamp));
         return true; // the file has changed!
@@ -137,7 +140,7 @@ int Synchronizer::Create(const TCHAR *pdffilename, PdfEngine *engine, Synchroniz
 
     const TCHAR *fileExt = path::GetExt(pdffilename);
     if (!str::EqI(fileExt, _T(".pdf"))) {
-        DBG_OUT("Bad PDF filename! (%s)\n", pdffilename);
+        lf(_T("Bad PDF filename! (%s)"), pdffilename);
         return PDFSYNCERR_INVALID_ARGUMENT;
     }
 
@@ -257,14 +260,14 @@ int Pdfsync::RebuildIndex()
             if (sscanf(line, "l %u %u %u", &psline.record, &psline.line, &psline.column) >= 2)
                 lines.Append(psline);
             else
-                DBG_OUT("Bad 'l' line in the pdfsync file\n");
+                l("Bad 'l' line in the pdfsync file");
             break;
 
         case 's':
             if (sscanf(line, "s %u", &page) == 1)
                 sheetIndex.Append(points.Count());
             else
-                DBG_OUT("Bad 's' line in the pdfsync file\n");
+                l("Bad 's' line in the pdfsync file");
             break;
 
         case 'p':
@@ -274,7 +277,7 @@ int Pdfsync::RebuildIndex()
             else if (sscanf(line, "p* %u %u %u", &pspoint.record, &pspoint.x, &pspoint.y) == 3)
                 points.Append(pspoint);
             else
-                DBG_OUT("Bad 'p' line in the pdfsync file\n");
+                l("Bad 'p' line in the pdfsync file");
             break;
 
         case '(':
@@ -304,11 +307,11 @@ int Pdfsync::RebuildIndex()
             if (filestack.Count() > 1)
                 fileIndex.At(filestack.Pop()).end = lines.Count();
             else
-                DBG_OUT("Unbalanced ')' line in the pdfsync file\n");
+                l("Unbalanced ')' line in the pdfsync file");
             break;
 
         default:
-            DBG_OUT("Ignoring invalid pdfsync line starting with '%c'\n", *line);
+            lf("Ignoring invalid pdfsync line starting with '%c'", *line);
             break;
         }
     }
@@ -460,7 +463,7 @@ int Pdfsync::SourceToDoc(const TCHAR* srcfilename, UINT line, UINT col, UINT *pa
     Vec<size_t> found_records;
     UINT ret = SourceToRecord(srcfilename, line, col, found_records);
     if (ret != PDFSYNCERR_SUCCESS || found_records.Count() == 0) {
-        DBG_OUT("source->pdf: %s:%u -> no record found, error:%u\n", srcfilename, line, ret);
+        lf(_T("source->pdf: %s:%u -> no record found, error:%u"), srcfilename, line, ret);
         return ret;
     }
 
@@ -483,7 +486,7 @@ int Pdfsync::SourceToDoc(const TCHAR* srcfilename, UINT line, UINT col, UINT *pa
             RectD mbox = engine->PageMediabox(firstPage);
             rc.y = mbox.dy - (rc.y + rc.dy);
             rects.Push(rc.Round());
-            DBG_OUT("source->pdf: %s:%u -> record:%u -> page:%u, x:%.0f, y:%.0f\n",
+            lf(_T("source->pdf: %s:%u -> record:%u -> page:%u, x:%.0f, y:%.0f"),
                     srcfilename, line, points.At(i).record, firstPage, rc.x, rc.y);
         }
     }

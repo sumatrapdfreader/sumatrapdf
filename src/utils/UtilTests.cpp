@@ -13,6 +13,9 @@
 #include "SimpleLog.h"
 #include <time.h>
 
+#define NOLOG defined(NDEBUG)
+#include "DebugLog.h"
+
 static void GeomTest()
 {
     PointD ptD(12.4, -13.6);
@@ -1109,7 +1112,7 @@ static void BencTestStress()
 
 void BaseUtils_UnitTests()
 {
-    DBG_OUT("Running BaseUtils unit tests\n");
+    l("Running BaseUtils unit tests");
     GeomTest();
     TStrTest();
     FileUtilTest();
