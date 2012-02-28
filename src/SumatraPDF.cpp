@@ -2145,9 +2145,8 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
         return;
 
     bool wasChm = win->IsChm();
-    if (wasChm && InHtmlNestedMessagePump()) {
+    if (wasChm && InHtmlNestedMessagePump())
         return;
-    }
 
     if (win->IsDocLoaded())
         win->dm->dontRenderFlag = true;
@@ -2155,11 +2154,10 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
         ExitFullscreen(*win);
 
     bool lastWindow = (1 == gWindows.Count());
-    if (lastWindow) {
+    if (lastWindow)
         SavePrefs();
-    } else {
+    else
         UpdateCurrentFileDisplayStateForWin(win);
-    }
 
     if (lastWindow && !quitIfLast) {
         if (wasChm)
@@ -2184,9 +2182,11 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
         }
         UpdateToolbarPageText(win, 0);
         UpdateToolbarFindText(win);
-        if (wasChm)
+        if (wasChm) {
             // restore the non-Chm menu
             RebuildMenuBarForWindow(win);
+        }
+
         DeleteOldSelectionInfo(win, true);
         win->RedrawAll();
         UpdateFindbox(win);
