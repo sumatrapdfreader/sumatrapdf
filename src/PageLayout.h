@@ -78,7 +78,8 @@ class LayoutInfo {
 public:
     LayoutInfo() :
       pageDx(0), pageDy(0), fontName(NULL), fontSize(0),
-      textAllocator(NULL), mobiDoc(NULL), htmlStr(0), htmlStrLen(0)
+      textAllocator(NULL), mobiDoc(NULL), htmlStr(0), htmlStrLen(0),
+      reparsePoint(NULL)
     { }
 
     int             pageDx;
@@ -96,6 +97,11 @@ public:
     MobiDoc *       mobiDoc;
     const char *    htmlStr;
     size_t          htmlStrLen;
+
+    // if not NULL, we will start parsing from this point
+    // if NULL, will start parsing from htmlStr
+    // should be within htmlStr
+    const char *    reparsePoint;
 };
 
 class PageLayout

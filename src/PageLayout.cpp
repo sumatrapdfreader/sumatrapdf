@@ -881,10 +881,15 @@ PageData *PageLayout::IterStart(LayoutInfo* li)
     if (spaceDx2 < spaceDx)
         spaceDx = spaceDx2;
 
+    currReparsePoint = layoutInfo->reparsePoint;
+    if (!currReparsePoint)
+        currReparsePoint = layoutInfo->htmlStr;
+    CrashIf((currReparsePoint < layoutInfo->htmlStr) ||
+            (currReparsePoint > (layoutInfo->htmlStr + layoutInfo->htmlStrLen)));
+
     currJustification = Align_Justify;
     currX = 0; currY = 0;
     currPage = new PageData;
-    currReparsePoint = layoutInfo->htmlStr;
     currPage->reparsePoint = currReparsePoint;
 
     currLineTopPadding = 0;
@@ -892,7 +897,9 @@ PageData *PageLayout::IterStart(LayoutInfo* li)
         ImageData *img = layoutInfo->mobiDoc->GetCoverImage();
         if (img) {
             EmitImage(img);
-            coverImage = img; // must do that after EmitImage()
+            // must do that after EmitImage() because EmitImage() uses it
+            // to check for duplicate cover image
+            coverImage = img;
         }
     }
     return IterNext();
