@@ -924,7 +924,6 @@ STDMETHODIMP HtmlMoniker::ParseDisplayName(IBindCtx *pbc, IMoniker *pmkToLeft,
     LPOLESTR pszDisplayName,
         ULONG *pchEaten, IMoniker **ppmkOut)
 {
-    DBG_OUT("%s", pszDisplayName);
     return E_NOTIMPL;
 }
 

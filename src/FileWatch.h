@@ -19,7 +19,7 @@ public:
     void SynchronousAbort();
 
     FileWatcher(CallbackFunc *callback) : hDir(NULL), curBuffer(0),
-        szFilepath(NULL), hWatchingThread(NULL), pCallback(callback) {
+        filePath(NULL), hWatchingThread(NULL), pCallback(callback) {
         ZeroMemory(&this->overl, sizeof(this->overl));
         // create the event used to abort the "watching" thread
         hEvtStopWatching = CreateEvent(NULL, TRUE, FALSE, NULL);
@@ -28,14 +28,14 @@ public:
     ~FileWatcher() {
         SynchronousAbort();
         delete pCallback;
-        free(szFilepath);
+        free(filePath);
         CloseHandle(hEvtStopWatching);
     }
 
 private:
-    HANDLE  hDir; // handle of the directory to watch
-    CallbackFunc *pCallback;// function called when a file change is detected
-    TCHAR * szFilepath; // path to the file watched
+    HANDLE          hDir;      // handle of the directory to watch
+    CallbackFunc *  pCallback; // function called when a file change is detected
+    TCHAR *         filePath;  // path to the file watched
 
     FILE_NOTIFY_INFORMATION buffer[2][512];
         // a double buffer where the Windows API ReadDirectory will store the list

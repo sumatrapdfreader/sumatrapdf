@@ -215,8 +215,6 @@ static void AppendRecentFilesToMenu(HMENU m)
         assert(state->filePath);
         if (state->filePath)
             AddFileMenuItem(m, state->filePath, index);
-        if (FILE_HISTORY_MAX_RECENT == index)
-            DBG_OUT("  not adding, reached max %d items\n", FILE_HISTORY_MAX_RECENT);
     }
 
     InsertMenu(m, IDM_EXIT, MF_BYCOMMAND | MF_SEPARATOR, 0, NULL);

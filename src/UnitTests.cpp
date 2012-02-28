@@ -10,6 +10,9 @@
 #include "AppTools.h"
 #include "StressTesting.h"
 
+#define NOLOG defined(NDEBUG)
+#include "DebugLog.h"
+
 static void hexstrTest()
 {
     unsigned char buf[6] = { 1, 2, 33, 255, 0, 18 };
@@ -168,7 +171,7 @@ static void BenchRangeTest()
 
 void SumatraPDF_UnitTests()
 {
-    DBG_OUT("Running SumatraPDF unit tests\n");
+    l("Running SumatraPDF unit tests");
     hexstrTest();
     ParseCommandLineTest();
     versioncheck_test();

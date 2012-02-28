@@ -558,13 +558,15 @@ $(OS)\AppPrefs.obj: src\DjVuEngine.h src\EngineManager.h src\Favorites.h
 $(OS)\AppPrefs.obj: src\FileHistory.h src\ImagesEngine.h src\PdfEngine.h
 $(OS)\AppPrefs.obj: src\PsEngine.h src\SumatraPDF.h src\TextSearch.h
 $(OS)\AppPrefs.obj: src\TextSelection.h src\translations.h src\utils\Allocator.h
-$(OS)\AppPrefs.obj: src\utils\BaseUtil.h src\utils\BencUtil.h src\utils\FileTransactions.h
-$(OS)\AppPrefs.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
-$(OS)\AppPrefs.obj: src\utils\StrUtil.h src\utils\Vec.h src\WindowInfo.h
+$(OS)\AppPrefs.obj: src\utils\BaseUtil.h src\utils\BencUtil.h src\utils\DebugLog.h
+$(OS)\AppPrefs.obj: src\utils\FileTransactions.h src\utils\FileUtil.h src\utils\GeomUtil.h
+$(OS)\AppPrefs.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\AppPrefs.obj: src\WindowInfo.h
 $(OS)\AppTools.obj: src\AppTools.h src\translations.h src\utils\Allocator.h
-$(OS)\AppTools.obj: src\utils\BaseUtil.h src\utils\CmdLineParser.h src\utils\FileUtil.h
-$(OS)\AppTools.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
-$(OS)\AppTools.obj: src\utils\Vec.h src\utils\WinUtil.h src\Version.h
+$(OS)\AppTools.obj: src\utils\BaseUtil.h src\utils\CmdLineParser.h src\utils\DebugLog.h
+$(OS)\AppTools.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
+$(OS)\AppTools.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
+$(OS)\AppTools.obj: src\Version.h
 $(OS)\ChmEngine.obj: src\BaseEngine.h src\ChmEngine.h src\utils\Allocator.h
 $(OS)\ChmEngine.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\ChmEngine.obj: src\utils\HtmlWindow.h src\utils\Scoped.h src\utils\StrUtil.h
@@ -580,8 +582,8 @@ $(OS)\DisplayModel.obj: src\BaseEngine.h src\ChmEngine.h src\DisplayModel.h
 $(OS)\DisplayModel.obj: src\DisplayState.h src\DjVuEngine.h src\EngineManager.h
 $(OS)\DisplayModel.obj: src\ImagesEngine.h src\PdfEngine.h src\PsEngine.h
 $(OS)\DisplayModel.obj: src\TextSearch.h src\TextSelection.h src\utils\Allocator.h
-$(OS)\DisplayModel.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\StrUtil.h
-$(OS)\DisplayModel.obj: src\utils\Vec.h
+$(OS)\DisplayModel.obj: src\utils\BaseUtil.h src\utils\DebugLog.h src\utils\GeomUtil.h
+$(OS)\DisplayModel.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\DjVuEngine.obj: src\BaseEngine.h src\DjVuEngine.h src\utils\Allocator.h
 $(OS)\DjVuEngine.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\DjVuEngine.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
@@ -612,8 +614,8 @@ $(OS)\Favorites.obj: src\TextSelection.h src\translations.h src\utils\Allocator.
 $(OS)\Favorites.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\Favorites.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\Favorites.obj: src\utils\WinUtil.h src\WindowInfo.h
-$(OS)\FileWatch.obj: src\FileWatch.h src\utils\BaseUtil.h src\utils\FileUtil.h
-$(OS)\FileWatch.obj: src\utils\Scoped.h src\utils\StrUtil.h
+$(OS)\FileWatch.obj: src\FileWatch.h src\utils\BaseUtil.h src\utils\DebugLog.h
+$(OS)\FileWatch.obj: src\utils\FileUtil.h src\utils\Scoped.h src\utils\StrUtil.h
 $(OS)\ImagesEngine.obj: ext\unrar\dll.hpp src\BaseEngine.h src\ImagesEngine.h
 $(OS)\ImagesEngine.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\FileUtil.h
 $(OS)\ImagesEngine.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
@@ -683,9 +685,9 @@ $(OS)\Print.obj: src\Notifications.h src\PdfEngine.h src\Print.h
 $(OS)\Print.obj: src\PsEngine.h src\Selection.h src\SumatraDialogs.h
 $(OS)\Print.obj: src\SumatraPDF.h src\TextSearch.h src\TextSelection.h
 $(OS)\Print.obj: src\translations.h src\utils\Allocator.h src\utils\BaseUtil.h
-$(OS)\Print.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
-$(OS)\Print.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
-$(OS)\Print.obj: src\WindowInfo.h
+$(OS)\Print.obj: src\utils\DebugLog.h src\utils\FileUtil.h src\utils\GeomUtil.h
+$(OS)\Print.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\Print.obj: src\utils\WinUtil.h src\WindowInfo.h
 $(OS)\PsEngine.obj: src\BaseEngine.h src\PdfEngine.h src\PsEngine.h
 $(OS)\PsEngine.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\FileUtil.h
 $(OS)\PsEngine.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
@@ -808,8 +810,9 @@ $(OS)\Uninstall.obj: src\utils\StrUtil.h src\utils\Timer.h src\utils\Vec.h
 $(OS)\Uninstall.obj: src\utils\WinUtil.h src\Version.h
 $(OS)\UnitTests.obj: src\AppTools.h src\BaseEngine.h src\DisplayState.h
 $(OS)\UnitTests.obj: src\ParseCommandLine.h src\StressTesting.h src\utils\Allocator.h
-$(OS)\UnitTests.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
-$(OS)\UnitTests.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
+$(OS)\UnitTests.obj: src\utils\BaseUtil.h src\utils\DebugLog.h src\utils\GeomUtil.h
+$(OS)\UnitTests.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\UnitTests.obj: src\utils\WinUtil.h
 $(OS)\WindowInfo.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
 $(OS)\WindowInfo.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
 $(OS)\WindowInfo.obj: src\EngineManager.h src\FileWatch.h src\ImagesEngine.h
@@ -865,8 +868,8 @@ $(OU)\UtilTests.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\BencUt
 $(OU)\UtilTests.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
 $(OU)\UtilTests.obj: src\utils\SimpleLog.h src\utils\StrUtil.h src\utils\Vec.h
 $(OU)\UtilTests.obj: src\utils\WinUtil.h
-$(OU)\WinUtil.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\FileUtil.h
-$(OU)\WinUtil.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
-$(OU)\WinUtil.obj: src\utils\Vec.h src\utils\WinUtil.h
+$(OU)\WinUtil.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\DebugLog.h
+$(OU)\WinUtil.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
+$(OU)\WinUtil.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(OU)\ZipUtil.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\FileUtil.h
 $(OU)\ZipUtil.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\ZipUtil.h

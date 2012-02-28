@@ -6,6 +6,9 @@
 #include "StrUtil.h"
 #include "FileUtil.h"
 
+#define NOLOG defined(NDEBUG)
+#include "DebugLog.h"
+
 bool FileWatcher::IsThreadRunning()
 {
     return hWatchingThread && (WaitForSingleObject(hWatchingThread, 0) == WAIT_TIMEOUT);
@@ -46,15 +49,14 @@ void FileWatcher::StartWatchThread()
     hWatchingThread = CreateThread(NULL, 0, WatchingThread, this, 0, &watchingthreadID);
 }
 
-void FileWatcher::Init(LPCTSTR filefullpath)
+void FileWatcher::Init(const TCHAR* fileFullPath)
 {
     // if the thread already exists then stop it
     if (IsThreadRunning())
         SynchronousAbort();
 
-    free(szFilepath);
-    szFilepath = str::Dup(filefullpath);
-    TCHAR *dirPath = path::GetDir(szFilepath);
+    str::ReplacePtr(&filePath, fileFullPath);
+    TCHAR *dirPath = path::GetDir(filePath);
 
     hDir = CreateFile(
         dirPath, // pointer to the directory containing the tex files
@@ -146,7 +148,7 @@ bool FileWatcher::NotifyChange()
     for (;;) {
         ScopedMem<WCHAR> filenameW(str::DupN(pFileNotify->FileName, pFileNotify->FileNameLength / sizeof(WCHAR)));
         ScopedMem<TCHAR> ptNotifyFilename(str::conv::FromWStr(filenameW));
-        bool isWatchedFile = str::EqI(ptNotifyFilename, path::GetBaseName(szFilepath));
+        bool isWatchedFile = str::EqI(ptNotifyFilename, path::GetBaseName(filePath));
 
         // is it the file that is being watched?
         if (isWatchedFile && pFileNotify->Action == FILE_ACTION_MODIFIED) {
@@ -154,7 +156,7 @@ bool FileWatcher::NotifyChange()
             // because the time granularity is so big that this can cause genuine
             // file notifications to be ignored. (This happens for instance for
             // PDF files produced by pdftex from small.tex document)
-            DBG_OUT("FileWatch: change detected in %s\n", szFilepath);
+            lf(_T("FileWatch: change detected in %s"), filePath);
             if (pCallback)
                 pCallback->Callback();
             return true;
