@@ -82,6 +82,9 @@
     <ClCompile Include="src\utils\TrivialHtmlParser_ut.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="src\mui\SvgPath_ut.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ebooktest\EbookTestMenu.h" />

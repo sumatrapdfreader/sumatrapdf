@@ -386,6 +386,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     setlocale(LC_ALL, "C");
 
 #ifdef DEBUG
+    extern void SvgPath_UnitTests();
+    SvgPath_UnitTests();
     extern void TrivialHtmlParser_UnitTests();
     TrivialHtmlParser_UnitTests();
     extern void BaseUtils_UnitTests();

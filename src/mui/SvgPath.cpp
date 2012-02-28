@@ -10,6 +10,18 @@ in a Button etc.
 http://www.w3.org/TR/SVG/paths.html
 http://tutorials.jenkov.com/svg/path-element.html
 https://developer.mozilla.org/en/SVG/Tutorial/Paths
+
+The eventual goal is to be able easily use vector data in SVG and XAML
+formats as there are many nice, freely licensable icons in those formats.
+Parsing svg path syntax is the first step.
+
+TODO: support composite paths (i.e. comprising of multiple GraphicsPaths
+that have attributes like color, pen size etc.). Some graphics require that.
+
+Note: this is not meant to fully support SVG or XAML syntax. We only need the
+basic subset and we can assume that to import data from SVG/XAML files we'll
+write a pre-processing script that will convert them to something that we
+understand.
 */
 
 #include "BaseUtil.h"
@@ -18,7 +30,8 @@ https://developer.mozilla.org/en/SVG/Tutorial/Paths
 #include "VecSegmented.h"
 
 // define to let str::Parse do most of the parsing
-// #define USE_STR_PARSE
+// TODO: it fails unit tests
+//#define USE_STR_PARSE
 
 namespace svg {
 
@@ -37,8 +50,7 @@ enum PathInstrType {
 };
 
 struct SvgPathInstr {
-    SvgPathInstr(PathInstrType type) : type(type) {
-    }
+    SvgPathInstr(PathInstrType type) : type(type) { }
 
     PathInstrType   type;
     // the meaning of values depends on InstrType. We could be more safe 
@@ -328,6 +340,7 @@ GraphicsPath *GraphicsPathFromPathData(const char *s)
 
         // convert relative coordinates to absolute based on end position of
         // previous element
+        // TODO: support the rest of instructions
         if (MoveRel == type) {
             RelPointToAbs(prevEnd, i->v);
             type = MoveAbs;
@@ -370,3 +383,8 @@ GraphicsPath *GraphicsPathFromPathData(const char *s)
 }
 
 }
+
+#ifdef DEBUG
+#include "SvgPath_ut.cpp"
+#endif
+
