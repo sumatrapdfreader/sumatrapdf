@@ -13,7 +13,6 @@
 #include "SimpleLog.h"
 #include <time.h>
 
-#define NOLOG defined(NDEBUG)
 #include "DebugLog.h"
 
 static void GeomTest()

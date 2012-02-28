@@ -13,7 +13,6 @@
 #include <io.h>
 #include <fcntl.h>
 
-#define NOLOG defined(NDEBUG)
 #include "DebugLog.h"
 
 // Loads a DLL explicitly from the system's library collection

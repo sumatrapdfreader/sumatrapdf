@@ -16,9 +16,6 @@
 #include "WindowInfo.h"
 #include "AppTools.h"
 
-#define NOLOG defined(NDEBUG)
-#include "DebugLog.h"
-
 #define PREFS_FILE_NAME         _T("sumatrapdfprefs.dat")
 
 #define MAX_REMEMBERED_FILES 1000
@@ -578,7 +575,6 @@ void Load(TCHAR *filepath, SerializableGlobalPrefs& globalPrefs,
     for (int index = 0; fileHistory.Get(index); index++) {
         DisplayState *state = fileHistory.Get(index);
         if (!file::Exists(state->filePath)) {
-            lf(_T("Prefs_Load() file '%s' doesn't exist anymore"), state->filePath);
             fileHistory.Remove(state);
             delete state;
         }

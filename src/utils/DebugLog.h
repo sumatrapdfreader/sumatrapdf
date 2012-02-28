@@ -5,23 +5,27 @@
 #define DebugLog_h
 
 /* Simple logging for ad-hoc logging with OutputDebugString().
+Only enabled in debug builds by default.
 
 To disable logging, #define NOLOG to 1 before including this file i.e.
 
 #define NOLOG 1
 #include "DebugLog.h"
 
-To only have logging in debug build:
+To always enable logging, #define NOLOG to 0 before the #include
 
-#define NOLOG defined(NDEBUG)
+#define NOLOG 0
 #include "DebugLog.h"
 
 Any other value for NOLOG (including 0), enables logging. This provides
 for an easy switch for turning logging on/off in a given .cpp file.
 */
 
-#include "Scoped.h"
-#include "StrUtil.h"
+#include "BaseUtil.h"
+
+#ifndef NOLOG
+#define NOLOG defined(NDEBUG)
+#endif
 
 namespace dbglog {
 
@@ -32,10 +36,13 @@ void lf(const WCHAR *fmt, ...);
 
 // short names are important for this use case
 #if NOLOG == 1
+
 inline void l(const char *s) { }
 inline void l(const WCHAR *s) { }
 #define lf(fmt, ...) ((void)0)
+
 #else
+
 inline void l(const char *s) {
     OutputDebugStringA(s);
     OutputDebugStringA("\n");
@@ -47,6 +54,7 @@ inline void l(const WCHAR *s) {
 }
 
 #define lf(fmt, ...) dbglog::lf(fmt, __VA_ARGS__)
+
 #endif
 
 #endif

@@ -18,9 +18,6 @@
 #include "SumatraDialogs.h"
 #include "Selection.h"
 
-#define NOLOG defined(NDEBUG)
-#include "DebugLog.h"
-
 static bool PrinterSupportsStretchDib(HWND hwndForMsgBox, HDC hdc)
 {
 #ifdef USE_GDI_FOR_PRINTING
@@ -127,8 +124,6 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
         bPrintPortrait = DMORIENT_PORTRAIT == pd.orientation;
 
     if (pd.sel.Count() > 0) {
-        l(" printing:  drawing bitmap for selection");
-
         for (size_t i = 0; i < pd.sel.Count(); i++) {
             StartPage(hdc);
             RectD *clipRegion = &pd.sel.At(i).rect;
@@ -180,8 +175,6 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
             if ((PrintRangeEven == pd.rangeAdv && pageNo % 2 != 0) ||
                 (PrintRangeOdd == pd.rangeAdv && pageNo % 2 == 0))
                 continue;
-
-            lf(" printing:  drawing bitmap for page %d", pageNo);
 
             StartPage(hdc);
             // MM_TEXT: Each logical unit is mapped to one device pixel.

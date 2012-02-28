@@ -10,7 +10,6 @@
 #include "AppTools.h"
 #include "StressTesting.h"
 
-#define NOLOG defined(NDEBUG)
 #include "DebugLog.h"
 
 static void hexstrTest()

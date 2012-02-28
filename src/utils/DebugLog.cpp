@@ -2,6 +2,8 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "DebugLog.h"
+#include "Scoped.h"
+#include "StrUtil.h"
 
 namespace dbglog {
 

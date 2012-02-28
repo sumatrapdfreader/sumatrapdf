@@ -549,10 +549,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\src\utils\DebugLog.h"
-					>
-				</File>
-				<File
 					RelativePath=".\src\utils\FrameTimeoutCalculator.h"
 					>
 				</File>
@@ -580,6 +576,14 @@
 			<Filter
 				Name="tools"
 				>
+				<File
+					RelativePath=".\src\utils\DebugLog.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\utils\DebugLog.h"
+					>
+				</File>
 				<File
 					RelativePath=".\src\utils\DirIter.cpp"
 					>

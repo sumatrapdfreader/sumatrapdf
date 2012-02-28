@@ -41,9 +41,6 @@
 #include "ParseCommandLine.h"
 #include "StressTesting.h"
 
-#define NOLOG defined(NDEBUG)
-#include "DebugLog.h"
-
 /* Define THREAD_BASED_FILEWATCH to use the thread-based implementation of file change detection. */
 #define THREAD_BASED_FILEWATCH
 
@@ -628,8 +625,6 @@ static void CreateChmThumbnail(WindowInfo& win, DisplayState& ds)
     assert(win.IsChm());
     if (!win.IsChm()) return;
 
-    Timer t(true);
-
     ChmEngine *chmEngine = static_cast<ChmEngine *>(win.dm->AsChmEngine()->Clone());
     if (!chmEngine)
         return;
@@ -640,11 +635,6 @@ static void CreateChmThumbnail(WindowInfo& win, DisplayState& ds)
         bmp = NULL;
     delete bmp;
     delete chmEngine;
-
-    t.Stop();
-    double dur = t.GetTimeInMs();
-    if (dur > 1000.0)
-        lf(_T("Formatting %s took %.2f secs"), win.loadedFilePath, dur / 1000.0);
 }
 
 static void CreateThumbnailForFile(WindowInfo& win, DisplayState& ds)
@@ -815,7 +805,6 @@ static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win,
         if (chmEngine)
             chmEngine->SetParentHwnd(win.hwndCanvas);
     } else if (allowFailure) {
-        lf(_T("failed to load file %s"), fileName);
         delete prevModel;
         ScopedMem<TCHAR> title2(str::Format(_T("%s - %s"), path::GetBaseName(fileName), SUMATRA_WINDOW_TITLE));
         win::SetText(win.hwndFrame, title2);
@@ -823,7 +812,6 @@ static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win,
     } else {
         // if there is an error while reading the document and a repair is not requested
         // then fallback to the previous state
-        lf(_T("failed to load file %s, falling back to previous DisplayModel"), fileName);
         win.dm = prevModel;
     }
 
@@ -1616,7 +1604,6 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
     bool rendering = false;
     RectI screen(PointI(), dm->viewPort.Size());
 
-    l("DrawDocument() ");
     for (int pageNo = 1; pageNo <= dm->PageCount(); ++pageNo) {
         PageInfo *pageInfo = dm->GetPageInfo(pageNo);
         if (!pageInfo || 0.0f == pageInfo->visibleRatio)
@@ -1648,11 +1635,9 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
                     win.RepaintAsync(REPAINT_MESSAGE_DELAY_IN_MS / 4);
                 else
                     DrawCenteredText(hdc, bounds, _TR("Please wait - rendering..."), IsUIRightToLeft());
-                lf("drawing empty %d ", pageNo);
                 rendering = true;
             } else {
                 DrawCenteredText(hdc, bounds, _TR("Couldn't render the page"), IsUIRightToLeft());
-                lf("   missing bitmap on visible page %d", pageNo);
             }
             SelectObject(hdc, hPrevFont);
             continue;
@@ -1733,7 +1718,6 @@ static void OnDraggingStart(WindowInfo& win, int x, int y, bool right=false)
     win.dragPrevPos = PointI(x, y);
     if (GetCursor())
         SetCursor(gCursorDrag);
-    lf(" dragging start, x=%d, y=%d", x, y);
 }
 
 static void OnDraggingStop(WindowInfo& win, int x, int y, bool aborted)
@@ -1749,7 +1733,6 @@ static void OnDraggingStop(WindowInfo& win, int x, int y, bool aborted)
         return;
 
     SizeI drag(x - win.dragPrevPos.x, y - win.dragPrevPos.y);
-    lf(" dragging ends, x=%d, y=%d, dx=%d, dy=%d", x, y, drag.dx, drag.dy);
     win.MoveDocBy(drag.dx, -2 * drag.dy);
 }
 
@@ -1800,7 +1783,6 @@ static void OnMouseMove(WindowInfo& win, int x, int y, WPARAM flags)
     case MA_DRAGGING:
     case MA_DRAGGING_RIGHT:
         drag = SizeI(win.dragPrevPos.x - x, win.dragPrevPos.y - y);
-        lf(" drag move, x=%d, y=%d, dx=%d, dy=%d", x, y, drag.dx, drag.dy);
         win.MoveDocBy(drag.dx, drag.dy);
         break;
     }
@@ -3094,8 +3076,6 @@ bool FrameOnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
 
 static void FrameOnChar(WindowInfo& win, WPARAM key)
 {
-//    lf("char=%d,%c\n", key, (char)key);
-
     if (IsCharUpper((TCHAR)key))
         key = (TCHAR)CharLower((LPTSTR)(TCHAR)key);
 

@@ -10,7 +10,6 @@
 #include <time.h>
 #include <synctex_parser.h>
 
-#define NOLOG defined(NDEBUG)
 #include "DebugLog.h"
 
 // size of the mark highlighting the location calculated by forward-search
@@ -107,7 +106,6 @@ bool Synchronizer::IsIndexDiscarded() const
     struct _stat newstamp;
     if (_tstat(syncfilepath, &newstamp) == 0 &&
         difftime(newstamp.st_mtime, syncfileTimestamp.st_mtime) > 0) {
-        lf(_T("PdfSync:sync file has changed, rebuilding index: %s"), syncfilepath);
         // update time stamp
         memcpy((void *)&syncfileTimestamp, &newstamp, sizeof(syncfileTimestamp));
         return true; // the file has changed!
@@ -139,10 +137,8 @@ int Synchronizer::Create(const TCHAR *pdffilename, PdfEngine *engine, Synchroniz
         return PDFSYNCERR_INVALID_ARGUMENT;
 
     const TCHAR *fileExt = path::GetExt(pdffilename);
-    if (!str::EqI(fileExt, _T(".pdf"))) {
-        lf(_T("Bad PDF filename! (%s)"), pdffilename);
+    if (!str::EqI(fileExt, _T(".pdf")))
         return PDFSYNCERR_INVALID_ARGUMENT;
-    }
 
     ScopedMem<TCHAR> baseName(str::DupN(pdffilename, fileExt - pdffilename));
 
@@ -462,10 +458,8 @@ int Pdfsync::SourceToDoc(const TCHAR* srcfilename, UINT line, UINT col, UINT *pa
 
     Vec<size_t> found_records;
     UINT ret = SourceToRecord(srcfilename, line, col, found_records);
-    if (ret != PDFSYNCERR_SUCCESS || found_records.Count() == 0) {
-        lf(_T("source->pdf: %s:%u -> no record found, error:%u"), srcfilename, line, ret);
+    if (ret != PDFSYNCERR_SUCCESS || found_records.Count() == 0)
         return ret;
-    }
 
     rects.Reset();
 
@@ -486,8 +480,6 @@ int Pdfsync::SourceToDoc(const TCHAR* srcfilename, UINT line, UINT col, UINT *pa
             RectD mbox = engine->PageMediabox(firstPage);
             rc.y = mbox.dy - (rc.y + rc.dy);
             rects.Push(rc.Round());
-            lf(_T("source->pdf: %s:%u -> record:%u -> page:%u, x:%.0f, y:%.0f"),
-                    srcfilename, line, points.At(i).record, firstPage, rc.x, rc.y);
         }
     }
 

@@ -12,7 +12,6 @@
 #include <shlobj.h>
 #include <shlwapi.h>
 
-#define NOLOG defined(NDEBUG)
 #include "DebugLog.h"
 
 // the only valid chars are 0-9, . and newlines.
@@ -485,29 +484,23 @@ static HDDEDATA CALLBACK DdeCallback(UINT uType, UINT uFmt, HCONV hconv, HSZ hsz
 
 void DDEExecute(const TCHAR* server, const TCHAR* topic, const TCHAR* command)
 {
-    lf(_T("DDEExecute(\"%s\",\"%s\",\"%s\")"), server, topic, command);
     unsigned long inst = 0;
     HSZ hszServer = NULL, hszTopic = NULL;
     HCONV hconv = NULL;
     HDDEDATA hddedata = NULL;
 
     UINT result = DdeInitialize(&inst, &DdeCallback, APPCMD_CLIENTONLY, 0);
-    if (result != DMLERR_NO_ERROR) {
-        lf("DDE communication could not be initiated %u.", result);
-        goto Exit;
-    }
+    if (result != DMLERR_NO_ERROR)
+        goto Error;
     hszServer = DdeCreateStringHandle(inst, server, CP_WINNEUTRAL);
     if (!hszServer)
         goto Error;
-
     hszTopic = DdeCreateStringHandle(inst, topic, CP_WINNEUTRAL);
     if (!hszTopic)
         goto Error;
-
     hconv = DdeConnect(inst, hszServer, hszTopic, 0);
     if (!hconv)
         goto Error;
-
     hddedata = DdeCreateDataHandle(inst, (BYTE*)command, (DWORD)(str::Len(command) + 1) * sizeof(TCHAR), 0, 0, CF_T_TEXT, 0);
     if (!hddedata)
         goto Error;

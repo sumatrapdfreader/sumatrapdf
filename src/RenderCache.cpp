@@ -6,9 +6,6 @@
 #include "Scoped.h"
 #include "WinUtil.h"
 
-#define NOLOG defined(NDEBUG)
-#include "DebugLog.h"
-
 /* Define if you want to conserve memory by always freeing cached bitmaps
    for pages not visible. Disabling this might lead to pages not rendering
    due to insufficient (GDI) memory. */
@@ -88,7 +85,6 @@ void RenderCache::Add(PageRenderRequest &req, RenderedBitmap *bitmap)
     assert(req.dm);
 
     req.rotation = normalizeRotation(req.rotation);
-    lf("RenderCache::Add(pageNo=%d, rotation=%d, zoom=%.2f%%)", req.pageNo, req.rotation, req.zoom);
     assert(cacheCount <= MAX_BITMAPS_CACHED);
 
     /* It's possible there still is a cached bitmap with different zoom/rotation */
@@ -199,9 +195,6 @@ bool RenderCache::FreePage(DisplayModel *dm, int pageNo, TilePosition *tile)
         }
 
         if (shouldFree) {
-            if (!freedSomething)
-                lf("RenderCache::FreePage(%#x, %d) ", dm, pageNo);
-            lf("freed %d ", entry->pageNo);
             freedSomething = true;
             DropCacheEntry(entry);
             cache[i] = NULL;
@@ -312,7 +305,6 @@ void RenderCache::Render(DisplayModel *dm, int pageNo, RenderingCallback *callba
 /* Render a bitmap for page <pageNo> in <dm>. */
 void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool clearQueue, RenderingCallback *callback)
 {
-    lf("RenderCache::Render(pageNo=%d)", pageNo);
     assert(dm);
 
     ScopedCritSec scope(&requestAccess);
@@ -326,11 +318,9 @@ void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool c
         if ((curReq->zoom != zoom) || (curReq->rotation != rotation)) {
             /* Currently rendered page is for the same page but with different zoom
             or rotation, so abort it */
-            l("  aborting rendering");
             curReq->abort = true;
         } else {
             /* we're already rendering exactly the same page */
-            l("  already rendering this page");
             goto Exit;
         }
     }
@@ -350,12 +340,10 @@ void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool c
                 tmp = requests[requestCount-1];
                 requests[requestCount-1] = *req;
                 *req = tmp;
-                l("  already queued");
                 goto Exit;
             } else {
                 /* There was a request queued for the same page but with different
                    zoom or rotation, so only replace this request */
-                lf("Replacing request for page %d with new request", req->pageNo);
                 req->zoom = zoom;
                 req->rotation = rotation;
 
@@ -481,7 +469,6 @@ bool RenderCache::ClearCurrentRequest()
    user know he has to wait until we finish */
 void RenderCache::CancelRendering(DisplayModel *dm)
 {
-    l("RenderCache::CancelRendering()");
     ClearQueueForDisplayModel(dm);
 
     for (;;) {
@@ -538,13 +525,9 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data)
 
         if (!cache->GetNextRequest(&req))
             continue;
-        lf("RenderCacheThread(): dequeued %d", req.pageNo);
-        if (!req.dm->PageVisibleNearby(req.pageNo) && !req.renderCb) {
-            l("RenderCacheThread(): not rendering because not visible");
+        if (!req.dm->PageVisibleNearby(req.pageNo) && !req.renderCb)
             continue;
-        }
         if (req.dm->dontRenderFlag) {
-            l("RenderCacheThread(): not rendering because of _dontRenderFlag");
             if (req.renderCb)
                 req.renderCb->Callback();
             continue;
@@ -558,10 +541,6 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data)
             continue;
         }
 
-        if (bmp)
-            lf("RenderCacheThread(): finished rendering %d", req.pageNo);
-        else
-            lf("RenderCacheThread(): failed to render a bitmap of page %d", req.pageNo);
         if (req.renderCb) {
             // the callback must free the RenderedBitmap
             req.renderCb->Callback(bmp);
@@ -611,8 +590,6 @@ UINT RenderCache::PaintTile(HDC hdc, RectI *bounds, DisplayModel *dm, int pageNo
             DropCacheEntry(entry);
         return renderDelay;
     }
-
-    lf("page %d ", pageNo);
 
     HDC bmpDC = CreateCompatibleDC(hdc);
     if (bmpDC) {

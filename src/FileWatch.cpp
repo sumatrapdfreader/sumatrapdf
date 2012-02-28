@@ -6,7 +6,6 @@
 #include "StrUtil.h"
 #include "FileUtil.h"
 
-#define NOLOG defined(NDEBUG)
 #include "DebugLog.h"
 
 bool FileWatcher::IsThreadRunning()
