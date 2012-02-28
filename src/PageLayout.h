@@ -71,7 +71,7 @@ struct PageData {
     Vec<DrawInstr>  instructions;
 };
 
-// just to pack args to LayoutHtml
+// just to pack args to PageLayout
 class LayoutInfo {
 public:
     LayoutInfo() :
@@ -188,8 +188,6 @@ protected:
 
     WCHAR               buf[512];
 };
-
-Vec<PageData*> *LayoutHtml(LayoutInfo* li);
 
 void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox);
 

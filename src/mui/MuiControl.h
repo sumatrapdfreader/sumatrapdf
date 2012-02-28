@@ -15,7 +15,7 @@ class EventMgr;
 class Control : public ILayout
 {
 public:
-    // allows a window to opt-out from being notified about
+    // allows a control to opt-out from being notified about
     // input events, stored in wantedInputBits
     enum WantedInputBits : int {
         WantsMouseOverBit   = 0,

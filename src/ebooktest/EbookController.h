@@ -24,17 +24,39 @@ class EbookController : public IClicked, ISizeChanged
     MobiDoc *       mobiDoc;
     const char *    html;
 
-    // TODO: this should be recycled along with pages
+    // TODO: this should be recycled along with pages so that its
+    // memory use doesn't grow without bounds
     PoolAllocator   textAllocator;
-    Vec<PageData*>* pages;
-    int             currPageNo; // within pages
+
+    // we're in one of 3 states:
+    // 1. showing pages as laid out from the beginning
+    // 2. showing pages as laid out starting from another page
+    //    (caused by resizing a window while displaying that page)
+    // 3. like 2. but layout process is still in progress and we're waiting
+    //    for more pages
+    Vec<PageData*>* pagesFromBeginning;
+    Vec<PageData*>* newPagesFromBeginning;
+    Vec<PageData*>* pagesFromPage;
+    int             startPageForPagesFromPage;
+
+    // either pagesFromBeginning or pagesFromPage
+    Vec<PageData*>* pagesShowing;
+    int             shownPageNo; // within pagesShowing
+
+    // if pagesShowing == pagesFromBeginning its the same as shownPageNo
+    // if pagesShowing == pagesFromPage it might be unknown during layout
+    // (if we haven't gotten enough pages to determine it) or the page that contains
+    // the beginning of the shown page
+    int             currPageNoFromBeginning;
+
     int             pageDx, pageDy; // size of the page for which pages was generated
 
     ThreadLayoutMobi *layoutThread;
-    void SetStatusText() const;
-    void DeletePages();
+
+    void UpdateStatus() const;
+    void DeletePages(Vec<PageData*>** pages);
     void TriggerLayout();
-    void LayoutHtml(int dx, int dy);
+    bool LayoutInProgress() const { return layoutThread != NULL; }
 
     // IClickHandler
     virtual void Clicked(Control *c, int x, int y);
@@ -48,8 +70,8 @@ public:
 
     void SetHtml(const char *html);
     void LoadMobi(const TCHAR *fileName);
-    void FinishedMobiLoading(UiMsg *msg);
-    void FinishedMobiLayout(UiMsg *msg);
+    void HandleFinishedMobiLoadingMsg(UiMsg *msg);
+    void HandleMobiLayoutMsg(UiMsg *msg);
     void OnLayoutTimer();
     void AdvancePage(int dist);
     void GoToPage(int newPageNo);

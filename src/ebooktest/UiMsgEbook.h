@@ -17,22 +17,26 @@ struct FinishedMobiLoadingData {
     }
 };
 
-struct FinishedMobiLayoutData {
-    Vec<PageData*> *    pages;
-    ThreadLayoutMobi *  thread;
+struct MobiLayoutData {
+    enum { MAX_PAGES = 32 };
+    PageData *         pages[MAX_PAGES];
+    int                pageCount;
+    bool               fromBeginning;
+    bool               finished;
+    ThreadLayoutMobi * thread;
 };
 
 class UiMsg {
 public:
     enum Type {
         FinishedMobiLoading,
-        FinishedMobiLayout
+        MobiLayout
     };
 
     Type type;
     union {
         FinishedMobiLoadingData finishedMobiLoading;
-        FinishedMobiLayoutData  finishedMobiLayout;
+        MobiLayoutData          mobiLayout;
     };
 
     UiMsg(Type type) : type(type) {

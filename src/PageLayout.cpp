@@ -893,16 +893,6 @@ PageData *PageLayout::IterStart(LayoutInfo* li)
     return IterNext();
 }
 
-Vec<PageData*> *LayoutHtml(LayoutInfo* li)
-{
-    Vec<PageData*> *pages = new Vec<PageData*>();
-    PageLayout l;
-    for (PageData *pd = l.IterStart(li); pd; pd = l.IterNext()) {
-        pages->Append(pd);
-    }
-    return pages;
-}
-
 // TODO: draw link in the appropriate format (blue text, unerlined, should show hand cursor when
 // mouse is over a link. There's a slight complication here: we only get explicit information about
 // strings, not about the whitespace and we should underline the whitespace as well. Also the text
