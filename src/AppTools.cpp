@@ -12,6 +12,9 @@
 #include <shlobj.h>
 #include <shlwapi.h>
 
+#define NOLOG defined(NDEBUG)
+#include "DebugLog.h"
+
 // the only valid chars are 0-9, . and newlines.
 // a valid version has to match the regex /^\d+(\.\d+)*(\r?\n)?$/
 // Return false if it contains anything else.
@@ -480,9 +483,9 @@ static HDDEDATA CALLBACK DdeCallback(UINT uType, UINT uFmt, HCONV hconv, HSZ hsz
     return 0;
 }
 
-void DDEExecute(LPCTSTR server, LPCTSTR topic, LPCTSTR command)
+void DDEExecute(const TCHAR* server, const TCHAR* topic, const TCHAR* command)
 {
-    DBG_OUT("DDEExecute(\"%s\",\"%s\",\"%s\")\n", server, topic, command);
+    lf(_T("DDEExecute(\"%s\",\"%s\",\"%s\")"), server, topic, command);
     unsigned long inst = 0;
     HSZ hszServer = NULL, hszTopic = NULL;
     HCONV hconv = NULL;
@@ -490,36 +493,32 @@ void DDEExecute(LPCTSTR server, LPCTSTR topic, LPCTSTR command)
 
     UINT result = DdeInitialize(&inst, &DdeCallback, APPCMD_CLIENTONLY, 0);
     if (result != DMLERR_NO_ERROR) {
-        DBG_OUT("DDE communication could not be initiated %u.\n", result);
-        goto exit;
+        lf("DDE communication could not be initiated %u.", result);
+        goto Exit;
     }
     hszServer = DdeCreateStringHandle(inst, server, CP_WINNEUTRAL);
-    if (!hszServer) {
-        DBG_OUT("DDE communication could not be initiated %u.\n", DdeGetLastError(inst));
-        goto exit;
-    }
+    if (!hszServer)
+        goto Error;
+
     hszTopic = DdeCreateStringHandle(inst, topic, CP_WINNEUTRAL);
-    if (!hszTopic) {
-        DBG_OUT("DDE communication could not be initiated %u.\n", DdeGetLastError(inst));
-        goto exit;
-    }
+    if (!hszTopic)
+        goto Error;
+
     hconv = DdeConnect(inst, hszServer, hszTopic, 0);
-    if (!hconv) {
-        DBG_OUT("DDE communication could not be initiated %u\n.", DdeGetLastError(inst));
-        goto exit;
-    }
+    if (!hconv)
+        goto Error;
+
     hddedata = DdeCreateDataHandle(inst, (BYTE*)command, (DWORD)(str::Len(command) + 1) * sizeof(TCHAR), 0, 0, CF_T_TEXT, 0);
-    if (!hddedata) {
-        DBG_OUT("DDE communication could not be initiated %u.\n", DdeGetLastError(inst));
-        goto exit;
-    }
+    if (!hddedata)
+        goto Error;
+
     HDDEDATA answer = DdeClientTransaction((BYTE*)hddedata, (DWORD)-1, hconv, 0, 0, XTYP_EXECUTE, 10000, 0);
     if (answer)
         DdeFreeDataHandle(answer);
     else
-        DBG_OUT("DDE transaction failed %u.\n", DdeGetLastError(inst));
+        lf("DDE transaction failed %u.", DdeGetLastError(inst));
 
-exit:
+Exit:
     if (hddedata)
         DdeFreeDataHandle(hddedata);
     if (hconv)
@@ -530,8 +529,11 @@ exit:
     if (hszServer)
         DdeFreeStringHandle(inst, hszServer);
     DdeUninitialize(inst);
+    return;
+Error:
+    lf("DDE communication could not be initiated %u.", DdeGetLastError(inst));
+    goto Exit;
 }
-
 
 #define UWM_DELAYED_SET_FOCUS (WM_APP + 1)
 #define UWM_DELAYED_CTRL_BACK (WM_APP + 2)

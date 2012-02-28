@@ -251,6 +251,7 @@
     <ClCompile Include="src\TextSearch.cpp" />
     <ClCompile Include="src\TextSelection.cpp" />
     <ClCompile Include="src\Toolbar.cpp" />
+    <ClCompile Include="src\utils\DebugLog.cpp" />
     <ClCompile Include="src\utils\FileTransactions.cpp" />
     <ClCompile Include="src\utils\HtmlPullParser.cpp" />
     <ClCompile Include="src\utils\Touch.cpp" />
@@ -386,6 +387,7 @@
     <ClInclude Include="src\TextSelection.h" />
     <ClInclude Include="src\Toolbar.h" />
     <ClInclude Include="src\utils\Allocator.h" />
+    <ClInclude Include="src\utils\DebugLog.h" />
     <ClInclude Include="src\utils\FileTransactions.h" />
     <ClInclude Include="src\utils\HtmlPullParser.h" />
     <ClInclude Include="src\utils\Touch.h" />
