@@ -45,6 +45,9 @@
 
 #include "DisplayModel.h"
 
+#define NOLOG defined(NDEBUG)
+#include "DebugLog.h"
+
 // Note: adding chm handling to DisplayModel is a hack, because DisplayModel
 // doesn't map to chm features well.
 
@@ -104,7 +107,7 @@ int normalizeRotation(int rotation)
     if (rotation < 0)
         rotation += 360;
     if (rotation < 0 || rotation >= 360 || (rotation % 90) != 0) {
-        DBG_OUT("normalizeRotation() invalid rotation: %d\n", rotation);
+        lf("normalizeRotation() invalid rotation: %d", rotation);
         return 0;
     }
     return rotation;
@@ -123,7 +126,7 @@ static bool IsValidZoom(float zoomLevel)
     if (IsZoomVirtual(zoomLevel))
         return true;
     if ((zoomLevel < ZOOM_MIN) || (zoomLevel > ZOOM_MAX)) {
-        DBG_OUT("IsValidZoom() invalid zoom: %.4f\n", zoomLevel);
+        lf("IsValidZoom() invalid zoom: %.4f", zoomLevel);
         return false;
     }
     return true;
@@ -573,7 +576,7 @@ RestartLayout:
     float currZoomReal = _zoomReal;
     SetZoomVirtual(zoomVirtual);
 
-//    DBG_OUT("DisplayModel::Relayout(), pageCount=%d, zoomReal=%.6f, zoomVirtual=%.2f\n", pageCount, dm->zoomReal, dm->zoomVirtual);
+//    lf("DisplayModel::Relayout(), pageCount=%d, zoomReal=%.6f, zoomVirtual=%.2f", pageCount, dm->zoomReal, dm->zoomVirtual);
 
     int newViewPortOffsetX = 0;
     if (0 != currZoomReal && INVALID_ZOOM != currZoomReal)
@@ -630,7 +633,7 @@ RestartLayout:
             rowMaxPageDy = 0;
             pageInARow = 0;
         }
-/*        DBG_OUT("  page = %3d, (x=%3d, y=%5d, dx=%4d, dy=%4d) orig=(dx=%d,dy=%d)\n",
+/*        lf("  page = %3d, (x=%3d, y=%5d, dx=%4d, dy=%4d) orig=(dx=%d,dy=%d)",
             pageNo, pageInfo->currPos.x, pageInfo->currPos.y,
                     pageInfo->currPos.dx, pageInfo->currPos.dy,
                     (int)pageSize.dx, (int)pageSize.dy); */
@@ -710,7 +713,7 @@ RestartLayout:
     /* if a page is smaller than drawing area in y axis, y-center the page */
     if (canvasDy < viewPort.dy) {
         int offY = padding->top + (viewPort.dy - canvasDy) / 2;
-        DBG_OUT("  offY = %.2f\n", offY);
+        lf("  offY = %.2f", offY);
         assert(offY >= 0.0);
         for (int pageNo = 1; pageNo <= PageCount(); ++pageNo) {
             PageInfo *pageInfo = GetPageInfo(pageNo);
@@ -719,7 +722,7 @@ RestartLayout:
                 continue;
             }
             pageInfo->pos.y += offY;
-            DBG_OUT("  page = %3d, (x=%3d, y=%5d, dx=%4d, dy=%4d)\n",
+            lf("  page = %3d, (x=%3d, y=%5d, dx=%4d, dy=%4d)",
                 pageNo, pageInfo->pos.x, pageInfo->pos.y,
                         pageInfo->pos.dx, pageInfo->pos.dy);
         }
@@ -742,7 +745,7 @@ void DisplayModel::ChangeStartPage(int startPage)
         if (displayModeContinuous(displayMode()))
             pageInfo->shown = true;
         else if (pageNo >= startPage && pageNo < startPage + columns) {
-            //DBG_OUT("DisplayModel::changeStartPage() set page %d as shown\n", pageNo);
+            //lf("DisplayModel::changeStartPage() set page %d as shown", pageNo);
             pageInfo->shown = true;
         } else
             pageInfo->shown = false;
@@ -761,7 +764,7 @@ void DisplayModel::RecalcVisibleParts()
     if (!pagesInfo)
         return;
 
-//    DBG_OUT("DisplayModel::RecalcVisibleParts() draw area         (x=%3d,y=%3d,dx=%4d,dy=%4d)\n",
+//    lf("DisplayModel::RecalcVisibleParts() draw area         (x=%3d,y=%3d,dx=%4d,dy=%4d)",
 //        viewPort.x, viewPort.y, viewPort.dx, viewPort.dy);
     for (int pageNo = 1; pageNo <= PageCount(); ++pageNo) {
         PageInfo *pageInfo = GetPageInfo(pageNo);
@@ -1009,7 +1012,7 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
             GetPageInfo(i)->visibleRatio = (i == pageNo ? 1.0f : 0);
         Relayout(_zoomVirtual, _rotation);
     }
-    //DBG_OUT("DisplayModel::GoToPage(pageNo=%d, scrollY=%d)\n", pageNo, scrollY);
+    //lf("DisplayModel::GoToPage(pageNo=%d, scrollY=%d)", pageNo, scrollY);
     PageInfo * pageInfo = GetPageInfo(pageNo);
 
     // intentionally ignore scrollX and scrollY when fitting to content
@@ -1110,7 +1113,7 @@ bool DisplayModel::GoToNextPage(int scrollY)
         return true;
     }
     int firstPageInNewRow = FirstPageInARowNo(currPageNo + columns, columns, displayModeShowCover(displayMode()));
-//    DBG_OUT("DisplayModel::goToNextPage(scrollY=%d), currPageNo=%d, firstPageInNewRow=%d\n", scrollY, currPageNo, firstPageInNewRow);
+//    lf("DisplayModel::goToNextPage(scrollY=%d), currPageNo=%d, firstPageInNewRow=%d", scrollY, currPageNo, firstPageInNewRow);
     if (firstPageInNewRow > PageCount()) {
         /* we're on a last row or after it, can't go any further */
         return false;
@@ -1130,7 +1133,7 @@ bool DisplayModel::GoToPrevPage(int scrollY)
 
     int columns = columnsFromDisplayMode(displayMode());
     int currPageNo = CurrentPageNo();
-    DBG_OUT("DisplayModel::goToPrevPage(scrollY=%d), currPageNo=%d\n", scrollY, currPageNo);
+    lf("DisplayModel::goToPrevPage(scrollY=%d), currPageNo=%d", scrollY, currPageNo);
 
     PointI top;
     if ((0 == scrollY || -1 == scrollY) && _zoomVirtual == ZOOM_FIT_CONTENT) {
@@ -1162,7 +1165,7 @@ bool DisplayModel::GoToPrevPage(int scrollY)
 
 bool DisplayModel::GoToLastPage()
 {
-    DBG_OUT("DisplayModel::goToLastPage()\n");
+    l("DisplayModel::goToLastPage()");
 
     int columns = columnsFromDisplayMode(displayMode());
     int currPageNo = CurrentPageNo();
@@ -1177,7 +1180,7 @@ bool DisplayModel::GoToLastPage()
 
 bool DisplayModel::GoToFirstPage()
 {
-    DBG_OUT("DisplayModel::goToFirstPage()\n");
+    l("DisplayModel::goToFirstPage()");
     if (AsChmEngine()) {
         GoToPage(1, 0, true);
         return true;
@@ -1200,7 +1203,7 @@ bool DisplayModel::GoToFirstPage()
 
 void DisplayModel::ScrollXTo(int xOff)
 {
-    DBG_OUT("DisplayModel::scrollXTo(xOff=%d)\n", xOff);
+    lf("DisplayModel::scrollXTo(xOff=%d)", xOff);
 
     int currPageNo = CurrentPageNo();
     viewPort.x = xOff;
@@ -1214,7 +1217,7 @@ void DisplayModel::ScrollXTo(int xOff)
 
 void DisplayModel::ScrollXBy(int dx)
 {
-    DBG_OUT("DisplayModel::scrollXBy(dx=%d)\n", dx);
+    lf("DisplayModel::scrollXBy(dx=%d)", dx);
 
     int newOffX = limitValue(viewPort.x + dx, 0, canvasSize.dx - viewPort.dx);
     if (newOffX != viewPort.x)
@@ -1223,7 +1226,7 @@ void DisplayModel::ScrollXBy(int dx)
 
 void DisplayModel::ScrollYTo(int yOff)
 {
-    DBG_OUT("DisplayModel::scrollYTo(yOff=%d)\n", yOff);
+    lf("DisplayModel::scrollYTo(yOff=%d)", yOff);
 
     int currPageNo = CurrentPageNo();
     viewPort.y = yOff;
@@ -1246,7 +1249,7 @@ void DisplayModel::ScrollYBy(int dy, bool changePage)
     int             newPageNo;
     int             currPageNo;
 
-    DBG_OUT("DisplayModel::scrollYBy(dy=%d, changePage=%d)\n", dy, (int)changePage);
+    lf("DisplayModel::scrollYBy(dy=%d, changePage=%d)", dy, (int)changePage);
     assert(0 != dy);
     if (0 == dy) return;
 
@@ -1316,7 +1319,7 @@ void DisplayModel::ZoomTo(float zoomLevel, PointI *fixPt)
         fixPt = NULL;
     }
 
-    //DBG_OUT("DisplayModel::zoomTo() zoomLevel=%.6f\n", _zoomLevel);
+    //lf("DisplayModel::zoomTo() zoomLevel=%.6f", _zoomLevel);
     Relayout(zoomLevel, _rotation);
     SetScrollState(ss);
 
@@ -1335,7 +1338,7 @@ void DisplayModel::ZoomBy(float zoomFactor, PointI *fixPt)
     // zoomTo expects a zoomVirtual, so undo the dpiFactor here
     float newZoom = ZoomAbsolute() * zoomFactor;
     newZoom = limitValue(newZoom, ZOOM_MIN, ZOOM_MAX);
-    //DBG_OUT("DisplayModel::zoomBy() zoomReal=%.6f, zoomFactor=%.2f, newZoom=%.2f\n", dm->zoomReal, zoomFactor, newZoom);
+    //lf("DisplayModel::zoomBy() zoomReal=%.6f, zoomFactor=%.2f, newZoom=%.2f", dm->zoomReal, zoomFactor, newZoom);
     ZoomTo(newZoom, fixPt);
 }
 
@@ -1372,12 +1375,12 @@ TCHAR *DisplayModel::GetTextInRegion(int pageNo, RectD region)
             RectI isect = regionI.Intersect(rect);
             if (!isect.IsEmpty() && 1.0 * isect.dx * isect.dy / (rect.dx * rect.dy) >= 0.3) {
                 *dest++ = *src;
-                //DBG_OUT("Char: %c : %d; ushort: %hu\n", (char)c, (int)c, (unsigned short)c);
-                //DBG_OUT("Found char: %c : %hu; real %c : %hu\n", c, (unsigned short)(unsigned char) c, ln->text[i].c, ln->text[i].c);
+                //lf("Char: %c : %d; ushort: %hu", (char)c, (int)c, (unsigned short)c);
+                //lf("Found char: %c : %hu; real %c : %hu", c, (unsigned short)(unsigned char) c, ln->text[i].c, ln->text[i].c);
             }
         } else if (dest > result && *(dest - 1) != '\n') {
             *dest++ = *src;
-            //DBG_OUT("Char: %c : %d; ushort: %hu\n", (char)buf[p], (int)(unsigned char)buf[p], buf[p]);
+            //lf("Char: %c : %d; ushort: %hu", (char)buf[p], (int)(unsigned char)buf[p], buf[p]);
         }
     }
     *dest = '\0';
@@ -1558,7 +1561,7 @@ DisplayModel *DisplayModel::CreateFromFileName(const TCHAR *fileName, DisplayMod
         return NULL;
     }
 
-//    DBG_OUT("DisplayModel::CreateFromFileName() pageCount = %d, startPage=%d, displayMode=%d\n",
+//    lf("DisplayModel::CreateFromFileName() pageCount = %d, startPage=%d, displayMode=%d",
 //        dm->PageCount(), startPage, (int)displayMode);
     return dm;
 }
