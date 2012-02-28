@@ -23,6 +23,9 @@
 #include "SumatraDialogs.h"
 #include "AppTools.h"
 
+#define NOLOG defined(NDEBUG)
+#include "DebugLog.h"
+
 // don't show the Search UI for document types that don't
 // support extracting text and/or navigating to a specific
 // text selection; default to showing it, since most users
@@ -364,7 +367,7 @@ bool OnInverseSearch(WindowInfo *win, int x, int y)
         int err = Synchronizer::Create(win->loadedFilePath,
             static_cast<PdfEngine *>(win->dm->engine), &win->pdfsync);
         if (err == PDFSYNCERR_SYNCFILE_NOTFOUND) {
-            DBG_OUT("Pdfsync: Sync file not found!\n");
+            l("Pdfsync: Sync file not found!");
             // We used to warn that "No synchronization file found" at this
             // point if gGlobalPrefs.enableTeXEnhancements is set; we no longer
             // so do because a double-click has several other meanings
@@ -373,7 +376,7 @@ bool OnInverseSearch(WindowInfo *win, int x, int y)
             return false;
         }
         if (err != PDFSYNCERR_SUCCESS) {
-            DBG_OUT("Pdfsync: Sync file cannot be loaded!\n");
+            l("Pdfsync: Sync file cannot be loaded!");
             ShowNotification(win, _TR("Synchronization file cannot be opened"));
             return true;
         }
@@ -389,7 +392,7 @@ bool OnInverseSearch(WindowInfo *win, int x, int y)
     UINT line, col;
     int err = win->pdfsync->DocToSource(pageNo, pt, srcfilepath, &line, &col);
     if (err != PDFSYNCERR_SUCCESS) {
-        DBG_OUT("cannot sync from pdf to source!\n");
+        l("cannot sync from pdf to source!");
         ShowNotification(win, _TR("No synchronization info at this position"));
         return true;
     }
@@ -470,15 +473,15 @@ void ShowForwardSearchResult(WindowInfo *win, const TCHAR *fileName, UINT line, 
 
 LRESULT OnDDEInitiate(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
-    DBG_OUT("received WM_DDE_INITIATE from %p with %08lx\n", (HWND)wparam, lparam);
+    lf("received WM_DDE_INITIATE from %p with %08lx", (HWND)wparam, lparam);
 
     ATOM aServer = GlobalAddAtom(PDFSYNC_DDE_SERVICE);
     ATOM aTopic = GlobalAddAtom(PDFSYNC_DDE_TOPIC);
 
     if (LOWORD(lparam) == aServer && HIWORD(lparam) == aTopic) {
         if (!IsWindowUnicode((HWND)wparam))
-            DBG_OUT("The client window is ANSI!\n");
-        DBG_OUT("Sending WM_DDE_ACK to %p\n", (HWND)wparam);
+            l("The client window is ANSI!");
+        lf("Sending WM_DDE_ACK to %p", (HWND)wparam);
         SendMessage((HWND)wparam, WM_DDE_ACK, (WPARAM)hwnd, MAKELPARAM(aServer, 0));
     }
     else {
@@ -529,7 +532,7 @@ static const TCHAR *HandleSyncCmd(const TCHAR *cmd, DDEACK& ack)
         // check if any opened PDF has sync information for the source file
         win = FindWindowInfoBySyncFile(srcFile);
         if (!win)
-            DBG_OUT("PdfSync: No open PDF file found for %s!", srcFile);
+            lf(_T("PdfSync: No open PDF file found for %s!"), srcFile);
         else if (newWindow)
             win = LoadDocument(win->loadedFilePath);
     }
@@ -537,7 +540,7 @@ static const TCHAR *HandleSyncCmd(const TCHAR *cmd, DDEACK& ack)
     if (!win || !win->IsDocLoaded())
         return next;
     if (!win->pdfsync) {
-        DBG_OUT("PdfSync: No sync file loaded!\n");
+        l("PdfSync: No sync file loaded!");
         return next;
     }
 
@@ -686,26 +689,26 @@ static const TCHAR *HandleSetViewCmd(const TCHAR *cmd, DDEACK& ack)
 
 LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
-    DBG_OUT("Received WM_DDE_EXECUTE from %p with %08lx\n", (HWND)wparam, lparam);
+    lf("Received WM_DDE_EXECUTE from %p with %08lx", (HWND)wparam, lparam);
 
     UINT_PTR lo, hi;
     UnpackDDElParam(WM_DDE_EXECUTE, lparam, &lo, &hi);
-    DBG_OUT("%08lx => lo %04x hi %04x\n", lparam, lo, hi);
+    lf("%08lx => lo %04x hi %04x", lparam, lo, hi);
 
     ScopedMem<TCHAR> cmd;
     DDEACK ack = { 0 };
 
     LPVOID command = GlobalLock((HGLOBAL)hi);
     if (!command) {
-        DBG_OUT("WM_DDE_EXECUTE: No command specified\n");
+        l("WM_DDE_EXECUTE: No command specified");
         goto Exit;
     }
 
     if (IsWindowUnicode((HWND)wparam)) {
-        DBG_OUT("The client window is UNICODE!\n");
+        l("The client window is UNICODE!");
         cmd.Set(str::conv::FromWStr((const WCHAR*)command));
     } else {
-        DBG_OUT("The client window is ANSI!\n");
+        l("The client window is ANSI!");
         cmd.Set(str::conv::FromAnsi((const char*)command));
     }
 
@@ -718,7 +721,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
         if (!nextCmd) nextCmd = HandlePageCmd(currCmd, ack);
         if (!nextCmd) nextCmd = HandleSetViewCmd(currCmd, ack);
         if (!nextCmd) {
-            DBG_OUT("WM_DDE_EXECUTE: unknown DDE command or bad command format\n");
+            l("WM_DDE_EXECUTE: unknown DDE command or bad command format");
             ScopedMem<TCHAR> tmp;
             nextCmd = str::Parse(currCmd, _T("%S]"), &tmp);
         }
@@ -728,7 +731,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
 Exit:
     GlobalUnlock((HGLOBAL)hi);
 
-    DBG_OUT("Posting %s WM_DDE_ACK to %p\n", ack.fAck ? _T("ACCEPT") : _T("REJECT"), (HWND)wparam);
+    lf("Posting %s WM_DDE_ACK to %p\n", ack.fAck ? "ACCEPT" : "REJECT", (HWND)wparam);
     lparam = ReuseDDElParam(lparam, WM_DDE_EXECUTE, WM_DDE_ACK, *(WORD *)&ack, hi);
     PostMessage((HWND)wparam, WM_DDE_ACK, (WPARAM)hwnd, lparam);
     return 0;
@@ -736,7 +739,7 @@ Exit:
 
 LRESULT OnDDETerminate(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
-    DBG_OUT("Received WM_DDE_TERMINATE from %p with %08lx\n", (HWND)wparam, lparam);
+    lf("Received WM_DDE_TERMINATE from %p with %08lx", (HWND)wparam, lparam);
 
     // Respond with another WM_DDE_TERMINATE message
     PostMessage((HWND)wparam, WM_DDE_TERMINATE, (WPARAM)hwnd, 0L);
