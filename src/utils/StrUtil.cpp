@@ -737,15 +737,6 @@ int CmpNatural(const TCHAR *a, const TCHAR *b)
     return diff;
 }
 
-void DbgOut(const TCHAR *format, ...)
-{
-    va_list args;
-    va_start(args, format);
-    ScopedMem<TCHAR> buf(FmtV(format, args));
-    OutputDebugString(buf);
-    va_end(args);
-}
-
 template <typename T>
 static T *ExtractUntil(const T *pos, T c, const T **endOut)
 {

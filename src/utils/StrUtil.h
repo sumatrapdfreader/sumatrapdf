@@ -113,13 +113,6 @@ TCHAR * FormatRomanNumeral(int number);
 
 int     CmpNatural(const TCHAR *a, const TCHAR *b);
 
-#ifdef DEBUG
-// don't call this directly, use DBG_OUT if the info is just for debug builds
-// or a SimpleLog/DebugLogger if it's indeed wanted in release builds as well
-// (as these are easier to redirect e.g. to the console or a file)
-void    DbgOut(const TCHAR *format, ...);
-#endif
-
 const char  *   Parse(const char *str, const char *format, ...);
 const char  *   Parse(const char *str, size_t len, const char *format, ...);
 const WCHAR *   Parse(const WCHAR *str, const WCHAR *format, ...);
@@ -169,12 +162,6 @@ inline bool ChrIsDigit(const WCHAR c)
 
 #define _MemToHex(ptr) str::MemToHex((const unsigned char *)(ptr), sizeof(*ptr))
 #define _HexToMem(txt, ptr) str::HexToMem(txt, (unsigned char *)(ptr), sizeof(*ptr))
-
-#ifndef DEBUG
-  #define DBG_OUT(format, ...) NoOp()
-#else
-  #define DBG_OUT(format, ...) str::DbgOut(_T(format), __VA_ARGS__)
-#endif
 
 #ifdef UNICODE
   #define CF_T_TEXT CF_UNICODETEXT

@@ -41,6 +41,9 @@
 #include "ParseCommandLine.h"
 #include "StressTesting.h"
 
+#define NOLOG defined(NDEBUG)
+#include "DebugLog.h"
+
 /* Define THREAD_BASED_FILEWATCH to use the thread-based implementation of file change detection. */
 #define THREAD_BASED_FILEWATCH
 
@@ -641,7 +644,7 @@ static void CreateChmThumbnail(WindowInfo& win, DisplayState& ds)
     t.Stop();
     double dur = t.GetTimeInMs();
     if (dur > 1000.0)
-        DBG_OUT("Formatting %s took %.2f secs\n", win.loadedFilePath, dur / 1000.0);
+        lf(_T("Formatting %s took %.2f secs"), win.loadedFilePath, dur / 1000.0);
 }
 
 static void CreateThumbnailForFile(WindowInfo& win, DisplayState& ds)
@@ -812,7 +815,7 @@ static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win,
         if (chmEngine)
             chmEngine->SetParentHwnd(win.hwndCanvas);
     } else if (allowFailure) {
-        DBG_OUT("failed to load file %s\n", fileName);
+        lf(_T("failed to load file %s"), fileName);
         delete prevModel;
         ScopedMem<TCHAR> title2(str::Format(_T("%s - %s"), path::GetBaseName(fileName), SUMATRA_WINDOW_TITLE));
         win::SetText(win.hwndFrame, title2);
@@ -820,7 +823,7 @@ static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win,
     } else {
         // if there is an error while reading the document and a repair is not requested
         // then fallback to the previous state
-        DBG_OUT("failed to load file %s, falling back to previous DisplayModel\n", fileName);
+        lf(_T("failed to load file %s, falling back to previous DisplayModel"), fileName);
         win.dm = prevModel;
     }
 
@@ -1613,7 +1616,7 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
     bool rendering = false;
     RectI screen(PointI(), dm->viewPort.Size());
 
-    DBG_OUT("DrawDocument() ");
+    l("DrawDocument() ");
     for (int pageNo = 1; pageNo <= dm->PageCount(); ++pageNo) {
         PageInfo *pageInfo = dm->GetPageInfo(pageNo);
         if (!pageInfo || 0.0f == pageInfo->visibleRatio)
@@ -1645,11 +1648,11 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
                     win.RepaintAsync(REPAINT_MESSAGE_DELAY_IN_MS / 4);
                 else
                     DrawCenteredText(hdc, bounds, _TR("Please wait - rendering..."), IsUIRightToLeft());
-                DBG_OUT("drawing empty %d ", pageNo);
+                lf("drawing empty %d ", pageNo);
                 rendering = true;
             } else {
                 DrawCenteredText(hdc, bounds, _TR("Couldn't render the page"), IsUIRightToLeft());
-                DBG_OUT("   missing bitmap on visible page %d\n", pageNo);
+                lf("   missing bitmap on visible page %d", pageNo);
             }
             SelectObject(hdc, hPrevFont);
             continue;
@@ -1677,7 +1680,6 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
     if (win.fwdSearchMark.show)
         PaintForwardSearchMark(&win, hdc);
 
-    DBG_OUT("\n");
     if (!rendering)
         DebugShowLinks(*dm, hdc);
 }
@@ -1731,7 +1733,7 @@ static void OnDraggingStart(WindowInfo& win, int x, int y, bool right=false)
     win.dragPrevPos = PointI(x, y);
     if (GetCursor())
         SetCursor(gCursorDrag);
-    DBG_OUT(" dragging start, x=%d, y=%d\n", x, y);
+    lf(" dragging start, x=%d, y=%d", x, y);
 }
 
 static void OnDraggingStop(WindowInfo& win, int x, int y, bool aborted)
@@ -1747,7 +1749,7 @@ static void OnDraggingStop(WindowInfo& win, int x, int y, bool aborted)
         return;
 
     SizeI drag(x - win.dragPrevPos.x, y - win.dragPrevPos.y);
-    DBG_OUT(" dragging ends, x=%d, y=%d, dx=%d, dy=%d\n", x, y, drag.dx, drag.dy);
+    lf(" dragging ends, x=%d, y=%d, dx=%d, dy=%d", x, y, drag.dx, drag.dy);
     win.MoveDocBy(drag.dx, -2 * drag.dy);
 }
 
@@ -1798,7 +1800,7 @@ static void OnMouseMove(WindowInfo& win, int x, int y, WPARAM flags)
     case MA_DRAGGING:
     case MA_DRAGGING_RIGHT:
         drag = SizeI(win.dragPrevPos.x - x, win.dragPrevPos.y - y);
-        DBG_OUT(" drag move, x=%d, y=%d, dx=%d, dy=%d\n", x, y, drag.dx, drag.dy);
+        lf(" drag move, x=%d, y=%d, dx=%d, dy=%d", x, y, drag.dx, drag.dy);
         win.MoveDocBy(drag.dx, drag.dy);
         break;
     }
@@ -1808,7 +1810,7 @@ static void OnMouseMove(WindowInfo& win, int x, int y, WPARAM flags)
 
 static void OnMouseLeftButtonDown(WindowInfo& win, int x, int y, WPARAM key)
 {
-    //DBG_OUT("Left button clicked on %d %d\n", x, y);
+    //lf("Left button clicked on %d %d", x, y);
     if (win.IsAboutWindow())
         // remember a link under so that on mouse up we only activate
         // link if mouse up is on the same link as mouse down
@@ -1917,7 +1919,7 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
 
 static void OnMouseLeftButtonDblClk(WindowInfo& win, int x, int y, WPARAM key)
 {
-    //DBG_OUT("Left button clicked on %d %d\n", x, y);
+    //lf("Left button clicked on %d %d", x, y);
     if ((win.fullScreen || win.presentation) && !(key & ~MK_LBUTTON) || win.IsAboutWindow()) {
         // in presentation and fullscreen modes, left clicks turn the page,
         // make two quick left clicks (AKA one double-click) turn two pages
@@ -1981,7 +1983,7 @@ static void OnMouseMiddleButtonDown(WindowInfo& win, int x, int y, WPARAM key)
 
 static void OnMouseRightButtonDown(WindowInfo& win, int x, int y, WPARAM key)
 {
-    //DBG_OUT("Right button clicked on %d %d\n", x, y);
+    //lf("Right button clicked on %d %d", x, y);
     if (!win.IsDocLoaded()) {
         SetFocus(win.hwndFrame);
         win.dragStart = PointI(x, y);
@@ -3034,7 +3036,7 @@ bool FrameOnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
             return true;
         }
     }
-    //DBG_OUT("key=%d,%c,shift=%d\n", key, (char)key, (int)WasKeyDown(VK_SHIFT));
+    //lf("key=%d,%c,shift=%d\n", key, (char)key, (int)WasKeyDown(VK_SHIFT));
 
     if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation)
         return false;
@@ -3092,7 +3094,7 @@ bool FrameOnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
 
 static void FrameOnChar(WindowInfo& win, WPARAM key)
 {
-//    DBG_OUT("char=%d,%c\n", key, (char)key);
+//    lf("char=%d,%c\n", key, (char)key);
 
     if (IsCharUpper((TCHAR)key))
         key = (TCHAR)CharLower((LPTSTR)(TCHAR)key);
