@@ -17,6 +17,17 @@ class   UiMsg;
 class   MobiDoc;
 class   ThreadLayoutMobi;
 
+// data used on the ui thread side when handling UiMsg::MobiLayout
+// It's separated out into its own struct for clarity
+struct LayoutTemp {
+    // if we're doing layout that starts from the beginning, this is NULL
+    // otherwise it's the reparse point of the page we were showing when
+    // we started the layout
+    const char *    startPageReparsePoint;
+    Vec<PageData *> pagesFromPage;
+    Vec<PageData *> pagesFromBeginning;
+};
+
 class EbookController : public IClicked, ISizeChanged
 {
     EbookControls * ctrls;
@@ -35,7 +46,6 @@ class EbookController : public IClicked, ISizeChanged
     // 3. like 2. but layout process is still in progress and we're waiting
     //    for more pages
     Vec<PageData*>* pagesFromBeginning;
-    Vec<PageData*>* newPagesFromBeginning;
     Vec<PageData*>* pagesFromPage;
     int             startPageForPagesFromPage;
 
@@ -52,6 +62,7 @@ class EbookController : public IClicked, ISizeChanged
     int             pageDx, pageDy; // size of the page for which pages was generated
 
     ThreadLayoutMobi *layoutThread;
+    LayoutTemp        layoutTmp;
 
     void UpdateStatus() const;
     void DeletePages(Vec<PageData*>** pages);

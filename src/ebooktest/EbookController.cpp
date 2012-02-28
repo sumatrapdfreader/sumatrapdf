@@ -140,7 +140,6 @@ EbookController::EbookController(EbookControls *ctrls) : ctrls(ctrls)
     mobiDoc = NULL;
     html = NULL;
     pagesFromBeginning = NULL;
-    newPagesFromBeginning = NULL;
     pagesFromPage = NULL;
     pagesShowing = NULL;
 
@@ -163,7 +162,6 @@ EbookController::~EbookController()
     ctrls->mainWnd->evtMgr->UnRegisterSizeChanged(this);
     ctrls->page->SetPage(NULL);
     DeletePages(&pagesFromBeginning);
-    DeletePages(&newPagesFromBeginning);
     DeletePages(&pagesFromPage);
     delete mobiDoc;
 }
@@ -171,8 +169,7 @@ EbookController::~EbookController()
 void EbookController::DeletePages(Vec<PageData*>** pages)
 {
     CrashIf((pagesFromBeginning != *pages) && 
-            (pagesFromPage != *pages) &&
-            (newPagesFromBeginning != *pages));
+            (pagesFromPage != *pages));
     ::DeletePages(*pages);
     *pages = NULL;
 }
@@ -206,18 +203,24 @@ void EbookController::HandleMobiLayoutMsg(UiMsg *msg)
         l("EbookController::MobiLayout() thread message discarded");
         return;
     }
-    MobiLayoutData *ld = &msg->mobiLayout;
     l("EbookController::HandleMobiLayoutMsg() got new pages");
-    if (!newPagesFromBeginning)
-        newPagesFromBeginning = new Vec<PageData*>();
-    newPagesFromBeginning->Append(ld->pages, ld->pageCount);
+
+    MobiLayoutData *ld = &msg->mobiLayout;
+    layoutTmp.pagesFromBeginning.Append(ld->pages, ld->pageCount);
 
     if (ld->finished) {
         layoutThread = NULL;
+        // we're about to delete PageData that can potentially be shown,
+        // so clear the page
+        ctrls->page->SetPage(NULL);
         DeletePages(&pagesFromBeginning);
-        pagesFromBeginning = newPagesFromBeginning;
+        pagesFromBeginning = new Vec<PageData*>();
+        PageData **pages = layoutTmp.pagesFromBeginning.LendData();
+        size_t pageCount =  layoutTmp.pagesFromBeginning.Count();
+        pagesFromBeginning->Append(pages, pageCount);
+        layoutTmp.pagesFromBeginning.Reset();
+        layoutTmp.pagesFromPage.Reset();
         pagesShowing = pagesFromBeginning;
-        newPagesFromBeginning = NULL;
         // TODO: should set the page to a page we were on the last time
         GoToPage(1);
     }
@@ -236,13 +239,18 @@ void EbookController::TriggerLayout()
     if (!html && !mobiDoc)
         return;
 
-    DeletePages(&newPagesFromBeginning);
     pagesShowing = NULL;
 
     // nicely ask existing layout thread (if exists) to quit but we don't
     // rely on that. If it sends us some data anyway, we'll ignore it
     if (layoutThread)
         layoutThread->RequestCancel();
+
+    // TODO: for now it's always from the beginning
+    layoutTmp.startPageReparsePoint = NULL;
+    // those should be reset in HandleMobiLayoutMsg();
+    CrashIf(layoutTmp.pagesFromBeginning.Count() > 0);
+    CrashIf(layoutTmp.pagesFromPage.Count() > 0);
 
     layoutThread = new ThreadLayoutMobi();
     layoutThread->controller = this;
@@ -319,9 +327,9 @@ void EbookController::GoToPage(int newPageNo)
     CrashIf((newPageNo < 1) || (newPageNo > (int)pagesShowing->Count()));
     CrashIf(pagesShowing != pagesFromBeginning);
     currPageNoFromBeginning = newPageNo;
-    UpdateStatus();
     PageData *pageData = pagesShowing->At(currPageNoFromBeginning-1);
     ctrls->page->SetPage(pageData);
+    UpdateStatus();
 }
 
 void EbookController::GoToLastPage()
