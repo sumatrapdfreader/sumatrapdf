@@ -18,19 +18,8 @@ inline size_t Len(const WCHAR *s) { return wcslen(s); }
 inline char *  Dup(const char *s) { return _strdup(s); }
 inline WCHAR * Dup(const WCHAR *s) { return _wcsdup(s); }
 
-inline void ReplacePtr(char **s, const char *snew) {
-    free(*s);
-    *s = NULL;
-    if (snew)
-        *s = str::Dup(snew);
-}
-
-inline void ReplacePtr(WCHAR **s, const WCHAR *snew) {
-    free(*s);
-    *s = NULL;
-    if (snew)
-        *s = str::Dup(snew);
-}
+void ReplacePtr(char **s, const char *snew);
+void ReplacePtr(WCHAR **s, const WCHAR *snew);
 
 char *  Join(const char *s1, const char *s2, const char *s3=NULL);
 WCHAR * Join(const WCHAR *s1, const WCHAR *s2, const WCHAR *s3=NULL);
@@ -132,6 +121,7 @@ void    DbgOut(const TCHAR *format, ...);
 #endif
 
 const char  *   Parse(const char *str, const char *format, ...);
+const char  *   Parse(const char *str, size_t len, const char *format, ...);
 const WCHAR *   Parse(const WCHAR *str, const WCHAR *format, ...);
 
 size_t Utf8ToWcharBuf(const char *s, size_t sLen, WCHAR *bufOut, size_t bufOutMax);

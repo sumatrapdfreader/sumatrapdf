@@ -138,6 +138,22 @@ bool EndsWithI(const WCHAR *txt, const WCHAR *end)
     return str::EqI(txt + txtLen - endLen, end);
 }
 
+void ReplacePtr(char **s, const char *snew)
+{
+    free(*s);
+    *s = NULL;
+    if (snew)
+        *s = str::Dup(snew);
+}
+
+void ReplacePtr(WCHAR **s, const WCHAR *snew)
+{
+    free(*s);
+    *s = NULL;
+    if (snew)
+        *s = str::Dup(snew);
+}
+
 /* Concatenate 2 strings. Any string can be NULL.
    Caller needs to free() memory. */
 char *Join(const char *s1, const char *s2, const char *s3)
@@ -793,16 +809,12 @@ static const WCHAR *ParseLimitedNumber(const WCHAR *str, const WCHAR *format,
    characters must be read for parsing the number (e.g. "%4d" parses -123 out of "-12345"
    and doesn't parse "123" at all).
 */
-const char *Parse(const char *str, const char *format, ...)
+static const char *ParseV(const char *str, const char *format, va_list args)
 {
-    if (!str)
-        return NULL;
-    va_list args;
-    va_start(args, format);
     for (const char *f = format; *f; f++) {
         if (*f != '%') {
             if (*f != *str)
-                goto Failure;
+                return NULL;
             str++;
             continue;
         }
@@ -844,15 +856,47 @@ const char *Parse(const char *str, const char *format, ...)
         else if (ChrIsDigit(*f))
             f = ParseLimitedNumber(str, f, &end, va_arg(args, void *)) - 1;
         if (!end || end == str)
-            goto Failure;
+            return NULL;
         str = end;
     }
-    va_end(args);
     return str;
+}
 
-Failure:
+const char *Parse(const char *str, const char *fmt, ...)
+{
+    if (!str || !fmt)
+        return NULL;
+
+    va_list args;
+    va_start(args, fmt);
+    const char *res = ParseV(str, fmt, args);
     va_end(args);
-    return NULL;
+    return res;
+}
+
+// TODO: could optimize it by making the main Parse() implementation
+// work with explicit length and not rely on zero-termination
+const char *Parse(const char *str, size_t len, const char *fmt, ...)
+{
+    char buf[128] = { 0 };
+    char *s = buf;
+
+    if (!str || !fmt)
+        return NULL;
+
+    if (len < dimof(buf))
+        memcpy(buf, str, len);
+    else
+        s = DupN(str, len);
+
+    va_list args;
+    va_start(args, fmt);
+    const char *res = ParseV(s, fmt, args);
+    va_end(args);
+
+    if (s != buf)
+        free(s);
+    return res;
 }
 
 const WCHAR *Parse(const WCHAR *str, const WCHAR *format, ...)

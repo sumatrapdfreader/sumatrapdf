@@ -201,10 +201,17 @@ static void TStrTest()
     assert(!str::Parse(_T("ab"), _T("a% b")));
     assert(!str::Parse(_T("%+"), _T("+")) && !str::Parse(_T("%+"), _T("%+")));
 
+    assert(str::Parse("abcd", 3, "abc%$"));
+    assert(str::Parse("abc", 3, "a%?bc%?d%$"));
+
     {
         float f1, f2;
         const TCHAR *end = str::Parse(_T("%1.23y -2e-3z"), _T("%%%fy%fz%$"), &f1, &f2);
         assert(end && !*end);
+        assert(f1 == 1.23f && f2 == -2e-3f);
+        f1 = 0; f2 = 0;
+        const char *end2 = str::Parse("%1.23y -2e-3zlah", 13, "%%%fy%fz%$", &f1, &f2);
+        assert(end2 && !*end2);
         assert(f1 == 1.23f && f2 == -2e-3f);
     }
 

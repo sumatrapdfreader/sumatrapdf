@@ -551,11 +551,8 @@ static bool IgnoreTag(const char *s, size_t sLen)
 // parse the number in s as a float
 static float ParseFloat(const char *s, size_t len)
 {
-    str::Str<char> sCopy;
-    sCopy.Append(s, len);
-    char *toParse = sCopy.Get();
     float x = 0;
-    str::Parse(toParse, "%f", &x);
+    str::Parse(s, len, "%f", &x);
     return x;
 }
 
@@ -563,14 +560,11 @@ static float ParseFloat(const char *s, size_t len)
 // to be passed by the caller
 static float ParseSizeAsPixels(const char *s, size_t len, float emInPoints)
 {
-    str::Str<char> sCopy;
-    sCopy.Append(s, len);
-    char *toParse = sCopy.Get();
     float x = 0;
     float sizeInPoints = 0;
-    if (str::Parse(toParse, "%fem", &x)) {
+    if (str::Parse(s, len, "%fem", &x)) {
         sizeInPoints = x * emInPoints;
-    } else if (str::Parse(toParse, "%fpt", &x)) {
+    } else if (str::Parse(s, len, "%fpt", &x)) {
         sizeInPoints = x;
     }
     // TODO: take dpi into account
@@ -601,12 +595,9 @@ void PageLayout::HandleTagA(HtmlToken *t)
     AttrInfo *attr = t->GetAttrByName("filepos");
     if (!attr) 
         return;
-    // TODO: would be nice to have str::Parse() that can operate on string with a given
-    // length, not only on zero-terminated strings
-    str::Str<char> nStr;
-    nStr.Append(attr->val, attr->valLen);
+
     int n = 0;
-    if (!str::Parse(nStr.Get(), "%d", &n))
+    if (!str::Parse(attr->val, attr->valLen, "%d", &n))
         return;
     if (n < 0)
         return;
@@ -661,10 +652,8 @@ void PageLayout::HandleTagImg(HtmlToken *t)
     AttrInfo *attr = t->GetAttrByName("recindex");
     if (!attr)
         return;
-    str::Str<char> nStr;
-    nStr.Append(attr->val, attr->valLen);
     int n = 0;
-    if (!str::Parse(nStr.Get(), "%d", &n))
+    if (!str::Parse(attr->val, attr->valLen, "%d", &n))
         return;
     ImageData *img = layoutInfo->mobiDoc->GetImage(n);
     if (!img)

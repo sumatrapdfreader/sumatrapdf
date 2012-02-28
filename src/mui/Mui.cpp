@@ -44,11 +44,6 @@ to register for click evens from any window that generates thems.
 
 TODO: generic way to handle tooltips
 
-TODO: generic, flexible layout where I can just add windows. See
-http://www.codeproject.com/Articles/194173/QuickDialogs-a-library-for-creating-dialogs-quickl
-for how it could look like, syntax-wise. Layout itself could implement
-something similar to html box model (http://marlongrech.wordpress.com/2012/01/23/thinking-in-boxes/) or maybe like Rebol/View (http://www.rebol.com/docs/view-system.html)
-
 TODO: add size to content option to HwndWrapper (a bool flag, if set instead
 of using window's size as available area, use infinite and size the
 window to the result of the layout process). Alternatively (or in
