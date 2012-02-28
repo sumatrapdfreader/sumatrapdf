@@ -509,7 +509,7 @@ void DDEExecute(const TCHAR* server, const TCHAR* topic, const TCHAR* command)
     if (answer)
         DdeFreeDataHandle(answer);
     else
-        plog("DDE transaction failed %u.", DdeGetLastError(inst));
+        plogf("DDE transaction failed %u.", DdeGetLastError(inst));
 
 Exit:
     if (hddedata)
@@ -525,7 +525,7 @@ Exit:
     return;
 
 Error:
-    plog("DDE communication could not be initiated %u.", DdeGetLastError(inst));
+    plogf("DDE communication could not be initiated %u.", DdeGetLastError(inst));
     goto Exit;
 }
 

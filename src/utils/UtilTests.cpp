@@ -1110,7 +1110,7 @@ static void BencTestStress()
 
 void BaseUtils_UnitTests()
 {
-    plog("Running BaseUtils unit tests");
+    plogf("Running BaseUtils unit tests");
     GeomTest();
     TStrTest();
     FileUtilTest();

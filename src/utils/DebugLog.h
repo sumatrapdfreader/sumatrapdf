@@ -43,6 +43,6 @@ void LogF(const WCHAR *fmt, ...);
 // use to indicate that the log messages are meant to be more
 // permanent (mostly for rarely executed code paths so that
 // the log isn't unnecessarily spammed)
-#define plog(fmt, ...) lf(fmt, __VA_ARGS__)
+#define plogf(fmt, ...) lf(fmt, __VA_ARGS__)
 
 #endif

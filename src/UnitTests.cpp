@@ -169,7 +169,7 @@ static void BenchRangeTest()
 
 void SumatraPDF_UnitTests()
 {
-    plog("Running SumatraPDF unit tests");
+    plogf("Running SumatraPDF unit tests");
     hexstrTest();
     ParseCommandLineTest();
     versioncheck_test();
