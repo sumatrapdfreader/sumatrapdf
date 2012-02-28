@@ -13,6 +13,9 @@
 #include <io.h>
 #include <fcntl.h>
 
+#define NOLOG defined(NDEBUG)
+#include "DebugLog.h"
+
 // Loads a DLL explicitly from the system's library collection
 HMODULE SafeLoadLibrary(const TCHAR *dllName)
 {
@@ -92,7 +95,7 @@ void SeeLastError(DWORD err)
         NULL, err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
         (LPTSTR)&msgBuf, 0, NULL);
     if (!msgBuf) return;
-    DBG_OUT("SeeLastError(): %s\n", msgBuf);
+    lf(_T("SeeLastError(): %s\n"), msgBuf);
     LocalFree(msgBuf);
 }
 
