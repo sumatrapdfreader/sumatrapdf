@@ -880,6 +880,7 @@ PageData *PageLayout::IterStart(LayoutInfo* li)
     currJustification = Align_Justify;
     currX = 0; currY = 0;
     currPage = new PageData;
+    currReparsePoint = layoutInfo->htmlStr;
     currPage->reparsePoint = currReparsePoint;
 
     currLineTopPadding = 0;

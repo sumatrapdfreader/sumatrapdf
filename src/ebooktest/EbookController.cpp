@@ -197,6 +197,21 @@ static LayoutInfo *GetLayoutInfo(const char *html, MobiDoc *mobiDoc, int dx, int
     return li;
 }
 
+// TODO: this sometimes overshoots by a page
+static size_t PageForReparsePoint(Vec<PageData*> *pages, const char *reparsePoint)
+{
+    for (size_t i = 0; i < pages->Count(); i++) {
+        PageData *pd = pages->At(i);
+        if (pd->reparsePoint == reparsePoint)
+            return i;
+        if (pd->reparsePoint > reparsePoint) {
+            CrashIf(0 == i);
+            return i;
+        }
+    }
+    return -1;
+}
+
 void EbookController::HandleMobiLayoutMsg(UiMsg *msg)
 {
     CrashIf(UiMsg::MobiLayout != msg->type);
@@ -209,20 +224,32 @@ void EbookController::HandleMobiLayoutMsg(UiMsg *msg)
     bool firstPageArrived = (0 == layoutTmp.pagesFromBeginning.Count());
     MobiLayoutData *ld = &msg->mobiLayout;
     layoutTmp.pagesFromBeginning.Append(ld->pages, ld->pageCount);
+    for (size_t i = 0; i < ld->pageCount; i++) {
+        CrashIf(!ld->pages[i]->reparsePoint);
+    }
     lf("EbookController::HandleMobiLayoutMsg() got %d new pages", ld->pageCount);
 
     if (!layoutTmp.startPageReparsePoint) {
         // if we're starting from the beginning, show the first page as
         // quickly as we can
-        if (firstPageArrived)
+        if (firstPageArrived) {
             ctrls->page->SetPage(layoutTmp.pagesFromBeginning.At(0));
+            currPageNoFromBeginning = 1;
+        }
+    } else {
+        // if we're starting from some page, see if the reparse point is within
+        // pages that arrived
+        // TODO: we do it every time we get new pages even if we've found a page before
+        size_t pageNo = PageForReparsePoint(&layoutTmp.pagesFromBeginning, layoutTmp.startPageReparsePoint);
+        if (-1 != pageNo) {
+            PageData *pd = layoutTmp.pagesFromBeginning.At(pageNo);
+            ctrls->page->SetPage(pd);
+            currPageNoFromBeginning = pageNo + 1;
+        }
     }
 
     if (ld->finished) {
         layoutThread = NULL;
-        // we're about to delete PageData that can potentially be shown,
-        // so clear the page
-        ctrls->page->SetPage(NULL);
         DeletePages(&pagesFromBeginning);
         pagesFromBeginning = new Vec<PageData*>();
         PageData **pages = layoutTmp.pagesFromBeginning.LendData();
@@ -231,8 +258,6 @@ void EbookController::HandleMobiLayoutMsg(UiMsg *msg)
         layoutTmp.pagesFromBeginning.Reset();
         layoutTmp.pagesFromPage.Reset();
         pagesShowing = pagesFromBeginning;
-        // TODO: should set the page to a page we were on the last time
-        GoToPage(1);
     }
     UpdateStatus();
 }
@@ -269,9 +294,10 @@ void EbookController::TriggerLayout()
 
 void EbookController::OnLayoutTimer()
 {
-    // TODO: get reparse point from current page
-    // layoutTmp.startPageReparsePoint
     layoutTmp.startPageReparsePoint = NULL;
+    PageData *pd = ctrls->page->GetPage();
+    if (pd)
+        layoutTmp.startPageReparsePoint = pd->reparsePoint;
     TriggerLayout();
 }
 
@@ -375,6 +401,7 @@ void EbookController::SetHtml(const char *newHtml)
 {
     html = newHtml;
     delete mobiDoc;
+    layoutTmp.startPageReparsePoint = NULL;
     TriggerLayout();
 }
 

@@ -65,6 +65,8 @@ struct DrawInstr {
 };
 
 struct PageData {
+    PageData() : reparsePoint(NULL)
+    {}
     // if we start parsing html again from reparsePoint, we should
     // get the same instructions
     const char *    reparsePoint;

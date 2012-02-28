@@ -20,7 +20,7 @@ struct FinishedMobiLoadingData {
 struct MobiLayoutData {
     enum { MAX_PAGES = 32 };
     PageData *         pages[MAX_PAGES];
-    int                pageCount;
+    size_t             pageCount;
     bool               fromBeginning;
     bool               finished;
     ThreadLayoutMobi * thread;
