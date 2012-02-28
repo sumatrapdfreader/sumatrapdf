@@ -202,7 +202,7 @@ TESTER_OBJS = \
 
 ET2_OBJS = \
 	$(OE2)\EbookTest.obj $(ET_RES) $(OE2)\PageLayout.obj $(OE2)\MiniMui.obj $(UTILS_OBJS) \
-	$(OE2)\MobiDoc.obj $(OE2)\EpubDoc.obj $(ZIP_OBJS) $(ZLIB_OBJS) $(OE2)\Fb2Doc.obj
+	$(OE2)\MobiDoc.obj $(OE2)\EpubDoc.obj $(ZIP_OBJS) $(ZLIB_OBJS) $(OE2)\Fb2Doc.obj $(OMUI)\SvgPath.obj
 
 TESTER2_OBJS = \
 	$(OE2)\Tester.obj $(OE2)\PageLayout.obj $(OE2)\MiniMui.obj $(UTILS_OBJS) \

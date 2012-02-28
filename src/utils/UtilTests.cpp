@@ -193,7 +193,8 @@ static void TStrTest()
     assert(str::Parse(_T("abc"), _T("a%?bc%?d%$")));
     assert(!str::Parse(_T("abc"), _T("ab%$")));
     assert(str::Parse(_T("a \r\n\t b"), _T("a%_b")));
-    assert(!str::Parse(_T("ab"), _T("a%_b")));
+    assert(str::Parse(_T("ab"), _T("a%_b")));
+    assert(!str::Parse(_T("a,b"), _T("a%_b")));
 
     {
         float f1, f2;

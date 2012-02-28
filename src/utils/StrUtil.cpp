@@ -785,7 +785,7 @@ static const WCHAR *ParseLimitedNumber(const WCHAR *str, const WCHAR *format,
      %S - parses a string into a ScopedMem<TCHAR>
      %? - makes the next single character optional (e.g. "x%?,y" parses both "xy" and "x,y")
      %$ - causes the parsing to fail if it's encountered when not at the end of the string
-     %_ - skips one or multiple whitespace characters
+     %_ - skips one or multiple whitespace characters (or none at all)
      %% - matches a single '%'
 
    %u, %d and %x accept an optional width argument, indicating exactly how many
@@ -826,8 +826,11 @@ const char *Parse(const char *str, const char *format, ...)
             continue; // don't fail, if we're indeed at the end of the string
         else if ('%' == *f && *f == *str)
             end = (char *)str + 1;
-        else if ('_' == *f && str::IsWs(*str))
-            for (end = (char *)str + 1; str::IsWs(*end); end++);
+        else if ('_' == *f) {
+            if (!str::IsWs(*str))
+                continue;
+            for (end = (char *)str; str::IsWs(*end); end++);
+        }
         else if ('?' == *f && *(f + 1)) {
             // skip the next format character, advance the string,
             // if it the optional character is the next character to parse
@@ -883,8 +886,11 @@ const WCHAR *Parse(const WCHAR *str, const WCHAR *format, ...)
             continue; // don't fail, if we're indeed at the end of the string
         else if ('%' == *f && *f == *str)
             end = (WCHAR *)str + 1;
-        else if ('_' == *f && iswspace(*str))
-            for (end = (WCHAR *)str + 1; iswspace(*end); end++);
+        else if ('_' == *f) {
+            if (!iswspace(*str))
+                continue;
+            for (end = (WCHAR *)str; iswspace(*end); end++);
+        }
         else if ('?' == *f && *(f + 1)) {
             // skip the next format character, advance the string,
             // if it the optional character is the next character to parse

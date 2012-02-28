@@ -272,24 +272,24 @@ static bool ParseSvgPathData(const char * s, VecSegmented<SvgPathInstr>& instr)
         case MoveAbs: case MoveRel:
         case LineToAbs: case LineToRel:
         case BezierTAbs: case BezierTRel:
-            s = str::Parse(s, "%f%_%f", &i.v[0], &i.v[1]);
+            s = str::Parse(s, "%f%_%?,%_%f", &i.v[0], &i.v[1]);
             break;
 
         case BezierSAbs: case BezierSRel:
         case BezierQAbs: case BezierQRel:
-            s = str::Parse(s, "%f%_%f,%f%_%f",
+            s = str::Parse(s, "%f%_%?,%_%f,%f%_%?,%_%f",
                 &i.v[0], &i.v[1], &i.v[2], &i.v[3]);
             break;
 
         case BezierCAbs: case BezierCRel:
-            s = str::Parse(s, "%f%_%f,%f%_%f,%f%_%f",
+            s = str::Parse(s, "%f%_%?,%_%f,%f%_%?,%_%f,%f%_%?,%_%f",
                 &i.v[0], &i.v[1], &i.v[2], &i.v[3], &i.v[4], &i.v[5]);
             break;
 
         case ArcAbs: case ArcRel:
             {
                 int largeArc, sweep;
-                s = str::Parse(s, "%f%_%f%?,%f%?,%d%?,%d%?,%f%_%f",
+                s = str::Parse(s, "%f%_%?,%_%f%_%?,%_%f%_%?,%_%d%_%?,%_%d%_%?,%_%f%_%?,%_%f",
                     &i.v[0], &i.v[1], &i.v[2], &largeArc, &sweep, &i.v[3], &i.v[4]);
                 i.largeArc = (largeArc != 0); i.sweep = (sweep != 0);
             }
