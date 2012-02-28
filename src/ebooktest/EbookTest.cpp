@@ -21,7 +21,6 @@
 #include "Version.h"
 #include "WinUtil.h"
 
-#define NOLOG defined(NDEBUG)
 #include "DebugLog.h"
 
 /*

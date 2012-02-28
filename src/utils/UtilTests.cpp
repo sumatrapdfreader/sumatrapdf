@@ -1111,7 +1111,7 @@ static void BencTestStress()
 
 void BaseUtils_UnitTests()
 {
-    l("Running BaseUtils unit tests");
+    lf("Running BaseUtils unit tests");
     GeomTest();
     TStrTest();
     FileUtilTest();

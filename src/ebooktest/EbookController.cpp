@@ -128,7 +128,7 @@ bool ThreadLayoutMobi::Layout(const char *reparsePoint)
     layoutInfo->reparsePoint = reparsePoint;
     for (PageData *pd = pl.IterStart(layoutInfo); pd; pd = pl.IterNext()) {
         if (WasCancelRequested()) {
-            l("Layout cancelled");
+            lf("Layout cancelled");
             for (int i = 0; i < pageCount; i++) {
                 delete pages[i];
             }
@@ -238,7 +238,7 @@ void EbookController::HandleMobiLayoutMsg(UiMsg *msg)
     CrashIf(UiMsg::MobiLayout != msg->type);
     if (layoutThread != msg->mobiLayout.thread) {
         // this is a message from cancelled thread, we can disregard
-        l("EbookController::MobiLayout() thread message discarded");
+        lf("EbookController::MobiLayout() thread message discarded");
         return;
     }
 
@@ -450,7 +450,7 @@ void EbookController::HandleFinishedMobiLoadingMsg(UiMsg *msg)
     html = NULL;
     str::ReplacePtr(&fileBeingLoaded, NULL);
     if (NULL == msg->finishedMobiLoading.mobiDoc) {
-        l("ControlEbook::FinishedMobiLoading(): failed to load");
+        lf("ControlEbook::FinishedMobiLoading(): failed to load");
         // TODO: a better way to notify about this, should be a transient message
         ScopedMem<TCHAR> s(str::Format(_T("Failed to load %s!"), msg->finishedMobiLoading.fileName));
         ctrls->status->SetText(s.Get());
