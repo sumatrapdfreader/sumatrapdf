@@ -797,6 +797,19 @@ void PageLayout::HandleText(HtmlToken *t)
     }
 }
 
+// ignore the content of <head>, <style> and <title> tags
+static bool ShouldIgnoreText(Vec<HtmlTag>& tagNesting)
+{
+    for (HtmlTag *tag = tagNesting.IterStart(); tag; tag = tagNesting.IterNext()) {
+        if ((Tag_Head == *tag) ||
+            (Tag_Style == *tag) ||
+            (Tag_Title == *tag)) {
+                return true;
+        }
+    }
+    return false;
+}
+
 // Return the next parsed page. Returns NULL if finished parsing.
 // For simplicity of implementation, we parse xml text node or
 // xml element at a time. This might cause a creation of one
@@ -825,10 +838,12 @@ PageData *PageLayout::IterNext()
             break;
 
         currReparsePoint = t->GetReparsePoint();
-        if (t->IsTag())
+        if (t->IsTag()) {
             HandleHtmlTag(t);
-        else
-            HandleText(t);
+        } else {
+            if (!ShouldIgnoreText(htmlParser->tagNesting))
+                HandleText(t);
+        }
     }
     // force layout of the last line
     FlushCurrLine(true);
