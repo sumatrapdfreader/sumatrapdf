@@ -35,6 +35,9 @@ class EbookController : public IClicked, ISizeChanged
     MobiDoc *       mobiDoc;
     const char *    html;
 
+    // only set while we load the file on a background thread used in UpdateStatus()
+    TCHAR *         fileBeingLoaded;
+
     // TODO: this should be recycled along with pages so that its
     // memory use doesn't grow without bounds
     PoolAllocator   textAllocator;

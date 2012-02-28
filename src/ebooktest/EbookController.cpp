@@ -4,6 +4,7 @@
 #include "EbookController.h"
 
 #include "EbookControls.h"
+#include "FileUtil.h"
 #include "MobiDoc.h"
 #include "PageLayout.h"
 #include "ThreadUtil.h"
@@ -139,6 +140,7 @@ EbookController::EbookController(EbookControls *ctrls) : ctrls(ctrls)
 {
     mobiDoc = NULL;
     html = NULL;
+    fileBeingLoaded = NULL;
     pagesFromBeginning = NULL;
     pagesFromPage = NULL;
     pagesShowing = NULL;
@@ -203,10 +205,18 @@ void EbookController::HandleMobiLayoutMsg(UiMsg *msg)
         l("EbookController::MobiLayout() thread message discarded");
         return;
     }
-    l("EbookController::HandleMobiLayoutMsg() got new pages");
 
+    bool firstPageArrived = (0 == layoutTmp.pagesFromBeginning.Count());
     MobiLayoutData *ld = &msg->mobiLayout;
     layoutTmp.pagesFromBeginning.Append(ld->pages, ld->pageCount);
+    lf("EbookController::HandleMobiLayoutMsg() got %d new pages", ld->pageCount);
+
+    if (!layoutTmp.startPageReparsePoint) {
+        // if we're starting from the beginning, show the first page as
+        // quickly as we can
+        if (firstPageArrived)
+            ctrls->page->SetPage(layoutTmp.pagesFromBeginning.At(0));
+    }
 
     if (ld->finished) {
         layoutThread = NULL;
@@ -224,6 +234,7 @@ void EbookController::HandleMobiLayoutMsg(UiMsg *msg)
         // TODO: should set the page to a page we were on the last time
         GoToPage(1);
     }
+    UpdateStatus();
 }
 
 void EbookController::TriggerLayout()
@@ -246,10 +257,7 @@ void EbookController::TriggerLayout()
     if (layoutThread)
         layoutThread->RequestCancel();
 
-    // TODO: for now it's always from the beginning
-    layoutTmp.startPageReparsePoint = NULL;
-    // those should be reset in HandleMobiLayoutMsg();
-    CrashIf(layoutTmp.pagesFromBeginning.Count() > 0);
+    CrashIf(layoutTmp.pagesFromBeginning.Count() > 0);  // those should be reset in HandleMobiLayoutMsg()
     CrashIf(layoutTmp.pagesFromPage.Count() > 0);
 
     layoutThread = new ThreadLayoutMobi();
@@ -261,6 +269,9 @@ void EbookController::TriggerLayout()
 
 void EbookController::OnLayoutTimer()
 {
+    // TODO: get reparse point from current page
+    // layoutTmp.startPageReparsePoint
+    layoutTmp.startPageReparsePoint = NULL;
     TriggerLayout();
 }
 
@@ -301,15 +312,23 @@ void EbookController::Clicked(Control *c, int x, int y)
 // show the status text based on current state
 void EbookController::UpdateStatus() const
 {
-    if (!pagesShowing) {
-        ctrls->status->SetText(_T(" "));
-        ctrls->progress->SetFilled(0.f);
+    ctrls->progress->SetFilled(0.f);
+
+    if (fileBeingLoaded) {
+        ScopedMem<TCHAR> s(str::Format(_T("Loading %s..."), fileBeingLoaded));
+        ctrls->status->SetText(s.Get());
         return;
     }
 
     if (LayoutInProgress()) {
-        ctrls->status->SetText(_T("Formatting the book..."));
-        ctrls->progress->SetFilled(0.f);
+        int pageCount = layoutTmp.pagesFromBeginning.Count();
+        ScopedMem<TCHAR> s(str::Format(_T("Formatting the book... %d pages"), pageCount));
+        ctrls->status->SetText(s.Get());
+        return;
+    }
+
+    if (!pagesShowing) {
+        ctrls->status->SetText(_T(" "));
         return;
     }
 
@@ -364,6 +383,7 @@ void EbookController::HandleFinishedMobiLoadingMsg(UiMsg *msg)
     CrashIf(UiMsg::FinishedMobiLoading != msg->type);
     delete mobiDoc;
     html = NULL;
+    str::ReplacePtr(&fileBeingLoaded, NULL);
     if (NULL == msg->finishedMobiLoading.mobiDoc) {
         l("ControlEbook::FinishedMobiLoading(): failed to load");
         // TODO: a better way to notify about this, should be a transient message
@@ -371,9 +391,10 @@ void EbookController::HandleFinishedMobiLoadingMsg(UiMsg *msg)
         ctrls->status->SetText(s.Get());
         return;
     }
-
     mobiDoc = msg->finishedMobiLoading.mobiDoc;
-    msg->finishedMobiLoading.mobiDoc = NULL;
+    msg->finishedMobiLoading.mobiDoc = NULL; // just in case, it shouldn't be freed anyway
+
+    layoutTmp.startPageReparsePoint = NULL; // mark as being laid out from the beginning
     TriggerLayout();
 }
 
@@ -385,7 +406,6 @@ void EbookController::LoadMobi(const TCHAR *fileName)
     loadThread->controller = this;
     loadThread->Start();
 
-    // TODO: better way to show this message
-    ScopedMem<TCHAR> s(str::Format(_T("Loading %s..."), fileName));
-    ctrls->status->SetText(s.Get());
+    fileBeingLoaded = str::Dup(path::GetBaseName(fileName));
+    UpdateStatus();
 }

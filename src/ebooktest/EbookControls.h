@@ -34,7 +34,8 @@ class PageControl : public Control
     int         cursorX, cursorY;
 
 public:
-    void SetPage(PageData *newPage) { page = newPage; RequestRepaint(this); }
+    void      SetPage(PageData *newPage) { page = newPage; RequestRepaint(this); }
+    PageData* GetPage() const { return page; }
 
     PageControl() : page(NULL), cursorX(-1), cursorY(-1) { bit::Set(wantedInputBits, WantsMouseMoveBit); }
 
