@@ -195,6 +195,11 @@ static void TStrTest()
     assert(str::Parse(_T("a \r\n\t b"), _T("a%_b")));
     assert(str::Parse(_T("ab"), _T("a%_b")));
     assert(!str::Parse(_T("a,b"), _T("a%_b")));
+    assert(str::Parse(_T("a\tb"), _T("a% b")));
+    assert(!str::Parse(_T("a\r\nb"), _T("a% b")));
+    assert(str::Parse(_T("a\r\nb"), _T("a% %_b")));
+    assert(!str::Parse(_T("ab"), _T("a% b")));
+    assert(!str::Parse(_T("%+"), _T("+")) && !str::Parse(_T("%+"), _T("%+")));
 
     {
         float f1, f2;
