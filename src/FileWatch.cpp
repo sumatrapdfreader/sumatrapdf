@@ -6,8 +6,6 @@
 #include "StrUtil.h"
 #include "FileUtil.h"
 
-#include "DebugLog.h"
-
 bool FileWatcher::IsThreadRunning()
 {
     return hWatchingThread && (WaitForSingleObject(hWatchingThread, 0) == WAIT_TIMEOUT);
@@ -155,7 +153,6 @@ bool FileWatcher::NotifyChange()
             // because the time granularity is so big that this can cause genuine
             // file notifications to be ignored. (This happens for instance for
             // PDF files produced by pdftex from small.tex document)
-            lf(_T("FileWatch: change detected in %s"), filePath);
             if (pCallback)
                 pCallback->Callback();
             return true;

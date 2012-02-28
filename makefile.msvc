@@ -612,8 +612,8 @@ $(OS)\Favorites.obj: src\TextSelection.h src\translations.h src\utils\Allocator.
 $(OS)\Favorites.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\Favorites.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\Favorites.obj: src\utils\WinUtil.h src\WindowInfo.h
-$(OS)\FileWatch.obj: src\FileWatch.h src\utils\BaseUtil.h src\utils\DebugLog.h
-$(OS)\FileWatch.obj: src\utils\FileUtil.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OS)\FileWatch.obj: src\FileWatch.h src\utils\BaseUtil.h src\utils\FileUtil.h
+$(OS)\FileWatch.obj: src\utils\Scoped.h src\utils\StrUtil.h
 $(OS)\ImagesEngine.obj: ext\unrar\dll.hpp src\BaseEngine.h src\ImagesEngine.h
 $(OS)\ImagesEngine.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\FileUtil.h
 $(OS)\ImagesEngine.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\Scoped.h

@@ -12,7 +12,6 @@
 #include "Vec.h"
 #include "SimpleLog.h"
 #include <time.h>
-
 #include "DebugLog.h"
 
 static void GeomTest()
@@ -1111,7 +1110,7 @@ static void BencTestStress()
 
 void BaseUtils_UnitTests()
 {
-    lf("Running BaseUtils unit tests");
+    plog("Running BaseUtils unit tests");
     GeomTest();
     TStrTest();
     FileUtilTest();

@@ -9,7 +9,7 @@ namespace dbglog {
 
 // TODO: as an optimization (to avoid allocations) and to prevent potential problems
 // when formatting, when there are no args just output fmt
-void lf(const char *fmt, ...)
+void LogF(const char *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
@@ -21,7 +21,7 @@ void lf(const char *fmt, ...)
 
 // TODO: as an optimization (to avoid allocations) and to prevent potential problems
 // when formatting, when there are no args just output fmt
-void lf(const WCHAR *fmt, ...)
+void LogF(const WCHAR *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);

@@ -5,12 +5,11 @@
 #include "StrUtil.h"
 #include "FileUtil.h"
 #include "PdfEngine.h"
+#include "DebugLog.h"
 
 #include <shlwapi.h>
 #include <time.h>
 #include <synctex_parser.h>
-
-#include "DebugLog.h"
 
 // size of the mark highlighting the location calculated by forward-search
 #define MARK_SIZE               10
@@ -256,14 +255,14 @@ int Pdfsync::RebuildIndex()
             if (sscanf(line, "l %u %u %u", &psline.record, &psline.line, &psline.column) >= 2)
                 lines.Append(psline);
             else
-                lf("Bad 'l' line in the pdfsync file");
+                plog("Bad 'l' line in the pdfsync file");
             break;
 
         case 's':
             if (sscanf(line, "s %u", &page) == 1)
                 sheetIndex.Append(points.Count());
             else
-                lf("Bad 's' line in the pdfsync file");
+                plog("Bad 's' line in the pdfsync file");
             break;
 
         case 'p':
@@ -273,7 +272,7 @@ int Pdfsync::RebuildIndex()
             else if (sscanf(line, "p* %u %u %u", &pspoint.record, &pspoint.x, &pspoint.y) == 3)
                 points.Append(pspoint);
             else
-                lf("Bad 'p' line in the pdfsync file");
+                plog("Bad 'p' line in the pdfsync file");
             break;
 
         case '(':
@@ -303,11 +302,11 @@ int Pdfsync::RebuildIndex()
             if (filestack.Count() > 1)
                 fileIndex.At(filestack.Pop()).end = lines.Count();
             else
-                lf("Unbalanced ')' line in the pdfsync file");
+                plog("Unbalanced ')' line in the pdfsync file");
             break;
 
         default:
-            lf("Ignoring invalid pdfsync line starting with '%c'", *line);
+            plog("Ignoring invalid pdfsync line starting with '%c'", *line);
             break;
         }
     }

@@ -94,7 +94,7 @@ void SeeLastError(DWORD err)
         NULL, err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
         (LPTSTR)&msgBuf, 0, NULL);
     if (!msgBuf) return;
-    lf(_T("SeeLastError(): %s"), msgBuf);
+    plog(_T("SeeLastError(): %s"), msgBuf);
     LocalFree(msgBuf);
 }
 

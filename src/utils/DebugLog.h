@@ -29,20 +29,20 @@ for an easy switch for turning logging on/off in a given .cpp file.
 
 namespace dbglog {
 
-void lf(const char *fmt, ...);
-void lf(const WCHAR *fmt, ...);
+void LogF(const char *fmt, ...);
+void LogF(const WCHAR *fmt, ...);
 
 } // namespace dbglog
 
 // short names are important for this use case
 #if NOLOG == 1
-
-#define lf(fmt, ...) ((void)0)
-
+#define lf(fmt, ...) NoOp()
 #else
-
-#define lf(fmt, ...) dbglog::lf(fmt, __VA_ARGS__)
-
+#define lf(fmt, ...) dbglog::LogF(fmt, __VA_ARGS__)
 #endif
+// use to indicate that the log messages are meant to be more
+// permanent (mostly for rarely executed code paths so that
+// the log isn't unnecessarily spammed)
+#define plog(fmt, ...) lf(fmt, __VA_ARGS__)
 
 #endif
