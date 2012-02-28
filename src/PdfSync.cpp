@@ -256,14 +256,14 @@ int Pdfsync::RebuildIndex()
             if (sscanf(line, "l %u %u %u", &psline.record, &psline.line, &psline.column) >= 2)
                 lines.Append(psline);
             else
-                l("Bad 'l' line in the pdfsync file");
+                lf("Bad 'l' line in the pdfsync file");
             break;
 
         case 's':
             if (sscanf(line, "s %u", &page) == 1)
                 sheetIndex.Append(points.Count());
             else
-                l("Bad 's' line in the pdfsync file");
+                lf("Bad 's' line in the pdfsync file");
             break;
 
         case 'p':
@@ -273,7 +273,7 @@ int Pdfsync::RebuildIndex()
             else if (sscanf(line, "p* %u %u %u", &pspoint.record, &pspoint.x, &pspoint.y) == 3)
                 points.Append(pspoint);
             else
-                l("Bad 'p' line in the pdfsync file");
+                lf("Bad 'p' line in the pdfsync file");
             break;
 
         case '(':
@@ -303,7 +303,7 @@ int Pdfsync::RebuildIndex()
             if (filestack.Count() > 1)
                 fileIndex.At(filestack.Pop()).end = lines.Count();
             else
-                l("Unbalanced ')' line in the pdfsync file");
+                lf("Unbalanced ')' line in the pdfsync file");
             break;
 
         default:

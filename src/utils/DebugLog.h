@@ -37,21 +37,9 @@ void lf(const WCHAR *fmt, ...);
 // short names are important for this use case
 #if NOLOG == 1
 
-inline void l(const char *s) { }
-inline void l(const WCHAR *s) { }
 #define lf(fmt, ...) ((void)0)
 
 #else
-
-inline void l(const char *s) {
-    OutputDebugStringA(s);
-    OutputDebugStringA("\n");
-}
-
-inline void l(const WCHAR *s) {
-    OutputDebugStringW(s);
-    OutputDebugStringA("\n");
-}
 
 #define lf(fmt, ...) dbglog::lf(fmt, __VA_ARGS__)
 

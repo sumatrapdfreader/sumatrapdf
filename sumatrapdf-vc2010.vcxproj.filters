@@ -798,7 +798,7 @@
       <Filter>zlib</Filter>
     </ClCompile>
     <ClCompile Include="src\utils\DebugLog.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1142,7 +1142,7 @@
       <Filter>zlib</Filter>
     </ClInclude>
     <ClInclude Include="src\utils\DebugLog.h">
-      <Filter>Source Files</Filter>
+      <Filter>utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
