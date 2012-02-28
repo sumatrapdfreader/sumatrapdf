@@ -12,8 +12,6 @@
 #include <shlobj.h>
 #include <shlwapi.h>
 
-#include "DebugLog.h"
-
 // the only valid chars are 0-9, . and newlines.
 // a valid version has to match the regex /^\d+(\.\d+)*(\r?\n)?$/
 // Return false if it contains anything else.
@@ -491,42 +489,34 @@ void DDEExecute(const TCHAR* server, const TCHAR* topic, const TCHAR* command)
 
     UINT result = DdeInitialize(&inst, &DdeCallback, APPCMD_CLIENTONLY, 0);
     if (result != DMLERR_NO_ERROR)
-        goto Error;
+        goto Exit;
     hszServer = DdeCreateStringHandle(inst, server, CP_WINNEUTRAL);
     if (!hszServer)
-        goto Error;
+        goto Exit;
     hszTopic = DdeCreateStringHandle(inst, topic, CP_WINNEUTRAL);
     if (!hszTopic)
-        goto Error;
+        goto Exit;
     hconv = DdeConnect(inst, hszServer, hszTopic, 0);
     if (!hconv)
-        goto Error;
+        goto Exit;
     hddedata = DdeCreateDataHandle(inst, (BYTE*)command, (DWORD)(str::Len(command) + 1) * sizeof(TCHAR), 0, 0, CF_T_TEXT, 0);
     if (!hddedata)
-        goto Error;
+        goto Exit;
 
     HDDEDATA answer = DdeClientTransaction((BYTE*)hddedata, (DWORD)-1, hconv, 0, 0, XTYP_EXECUTE, 10000, 0);
     if (answer)
         DdeFreeDataHandle(answer);
-    else
-        plogf("DDE transaction failed %u.", DdeGetLastError(inst));
 
 Exit:
     if (hddedata)
         DdeFreeDataHandle(hddedata);
     if (hconv)
         DdeDisconnect(hconv);
-
     if (hszTopic)
         DdeFreeStringHandle(inst, hszTopic);
     if (hszServer)
         DdeFreeStringHandle(inst, hszServer);
     DdeUninitialize(inst);
-    return;
-
-Error:
-    plogf("DDE communication could not be initiated %u.", DdeGetLastError(inst));
-    goto Exit;
 }
 
 #define UWM_DELAYED_SET_FOCUS (WM_APP + 1)

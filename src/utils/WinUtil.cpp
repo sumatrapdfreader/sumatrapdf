@@ -85,17 +85,21 @@ bool IsRunningInWow64()
 #endif
 }
 
+// TODO: is this function still needed
 void SeeLastError(DWORD err)
 {
-    TCHAR *msgBuf = NULL;
+    // allow to set a breakpoint in release builds
     if (err == 0)
         err = GetLastError();
+#ifdef DEBUG
+    TCHAR *msgBuf = NULL;
     FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
         NULL, err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
         (LPTSTR)&msgBuf, 0, NULL);
     if (!msgBuf) return;
     plogf(_T("SeeLastError(): %s"), msgBuf);
     LocalFree(msgBuf);
+#endif
 }
 
 // called needs to free() the result

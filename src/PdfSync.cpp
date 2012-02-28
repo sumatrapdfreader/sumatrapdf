@@ -5,7 +5,6 @@
 #include "StrUtil.h"
 #include "FileUtil.h"
 #include "PdfEngine.h"
-#include "DebugLog.h"
 
 #include <shlwapi.h>
 #include <time.h>
@@ -254,15 +253,13 @@ int Pdfsync::RebuildIndex()
             psline.column = 0;
             if (sscanf(line, "l %u %u %u", &psline.record, &psline.line, &psline.column) >= 2)
                 lines.Append(psline);
-            else
-                plogf("Bad 'l' line in the pdfsync file");
+            // else dbg("Bad 'l' line in the pdfsync file");
             break;
 
         case 's':
             if (sscanf(line, "s %u", &page) == 1)
                 sheetIndex.Append(points.Count());
-            else
-                plogf("Bad 's' line in the pdfsync file");
+            // else dbg("Bad 's' line in the pdfsync file");
             break;
 
         case 'p':
@@ -271,8 +268,7 @@ int Pdfsync::RebuildIndex()
                 points.Append(pspoint);
             else if (sscanf(line, "p* %u %u %u", &pspoint.record, &pspoint.x, &pspoint.y) == 3)
                 points.Append(pspoint);
-            else
-                plogf("Bad 'p' line in the pdfsync file");
+            // else dbg("Bad 'p' line in the pdfsync file");
             break;
 
         case '(':
@@ -301,12 +297,11 @@ int Pdfsync::RebuildIndex()
         case ')':
             if (filestack.Count() > 1)
                 fileIndex.At(filestack.Pop()).end = lines.Count();
-            else
-                plogf("Unbalanced ')' line in the pdfsync file");
+            // else dbg("Unbalanced ')' line in the pdfsync file");
             break;
 
         default:
-            plogf("Ignoring invalid pdfsync line starting with '%c'", *line);
+            // dbg("Ignoring invalid pdfsync line starting with '%c'", *line);
             break;
         }
     }

@@ -9,7 +9,6 @@
 #include "WinUtil.h"
 #include "AppTools.h"
 #include "StressTesting.h"
-#include "DebugLog.h"
 
 static void hexstrTest()
 {
@@ -169,7 +168,6 @@ static void BenchRangeTest()
 
 void SumatraPDF_UnitTests()
 {
-    plogf("Running SumatraPDF unit tests");
     hexstrTest();
     ParseCommandLineTest();
     versioncheck_test();
