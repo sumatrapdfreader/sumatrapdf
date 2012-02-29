@@ -22,7 +22,7 @@ static TCHAR *GetValidTempDir()
     }
     BOOL success = CreateDirectory(d, NULL);
     if (!success && (ERROR_ALREADY_EXISTS != GetLastError())) {
-        SeeLastError();
+        LogLastError();
         NotifyFailed(_T("Couldn't create temporary directory"));
         return NULL;
     }
@@ -71,13 +71,13 @@ static void UnregisterFromBeingDefaultViewer(HKEY hkey)
     if (str::Eq(buf, TAPP)) {
         LONG res = SHDeleteValue(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, PROG_ID);
         if (res != ERROR_SUCCESS)
-            SeeLastError(res);
+            LogLastError(res);
     }
     buf.Set(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, APPLICATION));
     if (str::EqI(buf, EXENAME)) {
         LONG res = SHDeleteValue(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, APPLICATION);
         if (res != ERROR_SUCCESS)
-            SeeLastError(res);
+            LogLastError(res);
     }
     buf.Set(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT _T("\\UserChoice"), PROG_ID));
     if (str::Eq(buf, TAPP))
@@ -157,7 +157,7 @@ static BOOL RemoveEmptyDirectory(TCHAR *dir)
     if (!RemoveDirectory(dir)) {
         DWORD lastError = GetLastError();
         if (ERROR_DIR_NOT_EMPTY != lastError && ERROR_FILE_NOT_FOUND != lastError) {
-            SeeLastError(lastError);
+            LogLastError(lastError);
             success = FALSE;
         }
     }
@@ -226,7 +226,7 @@ static bool RemoveShortcut(bool allUsers)
     ScopedMem<TCHAR> p(GetShortcutPath(allUsers));
     bool ok = DeleteFile(p);
     if (!ok && (ERROR_FILE_NOT_FOUND != GetLastError())) {
-        SeeLastError();
+        LogLastError();
         return false;
     }
     return true;

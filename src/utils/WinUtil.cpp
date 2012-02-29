@@ -85,21 +85,18 @@ bool IsRunningInWow64()
 #endif
 }
 
-// TODO: is this function still needed
-void SeeLastError(DWORD err)
+void LogLastError(DWORD err)
 {
     // allow to set a breakpoint in release builds
     if (err == 0)
         err = GetLastError();
-#ifdef DEBUG
-    TCHAR *msgBuf = NULL;
-    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+    char *msgBuf = NULL;
+    FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
         NULL, err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-        (LPTSTR)&msgBuf, 0, NULL);
+        (LPSTR)&msgBuf, 0, NULL);
     if (!msgBuf) return;
-    plogf(_T("SeeLastError(): %s"), msgBuf);
+    plogf("LogLastError: %s", msgBuf);
     LocalFree(msgBuf);
-#endif
 }
 
 // called needs to free() the result
@@ -131,24 +128,18 @@ TryAgainWOW64:
 #endif
         goto TryAgainWOW64;
     }
-    if (ERROR_SUCCESS != res && ERROR_FILE_NOT_FOUND != res)
-        SeeLastError(res);
     return val;
 }
 
 bool WriteRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const TCHAR *value)
 {
     LSTATUS res = SHSetValue(keySub, keyName, valName, REG_SZ, (const VOID *)value, (DWORD)(str::Len(value) + 1) * sizeof(TCHAR));
-    if (ERROR_SUCCESS != res)
-        SeeLastError(res);
     return ERROR_SUCCESS == res;
 }
 
 bool WriteRegDWORD(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, DWORD value)
 {
     LSTATUS res = SHSetValue(keySub, keyName, valName, REG_DWORD, (const VOID *)&value, sizeof(DWORD));
-    if (ERROR_SUCCESS != res)
-        SeeLastError(res);
     return ERROR_SUCCESS == res;
 }
 
@@ -178,8 +169,6 @@ bool DeleteRegKey(HKEY keySub, const TCHAR *keyName, bool resetACLFirst)
     }
 
     LSTATUS res = SHDeleteKey(keySub, keyName);
-    if (ERROR_SUCCESS != res && ERROR_FILE_NOT_FOUND != res)
-        SeeLastError(res);
     return ERROR_SUCCESS == res || ERROR_FILE_NOT_FOUND == res;
 }
 
@@ -407,10 +396,8 @@ HANDLE LaunchProcess(TCHAR *cmdLine, DWORD flags)
     si.cb = sizeof(si);
 
     // per msdn, cmdLine has to be writeable
-    if (!CreateProcess(NULL, cmdLine, NULL, NULL, FALSE, flags, NULL, NULL, &si, &pi)) {
-        SeeLastError();
+    if (!CreateProcess(NULL, cmdLine, NULL, NULL, FALSE, flags, NULL, NULL, &si, &pi))
         return NULL;
-    }
 
     CloseHandle(pi.hThread);
     return pi.hProcess;
@@ -570,8 +557,7 @@ bool CopyTextToClipboard(const TCHAR *text, bool appendOnly)
         lstrcpy(globalText, text);
         GlobalUnlock(handle);
 
-        if (!SetClipboardData(CF_T_TEXT, handle))
-            SeeLastError();
+        SetClipboardData(CF_T_TEXT, handle);
     }
 
     if (!appendOnly)
@@ -602,8 +588,6 @@ bool CopyImageToClipboard(HBITMAP hbmp, bool appendOnly)
         }
         else
             ok = SetClipboardData(CF_BITMAP, hbmp) != NULL;
-        if (!ok)
-            SeeLastError();
     }
 
     if (!appendOnly)

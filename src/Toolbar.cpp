@@ -594,8 +594,6 @@ void CreateToolbar(WindowInfo *win)
     DWORD  reBarStyle = WS_REBAR | WS_VISIBLE;
     win->hwndReBar = CreateWindowEx(WS_EX_TOOLWINDOW, REBARCLASSNAME, NULL, reBarStyle,
                                     0, 0, 0, 0, win->hwndFrame, (HMENU)IDC_REBAR, ghinst, NULL);
-    if (!win->hwndReBar)
-        SeeLastError();
 
     REBARINFO rbi;
     rbi.cbSize = sizeof(REBARINFO);

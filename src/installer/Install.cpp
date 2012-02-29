@@ -234,7 +234,7 @@ static bool CreateInstallationDirectory()
 {
     bool ok = dir::CreateAll(gGlobalData.installDir);
     if (!ok) {
-        SeeLastError();
+        LogLastError();
         NotifyFailed(_T("Couldn't create the installation directory"));
     }
     return ok;
@@ -440,7 +440,7 @@ static HANDLE CreateProcessAtLevel(const TCHAR *exe, const TCHAR *args=NULL, DWO
     return pi.hProcess;
 
 Error:
-    SeeLastError();
+    LogLastError();
     _SaferCloseLevel(slh);
     return NULL;
 }

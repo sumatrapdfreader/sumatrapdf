@@ -57,10 +57,8 @@ bool HttpGetToFile(const TCHAR *url, const TCHAR *destFilePath)
 
     HANDLE hf = CreateFile(destFilePath, GENERIC_WRITE, FILE_SHARE_READ, NULL,
             CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,  NULL);
-    if (INVALID_HANDLE_VALUE == hf) {
-        SeeLastError();
+    if (INVALID_HANDLE_VALUE == hf)
         goto Exit;
-    }
 
     hInet = InternetOpen(USER_AGENT, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
     if (!hInet)
@@ -79,10 +77,9 @@ bool HttpGetToFile(const TCHAR *url, const TCHAR *destFilePath)
 
         DWORD size;
         BOOL wroteOk = WriteFile(hf, buf, (DWORD)dwRead, &size, NULL);
-        if (!wroteOk) {
-            SeeLastError();
+        if (!wroteOk)
             goto Exit;
-        }
+
         if (size != dwRead)
             goto Exit;
     }
@@ -136,18 +133,14 @@ bool HttpPost(const TCHAR *server, const TCHAR *url, str::Str<char> *headers, st
     InternetSetOption(hReq, INTERNET_OPTION_RECEIVE_TIMEOUT,
                       &timeoutMs, sizeof(timeoutMs));
 
-    if (!HttpSendRequestA(hReq, hdr, hdrLen, d, dLen)) {
-        SeeLastError();
+    if (!HttpSendRequestA(hReq, hdr, hdrLen, d, dLen))
         goto Exit;
-    }
 
     // Get the response status.
     DWORD respHttpCode = 0;
     DWORD respHttpCodeSize = sizeof(respHttpCode);
-    if (!HttpQueryInfo(hReq, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER,
-                       &respHttpCode, &respHttpCodeSize, 0)) {
-        SeeLastError();
-    }
+    HttpQueryInfo(hReq, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER,
+                       &respHttpCode, &respHttpCodeSize, 0);
 
     DWORD dwRead;
     do {
@@ -161,7 +154,7 @@ bool HttpPost(const TCHAR *server, const TCHAR *url, str::Str<char> *headers, st
     // it looks like I should be calling HttpEndRequest(), but it always claims
     // a timeout even though the data has been sent, received and we get HTTP 200
     if (!HttpEndRequest(hReq, NULL, 0, 0)) {
-        SeeLastError();
+        LogLastError();
         goto Exit;
     }
 #endif

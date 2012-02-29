@@ -33,7 +33,7 @@ bool   IsRunningInWow64();
 
 inline bool WindowsVerVistaOrGreater() { return GetWindowsVersion() >= 0x0600; }
 
-void   SeeLastError(DWORD err=0);
+void   LogLastError(DWORD err=0);
 TCHAR *ReadRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName);
 bool   WriteRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const TCHAR *value);
 bool   WriteRegDWORD(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, DWORD value);
