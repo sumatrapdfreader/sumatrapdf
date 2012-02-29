@@ -178,7 +178,7 @@ struct Prop {
 
     bool Eq(const Prop* other) const;
 
-    static Prop *AllocFontName(const TCHAR *name);
+    static Prop *AllocFontName(const WCHAR *name);
     static Prop *AllocFontSize(float size);
     static Prop *AllocFontWeight(FontStyle style);
     // TODO: add AllocTextAlign(const char *s);
@@ -232,7 +232,7 @@ struct BorderColors {
 
 // CachedStyle combines values of all properties for easier use by clients
 struct CachedStyle {
-    const TCHAR *   fontName;
+    const WCHAR *   fontName;
     float           fontSize;
     FontStyle       fontWeight;
     Padding         padding;

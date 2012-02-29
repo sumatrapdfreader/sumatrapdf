@@ -93,8 +93,9 @@ HtmlElement *HtmlElement::GetChildByName(const char *name, int idx) const
 static TCHAR IntToChar(int codepoint, UINT codepage)
 {
 #ifndef UNICODE
+    WCHAR wc = codepoint;
     char c = 0;
-    WideCharToMultiByte(codepage, 0, &codepoint, 1, &c, 1, NULL, NULL);
+    WideCharToMultiByte(codepage, 0, &wc, 1, &c, 1, NULL, NULL);
     codepoint = c;
 #endif
     if (codepoint <= 0 || codepoint >= (1 << (8 * sizeof(TCHAR))))

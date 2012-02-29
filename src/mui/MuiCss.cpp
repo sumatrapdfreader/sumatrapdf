@@ -329,7 +329,7 @@ static Prop *UniqifyProp(Prop& p)
     return gAllProps->Append(p);
 }
 
-Prop *Prop::AllocFontName(const TCHAR *name)
+Prop *Prop::AllocFontName(const WCHAR *name)
 {
     Prop p(PropFontName);
     p.fontName = str::Dup(name);

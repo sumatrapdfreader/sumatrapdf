@@ -315,6 +315,34 @@ Error:
     return EINVAL;
 }
 
+errno_t __cdecl strcat_s(char *dst, size_t n, const char *src)
+{
+    if (!src || !dst)
+        goto Error;
+    char *dstEnd = dst + n;
+    while (*dst && (dst < dstEnd)) {
+        ++dst;
+    }
+    size_t dstLeft = (dstEnd - dst);
+    if (0 == dstLeft) {
+        // not null terminated
+        goto Error;
+    }
+    size_t srcLen = strlen(src);
+    if (srcLen > dstLeft) {
+        // no space for src in dst
+        goto Error;
+    }
+    while (*src) {
+        *dst++ = *src++;
+    }
+    *dst = 0;
+    return 0;
+Error:    
+    errno = EINVAL;
+    return EINVAL;
+}
+
 #if 0
 // http://msdn.microsoft.com/en-us/library/84x924s7(v=VS.100).aspx
 size_t __cdecl wcrtomb(char *mbchar, wchar_t wchar, mbstate_t *mbstate)

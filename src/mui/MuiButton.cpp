@@ -8,7 +8,7 @@ using namespace Gdiplus;
 
 namespace mui {
 
-Button::Button(const TCHAR *s)
+Button::Button(const WCHAR *s)
 {
     text = NULL;
     wantedInputBits = (uint16)-1; // wants everything
@@ -78,7 +78,7 @@ void Button::RecalculateSize(bool repaintIfSizeDidntChange)
         RequestRepaint(this);
 }
 
-void Button::SetText(const TCHAR *s)
+void Button::SetText(const WCHAR *s)
 {
     str::ReplacePtr(&text, s);
     RecalculateSize(true);

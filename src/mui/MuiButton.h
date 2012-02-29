@@ -16,11 +16,11 @@ class Button : public Control
     Style *         styleMouseOver;  // gStyleButtonMouseOver if NULL
 
 public:
-    Button(const TCHAR *s);
+    Button(const WCHAR *s);
 
     virtual ~Button();
 
-    void SetText(const TCHAR *s);
+    void SetText(const WCHAR *s);
 
     void RecalculateSize(bool repaintIfSizeDidntChange);
 
@@ -32,7 +32,7 @@ public:
 
     void    SetStyles(Style *def, Style *mouseOver);
 
-    TCHAR *         text;
+    WCHAR *         text;
     size_t          textDx; // cached measured text width
 };
 

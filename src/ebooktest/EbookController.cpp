@@ -380,25 +380,25 @@ void EbookController::UpdateStatus() const
 
     if (fileBeingLoaded) {
         ScopedMem<TCHAR> s(str::Format(_T("Loading %s..."), fileBeingLoaded));
-        ctrls->status->SetText(s.Get());
+        ctrls->status->SetText(AsWStrQ(s.Get()));
         return;
     }
 
     if (LayoutInProgress()) {
         int pageCount = layoutTmp.pagesFromBeginning.Count();
         ScopedMem<TCHAR> s(str::Format(_T("Formatting the book... %d pages"), pageCount));
-        ctrls->status->SetText(s.Get());
+        ctrls->status->SetText(AsWStrQ(s.Get()));
         return;
     }
 
     if (!pagesShowing) {
-        ctrls->status->SetText(_T(" "));
+        ctrls->status->SetText(L" ");
         return;
     }
 
     size_t pageCount = pagesShowing->Count();
     ScopedMem<TCHAR> s(str::Format(_T("Page %d out of %d"), currPageNoFromBeginning, (int)pageCount));
-    ctrls->status->SetText(s.Get());
+    ctrls->status->SetText(AsWStrQ(s.Get()));
     ctrls->progress->SetFilled(PercFromInt(pageCount, currPageNoFromBeginning));
 }
 
@@ -453,7 +453,7 @@ void EbookController::HandleFinishedMobiLoadingMsg(UiMsg *msg)
         lf("ControlEbook::FinishedMobiLoading(): failed to load");
         // TODO: a better way to notify about this, should be a transient message
         ScopedMem<TCHAR> s(str::Format(_T("Failed to load %s!"), msg->finishedMobiLoading.fileName));
-        ctrls->status->SetText(s.Get());
+        ctrls->status->SetText(AsWStrQ(s.Get()));
         return;
     }
     mobiDoc = msg->finishedMobiLoading.mobiDoc;

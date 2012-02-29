@@ -350,7 +350,7 @@ static TCHAR *MimeFromUrl(const TCHAR *url)
         if (str::EqI(ext, mimeTypes[i].ext))
             return str::Dup(mimeTypes[i].mimetype);
 
-    ScopedMem<TCHAR> contentType(ReadRegStr(HKEY_CLASSES_ROOT, AsTStrQ(ext), _T("Content Type")));
+    ScopedMem<TCHAR> contentType(ReadRegStr(HKEY_CLASSES_ROOT, ext, _T("Content Type")));
     if (contentType)
         return contentType.StealData();
 

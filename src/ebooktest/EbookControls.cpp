@@ -172,7 +172,7 @@ EbookControls *CreateEbookControls(HWND hwnd)
     ctrls->progress->hCursor = gCursorHand;
     ctrls->progress->SetStyle(styleProgress);
 
-    ctrls->status = new Button(_T(""));
+    ctrls->status = new Button(L"");
     ctrls->status->SetStyles(styleStatus, styleStatus);
 
     ctrls->page = new PageControl();
