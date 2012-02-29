@@ -856,10 +856,13 @@ static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win,
 
     const TCHAR *baseName = path::GetBaseName(win.dm->FileName());
     TCHAR *docTitle = win.dm->engine ? win.dm->engine->GetProperty("Title") : NULL;
-    if (!str::IsEmpty(docTitle)) {
-        ScopedMem<TCHAR> docTitleBit(str::Format(_T("- [%s] "), docTitle));
-        free(docTitle);
-        docTitle = docTitleBit.StealData();
+    if (docTitle) {
+        str::NormalizeWS(docTitle);
+        if (!str::IsEmpty(docTitle)) {
+            ScopedMem<TCHAR> docTitleBit(str::Format(_T("- [%s] "), docTitle));
+            free(docTitle);
+            docTitle = docTitleBit.StealData();
+        }
     }
     title.Set(str::Format(_T("%s %s- %s"), baseName, docTitle ? docTitle : _T(""), SUMATRA_WINDOW_TITLE));
 #ifdef UNICODE
