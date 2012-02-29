@@ -127,7 +127,7 @@ do_hash_insert(fz_context *ctx, fz_hash_table *table, void *key, void *val)
 		if (memcmp(key, ents[pos].key, table->keylen) == 0)
 		{
 			fz_warn(ctx, "assert: overwrite hash slot");
-			return ents[pos].val = val;
+			return ents[pos].val;
 		}
 
 		pos = (pos + 1) % size;

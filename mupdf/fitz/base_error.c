@@ -54,7 +54,7 @@ inline void fz_crash_abort()
 static void throw(fz_error_context *ex)
 {
 	if (ex->top >= 0) {
-		longjmp(ex->stack[ex->top].buffer, 1);
+		fz_longjmp(ex->stack[ex->top].buffer, 1);
 	} else {
 		fprintf(stderr, "uncaught exception: %s\n", ex->message);
 		LOGE("uncaught exception: %s\n", ex->message);

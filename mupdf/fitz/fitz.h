@@ -27,6 +27,14 @@
 #include "memento.h"
 #endif
 
+#ifdef __APPLE__
+#define fz_setjmp _setjmp
+#define fz_longjmp _longjmp
+#else
+#define fz_setjmp setjmp
+#define fz_longjmp longjmp
+#endif
+
 #ifdef __ANDROID__
 #include <android/log.h>
 #define LOG_TAG "libmupdf"
@@ -148,7 +156,7 @@ void fz_var_imp(void *);
 
 #define fz_try(ctx) \
 	if (fz_push_try(ctx->error), \
-		(ctx->error->stack[ctx->error->top].code = setjmp(ctx->error->stack[ctx->error->top].buffer)) == 0) \
+		(ctx->error->stack[ctx->error->top].code = fz_setjmp(ctx->error->stack[ctx->error->top].buffer)) == 0) \
 	{ do {
 
 #define fz_always(ctx) \
@@ -174,7 +182,7 @@ instead. This was held as too high a price to pay to drop limitation 2.
 
 #define fz_try(ctx) \
 	if (fz_push_try(ctx->error), \
-		(ctx->error->stack[ctx->error->top].code = setjmp(ctx->error->stack[ctx->error->top].buffer)) == 0) \
+		(ctx->error->stack[ctx->error->top].code = fz_setjmp(ctx->error->stack[ctx->error->top].buffer)) == 0) \
 	{ do {
 
 #define fz_always_(ctx, label) \
@@ -202,7 +210,7 @@ execution. Again this was felt to be too high a cost to use.
 
 #define fz_try(ctx) \
 	if (fz_push_try(ctx->error), \
-		(ctx->error->stack[ctx->error->top].code = setjmp(ctx->error->stack[ctx->error->top].buffer)) == 0) \
+		(ctx->error->stack[ctx->error->top].code = fz_setjmp(ctx->error->stack[ctx->error->top].buffer)) == 0) \
 	{ do {
 
 #define fz_always(ctx) \

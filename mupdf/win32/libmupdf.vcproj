@@ -210,6 +210,10 @@
 			Name="pdf"
 			>
 			<File
+				RelativePath="..\pdf\base_object.c"
+				>
+			</File>
+			<File
 				RelativePath="..\pdf\data_encodings.h"
 				>
 			</File>
@@ -359,10 +363,6 @@
 			</File>
 			<File
 				RelativePath="..\fitz\base_memory.c"
-				>
-			</File>
-			<File
-				RelativePath="..\fitz\base_object.c"
 				>
 			</File>
 			<File
