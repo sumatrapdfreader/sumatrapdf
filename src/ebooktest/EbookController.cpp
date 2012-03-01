@@ -218,16 +218,17 @@ static LayoutInfo *GetLayoutInfo(const char *html, MobiDoc *mobiDoc, int dx, int
     return li;
 }
 
-// TODO: this sometimes overshoots by a page
 static size_t PageForReparsePoint(Vec<PageData*> *pages, const char *reparsePoint)
 {
     for (size_t i = 0; i < pages->Count(); i++) {
         PageData *pd = pages->At(i);
         if (pd->reparsePoint == reparsePoint)
             return i;
+        // this is the first page whose content is after reparsePoint, so
+        // the page contining reparsePoint must be the one before
         if (pd->reparsePoint > reparsePoint) {
             CrashIf(0 == i);
-            return i;
+            return i - 1;
         }
     }
     return -1;
