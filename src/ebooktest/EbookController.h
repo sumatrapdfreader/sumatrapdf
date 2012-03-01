@@ -18,7 +18,7 @@ class   MobiDoc;
 class   ThreadLayoutMobi;
 
 // data used on the ui thread side when handling UiMsg::MobiLayout
-// It's separated out into its own struct for clarity
+// it's in its own struct for clarity
 struct LayoutTemp {
     // if we're doing layout that starts from the beginning, this is NULL
     // otherwise it's the reparse point of the page we were showing when

@@ -14,12 +14,8 @@ using namespace Gdiplus;
 
 // Parse mobi format http://wiki.mobileread.com/wiki/MOBI
 
-#define DETAILED_LOGGING 1 // set to 1 for detailed logging during debugging
-#if DETAILED_LOGGING
-#define l(fmt, ...) printf(fmt, __VA_ARGS__)
-#else
-#define l(fmt, ...) NoOp()
-#endif
+#define NOLOG 0
+#include "DebugLog.h"
 
 #define PALMDOC_TYPE_CREATOR   "TEXtREAd"
 #define MOBI_TYPE_CREATOR      "BOOKMOBI"
@@ -345,14 +341,14 @@ bool HuffDicDecompressor::DecodeOne(uint32 code, uint8 *& dst, size_t& dstLeft)
 {
     uint16 dict = code >> code_length;
     if ((size_t)dict > dictsCount) {
-        l("invalid dict value\n");
+        lf("invalid dict value");
         return false;
     }
     code &= ((1 << (code_length)) - 1);
     uint16 offset = ReadBeU16(dicts[dict] + code * 2);
 
     if ((uint32)offset > dictSize[dict]) {
-        l("invalid offset\n");
+        lf("invalid offset");
         return false;
     }
     uint16 symLen = ReadBeU16(dicts[dict] + offset);
@@ -368,11 +364,11 @@ bool HuffDicDecompressor::DecodeOne(uint32 code, uint8 *& dst, size_t& dstLeft)
     } else {
         symLen &= 0x7fff;
         if (symLen > 127) {
-            l("symLen too big\n");
+            lf("symLen too big");
             return false;
         }
         if (symLen > dstLeft) {
-            l("not enough space\n");
+            lf("not enough space");
             return false;
         }
         memcpy(dst, p, symLen);
@@ -392,7 +388,7 @@ size_t HuffDicDecompressor::Decompress(uint8 *src, size_t srcSize, uint8 *dst, s
 
     for (;;) {
         if (bitsConsumed > br.BitsLeft()) {
-            l("not enough data\n");
+            lf("not enough data");
             return -1;
         }
         br.Eat(bitsConsumed);
@@ -405,7 +401,7 @@ size_t HuffDicDecompressor::Decompress(uint8 *src, size_t srcSize, uint8 *dst, s
         uint32 v = cacheTable[bits >> 24];
         uint32 codeLen = v & 0x1f;
         if (!codeLen) {
-            l("corrupted table, zero code len\n");
+            lf("corrupted table, zero code len");
             return -1;
         }
         bool isTerminal = (v & 0x80) != 0;
@@ -421,7 +417,7 @@ size_t HuffDicDecompressor::Decompress(uint8 *src, size_t srcSize, uint8 *dst, s
                 code = (bits >> (32 - (codeLen+1)));
                 codeLen++;
                 if (codeLen > 32) {
-                    l("code len > 32 bits\n");
+                    lf("code len > 32 bits");
                     return -1;
                 }
             } while (baseVal > code);
@@ -434,7 +430,7 @@ size_t HuffDicDecompressor::Decompress(uint8 *src, size_t srcSize, uint8 *dst, s
     }
 
     if (br.BitsLeft() > 0 && 0 != bits) {
-        l("compressed data left\n");
+        lf("compressed data left");
     }
     return dstSize - dstLeft;
 }
@@ -554,7 +550,7 @@ bool MobiDoc::ParseHeader()
         isMobi = false;
     } else {
         // TODO: print type/creator
-        l(" unknown pdb type/creator\n");
+        lf(" unknown pdb type/creator");
         return false;
     }
 
@@ -582,7 +578,7 @@ bool MobiDoc::ParseHeader()
     // validate offsets
     for (int i = 0; i < pdbHeader.numRecords; i++) {
         if (recHeaders[i + 1].offset < recHeaders[i].offset) {
-            l("invalid offset field\n");
+            lf("invalid offset field");
             return false;
         }
         // technically PDB record size should be less than 64K,
@@ -592,7 +588,7 @@ bool MobiDoc::ParseHeader()
     size_t recLeft;
     char *buf = ReadRecord(0, recLeft);
     if (NULL == buf) {
-        l("failed to read record\n");
+        lf("failed to read record");
         return false;
     }
 
@@ -610,14 +606,14 @@ bool MobiDoc::ParseHeader()
     SwapU16(palmDocHdr->recordsCount);
     SwapU16(palmDocHdr->maxRecSize);
     if (!IsValidCompression(palmDocHdr->compressionType)) {
-        l("unknown compression type\n");
+        lf("unknown compression type");
         return false;
     }
     if (isMobi) {
         // TODO: this needs to be surfaced to the client so
         // that we can show the right error message
         if (palmDocHdr->mobi.encrType != ENCRYPTION_NONE) {
-            l("encryption is unsupported\n");
+            lf("encryption is unsupported");
             return false;
         }
     }
@@ -636,7 +632,7 @@ bool MobiDoc::ParseHeader()
 
     MobiHeader *mobiHdr = (MobiHeader*)currRecPos;
     if (!str::EqN("MOBI", mobiHdr->id, 4)) {
-        l("MobiHeader.id is not 'MOBI'\n");
+        lf("MobiHeader.id is not 'MOBI'");
         return false;
     }
     SwapU32(mobiHdr->hdrLen);
@@ -665,7 +661,7 @@ bool MobiDoc::ParseHeader()
     }
     size_t hdrLen = mobiHdr->hdrLen;
     if (hdrLen > recLeft) {
-        l("MobiHeader too big\n");
+        lf("MobiHeader too big");
         return false;
     }
     currRecPos += hdrLen;
@@ -768,7 +764,7 @@ bool MobiDoc::LoadImage(size_t imageNo)
     if (KnownNonImageRec(imgData, imgDataLen))
         return true;
     if (!KnownImageFormat(imgData, imgDataLen)) {
-        l("Unknown image format\n");
+        lf("Unknown image format");
         return true;
     }
     images[imageNo].data = (char*)memdup(imgData, imgDataLen);
@@ -911,7 +907,7 @@ bool MobiDoc::LoadDocRecordIntoBuffer(size_t recNo, str::Str<char>& strOut)
         char buf[6000]; // should be enough to decompress any record
         size_t uncompressedSize = PalmdocUncompress((uint8*)recData, recSize, (uint8*)buf, sizeof(buf));
         if (-1 == uncompressedSize) {
-            l("PalmDoc decompression failed\n");
+            lf("PalmDoc decompression failed");
             return false;
         }
         strOut.Append(buf, uncompressedSize);
@@ -925,7 +921,7 @@ bool MobiDoc::LoadDocRecordIntoBuffer(size_t recNo, str::Str<char>& strOut)
             return false;
         size_t uncompressedSize = huffDic->Decompress((uint8*)recData, recSize, (uint8*)buf, sizeof(buf));
         if (-1 == uncompressedSize) {
-            l("HuffDic decompression failed\n");
+            lf("HuffDic decompression failed");
             return false;
         }
         strOut.Append(buf, uncompressedSize);
