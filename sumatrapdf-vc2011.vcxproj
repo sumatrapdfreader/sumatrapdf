@@ -1,0 +1,512 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectName>sumatrapdf-vc2010</ProjectName>
+    <ProjectGuid>{9458F693-A9CC-4786-B79A-A2103EC71FA3}</ProjectGuid>
+    <RootNamespace>sumatrapdf</RootNamespace>
+    <Keyword>MakeFileProj</Keyword>
+    <VCTargetsPath Condition="'$(VCTargetsPath11)' != '' and '$(VSVersion)' == '' and $(VisualStudioVersion) == ''">$(VCTargetsPath11)</VCTargetsPath>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <PlatformToolset>v110</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <PlatformToolset>v110</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.30128.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">obj-dbg\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">obj-dbg\</IntDir>
+    <NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">nmake -f makefile.msvc CFG=dbg NASM=bin\nasm.exe</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">nmake -f makefile.msvc CFG=dbg  NASM=bin\nasm.exe rebuild</NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">nmake -f makefile.msvc CFG=dbg  NASM=bin\nasm.exe clean</NMakeCleanCommandLine>
+    <NMakeOutput Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">obj-dbg\sumatrapdf.exe</NMakeOutput>
+    <NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_DEBUG;DEBUG;UNICODE;SYNCTEX_FEATURE;HAVE_BZIP2;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <NMakeIncludeSearchPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(NMakeIncludeSearchPath);$(ProjectDir)\src;$(ProjectDir)\src\utils;$(ProjectDir)\src\utils\msvc;$(ProjectDir)\mupdf\fitz;$(ProjectDir)\mupdf\pdf;$(ProjectDir)\mupdf\xps;$(ProjectDir)\ext\libjpeg-turbo;$(ProjectDir)\ext\zlib-1.2.5;$(ProjectDir)\ext\zlib-1.2.5\minizip;$(ProjectDir)\ext\CHMLib\src</NMakeIncludeSearchPath>
+    <NMakeForcedIncludes Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(NMakeForcedIncludes)</NMakeForcedIncludes>
+    <NMakeAssemblySearchPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(NMakeAssemblySearchPath)</NMakeAssemblySearchPath>
+    <NMakeForcedUsingAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(NMakeForcedUsingAssemblies)</NMakeForcedUsingAssemblies>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">obj-rel\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">obj-rel\</IntDir>
+    <NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">nmake -f makefile.msvc CFG=rel  NASM=bin\nasm.exe</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">nmake -f makefile.msvc CFG=rel  NASM=bin\nasm.exe rebuild</NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">nmake -f makefile.msvc CFG=rel  NASM=bin\nasm.exe clean</NMakeCleanCommandLine>
+    <NMakeOutput Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">obj-rel\sumatrapdf.exe</NMakeOutput>
+    <NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIN32;NDEBUG;UNICODE;HAVE_BZIP2;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <NMakeIncludeSearchPath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeIncludeSearchPath);$(ProjectDir)\src;$(ProjectDir)\src\utils;$(ProjectDir)\src\utils\msvc;$(ProjectDir)\mupdf\fitz;$(ProjectDir)\mupdf\pdf;$(ProjectDir)\mupdf\xps;$(ProjectDir)\ext\libjpeg-turbo;$(ProjectDir)\ext\zlib-1.2.5;$(ProjectDir)\ext\zlib-1.2.5\minizip;$(ProjectDir)\ext\CHMLib\src</NMakeIncludeSearchPath>
+    <NMakeForcedIncludes Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeForcedIncludes)</NMakeForcedIncludes>
+    <NMakeAssemblySearchPath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeAssemblySearchPath)</NMakeAssemblySearchPath>
+    <NMakeForcedUsingAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeForcedUsingAssemblies)</NMakeForcedUsingAssemblies>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="baseutils\UtilTests.cpp" />
+    <ClCompile Include="ext\bzip2\blocksort.c" />
+    <ClCompile Include="ext\bzip2\bzlib.c" />
+    <ClCompile Include="ext\bzip2\compress.c" />
+    <ClCompile Include="ext\bzip2\crctable.c" />
+    <ClCompile Include="ext\bzip2\decompress.c" />
+    <ClCompile Include="ext\bzip2\huffman.c" />
+    <ClCompile Include="ext\bzip2\randtable.c" />
+    <ClCompile Include="ext\CHMLib\src\chm_lib.c" />
+    <ClCompile Include="ext\CHMLib\src\lzx.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jaricom.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jcapimin.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jcapistd.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jcarith.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jccoefct.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jccolor.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jcdctmgr.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jchuff.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jcinit.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jcmainct.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jcmarker.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jcmaster.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jcomapi.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jcparam.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jcphuff.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jcprepct.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jcsample.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jctrans.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jdapimin.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jdapistd.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jdarith.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jdatadst.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jdatasrc.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jdcoefct.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jdcolor.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jddctmgr.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jdhuff.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jdinput.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jdmainct.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jdmarker.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jdmaster.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jdmerge.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jdphuff.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jdpostct.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jdsample.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jdtrans.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jerror.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jfdctflt.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jfdctfst.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jfdctint.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jidctflt.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jidctfst.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jidctint.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jidctred.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jmemmgr.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jmemnobs.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jquant1.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jquant2.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jsimd_none.c" />
+    <ClCompile Include="ext\libjpeg-turbo\jutils.c" />
+    <ClCompile Include="ext\libjpeg-turbo\simd\jsimd_i386.c" />
+    <ClCompile Include="ext\zlib\adler32.c" />
+    <ClCompile Include="ext\zlib\compress.c" />
+    <ClCompile Include="ext\zlib\crc32.c" />
+    <ClCompile Include="ext\zlib\deflate.c" />
+    <ClCompile Include="ext\zlib\gzclose.c" />
+    <ClCompile Include="ext\zlib\gzlib.c" />
+    <ClCompile Include="ext\zlib\gzread.c" />
+    <ClCompile Include="ext\zlib\gzwopen.c" />
+    <ClCompile Include="ext\zlib\gzwrite.c" />
+    <ClCompile Include="ext\zlib\infback.c" />
+    <ClCompile Include="ext\zlib\inffast.c" />
+    <ClCompile Include="ext\zlib\inflate.c" />
+    <ClCompile Include="ext\zlib\inftrees.c" />
+    <ClCompile Include="ext\zlib\minizip\ioapi.c" />
+    <ClCompile Include="ext\zlib\minizip\iowin32.c" />
+    <ClCompile Include="ext\zlib\minizip\iowin32s.c" />
+    <ClCompile Include="ext\zlib\minizip\unzalloc.c" />
+    <ClCompile Include="ext\zlib\minizip\unzip.c" />
+    <ClCompile Include="ext\zlib\trees.c" />
+    <ClCompile Include="ext\zlib\uncompr.c" />
+    <ClCompile Include="ext\zlib\zutil.c" />
+    <ClCompile Include="mupdf\draw\draw_affine.c" />
+    <ClCompile Include="mupdf\draw\draw_blend.c" />
+    <ClCompile Include="mupdf\draw\draw_device.c" />
+    <ClCompile Include="mupdf\draw\draw_edge.c" />
+    <ClCompile Include="mupdf\draw\draw_glyph.c" />
+    <ClCompile Include="mupdf\draw\draw_mesh.c" />
+    <ClCompile Include="mupdf\draw\draw_paint.c" />
+    <ClCompile Include="mupdf\draw\draw_path.c" />
+    <ClCompile Include="mupdf\draw\draw_scale.c" />
+    <ClCompile Include="mupdf\draw\draw_simple_scale.c" />
+    <ClCompile Include="mupdf\draw\draw_unpack.c" />
+    <ClCompile Include="mupdf\fitz\base_context.c" />
+    <ClCompile Include="mupdf\fitz\base_geometry.c" />
+    <ClCompile Include="mupdf\fitz\base_getopt.c" />
+    <ClCompile Include="mupdf\fitz\base_link.c" />
+    <ClCompile Include="mupdf\fitz\base_object.c" />
+    <ClCompile Include="mupdf\fitz\base_time.c" />
+    <ClCompile Include="mupdf\fitz\crypt_sha2.c" />
+    <ClCompile Include="mupdf\fitz\dev_bbox.c" />
+    <ClCompile Include="mupdf\fitz\dev_draw.c" />
+    <ClCompile Include="mupdf\fitz\dev_gdiplus.cpp" />
+    <ClCompile Include="mupdf\fitz\dev_list.c" />
+    <ClCompile Include="mupdf\fitz\dev_null.c" />
+    <ClCompile Include="mupdf\fitz\dev_text.c" />
+    <ClCompile Include="mupdf\fitz\dev_trace.c" />
+    <ClCompile Include="mupdf\fitz\doc_outline.c" />
+    <ClCompile Include="mupdf\fitz\res_bitmap.c" />
+    <ClCompile Include="mupdf\fitz\res_halftone.c" />
+    <ClCompile Include="mupdf\fitz\res_path.c" />
+    <ClCompile Include="mupdf\fitz\res_pixmap.c" />
+    <ClCompile Include="mupdf\fitz\res_store.c" />
+    <ClCompile Include="mupdf\fitz\res_text.c" />
+    <ClCompile Include="mupdf\pdf\pdf_annot.c" />
+    <ClCompile Include="mupdf\pdf\pdf_cmap.c" />
+    <ClCompile Include="mupdf\pdf\pdf_cmap_load.c" />
+    <ClCompile Include="mupdf\pdf\pdf_cmap_parse.c" />
+    <ClCompile Include="mupdf\pdf\pdf_cmap_table.c" />
+    <ClCompile Include="mupdf\pdf\pdf_colorspace.c" />
+    <ClCompile Include="mupdf\pdf\pdf_crypt.c" />
+    <ClCompile Include="mupdf\pdf\pdf_encoding.c" />
+    <ClCompile Include="mupdf\pdf\pdf_font.c" />
+    <ClCompile Include="mupdf\pdf\pdf_fontfile.c" />
+    <ClCompile Include="mupdf\pdf\pdf_ft_tools.c" />
+    <ClCompile Include="mupdf\pdf\pdf_function.c" />
+    <ClCompile Include="mupdf\pdf\pdf_image.c" />
+    <ClCompile Include="mupdf\pdf\pdf_interpret.c" />
+    <ClCompile Include="mupdf\pdf\pdf_lex.c" />
+    <ClCompile Include="mupdf\pdf\pdf_metrics.c" />
+    <ClCompile Include="mupdf\pdf\pdf_nametree.c" />
+    <ClCompile Include="mupdf\pdf\pdf_outline.c" />
+    <ClCompile Include="mupdf\pdf\pdf_page.c" />
+    <ClCompile Include="mupdf\pdf\pdf_parse.c" />
+    <ClCompile Include="mupdf\pdf\pdf_pattern.c" />
+    <ClCompile Include="mupdf\pdf\pdf_repair.c" />
+    <ClCompile Include="mupdf\pdf\pdf_shade.c" />
+    <ClCompile Include="mupdf\pdf\pdf_store.c" />
+    <ClCompile Include="mupdf\pdf\pdf_stream.c" />
+    <ClCompile Include="mupdf\pdf\pdf_type3.c" />
+    <ClCompile Include="mupdf\pdf\pdf_unicode.c" />
+    <ClCompile Include="mupdf\pdf\pdf_xobject.c" />
+    <ClCompile Include="mupdf\pdf\pdf_xref.c" />
+    <ClCompile Include="mupdf\xps\xps_common.c" />
+    <ClCompile Include="mupdf\xps\xps_doc.c" />
+    <ClCompile Include="mupdf\xps\xps_glyphs.c" />
+    <ClCompile Include="mupdf\xps\xps_gradient.c" />
+    <ClCompile Include="mupdf\xps\xps_image.c" />
+    <ClCompile Include="mupdf\xps\xps_jpeg.c" />
+    <ClCompile Include="mupdf\xps\xps_outline.c" />
+    <ClCompile Include="mupdf\xps\xps_path.c" />
+    <ClCompile Include="mupdf\xps\xps_png.c" />
+    <ClCompile Include="mupdf\xps\xps_resource.c" />
+    <ClCompile Include="mupdf\xps\xps_tiff.c" />
+    <ClCompile Include="mupdf\xps\xps_tile.c" />
+    <ClCompile Include="mupdf\xps\xps_util.c" />
+    <ClCompile Include="mupdf\xps\xps_xml.c" />
+    <ClCompile Include="mupdf\xps\xps_zip.c" />
+    <ClCompile Include="src\AppPrefs.cpp" />
+    <ClCompile Include="src\AppTools.cpp" />
+    <ClCompile Include="src\Benchmark.cpp" />
+    <ClCompile Include="src\ChmEngine.cpp" />
+    <ClCompile Include="src\ChmUI.cpp" />
+    <ClCompile Include="src\CrashHandler.cpp" />
+    <ClCompile Include="src\DisplayModel.cpp" />
+    <ClCompile Include="src\DisplayState.cpp" />
+    <ClCompile Include="src\EngineDump.cpp" />
+    <ClCompile Include="src\ExternalPdfViewer.cpp" />
+    <ClCompile Include="src\Favorites.cpp" />
+    <ClCompile Include="src\FileWatch.cpp" />
+    <ClCompile Include="src\ImagesEngine.cpp" />
+    <ClCompile Include="src\LangMenuDef.cpp" />
+    <ClCompile Include="src\Menu.cpp" />
+    <ClCompile Include="src\ParseCommandLine.cpp" />
+    <ClCompile Include="src\PdfEngine.cpp" />
+    <ClCompile Include="src\PdfSync.cpp" />
+    <ClCompile Include="src\Print.cpp" />
+    <ClCompile Include="src\PsEngine.cpp" />
+    <ClCompile Include="src\RenderCache.cpp" />
+    <ClCompile Include="src\Search.cpp" />
+    <ClCompile Include="src\Selection.cpp" />
+    <ClCompile Include="src\StressTesting.cpp" />
+    <ClCompile Include="src\SumatraAbout.cpp" />
+    <ClCompile Include="src\SumatraDialogs.cpp" />
+    <ClCompile Include="src\SumatraPDF.cpp" />
+    <ClCompile Include="src\SumatraProperties.cpp" />
+    <ClCompile Include="src\TableOfContents.cpp" />
+    <ClCompile Include="src\TextSearch.cpp" />
+    <ClCompile Include="src\TextSelection.cpp" />
+    <ClCompile Include="src\Toolbar.cpp" />
+    <ClCompile Include="src\utils\DebugLog.cpp" />
+    <ClCompile Include="src\utils\FileTransactions.cpp" />
+    <ClCompile Include="src\utils\HtmlPullParser.cpp" />
+    <ClCompile Include="src\utils\Touch.cpp" />
+    <ClCompile Include="src\translations.cpp" />
+    <ClCompile Include="src\translations_txt.cpp" />
+    <ClCompile Include="mupdf\fitz\base_error.c" />
+    <ClCompile Include="mupdf\fitz\base_hash.c" />
+    <ClCompile Include="mupdf\fitz\base_memory.c" />
+    <ClCompile Include="mupdf\fitz\base_string.c" />
+    <ClCompile Include="mupdf\fitz\crypt_aes.c" />
+    <ClCompile Include="mupdf\fitz\crypt_arc4.c" />
+    <ClCompile Include="mupdf\fitz\crypt_md5.c" />
+    <ClCompile Include="mupdf\fitz\filt_basic.c" />
+    <ClCompile Include="mupdf\fitz\filt_dctd.c" />
+    <ClCompile Include="mupdf\fitz\filt_faxd.c" />
+    <ClCompile Include="mupdf\fitz\filt_flate.c" />
+    <ClCompile Include="mupdf\fitz\filt_jbig2d.c" />
+    <ClCompile Include="mupdf\fitz\filt_jpxd.c" />
+    <ClCompile Include="mupdf\fitz\filt_lzwd.c" />
+    <ClCompile Include="mupdf\fitz\filt_predict.c" />
+    <ClCompile Include="mupdf\fitz\obj_array.c" />
+    <ClCompile Include="mupdf\fitz\obj_dict.c" />
+    <ClCompile Include="mupdf\fitz\obj_print.c" />
+    <ClCompile Include="mupdf\fitz\obj_simple.c" />
+    <ClCompile Include="mupdf\fitz\res_colorspace.c" />
+    <ClCompile Include="mupdf\fitz\res_font.c" />
+    <ClCompile Include="mupdf\fitz\res_shade.c" />
+    <ClCompile Include="mupdf\fitz\stm_buffer.c" />
+    <ClCompile Include="mupdf\fitz\stm_open.c" />
+    <ClCompile Include="mupdf\fitz\stm_read.c" />
+    <ClCompile Include="ext\jbig2dec\jbig2.c" />
+    <ClCompile Include="ext\jbig2dec\jbig2_arith.c" />
+    <ClCompile Include="ext\jbig2dec\jbig2_arith_iaid.c" />
+    <ClCompile Include="ext\jbig2dec\jbig2_arith_int.c" />
+    <ClCompile Include="ext\jbig2dec\jbig2_generic.c" />
+    <ClCompile Include="ext\jbig2dec\jbig2_halftone.c" />
+    <ClCompile Include="ext\jbig2dec\jbig2_huffman.c" />
+    <ClCompile Include="ext\jbig2dec\jbig2_image.c" />
+    <ClCompile Include="ext\jbig2dec\jbig2_image_pbm.c" />
+    <ClCompile Include="ext\jbig2dec\jbig2_image_png.c" />
+    <ClCompile Include="ext\jbig2dec\jbig2_metadata.c" />
+    <ClCompile Include="ext\jbig2dec\jbig2_mmr.c" />
+    <ClCompile Include="ext\jbig2dec\jbig2_page.c" />
+    <ClCompile Include="ext\jbig2dec\jbig2_refinement.c" />
+    <ClCompile Include="ext\jbig2dec\jbig2_segment.c" />
+    <ClCompile Include="ext\jbig2dec\jbig2_symbol_dict.c" />
+    <ClCompile Include="ext\jbig2dec\jbig2_text.c" />
+    <ClCompile Include="src\UnitTests.cpp" />
+    <ClCompile Include="src\utils\BencUtil.cpp" />
+    <ClCompile Include="src\utils\DialogSizer.cpp" />
+    <ClCompile Include="src\utils\FileUtil.cpp" />
+    <ClCompile Include="src\utils\HtmlWindow.cpp" />
+    <ClCompile Include="src\utils\Http.cpp" />
+    <ClCompile Include="src\utils\StrUtil.cpp" />
+    <ClCompile Include="src\utils\TrivialHtmlParser.cpp" />
+    <ClCompile Include="src\utils\UtilTests.cpp" />
+    <ClCompile Include="src\utils\WinUtil.cpp" />
+    <ClCompile Include="src\utils\ZipUtil.cpp" />
+    <ClCompile Include="src\WindowInfo.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ext\bzip2\bzlib.h" />
+    <ClInclude Include="ext\bzip2\bzlib_private.h" />
+    <ClInclude Include="ext\CHMLib\src\chm_lib.h" />
+    <ClInclude Include="ext\CHMLib\src\lzx.h" />
+    <ClInclude Include="ext\libjpeg-turbo\jchuff.h" />
+    <ClInclude Include="ext\libjpeg-turbo\jconfig.h" />
+    <ClInclude Include="ext\libjpeg-turbo\jdct.h" />
+    <ClInclude Include="ext\libjpeg-turbo\jdhuff.h" />
+    <ClInclude Include="ext\libjpeg-turbo\jerror.h" />
+    <ClInclude Include="ext\libjpeg-turbo\jinclude.h" />
+    <ClInclude Include="ext\libjpeg-turbo\jmemsys.h" />
+    <ClInclude Include="ext\libjpeg-turbo\jmorecfg.h" />
+    <ClInclude Include="ext\libjpeg-turbo\jpegcomp.h" />
+    <ClInclude Include="ext\libjpeg-turbo\jpegint.h" />
+    <ClInclude Include="ext\libjpeg-turbo\jpeglib.h" />
+    <ClInclude Include="ext\libjpeg-turbo\jsimd.h" />
+    <ClInclude Include="ext\libjpeg-turbo\jsimddct.h" />
+    <ClInclude Include="ext\libjpeg-turbo\jversion.h" />
+    <ClInclude Include="ext\libjpeg-turbo\simd\jsimd.h" />
+    <ClInclude Include="ext\zlib\crc32.h" />
+    <ClInclude Include="ext\zlib\deflate.h" />
+    <ClInclude Include="ext\zlib\gzguts.h" />
+    <ClInclude Include="ext\zlib\inffast.h" />
+    <ClInclude Include="ext\zlib\inffixed.h" />
+    <ClInclude Include="ext\zlib\inflate.h" />
+    <ClInclude Include="ext\zlib\inftrees.h" />
+    <ClInclude Include="ext\zlib\minizip\ioapi.h" />
+    <ClInclude Include="ext\zlib\minizip\iowin32.h" />
+    <ClInclude Include="ext\zlib\minizip\iowin32s.h" />
+    <ClInclude Include="ext\zlib\minizip\unzalloc.h" />
+    <ClInclude Include="ext\zlib\minizip\unzip.h" />
+    <ClInclude Include="ext\zlib\trees.h" />
+    <ClInclude Include="ext\zlib\zconf.h" />
+    <ClInclude Include="ext\zlib\zlib.h" />
+    <ClInclude Include="ext\zlib\zutil.h" />
+    <ClInclude Include="mupdf\pdf\data_encodings.h" />
+    <ClInclude Include="mupdf\pdf\data_glyphlist.h" />
+    <ClInclude Include="mupdf\pdf\mupdf.h" />
+    <ClInclude Include="mupdf\xps\muxps.h" />
+    <ClInclude Include="src\AppPrefs.h" />
+    <ClInclude Include="src\AppTools.h" />
+    <ClInclude Include="src\BaseEngine.h" />
+    <ClInclude Include="src\Benchmark.h" />
+    <ClInclude Include="src\ChmEngine.h" />
+    <ClInclude Include="src\ChmUI.h" />
+    <ClInclude Include="src\CrashHandler.h" />
+    <ClInclude Include="src\DisplayModel.h" />
+    <ClInclude Include="src\DisplayState.h" />
+    <ClInclude Include="src\ExternalPdfViewer.h" />
+    <ClInclude Include="src\Favorites.h" />
+    <ClInclude Include="src\FileHistory.h" />
+    <ClInclude Include="src\FileWatch.h" />
+    <ClInclude Include="src\ImagesEngine.h" />
+    <ClInclude Include="src\installer\Resource.h" />
+    <ClInclude Include="src\LangMenuDef.h" />
+    <ClInclude Include="src\Menu.h" />
+    <ClInclude Include="src\Notifications.h" />
+    <ClInclude Include="src\ParseCommandLine.h" />
+    <ClInclude Include="src\PdfEngine.h" />
+    <ClInclude Include="src\PdfSync.h" />
+    <ClInclude Include="src\Print.h" />
+    <ClInclude Include="src\PsEngine.h" />
+    <ClInclude Include="src\RenderCache.h" />
+    <ClInclude Include="src\Resource.h" />
+    <ClInclude Include="src\Search.h" />
+    <ClInclude Include="src\Selection.h" />
+    <ClInclude Include="src\StressTesting.h" />
+    <ClInclude Include="src\SumatraDialogs.h" />
+    <ClInclude Include="src\SumatraPDF.h" />
+    <ClInclude Include="src\TableOfContents.h" />
+    <ClInclude Include="src\TextSearch.h" />
+    <ClInclude Include="src\TextSelection.h" />
+    <ClInclude Include="src\Toolbar.h" />
+    <ClInclude Include="src\utils\Allocator.h" />
+    <ClInclude Include="src\utils\DebugLog.h" />
+    <ClInclude Include="src\utils\FileTransactions.h" />
+    <ClInclude Include="src\utils\HtmlPullParser.h" />
+    <ClInclude Include="src\utils\Touch.h" />
+    <ClInclude Include="src\translations.h" />
+    <ClInclude Include="src\translations_txt.h" />
+    <ClInclude Include="src\utils\BaseUtil.h" />
+    <ClInclude Include="src\utils\BencUtil.h" />
+    <ClInclude Include="src\utils\CmdLineParser.h" />
+    <ClInclude Include="src\utils\DialogSizer.h" />
+    <ClInclude Include="src\utils\FileUtil.h" />
+    <ClInclude Include="src\utils\GeomUtil.h" />
+    <ClInclude Include="src\utils\HtmlWindow.h" />
+    <ClInclude Include="src\utils\Http.h" />
+    <ClInclude Include="src\utils\SimpleLog.h" />
+    <ClInclude Include="src\utils\StrUtil.h" />
+    <ClInclude Include="src\utils\TrivialHtmlParser.h" />
+    <ClInclude Include="src\utils\Scoped.h" />
+    <ClInclude Include="src\utils\Vec.h" />
+    <ClInclude Include="src\utils\WinUtil.h" />
+    <ClInclude Include="src\utils\ZipUtil.h" />
+    <ClInclude Include="src\Version.h" />
+    <ClInclude Include="mupdf\fitz\fitz.h" />
+    <ClInclude Include="ext\jbig2dec\config_win32.h" />
+    <ClInclude Include="ext\jbig2dec\jbig2.h" />
+    <ClInclude Include="ext\jbig2dec\jbig2_arith.h" />
+    <ClInclude Include="ext\jbig2dec\jbig2_arith_iaid.h" />
+    <ClInclude Include="ext\jbig2dec\jbig2_arith_int.h" />
+    <ClInclude Include="ext\jbig2dec\jbig2_generic.h" />
+    <ClInclude Include="ext\jbig2dec\jbig2_huffman.h" />
+    <ClInclude Include="ext\jbig2dec\jbig2_hufftab.h" />
+    <ClInclude Include="ext\jbig2dec\jbig2_image.h" />
+    <ClInclude Include="ext\jbig2dec\jbig2_metadata.h" />
+    <ClInclude Include="ext\jbig2dec\jbig2_mmr.h" />
+    <ClInclude Include="ext\jbig2dec\jbig2_priv.h" />
+    <ClInclude Include="ext\jbig2dec\jbig2_symbol_dict.h" />
+    <ClInclude Include="ext\jbig2dec\jbig2_text.h" />
+    <ClInclude Include="ext\jbig2dec\os_types.h" />
+    <ClInclude Include="src\WindowInfo.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="docs\releasenotes.txt" />
+    <None Include="docs\release_plan.txt" />
+    <None Include="docs\wishlist.txt" />
+    <None Include="ext\libjpeg-turbo\simd\jcclrmmx.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jcclrss2-64.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jcclrss2.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jccolmmx.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jccolss2-64.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jccolss2.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jcolsamp.inc" />
+    <None Include="ext\libjpeg-turbo\simd\jcqnt3dn.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jcqntmmx.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jcqnts2f-64.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jcqnts2f.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jcqnts2i-64.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jcqnts2i.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jcqntsse.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jcsammmx.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jcsamss2-64.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jcsamss2.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jdclrmmx.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jdclrss2-64.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jdclrss2.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jdcolmmx.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jdcolss2-64.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jdcolss2.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jdct.inc" />
+    <None Include="ext\libjpeg-turbo\simd\jdmermmx.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jdmerss2-64.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jdmerss2.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jdmrgmmx.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jdmrgss2-64.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jdmrgss2.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jdsammmx.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jdsamss2-64.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jdsamss2.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jf3dnflt.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jfmmxfst.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jfmmxint.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jfss2fst-64.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jfss2fst.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jfss2int-64.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jfss2int.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jfsseflt-64.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jfsseflt.asm" />
+    <None Include="ext\libjpeg-turbo\simd\ji3dnflt.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jimmxfst.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jimmxint.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jimmxred.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jiss2flt-64.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jiss2flt.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jiss2fst-64.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jiss2fst.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jiss2int-64.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jiss2int.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jiss2red-64.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jiss2red.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jisseflt.asm" />
+    <None Include="ext\libjpeg-turbo\simd\jsimdcpu.asm" />
+    <None Include="src\closetoc.bmp" />
+    <None Include="src\dragcursor.cur" />
+    <None Include="src\PdfDoc.ico" />
+    <None Include="src\reloading.bmp" />
+    <None Include="src\SumatraPDF-smaller.ico" />
+    <None Include="src\SumatraPDF.ico" />
+    <None Include="src\toolbar_11.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="src\SumatraPDF.exe.manifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="src\installer\Installer.manifest.rc" />
+    <ResourceCompile Include="src\installer\Installer.rc" />
+    <ResourceCompile Include="src\SumatraPDF.rc" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
