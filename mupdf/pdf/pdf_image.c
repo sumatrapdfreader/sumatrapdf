@@ -113,7 +113,6 @@ decomp_image_from_stream(fz_context *ctx, fz_stream *stm, pdf_image *image, int 
 	fz_try(ctx)
 	{
 		tile = fz_new_pixmap(ctx, image->base.colorspace, w, h);
-		tile->mask = fz_image_to_pixmap(ctx, image->base.mask, w, h);
 		tile->interpolate = image->interpolate;
 
 		stride = (w * image->n * image->bpc + 7) / 8;
@@ -252,11 +251,6 @@ pdf_image_get_pixmap(fz_context *ctx, fz_image *image_, int w, int h)
 		tile = image->tile;
 		if (!tile)
 			return NULL;
-		if (image->base.mask)
-		{
-			fz_drop_pixmap(ctx, tile->mask);
-			tile->mask = fz_image_to_pixmap(ctx, image->base.mask, w, h);
-		}
 		return fz_keep_pixmap(ctx, tile); /* That's all we can give you! */
 	}
 

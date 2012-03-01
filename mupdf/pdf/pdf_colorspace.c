@@ -210,8 +210,6 @@ pdf_expand_indexed_pixmap(fz_context *ctx, fz_pixmap *src)
 		}
 	}
 
-	if (src->mask)
-		dst->mask = fz_keep_pixmap(ctx, src->mask);
 	dst->interpolate = src->interpolate;
 
 	return dst;

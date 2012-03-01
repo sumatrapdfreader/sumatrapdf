@@ -215,7 +215,7 @@ execution. Again this was felt to be too high a cost to use.
 
 #define fz_always(ctx) \
 		} while (0); \
-		longjmp(ctx->error->stack[ctx->error->top].buffer, 3); \
+		fz_longjmp(ctx->error->stack[ctx->error->top].buffer, 3); \
 	} \
 	else if (ctx->error->stack[ctx->error->top].code & 1) \
 	{ do {
@@ -223,7 +223,7 @@ execution. Again this was felt to be too high a cost to use.
 #define fz_catch(ctx) \
 		} while(0); \
 		if (ctx->error->stack[ctx->error->top].code == 1) \
-			longjmp(ctx->error->stack[ctx->error->top].buffer, 2); \
+			fz_longjmp(ctx->error->stack[ctx->error->top].buffer, 2); \
 		ctx->error->top--;\
 	} \
 	else if (ctx->error->top--, 1)
@@ -1257,8 +1257,6 @@ typedef struct fz_colorspace_s fz_colorspace;
 	n: The number of color components in the image. Always
 	includes a separate alpha channel. XXX RGBA=4
 
-	mask: XXX
-
 	interpolate: A boolean flag set to non-zero if the image
 	will be drawn using linear interpolation, or set to zero if
 	image will be using nearest neighbour sampling.
@@ -1278,7 +1276,6 @@ struct fz_pixmap_s
 {
 	fz_storable storable;
 	int x, y, w, h, n;
-	fz_pixmap *mask; /* explicit soft/image mask */
 	int interpolate;
 	int xres, yres;
 	fz_colorspace *colorspace;

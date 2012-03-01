@@ -342,18 +342,17 @@ end:
 pdf_obj *
 pdf_parse_dict(pdf_document *xref, fz_stream *file, pdf_lexbuf *buf)
 {
-	pdf_obj *dict = NULL;
+	pdf_obj *dict;
 	pdf_obj *key = NULL;
 	pdf_obj *val = NULL;
 	int tok;
 	int a, b;
 	fz_context *ctx = file->ctx;
 
-	fz_var(dict);
+	dict = pdf_new_dict(ctx, 8);
+
 	fz_var(key);
 	fz_var(val);
-
-	dict = pdf_new_dict(ctx, 8);
 
 	fz_try(ctx)
 	{

@@ -506,8 +506,6 @@ fz_convert_pixmap(fz_context *ctx, fz_pixmap *sp, fz_pixmap *dp)
 
 	assert(ss && ds);
 
-	if (sp->mask)
-		dp->mask = fz_keep_pixmap(ctx, sp->mask);
 	dp->interpolate = sp->interpolate;
 
 	if (ss == fz_device_gray)

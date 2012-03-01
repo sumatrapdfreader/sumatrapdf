@@ -17,8 +17,6 @@ fz_free_pixmap_imp(fz_context *ctx, fz_storable *pix_)
 {
 	fz_pixmap *pix = (fz_pixmap *)pix_;
 
-	if (pix->mask)
-		fz_drop_pixmap(ctx, pix->mask);
 	if (pix->colorspace)
 		fz_drop_colorspace(ctx, pix->colorspace);
 	if (pix->free_samples)
@@ -37,7 +35,6 @@ fz_new_pixmap_with_data(fz_context *ctx, fz_colorspace *colorspace, int w, int h
 	pix->y = 0;
 	pix->w = w;
 	pix->h = h;
-	pix->mask = NULL;
 	pix->interpolate = 1;
 	pix->xres = 96;
 	pix->yres = 96;
