@@ -437,8 +437,9 @@ $(OE2)\MiniMui.obj: src\ebooktest2\MiniMui.h src\utils\Allocator.h src\utils\Bas
 $(OE2)\MiniMui.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
 $(OE2)\MobiDoc.obj: src\MobiDoc.cpp src\MobiDoc.h src\ebooktest2\BaseEbookDoc.h
 $(OE2)\MobiDoc.obj: src\ebooktest2\MobiDoc.h src\utils\Allocator.h src\utils\BaseUtil.h
-$(OE2)\MobiDoc.obj: src\utils\BitReader.h src\utils\FileUtil.h src\utils\GdiPlusUtil.h
-$(OE2)\MobiDoc.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
+$(OE2)\MobiDoc.obj: src\utils\BitReader.h src\utils\DebugLog.h src\utils\FileUtil.h
+$(OE2)\MobiDoc.obj: src\utils\GdiPlusUtil.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OE2)\MobiDoc.obj: src\utils\Vec.h
 $(OE2)\PageLayout.obj: src\PageLayout.cpp src\PageLayout.h src\MobiDoc.h
 $(OE2)\PageLayout.obj: src\PageLayout.h src\ebooktest2\BaseEbookDoc.h src\ebooktest2\MiniMui.h
 $(OE2)\PageLayout.obj: src\ebooktest2\PageLayout.h src\mui\Mui.h src\mui\MuiBase.h
@@ -643,8 +644,8 @@ $(OS)\Menu.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
 $(OS)\Menu.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\Menu.obj: src\WindowInfo.h
 $(OS)\MobiDoc.obj: src\MobiDoc.h src\utils\Allocator.h src\utils\BaseUtil.h
-$(OS)\MobiDoc.obj: src\utils\BitReader.h src\utils\FileUtil.h src\utils\GdiPlusUtil.h
-$(OS)\MobiDoc.obj: src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\MobiDoc.obj: src\utils\BitReader.h src\utils\DebugLog.h src\utils\FileUtil.h
+$(OS)\MobiDoc.obj: src\utils\GdiPlusUtil.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\MuPDF_Exports.obj: mupdf\fitz\fitz.h
 $(OS)\Notifications.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
 $(OS)\Notifications.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h

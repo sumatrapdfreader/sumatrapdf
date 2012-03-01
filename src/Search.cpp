@@ -288,6 +288,12 @@ static DWORD WINAPI FindThread(LPVOID data)
         }
     }
 
+    // wait for FindTextOnThread to return so that
+    // FindEndWorkItem closes the correct handle to
+    // the current find thread
+    while (!win->findThread)
+        Sleep(1);
+
     if (!win->findCanceled && rect)
         QueueWorkItem(new FindEndWorkItem(win, ftd, rect, ftd->wasModified, loopedAround));
     else
@@ -321,6 +327,7 @@ void FindTextOnThread(WindowInfo* win, TextSearchDirection direction, bool FAYT)
     }
 
     ftd->ShowUI(!FAYT);
+    win->findThread = NULL;
     win->findThread = CreateThread(NULL, 0, FindThread, ftd, 0, 0);
 }
 
