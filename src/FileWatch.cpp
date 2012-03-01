@@ -1,10 +1,18 @@
 /* Copyright 2006-2012 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "Scoped.h"
 #include "FileWatch.h"
+#include "Scoped.h"
 #include "StrUtil.h"
 #include "FileUtil.h"
+
+// TODO: a hack for VS 2011 compilation. 1600 is VS 2010
+#if _MSC_VER > 1600
+extern "C" {
+WINBASEAPI BOOL WINAPI
+GetOverlappedResult(_In_ HANDLE hFile, _In_ LPOVERLAPPED lpOverlapped, _Out_ LPDWORD lpNumberOfBytesTransferred, _In_ BOOL bWait);
+}
+#endif
 
 bool FileWatcher::IsThreadRunning()
 {
