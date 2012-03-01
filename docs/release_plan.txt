@@ -29,7 +29,6 @@ The shortest path to ebook support in sumatra:
    with layout from the beginning and can drop the layout from current page.
 
 2. Support more of the mobi format
-2.1 images
 2.2 links
 2.3 lists (ul, li)
 
