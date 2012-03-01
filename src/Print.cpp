@@ -550,28 +550,21 @@ bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool displayErro
         return false;
     }
 
-    // Retrieve the printer, printer driver, and output-port names from WIN.INI.
-    TCHAR devstring[256];
-    GetProfileString(_T("Devices"), printerName, _T(""), devstring, dimof(devstring));
-
-    // Parse the string of names
-    // If the string contains the required names, use them to
-    // create a device context.
-    ScopedMem<TCHAR> driver, port;
-    if (!str::Parse(devstring, _T("%S,%S,"), &driver, &port) &&
-        !str::Parse(devstring, _T("%S,%S"), &driver, &port) || !driver || !port) {
+    HANDLE printer;
+    bool ok = OpenPrinter((LPTSTR)printerName, &printer, NULL);
+    if (!ok) {
         if (displayErrors)
             MessageBox(NULL, _TR("Printer with given name doesn't exist"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0));
         return false;
     }
 
-    HANDLE printer;
-    bool ok = OpenPrinter((LPTSTR)printerName, &printer, NULL);
-    if (!ok) {
-        if (displayErrors)
-            MessageBox(NULL, _TR("Could not open Printer"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0));
-        return false;
-    }
+    // get printer driver information
+    DWORD needed = 0;
+    GetPrinter(printer, 2, NULL, 0, &needed);
+    ScopedMem<BYTE> infoData(SAZA(BYTE, needed));
+    if (infoData)
+        ok = GetPrinter(printer, 2, infoData, needed, &needed);
+    if (!ok || !infoData || needed <= sizeof(PRINTER_INFO_2)) goto Exit;
 
     DWORD structSize = DocumentProperties(NULL,
         printer,                /* Handle to our printer. */
@@ -612,7 +605,8 @@ bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool displayErro
 
     ClosePrinter(printer);
 
-    hdcPrint = CreateDC(driver, printerName, port, devMode);
+    PRINTER_INFO_2 *info = (PRINTER_INFO_2 *)infoData.Get();
+    hdcPrint = CreateDC(info->pDriverName, info->pPrinterName, info->pPortName, devMode);
     if (!hdcPrint) {
         if (displayErrors)
             MessageBox(NULL, _TR("Couldn't initialize printer"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0));
