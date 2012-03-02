@@ -938,17 +938,18 @@ protected:
                             fz_bbox clipbox=fz_infinite_bbox, bool cacheRun=true);
     void            DropPageRun(PdfPageRun *run, bool forceRemove=false);
 
-    PdfTocItem   *  BuildTocTree(fz_outline *entry, int& idCounter);
+    PdfTocItem    * BuildTocTree(fz_outline *entry, int& idCounter);
     void            LinkifyPageText(pdf_page *page);
     pdf_annot    ** ProcessPageAnnotations(pdf_page *page);
     RenderedBitmap *GetPageImage(int pageNo, RectD rect, size_t imageIx);
+    TCHAR         * ExtractFontList();
 
     bool            SaveEmbedded(LinkSaverUI& saveUI, int num, int gen);
 
     RectD         * _mediaboxes;
     fz_outline    * outline;
     fz_outline    * attachments;
-    pdf_obj        * _info;
+    pdf_obj       * _info;
     StrVec        * _pagelabels;
     pdf_annot   *** pageComments;
     fz_rect      ** imageRects;
@@ -2016,10 +2017,6 @@ TCHAR *PdfEngineImpl::ExtractPageText(pdf_page *page, TCHAR *lineSep, RectI **co
     if (!page)
         return NULL;
 
-#ifdef DISABLE_TEXT_SEARCH
-    return NULL;
-#endif
-
     fz_text_span *text = NULL;
     fz_device *dev;
     fz_var(text);
@@ -2080,6 +2077,67 @@ TCHAR *PdfEngineImpl::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords
     return result;
 }
 
+TCHAR *PdfEngineImpl::ExtractFontList()
+{
+    Vec<pdf_obj *> fontList;
+
+    // collect all fonts from all page objects
+    for (int i = 1; i <= PageCount(); i++) {
+        pdf_page *page = GetPdfPage(i);
+        if (!page)
+            continue;
+        ScopedCritSec scope(&ctxAccess);
+        // TODO: further fonts might be referenced e.g. by form objects
+        pdf_obj *fonts = pdf_dict_gets(page->resources, "Font");
+        for (int k = 0; k < pdf_dict_len(fonts); k++) {
+            pdf_obj *font = pdf_resolve_indirect(pdf_dict_get_val(fonts, k));
+            if (font && fontList.Find(font) == -1)
+                fontList.Append(font);
+        }
+    }
+
+    ScopedCritSec scope(&ctxAccess);
+
+    StrVec fonts;
+    for (size_t i = 0; i < fontList.Count(); i++) {
+        pdf_obj *font = fontList.At(i);
+        const char *name = pdf_to_name(pdf_dict_getsa(font, "BaseFont", "Name"));
+        if (str::IsEmpty(name))
+            continue;
+        bool embedded = str::Len(name) > 7 && name[6] == '+';
+        if (embedded)
+            name += 7;
+        const char *type = pdf_to_name(pdf_dict_gets(font, "Subtype"));
+        const char *encoding = pdf_to_name(pdf_dict_gets(font, "Encoding"));
+        if (str::Eq(encoding, "WinAnsiEncoding"))
+            encoding = "Ansi";
+        else if (str::Eq(encoding, "MacRomanEncoding"))
+            encoding = "Roman";
+        else if (str::Eq(encoding, "MacExpertEncoding"))
+            encoding = "Expert";
+
+        str::Str<char> info;
+        info.Append(name);
+        if (!str::IsEmpty(encoding) || !str::IsEmpty(type) || embedded) {
+            info.Append(" (");
+            if (!str::IsEmpty(type))
+                info.AppendFmt("%s; ", type);
+            if (!str::IsEmpty(encoding))
+                info.AppendFmt("%s; ", encoding);
+            if (embedded)
+                info.Append("embedded; ");
+            info.RemoveAt(info.Count() - 2, 2);
+            info.Append(")");
+        }
+        fonts.Append(str::conv::FromUtf8(info.LendData()));
+    }
+    if (fonts.Count() == 0)
+        return NULL;
+
+    fonts.SortNatural();
+    return fonts.Join(_T("\n"));
+}
+
 TCHAR *PdfEngineImpl::GetProperty(char *name)
 {
     if (!_doc)
@@ -2091,6 +2149,8 @@ TCHAR *PdfEngineImpl::GetProperty(char *name)
             return str::Format(_T("%d.%d Adobe Extension Level %d"), major, minor, 3);
         return str::Format(_T("%d.%d"), major, minor);
     }
+    if (str::Eq(name, "FontList"))
+        return ExtractFontList();
 
     // _info is guaranteed not to contain any indirect references,
     // so no need for ctxAccess
@@ -2486,9 +2546,10 @@ protected:
                             fz_bbox clipbox=fz_infinite_bbox, bool cacheRun=true);
     void            DropPageRun(XpsPageRun *run, bool forceRemove=false);
 
-    XpsTocItem   *  BuildTocTree(fz_outline *entry, int& idCounter);
+    XpsTocItem    * BuildTocTree(fz_outline *entry, int& idCounter);
     void            LinkifyPageText(xps_page *page, int pageNo);
     RenderedBitmap *GetPageImage(int pageNo, RectD rect, size_t imageIx);
+    TCHAR         * ExtractFontList();
 
     RectD         * _mediaboxes;
     fz_outline    * _outline;
@@ -3125,12 +3186,36 @@ unsigned char *XpsEngineImpl::GetFileData(size_t *cbCount)
     return data;
 }
 
+TCHAR *XpsEngineImpl::ExtractFontList()
+{
+    // load and parse all pages
+    for (int i = 1; i <= PageCount(); i++)
+        GetXpsPage(i);
+
+    ScopedCritSec scope(&ctxAccess);
+
+    // collect a list of all included fonts
+    StrVec fonts;
+    for (xps_font_cache *font = _doc->font_table; font; font = font->next) {
+        ScopedMem<TCHAR> path(str::conv::FromUtf8(font->name));
+        ScopedMem<TCHAR> name(str::conv::FromUtf8(font->font->name));
+        fonts.Append(str::Format(_T("%s (%s)"), name, path::GetBaseName(path)));
+    }
+    if (fonts.Count() == 0)
+        return NULL;
+
+    fonts.SortNatural();
+    return fonts.Join(_T("\n"));
+}
+
 TCHAR *XpsEngineImpl::GetProperty(char *name)
 {
     for (xps_doc_prop *prop = _info; prop; prop = prop->next) {
         if (str::Eq(prop->name, name) && !str::IsEmpty(prop->value))
             return str::conv::FromUtf8(prop->value);
     }
+    if (str::Eq(name, "FontList"))
+        return ExtractFontList();
     return NULL;
 };
 
@@ -3265,7 +3350,7 @@ fz_rect XpsEngineImpl::FindDestRect(const char *target)
     if (fz_is_empty_rect(found->rect)) {
         // ensure that the target rectangle could have been
         // updated through LinkifyPageText -> xps_extract_anchor_info
-        GetXpsPage(found->page);
+        GetXpsPage(found->page + 1);
     }
     return found->rect;
 }

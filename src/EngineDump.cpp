@@ -75,6 +75,14 @@ void DumpProperties(BaseEngine *engine)
     if (engine->PreferredLayout())
         Out("\t\tPreferredLayout=\"%d\"\n", engine->PreferredLayout());
     Out("\t/>\n");
+
+    ScopedMem<TCHAR> fontlist(engine->GetProperty("FontList"));
+    if (fontlist) {
+        StrVec fonts;
+        fonts.Split(fontlist, _T("\n"));
+        str.Set(Escape(fonts.Join(_T("\n\t\t"))));
+        Out("\t<FontList>\n\t\t%s\n\t</FontList>\n", str.Get());
+    }
 }
 
 // caller must free() the result
@@ -163,8 +171,8 @@ void DumpPageData(BaseEngine *engine, int pageNo, bool fullDump)
         Out("\t\tLabel=\"%s\"\n", label.Get());
     }
     RectI bbox = engine->PageMediabox(pageNo).Round();
-    RectI cbox = engine->PageContentBox(pageNo).Round();
     Out("\t\tMediaBox=\"%d %d %d %d\"\n", bbox.x, bbox.y, bbox.dx, bbox.dy);
+    RectI cbox = engine->PageContentBox(pageNo).Round();
     if (cbox != bbox)
         Out("\t\tContentBox=\"%d %d %d %d\"\n", cbox.x, cbox.y, cbox.dx, cbox.dy);
     if (engine->IsImagePage(pageNo))
