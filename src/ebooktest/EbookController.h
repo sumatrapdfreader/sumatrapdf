@@ -50,17 +50,17 @@ class EbookController : public IClicked, ISizeChanged
     //    for more pages
     Vec<PageData*>* pagesFromBeginning;
     Vec<PageData*>* pagesFromPage;
-    int             startPageForPagesFromPage;
 
-    // either pagesFromBeginning or pagesFromPage
+    // either pagesFromBeginning or pagesFromPage. If it's pagesFromBeginning
+    // then pagesFromPage should be NULL
     Vec<PageData*>* pagesShowing;
-    int             shownPageNo; // within pagesShowing
 
-    // if pagesShowing == pagesFromBeginning its the same as shownPageNo
-    // if pagesShowing == pagesFromPage it might be unknown during layout
-    // (if we haven't gotten enough pages to determine it) or the page that contains
-    // the beginning of the shown page
-    int             currPageNoFromBeginning;
+    // currPageNo is in range 1..$numberOfPages. It's always a page number
+    // as if the pages were formatted from the begginging. We don't always
+    // know this (when we're showing a page from pagesFromPage and we
+    // haven't yet formatted enough pages from beginning to determine which
+    // of those pages contains top of the shown page), in which case it's 0
+    int             currPageNo;
 
     int             pageDx, pageDy; // size of the page for which pages was generated
 
@@ -71,6 +71,7 @@ class EbookController : public IClicked, ISizeChanged
     void DeletePages(Vec<PageData*>** pages);
     void TriggerLayout();
     bool LayoutInProgress() const { return layoutThread != NULL; }
+    void GoOnePageBack();
 
     // IClickHandler
     virtual void Clicked(Control *c, int x, int y);

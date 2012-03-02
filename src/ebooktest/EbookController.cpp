@@ -166,7 +166,7 @@ EbookController::EbookController(EbookControls *ctrls) : ctrls(ctrls)
     pagesFromPage = NULL;
     pagesShowing = NULL;
 
-    shownPageNo = 0;
+    currPageNo = 0;
     layoutThread = NULL;
 
     pageDx = 0; pageDy = 0;
@@ -266,7 +266,7 @@ void EbookController::HandleMobiLayoutMsg(UiMsg *msg)
         // quickly as we can
         if (firstPageArrived) {
             ctrls->page->SetPage(layoutTmp.pagesFromBeginning.At(0));
-            currPageNoFromBeginning = 1;
+            currPageNo = 1;
         }
     } else {
         // if we're starting from some page, see if the reparse point is within
@@ -276,7 +276,7 @@ void EbookController::HandleMobiLayoutMsg(UiMsg *msg)
         if (-1 != pageNo) {
             PageData *pd = layoutTmp.pagesFromBeginning.At(pageNo);
             ctrls->page->SetPage(pd);
-            currPageNoFromBeginning = pageNo + 1;
+            currPageNo = pageNo + 1;
         }
     }
 
@@ -332,7 +332,7 @@ void EbookController::TriggerLayout()
 void EbookController::OnLayoutTimer()
 {
     layoutTmp.startPageReparsePoint = NULL;
-    if (currPageNoFromBeginning != 1) {
+    if (currPageNo != 1) {
         PageData *pd = ctrls->page->GetPage();
         if (pd)
             layoutTmp.startPageReparsePoint = pd->reparsePoint;
@@ -398,9 +398,9 @@ void EbookController::UpdateStatus() const
     }
 
     size_t pageCount = pagesShowing->Count();
-    ScopedMem<TCHAR> s(str::Format(_T("Page %d out of %d"), currPageNoFromBeginning, (int)pageCount));
+    ScopedMem<TCHAR> s(str::Format(_T("Page %d out of %d"), currPageNo, (int)pageCount));
     ctrls->status->SetText(AsWStrQ(s.Get()));
-    ctrls->progress->SetFilled(PercFromInt(pageCount, currPageNoFromBeginning));
+    ctrls->progress->SetFilled(PercFromInt(pageCount, currPageNo));
 }
 
 void EbookController::GoToPage(int newPageNo)
@@ -410,8 +410,8 @@ void EbookController::GoToPage(int newPageNo)
 
     CrashIf((newPageNo < 1) || (newPageNo > (int)pagesShowing->Count()));
     CrashIf(pagesShowing != pagesFromBeginning);
-    currPageNoFromBeginning = newPageNo;
-    PageData *pageData = pagesShowing->At(currPageNoFromBeginning-1);
+    currPageNo = newPageNo;
+    PageData *pageData = pagesShowing->At(currPageNo-1);
     ctrls->page->SetPage(pageData);
     UpdateStatus();
 }
@@ -424,13 +424,60 @@ void EbookController::GoToLastPage()
     GoToPage(pagesShowing->Count());
 }
 
+// Going back is a special case in that we might need to switch which
+// pages we're showing
+void EbookController::GoOnePageBack()
+{
+    if (pagesShowing == pagesFromBeginning) {
+        if (currPageNo > 1)
+            GoToPage(currPageNo - 1);
+        return;
+    }
+
+    CrashIf(!((pagesShowing == pagesFromPage) || (pagesShowing == NULL)));
+
+    // The complicated case: we can go back if we can map
+    // currently shown page (formatted from arbitrary point)
+    // to a page as formatted from beginning. This is not
+    // always possible (this page might not be created yet)
+    PageData *page = ctrls->page->GetPage();
+    CrashIf(!page);
+    const char *currPageReparsePoint = page->reparsePoint;
+    size_t newPage;
+    if (pagesFromBeginning) {
+        newPage = PageForReparsePoint(pagesFromBeginning, currPageReparsePoint);
+        lf("EbookController::GoOnePageBack(): mapped curr page to page %d in pagesFromBeginning", newPage);
+    } else {
+        CrashIf(!LayoutInProgress());
+        newPage = PageForReparsePoint(&layoutTmp.pagesFromBeginning, currPageReparsePoint);
+        lf("EbookController::GoOnePageBack(): mapped curr page to page %d in layoutTmp.pagesFromBeginning", newPage);
+    }
+    if (-1 == newPage)
+        return;
+    // TODO: switch from showing pagesFromPage to showing pagesFromBeginning
+    return;
+}
+
 void EbookController::AdvancePage(int dist)
 {
-    if (LayoutInProgress() || !pagesShowing)
+    // if we're not showing any 
+    if (!pagesShowing && !LayoutInProgress())
         return;
-    int newPageNo = currPageNoFromBeginning + dist;
+
+    if (-1 == dist) {
+        GoOnePageBack();
+        return;
+    }
+
+    // TODO: relax this, we can somethimes navigate pages even during
+    // layout
+    if (LayoutInProgress())
+        return;
+
+    int newPageNo = currPageNo + dist;
     if (newPageNo < 1)
         return;
+    // TODO: this is more complicated
     if (newPageNo > (int)pagesShowing->Count())
         return;
     GoToPage(newPageNo);
