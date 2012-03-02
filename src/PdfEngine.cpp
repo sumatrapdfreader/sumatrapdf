@@ -12,6 +12,8 @@ __pragma(warning(pop))
 #include "FileUtil.h"
 #include "Scoped.h"
 
+//#define DISABLE_TEXT_SEARCH
+
 // maximum size of a file that's entirely loaded into memory before parsed
 // and displayed; larger files will be kept open while they're displayed
 // so that their content can be loaded on demand in order to preserve memory
@@ -2014,6 +2016,10 @@ TCHAR *PdfEngineImpl::ExtractPageText(pdf_page *page, TCHAR *lineSep, RectI **co
     if (!page)
         return NULL;
 
+#ifdef DISABLE_TEXT_SEARCH
+    return NULL;
+#endif
+
     fz_text_span *text = NULL;
     fz_device *dev;
     fz_var(text);
@@ -2047,6 +2053,10 @@ TCHAR *PdfEngineImpl::ExtractPageText(pdf_page *page, TCHAR *lineSep, RectI **co
 
 TCHAR *PdfEngineImpl::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out, RenderTarget target)
 {
+#ifdef DISABLE_TEXT_SEARCH
+    return NULL;
+#endif
+
     pdf_page *page = GetPdfPage(pageNo, true);
     if (page)
         return ExtractPageText(page, lineSep, coords_out, target);
