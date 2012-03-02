@@ -202,8 +202,7 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
             // offset adjustments are needed because the GDI coordinate system
             // starts at the corner of the printable area and we rather want to
             // center the page on the physical paper (default behavior)
-            int horizOffset = (paperWidth - printableWidth) / 2 - leftMargin;
-            int vertOffset = (paperHeight - printableHeight) / 2 - topMargin;
+            PointI offset(-leftMargin, -topMargin);
 
             if (pd.scaleAdv != PrintScaleNone) {
                 // make sure to fit all content into the printable area when scaling
@@ -219,29 +218,29 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
                 if (PrintScaleShrink == pd.scaleAdv && dpiFactor < zoom)
                     zoom = dpiFactor;
                 // make sure that no content lies in the non-printable paper margins
-                RectT<float> onPaper((paperWidth - pSize.dx * zoom) / 2 + cbox.x * zoom + horizOffset,
-                                    (paperHeight - pSize.dy * zoom) / 2 + cbox.y * zoom + vertOffset,
+                RectT<float> onPaper((paperWidth - pSize.dx * zoom) / 2 + cbox.x * zoom,
+                                    (paperHeight - pSize.dy * zoom) / 2 + cbox.y * zoom,
                                     cbox.dx * zoom, cbox.dy * zoom);
                 if (leftMargin > onPaper.x)
-                    horizOffset = (int)(horizOffset + leftMargin - onPaper.x);
+                    offset.x += (int)(leftMargin - onPaper.x);
                 else if (paperWidth - rightMargin < onPaper.BR().x)
-                    horizOffset = (int)(horizOffset - onPaper.BR().x + (paperWidth - rightMargin));
+                    offset.x += (int)((paperWidth - rightMargin) - onPaper.BR().x);
                 if (topMargin > onPaper.y)
-                    vertOffset = (int)(vertOffset + topMargin - onPaper.y);
+                    offset.y += (int)(topMargin - onPaper.y);
                 else if (paperHeight - bottomMargin < onPaper.BR().y)
-                    vertOffset = (int)(vertOffset - onPaper.BR().y + (paperHeight - bottomMargin));
+                    offset.y += (int)((paperHeight - bottomMargin) - onPaper.BR().y);
             }
 
 #ifdef USE_GDI_FOR_PRINTING
-            RectI rc = RectI::FromXY((int)(paperWidth - pSize.dx * zoom) / 2 + horizOffset - leftMargin,
-                                     (int)(paperHeight - pSize.dy * zoom) / 2 + vertOffset - topMargin,
+            RectI rc = RectI::FromXY((int)(paperWidth - pSize.dx * zoom) / 2 + offset.x,
+                                     (int)(paperHeight - pSize.dy * zoom) / 2 + offset.y,
                                      paperWidth, paperHeight);
             engine.RenderPage(hdc, rc, pageNo, zoom, rotation, NULL, Target_Print);
 #else
             RenderedBitmap *bmp = engine.RenderBitmap(pageNo, zoom, rotation, NULL, Target_Print);
             if (bmp) {
-                PointI TL((paperWidth - bmp->Size().dx) / 2 + horizOffset - leftMargin,
-                          (paperHeight - bmp->Size().dy) / 2 + vertOffset - topMargin);
+                PointI TL((paperWidth - bmp->Size().dx) / 2 + offset.x,
+                          (paperHeight - bmp->Size().dy) / 2 + offset.y);
                 bmp->StretchDIBits(hdc, RectI(TL, bmp->Size()));
                 delete bmp;
             }
@@ -312,6 +311,10 @@ public:
     static DWORD WINAPI PrintThread(LPVOID data)
     {
         PrintThreadData *threadData = (PrintThreadData *)data;
+        // wait for PrintToDeviceOnThread to return so that we
+        // close the correct handle to the current printing thread
+        while (!threadData->win->printThread)
+            Sleep(1);
         threadData->thread = threadData->win->printThread;
         PrintToDevice(*threadData->data, threadData);
         QueueWorkItem(threadData);
@@ -331,6 +334,7 @@ static void PrintToDeviceOnThread(WindowInfo *win, PrintData *data)
 {
     assert(!win->printThread);
     PrintThreadData *threadData = new PrintThreadData(win, data);
+    win->printThread = NULL;
     win->printThread = CreateThread(NULL, 0, PrintThreadData::PrintThread, threadData, 0, NULL);
 }
 
