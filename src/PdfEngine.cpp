@@ -814,6 +814,29 @@ StrVec *BuildPageLabelVec(pdf_obj *root, int pageCount)
     return labels;
 }
 
+extern "C" static void
+fz_lock_context_cs(void *user, int lock)
+{
+    // we use a single critical section for all locks,
+    // since that critical section (ctxAccess) should
+    // be guarding all fz_context access anyway and
+    // thus already be in place (in debug builds we
+    // crash if that assertion doesn't hold)
+    CRITICAL_SECTION *cs = (CRITICAL_SECTION *)user;
+    bool ok = TryEnterCriticalSection(cs);
+    CrashIf(!ok);
+    if (!ok) {
+        EnterCriticalSection(cs);
+    }
+}
+
+extern "C" static void
+fz_unlock_context_cs(void *user, int lock)
+{
+    CRITICAL_SECTION *cs = (CRITICAL_SECTION *)user;
+    LeaveCriticalSection(cs);
+}
+
 ///// Above are extensions to Fitz and MuPDF, now follows PdfEngine /////
 
 struct PdfPageRun {
@@ -894,8 +917,6 @@ public:
     virtual bool IsPasswordProtected() const { return isProtected; }
     virtual char *GetDecryptionKey() const;
 
-    CRITICAL_SECTION fz_locks[FZ_LOCK_MAX];
-
 protected:
     const TCHAR *_fileName;
     char *_decryptionKey;
@@ -905,12 +926,11 @@ protected:
     // protected critical section in order to avoid deadlocks
     CRITICAL_SECTION ctxAccess;
     fz_context *    ctx;
+    fz_locks_context fz_locks_ctx;
     pdf_document *  _doc;
 
     CRITICAL_SECTION pagesAccess;
     pdf_page **     _pages;
-
-    fz_locks_context fz_locks_ctx;
 
     virtual bool    Load(const TCHAR *fileName, PasswordUI *pwdUI=NULL);
     virtual bool    Load(IStream *stream, PasswordUI *pwdUI=NULL);
@@ -1035,20 +1055,6 @@ public:
     }
 };
 
-static void
-fz_lock_pdf_engine(void *user, int lock)
-{
-    PdfEngineImpl *eng = (PdfEngineImpl*)user;
-    EnterCriticalSection(&eng->fz_locks[lock]);
-}
-
-static void
-fz_unlock_pdf_engine(void *user, int lock)
-{
-    PdfEngineImpl *eng = (PdfEngineImpl*)user;
-    LeaveCriticalSection(&eng->fz_locks[lock]);
-}
-
 PdfEngineImpl::PdfEngineImpl() : _fileName(NULL), _doc(NULL),
     _pages(NULL), _mediaboxes(NULL), _info(NULL),
     outline(NULL), attachments(NULL), _pagelabels(NULL),
@@ -1057,12 +1063,10 @@ PdfEngineImpl::PdfEngineImpl() : _fileName(NULL), _doc(NULL),
 {
     InitializeCriticalSection(&pagesAccess);
     InitializeCriticalSection(&ctxAccess);
-    for (size_t i = 0; i < FZ_LOCK_MAX; i++) {
-        InitializeCriticalSection(&fz_locks[i]);
-    }
-    fz_locks_ctx.user = this;
-    fz_locks_ctx.lock = fz_lock_pdf_engine;
-    fz_locks_ctx.unlock = fz_unlock_pdf_engine;
+
+    fz_locks_ctx.user = &ctxAccess;
+    fz_locks_ctx.lock = fz_lock_context_cs;
+    fz_locks_ctx.unlock = fz_unlock_context_cs;
     ctx = fz_new_context(NULL, &fz_locks_ctx, MAX_CONTEXT_MEMORY);
 }
 
@@ -1118,10 +1122,6 @@ PdfEngineImpl::~PdfEngineImpl()
     DeleteCriticalSection(&ctxAccess);
     LeaveCriticalSection(&pagesAccess);
     DeleteCriticalSection(&pagesAccess);
-
-    for (size_t i = 0; i < FZ_LOCK_MAX; i++) {
-        DeleteCriticalSection(&fz_locks[i]);
-    }
 }
 
 class PasswordCloner : public PasswordUI {
@@ -2536,6 +2536,7 @@ protected:
     // protected critical section in order to avoid deadlocks
     CRITICAL_SECTION ctxAccess;
     fz_context *    ctx;
+    fz_locks_context fz_locks_ctx;
     xps_document *  _doc;
 
     CRITICAL_SECTION _pagesAccess;
@@ -2656,7 +2657,10 @@ XpsEngineImpl::XpsEngineImpl() : _fileName(NULL), _doc(NULL), _pages(NULL), _med
     InitializeCriticalSection(&_pagesAccess);
     InitializeCriticalSection(&ctxAccess);
 
-    ctx = fz_new_context(NULL, NULL, MAX_CONTEXT_MEMORY);
+    fz_locks_ctx.user = &ctxAccess;
+    fz_locks_ctx.lock = fz_lock_context_cs;
+    fz_locks_ctx.unlock = fz_unlock_context_cs;
+    ctx = fz_new_context(NULL, &fz_locks_ctx, MAX_CONTEXT_MEMORY);
 }
 
 XpsEngineImpl::~XpsEngineImpl()
