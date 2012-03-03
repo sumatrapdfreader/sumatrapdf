@@ -20,6 +20,12 @@
 // in EbookTest.cpp
 void RestartLayoutTimer();
 
+void LayoutTemp::DeletePages()
+{
+    DeleteVecMembers<PageData*>(pagesFromBeginning);
+    DeleteVecMembers<PageData*>(pagesFromPage);
+}
+
 class ThreadLoadMobi : public ThreadBase {
 public:
     TCHAR *             fileName; // we own this memory
@@ -157,20 +163,12 @@ void ThreadLayoutMobi::Run()
         Layout(NULL);
 }
 
-EbookController::EbookController(EbookControls *ctrls) : ctrls(ctrls)
+EbookController::EbookController(EbookControls *ctrls) :
+    ctrls(ctrls), mobiDoc(NULL), html(NULL),
+    fileBeingLoaded(NULL), pagesFromBeginning(NULL), pagesFromPage(NULL),
+    currPageNo(0), pageShown(NULL), deletePageShown(false),
+    pageDx(0), pageDy(0), layoutThread(NULL)
 {
-    mobiDoc = NULL;
-    html = NULL;
-    fileBeingLoaded = NULL;
-    pagesFromBeginning = NULL;
-    pagesFromPage = NULL;
-    pagesShowing = NULL;
-
-    currPageNo = 0;
-    layoutThread = NULL;
-
-    pageDx = 0; pageDy = 0;
-
     ctrls->mainWnd->evtMgr->RegisterClicked(ctrls->next, this);
     ctrls->mainWnd->evtMgr->RegisterClicked(ctrls->prev, this);
     ctrls->mainWnd->evtMgr->RegisterClicked(ctrls->progress, this);
@@ -181,12 +179,24 @@ EbookController::EbookController(EbookControls *ctrls) : ctrls(ctrls)
 
 EbookController::~EbookController()
 {
+    if (layoutThread) {
+        layoutThread->RequestCancel();
+        // TODO: wait until finishes, within limits
+    }
     ctrls->mainWnd->evtMgr->UnRegisterClicked(this);
     ctrls->mainWnd->evtMgr->UnRegisterSizeChanged(this);
     ctrls->page->SetPage(NULL);
+    DeletePageShown();
     DeletePages(&pagesFromBeginning);
     DeletePages(&pagesFromPage);
     delete mobiDoc;
+}
+
+void EbookController::DeletePageShown()
+{
+    if (deletePageShown)
+        delete pageShown;
+    pageShown = NULL;
 }
 
 void EbookController::DeletePages(Vec<PageData*>** pages)
@@ -218,20 +228,55 @@ static LayoutInfo *GetLayoutInfo(const char *html, MobiDoc *mobiDoc, int dx, int
     return li;
 }
 
+// returns page whose content contains reparsePoint
+// page is in 1..$pageCount range to match currPageNo
+// returns 0 if not found
 static size_t PageForReparsePoint(Vec<PageData*> *pages, const char *reparsePoint)
 {
+    if (!pages)
+        return 0;
     for (size_t i = 0; i < pages->Count(); i++) {
         PageData *pd = pages->At(i);
         if (pd->reparsePoint == reparsePoint)
-            return i;
+            return i + 1;
         // this is the first page whose content is after reparsePoint, so
         // the page contining reparsePoint must be the one before
         if (pd->reparsePoint > reparsePoint) {
             CrashIf(0 == i);
-            return i - 1;
+            return i;
         }
     }
-    return -1;
+    return 0;
+}
+
+Vec<PageData*> *EbookController::GetPagesFromBeginning()
+{
+    if (pagesFromBeginning) {
+        CrashIf(LayoutInProgress());
+        return pagesFromBeginning;
+    }
+    if (LayoutInProgress() && (0 != layoutTemp.pagesFromBeginning.Count()))
+        return &layoutTemp.pagesFromBeginning;
+    return NULL;
+}
+
+// Given a page try to calculate its page number
+void EbookController::UpdateCurrPageNoForPage(PageData *pd)
+{
+    currPageNo = 0;
+    if (!pd)
+        return;
+    currPageNo = PageForReparsePoint(GetPagesFromBeginning(), pd->reparsePoint);
+    lf("UpdateCurrPageNoForPage() currPageNo=%d", currPageNo);
+}
+
+void EbookController::ShowPage(PageData *pd, bool deleteWhenDone)
+{
+    DeletePageShown();
+    pageShown = pd;
+    deletePageShown = deleteWhenDone;
+    ctrls->page->SetPage(pageShown);
+    UpdateCurrPageNoForPage(pageShown);
 }
 
 void EbookController::HandleMobiLayoutMsg(UiMsg *msg)
@@ -244,54 +289,90 @@ void EbookController::HandleMobiLayoutMsg(UiMsg *msg)
     }
 
     MobiLayoutData *ld = &msg->mobiLayout;
+    PageData *pageToShow = NULL;
 
     if (!ld->fromBeginning) {
-        // TODO: handle the pages
-        lf("Abandoning %d pages that are not from beginning", ld->pageCount);
-        for (size_t i = 0; i < ld->pageCount; i++) {
-            delete ld->pages[i];
+        // if this is the first page sent, we're currently showing a page
+        // formatted for old window size. Replace that page with new page
+        if (0 == layoutTemp.pagesFromPage.Count()) {
+            CrashIf(0 == ld->pageCount);
+            pageToShow = ld->pages[0];
         }
+        layoutTemp.pagesFromPage.Append(ld->pages, ld->pageCount);
+        if (pageToShow) {
+            CrashIf(pageToShow->reparsePoint != pageShown->reparsePoint);
+            ShowPage(pageToShow, false);
+        }
+        lf("Got %d pages from page, total %d", ld->pageCount, layoutTemp.pagesFromPage.Count());
+        UpdateStatus();
         return;
     }
 
-    bool firstPageArrived = (0 == layoutTmp.pagesFromBeginning.Count());
-    layoutTmp.pagesFromBeginning.Append(ld->pages, ld->pageCount);
+    if (0 == layoutTemp.pagesFromBeginning.Count()) {
+        CrashIf(0 == ld->pageCount);
+        pageToShow = ld->pages[0];
+    }
+
+    layoutTemp.pagesFromBeginning.Append(ld->pages, ld->pageCount);
     for (size_t i = 0; i < ld->pageCount; i++) {
         CrashIf(!ld->pages[i]->reparsePoint);
     }
-    lf("EbookController::HandleMobiLayoutMsg() got %d pages, fromBeginning = %d", ld->pageCount, (int)ld->fromBeginning);
+    lf("Got %d pages from beginning, total %d", ld->pageCount, layoutTemp.pagesFromBeginning.Count());
 
-    if (!layoutTmp.startPageReparsePoint) {
+    if (NULL == layoutTemp.reparsePoint) {
         // if we're starting from the beginning, show the first page as
         // quickly as we can
-        if (firstPageArrived) {
-            ctrls->page->SetPage(layoutTmp.pagesFromBeginning.At(0));
-            currPageNo = 1;
-        }
-    } else {
-        // if we're starting from some page, see if the reparse point is within
-        // pages that arrived
-        // TODO: we do it every time we get new pages even if we've found a page before
-        size_t pageNo = PageForReparsePoint(&layoutTmp.pagesFromBeginning, layoutTmp.startPageReparsePoint);
-        if (-1 != pageNo) {
-            PageData *pd = layoutTmp.pagesFromBeginning.At(pageNo);
-            ctrls->page->SetPage(pd);
-            currPageNo = pageNo + 1;
-        }
+        if (pageToShow)
+            ShowPage(pageToShow, false);
     }
 
     if (ld->finished) {
+        CrashIf(pagesFromBeginning || pagesFromPage);
         layoutThread = NULL;
-        DeletePages(&pagesFromBeginning);
         pagesFromBeginning = new Vec<PageData*>();
-        PageData **pages = layoutTmp.pagesFromBeginning.LendData();
-        size_t pageCount =  layoutTmp.pagesFromBeginning.Count();
+        PageData **pages = layoutTemp.pagesFromBeginning.LendData();
+        size_t pageCount =  layoutTemp.pagesFromBeginning.Count();
         pagesFromBeginning->Append(pages, pageCount);
-        layoutTmp.pagesFromBeginning.Reset();
-        layoutTmp.pagesFromPage.Reset();
-        pagesShowing = pagesFromBeginning;
+        layoutTemp.pagesFromBeginning.Reset();
+
+        pageCount =  layoutTemp.pagesFromPage.Count();
+        if (pageCount > 0) { // those are optional
+            pages = layoutTemp.pagesFromPage.LendData();
+            pagesFromPage = new Vec<PageData*>();
+            pagesFromPage->Append(pages, pageCount);
+            layoutTemp.pagesFromPage.Reset();
+        }
     }
     UpdateStatus();
+}
+
+// if we're showing a temp page, it must be part of some collection that we're
+// about to delete. Remove the page from its collection so that it doesn't get
+// deleted along with it. The caller must assume ownership of the object
+PageData *EbookController::PreserveTempPageShown()
+{
+    if (!pageShown)
+        return NULL;
+    if (deletePageShown) {
+        CrashIf(true); // not sure if this should ever happen
+        deletePageShown = false;
+        return pageShown;
+    }
+    if (LayoutInProgress()) {
+        CrashIf(pagesFromBeginning || pagesFromPage);
+        if (layoutTemp.pagesFromBeginning.Remove(pageShown))
+            return pageShown;
+        if (layoutTemp.pagesFromPage.Remove(pageShown))
+            return pageShown;
+        CrashIf(true); // where did the page come from?
+        return NULL;
+    }
+    if (pagesFromBeginning && pagesFromBeginning->Remove(pageShown))
+        return pageShown;
+    if (pagesFromPage && pagesFromPage->Remove(pageShown))
+        return pageShown;
+    CrashIf(true); // where did the page come from?
+    return NULL;
 }
 
 void EbookController::TriggerLayout()
@@ -307,36 +388,43 @@ void EbookController::TriggerLayout()
     if (!html && !mobiDoc)
         return;
 
-    pagesShowing = NULL;
+    PageData *newPage = PreserveTempPageShown();
+    if (newPage)
+        CrashIf((layoutTemp.reparsePoint != NULL) && (layoutTemp.reparsePoint != newPage->reparsePoint));
+    else
+        CrashIf(layoutTemp.reparsePoint != NULL);
 
     // nicely ask existing layout thread (if exists) to quit but we don't
     // rely on that. If it sends us some data anyway, we'll ignore it
-    if (layoutThread)
+    if (layoutThread) {
         layoutThread->RequestCancel();
+        layoutTemp.DeletePages();
+    }
 
-    CrashIf(layoutTmp.pagesFromBeginning.Count() > 0);  // those should be reset in HandleMobiLayoutMsg()
-    CrashIf(layoutTmp.pagesFromPage.Count() > 0);
+    DeletePages(&pagesFromBeginning);
+    DeletePages(&pagesFromPage);
 
+    CrashIf(layoutTemp.pagesFromBeginning.Count() > 0);
+    CrashIf(layoutTemp.pagesFromPage.Count() > 0);
+
+    ShowPage(newPage, newPage != NULL);
     layoutThread = new ThreadLayoutMobi();
     layoutThread->controller = this;
-    layoutThread->reparsePoint = layoutTmp.startPageReparsePoint;
     layoutThread->layoutInfo = GetLayoutInfo(html, mobiDoc, dx, dy, &textAllocator);
     // additional sanity check for reparsePoint: if it's the same as start of html,
     // mark it as NULL for the benefit of ThreadLayoutMobi
-    if (layoutThread->reparsePoint == layoutThread->layoutInfo->htmlStr)
-        layoutThread->reparsePoint = NULL;
+    if (layoutTemp.reparsePoint == layoutThread->layoutInfo->htmlStr)
+        layoutTemp.reparsePoint = NULL;
+    layoutThread->reparsePoint = layoutTemp.reparsePoint;
     layoutThread->Start();
     UpdateStatus();
 }
 
 void EbookController::OnLayoutTimer()
 {
-    layoutTmp.startPageReparsePoint = NULL;
-    if (currPageNo != 1) {
-        PageData *pd = ctrls->page->GetPage();
-        if (pd)
-            layoutTmp.startPageReparsePoint = pd->reparsePoint;
-    }
+    layoutTemp.reparsePoint = NULL;
+    if (pageShown)
+        layoutTemp.reparsePoint = pageShown->reparsePoint;
     TriggerLayout();
 }
 
@@ -361,133 +449,115 @@ void EbookController::Clicked(Control *c, int x, int y)
         return;
     }
 
-    if (c == ctrls->progress) {
-        float perc = ctrls->progress->GetPercAt(x);
-        if (pagesShowing) {
-            int pageCount = pagesShowing->Count();
-            int pageNo = IntFromPerc(pageCount, perc);
-            GoToPage(pageNo + 1);
-        }
-        return;
-    }
+    CrashIf(c != ctrls->progress);
 
-    CrashAlwaysIf(true);
+    float perc = ctrls->progress->GetPercAt(x);
+    CrashIf(!GetPagesFromBeginning()); // shouldn't be active if we don't have those
+    int pageCount = pagesFromBeginning->Count();
+    int newPageNo = IntFromPerc(pageCount, perc);
+    GoToPage(newPageNo);
+}
+
+size_t EbookController::GetMaxPageCount()
+{
+    Vec<PageData *> *pages1 = pagesFromBeginning;
+    Vec<PageData *> *pages2 = pagesFromPage;
+    if (LayoutInProgress()) {
+        CrashIf(pages1 || pages2);
+        pages1 = &layoutTemp.pagesFromBeginning;
+        pages2 = &layoutTemp.pagesFromPage;
+    }
+    size_t n = 0;
+    if (pages1 && pages1->Count() > n)
+        n = pages1->Count();
+    if (pages2 && pages2->Count() > n)
+        n = pages2->Count();
+    return n;
 }
 
 // show the status text based on current state
-void EbookController::UpdateStatus() const
+void EbookController::UpdateStatus()
 {
+    UpdateCurrPageNoForPage(pageShown);
     ctrls->progress->SetFilled(0.f);
+    size_t pageCount = GetMaxPageCount();
 
     if (fileBeingLoaded) {
-        ScopedMem<TCHAR> s(str::Format(_T("Loading %s..."), fileBeingLoaded));
-        ctrls->status->SetText(AsWStrQ(s.Get()));
+        ScopedMem<WCHAR> s(str::Format(L"Loading %s...", fileBeingLoaded));
+        ctrls->status->SetText(s.Get());
         return;
     }
 
     if (LayoutInProgress()) {
-        int pageCount = layoutTmp.pagesFromBeginning.Count();
-        ScopedMem<TCHAR> s(str::Format(_T("Formatting the book... %d pages"), pageCount));
-        ctrls->status->SetText(AsWStrQ(s.Get()));
+        ScopedMem<WCHAR> s(str::Format(L"Formatting the book... %d pages", pageCount));
+        ctrls->status->SetText(s.Get());
         return;
     }
 
-    if (!pagesShowing) {
-        ctrls->status->SetText(L" ");
-        return;
-    }
+    WCHAR *s = NULL;
+    if (0 == currPageNo)
+        s = str::Format(L"%d pages", pageCount);
+    else
+        s = str::Format(L"Page %d out of %d", currPageNo, pageCount);
 
-    size_t pageCount = pagesShowing->Count();
-    ScopedMem<TCHAR> s(str::Format(_T("Page %d out of %d"), currPageNo, (int)pageCount));
-    ctrls->status->SetText(AsWStrQ(s.Get()));
-    ctrls->progress->SetFilled(PercFromInt(pageCount, currPageNo));
+    ctrls->status->SetText(s);
+    free(s);
+    if (GetPagesFromBeginning())
+        ctrls->progress->SetFilled(PercFromInt(GetPagesFromBeginning()->Count(), currPageNo));
 }
 
 void EbookController::GoToPage(int newPageNo)
 {
-    if (LayoutInProgress() || !pagesShowing)
+    if (currPageNo == newPageNo)
         return;
-
-    CrashIf((newPageNo < 1) || (newPageNo > (int)pagesShowing->Count()));
-    CrashIf(pagesShowing != pagesFromBeginning);
-    currPageNo = newPageNo;
-    PageData *pageData = pagesShowing->At(currPageNo-1);
-    ctrls->page->SetPage(pageData);
+    CrashIf(!GetPagesFromBeginning());
+    if ((newPageNo < 1) || ((size_t)newPageNo > GetPagesFromBeginning()->Count()))
+        return;
+    CrashIf(LayoutInProgress());
+    ShowPage(GetPagesFromBeginning()->At(newPageNo - 1), false);
+    // even if we were showing a page from pagesFromPage before, we've
+    // transitioned to using pagesFromBeginning so we no longer need pagesFromPage
+    DeletePages(&pagesFromPage);
     UpdateStatus();
 }
 
 void EbookController::GoToLastPage()
 {
-    if (LayoutInProgress())
-        return;
-
-    GoToPage(pagesShowing->Count());
+    if (GetPagesFromBeginning())
+        GoToPage(GetPagesFromBeginning()->Count());
 }
 
-// Going back is a special case in that we might need to switch which
-// pages we're showing
-void EbookController::GoOnePageBack()
+// Going forward is a special case in that's the only case where we don't
+// need pagesFromBeginning. If we're currently showing a page from pagesFromPage
+// we'll show the next page
+void EbookController::GoOnePageForward()
 {
-    if (pagesShowing == pagesFromBeginning) {
-        if (currPageNo > 1)
-            GoToPage(currPageNo - 1);
-        return;
+    // TODO: if pageShown comes from pagesFromPage, show the following page
+    if (GetPagesFromBeginning() && (currPageNo != 0)) {
+        GoToPage(currPageNo + 1);
     }
-
-    CrashIf(!((pagesShowing == pagesFromPage) || (pagesShowing == NULL)));
-
-    // The complicated case: we can go back if we can map
-    // currently shown page (formatted from arbitrary point)
-    // to a page as formatted from beginning. This is not
-    // always possible (this page might not be created yet)
-    PageData *page = ctrls->page->GetPage();
-    CrashIf(!page);
-    const char *currPageReparsePoint = page->reparsePoint;
-    size_t newPage;
-    if (pagesFromBeginning) {
-        newPage = PageForReparsePoint(pagesFromBeginning, currPageReparsePoint);
-        lf("EbookController::GoOnePageBack(): mapped curr page to page %d in pagesFromBeginning", newPage);
-    } else {
-        CrashIf(!LayoutInProgress());
-        newPage = PageForReparsePoint(&layoutTmp.pagesFromBeginning, currPageReparsePoint);
-        lf("EbookController::GoOnePageBack(): mapped curr page to page %d in layoutTmp.pagesFromBeginning", newPage);
-    }
-    if (-1 == newPage)
-        return;
-    // TODO: switch from showing pagesFromPage to showing pagesFromBeginning
-    return;
 }
 
 void EbookController::AdvancePage(int dist)
 {
-    // if we're not showing any 
-    if (!pagesShowing && !LayoutInProgress())
-        return;
-
-    if (-1 == dist) {
-        GoOnePageBack();
+    if (1 == dist) {
+        // a special case for moving forward
+        GoOnePageForward();
         return;
     }
 
-    // TODO: relax this, we can somethimes navigate pages even during
-    // layout
-    if (LayoutInProgress())
+    // if we don't know at which page we're on, we can't advance relative to it
+    if (0 == currPageNo)
         return;
 
-    int newPageNo = currPageNo + dist;
-    if (newPageNo < 1)
-        return;
-    // TODO: this is more complicated
-    if (newPageNo > (int)pagesShowing->Count())
-        return;
-    GoToPage(newPageNo);
+    GoToPage(currPageNo + dist);
 }
 
 void EbookController::SetHtml(const char *newHtml)
 {
     html = newHtml;
     delete mobiDoc;
-    layoutTmp.startPageReparsePoint = NULL;
+    layoutTemp.reparsePoint = NULL;
     TriggerLayout();
 }
 
@@ -507,7 +577,7 @@ void EbookController::HandleFinishedMobiLoadingMsg(UiMsg *msg)
     mobiDoc = msg->finishedMobiLoading.mobiDoc;
     msg->finishedMobiLoading.mobiDoc = NULL; // just in case, it shouldn't be freed anyway
 
-    layoutTmp.startPageReparsePoint = NULL; // mark as being laid out from the beginning
+    layoutTemp.reparsePoint = NULL; // mark as being laid out from the beginning
     TriggerLayout();
 }
 

@@ -23,9 +23,11 @@ struct LayoutTemp {
     // if we're doing layout that starts from the beginning, this is NULL
     // otherwise it's the reparse point of the page we were showing when
     // we started the layout
-    const char *    startPageReparsePoint;
+    const char *    reparsePoint;
     Vec<PageData *> pagesFromPage;
     Vec<PageData *> pagesFromBeginning;
+
+    void            DeletePages();
 };
 
 class EbookController : public IClicked, ISizeChanged
@@ -35,7 +37,7 @@ class EbookController : public IClicked, ISizeChanged
     MobiDoc *       mobiDoc;
     const char *    html;
 
-    // only set while we load the file on a background thread used in UpdateStatus()
+    // only set while we load the file on a background thread, used in UpdateStatus()
     TCHAR *         fileBeingLoaded;
 
     // TODO: this should be recycled along with pages so that its
@@ -51,27 +53,37 @@ class EbookController : public IClicked, ISizeChanged
     Vec<PageData*>* pagesFromBeginning;
     Vec<PageData*>* pagesFromPage;
 
-    // either pagesFromBeginning or pagesFromPage. If it's pagesFromBeginning
-    // then pagesFromPage should be NULL
-    Vec<PageData*>* pagesShowing;
-
     // currPageNo is in range 1..$numberOfPages. It's always a page number
     // as if the pages were formatted from the begginging. We don't always
     // know this (when we're showing a page from pagesFromPage and we
     // haven't yet formatted enough pages from beginning to determine which
     // of those pages contains top of the shown page), in which case it's 0
-    int             currPageNo;
+    size_t          currPageNo;
+
+    // page that we're currently showing. It can come from pagesFromBeginning,
+    // pagesFromPage or from layoutTemp during layout or it can be a page that
+    // we took from previous pagesFromBeginning/pagesFromPage when we started
+    // new layout process
+    PageData *      pageShown;
+    // if true, we need to delete pageShown if we no longer need it
+    bool            deletePageShown;
 
     int             pageDx, pageDy; // size of the page for which pages was generated
 
     ThreadLayoutMobi *layoutThread;
-    LayoutTemp        layoutTmp;
+    LayoutTemp        layoutTemp;
 
-    void UpdateStatus() const;
+    void UpdateStatus();
     void DeletePages(Vec<PageData*>** pages);
+    void DeletePageShown();
+    void ShowPage(PageData *pd, bool deleteWhenDone);
+    PageData* PreserveTempPageShown();
+    void UpdateCurrPageNoForPage(PageData *pd);
+    Vec<PageData*> *GetPagesFromBeginning();
     void TriggerLayout();
     bool LayoutInProgress() const { return layoutThread != NULL; }
-    void GoOnePageBack();
+    void GoOnePageForward();
+    size_t GetMaxPageCount();
 
     // IClickHandler
     virtual void Clicked(Control *c, int x, int y);
