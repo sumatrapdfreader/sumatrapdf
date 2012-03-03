@@ -33,9 +33,10 @@ class PropertiesLayout : public Vec<PropertyEl *> {
 public:
     ~PropertiesLayout() { DeleteVecMembers(*this); }
     void AddProperty(const TCHAR *key, TCHAR *value);
+    bool HasProperty(const TCHAR *key);
 };
 
-void OnMenuProperties(WindowInfo& win);
+void OnMenuProperties(WindowInfo& win, bool extended=false);
 void CopyPropertiesToClipboard(HWND hwnd);
 LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 

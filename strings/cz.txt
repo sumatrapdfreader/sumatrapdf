@@ -274,9 +274,6 @@ Kopírování textu bylo odepřeno (zkopírováno jako obraz)
 Could not obtain Printer properties
 Nelze získat vlastnosti tiskárny
 
-Could not open Printer
-Tiskárnu nelze otevřít
-
 Couldn't initialize printer
 Tiskárnu nelze inicializovat
 
@@ -677,5 +674,6 @@ printing document
 tisk dokumentu
 
 # Untranslated:
+#Fonts:
 #Replace document &colors with Windows color scheme
 

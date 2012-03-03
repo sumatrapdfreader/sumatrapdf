@@ -269,9 +269,6 @@ Nie można kopiować tekstu (można kopiować jako obrazy)
 Could not obtain Printer properties
 Nie można uzyskać właściwości drukarki
 
-Could not open Printer
-Nie można uzyskać dostępu do drukarki
-
 Couldn't initialize printer
 Nie można zainicjować drukarki
 
@@ -673,5 +670,6 @@ drukowanie dokumentu
 
 # Untranslated:
 #Copy &Image
+#Fonts:
 #Replace document &colors with Windows color scheme
 

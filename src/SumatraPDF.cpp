@@ -4288,7 +4288,7 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
             // Don't break the shortcut for text boxes
             if (win->hwndFindBox == GetFocus() || win->hwndPageBox == GetFocus())
                 SendMessage(GetFocus(), WM_COPY, 0, 0);
-            else if (win->hwndProperties == GetForegroundWindow())
+            else if (GetForegroundWindow() == win->hwndProperties)
                 CopyPropertiesToClipboard(win->hwndProperties);
             else if (!HasPermission(Perm_CopySelection))
                 break;

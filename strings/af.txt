@@ -88,9 +88,6 @@ Vertoon Aanmekaar
 Contribute Translation
 Dra By Tot Ñ Vertaling.
 
-Could not open Printer
-Kon nie drukker oopmaak nie.
-
 E&xit\tCtrl+Q
 &Gaan Uit-Q
 
@@ -298,6 +295,7 @@ Zoem Uit
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Fonts:
 #Found text at page %s
 #Found text at page %s (again)
 #Frequently Read

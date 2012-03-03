@@ -274,9 +274,6 @@ Copying text was denied (copying as image only)
 Could not obtain Printer properties
 Δεν ήταν δυνατή η ανάκτηση των ιδιοτήτων του εκτυπωτή
 
-Could not open Printer
-Απέτυχε το άνοιγμα του εκτυπωτή
-
 Couldn't initialize printer
 Απέτυχε η έναρξη του εκτυπωτή
 
@@ -677,5 +674,6 @@ printing document
 εκτύπωση εγγράφου
 
 # Untranslated:
+#Fonts:
 #Replace document &colors with Windows color scheme
 

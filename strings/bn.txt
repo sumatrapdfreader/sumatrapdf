@@ -89,9 +89,6 @@ Continuous Facing
 Contribute Translation
 অনুবাদ প্রদান করুন
 
-Could not open Printer
-মুদ্রক কার্যকরী করা যাচ্ছে না
-
 E&xit\tCtrl+Q
 &প্রস্থান\tCtrl+Q
 
@@ -299,6 +296,7 @@ Zoom Out
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Fonts:
 #Found text at page %s
 #Found text at page %s (again)
 #Frequently Read

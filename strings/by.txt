@@ -134,9 +134,6 @@ Continuous Facing
 Contribute Translation
 Дапамагчы з перакладам
 
-Could not open Printer
-Немагчыма адчыніць друкарку
-
 Couldn't render the page
 Не атрымаўся сфармаваць малюнак старонкі
 
@@ -413,6 +410,7 @@ Zoom Out
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Fonts:
 #Found text at page %s (again)
 #Frequently Read
 #Hide frequently read

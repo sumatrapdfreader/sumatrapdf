@@ -266,9 +266,6 @@ Copying text was denied (copying as image only)
 Could not obtain Printer properties
 לא ניתן להשיג מאפייני מדפסת
 
-Could not open Printer
-לא ניתן לפתוח מדפסת
-
 Couldn't initialize printer
 לא ניתן לאתחל מדפסת
 
@@ -669,5 +666,6 @@ printing document
 #CHM documents
 #Copy &Image
 #File %s not found
+#Fonts:
 #Replace document &colors with Windows color scheme
 

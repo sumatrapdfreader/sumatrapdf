@@ -276,9 +276,6 @@ La copie en texte est refusée (seule une capture d’écran est faite)
 Could not obtain Printer properties
 Impossible d'obtenir les propriétés de l'imprimante
 
-Could not open Printer
-Impossible d'accéder à l'imprimante
-
 Couldn't initialize printer
 Impossible d'initialiser l'imprimante
 
@@ -679,5 +676,6 @@ printing document
 impression du document
 
 # Untranslated:
+#Fonts:
 #Replace document &colors with Windows color scheme
 

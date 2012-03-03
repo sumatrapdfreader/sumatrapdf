@@ -202,9 +202,6 @@ Contribute Translation
 Copying text was denied (copying as image only)
 පෙළ පිටපත්කිරීමට නොහැක (ඡායාරූප පිටපත්කිරීම පමණයි)
 
-Could not open Printer
-මෘද්‍රණ යන්ත්‍රය විවෘත නොවේ
-
 Couldn't initialize printer
 මුද්‍රණ යන්ත්‍රය ඇරඹිය නොහැක
 
@@ -532,6 +529,7 @@ printing document
 #F&avorites
 #Favorites
 #File %s not found
+#Fonts:
 #Found text at page %s (again)
 #Frequently Read
 #Hide frequently read

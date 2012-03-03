@@ -86,9 +86,6 @@ Continuous Facing
 Contribute Translation
 अनुवाद करने में मदद करें
 
-Could not open Printer
-परिंटर खोला नहीं जा सका
-
 E&xit\tCtrl+Q
 बाहर निकलें(&x)\tCtrl+Q
 
@@ -296,6 +293,7 @@ Zoom Out
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Fonts:
 #Found text at page %s
 #Found text at page %s (again)
 #Frequently Read

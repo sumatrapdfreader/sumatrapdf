@@ -269,9 +269,6 @@ Kopiranje teksta je odbijeno (može se kopirati samo kao slika)
 Could not obtain Printer properties
 Nije moguće prikazati osobine štampača
 
-Could not open Printer
-Štampač nije pronađen
-
 Couldn't initialize printer
 Nije moguće pokrenuti štampač
 
@@ -673,5 +670,6 @@ printing document
 
 # Untranslated:
 #Copy &Image
+#Fonts:
 #Replace document &colors with Windows color scheme
 

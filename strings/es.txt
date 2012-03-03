@@ -277,9 +277,6 @@ Copiado de texto no permitido (copiando como imagen)
 Could not obtain Printer properties
 Imposible obtener propiedades de la impresora
 
-Could not open Printer
-Impresora no disponible
-
 Couldn't initialize printer
 No se pudo inicializar la impresora
 
@@ -680,5 +677,6 @@ printing document
 imprimimendo documento
 
 # Untranslated:
+#Fonts:
 #Replace document &colors with Windows color scheme
 

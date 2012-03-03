@@ -159,9 +159,6 @@ A-dal heb aswa
 Contribute Translation
 Keworra treylyans
 
-Could not open Printer
-Ny yllys ygeri pryntyer
-
 Couldn't initialize printer
 Ny yllys darbari pryntyer
 
@@ -460,6 +457,7 @@ Faktor-zoum
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Fonts:
 #Found text at page %s (again)
 #Frequently Read
 #Hide frequently read

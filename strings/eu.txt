@@ -263,9 +263,6 @@ Idazkia kopiatzea eragotzita (kopiatzea irudi bezala bakarrik)
 Could not obtain Printer properties
 Ezinezkoa Irarkailu ezaugarriak lortzea
 
-Could not open Printer
-Ezin da Irarkailua ireki
-
 Couldn't initialize printer
 Ezinezkoa irarkailua abiaraztea
 
@@ -664,6 +661,7 @@ agiria irarkitzen
 #CHM documents
 #Copy &Image
 #File %s not found
+#Fonts:
 #No result found around line %u in file %s
 #Replace document &colors with Windows color scheme
 

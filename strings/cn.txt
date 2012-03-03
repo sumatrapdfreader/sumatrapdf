@@ -271,9 +271,6 @@ Copying text was denied (copying as image only)
 Could not obtain Printer properties
 无法获得打印机属性
 
-Could not open Printer
-无法打开打印机
-
 Couldn't initialize printer
 不能初始化打印机
 
@@ -674,5 +671,6 @@ printing document
 正在打印文档
 
 # Untranslated:
+#Fonts:
 #Replace document &colors with Windows color scheme
 

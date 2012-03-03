@@ -273,9 +273,6 @@ A cópia do texto foi recusada (copie como imagem)
 Could not obtain Printer properties
 Não foi possível obter as propriedades da impressora
 
-Could not open Printer
-Não foi possível abrir a impressora
-
 Couldn't initialize printer
 Não foi possível inicializar a impressora
 
@@ -676,5 +673,6 @@ printing document
 impressão de documento
 
 # Untranslated:
+#Fonts:
 #Replace document &colors with Windows color scheme
 

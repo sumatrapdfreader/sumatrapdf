@@ -88,9 +88,6 @@ Continuous Facing
 Contribute Translation
 ร่วมช่วยเหลือในการแปลภาษา
 
-Could not open Printer
-ไม่สามารถเปิดเครื่องพิมพ์ได้
-
 E&xit\tCtrl+Q
 ออก\tCtrl+Q
 
@@ -281,6 +278,7 @@ Zoom Out
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Fonts:
 #Found text at page %s
 #Found text at page %s (again)
 #Frequently Read

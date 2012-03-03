@@ -270,9 +270,6 @@ Copying text was denied (copying as image only)
 Could not obtain Printer properties
 Није могуће приказати особине штампача
 
-Could not open Printer
-Штампач није пронађен
-
 Couldn't initialize printer
 Није могуће покренути штампач
 
@@ -674,5 +671,6 @@ printing document
 
 # Untranslated:
 #Copy &Image
+#Fonts:
 #Replace document &colors with Windows color scheme
 

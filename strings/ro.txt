@@ -266,9 +266,6 @@ Copierea textului interzisă (s-a copiat ca imagine)
 Could not obtain Printer properties
 Nu s-au putut obține proprietățile imprimantei
 
-Could not open Printer
-Imprimantă inaccesibilă
-
 Couldn't initialize printer
 Nu s-a putut inițializa imprimanta
 
@@ -669,5 +666,6 @@ se imprimă documentul
 #CHM documents
 #Copy &Image
 #File %s not found
+#Fonts:
 #Replace document &colors with Windows color scheme
 

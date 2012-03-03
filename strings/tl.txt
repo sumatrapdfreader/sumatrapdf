@@ -218,9 +218,6 @@ Kopyahin ang komento
 Copying text was denied (copying as image only)
 Hindi maaaring kopyahin ang mensahe (kinopya bilang isang imahe lamang)
 
-Could not open Printer
-Hindi mabuksan ang Printer
-
 Couldn't initialize printer
 Hindi ma-initialize ang printer
 
@@ -573,6 +570,7 @@ ipini-print ang dokumento
 #F&avorites
 #Favorites
 #File %s not found
+#Fonts:
 #Found text at page %s (again)
 #Frequently Read
 #Hide frequently read

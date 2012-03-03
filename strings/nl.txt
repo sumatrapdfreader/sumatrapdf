@@ -280,9 +280,6 @@ Tekst kopiëren niet toegestaan (kopieer als afbeelding)
 Could not obtain Printer properties
 Kon geen Printer eigenschappen verkrijgen
 
-Could not open Printer
-Printer niet gevonden
-
 Couldn't initialize printer
 Kan de printer niet initialiseren
 
@@ -683,5 +680,6 @@ printing document
 bestand afdrukken
 
 # Untranslated:
+#Fonts:
 #Replace document &colors with Windows color scheme
 

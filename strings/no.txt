@@ -272,9 +272,6 @@ Mangler tillatelse til kopiering av tekst (kopierer kun som bilde)
 Could not obtain Printer properties
 Kunne ikke innhente skriveregenskaper
 
-Could not open Printer
-Kunne ikke åpne skriveren
-
 Couldn't initialize printer
 Kunne ikke klargjøre skriveren
 
@@ -676,5 +673,6 @@ skriver ut dokument
 
 # Untranslated:
 #Copy &Image
+#Fonts:
 #Replace document &colors with Windows color scheme
 

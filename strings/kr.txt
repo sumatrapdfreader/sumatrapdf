@@ -274,9 +274,6 @@ Copying text was denied (copying as image only)
 Could not obtain Printer properties
 프린터 속성을 가져올 수 없습니다.
 
-Could not open Printer
-프린터를 열 수 없습니다.
-
 Couldn't initialize printer
 프린터를 초기화할 수 없습니다.
 
@@ -677,5 +674,6 @@ printing document
 문서 인쇄 중
 
 # Untranslated:
+#Fonts:
 #Replace document &colors with Windows color scheme
 

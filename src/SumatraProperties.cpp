@@ -161,12 +161,17 @@ void PropertiesLayout::AddProperty(const TCHAR *key, TCHAR *value)
         free(value);
 }
 
+bool PropertiesLayout::HasProperty(const TCHAR *key)
+{
+    for (size_t i = 0; i < Count(); i++) {
+        if (str::Eq(key, At(i)->leftTxt))
+            return true;
+    }
+    return false;
+}
+
 static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RectI *rect)
 {
-    SIZE            txtSize;
-    int             totalDx, totalDy;
-    int             leftMaxDx, rightMaxDx;
-
     PropertiesLayout *layoutData = (PropertiesLayout *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
     ScopedFont fontLeftTxt(GetSimpleFont(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE));
     ScopedFont fontRightTxt(GetSimpleFont(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE));
@@ -174,40 +179,41 @@ static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RectI *rect)
 
     /* calculate text dimensions for the left side */
     SelectObject(hdc, fontLeftTxt);
-    leftMaxDx = 0;
+    int leftMaxDx = 0;
     for (size_t i = 0; i < layoutData->Count(); i++) {
         PropertyEl *el = layoutData->At(i);
-        GetTextExtentPoint32(hdc, el->leftTxt, (int)str::Len(el->leftTxt), &txtSize);
-        el->leftPos.dx = txtSize.cx;
-        el->leftPos.dy = txtSize.cy;
+        RECT rc = { 0 };
+        DrawText(hdc, el->leftTxt, -1, &rc, DT_NOPREFIX | DT_CALCRECT);
+        el->leftPos.dx = rc.right - rc.left;
+        // el->leftPos.dy is set below to be equal to el->rightPos.dy
 
-        assert(el->leftPos.dy == layoutData->At(0)->leftPos.dy);
         if (el->leftPos.dx > leftMaxDx)
             leftMaxDx = el->leftPos.dx;
     }
 
     /* calculate text dimensions for the right side */
     SelectObject(hdc, fontRightTxt);
-    rightMaxDx = 0;
+    int rightMaxDx = 0;
     int lineCount = 0;
+    int textDy = 0;
     for (size_t i = 0; i < layoutData->Count(); i++) {
         PropertyEl *el = layoutData->At(i);
-        GetTextExtentPoint32(hdc, el->rightTxt, (int)str::Len(el->rightTxt), &txtSize);
-        el->rightPos.dx = txtSize.cx;
-        el->rightPos.dy = txtSize.cy;
+        RECT rc = { 0 };
+        DrawText(hdc, el->rightTxt, -1, &rc, DT_NOPREFIX | DT_CALCRECT);
+        el->rightPos.dx = rc.right - rc.left;
+        el->leftPos.dy = el->rightPos.dy = rc.bottom - rc.top;
+        textDy += el->rightPos.dy;
 
-        assert(el->rightPos.dy == layoutData->At(0)->rightPos.dy);
         if (el->rightPos.dx > rightMaxDx)
             rightMaxDx = el->rightPos.dx;
         lineCount++;
     }
 
-    assert(lineCount > 0);
-    int textDy = lineCount > 0 ? layoutData->At(0)->rightPos.dy : 0;
-    totalDx = leftMaxDx + PROPERTIES_LEFT_RIGHT_SPACE_DX + rightMaxDx;
+    assert(lineCount > 0 && textDy > 0);
+    int totalDx = leftMaxDx + PROPERTIES_LEFT_RIGHT_SPACE_DX + rightMaxDx;
 
-    totalDy = 4;
-    totalDy += lineCount * (textDy + PROPERTIES_TXT_DY_PADDING);
+    int totalDy = 4;
+    totalDy += textDy + (lineCount - 1) * PROPERTIES_TXT_DY_PADDING;
     totalDy += 4;
 
     int offset = PROPERTIES_RECT_PADDING;
@@ -220,7 +226,7 @@ static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RectI *rect)
         el->leftPos = RectI(offset, offset + currY, leftMaxDx, el->leftPos.dy);
         el->rightPos.x = offset + leftMaxDx + PROPERTIES_LEFT_RIGHT_SPACE_DX;
         el->rightPos.y = offset + currY;
-        currY += (textDy + PROPERTIES_TXT_DY_PADDING);
+        currY += el->rightPos.dy + PROPERTIES_TXT_DY_PADDING;
     }
 
     SelectObject(hdc, origFont);
@@ -278,10 +284,21 @@ Example xref->info ("Info") object:
 >>
 */
 
-// TODO: add information about fonts ?
-void OnMenuProperties(WindowInfo& win)
+void OnMenuProperties(WindowInfo& win, bool extended)
 {
     if (win.hwndProperties) {
+#if defined(DEBUG) || defined(ENABLE_EXTENDED_PROPERTIES)
+        // make a repeated Ctrl+D display some extended properties
+        // TODO: expose this through a UI button or similar
+        if (GetForegroundWindow() == win.hwndProperties) {
+            PropertiesLayout *data = (PropertiesLayout *)GetWindowLongPtr(win.hwndProperties, GWLP_USERDATA);
+            if (!data || !data->HasProperty(_TR("Fonts:"))) {
+                DestroyWindow(win.hwndProperties);
+                win.hwndProperties = NULL;
+                OnMenuProperties(win, true);
+            }
+        }
+#endif
         SetActiveWindow(win.hwndProperties);
         return;
     }
@@ -367,6 +384,18 @@ void OnMenuProperties(WindowInfo& win)
     // Tagged PDF rules are described in 14.8.2 of
     // http://www.adobe.com/devnet/acrobat/pdfs/PDF32000_2008.pdf
     // layoutData->AddProperty(_T("Tagged PDF:"), str::Dup(_T("No")));
+
+#if defined(DEBUG) || defined(ENABLE_EXTENDED_PROPERTIES)
+    if (extended) {
+        // TODO: FontList extraction can take a while
+        str = engine->GetProperty("FontList");
+        if (str) {
+            // add a space between basic and extended file properties
+            layoutData->AddProperty(_T(" "), str::Dup(_T(" ")));
+        }
+        layoutData->AddProperty(_TR("Fonts:"), str);
+    }
+#endif
 
     win.hwndProperties = CreatePropertiesWindow(win.hwndFrame, *layoutData);
 }

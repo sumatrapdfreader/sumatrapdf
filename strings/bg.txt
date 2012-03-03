@@ -272,9 +272,6 @@ Copying text was denied (copying as image only)
 Could not obtain Printer properties
 Настройките на принтера не са намерени
 
-Could not open Printer
-Принтерът не е достъпен
-
 Couldn't initialize printer
 Принтерът не може да бъде инициализиран
 
@@ -675,5 +672,6 @@ printing document
 отпечатване на документ
 
 # Untranslated:
+#Fonts:
 #Replace document &colors with Windows color scheme
 

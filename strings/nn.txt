@@ -85,9 +85,6 @@ Kontunuerleg motståande
 Contribute Translation
 Delta med omsetjing
 
-Could not open Printer
-Finn ikkje skrivaren
-
 E&xit\tCtrl+Q
 &Avslutt\tCtrl+Q
 
@@ -296,6 +293,7 @@ Zoom ut
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Fonts:
 #Found text at page %s
 #Found text at page %s (again)
 #Frequently Read

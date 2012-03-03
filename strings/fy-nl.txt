@@ -166,9 +166,6 @@ Dûbele side trochrinnend
 Contribute Translation
 Help mei oersetten
 
-Could not open Printer
-Printer net fûn
-
 Couldn't initialize printer
 Kin de printer net inisjalisearje
 
@@ -490,6 +487,7 @@ Zoomfaktor
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Fonts:
 #Found text at page %s (again)
 #Frequently Read
 #Hide frequently read

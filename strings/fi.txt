@@ -273,9 +273,6 @@ Tekstin kopioiminen kiellettiin (kopioidaan vain kuvana)
 Could not obtain Printer properties
 Tulostimen ominaisuuksia ei voinut lukea
 
-Could not open Printer
-Tulostinta ei löydy
-
 Couldn't initialize printer
 Tulostinta ei voida valmistella
 
@@ -676,5 +673,6 @@ printing document
 tulostetaan asiakirjaa
 
 # Untranslated:
+#Fonts:
 #Replace document &colors with Windows color scheme
 

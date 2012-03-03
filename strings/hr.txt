@@ -247,9 +247,6 @@ Kopiraj ko&mentar
 Copying text was denied (copying as image only)
 Kopiranje teksta je nemoguće (kopirano kao slika)
 
-Could not open Printer
-Ne mogu pristupiti pisaču
-
 Couldn't initialize printer
 Ne mogu inicijalizirati pisač
 
@@ -635,6 +632,7 @@ ispisujem dokument
 #F&avorites
 #Favorites
 #File %s not found
+#Fonts:
 #Page %s
 #Printer with given name doesn't exist
 #Remove from favorites

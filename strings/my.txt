@@ -164,9 +164,6 @@ Dua belah mukasurat bersambung
 Contribute Translation
 Menyumbangkan alihbahasa
 
-Could not open Printer
-Pencetak tidak dapat dibuka
-
 Default PDF reader can't be changed in portable mode
 Pembaca utama PDF tidak boleh ditukar ketika mod mudah alih
 
@@ -389,6 +386,7 @@ mencetak dokumen
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Fonts:
 #Found text at page %s
 #Found text at page %s (again)
 #Frequently Read

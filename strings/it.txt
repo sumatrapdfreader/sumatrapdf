@@ -279,9 +279,6 @@ Impossibile copiare il testo (copio solo come immagine)
 Could not obtain Printer properties
 Impossibile ottenere info proprietà stampante
 
-Could not open Printer
-Stampante non accessibile
-
 Couldn't initialize printer
 Impossibile inizializzare la stampante
 
@@ -683,4 +680,7 @@ Copia del testo...
 
 printing document
 Stampa documento...
+
+# Untranslated:
+#Fonts:
 

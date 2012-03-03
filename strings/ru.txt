@@ -273,9 +273,6 @@ Copying text was denied (copying as image only)
 Could not obtain Printer properties
 Не удалось определить свойства принтера
 
-Could not open Printer
-Принтер недоступен
-
 Couldn't initialize printer
 Не удалось инициализировать принтер
 
@@ -677,4 +674,7 @@ copying text
 
 printing document
 печатается документ
+
+# Untranslated:
+#Fonts:
 

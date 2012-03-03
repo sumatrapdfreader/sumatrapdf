@@ -203,9 +203,6 @@ Cyfrannu cyfieithiad.
 Copying text was denied (copying as image only)
 Copïo testun wedi ei atal (copïo fel delwedd yn unig)
 
-Could not open Printer
-Methu agor Argraffydd
-
 Couldn't initialize printer
 Methu cychwyn yr argraffydd
 
@@ -552,6 +549,7 @@ argraffu dogfen
 #F&avorites
 #Favorites
 #File %s not found
+#Fonts:
 #Found text at page %s (again)
 #Frequently Read
 #Hide frequently read

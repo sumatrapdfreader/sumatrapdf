@@ -85,9 +85,6 @@ Continuous
 Continuous Facing
 ဆက်တိုက် မျက်နှာ
 
-Could not open Printer
-ပုံနှိပ်ကရိယာ ဖွင့်မရပါ
-
 E&xit\tCtrl+Q
 &ထွက်ပါ\tCtrl+Q
 
@@ -293,6 +290,7 @@ Zoom Out
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Fonts:
 #Found text at page %s
 #Found text at page %s (again)
 #Frequently Read

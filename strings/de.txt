@@ -275,9 +275,6 @@ Text kopieren verweigert (nur als Bild kopiert)
 Could not obtain Printer properties
 Konnte Druckereigenschaften nicht bestimmen
 
-Could not open Printer
-Konnte den Drucker nicht ansprechen.
-
 Couldn't initialize printer
 Der Drucker konnte nicht initialisiert werden
 
@@ -394,6 +391,9 @@ An Breite anpassen und Seiten fortlaufend anzeigen
 
 Fit a Single Page
 An eine einzelne Seite anpassen
+
+Fonts:
+Schriftarten:
 
 Found text at page %s
 Text auf Seite %s gefunden

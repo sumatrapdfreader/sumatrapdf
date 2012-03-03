@@ -272,9 +272,6 @@ Cópia de texto negada (copiando somente como imagem)
 Could not obtain Printer properties
 Não foi possível obter as propriedades da Impressora
 
-Could not open Printer
-Erro ao acessar a impressora.
-
 Couldn't initialize printer
 Não foi possível acionar a impressora
 
@@ -675,5 +672,6 @@ printing document
 imprimindo documento
 
 # Untranslated:
+#Fonts:
 #Replace document &colors with Windows color scheme
 

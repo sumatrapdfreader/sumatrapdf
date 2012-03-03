@@ -272,9 +272,6 @@ Chép văn bản bị từ chối (chỉ được chép như hình ảnh)
 Could not obtain Printer properties
 Không thể có được thuộc tính Máy in
 
-Could not open Printer
-Không mở được máy in.
-
 Couldn't initialize printer
 Không khởi động được máy in
 
@@ -675,5 +672,6 @@ printing document
 đang in tập tin
 
 # Untranslated:
+#Fonts:
 #Replace document &colors with Windows color scheme
 

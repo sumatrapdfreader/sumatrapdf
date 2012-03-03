@@ -234,9 +234,6 @@ Continuous Facing
 Contribute Translation
 மொழிபெயர்ப்புக்கு பங்களி
 
-Could not open Printer
-அச்சுப்பொறியை திறக்க முடியவில்லை
-
 Couldn't initialize printer
 அச்சுப்பொறியை தொடக்க முடியவில்லை
 
@@ -541,6 +538,7 @@ printing document
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Fonts:
 #Found text at page %s (again)
 #Frequently Read
 #Hide frequently read

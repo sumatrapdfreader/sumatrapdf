@@ -171,9 +171,6 @@ Continuous Facing
 Contribute Translation
 در ترجمه این برنامه کمک کنید
 
-Could not open Printer
-برنامه قادر به يافتن چاپگر نيست
-
 Couldn't initialize printer
 متأسفانه چاپگر منتخب در دسترس نیست
 
@@ -493,6 +490,7 @@ printing document
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Fonts:
 #Found text at page %s (again)
 #Frequently Read
 #Hide frequently read

@@ -269,9 +269,6 @@ Metnin kopyalanması reddedildi (görüntü olarak kopyalandı)
 Could not obtain Printer properties
 Yazıcı özellikleri temin edilemedi
 
-Could not open Printer
-Yazıcıya erişilemiyor.
-
 Couldn't initialize printer
 Yazıcı başlatılamadı
 
@@ -673,5 +670,6 @@ belge yazdırılıyor
 
 # Untranslated:
 #Copy &Image
+#Fonts:
 #Replace document &colors with Windows color scheme
 

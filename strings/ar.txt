@@ -274,9 +274,6 @@ Copying text was denied (copying as image only)
 Could not obtain Printer properties
 لم يمكن الحصول على خصائص الطابعة
 
-Could not open Printer
-تعذر فتح الطابعة
-
 Couldn't initialize printer
 لا يمكن تشغيل الطابعة
 
@@ -677,5 +674,6 @@ printing document
 تتم حالياً الطباعة
 
 # Untranslated:
+#Fonts:
 #Replace document &colors with Windows color scheme
 

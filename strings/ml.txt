@@ -67,9 +67,6 @@ Continuous Facing
 Contribute Translation
 മാക്സിന്‍ ബി ജൊണ്‍
 
-Could not open Printer
-അച്ചടിയന്ത്രം തുറക്കാന്‍ സാധിച്ചില്ല
-
 E&xit\tCtrl+Q
 പുറത്തേക്ക് \tCtrl+Q
 
@@ -256,6 +253,7 @@ Zoom Out
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Fonts:
 #Found text at page %s
 #Found text at page %s (again)
 #Frequently Read

@@ -266,9 +266,6 @@ Kopiering af tekst blev nægtet (kopierer kun som billede)
 Could not obtain Printer properties
 Kan ikke hente printer egenskaber
 
-Could not open Printer
-Kunne ikke åbne printer
-
 Couldn't initialize printer
 Kunne ikke starte printer
 
@@ -670,5 +667,6 @@ udskriver dokument
 #CHM documents
 #Copy &Image
 #File %s not found
+#Fonts:
 #Replace document &colors with Windows color scheme
 

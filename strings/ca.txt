@@ -270,9 +270,6 @@ No es pot copiar el text (només es copia com a imatge)
 Could not obtain Printer properties
 No es poden obtenir les propietats de la impressora
 
-Could not open Printer
-No es pot accedir a la impressora.
-
 Couldn't initialize printer
 No es pot inicialitzar la impressora
 
@@ -674,5 +671,6 @@ s'està imprimint el document
 
 # Untranslated:
 #Copy &Image
+#Fonts:
 #Replace document &colors with Windows color scheme
 

@@ -274,9 +274,6 @@ Kopírovanie textu odmietnuté (iba ako obrázok)
 Could not obtain Printer properties
 Získanie vlastností tlačiarne zlyhalo
 
-Could not open Printer
-Nie je možné otvoriť tlačiareň
-
 Couldn't initialize printer
 Inicializácia tlačiarne zlyhala
 
@@ -677,5 +674,6 @@ printing document
 prebieha tlač dokumentu
 
 # Untranslated:
+#Fonts:
 #Replace document &colors with Windows color scheme
 

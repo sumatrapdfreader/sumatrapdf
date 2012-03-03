@@ -253,9 +253,6 @@ Kopiera kommentar
 Copying text was denied (copying as image only)
 Textkopiering tilläts ej (kopierar som bild)
 
-Could not open Printer
-Kan inte anropa skrivaren.
-
 Couldn't initialize printer
 Kunde ej använda skrivare
 
@@ -662,5 +659,6 @@ skriver ut dokumentet
 #Copy &Image
 #Could not obtain Printer properties
 #File %s not found
+#Fonts:
 #Replace document &colors with Windows color scheme
 

@@ -269,9 +269,6 @@ Níorbh fhéidir téacs a mhacasamhlú (macasamhlú mar íomhá amháin)
 Could not obtain Printer properties
 Níorbh fhéidir airíonna an chlóire a fháil
 
-Could not open Printer
-Níorbh fhéidir an clóire a oscailt
-
 Couldn't initialize printer
 Níorbh fhéidir an clóire a thúsú
 
@@ -672,5 +669,6 @@ printing document
 ag clóbhualadh an cháipéis
 
 # Untranslated:
+#Fonts:
 #Replace document &colors with Windows color scheme
 

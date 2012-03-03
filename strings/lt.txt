@@ -261,9 +261,6 @@ Teksto kopijavimas uždraustas (kopijuojamas tik ekrano vaizdas)
 Could not obtain Printer properties
 Spausdintuvo savybių sužinoti nepavyko
 
-Could not open Printer
-Nepavyko atverti spausdintuvo
-
 Couldn't initialize printer
 Nepavyko prisijungti prie spausdintuvo
 
@@ -660,6 +657,7 @@ spausdinamas dokumentas
 #CHM documents
 #Copy &Image
 #File %s not found
+#Fonts:
 #Open in Microsoft XPS-Viewer
 #Replace document &colors with Windows color scheme
 #Save S&hortcut...\tCtrl+Shift+S

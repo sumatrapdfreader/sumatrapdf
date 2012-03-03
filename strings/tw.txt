@@ -248,9 +248,6 @@ Copy Co&mment
 Copying text was denied (copying as image only)
 複製文字失敗（只能複製為圖片）
 
-Could not open Printer
-無法開啟印表機。
-
 Couldn't initialize printer
 無法初始化印表機
 
@@ -636,6 +633,7 @@ printing document
 #F&avorites
 #Favorites
 #File %s not found
+#Fonts:
 #Page %s
 #Printer with given name doesn't exist
 #Remove from favorites

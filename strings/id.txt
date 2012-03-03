@@ -275,9 +275,6 @@ Menyalin teks ditolak (menyalin sebagai gambar saja)
 Could not obtain Printer properties
 Tidak bsa mendapatkan sifat Pencetak
 
-Could not open Printer
-Tidak dapat membuka printer
-
 Couldn't initialize printer
 Tidak dapat menginisialisasi printer
 
@@ -675,6 +672,7 @@ printing document
 mencetak dokumen
 
 # Untranslated:
+#Fonts:
 #Open in Microsoft XPS-Viewer
 #Replace document &colors with Windows color scheme
 

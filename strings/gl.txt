@@ -268,9 +268,6 @@ Copiar texto foi denegado (copiando só coma imaxe)
 Could not obtain Printer properties
 Non se poden obter as propiedades da impresora
 
-Could not open Printer
-Erro ao aceder á impressora.
-
 Couldn't initialize printer
 Non se pode inicializar a impresora
 
@@ -672,5 +669,6 @@ imprimindo documento
 
 # Untranslated:
 #Copy &Image
+#Fonts:
 #Replace document &colors with Windows color scheme
 

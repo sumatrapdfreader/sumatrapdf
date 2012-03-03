@@ -271,9 +271,6 @@ Kopiranje teksta je nemoguće (kopirano kao slika)
 Could not obtain Printer properties
 Ne mogu dobaviti postavke štampača
 
-Could not open Printer
-Ne mogu pristupiti štampaču
-
 Couldn't initialize printer
 Ne mogu inicijalizirati štampač
 
@@ -674,5 +671,6 @@ printing document
 štampam dokument
 
 # Untranslated:
+#Fonts:
 #Replace document &colors with Windows color scheme
 

@@ -270,9 +270,6 @@ Kopiranje besedila je bilo zavrnjeno (kopiranje samo kot slika)
 Could not obtain Printer properties
 Ne morem dobiti Lastnosti tiskalnika
 
-Could not open Printer
-Do tiskalnika ni mogoče dostopati
-
 Couldn't initialize printer
 Tiskalnika ni mogoče inicializirati
 
@@ -674,5 +671,6 @@ tiskanje dokumenta
 
 # Untranslated:
 #Copy &Image
+#Fonts:
 #Replace document &colors with Windows color scheme
 

@@ -271,9 +271,6 @@ Teksti kopeerimine on keelatud (kopeerida saab vaid pildina)
 Could not obtain Printer properties
 Printeri sätteid ei õnnestunud lugeda
 
-Could not open Printer
-Printerit ei leitud
-
 Couldn't initialize printer
 Printerit ei saa lähtestada
 
@@ -674,5 +671,6 @@ printing document
 dokumendi printimine
 
 # Untranslated:
+#Fonts:
 #Replace document &colors with Windows color scheme
 

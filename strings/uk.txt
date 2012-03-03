@@ -269,9 +269,6 @@ Copying text was denied (copying as image only)
 Could not obtain Printer properties
 Неможливо відобразити налаштування друкарки
 
-Could not open Printer
-Принтер недоступний.
-
 Couldn't initialize printer
 Неможливо знайти друкарку
 
@@ -673,5 +670,6 @@ printing document
 
 # Untranslated:
 #Copy &Image
+#Fonts:
 #Replace document &colors with Windows color scheme
 
