@@ -68,7 +68,7 @@ enum MobiDocType {
 // the size of the struct
 #define kMobiHeaderLen 232
 struct MobiHeader {
-    char        id[4];
+    char         id[4];
     uint32       hdrLen;   // including 4 id bytes
     uint32       type;     // MobiDocType
     uint32       textEncoding;
@@ -109,8 +109,8 @@ struct MobiHeader {
     // A set of binary flags, some of which indicate extra data at the end of each text block.
     // This only seems to be valid for Mobipocket format version 5 and 6 (and higher?), when
     // the header length is 228 (0xE4) or 232 (0xE8).
-    uint16      extraDataFlags;
-    int32       indxRec;
+    uint16       extraDataFlags;
+    int32        indxRec;
 };
 
 STATIC_ASSERT(kMobiHeaderLen == sizeof(MobiHeader), validMobiHeader);

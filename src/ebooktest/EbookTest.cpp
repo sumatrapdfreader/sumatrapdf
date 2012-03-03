@@ -23,32 +23,9 @@
 
 #include "DebugLog.h"
 
-/*
-TODO: doing page layout on a background thread needs to be more sophisticated.
-Technically it works but user experience is bad.
-
-The key to supporting fluid resizing is to limit the amount of work done on UI thread.
-While the window is being resized, we should only calculate a few pages ahead.
-
-Only when the user turns the pages (or, additionally, after some delay since
-the last resize) we should layout everything so that we can show
-number of pages.
-
-Also, we must do the Kindle trick, where resizing preserves the top of
-current page, but on going back it resyncs to show a page the way it
-would be if we came there from the first page.
-
-One way to do it would be to add another layout which creates a new
-stream of pages based on another stream of pages.
-
-Another option, probably better, is to turn PageLayout into an iterator
-that can give us pages incrementally and from an arbitrary position
-in the html.
-
-TODO: by hooking into mouse move events in HorizontalProgress control, we
+/* TODO: by hooking into mouse move events in HorizontalProgress control, we
 could show a window telling the user which page would we go to if he was
-to click there.
-*/
+to click there. */
 
 using namespace mui;
 

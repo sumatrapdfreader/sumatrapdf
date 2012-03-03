@@ -14,25 +14,11 @@ Things to do before 2.1 release:
   it (it might kill the pop-up menu on the button).
 
 The shortest path to ebook support in sumatra:
-1. Make UI responsive during layout process and allow re-layout (when resizing a window)
-   which maintains a fixed top of current page when moving forward but re-syncs with
-   natural layout when going back. This is what Kindle app does and is important to minimize
-   user disorientation in that case. The issue here is that when changing size of the page,
-   if we re-layout from the beginning, the part that is currently at the top of the page
-   would end up somewher in the middle of another page, which would be disorienting.
-   Keeping fixed top of current page requires being able to do layout from arbitrary point
-   in the document i.e. top of current page so each page needs enough information to be
-   able to do that. At the same time, it's not feasible to re-layout pages before that
-   for a different page size, so we effectively need to have 2 layouts: one from the
-   beginning and one from current page. As long as we only move forward by a page, we
-   use the layout from current page. When going backwards or skipping ahead, we re-sync
-   with layout from the beginning and can drop the layout from current page.
+1. Support more of the mobi format
+1.1 links
+1.2 lists (ul, li)
 
-2. Support more of the mobi format
-2.2 links
-2.3 lists (ul, li)
-
-3. Integrate the code into Sumatra. The way I'm thinking about doing it to minimize
+2. Integrate the code into Sumatra. The way I'm thinking about doing it to minimize
    changing existing code:
 
 a) rename WindowInfo to EngineWindowInfo and introduce EbookWindowInfo
