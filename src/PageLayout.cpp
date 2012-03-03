@@ -120,6 +120,8 @@ PageLayout::~PageLayout()
 void PageLayout::AppendInstr(DrawInstr di)
 {
     currLineInstr.Append(di);
+    if (!currLineReparsePoint)
+        currLineReparsePoint = currReparsePoint;
 }
 
 void PageLayout::SetCurrentFont(FontStyle fontStyle, float fontSize)
@@ -219,8 +221,10 @@ void PageLayout::LayoutLeftStartingAt(REAL offX)
 static void SetYPos(Vec<DrawInstr>& instr, float y)
 {
     for (DrawInstr *i = instr.IterStart(); i; i = instr.IterNext()) {
-        CrashIf(0.f != i->bbox.Y);
-        i->bbox.Y = y;
+        if (i->type != InstrImage) {
+            CrashIf(0.f != i->bbox.Y);
+            i->bbox.Y = y;
+        }
     }
 }
 
@@ -367,7 +371,7 @@ bool PageLayout::FlushCurrLine(bool isParagraphBreak)
     }
     currPage->instructions.Append(currLineInstr.LendData(), currLineInstr.Count());
     currLineInstr.Reset();
-    currLineReparsePoint = currReparsePoint;
+    currLineReparsePoint = NULL;
     currLineTopPadding = 0;
     currX = 0;
     return (newPage != NULL);
@@ -410,7 +414,7 @@ void PageLayout::EmitImage(ImageData *img)
     currX += (pageDx - bbox.Width) / 2.f;
     bbox.X = currX;
     bbox.Y = currY;
-    currPage->instructions.Append(DrawInstr::Image(img->data, img->len, bbox));
+    AppendInstr(DrawInstr::Image(img->data, img->len, bbox));
     currY += bbox.Height;
     ForceNewPage();
 }
@@ -873,8 +877,9 @@ PageData *PageLayout::IterStart(LayoutInfo* li)
     pageDy = (REAL)layoutInfo->pageDy;
     textAllocator = layoutInfo->textAllocator;
 
+    bool fromBeginning = (NULL == layoutInfo->reparsePoint);
     currReparsePoint = layoutInfo->reparsePoint;
-    currLineReparsePoint = currReparsePoint;
+    currLineReparsePoint = NULL;
     if (!currReparsePoint)
         currReparsePoint = layoutInfo->htmlStr;
     CrashIf((currReparsePoint < layoutInfo->htmlStr) ||
@@ -905,13 +910,20 @@ PageData *PageLayout::IterStart(LayoutInfo* li)
     currPage->reparsePoint = currReparsePoint;
 
     currLineTopPadding = 0;
-    if (layoutInfo->mobiDoc) {
+    if (layoutInfo->mobiDoc && fromBeginning) {
         ImageData *img = layoutInfo->mobiDoc->GetCoverImage();
         if (img) {
-            EmitImage(img);
-            // must do that after EmitImage() because EmitImage() uses it
-            // to check for duplicate cover image
-            coverImage = img;
+            // this is a heuristic that tries to filter images that are not
+            // cover images, like in http://www.sethgodin.com/sg/docs/StopStealingDreams-SethGodin.mobi
+            // TODO: a better way would be to only add the image if one isn't present at the
+            // beginning of html
+            Rect size = BitmapSizeFromData(img->data, img->len);
+            if ((size.Width >= 320) && (size.Height >= 200)) {
+                EmitImage(img);
+                // must do that after EmitImage() because EmitImage() uses it
+                // to check for duplicate cover image
+                coverImage = img;
+            }
         }
     }
     return IterNext();
