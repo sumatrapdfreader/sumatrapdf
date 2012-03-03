@@ -11,8 +11,13 @@
 #include "Timer.h"
 #include "UiMsgEbook.h"
 #include "UiMsg.h"
-
 #include "DebugLog.h"
+
+/* TODO: when showing a page from pagesFromPage, its page number can be 1 even
+   so that we can't go back even though we should. This will happen if we resize
+   while showing second page whose reparse point will be within the first page
+   after resize.
+*/
 
 #define FONT_NAME              L"Georgia"
 #define FONT_SIZE              12.5

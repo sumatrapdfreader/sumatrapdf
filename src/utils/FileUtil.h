@@ -25,7 +25,7 @@ namespace file {
 bool         Exists(const TCHAR *filePath);
 char *       ReadAll(const TCHAR *filePath, size_t *fileSizeOut);
 bool         ReadAll(const TCHAR *filePath, char *buffer, size_t bufferLen);
-bool         WriteAll(const TCHAR *filePath, void *data, size_t dataLen);
+bool         WriteAll(const TCHAR *filePath, const void *data, size_t dataLen);
 size_t       GetSize(const TCHAR *filePath);
 bool         Delete(const TCHAR *filePath);
 FILETIME     GetModificationTime(const TCHAR *filePath);

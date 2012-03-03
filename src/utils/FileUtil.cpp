@@ -281,7 +281,7 @@ bool ReadAll(const TCHAR *filePath, char *buffer, size_t bufferLen)
     return ok && sizeRead == bufferLen;
 }
 
-bool WriteAll(const TCHAR *filePath, void *data, size_t dataLen)
+bool WriteAll(const TCHAR *filePath, const void *data, size_t dataLen)
 {
     ScopedHandle h(CreateFile(filePath, GENERIC_WRITE, FILE_SHARE_READ, NULL,
                               CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL));

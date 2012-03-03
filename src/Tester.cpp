@@ -12,6 +12,7 @@
 #include "DirIter.h"
 #include "DebugLog.h"
 #include "FileUtil.h"
+#include "HtmlPrettyPrint.h"
 #include "MobiDoc.h"
 #include "Mui.h"
 #include "NoFreeAllocator.h"
@@ -26,7 +27,7 @@ using namespace Gdiplus;
 // if true, we'll save html content of a mobi ebook as well
 // as pretty-printed html to MOBI_SAVE_DIR. The name will be
 // ${file}.html and ${file}_pp.html
-static bool gMobiSaveHtml = false;
+static bool gMobiSaveHtml = true;
 // if true, we'll also save images in mobi files. The name
 // will be ${file}_img_${imgNo}.[jpg|png]
 // gMobiSaveHtml must be true as well
@@ -46,19 +47,22 @@ static void SaveMobiHtml(const TCHAR *filePathBase, MobiDoc *mb)
 {
     CrashAlwaysIf(!gMobiSaveHtml);
 
-#if 0 // TODO: we've changed how pretty-printing works, need to update
     ScopedMem<TCHAR> outFile(str::Join(filePathBase, _T("_pp.html")));
-    file::WriteAll(outFile.Get(), (void*)mb->prettyPrintedHtml->LendData(), mb->prettyPrintedHtml->Count());
+
+    size_t htmlLen;
+    const char *html = mb->GetBookHtmlData(htmlLen);
+    size_t ppHtmlLen;
+    char *ppHtml = PrettyPrintHtml(html, htmlLen, ppHtmlLen);
+    file::WriteAll(outFile.Get(), ppHtml, ppHtmlLen);
 
     outFile.Set(str::Join(filePathBase, _T(".html")));
-    file::WriteAll(outFile.Get(), mb->doc->LendData(), mb->doc->Count());
-#endif
+    file::WriteAll(outFile.Get(), html, htmlLen);
 }
 
 static void SaveMobiImage(const TCHAR *filePathBase, size_t imgNo, ImageData *img)
 {
     // it's valid to not have image data at a given index
-    if (!img->data)
+    if (!img || !img->data)
         return;
     const TCHAR *ext = GfxFileExtFromData((char*)img->data, img->len);
     CrashAlwaysIf(!ext);
@@ -87,7 +91,6 @@ static void TestMobiFile(const TCHAR *filePath)
     if (!gMobiSaveHtml)
         return;
 
-#if 0 // TODO: use PrettyPrintHtml()
     // Given the name of the name of source mobi file "${srcdir}/${file}.mobi"
     // construct a base name for extracted html/image files in the form
     // "${MOBI_SAVE_DIR}/${file}" i.e. change dir to MOBI_SAVE_DIR and
@@ -101,7 +104,6 @@ static void TestMobiFile(const TCHAR *filePath)
 
     SaveMobiHtml(filePathBase, mb);
     SaveMobiImages(filePathBase, mb);
-#endif
 
     delete mb;
 }
@@ -208,7 +210,7 @@ int main(int argc, char **argv)
         mui::Initialize();
         Timer t(true);
         MobiLayout(argv[i]);
-        lf("Spent %.2f ms laying out %s", t.GetTimeInMs(), argv[i]);
+        printf("Spent %.2f ms laying out %s", t.GetTimeInMs(), argv[i]);
         mui::Destroy();
         return 0;
     }

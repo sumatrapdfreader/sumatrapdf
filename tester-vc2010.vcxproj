@@ -86,6 +86,7 @@
     <ClCompile Include="src\utils\DirIter.cpp" />
     <ClCompile Include="src\utils\FileUtil.cpp" />
     <ClCompile Include="src\utils\GdiPlusUtil.cpp" />
+    <ClCompile Include="src\utils\HtmlPrettyPrint.cpp" />
     <ClCompile Include="src\utils\HtmlPullParser.cpp" />
     <ClCompile Include="src\utils\NoFreeAllocator.cpp" />
     <ClCompile Include="src\utils\StrUtil.cpp" />
@@ -110,6 +111,7 @@
     <ClInclude Include="src\utils\DirIter.h" />
     <ClInclude Include="src\utils\FileUtil.h" />
     <ClInclude Include="src\utils\GdiPlusUtil.h" />
+    <ClInclude Include="src\utils\HtmlPrettyPrint.h" />
     <ClInclude Include="src\utils\HtmlPullParser.h" />
     <ClInclude Include="src\utils\NoFreeAllocator.h" />
     <ClInclude Include="src\utils\StrUtil.h" />

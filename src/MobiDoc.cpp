@@ -793,8 +793,8 @@ ImageData *MobiDoc::GetImage(size_t imgRecIndex) const
 {
     // TODO: remove this before shipping as it probably can happen
     // in malfromed mobi files, but for now we want to know if it happens
-    CrashIf((imgRecIndex >= imagesCount) || (imgRecIndex < 1));
-    if ((imgRecIndex >= imagesCount) || (imgRecIndex < 1))
+    CrashIf((imgRecIndex > imagesCount) || (imgRecIndex < 1));
+    if ((imgRecIndex > imagesCount) || (imgRecIndex < 1))
         return NULL;
    --imgRecIndex;
    if (!images[imgRecIndex].data || (0 == images[imgRecIndex].len))
