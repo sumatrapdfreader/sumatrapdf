@@ -239,10 +239,13 @@ public:
         return -1;
     }
 
-    void Remove(T el) {
+    // returns true if removed
+    bool Remove(T el) {
         int i = Find(el);
-        if (i > -1)
-            RemoveAt(i);
+        if (-1 == i)
+            return false;
+        RemoveAt(i);
+        return true;
     }
 
     void Sort(int (*cmpFunc)(const void *a, const void *b)) {
