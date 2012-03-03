@@ -453,8 +453,8 @@ void EbookController::Clicked(Control *c, int x, int y)
 
     float perc = ctrls->progress->GetPercAt(x);
     CrashIf(!GetPagesFromBeginning()); // shouldn't be active if we don't have those
-    int pageCount = pagesFromBeginning->Count();
-    int newPageNo = IntFromPerc(pageCount, perc);
+    int pageCount = GetPagesFromBeginning()->Count();
+    int newPageNo = IntFromPerc(pageCount, perc) + 1;
     GoToPage(newPageNo);
 }
 
