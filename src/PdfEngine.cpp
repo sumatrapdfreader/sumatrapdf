@@ -12,8 +12,6 @@ __pragma(warning(pop))
 #include "FileUtil.h"
 #include "Scoped.h"
 
-//#define DISABLE_TEXT_SEARCH
-
 // maximum size of a file that's entirely loaded into memory before parsed
 // and displayed; larger files will be kept open while they're displayed
 // so that their content can be loaded on demand in order to preserve memory
@@ -896,6 +894,8 @@ public:
     virtual bool IsPasswordProtected() const { return isProtected; }
     virtual char *GetDecryptionKey() const;
 
+    CRITICAL_SECTION fz_locks[FZ_LOCK_MAX];
+
 protected:
     const TCHAR *_fileName;
     char *_decryptionKey;
@@ -909,6 +909,8 @@ protected:
 
     CRITICAL_SECTION pagesAccess;
     pdf_page **     _pages;
+
+    fz_locks_context fz_locks_ctx;
 
     virtual bool    Load(const TCHAR *fileName, PasswordUI *pwdUI=NULL);
     virtual bool    Load(IStream *stream, PasswordUI *pwdUI=NULL);
@@ -1033,6 +1035,20 @@ public:
     }
 };
 
+static void
+fz_lock_pdf_engine(void *user, int lock)
+{
+    PdfEngineImpl *eng = (PdfEngineImpl*)user;
+    EnterCriticalSection(&eng->fz_locks[lock]);
+}
+
+static void
+fz_unlock_pdf_engine(void *user, int lock)
+{
+    PdfEngineImpl *eng = (PdfEngineImpl*)user;
+    LeaveCriticalSection(&eng->fz_locks[lock]);
+}
+
 PdfEngineImpl::PdfEngineImpl() : _fileName(NULL), _doc(NULL),
     _pages(NULL), _mediaboxes(NULL), _info(NULL),
     outline(NULL), attachments(NULL), _pagelabels(NULL),
@@ -1041,8 +1057,13 @@ PdfEngineImpl::PdfEngineImpl() : _fileName(NULL), _doc(NULL),
 {
     InitializeCriticalSection(&pagesAccess);
     InitializeCriticalSection(&ctxAccess);
-
-    ctx = fz_new_context(NULL, NULL, MAX_CONTEXT_MEMORY);
+    for (size_t i = 0; i < FZ_LOCK_MAX; i++) {
+        InitializeCriticalSection(&fz_locks[i]);
+    }
+    fz_locks_ctx.user = this;
+    fz_locks_ctx.lock = fz_lock_pdf_engine;
+    fz_locks_ctx.unlock = fz_unlock_pdf_engine;
+    ctx = fz_new_context(NULL, &fz_locks_ctx, MAX_CONTEXT_MEMORY);
 }
 
 PdfEngineImpl::~PdfEngineImpl()
@@ -1097,6 +1118,10 @@ PdfEngineImpl::~PdfEngineImpl()
     DeleteCriticalSection(&ctxAccess);
     LeaveCriticalSection(&pagesAccess);
     DeleteCriticalSection(&pagesAccess);
+
+    for (size_t i = 0; i < FZ_LOCK_MAX; i++) {
+        DeleteCriticalSection(&fz_locks[i]);
+    }
 }
 
 class PasswordCloner : public PasswordUI {
@@ -2050,10 +2075,6 @@ TCHAR *PdfEngineImpl::ExtractPageText(pdf_page *page, TCHAR *lineSep, RectI **co
 
 TCHAR *PdfEngineImpl::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out, RenderTarget target)
 {
-#ifdef DISABLE_TEXT_SEARCH
-    return NULL;
-#endif
-
     pdf_page *page = GetPdfPage(pageNo, true);
     if (page)
         return ExtractPageText(page, lineSep, coords_out, target);
