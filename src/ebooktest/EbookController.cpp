@@ -203,6 +203,8 @@ void EbookController::DeletePages(Vec<PageData*>** pages)
 {
     CrashIf((pagesFromBeginning != *pages) && 
             (pagesFromPage != *pages));
+    if (pagesFromPage && (*pages == pagesFromPage))
+        lf("Deleting pages from page");
     ::DeletePages(*pages);
     *pages = NULL;
 }
@@ -278,9 +280,9 @@ void EbookController::ShowPage(PageData *pd, bool deleteWhenDone)
 
     UpdateCurrPageNoForPage(pageShown);
     if (pd) {
-        char s[16] = { 0 };
+        char s[64] = { 0 };
         memcpy(s, pd->reparsePoint, dimof(s) - 1);
-        lf("ShowPage() %d %s", currPageNo, s);
+        lf("ShowPage() %d '%s'", currPageNo, s);
     }
 }
 

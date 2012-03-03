@@ -120,8 +120,6 @@ PageLayout::~PageLayout()
 void PageLayout::AppendInstr(DrawInstr di)
 {
     currLineInstr.Append(di);
-    if (!currLineReparsePoint)
-        currLineReparsePoint = currReparsePoint;
 }
 
 void PageLayout::SetCurrentFont(FontStyle fontStyle, float fontSize)
@@ -332,7 +330,6 @@ void PageLayout::ForceNewPage()
     currX = 0.f;
     currJustification = Align_Justify;
     currLineTopPadding = 0.f;
-    currLineReparsePoint = NULL;
 }
 
 // returns true if created a new page
@@ -370,7 +367,7 @@ bool PageLayout::FlushCurrLine(bool isParagraphBreak)
     }
     currPage->instructions.Append(currLineInstr.LendData(), currLineInstr.Count());
     currLineInstr.Reset();
-    currLineReparsePoint = NULL;
+    currLineReparsePoint = currReparsePoint;
     currLineTopPadding = 0;
     currX = 0;
     return (newPage != NULL);
