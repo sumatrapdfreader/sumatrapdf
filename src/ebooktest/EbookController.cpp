@@ -267,7 +267,6 @@ void EbookController::UpdateCurrPageNoForPage(PageData *pd)
     if (!pd)
         return;
     currPageNo = PageForReparsePoint(GetPagesFromBeginning(), pd->reparsePoint);
-    lf("UpdateCurrPageNoForPage() currPageNo=%d", currPageNo);
 }
 
 void EbookController::ShowPage(PageData *pd, bool deleteWhenDone)
@@ -276,7 +275,13 @@ void EbookController::ShowPage(PageData *pd, bool deleteWhenDone)
     pageShown = pd;
     deletePageShown = deleteWhenDone;
     ctrls->page->SetPage(pageShown);
+
     UpdateCurrPageNoForPage(pageShown);
+    if (pd) {
+        char s[16] = { 0 };
+        memcpy(s, pd->reparsePoint, dimof(s) - 1);
+        lf("ShowPage() %d %s", currPageNo, s);
+    }
 }
 
 void EbookController::HandleMobiLayoutMsg(UiMsg *msg)
@@ -303,7 +308,7 @@ void EbookController::HandleMobiLayoutMsg(UiMsg *msg)
             CrashIf(pageToShow->reparsePoint != pageShown->reparsePoint);
             ShowPage(pageToShow, false);
         }
-        lf("Got %d pages from page, total %d", ld->pageCount, layoutTemp.pagesFromPage.Count());
+        //lf("Got %d pages from page, total %d", ld->pageCount, layoutTemp.pagesFromPage.Count());
         UpdateStatus();
         return;
     }
@@ -317,7 +322,7 @@ void EbookController::HandleMobiLayoutMsg(UiMsg *msg)
     for (size_t i = 0; i < ld->pageCount; i++) {
         CrashIf(!ld->pages[i]->reparsePoint);
     }
-    lf("Got %d pages from beginning, total %d", ld->pageCount, layoutTemp.pagesFromBeginning.Count());
+    //lf("Got %d pages from beginning, total %d", ld->pageCount, layoutTemp.pagesFromBeginning.Count());
 
     if (NULL == layoutTemp.reparsePoint) {
         // if we're starting from the beginning, show the first page as

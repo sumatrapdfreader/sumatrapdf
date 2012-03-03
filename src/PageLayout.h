@@ -143,6 +143,7 @@ protected:
     void  ChangeFontStyle(FontStyle fs, bool isStart);
     void  ChangeFontSize(float fontSize);
 
+    void  AppendInstr(DrawInstr di);
     bool  IsCurrLineEmpty();
 
     // constant during layout process
@@ -172,6 +173,8 @@ protected:
 
     // isntructions for the current line
     Vec<DrawInstr>      currLineInstr;
+    // reparse point of the first instructions in a current line
+    const char *        currLineReparsePoint;
     PageData *          currPage;
 
     // remember cover image if we've generated one, so that we

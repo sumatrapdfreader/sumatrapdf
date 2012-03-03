@@ -117,6 +117,13 @@ PageLayout::~PageLayout()
     mui::FreeGraphicsForMeasureText(gfx);
 }
 
+void PageLayout::AppendInstr(DrawInstr di)
+{
+    currLineInstr.Append(di);
+    if (!currLineReparsePoint)
+        currLineReparsePoint = currReparsePoint;
+}
+
 void PageLayout::SetCurrentFont(FontStyle fontStyle, float fontSize)
 {
     Font *newFont = mui::GetCachedFont(defaultFontName.Get(), fontSize, fontStyle);
@@ -125,7 +132,7 @@ void PageLayout::SetCurrentFont(FontStyle fontStyle, float fontSize)
     currFontStyle = fontStyle;
     currFontSize = fontSize;
     currFont = newFont;
-    currLineInstr.Append(DrawInstr::SetFont(currFont));
+    AppendInstr(DrawInstr::SetFont(currFont));
 }
 
 static bool ValidStyleForChangeFontStyle(FontStyle fs)
@@ -325,6 +332,7 @@ void PageLayout::ForceNewPage()
     currX = 0.f;
     currJustification = Align_Justify;
     currLineTopPadding = 0.f;
+    currLineReparsePoint = NULL;
 }
 
 // returns true if created a new page
@@ -347,7 +355,8 @@ bool PageLayout::FlushCurrLine(bool isParagraphBreak)
         // so need to start another page
         currY = 0.f;
         newPage = new PageData();
-        newPage->reparsePoint = currReparsePoint;
+        CrashIf(!currLineReparsePoint);
+        newPage->reparsePoint = currLineReparsePoint;
     }
     SetYPos(currLineInstr, currY + currLineTopPadding);
     currY += totalLineDy;
@@ -361,6 +370,7 @@ bool PageLayout::FlushCurrLine(bool isParagraphBreak)
     }
     currPage->instructions.Append(currLineInstr.LendData(), currLineInstr.Count());
     currLineInstr.Reset();
+    currLineReparsePoint = NULL;
     currLineTopPadding = 0;
     currX = 0;
     return (newPage != NULL);
@@ -415,7 +425,7 @@ void PageLayout::EmitHr()
     FlushCurrLine(true);
     CrashIf(0 != currX);
     RectF bbox(0.f, 0.f, pageDx, lineSpacing);
-    currLineInstr.Append(DrawInstr(InstrLine, bbox));
+    AppendInstr(DrawInstr(InstrLine, bbox));
     FlushCurrLine(true);
 }
 
@@ -431,7 +441,7 @@ void PageLayout::EmitParagraph(float indent, float topPadding)
     FlushCurrLine(true);
     CrashIf(0 != currX);
     if (ShouldAddIndent(indent, currJustification) && EnsureDx(indent)) {
-        currLineInstr.Append(DrawInstr::FixedSpace(indent));
+        AppendInstr(DrawInstr::FixedSpace(indent));
         currX += indent;
     }
     // remember so that we can use it in FlushCurrLine()
@@ -479,12 +489,13 @@ void PageLayout::EmitElasticSpace()
         return;
     EnsureDx(spaceDx);
     currX += spaceDx;
-    currLineInstr.Append(DrawInstr(InstrElasticSpace));
+    AppendInstr(DrawInstr(InstrElasticSpace));
 }
 
 // a text rune is a string of consecutive text with uniform style
 void PageLayout::EmitTextRun(const char *s, const char *end)
 {
+    currReparsePoint = s;
     CrashIf(IsSpaceOnly(s, end));
     const char *tmp = ResolveHtmlEntities(s, end, textAllocator);
     if (tmp != s) {
@@ -501,14 +512,14 @@ void PageLayout::EmitTextRun(const char *s, const char *end)
         bbox = MeasureText(gfx, currFont, buf, lenThatFits);
         bbox.Y = 0.f;
         CrashIf(bbox.Width > pageDx);
-        currLineInstr.Append(DrawInstr::Str(s, lenThatFits, bbox));
+        AppendInstr(DrawInstr::Str(s, lenThatFits, bbox));
         currX += bbox.Width;
         const char *newS = s + lenThatFits;
         if (end == newS)
             return;
         EmitTextRun(newS, end);
     } else {
-        currLineInstr.Append(DrawInstr::Str(s, end - s, bbox));
+        AppendInstr(DrawInstr::Str(s, end - s, bbox));
         currX += bbox.Width;
     }
 }
@@ -782,6 +793,7 @@ void PageLayout::HandleText(HtmlToken *t)
         currStart = curr;
         SkipWs(curr, end);
         // collapse multiple, consecutive white-spaces into a single space
+        currReparsePoint = curr;
         if (curr > currStart) {
             if (IsNewline(currStart, curr))
                 EmitNewLine();
@@ -865,6 +877,7 @@ PageData *PageLayout::IterStart(LayoutInfo* li)
     textAllocator = layoutInfo->textAllocator;
 
     currReparsePoint = layoutInfo->reparsePoint;
+    currLineReparsePoint = currReparsePoint;
     if (!currReparsePoint)
         currReparsePoint = layoutInfo->htmlStr;
     CrashIf((currReparsePoint < layoutInfo->htmlStr) ||
@@ -891,6 +904,7 @@ PageData *PageLayout::IterStart(LayoutInfo* li)
     currJustification = Align_Justify;
     currX = 0; currY = 0;
     currPage = new PageData;
+    CrashIf(!currReparsePoint);
     currPage->reparsePoint = currReparsePoint;
 
     currLineTopPadding = 0;
