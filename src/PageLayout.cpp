@@ -863,7 +863,14 @@ PageData *PageLayout::IterStart(LayoutInfo* li)
     pageDx = (REAL)layoutInfo->pageDx;
     pageDy = (REAL)layoutInfo->pageDy;
     textAllocator = layoutInfo->textAllocator;
-    htmlParser = new HtmlPullParser(layoutInfo->htmlStr, layoutInfo->htmlStrLen);
+
+    currReparsePoint = layoutInfo->reparsePoint;
+    if (!currReparsePoint)
+        currReparsePoint = layoutInfo->htmlStr;
+    CrashIf((currReparsePoint < layoutInfo->htmlStr) ||
+            (currReparsePoint > (layoutInfo->htmlStr + layoutInfo->htmlStrLen)));
+    size_t htmlLen = layoutInfo->htmlStrLen - (currReparsePoint - layoutInfo->htmlStr);
+    htmlParser = new HtmlPullParser(currReparsePoint, htmlLen);
 
     CrashIf(gfx);
     gfx = mui::AllocGraphicsForMeasureText();
@@ -880,12 +887,6 @@ PageData *PageLayout::IterStart(LayoutInfo* li)
     float spaceDx2 = GetSpaceDx(gfx, currFont);
     if (spaceDx2 < spaceDx)
         spaceDx = spaceDx2;
-
-    currReparsePoint = layoutInfo->reparsePoint;
-    if (!currReparsePoint)
-        currReparsePoint = layoutInfo->htmlStr;
-    CrashIf((currReparsePoint < layoutInfo->htmlStr) ||
-            (currReparsePoint > (layoutInfo->htmlStr + layoutInfo->htmlStrLen)));
 
     currJustification = Align_Justify;
     currX = 0; currY = 0;
