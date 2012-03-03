@@ -82,6 +82,7 @@ class EbookController : public IClicked, ISizeChanged
     Vec<PageData*> *GetPagesFromBeginning();
     void TriggerLayout();
     bool LayoutInProgress() const { return layoutThread != NULL; }
+    bool GoOnePageForward(Vec<PageData*> *pages);
     void GoOnePageForward();
     size_t GetMaxPageCount();
 

@@ -542,15 +542,31 @@ void EbookController::GoToLastPage()
         GoToPage(GetPagesFromBeginning()->Count());
 }
 
+bool EbookController::GoOnePageForward(Vec<PageData*> *pages)
+{
+    if (!pageShown || !pages)
+        return false;
+    int newPageIdx = pages->Find(pageShown) + 1;
+    if (0 == newPageIdx)
+        return false;
+    if ((size_t)newPageIdx >= pages->Count())
+        return false;
+    ShowPage(pages->At(newPageIdx), false);
+    return true;
+}
+
 // Going forward is a special case in that's the only case where we don't
 // need pagesFromBeginning. If we're currently showing a page from pagesFromPage
 // we'll show the next page
 void EbookController::GoOnePageForward()
 {
-    // TODO: if pageShown comes from pagesFromPage, show the following page
-    if (GetPagesFromBeginning() && (currPageNo != 0)) {
-        GoToPage(currPageNo + 1);
-    }
+    if (GoOnePageForward(pagesFromPage))
+        return;
+    if (GoOnePageForward(&layoutTemp.pagesFromPage))
+        return;
+    if (!GetPagesFromBeginning() || (0 == currPageNo))
+        return;
+    GoToPage(currPageNo + 1);
 }
 
 void EbookController::AdvancePage(int dist)
