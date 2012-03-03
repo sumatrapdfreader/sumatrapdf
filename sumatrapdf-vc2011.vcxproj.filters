@@ -14,10 +14,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
     </Filter>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
     <Filter Include="jpeg">
       <UniqueIdentifier>{066558ef-98f1-4e63-b5d4-b5aaebd0d65e}</UniqueIdentifier>
     </Filter>
@@ -44,6 +40,10 @@
     </Filter>
     <Filter Include="mupdf\draw">
       <UniqueIdentifier>{bdd43343-e63b-467d-b5e5-ba10a0e94337}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sumatra">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -171,46 +171,46 @@
       <Filter>mupdf\fitz</Filter>
     </ClCompile>
     <ClCompile Include="src\AppPrefs.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\CrashHandler.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\DisplayModel.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\DisplayState.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\FileWatch.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\LangMenuDef.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\PdfEngine.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\PdfSync.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\SumatraDialogs.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\SumatraPDF.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\translations.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\translations_txt.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\SumatraAbout.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\SumatraProperties.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\CrashHandler.cpp">
       <Filter>Source Files</Filter>
@@ -411,31 +411,31 @@
       <Filter>mupdf\fitz</Filter>
     </ClCompile>
     <ClCompile Include="src\WindowInfo.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\UnitTests.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="baseutils\UtilTests.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\AppTools.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\Benchmark.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\RenderCache.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\TextSearch.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\TextSelection.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\ImagesEngine.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\utils\BencUtil.cpp">
       <Filter>utils</Filter>
@@ -594,31 +594,31 @@
       <Filter>mupdf\xps</Filter>
     </ClCompile>
     <ClCompile Include="src\ParseCommandLine.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\StressTesting.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\Favorites.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\TableOfContents.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\Print.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\Search.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\ChmEngine.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\ExternalPdfViewer.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\Selection.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="ext\CHMLib\src\chm_lib.c">
       <Filter>chm</Filter>
@@ -627,7 +627,7 @@
       <Filter>chm</Filter>
     </ClCompile>
     <ClCompile Include="src\PsEngine.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\utils\TrivialHtmlParser.cpp">
       <Filter>utils</Filter>
@@ -636,19 +636,19 @@
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="src\Menu.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\ChmUI.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\utils\Touch.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\EngineDump.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\Toolbar.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="ext\bzip2\blocksort.c">
       <Filter>bzip2</Filter>
@@ -851,49 +851,49 @@
       <Filter>mupdf\fitz</Filter>
     </ClInclude>
     <ClInclude Include="src\AppPrefs.h">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\CrashHandler.h">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\DisplayModel.h">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\DisplayState.h">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\FileHistory.h">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\FileWatch.h">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\LangMenuDef.h">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\PdfEngine.h">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\PdfSync.h">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\Resource.h">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\SumatraDialogs.h">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\SumatraPDF.h">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\translations.h">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\translations_txt.h">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\Version.h">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="ext\libjpeg-turbo\jchuff.h">
       <Filter>jpeg</Filter>
@@ -944,31 +944,31 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\installer\Resource.h">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\WindowInfo.h">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\AppTools.h">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\BaseEngine.h">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\Benchmark.h">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\RenderCache.h">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\TextSearch.h">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\TextSelection.h">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\ImagesEngine.h">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\utils\ZipUtil.h">
       <Filter>utils</Filter>
@@ -1019,34 +1019,34 @@
       <Filter>mupdf\xps</Filter>
     </ClInclude>
     <ClInclude Include="src\Notifications.h">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\ParseCommandLine.h">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\StressTesting.h">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\Favorites.h">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\TableOfContents.h">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\Print.h">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\Search.h">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\ChmEngine.h">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\ExternalPdfViewer.h">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\Selection.h">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="ext\CHMLib\src\chm_lib.h">
       <Filter>chm</Filter>
@@ -1055,7 +1055,7 @@
       <Filter>chm</Filter>
     </ClInclude>
     <ClInclude Include="src\PsEngine.h">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\utils\TrivialHtmlParser.h">
       <Filter>utils</Filter>
@@ -1064,10 +1064,10 @@
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="src\Menu.h">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\ChmUI.h">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\utils\Scoped.h">
       <Filter>utils</Filter>
@@ -1076,7 +1076,7 @@
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="src\Toolbar.h">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="ext\bzip2\bzlib.h">
       <Filter>bzip2</Filter>
@@ -1338,6 +1338,7 @@
     <None Include="docs\releasenotes.txt" />
     <None Include="docs\wishlist.txt" />
     <None Include="docs\release_plan.txt" />
+    <None Include="makefile.msvc" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="src\SumatraPDF.rc">
@@ -1352,7 +1353,7 @@
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="src\SumatraPDF.exe.manifest">
-      <Filter>Source Files</Filter>
+      <Filter>sumatra</Filter>
     </Manifest>
   </ItemGroup>
 </Project>

@@ -490,6 +490,7 @@
     <None Include="ext\libjpeg-turbo\simd\jiss2red.asm" />
     <None Include="ext\libjpeg-turbo\simd\jisseflt.asm" />
     <None Include="ext\libjpeg-turbo\simd\jsimdcpu.asm" />
+    <None Include="makefile.msvc" />
     <None Include="src\closetoc.bmp" />
     <None Include="src\dragcursor.cur" />
     <None Include="src\PdfDoc.ico" />
