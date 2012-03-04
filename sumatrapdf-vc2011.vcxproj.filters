@@ -812,6 +812,9 @@
     <ClCompile Include="src\EbookControls.cpp">
       <Filter>sumatra\ebook</Filter>
     </ClCompile>
+    <ClCompile Include="src\SumatraStartup.cpp">
+      <Filter>sumatra</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
