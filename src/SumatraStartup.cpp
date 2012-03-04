@@ -126,6 +126,65 @@ static bool InstanceInit(HINSTANCE hInstance, int nCmdShow)
     return true;
 }
 
+static void OpenUsingDde(CommandLineInfo& i, int n, bool firstIsDocLoaded)
+{
+    // delegate file opening to a previously running instance by sending a DDE message
+    TCHAR fullpath[MAX_PATH];
+    GetFullPathName(i.fileNames.At(n), dimof(fullpath), fullpath, NULL);
+
+    ScopedMem<TCHAR> cmd(str::Format(_T("[") DDECOMMAND_OPEN _T("(\"%s\", 0, 1, 0)]"), fullpath));
+    DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
+    if (i.destName && !firstIsDocLoaded) {
+        cmd.Set(str::Format(_T("[") DDECOMMAND_GOTO _T("(\"%s\", \"%s\")]"), fullpath, i.destName));
+        DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
+    }
+    else if (i.pageNumber > 0 && !firstIsDocLoaded) {
+        cmd.Set(str::Format(_T("[") DDECOMMAND_PAGE _T("(\"%s\", %d)]"), fullpath, i.pageNumber));
+        DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
+    }
+    if ((i.startView != DM_AUTOMATIC || i.startZoom != INVALID_ZOOM ||
+            i.startScroll.x != -1 && i.startScroll.y != -1) && !firstIsDocLoaded) {
+        const TCHAR *viewMode = DisplayModeConv::NameFromEnum(i.startView);
+        cmd.Set(str::Format(_T("[") DDECOMMAND_SETVIEW _T("(\"%s\", \"%s\", %.2f, %d, %d)]"),
+                                    fullpath, viewMode, i.startZoom, i.startScroll.x, i.startScroll.y));
+        DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
+    }
+    if (i.forwardSearchOrigin && i.forwardSearchLine) {
+        cmd.Set(str::Format(_T("[") DDECOMMAND_SYNC _T("(\"%s\", \"%s\", %d, 0, 0, 1)]"),
+                                    i.fileNames.At(n), i.forwardSearchOrigin, i.forwardSearchLine));
+        DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
+    }
+}
+
+static void RunUnitTests()
+{
+#ifdef DEBUG
+    extern void BaseUtils_UnitTests();
+    BaseUtils_UnitTests();
+    extern void HtmlPullParser_UnitTests();
+    HtmlPullParser_UnitTests();
+    extern void TrivialHtmlParser_UnitTests();
+    TrivialHtmlParser_UnitTests();
+    extern void SumatraPDF_UnitTests();
+    SumatraPDF_UnitTests();
+#endif
+}
+
+static void GetCommandLineInfo(CommandLineInfo& i)
+{
+    i.bgColor = gGlobalPrefs.bgColor;
+    i.fwdSearch.offset = gGlobalPrefs.fwdSearch.offset;
+    i.fwdSearch.width = gGlobalPrefs.fwdSearch.width;
+    i.fwdSearch.color = gGlobalPrefs.fwdSearch.color;
+    i.fwdSearch.permanent = gGlobalPrefs.fwdSearch.permanent;
+    i.escToExit = gGlobalPrefs.escToExit;
+    if (gGlobalPrefs.useSysColors) {
+        i.colorRange[0] = GetSysColor(COLOR_WINDOWTEXT);
+        i.colorRange[1] = GetSysColor(COLOR_WINDOW);
+    }
+    i.ParseCommandLine(GetCommandLine());
+}
+
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     int retCode = 1;    // by default it's error
@@ -139,21 +198,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 #endif
 
     EnableNx();
-
     // ensure that C functions behave consistently under all OS locales
     // (use Win32 functions where localized input or output is desired)
     setlocale(LC_ALL, "C");
 
-#ifdef DEBUG
-    extern void BaseUtils_UnitTests();
-    BaseUtils_UnitTests();
-    extern void HtmlPullParser_UnitTests();
-    HtmlPullParser_UnitTests();
-    extern void TrivialHtmlParser_UnitTests();
-    TrivialHtmlParser_UnitTests();
-    extern void SumatraPDF_UnitTests();
-    SumatraPDF_UnitTests();
-#endif
+    RunUnitTests();
 
     // don't show system-provided dialog boxes when accessing files on drives
     // that are not mounted (e.g. a: drive without floppy or cd rom drive
@@ -183,18 +232,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     prefsFilename.Set(NULL);
 
     CommandLineInfo i;
-    i.bgColor = gGlobalPrefs.bgColor;
-    i.fwdSearch.offset = gGlobalPrefs.fwdSearch.offset;
-    i.fwdSearch.width = gGlobalPrefs.fwdSearch.width;
-    i.fwdSearch.color = gGlobalPrefs.fwdSearch.color;
-    i.fwdSearch.permanent = gGlobalPrefs.fwdSearch.permanent;
-    i.escToExit = gGlobalPrefs.escToExit;
-    if (gGlobalPrefs.useSysColors) {
-        i.colorRange[0] = GetSysColor(COLOR_WINDOWTEXT);
-        i.colorRange[1] = GetSysColor(COLOR_WINDOW);
-    }
-
-    i.ParseCommandLine(GetCommandLine());
+    GetCommandLineInfo(i);
 
     if (i.showConsole)
         RedirectIOToConsole();
@@ -280,31 +318,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     for (size_t n = 0; n < i.fileNames.Count(); n++) {
         if (i.reuseInstance && !i.printDialog) {
-            // delegate file opening to a previously running instance by sending a DDE message
-            TCHAR fullpath[MAX_PATH];
-            GetFullPathName(i.fileNames.At(n), dimof(fullpath), fullpath, NULL);
-            ScopedMem<TCHAR> command(str::Format(_T("[") DDECOMMAND_OPEN _T("(\"%s\", 0, 1, 0)]"), fullpath));
-            DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
-            if (i.destName && !firstIsDocLoaded) {
-                ScopedMem<TCHAR> cmd(str::Format(_T("[") DDECOMMAND_GOTO _T("(\"%s\", \"%s\")]"), fullpath, i.destName));
-                DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
-            }
-            else if (i.pageNumber > 0 && !firstIsDocLoaded) {
-                ScopedMem<TCHAR> cmd(str::Format(_T("[") DDECOMMAND_PAGE _T("(\"%s\", %d)]"), fullpath, i.pageNumber));
-                DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
-            }
-            if ((i.startView != DM_AUTOMATIC || i.startZoom != INVALID_ZOOM ||
-                 i.startScroll.x != -1 && i.startScroll.y != -1) && !firstIsDocLoaded) {
-                const TCHAR *viewMode = DisplayModeConv::NameFromEnum(i.startView);
-                ScopedMem<TCHAR> cmd(str::Format(_T("[") DDECOMMAND_SETVIEW _T("(\"%s\", \"%s\", %.2f, %d, %d)]"),
-                                         fullpath, viewMode, i.startZoom, i.startScroll.x, i.startScroll.y));
-                DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
-            }
-            if (i.forwardSearchOrigin && i.forwardSearchLine) {
-                ScopedMem<TCHAR> cmd(str::Format(_T("[") DDECOMMAND_SYNC _T("(\"%s\", \"%s\", %d, 0, 0, 1)]"),
-                                         i.fileNames.At(n), i.forwardSearchOrigin, i.forwardSearchLine));
-                DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
-            }
+            OpenUsingDde(i, n, firstIsDocLoaded);
         }
         else {
             bool showWin = !(i.printDialog && i.exitOnPrint) && !gPluginMode;
