@@ -183,7 +183,9 @@ SUMATRA_OBJS = \
 	$(OS)\Toolbar.obj $(OS)\Print.obj $(OS)\Notifications.obj \
 	$(OS)\Search.obj $(OS)\Menu.obj $(OS)\ExternalPdfViewer.obj \
 	$(OS)\Selection.obj $(SUMATRA_RES) \
-	$(UTILS_OBJS) $(ENGINE_OBJS) $(SYNCTEX_OBJS)
+	$(UTILS_OBJS) $(ENGINE_OBJS) $(SYNCTEX_OBJS) \
+	$(MUI_OBJS)  $(OS)\PageLayout.obj $(OS)\MobiDoc.obj \
+	$(OS)\EbookControls.obj $(OS)\EbookController.obj $(OS)\MobiWindow.obj
  
 INSTALLER_OBJS = \
 	$(OS)\Installer.obj $(INSTALLER_RES) $(UTILS_OBJS) $(ZIP_OBJS) $(ZLIB_OBJS)

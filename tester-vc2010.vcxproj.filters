@@ -1,0 +1,144 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="src\MobiDoc.cpp" />
+    <ClCompile Include="src\PageLayout.cpp" />
+    <ClCompile Include="src\Tester.cpp" />
+    <ClCompile Include="src\utils\BitReader.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\DirIter.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\FileUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\GdiPlusUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\StrUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\HtmlPullParser.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\NoFreeAllocator.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mui\Mui.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mui\MuiBase.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mui\MuiButton.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mui\MuiControl.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mui\MuiCss.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mui\MuiEventMgr.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mui\MuiHwndWrapper.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mui\MuiLayout.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mui\MuiPainter.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mui\MuiScrollBar.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\HtmlPrettyPrint.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\MobiDoc.h" />
+    <ClInclude Include="src\PageLayout.h" />
+    <ClInclude Include="src\utils\BitReader.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\BaseUtil.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\DirIter.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\GdiPlusUtil.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\FileUtil.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\StrUtil.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\Vec.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\Allocator.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\HtmlPullParser.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\NoFreeAllocator.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mui\Mui.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mui\MuiBase.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mui\MuiButton.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mui\MuiControl.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mui\MuiCss.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mui\MuiEventMgr.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mui\MuiHwndWrapper.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mui\MuiLayout.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mui\MuiPainter.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mui\MuiScrollBar.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\DebugLog.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\HtmlPrettyPrint.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="docs\ebook-todo.txt" />
+    <None Include="docs\ebooks-impl-notes.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="utils">
+      <UniqueIdentifier>{64baa436-78f4-41d4-be7d-fe148377cb50}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mui">
+      <UniqueIdentifier>{82c3c3d8-cedd-47ab-9546-5d6f9a16421a}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
