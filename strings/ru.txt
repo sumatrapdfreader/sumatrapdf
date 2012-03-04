@@ -390,6 +390,9 @@ Fit Width and Show Pages Continuously
 Fit a Single Page
 Подогнать страницу по размеру окна
 
+Fonts:
+Шрифты:
+
 Found text at page %s
 Текст найден на стр. %s
 
@@ -674,7 +677,4 @@ copying text
 
 printing document
 печатается документ
-
-# Untranslated:
-#Fonts:
 
