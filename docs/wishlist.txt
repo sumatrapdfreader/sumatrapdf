@@ -88,5 +88,5 @@ The code would of course be open-source.
 10. Native client version (https://developers.google.com/native-client/).
 
 There are some challenges (need completely custom UI, fonts aren't as easy
-to get at, CHM support would be much harder). The upside is we would be
-no-install, browser hosted (well, at least in Chrome).
+to get at, CHM support would be much harder). The upside is we would have
+no-install, browser hosted (well, at least in Chrome) app.

@@ -6,40 +6,41 @@
 #include <wininet.h>
 #include <locale.h>
 
-#include "WinUtil.h"
-#include "Http.h"
-#include "FileUtil.h"
-#include "Resource.h"
-#include "translations.h"
-#include "Version.h"
-
-#include "WindowInfo.h"
-#include "RenderCache.h"
-#include "PdfSync.h"
-
 #include "AppPrefs.h"
-#include "SumatraDialogs.h"
-#include "SumatraProperties.h"
-#include "SumatraAbout.h"
+#include "AppTools.h"
+#include "CrashHandler.h"
+#include "ExternalPdfViewer.h"
 #include "FileHistory.h"
 #include "Favorites.h"
+#include "FileUtil.h"
 #include "FileWatch.h"
-#include "AppTools.h"
-#include "Notifications.h"
-#include "TableOfContents.h"
-#include "Toolbar.h"
-#include "Print.h"
-#include "Search.h"
-#include "Timer.h"
-#include "ExternalPdfViewer.h"
-#include "Selection.h"
-#include "Menu.h"
-#include "Touch.h"
+#include "Http.h"
 #include "HtmlWindow.h"
-
-#include "CrashHandler.h"
+#include "Menu.h"
+#include "Mui.h"
+#include "MobiWindow.h"
+#include "Notifications.h"
 #include "ParseCommandLine.h"
+#include "PdfSync.h"
+#include "Print.h"
+#include "RenderCache.h"
+#include "Resource.h"
+#include "Search.h"
+#include "Selection.h"
+#include "SumatraAbout.h"
+#include "SumatraDialogs.h"
+#include "SumatraProperties.h"
 #include "StressTesting.h"
+#include "TableOfContents.h"
+#include "Timer.h"
+#include "Toolbar.h"
+#include "Touch.h"
+#include "translations.h"
+#include "UiMsgSumatra.h"
+#include "UiMsg.h"
+#include "Version.h"
+#include "WindowInfo.h"
+#include "WinUtil.h"
 
 /* Define THREAD_BASED_FILEWATCH to use the thread-based implementation of file change detection. */
 #define THREAD_BASED_FILEWATCH
@@ -4537,6 +4538,9 @@ static bool RegisterWinClass(HINSTANCE hinst)
     if (!RegisterNotificationsWndClass(hinst))
         return false;
 
+    if (!RegisterMobikWinClass(hinst))
+        return false;
+
     return true;
 }
 
@@ -4655,6 +4659,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     ScopedOle ole;
     InitAllCommonControls();
     ScopedGdiPlus gdiPlus(true);
+    mui::Initialize();
+    uimsg::Initialize();
 
     ScopedMem<TCHAR> prefsFilename(GetPrefsFileName());
     if (!file::Exists(prefsFilename)) {
@@ -4912,14 +4918,20 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     CleanUpThumbnailCache(gFileHistory);
 
 Exit:
-    while (gWindows.Count() > 0)
+    while (gWindows.Count() > 0) {
         DeleteWindowInfo(gWindows.At(0));
+    }
     DeleteObject(gBrushNoDocBg);
     DeleteObject(gBrushAboutBg);
     DeleteObject(gDefaultGuiFont);
     DeleteBitmap(gBitmapReloadingCue);
 
     delete gFavorites;
+
+    mui::Destroy();
+
+    //DrainUiMsgQueu();
+    uimsg::Destroy();
 
     // it's still possible to crash after this (destructors of static classes,
     // atexit() code etc.) point, but it's very unlikely

@@ -4,6 +4,8 @@
 #ifndef SumatraAbout_h
 #define SumatraAbout_h
 
+#include "WindowInfo.h" // for StaticLinkInfo
+
 #define ABOUT_CLASS_NAME        _T("SUMATRA_PDF_ABOUT")
 
 void OnMenuAbout();
