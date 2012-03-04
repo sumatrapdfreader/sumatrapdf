@@ -22,7 +22,7 @@ $(ODLL)\PdfPreview.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(ODLL)\PdfPreviewDll.obj: src\BaseEngine.h src\previewer\PdfPreview.h src\utils\Allocator.h
 $(ODLL)\PdfPreviewDll.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
 $(ODLL)\PdfPreviewDll.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
-$(OE2)\EbookTest.obj: src\MobiDoc.h src\PageLayout.h src\ebooktest2\BaseEbookDoc.h
+$(OE2)\EbookTest.obj: src\PageLayout.h src\MobiDoc.h src\ebooktest2\BaseEbookDoc.h
 $(OE2)\EbookTest.obj: src\ebooktest2\EpubDoc.h src\ebooktest2\Fb2Doc.h src\ebooktest2\MobiDoc.h
 $(OE2)\EbookTest.obj: src\ebooktest2\PageLayout.h src\ebooktest2\Resource.h src\utils\Allocator.h
 $(OE2)\EbookTest.obj: src\utils\BaseUtil.h src\utils\GdiPlusUtil.h src\utils\GeomUtil.h
@@ -42,16 +42,16 @@ $(OE2)\MobiDoc.obj: src\ebooktest2\MobiDoc.h src\utils\Allocator.h src\utils\Bas
 $(OE2)\MobiDoc.obj: src\utils\BitReader.h src\utils\DebugLog.h src\utils\FileUtil.h
 $(OE2)\MobiDoc.obj: src\utils\GdiPlusUtil.h src\utils\Scoped.h src\utils\StrUtil.h
 $(OE2)\MobiDoc.obj: src\utils\Vec.h
-$(OE2)\PageLayout.obj: src\MobiDoc.h src\PageLayout.cpp src\PageLayout.h
-$(OE2)\PageLayout.obj: src\ebooktest2\BaseEbookDoc.h src\ebooktest2\MiniMui.h src\ebooktest2\PageLayout.h
-$(OE2)\PageLayout.obj: src\mui\Mui.h src\mui\MuiBase.h src\mui\MuiButton.h
-$(OE2)\PageLayout.obj: src\mui\MuiControl.h src\mui\MuiCss.h src\mui\MuiEventMgr.h
-$(OE2)\PageLayout.obj: src\mui\MuiHwndWrapper.h src\mui\MuiLayout.h src\mui\MuiPainter.h
-$(OE2)\PageLayout.obj: src\mui\MuiScrollBar.h src\utils\Allocator.h src\utils\BaseUtil.h
-$(OE2)\PageLayout.obj: src\utils\BitManip.h src\utils\DebugLog.h src\utils\GdiPlusUtil.h
-$(OE2)\PageLayout.obj: src\utils\GeomUtil.h src\utils\HtmlPullParser.h src\utils\Scoped.h
-$(OE2)\PageLayout.obj: src\utils\StrUtil.h src\utils\Vec.h
-$(OE2)\Tester.obj: src\MobiDoc.h src\PageLayout.h src\ebooktest2\BaseEbookDoc.h
+$(OE2)\PageLayout.obj: src\PageLayout.cpp src\PageLayout.h src\MobiDoc.h
+$(OE2)\PageLayout.obj: src\PageLayout.h src\ebooktest2\BaseEbookDoc.h src\ebooktest2\MiniMui.h
+$(OE2)\PageLayout.obj: src\ebooktest2\PageLayout.h src\mui\Mui.h src\mui\MuiBase.h
+$(OE2)\PageLayout.obj: src\mui\MuiButton.h src\mui\MuiControl.h src\mui\MuiCss.h
+$(OE2)\PageLayout.obj: src\mui\MuiEventMgr.h src\mui\MuiHwndWrapper.h src\mui\MuiLayout.h
+$(OE2)\PageLayout.obj: src\mui\MuiPainter.h src\mui\MuiScrollBar.h src\utils\Allocator.h
+$(OE2)\PageLayout.obj: src\utils\BaseUtil.h src\utils\BitManip.h src\utils\DebugLog.h
+$(OE2)\PageLayout.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\HtmlPullParser.h
+$(OE2)\PageLayout.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
+$(OE2)\Tester.obj: src\PageLayout.h src\MobiDoc.h src\ebooktest2\BaseEbookDoc.h
 $(OE2)\Tester.obj: src\ebooktest2\EpubDoc.h src\ebooktest2\Fb2Doc.h src\ebooktest2\MobiDoc.h
 $(OE2)\Tester.obj: src\ebooktest2\PageLayout.h src\utils\Allocator.h src\utils\BaseUtil.h
 $(OE2)\Tester.obj: src\utils\CmdLineParser.h src\utils\DirIter.h src\utils\FileUtil.h

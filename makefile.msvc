@@ -89,8 +89,9 @@ INSTALLER_CFLAGS = $(INSTALLER_CFLAGS) /D "DEBUG" /D "_DEBUG"
 UNINSTALLER_CFLAGS = $(UNINSTALLER_CFLAGS) /D "DEBUG" /D "_DEBUG"
 !endif
 
-LIBS = $(LIBS) comctl32.lib Msimg32.lib Winspool.lib wininet.lib \
-       ole32.lib OleAut32.lib shlwapi.lib version.lib
+LIBS = $(LIBS) \
+	comctl32.lib Msimg32.lib Winspool.lib wininet.lib \
+	ole32.lib OleAut32.lib shlwapi.lib version.lib
 
 OS = $(O)\sumatrapdf
 OU = $(O)\utils
@@ -184,7 +185,7 @@ SUMATRA_OBJS = \
 	$(OS)\Search.obj $(OS)\Menu.obj $(OS)\ExternalPdfViewer.obj \
 	$(OS)\Selection.obj $(SUMATRA_RES) \
 	$(UTILS_OBJS) $(ENGINE_OBJS) $(SYNCTEX_OBJS) \
-	$(MUI_OBJS)  $(OS)\PageLayout.obj $(OS)\MobiDoc.obj \
+	$(MUI_OBJS) $(OS)\PageLayout.obj $(OS)\MobiDoc.obj \
 	$(OS)\EbookControls.obj $(OS)\EbookController.obj $(OS)\MobiWindow.obj
  
 INSTALLER_OBJS = \
@@ -398,4 +399,5 @@ $(OS)\Uninstaller.obj: $(OS)\Installer.obj
 {src\ebooktest2}.cpp{$(OE2)}.obj::
 	$(CC) $(ET2_CFLAGS) /Fo$(OE2)\ /Fd$(O)\vc80.pdb $<
 
+## Header-dependencies for src\* and src\*\*
 !INCLUDE makefile.deps

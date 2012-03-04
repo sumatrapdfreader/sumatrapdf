@@ -80,6 +80,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\SumatraStartup.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\UnitTests.cpp"
 				>
 			</File>
@@ -367,6 +371,50 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="Ebook / UI"
+				>
+				<File
+					RelativePath=".\src\EbookController.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\EbookController.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\EbookControls.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\EbookControls.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\MobiDoc.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\MobiDoc.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\MobiWindow.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\MobiWindow.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\PageLayout.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\PageLayout.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Resource Files"
@@ -626,6 +674,102 @@
 				</File>
 				<File
 					RelativePath=".\src\utils\UtilTests.cpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="mui"
+				>
+				<File
+					RelativePath=".\src\mui\Mui.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\mui\Mui.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\mui\MuiBase.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\mui\MuiBase.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\mui\MuiButton.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\mui\MuiButton.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\mui\MuiControl.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\mui\MuiControl.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\mui\MuiCss.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\mui\MuiCss.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\mui\MuiEventMgr.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\mui\MuiEventMgr.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\mui\MuiHwndWrapper.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\mui\MuiHwndWrapper.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\mui\MuiLayout.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\mui\MuiLayout.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\mui\MuiPainter.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\mui\MuiPainter.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\mui\MuiScrollBar.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\mui\MuiScrollBar.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\mui\SvgPath.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\mui\SvgPath.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\mui\SvgPath_ut.cpp"
 					>
 				</File>
 			</Filter>
