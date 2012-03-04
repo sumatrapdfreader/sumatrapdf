@@ -258,9 +258,9 @@ protected:
     bool            displayR2L;
 
     /* when we're in presentation mode, _pres* contains the pre-presentation values */
-    bool            _presentationMode;
-    float           _presZoomVirtual;
-    DisplayMode     _presDisplayMode;
+    bool            presentationMode;
+    float           presZoomVirtual;
+    DisplayMode     presDisplayMode;
 
     Vec<ScrollState>navHistory;
     /* index of the "current" history entry (to be updated on navigation),

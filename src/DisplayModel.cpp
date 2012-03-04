@@ -134,13 +134,13 @@ bool DisplayModel::DisplayStateFromModel(DisplayState *ds)
     if (!ds->filePath || !str::Eq(ds->filePath, FileName()))
         str::ReplacePtr(&ds->filePath, FileName());
 
-    ds->displayMode = _presentationMode ? _presDisplayMode : displayMode();
+    ds->displayMode = presentationMode ? presDisplayMode : displayMode();
     ds->rotation = _rotation;
-    ds->zoomVirtual = _presentationMode ? _presZoomVirtual : _zoomVirtual;
+    ds->zoomVirtual = presentationMode ? presZoomVirtual : _zoomVirtual;
 
     ScrollState ss = GetScrollState();
     ds->pageNo = ss.page;
-    if (_presentationMode)
+    if (presentationMode)
         ds->scrollPos = PointI();
     else
         ds->scrollPos = PointD(ss.x, ss.y).Convert<int>();
@@ -194,12 +194,12 @@ static int LastPageInARowNo(int pageNo, int columns, bool showCover, int pageCou
 DisplayModel::DisplayModel(DisplayModelCallback *cb)
 {
     _displayMode = DM_AUTOMATIC;
-    _presDisplayMode = DM_AUTOMATIC;
-    _presZoomVirtual = INVALID_ZOOM;
+    presDisplayMode = DM_AUTOMATIC;
+    presZoomVirtual = INVALID_ZOOM;
     _rotation = INVALID_ROTATION;
     _zoomVirtual = INVALID_ZOOM;
     padding = &gPagePadding;
-    _presentationMode = false;
+    presentationMode = false;
     _zoomReal = INVALID_ZOOM;
     dpiFactor = 1.0f;
     _startPage = INVALID_PAGE_NO;
@@ -251,7 +251,7 @@ void DisplayModel::SetInitialViewSettings(DisplayMode displayMode, int newStartP
         displayMode = DM_SINGLE_PAGE;
 
     _displayMode = displayMode;
-    _presDisplayMode = displayMode;
+    presDisplayMode = displayMode;
     PageLayoutType layout = engine->PreferredLayout();
     if (DM_AUTOMATIC == _displayMode) {
         switch (layout & ~Layout_R2L) {
@@ -1065,10 +1065,10 @@ void DisplayModel::ChangeDisplayMode(DisplayMode displayMode)
 
 void DisplayModel::SetPresentationMode(bool enable)
 {
-    _presentationMode = enable;
+    presentationMode = enable;
     if (enable) {
-        _presDisplayMode = _displayMode;
-        _presZoomVirtual = _zoomVirtual;
+        presDisplayMode = _displayMode;
+        presZoomVirtual = _zoomVirtual;
         padding = &gPagePaddingPresentation;
         ChangeDisplayMode(DM_SINGLE_PAGE);
         ZoomTo(ZOOM_FIT_PAGE);
@@ -1077,10 +1077,10 @@ void DisplayModel::SetPresentationMode(bool enable)
         padding = &gPagePadding;
         if (engine && engine->IsImageCollection())
             padding = &gImagePadding;
-        ChangeDisplayMode(_presDisplayMode);
-        if (!IsValidZoom(_presZoomVirtual))
-            _presZoomVirtual = _zoomVirtual;
-        ZoomTo(_presZoomVirtual);
+        ChangeDisplayMode(presDisplayMode);
+        if (!IsValidZoom(presZoomVirtual))
+            presZoomVirtual = _zoomVirtual;
+        ZoomTo(presZoomVirtual);
     }
 }
 
