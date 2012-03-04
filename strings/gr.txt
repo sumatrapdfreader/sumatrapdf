@@ -391,6 +391,9 @@ Fit Width and Show Pages Continuously
 Fit a Single Page
 Προσαρμογή μιας Σελίδας
 
+Fonts:
+Γραμματοσειρές:
+
 Found text at page %s
 Το κείμενο βρέθηκε στη σελίδα %s
 
@@ -550,6 +553,9 @@ Remove from favorites
 Remove page %s from favorites
 Αφαίρεση σελίδας %s από τα αγαπημένα
 
+Replace document &colors with Windows color scheme
+Αντικατάσταση των &χρωμάτων του εγγράφου με το θέμα των Windows
+
 Rotate &Left\tCtrl+Shift+-
 Περιστροφή Αριστερά\tCtrl+Shift+-
 
@@ -672,8 +678,4 @@ copying text
 
 printing document
 εκτύπωση εγγράφου
-
-# Untranslated:
-#Fonts:
-#Replace document &colors with Windows color scheme
 
