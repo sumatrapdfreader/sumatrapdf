@@ -156,6 +156,71 @@ static void OpenUsingDde(CommandLineInfo& i, int n, bool firstIsDocLoaded)
     }
 }
 
+static bool LoadOnStartup(CommandLineInfo& i, int n, bool firstIsDocLoaded)
+{
+    bool showWin = !(i.printDialog && i.exitOnPrint) && !gPluginMode;
+    WindowInfo *win = LoadDocument(i.fileNames.At(n), NULL, showWin);
+    if (!win || !win->IsDocLoaded())
+        return false;
+
+    if (win->IsDocLoaded() && i.destName && !firstIsDocLoaded) {
+        win->linkHandler->GotoNamedDest(i.destName);
+    } else if (win->IsDocLoaded() && i.pageNumber > 0 && !firstIsDocLoaded) {
+        if (win->dm->ValidPageNo(i.pageNumber))
+            win->dm->GoToPage(i.pageNumber, 0);
+    }
+    if (i.hwndPluginParent)
+        MakePluginWindow(*win, i.hwndPluginParent);
+    if (!(win->IsDocLoaded() && !firstIsDocLoaded))
+        return true;
+
+    if (i.enterPresentation || i.enterFullscreen)
+        EnterFullscreen(*win, i.enterPresentation);
+    if (i.startView != DM_AUTOMATIC)
+        SwitchToDisplayMode(win, i.startView);
+    if (i.startZoom != INVALID_ZOOM)
+        ZoomToSelection(win, i.startZoom, false);
+    if (i.startScroll.x != -1 || i.startScroll.y != -1) {
+        ScrollState ss = win->dm->GetScrollState();
+        ss.x = i.startScroll.x;
+        ss.y = i.startScroll.y;
+        win->dm->SetScrollState(ss);
+    }
+    if (i.forwardSearchOrigin && i.forwardSearchLine && win->pdfsync) {
+        UINT page;
+        Vec<RectI> rects;
+        int ret = win->pdfsync->SourceToDoc(i.forwardSearchOrigin, i.forwardSearchLine, 0, &page, rects);
+        ShowForwardSearchResult(win, i.forwardSearchOrigin, i.forwardSearchLine, 0, ret, page, rects);
+    }
+    return true;
+}
+
+static void SetupPluginMode(CommandLineInfo& i)
+{
+    gPluginURL = i.pluginURL;
+    if (!gPluginURL)
+        gPluginURL = i.fileNames.At(0);
+
+    assert(i.fileNames.Count() == 1);
+    while (i.fileNames.Count() > 1) {
+        free(i.fileNames.Pop());
+    }
+    i.reuseInstance = i.exitOnPrint = false;
+    // always display the toolbar when embedded (as there's no menubar in that case)
+    gGlobalPrefs.toolbarVisible = true;
+    // never allow esc as a shortcut to quit
+    gGlobalPrefs.escToExit = false;
+    // never show the sidebar by default
+    gGlobalPrefs.tocVisible = false;
+    if (DM_AUTOMATIC == gGlobalPrefs.defaultDisplayMode) {
+        // if the user hasn't changed the default display mode,
+        // display documents as single page/continuous/fit width
+        // (similar to Adobe Reader, Google Chrome and how browsers display HTML)
+        gGlobalPrefs.defaultDisplayMode = DM_CONTINUOUS;
+        gGlobalPrefs.defaultZoom = ZOOM_FIT_WIDTH;
+    }
+}
+
 static void RunUnitTests()
 {
 #ifdef DEBUG
@@ -272,28 +337,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     if (i.hwndPluginParent) {
         if (!IsWindow(i.hwndPluginParent) || i.fileNames.Count() == 0)
             goto Exit;
-
-        gPluginURL = i.pluginURL;
-        if (!gPluginURL)
-            gPluginURL = i.fileNames.At(0);
-
-        assert(i.fileNames.Count() == 1);
-        while (i.fileNames.Count() > 1)
-            free(i.fileNames.Pop());
-        i.reuseInstance = i.exitOnPrint = false;
-        // always display the toolbar when embedded (as there's no menubar in that case)
-        gGlobalPrefs.toolbarVisible = true;
-        // never allow esc as a shortcut to quit
-        gGlobalPrefs.escToExit = false;
-        // never show the sidebar by default
-        gGlobalPrefs.tocVisible = false;
-        if (DM_AUTOMATIC == gGlobalPrefs.defaultDisplayMode) {
-            // if the user hasn't changed the default display mode,
-            // display documents as single page/continuous/fit width
-            // (similar to Adobe Reader, Google Chrome and how browsers display HTML)
-            gGlobalPrefs.defaultDisplayMode = DM_CONTINUOUS;
-            gGlobalPrefs.defaultZoom = ZOOM_FIT_WIDTH;
-        }
+        SetupPluginMode(i);
     }
 
     WindowInfo *win = NULL;
@@ -319,43 +363,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     for (size_t n = 0; n < i.fileNames.Count(); n++) {
         if (i.reuseInstance && !i.printDialog) {
             OpenUsingDde(i, n, firstIsDocLoaded);
-        }
-        else {
-            bool showWin = !(i.printDialog && i.exitOnPrint) && !gPluginMode;
-            win = LoadDocument(i.fileNames.At(n), NULL, showWin);
-            if (!win || !win->IsDocLoaded())
-                retCode++; // set an error code for the next goto Exit
-            if (!win)
+        } else {
+            if (!LoadOnStartup(i, n, firstIsDocLoaded))
                 goto Exit;
-            if (win->IsDocLoaded() && i.destName && !firstIsDocLoaded) {
-                win->linkHandler->GotoNamedDest(i.destName);
-            }
-            else if (win->IsDocLoaded() && i.pageNumber > 0 && !firstIsDocLoaded) {
-                if (win->dm->ValidPageNo(i.pageNumber))
-                    win->dm->GoToPage(i.pageNumber, 0);
-            }
-            if (i.hwndPluginParent)
-                MakePluginWindow(*win, i.hwndPluginParent);
-            if (win->IsDocLoaded() && !firstIsDocLoaded) {
-                if (i.enterPresentation || i.enterFullscreen)
-                    EnterFullscreen(*win, i.enterPresentation);
-                if (i.startView != DM_AUTOMATIC)
-                    SwitchToDisplayMode(win, i.startView);
-                if (i.startZoom != INVALID_ZOOM)
-                    ZoomToSelection(win, i.startZoom, false);
-                if (i.startScroll.x != -1 || i.startScroll.y != -1) {
-                    ScrollState ss = win->dm->GetScrollState();
-                    ss.x = i.startScroll.x;
-                    ss.y = i.startScroll.y;
-                    win->dm->SetScrollState(ss);
-                }
-                if (i.forwardSearchOrigin && i.forwardSearchLine && win->pdfsync) {
-                    UINT page;
-                    Vec<RectI> rects;
-                    int ret = win->pdfsync->SourceToDoc(i.forwardSearchOrigin, i.forwardSearchLine, 0, &page, rects);
-                    ShowForwardSearchResult(win, i.forwardSearchOrigin, i.forwardSearchLine, 0, ret, page, rects);
-                }
-            }
         }
 
         if (i.printDialog)
@@ -369,9 +379,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     if (!firstIsDocLoaded) {
         bool enterFullscreen = (WIN_STATE_FULLSCREEN == gGlobalPrefs.windowState);
         win = CreateWindowInfo();
-        if (!win) {
+        if (!win)
             goto Exit;
-        }
 
         if (WIN_STATE_FULLSCREEN == gGlobalPrefs.windowState ||
             WIN_STATE_MAXIMIZED == gGlobalPrefs.windowState)
