@@ -251,13 +251,13 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
         }
         else if (is_arg_with_param("-bench")) {
             TCHAR *s = str::Dup(argList.At(++n));
-            filesToBenchmark.Push(s);
+            pathsToBenchmark.Push(s);
             s = NULL;
             if (has_additional_param() && IsBenchPagesInfo(additional_param())) {
                 s = str::Dup(additional_param());
                 n++;
             }
-            filesToBenchmark.Push(s);
+            pathsToBenchmark.Push(s);
             exitImmediately = true;
         } else if (is_arg("-crash-on-open")) {
             // to make testing of crash reporting system in pre-release/release

@@ -10,12 +10,12 @@
 class CommandLineInfo {
 public:
     StrVec      fileNames;
-    // filesToBenchmark contain 2 strings per each file to benchmark:
+    // pathsToBenchmark contain 2 strings per each file to benchmark:
     // - name of the file to benchmark
     // - optional (NULL if not available) string that represents which pages
     //   to benchmark. It can also be a string "loadonly" which means we'll
     //   only benchmark loading of the catalog
-    StrVec      filesToBenchmark;
+    StrVec      pathsToBenchmark;
     bool        makeDefault;
     bool        exitOnPrint;
     bool        printDialog;

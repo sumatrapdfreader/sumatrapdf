@@ -303,8 +303,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         RedirectIOToConsole();
     if (i.makeDefault)
         AssociateExeWithPdfExtension();
-    if (i.filesToBenchmark.Count() > 0) {
-        Bench(i.filesToBenchmark);
+    if (i.pathsToBenchmark.Count() > 0) {
+        BenchFileOrDir(i.pathsToBenchmark);
         if (i.showConsole)
             system("pause");
     }

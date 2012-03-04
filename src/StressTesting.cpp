@@ -106,7 +106,6 @@ bool IsBenchPagesInfo(const TCHAR *s)
 static void BenchFile(TCHAR *filePath, const TCHAR *pagesSpec)
 {
     if (!file::Exists(filePath)) {
-        logbench("Error: file %s doesn't exist", filePath);
         return;
     }
 
@@ -128,17 +127,19 @@ static void BenchFile(TCHAR *filePath, const TCHAR *pagesSpec)
     logbench("page count: %d", pages);
 
     if (NULL == pagesSpec) {
-        for (int i = 1; i <= pages; i++)
+        for (int i = 1; i <= pages; i++) {
             BenchLoadRender(engine, i);
+        }
     }
 
     assert(!pagesSpec || IsBenchPagesInfo(pagesSpec));
     Vec<PageRange> ranges;
     if (ParsePageRanges(pagesSpec, ranges)) {
         for (size_t i = 0; i < ranges.Count(); i++) {
-            for (int j = ranges.At(i).start; j <= ranges.At(i).end; j++)
+            for (int j = ranges.At(i).start; j <= ranges.At(i).end; j++) {
                 if (1 <= j && j <= pages)
                     BenchLoadRender(engine, j);
+            }
         }
     }
 
@@ -148,13 +149,30 @@ static void BenchFile(TCHAR *filePath, const TCHAR *pagesSpec)
     logbench("Finished (in %.2f ms): %s", total.GetTimeInMs(), filePath);
 }
 
-void Bench(StrVec& filesToBench)
+static void BenchDir(TCHAR *dir)
+{
+    StrVec files;
+    ScopedMem<TCHAR> pattern(str::Format(_T("%s\\*.pdf"), dir));
+    CollectPathsFromDirectory(pattern, files, false);
+    for (size_t i = 0; i < files.Count(); i++) {
+        BenchFile(files.At(i), NULL);
+    }
+}
+
+void BenchFileOrDir(StrVec& pathsToBench)
 {
     gLog = new slog::StderrLogger();
 
-    size_t n = filesToBench.Count() / 2;
-    for (size_t i = 0; i < n; i++)
-        BenchFile(filesToBench.At(2 * i), filesToBench.At(2 * i + 1));
+    size_t n = pathsToBench.Count() / 2;
+    for (size_t i = 0; i < n; i++) {
+        TCHAR *path = pathsToBench.At(2 * i);
+        if (file::Exists(path))
+            BenchFile(path, pathsToBench.At(2 * i + 1));
+        else if (dir::Exists(path))
+            BenchDir(path);
+        else
+            logbench("Error: file or dir %s doesn't exist", path);
+    }
 
     delete gLog;
 }

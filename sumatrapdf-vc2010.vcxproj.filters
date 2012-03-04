@@ -800,6 +800,9 @@
     <ClCompile Include="src\utils\DebugLog.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="src\SumatraStartup.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">

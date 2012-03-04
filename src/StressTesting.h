@@ -8,7 +8,7 @@
 
 bool IsValidPageRange(const TCHAR *ranges);
 bool IsBenchPagesInfo(const TCHAR *s);
-void Bench(StrVec& filesToBench);
+void BenchFileOrDir(StrVec& pathsToBench);
 
 #define DIR_STRESS_TIMER_ID 101
 
