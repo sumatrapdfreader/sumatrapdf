@@ -35,7 +35,7 @@ void Post(UiMsg *msg)
     SetEvent(gUiMsgEvent);
 }
 
-UiMsg *RetriveNext()
+UiMsg *RetrieveNext()
 {
     ScopedCritSec cs(&gUiMsgCs);
     if (0 == gUiMsgQueue->Count())

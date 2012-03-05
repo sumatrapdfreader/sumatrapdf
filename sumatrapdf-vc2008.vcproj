@@ -677,6 +677,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\utils\UiMsg.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\utils\UiMsg.h"
+					>
+				</File>
+				<File
 					RelativePath=".\src\utils\UtilTests.cpp"
 					>
 				</File>

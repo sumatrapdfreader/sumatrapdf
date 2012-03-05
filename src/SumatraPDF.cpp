@@ -4552,14 +4552,14 @@ static void DispatchUiMsg(UiMsg *msg)
 
 static void DispatchUiMessages()
 {
-    for (UiMsg *msg = uimsg::RetriveNext(); msg; msg = uimsg::RetriveNext()) {
+    for (UiMsg *msg = uimsg::RetrieveNext(); msg; msg = uimsg::RetrieveNext()) {
         DispatchUiMsg(msg);
     }
 }
 
-static void DrainUiMsgQueu()
+static void DrainUiMsgQueue()
 {
-    for (UiMsg *msg = uimsg::RetriveNext(); msg; msg = uimsg::RetriveNext()) {
+    for (UiMsg *msg = uimsg::RetrieveNext(); msg; msg = uimsg::RetrieveNext()) {
         delete msg;
     }
 }

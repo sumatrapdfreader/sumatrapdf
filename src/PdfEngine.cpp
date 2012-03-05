@@ -1839,6 +1839,7 @@ RenderedBitmap *PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
         dev = fz_new_draw_device(ctx, image);
     }
     fz_catch(ctx) {
+        fz_drop_pixmap(ctx, image);
         LeaveCriticalSection(&ctxAccess);
         return NULL;
     }
@@ -3148,6 +3149,7 @@ RenderedBitmap *XpsEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
         dev = fz_new_draw_device(ctx, image);
     }
     fz_catch(ctx) {
+        fz_drop_pixmap(ctx, image);
         LeaveCriticalSection(&ctxAccess);
         return NULL;
     }

@@ -427,6 +427,13 @@ Exit:
     while (gWindows.Count() > 0) {
         DeleteWindowInfo(gWindows.At(0));
     }
+
+#ifndef DEBUG
+    // leave all the remaining clean-up to the OS
+    // (as recommended for a quick exit)
+    ExitProcess(retCode);
+#endif
+
     DeleteObject(gBrushNoDocBg);
     DeleteObject(gBrushAboutBg);
     DeleteObject(gDefaultGuiFont);
@@ -436,7 +443,7 @@ Exit:
 
     mui::Destroy();
 
-    DrainUiMsgQueu();
+    DrainUiMsgQueue();
     uimsg::Destroy();
 
     // it's still possible to crash after this (destructors of static classes,

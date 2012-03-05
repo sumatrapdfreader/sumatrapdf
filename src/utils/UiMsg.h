@@ -57,7 +57,7 @@ void    Post(UiMsg *msg);
 // Called on ui thread (e.g. in an event loop) to process queued messages.
 // Removes the message from the queue.
 // Returns NULL if there are no more messages.
-UiMsg * RetriveNext();
+UiMsg * RetrieveNext();
 
 // Gets a handle of uimsg queque event. This event gets notified when
 // a new item is posted to the queue. Can be used to awake ui event
@@ -68,4 +68,3 @@ HANDLE  GetQueueEvent();
 }
 
 #endif
-
