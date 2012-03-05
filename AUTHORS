@@ -1,24 +1,25 @@
-﻿SumatraPDF contains code by
+﻿SumatraPDF contains code by:
 
-* Krzysztof J. Kowalczyk (original author) (kkowalczyk at gmail.com)
+* Alexander Klenin
 * Củ Văn Chuối (mrchuoi at gmail.com)
+* David Lopez
+* Danilo Roascio
+* Krzysztof J. Kowalczyk  (http://blog.kowalczyk.info)
+* Ludo Brands
+* Matthew Wilcoxson (matthew.wilcoxson at gmail.com)
+* Nathan Jhaveri
+* Peter Astrand
+* Robert Liu
+* Robert Prouse (rprouse at gmail.com)
+* Simon Bünzli (zeniko at gmail.com)
 * Tom Clegg
 * vadmium at gmail.com
-* Nathan Jhaveri
-* William Blum (william.blum at gmail.com)
-* Peter Astrand
-* Ludo Brands
-* Alexander Klenin
-* Matthew Wilcoxson (matthew.wilcoxson at gmail.com)
-* Robert Liu
-* David Lopez
 * Victor Kozyakin
-* Danilo Roascio
-* Simon Bünzli (zeniko at gmail.com)
-* Robert Prouse (rprouse at gmail.com)
+* William Blum (william.blum at gmail.com)
 
-All code under src is licensed as GPL v3 (see COPYING) with the main
-exception of code in src/utils which has a BSD license (see COPYING.BSD).
+Most code under src is licensed as GPL v3 (see COPYING) with the main
+exception of code in src/utils and src/mui which has a BSD license
+(see COPYING.BSD).
 
 Icons by Zenon, Sonke Tesch, George Georgiou, Robert Hegner,
 FAMFAMFAM and Yusuke Kamiyamane.
