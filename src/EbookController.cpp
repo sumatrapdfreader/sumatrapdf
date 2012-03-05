@@ -6,6 +6,7 @@
 #include "EbookControls.h"
 #include "FileUtil.h"
 #include "MobiDoc.h"
+#include "MobiWindow.h"
 #include "PageLayout.h"
 #include "ThreadUtil.h"
 #include "Timer.h"
@@ -16,8 +17,7 @@
 /* TODO: when showing a page from pagesFromPage, its page number can be 1
    so that we can't go back even though we should. This will happen if we resize
    while showing second page whose reparse point will be within the first page
-   after resize.
-*/
+   after resize. */
 
 #define FONT_NAME              L"Georgia"
 #define FONT_SIZE              12.5
@@ -31,19 +31,8 @@ void LayoutTemp::DeletePages()
     DeleteVecMembers<PageData*>(pagesFromPage);
 }
 
-class ThreadLoadMobi : public ThreadBase {
-public:
-    TCHAR *             fileName; // we own this memory
-    EbookController *   controller;
-
-    ThreadLoadMobi(const TCHAR *fileName);
-    virtual ~ThreadLoadMobi() { free(fileName); }
-
-    // ThreadBase
-    virtual void Run();
-};
-
-ThreadLoadMobi::ThreadLoadMobi(const TCHAR *fn)
+ThreadLoadMobi::ThreadLoadMobi(const TCHAR *fn, EbookController *controller) :
+    controller(controller)
 {
     autoDeleteSelf = true;
     fileName = str::Dup(fn);
@@ -618,8 +607,7 @@ void EbookController::LoadMobi(const TCHAR *fileName)
 {
     // note: ThreadLoadMobi object will get automatically deleted, so no
     // need to keep it around
-    ThreadLoadMobi *loadThread = new ThreadLoadMobi(fileName);
-    loadThread->controller = this;
+    ThreadLoadMobi *loadThread = new ThreadLoadMobi(fileName, this);
     loadThread->Start();
 
     fileBeingLoaded = str::Dup(path::GetBaseName(fileName));

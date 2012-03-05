@@ -436,7 +436,7 @@ Exit:
 
     mui::Destroy();
 
-    //DrainUiMsgQueu();
+    DrainUiMsgQueu();
     uimsg::Destroy();
 
     // it's still possible to crash after this (destructors of static classes,

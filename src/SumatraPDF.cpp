@@ -18,6 +18,7 @@
 #include "HtmlWindow.h"
 #include "Menu.h"
 #include "Mui.h"
+#include "MobiDoc.h"
 #include "MobiWindow.h"
 #include "Notifications.h"
 #include "ParseCommandLine.h"
@@ -1132,12 +1133,51 @@ static void RefreshUpdatedFiles() {
 }
 #endif
 
-WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, bool forceReuse, bool suppressPwdUI)
+// called when a background thread finishes loading mobi file
+static void HandleFinishedMobiLoadingMsg(FinishedMobiLoadingData *finishedMobiLoading)
+{
+    if (!finishedMobiLoading->mobiDoc) {
+        // TODO: show notification that loading failed
+        return;
+    }
+    // TODO: open mobi window
+    delete finishedMobiLoading->mobiDoc;
+}
+
+static bool IsMobiFile(const TCHAR *fileName)
+{
+    return str::EndsWithI(fileName, _T(".mobi"));
+}
+
+// Start loading a mobi file in the background
+static void LoadMobi(const TCHAR *fileName)
+{
+    // note: ThreadLoadMobi object will get automatically deleted, so no
+    // need to keep it around
+    ThreadLoadMobi *loadThread = new ThreadLoadMobi(fileName, NULL);
+    loadThread->Start();
+    // when loading is done, we'll call HandleFinishedMobiLoadingMsg()
+
+    // TODO: we should show a notification in the window user is looking at
+}
+
+// TODO: eventually I would like to move all loading to be async. To achieve that
+// we need clear separatation of loading process into 2 phases: loading the
+// file (and showing progress/load failures in topmost window) and placing
+// the loaded document in the window (either by replacing document in existing
+// window or creating a new window for the document)
+WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, 
+                         bool forceReuse, bool suppressPwdUI)
 {
     if (gCrashOnOpen)
         CrashMe();
 
     ScopedMem<TCHAR> fullpath(path::Normalize(fileName));
+
+    if (IsMobiFile(fileName)) {
+        LoadMobi(fileName);
+        return NULL;
+    }
 
     // fail with a notification if the file doesn't exist and
     // there is a window the user has just been interacting with
@@ -4493,6 +4533,32 @@ void UIThreadWorkItemQueue::Queue(UIThreadWorkItem *item)
     }
 }
 
+static void DispatchUiMsg(UiMsg *msg)
+{
+    if (UiMsg::FinishedMobiLoading == msg->type) {
+        HandleFinishedMobiLoadingMsg(&msg->finishedMobiLoading);
+    } else if (UiMsg::MobiLayout == msg->type) {
+        //gEbookController->HandleMobiLayoutMsg(msg);
+    } else {
+        CrashIf(true);
+    }
+    delete msg;
+}
+
+static void DispatchUiMessages()
+{
+    for (UiMsg *msg = uimsg::RetriveNext(); msg; msg = uimsg::RetriveNext()) {
+        DispatchUiMsg(msg);
+    }
+}
+
+static void DrainUiMsgQueu()
+{
+    for (UiMsg *msg = uimsg::RetriveNext(); msg; msg = uimsg::RetriveNext()) {
+        delete msg;
+    }
+}
+
 int RunMessageLoop()
 {
     MSG msg = { 0 };
@@ -4500,27 +4566,44 @@ int RunMessageLoop()
     WindowInfo *win = NULL;
     HACCEL hAccelTable = LoadAccelerators(ghinst, MAKEINTRESOURCE(IDC_SUMATRAPDF));
 
-    while (GetMessage(&msg, NULL, 0, 0) > 0) {
+    for (;;) {
+        DWORD res = WAIT_TIMEOUT;
+        HANDLE handles[MAXIMUM_WAIT_OBJECTS];
+        DWORD handleCount = 0;
+        handles[handleCount++] = uimsg::GetQueueEvent();
+        CrashIf(handleCount >= MAXIMUM_WAIT_OBJECTS);
+
+        if (handleCount > 0)
+            res = MsgWaitForMultipleObjects(handleCount, handles, FALSE, 1000, QS_ALLEVENTS);
+
+        if (res == WAIT_OBJECT_0)
+            DispatchUiMessages();
+
+        while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+            if (msg.message == WM_QUIT)
+                return (int)msg.wParam;
+
 #ifndef THREAD_BASED_FILEWATCH
-        if (NULL == msg.hwnd && WM_TIMER == msg.message && timerID == msg.wParam) {
-            RefreshUpdatedFiles();
-            continue;
-        }
+            if (NULL == msg.hwnd && WM_TIMER == msg.message && timerID == msg.wParam) {
+                RefreshUpdatedFiles();
+                continue;
+            }
 #endif
-        // Dispatch the accelerator to the correct window
-        win = FindWindowInfoByHwnd(msg.hwnd);
-        HWND accHwnd = win ? win->hwndFrame : msg.hwnd;
-        if (TranslateAccelerator(accHwnd, hAccelTable, &msg))
-            continue;
+            // Dispatch the accelerator to the correct window
+            win = FindWindowInfoByHwnd(msg.hwnd);
+            HWND accHwnd = win ? win->hwndFrame : msg.hwnd;
+            if (TranslateAccelerator(accHwnd, hAccelTable, &msg))
+                continue;
 
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
         // process these messages here so that we don't have to add this
         // handling to every WndProc that might receive those messages
         // note: this isn't called during an inner message loop, so
         //       Execute() also has to be called from a WndProc
         gUIThreadMarshaller.Execute();
+        DispatchUiMessages();
     }
 
     return (int)msg.wParam;
