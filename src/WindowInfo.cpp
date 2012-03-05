@@ -49,18 +49,19 @@ WindowInfo::~WindowInfo()
     delete stressTest;
 
     delete pdfsync;
-    delete dm;
     delete watcher;
     delete linkHandler;
-
     delete buffer;
     delete selectionOnPage;
     delete linkOnLastButtonDown;
+    delete tocRoot;
     delete notifications;
+    // delete DisplayModel/BaseEngine last, as e.g.
+    // DocTocItem or PageElement might still need the
+    // BaseEngine in their destructors
+    delete dm;
 
     free(loadedFilePath);
-
-    delete tocRoot;
 }
 
 // Notify both display model and double-buffer (if they exist)

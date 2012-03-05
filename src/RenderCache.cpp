@@ -515,7 +515,6 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data)
     RenderedBitmap *    bmp;
 
     for (;;) {
-        //l("Worker: wait");
         if (cache->ClearCurrentRequest()) {
             DWORD waitResult = WaitForSingleObject(cache->startRendering, INFINITE);
             // Is it not a page render request?
