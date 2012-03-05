@@ -13,9 +13,27 @@ using namespace mui;
 
 struct  EbookControls;
 struct  PageData;
-class   UiMsg;
 class   MobiDoc;
 class   ThreadLayoutMobi;
+
+struct FinishedMobiLoadingData {
+    TCHAR *     fileName;
+    MobiDoc *   mobiDoc;
+    double      loadingTimeMs;
+
+    void Free() {
+        free(fileName);
+    }
+};
+
+struct MobiLayoutData {
+    enum { MAX_PAGES = 32 };
+    PageData *         pages[MAX_PAGES];
+    size_t             pageCount;
+    bool               fromBeginning;
+    bool               finished;
+    ThreadLayoutMobi * thread;
+};
 
 // data used on the ui thread side when handling UiMsg::MobiLayout
 // it's in its own struct for clarity
@@ -98,8 +116,8 @@ public:
 
     void SetHtml(const char *html);
     void LoadMobi(const TCHAR *fileName);
-    void HandleFinishedMobiLoadingMsg(UiMsg *msg);
-    void HandleMobiLayoutMsg(UiMsg *msg);
+    void HandleFinishedMobiLoadingMsg(FinishedMobiLoadingData *finishedMobiLoading);
+    void HandleMobiLayoutMsg(MobiLayoutData *mobiLayout);
     void OnLayoutTimer();
     void AdvancePage(int dist);
     void GoToPage(int newPageNo);

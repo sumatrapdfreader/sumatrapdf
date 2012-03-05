@@ -3,7 +3,7 @@
 
 #include "BaseUtil.h"
 
-class EbookControls;
+struct EbookControls;
 class HwndWrapper;
 class EbookController;
 

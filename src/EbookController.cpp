@@ -13,7 +13,7 @@
 #include "UiMsg.h"
 #include "DebugLog.h"
 
-/* TODO: when showing a page from pagesFromPage, its page number can be 1 even
+/* TODO: when showing a page from pagesFromPage, its page number can be 1
    so that we can't go back even though we should. This will happen if we resize
    while showing second page whose reparse point will be within the first page
    after resize.
@@ -300,16 +300,14 @@ void EbookController::ShowPage(PageData *pd, bool deleteWhenDone)
     }
 }
 
-void EbookController::HandleMobiLayoutMsg(UiMsg *msg)
+void EbookController::HandleMobiLayoutMsg(MobiLayoutData *ld)
 {
-    CrashIf(UiMsg::MobiLayout != msg->type);
-    if (layoutThread != msg->mobiLayout.thread) {
+    if (layoutThread != ld->thread) {
         // this is a message from cancelled thread, we can disregard
         lf("EbookController::MobiLayout() thread message discarded");
         return;
     }
 
-    MobiLayoutData *ld = &msg->mobiLayout;
     PageData *pageToShow = NULL;
 
     if (!ld->fromBeginning) {
@@ -597,21 +595,20 @@ void EbookController::SetHtml(const char *newHtml)
     TriggerLayout();
 }
 
-void EbookController::HandleFinishedMobiLoadingMsg(UiMsg *msg)
+void EbookController::HandleFinishedMobiLoadingMsg(FinishedMobiLoadingData *finishedMobiLoading)
 {
-    CrashIf(UiMsg::FinishedMobiLoading != msg->type);
     delete mobiDoc;
     html = NULL;
     str::ReplacePtr(&fileBeingLoaded, NULL);
-    if (NULL == msg->finishedMobiLoading.mobiDoc) {
+    if (NULL == finishedMobiLoading->mobiDoc) {
         lf("ControlEbook::FinishedMobiLoading(): failed to load");
         // TODO: a better way to notify about this, should be a transient message
-        ScopedMem<TCHAR> s(str::Format(_T("Failed to load %s!"), msg->finishedMobiLoading.fileName));
+        ScopedMem<TCHAR> s(str::Format(_T("Failed to load %s!"), finishedMobiLoading->fileName));
         ctrls->status->SetText(AsWStrQ(s.Get()));
         return;
     }
-    mobiDoc = msg->finishedMobiLoading.mobiDoc;
-    msg->finishedMobiLoading.mobiDoc = NULL; // just in case, it shouldn't be freed anyway
+    mobiDoc = finishedMobiLoading->mobiDoc;
+    finishedMobiLoading->mobiDoc = NULL; // just in case, it shouldn't be freed anyway
 
     layoutTemp.reparsePoint = NULL; // mark as being laid out from the beginning
     TriggerLayout();

@@ -6,25 +6,7 @@
 struct PageData;
 class  MobiDoc;
 class  ThreadLayoutMobi;
-
-struct FinishedMobiLoadingData {
-    TCHAR *     fileName;
-    MobiDoc *   mobiDoc;
-    double      loadingTimeMs;
-
-    void Free() {
-        free(fileName);
-    }
-};
-
-struct MobiLayoutData {
-    enum { MAX_PAGES = 32 };
-    PageData *         pages[MAX_PAGES];
-    size_t             pageCount;
-    bool               fromBeginning;
-    bool               finished;
-    ThreadLayoutMobi * thread;
-};
+#include "EbookController.h"
 
 class UiMsg {
 public:
