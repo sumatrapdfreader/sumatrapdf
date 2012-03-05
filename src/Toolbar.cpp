@@ -5,7 +5,7 @@
 #include "StrUtil.h"
 #include "WinUtil.h"
 #include "Toolbar.h"
-#include "translations.h"
+#include "Translations.h"
 #include "resource.h"
 #include "WindowInfo.h"
 #include "AppTools.h"

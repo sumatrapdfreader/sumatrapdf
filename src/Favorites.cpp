@@ -3,7 +3,7 @@
 
 #include "Favorites.h"
 #include "SumatraPDF.h"
-#include "translations.h"
+#include "Translations.h"
 #include "FileUtil.h"
 #include "WinUtil.h"
 #include "resource.h"

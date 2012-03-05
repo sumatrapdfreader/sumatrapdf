@@ -36,7 +36,7 @@
 #include "Timer.h"
 #include "Toolbar.h"
 #include "Touch.h"
-#include "translations.h"
+#include "Translations.h"
 #include "UiMsgSumatra.h"
 #include "UiMsg.h"
 #include "Version.h"

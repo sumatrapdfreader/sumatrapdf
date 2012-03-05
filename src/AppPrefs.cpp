@@ -10,7 +10,7 @@
 #include "DisplayState.h"
 #include "FileHistory.h"
 #include "Favorites.h"
-#include "translations.h"
+#include "Translations.h"
 
 #include "SumatraPDF.h"
 #include "WindowInfo.h"

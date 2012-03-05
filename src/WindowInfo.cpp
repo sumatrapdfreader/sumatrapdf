@@ -11,7 +11,7 @@
 #include "Notifications.h"
 #include "Print.h"
 #include "Selection.h"
-#include "translations.h"
+#include "Translations.h"
 
 WindowInfo::WindowInfo(HWND hwnd) :
     dm(NULL), menu(NULL), hwndFrame(hwnd),

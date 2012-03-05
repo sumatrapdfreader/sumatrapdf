@@ -9,7 +9,7 @@
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "Toolbar.h"
-#include "translations.h"
+#include "Translations.h"
 #include "Notifications.h"
 
 #define COL_SELECTION_RECT      RGB(0xF5, 0xFC, 0x0C)

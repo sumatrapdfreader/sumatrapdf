@@ -13,7 +13,7 @@
 
 #include "Search.h"
 #include "resource.h"
-#include "translations.h"
+#include "Translations.h"
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "Notifications.h"

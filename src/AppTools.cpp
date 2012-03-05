@@ -5,7 +5,7 @@
 #include "StrUtil.h"
 #include "FileUtil.h"
 #include "WinUtil.h"
-#include "translations.h"
+#include "Translations.h"
 #include "AppTools.h"
 #include "CmdLineParser.h"
 #include "Version.h"

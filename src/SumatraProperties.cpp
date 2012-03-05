@@ -4,7 +4,7 @@
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "SumatraProperties.h"
-#include "translations.h"
+#include "Translations.h"
 #include "WinUtil.h"
 #include "FileUtil.h"
 #include "Scoped.h"

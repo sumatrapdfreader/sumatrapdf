@@ -8,7 +8,7 @@
 
 #include "WinUtil.h"
 #include "DialogSizer.h"
-#include "translations.h"
+#include "Translations.h"
 
 // cf. http://msdn.microsoft.com/en-us/library/ms645398(v=VS.85).aspx
 struct DLGTEMPLATEEX {

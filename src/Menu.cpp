@@ -3,16 +3,16 @@
 
 #include "Menu.h"
 #include "DisplayModel.h"
-#include "translations.h"
-#include "WindowInfo.h"
+#include "ExternalPdfViewer.h"
 #include "Favorites.h"
-#include "WinUtil.h"
 #include "FileUtil.h"
 #include "FileHistory.h"
-#include "ExternalPdfViewer.h"
 #include "Selection.h"
 #include "SumatraAbout.h"
 #include "SumatraDialogs.h"
+#include "Translations.h"
+#include "WindowInfo.h"
+#include "WinUtil.h"
 
 void MenuUpdateDisplayMode(WindowInfo* win)
 {
@@ -36,9 +36,7 @@ void MenuUpdateDisplayMode(WindowInfo* win)
     win::menu::SetChecked(win->menu, IDM_VIEW_CONTINUOUS, displayModeContinuous(displayMode));
 }
 
-#define SEP_ITEM "-----"
-
-MenuDef menuDefFile[] = {
+static MenuDef menuDefFile[] = {
     { _TRN("&Open\tCtrl+O"),                IDM_OPEN ,                  MF_REQ_DISK_ACCESS },
     { _TRN("&Close\tCtrl+W"),               IDM_CLOSE,                  MF_REQ_DISK_ACCESS },
     { _TRN("&Save As...\tCtrl+S"),          IDM_SAVEAS,                 MF_REQ_DISK_ACCESS },
@@ -57,7 +55,7 @@ MenuDef menuDefFile[] = {
     { _TRN("E&xit\tCtrl+Q"),                IDM_EXIT,                   0 }
 };
 
-MenuDef menuDefView[] = {
+static MenuDef menuDefView[] = {
     { _TRN("&Single Page\tCtrl+6"),         IDM_VIEW_SINGLE_PAGE,       MF_NOT_FOR_CHM },
     { _TRN("&Facing\tCtrl+7"),              IDM_VIEW_FACING,            MF_NOT_FOR_CHM },
     { _TRN("&Book View\tCtrl+8"),           IDM_VIEW_BOOK,              MF_NOT_FOR_CHM },
@@ -76,7 +74,7 @@ MenuDef menuDefView[] = {
     { _TRN("&Copy Selection\tCtrl+C"),      IDM_COPY_SELECTION,         MF_REQ_ALLOW_COPY },
 };
 
-MenuDef menuDefGoTo[] = {
+static MenuDef menuDefGoTo[] = {
     { _TRN("&Next Page\tRight Arrow"),      IDM_GOTO_NEXT_PAGE,         0 },
     { _TRN("&Previous Page\tLeft Arrow"),   IDM_GOTO_PREV_PAGE,         0 },
     { _TRN("&First Page\tHome"),            IDM_GOTO_FIRST_PAGE,        0 },
@@ -89,7 +87,7 @@ MenuDef menuDefGoTo[] = {
     { _TRN("Fin&d...\tCtrl+F"),             IDM_FIND_FIRST,             0 },
 };
 
-MenuDef menuDefZoom[] = {
+static MenuDef menuDefZoom[] = {
     { _TRN("Fit &Page\tCtrl+0"),            IDM_ZOOM_FIT_PAGE,          MF_NOT_FOR_CHM },
     { _TRN("&Actual Size\tCtrl+1"),         IDM_ZOOM_ACTUAL_SIZE,       MF_NOT_FOR_CHM },
     { _TRN("Fit &Width\tCtrl+2"),           IDM_ZOOM_FIT_WIDTH,         MF_NOT_FOR_CHM },
@@ -111,7 +109,7 @@ MenuDef menuDefZoom[] = {
     { "8.33%",                              IDM_ZOOM_8_33,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
 };
 
-MenuDef menuDefSettings[] = {
+static MenuDef menuDefSettings[] = {
     { _TRN("Change Language"),              IDM_CHANGE_LANGUAGE,        0  },
 #if 0
     { _TRN("Contribute Translation"),       IDM_CONTRIBUTE_TRANSLATION, MF_REQ_DISK_ACCESS },
@@ -126,7 +124,7 @@ MenuDef menuDefFavorites[] = {
     { _TRN("Show Favorites"),               IDM_FAV_TOGGLE,             MF_REQ_DISK_ACCESS },
 };
 
-MenuDef menuDefHelp[] = {
+static MenuDef menuDefHelp[] = {
     { _TRN("Visit &Website"),               IDM_VISIT_WEBSITE,          MF_REQ_DISK_ACCESS },
     { _TRN("&Manual"),                      IDM_MANUAL,                 MF_REQ_DISK_ACCESS },
     { _TRN("Check for &Updates"),           IDM_CHECK_UPDATE,           MF_REQ_INET_ACCESS },
@@ -135,7 +133,7 @@ MenuDef menuDefHelp[] = {
 };
 
 #ifdef SHOW_DEBUG_MENU_ITEMS
-MenuDef menuDefDebug[] = {
+static MenuDef menuDefDebug[] = {
     { "Highlight links",                    IDM_DEBUG_SHOW_LINKS,       MF_NO_TRANSLATE },
     { "Toggle PDF/XPS renderer",            IDM_DEBUG_GDI_RENDERER,     MF_NO_TRANSLATE },
     //{ SEP_ITEM,                             0,                          0 },
@@ -144,7 +142,7 @@ MenuDef menuDefDebug[] = {
 #endif
 
 // not used for Chm documents
-MenuDef menuDefContext[] = {
+static MenuDef menuDefContext[] = {
     { _TRN("&Copy Selection"),              IDM_COPY_SELECTION,         MF_REQ_ALLOW_COPY },
     { _TRN("Copy &Link Address"),           IDM_COPY_LINK_TARGET,       MF_REQ_ALLOW_COPY },
     { _TRN("Copy Co&mment"),                IDM_COPY_COMMENT,           MF_REQ_ALLOW_COPY },
@@ -157,7 +155,7 @@ MenuDef menuDefContext[] = {
     { _TRN("P&roperties"),                  IDM_PROPERTIES,             MF_PLUGIN_MODE_ONLY },
 };
 
-MenuDef menuDefContextStart[] = {
+static MenuDef menuDefContextStart[] = {
     { _TRN("&Open Document"),               IDM_OPEN_SELECTED_DOCUMENT, MF_REQ_DISK_ACCESS },
     { _TRN("&Pin Document"),                IDM_PIN_SELECTED_DOCUMENT,  MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
     { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },

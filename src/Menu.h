@@ -8,6 +8,8 @@
 #include "SumatraPDF.h"
 #include "resource.h"
 
+#define SEP_ITEM "-----"
+
 // those are defined here instead of resource.h to avoid
 // having them overwritten by dialog editor
 #define IDM_VIEW_LAYOUT_FIRST           IDM_VIEW_SINGLE_PAGE

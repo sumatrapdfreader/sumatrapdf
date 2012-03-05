@@ -2,7 +2,7 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
-#include "translations.h"
+#include "Translations.h"
 #include "StrUtil.h"
 
 namespace Trans {

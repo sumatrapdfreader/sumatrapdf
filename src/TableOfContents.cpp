@@ -7,7 +7,7 @@
 #include "resource.h"
 #include "TableOfContents.h"
 #include "WindowInfo.h"
-#include "translations.h"
+#include "Translations.h"
 #include "SumatraPDF.h"
 #include "AppTools.h"
 

@@ -9,7 +9,7 @@
 
 #include "Print.h"
 
-#include "translations.h"
+#include "Translations.h"
 #include "WindowInfo.h"
 #include "AppTools.h"
 
