@@ -414,6 +414,10 @@
 					RelativePath=".\src\PageLayout.h"
 					>
 				</File>
+				<File
+					RelativePath=".\src\UiMsgSumatra.h"
+					>
+				</File>
 			</Filter>
 		</Filter>
 		<Filter

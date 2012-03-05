@@ -32,12 +32,11 @@ def prependPath(files, basefile=None):
 		for dir in include_dirs:
 			path = pjoin(dir, file)
 			if os.path.exists(path):
-				result.append(path)
+				result.append(path.replace("/", "\\"))
 				break
 	return result
 
 def getObjectPath(file):
-	file = file.replace("/", "\\")
 	for (path, odir) in OBJECT_DIRS.items():
 		if file.startswith(path + "\\"):
 			return odir
@@ -76,7 +75,7 @@ def flattenDependencyList(dependencies):
 	return flatlist
 
 def normalizePaths(paths):
-	return re.sub(r"( |\\)[^.\\\s]+\\..\\", r"\1", paths.replace("/", "\\"))
+	return re.sub(r"( |\\)[^.\\\s]+\\..\\", r"\1", paths)
 
 def injectDependencyList(flatlist):
 	flatlist = "\n".join(sorted(flatlist, key=str.lower))

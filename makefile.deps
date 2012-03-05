@@ -266,10 +266,13 @@ $(OS)\Menu.obj: src\WindowInfo.h
 $(OS)\MobiDoc.obj: src\MobiDoc.h src\utils\Allocator.h src\utils\BaseUtil.h
 $(OS)\MobiDoc.obj: src\utils\BitReader.h src\utils\DebugLog.h src\utils\FileUtil.h
 $(OS)\MobiDoc.obj: src\utils\GdiPlusUtil.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\MobiWindow.obj: src\AppPrefs.h src\BaseEngine.h src\DisplayState.h
+$(OS)\MobiWindow.obj: src\EbookController.h src\EbookControls.h src\MobiDoc.h
 $(OS)\MobiWindow.obj: src\MobiWindow.h src\mui\Mui.h src\mui\MuiBase.h
 $(OS)\MobiWindow.obj: src\mui\MuiButton.h src\mui\MuiControl.h src\mui\MuiCss.h
 $(OS)\MobiWindow.obj: src\mui\MuiEventMgr.h src\mui\MuiHwndWrapper.h src\mui\MuiLayout.h
 $(OS)\MobiWindow.obj: src\mui\MuiPainter.h src\mui\MuiScrollBar.h src\Resource.h
+$(OS)\MobiWindow.obj: src\SumatraPDF.h src\TextSearch.h src\TextSelection.h
 $(OS)\MobiWindow.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\BitManip.h
 $(OS)\MobiWindow.obj: src\utils\GeomUtil.h src\utils\HtmlPullParser.h src\utils\StrUtil.h
 $(OS)\MobiWindow.obj: src\utils\ThreadUtil.h src\utils\Vec.h src\utils\WinUtil.h
