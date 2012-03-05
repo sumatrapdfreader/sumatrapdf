@@ -109,6 +109,7 @@ public:
     char *              GetBookHtmlData(size_t& lenOut) const;
     ImageData *         GetCoverImage();
     ImageData *         GetImage(size_t imgRecIndex) const;
+    TCHAR *             GetFileName() const { return fileName; }
 
     static MobiDoc *    ParseFile(const TCHAR *fileName);
 };

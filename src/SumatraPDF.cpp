@@ -896,14 +896,16 @@ Error:
             MoveWindow(win.hwndFrame, rect);
         }
 
-        if (showWin) {
+        if (showWin)
             ShowWindow(win.hwndFrame, showType);
-        }
+
         UpdateWindow(win.hwndFrame);
     }
     if (win.IsDocLoaded()) {
-        ToggleWindowStyle(win.hwndPageBox, ES_NUMBER, !win.dm->engine || !win.dm->engine->HasPageLabels());
-        // if the window isn't shown and win.canvasRc is still empty, zoom has not been determined yet
+        bool enable = !win.dm->engine || !win.dm->engine->HasPageLabels();
+        ToggleWindowStyle(win.hwndPageBox, ES_NUMBER, enable);
+        // if the window isn't shown and win.canvasRc is still empty, zoom
+        // has not been determined yet
         assert(!showWin || !win.canvasRc.IsEmpty() || win.IsChm());
         if (showWin || ss.page != 1)
             win.dm->SetScrollState(ss);
@@ -913,9 +915,8 @@ Error:
         // I'm too lazy to figure out where and why. This forces
         // setting zoom level after a page has been displayed
         // (indirectly triggered via UpdateToolbarState()).
-        if (win.IsChm()) {
+        if (win.IsChm())
             win.dm->Relayout(zoomVirtual, rotation);
-        }
     }
 
     SetSidebarVisibility(&win, tocVisible, gGlobalPrefs.favVisible);
@@ -1140,8 +1141,7 @@ static void HandleFinishedMobiLoadingMsg(FinishedMobiLoadingData *finishedMobiLo
         // TODO: show notification that loading failed
         return;
     }
-    // TODO: open mobi window
-    delete finishedMobiLoading->mobiDoc;
+    OpenMobiInWindow(finishedMobiLoading->mobiDoc);
 }
 
 static bool IsMobiFile(const TCHAR *fileName)
@@ -3398,7 +3398,8 @@ static LRESULT CALLBACK WndProcFavSplitter(HWND hwnd, UINT message, WPARAM wPara
     return DefWindowProc(hwnd, message, wParam, lParam);
 }
 
-static LRESULT CALLBACK WndProcSidebarSplitter(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+static LRESULT CALLBACK WndProcSidebarSplitter(HWND hwnd, UINT message,
+                                               WPARAM wParam, LPARAM lParam)
 {
     WindowInfo *win = FindWindowInfoByHwnd(hwnd);
     if (!win)
@@ -3694,6 +3695,7 @@ static LRESULT OnSetCursor(WindowInfo& win, HWND hwnd)
                 return TRUE;
             }
             win.DeleteInfotip();
+            break;
     }
     if (win.presentation)
         return TRUE;
@@ -4490,7 +4492,8 @@ InitMouseWheelInfo:
             return SendMessage(win->hwndCanvas, msg, wParam, lParam);
 
         case WM_DESTROY:
-            /* WM_DESTROY might be sent as a result of File\Close, in which case CloseWindow() has already been called */
+            /* WM_DESTROY might be sent as a result of File\Close, in which
+               case CloseWindow() has already been called */
             if (win)
                 CloseWindow(win, true, true);
             break;
@@ -4538,7 +4541,9 @@ static void DispatchUiMsg(UiMsg *msg)
     if (UiMsg::FinishedMobiLoading == msg->type) {
         HandleFinishedMobiLoadingMsg(&msg->finishedMobiLoading);
     } else if (UiMsg::MobiLayout == msg->type) {
-        //gEbookController->HandleMobiLayoutMsg(msg);
+        MobiWindow *win = FindMobiWindowByController(msg->mobiLayout.controller);
+        if (win)
+            win->ebookController->HandleMobiLayoutMsg(&msg->mobiLayout);
     } else {
         CrashIf(true);
     }

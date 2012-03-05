@@ -12,6 +12,7 @@
 using namespace mui;
 
 struct  EbookControls;
+class   EbookController;
 struct  PageData;
 class   MobiDoc;
 class   ThreadLayoutMobi;
@@ -32,6 +33,7 @@ struct MobiLayoutData {
     size_t             pageCount;
     bool               fromBeginning;
     bool               finished;
+    EbookController *  controller;
     ThreadLayoutMobi * thread;
 };
 
@@ -115,6 +117,7 @@ public:
     virtual ~EbookController();
 
     void SetHtml(const char *html);
+    void SetMobiDoc(MobiDoc *newMobiDoc);
     void LoadMobi(const TCHAR *fileName);
     void HandleFinishedMobiLoadingMsg(FinishedMobiLoadingData *finishedMobiLoading);
     void HandleMobiLayoutMsg(MobiLayoutData *mobiLayout);
@@ -122,6 +125,7 @@ public:
     void AdvancePage(int dist);
     void GoToPage(int newPageNo);
     void GoToLastPage();
+    MobiDoc *GetMobiDoc() const { return mobiDoc; }
 };
 
 #endif

@@ -23,7 +23,7 @@
 #define FONT_SIZE              12.5
 
 // in EbookTest.cpp
-void RestartLayoutTimer();
+void RestartLayoutTimer(EbookController *controller);
 
 void LayoutTemp::DeletePages()
 {
@@ -112,6 +112,7 @@ void ThreadLayoutMobi::SendPagesIfNecessary(bool force, bool finished, bool from
         memcpy(ld->pages, pages, pageCount * sizeof(PageData*));
     ld->pageCount = pageCount;
     ld->thread = this;
+    ld->controller = controller;
     uimsg::Post(msg);
     pageCount = 0;
 }
@@ -397,10 +398,12 @@ void EbookController::TriggerLayout()
         return;
 
     PageData *newPage = PreserveTempPageShown();
-    if (newPage)
-        CrashIf((layoutTemp.reparsePoint != NULL) && (layoutTemp.reparsePoint != newPage->reparsePoint));
-    else
+    if (newPage) {
+        CrashIf((layoutTemp.reparsePoint != NULL) && 
+                (layoutTemp.reparsePoint != newPage->reparsePoint));
+    } else {
         CrashIf(layoutTemp.reparsePoint != NULL);
+    }
 
     // nicely ask existing layout thread (if exists) to quit but we don't
     // rely on that. If it sends us some data anyway, we'll ignore it
@@ -441,7 +444,7 @@ void EbookController::SizeChanged(Control *c, int dx, int dy)
     CrashIf(c != ctrls->page);
     // delay re-layout so that we don't unnecessarily do the
     // work as long as the user is still resizing the window
-    RestartLayoutTimer();
+    RestartLayoutTimer(this);
 }
 
 // (x, y) is in the coordinates of w
@@ -584,10 +587,17 @@ void EbookController::SetHtml(const char *newHtml)
     TriggerLayout();
 }
 
+void EbookController::SetMobiDoc(MobiDoc *newMobiDoc)
+{
+    html = NULL;
+    delete mobiDoc;
+    mobiDoc = newMobiDoc;
+    layoutTemp.reparsePoint = NULL; // mark as being laid out from the beginning
+    TriggerLayout();
+}
+
 void EbookController::HandleFinishedMobiLoadingMsg(FinishedMobiLoadingData *finishedMobiLoading)
 {
-    delete mobiDoc;
-    html = NULL;
     str::ReplacePtr(&fileBeingLoaded, NULL);
     if (NULL == finishedMobiLoading->mobiDoc) {
         lf("ControlEbook::FinishedMobiLoading(): failed to load");
@@ -596,11 +606,8 @@ void EbookController::HandleFinishedMobiLoadingMsg(FinishedMobiLoadingData *fini
         ctrls->status->SetText(AsWStrQ(s.Get()));
         return;
     }
-    mobiDoc = finishedMobiLoading->mobiDoc;
+    SetMobiDoc(finishedMobiLoading->mobiDoc);
     finishedMobiLoading->mobiDoc = NULL; // just in case, it shouldn't be freed anyway
-
-    layoutTemp.reparsePoint = NULL; // mark as being laid out from the beginning
-    TriggerLayout();
 }
 
 void EbookController::LoadMobi(const TCHAR *fileName)

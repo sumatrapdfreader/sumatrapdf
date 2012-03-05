@@ -80,7 +80,7 @@ static bool RegisterWinClass(HINSTANCE hinst)
     if (!RegisterNotificationsWndClass(hinst))
         return false;
 
-    if (!RegisterMobikWinClass(hinst))
+    if (!RegisterMobiWinClass(hinst))
         return false;
 
     return true;

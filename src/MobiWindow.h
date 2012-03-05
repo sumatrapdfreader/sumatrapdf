@@ -7,6 +7,7 @@
 
 struct EbookControls;
 class  EbookController;
+class  MobiDoc;
 
 class ThreadLoadMobi : public ThreadBase {
     TCHAR *             fileName; // we own this memory
@@ -22,15 +23,21 @@ public:
 
 class MobiWindow {
 public:
-    const TCHAR *       loadedFilePath;
+    MobiWindow() : 
+        hwndFrame(NULL), ebookControls(NULL), 
+        hwndWrapper(NULL), ebookController(NULL) 
+    { }
+    ~MobiWindow() {}
     HWND                hwndFrame;
     EbookControls *     ebookControls;
     mui::HwndWrapper *  hwndWrapper;
     EbookController *   ebookController;
+
+    TCHAR *             LoadedFilePath() const;
 };
 
-void LoadMobi(const TCHAR *fileName);
-
-bool RegisterMobikWinClass(HINSTANCE hinst);
+MobiWindow* FindMobiWindowByController(EbookController *controller);
+void OpenMobiInWindow(MobiDoc *mobiDoc);
+bool RegisterMobiWinClass(HINSTANCE hinst);
 
 #endif
