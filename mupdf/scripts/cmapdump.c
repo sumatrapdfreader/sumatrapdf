@@ -198,7 +198,7 @@ void fz_drop_store_context(fz_context *ctx)
 {
 }
 
-fz_store *fz_store_keep(fz_context *ctx)
+fz_store *fz_keep_store_context(fz_context *ctx)
 {
 	return NULL;
 }

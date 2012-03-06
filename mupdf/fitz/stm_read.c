@@ -1,5 +1,7 @@
 #include "fitz.h"
 
+#define MIN_BOMB (100 << 20)
+
 int
 fz_read(fz_stream *stm, unsigned char *buf, int len)
 {
@@ -109,7 +111,7 @@ fz_read_all2(fz_stream *stm, int initial, int fail_on_error)
 			if (buf->len == buf->cap)
 				fz_grow_buffer(ctx, buf);
 
-			if (buf->len / 200 > initial)
+			if (buf->len >= MIN_BOMB && buf->len / 200 > initial)
 			{
 				fz_throw(ctx, "compression bomb detected");
 			}

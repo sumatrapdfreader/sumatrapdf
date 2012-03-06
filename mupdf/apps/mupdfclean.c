@@ -792,7 +792,7 @@ int main(int argc, char **argv)
 	xref = pdf_open_document(ctx, infile);
 	if (pdf_needs_password(xref))
 		if (!pdf_authenticate_password(xref, password))
-			fz_throw(ctx, "cannot authenticate password: %s\n", infile);
+			fz_throw(ctx, "cannot authenticate password: %s", infile);
 
 	out = fopen(outfile, "wb");
 	if (!out)

@@ -1,5 +1,7 @@
 #include "fitz.h"
 
+typedef struct fz_item_s fz_item;
+
 struct fz_item_s
 {
 	void *key;
@@ -420,7 +422,7 @@ fz_empty_store(fz_context *ctx)
 }
 
 fz_store *
-fz_store_keep(fz_context *ctx)
+fz_keep_store_context(fz_context *ctx)
 {
 	if (ctx == NULL || ctx->store == NULL)
 		return NULL;

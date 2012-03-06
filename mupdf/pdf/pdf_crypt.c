@@ -158,10 +158,20 @@ pdf_new_crypt(fz_context *ctx, pdf_obj *dict, pdf_obj *id)
 	obj = pdf_dict_gets(dict, "R");
 	if (pdf_is_int(obj))
 		crypt->r = pdf_to_int(obj);
+	else if (crypt->v <= 4)
+	{
+		fz_warn(ctx, "encryption dictionary missing revision value, guessing...");
+		if (crypt->v < 2)
+			crypt->r = 2;
+		else if (crypt->v == 2 || crypt->v == 3)
+			crypt->r = 3;
+		else if (crypt->v == 4)
+			crypt->r = 4;
+	}
 	else
 	{
 		pdf_free_crypt(ctx, crypt);
-		fz_throw(ctx, "encryption dictionary missing revision value");
+		fz_throw(ctx, "encryption dictionary missing version and revision value");
 	}
 
 	obj = pdf_dict_gets(dict, "O");
@@ -197,8 +207,8 @@ pdf_new_crypt(fz_context *ctx, pdf_obj *dict, pdf_obj *id)
 		crypt->p = pdf_to_int(obj);
 	else
 	{
-		pdf_free_crypt(ctx, crypt);
-		fz_throw(ctx, "encryption dictionary missing permissions value");
+		fz_warn(ctx, "encryption dictionary missing permissions");
+		crypt->p = 0xfffffffc;
 	}
 
 	if (crypt->r == 5)

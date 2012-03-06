@@ -122,7 +122,7 @@ fz_clone_context_internal(fz_context *ctx)
 	if (ctx == NULL || ctx->alloc == NULL)
 		return NULL;
 	new_ctx = new_context_phase1(ctx->alloc, ctx->locks);
-	new_ctx->store = fz_store_keep(ctx);
+	new_ctx->store = fz_keep_store_context(ctx);
 	new_ctx->glyph_cache = fz_keep_glyph_cache(ctx);
 	new_ctx->font = fz_keep_font_context(ctx);
 	return new_ctx;

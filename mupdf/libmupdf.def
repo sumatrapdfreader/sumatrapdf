@@ -86,12 +86,12 @@ EXPORTS
 	fz_resize_buffer
 	fz_grow_buffer
 	fz_trim_buffer
-	fz_new_store_context
-	fz_drop_store_context
-	fz_store_keep
-	fz_debug_store
 	fz_keep_storable
 	fz_drop_storable
+	fz_new_store_context
+	fz_drop_store_context
+	fz_keep_store_context
+	fz_debug_store
 	fz_store_item
 	fz_find_item
 	fz_remove_item

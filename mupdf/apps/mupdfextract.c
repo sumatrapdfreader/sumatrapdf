@@ -195,7 +195,7 @@ int main(int argc, char **argv)
 	doc = pdf_open_document(ctx, infile);
 	if (pdf_needs_password(doc))
 		if (!pdf_authenticate_password(doc, password))
-			fz_throw(ctx, "cannot authenticate password: %s\n", infile);
+			fz_throw(ctx, "cannot authenticate password: %s", infile);
 
 	if (fz_optind == argc)
 	{

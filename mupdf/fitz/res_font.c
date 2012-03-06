@@ -427,6 +427,7 @@ fz_render_ft_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm)
 	FT_Matrix m;
 	FT_Vector v;
 	FT_Error fterr;
+	fz_pixmap *result;
 
 	trm = fz_adjust_ft_glyph_width(ctx, font, gid, trm);
 
@@ -511,9 +512,10 @@ fz_render_ft_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm)
 		fz_unlock(ctx, FZ_LOCK_FREETYPE);
 		return NULL;
 	}
-	fz_unlock(ctx, FZ_LOCK_FREETYPE);
 
-	return fz_copy_ft_bitmap(ctx, face->glyph->bitmap_left, face->glyph->bitmap_top, &face->glyph->bitmap);
+	result = fz_copy_ft_bitmap(ctx, face->glyph->bitmap_left, face->glyph->bitmap_top, &face->glyph->bitmap);
+	fz_unlock(ctx, FZ_LOCK_FREETYPE);
+	return result;
 }
 
 fz_pixmap *
