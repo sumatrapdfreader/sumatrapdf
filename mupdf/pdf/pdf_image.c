@@ -206,7 +206,6 @@ decomp_image_from_stream(fz_context *ctx, fz_stream *stm, pdf_image *image, int 
 			/* We already have a tile. This must have been produced by a
 			 * racing thread. We'll throw away ours and use that one. */
 			fz_drop_pixmap(ctx, tile);
-			fz_free(ctx, key);
 			tile = existing_tile;
 		}
 	}
