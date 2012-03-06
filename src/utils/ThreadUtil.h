@@ -111,8 +111,8 @@ protected:
 public:
     ThreadBase() :
       hThread(NULL), autoDeleteSelf(false),
-      cancelRequested(0), threadName(NULL) {
-    }
+      cancelRequested(0), threadName(NULL)
+    { }
 
     // Name is for debugging purposes, can be NULL.
     // if autoDeleteSelf is true, the object will be deleted after
@@ -133,6 +133,10 @@ public:
 
     // call this to start executing Run() function.
     void Start();
+
+    // ask the thread to stop with RequestCancel(), wait for it
+    // to end and terminate if didn't end
+    void TerminateWithDelay(DWORD waitMs);
 
     // over-write this to implement the actual thread functionality
     virtual void Run() = 0;

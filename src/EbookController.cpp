@@ -154,8 +154,9 @@ void ThreadLayoutMobi::Run()
     // if we have reparsePoint, layout from that point and then
     // layout from the beginning. Otherwise just from beginning
     bool cancelled = Layout(reparsePoint);
-    if (!cancelled && (NULL != reparsePoint))
-        Layout(NULL);
+    if (cancelled || !reparsePoint)
+        return;
+    Layout(NULL);
 }
 
 EbookController::EbookController(EbookControls *ctrls) :
@@ -174,10 +175,9 @@ EbookController::EbookController(EbookControls *ctrls) :
 
 EbookController::~EbookController()
 {
-    if (layoutThread) {
-        layoutThread->RequestCancel();
-        // TODO: wait until finishes, within limits
-    }
+    if (layoutThread)
+        layoutThread->TerminateWithDelay(2000); // wait up to 2 seconds before terminating
+
     ctrls->mainWnd->evtMgr->UnRegisterClicked(this);
     ctrls->mainWnd->evtMgr->UnRegisterSizeChanged(this);
     ctrls->page->SetPage(NULL);

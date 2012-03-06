@@ -261,6 +261,7 @@
     <ClCompile Include="src\utils\DebugLog.cpp" />
     <ClCompile Include="src\utils\FileTransactions.cpp" />
     <ClCompile Include="src\utils\HtmlPullParser.cpp" />
+    <ClCompile Include="src\utils\ThreadUtil.cpp" />
     <ClCompile Include="src\utils\Touch.cpp" />
     <ClCompile Include="src\Translations.cpp" />
     <ClCompile Include="src\Translations_txt.cpp" />
@@ -401,6 +402,7 @@
     <ClInclude Include="src\utils\DebugLog.h" />
     <ClInclude Include="src\utils\FileTransactions.h" />
     <ClInclude Include="src\utils\HtmlPullParser.h" />
+    <ClInclude Include="src\utils\ThreadUtil.h" />
     <ClInclude Include="src\utils\Touch.h" />
     <ClInclude Include="src\Translations.h" />
     <ClInclude Include="src\utils\BaseUtil.h" />
