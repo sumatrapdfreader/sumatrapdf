@@ -1150,7 +1150,7 @@ static bool IsMobiFile(const TCHAR *fileName)
 }
 
 // Start loading a mobi file in the background
-static void LoadMobi(const TCHAR *fileName)
+static void LoadMobiAsync(const TCHAR *fileName)
 {
     // note: ThreadLoadMobi object will get automatically deleted, so no
     // need to keep it around
@@ -1175,7 +1175,7 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin,
     ScopedMem<TCHAR> fullpath(path::Normalize(fileName));
 
     if (IsMobiFile(fileName)) {
-        LoadMobi(fileName);
+        LoadMobiAsync(fileName);
         return NULL;
     }
 

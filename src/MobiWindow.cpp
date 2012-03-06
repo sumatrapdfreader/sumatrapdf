@@ -167,7 +167,7 @@ static void CloseMobiWindow(MobiWindow *win)
 
 static void OnMenuOpenMobi(MobiWindow *win)
 {
-
+    // TODO: write me
 }
 
 static LRESULT OnCommand(MobiWindow *win, UINT msg, WPARAM wParam, LPARAM lParam)
