@@ -265,8 +265,6 @@ void UpdateTocSelection(WindowInfo *win, int currPageNo)
 {
     if (!win->tocLoaded || !win->tocVisible)
         return;
-    if (GetFocus() == win->hwndTocTree)
-        return;
 
     HTREEITEM hRoot = TreeView_GetRoot(win->hwndTocTree);
     if (!hRoot)
