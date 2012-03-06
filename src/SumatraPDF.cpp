@@ -703,6 +703,7 @@ static void RebuildMenuBarForAllWindows()
     for (size_t i = 0; i < gWindows.Count(); i++) {
         RebuildMenuBarForWindow(gWindows.At(i));
     }
+    RebuildMenuBarForMobiWindows();
 }
 
 // When displaying CHM document we subclass hwndCanvas. UnsubclassCanvas() reverts that.
@@ -2753,10 +2754,10 @@ void ChangeLanguage(const char *langName)
     UpdateUITextForLanguage();
 }
 
-static void OnMenuChangeLanguage(WindowInfo& win)
+void OnMenuChangeLanguage(HWND hwnd)
 {
     int langId = Trans::GetLanguageIndex(gGlobalPrefs.currentLanguage);
-    int newLangId = Dialog_ChangeLanguge(win.hwndFrame, langId);
+    int newLangId = Dialog_ChangeLanguge(hwnd, langId);
 
     if (newLangId != -1 && langId != newLangId) {
         const char *langName = Trans::GetLanguageCode(newLangId);
@@ -4218,7 +4219,7 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
             break;
 
         case IDM_CHANGE_LANGUAGE:
-            OnMenuChangeLanguage(*win);
+            OnMenuChangeLanguage(win->hwndFrame);
             break;
 
         case IDM_VIEW_BOOKMARKS:

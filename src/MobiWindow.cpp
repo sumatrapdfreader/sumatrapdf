@@ -170,6 +170,28 @@ static void OnMenuOpenMobi(MobiWindow *win)
     // TODO: write me
 }
 
+static void RebuildMenuBarForMobiWindow(MobiWindow *win)
+{
+    HMENU oldMenu = GetMenu(win->hwndFrame);
+    HMENU newMenu = BuildMobiMenu();
+#if 0 // TODO: support fullscreen mode when we have it
+    if (!win->presentation && !win->fullScreen)
+        SetMenu(win->hwndFrame, win->menu);
+#endif
+    SetMenu(win->hwndFrame, newMenu);
+    DestroyMenu(oldMenu);
+}
+
+void RebuildMenuBarForMobiWindows()
+{
+    if (!gMobiWindows)
+        return;
+
+    for (size_t i = 0; i < gMobiWindows->Count(); i++) {
+        RebuildMenuBarForMobiWindow(gMobiWindows->At(i));
+    }
+}
+
 static LRESULT OnCommand(MobiWindow *win, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     int wmId = LOWORD(wParam);
@@ -206,11 +228,11 @@ static LRESULT OnCommand(MobiWindow *win, UINT msg, WPARAM wParam, LPARAM lParam
             win->ebookController->GoToLastPage();
             break;
 
-#if 0
         case IDM_CHANGE_LANGUAGE:
-            OnMenuChangeLanguage(*win);
+            OnMenuChangeLanguage(win->hwndFrame);
             break;
 
+#if 0
         case IDM_VIEW_BOOKMARKS:
             ToggleTocBox(win);
             break;

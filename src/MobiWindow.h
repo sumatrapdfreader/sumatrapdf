@@ -40,5 +40,6 @@ MobiWindow* FindMobiWindowByController(EbookController *controller);
 void OpenMobiInWindow(MobiDoc *mobiDoc);
 bool RegisterMobiWinClass(HINSTANCE hinst);
 void DeleteMobiWindows();
+void RebuildMenuBarForMobiWindows();
 
 #endif
