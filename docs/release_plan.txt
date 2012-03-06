@@ -1,6 +1,21 @@
 Things to do before 2.0 release:
-* mobi ebook support
 * switch to ucrt
+* integrate mobi support
+
+Current code carries many assumptions that everything is a WindowInfo and everything
+is an engine. Removing them all is too much for 2.0 so we'll make whatever's nececessary
+for basic mobi support.
+
+Specific things that still need to be added for minimal mobi support:
+- opening a mobi file from non-mobi window needs to preserve the illusion it works
+  as opening non-mobi windows. The simplest is probably opening new window on top
+  of the old window and closing the old window
+- opening non-mobi file from mobi window i.e. OnMenuOpenMobi()
+- closing mobi window CloseMobiWindow(). Need to transition into about window
+  if it's the last window
+
+Implicitly everything else is for later, including fullscreen, printing,
+search etc.
 
 Things to do before 2.1 release:
 * installer and settings: UI for registering other supported file types
@@ -18,17 +33,16 @@ The shortest path to ebook support in sumatra:
 1.1 links
 1.2 lists (ul, li)
 
-2. Integrate the code into Sumatra. The way I'm thinking about doing it to minimize
-   changing existing code:
+Possible long-term solution to eliminate "everything is a WindowInfo" asssumption:
 
-a) rename WindowInfo to EngineWindowInfo and introduce EbookWindowInfo
+a) rename WindowInfo to SumatraWindow and introduce MobiWindow
 b) 
 struct WindowInfo {
-  enum WindowInfoType { Engine, Ebook };
-  WindowInfoType type;
+  enum Type { Sumatra, Mobi };
+  Typ       type;
   union {
-    EngineWindowInfo engineWindowInfo;
-    EbookWindowInfo ebookWindowInfo;
+    SumatraWindow   sumatra;
+    MobiWindow      mobi;
 }};
 
 In that scheme, about window (or whatever we'll call it), could be its own type (as opposed
