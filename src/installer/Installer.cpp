@@ -850,7 +850,7 @@ static int RunApp()
         const DWORD timeout = ftc.GetTimeoutInMilliseconds();
         DWORD res = WAIT_TIMEOUT;
         if (timeout > 0) {
-            res = MsgWaitForMultipleObjects(0, 0, TRUE, timeout, QS_ALLEVENTS);
+            res = MsgWaitForMultipleObjects(0, 0, TRUE, timeout, QS_ALLINPUT);
         }
         if (res == WAIT_TIMEOUT) {
             AnimStep();

@@ -319,8 +319,8 @@ static int RunApp()
         CrashIf(handleCount >= MAXIMUM_WAIT_OBJECTS);
         if ((timeout > 0) || (handleCount > 0)) {
             if (0 == timeout)
-                timeout = 1000;
-            res = MsgWaitForMultipleObjects(handleCount, handles, FALSE, timeout, QS_ALLEVENTS);
+                timeout = INFINITE;
+            res = MsgWaitForMultipleObjects(handleCount, handles, FALSE, timeout, QS_ALLINPUT);
         }
 
         if (res == WAIT_OBJECT_0) {
