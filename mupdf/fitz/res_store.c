@@ -274,7 +274,8 @@ fz_store_item(fz_context *ctx, void *key, void *val_, unsigned int itemsize, fz_
 		}
 	}
 	/* Now we can never fail, bump the ref */
-	val->refs++;
+	if (val->refs > 0)
+		val->refs++;
 	/* Regardless of whether it's indexed, it goes into the linked list */
 	item->next = store->head;
 	if (item->next)
