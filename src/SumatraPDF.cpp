@@ -4595,6 +4595,9 @@ int RunMessageLoop()
     HACCEL hAccelTable = LoadAccelerators(ghinst, MAKEINTRESOURCE(IDC_SUMATRAPDF));
 
     for (;;) {
+#if 0
+        // this unnecessarily(?) blocks the UI thread and
+        // leads e.g. to jerky scrolling on my ThinkPad
         DWORD res = WAIT_TIMEOUT;
         HANDLE handles[MAXIMUM_WAIT_OBJECTS];
         DWORD handleCount = 0;
@@ -4606,6 +4609,7 @@ int RunMessageLoop()
 
         if (res == WAIT_OBJECT_0)
             DispatchUiMessages();
+#endif
 
         while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
             if (msg.message == WM_QUIT)

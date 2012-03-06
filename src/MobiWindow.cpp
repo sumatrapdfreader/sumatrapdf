@@ -130,6 +130,8 @@ static void OnToggleBbox(MobiWindow *win)
     InvalidateRect(win->hwndFrame, NULL, FALSE);
 }
 
+static void DeleteMobiWindow(MobiWindow *win);
+
 static LRESULT OnKeyDown(MobiWindow *win, UINT msg, WPARAM key, LPARAM lParam)
 {
     switch (key) {
@@ -152,6 +154,9 @@ static LRESULT OnKeyDown(MobiWindow *win, UINT msg, WPARAM key, LPARAM lParam)
         break;
     case VK_END:
         win->ebookController->GoToLastPage();
+        break;
+    case 'Q':
+        DeleteMobiWindow(win);
         break;
     default:
         return DefWindowProc(win->hwndFrame, msg, key, lParam);
