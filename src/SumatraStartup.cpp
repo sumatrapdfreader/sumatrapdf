@@ -403,7 +403,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         RegisterForPdfExtentions(win->hwndFrame);
 
     if (gGlobalPrefs.enableAutoUpdate && gWindows.Count() > 0)
-        DownloadSumatraUpdateInfo(*gWindows.At(0), true);
+        AutoUpdateCheckAsync(gWindows.At(0)->hwndFrame, true);
 
 #ifndef THREAD_BASED_FILEWATCH
     const UINT_PTR timerID = SetTimer(NULL, -1, FILEWATCH_DELAY_IN_MS, NULL);

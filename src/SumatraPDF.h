@@ -100,6 +100,7 @@ bool  CanSendAsEmailAttachment(WindowInfo *win=NULL);
 bool  DoCachePageRendering(WindowInfo *win, int pageNo);
 void  OnMenuSettings(HWND hwnd);
 void  OnMenuExit();
+void  AutoUpdateCheckAsync(HWND hwnd, bool autoCheck);
 
 WindowInfo* FindWindowInfoByFile(const TCHAR *file);
 WindowInfo* FindWindowInfoByHwnd(HWND hwnd);

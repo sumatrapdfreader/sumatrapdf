@@ -238,11 +238,11 @@ static LRESULT OnCommand(MobiWindow *win, UINT msg, WPARAM wParam, LPARAM lParam
         case IDM_ABOUT:
             OnMenuAbout();
             break;
+#endif
 
         case IDM_CHECK_UPDATE:
-            DownloadSumatraUpdateInfo(*win, false);
+            AutoUpdateCheckAsync(win->hwndFrame, false);
             break;
-#endif
 
         case IDM_SETTINGS:
             OnMenuSettings(win->hwndFrame);

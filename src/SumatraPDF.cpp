@@ -1425,7 +1425,7 @@ static void OnDropFiles(HDROP hDrop)
     DragFinish(hDrop);
 }
 
-static DWORD OnUrlDownloaded(HWND hParent, HttpReq *ctx, bool silent)
+static DWORD ShowAutoUpdateDialog(HWND hParent, HttpReq *ctx, bool silent)
 {
     if (ctx->error)
         return ctx->error;
@@ -1448,8 +1448,8 @@ static DWORD OnUrlDownloaded(HWND hParent, HttpReq *ctx, bool silent)
     if (CompareVersion(verTxt, UPDATE_CHECK_VER) <= 0) {
         /* if automated => don't notify that there is no new version */
         if (!silent) {
-            MessageBox(hParent, _TR("You have the latest version."),
-                       _TR("SumatraPDF Update"), MB_ICONINFORMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0));
+            UINT flags =  MB_ICONINFORMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0);
+            MessageBox(hParent, _TR("You have the latest version."), _TR("SumatraPDF Update"), flags);
         }
         return 0;
     }
@@ -1472,34 +1472,50 @@ static DWORD OnUrlDownloaded(HWND hParent, HttpReq *ctx, bool silent)
     return 0;
 }
 
+static void ProcessAutoUpdateCheckResult(HWND hwnd, HttpReq *req, bool autoCheck)
+{
+    ScopedMem<TCHAR> msg;
+
+    if (!IsWindowVisible(hwnd) || !req)
+        goto Exit;
+    DWORD error = ShowAutoUpdateDialog(hwnd, req, autoCheck);
+    if ((0 == error) || autoCheck)
+        goto Exit;
+
+    // notify the user about network error during a manual update check
+    msg.Set(str::Format(_TR("Can't connect to the Internet (error %#x)."), error));
+    UINT flags = MB_ICONEXCLAMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0);
+    MessageBox(hwnd, msg, _TR("SumatraPDF Update"), flags);
+Exit:
+    delete req;
+}
+
+// TODO: convert to UiMsg?
 class UpdateDownloadWorkItem : public UIThreadWorkItem, public HttpReqCallback
 {
-    bool autoCheck;
-    HttpReq *ctx;
+    HWND        hwnd;
+    bool        autoCheck;
+    HttpReq *   req;
 
 public:
-    UpdateDownloadWorkItem(WindowInfo *win, bool autoCheck) :
-        UIThreadWorkItem(win), autoCheck(autoCheck), ctx(NULL) { }
+    UpdateDownloadWorkItem(HWND hwnd, bool autoCheck) :
+        UIThreadWorkItem(NULL), hwnd(hwnd), autoCheck(autoCheck), req(NULL) { }
 
-    virtual void Callback(HttpReq *ctx) {
-        this->ctx = ctx;
+    virtual void Callback(HttpReq *aReq) {
+        req = aReq;
         QueueWorkItem(this);
     }
 
     virtual void Execute() {
-        if (WindowInfoStillValid(win) && ctx) {
-            DWORD error = OnUrlDownloaded(win->hwndFrame, ctx, autoCheck);
-            if (error && !autoCheck) {
-                // notify the user about the error during a manual update check
-                ScopedMem<TCHAR> msg(str::Format(_TR("Can't connect to the Internet (error %#x)."), error));
-                MessageBox(win->hwndFrame, msg, _TR("SumatraPDF Update"), MB_ICONEXCLAMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0));
-            }
-        }
-        delete ctx;
+        ProcessAutoUpdateCheckResult(hwnd, req, autoCheck);
     }
 };
 
-static void DownloadSumatraUpdateInfo(WindowInfo& win, bool autoCheck)
+// start auto-update check by downloading auto-update information from url
+// on a background thread and processing the retrieved data on ui thread
+// if autoCheck is true, this is a check *not* triggered by explicit action
+// of the user and therefore will show less UI
+void AutoUpdateCheckAsync(HWND hwnd, bool autoCheck)
 {
     if (!HasPermission(Perm_InternetAccess) || gPluginMode)
         return;
@@ -1525,7 +1541,7 @@ static void DownloadSumatraUpdateInfo(WindowInfo& win, bool autoCheck)
     }
 
     const TCHAR *url = SUMATRA_UPDATE_INFO_URL _T("?v=") UPDATE_CHECK_VER;
-    new HttpReq(url, new UpdateDownloadWorkItem(&win, autoCheck));
+    new HttpReq(url, new UpdateDownloadWorkItem(hwnd, autoCheck));
 
     FILETIME ft;
     GetSystemTimeAsFileTime(&ft);
@@ -4284,7 +4300,7 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
             break;
 
         case IDM_CHECK_UPDATE:
-            DownloadSumatraUpdateInfo(*win, false);
+            AutoUpdateCheckAsync(win->hwndFrame, false);
             break;
 
         case IDM_SETTINGS:
