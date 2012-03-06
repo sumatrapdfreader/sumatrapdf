@@ -201,7 +201,7 @@ HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu, bool for
     return menu;
 }
 
-static void AppendRecentFilesToMenu(HMENU m)
+void AppendRecentFilesToMenu(HMENU m)
 {
     if (!HasPermission(Perm_DiskAccess)) return;
     if (gFileHistory.IsEmpty()) return;

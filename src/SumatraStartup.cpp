@@ -428,6 +428,8 @@ Exit:
         DeleteWindowInfo(gWindows.At(0));
     }
 
+    DeleteMobiWindows();
+
 #ifndef DEBUG
     // leave all the remaining clean-up to the OS
     // (as recommended for a quick exit)

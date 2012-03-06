@@ -2,9 +2,11 @@
 
 #include "EbookController.h"
 #include "EbookControls.h"
+#include "Menu.h"
 #include "MobiDoc.h"
 #include "Resource.h"
 #include "SumatraPDF.h"
+#include "Translations.h"
 #include "WinUtil.h"
 
 #define MOBI_FRAME_CLASS_NAME    _T("SUMATRA_MOBI_FRAME")
@@ -21,6 +23,65 @@ inline int dpiAdjust(int value)
 }
 
 static Vec<MobiWindow*> *gMobiWindows = NULL;
+
+static MenuDef menuDefMobiFile[] = {
+    { _TRN("&Open\tCtrl+O"),                IDM_OPEN ,                  MF_REQ_DISK_ACCESS },
+    { _TRN("&Close\tCtrl+W"),               IDM_CLOSE,                  MF_REQ_DISK_ACCESS },
+    { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS },
+    { _TRN("E&xit\tCtrl+Q"),                IDM_EXIT,                   0 }
+};
+
+static MenuDef menuDefMobiGoTo[] = {
+    { _TRN("&Next Page\tRight Arrow"),      IDM_GOTO_NEXT_PAGE,         0 },
+    { _TRN("&Previous Page\tLeft Arrow"),   IDM_GOTO_PREV_PAGE,         0 },
+    { _TRN("&First Page\tHome"),            IDM_GOTO_FIRST_PAGE,        0 },
+    { _TRN("&Last Page\tEnd"),              IDM_GOTO_LAST_PAGE,         0 },
+};
+
+static MenuDef menuDefMobiSettings[] = {
+    { _TRN("Change Language"),              IDM_CHANGE_LANGUAGE,        0  },
+    { _TRN("&Options..."),                  IDM_SETTINGS,               MF_REQ_PREF_ACCESS },
+};
+
+static MenuDef menuDefHelp[] = {
+    { _TRN("Visit &Website"),               IDM_VISIT_WEBSITE,          MF_REQ_DISK_ACCESS },
+    { _TRN("&Manual"),                      IDM_MANUAL,                 MF_REQ_DISK_ACCESS },
+    { _TRN("Check for &Updates"),           IDM_CHECK_UPDATE,           MF_REQ_INET_ACCESS },
+    { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS },
+    { _TRN("&About"),                       IDM_ABOUT,                  0 },
+};
+
+#ifdef SHOW_DEBUG_MENU_ITEMS
+static MenuDef menuDefDebug[] = {
+    { "Highlight links",                    IDM_DEBUG_SHOW_LINKS,       MF_NO_TRANSLATE },
+    { "Toggle PDF/XPS renderer",            IDM_DEBUG_GDI_RENDERER,     MF_NO_TRANSLATE },
+    //{ SEP_ITEM,                             0,                          0 },
+    //{ "Crash me",                           IDM_DEBUG_CRASH_ME,         MF_NO_TRANSLATE },
+};
+#endif
+
+static HMENU BuildMobiMenu()
+{
+    HMENU mainMenu = CreateMenu();
+    HMENU m = CreateMenu();
+    win::menu::Empty(m);
+    BuildMenuFromMenuDef(menuDefMobiFile, dimof(menuDefMobiFile), m, false);
+    AppendRecentFilesToMenu(m);
+
+    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&File"));
+    m = BuildMenuFromMenuDef(menuDefMobiGoTo, dimof(menuDefMobiGoTo), CreateMenu(), false);
+    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Go To"));
+    m = BuildMenuFromMenuDef(menuDefMobiSettings, dimof(menuDefMobiSettings), CreateMenu());
+    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Settings"));
+    m = BuildMenuFromMenuDef(menuDefHelp, dimof(menuDefHelp), CreateMenu());
+    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Help"));
+#ifdef SHOW_DEBUG_MENU_ITEMS
+    m = BuildMenuFromMenuDef(menuDefDebug, dimof(menuDefDebug), CreateMenu());
+    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _T("Debug"));
+#endif
+
+    return mainMenu;
+}
 
 TCHAR *MobiWindow::LoadedFilePath() const
 {
@@ -191,10 +252,9 @@ void OpenMobiInWindow(MobiDoc *mobiDoc)
             ghinst, NULL);
     if (!hwnd)
         return;
-    MobiWindow *win = new MobiWindow();
-    //HMENU menu = BuildMenu();
-    //SetMenu(hwnd, menu);
+    SetMenu(hwnd, BuildMobiMenu());
 
+    MobiWindow *win = new MobiWindow();
     win->ebookControls = CreateEbookControls(hwnd);
     win->hwndWrapper = win->ebookControls->mainWnd;
     win->ebookController = new EbookController(win->ebookControls);
@@ -204,6 +264,25 @@ void OpenMobiInWindow(MobiDoc *mobiDoc)
     win->hwndFrame = hwnd;
     gMobiWindows->Append(win);
     ShowWindow(hwnd, SW_SHOW);
+}
+
+static void DeleteMobiWindow(MobiWindow *win)
+{
+    DestroyWindow(win->hwndFrame);
+    delete win->ebookController;
+    DestroyEbookControls(win->ebookControls);
+    gMobiWindows->Remove(win);
+    delete win;
+}
+
+void DeleteMobiWindows()
+{
+    if (!gMobiWindows)
+        return;
+    while (gMobiWindows->Count() > 0) {
+        DeleteMobiWindow(gMobiWindows->At(0));
+    }
+    delete gMobiWindows;
 }
 
 bool RegisterMobiWinClass(HINSTANCE hinst)
