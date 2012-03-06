@@ -200,10 +200,10 @@
     <ClCompile Include="src\SumatraPDF.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\translations.cpp">
+    <ClCompile Include="src\Translations.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\translations_txt.cpp">
+    <ClCompile Include="src\Translations_txt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\SumatraAbout.cpp">
@@ -889,10 +889,7 @@
     <ClInclude Include="src\SumatraPDF.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\translations.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\translations_txt.h">
+    <ClInclude Include="src\Translations.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Version.h">

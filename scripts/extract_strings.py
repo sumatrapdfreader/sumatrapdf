@@ -12,7 +12,7 @@ comments at the end of strings file for each language.
 """
 
 # whitelist some files as an optimization
-C_FILES_TO_EXCLUDE = ["translations_txt.cpp"]
+C_FILES_TO_EXCLUDE = ["Translations_txt.cpp"]
 def should_translate(file_name):
     file_name = file_name.lower()
     if not file_name.endswith(".cpp"):

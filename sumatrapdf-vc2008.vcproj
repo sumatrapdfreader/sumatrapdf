@@ -291,15 +291,15 @@
 					>
 				</File>
 				<File
-					RelativePath=".\src\translations.cpp"
+					RelativePath=".\src\Translations.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\src\translations.h"
+					RelativePath=".\src\Translations.h"
 					>
 				</File>
 				<File
-					RelativePath=".\src\translations_txt.cpp"
+					RelativePath=".\src\Translations_txt.cpp"
 					>
 				</File>
 				<File

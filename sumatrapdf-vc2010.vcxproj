@@ -256,8 +256,8 @@
     <ClCompile Include="src\utils\FileTransactions.cpp" />
     <ClCompile Include="src\utils\HtmlPullParser.cpp" />
     <ClCompile Include="src\utils\Touch.cpp" />
-    <ClCompile Include="src\translations.cpp" />
-    <ClCompile Include="src\translations_txt.cpp" />
+    <ClCompile Include="src\Translations.cpp" />
+    <ClCompile Include="src\Translations_txt.cpp" />
     <ClCompile Include="mupdf\fitz\base_error.c" />
     <ClCompile Include="mupdf\fitz\base_hash.c" />
     <ClCompile Include="mupdf\fitz\base_memory.c" />
@@ -392,8 +392,8 @@
     <ClInclude Include="src\utils\FileTransactions.h" />
     <ClInclude Include="src\utils\HtmlPullParser.h" />
     <ClInclude Include="src\utils\Touch.h" />
-    <ClInclude Include="src\translations.h" />
-    <ClInclude Include="src\translations_txt.h" />
+    <ClInclude Include="src\Translations.h" />
+    <ClInclude Include="src\Translations_txt.h" />
     <ClInclude Include="src\utils\BaseUtil.h" />
     <ClInclude Include="src\utils\BencUtil.h" />
     <ClInclude Include="src\utils\CmdLineParser.h" />

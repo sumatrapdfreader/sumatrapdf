@@ -199,12 +199,13 @@ $(OS)\MobiDoc.obj: src\utils\GdiPlusUtil.h src\utils\Scoped.h src\utils\StrUtil.
 $(OS)\MobiDoc.obj: src\utils\GdiPlusUtil.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\MobiDoc.obj: src\utils\Vec.h
 $(OS)\MobiWindow.obj: src\AppPrefs.h src\BaseEngine.h src\DisplayState.h
-$(OS)\MobiWindow.obj: src\EbookController.h src\EbookControls.h src\MobiDoc.h
-$(OS)\MobiWindow.obj: src\MobiWindow.h src\mui\Mui.h src\mui\MuiBase.h
-$(OS)\MobiWindow.obj: src\mui\MuiButton.h src\mui\MuiControl.h src\mui\MuiCss.h
-$(OS)\MobiWindow.obj: src\mui\MuiEventMgr.h src\mui\MuiHwndWrapper.h src\mui\MuiLayout.h
-$(OS)\MobiWindow.obj: src\mui\MuiPainter.h src\mui\MuiScrollBar.h src\Resource.h
-$(OS)\MobiWindow.obj: src\SumatraPDF.h src\TextSearch.h src\TextSelection.h
+$(OS)\MobiWindow.obj: src\EbookController.h src\EbookControls.h src\Menu.h
+$(OS)\MobiWindow.obj: src\MobiDoc.h src\MobiWindow.h src\mui\Mui.h
+$(OS)\MobiWindow.obj: src\mui\MuiBase.h src\mui\MuiButton.h src\mui\MuiControl.h
+$(OS)\MobiWindow.obj: src\mui\MuiCss.h src\mui\MuiEventMgr.h src\mui\MuiHwndWrapper.h
+$(OS)\MobiWindow.obj: src\mui\MuiLayout.h src\mui\MuiPainter.h src\mui\MuiScrollBar.h
+$(OS)\MobiWindow.obj: src\resource.h src\Resource.h src\SumatraPDF.h
+$(OS)\MobiWindow.obj: src\TextSearch.h src\TextSelection.h src\Translations.h
 $(OS)\MobiWindow.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\BitManip.h
 $(OS)\MobiWindow.obj: src\utils\GeomUtil.h src\utils\HtmlPullParser.h src\utils\StrUtil.h
 $(OS)\MobiWindow.obj: src\utils\ThreadUtil.h src\utils\Vec.h src\utils\WinUtil.h
@@ -469,7 +470,7 @@ $(OS)\Toolbar.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
 $(OS)\Toolbar.obj: src\utils\Vec.h src\utils\WinUtil.h src\WindowInfo.h
 $(OS)\Touch.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\Touch.h
 $(OS)\Touch.obj: src\utils\WinUtil.h
-$(OS)\Translations.obj: src\Translations.h src\translations_txt.cpp src\utils\BaseUtil.h
+$(OS)\Translations.obj: src\Translations.h src\Translations_txt.cpp src\utils\BaseUtil.h
 $(OS)\Translations.obj: src\utils\StrUtil.h
 $(OS)\TrivialHtmlParser.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\FileUtil.h
 $(OS)\TrivialHtmlParser.obj: src\utils\GeomUtil.h src\utils\HtmlPullParser.h src\utils\Scoped.h

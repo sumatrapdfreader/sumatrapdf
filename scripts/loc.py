@@ -17,7 +17,7 @@ DIRS = ["src",
 		]
 
 def is_blacklisted(name):
-	return name in ["translations_txt.cpp", "DialogSizer.cpp", "DialogSizer.h",
+	return name in ["Translations_txt.cpp", "DialogSizer.cpp", "DialogSizer.h",
 		"UtilTests.cpp", "UnitTests.cpp"]
 
 def count_file(name):

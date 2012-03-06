@@ -24,7 +24,7 @@ except:
 
 S3_JS_NAME = "blog/sumatrapdf-langs.js"
 # number of missing translations for a language to be considered
-# incomplete (will be excluded from translations_txt.cpp)
+# incomplete (will be excluded from Translations_txt.cpp)
 INCOMPLETE_MISSING_THRESHOLD = 40
 
 TRANSLATIONS_TXT_C = """\
@@ -196,7 +196,7 @@ def main():
         if s not in strings_dict:
             strings_dict[s] = []
 
-    c_file_name = os.path.join(g_src_dir, "translations_txt.cpp")
+    c_file_name = os.path.join(g_src_dir, "Translations_txt.cpp")
     gen_and_upload_js(strings_dict, langs, contributors)
     remove_incomplete_translations(langs, strings, strings_dict, INCOMPLETE_MISSING_THRESHOLD)
     gen_c_code(langs, strings_dict, c_file_name, load_lang_index())

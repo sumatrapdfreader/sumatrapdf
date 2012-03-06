@@ -9,7 +9,7 @@ namespace Trans {
 
 /*
 This code relies on the following variables that must be defined in
-a separate file translations_txt.cpp which is automatically generated
+a separate file Translations_txt.cpp which is automatically generated
 from translation files by scripts\update_translations.py.
 
 // array of UTF-8 encoded translated strings.
@@ -24,7 +24,7 @@ const char *gTranslations[LANGS_COUNT * STRINGS_COUNT];
 LangDef gLangData[LANGS_COUNT];
 */
 
-#include "translations_txt.cpp"
+#include "Translations_txt.cpp"
 
 // numeric index of the current language. 0 ... LANGS_COUNT-1
 static int gCurrLangIdx = 0;
