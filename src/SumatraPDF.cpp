@@ -9,6 +9,7 @@
 #include "AppPrefs.h"
 #include "AppTools.h"
 #include "CrashHandler.h"
+#include "EbookControls.h"
 #include "ExternalPdfViewer.h"
 #include "FileHistory.h"
 #include "Favorites.h"

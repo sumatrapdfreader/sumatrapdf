@@ -84,10 +84,14 @@ void PageControl::Paint(Graphics *gfx, int offX, int offY)
     gfx->SetClip(&origClipRegion, CombineModeReplace);
 }
 
-static void CreateStyles()
+static void CreateEbookStyles()
 {
     const int pageBorderX = 16;
     const int pageBorderY = 32;
+
+    // only create styles once
+    if (styleMainWnd)
+        return;
 
     styleMainWnd = new Style();
     styleMainWnd->Set(Prop::AllocColorSolid(PropBgColor, COLOR_SEPIA));
@@ -122,7 +126,8 @@ static void CreateStyles()
     styleProgress->Set(Prop::AllocColorSolid(PropColor, COLOR_LIGHT_BLUE));
 }
 
-static void DeleteStyles()
+// should only be called once at the end of the program
+void DeleteEbookStyles()
 {
     delete styleStatus;
     delete styleBtnNextPrevDefault;
@@ -155,7 +160,7 @@ static void CreateLayout(EbookControls *ctrls)
 
 EbookControls *CreateEbookControls(HWND hwnd)
 {
-    CreateStyles();
+    CreateEbookStyles();
 
     if (!gCursorHand)
         gCursorHand  = LoadCursor(NULL, IDC_HAND);
@@ -190,7 +195,6 @@ EbookControls *CreateEbookControls(HWND hwnd)
 
 void DestroyEbookControls(EbookControls* ctrls)
 {
-    DeleteStyles();
     delete ctrls->mainWnd;
     delete ctrls;
 }

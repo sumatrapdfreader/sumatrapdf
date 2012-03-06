@@ -429,6 +429,7 @@ Exit:
     }
 
     DeleteMobiWindows();
+    DeleteEbookStyles();
 
 #ifndef DEBUG
     // leave all the remaining clean-up to the OS

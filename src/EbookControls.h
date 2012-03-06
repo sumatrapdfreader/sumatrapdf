@@ -22,6 +22,7 @@ struct EbookControls {
 
 EbookControls * CreateEbookControls(HWND hwnd);
 void            DestroyEbookControls(EbookControls* controls);
+void            DeleteEbookStyles();
 
 struct PageData;
 
