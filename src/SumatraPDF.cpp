@@ -2116,7 +2116,7 @@ static void OnPaint(WindowInfo& win)
     EndPaint(win.hwndCanvas, &ps);
 }
 
-static void OnMenuExit()
+void OnMenuExit()
 {
     if (gPluginMode)
         return;
@@ -2762,13 +2762,13 @@ static void OnMenuViewShowHideToolbar()
     ShowOrHideToolbarGlobally();
 }
 
-static void OnMenuSettings(WindowInfo& win)
+void OnMenuSettings(HWND hwnd)
 {
     if (!HasPermission(Perm_SavePreferences)) return;
 
     bool useSysColors = gGlobalPrefs.useSysColors;
 
-    if (IDOK != Dialog_Settings(win.hwndFrame, &gGlobalPrefs))
+    if (IDOK != Dialog_Settings(hwnd, &gGlobalPrefs))
         return;
 
     if (!gGlobalPrefs.rememberOpenedFiles) {
@@ -2777,10 +2777,15 @@ static void OnMenuSettings(WindowInfo& win)
     }
     if (useSysColors != gGlobalPrefs.useSysColors)
         UpdateDocumentColors();
-    if (gWindows.Count() > 0 && gWindows.At(0)->IsAboutWindow())
-        gWindows.At(0)->RedrawAll(true);
 
     SavePrefs();
+}
+
+static void OnMenuSettings(WindowInfo& win)
+{
+    OnMenuSettings(win.hwndFrame);
+    if (gWindows.Count() > 0 && gWindows.At(0)->IsAboutWindow())
+        gWindows.At(0)->RedrawAll(true);
 }
 
 // toggles 'show pages continuously' state
@@ -4103,7 +4108,7 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
     if (!win)
         return DefWindowProc(hwnd, msg, wParam, lParam);
 
-    // most of them require a win, the few exceptions are no-ops without
+    // most of them require a win, the few exceptions are no-ops
     switch (wmId)
     {
         case IDM_OPEN:

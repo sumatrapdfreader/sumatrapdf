@@ -53,10 +53,7 @@ static MenuDef menuDefHelp[] = {
 
 #ifdef SHOW_DEBUG_MENU_ITEMS
 static MenuDef menuDefDebug[] = {
-    { "Highlight links",                    IDM_DEBUG_SHOW_LINKS,       MF_NO_TRANSLATE },
-    { "Toggle PDF/XPS renderer",            IDM_DEBUG_GDI_RENDERER,     MF_NO_TRANSLATE },
-    //{ SEP_ITEM,                             0,                          0 },
-    //{ "Crash me",                           IDM_DEBUG_CRASH_ME,         MF_NO_TRANSLATE },
+    { "Show bbox",                          IDM_DEBUG_SHOW_LINKS,       MF_NO_TRANSLATE },
 };
 #endif
 
@@ -133,30 +130,6 @@ static void OnToggleBbox(MobiWindow *win)
     InvalidateRect(win->hwndFrame, NULL, FALSE);
 }
 
-static LRESULT OnCommand(MobiWindow *win, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-    int wmId = LOWORD(wParam);
-
-    if ((IDM_EXIT == wmId) || (IDCANCEL == wmId)) {
-        // TODO: exit
-        return 0;
-    }
-
-    if (IDM_OPEN == wmId) {
-        // TODO: open dialog
-        return 0;
-    }
-
-#if 0
-    if (IDM_TOGGLE_BBOX == wmId) {
-        OnToggleBbox(win);
-        return 0;
-    }
-#endif
-
-    return DefWindowProc(win->hwndFrame, msg, wParam, lParam);
-}
-
 static LRESULT OnKeyDown(MobiWindow *win, UINT msg, WPARAM key, LPARAM lParam)
 {
     switch (key) {
@@ -169,10 +142,11 @@ static LRESULT OnKeyDown(MobiWindow *win, UINT msg, WPARAM key, LPARAM lParam)
     case VK_SPACE:
         win->ebookController->AdvancePage(IsShiftPressed() ? -1 : 1);
         break;
+#ifdef DEBUG
     case VK_F1:
-        //TODO: write me
-        //OnToggleBbox(hwnd);
+        OnToggleBbox(win);
         break;
+#endif
     case VK_HOME:
         win->ebookController->GoToPage(1);
         break;
@@ -182,6 +156,102 @@ static LRESULT OnKeyDown(MobiWindow *win, UINT msg, WPARAM key, LPARAM lParam)
     default:
         return DefWindowProc(win->hwndFrame, msg, key, lParam);
     }
+    return 0;
+}
+
+static void CloseMobiWindow(MobiWindow *win)
+{
+    // TODO: write me
+
+}
+
+static void OnMenuOpenMobi(MobiWindow *win)
+{
+
+}
+
+static LRESULT OnCommand(MobiWindow *win, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    int wmId = LOWORD(wParam);
+
+    switch (wmId)
+    {
+        case IDM_OPEN:
+        case IDT_FILE_OPEN:
+            OnMenuOpenMobi(win);
+            break;
+
+        case IDT_FILE_EXIT:
+        case IDM_CLOSE:
+            CloseMobiWindow(win);
+            break;
+
+        case IDM_EXIT:
+            OnMenuExit();
+            break;
+
+        case IDM_GOTO_NEXT_PAGE:
+            win->ebookController->AdvancePage(1);
+            break;
+
+        case IDM_GOTO_PREV_PAGE:
+            win->ebookController->AdvancePage(-1);
+            break;
+
+        case IDM_GOTO_FIRST_PAGE:
+            win->ebookController->GoToPage(1);
+            break;
+
+        case IDM_GOTO_LAST_PAGE:
+            win->ebookController->GoToLastPage();
+            break;
+
+#if 0
+        case IDM_CHANGE_LANGUAGE:
+            OnMenuChangeLanguage(*win);
+            break;
+
+        case IDM_VIEW_BOOKMARKS:
+            ToggleTocBox(win);
+            break;
+#endif
+
+#if 0
+        case IDM_GOTO_PAGE:
+            OnMenuGoToPage(*win);
+            break;
+#endif
+
+        case IDM_VISIT_WEBSITE:
+            LaunchBrowser(_T("http://blog.kowalczyk.info/software/sumatrapdf/"));
+            break;
+
+        case IDM_MANUAL:
+            LaunchBrowser(_T("http://blog.kowalczyk.info/software/sumatrapdf/manual.html"));
+            break;
+
+        case IDM_DEBUG_SHOW_LINKS:
+            OnToggleBbox(win);
+            return 0;
+
+#if 0
+        case IDM_ABOUT:
+            OnMenuAbout();
+            break;
+
+        case IDM_CHECK_UPDATE:
+            DownloadSumatraUpdateInfo(*win, false);
+            break;
+#endif
+
+        case IDM_SETTINGS:
+            OnMenuSettings(win->hwndFrame);
+            break;
+
+        default:
+            return DefWindowProc(win->hwndFrame, msg, wParam, lParam);
+    }
+
     return 0;
 }
 
@@ -224,7 +294,7 @@ static LRESULT CALLBACK MobiWndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPA
             return OnKeyDown(win, msg, wParam, lParam);
 
         case WM_COMMAND:
-            OnCommand(win, msg, wParam, lParam);
+            return OnCommand(win, msg, wParam, lParam);
             break;
 
         case WM_TIMER:
