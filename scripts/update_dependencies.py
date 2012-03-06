@@ -49,9 +49,9 @@ def extractIncludes(file):
 	content = re.sub(r'(?s)/\*.*?\*/', '/* */', content)
 	includes = re.findall(r'(?m)^#include ["<]([^">]+)[">]', content)
 	includes = prependPath(includes, file)
-
+	
 	for inc in includes:
-		includes += extractIncludes(inc)
+		includes += extractIncludes(inc.replace("\\", os.path.sep))
 	return uniquify(includes)
 
 def createDependencyList():
@@ -68,7 +68,7 @@ def flattenDependencyList(dependencies):
 	for file in dependencies.keys():
 		if dependencies[file]:
 			opath = getObjectPath(file)
-			filename = os.path.splitext(os.path.split(file)[1])[0]
+			filename = os.path.splitext(os.path.split(file.replace("\\", os.path.sep))[1])[0]
 			deplist = sorted(dependencies[file], key=str.lower)
 			for depgroup in group(deplist, DEPENDENCIES_PER_LINE):
 				flatlist.append("%s\\%s.obj: %s" % (opath, filename, " ".join(depgroup)))
