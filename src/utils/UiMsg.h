@@ -59,6 +59,12 @@ void    Post(UiMsg *msg);
 // Returns NULL if there are no more messages.
 UiMsg * RetrieveNext();
 
+// Gets a handle of uimsg queque event. This event gets notified when
+// a new item is posted to the queue. Can be used to awake ui event
+// loop if MsgWaitForMultipleObjects() is used, but that's not
+// necessary.
+HANDLE  GetQueueEvent();
+
 }
 
 #endif

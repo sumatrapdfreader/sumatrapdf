@@ -11,19 +11,20 @@ namespace uimsg {
 
 static Vec<UiMsg*> *        gUiMsgQueue;
 static CRITICAL_SECTION     gUiMsgCs;
-static DWORD                gUiMsgThreadId;
+static HANDLE               gUiMsgEvent;
 
 void Initialize()
 {
     gUiMsgQueue = new Vec<UiMsg*>();
     InitializeCriticalSection(&gUiMsgCs);
-    gUiMsgThreadId = GetCurrentThreadId();
+    gUiMsgEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 }
 
 void Destroy()
 {
     delete gUiMsgQueue;
     DeleteCriticalSection(&gUiMsgCs);
+    CloseHandle(gUiMsgEvent);
 }
 
 void Post(UiMsg *msg)
@@ -31,10 +32,7 @@ void Post(UiMsg *msg)
     CrashIf(!msg);
     ScopedCritSec cs(&gUiMsgCs);
     gUiMsgQueue->Append(msg);
-    if (gUiMsgQueue->Count() == 1) {
-        // make sure that the message queue isn't empty
-        PostThreadMessage(gUiMsgThreadId, WM_NULL, 0, 0);
-    }
+    SetEvent(gUiMsgEvent);
 }
 
 UiMsg *RetrieveNext()
@@ -46,6 +44,11 @@ UiMsg *RetrieveNext()
     CrashIf(!res);
     gUiMsgQueue->RemoveAt(0);
     return res;
+}
+
+HANDLE  GetQueueEvent()
+{
+    return gUiMsgEvent;
 }
 
 }

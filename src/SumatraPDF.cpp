@@ -4594,21 +4594,42 @@ int RunMessageLoop()
     WindowInfo *win = NULL;
     HACCEL hAccelTable = LoadAccelerators(ghinst, MAKEINTRESOURCE(IDC_SUMATRAPDF));
 
-    while (GetMessage(&msg, NULL, 0, 0)) {
-#ifndef THREAD_BASED_FILEWATCH
-        if (NULL == msg.hwnd && WM_TIMER == msg.message && timerID == msg.wParam) {
-            RefreshUpdatedFiles();
-            continue;
-        }
+    for (;;) {
+#if 0
+        // this unnecessarily(?) blocks the UI thread and
+        // leads e.g. to jerky scrolling on my ThinkPad
+        DWORD res = WAIT_TIMEOUT;
+        HANDLE handles[MAXIMUM_WAIT_OBJECTS];
+        DWORD handleCount = 0;
+        handles[handleCount++] = uimsg::GetQueueEvent();
+        CrashIf(handleCount >= MAXIMUM_WAIT_OBJECTS);
+
+        if (handleCount > 0)
+            res = MsgWaitForMultipleObjects(handleCount, handles, FALSE, 1000, QS_ALLEVENTS);
+
+        if (res == WAIT_OBJECT_0)
+            DispatchUiMessages();
 #endif
-        // Dispatch the accelerator to the correct window
-        win = FindWindowInfoByHwnd(msg.hwnd);
-        HWND accHwnd = win ? win->hwndFrame : msg.hwnd;
-        if (!TranslateAccelerator(accHwnd, hAccelTable, &msg)) {
+
+        while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+            if (msg.message == WM_QUIT)
+                return (int)msg.wParam;
+
+#ifndef THREAD_BASED_FILEWATCH
+            if (NULL == msg.hwnd && WM_TIMER == msg.message && timerID == msg.wParam) {
+                RefreshUpdatedFiles();
+                continue;
+            }
+#endif
+            // Dispatch the accelerator to the correct window
+            win = FindWindowInfoByHwnd(msg.hwnd);
+            HWND accHwnd = win ? win->hwndFrame : msg.hwnd;
+            if (TranslateAccelerator(accHwnd, hAccelTable, &msg))
+                continue;
+
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
-
         // process these messages here so that we don't have to add this
         // handling to every WndProc that might receive those messages
         // note: this isn't called during an inner message loop, so
