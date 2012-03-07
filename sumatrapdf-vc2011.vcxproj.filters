@@ -818,6 +818,9 @@
     <ClCompile Include="src\utils\ThreadUtil.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="src\PageLayout.cpp">
+      <Filter>sumatra\ebook</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -1173,6 +1176,9 @@
     </ClInclude>
     <ClInclude Include="src\utils\ThreadUtil.h">
       <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PageLayout.h">
+      <Filter>sumatra\ebook</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

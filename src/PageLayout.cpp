@@ -190,9 +190,13 @@ float PageLayout::CurrLineDy()
 {
     float dy = lineSpacing;
     for (DrawInstr *i = currLineInstr.IterStart(); i; i = currLineInstr.IterNext()) {
-        if ((InstrString == i->type) || (InstrLine == i->type)) {
-            if (i->bbox.Height > dy)
-                dy = i->bbox.Height;
+        switch (i->type) {
+            case InstrString:
+            case InstrLine:
+            case InstrImage:
+                if (i->bbox.Height > dy)
+                    dy = i->bbox.Height;
+                break;
         }
     }
     return dy;
@@ -221,10 +225,7 @@ void PageLayout::LayoutLeftStartingAt(REAL offX)
 static void SetYPos(Vec<DrawInstr>& instr, float y)
 {
     for (DrawInstr *i = instr.IterStart(); i; i = instr.IterNext()) {
-        if (i->type != InstrImage) {
-            CrashIf(0.f != i->bbox.Y);
             i->bbox.Y = y;
-        }
     }
 }
 
@@ -391,6 +392,8 @@ void PageLayout::EmitImage(ImageData *img)
     Rect imgSize = BitmapSizeFromData(img->data, img->len);
     if (imgSize.IsEmptyArea())
         return;
+    float imgDy = (float)imgSize.Height;
+    float imgDx = (float)imgSize.Width;
 
     // if the image we're adding early on is the same as cover
     // image, then skip it. 5 is a heuristic
@@ -399,23 +402,30 @@ void PageLayout::EmitImage(ImageData *img)
 
     FlushCurrLine(true);
     // TODO: probably should respect current paragraph justification
-    RectF bbox(0, 0, (REAL)imgSize.Width, (REAL)imgSize.Height);
-    if (currY  + (bbox.Height / 2.f) > pageDy) {
+    RectF bbox(0, 0, (REAL)imgSize.Width, imgDy);
+    if (currY  + (imgDy / 2.f) > pageDy) {
         // move overly large images to a new page
         ForceNewPage();
     }
 
-    if (bbox.Width > pageDx || bbox.Height > pageDy - currY) {
-        // resize still too large images to fit a page
-        REAL scale = min(pageDx / bbox.Width, (pageDy - currY) / bbox.Height);
-        bbox.Width *= scale;
-        bbox.Height *= scale;
+    if ((imgDx > pageDx) || (currY + imgDy) > pageDy) {
+        // if image is still bigger than available space, scale it down
+        REAL scale = min(pageDx / imgDx, (pageDy - currY) / imgDy);
+        imgDx *= scale;
+        imgDy *= scale;
     }
-    currX += (pageDx - bbox.Width) / 2.f;
+    currX += (pageDx - imgDx) / 2.f;
+    // TODO: everywhere else we have 2 distinc phases:
+    // a) accumulation of items within a current line
+    // b) calculating x/y position of those items based on
+    //    items and current justification.
+    // This breaks that patters by setting x position here
     bbox.X = currX;
-    bbox.Y = currY;
+    bbox.Y = 0;
+    bbox.Width = imgDx;
+    bbox.Height = imgDy;
     AppendInstr(DrawInstr::Image(img->data, img->len, bbox));
-    currY += bbox.Height;
+    currY += imgDy;
     ForceNewPage();
 }
 

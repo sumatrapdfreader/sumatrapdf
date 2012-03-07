@@ -240,6 +240,7 @@
     <ClCompile Include="src\Menu.cpp" />
     <ClCompile Include="src\MobiDoc.cpp" />
     <ClCompile Include="src\MobiWindow.cpp" />
+    <ClCompile Include="src\PageLayout.cpp" />
     <ClCompile Include="src\ParseCommandLine.cpp" />
     <ClCompile Include="src\PdfEngine.cpp" />
     <ClCompile Include="src\PdfSync.cpp" />
@@ -381,6 +382,7 @@
     <ClInclude Include="src\MobiDoc.h" />
     <ClInclude Include="src\MobiWindow.h" />
     <ClInclude Include="src\Notifications.h" />
+    <ClInclude Include="src\PageLayout.h" />
     <ClInclude Include="src\ParseCommandLine.h" />
     <ClInclude Include="src\PdfEngine.h" />
     <ClInclude Include="src\PdfSync.h" />
