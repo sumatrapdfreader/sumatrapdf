@@ -1163,6 +1163,22 @@ static void LoadMobiAsync(const TCHAR *fileName)
     // TODO: we should show a notification in the window user is looking at
 }
 
+// document path is either a file or a directory (when browsing images inside
+// directory).
+// We have a special handling for embedded documents which are referred to by
+// an invalid path containing more information after a colon (e.g. "C:\file.pdf:3:0")
+// We consider any path like that valid.
+// TODO: we could be more precise and check if a file exists after stripping
+// extra information from embedded document paths
+static bool DocumentPathExists(const TCHAR *path)
+{
+    if (file::Exists(path) || dir::Exists(path))
+        return true;
+    if (str::FindChar(path + 2, ':'))
+        return true;
+    return false;
+}
+
 // TODO: eventually I would like to move all loading to be async. To achieve that
 // we need clear separatation of loading process into 2 phases: loading the
 // file (and showing progress/load failures in topmost window) and placing
@@ -1183,9 +1199,7 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin,
 
     // fail with a notification if the file doesn't exist and
     // there is a window the user has just been interacting with
-    // Note: embedded documents are referred to by an invalid path
-    //       containing more information after a colon (e.g. "C:\file.pdf:3:0")
-    if (win && !forceReuse && !file::Exists(fullpath) && !dir::Exists(fullpath) && !str::FindChar(fullpath + 2, ':')) {
+    if (win && !forceReuse && !DocumentPathExists(fullpath)) {
         ScopedMem<TCHAR> msg(str::Format(_TR("File %s not found"), fullpath));
         ShowNotification(win, msg, true /* autoDismiss */, true /* highlight */);
         // display the notification ASAP (SavePrefs() can introduce a notable delay)
