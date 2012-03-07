@@ -394,6 +394,9 @@ Ajustar el ancho de página y mostrar las páginas de forma continua
 Fit a Single Page
 Ajustar a una sola página
 
+Fonts:
+Fuentes:
+
 Found text at page %s
 Se encontró el texto en la página %s
 
@@ -553,6 +556,9 @@ Eliminar de favoritos
 Remove page %s from favorites
 Eliminar página %s de favoritos
 
+Replace document &colors with Windows color scheme
+Reemplazar &colors del documento con el esquema de color de Windows
+
 Rotate &Left\tCtrl+Shift+-
 Girar a la izquierda\tCtrl+Mayús+-
 
@@ -675,8 +681,4 @@ copiado de texto
 
 printing document
 imprimimendo documento
-
-# Untranslated:
-#Fonts:
-#Replace document &colors with Windows color scheme
 
