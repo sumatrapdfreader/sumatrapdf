@@ -13,6 +13,7 @@ Specific things that still need to be added for minimal mobi support:
 - opening non-mobi file from mobi window i.e. OnMenuOpenMobi()
 - closing mobi window CloseMobiWindow(). Need to transition into about window
   if it's the last window
+- handle drag&drop on mobi window
 
 Implicitly everything else is for later, including fullscreen, printing,
 search etc.

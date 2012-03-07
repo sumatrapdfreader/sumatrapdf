@@ -1190,7 +1190,7 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin,
     if (gCrashOnOpen)
         CrashMe();
 
-    ScopedMem<TCHAR> fullpath(path::Normalize(fileName));
+    ScopedMem<TCHAR> fullPath(path::Normalize(fileName));
 
     if (IsMobiFile(fileName)) {
         LoadMobiAsync(fileName);
@@ -1199,13 +1199,13 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin,
 
     // fail with a notification if the file doesn't exist and
     // there is a window the user has just been interacting with
-    if (win && !forceReuse && !DocumentPathExists(fullpath)) {
-        ScopedMem<TCHAR> msg(str::Format(_TR("File %s not found"), fullpath));
+    if (win && !forceReuse && !DocumentPathExists(fullPath)) {
+        ScopedMem<TCHAR> msg(str::Format(_TR("File %s not found"), fullPath));
         ShowNotification(win, msg, true /* autoDismiss */, true /* highlight */);
         // display the notification ASAP (SavePrefs() can introduce a notable delay)
         win->RedrawAll(true);
 
-        if (gFileHistory.MarkFileInexistent(fullpath)) {
+        if (gFileHistory.MarkFileInexistent(fullPath)) {
             SavePrefs();
             // update the Frequently Read list
             if (1 == gWindows.Count() && gWindows.At(0)->IsAboutWindow())
@@ -1235,24 +1235,26 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin,
     win->notifications->RemoveAllInGroup(NG_PAGE_INFO_HELPER);
 
     win->suppressPwdUI = suppressPwdUI;
-    if (!LoadDocIntoWindow(fullpath, *win, NULL, isNewWindow,
+    if (!LoadDocIntoWindow(fullPath, *win, NULL, isNewWindow,
                            true /* allowFailure */, showWin, true /* placeWindow */)) {
         /* failed to open */
-        if (gFileHistory.MarkFileInexistent(fullpath))
+        if (gFileHistory.MarkFileInexistent(fullPath))
             SavePrefs();
         return win;
     }
 
+    // TODO: limit to pdf documents only? I see no reason to refresh other kinds
+    // of documents
     if (!win->watcher)
         win->watcher = new FileWatcher(new FileChangeCallback(win));
-    win->watcher->Init(fullpath);
+    win->watcher->Init(fullPath);
 #ifdef THREAD_BASED_FILEWATCH
     win->watcher->StartWatchThread();
 #endif
 
     if (gGlobalPrefs.rememberOpenedFiles) {
-        assert(str::Eq(fullpath, win->loadedFilePath));
-        gFileHistory.MarkFileLoaded(fullpath);
+        CrashIf(!str::Eq(fullPath, win->loadedFilePath));
+        gFileHistory.MarkFileLoaded(fullPath);
         if (gGlobalPrefs.showStartPage)
             CreateThumbnailForFile(*win, *gFileHistory.Get(0));
         SavePrefs();
@@ -1260,8 +1262,9 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin,
 
     // Add the file also to Windows' recently used documents (this doesn't
     // happen automatically on drag&drop, reopening from history, etc.)
+    // TODO: doesn't that also add embedded documents that don't really exist on disk?
     if (HasPermission(Perm_DiskAccess) && !gPluginMode)
-        SHAddToRecentDocs(SHARD_PATH, fullpath);
+        SHAddToRecentDocs(SHARD_PATH, fullPath);
 
     return win;
 }
