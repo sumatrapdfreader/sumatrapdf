@@ -1243,8 +1243,6 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin,
         return win;
     }
 
-    // TODO: limit to pdf documents only? I see no reason to refresh other kinds
-    // of documents
     if (!win->watcher)
         win->watcher = new FileWatcher(new FileChangeCallback(win));
     win->watcher->Init(fullPath);
@@ -1262,7 +1260,6 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin,
 
     // Add the file also to Windows' recently used documents (this doesn't
     // happen automatically on drag&drop, reopening from history, etc.)
-    // TODO: doesn't that also add embedded documents that don't really exist on disk?
     if (HasPermission(Perm_DiskAccess) && !gPluginMode)
         SHAddToRecentDocs(SHARD_PATH, fullPath);
 
