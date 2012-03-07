@@ -7,6 +7,32 @@
 #include "StrUtil.h"
 
 /*
+Given size of a page, we format html into a set of pages. We handle only a small
+subset of html commonly present in ebooks.
+
+Formatting is a delayed affair, divided into 2 stages.
+
+1. We gather elements and their sizes for the current line. When we detect that
+adding another element would overflow current line, we position elements in
+current line (stage 2) and start a new line. When we detect that adding a new
+line would overflow current page, we start a new page.
+
+2. When we position elements in current line, we calculate their x/y positions.
+
+Delaying this calculation until we have all elements of the line is necessary
+to implement e.g. justification. It's also simpler to have formatting logic in
+2 simpler phases than a single, more complicated step. We still need to make sure
+that both stages use the same logic for determining line/page overflow, otherwise
+elements will be drawn outside page bounds. This shouldn't be hard because only
+stage 1 calculates the sizes of elements.
+*/
+
+/*
+TODO: to implement links we probably need a link instruction that contain url and
+their bbox overlaps with the text of the link. This is necessary for easy
+implementation of link interactivity and to properly draw links as underlined
+(in our architecture spaces are not drawn so spaces within link cannot be underlined).
+
 TODO: PageLayout could be split into DrawInstrBuilder which knows pageDx, pageDy
 and generates DrawInstr and splits them into pages and a better named class that
 does the parsing of the document builds pages by invoking methods on DrawInstrBuilders.
@@ -17,51 +43,9 @@ Control objects further to make allocating hundreds of them cheaper or introduce
 other base element(s) with less functionality and less overhead).
 */
 
-static void SkipCharInStr(const char *& s, size_t& left, char c)
-{
-    while ((left > 0) && (*s == c)) {
-        ++s; --left;
-    }
-}
-
-static bool IsWordBreak(char c)
-{
-    return (c == ' ') || (c == '\n') || (c == '\r');
-}
-
-static void SkipNonWordBreak(const char *& s, size_t& left)
-{
-    while ((left > 0) && !IsWordBreak(*s)) {
-        ++s; --left;
-    }
-}
-
 static bool IsNewline(const char *s, const char *end)
 {
     return (1 == end - s) && ('\n' == s[0]);
-}
-
-// return true if s points to "\n", "\r" or "\r\n"
-// and advance s/left to skip it
-// We don't want to collapse multiple consecutive newlines into
-// one as we want to be able to detect paragraph breaks (i.e. empty
-// newlines i.e. a newline following another newline)
-static bool IsNewlineSkip(const char *& s, size_t& left)
-{
-    if (0 == left)
-        return false;
-    if ('\r' == *s) {
-        --left; ++s;
-        if ((left > 0) && ('\n' == *s)) {
-            --left; ++s;
-        }
-        return true;
-    }
-    if ('\n' == *s) {
-        --left; ++s;
-        return true;
-    }
-    return false;
 }
 
 DrawInstr DrawInstr::Str(const char *s, size_t len, RectF bbox)
@@ -534,28 +518,6 @@ void PageLayout::EmitTextRun(const char *s, const char *end)
         currX += bbox.Width;
     }
 }
-
-#if 0
-void DumpAttr(uint8 *s, size_t sLen)
-{
-    static Vec<char *> seen;
-    char *sCopy = str::DupN((char*)s, sLen);
-    bool didSee = false;
-    for (size_t i = 0; i < seen.Count(); i++) {
-        char *tmp = seen.At(i);
-        if (str::EqI(sCopy, tmp)) {
-            didSee = true;
-            break;
-        }
-    }
-    if (didSee) {
-        free(sCopy);
-        return;
-    }
-    seen.Append(sCopy);
-    printf("%s\n", sCopy);
-}
-#endif
 
 // tags that I want to explicitly ignore and not define
 // HtmlTag enums for them
