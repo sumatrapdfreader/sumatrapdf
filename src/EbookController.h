@@ -16,10 +16,12 @@ class   EbookController;
 struct  PageData;
 class   MobiDoc;
 class   ThreadLayoutMobi;
+class   WindowInfo;
 
 struct FinishedMobiLoadingData {
     TCHAR *     fileName;
     MobiDoc *   mobiDoc;
+    WindowInfo* win;
     double      loadingTimeMs;
 
     void Free() {

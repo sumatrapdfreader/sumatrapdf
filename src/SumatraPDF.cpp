@@ -1143,7 +1143,7 @@ static void HandleFinishedMobiLoadingMsg(FinishedMobiLoadingData *finishedMobiLo
         // TODO: show notification that loading failed
         return;
     }
-    OpenMobiInWindow(finishedMobiLoading->mobiDoc);
+    OpenMobiInWindow(finishedMobiLoading->mobiDoc, finishedMobiLoading->win);
 }
 
 static bool IsMobiFile(const TCHAR *fileName)
@@ -1152,12 +1152,14 @@ static bool IsMobiFile(const TCHAR *fileName)
 }
 
 // Start loading a mobi file in the background
-static void LoadMobiAsync(const TCHAR *fileName)
+static void LoadMobiAsync(const TCHAR *fileName, WindowInfo *win)
 {
     // note: ThreadLoadMobi object will get automatically deleted, so no
     // need to keep it around
     ThreadLoadMobi *loadThread = new ThreadLoadMobi(fileName, NULL);
+    loadThread->win = win;
     loadThread->Start();
+    
     // when loading is done, we'll call HandleFinishedMobiLoadingMsg()
 
     // TODO: we should show a notification in the window user is looking at
@@ -1193,7 +1195,7 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin,
     ScopedMem<TCHAR> fullPath(path::Normalize(fileName));
 
     if (IsMobiFile(fileName)) {
-        LoadMobiAsync(fileName);
+        LoadMobiAsync(fileName, win);
         return NULL;
     }
 

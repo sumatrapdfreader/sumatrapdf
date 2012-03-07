@@ -8,11 +8,13 @@
 struct EbookControls;
 class  EbookController;
 class  MobiDoc;
+class  WindowInfo;
 
 class ThreadLoadMobi : public ThreadBase {
     TCHAR *             fileName; // we own this memory
     EbookController *   controller;
 public:
+    WindowInfo *        win;
 
     ThreadLoadMobi(const TCHAR *fileName, EbookController *controller);
     virtual ~ThreadLoadMobi() { free(fileName); }
@@ -37,7 +39,7 @@ public:
 };
 
 MobiWindow* FindMobiWindowByController(EbookController *controller);
-void OpenMobiInWindow(MobiDoc *mobiDoc);
+void OpenMobiInWindow(MobiDoc *mobiDoc, WindowInfo *winToReplace);
 bool RegisterMobiWinClass(HINSTANCE hinst);
 void DeleteMobiWindows();
 void RebuildMenuBarForMobiWindows();

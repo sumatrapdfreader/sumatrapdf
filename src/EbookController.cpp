@@ -36,6 +36,7 @@ ThreadLoadMobi::ThreadLoadMobi(const TCHAR *fn, EbookController *controller) :
 {
     autoDeleteSelf = true;
     fileName = str::Dup(fn);
+    win = NULL;
 }
 
 void ThreadLoadMobi::Run()
@@ -49,6 +50,7 @@ void ThreadLoadMobi::Run()
     UiMsg *msg = new UiMsg(UiMsg::FinishedMobiLoading);
     msg->finishedMobiLoading.mobiDoc = mobiDoc;
     msg->finishedMobiLoading.fileName = fileName;
+    msg->finishedMobiLoading.win = win;
     fileName = NULL;
     uimsg::Post(msg);
 }

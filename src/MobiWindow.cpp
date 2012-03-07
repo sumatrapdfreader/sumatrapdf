@@ -335,11 +335,13 @@ static LRESULT CALLBACK MobiWndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPA
     return 0;
 }
 
-void OpenMobiInWindow(MobiDoc *mobiDoc)
+void OpenMobiInWindow(MobiDoc *mobiDoc, WindowInfo *winToReplace)
 {
     if (!gMobiWindows)
         gMobiWindows = new Vec<MobiWindow*>();
 
+    // TODO: delete winToReplace if necessary. Take size/position of new
+    // window from history or winToReplace
     win::GetHwndDpi(NULL, &gUiDPIFactor);
     HWND hwnd = CreateWindow(MOBI_FRAME_CLASS_NAME, _T("Ebook Test"),
             WS_OVERLAPPEDWINDOW,
