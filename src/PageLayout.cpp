@@ -907,6 +907,8 @@ PageData *PageLayout::IterStart(LayoutInfo* li)
 // should be underlined at a baseline
 void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox)
 {
+    // TODO: support changing the brText color to gRenderCache.colorRange[0]
+    //       or GetSysColor(COLOR_WINDOWTEXT) if gGlobalPrefs.useSysColors
     //SolidBrush brText(Color(0,0,0));
     SolidBrush brText(Color(0x5F, 0x4B, 0x32)); // this color matches Kindle app
     Pen pen(Color(255, 0, 0), 1);

@@ -4737,4 +4737,3 @@ int RunMessageLoop()
 // TODO: a hackish but cheap way to separate startup code.
 // Could be made to compile stand-alone
 #include "SumatraStartup.cpp"
-

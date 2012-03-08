@@ -19,12 +19,6 @@
 
 static bool gShowTextBoundingBoxes = false;
 
-static float gUiDPIFactor = 1.0f;
-inline int dpiAdjust(int value)
-{
-    return (int)(value * gUiDPIFactor);
-}
-
 static Vec<MobiWindow*> *gMobiWindows = NULL;
 
 static MenuDef menuDefMobiFile[] = {
@@ -131,6 +125,7 @@ static void OnToggleBbox(MobiWindow *win)
     gShowTextBoundingBoxes = !gShowTextBoundingBoxes;
     SetDebugPaint(gShowTextBoundingBoxes);
     InvalidateRect(win->hwndFrame, NULL, FALSE);
+    win::menu::SetChecked(GetMenu(win->hwndFrame), IDM_DEBUG_SHOW_LINKS, gShowTextBoundingBoxes);
 }
 
 static void DeleteMobiWindow(MobiWindow *win);
@@ -167,9 +162,11 @@ static LRESULT OnKeyDown(MobiWindow *win, UINT msg, WPARAM key, LPARAM lParam)
     return 0;
 }
 
+// TODO: how does this differ from DeleteMobiWindow (which destroys the window)?
 static void CloseMobiWindow(MobiWindow *win)
 {
     // TODO: write me
+    DeleteMobiWindow(win);
 }
 
 static void RebuildMenuBarForMobiWindow(MobiWindow *win)
@@ -287,8 +284,14 @@ static LRESULT CALLBACK MobiWndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPA
         case WM_CREATE:
             // we do nothing
             break;
+
         case WM_DESTROY:
-            // TODO: if this is the last window, exit the program
+            // TODO: do this in CloseMobiWindow instead?
+            if (TotalWindowsCount() == 1) {
+                CrashIf(gMobiWindows->Count() != 1);
+                CrashIf(gMobiWindows->At(0)->hwndFrame != hwnd);
+                PostQuitMessage(0);
+            }
             break;
 
         case WM_DROPFILES:
@@ -315,6 +318,8 @@ static LRESULT CALLBACK MobiWndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPA
     switch (msg)
     {
         case WM_PAINT:
+            // TODO: moving a window around is quite jerky due to
+            //       OnPaint's slowness - cache more aggressively?
             win->hwndWrapper->OnPaint(hwnd);
             break;
 
@@ -386,6 +391,7 @@ void OpenMobiInWindow(MobiDoc *mobiDoc, SumatraWindow& winToReplace)
     if (HasPermission(Perm_DiskAccess) && !gPluginMode)
         DragAcceptFiles(hwnd, TRUE);
     if (Touch::SupportsGestures()) {
+        // TODO: does this do anything without WM_TOUCH handling?
         GESTURECONFIG gc = { 0, GC_ALLGESTURES, 0 };
         Touch::SetGestureConfig(hwnd, 0, 1, &gc, sizeof(GESTURECONFIG));
     }
@@ -400,7 +406,8 @@ void OpenMobiInWindow(MobiDoc *mobiDoc, SumatraWindow& winToReplace)
 
     win->hwndFrame = hwnd;
     gMobiWindows->Append(win);
-    ShowWindow(hwnd, SW_SHOW);
+    bool wasMaximized = false; // TODO: IsZoomed(winToReplace->hwndFrame);
+    ShowWindow(hwnd, wasMaximized ? SW_SHOWMAXIMIZED : SW_SHOW);
 }
 
 static void DeleteMobiWindow(MobiWindow *win)

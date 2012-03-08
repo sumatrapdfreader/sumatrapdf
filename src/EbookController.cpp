@@ -366,6 +366,8 @@ PageData *EbookController::PreserveTempPageShown()
     if (!pageShown)
         return NULL;
     if (deletePageShown) {
+        // TODO: this can happen due to a race condition
+        //       (if there are too many WM_PAINT messages?)
         CrashIf(true); // not sure if this should ever happen
         deletePageShown = false;
         return pageShown;

@@ -105,6 +105,7 @@ void  AutoUpdateCheckAsync(HWND hwnd, bool autoCheck);
 void  OnMenuChangeLanguage(HWND hwnd);
 void  OnDropFiles(HDROP hDrop);
 void  OnMenuOpen(SumatraWindow& win);
+size_t TotalWindowsCount();
 void  CloseDocumentInWindow(WindowInfo *win);
 void  CloseDocumentAndDeleteWindowInfo(WindowInfo *win);
 

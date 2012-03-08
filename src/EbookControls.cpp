@@ -94,6 +94,8 @@ static void CreateEbookStyles()
         return;
 
     styleMainWnd = new Style();
+    // TODO: support changing this color to gRenderCache.colorRange[1]
+    //       or GetSysColor(COLOR_WINDOW) if gGlobalPrefs.useSysColors
     styleMainWnd->Set(Prop::AllocColorSolid(PropBgColor, COLOR_SEPIA));
 
     stylePage = new Style();
@@ -198,4 +200,3 @@ void DestroyEbookControls(EbookControls* ctrls)
     delete ctrls->mainWnd;
     delete ctrls;
 }
-
