@@ -2239,6 +2239,48 @@ void GetStressTestInfo(str::Str<char>* s)
     }
 }
 
+size_t TotalWindowsCount()
+{
+    return gWindows.Count() + MobiWindowsCount();
+}
+
+// closes a document inside a WindowInfo and turns it into
+// about window
+void CloseDocumentInWindow(WindowInfo *win)
+{
+    bool wasChm = win->IsChm();
+    if (wasChm)
+        UnsubclassCanvas(win->hwndCanvas);
+    delete win->watcher;
+    win->watcher = NULL;
+    SetSidebarVisibility(win, false, gGlobalPrefs.favVisible);
+    ClearTocBox(win);
+    AbortFinding(win, true);
+    delete win->dm;
+    win->dm = NULL;
+    str::ReplacePtr(&win->loadedFilePath, NULL);
+    delete win->pdfsync;
+    win->pdfsync = NULL;
+    win->notifications->RemoveAllInGroup(NG_RESPONSE_TO_ACTION);
+    win->notifications->RemoveAllInGroup(NG_PAGE_INFO_HELPER);
+
+    if (win->hwndProperties) {
+        DestroyWindow(win->hwndProperties);
+        assert(!win->hwndProperties);
+    }
+    UpdateToolbarPageText(win, 0);
+    UpdateToolbarFindText(win);
+    if (wasChm) {
+        // restore the non-Chm menu
+        RebuildMenuBarForWindow(win);
+    }
+
+    DeleteOldSelectionInfo(win, true);
+    win->RedrawAll();
+    UpdateFindbox(win);
+    SetFocus(win->hwndFrame);
+}
+
 /* Close the document associated with window 'hwnd'.
    Closes the window unless this is the last window in which
    case it switches to empty window and disables the "File\Close"
@@ -2261,44 +2303,15 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
     if (win->presentation)
         ExitFullscreen(*win);
 
-    bool lastWindow = (1 == gWindows.Count());
+    bool lastWindow = (1 == TotalWindowsCount());
     if (lastWindow)
         SavePrefs();
     else
         UpdateCurrentFileDisplayStateForWin(win);
 
     if (lastWindow && !quitIfLast) {
-        if (wasChm)
-            UnsubclassCanvas(win->hwndCanvas);
         /* last window - don't delete it */
-        delete win->watcher;
-        win->watcher = NULL;
-        SetSidebarVisibility(win, false, gGlobalPrefs.favVisible);
-        ClearTocBox(win);
-        AbortFinding(win, true);
-        delete win->dm;
-        win->dm = NULL;
-        str::ReplacePtr(&win->loadedFilePath, NULL);
-        delete win->pdfsync;
-        win->pdfsync = NULL;
-        win->notifications->RemoveAllInGroup(NG_RESPONSE_TO_ACTION);
-        win->notifications->RemoveAllInGroup(NG_PAGE_INFO_HELPER);
-
-        if (win->hwndProperties) {
-            DestroyWindow(win->hwndProperties);
-            assert(!win->hwndProperties);
-        }
-        UpdateToolbarPageText(win, 0);
-        UpdateToolbarFindText(win);
-        if (wasChm) {
-            // restore the non-Chm menu
-            RebuildMenuBarForWindow(win);
-        }
-
-        DeleteOldSelectionInfo(win, true);
-        win->RedrawAll();
-        UpdateFindbox(win);
-        SetFocus(win->hwndFrame);
+        CloseDocumentInWindow(win);
     } else {
         HWND hwndToDestroy = win->hwndFrame;
         DeleteWindowInfo(win);

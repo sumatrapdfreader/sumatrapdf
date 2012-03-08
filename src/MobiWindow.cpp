@@ -335,6 +335,13 @@ static LRESULT CALLBACK MobiWndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPA
     return 0;
 }
 
+size_t MobiWindowsCount()
+{
+    if (!gMobiWindows)
+        return 0;
+    return gMobiWindows->Count();
+}
+
 void OpenMobiInWindow(MobiDoc *mobiDoc, SumatraWindow& winToReplace)
 {
     if (!gMobiWindows)

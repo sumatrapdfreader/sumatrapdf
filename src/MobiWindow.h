@@ -40,9 +40,10 @@ public:
 };
 
 MobiWindow* FindMobiWindowByController(EbookController *controller);
-void OpenMobiInWindow(MobiDoc *mobiDoc, SumatraWindow& winToReplace);
-bool RegisterMobiWinClass(HINSTANCE hinst);
-void DeleteMobiWindows();
-void RebuildMenuBarForMobiWindows();
+void   OpenMobiInWindow(MobiDoc *mobiDoc, SumatraWindow& winToReplace);
+bool   RegisterMobiWinClass(HINSTANCE hinst);
+void   DeleteMobiWindows();
+void   RebuildMenuBarForMobiWindows();
+size_t MobiWindowsCount();
 
 #endif
