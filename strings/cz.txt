@@ -430,6 +430,9 @@ Nastavit SumatraPDF jako výchozí PDF prohlížeč
 Match Case
 Rozlišovat velikost písmen
 
+Mobi documents
+Mobi dokumenty
+
 Modified:
 Změněno:
 

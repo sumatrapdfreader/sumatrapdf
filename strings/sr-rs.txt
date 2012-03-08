@@ -426,6 +426,9 @@ Make SumatraPDF my default PDF reader
 Match Case
 Разликуј мала и велика слова
 
+Mobi documents
+Mobi документи
+
 Modified:
 Измењена:
 

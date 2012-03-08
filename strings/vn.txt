@@ -428,6 +428,9 @@ Make SumatraPDF my default PDF reader
 Match Case
 Phân biệt HOA-thường
 
+Mobi documents
+Tập tin Mobi
+
 Modified:
 Ngày chỉnh sửa
 

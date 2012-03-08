@@ -297,6 +297,7 @@ Zoom Out
 #Hide frequently read
 #Hint: Use the F3 key for finding again
 #Image files (*.%s)
+#Mobi documents
 #Modified:
 #New version %s is available. Download new version?
 #No matches were found

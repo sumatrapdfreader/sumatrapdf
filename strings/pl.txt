@@ -257,6 +257,9 @@ Wiele stron - układ ciągły
 Contribute Translation
 Dodaj swoje tłumaczenie
 
+Copy &Image
+Kopiuj obraz
+
 Copy &Link Address
 Kopiuj adres z &odnośnika
 
@@ -386,6 +389,9 @@ Dopasuj szerokość i wyświetlaj strony w układzie ciągłym
 Fit a Single Page
 Dopasuj pojedynczą stronę
 
+Fonts:
+Czcionki:
+
 Found text at page %s
 Znaleziono tekst na stronie %s
 
@@ -424,6 +430,9 @@ Ustaw SumatraPDF jako domyślną przeglądarkę PDF
 
 Match Case
 Uwzględnij wielkość liter
+
+Mobi documents
+Dokumenty Mobi
 
 Modified:
 Zmodyfikowano:
@@ -544,6 +553,9 @@ Usuń z ulubionych
 
 Remove page %s from favorites
 Usuń stronę %s z ulubionych
+
+Replace document &colors with Windows color scheme
+Wymień kolory dokumentu na kolory systemowe Windows
 
 Rotate &Left\tCtrl+Shift+-
 Obróć w &lewo\tCtrl+Shift+Minus
@@ -667,9 +679,4 @@ kopiowanie tekstu
 
 printing document
 drukowanie dokumentu
-
-# Untranslated:
-#Copy &Image
-#Fonts:
-#Replace document &colors with Windows color scheme
 

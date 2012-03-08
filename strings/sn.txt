@@ -295,6 +295,7 @@ Duputsa
 #Hint: Use the F3 key for finding again
 #Image files (*.%s)
 #Make SumatraPDF default application for PDF files?
+#Mobi documents
 #Modified:
 #No matches were found
 #No result found around line %u in file %s

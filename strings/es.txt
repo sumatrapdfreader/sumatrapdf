@@ -436,6 +436,9 @@ Hacer SumatraPDF el lector PDF por defecto
 Match Case
 Coincidir mayúsculas y minúsculas
 
+Mobi documents
+Documentos Mobi
+
 Modified:
 Modificado:
 

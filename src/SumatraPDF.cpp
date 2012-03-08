@@ -2607,7 +2607,7 @@ void OnMenuOpen(SumatraWindow& win)
         { _TR("Postscript documents"),  _T("*.ps;*.eps"),   PsEngine::IsAvailable() },
         { _TR("Comic books"),           _T("*.cbz;*.cbr"),  true },
         { _TR("CHM documents"),         _T("*.chm"),        true },
-        { _T("Mobi documents"),         _T("*.mobi"),       true }, // TODO: translate "Mobi documents"
+        { _TR("Mobi documents"),        _T("*.mobi"),       true },
     };
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling

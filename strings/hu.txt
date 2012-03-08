@@ -669,5 +669,6 @@ Nyomtatás
 #Copy &Image
 #File %s not found
 #Fonts:
+#Mobi documents
 #Replace document &colors with Windows color scheme
 

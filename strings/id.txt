@@ -431,6 +431,9 @@ Jadikan SumatraPDF sebagai pembaca PDF utama
 Match Case
 Cocokkan Ukuran Huruf
 
+Mobi documents
+Dokumen Mobi
+
 Modified:
 Dimodifikasi:
 

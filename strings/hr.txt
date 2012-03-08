@@ -633,6 +633,7 @@ ispisujem dokument
 #Favorites
 #File %s not found
 #Fonts:
+#Mobi documents
 #Page %s
 #Printer with given name doesn't exist
 #Remove from favorites

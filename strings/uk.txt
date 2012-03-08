@@ -425,6 +425,9 @@ Make SumatraPDF my default PDF reader
 Match Case
 Розрізняти малу й велику літери
 
+Mobi documents
+Документи Mobi
+
 Modified:
 Змінено:
 

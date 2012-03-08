@@ -427,6 +427,9 @@ Make SumatraPDF my default PDF reader
 Match Case
 大小写匹配
 
+Mobi documents
+Mobi 文档
+
 Modified:
 修改时间:
 

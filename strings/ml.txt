@@ -263,6 +263,7 @@ Zoom Out
 #Image files (*.%s)
 #Make SumatraPDF default application for PDF files?
 #Match Case
+#Mobi documents
 #Modified:
 #New version %s is available. Download new version?
 #No matches were found

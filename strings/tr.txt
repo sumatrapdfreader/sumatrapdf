@@ -425,6 +425,9 @@ Varsayılan PDF okuyucusu yap
 Match Case
 Büyük/Küçük harf eşleştir
 
+Mobi documents
+Mobi belgeleri
+
 Modified:
 Değiştirilme tarihi:
 

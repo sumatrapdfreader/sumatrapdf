@@ -425,6 +425,9 @@ Fes el SumatraPDF el lector de PDF predeterminat
 Match Case
 Distigeix entre majúscules i minúscules
 
+Mobi documents
+Documents Mobi
+
 Modified:
 Modificat:
 

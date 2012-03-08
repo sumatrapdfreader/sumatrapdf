@@ -575,6 +575,7 @@ ipini-print ang dokumento
 #Frequently Read
 #Hide frequently read
 #Image files (*.%s)
+#Mobi documents
 #Open a document...
 #Page %s
 #Postscript documents

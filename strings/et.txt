@@ -427,6 +427,9 @@ Tee SumatraPDF PDF-failide vaikerakenduseks
 Match Case
 Tõstutundlik
 
+Mobi documents
+Mobi-dokumendid
+
 Modified:
 Muudetud:
 

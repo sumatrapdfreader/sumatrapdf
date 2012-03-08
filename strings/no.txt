@@ -428,6 +428,9 @@ Bruk SumatraPDF som standard PDF-leser
 Match Case
 Skill mellom store og små bokstaver
 
+Mobi documents
+Mobi-dokumenter
+
 Modified:
 Endret:
 

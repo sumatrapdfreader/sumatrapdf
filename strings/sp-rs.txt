@@ -425,6 +425,9 @@ Neka SumatraPFD bude podrazumevani PDF čitač
 Match Case
 Razlikuj mala i velika slova
 
+Mobi documents
+Mobi dokumenti
+
 Modified:
 Izmenjena:
 

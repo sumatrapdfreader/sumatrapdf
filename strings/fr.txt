@@ -432,6 +432,9 @@ Définir SumatraPDF comme lecteur PDF par défaut
 Match Case
 Respecter la casse
 
+Mobi documents
+Fichiers Mobi
+
 Modified:
 Modifié le :
 

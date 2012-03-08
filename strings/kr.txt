@@ -430,6 +430,9 @@ SumatraPDF를 기본 PDF 리더로 만들기
 Match Case
 대/소문자 구분
 
+Mobi documents
+Mobi 문서
+
 Modified:
 수정 일자:
 

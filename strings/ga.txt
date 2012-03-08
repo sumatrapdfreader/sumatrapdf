@@ -425,6 +425,9 @@ Bíodh SumatraPDF mar an léitheoir PDF réamhshocruithe
 Match Case
 Comhoiriúnaigh an cás
 
+Mobi documents
+Cáipéisí Mobi
+
 Modified:
 Mionathraithe:
 

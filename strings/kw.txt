@@ -462,6 +462,7 @@ Faktor-zoum
 #Frequently Read
 #Hide frequently read
 #Image files (*.%s)
+#Mobi documents
 #Modified:
 #Number of Pages:
 #Open a document...

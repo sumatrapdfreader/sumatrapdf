@@ -658,6 +658,7 @@ spausdinamas dokumentas
 #Copy &Image
 #File %s not found
 #Fonts:
+#Mobi documents
 #Open in Microsoft XPS-Viewer
 #Replace document &colors with Windows color scheme
 #Save S&hortcut...\tCtrl+Shift+S

@@ -426,6 +426,9 @@ SumatraPDF naj bo privzeti bralnik PDF
 Match Case
 Razlikuj med velikimi/malimi črkami
 
+Mobi documents
+Mobi dokumenti
+
 Modified:
 Spremenjeno:
 

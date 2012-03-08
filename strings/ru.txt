@@ -432,6 +432,9 @@ Make SumatraPDF my default PDF reader
 Match Case
 Учитывать регистр
 
+Mobi documents
+Документы Mobi
+
 Modified:
 Изменён:
 

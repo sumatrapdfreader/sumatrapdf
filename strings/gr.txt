@@ -433,6 +433,9 @@ Make SumatraPDF my default PDF reader
 Match Case
 Αντιστοίχιση πεζών-κεφαλαίων
 
+Mobi documents
+Έγγραφα Mobi
+
 Modified:
 Τροποποιήθηκε:
 

@@ -300,6 +300,7 @@ Zoom Out
 #Hide frequently read
 #Hint: Use the F3 key for finding again
 #Image files (*.%s)
+#Mobi documents
 #Modified:
 #No matches were found
 #No result found around line %u in file %s

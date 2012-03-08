@@ -432,6 +432,9 @@ Tornar SumatraPDF o leitor principal dos PDF
 Match Case
 Sensível a maiúsculas
 
+Mobi documents
+Documentos Mobi
+
 Modified:
 Modificado:
 

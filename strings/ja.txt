@@ -425,6 +425,9 @@ SumatraPDF を規定の PDF リーダーにする
 Match Case
 大文字と小文字を区別する
 
+Mobi documents
+Mobi ドキュメント
+
 Modified:
 変更日時:
 

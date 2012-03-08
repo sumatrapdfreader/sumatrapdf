@@ -139,6 +139,9 @@ Blêdwizers\tF12
 Bytes
 Bytes
 
+CHM documents
+CHM-bestannen
+
 Cancel
 Annulearje
 
@@ -186,6 +189,9 @@ Standert &Zoom:
 
 Default PDF reader can't be changed in portable mode
 Standert PDF-lêzer kin net oanpast wurde yn portable moadus
+
+DjVu documents
+DjVu-bestannen
 
 Document Properties
 Dokuminteigenskippen
@@ -273,6 +279,9 @@ SumatraPDF as standert PDF-lêzer ynstelle
 
 Match Case
 Haadlettergefoelich
+
+Mobi documents
+Mobi-bestannen
 
 Modified:
 Oanpast:
@@ -418,6 +427,9 @@ Besykje it &webstee
 Warning
 Warskôging
 
+XPS documents
+XPS-bestannen
+
 You have the latest version.
 Jo brûke de meast resinte ferzje.
 
@@ -467,7 +479,6 @@ Zoomfaktor
 #Bookmark Shortcuts
 #Bookmark shortcut to page %s of %s
 #Bookmarks
-#CHM documents
 #Can't connect to the Internet (error %#x).
 #Comic books
 #Copy &Image
@@ -477,7 +488,6 @@ Zoomfaktor
 #Could not obtain Printer properties
 #Current file
 #Denied Permissions:
-#DjVu documents
 #Enter the command-line to invoke when you double-click on the PDF document:
 #Error loading %s
 #F&avorites
@@ -516,7 +526,6 @@ Zoomfaktor
 #Subject:
 #SumatraPDF Update
 #SumatraPDF crashed
-#XPS documents
 #copying text
 #printing document
 

@@ -675,5 +675,6 @@ printing document
 
 # Untranslated:
 #Fonts:
+#Mobi documents
 #Replace document &colors with Windows color scheme
 

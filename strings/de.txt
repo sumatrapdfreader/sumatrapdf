@@ -434,6 +434,9 @@ Standardmäßig PDF-Dateien mit SumatraPDF öffnen
 Match Case
 Groß-/Kleinschreibung beachten
 
+Mobi documents
+Mobi-Dokumente
+
 Modified:
 Geändert am:
 

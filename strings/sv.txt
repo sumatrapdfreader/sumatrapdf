@@ -660,5 +660,6 @@ skriver ut dokumentet
 #Could not obtain Printer properties
 #File %s not found
 #Fonts:
+#Mobi documents
 #Replace document &colors with Windows color scheme
 

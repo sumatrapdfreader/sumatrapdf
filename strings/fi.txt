@@ -429,6 +429,9 @@ Tee SumatraPDF:stä PDF-tiedostojen oletuslukuohjelma
 Match Case
 Sama kirjainkoko
 
+Mobi documents
+Mobi-asiakirjat
+
 Modified:
 Muuttanut:
 

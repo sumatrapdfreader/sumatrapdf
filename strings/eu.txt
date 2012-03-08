@@ -218,6 +218,9 @@ Gogokoenak
 Bytes
 Byte
 
+CHM documents
+CHM agiriak
+
 Can't connect to the Internet (error %#x).
 Ezinezkoa Internetera elkarketatzea (%#x akatsa).
 
@@ -415,6 +418,9 @@ Egin SumatraPDF nire berezko PDF irakurlea
 
 Match Case
 Hizki handiak edo txikiak bereizi
+
+Mobi documents
+Mobi agiriak
 
 Modified:
 Aldatuta:
@@ -658,7 +664,6 @@ agiria irarkitzen
 
 # Untranslated:
 #&Pin Document
-#CHM documents
 #Copy &Image
 #File %s not found
 #Fonts:

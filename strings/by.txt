@@ -416,6 +416,7 @@ Zoom Out
 #Hide frequently read
 #Hint: Use the F3 key for finding again
 #Image files (*.%s)
+#Mobi documents
 #Modified:
 #No synchronization file found
 #Number of Pages:

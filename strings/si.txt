@@ -534,6 +534,7 @@ printing document
 #Frequently Read
 #Hide frequently read
 #Image files (*.%s)
+#Mobi documents
 #No result found around line %u in file %s
 #Open a document...
 #P&roperties

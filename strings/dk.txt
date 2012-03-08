@@ -221,6 +221,9 @@ Bogmærker
 Bytes
 Bytes
 
+CHM documents
+CHM documenter
+
 Can't connect to the Internet (error %#x).
 Kan ikke forbinde til internettet (fejl %#x).
 
@@ -418,6 +421,9 @@ Gør SumatraPDF til min standard PDF-læser
 
 Match Case
 Versalfølsom søgning
+
+Mobi documents
+Mobi documenter
 
 Modified:
 Ændret:
@@ -664,7 +670,6 @@ udskriver dokument
 
 # Untranslated:
 #&Copy Selection
-#CHM documents
 #Copy &Image
 #File %s not found
 #Fonts:

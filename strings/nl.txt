@@ -436,6 +436,9 @@ SumatraPDF als standaard PDF-lezer instellen
 Match Case
 Hoofdlettergevoelig
 
+Mobi documents
+Mobi-bestanden
+
 Modified:
 Aangepast:
 

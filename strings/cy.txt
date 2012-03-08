@@ -170,6 +170,9 @@ Nodau Tudalen
 Bytes
 Beit
 
+CHM documents
+Dogfennau CHM
+
 Can't connect to the Internet (error %#x).
 Methu cysylltu â'r Rhyngrwyd (gwall %#x).
 
@@ -226,6 +229,9 @@ Nid oes modd newid y prif ddarllenydd yn y modd cludadwy
 
 Denied Permissions:
 Gwrthodwyd Caniatâd:
+
+DjVu documents
+Dogfennau DjVu
 
 Document Properties
 Priodweddau Dogfen
@@ -325,6 +331,9 @@ Gosod SumatraPDF fel y darllenydd PDF rhagosodedig
 
 Match Case
 Cydweddu Maint
+
+Mobi documents
+Dogfennau Mobi
 
 Modified:
 Newidwyd:
@@ -494,6 +503,9 @@ Visit &Website
 Warning
 Rhybudd
 
+XPS documents
+Dogfennau XPS
+
 You have the latest version.
 Mae'r fersiwn diweddaraf gennych.
 
@@ -536,14 +548,12 @@ argraffu dogfen
 #All supported documents
 #Bookmark Shortcuts
 #Bookmark shortcut to page %s of %s
-#CHM documents
 #Comic books
 #Copy &Image
 #Copy &Link Address
 #Copy Co&mment
 #Could not obtain Printer properties
 #Current file
-#DjVu documents
 #Enter the command-line to invoke when you double-click on the PDF document:
 #Error loading %s
 #F&avorites
@@ -570,6 +580,5 @@ argraffu dogfen
 #Show Favorites
 #Show frequently read
 #Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
-#XPS documents
 #[Changes detected; refreshing] %s
 

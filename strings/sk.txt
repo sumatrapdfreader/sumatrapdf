@@ -430,6 +430,9 @@ Nastaviť SumatraPDF ako predvolený PDF prehliadač
 Match Case
 Rozlišovať veľké/malé písmená
 
+Mobi documents
+Mobi dokumenty
+
 Modified:
 Upravené:
 
