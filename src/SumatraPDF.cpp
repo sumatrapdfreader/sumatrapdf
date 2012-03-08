@@ -984,10 +984,8 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
     bool showWin = true;
     bool placeWindow = false;
     ScopedMem<TCHAR> path(str::Dup(win->loadedFilePath));
-    HwndPasswordUI *pwdUI = new HwndPasswordUI(win->hwndFrame, false);
-    bool loaded = LoadDocIntoWindow(path, *win, pwdUI, &ds, isNewWindow, allowFailure, showWin, placeWindow);
-    delete pwdUI;
-    if (!loaded)
+    HwndPasswordUI pwdUI(win->hwndFrame, false);
+    if (!LoadDocIntoWindow(path, *win, &pwdUI, &ds, isNewWindow, allowFailure, showWin, placeWindow))
         return;
 
     if (gGlobalPrefs.showStartPage) {
@@ -1256,10 +1254,9 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin,
     win->notifications->RemoveAllInGroup(NG_RESPONSE_TO_ACTION);
     win->notifications->RemoveAllInGroup(NG_PAGE_INFO_HELPER);
 
-    HwndPasswordUI *pwdUI = new HwndPasswordUI(win->hwndFrame, suppressPwdUI);
-    bool loaded = LoadDocIntoWindow(fullPath, *win, pwdUI, NULL, isNewWindow,
+    HwndPasswordUI pwdUI(win->hwndFrame, suppressPwdUI);
+    bool loaded = LoadDocIntoWindow(fullPath, *win, &pwdUI, NULL, isNewWindow,
                            true /* allowFailure */, showWin, true /* placeWindow */);
-    delete pwdUI;
 
     if (!loaded) {
         if (gFileHistory.MarkFileInexistent(fullPath))
