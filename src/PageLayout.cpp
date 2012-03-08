@@ -6,6 +6,9 @@
 #include "PageLayout.h"
 #include "StrUtil.h"
 
+using namespace Gdiplus;
+#include "GdiPlusUtil.h"
+
 /*
 Given size of a page, we format html into a set of pages. We handle only a small
 subset of html commonly present in ebooks.

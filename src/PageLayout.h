@@ -11,7 +11,6 @@
 #include "Vec.h"
 
 using namespace Gdiplus;
-#include "GdiPlusUtil.h"
 
 // Layout information for a given page is a list of
 // draw instructions that define what to draw and where.

@@ -22,7 +22,6 @@ struct EbookControls {
 
 EbookControls * CreateEbookControls(HWND hwnd);
 void            DestroyEbookControls(EbookControls* controls);
-void            DeleteEbookStyles();
 
 struct PageData;
 
@@ -30,19 +29,19 @@ struct PageData;
 // TODO: move to a separate file
 class PageControl : public Control
 {
-    static const int CircleR = 10;
     PageData *  page;
     int         cursorX, cursorY;
 
 public:
+    PageControl() : page(NULL), cursorX(-1), cursorY(-1) {
+        bit::Set(wantedInputBits, WantsMouseMoveBit);
+    }
+    virtual ~PageControl() { }
+
     void      SetPage(PageData *newPage) { page = newPage; RequestRepaint(this); }
     PageData* GetPage() const { return page; }
 
-    PageControl() : page(NULL), cursorX(-1), cursorY(-1) { bit::Set(wantedInputBits, WantsMouseMoveBit); }
-
     Size GetDrawableSize();
-
-    virtual ~PageControl() { }
 
     virtual void Paint(Graphics *gfx, int offX, int offY);
 

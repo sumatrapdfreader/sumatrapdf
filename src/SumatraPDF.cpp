@@ -9,7 +9,7 @@
 #include "AppPrefs.h"
 #include "AppTools.h"
 #include "CrashHandler.h"
-#include "EbookControls.h"
+#include "EbookController.h"
 #include "ExternalPdfViewer.h"
 #include "FileHistory.h"
 #include "Favorites.h"
@@ -19,7 +19,6 @@
 #include "HtmlWindow.h"
 #include "Menu.h"
 #include "Mui.h"
-#include "MobiDoc.h"
 #include "MobiWindow.h"
 #include "Notifications.h"
 #include "ParseCommandLine.h"
@@ -1195,19 +1194,19 @@ static void LoadMobiAsync(const TCHAR *fileName, SumatraWindow& win)
     // TODO: we should show a notification in the window user is looking at
 }
 
-// document path is either a file or a directory (when browsing images inside
-// directory).
-// We have a special handling for embedded documents which are referred to by
-// an invalid path containing more information after a colon (e.g. "C:\file.pdf:3:0")
-// We consider any path like that valid.
-// TODO: we could be more precise and check if a file exists after stripping
-// extra information from embedded document paths
+// document path is either a file or a directory
+// (when browsing images inside directory).
 static bool DocumentPathExists(const TCHAR *path)
 {
     if (file::Exists(path) || dir::Exists(path))
         return true;
-    if (str::FindChar(path + 2, ':'))
-        return true;
+    if (str::FindChar(path + 2, ':')) {
+        // remove information needed for pointing at embedded documents
+        // (e.g. "C:\path\file.pdf:3:0") to check at least whether the
+        // container document exists
+        ScopedMem<TCHAR> realPath(str::DupN(path, str::FindChar(path + 2, ':') - path));
+        return file::Exists(realPath);
+    }
     return false;
 }
 

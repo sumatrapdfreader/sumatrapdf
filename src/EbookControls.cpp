@@ -27,8 +27,8 @@ static Rect RectForCircle(int x, int y, int r)
 void PageControl::NotifyMouseMove(int x, int y)
 {
 #if 0
-    Rect r1 = RectForCircle(cursorX, cursorY, CircleR);
-    Rect r2 = RectForCircle(x, y, CircleR);
+    Rect r1 = RectForCircle(cursorX, cursorY, 10);
+    Rect r2 = RectForCircle(x, y, 10);
     cursorX = x; cursorY = y;
     r1.Inflate(1,1); r2.Inflate(1,1);
     RequestRepaint(this, &r1, &r2);
@@ -56,7 +56,7 @@ void PageControl::Paint(Graphics *gfx, int offX, int offY)
         SolidBrush br(Color(180, 0, 0, 255));
         int x = offX + cursorX;
         int y = offY + cursorY;
-        Rect r(RectForCircle(x, y, CircleR));
+        Rect r(RectForCircle(x, y, 10));
         gfx->FillEllipse(&br, r);
     }
 #endif
@@ -82,6 +82,18 @@ void PageControl::Paint(Graphics *gfx, int offX, int offY)
 
     DrawPageLayout(gfx, &page->instructions, (REAL)r.X, (REAL)r.Y, IsDebugPaint());
     gfx->SetClip(&origClipRegion, CombineModeReplace);
+}
+
+// should only be called once at the end of the program
+static int DeleteEbookStyles()
+{
+    delete styleStatus;
+    delete styleBtnNextPrevDefault;
+    delete styleBtnNextPrevMouseOver;
+    delete stylePage;
+    delete styleProgress;
+    delete styleMainWnd;
+    return 0;
 }
 
 static void CreateEbookStyles()
@@ -126,17 +138,8 @@ static void CreateEbookStyles()
     styleProgress = new Style();
     styleProgress->Set(Prop::AllocColorSolid(PropBgColor, COLOR_LIGHT_GRAY));
     styleProgress->Set(Prop::AllocColorSolid(PropColor, COLOR_LIGHT_BLUE));
-}
 
-// should only be called once at the end of the program
-void DeleteEbookStyles()
-{
-    delete styleStatus;
-    delete styleBtnNextPrevDefault;
-    delete styleBtnNextPrevMouseOver;
-    delete stylePage;
-    delete styleProgress;
-    delete styleMainWnd;
+    _onexit(DeleteEbookStyles);
 }
 
 static void CreateLayout(EbookControls *ctrls)

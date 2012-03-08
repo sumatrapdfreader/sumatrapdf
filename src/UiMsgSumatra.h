@@ -3,9 +3,6 @@
 #ifndef UiMsgSumatra_h
 #define UiMsgSumatra_h
 
-struct PageData;
-class  MobiDoc;
-class  ThreadLayoutMobi;
 #include "EbookController.h"
 
 class UiMsg {
@@ -28,4 +25,5 @@ public:
             finishedMobiLoading.Free();
     }
 };
+
 #endif

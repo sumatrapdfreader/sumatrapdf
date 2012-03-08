@@ -17,8 +17,6 @@ class   EbookController;
 struct  PageData;
 class   MobiDoc;
 class   ThreadLayoutMobi;
-class   WindowInfo;
-class   MobiWindow;
 
 struct FinishedMobiLoadingData {
     TCHAR *         fileName;
