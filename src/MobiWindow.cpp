@@ -169,12 +169,6 @@ static LRESULT OnKeyDown(MobiWindow *win, UINT msg, WPARAM key, LPARAM lParam)
 static void CloseMobiWindow(MobiWindow *win)
 {
     // TODO: write me
-
-}
-
-static void OnMenuOpenMobi(MobiWindow *win)
-{
-    // TODO: write me
 }
 
 static void RebuildMenuBarForMobiWindow(MobiWindow *win)
@@ -207,7 +201,7 @@ static LRESULT OnCommand(MobiWindow *win, UINT msg, WPARAM wParam, LPARAM lParam
     {
         case IDM_OPEN:
         case IDT_FILE_OPEN:
-            OnMenuOpenMobi(win);
+            OnMenuOpen(MakeSumatraWindow(win));
             break;
 
         case IDT_FILE_EXIT:

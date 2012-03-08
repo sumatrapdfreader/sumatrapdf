@@ -6,6 +6,7 @@
 
 #include "BaseUtil.h"
 #include "AppPrefs.h"
+#include "SumatraWindow.h"
 #include "TextSearch.h"
 
 #define UWM_PREFS_FILE_UPDATED  (WM_USER + 1)
@@ -103,11 +104,13 @@ void  OnMenuExit();
 void  AutoUpdateCheckAsync(HWND hwnd, bool autoCheck);
 void  OnMenuChangeLanguage(HWND hwnd);
 void  OnDropFiles(HDROP hDrop);
+void  OnMenuOpen(SumatraWindow& win);
 
 WindowInfo* FindWindowInfoByFile(const TCHAR *file);
 WindowInfo* FindWindowInfoByHwnd(HWND hwnd);
 WindowInfo* FindWindowInfoBySyncFile(const TCHAR *file);
 WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win=NULL,
                          bool showWin=true, bool forceReuse=false, bool suppressPwdUI=false);
+void        LoadDocument(const TCHAR *fileName, SumatraWindow& win);
 
 #endif

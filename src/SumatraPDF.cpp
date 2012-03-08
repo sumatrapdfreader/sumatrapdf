@@ -1214,6 +1214,20 @@ static bool DocumentPathExists(const TCHAR *path)
     return false;
 }
 
+void LoadDocument(const TCHAR *fileName, SumatraWindow& win)
+{
+    // TODO: opening non-mobi files from mobi window doesn't work exactly
+    // as opening them from non-mobi window
+    if (SumatraWindow::WinInfo == win.type) {
+        LoadDocument(fileName, win.winInfo);
+        return;
+    }
+    CrashIf(SumatraWindow::WinMobi != win.type);
+    // TODO: LoadDocument() needs to handle SumatraWindow, for now
+    // we force opening in a new window
+    LoadDocument(fileName, NULL);
+}
+
 // TODO: eventually I would like to move all loading to be async. To achieve that
 // we need clear separatation of loading process into 2 phases: loading the
 // file (and showing progress/load failures in topmost window) and placing
@@ -2564,7 +2578,18 @@ static UINT_PTR CALLBACK FileOpenHook(HWND hDlg, UINT uiMsg, WPARAM wParam, LPAR
 }
 #endif
 
-static void OnMenuOpen(WindowInfo& win)
+HWND GetSumatraWindowHwnd(const SumatraWindow& win)
+{
+    if (SumatraWindow::WinInfo == win.type) {
+        return win.winInfo->hwndFrame;
+    } else {
+        CrashIf(SumatraWindow::WinMobi != win.type);
+        return win.winMobi->hwndFrame;
+    }
+    return NULL;
+}
+
+void OnMenuOpen(SumatraWindow& win)
 {
     if (!HasPermission(Perm_DiskAccess)) return;
     // don't allow opening different files in plugin mode
@@ -2581,7 +2606,8 @@ static void OnMenuOpen(WindowInfo& win)
         { _TR("DjVu documents"),        _T("*.djvu"),       true },
         { _TR("Postscript documents"),  _T("*.ps;*.eps"),   PsEngine::IsAvailable() },
         { _TR("Comic books"),           _T("*.cbz;*.cbr"),  true },
-        { _TR("CHM documents"),          _T("*.chm"),       true },
+        { _TR("CHM documents"),         _T("*.chm"),        true },
+        { _T("Mobi documents"),         _T("*.mobi"),       true }, // TODO: translate "Mobi documents"
     };
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
@@ -2599,15 +2625,18 @@ static void OnMenuOpen(WindowInfo& win)
     filters.Reset();
 
     for (int i = 0; i < dimof(fileFormats); i++) {
-        if (fileFormats[i].available)
-            fileFilter.AppendAndFree(str::Format(_T("%s\1%s\1"), fileFormats[i].name, fileFormats[i].filter));
+        if (fileFormats[i].available) {
+            const TCHAR *name = fileFormats[i].name;
+            TCHAR *filter = fileFormats[i].filter;
+            fileFilter.AppendAndFree(str::Format(_T("%s\1%s\1"), name, filter));
+        }
     }
     fileFilter.AppendAndFree(str::Format(_T("%s\1*.*\1"), _TR("All files")));
     str::TransChars(fileFilter.Get(), _T("\1"), _T("\0"));
 
     OPENFILENAME ofn = { 0 };
     ofn.lStructSize = sizeof(ofn);
-    ofn.hwndOwner = win.hwndFrame;
+    ofn.hwndOwner = GetSumatraWindowHwnd(win);
 
     ofn.lpstrFilter = fileFilter.Get();
     ofn.nFilterIndex = 1;
@@ -2640,14 +2669,14 @@ static void OnMenuOpen(WindowInfo& win)
     TCHAR *fileName = ofn.lpstrFile + ofn.nFileOffset;
     if (*(fileName - 1)) {
         // special case: single filename without NULL separator
-        LoadDocument(ofn.lpstrFile, &win);
+        LoadDocument(ofn.lpstrFile, win);
         return;
     }
 
     while (*fileName) {
         ScopedMem<TCHAR> filePath(path::Join(ofn.lpstrFile, fileName));
         if (filePath)
-            LoadDocument(filePath, &win);
+            LoadDocument(filePath, win);
         fileName += str::Len(fileName) + 1;
     }
 }
@@ -4181,7 +4210,7 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
     {
         case IDM_OPEN:
         case IDT_FILE_OPEN:
-            OnMenuOpen(*win);
+            OnMenuOpen(MakeSumatraWindow(win));
             break;
         case IDM_SAVEAS:
             OnMenuSaveAs(*win);

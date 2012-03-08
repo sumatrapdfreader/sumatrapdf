@@ -10,11 +10,12 @@ Specific things that still need to be added for minimal mobi support:
 - opening a mobi file from non-mobi window needs to preserve the illusion it works
   as opening non-mobi windows. The simplest is probably opening new window on top
   of the old window and closing the old window
-- opening non-mobi file from mobi window i.e. OnMenuOpenMobi()
 - closing mobi window CloseMobiWindow(). Need to transition into about window
   if it's the last window
 - file/close on mobi window
 - thumbnails for mobi files
+- touch gestures for mobi window
+- don't close sumatra if last non-mobi window is closed but we still have mobi windows
 
 Implicitly everything else is for later, including fullscreen, printing,
 search etc.
