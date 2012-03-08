@@ -427,6 +427,9 @@ Make SumatraPDF my default PDF reader
 Match Case
 Հաշվի առնել մեծատառ/փոքրատառը
 
+Mobi documents
+XPS ֆայլեր
+
 Modified:
 Փոփոխված.
 
@@ -672,6 +675,5 @@ printing document
 
 # Untranslated:
 #Fonts:
-#Mobi documents
 #Replace document &colors with Windows color scheme
 

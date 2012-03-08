@@ -221,6 +221,9 @@ Marcaje
 Bytes
 Octeți
 
+CHM documents
+Documente CHM
+
 Can't connect to the Internet (error %#x).
 Conectare la Internet eșuată (eroare %#x).
 
@@ -418,6 +421,9 @@ Setați SumatraPDF ca cititor implicit de PDF
 
 Match Case
 Potrivire literele mari și mici
+
+Mobi documents
+Documente Mobi
 
 Modified:
 Modificat:
@@ -663,10 +669,8 @@ printing document
 se imprimă documentul
 
 # Untranslated:
-#CHM documents
 #Copy &Image
 #File %s not found
 #Fonts:
-#Mobi documents
 #Replace document &colors with Windows color scheme
 

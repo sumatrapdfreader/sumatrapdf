@@ -206,6 +206,9 @@ Bookmarks
 Bytes
 字節
 
+CHM documents
+CHM 文件
+
 Can't connect to the Internet (error %#x).
 無法連結網際網路（錯誤：%#x）。
 
@@ -391,6 +394,9 @@ Make SumatraPDF my default PDF reader
 
 Match Case
 符合大小寫
+
+Mobi documents
+Mobi 文件
 
 Modified:
 檔案更新日期：
@@ -626,7 +632,6 @@ printing document
 #Add page %s to favorites
 #Add page %s to favorites with (optional) name:
 #Add to favorites
-#CHM documents
 #Copy &Image
 #Could not obtain Printer properties
 #Current file
@@ -634,7 +639,6 @@ printing document
 #Favorites
 #File %s not found
 #Fonts:
-#Mobi documents
 #Page %s
 #Printer with given name doesn't exist
 #Remove from favorites

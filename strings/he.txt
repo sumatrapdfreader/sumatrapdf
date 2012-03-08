@@ -221,6 +221,9 @@ Bookmarks
 Bytes
 ביטים
 
+CHM documents
+CHM מסמכי
+
 Can't connect to the Internet (error %#x).
 לא יכול להתקשר לאינטרנט (error %#x).
 
@@ -418,6 +421,9 @@ PDF הפוך את סומטרה לברירת מחדל עבור קבצי
 
 Match Case
 התאם לאותיות קטנות/גדולות
+
+Mobi documents
+Mobi מסמכי
 
 Modified:
 שונה:
@@ -663,10 +669,8 @@ printing document
 מדפיס מסמך
 
 # Untranslated:
-#CHM documents
 #Copy &Image
 #File %s not found
 #Fonts:
-#Mobi documents
 #Replace document &colors with Windows color scheme
 

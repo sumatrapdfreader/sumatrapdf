@@ -205,6 +205,9 @@ Oznake
 Bytes
 Bajtova
 
+CHM documents
+CHM dokumenti
+
 Can't connect to the Internet (error %#x).
 Internet nedostupan (greška %#x)
 
@@ -390,6 +393,9 @@ Neka SumatraPDF bude pretpostavljeni preglednik PDF datoteka
 
 Match Case
 Razlikuj velika i mala slova
+
+Mobi documents
+Mobi dokumenti
 
 Modified:
 Promijenjeno:
@@ -625,7 +631,6 @@ ispisujem dokument
 #Add page %s to favorites
 #Add page %s to favorites with (optional) name:
 #Add to favorites
-#CHM documents
 #Copy &Image
 #Could not obtain Printer properties
 #Current file
@@ -633,7 +638,6 @@ ispisujem dokument
 #Favorites
 #File %s not found
 #Fonts:
-#Mobi documents
 #Page %s
 #Printer with given name doesn't exist
 #Remove from favorites

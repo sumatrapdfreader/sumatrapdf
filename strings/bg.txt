@@ -428,6 +428,9 @@ Make SumatraPDF my default PDF reader
 Match Case
 Същия текст
 
+Mobi documents
+Mobi документи
+
 Modified:
 Модифициран:
 
@@ -673,6 +676,5 @@ printing document
 
 # Untranslated:
 #Fonts:
-#Mobi documents
 #Replace document &colors with Windows color scheme
 

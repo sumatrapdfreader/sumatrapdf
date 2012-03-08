@@ -428,6 +428,9 @@ Tornar o SumatraPDF o leitor PDF padrão
 Match Case
 Diferenciar minúsculas e maiúsculas
 
+Mobi documents
+Documentos Mobi
+
 Modified:
 Modificado:
 
@@ -673,6 +676,5 @@ imprimindo documento
 
 # Untranslated:
 #Fonts:
-#Mobi documents
 #Replace document &colors with Windows color scheme
 

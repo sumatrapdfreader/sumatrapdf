@@ -430,6 +430,9 @@ PDF جعل هذا البرنامج القارىء الرئيسي لملفات
 Match Case
 مناسبة الخط
 
+Mobi documents
+ملفات Mobi
+
 Modified:
 التعديل
 
@@ -675,6 +678,5 @@ printing document
 
 # Untranslated:
 #Fonts:
-#Mobi documents
 #Replace document &colors with Windows color scheme
 

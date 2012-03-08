@@ -223,6 +223,9 @@ Könyvjelzők
 Bytes
 bájt
 
+CHM documents
+CHM fájlok
+
 Can't connect to the Internet (error %#x).
 Nem sikerült kapcsolódni az Internetre (hiba %#x).
 
@@ -420,6 +423,9 @@ SumatraPDF mint alapértelmezett PDF olvasó
 
 Match Case
 Kis- és nagybetűk megkülönböztetése
+
+Mobi documents
+Mobi fájlok
 
 Modified:
 Módosítva:
@@ -665,10 +671,8 @@ printing document
 Nyomtatás
 
 # Untranslated:
-#CHM documents
 #Copy &Image
 #File %s not found
 #Fonts:
-#Mobi documents
 #Replace document &colors with Windows color scheme
 

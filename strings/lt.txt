@@ -216,6 +216,9 @@ Bookmarks
 Bytes
 baitų
 
+CHM documents
+CHM dokumentai
+
 Can't connect to the Internet (error %#x).
 Ryšys su internetu nutrūko (klaida %#x).
 
@@ -413,6 +416,9 @@ Make SumatraPDF my default PDF reader
 
 Match Case
 Skirti didžiąsias ir mažąsias raides
+
+Mobi documents
+Mobi dokumentai
 
 Modified:
 Keistas:
@@ -654,11 +660,9 @@ spausdinamas dokumentas
 # Untranslated:
 #Bookmark Shortcuts
 #Bookmark shortcut to page %s of %s
-#CHM documents
 #Copy &Image
 #File %s not found
 #Fonts:
-#Mobi documents
 #Open in Microsoft XPS-Viewer
 #Replace document &colors with Windows color scheme
 #Save S&hortcut...\tCtrl+Shift+S

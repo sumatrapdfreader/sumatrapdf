@@ -427,6 +427,9 @@ Učini SumatraPDF mojim glavnim čitačem PDF fajlova
 Match Case
 Razlikuj velika i mala slova
 
+Mobi documents
+Mobi dokumenti
+
 Modified:
 Izmijenjeno:
 
@@ -672,6 +675,5 @@ printing document
 
 # Untranslated:
 #Fonts:
-#Mobi documents
 #Replace document &colors with Windows color scheme
 

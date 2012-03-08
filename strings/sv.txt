@@ -214,6 +214,9 @@ Bokmärken
 Bytes
 Byte
 
+CHM documents
+CHM-dokument
+
 Can't connect to the Internet (error %#x).
 Kan ej ansluta till internet (fel %#x).
 
@@ -405,6 +408,9 @@ Använd SumatraPDF som standardläsare för PDF
 
 Match Case
 Matcha versaler/gemener
+
+Mobi documents
+Mobi-dokument
 
 Modified:
 Ändrad:
@@ -654,12 +660,10 @@ skriver ut dokumentet
 #All supported documents
 #Bookmark Shortcuts
 #Bookmark shortcut to page %s of %s
-#CHM documents
 #Comic books
 #Copy &Image
 #Could not obtain Printer properties
 #File %s not found
 #Fonts:
-#Mobi documents
 #Replace document &colors with Windows color scheme
 
