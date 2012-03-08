@@ -460,15 +460,9 @@ static void OnPaintProperties(HWND hwnd)
 
 void CopyPropertiesToClipboard(HWND hwnd)
 {
-    // just concatenate all the properties into a multi-line string
+    // concatenate all the properties into a multi-line string
     PropertiesLayout *layoutData = (PropertiesLayout *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-    assert(layoutData);
-    if (!layoutData) {
-        // TODO: remove once the bug has been fixed (no need to translate)
-        CopyTextToClipboard(_T("Please see http://code.google.com/p/sumatrapdf/wiki/SubmittingBugReports for how to report this bug!"));
-        CrashIf(true);
-        return;
-    }
+    CrashIf(!layoutData);
 
     str::Str<TCHAR> lines(256);
     for (size_t i = 0; i < layoutData->Count(); i++) {
