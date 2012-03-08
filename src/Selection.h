@@ -34,7 +34,7 @@ void DeleteOldSelectionInfo(WindowInfo *win, bool alsoTextSel=false);
 void PaintTransparentRectangles(HDC hdc, RectI screenRc, Vec<RectI>& rects, COLORREF selectionColor, BYTE alpha=0x5f, int margin=1);
 void PaintSelection(WindowInfo *win, HDC hdc);
 void UpdateTextSelection(WindowInfo *win, bool select=true);
-void ZoomToSelection(WindowInfo *win, float factor, bool relative);
+void ZoomToSelection(WindowInfo *win, float factor, bool relative=false);
 void CopySelectionToClipboard(WindowInfo *win);
 void OnSelectAll(WindowInfo *win, bool textOnly=false);
 void OnSelectionEdgeAutoscroll(WindowInfo *win, int x, int y);

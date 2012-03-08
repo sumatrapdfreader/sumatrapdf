@@ -666,7 +666,7 @@ static const TCHAR *HandleSetViewCmd(const TCHAR *cmd, DDEACK& ack)
         SwitchToDisplayMode(win, mode);
 
     if (zoom != INVALID_ZOOM)
-        ZoomToSelection(win, zoom, false);
+        ZoomToSelection(win, zoom);
 
     if (scroll.x != -1 || scroll.y != -1) {
         ScrollState ss = win->dm->GetScrollState();

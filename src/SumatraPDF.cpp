@@ -48,9 +48,6 @@
 /* Define THREAD_BASED_FILEWATCH to use the thread-based implementation of file change detection. */
 #define THREAD_BASED_FILEWATCH
 
-#define ZOOM_IN_FACTOR      1.2f
-#define ZOOM_OUT_FACTOR     1.0f / ZOOM_IN_FACTOR
-
 /* if TRUE, we're in debug mode where we show links as blue rectangle on
    the screen. Makes debugging code related to links easier. */
 #ifdef DEBUG
@@ -2963,7 +2960,7 @@ static void ChangeZoomLevel(WindowInfo *win, float newZoom, bool pagesContinuous
     else if (win->prevZoomVirtual != INVALID_ZOOM) {
         float prevZoom = win->prevZoomVirtual;
         SwitchToDisplayMode(win, win->prevDisplayMode);
-        ZoomToSelection(win, prevZoom, false);
+        ZoomToSelection(win, prevZoom);
     }
 }
 
@@ -3313,10 +3310,10 @@ static void FrameOnChar(WindowInfo& win, WPARAM key)
         win.ToggleZoom();
         break;
     case '+':
-        ZoomToSelection(&win, ZOOM_IN_FACTOR, true);
+        ZoomToSelection(&win, win.dm->NextZoomStep(ZOOM_MAX));
         break;
     case '-':
-        ZoomToSelection(&win, ZOOM_OUT_FACTOR, true);
+        ZoomToSelection(&win, win.dm->NextZoomStep(ZOOM_MIN));
         break;
     case '/':
         if (!gIsDivideKeyDown)
@@ -3910,8 +3907,8 @@ static LRESULT CanvasOnMouseWheel(WindowInfo& win, UINT message, WPARAM wParam, 
         POINT pt;
         GetCursorPosInHwnd(win.hwndCanvas, pt);
 
-        float factor = delta < 0 ? ZOOM_OUT_FACTOR : ZOOM_IN_FACTOR;
-        win.dm->ZoomBy(factor, &PointI(pt.x, pt.y));
+        float zoom = win.dm->NextZoomStep(delta < 0 ? ZOOM_MIN : ZOOM_MAX);
+        win.dm->ZoomTo(zoom, &PointI(pt.x, pt.y));
         UpdateToolbarState(&win);
 
         // don't show the context menu when zooming with the right mouse-button down
@@ -4270,11 +4267,13 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
             break;
 
         case IDT_VIEW_ZOOMIN:
-            ZoomToSelection(win, ZOOM_IN_FACTOR, true);
+            if (win->IsDocLoaded())
+                ZoomToSelection(win, win->dm->NextZoomStep(ZOOM_MAX));
             break;
 
         case IDT_VIEW_ZOOMOUT:
-            ZoomToSelection(win, ZOOM_OUT_FACTOR, true);
+            if (win->IsDocLoaded())
+                ZoomToSelection(win, win->dm->NextZoomStep(ZOOM_MIN));
             break;
 
         case IDM_ZOOM_6400:

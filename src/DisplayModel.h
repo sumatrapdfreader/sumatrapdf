@@ -179,6 +179,7 @@ public:
 
     void            ZoomTo(float zoomVirtual, PointI *fixPt=NULL);
     void            ZoomBy(float zoomFactor, PointI *fixPt=NULL);
+    float           NextZoomStep(float towardsLevel);
     void            RotateBy(int rotation);
 
     TCHAR *         GetTextInRegion(int pageNo, RectD region);

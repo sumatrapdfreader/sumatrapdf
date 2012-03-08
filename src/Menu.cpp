@@ -487,7 +487,7 @@ void OnMenuZoom(WindowInfo* win, UINT menuId)
         return;
 
     float zoom = ZoomMenuItemToZoom(menuId);
-    ZoomToSelection(win, zoom, false);
+    ZoomToSelection(win, zoom);
 }
 
 void OnMenuCustomZoom(WindowInfo* win)
@@ -498,7 +498,7 @@ void OnMenuCustomZoom(WindowInfo* win)
     float zoom = win->dm->ZoomVirtual();
     if (!Dialog_CustomZoom(win->hwndFrame, win->IsChm(), &zoom))
         return;
-    ZoomToSelection(win, zoom, false);
+    ZoomToSelection(win, zoom);
 }
 
 static void RebuildFileMenu(WindowInfo *win, HMENU menu)

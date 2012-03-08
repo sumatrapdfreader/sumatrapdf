@@ -275,6 +275,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\SumatraWindow.h"
+					>
+				</File>
+				<File
 					RelativePath=".\src\TableOfContents.cpp"
 					>
 				</File>
@@ -610,6 +614,10 @@
 				</File>
 				<File
 					RelativePath=".\src\utils\Scoped.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\utils\Sigslot.h"
 					>
 				</File>
 				<File

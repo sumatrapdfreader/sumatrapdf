@@ -122,8 +122,7 @@ static bool IsValidZoom(float zoomLevel)
 {
     if (IsZoomVirtual(zoomLevel))
         return true;
-    if ((zoomLevel < ZOOM_MIN) || (zoomLevel > ZOOM_MAX)) {
-        assert(0);
+    if ((zoomLevel < ZOOM_MIN - 0.01f) || (zoomLevel > ZOOM_MAX + 0.01f)) {
         return false;
     }
     return true;
@@ -1314,6 +1313,62 @@ void DisplayModel::ZoomBy(float zoomFactor, PointI *fixPt)
     newZoom = limitValue(newZoom, ZOOM_MIN, ZOOM_MAX);
     //lf("DisplayModel::zoomBy() zoomReal=%.6f, zoomFactor=%.2f, newZoom=%.2f", dm->zoomReal, zoomFactor, newZoom);
     ZoomTo(newZoom, fixPt);
+}
+
+float DisplayModel::NextZoomStep(float towardsLevel)
+{
+    // define USE_CONTINUOUS_ZOOM to use a continuous zoom range with
+    // all steps exactly 20% apart instead of the predefined zoom levels
+#ifdef USE_CONTINUOUS_ZOOM
+    const float zoomFactor = 1.2f;
+    float newZoom = ZoomAbsolute();
+    if (newZoom < towardsLevel)
+        newZoom = min(newZoom * zoomFactor, towardsLevel);
+    else if (newZoom > towardsLevel)
+        newZoom = max(newZoom / zoomFactor, towardsLevel);
+#else
+    // differences to Adobe Reader: starts at 8.33 (instead of 1 and 6.25)
+    // and has four additional intermediary zoom levels ("added")
+    static float zoomLevels[] = {
+        8.33f, 12.5f, 18 /* added */, 25, 33.33f, 50, 66.67f, 75,
+        100, 125, 150, 200, 300, 400, 600, 800, 1000 /* added */,
+        1200, 1600, 2000 /* added */, 2400, 3200, 4800 /* added */, 6400
+    };
+
+    int currPageNo = CurrentPageNo();
+    float pageZoom = ZoomRealFromVirtualForPage(ZOOM_FIT_PAGE, currPageNo) * 100 / dpiFactor;
+    float widthZoom = ZoomRealFromVirtualForPage(ZOOM_FIT_WIDTH, currPageNo) * 100 / dpiFactor;
+    float currZoom = ZoomAbsolute();
+
+    float newZoom = towardsLevel;
+    if (currZoom < towardsLevel) {
+        for (int i = 0; i < dimof(zoomLevels); i++) {
+            if (zoomLevels[i] - 0.01f <= currZoom)
+                continue;
+            if (currZoom < pageZoom && pageZoom <= zoomLevels[i])
+                newZoom = ZOOM_FIT_PAGE;
+            else if (currZoom < widthZoom && widthZoom <= zoomLevels[i])
+                newZoom = ZOOM_FIT_WIDTH;
+            else
+                newZoom = zoomLevels[i];
+            break;
+        }
+    } else if (currZoom > towardsLevel) {
+        for (int i = dimof(zoomLevels); i > 0; i--) {
+            if (currZoom <= zoomLevels[i-1] + 0.01f)
+                continue;
+            if (zoomLevels[i-1] <= pageZoom && pageZoom < currZoom)
+                newZoom = ZOOM_FIT_PAGE;
+            else if (zoomLevels[i-1] <= widthZoom && widthZoom < currZoom)
+                newZoom = ZOOM_FIT_WIDTH;
+            else
+                newZoom = zoomLevels[i-1];
+            break;
+        }
+    }
+#endif
+
+    return newZoom;
 }
 
 void DisplayModel::RotateBy(int newRotation)

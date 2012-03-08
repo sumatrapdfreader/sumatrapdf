@@ -179,7 +179,7 @@ static bool LoadOnStartup(CommandLineInfo& i, int n, bool firstIsDocLoaded)
     if (i.startView != DM_AUTOMATIC)
         SwitchToDisplayMode(win, i.startView);
     if (i.startZoom != INVALID_ZOOM)
-        ZoomToSelection(win, i.startZoom, false);
+        ZoomToSelection(win, i.startZoom);
     if (i.startScroll.x != -1 || i.startScroll.y != -1) {
         ScrollState ss = win->dm->GetScrollState();
         ss.x = i.startScroll.x;
