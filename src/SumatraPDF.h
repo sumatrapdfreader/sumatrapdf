@@ -105,6 +105,8 @@ void  AutoUpdateCheckAsync(HWND hwnd, bool autoCheck);
 void  OnMenuChangeLanguage(HWND hwnd);
 void  OnDropFiles(HDROP hDrop);
 void  OnMenuOpen(SumatraWindow& win);
+void  CloseDocumentInWindow(WindowInfo *win);
+void  CloseDocumentAndDeleteWindowInfo(WindowInfo *win);
 
 WindowInfo* FindWindowInfoByFile(const TCHAR *file);
 WindowInfo* FindWindowInfoByHwnd(HWND hwnd);

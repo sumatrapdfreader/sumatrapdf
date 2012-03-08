@@ -3,6 +3,7 @@
 #include "AppTools.h"
 #include "EbookController.h"
 #include "EbookControls.h"
+#include "FileHistory.h"
 #include "Menu.h"
 #include "MobiDoc.h"
 #include "Resource.h"
@@ -347,11 +348,20 @@ void OpenMobiInWindow(MobiDoc *mobiDoc, SumatraWindow& winToReplace)
     if (!gMobiWindows)
         gMobiWindows = new Vec<MobiWindow*>();
 
-    if (winToReplace.type == SumatraWindow::WinMobi) {
+    if (gGlobalPrefs.rememberOpenedFiles) {
+        gFileHistory.MarkFileLoaded(mobiDoc->GetFileName());
+#if 0
+        if (gGlobalPrefs.showStartPage)
+            CreateThumbnailForFile(*win, *gFileHistory.Get(0));
+#endif
+        SavePrefs();
+    }
+
+
+    if (SumatraWindow::WinMobi == winToReplace.type) {
         MobiWindow *mw = winToReplace.winMobi;
         CrashIf(!mw);
         mw->ebookController->SetMobiDoc(mobiDoc);
-        // TODO: remember the file has been opened in preferences
         // TODO: if we have window position/last position for this file, restore it
         return;
     }
@@ -362,8 +372,9 @@ void OpenMobiInWindow(MobiDoc *mobiDoc, SumatraWindow& winToReplace)
     else
         windowPos = GetDefaultWindowPos();
 
-    // TODO: delete winToReplace if necessary. Take size/position of new
-    // window from history or winToReplace
+    CrashIf(winToReplace.WinInfo != winToReplace.type);
+    CloseDocumentAndDeleteWindowInfo(winToReplace.winInfo);
+
     HWND hwnd = CreateWindow(
             MOBI_FRAME_CLASS_NAME, SUMATRA_WINDOW_TITLE,
             WS_OVERLAPPEDWINDOW,
@@ -385,7 +396,6 @@ void OpenMobiInWindow(MobiDoc *mobiDoc, SumatraWindow& winToReplace)
     win->ebookControls = CreateEbookControls(hwnd);
     win->hwndWrapper = win->ebookControls->mainWnd;
     win->ebookController = new EbookController(win->ebookControls);
-    //win->ebookController->SetHtml(gSampleHtml);
     win->ebookController->SetMobiDoc(mobiDoc);
 
     win->hwndFrame = hwnd;

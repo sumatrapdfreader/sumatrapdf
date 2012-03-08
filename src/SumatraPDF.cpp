@@ -671,7 +671,7 @@ static void CreateThumbnailForFile(WindowInfo& win, DisplayState& ds)
     if (gIsStressTesting)
         return;
 
-    // don't even create thumbnails for files that won't need them anytime soon
+    // don't create thumbnails for files that won't need them anytime soon
     Vec<DisplayState *> *list = gFileHistory.GetFrequencyOrder();
     int ix = list->Find(&ds);
     delete list;
@@ -2279,6 +2279,16 @@ void CloseDocumentInWindow(WindowInfo *win)
     win->RedrawAll();
     UpdateFindbox(win);
     SetFocus(win->hwndFrame);
+}
+
+void CloseDocumentAndDeleteWindowInfo(WindowInfo *win)
+{
+    if (!win)
+        return;
+    HWND hwndToDestroy = win->hwndFrame;
+    CloseDocumentInWindow(win);
+    DeleteWindowInfo(win);
+    DestroyWindow(hwndToDestroy);
 }
 
 /* Close the document associated with window 'hwnd'.
