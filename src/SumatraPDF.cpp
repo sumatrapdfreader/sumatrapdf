@@ -32,6 +32,7 @@
 #include "SumatraAbout.h"
 #include "SumatraDialogs.h"
 #include "SumatraProperties.h"
+#include "SumatraWindow.h"
 #include "StressTesting.h"
 #include "TableOfContents.h"
 #include "Timer.h"
@@ -1159,6 +1160,7 @@ static void HandleFinishedMobiLoadingMsg(FinishedMobiLoadingData *finishedMobiLo
 {
     if (!finishedMobiLoading->mobiDoc) {
         // TODO: show notification that loading failed
+        // TODO: remove from file history
         return;
     }
     OpenMobiInWindow(finishedMobiLoading->mobiDoc, finishedMobiLoading->win);
@@ -1169,13 +1171,26 @@ static bool IsMobiFile(const TCHAR *fileName)
     return str::EndsWithI(fileName, _T(".mobi"));
 }
 
+SumatraWindow MakeSumatraWindow(WindowInfo *winInfo)
+{
+    SumatraWindow w = { SumatraWindow::WinInfo, NULL };
+    w.winInfo = winInfo;
+    return w;
+}
+
+SumatraWindow MakeSumatraWindow(MobiWindow *winMobi)
+{
+    SumatraWindow w = { SumatraWindow::WinMobi, NULL };
+    w.winMobi = winMobi;
+    return w;
+}
+
 // Start loading a mobi file in the background
-static void LoadMobiAsync(const TCHAR *fileName, WindowInfo *win)
+static void LoadMobiAsync(const TCHAR *fileName, SumatraWindow& win)
 {
     // note: ThreadLoadMobi object will get automatically deleted, so no
     // need to keep it around
-    ThreadLoadMobi *loadThread = new ThreadLoadMobi(fileName, NULL);
-    loadThread->win = win;
+    ThreadLoadMobi *loadThread = new ThreadLoadMobi(fileName, NULL, win);
     loadThread->Start();
     
     // when loading is done, we'll call HandleFinishedMobiLoadingMsg()
@@ -1213,7 +1228,7 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin,
     ScopedMem<TCHAR> fullPath(path::Normalize(fileName));
 
     if (IsMobiFile(fileName)) {
-        LoadMobiAsync(fileName, win);
+        LoadMobiAsync(fileName, MakeSumatraWindow(win));
         return NULL;
     }
 
@@ -1443,7 +1458,7 @@ static bool RegisterForPdfExtentions(HWND hwnd)
     return true;
 }
 
-static void OnDropFiles(HDROP hDrop)
+void OnDropFiles(HDROP hDrop)
 {
     TCHAR       filename[MAX_PATH];
     const int   count = DragQueryFile(hDrop, DRAGQUERY_NUMFILES, 0, 0);

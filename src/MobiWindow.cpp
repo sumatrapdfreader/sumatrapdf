@@ -1,11 +1,13 @@
 #include "MobiWindow.h"
 
+#include "AppTools.h"
 #include "EbookController.h"
 #include "EbookControls.h"
 #include "Menu.h"
 #include "MobiDoc.h"
 #include "Resource.h"
 #include "SumatraPDF.h"
+#include "Touch.h"
 #include "Translations.h"
 #include "WinUtil.h"
 
@@ -294,6 +296,10 @@ static LRESULT CALLBACK MobiWndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPA
             // TODO: if this is the last window, exit the program
             break;
 
+        case WM_DROPFILES:
+            OnDropFiles((HDROP)wParam);
+            break;
+
         // if we return 0, during WM_PAINT we can check
         // PAINTSTRUCT.fErase to see if WM_ERASEBKGND
         // was sent before WM_PAINT
@@ -335,22 +341,43 @@ static LRESULT CALLBACK MobiWndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPA
     return 0;
 }
 
-void OpenMobiInWindow(MobiDoc *mobiDoc, WindowInfo *winToReplace)
+void OpenMobiInWindow(MobiDoc *mobiDoc, SumatraWindow& winToReplace)
 {
     if (!gMobiWindows)
         gMobiWindows = new Vec<MobiWindow*>();
 
+    if (winToReplace.type == SumatraWindow::WinMobi) {
+        MobiWindow *mw = winToReplace.winMobi;
+        CrashIf(!mw);
+        mw->ebookController->SetMobiDoc(mobiDoc);
+        // TODO: remember the file has been opened in preferences
+        // TODO: if we have window position/last position for this file, restore it
+        return;
+    }
+
+    RectI windowPos = gGlobalPrefs.windowPos;
+    if (!windowPos.IsEmpty())
+        EnsureAreaVisibility(windowPos);
+    else
+        windowPos = GetDefaultWindowPos();
+
     // TODO: delete winToReplace if necessary. Take size/position of new
     // window from history or winToReplace
-    win::GetHwndDpi(NULL, &gUiDPIFactor);
-    HWND hwnd = CreateWindow(MOBI_FRAME_CLASS_NAME, _T("Ebook Test"),
+    HWND hwnd = CreateWindow(
+            MOBI_FRAME_CLASS_NAME, SUMATRA_WINDOW_TITLE,
             WS_OVERLAPPEDWINDOW,
-            CW_USEDEFAULT, CW_USEDEFAULT,
-            dpiAdjust(WIN_DX), dpiAdjust(WIN_DY),
+            windowPos.x, windowPos.y, windowPos.dx, windowPos.dy,
             NULL, NULL,
             ghinst, NULL);
     if (!hwnd)
         return;
+    if (HasPermission(Perm_DiskAccess) && !gPluginMode)
+        DragAcceptFiles(hwnd, TRUE);
+    if (Touch::SupportsGestures()) {
+        GESTURECONFIG gc = { 0, GC_ALLGESTURES, 0 };
+        Touch::SetGestureConfig(hwnd, 0, 1, &gc, sizeof(GESTURECONFIG));
+    }
+
     SetMenu(hwnd, BuildMobiMenu());
 
     MobiWindow *win = new MobiWindow();

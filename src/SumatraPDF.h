@@ -102,6 +102,7 @@ void  OnMenuSettings(HWND hwnd);
 void  OnMenuExit();
 void  AutoUpdateCheckAsync(HWND hwnd, bool autoCheck);
 void  OnMenuChangeLanguage(HWND hwnd);
+void  OnDropFiles(HDROP hDrop);
 
 WindowInfo* FindWindowInfoByFile(const TCHAR *file);
 WindowInfo* FindWindowInfoByHwnd(HWND hwnd);

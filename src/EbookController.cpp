@@ -8,6 +8,7 @@
 #include "MobiDoc.h"
 #include "MobiWindow.h"
 #include "PageLayout.h"
+#include "SumatraWindow.h"
 #include "ThreadUtil.h"
 #include "Timer.h"
 #include "UiMsgSumatra.h"
@@ -31,12 +32,12 @@ void LayoutTemp::DeletePages()
     DeleteVecMembers<PageData*>(pagesFromPage);
 }
 
-ThreadLoadMobi::ThreadLoadMobi(const TCHAR *fn, EbookController *controller) :
+ThreadLoadMobi::ThreadLoadMobi(const TCHAR *fn, EbookController *controller, const SumatraWindow& sumWin) :
     controller(controller)
 {
     autoDeleteSelf = true;
     fileName = str::Dup(fn);
-    win = NULL;
+    win = sumWin;
 }
 
 void ThreadLoadMobi::Run()
@@ -610,15 +611,4 @@ void EbookController::HandleFinishedMobiLoadingMsg(FinishedMobiLoadingData *fini
     }
     SetMobiDoc(finishedMobiLoading->mobiDoc);
     finishedMobiLoading->mobiDoc = NULL; // just in case, it shouldn't be freed anyway
-}
-
-void EbookController::LoadMobi(const TCHAR *fileName)
-{
-    // note: ThreadLoadMobi object will get automatically deleted, so no
-    // need to keep it around
-    ThreadLoadMobi *loadThread = new ThreadLoadMobi(fileName, this);
-    loadThread->Start();
-
-    fileBeingLoaded = str::Dup(path::GetBaseName(fileName));
-    UpdateStatus();
 }

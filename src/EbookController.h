@@ -6,6 +6,7 @@
 
 #include "BaseUtil.h"
 #include "Mui.h"
+#include "SumatraWindow.h"
 #include "ThreadUtil.h"
 #include "Vec.h"
 
@@ -17,12 +18,13 @@ struct  PageData;
 class   MobiDoc;
 class   ThreadLayoutMobi;
 class   WindowInfo;
+class   MobiWindow;
 
 struct FinishedMobiLoadingData {
-    TCHAR *     fileName;
-    MobiDoc *   mobiDoc;
-    WindowInfo* win;
-    double      loadingTimeMs;
+    TCHAR *         fileName;
+    MobiDoc *       mobiDoc;
+    SumatraWindow   win;
+    double          loadingTimeMs;
 
     void Free() {
         free(fileName);
@@ -120,7 +122,6 @@ public:
 
     void SetHtml(const char *html);
     void SetMobiDoc(MobiDoc *newMobiDoc);
-    void LoadMobi(const TCHAR *fileName);
     void HandleFinishedMobiLoadingMsg(FinishedMobiLoadingData *finishedMobiLoading);
     void HandleMobiLayoutMsg(MobiLayoutData *mobiLayout);
     void OnLayoutTimer();

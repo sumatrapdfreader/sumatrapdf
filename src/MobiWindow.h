@@ -3,6 +3,7 @@
 
 #include "BaseUtil.h"
 #include "Mui.h"
+#include "SumatraWindow.h"
 #include "ThreadUtil.h"
 
 struct EbookControls;
@@ -14,9 +15,9 @@ class ThreadLoadMobi : public ThreadBase {
     TCHAR *             fileName; // we own this memory
     EbookController *   controller;
 public:
-    WindowInfo *        win;
+    SumatraWindow       win;
 
-    ThreadLoadMobi(const TCHAR *fileName, EbookController *controller);
+    ThreadLoadMobi(const TCHAR *fileName, EbookController *controller, const SumatraWindow& sumWin);
     virtual ~ThreadLoadMobi() { free(fileName); }
 
     // ThreadBase
@@ -39,7 +40,7 @@ public:
 };
 
 MobiWindow* FindMobiWindowByController(EbookController *controller);
-void OpenMobiInWindow(MobiDoc *mobiDoc, WindowInfo *winToReplace);
+void OpenMobiInWindow(MobiDoc *mobiDoc, SumatraWindow& winToReplace);
 bool RegisterMobiWinClass(HINSTANCE hinst);
 void DeleteMobiWindows();
 void RebuildMenuBarForMobiWindows();
