@@ -32,11 +32,12 @@ def prependPath(files, basefile=None):
 		for dir in include_dirs:
 			path = pjoin(dir, file)
 			if os.path.exists(path):
-				result.append(path.replace("/", "\\"))
+				result.append(path)
 				break
 	return result
 
 def getObjectPath(file):
+	file = file.replace("/", "\\")
 	for (path, odir) in OBJECT_DIRS.items():
 		if file.startswith(path + "\\"):
 			return odir
@@ -51,7 +52,7 @@ def extractIncludes(file):
 	includes = prependPath(includes, file)
 	
 	for inc in includes:
-		includes += extractIncludes(inc.replace("\\", os.path.sep))
+		includes += extractIncludes(inc)
 	return uniquify(includes)
 
 def createDependencyList():
@@ -68,14 +69,15 @@ def flattenDependencyList(dependencies):
 	for file in dependencies.keys():
 		if dependencies[file]:
 			opath = getObjectPath(file)
-			filename = os.path.splitext(os.path.split(file.replace("\\", os.path.sep))[1])[0]
-			deplist = sorted(dependencies[file], key=str.lower)
+			filename = os.path.splitext(os.path.split(file)[1])[0]
+			# TODO: normalizing paths already in prependPath makes getObjectPath fail under cygwin
+			deplist = sorted(dependencies[file], key=lambda s: str.lower(s.replace("/", "\\")))
 			for depgroup in group(deplist, DEPENDENCIES_PER_LINE):
 				flatlist.append("%s\\%s.obj: %s" % (opath, filename, " ".join(depgroup)))
 	return flatlist
 
 def normalizePaths(paths):
-	return re.sub(r"( |\\)[^.\\\s]+\\..\\", r"\1", paths)
+	return re.sub(r"( |\\)[^.\\\s]+\\..\\", r"\1", paths.replace("/", "\\"))
 
 def injectDependencyList(flatlist):
 	flatlist = "\n".join(sorted(flatlist, key=str.lower))
