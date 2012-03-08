@@ -180,7 +180,6 @@ public:
     } fwdSearchMark;
 
     CallbackFunc *  stressTest;
-    bool            suppressPwdUI;
 
     // WM_GESTURE handling
     bool    panStarted;
@@ -210,9 +209,7 @@ public:
     void CreateInfotip(const TCHAR *text, RectI& rc, bool multiline=false);
     void DeleteInfotip();
 
-    // DisplayModelCallback implementation (incl. PasswordUI and ChmNavigationCallback)
-    virtual TCHAR * GetPassword(const TCHAR *fileName, unsigned char *fileDigest,
-                                unsigned char decryptionKeyOut[32], bool *saveKey);
+    // DisplayModelCallback implementation (incl. ChmNavigationCallback)
     virtual void PageNoChanged(int pageNo);
     virtual void LaunchBrowser(const TCHAR *url);
     virtual void FocusFrame(bool always);

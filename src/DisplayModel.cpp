@@ -269,10 +269,11 @@ void DisplayModel::SetInitialViewSettings(DisplayMode displayMode, int newStartP
 }
 
 // must call SetInitialViewSettings() after Load()
-bool DisplayModel::Load(const TCHAR *fileName)
+// pwdUI only needs to be available during loading
+bool DisplayModel::Load(const TCHAR *fileName, PasswordUI *pwdUI)
 {
     assert(fileName);
-    engine = EngineManager::CreateEngine(fileName, dmCb, &engineType);
+    engine = EngineManager::CreateEngine(fileName, pwdUI, &engineType);
     if (!engine)
         return false;
     assert(engine->PageCount() > 0);
@@ -1526,10 +1527,10 @@ void DisplayModel::CopyNavHistory(DisplayModel& orig)
     }
 }
 
-DisplayModel *DisplayModel::CreateFromFileName(const TCHAR *fileName, DisplayModelCallback *cb)
+DisplayModel *DisplayModel::CreateFromFileName(const TCHAR *fileName, DisplayModelCallback *cb, PasswordUI *pwdUI)
 {
     DisplayModel *dm = new DisplayModel(cb);
-    if (!dm || !dm->Load(fileName)) {
+    if (!dm || !dm->Load(fileName, pwdUI)) {
         delete dm;
         return NULL;
     }

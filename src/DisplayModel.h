@@ -84,7 +84,7 @@ struct ScrollState {
 
 class DisplayModel;
 
-class DisplayModelCallback : public PasswordUI, public ChmNavigationCallback {
+class DisplayModelCallback : public ChmNavigationCallback {
 public:
     virtual void Repaint() = 0;
     virtual void UpdateScrollbars(SizeI canvas) = 0;
@@ -213,7 +213,7 @@ public:
 
 protected:
 
-    bool            Load(const TCHAR *fileName);
+    bool            Load(const TCHAR *fileName, PasswordUI *pwdUI);
     void            BuildPagesInfo();
     float           ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo);
     SizeD           PageSizeAfterRotation(int pageNo, bool fitToContent=false);
@@ -272,7 +272,7 @@ public:
     bool            dontRenderFlag;
 
     static DisplayModel *CreateFromFileName(const TCHAR *fileName,
-        DisplayModelCallback *dmCb);
+        DisplayModelCallback *dmCb, PasswordUI *pwdUI);
 };
 
 bool    displayModeContinuous(DisplayMode displayMode);

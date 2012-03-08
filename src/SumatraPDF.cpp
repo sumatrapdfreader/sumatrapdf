@@ -354,10 +354,23 @@ WindowInfo* FindWindowInfoBySyncFile(const TCHAR *file)
     return NULL;
 }
 
+class HwndPasswordUI : public PasswordUI
+{
+    HWND hwnd;
+    bool suppressPwdUI;
+
+public:
+    HwndPasswordUI(HWND hwnd, bool suppressPwdUI) : hwnd(hwnd), suppressPwdUI(suppressPwdUI)
+    {}
+
+    virtual TCHAR * GetPassword(const TCHAR *fileName, unsigned char *fileDigest,
+                                unsigned char decryptionKeyOut[32], bool *saveKey);
+};
+
 /* Get password for a given 'fileName', can be NULL if user cancelled the
    dialog box or if the encryption key has been filled in instead.
    Caller needs to free() the result. */
-TCHAR *WindowInfo::GetPassword(const TCHAR *fileName, unsigned char *fileDigest,
+TCHAR *HwndPasswordUI::GetPassword(const TCHAR *fileName, unsigned char *fileDigest,
                                unsigned char decryptionKeyOut[32], bool *saveKey)
 {
     DisplayState *fileFromHistory = gFileHistory.Find(fileName);
@@ -382,7 +395,11 @@ TCHAR *WindowInfo::GetPassword(const TCHAR *fileName, unsigned char *fileDigest,
     }
 
     fileName = path::GetBaseName(fileName);
-    return Dialog_GetPassword(this->hwndFrame, fileName, gGlobalPrefs.rememberOpenedFiles ? saveKey : NULL);
+    // the window that was used to initiate the loading process can be closed by now
+    // TODO: use our top-most window instead
+    if (!IsWindow(hwnd))
+        hwnd = NULL;
+    return Dialog_GetPassword(hwnd, fileName, gGlobalPrefs.rememberOpenedFiles ? saveKey : NULL);
 }
 
 static void RememberWindowPosition(WindowInfo& win)
@@ -721,7 +738,7 @@ static void UnsubclassCanvas(HWND hwnd)
 // placeWindow : if true then the Window will be moved/sized according
 //   to the 'state' information even if the window was already placed
 //   before (isNewWindow=false)
-static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win,
+static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win, PasswordUI *pwdUI,
     DisplayState *state, bool isNewWindow, bool allowFailure,
     bool showWin, bool placeWindow)
 {
@@ -768,7 +785,7 @@ static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win,
     win.pdfsync = NULL;
 
     str::ReplacePtr(&win.loadedFilePath, fileName);
-    win.dm = DisplayModel::CreateFromFileName(fileName, &win);
+    win.dm = DisplayModel::CreateFromFileName(fileName, &win, pwdUI);
 
     // make sure that MSHTML can't be used as a potential exploit
     // vector through another browser and our plugin (which doesn't
@@ -967,7 +984,10 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
     bool showWin = true;
     bool placeWindow = false;
     ScopedMem<TCHAR> path(str::Dup(win->loadedFilePath));
-    if (!LoadDocIntoWindow(path, *win, &ds, isNewWindow, allowFailure, showWin, placeWindow))
+    HwndPasswordUI *pwdUI = new HwndPasswordUI(win->hwndFrame, false);
+    bool loaded = LoadDocIntoWindow(path, *win, pwdUI, &ds, isNewWindow, allowFailure, showWin, placeWindow);
+    delete pwdUI;
+    if (!loaded)
         return;
 
     if (gGlobalPrefs.showStartPage) {
@@ -1236,10 +1256,12 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin,
     win->notifications->RemoveAllInGroup(NG_RESPONSE_TO_ACTION);
     win->notifications->RemoveAllInGroup(NG_PAGE_INFO_HELPER);
 
-    win->suppressPwdUI = suppressPwdUI;
-    if (!LoadDocIntoWindow(fullPath, *win, NULL, isNewWindow,
-                           true /* allowFailure */, showWin, true /* placeWindow */)) {
-        /* failed to open */
+    HwndPasswordUI *pwdUI = new HwndPasswordUI(win->hwndFrame, suppressPwdUI);
+    bool loaded = LoadDocIntoWindow(fullPath, *win, pwdUI, NULL, isNewWindow,
+                           true /* allowFailure */, showWin, true /* placeWindow */);
+    delete pwdUI;
+
+    if (!loaded) {
         if (gFileHistory.MarkFileInexistent(fullPath))
             SavePrefs();
         return win;

@@ -31,7 +31,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
     loadedFilePath(NULL), currPageNo(0),
     xScrollSpeed(0), yScrollSpeed(0), wheelAccumDelta(0),
     delayedRepaintTimer(0), watcher(NULL),
-    pdfsync(NULL), stressTest(NULL), suppressPwdUI(false),
+    pdfsync(NULL), stressTest(NULL),
     hwndFavBox(NULL), hwndFavTree(NULL), panStarted(false)
 {
     ZeroMemory(&selectionRect, sizeof(selectionRect));
