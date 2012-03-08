@@ -45,7 +45,7 @@ struct StaticLinkInfo {
 
 /* Describes information related to one window with (optional) a document
    on the screen */
-class WindowInfo : public ChmNavigationCallback
+class WindowInfo : public DisplayModelCallback
 {
 public:
     WindowInfo(HWND hwnd);
@@ -209,7 +209,7 @@ public:
     void CreateInfotip(const TCHAR *text, RectI& rc, bool multiline=false);
     void DeleteInfotip();
 
-    // ChmNavigationCallback implementation
+    // DisplayModelCallback implementation (incl. ChmNavigationCallback)
     virtual void PageNoChanged(int pageNo);
     virtual void LaunchBrowser(const TCHAR *url);
     virtual void FocusFrame(bool always);

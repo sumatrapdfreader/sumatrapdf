@@ -191,7 +191,7 @@ static int LastPageInARowNo(int pageNo, int columns, bool showCover, int pageCou
     return min(lastPageNo, pageCount);
 }
 
-DisplayModel::DisplayModel(ChmNavigationCallback *cb)
+DisplayModel::DisplayModel(DisplayModelCallback *cb)
 {
     _displayMode = DM_AUTOMATIC;
     presDisplayMode = DM_AUTOMATIC;
@@ -1527,7 +1527,7 @@ void DisplayModel::CopyNavHistory(DisplayModel& orig)
     }
 }
 
-DisplayModel *DisplayModel::CreateFromFileName(const TCHAR *fileName, ChmNavigationCallback *cb, PasswordUI *pwdUI)
+DisplayModel *DisplayModel::CreateFromFileName(const TCHAR *fileName, DisplayModelCallback *cb, PasswordUI *pwdUI)
 {
     DisplayModel *dm = new DisplayModel(cb);
     if (!dm || !dm->Load(fileName, pwdUI)) {

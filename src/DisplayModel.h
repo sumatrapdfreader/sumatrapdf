@@ -84,6 +84,14 @@ struct ScrollState {
 
 class DisplayModel;
 
+class DisplayModelCallback : public ChmNavigationCallback {
+public:
+    virtual void Repaint() = 0;
+    virtual void UpdateScrollbars(SizeI canvas) = 0;
+    virtual void RenderPage(int pageNo) = 0;
+    virtual void CleanUp(DisplayModel *dm) = 0;
+};
+
 // TODO: in hindsight, zoomVirtual is not a good name since it's either
 // virtual zoom level OR physical zoom level. Would be good to find
 // better naming scheme (call it zoomLevel?)
@@ -95,7 +103,7 @@ class DisplayModel;
 class DisplayModel
 {
 public:
-    DisplayModel(ChmNavigationCallback *dmCb);
+    DisplayModel(DisplayModelCallback *dmCb);
     ~DisplayModel();
 
     const TCHAR *FileName() const { return engine->FileName(); }
@@ -230,7 +238,7 @@ protected:
     int             _startPage;
 
     /* A callback to notify UI about required changes */
-    ChmNavigationCallback *dmCb;
+    DisplayModelCallback *dmCb;
 
     /* size of virtual canvas containing all rendered pages. */
     SizeI           canvasSize;
@@ -264,7 +272,7 @@ public:
     bool            dontRenderFlag;
 
     static DisplayModel *CreateFromFileName(const TCHAR *fileName,
-        ChmNavigationCallback *dmCb, PasswordUI *pwdUI);
+        DisplayModelCallback *dmCb, PasswordUI *pwdUI);
 };
 
 bool    displayModeContinuous(DisplayMode displayMode);
