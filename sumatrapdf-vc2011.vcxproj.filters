@@ -48,6 +48,9 @@
     <Filter Include="sumatra\ebook">
       <UniqueIdentifier>{80df37f0-fcb4-4a2f-a291-5b31189f715f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="mui">
+      <UniqueIdentifier>{868a148e-3e9d-4d5e-b71a-d71be9b4095e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ext\jbig2dec\jbig2.c">
@@ -821,6 +824,42 @@
     <ClCompile Include="src\PageLayout.cpp">
       <Filter>sumatra\ebook</Filter>
     </ClCompile>
+    <ClCompile Include="src\mui\Mui.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mui\MuiBase.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mui\MuiButton.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mui\MuiControl.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mui\MuiCss.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mui\MuiEventMgr.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mui\MuiHwndWrapper.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mui\MuiLayout.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mui\MuiPainter.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mui\MuiScrollBar.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mui\SvgPath.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mui\SvgPath_ut.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -1179,6 +1218,39 @@
     </ClInclude>
     <ClInclude Include="src\PageLayout.h">
       <Filter>sumatra\ebook</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mui\Mui.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mui\MuiBase.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mui\MuiButton.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mui\MuiControl.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mui\MuiCss.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mui\MuiEventMgr.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mui\MuiHwndWrapper.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mui\MuiLayout.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mui\MuiPainter.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mui\MuiScrollBar.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mui\SvgPath.h">
+      <Filter>mui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

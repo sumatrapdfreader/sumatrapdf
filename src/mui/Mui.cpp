@@ -236,6 +236,9 @@ void RequestRepaint(Control *c, const Rect *r1, const Rect *r2)
     }
     HWND hwnd = c->hwndParent;
     CrashIf(!hwnd);
+    HwndWrapper *wnd = GetRootHwndWnd(c);
+    if (wnd)
+        wnd->RequestRepaint();
 
     // if we have r1 or r2, invalidate those, else invalidate w
     bool didInvalidate = false;

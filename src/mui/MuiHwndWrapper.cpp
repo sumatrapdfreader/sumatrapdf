@@ -64,6 +64,7 @@ HwndWrapper::~HwndWrapper()
 void HwndWrapper::RequestLayout()
 {
     layoutRequested = true;
+    repaintRequested = true;
     // trigger message queue so that the layout request is processed
     InvalidateRect(hwndParent, NULL, TRUE);
     UpdateWindow(hwndParent);
@@ -78,7 +79,8 @@ void HwndWrapper::LayoutIfRequested()
 void HwndWrapper::OnPaint(HWND hwnd)
 {
     CrashIf(hwnd != hwndParent);
-    painter->Paint(hwnd);
+    painter->Paint(hwnd, repaintRequested);
+    repaintRequested = false;
 }
 
 }

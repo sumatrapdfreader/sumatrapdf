@@ -19,9 +19,10 @@ class EventMgr;
 class HwndWrapper : public Control
 {
     bool    layoutRequested;
+    bool    repaintRequested;
 
 public:
-    Painter *    painter;
+    Painter *           painter;
     EventMgr *          evtMgr;
 
     HwndWrapper(HWND hwnd = NULL);
@@ -31,6 +32,7 @@ public:
     void            SetMaxSize(Size maxSize);
 
     void            RequestLayout();
+    void            RequestRepaint() { repaintRequested = true; }
     void            LayoutIfRequested();
     void            SetHwnd(HWND hwnd);
     void            OnPaint(HWND hwnd);

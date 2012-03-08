@@ -25,6 +25,6 @@ public:
     Painter(HwndWrapper *wnd);
     ~Painter();
 
-    void Paint(HWND hwnd);
+    void Paint(HWND hwnd, bool isDirty);
 };
 

@@ -2,17 +2,9 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "Mui.h"
+#include "DebugLog.h"
 
 namespace mui {
-
-#if 0
-static bool BitmapSizeEquals(Bitmap *bmp, int dx, int dy)
-{
-    if (NULL == bmp)
-        return false;
-    return ((dx == bmp->GetWidth()) && (dy == bmp->GetHeight()));
-}
-#endif
 
 static bool BitmapNotBigEnough(Bitmap *bmp, int dx, int dy)
 {
@@ -95,7 +87,7 @@ static void PaintWindowsInZOrder(Graphics *g, Control *c)
 // with HWND.
 // Note: maybe should be split into BeginPaint()/Paint()/EndPaint()
 // calls so that the caller can do more drawing after Paint()
-void Painter::Paint(HWND hwnd)
+void Painter::Paint(HWND hwnd, bool isDirty)
 {
     CrashAlwaysIf(hwnd != wnd->hwndParent);
 
@@ -138,18 +130,27 @@ void Painter::Paint(HWND hwnd)
     if (BitmapNotBigEnough(cacheBmp, r.dx, r.dy)) {
         ::delete cacheBmp;
         cacheBmp = ::new Bitmap(r.dx, r.dy, &gDC);
+        isDirty = true;
     }
 
     //TODO: log clipBounds for debugging
     //Rect clipBounds;
     //clip.GetBounds(&cliBounds)
 
-    Graphics g((Image*)cacheBmp);
-    InitGraphicsMode(&g);
-    g.SetClip(&clip, CombineModeReplace);
+    // draw to a bitmap cache unless we were asked to skip
+    // this step and just blit cached bitmap because the caller
+    // knows it didn't change
+    if (isDirty) {
+        lf("Painter::Paint() painting to cacheBmp");
+        Graphics g((Image*)cacheBmp);
+        InitGraphicsMode(&g);
+        g.SetClip(&clip, CombineModeReplace);
 
-    PaintBackground(&g, Rect(0, 0, r.dx, r.dy));
-    PaintWindowsInZOrder(&g, wnd);
+        PaintBackground(&g, Rect(0, 0, r.dx, r.dy));
+        PaintWindowsInZOrder(&g, wnd);
+    } else {
+        lf("Painter::Paint() optimization: skipping painting to cacheBmp");
+    }
 
     // TODO: try to manually draw only the part that falls within
     // clipBounds or is it done automatically by DrawImage() ?

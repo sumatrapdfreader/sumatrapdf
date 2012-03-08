@@ -318,8 +318,6 @@ static LRESULT CALLBACK MobiWndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPA
     switch (msg)
     {
         case WM_PAINT:
-            // TODO: moving a window around is quite jerky due to
-            //       OnPaint's slowness - cache more aggressively?
             win->hwndWrapper->OnPaint(hwnd);
             break;
 
