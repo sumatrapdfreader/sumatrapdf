@@ -95,9 +95,10 @@ bool SaveRenderedBitmap(RenderedBitmap *bmp, const TCHAR *filePath)
         _T(".tiff"),_T("image/tiff"),
     };
     const TCHAR *encoder = NULL;
-    for (int i = 0; i < dimof(encoders) && !encoder; i += 2)
+    for (int i = 0; i < dimof(encoders) && !encoder; i += 2) {
         if (str::EqI(fileExt, encoders[i]))
             encoder = encoders[i+1];
+    }
 
     CLSID encClsid;
     if (!encoder || !GetEncoderClsid(encoder, encClsid))
@@ -462,9 +463,10 @@ bool ImageDirEngineImpl::LoadImageDir(const TCHAR *dirName)
         return false;
 
     do {
-        if (!(fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+        if (!(fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
             if (ImageEngine::IsSupportedFile(fdata.cFileName))
                 pageFileNames.Append(path::Join(dirName, fdata.cFileName));
+        }
     } while (FindNextFile(hfind, &fdata));
     FindClose(hfind);
 
@@ -539,8 +541,9 @@ public:
 DocTocItem *ImageDirEngineImpl::GetTocTree()
 {
     DocTocItem *root = new ImageDirTocItem(GetPageLabel(1), 1);
-    for (int i = 2; i <= PageCount(); i++)
+    for (int i = 2; i <= PageCount(); i++) {
         root->AddSibling(new ImageDirTocItem(GetPageLabel(i), i));
+    }
     return root;
 }
 

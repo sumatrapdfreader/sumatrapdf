@@ -7,6 +7,7 @@
 #include "Favorites.h"
 #include "FileUtil.h"
 #include "FileHistory.h"
+#include "MobiWindow.h"
 #include "Selection.h"
 #include "SumatraAbout.h"
 #include "SumatraDialogs.h"
@@ -304,6 +305,8 @@ void MenuUpdatePrintItem(WindowInfo* win, HMENU menu, bool disableOnly=false) {
 
 bool IsFileCloseMenuEnabled()
 {
+    if (MobiWindowsCount() > 0)
+        return true;
     for (size_t i = 0; i < gWindows.Count(); i++) {
         if (!gWindows.At(i)->IsAboutWindow())
             return true;

@@ -541,8 +541,9 @@ bool HasFavorites()
 
 void UpdateFavoritesTreeForAllWindows()
 {
-    for (size_t i = 0; i < gWindows.Count(); i++)
+    for (size_t i = 0; i < gWindows.Count(); i++) {
         UpdateFavoritesTreeIfNecessary(gWindows.At(i));
+    }
 
     // hide the favorites tree if we removed the last favorite
     if (!HasFavorites()) {
@@ -632,8 +633,9 @@ void RememberFavTreeExpansionState(WindowInfo *win)
 
 void RememberFavTreeExpansionStateForAllWindows()
 {
-    for (size_t i = 0; i < gWindows.Count(); i++)
+    for (size_t i = 0; i < gWindows.Count(); i++) {
         RememberFavTreeExpansionState(gWindows.At(i));
+    }
 }
 
 static LRESULT OnFavTreeNotify(WindowInfo *win, LPNMTREEVIEW pnmtv)
