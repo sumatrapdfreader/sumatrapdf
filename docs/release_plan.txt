@@ -7,12 +7,11 @@ is an engine. Removing them all is too much for 2.0 so we'll make whatever's nec
 for basic mobi support.
 
 Specific things that still need to be added for minimal mobi support:
-- closing mobi window CloseMobiWindow(). Need to transition into about window
-  if it's the last window
-- file/close on mobi window
 - thumbnails for mobi files
-- close the program if we close mobi window and it's a last window
 - on drag&drop of mobi window on about window, close about window
+- opening a file via recent files list in mobi window
+- opening mobi file via recent files list in non-mobi window shouldn't replace
+  a document if it's there
 
 Implicitly everything else is for later, including fullscreen, printing,
 search, touch gestures for mobi window etc.

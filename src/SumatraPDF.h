@@ -108,6 +108,7 @@ void  OnMenuOpen(SumatraWindow& win);
 size_t TotalWindowsCount();
 void  CloseDocumentInWindow(WindowInfo *win);
 void  CloseDocumentAndDeleteWindowInfo(WindowInfo *win);
+void  OnMenuAbout();
 
 WindowInfo* FindWindowInfoByFile(const TCHAR *file);
 WindowInfo* FindWindowInfoByHwnd(HWND hwnd);

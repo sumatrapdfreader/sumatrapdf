@@ -128,7 +128,17 @@ static void OnToggleBbox(MobiWindow *win)
     win::menu::SetChecked(GetMenu(win->hwndFrame), IDM_DEBUG_SHOW_LINKS, gShowTextBoundingBoxes);
 }
 
-static void DeleteMobiWindow(MobiWindow *win, bool forceClose=false);
+static void DeleteMobiWindow(MobiWindow *win, bool forceClose = false)
+{
+    if (gPluginMode && !forceClose)
+        return;
+
+    DestroyWindow(win->hwndFrame);
+    delete win->ebookController;
+    DestroyEbookControls(win->ebookControls);
+    gMobiWindows->Remove(win);
+    delete win;
+}
 
 static LRESULT OnKeyDown(MobiWindow *win, UINT msg, WPARAM key, LPARAM lParam)
 {
@@ -255,11 +265,9 @@ static LRESULT OnCommand(MobiWindow *win, UINT msg, WPARAM wParam, LPARAM lParam
             OnToggleBbox(win);
             return 0;
 
-#if 0
         case IDM_ABOUT:
             OnMenuAbout();
             break;
-#endif
 
         case IDM_CHECK_UPDATE:
             AutoUpdateCheckAsync(win->hwndFrame, false);
@@ -406,18 +414,6 @@ void OpenMobiInWindow(MobiDoc *mobiDoc, SumatraWindow& winToReplace)
     gMobiWindows->Append(win);
     bool wasMaximized = false; // TODO: IsZoomed(winToReplace->hwndFrame);
     ShowWindow(hwnd, wasMaximized ? SW_SHOWMAXIMIZED : SW_SHOW);
-}
-
-static void DeleteMobiWindow(MobiWindow *win, bool forceClose)
-{
-    if (gPluginMode && !forceClose)
-        return;
-
-    DestroyWindow(win->hwndFrame);
-    delete win->ebookController;
-    DestroyEbookControls(win->ebookControls);
-    gMobiWindows->Remove(win);
-    delete win;
 }
 
 void DeleteMobiWindows()
