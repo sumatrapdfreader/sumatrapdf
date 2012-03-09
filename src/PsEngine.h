@@ -13,7 +13,7 @@ public:
 public:
     static bool IsAvailable();
     static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
-    static PsEngine *CreateFromFileName(const TCHAR *fileName);
+    static PsEngine *CreateFromFile(const TCHAR *fileName);
 };
 
 #endif

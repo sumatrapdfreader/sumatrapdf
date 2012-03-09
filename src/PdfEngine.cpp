@@ -2444,7 +2444,7 @@ bool PdfEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
     return str::EndsWithI(fileName, _T(".pdf")) || findEmbedMarks(fileName);
 }
 
-PdfEngine *PdfEngine::CreateFromFileName(const TCHAR *fileName, PasswordUI *pwdUI)
+PdfEngine *PdfEngine::CreateFromFile(const TCHAR *fileName, PasswordUI *pwdUI)
 {
     PdfEngineImpl *engine = new PdfEngineImpl();
     if (!engine || !fileName || !engine->Load(fileName, pwdUI)) {
@@ -3454,7 +3454,7 @@ bool XpsEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
     return str::EndsWithI(fileName, _T(".xps"));
 }
 
-XpsEngine *XpsEngine::CreateFromFileName(const TCHAR *fileName)
+XpsEngine *XpsEngine::CreateFromFile(const TCHAR *fileName)
 {
     XpsEngineImpl *engine = new XpsEngineImpl();
     if (!engine || !fileName || !engine->Load(fileName)) {

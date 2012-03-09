@@ -860,6 +860,9 @@
     <ClCompile Include="src\mui\SvgPath_ut.cpp">
       <Filter>mui</Filter>
     </ClCompile>
+    <ClCompile Include="src\DjVuEngine.cpp">
+      <Filter>sumatra</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -1251,6 +1254,12 @@
     </ClInclude>
     <ClInclude Include="src\mui\SvgPath.h">
       <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\EngineManager.h">
+      <Filter>sumatra</Filter>
+    </ClInclude>
+    <ClInclude Include="src\DjVuEngine.h">
+      <Filter>sumatra</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -117,7 +117,7 @@ public:
     ChmEngineImpl();
     virtual ~ChmEngineImpl();
     virtual ChmEngine *Clone() {
-        return CreateFromFileName(fileName);
+        return CreateFromFile(fileName);
     }
 
     virtual const TCHAR *FileName() const { return fileName; };
@@ -835,7 +835,7 @@ bool ChmEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
     return str::EndsWithI(fileName, _T(".chm"));
 }
 
-ChmEngine *ChmEngine::CreateFromFileName(const TCHAR *fileName)
+ChmEngine *ChmEngine::CreateFromFile(const TCHAR *fileName)
 {
     ChmEngineImpl *engine = new ChmEngineImpl();
     if (!engine->Load(fileName)) {

@@ -15,14 +15,14 @@ public:
 class PdfEngine : public BaseEngine {
 public:
     static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
-    static PdfEngine *CreateFromFileName(const TCHAR *fileName, PasswordUI *pwdUI=NULL);
+    static PdfEngine *CreateFromFile(const TCHAR *fileName, PasswordUI *pwdUI=NULL);
     static PdfEngine *CreateFromStream(IStream *stream, PasswordUI *pwdUI=NULL);
 };
 
 class XpsEngine : public BaseEngine {
 public:
     static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
-    static XpsEngine *CreateFromFileName(const TCHAR *fileName);
+    static XpsEngine *CreateFromFile(const TCHAR *fileName);
     static XpsEngine *CreateFromStream(IStream *stream);
 };
 

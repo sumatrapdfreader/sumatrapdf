@@ -401,7 +401,7 @@ bool ImageEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
            str::EndsWithI(fileName, _T(".bmp"));
 }
 
-ImageEngine *ImageEngine::CreateFromFileName(const TCHAR *fileName)
+ImageEngine *ImageEngine::CreateFromFile(const TCHAR *fileName)
 {
     assert(IsSupportedFile(fileName) || IsSupportedFile(fileName, true));
     ImageEngineImpl *engine = new ImageEngineImpl();
@@ -428,7 +428,7 @@ class ImageDirEngineImpl : public ImagesEngine, public ImageDirEngine {
     friend ImageDirEngine;
 
 public:
-    virtual ImageDirEngine *Clone() { return CreateFromFileName(fileName); }
+    virtual ImageDirEngine *Clone() { return CreateFromFile(fileName); }
     virtual RectD PageMediabox(int pageNo);
 
     virtual unsigned char *GetFileData(size_t *cbCount) { return NULL; }
@@ -553,7 +553,7 @@ bool ImageDirEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
     return dir::Exists(fileName);
 }
 
-ImageDirEngine *ImageDirEngine::CreateFromFileName(const TCHAR *fileName)
+ImageDirEngine *ImageDirEngine::CreateFromFile(const TCHAR *fileName)
 {
     assert(dir::Exists(fileName));
     ImageDirEngineImpl *engine = new ImageDirEngineImpl();
@@ -583,7 +583,7 @@ public:
                 return CreateFromStream(stm);
         }
         if (fileName)
-            return CreateFromFileName(fileName);
+            return CreateFromFile(fileName);
         return NULL;
     }
     virtual RectD PageMediabox(int pageNo);
@@ -876,7 +876,7 @@ bool CbxEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
            str::EndsWithI(fileName, _T(".rar"));
 }
 
-CbxEngine *CbxEngine::CreateFromFileName(const TCHAR *fileName)
+CbxEngine *CbxEngine::CreateFromFile(const TCHAR *fileName)
 {
     assert(IsSupportedFile(fileName) || IsSupportedFile(fileName, true));
     CbxEngineImpl *engine = new CbxEngineImpl();

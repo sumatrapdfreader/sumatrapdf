@@ -9,7 +9,7 @@
 class DjVuEngine : public BaseEngine {
 public:
     static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
-    static DjVuEngine *CreateFromFileName(const TCHAR *fileName);
+    static DjVuEngine *CreateFromFile(const TCHAR *fileName);
 };
 
 #endif

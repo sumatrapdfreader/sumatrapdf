@@ -952,7 +952,7 @@ char *MobiDoc::GetBookHtmlData(size_t& lenOut) const
     return doc->Get();
 }
 
-MobiDoc *MobiDoc::ParseFile(const TCHAR *fileName)
+MobiDoc *MobiDoc::CreateFromFile(const TCHAR *fileName)
 {
     HANDLE fh = CreateFile(fileName, GENERIC_READ, FILE_SHARE_READ, NULL,
                               OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);

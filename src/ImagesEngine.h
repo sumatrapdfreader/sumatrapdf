@@ -9,20 +9,20 @@
 class ImageEngine : public virtual BaseEngine {
 public:
     static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
-    static ImageEngine *CreateFromFileName(const TCHAR *fileName);
+    static ImageEngine *CreateFromFile(const TCHAR *fileName);
     static ImageEngine *CreateFromStream(IStream *stream);
 };
 
 class ImageDirEngine : public virtual BaseEngine {
 public:
     static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
-    static ImageDirEngine *CreateFromFileName(const TCHAR *fileName);
+    static ImageDirEngine *CreateFromFile(const TCHAR *fileName);
 };
 
 class CbxEngine : public virtual BaseEngine {
 public:
     static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
-    static CbxEngine *CreateFromFileName(const TCHAR *fileName);
+    static CbxEngine *CreateFromFile(const TCHAR *fileName);
     static CbxEngine *CreateFromStream(IStream *stream);
 };
 

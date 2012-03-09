@@ -1582,7 +1582,7 @@ void DisplayModel::CopyNavHistory(DisplayModel& orig)
     }
 }
 
-DisplayModel *DisplayModel::CreateFromFileName(const TCHAR *fileName, DisplayModelCallback *cb, PasswordUI *pwdUI)
+DisplayModel *DisplayModel::CreateFromFile(const TCHAR *fileName, DisplayModelCallback *cb, PasswordUI *pwdUI)
 {
     DisplayModel *dm = new DisplayModel(cb);
     if (!dm || !dm->Load(fileName, pwdUI)) {

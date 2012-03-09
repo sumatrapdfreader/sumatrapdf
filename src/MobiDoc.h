@@ -111,7 +111,7 @@ public:
     ImageData *         GetImage(size_t imgRecIndex) const;
     TCHAR *             GetFileName() const { return fileName; }
 
-    static MobiDoc *    ParseFile(const TCHAR *fileName);
+    static MobiDoc *    CreateFromFile(const TCHAR *fileName);
 };
 
 #endif

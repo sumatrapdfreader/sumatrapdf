@@ -272,7 +272,7 @@ public:
     /* allow resizing a window without triggering a new rendering (needed for window destruction) */
     bool            dontRenderFlag;
 
-    static DisplayModel *CreateFromFileName(const TCHAR *fileName,
+    static DisplayModel *CreateFromFile(const TCHAR *fileName,
         DisplayModelCallback *dmCb, PasswordUI *pwdUI);
 };
 

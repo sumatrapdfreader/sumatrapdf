@@ -82,7 +82,7 @@ static void SaveMobiImages(const TCHAR *filePathBase, MobiDoc *mb)
 static void TestMobiFile(const TCHAR *filePath)
 {
     _tprintf(_T("Testing file '%s'\n"), filePath);
-    MobiDoc *mb = MobiDoc::ParseFile(filePath);
+    MobiDoc *mb = MobiDoc::CreateFromFile(filePath);
     if (!mb) {
         printf(" error: failed to parse the file\n");
         return;
@@ -154,7 +154,7 @@ static void MobiLayout(char *file)
         return;
     }
     printf("Laying out file '%s'\n", file);
-    MobiDoc *mb = MobiDoc::ParseFile(tmp);
+    MobiDoc *mb = MobiDoc::CreateFromFile(tmp);
     if (!mb) {
         printf("MobiLayout: failed to parse the file\n");
         return;

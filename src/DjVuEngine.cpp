@@ -191,7 +191,7 @@ public:
     DjVuEngineImpl();
     virtual ~DjVuEngineImpl();
     virtual DjVuEngine *Clone() {
-        return CreateFromFileName(fileName);
+        return CreateFromFile(fileName);
     }
 
     virtual const TCHAR *FileName() const { return fileName; };
@@ -845,7 +845,7 @@ bool DjVuEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
     return str::EndsWithI(fileName, _T(".djvu"));
 }
 
-DjVuEngine *DjVuEngine::CreateFromFileName(const TCHAR *fileName)
+DjVuEngine *DjVuEngine::CreateFromFile(const TCHAR *fileName)
 {
     DjVuEngineImpl *engine = new DjVuEngineImpl();
     if (!engine->Load(fileName)) {

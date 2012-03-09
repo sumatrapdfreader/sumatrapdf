@@ -782,7 +782,7 @@ static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win, PasswordUI *pwdU
     win.pdfsync = NULL;
 
     str::ReplacePtr(&win.loadedFilePath, fileName);
-    win.dm = DisplayModel::CreateFromFileName(fileName, &win, pwdUI);
+    win.dm = DisplayModel::CreateFromFile(fileName, &win, pwdUI);
 
     // make sure that MSHTML can't be used as a potential exploit
     // vector through another browser and our plugin (which doesn't
@@ -3077,7 +3077,8 @@ static void ExitFullscreen(WindowInfo& win)
     SetMenu(win.hwndFrame, win.menu);
 
     SetWindowLong(win.hwndFrame, GWL_STYLE, win.prevStyle);
-    SetWindowPos(win.hwndFrame, NULL, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE);
+    UINT flags = SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE;
+    SetWindowPos(win.hwndFrame, NULL, 0, 0, 0, 0, flags);
     MoveWindow(win.hwndFrame, win.frameRc);
     assert(WindowRect(win.hwndFrame) == win.frameRc);
 }

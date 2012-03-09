@@ -44,7 +44,7 @@ void ThreadLoadMobi::Run()
 {
     lf(_T("ThreadLoadMobi::Run(%s)"), fileName);
     Timer t(true);
-    MobiDoc *mobiDoc = MobiDoc::ParseFile(fileName);
+    MobiDoc *mobiDoc = MobiDoc::CreateFromFile(fileName);
     double loadingTimeMs = t.GetTimeInMs();
     lf(_T("Loaded %s in %.2f ms"), fileName, t.GetTimeInMs());
 

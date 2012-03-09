@@ -339,7 +339,7 @@ bool PsEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
            str::EndsWithI(fileName, _T(".eps"));
 }
 
-PsEngine *PsEngine::CreateFromFileName(const TCHAR *fileName)
+PsEngine *PsEngine::CreateFromFile(const TCHAR *fileName)
 {
     PsEngineImpl *engine = new PsEngineImpl();
     if (!engine->Load(fileName)) {
