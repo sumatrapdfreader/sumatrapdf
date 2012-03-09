@@ -9,7 +9,7 @@
 Lang: vn Vietnamese (Việt Nam)
 
 Contributor: Nguyễn Lương Đống (http://sites.google.com/site/nguyenluongdong)
-Contributor: Tào Trần Vương Thắng
+Contributor: Tào Trần Vương Thắng (http://keaclamviectot.blogspot.com)
 
 &About
 Giới thiệu
@@ -389,6 +389,9 @@ Vừa chiều rộng và Xem trang liên tiếp
 Fit a Single Page
 Vừa một trang đơn
 
+Fonts:
+Font chữ
+
 Found text at page %s
 Tìm thấy từ ở trang %s
 
@@ -551,6 +554,9 @@ Xóa khỏi Ưa thích
 Remove page %s from favorites
 Xoá trang %s khỏi Ưa thích
 
+Replace document &colors with Windows color scheme
+Thay màu tập tin bằng bảng màu Windows
+
 Rotate &Left\tCtrl+Shift+-
 Quay trái\tCtrl+Shift+-
 
@@ -673,8 +679,4 @@ copying text
 
 printing document
 đang in tập tin
-
-# Untranslated:
-#Fonts:
-#Replace document &colors with Windows color scheme
 
