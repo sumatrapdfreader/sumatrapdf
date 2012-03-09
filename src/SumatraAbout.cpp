@@ -52,7 +52,7 @@ struct AboutLayoutInfoEl {
 };
 
 static AboutLayoutInfoEl gAboutLayoutInfo[] = {
-    { _T("website"),        _T("SumatraPDF website"),   _T("http://blog.kowalczyk.info/software/sumatrapdf") },
+    { _T("website"),        _T("SumatraPDF website"),   WEBSITE_MAIN_URL},
     { _T("forums"),         _T("SumatraPDF forums"),    _T("http://blog.kowalczyk.info/forum_sumatra") },
     { _T("programming"),    _T("Krzysztof Kowalczyk"),  _T("http://blog.kowalczyk.info") },
     { _T("programming"),    _T("Simon B\xFCnzli"),      _T("http://www.zeniko.ch/#SumatraPDF") },
@@ -70,7 +70,7 @@ static AboutLayoutInfoEl gAboutLayoutInfo[] = {
     { _T("program icon"),   _T("Zenon"),                _T("http://www.flashvidz.tk/") },
     { _T("toolbar icons"),  _T("Yusuke Kamiyamane"),    _T("http://p.yusukekamiyamane.com/") },
     { _T("translators"),    _T("The Translators"),      _T("http://blog.kowalczyk.info/software/sumatrapdf/translators.html") },
-    { _T("translations"),   _T("Contribute translation"), _T("http://blog.kowalczyk.info/software/sumatrapdf/translations.html") },
+    { _T("translations"),   _T("Contribute translation"), WEBSITE_TRANSLATIONS_URL },
     { NULL, NULL, NULL }
 };
 

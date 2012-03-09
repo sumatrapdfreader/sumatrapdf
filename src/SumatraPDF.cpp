@@ -4388,15 +4388,15 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
             break;
 
         case IDM_VISIT_WEBSITE:
-            LaunchBrowser(_T("http://blog.kowalczyk.info/software/sumatrapdf/"));
+            LaunchBrowser(WEBSITE_MAIN_URL);
             break;
 
         case IDM_MANUAL:
-            LaunchBrowser(_T("http://blog.kowalczyk.info/software/sumatrapdf/manual.html"));
+            LaunchBrowser(WEBSITE_MANUAL_URL);
             break;
 
         case IDM_CONTRIBUTE_TRANSLATION:
-            LaunchBrowser(_T("http://blog.kowalczyk.info/software/sumatrapdf/translations.html"));
+            LaunchBrowser(WEBSITE_TRANSLATIONS_URL);
             break;
 
         case IDM_ABOUT:

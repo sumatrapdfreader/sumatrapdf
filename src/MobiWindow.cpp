@@ -254,11 +254,11 @@ static LRESULT OnCommand(MobiWindow *win, UINT msg, WPARAM wParam, LPARAM lParam
 #endif
 
         case IDM_VISIT_WEBSITE:
-            LaunchBrowser(_T("http://blog.kowalczyk.info/software/sumatrapdf/"));
+            LaunchBrowser(WEBSITE_MAIN_URL);
             break;
 
         case IDM_MANUAL:
-            LaunchBrowser(_T("http://blog.kowalczyk.info/software/sumatrapdf/manual.html"));
+            LaunchBrowser(WEBSITE_MANUAL_URL);
             break;
 
         case IDM_DEBUG_SHOW_LINKS:

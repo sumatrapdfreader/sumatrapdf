@@ -14,6 +14,10 @@
 #define FRAME_CLASS_NAME        _T("SUMATRA_PDF_FRAME")
 #define SUMATRA_WINDOW_TITLE    _T("SumatraPDF")
 
+#define WEBSITE_MAIN_URL         _T("http://blog.kowalczyk.info/software/sumatrapdf/")
+#define WEBSITE_MANUAL_URL       _T("http://blog.kowalczyk.info/software/sumatrapdf/manual.html")
+#define WEBSITE_TRANSLATIONS_URL _T("http://blog.kowalczyk.info/software/sumatrapdf/translations.html")
+
 // permissions that can be revoked (or explicitly set) through Group Policies
 enum {
     // enables Update checks, crash report submitting and hyperlinks
