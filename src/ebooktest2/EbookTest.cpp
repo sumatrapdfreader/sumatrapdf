@@ -101,7 +101,7 @@ void ControlEbook::AdvancePage(int dist)
 
 void ControlEbook::PageLayout(SizeI dim)
 {
-    if (dim == currDim && pages && pages->Count() > 0)
+    if (dim == currDim && pages && pages->Count() > 0 || RectI(PointI(), dim).IsEmpty())
         return;
     currDim = dim;
 

@@ -16,7 +16,7 @@ class MobiDoc2Impl : public MobiDoc2 {
     Vec<ImageData2>     images;
 
     bool Load() {
-        mobi = MobiDoc::ParseFile(fileName);
+        mobi = MobiDoc::CreateFromFile(fileName);
         if (!mobi)
             return false;
         ImageData *cover = mobi->GetCoverImage();
