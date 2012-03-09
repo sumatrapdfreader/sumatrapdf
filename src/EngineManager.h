@@ -11,6 +11,9 @@ enum EngineType {
     Engine_PDF, Engine_XPS,
     Engine_PS,
     Engine_Chm,
+#ifdef TEST_EPUB_ENGINE
+    Engine_Epub,
+#endif
 };
 
 #include "BaseEngine.h"
@@ -19,6 +22,9 @@ enum EngineType {
 #include "PdfEngine.h"
 #include "PsEngine.h"
 #include "ChmEngine.h"
+#ifdef TEST_EPUB_ENGINE
+#include "EpubEngine.h"
+#endif
 
 class EngineManager {
 public:
@@ -54,6 +60,11 @@ RetrySniffing:
         } else if (ChmEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_Chm) {
             engine = ChmEngine::CreateFromFile(filePath);
             engineType = Engine_Chm;
+#ifdef TEST_EPUB_ENGINE
+        } else if (EpubEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_Epub) {
+            engine = EpubEngine::CreateFromFile(filePath);
+            engineType = Engine_Epub;
+#endif
         }
 
         if (!engine && !sniff) {

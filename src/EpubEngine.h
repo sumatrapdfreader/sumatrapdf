@@ -9,7 +9,7 @@
 class EpubEngine : public BaseEngine {
 public:
     static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
-    static EpubEngine *CreateFromFileName(const TCHAR *fileName);
+    static EpubEngine *CreateFromFile(const TCHAR *fileName);
 };
 
 #endif

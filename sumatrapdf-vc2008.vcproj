@@ -123,6 +123,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\EpubEngine.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\EpubEngine.h"
+					>
+				</File>
+				<File
 					RelativePath=".\src\ImagesEngine.cpp"
 					>
 				</File>
