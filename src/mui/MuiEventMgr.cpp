@@ -3,6 +3,7 @@
 
 #include "Mui.h"
 #include "WindowsX.h"
+#include "DebugLog.h"
 
 namespace mui {
 
@@ -176,8 +177,12 @@ LRESULT EventMgr::OnSetCursor(int x, int y, bool& wasHandled)
 
 LRESULT EventMgr::OnMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& wasHandled)
 {
-    if (WM_SIZE == msg)
+    if (WM_SIZE == msg) {
+        int dx = LOWORD(lParam);
+        int dy = HIWORD(lParam);
+        lf("(%3d,%3d) EventMgr::OnMessage() WM_SIZE", dx, dy);
         wndRoot->RequestLayout();
+    }
 
     wndRoot->LayoutIfRequested();
 

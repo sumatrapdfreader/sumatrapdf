@@ -397,11 +397,11 @@ void EbookController::TriggerLayout()
         // we haven't been sized yet
         return;
     }
-    lf("EbookController::TriggerLayout (%d, %d)", dx, dy);
     CrashIf((dx < 100) || (dy < 40));
     if (!html && !mobiDoc)
         return;
 
+    lf("(%3d,%3d) EbookController::TriggerLayout", dx, dy);
     PageData *newPage = PreserveTempPageShown();
     if (newPage) {
         CrashIf((layoutTemp.reparsePoint != NULL) && 

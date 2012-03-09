@@ -128,16 +128,39 @@ static void OnToggleBbox(MobiWindow *win)
     win::menu::SetChecked(GetMenu(win->hwndFrame), IDM_DEBUG_SHOW_LINKS, gShowTextBoundingBoxes);
 }
 
-static void DeleteMobiWindow(MobiWindow *win, bool forceClose = false)
+// closes a physical window, deletes the MobiWindow object and removes it
+// from the global list of windows
+static void DeleteMobiWindow(MobiWindow *win, bool forceDelete = false)
 {
-    if (gPluginMode && !forceClose)
+    if (gPluginMode && !forceDelete)
         return;
 
-    DestroyWindow(win->hwndFrame);
     delete win->ebookController;
     DestroyEbookControls(win->ebookControls);
     gMobiWindows->Remove(win);
     delete win;
+    // must be called after removing win from gMobiWindows so that window
+    // message processing doesn't pick up a window being destroyed
+    DestroyWindow(win->hwndFrame);
+}
+
+// if forceClose is true, we force window deletion in plugin mode
+// if quitIfLast is true, we quit if we closed the last window, otherwise
+// we create an about window
+static void CloseMobiWindow(MobiWindow *win, bool quitIfLast, bool forceClose)
+{
+    DeleteMobiWindow(win, forceClose);
+    if (TotalWindowsCount() > 0)
+        return;
+    if (quitIfLast) {
+        PostQuitMessage(0);
+        return;
+    }
+    WindowInfo *w = CreateAndShowWindowInfo();
+    if (!w) {
+        PostQuitMessage(0);
+        return;
+    }
 }
 
 static LRESULT OnKeyDown(MobiWindow *win, UINT msg, WPARAM key, LPARAM lParam)
@@ -164,19 +187,12 @@ static LRESULT OnKeyDown(MobiWindow *win, UINT msg, WPARAM key, LPARAM lParam)
         win->ebookController->GoToLastPage();
         break;
     case 'Q':
-        DeleteMobiWindow(win);
+        CloseMobiWindow(win, true, true);
         break;
     default:
         return DefWindowProc(win->hwndFrame, msg, key, lParam);
     }
     return 0;
-}
-
-// TODO: how does this differ from DeleteMobiWindow (which destroys the window)?
-static void CloseMobiWindow(MobiWindow *win)
-{
-    // TODO: write me
-    DeleteMobiWindow(win);
 }
 
 static void RebuildMenuBarForMobiWindow(MobiWindow *win)
@@ -214,7 +230,7 @@ static LRESULT OnCommand(MobiWindow *win, UINT msg, WPARAM wParam, LPARAM lParam
 
         case IDT_FILE_EXIT:
         case IDM_CLOSE:
-            CloseMobiWindow(win);
+            CloseMobiWindow(win, false, false);
             break;
 
         case IDM_EXIT:
@@ -290,16 +306,7 @@ static LRESULT CALLBACK MobiWndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPA
     switch (msg)
     {
         case WM_CREATE:
-            // we do nothing
-            break;
-
-        case WM_DESTROY:
-            // TODO: do this in CloseMobiWindow instead?
-            if (TotalWindowsCount() == 1) {
-                CrashIf(gMobiWindows->Count() != 1);
-                CrashIf(gMobiWindows->At(0)->hwndFrame != hwnd);
-                PostQuitMessage(0);
-            }
+            SetMenu(hwnd, BuildMobiMenu());
             break;
 
         case WM_DROPFILES:
@@ -325,6 +332,10 @@ static LRESULT CALLBACK MobiWndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPA
 
     switch (msg)
     {
+        case WM_DESTROY:
+            CloseMobiWindow(win, true, true);
+            break;
+
         case WM_PAINT:
             win->hwndWrapper->OnPaint(hwnd);
             break;
@@ -368,7 +379,6 @@ void OpenMobiInWindow(MobiDoc *mobiDoc, SumatraWindow& winToReplace)
         SavePrefs();
     }
 
-
     if (SumatraWindow::WinMobi == winToReplace.type) {
         MobiWindow *mw = winToReplace.winMobi;
         CrashIf(!mw);
@@ -401,8 +411,6 @@ void OpenMobiInWindow(MobiDoc *mobiDoc, SumatraWindow& winToReplace)
         GESTURECONFIG gc = { 0, GC_ALLGESTURES, 0 };
         Touch::SetGestureConfig(hwnd, 0, 1, &gc, sizeof(GESTURECONFIG));
     }
-
-    SetMenu(hwnd, BuildMobiMenu());
 
     MobiWindow *win = new MobiWindow();
     win->ebookControls = CreateEbookControls(hwnd);

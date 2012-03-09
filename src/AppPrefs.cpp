@@ -676,8 +676,9 @@ bool SavePrefs()
         return false;
 
     /* mark currently shown files as visible */
-    for (size_t i = 0; i < gWindows.Count(); i++)
+    for (size_t i = 0; i < gWindows.Count(); i++) {
         UpdateCurrentFileDisplayStateForWin(gWindows.At(i));
+    }
 
     // don't save preferences without the proper permission
     if (!HasPermission(Perm_SavePreferences))
@@ -685,13 +686,15 @@ bool SavePrefs()
 
     ScopedMem<TCHAR> path(GetPrefsFileName());
     bool ok = Prefs::Save(path, gGlobalPrefs, gFileHistory, gFavorites);
-    if (ok) {
-        // notify all SumatraPDF instances about the updated prefs file
-        HWND hwnd = NULL;
-        while ((hwnd = FindWindowEx(HWND_DESKTOP, hwnd, FRAME_CLASS_NAME, NULL)))
-            PostMessage(hwnd, UWM_PREFS_FILE_UPDATED, 0, 0);
+    if (!ok)
+        return false;
+
+    // notify all SumatraPDF instances about the updated prefs file
+    HWND hwnd = NULL;
+    while ((hwnd = FindWindowEx(HWND_DESKTOP, hwnd, FRAME_CLASS_NAME, NULL))) {
+        PostMessage(hwnd, UWM_PREFS_FILE_UPDATED, 0, 0);
     }
-    return ok;
+    return true;
 }
 
 // refresh the preferences when a different SumatraPDF process saves them

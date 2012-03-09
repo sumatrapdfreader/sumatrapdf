@@ -377,20 +377,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         goto Exit;
 
     if (!firstIsDocLoaded) {
-        bool enterFullscreen = (WIN_STATE_FULLSCREEN == gGlobalPrefs.windowState);
-        win = CreateWindowInfo();
+        win = CreateAndShowWindowInfo();
         if (!win)
             goto Exit;
-
-        if (WIN_STATE_FULLSCREEN == gGlobalPrefs.windowState ||
-            WIN_STATE_MAXIMIZED == gGlobalPrefs.windowState)
-            ShowWindow(win->hwndFrame, SW_MAXIMIZE);
-        else
-            ShowWindow(win->hwndFrame, SW_SHOW);
-        UpdateWindow(win->hwndFrame);
-
-        if (enterFullscreen)
-            EnterFullscreen(*win);
     }
 
     UpdateUITextForLanguage(); // needed for RTL languages

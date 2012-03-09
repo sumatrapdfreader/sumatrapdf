@@ -391,7 +391,7 @@ void StressTest::Finished(bool success)
         ShowNotification(win, s, false, false, NG_STRESS_TEST_SUMMARY);
     }
 
-    CloseWindow(win, false);
+    CloseWindow(win, false, false);
     delete this;
 }
 
@@ -471,7 +471,7 @@ bool StressTest::OpenFile(const TCHAR *fileName)
         w->stressTest = win->stressTest;
         win->stressTest = NULL;
         win = w;
-        CloseWindow(toClose, false);
+        CloseWindow(toClose, false, false);
     }
     if (!win->dm)
         return false;

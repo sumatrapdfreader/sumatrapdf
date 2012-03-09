@@ -342,7 +342,7 @@ void LinkHandler::LaunchFile(const TCHAR *path, PageDestination *link)
     }
 
     if (!newWin->IsDocLoaded()) {
-        CloseWindow(newWin, true);
+        CloseWindow(newWin, true, false);
         // OpenFileExternally rejects files we'd otherwise
         // have to show a notification to be sure (which we
         // consider bad UI and thus simply don't)

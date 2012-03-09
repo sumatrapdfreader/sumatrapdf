@@ -12,6 +12,7 @@ Specific things that still need to be added for minimal mobi support:
 - opening a file via recent files list in mobi window
 - opening mobi file via recent files list in non-mobi window shouldn't replace
   a document if it's there
+- bug: moving mobi window after it's been created resizes it (which causes re-layout). Why?
 
 Implicitly everything else is for later, including fullscreen, printing,
 search, touch gestures for mobi window etc.

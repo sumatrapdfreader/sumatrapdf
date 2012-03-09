@@ -141,15 +141,12 @@ void Painter::Paint(HWND hwnd, bool isDirty)
     // this step and just blit cached bitmap because the caller
     // knows it didn't change
     if (isDirty) {
-        lf("Painter::Paint() painting to cacheBmp");
         Graphics g((Image*)cacheBmp);
         InitGraphicsMode(&g);
         g.SetClip(&clip, CombineModeReplace);
 
         PaintBackground(&g, Rect(0, 0, r.dx, r.dy));
         PaintWindowsInZOrder(&g, wnd);
-    } else {
-        lf("Painter::Paint() optimization: skipping painting to cacheBmp");
     }
 
     // TODO: try to manually draw only the part that falls within
