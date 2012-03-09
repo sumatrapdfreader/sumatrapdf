@@ -596,10 +596,11 @@ void QueueWorkItem(UIThreadWorkItem *wi)
 static bool SaveThumbnailForFile(const TCHAR *filePath, RenderedBitmap *bmp)
 {
     DisplayState *ds = gFileHistory.Find(filePath);
-    if (!ds)
+    if (!ds) {
+        delete bmp;
         return false;
-    if (ds->thumbnail)
-        delete ds->thumbnail;
+    }
+    delete ds->thumbnail;
     ds->thumbnail = bmp;
     SaveThumbnail(*ds);
     return true;
@@ -4731,7 +4732,6 @@ int RunMessageLoop()
         gUIThreadMarshaller.Execute();
         DispatchUiMessages();
     }
-
     return (int)msg.wParam;
 }
 // TODO: a hackish but cheap way to separate startup code.
