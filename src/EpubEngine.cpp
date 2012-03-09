@@ -51,8 +51,8 @@ public:
         }
     }
 
-    const char *GetBookHtmlData(size_t& lenOut) {
-        lenOut = htmlData.Size();
+    const char *GetBookHtmlData(size_t *lenOut) {
+        *lenOut = htmlData.Size();
         return htmlData.Get();
     }
 
@@ -363,7 +363,7 @@ public:
     virtual RectD PageMediabox(int pageNo) { return pageRect; }
     virtual RectD PageContentBox(int pageNo, RenderTarget target=Target_View) {
         RectD mbox = PageMediabox(pageNo);
-        mbox.Inflate(-PAGE_BORDER, -PAGE_BORDER);
+        mbox.Inflate(-pageBorder, -pageBorder);
         return mbox;
     }
 
@@ -379,16 +379,12 @@ public:
     virtual unsigned char *GetFileData(size_t *cbCount);
 
     virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out=NULL,
-                                    RenderTarget target=Target_View) {
-        return NULL;
-    }
+                                    RenderTarget target=Target_View);
 
     virtual bool IsImagePage(int pageNo) { return false; }
-    virtual PageLayoutType PreferredLayout() { return Layout_Single; }
-
-    virtual bool HasTocTree() const {
-        return false;
-    }
+    virtual PageLayoutType PreferredLayout() { return Layout_Book; }
+    // TODO: implement ToC extraction
+    virtual bool HasTocTree() const { return false; }
 
     virtual const TCHAR *GetDefaultFileExt() const { return _T(".epub"); }
 
@@ -400,16 +396,24 @@ protected:
     Vec<PageData *> *pages;
     // needed so that memory allocated by ResolveHtmlEntities isn't leaked
     PoolAllocator allocator;
-    RectD pageRect;
 
-    static const int PAGE_BORDER = (int)(0.4 * 96);
+    RectD pageRect;
+    float pageBorder;
 
     bool Load(const TCHAR *fileName);
     void GetTransform(Matrix& m, float zoom, int rotation);
+
+    Vec<DrawInstr> *GetPageData(int pageNo) {
+        CrashIf(pageNo < 1 || PageCount() < pageNo);
+        if (pageNo < 1 || PageCount() < pageNo)
+            return NULL;
+        return &pages->At(pageNo - 1)->instructions;
+    }
 };
 
 EpubEngineImpl::EpubEngineImpl() : fileName(NULL), doc(NULL), pages(NULL),
-    pageRect(0, 0, 5.12 * 96, 7.8 * 96) // "B Format" paperback
+    pageRect(0, 0, 5.12 * GetFileDPI(), 7.8 * GetFileDPI()), // "B Format" paperback
+    pageBorder(0.4f * GetFileDPI())
 {
 }
 
@@ -431,14 +435,13 @@ bool EpubEngineImpl::Load(const TCHAR *fileName)
         return false;
 
     LayoutInfo li;
-    li.htmlStr = doc->GetBookHtmlData(li.htmlStrLen);
-    li.pageDx = (int)pageRect.dx - 2 * PAGE_BORDER;
-    li.pageDy = (int)pageRect.dy - 2 * PAGE_BORDER;
-    li.textAllocator = &allocator;
-
     li.mobiDoc = (MobiDoc *)doc; // hack to allow passing doc through PageLayout
+    li.htmlStr = doc->GetBookHtmlData(&li.htmlStrLen);
+    li.pageDx = (int)(pageRect.dx - 2 * pageBorder);
+    li.pageDy = (int)(pageRect.dy - 2 * pageBorder);
     li.fontName = L"Georgia";
     li.fontSize = 11;
+    li.textAllocator = &allocator;
 
     pages = PageLayout2(&li).Layout();
 
@@ -506,9 +509,9 @@ RenderedBitmap *EpubEngineImpl::RenderBitmap(int pageNo, float zoom, int rotatio
 
 bool EpubEngineImpl::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target)
 {
-    if (pageNo < 1 || PageCount() < pageNo)
+    Vec<DrawInstr> *pageInstrs = GetPageData(pageNo);
+    if (!pageInstrs)
         return false;
-    PageData *pageData = pages->At(pageNo - 1);
 
     RectD pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
     RectI screen = Transform(pageRc, pageNo, zoom, rotation).Round();
@@ -529,8 +532,61 @@ bool EpubEngineImpl::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoo
     m.Translate((REAL)(screenRect.x - screen.x), (REAL)(screenRect.y - screen.y), MatrixOrderAppend);
     g.SetTransform(&m);
 
-    DrawPageLayout(&g, &pageData->instructions, (REAL)PAGE_BORDER, (REAL)PAGE_BORDER, false);
+    DrawPageLayout(&g, pageInstrs, pageBorder, pageBorder, false);
     return true;
+}
+
+TCHAR *EpubEngineImpl::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out, RenderTarget target)
+{
+    Vec<DrawInstr> *pageInstrs = GetPageData(pageNo);
+    if (!pageInstrs)
+        return NULL;
+
+    str::Str<TCHAR> content;
+    Vec<RectI> coords;
+    bool insertSpace = false;
+
+    for (DrawInstr *i = pageInstrs->IterStart(); i; i = pageInstrs->IterNext()) {
+        RectI bbox = RectT<float>(i->bbox.X, i->bbox.Y, i->bbox.Width, i->bbox.Height).Round();
+        bbox.Offset((int)pageBorder, (int)pageBorder);
+        switch (i->type) {
+        case InstrString:
+            if (coords.Count() > 0 && coords.Last().BR().x > bbox.x) {
+                content.Append(lineSep);
+                coords.AppendBlanks(str::Len(lineSep));
+                CrashIf(*lineSep && !coords.Last().IsEmpty());
+            }
+            else if (insertSpace && coords.Count() > 0) {
+                int swidth = bbox.x - coords.Last().BR().x;
+                if (swidth > 0) {
+                    content.Append(' ');
+                    coords.Append(RectI(bbox.x - swidth, bbox.y, swidth, bbox.dy));
+                }
+            }
+            insertSpace = false;
+            {
+                ScopedMem<char> utf8(str::DupN(i->str.s, i->str.len));
+                ScopedMem<TCHAR> s(str::conv::FromUtf8(utf8));
+                content.Append(s);
+                size_t len = str::Len(s);
+                double cwidth = 1.0 * bbox.dx / len;
+                for (size_t k = 0; k < len; k++)
+                    coords.Append(RectI((int)(bbox.x + k * cwidth), bbox.y, (int)cwidth, bbox.dy));
+            }
+            break;
+        case InstrElasticSpace:
+        case InstrFixedSpace:
+            insertSpace = true;
+            break;
+        }
+    }
+
+    if (coords_out) {
+        CrashIf(coords.Count() != content.Count());
+        *coords_out = new RectI[coords.Count()];
+        memcpy(*coords_out, coords.LendData(), coords.Count() * sizeof(RectI));
+    }
+    return content.StealData();
 }
 
 unsigned char *EpubEngineImpl::GetFileData(size_t *cbCount)

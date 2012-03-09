@@ -1334,6 +1334,7 @@ float DisplayModel::NextZoomStep(float towardsLevel)
         100, 125, 150, 200, 300, 400, 600, 800, 1000 /* added */,
         1200, 1600, 2000 /* added */, 2400, 3200, 4800 /* added */, 6400
     };
+    CrashIf(zoomLevels[0] != ZOOM_MIN || zoomLevels[dimof(zoomLevels)-1] != ZOOM_MAX);
 
     int currPageNo = CurrentPageNo();
     float pageZoom = ZoomRealFromVirtualForPage(ZOOM_FIT_PAGE, currPageNo) * 100 / dpiFactor;
