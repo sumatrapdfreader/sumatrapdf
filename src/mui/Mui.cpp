@@ -56,6 +56,22 @@ by giving windows a way to declare they have selectable text
 TODO: some claim GDI+ text drawing is slower than GDI, so we could try
 to use GDI instead
 
+TODO: optimize repainting. I have 2 ideas.
+
+1. Per-control bitmap cache. A flag on Control that requests using a
+cache bitmap. If a given control is complicated to draw, we wouldn't
+have to draw it every time during MuiPainter::Paint() but simply blit
+if that control hasn't changed. Simple to implement but of limited use. 
+
+2. Layers. We could add capability to group controls into z-ordered
+layers. Each layer would have a cache bitmap. We would only need to
+redraw a given layer if some control in has changed. This would allow
+dividing controls into those that change frequently and those that
+don't change frequently and putting them on separate layer. An especially
+important use case for this are animated controls like e.g. circular
+progress indicator (placing them on a separate layer would probably
+significantly reduce time to redraw the whole window).
+
 TODO: since we already paint to a cached bitmap, we could do rendering
 on a background thread and then just blit the bitmap to a window in
 WM_PAINT, assuming rendering on a non-ui thread is ok with gdi+.
@@ -69,8 +85,6 @@ properties (like e.g. Control::hwndParent), we could maintain separate mapping
 from Control * to such properties e.g. in an array. Another idea is to move
 rarely used fields into a separate struct linked from Control. If none of rarely
 used fields was set, we wouldn't have to allocate that struct.
-
-TODO: optimize repainting by cliping to dirty regions (?)
 
 TODO: could switch to layout units like in https://trac.webkit.org/wiki/LayoutUnit,
 https://wiki.mozilla.org/Mozilla2:Units, https://bugzilla.mozilla.org/show_bug.cgi?id=177805
