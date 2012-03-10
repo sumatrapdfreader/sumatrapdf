@@ -1336,10 +1336,18 @@ float DisplayModel::NextZoomStep(float towardsLevel)
     };
     CrashIf(zoomLevels[0] != ZOOM_MIN || zoomLevels[dimof(zoomLevels)-1] != ZOOM_MAX);
 
-    int currPageNo = CurrentPageNo();
-    float pageZoom = ZoomRealFromVirtualForPage(ZOOM_FIT_PAGE, currPageNo) * 100 / dpiFactor;
-    float widthZoom = ZoomRealFromVirtualForPage(ZOOM_FIT_WIDTH, currPageNo) * 100 / dpiFactor;
     float currZoom = ZoomAbsolute();
+    float pageZoom = (float)HUGE_VAL, widthZoom = (float)HUGE_VAL;
+    for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
+        if (PageShown(pageNo)) {
+            float pagePageZoom = ZoomRealFromVirtualForPage(ZOOM_FIT_PAGE, pageNo);
+            pageZoom = min(pageZoom, pagePageZoom);
+            float pageWidthZoom = ZoomRealFromVirtualForPage(ZOOM_FIT_WIDTH, pageNo);
+            widthZoom = min(widthZoom, pageWidthZoom);
+        }
+    }
+    CrashIf(pageZoom == (float)HUGE_VAL || widthZoom == (float)HUGE_VAL);
+    pageZoom *= 100 / dpiFactor; widthZoom *= 100 / dpiFactor;
 
     float newZoom = towardsLevel;
     if (currZoom < towardsLevel) {
