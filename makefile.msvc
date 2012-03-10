@@ -10,6 +10,7 @@
 #   note: building on X64 isn't officially supported and might unintentionally be broken
 #WITH_ANALYZE=yes
 #   use /analyze compiler flag 
+#TEST_EPUB_ENGINE=yes
 
 # Set default configuration
 !if "$(CFG)"==""
