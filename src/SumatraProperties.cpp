@@ -32,7 +32,7 @@ static bool PdfDateParse(const TCHAR *pdfDate, SYSTEMTIME *timeOut)
 // See: ISO 8601 specification
 // Format:  "YYYY-MM-DDTHH:MM:SSZ"
 // Example: "2011-04-19T22:10:48Z"
-static bool XpsDateParse(const TCHAR *xpsDate, SYSTEMTIME *timeOut)
+static bool IsoDateParse(const TCHAR *xpsDate, SYSTEMTIME *timeOut)
 {
     ZeroMemory(timeOut, sizeof(SYSTEMTIME));
     const TCHAR *end = str::Parse(xpsDate, _T("%4d-%2d-%2d"), &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay);
@@ -327,14 +327,22 @@ void OnMenuProperties(WindowInfo& win, bool extended)
     if (Engine_PDF == win.dm->engineType)
         ConvDateToDisplay(&str, PdfDateParse);
     else if (Engine_XPS == win.dm->engineType)
-        ConvDateToDisplay(&str, XpsDateParse);
+        ConvDateToDisplay(&str, IsoDateParse);
+#ifdef TEST_EPUB_ENGINE
+    else if (Engine_Epub == win.dm->engineType)
+        ConvDateToDisplay(&str, IsoDateParse);
+#endif
     layoutData->AddProperty(_TR("Created:"), str);
 
     str = engine->GetProperty("ModDate");
     if (Engine_PDF == win.dm->engineType)
         ConvDateToDisplay(&str, PdfDateParse);
     else if (Engine_XPS == win.dm->engineType)
-        ConvDateToDisplay(&str, XpsDateParse);
+        ConvDateToDisplay(&str, IsoDateParse);
+#ifdef TEST_EPUB_ENGINE
+    else if (Engine_Epub == win.dm->engineType)
+        ConvDateToDisplay(&str, IsoDateParse);
+#endif
     layoutData->AddProperty(_TR("Modified:"), str);
 
     str = engine->GetProperty("Creator");

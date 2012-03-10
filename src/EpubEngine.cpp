@@ -1,19 +1,20 @@
-/* Copyright 2006-2012 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
 // Test engine to see how well the BaseEngine API fits a flowed ebook format.
-// (pages are layout out the same as for a "B Format" paperback: 5.12" x 7.8")
+// (pages are layed out the same as for a "B Format" paperback: 5.12" x 7.8")
 
 #include "EpubEngine.h"
 #include "StrUtil.h"
 #include "FileUtil.h"
 #include "Scoped.h"
-#include "ZipUtil.h"
-#include "TrivialHtmlParser.h"
 #include "Allocator.h"
 
 /* epub loading code (cf. ebooktest2/EpubDoc.cpp and ebooktest2/BaseEbookDoc.h) */
 
+#include "ZipUtil.h"
+#include "TrivialHtmlParser.h"
+#include "HtmlPullParser.h"
 // for ImageData
 #include "MobiDoc.h"
 
@@ -31,8 +32,10 @@ class EpubDoc {
     ZipFile zip;
     str::Str<char> htmlData;
     Vec<ImageData2> images;
+    StrVec props;
 
     bool Load();
+    void ParseMetadata(const char *content);
 
     static bool VerifyEpub(ZipFile& zip) {
         ScopedMem<char> firstFileData(zip.GetFileData(_T("mimetype")));
@@ -76,6 +79,14 @@ public:
         return &images.At(index).base;
     }
 
+    TCHAR *GetProperty(const TCHAR *name) {
+        for (size_t i = 0; i < props.Count(); i += 2) {
+            if (str::Eq(props.At(i), name))
+                return str::Dup(props.At(i + 1));
+        }
+        return NULL;
+    }
+
     static bool IsSupportedFile(const TCHAR *fileName, bool sniff) {
         if (sniff) {
             return VerifyEpub(ZipFile(fileName));
@@ -96,6 +107,16 @@ static void UrlDecode(TCHAR *url)
         }
     }
     *url = '\0';
+}
+
+static TCHAR *GetTokenText(HtmlToken *tok)
+{
+    if (!tok->IsText())
+        return NULL;
+    ScopedMem<char> dup(str::DupN(tok->s, tok->sLen));
+    const char *tmp = ResolveHtmlEntities(dup, dup + tok->sLen, NULL);
+    ScopedMem<const char> autoFree(tmp != dup ? tmp : NULL);
+    return str::conv::FromUtf8(tmp);
 }
 
 bool EpubDoc::Load()
@@ -119,6 +140,7 @@ bool EpubDoc::Load()
     ScopedMem<char> content(zip.GetFileData(contentPath));
     if (!content)
         return false;
+    ParseMetadata(content);
     node = parser.ParseInPlace(content);
     if (!node)
         return false;
@@ -165,6 +187,47 @@ bool EpubDoc::Load()
     }
 
     return htmlData.Count() > 0;
+}
+
+void EpubDoc::ParseMetadata(const char *content)
+{
+    HtmlPullParser pullParser(content, str::Len(content));
+    int insideMetadata = 0;
+    HtmlToken *tok;
+
+    while ((tok = pullParser.Next())) {
+        if (tok->IsStartTag() && tok->NameIs("metadata"))
+            insideMetadata++;
+        else if (tok->IsEndTag() && tok->NameIs("metadata"))
+            insideMetadata--;
+        if (!insideMetadata)
+            continue;
+
+        if (tok->IsStartTag() && tok->NameIs("dc:title")) {
+            tok = pullParser.Next();
+            TCHAR *text = GetTokenText(tok);
+            if (text) {
+                props.Append(str::Dup(_T("Title")));
+                props.Append(text);
+            }
+        }
+        else if (tok->IsStartTag() && tok->NameIs("dc:creator")) {
+            tok = pullParser.Next();
+            TCHAR *text = GetTokenText(tok);
+            if (text) {
+                props.Append(str::Dup(_T("Author")));
+                props.Append(text);
+            }
+        }
+        else if (tok->IsStartTag() && tok->NameIs("dc:date")) {
+            tok = pullParser.Next();
+            TCHAR *text = GetTokenText(tok);
+            if (text) {
+                props.Append(str::Dup(_T("CreationDate")));
+                props.Append(text);
+            }
+        }
+    }
 }
 
 /* PageLayout extensions for Epub (cf. ebooktest2/PageLayout.cpp) */
@@ -383,6 +446,8 @@ public:
 
     virtual bool IsImagePage(int pageNo) { return false; }
     virtual PageLayoutType PreferredLayout() { return Layout_Book; }
+    virtual TCHAR *GetProperty(char *name);
+
     // TODO: implement ToC extraction
     virtual bool HasTocTree() const { return false; }
 
@@ -658,6 +723,12 @@ PageElement *EpubEngineImpl::GetElementAtPos(int pageNo, PointD pt)
     delete els;
 
     return el;
+}
+
+TCHAR *EpubEngineImpl::GetProperty(char *name)
+{
+    ScopedMem<TCHAR> nameT(str::conv::FromAnsi(name));
+    return doc->GetProperty(nameT);
 }
 
 unsigned char *EpubEngineImpl::GetFileData(size_t *cbCount)
