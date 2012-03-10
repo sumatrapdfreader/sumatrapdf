@@ -157,6 +157,7 @@ OPENJPEG_LIB := $(OUT)/libopenjpeg.a
 OPENJPEG_SRC := \
 	bio.c \
 	cio.c \
+	cidx_manager.c \
 	dwt.c \
 	event.c \
 	image.c \
@@ -167,12 +168,16 @@ OPENJPEG_SRC := \
 	mct.c \
 	mqc.c \
 	openjpeg.c \
+	phix_manager.c \
 	pi.c \
+	ppix_manager.c \
 	raw.c \
 	t1.c \
 	t2.c \
 	tcd.c \
 	tgt.c \
+	thix_manager.c \
+	tpix_manager.c \
 
 $(OPENJPEG_LIB): $(addprefix $(OUT)/opj_, $(OPENJPEG_SRC:%.c=%.o))
 $(OUT)/opj_%.o: $(OPENJPEG_DIR)/%.c | $(OUT)

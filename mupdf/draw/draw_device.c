@@ -1590,9 +1590,6 @@ fz_draw_free_user(fz_device *devp)
 			state--;
 		}
 		while(--dev->top > 0);
-		fz_drop_pixmap(ctx, dev->stack[0].mask);
-		fz_drop_pixmap(ctx, dev->stack[0].dest);
-		fz_drop_pixmap(ctx, dev->stack[0].shape);
 	}
 	if (dev->stack != &dev->init_stack[0])
 		fz_free(ctx, dev->stack);
