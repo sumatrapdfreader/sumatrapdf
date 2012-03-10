@@ -10,6 +10,18 @@
 #include "Scoped.h"
 #include "Allocator.h"
 
+namespace str {
+    namespace conv {
+
+inline TCHAR *FromUtf8N(const char *s, size_t len)
+{
+    ScopedMem<char> tmp(str::DupN(s, len));
+    return str::conv::FromUtf8(tmp);
+}
+
+    }
+}
+
 /* epub loading code (was ebooktest2/EpubDoc.cpp and ebooktest2/BaseEbookDoc.h) */
 
 #include "ZipUtil.h"
@@ -32,7 +44,7 @@ class EpubDoc {
     ZipFile zip;
     str::Str<char> htmlData;
     Vec<ImageData2> images;
-    StrVec props;
+    Vec<char *> props;
     ScopedMem<TCHAR> tocPath;
 
     bool Load();
@@ -52,6 +64,9 @@ public:
         for (size_t i = 0; i < images.Count(); i++) {
             free(images.At(i).base.data);
             free(images.At(i).id);
+        }
+        for (size_t i = 1; i < props.Count(); i += 2) {
+            free(props.At(i));
         }
     }
 
@@ -80,10 +95,10 @@ public:
         return &images.At(index).base;
     }
 
-    TCHAR *GetProperty(const TCHAR *name) {
+    TCHAR *GetProperty(const char *name) {
         for (size_t i = 0; i < props.Count(); i += 2) {
             if (str::Eq(props.At(i), name))
-                return str::Dup(props.At(i + 1));
+                return str::conv::FromUtf8(props.At(i + 1));
         }
         return NULL;
     }
@@ -116,14 +131,13 @@ static void UrlDecode(TCHAR *url)
     *url = '\0';
 }
 
-static TCHAR *GetTokenText(HtmlToken *tok)
+static char *GetTokenText(HtmlToken *tok)
 {
     if (!tok->IsText())
         return NULL;
     ScopedMem<char> dup(str::DupN(tok->s, tok->sLen));
-    const char *tmp = ResolveHtmlEntities(dup, dup + tok->sLen, NULL);
-    ScopedMem<const char> autoFree(tmp != dup ? tmp : NULL);
-    return str::conv::FromUtf8(tmp);
+    char *text = (char *)ResolveHtmlEntities(dup, dup + tok->sLen, NULL);
+    return text != dup ? text : str::Dup(text);
 }
 
 bool EpubDoc::Load()
@@ -220,25 +234,25 @@ void EpubDoc::ParseMetadata(const char *content)
 
         if (tok->IsStartTag() && tok->NameIs("dc:title")) {
             tok = pullParser.Next();
-            TCHAR *text = GetTokenText(tok);
+            char *text = GetTokenText(tok);
             if (text) {
-                props.Append(str::Dup(_T("Title")));
+                props.Append("Title");
                 props.Append(text);
             }
         }
         else if (tok->IsStartTag() && tok->NameIs("dc:creator")) {
             tok = pullParser.Next();
-            TCHAR *text = GetTokenText(tok);
+            char *text = GetTokenText(tok);
             if (text) {
-                props.Append(str::Dup(_T("Author")));
+                props.Append("Author");
                 props.Append(text);
             }
         }
         else if (tok->IsStartTag() && tok->NameIs("dc:date")) {
             tok = pullParser.Next();
-            TCHAR *text = GetTokenText(tok);
+            char *text = GetTokenText(tok);
             if (text) {
-                props.Append(str::Dup(_T("CreationDate")));
+                props.Append("CreationDate");
                 props.Append(text);
             }
         }
@@ -474,24 +488,28 @@ public:
     virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false);
     virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false);
 
-    virtual unsigned char *GetFileData(size_t *cbCount);
-
+    virtual unsigned char *GetFileData(size_t *cbCount) {
+        return (unsigned char *)file::ReadAll(fileName, cbCount);
+    }
     virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View);
-
     // make RenderCache request larger tiles than per default
     virtual bool HasClipOptimizations(int pageNo) { return false; }
     virtual PageLayoutType PreferredLayout() { return Layout_Book; }
-    virtual TCHAR *GetProperty(char *name);
 
-    virtual PageDestination *GetNamedDest(const TCHAR *name);
-    virtual bool HasTocTree() const { return doc && ScopedMem<char>(doc->GetToC()) != NULL; }
-    virtual DocTocItem *GetTocTree();
-
+    virtual TCHAR *GetProperty(char *name) {
+        return doc ? doc->GetProperty(name) : NULL;
+    }
     virtual const TCHAR *GetDefaultFileExt() const { return _T(".epub"); }
 
     virtual Vec<PageElement *> *GetElements(int pageNo);
     virtual PageElement *GetElementAtPos(int pageNo, PointD pt);
+
+    virtual PageDestination *GetNamedDest(const TCHAR *name);
+    virtual bool HasTocTree() const {
+        return doc && ScopedMem<char>(doc->GetToC()) != NULL;
+    }
+    virtual DocTocItem *GetTocTree();
 
     virtual bool BenchLoadPage(int pageNo) { return true; }
 
@@ -543,43 +561,40 @@ public:
 
 class EpubLink : public PageElement, public PageDestination {
     EpubEngineImpl *engine;
-    DrawInstr *linkInstr; // owned by EpubEngineImpl::pages
+    DrawInstr *link; // owned by EpubEngineImpl::pages
     RectI rect;
     int pageNo;
     bool isInternal;
 
     PageDestination *Resolve() const {
         CrashIf(!isInternal);
-        const char *id = (const char *)memchr(linkInstr->str.s, '#', linkInstr->str.len);
+        const char *id = (const char *)memchr(link->str.s, '#', link->str.len);
         if (!id)
-            id = linkInstr->str.s;
-        ScopedMem<char> idu(str::DupN(id, linkInstr->str.len - (id - linkInstr->str.s)));
-        ScopedMem<TCHAR> idt(str::conv::FromUtf8(idu));
+            id = link->str.s;
+        ScopedMem<TCHAR> idt(str::conv::FromUtf8N(id, link->str.len - (id - link->str.s)));
         return engine->GetNamedDest(idt);
     }
 
 public:
-    EpubLink() : engine(NULL), linkInstr(NULL), pageNo(-1), isInternal(false) { }
-    EpubLink(EpubEngineImpl *engine, DrawInstr *linkInstr, RectI rect, int pageNo=-1) :
-        engine(engine), linkInstr(linkInstr), rect(rect), pageNo(pageNo) {
+    EpubLink() : engine(NULL), link(NULL), pageNo(-1), isInternal(false) { }
+    EpubLink(EpubEngineImpl *engine, DrawInstr *link, RectI rect, int pageNo=-1) :
+        engine(engine), link(link), rect(rect), pageNo(pageNo) {
         // internal links don't start with a protocol
-        isInternal = !memchr(linkInstr->str.s, ':', linkInstr->str.len);
+        isInternal = !memchr(link->str.s, ':', link->str.len);
     }
 
     virtual PageElementType GetType() const { return Element_Link; }
     virtual int GetPageNo() const { return pageNo; }
     virtual RectD GetRect() const { return rect.Convert<double>(); }
     virtual TCHAR *GetValue() const {
-        if (!isInternal) {
-            ScopedMem<char> tmp(str::DupN(linkInstr->str.s, linkInstr->str.len));
-            return str::conv::FromUtf8(tmp);
-        }
+        if (!isInternal)
+            return str::conv::FromUtf8N(link->str.s, link->str.len);
         return NULL;
     }
     virtual PageDestination *AsLink() { return this; }
 
     virtual const char *GetDestType() const {
-        if (!linkInstr)
+        if (!link)
             return NULL;
         if (isInternal)
             return "ScrollTo";
@@ -838,8 +853,7 @@ TCHAR *EpubEngineImpl::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coord
             }
             insertSpace = false;
             {
-                ScopedMem<char> utf8(str::DupN(i->str.s, i->str.len));
-                ScopedMem<TCHAR> s(str::conv::FromUtf8(utf8));
+                ScopedMem<TCHAR> s(str::conv::FromUtf8N(i->str.s, i->str.len));
                 content.Append(s);
                 size_t len = str::Len(s);
                 double cwidth = 1.0 * bbox.dx / len;
@@ -884,7 +898,7 @@ static void AppendTocItem(EpubTocItem *& root, EpubTocItem *item, int level)
 
 DocTocItem *EpubEngineImpl::BuildTocTree(HtmlPullParser& parser, int& idCounter)
 {
-    ScopedMem<char> itemText, itemSrc;
+    ScopedMem<TCHAR> itemText, itemSrc;
     EpubTocItem *root = NULL;
     int level = -1;
 
@@ -892,34 +906,32 @@ DocTocItem *EpubEngineImpl::BuildTocTree(HtmlPullParser& parser, int& idCounter)
     while ((tok = parser.Next()) && (!tok->IsEndTag() || !tok->NameIs("navMap") && !tok->NameIs("ncx:navMap"))) {
         if (tok->IsTag() && (tok->NameIs("navPoint") || tok->NameIs("ncx:navPoint"))) {
             if (itemText) {
-                ScopedMem<TCHAR> src(itemSrc ? str::conv::FromUtf8(itemSrc) : NULL);
                 PageDestination *dest = NULL;
-                if (src && str::FindChar(src, ':'))
-                    dest = new SimpleDest2(0, RectD(), src.StealData());
-                else if (src && str::FindChar(src, '#'))
-                    dest = GetNamedDest(str::FindChar(src, '#'));
-                else if (src)
-                    dest = GetNamedDest(src);
-                EpubTocItem *item = new EpubTocItem(str::conv::FromUtf8(itemText), dest);
+                if (itemSrc && str::FindChar(itemSrc, ':'))
+                    dest = new SimpleDest2(0, RectD(), itemSrc.StealData());
+                else if (itemSrc && str::FindChar(itemSrc, '#'))
+                    dest = GetNamedDest(str::FindChar(itemSrc, '#'));
+                else if (itemSrc)
+                    dest = GetNamedDest(itemSrc);
+                itemSrc.Set(NULL);
+                EpubTocItem *item = new EpubTocItem(itemText.StealData(), dest);
                 item->id = ++idCounter;
                 AppendTocItem(root, item, level);
-                itemText.Set(NULL);
-                itemSrc.Set(NULL);
             }
             if (tok->IsStartTag())
                 level++;
-            if (tok->IsEndTag())
+            else if (tok->IsEndTag())
                 level--;
         }
         else if (tok->IsStartTag() && (tok->NameIs("text") || tok->NameIs("ncx:text"))) {
             tok = parser.Next();
             if (tok->IsText())
-                itemText.Set(str::DupN(tok->s, tok->sLen));
+                itemText.Set(str::conv::FromUtf8N(tok->s, tok->sLen));
         }
         else if (tok->IsTag() && !tok->IsEndTag() && (tok->NameIs("content") || tok->NameIs("ncx:content"))) {
             AttrInfo *attrInfo = tok->GetAttrByName("src");
             if (attrInfo)
-                itemSrc.Set(str::DupN(attrInfo->val, attrInfo->valLen));
+                itemSrc.Set(str::conv::FromUtf8N(attrInfo->val, attrInfo->valLen));
         }
     }
 
@@ -1022,17 +1034,6 @@ PageElement *EpubEngineImpl::GetElementAtPos(int pageNo, PointD pt)
     delete els;
 
     return el;
-}
-
-TCHAR *EpubEngineImpl::GetProperty(char *name)
-{
-    ScopedMem<TCHAR> nameT(str::conv::FromAnsi(name));
-    return doc->GetProperty(nameT);
-}
-
-unsigned char *EpubEngineImpl::GetFileData(size_t *cbCount)
-{
-    return (unsigned char *)file::ReadAll(fileName, cbCount);
 }
 
 bool EpubEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
