@@ -1266,18 +1266,6 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin,
 
     ScopedMem<TCHAR> fullPath(path::Normalize(fileName));
 
-    if (IsMobiFile(fileName)) {
-        if (!win) {
-            if ((1 == gWindows.Count()) && gWindows.At(0)->IsAboutWindow())
-                win = gWindows.At(0);
-        } else {
-            if (win->IsDocLoaded() && !forceReuse)
-                win = NULL;
-        }
-        LoadMobiAsync(fileName, MakeSumatraWindow(win));
-        return NULL;
-    }
-
     // fail with a notification if the file doesn't exist and
     // there is a window the user has just been interacting with
     if (win && !forceReuse && !DocumentPathExists(fullPath)) {
@@ -1292,6 +1280,18 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin,
             if (1 == gWindows.Count() && gWindows.At(0)->IsAboutWindow())
                 gWindows.At(0)->RedrawAll(true);
         }
+        return NULL;
+    }
+
+    if (IsMobiFile(fileName)) {
+        if (!win) {
+            if ((1 == gWindows.Count()) && gWindows.At(0)->IsAboutWindow())
+                win = gWindows.At(0);
+        } else {
+            if (win->IsDocLoaded() && !forceReuse)
+                win = NULL;
+        }
+        LoadMobiAsync(fileName, MakeSumatraWindow(win));
         return NULL;
     }
 
