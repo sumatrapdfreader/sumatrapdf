@@ -406,18 +406,6 @@ Next:
     // '<' - tag begins
     ++start;
 
-    if (!SkipUntilTagEnd(currPos, end)) {
-        currToken.SetError(HtmlToken::UnclosedTag, start);
-        return &currToken;
-    }
-
-    CrashIf('>' != *currPos);
-    if (currPos == start) {
-        // skip empty tags (<>), because we're lenient
-        ++currPos;
-        goto Next;
-    }
-
     // skip <? and <! (processing instructions and comments)
     if (('?' == *start) || ('!' == *start)) {
         if ('!' == *start && start + 2 < end && str::StartsWith(start, "!--")) {
@@ -428,6 +416,22 @@ Next:
             }
             currPos += 2;
         }
+        else if (!SkipUntil(currPos, end, '>')) {
+            currToken.SetError(HtmlToken::UnclosedTag, start);
+            return &currToken;
+        }
+        ++currPos;
+        goto Next;
+    }
+
+    if (!SkipUntilTagEnd(currPos, end)) {
+        currToken.SetError(HtmlToken::UnclosedTag, start);
+        return &currToken;
+    }
+
+    CrashIf('>' != *currPos);
+    if (currPos == start) {
+        // skip empty tags (<>), because we're lenient
         ++currPos;
         goto Next;
     }

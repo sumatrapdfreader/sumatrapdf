@@ -54,6 +54,7 @@ void ZipFile::ExtractFilenames()
         return;
     unzGoToFirstFile(uf);
 
+    // TODO: cache file positions for quicker access
     for (int i = 0; i < ginfo.number_entry && UNZ_OK == err; i++) {
         unz_file_info64 finfo;
         char fileName[MAX_PATH];

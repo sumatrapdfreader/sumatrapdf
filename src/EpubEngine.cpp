@@ -304,13 +304,16 @@ void PageLayout2::HandleHtmlTag2(HtmlToken *t)
     case Tag_H4: case Tag_H5:
         HandleTagHeader(t);
         break;
-    case Tag_Abbr: case Tag_Acronym: case Tag_Code:
-    case Tag_Lh: case Tag_Link: case Tag_Meta:
-    case Tag_Pre: case Tag_Style: case Tag_Title:
-        // ignore instead of crashing in HandleHtmlTag
+    case Tag_P: case Tag_Hr: case Tag_B:
+    case Tag_Strong: case Tag_I: case Tag_Em:
+    case Tag_U: case Tag_Strike: case Tag_Mbp_Pagebreak:
+    case Tag_Br: case Tag_Font: /* case Tag_Img: */
+    case Tag_A: case Tag_Blockquote: case Tag_Div:
+    case Tag_Sup: case Tag_Sub: case Tag_Span:
+        HandleHtmlTag(t);
         break;
     default:
-        HandleHtmlTag(t);
+        // ignore instead of crashing in HandleHtmlTag
         break;
     }
 }

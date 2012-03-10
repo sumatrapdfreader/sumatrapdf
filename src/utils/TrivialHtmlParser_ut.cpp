@@ -179,6 +179,11 @@ static void HtmlParser09()
     assert(str::Eq("root", root->name));
     ScopedMem<TCHAR> val(root->GetAttribute("attr"));
     assert(str::Eq(val, _T("<!-- comment -->")));
+
+    root = p.Parse("<!-- comment with \" and \' --><main />");
+    assert(1 == p.ElementsCount());
+    assert(0 == p.TotalAttrCount());
+    assert(str::Eq("main", root->name));
 }
 
 static void HtmlParserFile()
