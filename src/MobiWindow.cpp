@@ -139,10 +139,11 @@ static void DeleteMobiWindow(MobiWindow *win, bool forceDelete = false)
     delete win->ebookController;
     DestroyEbookControls(win->ebookControls);
     gMobiWindows->Remove(win);
+    HWND toDestroy = win->hwndFrame;
     delete win;
     // must be called after removing win from gMobiWindows so that window
     // message processing doesn't pick up a window being destroyed
-    DestroyWindow(win->hwndFrame);
+    DestroyWindow(toDestroy);
 }
 
 // if forceClose is true, we force window deletion in plugin mode
@@ -335,7 +336,8 @@ static LRESULT CALLBACK MobiWndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPA
         case WM_DESTROY:
             // called by windows if user clicks window's close button or if
             // we call DestroyWindow()
-            CloseMobiWindow(win, true, true);
+            if (win)
+                CloseMobiWindow(win, true, true);
             break;
 
         case WM_PAINT:
@@ -396,7 +398,9 @@ void OpenMobiInWindow(MobiDoc *mobiDoc, SumatraWindow& winToReplace)
         windowPos = GetDefaultWindowPos();
 
     CrashIf(winToReplace.WinInfo != winToReplace.type);
-    bool wasMaximized = IsZoomed(winToReplace.winInfo->hwndFrame);
+    bool wasMaximized = false;
+    if (winToReplace.winInfo && winToReplace.winInfo->hwndFrame)
+        wasMaximized = IsZoomed(winToReplace.winInfo->hwndFrame);
     CloseDocumentAndDeleteWindowInfo(winToReplace.winInfo);
 
     HWND hwnd = CreateWindow(

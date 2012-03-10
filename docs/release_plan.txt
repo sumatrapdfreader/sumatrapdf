@@ -12,12 +12,6 @@ Specific things that still need to be added for minimal mobi support:
 - opening a file via recent files list in mobi window
 - opening mobi file via recent files list in non-mobi window shouldn't replace
   a document if it's there
-- bug: moving mobi window after it's been created resizes it (which causes re-layout). Why?
-  It looks like WM_NCLBUTTONDOWN on window bar causes WM_SYSCOMMAND which causes WM_WINDOWPOSCHANGED
-  which causes WM_SIZE to the frame window and shrinks it by 48 pixels, which seems to be the size
-  of menu + window bar i.e. non-client area. Do I need a dummy canvas HWND inside like we have for
-  non-mobi windows or is there a way to avoid triggering this resize? It doesn't happen in
-  ebooktest
 
 Implicitly everything else is for later, including fullscreen, printing,
 search, touch gestures for mobi window etc.

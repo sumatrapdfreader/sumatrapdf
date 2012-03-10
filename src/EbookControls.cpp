@@ -189,7 +189,7 @@ EbookControls *CreateEbookControls(HWND hwnd)
     ctrls->page->SetStyle(stylePage);
 
     ctrls->mainWnd = new HwndWrapper(hwnd);
-    ctrls->mainWnd->SetMaxSize(Size(1024, 800));
+    ctrls->mainWnd->SetMinSize(Size(320, 200));
     ctrls->mainWnd->SetStyle(styleMainWnd);
 
     ctrls->mainWnd->AddChild(ctrls->next, ctrls->prev, ctrls->page);
