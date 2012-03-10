@@ -579,7 +579,7 @@ void PageLayout::HandleTagA(HtmlToken *t)
 {
     if (t->IsEndTag()) {
         if (inLink)
-            currPage->instructions.Append(DrawInstr(InstrLinkEnd));
+            AppendInstr(DrawInstr(InstrLinkEnd));
         inLink = false;
         return;
     }
@@ -595,7 +595,7 @@ void PageLayout::HandleTagA(HtmlToken *t)
     if ((size_t)n >= layoutInfo->htmlStrLen)
         return;
     inLink = true;
-    currPage->instructions.Append(DrawInstr::LinkStart((size_t)n));
+    AppendInstr(DrawInstr::LinkStart((size_t)n));
 }
 
 void PageLayout::HandleTagP(HtmlToken *t)

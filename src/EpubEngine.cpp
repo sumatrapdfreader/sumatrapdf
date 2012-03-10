@@ -239,6 +239,7 @@ void EpubDoc::ParseMetadata(const char *content)
 class PageLayoutEpub : public PageLayout {
     void HandleTagImg2(HtmlToken *t);
     void HandleTagHeader(HtmlToken *t);
+    void HandleTagA2(HtmlToken *t);
     void HandleHtmlTag2(HtmlToken *t);
 
     bool IgnoreText();
@@ -269,15 +270,35 @@ void PageLayoutEpub::HandleTagHeader(HtmlToken *t)
 {
     if (t->IsEndTag()) {
         HandleTagP(t);
+        currY += currFontSize / 2;
         currFontSize = defaultFontSize;
         ChangeFontStyle(FontStyleBold, false);
-        currY += 10;
     }
     else {
         currJustification = Align_Left;
         HandleTagP(t);
-        currFontSize = defaultFontSize * (1 + ('5' - t->s[1]) * 0.2f);
+        currFontSize = defaultFontSize * pow(1.1f, '5' - t->s[1]);
         ChangeFontStyle(FontStyleBold, true);
+        if (currY > 0)
+            currY += currFontSize / 2;
+    }
+}
+
+void PageLayoutEpub::HandleTagA2(HtmlToken *t)
+{
+    if (t->IsStartTag() && !inLink) {
+        AttrInfo *attr = t->GetAttrByName("href");
+        if (attr) {
+            DrawInstr i(InstrLinkStart);
+            i.str.s = attr->val;
+            i.str.len = attr->valLen;
+            AppendInstr(i);
+            inLink = true;
+        }
+    }
+    else if (t->IsEndTag() && inLink) {
+        AppendInstr(DrawInstr(InstrLinkEnd));
+        inLink = false;
     }
 }
 
@@ -304,11 +325,14 @@ void PageLayoutEpub::HandleHtmlTag2(HtmlToken *t)
     case Tag_H4: case Tag_H5:
         HandleTagHeader(t);
         break;
+    case Tag_A:
+        HandleTagA2(t);
+        break;
     case Tag_P: case Tag_Hr: case Tag_B:
     case Tag_Strong: case Tag_I: case Tag_Em:
     case Tag_U: case Tag_Strike: case Tag_Mbp_Pagebreak:
     case Tag_Br: case Tag_Font: /* case Tag_Img: */
-    case Tag_A: case Tag_Blockquote: case Tag_Div:
+    /* case Tag_A: */ case Tag_Blockquote: case Tag_Div:
     case Tag_Sup: case Tag_Sub: case Tag_Span:
         HandleHtmlTag(t);
         break;
@@ -489,6 +513,39 @@ protected:
             return NULL;
         return &pages->At(pageNo - 1)->instructions;
     }
+};
+
+class EpubLink : public PageElement, public PageDestination {
+    DrawInstr *linkInstr; // owned by EpubEngineImpl::pages
+    RectI rect;
+    int pageNo;
+
+public:
+    EpubLink() : linkInstr(NULL), pageNo(-1) { }
+    EpubLink(DrawInstr *linkInstr, RectI rect, int pageNo=-1) :
+        linkInstr(linkInstr), rect(rect), pageNo(pageNo) { }
+
+    virtual PageElementType GetType() const { return Element_Link; }
+    virtual int GetPageNo() const { return pageNo; }
+    virtual RectD GetRect() const { return rect.Convert<double>(); }
+    virtual TCHAR *GetValue() const {
+        ScopedMem<char> tmp(str::DupN(linkInstr->str.s, linkInstr->str.len));
+        return str::conv::FromUtf8(tmp);
+    }
+    virtual PageDestination *AsLink() { return this; }
+
+    virtual const char *GetDestType() const {
+        if (!linkInstr)
+            return NULL;
+        // TODO: support ScrollTo links
+        return "LaunchURL";
+    }
+    virtual int GetDestPageNo() const { return 0; }
+    virtual RectD GetDestRect() const {
+        return RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT,
+                     DEST_USE_DEFAULT, DEST_USE_DEFAULT);
+    }
+    virtual TCHAR *GetDestValue() const { return GetValue(); }
 };
 
 class ImageDataElement : public PageElement {
@@ -689,7 +746,7 @@ TCHAR *EpubEngineImpl::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coord
         RectI bbox = GetInstrBbox(i, pageBorder);
         switch (i->type) {
         case InstrString:
-            if (coords.Count() > 0 && coords.Last().BR().x > bbox.x) {
+            if (coords.Count() > 0 && bbox.x <= coords.Last().BR().x) {
                 content.Append(lineSep);
                 coords.AppendBlanks(str::Len(lineSep));
                 CrashIf(*lineSep && !coords.Last().IsEmpty());
@@ -737,9 +794,33 @@ Vec<PageElement *> *EpubEngineImpl::GetElements(int pageNo)
 
     Vec<PageElement *> *els = new Vec<PageElement *>();
 
+    DrawInstr *linkInstr = NULL;
+    RectI linkRect;
+
     for (DrawInstr *i = pageInstrs->IterStart(); i; i = pageInstrs->IterNext()) {
         if (InstrImage == i->type)
             els->Append(new ImageDataElement(pageNo, &i->img, GetInstrBbox(i, pageBorder)));
+        else if (InstrLinkStart == i->type) {
+            linkInstr = i;
+            linkRect = RectI();
+        }
+        else if (InstrLinkEnd == i->type && linkInstr) {
+            if (!linkInstr)
+                /* TODO: link started on a previous page */;
+            else if (!linkRect.IsEmpty())
+                els->Append(new EpubLink(linkInstr, linkRect, pageNo));
+            linkInstr = NULL;
+        }
+        else if (InstrString == i->type && linkInstr) {
+            RectI bbox = GetInstrBbox(i, pageBorder);
+            // split multi-line links into multiple EpubLinks
+            if (!linkRect.IsEmpty() && bbox.x <= linkRect.x) {
+                els->Append(new EpubLink(linkInstr, linkRect, pageNo));
+                linkRect = bbox;
+            }
+            else
+                linkRect = linkRect.Union(bbox);
+        }
     }
 
     return els;
