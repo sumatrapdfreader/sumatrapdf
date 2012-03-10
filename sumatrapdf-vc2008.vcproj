@@ -709,6 +709,14 @@
 				Name="mui"
 				>
 				<File
+					RelativePath=".\src\mui\MiniMui.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\mui\MiniMui.h"
+					>
+				</File>
+				<File
 					RelativePath=".\src\mui\Mui.cpp"
 					>
 				</File>

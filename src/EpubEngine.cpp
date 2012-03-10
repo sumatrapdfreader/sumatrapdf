@@ -10,7 +10,7 @@
 #include "Scoped.h"
 #include "Allocator.h"
 
-/* epub loading code (cf. ebooktest2/EpubDoc.cpp and ebooktest2/BaseEbookDoc.h) */
+/* epub loading code (was ebooktest2/EpubDoc.cpp and ebooktest2/BaseEbookDoc.h) */
 
 #include "ZipUtil.h"
 #include "TrivialHtmlParser.h"
@@ -233,10 +233,10 @@ void EpubDoc::ParseMetadata(const char *content)
     }
 }
 
-/* PageLayout extensions for Epub (cf. ebooktest2/PageLayout.cpp) */
+/* PageLayout extensions for Epub (was ebooktest2/PageLayout.cpp) */
 
 #include "PageLayout.h"
-#include "ebooktest2/MiniMui.h"
+#include "MiniMui.h"
 #include "GdiPlusUtil.h"
 
 struct PageAnchor {

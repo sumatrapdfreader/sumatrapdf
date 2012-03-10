@@ -10,7 +10,7 @@ pjoin = os.path.join
 
 DIRS = ["src", pjoin("src", "utils"), pjoin("src", "installer"), pjoin("src", "ifilter"), pjoin("src", "browserplugin"), pjoin("src", "previewer"), pjoin("src", "ebooktest"), pjoin("src", "ebooktest2"), pjoin("src", "mui")]
 INCLUDE_DIRS = DIRS + [pjoin("mupdf", "fitz"), pjoin("mupdf", "pdf"), pjoin("mupdf", "xps")]
-OBJECT_DIRS = { "src\\utils": "$(OU)", "src\\browserplugin": "$(ODLL)", "src\\ifilter": "$(ODLL)", "src\\previewer": "$(ODLL)", "src\\ebooktest": "$(OEB)", "src\\ebooktest2": "$(OE2)", "src\\mui": "$(OMUI)" } # default: "$(OS)"
+OBJECT_DIRS = { "src\\utils": "$(OU)", "src\\browserplugin": "$(ODLL)", "src\\ifilter": "$(ODLL)", "src\\previewer": "$(ODLL)", "src\\ebooktest": "$(OEB)", "src\\mui": "$(OMUI)" } # default: "$(OS)"
 MAKEFILE = "makefile.deps"
 DEPENDENCIES_PER_LINE = 3
 

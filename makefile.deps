@@ -22,42 +22,6 @@ $(ODLL)\PdfPreview.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(ODLL)\PdfPreviewDll.obj: src\BaseEngine.h src\previewer\PdfPreview.h src\utils\Allocator.h
 $(ODLL)\PdfPreviewDll.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
 $(ODLL)\PdfPreviewDll.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
-$(OE2)\EbookTest.obj: src\MobiDoc.h src\PageLayout.h src\ebooktest2\BaseEbookDoc.h
-$(OE2)\EbookTest.obj: src\ebooktest2\EpubDoc.h src\ebooktest2\Fb2Doc.h src\ebooktest2\MobiDoc.h
-$(OE2)\EbookTest.obj: src\ebooktest2\PageLayout.h src\ebooktest2\Resource.h src\utils\Allocator.h
-$(OE2)\EbookTest.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\HtmlPullParser.h
-$(OE2)\EbookTest.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
-$(OE2)\EbookTest.obj: src\utils\WinUtil.h src\Version.h
-$(OE2)\EpubDoc.obj: src\ebooktest2\BaseEbookDoc.h src\ebooktest2\EpubDoc.h src\utils\Allocator.h
-$(OE2)\EpubDoc.obj: src\utils\BaseUtil.h src\utils\Scoped.h src\utils\StrUtil.h
-$(OE2)\EpubDoc.obj: src\utils\TrivialHtmlParser.h src\utils\Vec.h src\utils\ZipUtil.h
-$(OE2)\Fb2Doc.obj: src\ebooktest2\BaseEbookDoc.h src\ebooktest2\Fb2Doc.h src\utils\Allocator.h
-$(OE2)\Fb2Doc.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\HtmlPullParser.h
-$(OE2)\Fb2Doc.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
-$(OE2)\Fb2Doc.obj: src\utils\ZipUtil.h
-$(OE2)\MiniMui.obj: src\ebooktest2\MiniMui.h src\utils\Allocator.h src\utils\BaseUtil.h
-$(OE2)\MiniMui.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
-$(OE2)\MobiDoc.obj: src\MobiDoc.cpp src\MobiDoc.h src\ebooktest2\BaseEbookDoc.h
-$(OE2)\MobiDoc.obj: src\ebooktest2\MobiDoc.h src\utils\Allocator.h src\utils\BaseUtil.h
-$(OE2)\MobiDoc.obj: src\utils\BitReader.h src\utils\DebugLog.h src\utils\FileUtil.h
-$(OE2)\MobiDoc.obj: src\utils\GdiPlusUtil.h src\utils\Scoped.h src\utils\StrUtil.h
-$(OE2)\MobiDoc.obj: src\utils\Vec.h
-$(OE2)\PageLayout.obj: src\PageLayout.h src\ebooktest2\BaseEbookDoc.h src\ebooktest2\MiniMui.h
-$(OE2)\PageLayout.obj: src\MobiDoc.h src\PageLayout.cpp src\PageLayout.h
-$(OE2)\PageLayout.obj: src\ebooktest2\PageLayout.h src\mui\Mui.h src\mui\MuiBase.h
-$(OE2)\PageLayout.obj: src\mui\MuiButton.h src\mui\MuiControl.h src\mui\MuiCss.h
-$(OE2)\PageLayout.obj: src\mui\MuiEventMgr.h src\mui\MuiHwndWrapper.h src\mui\MuiLayout.h
-$(OE2)\PageLayout.obj: src\mui\MuiPainter.h src\mui\MuiScrollBar.h src\utils\Allocator.h
-$(OE2)\PageLayout.obj: src\utils\BaseUtil.h src\utils\BitManip.h src\utils\DebugLog.h
-$(OE2)\PageLayout.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\HtmlPullParser.h
-$(OE2)\PageLayout.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
-$(OE2)\Tester.obj: src\MobiDoc.h src\PageLayout.h src\ebooktest2\BaseEbookDoc.h
-$(OE2)\Tester.obj: src\ebooktest2\EpubDoc.h src\ebooktest2\Fb2Doc.h src\ebooktest2\MobiDoc.h
-$(OE2)\Tester.obj: src\ebooktest2\PageLayout.h src\utils\Allocator.h src\utils\BaseUtil.h
-$(OE2)\Tester.obj: src\utils\CmdLineParser.h src\utils\DirIter.h src\utils\FileUtil.h
-$(OE2)\Tester.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\HtmlPrettyPrint.h
-$(OE2)\Tester.obj: src\utils\HtmlPullParser.h src\utils\Scoped.h src\utils\StrUtil.h
-$(OE2)\Tester.obj: src\utils\Vec.h src\utils\WinUtil.h
 $(OEB)\EbookController.obj: src\ebooktest\EbookController.h src\ebooktest\EbookControls.h src\ebooktest\UiMsgEbook.h
 $(OEB)\EbookController.obj: src\MobiDoc.h src\mui\Mui.h src\mui\MuiBase.h
 $(OEB)\EbookController.obj: src\mui\MuiButton.h src\mui\MuiControl.h src\mui\MuiCss.h
@@ -90,6 +54,8 @@ $(OEB)\EbookTest.obj: src\utils\Timer.h src\utils\UiMsg.h src\utils\Vec.h
 $(OEB)\EbookTest.obj: src\utils\WinUtil.h src\Version.h
 $(OEB)\EbookTestMenu.obj: src\ebooktest\EbookTestMenu.h src\ebooktest\Resource.h src\utils\BaseUtil.h
 $(OEB)\EbookTestMenu.obj: src\utils\Scoped.h src\utils\StrUtil.h
+$(OMUI)\MiniMui.obj: src\mui\MiniMui.h src\utils\Allocator.h src\utils\BaseUtil.h
+$(OMUI)\MiniMui.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
 $(OMUI)\Mui.obj: src\mui\Mui.h src\mui\MuiBase.h src\mui\MuiButton.h
 $(OMUI)\Mui.obj: src\mui\MuiControl.h src\mui\MuiCss.h src\mui\MuiEventMgr.h
 $(OMUI)\Mui.obj: src\mui\MuiHwndWrapper.h src\mui\MuiLayout.h src\mui\MuiPainter.h
@@ -217,8 +183,8 @@ $(OS)\EngineDump.obj: src\PdfEngine.h src\PsEngine.h src\utils\Allocator.h
 $(OS)\EngineDump.obj: src\utils\BaseUtil.h src\utils\CmdLineParser.h src\utils\FileUtil.h
 $(OS)\EngineDump.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
 $(OS)\EngineDump.obj: src\utils\Vec.h src\utils\WinUtil.h
-$(OS)\EpubEngine.obj: src\BaseEngine.h src\ebooktest2\MiniMui.h src\EpubEngine.h
-$(OS)\EpubEngine.obj: src\MobiDoc.h src\PageLayout.h src\utils\Allocator.h
+$(OS)\EpubEngine.obj: src\BaseEngine.h src\EpubEngine.h src\MobiDoc.h
+$(OS)\EpubEngine.obj: src\mui\MiniMui.h src\PageLayout.h src\utils\Allocator.h
 $(OS)\EpubEngine.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GdiPlusUtil.h
 $(OS)\EpubEngine.obj: src\utils\GeomUtil.h src\utils\HtmlPullParser.h src\utils\Scoped.h
 $(OS)\EpubEngine.obj: src\utils\StrUtil.h src\utils\TrivialHtmlParser.h src\utils\Vec.h
@@ -243,6 +209,9 @@ $(OS)\Favorites.obj: src\Translations.h src\utils\Allocator.h src\utils\BaseUtil
 $(OS)\Favorites.obj: src\utils\FileUtil.h src\utils\GdiPlusUtil.h src\utils\GeomUtil.h
 $(OS)\Favorites.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\Favorites.obj: src\utils\WinUtil.h src\WindowInfo.h
+$(OS)\Fb2Doc.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\FileUtil.h
+$(OS)\Fb2Doc.obj: src\utils\HtmlPullParser.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OS)\Fb2Doc.obj: src\utils\Vec.h src\utils\ZipUtil.h
 $(OS)\FileWatch.obj: src\FileWatch.h src\utils\BaseUtil.h src\utils\FileUtil.h
 $(OS)\FileWatch.obj: src\utils\Scoped.h src\utils\StrUtil.h
 $(OS)\ImagesEngine.obj: ext\unrar\dll.hpp src\BaseEngine.h src\ImagesEngine.h
@@ -279,9 +248,13 @@ $(OS)\Menu.obj: src\utils\BaseUtil.h src\utils\BitManip.h src\utils\FileUtil.h
 $(OS)\Menu.obj: src\utils\GeomUtil.h src\utils\HtmlPullParser.h src\utils\Scoped.h
 $(OS)\Menu.obj: src\utils\StrUtil.h src\utils\ThreadUtil.h src\utils\Vec.h
 $(OS)\Menu.obj: src\utils\WinUtil.h src\WindowInfo.h
+$(OS)\MobiDoc.obj: src\MobiDoc.cpp src\MobiDoc.h src\MobiDoc.h
 $(OS)\MobiDoc.obj: src\MobiDoc.h src\utils\Allocator.h src\utils\BaseUtil.h
+$(OS)\MobiDoc.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\BitReader.h
 $(OS)\MobiDoc.obj: src\utils\BitReader.h src\utils\DebugLog.h src\utils\FileUtil.h
+$(OS)\MobiDoc.obj: src\utils\DebugLog.h src\utils\FileUtil.h src\utils\GdiPlusUtil.h
 $(OS)\MobiDoc.obj: src\utils\GdiPlusUtil.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\MobiDoc.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\MobiWindow.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
 $(OS)\MobiWindow.obj: src\ChmEngine.h src\DisplayModel.h src\DisplayState.h
 $(OS)\MobiWindow.obj: src\DjVuEngine.h src\EbookController.h src\EbookControls.h

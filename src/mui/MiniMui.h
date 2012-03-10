@@ -4,7 +4,7 @@
 #ifndef Mui_h
 #define Mui_h
 
-// as little of mui as possible to make ../PageLayout compile
+// as little of mui as necessary to make ../EngineDump.cpp compile
 
 #include "BaseUtil.h"
 
@@ -17,7 +17,5 @@ Graphics *AllocGraphicsForMeasureText();
 void FreeGraphicsForMeasureText(Graphics *g);
 
 };
-
-void InitGraphicsMode(Graphics *g);
 
 #endif

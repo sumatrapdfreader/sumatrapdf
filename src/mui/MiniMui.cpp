@@ -1,20 +1,11 @@
 /* Copyright 2011-2012 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+// as little of mui as necessary to make ../EngineDump.cpp compile
+
 #include "MiniMui.h"
 #include "Scoped.h"
 #include "Vec.h"
-
-// set consistent mode for our graphics objects so that we get
-// the same results when measuring text
-void InitGraphicsMode(Graphics *g)
-{
-    g->SetCompositingQuality(CompositingQualityHighQuality);
-    g->SetSmoothingMode(SmoothingModeAntiAlias);
-    //g.SetSmoothingMode(SmoothingModeHighQuality);
-    g->SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
-    g->SetPageUnit(UnitPixel);
-}
 
 namespace mui {
 
@@ -72,6 +63,15 @@ Font *GetCachedFont(const WCHAR *name, float size, FontStyle style)
     return gFontCache.GetFont(name, size, style);
 }
 
+static void InitGraphicsMode(Graphics *g)
+{
+    g->SetCompositingQuality(CompositingQualityHighQuality);
+    g->SetSmoothingMode(SmoothingModeAntiAlias);
+    //g.SetSmoothingMode(SmoothingModeHighQuality);
+    g->SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
+    g->SetPageUnit(UnitPixel);
+}
+
 class GlobalGraphicsHack {
     ScopedGdiPlus scope;
     Bitmap bmp;
@@ -79,7 +79,11 @@ public:
     Graphics gfx;
 
     GlobalGraphicsHack() : bmp(1, 1, PixelFormat32bppARGB), gfx(&bmp) {
-        InitGraphicsMode(&gfx);
+        // cf. EpubEngineImpl::RenderPage
+        gfx.SetCompositingQuality(CompositingQualityHighQuality);
+        gfx.SetSmoothingMode(SmoothingModeAntiAlias);
+        gfx.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
+        gfx.SetPageUnit(UnitPixel);
     }
 };
 

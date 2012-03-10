@@ -99,7 +99,6 @@ OU = $(O)\utils
 ODLL = $(O)\applibs
 OEB = $(O)\ebooktest
 OMUI = $(O)\mui
-OE2 = $(O)\ebooktest2
 
 SUMATRA_APP = $(O)\SumatraPDF.exe
 SUMATRA_APP_NO_MUPDF = $(O)\SumatraPDF-no-MuPDF.exe
@@ -116,13 +115,6 @@ ET_CFLAGS       = $(SUMATRA_CFLAGS) /wd4530
 
 TESTER_APP      = $(O)\tester.exe
 TESTER_CFLAGS   = $(SUMATRA_CFLAGS)
-
-ET2_APP         = $(O)\EbookTest2.exe
-ET2_RES         = $(OE2)\EbookTest2.res
-ET2_CFLAGS      = $(SUMATRA_CFLAGS)
-
-TESTER2_APP     = $(O)\tester2.exe
-TESTER2_CFLAGS  = $(SUMATRA_CFLAGS)
 
 PDFFILTER_DLL = $(O)\PdfFilter.dll
 PDFFILTER_RES = $(ODLL)\PdfFilter.res
@@ -204,14 +196,6 @@ TESTER_OBJS = \
 	$(UTILS_OBJS) $(MUI_OBJS) $(OS)\Tester.obj $(OS)\PageLayout.obj \
 	$(OU)\NoFreeAllocator.obj $(OS)\MobiDoc.obj
 
-ET2_OBJS = \
-	$(OE2)\EbookTest.obj $(ET_RES) $(OE2)\PageLayout.obj $(OE2)\MiniMui.obj $(UTILS_OBJS) \
-	$(OE2)\MobiDoc.obj $(OE2)\EpubDoc.obj $(ZIP_OBJS) $(ZLIB_OBJS) $(OE2)\Fb2Doc.obj $(OMUI)\SvgPath.obj
-
-TESTER2_OBJS = \
-	$(OE2)\Tester.obj $(OE2)\PageLayout.obj $(OE2)\MiniMui.obj $(UTILS_OBJS) \
-	$(OE2)\MobiDoc.obj $(OE2)\EpubDoc.obj $(ZIP_OBJS) $(ZLIB_OBJS) $(OE2)\Fb2Doc.obj
-
 PDFFILTER_OBJS = \
 	$(ODLL)\PdfFilterDll.obj $(ODLL)\CPdfFilter.obj $(PDFFILTER_RES) \
 	$(OU)\StrUtil.obj $(OU)\FileUtil.obj $(OU)\WinUtil.obj $(OU)\DebugLog.obj \
@@ -231,7 +215,6 @@ ENGINEDUMP_OBJS = \
 
 !if "$(WITH_MICROCRT)"=="yes"
 ET_OBJS             = $(ET_OBJS) $(MICROCRT_WIN_OBJS)
-ET2_OBJS            = $(ET2_OBJS) $(MICROCRT_WIN_OBJS)
 INSTALLER_OBJS      = $(INSTALLER_OBJS) $(MICROCRT_WIN_OBJS)
 UNINSTALLER_OBJS    = $(UNINSTALLER_OBJS) $(MICROCRT_WIN_OBJS)
 SUMATRA_OBJS        = $(SUMATRA_OBJS) $(MICROCRT_WIN_OBJS)
@@ -245,7 +228,7 @@ ENGINEDUMP_OBJS     = $(ENGINEDUMP_OBJS) $(MICROCRT_CONSOLE_OBJS)
 SUMATRA_OBJS = $(SUMATRA_OBJS) $(OS)\EpubEngine.obj
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "TEST_EPUB_ENGINE"
 ENGINEDUMP_OBJS = $(ENGINEDUMP_OBJS) \
-	$(OS)\EpubEngine.obj $(OS)\PageLayout.obj $(OS)\MobiDoc.obj $(OE2)\MiniMui.obj
+	$(OS)\EpubEngine.obj $(OS)\PageLayout.obj $(OS)\MobiDoc.obj $(OMUI)\MiniMui.obj
 !endif
 
 !if "$(BUILD_TEX_IFILTER)"!=""
@@ -282,8 +265,6 @@ PdfBench:      $(OS) $(PDFBENCH_APP)
 EngineDump:    $(OS) $(ENGINEDUMP_APP)
 et:            $(OS) $(ET_APP)
 tester:        $(OS) $(TESTER_APP)
-et2:           $(OE2) $(ET2_APP)
-tester2:       $(OE2) $(TESTER2_APP)
 
 $(OS): $(O) $(OE) $(OCH)
 	@if not exist $(OS) mkdir $(OS)
@@ -291,7 +272,6 @@ $(OS): $(O) $(OE) $(OCH)
 	@if not exist $(ODLL) mkdir $(ODLL)
 	@if not exist $(OEB) mkdir $(OEB)
 	@if not exist $(OMUI) mkdir $(OMUI)
-	@if not exist $(OE2) mkdir $(OE2)
 
 $(SUMATRA_RES): src\SumatraPDF.rc src\Resource.h src\Version.h
 	rc /r /fo$@ $(EXTCFLAGS) src\SumatraPDF.rc
@@ -324,15 +304,6 @@ $(ET_APP): $(ET_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) dbghelp.lib psapi.lib /PDB:$*.pdb /OUT:$@
 
 $(TESTER_APP): $(TESTER_OBJS)
-	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
-
-$(ET2_RES): src\ebooktest2\EbookTest.rc src\ebooktest2\Resource.h src\Version.h
-	rc /r /fo$@ $(EXTCFLAGS) src\ebooktest\EbookTest.rc
-
-$(ET2_APP): $(ET2_OBJS)
-	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
-
-$(TESTER2_APP): $(TESTER2_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
 
 $(PDFFILTER_RES): src\ifilter\PdfFilter.rc src\Version.h
@@ -400,10 +371,6 @@ $(OS)\Uninstaller.obj: $(OS)\Installer.obj
 # ebooktest directory
 {src\ebooktest}.cpp{$(OEB)}.obj::
 	$(CC) $(ET_CFLAGS) /Fo$(OEB)\ /Fd$(O)\vc80.pdb $<
-
-# ebooktest2 directory
-{src\ebooktest2}.cpp{$(OE2)}.obj::
-	$(CC) $(ET2_CFLAGS) /Fo$(OE2)\ /Fd$(O)\vc80.pdb $<
 
 ## Header-dependencies for src\* and src\*\*
 !INCLUDE makefile.deps
