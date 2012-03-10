@@ -5847,7 +5847,7 @@ const char *gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "Adatta a larghezza pagina",
   "Adatta alla larghezza e visualizza le pagine in modo continuo",
   "Visualizza una pagina singola",
-  NULL,
+  "Font:",
   "Testo trovato a pagina %s",
   "Trovato testo alla pagina %s (ancora)",
   "Aperti recentemente",

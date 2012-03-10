@@ -399,6 +399,9 @@ Adatta alla larghezza e visualizza le pagine in modo continuo
 Fit a Single Page
 Visualizza una pagina singola
 
+Fonts:
+Font:
+
 Found text at page %s
 Testo trovato a pagina %s
 
@@ -686,7 +689,4 @@ Copia del testo...
 
 printing document
 Stampa documento...
-
-# Untranslated:
-#Fonts:
 
