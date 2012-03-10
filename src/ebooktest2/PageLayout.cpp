@@ -8,7 +8,7 @@
 #include "../PageLayout.cpp"
 
 #define DEFAULT_FONT_NAME   L"Georgia"
-#define DEFAULT_FONT_SIZE   12
+#define DEFAULT_FONT_SIZE   12.f
 
 class PageLayout2 : public PageLayout {
     void HandleTagImg2(HtmlToken *t);
@@ -183,7 +183,7 @@ Vec<PageData*> *LayoutHtml2(LayoutInfo li, BaseEbookDoc *doc)
 {
     li.mobiDoc = (MobiDoc *)doc; // hack to allow passing doc through PageLayout
     li.fontName = DEFAULT_FONT_NAME;
-    li.fontSize = DEFAULT_FONT_SIZE;
+    li.fontSize = DEFAULT_FONT_SIZE * 96 / 72;
 
     return PageLayout2(&li).Layout();
 }

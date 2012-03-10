@@ -49,7 +49,7 @@ public:
                 return e->font;
         }
 
-        f.font = ::new Font(name, size, style);
+        f.font = ::new Font(name, size, style, UnitPixel);
         if (!f.font) {
             // fall back to the default font, if a desired font can't be created
             f.font = ::new Font(L"Times New Roman", size, style, UnitPixel);
