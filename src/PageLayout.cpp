@@ -373,8 +373,10 @@ void PageLayout::EmitEmptyLine(float lineDy)
 {
     CrashIf(!IsCurrLineEmpty());
     currY += lineDy;
-    if (currY <= pageDy)
+    if (currY <= pageDy) {
+        currX = 0;
         return;
+    }
     ForceNewPage();
 }
 
