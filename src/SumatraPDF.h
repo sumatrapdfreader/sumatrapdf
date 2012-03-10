@@ -91,7 +91,6 @@ void  CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose);
 void  SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool favVisible);
 void  RememberFavTreeExpansionState(WindowInfo *win);
 void  LayoutTreeContainer(HWND hwndContainer, int id);
-void  DrawCloseButton(DRAWITEMSTRUCT *dis);
 void  AdvanceFocus(WindowInfo* win);
 bool  WindowInfoStillValid(WindowInfo *win);
 void  ChangeLanguage(const char *langName);

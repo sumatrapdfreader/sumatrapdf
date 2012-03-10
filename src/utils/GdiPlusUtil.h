@@ -6,6 +6,9 @@
 
 #include "BaseUtil.h"
 
+// used for communicating with DrawCloseButton()
+#define BUTTON_HOVER_TEXT _T("1")
+
 // not: must write "using namespace Gdipluls" before #include "GdiPlusUtil.h"
 // this is to make sure we don't accidentally do that just by including this file
 RectF    MeasureTextAccurate(Graphics *g, Font *f, const WCHAR *s, size_t len);
@@ -14,6 +17,7 @@ RectF    MeasureTextStandard(Graphics *g, Font *f, const WCHAR *s, size_t len);
 RectF    MeasureText(Graphics *g, Font *f, const WCHAR *s, size_t len = -1);
 REAL     GetSpaceDx(Graphics *g, Font *f);
 int      StringLenForWidth(Graphics *g, Font *f, const WCHAR *s, size_t len, float dx);
+void     DrawCloseButton(DRAWITEMSTRUCT *dis);
 
 const TCHAR * GfxFileExtFromData(char *data, size_t len);
 Bitmap *      BitmapFromData(void *data, size_t len);

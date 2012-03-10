@@ -2,14 +2,17 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
-#include "StrUtil.h"
-#include "WinUtil.h"
-#include "resource.h"
 #include "TableOfContents.h"
-#include "WindowInfo.h"
-#include "Translations.h"
-#include "SumatraPDF.h"
+
 #include "AppTools.h"
+using namespace Gdiplus;
+#include "GdiPlusUtil.h"
+#include "resource.h"
+#include "StrUtil.h"
+#include "SumatraPDF.h"
+#include "Translations.h"
+#include "WindowInfo.h"
+#include "WinUtil.h"
 
 #ifdef DISPLAY_TOC_PAGE_NUMBERS
 #define WM_APP_REPAINT_TOC     (WM_APP + 1)

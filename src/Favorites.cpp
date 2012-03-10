@@ -1,17 +1,19 @@
 /* Copyright 2006-2012 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+#include "AppTools.h"
+using namespace Gdiplus;
+#include "GdiPlusUtil.h"
 #include "Favorites.h"
+#include "FileHistory.h"
+#include "FileUtil.h"
+#include "Menu.h"
+#include "resource.h"
+#include "SumatraDialogs.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
-#include "FileUtil.h"
-#include "WinUtil.h"
-#include "resource.h"
 #include "WindowInfo.h"
-#include "FileHistory.h"
-#include "AppTools.h"
-#include "SumatraDialogs.h"
-#include "Menu.h"
+#include "WinUtil.h"
 
 int FileFavs::FindByPage(int pageNo) const
 {

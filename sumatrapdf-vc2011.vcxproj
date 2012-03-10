@@ -64,7 +64,6 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="baseutils\UtilTests.cpp" />
     <ClCompile Include="ext\bzip2\blocksort.c" />
     <ClCompile Include="ext\bzip2\bzlib.c" />
     <ClCompile Include="ext\bzip2\compress.c" />
@@ -224,7 +223,6 @@
     <ClCompile Include="mupdf\xps\xps_zip.c" />
     <ClCompile Include="src\AppPrefs.cpp" />
     <ClCompile Include="src\AppTools.cpp" />
-    <ClCompile Include="src\Benchmark.cpp" />
     <ClCompile Include="src\ChmEngine.cpp" />
     <ClCompile Include="src\CrashHandler.cpp" />
     <ClCompile Include="src\DisplayModel.cpp" />
@@ -237,7 +235,6 @@
     <ClCompile Include="src\Favorites.cpp" />
     <ClCompile Include="src\FileWatch.cpp" />
     <ClCompile Include="src\ImagesEngine.cpp" />
-    <ClCompile Include="src\LangMenuDef.cpp" />
     <ClCompile Include="src\Menu.cpp" />
     <ClCompile Include="src\MobiDoc.cpp" />
     <ClCompile Include="src\MobiWindow.cpp" />
@@ -274,6 +271,7 @@
     <ClCompile Include="src\Toolbar.cpp" />
     <ClCompile Include="src\utils\DebugLog.cpp" />
     <ClCompile Include="src\utils\FileTransactions.cpp" />
+    <ClCompile Include="src\utils\GdiPlusUtil.cpp" />
     <ClCompile Include="src\utils\HtmlPullParser.cpp" />
     <ClCompile Include="src\utils\ThreadUtil.cpp" />
     <ClCompile Include="src\utils\Touch.cpp" />
@@ -377,7 +375,6 @@
     <ClInclude Include="src\AppPrefs.h" />
     <ClInclude Include="src\AppTools.h" />
     <ClInclude Include="src\BaseEngine.h" />
-    <ClInclude Include="src\Benchmark.h" />
     <ClInclude Include="src\ChmEngine.h" />
     <ClInclude Include="src\CrashHandler.h" />
     <ClInclude Include="src\DisplayModel.h" />
@@ -392,7 +389,6 @@
     <ClInclude Include="src\FileWatch.h" />
     <ClInclude Include="src\ImagesEngine.h" />
     <ClInclude Include="src\installer\Resource.h" />
-    <ClInclude Include="src\LangMenuDef.h" />
     <ClInclude Include="src\Menu.h" />
     <ClInclude Include="src\MobiDoc.h" />
     <ClInclude Include="src\MobiWindow.h" />
@@ -429,6 +425,7 @@
     <ClInclude Include="src\utils\Allocator.h" />
     <ClInclude Include="src\utils\DebugLog.h" />
     <ClInclude Include="src\utils\FileTransactions.h" />
+    <ClInclude Include="src\utils\GdiPlusUtil.h" />
     <ClInclude Include="src\utils\HtmlPullParser.h" />
     <ClInclude Include="src\utils\ThreadUtil.h" />
     <ClInclude Include="src\utils\Touch.h" />

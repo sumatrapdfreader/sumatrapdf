@@ -397,6 +397,7 @@ void OpenMobiInWindow(MobiDoc *mobiDoc, SumatraWindow& winToReplace)
         MobiWindow *mw = winToReplace.winMobi;
         CrashIf(!mw);
         mw->ebookController->SetMobiDoc(mobiDoc);
+        //RebuildMenuBarForMobiWindow(mw);
         // TODO: if we have window position/last position for this file, restore it
         return;
     }

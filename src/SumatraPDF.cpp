@@ -15,6 +15,8 @@
 #include "Favorites.h"
 #include "FileUtil.h"
 #include "FileWatch.h"
+using namespace Gdiplus;
+#include "GdiPlusUtil.h"
 #include "Http.h"
 #include "HtmlWindow.h"
 #include "Menu.h"
@@ -3606,51 +3608,6 @@ void LayoutTreeContainer(HWND hwndContainer, int id)
     MoveWindow(hwndTitle, offset, offset, rc.dx - 2 * offset - 16, size.dy - 2 * offset, TRUE);
     MoveWindow(hwndClose, rc.dx - 16, (size.dy - 16) / 2, 16, 16, TRUE);
     MoveWindow(hwndTree, 0, size.dy, rc.dx, rc.dy - size.dy, TRUE);
-}
-
-#define BUTTON_HOVER_TEXT _T("1")
-
-#define COL_CLOSE_X RGB(0xa0, 0xa0, 0xa0)
-#define COL_CLOSE_X_HOVER RGB(0xf9, 0xeb, 0xeb)  // white-ish
-#define COL_CLOSE_HOVER_BG RGB(0xC1, 0x35, 0x35) // red-ish
-
-// Draws the 'x' close button in regular state or onhover state
-// Tries to mimic visual style of Chrome tab close button
-void DrawCloseButton(DRAWITEMSTRUCT *dis)
-{
-    using namespace Gdiplus;
-
-    RectI r(RectI::FromRECT(dis->rcItem));
-    ScopedMem<TCHAR> s(win::GetText(dis->hwndItem));
-    bool onHover = str::Eq(s, BUTTON_HOVER_TEXT);
-
-    Graphics g(dis->hDC);
-    g.SetCompositingQuality(CompositingQualityHighQuality);
-    g.SetSmoothingMode(SmoothingModeAntiAlias);
-    g.SetPageUnit(UnitPixel);
-
-    Color c;
-    c.SetFromCOLORREF(GetSysColor(COLOR_BTNFACE)); // hoping this is always the right color
-    SolidBrush bgBrush(c);
-    g.FillRectangle(&bgBrush, r.x, r.y, r.dx, r.dy);
-
-    // in onhover state, background is a red-ish circle
-    if (onHover) {
-        c.SetFromCOLORREF(COL_CLOSE_HOVER_BG);
-        SolidBrush b(c);
-        g.FillEllipse(&b, r.x, r.y, r.dx-2, r.dy-2);
-    }
-
-    // draw 'x'
-    c.SetFromCOLORREF(onHover ? COL_CLOSE_X_HOVER : COL_CLOSE_X);
-    Pen p(c, 2);
-    if (onHover) {
-        g.DrawLine(&p, Point(4,      4), Point(r.dx-6, r.dy-6));
-        g.DrawLine(&p, Point(r.dx-6, 4), Point(4,      r.dy-6));
-    } else {
-        g.DrawLine(&p, Point(4,      5), Point(r.dx-6, r.dy-5));
-        g.DrawLine(&p, Point(r.dx-6, 5), Point(4,      r.dy-5));
-    }
 }
 
 WNDPROC DefWndProcCloseButton = NULL;

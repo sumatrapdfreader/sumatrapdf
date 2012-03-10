@@ -51,6 +51,9 @@
     <Filter Include="mui">
       <UniqueIdentifier>{868a148e-3e9d-4d5e-b71a-d71be9b4095e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="sumatra\engines">
+      <UniqueIdentifier>{ff27589d-73b0-4269-b0ed-6d2edbe11db6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ext\jbig2dec\jbig2.c">
@@ -189,12 +192,6 @@
       <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\FileWatch.cpp">
-      <Filter>sumatra</Filter>
-    </ClCompile>
-    <ClCompile Include="src\LangMenuDef.cpp">
-      <Filter>sumatra</Filter>
-    </ClCompile>
-    <ClCompile Include="src\PdfEngine.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\PdfSync.cpp">
@@ -419,13 +416,7 @@
     <ClCompile Include="src\UnitTests.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="baseutils\UtilTests.cpp">
-      <Filter>sumatra</Filter>
-    </ClCompile>
     <ClCompile Include="src\AppTools.cpp">
-      <Filter>sumatra</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Benchmark.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\RenderCache.cpp">
@@ -435,9 +426,6 @@
       <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\TextSelection.cpp">
-      <Filter>sumatra</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ImagesEngine.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\utils\BencUtil.cpp">
@@ -614,9 +602,6 @@
     <ClCompile Include="src\Search.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="src\ChmEngine.cpp">
-      <Filter>sumatra</Filter>
-    </ClCompile>
     <ClCompile Include="src\ExternalPdfViewer.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
@@ -629,9 +614,6 @@
     <ClCompile Include="ext\CHMLib\src\lzx.c">
       <Filter>chm</Filter>
     </ClCompile>
-    <ClCompile Include="src\PsEngine.cpp">
-      <Filter>sumatra</Filter>
-    </ClCompile>
     <ClCompile Include="src\utils\TrivialHtmlParser.cpp">
       <Filter>utils</Filter>
     </ClCompile>
@@ -642,9 +624,6 @@
       <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\utils\Touch.cpp">
-      <Filter>sumatra</Filter>
-    </ClCompile>
-    <ClCompile Include="src\EngineDump.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="src\Toolbar.cpp">
@@ -860,8 +839,26 @@
     <ClCompile Include="src\mui\SvgPath_ut.cpp">
       <Filter>mui</Filter>
     </ClCompile>
+    <ClCompile Include="src\ChmEngine.cpp">
+      <Filter>sumatra\engines</Filter>
+    </ClCompile>
     <ClCompile Include="src\DjVuEngine.cpp">
-      <Filter>sumatra</Filter>
+      <Filter>sumatra\engines</Filter>
+    </ClCompile>
+    <ClCompile Include="src\EngineDump.cpp">
+      <Filter>sumatra\engines</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ImagesEngine.cpp">
+      <Filter>sumatra\engines</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PdfEngine.cpp">
+      <Filter>sumatra\engines</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PsEngine.cpp">
+      <Filter>sumatra\engines</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\GdiPlusUtil.cpp">
+      <Filter>utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -929,12 +926,6 @@
       <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\FileWatch.h">
-      <Filter>sumatra</Filter>
-    </ClInclude>
-    <ClInclude Include="src\LangMenuDef.h">
-      <Filter>sumatra</Filter>
-    </ClInclude>
-    <ClInclude Include="src\PdfEngine.h">
       <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\PdfSync.h">
@@ -1009,12 +1000,6 @@
     <ClInclude Include="src\AppTools.h">
       <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="src\BaseEngine.h">
-      <Filter>sumatra</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Benchmark.h">
-      <Filter>sumatra</Filter>
-    </ClInclude>
     <ClInclude Include="src\RenderCache.h">
       <Filter>sumatra</Filter>
     </ClInclude>
@@ -1022,9 +1007,6 @@
       <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\TextSelection.h">
-      <Filter>sumatra</Filter>
-    </ClInclude>
-    <ClInclude Include="src\ImagesEngine.h">
       <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\utils\ZipUtil.h">
@@ -1096,9 +1078,6 @@
     <ClInclude Include="src\Search.h">
       <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="src\ChmEngine.h">
-      <Filter>sumatra</Filter>
-    </ClInclude>
     <ClInclude Include="src\ExternalPdfViewer.h">
       <Filter>sumatra</Filter>
     </ClInclude>
@@ -1110,9 +1089,6 @@
     </ClInclude>
     <ClInclude Include="ext\CHMLib\src\lzx.h">
       <Filter>chm</Filter>
-    </ClInclude>
-    <ClInclude Include="src\PsEngine.h">
-      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\utils\TrivialHtmlParser.h">
       <Filter>utils</Filter>
@@ -1255,11 +1231,29 @@
     <ClInclude Include="src\mui\SvgPath.h">
       <Filter>mui</Filter>
     </ClInclude>
-    <ClInclude Include="src\EngineManager.h">
-      <Filter>sumatra</Filter>
+    <ClInclude Include="src\BaseEngine.h">
+      <Filter>sumatra\engines</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ChmEngine.h">
+      <Filter>sumatra\engines</Filter>
     </ClInclude>
     <ClInclude Include="src\DjVuEngine.h">
-      <Filter>sumatra</Filter>
+      <Filter>sumatra\engines</Filter>
+    </ClInclude>
+    <ClInclude Include="src\EngineManager.h">
+      <Filter>sumatra\engines</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ImagesEngine.h">
+      <Filter>sumatra\engines</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PdfEngine.h">
+      <Filter>sumatra\engines</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PsEngine.h">
+      <Filter>sumatra\engines</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\GdiPlusUtil.h">
+      <Filter>utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
