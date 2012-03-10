@@ -1258,8 +1258,13 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin,
     ScopedMem<TCHAR> fullPath(path::Normalize(fileName));
 
     if (IsMobiFile(fileName)) {
-        if (win && win->IsDocLoaded() && !forceReuse)
-            win = NULL;
+        if (!win) {
+            if ((1 == gWindows.Count()) && gWindows.At(0)->IsAboutWindow())
+                win = gWindows.At(0);
+        } else {
+            if (win->IsDocLoaded() && !forceReuse)
+                win = NULL;
+        }
         LoadMobiAsync(fileName, MakeSumatraWindow(win));
         return NULL;
     }
