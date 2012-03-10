@@ -1239,7 +1239,7 @@ void LoadDocument(const TCHAR *fileName, SumatraWindow& win)
         return;
     }
     CrashIf(SumatraWindow::WinMobi != win.type);
-    // TODO: LoadDocument() needs to handle SumatraWindow, for now
+    // TODO: LoadDocument() needs to handle MobiWindow, for now
     // we force opening in a new window
     LoadDocument(fileName, NULL);
 }
@@ -1258,6 +1258,8 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin,
     ScopedMem<TCHAR> fullPath(path::Normalize(fileName));
 
     if (IsMobiFile(fileName)) {
+        if (win && win->IsDocLoaded() && !forceReuse)
+            win = NULL;
         LoadMobiAsync(fileName, MakeSumatraWindow(win));
         return NULL;
     }
@@ -4236,11 +4238,9 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
     if ((wmId >= IDM_FILE_HISTORY_FIRST) && (wmId <= IDM_FILE_HISTORY_LAST))
     {
         DisplayState *state = gFileHistory.Get(wmId - IDM_FILE_HISTORY_FIRST);
-        if (state) {
-            if (HasPermission(Perm_DiskAccess))
-                LoadDocument(state->filePath, win);
-            return 0;
-        }
+        if (state && HasPermission(Perm_DiskAccess))
+            LoadDocument(state->filePath, win);
+        return 0;
     }
 
     // 10 submenus max with 10 items each max (=100) plus generous buffer => 200

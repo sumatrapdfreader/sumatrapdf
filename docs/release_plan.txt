@@ -9,9 +9,9 @@ for basic mobi support.
 Specific things that still need to be added for minimal mobi support:
 - thumbnails for mobi files
 - on drag&drop of mobi window on about window, close about window
-- opening a file via recent files list in mobi window
-- opening mobi file via recent files list in non-mobi window shouldn't replace
-  a document if it's there
+- update menus (especially recently opened file list) after opening a file
+  from mobi window
+- save and restore last position in the mobi file
 
 Implicitly everything else is for later, including fullscreen, printing,
 search, touch gestures for mobi window etc.

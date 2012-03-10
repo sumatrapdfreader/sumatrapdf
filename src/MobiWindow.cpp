@@ -223,6 +223,16 @@ static LRESULT OnCommand(MobiWindow *win, UINT msg, WPARAM wParam, LPARAM lParam
 {
     int wmId = LOWORD(wParam);
 
+    // check if the menuId belongs to an entry in the list of
+    // recently opened files and load the referenced file if it does
+    if ((wmId >= IDM_FILE_HISTORY_FIRST) && (wmId <= IDM_FILE_HISTORY_LAST))
+    {
+        DisplayState *state = gFileHistory.Get(wmId - IDM_FILE_HISTORY_FIRST);
+        if (state && HasPermission(Perm_DiskAccess))
+            LoadDocument(state->filePath, MakeSumatraWindow(win));
+        return 0;
+    }
+
     switch (wmId)
     {
         case IDM_OPEN:
