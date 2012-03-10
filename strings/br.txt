@@ -389,6 +389,9 @@ Ajustar pela largura e exibir páginas de modo contínuo
 Fit a Single Page
 Ajustar em uma única página
 
+Fonts:
+Fontes:
+
 Found text at page %s
 Texto encontrado na página %s
 
@@ -551,6 +554,9 @@ Remover dos Favoritos
 Remove page %s from favorites
 Remover página %s dos Favoritos
 
+Replace document &colors with Windows color scheme
+Substituir &cores do documento pelo esquema de cores do Windows
+
 Rotate &Left\tCtrl+Shift+-
 Girar à esquerda\tCtrl+Shift+-
 
@@ -673,8 +679,4 @@ copiando texto
 
 printing document
 imprimindo documento
-
-# Untranslated:
-#Fonts:
-#Replace document &colors with Windows color scheme
 
