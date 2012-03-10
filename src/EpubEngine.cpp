@@ -464,6 +464,7 @@ protected:
     Vec<PageData *> *pages;
     // needed so that memory allocated by ResolveHtmlEntities isn't leaked
     PoolAllocator allocator;
+    CRITICAL_SECTION iterAccess;
 
     RectD pageRect;
     float pageBorder;
@@ -510,15 +511,21 @@ EpubEngineImpl::EpubEngineImpl() : fileName(NULL), doc(NULL), pages(NULL),
     pageRect(0, 0, 5.12 * GetFileDPI(), 7.8 * GetFileDPI()), // "B Format" paperback
     pageBorder(0.4f * GetFileDPI())
 {
+    InitializeCriticalSection(&iterAccess);
 }
 
 EpubEngineImpl::~EpubEngineImpl()
 {
+    EnterCriticalSection(&iterAccess);
+
     delete doc;
     if (pages)
         DeleteVecMembers(*pages);
     delete pages;
     free((void *)fileName);
+
+    LeaveCriticalSection(&iterAccess);
+    DeleteCriticalSection(&iterAccess);
 }
 
 bool EpubEngineImpl::Load(const TCHAR *fileName)
@@ -620,6 +627,7 @@ bool EpubEngineImpl::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoo
     Color white(0xFF, 0xFF, 0xFF);
     Rect screenR(screenRect.x, screenRect.y, screenRect.dx, screenRect.dy);
     g.SetClip(screenR);
+    screenR.Inflate(1, 1);
     g.FillRectangle(&SolidBrush(white), screenR);
 
     Matrix m;
@@ -627,6 +635,7 @@ bool EpubEngineImpl::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoo
     m.Translate((REAL)(screenRect.x - screen.x), (REAL)(screenRect.y - screen.y), MatrixOrderAppend);
     g.SetTransform(&m);
 
+    ScopedCritSec scope(&iterAccess);
     DrawPageLayout(&g, pageInstrs, pageBorder, pageBorder, false);
     return true;
 }
@@ -643,6 +652,8 @@ TCHAR *EpubEngineImpl::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coord
     Vec<DrawInstr> *pageInstrs = GetPageData(pageNo);
     if (!pageInstrs)
         return NULL;
+
+    ScopedCritSec scope(&iterAccess);
 
     str::Str<TCHAR> content;
     Vec<RectI> coords;
@@ -695,6 +706,8 @@ Vec<PageElement *> *EpubEngineImpl::GetElements(int pageNo)
     Vec<DrawInstr> *pageInstrs = GetPageData(pageNo);
     if (!pageInstrs)
         return NULL;
+
+    ScopedCritSec scope(&iterAccess);
 
     Vec<PageElement *> *els = new Vec<PageElement *>();
 

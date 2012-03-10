@@ -227,6 +227,10 @@ void PageLayout::JustifyLineBoth()
         if (InstrElasticSpace == i->type)
             ++spaces;
     }
+    // don't take a space at the end of the line into account 
+    // (the last word is explicitly right-aligned below)
+    if (currLineInstr.Count() > 0 && InstrElasticSpace == currLineInstr.Last().type)
+        spaces--;
     if (0 == spaces)
         return;
     // redistribute extra dx space among elastic spaces
