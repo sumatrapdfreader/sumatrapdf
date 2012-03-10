@@ -55,6 +55,13 @@ static MenuDef menuDefDebug[] = {
 };
 #endif
 
+static void RebuildFileMenuForMobiWindow(HMENU menu)
+{
+    win::menu::Empty(menu);
+    BuildMenuFromMenuDef(menuDefMobiFile, dimof(menuDefMobiFile), menu, false);
+    AppendRecentFilesToMenu(menu);
+}
+
 static HMENU BuildMobiMenu()
 {
     HMENU mainMenu = CreateMenu();
@@ -209,6 +216,13 @@ static void RebuildMenuBarForMobiWindow(MobiWindow *win)
     DestroyMenu(oldMenu);
 }
 
+void UpdateMenuForMobiWindow(MobiWindow *win, HMENU m)
+{
+    UINT id = GetMenuItemID(m, 0);
+    if (id == menuDefMobiFile[0].id)
+        RebuildFileMenuForMobiWindow( m);
+}
+
 void RebuildMenuBarForMobiWindows()
 {
     if (!gMobiWindows)
@@ -317,9 +331,6 @@ static LRESULT CALLBACK MobiWndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPA
     // messages that don't require MobiWindow
     switch (msg)
     {
-        case WM_CREATE:
-            break;
-
         case WM_DROPFILES:
             OnDropFiles((HDROP)wParam);
             break;
@@ -361,6 +372,10 @@ static LRESULT CALLBACK MobiWndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPA
             return OnCommand(win, msg, wParam, lParam);
             break;
 
+        case WM_INITMENUPOPUP:
+            UpdateMenuForMobiWindow(win, (HMENU)wParam);
+            break;
+
         case WM_TIMER:
             OnTimer(win, wParam);
             break;
@@ -397,7 +412,6 @@ void OpenMobiInWindow(MobiDoc *mobiDoc, SumatraWindow& winToReplace)
         MobiWindow *mw = winToReplace.winMobi;
         CrashIf(!mw);
         mw->ebookController->SetMobiDoc(mobiDoc);
-        //RebuildMenuBarForMobiWindow(mw);
         // TODO: if we have window position/last position for this file, restore it
         return;
     }
