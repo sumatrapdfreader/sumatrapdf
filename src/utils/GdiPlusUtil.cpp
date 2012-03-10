@@ -189,6 +189,25 @@ void DrawCloseButton(DRAWITEMSTRUCT *dis)
     }
 }
 
+void GetBaseTransform(Matrix& m, RectF pageRect, float zoom, int rotation)
+{
+    rotation = rotation % 360;
+    if (rotation < 0) rotation = rotation + 360;
+    if (90 == rotation)
+        m.Translate(0, -pageRect.Height, MatrixOrderAppend);
+    else if (180 == rotation)
+        m.Translate(-pageRect.Width, -pageRect.Height, MatrixOrderAppend);
+    else if (270 == rotation)
+        m.Translate(-pageRect.Width, 0, MatrixOrderAppend);
+    else if (0 == rotation)
+        m.Translate(0, 0, MatrixOrderAppend);
+    else
+        CrashIf(true);
+
+    m.Scale(zoom, zoom, MatrixOrderAppend);
+    m.Rotate((REAL)rotation, MatrixOrderAppend);
+}
+
 const TCHAR *GfxFileExtFromData(char *data, size_t len)
 {
     char header[9] = { 0 };

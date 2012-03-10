@@ -233,20 +233,7 @@ bool ImagesEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom,
 void ImagesEngine::GetTransform(Matrix& m, int pageNo, float zoom, int rotation)
 {
     SizeD size = PageMediabox(pageNo).Size();
-
-    rotation = rotation % 360;
-    if (rotation < 0) rotation = rotation + 360;
-    if (90 == rotation)
-        m.Translate(0, (REAL)-size.dy, MatrixOrderAppend);
-    else if (180 == rotation)
-        m.Translate((REAL)-size.dx, (REAL)-size.dy, MatrixOrderAppend);
-    else if (270 == rotation)
-        m.Translate((REAL)-size.dx, 0, MatrixOrderAppend);
-    else // if (0 == rotation)
-        m.Translate(0, 0, MatrixOrderAppend);
-
-    m.Scale(zoom, zoom, MatrixOrderAppend);
-    m.Rotate((REAL)rotation, MatrixOrderAppend);
+    GetBaseTransform(m, RectF(0, 0, (REAL)size.dx, (REAL)size.dy), zoom, rotation);
 }
 
 PointD ImagesEngine::Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse)

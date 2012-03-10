@@ -19,6 +19,8 @@ REAL     GetSpaceDx(Graphics *g, Font *f);
 int      StringLenForWidth(Graphics *g, Font *f, const WCHAR *s, size_t len, float dx);
 void     DrawCloseButton(DRAWITEMSTRUCT *dis);
 
+void     GetBaseTransform(Matrix& m, RectF pageRect, float zoom, int rotation);
+
 const TCHAR * GfxFileExtFromData(char *data, size_t len);
 Bitmap *      BitmapFromData(void *data, size_t len);
 Rect          BitmapSizeFromData(char *data, size_t len);

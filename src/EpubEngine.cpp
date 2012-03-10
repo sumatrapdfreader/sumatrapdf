@@ -477,7 +477,10 @@ protected:
     float pageBorder;
 
     bool Load(const TCHAR *fileName);
-    void GetTransform(Matrix& m, float zoom, int rotation);
+    void GetTransform(Matrix& m, float zoom, int rotation) {
+        GetBaseTransform(m, RectF(0, 0, (REAL)pageRect.dx, (REAL)pageRect.dy),
+                         zoom, rotation);
+    }
     void FixFontSizeForResolution(HDC hDC);
 
     Vec<DrawInstr> *GetPageData(int pageNo) {
@@ -556,23 +559,6 @@ bool EpubEngineImpl::Load(const TCHAR *fileName)
     pages = PageLayoutEpub(&li).Layout();
 
     return true;
-}
-
-void EpubEngineImpl::GetTransform(Matrix& m, float zoom, int rotation)
-{
-    rotation = rotation % 360;
-    if (rotation < 0) rotation = rotation + 360;
-    if (90 == rotation)
-        m.Translate(0, (REAL)-pageRect.dy, MatrixOrderAppend);
-    else if (180 == rotation)
-        m.Translate((REAL)-pageRect.dx, (REAL)-pageRect.dy, MatrixOrderAppend);
-    else if (270 == rotation)
-        m.Translate((REAL)-pageRect.dx, 0, MatrixOrderAppend);
-    else // if (0 == rotation)
-        m.Translate(0, 0, MatrixOrderAppend);
-
-    m.Scale(zoom, zoom, MatrixOrderAppend);
-    m.Rotate((REAL)rotation, MatrixOrderAppend);
 }
 
 PointD EpubEngineImpl::Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse)
