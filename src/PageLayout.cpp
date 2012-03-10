@@ -40,6 +40,8 @@ TODO: PageLayout could be split into DrawInstrBuilder which knows pageDx, pageDy
 and generates DrawInstr and splits them into pages and a better named class that
 does the parsing of the document builds pages by invoking methods on DrawInstrBuilders.
 
+TODO: support <figure> and <figcaption> as e.g in http://ebookarchitects.com/files/BookOfTexas.mobi
+
 TODO: instead of generating list of DrawInstr objects, we could add neccessary
 support to mui and use list of Control objects instead (especially if we slim down
 Control objects further to make allocating hundreds of them cheaper or introduce some
@@ -717,9 +719,6 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
         return;
 
     HtmlTag tag = FindTag(t);
-    // TODO: ignore instead of crashing once we're satisfied we covered all the tags
-    // TODO: crashes for <figure> and <figcaption> in http://ebookarchitects.com/files/BookOfTexas.mobi
-    CrashIf(tag == Tag_NotFound);
 
     if (Tag_P == tag) {
         HandleTagP(t);
@@ -760,7 +759,7 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
         // TODO: implement me
     } else {
         // TODO: temporary debugging
-        CrashIf(!IgnoreThisTag(tag));
+        lf("unhandled tag: %d", tag);
     }
 }
 
