@@ -83,8 +83,8 @@ public:
         return NULL;
     }
 
-    void MarkFileLoaded(const TCHAR *filePath) {
-        assert(filePath);
+    DisplayState *MarkFileLoaded(const TCHAR *filePath) {
+        CrashIf(!filePath);
         // if a history entry with the same name already exists,
         // then reuse it. That way we don't have duplicates and
         // the file moves to the front of the list
@@ -97,6 +97,7 @@ public:
             Remove(state);
         Prepend(state);
         state->openCount++;
+        return state;
     }
 
     bool MarkFileInexistent(const TCHAR *filePath) {
@@ -137,12 +138,14 @@ public:
     // returns a shallow copy of the file history list, sorted
     // by open count (which has a pre-multiplied recency factor)
     // caller needs to delete the result (but not the contained states)
-    Vec<DisplayState *> *GetFrequencyOrder() {
-        Vec<DisplayState *> *list = new Vec<DisplayState *>(states);
-        for (size_t i = 0; i < list->Count(); i++)
-            list->At(i)->index = i;
-        list->Sort(cmpOpenCount);
-        return list;
+    void GetFrequencyOrder(Vec<DisplayState *>& list) {
+        CrashIf(list.Count() > 0);
+        size_t i = 0;
+        for (DisplayState **ds = states.IterStart(); ds; ds = states.IterNext()) {
+            (*ds)->index = i++;
+            list.Append(*ds);
+        }
+        list.Sort(cmpOpenCount);
     }
 };
 

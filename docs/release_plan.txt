@@ -7,7 +7,6 @@ is an engine. Removing them all is too much for 2.0 so we'll make whatever's nec
 for basic mobi support.
 
 Specific things that still need to be added for minimal mobi support:
-- thumbnails for mobi files
 - save and restore last position in the mobi file
 
 Implicitly everything else is for later, including fullscreen, printing,

@@ -556,14 +556,15 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF 
 #endif
     rc.dy -= DOCLIST_BOTTOM_BOX_DY;
 
-    Vec<DisplayState *> *list = fileHistory.GetFrequencyOrder();
+    Vec<DisplayState *> list;
+    fileHistory.GetFrequencyOrder(list);
 
     int width = limitValue((rc.dx - DOCLIST_MARGIN_LEFT - DOCLIST_MARGIN_RIGHT + DOCLIST_MARGIN_BETWEEN_X) / (THUMBNAIL_DX + DOCLIST_MARGIN_BETWEEN_X), 1, DOCLIST_MAX_THUMBNAILS_X);
     int height = min((rc.dy - DOCLIST_MARGIN_TOP - DOCLIST_MARGIN_BOTTOM + DOCLIST_MARGIN_BETWEEN_Y) / (THUMBNAIL_DY + DOCLIST_MARGIN_BETWEEN_Y), FILE_HISTORY_MAX_FREQUENT / width);
     PointI offset(rc.x + DOCLIST_MARGIN_LEFT + (rc.dx - width * THUMBNAIL_DX - (width - 1) * DOCLIST_MARGIN_BETWEEN_X - DOCLIST_MARGIN_LEFT - DOCLIST_MARGIN_RIGHT) / 2, rc.y + DOCLIST_MARGIN_TOP);
     if (offset.x < ABOUT_INNER_PADDING)
         offset.x = ABOUT_INNER_PADDING;
-    else if (list->Count() == 0)
+    else if (list.Count() == 0)
         offset.x = DOCLIST_MARGIN_LEFT;
 
     SelectObject(hdc, fontSumatraTxt);
@@ -581,12 +582,12 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF 
     win.staticLinks.Reset();
     for (int h = 0; h < height; h++) {
         for (int w = 0; w < width; w++) {
-            if (h * width + w >= (int)list->Count()) {
+            if (h * width + w >= (int)list.Count()) {
                 // display the "Open a document" link right below the last row
                 height = w > 0 ? h + 1 : h;
                 break;
             }
-            DisplayState *state = list->At(h * width + w);
+            DisplayState *state = list.At(h * width + w);
 
             RectI page(offset.x + w * (int)(THUMBNAIL_DX + DOCLIST_MARGIN_BETWEEN_X * win.uiDPIFactor),
                        offset.y + h * (int)(THUMBNAIL_DY + DOCLIST_MARGIN_BETWEEN_Y * win.uiDPIFactor),
@@ -628,7 +629,6 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF 
             win.staticLinks.Append(StaticLinkInfo(rect.Union(page), state->filePath, state->filePath));
         }
     }
-    delete list;
 
     /* render bottom links */
     rc.y += DOCLIST_MARGIN_TOP + height * THUMBNAIL_DY + (height - 1) * DOCLIST_MARGIN_BETWEEN_Y + DOCLIST_MARGIN_BOTTOM;
@@ -709,9 +709,10 @@ void CleanUpThumbnailCache(FileHistory& fileHistory)
     } while (FindNextFile(hfind, &fdata));
     FindClose(hfind);
 
-    Vec<DisplayState *> *list = fileHistory.GetFrequencyOrder();
-    for (size_t i = 0; i < list->Count() && i < FILE_HISTORY_MAX_FREQUENT * 2; i++) {
-        ScopedMem<TCHAR> bmpPath(GetThumbnailPath(list->At(i)->filePath));
+    Vec<DisplayState *> list;
+    fileHistory.GetFrequencyOrder(list);
+    for (size_t i = 0; i < list.Count() && i < FILE_HISTORY_MAX_FREQUENT * 2; i++) {
+        ScopedMem<TCHAR> bmpPath(GetThumbnailPath(list.At(i)->filePath));
         if (!bmpPath)
             continue;
         int idx = files.Find(path::GetBaseName(bmpPath));
@@ -720,7 +721,6 @@ void CleanUpThumbnailCache(FileHistory& fileHistory)
             files.RemoveAt(idx);
         }
     }
-    delete list;
 
     for (size_t i = 0; i < files.Count(); i++) {
         ScopedMem<TCHAR> bmpPath(path::Join(thumbsPath, files.At(i)));

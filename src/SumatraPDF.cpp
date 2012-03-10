@@ -138,7 +138,7 @@ static RenderCache                  gRenderCache;
        Favorites *                  gFavorites;
 static UIThreadWorkItemQueue        gUIThreadMarshaller;
 
-static bool                         gIsStressTesting = false;
+       bool                         gIsStressTesting = false;
 static bool                         gCrashOnOpen = false;
 
 // in restricted mode, some features can be disabled (such as
@@ -595,7 +595,7 @@ void QueueWorkItem(UIThreadWorkItem *wi)
     gUIThreadMarshaller.Queue(wi);
 }
 
-static bool SaveThumbnailForFile(const TCHAR *filePath, RenderedBitmap *bmp)
+bool SaveThumbnailForFile(const TCHAR *filePath, RenderedBitmap *bmp)
 {
     DisplayState *ds = gFileHistory.Find(filePath);
     if (!ds) {
@@ -657,25 +657,35 @@ static void CreateChmThumbnail(WindowInfo& win, DisplayState& ds)
     delete chmEngine;
 }
 
-static void CreateThumbnailForFile(WindowInfo& win, DisplayState& ds)
+bool ShouldSaveThumbnail(DisplayState& ds)
 {
     // don't create thumbnails if we won't be needing them at all
     if (!HasPermission(Perm_SavePreferences))
+        return false;
+
+    // don't accumulate thumbnails during a stress test
+    if (gIsStressTesting)
+        return false;
+
+    // don't create thumbnails for files that won't need them anytime soon
+    Vec<DisplayState *> list;
+    gFileHistory.GetFrequencyOrder(list);
+    int idx = list.Find(&ds);
+    if (idx < 0 || FILE_HISTORY_MAX_FREQUENT * 2 <= idx)
+        return false;
+
+    if (HasThumbnail(ds))
+        return false;
+    return true;
+}
+
+static void CreateThumbnailForFile(WindowInfo& win, DisplayState& ds)
+{
+    if (!ShouldSaveThumbnail(ds))
         return;
 
     assert(win.IsDocLoaded() && win.dm->engine);
     if (!win.IsDocLoaded() || !win.dm->engine) return;
-
-    // don't unnecessarily accumulate thumbnails during a stress test
-    if (gIsStressTesting)
-        return;
-
-    // don't create thumbnails for files that won't need them anytime soon
-    Vec<DisplayState *> *list = gFileHistory.GetFrequencyOrder();
-    int ix = list->Find(&ds);
-    delete list;
-    if (ix < 0 || FILE_HISTORY_MAX_FREQUENT * 2 <= ix)
-        return;
 
     // don't create thumbnails for password protected documents
     // (unless we're also remembering the decryption key anyway)
@@ -684,9 +694,6 @@ static void CreateThumbnailForFile(WindowInfo& win, DisplayState& ds)
         RemoveThumbnail(ds);
         return;
     }
-
-    if (HasThumbnail(ds))
-        return;
 
     if (win.IsChm()) {
         CreateChmThumbnail(win, ds);
@@ -1327,9 +1334,9 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin,
 
     if (gGlobalPrefs.rememberOpenedFiles) {
         CrashIf(!str::Eq(fullPath, win->loadedFilePath));
-        gFileHistory.MarkFileLoaded(fullPath);
+        DisplayState *ds = gFileHistory.MarkFileLoaded(fullPath);
         if (gGlobalPrefs.showStartPage)
-            CreateThumbnailForFile(*win, *gFileHistory.Get(0));
+            CreateThumbnailForFile(*win, *ds);
         SavePrefs();
     }
 

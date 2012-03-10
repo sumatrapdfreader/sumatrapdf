@@ -6,6 +6,7 @@
 
 #include "BaseUtil.h"
 #include "Mui.h"
+#include "PageLayout.h"
 #include "SumatraWindow.h"
 #include "ThreadUtil.h"
 #include "Vec.h"
@@ -15,6 +16,7 @@ using namespace mui;
 struct  EbookControls;
 class   EbookController;
 struct  PageData;
+class   PoolAllocator;
 class   MobiDoc;
 class   ThreadLayoutMobi;
 
@@ -51,6 +53,8 @@ struct LayoutTemp {
 
     void            DeletePages();
 };
+
+LayoutInfo *GetLayoutInfo(const char *html, MobiDoc *mobiDoc, int dx, int dy, PoolAllocator *textAllocator);
 
 class EbookController : public IClicked, ISizeChanged
 {

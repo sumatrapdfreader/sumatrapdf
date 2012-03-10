@@ -1,12 +1,15 @@
 #include "MobiWindow.h"
 
 #include "AppTools.h"
+#include "BaseEngine.h"
 #include "EbookController.h"
 #include "EbookControls.h"
 #include "FileHistory.h"
 #include "Menu.h"
 #include "MobiDoc.h"
+#include "PageLayout.h"
 #include "Resource.h"
+#include "SumatraAbout.h"
 #include "SumatraPDF.h"
 #include "Touch.h"
 #include "Translations.h"
@@ -66,9 +69,7 @@ static HMENU BuildMobiMenu()
 {
     HMENU mainMenu = CreateMenu();
     HMENU m = CreateMenu();
-    win::menu::Empty(m);
-    BuildMenuFromMenuDef(menuDefMobiFile, dimof(menuDefMobiFile), m, false);
-    AppendRecentFilesToMenu(m);
+    RebuildFileMenuForMobiWindow(m);
 
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&File"));
     m = BuildMenuFromMenuDef(menuDefMobiGoTo, dimof(menuDefMobiGoTo), CreateMenu(), false);
@@ -394,19 +395,75 @@ size_t MobiWindowsCount()
     return gMobiWindows->Count();
 }
 
+RenderedBitmap *RenderFirstMobiPageToBitmap(MobiDoc *mobiDoc, SizeI pageSize, SizeI bmpSize)
+{
+    PoolAllocator textAllocator;
+    LayoutInfo *li = GetLayoutInfo(NULL, mobiDoc, pageSize.dx, pageSize.dy, &textAllocator);
+    PageLayout pl;
+    PageData *pd = pl.IterStart(li);
+    if (!pd)
+        return NULL;
+
+    Bitmap *pageBmp = ::new Bitmap(pageSize.dx, pageSize.dy, PixelFormat32bppARGB);
+    if (!pageBmp) {
+        delete pd;
+        return NULL;
+    }
+    Graphics g((Image*)pageBmp);
+    Rect r(0, 0, pageSize.dx, pageSize.dy);
+    r.Inflate(1,1);
+    SolidBrush br(Color(255, 255, 255));
+    g.FillRectangle(&br, r);
+    DrawPageLayout(&g, &pd->instructions, 0, 0, false);
+
+    Bitmap res(bmpSize.dx, bmpSize.dy, PixelFormat24bppRGB);
+    Graphics g2(&res);
+    g2.SetInterpolationMode(InterpolationModeHighQualityBicubic);
+    g2.DrawImage(pageBmp, Rect(0, 0, bmpSize.dx, bmpSize.dy),
+                 0, 0, pageSize.dx, pageSize.dy, UnitPixel);
+
+    HBITMAP hbmp;
+    Status ok = res.GetHBITMAP(Color::White, &hbmp);
+    ::delete pageBmp;
+    delete pd;
+    if (ok != Ok)
+        return NULL;
+    return new RenderedBitmap(hbmp, bmpSize);
+}
+
+static void CreateThumbnailForMobiDoc(MobiDoc *mobiDoc, DisplayState& ds)
+{
+    CrashIf(!mobiDoc);
+    if (!ShouldSaveThumbnail(ds))
+        return;
+
+    SizeI pageSize(THUMBNAIL_DX * 2, THUMBNAIL_DY * 2);
+    SizeI bmpSize(THUMBNAIL_DX, THUMBNAIL_DY);
+    RenderedBitmap *bmp = RenderFirstMobiPageToBitmap(mobiDoc, pageSize, bmpSize);
+    if (bmp && SaveThumbnailForFile(mobiDoc->GetFileName(), bmp))
+        bmp = NULL;
+    delete bmp;
+}
+
 void OpenMobiInWindow(MobiDoc *mobiDoc, SumatraWindow& winToReplace)
 {
+    TCHAR *fullPath = mobiDoc->GetFileName();
     if (!gMobiWindows)
         gMobiWindows = new Vec<MobiWindow*>();
 
     if (gGlobalPrefs.rememberOpenedFiles) {
-        gFileHistory.MarkFileLoaded(mobiDoc->GetFileName());
-#if 0
-        if (gGlobalPrefs.showStartPage)
-            CreateThumbnailForFile(*win, *gFileHistory.Get(0));
-#endif
+        DisplayState *ds = gFileHistory.MarkFileLoaded(fullPath);
+        if (gGlobalPrefs.showStartPage && ds) {
+            // TODO: do it on a background thread?
+            CreateThumbnailForMobiDoc(mobiDoc, *ds);
+        }
         SavePrefs();
     }
+
+    // Add the file also to Windows' recently used documents (this doesn't
+    // happen automatically on drag&drop, reopening from history, etc.)
+    if (HasPermission(Perm_DiskAccess) && !gPluginMode)
+        SHAddToRecentDocs(SHARD_PATH, fullPath);
 
     if (SumatraWindow::WinMobi == winToReplace.type) {
         MobiWindow *mw = winToReplace.winMobi;

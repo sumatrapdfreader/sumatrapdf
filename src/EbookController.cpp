@@ -207,7 +207,7 @@ void EbookController::DeletePages(Vec<PageData*>** pages)
     *pages = NULL;
 }
 
-static LayoutInfo *GetLayoutInfo(const char *html, MobiDoc *mobiDoc, int dx, int dy, PoolAllocator *textAllocator)
+LayoutInfo *GetLayoutInfo(const char *html, MobiDoc *mobiDoc, int dx, int dy, PoolAllocator *textAllocator)
 {
     LayoutInfo *li = new LayoutInfo();
     size_t len;

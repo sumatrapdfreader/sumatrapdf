@@ -242,10 +242,10 @@ static BencArray *SerializeFileHistory(FileHistory& fileHistory, bool globalPref
     // Don't save more file entries than will be useful
     int minOpenCount = 0;
     if (globalPrefsOnly) {
-        Vec<DisplayState *> *frequencyList = fileHistory.GetFrequencyOrder();
-        if (frequencyList->Count() > FILE_HISTORY_MAX_RECENT)
-            minOpenCount = frequencyList->At(FILE_HISTORY_MAX_FREQUENT)->openCount / 2;
-        delete frequencyList;
+        Vec<DisplayState *> frequencyList;
+        fileHistory.GetFrequencyOrder(frequencyList);
+        if (frequencyList.Count() > FILE_HISTORY_MAX_RECENT)
+            minOpenCount = frequencyList.At(FILE_HISTORY_MAX_FREQUENT)->openCount / 2;
     }
 
     DisplayState *state;

@@ -66,6 +66,7 @@ class Favorites;
 extern HINSTANCE                ghinst;
 extern bool                     gDebugShowLinks;
 extern bool                     gUseGdiRenderer;
+extern bool                     gIsStressTesting;
 extern HCURSOR                  gCursorHand;
 extern HCURSOR                  gCursorArrow;
 extern HCURSOR                  gCursorIBeam;
@@ -113,6 +114,8 @@ void  CloseDocumentInWindow(WindowInfo *win);
 void  CloseDocumentAndDeleteWindowInfo(WindowInfo *win);
 void  OnMenuAbout();
 void  QuitIfNoMoreWindows();
+bool  ShouldSaveThumbnail(DisplayState& ds);
+bool  SaveThumbnailForFile(const TCHAR *filePath, RenderedBitmap *bmp);
 
 WindowInfo* FindWindowInfoByFile(const TCHAR *file);
 WindowInfo* FindWindowInfoByHwnd(HWND hwnd);
