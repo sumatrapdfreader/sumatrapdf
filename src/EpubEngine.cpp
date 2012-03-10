@@ -388,6 +388,9 @@ public:
 
     virtual const TCHAR *GetDefaultFileExt() const { return _T(".epub"); }
 
+    virtual Vec<PageElement *> *GetElements(int pageNo);
+    virtual PageElement *GetElementAtPos(int pageNo, PointD pt);
+
     virtual bool BenchLoadPage(int pageNo) { return true; }
 
 protected:
@@ -408,6 +411,33 @@ protected:
         if (pageNo < 1 || PageCount() < pageNo)
             return NULL;
         return &pages->At(pageNo - 1)->instructions;
+    }
+};
+
+class ImageDataElement : public PageElement {
+    int pageNo;
+    ImageData *id; // owned by EpubEngineImpl::pages
+    RectI bbox;
+
+public:
+    ImageDataElement(int pageNo, ImageData *id, RectI bbox) :
+        pageNo(pageNo), id(id), bbox(bbox) { }
+
+    virtual PageElementType GetType() const { return Element_Image; }
+    virtual int GetPageNo() const { return pageNo; }
+    virtual RectD GetRect() const { return bbox.Convert<double>(); }
+    virtual TCHAR *GetValue() const { return NULL; }
+
+    virtual RenderedBitmap *GetImage() {
+        HBITMAP hbmp;
+        Bitmap *bmp = BitmapFromData(id->data, id->len);
+        if (!bmp || bmp->GetHBITMAP(Color::White, &hbmp) != Ok) {
+            delete bmp;
+            return NULL;
+        }
+        SizeI size(bmp->GetWidth(), bmp->GetHeight());
+        delete bmp;
+        return new RenderedBitmap(hbmp, size);
     }
 };
 
@@ -536,6 +566,13 @@ bool EpubEngineImpl::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoo
     return true;
 }
 
+static RectI GetInstrBbox(DrawInstr *instr, float pageBorder)
+{
+    RectT<float> bbox(instr->bbox.X, instr->bbox.Y, instr->bbox.Width, instr->bbox.Height);
+    bbox.Offset(pageBorder, pageBorder);
+    return bbox.Round();
+}
+
 TCHAR *EpubEngineImpl::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out, RenderTarget target)
 {
     Vec<DrawInstr> *pageInstrs = GetPageData(pageNo);
@@ -547,8 +584,7 @@ TCHAR *EpubEngineImpl::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coord
     bool insertSpace = false;
 
     for (DrawInstr *i = pageInstrs->IterStart(); i; i = pageInstrs->IterNext()) {
-        RectI bbox = RectT<float>(i->bbox.X, i->bbox.Y, i->bbox.Width, i->bbox.Height).Round();
-        bbox.Offset((int)pageBorder, (int)pageBorder);
+        RectI bbox = GetInstrBbox(i, pageBorder);
         switch (i->type) {
         case InstrString:
             if (coords.Count() > 0 && coords.Last().BR().x > bbox.x) {
@@ -587,6 +623,41 @@ TCHAR *EpubEngineImpl::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coord
         memcpy(*coords_out, coords.LendData(), coords.Count() * sizeof(RectI));
     }
     return content.StealData();
+}
+
+Vec<PageElement *> *EpubEngineImpl::GetElements(int pageNo)
+{
+    Vec<DrawInstr> *pageInstrs = GetPageData(pageNo);
+    if (!pageInstrs)
+        return NULL;
+
+    Vec<PageElement *> *els = new Vec<PageElement *>();
+
+    for (DrawInstr *i = pageInstrs->IterStart(); i; i = pageInstrs->IterNext()) {
+        if (InstrImage == i->type)
+            els->Append(new ImageDataElement(pageNo, &i->img, GetInstrBbox(i, pageBorder)));
+    }
+
+    return els;
+}
+
+PageElement *EpubEngineImpl::GetElementAtPos(int pageNo, PointD pt)
+{
+    Vec<PageElement *> *els = GetElements(pageNo);
+    if (!els)
+        return NULL;
+
+    PageElement *el = NULL;
+    for (size_t i = 0; i < els->Count() && !el; i++)
+        if (els->At(i)->GetRect().Contains(pt))
+            el = els->At(i);
+
+    if (el)
+        els->Remove(el);
+    DeleteVecMembers(*els);
+    delete els;
+
+    return el;
 }
 
 unsigned char *EpubEngineImpl::GetFileData(size_t *cbCount)
