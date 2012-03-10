@@ -287,6 +287,9 @@ Download
 E&xit\tCtrl+Q
 離開(&X)\tCtrl+Q
 
+EPUB ebooks
+EPUB 文件
+
 Enter password
 輸入密碼
 

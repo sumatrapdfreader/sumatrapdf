@@ -210,6 +210,9 @@ Download
 E&xit\tCtrl+Q
 خروج\tCtrl+Q
 
+EPUB ebooks
+EPUB اسناد
+
 Enter password
 کلمه عبور را وارد کنید
 

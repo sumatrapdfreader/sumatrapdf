@@ -310,6 +310,9 @@ Preuzmi
 E&xit\tCtrl+Q
 &Izlaz\tCtrl+Q
 
+EPUB ebooks
+EPUB dokumenti
+
 Enter password
 Unesite lozinku
 

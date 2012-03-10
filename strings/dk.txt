@@ -308,6 +308,9 @@ Hent
 E&xit\tCtrl+Q
 S&lut\tCtrl+Q
 
+EPUB ebooks
+EPUB documenter
+
 Enter password
 Indtast kodeord
 

@@ -315,6 +315,9 @@ Télécharger
 E&xit\tCtrl+Q
 &Quitter\tCtrl+Q
 
+EPUB ebooks
+Fichiers EPUB
+
 Enter password
 Entrer le mot de passe
 

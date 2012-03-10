@@ -446,6 +446,7 @@ Faktor-zoum
 #Denied Permissions:
 #DjVu documents
 #Document Properties
+#EPUB ebooks
 #Enter the command-line to invoke when you double-click on the PDF document:
 #Error loading %s
 #F&avorites

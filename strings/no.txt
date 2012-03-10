@@ -311,6 +311,9 @@ Nedlasting
 E&xit\tCtrl+Q
 A&vslutt\tCtrl+Q
 
+EPUB ebooks
+EPUB-dokumenter
+
 Enter password
 Skriv inn passord
 

@@ -238,6 +238,7 @@ Zoom Out
 #DjVu documents
 #Document Properties
 #Download
+#EPUB ebooks
 #Enter password
 #Enter password for %s
 #Enter the command-line to invoke when you double-click on the PDF document:

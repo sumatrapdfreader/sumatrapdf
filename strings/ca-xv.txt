@@ -308,6 +308,9 @@ Baixa
 E&xit\tCtrl+Q
 I&x\tCtrl+Q
 
+EPUB ebooks
+Documents EPUB
+
 Enter password
 Introduïu la contrasenya
 

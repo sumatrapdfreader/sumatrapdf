@@ -202,6 +202,9 @@ Ynlade
 E&xit\tCtrl+Q
 &Ofslute\tCtrl+Q
 
+EPUB ebooks
+EPUB-bestannen
+
 Enter password
 Wachtwurd ynfiere
 

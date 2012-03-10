@@ -319,6 +319,9 @@ Downloaden
 E&xit\tCtrl+Q
 &Afsluiten\tCtrl+Q
 
+EPUB ebooks
+EPUB-bestanden
+
 Enter password
 Wachtwoord invoeren
 

@@ -314,6 +314,9 @@ Unduh
 E&xit\tCtrl+Q
 &Keluar\tCtrl+Q
 
+EPUB ebooks
+Dokumen EPUB
+
 Enter password
 Masukkan kata kunci
 

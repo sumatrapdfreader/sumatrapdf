@@ -242,6 +242,9 @@ Llwytho i Lawr
 E&xit\tCtrl+Q
 &Gadael\tCtrl+Q
 
+EPUB ebooks
+Dogfennau EPUB
+
 Enter password
 Rhoi cyfrinair
 

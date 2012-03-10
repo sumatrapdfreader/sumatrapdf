@@ -310,6 +310,9 @@ Laadi alla
 E&xit\tCtrl+Q
 Väl&ju\tCtrl+Q
 
+EPUB ebooks
+EPUB-dokumendid
+
 Enter password
 Sisesta salasõna
 

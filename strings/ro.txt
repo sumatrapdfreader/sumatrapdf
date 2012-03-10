@@ -308,6 +308,9 @@ Descarcă
 E&xit\tCtrl+Q
 &Ieșire\tCtrl+Q
 
+EPUB ebooks
+Documente EPUB
+
 Enter password
 Introduceți parola
 

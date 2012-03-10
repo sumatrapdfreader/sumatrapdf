@@ -295,6 +295,9 @@ Ladda &ned
 E&xit\tCtrl+Q
 &Avsluta\tCtrl+Q
 
+EPUB ebooks
+EPUB-dokument
+
 Enter password
 Ange lösenord
 

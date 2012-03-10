@@ -311,6 +311,9 @@ Tải xuống
 E&xit\tCtrl+Q
 Th&oát\tCtrl+Q
 
+EPUB ebooks
+Tập tin EPUB
+
 Enter password
 Nhập mật khẩu
 

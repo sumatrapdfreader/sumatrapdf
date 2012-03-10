@@ -316,6 +316,9 @@ Descargar
 E&xit\tCtrl+Q
 &Salir\tCtrl+Q
 
+EPUB ebooks
+Documentos EPUB
+
 Enter password
 Introduzca contraseña
 

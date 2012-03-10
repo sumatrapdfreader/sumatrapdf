@@ -529,6 +529,7 @@ printing document
 #Could not obtain Printer properties
 #Current file
 #DjVu documents
+#EPUB ebooks
 #Enter the command-line to invoke when you double-click on the PDF document:
 #Error loading %s
 #F&avorites

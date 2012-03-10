@@ -305,6 +305,9 @@ Jeitsi
 E&xit\tCtrl+Q
 I&rten\tCtrl+Q
 
+EPUB ebooks
+EPUB agiriak
+
 Enter password
 Idatzi sar-hitza
 

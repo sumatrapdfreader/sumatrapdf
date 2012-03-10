@@ -2411,6 +2411,9 @@ static void OnMenuSaveAs(WindowInfo& win)
     case Engine_Image:  fileFilter.AppendFmt(_TR("Image files (*.%s)"), defExt + 1); break;
     case Engine_PS:     fileFilter.Append(_TR("Postscript documents")); break;
     case Engine_Chm:    fileFilter.Append(_TR("CHM documents")); break;
+#ifdef TEST_EPUB_ENGINE
+    case Engine_Epub:   fileFilter.Append(_TR("EPUB ebooks")); break;
+#endif
     default:            fileFilter.Append(_TR("PDF documents")); break;
     }
     fileFilter.AppendFmt(_T("\1*%s\1"), defExt);
@@ -2670,6 +2673,7 @@ void OnMenuOpen(SumatraWindow& win)
         { _TR("Comic books"),           _T("*.cbz;*.cbr"),  true },
         { _TR("CHM documents"),         _T("*.chm"),        true },
         { _TR("Mobi documents"),        _T("*.mobi"),       true },
+        { _TR("EPUB ebooks"),           _T("*.epub"),       true },
     };
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling

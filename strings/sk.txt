@@ -313,6 +313,9 @@ Stiahnuť
 E&xit\tCtrl+Q
 &Ukončiť\tCtrl+Q
 
+EPUB ebooks
+EPUB dokumenty
+
 Enter password
 Zadať heslo
 

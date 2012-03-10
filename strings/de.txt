@@ -225,7 +225,7 @@ Bytes
 Byte
 
 CHM documents
-CHM-Dokumente
+CHM Hilfe-Dateien
 
 Can't connect to the Internet (error %#x).
 Keine Verbindung zum Internet möglich (Fehler %#x).
@@ -313,6 +313,9 @@ Herunterladen
 
 E&xit\tCtrl+Q
 &Beenden\tStrg+Q
+
+EPUB ebooks
+EPUB E-Bücher
 
 Enter password
 Bitte Passwort eingeben
@@ -435,7 +438,7 @@ Match Case
 Groß-/Kleinschreibung beachten
 
 Mobi documents
-Mobi-Dokumente
+Kindle E-Bücher
 
 Modified:
 Geändert am:

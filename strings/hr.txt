@@ -286,6 +286,9 @@ Preuzmi
 E&xit\tCtrl+Q
 &Izađi\tCtrl+Q
 
+EPUB ebooks
+EPUB dokumenti
+
 Enter password
 Unesi lozinku
 

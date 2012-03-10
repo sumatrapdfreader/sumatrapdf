@@ -280,6 +280,7 @@ Zoom Out
 #DjVu documents
 #Document Properties
 #Download
+#EPUB ebooks
 #Enter the command-line to invoke when you double-click on the PDF document:
 #Error loading %s
 #F&avorites

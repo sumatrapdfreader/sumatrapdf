@@ -313,6 +313,9 @@ Download
 E&xit\tCtrl+Q
 إغلاق البرنامج\tCtrl+Q
 
+EPUB ebooks
+ملفات EPUB
+
 Enter password
 ادخل كلمة المرور
 

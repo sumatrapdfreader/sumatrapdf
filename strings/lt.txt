@@ -303,6 +303,9 @@ Atsisiųsti
 E&xit\tCtrl+Q
 &Baigti darbą\tCtrl+Q
 
+EPUB ebooks
+EPUB dokumentai
+
 Enter password
 Įveskite slaptažodį
 

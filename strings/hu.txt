@@ -310,6 +310,9 @@ Letöltés
 E&xit\tCtrl+Q
 &Kilépés\tCtrl+Q
 
+EPUB ebooks
+EPUB fájlok
+
 Enter password
 Írja be a jelszót
 

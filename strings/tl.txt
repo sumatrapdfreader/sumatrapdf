@@ -566,6 +566,7 @@ ipini-print ang dokumento
 #Could not obtain Printer properties
 #Current file
 #DjVu documents
+#EPUB ebooks
 #Error loading %s
 #F&avorites
 #Favorites

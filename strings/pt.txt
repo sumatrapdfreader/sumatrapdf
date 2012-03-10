@@ -312,6 +312,9 @@ Transferir
 E&xit\tCtrl+Q
 &Sair\tCtrl+Q
 
+EPUB ebooks
+Documentos EPUB
+
 Enter password
 Indique a palavra passe
 

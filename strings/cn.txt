@@ -310,6 +310,9 @@ Download
 E&xit\tCtrl+Q
 退出(&X)\tCtrl+Q
 
+EPUB ebooks
+EPUB 文档
+
 Enter password
 输入密码
 

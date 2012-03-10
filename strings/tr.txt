@@ -308,6 +308,9 @@ Download
 E&xit\tCtrl+Q
 Ç&ık\tCtrl+O
 
+EPUB ebooks
+EPUB belgeleri
+
 Enter password
 Şifrenizi giriniz
 

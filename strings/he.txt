@@ -308,6 +308,9 @@ Download
 E&xit\tCtrl+Q
 יציאה\tCtrl+Q
 
+EPUB ebooks
+EPUB מסמכי
+
 Enter password
 הכנס סיסמה
 

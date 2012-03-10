@@ -313,6 +313,9 @@ Download
 E&xit\tCtrl+Q
 끝내기(&X)\tCtrl+Q
 
+EPUB ebooks
+EPUB 문서
+
 Enter password
 비밀번호 입력
 

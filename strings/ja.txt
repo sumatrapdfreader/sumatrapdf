@@ -308,6 +308,9 @@ Download
 E&xit\tCtrl+Q
 終了(&X)\tCtrl+Q
 
+EPUB ebooks
+EPUB ドキュメント
+
 Enter password
 パスワードの入力
 

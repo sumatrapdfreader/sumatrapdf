@@ -308,6 +308,9 @@ Download
 E&xit\tCtrl+Q
 Scoir\tCtrl+Q
 
+EPUB ebooks
+Cáipéisí EPUB
+
 Enter password
 Cuir isteach focal faire
 

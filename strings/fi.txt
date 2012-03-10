@@ -312,6 +312,9 @@ Lataa
 E&xit\tCtrl+Q
 &Poistu\tCtrl+Q
 
+EPUB ebooks
+EPUB-asiakirjat
+
 Enter password
 Kirjoita salasana
 

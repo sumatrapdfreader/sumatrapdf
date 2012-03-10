@@ -313,6 +313,9 @@ Download
 E&xit\tCtrl+Q
 Έ&ξοδος\tCtrl+Q
 
+EPUB ebooks
+Έγγραφα EPUB
+
 Enter password
 Εισάγετε κωδικό
 

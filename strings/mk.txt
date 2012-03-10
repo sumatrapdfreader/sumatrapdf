@@ -307,6 +307,9 @@ Download
 E&xit\tCtrl+Q
 &Излези\tCtrl+Q
 
+EPUB ebooks
+Документи од тип EPUB
+
 Enter password
 Внеси лозинка
 

@@ -308,6 +308,9 @@ Download
 E&xit\tCtrl+Q
 &Вийти\tCtrl+Q
 
+EPUB ebooks
+Документи EPUB
+
 Enter password
 Введіть пароль
 

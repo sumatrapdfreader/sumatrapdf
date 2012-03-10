@@ -307,6 +307,9 @@ Download
 E&xit\tCtrl+Q
 &გამოსვლა\tCtrl+Q
 
+EPUB ebooks
+EPUB დოკუმენტები
+
 Enter password
 შეიყვანეთ პაროლი
 
