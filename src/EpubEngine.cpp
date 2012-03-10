@@ -236,7 +236,7 @@ void EpubDoc::ParseMetadata(const char *content)
 #include "ebooktest2/MiniMui.h"
 #include "GdiPlusUtil.h"
 
-class PageLayout2 : public PageLayout {
+class PageLayoutEpub : public PageLayout {
     void HandleTagImg2(HtmlToken *t);
     void HandleTagHeader(HtmlToken *t);
     void HandleHtmlTag2(HtmlToken *t);
@@ -245,12 +245,12 @@ class PageLayout2 : public PageLayout {
     bool IsEmptyPage(PageData *d);
 
 public:
-    PageLayout2(LayoutInfo *li);
+    PageLayoutEpub(LayoutInfo *li);
 
     Vec<PageData*> *Layout();
 };
 
-void PageLayout2::HandleTagImg2(HtmlToken *t)
+void PageLayoutEpub::HandleTagImg2(HtmlToken *t)
 {
     if (!layoutInfo->mobiDoc)
         return;
@@ -265,7 +265,7 @@ void PageLayout2::HandleTagImg2(HtmlToken *t)
         EmitImage(img);
 }
 
-void PageLayout2::HandleTagHeader(HtmlToken *t)
+void PageLayoutEpub::HandleTagHeader(HtmlToken *t)
 {
     if (t->IsEndTag()) {
         HandleTagP(t);
@@ -281,7 +281,7 @@ void PageLayout2::HandleTagHeader(HtmlToken *t)
     }
 }
 
-void PageLayout2::HandleHtmlTag2(HtmlToken *t)
+void PageLayoutEpub::HandleHtmlTag2(HtmlToken *t)
 {
     HtmlTag tag = FindTag(t);
     switch (tag) {
@@ -318,7 +318,7 @@ void PageLayout2::HandleHtmlTag2(HtmlToken *t)
     }
 }
 
-PageLayout2::PageLayout2(LayoutInfo* li)
+PageLayoutEpub::PageLayoutEpub(LayoutInfo* li)
 {
     CrashIf(currPage);
     finishedParsing = false;
@@ -353,7 +353,7 @@ PageLayout2::PageLayout2(LayoutInfo* li)
     // Epub documents contain no cover image
 }
 
-bool PageLayout2::IgnoreText()
+bool PageLayoutEpub::IgnoreText()
 {
     // ignore the content of <head>, <style> and <title> tags
     return htmlParser->tagNesting.Find(Tag_Head) != -1 ||
@@ -362,7 +362,7 @@ bool PageLayout2::IgnoreText()
 }
 
 // empty page is one that consists of only invisible instructions
-bool PageLayout2::IsEmptyPage(PageData *p)
+bool PageLayoutEpub::IsEmptyPage(PageData *p)
 {
     if (!p)
         return false;
@@ -383,7 +383,7 @@ bool PageLayout2::IsEmptyPage(PageData *p)
     return true;
 }
 
-Vec<PageData*> *PageLayout2::Layout()
+Vec<PageData*> *PageLayoutEpub::Layout()
 {
     HtmlToken *t;
     while ((t = htmlParser->Next()) && !t->IsError()) {
@@ -553,7 +553,7 @@ bool EpubEngineImpl::Load(const TCHAR *fileName)
     li.fontSize = 11;
     li.textAllocator = &allocator;
 
-    pages = PageLayout2(&li).Layout();
+    pages = PageLayoutEpub(&li).Layout();
 
     return true;
 }

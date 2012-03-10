@@ -11,7 +11,8 @@
 #include <iowin32s.h>
 
 ZipFile::ZipFile(const TCHAR *path, Allocator *allocator) :
-    filenames(0, allocator), allocator(allocator)
+    filenames(0, allocator), fileinfo(0, allocator),
+    filepos(0, allocator), allocator(allocator)
 {
     zlib_filefunc64_def ffunc;
     fill_win32_filefunc64(&ffunc);
@@ -21,7 +22,8 @@ ZipFile::ZipFile(const TCHAR *path, Allocator *allocator) :
 }
 
 ZipFile::ZipFile(IStream *stream, Allocator *allocator) :
-    filenames(0, allocator), allocator(allocator)
+    filenames(0, allocator), fileinfo(0, allocator),
+    filepos(0, allocator), allocator(allocator)
 {
     zlib_filefunc64_def ffunc;
     fill_win32s_filefunc64(&ffunc);
@@ -43,6 +45,8 @@ ZipFile::~ZipFile()
 // cf. http://www.pkware.com/documents/casestudies/APPNOTE.TXT Appendix D
 #define CP_ZIP 437
 
+#define INVALID_ZIP_FILE_POS ((ZPOS64_T)-1)
+
 void ZipFile::ExtractFilenames()
 {
     if (!uf)
@@ -54,7 +58,6 @@ void ZipFile::ExtractFilenames()
         return;
     unzGoToFirstFile(uf);
 
-    // TODO: cache file positions for quicker access
     for (int i = 0; i < ginfo.number_entry && UNZ_OK == err; i++) {
         unz_file_info64 finfo;
         char fileName[MAX_PATH];
@@ -66,6 +69,12 @@ void ZipFile::ExtractFilenames()
             filenames.Append((const TCHAR *)Allocator::Dup(allocator, fileNameT,
                 (str::Len(fileNameT) + 1) * sizeof(TCHAR)));
             fileinfo.Append(finfo);
+
+            unz64_file_pos fpos;
+            err = unzGetFilePos64(uf, &fpos);
+            if (err != UNZ_OK)
+                fpos.num_of_file = INVALID_ZIP_FILE_POS;
+            filepos.Append(fpos);
         }
         err = unzGoToNextFile(uf);
     }
@@ -104,10 +113,16 @@ char *ZipFile::GetFileData(size_t fileindex, size_t *len)
         return NULL;
     if (fileindex >= filenames.Count())
         return NULL;
-    char fileNameA[MAX_PATH];
-    UINT cp = (fileinfo.At(fileindex).flag & (1 << 11)) ? CP_UTF8 : CP_ZIP;
-    str::conv::ToCodePageBuf(fileNameA, dimof(fileNameA), filenames.At(fileindex), cp);
-    int err = unzLocateFile(uf, fileNameA, 0);
+
+    int err = -1;
+    if (filepos.At(fileindex).num_of_file != INVALID_ZIP_FILE_POS)
+        err = unzGoToFilePos64(uf, &filepos.At(fileindex));
+    if (err != UNZ_OK) {
+        char fileNameA[MAX_PATH];
+        UINT cp = (fileinfo.At(fileindex).flag & (1 << 11)) ? CP_UTF8 : CP_ZIP;
+        str::conv::ToCodePageBuf(fileNameA, dimof(fileNameA), filenames.At(fileindex), cp);
+        err = unzLocateFile(uf, fileNameA, 0);
+    }
     if (err != UNZ_OK)
         return NULL;
     err = unzOpenCurrentFilePassword(uf, NULL);

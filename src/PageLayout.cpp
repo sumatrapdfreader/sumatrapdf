@@ -716,6 +716,7 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
 
     HtmlTag tag = FindTag(t);
     // TODO: ignore instead of crashing once we're satisfied we covered all the tags
+    // TODO: crashes for <figure> and <figcaption> in http://ebookarchitects.com/files/BookOfTexas.mobi
     CrashIf(tag == Tag_NotFound);
 
     if (Tag_P == tag) {

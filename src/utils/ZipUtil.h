@@ -13,6 +13,7 @@ class ZipFile {
     Allocator *allocator;
     Vec<const TCHAR *> filenames;
     Vec<unz_file_info64> fileinfo;
+    Vec<unz64_file_pos> filepos;
 
 public:
     ZipFile(const TCHAR *path, Allocator *allocator=NULL);
