@@ -8,7 +8,7 @@
 /*  parse compressed PCF fonts, as found with many X11 server              */
 /*  distributions.                                                         */
 /*                                                                         */
-/*  Copyright 2010 by                                                      */
+/*  Copyright 2010, 2012 by                                                */
 /*  Joel Klinghed.                                                         */
 /*                                                                         */
 /*  Based on src/gzip/ftgzip.c, Copyright 2002 - 2010 by                   */
@@ -35,6 +35,7 @@
 
 #undef __FTERRORS_H__
 
+#undef  FT_ERR_PREFIX
 #define FT_ERR_PREFIX  Bzip2_Err_
 #define FT_ERR_BASE    FT_Mod_Err_Bzip2
 

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CID-keyed Type1 font loader (body).                                  */
 /*                                                                         */
-/*  Copyright 1996-2006, 2009, 2011 by                                     */
+/*  Copyright 1996-2006, 2009, 2011-2012 by                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -147,8 +147,8 @@
 
 
   FT_CALLBACK_DEF( FT_Error )
-  parse_font_matrix( CID_Face     face,
-                     CID_Parser*  parser )
+  cid_parse_font_matrix( CID_Face     face,
+                         CID_Parser*  parser )
   {
     FT_Matrix*    matrix;
     FT_Vector*    offset;
@@ -268,7 +268,7 @@
 #include "cidtoken.h"
 
     T1_FIELD_CALLBACK( "FDArray",         parse_fd_array, 0 )
-    T1_FIELD_CALLBACK( "FontMatrix",      parse_font_matrix, 0 )
+    T1_FIELD_CALLBACK( "FontMatrix",      cid_parse_font_matrix, 0 )
     T1_FIELD_CALLBACK( "ExpansionFactor", parse_expansion_factor, 0 )
 
     { 0, T1_FIELD_LOCATION_CID_INFO, T1_FIELD_TYPE_NONE, 0, 0, 0, 0, 0, 0 }
@@ -513,8 +513,8 @@
 
 
   static void
-  t1_init_loader( CID_Loader*  loader,
-                  CID_Face     face )
+  cid_init_loader( CID_Loader*  loader,
+                   CID_Face     face )
   {
     FT_UNUSED( face );
 
@@ -522,8 +522,8 @@
   }
 
 
-  static void
-  t1_done_loader( CID_Loader*  loader )
+  static  void
+  cid_done_loader( CID_Loader*  loader )
   {
     CID_Parser*  parser = &loader->parser;
 
@@ -641,7 +641,7 @@
     FT_Error     error;
 
 
-    t1_init_loader( &loader, face );
+    cid_init_loader( &loader, face );
 
     parser = &loader.parser;
     error = cid_parser_new( parser, face->root.stream, face->root.memory,
@@ -682,7 +682,7 @@
     error = cid_read_subrs( face );
 
   Exit:
-    t1_done_loader( &loader );
+    cid_done_loader( &loader );
     return error;
   }
 

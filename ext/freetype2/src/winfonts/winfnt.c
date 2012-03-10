@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType font driver for Windows FNT/FON files                       */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2006, 2007, 2008, 2009, 2010 by */
+/*  Copyright 1996-2004, 2006-2012 by                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*  Copyright 2003 Huw D M Davies for Codeweavers                          */
 /*  Copyright 2007 Dmitry Timoshkov for Codeweavers                        */
@@ -23,7 +23,7 @@
 #include FT_INTERNAL_DEBUG_H
 #include FT_INTERNAL_STREAM_H
 #include FT_INTERNAL_OBJECTS_H
-#include FT_TRUETYPE_IDS_H 
+#include FT_TRUETYPE_IDS_H
 
 #include "winfnt.h"
 #include "fnterrs.h"
@@ -224,7 +224,7 @@
     if ( header->version != 0x200 &&
          header->version != 0x300 )
     {
-      FT_TRACE2(( "[not a valid FNT file]\n" ));
+      FT_TRACE2(( "  not a Windows FNT file\n" ));
       error = FNT_Err_Unknown_File_Format;
       goto Exit;
     }
@@ -234,7 +234,7 @@
 
     if ( header->file_size < size )
     {
-      FT_TRACE2(( "[not a valid FNT file]\n" ));
+      FT_TRACE2(( "  not a Windows FNT file\n" ));
       error = FNT_Err_Unknown_File_Format;
       goto Exit;
     }
@@ -665,8 +665,9 @@
 
 
   static void
-  FNT_Face_Done( FNT_Face  face )
+  FNT_Face_Done( FT_Face  fntface )       /* FNT_Face */
   {
+    FNT_Face   face = (FNT_Face)fntface;
     FT_Memory  memory;
 
 
@@ -677,24 +678,27 @@
 
     fnt_font_done( face );
 
-    FT_FREE( face->root.available_sizes );
-    face->root.num_fixed_sizes = 0;
+    FT_FREE( fntface->available_sizes );
+    fntface->num_fixed_sizes = 0;
   }
 
 
   static FT_Error
   FNT_Face_Init( FT_Stream      stream,
-                 FNT_Face       face,
+                 FT_Face        fntface,        /* FNT_Face */
                  FT_Int         face_index,
                  FT_Int         num_params,
                  FT_Parameter*  params )
   {
+    FNT_Face   face   = (FNT_Face)fntface;
     FT_Error   error;
     FT_Memory  memory = FT_FACE_MEMORY( face );
 
     FT_UNUSED( num_params );
     FT_UNUSED( params );
 
+
+    FT_TRACE2(( "Windows FNT driver\n" ));
 
     /* try to load font from a DLL */
     error = fnt_face_get_dll_font( face, face_index );
@@ -709,7 +713,7 @@
       if ( FT_NEW( face->font ) )
         goto Exit;
 
-      face->root.num_faces = 1;
+      fntface->num_faces = 1;
 
       font           = face->font;
       font->offset   = 0;
@@ -827,7 +831,14 @@
           root->charmap = root->charmaps[0];
       }
 
-      /* setup remaining flags */
+      /* set up remaining flags */
+
+      if ( font->header.last_char < font->header.first_char )
+      {
+        FT_TRACE2(( "invalid number of glyphs\n" ));
+        error = FNT_Err_Invalid_File_Format;
+        goto Fail;
+      }
 
       /* reserve one slot for the .notdef glyph at index 0 */
       root->num_glyphs = font->header.last_char -
@@ -874,7 +885,7 @@
     goto Exit;
 
   Fail:
-    FNT_Face_Done( face );
+    FNT_Face_Done( fntface );
 
   Exit:
     return error;
@@ -882,10 +893,13 @@
 
 
   static FT_Error
-  FNT_Size_Select( FT_Size  size )
+  FNT_Size_Select( FT_Size   size,
+                   FT_ULong  strike_index )
   {
     FNT_Face          face   = (FNT_Face)size->face;
     FT_WinFNT_Header  header = &face->font->header;
+
+    FT_UNUSED( strike_index );
 
 
     FT_Select_Metrics( size->face, 0 );
@@ -933,7 +947,7 @@
     if ( error )
       return error;
     else
-      return FNT_Size_Select( size );
+      return FNT_Size_Select( size, 0 );
   }
 
 
@@ -1086,10 +1100,10 @@
 
 
   static FT_Module_Interface
-  winfnt_get_service( FT_Driver         driver,
+  winfnt_get_service( FT_Module         module,
                       const FT_String*  service_id )
   {
-    FT_UNUSED( driver );
+    FT_UNUSED( module );
 
     return ft_service_list_lookup( winfnt_services, service_id );
   }
@@ -1111,34 +1125,34 @@
 
       0,
 
-      (FT_Module_Constructor)0,
-      (FT_Module_Destructor) 0,
-      (FT_Module_Requester)  winfnt_get_service
+      0,                  /* FT_Module_Constructor */
+      0,                  /* FT_Module_Destructor  */
+      winfnt_get_service
     },
 
-    sizeof( FNT_FaceRec ),
-    sizeof( FT_SizeRec ),
-    sizeof( FT_GlyphSlotRec ),
+    sizeof ( FNT_FaceRec ),
+    sizeof ( FT_SizeRec ),
+    sizeof ( FT_GlyphSlotRec ),
 
-    (FT_Face_InitFunc)        FNT_Face_Init,
-    (FT_Face_DoneFunc)        FNT_Face_Done,
-    (FT_Size_InitFunc)        0,
-    (FT_Size_DoneFunc)        0,
-    (FT_Slot_InitFunc)        0,
-    (FT_Slot_DoneFunc)        0,
+    FNT_Face_Init,
+    FNT_Face_Done,
+    0,                    /* FT_Size_InitFunc */
+    0,                    /* FT_Size_DoneFunc */
+    0,                    /* FT_Slot_InitFunc */
+    0,                    /* FT_Slot_DoneFunc */
 
 #ifdef FT_CONFIG_OPTION_OLD_INTERNALS
     ft_stub_set_char_sizes,
     ft_stub_set_pixel_sizes,
 #endif
-    (FT_Slot_LoadFunc)        FNT_Load_Glyph,
+    FNT_Load_Glyph,
 
-    (FT_Face_GetKerningFunc)  0,
-    (FT_Face_AttachFunc)      0,
-    (FT_Face_GetAdvancesFunc) 0,
+    0,                    /* FT_Face_GetKerningFunc  */
+    0,                    /* FT_Face_AttachFunc      */
+    0,                    /* FT_Face_GetAdvancesFunc */
 
-    (FT_Size_RequestFunc)     FNT_Size_Request,
-    (FT_Size_SelectFunc)      FNT_Size_Select
+    FNT_Size_Request,
+    FNT_Size_Select
   };
 
 

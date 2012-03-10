@@ -85,25 +85,25 @@ FT_BEGIN_HEADER
    *     miter limit is exceeded.  The outer edges of the strokes
    *     for the two segments are extended until they meet at an
    *     angle.  If the segments meet at too sharp an angle (such
-   *     that the miter would extend from the intersection of the 
-   *     segments a distance greater than the product of the miter 
-   *     limit value and the border radius), then a bevel join (see 
-   *     above) is used instead.  This prevents long spikes being 
-   *     created.  FT_STROKER_LINEJOIN_MITER_FIXED generates a miter 
+   *     that the miter would extend from the intersection of the
+   *     segments a distance greater than the product of the miter
+   *     limit value and the border radius), then a bevel join (see
+   *     above) is used instead.  This prevents long spikes being
+   *     created.  FT_STROKER_LINEJOIN_MITER_FIXED generates a miter
    *     line join as used in PostScript and PDF.
    *
    *   FT_STROKER_LINEJOIN_MITER_VARIABLE ::
    *   FT_STROKER_LINEJOIN_MITER ::
    *     Used to render mitered line joins, with variable bevels if
-   *     the miter limit is exceeded.  The intersection of the 
-   *     strokes is clipped at a line perpendicular to the bisector 
-   *     of the angle between the strokes, at the distance from the 
-   *     intersection of the segments equal to the product of the 
-   *     miter limit value and the border radius.  This prevents 
-   *     long spikes being created.  
-   *     FT_STROKER_LINEJOIN_MITER_VARIABLE generates a mitered line 
-   *     join as used in XPS.  FT_STROKER_LINEJOIN_MITER is an alias 
-   *     for FT_STROKER_LINEJOIN_MITER_VARIABLE, retained for 
+   *     the miter limit is exceeded.  The intersection of the
+   *     strokes is clipped at a line perpendicular to the bisector
+   *     of the angle between the strokes, at the distance from the
+   *     intersection of the segments equal to the product of the
+   *     miter limit value and the border radius.  This prevents
+   *     long spikes being created.
+   *     FT_STROKER_LINEJOIN_MITER_VARIABLE generates a mitered line
+   *     join as used in XPS.  FT_STROKER_LINEJOIN_MITER is an alias
+   *     for FT_STROKER_LINEJOIN_MITER_VARIABLE, retained for
    *     backwards compatibility.
    */
   typedef enum  FT_Stroker_LineJoin_

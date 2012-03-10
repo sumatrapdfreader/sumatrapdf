@@ -184,11 +184,11 @@
   };
 
 
-  static FT_Module_Interface
-  T42_Get_Interface( FT_Driver         driver,
+  FT_CALLBACK_DEF( FT_Module_Interface )
+  T42_Get_Interface( FT_Module         module,
                      const FT_String*  t42_interface )
   {
-    FT_UNUSED( driver );
+    FT_UNUSED( module );
 
     return ft_service_list_lookup( t42_services, t42_interface );
   }
@@ -213,34 +213,34 @@
 
       0,    /* format interface */
 
-      (FT_Module_Constructor)T42_Driver_Init,
-      (FT_Module_Destructor) T42_Driver_Done,
-      (FT_Module_Requester)  T42_Get_Interface,
+      T42_Driver_Init,
+      T42_Driver_Done,
+      T42_Get_Interface,
     },
 
     sizeof ( T42_FaceRec ),
     sizeof ( T42_SizeRec ),
     sizeof ( T42_GlyphSlotRec ),
 
-    (FT_Face_InitFunc)        T42_Face_Init,
-    (FT_Face_DoneFunc)        T42_Face_Done,
-    (FT_Size_InitFunc)        T42_Size_Init,
-    (FT_Size_DoneFunc)        T42_Size_Done,
-    (FT_Slot_InitFunc)        T42_GlyphSlot_Init,
-    (FT_Slot_DoneFunc)        T42_GlyphSlot_Done,
+    T42_Face_Init,
+    T42_Face_Done,
+    T42_Size_Init,
+    T42_Size_Done,
+    T42_GlyphSlot_Init,
+    T42_GlyphSlot_Done,
 
 #ifdef FT_CONFIG_OPTION_OLD_INTERNALS
     ft_stub_set_char_sizes,
     ft_stub_set_pixel_sizes,
 #endif
-    (FT_Slot_LoadFunc)        T42_GlyphSlot_Load,
+    T42_GlyphSlot_Load,
 
-    (FT_Face_GetKerningFunc)  0,
-    (FT_Face_AttachFunc)      0,
+    0,                 /* FT_Face_GetKerningFunc  */
+    0,                 /* FT_Face_AttachFunc      */
 
-    (FT_Face_GetAdvancesFunc) 0,
-    (FT_Size_RequestFunc)     T42_Size_Request,
-    (FT_Size_SelectFunc)      T42_Size_Select
+    0,                 /* FT_Face_GetAdvancesFunc */
+    T42_Size_Request,
+    T42_Size_Select
   };
 
 

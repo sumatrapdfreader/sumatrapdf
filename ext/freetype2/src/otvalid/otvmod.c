@@ -266,7 +266,7 @@
   const FT_Module_Class  otv_module_class =
   {
     0,
-    sizeof( FT_ModuleRec ),
+    sizeof ( FT_ModuleRec ),
     "otvalid",
     0x10000L,
     0x20000L,

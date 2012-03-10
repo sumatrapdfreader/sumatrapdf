@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType font driver implementation (body).                          */
 /*                                                                         */
-/*  Copyright 1996-2011 by                                                 */
+/*  Copyright 1996-2012 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -258,7 +258,7 @@
   /*************************************************************************/
   /*                                                                       */
   /* <Function>                                                            */
-  /*    Load_Glyph                                                         */
+  /*    tt_glyph_load                                                      */
   /*                                                                       */
   /* <Description>                                                         */
   /*    A driver method used to load a glyph within a given glyph slot.    */
@@ -282,10 +282,10 @@
   /*    FreeType error code.  0 means success.                             */
   /*                                                                       */
   static FT_Error
-  Load_Glyph( FT_GlyphSlot  ttslot,         /* TT_GlyphSlot */
-              FT_Size       ttsize,         /* TT_Size      */
-              FT_UInt       glyph_index,
-              FT_Int32      load_flags )
+  tt_glyph_load( FT_GlyphSlot  ttslot,      /* TT_GlyphSlot */
+                 FT_Size       ttsize,      /* TT_Size      */
+                 FT_UInt       glyph_index,
+                 FT_Int32      load_flags )
   {
     TT_GlyphSlot  slot = (TT_GlyphSlot)ttslot;
     TT_Size       size = (TT_Size)ttsize;
@@ -313,7 +313,7 @@
     if ( load_flags & FT_LOAD_NO_HINTING )
     {
       /* both FT_LOAD_NO_HINTING and FT_LOAD_NO_AUTOHINT   */
-      /* are necessary to disable hinting for tricky fonts */          
+      /* are necessary to disable hinting for tricky fonts */
 
       if ( FT_IS_TRICKY( face ) )
         load_flags &= ~FT_LOAD_NO_HINTING;
@@ -402,19 +402,35 @@
   tt_get_interface( FT_Module    driver,    /* TT_Driver */
                     const char*  tt_interface )
   {
+    FT_Library           library;
     FT_Module_Interface  result;
     FT_Module            sfntd;
     SFNT_Service         sfnt;
+
+
+    /* FT_TT_SERVICES_GET derefers `library' in PIC mode */
+#ifdef FT_CONFIG_OPTION_PIC
+    if ( !driver )
+      return NULL;
+    library = driver->library;
+    if ( !library )
+      return NULL;
+#endif
 
     result = ft_service_list_lookup( FT_TT_SERVICES_GET, tt_interface );
     if ( result != NULL )
       return result;
 
+#ifndef FT_CONFIG_OPTION_PIC
     if ( !driver )
       return NULL;
+    library = driver->library;
+    if ( !library )
+      return NULL;
+#endif
 
     /* only return the default interface from the SFNT module */
-    sfntd = FT_Get_Module( driver->library, "sfnt" );
+    sfntd = FT_Get_Module( library, "sfnt" );
     if ( sfntd )
     {
       sfnt = (SFNT_Service)( sfntd->clazz->module_interface );
@@ -440,11 +456,10 @@
 #define TT_SIZE_SELECT    0
 #endif
 
-  FT_DEFINE_DRIVER(tt_driver_class,
-  
-    
-      FT_MODULE_FONT_DRIVER        |
-      FT_MODULE_DRIVER_SCALABLE    |
+  FT_DEFINE_DRIVER( tt_driver_class,
+
+      FT_MODULE_FONT_DRIVER     |
+      FT_MODULE_DRIVER_SCALABLE |
       TT_HINTER_FLAG,
 
       sizeof ( TT_DriverRec ),
@@ -468,15 +483,15 @@
     tt_size_init,
     tt_size_done,
     tt_slot_init,
-    0,                      /* FT_Slot_DoneFunc */
+    0,                       /* FT_Slot_DoneFunc */
 
-    ft_stub_set_char_sizes, /* FT_CONFIG_OPTION_OLD_INTERNALS */
+    ft_stub_set_char_sizes,  /* FT_CONFIG_OPTION_OLD_INTERNALS */
     ft_stub_set_pixel_sizes, /* FT_CONFIG_OPTION_OLD_INTERNALS */
 
-    Load_Glyph,
+    tt_glyph_load,
 
     tt_get_kerning,
-    0,                      /* FT_Face_AttachFunc      */
+    0,                       /* FT_Face_AttachFunc */
     tt_get_advances,
 
     tt_size_request,

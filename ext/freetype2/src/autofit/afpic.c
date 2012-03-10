@@ -20,16 +20,20 @@
 #include FT_FREETYPE_H
 #include FT_INTERNAL_OBJECTS_H
 #include "afpic.h"
+#include "aferrors.h"
 
 #ifdef FT_CONFIG_OPTION_PIC
 
   /* forward declaration of PIC init functions from afmodule.c */
-  void FT_Init_Class_af_autofitter_service( FT_Library,
-                                            FT_AutoHinter_ServiceRec* );
+  void FT_Init_Class_af_autofitter_service(
+    FT_Library                 library,
+    FT_AutoHinter_ServiceRec*  clazz );
 
   /* forward declaration of PIC init functions from script classes */
 #include "aflatin.h"
+#ifdef FT_OPTION_AUTOFIT2
 #include "aflatin2.h"
+#endif
 #include "afcjk.h"
 #include "afdummy.h"
 #include "afindic.h"
@@ -73,7 +77,7 @@
         &container->af_script_classes_rec[ss];
     }
     container->af_script_classes[AF_SCRIPT_CLASSES_COUNT - 1] = NULL;
-    
+
     /* add call to initialization function when you add new scripts */
     ss = 0;
     FT_Init_Class_af_dummy_script_class(

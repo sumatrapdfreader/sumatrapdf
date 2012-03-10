@@ -2341,11 +2341,11 @@
   };
 
 
-  AF_DEFINE_SCRIPT_CLASS(af_latin_script_class,
+  AF_DEFINE_SCRIPT_CLASS( af_latin_script_class,
     AF_SCRIPT_LATIN,
     af_latin_uniranges,
 
-    sizeof( AF_LatinMetricsRec ),
+    sizeof ( AF_LatinMetricsRec ),
 
     (AF_Script_InitMetricsFunc) af_latin_metrics_init,
     (AF_Script_ScaleMetricsFunc)af_latin_metrics_scale,

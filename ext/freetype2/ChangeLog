@@ -1,3 +1,773 @@
+2012-03-08  Werner Lemberg  <wl@gnu.org>
+
+	* Version 2.4.9 released.
+	=========================
+
+
+	Tag sources with `VER-2-4-9'.
+
+	* docs/CHANGES: Updated.
+
+	* docs/VERSION.DLL: Update documentation and bump version number to
+	2.4.9.
+
+	* README, Jamfile (RefDoc),
+	builds/win32/vc2005/freetype.vcproj, builds/win32/vc2005/index.html,
+	builds/win32/vc2008/freetype.vcproj, builds/win32/vc2008/index.html,
+	builds/win32/vc2010/freetype.vcxproj, builds/win32/vc2010/index.html,
+	builds/win32/visualc/freetype.dsp,
+	builds/win32/visualc/freetype.vcproj,
+	builds/win32/visualc/index.html, builds/win32/visualce/freetype.dsp,
+	builds/win32/visualce/freetype.vcproj,
+	builds/win32/visualce/index.html,
+	builds/wince/vc2005-ce/freetype.vcproj,
+	builds/wince/vc2005-ce/index.html,
+	builds/wince/vc2008-ce/freetype.vcproj,
+	builds/wince/vc2008-ce/index.html: s/2.4.8/2.4.9/, s/248/249/.
+
+	* include/freetype/freetype.h (FREETYPE_PATCH): Set to 9.
+
+	* builds/unix/configure.raw (version_info): Set to 14:1:8.
+
+2012-03-08  Werner Lemberg  <wl@gnu.org>
+
+	[bdf] Add missing overflow check.
+
+	* src/bdf/bdflib.c (_bdf_parse_glyphs) <BITMAP>: Add threshold for
+	`glyph->bpr'.
+
+2012-03-07  Vinnie Falco  <vinnie.falco@gmail.com>
+
+	Prepare source code for amalgamation.
+
+	* src\autofit\aferrors.h, src\bdf\bdferror.h, src\bzip2\ftbzip2.c,
+	src\cache\ftcerror.h, src\cff\cfferrs.h, src\cid\ciderrs.h,
+	src\gxvalid\gxverror.h, src\gzip\ftgzip.c, src\lzw\ftlzw.c,
+	src\otvalid\otverror.h, src\pcf\pcferror.h, src\pfr\pfrerror.h,
+	src\psaux\psauxerr.h, src\pshinter\pshnterr.h,
+	src\psnames\psnamerr.h, src\raster\rasterrs.h, src\sfnt\sferrors.h,
+	src\smooth\ftsmerrs.h, src\truetype\tterrors.h,
+	src\type1\t1errors.h, src\type42\t42error.h, src\winfonts\fnterrs.h:
+	Add #undef FT_ERR_PREFIX before #define FT_ERR_PREFIX.
+
+2012-03-03  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #35660.
+
+	For some divisions, we use casts to 32bit entities.  Always guard
+	against division by zero with these casts also.
+
+	* src/base/ftcalc.c (ft_div64by32): Remove redundant cast.
+	(FT_MulDiv, FT_MulDiv_No_Round): Add 32bit cast.
+	(FT_DivFix): Add 32bit cast (this omission triggered the bug).
+
+2012-03-03  Werner Lemberg  <wl@gnu.org>
+
+	[psaux] Fix handling of track kerning.
+
+	* src/psaux/afmparse.c (afm_parse_track_kern): Don't inverse sign
+	for `min_kern'.  It is indeed quite common that track kerning
+	*increases* spacing for very small sizes.
+
+2012-03-02  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Fix Savannah bug #35689.
+
+	* src/truetype/ttgload.c (TT_Load_Simple_Glyph): Check first outline
+	point.
+
+2012-03-01  Werner Lemberg  <wl@gnu.org>
+
+	[bdf] Fix Savannah bug #35656.
+
+	* src/bdf/bdflib.c (_bdf_parse_glyphs) <_BDF_BITMAP>: Check validity
+	of nibble characters instead of accessing `a2i' array.
+
+2012-03-01  Werner Lemberg  <wl@gnu.org>
+
+	[winfonts] Fix Savannah bug #35659.
+
+	* src/winfonts/winfnt.c (FNT_Face_Init): Check number of glyphs.
+
+2012-03-01  Werner Lemberg  <wl@gnu.org>
+
+	[bdf] Fix Savannah bug #35658.
+
+	* src/bdf/bdflib.c (_bdf_list_split): Initialize `field' elements
+	properly.
+
+2012-03-01  Werner Lemberg  <wl@gnu.org>
+
+	[psaux] Fix Savannah bug #35657.
+
+	If in function `skip_spaces' the routine `skip_comment' comes to the
+	end of buffer, `cur' is still increased by one, so we need to check
+	for `p >= limit' and not `p == limit'.
+
+	* src/psaux/psconv.c (PS_Conv_Strtol, PS_Conv_ToFixed,
+	PS_Conv_ASCIIHexDecode, PS_Conv_EexecDecode): Fix boundary checking.
+
+2012-03-01  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Fix Savannah bug #35646.
+
+	* src/truetype/ttinterp.c (Ins_MIRP): Typo, present since ages.  The
+	code is now in sync with the other operators (e.g. MSIRP) which
+	modify twilight points.
+
+2012-03-01  Werner Lemberg  <wl@gnu.org>
+
+	[bdf] Fix Savannah bug #35643.
+
+	* src/bdf/bdflib.c (_bdf_list_ensure): Bring code in sync with
+	comment before `_bdf_list_split', this is, really allocate at least
+	five `field' elements.
+
+2012-03-01  Werner Lemberg  <wl@gnu.org>
+
+	[bdf] Fix Savannah bug #35641.
+
+	* src/bdf/bdflib.c (_bdf_parse_glyphs) <DWIDTH, BBX>: Abort if
+	_BDF_ENCODING isn't set.  We need this because access to the `glyph'
+	variable might be undefined otherwise.
+
+2012-03-01  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Fix Savannah bug #35640.
+
+	* src/truetype/ttinterp.c (SkipCode, TT_RunIns): Fix boundary check
+	for NPUSHB and NPUSHW instructions.
+
+2012-02-29  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Fix Savannah bug #35601.
+
+	* src/truetype/ttinterp.c (Ins_SHZ): Use number of points instead of
+	last point for loop.
+	Also remove redundant boundary check.
+
+2012-02-29  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Remove redundant check.
+
+	* src/truetype/ttgload.c (TT_Load_Simple_Glyph): Remove redundant
+	second check for ordered contour start points.
+
+2012-02-29  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Make SHC instruction behave similar to MS rasterizer.
+
+	* src/truetype/ttinterp.c (Ins_SHC): Handle virtual contour in
+	twilight zone.
+
+2012-02-29  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	Avoid modulo operators against a power-of-two denominator.
+
+	* src/afcjk.c (af_hint_normal_stem), src/base/ftoutln.c
+	(ft_contour_has), src/cff/cffgload.c (cff_decoder_parse_charstrings)
+	<cff_op_vvcurveto, cff_op_hhcurveto, cff_op_hvcurveto>,
+	src/gxvalid/gxvcommn.c (GXV_32BIT_ALIGNMENT_VALIDATE),
+	src/gxvalid/gxvfeat.c (gxv_feat_setting_validate): Replace `%' with
+	`&' operator.
+
+2012-02-29  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Don't synchronize digit widths for light rendering mode.
+
+	We don't hint horizontally in this mode.
+
+	* src/autofit/afloader.c (af_loader_load_g) <Hint_Metrics>:
+	Implement it.
+
+2012-02-26  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[type42] Minor code optimization (again).
+
+	* src/type42/t42parse.c (t42_parse_sfnts): Simplify previous change.
+
+2012-02-26  Mateusz Jurczyk  <mjurczyk@google.com>
+	    Werner Lemberg  <wl@gnu.org>
+
+	[smooth] Fix Savannah bug #35604.
+
+	* src/smooth/ftsmooth.c (ft_smooth_render_generic): Use `FT_Pos'
+	instead of `FT_UInt' for some variables and update comparisons
+	accordingly.  A detailed analysis can be found in the bug report.
+
+2012-02-26  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[type42] Minor code optimization.
+
+	* src/type42/t42parse.c (t42_parse_sfnts): Use bitmask instead of
+	modulo operator.
+
+2012-02-26  Werner Lemberg  <wl@gnu.org>
+
+	* docs/CHANGES: Updated.
+
+2012-02-26  Werner Lemberg  <wl@gnu.org>
+
+	[type1] Fix Savannah bug #35608.
+
+	* src/type1/t1parse.c (T1_Get_Private_Dict): Reject too short
+	dictionaries.
+
+2012-02-26  Werner Lemberg  <wl@gnu.org>
+
+	[bdf] Support `ENCODING -1 <n>' format.
+
+	* src/bdf/bdflib.c (_bdf_parse_glyphs) <ENCODING>: Implement it.
+
+2012-02-26  Werner Lemberg  <wl@gnu.org>
+
+	[bdf] Fix Savannah bug #35607.
+
+	* src/bdf/bdflib.c (_bdf_parse_glyphs) <ENCODING>: Normalize
+	negative encoding values.
+
+2012-02-26  Werner Lemberg  <wl@gnu.org>
+
+	[type1] Fix Savannah bug #35606.
+
+	* src/type1/t1load.c (parse_subrs): Add proper guards for `strncmp'.
+
+	* src/psaux/psobjs.c (ps_parser_skip_PS_token): Emit error message
+	only if cur < limit.
+
+2012-02-25  Werner Lemberg  <wl@gnu.org>
+
+	[pcf] Fix Savannah bug #35603.
+
+	* src/pcf/pcfread.c (pcf_get_properties): Assure final zero byte in
+	`strings' array.
+
+2012-02-25  Werner Lemberg  <wl@gnu.org>
+
+	[type42] Fix Savannah bug #35602.
+
+	* src/type42/t42parse.c (t42_parse_sfnts): Check `string_size' more
+	thoroughly.
+
+2012-02-25  Werner Lemberg  <wl@gnu.org>
+
+	[bdf] Fix Savannah bugs #35599 and #35600.
+
+	* src/bdf/bdflib.c (ACMSG16): New warning message.
+	(_bdf_parse_glyphs) <_BDF_BITMAP>: Check line length.
+
+2012-02-24  Werner Lemberg  <wl@gnu.org>
+
+	[bdf] Fix Savannah bugs #35597 and #35598.
+
+	* src/bdf/bdflib.c (_bdf_is_atom): Fix handling of property value.
+
+2012-02-24  Vinnie Falco  <vinnie.falco@gmail.com>
+
+	Prepare source code for amalgamation (6/6).
+
+	* src/cff/cffdrivr.c: s/Load_Glyph/cff_glyph_load/.
+
+	* src/cid/cidload.c: s/parse_font_matrix/cid_parse_font_matrix/.
+	s/t1_init_loader/cid_init_loader/.
+	s/t1_done_loader/cid_done_loader/.
+
+	* src/pxaux/t1cmap.c: s/t1_get_glyph_name/psaux_get_glyph_name/.
+
+	* src/truetype/ttdriver.c: s/Load_Glyph/tt_glyph_load/.
+
+	* src/type1/t1load.c: s/parse_font_matrix/t1_parse_font_matrix/.
+
+2012-02-24  Vinnie Falco  <vinnie.falco@gmail.com>
+
+	Prepare source code for amalgamation (5/6).
+
+	* include/freetype/fterrors.h: Undefine FT_KEEP_ERR_PREFIX after
+	using it.
+
+2012-02-22  Vinnie Falco  <vinnie.falco@gmail.com>
+
+	Prepare source code for amalgamation (4/6).
+
+	* src/smooth/ftgrays.c, src/raster/ftraster.c: Undefine RAS_ARG,
+	RAS_ARGS, RAS_VAR, and RAS_VARS before defining it.
+
+	* src/smooth/ftgrays.c: s/TRaster/black_TRaster/,
+	s/PRaster/black_PRaster/.
+	* src/raster/ftraster.c: s/TRaster/gray_TRaster/,
+	s/PRaster/gray_PRaster/.
+
+2012-02-20  Vinnie Falco  <vinnie.falco@gmail.com>
+
+	Prepare source code for amalgamation (3/6).
+
+	* src/smooth/ftgrays.c: s/TWorker/black_TWorker/,
+	s/PWorker/black_PWorker/.
+	* src/raster/ftraster.c: s/TWorker/gray_TWorker/,
+	s/PWorker/gray_PWorker/.
+
+2012-02-20  Vinnie Falco  <vinnie.falco@gmail.com>
+
+	Prepare source code for amalgamation (2/6).
+
+	* src/smooth/ftgrays.c, src/raster/ftraster.c: Undefine FLOOR,
+	CEILING, TRUNC, and SCALED before defining it.
+
+2012-02-20  Vinnie Falco  <vinnie.falco@gmail.com>
+
+	Prepare source code for amalgamation (1/6).
+
+	See discussion starting at
+
+	  http://lists.gnu.org/archive/html/freetype-devel/2012-01/msg00037.html
+
+	* src/smooth/ftgrays.c: s/TBand/gray_TBand/.
+	* src/raster/ftraster.c: s/TBand/black_TBand/.
+
+2012-02-17  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[autofit] Fix outline flags.
+
+	* src/autofit/afloader.c (af_loader_load_g): Don't reassign
+	`outline.flags' so that this information is preserved.  See
+	discussion starting at
+
+	  http://lists.gnu.org/archive/html/freetype-devel/2012-02/msg00046.html
+
+2012-02-11  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Fix Savannah bug #35466.
+
+	Jump instructions are now bound to the current function.  The MS
+	Windows rasterizer behaves the same, as confirmed by Greg Hitchcock.
+
+	* src/truetype/ttinterp.h (TT_CallRec): Add `Cur_End' element.
+	* src/truetype/ttobjs.h (TT_DefRecord): Add `end' element.
+
+	* src/truetype/ttinterp.c (DO_JROT, DO_JMPR, DO_JROF): Check upper
+	bound of jump address.
+	(Ins_FDEF, Ins_CALL, Ins_LOOPCALL, Ins_UNKNOWN, TT_RunIns): Updated.
+
+2012-02-11  Werner Lemberg  <wl@gnu.org>
+
+	We don't use `extensions'.
+
+	* include/freetype/internal/ftobjs.h (FT_DriverRec): Remove
+	`extensions' field.
+
+2012-02-11  Werner Lemberg  <wl@gnu.org>
+
+	Clean up `generic' fields.
+
+	* include/freetype/internal/ftobjs.h (FT_ModuleRec, FT_LibraryRec):
+	Remove `generic' field since users can't access it.
+
+	* src/base/ftobjs.c (FT_Done_GlyphSlot): Call `generic.finalizer' as
+	advertised in the documentation of FT_Generic.
+	(Destroy_Module, FT_Done_Library): Updated to changes in `ftobjs.h'.
+
+2012-02-07  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Harmonize function arguments.
+
+	* src/autofit/afloader.c, src/autofit/afloader.h: Use `FT_Int32' for
+	`load_flags'.
+
+2012-02-07  Werner Lemberg  <wl@gnu.org>
+
+	* src/cff/cffobjs.c (cff_face_init): Remove unnecessary casts.
+
+2012-01-17  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[gxvalid] Fix Savannah bug #35286.
+
+	Patch submitted by anonymous reporter.
+
+	* src/gxvalid/gxvcommn.c (gxv_XStateTable_subtable_setup):
+	gxv_set_length_by_ulong_offset() must be called with 3, not 4,
+	the number of the subtables in the state tables; classTable,
+	stateArray, entryTable.
+
+2012-01-17  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[raccess] Modify for PIC build.
+
+	Based on the patch provided by Erik Dahlstrom <ed@opera.com>,
+	http://lists.gnu.org/archive/html/freetype-devel/2012-01/msg00010.html
+
+	Also `raccess_guess_table[]' and `raccess_rule_by_darwin_vfs()'
+	are renamed with `ft_' suffixes.
+
+	* src/base/ftbase.h: `raccess_rule_by_darwin_vfs()' is renamed
+	to `ft_raccess_rule_by_darwin_vfs()'.
+	* src/base/ftobjs.c: Ditto.
+
+	* src/base/ftrfork.c: Declarations of FT_RFork_Rule,
+	raccess_guess_rec, are moved to...
+	* include/freetype/internal/ftrfork.h: Here.
+
+	* include/freetype/internal/ftrfork.h:
+	FT_RFORK_RULE_ARRAY_{BEGIN,ENTRY,END} macros are defined
+	to replace raccess_guess_table[] in both of PIC and non-PIC
+	modes.
+	* src/base/ftrfork.c: raccess_guess_table[] array is rewritten
+	by FT_RFORK_RULE_ARRAY_{BEGIN,ENTRY,END}.
+
+	* src/base/basepic.h (BasePIC): Add `ft_raccess_guess_table'
+	storage.  (FT_RACCESS_GUESS_TABLE_GET): New macro to retrieve
+	the function pointer from `ft_raccess_guess_table' storage in
+	`BasePIC' structure.
+	* src/base/ftrfork.c (FT_Raccess_Guess): Rewritten with
+	FT_RACCESS_GUESS_TABLE_GET.
+	(raccess_get_rule_type_from_rule_index): Add `library' as the
+	first argument to the function, to retrieve the storage of
+	`ft_raccess_guess_table' from it.  Also `raccess_guess_table'
+	is replaced by FT_RACCESS_GUESS_TABLE_GET.
+	(ft_raccess_rule_by_darwin_vfs): Ditto.
+
+2012-01-16  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Remove trailing spaces.
+
+2012-01-16  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Formatting PIC related sources.
+
+	* src/autofit/afpic.c: Harmonize to FT2 coding conventions.
+	* src/base/basepic.c: Ditto.
+	* src/base/ftpic.c: Ditto.
+	* src/cff/cffpic.c: Ditto.
+	* src/pshinter/pshpic.c: Ditto.
+	* src/psnames/pspic.c: Ditto.
+	* src/raster/rastpic.c: Ditto.
+	* src/sfnt/sfntpic.c: Ditto.
+	* src/smooth/ftspic.c: Ditto.
+	* src/truetype/ttpic.c: Ditto.
+
+2012-01-16  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[autofit] Fix the inclusion of `aflatin2.h' in PIC file.
+
+	* src/autofit/afpic.c: Include `aflatin2.h' when
+	FT_OPTION_AUTOFIT2 is defined, as afglobal.c does so.
+	Unconditionally inclusion causes declared but unimplemented
+	warning by GCC 4.6.
+
+2012-01-16  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[cff] Remove redundant declarations of cff_cmap_XXX_class_rec.
+
+	* src/cff/cffpic.c: The declarations of
+	FT_Init_Class_cff_cmap_encoding_class_rec() and
+	FT_Init_Class_cff_cmap_unicode_class_rec() are removed.
+	They can be obtained by the inclusion of cffcmap.h.
+	cffcmap.h invokes FT_DECLARE_CMAP_CLASS() and it declares
+	FT_Init_Class_cff_cmap_encoding_class_rec() etc in PIC mode.
+
+2012-01-15  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Fix redundant declaration warning in PIC mode.
+
+	Originally FT_DEFINE_{DRIVER,MODULE,RENDERER}() macros were
+	designed to declare xxx_pic_{free,init} by themselves.
+	Because these macros are used at the end of the module
+	interface (e.g. ttdriver.c) and the wrapper source to build
+	a module as a single object (e.g. truetype.c) includes
+	the PIC file (e.g. ttpic.c) before the module interface,
+	these macros are expanded AFTER xxx_pic_{free,init} body
+	when the modules are built as single object.
+	The declaration after the implementation causes the redundant
+	declaration warnings, so the declarations are moved to module
+	PIC headers (e.g. ttpic.h).  Separating to other header files
+	are needed for multi build.
+
+	* include/freetype/internal/ftdriver.h (FT_DEFINE_DRIVER):
+	Remove class_##_pic_free and class_##_pic_init declarations.
+	* include/freetype/internal/ftobjs.h (FT_DEFINE_RENDERER,
+	FT_DEFINE_MODULE): Ditto.
+
+	* src/base/basepic.h: Insert a comment and fix coding style.
+	* src/autofit/afpic.h: Declare autofit_module_class_pic_{free,
+	init}.
+	* src/cff/cffpic.h: Declare cff_driver_class_pic_{free,init}.
+	* src/pshinter/pshpic.h: Declare pshinter_module_class_pic_{free,
+	init}.
+	* src/psnames/pspic.h: Declare psnames_module_class_pic_{free,
+	init}.
+	* src/raster/rastpic.h: Declare
+	ft_raster{1,5}_renderer_class_pic_{free,init}
+	* src/sfnt/sfntpic.h: Declare sfnt_module_class_pic_{free,init}.
+	* src/smooth/ftspic.h: Declare
+	ft_smooth_{,lcd_,lcdv_}renderer_class_pic_{free,init}.
+	* src/truetype/ttpic.h: Declare tt_driver_class_pic_{free,init}.
+
+2012-01-15  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Make pspic.c to include module error header to fix multi build.
+
+	* src/psnames/pspic.c: Include `psnamerr.h'.
+
+2012-01-14  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[base] Fix a dereference of uninitialized variable in PIC mode.
+
+	* src/base/ftglyph.c (FT_Glyph_To_Bitmap): `glyph' must be
+	set before derefering to obtain `library'.  The initialization
+	of `clazz', `glyph', `library' and NULL pointer check are
+	reordered to minimize PIC conditonals.
+
+2012-01-14  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[base] Insert explicit cast for GCC 4.6 in PIC mode.
+
+	* src/base/ftinit.c (FT_Add_Default_Modules): Under PIC
+	configuration, FT_DEFAULT_MODULES_GET returns
+	FT_Module_Class** pointer, GCC 4.6 warns that
+	const FT_Module_Class* const* variable is warned as
+	inappropriate to store it.  To calm it, explicit cast is
+	inserted.  Also `library' is checked to prevent the NULL
+	pointer dereference in FT_DEFAULT_MODULES_GET.
+
+2012-01-13  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Fix PIC build broken by d9145241fe378104ba4c12a42534549faacc92e6.
+
+	Under PIC configuration, FT_{CFF,PSCMAPS,SFNT,TT}_SERVICES_GET
+	take no arguments but derefer the variable named `library'
+	internally.
+
+	* src/cff/cffdrivr.c (cff_get_interface): Declare `library' and
+	set it if non-NULL driver is passed.
+	* src/truetype/ttdriver.c (tt_get_interface): Ditto.
+
+	* src/sfnt/sfdriver.c (sfnt_get_interface): Declare `library'
+	under PIC configuration, and set it if non-NULL module is given.
+	* src/psnames/psmodule.c (psnames_get_interface): Ditto.
+
+2012-01-13  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Make PIC files include module error headers, to use the error codes
+	with per-module prefix.
+
+	* src/autofit/afpic.c: Include `aferrors.h'.
+	* src/cff/cffpic.c: Include `cfferrs.h'.
+	* src/pshinter/pshpic.c: Include `pshnterr.h'.
+	* src/raster/rastpic.c: Include `rasterrs.h'.
+	* src/sfnt/sfntpic.c: Include `sferrors.h'.
+	* src/smooth/ftspic.c: Include `ftsmerrs.h'.
+	* src/truetype/ttpic.c: Include `tterrors.h'.
+
+2012-01-04  Tobias Ringström  <tobias@ringis.se>
+
+	[truetype] Fix IP instruction if x_ppem != y_ppem.
+
+	* src/truetype/ttinterp.c (Ins_IP): Scale `orus' coordinates
+	properly.
+
+2012-01-02  Werner Lemberg  <wl@gnu.org>
+
+	Fix tracing message for `loca' table.
+
+	* src/truetype/ttpload.c (tt_face_get_location): Don't emit a
+	warning message if the last `loca' entry references an empty glyph.
+
+2011-12-10  Werner Lemberg  <wl@gnu.org>
+
+	Add some variable initializations.
+	Reported by Richard COOK <rscook@unicode.org>.
+
+	* src/type1/t1driver.c (t1_ps_get_font_value): Initialize `val'.
+	* src/smooth/ftgrays.c (gray_render_conic): Initialize `levels'
+	earlier.
+
+2011-12-08  Werner Lemberg  <wl@gnu.org>
+
+	Fix serious scaling bug in `FT_Get_Advances'.
+
+	* src/base/ftadvanc.c (FT_Get_Advances): Advance values returned by
+	`FT_Load_Glyph' must be simply multiplied by 1024.
+
+2011-12-08  Werner Lemberg  <wl@gnu.org>
+
+	* src/bdf/bdflib.c (_bdf_parse_start): Drop redundant error tracing.
+
+2011-12-02  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[mac] Unify DARWIN_NO_CARBON with FT_MACINTOSH.
+
+	Originally FT_MACINTOSH was a pure auto macro and DARWIN_NO_CARBON
+	was a configurable macro to disable Carbon-dependent code.  Because
+	now configure script sets DARWIN_NO_CARBON by default and disables
+	Darwin & Carbon-dependent codes, these macros can be unified.
+	FT_MACINTOSH (undefined by default) is kept and DARWIN_NO_CARBON
+	(defined by default) is removed, because DARWIN_NO_CARBON violates
+	FT_XXX naming convention of public macros, and a macro configured by
+	default is not portable for the building without configure (e.g.
+	make devel).
+
+	* builds/unix/configure.raw: Define FT_MACINTOSH if Carbon-based
+	old Mac font support is requested and Carbon is available.
+	* builds/unix/ftconfig.in: Undefine FT_MACINTOSH when the support
+	for Mac OS X without Carbon (e.g.  Mac OS X 10.4 for ppc64) is
+	requested.
+	* include/freetype/config/ftconfig.in: Ditto.
+	* builds/vms/ftconfig.h: Ditto.
+
+	* src/base/ftbase.h: Remove DARWIN_NO_CARBON.
+	* src/base/ftbase.c: Ditto.
+	* src/base/ftobjs.c: Ditto.
+	* src/base/ftrfork.c: Ditto.
+
+	* src/base/ftmac.c: Compile the body if FT_MACINTOSH is defined
+	(same with TT_USE_BYTECODE_INTERPRETER in ttinterp.c).
+	* builds/mac/ftmac.c: Ditto.
+
+	* builds/mac/FreeType.m68k_cfm.make.txt: Define FT_MACINTOSH.
+	* builds/mac/FreeType.m68k_far.make.txt: Ditto.
+	* builds/mac/FreeType.ppc_classic.make.txt: Ditto.
+	* builds/mac/FreeType.ppc_carbon.make.txt: Ditto.
+
+2011-11-30  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Fix Savannah bug #34728 (`make devel' on Mac OS X).
+
+	* builds/toplevel.mk: Check `/dev/null' to identify the Unix-
+	like systems without `init' nor `hurd' (e.g. Mac OS X >= 10.4).
+	* builds/unix/detect.mk: Ditto.
+
+2011-11-30  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[apinames] Fix the overflow of signed integer hash.
+
+	* src/tools/apinames.c (names_add): Change the type of `h' from
+	int to unsigned int, to prevent undefined behaviour in the
+	overflow of signed integers (overflow of unsigned int is defined
+	to be wrap around).  Found by clang test suggested by Sean
+	McBride.
+
+2011-11-30  Werner Lemberg  <wl@gnu.org>
+
+	[winfonts] Remove casts.
+
+	* src/winfonts/winfnt.c (winfnt_driver_class): Remove all casts and
+	update affected functions.
+	(FNT_Size_Select): Fix number of arguments.
+
+2011-11-30  Werner Lemberg  <wl@gnu.org>
+
+	[type42] Remove casts.
+
+	* src/type42/t42driver.c (t42_driver_class): Remove all casts and
+	update affected functions.
+
+	* src/type42/t42objs.c, src/type42/t42objs.h: Updated for t42driver
+	changes.
+
+2011-11-30  Werner Lemberg  <wl@gnu.org>
+
+	[type1] Remove casts.
+
+	* src/type1/t1driver.c (t1_driver_class): Remove all casts and
+	update affected functions.
+
+	* src/type1/t1gload.c, src/type1/t1gload.h, src/type1/t1objs.c:
+	Updated for t1driver changes.
+	src/type1/t1objs.h (T1_Driver): Remove unused typedef.
+	Updated for t1driver changes.
+
+2011-11-27  Werner Lemberg  <wl@gnu.org>
+
+	[bdf] Fix Savannah bug #34896.
+
+	ENCODING now covers the whole Unicode range.
+
+	Note, however, that this change is quite expensive since it
+	increases the size of three arrays by almost 400kByte in total.  The
+	right fix is to replace the logic with something smarter.
+	Additionally, there exist very old BDFs for three-byte CCCII
+	encoding which exceeds the range of Unicode (another reason to have
+	a smarter logic).
+
+	* src/bdf/bdf.h (bdf_font_t): Increase size of `nmod' and `umod'
+	arrays.
+	* src/bdf/bdflib.c (bdf_parse_t): Increase size of `have' array.
+
+2011-11-27  Werner Lemberg  <wl@gnu.org>
+
+	[bdf] Improve tracing.
+
+	* src/bdf/bdflib.c (DBGMSG1, DBGMSG2): New macros.
+	(_bdf_parse_glyphs): Use them.
+
+2011-11-26  Werner Lemberg  <wl@gnu.org>
+
+	Improve tracing.
+
+	* src/bdf/bdfdrivr.c (BDF_Face_Done), src/pcf/pcfdrivr.c
+	(PCF_Face_Done): Remove tracing message.
+
+	* src/bdf/bdfdrivr.c (BDF_Face_Init), src/cff/cffobjs.c
+	(cff_face_init), src/cid/cidobjs.c (cid_face_init),
+	src/pfr/pfrobjs.c (pfr_face_init), src/sfnt/sfobjs.c
+	(sfnt_init_face), src/truetype/ttobjs.c (tt_face_init),
+	src/type1/t1objs.c (T1_Face_Init), src/type42/t42objs.c
+	(T42_Face_Init), src/winfonts/winfnt.c (FNT_Face_Init): Add
+	`greeting' message.
+
+	* src/sfnt/sfobjs.c (sfnt_open_font), src/type42/t42objs.c
+	(T42_Open_Face): Improve tracing.
+
+2011-11-26  Werner Lemberg  <wl@gnu.org>
+
+	[cid] Fix error code.
+
+	* src/cid/cidparse.c (cid_parser_new): Do it.
+
+2011-11-26  Werner Lemberg  <wl@gnu.org>
+
+	[cff] Fix error code.
+
+	* src/cff/cffload.c (cff_font_load): Do it.
+
+2011-11-26  Werner Lemberg  <wl@gnu.org>
+
+	Add new error code FT_Err_Missing_Module.
+
+	Previously, FreeType misleadingly returned
+	FT_Err_Unknown_File_Format if a module was missing (or a test was
+	missing completely).
+
+	* include/freetype/fterrdef.h (FT_Err_Missing_Module): Define.
+
+	* src/cff/cffobjs.c (cff_face_init), src/cff/cffdrivr.c
+	(cff_get_glyph_name), src/cid/cidobjs.c (cid_face_init),
+	src/sfnt/sfobjs.c (sfnt_init_face), src/truetype/ttobjs.c
+	(tt_face_init), src/type1/t1objs.c (T1_Face_Init),
+	src/type42/t42objs.c (T42_Face_Init, T42_Driver_Init): Updated.
+
+	* src/type1/t1afm.c (T1_Read_Metrics), src/type/t1objs.c
+	(T1_Face_Init), src/type42/t42objs.c (T42_Face_Init): Remove now
+	redundant test for `psaux'.
+
+2011-11-25  Werner Lemberg  <wl@gnu.org>
+
+	[bdf] Add more error messages.
+
+	* src/bdf/bdflib.c (_bdf_set_default_spacing, _bdf_add_property):
+	Add line number argument.
+	Update all callers.
+	(ERRMSG5, ERRMSG6, ERRMSG7, ERRMSG8, ERRMSG9): New macros.
+	(_bdf_readstream, _bdf_set_default_spacing, _bdf_add_property,
+	_bdf_parse_glyphs, _bdf_parse_start): Add error messages.
+
+2011-11-24  Werner Lemberg  <wl@gnu.org>
+
+	* include/freetype/fterrors.h: Remove dead code.
+
+2011-11-15  Werner Lemberg  <wl@gnu.org>
+
+	* docs/releases: Updated.
+
 2011-11-15  Werner Lemberg  <wl@gnu.org>
 
 	* Version 2.4.8 released.
@@ -227,7 +997,7 @@
 	Add explicit LZW decompression stack size limit.
 
 	Stack larger than 1<<LZW_MAX_BITS is never needed if prefix table is
-	constructed correctly.  It's even less than that, see e.g. 
+	constructed correctly.  It's even less than that, see e.g.
 	libarchive code comment for a better size upper bound:
 
 	  http://code.google.com/p/libarchive/source/browse/trunk/libarchive/archive_read_support_filter_compress.c?r=3635#121
@@ -3290,7 +4060,7 @@
 
 ----------------------------------------------------------------------------
 
-Copyright 2010-2011 by
+Copyright 2010-2012 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This file is part of the FreeType project, and may only be used, modified,

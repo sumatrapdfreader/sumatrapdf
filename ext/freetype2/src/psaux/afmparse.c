@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    AFM parser (body).                                                   */
 /*                                                                         */
-/*  Copyright 2006, 2007, 2008, 2009, 2010 by                              */
+/*  Copyright 2006-2010, 2012 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -631,9 +631,6 @@
         tk->max_ptsize = shared_vals[3].u.f;
         tk->max_kern   = shared_vals[4].u.f;
 
-        /* is this correct? */
-        if ( tk->degree < 0 && tk->min_kern > 0 )
-          tk->min_kern = -tk->min_kern;
         break;
 
       case AFM_TOKEN_ENDTRACKKERN:
@@ -754,7 +751,7 @@
       case AFM_TOKEN_ENDFONTMETRICS:
         fi->NumKernPair = n + 1;
         ft_qsort( fi->KernPairs, fi->NumKernPair,
-                  sizeof( AFM_KernPairRec ),
+                  sizeof ( AFM_KernPairRec ),
                   afm_compare_kern_pairs );
         return PSaux_Err_Ok;
 

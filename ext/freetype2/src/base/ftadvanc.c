@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Quick computation of advance widths (body).                          */
 /*                                                                         */
-/*  Copyright 2008, 2009 by                                                */
+/*  Copyright 2008, 2009, 2011 by                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -129,7 +129,7 @@
     {
       error = func( face, start, count, flags, padvances );
       if ( !error )
-        goto Exit;
+        return _ft_face_scale_advances( face, padvances, count, flags );
 
       if ( error != FT_ERROR_BASE( FT_Err_Unimplemented_Feature ) )
         return error;
@@ -147,16 +147,13 @@
       if ( error )
         break;
 
+      /* scale from 26.6 to 16.16 */
       padvances[nn] = ( flags & FT_LOAD_VERTICAL_LAYOUT )
-                      ? face->glyph->advance.y
-                      : face->glyph->advance.x;
+                      ? face->glyph->advance.y << 10
+                      : face->glyph->advance.x << 10;
     }
 
-    if ( error )
-      return error;
-
-  Exit:
-    return _ft_face_scale_advances( face, padvances, count, flags );
+    return error;
   }
 
 

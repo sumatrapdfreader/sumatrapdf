@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Arithmetic computations (body).                                      */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2008 by             */
+/*  Copyright 1996-2006, 2008, 2012 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -307,7 +307,7 @@
       q <<= 1;
       r  |= lo >> 31;
 
-      if ( r >= (FT_UInt32)y )
+      if ( r >= y )
       {
         r -= y;
         q |= 1;
@@ -373,7 +373,7 @@
     if ( a <= 46340L && b <= 46340L && c <= 176095L && c > 0 )
       a = ( a * b + ( c >> 1 ) ) / c;
 
-    else if ( c > 0 )
+    else if ( (FT_Int32)c > 0 )
     {
       FT_Int64  temp, temp2;
 
@@ -412,7 +412,7 @@
     if ( a <= 46340L && b <= 46340L && c > 0 )
       a = a * b / c;
 
-    else if ( c > 0 )
+    else if ( (FT_Int32)c > 0 )
     {
       FT_Int64  temp;
 
@@ -464,7 +464,7 @@
      *  Unfortunately, it doesn't work (at least not portably).
      *
      *  It makes the assumption that right-shift on a negative signed value
-     *  fills the leftmost bits by copying the sign bit.  This is wrong. 
+     *  fills the leftmost bits by copying the sign bit.  This is wrong.
      *  According to K&R 2nd ed, section `A7.8 Shift Operators' on page 206,
      *  the result of right-shift of a negative signed value is
      *  implementation-defined.  At least one implementation fills the
@@ -544,7 +544,7 @@
     s  = (FT_Int32)a; a = FT_ABS( a );
     s ^= (FT_Int32)b; b = FT_ABS( b );
 
-    if ( b == 0 )
+    if ( (FT_UInt32)b == 0 )
     {
       /* check for division by 0 */
       q = (FT_UInt32)0x7FFFFFFFL;
@@ -552,15 +552,16 @@
     else if ( ( a >> 16 ) == 0 )
     {
       /* compute result directly */
-      q = (FT_UInt32)( (a << 16) + (b >> 1) ) / (FT_UInt32)b;
+      q = (FT_UInt32)( ( a << 16 ) + ( b >> 1 ) ) / (FT_UInt32)b;
     }
     else
     {
       /* we need more bits; we have to do it by hand */
       FT_Int64  temp, temp2;
 
-      temp.hi  = (FT_Int32) (a >> 16);
-      temp.lo  = (FT_UInt32)(a << 16);
+
+      temp.hi  = (FT_Int32) ( a >> 16 );
+      temp.lo  = (FT_UInt32)( a << 16 );
       temp2.hi = 0;
       temp2.lo = (FT_UInt32)( b >> 1 );
       FT_Add64( &temp, &temp2, &temp );

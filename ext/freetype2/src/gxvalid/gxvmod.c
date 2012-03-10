@@ -269,7 +269,7 @@
   const FT_Module_Class  gxv_module_class =
   {
     0,
-    sizeof( FT_ModuleRec ),
+    sizeof ( FT_ModuleRec ),
     "gxvalid",
     0x10000L,
     0x20000L,

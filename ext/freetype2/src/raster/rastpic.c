@@ -20,21 +20,25 @@
 #include FT_FREETYPE_H
 #include FT_INTERNAL_OBJECTS_H
 #include "rastpic.h"
+#include "rasterrs.h"
 
 #ifdef FT_CONFIG_OPTION_PIC
 
   /* forward declaration of PIC init functions from ftraster.c */
-  void FT_Init_Class_ft_standard_raster(FT_Raster_Funcs*);
+  void
+  FT_Init_Class_ft_standard_raster( FT_Raster_Funcs*  funcs );
 
   void
-  ft_raster1_renderer_class_pic_free(  FT_Library library )
+  ft_raster1_renderer_class_pic_free( FT_Library  library )
   {
-    FT_PIC_Container* pic_container = &library->pic_container;
-    FT_Memory memory = library->memory;
+    FT_PIC_Container*  pic_container = &library->pic_container;
+    FT_Memory  memory = library->memory;
+
+
     if ( pic_container->raster )
     {
       RasterPIC* container = (RasterPIC*)pic_container->raster;
-      if(--container->ref_count)
+      if ( --container->ref_count )
         return;
       FT_FREE( container );
       pic_container->raster = NULL;
@@ -43,7 +47,7 @@
 
 
   FT_Error
-  ft_raster1_renderer_class_pic_init( FT_Library library )
+  ft_raster1_renderer_class_pic_init( FT_Library  library )
   {
     FT_PIC_Container* pic_container = &library->pic_container;
     FT_Error          error         = Raster_Err_Ok;
@@ -51,7 +55,7 @@
     FT_Memory         memory        = library->memory;
 
 
-    /* since this function also serve raster5 renderer, 
+    /* since this function also serve raster5 renderer,
        it implements reference counting */
     if ( pic_container->raster )
     {
@@ -60,28 +64,31 @@
     }
 
     /* allocate pointer, clear and set global container pointer */
-    if ( FT_ALLOC ( container, sizeof ( *container ) ) )
+    if ( FT_ALLOC( container, sizeof ( *container ) ) )
       return error;
-    FT_MEM_SET( container, 0, sizeof(*container) );
+    FT_MEM_SET( container, 0, sizeof ( *container ) );
     pic_container->raster = container;
     container->ref_count = 1;
 
     /* initialize pointer table - this is how the module usually expects this data */
-    FT_Init_Class_ft_standard_raster(&container->ft_standard_raster);
+    FT_Init_Class_ft_standard_raster( &container->ft_standard_raster );
 /*Exit:*/
-    if(error)
-      ft_raster1_renderer_class_pic_free(library);
+    if( error )
+      ft_raster1_renderer_class_pic_free( library );
     return error;
   }
 
   /* re-route these init and free functions to the above functions */
-  FT_Error ft_raster5_renderer_class_pic_init(FT_Library library)
+  FT_Error
+  ft_raster5_renderer_class_pic_init( FT_Library  library )
   {
-    return ft_raster1_renderer_class_pic_init(library);
+    return ft_raster1_renderer_class_pic_init( library );
   }
-  void ft_raster5_renderer_class_pic_free(FT_Library library)
+
+  void
+  ft_raster5_renderer_class_pic_free( FT_Library  library )
   {
-    ft_raster1_renderer_class_pic_free(library);
+    ft_raster1_renderer_class_pic_free( library );
   }
 
 #endif /* FT_CONFIG_OPTION_PIC */

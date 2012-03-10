@@ -195,7 +195,7 @@
       if ( idx < sizeof ( type1->font_matrix ) /
                    sizeof ( type1->font_matrix.xx ) )
       {
-        FT_Fixed  val;
+        FT_Fixed  val = 0;
 
 
         retval = sizeof ( val );
@@ -225,7 +225,7 @@
       if ( idx < sizeof ( type1->font_bbox ) /
                    sizeof ( type1->font_bbox.xMin ) )
       {
-        FT_Fixed val;
+        FT_Fixed val = 0;
 
 
         retval = sizeof ( val );
@@ -607,11 +607,11 @@
   };
 
 
-  static FT_Module_Interface
-  Get_Interface( FT_Driver         driver,
+  FT_CALLBACK_DEF( FT_Module_Interface )
+  Get_Interface( FT_Module         module,
                  const FT_String*  t1_interface )
   {
-    FT_UNUSED( driver );
+    FT_UNUSED( module );
 
     return ft_service_list_lookup( t1_services, t1_interface );
   }
@@ -652,11 +652,14 @@
   /*    They can be implemented by format-specific interfaces.             */
   /*                                                                       */
   static FT_Error
-  Get_Kerning( T1_Face     face,
+  Get_Kerning( FT_Face     t1face,        /* T1_Face */
                FT_UInt     left_glyph,
                FT_UInt     right_glyph,
                FT_Vector*  kerning )
   {
+    T1_Face  face = (T1_Face)t1face;
+
+
     kerning->x = 0;
     kerning->y = 0;
 
@@ -681,7 +684,7 @@
       FT_MODULE_DRIVER_SCALABLE   |
       FT_MODULE_DRIVER_HAS_HINTER,
 
-      sizeof( FT_DriverRec ),
+      sizeof ( FT_DriverRec ),
 
       "type1",
       0x10000L,
@@ -689,38 +692,38 @@
 
       0,   /* format interface */
 
-      (FT_Module_Constructor)T1_Driver_Init,
-      (FT_Module_Destructor) T1_Driver_Done,
-      (FT_Module_Requester)  Get_Interface,
+      T1_Driver_Init,
+      T1_Driver_Done,
+      Get_Interface,
     },
 
-    sizeof( T1_FaceRec ),
-    sizeof( T1_SizeRec ),
-    sizeof( T1_GlyphSlotRec ),
+    sizeof ( T1_FaceRec ),
+    sizeof ( T1_SizeRec ),
+    sizeof ( T1_GlyphSlotRec ),
 
-    (FT_Face_InitFunc)        T1_Face_Init,
-    (FT_Face_DoneFunc)        T1_Face_Done,
-    (FT_Size_InitFunc)        T1_Size_Init,
-    (FT_Size_DoneFunc)        T1_Size_Done,
-    (FT_Slot_InitFunc)        T1_GlyphSlot_Init,
-    (FT_Slot_DoneFunc)        T1_GlyphSlot_Done,
+    T1_Face_Init,
+    T1_Face_Done,
+    T1_Size_Init,
+    T1_Size_Done,
+    T1_GlyphSlot_Init,
+    T1_GlyphSlot_Done,
 
 #ifdef FT_CONFIG_OPTION_OLD_INTERNALS
     ft_stub_set_char_sizes,
     ft_stub_set_pixel_sizes,
 #endif
-    (FT_Slot_LoadFunc)        T1_Load_Glyph,
+    T1_Load_Glyph,
 
 #ifdef T1_CONFIG_OPTION_NO_AFM
-    (FT_Face_GetKerningFunc)  0,
-    (FT_Face_AttachFunc)      0,
+    0,                     /* FT_Face_GetKerningFunc */
+    0,                     /* FT_Face_AttachFunc     */
 #else
-    (FT_Face_GetKerningFunc)  Get_Kerning,
-    (FT_Face_AttachFunc)      T1_Read_Metrics,
+    Get_Kerning,
+    T1_Read_Metrics,
 #endif
-    (FT_Face_GetAdvancesFunc) T1_Get_Advances,
-    (FT_Size_RequestFunc)     T1_Size_Request,
-    (FT_Size_SelectFunc)      0
+    T1_Get_Advances,
+    T1_Size_Request,
+    0                      /* FT_Size_SelectFunc     */
   };
 
 

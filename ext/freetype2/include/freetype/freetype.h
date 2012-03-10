@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType high-level API and common types (specification only).       */
 /*                                                                         */
-/*  Copyright 1996-2011 by                                                 */
+/*  Copyright 1996-2012 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -958,8 +958,8 @@ FT_BEGIN_HEADER
 
     FT_ListRec        sizes_list;
 
-    FT_Generic        autohint;
-    void*             extensions;
+    FT_Generic        autohint;   /* face-specific auto-hinter data */
+    void*             extensions; /* unused                         */
 
     FT_Face_Internal  internal;
 
@@ -1668,6 +1668,9 @@ FT_BEGIN_HEADER
   /*    use @FT_New_Library instead, followed by a call to                 */
   /*    @FT_Add_Default_Modules (or a series of calls to @FT_Add_Module).  */
   /*                                                                       */
+  /*    For multi-threading applications each thread should have its own   */
+  /*    FT_Library object.                                                 */
+  /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_Init_FreeType( FT_Library  *alibrary );
 
@@ -1952,6 +1955,10 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    Each new face object created with this function also owns a        */
   /*    default @FT_Size object, accessible as `face->size'.               */
+  /*                                                                       */
+  /*    One @FT_Library instance can have multiple face objects, this is,  */
+  /*    @FT_Open_Face and its siblings can be called multiple times using  */
+  /*    the same `library' argument.                                       */
   /*                                                                       */
   /*    See the discussion of reference counters in the description of     */
   /*    @FT_Reference_Face.                                                */
@@ -2445,6 +2452,11 @@ FT_BEGIN_HEADER
    *     during glyph loading.  This is mostly used to detect broken glyphs
    *     in fonts.  By default, FreeType tries to handle broken fonts also.
    *
+   *     In particular, errors from the TrueType bytecode engine are not
+   *     passed to the application if this flag is not set; this might
+   *     result in partially hinted or distorted glyphs in case a glyph's
+   *     bytecode is buggy.
+   *
    *   FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH ::
    *     Ignored.  Deprecated.
    *
@@ -2497,26 +2509,26 @@ FT_BEGIN_HEADER
    *
    */
 #define FT_LOAD_DEFAULT                      0x0
-#define FT_LOAD_NO_SCALE                     0x1
-#define FT_LOAD_NO_HINTING                   0x2
-#define FT_LOAD_RENDER                       0x4
-#define FT_LOAD_NO_BITMAP                    0x8
-#define FT_LOAD_VERTICAL_LAYOUT              0x10
-#define FT_LOAD_FORCE_AUTOHINT               0x20
-#define FT_LOAD_CROP_BITMAP                  0x40
-#define FT_LOAD_PEDANTIC                     0x80
-#define FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH  0x200
-#define FT_LOAD_NO_RECURSE                   0x400
-#define FT_LOAD_IGNORE_TRANSFORM             0x800
-#define FT_LOAD_MONOCHROME                   0x1000
-#define FT_LOAD_LINEAR_DESIGN                0x2000
-#define FT_LOAD_NO_AUTOHINT                  0x8000U
+#define FT_LOAD_NO_SCALE                     ( 1L << 0 )
+#define FT_LOAD_NO_HINTING                   ( 1L << 1 )
+#define FT_LOAD_RENDER                       ( 1L << 2 )
+#define FT_LOAD_NO_BITMAP                    ( 1L << 3 )
+#define FT_LOAD_VERTICAL_LAYOUT              ( 1L << 4 )
+#define FT_LOAD_FORCE_AUTOHINT               ( 1L << 5 )
+#define FT_LOAD_CROP_BITMAP                  ( 1L << 6 )
+#define FT_LOAD_PEDANTIC                     ( 1L << 7 )
+#define FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH  ( 1L << 9 )
+#define FT_LOAD_NO_RECURSE                   ( 1L << 10 )
+#define FT_LOAD_IGNORE_TRANSFORM             ( 1L << 11 )
+#define FT_LOAD_MONOCHROME                   ( 1L << 12 )
+#define FT_LOAD_LINEAR_DESIGN                ( 1L << 13 )
+#define FT_LOAD_NO_AUTOHINT                  ( 1L << 15 )
 
   /* */
 
   /* used internally only by certain font drivers! */
-#define FT_LOAD_ADVANCE_ONLY                 0x100
-#define FT_LOAD_SBITS_ONLY                   0x4000
+#define FT_LOAD_ADVANCE_ONLY                 ( 1L << 8 )
+#define FT_LOAD_SBITS_ONLY                   ( 1L << 14 )
 
 
   /**************************************************************************
@@ -2869,13 +2881,25 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    point_size :: The point size in 16.16 fractional points.           */
   /*                                                                       */
-  /*    degree     :: The degree of tightness.                             */
+  /*    degree     :: The degree of tightness.  Increasingly negative      */
+  /*                  values represent tighter track kerning, while        */
+  /*                  increasingly positive values represent looser track  */
+  /*                  kerning.  Value zero means no track kerning.         */
   /*                                                                       */
   /* <Output>                                                              */
-  /*    akerning   :: The kerning in 16.16 fractional points.              */
+  /*    akerning   :: The kerning in 16.16 fractional points, to be        */
+  /*                  uniformly applied between all glyphs.                */
   /*                                                                       */
   /* <Return>                                                              */
   /*    FreeType error code.  0~means success.                             */
+  /*                                                                       */
+  /* <Note>                                                                */
+  /*    Currently, only the Type~1 font driver supports track kerning,     */
+  /*    using data from AFM files (if attached with @FT_Attach_File or     */
+  /*    @FT_Attach_Stream).                                                */
+  /*                                                                       */
+  /*    Only very few AFM files come with track kerning data; please refer */
+  /*    to the Adobe's AFM specification for more details.                 */
   /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_Get_Track_Kerning( FT_Face    face,
@@ -3810,7 +3834,7 @@ FT_BEGIN_HEADER
    */
 #define FREETYPE_MAJOR  2
 #define FREETYPE_MINOR  4
-#define FREETYPE_PATCH  8
+#define FREETYPE_PATCH  9
 
 
   /*************************************************************************/

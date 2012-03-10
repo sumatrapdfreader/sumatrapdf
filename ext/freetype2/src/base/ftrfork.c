@@ -28,7 +28,7 @@
 #include FT_INTERNAL_DEBUG_H
 #include FT_INTERNAL_STREAM_H
 #include FT_INTERNAL_RFORK_H
-
+#include "basepic.h"
 
 #undef  FT_COMPONENT
 #define FT_COMPONENT  trace_raccess
@@ -253,14 +253,6 @@
   /*************************************************************************/
   /*************************************************************************/
 
-  typedef FT_Error
-  (*raccess_guess_func)( FT_Library  library,
-                         FT_Stream   stream,
-                         char       *base_file_name,
-                         char      **result_file_name,
-                         FT_Long    *result_offset );
-
-
   static FT_Error
   raccess_guess_apple_double( FT_Library  library,
                               FT_Stream   stream,
@@ -325,6 +317,20 @@
                                 FT_Long    *result_offset );
 
 
+  CONST_FT_RFORK_RULE_ARRAY_BEGIN(ft_raccess_guess_table,
+                                  ft_raccess_guess_rec)
+  CONST_FT_RFORK_RULE_ARRAY_ENTRY(apple_double,      apple_double)
+  CONST_FT_RFORK_RULE_ARRAY_ENTRY(apple_single,      apple_single)
+  CONST_FT_RFORK_RULE_ARRAY_ENTRY(darwin_ufs_export, darwin_ufs_export)
+  CONST_FT_RFORK_RULE_ARRAY_ENTRY(darwin_newvfs,     darwin_newvfs)
+  CONST_FT_RFORK_RULE_ARRAY_ENTRY(darwin_hfsplus,    darwin_hfsplus)
+  CONST_FT_RFORK_RULE_ARRAY_ENTRY(vfat,              vfat)
+  CONST_FT_RFORK_RULE_ARRAY_ENTRY(linux_cap,         linux_cap)
+  CONST_FT_RFORK_RULE_ARRAY_ENTRY(linux_double,      linux_double)
+  CONST_FT_RFORK_RULE_ARRAY_ENTRY(linux_netatalk,    linux_netatalk)
+  CONST_FT_RFORK_RULE_ARRAY_END
+
+
   /*************************************************************************/
   /****                                                                 ****/
   /****                       Helper functions                          ****/
@@ -348,43 +354,6 @@
                           const char  *original_name,
                           const char  *insertion );
 
-
-  typedef enum  FT_RFork_Rule_ {
-    FT_RFork_Rule_invalid = -2,
-    FT_RFork_Rule_uknown, /* -1 */
-    FT_RFork_Rule_apple_double,
-    FT_RFork_Rule_apple_single,
-    FT_RFork_Rule_darwin_ufs_export,
-    FT_RFork_Rule_darwin_newvfs,
-    FT_RFork_Rule_darwin_hfsplus,
-    FT_RFork_Rule_vfat,
-    FT_RFork_Rule_linux_cap,
-    FT_RFork_Rule_linux_double,
-    FT_RFork_Rule_linux_netatalk
-  } FT_RFork_Rule;
-
-  /* For fast translation between rule index and rule type,
-   * the macros FT_RFORK_xxx should be kept consistent with
-   * the raccess_guess_funcs table
-   */
-  typedef struct raccess_guess_rec_ {
-    raccess_guess_func  func;
-    FT_RFork_Rule       type;
-  } raccess_guess_rec;
-
-  static raccess_guess_rec  raccess_guess_table[FT_RACCESS_N_RULES] =
-  {
-    { raccess_guess_apple_double,	FT_RFork_Rule_apple_double, },
-    { raccess_guess_apple_single,	FT_RFork_Rule_apple_single, },
-    { raccess_guess_darwin_ufs_export,	FT_RFork_Rule_darwin_ufs_export, },
-    { raccess_guess_darwin_newvfs,	FT_RFork_Rule_darwin_newvfs, },
-    { raccess_guess_darwin_hfsplus,	FT_RFork_Rule_darwin_hfsplus, },
-    { raccess_guess_vfat,		FT_RFork_Rule_vfat, },
-    { raccess_guess_linux_cap,		FT_RFork_Rule_linux_cap, },
-    { raccess_guess_linux_double,	FT_RFork_Rule_linux_double, },
-    { raccess_guess_linux_netatalk,	FT_RFork_Rule_linux_netatalk, },
-  };
-
   FT_BASE_DEF( void )
   FT_Raccess_Guess( FT_Library  library,
                     FT_Stream   stream,
@@ -407,7 +376,7 @@
       if ( errors[i] )
         continue ;
 
-      errors[i] = (raccess_guess_table[i].func)( library,
+      errors[i] = (FT_RACCESS_GUESS_TABLE_GET[i].func)( library,
                                                  stream, base_name,
                                                  &(new_names[i]),
                                                  &(offsets[i]) );
@@ -417,21 +386,28 @@
   }
 
 
-#if !defined( FT_MACINTOSH ) || defined( DARWIN_NO_CARBON )
+#ifndef FT_MACINTOSH
   static FT_RFork_Rule
-  raccess_get_rule_type_from_rule_index( FT_UInt  rule_index )
+  raccess_get_rule_type_from_rule_index( FT_Library  library,
+                                         FT_UInt     rule_index )
   {
+    FT_UNUSED( library );
+
     if ( rule_index >= FT_RACCESS_N_RULES )
       return FT_RFork_Rule_invalid;
 
-    return raccess_guess_table[rule_index].type;
+    return FT_RACCESS_GUESS_TABLE_GET[rule_index].type;
   }
 
 
+  /*
+   * For this function, refer ftbase.h.
+   */
   FT_LOCAL_DEF( FT_Bool )
-  raccess_rule_by_darwin_vfs( FT_UInt  rule_index )
+  ft_raccess_rule_by_darwin_vfs( FT_Library  library,
+                                 FT_UInt     rule_index )
   {
-    switch( raccess_get_rule_type_from_rule_index( rule_index ) )
+    switch( raccess_get_rule_type_from_rule_index( library, rule_index ) )
     {
       case FT_RFork_Rule_darwin_newvfs:
       case FT_RFork_Rule_darwin_hfsplus:

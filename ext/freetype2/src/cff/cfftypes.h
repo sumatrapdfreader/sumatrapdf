@@ -269,7 +269,7 @@ FT_BEGIN_HEADER
     /* since version 2.3.6 */
     FT_String*       registry;
     FT_String*       ordering;
-      
+
   } CFF_FontRec, *CFF_Font;
 
 

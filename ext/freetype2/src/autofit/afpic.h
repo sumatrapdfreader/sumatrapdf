@@ -19,7 +19,7 @@
 #ifndef __AFPIC_H__
 #define __AFPIC_H__
 
-  
+
 FT_BEGIN_HEADER
 
 #include FT_INTERNAL_PIC_H
@@ -38,9 +38,9 @@ FT_BEGIN_HEADER
 #ifdef FT_OPTION_AUTOFIT2
 #define AF_SCRIPT_CLASSES_COUNT     6
 #else
-#define AF_SCRIPT_CLASSES_COUNT     5  
+#define AF_SCRIPT_CLASSES_COUNT     5
 #endif
-#define AF_SCRIPT_CLASSES_REC_COUNT  ( AF_SCRIPT_CLASSES_COUNT - 1 )    
+#define AF_SCRIPT_CLASSES_REC_COUNT  ( AF_SCRIPT_CLASSES_COUNT - 1 )
 
   typedef struct AFModulePIC_
   {
@@ -56,6 +56,13 @@ FT_BEGIN_HEADER
           ( GET_PIC( FT_FACE_LIBRARY(globals->face) )->af_script_classes )
 #define AF_AF_AUTOFITTER_SERVICE_GET                                       \
           ( GET_PIC( library )->af_autofitter_service )
+
+  /* see afpic.c for the implementation */
+  void
+  autofit_module_class_pic_free( FT_Library  library );
+
+  FT_Error
+  autofit_module_class_pic_init( FT_Library  library );
 
 #endif /* FT_CONFIG_OPTION_PIC */
 

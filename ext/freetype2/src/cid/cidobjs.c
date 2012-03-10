@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CID objects manager (body).                                          */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2008, 2010 by       */
+/*  Copyright 1996-2006, 2008, 2010-2011 by                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -299,6 +299,13 @@
       psaux = (PSAux_Service)FT_Get_Module_Interface(
                 FT_FACE_LIBRARY( face ), "psaux" );
 
+      if ( !psaux )
+      {
+        FT_ERROR(( "cid_face_init: cannot access `psaux' module\n" ));
+        error = CID_Err_Missing_Module;
+        goto Exit;
+      }
+
       face->psaux = psaux;
     }
 
@@ -310,6 +317,8 @@
 
       face->pshinter = pshinter;
     }
+
+    FT_TRACE2(( "CID driver\n" ));
 
     /* open the tokenizer; this will also check the font format */
     if ( FT_STREAM_SEEK( 0 ) )

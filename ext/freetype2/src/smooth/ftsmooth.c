@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Anti-aliasing renderer interface (body).                             */
 /*                                                                         */
-/*  Copyright 2000-2006, 2009-2011 by                                      */
+/*  Copyright 2000-2006, 2009-2012 by                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -105,9 +105,9 @@
     FT_Error     error;
     FT_Outline*  outline = NULL;
     FT_BBox      cbox;
-    FT_UInt      width, height, pitch;
+    FT_Pos       width, height, pitch;
 #ifndef FT_CONFIG_OPTION_SUBPIXEL_RENDERING
-    FT_UInt      height_org, width_org;
+    FT_Pos       height_org, width_org;
 #endif
     FT_Bitmap*   bitmap;
     FT_Memory    memory;
@@ -151,7 +151,7 @@
       return Smooth_Err_Raster_Overflow;
     }
     else
-      width  = (FT_UInt)( ( cbox.xMax - cbox.xMin ) >> 6 );
+      width  = ( cbox.xMax - cbox.xMin ) >> 6;
 
     if ( cbox.yMin < 0 && cbox.yMax > FT_INT_MAX + cbox.yMin )
     {
@@ -161,7 +161,7 @@
       return Smooth_Err_Raster_Overflow;
     }
     else
-      height = (FT_UInt)( ( cbox.yMax - cbox.yMin ) >> 6 );
+      height = ( cbox.yMax - cbox.yMin ) >> 6;
 
     bitmap = &slot->bitmap;
     memory = render->root.memory;
@@ -223,7 +223,7 @@
 
     /* Required check is ( pitch * height < FT_ULONG_MAX ),     */
     /* but we care realistic cases only. Always pitch <= width. */
-    if ( width > 0x7FFFU || height > 0x7FFFU )
+    if ( width > 0x7FFF || height > 0x7FFF )
     {
       FT_ERROR(( "ft_smooth_render_generic: glyph too large: %u x %u\n",
                  width, height ));
@@ -421,10 +421,10 @@
   }
 
 
-  FT_DEFINE_RENDERER(ft_smooth_renderer_class,
+  FT_DEFINE_RENDERER( ft_smooth_renderer_class,
 
       FT_MODULE_RENDERER,
-      sizeof( FT_RendererRec ),
+      sizeof ( FT_RendererRec ),
 
       "smooth",
       0x10000L,
@@ -448,10 +448,10 @@
   )
 
 
-  FT_DEFINE_RENDERER(ft_smooth_lcd_renderer_class,
-  
+  FT_DEFINE_RENDERER( ft_smooth_lcd_renderer_class,
+
       FT_MODULE_RENDERER,
-      sizeof( FT_RendererRec ),
+      sizeof ( FT_RendererRec ),
 
       "smooth-lcd",
       0x10000L,
@@ -474,10 +474,10 @@
     (FT_Raster_Funcs*)    &FT_GRAYS_RASTER_GET
   )
 
-  FT_DEFINE_RENDERER(ft_smooth_lcdv_renderer_class,
+  FT_DEFINE_RENDERER( ft_smooth_lcdv_renderer_class,
 
       FT_MODULE_RENDERER,
-      sizeof( FT_RendererRec ),
+      sizeof ( FT_RendererRec ),
 
       "smooth-lcdv",
       0x10000L,

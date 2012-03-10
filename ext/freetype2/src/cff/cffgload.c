@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType Glyph Loader (body).                                        */
 /*                                                                         */
-/*  Copyright 1996-2011 by                                                 */
+/*  Copyright 1996-2012 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -1513,11 +1513,9 @@
               goto Stack_Underflow;
 
             /* if num_args isn't of the form 4n or 4n+1, */
-            /* we reduce it to 4n+1                      */
+            /* we enforce it by clearing the second bit  */
 
-            nargs = num_args - num_args % 4;
-            if ( num_args - nargs > 0 )
-              nargs += 1;
+            nargs = num_args & ~2;
 
             if ( cff_builder_start_point( builder, x, y ) )
               goto Fail;
@@ -1560,11 +1558,9 @@
               goto Stack_Underflow;
 
             /* if num_args isn't of the form 4n or 4n+1, */
-            /* we reduce it to 4n+1                      */
+            /* we enforce it by clearing the second bit  */
 
-            nargs = num_args - num_args % 4;
-            if ( num_args - nargs > 0 )
-              nargs += 1;
+            nargs = num_args & ~2;
 
             if ( cff_builder_start_point( builder, x, y ) )
               goto Fail;
@@ -1612,11 +1608,9 @@
               goto Stack_Underflow;
 
             /* if num_args isn't of the form 8n, 8n+1, 8n+4, or 8n+5, */
-            /* we reduce it to the largest one which fits             */
+            /* we enforce it by clearing the second bit               */
 
-            nargs = num_args - num_args % 4;
-            if ( num_args - nargs > 0 )
-              nargs += 1;
+            nargs = num_args & ~2;
 
             args -= nargs;
             if ( check_points( builder, ( nargs / 4 ) * 3 ) )
@@ -1962,6 +1956,7 @@
           {
             /* Save glyph width so that the subglyphs don't overwrite it. */
             FT_Pos  glyph_width = decoder->glyph_width;
+
 
             error = cff_operator_seac( decoder,
                                        0L, args[-4], args[-3],
@@ -2705,7 +2700,7 @@
       FT_Byte   fd_index = cff_fd_select_get( &cff->fd_select,
                                               glyph_index );
 
-      if ( fd_index >= cff->num_subfonts ) 
+      if ( fd_index >= cff->num_subfonts )
         fd_index = (FT_Byte)( cff->num_subfonts - 1 );
 
       top_upm = cff->top_font.font_dict.units_per_em;
@@ -2961,7 +2956,7 @@
         if ( has_vertical_info )
           metrics->vertBearingX = metrics->horiBearingX -
                                     metrics->horiAdvance / 2;
-        else 
+        else
         {
           if ( load_flags & FT_LOAD_VERTICAL_LAYOUT )
             ft_synthesize_vertical_metrics( metrics,

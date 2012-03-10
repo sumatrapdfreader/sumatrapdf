@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter glyph loading routines (specification).                  */
 /*                                                                         */
-/*  Copyright 2003-2005, 2011 by                                           */
+/*  Copyright 2003-2005, 2011-2012 by                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -60,7 +60,7 @@ FT_BEGIN_HEADER
   af_loader_load_glyph( AF_Loader  loader,
                         FT_Face    face,
                         FT_UInt    gindex,
-                        FT_UInt32  load_flags );
+                        FT_Int32   load_flags );
 
 /* */
 

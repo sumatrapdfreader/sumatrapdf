@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType simple types definitions (specification only).              */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2004, 2006, 2007, 2008 by                   */
+/*  Copyright 1996-2002, 2004, 2006-2009, 2012 by                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -434,7 +434,7 @@ FT_BEGIN_HEADER
   /*    variety of FreeType core objects.  For example, a text layout API  */
   /*    might want to associate a glyph cache to a given size object.      */
   /*                                                                       */
-  /*    Most FreeType object contains a `generic' field, of type           */
+  /*    Some FreeType object contains a `generic' field, of type           */
   /*    FT_Generic, which usage is left to client applications and font    */
   /*    servers.                                                           */
   /*                                                                       */

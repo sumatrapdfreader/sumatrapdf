@@ -320,7 +320,7 @@
 
     /*
      * If cmap_index is greater than the maximum number of cachable
-     * charmaps, we assume the request is from a legacy rogue client 
+     * charmaps, we assume the request is from a legacy rogue client
      * using old internal header. See include/config/ftoption.h.
      */
     if ( cmap_index > FT_MAX_CHARMAP_CACHEABLE && !no_cmap_change )

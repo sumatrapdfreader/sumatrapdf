@@ -467,7 +467,7 @@
   }
 
 
-  
+
 #ifdef FT_CONFIG_OPTION_OLD_INTERNALS
 
   /* yet another backwards-legacy structure */
@@ -608,7 +608,7 @@
   const FTC_SFamilyClassRec  ftc_basic_sbit_family_class =
   {
     {
-      sizeof( FTC_BasicFamilyRec ),
+      sizeof ( FTC_BasicFamilyRec ),
       ftc_basic_family_compare,
       ftc_basic_family_init,
       0,                            /* FTC_MruNode_ResetFunc */

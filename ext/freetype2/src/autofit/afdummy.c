@@ -47,7 +47,7 @@
     AF_SCRIPT_NONE,
     NULL,
 
-    sizeof( AF_ScriptMetricsRec ),
+    sizeof ( AF_ScriptMetricsRec ),
 
     (AF_Script_InitMetricsFunc) NULL,
     (AF_Script_ScaleMetricsFunc)NULL,

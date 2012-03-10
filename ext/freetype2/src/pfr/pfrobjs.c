@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PFR object methods (body).                                  */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2010 by            */
+/*  Copyright 2002-2008, 2010-2011 by                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -23,7 +23,7 @@
 #include "pfrsbit.h"
 #include FT_OUTLINE_H
 #include FT_INTERNAL_DEBUG_H
-#include FT_TRUETYPE_IDS_H 
+#include FT_TRUETYPE_IDS_H
 
 #include "pfrerror.h"
 
@@ -77,6 +77,8 @@
     FT_UNUSED( params );
 
 
+    FT_TRACE2(( "PFR driver\n" ));
+
     /* load the header and check it */
     error = pfr_header_load( &face->header, stream );
     if ( error )
@@ -84,7 +86,7 @@
 
     if ( !pfr_header_check( &face->header ) )
     {
-      FT_TRACE4(( "pfr_face_init: not a valid PFR font\n" ));
+      FT_TRACE2(( "  not a PFR font\n" ));
       error = PFR_Err_Unknown_File_Format;
       goto Exit;
     }

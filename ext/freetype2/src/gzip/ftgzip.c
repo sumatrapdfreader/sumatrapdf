@@ -8,7 +8,7 @@
 /*  parse compressed PCF fonts, as found with many X11 server              */
 /*  distributions.                                                         */
 /*                                                                         */
-/*  Copyright 2002-2006, 2009-2011 by                                      */
+/*  Copyright 2002-2006, 2009-2012 by                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -32,6 +32,7 @@
 
 #undef __FTERRORS_H__
 
+#undef  FT_ERR_PREFIX
 #define FT_ERR_PREFIX  Gzip_Err_
 #define FT_ERR_BASE    FT_Mod_Err_Gzip
 
@@ -42,7 +43,7 @@
 
 #ifdef FT_CONFIG_OPTION_PIC
 #error "gzip code does not support PIC yet"
-#endif 
+#endif
 
 #ifdef FT_CONFIG_OPTION_SYSTEM_ZLIB
 

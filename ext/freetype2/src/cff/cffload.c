@@ -1458,7 +1458,7 @@
          font->header_size      < 4 ||
          font->absolute_offsize > 4 )
     {
-      FT_TRACE2(( "[not a CFF font header]\n" ));
+      FT_TRACE2(( "  not a CFF font header\n" ));
       error = CFF_Err_Unknown_File_Format;
       goto Exit;
     }
@@ -1576,7 +1576,7 @@
     if ( dict->charstrings_offset == 0 )
     {
       FT_ERROR(( "cff_font_load: no charstrings offset\n" ));
-      error = CFF_Err_Unknown_File_Format;
+      error = CFF_Err_Invalid_File_Format;
       goto Exit;
     }
 

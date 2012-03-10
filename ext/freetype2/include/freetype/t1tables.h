@@ -570,7 +570,7 @@ FT_BEGIN_HEADER
     PS_DICT_NOTICE,                 /* FT_String* */
     PS_DICT_FULL_NAME,              /* FT_String* */
     PS_DICT_FAMILY_NAME,            /* FT_String* */
-    PS_DICT_WEIGHT,                 /* FT_String  */
+    PS_DICT_WEIGHT,                 /* FT_String* */
     PS_DICT_IS_FIXED_PITCH,         /* FT_Bool    */
     PS_DICT_UNDERLINE_POSITION,     /* FT_Short   */
     PS_DICT_UNDERLINE_THICKNESS,    /* FT_UShort  */

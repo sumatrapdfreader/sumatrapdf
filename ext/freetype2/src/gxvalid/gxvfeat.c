@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueTypeGX/AAT feat table validation (body).                         */
 /*                                                                         */
-/*  Copyright 2004, 2005, 2008 by                                          */
+/*  Copyright 2004, 2005, 2008, 2012 by                                    */
 /*  suzuki toshiya, Masatake YAMATO, Red Hat K.K.,                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
@@ -176,7 +176,7 @@
     setting = FT_NEXT_USHORT( p );
 
     /* If we have exclusive setting, the setting should be odd. */
-    if ( exclusive && ( setting % 2 ) == 0 )
+    if ( exclusive && ( setting & 1 ) == 0 )
       FT_INVALID_DATA;
 
     gxv_feat_name_index_validate( p, limit, valid );

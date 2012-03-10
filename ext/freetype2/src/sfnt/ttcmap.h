@@ -70,7 +70,7 @@ FT_BEGIN_HEADER
     format_, validate_, get_cmap_info_                                       \
   };
 
-#else /* FT_CONFIG_OPTION_PIC */ 
+#else /* FT_CONFIG_OPTION_PIC */
 
 #define FT_DEFINE_TT_CMAP(class_, size_, init_, done_, char_index_,          \
     char_next_, char_var_index_, char_var_default_, variant_list_,           \
@@ -92,9 +92,9 @@ FT_BEGIN_HEADER
     clazz->format = format_;                                                 \
     clazz->validate = validate_;                                             \
     clazz->get_cmap_info = get_cmap_info_;                                   \
-  } 
+  }
 
-#endif /* FT_CONFIG_OPTION_PIC */ 
+#endif /* FT_CONFIG_OPTION_PIC */
 
   typedef struct  TT_ValidatorRec_
   {

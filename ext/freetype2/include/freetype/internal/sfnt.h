@@ -757,12 +757,12 @@ FT_BEGIN_HEADER
 
 #ifdef FT_CONFIG_OPTION_OLD_INTERNALS
 #define FT_DEFINE_DRIVERS_OLD_INTERNAL(a) \
-  a, 
+  a,
 #else
   #define FT_DEFINE_DRIVERS_OLD_INTERNAL(a)
 #endif
 #define FT_INTERNAL(a) \
-  a, 
+  a,
 
 #define FT_DEFINE_SFNT_INTERFACE(class_,                                     \
     goto_table_, init_face_, load_face_, done_face_, get_interface_,         \
@@ -819,7 +819,7 @@ FT_BEGIN_HEADER
     FT_INTERNAL(get_metrics_) \
   };
 
-#else /* FT_CONFIG_OPTION_PIC */ 
+#else /* FT_CONFIG_OPTION_PIC */
 
 #ifdef FT_CONFIG_OPTION_OLD_INTERNALS
 #define FT_DEFINE_DRIVERS_OLD_INTERNAL(a, a_) \
@@ -885,9 +885,9 @@ FT_BEGIN_HEADER
     FT_INTERNAL(set_sbit_strike,set_sbit_strike_) \
     FT_INTERNAL(load_strike_metrics,load_strike_metrics_) \
     FT_INTERNAL(get_metrics,get_metrics_) \
-  } 
+  }
 
-#endif /* FT_CONFIG_OPTION_PIC */ 
+#endif /* FT_CONFIG_OPTION_PIC */
 
 FT_END_HEADER
 

@@ -19,7 +19,7 @@
 #ifndef __SFNTPIC_H__
 #define __SFNTPIC_H__
 
-  
+
 FT_BEGIN_HEADER
 
 #include FT_INTERNAL_PIC_H
@@ -75,6 +75,13 @@ typedef struct sfntModulePIC_
 #define FT_SFNT_SERVICE_SFNT_TABLE_GET    (GET_PIC(library)->sfnt_service_sfnt_table)
 #define FT_SFNT_SERVICE_BDF_GET           (GET_PIC(library)->sfnt_service_bdf)
 #define FT_SFNT_INTERFACE_GET             (GET_PIC(library)->sfnt_interface)
+
+  /* see sfntpic.c for the implementation */
+  void
+  sfnt_module_class_pic_free( FT_Library  library );
+
+  FT_Error
+  sfnt_module_class_pic_init( FT_Library  library );
 
 #endif /* FT_CONFIG_OPTION_PIC */
 

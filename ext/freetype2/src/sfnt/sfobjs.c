@@ -376,7 +376,10 @@
          tag != TTAG_true    &&
          tag != TTAG_typ1    &&
          tag != 0x00020000UL )
+    {
+      FT_TRACE2(( "  not a font using the SFNT container format\n" ));
       return SFNT_Err_Unknown_File_Format;
+    }
 
     face->ttc_header.tag = TTAG_ttcf;
 
@@ -452,13 +455,18 @@
     {
       sfnt = (SFNT_Service)FT_Get_Module_Interface( library, "sfnt" );
       if ( !sfnt )
-        return SFNT_Err_Invalid_File_Format;
+      {
+        FT_ERROR(( "sfnt_init_face: cannot access `sfnt' module\n" ));
+        return SFNT_Err_Missing_Module;
+      }
 
       face->sfnt       = sfnt;
       face->goto_table = sfnt->goto_table;
     }
 
     FT_FACE_FIND_GLOBAL_SERVICE( face, face->psnames, POSTSCRIPT_CMAPS );
+
+    FT_TRACE2(( "SFNT driver\n" ));
 
     error = sfnt_open_font( stream, face );
     if ( error )

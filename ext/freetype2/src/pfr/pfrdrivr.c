@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PFR driver interface (body).                                */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2004, 2006, 2008, 2010 by                        */
+/*  Copyright 2002-2004, 2006, 2008, 2010, 2011 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -173,7 +173,7 @@
       FT_MODULE_FONT_DRIVER     |
       FT_MODULE_DRIVER_SCALABLE,
 
-      sizeof( FT_DriverRec ),
+      sizeof ( FT_DriverRec ),
 
       "pfr",
       0x10000L,
@@ -181,14 +181,14 @@
 
       NULL,
 
-      0,
-      0,
+      0,                /* FT_Module_Constructor */
+      0,                /* FT_Module_Destructor  */
       pfr_get_service
     },
 
-    sizeof( PFR_FaceRec ),
-    sizeof( PFR_SizeRec ),
-    sizeof( PFR_SlotRec ),
+    sizeof ( PFR_FaceRec ),
+    sizeof ( PFR_SizeRec ),
+    sizeof ( PFR_SlotRec ),
 
     pfr_face_init,
     pfr_face_done,
@@ -205,9 +205,9 @@
 
     pfr_get_kerning,
     0,                  /* FT_Face_AttachFunc      */
-    0,                   /* FT_Face_GetAdvancesFunc */
-    0,                  /* FT_Size_RequestFunc */
-    0,                  /* FT_Size_SelectFunc  */
+    0,                  /* FT_Face_GetAdvancesFunc */
+    0,                  /* FT_Size_RequestFunc     */
+    0,                  /* FT_Size_SelectFunc      */
   };
 
 

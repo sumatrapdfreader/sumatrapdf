@@ -328,7 +328,7 @@
 
 
     FT_MEM_SET( num_matched_ids, 0,
-                sizeof( int ) * TRICK_SFNT_IDS_NUM_FACES );
+                sizeof ( int ) * TRICK_SFNT_IDS_NUM_FACES );
     has_cvt  = FALSE;
     has_fpgm = FALSE;
     has_prep = FALSE;
@@ -493,10 +493,17 @@
     TT_Face       face = (TT_Face)ttface;
 
 
+    FT_TRACE2(( "TTF driver\n" ));
+
     library = ttface->driver->root.library;
-    sfnt    = (SFNT_Service)FT_Get_Module_Interface( library, "sfnt" );
+
+    sfnt = (SFNT_Service)FT_Get_Module_Interface( library, "sfnt" );
     if ( !sfnt )
-      goto Bad_Format;
+    {
+      FT_ERROR(( "tt_face_init: cannot access `sfnt' module\n" ));
+      error = TT_Err_Missing_Module;
+      goto Exit;
+    }
 
     /* create input stream from resource */
     if ( FT_STREAM_SEEK( 0 ) )
@@ -514,7 +521,7 @@
          face->format_tag != 0x00020000L &&    /* CJK fonts for Win 3.1 */
          face->format_tag != TTAG_true   )     /* Mac fonts */
     {
-      FT_TRACE2(( "[not a valid TTF font]\n" ));
+      FT_TRACE2(( "  not a TTF font\n" ));
       goto Bad_Format;
     }
 

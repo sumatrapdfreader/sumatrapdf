@@ -73,7 +73,7 @@
     if ( ft_strncmp( (char *)stream->cursor,
                      "%!PS-Adobe-3.0 Resource-CIDFont", 31 ) )
     {
-      FT_TRACE2(( "[not a valid CID-keyed font]\n" ));
+      FT_TRACE2(( "  not a CID-keyed font\n" ));
       error = CID_Err_Unknown_File_Format;
     }
 
@@ -99,7 +99,7 @@
         if ( stream_len == 0 )
         {
           FT_TRACE2(( "cid_parser_new: no `StartData' keyword found\n" ));
-          error = CID_Err_Unknown_File_Format;
+          error = CID_Err_Invalid_File_Format;
           goto Exit;
         }
 

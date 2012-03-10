@@ -1401,7 +1401,7 @@ FT_BEGIN_HEADER
     FT_Byte*              vert_metrics;
     FT_ULong              vert_metrics_size;
 
-    FT_ULong              num_locations; /* in broken TTF, gid > 0xFFFF */ 
+    FT_ULong              num_locations; /* in broken TTF, gid > 0xFFFF */
     FT_Byte*              glyph_locations;
 
     FT_Byte*              hdmx_table;

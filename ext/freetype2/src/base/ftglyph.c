@@ -254,7 +254,7 @@
   }
 
 
-  FT_DEFINE_GLYPH( ft_outline_glyph_class, 
+  FT_DEFINE_GLYPH( ft_outline_glyph_class,
     sizeof ( FT_OutlineGlyphRec ),
     FT_GLYPH_FORMAT_OUTLINE,
 
@@ -512,42 +512,42 @@
     FT_Error                  error = FT_Err_Ok;
     FT_Glyph                  glyph;
     FT_BitmapGlyph            bitmap = NULL;
-
     const FT_Glyph_Class*     clazz;
 
-#ifdef FT_CONFIG_OPTION_PIC
-    FT_Library                library = FT_GLYPH( glyph )->library;
-#endif
+    /* FT_BITMAP_GLYPH_CLASS_GET derefers `library' in PIC mode */
+    FT_Library                library;
 
 
     /* check argument */
     if ( !the_glyph )
       goto Bad;
-
-    /* we render the glyph into a glyph bitmap using a `dummy' glyph slot */
-    /* then calling FT_Render_Glyph_Internal()                            */
-
     glyph = *the_glyph;
     if ( !glyph )
       goto Bad;
 
-    clazz = glyph->clazz;
+    clazz   = glyph->clazz;
+    library = glyph->library;
+    if ( !library || !clazz )
+      goto Bad;
 
     /* when called with a bitmap glyph, do nothing and return successfully */
     if ( clazz == FT_BITMAP_GLYPH_CLASS_GET )
       goto Exit;
 
-    if ( !clazz || !clazz->glyph_prepare )
+    if ( !clazz->glyph_prepare )
       goto Bad;
+
+    /* we render the glyph into a glyph bitmap using a `dummy' glyph slot */
+    /* then calling FT_Render_Glyph_Internal()                            */
 
     FT_MEM_ZERO( &dummy, sizeof ( dummy ) );
     FT_MEM_ZERO( &dummy_internal, sizeof ( dummy_internal ) );
     dummy.internal = &dummy_internal;
-    dummy.library  = glyph->library;
+    dummy.library  = library;
     dummy.format   = clazz->glyph_format;
 
     /* create result bitmap glyph */
-    error = ft_new_glyph( glyph->library, FT_BITMAP_GLYPH_CLASS_GET,
+    error = ft_new_glyph( library, FT_BITMAP_GLYPH_CLASS_GET,
                           (FT_Glyph*)(void*)&bitmap );
     if ( error )
       goto Exit;

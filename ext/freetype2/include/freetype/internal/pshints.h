@@ -688,7 +688,7 @@ FT_BEGIN_HEADER
     get_globals_funcs_, get_t1_funcs_, get_t2_funcs_                         \
   };
 
-#else /* FT_CONFIG_OPTION_PIC */ 
+#else /* FT_CONFIG_OPTION_PIC */
 
 #define FT_DEFINE_PSHINTER_INTERFACE(class_, get_globals_funcs_,             \
                                      get_t1_funcs_, get_t2_funcs_)           \
@@ -700,9 +700,9 @@ FT_BEGIN_HEADER
     clazz->get_globals_funcs = get_globals_funcs_;                           \
     clazz->get_t1_funcs = get_t1_funcs_;                                     \
     clazz->get_t2_funcs = get_t2_funcs_;                                     \
-  } 
+  }
 
-#endif /* FT_CONFIG_OPTION_PIC */ 
+#endif /* FT_CONFIG_OPTION_PIC */
 
 FT_END_HEADER
 

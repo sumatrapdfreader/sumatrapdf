@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType glyph rasterizer (body).                                */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2005, 2007, 2008, 2009, 2010, 2011 by */
+/*  Copyright 1996-2003, 2005, 2007-2012 by                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -369,17 +369,22 @@
 
   /* Simple record used to implement a stack of bands, required */
   /* by the sub-banding mechanism                               */
-  typedef struct  TBand_
+  typedef struct  black_TBand_
   {
     Short  y_min;   /* band's minimum */
     Short  y_max;   /* band's maximum */
 
-  } TBand;
+  } black_TBand;
 
 
 #define AlignProfileSize \
   ( ( sizeof ( TProfile ) + sizeof ( Alignment ) - 1 ) / sizeof ( long ) )
 
+
+#undef RAS_ARG
+#undef RAS_ARGS
+#undef RAS_VAR
+#undef RAS_VARS
 
 #ifdef FT_STATIC_RASTER
 
@@ -396,8 +401,8 @@
 #else /* !FT_STATIC_RASTER */
 
 
-#define RAS_ARGS       PWorker    worker,
-#define RAS_ARG        PWorker    worker
+#define RAS_ARGS       black_PWorker  worker,
+#define RAS_ARG        black_PWorker  worker
 
 #define RAS_VARS       worker,
 #define RAS_VAR        worker
@@ -408,7 +413,7 @@
 #endif /* !FT_STATIC_RASTER */
 
 
-  typedef struct TWorker_  TWorker, *PWorker;
+  typedef struct black_TWorker_  black_TWorker, *black_PWorker;
 
 
   /* prototypes used for sweep function dispatch */
@@ -428,6 +433,10 @@
 
 
   /* NOTE: These operations are only valid on 2's complement processors */
+#undef FLOOR
+#undef CEILING
+#undef TRUNC
+#undef SCALED
 
 #define FLOOR( x )    ( (x) & -ras.precision )
 #define CEILING( x )  ( ( (x) + ras.precision - 1 ) & -ras.precision )
@@ -442,7 +451,7 @@
   /* Thus, their offset can be coded with less opcodes, resulting in a   */
   /* smaller executable.                                                 */
 
-  struct  TWorker_
+  struct  black_TWorker_
   {
     Int         precision_bits;     /* precision related variables         */
     Int         precision;
@@ -515,8 +524,8 @@
 
     TPoint      arcs[3 * MaxBezier + 1]; /* The Bezier stack               */
 
-    TBand       band_stack[16];     /* band stack used for sub-banding     */
-    Int         band_top;           /* band stack top                      */
+    black_TBand  band_stack[16];    /* band stack used for sub-banding     */
+    Int          band_top;          /* band stack top                      */
 
 #ifdef FT_RASTER_OPTION_ANTI_ALIASING
 
@@ -540,20 +549,20 @@
   };
 
 
-  typedef struct  TRaster_
+  typedef struct  black_TRaster_
   {
-    char*    buffer;
-    long     buffer_size;
-    void*    memory;
-    PWorker  worker;
-    Byte     grays[5];
-    Short    gray_width;
+    char*          buffer;
+    long           buffer_size;
+    void*          memory;
+    black_PWorker  worker;
+    Byte           grays[5];
+    Short          gray_width;
 
-  } TRaster, *PRaster;
+  } black_TRaster, *black_PRaster;
 
 #ifdef FT_STATIC_RASTER
 
-  static TWorker  cur_ras;
+  static black_TWorker  cur_ras;
 #define ras  cur_ras
 
 #else /* !FT_STATIC_RASTER */
@@ -3391,7 +3400,7 @@
 
 
   static void
-  ft_black_init( PRaster  raster )
+  ft_black_init( black_PRaster  raster )
   {
 #ifdef FT_RASTER_OPTION_ANTI_ALIASING
     FT_UInt  n;
@@ -3419,7 +3428,7 @@
   ft_black_new( void*       memory,
                 FT_Raster  *araster )
   {
-     static TRaster  the_raster;
+     static black_TRaster  the_raster;
      FT_UNUSED( memory );
 
 
@@ -3443,11 +3452,11 @@
 
 
   static int
-  ft_black_new( FT_Memory   memory,
-                PRaster    *araster )
+  ft_black_new( FT_Memory       memory,
+                black_PRaster  *araster )
   {
-    FT_Error  error;
-    PRaster   raster = NULL;
+    FT_Error       error;
+    black_PRaster  raster = NULL;
 
 
     *araster = 0;
@@ -3464,9 +3473,11 @@
 
 
   static void
-  ft_black_done( PRaster  raster )
+  ft_black_done( black_PRaster  raster )
   {
     FT_Memory  memory = (FT_Memory)raster->memory;
+
+
     FT_FREE( raster );
   }
 
@@ -3475,15 +3486,15 @@
 
 
   static void
-  ft_black_reset( PRaster  raster,
-                  char*    pool_base,
-                  long     pool_size )
+  ft_black_reset( black_PRaster  raster,
+                  char*          pool_base,
+                  long           pool_size )
   {
     if ( raster )
     {
-      if ( pool_base && pool_size >= (long)sizeof(TWorker) + 2048 )
+      if ( pool_base && pool_size >= (long)sizeof ( black_TWorker ) + 2048 )
       {
-        PWorker  worker = (PWorker)pool_base;
+        black_PWorker  worker = (black_PWorker)pool_base;
 
 
         raster->buffer      = pool_base + ( ( sizeof ( *worker ) + 7 ) & ~7 );
@@ -3501,7 +3512,7 @@
 
 
   static void
-  ft_black_set_mode( PRaster        raster,
+  ft_black_set_mode( black_PRaster  raster,
                      unsigned long  mode,
                      const char*    palette )
   {
@@ -3528,12 +3539,12 @@
 
 
   static int
-  ft_black_render( PRaster                  raster,
+  ft_black_render( black_PRaster            raster,
                    const FT_Raster_Params*  params )
   {
     const FT_Outline*  outline    = (const FT_Outline*)params->source;
     const FT_Bitmap*   target_map = params->target;
-    PWorker            worker;
+    black_PWorker      worker;
 
 
     if ( !raster || !raster->buffer || !raster->buffer_size )

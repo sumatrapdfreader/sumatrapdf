@@ -19,7 +19,7 @@
 #ifndef __PSPIC_H__
 #define __PSPIC_H__
 
-  
+
 FT_BEGIN_HEADER
 
 #include FT_INTERNAL_PIC_H
@@ -41,6 +41,13 @@ FT_BEGIN_HEADER
 #define GET_PIC(lib)                ((PSModulePIC*)((lib)->pic_container.psnames))
 #define FT_PSCMAPS_SERVICES_GET     (GET_PIC(library)->pscmaps_services)
 #define FT_PSCMAPS_INTERFACE_GET    (GET_PIC(library)->pscmaps_interface)
+
+  /* see pspic.c for the implementation */
+  void
+  psnames_module_class_pic_free( FT_Library  library );
+
+  FT_Error
+  psnames_module_class_pic_init( FT_Library  library );
 
 #endif /* FT_CONFIG_OPTION_PIC */
 

@@ -113,11 +113,11 @@
   };
 
 
-  AF_DEFINE_SCRIPT_CLASS(af_indic_script_class,
+  AF_DEFINE_SCRIPT_CLASS( af_indic_script_class,
     AF_SCRIPT_INDIC,
     af_indic_uniranges,
 
-    sizeof( AF_CJKMetricsRec ),
+    sizeof ( AF_CJKMetricsRec ),
 
     (AF_Script_InitMetricsFunc) af_indic_metrics_init,
     (AF_Script_ScaleMetricsFunc)af_indic_metrics_scale,
@@ -135,11 +135,11 @@
   };
 
 
-  AF_DEFINE_SCRIPT_CLASS(af_indic_script_class,
+  AF_DEFINE_SCRIPT_CLASS( af_indic_script_class,
     AF_SCRIPT_INDIC,
     af_indic_uniranges,
 
-    sizeof( AF_CJKMetricsRec ),
+    sizeof ( AF_CJKMetricsRec ),
 
     (AF_Script_InitMetricsFunc) NULL,
     (AF_Script_ScaleMetricsFunc)NULL,

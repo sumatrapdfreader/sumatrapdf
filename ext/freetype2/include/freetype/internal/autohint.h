@@ -206,7 +206,7 @@ FT_BEGIN_HEADER
     reset_face_, get_global_hints_, done_global_hints_, load_glyph_          \
   };
 
-#else /* FT_CONFIG_OPTION_PIC */ 
+#else /* FT_CONFIG_OPTION_PIC */
 
 #define FT_DEFINE_AUTOHINTER_SERVICE(class_, reset_face_, get_global_hints_, \
                                      done_global_hints_, load_glyph_)        \
@@ -219,9 +219,9 @@ FT_BEGIN_HEADER
     clazz->get_global_hints = get_global_hints_;                             \
     clazz->done_global_hints = done_global_hints_;                           \
     clazz->load_glyph = load_glyph_;                                         \
-  } 
+  }
 
-#endif /* FT_CONFIG_OPTION_PIC */ 
+#endif /* FT_CONFIG_OPTION_PIC */
 
 FT_END_HEADER
 

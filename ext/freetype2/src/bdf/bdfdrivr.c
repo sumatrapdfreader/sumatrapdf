@@ -2,7 +2,7 @@
 
     FreeType font driver for bdf files
 
-    Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 by
+    Copyright (C) 2001-2008, 2011 by
     Francesco Zappa Nardelli
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -30,7 +30,7 @@ THE SOFTWARE.
 #include FT_INTERNAL_STREAM_H
 #include FT_INTERNAL_OBJECTS_H
 #include FT_BDF_H
-#include FT_TRUETYPE_IDS_H 
+#include FT_TRUETYPE_IDS_H
 
 #include FT_SERVICE_BDF_H
 #include FT_SERVICE_XFREE86_NAME_H
@@ -332,8 +332,6 @@ THE SOFTWARE.
     FT_FREE( bdfface->available_sizes );
 
     FT_FREE( face->bdffont );
-
-    FT_TRACE4(( "BDF_Face_Done: done face\n" ));
   }
 
 
@@ -356,6 +354,8 @@ THE SOFTWARE.
     FT_UNUSED( face_index );
 
 
+    FT_TRACE2(( "BDF driver\n" ));
+
     if ( FT_STREAM_SEEK( 0 ) )
       goto Exit;
 
@@ -367,7 +367,7 @@ THE SOFTWARE.
     error = bdf_load_font( stream, memory, &options, &font );
     if ( error == BDF_Err_Missing_Startfont_Field )
     {
-      FT_TRACE2(( "[not a valid BDF file]\n" ));
+      FT_TRACE2(( "  not a BDF file\n" ));
       goto Fail;
     }
     else if ( error )
@@ -379,10 +379,10 @@ THE SOFTWARE.
       bdf_property_t*  prop = NULL;
 
 
-      FT_TRACE4(( "number of glyphs: %d (%d)\n",
+      FT_TRACE4(( "  number of glyphs: allocated %d (used %d)\n",
                   font->glyphs_size,
                   font->glyphs_used ));
-      FT_TRACE4(( "number of unencoded glyphs: %d (%d)\n",
+      FT_TRACE4(( "  number of unencoded glyphs: allocated %d (used %d)\n",
                   font->unencoded_size,
                   font->unencoded_used ));
 
@@ -482,7 +482,7 @@ THE SOFTWARE.
         for ( n = 0; n < font->glyphs_size; n++ )
         {
           (face->en_table[n]).enc = cur[n].encoding;
-          FT_TRACE4(( "idx %d, val 0x%lX\n", n, cur[n].encoding ));
+          FT_TRACE4(( "  idx %d, val 0x%lX\n", n, cur[n].encoding ));
           (face->en_table[n]).glyph = (FT_Short)n;
 
           if ( cur[n].encoding == font->default_char )
@@ -490,7 +490,8 @@ THE SOFTWARE.
             if ( n < FT_UINT_MAX )
               face->default_glyph = (FT_UInt)n;
             else
-              FT_TRACE1(( "idx %d is too large for this system\n", n ));
+              FT_TRACE1(( "BDF_Face_Init:"
+                          " idx %d is too large for this system\n", n ));
           }
         }
       }
@@ -761,8 +762,8 @@ THE SOFTWARE.
       case BDF_INTEGER:
         if ( prop->value.l > 0x7FFFFFFFL || prop->value.l < ( -1 - 0x7FFFFFFFL ) )
         {
-          FT_TRACE1(( "bdf_get_bdf_property: " ));
-          FT_TRACE1(( "too large integer 0x%x is truncated\n" ));
+          FT_TRACE1(( "bdf_get_bdf_property:"
+                      " too large integer 0x%x is truncated\n" ));
         }
         aproperty->type      = BDF_PROPERTY_TYPE_INTEGER;
         aproperty->u.integer = (FT_Int32)prop->value.l;
@@ -771,8 +772,8 @@ THE SOFTWARE.
       case BDF_CARDINAL:
         if ( prop->value.ul > 0xFFFFFFFFUL )
         {
-          FT_TRACE1(( "bdf_get_bdf_property: " ));
-          FT_TRACE1(( "too large cardinal 0x%x is truncated\n" ));
+          FT_TRACE1(( "bdf_get_bdf_property:"
+                      " too large cardinal 0x%x is truncated\n" ));
         }
         aproperty->type       = BDF_PROPERTY_TYPE_CARDINAL;
         aproperty->u.cardinal = (FT_UInt32)prop->value.ul;
@@ -847,9 +848,9 @@ THE SOFTWARE.
 
       0,
 
-      (FT_Module_Constructor)0,
-      (FT_Module_Destructor) 0,
-      (FT_Module_Requester)  bdf_driver_requester
+      0,                        /* FT_Module_Constructor */
+      0,                        /* FT_Module_Destructor  */
+      bdf_driver_requester
     },
 
     sizeof ( BDF_FaceRec ),
@@ -869,9 +870,9 @@ THE SOFTWARE.
 #endif
     BDF_Glyph_Load,
 
-    0,                          /* FT_Face_GetKerningFunc   */
-    0,                          /* FT_Face_AttachFunc       */
-    0,                          /* FT_Face_GetAdvancesFunc  */
+    0,                          /* FT_Face_GetKerningFunc  */
+    0,                          /* FT_Face_AttachFunc      */
+    0,                          /* FT_Face_GetAdvancesFunc */
 
     BDF_Size_Request,
     BDF_Size_Select

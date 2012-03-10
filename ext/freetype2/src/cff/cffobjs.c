@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType objects manager (body).                                     */
 /*                                                                         */
-/*  Copyright 1996-2011 by                                                 */
+/*  Copyright 1996-2012 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -403,7 +403,7 @@
     FT_Int32  idx             = 0;
     FT_Int32  length          = strlen( name ) + 1;
     FT_Bool   continue_search = 1;
- 
+
 
     while ( continue_search )
     {
@@ -494,12 +494,18 @@
     sfnt = (SFNT_Service)FT_Get_Module_Interface(
              library, "sfnt" );
     if ( !sfnt )
-      goto Bad_Format;
+    {
+      FT_ERROR(( "cff_face_init: cannot access `sfnt' module\n" ));
+      error = CFF_Err_Missing_Module;
+      goto Exit;
+    }
 
     FT_FACE_FIND_GLOBAL_SERVICE( face, psnames, POSTSCRIPT_CMAPS );
 
     pshinter = (PSHinter_Service)FT_Get_Module_Interface(
                  library, "pshinter" );
+
+    FT_TRACE2(( "CFF driver\n" ));
 
     /* create input stream from resource */
     if ( FT_STREAM_SEEK( 0 ) )
@@ -511,8 +517,9 @@
     {
       if ( face->format_tag != TTAG_OTTO )  /* `OTTO'; OpenType/CFF font */
       {
-        FT_TRACE2(( "[not a valid OpenType/CFF font]\n" ));
-        goto Bad_Format;
+        FT_TRACE2(( "  not an OpenType/CFF font\n" ));
+        error = CFF_Err_Unknown_File_Format;
+        goto Exit;
       }
 
       /* if we are performing a simple font format check, exit immediately */
@@ -604,7 +611,8 @@
                    " cannot open CFF & CEF fonts\n"
                    "              "
                    " without the `PSNames' module\n" ));
-        goto Bad_Format;
+        error = CFF_Err_Missing_Module;
+        goto Exit;
       }
 
 #ifdef FT_DEBUG_LEVEL_TRACE
@@ -772,7 +780,7 @@
           char*  family_name = NULL;
 
 
-          remove_subset_prefix( cffface->family_name ); 
+          remove_subset_prefix( cffface->family_name );
 
           if ( dict->family_name )
           {
@@ -819,7 +827,7 @@
                 style_name = cff_strcpy( memory, fullp );
 
                 /* remove the style part from the family name (if present) */
-                remove_style( cffface->family_name, style_name ); 
+                remove_style( cffface->family_name, style_name );
               }
               break;
             }
@@ -847,22 +855,22 @@
         /*                                                                 */
         /* Compute face flags.                                             */
         /*                                                                 */
-        flags = (FT_UInt32)( FT_FACE_FLAG_SCALABLE   | /* scalable outlines */
-                             FT_FACE_FLAG_HORIZONTAL | /* horizontal data   */
-                             FT_FACE_FLAG_HINTER );    /* has native hinter */
+        flags = FT_FACE_FLAG_SCALABLE   | /* scalable outlines */
+                FT_FACE_FLAG_HORIZONTAL | /* horizontal data   */
+                FT_FACE_FLAG_HINTER;      /* has native hinter */
 
         if ( sfnt_format )
-          flags |= (FT_UInt32)FT_FACE_FLAG_SFNT;
+          flags |= FT_FACE_FLAG_SFNT;
 
         /* fixed width font? */
         if ( dict->is_fixed_pitch )
-          flags |= (FT_UInt32)FT_FACE_FLAG_FIXED_WIDTH;
+          flags |= FT_FACE_FLAG_FIXED_WIDTH;
 
   /* XXX: WE DO NOT SUPPORT KERNING METRICS IN THE GPOS TABLE FOR NOW */
 #if 0
         /* kerning available? */
         if ( face->kern_pairs )
-          flags |= (FT_UInt32)FT_FACE_FLAG_KERNING;
+          flags |= FT_FACE_FLAG_KERNING;
 #endif
 
         cffface->face_flags = flags;
@@ -1014,10 +1022,6 @@
 
   Exit:
     return error;
-
-  Bad_Format:
-    error = CFF_Err_Unknown_File_Format;
-    goto Exit;
   }
 
 

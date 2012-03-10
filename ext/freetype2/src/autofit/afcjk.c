@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter hinting routines for CJK script (body).                  */
 /*                                                                         */
-/*  Copyright 2006-2011 by                                                 */
+/*  Copyright 2006-2012 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -1610,7 +1610,7 @@
         goto Exit;
     }
 
-    offset = cur_len % 64;
+    offset = cur_len & 63;
 
     if ( offset < 32 )
     {
@@ -2225,11 +2225,11 @@
   };
 
 
-  AF_DEFINE_SCRIPT_CLASS(af_cjk_script_class,
+  AF_DEFINE_SCRIPT_CLASS( af_cjk_script_class,
     AF_SCRIPT_CJK,
     af_cjk_uniranges,
 
-    sizeof( AF_CJKMetricsRec ),
+    sizeof ( AF_CJKMetricsRec ),
 
     (AF_Script_InitMetricsFunc) af_cjk_metrics_init,
     (AF_Script_ScaleMetricsFunc)af_cjk_metrics_scale,
@@ -2247,11 +2247,11 @@
   };
 
 
-  AF_DEFINE_SCRIPT_CLASS(af_cjk_script_class,
+  AF_DEFINE_SCRIPT_CLASS( af_cjk_script_class,
     AF_SCRIPT_CJK,
     af_cjk_uniranges,
 
-    sizeof( AF_CJKMetricsRec ),
+    sizeof ( AF_CJKMetricsRec ),
 
     (AF_Script_InitMetricsFunc) NULL,
     (AF_Script_ScaleMetricsFunc)NULL,

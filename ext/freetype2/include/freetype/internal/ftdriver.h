@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType font driver interface (specification).                      */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2006, 2008 by                         */
+/*  Copyright 1996-2003, 2006, 2008, 2011 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -162,10 +162,9 @@ FT_BEGIN_HEADER
   /*                        starting at `first'.  The `vertical' flag must */
   /*                        be set to get vertical advance heights.  The   */
   /*                        `advances' buffer is caller-allocated.         */
-  /*                        Currently not implemented.  The idea of this   */
-  /*                        function is to be able to perform              */
-  /*                        device-independent text layout without loading */
-  /*                        a single glyph image.                          */
+  /*                        The idea of this function is to be able to     */
+  /*                        perform device-independent text layout without */
+  /*                        loading a single glyph image.                  */
   /*                                                                       */
   /*    request_size     :: A handle to a function used to request the new */
   /*                        character size.  Can be set to 0 if the        */
@@ -268,7 +267,9 @@ FT_BEGIN_HEADER
   /*    and initialize any additional global data, like module specific    */
   /*    interface, and put them in the global pic container defined in     */
   /*    ftpic.h. if you don't need them just implement the functions as    */
-  /*    empty to resolve the link error.                                   */
+  /*    empty to resolve the link error.  Also the pic_init and pic_free   */
+  /*    functions should be declared in pic.h, to be referred by driver    */
+  /*    definition calling FT_DEFINE_DRIVER() in following.                */
   /*                                                                       */
   /*    When FT_CONFIG_OPTION_PIC is not defined the struct will be        */
   /*    allocated in the global scope (or the scope where the macro        */
@@ -285,7 +286,7 @@ FT_BEGIN_HEADER
 
 #define FT_DECLARE_DRIVER(class_)    \
   FT_CALLBACK_TABLE                  \
-  const FT_Driver_ClassRec  class_;  
+  const FT_Driver_ClassRec  class_;
 
 #define FT_DEFINE_DRIVER(class_,                                             \
                          flags_, size_, name_, version_, requires_,          \
@@ -327,7 +328,7 @@ FT_BEGIN_HEADER
     select_size_                                                             \
   };
 
-#else /* FT_CONFIG_OPTION_PIC */ 
+#else /* FT_CONFIG_OPTION_PIC */
 
 #ifdef FT_CONFIG_OPTION_OLD_INTERNALS
 #define FT_DEFINE_DRIVERS_OLD_INTERNALS(a_,b_) \
@@ -348,8 +349,6 @@ FT_BEGIN_HEADER
                          old_set_char_sizes_, old_set_pixel_sizes_,          \
                          load_glyph_, get_kerning_, attach_file_,            \
                          get_advances_, request_size_, select_size_ )        \
-  void class_##_pic_free( FT_Library library );                              \
-  FT_Error class_##_pic_init( FT_Library library );                          \
                                                                              \
   void                                                                       \
   FT_Destroy_Class_##class_( FT_Library        library,                      \
@@ -409,7 +408,7 @@ FT_BEGIN_HEADER
                                                                              \
     *output_class = (FT_Module_Class*)clazz;                                 \
     return FT_Err_Ok;                                                        \
-  }                
+  }
 
 
 #endif /* FT_CONFIG_OPTION_PIC */

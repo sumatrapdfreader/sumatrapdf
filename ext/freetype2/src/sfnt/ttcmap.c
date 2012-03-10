@@ -3363,7 +3363,7 @@
       return error;
 
     /* the location of the class instances follows the array of pointers */
-    recs = (TT_CMap_ClassRec*) (((char*)clazz)+(sizeof(*clazz)*(i+1))); 
+    recs = (TT_CMap_ClassRec*) (((char*)clazz)+(sizeof(*clazz)*(i+1)));
     i=0;
 
 #undef TTCMAPCITEM

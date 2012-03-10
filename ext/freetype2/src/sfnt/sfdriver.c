@@ -422,8 +422,19 @@
   sfnt_get_interface( FT_Module    module,
                       const char*  module_interface )
   {
-    FT_UNUSED( module );
+    /* FT_SFNT_SERVICES_GET derefers `library' in PIC mode */
+#ifdef FT_CONFIG_OPTION_PIC
+    FT_Library  library;
 
+
+    if ( !module )
+      return NULL;
+    library = module->library;
+    if ( !library )
+      return NULL;
+#else
+    FT_UNUSED( module );
+#endif
     return ft_service_list_lookup( FT_SFNT_SERVICES_GET, module_interface );
   }
 
@@ -556,14 +567,14 @@
 #endif /* FT_CONFIG_OPTION_OLD_INTERNALS */
 
 #ifdef TT_CONFIG_OPTION_EMBEDDED_BITMAPS
-#define PUT_EMBEDDED_BITMAPS(a) a 
+#define PUT_EMBEDDED_BITMAPS(a) a
 #else
-#define PUT_EMBEDDED_BITMAPS(a) 0 
+#define PUT_EMBEDDED_BITMAPS(a) 0
 #endif
 #ifdef TT_CONFIG_OPTION_POSTSCRIPT_NAMES
-#define PUT_PS_NAMES(a) a 
+#define PUT_PS_NAMES(a) a
 #else
-#define PUT_PS_NAMES(a) 0 
+#define PUT_PS_NAMES(a) 0
 #endif
 
   FT_DEFINE_SFNT_INTERFACE(sfnt_interface,
@@ -637,9 +648,9 @@
 
 
   FT_DEFINE_MODULE(sfnt_module_class,
-  
+
     0,  /* not a font driver or renderer */
-    sizeof( FT_ModuleRec ),
+    sizeof ( FT_ModuleRec ),
 
     "sfnt",     /* driver name                            */
     0x10000L,   /* driver version 1.0                     */

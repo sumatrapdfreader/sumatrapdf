@@ -26,7 +26,7 @@
 #ifndef __FTPIC_H__
 #define __FTPIC_H__
 
-  
+
 FT_BEGIN_HEADER
 
 #ifdef FT_CONFIG_OPTION_PIC
@@ -36,14 +36,14 @@ FT_BEGIN_HEADER
     /* pic containers for base */
     void* base;
     /* pic containers for modules */
-    void* autofit;   
-    void* cff;    
-    void* pshinter;    
-    void* psnames;    
-    void* raster;     
-    void* sfnt;     
-    void* smooth;     
-    void* truetype;     
+    void* autofit;
+    void* cff;
+    void* pshinter;
+    void* psnames;
+    void* raster;
+    void* sfnt;
+    void* smooth;
+    void* truetype;
   } FT_PIC_Container;
 
   /* Initialize the various function tables, structs, etc. stored in the container. */

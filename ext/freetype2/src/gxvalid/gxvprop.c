@@ -233,7 +233,7 @@
 
     /* XXX: check range? */
     offset = (FT_UShort)( base_value_p->u +
-                          relative_gindex * sizeof( FT_UShort ) );
+                          relative_gindex * sizeof ( FT_UShort ) );
     p      = valid->lookuptbl_head + offset;
     limit  = lookuptbl_limit;
 

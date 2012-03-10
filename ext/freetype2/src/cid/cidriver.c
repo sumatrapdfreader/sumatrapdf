@@ -111,13 +111,13 @@
 
     if ( registry )
       *registry = cid->registry;
-      
+
     if ( ordering )
       *ordering = cid->ordering;
 
     if ( supplement )
       *supplement = cid->supplement;
-      
+
     return CID_Err_Ok;
   }
 
@@ -196,7 +196,7 @@
       FT_MODULE_DRIVER_SCALABLE   |
       FT_MODULE_DRIVER_HAS_HINTER,
 
-      sizeof( FT_DriverRec ),
+      sizeof ( FT_DriverRec ),
       "t1cid",   /* module name           */
       0x10000L,  /* version 1.0 of driver */
       0x20000L,  /* requires FreeType 2.0 */
@@ -209,9 +209,9 @@
     },
 
     /* then the other font drivers fields */
-    sizeof( CID_FaceRec ),
-    sizeof( CID_SizeRec ),
-    sizeof( CID_GlyphSlotRec ),
+    sizeof ( CID_FaceRec ),
+    sizeof ( CID_SizeRec ),
+    sizeof ( CID_GlyphSlotRec ),
 
     cid_face_init,
     cid_face_done,

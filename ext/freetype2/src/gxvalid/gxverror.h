@@ -4,7 +4,8 @@
 /*                                                                         */
 /*    TrueTypeGX/AAT validation module error codes (specification only).   */
 /*                                                                         */
-/*  Copyright 2004, 2005 by suzuki toshiya, Masatake YAMATO, Red Hat K.K., */
+/*  Copyright 2004, 2005, 2012                                             */
+/*    by suzuki toshiya, Masatake YAMATO, Red Hat K.K.,                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -38,6 +39,7 @@
 
 #undef __FTERRORS_H__
 
+#undef  FT_ERR_PREFIX
 #define FT_ERR_PREFIX  GXV_Err_
 #define FT_ERR_BASE    FT_Mod_Err_GXV
 

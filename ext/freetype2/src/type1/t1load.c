@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 1 font loader (body).                                           */
 /*                                                                         */
-/*  Copyright 1996-2011 by                                                 */
+/*  Copyright 1996-2012 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -1075,8 +1075,8 @@
   /* and `/CharStrings' dictionaries.                                */
 
   static void
-  parse_font_matrix( T1_Face    face,
-                     T1_Loader  loader )
+  t1_parse_font_matrix( T1_Face    face,
+                        T1_Loader  loader )
   {
     T1_Parser   parser = &loader->parser;
     FT_Matrix*  matrix = &face->type1.font_matrix;
@@ -1099,7 +1099,7 @@
 
     if ( temp_scale == 0 )
     {
-      FT_ERROR(( "parse_font_matrix: invalid font matrix\n" ));
+      FT_ERROR(( "t1_parse_font_matrix: invalid font matrix\n" ));
       parser->root.error = T1_Err_Invalid_File_Format;
       return;
     }
@@ -1388,7 +1388,8 @@
 
 
       /* If the next token isn't `dup' we are done. */
-      if ( ft_strncmp( (char*)parser->root.cursor, "dup", 3 ) != 0 )
+      if ( parser->root.cursor + 4 < parser->root.limit            &&
+           ft_strncmp( (char*)parser->root.cursor, "dup", 3 ) != 0 )
         break;
 
       T1_Skip_PS_Token( parser );       /* `dup' */
@@ -1407,7 +1408,8 @@
         return;
       T1_Skip_Spaces  ( parser );
 
-      if ( ft_strncmp( (char*)parser->root.cursor, "put", 3 ) == 0 )
+      if ( parser->root.cursor + 4 < parser->root.limit            &&
+           ft_strncmp( (char*)parser->root.cursor, "put", 3 ) == 0 )
       {
         T1_Skip_PS_Token( parser ); /* skip `put' */
         T1_Skip_Spaces  ( parser );
@@ -1772,7 +1774,7 @@
 #include "t1tokens.h"
 
     /* now add the special functions... */
-    T1_FIELD_CALLBACK( "FontMatrix",           parse_font_matrix,
+    T1_FIELD_CALLBACK( "FontMatrix",           t1_parse_font_matrix,
                        T1_FIELD_DICT_FONTDICT )
     T1_FIELD_CALLBACK( "Encoding",             parse_encoding,
                        T1_FIELD_DICT_FONTDICT )
