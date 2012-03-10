@@ -185,7 +185,7 @@ SUMATRA_OBJS = \
 	$(OS)\Search.obj $(OS)\Menu.obj $(OS)\ExternalPdfViewer.obj \
 	$(OS)\Selection.obj $(SUMATRA_RES) \
 	$(UTILS_OBJS) $(ENGINE_OBJS) $(SYNCTEX_OBJS) \
-	$(MUI_OBJS) $(OS)\PageLayout.obj $(OS)\MobiDoc.obj \
+	$(MUI_OBJS) $(OS)\MobiDoc.obj $(OS)\PageLayout.obj \
 	$(OS)\EbookControls.obj $(OS)\EbookController.obj $(OS)\MobiWindow.obj
  
 INSTALLER_OBJS = \
@@ -196,12 +196,12 @@ UNINSTALLER_OBJS = \
 
 ET_OBJS = \
 	$(OEB)\EbookTest.obj $(OEB)\EbookTestMenu.obj $(ET_RES) \
-	$(OEB)\PageLayout.obj $(MUI_OBJS) $(UTILS_OBJS) $(OEB)\MobiDoc.obj \
+	$(OS)\PageLayout.obj $(MUI_OBJS) $(UTILS_OBJS) $(OS)\MobiDoc.obj \
 	$(OEB)\EbookControls.obj $(OEB)\EbookController.obj
 
 TESTER_OBJS = \
-	$(UTILS_OBJS) $(MUI_OBJS) $(OEB)\Tester.obj $(OEB)\PageLayout.obj \
-	$(OU)\NoFreeAllocator.obj $(OEB)\MobiDoc.obj
+	$(UTILS_OBJS) $(MUI_OBJS) $(OS)\Tester.obj $(OS)\PageLayout.obj \
+	$(OU)\NoFreeAllocator.obj $(OS)\MobiDoc.obj
 
 ET2_OBJS = \
 	$(OE2)\EbookTest.obj $(ET_RES) $(OE2)\PageLayout.obj $(OE2)\MiniMui.obj $(UTILS_OBJS) \
@@ -399,8 +399,6 @@ $(OS)\Uninstaller.obj: $(OS)\Installer.obj
 # ebooktest directory
 {src\ebooktest}.cpp{$(OEB)}.obj::
 	$(CC) $(ET_CFLAGS) /Fo$(OEB)\ /Fd$(O)\vc80.pdb $<
-{src}.cpp{$(OEB)}.obj::
-	$(CC) $(TESTER_CFLAGS) /Fo$(OEB)\ /Fd$(O)\vc80.pdb $<
 
 # ebooktest2 directory
 {src\ebooktest2}.cpp{$(OE2)}.obj::

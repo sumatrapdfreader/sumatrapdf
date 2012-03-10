@@ -3,9 +3,9 @@
 
 #include <locale.h>
 
-#include "EbookController.h"
-#include "EbookControls.h"
-#include "EbookTestMenu.h"
+#include "ebooktest\EbookController.h"
+#include "ebooktest\EbookControls.h"
+#include "ebooktest\EbookTestMenu.h"
 #include "FileUtil.h"
 #include "FrameTimeoutCalculator.h"
 #include "MobiDoc.h"
@@ -67,16 +67,6 @@ static inline void EnableAndShow(HWND hwnd, bool enable)
 {
     ShowWindow(hwnd, enable ? SW_SHOW : SW_HIDE);
     EnableWindow(hwnd, enable);
-}
-
-static void OnCreateWindow(HWND hwnd)
-{
-    HMENU menu = BuildMenu();
-    SetMenu(hwnd, menu);
-    gEbookControls = CreateEbookControls(hwnd);
-    gMainWnd = gEbookControls->mainWnd;
-    gEbookController = new EbookController(gEbookControls);
-    gEbookController->SetHtml(gSampleHtml);
 }
 
 static void OnOpen(HWND hwnd)
@@ -199,10 +189,6 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 
     switch (msg)
     {
-        case WM_CREATE:
-            OnCreateWindow(hwnd);
-            break;
-
         case WM_DESTROY:
             PostQuitMessage(0);
             break;
@@ -273,7 +259,12 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
     if (!gHwndFrame)
         return FALSE;
 
-    CenterDialog(gHwndFrame);
+    SetMenu(gHwndFrame, BuildMenu());
+    gEbookControls = CreateEbookControls(gHwndFrame);
+    gMainWnd = gEbookControls->mainWnd;
+    gEbookController = new EbookController(gEbookControls);
+    gEbookController->SetHtml(gSampleHtml);
+
     ShowWindow(gHwndFrame, SW_SHOW);
 
     return TRUE;
@@ -293,14 +284,14 @@ void DispatchUiMsg(UiMsg *msg)
 
 void DispatchUiMessages()
 {
-    for (UiMsg *msg = uimsg::RetriveNext(); msg; msg = uimsg::RetriveNext()) {
+    for (UiMsg *msg = uimsg::RetrieveNext(); msg; msg = uimsg::RetrieveNext()) {
         DispatchUiMsg(msg);
     }
 }
 
 void DrainUiMsgQueu()
 {
-    for (UiMsg *msg = uimsg::RetriveNext(); msg; msg = uimsg::RetriveNext()) {
+    for (UiMsg *msg = uimsg::RetrieveNext(); msg; msg = uimsg::RetrieveNext()) {
         delete msg;
     }
 }

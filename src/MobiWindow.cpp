@@ -10,6 +10,7 @@
 #include "SumatraPDF.h"
 #include "Touch.h"
 #include "Translations.h"
+#include "WindowInfo.h"
 #include "WinUtil.h"
 
 #define MOBI_FRAME_CLASS_NAME    _T("SUMATRA_MOBI_FRAME")
@@ -306,7 +307,6 @@ static LRESULT CALLBACK MobiWndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPA
     switch (msg)
     {
         case WM_CREATE:
-            SetMenu(hwnd, BuildMobiMenu());
             break;
 
         case WM_DROPFILES:
@@ -333,6 +333,8 @@ static LRESULT CALLBACK MobiWndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPA
     switch (msg)
     {
         case WM_DESTROY:
+            // called by windows if user clicks window's close button or if
+            // we call DestroyWindow()
             CloseMobiWindow(win, true, true);
             break;
 
@@ -394,6 +396,7 @@ void OpenMobiInWindow(MobiDoc *mobiDoc, SumatraWindow& winToReplace)
         windowPos = GetDefaultWindowPos();
 
     CrashIf(winToReplace.WinInfo != winToReplace.type);
+    bool wasMaximized = IsZoomed(winToReplace.winInfo->hwndFrame);
     CloseDocumentAndDeleteWindowInfo(winToReplace.winInfo);
 
     HWND hwnd = CreateWindow(
@@ -404,6 +407,7 @@ void OpenMobiInWindow(MobiDoc *mobiDoc, SumatraWindow& winToReplace)
             ghinst, NULL);
     if (!hwnd)
         return;
+    SetMenu(hwnd, BuildMobiMenu());
     if (HasPermission(Perm_DiskAccess) && !gPluginMode)
         DragAcceptFiles(hwnd, TRUE);
     if (Touch::SupportsGestures()) {
@@ -416,12 +420,11 @@ void OpenMobiInWindow(MobiDoc *mobiDoc, SumatraWindow& winToReplace)
     win->ebookControls = CreateEbookControls(hwnd);
     win->hwndWrapper = win->ebookControls->mainWnd;
     win->ebookController = new EbookController(win->ebookControls);
-    win->ebookController->SetMobiDoc(mobiDoc);
-
     win->hwndFrame = hwnd;
+
     gMobiWindows->Append(win);
-    bool wasMaximized = false; // TODO: IsZoomed(winToReplace->hwndFrame);
     ShowWindow(hwnd, wasMaximized ? SW_SHOWMAXIMIZED : SW_SHOW);
+    win->ebookController->SetMobiDoc(mobiDoc);
 }
 
 void DeleteMobiWindows()
