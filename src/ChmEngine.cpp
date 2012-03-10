@@ -154,7 +154,7 @@ public:
         return NULL;
     }
 
-    virtual bool IsImagePage(int pageNo) { return false; }
+    virtual bool HasClipOptimizations(int pageNo) { return false; }
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
     virtual TCHAR *GetProperty(char *name);
 

@@ -199,8 +199,8 @@ public:
     // caller needs to free() the result
     virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View) = 0;
-    // certain optimizations can be made for a page consisting of a single large image
-    virtual bool IsImagePage(int pageNo) = 0;
+    // pages where clipping doesn't help are rendered in larger tiles
+    virtual bool HasClipOptimizations(int pageNo) = 0;
     // the layout type this document's author suggests (if the user doesn't care)
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
     // whether the content should be displayed as images instead of as document pages

@@ -215,7 +215,7 @@ public:
     virtual unsigned char *GetFileData(size_t *cbCount);
     virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View);
-    virtual bool IsImagePage(int pageNo) { return true; }
+    virtual bool HasClipOptimizations(int pageNo) { return false; }
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
 
     // DPI isn't constant for all pages and thus premultiplied

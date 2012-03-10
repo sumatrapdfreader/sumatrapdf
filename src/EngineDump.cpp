@@ -175,8 +175,8 @@ void DumpPageData(BaseEngine *engine, int pageNo, bool fullDump)
     RectI cbox = engine->PageContentBox(pageNo).Round();
     if (cbox != bbox)
         Out("\t\tContentBox=\"%d %d %d %d\"\n", cbox.x, cbox.y, cbox.dx, cbox.dy);
-    if (engine->IsImagePage(pageNo))
-        Out("\t\tImagePage=\"yes\"\n");
+    if (!engine->HasClipOptimizations(pageNo))
+        Out("\t\tHasClipOptimizations=\"no\"\n");
     Out("\t>\n");
 
     if (fullDump) {

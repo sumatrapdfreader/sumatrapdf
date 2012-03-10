@@ -251,10 +251,10 @@ USHORT RenderCache::GetTileRes(DisplayModel *dm, int pageNo)
 
     // use larger tiles when fitting page or width or when a page is smaller
     // than the visible canvas width/height or when rendering pages
-    // containing a single image
+    // without clipping optimizations
     if (dm->ZoomVirtual() == ZOOM_FIT_PAGE || dm->ZoomVirtual() == ZOOM_FIT_WIDTH ||
         pixelbox.dx <= dm->viewPort.dx || pixelbox.dy < dm->viewPort.dy ||
-        dm->engine->IsImagePage(pageNo)) {
+        !dm->engine->HasClipOptimizations(pageNo)) {
         factorMax /= 2.0;
     }
 

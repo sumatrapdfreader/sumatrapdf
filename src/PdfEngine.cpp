@@ -885,7 +885,7 @@ public:
     virtual unsigned char *GetFileData(size_t *cbCount);
     virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View);
-    virtual bool IsImagePage(int pageNo);
+    virtual bool HasClipOptimizations(int pageNo);
     virtual PageLayoutType PreferredLayout();
     virtual TCHAR *GetProperty(char *name);
 
@@ -2252,19 +2252,19 @@ bool PdfEngineImpl::SaveEmbedded(LinkSaverUI& saveUI, int num, int gen)
     return result;
 }
 
-bool PdfEngineImpl::IsImagePage(int pageNo)
+bool PdfEngineImpl::HasClipOptimizations(int pageNo)
 {
     pdf_page *page = GetPdfPage(pageNo, true);
     // GetPdfPage extracts imageRects for us
     if (!page || !imageRects[pageNo-1])
-        return false;
+        return true;
 
     fz_rect mbox = fz_RectD_to_rect(PageMediabox(pageNo));
     // check if any image covers at least 90% of the page
     for (int i = 0; !fz_is_empty_rect(imageRects[pageNo-1][i]); i++)
         if (fz_calc_overlap(mbox, imageRects[pageNo-1][i]) >= 0.9f)
-            return true;
-    return false;
+            return false;
+    return true;
 }
 
 TCHAR *PdfEngineImpl::GetPageLabel(int pageNo)
@@ -2513,7 +2513,7 @@ public:
                                     RenderTarget target=Target_View) {
         return ExtractPageText(GetXpsPage(pageNo), lineSep, coords_out);
     }
-    virtual bool IsImagePage(int pageNo);
+    virtual bool HasClipOptimizations(int pageNo);
     virtual TCHAR *GetProperty(char *name);
 
     virtual float GetFileDPI() const { return 72.0f; }
@@ -3428,19 +3428,19 @@ DocTocItem *XpsEngineImpl::GetTocTree()
     return BuildTocTree(_outline, idCounter);
 }
 
-bool XpsEngineImpl::IsImagePage(int pageNo)
+bool XpsEngineImpl::HasClipOptimizations(int pageNo)
 {
     xps_page *page = GetXpsPage(pageNo, true);
     // GetXpsPage extracts imageRects for us
     if (!page || !imageRects[pageNo-1])
-        return false;
+        return true;
 
     fz_rect mbox = fz_RectD_to_rect(PageMediabox(pageNo));
     // check if any image covers at least 90% of the page
     for (int i = 0; !fz_is_empty_rect(imageRects[pageNo-1][i]); i++)
         if (fz_calc_overlap(mbox, imageRects[pageNo-1][i]) >= 0.9f)
-            return true;
-    return false;
+            return false;
+    return true;
 }
 
 bool XpsEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)

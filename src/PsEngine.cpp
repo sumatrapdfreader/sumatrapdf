@@ -241,8 +241,8 @@ public:
                                     RenderTarget target=Target_View) {
         return pdfEngine ? pdfEngine->ExtractPageText(pageNo, lineSep, coords_out, target) : NULL;
     }
-    virtual bool IsImagePage(int pageNo) {
-        return pdfEngine ? pdfEngine->IsImagePage(pageNo) : false;
+    virtual bool HasClipOptimizations(int pageNo) {
+        return pdfEngine ? pdfEngine->HasClipOptimizations(pageNo) : true;
     }
     virtual PageLayoutType PreferredLayout() {
         return pdfEngine ? pdfEngine->PreferredLayout() : Layout_Single;

@@ -445,7 +445,7 @@ public:
                                     RenderTarget target=Target_View);
 
     // make RenderCache request larger tiles than per default
-    virtual bool IsImagePage(int pageNo) { return true; }
+    virtual bool HasClipOptimizations(int pageNo) { return false; }
     virtual PageLayoutType PreferredLayout() { return Layout_Book; }
     virtual TCHAR *GetProperty(char *name);
 
