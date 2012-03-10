@@ -33,6 +33,7 @@ class EpubDoc {
     str::Str<char> htmlData;
     Vec<ImageData2> images;
     StrVec props;
+    ScopedMem<TCHAR> tocPath;
 
     bool Load();
     void ParseMetadata(const char *content);
@@ -85,6 +86,12 @@ public:
                 return str::Dup(props.At(i + 1));
         }
         return NULL;
+    }
+
+    char *GetToC() {
+        if (!tocPath)
+            return NULL;
+        return zip.GetFileData(tocPath);
     }
 
     static bool IsSupportedFile(const TCHAR *fileName, bool sniff) {
@@ -187,6 +194,11 @@ bool EpubDoc::Load()
             data.idx = zip.GetFileIndex(zipPath);
             images.Append(data);
         }
+        else if (str::Eq(mediatype, _T("application/x-dtbncx+xml"))) {
+            tocPath.Set(node->GetAttribute("href"));
+            if (tocPath)
+                tocPath.Set(str::Join(contentPath, tocPath));
+        }
     }
 
     return htmlData.Count() > 0;
@@ -256,7 +268,6 @@ class PageLayoutEpub : public PageLayout {
     void HandleHtmlTag2(HtmlToken *t);
 
     bool IgnoreText();
-    bool IsEmptyPage(PageData *d);
 
     Vec<PageAnchor> *anchors;
 
@@ -295,7 +306,7 @@ PageLayoutEpub::PageLayoutEpub(LayoutInfo* li)
     currJustification = Align_Justify;
     currX = 0; currY = 0;
     currPage = new PageData;
-    currPage->reparsePoint = currReparsePoint;
+    currReparsePoint = NULL;
 
     currLineTopPadding = 0;
     // Epub documents contain no cover image
@@ -361,7 +372,7 @@ void PageLayoutEpub::HandleHtmlTag2(HtmlToken *t)
             attrInfo = t->GetAttrByName("name");
         if (attrInfo)
             anchors->Append(PageAnchor(attrInfo->val, attrInfo->valLen,
-                                       pagesToSend.Count(), currY));
+                                       pagesToSend.Count() + 1, currY));
     }
 
     HtmlTag tag = FindTag(t);
@@ -410,28 +421,6 @@ bool PageLayoutEpub::IgnoreText()
            htmlParser->tagNesting.Find(Tag_Title) != -1;
 }
 
-// empty page is one that consists of only invisible instructions
-bool PageLayoutEpub::IsEmptyPage(PageData *p)
-{
-    if (!p)
-        return false;
-    DrawInstr *i;
-    for (i = p->instructions.IterStart(); i; i = p->instructions.IterNext()) {
-        switch (i->type) {
-        case InstrString:
-        case InstrImage:
-            return false;
-        case InstrLine:
-            // if a page only consits of lines we consider it empty. It's different
-            // than what Kindle does but I don't see the purpose of showing such
-            // pages to the user
-            break;
-        }
-    }
-    // all instructions were invisible
-    return true;
-}
-
 Vec<PageData*> *PageLayoutEpub::Layout(Vec<PageAnchor> *anchors)
 {
     // optionally extract anchor information
@@ -439,7 +428,6 @@ Vec<PageData*> *PageLayoutEpub::Layout(Vec<PageAnchor> *anchors)
 
     HtmlToken *t;
     while ((t = htmlParser->Next()) && !t->IsError()) {
-        currReparsePoint = t->GetReparsePoint();
         if (t->IsTag())
             HandleHtmlTag2(t);
         else if (!IgnoreText())
@@ -449,14 +437,6 @@ Vec<PageData*> *PageLayoutEpub::Layout(Vec<PageAnchor> *anchors)
     FlushCurrLine(true);
     pagesToSend.Append(currPage);
     currPage = NULL;
-
-    // remove empty pages (same as PageLayout::IterNext)
-    for (size_t i = 0; i < pagesToSend.Count(); i++) {
-        if (IsEmptyPage(pagesToSend.At(i))) {
-            delete pagesToSend.At(i);
-            pagesToSend.RemoveAt(i--);
-        }
-    }
 
     Vec<PageData *> *result = new Vec<PageData *>(pagesToSend);
     pagesToSend.Reset();
@@ -505,8 +485,8 @@ public:
     virtual TCHAR *GetProperty(char *name);
 
     virtual PageDestination *GetNamedDest(const TCHAR *name);
-    // TODO: implement ToC extraction
-    virtual bool HasTocTree() const { return false; }
+    virtual bool HasTocTree() const { return doc && ScopedMem<char>(doc->GetToC()) != NULL; }
+    virtual DocTocItem *GetTocTree();
 
     virtual const TCHAR *GetDefaultFileExt() const { return _T(".epub"); }
 
@@ -536,6 +516,7 @@ protected:
                          zoom, rotation);
     }
     void FixFontSizeForResolution(HDC hDC);
+    DocTocItem *BuildTocTree(HtmlPullParser& parser, int& idCounter);
 
     Vec<DrawInstr> *GetPageData(int pageNo) {
         CrashIf(pageNo < 1 || PageCount() < pageNo);
@@ -545,16 +526,19 @@ protected:
     }
 };
 
-class SimpleDest : public PageDestination {
+class SimpleDest2 : public PageDestination {
     int pageNo;
     RectD rect;
+    ScopedMem<TCHAR> value;
 
 public:
-    SimpleDest(int pageNo, RectD rect) : pageNo(pageNo), rect(rect) { }
+    SimpleDest2(int pageNo, RectD rect, TCHAR *value=NULL) :
+        pageNo(pageNo), rect(rect), value(value) { }
 
-    virtual const char *GetDestType() const { return NULL; }
+    virtual const char *GetDestType() const { return value ? "LaunchURL" : "ScrollTo"; }
     virtual int GetDestPageNo() const { return pageNo; }
     virtual RectD GetDestRect() const { return rect; }
+    virtual TCHAR *GetDestValue() const { return value ? str::Dup(value) : NULL; }
 };
 
 class EpubLink : public PageElement, public PageDestination {
@@ -656,6 +640,17 @@ public:
         delete bmp;
         return new RenderedBitmap(hbmp, size);
     }
+};
+
+class EpubTocItem : public DocTocItem {
+    PageDestination *dest;
+
+public:
+    EpubTocItem(TCHAR *title, PageDestination *dest) :
+        DocTocItem(title, dest ? dest->GetDestPageNo() : 0), dest(dest) { }
+    ~EpubTocItem() { delete dest; }
+
+    virtual PageDestination *GetLink() { return dest; }
 };
 
 EpubEngineImpl::EpubEngineImpl() : fileName(NULL), doc(NULL), pages(NULL),
@@ -867,6 +862,88 @@ TCHAR *EpubEngineImpl::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coord
     return content.StealData();
 }
 
+static void AppendTocItem(EpubTocItem *& root, EpubTocItem *item, int level)
+{
+    if (!root) {
+        root = item;
+        return;
+    }
+    // find the last child at each level, until finding the parent of the new item
+    DocTocItem *r2 = root;
+    while (level-- > 0) {
+        for (; r2->next; r2 = r2->next);
+        if (r2->child)
+            r2 = r2->child;
+        else {
+            r2->child = item;
+            return;
+        }
+    }
+    r2->AddSibling(item);
+}
+
+DocTocItem *EpubEngineImpl::BuildTocTree(HtmlPullParser& parser, int& idCounter)
+{
+    ScopedMem<char> itemText, itemSrc;
+    EpubTocItem *root = NULL;
+    int level = -1;
+
+    HtmlToken *tok;
+    while ((tok = parser.Next()) && (!tok->IsEndTag() || !tok->NameIs("navMap") && !tok->NameIs("ncx:navMap"))) {
+        if (tok->IsTag() && (tok->NameIs("navPoint") || tok->NameIs("ncx:navPoint"))) {
+            if (itemText) {
+                ScopedMem<TCHAR> src(itemSrc ? str::conv::FromUtf8(itemSrc) : NULL);
+                PageDestination *dest = NULL;
+                if (src && str::FindChar(src, ':'))
+                    dest = new SimpleDest2(0, RectD(), src.StealData());
+                else if (src && str::FindChar(src, '#'))
+                    dest = GetNamedDest(str::FindChar(src, '#'));
+                else if (src)
+                    dest = GetNamedDest(src);
+                EpubTocItem *item = new EpubTocItem(str::conv::FromUtf8(itemText), dest);
+                item->id = ++idCounter;
+                AppendTocItem(root, item, level);
+                itemText.Set(NULL);
+                itemSrc.Set(NULL);
+            }
+            if (tok->IsStartTag())
+                level++;
+            if (tok->IsEndTag())
+                level--;
+        }
+        else if (tok->IsStartTag() && (tok->NameIs("text") || tok->NameIs("ncx:text"))) {
+            tok = parser.Next();
+            if (tok->IsText())
+                itemText.Set(str::DupN(tok->s, tok->sLen));
+        }
+        else if (tok->IsTag() && !tok->IsEndTag() && (tok->NameIs("content") || tok->NameIs("ncx:content"))) {
+            AttrInfo *attrInfo = tok->GetAttrByName("src");
+            if (attrInfo)
+                itemSrc.Set(str::DupN(attrInfo->val, attrInfo->valLen));
+        }
+    }
+
+    return root;
+}
+
+DocTocItem *EpubEngineImpl::GetTocTree()
+{
+    ScopedMem<char> tocXml(doc->GetToC());
+    if (!tocXml)
+        return NULL;
+
+    HtmlPullParser parser(tocXml, str::Len(tocXml));
+    HtmlToken *tok;
+    // skip to the start of the navMap
+    while ((tok = parser.Next())) {
+        if (tok->IsStartTag() && (tok->NameIs("navMap") || tok->NameIs("ncx:navMap"))) {
+            int idCounter = 0;
+            return BuildTocTree(parser, idCounter);
+        }
+    }
+    return NULL;
+}
+
 PageDestination *EpubEngineImpl::GetNamedDest(const TCHAR *name)
 {
     if ('#' == *name)
@@ -879,7 +956,7 @@ PageDestination *EpubEngineImpl::GetNamedDest(const TCHAR *name)
         if (name_len == anchor->len && str::EqN(name_utf8, anchor->s, name_len)) {
             RectD rect(0, anchor->currY, pageRect.dx, 10 + pageBorder * 2);
             rect.Inflate(-pageBorder, -pageBorder);
-            return new SimpleDest(anchor->pageNo, rect);
+            return new SimpleDest2(anchor->pageNo, rect);
         }
     }
 
