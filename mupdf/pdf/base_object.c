@@ -756,6 +756,7 @@ fz_dict_put(pdf_obj *obj, pdf_obj *key, pdf_obj *val)
 	int i;
 
 	RESOLVE(obj);
+	if (!obj) return; /* SumatraPDF: Can't warn :( */
 	if (!obj || obj->kind != PDF_DICT)
 	{
 		fz_warn(obj->ctx, "assert: not a dict (%s)", pdf_objkindstr(obj));
@@ -816,6 +817,7 @@ pdf_dict_dels(pdf_obj *obj, char *key)
 {
 	RESOLVE(obj);
 
+	if (!obj) return; /* SumatraPDF: Can't warn :( */
 	if (!obj || obj->kind != PDF_DICT)
 		fz_warn(obj->ctx, "assert: not a dict (%s)", pdf_objkindstr(obj));
 	else
