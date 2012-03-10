@@ -5,11 +5,11 @@
 #include "Mui.h"
 #include "SumatraWindow.h"
 #include "ThreadUtil.h"
+#include "WindowInfo.h"
 
 struct EbookControls;
 class  EbookController;
 class  MobiDoc;
-class  WindowInfo;
 
 class ThreadLoadMobi : public ThreadBase {
     TCHAR *             fileName; // we own this memory
@@ -29,13 +29,13 @@ public:
     MobiWindow() : 
         hwndFrame(NULL), ebookControls(NULL), 
         hwndWrapper(NULL), ebookController(NULL) 
-    { }
+    { touchState.panStarted = false; }
     ~MobiWindow() {}
     HWND                hwndFrame;
     EbookControls *     ebookControls;
     mui::HwndWrapper *  hwndWrapper;
     EbookController *   ebookController;
-
+    TouchState          touchState;
     TCHAR *             LoadedFilePath() const;
 };
 

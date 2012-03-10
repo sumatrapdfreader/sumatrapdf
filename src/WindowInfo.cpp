@@ -32,12 +32,12 @@ WindowInfo::WindowInfo(HWND hwnd) :
     xScrollSpeed(0), yScrollSpeed(0), wheelAccumDelta(0),
     delayedRepaintTimer(0), watcher(NULL),
     pdfsync(NULL), stressTest(NULL),
-    hwndFavBox(NULL), hwndFavTree(NULL), panStarted(false)
+    hwndFavBox(NULL), hwndFavTree(NULL)
 {
     ZeroMemory(&selectionRect, sizeof(selectionRect));
 
     dpi = win::GetHwndDpi(hwndFrame, &uiDPIFactor);
-
+    touchState.panStarted = false;
     buffer = new DoubleBuffer(hwndCanvas, canvasRc);
     linkHandler = new LinkHandler(*this);
     notifications = new Notifications();

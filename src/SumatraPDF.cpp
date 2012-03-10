@@ -3992,24 +3992,24 @@ static LRESULT OnGesture(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lP
     switch (gi.dwID) {
         case GID_ZOOM:
             if (gi.dwFlags != GF_BEGIN) {
-                float zoom = (float)LODWORD(gi.ullArguments) / (float)win.startArg;
+                float zoom = (float)LODWORD(gi.ullArguments) / (float)win.touchState.startArg;
                 ZoomToSelection(&win, zoom, true);
             }
-            win.startArg = LODWORD(gi.ullArguments);
+            win.touchState.startArg = LODWORD(gi.ullArguments);
             break;
 
         case GID_PAN:
             // Flicking left or right changes the page,
             // panning moves the document in the scroll window
             if (gi.dwFlags == GF_BEGIN) {
-                win.panStarted = true;
-                win.panPos = gi.ptsLocation;
-                win.panScrollOrigX = GetScrollPos(win.hwndCanvas, SB_HORZ);
+                win.touchState.panStarted = true;
+                win.touchState.panPos = gi.ptsLocation;
+                win.touchState.panScrollOrigX = GetScrollPos(win.hwndCanvas, SB_HORZ);
             }
-            else if (win.panStarted) {
-                int deltaX = win.panPos.x - gi.ptsLocation.x;
-                int deltaY = win.panPos.y - gi.ptsLocation.y;
-                win.panPos = gi.ptsLocation;
+            else if (win.touchState.panStarted) {
+                int deltaX = win.touchState.panPos.x - gi.ptsLocation.x;
+                int deltaY = win.touchState.panPos.y - gi.ptsLocation.y;
+                win.touchState.panPos = gi.ptsLocation;
 
                 if ((gi.dwFlags & GF_INERTIA) && abs(deltaX) > abs(deltaY)) {
                     // Switch pages once we hit inertia in a horizontal direction
@@ -4019,8 +4019,8 @@ static LRESULT OnGesture(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lP
                         win.dm->GoToNextPage(0);
                     // When we switch pages, go back to the initial scroll position
                     // and prevent further pan movement caused by the inertia
-                    win.dm->ScrollXTo(win.panScrollOrigX);
-                    win.panStarted = false;
+                    win.dm->ScrollXTo(win.touchState.panScrollOrigX);
+                    win.touchState.panStarted = false;
                 }
                 else {
                     // Pan/Scroll

@@ -234,6 +234,67 @@ void RebuildMenuBarForMobiWindows()
     }
 }
 
+static LRESULT OnGesture(MobiWindow *win, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    if (!Touch::SupportsGestures())
+        return DefWindowProc(win->hwndFrame, message, wParam, lParam);
+
+    HGESTUREINFO hgi = (HGESTUREINFO)lParam;
+    GESTUREINFO gi = { 0 };
+    gi.cbSize = sizeof(GESTUREINFO);
+
+    BOOL ok = Touch::GetGestureInfo(hgi, &gi);
+    if (!ok) {
+        Touch::CloseGestureInfoHandle(hgi);
+        return 0;
+    }
+
+    switch (gi.dwID) {
+        case GID_ZOOM:
+            win->touchState.startArg = LODWORD(gi.ullArguments);
+            break;
+
+        case GID_PAN:
+            // Flicking left or right changes the page,
+            // panning moves the document in the scroll window
+            if (gi.dwFlags == GF_BEGIN) {
+                win->touchState.panStarted = true;
+                win->touchState.panPos = gi.ptsLocation;
+            } else if (win->touchState.panStarted) {
+                int deltaX = win->touchState.panPos.x - gi.ptsLocation.x;
+                int deltaY = win->touchState.panPos.y - gi.ptsLocation.y;
+                win->touchState.panPos = gi.ptsLocation;
+
+                if ((gi.dwFlags & GF_INERTIA) && abs(deltaX) > abs(deltaY)) {
+                    // Switch pages once we hit inertia in a horizontal direction
+                    if (deltaX < 0)
+                        win->ebookController->AdvancePage(-1);
+                    else if (deltaX > 0)
+                        win->ebookController->AdvancePage(1);
+                    win->touchState.panStarted = false;
+                }
+            }
+            break;
+
+        case GID_TWOFINGERTAP:
+            // Two-finger tap toggles fullscreen mode
+            // TODO: write me when we have fullscreen mode
+            break;
+
+        case GID_PRESSANDTAP:
+            // in engine window toggles between Fit Page, Fit Width and Fit Content (same as 'z')
+            // TODO: should we do something here?
+            break;
+
+        default:
+            // A gesture was not recognized
+            break;
+    }
+
+    Touch::CloseGestureInfoHandle(hgi);
+    return 0;
+}
+
 static LRESULT OnCommand(MobiWindow *win, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     int wmId = LOWORD(wParam);
@@ -358,8 +419,7 @@ static LRESULT CALLBACK MobiWndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPA
         case WM_DESTROY:
             // called by windows if user clicks window's close button or if
             // we call DestroyWindow()
-            if (win)
-                CloseMobiWindow(win, true, true);
+            CloseMobiWindow(win, true, true);
             break;
 
         case WM_PAINT:
@@ -376,6 +436,9 @@ static LRESULT CALLBACK MobiWndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPA
         case WM_INITMENUPOPUP:
             UpdateMenuForMobiWindow(win, (HMENU)wParam);
             break;
+
+        case WM_GESTURE:
+            return OnGesture(win, msg, wParam, lParam);
 
         case WM_TIMER:
             OnTimer(win, wParam);

@@ -32,6 +32,14 @@ enum PresentationMode {
     PM_WHITE_SCREEN
 };
 
+// WM_GESTURE handling
+struct TouchState {
+    bool    panStarted;
+    POINTS  panPos;
+    int     panScrollOrigX;
+    double  startArg;
+};
+
 /* Describes position, the target (URL or file path) and infotip of a "hyperlink" */
 struct StaticLinkInfo {
     StaticLinkInfo() : target(NULL), infotip(NULL) { }
@@ -181,11 +189,7 @@ public:
 
     CallbackFunc *  stressTest;
 
-    // WM_GESTURE handling
-    bool    panStarted;
-    POINTS  panPos;
-    int     panScrollOrigX;
-    double  startArg;
+    TouchState touchState;
 
     void  UpdateCanvasSize();
     SizeI GetViewPortSize();

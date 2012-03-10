@@ -8,9 +8,11 @@ for basic mobi support.
 
 Specific things that still need to be added for minimal mobi support:
 - save and restore last position in the mobi file
+- document properties
+- ability to use test document in debug mode
 
 Implicitly everything else is for later, including fullscreen, printing,
-search, touch gestures for mobi window etc.
+search etc.
 
 Things to do before 2.1 release:
 * installer and settings: UI for registering other supported file types
