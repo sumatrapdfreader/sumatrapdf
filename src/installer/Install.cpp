@@ -83,15 +83,15 @@ static bool InstallCopyFiles()
 
         ScopedMem<TCHAR> extpath(path::Join(gGlobalData.installDir, path::GetBaseName(filepathT)));
         bool ok = trans.WriteAll(extpath, data, size);
-        if (ok) {
-            // set modification time to original value
-            FILETIME ftModified = archive.GetFileTime(filepathT);
-            trans.SetModificationTime(extpath, ftModified);
-        }
-        else {
+        if (!ok) {
             ScopedMem<TCHAR> msg(str::Format(_T("Couldn't write %s to disk"), filepathT));
             NotifyFailed(msg);
+            return false;
         }
+
+        // set modification time to original value
+        FILETIME ftModified = archive.GetFileTime(filepathT);
+        trans.SetModificationTime(extpath, ftModified);
 
         ProgressStep();
     }
