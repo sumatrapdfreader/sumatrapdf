@@ -235,9 +235,9 @@ $(OS)\Favorites.obj: src\Menu.h src\PdfEngine.h src\PsEngine.h
 $(OS)\Favorites.obj: src\resource.h src\SumatraDialogs.h src\SumatraPDF.h
 $(OS)\Favorites.obj: src\SumatraWindow.h src\TextSearch.h src\TextSelection.h
 $(OS)\Favorites.obj: src\Translations.h src\utils\Allocator.h src\utils\BaseUtil.h
-$(OS)\Favorites.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
-$(OS)\Favorites.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
-$(OS)\Favorites.obj: src\WindowInfo.h
+$(OS)\Favorites.obj: src\utils\FileUtil.h src\utils\GdiPlusUtil.h src\utils\GeomUtil.h
+$(OS)\Favorites.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\Favorites.obj: src\utils\WinUtil.h src\WindowInfo.h
 $(OS)\FileWatch.obj: src\FileWatch.h src\utils\BaseUtil.h src\utils\FileUtil.h
 $(OS)\FileWatch.obj: src\utils\Scoped.h src\utils\StrUtil.h
 $(OS)\ImagesEngine.obj: ext\unrar\dll.hpp src\BaseEngine.h src\ImagesEngine.h
@@ -410,12 +410,12 @@ $(OS)\SumatraPDF.obj: src\SumatraPDF.h src\SumatraProperties.h src\SumatraStartu
 $(OS)\SumatraPDF.obj: src\SumatraWindow.h src\TableOfContents.h src\TextSearch.h
 $(OS)\SumatraPDF.obj: src\TextSelection.h src\Toolbar.h src\Translations.h
 $(OS)\SumatraPDF.obj: src\UiMsgSumatra.h src\utils\Allocator.h src\utils\BaseUtil.h
-$(OS)\SumatraPDF.obj: src\utils\BitManip.h src\utils\FileUtil.h src\utils\GeomUtil.h
-$(OS)\SumatraPDF.obj: src\utils\HtmlPullParser.h src\utils\HtmlWindow.h src\utils\Http.h
-$(OS)\SumatraPDF.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\ThreadUtil.h
-$(OS)\SumatraPDF.obj: src\utils\Timer.h src\utils\Touch.h src\utils\UiMsg.h
-$(OS)\SumatraPDF.obj: src\utils\Vec.h src\utils\WinUtil.h src\Version.h
-$(OS)\SumatraPDF.obj: src\WindowInfo.h
+$(OS)\SumatraPDF.obj: src\utils\BitManip.h src\utils\FileUtil.h src\utils\GdiPlusUtil.h
+$(OS)\SumatraPDF.obj: src\utils\GeomUtil.h src\utils\HtmlPullParser.h src\utils\HtmlWindow.h
+$(OS)\SumatraPDF.obj: src\utils\Http.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OS)\SumatraPDF.obj: src\utils\ThreadUtil.h src\utils\Timer.h src\utils\Touch.h
+$(OS)\SumatraPDF.obj: src\utils\UiMsg.h src\utils\Vec.h src\utils\WinUtil.h
+$(OS)\SumatraPDF.obj: src\Version.h src\WindowInfo.h
 $(OS)\SumatraProperties.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
 $(OS)\SumatraProperties.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
 $(OS)\SumatraProperties.obj: src\EngineManager.h src\EpubEngine.h src\ImagesEngine.h
@@ -432,8 +432,9 @@ $(OS)\TableOfContents.obj: src\ImagesEngine.h src\PdfEngine.h src\PsEngine.h
 $(OS)\TableOfContents.obj: src\resource.h src\SumatraPDF.h src\SumatraWindow.h
 $(OS)\TableOfContents.obj: src\TableOfContents.h src\TextSearch.h src\TextSelection.h
 $(OS)\TableOfContents.obj: src\Translations.h src\utils\Allocator.h src\utils\BaseUtil.h
-$(OS)\TableOfContents.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
-$(OS)\TableOfContents.obj: src\utils\Vec.h src\utils\WinUtil.h src\WindowInfo.h
+$(OS)\TableOfContents.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
+$(OS)\TableOfContents.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
+$(OS)\TableOfContents.obj: src\WindowInfo.h
 $(OS)\Tester.obj: src\MobiDoc.h src\mui\Mui.h src\mui\MuiBase.h
 $(OS)\Tester.obj: src\mui\MuiButton.h src\mui\MuiControl.h src\mui\MuiCss.h
 $(OS)\Tester.obj: src\mui\MuiEventMgr.h src\mui\MuiHwndWrapper.h src\mui\MuiLayout.h

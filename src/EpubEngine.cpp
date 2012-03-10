@@ -465,13 +465,17 @@ protected:
     Vec<PageData *> *pages;
     // needed so that memory allocated by ResolveHtmlEntities isn't leaked
     PoolAllocator allocator;
+    // needed since pages::IterStart/IterNext aren't thread-safe
     CRITICAL_SECTION iterAccess;
+    // needed to undo the DPI specific UnitPoint-UnitPixel conversion
+    int currFontDpi;
 
     RectD pageRect;
     float pageBorder;
 
     bool Load(const TCHAR *fileName);
     void GetTransform(Matrix& m, float zoom, int rotation);
+    void FixFontSizeForResolution(HDC hDC);
 
     Vec<DrawInstr> *GetPageData(int pageNo) {
         CrashIf(pageNo < 1 || PageCount() < pageNo);
@@ -510,7 +514,7 @@ public:
 
 EpubEngineImpl::EpubEngineImpl() : fileName(NULL), doc(NULL), pages(NULL),
     pageRect(0, 0, 5.12 * GetFileDPI(), 7.8 * GetFileDPI()), // "B Format" paperback
-    pageBorder(0.4f * GetFileDPI())
+    pageBorder(0.4f * GetFileDPI()), currFontDpi(96)
 {
     InitializeCriticalSection(&iterAccess);
 }
@@ -543,7 +547,7 @@ bool EpubEngineImpl::Load(const TCHAR *fileName)
     li.pageDx = (int)(pageRect.dx - 2 * pageBorder);
     li.pageDy = (int)(pageRect.dy - 2 * pageBorder);
     li.fontName = L"Georgia";
-    li.fontSize = 11.f * 96 / 72;
+    li.fontSize = 11;
     li.textAllocator = &allocator;
 
     pages = PageLayout2(&li).Layout();
@@ -610,6 +614,37 @@ RenderedBitmap *EpubEngineImpl::RenderBitmap(int pageNo, float zoom, int rotatio
     return new RenderedBitmap(hbmp, screen.Size());
 }
 
+void EpubEngineImpl::FixFontSizeForResolution(HDC hDC)
+{
+    int dpi = GetDeviceCaps(hDC, LOGPIXELSY);
+    if (dpi == currFontDpi)
+        return;
+
+    ScopedCritSec scope(&iterAccess);
+
+    float dpiFactor = 1.0f * currFontDpi / dpi;
+    Graphics g(hDC);
+    LOGFONTW lfw;
+
+    for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
+        Vec<DrawInstr> *pageInstrs = GetPageData(pageNo);
+        CrashIf(!pageInstrs);
+        if (!pageInstrs)
+            continue;
+        for (DrawInstr *i = pageInstrs->IterStart(); i; i = pageInstrs->IterNext()) {
+            if (InstrSetFont == i->type) {
+                Status ok = i->font->GetLogFontW(&g, &lfw);
+                if (Ok == ok) {
+                    REAL newSize = i->font->GetSize() * dpiFactor;
+                    FontStyle newStyle = (FontStyle)i->font->GetStyle();
+                    i->font = mui::GetCachedFont(lfw.lfFaceName, newSize, newStyle);
+                }
+            }
+        }
+    }
+    currFontDpi = dpi;
+}
+
 bool EpubEngineImpl::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target)
 {
     Vec<DrawInstr> *pageInstrs = GetPageData(pageNo);
@@ -637,6 +672,7 @@ bool EpubEngineImpl::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoo
     g.SetTransform(&m);
 
     ScopedCritSec scope(&iterAccess);
+    FixFontSizeForResolution(hDC);
     DrawPageLayout(&g, pageInstrs, pageBorder, pageBorder, false);
     return true;
 }
