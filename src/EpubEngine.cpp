@@ -444,7 +444,8 @@ public:
     virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View);
 
-    virtual bool IsImagePage(int pageNo) { return false; }
+    // make RenderCache request larger tiles than per default
+    virtual bool IsImagePage(int pageNo) { return true; }
     virtual PageLayoutType PreferredLayout() { return Layout_Book; }
     virtual TCHAR *GetProperty(char *name);
 
@@ -542,7 +543,7 @@ bool EpubEngineImpl::Load(const TCHAR *fileName)
     li.pageDx = (int)(pageRect.dx - 2 * pageBorder);
     li.pageDy = (int)(pageRect.dy - 2 * pageBorder);
     li.fontName = L"Georgia";
-    li.fontSize = 11;
+    li.fontSize = 11.f * 96 / 72;
     li.textAllocator = &allocator;
 
     pages = PageLayout2(&li).Layout();

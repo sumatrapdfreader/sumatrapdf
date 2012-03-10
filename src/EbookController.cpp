@@ -21,7 +21,7 @@
    after resize. */
 
 #define FONT_NAME              L"Georgia"
-#define FONT_SIZE              12.5
+#define FONT_SIZE              12.5f
 
 // in EbookTest.cpp
 void RestartLayoutTimer(EbookController *controller);
@@ -218,7 +218,7 @@ static LayoutInfo *GetLayoutInfo(const char *html, MobiDoc *mobiDoc, int dx, int
         html = mobiDoc->GetBookHtmlData(len);
     }
     li->fontName = str::Dup(FONT_NAME);
-    li->fontSize = FONT_SIZE;
+    li->fontSize = FONT_SIZE * 96 / 72; // TODO: take DPI into account
     li->htmlStr = html;
     li->htmlStrLen = len;
     li->pageDx = dx;

@@ -119,11 +119,6 @@ void DestroyBase()
     DeleteCriticalSection(&gMuiCs);
 }
 
-static Font *CreateFontByStyle(const WCHAR *name, REAL size, FontStyle style)
-{
-    return ::new Font(name, size, style);
-}
-
 bool FontCacheEntry::SameAs(const WCHAR *otherName, float otherSize, FontStyle otherStyle)
 {
     if (size != otherSize)
@@ -132,7 +127,6 @@ bool FontCacheEntry::SameAs(const WCHAR *otherName, float otherSize, FontStyle o
         return false;
     return str::Eq(name, otherName);
 }
-
 
 // convenience function: given cached style, get a Font object matching the font
 // properties.
@@ -150,7 +144,7 @@ Font *GetCachedFont(const WCHAR *name, float size, FontStyle style)
     FontCacheEntry f = { str::Dup(name), size, style, NULL };
     // TODO: handle a failure to create a font. Use fontCache[0] if exists
     // or try to fallback to a known font like Times New Roman
-    f.font = CreateFontByStyle(name, size, style);
+    f.font = ::new Font(name, size, style, UnitPixel);
     gFontsCache->Append(f);
     return f.font;
 }

@@ -52,7 +52,7 @@ public:
         f.font = ::new Font(name, size, style);
         if (!f.font) {
             // fall back to the default font, if a desired font can't be created
-            f.font = ::new Font(L"Times New Roman", size, style);
+            f.font = ::new Font(L"Times New Roman", size, style, UnitPixel);
             if (!f.font) {
                 if (cache.Count() > 0)
                     return cache.At(0).font;
