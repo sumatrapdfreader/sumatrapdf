@@ -144,7 +144,7 @@ Font *GetCachedFont(const WCHAR *name, float size, FontStyle style)
     FontCacheEntry f = { str::Dup(name), size, style, NULL };
     // TODO: handle a failure to create a font. Use fontCache[0] if exists
     // or try to fallback to a known font like Times New Roman
-    f.font = ::new Font(name, size, style, UnitPixel);
+    f.font = ::new Font(name, size, style);
     gFontsCache->Append(f);
     return f.font;
 }

@@ -339,7 +339,7 @@ Prop *Prop::AllocFontName(const WCHAR *name)
 Prop *Prop::AllocFontSize(float size)
 {
     Prop p(PropFontSize);
-    p.fontSize = size * 96 / 72; // TODO: use actual DPI instead of 96
+    p.fontSize = size;
     return UniqifyProp(p);
 }
 

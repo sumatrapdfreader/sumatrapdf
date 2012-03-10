@@ -218,7 +218,7 @@ static LayoutInfo *GetLayoutInfo(const char *html, MobiDoc *mobiDoc, int dx, int
         html = mobiDoc->GetBookHtmlData(len);
     }
     li->fontName = str::Dup(FONT_NAME);
-    li->fontSize = FONT_SIZE * 96 / 72; // TODO: take DPI into account
+    li->fontSize = FONT_SIZE;
     li->htmlStr = html;
     li->htmlStrLen = len;
     li->pageDx = dx;
