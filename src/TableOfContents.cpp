@@ -135,10 +135,11 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd)
 class GoToTocLinkWorkItem : public UIThreadWorkItem
 {
     DocTocItem *tocItem;
+    HTREEITEM hItem;
 
 public:
-    GoToTocLinkWorkItem(WindowInfo *win, DocTocItem *tocItem) :
-        UIThreadWorkItem(win), tocItem(tocItem) { }
+    GoToTocLinkWorkItem(WindowInfo *win, DocTocItem *tocItem, HTREEITEM hItem) :
+        UIThreadWorkItem(win), tocItem(tocItem), hItem(hItem) { }
 
     virtual void Execute() {
         if (!WindowInfoStillValid(win) || !win->IsDocLoaded() || !tocItem)
@@ -148,6 +149,9 @@ public:
             win->linkHandler->GotoLink(tocItem->GetLink());
         else if (tocItem->pageNo)
             win->dm->GoToPage(tocItem->pageNo, 0, true);
+        // make sure that the tree item that the user selected
+        // isn't unselected in UpdateTocSelection right again
+        TreeView_SelectItem(win->hwndTocTree, hItem);
     }
 };
 
@@ -164,7 +168,8 @@ static void GoToTocLinkForTVItem(WindowInfo* win, HWND hTV, HTREEITEM hItem=NULL
     if (!tocItem || !win->IsDocLoaded())
         return;
     if ((allowExternal || tocItem->GetLink() && str::Eq(tocItem->GetLink()->GetDestType(), "ScrollTo")) || tocItem->pageNo) {
-        QueueWorkItem(new GoToTocLinkWorkItem(win, tocItem));
+        // delay changing the page until the tree messages have been handled
+        QueueWorkItem(new GoToTocLinkWorkItem(win, tocItem, hItem));
     }
 }
 
