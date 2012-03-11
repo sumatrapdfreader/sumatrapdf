@@ -139,6 +139,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\MobiEngine.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\MobiEngine.h"
+					>
+				</File>
+				<File
 					RelativePath=".\src\PdfEngine.cpp"
 					>
 				</File>

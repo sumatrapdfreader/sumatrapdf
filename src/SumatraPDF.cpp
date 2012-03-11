@@ -2413,6 +2413,7 @@ static void OnMenuSaveAs(WindowInfo& win)
     case Engine_Chm:    fileFilter.Append(_TR("CHM documents")); break;
 #ifdef TEST_EPUB_ENGINE
     case Engine_Epub:   fileFilter.Append(_TR("EPUB ebooks")); break;
+    case Engine_Mobi:   fileFilter.Append(_TR("Mobi documents")); break;
 #endif
     default:            fileFilter.Append(_TR("PDF documents")); break;
     }

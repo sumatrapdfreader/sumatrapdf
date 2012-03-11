@@ -233,10 +233,10 @@ ENGINEDUMP_OBJS     = $(ENGINEDUMP_OBJS) $(MICROCRT_CONSOLE_OBJS)
 !endif
 
 !if "$(TEST_EPUB_ENGINE)"!="" || "$(CFG)"=="dbg"
-SUMATRA_OBJS = $(SUMATRA_OBJS) $(OS)\EpubEngine.obj
+SUMATRA_OBJS = $(SUMATRA_OBJS) $(OS)\EpubEngine.obj $(OS)\MobiEngine.obj
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "TEST_EPUB_ENGINE"
 ENGINEDUMP_OBJS = $(ENGINEDUMP_OBJS) \
-	$(OS)\EpubEngine.obj $(OS)\PageLayout.obj $(OS)\MobiDoc.obj $(OMUI)\MiniMui.obj
+	$(OS)\EpubEngine.obj $(OS)\PageLayout.obj $(OS)\MobiDoc.obj $(OMUI)\MiniMui.obj $(OS)\MobiEngine.obj
 !endif
 
 !if "$(BUILD_TEX_IFILTER)"!=""

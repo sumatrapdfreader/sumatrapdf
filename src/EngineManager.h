@@ -13,6 +13,7 @@ enum EngineType {
     Engine_Chm,
 #ifdef TEST_EPUB_ENGINE
     Engine_Epub,
+    Engine_Mobi,
 #endif
 };
 
@@ -24,6 +25,7 @@ enum EngineType {
 #include "ChmEngine.h"
 #ifdef TEST_EPUB_ENGINE
 #include "EpubEngine.h"
+#include "MobiEngine.h"
 #endif
 
 class EngineManager {
@@ -64,6 +66,9 @@ RetrySniffing:
         } else if (EpubEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_Epub) {
             engine = EpubEngine::CreateFromFile(filePath);
             engineType = Engine_Epub;
+        } else if (MobiEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_Mobi) {
+            engine = MobiEngine::CreateFromFile(filePath);
+            engineType = Engine_Mobi;
 #endif
         }
 
