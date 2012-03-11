@@ -43,7 +43,7 @@ EXTDIR=ext
 LIBMUPDF_RES = $(O)\libmupdf.res
 
 # default target
-all_sumatrapdf: SumatraPDF Uninstaller PDFFilter PdfPreview BrowserPlugin EngineDump PdfBench tester
+all_sumatrapdf: SumatraPDF Uninstaller PDFFilter PdfPreview BrowserPlugin EngineDump PdfBench tester memtrace
 
 ##### add configuration changes that should also affect MuPDF before this line #####
 
@@ -94,11 +94,12 @@ LIBS = $(LIBS) \
 	comctl32.lib Msimg32.lib Winspool.lib wininet.lib \
 	ole32.lib OleAut32.lib shlwapi.lib version.lib
 
-OS = $(O)\sumatrapdf
-OU = $(O)\utils
+OS   = $(O)\sumatrapdf
+OU   = $(O)\utils
 ODLL = $(O)\applibs
-OEB = $(O)\ebooktest
+OEB  = $(O)\ebooktest
 OMUI = $(O)\mui
+OM   = $(O)\memtrace
 
 SUMATRA_APP = $(O)\SumatraPDF.exe
 SUMATRA_APP_NO_MUPDF = $(O)\SumatraPDF-no-MuPDF.exe
@@ -123,6 +124,10 @@ PDFFILTER_CFLAGS = $(SUMATRA_CFLAGS)
 PDFPREVIEW_DLL = $(O)\PdfPreview.dll
 PDFPREVIEW_RES = $(ODLL)\PdfPreview.res
 PDFPREVIEW_CFLAGS = $(SUMATRA_CFLAGS)
+
+MEMTRACE_DLL = $(O)\memtrace.dll
+MEMTRACE_RES = $(ODLL)\memtrace.res
+MEMTRACE_CFLAGS = $(SUMATRA_CFLAGS)
 
 BROWSER_PLUGIN = $(O)\npPdfViewer.dll
 BROWSER_PLUGIN_RES = $(ODLL)\npPdfViewer.res
@@ -213,6 +218,9 @@ BROWSER_PLUGIN_OBJS = \
 ENGINEDUMP_OBJS = \
 	$(OS)\EngineDump.obj $(ENGINE_OBJS) $(LIBS_OBJS) $(UTILS_OBJS)
 
+MEMTRACE_OBJS = \
+	$(OM)\MemTraceDll.obj
+
 !if "$(WITH_MICROCRT)"=="yes"
 ET_OBJS             = $(ET_OBJS) $(MICROCRT_WIN_OBJS)
 INSTALLER_OBJS      = $(INSTALLER_OBJS) $(MICROCRT_WIN_OBJS)
@@ -265,6 +273,7 @@ PdfBench:      $(OS) $(PDFBENCH_APP)
 EngineDump:    $(OS) $(ENGINEDUMP_APP)
 et:            $(OS) $(ET_APP)
 tester:        $(OS) $(TESTER_APP)
+memtrace:      $(OS) $(MEMTRACE_DLL)
 
 $(OS): $(O) $(OE) $(OCH)
 	@if not exist $(OS) mkdir $(OS)
@@ -272,6 +281,7 @@ $(OS): $(O) $(OE) $(OCH)
 	@if not exist $(ODLL) mkdir $(ODLL)
 	@if not exist $(OEB) mkdir $(OEB)
 	@if not exist $(OMUI) mkdir $(OMUI)
+	@if not exist $(OM) mkdir $(OM)
 
 $(SUMATRA_RES): src\SumatraPDF.rc src\Resource.h src\Version.h
 	rc /r /fo$@ $(EXTCFLAGS) src\SumatraPDF.rc
@@ -318,6 +328,12 @@ $(PDFPREVIEW_RES): src\previewer\PdfPreview.rc src\Version.h
 $(PDFPREVIEW_DLL): $(PDFPREVIEW_OBJS)
 	$(LD) /DLL $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
 
+$(MEMTRACE_RES): src\memtrace\MemTrace.rc
+	rc /r /fo$@ $(EXTCFLAGS) src\memtrace\MemTrace.rc
+
+$(MEMTRACE_DLL): $(MEMTRACE_OBJS)
+	$(LD) /DLL $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
+
 $(BROWSER_PLUGIN_RES): src\browserplugin\npPdfViewer.rc src\Version.h
 	rc /r /fo$@ $(EXTCFLAGS) src\browserplugin\npPdfViewer.rc
 
@@ -327,7 +343,6 @@ $(BROWSER_PLUGIN): $(BROWSER_PLUGIN_OBJS)
 $(ENGINEDUMP_APP): $(ENGINEDUMP_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
 
-# ucrt directory
 {src\ucrt\src}.cpp{$(OS)}.obj::
 	$(CC) $(MICROCRT_CFLAGS) /Fo$(OS)\ /Fd$(O)\vc80.pdb $<
 
@@ -338,31 +353,24 @@ $(ENGINEDUMP_APP): $(ENGINEDUMP_OBJS)
 {src\ucrt\src}.asm{$(OS)}.obj:
 	ml /c /coff /Fo$(OS)\ $<
 
-# utils directory
 {src\utils}.cpp{$(OU)}.obj::
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(OU)\ /Fd$(O)\vc80.pdb $<
 
-# mui directory
 {src\mui}.cpp{$(OMUI)}.obj::
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(OMUI)\ /Fd$(O)\vc80.pdb $<
 
-# SumatraPDF app directory
 {src}.cpp{$(OS)}.obj::
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(OS)\ /Fd$(O)\vc80.pdb $<
 
-# browserplugin directory
 {src\browserplugin}.cpp{$(ODLL)}.obj::
 	$(CC) $(BROWSER_PLUGIN_CFLAGS) /Fo$(ODLL)\ /Fd$(O)\vc80.pdb $<
 
-# IFilter directory
 {src\ifilter}.cpp{$(ODLL)}.obj::
 	$(CC) $(PDFFILTER_CFLAGS) /Fo$(ODLL)\ /Fd$(O)\vc80.pdb $<
 
-# previewer directory
 {src\previewer}.cpp{$(ODLL)}.obj::
 	$(CC) $(PDFPREVIEW_CFLAGS) /Fo$(ODLL)\ /Fd$(O)\vc80.pdb $<
 
-# Installer directory
 {src\installer}.cpp{$(OS)}.obj::
 	$(CC) $(INSTALLER_CFLAGS) /Fo$(OS)\ /Fd$(O)\vc80.pdb $<
 $(OS)\Uninstaller.obj: $(OS)\Installer.obj
@@ -371,6 +379,9 @@ $(OS)\Uninstaller.obj: $(OS)\Installer.obj
 # ebooktest directory
 {src\ebooktest}.cpp{$(OEB)}.obj::
 	$(CC) $(ET_CFLAGS) /Fo$(OEB)\ /Fd$(O)\vc80.pdb $<
+
+{src\memtrace}.cpp{$(OM)}.obj::
+	$(CC) $(MEMTRACE_CFLAGS) /Fo$(OM)\ /Fd$(O)\vc80.pdb $<
 
 ## Header-dependencies for src\* and src\*\*
 !INCLUDE makefile.deps
