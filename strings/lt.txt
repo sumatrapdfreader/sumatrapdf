@@ -664,6 +664,7 @@ spausdinamas dokumentas
 #Bookmark Shortcuts
 #Bookmark shortcut to page %s of %s
 #Copy &Image
+#Copyright:
 #File %s not found
 #Fonts:
 #Open in Microsoft XPS-Viewer

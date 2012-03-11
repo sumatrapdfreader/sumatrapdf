@@ -668,6 +668,7 @@ agiria irarkitzen
 # Untranslated:
 #&Pin Document
 #Copy &Image
+#Copyright:
 #File %s not found
 #Fonts:
 #No result found around line %u in file %s

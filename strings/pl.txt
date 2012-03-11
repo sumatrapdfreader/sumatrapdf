@@ -269,6 +269,9 @@ Kopiuj ko&mentarz
 Copying text was denied (copying as image only)
 Nie można kopiować tekstu (można kopiować jako obrazy)
 
+Copyright:
+Prawo autorskie:
+
 Could not obtain Printer properties
 Nie można uzyskać właściwości drukarki
 

@@ -563,6 +563,7 @@ ipini-print ang dokumento
 #CHM documents
 #Comic books
 #Copy &Image
+#Copyright:
 #Could not obtain Printer properties
 #Current file
 #DjVu documents

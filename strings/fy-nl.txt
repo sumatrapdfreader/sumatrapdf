@@ -488,6 +488,7 @@ Zoomfaktor
 #Copy &Link Address
 #Copy Co&mment
 #Copying text was denied (copying as image only)
+#Copyright:
 #Could not obtain Printer properties
 #Current file
 #Denied Permissions:

@@ -675,6 +675,7 @@ printing document
 
 # Untranslated:
 #Copy &Image
+#Copyright:
 #Fonts:
 #Replace document &colors with Windows color scheme
 

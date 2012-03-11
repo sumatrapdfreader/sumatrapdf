@@ -270,6 +270,9 @@ Copy Co&mment
 Copying text was denied (copying as image only)
 Скопировать текст невозможно (копируется как изображение)
 
+Copyright:
+Авторское право:
+
 Could not obtain Printer properties
 Не удалось определить свойства принтера
 

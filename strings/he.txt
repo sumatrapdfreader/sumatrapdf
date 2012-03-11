@@ -673,6 +673,7 @@ printing document
 
 # Untranslated:
 #Copy &Image
+#Copyright:
 #File %s not found
 #Fonts:
 #Replace document &colors with Windows color scheme

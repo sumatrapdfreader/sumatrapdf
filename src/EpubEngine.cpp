@@ -44,7 +44,7 @@ class EpubDoc {
     ZipFile zip;
     str::Str<char> htmlData;
     Vec<ImageData2> images;
-    Vec<char *> props;
+    Vec<const char *> props;
     ScopedMem<TCHAR> tocPath;
 
     bool Load();
@@ -66,7 +66,7 @@ public:
             free(images.At(i).id);
         }
         for (size_t i = 1; i < props.Count(); i += 2) {
-            free(props.At(i));
+            free((void *)props.At(i));
         }
     }
 
@@ -131,15 +131,6 @@ static void UrlDecode(TCHAR *url)
     *url = '\0';
 }
 
-static char *GetTokenText(HtmlToken *tok)
-{
-    if (!tok->IsText())
-        return NULL;
-    ScopedMem<char> dup(str::DupN(tok->s, tok->sLen));
-    char *text = (char *)ResolveHtmlEntities(dup, dup + tok->sLen, NULL);
-    return text != dup ? text : str::Dup(text);
-}
-
 bool EpubDoc::Load()
 {
     if (!VerifyEpub(zip))
@@ -173,26 +164,17 @@ bool EpubDoc::Load()
         *(TCHAR *)(str::FindCharLast(contentPath, '/') + 1) = '\0';
     else
         *contentPath = '\0';
+    StrVec idPathMap;
+
     for (node = node->down; node; node = node->next) {
         ScopedMem<TCHAR> mediatype(node->GetAttribute("media-type"));
         if (str::Eq(mediatype, _T("application/xhtml+xml"))) {
             ScopedMem<TCHAR> htmlPath(node->GetAttribute("href"));
-            if (!htmlPath)
-                continue;
-            ScopedMem<char> utf8_path(str::conv::ToUtf8(htmlPath));
-            htmlPath.Set(str::Join(contentPath, htmlPath));
-
-            ScopedMem<char> html(zip.GetFileData(htmlPath));
-            if (!html)
-                continue;
-            if (htmlData.Count() > 0) {
-                // insert explicit page-breaks between sections
-                htmlData.Append("<pagebreak />");
+            ScopedMem<TCHAR> htmlId(node->GetAttribute("id"));
+            if (htmlPath && htmlId) {
+                idPathMap.Append(htmlId.StealData());
+                idPathMap.Append(htmlPath.StealData());
             }
-            // add an anchor with the file name at the top (for internal links)
-            htmlData.AppendFmt("<a name=\"%s\" />", utf8_path);
-            // TODO: merge/remove <head>s and drop everything else outside of <body>s(?)
-            htmlData.Append(html);
         }
         else if (str::Eq(mediatype, _T("image/png"))  ||
                  str::Eq(mediatype, _T("image/jpeg")) ||
@@ -215,11 +197,51 @@ bool EpubDoc::Load()
         }
     }
 
+    node = parser.FindElementByName("spine");
+    if (!node)
+        return false;
+    for (node = node->down; node; node = node->next) {
+        if (!str::Eq(node->name, "itemref"))
+            continue;
+        ScopedMem<TCHAR> idref(node->GetAttribute("idref"));
+        if (!idref)
+            continue;
+        const TCHAR *htmlPath = NULL;
+        for (size_t i = 0; i < idPathMap.Count() && !htmlPath; i += 2) {
+            if (str::Eq(idref, idPathMap.At(i)))
+                htmlPath = idPathMap.At(i+1);
+        }
+        if (!htmlPath)
+            continue;
+
+        ScopedMem<TCHAR> fullPath(str::Join(contentPath, htmlPath));
+        ScopedMem<char> html(zip.GetFileData(fullPath));
+        if (!html)
+            continue;
+        if (htmlData.Count() > 0) {
+            // insert explicit page-breaks between sections
+            htmlData.Append("<pagebreak />");
+        }
+        // add an anchor with the file name at the top (for internal links)
+        ScopedMem<char> utf8_path(str::conv::ToUtf8(htmlPath));
+        htmlData.AppendFmt("<a name=\"%s\" />", utf8_path);
+        // TODO: merge/remove <head>s and drop everything else outside of <body>s(?)
+        htmlData.Append(html);
+    }
+
     return htmlData.Count() > 0;
 }
 
 void EpubDoc::ParseMetadata(const char *content)
 {
+    const char *metadataMap[] = {
+        "dc:title",         "Title",
+        "dc:creator",       "Author",
+        "dc:date",          "CreationDate",
+        "dc:description",   "Subject",
+        "dc:rights",        "Copyright",
+    };
+
     HtmlPullParser pullParser(content, str::Len(content));
     int insideMetadata = 0;
     HtmlToken *tok;
@@ -231,29 +253,23 @@ void EpubDoc::ParseMetadata(const char *content)
             insideMetadata--;
         if (!insideMetadata)
             continue;
+        if (!tok->IsStartTag())
+            continue;
 
-        if (tok->IsStartTag() && tok->NameIs("dc:title")) {
-            tok = pullParser.Next();
-            char *text = GetTokenText(tok);
-            if (text) {
-                props.Append("Title");
-                props.Append(text);
-            }
-        }
-        else if (tok->IsStartTag() && tok->NameIs("dc:creator")) {
-            tok = pullParser.Next();
-            char *text = GetTokenText(tok);
-            if (text) {
-                props.Append("Author");
-                props.Append(text);
-            }
-        }
-        else if (tok->IsStartTag() && tok->NameIs("dc:date")) {
-            tok = pullParser.Next();
-            char *text = GetTokenText(tok);
-            if (text) {
-                props.Append("CreationDate");
-                props.Append(text);
+        for (int i = 0; i < dimof(metadataMap); i += 2) {
+            if (tok->NameIs(metadataMap[i])) {
+                tok = pullParser.Next();
+                if (!tok->IsText())
+                    break;
+                ScopedMem<char> value(str::DupN(tok->s, tok->sLen));
+                char *text = (char *)ResolveHtmlEntities(value, value + tok->sLen, NULL);
+                if (text == value)
+                    text = str::Dup(text);
+                if (text) {
+                    props.Append(metadataMap[i+1]);
+                    props.Append(text);
+                }
+                break;
             }
         }
     }

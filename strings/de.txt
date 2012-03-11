@@ -272,6 +272,9 @@ K&ommentar kopieren
 Copying text was denied (copying as image only)
 Text kopieren verweigert (nur als Bild kopiert)
 
+Copyright:
+Copyright:
+
 Could not obtain Printer properties
 Konnte Druckereigenschaften nicht bestimmen
 

@@ -675,6 +675,7 @@ printing document
 ag clóbhualadh an cháipéis
 
 # Untranslated:
+#Copyright:
 #Fonts:
 #Replace document &colors with Windows color scheme
 

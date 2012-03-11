@@ -680,6 +680,7 @@ printing document
 문서 인쇄 중
 
 # Untranslated:
+#Copyright:
 #Fonts:
 #Replace document &colors with Windows color scheme
 

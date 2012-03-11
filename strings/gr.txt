@@ -685,3 +685,6 @@ copying text
 printing document
 εκτύπωση εγγράφου
 
+# Untranslated:
+#Copyright:
+

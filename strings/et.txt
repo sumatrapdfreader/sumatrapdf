@@ -677,6 +677,7 @@ printing document
 dokumendi printimine
 
 # Untranslated:
+#Copyright:
 #Fonts:
 #Replace document &colors with Windows color scheme
 

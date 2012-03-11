@@ -679,6 +679,7 @@ printing document
 tulostetaan asiakirjaa
 
 # Untranslated:
+#Copyright:
 #Fonts:
 #Replace document &colors with Windows color scheme
 

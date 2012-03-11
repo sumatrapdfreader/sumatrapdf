@@ -274,6 +274,9 @@ Copiar co&mentario
 Copying text was denied (copying as image only)
 Copiado de texto no permitido (copiando como imagen)
 
+Copyright:
+Derecho de autor:
+
 Could not obtain Printer properties
 Imposible obtener propiedades de la impresora
 

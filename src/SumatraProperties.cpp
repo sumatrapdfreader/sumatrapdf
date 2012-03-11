@@ -323,6 +323,9 @@ void OnMenuProperties(WindowInfo& win, bool extended)
     str = engine->GetProperty("Author");
     layoutData->AddProperty(_TR("Author:"), str);
 
+    str = engine->GetProperty("Copyright");
+    layoutData->AddProperty(_TR("Copyright:"), str);
+
     str = engine->GetProperty("CreationDate");
     if (Engine_PDF == win.dm->engineType)
         ConvDateToDisplay(&str, PdfDateParse);

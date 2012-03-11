@@ -276,6 +276,9 @@ Copia co&mmento
 Copying text was denied (copying as image only)
 Impossibile copiare il testo (copio solo come immagine)
 
+Copyright:
+Copyright:
+
 Could not obtain Printer properties
 Impossibile ottenere info proprietà stampante
 

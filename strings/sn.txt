@@ -261,6 +261,7 @@ Duputsa
 #Copy &Link Address
 #Copy Co&mment
 #Copying text was denied (copying as image only)
+#Copyright:
 #Could not obtain Printer properties
 #Couldn't initialize printer
 #Couldn't render the page

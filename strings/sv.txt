@@ -665,6 +665,7 @@ skriver ut dokumentet
 #Bookmark shortcut to page %s of %s
 #Comic books
 #Copy &Image
+#Copyright:
 #Could not obtain Printer properties
 #File %s not found
 #Fonts:

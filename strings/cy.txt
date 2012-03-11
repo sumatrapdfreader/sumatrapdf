@@ -555,6 +555,7 @@ argraffu dogfen
 #Copy &Image
 #Copy &Link Address
 #Copy Co&mment
+#Copyright:
 #Could not obtain Printer properties
 #Current file
 #Enter the command-line to invoke when you double-click on the PDF document:

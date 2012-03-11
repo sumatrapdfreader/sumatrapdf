@@ -679,6 +679,7 @@ skriver ut dokument
 
 # Untranslated:
 #Copy &Image
+#Copyright:
 #Fonts:
 #Replace document &colors with Windows color scheme
 

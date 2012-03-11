@@ -680,6 +680,7 @@ printing document
 تتم حالياً الطباعة
 
 # Untranslated:
+#Copyright:
 #Fonts:
 #Replace document &colors with Windows color scheme
 

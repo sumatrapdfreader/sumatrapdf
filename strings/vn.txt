@@ -269,6 +269,9 @@ Chép chú thích
 Copying text was denied (copying as image only)
 Chép văn bản bị từ chối (chỉ được chép như hình ảnh)
 
+Copyright:
+Quyền tác giả:
+
 Could not obtain Printer properties
 Không thể có được thuộc tính Máy in
 

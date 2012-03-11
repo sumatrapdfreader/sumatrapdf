@@ -672,6 +672,7 @@ printing document
 
 # Untranslated:
 #Copy &Image
+#Copyright:
 #Fonts:
 #No result found around line %u in file %s
 #Replace document &colors with Windows color scheme

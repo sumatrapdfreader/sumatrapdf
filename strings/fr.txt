@@ -682,6 +682,7 @@ printing document
 impression du document
 
 # Untranslated:
+#Copyright:
 #Fonts:
 #Replace document &colors with Windows color scheme
 

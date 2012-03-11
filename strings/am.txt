@@ -674,6 +674,7 @@ printing document
 ֆայլը տպվում է
 
 # Untranslated:
+#Copyright:
 #EPUB ebooks
 #Fonts:
 #Replace document &colors with Windows color scheme

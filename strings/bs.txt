@@ -677,6 +677,7 @@ printing document
 štampam dokument
 
 # Untranslated:
+#Copyright:
 #Fonts:
 #Replace document &colors with Windows color scheme
 

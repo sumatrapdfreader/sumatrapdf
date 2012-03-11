@@ -492,6 +492,7 @@ printing document
 #Copy &Link Address
 #Copy Co&mment
 #Copying text was denied (copying as image only)
+#Copyright:
 #Could not obtain Printer properties
 #Current file
 #Enter the command-line to invoke when you double-click on the PDF document:

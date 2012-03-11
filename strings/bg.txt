@@ -678,6 +678,7 @@ printing document
 отпечатване на документ
 
 # Untranslated:
+#Copyright:
 #Fonts:
 #Replace document &colors with Windows color scheme
 

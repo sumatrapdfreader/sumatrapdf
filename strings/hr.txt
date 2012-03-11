@@ -635,6 +635,7 @@ ispisujem dokument
 #Add page %s to favorites with (optional) name:
 #Add to favorites
 #Copy &Image
+#Copyright:
 #Could not obtain Printer properties
 #Current file
 #F&avorites

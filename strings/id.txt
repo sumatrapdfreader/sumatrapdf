@@ -678,6 +678,7 @@ printing document
 mencetak dokumen
 
 # Untranslated:
+#Copyright:
 #Fonts:
 #Open in Microsoft XPS-Viewer
 #Replace document &colors with Windows color scheme

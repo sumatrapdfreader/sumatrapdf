@@ -51,6 +51,9 @@ void DumpProperties(BaseEngine *engine)
     str.Set(Escape(engine->GetProperty("Author")));
     if (str)
         Out("\t\tAuthor=\"%s\"\n", str.Get());
+    str.Set(Escape(engine->GetProperty("Copyright")));
+    if (str)
+        Out("\t\tCopyright=\"%s\"\n", str.Get());
     str.Set(Escape(engine->GetProperty("CreationDate")));
     if (str)
         Out("\t\tCreationDate=\"%s\"\n", str.Get());

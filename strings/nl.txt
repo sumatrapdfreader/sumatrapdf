@@ -686,6 +686,7 @@ printing document
 bestand afdrukken
 
 # Untranslated:
+#Copyright:
 #Fonts:
 #Replace document &colors with Windows color scheme
 

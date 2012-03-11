@@ -269,6 +269,9 @@ Copiar Co&mentário
 Copying text was denied (copying as image only)
 Cópia de texto negada (copiando somente como imagem)
 
+Copyright:
+Direito autoral:
+
 Could not obtain Printer properties
 Não foi possível obter as propriedades da Impressora
 

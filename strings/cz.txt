@@ -680,6 +680,7 @@ printing document
 tisk dokumentu
 
 # Untranslated:
+#Copyright:
 #Fonts:
 #Replace document &colors with Windows color scheme
 

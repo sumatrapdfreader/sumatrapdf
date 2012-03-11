@@ -522,6 +522,7 @@ printing document
 #Copy &Image
 #Copy &Link Address
 #Copy Co&mment
+#Copyright:
 #Could not obtain Printer properties
 #Current file
 #DjVu documents
