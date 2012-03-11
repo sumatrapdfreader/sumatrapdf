@@ -779,7 +779,7 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
         // TODO: implement me
     } else {
         // TODO: temporary debugging
-        lf("unhandled tag: %d", tag);
+        //lf("unhandled tag: %d", tag);
     }
 }
 

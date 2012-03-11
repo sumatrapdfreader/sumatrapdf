@@ -401,7 +401,13 @@ void EbookController::TriggerLayout()
     if (!html && !mobiDoc)
         return;
 
+    if ((pageDx == dx) && (pageDy == dy)) {
+        lf("EbookController::TriggerLayout() - skipping layout because same as last size");
+        return;
+    }
+
     lf("(%3d,%3d) EbookController::TriggerLayout", dx, dy);
+    pageDx = dx; pageDy = dy; // set it early to prevent re-doing layout at the same size
     PageData *newPage = PreserveTempPageShown();
     if (newPage) {
         CrashIf((layoutTemp.reparsePoint != NULL) && 

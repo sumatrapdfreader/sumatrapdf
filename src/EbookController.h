@@ -94,7 +94,8 @@ class EbookController : public IClicked, ISizeChanged
     // if true, we need to delete pageShown if we no longer need it
     bool            deletePageShown;
 
-    int             pageDx, pageDy; // size of the page for which pages was generated
+     // size of the page for which pages were generated
+    int             pageDx, pageDy;
 
     ThreadLayoutMobi *layoutThread;
     LayoutTemp        layoutTemp;
