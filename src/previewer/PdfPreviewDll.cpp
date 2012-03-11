@@ -62,6 +62,10 @@ public:
         else if (SUCCEEDED(CLSIDFromString(AsWStrQ(SZ_CBZ_PREVIEW_CLSID), &clsid)) && IsEqualCLSID(m_clsid, clsid))
             pObject = new CCbzPreview(&g_lRefCount);
 #endif
+#ifdef BUILD_EPUB_PREVIEW
+        else if (SUCCEEDED(CLSIDFromString(AsWStrQ(SZ_EPUB_PREVIEW_CLSID), &clsid)) && IsEqualCLSID(m_clsid, clsid))
+            pObject = new CEpubPreview(&g_lRefCount);
+#endif
         else
             return E_NOINTERFACE;
         if (!pObject)
@@ -169,6 +173,24 @@ STDAPI DllRegisterServer()
         { _T("Software\\Classes\\CLSID\\") SZ_CBZ_PREVIEW_CLSID,
                 _T("AppId"),            IsRunningInWow64() ? _T("{534A1E02-D58F-44f0-B58B-36CBED287C7C}") : _T("{6d2b5079-2f0b-48dd-ab7f-97cec514d30b}") },
 #endif
+#ifdef BUILD_EPUB_PREVIEW
+        { _T("Software\\Classes\\CLSID\\") SZ_EPUB_PREVIEW_CLSID,
+                NULL,                   _T("SumatraPDF Preview Handler") },
+        { _T("Software\\Classes\\CLSID\\") SZ_EPUB_PREVIEW_CLSID _T("\\InProcServer32"),
+                NULL,                   path },
+        { _T("Software\\Classes\\CLSID\\") SZ_EPUB_PREVIEW_CLSID _T("\\InProcServer32"),
+                _T("ThreadingModel"),   _T("Apartment") },
+        // IThumbnailProvider
+        { _T("Software\\Classes\\.epub\\shellex\\{e357fccd-a995-4576-b01f-234630154e96}"),
+                NULL,                   SZ_EPUB_PREVIEW_CLSID },
+        // IPreviewHandler
+        { _T("Software\\Classes\\.epub\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}"),
+                NULL,                   SZ_EPUB_PREVIEW_CLSID },
+        { _T("Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers"),
+                SZ_EPUB_PREVIEW_CLSID,   _T("SumatraPDF Preview Handler") },
+        { _T("Software\\Classes\\CLSID\\") SZ_EPUB_PREVIEW_CLSID,
+                _T("AppId"),            IsRunningInWow64() ? _T("{534A1E02-D58F-44f0-B58B-36CBED287C7C}") : _T("{6d2b5079-2f0b-48dd-ab7f-97cec514d30b}") },
+#endif
     };
 
     for (int i = 0; i < dimof(regVals); i++) {
@@ -197,6 +219,11 @@ STDAPI DllUnregisterServer()
         _T("Software\\Classes\\.cbz\\shellex\\{e357fccd-a995-4576-b01f-234630154e96}"),
         _T("Software\\Classes\\.cbz\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}"),
 #endif
+#ifdef BUILD_EPUB_PREVIEW
+        _T("Software\\Classes\\CLSID\\") SZ_EPUB_PREVIEW_CLSID,
+        _T("Software\\Classes\\.epub\\shellex\\{e357fccd-a995-4576-b01f-234630154e96}"),
+        _T("Software\\Classes\\.epub\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}"),
+#endif
     };
 
     HRESULT hr = S_OK;
@@ -216,6 +243,10 @@ STDAPI DllUnregisterServer()
 #ifdef BUILD_CBZ_PREVIEW
     SHDeleteValue(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers"), SZ_CBZ_PREVIEW_CLSID);
     SHDeleteValue(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers"), SZ_CBZ_PREVIEW_CLSID);
+#endif
+#ifdef BUILD_EPUB_PREVIEW
+    SHDeleteValue(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers"), SZ_EPUB_PREVIEW_CLSID);
+    SHDeleteValue(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers"), SZ_EPUB_PREVIEW_CLSID);
 #endif
 
     return hr;

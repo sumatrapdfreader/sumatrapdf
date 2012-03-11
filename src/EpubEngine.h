@@ -10,6 +10,7 @@ class EpubEngine : public BaseEngine {
 public:
     static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
     static EpubEngine *CreateFromFile(const TCHAR *fileName);
+    static EpubEngine *CreateFromStream(IStream *stream);
 };
 
 #endif

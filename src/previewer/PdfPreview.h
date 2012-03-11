@@ -11,6 +11,9 @@
 #ifdef BUILD_CBZ_PREVIEW
 #define SZ_CBZ_PREVIEW_CLSID    _T("{C29D3E2B-8FF6-4033-A4E8-54221D859D74}")
 #endif
+#ifdef BUILD_EPUB_PREVIEW
+#define SZ_EPUB_PREVIEW_CLSID   _T("{80C4E4B1-2B0F-40d5-95AF-BE7B57FEA4F9}")
+#endif
 
 #include "BaseUtil.h"
 #include "Scoped.h"
@@ -190,6 +193,18 @@ protected:
 class CCbzPreview : public PreviewBase {
 public:
     CCbzPreview(long *plRefCount) : PreviewBase(plRefCount) {
+        m_gdiScope = new ScopedGdiPlus();
+    }
+
+protected:
+    virtual BaseEngine *LoadEngine(IStream *stream);
+};
+#endif
+
+#ifdef BUILD_EPUB_PREVIEW
+class CEpubPreview : public PreviewBase {
+public:
+    CEpubPreview(long *plRefCount) : PreviewBase(plRefCount) {
         m_gdiScope = new ScopedGdiPlus();
     }
 

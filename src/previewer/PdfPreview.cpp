@@ -316,3 +316,13 @@ int    PASCAL   RARProcessFile(HANDLE, int, char *, char *) { return -1; }
 int    PASCAL   RARCloseArchive(HANDLE) { return -1; }
 
 #endif
+
+#ifdef BUILD_EPUB_PREVIEW
+#include "EpubEngine.h"
+
+BaseEngine *CEpubPreview::LoadEngine(IStream *stream)
+{
+    return EpubEngine::CreateFromStream(stream);
+}
+
+#endif

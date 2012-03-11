@@ -236,7 +236,7 @@ ENGINEDUMP_OBJS     = $(ENGINEDUMP_OBJS) $(MICROCRT_CONSOLE_OBJS)
 SUMATRA_OBJS = $(SUMATRA_OBJS) $(OS)\EpubEngine.obj $(OS)\MobiEngine.obj
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "TEST_EPUB_ENGINE"
 ENGINEDUMP_OBJS = $(ENGINEDUMP_OBJS) \
-	$(OS)\EpubEngine.obj $(OS)\PageLayout.obj $(OS)\MobiDoc.obj $(OMUI)\MiniMui.obj $(OS)\MobiEngine.obj
+	$(OS)\EpubEngine.obj $(OS)\PageLayout.obj $(OMUI)\MiniMui.obj $(OS)\MobiDoc.obj $(OS)\MobiEngine.obj
 !endif
 
 !if "$(BUILD_TEX_IFILTER)"!=""
@@ -250,6 +250,14 @@ PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_XPS_PREVIEW"
 !if "$(BUILD_CBZ_PREVIEW)"!=""
 PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_CBZ_PREVIEW"
 PDFPREVIEW_OBJS = $(PDFPREVIEW_OBJS) $(OS)\ImagesEngine.obj $(OU)\GdiPlusUtil.obj $(ZIP_OBJS)
+!endif
+!if "$(BUILD_EPUB_PREVIEW)"!=""
+PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_EPUB_PREVIEW"
+PDFPREVIEW_OBJS = $(PDFPREVIEW_OBJS) $(OS)\EpubEngine.obj $(OS)\PageLayout.obj $(OS)\MobiDoc.obj \
+	$(OMUI)\MiniMui.obj $(OU)\TrivialHtmlParser.obj $(OU)\HtmlPullParser.obj $(OU)\BitReader.obj
+!if "$(BUILD_CBZ_PREVIEW)"==""
+PDFPREVIEW_OBJS = $(PDFPREVIEW_OBJS) $(OU)\GdiPlusUtil.obj $(ZIP_OBJS)
+!endif
 !endif
 
 ##### SumatraPDF-specific build rules #####
@@ -376,7 +384,6 @@ $(ENGINEDUMP_APP): $(ENGINEDUMP_OBJS)
 $(OS)\Uninstaller.obj: $(OS)\Installer.obj
 	$(CC) $(UNINSTALLER_CFLAGS) /Fo$(OS)\Uninstaller.obj /Fd$(O)\vc80.pdb src\installer\Installer.cpp
 
-# ebooktest directory
 {src\ebooktest}.cpp{$(OEB)}.obj::
 	$(CC) $(ET_CFLAGS) /Fo$(OEB)\ /Fd$(O)\vc80.pdb $<
 

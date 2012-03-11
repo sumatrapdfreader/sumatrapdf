@@ -60,6 +60,7 @@ class EpubDoc {
 
 public:
     EpubDoc(const TCHAR *fileName) : zip(fileName) { }
+    EpubDoc(IStream *stream) : zip(stream) { }
     ~EpubDoc() {
         for (size_t i = 0; i < images.Count(); i++) {
             free(images.At(i).base.data);
@@ -545,6 +546,9 @@ protected:
     float pageBorder;
 
     bool Load(const TCHAR *fileName);
+    bool Load(IStream *stream);
+    bool FinishLoading();
+
     void GetTransform(Matrix& m, float zoom, int rotation) {
         GetBaseTransform(m, RectF(0, 0, (REAL)pageRect.dx, (REAL)pageRect.dy),
                          zoom, rotation);
@@ -708,8 +712,18 @@ EpubEngineImpl::~EpubEngineImpl()
 bool EpubEngineImpl::Load(const TCHAR *fileName)
 {
     this->fileName = str::Dup(fileName);
-
     doc = new EpubDoc(fileName);
+    return FinishLoading();
+}
+
+bool EpubEngineImpl::Load(IStream *stream)
+{
+    doc = new EpubDoc(stream);
+    return FinishLoading();
+}
+
+bool EpubEngineImpl::FinishLoading()
+{
     if (!doc || !doc->Load())
         return false;
 
@@ -1061,6 +1075,16 @@ EpubEngine *EpubEngine::CreateFromFile(const TCHAR *fileName)
 {
     EpubEngineImpl *engine = new EpubEngineImpl();
     if (!engine->Load(fileName)) {
+        delete engine;
+        return NULL;
+    }
+    return engine;
+}
+
+EpubEngine *EpubEngine::CreateFromStream(IStream *stream)
+{
+    EpubEngineImpl *engine = new EpubEngineImpl();
+    if (!engine->Load(stream)) {
         delete engine;
         return NULL;
     }
