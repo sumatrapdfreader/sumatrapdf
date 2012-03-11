@@ -333,8 +333,11 @@ void PageLayout::ForceNewPage()
 // returns true if created a new page
 bool PageLayout::FlushCurrLine(bool isParagraphBreak)
 {
-    if (IsCurrLineEmpty())
+    if (IsCurrLineEmpty()) {
+        // TODO: rather create a new line if currLineInstr.Count() > 0 ?
+        currX = 0;
         return false;
+    }
     AlignAttr align = currJustification;
     if (isParagraphBreak && (Align_Justify == align))
         align = Align_Left;
