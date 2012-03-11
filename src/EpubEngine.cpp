@@ -293,6 +293,8 @@ struct PageAnchor {
 };
 
 class PageLayoutEpub : public PageLayout {
+    void EmitImage2(ImageData *img);
+
     void HandleTagImg2(HtmlToken *t);
     void HandleTagHeader(HtmlToken *t);
     void HandleTagA2(HtmlToken *t);
@@ -344,6 +346,35 @@ PageLayoutEpub::PageLayoutEpub(LayoutInfo* li)
     anchors = NULL;
 }
 
+void PageLayoutEpub::EmitImage2(ImageData *img)
+{
+    Rect imgSize = BitmapSizeFromData(img->data, img->len);
+    if (imgSize.IsEmptyArea())
+        return;
+
+    SizeF newSize((REAL)imgSize.Width, (REAL)imgSize.Height);
+    // move overly large images to a new line
+    if (!IsCurrLineEmpty() && currX + newSize.Width > pageDx)
+        FlushCurrLine(false);
+    // move overly large images to a new page
+    if (currY > 0 && currY + newSize.Height / 2.f > pageDy)
+        ForceNewPage();
+    // if image is still bigger than available space, scale it down
+    if ((newSize.Width > pageDx) || (currY + newSize.Height) > pageDy) {
+        REAL scale = min(pageDx / newSize.Width, (pageDy - currY) / newSize.Height);
+        newSize.Width *= scale;
+        newSize.Height *= scale;
+    }
+
+    RectF bbox(PointF(currX, 0), newSize);
+    AppendInstr(DrawInstr::Image(img->data, img->len, bbox));
+    // add an empty string in place of the image so that
+    // we can make the image flow with the text (as long
+    // as justification code doesn't take into account images)
+    AppendInstr(DrawInstr::Str("", 0, bbox));
+    currX += bbox.Width;
+}
+
 void PageLayoutEpub::HandleTagImg2(HtmlToken *t)
 {
     if (!layoutInfo->mobiDoc)
@@ -356,7 +387,7 @@ void PageLayoutEpub::HandleTagImg2(HtmlToken *t)
     ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
     ImageData *img = doc->GetImageData(src);
     if (img)
-        EmitImage(img);
+        EmitImage2(img);
 }
 
 void PageLayoutEpub::HandleTagHeader(HtmlToken *t)
@@ -737,6 +768,36 @@ bool EpubEngineImpl::FinishLoading()
     li.textAllocator = &allocator;
 
     pages = PageLayoutEpub(&li).Layout(&anchors);
+    if (!pages)
+        return false;
+
+    // fix image justification
+    for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
+        Vec<DrawInstr> *pageInstrs = GetPageData(pageNo);
+        if (!pageInstrs)
+            return false;
+        for (size_t k = 0; k < pageInstrs->Count(); k++) {
+            DrawInstr *i = &pageInstrs->At(k);
+            if (InstrImage != i->type)
+                continue;
+            CrashIf(k == 0 || k + 1 == pageInstrs->Count());
+            DrawInstr *i2 = &pageInstrs->At(k+1);
+            CrashIf(i2->type != InstrString || i2->str.len != 0 || i2->bbox.Width != i->bbox.Width);
+            i->bbox.X = i2->bbox.X;
+            // center images that are alone on a line
+            DrawInstr *i3 = NULL, *i4 = NULL;
+            for (size_t j = k; j > 0 && !i3; j--) {
+                if (InstrString == pageInstrs->At(j).type)
+                    i3 = &pageInstrs->At(j);
+            }
+            for (size_t j = k + 2; j < pageInstrs->Count() && !i4; j++) {
+                if (InstrString == pageInstrs->At(j).type)
+                    i4 = &pageInstrs->At(j);
+            }
+            if ((!i3 || i3->bbox.Y != i->bbox.Y) && (!i4 || i4->bbox.Y != i->bbox.Y))
+                i2->bbox.X = i->bbox.X = ((REAL)pageRect.dx - 2 * pageBorder - i->bbox.Width) / 2;
+        }
+    }
 
     return true;
 }
@@ -797,9 +858,6 @@ void EpubEngineImpl::FixFontSizeForResolution(HDC hDC)
 
     for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
         Vec<DrawInstr> *pageInstrs = GetPageData(pageNo);
-        CrashIf(!pageInstrs);
-        if (!pageInstrs)
-            continue;
         for (DrawInstr *i = pageInstrs->IterStart(); i; i = pageInstrs->IterNext()) {
             if (InstrSetFont == i->type) {
                 Status ok = i->font->GetLogFontW(&g, &lfw);
@@ -816,10 +874,6 @@ void EpubEngineImpl::FixFontSizeForResolution(HDC hDC)
 
 bool EpubEngineImpl::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target)
 {
-    Vec<DrawInstr> *pageInstrs = GetPageData(pageNo);
-    if (!pageInstrs)
-        return false;
-
     RectD pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
     RectI screen = Transform(pageRc, pageNo, zoom, rotation).Round();
 
@@ -842,7 +896,7 @@ bool EpubEngineImpl::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoo
 
     ScopedCritSec scope(&iterAccess);
     FixFontSizeForResolution(hDC);
-    DrawPageLayout(&g, pageInstrs, pageBorder, pageBorder, false);
+    DrawPageLayout(&g, GetPageData(pageNo), pageBorder, pageBorder, false);
     return true;
 }
 
@@ -855,16 +909,13 @@ static RectI GetInstrBbox(DrawInstr *instr, float pageBorder)
 
 TCHAR *EpubEngineImpl::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out, RenderTarget target)
 {
-    Vec<DrawInstr> *pageInstrs = GetPageData(pageNo);
-    if (!pageInstrs)
-        return NULL;
-
     ScopedCritSec scope(&iterAccess);
 
     str::Str<TCHAR> content;
     Vec<RectI> coords;
     bool insertSpace = false;
 
+    Vec<DrawInstr> *pageInstrs = GetPageData(pageNo);
     for (DrawInstr *i = pageInstrs->IterStart(); i; i = pageInstrs->IterNext()) {
         RectI bbox = GetInstrBbox(i, pageBorder);
         switch (i->type) {
@@ -1007,10 +1058,6 @@ PageDestination *EpubEngineImpl::GetNamedDest(const TCHAR *name)
 
 Vec<PageElement *> *EpubEngineImpl::GetElements(int pageNo)
 {
-    Vec<DrawInstr> *pageInstrs = GetPageData(pageNo);
-    if (!pageInstrs)
-        return NULL;
-
     ScopedCritSec scope(&iterAccess);
 
     Vec<PageElement *> *els = new Vec<PageElement *>();
@@ -1018,6 +1065,7 @@ Vec<PageElement *> *EpubEngineImpl::GetElements(int pageNo)
     DrawInstr *linkInstr = NULL;
     RectI linkRect;
 
+    Vec<DrawInstr> *pageInstrs = GetPageData(pageNo);
     for (DrawInstr *i = pageInstrs->IterStart(); i; i = pageInstrs->IterNext()) {
         if (InstrImage == i->type)
             els->Append(new ImageDataElement(pageNo, &i->img, GetInstrBbox(i, pageBorder)));
