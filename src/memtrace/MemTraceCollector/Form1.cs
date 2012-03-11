@@ -53,10 +53,5 @@ namespace MemTraceCollector
         {
             Application.Exit();
         }
-
-        private void tbFromClients_TextChanged(object sender, EventArgs e)
-        {
-
-        }
     }
 }
