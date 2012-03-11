@@ -219,7 +219,7 @@ ENGINEDUMP_OBJS = \
 	$(OS)\EngineDump.obj $(ENGINE_OBJS) $(LIBS_OBJS) $(UTILS_OBJS)
 
 MEMTRACE_OBJS = \
-	$(OM)\MemTraceDll.obj
+	$(OM)\MemTraceDll.obj $(UTILS_OBJS)
 
 !if "$(WITH_MICROCRT)"=="yes"
 ET_OBJS             = $(ET_OBJS) $(MICROCRT_WIN_OBJS)

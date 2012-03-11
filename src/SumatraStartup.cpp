@@ -1,6 +1,16 @@
 // TODO: for the moment it needs to be included from SumatraPDF.cpp
 // and not compiled as stand-alone
 
+static bool TryLoadMemTrace()
+{
+    ScopedMem<TCHAR> exePath(GetExePath());
+    ScopedMem<TCHAR> exeDir(path::GetDir(exePath));
+    ScopedMem<TCHAR> dllPath(path::Join(exeDir, _T("memtrace.dll")));
+    if (!LoadLibrary(dllPath))
+        return false;
+    return true;
+}
+
 static void MakePluginWindow(WindowInfo& win, HWND hwndParent)
 {
     assert(IsWindow(hwndParent));
@@ -260,6 +270,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     // aborts, etc. where some clean-up might not take place)
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF);
     //_CrtSetBreakAlloc(421);
+    TryLoadMemTrace();
 #endif
 
     EnableNx();

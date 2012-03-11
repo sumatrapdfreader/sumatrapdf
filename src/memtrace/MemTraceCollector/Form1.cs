@@ -13,7 +13,7 @@ namespace MemTraceCollector
     {
         private Server pipeServer;
         private const string PIPE_NAME = "\\\\.\\pipe\\MemTraceCollectorPipe";
-
+        private string textFromClients = "";
         public Form1()
         {
             InitializeComponent();
@@ -40,7 +40,8 @@ namespace MemTraceCollector
 
         void DisplayMessageReceived(Server.Client client, string message)
         {
-            tbFromClients.Text += message + "\r\n";
+            textFromClients += message + "\r\n";
+            tbFromClients.Text = textFromClients;
         }
 
         private void Form1_Load(object sender, EventArgs e)
