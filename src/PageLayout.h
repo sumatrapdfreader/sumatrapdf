@@ -144,6 +144,7 @@ protected:
 
     void  AppendInstr(DrawInstr di);
     bool  IsCurrLineEmpty();
+    bool  IgnoreText();
 
     // constant during layout process
     LayoutInfo *        layoutInfo;

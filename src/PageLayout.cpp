@@ -794,10 +794,10 @@ void PageLayout::HandleText(HtmlToken *t)
     }
 }
 
-// ignore the content of <head>, <style> and <title> tags
-static bool ShouldIgnoreText(Vec<HtmlTag>& tagNesting)
+// we ignore the content of <head>, <style> and <title> tags
+bool PageLayout::IgnoreText()
 {
-    for (HtmlTag *tag = tagNesting.IterStart(); tag; tag = tagNesting.IterNext()) {
+    for (HtmlTag *tag = htmlParser->tagNesting.IterStart(); tag; tag = htmlParser->tagNesting.IterNext()) {
         if ((Tag_Head == *tag) ||
             (Tag_Style == *tag) ||
             (Tag_Title == *tag)) {
@@ -838,7 +838,7 @@ PageData *PageLayout::IterNext()
         if (t->IsTag()) {
             HandleHtmlTag(t);
         } else {
-            if (!ShouldIgnoreText(htmlParser->tagNesting))
+            if (!IgnoreText())
                 HandleText(t);
         }
     }

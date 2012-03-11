@@ -237,6 +237,7 @@
     <ClCompile Include="src\LangMenuDef.cpp" />
     <ClCompile Include="src\Menu.cpp" />
     <ClCompile Include="src\MobiDoc.cpp" />
+    <ClCompile Include="src\MobiEngine.cpp" />
     <ClCompile Include="src\MobiWindow.cpp" />
     <ClCompile Include="src\mui\Mui.cpp" />
     <ClCompile Include="src\mui\MuiBase.cpp" />
@@ -391,6 +392,7 @@
     <ClInclude Include="src\LangMenuDef.h" />
     <ClInclude Include="src\Menu.h" />
     <ClInclude Include="src\MobiDoc.h" />
+    <ClInclude Include="src\MobiEngine.h" />
     <ClInclude Include="src\MobiWindow.h" />
     <ClInclude Include="src\mui\Mui.h" />
     <ClInclude Include="src\mui\MuiBase.h" />

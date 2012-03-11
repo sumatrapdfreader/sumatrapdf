@@ -300,8 +300,6 @@ class PageLayoutEpub : public PageLayout {
     void HandleTagA2(HtmlToken *t);
     void HandleHtmlTag2(HtmlToken *t);
 
-    bool IgnoreText();
-
     Vec<PageAnchor> *anchors;
 
 public:
@@ -473,14 +471,6 @@ void PageLayoutEpub::HandleHtmlTag2(HtmlToken *t)
         // ignore instead of crashing in HandleHtmlTag
         break;
     }
-}
-
-bool PageLayoutEpub::IgnoreText()
-{
-    // ignore the content of <head>, <style> and <title> tags
-    return htmlParser->tagNesting.Find(Tag_Head) != -1 ||
-           htmlParser->tagNesting.Find(Tag_Style) != -1 ||
-           htmlParser->tagNesting.Find(Tag_Title) != -1;
 }
 
 Vec<PageData*> *PageLayoutEpub::Layout(Vec<PageAnchor> *anchors)
