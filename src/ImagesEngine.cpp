@@ -859,7 +859,7 @@ bool CbxEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
 
     return str::EndsWithI(fileName, _T(".cbz")) ||
            str::EndsWithI(fileName, _T(".cbr")) ||
-           str::EndsWithI(fileName, _T(".zip")) ||
+           str::EndsWithI(fileName, _T(".zip")) && !str::EndsWithI(fileName, _T(".fb2.zip")) ||
            str::EndsWithI(fileName, _T(".rar"));
 }
 

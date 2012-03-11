@@ -214,7 +214,7 @@ static bool IsStressTestSupportedFile(const TCHAR *fileName, const TCHAR *filter
            CbxEngine::IsSupportedFile(fileName)  ||
 #ifdef TEST_EPUB_ENGINE
            EpubEngine::IsSupportedFile(fileName) ||
-           MobiEngine::IsSupportedFile(fileName) ||
+           Fb2Engine::IsSupportedFile(fileName)  ||
 #endif
            ChmEngine::IsSupportedFile(fileName);
 }

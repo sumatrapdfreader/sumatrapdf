@@ -13,6 +13,7 @@ enum EngineType {
     Engine_Chm,
 #ifdef TEST_EPUB_ENGINE
     Engine_Epub,
+    Engine_Fb2,
     Engine_Mobi,
 #endif
 };
@@ -66,6 +67,9 @@ RetrySniffing:
         } else if (EpubEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_Epub) {
             engine = EpubEngine::CreateFromFile(filePath);
             engineType = Engine_Epub;
+        } else if (Fb2Engine::IsSupportedFile(filePath, sniff) && engineType != Engine_Fb2) {
+            engine = Fb2Engine::CreateFromFile(filePath);
+            engineType = Engine_Fb2;
         } else if (MobiEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_Mobi) {
             engine = MobiEngine::CreateFromFile(filePath);
             engineType = Engine_Mobi;
