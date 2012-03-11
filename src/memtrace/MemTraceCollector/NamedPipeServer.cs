@@ -89,9 +89,8 @@ namespace NamedPipe
             {
                 ListenForClients();
             }
-            catch (ThreadAbortException e)
+            catch (ThreadAbortException)
             {
-                Console.WriteLine("thread aborted");
             }
         }
         private void ListenForClients()
