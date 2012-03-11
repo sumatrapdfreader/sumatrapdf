@@ -264,6 +264,19 @@ void DumpData(BaseEngine *engine, bool fullDump)
     Out("</EngineDump>\n");
 }
 
+void RenderDocument(BaseEngine *engine, const TCHAR *renderPath)
+{
+    for (int pageNo = 1; pageNo <= engine->PageCount(); pageNo++) {
+        RenderedBitmap *bmp = engine->RenderBitmap(pageNo, 1.0, 0);
+        size_t len = 0;
+        ScopedMem<unsigned char> data(bmp ? SerializeBitmap(bmp->GetBitmap(), &len) : NULL);
+
+        ScopedMem<TCHAR> pageBmpPath(str::Format(renderPath, pageNo));
+        file::WriteAll(pageBmpPath, data, len);
+        delete bmp;
+    }
+}
+
 class PasswordHolder : public PasswordUI {
     const TCHAR *password;
 public:
@@ -280,7 +293,9 @@ int main(int argc, char **argv)
 {
     CmdLineParser argList(GetCommandLine());
     if (argList.Count() < 2) {
-        ErrOut("Usage: %s <filename> [-pwd <password>] [-full]\n", path::GetBaseName(argList.At(0)));
+Usage:
+        ErrOut("%s <filename> [-pwd <password>] [-full] [-render <path-%%d.bmp>]\n",
+            path::GetBaseName(argList.At(0)));
         return 0;
     }
 
@@ -298,22 +313,31 @@ int main(int argc, char **argv)
         filePath.Set(str::Dup(argList.At(1)));
     }
 
-    ScopedMem<TCHAR> password;
-    int pwdIdx = argList.Find(_T("-pwd"));
-    if (pwdIdx > 1 && (size_t)pwdIdx + 1 < argList.Count()) {
-        password.Set(argList.At(pwdIdx + 1));
-        argList.RemoveAt(pwdIdx + 1);
+    bool fullDump = false;
+    TCHAR *password = NULL;
+    TCHAR *renderPath = NULL;
+    for (size_t i = 2; i < argList.Count(); i++) {
+        if (str::Eq(argList.At(i), _T("-full")))
+            fullDump = true;
+        else if (str::Eq(argList.At(i), _T("-pwd")) && i + 1 < argList.Count())
+            password = argList.At(++i);
+        else if (str::Eq(argList.At(i), _T("-render")) && i + 1 < argList.Count())
+            renderPath = argList.At(++i);
+        else
+            goto Usage;
     }
-    PasswordHolder pwdUI(password);
 
     ScopedGdiPlus gdiPlus;
     EngineType engineType;
+    PasswordHolder pwdUI(password);
     BaseEngine *engine = EngineManager::CreateEngine(filePath, &pwdUI, &engineType);
     if (!engine) {
         ErrOut("Error: Couldn't create an engine for %s!\n", path::GetBaseName(filePath));
         return 1;
     }
-    DumpData(engine, argList.Find(_T("-full")) > 1);
+    DumpData(engine, fullDump);
+    if (renderPath)
+        RenderDocument(engine, renderPath);
     delete engine;
 
 #ifdef DEBUG
