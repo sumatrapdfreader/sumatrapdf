@@ -36,6 +36,23 @@ their bbox overlaps with the text of the link. This is necessary for easy
 implementation of link interactivity and to properly draw links as underlined
 (in our architecture spaces are not drawn so spaces within link cannot be underlined).
 
+TODO: properly implement carrying over visual state between pages to allow proper
+re-layout from arbitrary point. Currently we inject SetFont instruction at the beginning
+of every page to ensure that e.g. bold text that carries over to a new page is still bold.
+That's not enough and it breaks when doing re-layout from that page (the bold state is lost).
+Instead we need to remember information affecting visual state (which is a diff from default
+state defined by default font name, font size, color) inside PageData, the way we remember
+reparsePoint. We would no longer need that SetFont instructions but DrawPageLayout() would have
+to take this into account to setup initial state.
+The information that we need to remember:
+* font name (if different from default font name, NULL otherwise)
+* font size scale i.e. 1.f means "default font size". This is to allow the user to change
+  default font size and allow us to relayout from arbitrary page
+* font style (bold/italic etc.)
+* a link url if we're carrying over a text for a link (NULL if no link)
+* text color (when/if we support changing text color)
+* more ?
+
 TODO: PageLayout could be split into DrawInstrBuilder which knows pageDx, pageDy
 and generates DrawInstr and splits them into pages and a better named class that
 does the parsing of the document builds pages by invoking methods on DrawInstrBuilders.
