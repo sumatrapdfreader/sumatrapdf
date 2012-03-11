@@ -483,7 +483,7 @@ public:
     EpubEngineImpl();
     virtual ~EpubEngineImpl();
     virtual EpubEngine *Clone() {
-        return CreateFromFile(fileName);
+        return fileName ? CreateFromFile(fileName) : NULL;
     }
 
     virtual const TCHAR *FileName() const { return fileName; };

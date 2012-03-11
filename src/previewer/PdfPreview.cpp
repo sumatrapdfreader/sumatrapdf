@@ -314,7 +314,6 @@ int    PASCAL   RARReadHeaderEx(HANDLE, struct RARHeaderDataEx *) { return -1; }
 void   PASCAL   RARSetCallback(HANDLE, UNRARCALLBACK, LPARAM) { }
 int    PASCAL   RARProcessFile(HANDLE, int, char *, char *) { return -1; }
 int    PASCAL   RARCloseArchive(HANDLE) { return -1; }
-
 #endif
 
 #ifdef BUILD_EPUB_PREVIEW
@@ -325,4 +324,8 @@ BaseEngine *CEpubPreview::LoadEngine(IStream *stream)
     return EpubEngine::CreateFromStream(stream);
 }
 
+// allow to build PdfPreview.dll without MobiDoc
+#include "MobiDoc.h"
+ImageData *MobiDoc::GetCoverImage() { return NULL; }
+ImageData *MobiDoc::GetImage(size_t imgRecIndex) const { return NULL; }
 #endif

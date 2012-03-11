@@ -253,8 +253,8 @@ PDFPREVIEW_OBJS = $(PDFPREVIEW_OBJS) $(OS)\ImagesEngine.obj $(OU)\GdiPlusUtil.ob
 !endif
 !if "$(BUILD_EPUB_PREVIEW)"!=""
 PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_EPUB_PREVIEW"
-PDFPREVIEW_OBJS = $(PDFPREVIEW_OBJS) $(OS)\EpubEngine.obj $(OS)\PageLayout.obj $(OS)\MobiDoc.obj \
-	$(OMUI)\MiniMui.obj $(OU)\TrivialHtmlParser.obj $(OU)\HtmlPullParser.obj $(OU)\BitReader.obj
+PDFPREVIEW_OBJS = $(PDFPREVIEW_OBJS) $(OS)\EpubEngine.obj $(OS)\PageLayout.obj \
+	$(OMUI)\MiniMui.obj $(OU)\TrivialHtmlParser.obj $(OU)\HtmlPullParser.obj
 !if "$(BUILD_CBZ_PREVIEW)"==""
 PDFPREVIEW_OBJS = $(PDFPREVIEW_OBJS) $(OU)\GdiPlusUtil.obj $(ZIP_OBJS)
 !endif
