@@ -14,9 +14,10 @@ void LogF(const char *fmt, ...)
     va_list args;
     va_start(args, fmt);
     ScopedMem<char> s(str::FmtV(fmt, args));
+    // DbgView displays one line per OutputDebugString call
+    s.Set(str::Join(s, "\n"));
     OutputDebugStringA(s.Get());
     va_end(args);
-    OutputDebugStringA("\n");
 }
 
 // TODO: as an optimization (to avoid allocations) and to prevent potential problems
@@ -26,9 +27,10 @@ void LogF(const WCHAR *fmt, ...)
     va_list args;
     va_start(args, fmt);
     ScopedMem<WCHAR> s(str::FmtV(fmt, args));
+    // DbgView displays one line per OutputDebugString call
+    s.Set(str::Join(s, L"\n"));
     OutputDebugStringW(s.Get());
     va_end(args);
-    OutputDebugStringA("\n");
 }
 
 } // namespace dbglog
