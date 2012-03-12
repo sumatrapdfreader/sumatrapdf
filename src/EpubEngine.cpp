@@ -739,6 +739,7 @@ void EpubDoc::ParseMetadata(const char *content)
 
 class PageLayoutEpub : public PageLayout {
 protected:
+    void EmitParagraph2(float indentation=0);
     void EmitImage2(ImageData *img);
 
     void HandleTagImg2(HtmlToken *t);
@@ -747,6 +748,7 @@ protected:
     void HandleHtmlTag2(HtmlToken *t);
 
     Vec<PageAnchor> *anchors;
+    int listDepth;
 
 public:
     PageLayoutEpub(LayoutInfo *li);
@@ -788,6 +790,19 @@ PageLayoutEpub::PageLayoutEpub(LayoutInfo* li)
     currLineTopPadding = 0;
     // EPUB documents contain no cover image
     anchors = NULL;
+    listDepth = 0;
+}
+
+void PageLayoutEpub::EmitParagraph2(float indentation)
+{
+    EmitParagraph(indentation, 0);
+    // prevent accidental double-indentation
+    for (size_t i = currLineInstr.Count(); i > 0; i--) {
+        if (InstrFixedSpace == currLineInstr.At(i-1).type &&
+            (!indentation || i < currLineInstr.Count())) {
+            currLineInstr.RemoveAt(i-1);
+        }
+    }
 }
 
 void PageLayoutEpub::EmitImage2(ImageData *img)
@@ -838,19 +853,19 @@ void PageLayoutEpub::HandleTagImg2(HtmlToken *t)
 void PageLayoutEpub::HandleTagHeader(HtmlToken *t)
 {
     if (t->IsEndTag()) {
-        HandleTagP(t);
+        FlushCurrLine(true);
         currY += currFontSize / 2;
         currFontSize = defaultFontSize;
-        ChangeFontStyle(FontStyleBold, false);
+        currJustification = Align_Justify;
     }
     else {
         currJustification = Align_Left;
-        HandleTagP(t);
+        EmitParagraph2();
         currFontSize = defaultFontSize * pow(1.1f, '5' - t->s[1]);
-        ChangeFontStyle(FontStyleBold, true);
         if (currY > 0)
             currY += currFontSize / 2;
     }
+    ChangeFontStyle(FontStyleBold, t->IsStartTag());
 }
 
 void PageLayoutEpub::HandleTagA2(HtmlToken *t, const char *linkAttr)
@@ -891,10 +906,28 @@ void PageLayoutEpub::HandleHtmlTag2(HtmlToken *t)
         ForceNewPage();
         break;
     case Tag_Ul: case Tag_Ol: case Tag_Dl:
-        currJustification = Align_Left;
+        if (t->IsStartTag())
+            listDepth++;
+        else if (t->IsEndTag()) {
+            if (listDepth > 0)
+                listDepth--;
+            FlushCurrLine(true);
+        }
         break;
-    case Tag_Li: case Tag_Dd: case Tag_Dt:
-        FlushCurrLine(false);
+    case Tag_Li: case Tag_Dd:
+        if (t->IsStartTag())
+            EmitParagraph2(15.f * listDepth);
+        else if (t->IsEndTag())
+            FlushCurrLine(true);
+        break;
+    case Tag_Dt:
+        if (t->IsStartTag()) {
+            EmitParagraph2(15.f * (listDepth - 1));
+            currJustification = Align_Left;
+        }
+        else if (t->IsEndTag())
+            FlushCurrLine(true);
+        ChangeFontStyle(FontStyleBold, t->IsStartTag());
         break;
     case Tag_Center:
         currJustification = Align_Center;
@@ -906,16 +939,8 @@ void PageLayoutEpub::HandleHtmlTag2(HtmlToken *t)
     case Tag_A:
         HandleTagA2(t);
         break;
-    case Tag_P: case Tag_Hr: case Tag_B:
-    case Tag_Strong: case Tag_I: case Tag_Em:
-    case Tag_U: case Tag_Strike: case Tag_Mbp_Pagebreak:
-    case Tag_Br: case Tag_Font: /* case Tag_Img: */
-    /* case Tag_A: */ case Tag_Blockquote: case Tag_Div:
-    case Tag_Sup: case Tag_Sub: case Tag_Span:
-        HandleHtmlTag(t);
-        break;
     default:
-        // ignore instead of crashing in HandleHtmlTag
+        HandleHtmlTag(t);
         break;
     }
 }
@@ -1376,10 +1401,8 @@ void PageLayoutFb2::HandleFb2Tag(HtmlToken *t)
     else if (t->NameIs("epigraph"))
         HandleTagAsHtml(t, "blockquote");
     else if (t->NameIs("empty-line")) {
-        if (!t->IsEndTag()) {
-            EmitParagraph(0, 0);
-            FlushCurrLine(true);
-        }
+        if (!t->IsEndTag())
+            EmitParagraph2();
     }
 }
 
