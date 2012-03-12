@@ -240,7 +240,6 @@ public:
     bool SetHuffData(uint8 *huffData, size_t huffDataLen);
     bool AddCdicData(uint8 *cdicData, uint32 cdicDataLen);
     size_t Decompress(uint8 *src, size_t octets, uint8 *dst, size_t avail_in);
-    //size_t Decompress2(uint8 *src, size_t srcSize, uint8 *dst, size_t dstSize);
     bool DecodeOne(uint32 code, uint8 *& dst, size_t& dstLeft);
 };
 
@@ -258,84 +257,12 @@ HuffDicDecompressor::~HuffDicDecompressor()
     free(huffmanData);
 }
 
-#if 0
-// cache is array of 256 values (caller ensures that)
-bool HuffDicDecompressor::UnpackCacheData(uint32 *cache)
-{
-    for (size_t i = 0; i < 256; i++) {
-        uint32 v = cache[i];
-        SwapU32(v);
-        bool isTerminal =  (v & 0x80) != 0;
-        uint8 valLen = v & 0x1f;
-        uint32 val = v >> 8;
-        if (valLen == 0)
-            return false;
-        if ((valLen <= 8) && !isTerminal)
-            return false;
-        val = ((val + 1) << (32 - valLen)) - 1;
-        dict1[i].isTerminal = isTerminal;
-        dict1[i].valLen = valLen;
-        dict1[i].val = val;
-    }
-    return true;
-}
-#endif
-
 uint16 ReadBeU16(uint8 *d)
 {
     uint16 v = *((uint16*)d);
     SwapU16(v);
     return v;
 }
-
-#if 0
-uint64_t GetNext64Bits(uint8 *& s, size_t& srcSize)
-{
-    uint64 v = 0;
-    for (size_t i = 0; i < 8; i++) {
-        v = v << 8;
-        if (srcSize > 0) {
-            v |= *s++;
-            --srcSize;
-        }
-    }
-    return v;
-}
-
-bool DecodeCode(uint32 v, bool& isTerminal, uint32& codeLen, uint32& maxCode)
-{
-    //SwapU32(v);
-    isTerminal =  (v & 0x80) != 0;
-    codeLen = v & 0x1f;
-    maxCode = v >> 8;
-    if (codeLen == 0)
-        return false;
-    if ((codeLen <= 8) && !isTerminal)
-        return false;
-    maxCode = ((maxCode + 1) << (32 - codeLen)) - 1;
-    return true;
-}
-
-size_t HuffDicDecompressor::Decompress2(uint8 *src, size_t srcSize, uint8 *dst, size_t dstSize)
-{
-    int bitsLeft = srcSize * 8;
-    uint64_t x = GetNext64Bits(src, srcSize);
-    int n = 32;
-    bool isTerminal;
-    uint32 val, valLen;
-    for (;;) {
-        if (n <= 0) {
-            x = GetNext64Bits(src, srcSize);
-            n += 32;
-        }
-        uint64_t mask = (1ull << 32) - 1;
-        uint32 code = (uint32_t)((x >> n) & mask);
-
-        if (!DecodeCode(code, isTerminal, valLen, val))
-            return -1;
-    }
-}
-#endif
 
 bool HuffDicDecompressor::DecodeOne(uint32 code, uint8 *& dst, size_t& dstLeft)
 {
