@@ -9,6 +9,7 @@
 Lang: hr Croatian (Hrvatski)
 
 Contributor: Krunoslav Tomorad (cygnus77@gmail.com)
+Contributor: Stjepan Treger (stjepan.treger@gmail.com)
 
 &About
 &O programu...
@@ -157,8 +158,23 @@ Koristi &originalne veličine stranica
 (of %d)
 (od %d)
 
+(page %s)
+(stranica %s)
+
 About SumatraPDF
 O SumatriPDF
+
+Add Favorite
+Dodaj favorita
+
+Add page %s to favorites
+Dodaj stranicu %s u favorite
+
+Add page %s to favorites with (optional) name:
+Dodaj stranicu %s u favorite sa (opcijnalno) imenom:
+
+Add to favorites
+Dodaj u favorite
 
 Advanced
 Napredno
@@ -241,6 +257,9 @@ Dvije stranice slijedno
 Contribute Translation
 Pomozi prijevodom
 
+Copy &Image
+Kopiraj Sl&iku
+
 Copy &Link Address
 Kopiraj adresu &linka
 
@@ -250,6 +269,12 @@ Kopiraj ko&mentar
 Copying text was denied (copying as image only)
 Kopiranje teksta je nemoguće (kopirano kao slika)
 
+Copyright:
+Autorsko pravo
+
+Could not obtain Printer properties
+Nemoguće pribaviti svojstva printera
+
 Couldn't initialize printer
 Ne mogu inicijalizirati pisač
 
@@ -258,6 +283,9 @@ Nije moguće iscrtati stranicu
 
 Created:
 Stvoreno:
+
+Current file
+Trenutna datoteka
 
 Custom &Zoom...\tCtrl+Y
 &Prilagođeno uvećanje...\tCtrl+Y
@@ -301,6 +329,9 @@ Unesite naredbenu liniju za pokretanje kod dvostrukog klika na PDF dokumentu:
 Error loading %s
 Greška kod pokretanja %s
 
+F&avorites
+F&avoriti
+
 F&orward\tAlt+Right Arrow
 Naprijed\tAlt+->
 
@@ -312,6 +343,12 @@ Dvije stranice
 
 Failed to save a file
 Spremanje datoteke nije uspjelo
+
+Favorites
+Favoriti
+
+File %s not found
+Datoteka %s nije pronađena
 
 File Size:
 Veličina datoteke:
@@ -357,6 +394,9 @@ Namjesti po širini i prikaži stranice slijedno
 
 Fit a Single Page
 Namjesti po jednoj stranici
+
+Fonts:
+Fontovi:
 
 Found text at page %s
 Tekst je pronađen na %s. stranici
@@ -466,6 +506,9 @@ PDF dokumenti
 Pa&ge...\tCtrl+G
 Stranica...\tCtrl+G
 
+Page %s
+Stranica %s
+
 Page Size:
 Veličina stranice:
 
@@ -496,6 +539,9 @@ Ispis
 Print range
 Ispiši raspon
 
+Printer with given name doesn't exist
+Ne postoji printer sa zadanim imenom
+
 Printing is still in progress. Abort and start over?
 Ispis je još u tijeku. Prekini i započni ponovno?
 
@@ -507,6 +553,15 @@ Problem prilikom ispisivanja.
 
 Remember &opened files
 Upamti &otvorene datoteke
+
+Remove from favorites
+Ukloni iz favorita
+
+Remove page %s from favorites
+Ukloni stranicu %s iz favorita
+
+Replace document &colors with Windows color scheme
+Zamijeni boje dokumenta s postavkama &Windows boja 
 
 Rotate &Left\tCtrl+Shift+-
 Zaokreni nalijevo\tCtrl+Shift+-
@@ -543,6 +598,9 @@ Prikaži alatnu traku
 
 Show &pages continuously
 Prikaži stranice slijedno
+
+Show Favorites
+Prikaži favorite
 
 Show frequently read
 Prikaži najčešće čitano
@@ -627,25 +685,4 @@ kopiram tekst
 
 printing document
 ispisujem dokument
-
-# Untranslated:
-#(page %s)
-#Add Favorite
-#Add page %s to favorites
-#Add page %s to favorites with (optional) name:
-#Add to favorites
-#Copy &Image
-#Copyright:
-#Could not obtain Printer properties
-#Current file
-#F&avorites
-#Favorites
-#File %s not found
-#Fonts:
-#Page %s
-#Printer with given name doesn't exist
-#Remove from favorites
-#Remove page %s from favorites
-#Replace document &colors with Windows color scheme
-#Show Favorites
 
