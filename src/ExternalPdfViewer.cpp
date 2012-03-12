@@ -8,7 +8,6 @@
 
 #include "ExternalPdfViewer.h"
 
-#include "EngineManager.h"
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 

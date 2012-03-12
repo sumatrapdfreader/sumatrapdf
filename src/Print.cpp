@@ -12,6 +12,7 @@
 #include "Translations.h"
 #include "WindowInfo.h"
 #include "AppTools.h"
+#include "EngineManager.h"
 
 #include "SumatraPDF.h"
 #include "Notifications.h"

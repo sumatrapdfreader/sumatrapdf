@@ -10,7 +10,6 @@
 #   note: building on X64 isn't officially supported and might unintentionally be broken
 #WITH_ANALYZE=yes
 #   use /analyze compiler flag 
-#TEST_EPUB_ENGINE=yes
 
 # Set default configuration
 !if "$(CFG)"==""
@@ -169,7 +168,12 @@ ENGINE_OBJS = \
 	$(OS)\PdfEngine.obj $(OS)\PsEngine.obj \
 	$(OS)\ImagesEngine.obj $(ZIP_OBJS) $(UNRAR_OBJS) \
 	$(OS)\DjVuEngine.obj $(DJVU_OBJS) \
-	$(OS)\ChmEngine.obj $(CHMLIB_OBJS)
+	$(OS)\ChmEngine.obj $(CHMLIB_OBJS) \
+	$(OS)\EpubEngine.obj
+
+EBOOK_OBJS = \
+	$(OS)\MobiDoc.obj $(OS)\PageLayout.obj \
+	$(OS)\EbookControls.obj $(OS)\EbookController.obj $(OS)\MobiWindow.obj
 
 SUMATRA_OBJS = \
 	$(OS)\AppPrefs.obj $(OS)\DisplayModel.obj $(OS)\CrashHandler.obj \
@@ -182,9 +186,7 @@ SUMATRA_OBJS = \
 	$(OS)\Toolbar.obj $(OS)\Print.obj $(OS)\Notifications.obj \
 	$(OS)\Search.obj $(OS)\Menu.obj $(OS)\ExternalPdfViewer.obj \
 	$(OS)\Selection.obj $(SUMATRA_RES) \
-	$(UTILS_OBJS) $(ENGINE_OBJS) $(SYNCTEX_OBJS) \
-	$(MUI_OBJS) $(OS)\MobiDoc.obj $(OS)\PageLayout.obj \
-	$(OS)\EbookControls.obj $(OS)\EbookController.obj $(OS)\MobiWindow.obj
+	$(UTILS_OBJS) $(ENGINE_OBJS) $(SYNCTEX_OBJS) $(EBOOK_OBJS) $(MUI_OBJS)
  
 INSTALLER_OBJS = \
 	$(OS)\Installer.obj $(INSTALLER_RES) $(UTILS_OBJS) $(ZIP_OBJS) $(ZLIB_OBJS)
@@ -216,7 +218,8 @@ BROWSER_PLUGIN_OBJS = \
 	$(OU)\StrUtil.obj $(OU)\FileUtil.obj $(OU)\WinUtil.obj $(OU)\DebugLog.obj
 
 ENGINEDUMP_OBJS = \
-	$(OS)\EngineDump.obj $(ENGINE_OBJS) $(LIBS_OBJS) $(UTILS_OBJS)
+	$(OS)\EngineDump.obj $(ENGINE_OBJS) $(LIBS_OBJS) $(UTILS_OBJS) \
+	$(OS)\PageLayout.obj $(OMUI)\MiniMui.obj $(OS)\MobiDoc.obj
 
 MEMTRACE_OBJS = \
 	$(OM)\MemTraceDll.obj $(UTILS_OBJS)
@@ -230,13 +233,6 @@ PDFFILTER_OBJS      = $(PDFFILTER_OBJS) $(MICROCRT_DLL_OBJS)
 PDFPREVIEW_OBJS     = $(PDFPREVIEW_OBJS) $(MICROCRT_DLL_OBJS)
 BROWSER_PLUGIN_OBJS = $(BROWSER_PLUGIN_OBJS) $(MICROCRT_DLL_OBJS)
 ENGINEDUMP_OBJS     = $(ENGINEDUMP_OBJS) $(MICROCRT_CONSOLE_OBJS)
-!endif
-
-!if "$(TEST_EPUB_ENGINE)"!="" || "$(CFG)"=="dbg"
-SUMATRA_OBJS = $(SUMATRA_OBJS) $(OS)\EpubEngine.obj
-SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "TEST_EPUB_ENGINE"
-ENGINEDUMP_OBJS = $(ENGINEDUMP_OBJS) \
-	$(OS)\EpubEngine.obj $(OS)\PageLayout.obj $(OMUI)\MiniMui.obj $(OS)\MobiDoc.obj
 !endif
 
 !if "$(BUILD_TEX_IFILTER)"!=""

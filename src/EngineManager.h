@@ -4,6 +4,11 @@
 #ifndef EngineManager_h
 #define EngineManager_h
 
+// enable ebook engines in debug builds
+#if defined(DEBUG) && !defined(ENABLE_EBOOK_ENGINES)
+#define ENABLE_EBOOK_ENGINES
+#endif
+
 enum EngineType {
     Engine_None,
     Engine_DjVu,
@@ -11,11 +16,9 @@ enum EngineType {
     Engine_PDF, Engine_XPS,
     Engine_PS,
     Engine_Chm,
-#ifdef TEST_EPUB_ENGINE
     Engine_Epub,
     Engine_Fb2,
     Engine_Mobi,
-#endif
 };
 
 #include "BaseEngine.h"
@@ -24,9 +27,7 @@ enum EngineType {
 #include "PdfEngine.h"
 #include "PsEngine.h"
 #include "ChmEngine.h"
-#ifdef TEST_EPUB_ENGINE
 #include "EpubEngine.h"
-#endif
 
 class EngineManager {
 public:
@@ -62,7 +63,7 @@ RetrySniffing:
         } else if (ChmEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_Chm) {
             engine = ChmEngine::CreateFromFile(filePath);
             engineType = Engine_Chm;
-#ifdef TEST_EPUB_ENGINE
+#ifdef ENABLE_EBOOK_ENGINES
         } else if (EpubEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_Epub) {
             engine = EpubEngine::CreateFromFile(filePath);
             engineType = Engine_Epub;

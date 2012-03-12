@@ -331,10 +331,8 @@ void OnMenuProperties(WindowInfo& win, bool extended)
         ConvDateToDisplay(&str, PdfDateParse);
     else if (Engine_XPS == win.dm->engineType)
         ConvDateToDisplay(&str, IsoDateParse);
-#ifdef TEST_EPUB_ENGINE
     else if (Engine_Epub == win.dm->engineType)
         ConvDateToDisplay(&str, IsoDateParse);
-#endif
     layoutData->AddProperty(_TR("Created:"), str);
 
     str = engine->GetProperty("ModDate");
@@ -342,10 +340,8 @@ void OnMenuProperties(WindowInfo& win, bool extended)
         ConvDateToDisplay(&str, PdfDateParse);
     else if (Engine_XPS == win.dm->engineType)
         ConvDateToDisplay(&str, IsoDateParse);
-#ifdef TEST_EPUB_ENGINE
     else if (Engine_Epub == win.dm->engineType)
         ConvDateToDisplay(&str, IsoDateParse);
-#endif
     layoutData->AddProperty(_TR("Modified:"), str);
 
     str = engine->GetProperty("Creator");

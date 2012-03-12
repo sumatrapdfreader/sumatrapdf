@@ -212,9 +212,10 @@ static bool IsStressTestSupportedFile(const TCHAR *fileName, const TCHAR *filter
            XpsEngine::IsSupportedFile(fileName)  ||
            DjVuEngine::IsSupportedFile(fileName) ||
            CbxEngine::IsSupportedFile(fileName)  ||
-#ifdef TEST_EPUB_ENGINE
+#ifdef ENABLE_EBOOK_ENGINES
            EpubEngine::IsSupportedFile(fileName) ||
            Fb2Engine::IsSupportedFile(fileName)  ||
+//         MobiEngine::IsSupportedFile(fileName) ||
 #endif
            ChmEngine::IsSupportedFile(fileName);
 }
