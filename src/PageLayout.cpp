@@ -239,7 +239,13 @@ static void SetYPos(Vec<DrawInstr>& instr, float y)
 void PageLayout::JustifyLineBoth()
 {
     REAL extraSpaceDxTotal = pageDx - CurrLineDx();
-    CrashIf(extraSpaceDxTotal < 0.f);
+    // TODO: don't know why it happens but it does on pg12.mobi
+    // where extraSpaceDxTotal ~ -9 when formatted at a small size
+    // (is it related to images?)
+    //CrashIf(extraSpaceDxTotal < 0.f);
+    if (extraSpaceDxTotal < 0.f)
+        extraSpaceDxTotal = 0.f;
+
     LayoutLeftStartingAt(0.f);
     size_t spaces = 0;
     for (DrawInstr *i = currLineInstr.IterStart(); i; i = currLineInstr.IterNext()) {

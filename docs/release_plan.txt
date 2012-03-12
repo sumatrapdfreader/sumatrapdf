@@ -3,6 +3,8 @@ Things to do before 2.0 release:
 Specific things that still need to be added for minimal mobi support:
 - save and restore last position in the mobi file
 - document properties
+- crash in mobi: HEAP: Free Heap block 70dae8 modified at 70db1c which is +1 at offset
+  0x34 (52). Is it InterlockedIncrement() or some other refCount on a freed object?
 
 Maybe for 2.0:
 - progress bar flicker when status line changes width (I think). We probably force repaint after
