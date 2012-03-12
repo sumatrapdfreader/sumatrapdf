@@ -74,6 +74,7 @@ class MobiDoc
     size_t              docRecCount;
     int                 compressionType;
     size_t              docUncompressedSize;
+    int                 textEncoding;
 
     bool                multibyte;
     size_t              trailersCount;

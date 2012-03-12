@@ -414,6 +414,11 @@ static void TStrTest()
 
         free(s);
     }
+
+    assert(!str::ToMultiByte("abc", 9876, 123456));
+    assert(!str::ToMultiByte(L"abc", 98765));
+    assert(!str::conv::FromCodePage("abc", 12345));
+    assert(!str::conv::ToCodePage(_T("abc"), 987654));
 }
 
 static void FileUtilTest()

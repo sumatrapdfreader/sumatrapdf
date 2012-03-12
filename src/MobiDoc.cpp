@@ -519,7 +519,8 @@ MobiDoc::MobiDoc() :
     fileName(NULL), fileHandle(0), recHeaders(NULL), firstRecData(NULL), isMobi(false),
     docRecCount(0), compressionType(0), docUncompressedSize(0), doc(NULL),
     multibyte(false), trailersCount(0), imageFirstRec(0), imagesCount(0),
-    images(NULL), bufDynamic(NULL), bufDynamicSize(0), huffDic(NULL)
+    images(NULL), bufDynamic(NULL), bufDynamicSize(0), huffDic(NULL),
+    textEncoding(CP_UTF8)
 {
 }
 
@@ -650,6 +651,8 @@ bool MobiDoc::ParseHeader()
     SwapU32(mobiHdr->huffmanTableOffset);
     SwapU32(mobiHdr->huffmanTableLen);
     SwapU32(mobiHdr->exhtFlags);
+
+    textEncoding = mobiHdr->textEncoding;
 
     if (pdbHeader.numRecords > mobiHdr->imageFirstRec) {
         imageFirstRec = mobiHdr->imageFirstRec;
@@ -943,6 +946,13 @@ bool MobiDoc::LoadDocument()
             return false;
     }
     assert(docUncompressedSize == doc->Size());
+    if (textEncoding != CP_UTF8) {
+        char *docUtf8 = str::ToMultiByte(doc->Get(), textEncoding, CP_UTF8);
+        if (docUtf8) {
+            doc->Reset();
+            doc->AppendAndFree(docUtf8);
+        }
+    }
     return true;
 }
 

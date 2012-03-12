@@ -217,6 +217,8 @@ char *ToMultiByte(const WCHAR *txt, UINT codePage)
     if (!txt) return NULL;
 
     int requiredBufSize = WideCharToMultiByte(codePage, 0, txt, -1, NULL, 0, NULL, NULL);
+    if (0 == requiredBufSize)
+        return NULL;
     char *res = SAZA(char, requiredBufSize);
     if (!res)
         return NULL;
@@ -247,6 +249,8 @@ WCHAR *ToWideChar(const char *src, UINT codePage)
     if (!src) return NULL;
 
     int requiredBufSize = MultiByteToWideChar(codePage, 0, src, -1, NULL, 0);
+    if (0 == requiredBufSize)
+        return NULL;
     WCHAR *res = SAZA(WCHAR, requiredBufSize);
     if (!res)
         return NULL;
