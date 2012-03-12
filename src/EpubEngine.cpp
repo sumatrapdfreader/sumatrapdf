@@ -5,13 +5,18 @@
 // (pages are layed out the same as for a "B Format" paperback: 5.12" x 7.8")
 
 #include "EpubEngine.h"
-#include "StrUtil.h"
-#include "FileUtil.h"
 #include "Scoped.h"
 #include "Allocator.h"
-#include "PageLayout.h"
-#include "GdiPlusUtil.h"
+#include "StrUtil.h"
+#include "FileUtil.h"
+#include "ZipUtil.h"
 #include "MiniMui.h"
+#include "GdiPlusUtil.h"
+#include "TrivialHtmlParser.h"
+#include "HtmlPullParser.h"
+#include "PageLayout.h"
+// for ImageData
+#include "MobiDoc.h"
 
 // disable warning C4250 which is wrongly issued due to a compiler bug; cf.
 // http://connect.microsoft.com/VisualStudio/feedback/details/101259/disable-warning-c4250-class1-inherits-class2-member-via-dominance-when-weak-member-is-a-pure-virtual-function
@@ -488,12 +493,6 @@ PageDestination *EbookEngine::GetNamedDest(const TCHAR *name)
 }
 
 /* EPUB loading code (was ebooktest2/EpubDoc.cpp) */
-
-#include "ZipUtil.h"
-#include "TrivialHtmlParser.h"
-#include "HtmlPullParser.h"
-// for ImageData
-#include "MobiDoc.h"
 
 struct ImageData2 {
     ImageData base;
@@ -1200,6 +1199,20 @@ bool Fb2Doc::Load()
     }
     if (!data)
         return false;
+
+    const char *xmlPI = str::Find(data, "<?xml");
+    if (xmlPI && str::Find(xmlPI, "?>")) {
+        HtmlToken pi;
+        pi.SetValue(HtmlToken::EmptyElementTag, xmlPI + 2, str::Find(xmlPI, "?>"));
+        AttrInfo *enc = pi.GetAttrByName("encoding");
+        if (enc) {
+            ScopedMem<char> tmp(str::DupN(enc->val, enc->valLen));
+            if (str::Find(tmp, "1251")) {
+                data.Set(str::ToMultiByte(data, 1251, CP_UTF8));
+                len = str::Len(data);
+            }
+        }
+    }
 
     HtmlPullParser parser(data, len);
     HtmlToken *tok;
