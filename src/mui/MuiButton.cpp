@@ -8,12 +8,12 @@ using namespace Gdiplus;
 
 namespace mui {
 
-Button::Button(const WCHAR *s)
+Button::Button(const WCHAR *s, Style *def, Style *mouseOver)
 {
     text = NULL;
     wantedInputBits = (uint16)-1; // wants everything
-    styleDefault = NULL;
-    styleMouseOver = NULL;
+    styleDefault = def;
+    styleMouseOver = mouseOver;
     SetStyle(styleDefault);
     SetText(s);
 }
@@ -52,25 +52,34 @@ void Button::NotifyMouseLeave()
     RecalculateSize(true);
 }
 
-// Update desired size of the button.
-// If the size changes, trigger layout (which will in
-// turn request repaints of affected areas)
+// Update desired size of the button. If the size changes, trigger layout
+// (which will in turn request repaints of affected areas)
+// To keep size of the button stable (to avoid re-layouts) we use font
+// line spacing to be the height of the button, even if text is empty.
+// Note: it might be that for some cases button with no text should collapse
+// in size but we don't have a need for that yet
 void Button::RecalculateSize(bool repaintIfSizeDidntChange)
 {
     Size prevSize = desiredSize;
 
     desiredSize = GetBorderAndPaddingSize(cachedStyle);
+    Graphics *gfx = AllocGraphicsForMeasureText();
+    CachedStyle *s = cachedStyle;
+    Font *font = GetCachedFont(s->fontName, s->fontSize, s->fontWeight);
+
     textDx = 0;
+    float fontDy = font->GetHeight(gfx);
+    RectF bbox;
     if (text) {
-        Graphics *gfx = AllocGraphicsForMeasureText();
-        CachedStyle *s = cachedStyle;
-        Font *font = GetCachedFont(s->fontName, s->fontSize, s->fontWeight);
-        RectF bbox = MeasureText(gfx, font, text);
+        bbox = MeasureText(gfx, font, text);
         textDx = (size_t)bbox.Width; // TODO: round up?
-        desiredSize.Width  += textDx;
-        desiredSize.Height += (INT)bbox.Height; // TODO: round up?
-        FreeGraphicsForMeasureText(gfx);
+        // bbox shouldn't be bigger than fontDy. We apply magic .1f adjustement because
+        // bbox is bigger in n-th decimal point
+        CrashIf(fontDy + .1f < bbox.Height);
     }
+    desiredSize.Width  += textDx;
+    desiredSize.Height += (INT)fontDy; // TODO: round up?
+    FreeGraphicsForMeasureText(gfx);
 
     if (!prevSize.Equals(desiredSize))
         RequestLayout(this);

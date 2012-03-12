@@ -16,7 +16,7 @@ class Button : public Control
     Style *         styleMouseOver;  // gStyleButtonMouseOver if NULL
 
 public:
-    Button(const WCHAR *s);
+    Button(const WCHAR *s, Style *def, Style *mouseOver);
 
     virtual ~Button();
 
