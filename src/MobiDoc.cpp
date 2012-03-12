@@ -443,11 +443,11 @@ static bool IsValidCompression(int comprType)
 }
 
 MobiDoc::MobiDoc() :
-    fileName(NULL), fileHandle(0), recHeaders(NULL), firstRecData(NULL), isMobi(false),
-    docRecCount(0), compressionType(0), docUncompressedSize(0), doc(NULL),
-    multibyte(false), trailersCount(0), imageFirstRec(0), imagesCount(0),
-    images(NULL), bufDynamic(NULL), bufDynamicSize(0), huffDic(NULL),
-    textEncoding(CP_UTF8)
+    fileName(NULL), fileHandle(0), recHeaders(NULL), firstRecData(NULL),
+    isMobi(false), docRecCount(0), compressionType(0), docUncompressedSize(0),
+    doc(NULL), multibyte(false), trailersCount(0), imageFirstRec(0),
+    imagesCount(0), images(NULL), bufDynamic(NULL), bufDynamicSize(0),
+    huffDic(NULL), textEncoding(CP_UTF8)
 {
 }
 
@@ -458,8 +458,9 @@ MobiDoc::~MobiDoc()
     free(firstRecData);
     free(recHeaders);
     free(bufDynamic);
-    for (size_t i = 0; i < imagesCount; i++)
+    for (size_t i = 0; i < imagesCount; i++) {
         free(images[i].data);
+    }
     free(images);
     delete huffDic;
     delete doc;
@@ -495,9 +496,9 @@ bool MobiDoc::ParseHeader()
         return false;
     DWORD toRead = kPdbRecordHeaderLen * pdbHeader.numRecords;
     ok = ReadFile(fileHandle, (void*)recHeaders, toRead, &bytesRead, NULL);
-    if (!ok || (toRead != bytesRead)) {
+    if (!ok || (toRead != bytesRead))
         return false;
-    }
+
     for (int i = 0; i < pdbHeader.numRecords; i++) {
         SwapU32(recHeaders[i].offset);
     }

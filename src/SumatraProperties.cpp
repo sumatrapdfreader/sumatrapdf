@@ -2,7 +2,9 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include "EbookController.h"
 #include "FileUtil.h"
+#include "MobiDoc.h"
 #include "MobiWindow.h"
 #include "Scoped.h"
 #include "SumatraPDF.h"
@@ -314,7 +316,6 @@ Example xref->info ("Info") object:
  /Keywords <>
 >>
 */
-
 static void GetProps(BaseEngine *engine, EngineType engineType, PropertiesLayout *layoutData)
 {
     TCHAR *str = str::Dup(gPluginMode ? gPluginURL : engine->FileName());
@@ -441,15 +442,35 @@ static void ShowProperties(WindowInfo& win, bool extended)
     if (!CreatePropertiesWindow(win.hwndFrame, layoutData))
         delete layoutData;
 }
+static void GetProps(MobiDoc *mobiDoc, PropertiesLayout *layoutData)
+{
+    TCHAR *str = str::Dup(gPluginMode ? gPluginURL : mobiDoc->GetFileName());
+    layoutData->AddProperty(_TR("File:"), str);
+
+    size_t fileSize = file::GetSize(mobiDoc->GetFileName());
+    if (fileSize != INVALID_FILE_SIZE) {
+        str = FormatFileSize(fileSize);
+        layoutData->AddProperty(_TR("File Size:"), str);
+    }
+
+}
 
 static void ShowProperties(MobiWindow *win)
 {
-    PropertiesLayout *pl = FindPropertyWindowByParent(win->hwndFrame);
-    if (pl) {
-        SetActiveWindow(pl->hwnd);
+    PropertiesLayout *layoutData = FindPropertyWindowByParent(win->hwndFrame);
+    if (layoutData) {
+        SetActiveWindow(layoutData->hwnd);
         return;
     }
+    MobiDoc *mobiDoc = win->ebookController->GetMobiDoc();
+    if (!mobiDoc)
+        return;
+    layoutData = new PropertiesLayout();
+    gPropertiesWindows.Append(layoutData);
+    GetProps(mobiDoc, layoutData);
     // TODO: show properties
+    if (!CreatePropertiesWindow(win->hwndFrame, layoutData))
+        delete layoutData;
 }
 
 void OnMenuProperties(SumatraWindow& win)

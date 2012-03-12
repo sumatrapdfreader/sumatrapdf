@@ -388,6 +388,10 @@ static LRESULT OnCommand(MobiWindow *win, UINT msg, WPARAM wParam, LPARAM lParam
             OnMenuSettings(win->hwndFrame);
             break;
 
+        case IDM_PROPERTIES:
+            OnMenuProperties(MakeSumatraWindow(win));
+            break;
+
         default:
             return DefWindowProc(win->hwndFrame, msg, wParam, lParam);
     }
