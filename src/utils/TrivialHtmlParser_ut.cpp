@@ -166,7 +166,7 @@ static void HtmlParser07()
 
 static void HtmlParser08()
 {
-    ScopedMem<TCHAR> val(DecodeHtmlEntitites("&auml&test;&&ouml-"));
+    ScopedMem<TCHAR> val(DecodeHtmlEntitites("&auml&test;&&ouml-", CP_ACP));
     assert(str::Eq(val.Get(), _T("\xE4&test;&\xF6-")));
 }
 

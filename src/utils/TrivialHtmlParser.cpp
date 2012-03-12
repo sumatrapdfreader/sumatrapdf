@@ -104,7 +104,7 @@ static TCHAR IntToChar(int codepoint, UINT codepage)
 }
 
 // caller needs to free() the result
-static TCHAR *DecodeHtmlEntitites(const char *string, UINT codepage=CP_ACP)
+TCHAR *DecodeHtmlEntitites(const char *string, UINT codepage)
 {
     TCHAR *fixed = str::conv::FromCodePage(string, codepage), *dst = fixed;
     const TCHAR *src = fixed;

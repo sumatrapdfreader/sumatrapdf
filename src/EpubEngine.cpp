@@ -536,7 +536,7 @@ public:
         }
     }
 
-    const char *GetBookHtmlData(size_t *lenOut) {
+    const char *GetBookData(size_t *lenOut) {
         *lenOut = htmlData.Size();
         return htmlData.Get();
     }
@@ -749,7 +749,7 @@ protected:
 
     void HandleTagImg2(HtmlToken *t);
     void HandleTagHeader(HtmlToken *t);
-    void HandleTagA2(HtmlToken *t);
+    void HandleTagA2(HtmlToken *t, const char *linkAttr="href");
     void HandleHtmlTag2(HtmlToken *t);
 
     Vec<PageAnchor> *anchors;
@@ -827,7 +827,8 @@ void PageLayoutEpub::EmitImage2(ImageData *img)
 
 void PageLayoutEpub::HandleTagImg2(HtmlToken *t)
 {
-    if (!layoutInfo->mobiDoc)
+    CrashIf(!layoutInfo->mobiDoc);
+    if (t->IsEndTag())
         return;
     EpubDoc *doc = (EpubDoc *)layoutInfo->mobiDoc;
 
@@ -858,10 +859,10 @@ void PageLayoutEpub::HandleTagHeader(HtmlToken *t)
     }
 }
 
-void PageLayoutEpub::HandleTagA2(HtmlToken *t)
+void PageLayoutEpub::HandleTagA2(HtmlToken *t, const char *linkAttr)
 {
     if (t->IsStartTag() && !inLink) {
-        AttrInfo *attr = t->GetAttrByName("href");
+        AttrInfo *attr = t->GetAttrByName(linkAttr);
         if (attr) {
             DrawInstr i(InstrLinkStart);
             i.str.s = attr->val;
@@ -878,7 +879,7 @@ void PageLayoutEpub::HandleTagA2(HtmlToken *t)
 
 void PageLayoutEpub::HandleHtmlTag2(HtmlToken *t)
 {
-    if (anchors && t->IsTag()) {
+    if (anchors) {
         AttrInfo *attrInfo = t->GetAttrByName("id");
         if (!attrInfo && t->NameIs("a"))
             attrInfo = t->GetAttrByName("name");
@@ -1010,7 +1011,7 @@ bool EpubEngineImpl::FinishLoading()
 
     LayoutInfo li;
     li.mobiDoc = (MobiDoc *)doc; // hack to allow passing doc through PageLayout
-    li.htmlStr = doc->GetBookHtmlData(&li.htmlStrLen);
+    li.htmlStr = doc->GetBookData(&li.htmlStrLen);
     li.pageDx = (int)(pageRect.dx - 2 * pageBorder);
     li.pageDy = (int)(pageRect.dy - 2 * pageBorder);
     li.fontName = L"Georgia";
@@ -1139,8 +1140,9 @@ class Fb2Doc {
     friend Fb2EngineImpl;
 
     ScopedMem<TCHAR> fileName;
-    str::Str<char> htmlData;
+    str::Str<char> xmlData;
     Vec<ImageData2> images;
+    ScopedMem<TCHAR> docTitle;
 
     bool Load();
     void ExtractImage(HtmlPullParser& parser, HtmlToken *tok);
@@ -1154,9 +1156,9 @@ public:
         }
     }
 
-    const char *GetBookHtmlData(size_t *lenOut) {
-        *lenOut = htmlData.Size();
-        return htmlData.Get();
+    const char *GetBookData(size_t *lenOut) {
+        *lenOut = xmlData.Size();
+        return xmlData.Get();
     }
 
     ImageData *GetImageData(const char *id) {
@@ -1174,6 +1176,8 @@ public:
     }
 
     TCHAR *GetProperty(const char *name) {
+        if (str::Eq(name, "Title") && docTitle)
+            return str::Dup(docTitle);
         return NULL;
     }
 
@@ -1182,21 +1186,6 @@ public:
                str::EndsWithI(fileName, _T(".fb2.zip"));
     }
 };
-
-static void AppendTextNormWS(str::Str<char>& out, const char *s, size_t len)
-{
-    bool wasWs = false;
-    const char *end = s + len;
-    for (; s < end; s++) {
-        if (!str::IsWs(*s)) {
-            out.Append(*s);
-            wasWs = false;
-        } else if (!wasWs) {
-            out.Append(' ');
-            wasWs = true;
-        }
-    }
-}
 
 bool Fb2Doc::Load()
 {
@@ -1214,92 +1203,38 @@ bool Fb2Doc::Load()
 
     HtmlPullParser parser(data, len);
     HtmlToken *tok;
-    int inBody = 0, inTitle = 0;
-    int sectionDepth = 1;
+    int inBody = 0, inTitleInfo = 0;
+    const char *bodyStart = NULL;
     while ((tok = parser.Next())) {
-        HtmlTag tag = tok->IsTag() ? FindTag(tok) : Tag_NotFound;
-        if (!inBody && tok->IsStartTag() && Tag_Body == tag)
-            inBody++;
-        else if (inBody && tok->IsEndTag() && Tag_Body == tag)
-            inBody--;
-        if (!inBody && tok->IsStartTag() && tok->NameIs("binary"))
+        if (!inTitleInfo && tok->IsStartTag() && tok->NameIs("body")) {
+            if (!inBody++)
+                bodyStart = tok->s;
+        }
+        else if (inBody && tok->IsEndTag() && tok->NameIs("body")) {
+            if (!--inBody) {
+                if (xmlData.Count() > 0)
+                    xmlData.Append("<pagebreak />");
+                xmlData.Append('<');
+                xmlData.Append(bodyStart, tok->s - bodyStart + tok->sLen);
+                xmlData.Append('>');
+            }
+        }
+        else if (!inBody && tok->IsStartTag() && tok->NameIs("binary"))
             ExtractImage(parser, tok);
-        if (!inBody)
-            continue;
-
-        if (tok->IsText()) {
-            AppendTextNormWS(htmlData, tok->s, tok->sLen);
-        }
-        else if (tok->IsStartTag()) {
-            if (Tag_P == tag && !inTitle) {
-                htmlData.Append("<p>");
-            }
-            else if (Tag_Title == tag) {
-                if (inTitle++)
-                    /* ignore nested title tags */;
-                else if (sectionDepth <= 5)
-                    htmlData.AppendFmt("<h%d>", sectionDepth);
-                else
-                    htmlData.Append("<p><b>");
-            }
-            else if (Tag_Body == tag) {
-                if (htmlData.Count() == 0)
-                    htmlData.Append("<!doctype html><title></title>");
-            }
-            else if (Tag_Strong == tag) {
-                htmlData.Append("<strong>");
-            }
-            else if (tok->NameIs("section")) {
-                sectionDepth++;
-            }
-            else if (tok->NameIs("emphasis")) {
-                htmlData.Append("<em>");
-            }
-            else if (tok->NameIs("epigraph")) {
-                htmlData.Append("<blockquote>");
-            }
-            // TODO: handle Tag_A, <text-author>
-        }
-        else if (tok->IsEndTag()) {
-            if (Tag_P == tag && !inTitle) {
-                htmlData.Append("</p>");
-            }
-            else if (Tag_Title == tag && inTitle > 0) {
-                if (--inTitle)
-                    /* ignore nested title tags */;
-                else if (sectionDepth <= 5)
-                    htmlData.AppendFmt("</h%d>", sectionDepth);
-                else
-                    htmlData.Append("</b></p>");
-            }
-            else if (Tag_Strong == tag) {
-                htmlData.Append("</strong>");
-            }
-            else if (tok->NameIs("section") && sectionDepth > 0) {
-                sectionDepth--;
-            }
-            else if (tok->NameIs("emphasis")) {
-                htmlData.Append("</em>");
-            }
-            else if (tok->NameIs("epigraph")) {
-                htmlData.Append("</blockquote>");
-            }
-        }
-        else if (tok->IsEmptyElementEndTag()) {
-            if (tok->NameIs("image")) {
-                AttrInfo *attrInfo = tok->GetAttrByName("xlink:href");
-                if (attrInfo) {
-                    ScopedMem<char> link(str::DupN(attrInfo->val, attrInfo->valLen));
-                    htmlData.AppendFmt("<img src=\"%s\">", link);
-                }
-            }
-            else if (tok->NameIs("empty-line")) {
-                htmlData.Append("<p></p>");
+        else if (!inBody && tok->IsStartTag() && tok->NameIs("title-info"))
+            inTitleInfo++;
+        else if (inTitleInfo && tok->IsEndTag() && tok->NameIs("title-info"))
+            inTitleInfo--;
+        else if (inTitleInfo && tok->IsStartTag() && tok->NameIs("book-title")) {
+            tok = parser.Next();
+            if (tok->IsText()) {
+                ScopedMem<char> tmp(str::DupN(tok->s, tok->sLen));
+                docTitle.Set(DecodeHtmlEntitites(tmp, CP_UTF8));
             }
         }
     }
 
-    return htmlData.Count() > 0;
+    return xmlData.Size() > 0;
 }
 
 inline char decode64(char c)
@@ -1367,22 +1302,26 @@ void Fb2Doc::ExtractImage(HtmlPullParser& parser, HtmlToken *tok)
 /* PageLayout extensions for FictionBook2 */
 
 class PageLayoutFb2 : public PageLayoutEpub {
+    int section;
+
     void HandleTagImg3(HtmlToken *t);
+    void HandleTagAsHtml(HtmlToken *t, const char *name);
     void HandleFb2Tag(HtmlToken *t);
 
 public:
-    PageLayoutFb2(LayoutInfo *li) : PageLayoutEpub(li) { }
+    PageLayoutFb2(LayoutInfo *li) : PageLayoutEpub(li), section(1) { }
 
     Vec<PageData*> *Layout(Vec<PageAnchor> *anchors=NULL);
 };
 
 void PageLayoutFb2::HandleTagImg3(HtmlToken *t)
 {
-    if (!layoutInfo->mobiDoc)
+    CrashIf(!layoutInfo->mobiDoc);
+    if (t->IsEndTag())
         return;
     Fb2Doc *doc = (Fb2Doc *)layoutInfo->mobiDoc;
 
-    AttrInfo *attr = t->GetAttrByName("src");
+    AttrInfo *attr = t->GetAttrByName("xlink:href");
     if (!attr)
         return;
     ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
@@ -1391,52 +1330,56 @@ void PageLayoutFb2::HandleTagImg3(HtmlToken *t)
         EmitImage2(img);
 }
 
+void PageLayoutFb2::HandleTagAsHtml(HtmlToken *t, const char *name)
+{
+    HtmlToken tok;
+    tok.SetValue(t->type, name, name + str::Len(name));
+    HandleHtmlTag2(&tok);
+}
+
 void PageLayoutFb2::HandleFb2Tag(HtmlToken *t)
 {
-    if (anchors && t->IsTag()) {
+    if (anchors) {
         AttrInfo *attrInfo = t->GetAttrByName("id");
-        if (!attrInfo && t->NameIs("a"))
-            attrInfo = t->GetAttrByName("name");
         if (attrInfo)
             anchors->Append(PageAnchor(attrInfo->val, attrInfo->valLen,
                                        pagesToSend.Count() + 1, currY));
     }
 
-    HtmlTag tag = FindTag(t);
-    switch (tag) {
-    case Tag_Img:
+    if (t->NameIs("title")) {
+        HtmlToken tok2;
+        ScopedMem<char> name(str::Format("h%d", section));
+        tok2.SetValue(t->type, name, name + str::Len(name));
+        HandleTagHeader(&tok2);
+    }
+    else if (t->NameIs("section")) {
+        if (t->IsStartTag())
+            section++;
+        else if (t->IsEndTag() && section > 1)
+            section--;
+        FlushCurrLine(true);
+    }
+    else if (t->NameIs("p")) {
+        if (htmlParser->tagNesting.Find(Tag_Title) == -1)
+            HandleHtmlTag2(t);
+    }
+    else if (t->NameIs("image"))
         HandleTagImg3(t);
-        break;
-    case Tag_Pagebreak:
+    else if (t->NameIs("a"))
+        HandleTagA2(t, "xlink:href");
+    else if (t->NameIs("pagebreak"))
         ForceNewPage();
-        break;
-    case Tag_Ul: case Tag_Ol: case Tag_Dl:
-        currJustification = Align_Left;
-        break;
-    case Tag_Li: case Tag_Dd: case Tag_Dt:
-        FlushCurrLine(false);
-        break;
-    case Tag_Center:
-        currJustification = Align_Center;
-        break;
-    case Tag_H1: case Tag_H2: case Tag_H3:
-    case Tag_H4: case Tag_H5:
-        HandleTagHeader(t);
-        break;
-    case Tag_A:
-        HandleTagA2(t);
-        break;
-    case Tag_P: case Tag_Hr: case Tag_B:
-    case Tag_Strong: case Tag_I: case Tag_Em:
-    case Tag_U: case Tag_Strike: case Tag_Mbp_Pagebreak:
-    case Tag_Br: case Tag_Font: /* case Tag_Img: */
-    /* case Tag_A: */ case Tag_Blockquote: case Tag_Div:
-    case Tag_Sup: case Tag_Sub: case Tag_Span:
-        HandleHtmlTag(t);
-        break;
-    default:
-        // ignore instead of crashing in HandleHtmlTag
-        break;
+    else if (t->NameIs("strong"))
+        HandleTagAsHtml(t, "b");
+    else if (t->NameIs("emphasis"))
+        HandleTagAsHtml(t, "i");
+    else if (t->NameIs("epigraph"))
+        HandleTagAsHtml(t, "blockquote");
+    else if (t->NameIs("empty-line")) {
+        if (!t->IsEndTag()) {
+            EmitParagraph(0, 0);
+            FlushCurrLine(true);
+        }
     }
 }
 
@@ -1449,7 +1392,7 @@ Vec<PageData*> *PageLayoutFb2::Layout(Vec<PageAnchor> *anchors)
     while ((t = htmlParser->Next()) && !t->IsError()) {
         if (t->IsTag())
             HandleFb2Tag(t);
-        else if (!IgnoreText())
+        else
             HandleText(t);
     }
 
@@ -1495,7 +1438,7 @@ bool Fb2EngineImpl::Load(const TCHAR *fileName)
 
     LayoutInfo li;
     li.mobiDoc = (MobiDoc *)doc; // hack to allow passing doc through PageLayout
-    li.htmlStr = doc->GetBookHtmlData(&li.htmlStrLen);
+    li.htmlStr = doc->GetBookData(&li.htmlStrLen);
     li.pageDx = (int)(pageRect.dx - 2 * pageBorder);
     li.pageDy = (int)(pageRect.dy - 2 * pageBorder);
     li.fontName = L"Georgia";

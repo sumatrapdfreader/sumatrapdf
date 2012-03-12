@@ -82,4 +82,6 @@ public:
     HtmlElement *FindElementByName(const char *name, HtmlElement *from=NULL);
 };
 
+TCHAR *DecodeHtmlEntitites(const char *string, UINT codepage);
+
 #endif
