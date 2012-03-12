@@ -684,7 +684,7 @@ bool SavePrefs()
     }
 
     for (size_t i = 0; i < gMobiWindows.Count(); i++) {
-        UpdateCurrentFileDisplayStateForWin(MakeSumatraWindow(gWindows.At(i)));
+        UpdateCurrentFileDisplayStateForWin(MakeSumatraWindow(gMobiWindows.At(i)));
     }
 
     // don't save preferences without the proper permission
