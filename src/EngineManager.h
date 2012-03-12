@@ -26,7 +26,6 @@ enum EngineType {
 #include "ChmEngine.h"
 #ifdef TEST_EPUB_ENGINE
 #include "EpubEngine.h"
-#include "MobiEngine.h"
 #endif
 
 class EngineManager {

@@ -326,6 +326,9 @@ BaseEngine *CEpubPreview::LoadEngine(IStream *stream)
 
 // allow to build PdfPreview.dll without MobiDoc
 #include "MobiDoc.h"
-ImageData *MobiDoc::GetCoverImage() { return NULL; }
+MobiDoc::~MobiDoc() { }
 ImageData *MobiDoc::GetImage(size_t imgRecIndex) const { return NULL; }
+ImageData *MobiDoc::GetCoverImage() { return NULL; }
+char *MobiDoc::GetBookHtmlData(size_t& lenOut) const { return NULL; }
+MobiDoc *MobiDoc::CreateFromFile(const TCHAR *fileName) { return NULL; }
 #endif

@@ -22,7 +22,7 @@
 // http://connect.microsoft.com/VisualStudio/feedback/details/101259/disable-warning-c4250-class1-inherits-class2-member-via-dominance-when-weak-member-is-a-pure-virtual-function
 #pragma warning( disable: 4250 ) /* 'class1' : inherits 'class2::member' via dominance */
 
-/* common classes for EPUB and FictionBook2 engines */
+/* common classes for EPUB, FictionBook2 and Mobi engines */
 
 namespace str {
     namespace conv {
@@ -93,7 +93,7 @@ protected:
     // needed so that memory allocated by ResolveHtmlEntities isn't leaked
     PoolAllocator allocator;
     // needed since pages::IterStart/IterNext aren't thread-safe
-    CRITICAL_SECTION iterAccess;
+    CRITICAL_SECTION pagesAccess;
     // needed to undo the DPI specific UnitPoint-UnitPixel conversion
     int currFontDpi;
 
@@ -161,7 +161,7 @@ public:
 
 class ImageDataElement : public PageElement {
     int pageNo;
-    ImageData *id; // owned by EpubEngineImpl::pages
+    ImageData *id; // owned by *EngineImpl::pages
     RectI bbox;
 
 public:
@@ -190,24 +190,26 @@ EbookEngine::EbookEngine() : fileName(NULL), pages(NULL),
     pageRect(0, 0, 5.12 * GetFileDPI(), 7.8 * GetFileDPI()), // "B Format" paperback
     pageBorder(0.4f * GetFileDPI()), currFontDpi(96)
 {
-    InitializeCriticalSection(&iterAccess);
+    InitializeCriticalSection(&pagesAccess);
 }
 
 EbookEngine::~EbookEngine()
 {
-    EnterCriticalSection(&iterAccess);
+    EnterCriticalSection(&pagesAccess);
 
     if (pages)
         DeleteVecMembers(*pages);
     delete pages;
     free((void *)fileName);
 
-    LeaveCriticalSection(&iterAccess);
-    DeleteCriticalSection(&iterAccess);
+    LeaveCriticalSection(&pagesAccess);
+    DeleteCriticalSection(&pagesAccess);
 }
 
 bool EbookEngine::FixImageJustification()
 {
+    ScopedCritSec scope(&pagesAccess);
+
     for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
         Vec<DrawInstr> *pageInstrs = GetPageData(pageNo);
         if (!pageInstrs)
@@ -286,7 +288,7 @@ void EbookEngine::FixFontSizeForResolution(HDC hDC)
     if (dpi == currFontDpi)
         return;
 
-    ScopedCritSec scope(&iterAccess);
+    ScopedCritSec scope(&pagesAccess);
 
     float dpiFactor = 1.0f * currFontDpi / dpi;
     Graphics g(hDC);
@@ -330,7 +332,7 @@ bool EbookEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, 
     m.Translate((REAL)(screenRect.x - screen.x), (REAL)(screenRect.y - screen.y), MatrixOrderAppend);
     g.SetTransform(&m);
 
-    ScopedCritSec scope(&iterAccess);
+    ScopedCritSec scope(&pagesAccess);
     FixFontSizeForResolution(hDC);
     DrawPageLayout(&g, GetPageData(pageNo), pageBorder, pageBorder, false, &Color(Color::Black));
     return true;
@@ -345,7 +347,7 @@ static RectI GetInstrBbox(DrawInstr *instr, float pageBorder)
 
 TCHAR *EbookEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out, RenderTarget target)
 {
-    ScopedCritSec scope(&iterAccess);
+    ScopedCritSec scope(&pagesAccess);
 
     str::Str<TCHAR> content;
     Vec<RectI> coords;
@@ -412,7 +414,7 @@ PageElement *EbookEngine::CreatePageLink(DrawInstr *link, RectI rect, int pageNo
 
 Vec<PageElement *> *EbookEngine::GetElements(int pageNo)
 {
-    ScopedCritSec scope(&iterAccess);
+    ScopedCritSec scope(&pagesAccess);
 
     Vec<PageElement *> *els = new Vec<PageElement *>();
 
@@ -543,21 +545,14 @@ public:
     ImageData *GetImageData(const char *id) {
         // TODO: paths are relative from the html document to the image
         for (size_t i = 0; i < images.Count(); i++) {
-            if (str::EndsWith(id, images.At(i).id))
-                return GetImageData(i);
+            if (str::EndsWith(id, images.At(i).id)) {
+                if (!images.At(i).base.data)
+                    images.At(i).base.data = zip.GetFileData(images.At(i).idx, &images.At(i).base.len);
+                if (images.At(i).base.data)
+                    return &images.At(i).base;
+            }
         }
         return NULL;
-    }
-
-    ImageData *GetImageData(size_t index) {
-        if (index >= images.Count())
-            return NULL;
-        if (!images.At(index).base.data) {
-            images.At(index).base.data = zip.GetFileData(images.At(index).idx, &images.At(index).base.len);
-            if (!images.At(index).base.data)
-                return NULL;
-        }
-        return &images.At(index).base;
     }
 
     TCHAR *GetProperty(const char *name) {
@@ -1018,12 +1013,10 @@ bool EpubEngineImpl::FinishLoading()
     li.textAllocator = &allocator;
 
     pages = PageLayoutEpub(&li).Layout(&anchors);
-    if (!pages)
-        return false;
     if (!FixImageJustification())
         return false;
 
-    return true;
+    return pages->Count() > 0;
 }
 
 static void AppendTocItem(EpubTocItem *& root, EpubTocItem *item, int level)
@@ -1163,15 +1156,9 @@ public:
     ImageData *GetImageData(const char *id) {
         for (size_t i = 0; i < images.Count(); i++) {
             if (str::Eq(images.At(i).id, id))
-                return GetImageData(i);
+                return &images.At(i).base;
         }
         return NULL;
-    }
-
-    ImageData *GetImageData(size_t index) {
-        if (index >= images.Count())
-            return NULL;
-        return &images.At(index).base;
     }
 
     TCHAR *GetProperty(const char *name) {
@@ -1459,12 +1446,10 @@ bool Fb2EngineImpl::Load(const TCHAR *fileName)
     li.textAllocator = &allocator;
 
     pages = PageLayoutFb2(&li).Layout(&anchors);
-    if (!pages)
-        return false;
     if (!FixImageJustification())
         return false;
 
-    return true;
+    return pages->Count() > 0;
 }
 
 bool Fb2Engine::IsSupportedFile(const TCHAR *fileName, bool sniff)
@@ -1475,6 +1460,73 @@ bool Fb2Engine::IsSupportedFile(const TCHAR *fileName, bool sniff)
 Fb2Engine *Fb2Engine::CreateFromFile(const TCHAR *fileName)
 {
     Fb2EngineImpl *engine = new Fb2EngineImpl();
+    if (!engine->Load(fileName)) {
+        delete engine;
+        return NULL;
+    }
+    return engine;
+}
+
+/* BaseEngine for handling Mobi documents (for reference testing) */
+
+class MobiEngineImpl : public EbookEngine, public MobiEngine {
+    friend MobiEngine;
+
+public:
+    MobiEngineImpl() : EbookEngine(), doc(NULL) { }
+    virtual ~MobiEngineImpl() { delete doc; }
+    virtual MobiEngine *Clone() {
+        return fileName ? CreateFromFile(fileName) : NULL;
+    }
+
+    // GetElements relies on InstrLinkStart holding a string instead of an offset
+    virtual Vec<PageElement *> *GetElements(int pageNo) { return NULL; }
+
+    virtual const TCHAR *GetDefaultFileExt() const { return _T(".mobi"); }
+
+protected:
+    MobiDoc *doc;
+
+    bool Load(const TCHAR *fileName);
+};
+
+bool MobiEngineImpl::Load(const TCHAR *fileName)
+{
+    this->fileName = str::Dup(fileName);
+
+    doc = MobiDoc::CreateFromFile(fileName);
+    if (!doc)
+        return false;
+
+    LayoutInfo li;
+    li.mobiDoc = doc;
+    li.htmlStr = doc->GetBookHtmlData(li.htmlStrLen);
+    li.pageDx = (int)(pageRect.dx - 2 * pageBorder);
+    li.pageDy = (int)(pageRect.dy - 2 * pageBorder);
+    li.fontName = L"Georgia";
+    li.fontSize = 11;
+    li.textAllocator = &allocator;
+
+    pages = new Vec<PageData *>();
+
+    PageLayout layout;
+    for (PageData *pd = layout.IterStart(&li); pd; pd = layout.IterNext()) {
+        pages->Append(pd);
+    }
+    
+    return pages->Count() > 0;
+}
+
+bool MobiEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
+{
+    return str::EndsWithI(fileName, _T(".mobi")) ||
+           str::EndsWithI(fileName, _T(".azw"))  ||
+           str::EndsWithI(fileName, _T(".prc"));
+}
+
+MobiEngine *MobiEngine::CreateFromFile(const TCHAR *fileName)
+{
+    MobiEngineImpl *engine = new MobiEngineImpl();
     if (!engine->Load(fileName)) {
         delete engine;
         return NULL;

@@ -19,4 +19,10 @@ public:
     static Fb2Engine *CreateFromFile(const TCHAR *fileName);
 };
 
+class MobiEngine : public virtual BaseEngine {
+public:
+    static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
+    static MobiEngine *CreateFromFile(const TCHAR *fileName);
+};
+
 #endif
