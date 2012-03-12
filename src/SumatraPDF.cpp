@@ -48,7 +48,7 @@ using namespace Gdiplus;
 /* Define THREAD_BASED_FILEWATCH to use the thread-based implementation of file change detection. */
 #define THREAD_BASED_FILEWATCH
 
-/* if TRUE, we're in debug mode where we show links as blue rectangle on
+/* if true, we're in debug mode where we show links as blue rectangle on
    the screen. Makes debugging code related to links easier. */
 #ifdef DEBUG
 bool             gDebugShowLinks = true;
@@ -60,6 +60,13 @@ bool             gDebugShowLinks = false;
    otherwise Fitz/MuPDF is used at least for screen rendering.
    In Debug builds, you can switch between the two through the Debug menu */
 bool             gUseGdiRenderer = false;
+
+/* if true, ebooks are rendered flowed instead of in fixed-sized pages */
+#ifndef DISABLE_EBOOK_UI
+bool             gUseEbookUI = true;
+#else
+bool             gUseEbookUI = false;
+#endif
 
 // in plugin mode, the window's frame isn't drawn and closing and
 // fullscreen are disabled, so that SumatraPDF can be displayed
@@ -1290,7 +1297,7 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin,
         return NULL;
     }
 
-    if (IsMobiFile(fileName)) {
+    if (gUseEbookUI && IsMobiFile(fileName)) {
         if (!win) {
             if ((1 == gWindows.Count()) && gWindows.At(0)->IsAboutWindow())
                 win = gWindows.At(0);
@@ -4487,6 +4494,10 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
 
         case IDM_DEBUG_GDI_RENDERER:
             ToggleGdiDebugging();
+            break;
+
+        case IDM_DEBUG_EBOOK_UI:
+            gUseEbookUI = !gUseEbookUI;
             break;
 
         case IDM_DEBUG_CRASH_ME:

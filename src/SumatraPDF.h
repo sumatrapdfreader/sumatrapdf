@@ -67,6 +67,7 @@ class Favorites;
 extern HINSTANCE                ghinst;
 extern bool                     gDebugShowLinks;
 extern bool                     gUseGdiRenderer;
+extern bool                     gUseEbookUI;
 extern bool                     gIsStressTesting;
 extern HCURSOR                  gCursorHand;
 extern HCURSOR                  gCursorArrow;

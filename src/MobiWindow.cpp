@@ -59,7 +59,8 @@ static MenuDef menuDefHelp[] = {
 #ifdef SHOW_DEBUG_MENU_ITEMS
 static MenuDef menuDefDebug[] = {
     { "Show bbox",                          IDM_DEBUG_SHOW_LINKS,       MF_NO_TRANSLATE },
-    { "Test page layout",                   IDM_TEST_PAGE_LAYOUT,       MF_NO_TRANSLATE },
+    { "Test page layout",                   IDM_DEBUG_PAGE_LAYOUT,      MF_NO_TRANSLATE },
+    { "Toggle ebook UI",                    IDM_DEBUG_EBOOK_UI,         MF_NO_TRANSLATE },
 };
 #endif
 
@@ -366,13 +367,18 @@ static LRESULT OnCommand(MobiWindow *win, UINT msg, WPARAM wParam, LPARAM lParam
             LaunchBrowser(WEBSITE_MANUAL_URL);
             break;
 
+#ifdef SHOW_DEBUG_MENU_ITEMS
         case IDM_DEBUG_SHOW_LINKS:
             OnToggleBbox(win);
             break;
 
-#ifdef SHOW_DEBUG_MENU_ITEMS
-        case IDM_TEST_PAGE_LAYOUT:
+        case IDM_DEBUG_PAGE_LAYOUT:
             win->ebookController->SetHtml(gSampleHtml);
+            break;
+
+        case IDM_DEBUG_EBOOK_UI:
+            gUseEbookUI = !gUseEbookUI;
+            win::menu::SetChecked(GetMenu(win->hwndFrame), IDM_DEBUG_EBOOK_UI, !gUseEbookUI);
             break;
 #endif
 
