@@ -5,11 +5,11 @@ Specific things that still need to be added for minimal mobi support:
 - document properties
 - crash in mobi: HEAP: Free Heap block 70dae8 modified at 70db1c which is +1 at offset
   0x34 (52). Is it InterlockedIncrement() or some other refCount on a freed object?
+- mem leak when mobi layout thread is interrupted
 
 Maybe for 2.0:
 - progress bar flicker when status line changes width (I think). We probably force repaint after
   re-layout in mui even if position/sizes of controls haven't changed
-- ability to use test document in debug mode
 
 Things that can wait for 2.1:
 - links in mobi format

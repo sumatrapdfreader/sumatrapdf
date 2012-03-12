@@ -127,12 +127,16 @@ void ThreadBase::Start()
     hThread = CreateThread(NULL, 0, ThreadProc, this, 0, 0);
 }
 
-void ThreadBase::TerminateWithDelay(DWORD waitMs)
+bool ThreadBase::RequestCancelAndWaitToStop(DWORD waitMs, bool terminate)
 {
     RequestCancel();
     DWORD res = WaitForSingleObject(hThread, waitMs);
     if (WAIT_OBJECT_0 == res)
-        return;
-    TerminateThread(hThread, 1);
-    CloseHandle(hThread);
+        return true;
+    if (terminate) {
+        TerminateThread(hThread, 1);
+        CloseHandle(hThread);
+    }
+    return false;
 }
+

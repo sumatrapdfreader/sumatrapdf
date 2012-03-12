@@ -866,6 +866,15 @@
     <ClCompile Include="src\MobiEngine.cpp">
       <Filter>sumatra\engines</Filter>
     </ClCompile>
+    <ClCompile Include="src\utils\BitReader.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\DirIter.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\ThreadUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -1261,6 +1270,18 @@
     </ClInclude>
     <ClInclude Include="src\MobiEngine.h">
       <Filter>sumatra\engines</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\BitManip.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\BitReader.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\DirIter.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\ThreadUtil.h">
+      <Filter>utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

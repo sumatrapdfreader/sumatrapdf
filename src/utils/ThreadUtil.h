@@ -135,8 +135,9 @@ public:
     void Start();
 
     // ask the thread to stop with RequestCancel(), wait for it
-    // to end and terminate if didn't end
-    void TerminateWithDelay(DWORD waitMs);
+    // to end and terminate if didn't end and terminate is true
+    // returns true if thread stopped by itself
+    bool RequestCancelAndWaitToStop(DWORD waitMs, bool terminate);
 
     // over-write this to implement the actual thread functionality
     virtual void Run() = 0;

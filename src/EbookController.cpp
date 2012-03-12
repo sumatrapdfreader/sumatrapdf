@@ -83,7 +83,7 @@ public:
 
 ThreadLayoutMobi::ThreadLayoutMobi() : layoutInfo(NULL), pageCount(0)
 {
-    autoDeleteSelf = true;
+    autoDeleteSelf = false;
 }
 
 ThreadLayoutMobi::~ThreadLayoutMobi()
@@ -178,16 +178,9 @@ EbookController::EbookController(EbookControls *ctrls) :
 
 EbookController::~EbookController()
 {
-    if (layoutThread)
-        layoutThread->TerminateWithDelay(2000); // wait up to 2 seconds before terminating
-
     ctrls->mainWnd->evtMgr->UnRegisterClicked(this);
     ctrls->mainWnd->evtMgr->UnRegisterSizeChanged(this);
-    ctrls->page->SetPage(NULL);
-    DeletePageShown();
-    DeletePages(&pagesFromBeginning);
-    DeletePages(&pagesFromPage);
-    delete mobiDoc;
+    CloseCurrentDocument();
 }
 
 void EbookController::DeletePageShown()
@@ -195,6 +188,32 @@ void EbookController::DeletePageShown()
     if (deletePageShown)
         delete pageShown;
     pageShown = NULL;
+}
+
+// stop layout thread and optionally terminate it (if we're closing
+// a document we'll delete the ebook data so we can't have the thread
+// keep using it)
+void EbookController::StopLayoutThread(bool forceTerminate)
+{
+    if (!layoutThread)
+        return;
+    layoutThread->RequestCancelAndWaitToStop(1000, forceTerminate);
+    layoutThread = NULL;
+    layoutTemp.DeletePages();
+}
+
+void EbookController::CloseCurrentDocument()
+{
+    StopLayoutThread(true);
+    ctrls->page->SetPage(NULL);
+    DeletePageShown();
+    DeletePages(&pagesFromBeginning);
+    DeletePages(&pagesFromPage);
+    delete mobiDoc;
+    mobiDoc = NULL;
+    html = NULL;
+    layoutTemp.reparsePoint = NULL; // mark as being laid out from the beginning
+    pageDx = 0; pageDy = 0;
 }
 
 void EbookController::DeletePages(Vec<PageData*>** pages)
@@ -206,6 +225,7 @@ void EbookController::DeletePages(Vec<PageData*>** pages)
     ::DeletePages(*pages);
     *pages = NULL;
 }
+
 
 LayoutInfo *GetLayoutInfo(const char *html, MobiDoc *mobiDoc, int dx, int dy, PoolAllocator *textAllocator)
 {
@@ -416,12 +436,7 @@ void EbookController::TriggerLayout()
         CrashIf(layoutTemp.reparsePoint != NULL);
     }
 
-    // nicely ask existing layout thread (if exists) to quit but we don't
-    // rely on that. If it sends us some data anyway, we'll ignore it
-    if (layoutThread) {
-        layoutThread->RequestCancel();
-        layoutTemp.DeletePages();
-    }
+    StopLayoutThread(false);
 
     DeletePages(&pagesFromBeginning);
     DeletePages(&pagesFromPage);
@@ -592,18 +607,15 @@ void EbookController::AdvancePage(int dist)
 
 void EbookController::SetHtml(const char *newHtml)
 {
+    CloseCurrentDocument();
     html = newHtml;
-    delete mobiDoc;
-    layoutTemp.reparsePoint = NULL;
     TriggerLayout();
 }
 
 void EbookController::SetMobiDoc(MobiDoc *newMobiDoc)
 {
-    html = NULL;
-    delete mobiDoc;
+    CloseCurrentDocument();
     mobiDoc = newMobiDoc;
-    layoutTemp.reparsePoint = NULL; // mark as being laid out from the beginning
     TriggerLayout();
 }
 

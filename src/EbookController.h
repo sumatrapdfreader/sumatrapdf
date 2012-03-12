@@ -100,18 +100,20 @@ class EbookController : public IClicked, ISizeChanged
     ThreadLayoutMobi *layoutThread;
     LayoutTemp        layoutTemp;
 
-    void UpdateStatus();
-    void DeletePages(Vec<PageData*>** pages);
-    void DeletePageShown();
-    void ShowPage(PageData *pd, bool deleteWhenDone);
-    PageData* PreserveTempPageShown();
-    void UpdateCurrPageNoForPage(PageData *pd);
     Vec<PageData*> *GetPagesFromBeginning();
-    void TriggerLayout();
-    bool LayoutInProgress() const { return layoutThread != NULL; }
-    bool GoOnePageForward(Vec<PageData*> *pages);
-    void GoOnePageForward();
-    size_t GetMaxPageCount();
+    PageData*   PreserveTempPageShown();
+    void        UpdateStatus();
+    void        DeletePages(Vec<PageData*>** pages);
+    void        DeletePageShown();
+    void        ShowPage(PageData *pd, bool deleteWhenDone);
+    void        UpdateCurrPageNoForPage(PageData *pd);
+    void        TriggerLayout();
+    bool        LayoutInProgress() const { return layoutThread != NULL; }
+    bool        GoOnePageForward(Vec<PageData*> *pages);
+    void        GoOnePageForward();
+    size_t      GetMaxPageCount();
+    void        StopLayoutThread(bool forceTerminate);
+    void        CloseCurrentDocument();
 
     // IClickHandler
     virtual void Clicked(Control *c, int x, int y);
