@@ -129,6 +129,12 @@ void ThreadBase::Start()
 
 bool ThreadBase::RequestCancelAndWaitToStop(DWORD waitMs, bool terminate)
 {
+    // should not be called on threads that are auto-delete because there's
+    // a race where WaitForSingleObject() might return telling us the thread
+    // is still alive but the thread might auto-delete itself right after
+    // that and we'll crash trying to use hThread which is now garbage
+    CrashIf(autoDeleteSelf && terminate);
+
     RequestCancel();
     DWORD res = WaitForSingleObject(hThread, waitMs);
     if (WAIT_OBJECT_0 == res)
