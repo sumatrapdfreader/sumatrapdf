@@ -1479,8 +1479,9 @@ public:
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
-    // GetElements relies on InstrLinkStart holding a string instead of an offset
-    virtual Vec<PageElement *> *GetElements(int pageNo) { return NULL; }
+    // TODO: implement links the way EbookEngine expects them
+    virtual Vec<PageElement *> *GetElements(int pageNo);
+    virtual PageDestination *GetNamedDest(const TCHAR *name) { return NULL; }
 
     virtual const TCHAR *GetDefaultFileExt() const { return _T(".mobi"); }
 
@@ -1515,6 +1516,21 @@ bool MobiEngineImpl::Load(const TCHAR *fileName)
     }
     
     return pages->Count() > 0;
+}
+
+Vec<PageElement *> *MobiEngineImpl::GetElements(int pageNo)
+{
+    ScopedCritSec scope(&pagesAccess);
+
+    Vec<PageElement *> *els = new Vec<PageElement *>();
+
+    Vec<DrawInstr> *pageInstrs = GetPageData(pageNo);
+    for (DrawInstr *i = pageInstrs->IterStart(); i; i = pageInstrs->IterNext()) {
+        if (InstrImage == i->type)
+            els->Append(new ImageDataElement(pageNo, &i->img, GetInstrBbox(i, pageBorder)));
+    }
+
+    return els;
 }
 
 bool MobiEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
