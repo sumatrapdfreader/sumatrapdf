@@ -314,7 +314,9 @@ WindowInfo *FindWindowInfoByHwnd(HWND hwnd)
             // ToC tree, sidebar title and close button
             parent == win->hwndTocBox   ||
             // Favorites tree, title, and close button
-            parent == win->hwndFavBox)
+            parent == win->hwndFavBox   ||
+            // Properties window (required for shortcut handling)
+            FindPropertyWindowByParent(win->hwndFrame))
         {
             return win;
         }

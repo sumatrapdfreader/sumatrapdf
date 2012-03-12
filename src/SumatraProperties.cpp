@@ -20,7 +20,7 @@
 
 static Vec<PropertiesLayout*> gPropertiesWindows;
 
-static PropertiesLayout* FindPropertyWindowByParent(HWND hwndParent)
+PropertiesLayout* FindPropertyWindowByParent(HWND hwndParent)
 {
     for (size_t i = 0; i < gPropertiesWindows.Count(); i++) {
         PropertiesLayout *pl = gPropertiesWindows.At(i);
@@ -383,7 +383,7 @@ static void ShowProperties(WindowInfo& win, bool extended)
 #if defined(DEBUG) || defined(ENABLE_EXTENDED_PROPERTIES)
         // make a repeated Ctrl+D display some extended properties
         // TODO: expose this through a UI button or similar
-        if (GetForegroundWindow() == layoutData->hwndParent) {
+        if (GetForegroundWindow() == layoutData->hwnd) {
             if (!layoutData->HasProperty(_TR("Fonts:"))) {
                 DestroyWindow(layoutData->hwnd);
                 ShowProperties(win, true);
@@ -539,14 +539,16 @@ static void OnPaintProperties(HWND hwnd)
     EndPaint(hwnd, &ps);
 }
 
-// returns true if there is a properties window for a given parent window
+// returns true if properties have been copied to the clipboard
 bool CopyPropertiesToClipboard(HWND hwndParent)
 {
-    // concatenate all the properties into a multi-line string
     PropertiesLayout *layoutData = FindPropertyWindowByParent(hwndParent);
     if (!layoutData)
         return false;
+    if (GetForegroundWindow() != layoutData->hwnd)
+        return false;
 
+    // concatenate all the properties into a multi-line string
     str::Str<TCHAR> lines(256);
     for (size_t i = 0; i < layoutData->Count(); i++) {
         PropertyEl *el = layoutData->At(i);

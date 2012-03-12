@@ -8,9 +8,9 @@ import os, re, fnmatch
 from util import verify_started_in_right_directory, group, uniquify
 pjoin = os.path.join
 
-DIRS = ["src", pjoin("src", "utils"), pjoin("src", "installer"), pjoin("src", "ifilter"), pjoin("src", "browserplugin"), pjoin("src", "previewer"), pjoin("src", "ebooktest"), pjoin("src", "mui"), pjoin("src", "memtrace")]
+DIRS = ["src", pjoin("src", "utils"), pjoin("src", "installer"), pjoin("src", "ifilter"), pjoin("src", "browserplugin"), pjoin("src", "previewer"), pjoin("src", "mui"), pjoin("src", "memtrace")]
 INCLUDE_DIRS = DIRS + [pjoin("mupdf", "fitz"), pjoin("mupdf", "pdf"), pjoin("mupdf", "xps")]
-OBJECT_DIRS = { "src\\utils": "$(OU)", "src\\browserplugin": "$(ODLL)", "src\\ifilter": "$(ODLL)", "src\\previewer": "$(ODLL)", "src\\ebooktest": "$(OEB)", "src\\mui": "$(OMUI)", "src\\memtrace": "$(OM)" } # default: "$(OS)"
+OBJECT_DIRS = { "src\\utils": "$(OU)", "src\\browserplugin": "$(ODLL)", "src\\ifilter": "$(ODLL)", "src\\previewer": "$(ODLL)", "src\\mui": "$(OMUI)", "src\\memtrace": "$(OM)" } # default: "$(OS)"
 MAKEFILE = "makefile.deps"
 DEPENDENCIES_PER_LINE = 3
 
