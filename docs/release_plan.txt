@@ -1,59 +1,19 @@
 Things to do before 2.0 release:
-* switch to ucrt
-* integrate mobi support
-
-Current code carries many assumptions that everything is a WindowInfo and everything
-is an engine. Removing them all is too much for 2.0 so we'll make whatever's nececessary
-for basic mobi support.
 
 Specific things that still need to be added for minimal mobi support:
 - save and restore last position in the mobi file
 - document properties
 - ability to use test document in debug mode
 
-Implicitly everything else is for later, including fullscreen, printing,
-search etc.
+Maybe for 2.0:
+- progress bar flicker when status line changes width (I think). We probably force repaint after
+  re-layout in mui even if position/sizes of controls haven't changed
 
-Things to do before 2.1 release:
-* installer and settings: UI for registering other supported file types
-  http://code.google.com/p/sumatrapdf/issues/detail?id=1365
-* bug: focus captured by web control when clicking on "Related Topics" button in 
-  010Editor.chm from http://code.google.com/p/sumatrapdf/issues/detail?id=1579
-  I don't know how to fix this. It seems that the problem really is that a button
-  window inside browser control captures the focus. I tried hack it by detecting
-  frame window loosing focus (via WM_KILLFOCUS) and doing delayed re-capture of
-  focus to frame window, but it doesn't work and it's not the right time to do
-  it (it might kill the pop-up menu on the button).
-
-The shortest path to ebook support in sumatra:
-1. Support more of the mobi format
-1.1 links
-1.2 lists (ul, li)
-
-Possible long-term solution to eliminate "everything is a WindowInfo" asssumption:
-
-a) rename WindowInfo to SumatraWindow and introduce MobiWindow
-b) 
-struct WindowInfo {
-  enum Type { Sumatra, Mobi };
-  Typ       type;
-  union {
-    SumatraWindow   sumatra;
-    MobiWindow      mobi;
-}};
-
-In that scheme, about window (or whatever we'll call it), could be its own type (as opposed
-to sharing logic with engine window).
-
-This is introduce the distinction between the thing that is in gWindows array (WindowInfo)
-and the thing that current code uses to act upon (EngineWindowInfo). In most cases we
-would just fish out EngineWindowInfo from WindowInfo and pass to other functions.
-
-In some cases, like LoadDocument(), we need to take into account the type and do dispatch
-based on that. The most difficulat part here is transitioning between types of a window e.g.
-when opening an ebook in what is currently engine window (and vice versa).
-
-The simplest way is to create a completely new window with desired type on top of existing
-window and close the old one. Another possibility is to write code that transitions from one
-type to another e.g. transitioning from engine window to ebook window would involve destroying
-all its hwnd windows etc.
+Things that can wait for 2.1:
+- links in mobi format
+- lists in mobi format (ul, li)
+- search in mobi
+- fullscreen for mobi
+- printing from mobi
+- better way of switching between mobi and non-mobi windows
+- etc.
