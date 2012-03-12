@@ -23,8 +23,6 @@
 
 static bool gShowTextBoundingBoxes = false;
 
-static Vec<MobiWindow*> *gMobiWindows = NULL;
-
 static MenuDef menuDefMobiFile[] = {
     { _TRN("&Open\tCtrl+O"),                IDM_OPEN ,                  MF_REQ_DISK_ACCESS },
     { _TRN("&Close\tCtrl+W"),               IDM_CLOSE,                  MF_REQ_DISK_ACCESS },
@@ -95,9 +93,7 @@ TCHAR *MobiWindow::LoadedFilePath() const
 
 static MobiWindow* FindMobiWindowByHwnd(HWND hwnd)
 {
-    if (!gMobiWindows)
-        return NULL;
-    for (MobiWindow **w = gMobiWindows->IterStart(); w; w = gMobiWindows->IterNext()) {
+    for (MobiWindow **w = gMobiWindows.IterStart(); w; w = gMobiWindows.IterNext()) {
         if ((*w)->hwndFrame == hwnd)
             return *w;
     }
@@ -106,7 +102,7 @@ static MobiWindow* FindMobiWindowByHwnd(HWND hwnd)
 
 MobiWindow* FindMobiWindowByController(EbookController *controller)
 {
-    for (MobiWindow **w = gMobiWindows->IterStart(); w; w = gMobiWindows->IterNext()) {
+    for (MobiWindow **w = gMobiWindows.IterStart(); w; w = gMobiWindows.IterNext()) {
         if ((*w)->ebookController == controller)
             return *w;
     }
@@ -139,14 +135,14 @@ static void OnToggleBbox(MobiWindow *win)
 
 // closes a physical window, deletes the MobiWindow object and removes it
 // from the global list of windows
-static void DeleteMobiWindow(MobiWindow *win, bool forceDelete = false)
+void DeleteMobiWindow(MobiWindow *win, bool forceDelete)
 {
     if (gPluginMode && !forceDelete)
         return;
 
     delete win->ebookController;
     DestroyEbookControls(win->ebookControls);
-    gMobiWindows->Remove(win);
+    gMobiWindows.Remove(win);
     HWND toDestroy = win->hwndFrame;
     delete win;
     // must be called after removing win from gMobiWindows so that window
@@ -226,11 +222,8 @@ void UpdateMenuForMobiWindow(MobiWindow *win, HMENU m)
 
 void RebuildMenuBarForMobiWindows()
 {
-    if (!gMobiWindows)
-        return;
-
-    for (size_t i = 0; i < gMobiWindows->Count(); i++) {
-        RebuildMenuBarForMobiWindow(gMobiWindows->At(i));
+    for (size_t i = 0; i < gMobiWindows.Count(); i++) {
+        RebuildMenuBarForMobiWindow(gMobiWindows.At(i));
     }
 }
 
@@ -451,13 +444,6 @@ static LRESULT CALLBACK MobiWndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPA
     return 0;
 }
 
-size_t MobiWindowsCount()
-{
-    if (!gMobiWindows)
-        return 0;
-    return gMobiWindows->Count();
-}
-
 RenderedBitmap *RenderFirstMobiPageToBitmap(MobiDoc *mobiDoc, SizeI pageSize, SizeI bmpSize)
 {
     PoolAllocator textAllocator;
@@ -511,8 +497,6 @@ static void CreateThumbnailForMobiDoc(MobiDoc *mobiDoc, DisplayState& ds)
 void OpenMobiInWindow(MobiDoc *mobiDoc, SumatraWindow& winToReplace)
 {
     TCHAR *fullPath = mobiDoc->GetFileName();
-    if (!gMobiWindows)
-        gMobiWindows = new Vec<MobiWindow*>();
 
     if (gGlobalPrefs.rememberOpenedFiles) {
         DisplayState *ds = gFileHistory.MarkFileLoaded(fullPath);
@@ -528,8 +512,8 @@ void OpenMobiInWindow(MobiDoc *mobiDoc, SumatraWindow& winToReplace)
     if (HasPermission(Perm_DiskAccess) && !gPluginMode)
         SHAddToRecentDocs(SHARD_PATH, fullPath);
 
-    if (SumatraWindow::WinMobi == winToReplace.type) {
-        MobiWindow *mw = winToReplace.winMobi;
+    if (winToReplace.AsMobiWindow()) {
+        MobiWindow *mw = winToReplace.AsMobiWindow();
         CrashIf(!mw);
         mw->ebookController->SetMobiDoc(mobiDoc);
         // TODO: if we have window position/last position for this file, restore it
@@ -542,7 +526,7 @@ void OpenMobiInWindow(MobiDoc *mobiDoc, SumatraWindow& winToReplace)
     else
         windowPos = GetDefaultWindowPos();
 
-    CrashIf(winToReplace.WinInfo != winToReplace.type);
+    CrashIf(!winToReplace.AsWindowInfo());
     bool wasMaximized = false;
     if (winToReplace.winInfo && winToReplace.winInfo->hwndFrame)
         wasMaximized = IsZoomed(winToReplace.winInfo->hwndFrame);
@@ -571,19 +555,9 @@ void OpenMobiInWindow(MobiDoc *mobiDoc, SumatraWindow& winToReplace)
     win->ebookController = new EbookController(win->ebookControls);
     win->hwndFrame = hwnd;
 
-    gMobiWindows->Append(win);
+    gMobiWindows.Append(win);
     ShowWindow(hwnd, wasMaximized ? SW_SHOWMAXIMIZED : SW_SHOW);
     win->ebookController->SetMobiDoc(mobiDoc);
-}
-
-void DeleteMobiWindows()
-{
-    if (!gMobiWindows)
-        return;
-    while (gMobiWindows->Count() > 0) {
-        DeleteMobiWindow(gMobiWindows->At(0), true);
-    }
-    delete gMobiWindows;
 }
 
 bool RegisterMobiWinClass(HINSTANCE hinst)

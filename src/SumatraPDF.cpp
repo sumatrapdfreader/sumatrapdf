@@ -117,28 +117,31 @@ TCHAR *          gPluginURL = NULL; // owned by CommandLineInfo in WinMain
 #define FILEWATCH_DELAY_IN_MS       1000
 #endif
 
-       HINSTANCE                    ghinst = NULL;
+HINSTANCE                    ghinst = NULL;
 
-       HCURSOR                      gCursorArrow;
-       HCURSOR                      gCursorHand;
+HCURSOR                      gCursorArrow;
+HCURSOR                      gCursorHand;
+HCURSOR                      gCursorIBeam;
+HBRUSH                       gBrushNoDocBg;
+HBRUSH                       gBrushAboutBg;
+HFONT                        gDefaultGuiFont;
+
+// TODO: combine into Vec<SumatraWindow> (after 2.0) ?
+Vec<WindowInfo*>             gWindows;
+Vec<MobiWindow*>             gMobiWindows;
+FileHistory                  gFileHistory;
+Favorites *                  gFavorites;
+
+bool                         gIsStressTesting = false;
+
 static HCURSOR                      gCursorDrag;
-       HCURSOR                      gCursorIBeam;
 static HCURSOR                      gCursorScroll;
 static HCURSOR                      gCursorSizeWE;
 static HCURSOR                      gCursorSizeNS;
 static HCURSOR                      gCursorNo;
-       HBRUSH                       gBrushNoDocBg;
-       HBRUSH                       gBrushAboutBg;
-       HFONT                        gDefaultGuiFont;
 static HBITMAP                      gBitmapReloadingCue;
-
 static RenderCache                  gRenderCache;
-       Vec<WindowInfo*>             gWindows;
-       FileHistory                  gFileHistory;
-       Favorites *                  gFavorites;
 static UIThreadWorkItemQueue        gUIThreadMarshaller;
-
-       bool                         gIsStressTesting = false;
 static bool                         gCrashOnOpen = false;
 
 // in restricted mode, some features can be disabled (such as
@@ -452,7 +455,12 @@ static void UpdateSidebarDisplayState(WindowInfo *win, DisplayState *ds)
         ds->tocState = new Vec<int>(win->tocState);
 }
 
-void UpdateCurrentFileDisplayStateForWin(WindowInfo* win)
+static void UpdateCurrentFileDisplayStateForWinMobi(MobiWindow* win)
+{
+    // TODO: write me
+}
+
+static void UpdateCurrentFileDisplayStateForWinInfo(WindowInfo* win)
 {
     RememberWindowPosition(*win);
     if (!win->IsDocLoaded())
@@ -473,6 +481,14 @@ void UpdateCurrentFileDisplayStateForWin(WindowInfo* win)
     state->useGlobalValues = gGlobalPrefs.globalPrefsOnly;
     UpdateDisplayStateWindowRect(*win, *state, false);
     UpdateSidebarDisplayState(win, state);
+}
+
+void UpdateCurrentFileDisplayStateForWin(SumatraWindow& win)
+{
+    if (win.AsWindowInfo())
+        UpdateCurrentFileDisplayStateForWinInfo(win.AsWindowInfo());
+    else if (win.AsMobiWindow())
+        UpdateCurrentFileDisplayStateForWinMobi(win.AsMobiWindow());
 }
 
 bool IsUIRightToLeft()
@@ -1198,14 +1214,14 @@ static bool IsMobiFile(const TCHAR *fileName)
 
 SumatraWindow MakeSumatraWindow(WindowInfo *winInfo)
 {
-    SumatraWindow w = { SumatraWindow::WinInfo, NULL };
+    SumatraWindow w = { SumatraWindow::Info, NULL };
     w.winInfo = winInfo;
     return w;
 }
 
 SumatraWindow MakeSumatraWindow(MobiWindow *winMobi)
 {
-    SumatraWindow w = { SumatraWindow::WinMobi, NULL };
+    SumatraWindow w = { SumatraWindow::Mobi, NULL };
     w.winMobi = winMobi;
     return w;
 }
@@ -1243,11 +1259,11 @@ void LoadDocument(const TCHAR *fileName, SumatraWindow& win)
 {
     // TODO: opening non-mobi files from mobi window doesn't work exactly
     // as opening them from non-mobi window
-    if (SumatraWindow::WinInfo == win.type) {
-        LoadDocument(fileName, win.winInfo);
+    if (win.AsWindowInfo()) {
+        LoadDocument(fileName, win.AsWindowInfo());
         return;
     }
-    CrashIf(SumatraWindow::WinMobi != win.type);
+    CrashIf(!win.AsMobiWindow());
     // TODO: LoadDocument() needs to handle MobiWindow, for now
     // we force opening in a new window
     LoadDocument(fileName, NULL);
@@ -2273,7 +2289,7 @@ void GetStressTestInfo(str::Str<char>* s)
 
 size_t TotalWindowsCount()
 {
-    return gWindows.Count() + MobiWindowsCount();
+    return gWindows.Count() + gMobiWindows.Count();
 }
 
 // closes a document inside a WindowInfo and turns it into
@@ -2356,7 +2372,7 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
     if (lastWindow)
         SavePrefs();
     else
-        UpdateCurrentFileDisplayStateForWin(win);
+        UpdateCurrentFileDisplayStateForWin(MakeSumatraWindow(win));
 
     if (lastWindow && !quitIfLast) {
         /* last window - don't delete it */
@@ -2647,11 +2663,11 @@ static UINT_PTR CALLBACK FileOpenHook(HWND hDlg, UINT uiMsg, WPARAM wParam, LPAR
 
 HWND GetSumatraWindowHwnd(const SumatraWindow& win)
 {
-    if (SumatraWindow::WinInfo == win.type) {
-        return win.winInfo->hwndFrame;
+    if (win.AsWindowInfo()) {
+        return win.AsWindowInfo()->hwndFrame;
     } else {
-        CrashIf(SumatraWindow::WinMobi != win.type);
-        return win.winMobi->hwndFrame;
+        CrashIf(!win.AsMobiWindow());
+        return win.AsMobiWindow()->hwndFrame;
     }
     return NULL;
 }
@@ -2777,7 +2793,7 @@ static void BrowseFolder(WindowInfo& win, bool forward)
     else
         index = (int)(index + files.Count() - 1) % files.Count();
 
-    UpdateCurrentFileDisplayStateForWin(&win);
+    UpdateCurrentFileDisplayStateForWin(MakeSumatraWindow(&win));
     LoadDocument(files.At(index), &win, true, true);
 }
 

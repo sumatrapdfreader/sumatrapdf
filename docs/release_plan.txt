@@ -3,11 +3,11 @@ Things to do before 2.0 release:
 Specific things that still need to be added for minimal mobi support:
 - save and restore last position in the mobi file
 - document properties
-- ability to use test document in debug mode
 
 Maybe for 2.0:
 - progress bar flicker when status line changes width (I think). We probably force repaint after
   re-layout in mui even if position/sizes of controls haven't changed
+- ability to use test document in debug mode
 
 Things that can wait for 2.1:
 - links in mobi format

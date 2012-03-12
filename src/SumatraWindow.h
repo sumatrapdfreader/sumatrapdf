@@ -8,12 +8,14 @@ class WindowInfo;
 // TODO: not sure if that's how the things should work ultimately but
 // for now it'll do
 struct SumatraWindow {
-    enum Type { WinInfo, WinMobi };
+    enum Type { Info, Mobi };
     Type type;
     union {
         WindowInfo *winInfo;
         MobiWindow *winMobi;
     };
+    WindowInfo *AsWindowInfo() const { return (Info == type) ? winInfo : NULL; }
+    MobiWindow *AsMobiWindow() const { return (Mobi == type) ? winMobi : NULL; }
 };
 
 // helpers for making sure type agrees with data

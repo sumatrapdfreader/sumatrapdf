@@ -60,6 +60,7 @@ enum MenuToolbarFlags {
 #define ABOUT_BG_COLOR_DEFAULT  (RGB(0xff, 0xf2, 0) - 0x80000000)
 
 class WindowInfo;
+class MobiWindow;
 class Favorites;
 
 // all defined in SumatraPDF.cpp
@@ -75,6 +76,7 @@ extern HBRUSH                   gBrushAboutBg;
 extern HFONT                    gDefaultGuiFont;
 extern TCHAR *                  gPluginURL;
 extern Vec<WindowInfo*>         gWindows;
+extern Vec<MobiWindow*>         gMobiWindows;
 extern Favorites *              gFavorites;
 extern FileHistory              gFileHistory;
 extern WNDPROC                  DefWndProcCloseButton;
@@ -97,7 +99,7 @@ bool  WindowInfoStillValid(WindowInfo *win);
 void  ChangeLanguage(const char *langName);
 void  ShowOrHideToolbarGlobally();
 void  UpdateDocumentColors();
-void  UpdateCurrentFileDisplayStateForWin(WindowInfo* win);
+void  UpdateCurrentFileDisplayStateForWin(SumatraWindow& win);
 bool  FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lparam, bool inTextfield=false);
 void  SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode, bool keepContinuous=false);
 void  ReloadDocument(WindowInfo *win, bool autorefresh=false);

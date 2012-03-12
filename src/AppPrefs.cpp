@@ -27,6 +27,7 @@
 #define FILE_STR                    "File"
 #define DISPLAY_MODE_STR            "Display Mode"
 #define PAGE_NO_STR                 "Page"
+#define REPARSE_POINT_IDX_STR       "ReparsePointIdx"
 #define ZOOM_VIRTUAL_STR            "ZoomVirtual"
 #define ROTATION_STR                "Rotation"
 #define SCROLL_X_STR                "Scroll X2"
@@ -208,6 +209,7 @@ static BencDict *DisplayState_Serialize(DisplayState *ds, bool globalPrefsOnly)
     const TCHAR *mode = DisplayModeConv::NameFromEnum(ds->displayMode);
     prefs->Add(DISPLAY_MODE_STR, mode);
     prefs->Add(PAGE_NO_STR, ds->pageNo);
+    prefs->Add(REPARSE_POINT_IDX_STR, ds->reparsePointIdx);
     prefs->Add(ROTATION_STR, ds->rotation);
     prefs->Add(SCROLL_X_STR, ds->scrollPos.x);
     prefs->Add(SCROLL_Y_STR, ds->scrollPos.y);
@@ -423,6 +425,7 @@ static DisplayState * DeserializeDisplayState(BencDict *dict, bool globalPrefsOn
 
     Retrieve(dict, DISPLAY_MODE_STR, ds->displayMode);
     Retrieve(dict, PAGE_NO_STR, ds->pageNo);
+    Retrieve(dict, REPARSE_POINT_IDX_STR, ds->reparsePointIdx);
     Retrieve(dict, ROTATION_STR, ds->rotation);
     Retrieve(dict, SCROLL_X_STR, ds->scrollPos.x);
     Retrieve(dict, SCROLL_Y_STR, ds->scrollPos.y);
@@ -677,7 +680,11 @@ bool SavePrefs()
 
     /* mark currently shown files as visible */
     for (size_t i = 0; i < gWindows.Count(); i++) {
-        UpdateCurrentFileDisplayStateForWin(gWindows.At(i));
+        UpdateCurrentFileDisplayStateForWin(MakeSumatraWindow(gWindows.At(i)));
+    }
+
+    for (size_t i = 0; i < gMobiWindows.Count(); i++) {
+        UpdateCurrentFileDisplayStateForWin(MakeSumatraWindow(gWindows.At(i)));
     }
 
     // don't save preferences without the proper permission

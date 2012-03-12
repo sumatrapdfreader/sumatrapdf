@@ -305,7 +305,7 @@ void MenuUpdatePrintItem(WindowInfo* win, HMENU menu, bool disableOnly=false) {
 
 bool IsFileCloseMenuEnabled()
 {
-    if (MobiWindowsCount() > 0)
+    if (gMobiWindows.Count() > 0)
         return true;
     for (size_t i = 0; i < gWindows.Count(); i++) {
         if (!gWindows.At(i)->IsAboutWindow())

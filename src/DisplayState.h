@@ -33,7 +33,7 @@ class DisplayState {
 public:
     DisplayState() :
         filePath(NULL), useGlobalValues(false), index(0), openCount(0),
-        displayMode(DM_AUTOMATIC), pageNo(1), zoomVirtual(100.0),
+        displayMode(DM_AUTOMATIC), pageNo(1), reparsePointIdx(0), zoomVirtual(100.0),
         rotation(0), windowState(0), thumbnail(NULL), isPinned(false),
         decryptionKey(NULL), tocVisible(true),
         sidebarDx(0), tocState(NULL) { }
@@ -65,6 +65,9 @@ public:
     enum DisplayMode    displayMode;
     PointI              scrollPos;
     int                 pageNo;
+    // for bookmarking ebook files: offset of the current page reparse
+    // point within html
+    int                 reparsePointIdx;
     float               zoomVirtual;
     int                 rotation;
     int                 windowState;

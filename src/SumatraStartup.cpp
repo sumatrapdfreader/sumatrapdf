@@ -427,7 +427,9 @@ Exit:
     while (gWindows.Count() > 0) {
         DeleteWindowInfo(gWindows.At(0));
     }
-    DeleteMobiWindows();
+    while (gMobiWindows.Count() > 0) {
+        DeleteMobiWindow(gMobiWindows.At(0), true);
+    }
 
 #ifndef DEBUG
     // leave all the remaining clean-up to the OS
