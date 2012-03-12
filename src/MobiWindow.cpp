@@ -9,6 +9,7 @@
 #include "MobiDoc.h"
 #include "PageLayout.h"
 #include "Resource.h"
+#include "SumatraProperties.h"
 #include "SumatraAbout.h"
 #include "SumatraPDF.h"
 #include "Touch.h"
@@ -146,6 +147,7 @@ void DeleteMobiWindow(MobiWindow *win, bool forceDelete)
     if (gPluginMode && !forceDelete)
         return;
 
+    DeletePropertiesWindow(win->hwndFrame);
     delete win->ebookController;
     DestroyEbookControls(win->ebookControls);
     gMobiWindows.Remove(win);

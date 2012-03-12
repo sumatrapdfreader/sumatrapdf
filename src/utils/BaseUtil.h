@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <time.h>
+#include <locale.h>
 
 #ifndef UNICODE
 #include <sys/types.h>

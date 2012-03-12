@@ -1,18 +1,49 @@
 /* Copyright 2006-2012 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+#include "BaseUtil.h"
+#include "FileUtil.h"
+#include "MobiWindow.h"
+#include "Scoped.h"
 #include "SumatraPDF.h"
-#include "WindowInfo.h"
 #include "SumatraProperties.h"
 #include "Translations.h"
+#include "WindowInfo.h"
 #include "WinUtil.h"
-#include "FileUtil.h"
-#include "Scoped.h"
 
 #define PROPERTIES_LEFT_RIGHT_SPACE_DX 8
 #define PROPERTIES_RECT_PADDING     8
 #define PROPERTIES_TXT_DY_PADDING 2
 #define PROPERTIES_WIN_TITLE    _TR("Document Properties")
+
+static Vec<PropertiesLayout*> gPropertiesWindows;
+
+static PropertiesLayout* FindPropertyWindowByParent(HWND hwndParent)
+{
+    for (size_t i = 0; i < gPropertiesWindows.Count(); i++) {
+        PropertiesLayout *pl = gPropertiesWindows.At(i);
+        if (pl->hwndParent == hwndParent)
+            return pl;
+    }
+    return NULL;
+}
+
+static PropertiesLayout* FindPropertyWindowByHwnd(HWND hwnd)
+{
+    for (size_t i = 0; i < gPropertiesWindows.Count(); i++) {
+        PropertiesLayout *pl = gPropertiesWindows.At(i);
+        if (pl->hwnd == hwnd)
+            return pl;
+    }
+    return NULL;
+}
+
+void DeletePropertiesWindow(HWND hwndParent)
+{
+    PropertiesLayout *pl = FindPropertyWindowByParent(hwndParent);
+    if (pl)
+        DestroyWindow(pl->hwnd);
+}
 
 // See: http://www.verypdf.com/pdfinfoeditor/pdf-date-format.htm
 // Format:  "D:YYYYMMDDHHMMSSxxxxxxx"
@@ -170,9 +201,8 @@ bool PropertiesLayout::HasProperty(const TCHAR *key)
     return false;
 }
 
-static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RectI *rect)
+static void UpdatePropertiesLayout(PropertiesLayout *layoutData, HDC hdc, RectI *rect)
 {
-    PropertiesLayout *layoutData = (PropertiesLayout *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
     ScopedFont fontLeftTxt(GetSimpleFont(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE));
     ScopedFont fontRightTxt(GetSimpleFont(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE));
     HGDIOBJ origFont = SelectObject(hdc, fontLeftTxt);
@@ -232,39 +262,40 @@ static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RectI *rect)
     SelectObject(hdc, origFont);
 }
 
-static HWND CreatePropertiesWindow(HWND hParent, PropertiesLayout& layoutData)
+static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData)
 {
-    HWND hwndProperties = CreateWindow(
+    CrashIf(layoutData->hwnd);
+    HWND hwnd = CreateWindow(
            PROPERTIES_CLASS_NAME, PROPERTIES_WIN_TITLE,
            WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
            CW_USEDEFAULT, CW_USEDEFAULT,
            CW_USEDEFAULT, CW_USEDEFAULT,
            NULL, NULL,
            ghinst, NULL);
-    if (!hwndProperties)
-        return NULL;
+    if (!hwnd)
+        return false;
 
-    assert(!GetWindowLongPtr(hwndProperties, GWLP_USERDATA));
-    SetWindowLongPtr(hwndProperties, GWLP_USERDATA, (LONG_PTR)&layoutData);
-    ToggleWindowStyle(hwndProperties, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, IsUIRightToLeft(), GWL_EXSTYLE);
+    layoutData->hwnd = hwnd;
+    layoutData->hwndParent = hParent;
+    ToggleWindowStyle(hwnd, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, IsUIRightToLeft(), GWL_EXSTYLE);
 
     // get the dimensions required for the about box's content
     RectI rc;
     PAINTSTRUCT ps;
-    HDC hdc = BeginPaint(hwndProperties, &ps);
-    UpdatePropertiesLayout(hwndProperties, hdc, &rc);
-    EndPaint(hwndProperties, &ps);
+    HDC hdc = BeginPaint(hwnd, &ps);
+    UpdatePropertiesLayout(layoutData, hdc, &rc);
+    EndPaint(hwnd, &ps);
 
     // resize the new window to just match these dimensions
-    WindowRect wRc(hwndProperties);
-    ClientRect cRc(hwndProperties);
+    WindowRect wRc(hwnd);
+    ClientRect cRc(hwnd);
     wRc.dx += rc.dx - cRc.dx;
     wRc.dy += rc.dy - cRc.dy;
-    MoveWindow(hwndProperties, wRc.x, wRc.y, wRc.dx, wRc.dy, FALSE);
-    CenterDialog(hwndProperties, hParent);
+    MoveWindow(hwnd, wRc.x, wRc.y, wRc.dx, wRc.dy, FALSE);
+    CenterDialog(hwnd, hParent);
 
-    ShowWindow(hwndProperties, SW_SHOW);
-    return hwndProperties;
+    ShowWindow(hwnd, SW_SHOW);
+    return true;
 }
 
 /*
@@ -284,33 +315,8 @@ Example xref->info ("Info") object:
 >>
 */
 
-void OnMenuProperties(WindowInfo& win, bool extended)
+static void GetProps(BaseEngine *engine, EngineType engineType, PropertiesLayout *layoutData)
 {
-    if (win.hwndProperties) {
-#if defined(DEBUG) || defined(ENABLE_EXTENDED_PROPERTIES)
-        // make a repeated Ctrl+D display some extended properties
-        // TODO: expose this through a UI button or similar
-        if (GetForegroundWindow() == win.hwndProperties) {
-            PropertiesLayout *data = (PropertiesLayout *)GetWindowLongPtr(win.hwndProperties, GWLP_USERDATA);
-            if (!data || !data->HasProperty(_TR("Fonts:"))) {
-                DestroyWindow(win.hwndProperties);
-                win.hwndProperties = NULL;
-                OnMenuProperties(win, true);
-            }
-        }
-#endif
-        SetActiveWindow(win.hwndProperties);
-        return;
-    }
-
-    if (!win.IsDocLoaded())
-        return;
-    BaseEngine *engine = win.dm->engine;
-
-    PropertiesLayout *layoutData = new PropertiesLayout();
-    if (!layoutData)
-        return;
-
     TCHAR *str = str::Dup(gPluginMode ? gPluginURL : engine->FileName());
     layoutData->AddProperty(_TR("File:"), str);
 
@@ -327,20 +333,20 @@ void OnMenuProperties(WindowInfo& win, bool extended)
     layoutData->AddProperty(_TR("Copyright:"), str);
 
     str = engine->GetProperty("CreationDate");
-    if (Engine_PDF == win.dm->engineType)
+    if (Engine_PDF == engineType)
         ConvDateToDisplay(&str, PdfDateParse);
-    else if (Engine_XPS == win.dm->engineType)
+    else if (Engine_XPS == engineType)
         ConvDateToDisplay(&str, IsoDateParse);
-    else if (Engine_Epub == win.dm->engineType)
+    else if (Engine_Epub == engineType)
         ConvDateToDisplay(&str, IsoDateParse);
     layoutData->AddProperty(_TR("Created:"), str);
 
     str = engine->GetProperty("ModDate");
-    if (Engine_PDF == win.dm->engineType)
+    if (Engine_PDF == engineType)
         ConvDateToDisplay(&str, PdfDateParse);
-    else if (Engine_XPS == win.dm->engineType)
+    else if (Engine_XPS == engineType)
         ConvDateToDisplay(&str, IsoDateParse);
-    else if (Engine_Epub == win.dm->engineType)
+    else if (Engine_Epub == engineType)
         ConvDateToDisplay(&str, IsoDateParse);
     layoutData->AddProperty(_TR("Modified:"), str);
 
@@ -365,6 +371,34 @@ void OnMenuProperties(WindowInfo& win, bool extended)
 
     str = str::Format(_T("%d"), engine->PageCount());
     layoutData->AddProperty(_TR("Number of Pages:"), str);
+}
+
+static void ShowProperties(WindowInfo& win, bool extended)
+{
+    TCHAR *str;
+    PropertiesLayout *layoutData = FindPropertyWindowByParent(win.hwndFrame);
+
+    if (layoutData) {
+#if defined(DEBUG) || defined(ENABLE_EXTENDED_PROPERTIES)
+        // make a repeated Ctrl+D display some extended properties
+        // TODO: expose this through a UI button or similar
+        if (GetForegroundWindow() == layoutData->hwndParent) {
+            if (!layoutData->HasProperty(_TR("Fonts:"))) {
+                DestroyWindow(layoutData->hwnd);
+                ShowProperties(win, true);
+            }
+        }
+#endif
+        SetActiveWindow(layoutData->hwnd);
+        return;
+    }
+
+    if (!win.IsDocLoaded())
+        return;
+    BaseEngine *engine = win.dm->engine;
+    layoutData = new PropertiesLayout();
+    gPropertiesWindows.Append(layoutData);
+    GetProps(engine, win.dm->engineType, layoutData);
 
     if (!win.IsChm()) {
         str = FormatPageSize(engine, win.dm->CurrentPageNo(), win.dm->Rotation());
@@ -404,12 +438,31 @@ void OnMenuProperties(WindowInfo& win, bool extended)
     }
 #endif
 
-    win.hwndProperties = CreatePropertiesWindow(win.hwndFrame, *layoutData);
+    if (!CreatePropertiesWindow(win.hwndFrame, layoutData))
+        delete layoutData;
+}
+
+static void ShowProperties(MobiWindow *win)
+{
+    PropertiesLayout *pl = FindPropertyWindowByParent(win->hwndFrame);
+    if (pl) {
+        SetActiveWindow(pl->hwnd);
+        return;
+    }
+    // TODO: show properties
+}
+
+void OnMenuProperties(SumatraWindow& win)
+{
+    if (win.AsWindowInfo())
+        ShowProperties(*win.AsWindowInfo(), false);
+    else if (win.AsMobiWindow())
+        ShowProperties(win.AsMobiWindow());
 }
 
 static void DrawProperties(HWND hwnd, HDC hdc)
 {
-    PropertiesLayout *layoutData = (PropertiesLayout *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    PropertiesLayout *layoutData = FindPropertyWindowByHwnd(hwnd);
 #if 0
     HPEN penBorder = CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, COL_BLACK);
 #endif
@@ -460,16 +513,18 @@ static void OnPaintProperties(HWND hwnd)
     PAINTSTRUCT ps;
     RectI rc;
     HDC hdc = BeginPaint(hwnd, &ps);
-    UpdatePropertiesLayout(hwnd, hdc, &rc);
+    UpdatePropertiesLayout(FindPropertyWindowByHwnd(hwnd), hdc, &rc);
     DrawProperties(hwnd, hdc);
     EndPaint(hwnd, &ps);
 }
 
-void CopyPropertiesToClipboard(HWND hwnd)
+// returns true if there is a properties window for a given parent window
+bool CopyPropertiesToClipboard(HWND hwndParent)
 {
     // concatenate all the properties into a multi-line string
-    PropertiesLayout *layoutData = (PropertiesLayout *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-    CrashIf(!layoutData);
+    PropertiesLayout *layoutData = FindPropertyWindowByParent(hwndParent);
+    if (!layoutData)
+        return false;
 
     str::Str<TCHAR> lines(256);
     for (size_t i = 0; i < layoutData->Count(); i++) {
@@ -478,11 +533,12 @@ void CopyPropertiesToClipboard(HWND hwnd)
     }
 
     CopyTextToClipboard(lines.LendData());
+    return true;
 }
 
 LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    WindowInfo * win = FindWindowInfoByHwnd(hwnd);
+    PropertiesLayout *pl;
 
     switch (message)
     {
@@ -503,11 +559,10 @@ LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT message, WPARAM wParam, LPARA
             break;
 
         case WM_DESTROY:
-            delete (PropertiesLayout *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-            if (win) {
-                assert(win->hwndProperties);
-                win->hwndProperties = NULL;
-            }
+            pl = FindPropertyWindowByHwnd(hwnd);
+            CrashIf(!pl);
+            gPropertiesWindows.Remove(pl);
+            delete pl;
             break;
 
         /* TODO: handle mouse move/down/up so that links work (?) */

@@ -1283,6 +1283,9 @@
     <ClInclude Include="src\utils\ThreadUtil.h">
       <Filter>utils</Filter>
     </ClInclude>
+    <ClInclude Include="src\SumatraProperties.h">
+      <Filter>sumatra</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\closetoc.bmp">

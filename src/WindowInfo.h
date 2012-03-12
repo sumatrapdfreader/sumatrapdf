@@ -104,7 +104,6 @@ public:
     HWND            hwndFavSplitter;
 
     HWND            hwndInfotip;
-    HWND            hwndProperties;
 
     bool            infotipVisible;
     HMENU           menu;

@@ -4,7 +4,6 @@
 #include "SumatraPDF.h"
 #include <shlobj.h>
 #include <wininet.h>
-#include <locale.h>
 
 #include "AppPrefs.h"
 #include "AppTools.h"
@@ -306,7 +305,6 @@ WindowInfo *FindWindowInfoByHwnd(HWND hwnd)
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows.At(i);
         if (hwnd == win->hwndFrame      ||
-            hwnd == win->hwndProperties ||
             // canvas, toolbar, rebar, tocbox, splitters
             parent == win->hwndFrame    ||
             // infotips, message windows
@@ -1145,16 +1143,7 @@ WindowInfo *CreateAndShowWindowInfo()
 
 static void DeleteWindowInfo(WindowInfo *win)
 {
-    assert(win);
-    if (!win) return;
-
-    // must DestroyWindow(win->hwndProperties) before removing win from
-    // the list of properties beacuse WM_DESTROY handler needs to find
-    // WindowInfo for its HWND
-    if (win->hwndProperties) {
-        DestroyWindow(win->hwndProperties);
-        assert(NULL == win->hwndProperties);
-    }
+    DeletePropertiesWindow(win->hwndFrame);
     gWindows.Remove(win);
 
     ImageList_Destroy((HIMAGELIST)SendMessage(win->hwndToolbar, TB_GETIMAGELIST, 0, 0));
@@ -2312,10 +2301,7 @@ void CloseDocumentInWindow(WindowInfo *win)
     win->notifications->RemoveAllInGroup(NG_RESPONSE_TO_ACTION);
     win->notifications->RemoveAllInGroup(NG_PAGE_INFO_HELPER);
 
-    if (win->hwndProperties) {
-        DestroyWindow(win->hwndProperties);
-        assert(!win->hwndProperties);
-    }
+    DeletePropertiesWindow(win->hwndFrame);
     UpdateToolbarPageText(win, 0);
     UpdateToolbarFindText(win);
     if (wasChm) {
@@ -4451,7 +4437,7 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
             break;
 
         case IDM_PROPERTIES:
-            OnMenuProperties(*win);
+            OnMenuProperties(MakeSumatraWindow(win));
             break;
 
         case IDM_MOVE_FRAME_FOCUS:
@@ -4475,8 +4461,8 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
             // Don't break the shortcut for text boxes
             if (win->hwndFindBox == GetFocus() || win->hwndPageBox == GetFocus())
                 SendMessage(GetFocus(), WM_COPY, 0, 0);
-            else if (GetForegroundWindow() == win->hwndProperties)
-                CopyPropertiesToClipboard(win->hwndProperties);
+            else if (CopyPropertiesToClipboard(win->hwndFrame))
+                break;
             else if (!HasPermission(Perm_CopySelection))
                 break;
             else if (win->IsChm())

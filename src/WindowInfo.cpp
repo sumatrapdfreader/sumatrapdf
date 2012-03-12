@@ -24,7 +24,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
     hwndPageText(NULL), hwndPageBox(NULL), hwndPageBg(NULL), hwndPageTotal(NULL),
     hwndTocBox(NULL), hwndTocTree(NULL),
     hwndSidebarSplitter(NULL), hwndFavSplitter(NULL),
-    hwndInfotip(NULL), infotipVisible(false), hwndProperties(NULL),
+    hwndInfotip(NULL), infotipVisible(false),
     findThread(NULL), findCanceled(false), printThread(NULL), printCanceled(false),
     showSelection(false), mouseAction(MA_IDLE), dragStartPending(false),
     prevZoomVirtual(INVALID_ZOOM), prevDisplayMode(DM_AUTOMATIC),

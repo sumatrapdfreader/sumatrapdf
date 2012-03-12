@@ -1,7 +1,6 @@
 /* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
    License: BSD */
 
-#include <locale.h>
 #include "BaseUtil.h"
 #include "Resource.h"
 

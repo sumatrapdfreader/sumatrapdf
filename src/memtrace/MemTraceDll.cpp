@@ -79,13 +79,11 @@ static BOOL ProcessDetach()
 
 static BOOL ThreadAttach()
 {
-    lf("ThreadAttach()");
     return TRUE;
 }
 
 static BOOL ThreadDetach()
 {
-    lf("ThreadDetach()");
     return TRUE;
 }
 

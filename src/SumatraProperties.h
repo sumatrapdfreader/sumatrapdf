@@ -31,13 +31,18 @@ public:
 
 class PropertiesLayout : public Vec<PropertyEl *> {
 public:
+    PropertiesLayout() : hwnd(NULL), hwndParent(NULL) { }
     ~PropertiesLayout() { DeleteVecMembers(*this); }
     void AddProperty(const TCHAR *key, TCHAR *value);
     bool HasProperty(const TCHAR *key);
+
+    HWND    hwnd;
+    HWND    hwndParent;
 };
 
-void OnMenuProperties(WindowInfo& win, bool extended=false);
-void CopyPropertiesToClipboard(HWND hwnd);
+void OnMenuProperties(SumatraWindow& win);
+bool CopyPropertiesToClipboard(HWND hwndParent);
+void DeletePropertiesWindow(HWND hwndParent);
 LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 #endif
