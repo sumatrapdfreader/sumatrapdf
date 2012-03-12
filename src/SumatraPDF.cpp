@@ -2684,7 +2684,10 @@ void OnMenuOpen(SumatraWindow& win)
         { _TR("Comic books"),           _T("*.cbz;*.cbr"),  true },
         { _TR("CHM documents"),         _T("*.chm"),        true },
         { _TR("Mobi documents"),        _T("*.mobi"),       true },
+#ifdef ENABLE_EBOOK_ENGINES
         { _TR("EPUB ebooks"),           _T("*.epub"),       true },
+        { _T("FictionBooks"),           _T("*.fb2"),        true },
+#endif
     };
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
