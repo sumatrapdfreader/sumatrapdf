@@ -180,7 +180,6 @@ LRESULT EventMgr::OnMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& wasHan
     if (WM_SIZE == msg) {
         int dx = LOWORD(lParam);
         int dy = HIWORD(lParam);
-        lf("(%3d,%3d) EventMgr::OnMessage() WM_SIZE", dx, dy);
         wndRoot->RequestLayout();
         return 0;
     }

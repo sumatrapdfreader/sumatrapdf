@@ -28,8 +28,8 @@ void RestartLayoutTimer(EbookController *controller);
 
 void LayoutTemp::DeletePages()
 {
-    DeleteVecMembers<PageData*>(pagesFromBeginning);
-    DeleteVecMembers<PageData*>(pagesFromPage);
+    DeleteVecMembers(pagesFromBeginning);
+    DeleteVecMembers(pagesFromPage);
 }
 
 ThreadLoadMobi::ThreadLoadMobi(const TCHAR *fn, EbookController *controller, const SumatraWindow& sumWin) :
@@ -96,7 +96,7 @@ static void DeletePages(Vec<PageData*> *pages)
 {
     if (!pages)
         return;
-    DeleteVecMembers<PageData*>(*pages);
+    DeleteVecMembers(*pages);
     delete pages;
 }
 
@@ -125,7 +125,7 @@ void ThreadLayoutMobi::SendPagesIfNecessary(bool force, bool finished, bool from
 bool ThreadLayoutMobi::Layout(const char *reparsePoint)
 {
     bool fromBeginning = (reparsePoint == NULL);
-    lf("Started laying out mobi, fromBeginning=%d", (int)fromBeginning);
+    //lf("Started laying out mobi, fromBeginning=%d", (int)fromBeginning);
     int totalPageCount = 0;
     Timer t(true);
     PageLayout pl;
@@ -136,6 +136,7 @@ bool ThreadLayoutMobi::Layout(const char *reparsePoint)
             for (int i = 0; i < pageCount; i++) {
                 delete pages[i];
             }
+            delete pd;
             return true;
         }
         pages[pageCount++] = pd;
@@ -148,7 +149,7 @@ bool ThreadLayoutMobi::Layout(const char *reparsePoint)
     // this is the last message only if we're laying out from the beginning
     bool finished = fromBeginning;
     SendPagesIfNecessary(true, finished, fromBeginning);
-    lf("Laying out took %.2f ms", t.GetTimeInMs());
+    //lf("Laying out took %.2f ms", t.GetTimeInMs());
     return false;
 }
 
@@ -197,7 +198,8 @@ void EbookController::StopLayoutThread(bool forceTerminate)
 {
     if (!layoutThread)
         return;
-    layoutThread->RequestCancelAndWaitToStop(1000, forceTerminate);
+    if (layoutThread->RequestCancelAndWaitToStop(1000, forceTerminate) || forceTerminate)
+        delete layoutThread;
     layoutThread = NULL;
     layoutTemp.DeletePages();
 }
@@ -309,7 +311,7 @@ void EbookController::ShowPage(PageData *pd, bool deleteWhenDone)
     if (pd) {
         char s[64] = { 0 };
         memcpy(s, pd->reparsePoint, dimof(s) - 1);
-        lf("ShowPage() %d '%s'", currPageNo, s);
+        //lf("ShowPage() %d '%s'", currPageNo, s);
     }
 }
 
@@ -318,6 +320,8 @@ void EbookController::HandleMobiLayoutMsg(MobiLayoutData *ld)
     if (layoutThread != ld->thread) {
         // this is a message from cancelled thread, we can disregard
         lf("EbookController::MobiLayout() thread message discarded");
+        if (ld->finished)
+            delete ld->thread;
         return;
     }
 
@@ -360,6 +364,7 @@ void EbookController::HandleMobiLayoutMsg(MobiLayoutData *ld)
 
     if (ld->finished) {
         CrashIf(pagesFromBeginning || pagesFromPage);
+        delete layoutThread;
         layoutThread = NULL;
         pagesFromBeginning = new Vec<PageData*>();
         PageData **pages = layoutTemp.pagesFromBeginning.LendData();
@@ -422,11 +427,11 @@ void EbookController::TriggerLayout()
         return;
 
     if ((pageDx == dx) && (pageDy == dy)) {
-        lf("EbookController::TriggerLayout() - skipping layout because same as last size");
+        //lf("EbookController::TriggerLayout() - skipping layout because same as last size");
         return;
     }
 
-    lf("(%3d,%3d) EbookController::TriggerLayout", dx, dy);
+    //lf("(%3d,%3d) EbookController::TriggerLayout", dx, dy);
     pageDx = dx; pageDy = dy; // set it early to prevent re-doing layout at the same size
     PageData *newPage = PreserveTempPageShown();
     if (newPage) {

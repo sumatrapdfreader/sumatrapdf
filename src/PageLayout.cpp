@@ -115,9 +115,7 @@ PageLayout::PageLayout() : currPage(NULL), gfx(NULL)
 PageLayout::~PageLayout()
 {
     // delete all pages that were not consumed by the caller
-    for (PageData **p = pagesToSend.IterStart(); p; p = pagesToSend.IterNext()) {
-        delete *p;
-    }
+    DeleteVecMembers(pagesToSend);
     delete currPage;
     delete htmlParser;
     mui::FreeGraphicsForMeasureText(gfx);
@@ -368,33 +366,31 @@ bool PageLayout::FlushCurrLine(bool isParagraphBreak)
 
     // create a new page if necessary
     float totalLineDy = CurrLineDy() + currLineTopPadding;
-    PageData *newPage = NULL;
+    bool createdPage = false;
     if (currY + totalLineDy > pageDy) {
-        pagesToSend.Append(currPage);
-        pageCount++;
         // current line too big to fit in current page,
         // so need to start another page
-        currY = 0.f;
-        newPage = new PageData();
+        pagesToSend.Append(currPage);
+        currPage = new PageData();
+        createdPage = true;
+        // instructions for each page need to be self-contained
+        // so we have to carry over some state (like current font)
+        CrashIf(!currFont);
+        currPage->instructions.Append(DrawInstr::SetFont(currFont));
         CrashIf(!currLineReparsePoint);
-        newPage->reparsePoint = currLineReparsePoint;
+        currPage->reparsePoint = currLineReparsePoint;
+        pageCount++;
+        currY = 0.f;
     }
     SetYPos(currLineInstr, currY + currLineTopPadding);
     currY += totalLineDy;
 
-    if (newPage) {
-        // instructions for each page need to be self-contained
-        // so we have to carry over some state (like current font)
-        CrashIf(!currFont);
-        newPage->instructions.Append(DrawInstr::SetFont(currFont));
-        currPage = newPage;
-    }
     currPage->instructions.Append(currLineInstr.LendData(), currLineInstr.Count());
     currLineInstr.Reset();
     currLineReparsePoint = NULL;
     currLineTopPadding = 0;
     currX = 0;
-    return (newPage != NULL);
+    return createdPage;
 }
 
 void PageLayout::EmitEmptyLine(float lineDy)

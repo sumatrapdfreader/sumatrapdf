@@ -41,7 +41,7 @@ void HwndWrapper::TopLevelLayout()
     CrashIf(!hwndParent);
     ClientRect rc(hwndParent);
     Size availableSize(rc.dx, rc.dy);
-    lf("(%3d,%3d) HwndWrapper::TopLevelLayout()", rc.dx, rc.dy);
+    //lf("(%3d,%3d) HwndWrapper::TopLevelLayout()", rc.dx, rc.dy);
     Measure(availableSize);
     desiredSize = availableSize;
     Rect r(0, 0, desiredSize.Width, desiredSize.Height);
