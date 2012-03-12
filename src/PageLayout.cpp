@@ -934,12 +934,12 @@ PageData *PageLayout::IterStart(LayoutInfo* li)
 // mouse is over a link. There's a slight complication here: we only get explicit information about
 // strings, not about the whitespace and we should underline the whitespace as well. Also the text
 // should be underlined at a baseline
-void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox)
+void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox, Color *textColor)
 {
-    // TODO: support changing the brText color to gRenderCache.colorRange[0]
-    //       or GetSysColor(COLOR_WINDOWTEXT) if gGlobalPrefs.useSysColors
-    //SolidBrush brText(Color(0,0,0));
-    SolidBrush brText(Color(0x5F, 0x4B, 0x32)); // this color matches Kindle app
+    Color kindleTextColor(0x5F, 0x4B, 0x32); // this color matches Kindle app
+    if (!textColor)
+        textColor = &kindleTextColor;
+    SolidBrush brText(*textColor);
     Pen pen(Color(255, 0, 0), 1);
     //Pen linePen(Color(0, 0, 0), 2.f);
     Pen linePen(Color(0x5F, 0x4B, 0x32), 2.f);

@@ -80,6 +80,8 @@ void PageControl::Paint(Graphics *gfx, int offX, int offY)
     r.Inflate(1,0);
     gfx->SetClip(r, CombineModeReplace);
 
+    // TODO: support changing the text color to gRenderCache.colorRange[0]
+    //       or GetSysColor(COLOR_WINDOWTEXT) if gGlobalPrefs.useSysColors
     DrawPageLayout(gfx, &page->instructions, (REAL)r.X, (REAL)r.Y, IsDebugPaint());
     gfx->SetClip(&origClipRegion, CombineModeReplace);
 }

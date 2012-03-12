@@ -477,7 +477,7 @@ RenderedBitmap *RenderFirstMobiPageToBitmap(MobiDoc *mobiDoc, SizeI pageSize, Si
     r.Inflate(1,1);
     SolidBrush br(Color(255, 255, 255));
     g.FillRectangle(&br, r);
-    DrawPageLayout(&g, &pd->instructions, 0, 0, false);
+    DrawPageLayout(&g, &pd->instructions, 0, 0, false, &Color(Color::Black));
 
     Bitmap res(bmpSize.dx, bmpSize.dy, PixelFormat24bppRGB);
     Graphics g2(&res);

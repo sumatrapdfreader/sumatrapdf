@@ -332,7 +332,7 @@ bool EbookEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, 
 
     ScopedCritSec scope(&iterAccess);
     FixFontSizeForResolution(hDC);
-    DrawPageLayout(&g, GetPageData(pageNo), pageBorder, pageBorder, false);
+    DrawPageLayout(&g, GetPageData(pageNo), pageBorder, pageBorder, false, &Color(Color::Black));
     return true;
 }
 

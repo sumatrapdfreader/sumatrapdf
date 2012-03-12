@@ -197,7 +197,7 @@ bool MobiEngineImpl::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoo
     g.SetTransform(&m);
 
     ScopedCritSec scope(&iterAccess);
-    DrawPageLayout(&g, pageInstrs, pageBorder, pageBorder, false);
+    DrawPageLayout(&g, pageInstrs, pageBorder, pageBorder, false, &Color(Color::Black));
     return true;
 }
 
