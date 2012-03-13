@@ -680,11 +680,11 @@ bool SavePrefs()
 
     /* mark currently shown files as visible */
     for (size_t i = 0; i < gWindows.Count(); i++) {
-        UpdateCurrentFileDisplayStateForWin(MakeSumatraWindow(gWindows.At(i)));
+        UpdateCurrentFileDisplayStateForWin(SumatraWindow::Make(gWindows.At(i)));
     }
 
     for (size_t i = 0; i < gMobiWindows.Count(); i++) {
-        UpdateCurrentFileDisplayStateForWin(MakeSumatraWindow(gMobiWindows.At(i)));
+        UpdateCurrentFileDisplayStateForWin(SumatraWindow::Make(gMobiWindows.At(i)));
     }
 
     // don't save preferences without the proper permission

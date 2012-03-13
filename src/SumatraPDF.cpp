@@ -1210,20 +1210,6 @@ static bool IsMobiFile(const TCHAR *fileName)
     return str::EndsWithI(fileName, _T(".mobi"));
 }
 
-SumatraWindow MakeSumatraWindow(WindowInfo *winInfo)
-{
-    SumatraWindow w = { SumatraWindow::Info, NULL };
-    w.winInfo = winInfo;
-    return w;
-}
-
-SumatraWindow MakeSumatraWindow(MobiWindow *winMobi)
-{
-    SumatraWindow w = { SumatraWindow::Mobi, NULL };
-    w.winMobi = winMobi;
-    return w;
-}
-
 // Start loading a mobi file in the background
 static void LoadMobiAsync(const TCHAR *fileName, SumatraWindow& win)
 {
@@ -1305,7 +1291,7 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin,
             if (win->IsDocLoaded() && !forceReuse)
                 win = NULL;
         }
-        LoadMobiAsync(fileName, MakeSumatraWindow(win));
+        LoadMobiAsync(fileName, SumatraWindow::Make(win));
         return NULL;
     }
 
@@ -2367,7 +2353,7 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
     if (lastWindow)
         SavePrefs();
     else
-        UpdateCurrentFileDisplayStateForWin(MakeSumatraWindow(win));
+        UpdateCurrentFileDisplayStateForWin(SumatraWindow::Make(win));
 
     if (lastWindow && !quitIfLast) {
         /* last window - don't delete it */
@@ -2789,7 +2775,7 @@ static void BrowseFolder(WindowInfo& win, bool forward)
     else
         index = (int)(index + files.Count() - 1) % files.Count();
 
-    UpdateCurrentFileDisplayStateForWin(MakeSumatraWindow(&win));
+    UpdateCurrentFileDisplayStateForWin(SumatraWindow::Make(&win));
     LoadDocument(files.At(index), &win, true, true);
 }
 
@@ -4245,7 +4231,7 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
     {
         case IDM_OPEN:
         case IDT_FILE_OPEN:
-            OnMenuOpen(MakeSumatraWindow(win));
+            OnMenuOpen(SumatraWindow::Make(win));
             break;
         case IDM_SAVEAS:
             OnMenuSaveAs(*win);
@@ -4449,7 +4435,7 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
             break;
 
         case IDM_PROPERTIES:
-            OnMenuProperties(MakeSumatraWindow(win));
+            OnMenuProperties(SumatraWindow::Make(win));
             break;
 
         case IDM_MOVE_FRAME_FOCUS:

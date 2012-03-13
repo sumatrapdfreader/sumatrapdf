@@ -23,8 +23,8 @@ $(ODLL)\PdfPreview.obj: src\utils\Vec.h src\utils\WinUtil.h
 $(ODLL)\PdfPreviewDll.obj: src\BaseEngine.h src\previewer\PdfPreview.h src\utils\Allocator.h
 $(ODLL)\PdfPreviewDll.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
 $(ODLL)\PdfPreviewDll.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
-$(OM)\MemTraceDll.obj: src\memtrace\MemTraceDll.h src\utils\BaseUtil.h src\utils\DebugLog.h
-$(OM)\MemTraceDll.obj: src\utils\StrUtil.h
+$(OM)\MemTraceDll.obj: src\memtrace\MemTraceDll.h src\memtrace\nsWindowsDllInterceptor.h src\utils\BaseUtil.h
+$(OM)\MemTraceDll.obj: src\utils\DebugLog.h src\utils\StrUtil.h
 $(OMUI)\MiniMui.obj: src\mui\MiniMui.h src\utils\Allocator.h src\utils\BaseUtil.h
 $(OMUI)\MiniMui.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
 $(OMUI)\Mui.obj: src\mui\Mui.h src\mui\MuiBase.h src\mui\MuiButton.h
@@ -233,9 +233,10 @@ $(OS)\MobiWindow.obj: src\Resource.h src\SumatraAbout.h src\SumatraPDF.h
 $(OS)\MobiWindow.obj: src\SumatraProperties.h src\SumatraWindow.h src\TextSearch.h
 $(OS)\MobiWindow.obj: src\TextSelection.h src\Translations.h src\utils\Allocator.h
 $(OS)\MobiWindow.obj: src\utils\BaseUtil.h src\utils\BitManip.h src\utils\FileUtil.h
-$(OS)\MobiWindow.obj: src\utils\GeomUtil.h src\utils\HtmlPullParser.h src\utils\Scoped.h
-$(OS)\MobiWindow.obj: src\utils\StrUtil.h src\utils\ThreadUtil.h src\utils\Touch.h
-$(OS)\MobiWindow.obj: src\utils\Vec.h src\utils\WinUtil.h src\WindowInfo.h
+$(OS)\MobiWindow.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\HtmlPullParser.h
+$(OS)\MobiWindow.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\ThreadUtil.h
+$(OS)\MobiWindow.obj: src\utils\Touch.h src\utils\Vec.h src\utils\WinUtil.h
+$(OS)\MobiWindow.obj: src\WindowInfo.h
 $(OS)\MuPDF_Exports.obj: mupdf\fitz\fitz.h
 $(OS)\Notifications.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
 $(OS)\Notifications.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
@@ -259,10 +260,11 @@ $(OS)\ParseCommandLine.obj: src\SumatraWindow.h src\TextSearch.h src\TextSelecti
 $(OS)\ParseCommandLine.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\CmdLineParser.h
 $(OS)\ParseCommandLine.obj: src\utils\GeomUtil.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\ParseCommandLine.obj: src\utils\WinUtil.h
-$(OS)\PdfEngine.obj: mupdf\fitz\fitz.h mupdf\pdf\mupdf.h mupdf\xps\muxps.h
-$(OS)\PdfEngine.obj: src\BaseEngine.h src\PdfEngine.h src\utils\Allocator.h
-$(OS)\PdfEngine.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
-$(OS)\PdfEngine.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\PdfEngine.obj: mupdf\fitz\fitz-internal.h mupdf\fitz\fitz.h mupdf\pdf\mupdf-internal.h
+$(OS)\PdfEngine.obj: mupdf\pdf\mupdf.h mupdf\xps\muxps.h src\BaseEngine.h
+$(OS)\PdfEngine.obj: src\PdfEngine.h src\utils\Allocator.h src\utils\BaseUtil.h
+$(OS)\PdfEngine.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
+$(OS)\PdfEngine.obj: src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\PdfSync.obj: src\BaseEngine.h src\PdfEngine.h src\PdfSync.h
 $(OS)\PdfSync.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\FileUtil.h
 $(OS)\PdfSync.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h

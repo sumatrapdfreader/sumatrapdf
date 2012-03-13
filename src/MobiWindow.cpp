@@ -309,7 +309,7 @@ static LRESULT OnCommand(MobiWindow *win, UINT msg, WPARAM wParam, LPARAM lParam
     {
         DisplayState *state = gFileHistory.Get(wmId - IDM_FILE_HISTORY_FIRST);
         if (state && HasPermission(Perm_DiskAccess))
-            LoadDocument(state->filePath, MakeSumatraWindow(win));
+            LoadDocument(state->filePath, SumatraWindow::Make(win));
         return 0;
     }
 
@@ -317,7 +317,7 @@ static LRESULT OnCommand(MobiWindow *win, UINT msg, WPARAM wParam, LPARAM lParam
     {
         case IDM_OPEN:
         case IDT_FILE_OPEN:
-            OnMenuOpen(MakeSumatraWindow(win));
+            OnMenuOpen(SumatraWindow::Make(win));
             break;
 
         case IDT_FILE_EXIT:
@@ -397,7 +397,7 @@ static LRESULT OnCommand(MobiWindow *win, UINT msg, WPARAM wParam, LPARAM lParam
             break;
 
         case IDM_PROPERTIES:
-            OnMenuProperties(MakeSumatraWindow(win));
+            OnMenuProperties(SumatraWindow::Make(win));
             break;
 
         default:
