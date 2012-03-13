@@ -258,6 +258,9 @@ Nepretrgano dvostransko
 Contribute Translation
 Prispevajte prevod
 
+Copy &Image
+Kopiraj &sliko
+
 Copy &Link Address
 Kopiraj nas&lov povezave
 
@@ -266,6 +269,9 @@ Kopiraj ko&mentar
 
 Copying text was denied (copying as image only)
 Kopiranje besedila je bilo zavrnjeno (kopiranje samo kot slika)
+
+Copyright:
+Avtorske pravice:
 
 Could not obtain Printer properties
 Ne morem dobiti Lastnosti tiskalnika
@@ -389,6 +395,9 @@ Prilagodi po širini in prikaži strani nepretrgano
 
 Fit a Single Page
 Prilagodi enostransko
+
+Fonts:
+Pisave:
 
 Found text at page %s
 Besedilo najdeno na strani %s
@@ -552,6 +561,9 @@ Odstrani iz priljubljenih
 Remove page %s from favorites
 Odstrani stran %s iz priljubljenih
 
+Replace document &colors with Windows color scheme
+Zamenjaj &barve dokumenta z barvno shemo Windows
+
 Rotate &Left\tCtrl+Shift+-
 Zasukaj v levo\tCtrl+Shift+-
 
@@ -674,10 +686,4 @@ kopiranje besedila
 
 printing document
 tiskanje dokumenta
-
-# Untranslated:
-#Copy &Image
-#Copyright:
-#Fonts:
-#Replace document &colors with Windows color scheme
 
