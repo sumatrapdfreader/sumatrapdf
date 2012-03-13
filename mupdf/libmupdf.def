@@ -15,7 +15,7 @@ EXPORTS
 	fz_new_context
 	fz_clone_context
 	fz_free_context
-	fz_get_aa_level
+	fz_aa_level
 	fz_set_aa_level
 	fz_malloc
 	fz_calloc
@@ -70,14 +70,16 @@ EXPORTS
 	fz_keep_bitmap
 	fz_drop_bitmap
 	fz_find_device_colorspace
-	fz_bound_pixmap
+	fz_pixmap_bbox
+	fz_pixmap_width
+	fz_pixmap_height
 	fz_new_pixmap
-	fz_new_pixmap_with_rect
+	fz_new_pixmap_with_bbox
 	fz_keep_pixmap
 	fz_drop_pixmap
 	fz_pixmap_colorspace
 	fz_pixmap_components
-	fz_pixmap_pixels
+	fz_pixmap_samples
 	fz_clear_pixmap_with_value
 	fz_clear_pixmap
 	fz_invert_pixmap
@@ -85,7 +87,7 @@ EXPORTS
 	fz_gamma_pixmap
 	fz_unmultiply_pixmap
 	fz_convert_pixmap
-	fz_save_pixmap
+	fz_write_pixmap
 	fz_write_pnm
 	fz_write_pam
 	fz_write_png
@@ -118,8 +120,8 @@ EXPORTS
 	fz_keep_link
 	fz_drop_link
 	fz_free_link_dest
-	fz_debug_outline_xml
-	fz_debug_outline
+	fz_print_outline_xml
+	fz_print_outline
 	fz_free_outline
 	fz_open_document
 	fz_close_document
@@ -132,6 +134,7 @@ EXPORTS
 	fz_bound_page
 	fz_run_page
 	fz_free_page
+
 	fz_clone_context_internal
 	fz_new_aa_context
 	fz_free_aa_context
@@ -140,7 +143,7 @@ EXPORTS
 	fz_synchronize_end
 	fz_atof
 	fz_new_hash_table
-	fz_debug_hash
+	fz_print_hash
 	fz_empty_hash
 	fz_free_hash
 	fz_hash_find
@@ -167,7 +170,7 @@ EXPORTS
 	fz_new_store_context
 	fz_drop_store_context
 	fz_keep_store_context
-	fz_debug_store
+	fz_print_store
 	fz_store_item
 	fz_find_item
 	fz_remove_item
@@ -196,13 +199,13 @@ EXPORTS
 	fz_open_lzwd
 	fz_open_predict
 	fz_open_jbig2d
-	fz_find_blendmode
+	fz_lookup_blendmode
 	fz_blendmode_name
 	fz_new_bitmap
 	fz_bitmap_details
 	fz_clear_bitmap
 	fz_new_pixmap_with_data
-	fz_new_pixmap_with_rect_and_data
+	fz_new_pixmap_with_bbox_and_data
 	fz_free_pixmap_imp
 	fz_clear_pixmap_rect_with_value
 	fz_copy_pixmap_rect
@@ -210,12 +213,13 @@ EXPORTS
 	fz_alpha_from_gray
 	fz_pixmap_size
 	fz_scale_pixmap
+	fz_pixmap_bbox_no_ctx
 	fz_load_jpx
 	fz_load_jpeg
 	fz_load_png
 	fz_load_tiff
 	fz_new_halftone
-	fz_get_default_halftone
+	fz_default_halftone
 	fz_drop_halftone
 	fz_keep_halftone
 	fz_new_colorspace
@@ -232,7 +236,7 @@ EXPORTS
 	fz_new_font_from_file
 	fz_keep_font
 	fz_drop_font
-	fz_debug_font
+	fz_print_font
 	fz_set_font_bbox
 	fz_bound_glyph
 	fz_glyph_cacheable
@@ -247,7 +251,7 @@ EXPORTS
 	fz_transform_path
 	fz_clone_path
 	fz_bound_path
-	fz_debug_path
+	fz_print_path
 	fz_new_glyph_cache_context
 	fz_keep_glyph_cache
 	fz_drop_glyph_cache_context
@@ -262,11 +266,11 @@ EXPORTS
 	fz_free_text
 	fz_bound_text
 	fz_clone_text
-	fz_debug_text
+	fz_print_text
 	fz_keep_shade
 	fz_drop_shade
 	fz_free_shade_imp
-	fz_debug_shade
+	fz_print_shade
 	fz_bound_shade
 	fz_paint_shade
 	fz_new_gel
@@ -373,8 +377,8 @@ EXPORTS
 	pdf_dict_dels
 	pdf_sort_dict
 	pdf_fprint_obj
-	pdf_debug_obj
-	pdf_debug_ref
+	pdf_print_obj
+	pdf_print_ref
 	pdf_to_utf8
 	pdf_to_ucs2
 	pdf_to_utf8_name
@@ -398,7 +402,7 @@ EXPORTS
 	pdf_needs_password
 	pdf_authenticate_password
 	pdf_has_permission
-	pdf_find_page_number
+	pdf_lookup_page_number
 	pdf_count_pages
 	pdf_load_page
 	pdf_load_links
@@ -406,6 +410,7 @@ EXPORTS
 	pdf_free_page
 	pdf_run_page
 	pdf_run_page_with_usage
+
 	pdf_set_str_len
 	pdf_get_indirect_document
 	pdf_lex
@@ -421,18 +426,18 @@ EXPORTS
 	pdf_open_image_decomp_stream
 	pdf_repair_xref
 	pdf_repair_obj_stms
-	pdf_debug_xref
+	pdf_print_xref
 	pdf_resize_xref
 	pdf_new_crypt
 	pdf_free_crypt
 	pdf_crypt_obj
 	pdf_open_crypt
 	pdf_open_crypt_with_filter
-	pdf_get_crypt_revision
-	pdf_get_crypt_method
-	pdf_get_crypt_length
-	pdf_get_crypt_key
-	pdf_debug_crypt
+	pdf_crypt_revision
+	pdf_crypt_method
+	pdf_crypt_length
+	pdf_crypt_key
+	pdf_print_crypt
 	pdf_load_function
 	pdf_eval_function
 	pdf_keep_function
@@ -455,9 +460,9 @@ EXPORTS
 	pdf_drop_cmap
 	pdf_free_cmap_imp
 	pdf_cmap_size
-	pdf_debug_cmap
-	pdf_get_wmode
-	pdf_set_wmode
+	pdf_print_cmap
+	pdf_cmap_wmode
+	pdf_set_cmap_wmode
 	pdf_set_usecmap
 	pdf_add_codespace
 	pdf_map_range_to_table
@@ -481,15 +486,15 @@ EXPORTS
 	pdf_add_vmtx
 	pdf_end_hmtx
 	pdf_end_vmtx
-	pdf_get_hmtx
-	pdf_get_vmtx
-	pdf_ft_get_vgid
+	pdf_lookup_hmtx
+	pdf_lookup_vmtx
+	pdf_ft_lookup_vgid
 	pdf_ft_free_vsubst
 	pdf_load_to_unicode
 	pdf_font_cid_to_gid
-	pdf_find_builtin_font
-	pdf_find_substitute_font
-	pdf_find_substitute_cjk_font
+	pdf_lookup_builtin_font
+	pdf_lookup_substitute_font
+	pdf_lookup_substitute_cjk_font
 	pdf_load_type3_font
 	pdf_load_font
 	pdf_load_windows_font
@@ -497,7 +502,7 @@ EXPORTS
 	pdf_new_font_desc
 	pdf_keep_font
 	pdf_drop_font
-	pdf_debug_font
+	pdf_print_font
 	pdf_parse_link_dest
 	pdf_parse_action
 	pdf_lookup_dest
@@ -514,9 +519,6 @@ EXPORTS
 
 ; MuXPS exports
 
-	xps_strcasecmp
-	xps_resolve_url
-	xps_url_is_remote
 	xml_parse_document
 	xml_next
 	xml_down
@@ -525,12 +527,27 @@ EXPORTS
 	xml_free_element
 	xml_print_element
 	xml_detach
+	xps_open_document
+	xps_open_document_with_stream
+	xps_close_document
+	xps_count_pages
+	xps_load_page
+	xps_bound_page
+	xps_run_page
+	xps_load_links
+	xps_free_page
+	xps_load_outline
+
+	xps_strcasecmp
+	xps_resolve_url
+	xps_url_is_remote
+	xps_parse_point
 	xps_new_part
 	xps_has_part
 	xps_read_part
 	xps_free_part
 	xps_read_page_list
-	xps_debug_page_list
+	xps_print_page_list
 	xps_free_page_list
 	xps_count_pages
 	xps_load_page
@@ -539,9 +556,9 @@ EXPORTS
 	xps_free_page
 	xps_bound_page_quick_and_dirty
 	xps_load_outline
-	xps_find_link_target
+	xps_lookup_link_target
 	xps_add_link
-	xps_find_link_target_obj
+	xps_lookup_link_target_obj
 	xps_count_font_encodings
 	xps_identify_font_encoding
 	xps_select_font_encoding
@@ -551,7 +568,7 @@ EXPORTS
 	xps_set_color
 	xps_free_resource_dictionary
 	xps_resolve_resource_reference
-	xps_debug_resource_dictionary
+	xps_print_resource_dictionary
 	xps_run_page
 	xps_parse_fixed_page
 	xps_parse_canvas
@@ -569,13 +586,8 @@ EXPORTS
 	xps_end_opacity
 	xps_parse_brush
 	xps_parse_element
-	xps_find_alternate_content
+	xps_lookup_alternate_content
 	xps_clip
-	xps_open_document
-	xps_open_document_with_stream
-	xps_close_document
-	xps_get_real_params
-	xps_get_point
 	xps_extract_anchor_info
 	xps_extract_doc_props
 	xps_free_doc_prop

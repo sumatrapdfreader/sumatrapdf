@@ -15,48 +15,48 @@ fz_free_outline(fz_context *ctx, fz_outline *outline)
 }
 
 static void
-do_debug_outline_xml(fz_outline *outline, int level)
+do_debug_outline_xml(FILE *out, fz_outline *outline, int level)
 {
 	while (outline)
 	{
-		printf("<outline title=\"%s\" page=\"%d\"", outline->title, outline->dest.kind == FZ_LINK_GOTO ? outline->dest.ld.gotor.page + 1 : 0);
+		fprintf(out, "<outline title=\"%s\" page=\"%d\"", outline->title, outline->dest.kind == FZ_LINK_GOTO ? outline->dest.ld.gotor.page + 1 : 0);
 		if (outline->down)
 		{
-			printf(">\n");
-			do_debug_outline_xml(outline->down, level + 1);
-			printf("</outline>\n");
+			fprintf(out, ">\n");
+			do_debug_outline_xml(out, outline->down, level + 1);
+			fprintf(out, "</outline>\n");
 		}
 		else
 		{
-			printf(" />\n");
+			fprintf(out, " />\n");
 		}
 		outline = outline->next;
 	}
 }
 
 void
-fz_debug_outline_xml(fz_context *ctx, fz_outline *outline)
+fz_print_outline_xml(fz_context *ctx, FILE *out, fz_outline *outline)
 {
-	do_debug_outline_xml(outline, 0);
+	do_debug_outline_xml(out, outline, 0);
 }
 
 static void
-do_debug_outline(fz_outline *outline, int level)
+do_debug_outline(FILE *out, fz_outline *outline, int level)
 {
 	int i;
 	while (outline)
 	{
 		for (i = 0; i < level; i++)
-			putchar('\t');
-		printf("%s\t%d\n", outline->title, outline->dest.kind == FZ_LINK_GOTO ? outline->dest.ld.gotor.page + 1 : 0);
+			fputc('\t', out);
+		fprintf(out, "%s\t%d\n", outline->title, outline->dest.kind == FZ_LINK_GOTO ? outline->dest.ld.gotor.page + 1 : 0);
 		if (outline->down)
-			do_debug_outline(outline->down, level + 1);
+			do_debug_outline(out, outline->down, level + 1);
 		outline = outline->next;
 	}
 }
 
 void
-fz_debug_outline(fz_context *ctx, fz_outline *outline)
+fz_print_outline(fz_context *ctx, FILE *out, fz_outline *outline)
 {
-	do_debug_outline(outline, 0);
+	do_debug_outline(out, outline, 0);
 }

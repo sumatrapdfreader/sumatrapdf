@@ -453,12 +453,12 @@ fz_drop_store_context(fz_context *ctx)
 }
 
 void
-fz_debug_store(fz_context *ctx)
+fz_print_store(fz_context *ctx, FILE *out)
 {
 	fz_item *item, *next;
 	fz_store *store = ctx->store;
 
-	printf("-- resource store contents --\n");
+	fprintf(out, "-- resource store contents --\n");
 
 	fz_lock(ctx, FZ_LOCK_ALLOC);
 	for (item = store->head; item; item = next)
@@ -466,10 +466,10 @@ fz_debug_store(fz_context *ctx)
 		next = item->next;
 		if (next)
 			next->val->refs++;
-		printf("store[*][refs=%d][size=%d] ", item->val->refs, item->size);
+		fprintf(out, "store[*][refs=%d][size=%d] ", item->val->refs, item->size);
 		fz_unlock(ctx, FZ_LOCK_ALLOC);
 		item->type->debug(item->key);
-		printf(" = %p\n", item->val);
+		fprintf(out, " = %p\n", item->val);
 		fz_lock(ctx, FZ_LOCK_ALLOC);
 		if (next)
 			next->val->refs--;
@@ -521,7 +521,7 @@ int fz_store_scavenge(fz_context *ctx, unsigned int size, int *phase)
 
 #ifdef DEBUG_SCAVENGING
 	printf("Scavenging: store=%d size=%d phase=%d\n", store->size, size, *phase);
-	fz_debug_store(ctx);
+	fz_print_store(ctx, stderr);
 	Memento_stats();
 #endif
 	do
@@ -549,7 +549,7 @@ int fz_store_scavenge(fz_context *ctx, unsigned int size, int *phase)
 		{
 #ifdef DEBUG_SCAVENGING
 			printf("scavenged: store=%d\n", store->size);
-			fz_debug_store(ctx);
+			fz_print_store(ctx, stderr);
 			Memento_stats();
 #endif
 			return 1;
@@ -559,7 +559,7 @@ int fz_store_scavenge(fz_context *ctx, unsigned int size, int *phase)
 
 #ifdef DEBUG_SCAVENGING
 	printf("scavenging failed\n");
-	fz_debug_store(ctx);
+	fz_print_store(ctx, stderr);
 	Memento_listBlocks();
 #endif
 	return 0;

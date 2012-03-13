@@ -88,7 +88,7 @@ pdf_parse_wmode(fz_context *ctx, pdf_cmap *cmap, fz_stream *file)
 	/* RJW: Lost debugging: "syntaxerror in cmap" */
 
 	if (tok == PDF_TOK_INT)
-		pdf_set_wmode(ctx, cmap, buf.i);
+		pdf_set_cmap_wmode(ctx, cmap, buf.i);
 	else
 		fz_warn(ctx, "expected integer after WMode in cmap");
 }

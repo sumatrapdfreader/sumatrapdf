@@ -16,7 +16,7 @@
 #endif
 
 unsigned char *
-pdf_find_builtin_font(char *name, unsigned int *len)
+pdf_lookup_builtin_font(char *name, unsigned int *len)
 {
 	if (!strcmp("Courier", name)) {
 		*len = sizeof pdf_font_NimbusMonL_Regu;
@@ -79,32 +79,32 @@ pdf_find_builtin_font(char *name, unsigned int *len)
 }
 
 unsigned char *
-pdf_find_substitute_font(int mono, int serif, int bold, int italic, unsigned int *len)
+pdf_lookup_substitute_font(int mono, int serif, int bold, int italic, unsigned int *len)
 {
 #ifdef NODROIDFONT
 	if (mono) {
 		if (bold) {
-			if (italic) return pdf_find_builtin_font("Courier-BoldOblique", len);
-			else return pdf_find_builtin_font("Courier-Bold", len);
+			if (italic) return pdf_lookup_builtin_font("Courier-BoldOblique", len);
+			else return pdf_lookup_builtin_font("Courier-Bold", len);
 		} else {
-			if (italic) return pdf_find_builtin_font("Courier-Oblique", len);
-			else return pdf_find_builtin_font("Courier", len);
+			if (italic) return pdf_lookup_builtin_font("Courier-Oblique", len);
+			else return pdf_lookup_builtin_font("Courier", len);
 		}
 	} else if (serif) {
 		if (bold) {
-			if (italic) return pdf_find_builtin_font("Times-BoldItalic", len);
-			else return pdf_find_builtin_font("Times-Bold", len);
+			if (italic) return pdf_lookup_builtin_font("Times-BoldItalic", len);
+			else return pdf_lookup_builtin_font("Times-Bold", len);
 		} else {
-			if (italic) return pdf_find_builtin_font("Times-Italic", len);
-			else return pdf_find_builtin_font("Times-Roman", len);
+			if (italic) return pdf_lookup_builtin_font("Times-Italic", len);
+			else return pdf_lookup_builtin_font("Times-Roman", len);
 		}
 	} else {
 		if (bold) {
-			if (italic) return pdf_find_builtin_font("Helvetica-BoldOblique", len);
-			else return pdf_find_builtin_font("Helvetica-Bold", len);
+			if (italic) return pdf_lookup_builtin_font("Helvetica-BoldOblique", len);
+			else return pdf_lookup_builtin_font("Helvetica-Bold", len);
 		} else {
-			if (italic) return pdf_find_builtin_font("Helvetica-Oblique", len);
-			else return pdf_find_builtin_font("Helvetica", len);
+			if (italic) return pdf_lookup_builtin_font("Helvetica-Oblique", len);
+			else return pdf_lookup_builtin_font("Helvetica", len);
 		}
 	}
 #else
@@ -119,7 +119,7 @@ pdf_find_substitute_font(int mono, int serif, int bold, int italic, unsigned int
 }
 
 unsigned char *
-pdf_find_substitute_cjk_font(int ros, int serif, unsigned int *len)
+pdf_lookup_substitute_cjk_font(int ros, int serif, unsigned int *len)
 {
 #ifndef NOCJKFONT
 	*len = sizeof pdf_font_DroidSansFallback;

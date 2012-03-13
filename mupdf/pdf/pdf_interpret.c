@@ -719,11 +719,11 @@ pdf_show_char(pdf_csi *csi, int cid)
 
 	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1149 */
 	if (fontdesc->wmode == 1 && fontdesc->font->ft_face)
-		gid = pdf_ft_get_vgid(ctx, fontdesc, gid);
+		gid = pdf_ft_lookup_vgid(ctx, fontdesc, gid);
 
 	if (fontdesc->wmode == 1)
 	{
-		v = pdf_get_vmtx(ctx, fontdesc, cid);
+		v = pdf_lookup_vmtx(ctx, fontdesc, cid);
 		tsm.e -= v.x * gstate->size * 0.001f;
 		tsm.f -= v.y * gstate->size * 0.001f;
 	}
@@ -785,7 +785,7 @@ pdf_show_char(pdf_csi *csi, int cid)
 
 	if (fontdesc->wmode == 0)
 	{
-		h = pdf_get_hmtx(ctx, fontdesc, cid);
+		h = pdf_lookup_hmtx(ctx, fontdesc, cid);
 		w0 = h.w * 0.001f;
 		tx = (w0 * gstate->size + gstate->char_space) * gstate->scale;
 		csi->tm = fz_concat(fz_translate(tx, 0), csi->tm);
@@ -1527,7 +1527,8 @@ pdf_run_extgstate(pdf_csi *csi, pdf_obj *rdb, pdf_obj *extgstate)
 			if (pdf_is_array(val) && pdf_array_len(val) == 2)
 			{
 				pdf_obj *dashes = pdf_array_get(val, 0);
-				gstate->stroke_state.dash_len = MAX(pdf_array_len(dashes), 32);
+				/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692917 */
+				gstate->stroke_state.dash_len = MIN(pdf_array_len(dashes), nelem(gstate->stroke_state.dash_list));
 				for (k = 0; k < gstate->stroke_state.dash_len; k++)
 					gstate->stroke_state.dash_list[k] = pdf_to_real(pdf_array_get(dashes, k));
 				gstate->stroke_state.dash_phase = pdf_to_real(pdf_array_get(val, 1));
@@ -1546,7 +1547,7 @@ pdf_run_extgstate(pdf_csi *csi, pdf_obj *rdb, pdf_obj *extgstate)
 		{
 			if (pdf_is_array(val))
 				val = pdf_array_get(val, 0);
-			gstate->blendmode = fz_find_blendmode(pdf_to_name(val));
+			gstate->blendmode = fz_lookup_blendmode(pdf_to_name(val));
 		}
 
 		else if (!strcmp(s, "SMask"))

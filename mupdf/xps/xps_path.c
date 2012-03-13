@@ -1,8 +1,7 @@
-#include "fitz-internal.h"
-#include "muxps.h"
+#include "muxps-internal.h"
 
-char *
-xps_get_real_params(char *s, int num, float *x)
+static char *
+xps_parse_float_array(char *s, int num, float *x)
 {
 	int k = 0;
 
@@ -25,12 +24,12 @@ xps_get_real_params(char *s, int num, float *x)
 }
 
 char *
-xps_get_point(char *s_in, float *x, float *y)
+xps_parse_point(char *s_in, float *x, float *y)
 {
 	char *s_out = s_in;
 	float xy[2];
 
-	s_out = xps_get_real_params(s_out, 2, &xy[0]);
+	s_out = xps_parse_float_array(s_out, 2, &xy[0]);
 	*x = xy[0];
 	*y = xy[1];
 	return s_out;
@@ -537,8 +536,8 @@ xps_parse_arc_segment(fz_context *doc, fz_path *path, xml_element *root, int str
 	point_x = point_y = 0;
 	size_x = size_y = 0;
 
-	xps_get_point(point_att, &point_x, &point_y);
-	xps_get_point(size_att, &size_x, &size_y);
+	xps_parse_point(point_att, &point_x, &point_y);
+	xps_parse_point(size_att, &size_x, &size_y);
 	rotation_angle = fz_atof(rotation_angle_att);
 	is_large_arc = !strcmp(is_large_arc_att, "true");
 	is_clockwise = !strcmp(sweep_direction_att, "Clockwise");
@@ -580,7 +579,7 @@ xps_parse_poly_quadratic_bezier_segment(fz_context *doc, fz_path *path, xml_elem
 	while (*s != 0)
 	{
 		while (*s == ' ') s++;
-		s = xps_get_point(s, &x[n], &y[n]);
+		s = xps_parse_point(s, &x[n], &y[n]);
 		n ++;
 		if (n == 2)
 		{
@@ -628,7 +627,7 @@ xps_parse_poly_bezier_segment(fz_context *doc, fz_path *path, xml_element *root,
 	while (*s != 0)
 	{
 		while (*s == ' ') s++;
-		s = xps_get_point(s, &x[n], &y[n]);
+		s = xps_parse_point(s, &x[n], &y[n]);
 		n ++;
 		if (n == 3)
 		{
@@ -666,7 +665,7 @@ xps_parse_poly_line_segment(fz_context *doc, fz_path *path, xml_element *root, i
 	while (*s != 0)
 	{
 		while (*s == ' ') s++;
-		s = xps_get_point(s, &x, &y);
+		s = xps_parse_point(s, &x, &y);
 		if (stroking && !is_stroked)
 			fz_moveto(doc, path, x, y);
 		else
@@ -699,7 +698,7 @@ xps_parse_path_figure(fz_context *doc, fz_path *path, xml_element *root, int str
 	if (is_filled_att)
 		is_filled = !strcmp(is_filled_att, "true");
 	if (start_point_att)
-		xps_get_point(start_point_att, &start_x, &start_y);
+		xps_parse_point(start_point_att, &start_x, &start_y);
 
 	if (!stroking && !is_filled) /* not filled, when filling */
 		return;

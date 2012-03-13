@@ -47,7 +47,7 @@ pdf_load_embedded_cmap(pdf_document *xref, pdf_obj *stmobj)
 
 		wmode = pdf_dict_gets(stmobj, "WMode");
 		if (pdf_is_int(wmode))
-			pdf_set_wmode(ctx, cmap, pdf_to_int(wmode));
+			pdf_set_cmap_wmode(ctx, cmap, pdf_to_int(wmode));
 		obj = pdf_dict_gets(stmobj, "UseCMap");
 		if (pdf_is_name(obj))
 		{
@@ -97,7 +97,7 @@ pdf_new_identity_cmap(fz_context *ctx, int wmode, int bytes)
 		pdf_add_codespace(ctx, cmap, 0x0000, 0xffff, bytes);
 		pdf_map_range_to_range(ctx, cmap, 0x0000, 0xffff, 0);
 		pdf_sort_cmap(ctx, cmap);
-		pdf_set_wmode(ctx, cmap, wmode);
+		pdf_set_cmap_wmode(ctx, cmap, wmode);
 	}
 	fz_catch(ctx)
 	{

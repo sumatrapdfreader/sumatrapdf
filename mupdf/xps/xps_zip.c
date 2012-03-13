@@ -1,5 +1,4 @@
-#include "fitz-internal.h"
-#include "muxps.h"
+#include "muxps-internal.h"
 
 #include <zlib.h>
 

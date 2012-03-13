@@ -328,7 +328,7 @@ fz_transform_path(fz_context *ctx, fz_path *path, fz_matrix ctm)
 }
 
 void
-fz_debug_path(fz_context *ctx, fz_path *path, int indent)
+fz_print_path(fz_context *ctx, FILE *out, fz_path *path, int indent)
 {
 	float x, y;
 	int i = 0;
@@ -336,32 +336,32 @@ fz_debug_path(fz_context *ctx, fz_path *path, int indent)
 	while (i < path->len)
 	{
 		for (n = 0; n < indent; n++)
-			putchar(' ');
+			fputc(' ', out);
 		switch (path->items[i++].k)
 		{
 		case FZ_MOVETO:
 			x = path->items[i++].v;
 			y = path->items[i++].v;
-			printf("%g %g m\n", x, y);
+			fprintf(out, "%g %g m\n", x, y);
 			break;
 		case FZ_LINETO:
 			x = path->items[i++].v;
 			y = path->items[i++].v;
-			printf("%g %g l\n", x, y);
+			fprintf(out, "%g %g l\n", x, y);
 			break;
 		case FZ_CURVETO:
 			x = path->items[i++].v;
 			y = path->items[i++].v;
-			printf("%g %g ", x, y);
+			fprintf(out, "%g %g ", x, y);
 			x = path->items[i++].v;
 			y = path->items[i++].v;
-			printf("%g %g ", x, y);
+			fprintf(out, "%g %g ", x, y);
 			x = path->items[i++].v;
 			y = path->items[i++].v;
-			printf("%g %g c\n", x, y);
+			fprintf(out, "%g %g c\n", x, y);
 			break;
 		case FZ_CLOSE_PATH:
-			printf("h\n");
+			fprintf(out, "h\n");
 			break;
 		}
 	}

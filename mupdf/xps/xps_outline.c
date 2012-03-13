@@ -1,5 +1,4 @@
-#include "fitz-internal.h"
-#include "muxps.h"
+#include "muxps-internal.h"
 
 /*
  * Parse the document structure / outline parts referenced from fixdoc relationships.
@@ -40,7 +39,7 @@ xps_parse_document_outline(xps_document *doc, xml_element *root)
 			else if (!xps_url_is_remote(target))
 			{
 				entry->dest.kind = FZ_LINK_GOTO;
-				entry->dest.ld.gotor.page = xps_find_link_target(doc, target);
+				entry->dest.ld.gotor.page = xps_lookup_link_target(doc, target);
 				/* for retrieving updated target rectangles */
 				entry->dest.ld.gotor.rname = fz_strdup(doc->ctx, target);
 			}
@@ -173,7 +172,7 @@ xps_extract_anchor_info(xps_document *doc, fz_rect rect, char *target_uri, char 
 		if (!xps_url_is_remote(target_uri))
 		{
 			ld.kind = FZ_LINK_GOTO;
-			ld.ld.gotor.page = xps_find_link_target(doc, target_uri);
+			ld.ld.gotor.page = xps_lookup_link_target(doc, target_uri);
 			/* for retrieving updated target rectangles */
 			ld.ld.gotor.rname = fz_strdup(doc->ctx, target_uri);
 		}
@@ -209,7 +208,7 @@ xps_extract_anchor_info(xps_document *doc, fz_rect rect, char *target_uri, char 
 		xps_target *target;
 		char *valueId = fz_malloc(doc->ctx, strlen(anchor_name) + 2);
 		sprintf(valueId, "#%s", anchor_name);
-		target = xps_find_link_target_obj(doc, valueId);
+		target = xps_lookup_link_target_obj(doc, valueId);
 		if (target)
 			target->rect = rect;
 		fz_free(doc->ctx, valueId);

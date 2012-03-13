@@ -299,15 +299,15 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 			dev = NULL;
 			if (showtext == TEXT_XML)
 			{
-				fz_print_text_page_xml(stdout, text);
+				fz_print_text_page_xml(ctx, stdout, text);
 			}
 			else if (showtext == TEXT_HTML)
 			{
-				fz_print_text_page_html(stdout, text);
+				fz_print_text_page_html(ctx, stdout, text);
 			}
 			else if (showtext == TEXT_PLAIN)
 			{
-				fz_print_text_page(stdout, text);
+				fz_print_text_page(ctx, stdout, text);
 				printf("\f\n");
 			}
 		}
@@ -370,7 +370,7 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 
 		fz_try(ctx)
 		{
-			pix = fz_new_pixmap_with_rect(ctx, colorspace, bbox);
+			pix = fz_new_pixmap_with_bbox(ctx, colorspace, bbox);
 
 			if (savealpha)
 				fz_clear_pixmap(ctx, pix);
@@ -507,9 +507,9 @@ static void drawoutline(fz_context *ctx, fz_document *doc)
 {
 	fz_outline *outline = fz_load_outline(doc);
 	if (showoutline > 1)
-		fz_debug_outline_xml(ctx, outline);
+		fz_print_outline_xml(ctx, stdout, outline);
 	else
-		fz_debug_outline(ctx, outline);
+		fz_print_outline(ctx, stdout, outline);
 	fz_free_outline(ctx, outline);
 }
 
@@ -654,7 +654,7 @@ int main(int argc, char **argv)
 	{
 		printf("</body>\n");
 		printf("<style>\n");
-		fz_print_text_sheet(stdout, sheet);
+		fz_print_text_sheet(ctx, stdout, sheet);
 		printf("</style>\n");
 	}
 

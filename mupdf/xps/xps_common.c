@@ -1,5 +1,4 @@
-#include "fitz-internal.h"
-#include "muxps.h"
+#include "muxps-internal.h"
 
 static inline int unhex(int a)
 {
@@ -11,7 +10,7 @@ static inline int unhex(int a)
 
 /* SumatraPDF: basic support for alternate content */
 xml_element *
-xps_find_alternate_content(xml_element *node)
+xps_lookup_alternate_content(xml_element *node)
 {
 	for (node = xml_down(node); node; node = xml_next(node))
 	{
@@ -62,7 +61,7 @@ xps_parse_element(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri
 	/* SumatraPDF: basic support for alternate content */
 	if (!strcmp(xml_tag(node), "mc:AlternateContent"))
 	{
-		node = xps_find_alternate_content(node);
+		node = xps_lookup_alternate_content(node);
 		if (node)
 			xps_parse_element(doc, ctm, area, base_uri, dict, node);
 	}

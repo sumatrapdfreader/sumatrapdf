@@ -36,6 +36,11 @@ MKDIR_CMD = $(QUIET_MKDIR) mkdir -p $@
 
 # --- Rules ---
 
+FITZ_HDR := fitz/fitz.h fitz/fitz-internal.h
+MUPDF_HDR := $(FITZ_HDR) pdf/mupdf.h pdf/mupdf-internal.h
+MUXPS_HDR := $(FITZ_HDR) xps/muxps.h xps/muxps-internal.h
+MUCBZ_HDR := $(FITZ_HDR) cbz/mucbz.h
+
 $(OUT) $(GEN) :
 	$(MKDIR_CMD)
 
@@ -46,15 +51,15 @@ $(OUT)/%.a :
 $(OUT)/% : $(OUT)/%.o
 	$(LINK_CMD)
 
-$(OUT)/%.o : fitz/%.c fitz/fitz.h | $(OUT)
+$(OUT)/%.o : fitz/%.c $(FITZ_HDR) | $(OUT)
 	$(CC_CMD)
-$(OUT)/%.o : draw/%.c fitz/fitz.h | $(OUT)
+$(OUT)/%.o : draw/%.c $(FITZ_HDR) | $(OUT)
 	$(CC_CMD)
-$(OUT)/%.o : pdf/%.c fitz/fitz.h pdf/mupdf.h | $(OUT)
+$(OUT)/%.o : pdf/%.c $(MUPDF_HDR) | $(OUT)
 	$(CC_CMD)
-$(OUT)/%.o : xps/%.c fitz/fitz.h xps/muxps.h | $(OUT)
+$(OUT)/%.o : xps/%.c $(MUXPS_HDR) | $(OUT)
 	$(CC_CMD)
-$(OUT)/%.o : cbz/%.c fitz/fitz.h cbz/mucbz.h | $(OUT)
+$(OUT)/%.o : cbz/%.c $(MUCBZ_HDR) | $(OUT)
 	$(CC_CMD)
 $(OUT)/%.o : apps/%.c fitz/fitz.h pdf/mupdf.h xps/muxps.h cbz/mucbz.h | $(OUT)
 	$(CC_CMD)

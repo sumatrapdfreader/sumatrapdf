@@ -1,5 +1,4 @@
-#include "fitz-internal.h"
-#include "muxps.h"
+#include "muxps-internal.h"
 
 static void
 xps_rels_for_part(char *buf, char *name, int buflen)
@@ -21,7 +20,7 @@ xps_rels_for_part(char *buf, char *name, int buflen)
  */
 
 void
-xps_debug_page_list(xps_document *doc)
+xps_print_page_list(xps_document *doc)
 {
 	xps_fixdoc *fixdoc = doc->first_fixdoc;
 	xps_page *page = doc->first_page;
@@ -195,7 +194,7 @@ xps_add_link_target(xps_document *doc, char *name)
 
 /* SumatraPDF: extended link support */
 xps_target *
-xps_find_link_target_obj(xps_document *doc, char *target_uri)
+xps_lookup_link_target_obj(xps_document *doc, char *target_uri)
 {
 	xps_target *target;
 	char *needle = strrchr(target_uri, '#');
@@ -208,9 +207,9 @@ xps_find_link_target_obj(xps_document *doc, char *target_uri)
 }
 
 int
-xps_find_link_target(xps_document *doc, char *target_uri)
+xps_lookup_link_target(xps_document *doc, char *target_uri)
 {
-	xps_target *target = xps_find_link_target_obj(doc, target_uri);
+	xps_target *target = xps_lookup_link_target_obj(doc, target_uri);
 	return target ? target->page : -1;
 }
 
@@ -429,7 +428,7 @@ xps_load_fixed_page(xps_document *doc, xps_page *page)
 	/* SumatraPDF: basic support for alternate content */
 	if (!strcmp(xml_tag(root), "mc:AlternateContent"))
 	{
-		xml_element *node = xps_find_alternate_content(root);
+		xml_element *node = xps_lookup_alternate_content(root);
 		if (!node)
 		{
 			xml_free_element(doc->ctx, root);

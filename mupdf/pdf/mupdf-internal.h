@@ -201,7 +201,7 @@ fz_stream *pdf_open_image_decomp_stream(fz_context *ctx, fz_buffer *, pdf_image_
 
 void pdf_repair_xref(pdf_document *doc, pdf_lexbuf *buf);
 void pdf_repair_obj_stms(pdf_document *doc);
-void pdf_debug_xref(pdf_document *);
+void pdf_print_xref(pdf_document *);
 void pdf_resize_xref(pdf_document *doc, int newcap);
 
 /*
@@ -215,12 +215,12 @@ void pdf_crypt_obj(fz_context *ctx, pdf_crypt *crypt, pdf_obj *obj, int num, int
 fz_stream *pdf_open_crypt(fz_stream *chain, pdf_crypt *crypt, int num, int gen);
 fz_stream *pdf_open_crypt_with_filter(fz_stream *chain, pdf_crypt *crypt, char *name, int num, int gen);
 
-int pdf_get_crypt_revision(pdf_document *doc);
-char *pdf_get_crypt_method(pdf_document *doc);
-int pdf_get_crypt_length(pdf_document *doc);
-unsigned char *pdf_get_crypt_key(pdf_document *doc);
+int pdf_crypt_revision(pdf_document *doc);
+char *pdf_crypt_method(pdf_document *doc);
+int pdf_crypt_length(pdf_document *doc);
+unsigned char *pdf_crypt_key(pdf_document *doc);
 
-void pdf_debug_crypt(pdf_crypt *crypt);
+void pdf_print_crypt(pdf_crypt *crypt);
 
 /*
  * Functions, Colorspaces, Shadings and Images
@@ -340,9 +340,9 @@ void pdf_drop_cmap(fz_context *ctx, pdf_cmap *cmap);
 void pdf_free_cmap_imp(fz_context *ctx, fz_storable *cmap);
 unsigned int pdf_cmap_size(fz_context *ctx, pdf_cmap *cmap);
 
-void pdf_debug_cmap(fz_context *ctx, pdf_cmap *cmap);
-int pdf_get_wmode(fz_context *ctx, pdf_cmap *cmap);
-void pdf_set_wmode(fz_context *ctx, pdf_cmap *cmap, int wmode);
+void pdf_print_cmap(fz_context *ctx, pdf_cmap *cmap);
+int pdf_cmap_wmode(fz_context *ctx, pdf_cmap *cmap);
+void pdf_set_cmap_wmode(fz_context *ctx, pdf_cmap *cmap, int wmode);
 void pdf_set_usecmap(fz_context *ctx, pdf_cmap *cmap, pdf_cmap *usecmap);
 
 void pdf_add_codespace(fz_context *ctx, pdf_cmap *cmap, int low, int high, int n);
@@ -461,19 +461,19 @@ void pdf_add_hmtx(fz_context *ctx, pdf_font_desc *font, int lo, int hi, int w);
 void pdf_add_vmtx(fz_context *ctx, pdf_font_desc *font, int lo, int hi, int x, int y, int w);
 void pdf_end_hmtx(fz_context *ctx, pdf_font_desc *font);
 void pdf_end_vmtx(fz_context *ctx, pdf_font_desc *font);
-pdf_hmtx pdf_get_hmtx(fz_context *ctx, pdf_font_desc *font, int cid);
-pdf_vmtx pdf_get_vmtx(fz_context *ctx, pdf_font_desc *font, int cid);
+pdf_hmtx pdf_lookup_hmtx(fz_context *ctx, pdf_font_desc *font, int cid);
+pdf_vmtx pdf_lookup_vmtx(fz_context *ctx, pdf_font_desc *font, int cid);
 /* SumatraPDF */
-int pdf_ft_get_vgid(fz_context *ctx, pdf_font_desc *fontdesc, int gid);
+int pdf_ft_lookup_vgid(fz_context *ctx, pdf_font_desc *fontdesc, int gid);
 void pdf_ft_free_vsubst(pdf_font_desc *fontdesc);
 
 void pdf_load_to_unicode(pdf_document *doc, pdf_font_desc *font, char **strings, char *collection, pdf_obj *cmapstm);
 
 int pdf_font_cid_to_gid(fz_context *ctx, pdf_font_desc *fontdesc, int cid);
 
-unsigned char *pdf_find_builtin_font(char *name, unsigned int *len);
-unsigned char *pdf_find_substitute_font(int mono, int serif, int bold, int italic, unsigned int *len);
-unsigned char *pdf_find_substitute_cjk_font(int ros, int serif, unsigned int *len);
+unsigned char *pdf_lookup_builtin_font(char *name, unsigned int *len);
+unsigned char *pdf_lookup_substitute_font(int mono, int serif, int bold, int italic, unsigned int *len);
+unsigned char *pdf_lookup_substitute_cjk_font(int ros, int serif, unsigned int *len);
 
 pdf_font_desc *pdf_load_type3_font(pdf_document *doc, pdf_obj *rdb, pdf_obj *obj);
 pdf_font_desc *pdf_load_font(pdf_document *doc, pdf_obj *rdb, pdf_obj *obj);
@@ -486,7 +486,7 @@ pdf_font_desc *pdf_new_font_desc(fz_context *ctx);
 pdf_font_desc *pdf_keep_font(fz_context *ctx, pdf_font_desc *fontdesc);
 void pdf_drop_font(fz_context *ctx, pdf_font_desc *font);
 
-void pdf_debug_font(fz_context *ctx, pdf_font_desc *fontdesc);
+void pdf_print_font(fz_context *ctx, pdf_font_desc *fontdesc);
 
 /*
  * Interactive features

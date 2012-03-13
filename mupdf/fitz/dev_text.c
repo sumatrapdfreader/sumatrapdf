@@ -44,7 +44,7 @@ fz_free_text_sheet(fz_context *ctx, fz_text_sheet *sheet)
 }
 
 static fz_text_style *
-fz_find_text_style_imp(fz_context *ctx, fz_text_sheet *sheet,
+fz_lookup_text_style_imp(fz_context *ctx, fz_text_sheet *sheet,
 	float size, fz_font *font, int wmode, int script)
 {
 	fz_text_style *style;
@@ -73,7 +73,7 @@ fz_find_text_style_imp(fz_context *ctx, fz_text_sheet *sheet,
 }
 
 static fz_text_style *
-fz_find_text_style(fz_context *ctx, fz_text_sheet *sheet, fz_text *text, fz_matrix *ctm,
+fz_lookup_text_style(fz_context *ctx, fz_text_sheet *sheet, fz_text *text, fz_matrix *ctm,
 	fz_colorspace *colorspace, float *color, float alpha, fz_stroke_state *stroke)
 {
 	float size = 1.0f;
@@ -88,7 +88,7 @@ fz_find_text_style(fz_context *ctx, fz_text_sheet *sheet, fz_text *text, fz_matr
 		trm = fz_concat(tm, *ctm);
 		size = fz_matrix_expansion(trm);
 	}
-	return fz_find_text_style_imp(ctx, sheet, size, font, wmode, 0);
+	return fz_lookup_text_style_imp(ctx, sheet, size, font, wmode, 0);
 }
 
 fz_text_page *
@@ -180,7 +180,7 @@ append_line(fz_context *ctx, fz_text_block *block, fz_text_line *line)
 }
 
 static fz_text_block *
-find_block_for_line(fz_context *ctx, fz_text_page *page, fz_text_line *line)
+lookup_block_for_line(fz_context *ctx, fz_text_page *page, fz_text_line *line)
 {
 	float size = line->len > 0 && line->spans[0].len > 0 ? line->spans[0].style->size : 1;
 	int i;
@@ -216,7 +216,7 @@ find_block_for_line(fz_context *ctx, fz_text_page *page, fz_text_line *line)
 static void
 insert_line(fz_context *ctx, fz_text_page *page, fz_text_line *line)
 {
-	append_line(ctx, find_block_for_line(ctx, page, line), line);
+	append_line(ctx, lookup_block_for_line(ctx, page, line), line);
 }
 
 static fz_rect
@@ -526,7 +526,6 @@ fz_text_extract(fz_context *ctx, fz_text_device *dev, fz_text *text, fz_matrix c
 	float descender = 0;
 	int multi;
 	int i, j, err;
-
 	int lastchar = ' ';
 
 	if (text->len == 0)
@@ -689,7 +688,7 @@ fz_text_fill_text(fz_device *dev, fz_text *text, fz_matrix ctm,
 {
 	fz_text_device *tdev = dev->user;
 	fz_text_style *style;
-	style = fz_find_text_style(dev->ctx, tdev->sheet, text, &ctm, colorspace, color, alpha, NULL);
+	style = fz_lookup_text_style(dev->ctx, tdev->sheet, text, &ctm, colorspace, color, alpha, NULL);
 	fz_text_extract(dev->ctx, tdev, text, ctm, style);
 }
 
@@ -699,7 +698,7 @@ fz_text_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *stroke, fz_m
 {
 	fz_text_device *tdev = dev->user;
 	fz_text_style *style;
-	style = fz_find_text_style(dev->ctx, tdev->sheet, text, &ctm, colorspace, color, alpha, stroke);
+	style = fz_lookup_text_style(dev->ctx, tdev->sheet, text, &ctm, colorspace, color, alpha, stroke);
 	fz_text_extract(dev->ctx, tdev, text, ctm, style);
 }
 
@@ -708,7 +707,7 @@ fz_text_clip_text(fz_device *dev, fz_text *text, fz_matrix ctm, int accumulate)
 {
 	fz_text_device *tdev = dev->user;
 	fz_text_style *style;
-	style = fz_find_text_style(dev->ctx, tdev->sheet, text, &ctm, NULL, NULL, 0, NULL);
+	style = fz_lookup_text_style(dev->ctx, tdev->sheet, text, &ctm, NULL, NULL, 0, NULL);
 	fz_text_extract(dev->ctx, tdev, text, ctm, style);
 }
 
@@ -717,7 +716,7 @@ fz_text_clip_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *stroke,
 {
 	fz_text_device *tdev = dev->user;
 	fz_text_style *style;
-	style = fz_find_text_style(dev->ctx, tdev->sheet, text, &ctm, NULL, NULL, 0, stroke);
+	style = fz_lookup_text_style(dev->ctx, tdev->sheet, text, &ctm, NULL, NULL, 0, stroke);
 	fz_text_extract(dev->ctx, tdev, text, ctm, style);
 }
 
@@ -726,7 +725,7 @@ fz_text_ignore_text(fz_device *dev, fz_text *text, fz_matrix ctm)
 {
 	fz_text_device *tdev = dev->user;
 	fz_text_style *style;
-	style = fz_find_text_style(dev->ctx, tdev->sheet, text, &ctm, NULL, NULL, 0, NULL);
+	style = fz_lookup_text_style(dev->ctx, tdev->sheet, text, &ctm, NULL, NULL, 0, NULL);
 	fz_text_extract(dev->ctx, tdev, text, ctm, style);
 }
 
@@ -841,7 +840,7 @@ fz_print_style(FILE *out, fz_text_style *style)
 }
 
 void
-fz_print_text_sheet(FILE *out, fz_text_sheet *sheet)
+fz_print_text_sheet(fz_context *ctx, FILE *out, fz_text_sheet *sheet)
 {
 	fz_text_style *style;
 	for (style = sheet->style; style; style = style->next)
@@ -849,7 +848,7 @@ fz_print_text_sheet(FILE *out, fz_text_sheet *sheet)
 }
 
 void
-fz_print_text_page_html(FILE *out, fz_text_page *page)
+fz_print_text_page_html(fz_context *ctx, FILE *out, fz_text_page *page)
 {
 	int block_n, line_n, span_n, ch_n;
 	fz_text_style *style = NULL;
@@ -906,7 +905,7 @@ fz_print_text_page_html(FILE *out, fz_text_page *page)
 }
 
 void
-fz_print_text_page_xml(FILE *out, fz_text_page *page)
+fz_print_text_page_xml(fz_context *ctx, FILE *out, fz_text_page *page)
 {
 	fz_text_block *block;
 	fz_text_line *line;
@@ -961,7 +960,7 @@ fz_print_text_page_xml(FILE *out, fz_text_page *page)
 }
 
 void
-fz_print_text_page(FILE *out, fz_text_page *page)
+fz_print_text_page(fz_context *ctx, FILE *out, fz_text_page *page)
 {
 	fz_text_block *block;
 	fz_text_line *line;

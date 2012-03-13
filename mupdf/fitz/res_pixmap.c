@@ -82,7 +82,7 @@ fz_new_pixmap(fz_context *ctx, fz_colorspace *colorspace, int w, int h)
 }
 
 fz_pixmap *
-fz_new_pixmap_with_rect(fz_context *ctx, fz_colorspace *colorspace, fz_bbox r)
+fz_new_pixmap_with_bbox(fz_context *ctx, fz_colorspace *colorspace, fz_bbox r)
 {
 	fz_pixmap *pixmap;
 	pixmap = fz_new_pixmap(ctx, colorspace, r.x1 - r.x0, r.y1 - r.y0);
@@ -92,7 +92,7 @@ fz_new_pixmap_with_rect(fz_context *ctx, fz_colorspace *colorspace, fz_bbox r)
 }
 
 fz_pixmap *
-fz_new_pixmap_with_rect_and_data(fz_context *ctx, fz_colorspace *colorspace, fz_bbox r, unsigned char *samples)
+fz_new_pixmap_with_bbox_and_data(fz_context *ctx, fz_colorspace *colorspace, fz_bbox r, unsigned char *samples)
 {
 	fz_pixmap *pixmap;
 	pixmap = fz_new_pixmap_with_data(ctx, colorspace, r.x1 - r.x0, r.y1 - r.y0, samples);
@@ -102,7 +102,7 @@ fz_new_pixmap_with_rect_and_data(fz_context *ctx, fz_colorspace *colorspace, fz_
 }
 
 fz_bbox
-fz_bound_pixmap(fz_pixmap *pix)
+fz_pixmap_bbox(fz_context *ctx, fz_pixmap *pix)
 {
 	fz_bbox bbox;
 	bbox.x0 = pix->x;
@@ -110,6 +110,29 @@ fz_bound_pixmap(fz_pixmap *pix)
 	bbox.x1 = pix->x + pix->w;
 	bbox.y1 = pix->y + pix->h;
 	return bbox;
+}
+
+fz_bbox
+fz_pixmap_bbox_no_ctx(fz_pixmap *pix)
+{
+	fz_bbox bbox;
+	bbox.x0 = pix->x;
+	bbox.y0 = pix->y;
+	bbox.x1 = pix->x + pix->w;
+	bbox.y1 = pix->y + pix->h;
+	return bbox;
+}
+
+int
+fz_pixmap_width(fz_context *ctx, fz_pixmap *pix)
+{
+	return pix->w;
+}
+
+int
+fz_pixmap_height(fz_context *ctx, fz_pixmap *pix)
+{
+	return pix->h;
 }
 
 void
@@ -146,8 +169,8 @@ fz_copy_pixmap_rect(fz_context *ctx, fz_pixmap *dest, fz_pixmap *src, fz_bbox r)
 	unsigned char *destp;
 	int y, w, destspan, srcspan;
 
-	r = fz_intersect_bbox(r, fz_bound_pixmap(dest));
-	r = fz_intersect_bbox(r, fz_bound_pixmap(src));
+	r = fz_intersect_bbox(r, fz_pixmap_bbox(ctx, dest));
+	r = fz_intersect_bbox(r, fz_pixmap_bbox(ctx, src));
 	w = r.x1 - r.x0;
 	y = r.y1 - r.y0;
 	if (w <= 0 || y <= 0)
@@ -173,7 +196,7 @@ fz_clear_pixmap_rect_with_value(fz_context *ctx, fz_pixmap *dest, int value, fz_
 	unsigned char *destp;
 	int x, y, w, k, destspan;
 
-	r = fz_intersect_bbox(r, fz_bound_pixmap(dest));
+	r = fz_intersect_bbox(r, fz_pixmap_bbox(ctx, dest));
 	w = r.x1 - r.x0;
 	y = r.y1 - r.y0;
 	if (w <= 0 || y <= 0)
@@ -251,7 +274,7 @@ fz_alpha_from_gray(fz_context *ctx, fz_pixmap *gray, int luminosity)
 
 	assert(gray->n == 2);
 
-	alpha = fz_new_pixmap_with_rect(ctx, NULL, fz_bound_pixmap(gray));
+	alpha = fz_new_pixmap_with_bbox(ctx, NULL, fz_pixmap_bbox(ctx, gray));
 	dp = alpha->samples;
 	sp = gray->samples;
 	if (!luminosity)

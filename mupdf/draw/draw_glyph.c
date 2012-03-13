@@ -130,7 +130,7 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix ctm, fz_color
 	key.d = ctm.d * 65536;
 	key.e = (ctm.e - floorf(ctm.e)) * 256;
 	key.f = (ctm.f - floorf(ctm.f)) * 256;
-	key.aa = fz_get_aa_level(ctx);
+	key.aa = fz_aa_level(ctx);
 
 	fz_lock(ctx, FZ_LOCK_GLYPHCACHE);
 	val = fz_hash_find(ctx, cache->hash, &key);

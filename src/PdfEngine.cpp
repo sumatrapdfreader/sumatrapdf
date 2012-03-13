@@ -105,7 +105,8 @@ RenderedFitzBitmap::RenderedFitzBitmap(fz_context *ctx, fz_pixmap *pixmap) :
     /* BGRA is a GDI compatible format */
     fz_pixmap *bgrPixmap;
     fz_try(ctx) {
-        bgrPixmap = fz_new_pixmap_with_rect(ctx, fz_find_device_colorspace("DeviceBGR"), fz_bound_pixmap(pixmap));
+        fz_colorspace *colorspace = fz_find_device_colorspace(ctx, "DeviceBGR");
+        bgrPixmap = fz_new_pixmap_with_bbox(ctx, colorspace, fz_pixmap_bbox(ctx, pixmap));
         fz_convert_pixmap(ctx, bgrPixmap, pixmap);
     }
     fz_catch(ctx) {
@@ -1154,7 +1155,7 @@ PdfEngineImpl *PdfEngineImpl::Clone()
     // use this document's encryption key (if any) to load the clone
     PasswordCloner *pwdUI = NULL;
     if (_doc->crypt)
-        pwdUI = new PasswordCloner(pdf_get_crypt_key(_doc));
+        pwdUI = new PasswordCloner(pdf_crypt_key(_doc));
 
     PdfEngineImpl *clone = new PdfEngineImpl();
     if (!clone || !clone->Load(_doc->file, pwdUI)) {
@@ -1309,7 +1310,7 @@ bool PdfEngineImpl::LoadFromStream(fz_stream *stm, PasswordUI *pwdUI)
 
     bool ok = false, saveKey = false;
     for (int i = 0; !ok && i < 3; i++) {
-        ScopedMem<TCHAR> pwd(pwdUI->GetPassword(_fileName, digest, pdf_get_crypt_key(_doc), &saveKey));
+        ScopedMem<TCHAR> pwd(pwdUI->GetPassword(_fileName, digest, pdf_crypt_key(_doc), &saveKey));
         if (!pwd) {
             // password not given or encryption key has been remembered
             ok = saveKey;
@@ -1336,7 +1337,7 @@ bool PdfEngineImpl::LoadFromStream(fz_stream *stm, PasswordUI *pwdUI)
     }
 
     if (ok && saveKey) {
-        memcpy(digest + 16, pdf_get_crypt_key(_doc), 32);
+        memcpy(digest + 16, pdf_crypt_key(_doc), 32);
         _decryptionKey = _MemToHex(&digest);
     }
 
@@ -1834,7 +1835,8 @@ RenderedBitmap *PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
     fz_pixmap *image;
     EnterCriticalSection(&ctxAccess);
     fz_try(ctx) {
-        image = fz_new_pixmap_with_rect(ctx, fz_find_device_colorspace("DeviceRGB"), bbox);
+        fz_colorspace *colorspace = fz_find_device_colorspace(ctx, "DeviceRGB");
+        image = fz_new_pixmap_with_bbox(ctx, colorspace, bbox);
         fz_clear_pixmap_with_value(ctx, image, 0xFF); // initialize white background
     }
     fz_catch(ctx) {
@@ -2180,7 +2182,7 @@ TCHAR *PdfEngineImpl::GetProperty(char *name)
 
     if (str::Eq(name, "PdfVersion")) {
         int major = _doc->version / 10, minor = _doc->version % 10;
-        if (1 == major && 7 == minor && 5 == pdf_get_crypt_revision(_doc))
+        if (1 == major && 7 == minor && 5 == pdf_crypt_revision(_doc))
             return str::Format(_T("%d.%d Adobe Extension Level %d"), major, minor, 3);
         return str::Format(_T("%d.%d"), major, minor);
     }
@@ -2480,7 +2482,7 @@ PdfEngine *PdfEngine::CreateFromStream(IStream *stream, PasswordUI *pwdUI)
 ///// XpsEngine is also based on Fitz and shares quite some code with PdfEngine /////
 
 extern "C" {
-#include <muxps.h>
+#include <muxps-internal.h>
 }
 
 struct XpsPageRun {
@@ -3149,7 +3151,8 @@ RenderedBitmap *XpsEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
     fz_pixmap *image;
     EnterCriticalSection(&ctxAccess);
     fz_try(ctx) {
-        image = fz_new_pixmap_with_rect(ctx, fz_find_device_colorspace("DeviceRGB"), bbox);
+        fz_colorspace *colorspace = fz_find_device_colorspace(ctx, "DeviceRGB");
+        image = fz_new_pixmap_with_bbox(ctx, colorspace, bbox);
         fz_clear_pixmap_with_value(ctx, image, 0xFF); // initialize white background
     }
     fz_catch(ctx) {
@@ -3389,7 +3392,7 @@ fz_rect XpsEngineImpl::FindDestRect(const char *target)
     if (str::IsEmpty(target))
         return fz_empty_rect;
 
-    xps_target *found = xps_find_link_target_obj(_doc, (char *)target);
+    xps_target *found = xps_lookup_link_target_obj(_doc, (char *)target);
     if (!found)
         return fz_empty_rect;
     if (fz_is_empty_rect(found->rect)) {

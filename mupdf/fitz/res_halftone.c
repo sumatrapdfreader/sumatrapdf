@@ -56,7 +56,7 @@ static unsigned char mono_ht[] =
 	0xF2, 0x72, 0xD2, 0x52, 0xFA, 0x7A, 0xDA, 0x5A, 0xF0, 0x70, 0xD0, 0x50, 0xF8, 0x78, 0xD8, 0x58
 };
 
-fz_halftone *fz_get_default_halftone(fz_context *ctx, int num_comps)
+fz_halftone *fz_default_halftone(fz_context *ctx, int num_comps)
 {
 	fz_halftone *ht = fz_new_halftone(ctx, num_comps);
 	assert(num_comps == 1); /* Only support 1 component for now */
@@ -172,7 +172,7 @@ fz_bitmap *fz_halftone_pixmap(fz_context *ctx, fz_pixmap *pix, fz_halftone *ht)
 	n = pix->n-1; /* Remove alpha */
 	if (ht == NULL)
 	{
-		ht = fz_get_default_halftone(ctx, n);
+		ht = fz_default_halftone(ctx, n);
 	}
 	ht_line = fz_malloc(ctx, pix->w * n);
 	out = fz_new_bitmap(ctx, pix->w, pix->h, n);

@@ -188,7 +188,7 @@ Java_com_artifex_mupdf_MuPDFCore_drawPage(JNIEnv *env, jobject thiz, jobject bit
 		rect.y0 = patchY;
 		rect.x1 = patchX + patchW;
 		rect.y1 = patchY + patchH;
-		pix = fz_new_pixmap_with_rect_and_data(ctx, colorspace, rect, pixels);
+		pix = fz_new_pixmap_with_bbox_and_data(ctx, colorspace, rect, pixels);
 		if (currentPageList == NULL)
 		{
 			fz_clear_pixmap_with_value(pix, 0xd0);

@@ -843,7 +843,7 @@ pdf_close_document(pdf_document *xref)
 }
 
 void
-pdf_debug_xref(pdf_document *xref)
+pdf_print_xref(pdf_document *xref)
 {
 	int i;
 	printf("xref\n0 %d\n", xref->len);

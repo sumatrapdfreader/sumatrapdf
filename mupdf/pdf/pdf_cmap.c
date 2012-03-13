@@ -98,19 +98,19 @@ pdf_set_usecmap(fz_context *ctx, pdf_cmap *cmap, pdf_cmap *usecmap)
 }
 
 int
-pdf_get_wmode(fz_context *ctx, pdf_cmap *cmap)
+pdf_cmap_wmode(fz_context *ctx, pdf_cmap *cmap)
 {
 	return cmap->wmode;
 }
 
 void
-pdf_set_wmode(fz_context *ctx, pdf_cmap *cmap, int wmode)
+pdf_set_cmap_wmode(fz_context *ctx, pdf_cmap *cmap, int wmode)
 {
 	cmap->wmode = wmode;
 }
 
 void
-pdf_debug_cmap(fz_context *ctx, pdf_cmap *cmap)
+pdf_print_cmap(fz_context *ctx, pdf_cmap *cmap)
 {
 	int i, k, n;
 

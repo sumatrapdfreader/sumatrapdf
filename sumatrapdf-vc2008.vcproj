@@ -1213,6 +1213,10 @@
 				Name="xps"
 				>
 				<File
+					RelativePath=".\mupdf\xps\muxps-internal.h"
+					>
+				</File>
+				<File
 					RelativePath=".\mupdf\xps\muxps.h"
 					>
 				</File>

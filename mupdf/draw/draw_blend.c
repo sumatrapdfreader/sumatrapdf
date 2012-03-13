@@ -24,7 +24,7 @@ static const char *fz_blendmode_names[] =
 	"Luminosity",
 };
 
-int fz_find_blendmode(char *name)
+int fz_lookup_blendmode(char *name)
 {
 	int i;
 	for (i = 0; i < nelem(fz_blendmode_names); i++)
@@ -589,8 +589,8 @@ fz_blend_pixmap(fz_pixmap *dst, fz_pixmap *src, int alpha, int blendmode, int is
 		}
 	}
 
-	bbox = fz_bound_pixmap(dst);
-	bbox = fz_intersect_bbox(bbox, fz_bound_pixmap(src));
+	bbox = fz_pixmap_bbox_no_ctx(dst);
+	bbox = fz_intersect_bbox(bbox, fz_pixmap_bbox_no_ctx(src));
 
 	x = bbox.x0;
 	y = bbox.y0;

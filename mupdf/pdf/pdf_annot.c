@@ -60,7 +60,7 @@ pdf_parse_link_dest(pdf_document *xref, pdf_obj *dest)
 	if (pdf_is_int(obj))
 		ld.ld.gotor.page = pdf_to_int(obj);
 	else
-		ld.ld.gotor.page = pdf_find_page_number(xref, obj);
+		ld.ld.gotor.page = pdf_lookup_page_number(xref, obj);
 
 	ld.kind = FZ_LINK_GOTO;
 	ld.ld.gotor.flags = 0;

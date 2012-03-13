@@ -164,7 +164,7 @@ fz_colorspace *fz_device_bgr = &k_device_bgr;
 fz_colorspace *fz_device_cmyk = &k_device_cmyk;
 
 fz_colorspace *
-fz_find_device_colorspace(char *name)
+fz_find_device_colorspace(fz_context *ctx, char *name)
 {
 	if (!strcmp(name, "DeviceGray"))
 		return fz_device_gray;

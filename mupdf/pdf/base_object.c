@@ -1256,13 +1256,13 @@ pdf_fprint_obj(FILE *fp, pdf_obj *obj, int tight)
 }
 
 void
-pdf_debug_obj(pdf_obj *obj)
+pdf_print_obj(pdf_obj *obj)
 {
 	pdf_fprint_obj(stdout, obj, 0);
 }
 
 void
-pdf_debug_ref(pdf_obj *ref)
+pdf_print_ref(pdf_obj *ref)
 {
-	pdf_debug_obj(pdf_resolve_indirect(ref));
+	pdf_print_obj(pdf_resolve_indirect(ref));
 }

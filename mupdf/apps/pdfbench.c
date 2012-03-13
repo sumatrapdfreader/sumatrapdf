@@ -137,7 +137,7 @@ void benchrenderpage(fz_context *ctx, pdf_document *xref, pdf_page *page, int pa
 	timerstart(&timer);
 
 	bbox = fz_round_rect(pdf_bound_page(xref, page));
-	pix = fz_new_pixmap_with_rect(ctx, fz_device_rgb, bbox);
+	pix = fz_new_pixmap_with_bbox(ctx, fz_device_rgb, bbox);
 	fz_clear_pixmap_with_value(ctx, pix, 0xFF);
 	dev = fz_new_draw_device(ctx, pix);
 	fz_try(ctx) {

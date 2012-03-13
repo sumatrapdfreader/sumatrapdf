@@ -68,59 +68,59 @@ fz_bound_shade(fz_context *ctx, fz_shade *shade, fz_matrix ctm)
 }
 
 void
-fz_debug_shade(fz_context *ctx, fz_shade *shade)
+fz_print_shade(fz_context *ctx, FILE *out, fz_shade *shade)
 {
 	int i, j, n;
 	float *vertex;
 	int triangle;
 
-	printf("shading {\n");
+	fprintf(out, "shading {\n");
 
 	switch (shade->type)
 	{
-	case FZ_LINEAR: printf("\ttype linear\n"); break;
-	case FZ_RADIAL: printf("\ttype radial\n"); break;
-	case FZ_MESH: printf("\ttype mesh\n"); break;
+	case FZ_LINEAR: fprintf(out, "\ttype linear\n"); break;
+	case FZ_RADIAL: fprintf(out, "\ttype radial\n"); break;
+	case FZ_MESH: fprintf(out, "\ttype mesh\n"); break;
 	}
 
-	printf("\tbbox [%g %g %g %g]\n",
+	fprintf(out, "\tbbox [%g %g %g %g]\n",
 		shade->bbox.x0, shade->bbox.y0,
 		shade->bbox.x1, shade->bbox.y1);
 
-	printf("\tcolorspace %s\n", shade->colorspace->name);
+	fprintf(out, "\tcolorspace %s\n", shade->colorspace->name);
 
-	printf("\tmatrix [%g %g %g %g %g %g]\n",
+	fprintf(out, "\tmatrix [%g %g %g %g %g %g]\n",
 			shade->matrix.a, shade->matrix.b, shade->matrix.c,
 			shade->matrix.d, shade->matrix.e, shade->matrix.f);
 
 	if (shade->use_background)
 	{
-		printf("\tbackground [");
+		fprintf(out, "\tbackground [");
 		for (i = 0; i < shade->colorspace->n; i++)
-			printf("%s%g", i == 0 ? "" : " ", shade->background[i]);
-		printf("]\n");
+			fprintf(out, "%s%g", i == 0 ? "" : " ", shade->background[i]);
+		fprintf(out, "]\n");
 	}
 
 	if (shade->use_function)
 	{
-		printf("\tfunction\n");
+		fprintf(out, "\tfunction\n");
 		n = 3;
 	}
 	else
 		n = 2 + shade->colorspace->n;
 
-	printf("\tvertices: %d\n", shade->mesh_len);
+	fprintf(out, "\tvertices: %d\n", shade->mesh_len);
 
 	vertex = shade->mesh;
 	triangle = 0;
 	i = 0;
 	while (i < shade->mesh_len)
 	{
-		printf("\t%d:(%g, %g): ", triangle, vertex[0], vertex[1]);
+		fprintf(out, "\t%d:(%g, %g): ", triangle, vertex[0], vertex[1]);
 
 		for (j = 2; j < n; j++)
-			printf("%s%g", j == 2 ? "" : " ", vertex[j]);
-		printf("\n");
+			fprintf(out, "%s%g", j == 2 ? "" : " ", vertex[j]);
+		fprintf(out, "\n");
 
 		vertex += n;
 		i++;
@@ -128,5 +128,5 @@ fz_debug_shade(fz_context *ctx, fz_shade *shade)
 			triangle++;
 	}
 
-	printf("}\n");
+	fprintf(out, "}\n");
 }

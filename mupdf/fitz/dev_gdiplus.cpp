@@ -99,7 +99,7 @@ public:
 		{
 			fz_try(ctx)
 			{
-				pix = fz_new_pixmap_with_rect(ctx, fz_device_bgr, fz_bound_pixmap(pixmap));
+				pix = fz_new_pixmap_with_bbox(ctx, fz_device_bgr, fz_pixmap_bbox(ctx, pixmap));
 			}
 			fz_catch(ctx)
 			{
@@ -1299,7 +1299,7 @@ fz_gdiplus_fill_shade(fz_device *dev, fz_shade *shade, fz_matrix ctm, float alph
 	if (fz_is_empty_bbox(bbox))
 		return;
 	
-	fz_pixmap *dest = fz_new_pixmap_with_rect(dev->ctx, fz_device_rgb, bbox);
+	fz_pixmap *dest = fz_new_pixmap_with_bbox(dev->ctx, fz_device_rgb, bbox);
 	fz_clear_pixmap(dev->ctx, dest);
 	
 	if (shade->use_background)
@@ -1354,7 +1354,7 @@ fz_gdiplus_fill_image_mask(fz_device *dev, fz_image *image, fz_matrix ctm,
 		memcpy(rgb, ((userData *)dev->user)->t3color, sizeof(rgb));
 	
 	fz_pixmap *pixmap = fz_image_to_pixmap_def(dev->ctx, image, ctm);
-	fz_pixmap *img2 = fz_new_pixmap_with_rect(dev->ctx, fz_device_rgb, fz_bound_pixmap(pixmap));
+	fz_pixmap *img2 = fz_new_pixmap_with_bbox(dev->ctx, fz_device_rgb, fz_pixmap_bbox(dev->ctx, pixmap));
 	for (int i = 0; i < img2->w * img2->h; i++)
 	{
 		img2->samples[i * 4] = rgb[0] * 255;

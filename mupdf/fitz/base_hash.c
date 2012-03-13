@@ -268,22 +268,22 @@ fz_hash_remove(fz_context *ctx, fz_hash_table *table, void *key)
 }
 
 void
-fz_debug_hash(fz_context *ctx, fz_hash_table *table)
+fz_print_hash(fz_context *ctx, FILE *out, fz_hash_table *table)
 {
 	int i, k;
 
-	printf("cache load %d / %d\n", table->load, table->size);
+	fprintf(out, "cache load %d / %d\n", table->load, table->size);
 
 	for (i = 0; i < table->size; i++)
 	{
 		if (!table->ents[i].val)
-			printf("table % 4d: empty\n", i);
+			fprintf(out, "table % 4d: empty\n", i);
 		else
 		{
-			printf("table % 4d: key=", i);
+			fprintf(out, "table % 4d: key=", i);
 			for (k = 0; k < MAX_KEY_LEN; k++)
-				printf("%02x", ((char*)table->ents[i].key)[k]);
-			printf(" val=$%p\n", table->ents[i].val);
+				fprintf(out, "%02x", ((char*)table->ents[i].key)[k]);
+			fprintf(out, " val=$%p\n", table->ents[i].val);
 		}
 	}
 }

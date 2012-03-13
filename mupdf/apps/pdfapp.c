@@ -199,20 +199,23 @@ static fz_matrix pdfapp_viewctm(pdfapp_t *app)
 
 static void pdfapp_panview(pdfapp_t *app, int newx, int newy)
 {
+	int image_w = fz_pixmap_width(app->ctx, app->image);
+	int image_h = fz_pixmap_height(app->ctx, app->image);
+
 	if (newx > 0)
 		newx = 0;
 	if (newy > 0)
 		newy = 0;
 
-	if (newx + app->image->w < app->winw)
-		newx = app->winw - app->image->w;
-	if (newy + app->image->h < app->winh)
-		newy = app->winh - app->image->h;
+	if (newx + image_w < app->winw)
+		newx = app->winw - image_w;
+	if (newy + image_h < app->winh)
+		newy = app->winh - image_h;
 
-	if (app->winw >= app->image->w)
-		newx = (app->winw - app->image->w) / 2;
-	if (app->winh >= app->image->h)
-		newy = (app->winh - app->image->h) / 2;
+	if (app->winw >= image_w)
+		newx = (app->winw - image_w) / 2;
+	if (app->winh >= image_h)
+		newy = (app->winh - image_h) / 2;
 
 	if (newx != app->panx || newy != app->pany)
 		winrepaint(app);
@@ -300,7 +303,7 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 #else
 			colorspace = fz_device_rgb;
 #endif
-		app->image = fz_new_pixmap_with_rect(app->ctx, colorspace, bbox);
+		app->image = fz_new_pixmap_with_bbox(app->ctx, colorspace, bbox);
 		fz_clear_pixmap_with_value(app->ctx, app->image, 255);
 		idev = fz_new_draw_device(app->ctx, app->image);
 		fz_run_display_list(app->page_list, idev, ctm, bbox, NULL);
@@ -313,8 +316,8 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 
 		if (app->shrinkwrap)
 		{
-			int w = app->image->w;
-			int h = app->image->h;
+			int w = fz_pixmap_width(app->ctx, app->image);
+			int h = fz_pixmap_height(app->ctx, app->image);
 			if (app->winw == w)
 				app->panx = 0;
 			if (app->winh == h)
@@ -711,22 +714,22 @@ void pdfapp_onkey(pdfapp_t *app, int c)
 		break;
 
 	case 'h':
-		app->panx += app->image->w / 10;
+		app->panx += fz_pixmap_width(app->ctx, app->image) / 10;
 		pdfapp_showpage(app, 0, 0, 1);
 		break;
 
 	case 'j':
-		app->pany -= app->image->h / 10;
+		app->pany -= fz_pixmap_height(app->ctx, app->image) / 10;
 		pdfapp_showpage(app, 0, 0, 1);
 		break;
 
 	case 'k':
-		app->pany += app->image->h / 10;
+		app->pany += fz_pixmap_height(app->ctx, app->image) / 10;
 		pdfapp_showpage(app, 0, 0, 1);
 		break;
 
 	case 'l':
-		app->panx -= app->image->w / 10;
+		app->panx -= fz_pixmap_width(app->ctx, app->image) / 10;
 		pdfapp_showpage(app, 0, 0, 1);
 		break;
 
@@ -901,12 +904,13 @@ void pdfapp_onkey(pdfapp_t *app, int c)
 
 void pdfapp_onmouse(pdfapp_t *app, int x, int y, int btn, int modifiers, int state)
 {
+	fz_bbox rect = fz_pixmap_bbox(app->ctx, app->image);
 	fz_link *link;
 	fz_matrix ctm;
 	fz_point p;
 
-	p.x = x - app->panx + app->image->x;
-	p.y = y - app->pany + app->image->y;
+	p.x = x - app->panx + rect.x0;
+	p.y = y - app->pany + rect.y0;
 
 	ctm = pdfapp_viewctm(app);
 	ctm = fz_invert_matrix(ctm);
@@ -990,10 +994,10 @@ void pdfapp_onmouse(pdfapp_t *app, int x, int y, int btn, int modifiers, int sta
 		if (app->iscopying)
 		{
 			app->iscopying = 0;
-			app->selr.x0 = MIN(app->selx, x) - app->panx + app->image->x;
-			app->selr.x1 = MAX(app->selx, x) - app->panx + app->image->x;
-			app->selr.y0 = MIN(app->sely, y) - app->pany + app->image->y;
-			app->selr.y1 = MAX(app->sely, y) - app->pany + app->image->y;
+			app->selr.x0 = MIN(app->selx, x) - app->panx + rect.x0;
+			app->selr.x1 = MAX(app->selx, x) - app->panx + rect.x0;
+			app->selr.y0 = MIN(app->sely, y) - app->pany + rect.y0;
+			app->selr.y1 = MAX(app->sely, y) - app->pany + rect.y0;
 			winrepaint(app);
 			if (app->selr.x0 < app->selr.x1 && app->selr.y0 < app->selr.y1)
 				windocopy(app);
@@ -1008,7 +1012,7 @@ void pdfapp_onmouse(pdfapp_t *app, int x, int y, int btn, int modifiers, int sta
 		int newy = app->pany + y - app->sely;
 		/* Scrolling beyond limits implies flipping pages */
 		/* Are we requested to scroll beyond limits? */
-		if (newy + app->image->h < app->winh || newy > 0)
+		if (newy + fz_pixmap_height(app->ctx, app->image) < app->winh || newy > 0)
 		{
 			/* Yes. We can assume that deltay != 0 */
 			int deltay = y - app->sely;
@@ -1030,7 +1034,7 @@ void pdfapp_onmouse(pdfapp_t *app, int x, int y, int btn, int modifiers, int sta
 					{
 						app->pageno--;
 						pdfapp_showpage(app, 1, 1, 1);
-						newy = -app->image->h;
+						newy = -fz_pixmap_height(app->ctx, app->image);
 					}
 					app->beyondy = 0;
 				}
@@ -1061,10 +1065,10 @@ void pdfapp_onmouse(pdfapp_t *app, int x, int y, int btn, int modifiers, int sta
 
 	else if (app->iscopying)
 	{
-		app->selr.x0 = MIN(app->selx, x) - app->panx + app->image->x;
-		app->selr.x1 = MAX(app->selx, x) - app->panx + app->image->x;
-		app->selr.y0 = MIN(app->sely, y) - app->pany + app->image->y;
-		app->selr.y1 = MAX(app->sely, y) - app->pany + app->image->y;
+		app->selr.x0 = MIN(app->selx, x) - app->panx + rect.x0;
+		app->selr.x1 = MAX(app->selx, x) - app->panx + rect.x0;
+		app->selr.y0 = MIN(app->sely, y) - app->pany + rect.y0;
+		app->selr.y1 = MAX(app->sely, y) - app->pany + rect.y0;
 		winrepaint(app);
 	}
 

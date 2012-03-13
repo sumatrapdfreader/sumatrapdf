@@ -20,7 +20,7 @@ struct fz_aa_context_s
 	int hscale;
 	int vscale;
 	int scale;
-	int level;
+	int bits;
 };
 
 void fz_new_aa_context(fz_context *ctx)
@@ -30,12 +30,12 @@ void fz_new_aa_context(fz_context *ctx)
 	ctx->aa->hscale = 17;
 	ctx->aa->vscale = 15;
 	ctx->aa->scale = 256;
-	ctx->aa->level = 8;
+	ctx->aa->bits = 8;
 
 #define fz_aa_hscale ((ctxaa)->hscale)
 #define fz_aa_vscale ((ctxaa)->vscale)
 #define fz_aa_scale ((ctxaa)->scale)
-#define fz_aa_level ((ctxaa)->level)
+#define fz_aa_bits ((ctxaa)->bits)
 #define AA_SCALE(x) ((x * fz_aa_scale) >> 8)
 
 #endif
@@ -43,11 +43,8 @@ void fz_new_aa_context(fz_context *ctx)
 
 void fz_copy_aa_context(fz_context *dst, fz_context *src)
 {
-	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692915 */
-#ifndef AA_BITS
-	if (dst->aa && src->aa)
+	if (dst && dst->aa && src && src->aa)
 		memcpy(dst->aa, src->aa, sizeof(*src->aa));
-#endif
 }
 
 void fz_free_aa_context(fz_context *ctx)
@@ -64,40 +61,40 @@ void fz_free_aa_context(fz_context *ctx)
 #define AA_SCALE(x) (x)
 #define fz_aa_hscale 17
 #define fz_aa_vscale 15
-#define fz_aa_level 8
+#define fz_aa_bits 8
 
 #elif AA_BITS > 4
 #define AA_SCALE(x) ((x * 255) >> 6)
 #define fz_aa_hscale 8
 #define fz_aa_vscale 8
-#define fz_aa_level 6
+#define fz_aa_bits 6
 
 #elif AA_BITS > 2
 #define AA_SCALE(x) (x * 17)
 #define fz_aa_hscale 5
 #define fz_aa_vscale 3
-#define fz_aa_level 4
+#define fz_aa_bits 4
 
 #elif AA_BITS > 0
 #define AA_SCALE(x) ((x * 255) >> 2)
 #define fz_aa_hscale 2
 #define fz_aa_vscale 2
-#define fz_aa_level 2
+#define fz_aa_bits 2
 
 #else
 #define AA_SCALE(x) (x * 255)
 #define fz_aa_hscale 1
 #define fz_aa_vscale 1
-#define fz_aa_level 0
+#define fz_aa_bits 0
 
 #endif
 #endif
 
 int
-fz_get_aa_level(fz_context *ctx)
+fz_aa_level(fz_context *ctx)
 {
 	fz_aa_context *ctxaa = ctx->aa;
-	return fz_aa_level;
+	return fz_aa_bits;
 }
 
 void
@@ -105,37 +102,37 @@ fz_set_aa_level(fz_context *ctx, int level)
 {
 	fz_aa_context *ctxaa = ctx->aa;
 #ifdef AA_BITS
-	fz_warn(ctx, "anti-aliasing was compiled with a fixed precision of %d bits", fz_aa_level);
+	fz_warn(ctx, "anti-aliasing was compiled with a fixed precision of %d bits", fz_aa_bits);
 #else
 	if (level > 6)
 	{
 		fz_aa_hscale = 17;
 		fz_aa_vscale = 15;
-		fz_aa_level = 8;
+		fz_aa_bits = 8;
 	}
 	else if (level > 4)
 	{
 		fz_aa_hscale = 8;
 		fz_aa_vscale = 8;
-		fz_aa_level = 6;
+		fz_aa_bits = 6;
 	}
 	else if (level > 2)
 	{
 		fz_aa_hscale = 5;
 		fz_aa_vscale = 3;
-		fz_aa_level = 4;
+		fz_aa_bits = 4;
 	}
 	else if (level > 0)
 	{
 		fz_aa_hscale = 2;
 		fz_aa_vscale = 2;
-		fz_aa_level = 2;
+		fz_aa_bits = 2;
 	}
 	else
 	{
 		fz_aa_hscale = 1;
 		fz_aa_vscale = 1;
-		fz_aa_level = 0;
+		fz_aa_bits = 0;
 	}
 	fz_aa_scale = 0xFF00 / (fz_aa_hscale * fz_aa_vscale);
 #endif
@@ -801,7 +798,7 @@ fz_scan_convert(fz_gel *gel, int eofill, fz_bbox clip,
 {
 	fz_aa_context *ctxaa = gel->ctx->aa;
 
-	if (fz_aa_level > 0)
+	if (fz_aa_bits > 0)
 		fz_scan_convert_aa(gel, eofill, clip, dst, color);
 	else
 		fz_scan_convert_sharp(gel, eofill, clip, dst, color);

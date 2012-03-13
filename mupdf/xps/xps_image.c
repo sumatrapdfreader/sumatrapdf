@@ -1,5 +1,4 @@
-#include "fitz-internal.h"
-#include "muxps.h"
+#include "muxps-internal.h"
 
 typedef struct xps_image_s xps_image;
 

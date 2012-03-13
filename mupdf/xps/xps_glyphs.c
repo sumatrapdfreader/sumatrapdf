@@ -1,5 +1,4 @@
-#include "fitz-internal.h"
-#include "muxps.h"
+#include "muxps-internal.h"
 
 #include <ft2build.h>
 #include FT_FREETYPE_H

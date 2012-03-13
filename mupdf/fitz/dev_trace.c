@@ -145,7 +145,7 @@ fz_trace_fill_text(fz_device *dev, fz_text *text, fz_matrix ctm,
 	fz_trace_matrix(ctm);
 	fz_trace_trm(text->trm);
 	printf(">\n");
-	fz_debug_text(dev->ctx, text, 0);
+	fz_print_text(dev->ctx, stdout, text);
 	printf("</fill_text>\n");
 }
 
@@ -158,7 +158,7 @@ fz_trace_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *stroke, fz_
 	fz_trace_matrix(ctm);
 	fz_trace_trm(text->trm);
 	printf(">\n");
-	fz_debug_text(dev->ctx, text, 0);
+	fz_print_text(dev->ctx, stdout, text);
 	printf("</stroke_text>\n");
 }
 
@@ -170,7 +170,7 @@ fz_trace_clip_text(fz_device *dev, fz_text *text, fz_matrix ctm, int accumulate)
 	fz_trace_matrix(ctm);
 	fz_trace_trm(text->trm);
 	printf(">\n");
-	fz_debug_text(dev->ctx, text, 0);
+	fz_print_text(dev->ctx, stdout, text);
 	printf("</clip_text>\n");
 }
 
@@ -181,7 +181,7 @@ fz_trace_clip_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *stroke
 	fz_trace_matrix(ctm);
 	fz_trace_trm(text->trm);
 	printf(">\n");
-	fz_debug_text(dev->ctx, text, 0);
+	fz_print_text(dev->ctx, stdout, text);
 	printf("</clip_stroke_text>\n");
 }
 
@@ -192,7 +192,7 @@ fz_trace_ignore_text(fz_device *dev, fz_text *text, fz_matrix ctm)
 	fz_trace_matrix(ctm);
 	fz_trace_trm(text->trm);
 	printf(">\n");
-	fz_debug_text(dev->ctx, text, 0);
+	fz_print_text(dev->ctx, stdout, text);
 	printf("</ignore_text>\n");
 }
 

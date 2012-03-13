@@ -51,7 +51,7 @@ render(char *filename, int pagenumber, int zoom, int rotation)
 	// space has the origin at the top left corner and the x axis
 	// extends to the right and the y axis extends down.
 
-	fz_pixmap *pix = fz_new_pixmap_with_rect(ctx, fz_device_rgb, bbox);
+	fz_pixmap *pix = fz_new_pixmap_with_bbox(ctx, fz_device_rgb, bbox);
 	fz_clear_pixmap_with_value(ctx, pix, 0xff);
 
 	// A page consists of a series of objects (text, line art, images,

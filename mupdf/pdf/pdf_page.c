@@ -140,7 +140,7 @@ pdf_count_pages(pdf_document *xref)
 }
 
 int
-pdf_find_page_number(pdf_document *xref, pdf_obj *page)
+pdf_lookup_page_number(pdf_document *xref, pdf_obj *page)
 {
 	int i, num = pdf_to_num(page);
 

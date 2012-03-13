@@ -89,7 +89,7 @@ int fz_pixmap_components(fz_context *ctx, fz_pixmap *pix)
 	return pix->n;
 }
 
-unsigned char *fz_pixmap_pixels(fz_context *ctx, fz_pixmap *pix)
+unsigned char *fz_pixmap_samples(fz_context *ctx, fz_pixmap *pix)
 {
 	if (!pix)
 		return NULL;

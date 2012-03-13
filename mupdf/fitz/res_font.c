@@ -505,7 +505,7 @@ fz_render_ft_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm, int a
 		FT_Outline_Translate(&face->glyph->outline, -strength * 32, -strength * 32);
 	}
 
-	fterr = FT_Render_Glyph(face->glyph, fz_get_aa_level(ctx) > 0 ? FT_RENDER_MODE_NORMAL : FT_RENDER_MODE_MONO);
+	fterr = FT_Render_Glyph(face->glyph, fz_aa_level(ctx) > 0 ? FT_RENDER_MODE_NORMAL : FT_RENDER_MODE_MONO);
 	if (fterr)
 	{
 		fz_warn(ctx, "freetype render glyph (gid %d): %s", gid, ft_error_string(fterr));
@@ -609,7 +609,7 @@ fz_render_ft_stroked_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix tr
 
 	FT_Stroker_Done(stroker);
 
-	fterr = FT_Glyph_To_Bitmap(&glyph, fz_get_aa_level(ctx) > 0 ? FT_RENDER_MODE_NORMAL : FT_RENDER_MODE_MONO, 0, 1);
+	fterr = FT_Glyph_To_Bitmap(&glyph, fz_aa_level(ctx) > 0 ? FT_RENDER_MODE_NORMAL : FT_RENDER_MODE_MONO, 0, 1);
 	if (fterr)
 	{
 		fz_warn(ctx, "FT_Glyph_To_Bitmap: %s", ft_error_string(fterr));
@@ -790,7 +790,7 @@ fz_render_t3_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm, fz_co
 	bbox.x1++;
 	bbox.y1++;
 
-	glyph = fz_new_pixmap_with_rect(ctx, model ? model : fz_device_gray, bbox);
+	glyph = fz_new_pixmap_with_bbox(ctx, model ? model : fz_device_gray, bbox);
 	fz_clear_pixmap(ctx, glyph);
 
 	ctm = fz_concat(font->t3matrix, trm);
@@ -842,29 +842,29 @@ fz_render_t3_glyph_direct(fz_context *ctx, fz_device *dev, fz_font *font, int gi
 }
 
 void
-fz_debug_font(fz_context *ctx, fz_font *font)
+fz_print_font(fz_context *ctx, FILE *out, fz_font *font)
 {
-	printf("font '%s' {\n", font->name);
+	fprintf(out, "font '%s' {\n", font->name);
 
 	if (font->ft_face)
 	{
-		printf("\tfreetype face %p\n", font->ft_face);
+		fprintf(out, "\tfreetype face %p\n", font->ft_face);
 		if (font->ft_substitute)
-			printf("\tsubstitute font\n");
+			fprintf(out, "\tsubstitute font\n");
 	}
 
 	if (font->t3procs)
 	{
-		printf("\ttype3 matrix [%g %g %g %g]\n",
+		fprintf(out, "\ttype3 matrix [%g %g %g %g]\n",
 			font->t3matrix.a, font->t3matrix.b,
 			font->t3matrix.c, font->t3matrix.d);
 
-		printf("\ttype3 bbox [%g %g %g %g]\n",
+		fprintf(out, "\ttype3 bbox [%g %g %g %g]\n",
 			font->bbox.x0, font->bbox.y0,
 			font->bbox.x1, font->bbox.y1);
 	}
 
-	printf("}\n");
+	fprintf(out, "}\n");
 }
 
 fz_rect

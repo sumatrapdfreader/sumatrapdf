@@ -371,7 +371,7 @@ static FT_UInt ft2gsub_get_gid(const struct ft2vert_st *ft2vert, const FT_UInt g
 }
 
 
-int pdf_ft_get_vgid(fz_context *ctx, pdf_font_desc *fontdesc, int gid)
+int pdf_ft_lookup_vgid(fz_context *ctx, pdf_font_desc *fontdesc, int gid)
 {
 	int vgid = 0;
 	if (!fontdesc->_vsubst)

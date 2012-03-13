@@ -618,7 +618,7 @@ pdf_has_permission(pdf_document *xref, int p)
 }
 
 unsigned char *
-pdf_get_crypt_key(pdf_document *xref)
+pdf_crypt_key(pdf_document *xref)
 {
 	if (xref->crypt)
 		return xref->crypt->key;
@@ -626,7 +626,7 @@ pdf_get_crypt_key(pdf_document *xref)
 }
 
 int
-pdf_get_crypt_revision(pdf_document *xref)
+pdf_crypt_revision(pdf_document *xref)
 {
 	if (xref->crypt)
 		return xref->crypt->v;
@@ -634,7 +634,7 @@ pdf_get_crypt_revision(pdf_document *xref)
 }
 
 char *
-pdf_get_crypt_method(pdf_document *xref)
+pdf_crypt_method(pdf_document *xref)
 {
 	if (xref->crypt)
 	{
@@ -651,7 +651,7 @@ pdf_get_crypt_method(pdf_document *xref)
 }
 
 int
-pdf_get_crypt_length(pdf_document *xref)
+pdf_crypt_length(pdf_document *xref)
 {
 	if (xref->crypt)
 		return xref->crypt->length;
@@ -822,7 +822,7 @@ pdf_open_crypt_with_filter(fz_stream *chain, pdf_crypt *crypt, char *name, int n
 	return chain;
 }
 
-void pdf_debug_crypt(pdf_crypt *crypt)
+void pdf_print_crypt(pdf_crypt *crypt)
 {
 	int i;
 

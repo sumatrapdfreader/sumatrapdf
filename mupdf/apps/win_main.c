@@ -355,11 +355,10 @@ void winblitsearch()
 
 void winblit()
 {
-	fz_bbox bb = fz_bound_pixmap(gapp.image);
-	int image_w = bb.x1-bb.x0;
-	int image_h = bb.y1-bb.y0;
+	int image_w = fz_pixmap_width(gapp.ctx, gapp.image);
+	int image_h = fz_pixmap_height(gapp.ctx, gapp.image);
 	int image_n = fz_pixmap_components(context, gapp.image);
-	unsigned char *samples = fz_pixmap_pixels(context, gapp.image);
+	unsigned char *samples = fz_pixmap_samples(context, gapp.image);
 	int x0 = gapp.panx;
 	int y0 = gapp.pany;
 	int x1 = gapp.panx + image_w;
@@ -380,7 +379,7 @@ void winblit()
 		dibinf->bmiHeader.biHeight = -image_h;
 		dibinf->bmiHeader.biSizeImage = image_h * 4;
 
-		if (gapp.image->n == 2)
+		if (image_n == 2)
 		{
 			int i = image_w * image_h;
 			unsigned char *color = malloc(i*4);
@@ -398,7 +397,7 @@ void winblit()
 				dibinf, DIB_RGB_COLORS);
 			free(color);
 		}
-		if (gapp.image->n == 4)
+		if (image_n == 4)
 		{
 			SetDIBitsToDevice(hdc,
 				gapp.panx, gapp.pany, image_w, image_h,

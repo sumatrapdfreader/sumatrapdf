@@ -79,8 +79,8 @@ void pdf_dict_dels(pdf_obj *dict, char *key);
 void pdf_sort_dict(pdf_obj *dict);
 
 int pdf_fprint_obj(FILE *fp, pdf_obj *obj, int tight);
-void pdf_debug_obj(pdf_obj *obj);
-void pdf_debug_ref(pdf_obj *obj);
+void pdf_print_obj(pdf_obj *obj);
+void pdf_print_ref(pdf_obj *obj);
 
 char *pdf_to_utf8(fz_context *ctx, pdf_obj *src);
 unsigned short *pdf_to_ucs2(fz_context *ctx, pdf_obj *src); /* sumatrapdf */
@@ -166,7 +166,7 @@ int pdf_has_permission(pdf_document *doc, int p);
 
 typedef struct pdf_page_s pdf_page;
 
-int pdf_find_page_number(pdf_document *doc, pdf_obj *pageobj);
+int pdf_lookup_page_number(pdf_document *doc, pdf_obj *pageobj);
 int pdf_count_pages(pdf_document *doc);
 
 /*

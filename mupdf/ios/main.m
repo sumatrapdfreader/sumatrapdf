@@ -216,7 +216,7 @@ static UIImage *renderPage(struct document *doc, int number, CGSize screenSize)
 	ctm = fz_scale(scale.width, scale.height);
 	bbox = (fz_bbox){0, 0, pageSize.width * scale.width, pageSize.height * scale.height};
 
-	pix = fz_new_pixmap_with_rect(ctx, fz_device_rgb, bbox);
+	pix = fz_new_pixmap_with_bbox(ctx, fz_device_rgb, bbox);
 	fz_clear_pixmap_with_value(ctx, pix, 255);
 
 	dev = fz_new_draw_device(ctx, pix);
@@ -253,7 +253,7 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 	rect.y1 = tileRect.origin.y + tileRect.size.height;
 	bbox = fz_round_rect(rect);
 
-	pix = fz_new_pixmap_with_rect(ctx, fz_device_rgb, bbox);
+	pix = fz_new_pixmap_with_bbox(ctx, fz_device_rgb, bbox);
 	fz_clear_pixmap_with_value(ctx, pix, 255);
 
 	dev = fz_new_draw_device(ctx, pix);

@@ -40,7 +40,7 @@ pdf_debug_key(void *key_)
 	{
 		printf("(%d %d R) ", pdf_to_num(key), pdf_to_gen(key));
 	} else
-		pdf_debug_obj(key);
+		pdf_print_obj(key);
 }
 
 static fz_store_type pdf_obj_store_type =

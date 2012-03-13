@@ -1,5 +1,4 @@
-#include "fitz-internal.h"
-#include "muxps.h"
+#include "muxps-internal.h"
 
 #define MAX_STOPS 256
 
@@ -321,9 +320,9 @@ xps_draw_radial_gradient(xps_document *doc, fz_matrix ctm, fz_rect area,
 	yrad = 1.0;
 
 	if (origin_att)
-		xps_get_point(origin_att, &x0, &y0);
+		xps_parse_point(origin_att, &x0, &y0);
 	if (center_att)
-		xps_get_point(center_att, &x1, &y1);
+		xps_parse_point(center_att, &x1, &y1);
 	if (radius_x_att)
 		xrad = fz_atof(radius_x_att);
 	if (radius_y_att)
@@ -395,9 +394,9 @@ xps_draw_linear_gradient(xps_document *doc, fz_matrix ctm, fz_rect area,
 	x1 = y1 = 1;
 
 	if (start_point_att)
-		xps_get_point(start_point_att, &x0, &y0);
+		xps_parse_point(start_point_att, &x0, &y0);
 	if (end_point_att)
-		xps_get_point(end_point_att, &x1, &y1);
+		xps_parse_point(end_point_att, &x1, &y1);
 
 	/* SumatraPDF: repeat and reflect gradients */
 	p1.x = x0; p1.y = y0; p2.x = x1; p2.y = y1;
