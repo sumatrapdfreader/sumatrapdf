@@ -20,16 +20,16 @@ _TEXT segment use32 para public 'CODE'
 
     public  __ftol2_sse
     public  _stricmp
-    public  ___iob_func
-    public _strnicmp
-    public _vsnprintf
+    public  _strnicmp
+    public  _vsnprintf
     public  __chkstk
-    public __alloca_probe
-    public ___CxxFrameHandler3
-    public __CxxThrowException@8
-    public ___CxxLongjmpUnwind@4
-    public _msvcrt_vswprintf
-    public __except_handler4
+    public  __alloca_probe
+    public  ___iob_func
+    public  ___CxxFrameHandler3
+    public  __CxxThrowException@8
+    public  ___CxxLongjmpUnwind@4
+    public  _msvcrt_vswprintf
+    public  __except_handler4
 
     extrn __imp___ftol:dword
     extrn __imp___stricmp:dword

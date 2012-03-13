@@ -36,6 +36,7 @@ EXPORTS
        _HUGE DATA
        _hypot
        _initterm
+       _isnan
        _localtime64
        _lseek
        _lseeki64
