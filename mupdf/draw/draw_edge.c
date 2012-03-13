@@ -1,4 +1,4 @@
-#include "fitz.h"
+#include "fitz-internal.h"
 
 #define BBOX_MIN -(1<<20)
 #define BBOX_MAX (1<<20)
@@ -39,6 +39,12 @@ void fz_new_aa_context(fz_context *ctx)
 #define AA_SCALE(x) ((x * fz_aa_scale) >> 8)
 
 #endif
+}
+
+void fz_copy_aa_context(fz_context *dst, fz_context *src)
+{
+	if (dst && src)
+		memcpy(dst, src, sizeof(*src));
 }
 
 void fz_free_aa_context(fz_context *ctx)

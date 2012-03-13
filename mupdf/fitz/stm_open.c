@@ -1,4 +1,4 @@
-#include "fitz.h"
+#include "fitz-internal.h"
 
 fz_stream *
 fz_new_stream(fz_context *ctx, void *state,

@@ -1,5 +1,5 @@
-#include "fitz.h"
-#include "mupdf.h"
+#include "fitz-internal.h"
+#include "mupdf-internal.h"
 
 static pdf_obj *
 pdf_lookup_name_imp(fz_context *ctx, pdf_obj *node, pdf_obj *needle)

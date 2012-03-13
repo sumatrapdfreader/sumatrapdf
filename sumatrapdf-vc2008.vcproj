@@ -937,6 +937,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\mupdf\fitz\fitz-internal.h"
+					>
+				</File>
+				<File
 					RelativePath=".\mupdf\fitz\fitz.h"
 					>
 				</File>
@@ -949,7 +953,15 @@
 					>
 				</File>
 				<File
+					RelativePath=".\mupdf\fitz\image_md5.c"
+					>
+				</File>
+				<File
 					RelativePath=".\mupdf\fitz\image_png.c"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\fitz\image_save.c"
 					>
 				</File>
 				<File
@@ -1066,6 +1078,10 @@
 				</File>
 				<File
 					RelativePath=".\mupdf\pdf\data_glyphlist.h"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\pdf\mupdf-internal.h"
 					>
 				</File>
 				<File

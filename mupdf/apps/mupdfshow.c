@@ -2,8 +2,7 @@
  * pdfshow -- the ultimate pdf debugging tool
  */
 
-#include "fitz.h"
-#include "mupdf.h"
+#include "mupdf-internal.h"
 
 static pdf_document *doc = NULL;
 static fz_context *ctx = NULL;
@@ -145,7 +144,7 @@ static void showgrep(char *filename)
 	pdf_obj *obj;
 	int i;
 
-	for (i = 0; i < doc->len; i++)
+	for (i = 0; i < pdf_count_objects(doc); i++)
 	{
 		if (doc->table[i].type == 'n' || doc->table[i].type == 'o')
 		{

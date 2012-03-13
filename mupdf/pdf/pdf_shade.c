@@ -1,5 +1,5 @@
-#include "fitz.h"
-#include "mupdf.h"
+#include "fitz-internal.h"
+#include "mupdf-internal.h"
 
 #define HUGENUM 32000 /* how far to extend axial/radial shadings */
 #define FUNSEGS 32 /* size of sampled mesh for function-based shadings */

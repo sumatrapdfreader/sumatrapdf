@@ -1,4 +1,4 @@
-#include "fitz.h"
+#include "fitz-internal.h"
 
 fz_shade *
 fz_keep_shade(fz_context *ctx, fz_shade *shade)

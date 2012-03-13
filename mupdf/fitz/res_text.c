@@ -1,4 +1,4 @@
-#include "fitz.h"
+#include "fitz-internal.h"
 
 fz_text *
 fz_new_text(fz_context *ctx, fz_font *font, fz_matrix trm, int wmode)

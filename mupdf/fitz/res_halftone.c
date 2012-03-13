@@ -1,4 +1,4 @@
-#include "fitz.h"
+#include "fitz-internal.h"
 
 fz_halftone *
 fz_new_halftone(fz_context *ctx, int comps)
@@ -162,13 +162,18 @@ fz_bitmap *fz_halftone_pixmap(fz_context *ctx, fz_pixmap *pix, fz_halftone *ht)
 	fz_bitmap *out;
 	unsigned char *ht_line, *o, *p;
 	int w, h, x, y, n, pstride, ostride;
+	fz_halftone *ht_orig = ht;
 
-	if (!pix || !ht)
+	if (!pix)
 		return NULL;
 
 	assert(pix->n == 2); /* Mono + Alpha */
 
 	n = pix->n-1; /* Remove alpha */
+	if (ht == NULL)
+	{
+		ht = fz_get_default_halftone(ctx, n);
+	}
 	ht_line = fz_malloc(ctx, pix->w * n);
 	out = fz_new_bitmap(ctx, pix->w, pix->h, n);
 	o = out->samples;
@@ -187,5 +192,7 @@ fz_bitmap *fz_halftone_pixmap(fz_context *ctx, fz_pixmap *pix, fz_halftone *ht)
 		o += ostride;
 		p += pstride;
 	}
+	if (!ht_orig)
+		fz_drop_halftone(ctx, ht);
 	return out;
 }

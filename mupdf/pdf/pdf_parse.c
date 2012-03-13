@@ -1,5 +1,5 @@
-#include "fitz.h"
-#include "mupdf.h"
+#include "fitz-internal.h"
+#include "mupdf-internal.h"
 
 fz_rect
 pdf_to_rect(fz_context *ctx, pdf_obj *array)
@@ -45,7 +45,7 @@ pdf_to_utf8(fz_context *ctx, pdf_obj *src)
 		for (i = 2; i + 1 < srclen; i += 2)
 		{
 			ucs = srcptr[i] << 8 | srcptr[i+1];
-			dstlen += runelen(ucs);
+			dstlen += fz_runelen(ucs);
 		}
 
 		dstptr = dst = fz_malloc(ctx, dstlen + 1);
@@ -53,7 +53,7 @@ pdf_to_utf8(fz_context *ctx, pdf_obj *src)
 		for (i = 2; i + 1 < srclen; i += 2)
 		{
 			ucs = srcptr[i] << 8 | srcptr[i+1];
-			dstptr += runetochar(dstptr, &ucs);
+			dstptr += fz_runetochar(dstptr, ucs);
 		}
 	}
 	else if (srclen >= 2 && srcptr[0] == 255 && srcptr[1] == 254)
@@ -61,7 +61,7 @@ pdf_to_utf8(fz_context *ctx, pdf_obj *src)
 		for (i = 2; i + 1 < srclen; i += 2)
 		{
 			ucs = srcptr[i] | srcptr[i+1] << 8;
-			dstlen += runelen(ucs);
+			dstlen += fz_runelen(ucs);
 		}
 
 		dstptr = dst = fz_malloc(ctx, dstlen + 1);
@@ -69,20 +69,20 @@ pdf_to_utf8(fz_context *ctx, pdf_obj *src)
 		for (i = 2; i + 1 < srclen; i += 2)
 		{
 			ucs = srcptr[i] | srcptr[i+1] << 8;
-			dstptr += runetochar(dstptr, &ucs);
+			dstptr += fz_runetochar(dstptr, ucs);
 		}
 	}
 	else
 	{
 		for (i = 0; i < srclen; i++)
-			dstlen += runelen(pdf_doc_encoding[srcptr[i]]);
+			dstlen += fz_runelen(pdf_doc_encoding[srcptr[i]]);
 
 		dstptr = dst = fz_malloc(ctx, dstlen + 1);
 
 		for (i = 0; i < srclen; i++)
 		{
 			ucs = pdf_doc_encoding[srcptr[i]];
-			dstptr += runetochar(dstptr, &ucs);
+			dstptr += fz_runetochar(dstptr, ucs);
 		}
 	}
 

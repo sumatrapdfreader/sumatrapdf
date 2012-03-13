@@ -317,7 +317,7 @@ void wintitle(pdfapp_t *app, char *title)
 	sp = title;
 	while (*sp && dp < wide + 255)
 	{
-		sp += chartorune(&rune, sp);
+		sp += fz_chartorune(&rune, sp);
 		*dp++ = rune;
 	}
 	*dp = 0;
@@ -355,10 +355,15 @@ void winblitsearch()
 
 void winblit()
 {
+	fz_bbox bb = fz_bound_pixmap(gapp.image);
+	int image_w = bb.x1-bb.x0;
+	int image_h = bb.y1-bb.y0;
+	int image_n = fz_pixmap_components(context, gapp.image);
+	unsigned char *samples = fz_pixmap_pixels(context, gapp.image);
 	int x0 = gapp.panx;
 	int y0 = gapp.pany;
-	int x1 = gapp.panx + gapp.image->w;
-	int y1 = gapp.pany + gapp.image->h;
+	int x1 = gapp.panx + image_w;
+	int y1 = gapp.pany + image_h;
 	RECT r;
 
 	if (gapp.image)
@@ -371,15 +376,15 @@ void winblit()
 
 		pdfapp_inverthit(&gapp);
 
-		dibinf->bmiHeader.biWidth = gapp.image->w;
-		dibinf->bmiHeader.biHeight = -gapp.image->h;
-		dibinf->bmiHeader.biSizeImage = gapp.image->h * 4;
+		dibinf->bmiHeader.biWidth = image_w;
+		dibinf->bmiHeader.biHeight = -image_h;
+		dibinf->bmiHeader.biSizeImage = image_h * 4;
 
 		if (gapp.image->n == 2)
 		{
-			int i = gapp.image->w * gapp.image->h;
+			int i = image_w * image_h;
 			unsigned char *color = malloc(i*4);
-			unsigned char *s = gapp.image->samples;
+			unsigned char *s = samples;
 			unsigned char *d = color;
 			for (; i > 0 ; i--)
 			{
@@ -388,16 +393,16 @@ void winblit()
 				d += 4;
 			}
 			SetDIBitsToDevice(hdc,
-				gapp.panx, gapp.pany, gapp.image->w, gapp.image->h,
-				0, 0, 0, gapp.image->h, color,
+				gapp.panx, gapp.pany, image_w, image_h,
+				0, 0, 0, image_h, color,
 				dibinf, DIB_RGB_COLORS);
 			free(color);
 		}
 		if (gapp.image->n == 4)
 		{
 			SetDIBitsToDevice(hdc,
-				gapp.panx, gapp.pany, gapp.image->w, gapp.image->h,
-				0, 0, 0, gapp.image->h, gapp.image->samples,
+				gapp.panx, gapp.pany, image_w, image_h,
+				0, 0, 0, image_h, samples,
 				dibinf, DIB_RGB_COLORS);
 		}
 

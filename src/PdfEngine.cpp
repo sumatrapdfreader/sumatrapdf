@@ -3,7 +3,7 @@
 
 extern "C" {
 __pragma(warning(push))
-#include <fitz.h>
+#include <fitz-internal.h>
 __pragma(warning(pop))
 }
 
@@ -106,7 +106,7 @@ RenderedFitzBitmap::RenderedFitzBitmap(fz_context *ctx, fz_pixmap *pixmap) :
     fz_pixmap *bgrPixmap;
     fz_try(ctx) {
         bgrPixmap = fz_new_pixmap_with_rect(ctx, fz_find_device_colorspace("DeviceBGR"), fz_bound_pixmap(pixmap));
-        fz_convert_pixmap(ctx, pixmap, bgrPixmap);
+        fz_convert_pixmap(ctx, bgrPixmap, pixmap);
     }
     fz_catch(ctx) {
         return;
@@ -247,12 +247,18 @@ void fz_stream_fingerprint(fz_stream *file, unsigned char digest[16])
     fz_drop_buffer(file->ctx, buffer);
 }
 
-TCHAR *fz_span_to_tchar(fz_text_span *text, TCHAR *lineSep, RectI **coords_out=NULL)
+TCHAR *fz_text_page_to_str(fz_text_page *text, TCHAR *lineSep, RectI **coords_out=NULL)
 {
     size_t lineSepLen = str::Len(lineSep);
     size_t textLen = 0;
-    for (fz_text_span *span = text; span; span = span->next)
-        textLen += span->len + lineSepLen;
+    for (fz_text_block *block = text->blocks; block < text->blocks + text->len; block++) {
+        for (fz_text_line *line = block->lines; line < block->lines + block->len; line++) {
+            for (fz_text_span *span = line->spans; span < line->spans + line->len; span++) {
+                textLen += span->len;
+            }
+            textLen += lineSepLen;
+        }
+    }
 
     TCHAR *content = SAZA(TCHAR, textLen + 1);
     if (!content)
@@ -268,28 +274,30 @@ TCHAR *fz_span_to_tchar(fz_text_span *text, TCHAR *lineSep, RectI **coords_out=N
     }
 
     TCHAR *dest = content;
-    for (fz_text_span *span = text; span; span = span->next) {
-        for (int i = 0; i < span->len; i++) {
+    for (fz_text_block *block = text->blocks; block < text->blocks + text->len; block++) {
+        for (fz_text_line *line = block->lines; line < block->lines + block->len; line++) {
+            for (fz_text_span *span = line->spans; span < line->spans + line->len; span++) {
+                for (int i = 0; i < span->len; i++) {
 #ifdef UNICODE
-            *dest = span->text[i].c;
+                    *dest = span->text[i].c;
 #else
-            WCHAR c = span->text[i].c;
-            if (!WideCharToMultiByte(CP_ACP, 0, &c, 1, dest, 1, NULL, NULL))
-                *dest = '?';
+                    WCHAR c = span->text[i].c;
+                    if (!WideCharToMultiByte(CP_ACP, 0, &c, 1, dest, 1, NULL, NULL))
+                        *dest = '?';
 #endif
-            if (*dest < 32)
-                *dest = '?';
-            dest++;
-            if (destRect)
-                *destRect++ = fz_bbox_to_RectI(span->text[i].bbox);
-        }
-        if (!span->eol && span->next)
-            continue;
-        lstrcpy(dest, lineSep);
-        dest += lineSepLen;
-        if (destRect) {
-            ZeroMemory(destRect, lineSepLen * sizeof(fz_bbox));
-            destRect += lineSepLen;
+                    if (*dest < 32)
+                        *dest = '?';
+                    dest++;
+                    if (destRect)
+                        *destRect++ = fz_rect_to_RectD(span->text[i].bbox).Round();
+                }
+            }
+            lstrcpy(dest, lineSep);
+            dest += lineSepLen;
+            if (destRect) {
+                ZeroMemory(destRect, lineSepLen * sizeof(fz_bbox));
+                destRect += lineSepLen;
+            }
         }
     }
 
@@ -640,7 +648,7 @@ static fz_device *fz_new_inspection_device(fz_context *ctx, ListInspectionData *
 }
 
 extern "C" {
-#include <mupdf.h>
+#include <mupdf-internal.h>
 }
 
 namespace str {
@@ -2043,17 +2051,21 @@ TCHAR *PdfEngineImpl::ExtractPageText(pdf_page *page, TCHAR *lineSep, RectI **co
     if (!page)
         return NULL;
 
-    fz_text_span *text = NULL;
+    fz_text_sheet *sheet = NULL;
+    fz_text_page *text = NULL;
     fz_device *dev;
+    fz_var(sheet);
     fz_var(text);
 
     EnterCriticalSection(&ctxAccess);
     fz_try(ctx) {
-        text = fz_new_text_span(ctx);
-        dev = fz_new_text_device(ctx, text);
+        sheet = fz_new_text_sheet(ctx);
+        text = fz_new_text_page(ctx, pdf_bound_page(_doc, page));
+        dev = fz_new_text_device(ctx, sheet, text);
     }
     fz_catch(ctx) {
-        fz_free_text_span(ctx, text);
+        fz_free_text_page(ctx, text);
+        fz_free_text_sheet(ctx, sheet);
         LeaveCriticalSection(&ctxAccess);
         return NULL;
     }
@@ -2068,8 +2080,9 @@ TCHAR *PdfEngineImpl::ExtractPageText(pdf_page *page, TCHAR *lineSep, RectI **co
 
     TCHAR *content = NULL;
     if (ok)
-        content = fz_span_to_tchar(text, lineSep, coords_out);
-    fz_free_text_span(ctx, text);
+        content = fz_text_page_to_str(text, lineSep, coords_out);
+    fz_free_text_page(ctx, text);
+    fz_free_text_sheet(ctx, sheet);
 
     return content;
 }
@@ -3171,17 +3184,21 @@ TCHAR *XpsEngineImpl::ExtractPageText(xps_page *page, TCHAR *lineSep, RectI **co
     if (!page)
         return NULL;
 
-    fz_text_span *text = NULL;
+    fz_text_sheet *sheet = NULL;
+    fz_text_page *text = NULL;
     fz_device *dev;
+    fz_var(sheet);
     fz_var(text);
 
     EnterCriticalSection(&ctxAccess);
     fz_try(ctx) {
-        text = fz_new_text_span(ctx);
-        dev = fz_new_text_device(ctx, text);
+        sheet = fz_new_text_sheet(ctx);
+        text = fz_new_text_page(ctx, xps_bound_page(_doc, page));
+        dev = fz_new_text_device(ctx, sheet, text);
     }
     fz_catch(ctx) {
-        fz_free_text_span(ctx, text);
+        fz_free_text_page(ctx, text);
+        fz_free_text_sheet(ctx, sheet);
         LeaveCriticalSection(&ctxAccess);
         return NULL;
     }
@@ -3194,8 +3211,9 @@ TCHAR *XpsEngineImpl::ExtractPageText(xps_page *page, TCHAR *lineSep, RectI **co
 
     ScopedCritSec scope(&ctxAccess);
 
-    TCHAR *content = fz_span_to_tchar(text, lineSep, coords_out);
-    fz_free_text_span(ctx, text);
+    TCHAR *content = fz_text_page_to_str(text, lineSep, coords_out);
+    fz_free_text_page(ctx, text);
+    fz_free_text_sheet(ctx, sheet);
 
     return content;
 }

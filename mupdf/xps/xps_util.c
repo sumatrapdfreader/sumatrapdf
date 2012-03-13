@@ -1,4 +1,4 @@
-#include "fitz.h"
+#include "fitz-internal.h"
 #include "muxps.h"
 
 static inline int xps_tolower(int c)

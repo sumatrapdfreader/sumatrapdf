@@ -22,6 +22,12 @@
 
 extern int ffs(int);
 
+static int is_big_endian(void)
+{
+	static const int one = 1;
+	return *(char*)&one == 0;
+}
+
 typedef void (*ximage_convert_func_t)
 (
 	const unsigned char *src,
@@ -212,7 +218,7 @@ select_mode(void)
 	unsigned long rs, gs, bs;
 
 	byteorder = ImageByteOrder(info.display);
-	if (fz_is_big_endian())
+	if (is_big_endian())
 		byterev = byteorder != MSBFirst;
 	else
 		byterev = byteorder != LSBFirst;

@@ -4,7 +4,7 @@
  */
 
 #include "fitz.h"
-#include "mupdf.h"
+#include "mupdf-internal.h"
 
 pdf_document *xref;
 fz_context *ctx;

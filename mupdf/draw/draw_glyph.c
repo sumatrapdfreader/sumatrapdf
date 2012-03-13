@@ -1,4 +1,4 @@
-#include "fitz.h"
+#include "fitz-internal.h"
 
 /* SumatraPDF: changed max font size from 1000 to 3000 */
 #define MAX_FONT_SIZE 3000
@@ -21,6 +21,7 @@ struct fz_glyph_key_s
 	int c, d;
 	unsigned short gid;
 	unsigned char e, f;
+	int aa;
 };
 
 void
@@ -129,6 +130,7 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix ctm, fz_color
 	key.d = ctm.d * 65536;
 	key.e = (ctm.e - floorf(ctm.e)) * 256;
 	key.f = (ctm.f - floorf(ctm.f)) * 256;
+	key.aa = fz_get_aa_level(ctx);
 
 	fz_lock(ctx, FZ_LOCK_GLYPHCACHE);
 	val = fz_hash_find(ctx, cache->hash, &key);
@@ -146,7 +148,7 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix ctm, fz_color
 	{
 		if (font->ft_face)
 		{
-			val = fz_render_ft_glyph(ctx, font, gid, ctm);
+			val = fz_render_ft_glyph(ctx, font, gid, ctm, key.aa);
 		}
 		else if (font->t3procs)
 		{

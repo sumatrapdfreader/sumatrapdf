@@ -1,4 +1,4 @@
-#include "fitz.h"
+#include "fitz-internal.h"
 
 /*
 Simple hashtable with open addressing linear probe.

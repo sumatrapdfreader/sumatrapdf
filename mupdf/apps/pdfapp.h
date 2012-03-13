@@ -1,3 +1,8 @@
+#ifndef PDFAPP_H
+#define PDFAPP_H
+
+#include "fitz.h"
+
 /*
  * Utility object for handling a pdf application / view
  * Takes care of PDF loading and displaying and navigation,
@@ -47,7 +52,8 @@ struct pdfapp_s
 	fz_page *page;
 	fz_rect page_bbox;
 	fz_display_list *page_list;
-	fz_text_span *page_text;
+	fz_text_page *page_text;
+	fz_text_sheet *page_sheet;
 	fz_link *page_links;
 
 	/* snapback history */
@@ -106,3 +112,5 @@ void pdfapp_onresize(pdfapp_t *app, int w, int h);
 
 void pdfapp_invert(pdfapp_t *app, fz_bbox rect);
 void pdfapp_inverthit(pdfapp_t *app);
+
+#endif

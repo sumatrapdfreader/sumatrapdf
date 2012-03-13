@@ -1,9 +1,9 @@
-#ifndef _FITZ_H_
-#define _FITZ_H_
+#ifndef FITZ_H
+#define FITZ_H
 
 /*
- * Include the standard libc headers.
- */
+	Include the standard libc headers.
+*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,7 +15,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <limits.h>	/* INT_MAX & co */
-#include <float.h> /* FLT_EPSILON */
+#include <float.h> /* FLT_EPSILON, FLT_MAX & co */
 #include <fcntl.h> /* O_RDONLY & co */
 
 #include <setjmp.h>
@@ -27,6 +27,12 @@
 #include "memento.h"
 #endif
 
+/*
+	Some versions of setjmp/longjmp (notably MacOSX and ios) store/restore
+	signal handlers too. We don't alter signal handlers within mupdf, so
+	there is no need for us to store/restore - hence we use the
+	non-restoring variants. This makes a large speed difference.
+*/
 #ifdef __APPLE__
 #define fz_setjmp _setjmp
 #define fz_longjmp _longjmp
@@ -51,10 +57,11 @@
 #define MIN(a,b) ( (a) < (b) ? (a) : (b) )
 #define MAX(a,b) ( (a) > (b) ? (a) : (b) )
 #define CLAMP(x,a,b) ( (x) > (b) ? (b) : ( (x) < (a) ? (a) : (x) ) )
+#define DIV_BY_ZERO(a, b, min, max) (((a) < 0) ^ ((b) < 0) ? (min) : (max))
 
 /*
- * Some differences in libc can be smoothed over
- */
+	Some differences in libc can be smoothed over
+*/
 
 #ifdef _MSC_VER /* Microsoft Visual C */
 
@@ -67,6 +74,7 @@
 int gettimeofday(struct timeval *tv, struct timezone *tz);
 
 #define snprintf _snprintf
+#define isnan _isnan
 
 #else /* Unix or close enough */
 
@@ -87,8 +95,8 @@ int gettimeofday(struct timeval *tv, struct timezone *tz);
 #endif
 
 /*
- * Variadic macros, inline and restrict keywords
- */
+	Variadic macros, inline and restrict keywords
+*/
 
 #if __STDC_VERSION__ == 199901L /* C99 */
 #elif _MSC_VER >= 1500 /* MSVC 9 or newer */
@@ -103,8 +111,8 @@ int gettimeofday(struct timeval *tv, struct timezone *tz);
 #endif
 
 /*
- * GCC can do type checking of printf strings
- */
+	GCC can do type checking of printf strings
+*/
 
 #ifndef __printflike
 #if __GNUC__ > 2 || __GNUC__ == 2 && __GNUC_MINOR__ >= 7
@@ -135,9 +143,6 @@ struct fz_alloc_context_s
 	void (*free)(void *, void *);
 };
 
-/* Default allocator */
-extern fz_alloc_context fz_alloc_default;
-
 struct fz_error_context_s
 {
 	int top;
@@ -151,8 +156,10 @@ struct fz_error_context_s
 void fz_var_imp(void *);
 #define fz_var(var) fz_var_imp((void *)&(var))
 
-/* Exception macro definitions. Just treat these as a black box - pay no
- * attention to the man behind the curtain. */
+/*
+	Exception macro definitions. Just treat these as a black box - pay no
+	attention to the man behind the curtain.
+*/
 
 #define fz_try(ctx) \
 	if (fz_push_try(ctx->error), \
@@ -169,78 +176,11 @@ void fz_var_imp(void *);
 	} \
 	if (ctx->error->stack[ctx->error->top--].code)
 
-/*
-
-We also include a couple of other formulations of the macros, with
-different strengths and weaknesses. These will be removed shortly, but
-I want them in git for at least 1 revision so I have a record of them.
-
-A formulation of try/always/catch that lifts limitation 2 above, but
-has problems when try/catch are nested in the same function; the inner
-nestings need to use fz_always_(ctx, label) and fz_catch_(ctx, label)
-instead. This was held as too high a price to pay to drop limitation 2.
-
-#define fz_try(ctx) \
-	if (fz_push_try(ctx->error), \
-		(ctx->error->stack[ctx->error->top].code = fz_setjmp(ctx->error->stack[ctx->error->top].buffer)) == 0) \
-	{ do {
-
-#define fz_always_(ctx, label) \
-		} while (0); \
-		goto ALWAYS_LABEL_ ## label ; \
-	} \
-	else if (ctx->error->stack[ctx->error->top].code) \
-	{ ALWAYS_LABEL_ ## label : \
-		do {
-
-#define fz_catch_(ctx, label) \
-		} while(0); \
-		if (ctx->error->stack[ctx->error->top--].code) \
-			goto CATCH_LABEL_ ## label; \
-	} \
-	else if (ctx->error->top--, 1) \
-	CATCH_LABEL ## label:
-
-#define fz_always(ctx) fz_always_(ctx, TOP)
-#define fz_catch(ctx) fz_catch_(ctx, TOP)
-
-Another alternative formulation, that again removes limitation 2, but at
-the cost of an always block always costing us 1 extra longjmp per
-execution. Again this was felt to be too high a cost to use.
-
-#define fz_try(ctx) \
-	if (fz_push_try(ctx->error), \
-		(ctx->error->stack[ctx->error->top].code = fz_setjmp(ctx->error->stack[ctx->error->top].buffer)) == 0) \
-	{ do {
-
-#define fz_always(ctx) \
-		} while (0); \
-		fz_longjmp(ctx->error->stack[ctx->error->top].buffer, 3); \
-	} \
-	else if (ctx->error->stack[ctx->error->top].code & 1) \
-	{ do {
-
-#define fz_catch(ctx) \
-		} while(0); \
-		if (ctx->error->stack[ctx->error->top].code == 1) \
-			fz_longjmp(ctx->error->stack[ctx->error->top].buffer, 2); \
-		ctx->error->top--;\
-	} \
-	else if (ctx->error->top--, 1)
-*/
-
 void fz_push_try(fz_error_context *ex);
 /* SumatraPDF: add filename and line number to errors and warnings */
 #define fz_throw(CTX, MSG, ...) fz_throw_imp(CTX, __FILE__, __LINE__, MSG, __VA_ARGS__)
 void fz_throw_imp(fz_context *ctx, char *file, int line, char *fmt, ...) __printflike(4, 5);
 void fz_rethrow(fz_context *);
-
-struct fz_warn_context_s
-{
-	char message[256];
-	int count;
-};
-
 /* SumatraPDF: add filename and line number to errors and warnings */
 #define fz_warn(CTX, MSG, ...) fz_warn_imp(CTX, __FILE__, __LINE__, MSG, __VA_ARGS__)
 void fz_warn_imp(fz_context *ctx, char *file, int line, char *fmt, ...) __printflike(4, 5);
@@ -267,6 +207,20 @@ struct fz_context_s
 	fz_aa_context *aa;
 	fz_store *store;
 	fz_glyph_cache *glyph_cache;
+};
+
+/*
+	Specifies the maximum size in bytes of the resource store in
+	fz_context. Given as argument to fz_new_context.
+
+	FZ_STORE_UNLIMITED: Let resource store grow unbounded.
+
+	FZ_STORE_DEFAULT: A reasonable upper bound on the size, for
+	devices that are not memory constrained.
+*/
+enum {
+	FZ_STORE_UNLIMITED = 0,
+	FZ_STORE_DEFAULT = 256 << 20,
 };
 
 /*
@@ -315,7 +269,6 @@ fz_context *fz_new_context(fz_alloc_context *alloc, fz_locks_context *locks, uns
 	Does not throw exception, but may return NULL.
 */
 fz_context *fz_clone_context(fz_context *ctx);
-fz_context *fz_clone_context_internal(fz_context *ctx);
 
 /*
 	fz_free_context: Free a context and its global state.
@@ -328,8 +281,19 @@ fz_context *fz_clone_context_internal(fz_context *ctx);
 */
 void fz_free_context(fz_context *ctx);
 
-void fz_new_aa_context(fz_context *ctx);
-void fz_free_aa_context(fz_context *ctx);
+/*
+	fz_get_aa_level: Get the number of bits of antialiasing we are
+	using. Between 0 and 8.
+*/
+int fz_get_aa_level(fz_context *ctx);
+
+/*
+	fz_set_aa_level: Set the number of bits of antialiasing we should use.
+
+	bits: The number of bits of antialiasing to use (values are clamped
+	to within the 0 to 8 range).
+*/
+void fz_set_aa_level(fz_context *ctx, int bits);
 
 /*
 	Locking functions
@@ -352,15 +316,11 @@ void fz_free_aa_context(fz_context *ctx);
 	enabled by defining FITZ_DEBUG_LOCKING.
 */
 
-#if defined(MEMENTO) || defined(DEBUG)
-#define FITZ_DEBUG_LOCKING
-#endif
-
 struct fz_locks_context_s
 {
 	void *user;
-	void (*lock)(void *, int);
-	void (*unlock)(void *, int);
+	void (*lock)(void *user, int lock);
+	void (*unlock)(void *user, int lock);
 };
 
 enum {
@@ -371,57 +331,80 @@ enum {
 	FZ_LOCK_MAX
 };
 
-/* Default locks */
-extern fz_locks_context fz_locks_default;
+/*
+	Memory Allocation and Scavenging:
 
-#ifdef FITZ_DEBUG_LOCKING
+	All calls to MuPDFs allocator functions pass through to the
+	underlying allocators passed in when the initial context is
+	created, after locks are taken (using the supplied locking function)
+	to ensure that only one thread at a time calls through.
 
-void fz_assert_lock_held(fz_context *ctx, int lock);
-void fz_assert_lock_not_held(fz_context *ctx, int lock);
-void fz_lock_debug_lock(fz_context *ctx, int lock);
-void fz_lock_debug_unlock(fz_context *ctx, int lock);
+	If the underlying allocator fails, MuPDF attempts to make room for
+	the allocation by evicting elements from the store, then retrying.
 
-#else
-
-#define fz_assert_lock_held(A,B) do { } while (0)
-#define fz_assert_lock_not_held(A,B) do { } while (0)
-#define fz_lock_debug_lock(A,B) do { } while (0)
-#define fz_lock_debug_unlock(A,B) do { } while (0)
-
-#endif /* !FITZ_DEBUG_LOCKING */
-
-static inline void
-fz_lock(fz_context *ctx, int lock)
-{
-	fz_lock_debug_lock(ctx, lock);
-	ctx->locks->lock(ctx->locks->user, lock);
-}
-
-static inline void
-fz_unlock(fz_context *ctx, int lock)
-{
-	fz_lock_debug_unlock(ctx, lock);
-	ctx->locks->unlock(ctx->locks->user, lock);
-}
-
-/* SumatraPDF: basic global synchronizing */
-#ifdef _WIN32
-void fz_synchronize_begin();
-void fz_synchronize_end();
-#endif
-
+	Any call to allocate may then result in several calls to the underlying
+	allocator, and result in elements that are only referred to by the
+	store being freed.
+*/
 
 /*
- * Basic runtime and utility functions
- */
+	fz_malloc: Allocate a block of memory (with scavenging)
 
-/* memory allocation */
+	size: The number of bytes to allocate.
 
-/* The following throw exceptions on failure to allocate */
+	Returns a pointer to the allocated block. May return NULL if size is
+	0. Throws exception on failure to allocate.
+*/
 void *fz_malloc(fz_context *ctx, unsigned int size);
+
+/*
+	fz_calloc: Allocate a zeroed block of memory (with scavenging)
+
+	count: The number of objects to allocate space for.
+
+	size: The size (in bytes) of each object.
+
+	Returns a pointer to the allocated block. May return NULL if size
+	and/or count are 0. Throws exception on failure to allocate.
+*/
 void *fz_calloc(fz_context *ctx, unsigned int count, unsigned int size);
+
+/*
+	fz_malloc_array: Allocate a block of (non zeroed) memory (with
+	scavenging). Equivalent to fz_calloc without the memory clearing.
+
+	count: The number of objects to allocate space for.
+
+	size: The size (in bytes) of each object.
+
+	Returns a pointer to the allocated block. May return NULL if size
+	and/or count are 0. Throws exception on failure to allocate.
+*/
 void *fz_malloc_array(fz_context *ctx, unsigned int count, unsigned int size);
+
+/*
+	fz_resize_array: Resize a block of memory (with scavenging).
+
+	p: The existing block to resize
+
+	count: The number of objects to resize to.
+
+	size: The size (in bytes) of each object.
+
+	Returns a pointer to the resized block. May return NULL if size
+	and/or count are 0. Throws exception on failure to resize (original
+	block is left unchanged).
+*/
 void *fz_resize_array(fz_context *ctx, void *p, unsigned int count, unsigned int size);
+
+/*
+	fz_strdup: Duplicate a C string (with scavenging)
+
+	s: The string to duplicate.
+
+	Returns a pointer to a duplicated string. Throws exception on failure
+	to allocate.
+*/
 char *fz_strdup(fz_context *ctx, char *s);
 
 /*
@@ -431,32 +414,144 @@ char *fz_strdup(fz_context *ctx, char *s);
 */
 void fz_free(fz_context *ctx, void *p);
 
-/* The following returns NULL on failure to allocate */
+/*
+	fz_malloc_no_throw: Allocate a block of memory (with scavenging)
+
+	size: The number of bytes to allocate.
+
+	Returns a pointer to the allocated block. May return NULL if size is
+	0. Returns NULL on failure to allocate.
+*/
 void *fz_malloc_no_throw(fz_context *ctx, unsigned int size);
-void *fz_malloc_array_no_throw(fz_context *ctx, unsigned int count, unsigned int size);
+
+/*
+	fz_calloc_no_throw: Allocate a zeroed block of memory (with scavenging)
+
+	count: The number of objects to allocate space for.
+
+	size: The size (in bytes) of each object.
+
+	Returns a pointer to the allocated block. May return NULL if size
+	and/or count are 0. Returns NULL on failure to allocate.
+*/
 void *fz_calloc_no_throw(fz_context *ctx, unsigned int count, unsigned int size);
+
+/*
+	fz_malloc_array_no_throw: Allocate a block of (non zeroed) memory
+	(with scavenging). Equivalent to fz_calloc_no_throw without the
+	memory clearing.
+
+	count: The number of objects to allocate space for.
+
+	size: The size (in bytes) of each object.
+
+	Returns a pointer to the allocated block. May return NULL if size
+	and/or count are 0. Returns NULL on failure to allocate.
+*/
+void *fz_malloc_array_no_throw(fz_context *ctx, unsigned int count, unsigned int size);
+
+/*
+	fz_resize_array_no_throw: Resize a block of memory (with scavenging).
+
+	p: The existing block to resize
+
+	count: The number of objects to resize to.
+
+	size: The size (in bytes) of each object.
+
+	Returns a pointer to the resized block. May return NULL if size
+	and/or count are 0. Returns NULL on failure to resize (original
+	block is left unchanged).
+*/
 void *fz_resize_array_no_throw(fz_context *ctx, void *p, unsigned int count, unsigned int size);
+
+/*
+	fz_strdup_no_throw: Duplicate a C string (with scavenging)
+
+	s: The string to duplicate.
+
+	Returns a pointer to a duplicated string. Returns NULL on failure
+	to allocate.
+*/
 char *fz_strdup_no_throw(fz_context *ctx, char *s);
 
-/* alloc and zero a struct, and tag it for memento */
-#define fz_malloc_struct(CTX, STRUCT) \
-	Memento_label(fz_calloc(CTX,1,sizeof(STRUCT)), #STRUCT)
-
-/* runtime (hah!) test for endian-ness */
-int fz_is_big_endian(void);
-
 /* safe string functions */
+/*
+	fz_strsep: Given a pointer to a C string (or a pointer to NULL) break
+	it at the first occurence of a delimiter char (from a given set).
+
+	stringp: Pointer to a C string pointer (or NULL). Updated on exit to
+	point to the first char of the string after the delimiter that was
+	found. The string pointed to by stringp will be corrupted by this
+	call (as the found delimiter will be overwritten by 0).
+
+	delim: A C string of acceptable delimiter characters.
+
+	Returns a pointer to a C string containing the chars of stringp up
+	to the first delimiter char (or the end of the string), or NULL.
+*/
 char *fz_strsep(char **stringp, const char *delim);
+
+/*
+	fz_strlcpy: Copy at most n-1 chars of a string into a destination
+	buffer with null termination, returning the real length of the
+	initial string (excluding terminator).
+
+	dst: Destination buffer, at least n bytes long.
+
+	src: C string (non-NULL).
+
+	n: Size of dst buffer in bytes.
+
+	Returns the length (excluding terminator) of src.
+*/
 int fz_strlcpy(char *dst, const char *src, int n);
+
+/*
+	fz_strlcat: Concatenate 2 strings, with a maximum length.
+
+	dst: pointer to first string in a buffer of n bytes.
+
+	src: pointer to string to concatenate.
+
+	n: Size (in bytes) of buffer that dst is in.
+
+	Returns the real length that a concatenated dst + src would have been
+	(not including terminator).
+*/
 int fz_strlcat(char *dst, const char *src, int n);
 
-/* Range checking atof */
-float fz_atof(const char *s);
+/*
+	fz_chartorune: UTF8 decode a string of chars to a rune.
 
-/* utf-8 encoding and decoding */
-int chartorune(int *rune, char *str);
-int runetochar(char *str, int *rune);
-int runelen(int c);
+	rune: Pointer to an int to assign the decoded 'rune' to.
+
+	str: Pointer to a UTF8 encoded string
+
+	Returns the number of bytes consumed. Does not throw exceptions.
+*/
+int fz_chartorune(int *rune, char *str);
+
+/*
+	runetochar: UTF8 encode a run to a string of chars.
+
+	str: Pointer to a place to put the UTF8 encoded string.
+
+	rune: Pointer to a 'rune'.
+
+	Returns the number of bytes the rune took to output. Does not throw
+	exceptions.
+*/
+int fz_runetochar(char *str, int rune);
+
+/*
+	fz_runelen: Count many chars are required to represent a rune.
+
+	rune: The rune to encode.
+
+	Returns the number of bytes required to represent this run in UTF8.
+*/
+int fz_runelen(int rune);
 
 /* getopt */
 extern int fz_getopt(int nargc, char * const *nargv, const char *ostr);
@@ -464,56 +559,56 @@ extern int fz_optind;
 extern char *fz_optarg;
 
 /*
- * Generic hash-table with fixed-length keys.
- */
-
-typedef struct fz_hash_table_s fz_hash_table;
-
-fz_hash_table *fz_new_hash_table(fz_context *ctx, int initialsize, int keylen, int lock);
-void fz_debug_hash(fz_context *ctx, fz_hash_table *table);
-void fz_empty_hash(fz_context *ctx, fz_hash_table *table);
-void fz_free_hash(fz_context *ctx, fz_hash_table *table);
-
-void *fz_hash_find(fz_context *ctx, fz_hash_table *table, void *key);
-void *fz_hash_insert(fz_context *ctx, fz_hash_table *table, void *key, void *val);
-void fz_hash_remove(fz_context *ctx, fz_hash_table *table, void *key);
-
-int fz_hash_len(fz_context *ctx, fz_hash_table *table);
-void *fz_hash_get_key(fz_context *ctx, fz_hash_table *table, int idx);
-void *fz_hash_get_val(fz_context *ctx, fz_hash_table *table, int idx);
+	fz_point is a point in a two-dimensional space.
+*/
+typedef struct fz_point_s fz_point;
+struct fz_point_s
+{
+	float x, y;
+};
 
 /*
- * Math and geometry
- */
+	fz_rect is a rectangle represented by two diagonally opposite
+	corners at arbitrary coordinates.
 
-/* Multiply scaled two integers in the 0..255 range */
-static inline int fz_mul255(int a, int b)
-{
-	/* see Jim Blinn's book "Dirty Pixels" for how this works */
-	int x = a * b + 128;
-	x += x >> 8;
-	return x >> 8;
-}
+	Rectangles are always axis-aligned with the X- and Y- axes.
+	The relationship between the coordinates are that x0 <= x1 and
+	y0 <= y1 in all cases except for infinte rectangles. The area
+	of a rectangle is defined as (x1 - x0) * (y1 - y0). If either
+	x0 > x1 or y0 > y1 is true for a given rectangle then it is
+	defined to be infinite.
 
-/* Expand a value A from the 0...255 range to the 0..256 range */
-#define FZ_EXPAND(A) ((A)+((A)>>7))
+	To check for empty or infinite rectangles use fz_is_empty_rect
+	and fz_is_infinite_rect. Compare to fz_bbox which has corners
+	at integer coordinates.
 
-/* Combine values A (in any range) and B (in the 0..256 range),
- * to give a single value in the same range as A was. */
-#define FZ_COMBINE(A,B) (((A)*(B))>>8)
+	x0, y0: The top left corner.
 
-/* Combine values A and C (in the same (any) range) and B and D (in the
- * 0..256 range), to give a single value in the same range as A and C were. */
-#define FZ_COMBINE2(A,B,C,D) (FZ_COMBINE((A), (B)) + FZ_COMBINE((C), (D)))
-
-/* Blend SRC and DST (in the same range) together according to
- * AMOUNT (in the 0...256 range). */
-#define FZ_BLEND(SRC, DST, AMOUNT) ((((SRC)-(DST))*(AMOUNT) + ((DST)<<8))>>8)
-
-typedef struct fz_matrix_s fz_matrix;
-typedef struct fz_point_s fz_point;
+	x1, y1: The botton right corner.
+*/
 typedef struct fz_rect_s fz_rect;
+struct fz_rect_s
+{
+	float x0, y0;
+	float x1, y1;
+};
+
+/*
+	fz_bbox is a bounding box similar to a fz_rect, except that
+	all corner coordinates are rounded to integer coordinates.
+	To check for empty or infinite bounding boxes use
+	fz_is_empty_bbox and fz_is_infinite_bbox.
+
+	x0, y0: The top left corner.
+
+	x1, y1: The bottom right corner.
+*/
 typedef struct fz_bbox_s fz_bbox;
+struct fz_bbox_s
+{
+	int x0, y0;
+	int x1, y1;
+};
 
 /*
 	A rectangle with sides of length one.
@@ -558,7 +653,6 @@ extern const fz_bbox fz_infinite_bbox;
 
 	An empty rectangle is defined as one whose area is zero.
 */
-/* SumatraPDF: check both dimensions */
 #define fz_is_empty_rect(r) ((r).x0 == (r).x1 || (r).y0 == (r).y1)
 
 /*
@@ -567,7 +661,6 @@ extern const fz_bbox fz_infinite_bbox;
 	Same definition of empty bounding boxes as for empty
 	rectangles. See fz_is_empty_rect.
 */
-/* SumatraPDF: check both dimensions */
 #define fz_is_empty_bbox(b) ((b).x0 == (b).x1 || (b).y0 == (b).y1)
 
 /*
@@ -576,7 +669,7 @@ extern const fz_bbox fz_infinite_bbox;
 	An infinite rectangle is defined as one where either of the
 	two relationships between corner coordinates are not true.
 */
-#define fz_is_infinite_rect(r) ((r).x0 > (r).x1)
+#define fz_is_infinite_rect(r) ((r).x0 > (r).x1 || (r).y0 > (r).y1)
 
 /*
 	fz_is_infinite_bbox: Check if bounding box is infinite.
@@ -584,7 +677,7 @@ extern const fz_bbox fz_infinite_bbox;
 	Same definition of infinite bounding boxes as for infinite
 	rectangles. See fz_is_infinite_rect.
 */
-#define fz_is_infinite_bbox(b) ((b).x0 > (b).x1)
+#define fz_is_infinite_bbox(b) ((b).x0 > (b).x1 || (b).y0 > (b).y1)
 
 /*
 	fz_matrix is a a row-major 3x3 matrix used for representing
@@ -599,59 +692,12 @@ extern const fz_bbox fz_infinite_bbox;
 	| c d 0 |   normally represented as    [ a b c d e f ].
 	\ e f 1 /
 */
+typedef struct fz_matrix_s fz_matrix;
 struct fz_matrix_s
 {
 	float a, b, c, d, e, f;
 };
 
-/*
-	fz_point is a point in a two-dimensional space.
-*/
-struct fz_point_s
-{
-	float x, y;
-};
-
-/*
-	fz_rect is a rectangle represented by two diagonally opposite
-	corners at arbitrary coordinates.
-
-	Rectangles are always axis-aligned with the X- and Y- axes.
-	The relationship between the coordinates are that x0 <= x1 and
-	y0 <= y1 in all cases except for infinte rectangles. The area
-	of a rectangle is defined as (x1 - x0) * (y1 - y0). If either
-	x0 > x1 or y0 > y1 is true for a given rectangle then it is
-	defined to be infinite.
-
-	To check for empty or infinite rectangles use fz_is_empty_rect
-	and fz_is_infinite_rect. Compare to fz_bbox which has corners
-	at integer coordinates.
-
-	x0, y0: The top left corner.
-
-	x1, y1: The botton right corner.
-*/
-struct fz_rect_s
-{
-	float x0, y0;
-	float x1, y1;
-};
-
-/*
-	fz_bbox is a bounding box similar to a fz_rect, except that
-	all corner coordinates are rounded to integer coordinates.
-	To check for empty or infinite bounding boxes use
-	fz_is_empty_bbox and fz_is_infinite_bbox.
-
-	x0, y0: The top left corner.
-
-	x1, y1: The botton right corner.
-*/
-struct fz_bbox_s
-{
-	int x0, y0;
-	int x1, y1;
-};
 
 /*
 	fz_identity: Identity transform matrix.
@@ -742,8 +788,10 @@ fz_matrix fz_invert_matrix(fz_matrix matrix);
 */
 int fz_is_rectilinear(fz_matrix m);
 
-float fz_matrix_expansion(fz_matrix m);
-float fz_matrix_max_expansion(fz_matrix m);
+/*
+	fz_matrix_expansion: Calculate average scaling factor of matrix.
+*/
+float fz_matrix_expansion(fz_matrix m); /* sumatrapdf */
 
 /*
 	fz_round_rect: Convert a rect into a bounding box.
@@ -856,291 +904,39 @@ fz_rect fz_transform_rect(fz_matrix transform, fz_rect rect);
 */
 fz_bbox fz_transform_bbox(fz_matrix matrix, fz_bbox bbox);
 
-void fz_gridfit_matrix(fz_matrix *m);
-
 /*
- * Basic crypto functions.
- * Independent of the rest of fitz.
- * For further encapsulation in filters, or not.
- */
+	fz_buffer is a wrapper around a dynamically allocated array of bytes.
 
-/* md5 digests */
-
-typedef struct fz_md5_s fz_md5;
-
-struct fz_md5_s
-{
-	unsigned int state[4];
-	unsigned int count[2];
-	unsigned char buffer[64];
-};
-
-void fz_md5_init(fz_md5 *state);
-void fz_md5_update(fz_md5 *state, const unsigned char *input, unsigned inlen);
-void fz_md5_final(fz_md5 *state, unsigned char digest[16]);
-
-/* sha-256 digests */
-
-typedef struct fz_sha256_s fz_sha256;
-
-struct fz_sha256_s
-{
-	unsigned int state[8];
-	unsigned int count[2];
-	union {
-		unsigned char u8[64];
-		unsigned int u32[16];
-	} buffer;
-};
-
-void fz_sha256_init(fz_sha256 *state);
-void fz_sha256_update(fz_sha256 *state, const unsigned char *input, unsigned int inlen);
-void fz_sha256_final(fz_sha256 *state, unsigned char digest[32]);
-
-/* arc4 crypto */
-
-typedef struct fz_arc4_s fz_arc4;
-
-struct fz_arc4_s
-{
-	unsigned x;
-	unsigned y;
-	unsigned char state[256];
-};
-
-void fz_arc4_init(fz_arc4 *state, const unsigned char *key, unsigned len);
-void fz_arc4_encrypt(fz_arc4 *state, unsigned char *dest, const unsigned char *src, unsigned len);
-
-/* AES block cipher implementation from XYSSL */
-
-typedef struct fz_aes_s fz_aes;
-
-#define AES_DECRYPT 0
-#define AES_ENCRYPT 1
-
-struct fz_aes_s
-{
-	int nr; /* number of rounds */
-	unsigned long *rk; /* AES round keys */
-	unsigned long buf[68]; /* unaligned data */
-};
-
-void aes_setkey_enc( fz_aes *ctx, const unsigned char *key, int keysize );
-void aes_setkey_dec( fz_aes *ctx, const unsigned char *key, int keysize );
-void aes_crypt_cbc( fz_aes *ctx, int mode, int length,
-	unsigned char iv[16],
-	const unsigned char *input,
-	unsigned char *output );
-
-/*
-	fz_buffer is a XXX
+	Buffers have a capacity (the number of bytes storage immediately
+	available) and a current size.
 */
 typedef struct fz_buffer_s fz_buffer;
 
-struct fz_buffer_s
-{
-	int refs;
-	unsigned char *data;
-	int cap, len;
-};
+/*
+	fz_keep_buffer: Increment the reference count for a buffer.
 
-fz_buffer *fz_new_buffer(fz_context *ctx, int size);
+	buf: The buffer to increment the reference count for.
+
+	Returns a pointer to the buffer. Does not throw exceptions.
+*/
 fz_buffer *fz_keep_buffer(fz_context *ctx, fz_buffer *buf);
+
+/*
+	fz_drop_buffer: Decrement the reference count for a buffer.
+
+	buf: The buffer to decrement the reference count for.
+*/
 void fz_drop_buffer(fz_context *ctx, fz_buffer *buf);
 
-void fz_resize_buffer(fz_context *ctx, fz_buffer *buf, int size);
-void fz_grow_buffer(fz_context *ctx, fz_buffer *buf);
-void fz_trim_buffer(fz_context *ctx, fz_buffer *buf);
-
 /*
-	Resource store
+	fz_buffer_storage: Retrieve information on the storage currently used
+	by a buffer.
 
-	MuPDF stores decoded "objects" into a store for potential reuse.
-	If the size of the store gets too big, objects stored within it can
-	be evicted and freed to recover space. When MuPDF comes to decode
-	such an object, it will check to see if a version of this object is
-	already in the store - if it is, it will simply reuse it. If not, it
-	will decode it and place it into the store.
+	data: Pointer to place to retrieve data pointer.
 
-	All objects that can be placed into the store are derived from the
-	fz_storable type (i.e. this should be the first component of the
-	objects structure). This allows for consistent (thread safe)
-	reference counting, and includes a function that will be called to
-	free the object as soon as the reference count reaches zero.
-
-	Most objects offer fz_keep_XXXX/fz_drop_XXXX functions derived
-	from fz_keep_storable/fz_drop_storable. Creation of such objects
-	includes a call to FZ_INIT_STORABLE to set up the fz_storable header.
- */
-
-typedef struct fz_storable_s fz_storable;
-
-typedef void (fz_store_free_fn)(fz_context *, fz_storable *);
-
-struct fz_storable_s {
-	int refs;
-	fz_store_free_fn *free;
-};
-
-#define FZ_INIT_STORABLE(S_,RC,FREE) \
-	do { fz_storable *S = &(S_)->storable; S->refs = (RC); \
-	S->free = (FREE); \
-	} while (0)
-
-void *fz_keep_storable(fz_context *, fz_storable *);
-void fz_drop_storable(fz_context *, fz_storable *);
-
-/*
-	Specifies the maximum size in bytes of the resource store in
-	fz_context. Given as argument to fz_new_context.
-
-	FZ_STORE_UNLIMITED: Let resource store grow unbounded.
-
-	FZ_STORE_DEFAULT: A reasonable upper bound on the size, for
-	devices that are not memory constrained.
+	Returns length of stream.
 */
-enum {
-	FZ_STORE_UNLIMITED = 0,
-	FZ_STORE_DEFAULT = 256 << 20,
-};
-
-/*
-	The store can be seen as a dictionary that maps keys to fz_storable
-	values. In order to allow keys of different types to be stored, we
-	have a structure full of functions for each key 'type'; this
-	fz_store_type pointer is stored with each key, and tells the store
-	how to perform certain operations (like taking/dropping a reference,
-	comparing two keys, outputting details for debugging etc).
-
-	The store uses a hash table internally for speed where possible. In
-	order for this to work, we need a mechanism for turning a generic
-	'key' into 'a hashable string'. For this purpose the type structure
-	contains a make_hash_key function pointer that maps from a void *
-	to an fz_store_hash structure. If make_hash_key function returns 0,
-	then the key is determined not to be hashable, and the value is
-	not stored in the hash table.
-*/
-typedef struct fz_store_hash_s fz_store_hash;
-
-struct fz_store_hash_s
-{
-	fz_store_free_fn *free;
-	union
-	{
-		struct
-		{
-			int i0;
-			int i1;
-		} i;
-		struct
-		{
-			void *ptr;
-			int i;
-		} pi;
-	} u;
-};
-
-typedef struct fz_store_type_s fz_store_type;
-
-struct fz_store_type_s
-{
-	int (*make_hash_key)(fz_store_hash *, void *);
-	void *(*keep_key)(fz_context *,void *);
-	void (*drop_key)(fz_context *,void *);
-	int (*cmp_key)(void *, void *);
-	void (*debug)(void *);
-};
-
-/*
-	fz_store_new_context: Create a new store inside the context
-
-	max: The maximum size (in bytes) that the store is allowed to grow
-	to. FZ_STORE_UNLIMITED means no limit.
-*/
-void fz_new_store_context(fz_context *ctx, unsigned int max);
-
-/*
-	fz_drop_store_context: Drop a reference to the store.
-*/
-void fz_drop_store_context(fz_context *ctx);
-
-/*
-	fz_keep_store_context: Take a reference to the store.
-*/
-fz_store *fz_keep_store_context(fz_context *ctx);
-
-/*
-	fz_debug_store: Dump the contents of the store for debugging.
-*/
-void fz_debug_store(fz_context *ctx);
-
-/*
-	fz_store_item: Add an item to the store.
-
-	Add an item into the store, returning NULL for success. If an item
-	with the same key is found in the store, then our item will not be
-	inserted, and the function will return a pointer to that value
-	instead. This function takes its own reference to val, as required
-	(i.e. the caller maintains ownership of its own reference).
-
-	key: The key to use to index the item.
-
-	val: The value to store.
-
-	itemsize: The size in bytes of the value (as counted towards the
-	store size).
-
-	type: Functions used to manipulate the key.
-*/
-void *fz_store_item(fz_context *ctx, void *key, void *val, unsigned int itemsize, fz_store_type *type);
-
-/*
-	fz_find_item: Find an item within the store.
-
-	free: The function used to free the value (to ensure we get a value
-	of the correct type).
-
-	key: The key to use to index the item.
-
-	type: Functions used to manipulate the key.
-
-	Returns NULL for not found, otherwise returns a pointer to the value
-	indexed by key to which a reference has been taken.
-*/
-void *fz_find_item(fz_context *ctx, fz_store_free_fn *free, void *key, fz_store_type *type);
-
-/*
-	fz_remove_item: Remove an item from the store.
-
-	If an item indexed by the given key exists in the store, remove it.
-
-	free: The function used to free the value (to ensure we get a value
-	of the correct type).
-
-	key: The key to use to find the item to remove.
-
-	type: Functions used to manipulate the key.
-*/
-void fz_remove_item(fz_context *ctx, fz_store_free_fn *free, void *key, fz_store_type *type);
-
-/*
-	fz_empty_store: Evict everything from the store.
-*/
-void fz_empty_store(fz_context *ctx);
-
-/*
-	fz_store_scavenge: Internal function used as part of the scavenging
-	allocator; when we fail to allocate memory, before returning a
-	failure to the caller, we try to scavenge space within the store by
-	evicting at least 'size' bytes. The allocator then retries.
-
-	size: The number of bytes we are trying to have free.
-
-	phase: What phase of the scavenge we are in. Updated on exit.
-
-	Returns non zero if we managed to free any memory.
-*/
-int fz_store_scavenge(fz_context *ctx, unsigned int size, int *phase);
+int fz_buffer_storage(fz_context *ctx, fz_buffer *buf, unsigned char **data);
 
 /*
 	fz_stream is a buffered reader capable of seeking in both
@@ -1152,26 +948,6 @@ int fz_store_scavenge(fz_context *ctx, unsigned int size, int *phase);
 	Only the data between rp and wp is valid.
 */
 typedef struct fz_stream_s fz_stream;
-
-struct fz_stream_s
-{
-	fz_context *ctx;
-	int refs;
-	int error;
-	int eof;
-	int pos;
-	int avail;
-	int bits;
-	int locked;
-	unsigned char *bp, *rp, *wp, *ep;
-	void *state;
-	int (*read)(fz_stream *stm, unsigned char *buf, int len);
-	void (*close)(fz_context *ctx, void *state);
-	void (*seek)(fz_stream *stm, int offset, int whence);
-	/* SumatraPDF: allow to clone a stream */
-	fz_stream *(*reopen)(fz_context *ctx, fz_stream *stm);
-	unsigned char buf[4096];
-};
 
 /*
 	fz_open_file: Open the named file and wrap it in a stream.
@@ -1202,14 +978,28 @@ fz_stream *fz_open_file_w(fz_context *ctx, const wchar_t *filename);
 fz_stream *fz_open_fd(fz_context *ctx, int file);
 
 /*
-	fz_open_buffer: XXX
-*/
-fz_stream *fz_open_buffer(fz_context *ctx, fz_buffer *buf);
+	fz_open_memory: Open a block of memory as a stream.
 
-/*
-	fz_open_memory: XXX
+	data: Pointer to start of data block. Ownership of the data block is
+	NOT passed in.
+
+	len: Number of bytes in data block.
+
+	Returns pointer to newly created stream. May throw exceptions on
+	failure to allocate.
 */
 fz_stream *fz_open_memory(fz_context *ctx, unsigned char *data, int len);
+
+/*
+	fz_open_buffer: Open a buffer as a stream.
+
+	buf: The buffer to open. Ownership of the buffer is NOT passed in
+	(this function takes it's own reference).
+
+	Returns pointer to newly created stream. May throw exceptions on
+	failure to allocate.
+*/
+fz_stream *fz_open_buffer(fz_context *ctx, fz_buffer *buf);
 
 /*
 	fz_close: Close an open stream.
@@ -1222,183 +1012,146 @@ fz_stream *fz_open_memory(fz_context *ctx, unsigned char *data, int len);
 */
 void fz_close(fz_stream *stm);
 
-void fz_lock_stream(fz_stream *stm);
-/* SumatraPDF: allow to clone a stream */
-fz_stream *fz_clone_stream(fz_context *ctx, fz_stream *stm);
-
-fz_stream *fz_new_stream(fz_context *ctx, void*, int(*)(fz_stream*, unsigned char*, int), void(*)(fz_context *, void *));
-fz_stream *fz_keep_stream(fz_stream *stm);
-void fz_fill_buffer(fz_stream *stm);
-
+/*
+	fz_tell: return the current reading position within a stream
+*/
 int fz_tell(fz_stream *stm);
+
+/*
+	fz_seek: Seek within a stream.
+
+	stm: The stream to seek within.
+
+	offset: The offset to seek to.
+
+	whence: From where the offset is measured (see fseek).
+*/
 void fz_seek(fz_stream *stm, int offset, int whence);
 
-int fz_read(fz_stream *stm, unsigned char *buf, int len);
-void fz_read_line(fz_stream *stm, char *buf, int max);
+/*
+	fz_read: Read from a stream into a given data block.
+
+	stm: The stream to read from.
+
+	data: The data block to read into.
+
+	len: The length of the data block (in bytes).
+
+	Returns the number of bytes read. May throw exceptions.
+*/
+int fz_read(fz_stream *stm, unsigned char *data, int len);
+
+/*
+	fz_read_all: Read all of a stream into a buffer.
+
+	stm: The stream to read from
+
+	initial: Suggested initial size for the buffer.
+
+	Returns a buffer created from reading from the stream. May throw
+	exceptions on failure to allocate.
+*/
 fz_buffer *fz_read_all(fz_stream *stm, int initial);
 /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1587 */
 fz_buffer *fz_read_all2(fz_stream *stm, int initial, int fail_on_error);
 
-static inline int fz_read_byte(fz_stream *stm)
-{
-	if (stm->rp == stm->wp)
-	{
-		fz_fill_buffer(stm);
-		return stm->rp < stm->wp ? *stm->rp++ : EOF;
-	}
-	return *stm->rp++;
-}
-
-static inline int fz_peek_byte(fz_stream *stm)
-{
-	if (stm->rp == stm->wp)
-	{
-		fz_fill_buffer(stm);
-		return stm->rp < stm->wp ? *stm->rp : EOF;
-	}
-	return *stm->rp;
-}
-
-static inline void fz_unread_byte(fz_stream *stm)
-{
-	if (stm->rp > stm->bp)
-		stm->rp--;
-}
-
-static inline int fz_is_eof(fz_stream *stm)
-{
-	if (stm->rp == stm->wp)
-	{
-		if (stm->eof)
-			return 1;
-		return fz_peek_byte(stm) == EOF;
-	}
-	return 0;
-}
-
-static inline unsigned int fz_read_bits(fz_stream *stm, int n)
-{
-	unsigned int x;
-
-	if (n <= stm->avail)
-	{
-		stm->avail -= n;
-		x = (stm->bits >> stm->avail) & ((1 << n) - 1);
-	}
-	else
-	{
-		x = stm->bits & ((1 << stm->avail) - 1);
-		n -= stm->avail;
-		stm->avail = 0;
-
-		while (n > 8)
-		{
-			x = (x << 8) | fz_read_byte(stm);
-			n -= 8;
-		}
-
-		if (n > 0)
-		{
-			stm->bits = fz_read_byte(stm);
-			stm->avail = 8 - n;
-			x = (x << n) | (stm->bits >> stm->avail);
-		}
-	}
-
-	return x;
-}
-
-static inline void fz_sync_bits(fz_stream *stm)
-{
-	stm->avail = 0;
-}
-
-static inline int fz_is_eof_bits(fz_stream *stm)
-{
-	return fz_is_eof(stm) && (stm->avail == 0 || stm->bits == EOF);
-}
+/* SumatraPDF: allow to clone a stream */
+fz_stream *fz_clone_stream(fz_context *ctx, fz_stream *stm);
 
 /*
- * Data filters.
- */
-
-fz_stream *fz_open_copy(fz_stream *chain);
-fz_stream *fz_open_null(fz_stream *chain, int len);
-fz_stream *fz_open_arc4(fz_stream *chain, unsigned char *key, unsigned keylen);
-fz_stream *fz_open_aesd(fz_stream *chain, unsigned char *key, unsigned keylen);
-fz_stream *fz_open_a85d(fz_stream *chain);
-fz_stream *fz_open_ahxd(fz_stream *chain);
-fz_stream *fz_open_rld(fz_stream *chain);
-fz_stream *fz_open_dctd(fz_stream *chain, int color_transform);
-fz_stream *fz_open_resized_dctd(fz_stream *chain, int color_transform, int factor);
-fz_stream *fz_open_faxd(fz_stream *chain,
-	int k, int end_of_line, int encoded_byte_align,
-	int columns, int rows, int end_of_block, int black_is_1);
-fz_stream *fz_open_flated(fz_stream *chain);
-fz_stream *fz_open_lzwd(fz_stream *chain, int early_change);
-fz_stream *fz_open_predict(fz_stream *chain, int predictor, int columns, int colors, int bpc);
-fz_stream *fz_open_jbig2d(fz_stream *chain, fz_buffer *global);
+	Bitmaps have 1 bit per component. Only used for creating halftoned
+	versions of contone buffers, and saving out. Samples are stored msb
+	first, akin to pbms.
+*/
+typedef struct fz_bitmap_s fz_bitmap;
 
 /*
- * Resources and other graphics related objects.
- */
+	fz_keep_bitmap: Take a reference to a bitmap.
 
-/* SumatraPDF: make fz_shades use less memory */
-enum { FZ_MAX_COLORS = 8 };
+	bit: The bitmap to increment the reference for.
 
-int fz_find_blendmode(char *name);
-char *fz_blendmode_name(int blendmode);
+	Returns bit. Does not throw exceptions.
+*/
+fz_bitmap *fz_keep_bitmap(fz_context *ctx, fz_bitmap *bit);
 
 /*
- * Pixmaps have n components per pixel. the last is always alpha.
- * premultiplied alpha when rendering, but non-premultiplied for colorspace
- * conversions and rescaling.
- */
+	fz_drop_bitmap: Drop a reference and free a bitmap.
 
-typedef struct fz_pixmap_s fz_pixmap;
+	Decrement the reference count for the bitmap. When no
+	references remain the pixmap will be freed.
+
+	Does not throw exceptions.
+*/
+void fz_drop_bitmap(fz_context *ctx, fz_bitmap *bit);
+
+/*
+	An fz_colorspace object represents an abstract colorspace. While
+	this should be treated as a black box by callers of the library at
+	this stage, know that it encapsulates knowledge of how to convert
+	colors to and from the colorspace, any lookup tables generated, the
+	number of components in the colorspace etc.
+*/
 typedef struct fz_colorspace_s fz_colorspace;
 
 /*
-	fz_pixmap is an image XXX
-
-	x, y: XXX
-
-	w, h: The width and height of the image in pixels.
-
-	n: The number of color components in the image. Always
-	includes a separate alpha channel. XXX RGBA=4
-
-	interpolate: A boolean flag set to non-zero if the image
-	will be drawn using linear interpolation, or set to zero if
-	image will be using nearest neighbour sampling.
-
-	xres, yres: Image resolution in dpi. Default is 96 dpi.
-
-	colorspace: XXX
-
-	samples:
-
-	free_samples: Is zero when an application has provided its own
-	buffer for pixel data through fz_new_pixmap_with_rect_and_data.
-	If not zero the buffer will be freed when fz_drop_pixmap is
-	called for the pixmap.
+	fz_find_device_colorspace: Find a standard colorspace based upon
+	it's name.
 */
-struct fz_pixmap_s
-{
-	fz_storable storable;
-	int x, y, w, h, n;
-	int interpolate;
-	int xres, yres;
-	fz_colorspace *colorspace;
-	unsigned char *samples;
-	int free_samples;
-	int has_alpha; /* SumatraPDF: allow optimizing non-alpha pixmaps */
-	int single_bit; /* SumatraPDF: allow optimizing 1-bit pixmaps */
-};
+fz_colorspace *fz_find_device_colorspace(char *name);
 
+/*
+	fz_device_gray: Abstract colorspace representing device specific
+	gray.
+*/
+extern fz_colorspace *fz_device_gray;
+
+/*
+	fz_device_rgb: Abstract colorspace representing device specific
+	rgb.
+*/
+extern fz_colorspace *fz_device_rgb;
+
+/*
+	fz_device_bgr: Abstract colorspace representing device specific
+	bgr.
+*/
+extern fz_colorspace *fz_device_bgr;
+
+/*
+	fz_device_cmyk: Abstract colorspace representing device specific
+	CMYK.
+*/
+extern fz_colorspace *fz_device_cmyk;
+
+/*
+	Pixmaps represent a set of pixels for a 2 dimensional region of a
+	plane. Each pixel has n components per pixel, the last of which is
+	always alpha. The data is in premultiplied alpha when rendering, but
+	non-premultiplied for colorspace conversions and rescaling.
+*/
+typedef struct fz_pixmap_s fz_pixmap;
+
+/*
+	fz_bound_pixmap: Return a bounding box for a pixmap.
+
+	Returns an exact bounding box for the supplied pixmap.
+*/
 fz_bbox fz_bound_pixmap(fz_pixmap *pix);
 
-fz_pixmap *fz_new_pixmap_with_data(fz_context *ctx, fz_colorspace *colorspace, int w, int h, unsigned char *samples);
+/*
+	fz_new_pixmap: Create a new pixmap, with it's origin at (0,0)
+
+	cs: The colorspace to use for the pixmap, or NULL for an alpha
+	plane/mask.
+
+	w: The width of the pixmap (in pixels)
+
+	h: The height of the pixmap (in pixels)
+
+	Returns a pointer to the new pixmap. Throws exception on failure to
+	allocate.
+*/
+fz_pixmap *fz_new_pixmap(fz_context *ctx, fz_colorspace *cs, int w, int h);
 
 /*
 	fz_new_pixmap_with_rect: Create a pixmap of a given size,
@@ -1417,22 +1170,12 @@ fz_pixmap *fz_new_pixmap_with_data(fz_context *ctx, fz_colorspace *colorspace, i
 fz_pixmap *fz_new_pixmap_with_rect(fz_context *ctx, fz_colorspace *colorspace, fz_bbox bbox);
 
 /*
-	fz_new_pixmap_with_rect_and_data: Create a pixmap using the
-	provided buffer for pixel data.
+	fz_keep_pixmap: Take a reference to a pixmap.
 
-	While fz_new_pixmap_with_rect allocates its own buffer for
-	pixel data, fz_new_pixmap_with_rect_and_data lets the caller
-	allocate and provide a buffer to be used. Otherwise the two
-	functions are identical.
+	pix: The pixmap to increment the reference for.
 
-	samples: An array of pixel samples. The created pixmap will
-	keep a pointer to the array so it must not be modified or
-	freed until the created pixmap is dropped and freed by
-	fz_drop_pixmap.
+	Returns pix. Does not throw exceptions.
 */
-fz_pixmap *fz_new_pixmap_with_rect_and_data(fz_context *ctx,
-fz_colorspace *colorspace, fz_bbox bbox, unsigned char *samples);
-fz_pixmap *fz_new_pixmap(fz_context *ctx, fz_colorspace *, int w, int h);
 fz_pixmap *fz_keep_pixmap(fz_context *ctx, fz_pixmap *pix);
 
 /*
@@ -1445,13 +1188,31 @@ fz_pixmap *fz_keep_pixmap(fz_context *ctx, fz_pixmap *pix);
 */
 void fz_drop_pixmap(fz_context *ctx, fz_pixmap *pix);
 
-void fz_free_pixmap_imp(fz_context *ctx, fz_storable *pix);
-void fz_clear_pixmap(fz_context *ctx, fz_pixmap *pix);
+/*
+	fz_pixmap_colorspace: Return the colorspace of a pixmap
+
+	Returns colorspace. Does not throw exceptions.
+*/
+fz_colorspace *fz_pixmap_colorspace(fz_context *ctx, fz_pixmap *pix);
 
 /*
-	fz_clear_pixmap_with_value: Clears a pixmap with the given value
+	fz_pixmap_components: Return the number of components in a pixmap.
 
-	pix: Pixmap obtained from fz_new_pixmap*.
+	Returns the number of components. Does not throw exceptions.
+*/
+int fz_pixmap_components(fz_context *ctx, fz_pixmap *pix);
+
+/*
+	fz_pixmap_pixels: Returns a pointer to the pixel data of a pixmap.
+
+	Returns the pointer. Does not throw exceptions.
+*/
+unsigned char *fz_pixmap_pixels(fz_context *ctx, fz_pixmap *pix);
+
+/*
+	fz_clear_pixmap_with_value: Clears a pixmap with the given value.
+
+	pix: The pixmap to clear.
 
 	value: Values in the range 0 to 255 are valid. Each component
 	sample for each pixel in the pixmap will be set to this value,
@@ -1461,20 +1222,109 @@ void fz_clear_pixmap(fz_context *ctx, fz_pixmap *pix);
 */
 void fz_clear_pixmap_with_value(fz_context *ctx, fz_pixmap *pix, int value);
 
-void fz_clear_pixmap_rect_with_value(fz_context *ctx, fz_pixmap *pix, int value, fz_bbox r);
-void fz_copy_pixmap_rect(fz_context *ctx, fz_pixmap *dest, fz_pixmap *src, fz_bbox r);
-void fz_premultiply_pixmap(fz_context *ctx, fz_pixmap *pix);
-void fz_unmultiply_pixmap(fz_context *ctx, fz_pixmap *pix);
-fz_pixmap *fz_alpha_from_gray(fz_context *ctx, fz_pixmap *gray, int luminosity);
+/*
+	fz_clear_pixmap_with_value: Sets all components (including alpha) of
+	all pixels in a pixmap to 0.
+
+	pix: The pixmap to clear.
+
+	Does not throw exceptions.
+*/
+void fz_clear_pixmap(fz_context *ctx, fz_pixmap *pix);
+
+/*
+	fz_invert_pixmap: Invert all the pixels in a pixmap. All components
+	of all pixels are inverted (except alpha, which is unchanged).
+
+	Does not throw exceptions.
+*/
 void fz_invert_pixmap(fz_context *ctx, fz_pixmap *pix);
+
+/*
+	fz_invert_pixmap: Invert all the pixels in a given rectangle of a
+	pixmap. All components of all pixels in the rectangle are inverted
+	(except alpha, which is unchanged).
+
+	Does not throw exceptions.
+*/
+void fz_invert_pixmap_rect(fz_pixmap *image, fz_bbox rect);
+
+/*
+	fz_gamma_pixmap: Apply gamma correction to a pixmap. All components
+	of all pixels are modified (except alpha, which is unchanged).
+
+	gamma: The gamma value to apply; 1.0 for no change.
+
+	Does not throw exceptions.
+*/
 void fz_gamma_pixmap(fz_context *ctx, fz_pixmap *pix, float gamma);
-unsigned int fz_pixmap_size(fz_context *ctx, fz_pixmap *pix);
 
-fz_pixmap *fz_scale_pixmap(fz_context *ctx, fz_pixmap *src, float x, float y, float w, float h, fz_bbox *clip);
+/*
+	fz_unmultiply_pixmap: Convert a pixmap from premultiplied to
+	non-premultiplied format.
 
+	Does not throw exceptions.
+*/
+void fz_unmultiply_pixmap(fz_context *ctx, fz_pixmap *pix);
+
+/*
+	fz_convert_pixmap: Convert from one pixmap to another (assumed to be
+	the same size, but possibly with a different colorspace).
+
+	dst: the source pixmap.
+
+	src: the destination pixmap.
+*/
+void fz_convert_pixmap(fz_context *ctx, fz_pixmap *dst, fz_pixmap *src);
+
+/*
+	fz_save_pixmap: Save a pixmap out.
+
+	name: The prefix for the name of the pixmap. The pixmap will be saved
+	as "name.png" if the pixmap is RGB or Greyscale, "name.pam" otherwise.
+
+	rgb: If non zero, the pixmap is converted to rgb (if possible) before
+	saving.
+*/
+void fz_save_pixmap(fz_context *ctx, fz_pixmap *img, char *name, int rgb);
+
+/*
+	fz_write_pnm: Save a pixmap as a pnm
+
+	filename: The filename to save as (including extension).
+*/
 void fz_write_pnm(fz_context *ctx, fz_pixmap *pixmap, char *filename);
+
+/*
+	fz_write_pam: Save a pixmap as a pam
+
+	filename: The filename to save as (including extension).
+*/
 void fz_write_pam(fz_context *ctx, fz_pixmap *pixmap, char *filename, int savealpha);
+
+/*
+	fz_write_png: Save a pixmap as a png
+
+	filename: The filename to save as (including extension).
+*/
 void fz_write_png(fz_context *ctx, fz_pixmap *pixmap, char *filename, int savealpha);
+
+/*
+	fz_write_pbm: Save a bitmap as a pbm
+
+	filename: The filename to save as (including extension).
+*/
+void fz_write_pbm(fz_context *ctx, fz_bitmap *bitmap, char *filename);
+
+/*
+	fz_md5_pixmap: Return the md5 digest for a pixmap
+
+	filename: The filename to save as (including extension).
+*/
+void fz_md5_pixmap(fz_pixmap *pixmap, unsigned char digest[16]);
+
+/* SumatraPDF: generalize fz_md5_pixmap for e.g. bitmaps */
+void fz_md5_data(void *data, int len, unsigned char digest[16]);
 
 /*
 	Images are storable objects from which we can obtain fz_pixmaps.
@@ -1483,15 +1333,6 @@ void fz_write_png(fz_context *ctx, fz_pixmap *pixmap, char *filename, int saveal
 	demand.
  */
 typedef struct fz_image_s fz_image;
-
-struct fz_image_s
-{
-	fz_storable storable;
-	int w, h;
-	fz_image *mask;
-	fz_colorspace *colorspace;
-	fz_pixmap *(*get_pixmap)(fz_context *, fz_image *, int w, int h);
-};
 
 /*
 	fz_image_to_pixmap: Called to get a handle to a pixmap from an image.
@@ -1526,447 +1367,46 @@ void fz_drop_image(fz_context *ctx, fz_image *image);
 */
 fz_image *fz_keep_image(fz_context *ctx, fz_image *image);
 
-fz_pixmap *fz_load_jpx(fz_context *ctx, unsigned char *data, int size, fz_colorspace *cs);
-fz_pixmap *fz_load_jpeg(fz_context *doc, unsigned char *data, int size);
-fz_pixmap *fz_load_png(fz_context *doc, unsigned char *data, int size);
-fz_pixmap *fz_load_tiff(fz_context *doc, unsigned char *data, int size);
-
-/*
-	Bitmaps have 1 bit per component. Only used for creating halftoned
-	versions of contone buffers, and saving out. Samples are stored msb
-	first, akin to pbms.
-*/
-typedef struct fz_bitmap_s fz_bitmap;
-
-struct fz_bitmap_s
-{
-	int refs;
-	int w, h, stride, n;
-	unsigned char *samples;
-};
-
-fz_bitmap *fz_new_bitmap(fz_context *ctx, int w, int h, int n);
-fz_bitmap *fz_keep_bitmap(fz_context *ctx, fz_bitmap *bit);
-void fz_clear_bitmap(fz_context *ctx, fz_bitmap *bit);
-void fz_drop_bitmap(fz_context *ctx, fz_bitmap *bit);
-
-void fz_write_pbm(fz_context *ctx, fz_bitmap *bitmap, char *filename);
-
 /*
 	A halftone is a set of threshold tiles, one per component. Each
 	threshold tile is a pixmap, possibly of varying sizes and phases.
+	Currently, we only provide one 'default' halftone tile for operating
+	on 1 component plus alpha pixmaps (where the alpha is ignored). This
+	is signified by an fz_halftone pointer to NULL.
 */
 typedef struct fz_halftone_s fz_halftone;
 
-struct fz_halftone_s
-{
-	int refs;
-	int n;
-	fz_pixmap *comp[1];
-};
+/*
+	fz_halftone_pixmap: Make a bitmap from a pixmap and a halftone.
 
-fz_halftone *fz_new_halftone(fz_context *ctx, int num_comps);
-fz_halftone *fz_get_default_halftone(fz_context *ctx, int num_comps);
-fz_halftone *fz_keep_halftone(fz_context *ctx, fz_halftone *half);
-void fz_drop_halftone(fz_context *ctx, fz_halftone *half);
+	pix: The pixmap to generate from. Currently must be a single color
+	component + alpha (where the alpha is assumed to be solid).
 
+	ht: The halftone to use. NULL implies the default halftone.
+
+	Returns the resultant bitmap. Throws exceptions in the case of
+	failure to allocate.
+*/
 fz_bitmap *fz_halftone_pixmap(fz_context *ctx, fz_pixmap *pix, fz_halftone *ht);
 
 /*
- * Colorspace resources.
- */
-
-/*
-	fz_device_gray: XXX
+	An abstract font handle. Currently there are no public API functions
+	for handling these.
 */
-extern fz_colorspace *fz_device_gray;
-
-/*
-	fz_device_rgb: XXX
-*/
-extern fz_colorspace *fz_device_rgb;
-
-/*
-	fz_device_bgr: XXX
-*/
-extern fz_colorspace *fz_device_bgr;
-
-/*
-	fz_device_cmyk: XXX
-*/
-extern fz_colorspace *fz_device_cmyk;
-
-struct fz_colorspace_s
-{
-	fz_storable storable;
-	unsigned int size;
-	char name[16];
-	int n;
-	void (*to_rgb)(fz_context *ctx, fz_colorspace *, float *src, float *rgb);
-	void (*from_rgb)(fz_context *ctx, fz_colorspace *, float *rgb, float *dst);
-	void (*free_data)(fz_context *Ctx, fz_colorspace *);
-	void *data;
-};
-
-fz_colorspace *fz_new_colorspace(fz_context *ctx, char *name, int n);
-fz_colorspace *fz_keep_colorspace(fz_context *ctx, fz_colorspace *colorspace);
-void fz_drop_colorspace(fz_context *ctx, fz_colorspace *colorspace);
-void fz_free_colorspace_imp(fz_context *ctx, fz_storable *colorspace);
-
-void fz_convert_color(fz_context *ctx, fz_colorspace *srcs, float *srcv, fz_colorspace *dsts, float *dstv);
-void fz_convert_pixmap(fz_context *ctx, fz_pixmap *src, fz_pixmap *dst);
-
-fz_colorspace *fz_find_device_colorspace(char *name);
-
-/*
- * Fonts come in two variants:
- *	Regular fonts are handled by FreeType.
- *	Type 3 fonts have callbacks to the interpreter.
- */
-
-typedef struct fz_device_s fz_device;
-
 typedef struct fz_font_s fz_font;
-char *ft_error_string(int err);
-
-struct fz_font_s
-{
-	int refs;
-	char name[32];
-
-	void *ft_face; /* has an FT_Face if used */
-	int ft_substitute; /* ... substitute metrics */
-	int ft_bold; /* ... synthesize bold */
-	int ft_italic; /* ... synthesize italic */
-	int ft_hint; /* ... force hinting for DynaLab fonts */
-
-	/* origin of font data */
-	char *ft_file;
-	unsigned char *ft_data;
-	int ft_size;
-
-	fz_matrix t3matrix;
-	void *t3resources;
-	fz_buffer **t3procs; /* has 256 entries if used */
-	float *t3widths; /* has 256 entries if used */
-	char *t3flags; /* has 256 entries if used */
-	void *t3doc; /* a pdf_document for the callback */
-	void (*t3run)(void *doc, void *resources, fz_buffer *contents, fz_device *dev, fz_matrix ctm, void *gstate);
-	void (*t3freeres)(void *doc, void *resources);
-
-	fz_rect bbox;	/* font bbox is used only for t3 fonts */
-
-	/* per glyph bounding box cache */
-	int use_glyph_bbox;
-	int bbox_count;
-	fz_rect *bbox_table;
-
-	/* substitute metrics */
-	int width_count;
-	int *width_table; /* in 1000 units */
-};
-
-void fz_new_font_context(fz_context *ctx);
-fz_font_context *fz_keep_font_context(fz_context *ctx);
-void fz_drop_font_context(fz_context *ctx);
-
-fz_font *fz_new_type3_font(fz_context *ctx, char *name, fz_matrix matrix);
-
-fz_font *fz_new_font_from_memory(fz_context *ctx, unsigned char *data, int len, int index, int use_glyph_bbox);
-fz_font *fz_new_font_from_file(fz_context *ctx, char *path, int index, int use_glyph_bbox);
-
-fz_font *fz_keep_font(fz_context *ctx, fz_font *font);
-void fz_drop_font(fz_context *ctx, fz_font *font);
-
-void fz_debug_font(fz_context *ctx, fz_font *font);
-
-void fz_set_font_bbox(fz_context *ctx, fz_font *font, float xmin, float ymin, float xmax, float ymax);
-fz_rect fz_bound_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm);
-int fz_glyph_cacheable(fz_context *ctx, fz_font *font, int gid);
 
 /*
- * Vector path buffer.
- * It can be stroked and dashed, or be filled.
- * It has a fill rule (nonzero or even_odd).
- *
- * When rendering, they are flattened, stroked and dashed straight
- * into the Global Edge List.
- */
-
-typedef struct fz_path_s fz_path;
-typedef struct fz_stroke_state_s fz_stroke_state;
-
-typedef union fz_path_item_s fz_path_item;
-
-typedef enum fz_path_item_kind_e
-{
-	FZ_MOVETO,
-	FZ_LINETO,
-	FZ_CURVETO,
-	FZ_CLOSE_PATH
-} fz_path_item_kind;
-
-typedef enum fz_linecap_e
-{
-	FZ_LINECAP_BUTT = 0,
-	FZ_LINECAP_ROUND = 1,
-	FZ_LINECAP_SQUARE = 2,
-	FZ_LINECAP_TRIANGLE = 3
-} fz_linecap;
-
-typedef enum fz_linejoin_e
-{
-	FZ_LINEJOIN_MITER = 0,
-	FZ_LINEJOIN_ROUND = 1,
-	FZ_LINEJOIN_BEVEL = 2,
-	FZ_LINEJOIN_MITER_XPS = 3
-} fz_linejoin;
-
-union fz_path_item_s
-{
-	fz_path_item_kind k;
-	float v;
-};
-
-struct fz_path_s
-{
-	int len, cap;
-	fz_path_item *items;
-	int last;
-};
-
-struct fz_stroke_state_s
-{
-	fz_linecap start_cap, dash_cap, end_cap;
-	fz_linejoin linejoin;
-	float linewidth;
-	float miterlimit;
-	float dash_phase;
-	int dash_len;
-	float dash_list[32];
-};
-
-fz_path *fz_new_path(fz_context *ctx);
-void fz_moveto(fz_context*, fz_path*, float x, float y);
-void fz_lineto(fz_context*, fz_path*, float x, float y);
-void fz_curveto(fz_context*,fz_path*, float, float, float, float, float, float);
-void fz_curvetov(fz_context*,fz_path*, float, float, float, float);
-void fz_curvetoy(fz_context*,fz_path*, float, float, float, float);
-void fz_closepath(fz_context*,fz_path*);
-void fz_free_path(fz_context *ctx, fz_path *path);
-
-void fz_transform_path(fz_context *ctx, fz_path *path, fz_matrix transform);
-
-fz_path *fz_clone_path(fz_context *ctx, fz_path *old);
-
-fz_rect fz_bound_path(fz_context *ctx, fz_path *path, fz_stroke_state *stroke, fz_matrix ctm);
-void fz_debug_path(fz_context *ctx, fz_path *, int indent);
-
-/*
- * Glyph cache
- */
-
-void fz_new_glyph_cache_context(fz_context *ctx);
-fz_glyph_cache *fz_keep_glyph_cache(fz_context *ctx);
-void fz_drop_glyph_cache_context(fz_context *ctx);
-void fz_purge_glyph_cache(fz_context *ctx);
-
-fz_pixmap *fz_render_ft_glyph(fz_context *ctx, fz_font *font, int cid, fz_matrix trm);
-fz_pixmap *fz_render_t3_glyph(fz_context *ctx, fz_font *font, int cid, fz_matrix trm, fz_colorspace *model);
-fz_pixmap *fz_render_ft_stroked_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm, fz_matrix ctm, fz_stroke_state *state);
-fz_pixmap *fz_render_glyph(fz_context *ctx, fz_font*, int, fz_matrix, fz_colorspace *model);
-fz_pixmap *fz_render_stroked_glyph(fz_context *ctx, fz_font*, int, fz_matrix, fz_matrix, fz_stroke_state *stroke);
-void fz_render_t3_glyph_direct(fz_context *ctx, fz_device *dev, fz_font *font, int gid, fz_matrix trm, void *gstate);
-
-/*
- * Text buffer.
- *
- * The trm field contains the a, b, c and d coefficients.
- * The e and f coefficients come from the individual elements,
- * together they form the transform matrix for the glyph.
- *
- * Glyphs are referenced by glyph ID.
- * The Unicode text equivalent is kept in a separate array
- * with indexes into the glyph array.
- */
-
-typedef struct fz_text_s fz_text;
-typedef struct fz_text_item_s fz_text_item;
-
-struct fz_text_item_s
-{
-	float x, y;
-	int gid; /* -1 for one gid to many ucs mappings */
-	int ucs; /* -1 for one ucs to many gid mappings */
-};
-
-struct fz_text_s
-{
-	fz_font *font;
-	fz_matrix trm;
-	int wmode;
-	int len, cap;
-	fz_text_item *items;
-};
-
-fz_text *fz_new_text(fz_context *ctx, fz_font *face, fz_matrix trm, int wmode);
-void fz_add_text(fz_context *ctx, fz_text *text, int gid, int ucs, float x, float y);
-void fz_free_text(fz_context *ctx, fz_text *text);
-fz_rect fz_bound_text(fz_context *ctx, fz_text *text, fz_matrix ctm);
-fz_text *fz_clone_text(fz_context *ctx, fz_text *old);
-void fz_debug_text(fz_context *ctx, fz_text*, int indent);
-
-/*
- * The shading code uses gouraud shaded triangle meshes.
- */
-
-enum
-{
-	FZ_LINEAR,
-	FZ_RADIAL,
-	FZ_MESH,
-};
-
-typedef struct fz_shade_s fz_shade;
-
-struct fz_shade_s
-{
-	fz_storable storable;
-
-	fz_rect bbox;		/* can be fz_infinite_rect */
-	fz_colorspace *colorspace;
-
-	fz_matrix matrix;	/* matrix from pattern dict */
-	int use_background;	/* background color for fills but not 'sh' */
-	float background[FZ_MAX_COLORS];
-
-	int use_function;
-	float function[256][FZ_MAX_COLORS + 1];
-
-	int type; /* linear, radial, mesh */
-	int extend[2];
-
-	int mesh_len;
-	int mesh_cap;
-	float *mesh; /* [x y 0], [x y r], [x y t] or [x y c1 ... cn] */
-};
-
-fz_shade *fz_keep_shade(fz_context *ctx, fz_shade *shade);
-void fz_drop_shade(fz_context *ctx, fz_shade *shade);
-void fz_free_shade_imp(fz_context *ctx, fz_storable *shade);
-void fz_debug_shade(fz_context *ctx, fz_shade *shade);
-
-fz_rect fz_bound_shade(fz_context *ctx, fz_shade *shade, fz_matrix ctm);
-void fz_paint_shade(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox);
-
-/*
- * Scan converter
- */
-
-int fz_get_aa_level(fz_context *ctx);
-void fz_set_aa_level(fz_context *ctx, int bits);
-
-typedef struct fz_gel_s fz_gel;
-
-fz_gel *fz_new_gel(fz_context *ctx);
-void fz_insert_gel(fz_gel *gel, float x0, float y0, float x1, float y1);
-void fz_reset_gel(fz_gel *gel, fz_bbox clip);
-void fz_sort_gel(fz_gel *gel);
-fz_bbox fz_bound_gel(fz_gel *gel);
-void fz_free_gel(fz_gel *gel);
-int fz_is_rect_gel(fz_gel *gel);
-
-void fz_scan_convert(fz_gel *gel, int eofill, fz_bbox clip, fz_pixmap *pix, unsigned char *colorbv);
-
-void fz_flatten_fill_path(fz_gel *gel, fz_path *path, fz_matrix ctm, float flatness);
-void fz_flatten_stroke_path(fz_gel *gel, fz_path *path, fz_stroke_state *stroke, fz_matrix ctm, float flatness, float linewidth);
-void fz_flatten_dash_path(fz_gel *gel, fz_path *path, fz_stroke_state *stroke, fz_matrix ctm, float flatness, float linewidth);
-
-/*
- * The device interface.
- */
-
-enum
-{
-	/* Hints */
-	FZ_IGNORE_IMAGE = 1,
-	FZ_IGNORE_SHADE = 2,
-
-	/* Flags */
-	FZ_DEVFLAG_MASK = 1,
-	FZ_DEVFLAG_COLOR = 2,
-	FZ_DEVFLAG_UNCACHEABLE = 4,
-	FZ_DEVFLAG_FILLCOLOR_UNDEFINED = 8,
-	FZ_DEVFLAG_STROKECOLOR_UNDEFINED = 16,
-	FZ_DEVFLAG_STARTCAP_UNDEFINED = 32,
-	FZ_DEVFLAG_DASHCAP_UNDEFINED = 64,
-	FZ_DEVFLAG_ENDCAP_UNDEFINED = 128,
-	FZ_DEVFLAG_LINEJOIN_UNDEFINED = 256,
-	FZ_DEVFLAG_MITERLIMIT_UNDEFINED = 512,
-	FZ_DEVFLAG_LINEWIDTH_UNDEFINED = 1024,
-	/* Arguably we should have a bit for the dash pattern itself being
-	 * undefined, but that causes problems; do we assume that it should
-	 * always be set to non-dashing at the start of every glyph? */
-};
-
-struct fz_device_s
-{
-	int hints;
-	int flags;
-
-	void *user;
-	void (*free_user)(fz_device *);
-	fz_context *ctx;
-
-	void (*fill_path)(fz_device *, fz_path *, int even_odd, fz_matrix, fz_colorspace *, float *color, float alpha);
-	void (*stroke_path)(fz_device *, fz_path *, fz_stroke_state *, fz_matrix, fz_colorspace *, float *color, float alpha);
-	void (*clip_path)(fz_device *, fz_path *, fz_rect *rect, int even_odd, fz_matrix);
-	void (*clip_stroke_path)(fz_device *, fz_path *, fz_rect *rect, fz_stroke_state *, fz_matrix);
-
-	void (*fill_text)(fz_device *, fz_text *, fz_matrix, fz_colorspace *, float *color, float alpha);
-	void (*stroke_text)(fz_device *, fz_text *, fz_stroke_state *, fz_matrix, fz_colorspace *, float *color, float alpha);
-	void (*clip_text)(fz_device *, fz_text *, fz_matrix, int accumulate);
-	void (*clip_stroke_text)(fz_device *, fz_text *, fz_stroke_state *, fz_matrix);
-	void (*ignore_text)(fz_device *, fz_text *, fz_matrix);
-
-	void (*fill_shade)(fz_device *, fz_shade *shd, fz_matrix ctm, float alpha);
-	void (*fill_image)(fz_device *, fz_image *img, fz_matrix ctm, float alpha);
-	void (*fill_image_mask)(fz_device *, fz_image *img, fz_matrix ctm, fz_colorspace *, float *color, float alpha);
-	void (*clip_image_mask)(fz_device *, fz_image *img, fz_rect *rect, fz_matrix ctm);
-
-	void (*pop_clip)(fz_device *);
-
-	void (*begin_mask)(fz_device *, fz_rect, int luminosity, fz_colorspace *, float *bc);
-	void (*end_mask)(fz_device *);
-	void (*begin_group)(fz_device *, fz_rect, int isolated, int knockout, int blendmode, float alpha);
-	void (*end_group)(fz_device *);
-
-	void (*begin_tile)(fz_device *, fz_rect area, fz_rect view, float xstep, float ystep, fz_matrix ctm);
-	void (*end_tile)(fz_device *);
-};
-
-void fz_fill_path(fz_device *dev, fz_path *path, int even_odd, fz_matrix ctm, fz_colorspace *colorspace, float *color, float alpha);
-void fz_stroke_path(fz_device *dev, fz_path *path, fz_stroke_state *stroke, fz_matrix ctm, fz_colorspace *colorspace, float *color, float alpha);
-void fz_clip_path(fz_device *dev, fz_path *path, fz_rect *rect, int even_odd, fz_matrix ctm);
-void fz_clip_stroke_path(fz_device *dev, fz_path *path, fz_rect *rect, fz_stroke_state *stroke, fz_matrix ctm);
-void fz_fill_text(fz_device *dev, fz_text *text, fz_matrix ctm, fz_colorspace *colorspace, float *color, float alpha);
-void fz_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *stroke, fz_matrix ctm, fz_colorspace *colorspace, float *color, float alpha);
-void fz_clip_text(fz_device *dev, fz_text *text, fz_matrix ctm, int accumulate);
-void fz_clip_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *stroke, fz_matrix ctm);
-void fz_ignore_text(fz_device *dev, fz_text *text, fz_matrix ctm);
-void fz_pop_clip(fz_device *dev);
-void fz_fill_shade(fz_device *dev, fz_shade *shade, fz_matrix ctm, float alpha);
-void fz_fill_image(fz_device *dev, fz_image *image, fz_matrix ctm, float alpha);
-void fz_fill_image_mask(fz_device *dev, fz_image *image, fz_matrix ctm, fz_colorspace *colorspace, float *color, float alpha);
-void fz_clip_image_mask(fz_device *dev, fz_image *image, fz_rect *rect, fz_matrix ctm);
-void fz_begin_mask(fz_device *dev, fz_rect area, int luminosity, fz_colorspace *colorspace, float *bc);
-void fz_end_mask(fz_device *dev);
-void fz_begin_group(fz_device *dev, fz_rect area, int isolated, int knockout, int blendmode, float alpha);
-void fz_end_group(fz_device *dev);
-void fz_begin_tile(fz_device *dev, fz_rect area, fz_rect view, float xstep, float ystep, fz_matrix ctm);
-void fz_end_tile(fz_device *dev);
-
-fz_device *fz_new_device(fz_context *ctx, void *user);
+	The different format handlers (pdf, xps etc) interpret pages to a
+	device. These devices can then process the stream of calls they
+	recieve in various ways:
+		The trace device outputs debugging information for the calls.
+		The draw device will render them.
+		The list device stores them in a list to play back later.
+		The text device performs text extraction and searching.
+		The bbox device calculates the bounding box for the page.
+	Other devices can (and will) be written in future.
+*/
+typedef struct fz_device_s fz_device;
 
 /*
 	fz_free_device: Free a devices of any type and its resources.
@@ -1976,8 +1416,6 @@ void fz_free_device(fz_device *dev);
 /*
 	fz_new_trace_device: Create a device to print a debug trace of
 	all device calls.
-
-	XXX
 */
 fz_device *fz_new_trace_device(fz_context *ctx);
 
@@ -2001,8 +1439,6 @@ fz_device *fz_new_bbox_device(fz_context *ctx, fz_bbox *bboxp);
 */
 fz_device *fz_new_draw_device(fz_context *ctx, fz_pixmap *dest);
 
-fz_device *fz_new_draw_device_type3(fz_context *ctx, fz_pixmap *dest);
-
 /* SumatraPDF: GDI+ draw device */
 #ifdef _WIN32
 fz_device *fz_new_gdiplus_device(fz_context *ctx, void *hDC, fz_bbox baseClip);
@@ -2012,44 +1448,99 @@ fz_device *fz_new_gdiplus_device(fz_context *ctx, void *hDC, fz_bbox baseClip);
  * Text extraction device
  */
 
-typedef struct fz_text_span_s fz_text_span;
+typedef struct fz_text_style_s fz_text_style;
 typedef struct fz_text_char_s fz_text_char;
+typedef struct fz_text_span_s fz_text_span;
+typedef struct fz_text_line_s fz_text_line;
+typedef struct fz_text_block_s fz_text_block;
+
+typedef struct fz_text_sheet_s fz_text_sheet;
+typedef struct fz_text_page_s fz_text_page;
+
+struct fz_text_style_s
+{
+	int id;
+	fz_font *font;
+	float size;
+	int wmode;
+	int script;
+	/* etc... */
+	fz_text_style *next;
+};
+
+struct fz_text_sheet_s
+{
+	int maxid;
+	fz_text_style *style;
+};
 
 struct fz_text_char_s
 {
+	fz_rect bbox;
 	int c;
-	fz_bbox bbox;
 };
 
 struct fz_text_span_s
 {
-	fz_font *font;
-	float size;
-	int wmode;
+	fz_rect bbox;
 	int len, cap;
 	fz_text_char *text;
-	fz_text_span *next;
-	int eol;
+	fz_text_style *style;
 };
 
-fz_text_span *fz_new_text_span(fz_context *ctx);
-void fz_free_text_span(fz_context *ctx, fz_text_span *line);
-void fz_debug_text_span(fz_text_span *line);
-void fz_debug_text_span_xml(fz_text_span *span);
+struct fz_text_line_s
+{
+	fz_rect bbox;
+	int len, cap;
+	fz_text_span *spans;
+};
+
+struct fz_text_block_s
+{
+	fz_rect bbox;
+	int len, cap;
+	fz_text_line *lines;
+};
+
+struct fz_text_page_s
+{
+	fz_rect mediabox;
+	int len, cap;
+	fz_text_block *blocks;
+};
 
 /*
-	fz_new_text_device: Create a device to print the text on a
-	page in XML.
+	fz_new_text_device: Create a device to extract the text on a page.
 
-	The text on a page will be translated into a sequnce of XML
-	elements. For each text span the font, font size, writing mode
-	and end of line flag is printed. Since text can be placed at
-	arbitrary positions then heuristics must be used to try to
-	collect text spans together that are roughly located on the
-	same baseline. Each character in the text span will have its
-	UTF-8 character printed along with a bounding box containing it.
+	Gather and sort the text on a page into spans of uniform style,
+	arranged into lines and blocks by reading order. The reading order
+	is determined by various heuristics, so may not be accurate.
 */
-fz_device *fz_new_text_device(fz_context *ctx, fz_text_span *text);
+fz_device *fz_new_text_device(fz_context *ctx, fz_text_sheet *sheet, fz_text_page *page);
+
+/*
+	fz_new_text_sheet: Create an empty style sheet.
+
+	The style sheet is filled out by the text device, creating
+	one style for each unique font, color, size combination that
+	is used.
+*/
+fz_text_sheet *fz_new_text_sheet(fz_context *ctx);
+void fz_free_text_sheet(fz_context *ctx, fz_text_sheet *sheet);
+
+/*
+	fz_new_text_page: Create an empty text page.
+
+	The text page is filled out by the text device to contain the blocks,
+	lines and spans of text on the page.
+*/
+fz_text_page *fz_new_text_page(fz_context *ctx, fz_rect mediabox);
+void fz_free_text_page(fz_context *ctx, fz_text_page *page);
+
+void fz_print_text_sheet(FILE *out, fz_text_sheet *sheet);
+void fz_print_text_page_html(FILE *out, fz_text_page *page);
+void fz_print_text_page_xml(FILE *out, fz_text_page *page);
+void fz_print_text_page(FILE *out, fz_text_page *page);
 
 /*
  * Cookie support - simple communication channel between app/library.
@@ -2099,8 +1590,8 @@ struct fz_cookie_s
 };
 
 /*
- * Display list device -- record and play back device commands.
- */
+	Display list device -- record and play back device commands.
+*/
 
 /*
 	fz_display_list is a list containing drawing commands (text,
@@ -2174,58 +1665,6 @@ void fz_run_display_list(fz_display_list *list, fz_device *dev, fz_matrix ctm, f
 	Does not throw exceptions.
 */
 void fz_free_display_list(fz_context *ctx, fz_display_list *list);
-
-/*
- * Plotting functions.
- */
-
-void fz_decode_tile(fz_pixmap *pix, float *decode);
-void fz_decode_indexed_tile(fz_pixmap *pix, float *decode, int maxval);
-void fz_unpack_tile(fz_pixmap *dst, unsigned char * restrict src, int n, int depth, int stride, int scale);
-
-void fz_paint_solid_alpha(unsigned char * restrict dp, int w, int alpha);
-void fz_paint_solid_color(unsigned char * restrict dp, int n, int w, unsigned char *color);
-
-void fz_paint_span(unsigned char * restrict dp, unsigned char * restrict sp, int n, int w, int alpha);
-void fz_paint_span_with_color(unsigned char * restrict dp, unsigned char * restrict mp, int n, int w, unsigned char *color);
-
-void fz_paint_image(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *shape, fz_pixmap *img, fz_matrix ctm, int alpha);
-void fz_paint_image_with_color(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *shape, fz_pixmap *img, fz_matrix ctm, unsigned char *colorbv);
-
-void fz_paint_pixmap(fz_pixmap *dst, fz_pixmap *src, int alpha);
-void fz_paint_pixmap_with_mask(fz_pixmap *dst, fz_pixmap *src, fz_pixmap *msk);
-void fz_paint_pixmap_with_rect(fz_pixmap *dst, fz_pixmap *src, int alpha, fz_bbox bbox);
-
-void fz_blend_pixmap(fz_pixmap *dst, fz_pixmap *src, int alpha, int blendmode, int isolated, fz_pixmap *shape);
-void fz_blend_pixel(unsigned char dp[3], unsigned char bp[3], unsigned char sp[3], int blendmode);
-
-enum
-{
-	/* PDF 1.4 -- standard separable */
-	FZ_BLEND_NORMAL,
-	FZ_BLEND_MULTIPLY,
-	FZ_BLEND_SCREEN,
-	FZ_BLEND_OVERLAY,
-	FZ_BLEND_DARKEN,
-	FZ_BLEND_LIGHTEN,
-	FZ_BLEND_COLOR_DODGE,
-	FZ_BLEND_COLOR_BURN,
-	FZ_BLEND_HARD_LIGHT,
-	FZ_BLEND_SOFT_LIGHT,
-	FZ_BLEND_DIFFERENCE,
-	FZ_BLEND_EXCLUSION,
-
-	/* PDF 1.4 -- standard non-separable */
-	FZ_BLEND_HUE,
-	FZ_BLEND_SATURATION,
-	FZ_BLEND_COLOR,
-	FZ_BLEND_LUMINOSITY,
-
-	/* For packing purposes */
-	FZ_BLEND_MODEMASK = 15,
-	FZ_BLEND_ISOLATED = 16,
-	FZ_BLEND_KNOCKOUT = 32
-};
 
 /* Links */
 
@@ -2390,8 +1829,16 @@ struct fz_outline_s
 	int is_open; /* SumatraPDF: support expansion states */
 };
 
-void fz_debug_outline_xml(fz_context *ctx, fz_outline *outline, int level);
-void fz_debug_outline(fz_context *ctx, fz_outline *outline, int level);
+/*
+	fz_debug_outline_xml: Dump the given outlines to stdout as (pseudo)
+	XML.
+*/
+void fz_debug_outline_xml(fz_context *ctx, fz_outline *outline);
+
+/*
+	fz_debug_outline: Dump the given outlines to stdout as text.
+*/
+void fz_debug_outline(fz_context *ctx, fz_outline *outline);
 
 /*
 	fz_free_outline: Free hierarchical outline.
@@ -2402,24 +1849,11 @@ void fz_debug_outline(fz_context *ctx, fz_outline *outline, int level);
 */
 void fz_free_outline(fz_context *ctx, fz_outline *outline);
 
-/* Document interface */
-
+/*
+	Document interface
+*/
 typedef struct fz_document_s fz_document;
-typedef struct fz_page_s fz_page; /* doesn't have a definition -- always cast to *_page */
-
-struct fz_document_s
-{
-	void (*close)(fz_document *);
-	int (*needs_password)(fz_document *doc);
-	int (*authenticate_password)(fz_document *doc, char *password);
-	fz_outline *(*load_outline)(fz_document *doc);
-	int (*count_pages)(fz_document *doc);
-	fz_page *(*load_page)(fz_document *doc, int number);
-	fz_link *(*load_links)(fz_document *doc, fz_page *page);
-	fz_rect (*bound_page)(fz_document *doc, fz_page *page);
-	void (*run_page)(fz_document *doc, fz_page *page, fz_device *dev, fz_matrix transform, fz_cookie *cookie);
-	void (*free_page)(fz_document *doc, fz_page *page);
-};
+typedef struct fz_page_s fz_page;
 
 /*
 	fz_open_document: Open a PDF, XPS or CBZ document.

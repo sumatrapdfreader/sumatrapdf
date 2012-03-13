@@ -1,4 +1,4 @@
-#include "fitz.h"
+#include "fitz-internal.h"
 
 void
 fz_free_link_dest(fz_context *ctx, fz_link_dest *dest)

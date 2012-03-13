@@ -1,4 +1,4 @@
-#include "fitz.h"
+#include "fitz-internal.h"
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -421,7 +421,7 @@ fz_copy_ft_bitmap(fz_context *ctx, int left, int top, FT_Bitmap *bitmap)
 
 /* The glyph cache lock is always taken when this is called. */
 fz_pixmap *
-fz_render_ft_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm)
+fz_render_ft_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm, int aa)
 {
 	FT_Face face = font->ft_face;
 	FT_Matrix m;
@@ -455,7 +455,7 @@ fz_render_ft_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm)
 		fz_warn(ctx, "freetype setting character size: %s", ft_error_string(fterr));
 	FT_Set_Transform(face, &m, &v);
 
-	if (fz_get_aa_level(ctx) == 0)
+	if (aa == 0)
 	{
 		/* If you really want grid fitting, enable this code. */
 		float scale = fz_matrix_expansion(trm);

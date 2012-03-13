@@ -1,4 +1,4 @@
-#include "fitz.h"
+#include "fitz-internal.h"
 
 #define OPJ_STATIC
 #include <openjpeg.h>
@@ -144,7 +144,7 @@ fz_load_jpx(fz_context *ctx, unsigned char *data, int size, fz_colorspace *defcs
 		if (n == 4)
 		{
 			fz_pixmap *tmp = fz_new_pixmap(ctx, fz_device_rgb, w, h);
-			fz_convert_pixmap(ctx, img, tmp);
+			fz_convert_pixmap(ctx, tmp, img);
 			fz_drop_pixmap(ctx, img);
 			img = tmp;
 		}

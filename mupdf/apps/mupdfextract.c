@@ -2,7 +2,6 @@
  * pdfextract -- the ultimate way to extract images and fonts from pdfs
  */
 
-#include "fitz.h"
 #include "mupdf.h"
 
 static pdf_document *doc = NULL;
@@ -34,7 +33,7 @@ static void saveimage(int num)
 	fz_image *image;
 	fz_pixmap *img;
 	pdf_obj *ref;
-	char name[1024];
+	char name[32];
 
 	ref = pdf_new_indirect(ctx, num, 0, doc);
 
@@ -44,27 +43,8 @@ static void saveimage(int num)
 	img = fz_image_to_pixmap(ctx, image, 0, 0);
 	fz_drop_image(ctx, image);
 
-	if (dorgb && img->colorspace && img->colorspace != fz_device_rgb)
-	{
-		fz_pixmap *temp;
-		temp = fz_new_pixmap_with_rect(ctx, fz_device_rgb, fz_bound_pixmap(img));
-		fz_convert_pixmap(ctx, img, temp);
-		fz_drop_pixmap(ctx, img);
-		img = temp;
-	}
-
-	if (img->n <= 4)
-	{
-		sprintf(name, "img-%04d.png", num);
-		printf("extracting image %s\n", name);
-		fz_write_png(ctx, img, name, 0);
-	}
-	else
-	{
-		sprintf(name, "img-%04d.pam", num);
-		printf("extracting image %s\n", name);
-		fz_write_pam(ctx, img, name, 0);
-	}
+	sprintf(name, "img-%04d", num);
+	fz_save_pixmap(ctx, img, name, dorgb);
 
 	fz_drop_pixmap(ctx, img);
 	pdf_drop_obj(ref);
@@ -80,7 +60,8 @@ static void savefont(pdf_obj *dict, int num)
 	char *ext = "";
 	FILE *f;
 	char *fontname = "font";
-	int n;
+	int n, len;
+	char *data;
 
 	obj = pdf_dict_gets(dict, "FontName");
 	if (obj)
@@ -133,8 +114,9 @@ static void savefont(pdf_obj *dict, int num)
 	if (!f)
 		fz_throw(ctx, "Error creating font file");
 
-	n = fwrite(buf->data, 1, buf->len, f);
-	if (n < buf->len)
+	len = fz_buffer_storage(ctx, buf, &data);
+	n = fwrite(data, 1, len, f);
+	if (n < len)
 		fz_throw(ctx, "Error writing font file");
 
 	if (fclose(f) < 0)
@@ -199,7 +181,7 @@ int main(int argc, char **argv)
 
 	if (fz_optind == argc)
 	{
-		for (o = 0; o < doc->len; o++)
+		for (o = 0; o < pdf_count_objects(doc); o++)
 			showobject(o);
 	}
 	else

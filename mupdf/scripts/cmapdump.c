@@ -6,8 +6,8 @@
 /* We never want to build memento versions of the cmapdump util */
 #undef MEMENTO
 
-#include "fitz.h"
-#include "mupdf.h"
+#include "fitz-internal.h"
+#include "mupdf-internal.h"
 
 #include "../fitz/base_context.c"
 #include "../fitz/base_error.c"
@@ -178,6 +178,10 @@ void fz_new_aa_context(fz_context *ctx)
 }
 
 void fz_free_aa_context(fz_context *ctx)
+{
+}
+
+void fz_copy_aa_context(fz_context *dst, fz_context *src)
 {
 }
 

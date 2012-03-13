@@ -1,4 +1,4 @@
-#include "fitz.h"
+#include "fitz-internal.h"
 #include "muxps.h"
 
 #define MAX_STOPS 256
@@ -61,7 +61,7 @@ xps_parse_gradient_stops(xps_document *doc, char *base_uri, xml_element *node,
 
 				xps_parse_color(doc, base_uri, color, &colorspace, sample);
 
-				fz_convert_color(doc->ctx, colorspace, sample + 1, fz_device_rgb, rgb);
+				fz_convert_color(doc->ctx, fz_device_rgb, rgb, colorspace, sample + 1);
 
 				stops[count].r = rgb[0];
 				stops[count].g = rgb[1];

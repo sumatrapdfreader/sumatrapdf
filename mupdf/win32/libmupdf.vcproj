@@ -222,6 +222,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\pdf\mupdf-internal.h"
+				>
+			</File>
+			<File
 				RelativePath="..\pdf\mupdf.h"
 				>
 			</File>
@@ -450,6 +454,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\fitz\fitz-internal.h"
+				>
+			</File>
+			<File
 				RelativePath="..\fitz\fitz.h"
 				>
 			</File>
@@ -462,7 +470,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\fitz\image_md5.c"
+				>
+			</File>
+			<File
 				RelativePath="..\fitz\image_png.c"
+				>
+			</File>
+			<File
+				RelativePath="..\fitz\image_save.c"
 				>
 			</File>
 			<File

@@ -1,5 +1,4 @@
-#include "fitz.h"
-#include "mupdf.h"
+#include "mupdf-internal.h"
 
 /**
  * the following code has been adapted from

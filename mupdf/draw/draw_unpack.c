@@ -1,4 +1,4 @@
-#include "fitz.h"
+#include "fitz-internal.h"
 
 /* Unpack image samples and optionally pad pixels with opaque alpha */
 

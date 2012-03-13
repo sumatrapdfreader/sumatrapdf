@@ -1,9 +1,7 @@
-#ifndef _MUCBZ_H_
-#define _MUCBZ_H_
+#ifndef MUCBZ_H
+#define MUCBZ_H
 
-#ifndef _FITZ_H_
-#error "fitz.h must be included before mucbz.h"
-#endif
+#include "fitz.h"
 
 typedef struct cbz_document_s cbz_document;
 typedef struct cbz_page_s cbz_page;

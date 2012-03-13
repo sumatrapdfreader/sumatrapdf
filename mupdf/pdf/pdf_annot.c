@@ -1,5 +1,5 @@
-#include "fitz.h"
-#include "mupdf.h"
+#include "fitz-internal.h"
+#include "mupdf-internal.h"
 
 static pdf_obj *
 resolve_dest_rec(pdf_document *xref, pdf_obj *dest, int depth)
@@ -744,6 +744,17 @@ pdf_get_quadrilaterals(pdf_obj *quad_points, int i, fz_rect *a, fz_rect *b)
 	a->y1 = pdf_to_real(pdf_array_get(quad_points, i * 8 + 7));
 }
 
+static fz_rect
+fz_straighten_rect(fz_rect rect)
+{
+	fz_rect r;
+	r.x0 = MIN(rect.x0, rect.x1);
+	r.y0 = MIN(rect.y0, rect.y1);
+	r.x1 = MAX(rect.x0, rect.x1);
+	r.y1 = MAX(rect.y0, rect.y1);
+	return r;
+}
+
 #define ANNOT_HIGHLIGHT_AP_RESOURCES \
 	"<< /ExtGState << /GS << /Type/ExtGState /ca 0.8 /AIS false /BM /Multiply >> >> >>"
 
@@ -764,6 +775,7 @@ pdf_create_highlight_annot(pdf_document *xref, pdf_obj *obj)
 		pdf_get_quadrilaterals(quad_points, i, &a, &b);
 		skew = 0.15 * fabs(a.y0 - b.y0);
 		b.x0 -= skew; b.x1 += skew;
+		a = fz_straighten_rect(a); b = fz_straighten_rect(b);
 		rect = fz_union_rect(rect, fz_union_rect(a, b));
 	}
 	pdf_get_annot_color(obj, rgb);
@@ -796,6 +808,7 @@ pdf_create_markup_annot(pdf_document *xref, pdf_obj *obj, char *type)
 	{
 		pdf_get_quadrilaterals(quad_points, i, &a, &b);
 		b.y0 -= 0.25; a.y1 += 0.25;
+		a = fz_straighten_rect(a); b = fz_straighten_rect(b);
 		rect = fz_union_rect(rect, fz_union_rect(a, b));
 	}
 	pdf_get_annot_color(obj, rgb);

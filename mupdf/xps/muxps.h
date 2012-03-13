@@ -1,9 +1,7 @@
 #ifndef _MUXPS_H_
 #define _MUXPS_H_
 
-#ifndef _FITZ_H_
-#error "fitz.h must be included before muxps.h"
-#endif
+#include "fitz-internal.h"
 
 typedef unsigned char byte;
 

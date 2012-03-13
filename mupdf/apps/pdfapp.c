@@ -1,8 +1,7 @@
-#include "fitz.h"
+#include "pdfapp.h"
 #include "mupdf.h"
 #include "muxps.h"
 #include "mucbz.h"
-#include "pdfapp.h"
 
 #include <ctype.h> /* for tolower() */
 
@@ -80,23 +79,7 @@ void pdfapp_init(fz_context *ctx, pdfapp_t *app)
 
 void pdfapp_invert(pdfapp_t *app, fz_bbox rect)
 {
-	unsigned char *p;
-	int x, y, n;
-
-	int x0 = CLAMP(rect.x0 - app->image->x, 0, app->image->w - 1);
-	int x1 = CLAMP(rect.x1 - app->image->x, 0, app->image->w - 1);
-	int y0 = CLAMP(rect.y0 - app->image->y, 0, app->image->h - 1);
-	int y1 = CLAMP(rect.y1 - app->image->y, 0, app->image->h - 1);
-
-	for (y = y0; y < y1; y++)
-	{
-		p = app->image->samples + (y * app->image->w + x0) * app->image->n;
-		for (x = x0; x < x1; x++)
-		{
-			for (n = app->image->n; n > 0; n--, p++)
-				*p = 255 - *p;
-		}
-	}
+	fz_invert_pixmap_rect(app->image, rect);
 }
 
 void pdfapp_open(pdfapp_t *app, char *filename, int fd, int reload)
@@ -174,7 +157,7 @@ void pdfapp_close(pdfapp_t *app)
 	app->page_list = NULL;
 
 	if (app->page_text)
-		fz_free_text_span(app->ctx, app->page_text);
+		fz_free_text_page(app->ctx, app->page_text);
 	app->page_text = NULL;
 
 	if (app->page_links)
@@ -245,7 +228,7 @@ static void pdfapp_loadpage(pdfapp_t *app)
 	if (app->page_list)
 		fz_free_display_list(app->ctx, app->page_list);
 	if (app->page_text)
-		fz_free_text_span(app->ctx, app->page_text);
+		fz_free_text_page(app->ctx, app->page_text);
 	if (app->page_links)
 		fz_drop_link(app->ctx, app->page_links);
 	if (app->page)
@@ -290,8 +273,9 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 		app->hitlen = 0;
 
 		/* Extract text */
-		app->page_text = fz_new_text_span(app->ctx);
-		tdev = fz_new_text_device(app->ctx, app->page_text);
+		app->page_sheet = fz_new_text_sheet(app->ctx);
+		app->page_text = fz_new_text_page(app->ctx, app->page_bbox);
+		tdev = fz_new_text_device(app->ctx, app->page_sheet, app->page_text);
 		fz_run_display_list(app->page_list, tdev, fz_identity, fz_infinite_bbox, NULL);
 		fz_free_device(tdev);
 	}
@@ -371,23 +355,61 @@ static void pdfapp_gotopage(pdfapp_t *app, int number)
 	pdfapp_showpage(app, 1, 1, 1);
 }
 
-static inline fz_bbox bboxcharat(fz_text_span *span, int idx)
+static fz_text_char textcharat(fz_text_page *page, int idx)
 {
+	static fz_text_char emptychar = { {0,0,0,0}, ' ' };
+	fz_text_block *block;
+	fz_text_line *line;
+	fz_text_span *span;
 	int ofs = 0;
-	while (span)
+	for (block = page->blocks; block < page->blocks + page->len; block++)
 	{
-		if (idx < ofs + span->len)
-			return span->text[idx - ofs].bbox;
-		if (span->eol)
+		for (line = block->lines; line < block->lines + block->len; line++)
 		{
-			if (idx == ofs + span->len)
-				return fz_empty_bbox;
-			ofs ++;
+			for (span = line->spans; span < line->spans + line->len; span++)
+			{
+				if (idx < ofs + span->len)
+					return span->text[idx - ofs];
+				/* pseudo-newline */
+				if (span + 1 == line->spans + line->len)
+				{
+					if (idx == ofs + span->len)
+						return emptychar;
+					ofs++;
+				}
+				ofs += span->len;
+			}
 		}
-		ofs += span->len;
-		span = span->next;
 	}
-	return fz_empty_bbox;
+	return emptychar;
+}
+
+static int textlen(fz_text_page *page)
+{
+	fz_text_block *block;
+	fz_text_line *line;
+	fz_text_span *span;
+	int len = 0;
+	for (block = page->blocks; block < page->blocks + page->len; block++)
+	{
+		for (line = block->lines; line < block->lines + block->len; line++)
+		{
+			for (span = line->spans; span < line->spans + line->len; span++)
+				len += span->len;
+			len++; /* pseudo-newline */
+		}
+	}
+	return len;
+}
+
+static inline int charat(fz_text_page *page, int idx)
+{
+	return textcharat(page, idx).c;
+}
+
+static inline fz_bbox bboxcharat(fz_text_page *page, int idx)
+{
+	return fz_round_rect(textcharat(page, idx).bbox);
 }
 
 void pdfapp_inverthit(pdfapp_t *app)
@@ -421,52 +443,20 @@ void pdfapp_inverthit(pdfapp_t *app)
 		pdfapp_invert(app, fz_transform_bbox(ctm, hitbox));
 }
 
-static inline int charat(fz_text_span *span, int idx)
-{
-	int ofs = 0;
-	while (span)
-	{
-		if (idx < ofs + span->len)
-			return span->text[idx - ofs].c;
-		if (span->eol)
-		{
-			if (idx == ofs + span->len)
-				return ' ';
-			ofs ++;
-		}
-		ofs += span->len;
-		span = span->next;
-	}
-	return 0;
-}
-
-static int textlen(fz_text_span *span)
-{
-	int len = 0;
-	while (span)
-	{
-		len += span->len;
-		if (span->eol)
-			len ++;
-		span = span->next;
-	}
-	return len;
-}
-
-static int match(char *s, fz_text_span *span, int n)
+static int match(char *s, fz_text_page *page, int n)
 {
 	int orig = n;
 	int c;
 	while ((c = *s++))
 	{
-		if (c == ' ' && charat(span, n) == ' ')
+		if (c == ' ' && charat(page, n) == ' ')
 		{
-			while (charat(span, n) == ' ')
+			while (charat(page, n) == ' ')
 				n++;
 		}
 		else
 		{
-			if (tolower(c) != tolower(charat(span, n)))
+			if (tolower(c) != tolower(charat(page, n)))
 				return 0;
 			n++;
 		}
@@ -1084,6 +1074,9 @@ void pdfapp_oncopy(pdfapp_t *app, unsigned short *ucsbuf, int ucslen)
 {
 	fz_bbox hitbox;
 	fz_matrix ctm;
+	fz_text_page *page = app->page_text;
+	fz_text_block *block;
+	fz_text_line *line;
 	fz_text_span *span;
 	int c, i, p;
 	int seen;
@@ -1096,32 +1089,40 @@ void pdfapp_oncopy(pdfapp_t *app, unsigned short *ucsbuf, int ucslen)
 	ctm = pdfapp_viewctm(app);
 
 	p = 0;
-	for (span = app->page_text; span; span = span->next)
+
+	for (block = page->blocks; block < page->blocks + page->len; block++)
 	{
-		seen = 0;
-
-		for (i = 0; i < span->len; i++)
+		for (line = block->lines; line < block->lines + block->len; line++)
 		{
-			hitbox = fz_transform_bbox(ctm, span->text[i].bbox);
-			c = span->text[i].c;
-			if (c < 32)
-				c = '?';
-			if (hitbox.x1 >= x0 && hitbox.x0 <= x1 && hitbox.y1 >= y0 && hitbox.y0 <= y1)
+			for (span = line->spans; span < line->spans + line->len; span++)
 			{
-				if (p < ucslen - 1)
-					ucsbuf[p++] = c;
-				seen = 1;
-			}
-		}
+				seen = 0;
 
-		if (seen && span->eol)
-		{
+				for (i = 0; i < span->len; i++)
+				{
+					hitbox = fz_round_rect(span->text[i].bbox);
+					hitbox = fz_transform_bbox(ctm, hitbox);
+					c = span->text[i].c;
+					if (c < 32)
+						c = '?';
+					if (hitbox.x1 >= x0 && hitbox.x0 <= x1 && hitbox.y1 >= y0 && hitbox.y0 <= y1)
+					{
+						if (p < ucslen - 1)
+							ucsbuf[p++] = c;
+						seen = 1;
+					}
+				}
+
+				if (seen && span + 1 == line->spans + line->len)
+				{
 #ifdef _WIN32
-			if (p < ucslen - 1)
-				ucsbuf[p++] = '\r';
+					if (p < ucslen - 1)
+						ucsbuf[p++] = '\r';
 #endif
-			if (p < ucslen - 1)
-				ucsbuf[p++] = '\n';
+					if (p < ucslen - 1)
+						ucsbuf[p++] = '\n';
+				}
+			}
 		}
 	}
 

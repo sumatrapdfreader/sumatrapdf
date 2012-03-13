@@ -2,11 +2,6 @@
  * Benchmarking of loading and drawing pdf pages.
  */
 
-#ifdef _WIN32
-#include <windows.h>
-#endif
-
-#include "fitz.h"
 #include "mupdf.h"
 
 #define logbench(...) \
@@ -15,6 +10,7 @@
 
 /* milli-second timer */
 #ifdef _WIN32
+#include <windows.h>
 
 typedef struct mstimer {
 	LARGE_INTEGER   start;
@@ -47,8 +43,8 @@ double timeinms(mstimer *timer)
 }
 
 #else
-
 #include <sys/time.h>
+
 typedef struct mstimer {
 	struct timeval    start;
 	struct timeval    end;
@@ -112,16 +108,16 @@ pdf_document *openxref(fz_context *ctx, char *filename)
 	return xref;
 }
 
-pdf_page *benchloadpage(pdf_document *xref, int pagenum)
+pdf_page *benchloadpage(fz_context *ctx, pdf_document *xref, int pagenum)
 {
 	pdf_page *page;
 	mstimer timer;
 
 	timerstart(&timer);
-	fz_try(xref->ctx) {
+	fz_try(ctx) {
 		page = pdf_load_page(xref, pagenum - 1);
 	}
-	fz_catch(xref->ctx) {
+	fz_catch(ctx) {
 		logbench("Error: failed to load page %d\n", pagenum);
 		return NULL;
 	}
@@ -131,7 +127,7 @@ pdf_page *benchloadpage(pdf_document *xref, int pagenum)
 	return page;
 }
 
-void benchrenderpage(pdf_document *xref, pdf_page *page, int pagenum)
+void benchrenderpage(fz_context *ctx, pdf_document *xref, pdf_page *page, int pagenum)
 {
 	fz_device *dev;
 	fz_pixmap *pix;
@@ -141,19 +137,19 @@ void benchrenderpage(pdf_document *xref, pdf_page *page, int pagenum)
 	timerstart(&timer);
 
 	bbox = fz_round_rect(pdf_bound_page(xref, page));
-	pix = fz_new_pixmap_with_rect(xref->ctx, fz_device_rgb, bbox);
-	fz_clear_pixmap_with_value(xref->ctx, pix, 0xFF);
-	dev = fz_new_draw_device(xref->ctx, pix);
-	fz_try(xref->ctx) {
+	pix = fz_new_pixmap_with_rect(ctx, fz_device_rgb, bbox);
+	fz_clear_pixmap_with_value(ctx, pix, 0xFF);
+	dev = fz_new_draw_device(ctx, pix);
+	fz_try(ctx) {
 		pdf_run_page(xref, page, dev, fz_identity, NULL);
 		timerstop(&timer);
 		logbench("pagerender %3d: %.2f ms\n", pagenum, timeinms(&timer));
 	}
-	fz_catch(xref->ctx) {
+	fz_catch(ctx) {
 		logbench("Error: pdf_run_page() failed\n");
 	}
 
-	fz_drop_pixmap(xref->ctx, pix);
+	fz_drop_pixmap(ctx, pix);
 	fz_free_device(dev);
 }
 
@@ -191,9 +187,9 @@ void benchfile(char *pdffilename, int loadonly, int pageNo)
 		pdf_page *page;
 		if ((-1 != pageNo) && (pageNo != curpage))
 			continue;
-		page = benchloadpage(xref, curpage);
+		page = benchloadpage(ctx, xref, curpage);
 		if (page) {
-			benchrenderpage(xref, page, curpage);
+			benchrenderpage(ctx, xref, page, curpage);
 			pdf_free_page(xref, page);
 		}
 	}

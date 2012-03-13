@@ -1,4 +1,4 @@
-#include "fitz.h"
+#include "fitz-internal.h"
 
 #define SLOWCMYK
 
@@ -180,7 +180,7 @@ fz_find_device_colorspace(char *name)
 
 /* Fast pixmap color conversions */
 
-static void fast_gray_to_rgb(fz_pixmap *src, fz_pixmap *dst)
+static void fast_gray_to_rgb(fz_pixmap *dst, fz_pixmap *src)
 {
 	unsigned char *s = src->samples;
 	unsigned char *d = dst->samples;
@@ -196,7 +196,7 @@ static void fast_gray_to_rgb(fz_pixmap *src, fz_pixmap *dst)
 	}
 }
 
-static void fast_gray_to_cmyk(fz_pixmap *src, fz_pixmap *dst)
+static void fast_gray_to_cmyk(fz_pixmap *dst, fz_pixmap *src)
 {
 	unsigned char *s = src->samples;
 	unsigned char *d = dst->samples;
@@ -213,7 +213,7 @@ static void fast_gray_to_cmyk(fz_pixmap *src, fz_pixmap *dst)
 	}
 }
 
-static void fast_rgb_to_gray(fz_pixmap *src, fz_pixmap *dst)
+static void fast_rgb_to_gray(fz_pixmap *dst, fz_pixmap *src)
 {
 	unsigned char *s = src->samples;
 	unsigned char *d = dst->samples;
@@ -227,7 +227,7 @@ static void fast_rgb_to_gray(fz_pixmap *src, fz_pixmap *dst)
 	}
 }
 
-static void fast_bgr_to_gray(fz_pixmap *src, fz_pixmap *dst)
+static void fast_bgr_to_gray(fz_pixmap *dst, fz_pixmap *src)
 {
 	unsigned char *s = src->samples;
 	unsigned char *d = dst->samples;
@@ -241,7 +241,7 @@ static void fast_bgr_to_gray(fz_pixmap *src, fz_pixmap *dst)
 	}
 }
 
-static void fast_rgb_to_cmyk(fz_pixmap *src, fz_pixmap *dst)
+static void fast_rgb_to_cmyk(fz_pixmap *dst, fz_pixmap *src)
 {
 	unsigned char *s = src->samples;
 	unsigned char *d = dst->samples;
@@ -262,7 +262,7 @@ static void fast_rgb_to_cmyk(fz_pixmap *src, fz_pixmap *dst)
 	}
 }
 
-static void fast_bgr_to_cmyk(fz_pixmap *src, fz_pixmap *dst)
+static void fast_bgr_to_cmyk(fz_pixmap *dst, fz_pixmap *src)
 {
 	unsigned char *s = src->samples;
 	unsigned char *d = dst->samples;
@@ -283,7 +283,7 @@ static void fast_bgr_to_cmyk(fz_pixmap *src, fz_pixmap *dst)
 	}
 }
 
-static void fast_cmyk_to_gray(fz_pixmap *src, fz_pixmap *dst)
+static void fast_cmyk_to_gray(fz_pixmap *dst, fz_pixmap *src)
 {
 	unsigned char *s = src->samples;
 	unsigned char *d = dst->samples;
@@ -300,7 +300,7 @@ static void fast_cmyk_to_gray(fz_pixmap *src, fz_pixmap *dst)
 	}
 }
 
-static void fast_cmyk_to_rgb(fz_context *ctx, fz_pixmap *src, fz_pixmap *dst)
+static void fast_cmyk_to_rgb(fz_context *ctx, fz_pixmap *dst, fz_pixmap *src)
 {
 	unsigned char *s = src->samples;
 	unsigned char *d = dst->samples;
@@ -328,7 +328,7 @@ static void fast_cmyk_to_rgb(fz_context *ctx, fz_pixmap *src, fz_pixmap *dst)
 	}
 }
 
-static void fast_cmyk_to_bgr(fz_context *ctx, fz_pixmap *src, fz_pixmap *dst)
+static void fast_cmyk_to_bgr(fz_context *ctx, fz_pixmap *dst, fz_pixmap *src)
 {
 	unsigned char *s = src->samples;
 	unsigned char *d = dst->samples;
@@ -356,7 +356,7 @@ static void fast_cmyk_to_bgr(fz_context *ctx, fz_pixmap *src, fz_pixmap *dst)
 	}
 }
 
-static void fast_rgb_to_bgr(fz_pixmap *src, fz_pixmap *dst)
+static void fast_rgb_to_bgr(fz_pixmap *dst, fz_pixmap *src)
 {
 	unsigned char *s = src->samples;
 	unsigned char *d = dst->samples;
@@ -373,7 +373,7 @@ static void fast_rgb_to_bgr(fz_pixmap *src, fz_pixmap *dst)
 }
 
 static void
-fz_std_conv_pixmap(fz_context *ctx, fz_pixmap *src, fz_pixmap *dst)
+fz_std_conv_pixmap(fz_context *ctx, fz_pixmap *dst, fz_pixmap *src)
 {
 	float srcv[FZ_MAX_COLORS];
 	float dstv[FZ_MAX_COLORS];
@@ -404,7 +404,7 @@ fz_std_conv_pixmap(fz_context *ctx, fz_pixmap *src, fz_pixmap *dst)
 				srcv[1] = *s++ - 128;
 				srcv[2] = *s++ - 128;
 
-				fz_convert_color(ctx, ss, srcv, ds, dstv);
+				fz_convert_color(ctx, ds, dstv, ss, srcv);
 
 				for (k = 0; k < dstn; k++)
 					*d++ = dstv[k] * 255;
@@ -424,7 +424,7 @@ fz_std_conv_pixmap(fz_context *ctx, fz_pixmap *src, fz_pixmap *dst)
 				for (k = 0; k < srcn; k++)
 					srcv[k] = *s++ / 255.0f;
 
-				fz_convert_color(ctx, ss, srcv, ds, dstv);
+				fz_convert_color(ctx, ds, dstv, ss, srcv);
 
 				for (k = 0; k < dstn; k++)
 					*d++ = dstv[k] * 255;
@@ -442,7 +442,7 @@ fz_std_conv_pixmap(fz_context *ctx, fz_pixmap *src, fz_pixmap *dst)
 		for (i = 0; i < 256; i++)
 		{
 			srcv[0] = i / 255.0f;
-			fz_convert_color(ctx, ss, srcv, ds, dstv);
+			fz_convert_color(ctx, ds, dstv, ss, srcv);
 			for (k = 0; k < dstn; k++)
 				lookup[i * dstn + k] = dstv[k] * 255;
 		}
@@ -483,7 +483,7 @@ fz_std_conv_pixmap(fz_context *ctx, fz_pixmap *src, fz_pixmap *dst)
 				{
 					for (k = 0; k < srcn; k++)
 						srcv[k] = *s++ / 255.0f;
-					fz_convert_color(ctx, ss, srcv, ds, dstv);
+					fz_convert_color(ctx, ds, dstv, ss, srcv);
 					for (k = 0; k < dstn; k++)
 						*d++ = dstv[k] * 255;
 
@@ -499,7 +499,7 @@ fz_std_conv_pixmap(fz_context *ctx, fz_pixmap *src, fz_pixmap *dst)
 }
 
 void
-fz_convert_pixmap(fz_context *ctx, fz_pixmap *sp, fz_pixmap *dp)
+fz_convert_pixmap(fz_context *ctx, fz_pixmap *dp, fz_pixmap *sp)
 {
 	fz_colorspace *ss = sp->colorspace;
 	fz_colorspace *ds = dp->colorspace;
@@ -510,37 +510,37 @@ fz_convert_pixmap(fz_context *ctx, fz_pixmap *sp, fz_pixmap *dp)
 
 	if (ss == fz_device_gray)
 	{
-		if (ds == fz_device_rgb) fast_gray_to_rgb(sp, dp);
-		else if (ds == fz_device_bgr) fast_gray_to_rgb(sp, dp); /* bgr == rgb here */
-		else if (ds == fz_device_cmyk) fast_gray_to_cmyk(sp, dp);
-		else fz_std_conv_pixmap(ctx, sp, dp);
+		if (ds == fz_device_rgb) fast_gray_to_rgb(dp, sp);
+		else if (ds == fz_device_bgr) fast_gray_to_rgb(dp, sp); /* bgr == rgb here */
+		else if (ds == fz_device_cmyk) fast_gray_to_cmyk(dp, sp);
+		else fz_std_conv_pixmap(ctx, dp, sp);
 	}
 
 	else if (ss == fz_device_rgb)
 	{
-		if (ds == fz_device_gray) fast_rgb_to_gray(sp, dp);
-		else if (ds == fz_device_bgr) fast_rgb_to_bgr(sp, dp);
-		else if (ds == fz_device_cmyk) fast_rgb_to_cmyk(sp, dp);
-		else fz_std_conv_pixmap(ctx, sp, dp);
+		if (ds == fz_device_gray) fast_rgb_to_gray(dp, sp);
+		else if (ds == fz_device_bgr) fast_rgb_to_bgr(dp, sp);
+		else if (ds == fz_device_cmyk) fast_rgb_to_cmyk(dp, sp);
+		else fz_std_conv_pixmap(ctx, dp, sp);
 	}
 
 	else if (ss == fz_device_bgr)
 	{
-		if (ds == fz_device_gray) fast_bgr_to_gray(sp, dp);
-		else if (ds == fz_device_rgb) fast_rgb_to_bgr(sp, dp); /* bgr = rgb here */
+		if (ds == fz_device_gray) fast_bgr_to_gray(dp, sp);
+		else if (ds == fz_device_rgb) fast_rgb_to_bgr(dp, sp); /* bgr = rgb here */
 		else if (ds == fz_device_cmyk) fast_bgr_to_cmyk(sp, dp);
-		else fz_std_conv_pixmap(ctx, sp, dp);
+		else fz_std_conv_pixmap(ctx, dp, sp);
 	}
 
 	else if (ss == fz_device_cmyk)
 	{
-		if (ds == fz_device_gray) fast_cmyk_to_gray(sp, dp);
-		else if (ds == fz_device_bgr) fast_cmyk_to_bgr(ctx, sp, dp);
-		else if (ds == fz_device_rgb) fast_cmyk_to_rgb(ctx, sp, dp);
-		else fz_std_conv_pixmap(ctx, sp, dp);
+		if (ds == fz_device_gray) fast_cmyk_to_gray(dp, sp);
+		else if (ds == fz_device_bgr) fast_cmyk_to_bgr(ctx, dp, sp);
+		else if (ds == fz_device_rgb) fast_cmyk_to_rgb(ctx, dp, sp);
+		else fz_std_conv_pixmap(ctx, dp, sp);
 	}
 
-	else fz_std_conv_pixmap(ctx, sp, dp);
+	else fz_std_conv_pixmap(ctx, dp, sp);
 }
 
 /* Convert a single color */
@@ -567,7 +567,7 @@ fz_std_conv_color(fz_context *ctx, fz_colorspace *srcs, float *srcv, fz_colorspa
 }
 
 void
-fz_convert_color(fz_context *ctx, fz_colorspace *ss, float *sv, fz_colorspace *ds, float *dv)
+fz_convert_color(fz_context *ctx, fz_colorspace *ds, float *dv, fz_colorspace *ss, float *sv)
 {
 	if (ss == fz_device_gray)
 	{

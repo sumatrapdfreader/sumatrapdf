@@ -239,7 +239,8 @@ FITZ_OBJS = \
 	$(OFZ)\image_jpeg.obj $(OFZ)\image_jpx.obj $(OFZ)\image_png.obj $(OFZ)\image_tiff.obj \
 	$(OFZ)\res_path.obj $(OFZ)\res_pixmap.obj $(OFZ)\res_text.obj $(OFZ)\res_bitmap.obj \
 	$(OFZ)\res_colorspace.obj $(OFZ)\res_font.obj $(OFZ)\res_shade.obj $(OFZ)\res_halftone.obj \
-	$(OFZ)\stm_buffer.obj $(OFZ)\stm_open.obj $(OFZ)\stm_read.obj
+	$(OFZ)\stm_buffer.obj $(OFZ)\stm_open.obj $(OFZ)\stm_read.obj \
+	$(OFZ)\image_md5.obj $(OFZ)\image_save.obj
 
 MUPDF_OBJS = \
 	$(OP)\base_object.obj $(OP)\pdf_annot.obj $(OP)\pdf_cmap.obj $(OP)\pdf_store.obj \
@@ -493,10 +494,17 @@ $(OP)\pdf_cmap_tables.obj: $(MUPDF_GEN_DIR) \
 	$(MUPDF_GEN_DIR)\cmap_cns.h $(MUPDF_GEN_DIR)\cmap_gbs.h \
 	$(MUPDF_GEN_DIR)\cmap_japan.h $(MUPDF_GEN_DIR)\cmap_korea.h
 
-$(FITZ_OBJS) $(FITZ_DRAW_OBJS): $(MUPDF_DIR)\fitz\fitz.h
-$(MUPDF_OBJS) $(CMAP_OBJS): $(MUPDF_DIR)\fitz\fitz.h $(MUPDF_DIR)\pdf\mupdf.h
-$(MUXPS_OBJS): $(MUPDF_DIR)\fitz\fitz.h $(MUPDF_DIR)\xps\muxps.h
-$(MUCBZ_OBJS): $(MUPDF_DIR)\fitz\fitz.h $(MUPDF_DIR)\cbz\mucbz.h
-$(MUAPPS_OBJS): $(MUPDF_DIR)\fitz\fitz.h $(MUPDF_DIR)\pdf\mupdf.h $(MUPDF_DIR)\xps\muxps.h $(MUPDF_DIR)\cbz\mucbz.h
+# header dependencies
+
+FITZ_H  = $(MUPDF_DIR)\fitz\fitz.h $(MUPDF_DIR)\fitz\fitz-internal.h
+MUPDF_H = $(MUPDF_DIR)\pdf\mupdf.h $(MUPDF_DIR)\pdf\mupdf-internal.h
+MUXPS_H = $(MUPDF_DIR)\xps\muxps.h
+MUCBZ_H = $(MUPDF_DIR)\cbz\mucbz.h
+
+$(FITZ_OBJS) $(FITZ_DRAW_OBJS): $(FITZ_H)
+$(MUPDF_OBJS) $(CMAP_OBJS): $(FITZ_H) $(MUPDF_H)
+$(MUXPS_OBJS): $(FITZ_H) $(MUXPS_H)
+$(MUCBZ_OBJS): $(FITZ_H) $(MUCBZ_H)
+$(MUAPPS_OBJS): $(FITZ_H) $(MUPDF_H) $(MUXPS_H) $(MUCBZ_H)
 
 force: ;

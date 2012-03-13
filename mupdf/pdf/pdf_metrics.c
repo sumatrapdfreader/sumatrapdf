@@ -1,5 +1,5 @@
-#include "fitz.h"
-#include "mupdf.h"
+#include "fitz-internal.h"
+#include "mupdf-internal.h"
 
 void
 pdf_set_font_wmode(fz_context *ctx, pdf_font_desc *font, int wmode)

@@ -1,7 +1,3 @@
-#include "fitz.h"
-#include "mupdf.h"
-#include "muxps.h"
-#include "mucbz.h"
 #include "pdfapp.h"
 
 #include <X11/Xlib.h>
@@ -253,6 +249,9 @@ void winhelp(pdfapp_t *app)
 
 void winresize(pdfapp_t *app, int w, int h)
 {
+	fz_bbox bb = fz_bound_pixmap(gapp.image);
+	int image_w = bb.x1 - bb.x0;
+	int image_h = bb.y1 - bb.y0;
 	XWindowChanges values;
 	int mask, width, height;
 
@@ -287,7 +286,7 @@ void winresize(pdfapp_t *app, int w, int h)
 		}
 
 		XSetForeground(xdpy, xgc, WhitePixel(xdpy, xscr));
-		XFillRectangle(xdpy, xwin, xgc, 0, 0, gapp.image->w, gapp.image->h);
+		XFillRectangle(xdpy, xwin, xgc, 0, 0, image_w, image_h);
 		XFlush(xdpy);
 
 		if (width != reqw || height != reqh)
@@ -338,10 +337,15 @@ static void winblitsearch(pdfapp_t *app)
 
 static void winblit(pdfapp_t *app)
 {
+	fz_bbox bb = fz_bound_pixmap(gapp.image);
+	int image_w = bb.x1 - bb.x0;
+	int image_h = bb.y1 - bb.y0;
+	int image_n = fz_pixmap_components(gapp.ctx, gapp.image);
+	unsigned char *image_samples = fz_pixmap_pixels(gapp.ctx, gapp.image);
 	int x0 = gapp.panx;
 	int y0 = gapp.pany;
-	int x1 = gapp.panx + gapp.image->w;
-	int y1 = gapp.pany + gapp.image->h;
+	int x1 = gapp.panx + image_w;
+	int y1 = gapp.pany + image_h;
 
 	XSetForeground(xdpy, xgc, xbgcolor.pixel);
 	fillrect(0, 0, x0, gapp.winh);
@@ -350,8 +354,8 @@ static void winblit(pdfapp_t *app)
 	fillrect(0, y1, gapp.winw, gapp.winh - y1);
 
 	XSetForeground(xdpy, xgc, xshcolor.pixel);
-	fillrect(x0+2, y1, gapp.image->w, 2);
-	fillrect(x1, y0+2, 2, gapp.image->h);
+	fillrect(x0+2, y1, image_w, 2);
+	fillrect(x1, y0+2, 2, image_h);
 
 	if (gapp.iscopying || justcopied)
 	{
@@ -361,21 +365,21 @@ static void winblit(pdfapp_t *app)
 
 	pdfapp_inverthit(&gapp);
 
-	if (gapp.image->n == 4)
+	if (image_n == 4)
 		ximage_blit(xwin, xgc,
 			x0, y0,
-			gapp.image->samples,
+			image_samples,
 			0, 0,
-			gapp.image->w,
-			gapp.image->h,
-			gapp.image->w * gapp.image->n);
-	else if (gapp.image->n == 2)
+			image_w,
+			image_h,
+			image_w * image_n);
+	else if (image_n == 2)
 	{
-		int i = gapp.image->w*gapp.image->h;
+		int i = image_w*image_h;
 		unsigned char *color = malloc(i*4);
 		if (color)
 		{
-			unsigned char *s = gapp.image->samples;
+			unsigned char *s = image_samples;
 			unsigned char *d = color;
 			for (; i > 0 ; i--)
 			{
@@ -387,9 +391,9 @@ static void winblit(pdfapp_t *app)
 				x0, y0,
 				color,
 				0, 0,
-				gapp.image->w,
-				gapp.image->h,
-				gapp.image->w * 4);
+				image_w,
+				image_h,
+				image_w * 4);
 			free(color);
 		}
 	}
@@ -462,7 +466,7 @@ void windocopy(pdfapp_t *app)
 	{
 		ucs = ucs2[0];
 
-		utf8 += runetochar(utf8, &ucs);
+		utf8 += fz_runetochar(utf8, ucs);
 
 		if (ucs < 256)
 			*latin1++ = ucs;

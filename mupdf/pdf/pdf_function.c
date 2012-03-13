@@ -1,5 +1,5 @@
-#include "fitz.h"
-#include "mupdf.h"
+#include "fitz-internal.h"
+#include "mupdf-internal.h"
 
 enum
 {
@@ -203,7 +203,13 @@ ps_push_real(ps_stack *st, float n)
 	if (!ps_overflow(st, 1))
 	{
 		st->stack[st->sp].type = PS_REAL;
-		st->stack[st->sp].u.f = n;
+		if (isnan(n))
+		{
+			/* Push 1.0, as it's a small known value that won't
+			   cause a divide by 0. Same reason as in fz_atof. */
+			n = 1.0;
+		}
+		st->stack[st->sp].u.f = CLAMP(n, -FLT_MAX, FLT_MAX);
 		st->sp++;
 	}
 }
@@ -360,10 +366,10 @@ ps_run(fz_context *ctx, psobj *code, ps_stack *st, int pc)
 			case PS_OP_BITSHIFT:
 				i2 = ps_pop_int(st);
 				i1 = ps_pop_int(st);
-				if (i2 > 0)
+				if (i2 > 0 && i2 < 8 * sizeof (i2))
 					ps_push_int(st, i1 << i2);
-				else if (i2 < 0)
-					ps_push_int(st, (int)((unsigned int)i1 >> i2));
+				else if (i2 < 0 && i2 > -8 * (int)sizeof (i2))
+					ps_push_int(st, (int)((unsigned int)i1 >> -i2));
 				else
 					ps_push_int(st, i1);
 				break;
@@ -393,7 +399,10 @@ ps_run(fz_context *ctx, psobj *code, ps_stack *st, int pc)
 			case PS_OP_DIV:
 				r2 = ps_pop_real(st);
 				r1 = ps_pop_real(st);
-				ps_push_real(st, r1 / r2);
+				if (fabsf(r2) < FLT_EPSILON)
+					ps_push_real(st, r1 / r2);
+				else
+					ps_push_real(st, DIV_BY_ZERO(r1, r2, -FLT_MAX, FLT_MAX));
 				break;
 
 			case PS_OP_DUP:
@@ -466,7 +475,10 @@ ps_run(fz_context *ctx, psobj *code, ps_stack *st, int pc)
 			case PS_OP_IDIV:
 				i2 = ps_pop_int(st);
 				i1 = ps_pop_int(st);
-				ps_push_int(st, i1 / i2);
+				if (i2 != 0)
+					ps_push_int(st, i1 / i2);
+				else
+					ps_push_int(st, DIV_BY_ZERO(i1, i2, INT_MIN, INT_MAX));
 				break;
 
 			case PS_OP_INDEX:
@@ -512,7 +524,10 @@ ps_run(fz_context *ctx, psobj *code, ps_stack *st, int pc)
 			case PS_OP_MOD:
 				i2 = ps_pop_int(st);
 				i1 = ps_pop_int(st);
-				ps_push_int(st, i1 % i2);
+				if (i2 != 0)
+					ps_push_int(st, i1 % i2);
+				else
+					ps_push_int(st, DIV_BY_ZERO(i1, i2, INT_MIN, INT_MAX));
 				break;
 
 			case PS_OP_MUL:

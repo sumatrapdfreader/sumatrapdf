@@ -1,5 +1,5 @@
-#include "fitz.h"
-#include "mupdf.h"
+#include "fitz-internal.h"
+#include "mupdf-internal.h"
 
 pdf_pattern *
 pdf_keep_pattern(fz_context *ctx, pdf_pattern *pat)

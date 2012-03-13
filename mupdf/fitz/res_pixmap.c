@@ -1,4 +1,4 @@
-#include "fitz.h"
+#include "fitz-internal.h"
 
 fz_pixmap *
 fz_keep_pixmap(fz_context *ctx, fz_pixmap *pix)
@@ -280,6 +280,27 @@ fz_invert_pixmap(fz_context *ctx, fz_pixmap *pix)
 			for (k = 0; k < pix->n - 1; k++)
 				s[k] = 255 - s[k];
 			s += pix->n;
+		}
+	}
+}
+
+void fz_invert_pixmap_rect(fz_pixmap *image, fz_bbox rect)
+{
+	unsigned char *p;
+	int x, y, n;
+
+	int x0 = CLAMP(rect.x0 - image->x, 0, image->w - 1);
+	int x1 = CLAMP(rect.x1 - image->x, 0, image->w - 1);
+	int y0 = CLAMP(rect.y0 - image->y, 0, image->h - 1);
+	int y1 = CLAMP(rect.y1 - image->y, 0, image->h - 1);
+
+	for (y = y0; y < y1; y++)
+	{
+		p = image->samples + (y * image->w + x0) * image->n;
+		for (x = x0; x < x1; x++)
+		{
+			for (n = image->n; n > 0; n--, p++)
+				*p = 255 - *p;
 		}
 	}
 }

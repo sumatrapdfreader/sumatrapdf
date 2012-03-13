@@ -10,7 +10,7 @@
  */
 
 #include "fitz.h"
-#include "mupdf.h"
+#include "mupdf-internal.h"
 
 static FILE *out = NULL;
 

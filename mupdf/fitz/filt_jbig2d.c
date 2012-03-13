@@ -1,4 +1,4 @@
-#include "fitz.h"
+#include "fitz-internal.h"
 
 #ifdef _WIN32 /* Microsoft Visual C++ */
 

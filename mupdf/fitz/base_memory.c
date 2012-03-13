@@ -3,7 +3,7 @@
 #define _CRTDBG_MAP_ALLOC
 #endif
 
-#include "fitz.h"
+#include "fitz-internal.h"
 
 static void *
 do_scavenging_malloc(fz_context *ctx, unsigned int size)

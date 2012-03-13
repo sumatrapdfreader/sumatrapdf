@@ -7,7 +7,7 @@ This file has been put into the public domain.
 You can do whatever you want with this file.
 */
 
-#include "fitz.h"
+#include "fitz-internal.h"
 
 static inline int isbigendian(void)
 {

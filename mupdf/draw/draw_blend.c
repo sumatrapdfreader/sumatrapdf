@@ -1,4 +1,4 @@
-#include "fitz.h"
+#include "fitz-internal.h"
 
 /* PDF 1.4 blend modes. These are slow. */
 

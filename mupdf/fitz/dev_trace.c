@@ -1,4 +1,4 @@
-#include "fitz.h"
+#include "fitz-internal.h"
 
 static void
 fz_trace_matrix(fz_matrix ctm)

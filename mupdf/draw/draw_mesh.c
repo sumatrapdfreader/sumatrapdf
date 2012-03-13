@@ -1,4 +1,4 @@
-#include "fitz.h"
+#include "fitz-internal.h"
 
 /*
  * polygon clipping
@@ -509,7 +509,7 @@ fz_paint_mesh(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, 
 				tri[k][2] = *mesh++ * 255;
 			else
 			{
-				fz_convert_color(ctx, shade->colorspace, mesh, dest->colorspace, tri[k] + 2);
+				fz_convert_color(ctx, dest->colorspace, tri[k] + 2, shade->colorspace, mesh);
 				for (i = 0; i < dest->colorspace->n; i++)
 					tri[k][i + 2] *= 255;
 				mesh += shade->colorspace->n;
@@ -539,7 +539,7 @@ fz_paint_shade(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_pixmap *dest,
 		{
 			for (i = 0; i < 256; i++)
 			{
-				fz_convert_color(ctx, shade->colorspace, shade->function[i], dest->colorspace, color);
+				fz_convert_color(ctx, dest->colorspace, color, shade->colorspace, shade->function[i]);
 				for (k = 0; k < dest->colorspace->n; k++)
 					clut[i][k] = color[k] * 255;
 				clut[i][k] = shade->function[i][shade->colorspace->n] * 255;

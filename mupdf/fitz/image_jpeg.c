@@ -1,4 +1,4 @@
-#include "fitz.h"
+#include "fitz-internal.h"
 
 #include <jpeglib.h>
 #include <setjmp.h>

@@ -6,7 +6,7 @@
 #include <windows.h>
 #include <gdiplus.h>
 extern "C" {
-#include <fitz.h>
+#include "fitz-internal.h"
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -116,7 +116,7 @@ public:
 			}
 			else
 			{
-				fz_convert_pixmap(ctx, pixmap, pix);
+				fz_convert_pixmap(ctx, pix, pixmap);
 			}
 		}
 		else
@@ -464,7 +464,7 @@ public:
 			float srcv[FZ_MAX_COLORS], rgb[3];
 			for (int k = 0; k < image->colorspace->n; k++)
 				srcv[k] = image->samples[k] / 255.0f;
-			fz_convert_color(ctx, image->colorspace, srcv, fz_device_rgb, rgb);
+			fz_convert_color(ctx, fz_device_rgb, rgb, image->colorspace, srcv);
 			SolidBrush brush(Color(alpha * image->samples[image->colorspace->n],
 				rgb[0] * 255, rgb[1] * 255, rgb[2] * 255));
 			
@@ -558,7 +558,7 @@ protected:
 					color[0] = maskScan0[col * 4] / 255.0f;
 					color[1] = maskScan0[col * 4 + 1] / 255.0f;
 					color[2] = maskScan0[col * 4 + 2] / 255.0f;
-					fz_convert_color(ctx, fz_device_rgb, color, fz_device_gray, &gray);
+					fz_convert_color(ctx, fz_device_gray, &gray, fz_device_rgb, color);
 					alpha = gray * 255;
 				}
 				Scan0[col * 4 + 3] *= alpha / 255.0f;
@@ -741,7 +741,7 @@ gdiplus_get_brush(fz_device *dev, fz_colorspace *colorspace, float *color, float
 	float rgb[3];
 	
 	if (!((userData *)dev->user)->t3color)
-		fz_convert_color(dev->ctx, colorspace, color, fz_device_rgb, rgb);
+		fz_convert_color(dev->ctx, fz_device_rgb, rgb, colorspace, color);
 	else
 		memcpy(rgb, ((userData *)dev->user)->t3color, sizeof(rgb));
 	
@@ -1190,7 +1190,7 @@ gdiplus_run_t3_text(fz_device *dev, fz_text *text, fz_matrix ctm,
 		fz_warn(dev->ctx, "stroking Type 3 glyphs is not supported");
 	
 	float rgb[3];
-	fz_convert_color(dev->ctx, colorspace, color, fz_device_rgb, rgb);
+	fz_convert_color(dev->ctx, fz_device_rgb, rgb, colorspace, color);
 	((userData *)dev->user)->t3color = rgb;
 	
 	fz_font *font = text->font;
@@ -1305,7 +1305,7 @@ fz_gdiplus_fill_shade(fz_device *dev, fz_shade *shade, fz_matrix ctm, float alph
 	if (shade->use_background)
 	{
 		float colorfv[4];
-		fz_convert_color(dev->ctx, shade->colorspace, shade->background, fz_device_rgb, colorfv);
+		fz_convert_color(dev->ctx, fz_device_rgb, colorfv, shade->colorspace, shade->background);
 		colorfv[3] = 1.0;
 		
 		for (int y = bbox.y0; y < bbox.y1; y++)
@@ -1349,7 +1349,7 @@ fz_gdiplus_fill_image_mask(fz_device *dev, fz_image *image, fz_matrix ctm,
 {
 	float rgb[3];
 	if (!((userData *)dev->user)->t3color)
-		fz_convert_color(dev->ctx, colorspace, color, fz_device_rgb, rgb);
+		fz_convert_color(dev->ctx, fz_device_rgb, rgb, colorspace, color);
 	else
 		memcpy(rgb, ((userData *)dev->user)->t3color, sizeof(rgb));
 	
@@ -1390,7 +1390,7 @@ fz_gdiplus_begin_mask(fz_device *dev, fz_rect rect, int luminosity,
 {
 	float rgb[3] = { 0 };
 	if (luminosity && colorspace && colorfv)
-		fz_convert_color(dev->ctx, colorspace, colorfv, fz_device_rgb, rgb);
+		fz_convert_color(dev->ctx, fz_device_rgb, rgb, colorspace, colorfv);
 	
 	((userData *)dev->user)->recordClipMask(rect, !!luminosity, rgb);
 }

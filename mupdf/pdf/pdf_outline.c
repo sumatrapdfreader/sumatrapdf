@@ -1,5 +1,5 @@
-#include "fitz.h"
-#include "mupdf.h"
+#include "fitz-internal.h"
+#include "mupdf-internal.h"
 
 static fz_outline *
 pdf_load_outline_imp(pdf_document *xref, pdf_obj *dict)

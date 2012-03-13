@@ -1,5 +1,5 @@
-#include "fitz.h"
-#include "mupdf.h"
+#include "fitz-internal.h"
+#include "mupdf-internal.h"
 
 static int
 pdf_make_hash_key(fz_store_hash *hash, void *key_)

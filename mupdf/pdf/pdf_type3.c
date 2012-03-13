@@ -1,5 +1,5 @@
-#include "fitz.h"
-#include "mupdf.h"
+#include "fitz-internal.h"
+#include "mupdf-internal.h"
 
 static void
 pdf_run_glyph_func(void *doc, void *rdb_, fz_buffer *contents, fz_device *dev, fz_matrix ctm, void *gstate)

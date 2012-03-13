@@ -1,5 +1,5 @@
-#include "fitz.h"
-#include "mupdf.h"
+#include "fitz-internal.h"
+#include "mupdf-internal.h"
 
 static inline int iswhite(int ch)
 {
@@ -1076,6 +1076,11 @@ pdf_resolve_indirect(pdf_obj *ref)
 	}
 
 	return ref;
+}
+
+int pdf_count_objects(pdf_document *doc)
+{
+	return doc->len;
 }
 
 /* Replace numbered object -- for use by pdfclean and similar tools */
