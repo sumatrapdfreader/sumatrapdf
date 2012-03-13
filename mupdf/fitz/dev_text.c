@@ -885,7 +885,8 @@ fz_print_text_page_html(FILE *out, fz_text_page *page)
 						fprintf(out, "&#x%x;", ch->c);
 				}
 			}
-			fz_print_style_end(out, style);
+			if (style != NULL)
+				fz_print_style_end(out, style);
 			fprintf(out, "</p>\n");
 		}
 		fprintf(out, "</div>\n");

@@ -15,7 +15,6 @@
 #include "TrivialHtmlParser.h"
 #include "HtmlPullParser.h"
 #include "PageLayout.h"
-// for ImageData
 #include "MobiDoc.h"
 
 // disable warning C4250 which is wrongly issued due to a compiler bug; cf.
@@ -494,6 +493,192 @@ PageDestination *EbookEngine::GetNamedDest(const TCHAR *name)
     return NULL;
 }
 
+/* common layout extensions (to be integrated into PageLayout/EbookFormatter) */
+
+class PageLayoutCommon : public PageLayout {
+protected:
+    void EmitParagraph2(float indentation=0);
+    void EmitImage2(ImageData *img);
+
+    void HandleTagHeader(HtmlToken *t);
+    void HandleTagA2(HtmlToken *t, const char *linkAttr="href");
+    void HandleHtmlTag2(HtmlToken *t);
+
+    Vec<PageAnchor> *anchors;
+    int listDepth;
+
+public:
+    PageLayoutCommon(LayoutInfo *li);
+    // Vec<PageData*> *Layout(Vec<PageAnchor> *anchors=NULL);
+};
+
+PageLayoutCommon::PageLayoutCommon(LayoutInfo* li) : anchors(NULL), listDepth(0)
+{
+    CrashIf(currPage);
+    finishedParsing = false;
+    layoutInfo = li;
+    pageDx = (REAL)layoutInfo->pageDx;
+    pageDy = (REAL)layoutInfo->pageDy;
+    textAllocator = layoutInfo->textAllocator;
+    htmlParser = new HtmlPullParser(layoutInfo->htmlStr, layoutInfo->htmlStrLen);
+
+    CrashIf(gfx);
+    gfx = mui::AllocGraphicsForMeasureText();
+    defaultFontName.Set(str::Dup(layoutInfo->fontName));
+    defaultFontSize = layoutInfo->fontSize;
+    SetCurrentFont(FontStyleRegular, defaultFontSize);
+
+    coverImage = NULL;
+    pageCount = 0;
+    inLink = false;
+
+    lineSpacing = currFont->GetHeight(gfx);
+    spaceDx = currFontSize / 2.5f; // note: a heuristic
+    float spaceDx2 = GetSpaceDx(gfx, currFont);
+    if (spaceDx2 < spaceDx)
+        spaceDx = spaceDx2;
+
+    currJustification = Align_Justify;
+    currX = 0; currY = 0;
+    currPage = new PageData;
+    currReparsePoint = NULL;
+
+    currLineTopPadding = 0;
+}
+
+void PageLayoutCommon::EmitParagraph2(float indentation)
+{
+    EmitParagraph(indentation, 0);
+    // prevent accidental double-indentation
+    for (size_t i = currLineInstr.Count(); i > 0; i--) {
+        if (InstrFixedSpace == currLineInstr.At(i-1).type &&
+            (!indentation || i < currLineInstr.Count())) {
+            currLineInstr.RemoveAt(i-1);
+        }
+    }
+}
+
+void PageLayoutCommon::EmitImage2(ImageData *img)
+{
+    Rect imgSize = BitmapSizeFromData(img->data, img->len);
+    if (imgSize.IsEmptyArea())
+        return;
+
+    SizeF newSize((REAL)imgSize.Width, (REAL)imgSize.Height);
+    // move overly large images to a new line
+    if (!IsCurrLineEmpty() && currX + newSize.Width > pageDx)
+        FlushCurrLine(false);
+    // move overly large images to a new page
+    if (currY > 0 && currY + newSize.Height / 2.f > pageDy)
+        ForceNewPage();
+    // if image is still bigger than available space, scale it down
+    if ((newSize.Width > pageDx) || (currY + newSize.Height) > pageDy) {
+        REAL scale = min(pageDx / newSize.Width, (pageDy - currY) / newSize.Height);
+        newSize.Width *= scale;
+        newSize.Height *= scale;
+    }
+
+    RectF bbox(PointF(currX, 0), newSize);
+    AppendInstr(DrawInstr::Image(img->data, img->len, bbox));
+    // add an empty string in place of the image so that
+    // we can make the image flow with the text (as long
+    // as justification code doesn't take into account images)
+    AppendInstr(DrawInstr::Str("", 0, bbox));
+    currX += bbox.Width;
+}
+
+void PageLayoutCommon::HandleTagHeader(HtmlToken *t)
+{
+    if (t->IsEndTag()) {
+        FlushCurrLine(true);
+        currY += currFontSize / 2;
+        currFontSize = defaultFontSize;
+        currJustification = Align_Justify;
+    }
+    else {
+        currJustification = Align_Left;
+        EmitParagraph2();
+        currFontSize = defaultFontSize * pow(1.1f, '5' - t->s[1]);
+        if (currY > 0)
+            currY += currFontSize / 2;
+    }
+    ChangeFontStyle(FontStyleBold, t->IsStartTag());
+}
+
+void PageLayoutCommon::HandleTagA2(HtmlToken *t, const char *linkAttr)
+{
+    if (t->IsStartTag() && !inLink) {
+        AttrInfo *attr = t->GetAttrByName(linkAttr);
+        if (attr) {
+            DrawInstr i(InstrLinkStart);
+            i.str.s = attr->val;
+            i.str.len = attr->valLen;
+            AppendInstr(i);
+            inLink = true;
+        }
+    }
+    else if (t->IsEndTag() && inLink) {
+        AppendInstr(DrawInstr(InstrLinkEnd));
+        inLink = false;
+    }
+}
+
+void PageLayoutCommon::HandleHtmlTag2(HtmlToken *t)
+{
+    if (anchors) {
+        AttrInfo *attrInfo = t->GetAttrByName("id");
+        if (!attrInfo && t->NameIs("a"))
+            attrInfo = t->GetAttrByName("name");
+        if (attrInfo)
+            anchors->Append(PageAnchor(attrInfo->val, attrInfo->valLen,
+                                       pagesToSend.Count() + 1, currY));
+    }
+
+    HtmlTag tag = FindTag(t);
+    switch (tag) {
+    case Tag_Pagebreak:
+        ForceNewPage();
+        break;
+    case Tag_Ul: case Tag_Ol: case Tag_Dl:
+        if (t->IsStartTag())
+            listDepth++;
+        else if (t->IsEndTag()) {
+            if (listDepth > 0)
+                listDepth--;
+            FlushCurrLine(true);
+        }
+        break;
+    case Tag_Li: case Tag_Dd:
+        if (t->IsStartTag())
+            EmitParagraph2(15.f * listDepth);
+        else if (t->IsEndTag())
+            FlushCurrLine(true);
+        break;
+    case Tag_Dt:
+        if (t->IsStartTag()) {
+            EmitParagraph2(15.f * (listDepth - 1));
+            currJustification = Align_Left;
+        }
+        else if (t->IsEndTag())
+            FlushCurrLine(true);
+        ChangeFontStyle(FontStyleBold, t->IsStartTag());
+        break;
+    case Tag_Center:
+        currJustification = Align_Center;
+        break;
+    case Tag_H1: case Tag_H2: case Tag_H3:
+    case Tag_H4: case Tag_H5:
+        HandleTagHeader(t);
+        break;
+    case Tag_A:
+        HandleTagA2(t);
+        break;
+    default:
+        HandleHtmlTag(t);
+        break;
+    }
+}
+
 /* EPUB loading code (was ebooktest2/EpubDoc.cpp) */
 
 struct ImageData2 {
@@ -737,157 +922,41 @@ void EpubDoc::ParseMetadata(const char *content)
 
 /* PageLayout extensions for EPUB (was ebooktest2/PageLayout.cpp) */
 
-class PageLayoutEpub : public PageLayout {
+class PageLayoutEpub : public PageLayoutCommon {
 protected:
-    void EmitParagraph2(float indentation=0);
-    void EmitImage2(ImageData *img);
+    void HandleTagImgEpub(HtmlToken *t);
+    void HandleHtmlTagEpub(HtmlToken *t);
 
-    void HandleTagImg2(HtmlToken *t);
-    void HandleTagHeader(HtmlToken *t);
-    void HandleTagA2(HtmlToken *t, const char *linkAttr="href");
-    void HandleHtmlTag2(HtmlToken *t);
-
-    Vec<PageAnchor> *anchors;
-    int listDepth;
+    EpubDoc *epubDoc;
 
 public:
-    PageLayoutEpub(LayoutInfo *li);
+    PageLayoutEpub(LayoutInfo *li, EpubDoc *doc) :
+        PageLayoutCommon(li), epubDoc(doc) { }
 
     Vec<PageData*> *Layout(Vec<PageAnchor> *anchors=NULL);
 };
 
-PageLayoutEpub::PageLayoutEpub(LayoutInfo* li)
+void PageLayoutEpub::HandleTagImgEpub(HtmlToken *t)
 {
-    CrashIf(currPage);
-    finishedParsing = false;
-    layoutInfo = li;
-    pageDx = (REAL)layoutInfo->pageDx;
-    pageDy = (REAL)layoutInfo->pageDy;
-    textAllocator = layoutInfo->textAllocator;
-    htmlParser = new HtmlPullParser(layoutInfo->htmlStr, layoutInfo->htmlStrLen);
-
-    CrashIf(gfx);
-    gfx = mui::AllocGraphicsForMeasureText();
-    defaultFontName.Set(str::Dup(layoutInfo->fontName));
-    defaultFontSize = layoutInfo->fontSize;
-    SetCurrentFont(FontStyleRegular, defaultFontSize);
-
-    coverImage = NULL;
-    pageCount = 0;
-    inLink = false;
-
-    lineSpacing = currFont->GetHeight(gfx);
-    spaceDx = currFontSize / 2.5f; // note: a heuristic
-    float spaceDx2 = GetSpaceDx(gfx, currFont);
-    if (spaceDx2 < spaceDx)
-        spaceDx = spaceDx2;
-
-    currJustification = Align_Justify;
-    currX = 0; currY = 0;
-    currPage = new PageData;
-    currReparsePoint = NULL;
-
-    currLineTopPadding = 0;
-    // EPUB documents contain no cover image
-    anchors = NULL;
-    listDepth = 0;
-}
-
-void PageLayoutEpub::EmitParagraph2(float indentation)
-{
-    EmitParagraph(indentation, 0);
-    // prevent accidental double-indentation
-    for (size_t i = currLineInstr.Count(); i > 0; i--) {
-        if (InstrFixedSpace == currLineInstr.At(i-1).type &&
-            (!indentation || i < currLineInstr.Count())) {
-            currLineInstr.RemoveAt(i-1);
-        }
-    }
-}
-
-void PageLayoutEpub::EmitImage2(ImageData *img)
-{
-    Rect imgSize = BitmapSizeFromData(img->data, img->len);
-    if (imgSize.IsEmptyArea())
-        return;
-
-    SizeF newSize((REAL)imgSize.Width, (REAL)imgSize.Height);
-    // move overly large images to a new line
-    if (!IsCurrLineEmpty() && currX + newSize.Width > pageDx)
-        FlushCurrLine(false);
-    // move overly large images to a new page
-    if (currY > 0 && currY + newSize.Height / 2.f > pageDy)
-        ForceNewPage();
-    // if image is still bigger than available space, scale it down
-    if ((newSize.Width > pageDx) || (currY + newSize.Height) > pageDy) {
-        REAL scale = min(pageDx / newSize.Width, (pageDy - currY) / newSize.Height);
-        newSize.Width *= scale;
-        newSize.Height *= scale;
-    }
-
-    RectF bbox(PointF(currX, 0), newSize);
-    AppendInstr(DrawInstr::Image(img->data, img->len, bbox));
-    // add an empty string in place of the image so that
-    // we can make the image flow with the text (as long
-    // as justification code doesn't take into account images)
-    AppendInstr(DrawInstr::Str("", 0, bbox));
-    currX += bbox.Width;
-}
-
-void PageLayoutEpub::HandleTagImg2(HtmlToken *t)
-{
-    CrashIf(!layoutInfo->mobiDoc);
+    CrashIf(!epubDoc);
     if (t->IsEndTag())
         return;
-    EpubDoc *doc = (EpubDoc *)layoutInfo->mobiDoc;
-
     AttrInfo *attr = t->GetAttrByName("src");
     if (!attr)
         return;
     ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
-    ImageData *img = doc->GetImageData(src);
+    ImageData *img = epubDoc->GetImageData(src);
     if (img)
         EmitImage2(img);
 }
 
-void PageLayoutEpub::HandleTagHeader(HtmlToken *t)
+void PageLayoutEpub::HandleHtmlTagEpub(HtmlToken *t)
 {
-    if (t->IsEndTag()) {
-        FlushCurrLine(true);
-        currY += currFontSize / 2;
-        currFontSize = defaultFontSize;
-        currJustification = Align_Justify;
+    if (FindTag(t) != Tag_Img) {
+        HandleHtmlTag2(t);
+        return;
     }
-    else {
-        currJustification = Align_Left;
-        EmitParagraph2();
-        currFontSize = defaultFontSize * pow(1.1f, '5' - t->s[1]);
-        if (currY > 0)
-            currY += currFontSize / 2;
-    }
-    ChangeFontStyle(FontStyleBold, t->IsStartTag());
-}
 
-void PageLayoutEpub::HandleTagA2(HtmlToken *t, const char *linkAttr)
-{
-    if (t->IsStartTag() && !inLink) {
-        AttrInfo *attr = t->GetAttrByName(linkAttr);
-        if (attr) {
-            DrawInstr i(InstrLinkStart);
-            i.str.s = attr->val;
-            i.str.len = attr->valLen;
-            AppendInstr(i);
-            inLink = true;
-        }
-    }
-    else if (t->IsEndTag() && inLink) {
-        AppendInstr(DrawInstr(InstrLinkEnd));
-        inLink = false;
-    }
-}
-
-void PageLayoutEpub::HandleHtmlTag2(HtmlToken *t)
-{
     if (anchors) {
         AttrInfo *attrInfo = t->GetAttrByName("id");
         if (!attrInfo && t->NameIs("a"))
@@ -896,53 +965,7 @@ void PageLayoutEpub::HandleHtmlTag2(HtmlToken *t)
             anchors->Append(PageAnchor(attrInfo->val, attrInfo->valLen,
                                        pagesToSend.Count() + 1, currY));
     }
-
-    HtmlTag tag = FindTag(t);
-    switch (tag) {
-    case Tag_Img:
-        HandleTagImg2(t);
-        break;
-    case Tag_Pagebreak:
-        ForceNewPage();
-        break;
-    case Tag_Ul: case Tag_Ol: case Tag_Dl:
-        if (t->IsStartTag())
-            listDepth++;
-        else if (t->IsEndTag()) {
-            if (listDepth > 0)
-                listDepth--;
-            FlushCurrLine(true);
-        }
-        break;
-    case Tag_Li: case Tag_Dd:
-        if (t->IsStartTag())
-            EmitParagraph2(15.f * listDepth);
-        else if (t->IsEndTag())
-            FlushCurrLine(true);
-        break;
-    case Tag_Dt:
-        if (t->IsStartTag()) {
-            EmitParagraph2(15.f * (listDepth - 1));
-            currJustification = Align_Left;
-        }
-        else if (t->IsEndTag())
-            FlushCurrLine(true);
-        ChangeFontStyle(FontStyleBold, t->IsStartTag());
-        break;
-    case Tag_Center:
-        currJustification = Align_Center;
-        break;
-    case Tag_H1: case Tag_H2: case Tag_H3:
-    case Tag_H4: case Tag_H5:
-        HandleTagHeader(t);
-        break;
-    case Tag_A:
-        HandleTagA2(t);
-        break;
-    default:
-        HandleHtmlTag(t);
-        break;
-    }
+    HandleTagImgEpub(t);
 }
 
 Vec<PageData*> *PageLayoutEpub::Layout(Vec<PageAnchor> *anchors)
@@ -953,7 +976,7 @@ Vec<PageData*> *PageLayoutEpub::Layout(Vec<PageAnchor> *anchors)
     HtmlToken *t;
     while ((t = htmlParser->Next()) && !t->IsError()) {
         if (t->IsTag())
-            HandleHtmlTag2(t);
+            HandleHtmlTagEpub(t);
         else if (!IgnoreText())
             HandleText(t);
     }
@@ -1029,7 +1052,7 @@ bool EpubEngineImpl::FinishLoading()
         return false;
 
     LayoutInfo li;
-    li.mobiDoc = (MobiDoc *)doc; // hack to allow passing doc through PageLayout
+    li.mobiDoc = (MobiDoc *)1; // crash on use
     li.htmlStr = doc->GetBookData(&li.htmlStrLen);
     li.pageDx = (int)(pageRect.dx - 2 * pageBorder);
     li.pageDy = (int)(pageRect.dy - 2 * pageBorder);
@@ -1037,7 +1060,7 @@ bool EpubEngineImpl::FinishLoading()
     li.fontSize = 11;
     li.textAllocator = &allocator;
 
-    pages = PageLayoutEpub(&li).Layout(&anchors);
+    pages = PageLayoutEpub(&li, doc).Layout(&anchors);
     if (!FixImageJustification())
         return false;
 
@@ -1326,31 +1349,32 @@ void Fb2Doc::ExtractImage(HtmlPullParser& parser, HtmlToken *tok)
 
 /* PageLayout extensions for FictionBook2 */
 
-class PageLayoutFb2 : public PageLayoutEpub {
+class PageLayoutFb2 : public PageLayoutCommon {
     int section;
 
-    void HandleTagImg3(HtmlToken *t);
+    void HandleTagImgFb2(HtmlToken *t);
     void HandleTagAsHtml(HtmlToken *t, const char *name);
     void HandleFb2Tag(HtmlToken *t);
 
+    Fb2Doc *fb2Doc;
+
 public:
-    PageLayoutFb2(LayoutInfo *li) : PageLayoutEpub(li), section(1) { }
+    PageLayoutFb2(LayoutInfo *li, Fb2Doc *doc) :
+        PageLayoutCommon(li), fb2Doc(doc), section(1) { }
 
     Vec<PageData*> *Layout(Vec<PageAnchor> *anchors=NULL);
 };
 
-void PageLayoutFb2::HandleTagImg3(HtmlToken *t)
+void PageLayoutFb2::HandleTagImgFb2(HtmlToken *t)
 {
-    CrashIf(!layoutInfo->mobiDoc);
+    CrashIf(!fb2Doc);
     if (t->IsEndTag())
         return;
-    Fb2Doc *doc = (Fb2Doc *)layoutInfo->mobiDoc;
-
     AttrInfo *attr = t->GetAttrByName("xlink:href");
     if (!attr)
         return;
     ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
-    ImageData *img = doc->GetImageData(src);
+    ImageData *img = fb2Doc->GetImageData(src);
     if (img)
         EmitImage2(img);
 }
@@ -1389,7 +1413,7 @@ void PageLayoutFb2::HandleFb2Tag(HtmlToken *t)
             HandleHtmlTag2(t);
     }
     else if (t->NameIs("image"))
-        HandleTagImg3(t);
+        HandleTagImgFb2(t);
     else if (t->NameIs("a"))
         HandleTagA2(t, "xlink:href");
     else if (t->NameIs("pagebreak"))
@@ -1460,7 +1484,7 @@ bool Fb2EngineImpl::Load(const TCHAR *fileName)
         return false;
 
     LayoutInfo li;
-    li.mobiDoc = (MobiDoc *)doc; // hack to allow passing doc through PageLayout
+    li.mobiDoc = (MobiDoc *)1; // crash on use
     li.htmlStr = doc->GetBookData(&li.htmlStrLen);
     li.pageDx = (int)(pageRect.dx - 2 * pageBorder);
     li.pageDy = (int)(pageRect.dy - 2 * pageBorder);
@@ -1468,7 +1492,7 @@ bool Fb2EngineImpl::Load(const TCHAR *fileName)
     li.fontSize = 11;
     li.textAllocator = &allocator;
 
-    pages = PageLayoutFb2(&li).Layout(&anchors);
+    pages = PageLayoutFb2(&li, doc).Layout(&anchors);
     if (!FixImageJustification())
         return false;
 
@@ -1488,6 +1512,30 @@ Fb2Engine *Fb2Engine::CreateFromFile(const TCHAR *fileName)
         return NULL;
     }
     return engine;
+}
+
+/* PageLayout extensions for Mobi */
+
+class PageLayoutMobi : public PageLayout {
+    LayoutInfo *li2;
+
+public:
+    PageLayoutMobi(LayoutInfo *li, MobiDoc *doc) : li2(li) {
+        li2->mobiDoc = doc;
+    }
+
+    Vec<PageData*> *Layout(Vec<PageAnchor> *anchors=NULL);
+};
+
+Vec<PageData*> *PageLayoutMobi::Layout(Vec<PageAnchor> *anchors)
+{
+    Vec<PageData *> *pages = new Vec<PageData *>();
+
+    for (PageData *pd = IterStart(li2); pd; pd = IterNext()) {
+        pages->Append(pd);
+    }
+
+    return pages;
 }
 
 /* BaseEngine for handling Mobi documents (for reference testing) */
@@ -1523,7 +1571,7 @@ bool MobiEngineImpl::Load(const TCHAR *fileName)
         return false;
 
     LayoutInfo li;
-    li.mobiDoc = doc;
+    li.mobiDoc = (MobiDoc *)1; // crash on use
     li.htmlStr = doc->GetBookHtmlData(li.htmlStrLen);
     li.pageDx = (int)(pageRect.dx - 2 * pageBorder);
     li.pageDy = (int)(pageRect.dy - 2 * pageBorder);
@@ -1531,12 +1579,7 @@ bool MobiEngineImpl::Load(const TCHAR *fileName)
     li.fontSize = 11;
     li.textAllocator = &allocator;
 
-    pages = new Vec<PageData *>();
-
-    PageLayout layout;
-    for (PageData *pd = layout.IterStart(&li); pd; pd = layout.IterNext()) {
-        pages->Append(pd);
-    }
+    pages = PageLayoutMobi(&li, doc).Layout(&anchors);
     
     return pages->Count() > 0;
 }

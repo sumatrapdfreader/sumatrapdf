@@ -43,8 +43,11 @@ void fz_new_aa_context(fz_context *ctx)
 
 void fz_copy_aa_context(fz_context *dst, fz_context *src)
 {
-	if (dst && src)
-		memcpy(dst, src, sizeof(*src));
+	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692915 */
+#ifndef AA_BITS
+	if (dst->aa && src->aa)
+		memcpy(dst->aa, src->aa, sizeof(*src->aa));
+#endif
 }
 
 void fz_free_aa_context(fz_context *ctx)
