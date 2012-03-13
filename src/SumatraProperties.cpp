@@ -6,6 +6,7 @@
 #include "FileUtil.h"
 #include "MobiDoc.h"
 #include "MobiWindow.h"
+#include "resource.h"
 #include "Scoped.h"
 #include "SumatraPDF.h"
 #include "SumatraProperties.h"
@@ -20,7 +21,7 @@
 
 static Vec<PropertiesLayout*> gPropertiesWindows;
 
-PropertiesLayout* FindPropertyWindowByParent(HWND hwndParent)
+static PropertiesLayout* FindPropertyWindowByParent(HWND hwndParent)
 {
     for (size_t i = 0; i < gPropertiesWindows.Count(); i++) {
         PropertiesLayout *pl = gPropertiesWindows.At(i);
@@ -374,22 +375,12 @@ static void GetProps(BaseEngine *engine, EngineType engineType, PropertiesLayout
     layoutData->AddProperty(_TR("Number of Pages:"), str);
 }
 
-static void ShowProperties(WindowInfo& win, bool extended)
+static void ShowProperties(WindowInfo& win, bool extended=false)
 {
     TCHAR *str;
     PropertiesLayout *layoutData = FindPropertyWindowByParent(win.hwndFrame);
 
     if (layoutData) {
-#if defined(DEBUG) || defined(ENABLE_EXTENDED_PROPERTIES)
-        // make a repeated Ctrl+D display some extended properties
-        // TODO: expose this through a UI button or similar
-        if (GetForegroundWindow() == layoutData->hwnd) {
-            if (!layoutData->HasProperty(_TR("Fonts:"))) {
-                DestroyWindow(layoutData->hwnd);
-                ShowProperties(win, true);
-            }
-        }
-#endif
         SetActiveWindow(layoutData->hwnd);
         return;
     }
@@ -476,7 +467,7 @@ static void ShowProperties(MobiWindow *win)
 void OnMenuProperties(SumatraWindow& win)
 {
     if (win.AsWindowInfo())
-        ShowProperties(*win.AsWindowInfo(), false);
+        ShowProperties(*win.AsWindowInfo());
     else if (win.AsMobiWindow())
         ShowProperties(win.AsMobiWindow());
 }
@@ -540,13 +531,11 @@ static void OnPaintProperties(HWND hwnd)
 }
 
 // returns true if properties have been copied to the clipboard
-bool CopyPropertiesToClipboard(HWND hwndParent)
+static void CopyPropertiesToClipboard(HWND hwnd)
 {
-    PropertiesLayout *layoutData = FindPropertyWindowByParent(hwndParent);
+    PropertiesLayout *layoutData = FindPropertyWindowByHwnd(hwnd);
     if (!layoutData)
-        return false;
-    if (GetForegroundWindow() != layoutData->hwnd)
-        return false;
+        return;
 
     // concatenate all the properties into a multi-line string
     str::Str<TCHAR> lines(256);
@@ -556,7 +545,32 @@ bool CopyPropertiesToClipboard(HWND hwndParent)
     }
 
     CopyTextToClipboard(lines.LendData());
-    return true;
+}
+
+static void PropertiesOnCommand(HWND hwnd, WPARAM wParam)
+{
+    PropertiesLayout *pl;
+
+    switch (LOWORD(wParam)) {
+    case IDM_COPY_SELECTION:
+        CopyPropertiesToClipboard(hwnd);
+        break;
+
+    case IDM_PROPERTIES:
+#if defined(DEBUG) || defined(ENABLE_EXTENDED_PROPERTIES)
+        // make a repeated Ctrl+D display some extended properties
+        // TODO: expose this through a UI button or similar
+        pl = FindPropertyWindowByHwnd(hwnd);
+        if (pl) {
+            WindowInfo *win = FindWindowInfoByHwnd(pl->hwndParent);
+            if (win && !pl->HasProperty(_TR("Fonts:"))) {
+                DestroyWindow(hwnd);
+                ShowProperties(*win, true);
+            }
+        }
+#endif
+        break;
+    }
 }
 
 LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -586,6 +600,10 @@ LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT message, WPARAM wParam, LPARA
             CrashIf(!pl);
             gPropertiesWindows.Remove(pl);
             delete pl;
+            break;
+
+        case WM_COMMAND:
+            PropertiesOnCommand(hwnd, wParam);
             break;
 
         /* TODO: handle mouse move/down/up so that links work (?) */

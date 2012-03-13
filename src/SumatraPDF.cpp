@@ -321,9 +321,7 @@ WindowInfo *FindWindowInfoByHwnd(HWND hwnd)
             // ToC tree, sidebar title and close button
             parent == win->hwndTocBox   ||
             // Favorites tree, title, and close button
-            parent == win->hwndFavBox   ||
-            // Properties window (required for shortcut handling)
-            FindPropertyWindowByParent(win->hwndFrame))
+            parent == win->hwndFavBox)
         {
             return win;
         }
@@ -4500,8 +4498,6 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
             // Don't break the shortcut for text boxes
             if (win->hwndFindBox == GetFocus() || win->hwndPageBox == GetFocus())
                 SendMessage(GetFocus(), WM_COPY, 0, 0);
-            else if (CopyPropertiesToClipboard(win->hwndFrame))
-                break;
             else if (!HasPermission(Perm_CopySelection))
                 break;
             else if (win->IsChm())
@@ -4516,6 +4512,7 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
             OnSelectAll(win);
             break;
 
+#ifdef SHOW_DEBUG_MENU_ITEMS
         case IDM_DEBUG_SHOW_LINKS:
             gDebugShowLinks = !gDebugShowLinks;
             for (size_t i = 0; i < gWindows.Count(); i++)
@@ -4533,6 +4530,7 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
         case IDM_DEBUG_CRASH_ME:
             CrashMe();
             break;
+#endif
 
         case IDM_FAV_ADD:
             AddFavorite(win);

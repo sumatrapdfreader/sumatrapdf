@@ -25,7 +25,7 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="nmake -f makefile.msvc CFG=dbg NASM=bin\nasm.exe"
+				BuildCommandLine="nmake -f makefile.msvc CFG=dbg NASM=bin\nasm.exe all_sumatrapdf all"
 				ReBuildCommandLine="nmake -f makefile.msvc CFG=dbg NASM=bin\nasm.exe rebuild"
 				CleanCommandLine="nmake -f makefile.msvc CFG=dbg NASM=bin\nasm.exe clean"
 				Output="obj-dbg\sumatrapdf.exe"
@@ -46,7 +46,7 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="nmake -f makefile.msvc CFG=rel NASM=bin\nasm.exe"
+				BuildCommandLine="nmake -f makefile.msvc CFG=rel NASM=bin\nasm.exe all_sumatrapdf"
 				ReBuildCommandLine="nmake -f makefile.msvc CFG=rel NASM=bin\nasm.exe rebuild"
 				CleanCommandLine="nmake -f makefile.msvc CFG=rel NASM=bin\nasm.exe clean"
 				Output="obj-rel\sumatrapdf.exe"

@@ -41,8 +41,6 @@ public:
 };
 
 void OnMenuProperties(SumatraWindow& win);
-bool CopyPropertiesToClipboard(HWND hwndParent);
-PropertiesLayout *FindPropertyWindowByParent(HWND hwndParent);
 void DeletePropertiesWindow(HWND hwndParent);
 LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
