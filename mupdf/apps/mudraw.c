@@ -307,10 +307,8 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 			}
 			else if (showtext == TEXT_PLAIN)
 			{
-				// SumatraPDF: keep old output format until dev_text regressions have been fixed
-				printf("[Page %d]\n", pagenum);
 				fz_print_text_page(stdout, text);
-				// printf("\f\n");
+				printf("\f\n");
 			}
 		}
 		fz_catch(ctx)
