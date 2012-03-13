@@ -521,7 +521,7 @@ static void UpdateCurrentFileDisplayStateForWinMobi(MobiWindow* win)
 static void UpdateCurrentFileDisplayStateForWinInfo(WindowInfo* win)
 {
     RememberWindowPosition(*win);
-    DisplayState *ds = gFileHistory.Find(win->dm->FileName());
+    DisplayState *ds = gFileHistory.Find(win->loadedFilePath);
     if (!ds)
         return;
     win->dm->DisplayStateFromModel(ds);
