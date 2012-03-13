@@ -13,12 +13,13 @@ DIRS = ["src",
 		pj("src", "ifilter"),
 		pj("src", "browserplugin"),
 		pj("src", "previewer"),
-		pj("src", "ebooktest"),
 		]
 
 def is_blacklisted(name):
-	return name in ["Translations_txt.cpp", "DialogSizer.cpp", "DialogSizer.h",
-		"UtilTests.cpp", "UnitTests.cpp"]
+	if name in ["Translations_txt.cpp", "DialogSizer.cpp", "DialogSizer.h",
+		"UtilTests.cpp", "UnitTests.cpp"]: return True
+	if name.endswith("_ut.cpp"): return True
+	return False
 
 def count_file(name):
 	return (name.endswith(".cpp") or name.endswith(".h")) and not is_blacklisted(name)
