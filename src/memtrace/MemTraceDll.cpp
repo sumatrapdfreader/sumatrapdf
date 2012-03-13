@@ -16,6 +16,7 @@ nothing.
 
 #include "BaseUtil.h"
 #include "MemTraceDll.h"
+#include "nsWindowsDllInterceptor.h"
 
 #include "StrUtil.h"
 
@@ -25,7 +26,28 @@ nothing.
 static HANDLE gModule;
 static HANDLE gPipe;
 
+WindowsDllInterceptor gNtdllIntercept;
+
+//http://msdn.microsoft.com/en-us/library/windows/hardware/ff552108(v=vs.85).aspx
+PVOID (WINAPI *gRtlAllocateHeapOrig)(PVOID heapHandle, ULONG flags, SIZE_T size);
+// http://msdn.microsoft.com/en-us/library/windows/hardware/ff552276(v=vs.85).aspx
+BOOLEAN (WINAPI *gRtlFreeHeapOrig)(PVOID heapHandle, ULONG flags, PVOID heapBase);
+
 #define PIPE_NAME "\\\\.\\pipe\\MemTraceCollectorPipe"
+
+// note: must be careful to not allocate memory in this function to avoid
+// infinite recursion
+PVOID WINAPI RtlAllocateHeapHook(PVOID heapHandle, ULONG flags, SIZE_T size)
+{
+    PVOID res = gRtlAllocateHeapOrig(heapHandle, flags, size);
+    return res;
+}
+
+BOOLEAN WINAPI RtlFreeHeapHook(PVOID heapHandle, ULONG flags, PVOID heapBase)
+{
+    BOOLEAN res = gRtlFreeHeapOrig(heapHandle, flags, heapBase);
+    return res;
+}
 
 static bool WriteToPipe(const char *s)
 {
@@ -59,14 +81,32 @@ static void ClosePipe()
     gPipe = NULL;
 }
 
+static void InstallHooks()
+{
+    gNtdllIntercept.Init("ntdll.dll");
+    bool ok = gNtdllIntercept.AddHook("RtlAllocateHeap", reinterpret_cast<intptr_t>(RtlAllocateHeapHook), (void**) &gRtlAllocateHeapOrig);
+    if (ok)
+        lf("Hooked RtlAllocateHeap");
+    else
+        lf("failed to hook RtlAllocateHeap");
+
+    ok = gNtdllIntercept.AddHook("RtlFreeHeap", reinterpret_cast<intptr_t>(RtlFreeHeapHook), (void**) &gRtlFreeHeapOrig);
+    if (ok)
+        lf("Hooked RtlFreeHeap");
+    else
+        lf("failed to hook RtlFreeHeap");
+}
+
 static BOOL ProcessAttach()
 {
     lf("ProcessAttach()");
     if (!TryOpenPipe()) {
         lf("couldn't open pipe");
+        return FALSE;
     } else {
         lf("opened pipe");
     }
+    InstallHooks();
     return TRUE;
 }
 

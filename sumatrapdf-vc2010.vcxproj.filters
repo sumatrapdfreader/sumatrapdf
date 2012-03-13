@@ -54,6 +54,9 @@
     <Filter Include="sumatra\mobi">
       <UniqueIdentifier>{232267dd-50d1-4b01-83e1-89ab2c6dde73}</UniqueIdentifier>
     </Filter>
+    <Filter Include="memtrace">
+      <UniqueIdentifier>{fd8ec5df-2865-47af-8513-c20645a2e26c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ext\jbig2dec\jbig2.c">
@@ -878,6 +881,9 @@
     <ClCompile Include="src\utils\GdiPlusUtil.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="src\memtrace\MemTraceDll.cpp">
+      <Filter>memtrace</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -1198,7 +1204,6 @@
     <ClInclude Include="src\utils\DebugLog.h">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="src\Translations_txt.h" />
     <ClInclude Include="src\mui\Mui.h">
       <Filter>mui</Filter>
     </ClInclude>
@@ -1291,6 +1296,12 @@
     </ClInclude>
     <ClInclude Include="src\utils\GdiPlusUtil.h">
       <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\memtrace\MemTraceDll.h">
+      <Filter>memtrace</Filter>
+    </ClInclude>
+    <ClInclude Include="src\memtrace\nsWindowsDllInterceptor.h">
+      <Filter>memtrace</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -235,6 +235,7 @@
     <ClCompile Include="src\FileWatch.cpp" />
     <ClCompile Include="src\ImagesEngine.cpp" />
     <ClCompile Include="src\LangMenuDef.cpp" />
+    <ClCompile Include="src\memtrace\MemTraceDll.cpp" />
     <ClCompile Include="src\Menu.cpp" />
     <ClCompile Include="src\MobiDoc.cpp" />
     <ClCompile Include="src\MobiEngine.cpp" />
@@ -394,6 +395,8 @@
     <ClInclude Include="src\ImagesEngine.h" />
     <ClInclude Include="src\installer\Resource.h" />
     <ClInclude Include="src\LangMenuDef.h" />
+    <ClInclude Include="src\memtrace\MemTraceDll.h" />
+    <ClInclude Include="src\memtrace\nsWindowsDllInterceptor.h" />
     <ClInclude Include="src\Menu.h" />
     <ClInclude Include="src\MobiDoc.h" />
     <ClInclude Include="src\MobiEngine.h" />
@@ -439,7 +442,6 @@
     <ClInclude Include="src\utils\ThreadUtil.h" />
     <ClInclude Include="src\utils\Touch.h" />
     <ClInclude Include="src\Translations.h" />
-    <ClInclude Include="src\Translations_txt.h" />
     <ClInclude Include="src\utils\BaseUtil.h" />
     <ClInclude Include="src\utils\BencUtil.h" />
     <ClInclude Include="src\utils\CmdLineParser.h" />
