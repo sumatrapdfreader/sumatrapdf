@@ -317,6 +317,9 @@ int    PASCAL   RARCloseArchive(HANDLE) { return -1; }
 #endif
 
 #ifdef BUILD_EPUB_PREVIEW
+// TODO: this somehow prevents dllhost.exe from exiting
+//       (maybe due to the global ScopedGdiPlus in (Mini)Mui?)
+
 #include "EpubEngine.h"
 
 BaseEngine *CEpubPreview::LoadEngine(IStream *stream)
