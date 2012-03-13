@@ -1033,11 +1033,11 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
     DisplayState ds;
     ds.useGlobalValues = gGlobalPrefs.globalPrefsOnly;
     if (!win->IsDocLoaded()) {
-        win->dm->DisplayStateFromModel(&ds);
         if (!autorefresh && win->loadedFilePath)
             LoadDocument(win->loadedFilePath, win);
         return;
     }
+    win->dm->DisplayStateFromModel(&ds);
     UpdateDisplayStateWindowRect(*win, ds);
     UpdateSidebarDisplayState(win, &ds);
     // Set the windows state based on the actual window's placement
