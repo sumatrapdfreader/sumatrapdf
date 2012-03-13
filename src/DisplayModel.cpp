@@ -897,20 +897,39 @@ void DisplayModel::RenderVisibleParts()
         PageInfo *pageInfo = GetPageInfo(pageNo);
         if (pageInfo->visibleRatio > 0.0) {
             assert(pageInfo->shown);
-            dmCb->RenderPage(pageNo);
             if (0 == firstVisible)
                 firstVisible = pageNo;
             lastVisible = pageNo;
         }
     }
+    CrashIf(!firstVisible);
+
+    // rendering happens LIFO except if the queue is currently
+    // empty, so request the visible pages first and last to
+    // make sure they're rendered before the predicted pages
+    for (int pageNo = firstVisible; pageNo <= firstVisible; pageNo++) {
+        dmCb->RenderPage(pageNo);
+    }
 
     if (gPredictiveRender) {
-        // as a trade-off, we don't prerender two pages each in Facing
-        // and Book View modes (else 4 of 8 potential request slots would be taken)
-        if (lastVisible < PageCount())
-            dmCb->RenderPage(lastVisible + 1);
+        // prerender two more pages in facing and book view modes
+        // if the rendering queue still has place for them
+        if (!displayModeSingle(displayMode())) {
+            if (firstVisible > 2)
+                dmCb->RenderPage(firstVisible - 2);
+            if (lastVisible + 1 < PageCount())
+                dmCb->RenderPage(lastVisible + 2);
+        }
         if (firstVisible > 1)
             dmCb->RenderPage(firstVisible - 1);
+        if (lastVisible < PageCount())
+            dmCb->RenderPage(lastVisible + 1);
+    }
+
+    // request the visible pages last so that the above requested
+    // invisible pages are not rendered if the queue fills up
+    for (int pageNo = lastVisible; pageNo >= firstVisible; pageNo--) {
+        dmCb->RenderPage(pageNo);
     }
 }
 
