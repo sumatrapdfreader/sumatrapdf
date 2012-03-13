@@ -411,10 +411,10 @@ TCHAR *HwndPasswordUI::GetPassword(const TCHAR *fileName, unsigned char *fileDig
     return Dialog_GetPassword(hwnd, fileName, gGlobalPrefs.rememberOpenedFiles ? saveKey : NULL);
 }
 
+// update global windowState for next default launch when either
+// no pdf is opened or a document without window dimension information
 static void RememberWindowPosition(WindowInfo& win)
 {
-    // update global windowState for next default launch when either
-    // no pdf is opened or a document without window dimension information
     if (win.presentation)
         gGlobalPrefs.windowState = win.windowStateBeforePresentation;
     else if (win.fullScreen)
@@ -432,6 +432,25 @@ static void RememberWindowPosition(WindowInfo& win)
         // TODO: Use Get/SetWindowPlacement (otherwise we'd have to separately track
         //       the non-maximized dimensions for proper restoration)
         gGlobalPrefs.windowPos = WindowRect(win.hwndFrame);
+    }
+}
+
+// update global windowState for next default launch when either
+// no pdf is opened or a document without window dimension information
+static void RememberWindowPosition(MobiWindow *win)
+{
+    if (IsZoomed(win->hwndFrame))
+        gGlobalPrefs.windowState = WIN_STATE_MAXIMIZED;
+    else if (!IsIconic(win->hwndFrame))
+        gGlobalPrefs.windowState = WIN_STATE_NORMAL;
+
+    // don't touch gGlobalPrefs.sidebarDx as it's only relevant to non-mobi windows
+
+    /* don't update the window's dimensions if it is maximized, mimimized or fullscreened */
+    if (WIN_STATE_NORMAL == gGlobalPrefs.windowState && !IsIconic(win->hwndFrame)) {
+        // TODO: Use Get/SetWindowPlacement (otherwise we'd have to separately track
+        //       the non-maximized dimensions for proper restoration)
+        gGlobalPrefs.windowPos = WindowRect(win->hwndFrame);
     }
 }
 
@@ -462,32 +481,53 @@ static void UpdateSidebarDisplayState(WindowInfo *win, DisplayState *ds)
         ds->tocState = new Vec<int>(win->tocState);
 }
 
+static void UpdateSidebarDisplayState(MobiWindow *win, DisplayState *ds)
+{
+    ds->tocVisible = false;
+    delete ds->tocState;
+    ds->tocState = NULL;
+}
+
+static void DisplayStateFromMobiWindow(MobiWindow* win, DisplayState* ds)
+{
+    if (!ds->filePath || !str::EqI(ds->filePath, win->LoadedFilePath()))
+        str::ReplacePtr(&ds->filePath, win->LoadedFilePath());
+
+    // TODO: when we support 2 pages at a time, it might also
+    // be DM_FACING
+    ds->displayMode = DM_SINGLE_PAGE;
+    ds->rotation = 0;
+    ds->zoomVirtual = 0;
+    ds->reparsePointIdx = 0; // TODO: remember reparse point
+
+    ds->pageNo = 1;
+    ds->scrollPos = PointI();
+    CrashIf(ds->decryptionKey);
+}
+
 static void UpdateCurrentFileDisplayStateForWinMobi(MobiWindow* win)
 {
-    // TODO: write me
+    RememberWindowPosition(win);
+    DisplayState *ds = gFileHistory.Find(win->LoadedFilePath());
+    if (!ds)
+        return;
+    DisplayStateFromMobiWindow(win, ds);
+    ds->useGlobalValues = gGlobalPrefs.globalPrefsOnly;
+    ds->windowState = gGlobalPrefs.windowState;
+    ds->windowPos   = gGlobalPrefs.windowPos;
+    UpdateSidebarDisplayState(win, ds);
 }
 
 static void UpdateCurrentFileDisplayStateForWinInfo(WindowInfo* win)
 {
     RememberWindowPosition(*win);
-    if (!win->IsDocLoaded())
+    DisplayState *ds = gFileHistory.Find(win->dm->FileName());
+    if (!ds)
         return;
-
-    const TCHAR *fileName = win->dm->FileName();
-    assert(fileName);
-    if (!fileName)
-        return;
-
-    DisplayState *state = gFileHistory.Find(fileName);
-    assert(state || !gGlobalPrefs.rememberOpenedFiles);
-    if (!state)
-        return;
-
-    if (!win->dm->DisplayStateFromModel(state))
-        return;
-    state->useGlobalValues = gGlobalPrefs.globalPrefsOnly;
-    UpdateDisplayStateWindowRect(*win, *state, false);
-    UpdateSidebarDisplayState(win, state);
+    win->dm->DisplayStateFromModel(ds);
+    ds->useGlobalValues = gGlobalPrefs.globalPrefsOnly;
+    UpdateDisplayStateWindowRect(*win, *ds, false);
+    UpdateSidebarDisplayState(win, ds);
 }
 
 void UpdateCurrentFileDisplayStateForWin(SumatraWindow& win)
@@ -992,8 +1032,9 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
 
     DisplayState ds;
     ds.useGlobalValues = gGlobalPrefs.globalPrefsOnly;
-    if (!win->IsDocLoaded() || !win->dm->DisplayStateFromModel(&ds)) {
-        if (!autorefresh && !win->IsDocLoaded() && !win->IsAboutWindow())
+    if (!win->IsDocLoaded()) {
+        win->dm->DisplayStateFromModel(&ds);
+        if (!autorefresh && win->loadedFilePath)
             LoadDocument(win->loadedFilePath, win);
         return;
     }

@@ -128,9 +128,9 @@ static bool IsValidZoom(float zoomLevel)
     return true;
 }
 
-bool DisplayModel::DisplayStateFromModel(DisplayState *ds)
+void DisplayModel::DisplayStateFromModel(DisplayState *ds)
 {
-    if (!ds->filePath || !str::Eq(ds->filePath, FileName()))
+    if (!ds->filePath || !str::EqI(ds->filePath, FileName()))
         str::ReplacePtr(&ds->filePath, FileName());
 
     ds->displayMode = presentationMode ? presDisplayMode : displayMode();
@@ -146,8 +146,6 @@ bool DisplayModel::DisplayStateFromModel(DisplayState *ds)
 
     free(ds->decryptionKey);
     ds->decryptionKey = engine->GetDecryptionKey();
-
-    return true;
 }
 
 SizeD DisplayModel::PageSizeAfterRotation(int pageNo, bool fitToContent)

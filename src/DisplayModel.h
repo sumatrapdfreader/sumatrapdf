@@ -204,7 +204,7 @@ public:
     void            Navigate(int dir);
     void            CopyNavHistory(DisplayModel& orig);
 
-    bool            DisplayStateFromModel(DisplayState *ds);
+    void            DisplayStateFromModel(DisplayState *ds);
     void            SetInitialViewSettings(DisplayMode displayMode, int newStartPage, SizeI viewPort, int screenDPI);
 
     // called when we decide that the display needs to be redrawn

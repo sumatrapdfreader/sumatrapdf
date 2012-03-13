@@ -8,11 +8,15 @@ Maybe for 2.0:
   re-layout in mui even if position/sizes of controls haven't changed
 - even more mobi document properties
 
-Things that can wait for 2.1:
+Things that can wait for 2.1 or later:
 - links in mobi format
 - lists in mobi format (ul, li)
-- search in mobi
-- fullscreen for mobi
-- printing from mobi
+- mobi: search
+- mobi: fullscreen
+- mobi: printing
 - better way of switching between mobi and non-mobi windows
+- mobi: allow to change default font name/size, remember it
+        for a given document in preferences
+- mobi: 2 page display
+- mobi: rtl support
 - etc.
