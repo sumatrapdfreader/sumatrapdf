@@ -875,6 +875,9 @@
     <ClCompile Include="src\utils\ThreadUtil.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="src\utils\GdiPlusUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -1285,6 +1288,9 @@
     </ClInclude>
     <ClInclude Include="src\SumatraProperties.h">
       <Filter>sumatra</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\GdiPlusUtil.h">
+      <Filter>utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

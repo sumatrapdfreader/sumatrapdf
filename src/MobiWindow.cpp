@@ -5,6 +5,8 @@
 #include "EbookController.h"
 #include "EbookControls.h"
 #include "FileHistory.h"
+using namespace Gdiplus;
+#include "GdiPlusUtil.h"
 #include "Menu.h"
 #include "MobiDoc.h"
 #include "PageLayout.h"
@@ -504,15 +506,52 @@ RenderedBitmap *RenderFirstMobiPageToBitmap(MobiDoc *mobiDoc, SizeI pageSize, Si
     return new RenderedBitmap(hbmp, bmpSize);
 }
 
+static RenderedBitmap *ThumbFromCoverPage(MobiDoc *mobiDoc)
+{
+    ImageData *coverImage = mobiDoc->GetCoverImage();
+    if (!coverImage)
+        return NULL;
+    Bitmap *coverBmp = BitmapFromData(coverImage->data, coverImage->len);
+    if (!coverBmp)
+        return NULL;
+
+    Rect bmpSize = BitmapSizeFromData(coverImage->data, coverImage->len);
+    Bitmap res(THUMBNAIL_DX, THUMBNAIL_DY, PixelFormat24bppRGB);
+    float scale = (float)THUMBNAIL_DX / (float)bmpSize.Width;
+    int fromDy = THUMBNAIL_DY;
+    if (scale < 1.f)
+        fromDy = (int)((float)bmpSize.Height * scale);
+    Graphics g(&res);
+    g.SetInterpolationMode(InterpolationModeHighQualityBicubic);
+    g.DrawImage(coverBmp, Rect(0, 0, THUMBNAIL_DX, THUMBNAIL_DY),
+        0, 0, bmpSize.Width, fromDy, UnitPixel);
+    HBITMAP hbmp;
+    Status ok = res.GetHBITMAP(Color::White, &hbmp);
+    delete coverBmp;
+    if (ok == Ok)
+        return new RenderedBitmap(hbmp, SizeI(THUMBNAIL_DX, THUMBNAIL_DY));
+    return NULL;
+}
+
 static void CreateThumbnailForMobiDoc(MobiDoc *mobiDoc, DisplayState& ds)
 {
     CrashIf(!mobiDoc);
+
     if (!ShouldSaveThumbnail(ds))
         return;
 
-    SizeI pageSize(THUMBNAIL_DX * 2, THUMBNAIL_DY * 2);
-    SizeI bmpSize(THUMBNAIL_DX, THUMBNAIL_DY);
-    RenderedBitmap *bmp = RenderFirstMobiPageToBitmap(mobiDoc, pageSize, bmpSize);
+    // if there is cover image, we use it to generate thumbnail by scaling
+    // image width to thumbnail dx, scaling height proportionally and using
+    // as much of it as fits in thumbnail dy
+    RenderedBitmap *bmp = ThumbFromCoverPage(mobiDoc);
+    // no cover image so generate thumbnail from first page
+    if (!bmp)
+    {
+        SizeI pageSize(THUMBNAIL_DX * 2, THUMBNAIL_DY * 2);
+        SizeI dstSize(THUMBNAIL_DX, THUMBNAIL_DY);
+        bmp = RenderFirstMobiPageToBitmap(mobiDoc, pageSize, dstSize);
+    }
+
     if (bmp && SaveThumbnailForFile(mobiDoc->GetFileName(), bmp))
         bmp = NULL;
     delete bmp;
