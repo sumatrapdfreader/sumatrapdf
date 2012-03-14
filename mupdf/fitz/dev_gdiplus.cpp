@@ -479,12 +479,12 @@ public:
 			gdiplus_transform_point(ctm, 0, 1)
 		};
 		
-		float scale = _hypotf(_hypotf(ctm.a, ctm.b), _hypotf(ctm.c, ctm.d)) / _hypotf(image->w, image->h);
+		float scale = hypotf(hypotf(ctm.a, ctm.b), hypotf(ctm.c, ctm.d)) / hypotf(image->w, image->h);
 		/* cf. fz_paint_image_imp in draw/imagedraw.c for when (not) to interpolate */
-		bool downscale = _hypotf(ctm.a, ctm.b) < image->w && _hypotf(ctm.c, ctm.d) < image->h;
+		bool downscale = hypotf(ctm.a, ctm.b) < image->w && hypotf(ctm.c, ctm.d) < image->h;
 		bool alwaysInterpolate = downscale ||
-			_hypotf(ctm.a, ctm.b) > image->w && _hypotf(ctm.c, ctm.d) > image->h &&
-			_hypotf(ctm.a, ctm.b) < 2 * image->w && _hypotf(ctm.c, ctm.d) < 2 * image->h;
+			hypotf(ctm.a, ctm.b) > image->w && hypotf(ctm.c, ctm.d) > image->h &&
+			hypotf(ctm.a, ctm.b) < 2 * image->w && hypotf(ctm.c, ctm.d) < 2 * image->h;
 		
 		if (!image->interpolate && !alwaysInterpolate && graphics == this->graphics)
 		{
@@ -1329,8 +1329,8 @@ fz_gdiplus_fill_shade(fz_device *dev, fz_shade *shade, fz_matrix ctm, float alph
 static fz_pixmap *
 fz_image_to_pixmap_def(fz_context *ctx, fz_image *image, fz_matrix ctm)
 {
-	float dx = _hypotf(ctm.a, ctm.b);
-	float dy = _hypotf(ctm.c, ctm.d);
+	float dx = hypotf(ctm.a, ctm.b);
+	float dy = hypotf(ctm.c, ctm.d);
 	// TODO: use dx = image->w and dy = image->h instead?
 	return fz_image_to_pixmap(ctx, image, dx, dy);
 }

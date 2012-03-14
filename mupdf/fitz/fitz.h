@@ -75,6 +75,7 @@ int gettimeofday(struct timeval *tv, struct timezone *tz);
 
 #define snprintf _snprintf
 #define isnan _isnan
+#define hypotf _hypotf
 
 #else /* Unix or close enough */
 
@@ -186,6 +187,7 @@ void fz_rethrow(fz_context *);
 /* SumatraPDF: add filename and line number to errors and warnings */
 #define fz_warn(CTX, MSG, ...) fz_warn_imp(CTX, __FILE__, __LINE__, MSG, __VA_ARGS__)
 void fz_warn_imp(fz_context *ctx, char *file, int line, char *fmt, ...) __printflike(4, 5);
+
 /*
 	fz_flush_warnings: Flush any repeated warnings.
 
@@ -1180,8 +1182,50 @@ fz_pixmap *fz_new_pixmap(fz_context *ctx, fz_colorspace *cs, int w, int h);
 	pixmap will keep a reference to the colorspace.
 
 	bbox: Bounding box specifying location/size of created pixmap.
+
+	Returns a pointer to the new pixmap. Throws exception on failure to
+	allocate.
 */
 fz_pixmap *fz_new_pixmap_with_bbox(fz_context *ctx, fz_colorspace *colorspace, fz_bbox bbox);
+
+/*
+	fz_new_pixmap_with_data: Create a new pixmap, with it's origin at
+	(0,0) using the supplied data block.
+
+	cs: The colorspace to use for the pixmap, or NULL for an alpha
+	plane/mask.
+
+	w: The width of the pixmap (in pixels)
+
+	h: The height of the pixmap (in pixels)
+
+	samples: The data block to keep the samples in.
+
+	Returns a pointer to the new pixmap. Throws exception on failure to
+	allocate.
+*/
+fz_pixmap *fz_new_pixmap_with_data(fz_context *ctx, fz_colorspace *colorspace, int w, int h, unsigned char *samples);
+
+/*
+	fz_new_pixmap_with_bbox_and_data: Create a pixmap of a given size,
+	location and pixel format, using the supplied data block.
+
+	The bounding box specifies the size of the created pixmap and
+	where it will be located. The colorspace determines the number
+	of components per pixel. Alpha is always present. Pixmaps are
+	reference counted, so drop references using fz_drop_pixmap.
+
+	colorspace: Colorspace format used for the created pixmap. The
+	pixmap will keep a reference to the colorspace.
+
+	bbox: Bounding box specifying location/size of created pixmap.
+
+	samples: The data block to keep the samples in.
+
+	Returns a pointer to the new pixmap. Throws exception on failure to
+	allocate.
+*/
+fz_pixmap *fz_new_pixmap_with_bbox_and_data(fz_context *ctx, fz_colorspace *colorspace, fz_bbox bbox, unsigned char *samples);
 
 /*
 	fz_keep_pixmap: Take a reference to a pixmap.

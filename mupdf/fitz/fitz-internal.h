@@ -628,10 +628,6 @@ struct fz_pixmap_s
 	int single_bit; /* SumatraPDF: allow optimizing 1-bit pixmaps */
 };
 
-fz_pixmap *fz_new_pixmap_with_data(fz_context *ctx, fz_colorspace *colorspace, int w, int h, unsigned char *samples);
-
-fz_pixmap *fz_new_pixmap_with_bbox_and_data(fz_context *ctx, fz_colorspace *colorspace, fz_bbox bbox, unsigned char *samples);
-
 void fz_free_pixmap_imp(fz_context *ctx, fz_storable *pix);
 
 void fz_clear_pixmap_rect_with_value(fz_context *ctx, fz_pixmap *pix, int value, fz_bbox r);

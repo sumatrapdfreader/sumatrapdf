@@ -8,13 +8,15 @@ LOCAL_CFLAGS += -DARCH_ARM -DARCH_THUMB -DARCH_ARM_CAN_LOAD_UNALIGNED
 
 LOCAL_C_INCLUDES := \
 	../thirdparty/jbig2dec \
-	../thirdparty/openjpeg-1.4/libopenjpeg \
+	../thirdparty/openjpeg-1.5.0/libopenjpeg \
 	../thirdparty/jpeg-8d \
 	../thirdparty/zlib-1.2.5 \
 	../thirdparty/freetype-2.4.8/include \
 	../draw \
 	../fitz \
 	../pdf \
+	../xps \
+	../cbz \
 	../scripts \
 	..
 
@@ -26,7 +28,6 @@ LOCAL_SRC_FILES := \
 	$(MY_ROOT)/fitz/base_getopt.c \
 	$(MY_ROOT)/fitz/base_hash.c \
 	$(MY_ROOT)/fitz/base_memory.c \
-	$(MY_ROOT)/fitz/base_object.c \
 	$(MY_ROOT)/fitz/base_string.c \
 	$(MY_ROOT)/fitz/base_time.c \
 	$(MY_ROOT)/fitz/crypt_aes.c \
@@ -72,6 +73,7 @@ LOCAL_SRC_FILES := \
 	$(MY_ROOT)/draw/draw_path.c \
 	$(MY_ROOT)/draw/draw_simple_scale.c \
 	$(MY_ROOT)/draw/draw_unpack.c \
+	$(MY_ROOT)/pdf/base_object.c \
 	$(MY_ROOT)/pdf/pdf_annot.c \
 	$(MY_ROOT)/pdf/pdf_cmap.c \
 	$(MY_ROOT)/pdf/pdf_cmap_load.c \
@@ -95,10 +97,24 @@ LOCAL_SRC_FILES := \
 	$(MY_ROOT)/pdf/pdf_repair.c \
 	$(MY_ROOT)/pdf/pdf_shade.c \
 	$(MY_ROOT)/pdf/pdf_stream.c \
+	$(MY_ROOT)/pdf/pdf_store.c \
 	$(MY_ROOT)/pdf/pdf_type3.c \
 	$(MY_ROOT)/pdf/pdf_unicode.c \
 	$(MY_ROOT)/pdf/pdf_xobject.c \
-	$(MY_ROOT)/pdf/pdf_xref.c
+	$(MY_ROOT)/pdf/pdf_xref.c \
+	$(MY_ROOT)/xps/xps_common.c \
+	$(MY_ROOT)/xps/xps_doc.c \
+	$(MY_ROOT)/xps/xps_glyphs.c \
+	$(MY_ROOT)/xps/xps_gradient.c \
+	$(MY_ROOT)/xps/xps_image.c \
+	$(MY_ROOT)/xps/xps_outline.c \
+	$(MY_ROOT)/xps/xps_path.c \
+	$(MY_ROOT)/xps/xps_resource.c \
+	$(MY_ROOT)/xps/xps_tile.c \
+	$(MY_ROOT)/xps/xps_util.c \
+	$(MY_ROOT)/xps/xps_xml.c \
+	$(MY_ROOT)/xps/xps_zip.c \
+	$(MY_ROOT)/cbz/mucbz.c
 
 LOCAL_LDLIBS    := -lm -llog -ljnigraphics
 

@@ -17,6 +17,7 @@ struct fz_text_device_s
 	fz_text_line cur_line;
 	fz_text_span cur_span;
 	fz_point point;
+	int lastchar;
 };
 
 fz_text_sheet *
@@ -39,7 +40,6 @@ fz_free_text_sheet(fz_context *ctx, fz_text_sheet *sheet)
 		fz_free(ctx, style);
 		style = next;
 	}
-	/* SumatraPDF: fix memory leak */
 	fz_free(ctx, sheet);
 }
 
@@ -526,7 +526,6 @@ fz_text_extract(fz_context *ctx, fz_text_device *dev, fz_text *text, fz_matrix c
 	float descender = 0;
 	int multi;
 	int i, j, err;
-	int lastchar = ' ';
 
 	if (text->len == 0)
 		return;
@@ -541,7 +540,6 @@ fz_text_extract(fz_context *ctx, fz_text_device *dev, fz_text *text, fz_matrix c
 		descender = (float)face->descender / face->units_per_EM;
 		fz_unlock(ctx, FZ_LOCK_FREETYPE);
 	}
-	/* SumatraPDF: use a Type 3 font's FontBBox instead of 1 and 0 */
 	else if (font->t3procs && !fz_is_empty_rect(font->bbox))
 	{
 		ascender = font->bbox.y1;
@@ -590,7 +588,7 @@ fz_text_extract(fz_context *ctx, fz_text_device *dev, fz_text *text, fz_matrix c
 		/* Add space and newlines based on pen movement */
 		if (dist > 0)
 		{
-			/* SumatraPDF: correctly determine the last character */
+			/* SumatraPDF: don't add spaces for large overlapping glyphs */
 			fz_text_span *last = &dev->cur_span;
 			if (last->len == 0 && dev->cur_line.len > 0)
 				last = &dev->cur_line.spans[dev->cur_line.len - 1];
@@ -602,23 +600,20 @@ fz_text_extract(fz_context *ctx, fz_text_device *dev, fz_text *text, fz_matrix c
 			if (dist > size * LINE_DIST)
 			{
 				fz_flush_text_line(ctx, dev, style);
-				lastchar = ' ';
+				dev->lastchar = ' ';
 			}
-			else if (fabsf(dot) > 0.95f && dist > size * SPACE_DIST &&
-			/* SumatraPDF: correctly determine the last character */
-				last->len > 0 && last->text[last->len - 1].c != ' ' &&
+			else if (fabsf(dot) > 0.95f && dist > size * SPACE_DIST && dev->lastchar != ' ' &&
 			/* SumatraPDF: don't add spaces before spaces or for large overlapping glyphs */
 				text->items[i].ucs != ' ' && !fz_maps_into_rect(trm, last->text[last->len - 1].bbox))
 			{
 				fz_rect spacerect;
 				spacerect.x0 = -0.2f;
-				/* SumatraPDF: make spaces stand out less */
 				spacerect.y0 = descender;
 				spacerect.x1 = 0;
 				spacerect.y1 = ascender;
 				spacerect = fz_transform_rect(trm, spacerect);
 				fz_add_text_char(ctx, dev, style, ' ', spacerect);
-				lastchar = ' ';
+				dev->lastchar = ' ';
 			}
 		}
 
@@ -674,11 +669,10 @@ fz_text_extract(fz_context *ctx, fz_text_device *dev, fz_text *text, fz_matrix c
 				fz_rect part = fz_split_bbox(rect, j, multi);
 				fz_add_text_char(ctx, dev, style, text->items[i + j].ucs, part);
 			}
-			/* SumatraPDF: fix one-to-many mappings */
 			i += j - 1;
 		}
 
-		lastchar = text->items[i].ucs;
+		dev->lastchar = text->items[i].ucs;
 	}
 }
 
@@ -766,6 +760,7 @@ fz_new_text_device(fz_context *ctx, fz_text_sheet *sheet, fz_text_page *page)
 	tdev->page = page;
 	tdev->point.x = -1;
 	tdev->point.y = -1;
+	tdev->lastchar = ' ';
 
 	init_line(ctx, &tdev->cur_line);
 	init_span(ctx, &tdev->cur_span, NULL);

@@ -305,8 +305,6 @@ xps_draw_radial_gradient(xps_document *doc, fz_matrix ctm, fz_rect area,
 	float xrad = 1;
 	float yrad = 1;
 	float invscale;
-	/* SumatraPDF: repeat and reflect gradients */
-	fz_rect rc;
 	int i, ma = 1;
 
 	char *center_att = xml_att(root, "Center");
@@ -328,12 +326,11 @@ xps_draw_radial_gradient(xps_document *doc, fz_matrix ctm, fz_rect area,
 	if (radius_y_att)
 		yrad = fz_atof(radius_y_att);
 
-	/* SumatraPDF: fix "Zero-radius.xps" */
-	if (xrad == 0.0)
-		xrad = 0.01f;
+	xrad = MAX(0.01f, xrad);
+	yrad = MAX(0.01f, yrad);
 
 	/* scale the ctm to make ellipses */
-	if (xrad != 0.0)
+	if (fabsf(xrad) > FLT_EPSILON)
 		ctm = fz_concat(fz_scale(1, yrad / xrad), ctm);
 
 	if (yrad != 0.0)
@@ -346,12 +343,12 @@ xps_draw_radial_gradient(xps_document *doc, fz_matrix ctm, fz_rect area,
 	r0 = 0;
 	r1 = xrad;
 
-	/* SumatraPDF: repeat and reflect gradients */
-	rc = fz_transform_rect(fz_invert_matrix(ctm), area);
-	ma = MAX(ma, ceilf(_hypotf(rc.x0 - x0, rc.y0 - y0) / xrad));
-	ma = MAX(ma, ceilf(_hypotf(rc.x1 - x0, rc.y0 - y0) / xrad));
-	ma = MAX(ma, ceilf(_hypotf(rc.x0 - x0, rc.y1 - y0) / xrad));
-	ma = MAX(ma, ceilf(_hypotf(rc.x1 - x0, rc.y1 - y0) / xrad));
+	area = fz_transform_rect(fz_invert_matrix(ctm), area);
+	ma = MAX(ma, ceilf(hypotf(area.x0 - x0, area.y0 - y0) / xrad));
+	ma = MAX(ma, ceilf(hypotf(area.x1 - x0, area.y0 - y0) / xrad));
+	ma = MAX(ma, ceilf(hypotf(area.x0 - x0, area.y1 - y0) / xrad));
+	ma = MAX(ma, ceilf(hypotf(area.x1 - x0, area.y1 - y0) / xrad));
+
 	if (spread == SPREAD_REPEAT)
 	{
 		for (i = ma - 1; i >= 0; i--)
@@ -368,7 +365,9 @@ xps_draw_radial_gradient(xps_document *doc, fz_matrix ctm, fz_rect area,
 		}
 	}
 	else
-	xps_draw_one_radial_gradient(doc, ctm, stops, count, 1, x0, y0, r0, x1, y1, r1);
+	{
+		xps_draw_one_radial_gradient(doc, ctm, stops, count, 1, x0, y0, r0, x1, y1, r1);
+	}
 }
 
 /*
@@ -382,7 +381,6 @@ xps_draw_linear_gradient(xps_document *doc, fz_matrix ctm, fz_rect area,
 	xml_element *root, int spread)
 {
 	float x0, y0, x1, y1;
-	/* SumatraPDF: repeat and reflect gradients */
 	int i, mi, ma;
 	float dx, dy, x, y, k;
 	fz_point p1, p2;
@@ -398,7 +396,6 @@ xps_draw_linear_gradient(xps_document *doc, fz_matrix ctm, fz_rect area,
 	if (end_point_att)
 		xps_parse_point(end_point_att, &x1, &y1);
 
-	/* SumatraPDF: repeat and reflect gradients */
 	p1.x = x0; p1.y = y0; p2.x = x1; p2.y = y1;
 	p1 = fz_transform_point(ctm, p1); p2 = fz_transform_point(ctm, p2);
 	x = p2.x - p1.x; y = p2.y - p1.y;
@@ -428,7 +425,9 @@ xps_draw_linear_gradient(xps_document *doc, fz_matrix ctm, fz_rect area,
 		}
 	}
 	else
-	xps_draw_one_linear_gradient(doc, ctm, stops, count, 1, x0, y0, x1, y1);
+	{
+		xps_draw_one_linear_gradient(doc, ctm, stops, count, 1, x0, y0, x1, y1);
+	}
 }
 
 /*

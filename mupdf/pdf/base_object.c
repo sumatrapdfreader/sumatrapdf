@@ -454,7 +454,9 @@ pdf_copy_array(fz_context *ctx, pdf_obj *obj)
 	int n;
 
 	RESOLVE(obj);
-	if (!obj || obj->kind != PDF_ARRAY)
+	if (!obj)
+		return NULL; /* Can't warn :( */
+	if (obj->kind != PDF_ARRAY)
 		fz_warn(ctx, "assert: not an array (%s)", pdf_objkindstr(obj));
 
 	arr = pdf_new_array(ctx, pdf_array_len(obj));
@@ -623,7 +625,9 @@ pdf_copy_dict(fz_context *ctx, pdf_obj *obj)
 	int i, n;
 
 	RESOLVE(obj);
-	if (obj && obj->kind != PDF_DICT)
+	if (!obj)
+		return NULL; /* Can't warn :( */
+	if (obj->kind != PDF_DICT)
 		fz_warn(ctx, "assert: not a dict (%s)", pdf_objkindstr(obj));
 
 	n = pdf_dict_len(obj);
@@ -756,8 +760,9 @@ fz_dict_put(pdf_obj *obj, pdf_obj *key, pdf_obj *val)
 	int i;
 
 	RESOLVE(obj);
-	if (!obj) return; /* SumatraPDF: Can't warn :( */
-	if (!obj || obj->kind != PDF_DICT)
+	if (!obj)
+		return; /* Can't warn :( */
+	if (obj->kind != PDF_DICT)
 	{
 		fz_warn(obj->ctx, "assert: not a dict (%s)", pdf_objkindstr(obj));
 		return;
@@ -817,8 +822,9 @@ pdf_dict_dels(pdf_obj *obj, char *key)
 {
 	RESOLVE(obj);
 
-	if (!obj) return; /* SumatraPDF: Can't warn :( */
-	if (!obj || obj->kind != PDF_DICT)
+	if (!obj)
+		return; /* Can't warn :( */
+	if (obj->kind != PDF_DICT)
 		fz_warn(obj->ctx, "assert: not a dict (%s)", pdf_objkindstr(obj));
 	else
 	{

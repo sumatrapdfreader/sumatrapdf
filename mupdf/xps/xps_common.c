@@ -8,7 +8,6 @@ static inline int unhex(int a)
 	return 0;
 }
 
-/* SumatraPDF: basic support for alternate content */
 xml_element *
 xps_lookup_alternate_content(xml_element *node)
 {
@@ -58,7 +57,6 @@ xps_parse_element(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri
 		xps_parse_glyphs(doc, ctm, base_uri, dict, node);
 	if (!strcmp(xml_tag(node), "Canvas"))
 		xps_parse_canvas(doc, ctm, area, base_uri, dict, node);
-	/* SumatraPDF: basic support for alternate content */
 	if (!strcmp(xml_tag(node), "mc:AlternateContent"))
 	{
 		node = xps_lookup_alternate_content(node);

@@ -60,7 +60,6 @@ fz_keep_link(fz_context *ctx, fz_link *link)
 void
 fz_drop_link(fz_context *ctx, fz_link *link)
 {
-	/* SumatraPDF: free links without recursion */
 	while (link && --link->refs == 0)
 	{
 		fz_link *next = link->next;

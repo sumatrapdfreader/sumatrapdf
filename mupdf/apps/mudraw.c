@@ -658,6 +658,9 @@ int main(int argc, char **argv)
 		printf("</style>\n");
 	}
 
+	if (showtext)
+		fz_free_text_sheet(ctx, sheet);
+
 	if (showtime)
 	{
 		printf("total %dms / %d pages for an average of %dms\n",

@@ -7,24 +7,6 @@
 typedef unsigned char byte;
 
 /*
- * XPS and ZIP constants.
- */
-
-#define REL_START_PART \
-	"http://schemas.microsoft.com/xps/2005/06/fixedrepresentation"
-#define REL_DOC_STRUCTURE \
-	"http://schemas.microsoft.com/xps/2005/06/documentstructure"
-#define REL_REQUIRED_RESOURCE \
-	"http://schemas.microsoft.com/xps/2005/06/required-resource"
-#define REL_REQUIRED_RESOURCE_RECURSIVE \
-	"http://schemas.microsoft.com/xps/2005/06/required-resource#recursive"
-
-#define ZIP_LOCAL_FILE_SIG 0x04034b50
-#define ZIP_DATA_DESC_SIG 0x08074b50
-#define ZIP_CENTRAL_DIRECTORY_SIG 0x02014b50
-#define ZIP_END_OF_CENTRAL_DIRECTORY_SIG 0x06054b50
-
-/*
  * Memory, and string functions.
  */
 
@@ -187,10 +169,9 @@ void xps_end_opacity(xps_document *doc, char *base_uri, xps_resource *dict, char
 void xps_parse_brush(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri, xps_resource *dict, xml_element *node);
 void xps_parse_element(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri, xps_resource *dict, xml_element *node);
 
-/* SumatraPDF: basic support for alternate content */
-xml_element *xps_lookup_alternate_content(xml_element *node);
-
 void xps_clip(xps_document *doc, fz_matrix ctm, xps_resource *dict, char *clip_att, xml_element *clip_tag);
+
+xml_element *xps_lookup_alternate_content(xml_element *node);
 
 /*
  * The interpreter context.

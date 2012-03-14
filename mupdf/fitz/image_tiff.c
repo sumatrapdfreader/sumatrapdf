@@ -313,7 +313,6 @@ fz_expand_tiff_colormap(struct tiff *tiff)
 	tiff->samplesperpixel += 2;
 	tiff->bitspersample = 8;
 	tiff->stride = stride;
-	/* SumatraPDF: fix memory leak */
 	fz_free(tiff->ctx, tiff->samples);
 	tiff->samples = samples;
 }

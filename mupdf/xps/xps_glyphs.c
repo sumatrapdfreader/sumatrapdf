@@ -402,8 +402,8 @@ xps_parse_glyphs(xps_document *doc, fz_matrix ctm,
 	fz_font *font;
 
 	char partname[1024];
+	char fakename[1024];
 	char *subfont;
-	char *font_style = NULL; /* SumatraPDF: support StyleSimulations */
 
 	float font_size = 10;
 	int subfontid = 0;
@@ -483,27 +483,22 @@ xps_parse_glyphs(xps_document *doc, fz_matrix ctm,
 		subfontid = atoi(subfont + 1);
 		*subfont = 0;
 	}
-	/* SumatraPDF: support StyleSimulations */
+
+	/* Make a new part name for font with style simulation applied */
+	fz_strlcpy(fakename, partname, sizeof fakename);
 	if (style_att)
 	{
-		font_style = partname + strlen(partname);
 		if (!strcmp(style_att, "BoldSimulation"))
-			fz_strlcat(partname, "#Bold", sizeof(partname));
+			fz_strlcat(fakename, "#Bold", sizeof fakename);
 		else if (!strcmp(style_att, "ItalicSimulation"))
-			fz_strlcat(partname, "#Italic", sizeof(partname));
+			fz_strlcat(fakename, "#Italic", sizeof fakename);
 		else if (!strcmp(style_att, "BoldItalicSimulation"))
-			fz_strlcat(partname, "#BoldItalic", sizeof(partname));
-		else
-			font_style = NULL;
+			fz_strlcat(fakename, "#BoldItalic", sizeof fakename);
 	}
 
-	font = xps_lookup_font(doc, partname);
+	font = xps_lookup_font(doc, fakename);
 	if (!font)
 	{
-		/* SumatraPDF: support StyleSimulations */
-		if (font_style)
-			*font_style = '\0';
-
 		fz_try(doc->ctx)
 		{
 			part = xps_read_part(doc, partname);
@@ -531,18 +526,15 @@ xps_parse_glyphs(xps_document *doc, fz_matrix ctm,
 			return;
 		}
 
-		/* SumatraPDF: support StyleSimulations */
-		if (font_style)
+		if (style_att)
 		{
-			*font_style = '#';
-			font->ft_bold = strstr(font_style, "Bold") != NULL;
-			font->ft_italic = strstr(font_style, "Italic") != NULL;
+			font->ft_bold = !!strstr(style_att, "Bold");
+			font->ft_italic = !!strstr(style_att, "Italic");
 		}
 
 		xps_select_best_font_encoding(doc, font);
 
-		/* SumatraPDF: support StyleSimulations */
-		xps_insert_font(doc, partname, font);
+		xps_insert_font(doc, fakename, font);
 
 		/* NOTE: we keep part->data in the font */
 		font->ft_data = part->data;
@@ -601,7 +593,7 @@ xps_parse_glyphs(xps_document *doc, fz_matrix ctm,
 
 		xps_parse_color(doc, base_uri, fill_att, &colorspace, samples);
 		if (fill_opacity_att)
-			samples[0] = fz_atof(fill_opacity_att);
+			samples[0] *= fz_atof(fill_opacity_att);
 		xps_set_color(doc, colorspace, samples);
 
 		fz_fill_text(doc->dev, text, ctm,

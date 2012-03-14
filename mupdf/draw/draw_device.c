@@ -99,7 +99,7 @@ push_stack(fz_draw_device *dev)
 {
 	fz_draw_state *state;
 
-	if (dev->top == dev->stack_max - 1)
+	if (dev->top == dev->stack_max-1)
 		fz_grow_stack(dev);
 	state = &dev->stack[dev->top];
 	dev->top++;

@@ -109,7 +109,6 @@ xps_load_document_structure(xps_document *doc, xps_fixdoc *fixdoc)
 		fz_rethrow(doc->ctx);
 	}
 	xps_free_part(doc, part);
-	/* SumatraPDF: fix a potential NULL-pointer dereference */
 	if (!root)
 		return NULL;
 
@@ -136,19 +135,16 @@ xps_load_outline(xps_document *doc)
 	for (fixdoc = doc->first_fixdoc; fixdoc; fixdoc = fixdoc->next) {
 		if (fixdoc->outline) {
 			outline = xps_load_document_structure(doc, fixdoc);
-			/* SumatraPDF: ignore empty outlines */
 			if (!outline)
 				continue;
-			/* SumatraPDF: don't overwrite outline entries */
-			if (head)
-			{
-				while (tail->next)
-					tail = tail->next;
-			}
 			if (!head)
 				head = outline;
 			else
+			{
+				while (tail->next)
+					tail = tail->next;
 				tail->next = outline;
+			}
 			tail = outline;
 		}
 	}

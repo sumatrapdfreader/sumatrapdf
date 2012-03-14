@@ -203,10 +203,7 @@ cbz_read_zip_dir_imp(cbz_document *doc, int startoffset)
 	(void) getlong(file); /* size of central directory */
 	offset = getlong(file); /* offset to central directory */
 
-	doc->entry = fz_malloc_array(ctx, count, sizeof(cbz_entry));
-	/* SumatraPDF: don't crash in cbz_close_document in case the above
-	   malloc fails or an exception is thrown in the loop below */
-	memset(doc->entry, 0, count * sizeof(cbz_entry));
+	doc->entry = fz_calloc(ctx, count, sizeof(cbz_entry));
 	doc->entry_count = count;
 
 	fz_seek(file, offset, 0);

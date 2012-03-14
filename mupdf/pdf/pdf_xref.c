@@ -22,7 +22,8 @@ pdf_load_version(pdf_document *xref)
 	if (memcmp(buf, "%PDF-", 5) != 0)
 		fz_throw(xref->ctx, "cannot recognize version marker");
 
-	xref->version = fz_atof(buf + 5) * 10 + 0.1; /* SumatraPDF: don't accidentally round down */
+	/* SumatraPDF: use fz_atof once the major or minor PDF version reaches 10 */
+	xref->version = atoi(buf + 5) * 10 + atoi(buf + 7);
 }
 
 static void
@@ -1051,7 +1052,6 @@ pdf_resolve_indirect(pdf_obj *ref)
 	{
 		if (--sanity == 0)
 		{
-			/* SumatraPDF: don't throw, same as for pdf_cache_object below  */
 			fz_warn(ctx, "Too many indirections (possible indirection cycle involving %d %d R)", num, gen);
 			return NULL;
 		}

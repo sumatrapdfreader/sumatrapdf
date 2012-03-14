@@ -160,6 +160,10 @@ void pdfapp_close(pdfapp_t *app)
 		fz_free_text_page(app->ctx, app->page_text);
 	app->page_text = NULL;
 
+	if (app->page_sheet)
+		fz_free_text_sheet(app->ctx, app->page_sheet);
+	app->page_sheet = NULL;
+
 	if (app->page_links)
 		fz_drop_link(app->ctx, app->page_links);
 	app->page_links = NULL;
@@ -232,10 +236,18 @@ static void pdfapp_loadpage(pdfapp_t *app)
 		fz_free_display_list(app->ctx, app->page_list);
 	if (app->page_text)
 		fz_free_text_page(app->ctx, app->page_text);
+	if (app->page_sheet)
+		fz_free_text_sheet(app->ctx, app->page_sheet);
 	if (app->page_links)
 		fz_drop_link(app->ctx, app->page_links);
 	if (app->page)
 		fz_free_page(app->doc, app->page);
+
+	app->page_list = NULL;
+	app->page_text = NULL;
+	app->page_sheet = NULL;
+	app->page_links = NULL;
+	app->page = NULL;
 
 	fz_try(app->ctx)
 	{
@@ -256,9 +268,11 @@ static void pdfapp_loadpage(pdfapp_t *app)
 	}
 }
 
+#define MAX_TITLE 256
+
 static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repaint)
 {
-	char buf[256];
+	char buf[MAX_TITLE];
 	fz_device *idev;
 	fz_device *tdev;
 	fz_colorspace *colorspace;
@@ -285,8 +299,20 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 
 	if (drawpage)
 	{
-		sprintf(buf, "%s - %d/%d (%d dpi)", app->doctitle,
+		char buf2[64];
+		size_t len;
+
+		sprintf(buf2, " - %d/%d (%d dpi)",
 				app->pageno, app->pagecount, app->resolution);
+		len = MAX_TITLE-strlen(buf2);
+		if (strlen(app->doctitle) > len)
+		{
+			snprintf(buf, len-3, "%s", app->doctitle);
+			strcat(buf, "...");
+			strcat(buf, buf2);
+		}
+		else
+			sprintf(buf, "%s%s", app->doctitle, buf2);
 		wintitle(app, buf);
 
 		ctm = pdfapp_viewctm(app);

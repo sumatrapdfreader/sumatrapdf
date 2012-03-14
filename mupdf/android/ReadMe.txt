@@ -148,7 +148,8 @@ done once). With the emulator running type:
        adb push ../../MyTests/pdf_reference17.pdf /mnt/sdcard/Download/test.pdf
 
 (where obviously ../../MyTests/pdf_reference17.pdf is altered for your
-machine). (adb lives in <sdk>/platform-tools if it's not on your path).
+machine, and  under Windows, should start c:/ even if invoked from cygwin) (adb lives
+in <sdk>/platform-tools if it's not on your path).
 
 16) With the emulator running (see step 14), execute
 

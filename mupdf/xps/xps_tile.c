@@ -126,7 +126,6 @@ xps_parse_tiling_brush(xps_document *doc, fz_matrix ctm, fz_rect area,
 	if (viewport_att)
 		xps_parse_rectangle(doc, viewport_att, &viewport);
 
-	/* SumatraPDF: warn when not drawing anything */
 	if (fabsf(viewport.x1 - viewport.x0) < 0.01f || fabsf(viewport.y1 - viewport.y0) < 0.01f)
 		fz_warn(doc->ctx, "not drawing tile for viewport size %.4f x %.4f", viewport.x1 - viewport.x0, viewport.y1 - viewport.y0);
 	else if (fabsf(viewbox.x1 - viewbox.x0) < 0.01f || fabsf(viewbox.y1 - viewbox.y0) < 0.01f)
@@ -277,17 +276,20 @@ xps_parse_canvas(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri,
 
 	for (node = xml_down(root); node; node = xml_next(node))
 	{
-		/* SumatraPDF: fix memory leak */
-		if (!strcmp(xml_tag(node), "Canvas.Resources") && new_dict)
-			fz_warn(doc->ctx, "ignoring follow-up resource dictionaries");
-		else
 		if (!strcmp(xml_tag(node), "Canvas.Resources") && xml_down(node))
 		{
-			new_dict = xps_parse_resource_dictionary(doc, base_uri, xml_down(node));
 			if (new_dict)
 			{
-				new_dict->parent = dict;
-				dict = new_dict;
+				fz_warn(doc->ctx, "ignoring follow-up resource dictionaries");
+			}
+			else
+			{
+				new_dict = xps_parse_resource_dictionary(doc, base_uri, xml_down(node));
+				if (new_dict)
+				{
+					new_dict->parent = dict;
+					dict = new_dict;
+				}
 			}
 		}
 
@@ -366,12 +368,13 @@ xps_parse_fixed_page(xps_document *doc, fz_matrix ctm, xps_page *page)
 
 	for (node = xml_down(page->root); node; node = xml_next(node))
 	{
-		/* SumatraPDF: fix memory leak */
-		if (!strcmp(xml_tag(node), "FixedPage.Resources") && dict)
-			fz_warn(doc->ctx, "ignoring follow-up resource dictionaries");
-		else
 		if (!strcmp(xml_tag(node), "FixedPage.Resources") && xml_down(node))
-			dict = xps_parse_resource_dictionary(doc, base_uri, xml_down(node));
+		{
+			if (dict)
+				fz_warn(doc->ctx, "ignoring follow-up resource dictionaries");
+			else
+				dict = xps_parse_resource_dictionary(doc, base_uri, xml_down(node));
+		}
 		xps_parse_element(doc, ctm, area, base_uri, dict, node);
 	}
 
