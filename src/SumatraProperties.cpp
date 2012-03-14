@@ -549,8 +549,6 @@ static void CopyPropertiesToClipboard(HWND hwnd)
 
 static void PropertiesOnCommand(HWND hwnd, WPARAM wParam)
 {
-    PropertiesLayout *pl;
-
     switch (LOWORD(wParam)) {
     case IDM_COPY_SELECTION:
         CopyPropertiesToClipboard(hwnd);
@@ -560,7 +558,7 @@ static void PropertiesOnCommand(HWND hwnd, WPARAM wParam)
 #if defined(DEBUG) || defined(ENABLE_EXTENDED_PROPERTIES)
         // make a repeated Ctrl+D display some extended properties
         // TODO: expose this through a UI button or similar
-        pl = FindPropertyWindowByHwnd(hwnd);
+        PropertiesLayout *pl = FindPropertyWindowByHwnd(hwnd);
         if (pl) {
             WindowInfo *win = FindWindowInfoByHwnd(pl->hwndParent);
             if (win && !pl->HasProperty(_TR("Fonts:"))) {
