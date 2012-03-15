@@ -10,6 +10,8 @@
 #   note: building on X64 isn't officially supported and might unintentionally be broken
 #WITH_ANALYZE=yes
 #   use /analyze compiler flag 
+#WITH_UCRT=yes
+#   if 'yes', compile with ucrt for smaller size
 
 # Set default configuration
 !if "$(CFG)"==""
@@ -20,14 +22,14 @@ CFG=dbg
 O = obj-$(CFG)
 
 # for now use regular crt in debug builds to get memory leak detection
-!if "$(WITH_MICROCRT)"=="" && "$(CFG)"!="dbg"
-WITH_MICROCRT=yes
+!if "$(WITH_UCRT)"=="" && "$(CFG)"!="dbg"
+WITH_UCRT=yes
 !endif
 
 # for x86 : obj-dbg and obj-rel ; for x64 : obj-dbg64 and obj-rel64
 !if "$(PLATFORM)"=="X64"
 O = $(O)64
-WITH_MICROCRT=no # uCRT not tested on x64
+WITH_UCRT=no # uCRT not tested on x64
 !endif
 
 !if "$(MUPDF_DIR)"==""
@@ -224,7 +226,7 @@ ENGINEDUMP_OBJS = \
 MEMTRACE_OBJS = \
 	$(OM)\MemTraceDll.obj $(UTILS_OBJS)
 
-!if "$(WITH_MICROCRT)"=="yes"
+!if "$(WITH_UCRT)"=="yes"
 ET_OBJS             = $(ET_OBJS) $(MICROCRT_WIN_OBJS)
 INSTALLER_OBJS      = $(INSTALLER_OBJS) $(MICROCRT_WIN_OBJS)
 UNINSTALLER_OBJS    = $(UNINSTALLER_OBJS) $(MICROCRT_WIN_OBJS)
