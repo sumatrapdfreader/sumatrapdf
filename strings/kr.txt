@@ -23,7 +23,7 @@ Contributor: 4Li
 선택한 모든 페이지(&A)
 
 &Back\tAlt+Left Arrow
-뒤로(&B)\tAlt+Left Arrow
+뒤로(&B)\tAlt+왼쪽 방향키
 
 &Book View\tCtrl+8
 책처럼 보기(&B)\tCtrl+8
@@ -80,7 +80,7 @@ Contributor: 4Li
 대소문자 구분(&M)
 
 &Next Page\tRight Arrow
-다음 페이지(&N)\t->
+다음 페이지(&N)\t오른쪽 방향키
 
 &No
 아니오(&N)
@@ -107,7 +107,7 @@ Contributor: 4Li
 문서 고정(&P)
 
 &Previous Page\tLeft Arrow
-이전 페이지(&P)\t<-
+이전 페이지(&P)\t왼쪽 방향키
 
 &Print...
 인쇄(&P)...
@@ -188,7 +188,7 @@ All supported documents
 모든 지원되는 문서
 
 Application:
-응용 프로그램:
+프로그램:
 
 Associate with PDF files?
 PDF 파일 확장자를 연결할까요?
@@ -197,7 +197,7 @@ Attachment: %s
 첨부: %s
 
 Author:
-제작자:
+저자:
 
 Automatic
 자동
@@ -239,7 +239,7 @@ Cannot start inverse search command. Please check the command line in the settin
 역 검색 명령을 시작할 수 없습니다. 설정에서 명령줄을 확인하세요.
 
 Change Language
-언어 바꾸기 (Change Language)
+언어 바꾸기(Change Language)
 
 Check for &Updates
 업데이트 확인(&U)
@@ -271,6 +271,9 @@ Copy Co&mment
 Copying text was denied (copying as image only)
 텍스트 복사가 거부되었습니다. (이미지만 복사됩니다.)
 
+Copyright:
+저작권:
+
 Could not obtain Printer properties
 프린터 속성을 가져올 수 없습니다.
 
@@ -281,7 +284,7 @@ Couldn't render the page
 페이지 렌더링을 할 수 없습니다.
 
 Created:
-생성 일자:
+만든 날짜:
 
 Current file
 현재 파일
@@ -394,6 +397,9 @@ Fit Width and Show Pages Continuously
 Fit a Single Page
 한 페이지 맞춤
 
+Fonts:
+글꼴:
+
 Found text at page %s
 %s 페이지에서 텍스트를 찾았습니다.
 
@@ -425,7 +431,7 @@ MB
 MB
 
 Make SumatraPDF default application for PDF files?
-SumatraPDF를 PDF 파일의 기본 응용 프로그램으로 만들까요?
+SumatraPDF를 PDF 파일의 기본 프로그램으로 만들까요?
 
 Make SumatraPDF my default PDF reader
 SumatraPDF를 기본 PDF 리더로 만들기
@@ -437,7 +443,7 @@ Mobi documents
 Mobi 문서
 
 Modified:
-수정 일자:
+수정한 날짜:
 
 New version %s is available. Download new version?
 새 버전 %s 이 사용 가능합니다. 다운로드할까요?
@@ -458,7 +464,7 @@ No synchronization info at this position
 이 위치의 동기화 정보가 없습니다.
 
 Number of Pages:
-총 페이지 수:
+페이지 수:
 
 OK
 확인
@@ -470,16 +476,16 @@ Open a document...
 문서 열기...
 
 Open in &Adobe Reader
-Adobe Reader 에서 열기(&A)
+Adobe Reader에서 열기(&A)
 
 Open in &Foxit Reader
-Foxit Reader 에서 열기(&F)
+Foxit Reader에서 열기(&F)
 
 Open in Microsoft XPS-Viewer
-Microsoft XPS-Viewer 에서 열기
+Microsoft XPS-Viewer에서 열기
 
 Open in PDF-XChange
-PDF-XChange 에서 열기
+PDF-XChange에서 열기
 
 P&roperties
 속성(&R)
@@ -556,6 +562,9 @@ Remove from favorites
 Remove page %s from favorites
 책갈피에서 %s 페이지 제거
 
+Replace document &colors with Windows color scheme
+Windows 색 구성표처럼 문서 색 교체(&C)
+
 Rotate &Left\tCtrl+Shift+-
 반시계 방향으로 회전(&L)\tCtrl+Shift+-
 
@@ -584,10 +593,10 @@ Send by &E-mail...
 이메일로 보내기(&E)...
 
 Set inverse search command-line
-명령줄 역탐색 설정
+명령줄 역 탐색 설정
 
 Show &Toolbar
-도구 모음 보이기(&T)
+도구모음 보이기(&T)
 
 Show &pages continuously
 연속적으로 페이지 보이기(&P)
@@ -678,9 +687,4 @@ copying text
 
 printing document
 문서 인쇄 중
-
-# Untranslated:
-#Copyright:
-#Fonts:
-#Replace document &colors with Windows color scheme
 
