@@ -101,7 +101,6 @@ protected:
                          zoom, rotation);
     }
     bool ExtractPageAnchors();
-    bool FixImageJustification();
     void FixFontSizeForResolution(HDC hDC);
     PageElement *CreatePageLink(DrawInstr *link, RectI rect, int pageNo);
 
@@ -214,40 +213,6 @@ bool EbookEngine::ExtractPageAnchors()
         for (DrawInstr *i = pageInstrs->IterStart(); i; i = pageInstrs->IterNext()) {
             if (InstrAnchor == i->type)
                 anchors.Append(PageAnchor(i, pageNo));
-        }
-    }
-
-    return true;
-}
-
-bool EbookEngine::FixImageJustification()
-{
-    ScopedCritSec scope(&pagesAccess);
-
-    for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
-        Vec<DrawInstr> *pageInstrs = GetPageData(pageNo);
-        if (!pageInstrs)
-            return false;
-        for (size_t k = 0; k < pageInstrs->Count(); k++) {
-            DrawInstr *i = &pageInstrs->At(k);
-            if (InstrImage != i->type)
-                continue;
-            CrashIf(k == 0 || k + 1 == pageInstrs->Count());
-            DrawInstr *i2 = &pageInstrs->At(k+1);
-            CrashIf(i2->type != InstrString || i2->str.len != 0 || i2->bbox.Width != i->bbox.Width);
-            i->bbox.X = i2->bbox.X;
-            // center images that are alone on a line
-            DrawInstr *i3 = NULL, *i4 = NULL;
-            for (size_t j = k; j > 0 && !i3; j--) {
-                if (InstrString == pageInstrs->At(j).type)
-                    i3 = &pageInstrs->At(j);
-            }
-            for (size_t j = k + 2; j < pageInstrs->Count() && !i4; j++) {
-                if (InstrString == pageInstrs->At(j).type)
-                    i4 = &pageInstrs->At(j);
-            }
-            if ((!i3 || i3->bbox.Y != i->bbox.Y) && (!i4 || i4->bbox.Y != i->bbox.Y))
-                i2->bbox.X = i->bbox.X = ((REAL)pageRect.dx - 2 * pageBorder - i->bbox.Width) / 2;
         }
     }
 
@@ -514,7 +479,6 @@ PageDestination *EbookEngine::GetNamedDest(const TCHAR *name)
 class PageLayoutCommon : public PageLayout {
 protected:
     void EmitParagraph2(float indentation=0);
-    void EmitImage2(ImageData *img);
 
     void HandleTagHeader(HtmlToken *t);
     void HandleTagP2(HtmlToken *t);
@@ -561,35 +525,6 @@ void PageLayoutCommon::EmitParagraph2(float indentation)
     }
 }
 
-void PageLayoutCommon::EmitImage2(ImageData *img)
-{
-    Rect imgSize = BitmapSizeFromData(img->data, img->len);
-    if (imgSize.IsEmptyArea())
-        return;
-
-    SizeF newSize((REAL)imgSize.Width, (REAL)imgSize.Height);
-    // move overly large images to a new line
-    if (!IsCurrLineEmpty() && currX + newSize.Width > pageDx)
-        FlushCurrLine(false);
-    // move overly large images to a new page
-    if (currY > 0 && currY + newSize.Height / 2.f > pageDy)
-        ForceNewPage();
-    // if image is still bigger than available space, scale it down
-    if ((newSize.Width > pageDx) || (currY + newSize.Height) > pageDy) {
-        REAL scale = min(pageDx / newSize.Width, (pageDy - currY) / newSize.Height);
-        newSize.Width *= scale;
-        newSize.Height *= scale;
-    }
-
-    RectF bbox(PointF(currX, 0), newSize);
-    AppendInstr(DrawInstr::Image(img->data, img->len, bbox));
-    // add an empty string in place of the image so that
-    // we can make the image flow with the text (as long
-    // as justification code doesn't take into account images)
-    AppendInstr(DrawInstr::Str("", 0, bbox));
-    currX += bbox.Width;
-}
-
 void PageLayoutCommon::HandleTagHeader(HtmlToken *t)
 {
     if (t->IsEndTag()) {
@@ -629,10 +564,7 @@ void PageLayoutCommon::HandleTagA2(HtmlToken *t, const char *linkAttr)
     if (t->IsStartTag() && !inLink) {
         AttrInfo *attr = t->GetAttrByName(linkAttr);
         if (attr) {
-            DrawInstr i(InstrLinkStart);
-            i.str.s = attr->val;
-            i.str.len = attr->valLen;
-            AppendInstr(i);
+            AppendInstr(DrawInstr::LinkStart(attr->val, attr->valLen));
             inLink = true;
         }
     }
@@ -647,9 +579,7 @@ void PageLayoutCommon::HandleHtmlTag2(HtmlToken *t)
     HtmlTag tag = FindTag(t);
     switch (tag) {
     case Tag_P:
-        break;
-    case Tag_Pagebreak:
-        ForceNewPage();
+        HandleTagP2(t);
         break;
     case Tag_Ul: case Tag_Ol: case Tag_Dl:
         if (t->IsStartTag())
@@ -942,8 +872,8 @@ void EpubDoc::ParseMetadata(const char *content)
 
 class PageLayoutEpub : public PageLayoutCommon {
 protected:
-    void HandleTagImgEpub(HtmlToken *t);
-    void HandleHtmlTagEpub(HtmlToken *t);
+    void HandleTagImg_Epub(HtmlToken *t);
+    void HandleHtmlTag_Epub(HtmlToken *t);
 
     EpubDoc *epubDoc;
 
@@ -954,7 +884,7 @@ public:
     Vec<PageData*> *Layout();
 };
 
-void PageLayoutEpub::HandleTagImgEpub(HtmlToken *t)
+void PageLayoutEpub::HandleTagImg_Epub(HtmlToken *t)
 {
     CrashIf(!epubDoc);
     if (t->IsEndTag())
@@ -965,16 +895,18 @@ void PageLayoutEpub::HandleTagImgEpub(HtmlToken *t)
     ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
     ImageData *img = epubDoc->GetImageData(src);
     if (img)
-        EmitImage2(img);
+        EmitImage(img);
 }
 
-void PageLayoutEpub::HandleHtmlTagEpub(HtmlToken *t)
+void PageLayoutEpub::HandleHtmlTag_Epub(HtmlToken *t)
 {
     HtmlTag tag = FindTag(t);
     if (Tag_Img == tag) {
-        HandleTagImgEpub(t);
+        HandleTagImg_Epub(t);
         HandleAnchorTag(t);
     }
+    else if (Tag_Pagebreak == tag)
+        ForceNewPage();
     else
         HandleHtmlTag2(t);
 }
@@ -984,7 +916,7 @@ Vec<PageData*> *PageLayoutEpub::Layout()
     HtmlToken *t;
     while ((t = htmlParser->Next()) && !t->IsError()) {
         if (t->IsTag())
-            HandleHtmlTagEpub(t);
+            HandleHtmlTag_Epub(t);
         else if (!IgnoreText())
             HandleText(t);
     }
@@ -1069,8 +1001,6 @@ bool EpubEngineImpl::FinishLoading()
     li.textAllocator = &allocator;
 
     pages = PageLayoutEpub(&li, doc).Layout();
-    if (!FixImageJustification())
-        return false;
     if (!ExtractPageAnchors())
         return false;
 
@@ -1386,7 +1316,7 @@ void PageLayoutFb2::HandleTagImg_Fb2(HtmlToken *t)
     ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
     ImageData *img = fb2Doc->GetImageData(src);
     if (img)
-        EmitImage2(img);
+        EmitImage(img);
 }
 
 void PageLayoutFb2::HandleTagAsHtml(HtmlToken *t, const char *name)
@@ -1497,8 +1427,6 @@ bool Fb2EngineImpl::Load(const TCHAR *fileName)
     li.textAllocator = &allocator;
 
     pages = PageLayoutFb2(&li, doc).Layout();
-    if (!FixImageJustification())
-        return false;
     if (!ExtractPageAnchors())
         return false;
 

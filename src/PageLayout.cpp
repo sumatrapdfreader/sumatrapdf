@@ -202,7 +202,7 @@ REAL PageLayout::CurrLineDx()
 {
     REAL dx = 0;
     for (DrawInstr *i = currLineInstr.IterStart(); i; i = currLineInstr.IterNext()) {
-        if (InstrString == i->type) {
+        if (InstrString == i->type || InstrImage == i->type) {
             dx += i->bbox.Width;
         } else if (InstrElasticSpace == i->type) {
             dx += spaceDx;
@@ -234,17 +234,26 @@ float PageLayout::CurrLineDy()
 // We set position x of each visible element
 void PageLayout::LayoutLeftStartingAt(REAL offX)
 {
+    DrawInstr *lastInstr = NULL;
+    int instrCount = 0;
+
     REAL x = offX;
     for (DrawInstr *i = currLineInstr.IterStart(); i; i = currLineInstr.IterNext()) {
-        if (InstrString == i->type) {
+        if (InstrString == i->type || InstrImage == i->type) {
             i->bbox.X = x;
             x += i->bbox.Width;
+            lastInstr = i;
+            instrCount++;
         } else if (InstrElasticSpace == i->type) {
             x += spaceDx;
         } else if (InstrFixedSpace == i->type) {
             x += i->fixedSpaceDx;
         }
     }
+
+    // center a single image
+    if (instrCount == 1 && InstrImage == lastInstr->type)
+        lastInstr->bbox.X = (pageDx - lastInstr->bbox.Width) / 2.f;
 }
 
 // TODO: if elements are of different sizes (e.g. texts using different fonts)
@@ -272,18 +281,18 @@ void PageLayout::JustifyLineBoth()
 
     LayoutLeftStartingAt(0.f);
     size_t spaces = 0;
-    bool wordAfterSpace = true;
+    bool endsWithSpace = false;
     for (DrawInstr *i = currLineInstr.IterStart(); i; i = currLineInstr.IterNext()) {
         if (InstrElasticSpace == i->type) {
             ++spaces;
-            wordAfterSpace = false;
+            endsWithSpace = true;
         }
-        else if (InstrString == i->type)
-            wordAfterSpace = true;
+        else if (InstrString == i->type || InstrImage == i->type)
+            endsWithSpace = false;
     }
     // don't take a space at the end of the line into account 
     // (the last word is explicitly right-aligned below)
-    if (!wordAfterSpace)
+    if (endsWithSpace)
         spaces--;
     if (0 == spaces)
         return;
@@ -294,7 +303,7 @@ void PageLayout::JustifyLineBoth()
     for (DrawInstr *i = currLineInstr.IterStart(); i; i = currLineInstr.IterNext()) {
         if (InstrElasticSpace == i->type)
             offX += extraSpaceDx;
-        else if (InstrString == i->type) {
+        else if (InstrString == i->type || InstrImage == i->type) {
             i->bbox.X += offX;
             lastStr = i;
         }
@@ -409,36 +418,24 @@ void PageLayout::EmitImage(ImageData *img)
     Rect imgSize = BitmapSizeFromData(img->data, img->len);
     if (imgSize.IsEmptyArea())
         return;
-    float imgDy = (float)imgSize.Height;
-    float imgDx = (float)imgSize.Width;
 
-    FlushCurrLine(true);
-    // TODO: probably should respect current paragraph justification
-    RectF bbox(0, 0, (REAL)imgSize.Width, imgDy);
-    if (currY  + (imgDy / 2.f) > pageDy) {
-        // move overly large images to a new page
+    SizeF newSize((REAL)imgSize.Width, (REAL)imgSize.Height);
+    // move overly large images to a new line
+    if (!IsCurrLineEmpty() && currX + newSize.Width > pageDx)
+        FlushCurrLine(false);
+    // move overly large images to a new page
+    if (currY > 0 && currY + newSize.Height / 2.f > pageDy)
         ForceNewPage();
+    // if image is still bigger than available space, scale it down
+    if ((newSize.Width > pageDx) || (currY + newSize.Height) > pageDy) {
+        REAL scale = min(pageDx / newSize.Width, (pageDy - currY) / newSize.Height);
+        newSize.Width *= scale;
+        newSize.Height *= scale;
     }
 
-    if ((imgDx > pageDx) || (currY + imgDy) > pageDy) {
-        // if image is still bigger than available space, scale it down
-        REAL scale = min(pageDx / imgDx, (pageDy - currY) / imgDy);
-        imgDx *= scale;
-        imgDy *= scale;
-    }
-    currX += (pageDx - imgDx) / 2.f;
-    // TODO: everywhere else we have 2 distinc phases:
-    // a) accumulation of items within a current line
-    // b) calculating x/y position of those items based on
-    //    items and current justification.
-    // This breaks that patters by setting x position here
-    bbox.X = currX;
-    bbox.Y = 0;
-    bbox.Width = imgDx;
-    bbox.Height = imgDy;
+    RectF bbox(PointF(currX, 0), newSize);
     AppendInstr(DrawInstr::Image(img->data, img->len, bbox));
-    currY += imgDy;
-    ForceNewPage();
+    currX += bbox.Width;
 }
 
 // add horizontal line (<hr> in html terms)
@@ -493,6 +490,7 @@ static bool CanEmitElasticSpace(float currX, float maxCurrX, Vec<DrawInstr>& cur
     if (currX > maxCurrX)
         return false;
     DrawInstr& di = currLineInstr.Last();
+    // don't add a space if only an anchor would be in between them
     if (InstrAnchor == di.type && currLineInstr.Count() > 1)
         di = currLineInstr.At(currLineInstr.Count() - 2);
     return (InstrElasticSpace != di.type) && (InstrFixedSpace != di.type);
