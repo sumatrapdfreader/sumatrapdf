@@ -229,8 +229,8 @@ fz_bound_path(fz_context *ctx, fz_path *path, fz_stroke_state *stroke, fz_matrix
 	 * for it to be expanded in the stroked case below. */
 	if (path->len == 0)
 		return fz_empty_rect;
-        /* A path must start with a moveto - and if that's all there is
-         * then the path is empty. */
+	/* A path must start with a moveto - and if that's all there is
+	 * then the path is empty. */
 	if (path->len == 3)
 		return fz_empty_rect;
 

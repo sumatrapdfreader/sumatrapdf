@@ -109,7 +109,10 @@ class PageLayout
 protected:
     void HandleAnchorTag(HtmlToken *t, bool idsOnly=false);
     void HandleTagBr();
+    void HandleTagP(HtmlToken *t);
     void HandleTagFont(HtmlToken *t);
+    bool HandleTagA(HtmlToken *t, const char *linkAttr="href");
+    void HandleTagHx(HtmlToken *t);
     void HandleHtmlTag(HtmlToken *t);
     void HandleText(HtmlToken *t);
 
@@ -199,7 +202,6 @@ class PageLayoutMobi : public PageLayout {
 
     bool                finishedParsing;
 
-    void HandleTagA_Mobi(HtmlToken *t);
     void HandleTagP_Mobi(HtmlToken *t);
     void HandleTagImg_Mobi(HtmlToken *t);
     void HandleHtmlTag_Mobi(HtmlToken *t);

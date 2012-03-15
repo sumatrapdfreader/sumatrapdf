@@ -462,7 +462,12 @@ void PageLayout::EmitParagraph(float indent, float topPadding)
     CrashIf(0 != currX);
     if (ShouldAddIndent(indent, currJustification) && EnsureDx(indent)) {
         AppendInstr(DrawInstr::FixedSpace(indent));
-        currX += indent;
+        currX = indent;
+        // prevent accidental double-indentation
+        for (size_t i = currLineInstr.Count(); i > 1; i--) {
+            if (InstrFixedSpace == currLineInstr.At(i - 2).type)
+                currLineInstr.RemoveAt(i - 2);
+        }
     }
     // remember so that we can use it in FlushCurrLine()
     currLineTopPadding = topPadding;
@@ -598,6 +603,22 @@ void PageLayout::HandleTagBr()
         FlushCurrLine(true);
 }
 
+void PageLayout::HandleTagP(HtmlToken *t)
+{
+    if (!t->IsEndTag()) {
+        AttrInfo *attr = t->GetAttrByName("align");
+        if (attr) {
+            AlignAttr just = GetAlignAttrByName(attr->val, attr->valLen);
+            if (just != Align_NotFound)
+                currJustification = just;
+        }
+        EmitParagraph(0);
+    } else {
+        FlushCurrLine(true);
+        currJustification = Align_Justify;
+    }
+}
+
 void PageLayout::HandleTagFont(HtmlToken *t)
 {
     if (t->IsEndTag()) {
@@ -627,6 +648,24 @@ void PageLayout::HandleTagFont(HtmlToken *t)
     ChangeFontSize(defaultFontSize * scale);
 }
 
+bool PageLayout::HandleTagA(HtmlToken *t, const char *linkAttr)
+{
+    if (t->IsStartTag() && !inLink) {
+        AttrInfo *attr = t->GetAttrByName(linkAttr);
+        if (attr) {
+            AppendInstr(DrawInstr::LinkStart(attr->val, attr->valLen));
+            inLink = true;
+            return true;
+        }
+    }
+    else if (t->IsEndTag() && inLink) {
+        AppendInstr(DrawInstr(InstrLinkEnd));
+        inLink = false;
+        return true;
+    }
+    return false;
+}
+
 static bool IsTagH(HtmlTag tag)
 {
     switch (tag) {
@@ -640,6 +679,24 @@ static bool IsTagH(HtmlTag tag)
    return false;
  }
 
+void PageLayout::HandleTagHx(HtmlToken *t)
+{
+    if (t->IsEndTag()) {
+        FlushCurrLine(true);
+        currY += currFontSize / 2;
+        currFontSize = defaultFontSize;
+        currJustification = Align_Justify;
+    }
+    else {
+        currJustification = Align_Left;
+        EmitParagraph(0);
+        currFontSize = defaultFontSize * pow(1.1f, '5' - t->s[1]);
+        if (currY > 0)
+            currY += currFontSize / 2;
+    }
+    ChangeFontStyle(FontStyleBold, t->IsStartTag());
+}
+
 void PageLayout::HandleHtmlTag(HtmlToken *t)
 {
     CrashAlwaysIf(!t->IsTag());
@@ -649,7 +706,9 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
 
     HtmlTag tag = FindTag(t);
 
-    if (Tag_Hr == tag) {
+    if (Tag_P == tag) {
+        HandleTagP(t);
+    } else if (Tag_Hr == tag) {
         // imitating Kindle: hr is proceeded by an empty line
         FlushCurrLine(false);
         EmitEmptyLine(lineSpacing);
@@ -666,12 +725,14 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
         HandleTagBr();
     } else if (Tag_Font == tag) {
         HandleTagFont(t);
+    } else if (Tag_A == tag) {
+        HandleTagA(t);
     } else if (Tag_Blockquote == tag) {
         // TODO: implement me
     } else if (Tag_Div == tag) {
         // TODO: implement me
     } else if (IsTagH(tag)) {
-        // TODO: implement me
+        HandleTagHx(t);
     } else if (Tag_Sup == tag) {
         // TODO: implement me
     } else if (Tag_Sub == tag) {
@@ -786,30 +847,6 @@ void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, RE
 
 /* Mobi-specific PageLayout methods */
 
-// TODO: this only accepts <a> tags with filepos attribute
-// there are files with regular http links etc. - not sure if we should
-// support them. Sometimes they point to suspicious, dead web pages
-void PageLayoutMobi::HandleTagA_Mobi(HtmlToken *t)
-{
-    if (t->IsEndTag()) {
-        if (inLink)
-            AppendInstr(DrawInstr(InstrLinkEnd));
-        inLink = false;
-        return;
-    }
-    AttrInfo *attr = t->GetAttrByName("filepos");
-    if (!attr) 
-        return;
-
-    int filepos = 0;
-    if (!str::Parse(attr->val, attr->valLen, "%d", &filepos))
-        return;
-    if (filepos < 0 || (size_t)filepos >= layoutInfo->htmlStrLen)
-        return;
-    inLink = true;
-    AppendInstr(DrawInstr::LinkStart(attr->val, attr->valLen));
-}
-
 void PageLayoutMobi::HandleTagP_Mobi(HtmlToken *t)
 {
     if (t->IsEndTag()) {
@@ -904,7 +941,8 @@ void PageLayoutMobi::HandleHtmlTag_Mobi(HtmlToken *t)
         HandleAnchorTag(t);
     } else if (Tag_A == tag) {
         HandleAnchorTag(t);
-        HandleTagA_Mobi(t);
+        // TODO: also handle external links?
+        HandleTagA(t, "filepos");
     } else {
         HandleHtmlTag(t);
     }

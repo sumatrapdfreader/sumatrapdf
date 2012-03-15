@@ -11,5 +11,5 @@ but can be over-written by DllMain() in .obj file?
 
 BOOL APIENTRY DllMain(HANDLE hModule, DWORD dwReason, LPVOID lpReserved)
 {
-	return TRUE;
+    return TRUE;
 }

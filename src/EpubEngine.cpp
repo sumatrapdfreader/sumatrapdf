@@ -478,11 +478,6 @@ PageDestination *EbookEngine::GetNamedDest(const TCHAR *name)
 
 class PageLayoutCommon : public PageLayout {
 protected:
-    void EmitParagraph2(float indentation=0);
-
-    void HandleTagHeader(HtmlToken *t);
-    void HandleTagP2(HtmlToken *t);
-    void HandleTagA2(HtmlToken *t, const char *linkAttr="href");
     void HandleHtmlTag2(HtmlToken *t);
 
     int listDepth;
@@ -511,76 +506,14 @@ PageLayoutCommon::PageLayoutCommon(LayoutInfo* li) : listDepth(0)
         spaceDx = spaceDx2;
 
     currPage = new PageData();
+    currPage->reparsePoint = li->htmlStr;
 }
 
-void PageLayoutCommon::EmitParagraph2(float indentation)
-{
-    EmitParagraph(indentation);
-    // prevent accidental double-indentation
-    for (size_t i = currLineInstr.Count(); i > 0; i--) {
-        if (InstrFixedSpace == currLineInstr.At(i-1).type &&
-            (!indentation || i < currLineInstr.Count())) {
-            currLineInstr.RemoveAt(i-1);
-        }
-    }
-}
-
-void PageLayoutCommon::HandleTagHeader(HtmlToken *t)
-{
-    if (t->IsEndTag()) {
-        FlushCurrLine(true);
-        currY += currFontSize / 2;
-        currFontSize = defaultFontSize;
-        currJustification = Align_Justify;
-    }
-    else {
-        currJustification = Align_Left;
-        EmitParagraph2();
-        currFontSize = defaultFontSize * pow(1.1f, '5' - t->s[1]);
-        if (currY > 0)
-            currY += currFontSize / 2;
-    }
-    ChangeFontStyle(FontStyleBold, t->IsStartTag());
-}
-
-void PageLayoutCommon::HandleTagP2(HtmlToken *t)
-{
-    if (!t->IsEndTag()) {
-        AttrInfo *attr = t->GetAttrByName("align");
-        if (attr) {
-            AlignAttr just = GetAlignAttrByName(attr->val, attr->valLen);
-            if (just != Align_NotFound)
-                currJustification = just;
-        }
-        EmitParagraph2();
-    } else {
-        FlushCurrLine(true);
-        currJustification = Align_Justify;
-    }
-}
-
-void PageLayoutCommon::HandleTagA2(HtmlToken *t, const char *linkAttr)
-{
-    if (t->IsStartTag() && !inLink) {
-        AttrInfo *attr = t->GetAttrByName(linkAttr);
-        if (attr) {
-            AppendInstr(DrawInstr::LinkStart(attr->val, attr->valLen));
-            inLink = true;
-        }
-    }
-    else if (t->IsEndTag() && inLink) {
-        AppendInstr(DrawInstr(InstrLinkEnd));
-        inLink = false;
-    }
-}
-
+// TODO: merge into PageLayout::HandleHtmlTag
 void PageLayoutCommon::HandleHtmlTag2(HtmlToken *t)
 {
     HtmlTag tag = FindTag(t);
     switch (tag) {
-    case Tag_P:
-        HandleTagP2(t);
-        break;
     case Tag_Ul: case Tag_Ol: case Tag_Dl:
         if (t->IsStartTag())
             listDepth++;
@@ -593,14 +526,14 @@ void PageLayoutCommon::HandleHtmlTag2(HtmlToken *t)
         break;
     case Tag_Li: case Tag_Dd:
         if (t->IsStartTag())
-            EmitParagraph2(15.f * listDepth);
+            EmitParagraph(15.f * listDepth);
         else if (t->IsEndTag())
             FlushCurrLine(true);
         HandleAnchorTag(t);
         break;
     case Tag_Dt:
         if (t->IsStartTag()) {
-            EmitParagraph2(15.f * (listDepth - 1));
+            EmitParagraph(15.f * (listDepth - 1));
             currJustification = Align_Left;
         }
         else if (t->IsEndTag())
@@ -611,15 +544,6 @@ void PageLayoutCommon::HandleHtmlTag2(HtmlToken *t)
     case Tag_Center:
         currJustification = Align_Center;
         HandleAnchorTag(t);
-        break;
-    case Tag_H1: case Tag_H2: case Tag_H3:
-    case Tag_H4: case Tag_H5:
-        HandleTagHeader(t);
-        HandleAnchorTag(t);
-        break;
-    case Tag_A:
-        HandleAnchorTag(t);
-        HandleTagA2(t);
         break;
     default:
         HandleHtmlTag(t);
@@ -1329,11 +1253,11 @@ void PageLayoutFb2::HandleTagAsHtml(HtmlToken *t, const char *name)
 void PageLayoutFb2::HandleFb2Tag(HtmlToken *t)
 {
     if (t->NameIs("title")) {
-        HtmlToken tok2;
+        HandleAnchorTag(t);
+        HtmlToken tok;
         ScopedMem<char> name(str::Format("h%d", section));
-        tok2.SetValue(t->type, name, name + str::Len(name));
-        HandleTagHeader(&tok2);
-        HandleAnchorTag(t, true);
+        tok.SetValue(t->type, name, name + str::Len(name));
+        HandleTagHx(&tok);
     }
     else if (t->NameIs("section")) {
         if (t->IsStartTag())
@@ -1341,7 +1265,7 @@ void PageLayoutFb2::HandleFb2Tag(HtmlToken *t)
         else if (t->IsEndTag() && section > 1)
             section--;
         FlushCurrLine(true);
-        HandleAnchorTag(t, true);
+        HandleAnchorTag(t);
     }
     else if (t->NameIs("p")) {
         if (htmlParser->tagNesting.Find(Tag_Title) == -1)
@@ -1349,10 +1273,12 @@ void PageLayoutFb2::HandleFb2Tag(HtmlToken *t)
     }
     else if (t->NameIs("image")) {
         HandleTagImg_Fb2(t);
-        HandleAnchorTag(t, true);
+        HandleAnchorTag(t);
     }
-    else if (t->NameIs("a"))
-        HandleTagA2(t, "xlink:href");
+    else if (t->NameIs("a")) {
+        HandleAnchorTag(t, true);
+        HandleTagA(t, "xlink:href");
+    }
     else if (t->NameIs("pagebreak"))
         ForceNewPage();
     else if (t->NameIs("strong"))
@@ -1363,7 +1289,7 @@ void PageLayoutFb2::HandleFb2Tag(HtmlToken *t)
         HandleTagAsHtml(t, "blockquote");
     else if (t->NameIs("empty-line")) {
         if (!t->IsEndTag())
-            EmitParagraph2();
+            EmitParagraph(0);
     }
 }
 
@@ -1460,7 +1386,7 @@ public:
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
-    virtual PageDestination *GetNamedDest(const TCHAR *name) { return NULL; }
+    virtual PageDestination *GetNamedDest(const TCHAR *name);
 
     virtual const TCHAR *GetDefaultFileExt() const { return _T(".mobi"); }
 
@@ -1492,6 +1418,33 @@ bool MobiEngineImpl::Load(const TCHAR *fileName)
         return false;
     
     return pages->Count() > 0;
+}
+
+PageDestination *MobiEngineImpl::GetNamedDest(const TCHAR *name)
+{
+    int filepos = _ttoi(name);
+    if (!filepos)
+        return NULL;
+    size_t dummyLen;
+    char *start = doc->GetBookHtmlData(dummyLen);
+    for (int pageNo = 1; pageNo <= PageCount() + 1; pageNo++) {
+        if (pages->At(pageNo - 1)->reparsePoint - start > filepos || pageNo > PageCount()) {
+            pageNo--;
+            ScopedCritSec scope(&pagesAccess);
+            Vec<DrawInstr> *pageInstrs = GetPageData(pageNo);
+            float currY = 0;
+            for (DrawInstr *i = pageInstrs->IterStart(); i; i = pageInstrs->IterNext()) {
+                if (InstrString == i->type && i->str.s - start >= filepos) {
+                    currY = i->bbox.Y;
+                    break;
+                }
+            }
+            RectD rect(0, currY + pageBorder, pageRect.dx, 10);
+            rect.Inflate(-pageBorder, 0);
+            return new SimpleDest2(pageNo, rect);
+        }
+    }
+    return NULL;
 }
 
 bool MobiEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
