@@ -103,22 +103,13 @@ public:
     const char *    reparsePoint;
 };
 
+// TODO: rename to EbookFormatter
 class PageLayout
 {
-public:
-    PageLayout();
-    ~PageLayout();
-
-    PageData *IterStart(LayoutInfo* layoutInfo);
-    PageData *IterNext();
-
 protected:
     void HandleAnchorTag(HtmlToken *t, bool idsOnly=false);
     void HandleTagBr();
-    void HandleTagA(HtmlToken *t);
-    void HandleTagP(HtmlToken *t);
     void HandleTagFont(HtmlToken *t);
-    void HandleTagImg(HtmlToken *t);
     void HandleHtmlTag(HtmlToken *t);
     void HandleText(HtmlToken *t);
 
@@ -134,7 +125,7 @@ protected:
     void  EmitTextRun(const char *s, const char *end);
     void  EmitNewLine();
     void  EmitElasticSpace();
-    void  EmitParagraph(float indent, float topPadding);
+    void  EmitParagraph(float indent, float topPadding=0);
     void  EmitEmptyLine(float lineDy);
     void  ForceNewPage();
     bool  EnsureDx(float dx);
@@ -178,14 +169,6 @@ protected:
     const char *        currLineReparsePoint;
     PageData *          currPage;
 
-    // remember cover image if we've generated one, so that we
-    // can avoid adding the same image twice if it's early in
-    // the book
-    ImageData *         coverImage;
-    // number of pages generated so far, approximate. Only used
-    // for detection of cover image duplicates
-    int                 pageCount;
-
     // for tracking whether we're currently inside <a> tag
     bool                inLink;
 
@@ -196,9 +179,38 @@ protected:
 
     // list of pages that we've created but haven't yet sent to client
     Vec<PageData*>      pagesToSend;
-    bool                finishedParsing;
 
     WCHAR               buf[512];
+
+public:
+    PageLayout();
+    ~PageLayout();
+};
+
+// TODO: rename to MobiFormatter
+class PageLayoutMobi : public PageLayout {
+    // remember cover image if we've generated one, so that we
+    // can avoid adding the same image twice if it's early in
+    // the book
+    ImageData *         coverImage;
+    // number of pages generated so far, approximate. Only used
+    // for detection of cover image duplicates
+    int                 pageCount;
+
+    bool                finishedParsing;
+
+    void HandleTagA_Mobi(HtmlToken *t);
+    void HandleTagP_Mobi(HtmlToken *t);
+    void HandleTagImg_Mobi(HtmlToken *t);
+    void HandleHtmlTag_Mobi(HtmlToken *t);
+
+public:
+    PageLayoutMobi() : PageLayout() { }
+
+    PageData *IterStart(LayoutInfo* layoutInfo);
+    PageData *IterNext();
+
+    Vec<PageData*> *Layout(LayoutInfo *li);
 };
 
 void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox, Color *textColor=NULL);

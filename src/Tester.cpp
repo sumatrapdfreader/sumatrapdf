@@ -171,7 +171,7 @@ static void MobiLayout(char *file)
     li.htmlStr = mb->GetBookHtmlData(li.htmlStrLen);
     li.textAllocator = &textAllocator;
 
-    PageLayout pl;
+    PageLayoutMobi pl;
     Vec<PageData*> *pages = new Vec<PageData*>();
     for (PageData *pd = pl.IterStart(&li); pd; pd = pl.IterNext()) {
         pages->Append(pd);

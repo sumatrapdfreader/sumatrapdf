@@ -128,7 +128,7 @@ bool ThreadLayoutMobi::Layout(const char *reparsePoint)
     //lf("Started laying out mobi, fromBeginning=%d", (int)fromBeginning);
     int totalPageCount = 0;
     Timer t(true);
-    PageLayout pl;
+    PageLayoutMobi pl;
     layoutInfo->reparsePoint = reparsePoint;
     for (PageData *pd = pl.IterStart(layoutInfo); pd; pd = pl.IterNext()) {
         if (WasCancelRequested()) {

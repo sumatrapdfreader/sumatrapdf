@@ -118,7 +118,10 @@ DrawInstr DrawInstr::Anchor(const char *s, size_t len, RectF bbox)
     return di;
 }
 
-PageLayout::PageLayout() : currPage(NULL), gfx(NULL)
+PageLayout::PageLayout() : currPage(NULL), gfx(NULL),
+    currX(0), currY(0), currJustification(Align_Justify),
+    currLineTopPadding(0), currReparsePoint(NULL),
+    inLink(false)
 {
 }
 
@@ -302,25 +305,6 @@ void PageLayout::JustifyLineBoth()
         lastStr->bbox.X = pageDx - lastStr->bbox.Width;
 }
 
-// empty page is one that consists of only invisible instructions
-bool IsEmptyPage(PageData *p)
-{
-    if (!p)
-        return false;
-    DrawInstr *i;
-    for (i = p->instructions.IterStart(); i; i = p->instructions.IterNext()) {
-        // if a page only consits of lines we consider it empty. It's different
-        // than what Kindle does but I don't see the purpose of showing such
-        // pages to the user
-        if (InstrLine == i->type)
-            continue;
-        if (IsVisibleDrawInstr(i))
-            return false;
-    }
-    // all instructions were invisible
-    return true;
-}
-
 bool PageLayout::IsCurrLineEmpty()
 {
     for (DrawInstr *i = currLineInstr.IterStart(); i; i = currLineInstr.IterNext()) {
@@ -358,7 +342,6 @@ void PageLayout::ForceNewPage()
     if (createdNewPage)
         return;
     pagesToSend.Append(currPage);
-    pageCount++;
     currPage = new PageData();
     currPage->reparsePoint = currReparsePoint;
 
@@ -397,7 +380,6 @@ bool PageLayout::FlushCurrLine(bool isParagraphBreak)
         currPage->instructions.Append(DrawInstr::SetFont(currFont));
         CrashIf(!currLineReparsePoint);
         currPage->reparsePoint = currLineReparsePoint;
-        pageCount++;
         currY = 0.f;
     }
     SetYPos(currLineInstr, currY + currLineTopPadding);
@@ -429,11 +411,6 @@ void PageLayout::EmitImage(ImageData *img)
         return;
     float imgDy = (float)imgSize.Height;
     float imgDx = (float)imgSize.Width;
-
-    // if the image we're adding early on is the same as cover
-    // image, then skip it. 5 is a heuristic
-    if ((img == coverImage) && (pageCount < 5))
-        return;
 
     FlushCurrLine(true);
     // TODO: probably should respect current paragraph justification
@@ -540,7 +517,7 @@ void PageLayout::EmitElasticSpace()
     AppendInstr(DrawInstr(InstrElasticSpace));
 }
 
-// a text rune is a string of consecutive text with uniform style
+// a text run is a string of consecutive text with uniform style
 void PageLayout::EmitTextRun(const char *s, const char *end)
 {
     currReparsePoint = s;
@@ -570,19 +547,6 @@ void PageLayout::EmitTextRun(const char *s, const char *end)
         AppendInstr(DrawInstr::Str(s, end - s, bbox));
         currX += bbox.Width;
     }
-}
-
-// tags that I want to explicitly ignore and not define
-// HtmlTag enums for them
-// One file has a bunch of st1:* tags (st1:city, st1:place etc.)
-static bool IgnoreTag(const char *s, size_t sLen)
-{
-    if (sLen >= 4 && s[3] == ':' && s[0] == 's' && s[1] == 't' && s[2] == '1')
-        return true;
-    // no idea what "o:p" is
-    if (sLen == 3 && s[1] == ':' && s[0] == 'o'  && s[2] == 'p')
-        return true;
-    return false;
 }
 
 // parse the number in s as a float
@@ -636,85 +600,6 @@ void PageLayout::HandleTagBr()
         FlushCurrLine(true);
 }
 
-// TODO: this only accepts <a> tags with filepos attribute
-// there are files with regular http links etc. - not sure if we should
-// support them. Sometimes they point to suspicious, dead web pages
-void PageLayout::HandleTagA(HtmlToken *t)
-{
-    if (t->IsEndTag()) {
-        if (inLink)
-            AppendInstr(DrawInstr(InstrLinkEnd));
-        inLink = false;
-        return;
-    }
-    AttrInfo *attr = t->GetAttrByName("filepos");
-    if (!attr) 
-        return;
-
-    int filepos = 0;
-    if (!str::Parse(attr->val, attr->valLen, "%d", &filepos))
-        return;
-    if (filepos < 0 || (size_t)filepos >= layoutInfo->htmlStrLen)
-        return;
-    inLink = true;
-    AppendInstr(DrawInstr::LinkStart(attr->val, attr->valLen));
-}
-
-void PageLayout::HandleTagP(HtmlToken *t)
-{
-    if (t->IsEndTag()) {
-        FlushCurrLine(true);
-        currJustification = Align_Justify;
-        return;
-    }
-
-    // handle a start p tag
-    AlignAttr just = Align_NotFound;
-    AttrInfo *attr = t->GetAttrByName("align");
-    if (attr) 
-        just = GetAlignAttrByName(attr->val, attr->valLen);;
-    if (just != Align_NotFound)
-        currJustification = just;
-    // best I can tell, in mobi <p width="1em" height="3pt> means that
-    // the first line of the paragrap is indented by 1em and there's
-    /// 3pt top padding
-    float lineIndent = 0;
-    float topPadding = 0;
-    attr = t->GetAttrByName("width");
-    if (attr) {
-        lineIndent = ParseSizeAsPixels(attr->val, attr->valLen, currFontSize);
-        // there are files with negative width which produces partially invisible
-        // text, so don't allow that
-        if (lineIndent < 0.f)
-            lineIndent = 0.f;
-    }
-    attr = t->GetAttrByName("height");
-    if (attr)
-        topPadding = ParseSizeAsPixels(attr->val, attr->valLen, currFontSize);
-    EmitParagraph(lineIndent, topPadding);
-}
-
-// mobi format has image tags in the form:
-// <img recindex="0000n" alt=""/>
-// where recindex is the record number of pdb record
-// that holds the image (within image record array, not a
-// global record)
-// TODO: handle alt attribute (?)
-void PageLayout::HandleTagImg(HtmlToken *t)
-{
-    AttrInfo *attr = t->GetAttrByName("recindex");
-    if (!attr)
-        return;
-    int n = 0;
-    if (!str::Parse(attr->val, attr->valLen, "%d", &n))
-        return;
-    ImageData *img = layoutInfo->mobiDoc->GetImage(n);
-    if (!img)
-        return;
-
-    EmitImage(img);
-}
-
 void PageLayout::HandleTagFont(HtmlToken *t)
 {
     if (t->IsEndTag()) {
@@ -744,15 +629,6 @@ void PageLayout::HandleTagFont(HtmlToken *t)
     ChangeFontSize(defaultFontSize * scale);
 }
 
-// List of tags that we don't know we don't handle yet (either because we don't want
-// to or because we haven't implemented them yet)
-static bool IgnoreThisTag(HtmlTag tag)
-{
-    static uint8 tagsToIgnore[] = { Tag_Html, Tag_Body, Tag_Head, Tag_Guide, 
-        Tag_Reference, Tag_Table, Tag_Tr, Tag_Td, Tag_Tt };
-    return IsInArray((uint8)tag, tagsToIgnore, dimof(tagsToIgnore));
-}
-
 static bool IsTagH(HtmlTag tag)
 {
     switch (tag) {
@@ -770,20 +646,12 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
 {
     CrashAlwaysIf(!t->IsTag());
 
-    // HtmlToken string includes potential attributes,
-    // get the length of just the tag
-    size_t tagLen = GetTagLen(t);
-    if (IgnoreTag(t->s, tagLen))
-        return;
-
     // any tag could contain anchor information
     HandleAnchorTag(t);
 
     HtmlTag tag = FindTag(t);
 
-    if (Tag_P == tag) {
-        HandleTagP(t);
-    } else if (Tag_Hr == tag) {
+    if (Tag_Hr == tag) {
         // imitating Kindle: hr is proceeded by an empty line
         FlushCurrLine(false);
         EmitEmptyLine(lineSpacing);
@@ -796,16 +664,10 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
         ChangeFontStyle(FontStyleUnderline, t->IsStartTag());
     } else if (Tag_Strike == tag) {
         ChangeFontStyle(FontStyleStrikeout, t->IsStartTag());
-    } else if (Tag_Mbp_Pagebreak == tag) {
-        ForceNewPage();
     } else if (Tag_Br == tag) {
         HandleTagBr();
     } else if (Tag_Font == tag) {
         HandleTagFont(t);
-    } else if (Tag_Img == tag) {
-        HandleTagImg(t);
-    } else if (Tag_A == tag) {
-        HandleTagA(t);
     } else if (Tag_Blockquote == tag) {
         // TODO: implement me
     } else if (Tag_Div == tag) {
@@ -865,12 +727,216 @@ bool PageLayout::IgnoreText()
     return false;
 }
 
+// TODO: draw link in the appropriate format (blue text, unerlined, should show hand cursor when
+// mouse is over a link. There's a slight complication here: we only get explicit information about
+// strings, not about the whitespace and we should underline the whitespace as well. Also the text
+// should be underlined at a baseline
+void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox, Color *textColor)
+{
+    Color kindleTextColor(0x5F, 0x4B, 0x32); // this color matches Kindle app
+    if (!textColor)
+        textColor = &kindleTextColor;
+    SolidBrush brText(*textColor);
+    Pen pen(Color(255, 0, 0), 1);
+    //Pen linePen(Color(0, 0, 0), 2.f);
+    Pen linePen(Color(0x5F, 0x4B, 0x32), 2.f);
+    Font *font = NULL;
+
+    WCHAR buf[512];
+    PointF pos;
+    DrawInstr *i;
+    bool insideLink = false;
+    for (i = drawInstructions->IterStart(); i; i = drawInstructions->IterNext()) {
+        RectF bbox = i->bbox;
+        bbox.X += offX;
+        bbox.Y += offY;
+        if (InstrLine == i->type) {
+            // hr is a line drawn in the middle of bounding box
+            REAL y = bbox.Y + bbox.Height / 2.f;
+            PointF p1(bbox.X, y);
+            PointF p2(bbox.X + bbox.Width, y);
+            if (showBbox)
+                g->DrawRectangle(&pen, bbox);
+            g->DrawLine(&linePen, p1, p2);
+        } else if (InstrString == i->type) {
+            size_t strLen = str::Utf8ToWcharBuf(i->str.s, i->str.len, buf, dimof(buf));
+            bbox.GetLocation(&pos);
+            if (showBbox)
+                g->DrawRectangle(&pen, bbox);
+            g->DrawString(buf, strLen, font, pos, NULL, &brText);
+        } else if (InstrSetFont == i->type) {
+            font = i->font;
+        } else if ((InstrElasticSpace == i->type) ||
+            (InstrFixedSpace == i->type) ||
+            (InstrAnchor == i->type)) {
+            // ignore
+        } else if (InstrImage == i->type) {
+            // TODO: cache the bitmap somewhere (?)
+            Bitmap *bmp = BitmapFromData(i->img.data, i->img.len);
+            if (bmp)
+                g->DrawImage(bmp, bbox, 0, 0, (REAL)bmp->GetWidth(), (REAL)bmp->GetHeight(), UnitPixel);
+            delete bmp;
+        } else if (InstrLinkStart == i->type) {
+            insideLink = true;
+        } else if (InstrLinkEnd == i->type) {
+            insideLink = false;
+        } else {
+            CrashIf(true);
+        }
+    }
+}
+
+/* Mobi-specific PageLayout methods */
+
+// TODO: this only accepts <a> tags with filepos attribute
+// there are files with regular http links etc. - not sure if we should
+// support them. Sometimes they point to suspicious, dead web pages
+void PageLayoutMobi::HandleTagA_Mobi(HtmlToken *t)
+{
+    if (t->IsEndTag()) {
+        if (inLink)
+            AppendInstr(DrawInstr(InstrLinkEnd));
+        inLink = false;
+        return;
+    }
+    AttrInfo *attr = t->GetAttrByName("filepos");
+    if (!attr) 
+        return;
+
+    int filepos = 0;
+    if (!str::Parse(attr->val, attr->valLen, "%d", &filepos))
+        return;
+    if (filepos < 0 || (size_t)filepos >= layoutInfo->htmlStrLen)
+        return;
+    inLink = true;
+    AppendInstr(DrawInstr::LinkStart(attr->val, attr->valLen));
+}
+
+void PageLayoutMobi::HandleTagP_Mobi(HtmlToken *t)
+{
+    if (t->IsEndTag()) {
+        FlushCurrLine(true);
+        currJustification = Align_Justify;
+        return;
+    }
+
+    // handle a start p tag
+    AlignAttr just = Align_NotFound;
+    AttrInfo *attr = t->GetAttrByName("align");
+    if (attr)
+        just = GetAlignAttrByName(attr->val, attr->valLen);
+    if (just != Align_NotFound)
+        currJustification = just;
+    // best I can tell, in mobi <p width="1em" height="3pt> means that
+    // the first line of the paragrap is indented by 1em and there's
+    /// 3pt top padding
+    float lineIndent = 0;
+    float topPadding = 0;
+    attr = t->GetAttrByName("width");
+    if (attr) {
+        lineIndent = ParseSizeAsPixels(attr->val, attr->valLen, currFontSize);
+        // there are files with negative width which produces partially invisible
+        // text, so don't allow that
+        if (lineIndent < 0.f)
+            lineIndent = 0.f;
+    }
+    attr = t->GetAttrByName("height");
+    if (attr)
+        topPadding = ParseSizeAsPixels(attr->val, attr->valLen, currFontSize);
+    EmitParagraph(lineIndent, topPadding);
+}
+
+// mobi format has image tags in the form:
+// <img recindex="0000n" alt=""/>
+// where recindex is the record number of pdb record
+// that holds the image (within image record array, not a
+// global record)
+// TODO: handle alt attribute (?)
+void PageLayoutMobi::HandleTagImg_Mobi(HtmlToken *t)
+{
+    AttrInfo *attr = t->GetAttrByName("recindex");
+    if (!attr)
+        return;
+    int n = 0;
+    if (!str::Parse(attr->val, attr->valLen, "%d", &n))
+        return;
+    ImageData *img = layoutInfo->mobiDoc->GetImage(n);
+    if (!img)
+        return;
+
+    // if the image we're adding early on is the same as cover
+    // image, then skip it. 5 is a heuristic
+    if ((img == coverImage) && (pageCount < 5))
+        return;
+
+    EmitImage(img);
+}
+
+// tags that I want to explicitly ignore and not define
+// HtmlTag enums for them
+// One file has a bunch of st1:* tags (st1:city, st1:place etc.)
+static bool IgnoreTag(const char *s, size_t sLen)
+{
+    if (sLen >= 4 && s[3] == ':' && s[0] == 's' && s[1] == 't' && s[2] == '1')
+        return true;
+    // no idea what "o:p" is
+    if (sLen == 3 && s[1] == ':' && s[0] == 'o'  && s[2] == 'p')
+        return true;
+    return false;
+}
+
+void PageLayoutMobi::HandleHtmlTag_Mobi(HtmlToken *t)
+{
+    CrashAlwaysIf(!t->IsTag());
+
+    // HtmlToken string includes potential attributes,
+    // get the length of just the tag
+    size_t tagLen = GetTagLen(t);
+    if (IgnoreTag(t->s, tagLen))
+        return;
+
+    HtmlTag tag = FindTag(t);
+    if (Tag_P == tag) {
+        HandleTagP_Mobi(t);
+        HandleAnchorTag(t);
+    } else if (Tag_Mbp_Pagebreak == tag) {
+        ForceNewPage();
+    } else if (Tag_Img == tag) {
+        HandleTagImg_Mobi(t);
+        HandleAnchorTag(t);
+    } else if (Tag_A == tag) {
+        HandleAnchorTag(t);
+        HandleTagA_Mobi(t);
+    } else {
+        HandleHtmlTag(t);
+    }
+}
+
+// empty page is one that consists of only invisible instructions
+static bool IsEmptyPage(PageData *p)
+{
+    if (!p)
+        return false;
+    DrawInstr *i;
+    for (i = p->instructions.IterStart(); i; i = p->instructions.IterNext()) {
+        // if a page only consits of lines we consider it empty. It's different
+        // than what Kindle does but I don't see the purpose of showing such
+        // pages to the user
+        if (InstrLine == i->type)
+            continue;
+        if (IsVisibleDrawInstr(i))
+            return false;
+    }
+    // all instructions were invisible
+    return true;
+}
+
 // Return the next parsed page. Returns NULL if finished parsing.
 // For simplicity of implementation, we parse xml text node or
 // xml element at a time. This might cause a creation of one
 // or more pages, which we remeber and send to the caller
 // if we detect accumulated pages.
-PageData *PageLayout::IterNext()
+PageData *PageLayoutMobi::IterNext()
 {
     for (;;)
     {
@@ -878,6 +944,7 @@ PageData *PageLayout::IterNext()
         while (pagesToSend.Count() > 0) {
             PageData *ret = pagesToSend.At(0);
             pagesToSend.RemoveAt(0);
+            pageCount++;
             if (IsEmptyPage(ret))
                 delete ret;
             else
@@ -894,7 +961,7 @@ PageData *PageLayout::IterNext()
 
         currReparsePoint = t->GetReparsePoint();
         if (t->IsTag()) {
-            HandleHtmlTag(t);
+            HandleHtmlTag_Mobi(t);
         } else {
             if (!IgnoreText())
                 HandleText(t);
@@ -910,8 +977,10 @@ PageData *PageLayout::IterNext()
     return IterNext();
 }
 
-PageData *PageLayout::IterStart(LayoutInfo* li)
+PageData *PageLayoutMobi::IterStart(LayoutInfo* li)
 {
+    // TODO: move part of the following into the constructor?
+
     CrashIf(currPage);
     finishedParsing = false;
     layoutInfo = li;
@@ -971,61 +1040,12 @@ PageData *PageLayout::IterStart(LayoutInfo* li)
     return IterNext();
 }
 
-// TODO: draw link in the appropriate format (blue text, unerlined, should show hand cursor when
-// mouse is over a link. There's a slight complication here: we only get explicit information about
-// strings, not about the whitespace and we should underline the whitespace as well. Also the text
-// should be underlined at a baseline
-void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox, Color *textColor)
+// convenience method to get all pages layed out
+Vec<PageData*> *PageLayoutMobi::Layout(LayoutInfo *li)
 {
-    Color kindleTextColor(0x5F, 0x4B, 0x32); // this color matches Kindle app
-    if (!textColor)
-        textColor = &kindleTextColor;
-    SolidBrush brText(*textColor);
-    Pen pen(Color(255, 0, 0), 1);
-    //Pen linePen(Color(0, 0, 0), 2.f);
-    Pen linePen(Color(0x5F, 0x4B, 0x32), 2.f);
-    Font *font = NULL;
-
-    WCHAR buf[512];
-    PointF pos;
-    DrawInstr *i;
-    bool insideLink = false;
-    for (i = drawInstructions->IterStart(); i; i = drawInstructions->IterNext()) {
-        RectF bbox = i->bbox;
-        bbox.X += offX;
-        bbox.Y += offY;
-        if (InstrLine == i->type) {
-            // hr is a line drawn in the middle of bounding box
-            REAL y = bbox.Y + bbox.Height / 2.f;
-            PointF p1(bbox.X, y);
-            PointF p2(bbox.X + bbox.Width, y);
-            if (showBbox)
-                g->DrawRectangle(&pen, bbox);
-            g->DrawLine(&linePen, p1, p2);
-        } else if (InstrString == i->type) {
-            size_t strLen = str::Utf8ToWcharBuf(i->str.s, i->str.len, buf, dimof(buf));
-            bbox.GetLocation(&pos);
-            if (showBbox)
-                g->DrawRectangle(&pen, bbox);
-            g->DrawString(buf, strLen, font, pos, NULL, &brText);
-        } else if (InstrSetFont == i->type) {
-            font = i->font;
-        } else if ((InstrElasticSpace == i->type) ||
-            (InstrFixedSpace == i->type) ||
-            (InstrAnchor == i->type)) {
-            // ignore
-        } else if (InstrImage == i->type) {
-            // TODO: cache the bitmap somewhere (?)
-            Bitmap *bmp = BitmapFromData(i->img.data, i->img.len);
-            if (bmp)
-                g->DrawImage(bmp, bbox, 0, 0, (REAL)bmp->GetWidth(), (REAL)bmp->GetHeight(), UnitPixel);
-            delete bmp;
-        } else if (InstrLinkStart == i->type) {
-            insideLink = true;
-        } else if (InstrLinkEnd == i->type) {
-            insideLink = false;
-        } else {
-            CrashIf(true);
-        }
+    Vec<PageData *> *pages = new Vec<PageData *>();
+    for (PageData *pd = IterStart(li); pd; pd = IterNext()) {
+        pages->Append(pd);
     }
+    return pages;
 }

@@ -474,7 +474,7 @@ RenderedBitmap *RenderFirstMobiPageToBitmap(MobiDoc *mobiDoc, SizeI pageSize, Si
 {
     PoolAllocator textAllocator;
     LayoutInfo *li = GetLayoutInfo(NULL, mobiDoc, pageSize.dx, pageSize.dy, &textAllocator);
-    PageLayout pl;
+    PageLayoutMobi pl;
     PageData *pd = pl.IterStart(li);
     if (!pd)
         return NULL;

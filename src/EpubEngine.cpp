@@ -517,6 +517,7 @@ protected:
     void EmitImage2(ImageData *img);
 
     void HandleTagHeader(HtmlToken *t);
+    void HandleTagP2(HtmlToken *t);
     void HandleTagA2(HtmlToken *t, const char *linkAttr="href");
     void HandleHtmlTag2(HtmlToken *t);
 
@@ -528,23 +529,16 @@ public:
 
 PageLayoutCommon::PageLayoutCommon(LayoutInfo* li) : listDepth(0)
 {
-    CrashIf(currPage);
-    finishedParsing = false;
     layoutInfo = li;
     pageDx = (REAL)layoutInfo->pageDx;
     pageDy = (REAL)layoutInfo->pageDy;
     textAllocator = layoutInfo->textAllocator;
     htmlParser = new HtmlPullParser(layoutInfo->htmlStr, layoutInfo->htmlStrLen);
 
-    CrashIf(gfx);
     gfx = mui::AllocGraphicsForMeasureText();
     defaultFontName.Set(str::Dup(layoutInfo->fontName));
     defaultFontSize = layoutInfo->fontSize;
     SetCurrentFont(FontStyleRegular, defaultFontSize);
-
-    coverImage = NULL;
-    pageCount = 0;
-    inLink = false;
 
     lineSpacing = currFont->GetHeight(gfx);
     spaceDx = currFontSize / 2.5f; // note: a heuristic
@@ -552,17 +546,12 @@ PageLayoutCommon::PageLayoutCommon(LayoutInfo* li) : listDepth(0)
     if (spaceDx2 < spaceDx)
         spaceDx = spaceDx2;
 
-    currJustification = Align_Justify;
-    currX = 0; currY = 0;
-    currPage = new PageData;
-    currReparsePoint = NULL;
-
-    currLineTopPadding = 0;
+    currPage = new PageData();
 }
 
 void PageLayoutCommon::EmitParagraph2(float indentation)
 {
-    EmitParagraph(indentation, 0);
+    EmitParagraph(indentation);
     // prevent accidental double-indentation
     for (size_t i = currLineInstr.Count(); i > 0; i--) {
         if (InstrFixedSpace == currLineInstr.At(i-1).type &&
@@ -619,6 +608,22 @@ void PageLayoutCommon::HandleTagHeader(HtmlToken *t)
     ChangeFontStyle(FontStyleBold, t->IsStartTag());
 }
 
+void PageLayoutCommon::HandleTagP2(HtmlToken *t)
+{
+    if (!t->IsEndTag()) {
+        AttrInfo *attr = t->GetAttrByName("align");
+        if (attr) {
+            AlignAttr just = GetAlignAttrByName(attr->val, attr->valLen);
+            if (just != Align_NotFound)
+                currJustification = just;
+        }
+        EmitParagraph2();
+    } else {
+        FlushCurrLine(true);
+        currJustification = Align_Justify;
+    }
+}
+
 void PageLayoutCommon::HandleTagA2(HtmlToken *t, const char *linkAttr)
 {
     if (t->IsStartTag() && !inLink) {
@@ -641,6 +646,8 @@ void PageLayoutCommon::HandleHtmlTag2(HtmlToken *t)
 {
     HtmlTag tag = FindTag(t);
     switch (tag) {
+    case Tag_P:
+        break;
     case Tag_Pagebreak:
         ForceNewPage();
         break;
@@ -1355,7 +1362,7 @@ void Fb2Doc::ExtractImage(HtmlPullParser& parser, HtmlToken *tok)
 class PageLayoutFb2 : public PageLayoutCommon {
     int section;
 
-    void HandleTagImgFb2(HtmlToken *t);
+    void HandleTagImg_Fb2(HtmlToken *t);
     void HandleTagAsHtml(HtmlToken *t, const char *name);
     void HandleFb2Tag(HtmlToken *t);
 
@@ -1368,7 +1375,7 @@ public:
     Vec<PageData*> *Layout();
 };
 
-void PageLayoutFb2::HandleTagImgFb2(HtmlToken *t)
+void PageLayoutFb2::HandleTagImg_Fb2(HtmlToken *t)
 {
     CrashIf(!fb2Doc);
     if (t->IsEndTag())
@@ -1411,7 +1418,7 @@ void PageLayoutFb2::HandleFb2Tag(HtmlToken *t)
             HandleHtmlTag2(t);
     }
     else if (t->NameIs("image")) {
-        HandleTagImgFb2(t);
+        HandleTagImg_Fb2(t);
         HandleAnchorTag(t, true);
     }
     else if (t->NameIs("a"))
@@ -1513,30 +1520,6 @@ Fb2Engine *Fb2Engine::CreateFromFile(const TCHAR *fileName)
     return engine;
 }
 
-/* PageLayout extensions for Mobi */
-
-class PageLayoutMobi : public PageLayout {
-    LayoutInfo *li2;
-
-public:
-    PageLayoutMobi(LayoutInfo *li, MobiDoc *doc) : li2(li) {
-        li2->mobiDoc = doc;
-    }
-
-    Vec<PageData*> *Layout();
-};
-
-Vec<PageData*> *PageLayoutMobi::Layout()
-{
-    Vec<PageData *> *pages = new Vec<PageData *>();
-
-    for (PageData *pd = IterStart(li2); pd; pd = IterNext()) {
-        pages->Append(pd);
-    }
-
-    return pages;
-}
-
 /* BaseEngine for handling Mobi documents (for reference testing) */
 
 class MobiEngineImpl : public EbookEngine, public MobiEngine {
@@ -1568,7 +1551,7 @@ bool MobiEngineImpl::Load(const TCHAR *fileName)
         return false;
 
     LayoutInfo li;
-    li.mobiDoc = (MobiDoc *)1; // crash on use
+    li.mobiDoc = doc;
     li.htmlStr = doc->GetBookHtmlData(li.htmlStrLen);
     li.pageDx = (int)(pageRect.dx - 2 * pageBorder);
     li.pageDy = (int)(pageRect.dy - 2 * pageBorder);
@@ -1576,7 +1559,7 @@ bool MobiEngineImpl::Load(const TCHAR *fileName)
     li.fontSize = 11;
     li.textAllocator = &allocator;
 
-    pages = PageLayoutMobi(&li, doc).Layout();
+    pages = PageLayoutMobi().Layout(&li);
     if (!ExtractPageAnchors())
         return false;
     
