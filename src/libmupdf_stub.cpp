@@ -1,5 +1,5 @@
 /* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
-License: GPLv3 (see COPYING) */
+   License: GPLv3 (see COPYING) */
 
 #include "BaseUtil.h"
 

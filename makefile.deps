@@ -23,8 +23,9 @@ $(ODLL)\PdfPreview.obj: src\utils\Vec.h src\utils\WinUtil.h
 $(ODLL)\PdfPreviewDll.obj: src\BaseEngine.h src\previewer\PdfPreview.h src\utils\Allocator.h
 $(ODLL)\PdfPreviewDll.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
 $(ODLL)\PdfPreviewDll.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
-$(OM)\MemTraceDll.obj: src\memtrace\MemTraceDll.h src\memtrace\nsWindowsDllInterceptor.h src\utils\BaseUtil.h
-$(OM)\MemTraceDll.obj: src\utils\DebugLog.h src\utils\StrUtil.h
+$(OM)\MemTraceDll.obj: src\memtrace\MemTraceDll.h src\memtrace\nsWindowsDllInterceptor.h src\utils\Allocator.h
+$(OM)\MemTraceDll.obj: src\utils\BaseUtil.h src\utils\DebugLog.h src\utils\StrUtil.h
+$(OM)\MemTraceDll.obj: src\utils\Vec.h
 $(OMUI)\MiniMui.obj: src\mui\MiniMui.h src\utils\Allocator.h src\utils\BaseUtil.h
 $(OMUI)\MiniMui.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
 $(OMUI)\Mui.obj: src\mui\Mui.h src\mui\MuiBase.h src\mui\MuiButton.h
@@ -200,6 +201,7 @@ $(OS)\Installer.obj: src\utils\CmdLineParser.h src\utils\FileTransactions.h src\
 $(OS)\Installer.obj: src\utils\FrameTimeoutCalculator.h src\utils\GeomUtil.h src\utils\Scoped.h
 $(OS)\Installer.obj: src\utils\StrUtil.h src\utils\Timer.h src\utils\Vec.h
 $(OS)\Installer.obj: src\utils\WinUtil.h src\utils\ZipUtil.h src\Version.h
+$(OS)\libmupdf_stub.obj: src\utils\BaseUtil.h
 $(OS)\Menu.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
 $(OS)\Menu.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
 $(OS)\Menu.obj: src\EngineManager.h src\EpubEngine.h src\ExternalPdfViewer.h

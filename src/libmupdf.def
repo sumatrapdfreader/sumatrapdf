@@ -75,6 +75,8 @@ EXPORTS
 	fz_pixmap_height
 	fz_new_pixmap
 	fz_new_pixmap_with_bbox
+	fz_new_pixmap_with_data
+	fz_new_pixmap_with_bbox_and_data
 	fz_keep_pixmap
 	fz_drop_pixmap
 	fz_pixmap_colorspace
@@ -204,8 +206,6 @@ EXPORTS
 	fz_new_bitmap
 	fz_bitmap_details
 	fz_clear_bitmap
-	fz_new_pixmap_with_data
-	fz_new_pixmap_with_bbox_and_data
 	fz_free_pixmap_imp
 	fz_clear_pixmap_rect_with_value
 	fz_copy_pixmap_rect
@@ -586,8 +586,8 @@ EXPORTS
 	xps_end_opacity
 	xps_parse_brush
 	xps_parse_element
-	xps_lookup_alternate_content
 	xps_clip
+	xps_lookup_alternate_content
 	xps_extract_anchor_info
 	xps_extract_doc_props
 	xps_free_doc_prop

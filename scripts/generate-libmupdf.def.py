@@ -74,7 +74,7 @@ def main():
 	mucbz_exports = generateExports("cbz/mucbz.h")
 	
 	list = LIBMUPDF_DEF % locals()
-	open("libmupdf.def", "wb").write(list.replace("\n", "\r\n"))
+	open("../src/libmupdf.def", "wb").write(list.replace("\n", "\r\n"))
 
 if __name__ == "__main__":
 	if os.path.exists("generate-libmupdf.def.py"):

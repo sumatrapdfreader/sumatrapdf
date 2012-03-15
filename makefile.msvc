@@ -40,9 +40,6 @@ MUPDF_DIR=mupdf
 EXTDIR=ext
 !endif
 
-# include SumatraPDF's version number in libmupdf.dll
-LIBMUPDF_RES = $(O)\libmupdf.res
-
 # default target
 all_sumatrapdf: SumatraPDF Uninstaller PDFFilter PdfPreview BrowserPlugin EngineDump PdfBench tester memtrace
 
@@ -123,8 +120,9 @@ PDFFILTER_RES = $(ODLL)\PdfFilter.res
 PDFFILTER_CFLAGS = $(SUMATRA_CFLAGS)
 
 LIBMUPDF_LIB = $(O)\libmupdf.lib
-LIBMUPDF_DEF = $(MUPDF_DIR)\libmupdf.def
+LIBMUPDF_DEF = src\libmupdf.def
 LIBMUPDF_DLL = $(O)\libmupdf.dll
+LIBMUPDF_RES = $(O)\libmupdf.res
 
 PDFPREVIEW_DLL = $(O)\PdfPreview.dll
 PDFPREVIEW_RES = $(ODLL)\PdfPreview.res
