@@ -31,7 +31,9 @@ enum DrawInstrType {
     // marks the beginning of a link (<a> tag)
     InstrLinkStart,
     // marks end of the link (must have matching InstrLinkStart)
-    InstrLinkEnd
+    InstrLinkEnd,
+    // marks an anchor an internal link might refer to
+    InstrAnchor,
 };
 
 struct DrawInstr {
@@ -41,13 +43,10 @@ struct DrawInstr {
         struct {
             const char *s;
             size_t      len;
-        }                   str;          // InstrString
+        }                   str;          // InstrString, InstrLinkStart, InstrAnchor
         Font *              font;         // InstrSetFont
         float               fixedSpaceDx; // InstrFixedSpace
         ImageData           img;
-        // in mobi format, links are represented as a file
-        // position to which we should navigate
-        size_t              linkFilePos;  // InstrLinkStart
     };
     RectF bbox; // common to most instructions
 
@@ -60,7 +59,8 @@ struct DrawInstr {
     static DrawInstr Image(char *data, size_t len, RectF bbox);
     static DrawInstr SetFont(Font *font);
     static DrawInstr FixedSpace(float dx);
-    static DrawInstr LinkStart(size_t pos);
+    static DrawInstr LinkStart(const char *s, size_t len);
+    static DrawInstr Anchor(const char *s, size_t len, RectF bbox);
 };
 
 struct PageData {
@@ -113,6 +113,7 @@ public:
     PageData *IterNext();
 
 protected:
+    void HandleAnchorTag(HtmlToken *t, bool idsOnly=false);
     void HandleTagBr();
     void HandleTagA(HtmlToken *t);
     void HandleTagP(HtmlToken *t);

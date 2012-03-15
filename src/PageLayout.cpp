@@ -101,10 +101,20 @@ DrawInstr DrawInstr::Image(char *data, size_t len, RectF bbox)
     return di;
 }
 
-DrawInstr DrawInstr::LinkStart(size_t pos)
+DrawInstr DrawInstr::LinkStart(const char *s, size_t len)
 {
     DrawInstr di(InstrLinkStart);
-    di.linkFilePos = pos;
+    di.str.s = s;
+    di.str.len = len;
+    return di;
+}
+
+DrawInstr DrawInstr::Anchor(const char *s, size_t len, RectF bbox)
+{
+    DrawInstr di(InstrAnchor);
+    di.str.s = s;
+    di.str.len = len;
+    di.bbox = bbox;
     return di;
 }
 
@@ -172,6 +182,17 @@ void PageLayout::ChangeFontSize(float fontSize)
     SetCurrentFont(currFontStyle, fontSize);
 }
 
+static bool IsVisibleDrawInstr(DrawInstr *i)
+{
+    switch (i->type) {
+        case InstrString:
+        case InstrLine:
+        case InstrImage:
+            return true;
+    }
+    return false;
+}
+
 // sum of widths of all elements with a fixed size and flexible
 // spaces (using minimum value for its width)
 REAL PageLayout::CurrLineDx()
@@ -229,7 +250,9 @@ void PageLayout::LayoutLeftStartingAt(REAL offX)
 static void SetYPos(Vec<DrawInstr>& instr, float y)
 {
     for (DrawInstr *i = instr.IterStart(); i; i = instr.IterNext()) {
-            i->bbox.Y = y;
+        if (!IsVisibleDrawInstr(i))
+            continue;
+        i->bbox.Y = y;
     }
 }
 
@@ -246,13 +269,18 @@ void PageLayout::JustifyLineBoth()
 
     LayoutLeftStartingAt(0.f);
     size_t spaces = 0;
+    bool wordAfterSpace = true;
     for (DrawInstr *i = currLineInstr.IterStart(); i; i = currLineInstr.IterNext()) {
-        if (InstrElasticSpace == i->type)
+        if (InstrElasticSpace == i->type) {
             ++spaces;
+            wordAfterSpace = false;
+        }
+        else if (InstrString == i->type)
+            wordAfterSpace = true;
     }
     // don't take a space at the end of the line into account 
     // (the last word is explicitly right-aligned below)
-    if (currLineInstr.Count() > 0 && InstrElasticSpace == currLineInstr.Last().type)
+    if (!wordAfterSpace)
         spaces--;
     if (0 == spaces)
         return;
@@ -261,27 +289,17 @@ void PageLayout::JustifyLineBoth()
     float offX = 0.f;
     DrawInstr *lastStr = NULL;
     for (DrawInstr *i = currLineInstr.IterStart(); i; i = currLineInstr.IterNext()) {
-        i->bbox.X += offX;
         if (InstrElasticSpace == i->type)
             offX += extraSpaceDx;
-        else if (InstrString == i->type)
+        else if (InstrString == i->type) {
+            i->bbox.X += offX;
             lastStr = i;
+        }
     }
     // align the last element perfectly against the right edge in case
     // we've accumulated rounding errors
     if (lastStr)
         lastStr->bbox.X = pageDx - lastStr->bbox.Width;
-}
-
-static bool IsVisibleDrawInstr(DrawInstr *i)
-{
-    switch (i->type) {
-        case InstrString:
-        case InstrLine:
-        case InstrImage:
-            return true;
-    }
-    return false;
 }
 
 // empty page is one that consists of only invisible instructions
@@ -498,6 +516,8 @@ static bool CanEmitElasticSpace(float currX, float maxCurrX, Vec<DrawInstr>& cur
     if (currX > maxCurrX)
         return false;
     DrawInstr& di = currLineInstr.Last();
+    if (InstrAnchor == di.type && currLineInstr.Count() > 1)
+        di = currLineInstr.At(currLineInstr.Count() - 2);
     return (InstrElasticSpace != di.type) && (InstrFixedSpace != di.type);
 }
 
@@ -589,6 +609,24 @@ static float ParseSizeAsPixels(const char *s, size_t len, float emInPoints)
     return sizeInPixels;
 }
 
+void PageLayout::HandleAnchorTag(HtmlToken *t, bool idsOnly)
+{
+    if (t->IsEndTag())
+        return;
+
+    AttrInfo *attr = t->GetAttrByName("id");
+    if (!attr && !idsOnly && t->NameIs("a"))
+        attr = t->GetAttrByName("name");
+    if (!attr)
+        return;
+
+    // TODO: make anchors more specific than the top of the current line?
+    RectF bbox(0, currY, pageDx, 0);
+    // append at the start of the line to prevent the anchor
+    // from being flushed to the next page (with wrong currY value)
+    currPage->instructions.Append(DrawInstr::Anchor(attr->val, attr->valLen, bbox));
+}
+
 void PageLayout::HandleTagBr()
 {
     // Trying to match Kindle behavior
@@ -613,15 +651,13 @@ void PageLayout::HandleTagA(HtmlToken *t)
     if (!attr) 
         return;
 
-    int n = 0;
-    if (!str::Parse(attr->val, attr->valLen, "%d", &n))
+    int filepos = 0;
+    if (!str::Parse(attr->val, attr->valLen, "%d", &filepos))
         return;
-    if (n < 0)
-        return;
-    if ((size_t)n >= layoutInfo->htmlStrLen)
+    if (filepos < 0 || (size_t)filepos >= layoutInfo->htmlStrLen)
         return;
     inLink = true;
-    AppendInstr(DrawInstr::LinkStart((size_t)n));
+    AppendInstr(DrawInstr::LinkStart(attr->val, attr->valLen));
 }
 
 void PageLayout::HandleTagP(HtmlToken *t)
@@ -739,6 +775,9 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
     size_t tagLen = GetTagLen(t);
     if (IgnoreTag(t->s, tagLen))
         return;
+
+    // any tag could contain anchor information
+    HandleAnchorTag(t);
 
     HtmlTag tag = FindTag(t);
 
@@ -971,7 +1010,9 @@ void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, RE
             g->DrawString(buf, strLen, font, pos, NULL, &brText);
         } else if (InstrSetFont == i->type) {
             font = i->font;
-        } else if ((InstrElasticSpace == i->type) || (InstrFixedSpace == i->type)) {
+        } else if ((InstrElasticSpace == i->type) ||
+            (InstrFixedSpace == i->type) ||
+            (InstrAnchor == i->type)) {
             // ignore
         } else if (InstrImage == i->type) {
             // TODO: cache the bitmap somewhere (?)

@@ -36,13 +36,10 @@ inline TCHAR *FromUtf8N(const char *s, size_t len)
 }
 
 struct PageAnchor {
-    const char *s;
-    size_t len;
+    DrawInstr *instr;
     int pageNo;
-    float currY;
 
-    PageAnchor(const char *s=NULL, size_t len=0, int pageNo=-1, float currY=-1) :
-        s(s), len(len), pageNo(pageNo), currY(currY) { }
+    PageAnchor(DrawInstr *instr=NULL, int pageNo=-1) : instr(instr), pageNo(pageNo) { }
 };
 
 class EbookEngine : public virtual BaseEngine {
@@ -103,6 +100,7 @@ protected:
         GetBaseTransform(m, RectF(0, 0, (REAL)pageRect.dx, (REAL)pageRect.dy),
                          zoom, rotation);
     }
+    bool ExtractPageAnchors();
     bool FixImageJustification();
     void FixFontSizeForResolution(HDC hDC);
     PageElement *CreatePageLink(DrawInstr *link, RectI rect, int pageNo);
@@ -203,6 +201,23 @@ EbookEngine::~EbookEngine()
 
     LeaveCriticalSection(&pagesAccess);
     DeleteCriticalSection(&pagesAccess);
+}
+
+bool EbookEngine::ExtractPageAnchors()
+{
+    ScopedCritSec scope(&pagesAccess);
+
+    for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
+        Vec<DrawInstr> *pageInstrs = GetPageData(pageNo);
+        if (!pageInstrs)
+            return false;
+        for (DrawInstr *i = pageInstrs->IterStart(); i; i = pageInstrs->IterNext()) {
+            if (InstrAnchor == i->type)
+                anchors.Append(PageAnchor(i, pageNo));
+        }
+    }
+
+    return true;
 }
 
 bool EbookEngine::FixImageJustification()
@@ -483,9 +498,10 @@ PageDestination *EbookEngine::GetNamedDest(const TCHAR *name)
 
     for (size_t i = 0; i < anchors.Count(); i++) {
         PageAnchor *anchor = &anchors.At(i);
-        if (name_len == anchor->len && str::EqN(name_utf8, anchor->s, name_len)) {
-            RectD rect(0, anchor->currY, pageRect.dx, 10 + pageBorder * 2);
-            rect.Inflate(-pageBorder, -pageBorder);
+        if (name_len == anchor->instr->str.len &&
+            str::EqN(name_utf8, anchor->instr->str.s, name_len)) {
+            RectD rect(0, anchor->instr->bbox.Y + pageBorder, pageRect.dx, 10);
+            rect.Inflate(-pageBorder, 0);
             return new SimpleDest2(anchor->pageNo, rect);
         }
     }
@@ -504,15 +520,13 @@ protected:
     void HandleTagA2(HtmlToken *t, const char *linkAttr="href");
     void HandleHtmlTag2(HtmlToken *t);
 
-    Vec<PageAnchor> *anchors;
     int listDepth;
 
 public:
     PageLayoutCommon(LayoutInfo *li);
-    // Vec<PageData*> *Layout(Vec<PageAnchor> *anchors=NULL);
 };
 
-PageLayoutCommon::PageLayoutCommon(LayoutInfo* li) : anchors(NULL), listDepth(0)
+PageLayoutCommon::PageLayoutCommon(LayoutInfo* li) : listDepth(0)
 {
     CrashIf(currPage);
     finishedParsing = false;
@@ -625,15 +639,6 @@ void PageLayoutCommon::HandleTagA2(HtmlToken *t, const char *linkAttr)
 
 void PageLayoutCommon::HandleHtmlTag2(HtmlToken *t)
 {
-    if (anchors) {
-        AttrInfo *attrInfo = t->GetAttrByName("id");
-        if (!attrInfo && t->NameIs("a"))
-            attrInfo = t->GetAttrByName("name");
-        if (attrInfo)
-            anchors->Append(PageAnchor(attrInfo->val, attrInfo->valLen,
-                                       pagesToSend.Count() + 1, currY));
-    }
-
     HtmlTag tag = FindTag(t);
     switch (tag) {
     case Tag_Pagebreak:
@@ -647,12 +652,14 @@ void PageLayoutCommon::HandleHtmlTag2(HtmlToken *t)
                 listDepth--;
             FlushCurrLine(true);
         }
+        HandleAnchorTag(t);
         break;
     case Tag_Li: case Tag_Dd:
         if (t->IsStartTag())
             EmitParagraph2(15.f * listDepth);
         else if (t->IsEndTag())
             FlushCurrLine(true);
+        HandleAnchorTag(t);
         break;
     case Tag_Dt:
         if (t->IsStartTag()) {
@@ -662,15 +669,19 @@ void PageLayoutCommon::HandleHtmlTag2(HtmlToken *t)
         else if (t->IsEndTag())
             FlushCurrLine(true);
         ChangeFontStyle(FontStyleBold, t->IsStartTag());
+        HandleAnchorTag(t);
         break;
     case Tag_Center:
         currJustification = Align_Center;
+        HandleAnchorTag(t);
         break;
     case Tag_H1: case Tag_H2: case Tag_H3:
     case Tag_H4: case Tag_H5:
         HandleTagHeader(t);
+        HandleAnchorTag(t);
         break;
     case Tag_A:
+        HandleAnchorTag(t);
         HandleTagA2(t);
         break;
     default:
@@ -933,7 +944,7 @@ public:
     PageLayoutEpub(LayoutInfo *li, EpubDoc *doc) :
         PageLayoutCommon(li), epubDoc(doc) { }
 
-    Vec<PageData*> *Layout(Vec<PageAnchor> *anchors=NULL);
+    Vec<PageData*> *Layout();
 };
 
 void PageLayoutEpub::HandleTagImgEpub(HtmlToken *t)
@@ -952,27 +963,17 @@ void PageLayoutEpub::HandleTagImgEpub(HtmlToken *t)
 
 void PageLayoutEpub::HandleHtmlTagEpub(HtmlToken *t)
 {
-    if (FindTag(t) != Tag_Img) {
+    HtmlTag tag = FindTag(t);
+    if (Tag_Img == tag) {
+        HandleTagImgEpub(t);
+        HandleAnchorTag(t);
+    }
+    else
         HandleHtmlTag2(t);
-        return;
-    }
-
-    if (anchors) {
-        AttrInfo *attrInfo = t->GetAttrByName("id");
-        if (!attrInfo && t->NameIs("a"))
-            attrInfo = t->GetAttrByName("name");
-        if (attrInfo)
-            anchors->Append(PageAnchor(attrInfo->val, attrInfo->valLen,
-                                       pagesToSend.Count() + 1, currY));
-    }
-    HandleTagImgEpub(t);
 }
 
-Vec<PageData*> *PageLayoutEpub::Layout(Vec<PageAnchor> *anchors)
+Vec<PageData*> *PageLayoutEpub::Layout()
 {
-    // optionally extract anchor information
-    this->anchors = anchors;
-
     HtmlToken *t;
     while ((t = htmlParser->Next()) && !t->IsError()) {
         if (t->IsTag())
@@ -1060,8 +1061,10 @@ bool EpubEngineImpl::FinishLoading()
     li.fontSize = 11;
     li.textAllocator = &allocator;
 
-    pages = PageLayoutEpub(&li, doc).Layout(&anchors);
+    pages = PageLayoutEpub(&li, doc).Layout();
     if (!FixImageJustification())
+        return false;
+    if (!ExtractPageAnchors())
         return false;
 
     return pages->Count() > 0;
@@ -1362,7 +1365,7 @@ public:
     PageLayoutFb2(LayoutInfo *li, Fb2Doc *doc) :
         PageLayoutCommon(li), fb2Doc(doc), section(1) { }
 
-    Vec<PageData*> *Layout(Vec<PageAnchor> *anchors=NULL);
+    Vec<PageData*> *Layout();
 };
 
 void PageLayoutFb2::HandleTagImgFb2(HtmlToken *t)
@@ -1388,18 +1391,12 @@ void PageLayoutFb2::HandleTagAsHtml(HtmlToken *t, const char *name)
 
 void PageLayoutFb2::HandleFb2Tag(HtmlToken *t)
 {
-    if (anchors) {
-        AttrInfo *attrInfo = t->GetAttrByName("id");
-        if (attrInfo)
-            anchors->Append(PageAnchor(attrInfo->val, attrInfo->valLen,
-                                       pagesToSend.Count() + 1, currY));
-    }
-
     if (t->NameIs("title")) {
         HtmlToken tok2;
         ScopedMem<char> name(str::Format("h%d", section));
         tok2.SetValue(t->type, name, name + str::Len(name));
         HandleTagHeader(&tok2);
+        HandleAnchorTag(t, true);
     }
     else if (t->NameIs("section")) {
         if (t->IsStartTag())
@@ -1407,13 +1404,16 @@ void PageLayoutFb2::HandleFb2Tag(HtmlToken *t)
         else if (t->IsEndTag() && section > 1)
             section--;
         FlushCurrLine(true);
+        HandleAnchorTag(t, true);
     }
     else if (t->NameIs("p")) {
         if (htmlParser->tagNesting.Find(Tag_Title) == -1)
             HandleHtmlTag2(t);
     }
-    else if (t->NameIs("image"))
+    else if (t->NameIs("image")) {
         HandleTagImgFb2(t);
+        HandleAnchorTag(t, true);
+    }
     else if (t->NameIs("a"))
         HandleTagA2(t, "xlink:href");
     else if (t->NameIs("pagebreak"))
@@ -1430,11 +1430,8 @@ void PageLayoutFb2::HandleFb2Tag(HtmlToken *t)
     }
 }
 
-Vec<PageData*> *PageLayoutFb2::Layout(Vec<PageAnchor> *anchors)
+Vec<PageData*> *PageLayoutFb2::Layout()
 {
-    // optionally extract anchor information
-    this->anchors = anchors;
-
     HtmlToken *t;
     while ((t = htmlParser->Next()) && !t->IsError()) {
         if (t->IsTag())
@@ -1492,8 +1489,10 @@ bool Fb2EngineImpl::Load(const TCHAR *fileName)
     li.fontSize = 11;
     li.textAllocator = &allocator;
 
-    pages = PageLayoutFb2(&li, doc).Layout(&anchors);
+    pages = PageLayoutFb2(&li, doc).Layout();
     if (!FixImageJustification())
+        return false;
+    if (!ExtractPageAnchors())
         return false;
 
     return pages->Count() > 0;
@@ -1524,10 +1523,10 @@ public:
         li2->mobiDoc = doc;
     }
 
-    Vec<PageData*> *Layout(Vec<PageAnchor> *anchors=NULL);
+    Vec<PageData*> *Layout();
 };
 
-Vec<PageData*> *PageLayoutMobi::Layout(Vec<PageAnchor> *anchors)
+Vec<PageData*> *PageLayoutMobi::Layout()
 {
     Vec<PageData *> *pages = new Vec<PageData *>();
 
@@ -1550,8 +1549,6 @@ public:
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
-    // TODO: implement links the way EbookEngine expects them
-    virtual Vec<PageElement *> *GetElements(int pageNo);
     virtual PageDestination *GetNamedDest(const TCHAR *name) { return NULL; }
 
     virtual const TCHAR *GetDefaultFileExt() const { return _T(".mobi"); }
@@ -1579,24 +1576,11 @@ bool MobiEngineImpl::Load(const TCHAR *fileName)
     li.fontSize = 11;
     li.textAllocator = &allocator;
 
-    pages = PageLayoutMobi(&li, doc).Layout(&anchors);
+    pages = PageLayoutMobi(&li, doc).Layout();
+    if (!ExtractPageAnchors())
+        return false;
     
     return pages->Count() > 0;
-}
-
-Vec<PageElement *> *MobiEngineImpl::GetElements(int pageNo)
-{
-    ScopedCritSec scope(&pagesAccess);
-
-    Vec<PageElement *> *els = new Vec<PageElement *>();
-
-    Vec<DrawInstr> *pageInstrs = GetPageData(pageNo);
-    for (DrawInstr *i = pageInstrs->IterStart(); i; i = pageInstrs->IterNext()) {
-        if (InstrImage == i->type)
-            els->Append(new ImageDataElement(pageNo, &i->img, GetInstrBbox(i, pageBorder)));
-    }
-
-    return els;
 }
 
 bool MobiEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
