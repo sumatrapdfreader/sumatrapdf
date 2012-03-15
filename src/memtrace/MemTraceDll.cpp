@@ -14,17 +14,61 @@ If the collection process doesn't run when memtrace.dll is initialized, we do
 nothing.
 */
 
+#include <stddef.h> // for offsetof
 #include "BaseUtil.h"
 #include "MemTraceDll.h"
-#include "nsWindowsDllInterceptor.h"
 
+#include "nsWindowsDllInterceptor.h"
 #include "StrUtil.h"
+#include "Vec.h"
 
 #define NOLOG 0  // always log
 #include "DebugLog.h"
 
 static HANDLE gModule;
 static HANDLE gPipe;
+
+struct AllocData {
+    int64     size;
+    uint64    addr;
+};
+
+struct FreeData {
+    uint64    addr;
+};
+
+struct SerializeInfo {
+    enum Type { Int64, UInt64, Sentinel };
+    Type    type;
+    int     offset;
+
+    bool IsSentinel() const { return Sentinel == type; };
+};
+
+#define SERIALIZEINFO_SENTINEL { SerializeInfo::Sentinel, 0 }
+
+SerializeInfo allocDataSerInfo[] = {
+    { SerializeInfo::Int64, offsetof(AllocData, size) },
+    { SerializeInfo::UInt64, offsetof(AllocData, addr) },
+    SERIALIZEINFO_SENTINEL
+};
+
+// data is a pointer to a struct being serialized and serInfo describes
+// the struct. res is a result as a stream of bytes
+void SerializeStruct(char *data, SerializeInfo *serInfo, Vec<byte>& res)
+{
+    res.Reset();
+    // reserve space for the size of the packet, which we only know
+    // after serializeing the data. We're making an assumption here
+    // that serialized data will be smaller than 65k
+    // note: we can easily relax that by using uint32 for len
+    uint16 *resLen = (uint16*)res.AppendBlanks(2);
+    uint16 len = 0;
+    while (!serInfo->IsSentinel()) {
+        ++serInfo;
+    }
+    *resLen = len;
+}
 
 WindowsDllInterceptor gNtdllIntercept;
 
