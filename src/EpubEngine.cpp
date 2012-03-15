@@ -393,15 +393,15 @@ PageElement *EbookEngine::CreatePageLink(DrawInstr *link, RectI rect, int pageNo
 
 Vec<PageElement *> *EbookEngine::GetElements(int pageNo)
 {
-    ScopedCritSec scope(&pagesAccess);
-
     Vec<PageElement *> *els = new Vec<PageElement *>();
 
     DrawInstr *linkInstr = NULL;
     RectI linkRect;
 
     Vec<DrawInstr> *pageInstrs = GetPageData(pageNo);
-    for (DrawInstr *i = pageInstrs->IterStart(); i; i = pageInstrs->IterNext()) {
+    // CreatePageLink -> GetNamedDest might use pageInstrs->IterStart()
+    for (size_t k = 0; k < pageInstrs->Count(); k++) {
+        DrawInstr *i = &pageInstrs->At(k);
         if (InstrImage == i->type)
             els->Append(new ImageDataElement(pageNo, &i->img, GetInstrBbox(i, pageBorder)));
         else if (InstrLinkStart == i->type) {
