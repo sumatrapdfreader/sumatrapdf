@@ -10,8 +10,8 @@
 #   note: building on X64 isn't officially supported and might unintentionally be broken
 #WITH_ANALYZE=yes
 #   use /analyze compiler flag 
-#WITH_UCRT=yes
-#   if 'yes', compile with ucrt for smaller size
+#WITH_UCRT=yes|no
+#   if 'yes', compile with ucrt for smaller binaries size
 
 # Set default configuration
 !if "$(CFG)"==""
@@ -122,6 +122,10 @@ PDFFILTER_DLL = $(O)\PdfFilter.dll
 PDFFILTER_RES = $(ODLL)\PdfFilter.res
 PDFFILTER_CFLAGS = $(SUMATRA_CFLAGS)
 
+LIBMUPDF_LIB = $(O)\libmupdf.lib
+LIBMUPDF_DEF = $(MUPDF_DIR)\libmupdf.def
+LIBMUPDF_DLL = $(O)\libmupdf.dll
+
 PDFPREVIEW_DLL = $(O)\PdfPreview.dll
 PDFPREVIEW_RES = $(ODLL)\PdfPreview.res
 PDFPREVIEW_CFLAGS = $(SUMATRA_CFLAGS)
@@ -226,6 +230,8 @@ ENGINEDUMP_OBJS = \
 MEMTRACE_OBJS = \
 	$(OM)\MemTraceDll.obj $(UTILS_OBJS)
 
+LIBMUPDF_OBJS = $(LIBS_OBJS)
+
 !if "$(WITH_UCRT)"=="yes"
 ET_OBJS             = $(ET_OBJS) $(MICROCRT_WIN_OBJS)
 INSTALLER_OBJS      = $(INSTALLER_OBJS) $(MICROCRT_WIN_OBJS)
@@ -235,6 +241,7 @@ PDFFILTER_OBJS      = $(PDFFILTER_OBJS) $(MICROCRT_DLL_OBJS)
 PDFPREVIEW_OBJS     = $(PDFPREVIEW_OBJS) $(MICROCRT_DLL_OBJS)
 BROWSER_PLUGIN_OBJS = $(BROWSER_PLUGIN_OBJS) $(MICROCRT_DLL_OBJS)
 ENGINEDUMP_OBJS     = $(ENGINEDUMP_OBJS) $(MICROCRT_CONSOLE_OBJS)
+LIBMUPDF_OBJS       = $(LIBMUPDF_OBJS) $(OS)\libmupdf_stub.obj $(MICROCRT_DLL_OBJS)
 !endif
 
 !if "$(BUILD_TEX_IFILTER)"!=""
@@ -300,6 +307,9 @@ $(SUMATRA_APP_NO_MUPDF): $(SUMATRA_OBJS) $(OS)\MuPDF_Exports.obj
 
 $(LIBMUPDF_RES): src\libmupdf.rc src\Version.h
 	rc /r /fo$@ $(EXTCFLAGS) src\libmupdf.rc
+
+$(LIBMUPDF_DLL): $(LIBMUPDF_OBJS) $(LIBMUPDF_DEF) $(LIBMUPDF_RES)
+	$(LD) /DLL $(LDFLAGS) $(LIBMUPDF_OBJS) $(LIBMUPDF_RES) $(LIBS) /DEF:$(LIBMUPDF_DEF) /IMPLIB:$(LIBMUPDF_LIB) /PDB:$*.pdb /OUT:$@
 
 $(INSTALLER_RES): src\installer\Installer.rc src\installer\Resource.h src\Version.h
 	rc /r /fo$@ $(EXTCFLAGS) /D "INSTALL_PAYLOAD_ZIP=..\..\$(O)\InstallerData.zip" src\installer\Installer.rc

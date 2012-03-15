@@ -310,10 +310,6 @@ FONTDUMP_APP = $(O)\fontdump.exe
 MUDRAW_OBJS = $(LIBS_OBJS) $(OA)\mudraw.obj
 MUDRAW_APP = $(O)\mudraw.exe
 
-LIBMUPDF_LIB = $(O)\libmupdf.lib
-LIBMUPDF_DEF = $(MUPDF_DIR)\libmupdf.def
-LIBMUPDF_DLL = $(O)\libmupdf.dll
-
 all: $(O) $(PDFSHOW_APP) $(PDFCLEAN_APP) $(PDFINFO_APP) $(PDFEXTRACT_APP) $(PDFAPP_APP) $(MUDRAW_APP) $(PDFBENCH_APP)
 
 clean: force
@@ -361,9 +357,6 @@ $(PDFEXTRACT_APP): $(PDFEXTRACT_OBJS)
 
 $(MUDRAW_APP): $(MUDRAW_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
-
-$(LIBMUPDF_DLL): $(LIBS_OBJS) $(LIBMUPDF_DEF) $(LIBMUPDF_RES)
-	$(LD) /DLL $(LDFLAGS) $(LIBS_OBJS) $(LIBMUPDF_RES) $(LIBS) /DEF:$(LIBMUPDF_DEF) /IMPLIB:$(LIBMUPDF_LIB) /PDB:$*.pdb /OUT:$@
 
 # freetype directories
 {$(FREETYPE_DIR)\builds\win32}.c{$(OFT)}.obj::
