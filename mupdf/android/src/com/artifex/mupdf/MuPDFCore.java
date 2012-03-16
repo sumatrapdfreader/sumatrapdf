@@ -28,6 +28,7 @@ public class MuPDFCore
 			int patchW, int patchH);
 	public static native RectF[] searchPage(String text);
 	public static native int getPageLink(int page, float x, float y);
+	public static native LinkInfo [] getPageLinksInternal(int page);
 	public static native OutlineItem [] getOutlineInternal();
 	public static native boolean hasOutlineInternal();
 	public static native boolean needsPasswordInternal();
@@ -88,6 +89,10 @@ public class MuPDFCore
 
 	public synchronized int hitLinkPage(int page, float x, float y) {
 		return getPageLink(page, x, y);
+	}
+
+	public synchronized LinkInfo [] getPageLinks(int page) {
+		return getPageLinksInternal(page);
 	}
 
 	public synchronized RectF [] searchPage(int page, String text) {

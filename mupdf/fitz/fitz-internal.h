@@ -801,6 +801,7 @@ struct fz_path_s
 
 struct fz_stroke_state_s
 {
+	int refs;
 	fz_linecap start_cap, dash_cap, end_cap;
 	fz_linejoin linejoin;
 	float linewidth;
@@ -825,6 +826,13 @@ fz_path *fz_clone_path(fz_context *ctx, fz_path *old);
 
 fz_rect fz_bound_path(fz_context *ctx, fz_path *path, fz_stroke_state *stroke, fz_matrix ctm);
 void fz_print_path(fz_context *ctx, FILE *out, fz_path *, int indent);
+
+fz_stroke_state *fz_new_stroke_state(fz_context *ctx);
+fz_stroke_state *fz_new_stroke_state_with_len(fz_context *ctx, int len);
+fz_stroke_state *fz_keep_stroke_state(fz_context *ctx, fz_stroke_state *stroke);
+void fz_drop_stroke_state(fz_context *ctx, fz_stroke_state *stroke);
+fz_stroke_state *fz_unshare_stroke_state(fz_context *ctx, fz_stroke_state *shared);
+fz_stroke_state *fz_unshare_stroke_state_with_len(fz_context *ctx, fz_stroke_state *shared, int len);
 
 /*
  * Glyph cache

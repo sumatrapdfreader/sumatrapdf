@@ -366,3 +366,99 @@ fz_print_path(fz_context *ctx, FILE *out, fz_path *path, int indent)
 		}
 	}
 }
+
+fz_stroke_state *
+fz_keep_stroke_state(fz_context *ctx, fz_stroke_state *stroke)
+{
+	if (!stroke)
+		return NULL;
+
+	fz_lock(ctx, FZ_LOCK_ALLOC);
+	if (stroke->refs > 0)
+		stroke->refs++;
+	fz_unlock(ctx, FZ_LOCK_ALLOC);
+	return stroke;
+}
+
+void
+fz_drop_stroke_state(fz_context *ctx, fz_stroke_state *stroke)
+{
+	int drop;
+
+	if (!stroke)
+		return;
+
+	fz_lock(ctx, FZ_LOCK_ALLOC);
+	drop = (stroke->refs > 0 ? --stroke->refs == 0 : 0);
+	fz_unlock(ctx, FZ_LOCK_ALLOC);
+	if (drop)
+		fz_free(ctx, stroke);
+}
+
+fz_stroke_state *
+fz_new_stroke_state_with_len(fz_context *ctx, int len)
+{
+	fz_stroke_state *state;
+
+	len -= nelem(state->dash_list);
+	if (len < 0)
+		len = 0;
+
+	state = Memento_label(fz_malloc(ctx, sizeof(*state) + sizeof(state->dash_list[0]) * len), "fz_stroke_state");
+	state->refs = 1;
+	state->start_cap = FZ_LINECAP_BUTT;
+	state->dash_cap = FZ_LINECAP_BUTT;
+	state->end_cap = FZ_LINECAP_BUTT;
+	state->linejoin = FZ_LINEJOIN_MITER;
+	state->linewidth = 1;
+	state->miterlimit = 10;
+	state->dash_phase = 0;
+	state->dash_len = 0;
+	memset(state->dash_list, 0, sizeof(state->dash_list[0]) * (len + nelem(state->dash_list)));
+
+	return state;
+}
+
+fz_stroke_state *
+fz_new_stroke_state(fz_context *ctx)
+{
+	return fz_new_stroke_state_with_len(ctx, 0);
+}
+
+
+fz_stroke_state *
+fz_unshare_stroke_state_with_len(fz_context *ctx, fz_stroke_state *shared, int len)
+{
+	int single, unsize, shsize, shlen, drop;
+	fz_stroke_state *unshared;
+
+	fz_lock(ctx, FZ_LOCK_ALLOC);
+	single = (shared->refs == 1);
+	fz_unlock(ctx, FZ_LOCK_ALLOC);
+
+	shlen = shared->dash_len - nelem(shared->dash_list);
+	if (shlen < 0)
+		shlen = 0;
+	shsize = sizeof(*shared) + sizeof(shared->dash_list[0]) * shlen;
+	len -= nelem(shared->dash_list);
+	if (len < 0)
+		len = 0;
+	if (single && shlen >= len)
+		return shared;
+	unsize = sizeof(*unshared) + sizeof(unshared->dash_list[0]) * len;
+	unshared = Memento_label(fz_malloc(ctx, unsize), "fz_stroke_state");
+	memcpy(unshared, shared, (shsize > unsize ? unsize : shsize));
+	unshared->refs = 1;
+	fz_lock(ctx, FZ_LOCK_ALLOC);
+	drop = (shared->refs > 0 ? --shared->refs == 0 : 0);
+	fz_unlock(ctx, FZ_LOCK_ALLOC);
+	if (drop)
+		fz_free(ctx, shared);
+	return unshared;
+}
+
+fz_stroke_state *
+fz_unshare_stroke_state(fz_context *ctx, fz_stroke_state *shared)
+{
+	return fz_unshare_stroke_state_with_len(ctx, shared, shared->dash_len);
+}

@@ -785,7 +785,7 @@ fz_render_t3_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm, fz_co
 		model = NULL; /* Treat as masked */
 	}
 
-	bbox = fz_round_rect(fz_bound_glyph(ctx, font, gid, trm));
+	bbox = fz_bbox_covering_rect(fz_bound_glyph(ctx, font, gid, trm));
 	bbox.x0--;
 	bbox.y0--;
 	bbox.x1++;

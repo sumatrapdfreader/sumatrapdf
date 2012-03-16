@@ -170,15 +170,30 @@ const fz_bbox fz_infinite_bbox = { 1, 1, -1, -1 };
 const fz_bbox fz_empty_bbox = { 0, 0, 0, 0 };
 const fz_bbox fz_unit_bbox = { 0, 0, 1, 1 };
 
+#define SAFE_INT(f) ((f > INT_MAX) ? INT_MAX : ((f < INT_MIN) ? INT_MIN : (int)f))
+fz_bbox
+fz_bbox_covering_rect(fz_rect f)
+{
+	fz_bbox i;
+	f.x0 = floorf(f.x0);
+	f.y0 = floorf(f.y0);
+	f.x1 = ceilf(f.x1);
+	f.y1 = ceilf(f.y1);
+	i.x0 = SAFE_INT(f.x0);
+	i.y0 = SAFE_INT(f.y0);
+	i.x1 = SAFE_INT(f.x1);
+	i.y1 = SAFE_INT(f.y1);
+	return i;
+}
+
 fz_bbox
 fz_round_rect(fz_rect f)
 {
 	fz_bbox i;
-	f.x0 = floorf(f.x0 + FLT_EPSILON);
-	f.y0 = floorf(f.y0 + FLT_EPSILON);
-	f.x1 = ceilf(f.x1 - FLT_EPSILON);
-	f.y1 = ceilf(f.y1 - FLT_EPSILON);
-#define SAFE_INT(f) ((f > INT_MAX) ? INT_MAX : ((f < INT_MIN) ? INT_MIN : (int)f))
+	f.x0 = floorf(f.x0 + 0.001);
+	f.y0 = floorf(f.y0 + 0.001);
+	f.x1 = ceilf(f.x1 - 0.001);
+	f.y1 = ceilf(f.y1 - 0.001);
 	i.x0 = SAFE_INT(f.x0);
 	i.y0 = SAFE_INT(f.y0);
 	i.x1 = SAFE_INT(f.x1);

@@ -96,14 +96,6 @@ fz_new_display_node(fz_context *ctx, fz_display_command cmd, fz_matrix ctm,
 	return node;
 }
 
-static fz_stroke_state *
-fz_clone_stroke_state(fz_context *ctx, fz_stroke_state *stroke)
-{
-	fz_stroke_state *newstroke = fz_malloc_struct(ctx, fz_stroke_state);
-	*newstroke = *stroke;
-	return newstroke;
-}
-
 static void
 fz_append_display_node(fz_display_list *list, fz_display_node *node)
 {
@@ -219,7 +211,7 @@ fz_free_display_node(fz_context *ctx, fz_display_node *node)
 		break;
 	}
 	if (node->stroke)
-		fz_free(ctx, node->stroke);
+		fz_drop_stroke_state(ctx, node->stroke);
 	if (node->colorspace)
 		fz_drop_colorspace(ctx, node->colorspace);
 	fz_free(ctx, node);
@@ -257,7 +249,7 @@ fz_list_stroke_path(fz_device *dev, fz_path *path, fz_stroke_state *stroke, fz_m
 	{
 		node->rect = fz_bound_path(dev->ctx, path, stroke, ctm);
 		node->item.path = fz_clone_path(dev->ctx, path);
-		node->stroke = fz_clone_stroke_state(dev->ctx, stroke);
+		node->stroke = fz_keep_stroke_state(dev->ctx, stroke);
 	}
 	fz_catch(ctx)
 	{
@@ -301,7 +293,7 @@ fz_list_clip_stroke_path(fz_device *dev, fz_path *path, fz_rect *rect, fz_stroke
 		if (rect)
 			node->rect = fz_intersect_rect(node->rect, *rect);
 		node->item.path = fz_clone_path(dev->ctx, path);
-		node->stroke = fz_clone_stroke_state(dev->ctx, stroke);
+		node->stroke = fz_keep_stroke_state(dev->ctx, stroke);
 	}
 	fz_catch(ctx)
 	{
@@ -343,7 +335,7 @@ fz_list_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *stroke, fz_m
 	{
 		node->rect = fz_bound_text(dev->ctx, text, ctm);
 		node->item.text = fz_clone_text(dev->ctx, text);
-		node->stroke = fz_clone_stroke_state(dev->ctx, stroke);
+		node->stroke = fz_keep_stroke_state(dev->ctx, stroke);
 	}
 	fz_catch(ctx)
 	{
@@ -386,7 +378,7 @@ fz_list_clip_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *stroke,
 	{
 		node->rect = fz_bound_text(dev->ctx, text, ctm);
 		node->item.text = fz_clone_text(dev->ctx, text);
-		node->stroke = fz_clone_stroke_state(dev->ctx, stroke);
+		node->stroke = fz_keep_stroke_state(dev->ctx, stroke);
 	}
 	fz_catch(ctx)
 	{
@@ -626,7 +618,7 @@ fz_run_display_list(fz_display_list *list, fz_device *dev, fz_matrix top_ctm, fz
 		}
 		else
 		{
-			bbox = fz_round_rect(fz_transform_rect(top_ctm, node->rect));
+			bbox = fz_bbox_covering_rect(fz_transform_rect(top_ctm, node->rect));
 			bbox = fz_intersect_bbox(bbox, scissor);
 			empty = fz_is_empty_bbox(bbox);
 		}

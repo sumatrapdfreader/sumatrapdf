@@ -16,6 +16,7 @@ enum { TEXT_PLAIN = 1, TEXT_HTML = 2, TEXT_XML = 3 };
 
 static char *output = NULL;
 static float resolution = 72;
+static int res_specified = 0;
 static float rotation = 0;
 
 static int showxml = 0;
@@ -54,9 +55,9 @@ static void usage(void)
 #endif
 		"\t-p -\tpassword\n"
 		"\t-r -\tresolution in dpi (default: 72)\n"
-		"\t-w -\twidth (in pixels)\n"
-		"\t-h -\theight (in pixels)\n"
-		"\t-f -\tif both -w and -h are used then fit exactly\n"
+		"\t-w -\twidth (in pixels) (maximum width if -r is specified)\n"
+		"\t-h -\theight (in pixels) (maximum height if -r is specified)\n"
+		"\t-f -\tfit width and/or height exactly (ignore aspect)\n"
 		"\t-a\tsave alpha channel (only pam and png)\n"
 		"\t-b -\tnumber of bits of antialiasing (0 to 8)\n"
 		"\t-g\trender in grayscale\n"
@@ -337,6 +338,7 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 		fz_rect bounds, bounds2;
 		fz_bbox bbox;
 		fz_pixmap *pix = NULL;
+		int w, h;
 
 		fz_var(pix);
 
@@ -345,15 +347,42 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 		ctm = fz_scale(zoom, zoom);
 		ctm = fz_concat(ctm, fz_rotate(rotation));
 		bounds2 = fz_transform_rect(ctm, bounds);
-		if (width || height)
+		bbox = fz_round_rect(bounds2);
+		/* Make local copies of our width/height */
+		w = width;
+		h = height;
+		/* If a resolution is specified, check to see whether w/h are
+		 * exceeded; if not, unset them. */
+		if (res_specified)
 		{
-			float scalex = width/(bounds2.x1-bounds2.x0);
-			float scaley = height/(bounds2.y1-bounds2.y0);
+			int t;
+			t = bbox.x1 - bbox.x0;
+			if (w && t <= w)
+				w = 0;
+			t = bbox.y1 - bbox.y0;
+			if (h && t <= h)
+				h = 0;
+		}
+		/* Now w or h will be 0 unless then need to be enforced. */
+		if (w || h)
+		{
+			float scalex = w/(bounds2.x1-bounds2.x0);
+			float scaley = h/(bounds2.y1-bounds2.y0);
 
-			if (width == 0)
-				scalex = scaley;
-			if (height == 0)
-				scaley = scalex;
+			if (fit)
+			{
+				if (w == 0)
+					scalex = 1.0f;
+				if (h == 0)
+					scaley = 1.0f;
+			}
+			else
+			{
+				if (w == 0)
+					scalex = scaley;
+				if (h == 0)
+					scaley = scalex;
+			}
 			if (!fit)
 			{
 				if (scalex > scaley)
@@ -533,7 +562,7 @@ int main(int argc, char **argv)
 		{
 		case 'o': output = fz_optarg; break;
 		case 'p': password = fz_optarg; break;
-		case 'r': resolution = atof(fz_optarg); break;
+		case 'r': resolution = atof(fz_optarg); res_specified = 1; break;
 		case 'R': rotation = atof(fz_optarg); break;
 		case 'a': savealpha = 1; break;
 		case 'b': alphabits = atoi(fz_optarg); break;

@@ -43,6 +43,7 @@ EXPORTS
 	fz_invert_matrix
 	fz_is_rectilinear
 	fz_matrix_expansion
+	fz_bbox_covering_rect
 	fz_round_rect
 	fz_intersect_rect
 	fz_intersect_bbox
@@ -252,6 +253,12 @@ EXPORTS
 	fz_clone_path
 	fz_bound_path
 	fz_print_path
+	fz_new_stroke_state
+	fz_new_stroke_state_with_len
+	fz_keep_stroke_state
+	fz_drop_stroke_state
+	fz_unshare_stroke_state
+	fz_unshare_stroke_state_with_len
 	fz_new_glyph_cache_context
 	fz_keep_glyph_cache
 	fz_drop_glyph_cache_context

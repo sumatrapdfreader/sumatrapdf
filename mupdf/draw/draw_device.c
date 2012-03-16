@@ -342,7 +342,7 @@ fz_draw_clip_path(fz_device *devp, fz_path *path, fz_rect *rect, int even_odd, f
 	bbox = fz_bound_gel(dev->gel);
 	bbox = fz_intersect_bbox(bbox, state->scissor);
 	if (rect)
-		bbox = fz_intersect_bbox(bbox, fz_round_rect(*rect));
+		bbox = fz_intersect_bbox(bbox, fz_bbox_covering_rect(*rect));
 
 	if (fz_is_empty_rect(bbox) || fz_is_rect_gel(dev->gel))
 	{
@@ -397,7 +397,7 @@ fz_draw_clip_stroke_path(fz_device *devp, fz_path *path, fz_rect *rect, fz_strok
 	bbox = fz_bound_gel(dev->gel);
 	bbox = fz_intersect_bbox(bbox, state->scissor);
 	if (rect)
-		bbox = fz_intersect_bbox(bbox, fz_round_rect(*rect));
+		bbox = fz_intersect_bbox(bbox, fz_bbox_covering_rect(*rect));
 
 	state[1].mask = fz_new_pixmap_with_bbox(dev->ctx, NULL, bbox);
 	fz_clear_pixmap(dev->ctx, state[1].mask);
@@ -589,7 +589,7 @@ fz_draw_clip_text(fz_device *devp, fz_text *text, fz_matrix ctm, int accumulate)
 	if (accumulate == 0)
 	{
 		/* make the mask the exact size needed */
-		bbox = fz_round_rect(fz_bound_text(dev->ctx, text, ctm));
+		bbox = fz_bbox_covering_rect(fz_bound_text(dev->ctx, text, ctm));
 		bbox = fz_intersect_bbox(bbox, state->scissor);
 	}
 	else
@@ -670,7 +670,7 @@ fz_draw_clip_stroke_text(fz_device *devp, fz_text *text, fz_stroke_state *stroke
 	fz_colorspace *model = state->dest->colorspace;
 
 	/* make the mask the exact size needed */
-	bbox = fz_round_rect(fz_bound_text(dev->ctx, text, ctm));
+	bbox = fz_bbox_covering_rect(fz_bound_text(dev->ctx, text, ctm));
 	bbox = fz_intersect_bbox(bbox, state->scissor);
 
 	mask = fz_new_pixmap_with_bbox(dev->ctx, NULL, bbox);
@@ -743,7 +743,7 @@ fz_draw_fill_shade(fz_device *devp, fz_shade *shade, fz_matrix ctm, float alpha)
 
 	bounds = fz_bound_shade(dev->ctx, shade, ctm);
 	scissor = state->scissor;
-	bbox = fz_intersect_bbox(fz_round_rect(bounds), scissor);
+	bbox = fz_intersect_bbox(fz_bbox_covering_rect(bounds), scissor);
 
 	if (fz_is_empty_rect(bbox))
 		return;
@@ -1087,10 +1087,10 @@ fz_draw_clip_image_mask(fz_device *devp, fz_image *image, fz_rect *rect, fz_matr
 	dump_spaces(dev->top-1, "Clip (image mask) begin\n");
 #endif
 
-	bbox = fz_round_rect(fz_transform_rect(ctm, fz_unit_rect));
+	bbox = fz_bbox_covering_rect(fz_transform_rect(ctm, fz_unit_rect));
 	bbox = fz_intersect_bbox(bbox, state->scissor);
 	if (rect)
-		bbox = fz_intersect_bbox(bbox, fz_round_rect(*rect));
+		bbox = fz_intersect_bbox(bbox, fz_bbox_covering_rect(*rect));
 
 	dx = sqrtf(ctm.a * ctm.a + ctm.b * ctm.b);
 	dy = sqrtf(ctm.c * ctm.c + ctm.d * ctm.d);
@@ -1209,7 +1209,7 @@ fz_draw_begin_mask(fz_device *devp, fz_rect rect, int luminosity, fz_colorspace 
 	fz_draw_state *state = push_stack(dev);
 	fz_pixmap *shape = state->shape;
 
-	bbox = fz_round_rect(rect);
+	bbox = fz_bbox_covering_rect(rect);
 	bbox = fz_intersect_bbox(bbox, state->scissor);
 	dest = fz_new_pixmap_with_bbox(dev->ctx, fz_device_gray, bbox);
 	if (state->shape)
@@ -1316,7 +1316,7 @@ fz_draw_begin_group(fz_device *devp, fz_rect rect, int isolated, int knockout, i
 		fz_knockout_begin(dev);
 
 	state = push_stack(dev);
-	bbox = fz_round_rect(rect);
+	bbox = fz_bbox_covering_rect(rect);
 	bbox = fz_intersect_bbox(bbox, state->scissor);
 	dest = fz_new_pixmap_with_bbox(ctx, model, bbox);
 
@@ -1443,7 +1443,7 @@ fz_draw_begin_tile(fz_device *devp, fz_rect area, fz_rect view, float xstep, flo
 		fz_knockout_begin(dev);
 
 	state = push_stack(dev);
-	bbox = fz_round_rect(fz_transform_rect(ctm, view));
+	bbox = fz_bbox_covering_rect(fz_transform_rect(ctm, view));
 	/* We should never have a bbox that entirely covers our destination.
 	 * If we do, then the check for only 1 tile being visible above has
 	 * failed. Actually, this *can* fail due to the round_rect, at extreme

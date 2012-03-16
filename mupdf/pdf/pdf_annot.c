@@ -266,12 +266,13 @@ pdf_parse_action(pdf_document *xref, pdf_obj *action)
 	}
 	else if (!strcmp(pdf_to_name(obj), "Launch"))
 	{
+		dest = pdf_dict_gets(action, "F");
 		ld.kind = FZ_LINK_LAUNCH;
 		/* SumatraPDF: parse full file specifications */
-		ld.ld.launch.file_spec = pdf_file_spec_to_str(ctx, pdf_dict_gets(action, "F"));
+		ld.ld.launch.file_spec = pdf_file_spec_to_str(ctx, dest);
 		ld.ld.launch.new_window = pdf_to_int(pdf_dict_gets(action, "NewWindow"));
 		/* SumatraPDF: support launching embedded files */
-		obj = pdf_dict_gets(pdf_dict_gets(action, "F"), "EF");
+		obj = pdf_dict_gets(dest, "EF");
 #ifdef _WIN32
 		obj = pdf_dict_getsa(obj, "DOS", "F");
 #else

@@ -174,39 +174,95 @@ Multi-threading
 ===============
 
 First off, study the basic usage example in doc/example.c and make
-sure you understand how it works as it will be the referenced in this
-section too.
+sure you understand how it works as the data structures manipulated
+there will be refered to in this section too.
 
-There are two variations of how to create multi-threaded applications:
+MuPDF can usefully be built into a multi-threaded application without
+the library needing to know anything threading at all. If the library
+opens a document in one thread, and then sits there as a 'server'
+requesting pages and rendering them for other threads that need them,
+then the library is only ever being called from this one thread.
 
-1)	lock-less operation -- in which one thread is requesting pages
-	to be drawn and responding to user interface actions, while
-	another thread is dedicated to drawing pages. In this scenario
-	only one thread owns and manipulates the context and document
-	at any one time.
+Other threads can still be used to handle UI requests etc, but as far
+as MuPDF is concerned it is only being used in a single threaded way.
+In this instance, there are no threading issues with MuPDF at all,
+and it can safely be used without any locking, as described in the
+previous sections.
 
-2)	using locking -- where one thread is requesting pages to be
-	draw and responding to user interface actions, while several
-	threads may be drawing pages. In this scenario each thread has
-	its own context but they share some global state, for example
-	the resource store. An additional constraint
+This section will attempt to explain how to use MuPDF in the more
+complex case; where we genuinely want to call the MuPDF library
+concurrently from multiple threads within a single application.
 
-The usage example starts by getting a context from fz_new_context with
-standard memory allocation functions, default resource store size and,
-crucially, no locking. 
+MuPDF can be invoked with a user supplied set of locking functions.
+It uses these to take mutexes around operations that would conflict
+if performed concurrently in multiple threads. By leaving the
+exact implementation of locks to the caller MuPDF remains threading
+library agnostic.
 
-In a multi-threaded application every thread must have a context. Or
-more specifically, each context can only be used from one thread at a
-time. When starting another thread, do NOT call fz_new_context again;
-instead call fz_clone_context. This creates a context sharing the
-memory allocator, resource store etc.
+The following simple rules should be followed to ensure that
+multi-threaded operations run smoothly:
 
+1)	"No simultaneous calls to MuPDF in different threads are
+	allowed to use the same context."
 
+	Most of the time it is simplest to just use a different
+	context for every thread; just create a new context at the
+	same time as you create the thread.
 
+2)	"The document is bound to the context with which it is created."
 
-så utan lås: en gui-tråd som visa progress, en tråd som renderar
-med lås: en gui-tråd som request:ar och flera trådar som renderar
+	All subsequent accesses to the document implicitly use the same
+	context; this means that only 1 thread can ever be accessing
+	the document at once. This does not mean that the document can
+	only ever be used from one thread, though in many cases this
+	is the simplest structure overall.
 
-having fitz level display list objects created in 
-one thread, consumed as read-only in multiple threads, with locked access 
-around a few shared caches
+3)	"Any device is bound to the context with which it is created."
+
+	All subsequent uses of a device implicitly use the context with
+	which it was created; this means that if a device is used with
+	a document, it should be created with the same context as that
+	document was. This does not mean that the device can only ever
+	be used from one thread, though in many cases this is the
+	simplest structure overall.
+	
+So, how does a multi-threaded example differ from a non-multithreaded
+one?
+
+Firstly, when we create the first context, we call fz_new_context
+as before, but the second argument should be a pointer to a set
+of locking functions.
+
+The calling code should provide FZ_LOCK_MAX mutexes, which will be
+locked/unlocked by MuPDF calling the lock/unlock function pointers
+in the supplied structure with the user pointer from the structure
+and the lock number, i (0 <= i < FZ_LOCK_MAX). These mutexes can
+safely be recursive or non-recursive as MuPDF only calls in a non-
+recursive style.
+
+To make subsequent contexts, the user should NOT call fz_new_context
+again (as this will fail to share important resources such as the
+store and glyphcache), but should rather call fz_clone_context.
+Each of these cloned contexts can be freed by fz_free_context as
+usual.
+
+To open a document, call fz_open_document as usual, passing a context
+and a filename; this context is bound to the document. All future
+calls to access the document will use this context internally.
+
+Only one thread at a time can therefore perform operations such as
+fetching a page, or rendering that page to a display list. Once a
+display list has been obtained however, it can be rendered from any
+other thread (or even from several threads simultaneously, giving
+banded rendering).
+
+This means that an implementer has 2 basic choices when constructing
+an application to use MuPDF in multi-threaded mode. Either he can
+construct it so that a single nominated thread opens the document
+and then acts as a 'server' creating display lists for other threads
+to render, or he can add his own mutex around calls to mupdf that
+use the document. The former is likely to be far more efficient in
+the long run.
+
+For an example of how to do multi-threading see doc/multi-threaded.c
+which has a main thread and one rendering thread per page.

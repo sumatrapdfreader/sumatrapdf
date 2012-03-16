@@ -360,7 +360,7 @@ public:
 	{
 		pushClip(&Region());
 		
-		fz_bbox bbox = fz_round_rect(fz_transform_rect(ctm, rect));
+		fz_bbox bbox = fz_bbox_covering_rect(fz_transform_rect(ctm, rect));
 		stack->bounds.X = bbox.x0; stack->bounds.Width = bbox.x1 - bbox.x0;
 		stack->bounds.Y = bbox.y0; stack->bounds.Height = bbox.y1 - bbox.y0;
 		
@@ -1294,7 +1294,7 @@ fz_gdiplus_fill_shade(fz_device *dev, fz_shade *shade, fz_matrix ctm, float alph
 		bounds = fz_transform_rect(fz_concat(shade->matrix, ctm), shade->bbox);
 		clip = fz_intersect_rect(bounds, clip);
 	}
-	fz_bbox bbox = fz_round_rect(clip);
+	fz_bbox bbox = fz_bbox_covering_rect(clip);
 	
 	if (fz_is_empty_bbox(bbox))
 		return;

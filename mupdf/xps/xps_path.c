@@ -857,7 +857,7 @@ xps_parse_path(xps_document *doc, fz_matrix ctm, char *base_uri, xps_resource *d
 	char *stroke_thickness_att;
 	char *navigate_uri_att;
 
-	fz_stroke_state stroke;
+	fz_stroke_state *stroke = NULL;
 	fz_matrix transform;
 	float samples[32];
 	fz_colorspace *colorspace;
@@ -865,6 +865,7 @@ xps_parse_path(xps_document *doc, fz_matrix ctm, char *base_uri, xps_resource *d
 	fz_path *stroke_path = NULL;
 	fz_rect area;
 	int fill_rule;
+	int dash_len = 0;
 
 	/*
 	 * Extract attributes and extended attributes.
@@ -936,43 +937,62 @@ xps_parse_path(xps_document *doc, fz_matrix ctm, char *base_uri, xps_resource *d
 		stroke_tag = NULL;
 	}
 
-	stroke.start_cap = xps_parse_line_cap(stroke_start_line_cap_att);
-	stroke.dash_cap = xps_parse_line_cap(stroke_dash_cap_att);
-	stroke.end_cap = xps_parse_line_cap(stroke_end_line_cap_att);
-
-	stroke.linejoin = FZ_LINEJOIN_MITER_XPS;
-	if (stroke_line_join_att)
+	if (stroke_att || stroke_tag)
 	{
-		if (!strcmp(stroke_line_join_att, "Miter")) stroke.linejoin = FZ_LINEJOIN_MITER_XPS;
-		if (!strcmp(stroke_line_join_att, "Round")) stroke.linejoin = FZ_LINEJOIN_ROUND;
-		if (!strcmp(stroke_line_join_att, "Bevel")) stroke.linejoin = FZ_LINEJOIN_BEVEL;
-	}
-
-	stroke.miterlimit = 10;
-	if (stroke_miter_limit_att)
-		stroke.miterlimit = fz_atof(stroke_miter_limit_att);
-
-	stroke.linewidth = 1;
-	if (stroke_thickness_att)
-		stroke.linewidth = fz_atof(stroke_thickness_att);
-
-	stroke.dash_phase = 0;
-	stroke.dash_len = 0;
-	if (stroke_dash_array_att)
-	{
-		char *s = stroke_dash_array_att;
-
-		if (stroke_dash_offset_att)
-			stroke.dash_phase = fz_atof(stroke_dash_offset_att) * stroke.linewidth;
-
-		while (*s && stroke.dash_len < nelem(stroke.dash_list))
+		if (stroke_dash_array_att)
 		{
-			while (*s == ' ')
-				s++;
-			if (*s) /* needed in case of a space before the last quote */
-				stroke.dash_list[stroke.dash_len++] = fz_atof(s) * stroke.linewidth;
-			while (*s && *s != ' ')
-				s++;
+			char *s = stroke_dash_array_att;
+
+			while (*s)
+			{
+				while (*s == ' ')
+					s++;
+				if (*s) /* needed in case of a space before the last quote */
+					dash_len++;
+				while (*s && *s != ' ')
+					s++;
+			}
+		}
+		stroke = fz_new_stroke_state_with_len(doc->ctx, dash_len);
+		stroke->start_cap = xps_parse_line_cap(stroke_start_line_cap_att);
+		stroke->dash_cap = xps_parse_line_cap(stroke_dash_cap_att);
+		stroke->end_cap = xps_parse_line_cap(stroke_end_line_cap_att);
+
+		stroke->linejoin = FZ_LINEJOIN_MITER_XPS;
+		if (stroke_line_join_att)
+		{
+			if (!strcmp(stroke_line_join_att, "Miter")) stroke->linejoin = FZ_LINEJOIN_MITER_XPS;
+			if (!strcmp(stroke_line_join_att, "Round")) stroke->linejoin = FZ_LINEJOIN_ROUND;
+			if (!strcmp(stroke_line_join_att, "Bevel")) stroke->linejoin = FZ_LINEJOIN_BEVEL;
+		}
+
+		stroke->miterlimit = 10;
+		if (stroke_miter_limit_att)
+			stroke->miterlimit = fz_atof(stroke_miter_limit_att);
+
+		stroke->linewidth = 1;
+		if (stroke_thickness_att)
+			stroke->linewidth = fz_atof(stroke_thickness_att);
+
+		stroke->dash_phase = 0;
+		stroke->dash_len = 0;
+		if (stroke_dash_array_att)
+		{
+			char *s = stroke_dash_array_att;
+
+			if (stroke_dash_offset_att)
+				stroke->dash_phase = fz_atof(stroke_dash_offset_att) * stroke->linewidth;
+
+			while (*s)
+			{
+				while (*s == ' ')
+					s++;
+				if (*s) /* needed in case of a space before the last quote */
+					stroke->dash_list[stroke->dash_len++] = fz_atof(s) * stroke->linewidth;
+				while (*s && *s != ' ')
+					s++;
+			}
+			stroke->dash_len = dash_len;
 		}
 	}
 
@@ -1000,7 +1020,7 @@ xps_parse_path(xps_document *doc, fz_matrix ctm, char *base_uri, xps_resource *d
 
 	if (stroke_att || stroke_tag)
 	{
-		area = fz_bound_path(doc->ctx, stroke_path, &stroke, ctm);
+		area = fz_bound_path(doc->ctx, stroke_path, stroke, ctm);
 		if (stroke_path != path && (fill_att || fill_tag))
 			area = fz_union_rect(area, fz_bound_path(doc->ctx, path, NULL, ctm));
 	}
@@ -1041,13 +1061,13 @@ xps_parse_path(xps_document *doc, fz_matrix ctm, char *base_uri, xps_resource *d
 			samples[0] *= fz_atof(stroke_opacity_att);
 		xps_set_color(doc, colorspace, samples);
 
-		fz_stroke_path(doc->dev, stroke_path, &stroke, ctm,
+		fz_stroke_path(doc->dev, stroke_path, stroke, ctm,
 			doc->colorspace, doc->color, doc->alpha);
 	}
 
 	if (stroke_tag)
 	{
-		fz_clip_stroke_path(doc->dev, stroke_path, NULL, &stroke, ctm);
+		fz_clip_stroke_path(doc->dev, stroke_path, NULL, stroke, ctm);
 		xps_parse_brush(doc, ctm, area, stroke_uri, dict, stroke_tag);
 		fz_pop_clip(doc->dev);
 	}
@@ -1058,6 +1078,7 @@ xps_parse_path(xps_document *doc, fz_matrix ctm, char *base_uri, xps_resource *d
 		fz_free_path(doc->ctx, stroke_path);
 	fz_free_path(doc->ctx, path);
 	path = NULL;
+	fz_drop_stroke_state(doc->ctx, stroke);
 
 	if (clip_att || clip_tag)
 		fz_pop_clip(doc->dev);

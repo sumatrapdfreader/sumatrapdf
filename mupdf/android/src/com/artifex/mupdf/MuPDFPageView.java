@@ -13,6 +13,10 @@ public class MuPDFPageView extends PageView {
 	}
 
 	public int hitLinkPage(float x, float y) {
+		// Since link highlighting was implemented, the super class
+		// PageView has had sufficient information to be able to
+		// perform this method directly. Making that change would
+		// make MuPDFCore.hitLinkPage superfluous.
 		float scale = mSourceScale*(float)getWidth()/(float)mSize.x;
 		float docRelX = (x - getLeft())/scale;
 		float docRelY = (y - getTop())/scale;
@@ -24,5 +28,10 @@ public class MuPDFPageView extends PageView {
 	protected void drawPage(Bitmap bm, int sizeX, int sizeY,
 			int patchX, int patchY, int patchWidth, int patchHeight) {
 		mCore.drawPage(mPageNumber, bm, sizeX, sizeY, patchX, patchY, patchWidth, patchHeight);
+	}
+
+	@Override
+	protected LinkInfo[] getLinkInfo() {
+		return mCore.getPageLinks(mPageNumber);
 	}
 }

@@ -37,7 +37,7 @@ struct pdf_gstate_s
 	int clip_depth;
 
 	/* path stroking */
-	fz_stroke_state stroke_state;
+	fz_stroke_state *stroke_state;
 
 	/* materials */
 	pdf_material stroke;
@@ -442,9 +442,9 @@ pdf_show_path(pdf_csi *csi, int doclose, int dofill, int dostroke, int even_odd)
 	if (dostroke) {
 		if (csi->dev->flags & (FZ_DEVFLAG_STROKECOLOR_UNDEFINED | FZ_DEVFLAG_LINEJOIN_UNDEFINED | FZ_DEVFLAG_LINEWIDTH_UNDEFINED))
 			csi->dev->flags |= FZ_DEVFLAG_UNCACHEABLE;
-		else if (gstate->stroke_state.dash_len != 0 && csi->dev->flags & (FZ_DEVFLAG_STARTCAP_UNDEFINED | FZ_DEVFLAG_DASHCAP_UNDEFINED | FZ_DEVFLAG_ENDCAP_UNDEFINED))
+		else if (gstate->stroke_state->dash_len != 0 && csi->dev->flags & (FZ_DEVFLAG_STARTCAP_UNDEFINED | FZ_DEVFLAG_DASHCAP_UNDEFINED | FZ_DEVFLAG_ENDCAP_UNDEFINED))
 			csi->dev->flags |= FZ_DEVFLAG_UNCACHEABLE;
-		else if (gstate->stroke_state.linejoin == FZ_LINEJOIN_MITER && (csi->dev->flags & FZ_DEVFLAG_MITERLIMIT_UNDEFINED))
+		else if (gstate->stroke_state->linejoin == FZ_LINEJOIN_MITER && (csi->dev->flags & FZ_DEVFLAG_MITERLIMIT_UNDEFINED))
 			csi->dev->flags |= FZ_DEVFLAG_UNCACHEABLE;
 	}
 	if (dofill) {
@@ -461,7 +461,7 @@ pdf_show_path(pdf_csi *csi, int doclose, int dofill, int dostroke, int even_odd)
 			fz_closepath(ctx, path);
 
 		if (dostroke)
-			bbox = fz_bound_path(ctx, path, &gstate->stroke_state, gstate->ctm);
+			bbox = fz_bound_path(ctx, path, gstate->stroke_state, gstate->ctm);
 		else
 			bbox = fz_bound_path(ctx, path, NULL, gstate->ctm);
 
@@ -489,10 +489,11 @@ pdf_show_path(pdf_csi *csi, int doclose, int dofill, int dostroke, int even_odd)
 				if (6 <= path->len && path->len <= 7 && path->items[0].k == FZ_MOVETO && path->items[3].k == FZ_LINETO &&
 					(path->items[1].v != path->items[4].v || path->items[2].v != path->items[5].v))
 				{
-					fz_stroke_state state = { 0 };
-					state.linewidth = 0.1f / fz_matrix_expansion(gstate->ctm);
-					fz_stroke_path(csi->dev, path, &state, gstate->ctm,
+					fz_stroke_state *stroke = fz_new_stroke_state(ctx);
+					stroke->linewidth = 0.1f / fz_matrix_expansion(gstate->ctm);
+					fz_stroke_path(csi->dev, path, stroke, gstate->ctm,
 						gstate->fill.colorspace, gstate->fill.v, gstate->fill.alpha);
+					fz_drop_stroke_state(ctx, stroke);
 					break;
 				}
 				fz_fill_path(csi->dev, path, even_odd, gstate->ctm,
@@ -524,13 +525,13 @@ pdf_show_path(pdf_csi *csi, int doclose, int dofill, int dostroke, int even_odd)
 			case PDF_MAT_NONE:
 				break;
 			case PDF_MAT_COLOR:
-				fz_stroke_path(csi->dev, path, &gstate->stroke_state, gstate->ctm,
+				fz_stroke_path(csi->dev, path, gstate->stroke_state, gstate->ctm,
 					gstate->stroke.colorspace, gstate->stroke.v, gstate->stroke.alpha);
 				break;
 			case PDF_MAT_PATTERN:
 				if (gstate->stroke.pattern)
 				{
-					fz_clip_stroke_path(csi->dev, path, &bbox, &gstate->stroke_state, gstate->ctm);
+					fz_clip_stroke_path(csi->dev, path, &bbox, gstate->stroke_state, gstate->ctm);
 					pdf_show_pattern(csi, gstate->stroke.pattern, bbox, PDF_STROKE);
 					fz_pop_clip(csi->dev);
 				}
@@ -538,7 +539,7 @@ pdf_show_path(pdf_csi *csi, int doclose, int dofill, int dostroke, int even_odd)
 			case PDF_MAT_SHADE:
 				if (gstate->stroke.shade)
 				{
-					fz_clip_stroke_path(csi->dev, path, &bbox, &gstate->stroke_state, gstate->ctm);
+					fz_clip_stroke_path(csi->dev, path, &bbox, gstate->stroke_state, gstate->ctm);
 					fz_fill_shade(csi->dev, gstate->stroke.shade, csi->top_ctm, gstate->stroke.alpha);
 					fz_pop_clip(csi->dev);
 				}
@@ -644,13 +645,13 @@ pdf_flush_text(pdf_csi *csi)
 			case PDF_MAT_NONE:
 				break;
 			case PDF_MAT_COLOR:
-				fz_stroke_text(csi->dev, text, &gstate->stroke_state, gstate->ctm,
+				fz_stroke_text(csi->dev, text, gstate->stroke_state, gstate->ctm,
 					gstate->stroke.colorspace, gstate->stroke.v, gstate->stroke.alpha);
 				break;
 			case PDF_MAT_PATTERN:
 				if (gstate->stroke.pattern)
 				{
-					fz_clip_stroke_text(csi->dev, text, &gstate->stroke_state, gstate->ctm);
+					fz_clip_stroke_text(csi->dev, text, gstate->stroke_state, gstate->ctm);
 					pdf_show_pattern(csi, gstate->stroke.pattern, csi->text_bbox, PDF_STROKE);
 					fz_pop_clip(csi->dev);
 				}
@@ -658,7 +659,7 @@ pdf_flush_text(pdf_csi *csi)
 			case PDF_MAT_SHADE:
 				if (gstate->stroke.shade)
 				{
-					fz_clip_stroke_text(csi->dev, text, &gstate->stroke_state, gstate->ctm);
+					fz_clip_stroke_text(csi->dev, text, gstate->stroke_state, gstate->ctm);
 					fz_fill_shade(csi->dev, gstate->stroke.shade, csi->top_ctm, gstate->stroke.alpha);
 					fz_pop_clip(csi->dev);
 				}
@@ -877,20 +878,12 @@ pdf_show_text(pdf_csi *csi, pdf_obj *text)
  */
 
 static void
-pdf_init_gstate(pdf_gstate *gs, fz_matrix ctm)
+pdf_init_gstate(fz_context *ctx, pdf_gstate *gs, fz_matrix ctm)
 {
 	gs->ctm = ctm;
 	gs->clip_depth = 0;
 
-	gs->stroke_state.start_cap = FZ_LINECAP_BUTT;
-	gs->stroke_state.dash_cap = FZ_LINECAP_BUTT;
-	gs->stroke_state.end_cap = FZ_LINECAP_BUTT;
-	gs->stroke_state.linejoin = FZ_LINEJOIN_MITER;
-	gs->stroke_state.linewidth = 1;
-	gs->stroke_state.miterlimit = 10;
-	gs->stroke_state.dash_phase = 0;
-	gs->stroke_state.dash_len = 0;
-	memset(gs->stroke_state.dash_list, 0, sizeof(gs->stroke_state.dash_list));
+	gs->stroke_state = fz_new_stroke_state(ctx);
 
 	gs->stroke.kind = PDF_MAT_COLOR;
 	gs->stroke.colorspace = fz_device_gray; /* No fz_keep_colorspace as static */
@@ -952,6 +945,7 @@ copy_state(fz_context *ctx, pdf_gstate *gs, pdf_gstate *old)
 	gs->fill = old->fill;
 	gs->font = old->font;
 	gs->softmask = old->softmask;
+	gs->stroke_state = fz_keep_stroke_state(ctx, old->stroke_state);
 
 	pdf_keep_material(ctx, &gs->stroke);
 	pdf_keep_material(ctx, &gs->fill);
@@ -999,7 +993,7 @@ pdf_new_csi(pdf_document *xref, fz_device *dev, fz_matrix ctm, char *event, fz_c
 		csi->gstate = fz_malloc_array(ctx, csi->gcap, sizeof(pdf_gstate));
 
 		csi->top_ctm = ctm;
-		pdf_init_gstate(&csi->gstate[0], ctm);
+		pdf_init_gstate(ctx, &csi->gstate[0], ctm);
 		if (gstate)
 			copy_state(ctx, &csi->gstate[0], gstate);
 		csi->gtop = 0;
@@ -1055,6 +1049,7 @@ pdf_gsave(pdf_csi *csi)
 		pdf_keep_font(ctx, gs->font);
 	if (gs->softmask)
 		pdf_keep_xobject(ctx, gs->softmask);
+	fz_keep_stroke_state(ctx, gs->stroke_state);
 }
 
 static void
@@ -1076,6 +1071,7 @@ pdf_grestore(pdf_csi *csi)
 		pdf_drop_font(ctx, gs->font);
 	if (gs->softmask)
 		pdf_drop_xobject(ctx, gs->softmask);
+	fz_drop_stroke_state(ctx, gs->stroke_state);
 
 	csi->gtop --;
 
@@ -1108,6 +1104,7 @@ pdf_free_csi(pdf_csi *csi)
 		pdf_drop_font(ctx, csi->gstate[0].font);
 	if (csi->gstate[0].softmask)
 		pdf_drop_xobject(ctx, csi->gstate[0].softmask);
+	fz_drop_stroke_state(ctx, csi->gstate[0].stroke_state);
 
 	while (csi->gstate[0].clip_depth--)
 		fz_pop_clip(csi->dev);
@@ -1502,24 +1499,28 @@ pdf_run_extgstate(pdf_csi *csi, pdf_obj *rdb, pdf_obj *extgstate)
 		else if (!strcmp(s, "LC"))
 		{
 			csi->dev->flags &= ~(FZ_DEVFLAG_STARTCAP_UNDEFINED | FZ_DEVFLAG_DASHCAP_UNDEFINED | FZ_DEVFLAG_ENDCAP_UNDEFINED);
-			gstate->stroke_state.start_cap = pdf_to_int(val);
-			gstate->stroke_state.dash_cap = pdf_to_int(val);
-			gstate->stroke_state.end_cap = pdf_to_int(val);
+			gstate->stroke_state = fz_unshare_stroke_state(ctx, gstate->stroke_state);
+			gstate->stroke_state->start_cap = pdf_to_int(val);
+			gstate->stroke_state->dash_cap = pdf_to_int(val);
+			gstate->stroke_state->end_cap = pdf_to_int(val);
 		}
 		else if (!strcmp(s, "LW"))
 		{
 			csi->dev->flags &= ~FZ_DEVFLAG_LINEWIDTH_UNDEFINED;
-			gstate->stroke_state.linewidth = pdf_to_real(val);
+			gstate->stroke_state = fz_unshare_stroke_state(ctx, gstate->stroke_state);
+			gstate->stroke_state->linewidth = pdf_to_real(val);
 		}
 		else if (!strcmp(s, "LJ"))
 		{
 			csi->dev->flags &= ~FZ_DEVFLAG_LINEJOIN_UNDEFINED;
-			gstate->stroke_state.linejoin = pdf_to_int(val);
+			gstate->stroke_state = fz_unshare_stroke_state(ctx, gstate->stroke_state);
+			gstate->stroke_state->linejoin = pdf_to_int(val);
 		}
 		else if (!strcmp(s, "ML"))
 		{
 			csi->dev->flags &= ~FZ_DEVFLAG_MITERLIMIT_UNDEFINED;
-			gstate->stroke_state.miterlimit = pdf_to_real(val);
+			gstate->stroke_state = fz_unshare_stroke_state(ctx, gstate->stroke_state);
+			gstate->stroke_state->miterlimit = pdf_to_real(val);
 		}
 
 		else if (!strcmp(s, "D"))
@@ -1527,11 +1528,12 @@ pdf_run_extgstate(pdf_csi *csi, pdf_obj *rdb, pdf_obj *extgstate)
 			if (pdf_is_array(val) && pdf_array_len(val) == 2)
 			{
 				pdf_obj *dashes = pdf_array_get(val, 0);
-				/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692917 */
-				gstate->stroke_state.dash_len = MIN(pdf_array_len(dashes), nelem(gstate->stroke_state.dash_list));
-				for (k = 0; k < gstate->stroke_state.dash_len; k++)
-					gstate->stroke_state.dash_list[k] = pdf_to_real(pdf_array_get(dashes, k));
-				gstate->stroke_state.dash_phase = pdf_to_real(pdf_array_get(val, 1));
+				int len = pdf_array_len(dashes);
+				gstate->stroke_state = fz_unshare_stroke_state_with_len(ctx, gstate->stroke_state, len);
+				gstate->stroke_state->dash_len = len;
+				for (k = 0; k < len; k++)
+					gstate->stroke_state->dash_list[k] = pdf_to_real(pdf_array_get(dashes, k));
+				gstate->stroke_state->dash_phase = pdf_to_real(pdf_array_get(val, 1));
 			}
 			else
 				fz_throw(ctx, "malformed /D");
@@ -1879,9 +1881,10 @@ static void pdf_run_J(pdf_csi *csi)
 {
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
 	csi->dev->flags &= ~(FZ_DEVFLAG_STARTCAP_UNDEFINED | FZ_DEVFLAG_DASHCAP_UNDEFINED | FZ_DEVFLAG_ENDCAP_UNDEFINED);
-	gstate->stroke_state.start_cap = csi->stack[0];
-	gstate->stroke_state.dash_cap = csi->stack[0];
-	gstate->stroke_state.end_cap = csi->stack[0];
+	gstate->stroke_state = fz_unshare_stroke_state(csi->dev->ctx, gstate->stroke_state);
+	gstate->stroke_state->start_cap = csi->stack[0];
+	gstate->stroke_state->dash_cap = csi->stack[0];
+	gstate->stroke_state->end_cap = csi->stack[0];
 }
 
 static void pdf_run_K(pdf_csi *csi)
@@ -1895,7 +1898,8 @@ static void pdf_run_M(pdf_csi *csi)
 {
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
 	csi->dev->flags &= ~FZ_DEVFLAG_MITERLIMIT_UNDEFINED;
-	gstate->stroke_state.miterlimit = csi->stack[0];
+	gstate->stroke_state = fz_unshare_stroke_state(csi->dev->ctx, gstate->stroke_state);
+	gstate->stroke_state->miterlimit = csi->stack[0];
 }
 
 static void pdf_run_MP(pdf_csi *csi)
@@ -2163,12 +2167,15 @@ static void pdf_run_d(pdf_csi *csi)
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
 	pdf_obj *array;
 	int i;
+	int len;
 
 	array = csi->obj;
-	gstate->stroke_state.dash_len = MIN(pdf_array_len(array), nelem(gstate->stroke_state.dash_list));
-	for (i = 0; i < gstate->stroke_state.dash_len; i++)
-		gstate->stroke_state.dash_list[i] = pdf_to_real(pdf_array_get(array, i));
-	gstate->stroke_state.dash_phase = csi->stack[0];
+	len = pdf_array_len(array);
+	gstate->stroke_state = fz_unshare_stroke_state_with_len(csi->dev->ctx, gstate->stroke_state, len);
+	gstate->stroke_state->dash_len = len;
+	for (i = 0; i < len; i++)
+		gstate->stroke_state->dash_list[i] = pdf_to_real(pdf_array_get(array, i));
+	gstate->stroke_state->dash_phase = csi->stack[0];
 }
 
 static void pdf_run_d0(pdf_csi *csi)
@@ -2237,7 +2244,8 @@ static void pdf_run_j(pdf_csi *csi)
 {
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
 	csi->dev->flags &= ~FZ_DEVFLAG_LINEJOIN_UNDEFINED;
-	gstate->stroke_state.linejoin = csi->stack[0];
+	gstate->stroke_state = fz_unshare_stroke_state(csi->dev->ctx, gstate->stroke_state);
+	gstate->stroke_state->linejoin = csi->stack[0];
 }
 
 static void pdf_run_k(pdf_csi *csi)
@@ -2353,7 +2361,8 @@ static void pdf_run_w(pdf_csi *csi)
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
 	pdf_flush_text(csi); /* linewidth affects stroked text rendering mode */
 	csi->dev->flags &= ~FZ_DEVFLAG_LINEWIDTH_UNDEFINED;
-	gstate->stroke_state.linewidth = csi->stack[0];
+	gstate->stroke_state = fz_unshare_stroke_state(csi->dev->ctx, gstate->stroke_state);
+	gstate->stroke_state->linewidth = csi->stack[0];
 }
 
 static void pdf_run_y(pdf_csi *csi)

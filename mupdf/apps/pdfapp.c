@@ -92,7 +92,9 @@ void pdfapp_open(pdfapp_t *app, char *filename, int fd, int reload)
 	{
 		file = fz_open_fd(ctx, fd);
 
-		if (strstr(filename, ".xps") || strstr(filename, ".XPS") || strstr(filename, ".rels"))
+		if (strstr(filename, ".rels"))
+			app->doc = (fz_document*) xps_open_document(ctx, filename);
+		else if (strstr(filename, ".xps") || strstr(filename, ".XPS") || strstr(filename, ".rels"))
 			app->doc = (fz_document*) xps_open_document_with_stream(file);
 		else if (strstr(filename, ".cbz") || strstr(filename, ".CBZ") || strstr(filename, ".zip") || strstr(filename, ".ZIP"))
 			app->doc = (fz_document*) cbz_open_document_with_stream(file);
@@ -438,7 +440,7 @@ static inline int charat(fz_text_page *page, int idx)
 
 static inline fz_bbox bboxcharat(fz_text_page *page, int idx)
 {
-	return fz_round_rect(textcharat(page, idx).bbox);
+	return fz_bbox_covering_rect(textcharat(page, idx).bbox);
 }
 
 void pdfapp_inverthit(pdfapp_t *app)
@@ -1109,7 +1111,7 @@ void pdfapp_oncopy(pdfapp_t *app, unsigned short *ucsbuf, int ucslen)
 	fz_text_line *line;
 	fz_text_span *span;
 	int c, i, p;
-	int seen;
+	int seen = 0;
 
 	int x0 = app->selr.x0;
 	int x1 = app->selr.x1;
@@ -1126,11 +1128,21 @@ void pdfapp_oncopy(pdfapp_t *app, unsigned short *ucsbuf, int ucslen)
 		{
 			for (span = line->spans; span < line->spans + line->len; span++)
 			{
+				if (seen)
+				{
+#ifdef _WIN32
+					if (p < ucslen - 1)
+						ucsbuf[p++] = '\r';
+#endif
+					if (p < ucslen - 1)
+						ucsbuf[p++] = '\n';
+				}
+
 				seen = 0;
 
 				for (i = 0; i < span->len; i++)
 				{
-					hitbox = fz_round_rect(span->text[i].bbox);
+					hitbox = fz_bbox_covering_rect(span->text[i].bbox);
 					hitbox = fz_transform_bbox(ctm, hitbox);
 					c = span->text[i].c;
 					if (c < 32)
@@ -1143,15 +1155,7 @@ void pdfapp_oncopy(pdfapp_t *app, unsigned short *ucsbuf, int ucslen)
 					}
 				}
 
-				if (seen && span + 1 == line->spans + line->len)
-				{
-#ifdef _WIN32
-					if (p < ucslen - 1)
-						ucsbuf[p++] = '\r';
-#endif
-					if (p < ucslen - 1)
-						ucsbuf[p++] = '\n';
-				}
+				seen = (seen && span + 1 == line->spans + line->len);
 			}
 		}
 	}

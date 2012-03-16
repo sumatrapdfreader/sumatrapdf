@@ -2,12 +2,13 @@ package com.artifex.mupdf;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.graphics.RectF;
-import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -22,7 +23,6 @@ import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.RelativeLayout;
@@ -42,6 +42,7 @@ class SearchTaskResult {
 public class MuPDFActivity extends Activity
 {
 	/* The core rendering instance */
+	private enum LinkState {DEFAULT, HIGHLIGHT, INHIBIT};
 	private final int    TAP_PAGE_MARGIN = 5;
 	private MuPDFCore    core;
 	private String       mFileName;
@@ -56,14 +57,15 @@ public class MuPDFActivity extends Activity
 	private ImageButton  mCancelButton;
 	private ImageButton  mOutlineButton;
 	private ViewSwitcher mTopBarSwitcher;
-	private View         mLowerButtons;
+	private ImageButton  mLinkButton;
 	private boolean      mTopBarIsSearch;
 	private ImageButton  mSearchBack;
 	private ImageButton  mSearchFwd;
 	private EditText     mSearchText;
-	private AsyncTask<Integer,Void,SearchTaskResult> mSearchTask;
+	private AsyncTask<Integer,Integer,SearchTaskResult> mSearchTask;
 	private SearchTaskResult mSearchTaskResult;
 	private AlertDialog.Builder mAlertBuilder;
+	private LinkState    mLinkState = LinkState.DEFAULT;
 
 	private MuPDFCore openFile(String path)
 	{
@@ -103,8 +105,19 @@ public class MuPDFActivity extends Activity
 		}
 		if (core == null) {
 			Intent intent = getIntent();
-			if (Intent.ACTION_VIEW.equals(intent.getAction()))
-				core = openFile(Uri.decode(intent.getData().getEncodedPath()));
+			if (Intent.ACTION_VIEW.equals(intent.getAction())) {
+				Uri uri = intent.getData();
+				if (uri.toString().startsWith("content://media/external/file")) {
+					// Handle view requests from the Transformer Prime's file manager
+					// Hopefully other file managers will use this same scheme, if not
+					// using explicit paths.
+					Cursor cursor = getContentResolver().query(uri, new String[]{"_data"}, null, null, null);
+					if (cursor.moveToFirst()) {
+						uri = Uri.parse(cursor.getString(0));
+					}
+				}
+				core = openFile(Uri.decode(uri.getEncodedPath()));
+			}
 			if (core != null && core.needsPassword()) {
 				requestPassword(savedInstanceState);
 				return;
@@ -169,9 +182,11 @@ public class MuPDFActivity extends Activity
 					super.moveToNext();
 				} else if (!showButtonsDisabled) {
 					int linkPage = -1;
-					MuPDFPageView pageView = (MuPDFPageView) mDocView.getDisplayedView();
-					if (pageView != null) {
-						linkPage = pageView.hitLinkPage(e.getX(), e.getY());
+					if (mLinkState != LinkState.INHIBIT) {
+						MuPDFPageView pageView = (MuPDFPageView) mDocView.getDisplayedView();
+						if (pageView != null) {
+							linkPage = pageView.hitLinkPage(e.getX(), e.getY());
+						}
 					}
 
 					if (linkPage != -1) {
@@ -214,6 +229,8 @@ public class MuPDFActivity extends Activity
 					((PageView)v).setSearchBoxes(mSearchTaskResult.searchBoxes);
 				else
 					((PageView)v).setSearchBoxes(null);
+
+				((PageView)v).setLinkHighlighting(mLinkState == LinkState.HIGHLIGHT);
 			}
 
 			protected void onMoveToChild(int i) {
@@ -285,6 +302,12 @@ public class MuPDFActivity extends Activity
 				boolean haveText = s.toString().length() > 0;
 				mSearchBack.setEnabled(haveText);
 				mSearchFwd.setEnabled(haveText);
+
+				// Remove any previous search results
+				if (mSearchTaskResult != null) {
+					mSearchTaskResult = null;
+					mDocView.resetupChildren();
+				}
 			}
 			public void beforeTextChanged(CharSequence s, int start, int count,
 					int after) {}
@@ -312,6 +335,29 @@ public class MuPDFActivity extends Activity
 			public void onClick(View v) {
 				hideKeyboard();
 				search(1);
+			}
+		});
+
+		mLinkButton.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				switch(mLinkState) {
+				case DEFAULT:
+					mLinkState = LinkState.HIGHLIGHT;
+					mLinkButton.setImageResource(R.drawable.ic_hl_link);
+					//Inform pages of the change.
+					mDocView.resetupChildren();
+					break;
+				case HIGHLIGHT:
+					mLinkState = LinkState.INHIBIT;
+					mLinkButton.setImageResource(R.drawable.ic_nolink);
+					//Inform pages of the change.
+					mDocView.resetupChildren();
+					break;
+				case INHIBIT:
+					mLinkState = LinkState.DEFAULT;
+					mLinkButton.setImageResource(R.drawable.ic_link);
+					break;
+				}
 			}
 		});
 
@@ -390,6 +436,9 @@ public class MuPDFActivity extends Activity
 	@Override
 	protected void onPause() {
 		super.onPause();
+
+		killSearch();
+
 		if (mFileName != null && mDocView != null) {
 			SharedPreferences prefs = getPreferences(Context.MODE_PRIVATE);
 			SharedPreferences.Editor edit = prefs.edit();
@@ -510,7 +559,7 @@ public class MuPDFActivity extends Activity
 		mSearchBack = (ImageButton)mButtonsView.findViewById(R.id.searchBack);
 		mSearchFwd = (ImageButton)mButtonsView.findViewById(R.id.searchForward);
 		mSearchText = (EditText)mButtonsView.findViewById(R.id.searchText);
-		mLowerButtons = mButtonsView.findViewById(R.id.lowerButtons);
+		mLinkButton = (ImageButton)mButtonsView.findViewById(R.id.linkButton);
 		mTopBarSwitcher.setVisibility(View.INVISIBLE);
 		mPageNumberView.setVisibility(View.INVISIBLE);
 		mPageSlider.setVisibility(View.INVISIBLE);
@@ -528,13 +577,27 @@ public class MuPDFActivity extends Activity
 			imm.hideSoftInputFromWindow(mSearchText.getWindowToken(), 0);
 	}
 
-	void search(int direction) {
+	void killSearch() {
 		if (mSearchTask != null) {
 			mSearchTask.cancel(true);
 			mSearchTask = null;
 		}
+	}
 
-		mSearchTask = new AsyncTask<Integer,Void,SearchTaskResult>() {
+	void search(int direction) {
+		killSearch();
+
+		final ProgressDialog progressDialog = new ProgressDialog(this);
+		progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+		progressDialog.setTitle(getString(R.string.searching_));
+		progressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+			public void onCancel(DialogInterface dialog) {
+				killSearch();
+			}
+		});
+		progressDialog.setMax(core.countPages());
+
+		mSearchTask = new AsyncTask<Integer,Integer,SearchTaskResult>() {
 			@Override
 			protected SearchTaskResult doInBackground(Integer... params) {
 				int index;
@@ -543,7 +606,8 @@ public class MuPDFActivity extends Activity
 				else
 					index = mSearchTaskResult.pageNumber + params[0].intValue();
 
-				while (0 <= index && index < core.countPages()) {
+				while (0 <= index && index < core.countPages() && !isCancelled()) {
+					publishProgress(index);
 					RectF searchHits[] = core.searchPage(index, mSearchText.getText().toString());
 
 					if (searchHits != null && searchHits.length > 0)
@@ -556,6 +620,7 @@ public class MuPDFActivity extends Activity
 
 			@Override
 			protected void onPostExecute(SearchTaskResult result) {
+				progressDialog.cancel();
 				if (result != null) {
 					// Ask the ReaderView to move to the resulting page
 					mDocView.setDisplayedViewIndex(result.pageNumber);
@@ -564,12 +629,30 @@ public class MuPDFActivity extends Activity
 					// via overridden onChildSetup method.
 				    mDocView.resetupChildren();
 				} else {
-					mAlertBuilder.setTitle("Text not found");
+					mAlertBuilder.setTitle(R.string.text_not_found);
 					AlertDialog alert = mAlertBuilder.create();
 					alert.setButton(AlertDialog.BUTTON_POSITIVE, "Dismiss",
 							(DialogInterface.OnClickListener)null);
 					alert.show();
 				}
+			}
+
+			@Override
+			protected void onCancelled() {
+				super.onCancelled();
+				progressDialog.cancel();
+			}
+
+			@Override
+			protected void onProgressUpdate(Integer... values) {
+				super.onProgressUpdate(values);
+				progressDialog.setProgress(values[0].intValue());
+			}
+
+			@Override
+			protected void onPreExecute() {
+				super.onPreExecute();
+				progressDialog.show();
 			}
 		};
 

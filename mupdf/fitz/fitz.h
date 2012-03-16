@@ -800,6 +800,20 @@ int fz_is_rectilinear(fz_matrix m);
 float fz_matrix_expansion(fz_matrix m); /* sumatrapdf */
 
 /*
+	fz_bbox_covering_rect: Convert a rect into the minimal bounding box
+	that covers the rectangle.
+
+	Coordinates in a bounding box are integers, so rounding of the
+	rects coordinates takes place. The top left corner is rounded
+	upwards and left while the bottom right corner is rounded
+	downwards and to the right. Overflows or underflowing
+	coordinates are clamped to INT_MIN/INT_MAX.
+
+	Does not throw exceptions.
+*/
+fz_bbox fz_bbox_covering_rect(fz_rect rect);
+
+/*
 	fz_round_rect: Convert a rect into a bounding box.
 
 	Coordinates in a bounding box are integers, so rounding of the
@@ -807,6 +821,12 @@ float fz_matrix_expansion(fz_matrix m); /* sumatrapdf */
 	upwards and left while the bottom right corner is rounded
 	downwards and to the right. Overflows or underflowing
 	coordinates are clamped to INT_MIN/INT_MAX.
+
+	This differs from fz_bbox_covering_rect, in that fz_bbox_covering_rect
+	slavishly follows the numbers (i.e any slight over/under calculations
+	can cause whole extra pixels to be added). fz_round_rect
+	allows for a small amount of rounding error when calculating
+	the bbox.
 
 	Does not throw exceptions.
 */

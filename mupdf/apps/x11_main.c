@@ -503,7 +503,6 @@ void onselreq(Window requestor, Atom selection, Atom target, Atom property, Time
 		atomlist[1] = XA_TIMESTAMP;
 		atomlist[2] = XA_STRING;
 		atomlist[3] = XA_UTF8_STRING;
-		printf(" -> targets\n");
 		XChangeProperty(xdpy, requestor, property, target,
 			32, PropModeReplace,
 			(unsigned char *)atomlist, sizeof(atomlist)/sizeof(Atom));
@@ -528,7 +527,7 @@ void onselreq(Window requestor, Atom selection, Atom target, Atom property, Time
 		nevt.xselection.property = None;
 	}
 
-	XSendEvent(xdpy, requestor, False, SelectionNotify, &nevt);
+	XSendEvent(xdpy, requestor, False, 0, &nevt);
 }
 
 void winreloadfile(pdfapp_t *app)

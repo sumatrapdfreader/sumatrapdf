@@ -557,6 +557,63 @@ Java_com_artifex_mupdf_MuPDFCore_destroying(JNIEnv * env, jobject thiz)
 	doc = NULL;
 }
 
+JNIEXPORT jobjectArray JNICALL
+Java_com_artifex_mupdf_MuPDFCore_getPageLinksInternal(JNIEnv * env, jobject thiz, int pageNumber)
+{
+	jclass       linkInfoClass;
+	jmethodID    ctor;
+	jobjectArray arr;
+	jobject      linkInfo;
+	fz_matrix    ctm;
+	float        zoom;
+	fz_link     *list;
+	fz_link     *link;
+	int          count;
+
+	linkInfoClass = (*env)->FindClass(env, "com/artifex/mupdf/LinkInfo");
+	if (linkInfoClass == NULL) return NULL;
+	ctor = (*env)->GetMethodID(env, linkInfoClass, "<init>", "(FFFFI)V");
+	if (ctor == NULL) return NULL;
+
+	Java_com_artifex_mupdf_MuPDFCore_gotoPageInternal(env, thiz, pageNumber);
+	if (currentPageNumber == -1 || currentPage == NULL)
+		return NULL;
+
+	zoom = resolution / 72;
+	ctm = fz_scale(zoom, zoom);
+
+	list = fz_load_links(doc, currentPage);
+	count = 0;
+	for (link = list; link; link = link->next)
+	{
+		if (link->dest.kind == FZ_LINK_GOTO)
+			count++ ;
+	}
+
+	arr = (*env)->NewObjectArray(env, count, linkInfoClass, NULL);
+	if (arr == NULL) return NULL;
+
+	count = 0;
+	for (link = list; link; link = link->next)
+	{
+		if (link->dest.kind == FZ_LINK_GOTO)
+		{
+			fz_rect rect = fz_transform_rect(ctm, link->rect);
+
+			linkInfo = (*env)->NewObject(env, linkInfoClass, ctor,
+					(float)rect.x0, (float)rect.y0, (float)rect.x1, (float)rect.y1,
+					link->dest.ld.gotor.page);
+			if (linkInfo == NULL) return NULL;
+			(*env)->SetObjectArrayElement(env, arr, count, linkInfo);
+			(*env)->DeleteLocalRef(env, linkInfo);
+
+			count ++;
+		}
+	}
+
+	return arr;
+}
+
 JNIEXPORT int JNICALL
 Java_com_artifex_mupdf_MuPDFCore_getPageLink(JNIEnv * env, jobject thiz, int pageNumber, float x, float y)
 {
