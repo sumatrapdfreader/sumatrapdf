@@ -112,11 +112,13 @@ protected:
     void HandleTagFont(HtmlToken *t);
     bool HandleTagA(HtmlToken *t, const char *linkAttr="href");
     void HandleTagHx(HtmlToken *t);
+    void HandleTagList(HtmlToken *t);
     void HandleHtmlTag(HtmlToken *t);
     void HandleText(HtmlToken *t);
 
     float CurrLineDx();
     float CurrLineDy();
+    float NewLineX();
     void  LayoutLeftStartingAt(REAL offX);
     void  JustifyLineBoth();
     void  JustifyCurrLine(AlignAttr align);
@@ -164,6 +166,8 @@ protected:
     float               currLineTopPadding;
     // number of consecutive newlines
     int                 newLinesCount;
+    // number of nested lists for indenting whole paragraphs
+    int                 listDepth;
 
     // isntructions for the current line
     Vec<DrawInstr>      currLineInstr;

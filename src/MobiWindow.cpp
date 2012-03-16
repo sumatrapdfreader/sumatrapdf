@@ -44,6 +44,11 @@ static const char *gSampleHtml =
     "time to move on.</p> "\
     "On to the <b>next<mbp:pagebreak>page</b>"\
     "<p>ThisIsAVeryVeryVeryLongWordThatShouldBeBrokenIntoMultiple lines</p>"\
+    "<h3>List</h3><ul><li>First item</li><li>Nested: "\
+    "<ol><li>Number one</li><li>Two</li></ol></li></ul>"\
+    "<ul><ul><ul><ul><ul><ul><ul><ul><ul><ul><ul><ul><ul><ul><ul>"\
+    "<li>VeryVeryVeryVeryDeeplyNestedListItem</li>"\
+    "</ul></ul></ul></ul></ul></ul></ul></ul></ul></ul></ul></ul></ul></ul></ul>"
     "<mbp:pagebreak><hr><mbp:pagebreak>blah<br>Foodo.<p>And me</p></html>";
 #endif
 

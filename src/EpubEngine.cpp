@@ -473,57 +473,7 @@ PageDestination *EbookEngine::GetNamedDest(const TCHAR *name)
     return NULL;
 }
 
-/* common layout extensions (to be integrated into PageLayout/EbookFormatter) */
-
-class PageLayoutCommon : public PageLayout {
-protected:
-    void HandleHtmlTag2(HtmlToken *t);
-
-    int listDepth;
-
-public:
-    PageLayoutCommon(LayoutInfo *li) : PageLayout(li), listDepth(0) { }
-};
-
-// TODO: merge into PageLayout::HandleHtmlTag
-void PageLayoutCommon::HandleHtmlTag2(HtmlToken *t)
-{
-    HtmlTag tag = FindTag(t);
-    switch (tag) {
-    case Tag_Ul: case Tag_Ol: case Tag_Dl:
-        if (t->IsStartTag())
-            listDepth++;
-        else if (t->IsEndTag()) {
-            if (listDepth > 0)
-                listDepth--;
-            FlushCurrLine(true);
-        }
-        HandleAnchorTag(t);
-        break;
-    case Tag_Li: case Tag_Dd:
-        if (t->IsStartTag())
-            EmitParagraph(15.f * listDepth);
-        else if (t->IsEndTag())
-            FlushCurrLine(true);
-        HandleAnchorTag(t);
-        break;
-    case Tag_Dt:
-        if (t->IsStartTag()) {
-            EmitParagraph(15.f * (listDepth - 1));
-            currJustification = Align_Left;
-        }
-        else if (t->IsEndTag())
-            FlushCurrLine(true);
-        ChangeFontStyle(FontStyleBold, t->IsStartTag());
-        HandleAnchorTag(t);
-        break;
-    default:
-        HandleHtmlTag(t);
-        break;
-    }
-}
-
-/* EPUB loading code (was ebooktest2/EpubDoc.cpp) */
+/* EPUB loading code */
 
 struct ImageData2 {
     ImageData base;
@@ -764,9 +714,9 @@ void EpubDoc::ParseMetadata(const char *content)
     }
 }
 
-/* PageLayout extensions for EPUB (was ebooktest2/PageLayout.cpp) */
+/* PageLayout extensions for EPUB */
 
-class PageLayoutEpub : public PageLayoutCommon {
+class PageLayoutEpub : public PageLayout {
 protected:
     void HandleTagImg_Epub(HtmlToken *t);
     void HandleHtmlTag_Epub(HtmlToken *t);
@@ -774,8 +724,7 @@ protected:
     EpubDoc *epubDoc;
 
 public:
-    PageLayoutEpub(LayoutInfo *li, EpubDoc *doc) :
-        PageLayoutCommon(li), epubDoc(doc) { }
+    PageLayoutEpub(LayoutInfo *li, EpubDoc *doc) : PageLayout(li), epubDoc(doc) { }
 
     Vec<PageData*> *Layout();
 };
@@ -804,7 +753,7 @@ void PageLayoutEpub::HandleHtmlTag_Epub(HtmlToken *t)
     else if (Tag_Pagebreak == tag)
         ForceNewPage();
     else
-        HandleHtmlTag2(t);
+        HandleHtmlTag(t);
 }
 
 Vec<PageData*> *PageLayoutEpub::Layout()
@@ -1007,7 +956,7 @@ EpubEngine *EpubEngine::CreateFromStream(IStream *stream)
     return engine;
 }
 
-/* FictionBook2 loading code (was ebooktest2/Fb2Doc.cpp) */
+/* FictionBook2 loading code */
 
 class Fb2EngineImpl;
 
@@ -1184,7 +1133,7 @@ void Fb2Doc::ExtractImage(HtmlPullParser& parser, HtmlToken *tok)
 
 /* PageLayout extensions for FictionBook2 */
 
-class PageLayoutFb2 : public PageLayoutCommon {
+class PageLayoutFb2 : public PageLayout {
     int section;
 
     void HandleTagImg_Fb2(HtmlToken *t);
@@ -1195,7 +1144,7 @@ class PageLayoutFb2 : public PageLayoutCommon {
 
 public:
     PageLayoutFb2(LayoutInfo *li, Fb2Doc *doc) :
-        PageLayoutCommon(li), fb2Doc(doc), section(1) { }
+        PageLayout(li), fb2Doc(doc), section(1) { }
 
     Vec<PageData*> *Layout();
 };
@@ -1218,17 +1167,17 @@ void PageLayoutFb2::HandleTagAsHtml(HtmlToken *t, const char *name)
 {
     HtmlToken tok;
     tok.SetValue(t->type, name, name + str::Len(name));
-    HandleHtmlTag2(&tok);
+    HandleHtmlTag(&tok);
 }
 
 void PageLayoutFb2::HandleFb2Tag(HtmlToken *t)
 {
     if (t->NameIs("title")) {
-        HandleAnchorTag(t);
         HtmlToken tok;
         ScopedMem<char> name(str::Format("h%d", section));
         tok.SetValue(t->type, name, name + str::Len(name));
         HandleTagHx(&tok);
+        HandleAnchorTag(t);
     }
     else if (t->NameIs("section")) {
         if (t->IsStartTag())
@@ -1240,15 +1189,15 @@ void PageLayoutFb2::HandleFb2Tag(HtmlToken *t)
     }
     else if (t->NameIs("p")) {
         if (htmlParser->tagNesting.Find(Tag_Title) == -1)
-            HandleHtmlTag2(t);
+            HandleHtmlTag(t);
     }
     else if (t->NameIs("image")) {
         HandleTagImg_Fb2(t);
         HandleAnchorTag(t);
     }
     else if (t->NameIs("a")) {
-        HandleAnchorTag(t, true);
         HandleTagA(t, "xlink:href");
+        HandleAnchorTag(t, true);
     }
     else if (t->NameIs("pagebreak"))
         ForceNewPage();

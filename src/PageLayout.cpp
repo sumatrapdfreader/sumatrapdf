@@ -122,7 +122,7 @@ PageLayout::PageLayout(LayoutInfo *li) : layoutInfo(li),
     pageDx((REAL)li->pageDx), pageDy((REAL)li->pageDy),
     textAllocator(li->textAllocator), currLineReparsePoint(NULL),
     currX(0), currY(0), currJustification(Align_Justify),
-    currLineTopPadding(0), currLink(NULL)
+    currLineTopPadding(0), currLink(NULL), listDepth(0)
 {
     currReparsePoint = li->reparsePoint;
     if (!currReparsePoint)
@@ -223,7 +223,7 @@ static bool IsVisibleDrawInstr(DrawInstr *i)
 // spaces (using minimum value for its width)
 REAL PageLayout::CurrLineDx()
 {
-    REAL dx = 0;
+    REAL dx = NewLineX();
     for (DrawInstr *i = currLineInstr.IterStart(); i; i = currLineInstr.IterNext()) {
         if (InstrString == i->type || InstrImage == i->type) {
             dx += i->bbox.Width;
@@ -253,6 +253,19 @@ float PageLayout::CurrLineDy()
     return dy;
 }
 
+// return the width of the left margin (used for paragraph
+// indentation inside lists)
+float PageLayout::NewLineX()
+{
+    // TODO: indent based on font size instead?
+    float x = 15.f * listDepth;
+    if (x < pageDx - 20.f)
+        return x;
+    if (pageDx < 20.f)
+        return 0.f;
+    return pageDx - 20.f;
+}
+
 // When this is called, Width and Height of each element is already set
 // We set position x of each visible element
 void PageLayout::LayoutLeftStartingAt(REAL offX)
@@ -260,7 +273,7 @@ void PageLayout::LayoutLeftStartingAt(REAL offX)
     DrawInstr *lastInstr = NULL;
     int instrCount = 0;
 
-    REAL x = offX;
+    REAL x = offX + NewLineX();
     for (DrawInstr *i = currLineInstr.IterStart(); i; i = currLineInstr.IterNext()) {
         if (InstrString == i->type || InstrImage == i->type) {
             i->bbox.X = x;
@@ -381,7 +394,7 @@ void PageLayout::ForceNewPage()
 
     currPage->instructions.Append(DrawInstr::SetFont(currFont));
     currY = 0.f;
-    currX = 0.f;
+    currX = NewLineX();
     currJustification = Align_Justify;
     currLineTopPadding = 0.f;
     if (currLink)
@@ -407,7 +420,7 @@ bool PageLayout::FlushCurrLine(bool isParagraphBreak)
 {
     if (IsCurrLineEmpty()) {
         // TODO: rather create a new line if currLineInstr.Count() > 0 ?
-        currX = 0;
+        currX = NewLineX();
         return false;
     }
     AlignAttr align = currJustification;
@@ -445,7 +458,7 @@ bool PageLayout::FlushCurrLine(bool isParagraphBreak)
     currLineInstr.Reset();
     currLineReparsePoint = NULL;
     currLineTopPadding = 0;
-    currX = 0;
+    currX = NewLineX();
     return createdPage;
 }
 
@@ -454,7 +467,7 @@ void PageLayout::EmitEmptyLine(float lineDy)
     CrashIf(!IsCurrLineEmpty());
     currY += lineDy;
     if (currY <= pageDy) {
-        currX = 0;
+        currX = NewLineX();
         return;
     }
     ForceNewPage();
@@ -490,7 +503,7 @@ void PageLayout::EmitHr()
 {
     // hr creates an implicit paragraph break
     FlushCurrLine(true);
-    CrashIf(0 != currX);
+    CrashIf(NewLineX() != currX);
     RectF bbox(0.f, 0.f, pageDx, lineSpacing);
     AppendInstr(DrawInstr(InstrLine, bbox));
     FlushCurrLine(true);
@@ -506,10 +519,10 @@ static bool ShouldAddIndent(float indent, AlignAttr just)
 void PageLayout::EmitParagraph(float indent, float topPadding)
 {
     FlushCurrLine(true);
-    CrashIf(0 != currX);
+    CrashIf(NewLineX() != currX);
     if (ShouldAddIndent(indent, currJustification) && EnsureDx(indent)) {
         AppendInstr(DrawInstr::FixedSpace(indent));
-        currX = indent;
+        currX = NewLineX() + indent;
         // prevent accidental double-indentation
         for (size_t i = currLineInstr.Count(); i > 1; i--) {
             if (InstrFixedSpace == currLineInstr.At(i - 2).type)
@@ -533,9 +546,9 @@ bool PageLayout::EnsureDx(float dx)
 
 // don't emit multiple spaces and don't emit spaces
 // at the beginning of the line
-static bool CanEmitElasticSpace(float currX, float maxCurrX, Vec<DrawInstr>& currLineInstr)
+static bool CanEmitElasticSpace(float currX, float NewLineX, float maxCurrX, Vec<DrawInstr>& currLineInstr)
 {
-    if (0 == currX)
+    if (NewLineX == currX)
         return false;
     // prevent elastic spaces from being flushed to the
     // beginning of the next line
@@ -560,7 +573,7 @@ void PageLayout::EmitNewLine()
 
 void PageLayout::EmitElasticSpace()
 {
-    if (!CanEmitElasticSpace(currX, pageDx - spaceDx, currLineInstr))
+    if (!CanEmitElasticSpace(currX, NewLineX(), pageDx - spaceDx, currLineInstr))
         return;
     EnsureDx(spaceDx);
     currX += spaceDx;
@@ -582,8 +595,8 @@ void PageLayout::EmitTextRun(const char *s, const char *end)
     RectF bbox = MeasureText(gfx, currFont, buf, strLen);
     bbox.Y = 0.f;
     EnsureDx(bbox.Width);
-    if (bbox.Width > pageDx) {
-        int lenThatFits = StringLenForWidth(gfx, currFont, buf, strLen, pageDx);
+    if (bbox.Width > pageDx - NewLineX()) {
+        int lenThatFits = StringLenForWidth(gfx, currFont, buf, strLen, pageDx - NewLineX());
         bbox = MeasureText(gfx, currFont, buf, lenThatFits);
         bbox.Y = 0.f;
         CrashIf(bbox.Width > pageDx);
@@ -745,12 +758,19 @@ void PageLayout::HandleTagHx(HtmlToken *t)
     ChangeFontStyle(FontStyleBold, t->IsStartTag());
 }
 
+void PageLayout::HandleTagList(HtmlToken *t)
+{
+    FlushCurrLine(true);
+    if (t->IsStartTag())
+        listDepth++;
+    else if (t->IsEndTag() && listDepth > 0)
+        listDepth--;
+    currX = NewLineX();
+}
+
 void PageLayout::HandleHtmlTag(HtmlToken *t)
 {
     CrashAlwaysIf(!t->IsTag());
-
-    // any tag could contain anchor information
-    HandleAnchorTag(t);
 
     HtmlTag tag = FindTag(t);
 
@@ -792,10 +812,26 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
         HandleTagP(t);
         if (!t->IsEndTag())
             currJustification = Align_Center;
+    } else if ((Tag_Ul == tag) || (Tag_Ol == tag)) {
+        HandleTagList(t);
+    } else if ((Tag_Li == tag) || (Tag_Dd == tag)) {
+        // TODO: display bullet/number for Tag_Li
+        FlushCurrLine(true);
+    } else if (Tag_Dt == tag) {
+        if (t->IsStartTag()) {
+            EmitParagraph(15.f);
+            currJustification = Align_Left;
+        } else {
+            FlushCurrLine(true);
+        }
+        ChangeFontStyle(FontStyleBold, t->IsStartTag());
     } else {
         // TODO: temporary debugging
         //lf("unhandled tag: %d", tag);
     }
+
+    // any tag could contain anchor information
+    HandleAnchorTag(t);
 }
 
 void PageLayout::HandleText(HtmlToken *t)
@@ -915,7 +951,9 @@ PageLayoutMobi::PageLayoutMobi(LayoutInfo* li, MobiDoc *doc) :
             Rect size = BitmapSizeFromData(img->data, img->len);
             if ((size.Width >= 320) && (size.Height >= 200)) {
                 coverImage = img;
+                // TODO: vertically center the cover image?
                 EmitImage(coverImage);
+                ForceNewPage();
             }
         }
     }
