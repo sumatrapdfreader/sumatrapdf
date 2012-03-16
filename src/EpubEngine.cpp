@@ -408,10 +408,9 @@ Vec<PageElement *> *EbookEngine::GetElements(int pageNo)
             linkInstr = i;
             linkRect = RectI();
         }
-        else if (InstrLinkEnd == i->type && linkInstr) {
-            if (!linkInstr)
-                /* TODO: link started on a previous page */;
-            else if (!linkRect.IsEmpty()) {
+        else if (InstrLinkEnd == i->type) {
+            CrashIf(!linkInstr);
+            if (!linkRect.IsEmpty()) {
                 PageElement *link = CreatePageLink(linkInstr, linkRect, pageNo);
                 if (link)
                     els->Append(link);
@@ -483,31 +482,8 @@ protected:
     int listDepth;
 
 public:
-    PageLayoutCommon(LayoutInfo *li);
+    PageLayoutCommon(LayoutInfo *li) : PageLayout(li), listDepth(0) { }
 };
-
-PageLayoutCommon::PageLayoutCommon(LayoutInfo* li) : listDepth(0)
-{
-    layoutInfo = li;
-    pageDx = (REAL)layoutInfo->pageDx;
-    pageDy = (REAL)layoutInfo->pageDy;
-    textAllocator = layoutInfo->textAllocator;
-    htmlParser = new HtmlPullParser(layoutInfo->htmlStr, layoutInfo->htmlStrLen);
-
-    gfx = mui::AllocGraphicsForMeasureText();
-    defaultFontName.Set(str::Dup(layoutInfo->fontName));
-    defaultFontSize = layoutInfo->fontSize;
-    SetCurrentFont(FontStyleRegular, defaultFontSize);
-
-    lineSpacing = currFont->GetHeight(gfx);
-    spaceDx = currFontSize / 2.5f; // note: a heuristic
-    float spaceDx2 = GetSpaceDx(gfx, currFont);
-    if (spaceDx2 < spaceDx)
-        spaceDx = spaceDx2;
-
-    currPage = new PageData();
-    currPage->reparsePoint = li->htmlStr;
-}
 
 // TODO: merge into PageLayout::HandleHtmlTag
 void PageLayoutCommon::HandleHtmlTag2(HtmlToken *t)
@@ -539,10 +515,6 @@ void PageLayoutCommon::HandleHtmlTag2(HtmlToken *t)
         else if (t->IsEndTag())
             FlushCurrLine(true);
         ChangeFontStyle(FontStyleBold, t->IsStartTag());
-        HandleAnchorTag(t);
-        break;
-    case Tag_Center:
-        currJustification = Align_Center;
         HandleAnchorTag(t);
         break;
     default:
@@ -916,7 +888,6 @@ bool EpubEngineImpl::FinishLoading()
         return false;
 
     LayoutInfo li;
-    li.mobiDoc = (MobiDoc *)1; // crash on use
     li.htmlStr = doc->GetBookData(&li.htmlStrLen);
     li.pageDx = (int)(pageRect.dx - 2 * pageBorder);
     li.pageDy = (int)(pageRect.dy - 2 * pageBorder);
@@ -1344,7 +1315,6 @@ bool Fb2EngineImpl::Load(const TCHAR *fileName)
         return false;
 
     LayoutInfo li;
-    li.mobiDoc = (MobiDoc *)1; // crash on use
     li.htmlStr = doc->GetBookData(&li.htmlStrLen);
     li.pageDx = (int)(pageRect.dx - 2 * pageBorder);
     li.pageDy = (int)(pageRect.dy - 2 * pageBorder);
@@ -1405,7 +1375,6 @@ bool MobiEngineImpl::Load(const TCHAR *fileName)
         return false;
 
     LayoutInfo li;
-    li.mobiDoc = doc;
     li.htmlStr = doc->GetBookHtmlData(li.htmlStrLen);
     li.pageDx = (int)(pageRect.dx - 2 * pageBorder);
     li.pageDy = (int)(pageRect.dy - 2 * pageBorder);
@@ -1413,7 +1382,7 @@ bool MobiEngineImpl::Load(const TCHAR *fileName)
     li.fontSize = 11;
     li.textAllocator = &allocator;
 
-    pages = PageLayoutMobi().Layout(&li);
+    pages = PageLayoutMobi(&li, doc).Layout();
     if (!ExtractPageAnchors())
         return false;
     

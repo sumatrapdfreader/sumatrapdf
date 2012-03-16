@@ -77,7 +77,7 @@ class LayoutInfo {
 public:
     LayoutInfo() :
       pageDx(0), pageDy(0), fontName(NULL), fontSize(0),
-      textAllocator(NULL), mobiDoc(NULL), htmlStr(0), htmlStrLen(0),
+      textAllocator(NULL), htmlStr(0), htmlStrLen(0),
       reparsePoint(NULL)
     { }
 
@@ -93,7 +93,6 @@ public:
        used to allocate this text. */
     Allocator *     textAllocator;
 
-    MobiDoc *       mobiDoc;
     const char *    htmlStr;
     size_t          htmlStrLen;
 
@@ -173,7 +172,8 @@ protected:
     PageData *          currPage;
 
     // for tracking whether we're currently inside <a> tag
-    bool                inLink;
+    const char *        currLink;
+    size_t              currLinkLen;
 
     // reparse point for the current HtmlToken
     const char *        currReparsePoint;
@@ -186,12 +186,14 @@ protected:
     WCHAR               buf[512];
 
 public:
-    PageLayout();
+    PageLayout(LayoutInfo *li);
     ~PageLayout();
 };
 
 // TODO: rename to MobiFormatter
 class PageLayoutMobi : public PageLayout {
+    // accessor to images (and other format-specific data)
+    MobiDoc *           doc;
     // remember cover image if we've generated one, so that we
     // can avoid adding the same image twice if it's early in
     // the book
@@ -207,12 +209,10 @@ class PageLayoutMobi : public PageLayout {
     void HandleHtmlTag_Mobi(HtmlToken *t);
 
 public:
-    PageLayoutMobi() : PageLayout() { }
+    PageLayoutMobi(LayoutInfo *li, MobiDoc *doc);
 
-    PageData *IterStart(LayoutInfo* layoutInfo);
-    PageData *IterNext();
-
-    Vec<PageData*> *Layout(LayoutInfo *li);
+    PageData *Next();
+    Vec<PageData*> *Layout();
 };
 
 void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox, Color *textColor=NULL);

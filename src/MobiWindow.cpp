@@ -21,7 +21,30 @@ using namespace Gdiplus;
 
 #ifdef SHOW_DEBUG_MENU_ITEMS
 // A sample text to display if we don't show an actual mobi file
-static const char *gSampleHtml = "<html><p align=justify width=1em><b>ClearType</b>, is <b>dependent</b> on the <i>orientation &amp; ordering</i> of the LCD stripes and possibly some other things unknown.</p> <p align='right height=13pt'><em>Currently</em>, ClearType is implemented <hr><br/> only for vertical stripes that are ordered RGB.</p> <p align=center height=8pt>This might be a concern if you are using a tablet PC.</p> <p width='1em'>Where the display can be oriented in any direction, or if you are using a screen that can be turned from landscape to portrait. The <strike>following example</strike> draws text with two <u>different quality</u> settings.</p> <p width=1em>This is a paragraph that should take at least two lines. With study and discreet inquiries, Abagnale picked up airline jargon and discovered that pilots could ride free anywhere in the world on any airline; and that hotels billed airlines direct and cashed checks issued by airline companies.</p><br><p width=1em>    And this is another paragraph tha we wrote today. Hiding out in a southern city, Abagnale learned that the state attorney general was seeking assistants. For nine months he practiced law, but when a real Harvard lawyer appeared on the scene, Abagnale figured it was time to move on.</p> On to the <b>next<mbp:pagebreak>page</b><p>ThisIsAVeryVeryVeryLongWordThatShouldBeBrokenIntoMultiple lines</p><mbp:pagebreak><hr><mbp:pagebreak>blah<br>Foodo.<p>And me</p></html>";
+static const char *gSampleHtml =
+    "<html><p align=justify width=1em><b>ClearType</b>, is <b>dependent</b> "\
+    "on the <i>orientation &amp; ordering</i> of the LCD stripes and "\
+    "possibly some other things unknown.</p> "\
+    "<p align='right height=13pt'><em>Currently</em>, ClearType is implemented "\
+    "<hr><br/> only for vertical stripes that are ordered RGB.</p> "\
+    "<p align=center height=8pt>This might be a concern if you are using a tablet PC.</p>"\
+    "<p width='1em'>Where the display can be oriented in any direction, or if you"\
+    "are using a screen that can be turned from landscape to portrait. The "\
+    "<strike>following example</strike> draws text with two <u>different quality</u> "\
+    "settings.</p> "\
+    "<h2>Intermediary heading</h2>"\
+    "<p width=1em>This is a paragraph that should take at least two lines. "\
+    "With study and discreet inquiries, Abagnale picked up airline jargon "\
+    "and discovered that pilots could ride free anywhere in the world on any "\
+    "airline; and that hotels billed airlines direct and cashed checks issued "\
+    "by airline companies.</p><br><p width=1em>    And this is another paragraph "\
+    "tha we wrote today. Hiding out in a southern city, Abagnale learned that the "\
+    "state attorney general was seeking assistants. For nine months he practiced law, "\
+    "but when a real Harvard lawyer appeared on the scene, Abagnale figured it was "\
+    "time to move on.</p> "\
+    "On to the <b>next<mbp:pagebreak>page</b>"\
+    "<p>ThisIsAVeryVeryVeryLongWordThatShouldBeBrokenIntoMultiple lines</p>"\
+    "<mbp:pagebreak><hr><mbp:pagebreak>blah<br>Foodo.<p>And me</p></html>";
 #endif
 
 #define MOBI_FRAME_CLASS_NAME    _T("SUMATRA_MOBI_FRAME")
@@ -474,8 +497,8 @@ RenderedBitmap *RenderFirstMobiPageToBitmap(MobiDoc *mobiDoc, SizeI pageSize, Si
 {
     PoolAllocator textAllocator;
     LayoutInfo *li = GetLayoutInfo(NULL, mobiDoc, pageSize.dx, pageSize.dy, &textAllocator);
-    PageLayoutMobi pl;
-    PageData *pd = pl.IterStart(li);
+    PageLayoutMobi pl(li, mobiDoc);
+    PageData *pd = pl.Next();
     if (!pd)
         return NULL;
 

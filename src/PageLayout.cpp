@@ -118,11 +118,34 @@ DrawInstr DrawInstr::Anchor(const char *s, size_t len, RectF bbox)
     return di;
 }
 
-PageLayout::PageLayout() : currPage(NULL), gfx(NULL),
+PageLayout::PageLayout(LayoutInfo *li) : layoutInfo(li),
+    pageDx((REAL)li->pageDx), pageDy((REAL)li->pageDy),
+    textAllocator(li->textAllocator), currLineReparsePoint(NULL),
     currX(0), currY(0), currJustification(Align_Justify),
-    currLineTopPadding(0), currReparsePoint(NULL),
-    inLink(false)
+    currLineTopPadding(0), currLink(NULL)
 {
+    currReparsePoint = li->reparsePoint;
+    if (!currReparsePoint)
+        currReparsePoint = layoutInfo->htmlStr;
+
+    CrashIf((currReparsePoint < li->htmlStr) || (currReparsePoint > (li->htmlStr + li->htmlStrLen)));
+    size_t htmlLen = li->htmlStrLen - (currReparsePoint - li->htmlStr);
+    htmlParser = new HtmlPullParser(currReparsePoint, htmlLen);
+
+    gfx = mui::AllocGraphicsForMeasureText();
+    defaultFontName.Set(str::Dup(li->fontName));
+    defaultFontSize = li->fontSize;
+    SetCurrentFont(FontStyleRegular, defaultFontSize);
+
+    lineSpacing = currFont->GetHeight(gfx);
+    spaceDx = currFontSize / 2.5f; // note: a heuristic
+    float spaceDx2 = GetSpaceDx(gfx, currFont);
+    if (spaceDx2 < spaceDx)
+        spaceDx = spaceDx2;
+
+    currPage = new PageData();
+    CrashIf(!currReparsePoint);
+    currPage->reparsePoint = currReparsePoint;
 }
 
 PageLayout::~PageLayout()
@@ -350,6 +373,8 @@ void PageLayout::ForceNewPage()
     bool createdNewPage = FlushCurrLine(true);
     if (createdNewPage)
         return;
+    if (currLink)
+        currPage->instructions.Append(DrawInstr(InstrLinkEnd));
     pagesToSend.Append(currPage);
     currPage = new PageData();
     currPage->reparsePoint = currReparsePoint;
@@ -359,6 +384,22 @@ void PageLayout::ForceNewPage()
     currX = 0.f;
     currJustification = Align_Justify;
     currLineTopPadding = 0.f;
+    if (currLink)
+        currPage->instructions.Append(DrawInstr::LinkStart(currLink, currLinkLen));
+}
+
+static const char *GetOpenLink(Vec<DrawInstr> *pageInstrs, size_t *len)
+{
+    for (size_t k = pageInstrs->Count(); k > 0; k--) {
+        DrawInstr *i = &pageInstrs->At(k-1);
+        if (InstrLinkStart == i->type) {
+            *len = i->str.len;
+            return i->str.s;
+        }
+        if (InstrLinkEnd == i->type)
+            break;
+    }
+    return NULL;
 }
 
 // returns true if created a new page
@@ -380,6 +421,10 @@ bool PageLayout::FlushCurrLine(bool isParagraphBreak)
     if (currY + totalLineDy > pageDy) {
         // current line too big to fit in current page,
         // so need to start another page
+        size_t openLinkLen;
+        const char *openLink = GetOpenLink(&currPage->instructions, &openLinkLen);
+        if (openLink)
+            currPage->instructions.Append(DrawInstr(InstrLinkEnd));
         pagesToSend.Append(currPage);
         currPage = new PageData();
         createdPage = true;
@@ -390,6 +435,8 @@ bool PageLayout::FlushCurrLine(bool isParagraphBreak)
         CrashIf(!currLineReparsePoint);
         currPage->reparsePoint = currLineReparsePoint;
         currY = 0.f;
+        if (openLink)
+            currPage->instructions.Append(DrawInstr::LinkStart(openLink, openLinkLen));
     }
     SetYPos(currLineInstr, currY + currLineTopPadding);
     currY += totalLineDy;
@@ -650,17 +697,18 @@ void PageLayout::HandleTagFont(HtmlToken *t)
 
 bool PageLayout::HandleTagA(HtmlToken *t, const char *linkAttr)
 {
-    if (t->IsStartTag() && !inLink) {
+    if (t->IsStartTag() && !currLink) {
         AttrInfo *attr = t->GetAttrByName(linkAttr);
         if (attr) {
             AppendInstr(DrawInstr::LinkStart(attr->val, attr->valLen));
-            inLink = true;
+            currLink = attr->val;
+            currLinkLen = attr->valLen;
             return true;
         }
     }
-    else if (t->IsEndTag() && inLink) {
+    else if (t->IsEndTag() && currLink) {
         AppendInstr(DrawInstr(InstrLinkEnd));
-        inLink = false;
+        currLink = NULL;
         return true;
     }
     return false;
@@ -731,6 +779,7 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
         // TODO: implement me
     } else if (Tag_Div == tag) {
         // TODO: implement me
+        FlushCurrLine(true);
     } else if (IsTagH(tag)) {
         HandleTagHx(t);
     } else if (Tag_Sup == tag) {
@@ -739,6 +788,10 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
         // TODO: implement me
     } else if (Tag_Span == tag) {
         // TODO: implement me
+    } else if (Tag_Center == tag) {
+        HandleTagP(t);
+        if (!t->IsEndTag())
+            currJustification = Align_Center;
     } else {
         // TODO: temporary debugging
         //lf("unhandled tag: %d", tag);
@@ -847,6 +900,27 @@ void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, RE
 
 /* Mobi-specific PageLayout methods */
 
+PageLayoutMobi::PageLayoutMobi(LayoutInfo* li, MobiDoc *doc) :
+    PageLayout(li), doc(doc), coverImage(NULL), pageCount(0),
+    finishedParsing(false)
+{
+    bool fromBeginning = (NULL == li->reparsePoint);
+    if (doc && fromBeginning) {
+        ImageData *img = doc->GetCoverImage();
+        if (img) {
+            // this is a heuristic that tries to filter images that are not
+            // cover images, like in http://www.sethgodin.com/sg/docs/StopStealingDreams-SethGodin.mobi
+            // TODO: a better way would be to only add the image if one isn't present at the
+            // beginning of html
+            Rect size = BitmapSizeFromData(img->data, img->len);
+            if ((size.Width >= 320) && (size.Height >= 200)) {
+                coverImage = img;
+                EmitImage(coverImage);
+            }
+        }
+    }
+}
+
 void PageLayoutMobi::HandleTagP_Mobi(HtmlToken *t)
 {
     if (t->IsEndTag()) {
@@ -895,7 +969,7 @@ void PageLayoutMobi::HandleTagImg_Mobi(HtmlToken *t)
     int n = 0;
     if (!str::Parse(attr->val, attr->valLen, "%d", &n))
         return;
-    ImageData *img = layoutInfo->mobiDoc->GetImage(n);
+    ImageData *img = doc->GetImage(n);
     if (!img)
         return;
 
@@ -941,8 +1015,9 @@ void PageLayoutMobi::HandleHtmlTag_Mobi(HtmlToken *t)
         HandleAnchorTag(t);
     } else if (Tag_A == tag) {
         HandleAnchorTag(t);
-        // TODO: also handle external links?
-        HandleTagA(t, "filepos");
+        // handle internal and external links (prefer internal ones)
+        if (!HandleTagA(t, "filepos"))
+            HandleTagA(t);
     } else {
         HandleHtmlTag(t);
     }
@@ -972,7 +1047,7 @@ static bool IsEmptyPage(PageData *p)
 // xml element at a time. This might cause a creation of one
 // or more pages, which we remeber and send to the caller
 // if we detect accumulated pages.
-PageData *PageLayoutMobi::IterNext()
+PageData *PageLayoutMobi::Next()
 {
     for (;;)
     {
@@ -1010,77 +1085,14 @@ PageData *PageLayoutMobi::IterNext()
     currPage = NULL;
     // call ourselves recursively to return accumulated pages
     finishedParsing = true;
-    return IterNext();
-}
-
-PageData *PageLayoutMobi::IterStart(LayoutInfo* li)
-{
-    // TODO: move part of the following into the constructor?
-
-    CrashIf(currPage);
-    finishedParsing = false;
-    layoutInfo = li;
-    pageDx = (REAL)layoutInfo->pageDx;
-    pageDy = (REAL)layoutInfo->pageDy;
-    textAllocator = layoutInfo->textAllocator;
-
-    bool fromBeginning = (NULL == layoutInfo->reparsePoint);
-    currReparsePoint = layoutInfo->reparsePoint;
-    currLineReparsePoint = NULL;
-    if (!currReparsePoint)
-        currReparsePoint = layoutInfo->htmlStr;
-    CrashIf((currReparsePoint < layoutInfo->htmlStr) ||
-            (currReparsePoint > (layoutInfo->htmlStr + layoutInfo->htmlStrLen)));
-    size_t htmlLen = layoutInfo->htmlStrLen - (currReparsePoint - layoutInfo->htmlStr);
-    htmlParser = new HtmlPullParser(currReparsePoint, htmlLen);
-
-    CrashIf(gfx);
-    gfx = mui::AllocGraphicsForMeasureText();
-    defaultFontName.Set(str::Dup(layoutInfo->fontName));
-    defaultFontSize = layoutInfo->fontSize;
-    SetCurrentFont(FontStyleRegular, defaultFontSize);
-
-    coverImage = NULL;
-    pageCount = 0;
-    inLink = false;
-
-    lineSpacing = currFont->GetHeight(gfx);
-    spaceDx = currFontSize / 2.5f; // note: a heuristic
-    float spaceDx2 = GetSpaceDx(gfx, currFont);
-    if (spaceDx2 < spaceDx)
-        spaceDx = spaceDx2;
-
-    currJustification = Align_Justify;
-    currX = 0; currY = 0;
-    currPage = new PageData;
-    CrashIf(!currReparsePoint);
-    currPage->reparsePoint = currReparsePoint;
-
-    currLineTopPadding = 0;
-    if (layoutInfo->mobiDoc && fromBeginning) {
-        ImageData *img = layoutInfo->mobiDoc->GetCoverImage();
-        if (img) {
-            // this is a heuristic that tries to filter images that are not
-            // cover images, like in http://www.sethgodin.com/sg/docs/StopStealingDreams-SethGodin.mobi
-            // TODO: a better way would be to only add the image if one isn't present at the
-            // beginning of html
-            Rect size = BitmapSizeFromData(img->data, img->len);
-            if ((size.Width >= 320) && (size.Height >= 200)) {
-                EmitImage(img);
-                // must do that after EmitImage() because EmitImage() uses it
-                // to check for duplicate cover image
-                coverImage = img;
-            }
-        }
-    }
-    return IterNext();
+    return Next();
 }
 
 // convenience method to get all pages layed out
-Vec<PageData*> *PageLayoutMobi::Layout(LayoutInfo *li)
+Vec<PageData*> *PageLayoutMobi::Layout()
 {
     Vec<PageData *> *pages = new Vec<PageData *>();
-    for (PageData *pd = IterStart(li); pd; pd = IterNext()) {
+    for (PageData *pd = Next(); pd; pd = Next()) {
         pages->Append(pd);
     }
     return pages;

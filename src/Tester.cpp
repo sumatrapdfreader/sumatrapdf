@@ -167,15 +167,11 @@ static void MobiLayout(char *file)
     li.pageDy = 480;
     li.fontName = L"Tahoma";
     li.fontSize = 12;
-    li.mobiDoc = mb;
     li.htmlStr = mb->GetBookHtmlData(li.htmlStrLen);
     li.textAllocator = &textAllocator;
 
-    PageLayoutMobi pl;
-    Vec<PageData*> *pages = new Vec<PageData*>();
-    for (PageData *pd = pl.IterStart(&li); pd; pd = pl.IterNext()) {
-        pages->Append(pd);
-    }
+    PageLayoutMobi pl(&li, mb);
+    Vec<PageData*> *pages = pl.Layout();
     DeleteVecMembers<PageData*>(*pages);
     delete pages;
     delete mb;

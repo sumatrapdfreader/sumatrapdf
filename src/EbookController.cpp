@@ -60,6 +60,7 @@ class ThreadLayoutMobi : public ThreadBase {
 public:
     // provided by the caller
     LayoutInfo *        layoutInfo; // we own it
+    MobiDoc *           mobiDoc;
     PoolAllocator *     textAllocator;
     EbookController *   controller;
     // if set, we first send pages for text parsed from
@@ -74,14 +75,15 @@ public:
     void        SendPagesIfNecessary(bool force, bool finished, bool fromBeginning);
     bool        Layout(const char *reparsePoint);
 
-    ThreadLayoutMobi();
+    ThreadLayoutMobi(LayoutInfo *li, MobiDoc *doc, EbookController *ctrl);
     virtual ~ThreadLayoutMobi();
 
     // ThreadBase
     virtual void Run();
 };
 
-ThreadLayoutMobi::ThreadLayoutMobi() : layoutInfo(NULL), pageCount(0)
+ThreadLayoutMobi::ThreadLayoutMobi(LayoutInfo *li, MobiDoc *doc, EbookController *ctrl) :
+    layoutInfo(li), mobiDoc(doc), controller(ctrl), pageCount(0)
 {
     autoDeleteSelf = false;
 }
@@ -114,6 +116,9 @@ void ThreadLayoutMobi::SendPagesIfNecessary(bool force, bool finished, bool from
     if (pageCount > 0)
         memcpy(ld->pages, pages, pageCount * sizeof(PageData*));
     ld->pageCount = pageCount;
+    // TODO: the thread could be deleted before the message is handled
+    //       (Debug -> "Test page layout" while layout is still in progress)
+    //       who should own/delete ThreadLayoutMobi?
     ld->thread = this;
     ld->controller = controller;
     uimsg::Post(msg);
@@ -128,9 +133,9 @@ bool ThreadLayoutMobi::Layout(const char *reparsePoint)
     //lf("Started laying out mobi, fromBeginning=%d", (int)fromBeginning);
     int totalPageCount = 0;
     Timer t(true);
-    PageLayoutMobi pl;
     layoutInfo->reparsePoint = reparsePoint;
-    for (PageData *pd = pl.IterStart(layoutInfo); pd; pd = pl.IterNext()) {
+    PageLayoutMobi pl(layoutInfo, mobiDoc);
+    for (PageData *pd = pl.Next(); pd; pd = pl.Next()) {
         if (WasCancelRequested()) {
             lf("Layout cancelled");
             for (int i = 0; i < pageCount; i++) {
@@ -245,7 +250,6 @@ LayoutInfo *GetLayoutInfo(const char *html, MobiDoc *mobiDoc, int dx, int dy, Po
     li->htmlStrLen = len;
     li->pageDx = dx;
     li->pageDy = dy;
-    li->mobiDoc = mobiDoc;
     li->textAllocator = textAllocator;
     return li;
 }
@@ -450,12 +454,11 @@ void EbookController::TriggerLayout()
     CrashIf(layoutTemp.pagesFromPage.Count() > 0);
 
     ShowPage(newPage, newPage != NULL);
-    layoutThread = new ThreadLayoutMobi();
-    layoutThread->controller = this;
-    layoutThread->layoutInfo = GetLayoutInfo(html, mobiDoc, dx, dy, &textAllocator);
+    LayoutInfo *li = GetLayoutInfo(html, mobiDoc, dx, dy, &textAllocator);
+    layoutThread = new ThreadLayoutMobi(li, mobiDoc, this);
     // additional sanity check for reparsePoint: if it's the same as start of html,
     // mark it as NULL for the benefit of ThreadLayoutMobi
-    if (layoutTemp.reparsePoint == layoutThread->layoutInfo->htmlStr)
+    if (layoutTemp.reparsePoint == li->htmlStr)
         layoutTemp.reparsePoint = NULL;
     layoutThread->reparsePoint = layoutTemp.reparsePoint;
     layoutThread->Start();

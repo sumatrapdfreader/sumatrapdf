@@ -23,7 +23,8 @@ class DirIter
     bool TryNextDir();
 
 public:
-    DirIter() : foundNext(false) { }
+    DirIter() : foundNext(false), currFindHandle(NULL) { }
+    ~DirIter() { CloseHandle(currFindHandle); }
 
     bool Start(const TCHAR *dir, bool recursive=false);
     const TCHAR *Next();
