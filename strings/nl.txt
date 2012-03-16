@@ -277,6 +277,9 @@ Notitie kopiëren
 Copying text was denied (copying as image only)
 Tekst kopiëren niet toegestaan (kopieer als afbeelding)
 
+Copyright:
+Auteursrecht
+
 Could not obtain Printer properties
 Kon geen Printer eigenschappen verkrijgen
 
@@ -399,6 +402,9 @@ Passend in breedte en pagina's doorlopend
 
 Fit a Single Page
 Hele pagina passend maken
+
+Fonts:
+Lettertypen:
 
 Found text at page %s
 Tekst gevonden op pagina %s
@@ -562,6 +568,9 @@ Verwijder uit favorieten
 Remove page %s from favorites
 Verwijder pagina %s uit favorieten
 
+Replace document &colors with Windows color scheme
+Vervang de documentkleuren met Windows kleurenschema
+
 Rotate &Left\tCtrl+Shift+-
 Linksom draaien\tCtrl+Shift+-
 
@@ -684,9 +693,4 @@ tekst kopiëren
 
 printing document
 bestand afdrukken
-
-# Untranslated:
-#Copyright:
-#Fonts:
-#Replace document &colors with Windows color scheme
 
