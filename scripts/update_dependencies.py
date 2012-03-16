@@ -1,7 +1,7 @@
 """
-Updates the dependency lists in makefile.msvc for all object files produced
-from sources in utils and src, so that changing a header file always leads
-to the recompilation of all the files depending on this header.
+Updates the dependency lists in makefile.deps for all object files produced
+from sources in src and subfolders, so that changing a header file always
+leads to the recompilation of all the files depending on this header.
 """
 
 import os, re, fnmatch
