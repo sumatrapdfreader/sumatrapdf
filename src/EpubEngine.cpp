@@ -1343,8 +1343,8 @@ PageDestination *MobiEngineImpl::GetNamedDest(const TCHAR *name)
     int filepos = _ttoi(name);
     if (!filepos)
         return NULL;
-    size_t dummyLen;
-    char *start = doc->GetBookHtmlData(dummyLen);
+    size_t htmlLen;
+    char *start = doc->GetBookHtmlData(htmlLen);
     for (int pageNo = 1; pageNo <= PageCount() + 1; pageNo++) {
         if (pages->At(pageNo - 1)->reparsePoint - start > filepos || pageNo > PageCount()) {
             pageNo--;
@@ -1352,7 +1352,8 @@ PageDestination *MobiEngineImpl::GetNamedDest(const TCHAR *name)
             Vec<DrawInstr> *pageInstrs = GetPageData(pageNo);
             float currY = 0;
             for (DrawInstr *i = pageInstrs->IterStart(); i; i = pageInstrs->IterNext()) {
-                if (InstrString == i->type && i->str.s - start >= filepos) {
+                if (InstrString == i->type && i->str.s >= start &&
+                    i->str.s <= start + htmlLen && i->str.s - start >= filepos) {
                     currY = i->bbox.Y;
                     break;
                 }
