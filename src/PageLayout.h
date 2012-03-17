@@ -72,7 +72,7 @@ struct PageData {
     Vec<DrawInstr>  instructions;
 };
 
-// just to pack args to PageLayout
+// just to pack args to HtmlFormatter
 class LayoutInfo {
 public:
     LayoutInfo() :
@@ -102,8 +102,7 @@ public:
     const char *    reparsePoint;
 };
 
-// TODO: rename to EbookFormatter
-class PageLayout
+class HtmlFormatter
 {
 protected:
     void HandleAnchorTag(HtmlToken *t, bool idsOnly=false);
@@ -187,12 +186,11 @@ protected:
     WCHAR               buf[512];
 
 public:
-    PageLayout(LayoutInfo *li);
-    ~PageLayout();
+    HtmlFormatter(LayoutInfo *li);
+    ~HtmlFormatter();
 };
 
-// TODO: rename to MobiFormatter
-class PageLayoutMobi : public PageLayout {
+class MobiFormatter : public HtmlFormatter {
     // accessor to images (and other format-specific data)
     MobiDoc *           doc;
     // remember cover image if we've generated one, so that we
@@ -210,7 +208,7 @@ class PageLayoutMobi : public PageLayout {
     void HandleHtmlTag_Mobi(HtmlToken *t);
 
 public:
-    PageLayoutMobi(LayoutInfo *li, MobiDoc *doc);
+    MobiFormatter(LayoutInfo *li, MobiDoc *doc);
 
     PageData *Next();
     Vec<PageData*> *Layout();

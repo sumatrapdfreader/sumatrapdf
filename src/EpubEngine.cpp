@@ -714,9 +714,9 @@ void EpubDoc::ParseMetadata(const char *content)
     }
 }
 
-/* PageLayout extensions for EPUB */
+/* formatting extensions for EPUB */
 
-class PageLayoutEpub : public PageLayout {
+class EpubFormatter : public HtmlFormatter {
 protected:
     void HandleTagImg_Epub(HtmlToken *t);
     void HandleHtmlTag_Epub(HtmlToken *t);
@@ -724,12 +724,12 @@ protected:
     EpubDoc *epubDoc;
 
 public:
-    PageLayoutEpub(LayoutInfo *li, EpubDoc *doc) : PageLayout(li), epubDoc(doc) { }
+    EpubFormatter(LayoutInfo *li, EpubDoc *doc) : HtmlFormatter(li), epubDoc(doc) { }
 
     Vec<PageData*> *Layout();
 };
 
-void PageLayoutEpub::HandleTagImg_Epub(HtmlToken *t)
+void EpubFormatter::HandleTagImg_Epub(HtmlToken *t)
 {
     CrashIf(!epubDoc);
     if (t->IsEndTag())
@@ -743,7 +743,7 @@ void PageLayoutEpub::HandleTagImg_Epub(HtmlToken *t)
         EmitImage(img);
 }
 
-void PageLayoutEpub::HandleHtmlTag_Epub(HtmlToken *t)
+void EpubFormatter::HandleHtmlTag_Epub(HtmlToken *t)
 {
     HtmlTag tag = FindTag(t);
     if (Tag_Img == tag) {
@@ -756,7 +756,7 @@ void PageLayoutEpub::HandleHtmlTag_Epub(HtmlToken *t)
         HandleHtmlTag(t);
 }
 
-Vec<PageData*> *PageLayoutEpub::Layout()
+Vec<PageData*> *EpubFormatter::Layout()
 {
     HtmlToken *t;
     while ((t = htmlParser->Next()) && !t->IsError()) {
@@ -844,7 +844,7 @@ bool EpubEngineImpl::FinishLoading()
     li.fontSize = 11;
     li.textAllocator = &allocator;
 
-    pages = PageLayoutEpub(&li, doc).Layout();
+    pages = EpubFormatter(&li, doc).Layout();
     if (!ExtractPageAnchors())
         return false;
 
@@ -1131,9 +1131,9 @@ void Fb2Doc::ExtractImage(HtmlPullParser& parser, HtmlToken *tok)
     images.Append(data);
 }
 
-/* PageLayout extensions for FictionBook2 */
+/* formatting extensions for FictionBook2 */
 
-class PageLayoutFb2 : public PageLayout {
+class Fb2Formatter : public HtmlFormatter {
     int section;
 
     void HandleTagImg_Fb2(HtmlToken *t);
@@ -1143,13 +1143,13 @@ class PageLayoutFb2 : public PageLayout {
     Fb2Doc *fb2Doc;
 
 public:
-    PageLayoutFb2(LayoutInfo *li, Fb2Doc *doc) :
-        PageLayout(li), fb2Doc(doc), section(1) { }
+    Fb2Formatter(LayoutInfo *li, Fb2Doc *doc) :
+        HtmlFormatter(li), fb2Doc(doc), section(1) { }
 
     Vec<PageData*> *Layout();
 };
 
-void PageLayoutFb2::HandleTagImg_Fb2(HtmlToken *t)
+void Fb2Formatter::HandleTagImg_Fb2(HtmlToken *t)
 {
     CrashIf(!fb2Doc);
     if (t->IsEndTag())
@@ -1163,14 +1163,14 @@ void PageLayoutFb2::HandleTagImg_Fb2(HtmlToken *t)
         EmitImage(img);
 }
 
-void PageLayoutFb2::HandleTagAsHtml(HtmlToken *t, const char *name)
+void Fb2Formatter::HandleTagAsHtml(HtmlToken *t, const char *name)
 {
     HtmlToken tok;
     tok.SetValue(t->type, name, name + str::Len(name));
     HandleHtmlTag(&tok);
 }
 
-void PageLayoutFb2::HandleFb2Tag(HtmlToken *t)
+void Fb2Formatter::HandleFb2Tag(HtmlToken *t)
 {
     if (t->NameIs("title")) {
         HtmlToken tok;
@@ -1213,7 +1213,7 @@ void PageLayoutFb2::HandleFb2Tag(HtmlToken *t)
     }
 }
 
-Vec<PageData*> *PageLayoutFb2::Layout()
+Vec<PageData*> *Fb2Formatter::Layout()
 {
     HtmlToken *t;
     while ((t = htmlParser->Next()) && !t->IsError()) {
@@ -1271,7 +1271,7 @@ bool Fb2EngineImpl::Load(const TCHAR *fileName)
     li.fontSize = 11;
     li.textAllocator = &allocator;
 
-    pages = PageLayoutFb2(&li, doc).Layout();
+    pages = Fb2Formatter(&li, doc).Layout();
     if (!ExtractPageAnchors())
         return false;
 
@@ -1331,7 +1331,7 @@ bool MobiEngineImpl::Load(const TCHAR *fileName)
     li.fontSize = 11;
     li.textAllocator = &allocator;
 
-    pages = PageLayoutMobi(&li, doc).Layout();
+    pages = MobiFormatter(&li, doc).Layout();
     if (!ExtractPageAnchors())
         return false;
     

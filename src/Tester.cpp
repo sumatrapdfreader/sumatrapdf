@@ -170,8 +170,8 @@ static void MobiLayout(char *file)
     li.htmlStr = mb->GetBookHtmlData(li.htmlStrLen);
     li.textAllocator = &textAllocator;
 
-    PageLayoutMobi pl(&li, mb);
-    Vec<PageData*> *pages = pl.Layout();
+    MobiFormatter mf(&li, mb);
+    Vec<PageData*> *pages = mf.Layout();
     DeleteVecMembers<PageData*>(*pages);
     delete pages;
     delete mb;

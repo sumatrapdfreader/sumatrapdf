@@ -134,8 +134,8 @@ bool ThreadLayoutMobi::Layout(const char *reparsePoint)
     int totalPageCount = 0;
     Timer t(true);
     layoutInfo->reparsePoint = reparsePoint;
-    PageLayoutMobi pl(layoutInfo, mobiDoc);
-    for (PageData *pd = pl.Next(); pd; pd = pl.Next()) {
+    MobiFormatter mf(layoutInfo, mobiDoc);
+    for (PageData *pd = mf.Next(); pd; pd = mf.Next()) {
         if (WasCancelRequested()) {
             lf("Layout cancelled");
             for (int i = 0; i < pageCount; i++) {

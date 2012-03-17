@@ -53,7 +53,7 @@ The information that we need to remember:
 * text color (when/if we support changing text color)
 * more ?
 
-TODO: PageLayout could be split into DrawInstrBuilder which knows pageDx, pageDy
+TODO: HtmlFormatter could be split into DrawInstrBuilder which knows pageDx, pageDy
 and generates DrawInstr and splits them into pages and a better named class that
 does the parsing of the document builds pages by invoking methods on DrawInstrBuilders.
 
@@ -113,7 +113,7 @@ DrawInstr DrawInstr::Anchor(const char *s, size_t len, RectF bbox)
     return di;
 }
 
-PageLayout::PageLayout(LayoutInfo *li) : layoutInfo(li),
+HtmlFormatter::HtmlFormatter(LayoutInfo *li) : layoutInfo(li),
     pageDx((REAL)li->pageDx), pageDy((REAL)li->pageDy),
     textAllocator(li->textAllocator), currLineReparsePoint(NULL),
     currX(0), currY(0), currJustification(Align_Justify),
@@ -143,7 +143,7 @@ PageLayout::PageLayout(LayoutInfo *li) : layoutInfo(li),
     currPage->reparsePoint = currReparsePoint;
 }
 
-PageLayout::~PageLayout()
+HtmlFormatter::~HtmlFormatter()
 {
     // delete all pages that were not consumed by the caller
     DeleteVecMembers(pagesToSend);
@@ -152,14 +152,14 @@ PageLayout::~PageLayout()
     mui::FreeGraphicsForMeasureText(gfx);
 }
 
-void PageLayout::AppendInstr(DrawInstr di)
+void HtmlFormatter::AppendInstr(DrawInstr di)
 {
     currLineInstr.Append(di);
     if (!currLineReparsePoint)
         currLineReparsePoint = currReparsePoint;
 }
 
-void PageLayout::SetCurrentFont(FontStyle fontStyle, float fontSize)
+void HtmlFormatter::SetCurrentFont(FontStyle fontStyle, float fontSize)
 {
     Font *newFont = mui::GetCachedFont(defaultFontName.Get(), fontSize, fontStyle);
     if (currFont == newFont)
@@ -186,7 +186,7 @@ static bool ValidStyleForChangeFontStyle(FontStyle fs)
 // TODO: it doesn't support the case where the same style is nested
 // like "<b>fo<b>oo</b>bar</b>" - "bar" should still be bold but wont
 // We would have to maintain counts for each style to do it fully right
-void PageLayout::ChangeFontStyle(FontStyle fs, bool addStyle)
+void HtmlFormatter::ChangeFontStyle(FontStyle fs, bool addStyle)
 {
     CrashAlwaysIf(!ValidStyleForChangeFontStyle(fs));
     FontStyle newFontStyle = currFontStyle;
@@ -198,7 +198,7 @@ void PageLayout::ChangeFontStyle(FontStyle fs, bool addStyle)
     SetCurrentFont(newFontStyle, currFontSize);
 }
 
-void PageLayout::ChangeFontSize(float fontSize)
+void HtmlFormatter::ChangeFontSize(float fontSize)
 {
     SetCurrentFont(currFontStyle, fontSize);
 }
@@ -216,7 +216,7 @@ static bool IsVisibleDrawInstr(DrawInstr *i)
 
 // sum of widths of all elements with a fixed size and flexible
 // spaces (using minimum value for its width)
-REAL PageLayout::CurrLineDx()
+REAL HtmlFormatter::CurrLineDx()
 {
     REAL dx = NewLineX();
     for (DrawInstr *i = currLineInstr.IterStart(); i; i = currLineInstr.IterNext()) {
@@ -232,7 +232,7 @@ REAL PageLayout::CurrLineDx()
 }
 
 // return the height of the tallest element on the line
-float PageLayout::CurrLineDy()
+float HtmlFormatter::CurrLineDy()
 {
     float dy = lineSpacing;
     for (DrawInstr *i = currLineInstr.IterStart(); i; i = currLineInstr.IterNext()) {
@@ -250,7 +250,7 @@ float PageLayout::CurrLineDy()
 
 // return the width of the left margin (used for paragraph
 // indentation inside lists)
-float PageLayout::NewLineX()
+float HtmlFormatter::NewLineX()
 {
     // TODO: indent based on font size instead?
     float x = 15.f * listDepth;
@@ -263,7 +263,7 @@ float PageLayout::NewLineX()
 
 // When this is called, Width and Height of each element is already set
 // We set position x of each visible element
-void PageLayout::LayoutLeftStartingAt(REAL offX)
+void HtmlFormatter::LayoutLeftStartingAt(REAL offX)
 {
     DrawInstr *lastInstr = NULL;
     int instrCount = 0;
@@ -300,7 +300,7 @@ static void SetYPos(Vec<DrawInstr>& instr, float y)
 }
 
 // Redistribute extra space in the line equally among the spaces
-void PageLayout::JustifyLineBoth()
+void HtmlFormatter::JustifyLineBoth()
 {
     REAL extraSpaceDxTotal = pageDx - CurrLineDx();
     // TODO: don't know why it happens but it does on pg12.mobi
@@ -345,7 +345,7 @@ void PageLayout::JustifyLineBoth()
         lastStr->bbox.X = pageDx - lastStr->bbox.Width;
 }
 
-bool PageLayout::IsCurrLineEmpty()
+bool HtmlFormatter::IsCurrLineEmpty()
 {
     for (DrawInstr *i = currLineInstr.IterStart(); i; i = currLineInstr.IterNext()) {
         if (IsVisibleDrawInstr(i))
@@ -355,7 +355,7 @@ bool PageLayout::IsCurrLineEmpty()
 }
 
 // justifies current line and returns line dy (i.e. height of the tallest element)
-void PageLayout::JustifyCurrLine(AlignAttr align)
+void HtmlFormatter::JustifyCurrLine(AlignAttr align)
 {
     switch (align) {
         case Align_Left:
@@ -376,7 +376,7 @@ void PageLayout::JustifyCurrLine(AlignAttr align)
     }
 }
 
-void PageLayout::ForceNewPage()
+void HtmlFormatter::ForceNewPage()
 {
     bool createdNewPage = FlushCurrLine(true);
     if (createdNewPage)
@@ -411,7 +411,7 @@ static const char *GetOpenLink(Vec<DrawInstr> *pageInstrs, size_t *len)
 }
 
 // returns true if created a new page
-bool PageLayout::FlushCurrLine(bool isParagraphBreak)
+bool HtmlFormatter::FlushCurrLine(bool isParagraphBreak)
 {
     if (IsCurrLineEmpty()) {
         // TODO: rather create a new line if currLineInstr.Count() > 0 ?
@@ -457,7 +457,7 @@ bool PageLayout::FlushCurrLine(bool isParagraphBreak)
     return createdPage;
 }
 
-void PageLayout::EmitEmptyLine(float lineDy)
+void HtmlFormatter::EmitEmptyLine(float lineDy)
 {
     CrashIf(!IsCurrLineEmpty());
     currY += lineDy;
@@ -468,7 +468,7 @@ void PageLayout::EmitEmptyLine(float lineDy)
     ForceNewPage();
 }
 
-void PageLayout::EmitImage(ImageData *img)
+void HtmlFormatter::EmitImage(ImageData *img)
 {
     Rect imgSize = BitmapSizeFromData(img->data, img->len);
     if (imgSize.IsEmptyArea())
@@ -494,7 +494,7 @@ void PageLayout::EmitImage(ImageData *img)
 }
 
 // add horizontal line (<hr> in html terms)
-void PageLayout::EmitHr()
+void HtmlFormatter::EmitHr()
 {
     // hr creates an implicit paragraph break
     FlushCurrLine(true);
@@ -511,7 +511,7 @@ static bool ShouldAddIndent(float indent, AlignAttr just)
     return (Align_Left == just) || (Align_Justify == just);
 }
 
-void PageLayout::EmitParagraph(float indent, float topPadding)
+void HtmlFormatter::EmitParagraph(float indent, float topPadding)
 {
     FlushCurrLine(true);
     CrashIf(NewLineX() != currX);
@@ -531,7 +531,7 @@ void PageLayout::EmitParagraph(float indent, float topPadding)
 // ensure there is enough dx space left in the current line
 // if there isn't, we start a new line
 // returns false if dx is bigger than pageDx
-bool PageLayout::EnsureDx(float dx)
+bool HtmlFormatter::EnsureDx(float dx)
 {
     if (currX + dx <= pageDx)
         return true;
@@ -556,7 +556,7 @@ static bool CanEmitElasticSpace(float currX, float NewLineX, float maxCurrX, Vec
     return (InstrElasticSpace != di.type) && (InstrFixedSpace != di.type);
 }
 
-void PageLayout::EmitElasticSpace()
+void HtmlFormatter::EmitElasticSpace()
 {
     if (!CanEmitElasticSpace(currX, NewLineX(), pageDx - spaceDx, currLineInstr))
         return;
@@ -566,7 +566,7 @@ void PageLayout::EmitElasticSpace()
 }
 
 // a text run is a string of consecutive text with uniform style
-void PageLayout::EmitTextRun(const char *s, const char *end)
+void HtmlFormatter::EmitTextRun(const char *s, const char *end)
 {
     currReparsePoint = s;
     CrashIf(IsSpaceOnly(s, end));
@@ -621,7 +621,7 @@ static float ParseSizeAsPixels(const char *s, size_t len, float emInPoints)
     return sizeInPixels;
 }
 
-void PageLayout::HandleAnchorTag(HtmlToken *t, bool idsOnly)
+void HtmlFormatter::HandleAnchorTag(HtmlToken *t, bool idsOnly)
 {
     if (t->IsEndTag())
         return;
@@ -639,7 +639,7 @@ void PageLayout::HandleAnchorTag(HtmlToken *t, bool idsOnly)
     currPage->instructions.Append(DrawInstr::Anchor(attr->val, attr->valLen, bbox));
 }
 
-void PageLayout::HandleTagBr()
+void HtmlFormatter::HandleTagBr()
 {
     // Trying to match Kindle behavior
     if (IsCurrLineEmpty())
@@ -648,7 +648,7 @@ void PageLayout::HandleTagBr()
         FlushCurrLine(true);
 }
 
-void PageLayout::HandleTagP(HtmlToken *t)
+void HtmlFormatter::HandleTagP(HtmlToken *t)
 {
     if (!t->IsEndTag()) {
         AttrInfo *attr = t->GetAttrByName("align");
@@ -664,7 +664,7 @@ void PageLayout::HandleTagP(HtmlToken *t)
     }
 }
 
-void PageLayout::HandleTagFont(HtmlToken *t)
+void HtmlFormatter::HandleTagFont(HtmlToken *t)
 {
     if (t->IsEndTag()) {
         ChangeFontSize(defaultFontSize);
@@ -693,7 +693,7 @@ void PageLayout::HandleTagFont(HtmlToken *t)
     ChangeFontSize(defaultFontSize * scale);
 }
 
-bool PageLayout::HandleTagA(HtmlToken *t, const char *linkAttr)
+bool HtmlFormatter::HandleTagA(HtmlToken *t, const char *linkAttr)
 {
     if (t->IsStartTag() && !currLink) {
         AttrInfo *attr = t->GetAttrByName(linkAttr);
@@ -725,7 +725,7 @@ static bool IsTagH(HtmlTag tag)
    return false;
  }
 
-void PageLayout::HandleTagHx(HtmlToken *t)
+void HtmlFormatter::HandleTagHx(HtmlToken *t)
 {
     if (t->IsEndTag()) {
         FlushCurrLine(true);
@@ -743,7 +743,7 @@ void PageLayout::HandleTagHx(HtmlToken *t)
     ChangeFontStyle(FontStyleBold, t->IsStartTag());
 }
 
-void PageLayout::HandleTagList(HtmlToken *t)
+void HtmlFormatter::HandleTagList(HtmlToken *t)
 {
     FlushCurrLine(true);
     if (t->IsStartTag())
@@ -753,7 +753,7 @@ void PageLayout::HandleTagList(HtmlToken *t)
     currX = NewLineX();
 }
 
-void PageLayout::HandleHtmlTag(HtmlToken *t)
+void HtmlFormatter::HandleHtmlTag(HtmlToken *t)
 {
     CrashAlwaysIf(!t->IsTag());
 
@@ -819,7 +819,7 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
     HandleAnchorTag(t);
 }
 
-void PageLayout::HandleText(HtmlToken *t)
+void HtmlFormatter::HandleText(HtmlToken *t)
 {
     CrashIf(!t->IsText());
     const char *curr = t->s;
@@ -841,7 +841,7 @@ void PageLayout::HandleText(HtmlToken *t)
 }
 
 // we ignore the content of <head>, <style> and <title> tags
-bool PageLayout::IgnoreText()
+bool HtmlFormatter::IgnoreText()
 {
     for (HtmlTag *tag = htmlParser->tagNesting.IterStart(); tag; tag = htmlParser->tagNesting.IterNext()) {
         if ((Tag_Head == *tag) ||
@@ -912,10 +912,10 @@ void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, RE
     }
 }
 
-/* Mobi-specific PageLayout methods */
+/* Mobi-specific formatting methods */
 
-PageLayoutMobi::PageLayoutMobi(LayoutInfo* li, MobiDoc *doc) :
-    PageLayout(li), doc(doc), coverImage(NULL), pageCount(0),
+MobiFormatter::MobiFormatter(LayoutInfo* li, MobiDoc *doc) :
+    HtmlFormatter(li), doc(doc), coverImage(NULL), pageCount(0),
     finishedParsing(false)
 {
     bool fromBeginning = (NULL == li->reparsePoint);
@@ -937,7 +937,7 @@ PageLayoutMobi::PageLayoutMobi(LayoutInfo* li, MobiDoc *doc) :
     }
 }
 
-void PageLayoutMobi::HandleTagP_Mobi(HtmlToken *t)
+void MobiFormatter::HandleTagP_Mobi(HtmlToken *t)
 {
     if (t->IsEndTag()) {
         FlushCurrLine(true);
@@ -977,7 +977,7 @@ void PageLayoutMobi::HandleTagP_Mobi(HtmlToken *t)
 // that holds the image (within image record array, not a
 // global record)
 // TODO: handle alt attribute (?)
-void PageLayoutMobi::HandleTagImg_Mobi(HtmlToken *t)
+void MobiFormatter::HandleTagImg_Mobi(HtmlToken *t)
 {
     AttrInfo *attr = t->GetAttrByName("recindex");
     if (!attr)
@@ -1010,7 +1010,7 @@ static bool IgnoreTag(const char *s, size_t sLen)
     return false;
 }
 
-void PageLayoutMobi::HandleHtmlTag_Mobi(HtmlToken *t)
+void MobiFormatter::HandleHtmlTag_Mobi(HtmlToken *t)
 {
     CrashAlwaysIf(!t->IsTag());
 
@@ -1063,7 +1063,7 @@ static bool IsEmptyPage(PageData *p)
 // xml element at a time. This might cause a creation of one
 // or more pages, which we remeber and send to the caller
 // if we detect accumulated pages.
-PageData *PageLayoutMobi::Next()
+PageData *MobiFormatter::Next()
 {
     for (;;)
     {
@@ -1105,7 +1105,7 @@ PageData *PageLayoutMobi::Next()
 }
 
 // convenience method to get all pages layed out
-Vec<PageData*> *PageLayoutMobi::Layout()
+Vec<PageData*> *MobiFormatter::Layout()
 {
     Vec<PageData *> *pages = new Vec<PageData *>();
     for (PageData *pd = Next(); pd; pd = Next()) {
