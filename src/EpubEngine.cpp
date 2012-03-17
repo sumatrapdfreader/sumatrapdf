@@ -401,7 +401,7 @@ Vec<PageElement *> *EbookEngine::GetElements(int pageNo)
         DrawInstr *i = &pageInstrs->At(k);
         if (InstrImage == i->type)
             els->Append(new ImageDataElement(pageNo, &i->img, GetInstrBbox(i, pageBorder)));
-        else if (InstrLinkStart == i->type) {
+        else if (InstrLinkStart == i->type && !i->bbox.IsEmptyArea()) {
             PageElement *link = CreatePageLink(i, GetInstrBbox(i, pageBorder), pageNo);
             if (link)
                 els->Append(link);
@@ -744,6 +744,7 @@ Vec<PageData*> *EpubFormatter::Layout()
     }
 
     FlushCurrLine(true);
+    UpdateLinkBboxes(currPage);
     pagesToSend.Append(currPage);
     currPage = NULL;
 
@@ -1201,6 +1202,7 @@ Vec<PageData*> *Fb2Formatter::Layout()
     }
 
     FlushCurrLine(true);
+    UpdateLinkBboxes(currPage);
     pagesToSend.Append(currPage);
     currPage = NULL;
 

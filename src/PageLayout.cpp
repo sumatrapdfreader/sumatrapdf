@@ -442,6 +442,7 @@ bool HtmlFormatter::FlushCurrLine(bool isParagraphBreak)
     DrawInstr link;
     if (currLinkIdx) {
         link = currLineInstr.At(currLinkIdx - 1);
+        // TODO: this occasionally leads to empty links
         AppendInstr(DrawInstr(InstrLinkEnd));
     }
     currPage->instructions.Append(currLineInstr.LendData(), currLineInstr.Count());
@@ -875,7 +876,7 @@ void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, RE
         bbox.Y += offY;
         if (InstrLine == i->type) {
             // hr is a line drawn in the middle of bounding box
-            REAL y = bbox.Y + bbox.Height / 2.f;
+            REAL y = floorf(bbox.Y + bbox.Height / 2.f + 0.5f);
             PointF p1(bbox.X, y);
             PointF p2(bbox.X + bbox.Width, y);
             if (showBbox)
@@ -901,8 +902,9 @@ void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, RE
             delete bmp;
         } else if (InstrLinkStart == i->type) {
             // TODO: set text color to blue
-            PointF p1(bbox.X, bbox.Y + bbox.Height);
-            PointF p2(bbox.X + bbox.Width, bbox.Y + bbox.Height);
+            REAL y = floorf(bbox.Y + bbox.Height + 0.5f);
+            PointF p1(bbox.X, y);
+            PointF p2(bbox.X + bbox.Width, y);
             Pen linkPen(*textColor);
             g->DrawLine(&linkPen, p1, p2);
         } else if (InstrLinkEnd == i->type) {
@@ -1098,6 +1100,7 @@ PageData *MobiFormatter::Next()
     // force layout of the last line
     FlushCurrLine(true);
 
+    UpdateLinkBboxes(currPage);
     pagesToSend.Append(currPage);
     currPage = NULL;
     // call ourselves recursively to return accumulated pages

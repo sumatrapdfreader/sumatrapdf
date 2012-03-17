@@ -27,7 +27,8 @@ static const char *gSampleHtml =
     "possibly some other things unknown.</p> "\
     "<p align='right height=13pt'><em>Currently</em>, ClearType is implemented "\
     "<hr><br/> only for vertical stripes that are ordered RGB.</p> "\
-    "<p align=center height=8pt>This might be a concern if you are using a tablet PC.</p>"\
+    "<p align=center height=8pt>This might be a concern if you are using a "\
+    "<a href='http://en.wikipedia.org/wiki/Tablet_pc'>tablet PC</a>.</p>"\
     "<p width='1em'>Where the display can be oriented in any direction, or if you"\
     "are using a screen that can be turned from landscape to portrait. The "\
     "<strike>following example</strike> draws text with two <u>different quality</u> "\
