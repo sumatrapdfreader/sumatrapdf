@@ -74,7 +74,7 @@ def RefTestFile(EngineDumpExe, file, refdir):
 		os.remove(xmlCmpPath)
 	
 	# compare all bitmap renderings (and create diff bitmaps where needed)
-	for file in fnmatch.filter(os.listdir(refdir), base + "-*.ref.bmp"):
+	for file in fnmatch.filter(os.listdir(refdir), base + "-[0-9]*.ref.bmp"):
 		bmpRefPath = pjoin(refdir, file)
 		bmpCmpPath, bmpDiffPath = bmpRefPath[:-8] + ".cmp.bmp", bmpRefPath[:-8] + ".diff.bmp"
 		if BitmapDiff(bmpRefPath, bmpCmpPath, bmpDiffPath):
@@ -83,7 +83,7 @@ def RefTestFile(EngineDumpExe, file, refdir):
 			os.remove(bmpCmpPath)
 			if os.path.isfile(bmpDiffPath):
 				os.remove(bmpDiffPath)
-	for file in fnmatch.filter(os.listdir(refdir), base + "-*.cmp.bmp"):
+	for file in fnmatch.filter(os.listdir(refdir), base + "-[0-9]*.cmp.bmp"):
 		bmpCmpPath = pjoin(refdir, file)
 		bmpRefPath = bmpCmpPath[:-8] + ".ref.bmp"
 		if not os.path.isfile(bmpRefPath):
@@ -107,6 +107,9 @@ def RefTestDir(EngineDumpExe, dir, refdir):
 		print "\n" + "=" * 25 + " RENDERING DIFFERENCES " + "=" * 25
 		for file in diffs:
 			print pjoin(refdir, file)
+		print
+	
+	return len(diffs)
 
 def main(args):
 	# find a path to EngineDump.exe (defaults to ../obj-dbg/EngineDump.exe)
@@ -118,7 +121,7 @@ def main(args):
 	# minimal sanity check of arguments
 	if not args[1:] or not os.path.isdir(args[1]):
 		print "Usage: %s [EngineDump.exe] <dir> [-refdir <dir>] [<dir> ...]" % (os.path.split(args[0])[1])
-		sys.exit(0)
+		return
 	
 	# collect all directories to test (and the corresonding reference directories)
 	dirs, ix = [], 1
@@ -131,8 +134,10 @@ def main(args):
 			ix += 1
 	
 	# run the test
+	fails = 0
 	for (dir, refdir) in dirs:
-		RefTestDir(EngineDumpExe, dir, refdir)
+		fails += RefTestDir(EngineDumpExe, dir, refdir)
+	sys.exit(fails)
 
 if __name__ == "__main__":
 	main(sys.argv[:])
