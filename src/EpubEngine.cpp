@@ -395,9 +395,6 @@ Vec<PageElement *> *EbookEngine::GetElements(int pageNo)
 {
     Vec<PageElement *> *els = new Vec<PageElement *>();
 
-    DrawInstr *linkInstr = NULL;
-    RectI linkRect;
-
     Vec<DrawInstr> *pageInstrs = GetPageData(pageNo);
     // CreatePageLink -> GetNamedDest might use pageInstrs->IterStart()
     for (size_t k = 0; k < pageInstrs->Count(); k++) {
@@ -405,29 +402,9 @@ Vec<PageElement *> *EbookEngine::GetElements(int pageNo)
         if (InstrImage == i->type)
             els->Append(new ImageDataElement(pageNo, &i->img, GetInstrBbox(i, pageBorder)));
         else if (InstrLinkStart == i->type) {
-            linkInstr = i;
-            linkRect = RectI();
-        }
-        else if (InstrLinkEnd == i->type) {
-            CrashIf(!linkInstr);
-            if (!linkRect.IsEmpty()) {
-                PageElement *link = CreatePageLink(linkInstr, linkRect, pageNo);
-                if (link)
-                    els->Append(link);
-            }
-            linkInstr = NULL;
-        }
-        else if (InstrString == i->type && linkInstr) {
-            RectI bbox = GetInstrBbox(i, pageBorder);
-            // split multi-line links into multiple Fb2Links
-            if (!linkRect.IsEmpty() && bbox.x <= linkRect.x) {
-                PageElement *link = CreatePageLink(linkInstr, linkRect, pageNo);
-                if (link)
-                    els->Append(link);
-                linkRect = bbox;
-            }
-            else
-                linkRect = linkRect.Union(bbox);
+            PageElement *link = CreatePageLink(i, GetInstrBbox(i, pageBorder), pageNo);
+            if (link)
+                els->Append(link);
         }
     }
 

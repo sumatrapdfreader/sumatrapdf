@@ -122,6 +122,7 @@ protected:
     void  JustifyLineBoth();
     void  JustifyCurrLine(AlignAttr align);
     bool  FlushCurrLine(bool isParagraphBreak);
+    void  UpdateLinkBboxes(PageData *page);
 
     void  EmitImage(ImageData *img);
     void  EmitHr();
@@ -172,8 +173,7 @@ protected:
     PageData *          currPage;
 
     // for tracking whether we're currently inside <a> tag
-    const char *        currLink;
-    size_t              currLinkLen;
+    size_t              currLinkIdx;
 
     // reparse point for the current HtmlToken
     const char *        currReparsePoint;

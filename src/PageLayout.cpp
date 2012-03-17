@@ -31,11 +31,6 @@ stage 1 calculates the sizes of elements.
 */
 
 /*
-TODO: to implement links we probably need a link instruction that contain url and
-their bbox overlaps with the text of the link. This is necessary for easy
-implementation of link interactivity and to properly draw links as underlined
-(in our architecture spaces are not drawn so spaces within link cannot be underlined).
-
 TODO: properly implement carrying over visual state between pages to allow proper
 re-layout from arbitrary point. Currently we inject SetFont instruction at the beginning
 of every page to ensure that e.g. bold text that carries over to a new page is still bold.
@@ -117,7 +112,7 @@ HtmlFormatter::HtmlFormatter(LayoutInfo *li) : layoutInfo(li),
     pageDx((REAL)li->pageDx), pageDy((REAL)li->pageDy),
     textAllocator(li->textAllocator), currLineReparsePoint(NULL),
     currX(0), currY(0), currJustification(Align_Justify),
-    currLineTopPadding(0), currLink(NULL), listDepth(0)
+    currLineTopPadding(0), currLinkIdx(0), listDepth(0)
 {
     currReparsePoint = li->reparsePoint;
     if (!currReparsePoint)
@@ -236,13 +231,9 @@ float HtmlFormatter::CurrLineDy()
 {
     float dy = lineSpacing;
     for (DrawInstr *i = currLineInstr.IterStart(); i; i = currLineInstr.IterNext()) {
-        switch (i->type) {
-            case InstrString:
-            case InstrLine:
-            case InstrImage:
-                if (i->bbox.Height > dy)
-                    dy = i->bbox.Height;
-                break;
+        if (IsVisibleDrawInstr(i)) {
+            if (i->bbox.Height > dy)
+                dy = i->bbox.Height;
         }
     }
     return dy;
@@ -293,9 +284,8 @@ void HtmlFormatter::LayoutLeftStartingAt(REAL offX)
 static void SetYPos(Vec<DrawInstr>& instr, float y)
 {
     for (DrawInstr *i = instr.IterStart(); i; i = instr.IterNext()) {
-        if (!IsVisibleDrawInstr(i))
-            continue;
-        i->bbox.Y = y;
+        if (IsVisibleDrawInstr(i))
+            i->bbox.Y = y;
     }
 }
 
@@ -354,7 +344,6 @@ bool HtmlFormatter::IsCurrLineEmpty()
     return true;
 }
 
-// justifies current line and returns line dy (i.e. height of the tallest element)
 void HtmlFormatter::JustifyCurrLine(AlignAttr align)
 {
     switch (align) {
@@ -376,13 +365,35 @@ void HtmlFormatter::JustifyCurrLine(AlignAttr align)
     }
 }
 
+static RectF RectFUnion(RectF& r1, RectF& r2)
+{
+    if (r2.IsEmptyArea())
+        return r1;
+    if (r1.IsEmptyArea())
+        return r2;
+    RectF ru;
+    ru.Union(ru, r1, r2);
+    return ru;
+}
+
+void HtmlFormatter::UpdateLinkBboxes(PageData *page)
+{
+    for (DrawInstr *i = page->instructions.IterStart(); i; i = page->instructions.IterNext()) {
+        if (InstrLinkStart != i->type)
+            continue;
+        for (DrawInstr *i2 = i + 1; i2->type != InstrLinkEnd; i2++) {
+            if (IsVisibleDrawInstr(i2))
+                i->bbox = RectFUnion(i->bbox, i2->bbox);
+        }
+    }
+}
+
 void HtmlFormatter::ForceNewPage()
 {
     bool createdNewPage = FlushCurrLine(true);
     if (createdNewPage)
         return;
-    if (currLink)
-        currPage->instructions.Append(DrawInstr(InstrLinkEnd));
+    UpdateLinkBboxes(currPage);
     pagesToSend.Append(currPage);
     currPage = new PageData();
     currPage->reparsePoint = currReparsePoint;
@@ -392,22 +403,6 @@ void HtmlFormatter::ForceNewPage()
     currX = NewLineX();
     currJustification = Align_Justify;
     currLineTopPadding = 0.f;
-    if (currLink)
-        currPage->instructions.Append(DrawInstr::LinkStart(currLink, currLinkLen));
-}
-
-static const char *GetOpenLink(Vec<DrawInstr> *pageInstrs, size_t *len)
-{
-    for (size_t k = pageInstrs->Count(); k > 0; k--) {
-        DrawInstr *i = &pageInstrs->At(k-1);
-        if (InstrLinkStart == i->type) {
-            *len = i->str.len;
-            return i->str.s;
-        }
-        if (InstrLinkEnd == i->type)
-            break;
-    }
-    return NULL;
 }
 
 // returns true if created a new page
@@ -429,10 +424,7 @@ bool HtmlFormatter::FlushCurrLine(bool isParagraphBreak)
     if (currY + totalLineDy > pageDy) {
         // current line too big to fit in current page,
         // so need to start another page
-        size_t openLinkLen;
-        const char *openLink = GetOpenLink(&currPage->instructions, &openLinkLen);
-        if (openLink)
-            currPage->instructions.Append(DrawInstr(InstrLinkEnd));
+        UpdateLinkBboxes(currPage);
         pagesToSend.Append(currPage);
         currPage = new PageData();
         createdPage = true;
@@ -443,17 +435,24 @@ bool HtmlFormatter::FlushCurrLine(bool isParagraphBreak)
         CrashIf(!currLineReparsePoint);
         currPage->reparsePoint = currLineReparsePoint;
         currY = 0.f;
-        if (openLink)
-            currPage->instructions.Append(DrawInstr::LinkStart(openLink, openLinkLen));
     }
     SetYPos(currLineInstr, currY + currLineTopPadding);
     currY += totalLineDy;
 
+    DrawInstr link;
+    if (currLinkIdx) {
+        link = currLineInstr.At(currLinkIdx - 1);
+        AppendInstr(DrawInstr(InstrLinkEnd));
+    }
     currPage->instructions.Append(currLineInstr.LendData(), currLineInstr.Count());
     currLineInstr.Reset();
     currLineReparsePoint = NULL;
     currLineTopPadding = 0;
     currX = NewLineX();
+    if (currLinkIdx) {
+        AppendInstr(DrawInstr::LinkStart(link.str.s, link.str.len));
+        currLinkIdx = currLineInstr.Count();
+    }
     return createdPage;
 }
 
@@ -695,18 +694,17 @@ void HtmlFormatter::HandleTagFont(HtmlToken *t)
 
 bool HtmlFormatter::HandleTagA(HtmlToken *t, const char *linkAttr)
 {
-    if (t->IsStartTag() && !currLink) {
+    if (t->IsStartTag() && !currLinkIdx) {
         AttrInfo *attr = t->GetAttrByName(linkAttr);
         if (attr) {
             AppendInstr(DrawInstr::LinkStart(attr->val, attr->valLen));
-            currLink = attr->val;
-            currLinkLen = attr->valLen;
+            currLinkIdx = currLineInstr.Count();
             return true;
         }
     }
-    else if (t->IsEndTag() && currLink) {
+    else if (t->IsEndTag() && currLinkIdx) {
         AppendInstr(DrawInstr(InstrLinkEnd));
-        currLink = NULL;
+        currLinkIdx = 0;
         return true;
     }
     return false;
@@ -863,7 +861,7 @@ void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, RE
     if (!textColor)
         textColor = &kindleTextColor;
     SolidBrush brText(*textColor);
-    Pen pen(Color(255, 0, 0), 1);
+    Pen debugPen(Color(255, 0, 0), 1);
     //Pen linePen(Color(0, 0, 0), 2.f);
     Pen linePen(Color(0x5F, 0x4B, 0x32), 2.f);
     Font *font = NULL;
@@ -871,7 +869,6 @@ void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, RE
     WCHAR buf[512];
     PointF pos;
     DrawInstr *i;
-    bool insideLink = false;
     for (i = drawInstructions->IterStart(); i; i = drawInstructions->IterNext()) {
         RectF bbox = i->bbox;
         bbox.X += offX;
@@ -882,13 +879,13 @@ void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, RE
             PointF p1(bbox.X, y);
             PointF p2(bbox.X + bbox.Width, y);
             if (showBbox)
-                g->DrawRectangle(&pen, bbox);
+                g->DrawRectangle(&debugPen, bbox);
             g->DrawLine(&linePen, p1, p2);
         } else if (InstrString == i->type) {
             size_t strLen = str::Utf8ToWcharBuf(i->str.s, i->str.len, buf, dimof(buf));
             bbox.GetLocation(&pos);
             if (showBbox)
-                g->DrawRectangle(&pen, bbox);
+                g->DrawRectangle(&debugPen, bbox);
             g->DrawString(buf, strLen, font, pos, NULL, &brText);
         } else if (InstrSetFont == i->type) {
             font = i->font;
@@ -903,9 +900,13 @@ void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, RE
                 g->DrawImage(bmp, bbox, 0, 0, (REAL)bmp->GetWidth(), (REAL)bmp->GetHeight(), UnitPixel);
             delete bmp;
         } else if (InstrLinkStart == i->type) {
-            insideLink = true;
+            // TODO: set text color to blue
+            PointF p1(bbox.X, bbox.Y + bbox.Height);
+            PointF p2(bbox.X + bbox.Width, bbox.Y + bbox.Height);
+            Pen linkPen(*textColor);
+            g->DrawLine(&linkPen, p1, p2);
         } else if (InstrLinkEnd == i->type) {
-            insideLink = false;
+            // TODO: set text color back again
         } else {
             CrashIf(true);
         }
