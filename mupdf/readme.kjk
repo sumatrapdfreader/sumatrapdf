@@ -4,4 +4,8 @@ This repository collects my improvements to fitz/mupdf code that I make while wo
 
 fitz/mupdf is licensed under GPLv3, with commercial license available from Artifex.
 
-All the fixes I make are placed into public domain. Note: that only applies to my changes, obviously if you're using fitz/mupfd, you're still bound by GPLv3.
+All the fixes I make are placed into public domain. Note: that only applies to my changes, obviously if you're using fitz/mupdf, you're still bound by GPLv3.
+
+
+Addendum:
+This repository also contains patches by other authors. Unless stated otherwise, their patches are licensed under GPLv3.
