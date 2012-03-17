@@ -555,27 +555,25 @@ DjVuDocEditor::insert_file(const GURL &file_url, bool is_page,
                                          can_compress_flag);
   }
 
-         // Oh. It does exist... Check that it has IFF structure
+  // Oh. It does exist... Check that it has IFF structure
   {
-       const GP<IFFByteStream> giff(
-         IFFByteStream::create(file_pool->get_stream()));
-       IFFByteStream &iff=*giff;
-       GUTF8String chkid;
-
-       int length;
-       length=iff.get_chunk(chkid);
-       if (chkid!="FORM:DJVI" && chkid!="FORM:DJVU" &&
-         chkid!="FORM:BM44" && chkid!="FORM:PM44")
-       G_THROW( ERR_MSG("DjVuDocEditor.not_1_page") "\t"+file_url.get_string());
-
-       // Wonderful. It's even a DjVu file. Scan for NDIR chunks.
-       // If NDIR chunk is found, ignore the file
-       while(iff.get_chunk(chkid))
-       {
-         if (chkid=="NDIR")
-           return false;
-         iff.close_chunk();
-       }
+    const GP<IFFByteStream> giff(
+       IFFByteStream::create(file_pool->get_stream()));
+    IFFByteStream &iff=*giff;
+    GUTF8String chkid;
+    iff.get_chunk(chkid);
+    if (chkid!="FORM:DJVI" && chkid!="FORM:DJVU" &&
+        chkid!="FORM:BM44" && chkid!="FORM:PM44")
+      G_THROW( ERR_MSG("DjVuDocEditor.not_1_page") "\t"
+               + file_url.get_string());
+    // Wonderful. It's even a DjVu file. Scan for NDIR chunks.
+    // If NDIR chunk is found, ignore the file
+    while(iff.get_chunk(chkid))
+      {
+        if (chkid=="NDIR")
+          return false;
+        iff.close_chunk();
+      }
   }
   return insert_file(file_pool,file_url,is_page,file_pos,name2id,source);
 }
@@ -1732,7 +1730,7 @@ DjVuDocEditor::generate_thumbnails(int thumb_size,
    do
    {
      page_num=generate_thumbnails(thumb_size,page_num);
-     if (cb) if (cb(page_num, cl_data)) return;
+     if (cb && page_num>0) if (cb(page_num-1, cl_data)) return;
    } while(page_num>=0);
 }
 
@@ -1962,7 +1960,15 @@ DjVuDocEditor::save_as(const GURL &where, bool bundled)
      doc_url=GURL();
    }else
    {
-     if (djvm_dir->get_files_num()==1 && !djvm_nav)
+     bool singlepage = (djvm_dir->get_files_num()==1 && !djvm_nav);
+     if (singlepage)
+     {
+       // maybe save as single page
+       DjVmDir::File *file = djvm_dir->page_to_file(0);
+       if (file->get_title() != file->get_load_name())
+         singlepage = false;
+     }
+     if (singlepage)
      {
        // Here 'bundled' has no effect: we will save it as one page.
        DEBUG_MSG("saving one file...\n");

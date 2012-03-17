@@ -88,6 +88,7 @@
 #include "GString.h"
 #include "ByteStream.h"
 
+#include <stddef.h>
 
 #ifdef HAVE_NAMESPACES
 namespace DJVU {

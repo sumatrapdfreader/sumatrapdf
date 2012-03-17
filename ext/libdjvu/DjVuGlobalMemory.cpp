@@ -67,6 +67,8 @@
 
 #include "DjVuGlobal.h"
 #include "GException.h"
+
+#include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 #include "debug.h"

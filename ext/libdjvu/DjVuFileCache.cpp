@@ -63,6 +63,7 @@
 #include "DjVuFileCache.h"
 #include "debug.h"
 
+#include <stddef.h>
 #include <stdlib.h>
 
 

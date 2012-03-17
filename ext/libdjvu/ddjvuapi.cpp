@@ -60,6 +60,7 @@
 # pragma implementation "ddjvuapi.h"
 #endif
 
+#include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -555,6 +556,7 @@ ddjvu_cache_clear(ddjvu_context_t *ctx)
   G_TRY
     {
       GMonitorLock lock(&ctx->monitor);
+      DataPool::close_all();
       if (ctx->cache)
       {
         ctx->cache->clear();
@@ -3659,14 +3661,14 @@ ddjvu_document_get_pagetext(ddjvu_document_t *document, int pageno,
 // creates the proper escapes on the fly.
 
 
-static struct {
+struct anno_dat_s {
   const char *s;
   char buf[8];
   int  blen;
   int  state;
   bool compat;
   bool eof;
-} anno_dat;
+};
 
 
 static bool
@@ -3703,16 +3705,16 @@ anno_compat(const char *s)
 
 
 static int
-anno_getc(void)
+anno_fgetc(miniexp_io_t *io)
 {
+  struct anno_dat_s *anno_dat_p = (struct anno_dat_s*)(io->data[0]);
+  struct anno_dat_s &anno_dat = *anno_dat_p;
   if (anno_dat.blen>0)
     {
       anno_dat.blen--;
       char c = anno_dat.buf[0];
-      { // extra nesting for windows
-        for (int i=0; i<anno_dat.blen; i++)
-          anno_dat.buf[i] = anno_dat.buf[i+1];
-      }
+      for (int i=0; i<anno_dat.blen; i++)
+        anno_dat.buf[i] = anno_dat.buf[i+1];
       return c;
     }
   if (! *anno_dat.s)
@@ -3754,16 +3756,16 @@ anno_getc(void)
 
 
 static int
-anno_ungetc(int c)
+anno_ungetc(miniexp_io_t *io, int c)
 {
   if (c == EOF)
     return EOF;
+  struct anno_dat_s *anno_dat_p = (struct anno_dat_s*)(io->data[0]);
+  struct anno_dat_s &anno_dat = *anno_dat_p;
   if (anno_dat.blen>=(int)sizeof(anno_dat.buf))
     return EOF;
-  { // extra nesting for windows
-    for (int i=anno_dat.blen; i>0; i--)
-      anno_dat.buf[i] = anno_dat.buf[i-1];
-  }
+  for (int i=anno_dat.blen; i>0; i--)
+    anno_dat.buf[i] = anno_dat.buf[i-1];
   anno_dat.blen += 1;
   anno_dat.buf[0] = c;
   return c;
@@ -3781,22 +3783,23 @@ anno_sub(ByteStream *bs, miniexp_t &result)
     raw += GUTF8String(buffer, length);
   // Prepare 
   miniexp_t a;
+  struct anno_dat_s anno_dat;
   anno_dat.s = (const char*)raw;
   anno_dat.compat = anno_compat(anno_dat.s);
   anno_dat.blen = 0;
   anno_dat.state = 0;
   anno_dat.eof = false;
-  int (*saved_getc)(void) = minilisp_getc;
-  int (*saved_ungetc)(int) = minilisp_ungetc;
-  // Process
-  minilisp_getc = anno_getc;
-  minilisp_ungetc = anno_ungetc;
+  miniexp_io_t io;
+  miniexp_io_init(&io);
+  io.data[0] = (void*)&anno_dat;
+  io.fgetc = anno_fgetc;
+  io.ungetc = anno_ungetc;
+  io.p_macrochar = 0;
+  io.p_macroqueue = 0;
+  // Read
   while (* anno_dat.s )
-    if ((a = miniexp_read()) != miniexp_dummy)
+    if ((a = miniexp_read_r(&io)) != miniexp_dummy)
       result = miniexp_cons(a, result);
-  // Restore
-  minilisp_getc = saved_getc;
-  minilisp_ungetc = saved_ungetc;
 }
 
 

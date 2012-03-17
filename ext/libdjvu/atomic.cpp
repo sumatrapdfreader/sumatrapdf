@@ -28,6 +28,7 @@
 # include "config.h"
 #endif
 
+#include <stddef.h>
 #include <stdlib.h>
 #include <assert.h>
 #include "atomic.h"

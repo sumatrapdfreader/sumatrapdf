@@ -72,6 +72,7 @@
 #include "GPixmap.h"
 #include "debug.h"
 #include <stdarg.h>
+#include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>

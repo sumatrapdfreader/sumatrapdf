@@ -62,6 +62,7 @@
 
 #include "MMX.h"
 #include <stdio.h>
+#include <stddef.h>
 #include <stdlib.h>
 
 
@@ -166,8 +167,23 @@ MMXControl::enable_mmx()
                     : "=m" (cpuflags) :
                     : "eax","ecx","edx");
 #endif
+#if defined(MMX) && defined(__GNUC__) && defined(__x86_64__)
+  // Detection of MMX for GCC
+  __asm__ volatile (// Check that CR0:EM is clear
+                    "xorl %%edx,%%edx\n\t"
+                    "smsw %%ax\n\t"
+                    "andl $4,%%eax\n\t"
+                    "jnz 1f\n\t"
+                    // Execute CPUID
+                    "movl $1,%%eax\n\t"
+                    "cpuid\n"
+                    // Finish
+		    "1:\tmovl %%edx, %0"
+                    : "=m" (cpuflags) :
+                    : "eax","ebx","ecx","edx");
+#endif
 #if defined(MMX) && defined(_MSC_VER) && defined(_M_IX86)
-  // Detection of MMX for MSVC
+  // Detection of MMX for MSVC 32 bits
   __asm {  pushfd
            pop     ecx
            xor     edx,edx

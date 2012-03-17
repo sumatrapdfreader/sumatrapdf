@@ -73,6 +73,7 @@
 #include "GThreads.h"
 #include "debug.h"
 
+#include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -642,26 +643,22 @@ GBaseString::UTF8ToNative(
   const char *source=(*this);
   GP<GStringRep> retval;
   if(source && source[0]) 
-  {
-#if DO_CHANGELOCALE
-    GUTF8String lc_ctype(setlocale(LC_CTYPE,0));
-#endif
-    bool repeat;
-    for(repeat=!currentlocale;;repeat=false)
     {
-      retval=(*this)->toNative((GStringRep::EscapeMode)escape);
 #if DO_CHANGELOCALE
-      if (!repeat || retval || (lc_ctype == setlocale(LC_CTYPE,"")))
+      GUTF8String lc_ctype(setlocale(LC_CTYPE,0));
+      bool repeat;
+      for(repeat=!currentlocale;;repeat=false)
+        {
 #endif
-        break;
-    }
+          retval=(*this)->toNative((GStringRep::EscapeMode)escape);
 #if DO_CHANGELOCALE
-    if(!repeat)
-      {
+          if (!repeat || retval || (lc_ctype == setlocale(LC_CTYPE,"")))
+            break;
+        }
+      if(!repeat)
         setlocale(LC_CTYPE,(const char *)lc_ctype);
-      }
 #endif
-  }
+    }
   return GNativeString(retval);
 }
 
@@ -696,27 +693,19 @@ GBaseString::NativeToUTF8(void) const
     const char *source=(*this);
 #if DO_CHANGELOCALE
     GUTF8String lc_ctype=setlocale(LC_CTYPE,0);
-#endif
     bool repeat;
     for(repeat=true;;repeat=false)
-    {
-      if( (retval=GStringRep::NativeToUTF8(source)) )
       {
-        if(GStringRep::cmp(retval->toNative(),source))
-        {
-          retval=GStringRep::UTF8::create((unsigned int)0);
-        }
-      }
-#if DO_CHANGELOCALE
-      if(!repeat || retval || (lc_ctype == setlocale(LC_CTYPE,"")))
 #endif
-        break;
-    }
+        if( (retval=GStringRep::NativeToUTF8(source)) )
+          if(GStringRep::cmp(retval->toNative(),source))
+            retval=GStringRep::UTF8::create((unsigned int)0);
 #if DO_CHANGELOCALE
+        if(!repeat || retval || (lc_ctype == setlocale(LC_CTYPE,"")))
+          break;
+      }
     if(!repeat)
-    {
       setlocale(LC_CTYPE,(const char *)lc_ctype);
-    }
 #endif
   }
   return GUTF8String(retval);

@@ -23,6 +23,7 @@
 # pragma implementation "miniexp.h"
 #endif
 
+#include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
@@ -760,7 +761,7 @@ miniobj_t::pname() const
 {
   const char *cname = miniexp_to_name(classof());
   char *res = new char[strlen(cname)+24];
-  sprintf(res,"#<%s:%p>",cname,this);
+  sprintf(res,"#%s:<%p>",cname,this);
   return res;
 }
 
@@ -893,10 +894,9 @@ print_c_string(const char *s, char *d, bool eightbits)
 char *
 ministring_t::pname() const
 {
-  bool eightbits = !minilisp_print_7bits;
-  int n = print_c_string(s, 0, eightbits);
+  int n = print_c_string(s, 0, true);
   char *d = new char[n];
-  if (d) print_c_string(s, d, eightbits);
+  if (d) print_c_string(s, d, true);
   return d;
 }
 
@@ -962,53 +962,119 @@ miniexp_concat(miniexp_t p)
 /* INPUT/OUTPUT                                       */
 /* -------------------------------------------------- */
 
-extern "C" { 
-  // SunCC needs this to be defined inside extern "C" { ... }
-  // Beware the difference between extern "C" {...} and extern "C".
-  miniexp_t (*minilisp_macrochar_parser[128])(void); 
+BEGIN_ANONYMOUS_NAMESPACE
+
+struct CompatCounter 
+{
+  static int count;
+  CompatCounter() { count += 1; }
+  ~CompatCounter() { count -= 1; }
+};
+
+int CompatCounter::count = 0;
+
+END_ANONYMOUS_NAMESPACE
+
+static int
+compat_puts(const char *s)
+{
+  CompatCounter count;
+  return miniexp_io.fputs(&miniexp_io, s);
 }
 
-/* --------- OUTPUT */
+static int
+compat_getc()
+{
+  CompatCounter count;
+  return miniexp_io.fgetc(&miniexp_io);
+}
 
-static FILE *outputfile;
+static int
+compat_ungetc(int c)
+{
+  CompatCounter count;
+  return miniexp_io.ungetc(&miniexp_io, c);
+}
 
 static int 
-stdio_puts(const char *s)
+stdio_fputs(miniexp_io_t *io, const char *s)
 {
-  if (!outputfile)
-    outputfile = stdout;
-  return fputs(s, outputfile);
-  return EOF;
+  if (io == &miniexp_io && !CompatCounter::count)
+    return (*minilisp_puts)(s); /* compatibility hack */
+  FILE *f = (io->data[1]) ? (FILE*)(io->data[1]) : stdout;
+  return ::fputs(s, f);
 }
 
-int (*minilisp_puts)(const char *s) = stdio_puts;
+static int 
+stdio_fgetc(miniexp_io_t *io)
+{
+  if (io == &miniexp_io && !CompatCounter::count)
+    return (*minilisp_getc)(); /* compatibility hack */
+  FILE *f = (io->data[0]) ? (FILE*)(io->data[0]) : stdin;
+  return ::getc(f);
+}
 
-int minilisp_print_7bits = 1;
+static int 
+stdio_ungetc(miniexp_io_t *io, int c)
+{
+  if (io == &miniexp_io && !CompatCounter::count)
+    return (*minilisp_ungetc)(c); /* compatibility hack */
+  FILE *f = (io->data[0]) ? (FILE*)(io->data[0]) : stdin;
+  return ::ungetc(c, f);
+}
+
+extern "C" 
+{ 
+  // SunCC needs this to be defined inside extern "C" { ... }
+  // Beware the difference between extern "C" {...} and extern "C".
+  miniexp_t (*minilisp_macrochar_parser[128])(void);
+  minivar_t minilisp_macroqueue;
+  int minilisp_print_7bits;
+}
+
+
+miniexp_io_t miniexp_io = { 
+  stdio_fputs, stdio_fgetc, stdio_ungetc, { 0, 0, 0, 0 },
+  (int*)&minilisp_print_7bits,
+  (miniexp_macrochar_t*)minilisp_macrochar_parser, 
+  (minivar_t*)&minilisp_macroqueue,
+  0
+};  
+
+int (*minilisp_puts)(const char *) = compat_puts;
+int (*minilisp_getc)(void) = compat_getc;
+int (*minilisp_ungetc)(int) = compat_ungetc;
 
 void 
-minilisp_set_output(FILE *f)
+miniexp_io_init(miniexp_io_t *io)
 {
-  outputfile = f;
-  minilisp_puts = stdio_puts;
+  io->fputs = stdio_fputs;
+  io->fgetc = stdio_fgetc;
+  io->ungetc = stdio_ungetc;
+  io->data[0] = io->data[1] = io->data[2] = io->data[3] = 0;
+  io->p_print7bits = (int*)&minilisp_print_7bits;;
+  io->p_macrochar = (miniexp_macrochar_t*)minilisp_macrochar_parser;
+  io->p_macroqueue = (minivar_t*)&minilisp_macroqueue;
+  io->p_reserved = 0;
 }
 
-static bool
-must_quote_symbol(const char *s)
+void 
+miniexp_io_set_output(miniexp_io_t* io, FILE *f)
 {
-  int c;
-  const char *r = s;
-  while ((c = *r++))
-    if (c=='(' || c==')' || c=='\"' || c=='|' || 
-        isspace(c) || !isascii(c) || !isprint(c) ||
-        minilisp_macrochar_parser[c] )
-      return true;
-  char *end;
-#ifdef __GNUC__
-  long junk __attribute__ ((unused)) =
-#endif
-  strtol(s, &end, 0);
-  return (!*end);
+  io->fputs = stdio_fputs;
+  io->data[1] = f;
 }
+
+void 
+miniexp_io_set_input(miniexp_io_t* io, FILE *f)
+{
+  io->fgetc = stdio_fgetc;
+  io->ungetc = stdio_ungetc;
+  io->data[0] = f;
+}
+
+
+/* ---- OUTPUT */
 
 BEGIN_ANONYMOUS_NAMESPACE
 
@@ -1016,10 +1082,12 @@ struct printer_t
 {
   int tab;
   bool dryrun;
-  printer_t() : tab(0), dryrun(false) {}
+  miniexp_io_t *io;
+  printer_t(miniexp_io_t *io) : tab(0), dryrun(false), io(io) {}
   void mlput(const char *s);
   void mltab(int n);
   void print(miniexp_t p);
+  bool must_quote_symbol(const char *s);
   virtual miniexp_t begin() { return miniexp_nil; }
   virtual bool newline() { return false; }
   virtual void end(miniexp_t) { }
@@ -1030,7 +1098,7 @@ void
 printer_t::mlput(const char *s)
 {
   if (! dryrun)
-    minilisp_puts(s);
+    io->fputs(io, s);
   while (*s)
     if (*s++ == '\n')
       tab = 0;
@@ -1047,6 +1115,24 @@ printer_t::mltab(int n)
     mlput(" ");
 }
 
+bool
+printer_t::must_quote_symbol(const char *s)
+{
+  int c;
+  const char *r = s;
+  while ((c = *r++))
+    if (c=='(' || c==')' || c=='\"' || c=='|' || 
+        isspace(c) || !isascii(c) || !isprint(c) ||
+        (c >= 0 && c < 128 && io->p_macrochar && io->p_macrochar[c]) )
+      return true;
+  char *end;
+#ifdef __GNUC__
+  long junk __attribute__ ((unused)) =
+#endif
+  strtol(s, &end, 0);
+  return (!*end);
+}
+
 void
 printer_t::print(miniexp_t p)
 {
@@ -1058,7 +1144,7 @@ printer_t::print(miniexp_t p)
     }
   else if (p == miniexp_dummy)
     {
-      mlput("#<dummy>");
+      mlput("#dummy");
     }
   else if (miniexp_numberp(p))
     {
@@ -1072,6 +1158,16 @@ printer_t::print(miniexp_t p)
       if (needquote) mlput("|");
       mlput(s);
       if (needquote) mlput("|");
+    }
+  else if (miniexp_stringp(p))
+    {
+      const char *s = miniexp_to_str(p);
+      bool print7bits = (io->p_print7bits && *io->p_print7bits);
+      int n = print_c_string(s, 0, !print7bits);
+      char *d = new char[n];
+      if (d) print_c_string(s, d, !print7bits);
+      mlput(d);
+      delete [] d;
     }
   else if (miniexp_objectp(p))
     {
@@ -1138,6 +1234,7 @@ struct pprinter_t : public printer_t
 {
   int width;
   minivar_t l;
+  pprinter_t(miniexp_io_t *io) : printer_t(io) {}
   virtual miniexp_t begin();
   virtual bool newline();
   virtual void end(miniexp_t);
@@ -1190,28 +1287,28 @@ pprinter_t::end(miniexp_t p)
 END_ANONYMOUS_NAMESPACE
 
 miniexp_t 
-miniexp_prin(miniexp_t p)
+miniexp_prin_r(miniexp_io_t *io, miniexp_t p)
 {
   minivar_t xp = p;
-  printer_t printer;
+  printer_t printer(io);
   printer.print(p);
   return p;
 }
 
 miniexp_t 
-miniexp_print(miniexp_t p)
+miniexp_print_r(miniexp_io_t *io, miniexp_t p)
 {
   minivar_t xp = p;
-  miniexp_prin(p);
-  minilisp_puts("\n");
+  miniexp_prin_r(io, p);
+  io->fputs(io, "\n");
   return p;
 }
 
 miniexp_t 
-miniexp_pprin(miniexp_t p, int width)
+miniexp_pprin_r(miniexp_io_t *io, miniexp_t p, int width)
 {  
   minivar_t xp = p;
-  pprinter_t printer;
+  pprinter_t printer(io);
   printer.width = width;
   // step1 - measure lengths into list <l>
   printer.tab = 0;
@@ -1228,34 +1325,36 @@ miniexp_pprin(miniexp_t p, int width)
 }
 
 miniexp_t 
-miniexp_pprint(miniexp_t p, int width)
+miniexp_pprint_r(miniexp_io_t *io, miniexp_t p, int width)
 {
-  miniexp_pprin(p, width);
-  minilisp_puts("\n");
+  miniexp_pprin_r(io, p, width);
+  io->fputs(io, "\n");
   return p;
 }
 
-/* --------- PNAME */
 
-static struct { 
-  char *b; int l; int m; 
-} pname_data;
+/* ---- PNAME */
 
 static int
-pname_puts(const char *s)
+pname_fputs(miniexp_io_t *io, const char *s)
 {
-  int x = strlen(s);
-  if (pname_data.l + x >= pname_data.m)
+  char *b = (char*)(io->data[0]);
+  size_t l = (size_t)(io->data[2]);
+  size_t m = (size_t)(io->data[3]);
+  size_t x = strlen(s);
+  if (l + x >= m)
     {
-      int nm = pname_data.l + x + 256;
+      size_t nm = l + x + 256;
       char *nb = new char[nm+1];
-      memcpy(nb, pname_data.b, pname_data.l);
-      delete [] pname_data.b;
-      pname_data.m = nm;
-      pname_data.b = nb;
+      memcpy(nb, b, l);
+      delete [] b;
+      b = nb;
+      m = nm;
     }
-  strcpy(pname_data.b + pname_data.l, s);
-  pname_data.l += x;
+  strcpy(b + l, s);
+  io->data[0] = (void*)(b);
+  io->data[2] = (void*)(l + x);
+  io->data[3] = (void*)(m);
   return x;
 }
 
@@ -1263,71 +1362,29 @@ miniexp_t
 miniexp_pname(miniexp_t p, int width)
 {
   minivar_t r;
-  int (*saved)(const char*) = minilisp_puts;
-  pname_data.b = 0;
-  pname_data.m = pname_data.l = 0;
+  miniexp_io_t io;
+  miniexp_io_init(&io);
+  io.fputs = pname_fputs;
+  io.data[0] = io.data[2] = io.data[3] = 0;
   try
     {
-      minilisp_puts = pname_puts;
       if (width > 0)
-        miniexp_pprin(p, width);
+        miniexp_pprin_r(&io, p, width);
       else
-        miniexp_prin(p);
-      minilisp_puts = saved;
-      r = miniexp_string(pname_data.b);
-      delete [] pname_data.b;
-      pname_data.b = 0;
+        miniexp_prin_r(&io, p);
+      if (io.data[0])
+        r = miniexp_string((const char*)io.data[0]);
+      delete [] (char*)(io.data[0]);
     }
   catch(...)
     {
-      minilisp_puts = saved;
-      delete [] pname_data.b;
-      pname_data.b = 0;
+      delete [] (char*)(io.data[0]);
     }
   return r;
 }
 
 
-
-/* --------- INPUT */
-
-static FILE *inputfile;
-static minivar_t inputqueue;
-
-static int
-stdio_getc(void)
-{
-  if (!inputfile)
-    inputfile = stdin;
-  return getc(inputfile);
-}
-
-static int
-stdio_ungetc(int c)
-{
-  if (inputfile && c>=0)
-    return ungetc(c, inputfile);
-  return EOF;
-}
-
-int (*minilisp_getc)(void) = stdio_getc;
-
-int (*minilisp_ungetc)(int c) = stdio_ungetc;
-
-void 
-minilisp_set_input(FILE *f)
-{
-  inputfile = f;
-  minilisp_getc = stdio_getc;
-  minilisp_ungetc = stdio_ungetc;
-}
-
-static void
-skip_blank(int &c)
-{
-  while (isspace(c))
-    c = minilisp_getc();
-}
+/* ---- INPUT */
 
 static void
 append(int c, char* &s, int &l, int &m)
@@ -1345,49 +1402,56 @@ append(int c, char* &s, int &l, int &m)
   s[l] = 0;
 }
 
+static void
+skip_blank(miniexp_io_t *io, int &c)
+{
+  while (isspace(c))
+    c = io->fgetc(io);
+}
+
 static miniexp_t
-read_error(int &c)
+read_error(miniexp_io_t *io, int &c)
 {
   while (c!=EOF && c!='\n')
-    c = minilisp_getc();
+    c = io->fgetc(io);
   return miniexp_dummy;
 }
 
 static miniexp_t
-read_c_string(int &c)
+read_c_string(miniexp_io_t *io, int &c)
 {
   miniexp_t r;
   char *s = 0;
   int l = 0;
   int m = 0;
   ASSERT(c == '\"');
-  c = minilisp_getc();
+  c = io->fgetc(io);
   for(;;)
     {
       if (c==EOF || (isascii(c) && !isprint(c)))
-        return read_error(c);
+        return read_error(io, c);
       else if (c=='\"')
         break;
       else if (c=='\\')
         {
-          c = minilisp_getc();
+          c = io->fgetc(io);
           if (c == '\n')
             {
-              c = minilisp_getc();
+              c = io->fgetc(io);
               continue;
             }
           else if (c>='0' && c<='7')
             {
               int x = (c-'0');
-              c = minilisp_getc();
+              c = io->fgetc(io);
               if (c>='0' && c<='7')
                 {
                   x = (x<<3)+(c-'0');
-                  c = minilisp_getc();
+                  c = io->fgetc(io);
                   if (c>='0' && c<='7')
                     {
                       x = (x<<3)+(c-'0');
-                      c = minilisp_getc();
+                      c = io->fgetc(io);
                     }
                 }
               append((char)x, s, l, m);
@@ -1397,22 +1461,22 @@ read_c_string(int &c)
             {
               int x = 0;
               int d = c;
-              c = minilisp_getc();
+              c = io->fgetc(io);
               if (isxdigit(c))
                 {
                   x = (x<<4) + (isdigit(c) ? c-'0' : toupper(c)-'A'+10);
-                  c = minilisp_getc();
+                  c = io->fgetc(io);
                   if (isxdigit(c))
                     {
                       x = (x<<4) + (isdigit(c) ? c-'0' : toupper(c)-'A'+10);
-                      c = minilisp_getc();
+                      c = io->fgetc(io);
                     }
                   append((char)x, s, l, m);
                   continue;
                 }
               else
                 {
-                  minilisp_ungetc(c);
+                  io->ungetc(io, c);
                   c = d;
                 }
             }
@@ -1425,16 +1489,16 @@ read_c_string(int &c)
           }
         }
       append(c,s,l,m);
-      c = minilisp_getc();
+      c = io->fgetc(io);
     }
-  c = minilisp_getc();
+  c = io->fgetc(io);
   r = miniexp_string(s ? s : "");
   delete [] s;
   return r;
 }
 
 static miniexp_t
-read_quoted_symbol(int &c)
+read_quoted_symbol(miniexp_io_t *io, int &c)
 {
   miniexp_t r;
   char *s = 0;
@@ -1443,21 +1507,21 @@ read_quoted_symbol(int &c)
   ASSERT(c == '|');
   for(;;)
     {
-      c = minilisp_getc();
+      c = io->fgetc(io);
       if (c==EOF || (isascii(c) && !isprint(c)))
-        return read_error(c);
+        return read_error(io, c);
       if (c=='|')
         break;
       append(c,s,l,m);
     }
-  c = minilisp_getc();
+  c = io->fgetc(io);
   r = miniexp_symbol(s ? s : "");
   delete [] s;
   return r;
 }
 
 static miniexp_t
-read_symbol_or_number(int &c)
+read_symbol_or_number(miniexp_io_t *io, int &c)
 {
   miniexp_t r;
   char *s = 0;
@@ -1465,15 +1529,16 @@ read_symbol_or_number(int &c)
   int m = 0;
   for(;;)
     {
-      if (c==EOF || c=='(' || c==')' || c=='|' || c=='\"'  || 
-          isspace(c) || !isascii(c) || !isprint(c) || 
-          minilisp_macrochar_parser[c] )
+      if (c==EOF || c=='(' || c==')' || c=='|' || c=='\"'  
+          || isspace(c) || !isascii(c) || !isprint(c) 
+          || (io->p_macrochar && io->p_macroqueue  
+              && c < 128 && c >= 0 && io->p_macrochar[c] ) )
         break;
       append(c,s,l,m);
-      c = minilisp_getc();
+      c = io->fgetc(io);
     }
   if (l <= 0)
-    return read_error(c);
+    return read_error(io, c);
   char *end;
   long x = strtol(s, &end, 0);
   if (*end)
@@ -1485,24 +1550,24 @@ read_symbol_or_number(int &c)
 }
 
 static miniexp_t
-read_miniexp(int &c)
+read_miniexp(miniexp_io_t *io, int &c)
 {
   for(;;)
     {
-      if (miniexp_consp(inputqueue))
+      if (io->p_macroqueue && miniexp_consp(*io->p_macroqueue))
         {
-          miniexp_t p = car(inputqueue);
-          inputqueue = cdr(inputqueue);
+          miniexp_t p = car(*io->p_macroqueue);
+          *io->p_macroqueue = cdr(*io->p_macroqueue);
           return p;
         }
-      skip_blank(c);
+      skip_blank(io, c);
       if (c == EOF)
         {
-          return read_error(c);
+          return read_error(io, c);
         }
       else if (c == ')')
         {
-          c = minilisp_getc();
+          c = io->fgetc(io);
           continue;
         }
       else if (c == '(')
@@ -1510,20 +1575,20 @@ read_miniexp(int &c)
           minivar_t l;
           miniexp_t *where = &l;
           minivar_t p;
-          c = minilisp_getc();
+          c = io->fgetc(io);
           for(;;)
             {
-              skip_blank(c);
+              skip_blank(io, c);
               if (c == ')')
                 break;
               if (c == '.')
                 {
-                  int d = minilisp_getc();
-                  minilisp_ungetc(d);
+                  int d = io->fgetc(io);
+                  io->ungetc(io, d);
                   if (isspace(d)) 
                     break;
                 }
-              p = read_miniexp(c);
+              p = read_miniexp(io, c);
               if ((miniexp_t)p == miniexp_dummy)
                 return miniexp_dummy;
               *where = miniexp_cons(p, miniexp_nil);
@@ -1531,48 +1596,97 @@ read_miniexp(int &c)
             }
           if (c == '.')
             {
-              c = minilisp_getc();
-              skip_blank(c);
+              c = io->fgetc(io);
+              skip_blank(io, c);
               if (c != ')')
-                *where = read_miniexp(c);
+                *where = read_miniexp(io, c);
             }
-          skip_blank(c);
+          skip_blank(io, c);
           if (c != ')')
-            return read_error(c);
-          c = minilisp_getc();
+            return read_error(io, c);
+          c = io->fgetc(io);
           return l;
         }
       else if (c == '"')
         {
-          return read_c_string(c);
+          return read_c_string(io, c);
         }
       else if (c == '|')
         {
-          return read_quoted_symbol(c);
+          return read_quoted_symbol(io, c);
         }
-      else if (c>=0 && c<128 && minilisp_macrochar_parser[c])
+      else if (c == '#')
         {
-          miniexp_t p = minilisp_macrochar_parser[c]();
+          /* SumatraPDF: this is a color value: #RRGGBB */
+          return read_symbol_or_number(io, c);
+        }
+      else if (io->p_macrochar && io->p_macroqueue 
+               && c >= 0 && c < 128 
+               && io->p_macrochar[c])
+        {
+          miniexp_t p = io->p_macrochar[c](io);
           if (miniexp_length(p) > 0)
-            inputqueue = p;
-          c = minilisp_getc();
+            *io->p_macroqueue = p;
+          c = io->fgetc(io);
           continue;
         }
       else 
         {
-          return read_symbol_or_number(c);
+          return read_symbol_or_number(io, c);
         }
     }
 }
 
 miniexp_t 
-miniexp_read(void)
+miniexp_read_r(miniexp_io_t *io)
 {
-  int c = minilisp_getc();
-  miniexp_t p = read_miniexp(c);
-  minilisp_ungetc(c);
+  int c = io->fgetc(io);
+  miniexp_t p = read_miniexp(io, c);
+  io->ungetc(io, c);
   return p;
 }
+
+
+/* ---- COMPAT */
+
+miniexp_t miniexp_read(void)
+{
+  return miniexp_read_r(&miniexp_io);
+}
+
+miniexp_t miniexp_prin(miniexp_t p)
+{
+  return miniexp_prin_r(&miniexp_io, p);
+}
+
+miniexp_t miniexp_print(miniexp_t p)
+{
+  return miniexp_print_r(&miniexp_io, p);
+}
+
+miniexp_t miniexp_pprin(miniexp_t p, int w)
+{
+  return miniexp_pprin_r(&miniexp_io, p, w);
+}
+
+miniexp_t miniexp_pprint(miniexp_t p, int w)
+{
+  return miniexp_pprint_r(&miniexp_io, p, w);
+}
+
+void 
+minilisp_set_output(FILE *f)
+{
+  miniexp_io_set_output(&miniexp_io, f);
+}
+
+void 
+minilisp_set_input(FILE *f)
+{
+  miniexp_io_set_input(&miniexp_io, f);
+}
+
+
 
 
 /* -------------------------------------------------- */

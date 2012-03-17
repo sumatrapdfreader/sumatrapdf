@@ -254,24 +254,24 @@ GLObject::print(ByteStream & str, int compact, int indent, int * cur_pos) const
   if (!cur_pos) { cur_pos = &local_cur_pos; }
   
   GUTF8String buffer;
-  const char * to_print=0;
   switch(type)
   {
   case NUMBER:
-    to_print=buffer.format("%d",number);
+    buffer.format("%d",number);
     break;
   case STRING:
-    to_print=make_c_string(string);
+    buffer = make_c_string(string);
     break;
   case SYMBOL:
-    to_print=buffer.format("%s",(const char *)symbol);
+    buffer.format("%s",(const char *)symbol);
     break;
   case LIST:
-    to_print=buffer.format("(%s",(const char *)name);
+    buffer.format("(%s",(const char *)name);
     break;
   case INVALID:
     break;
   }
+  const char * to_print = (const char*)buffer;
   if (!compact && *cur_pos+strlen(to_print)>70)
   {
     char ch='\n';
@@ -1374,7 +1374,7 @@ DjVuANT::encode_raw(void) const
      }
       //*** XMP Metadata
    del_all_items(XMP_TAG, parser);
-   if (!xmpmetadata)
+   if (!!xmpmetadata)
      {
        GUTF8String mdatabuffer("(");
        mdatabuffer +=  XMP_TAG;
@@ -1384,8 +1384,10 @@ DjVuANT::encode_raw(void) const
      //*** Mapareas
    del_all_items(GMapArea::MAPAREA_TAG, parser);
    for(GPosition pos=map_areas;pos;++pos)
-      parser.parse(map_areas[pos]->print());
-
+     {
+       GUTF8String mapareabuffer = map_areas[pos]->print();
+       parser.parse(mapareabuffer);
+     }
    GP<ByteStream> gstr=ByteStream::create();
    ByteStream &str=*gstr;
    parser.print(str, 1);

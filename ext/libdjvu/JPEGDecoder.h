@@ -64,6 +64,7 @@
 
 #ifdef NEED_JPEG_DECODER
 
+#include <stddef.h>
 #include <string.h>
 #include <setjmp.h>
 

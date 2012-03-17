@@ -5,7 +5,7 @@ CHMLib          0.40a   2009-07-02   https://github.com/jedwing/CHMLib
 freetype2       2.4.9   2012-03-08   http://sourceforge.net/projects/freetype/files/freetype2/
 jbig2dec        0.11git 2012-01-24   http://git.ghostscript.com/?p=jbig2dec.git
 libjpeg-turbo   1.2.0   2011-02-10   http://sourceforge.net/projects/libjpeg-turbo/files/
-libdjvu         3.5.24  2011-03-06   http://djvu.sourceforge.net/
+libdjvu         3.5.25  2012-03-15   http://djvu.sourceforge.net/
 openjpeg        1.5.0   2012-02-07   http://code.google.com/p/openjpeg/downloads
 synctex         1.16    2011-06-14   http://itexmac.sourceforge.net/SyncTeX.html
 unrar           4.10.0  2012-01-09   http://www.rarlab.com/rar_add.htm

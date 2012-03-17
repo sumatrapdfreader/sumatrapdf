@@ -67,6 +67,7 @@
 // Our original implementation consisted of multiple classes.
 // <http://prdownloads.sourceforge.net/djvu/DjVu2_2b-src.tgz>.
 
+#include <stddef.h>
 #include <string.h>
 #if PARANOID_DEBUG
 # include <assert.h>

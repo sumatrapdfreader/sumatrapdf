@@ -71,6 +71,7 @@
 #include "debug.h"
 #include <ctype.h>
 #include <string.h>
+#include <stddef.h>
 #include <stdlib.h>
 #ifdef WIN32
 # include <tchar.h>

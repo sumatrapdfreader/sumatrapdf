@@ -72,6 +72,7 @@
 #include "GURL.h"
 #include "debug.h"
 
+#include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>

@@ -1360,9 +1360,6 @@ DataPool::stop(bool only_blocked)
 	 // "active_readers"
       while(*active_readers)
       {
-#if (THREADMODEL==COTHREADS) || (THREADMODEL==MACTHREADS)
-	 GThread::yield();
-#endif
 	 pool->restart_readers();
       }
    }
@@ -1782,6 +1779,7 @@ void
 DataPool::close_all(void)
 {
   OpenFiles::get()->close_all();
+  FCPools::get()->clean();
 }
 
 

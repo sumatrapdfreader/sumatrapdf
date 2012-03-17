@@ -62,6 +62,8 @@
 
 #include "GString.h"
 
+#include <stddef.h>
+
 #if HAS_ICONV
 #include <iconv.h>
 #endif

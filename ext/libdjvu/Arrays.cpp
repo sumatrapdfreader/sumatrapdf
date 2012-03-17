@@ -239,9 +239,7 @@ ArrayRep::ins(int n, const void * what, unsigned int howmany)
       copy(ndata, lobound-minlo, hibound-minlo,
 	   data, lobound-minlo, hibound-minlo);
       destroy(data, lobound-minlo, hibound-minlo);
-      void *tmp=data;
       data=ndata;
-      tmp=data;
       maxhi = nmaxhi;
    }
 

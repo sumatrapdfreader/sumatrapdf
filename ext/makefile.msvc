@@ -30,7 +30,7 @@ UNRAR_CFLAGS = $(UNRAR_CFLAGS:/EHs-c-=/EHsc)
 UNRAR_CFLAGS = $(UNRAR_CFLAGS:UNICODE=IGNORE_THIS)
 
 DJVU_CFLAGS = $(CFLAGSOPT) /D "NEED_JPEG_DECODER" /I$(JPEG_TURBO_DIR)
-DJVU_CFLAGS = $(DJVU_CFLAGS) /D "THREADMODEL=NOTHREADS" /D "DDJVUAPI=/**/" /D "MINILISPAPI=/**/"
+DJVU_CFLAGS = $(DJVU_CFLAGS) /D "THREADMODEL=0" /D "DDJVUAPI=/**/" /D "MINILISPAPI=/**/"
 # a hack to enable C++ exception handling for libdjvu (without triggering a warning)
 DJVU_CFLAGS = $(DJVU_CFLAGS:/EHs-c-=/EHsc)
 # undo /D "UNICODE", as libdjvu uses TCHAR functions for char in several places

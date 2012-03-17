@@ -176,6 +176,7 @@ DjVuDocument::start_init(
       // Initialize
    cache=xcache;
    doc_type=UNKNOWN_TYPE;
+   DataPool::close_all();
    DjVuPortcaster * pcaster=get_portcaster();
    if (!xport)
      xport=simple_port=new DjVuSimplePort();
@@ -1773,10 +1774,20 @@ DjVuDocument::write(const GP<ByteStream> &gstr, bool force_djvm)
    
   GP<DjVmDoc> doc=get_djvm_doc();
   GP<DjVmDir> dir=doc->get_djvm_dir();
-  if (force_djvm || dir->get_files_num()>1)
+
+  bool singlepage = (dir->get_files_num()==1 && !djvm_nav && !force_djvm);
+  if (singlepage)
+  {
+    // maybe save as single page
+    DjVmDir::File *file = dir->page_to_file(0);
+    if (file->get_title() != file->get_load_name())
+      singlepage = false;
+  }
+  if (! singlepage)
   {
     doc->write(gstr);
-  }else
+  }
+  else
   {
     GPList<DjVmDir::File> files_list=dir->resolve_duplicates(false);
     GP<DataPool> pool=doc->get_data(files_list[files_list]->get_load_name());

@@ -962,7 +962,7 @@ public:
   /** Inserts an element before the first element of the list. 
       The new element is initialized with a copy of argument #elt#. */
   void prepend(const TYPE &elt)
-    { GListImpl<TI>::prepend(newnode((const TI&)elt)); }
+    { GListImpl<TI>::prepend(this->newnode((const TI&)elt)); }
   /** Inserts a new element after the list element at position #pos#.  When
       position #pos# is null the element is inserted at the beginning of the
       list.  The new element is initialized with a copy of #elt#. */

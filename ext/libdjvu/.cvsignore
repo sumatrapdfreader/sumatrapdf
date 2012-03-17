@@ -1,8 +1,0 @@
-*.lo
-.libs
-DjVuDocument.loT
-Makefile
-ddjvuapi.pc
-libdjvulibre*.a
-libdjvulibre*.so*
-libdjvulibre.la

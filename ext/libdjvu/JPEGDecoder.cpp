@@ -153,7 +153,6 @@ JPEGDecoder::decode(ByteStream & bs,GPixmap &pix)
 
   JSAMPARRAY buffer;    /* Output row buffer */
   int row_stride;   /* physical row width in output buffer */
-  int full_buf_size;
   int isGrey,i;
 
   cinfo.err = jpeg_std_error(&jerr.pub);
@@ -184,7 +183,6 @@ JPEGDecoder::decode(ByteStream & bs,GPixmap &pix)
 
   /* JSAMPLEs per row in output buffer */
   row_stride = cinfo.output_width * cinfo.output_components;
-  full_buf_size = row_stride * cinfo.output_height;
 
   /* Make a one-row-high sample array that will go away when done with image */
   buffer = (*cinfo.mem->alloc_sarray)

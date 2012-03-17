@@ -38,7 +38,6 @@ TOUCH = @TOUCH@
 INSTALL = @INSTALL@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_DATA = @INSTALL_DATA@
-INSTALL_SHLIB = @INSTALL_SHLIB@
 LIBTOOL = @LIBTOOL@
 
 DEFS = @DEFS@
@@ -101,7 +100,7 @@ install-data: FORCE
 install-lib: ${LIBDJVU_LA} FORCE
 	${INSTALL} -d ${DESTDIR}${libdir}
 	${LIBTOOL} --mode=install \
-	  ${INSTALL_SHLIB} ${LIBDJVU_LA} ${DESTDIR}${libdir}
+	  ${INSTALL_DATA} ${LIBDJVU_LA} ${DESTDIR}${libdir}
 
 install-include: FORCE
 	${INSTALL} -d ${DESTDIR}${includedir}/libdjvu

@@ -66,6 +66,8 @@
 #include "ZPCodec.h"
 #include "ByteStream.h"
 #include "GException.h"
+
+#include <stddef.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <math.h>

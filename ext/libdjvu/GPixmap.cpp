@@ -75,6 +75,8 @@
 #include "GThreads.h"
 #include "Arrays.h"
 #include "JPEGDecoder.h"
+
+#include <stddef.h>
 #include <stdlib.h>
 #include <math.h>
 #include <assert.h>
@@ -282,6 +284,9 @@ GPixmap::GPixmap(const GPixmap &ref, const GRect &rect)
 void 
 GPixmap::init(int arows, int acolumns, const GPixel *filler)
 {
+  if (arows != (unsigned short) arows ||
+      acolumns != (unsigned short) acolumns )
+    G_THROW("Illegal arguments");
   destroy();
   nrows = arows;
   ncolumns = acolumns;

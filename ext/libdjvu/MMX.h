@@ -143,17 +143,18 @@ class MMXControl
 
 #ifndef NO_MMX
 
-#if defined(__GNUC__) && defined(__i386__)
+#if defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
+typedef struct{ char c[8]; } MMX_t;
 #define MMXemms \
   __asm__ volatile("emms" : : : "memory" ) 
 #define MMXrr(op,src,dst) \
-  __asm__ volatile( #op " %%" #src ",%%" #dst : : : "memory") 
+  __asm__ volatile( #op " %%" #src ",%%" #dst : : : "memory" ) 
 #define MMXir(op,imm,dst) \
-  __asm__ volatile( #op " %0,%%" #dst : : "i" (imm) : "memory") 
+  __asm__ volatile( #op " %0,%%" #dst : : "i" (imm) : "memory" )
 #define MMXar(op,addr,dst) \
-  __asm__ volatile( #op " %0,%%" #dst : : "m" (*(addr)) : "memory") 
+  __asm__ volatile( #op " %0,%%" #dst : : "m" (*(MMX_t*)(addr)) : "memory" ) 
 #define MMXra(op,src,addr) \
-  __asm__ volatile( #op " %%" #src ",%0" : : "m" (*(addr)) : "memory") 
+  __asm__ volatile( #op " %%" #src ",%0" : "=m" (*(MMX_t*)(addr)) : : "memory") 
 #define MMX 1
 #endif
 
