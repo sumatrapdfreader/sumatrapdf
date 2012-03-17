@@ -65,11 +65,6 @@ Control objects further to make allocating hundreds of them cheaper or introduce
 other base element(s) with less functionality and less overhead).
 */
 
-static bool IsNewline(const char *s, const char *end)
-{
-    return (1 == end - s) && ('\n' == s[0]);
-}
-
 DrawInstr DrawInstr::Str(const char *s, size_t len, RectF bbox)
 {
     DrawInstr di(InstrString, bbox);
@@ -561,16 +556,6 @@ static bool CanEmitElasticSpace(float currX, float NewLineX, float maxCurrX, Vec
     return (InstrElasticSpace != di.type) && (InstrFixedSpace != di.type);
 }
 
-void PageLayout::EmitNewLine()
-{
-    // a single newline is considered "soft" and ignored
-    // two or more consecutive newlines are considered a
-    // single paragraph break
-    newLinesCount++;
-    if (2 == newLinesCount)
-        FlushCurrLine(true);
-}
-
 void PageLayout::EmitElasticSpace()
 {
     if (!CanEmitElasticSpace(currX, NewLineX(), pageDx - spaceDx, currLineInstr))
@@ -837,28 +822,21 @@ void PageLayout::HandleHtmlTag(HtmlToken *t)
 void PageLayout::HandleText(HtmlToken *t)
 {
     CrashIf(!t->IsText());
-    const char *end = t->s + t->sLen;
     const char *curr = t->s;
-    const char *currStart;
-    // break text into runes i.e. chunks taht are either all
+    const char *end = t->s + t->sLen;
+    // break text into runs i.e. chunks that are either all
     // whitespace or all non-whitespace
     while (curr < end) {
-        currStart = curr;
-        SkipWs(curr, end);
         // collapse multiple, consecutive white-spaces into a single space
         currReparsePoint = curr;
-        if (curr > currStart) {
-            if (IsNewline(currStart, curr))
-                EmitNewLine();
-            else
-                EmitElasticSpace();
-        }
-        currStart = curr;
+        SkipWs(curr, end);
+        if (curr > currReparsePoint)
+            EmitElasticSpace();
+
+        currReparsePoint = curr;
         SkipNonWs(curr, end);
-        if (curr > currStart) {
-            EmitTextRun(currStart, curr);
-            newLinesCount = 0;
-        }
+        if (curr > currReparsePoint)
+            EmitTextRun(currReparsePoint, curr);
     }
 }
 

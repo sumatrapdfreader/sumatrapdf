@@ -127,7 +127,6 @@ protected:
     void  EmitImage(ImageData *img);
     void  EmitHr();
     void  EmitTextRun(const char *s, const char *end);
-    void  EmitNewLine();
     void  EmitElasticSpace();
     void  EmitParagraph(float indent, float topPadding=0);
     void  EmitEmptyLine(float lineDy);
@@ -164,8 +163,6 @@ protected:
     // remembered when we start a new line, used when we actually
     // layout a line
     float               currLineTopPadding;
-    // number of consecutive newlines
-    int                 newLinesCount;
     // number of nested lists for indenting whole paragraphs
     int                 listDepth;
 
