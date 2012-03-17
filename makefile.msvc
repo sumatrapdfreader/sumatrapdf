@@ -54,7 +54,6 @@ CFLAGSOPT = $(CFLAGSOPT) /Isrc/utils/msvc
 
 # include build data for the remaining third-party libraries
 !INCLUDE $(EXTDIR)\makefile.msvc
-!INCLUDE $(EXTDIR)\chrome\makefile.msvc
 
 # Modify the following defines if you have to target a platform prior to the ones specified below.
 # Their meaning: http://msdn.microsoft.com/en-us/library/aa383745(VS.85).aspx
@@ -80,7 +79,7 @@ UNINSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/Isrc/utils /Isrc/utils/msvc /Isrc /Isrc/installer \
 	/D "BUILD_UNINSTALLER"
 
-MICROCRT_CFLAGS = $(CFLAGS)
+UCRT_CFLAGS = $(CFLAGS)
 
 !if "$(CFG)"=="dbg"
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "DEBUG" /D "_DEBUG"
@@ -138,16 +137,14 @@ BROWSER_PLUGIN_CFLAGS = $(CFLAGS) /Isrc/utils /Isrc/utils/msvc
 
 ENGINEDUMP_APP = $(O)\EngineDump.exe
 
-MICROCRT_OBJS = \
+UCRT_OBJS = \
 	$(OS)\ucrt.obj $(OS)\ucrt_asm.obj $(OS)\ucrt_math.obj \
 	$(OS)\_wstat64i32.obj $(OS)\_stat64i32.obj \
 	src\ucrt\lib\msvcrt_dll.lib src\ucrt\lib\ntdll_dll.lib
 
-MICROCRT_WIN_OBJS = $(MICROCRT_OBJS) $(OS)\ucrt_win.obj
-
-MICROCRT_DLL_OBJS = $(MICROCRT_OBJS) $(OS)\ucrt_dll.obj
-
-MICROCRT_CONSOLE_OBJS = $(MICROCRT_OBJS) $(OS)\ucrt_console.obj
+UCRT_WIN_OBJS = $(UCRT_OBJS) $(OS)\ucrt_win.obj
+UCRT_DLL_OBJS = $(UCRT_OBJS) $(OS)\ucrt_dll.obj
+UCRT_CON_OBJS = $(UCRT_OBJS) $(OS)\ucrt_console.obj
 
 UTILS_OBJS = \
 	$(OU)\BencUtil.obj $(OU)\FileUtil.obj $(OU)\Http.obj \
@@ -231,15 +228,15 @@ MEMTRACE_OBJS = \
 LIBMUPDF_OBJS = $(LIBS_OBJS)
 
 !if "$(WITH_UCRT)"=="yes"
-ET_OBJS             = $(ET_OBJS) $(MICROCRT_WIN_OBJS)
-INSTALLER_OBJS      = $(INSTALLER_OBJS) $(MICROCRT_WIN_OBJS)
-UNINSTALLER_OBJS    = $(UNINSTALLER_OBJS) $(MICROCRT_WIN_OBJS)
-SUMATRA_OBJS        = $(SUMATRA_OBJS) $(MICROCRT_WIN_OBJS)
-PDFFILTER_OBJS      = $(PDFFILTER_OBJS) $(MICROCRT_DLL_OBJS)
-PDFPREVIEW_OBJS     = $(PDFPREVIEW_OBJS) $(MICROCRT_DLL_OBJS)
-BROWSER_PLUGIN_OBJS = $(BROWSER_PLUGIN_OBJS) $(MICROCRT_DLL_OBJS)
-ENGINEDUMP_OBJS     = $(ENGINEDUMP_OBJS) $(MICROCRT_CONSOLE_OBJS)
-LIBMUPDF_OBJS       = $(LIBMUPDF_OBJS) $(OS)\libmupdf_stub.obj $(MICROCRT_DLL_OBJS)
+ET_OBJS             = $(ET_OBJS) $(UCRT_WIN_OBJS)
+INSTALLER_OBJS      = $(INSTALLER_OBJS) $(UCRT_WIN_OBJS)
+UNINSTALLER_OBJS    = $(UNINSTALLER_OBJS) $(UCRT_WIN_OBJS)
+SUMATRA_OBJS        = $(SUMATRA_OBJS) $(UCRT_WIN_OBJS)
+PDFFILTER_OBJS      = $(PDFFILTER_OBJS) $(UCRT_DLL_OBJS)
+PDFPREVIEW_OBJS     = $(PDFPREVIEW_OBJS) $(UCRT_DLL_OBJS)
+BROWSER_PLUGIN_OBJS = $(BROWSER_PLUGIN_OBJS) $(UCRT_DLL_OBJS)
+ENGINEDUMP_OBJS     = $(ENGINEDUMP_OBJS) $(UCRT_CON_OBJS)
+LIBMUPDF_OBJS       = $(LIBMUPDF_OBJS) $(OS)\libmupdf_stub.obj $(UCRT_DLL_OBJS)
 !endif
 
 !if "$(BUILD_TEX_IFILTER)"!=""
@@ -286,7 +283,7 @@ et:            $(OS) $(ET_APP)
 tester:        $(OS) $(TESTER_APP)
 memtrace:      $(OS) $(MEMTRACE_DLL)
 
-$(OS): $(O) $(OE) $(OCH)
+$(OS): $(O) $(OE)
 	@if not exist $(OS) mkdir $(OS)
 	@if not exist $(OU) mkdir $(OU)
 	@if not exist $(ODLL) mkdir $(ODLL)
@@ -358,10 +355,10 @@ $(ENGINEDUMP_APP): $(ENGINEDUMP_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
 
 {src\ucrt\src}.cpp{$(OS)}.obj::
-	$(CC) $(MICROCRT_CFLAGS) /Fo$(OS)\ /Fd$(O)\vc80.pdb $<
+	$(CC) $(UCRT_CFLAGS) /Fo$(OS)\ /Fd$(O)\vc80.pdb $<
 
 {src\ucrt\src\mingw}.c{$(OS)}.obj::
-	$(CC) $(MICROCRT_CFLAGS) /Fo$(OS)\ /Fd$(O)\vc80.pdb $<
+	$(CC) $(UCRT_CFLAGS) /Fo$(OS)\ /Fd$(O)\vc80.pdb $<
 
 # http://msdn.microsoft.com/en-us/library/s0ksfwcf.aspx
 {src\ucrt\src}.asm{$(OS)}.obj:

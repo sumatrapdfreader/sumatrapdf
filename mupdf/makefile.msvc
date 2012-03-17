@@ -111,7 +111,7 @@ CFLAGSB = $(CFLAGSB) /MTd
 # /RTCu : ununitialized local usage checks
 # /Od   : disable optimizations
 CFLAGS = $(CFLAGSB) /Od /RTCs /RTCu
-!if "$(WITH_MICROCRT)"=="yes"
+!if "$(WITH_UCRT)"=="yes"
 # TODO: try to make uCRT compile with /RTCs /RTCu  (or don't link
 #       it at all, since we statically link the debug CRT anyway)
 CFLAGS = $(CFLAGSB:/RTCs /RTCu=)
