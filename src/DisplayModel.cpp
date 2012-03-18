@@ -890,24 +890,24 @@ bool DisplayModel::IsOverText(PointI pt)
 
 void DisplayModel::RenderVisibleParts()
 {
-    int firstVisible = 0;
-    int lastVisible = 0;
+    int firstVisiblePage = 0;
+    int lastVisiblePage = 0;
 
     for (int pageNo = 1; pageNo <= PageCount(); ++pageNo) {
         PageInfo *pageInfo = GetPageInfo(pageNo);
         if (pageInfo->visibleRatio > 0.0) {
             assert(pageInfo->shown);
-            if (0 == firstVisible)
-                firstVisible = pageNo;
-            lastVisible = pageNo;
+            if (0 == firstVisiblePage)
+                firstVisiblePage = pageNo;
+            lastVisiblePage = pageNo;
         }
     }
-    CrashIf(!firstVisible);
+    CrashIf(0 == firstVisiblePage);
 
     // rendering happens LIFO except if the queue is currently
     // empty, so request the visible pages first and last to
     // make sure they're rendered before the predicted pages
-    for (int pageNo = firstVisible; pageNo <= firstVisible; pageNo++) {
+    for (int pageNo = firstVisiblePage; pageNo <= firstVisiblePage; pageNo++) {
         dmCb->RenderPage(pageNo);
     }
 
@@ -915,20 +915,20 @@ void DisplayModel::RenderVisibleParts()
         // prerender two more pages in facing and book view modes
         // if the rendering queue still has place for them
         if (!displayModeSingle(displayMode())) {
-            if (firstVisible > 2)
-                dmCb->RenderPage(firstVisible - 2);
-            if (lastVisible + 1 < PageCount())
-                dmCb->RenderPage(lastVisible + 2);
+            if (firstVisiblePage > 2)
+                dmCb->RenderPage(firstVisiblePage - 2);
+            if (lastVisiblePage + 1 < PageCount())
+                dmCb->RenderPage(lastVisiblePage + 2);
         }
-        if (firstVisible > 1)
-            dmCb->RenderPage(firstVisible - 1);
-        if (lastVisible < PageCount())
-            dmCb->RenderPage(lastVisible + 1);
+        if (firstVisiblePage > 1)
+            dmCb->RenderPage(firstVisiblePage - 1);
+        if (lastVisiblePage < PageCount())
+            dmCb->RenderPage(lastVisiblePage + 1);
     }
 
     // request the visible pages last so that the above requested
     // invisible pages are not rendered if the queue fills up
-    for (int pageNo = lastVisible; pageNo >= firstVisible; pageNo--) {
+    for (int pageNo = lastVisiblePage; pageNo >= firstVisiblePage; pageNo--) {
         dmCb->RenderPage(pageNo);
     }
 }
