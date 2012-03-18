@@ -891,7 +891,7 @@ bool DisplayModel::IsOverText(PointI pt)
 void DisplayModel::RenderVisibleParts()
 {
     int firstVisiblePage = 0;
-    int lastVisiblePage = -1;
+    int lastVisiblePage = 0;
 
     for (int pageNo = 1; pageNo <= PageCount(); ++pageNo) {
         PageInfo *pageInfo = GetPageInfo(pageNo);
@@ -902,8 +902,10 @@ void DisplayModel::RenderVisibleParts()
             lastVisiblePage = pageNo;
         }
     }
-    // TODO: this assertion doesn't seem to hold always
-    // CrashIf(0 == firstVisiblePage);
+    // no page is visible if e.g. the window is resized
+    // vertically until only the title bar remains visible
+    if (0 == firstVisiblePage)
+        return;
 
     // rendering happens LIFO except if the queue is currently
     // empty, so request the visible pages first and last to
