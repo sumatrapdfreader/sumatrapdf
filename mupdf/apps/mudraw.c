@@ -224,13 +224,13 @@ static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display
 					for (; i + j < width && j < 128 && !memcmp(line + i * 3, line + (i + j) * 3, 3); j++);
 					if (j > 1)
 					{
-						fprintf(f, "%c", j - 1 + 128);
+						putc(j - 1 + 128, f);
 						fwrite(line + i * 3, 1, 3, f);
 					}
 					else
 					{
 						for (; i + j < width && j < 128 && memcmp(line + (i + j - 1) * 3, line + (i + j) * 3, 3) != 0; j++);
-						fprintf(f, "%c", j - 1);
+						putc(j - 1, f);
 						fwrite(line + i * 3, 1, j * 3, f);
 					}
 				}
