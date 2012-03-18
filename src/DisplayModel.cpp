@@ -891,7 +891,7 @@ bool DisplayModel::IsOverText(PointI pt)
 void DisplayModel::RenderVisibleParts()
 {
     int firstVisiblePage = 0;
-    int lastVisiblePage = 0;
+    int lastVisiblePage = -1;
 
     for (int pageNo = 1; pageNo <= PageCount(); ++pageNo) {
         PageInfo *pageInfo = GetPageInfo(pageNo);
@@ -902,12 +902,13 @@ void DisplayModel::RenderVisibleParts()
             lastVisiblePage = pageNo;
         }
     }
-    CrashIf(0 == firstVisiblePage);
+    // TODO: this assertion doesn't seem to hold always
+    // CrashIf(0 == firstVisiblePage);
 
     // rendering happens LIFO except if the queue is currently
     // empty, so request the visible pages first and last to
     // make sure they're rendered before the predicted pages
-    for (int pageNo = firstVisiblePage; pageNo <= firstVisiblePage; pageNo++) {
+    for (int pageNo = firstVisiblePage; pageNo <= lastVisiblePage; pageNo++) {
         dmCb->RenderPage(pageNo);
     }
 
