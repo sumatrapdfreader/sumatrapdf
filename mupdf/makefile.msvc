@@ -96,7 +96,7 @@ CFLAGSB = $(CFLAGSB) /EHs-c-
 # docs say /Ox better, my tests say /O2 better
 OPTLEVEL = /O2
 
-!if "$(CFG)"=="rel"
+!if "$(CFG)"!="dbg"
 # /GL  : enable link-time code generation
 CFLAGS    = $(CFLAGSB) $(OPTLEVEL) /GL /D "NDEBUG"
 CFLAGSOPT = $(CFLAGSB) $(OPTLEVEL) /D "NDEBUG"
@@ -169,7 +169,7 @@ FT_OBJS = \
 	$(OFT)\type1cid.obj $(OFT)\psaux.obj $(OFT)\psnames.obj $(OFT)\smooth.obj \
 	$(OFT)\sfnt.obj $(OFT)\truetype.obj $(OFT)\type1.obj $(OFT)\raster.obj \
 	$(OFT)\otvalid.obj $(OFT)\ftotval.obj $(OFT)\pshinter.obj
-!if "$(CFG)"!="rel"
+!if "$(CFG)"=="dbg"
 FT_OBJS = $(FT_OBJS) $(OFT)\ftdebug.obj
 !endif
 

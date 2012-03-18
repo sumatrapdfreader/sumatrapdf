@@ -149,7 +149,7 @@ def main():
   extcflags = ""
   if build_prerelease:
     extcflags = "EXTCFLAGS=-DSVN_PRE_RELEASE_VER=%s" % ver
-  platform = "PLATFORM=%s" % (target_platform or "X32")
+  platform = "PLATFORM=%s" % (target_platform or "X86")
 
   run_cmd_throw("nmake", "-f", "makefile.msvc", config, extcflags, platform, "all_sumatrapdf")
   build_installer_data(obj_dir)
