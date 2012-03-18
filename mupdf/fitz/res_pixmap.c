@@ -587,6 +587,56 @@ fz_write_png(fz_context *ctx, fz_pixmap *pixmap, char *filename, int savealpha)
 	fz_free(ctx, cdata);
 }
 
+/* SumatraPDF: Write pixmap to TGA file (with or without alpha channel) */
+void
+fz_write_tga(fz_context *ctx, fz_pixmap *pixmap, char *filename, int savealpha)
+{
+	FILE *fp;
+	unsigned short head[9];
+	int n = pixmap->n;
+	int d = savealpha || n == 1 ? n : n - 1;
+	int k;
+
+	if (n != 1 && n != 2 && n != 4)
+		fz_throw(ctx, "pixmap must be grayscale or rgb to write as tga");
+
+	fp = fopen(filename, "wb");
+	if (!fp)
+		fz_throw(ctx, "cannot open file '%s': %s", filename, strerror(errno));
+
+	memset(head, 0, sizeof(head));
+	head[1] = n == 4 ? 10 : 11;
+	head[6] = pixmap->w;
+	head[7] = pixmap->h;
+	head[8] = d * 8 + (savealpha ? 1 << 8 : 0) + (1 << 13);
+	fwrite(head, sizeof(head), 1, fp);
+
+	for (k = 0; k < pixmap->h; k++)
+	{
+		int i, j;
+		char *line = pixmap->samples + pixmap->w * n * k;
+		for (i = 0, j = 1; i < pixmap->w; i += j, j = 1)
+		{
+			for (; i + j < pixmap->w && j < 128 && !memcmp(line + i * n, line + (i + j) * n, d); j++);
+			if (j > 1)
+			{
+				fprintf(fp, "%c", j - 1 + 128);
+				fwrite(line + i * n, 1, d, fp);
+			}
+			else
+			{
+				for (; i + j < pixmap->w && j < 128 && memcmp(line + (i + j - 1) * n, line + (i + j) * n, d) != 0; j++);
+				fprintf(fp, "%c", j - 1);
+				for (; j > 0; j--, i++)
+					fwrite(line + i * n, 1, d, fp);
+			}
+		}
+	}
+	fwrite("\0\0\0\0\0\0\0\0TRUEVISION-XFILE.\0", 1, 26, fp);
+
+	fclose(fp);
+}
+
 unsigned int
 fz_pixmap_size(fz_context *ctx, fz_pixmap * pix)
 {

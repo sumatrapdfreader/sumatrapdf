@@ -49,16 +49,17 @@ static void usage(void)
 		"usage: mudraw [options] input [pages]\n"
 		"\t-o -\toutput filename (%%d for page number)\n"
 #ifdef GDI_PLUS_BMP_RENDERER
-		"\t\tsupported formats: pgm, ppm, pam, png, pbm, bmp, tga\n"
+		"\t\tsupported formats: pgm, ppm, pam, png, pbm, tga, bmp\n"
 #else
-		"\t\tsupported formats: pgm, ppm, pam, png, pbm\n"
+		/* SumatraPDF: support TGA as output format */
+		"\t\tsupported formats: pgm, ppm, pam, png, pbm, tga\n"
 #endif
 		"\t-p -\tpassword\n"
 		"\t-r -\tresolution in dpi (default: 72)\n"
 		"\t-w -\twidth (in pixels) (maximum width if -r is specified)\n"
 		"\t-h -\theight (in pixels) (maximum height if -r is specified)\n"
 		"\t-f -\tfit width and/or height exactly (ignore aspect)\n"
-		"\t-a\tsave alpha channel (only pam and png)\n"
+		"\t-a\tsave alpha channel (only pam, png and tga)\n"
 		"\t-b -\tnumber of bits of antialiasing (0 to 8)\n"
 		"\t-g\trender in grayscale\n"
 		"\t-m\tshow timing information\n"
@@ -242,13 +243,16 @@ static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display
 
 	if (showmd5)
 	{
+		fz_pixmap *pix = fz_new_pixmap_with_data(ctx, fz_device_rgb, bmpDataLen / 4 / h, h, bmpData);
 		unsigned char digest[16];
 		int i;
 
-		fz_md5_data(bmpData, bmpDataLen, digest);
+		fz_md5_pixmap(pix, digest);
 		printf(" ");
 		for (i = 0; i < 16; i++)
 			printf("%02x", digest[i]);
+
+		fz_drop_pixmap(ctx, pix);
 	}
 
 	fz_free(ctx, bmpData);
@@ -366,7 +370,8 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 		printf("page %s %d", filename, pagenum);
 
 #ifdef GDI_PLUS_BMP_RENDERER
-	if (output && (strstr(output, ".bmp") || strstr(output, ".tga")))
+	// hack: use -d to "disable GDI+" when saving as TGA
+	if (output && (strstr(output, ".bmp") || strstr(output, ".tga") && uselist))
 		drawbmp(ctx, doc, page, list, pagenum);
 	else
 #endif
@@ -476,6 +481,9 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 					fz_write_pbm(ctx, bit, buf);
 					fz_drop_bitmap(ctx, bit);
 				}
+				/* SumatraPDF: support TGA as output format */
+				else if (strstr(output, ".tga"))
+					fz_write_tga(ctx, pix, buf, savealpha);
 			}
 
 			if (showmd5)

@@ -96,7 +96,7 @@ EXPORTS
 	fz_write_png
 	fz_write_pbm
 	fz_md5_pixmap
-	fz_md5_data
+	fz_write_tga
 	fz_image_to_pixmap
 	fz_drop_image
 	fz_keep_image

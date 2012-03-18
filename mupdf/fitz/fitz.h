@@ -1401,8 +1401,8 @@ void fz_write_pbm(fz_context *ctx, fz_bitmap *bitmap, char *filename);
 */
 void fz_md5_pixmap(fz_pixmap *pixmap, unsigned char digest[16]);
 
-/* SumatraPDF: generalize fz_md5_pixmap for e.g. bitmaps */
-void fz_md5_data(void *data, int len, unsigned char digest[16]);
+/* SumatraPDF: support TGA as output format */
+void fz_write_tga(fz_context *ctx, fz_pixmap *pixmap, char *filename, int savealpha);
 
 /*
 	Images are storable objects from which we can obtain fz_pixmaps.
