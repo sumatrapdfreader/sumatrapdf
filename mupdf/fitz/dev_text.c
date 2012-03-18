@@ -650,7 +650,12 @@ fz_text_extract(fz_context *ctx, fz_text_device *dev, fz_text *text, fz_matrix c
 
 		rect = fz_transform_rect(trm, rect);
 		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1839 */
-		rect = fz_union_rect(rect, fz_bound_glyph(ctx, font, text->items[i].gid, trm));
+		if (font->ft_face)
+		{
+			fz_rect bbox = fz_bound_glyph(ctx, font, text->items[i].gid, trm);
+			rect.y0 = MIN(rect.y0, bbox.y0);
+			rect.y1 = MAX(rect.y1, bbox.y1);
+		}
 		pen->x = trm.e + dir.x * adv;
 		pen->y = trm.f + dir.y * adv;
 
