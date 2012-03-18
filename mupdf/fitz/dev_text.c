@@ -649,6 +649,8 @@ fz_text_extract(fz_context *ctx, fz_text_device *dev, fz_text *text, fz_matrix c
 		}
 
 		rect = fz_transform_rect(trm, rect);
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1839 */
+		rect = fz_union_rect(rect, fz_bound_glyph(ctx, font, text->items[i].gid, trm));
 		pen->x = trm.e + dir.x * adv;
 		pen->y = trm.f + dir.y * adv;
 
@@ -738,7 +740,10 @@ fz_text_free_user(fz_device *dev)
 	fz_context *ctx = dev->ctx;
 	fz_text_device *tdev = dev->user;
 
+	/* SumatraPDF: prevent empty spans with a NULL style */
+	if (tdev->cur_span.len > 0)
 	append_span(ctx, &tdev->cur_line, &tdev->cur_span);
+	if (tdev->cur_line.len > 0)
 	insert_line(ctx, tdev->page, &tdev->cur_line);
 
 	qsort(tdev->page->blocks, tdev->page->len, sizeof *tdev->page->blocks, cmp_block);
@@ -944,7 +949,7 @@ fz_print_text_page_xml(fz_context *ctx, FILE *out, fz_text_page *page)
 						break;
 					}
 					fprintf(out, "\"/>\n");
-			}
+				}
 				fprintf(out, "</span>\n");
 			}
 			fprintf(out, "</line>\n");

@@ -310,7 +310,7 @@ FONTDUMP_APP = $(O)\fontdump.exe
 MUDRAW_OBJS = $(LIBS_OBJS) $(OA)\mudraw.obj
 MUDRAW_APP = $(O)\mudraw.exe
 
-all: $(O) $(PDFSHOW_APP) $(PDFCLEAN_APP) $(PDFINFO_APP) $(PDFEXTRACT_APP) $(PDFAPP_APP) $(MUDRAW_APP) $(PDFBENCH_APP)
+all: $(O) $(MUDRAW_APP) $(PDFSHOW_APP) $(PDFCLEAN_APP) $(PDFINFO_APP) $(PDFEXTRACT_APP) $(PDFAPP_APP) $(PDFBENCH_APP)
 
 clean: force
 	-rmdir /S /Q $(O)
