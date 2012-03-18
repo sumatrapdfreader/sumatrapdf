@@ -49,7 +49,7 @@ static void usage(void)
 		"usage: mudraw [options] input [pages]\n"
 		"\t-o -\toutput filename (%%d for page number)\n"
 #ifdef GDI_PLUS_BMP_RENDERER
-		"\t\tsupported formats: pgm, ppm, pam, png, pbm, bmp\n"
+		"\t\tsupported formats: pgm, ppm, pam, png, pbm, bmp, tga\n"
 #else
 		"\t\tsupported formats: pgm, ppm, pam, png, pbm\n"
 #endif
@@ -122,22 +122,27 @@ static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display
 	ctm = fz_scale(zoom, zoom);
 	ctm = fz_concat(ctm, fz_rotate(rotation));
 	bounds2 = fz_transform_rect(ctm, bounds);
-	if (width || height)
-	{
-		float scalex = width/(bounds2.x1-bounds2.x0);
-		float scaley = height/(bounds2.y1-bounds2.y0);
 
-		if (width == 0)
-			scalex = scaley;
-		if (height == 0)
-			scaley = scalex;
+	w = width;
+	h = height;
+	if (res_specified)
+	{
+		bbox = fz_round_rect(bounds2);
+		if (w && bbox.x1 - bbox.x0 <= w)
+			w = 0;
+		if (h && bbox.y1 - bbox.y0 <= h)
+			h = 0;
+	}
+	if (w || h)
+	{
+		float scalex = w / (bounds2.x1 - bounds2.x0);
+		float scaley = h / (bounds2.y1 - bounds2.y0);
+		if (w == 0)
+			scalex = fit ? 1.0f : scaley;
+		if (h == 0)
+			scaley = fit ? 1.0f : scalex;
 		if (!fit)
-		{
-			if (scalex > scaley)
-				scalex = scaley;
-			else
-				scaley = scalex;
-		}
+			scalex = scaley = min(scalex, scaley);
 		ctm = fz_concat(ctm, fz_scale(scalex, scaley));
 		bounds2 = fz_transform_rect(ctm, bounds);
 	}
@@ -182,23 +187,57 @@ static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display
 	if (output)
 	{
 		char buf[512];
-		int fd;
+		FILE *f;
 		BITMAPFILEHEADER bmpfh = { 0 };
 
 		sprintf(buf, output, pagenum);
-		fd = open(buf, O_BINARY|O_WRONLY|O_CREAT|O_TRUNC, 0666);
-		if (fd < 0)
+		f = fopen(buf, "wb");
+		if (!f)
 			fz_throw(ctx, "ioerror: could not create raster file '%s'", buf);
 
-		bmpfh.bfType = MAKEWORD('B', 'M');
-		bmpfh.bfOffBits = sizeof(bmpfh) + sizeof(bmi);
-		bmpfh.bfSize = bmpfh.bfOffBits + bmpDataLen;
+		if (strstr(output, ".bmp"))
+		{
+			bmpfh.bfType = MAKEWORD('B', 'M');
+			bmpfh.bfOffBits = sizeof(bmpfh) + sizeof(bmi);
+			bmpfh.bfSize = bmpfh.bfOffBits + bmpDataLen;
 
-		write(fd, &bmpfh, sizeof(bmpfh));
-		write(fd, &bmi, sizeof(bmi));
-		write(fd, bmpData, bmpDataLen);
+			fwrite(&bmpfh, sizeof(bmpfh), 1, f);
+			fwrite(&bmi, sizeof(bmi), 1, f);
+			fwrite(bmpData, 1, bmpDataLen, f);
+		}
+		else
+		{
+			unsigned short width = w, height = h, k;
 
-		close(fd);
+			fwrite("\0\0\x0A\0\0\0\0\0\0\0\0\0", 1, 12, f);
+			fwrite(&width, 2, 1, f);
+			fwrite(&height, 2, 1, f);
+			fwrite("\x18\0", 1, 2, f);
+
+			for (k = 0; k < height; k++)
+			{
+				int i, j;
+				char *line = bmpData + bmpDataLen / h * k;
+				for (i = 0, j = 1; i < width; i += j, j = 1)
+				{
+					for (; i + j < width && j < 128 && !memcmp(line + i * 3, line + (i + j) * 3, 3); j++);
+					if (j > 1)
+					{
+						fprintf(f, "%c", j - 1 + 128);
+						fwrite(line + i * 3, 1, 3, f);
+					}
+					else
+					{
+						for (; i + j < width && j < 128 && memcmp(line + (i + j - 1) * 3, line + (i + j) * 3, 3) != 0; j++);
+						fprintf(f, "%c", j - 1);
+						fwrite(line + i * 3, 1, j * 3, f);
+					}
+				}
+			}
+			fwrite("\0\0\0\0\0\0\0\0TRUEVISION-XFILE.\0", 1, 26, f);
+		}
+
+		fclose(f);
 	}
 
 	if (showmd5)
@@ -327,7 +366,7 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 		printf("page %s %d", filename, pagenum);
 
 #ifdef GDI_PLUS_BMP_RENDERER
-	if (output && strstr(output, ".bmp"))
+	if (output && (strstr(output, ".bmp") || strstr(output, ".tga")))
 		drawbmp(ctx, doc, page, list, pagenum);
 	else
 #endif

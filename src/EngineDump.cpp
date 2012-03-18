@@ -7,6 +7,8 @@
 #include "CmdLineParser.h"
 #include "WinUtil.h"
 #include "Scoped.h"
+using namespace Gdiplus;
+#include "GdiPlusUtil.h"
 
 #define Out(msg, ...) printf(msg, __VA_ARGS__)
 
@@ -241,7 +243,7 @@ void DumpThumbnail(BaseEngine *engine)
     }
 
     size_t len;
-    ScopedMem<unsigned char> data(SerializeBitmap(bmp->GetBitmap(), &len));
+    ScopedMem<unsigned char> data(SerializeRunLengthEncoded(bmp->GetBitmap(), &len));
     ScopedMem<char> hexData(data ? str::MemToHex(data, len) : NULL);
     if (hexData)
         Out("\t<Thumbnail>\n\t\t%s\n\t</Thumbnail>\n", hexData.Get());
@@ -270,8 +272,11 @@ void RenderDocument(BaseEngine *engine, const TCHAR *renderPath)
     for (int pageNo = 1; pageNo <= engine->PageCount(); pageNo++) {
         RenderedBitmap *bmp = engine->RenderBitmap(pageNo, 1.0, 0);
         size_t len = 0;
-        ScopedMem<unsigned char> data(bmp ? SerializeBitmap(bmp->GetBitmap(), &len) : NULL);
-
+        ScopedMem<unsigned char> data;
+        if (bmp && str::EndsWithI(renderPath, _T(".bmp")))
+            data.Set(SerializeBitmap(bmp->GetBitmap(), &len));
+        else if (bmp)
+            data.Set(SerializeRunLengthEncoded(bmp->GetBitmap(), &len));
         ScopedMem<TCHAR> pageBmpPath(str::Format(renderPath, pageNo));
         file::WriteAll(pageBmpPath, data, len);
         delete bmp;

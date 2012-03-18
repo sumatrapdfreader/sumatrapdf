@@ -1,7 +1,7 @@
 """
-Renders all files in a directory to page bitmaps and an XML dump and
-checks these renderings against a previous known-good reference
-rendering, creating bitmap difference files for easier comparison.
+Renders all files in a directory to page TGA images and an XML dump
+and checks these renderings against a previous known-good reference
+rendering, creating TGA difference files for easier comparison.
 
 Use for regression testing:
 
@@ -13,54 +13,77 @@ import os, sys, struct, fnmatch
 from subprocess import Popen, PIPE
 pjoin = os.path.join
 
-def EngineDump(EngineDumpExe, file, bmpPath):
-	proc = Popen([EngineDumpExe, file, "-full", "-render", bmpPath], stdout=PIPE)
+def EngineDump(EngineDumpExe, file, tgaPath):
+	proc = Popen([EngineDumpExe, file, "-full", "-render", tgaPath], stdout=PIPE)
 	xmlDump, _ = proc.communicate()
 	return xmlDump
 
-def BitmapDiff(bmpRef, bmpCmp, bmpDiff):
+def TgaRleUnpack(data):
+	# unpacks data from a type 10 TGA file (24-bit run-length encoded)
+	exp, i = [], 0
+	while i + 4 < len(data):
+		bit = struct.unpack("B", data[i])[0] + 1
+		i += 1
+		if bit <= 128:
+			exp.append(data[i:i + bit * 3])
+			i += bit * 3
+		else:
+			exp.append(data[i:i + 3] * (bit - 128))
+			i += 3
+	return "".join(exp)
+
+def BitmapDiff(tgaRef, tgaCmp, tgaDiff):
 	# ensure that the comparison bitmap exists
-	if not os.path.isfile(bmpCmp):
-		open(bmpCmp, "wb").write("")
-	ref = open(bmpRef, "rb").read()
-	cmp = open(bmpCmp, "rb").read()
+	if not os.path.isfile(tgaCmp):
+		open(tgaCmp, "wb").write("")
+	ref = open(tgaRef, "rb").read()
+	cmp = open(tgaCmp, "rb").read()
 	
 	# bail if the files are either identical or the reference is broken
 	if ref == cmp:
 		return False
-	if len(ref) < 22:
+	if len(ref) < 18:
 		return True
 	
 	# determine bitmap dimensions
-	header_len, _, width = struct.unpack('LLL', ref[10:22])
+	width, height = struct.unpack('<HH', ref[12:16])
 	
-	# compare as long as both files contain pixels
-	i, lenRef = header_len, len(ref)
-	lenMin = min(lenRef, len(cmp))
+	# unpack the run-length encoded data
+	refData = TgaRleUnpack(ref[18:])
+	if len(refData) < width * height * 3:
+		refData += "\x00" * (width * height * 3 - len(refData))
+	cmpData = TgaRleUnpack(cmp[18:])
+	if len(cmpData) < width * height * 3:
+		refData += "\xFF" * (width * height * 3 - len(cmpData))
 	
 	# write a black pixel for identical and a red pixel for different color values
-	diff = [ref[:header_len]]
-	while i + 3 <= lenMin:
-		diff.append("\x00\x00\x00" if ref[i:i+3] == cmp[i:i+3] else "\x00\x00\xFF")
-		i += 3
-		# pad the difference between actual width and stride
-		if width % 4 != 0 and len(diff) % width == 1:
-			padding = 4 - (3 * width % 4)
-			diff[-1] += "\x88" * padding
-			i += padding
+	# (packed as a type 9 TGA file - 8-bit indexed run-length encoded)
+	diff = [struct.pack("<BBBHHBHHHHBB", 0, 1, 9, 0, 2, 24, 0, 0, width, height, 8, 0) + "\x00\x00\x00\x00\x00\xFF"]
+	for i in range(height):
+		refLine = refData[i * width * 3:(i + 1) * width * 3]
+		cmpLine = cmpData[i * width * 3:(i + 1) * width * 3]
+		j = 0
+		# reencode the difference file line-by-line
+		while j < width:
+			same = refLine[j*3:j*3+3] == cmpLine[j*3:j*3+3]
+			k = j + 1
+			while k < width and k - j < 128 and (refLine[k*3:k*3+3] == cmpLine[k*3:k*3+3]) == same:
+				k += 1
+			diff.append(struct.pack("BB", k - j - 1 + 128, 0 if same else 1))
+			j = k
 	
-	# fill up the remaining pixels with gray
-	diff.append("\x80" * (lenRef - i))
+	# add the file footer
+	diff.append("\x00" * 8 + "TRUEVISION-XFILE.\x00")
 	
 	# write the red-on-black difference file to disk
-	open(bmpDiff, "wb").write("".join(diff))
+	open(tgaDiff, "wb").write("".join(diff))
 	return True
 
 def RefTestFile(EngineDumpExe, file, refdir):
 	# create an XML dump and bitmap renderings of all pages
 	base = os.path.splitext(os.path.split(file)[1])[0]
-	bmpPath = pjoin(refdir, base + "-%d.cmp.bmp")
-	xmlDump = EngineDump(EngineDumpExe, file, bmpPath)
+	tgaPath = pjoin(refdir, base + "-%d.cmp.tga")
+	xmlDump = EngineDump(EngineDumpExe, file, tgaPath)
 	
 	# compare the XML dumps (remove the dump if it's the same as the reference)
 	xmlRefPath = pjoin(refdir, base + ".ref.xml")
@@ -74,20 +97,20 @@ def RefTestFile(EngineDumpExe, file, refdir):
 		os.remove(xmlCmpPath)
 	
 	# compare all bitmap renderings (and create diff bitmaps where needed)
-	for file in fnmatch.filter(os.listdir(refdir), base + "-[0-9]*.ref.bmp"):
-		bmpRefPath = pjoin(refdir, file)
-		bmpCmpPath, bmpDiffPath = bmpRefPath[:-8] + ".cmp.bmp", bmpRefPath[:-8] + ".diff.bmp"
-		if BitmapDiff(bmpRefPath, bmpCmpPath, bmpDiffPath):
-			print "  FAIL!", bmpCmpPath
+	for file in fnmatch.filter(os.listdir(refdir), base + "-[0-9]*.ref.tga"):
+		tgaRefPath = pjoin(refdir, file)
+		tgaCmpPath, tgaDiffPath = tgaRefPath[:-8] + ".cmp.tga", tgaRefPath[:-8] + ".diff.tga"
+		if BitmapDiff(tgaRefPath, tgaCmpPath, tgaDiffPath):
+			print "  FAIL!", tgaCmpPath
 		else:
-			os.remove(bmpCmpPath)
-			if os.path.isfile(bmpDiffPath):
-				os.remove(bmpDiffPath)
-	for file in fnmatch.filter(os.listdir(refdir), base + "-[0-9]*.cmp.bmp"):
-		bmpCmpPath = pjoin(refdir, file)
-		bmpRefPath = bmpCmpPath[:-8] + ".ref.bmp"
-		if not os.path.isfile(bmpRefPath):
-			os.rename(bmpCmpPath, bmpRefPath)
+			os.remove(tgaCmpPath)
+			if os.path.isfile(tgaDiffPath):
+				os.remove(tgaDiffPath)
+	for file in fnmatch.filter(os.listdir(refdir), base + "-[0-9]*.cmp.tga"):
+		tgaCmpPath = pjoin(refdir, file)
+		tgaRefPath = tgaCmpPath[:-8] + ".ref.tga"
+		if not os.path.isfile(tgaRefPath):
+			os.rename(tgaCmpPath, tgaRefPath)
 
 def RefTestDir(EngineDumpExe, dir, refdir):
 	# create reference directory, if it doesn't exists yet

@@ -153,8 +153,8 @@ $(OS)\EngineDump.obj: src\BaseEngine.h src\ChmEngine.h src\DjVuEngine.h
 $(OS)\EngineDump.obj: src\EngineManager.h src\EpubEngine.h src\ImagesEngine.h
 $(OS)\EngineDump.obj: src\PdfEngine.h src\PsEngine.h src\utils\Allocator.h
 $(OS)\EngineDump.obj: src\utils\BaseUtil.h src\utils\CmdLineParser.h src\utils\FileUtil.h
-$(OS)\EngineDump.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
-$(OS)\EngineDump.obj: src\utils\Vec.h src\utils\WinUtil.h
+$(OS)\EngineDump.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
+$(OS)\EngineDump.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\EpubEngine.obj: src\BaseEngine.h src\EpubEngine.h src\MobiDoc.h
 $(OS)\EpubEngine.obj: src\mui\MiniMui.h src\PageLayout.h src\utils\Allocator.h
 $(OS)\EpubEngine.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GdiPlusUtil.h
@@ -453,7 +453,7 @@ $(OU)\FileUtil.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\Scoped.h
 $(OU)\FileUtil.obj: src\utils\StrUtil.h
 $(OU)\GdiPlusUtil.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GdiPlusUtil.h
 $(OU)\GdiPlusUtil.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
-$(OU)\GdiPlusUtil.obj: src\utils\WinUtil.h
+$(OU)\GdiPlusUtil.obj: src\utils\Vec.h src\utils\WinUtil.h
 $(OU)\HtmlPrettyPrint.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\HtmlPrettyPrint.h
 $(OU)\HtmlPrettyPrint.obj: src\utils\HtmlPullParser.h src\utils\StrUtil.h src\utils\Vec.h
 $(OU)\HtmlPullParser.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\HtmlPullParser.h
