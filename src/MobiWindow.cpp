@@ -179,6 +179,8 @@ void DeleteMobiWindow(MobiWindow *win, bool forceDelete)
     if (gPluginMode && !forceDelete)
         return;
 
+    UpdateCurrentFileDisplayStateForWin(SumatraWindow::Make(win));
+
     DeletePropertiesWindow(win->hwndFrame);
     delete win->ebookController;
     DestroyEbookControls(win->ebookControls);
@@ -573,9 +575,9 @@ static void CreateThumbnailForMobiDoc(MobiDoc *mobiDoc, DisplayState& ds)
     // image width to thumbnail dx, scaling height proportionally and using
     // as much of it as fits in thumbnail dy
     RenderedBitmap *bmp = ThumbFromCoverPage(mobiDoc);
-    // no cover image so generate thumbnail from first page
     if (!bmp)
     {
+        // no cover image so generate thumbnail from first page
         SizeI pageSize(THUMBNAIL_DX * 2, THUMBNAIL_DY * 2);
         SizeI dstSize(THUMBNAIL_DX, THUMBNAIL_DY);
         bmp = RenderFirstMobiPageToBitmap(mobiDoc, pageSize, dstSize);
@@ -589,9 +591,10 @@ static void CreateThumbnailForMobiDoc(MobiDoc *mobiDoc, DisplayState& ds)
 void OpenMobiInWindow(MobiDoc *mobiDoc, SumatraWindow& winToReplace)
 {
     TCHAR *fullPath = mobiDoc->GetFileName();
+    DisplayState *ds = gFileHistory.Find(fullPath);
 
     if (gGlobalPrefs.rememberOpenedFiles) {
-        DisplayState *ds = gFileHistory.MarkFileLoaded(fullPath);
+        ds = gFileHistory.MarkFileLoaded(fullPath);
         if (gGlobalPrefs.showStartPage && ds) {
             // TODO: do it on a background thread?
             CreateThumbnailForMobiDoc(mobiDoc, *ds);
@@ -617,6 +620,11 @@ void OpenMobiInWindow(MobiDoc *mobiDoc, SumatraWindow& winToReplace)
         EnsureAreaVisibility(windowPos);
     else
         windowPos = GetDefaultWindowPos();
+
+    if (ds && !ds->windowPos.IsEmpty()) {
+        // Make sure it doesn't have a position like outside of the screen etc.
+        windowPos = ShiftRectToWorkArea(ds->windowPos);
+    }
 
     WindowInfo *winInfo = winToReplace.AsWindowInfo();
     bool wasMaximized = false;

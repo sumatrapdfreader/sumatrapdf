@@ -134,6 +134,7 @@ public:
     void GoToPage(int newPageNo);
     void GoToLastPage();
     MobiDoc *GetMobiDoc() const { return mobiDoc; }
+    int  CurrReparsePointIdx() const;
 };
 
 #endif

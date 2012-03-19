@@ -640,3 +640,13 @@ void EbookController::HandleFinishedMobiLoadingMsg(FinishedMobiLoadingData *fini
     SetMobiDoc(finishedMobiLoading->mobiDoc);
     finishedMobiLoading->mobiDoc = NULL; // just in case, it shouldn't be freed anyway
 }
+
+int EbookController::CurrReparsePointIdx() const
+{
+    if (!pageShown)
+        return 0;
+    // TODO: switch to remembering reparsePointIdx instead of reparsePoint
+    // return pageShown->reparsePoint;
+    return 0;
+}
+

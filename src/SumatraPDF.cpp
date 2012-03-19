@@ -411,7 +411,7 @@ TCHAR *HwndPasswordUI::GetPassword(const TCHAR *fileName, unsigned char *fileDig
 
 // update global windowState for next default launch when either
 // no pdf is opened or a document without window dimension information
-static void RememberWindowPosition(WindowInfo& win)
+static void RememberDefaultWindowPosition(WindowInfo& win)
 {
     if (win.presentation)
         gGlobalPrefs.windowState = win.windowStateBeforePresentation;
@@ -435,7 +435,7 @@ static void RememberWindowPosition(WindowInfo& win)
 
 // update global windowState for next default launch when either
 // no pdf is opened or a document without window dimension information
-static void RememberWindowPosition(MobiWindow *win)
+static void RememberDefaultWindowPosition(MobiWindow *win)
 {
     if (IsZoomed(win->hwndFrame))
         gGlobalPrefs.windowState = WIN_STATE_MAXIMIZED;
@@ -455,7 +455,7 @@ static void RememberWindowPosition(MobiWindow *win)
 static void UpdateDisplayStateWindowRect(WindowInfo& win, DisplayState& ds, bool updateGlobal=true)
 {
     if (updateGlobal)
-        RememberWindowPosition(win);
+        RememberDefaultWindowPosition(win);
 
     ds.windowState = gGlobalPrefs.windowState;
     ds.windowPos   = gGlobalPrefs.windowPos;
@@ -496,8 +496,7 @@ static void DisplayStateFromMobiWindow(MobiWindow* win, DisplayState* ds)
     ds->displayMode = DM_SINGLE_PAGE;
     ds->rotation = 0;
     ds->zoomVirtual = 0;
-    ds->reparsePointIdx = 0; // TODO: remember reparse point
-
+    ds->reparsePointIdx = win->ebookController->CurrReparsePointIdx();
     ds->pageNo = 1;
     ds->scrollPos = PointI();
     CrashIf(ds->decryptionKey);
@@ -505,7 +504,7 @@ static void DisplayStateFromMobiWindow(MobiWindow* win, DisplayState* ds)
 
 static void UpdateCurrentFileDisplayStateForWinMobi(MobiWindow* win)
 {
-    RememberWindowPosition(win);
+    RememberDefaultWindowPosition(win);
     DisplayState *ds = gFileHistory.Find(win->LoadedFilePath());
     if (!ds)
         return;
@@ -518,7 +517,7 @@ static void UpdateCurrentFileDisplayStateForWinMobi(MobiWindow* win)
 
 static void UpdateCurrentFileDisplayStateForWinInfo(WindowInfo* win)
 {
-    RememberWindowPosition(*win);
+    RememberDefaultWindowPosition(*win);
     DisplayState *ds = gFileHistory.Find(win->loadedFilePath);
     if (!ds)
         return;
@@ -3174,7 +3173,7 @@ static void OnMenuViewFullscreen(WindowInfo& win, bool presentation=false)
     bool enterFullscreen = presentation ? !win.presentation : !win.fullScreen;
 
     if (!win.presentation && !win.fullScreen)
-        RememberWindowPosition(win);
+        RememberDefaultWindowPosition(win);
     else
         ExitFullscreen(win);
 
@@ -4566,7 +4565,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 
         case WM_SIZE:
             if (win && SIZE_MINIMIZED != wParam) {
-                RememberWindowPosition(*win);
+                RememberDefaultWindowPosition(*win);
                 AdjustWindowEdge(*win);
 
                 int dx = LOWORD(lParam);
@@ -4577,7 +4576,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 
         case WM_MOVE:
             if (win) {
-                RememberWindowPosition(*win);
+                RememberDefaultWindowPosition(*win);
                 AdjustWindowEdge(*win);
             }
             break;
