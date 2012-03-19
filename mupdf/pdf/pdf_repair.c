@@ -386,6 +386,13 @@ pdf_repair_xref(pdf_document *xref, pdf_lexbuf *buf)
 
 			xref->table[list[i].num].stm_ofs = list[i].stm_ofs;
 
+			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1841 */
+			if (xref->table[list[i].num].obj)
+			{
+				pdf_drop_obj(xref->table[list[i].num].obj);
+				xref->table[list[i].num].obj = NULL;
+			}
+
 			/* corrected stream length */
 			if (list[i].stm_len >= 0)
 			{
@@ -400,7 +407,6 @@ pdf_repair_xref(pdf_document *xref, pdf_lexbuf *buf)
 
 				pdf_drop_obj(dict);
 			}
-
 		}
 
 		xref->table[0].type = 'f';
