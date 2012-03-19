@@ -770,7 +770,8 @@ void HtmlFormatter::HandleHtmlTag(HtmlToken *t)
     } else if ((Tag_I == tag) || (Tag_Em == tag)) {
         ChangeFontStyle(FontStyleItalic, t->IsStartTag());
     } else if (Tag_U == tag) {
-        ChangeFontStyle(FontStyleUnderline, t->IsStartTag());
+        if (!currLinkIdx)
+            ChangeFontStyle(FontStyleUnderline, t->IsStartTag());
     } else if (Tag_Strike == tag) {
         ChangeFontStyle(FontStyleStrikeout, t->IsStartTag());
     } else if (Tag_Br == tag) {
