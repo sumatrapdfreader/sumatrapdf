@@ -21,7 +21,7 @@ static void fz_opj_info_callback(const char *msg, void *client_data)
 }
 
 fz_pixmap *
-fz_load_jpx(fz_context *ctx, unsigned char *data, int size, fz_colorspace *defcs)
+fz_load_jpx(fz_context *ctx, unsigned char *data, int size, fz_colorspace *defcs, int indexed)
 {
 	fz_pixmap *img;
 	opj_event_mgr_t evtmgr;
@@ -50,6 +50,8 @@ fz_load_jpx(fz_context *ctx, unsigned char *data, int size, fz_colorspace *defcs
 	evtmgr.info_handler = fz_opj_info_callback;
 
 	opj_set_default_decoder_parameters(&params);
+	if (indexed)
+		params.flags |= OPJ_DPARAMETERS_IGNORE_PCLR_CMAP_CDEF_FLAG;
 
 	info = opj_create_decompress(format);
 	opj_set_event_mgr((opj_common_ptr)info, &evtmgr, ctx);

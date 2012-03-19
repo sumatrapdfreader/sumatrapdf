@@ -50,6 +50,8 @@ char *pdfapp_usage(pdfapp_t *app)
 		"l\t\t-- scroll right\n"
 		"+\t\t-- zoom in\n"
 		"-\t\t-- zoom out\n"
+		"W\t\t-- zoom to fit window width\n"
+		"H\t\t-- zoom to fit window height\n"
 		"w\t\t-- shrinkwrap\n"
 		"r\t\t-- reload file\n"
 		". pgdn right space\t-- next page\n"
@@ -65,6 +67,7 @@ char *pdfapp_usage(pdfapp_t *app)
 		"n\t\t-- find next search result\n"
 		"N\t\t-- find previous search result\n"
 		"c\t\t-- toggle between color and grayscale\n"
+		"i\t\t-- toggle inverted color mode\n"
 	;
 }
 
@@ -336,6 +339,8 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 		idev = fz_new_draw_device(app->ctx, app->image);
 		fz_run_display_list(app->page_list, idev, ctm, bbox, NULL);
 		fz_free_device(idev);
+		if (app->invert)
+			fz_invert_pixmap(app->ctx, app->image);
 	}
 
 	if (repaint)
@@ -695,6 +700,23 @@ void pdfapp_onkey(pdfapp_t *app, int c)
 		pdfapp_showpage(app, 0, 1, 1);
 		break;
 
+	case 'W':
+		app->resolution *= (double) app->winw / (double) fz_pixmap_width(app->ctx, app->image);
+		if (app->resolution > MAXRES)
+			app->resolution = MAXRES;
+		else if (app->resolution < MINRES)
+			app->resolution = MINRES;
+		pdfapp_showpage(app, 0, 1, 1);
+		break;
+	case 'H':
+		app->resolution *= (double) app->winh / (double) fz_pixmap_height(app->ctx, app->image);
+		if (app->resolution > MAXRES)
+			app->resolution = MAXRES;
+		else if (app->resolution < MINRES)
+			app->resolution = MINRES;
+		pdfapp_showpage(app, 0, 1, 1);
+		break;
+
 	case 'L':
 		app->rotate -= 90;
 		pdfapp_showpage(app, 0, 1, 1);
@@ -706,6 +728,11 @@ void pdfapp_onkey(pdfapp_t *app, int c)
 
 	case 'c':
 		app->grayscale ^= 1;
+		pdfapp_showpage(app, 0, 1, 1);
+		break;
+
+	case 'i':
+		app->invert ^= 1;
 		pdfapp_showpage(app, 0, 1, 1);
 		break;
 

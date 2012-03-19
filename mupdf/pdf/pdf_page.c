@@ -352,6 +352,14 @@ pdf_load_page(pdf_document *xref, int number)
 	}
 
 	page->rotate = pdf_to_int(pdf_dict_gets(pageobj, "Rotate"));
+	/* Snap page->rotate to 0, 90, 180 or 270 */
+	if (page->rotate < 0)
+		page->rotate = 360 - ((-page->rotate) % 360);
+	if (page->rotate >= 360)
+		page->rotate = page->rotate % 360;
+	page->rotate = 90*((page->rotate + 45)/90);
+	if (page->rotate > 360)
+		page->rotate = 0;
 
 	ctm = fz_concat(fz_rotate(-page->rotate), fz_scale(1, -1));
 	realbox = fz_transform_rect(ctm, page->mediabox);

@@ -649,7 +649,7 @@ struct fz_image_s
 	fz_pixmap *(*get_pixmap)(fz_context *, fz_image *, int w, int h);
 };
 
-fz_pixmap *fz_load_jpx(fz_context *ctx, unsigned char *data, int size, fz_colorspace *cs);
+fz_pixmap *fz_load_jpx(fz_context *ctx, unsigned char *data, int size, fz_colorspace *cs, int indexed);
 fz_pixmap *fz_load_jpeg(fz_context *doc, unsigned char *data, int size);
 fz_pixmap *fz_load_png(fz_context *doc, unsigned char *data, int size);
 fz_pixmap *fz_load_tiff(fz_context *doc, unsigned char *data, int size);

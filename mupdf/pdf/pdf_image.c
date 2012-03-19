@@ -506,7 +506,7 @@ pdf_load_jpx(pdf_document *xref, pdf_obj *dict, pdf_image *image)
 			indexed = !strcmp(colorspace->name, "Indexed");
 		}
 
-		img = fz_load_jpx(ctx, buf->data, buf->len, colorspace);
+		img = fz_load_jpx(ctx, buf->data, buf->len, colorspace, indexed);
 		/* RJW: "cannot load jpx image" */
 
 		if (img && colorspace == NULL)
