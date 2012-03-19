@@ -781,6 +781,7 @@ void HtmlFormatter::HandleHtmlTag(HtmlToken *t)
         HandleTagA(t);
     } else if (Tag_Blockquote == tag) {
         // TODO: implement me
+        HandleTagList(t);
     } else if (Tag_Div == tag) {
         // TODO: implement me
         FlushCurrLine(true);
@@ -809,6 +810,12 @@ void HtmlFormatter::HandleHtmlTag(HtmlToken *t)
             FlushCurrLine(true);
         }
         ChangeFontStyle(FontStyleBold, t->IsStartTag());
+    } else if (Tag_Table == tag) {
+        // TODO: implement me
+        HandleTagList(t);
+    } else if (Tag_Tr == tag) {
+        // display tables row-by-row for now
+        FlushCurrLine(true);
     } else {
         // TODO: temporary debugging
         //lf("unhandled tag: %d", tag);

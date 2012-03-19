@@ -182,6 +182,17 @@ public:
     }
 };
 
+class EbookTocItem : public DocTocItem {
+    PageDestination *dest;
+
+public:
+    EbookTocItem(TCHAR *title, PageDestination *dest) :
+        DocTocItem(title, dest ? dest->GetDestPageNo() : 0), dest(dest) { }
+    ~EbookTocItem() { delete dest; }
+
+    virtual PageDestination *GetLink() { return dest; }
+};
+
 EbookEngine::EbookEngine() : fileName(NULL), pages(NULL),
     pageRect(0, 0, 5.12 * GetFileDPI(), 7.8 * GetFileDPI()), // "B Format" paperback
     pageBorder(0.4f * GetFileDPI()), currFontDpi(96)
@@ -785,17 +796,6 @@ protected:
     DocTocItem *BuildTocTree(HtmlPullParser& parser, int& idCounter);
 };
 
-class EpubTocItem : public DocTocItem {
-    PageDestination *dest;
-
-public:
-    EpubTocItem(TCHAR *title, PageDestination *dest) :
-        DocTocItem(title, dest ? dest->GetDestPageNo() : 0), dest(dest) { }
-    ~EpubTocItem() { delete dest; }
-
-    virtual PageDestination *GetLink() { return dest; }
-};
-
 bool EpubEngineImpl::Load(const TCHAR *fileName)
 {
     this->fileName = str::Dup(fileName);
@@ -829,7 +829,7 @@ bool EpubEngineImpl::FinishLoading()
     return pages->Count() > 0;
 }
 
-static void AppendTocItem(EpubTocItem *& root, EpubTocItem *item, int level)
+static void AppendTocItem(EbookTocItem *& root, EbookTocItem *item, int level)
 {
     if (!root) {
         root = item;
@@ -852,11 +852,11 @@ static void AppendTocItem(EpubTocItem *& root, EpubTocItem *item, int level)
 DocTocItem *EpubEngineImpl::BuildTocTree(HtmlPullParser& parser, int& idCounter)
 {
     ScopedMem<TCHAR> itemText, itemSrc;
-    EpubTocItem *root = NULL;
+    EbookTocItem *root = NULL;
     int level = -1;
 
     HtmlToken *tok;
-    while ((tok = parser.Next()) && (!tok->IsEndTag() || !tok->NameIs("navMap") && !tok->NameIs("ncx:navMap"))) {
+    while ((tok = parser.Next()) && !tok->IsError() && (!tok->IsEndTag() || !tok->NameIs("navMap") && !tok->NameIs("ncx:navMap"))) {
         if (tok->IsTag() && (tok->NameIs("navPoint") || tok->NameIs("ncx:navPoint"))) {
             if (itemText) {
                 PageDestination *dest = NULL;
@@ -867,7 +867,7 @@ DocTocItem *EpubEngineImpl::BuildTocTree(HtmlPullParser& parser, int& idCounter)
                 else if (itemSrc)
                     dest = GetNamedDest(itemSrc);
                 itemSrc.Set(NULL);
-                EpubTocItem *item = new EpubTocItem(itemText.StealData(), dest);
+                EbookTocItem *item = new EbookTocItem(itemText.StealData(), dest);
                 item->id = ++idCounter;
                 AppendTocItem(root, item, level);
             }
@@ -880,6 +880,8 @@ DocTocItem *EpubEngineImpl::BuildTocTree(HtmlPullParser& parser, int& idCounter)
             tok = parser.Next();
             if (tok->IsText())
                 itemText.Set(str::conv::FromUtf8N(tok->s, tok->sLen));
+            else if (tok->IsError())
+                break;
         }
         else if (tok->IsTag() && !tok->IsEndTag() && (tok->NameIs("content") || tok->NameIs("ncx:content"))) {
             AttrInfo *attrInfo = tok->GetAttrByName("src");
@@ -900,7 +902,7 @@ DocTocItem *EpubEngineImpl::GetTocTree()
     HtmlPullParser parser(tocXml, str::Len(tocXml));
     HtmlToken *tok;
     // skip to the start of the navMap
-    while ((tok = parser.Next())) {
+    while ((tok = parser.Next()) && !tok->IsError()) {
         if (tok->IsStartTag() && (tok->NameIs("navMap") || tok->NameIs("ncx:navMap"))) {
             int idCounter = 0;
             return BuildTocTree(parser, idCounter);
@@ -1015,7 +1017,7 @@ bool Fb2Doc::Load()
     HtmlToken *tok;
     int inBody = 0, inTitleInfo = 0;
     const char *bodyStart = NULL;
-    while ((tok = parser.Next())) {
+    while ((tok = parser.Next()) && !tok->IsError()) {
         if (!inTitleInfo && tok->IsStartTag() && tok->NameIs("body")) {
             if (!inBody++)
                 bodyStart = tok->s;
@@ -1041,6 +1043,8 @@ bool Fb2Doc::Load()
                 ScopedMem<char> tmp(str::DupN(tok->s, tok->sLen));
                 docTitle.Set(DecodeHtmlEntitites(tmp, CP_UTF8));
             }
+            else if (tok->IsError())
+                break;
         }
     }
 
@@ -1278,18 +1282,21 @@ class MobiEngineImpl : public EbookEngine, public MobiEngine {
     friend MobiEngine;
 
 public:
-    MobiEngineImpl() : EbookEngine(), doc(NULL) { }
+    MobiEngineImpl() : EbookEngine(), doc(NULL), tocReparsePoint(NULL) { }
     virtual ~MobiEngineImpl() { delete doc; }
     virtual MobiEngine *Clone() {
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
     virtual PageDestination *GetNamedDest(const TCHAR *name);
+    virtual bool HasTocTree() const { return tocReparsePoint != NULL; }
+    virtual DocTocItem *GetTocTree();
 
     virtual const TCHAR *GetDefaultFileExt() const { return _T(".mobi"); }
 
 protected:
     MobiDoc *doc;
+    const char *tocReparsePoint;
 
     bool Load(const TCHAR *fileName);
 };
@@ -1313,7 +1320,23 @@ bool MobiEngineImpl::Load(const TCHAR *fileName)
     pages = MobiFormatter(&li, doc).Layout();
     if (!ExtractPageAnchors())
         return false;
-    
+
+    HtmlParser parser;
+    if (parser.Parse(li.htmlStr)) {
+        HtmlElement *ref = NULL;
+        while ((ref = parser.FindElementByName("reference", ref))) {
+            ScopedMem<TCHAR> type(ref->GetAttribute("type"));
+            ScopedMem<TCHAR> filepos(ref->GetAttribute("filepos"));
+            if (str::EqI(type, _T("toc")) && filepos) {
+                unsigned int pos;
+                if (str::Parse(filepos, _T("%u%$"), &pos) && pos < li.htmlStrLen) {
+                    tocReparsePoint = li.htmlStr + pos;
+                    break;
+                }
+            }
+        }
+    }
+
     return pages->Count() > 0;
 }
 
@@ -1342,6 +1365,66 @@ PageDestination *MobiEngineImpl::GetNamedDest(const TCHAR *name)
         }
     }
     return NULL;
+}
+
+DocTocItem *MobiEngineImpl::GetTocTree()
+{
+    if (!tocReparsePoint)
+        return NULL;
+
+    EbookTocItem *root = NULL;
+    ScopedMem<TCHAR> itemText;
+    ScopedMem<TCHAR> itemLink;
+    int itemLevel = 0;
+    int idCounter = 0;
+
+    // there doesn't seem to be a standard for Mobi ToCs, so we try to
+    // determine the author's intentions by looking at commonly used tags
+    HtmlPullParser parser(tocReparsePoint, str::Len(tocReparsePoint));
+    HtmlToken *tok;
+    while ((tok = parser.Next()) && !tok->IsError()) {
+        if (itemLink && tok->IsText()) {
+            ScopedMem<TCHAR> linkText(str::conv::FromUtf8N(tok->s, tok->sLen));
+            if (itemText)
+                itemText.Set(str::Join(itemText, _T(" "), linkText));
+            else
+                itemText.Set(linkText.StealData());
+        }
+        else if (!tok->IsTag())
+            continue;
+        else if (tok->NameIs("mbp:pagebreak"))
+            break;
+        else if (!itemLink && tok->IsStartTag() && tok->NameIs("a")) {
+            AttrInfo *attr = tok->GetAttrByName("filepos");
+            if (!attr)
+                attr = tok->GetAttrByName("href");
+            if (attr)
+                itemLink.Set(str::conv::FromUtf8N(attr->val, attr->valLen));
+        }
+        else if (itemLink && tok->IsEndTag() && tok->NameIs("a")) {
+            PageDestination *dest = NULL;
+            if (!itemText) {
+                itemLink.Set(NULL);
+                continue;
+            }
+            if (str::FindChar(itemLink, ':'))
+                dest = new SimpleDest2(0, RectD(), itemLink.StealData());
+            else
+                dest = GetNamedDest(itemLink);
+            EbookTocItem *item = new EbookTocItem(itemText.StealData(), dest);
+            item->id = ++idCounter;
+            AppendTocItem(root, item, itemLevel);
+            itemLink.Set(NULL);
+        }
+        else if (tok->NameIs("blockquote") || tok->NameIs("ul") || tok->NameIs("ol")) {
+            if (tok->IsStartTag())
+                itemLevel++;
+            else if (tok->IsEndTag() && itemLevel > 0)
+                itemLevel--;
+        }
+    }
+
+    return root;
 }
 
 bool MobiEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
