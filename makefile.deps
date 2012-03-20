@@ -135,12 +135,12 @@ $(OS)\EbookController.obj: src\mui\MuiControl.h src\mui\MuiCss.h src\mui\MuiEven
 $(OS)\EbookController.obj: src\mui\MuiHwndWrapper.h src\mui\MuiLayout.h src\mui\MuiPainter.h
 $(OS)\EbookController.obj: src\mui\MuiScrollBar.h src\PageLayout.h src\PdfEngine.h
 $(OS)\EbookController.obj: src\PsEngine.h src\SumatraWindow.h src\TextSearch.h
-$(OS)\EbookController.obj: src\TextSelection.h src\UiMsgSumatra.h src\utils\Allocator.h
-$(OS)\EbookController.obj: src\utils\BaseUtil.h src\utils\BitManip.h src\utils\DebugLog.h
-$(OS)\EbookController.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\HtmlPullParser.h
-$(OS)\EbookController.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\ThreadUtil.h
-$(OS)\EbookController.obj: src\utils\Timer.h src\utils\UiMsg.h src\utils\Vec.h
-$(OS)\EbookController.obj: src\WindowInfo.h
+$(OS)\EbookController.obj: src\TextSelection.h src\Translations.h src\UiMsgSumatra.h
+$(OS)\EbookController.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\BitManip.h
+$(OS)\EbookController.obj: src\utils\DebugLog.h src\utils\FileUtil.h src\utils\GeomUtil.h
+$(OS)\EbookController.obj: src\utils\HtmlPullParser.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OS)\EbookController.obj: src\utils\ThreadUtil.h src\utils\Timer.h src\utils\UiMsg.h
+$(OS)\EbookController.obj: src\utils\Vec.h src\WindowInfo.h
 $(OS)\EbookControls.obj: src\EbookControls.h src\MobiDoc.h src\mui\Mui.h
 $(OS)\EbookControls.obj: src\mui\MuiBase.h src\mui\MuiButton.h src\mui\MuiControl.h
 $(OS)\EbookControls.obj: src\mui\MuiCss.h src\mui\MuiEventMgr.h src\mui\MuiHwndWrapper.h

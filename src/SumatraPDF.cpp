@@ -491,15 +491,13 @@ static void DisplayStateFromMobiWindow(MobiWindow* win, DisplayState* ds)
     if (!ds->filePath || !str::EqI(ds->filePath, win->LoadedFilePath()))
         str::ReplacePtr(&ds->filePath, win->LoadedFilePath());
 
-    // TODO: when we support 2 pages at a time, it might also
-    // be DM_FACING
-    ds->displayMode = DM_SINGLE_PAGE;
-    ds->rotation = 0;
-    ds->zoomVirtual = 0;
+    // don't modify any of the other DisplayState values
+    // as long as they're not used, so that the same
+    // DisplayState settings can also be used for MobiEngine
+    // (in debug builds and in case we ever want to allow to
+    // switch between the interfaces); we get reasonable
+    // defaults from DisplayState's constructor anyway
     ds->reparseIdx = win->ebookController->CurrPageReparseIdx();
-    ds->pageNo = 1;
-    ds->scrollPos = PointI();
-    CrashIf(ds->decryptionKey);
 }
 
 static void UpdateCurrentFileDisplayStateForWinMobi(MobiWindow* win)
