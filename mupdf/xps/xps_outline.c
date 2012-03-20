@@ -202,12 +202,12 @@ xps_extract_anchor_info(xps_document *doc, fz_rect rect, char *target_uri, char 
 	if (anchor_name)
 	{
 		xps_target *target;
-		char *valueId = fz_malloc(doc->ctx, strlen(anchor_name) + 2);
-		sprintf(valueId, "#%s", anchor_name);
-		target = xps_lookup_link_target_obj(doc, valueId);
+		char *value_id = fz_malloc(doc->ctx, strlen(anchor_name) + 2);
+		sprintf(value_id, "#%s", anchor_name);
+		target = xps_lookup_link_target_obj(doc, value_id);
 		if (target)
 			target->rect = rect;
-		fz_free(doc->ctx, valueId);
+		fz_free(doc->ctx, value_id);
 	}
 }
 

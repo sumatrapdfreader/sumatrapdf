@@ -1438,14 +1438,14 @@ fz_gdiplus_free_user(fz_device *dev)
 }
 
 fz_device *
-fz_new_gdiplus_device(fz_context *ctx, void *hDC, fz_bbox baseClip)
+fz_new_gdiplus_device(fz_context *ctx, void *dc, fz_bbox base_clip)
 {
 	fz_synchronize_begin();
 	if (++m_gdiplusUsage == 1)
 		GdiplusStartup(&m_gdiplusToken, &GdiplusStartupInput(), NULL);
 	fz_synchronize_end();
 	
-	fz_device *dev = fz_new_device(ctx, new userData(ctx, (HDC)hDC, baseClip));
+	fz_device *dev = fz_new_device(ctx, new userData(ctx, (HDC)dc, base_clip));
 	dev->free_user = fz_gdiplus_free_user;
 	
 	dev->fill_path = fz_gdiplus_fill_path;

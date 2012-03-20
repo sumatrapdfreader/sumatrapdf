@@ -278,8 +278,8 @@ pdf_parse_action(pdf_document *xref, pdf_obj *action)
 #else
 		obj = pdf_dict_getsa(obj, "Unix", "F");
 #endif
-		ld.ld.launch.embeddedNum = pdf_to_num(obj);
-		ld.ld.launch.embeddedGen = pdf_to_gen(obj);
+		ld.ld.launch.embedded_num = pdf_to_num(obj);
+		ld.ld.launch.embedded_gen = pdf_to_gen(obj);
 	}
 	else if (!strcmp(pdf_to_name(obj), "Named"))
 	{

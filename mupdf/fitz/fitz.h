@@ -1519,7 +1519,7 @@ fz_device *fz_new_draw_device(fz_context *ctx, fz_pixmap *dest);
 
 /* SumatraPDF: GDI+ draw device */
 #ifdef _WIN32
-fz_device *fz_new_gdiplus_device(fz_context *ctx, void *hDC, fz_bbox baseClip);
+fz_device *fz_new_gdiplus_device(fz_context *ctx, void *dc, fz_bbox base_clip);
 #endif
 
 /*
@@ -1826,7 +1826,7 @@ struct fz_link_dest_s
 			char *file_spec;
 			int new_window;
 			/* SumatraPDF: support launching embedded files */
-			int embeddedNum, embeddedGen;
+			int embedded_num, embedded_gen;
 		}
 		launch;
 		struct

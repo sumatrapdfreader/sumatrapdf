@@ -701,8 +701,8 @@ fz_outline *pdf_loadattachments(pdf_document *xref)
         node->dest.kind = FZ_LINK_LAUNCH;
         node->dest.ld.launch.file_spec = pdf_file_spec_to_str(xref->ctx, dest);
         node->dest.ld.launch.new_window = 1;
-        node->dest.ld.launch.embeddedNum = pdf_to_num(embedded);
-        node->dest.ld.launch.embeddedGen = pdf_to_gen(embedded);
+        node->dest.ld.launch.embedded_num = pdf_to_num(embedded);
+        node->dest.ld.launch.embedded_gen = pdf_to_gen(embedded);
     }
     pdf_drop_obj(dict);
 
@@ -1986,8 +1986,8 @@ pdf_annot **PdfEngineImpl::ProcessPageAnnotations(pdf_page *page)
                 ld.kind = FZ_LINK_LAUNCH;
                 ld.ld.launch.file_spec = pdf_file_spec_to_str(ctx, file);
                 ld.ld.launch.new_window = 1;
-                ld.ld.launch.embeddedNum = pdf_to_num(embedded);
-                ld.ld.launch.embeddedGen = pdf_to_gen(embedded);
+                ld.ld.launch.embedded_num = pdf_to_num(embedded);
+                ld.ld.launch.embedded_gen = pdf_to_gen(embedded);
                 rect = fz_transform_rect(page->ctm, rect);
                 // add links in top-to-bottom order (i.e. last-to-first)
                 fz_link *link = fz_new_link(ctx, rect, ld);
@@ -2351,10 +2351,10 @@ TCHAR *PdfLink::GetValue() const
     case FZ_LINK_LAUNCH:
         // note: we (intentionally) don't support the /Win specific Launch parameters
         path = str::conv::FromUtf8(link->ld.launch.file_spec);
-        if (path && link->ld.launch.embeddedNum && str::EndsWithI(path, _T(".pdf"))) {
+        if (path && link->ld.launch.embedded_num && str::EndsWithI(path, _T(".pdf"))) {
             free(path);
             path = str::Format(_T("%s:%d:%d"), engine->FileName(),
-                link->ld.launch.embeddedNum, link->ld.launch.embeddedGen);
+                link->ld.launch.embedded_num, link->ld.launch.embedded_gen);
         }
         break;
     case FZ_LINK_GOTOR:
@@ -2375,7 +2375,7 @@ const char *PdfLink::GetDestType() const
     case FZ_LINK_URI: return "LaunchURL";
     case FZ_LINK_NAMED: return link->ld.named.named;
     case FZ_LINK_LAUNCH:
-        if (link->ld.launch.embeddedNum)
+        if (link->ld.launch.embedded_num)
             return "LaunchEmbedded";
         return "LaunchFile";
     case FZ_LINK_GOTOR: return "LaunchFile";
@@ -2440,7 +2440,7 @@ TCHAR *PdfLink::GetDestName() const
 bool PdfLink::SaveEmbedded(LinkSaverUI& saveUI)
 {
     ScopedCritSec scope(&engine->ctxAccess);
-    return engine->SaveEmbedded(saveUI, link->ld.launch.embeddedNum, link->ld.launch.embeddedGen);
+    return engine->SaveEmbedded(saveUI, link->ld.launch.embedded_num, link->ld.launch.embedded_gen);
 }
 
 bool PdfEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)

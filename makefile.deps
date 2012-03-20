@@ -194,13 +194,14 @@ $(OS)\Install.obj: src\utils\BaseUtil.h src\utils\CmdLineParser.h src\utils\File
 $(OS)\Install.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
 $(OS)\Install.obj: src\utils\StrUtil.h src\utils\Timer.h src\utils\Vec.h
 $(OS)\Install.obj: src\utils\WinUtil.h src\utils\ZipUtil.h src\Version.h
-$(OS)\Installer.obj: src\BaseEngine.h src\ifilter\PdfFilter.h src\previewer\PdfPreview.h
-$(OS)\Installer.obj: src\installer\Install.cpp src\installer\Installer.h src\installer\Resource.h
-$(OS)\Installer.obj: src\installer\Uninstall.cpp src\utils\Allocator.h src\utils\BaseUtil.h
-$(OS)\Installer.obj: src\utils\CmdLineParser.h src\utils\FileTransactions.h src\utils\FileUtil.h
-$(OS)\Installer.obj: src\utils\FrameTimeoutCalculator.h src\utils\GeomUtil.h src\utils\Scoped.h
-$(OS)\Installer.obj: src\utils\StrUtil.h src\utils\Timer.h src\utils\Vec.h
-$(OS)\Installer.obj: src\utils\WinUtil.h src\utils\ZipUtil.h src\Version.h
+$(OS)\Installer.obj: src\AppTools.h src\BaseEngine.h src\CrashHandler.h
+$(OS)\Installer.obj: src\ifilter\PdfFilter.h src\previewer\PdfPreview.h src\installer\Install.cpp
+$(OS)\Installer.obj: src\installer\Installer.h src\installer\Resource.h src\installer\Uninstall.cpp
+$(OS)\Installer.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\CmdLineParser.h
+$(OS)\Installer.obj: src\utils\FileTransactions.h src\utils\FileUtil.h src\utils\FrameTimeoutCalculator.h
+$(OS)\Installer.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OS)\Installer.obj: src\utils\Timer.h src\utils\Vec.h src\utils\WinUtil.h
+$(OS)\Installer.obj: src\utils\ZipUtil.h src\Version.h
 $(OS)\libmupdf_stub.obj: src\utils\BaseUtil.h
 $(OS)\Menu.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
 $(OS)\Menu.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h

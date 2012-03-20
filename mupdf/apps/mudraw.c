@@ -110,13 +110,13 @@ static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display
 
 	int w, h;
 	fz_device *dev;
-	HDC hDC, hDCMain;
+	HDC dc, dc_main;
 	RECT rc;
-	HBRUSH bgBrush;
+	HBRUSH bg_brush;
 	HBITMAP hbmp;
 	BITMAPINFO bmi = { 0 };
-	int bmpDataLen;
-	char *bmpData;
+	int bmp_data_len;
+	char *bmp_data;
 
 	bounds = fz_bound_page(doc, page);
 	zoom = resolution / 72;
@@ -152,17 +152,17 @@ static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display
 	w = bbox.x1 - bbox.x0;
 	h = bbox.y1 - bbox.y0;
 
-	hDCMain = GetDC(NULL);
-	hDC = CreateCompatibleDC(hDCMain);
-	hbmp = CreateCompatibleBitmap(hDCMain, w, h);
-	DeleteObject(SelectObject(hDC, hbmp));
+	dc_main = GetDC(NULL);
+	dc = CreateCompatibleDC(dc_main);
+	hbmp = CreateCompatibleBitmap(dc_main, w, h);
+	DeleteObject(SelectObject(dc, hbmp));
 
 	SetRect(&rc, 0, 0, w, h);
-	bgBrush = CreateSolidBrush(RGB(0xFF,0xFF,0xFF));
-	FillRect(hDC, &rc, bgBrush);
-	DeleteObject(bgBrush);
+	bg_brush = CreateSolidBrush(RGB(0xFF,0xFF,0xFF));
+	FillRect(dc, &rc, bg_brush);
+	DeleteObject(bg_brush);
 
-	dev = fz_new_gdiplus_device(ctx, hDC, bbox);
+	dev = fz_new_gdiplus_device(ctx, dc, bbox);
 	if (list)
 		fz_run_display_list(list, dev, ctm, bbox, NULL);
 	else
@@ -176,13 +176,13 @@ static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display
 	bmi.bmiHeader.biBitCount = 24;
 	bmi.bmiHeader.biCompression = BI_RGB;
 
-	bmpDataLen = ((w * 3 + 3) / 4) * 4 * h;
-	bmpData = fz_malloc(ctx, bmpDataLen);
-	if (!GetDIBits(hDC, hbmp, 0, h, bmpData, &bmi, DIB_RGB_COLORS))
+	bmp_data_len = ((w * 3 + 3) / 4) * 4 * h;
+	bmp_data = fz_malloc(ctx, bmp_data_len);
+	if (!GetDIBits(dc, hbmp, 0, h, bmp_data, &bmi, DIB_RGB_COLORS))
 		fz_throw(ctx, "gdierror: cannot draw page %d in PDF file '%s'", pagenum, filename);
 
-	DeleteDC(hDC);
-	ReleaseDC(NULL, hDCMain);
+	DeleteDC(dc);
+	ReleaseDC(NULL, dc_main);
 	DeleteObject(hbmp);
 
 	if (output)
@@ -200,11 +200,11 @@ static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display
 		{
 			bmpfh.bfType = MAKEWORD('B', 'M');
 			bmpfh.bfOffBits = sizeof(bmpfh) + sizeof(bmi);
-			bmpfh.bfSize = bmpfh.bfOffBits + bmpDataLen;
+			bmpfh.bfSize = bmpfh.bfOffBits + bmp_data_len;
 
 			fwrite(&bmpfh, sizeof(bmpfh), 1, f);
 			fwrite(&bmi, sizeof(bmi), 1, f);
-			fwrite(bmpData, 1, bmpDataLen, f);
+			fwrite(bmp_data, 1, bmp_data_len, f);
 		}
 		else
 		{
@@ -218,7 +218,7 @@ static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display
 			for (k = 0; k < height; k++)
 			{
 				int i, j;
-				char *line = bmpData + bmpDataLen / h * k;
+				char *line = bmp_data + bmp_data_len / h * k;
 				for (i = 0, j = 1; i < width; i += j, j = 1)
 				{
 					for (; i + j < width && j < 128 && !memcmp(line + i * 3, line + (i + j) * 3, 3); j++);
@@ -243,7 +243,7 @@ static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display
 
 	if (showmd5)
 	{
-		fz_pixmap *pix = fz_new_pixmap_with_data(ctx, fz_device_rgb, bmpDataLen / 4 / h, h, bmpData);
+		fz_pixmap *pix = fz_new_pixmap_with_data(ctx, fz_device_rgb, bmp_data_len / 4 / h, h, bmp_data);
 		unsigned char digest[16];
 		int i;
 
@@ -255,7 +255,7 @@ static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display
 		fz_drop_pixmap(ctx, pix);
 	}
 
-	fz_free(ctx, bmpData);
+	fz_free(ctx, bmp_data);
 }
 #endif
 
