@@ -667,6 +667,8 @@ spausdinamas dokumentas
 #Copyright:
 #File %s not found
 #Fonts:
+#Formatting the book... %d pages
+#Loading file %s...
 #Open in Microsoft XPS-Viewer
 #Replace document &colors with Windows color scheme
 #Save S&hortcut...\tCtrl+Shift+S

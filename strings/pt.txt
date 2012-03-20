@@ -687,3 +687,7 @@ cópia de texto
 printing document
 impressão de documento
 
+# Untranslated:
+#Formatting the book... %d pages
+#Loading file %s...
+

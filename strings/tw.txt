@@ -643,6 +643,8 @@ printing document
 #Favorites
 #File %s not found
 #Fonts:
+#Formatting the book... %d pages
+#Loading file %s...
 #Page %s
 #Printer with given name doesn't exist
 #Remove from favorites

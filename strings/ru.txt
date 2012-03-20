@@ -687,3 +687,7 @@ copying text
 printing document
 печатается документ
 
+# Untranslated:
+#Formatting the book... %d pages
+#Loading file %s...
+

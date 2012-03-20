@@ -686,3 +686,7 @@ kopiowanie tekstu
 printing document
 drukowanie dokumentu
 
+# Untranslated:
+#Formatting the book... %d pages
+#Loading file %s...
+

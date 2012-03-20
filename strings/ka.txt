@@ -674,6 +674,8 @@ printing document
 #Copy &Image
 #Copyright:
 #Fonts:
+#Formatting the book... %d pages
+#Loading file %s...
 #No result found around line %u in file %s
 #Replace document &colors with Windows color scheme
 

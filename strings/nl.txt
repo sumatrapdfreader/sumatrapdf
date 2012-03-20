@@ -694,3 +694,7 @@ tekst kopiëren
 printing document
 bestand afdrukken
 
+# Untranslated:
+#Formatting the book... %d pages
+#Loading file %s...
+

@@ -689,3 +689,7 @@ Text kopieren verweigert
 printing document
 Dokument drucken verweigert
 
+# Untranslated:
+#Formatting the book... %d pages
+#Loading file %s...
+

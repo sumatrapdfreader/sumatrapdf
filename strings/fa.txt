@@ -505,10 +505,12 @@ printing document
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
 #Fonts:
+#Formatting the book... %d pages
 #Found text at page %s (again)
 #Frequently Read
 #Hide frequently read
 #Image files (*.%s)
+#Loading file %s...
 #No matches were found
 #No result found around line %u in file %s
 #No synchronization info at this position

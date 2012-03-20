@@ -688,3 +688,7 @@ copying text
 printing document
 문서 인쇄 중
 
+# Untranslated:
+#Formatting the book... %d pages
+#Loading file %s...
+

@@ -687,3 +687,7 @@ kopiranje besedila
 printing document
 tiskanje dokumenta
 
+# Untranslated:
+#Formatting the book... %d pages
+#Loading file %s...
+

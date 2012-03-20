@@ -678,5 +678,7 @@ Nyomtatás
 #Copyright:
 #File %s not found
 #Fonts:
+#Formatting the book... %d pages
+#Loading file %s...
 #Replace document &colors with Windows color scheme
 

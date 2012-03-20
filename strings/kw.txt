@@ -460,10 +460,12 @@ Faktor-zoum
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
 #Fonts:
+#Formatting the book... %d pages
 #Found text at page %s (again)
 #Frequently Read
 #Hide frequently read
 #Image files (*.%s)
+#Loading file %s...
 #Mobi documents
 #Modified:
 #Number of Pages:

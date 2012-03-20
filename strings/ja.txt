@@ -675,6 +675,8 @@ printing document
 #Copy &Image
 #Copyright:
 #Fonts:
+#Formatting the book... %d pages
+#Loading file %s...
 #Open in Microsoft XPS-Viewer
 #Replace document &colors with Windows color scheme
 

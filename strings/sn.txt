@@ -290,12 +290,14 @@ Duputsa
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
 #Fonts:
+#Formatting the book... %d pages
 #Found text at page %s
 #Found text at page %s (again)
 #Frequently Read
 #Hide frequently read
 #Hint: Use the F3 key for finding again
 #Image files (*.%s)
+#Loading file %s...
 #Make SumatraPDF default application for PDF files?
 #Mobi documents
 #Modified:

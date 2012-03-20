@@ -686,3 +686,7 @@ copying text
 printing document
 đang in tập tin
 
+# Untranslated:
+#Formatting the book... %d pages
+#Loading file %s...
+

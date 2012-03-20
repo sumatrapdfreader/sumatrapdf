@@ -686,3 +686,7 @@ kopiram tekst
 printing document
 ispisujem dokument
 
+# Untranslated:
+#Formatting the book... %d pages
+#Loading file %s...
+

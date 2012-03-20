@@ -687,4 +687,6 @@ printing document
 
 # Untranslated:
 #Copyright:
+#Formatting the book... %d pages
+#Loading file %s...
 

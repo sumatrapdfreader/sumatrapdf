@@ -691,3 +691,7 @@ copiado de texto
 printing document
 imprimimendo documento
 
+# Untranslated:
+#Formatting the book... %d pages
+#Loading file %s...
+
