@@ -210,7 +210,7 @@ public:
     MobiFormatter(LayoutInfo *li, MobiDoc *doc);
 
     PageData *Next();
-    Vec<PageData*> *Layout();
+    Vec<PageData*> *FormatAllPages();
 };
 
 void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox, Color *textColor=NULL);

@@ -1129,8 +1129,8 @@ PageData *MobiFormatter::Next()
     return Next();
 }
 
-// convenience method to get all pages layed out
-Vec<PageData*> *MobiFormatter::Layout()
+// convenience method to format the whole html
+Vec<PageData*> *MobiFormatter::FormatAllPages()
 {
     Vec<PageData *> *pages = new Vec<PageData *>();
     for (PageData *pd = Next(); pd; pd = Next()) {

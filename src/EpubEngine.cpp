@@ -1317,7 +1317,7 @@ bool MobiEngineImpl::Load(const TCHAR *fileName)
     li.fontSize = 11;
     li.textAllocator = &allocator;
 
-    pages = MobiFormatter(&li, doc).Layout();
+    pages = MobiFormatter(&li, doc).FormatAllPages();
     if (!ExtractPageAnchors())
         return false;
 

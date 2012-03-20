@@ -171,7 +171,7 @@ static void MobiLayout(char *file)
     li.textAllocator = &textAllocator;
 
     MobiFormatter mf(&li, mb);
-    Vec<PageData*> *pages = mf.Layout();
+    Vec<PageData*> *pages = mf.FormatAllPages();
     DeleteVecMembers<PageData*>(*pages);
     delete pages;
     delete mb;
