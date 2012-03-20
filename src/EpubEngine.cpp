@@ -714,7 +714,7 @@ protected:
 public:
     EpubFormatter(LayoutInfo *li, EpubDoc *doc) : HtmlFormatter(li), epubDoc(doc) { }
 
-    Vec<PageData*> *Layout();
+    Vec<PageData*> *FormatAllPages();
 };
 
 void EpubFormatter::HandleTagImg_Epub(HtmlToken *t)
@@ -744,7 +744,7 @@ void EpubFormatter::HandleHtmlTag_Epub(HtmlToken *t)
         HandleHtmlTag(t);
 }
 
-Vec<PageData*> *EpubFormatter::Layout()
+Vec<PageData*> *EpubFormatter::FormatAllPages()
 {
     HtmlToken *t;
     while ((t = htmlParser->Next()) && !t->IsError()) {
@@ -822,7 +822,7 @@ bool EpubEngineImpl::FinishLoading()
     li.fontSize = 11;
     li.textAllocator = &allocator;
 
-    pages = EpubFormatter(&li, doc).Layout();
+    pages = EpubFormatter(&li, doc).FormatAllPages();
     if (!ExtractPageAnchors())
         return false;
 
@@ -1128,7 +1128,7 @@ public:
     Fb2Formatter(LayoutInfo *li, Fb2Doc *doc) :
         HtmlFormatter(li), fb2Doc(doc), section(1) { }
 
-    Vec<PageData*> *Layout();
+    Vec<PageData*> *FormatAllPages();
 };
 
 void Fb2Formatter::HandleTagImg_Fb2(HtmlToken *t)
@@ -1195,7 +1195,7 @@ void Fb2Formatter::HandleFb2Tag(HtmlToken *t)
     }
 }
 
-Vec<PageData*> *Fb2Formatter::Layout()
+Vec<PageData*> *Fb2Formatter::FormatAllPages()
 {
     HtmlToken *t;
     while ((t = htmlParser->Next()) && !t->IsError()) {
@@ -1254,7 +1254,7 @@ bool Fb2EngineImpl::Load(const TCHAR *fileName)
     li.fontSize = 11;
     li.textAllocator = &allocator;
 
-    pages = Fb2Formatter(&li, doc).Layout();
+    pages = Fb2Formatter(&li, doc).FormatAllPages();
     if (!ExtractPageAnchors())
         return false;
 
@@ -1343,23 +1343,25 @@ bool MobiEngineImpl::Load(const TCHAR *fileName)
 PageDestination *MobiEngineImpl::GetNamedDest(const TCHAR *name)
 {
     int filePos = _ttoi(name);
-    if (!filePos)
+    if (filePos < 0 || 0 == filePos && *name != '0')
         return NULL;
-    int foundPageNo = -1;
-    for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
-        if (PageCount() == pageNo || pages->At(pageNo)->reparseIdx > filePos) {
-            foundPageNo = pageNo;
+    int pageNo;
+    for (pageNo = 1; pageNo < PageCount(); pageNo++) {
+        if (pages->At(pageNo)->reparseIdx > filePos)
             break;
-        }
     }
-    if (-1 == foundPageNo)
-        return NULL;
+    CrashIf(pageNo < 1 || pageNo > PageCount());
 
     size_t htmlLen;
     char *start = doc->GetBookHtmlData(htmlLen);
+    if ((size_t)filePos > htmlLen)
+        return NULL;
+
     ScopedCritSec scope(&pagesAccess);
-    Vec<DrawInstr> *pageInstrs = GetPageData(foundPageNo);
-    float currY = 0;
+    Vec<DrawInstr> *pageInstrs = GetPageData(pageNo);
+    // link to the bottom of the page, if filePos points
+    // beyond the last visible DrawInstr of a page
+    float currY = (float)pageRect.dy;
     for (DrawInstr *i = pageInstrs->IterStart(); i; i = pageInstrs->IterNext()) {
         if (InstrString == i->type && i->str.s >= start &&
             i->str.s <= start + htmlLen && i->str.s - start >= filePos) {
@@ -1369,7 +1371,7 @@ PageDestination *MobiEngineImpl::GetNamedDest(const TCHAR *name)
     }
     RectD rect(0, currY + pageBorder, pageRect.dx, 10);
     rect.Inflate(-pageBorder, 0);
-    return new SimpleDest2(foundPageNo, rect);
+    return new SimpleDest2(pageNo, rect);
 }
 
 DocTocItem *MobiEngineImpl::GetTocTree()

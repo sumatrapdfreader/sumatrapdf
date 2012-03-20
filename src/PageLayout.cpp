@@ -578,29 +578,34 @@ void HtmlFormatter::EmitTextRun(const char *s, const char *end)
     CrashIf(!ValidReparseIdx(currReparseIdx, htmlParser));
     CrashIf(IsSpaceOnly(s, end));
     const char *tmp = ResolveHtmlEntities(s, end, textAllocator);
-    if (tmp != s) {
+    bool resolved = tmp != s;
+    if (resolved) {
         s = tmp;
         end = s + str::Len(s);
     }
 
-    size_t strLen = str::Utf8ToWcharBuf(s, end - s, buf, dimof(buf));
-    RectF bbox = MeasureText(gfx, currFont, buf, strLen);
-    bbox.Y = 0.f;
-    EnsureDx(bbox.Width);
-    if (bbox.Width > pageDx - NewLineX()) {
+    while (s < end) {
+        // don't update the reparseIdx if s doesn't point into the original source
+        if (!resolved)
+            currReparseIdx = s - htmlParser->Start();
+
+        size_t strLen = str::Utf8ToWcharBuf(s, end - s, buf, dimof(buf));
+        RectF bbox = MeasureText(gfx, currFont, buf, strLen);
+        bbox.Y = 0.f;
+        EnsureDx(bbox.Width);
+        if (bbox.Width <= pageDx - NewLineX()) {
+            AppendInstr(DrawInstr::Str(s, end - s, bbox));
+            currX += bbox.Width;
+            break;
+        }
+
         int lenThatFits = StringLenForWidth(gfx, currFont, buf, strLen, pageDx - NewLineX());
         bbox = MeasureText(gfx, currFont, buf, lenThatFits);
         bbox.Y = 0.f;
         CrashIf(bbox.Width > pageDx);
         AppendInstr(DrawInstr::Str(s, lenThatFits, bbox));
         currX += bbox.Width;
-        const char *newS = s + lenThatFits;
-        if (end == newS)
-            return;
-        EmitTextRun(newS, end);
-    } else {
-        AppendInstr(DrawInstr::Str(s, end - s, bbox));
-        currX += bbox.Width;
+        s += lenThatFits;
     }
 }
 
@@ -836,7 +841,6 @@ void HtmlFormatter::HandleHtmlTag(HtmlToken *t)
 void HtmlFormatter::HandleText(HtmlToken *t)
 {
     CrashIf(!t->IsText());
-    const char *tmp;
     bool skipped;
     const char *curr = t->s;
     const char *end = t->s + t->sLen;
@@ -849,10 +853,11 @@ void HtmlFormatter::HandleText(HtmlToken *t)
         if (skipped)
             EmitElasticSpace();
 
-        tmp = curr;
-        SkipNonWs(curr, end);
-        if (tmp != curr)
-            EmitTextRun(tmp, curr);
+        const char *text = curr;
+        currReparseIdx = curr - htmlParser->Start();
+        skipped = SkipNonWs(curr, end);
+        if (skipped)
+            EmitTextRun(text, curr);
     }
 }
 
