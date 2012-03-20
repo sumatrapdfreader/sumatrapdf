@@ -10,6 +10,9 @@ The installer is good enough for production but it doesn't mean it couldn't be i
  * show fireworks on successful installation/uninstallation
 */
 
+// define to allow testing crash handling via -crash cmd-line option
+#define ENABLE_CRASH_TESTING
+
 // define for testing the uninstaller
 // #define TEST_UNINSTALLER
 #if defined(TEST_UNINSTALLER) && !defined(BUILD_UNINSTALLER)
@@ -17,7 +20,6 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #endif
 
 #include "Installer.h"
-#include "AppTools.h"
 #include "CrashHandler.h"
 #include "FrameTimeoutCalculator.h"
 
@@ -27,6 +29,9 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #else
 #include "Install.cpp"
 #endif
+
+#define NOLOG 0 // log always
+#include "DebugLog.h"
 
 using namespace Gdiplus;
 
@@ -96,6 +101,7 @@ GlobalData gGlobalData = {
     NULL,  /* TCHAR *firstError */
     NULL,  /* HANDLE hThread */
     false, /* bool success */
+    false, /* bool crash */
 };
 
 void NotifyFailed(TCHAR *msg)
@@ -103,6 +109,7 @@ void NotifyFailed(TCHAR *msg)
     if (!gGlobalData.firstError)
         gGlobalData.firstError = str::Dup(msg);
     // MessageBox(gHwndFrame, msg, _T("Installation failed"),  MB_ICONEXCLAMATION | MB_OK);
+    plogf(_T("%s"), msg);
 }
 
 void SetMsg(TCHAR *msg, Color color)
@@ -514,7 +521,7 @@ LetterInfo gLetters[] = {
 
 static char RandUppercaseLetter()
 {
-    // TODO: clearly, not random but seem to work ok anyway
+    // note: clearly, not random but seems to work ok anyway
     static char l = 'A' - 1;
     l++;
     if (l > 'Z')
@@ -915,6 +922,13 @@ static void ParseCommandLine(TCHAR *cmdLine)
 #endif
         else if (is_arg("h") || is_arg("help") || is_arg("?"))
             gGlobalData.showUsageAndQuit = true;
+#ifdef ENABLE_CRASH_TESTING
+        else if (is_arg("crash")) {
+            // will induce crash when 'Install' button is pressed
+            // for testing crash handling
+            gGlobalData.crash = true;
+        }
+#endif
     }
 }
 
@@ -940,6 +954,21 @@ void GetStressTestInfo(str::Str<char>* s)
     // no-op but must be defined for CrashHandler.cpp
 }
 
+static void InstallInstallerCrashHandler()
+{
+    TCHAR tempDir[MAX_PATH] = { 0 };
+    DWORD res = GetTempPath(dimof(tempDir), tempDir);
+    if ((0 == res) || !dir::Exists(tempDir)) {
+        BOOL ok = SHGetSpecialFolderPath(NULL, tempDir, CSIDL_LOCAL_APPDATA, TRUE);
+        if (!ok)
+            return;
+    }
+
+    ScopedMem<TCHAR> symDir(path::Join(tempDir, _T("sumatrasymbols")));
+    ScopedMem<TCHAR> crashDumpPath(path::Join(tempDir, CRASH_DUMP_FILE_NAME));
+    InstallCrashHandler(crashDumpPath, tempDir);
+}
+
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     int ret = 1;
@@ -951,12 +980,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     ScopedGdiPlus gdi;
 
 #if !defined(BUILD_UNINSTALLER)
-    // TODO: use a safe (i.e. writeable) temporary location? The dir in which installer
-    // exe is might not be (and almost surely not the uninstaller's path, but we don't
-    // support that yet)
-    //ScopedMem<TCHAR> symDir(AppGenDataFilename(_T("symbols")));
-    //ScopedMem<TCHAR> crashDumpPath(AppGenDataFilename(CRASH_DUMP_FILE_NAME));
-    //InstallCrashHandler(crashDumpPath);
+    InstallInstallerCrashHandler();
 #endif
 
     ParseCommandLine(GetCommandLine());

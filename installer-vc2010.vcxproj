@@ -69,19 +69,19 @@
     </BuildLog>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\AppTools.cpp" />
     <ClCompile Include="src\CrashHandler.cpp" />
     <ClCompile Include="src\installer\Install.cpp" />
     <ClCompile Include="src\installer\Installer.cpp" />
     <ClCompile Include="src\installer\Uninstall.cpp" />
+    <ClCompile Include="src\utils\DebugLog.cpp" />
     <ClCompile Include="src\utils\FileUtil.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\AppTools.h" />
     <ClInclude Include="src\CrashHandler.h" />
     <ClInclude Include="src\installer\Installer.h" />
     <ClInclude Include="src\installer\Resource.h" />
     <ClInclude Include="src\installer\Version.h" />
+    <ClInclude Include="src\utils\DebugLog.h" />
     <ClInclude Include="src\utils\FileUtil.h" />
     <ClInclude Include="src\utils\FrameTimeoutCalculator.h" />
   </ItemGroup>

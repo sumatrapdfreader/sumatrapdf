@@ -91,8 +91,7 @@ bool IsRunningInPortableMode()
         }
     }
 
-    TCHAR programFilesDir[MAX_PATH];
-    programFilesDir[0] = '\0';
+    TCHAR programFilesDir[MAX_PATH] = { 0 };
     BOOL ok = SHGetSpecialFolderPath(NULL, programFilesDir, CSIDL_PROGRAM_FILES, FALSE);
     if (!ok)
         return true;

@@ -98,19 +98,21 @@
 #define WM_APP_INSTALLATION_FINISHED        (WM_APP + 1)
 
 struct GlobalData {
-    bool silent;
-    bool showUsageAndQuit;
-    TCHAR *installDir;
+    bool    silent;
+    bool    showUsageAndQuit;
+    TCHAR * installDir;
 #ifndef BUILD_UNINSTALLER
-    bool registerAsDefault;
-    bool installBrowserPlugin;
-    bool installPdfFilter;
-    bool installPdfPreviewer;
+    bool    registerAsDefault;
+    bool    installBrowserPlugin;
+    bool    installPdfFilter;
+    bool    installPdfPreviewer;
 #endif
 
-    TCHAR *firstError;
-    HANDLE hThread;
-    bool success;
+    TCHAR * firstError;
+    HANDLE  hThread;
+    bool    success;
+    // only for testing 
+    bool    crash;
 };
 
 struct PayloadInfo {

@@ -32,6 +32,13 @@
 #define CRASH_SUBMIT_URL    _T("/app/crashsubmit?appname=SumatraPDF")
 #endif
 
+// The following functions allow crash handler to be used by both installer
+// and sumatra proper. They must be implemented for each app.
+extern void GetStressTestInfo(str::Str<char>* s);
+extern bool CrashHandlerCanUseNet();
+extern void CrashHandlerMessage();
+extern void GetProgramInfo(str::Str<char>& s);
+
 /* Hard won wisdom: changing symbol path with SymSetSearchPath() after modules
 have been loaded (invideProcess=TRUE in SymInitialize() or SymRefreshModuleList())
 doesn't work.
@@ -499,9 +506,8 @@ static void GetCallstack(str::Str<char>& s, CONTEXT& ctx, HANDLE hThread)
             break;
         framesCount++;
     }
-    if (0 == framesCount) {
+    if (0 == framesCount)
         s.Append("StackWalk64() couldn't get even the first stack frame info");
-    }
 }
 
 // disabled because apparently RtlCaptureContext() crashes when code
@@ -674,9 +680,6 @@ static void GetExceptionInfo(str::Str<char>& s, EXCEPTION_POINTERS *excPointers)
     GetCallstack(s, *ctx, GetCurrentThread());
 }
 
-// in SumatraPDF.cpp
-extern void GetStressTestInfo(str::Str<char>* s);
-
 static char *BuildCrashInfoText()
 {
     LogDbgDetail("BuildCrashInfoText(): start");
@@ -805,9 +808,6 @@ static bool DownloadSymbols(const TCHAR *symDir, const TCHAR *symbolsZipPath)
     return ok;
 }
 
-// must be implemented per-app that uses CrashHandler.cpp
-extern bool CrashHandlerCanUseNet();
-
 // If we can't resolve the symbols, we assume it's because we don't have symbols
 // so we'll try to download them and retry. If we can resolve symbols, we'll
 // get the callstacks etc. and submit to our server for analysis.
@@ -907,16 +907,11 @@ static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS *exceptionInfo)
     SetEvent(gDumpEvent);
     WaitForSingleObject(gDumpThread, INFINITE);
 
-    // this is per-app that uses crash handler and must be implemented in that app
-    extern void CrashHandlerMessage();
     CrashHandlerMessage();
     TerminateProcess(GetCurrentProcess(), 1);
 
     return EXCEPTION_CONTINUE_SEARCH;
 }
-
-// must be implemented per-app that uses CrashHandler.cpp
-extern void GetProgramInfo(str::Str<char>& s);
 
 static char *OsNameFromVer(OSVERSIONINFOEX ver)
 {

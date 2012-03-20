@@ -27,10 +27,10 @@
     <ClCompile Include="src\installer\Uninstall.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\AppTools.cpp">
+    <ClCompile Include="src\CrashHandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\CrashHandler.cpp">
+    <ClCompile Include="src\utils\DebugLog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -50,10 +50,10 @@
     <ClInclude Include="src\utils\FrameTimeoutCalculator.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\AppTools.h">
+    <ClInclude Include="src\CrashHandler.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\CrashHandler.h">
+    <ClInclude Include="src\utils\DebugLog.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
