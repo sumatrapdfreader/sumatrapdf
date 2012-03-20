@@ -53,39 +53,15 @@ static void usage(void)
  * Garbage collect objects not reachable from the trailer.
  */
 
-static void sweepref(pdf_obj *ref);
-
-static void sweepobj(pdf_obj *obj)
-{
-	int i;
-
-	if (pdf_is_indirect(obj))
-		sweepref(obj);
-
-	else if (pdf_is_dict(obj))
-	{
-		int n = pdf_dict_len(obj);
-		for (i = 0; i < n; i++)
-			sweepobj(pdf_dict_get_val(obj, i));
-	}
-
-	else if (pdf_is_array(obj))
-	{
-		int n = pdf_array_len(obj);
-		for (i = 0; i < n; i++)
-			sweepobj(pdf_array_get(obj, i));
-	}
-}
-
-static void sweepref(pdf_obj *obj)
+static pdf_obj *sweepref(pdf_obj *obj)
 {
 	int num = pdf_to_num(obj);
 	int gen = pdf_to_gen(obj);
 
 	if (num < 0 || num >= xref->len)
-		return;
+		return NULL;
 	if (uselist[num])
-		return;
+		return NULL;
 
 	uselist[num] = 1;
 
@@ -108,7 +84,29 @@ static void sweepref(pdf_obj *obj)
 		/* Leave broken */
 	}
 
-	sweepobj(pdf_resolve_indirect(obj));
+	return pdf_resolve_indirect(obj);
+}
+
+static void sweepobj(pdf_obj *obj)
+{
+	int i;
+
+	if (pdf_is_indirect(obj))
+		obj = sweepref(obj);
+
+	if (pdf_is_dict(obj))
+	{
+		int n = pdf_dict_len(obj);
+		for (i = 0; i < n; i++)
+			sweepobj(pdf_dict_get_val(obj, i));
+	}
+
+	else if (pdf_is_array(obj))
+	{
+		int n = pdf_array_len(obj);
+		for (i = 0; i < n; i++)
+			sweepobj(pdf_array_get(obj, i));
+	}
 }
 
 /*
