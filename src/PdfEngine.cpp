@@ -2138,13 +2138,29 @@ TCHAR *PdfEngineImpl::ExtractFontList()
     StrVec fonts;
     for (size_t i = 0; i < fontList.Count(); i++) {
         pdf_obj *font = fontList.At(i);
-        const char *name = pdf_to_name(pdf_dict_getsa(font, "BaseFont", "Name"));
+        pdf_obj *font2 = pdf_array_get(pdf_dict_gets(font, "DescendantFonts"), 0);
+        if (!font2)
+            font2 = font;
+
+        const char *name = pdf_to_name(pdf_dict_getsa(font2, "BaseFont", "Name"));
         if (str::IsEmpty(name))
             continue;
-        bool embedded = str::Len(name) > 7 && name[6] == '+';
-        if (embedded)
+        bool embedded = false;
+        pdf_obj *desc = pdf_dict_gets(font2, "FontDescriptor");
+        if (desc && (pdf_dict_gets(desc, "FontFile") || pdf_dict_getsa(desc, "FontFile2", "FontFile3")))
+            embedded = true;
+        if (embedded && str::Len(name) > 7 && name[6] == '+')
             name += 7;
+
         const char *type = pdf_to_name(pdf_dict_gets(font, "Subtype"));
+        if (font2 != font) {
+            const char *type2 = pdf_to_name(pdf_dict_gets(font2, "Subtype"));
+            if (str::Eq(type2, "CIDFontType0"))
+                type = "Type1 (CID)";
+            else if (str::Eq(type2, "CIDFontType2"))
+                type = "TrueType (CID)";
+        }
+
         const char *encoding = pdf_to_name(pdf_dict_gets(font, "Encoding"));
         if (str::Eq(encoding, "WinAnsiEncoding"))
             encoding = "Ansi";
