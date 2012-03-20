@@ -124,9 +124,9 @@ HtmlFormatter::HtmlFormatter(LayoutInfo *li) : layoutInfo(li),
     currLineTopPadding(0), currLinkIdx(0), listDepth(0)
 {
     currReparseIdx = li->reparseIdx;
-    CrashIf((currReparseIdx < 0) || (currReparseIdx >= (int)li->htmlStrLen));
-    size_t htmlLen = li->htmlStrLen - currReparseIdx;
-    htmlParser = new HtmlPullParser(li->htmlStr + currReparseIdx, htmlLen);
+    htmlParser = new HtmlPullParser(li->htmlStr, li->htmlStrLen);
+    htmlParser->SetCurrPosOff(currReparseIdx);
+    CrashIf(!ValidReparseIdx(currReparseIdx, htmlParser));
 
     gfx = mui::AllocGraphicsForMeasureText();
     defaultFontName.Set(str::Dup(li->fontName));

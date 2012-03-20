@@ -166,6 +166,7 @@ public:
     HtmlPullParser(const char *s, size_t len) : currPos(s), end(s + len), start(s), len(len) { }
     HtmlPullParser(const char *s, const char *end) : currPos(s), end(end), start(s), len(end - s) { }
 
+    void         SetCurrPosOff(int off) { currPos = start + off; }
     size_t       Len()   const { return len;   }
     const char * Start() const { return start; }
 

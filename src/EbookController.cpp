@@ -132,7 +132,10 @@ bool ThreadLayoutMobi::Layout(int reparseIdx)
     Timer t(true);
     layoutInfo->reparseIdx = reparseIdx;
     MobiFormatter mf(layoutInfo, mobiDoc);
+    int lastReparseIdx = reparseIdx;
     for (PageData *pd = mf.Next(); pd; pd = mf.Next()) {
+        CrashIf(pd->reparseIdx < lastReparseIdx);
+        lastReparseIdx = pd->reparseIdx;
         if (WasCancelRequested()) {
             lf("Layout cancelled");
             for (int i = 0; i < pageCount; i++) {
