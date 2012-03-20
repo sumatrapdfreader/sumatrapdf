@@ -87,7 +87,7 @@ DrawInstr DrawInstr::SetFont(Font *font)
 DrawInstr DrawInstr::FixedSpace(float dx)
 {
     DrawInstr di(InstrFixedSpace);
-    di.fixedSpaceDx = dx;
+    di.bbox.Width = dx;
     return di;
 }
 
@@ -227,7 +227,7 @@ REAL HtmlFormatter::CurrLineDx()
         } else if (InstrElasticSpace == i->type) {
             dx += spaceDx;
         } else if (InstrFixedSpace == i->type) {
-            dx += i->fixedSpaceDx;
+            dx += i->bbox.Width;
         }
     }
     return dx;
@@ -276,7 +276,7 @@ void HtmlFormatter::LayoutLeftStartingAt(REAL offX)
         } else if (InstrElasticSpace == i->type) {
             x += spaceDx;
         } else if (InstrFixedSpace == i->type) {
-            x += i->fixedSpaceDx;
+            x += i->bbox.Width;
         }
     }
 
@@ -300,12 +300,7 @@ static void SetYPos(Vec<DrawInstr>& instr, float y)
 void HtmlFormatter::JustifyLineBoth()
 {
     REAL extraSpaceDxTotal = pageDx - CurrLineDx();
-    // TODO: don't know why it happens but it does on pg12.mobi
-    // where extraSpaceDxTotal ~ -9 when formatted at a small size
-    // (is it related to images?)
-    //CrashIf(extraSpaceDxTotal < 0.f);
-    if (extraSpaceDxTotal < 0.f)
-        extraSpaceDxTotal = 0.f;
+    CrashIf(extraSpaceDxTotal < 0.f);
 
     LayoutLeftStartingAt(0.f);
     size_t spaces = 0;
@@ -416,8 +411,14 @@ void HtmlFormatter::ForceNewPage()
 bool HtmlFormatter::FlushCurrLine(bool isParagraphBreak)
 {
     if (IsCurrLineEmpty()) {
-        // TODO: rather create a new line if currLineInstr.Count() > 0 ?
         currX = NewLineX();
+        currLineTopPadding = 0;
+        // remove all spaces (only keep SetFont, LinkStart and Anchor instructions)
+        for (size_t k = currLineInstr.Count(); k > 0; k--) {
+            DrawInstr *i = &currLineInstr.At(k-1);
+            if (InstrFixedSpace == i->type || InstrElasticSpace == i->type)
+                currLineInstr.RemoveAt(k-1);
+        }
         return false;
     }
     AlignAttr align = currJustification;
@@ -510,28 +511,16 @@ void HtmlFormatter::EmitHr()
     FlushCurrLine(true);
 }
 
-static bool ShouldAddIndent(float indent, AlignAttr just)
-{
-    if (0.f == indent)
-        return false;
-    return (Align_Left == just) || (Align_Justify == just);
-}
-
-void HtmlFormatter::EmitParagraph(float indent, float topPadding)
+void HtmlFormatter::EmitParagraph(float indent)
 {
     FlushCurrLine(true);
     CrashIf(NewLineX() != currX);
-    if (ShouldAddIndent(indent, currJustification) && EnsureDx(indent)) {
+    bool needsIndent = Align_Left == currJustification ||
+                       Align_Justify == currJustification;
+    if (indent > 0 && needsIndent && EnsureDx(indent)) {
         AppendInstr(DrawInstr::FixedSpace(indent));
         currX = NewLineX() + indent;
-        // prevent accidental double-indentation
-        for (size_t i = currLineInstr.Count(); i > 1; i--) {
-            if (InstrFixedSpace == currLineInstr.At(i - 2).type)
-                currLineInstr.RemoveAt(i - 2);
-        }
     }
-    // remember so that we can use it in FlushCurrLine()
-    currLineTopPadding = topPadding;
 }
 
 // ensure there is enough dx space left in the current line
@@ -593,7 +582,7 @@ void HtmlFormatter::EmitTextRun(const char *s, const char *end)
         RectF bbox = MeasureText(gfx, currFont, buf, strLen);
         bbox.Y = 0.f;
         EnsureDx(bbox.Width);
-        if (bbox.Width <= pageDx - NewLineX()) {
+        if (bbox.Width <= pageDx - currX) {
             AppendInstr(DrawInstr::Str(s, end - s, bbox));
             currX += bbox.Width;
             break;
@@ -965,38 +954,29 @@ MobiFormatter::MobiFormatter(LayoutInfo* li, MobiDoc *doc) :
     ForceNewPage();
 }
 
-void MobiFormatter::HandleTagP_Mobi(HtmlToken *t)
+void MobiFormatter::HandleSpacing_Mobi(HtmlToken *t)
 {
-    if (t->IsEndTag()) {
-        FlushCurrLine(true);
-        currJustification = Align_Justify;
+    if (t->IsEndTag())
         return;
-    }
 
-    // handle a start p tag
-    AlignAttr just = Align_NotFound;
-    AttrInfo *attr = t->GetAttrByName("align");
-    if (attr)
-        just = GetAlignAttrByName(attr->val, attr->valLen);
-    if (just != Align_NotFound)
-        currJustification = just;
     // best I can tell, in mobi <p width="1em" height="3pt> means that
     // the first line of the paragrap is indented by 1em and there's
-    /// 3pt top padding
-    float lineIndent = 0;
-    float topPadding = 0;
-    attr = t->GetAttrByName("width");
+    // 3pt top padding (the same seems to apply for <blockquote>)
+    AttrInfo *attr = t->GetAttrByName("width");
     if (attr) {
-        lineIndent = ParseSizeAsPixels(attr->val, attr->valLen, currFontSize);
+        float lineIndent = ParseSizeAsPixels(attr->val, attr->valLen, currFontSize);
         // there are files with negative width which produces partially invisible
         // text, so don't allow that
-        if (lineIndent < 0.f)
-            lineIndent = 0.f;
+        if (lineIndent > 0) {
+            // this should replace the previously emitted paragraph/quote block
+            EmitParagraph(lineIndent);
+        }
     }
     attr = t->GetAttrByName("height");
-    if (attr)
-        topPadding = ParseSizeAsPixels(attr->val, attr->valLen, currFontSize);
-    EmitParagraph(lineIndent, topPadding);
+    if (attr) {
+        // for use it in FlushCurrLine()
+        currLineTopPadding = ParseSizeAsPixels(attr->val, attr->valLen, currFontSize);
+    }
 }
 
 // mobi format has image tags in the form:
@@ -1049,9 +1029,9 @@ void MobiFormatter::HandleHtmlTag_Mobi(HtmlToken *t)
         return;
 
     HtmlTag tag = FindTag(t);
-    if (Tag_P == tag) {
-        HandleTagP_Mobi(t);
-        HandleAnchorTag(t);
+    if (Tag_P == tag || Tag_Blockquote == tag) {
+        HandleHtmlTag(t);
+        HandleSpacing_Mobi(t);
     } else if (Tag_Mbp_Pagebreak == tag) {
         ForceNewPage();
     } else if (Tag_Img == tag) {

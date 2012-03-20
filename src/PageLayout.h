@@ -45,7 +45,6 @@ struct DrawInstr {
             size_t      len;
         }                   str;          // InstrString, InstrLinkStart, InstrAnchor
         Font *              font;         // InstrSetFont
-        float               fixedSpaceDx; // InstrFixedSpace
         ImageData           img;
     };
     RectF bbox; // common to most instructions
@@ -127,7 +126,7 @@ protected:
     void  EmitHr();
     void  EmitTextRun(const char *s, const char *end);
     void  EmitElasticSpace();
-    void  EmitParagraph(float indent, float topPadding=0);
+    void  EmitParagraph(float indent);
     void  EmitEmptyLine(float lineDy);
     void  ForceNewPage();
     bool  EnsureDx(float dx);
@@ -202,7 +201,7 @@ class MobiFormatter : public HtmlFormatter {
 
     bool                finishedParsing;
 
-    void HandleTagP_Mobi(HtmlToken *t);
+    void HandleSpacing_Mobi(HtmlToken *t);
     void HandleTagImg_Mobi(HtmlToken *t);
     void HandleHtmlTag_Mobi(HtmlToken *t);
 
