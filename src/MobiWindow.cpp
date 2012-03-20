@@ -602,6 +602,10 @@ void OpenMobiInWindow(MobiDoc *mobiDoc, SumatraWindow& winToReplace)
         SavePrefs();
     }
 
+    int startReparseIdx = -1;
+    if (ds)
+        startReparseIdx = ds->reparseIdx;
+
     // Add the file also to Windows' recently used documents (this doesn't
     // happen automatically on drag&drop, reopening from history, etc.)
     if (HasPermission(Perm_DiskAccess) && !gPluginMode)
@@ -644,7 +648,6 @@ void OpenMobiInWindow(MobiDoc *mobiDoc, SumatraWindow& winToReplace)
     if (HasPermission(Perm_DiskAccess) && !gPluginMode)
         DragAcceptFiles(hwnd, TRUE);
     if (Touch::SupportsGestures()) {
-        // TODO: does this do anything without WM_TOUCH handling?
         GESTURECONFIG gc = { 0, GC_ALLGESTURES, 0 };
         Touch::SetGestureConfig(hwnd, 0, 1, &gc, sizeof(GESTURECONFIG));
     }
@@ -657,7 +660,7 @@ void OpenMobiInWindow(MobiDoc *mobiDoc, SumatraWindow& winToReplace)
 
     gMobiWindows.Append(win);
     ShowWindow(hwnd, wasMaximized ? SW_SHOWMAXIMIZED : SW_SHOW);
-    win->ebookController->SetMobiDoc(mobiDoc);
+    win->ebookController->SetMobiDoc(mobiDoc, startReparseIdx);
 }
 
 bool RegisterMobiWinClass(HINSTANCE hinst)

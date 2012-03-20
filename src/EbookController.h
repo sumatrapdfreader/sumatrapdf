@@ -100,6 +100,10 @@ class EbookController : public IClicked, ISizeChanged
     ThreadLayoutMobi *layoutThread;
     LayoutTemp        layoutTemp;
 
+    // when loading a new mobiDoc, this indicates the page we should
+    // show after loading. -1 indicates no action needed
+    int               startReparseIdx;
+
     Vec<PageData*> *GetPagesFromBeginning();
     PageData*   PreserveTempPageShown();
     void        UpdateStatus();
@@ -126,7 +130,7 @@ public:
     virtual ~EbookController();
 
     void SetHtml(const char *html);
-    void SetMobiDoc(MobiDoc *newMobiDoc);
+    void SetMobiDoc(MobiDoc *newMobiDoc, int startReparseIdxArg = -1);
     void HandleFinishedMobiLoadingMsg(FinishedMobiLoadingData *finishedMobiLoading);
     void HandleMobiLayoutMsg(MobiLayoutData *mobiLayout);
     void OnLayoutTimer();

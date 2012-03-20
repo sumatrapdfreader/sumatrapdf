@@ -108,6 +108,7 @@ public:
 
     bool                LoadDocument();
     char *              GetBookHtmlData(size_t& lenOut) const;
+    size_t              GetBookHtmlSize() const { return doc->Size(); }
     ImageData *         GetCoverImage();
     ImageData *         GetImage(size_t imgRecIndex) const;
     TCHAR *             GetFileName() const { return fileName; }

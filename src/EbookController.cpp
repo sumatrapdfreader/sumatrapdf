@@ -173,7 +173,7 @@ EbookController::EbookController(EbookControls *ctrls) :
     ctrls(ctrls), mobiDoc(NULL), html(NULL),
     fileBeingLoaded(NULL), pagesFromBeginning(NULL), pagesFromPage(NULL),
     currPageNo(0), pageShown(NULL), deletePageShown(false),
-    pageDx(0), pageDy(0), layoutThread(NULL)
+    pageDx(0), pageDy(0), layoutThread(NULL), startReparseIdx(-1)
 {
     ctrls->mainWnd->evtMgr->RegisterClicked(ctrls->next, this);
     ctrls->mainWnd->evtMgr->RegisterClicked(ctrls->prev, this);
@@ -354,15 +354,38 @@ void EbookController::HandleMobiLayoutMsg(MobiLayoutData *ld)
         return;
     }
 
-    if (0 == layoutTemp.pagesFromBeginning.Count()) {
-        CrashIf(0 == ld->pageCount);
-        pageToShow = ld->pages[0];
+    // we're showing pages from the beginning
+    if (-1 != startReparseIdx) {
+        // we're formatting a book for which we need to restore
+        // page from previous session
+        CrashIf(layoutTemp.reparseIdx != 0);
+        for (size_t i = 0; i < ld->pageCount; i++) {
+            PageData *pd = ld->pages[i];
+            if (pd->reparseIdx == startReparseIdx) {
+                pageToShow = pd;
+            } else if (pd->reparseIdx >= startReparseIdx) {
+                // this is the first page whose reaprseIdx is greater than
+                // the one we're looking for, so previous page has the data
+                if (i > 0) {
+                    pageToShow = ld->pages[i];
+                } else {
+                    CrashIf(0 == layoutTemp.pagesFromBeginning.Count());
+                    pageToShow = layoutTemp.pagesFromBeginning.At(layoutTemp.pagesFromBeginning.Count() - 1);
+                }
+            }
+            if (pageToShow) {
+                startReparseIdx = -1;
+                break;
+            }
+        }
+    } else {
+        if (0 == layoutTemp.pagesFromBeginning.Count()) {
+            CrashIf(0 == ld->pageCount);
+            pageToShow = ld->pages[0];
+        }
     }
 
     layoutTemp.pagesFromBeginning.Append(ld->pages, ld->pageCount);
-    for (size_t i = 0; i < ld->pageCount; i++) {
-        CrashIf(ld->pages[i]->reparseIdx < 0);
-    }
     //lf("Got %d pages from beginning, total %d", ld->pageCount, layoutTemp.pagesFromBeginning.Count());
 
     if (0 == layoutTemp.reparseIdx) {
@@ -616,13 +639,17 @@ void EbookController::AdvancePage(int dist)
 
 void EbookController::SetHtml(const char *newHtml)
 {
+    startReparseIdx = -1;
     CloseCurrentDocument();
     html = newHtml;
     TriggerLayout();
 }
 
-void EbookController::SetMobiDoc(MobiDoc *newMobiDoc)
+void EbookController::SetMobiDoc(MobiDoc *newMobiDoc, int startReparseIdxArg)
 {
+    startReparseIdx = startReparseIdxArg;
+    if (startReparseIdx >= (int)newMobiDoc->GetBookHtmlSize())
+        startReparseIdx = -1;
     CloseCurrentDocument();
     mobiDoc = newMobiDoc;
     TriggerLayout();
