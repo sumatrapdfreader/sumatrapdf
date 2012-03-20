@@ -57,6 +57,9 @@
     <Filter Include="memtrace">
       <UniqueIdentifier>{fd8ec5df-2865-47af-8513-c20645a2e26c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="installer">
+      <UniqueIdentifier>{b0cee761-6a1e-4847-955e-f0eb80c32cd6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ext\jbig2dec\jbig2.c">
@@ -884,6 +887,15 @@
     <ClCompile Include="src\memtrace\MemTraceDll.cpp">
       <Filter>memtrace</Filter>
     </ClCompile>
+    <ClCompile Include="src\installer\Install.cpp">
+      <Filter>installer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\installer\Installer.cpp">
+      <Filter>installer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\installer\Uninstall.cpp">
+      <Filter>installer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -1303,6 +1315,9 @@
     <ClInclude Include="src\memtrace\nsWindowsDllInterceptor.h">
       <Filter>memtrace</Filter>
     </ClInclude>
+    <ClInclude Include="src\installer\Installer.h">
+      <Filter>installer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\closetoc.bmp">
@@ -1513,6 +1528,9 @@
   <ItemGroup>
     <Manifest Include="src\SumatraPDF.exe.manifest">
       <Filter>sumatra</Filter>
+    </Manifest>
+    <Manifest Include="src\installer\Installer.exe.manifest">
+      <Filter>installer</Filter>
     </Manifest>
   </ItemGroup>
 </Project>

@@ -18,6 +18,10 @@
 #define WEBSITE_MANUAL_URL       _T("http://blog.kowalczyk.info/software/sumatrapdf/manual.html")
 #define WEBSITE_TRANSLATIONS_URL _T("http://blog.kowalczyk.info/software/sumatrapdf/translations.html")
 
+#ifndef CRASH_REPORT_URL
+#define CRASH_REPORT_URL         _T("http://blog.kowalczyk.info/software/sumatrapdf/develop.html")
+#endif
+
 // permissions that can be revoked (or explicitly set) through Group Policies
 enum {
     // enables Update checks, crash report submitting and hyperlinks

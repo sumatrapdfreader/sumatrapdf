@@ -17,6 +17,8 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #endif
 
 #include "Installer.h"
+#include "AppTools.h"
+#include "CrashHandler.h"
 #include "FrameTimeoutCalculator.h"
 
 // TODO: can't build these separately without breaking TEST_UNINSTALLER
@@ -916,6 +918,28 @@ static void ParseCommandLine(TCHAR *cmdLine)
     }
 }
 
+#define CRASH_DUMP_FILE_NAME         _T("suminstaller.dmp")
+
+void CrashHandlerMessage()
+{
+    // no-op but must be defined for CrashHandler.cpp
+}
+
+void GetProgramInfo(str::Str<char>& s)
+{
+    // TODO: implement me
+}
+
+bool CrashHandlerCanUseNet()
+{
+    return true;
+}
+
+void GetStressTestInfo(str::Str<char>* s)
+{
+    // no-op but must be defined for CrashHandler.cpp
+}
+
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     int ret = 1;
@@ -925,6 +949,15 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     ScopedCom com;
     InitAllCommonControls();
     ScopedGdiPlus gdi;
+
+#if !defined(BUILD_UNINSTALLER)
+    // TODO: use a safe (i.e. writeable) temporary location? The dir in which installer
+    // exe is might not be (and almost surely not the uninstaller's path, but we don't
+    // support that yet)
+    //ScopedMem<TCHAR> symDir(AppGenDataFilename(_T("symbols")));
+    //ScopedMem<TCHAR> crashDumpPath(AppGenDataFilename(CRASH_DUMP_FILE_NAME));
+    //InstallCrashHandler(crashDumpPath);
+#endif
 
     ParseCommandLine(GetCommandLine());
     if (gGlobalData.showUsageAndQuit) {

@@ -234,6 +234,9 @@
     <ClCompile Include="src\Favorites.cpp" />
     <ClCompile Include="src\FileWatch.cpp" />
     <ClCompile Include="src\ImagesEngine.cpp" />
+    <ClCompile Include="src\installer\Install.cpp" />
+    <ClCompile Include="src\installer\Installer.cpp" />
+    <ClCompile Include="src\installer\Uninstall.cpp" />
     <ClCompile Include="src\LangMenuDef.cpp" />
     <ClCompile Include="src\memtrace\MemTraceDll.cpp" />
     <ClCompile Include="src\Menu.cpp" />
@@ -393,6 +396,7 @@
     <ClInclude Include="src\FileHistory.h" />
     <ClInclude Include="src\FileWatch.h" />
     <ClInclude Include="src\ImagesEngine.h" />
+    <ClInclude Include="src\installer\Installer.h" />
     <ClInclude Include="src\installer\Resource.h" />
     <ClInclude Include="src\LangMenuDef.h" />
     <ClInclude Include="src\memtrace\MemTraceDll.h" />
@@ -546,6 +550,7 @@
     <None Include="src\toolbar_11.bmp" />
   </ItemGroup>
   <ItemGroup>
+    <Manifest Include="src\installer\Installer.exe.manifest" />
     <Manifest Include="src\SumatraPDF.exe.manifest" />
   </ItemGroup>
   <ItemGroup>

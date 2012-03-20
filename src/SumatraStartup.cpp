@@ -286,8 +286,13 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
     srand((unsigned int)time(NULL));
 
+    // TODO: move into %TEMP%? or rename? currently the
+    //       "symbols" folder isn't obviously related to
+    //       SumatraPDF when running in portable mode from
+    //       a folder containing multiple applications
+    ScopedMem<TCHAR> symDir(AppGenDataFilename(_T("symbols")));
     ScopedMem<TCHAR> crashDumpPath(AppGenDataFilename(CRASH_DUMP_FILE_NAME));
-    InstallCrashHandler(crashDumpPath);
+    InstallCrashHandler(crashDumpPath, symDir);
 
     ScopedOle ole;
     InitAllCommonControls();

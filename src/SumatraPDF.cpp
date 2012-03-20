@@ -4781,6 +4781,38 @@ int RunMessageLoop()
     }
     return (int)msg.wParam;
 }
+
+void GetProgramInfo(str::Str<char>& s)
+{
+    s.AppendFmt("Ver: %s", QM(CURR_VERSION));
+#ifdef SVN_PRE_RELEASE_VER
+    s.AppendFmt(".%s pre-release", QM(SVN_PRE_RELEASE_VER));
+#endif
+#ifdef DEBUG
+    s.Append(" dbg");
+#endif
+    s.Append("\r\n");
+    s.AppendFmt("Browser plugin: %s\r\n", gPluginMode ? "yes" : "no");
+}
+
+bool CrashHandlerCanUseNet()
+{
+    return HasPermission(Perm_InternetAccess);
+}
+
+void CrashHandlerMessage()
+{
+    // don't show a message box in restricted use, as the user most likely won't be
+    // able to do anything about it anyway and it's up to the application provider
+    // to fix the unexpected behavior (of which for a restricted set of documents
+    // there should be much less, anyway)
+    if (HasPermission(Perm_DiskAccess)) {
+        int res = MessageBox(NULL, _TR("Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash."), _TR("SumatraPDF crashed"), MB_ICONERROR | MB_OKCANCEL | (IsUIRightToLeft() ? MB_RTLREADING : 0));
+        if (IDCANCEL == res)
+            LaunchBrowser(CRASH_REPORT_URL);
+    }
+}
+
 // TODO: a hackish but cheap way to separate startup code.
 // Could be made to compile stand-alone
 #include "SumatraStartup.cpp"

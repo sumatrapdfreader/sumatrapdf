@@ -19,10 +19,6 @@
 
 #include <unzalloc.h>
 
-#ifndef CRASH_REPORT_URL
-#define CRASH_REPORT_URL _T("http://blog.kowalczyk.info/software/sumatrapdf/develop.html")
-#endif
-
 #ifndef SYMBOL_DOWNLOAD_URL
 #ifdef SVN_PRE_RELEASE_VER
 #define SYMBOL_DOWNLOAD_URL _T("http://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-") _T(QM(SVN_PRE_RELEASE_VER)) _T(".pdb.zip")
@@ -809,13 +805,16 @@ static bool DownloadSymbols(const TCHAR *symDir, const TCHAR *symbolsZipPath)
     return ok;
 }
 
+// must be implemented per-app that uses CrashHandler.cpp
+extern bool CrashHandlerCanUseNet();
+
 // If we can't resolve the symbols, we assume it's because we don't have symbols
 // so we'll try to download them and retry. If we can resolve symbols, we'll
 // get the callstacks etc. and submit to our server for analysis.
 void SubmitCrashInfo()
 {
     LogDbgDetail("SubmitCrashInfo(): start");
-    if (!HasPermission(Perm_InternetAccess)) {
+    if (!CrashHandlerCanUseNet()) {
         LogDbg("SubmitCrashInfo(): No internet access permission");
         return;
     }
@@ -908,33 +907,16 @@ static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS *exceptionInfo)
     SetEvent(gDumpEvent);
     WaitForSingleObject(gDumpThread, INFINITE);
 
-    // don't show a message box in restricted use, as the user most likely won't be
-    // able to do anything about it anyway and it's up to the application provider
-    // to fix the unexpected behavior (of which for a restricted set of documents
-    // there should be much less, anyway)
-    if (HasPermission(Perm_DiskAccess)) {
-        int res = MessageBox(NULL, _TR("Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash."), _TR("SumatraPDF crashed"), MB_ICONERROR | MB_OKCANCEL | (IsUIRightToLeft() ? MB_RTLREADING : 0));
-        if (IDCANCEL == res)
-            LaunchBrowser(CRASH_REPORT_URL);
-    }
-
+    // this is per-app that uses crash handler and must be implemented in that app
+    extern void CrashHandlerMessage();
+    CrashHandlerMessage();
     TerminateProcess(GetCurrentProcess(), 1);
 
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
-static void GetProgramInfo(str::Str<char>& s)
-{
-    s.AppendFmt("Ver: %s", QM(CURR_VERSION));
-#ifdef SVN_PRE_RELEASE_VER
-    s.AppendFmt(".%s pre-release", QM(SVN_PRE_RELEASE_VER));
-#endif
-#ifdef DEBUG
-    s.Append(" dbg");
-#endif
-    s.Append("\r\n");
-    s.AppendFmt("Browser plugin: %s\r\n", gPluginMode ? "yes" : "no");
-}
+// must be implemented per-app that uses CrashHandler.cpp
+extern void GetProgramInfo(str::Str<char>& s);
 
 static char *OsNameFromVer(OSVERSIONINFOEX ver)
 {
@@ -1083,21 +1065,15 @@ static void BuildSystemInfo()
     gSystemInfo = s.StealData();
 }
 
-static bool BuilCrashDumpPaths()
+static bool BuilCrashDumpPaths(const TCHAR *symDir)
 {
-    // TODO: move into %TEMP%? or rename? currently the
-    //       "symbols" folder isn't obviously related to
-    //       SumatraPDF when running in portable mode from
-    //       a folder containing multiple applications
-    TCHAR *symDir = AppGenDataFilename(_T("symbols"));
     if (!symDir)
         return false;
     if (!dir::Create(symDir)) {
-        free(symDir);
         LogDbg("GetCrashDumpDir(): couldn't get symbols dir");
         return false;
     }
-    gCrashDumpDir = symDir;
+    gCrashDumpDir = (TCHAR*)symDir;
     gSymbolsZipPath = path::Join(symDir, _T("symbols_tmp.zip"));
     gLibMupdfPdbPath = path::Join(symDir, _T("SumatraPDF.pdb"));
     gSumatraPdfPdbPath = path::Join(symDir, _T("libmupdf.pdb"));
@@ -1178,14 +1154,14 @@ static bool IsStaticBuild()
     return isStatic;
 }
 
-void InstallCrashHandler(const TCHAR *crashDumpPath)
+void InstallCrashHandler(const TCHAR *crashDumpPath, const TCHAR *symDir)
 {
     assert(!gDumpEvent && !gDumpThread);
 
     if (!crashDumpPath)
         return;
 #ifndef HAS_NO_SYMBOLS
-    if (!BuilCrashDumpPaths())
+    if (!BuilCrashDumpPaths(symDir))
         return;
     if (!BuildSymbolPath())
         return;

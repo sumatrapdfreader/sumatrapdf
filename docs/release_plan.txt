@@ -1,4 +1,7 @@
 Things to do before 2.0 release:
+- crash handler for installer:
+ - add installer symbols to symbols zip
+ - setup crash handler paths for installer
 
 Maybe for 2.0:
 - progress bar flicker when status line changes width (I think). We probably
