@@ -525,7 +525,8 @@ pdf_load_simple_font(pdf_document *xref, pdf_obj *dict)
 		}
 
 		/* Some chinese documents mistakenly consider WinAnsiEncoding to be codepage 936 */
-		if (!*fontdesc->font->name &&
+		/* SumatraPDF: tweak heuristic to determine broken chinese fonts */
+		if (descriptor && pdf_is_string(pdf_dict_gets(descriptor, "FontName")) &&
 			!pdf_dict_gets(dict, "ToUnicode") &&
 			!strcmp(pdf_to_name(pdf_dict_gets(dict, "Encoding")), "WinAnsiEncoding") &&
 			pdf_to_int(pdf_dict_gets(descriptor, "Flags")) == 4)
@@ -1095,12 +1096,11 @@ pdf_load_font_descriptor(pdf_font_desc *fontdesc, pdf_document *xref, pdf_obj *d
 	FT_Face face;
 	fz_context *ctx = xref->ctx;
 
-	if (!strchr(basefont, ',') || strchr(basefont, '+'))
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1666 */
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1842 */
+	if (strchr(basefont, '+') && pdf_is_name(pdf_dict_gets(dict, "FontName")))
 		origname = pdf_to_name(pdf_dict_gets(dict, "FontName"));
 	else
-		origname = basefont;
-	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1666 */
-	if (*origname && !strchr(basefont, '+'))
 		origname = basefont;
 	fontname = clean_font_name(origname);
 
