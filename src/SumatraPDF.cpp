@@ -496,7 +496,7 @@ static void DisplayStateFromMobiWindow(MobiWindow* win, DisplayState* ds)
     ds->displayMode = DM_SINGLE_PAGE;
     ds->rotation = 0;
     ds->zoomVirtual = 0;
-    ds->reparsePointIdx = win->ebookController->CurrReparsePointIdx();
+    ds->reparseIdx = win->ebookController->CurrPageReparseIdx();
     ds->pageNo = 1;
     ds->scrollPos = PointI();
     CrashIf(ds->decryptionKey);

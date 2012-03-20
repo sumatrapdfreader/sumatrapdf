@@ -44,10 +44,10 @@ struct MobiLayoutData {
 // data used on the ui thread side when handling UiMsg::MobiLayout
 // it's in its own struct for clarity
 struct LayoutTemp {
-    // if we're doing layout that starts from the beginning, this is NULL
+    // if we're doing layout that starts from the beginning, this is 0
     // otherwise it's the reparse point of the page we were showing when
     // we started the layout
-    const char *    reparsePoint;
+    int             reparseIdx;
     Vec<PageData *> pagesFromPage;
     Vec<PageData *> pagesFromBeginning;
 
@@ -134,7 +134,7 @@ public:
     void GoToPage(int newPageNo);
     void GoToLastPage();
     MobiDoc *GetMobiDoc() const { return mobiDoc; }
-    int  CurrReparsePointIdx() const;
+    int  CurrPageReparseIdx() const;
 };
 
 #endif

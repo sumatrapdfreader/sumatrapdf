@@ -64,11 +64,12 @@ struct DrawInstr {
 };
 
 struct PageData {
-    PageData() : reparsePoint(NULL)
+    PageData() : reparseIdx(NULL)
     {}
-    // if we start parsing html again from reparsePoint, we should
-    // get the same instructions
-    const char *    reparsePoint;
+    // if we start parsing html again from reparseIdx, we should
+    // get the same instructions. reparseIdx is an offset within
+    // html data
+    int             reparseIdx;
     Vec<DrawInstr>  instructions;
 };
 
@@ -78,7 +79,7 @@ public:
     LayoutInfo() :
       pageDx(0), pageDy(0), fontName(NULL), fontSize(0),
       textAllocator(NULL), htmlStr(0), htmlStrLen(0),
-      reparsePoint(NULL)
+      reparseIdx(0)
     { }
 
     int             pageDx;
@@ -96,10 +97,8 @@ public:
     const char *    htmlStr;
     size_t          htmlStrLen;
 
-    // if not NULL, we will start parsing from this point
-    // if NULL, will start parsing from htmlStr
-    // should be within htmlStr
-    const char *    reparsePoint;
+    // we stat parsing from htmlStr + reparseIdx
+    int             reparseIdx;
 };
 
 class HtmlFormatter
@@ -169,14 +168,14 @@ protected:
     // isntructions for the current line
     Vec<DrawInstr>      currLineInstr;
     // reparse point of the first instructions in a current line
-    const char *        currLineReparsePoint;
+    int                 currLineReparseIdx;
     PageData *          currPage;
 
     // for tracking whether we're currently inside <a> tag
     size_t              currLinkIdx;
 
     // reparse point for the current HtmlToken
-    const char *        currReparsePoint;
+    int                 currReparseIdx;
 
     HtmlPullParser *    htmlParser;
 

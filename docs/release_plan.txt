@@ -1,11 +1,12 @@
 Things to do before 2.0 release:
 
 Specific things that still need to be added for minimal mobi support:
-- save and restore last position in the mobi file
+- save/restore position in mobi file (reparseIdx)
 
 Maybe for 2.0:
-- progress bar flicker when status line changes width (I think). We probably force repaint after
-  re-layout in mui even if position/sizes of controls haven't changed
+- progress bar flicker when status line changes width (I think). We probably
+  force repaint after re-layout in mui even if position/size of controls
+  hasn't changed
 - even more mobi document properties
 
 Things that can wait for 2.1 or later:
@@ -20,3 +21,9 @@ Things that can wait for 2.1 or later:
 - mobi: 2 page display
 - mobi: rtl support
 - etc.
+
+Misc stuff for 2.1 or later:
+- rename LayoutInfo => FormatterArgs (HtmlFormatterArgs ?),
+  PageData => HtmlPage (?), DrawPageLayout => DrawHtmlPage (?),
+  *Layout* => *Format*, PageLayout.[h|cpp] => HtmlFormatter.[h|cpp]
+

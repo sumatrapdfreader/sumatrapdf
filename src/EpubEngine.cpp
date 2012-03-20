@@ -1347,8 +1347,12 @@ PageDestination *MobiEngineImpl::GetNamedDest(const TCHAR *name)
         return NULL;
     size_t htmlLen;
     char *start = doc->GetBookHtmlData(htmlLen);
+    // TODO: less indentation via:
+    // PageData *pd = PageForReparseIdx(filePos);
+    // if (!pd) return NULL;
+    // ...
     for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
-        if (PageCount() == pageNo || pages->At(pageNo)->reparsePoint - start > filepos) {
+        if (PageCount() == pageNo || pages->At(pageNo)->reparseIdx > filepos) {
             ScopedCritSec scope(&pagesAccess);
             Vec<DrawInstr> *pageInstrs = GetPageData(pageNo);
             float currY = 0;

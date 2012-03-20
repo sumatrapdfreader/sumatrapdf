@@ -155,19 +155,25 @@ class HtmlPullParser {
     const char *   currPos;
     const char *   end;
 
-    HtmlToken      currToken;
+    const char *   start;
+    size_t         len;
 
+    HtmlToken      currToken;
+    
 public:
     Vec<HtmlTag>   tagNesting;
 
-    HtmlPullParser(const char *s, size_t len) : currPos(s), end(s + len) { }
-    HtmlPullParser(const char *s, const char *end) : currPos(s), end(end) { }
+    HtmlPullParser(const char *s, size_t len) : currPos(s), end(s + len), start(s), len(len) { }
+    HtmlPullParser(const char *s, const char *end) : currPos(s), end(end), start(s), len(end - s) { }
 
-    HtmlToken *Next();
+    size_t       Len()   const { return len;   }
+    const char * Start() const { return start; }
+
+    HtmlToken *  Next();
 };
 
-void        SkipWs(const char*& s, const char *end);
-void        SkipNonWs(const char*& s, const char *end);
+bool        SkipWs(const char*& s, const char *end);
+bool        SkipNonWs(const char*& s, const char *end);
 bool        IsSpaceOnly(const char *s, const char *end);
 bool        IsInArray(uint8 val, uint8 *arr, size_t arrLen);
 bool        IsTagSelfClosing(const char *s, size_t len = -1);

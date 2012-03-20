@@ -37,7 +37,7 @@ of every page to ensure that e.g. bold text that carries over to a new page is s
 That's not enough and it breaks when doing re-layout from that page (the bold state is lost).
 Instead we need to remember information affecting visual state (which is a diff from default
 state defined by default font name, font size, color) inside PageData, the way we remember
-reparsePoint. We would no longer need that SetFont instructions but DrawPageLayout() would have
+reparseIdx. We would no longer need that SetFont instructions but DrawPageLayout() would have
 to take this into account to setup initial state.
 The information that we need to remember:
 * font name (if different from default font name, NULL otherwise)
@@ -59,6 +59,15 @@ support to mui and use list of Control objects instead (especially if we slim do
 Control objects further to make allocating hundreds of them cheaper or introduce some
 other base element(s) with less functionality and less overhead).
 */
+
+static bool ValidReparseIdx(int idx, HtmlPullParser *parser)
+{
+    // note: not the most compact version on purpose, to allow
+    // setting a breakpoint on the path returning false
+    if ((idx < 0) || (idx > (int)parser->Len()))
+        return false;
+    return true;
+}
 
 DrawInstr DrawInstr::Str(const char *s, size_t len, RectF bbox)
 {
@@ -110,17 +119,14 @@ DrawInstr DrawInstr::Anchor(const char *s, size_t len, RectF bbox)
 
 HtmlFormatter::HtmlFormatter(LayoutInfo *li) : layoutInfo(li),
     pageDx((REAL)li->pageDx), pageDy((REAL)li->pageDy),
-    textAllocator(li->textAllocator), currLineReparsePoint(NULL),
+    textAllocator(li->textAllocator), currLineReparseIdx(NULL),
     currX(0), currY(0), currJustification(Align_Justify),
     currLineTopPadding(0), currLinkIdx(0), listDepth(0)
 {
-    currReparsePoint = li->reparsePoint;
-    if (!currReparsePoint)
-        currReparsePoint = layoutInfo->htmlStr;
-
-    CrashIf((currReparsePoint < li->htmlStr) || (currReparsePoint > (li->htmlStr + li->htmlStrLen)));
-    size_t htmlLen = li->htmlStrLen - (currReparsePoint - li->htmlStr);
-    htmlParser = new HtmlPullParser(currReparsePoint, htmlLen);
+    currReparseIdx = li->reparseIdx;
+    CrashIf((currReparseIdx < 0) || (currReparseIdx >= (int)li->htmlStrLen));
+    size_t htmlLen = li->htmlStrLen - currReparseIdx;
+    htmlParser = new HtmlPullParser(li->htmlStr + currReparseIdx, htmlLen);
 
     gfx = mui::AllocGraphicsForMeasureText();
     defaultFontName.Set(str::Dup(li->fontName));
@@ -134,8 +140,7 @@ HtmlFormatter::HtmlFormatter(LayoutInfo *li) : layoutInfo(li),
         spaceDx = spaceDx2;
 
     currPage = new PageData();
-    CrashIf(!currReparsePoint);
-    currPage->reparsePoint = currReparsePoint;
+    currPage->reparseIdx = currReparseIdx;
 }
 
 HtmlFormatter::~HtmlFormatter()
@@ -150,8 +155,10 @@ HtmlFormatter::~HtmlFormatter()
 void HtmlFormatter::AppendInstr(DrawInstr di)
 {
     currLineInstr.Append(di);
-    if (!currLineReparsePoint)
-        currLineReparsePoint = currReparsePoint;
+    if (-1 == currLineReparseIdx) {
+        currLineReparseIdx = currReparseIdx;
+        CrashIf(!ValidReparseIdx(currReparseIdx, htmlParser));
+    }
 }
 
 void HtmlFormatter::SetCurrentFont(FontStyle fontStyle, float fontSize)
@@ -396,7 +403,7 @@ void HtmlFormatter::ForceNewPage()
     UpdateLinkBboxes(currPage);
     pagesToSend.Append(currPage);
     currPage = new PageData();
-    currPage->reparsePoint = currReparsePoint;
+    currPage->reparseIdx = currReparseIdx;
 
     currPage->instructions.Append(DrawInstr::SetFont(currFont));
     currY = 0.f;
@@ -432,8 +439,7 @@ bool HtmlFormatter::FlushCurrLine(bool isParagraphBreak)
         // so we have to carry over some state (like current font)
         CrashIf(!currFont);
         currPage->instructions.Append(DrawInstr::SetFont(currFont));
-        CrashIf(!currLineReparsePoint);
-        currPage->reparsePoint = currLineReparsePoint;
+        currPage->reparseIdx = currLineReparseIdx;
         currY = 0.f;
     }
     SetYPos(currLineInstr, currY + currLineTopPadding);
@@ -447,7 +453,7 @@ bool HtmlFormatter::FlushCurrLine(bool isParagraphBreak)
     }
     currPage->instructions.Append(currLineInstr.LendData(), currLineInstr.Count());
     currLineInstr.Reset();
-    currLineReparsePoint = NULL;
+    currLineReparseIdx = -1; // mark as not set
     currLineTopPadding = 0;
     currX = NewLineX();
     if (currLinkIdx) {
@@ -568,7 +574,8 @@ void HtmlFormatter::EmitElasticSpace()
 // a text run is a string of consecutive text with uniform style
 void HtmlFormatter::EmitTextRun(const char *s, const char *end)
 {
-    currReparsePoint = s;
+    currReparseIdx = s - htmlParser->Start();
+    CrashIf(!ValidReparseIdx(currReparseIdx, htmlParser));
     CrashIf(IsSpaceOnly(s, end));
     const char *tmp = ResolveHtmlEntities(s, end, textAllocator);
     if (tmp != s) {
@@ -829,21 +836,23 @@ void HtmlFormatter::HandleHtmlTag(HtmlToken *t)
 void HtmlFormatter::HandleText(HtmlToken *t)
 {
     CrashIf(!t->IsText());
+    const char *tmp;
+    bool skipped;
     const char *curr = t->s;
     const char *end = t->s + t->sLen;
     // break text into runs i.e. chunks that are either all
     // whitespace or all non-whitespace
     while (curr < end) {
         // collapse multiple, consecutive white-spaces into a single space
-        currReparsePoint = curr;
-        SkipWs(curr, end);
-        if (curr > currReparsePoint)
+        currReparseIdx = curr - htmlParser->Start();
+        skipped = SkipWs(curr, end);
+        if (skipped)
             EmitElasticSpace();
 
-        currReparsePoint = curr;
+        tmp = curr;
         SkipNonWs(curr, end);
-        if (curr > currReparsePoint)
-            EmitTextRun(currReparsePoint, curr);
+        if (tmp != curr)
+            EmitTextRun(tmp, curr);
     }
 }
 
@@ -929,23 +938,26 @@ MobiFormatter::MobiFormatter(LayoutInfo* li, MobiDoc *doc) :
     HtmlFormatter(li), doc(doc), coverImage(NULL), pageCount(0),
     finishedParsing(false)
 {
-    bool fromBeginning = (NULL == li->reparsePoint);
-    if (doc && fromBeginning) {
-        ImageData *img = doc->GetCoverImage();
-        if (img) {
-            // this is a heuristic that tries to filter images that are not
-            // cover images, like in http://www.sethgodin.com/sg/docs/StopStealingDreams-SethGodin.mobi
-            // TODO: a better way would be to only add the image if one isn't present at the
-            // beginning of html
-            Rect size = BitmapSizeFromData(img->data, img->len);
-            if ((size.Width >= 320) && (size.Height >= 200)) {
-                coverImage = img;
-                // TODO: vertically center the cover image?
-                EmitImage(coverImage);
-                ForceNewPage();
-            }
-        }
-    }
+    bool fromBeginning = (0 == li->reparseIdx);
+    if (!doc || !fromBeginning)
+        return;
+
+    ImageData *img = doc->GetCoverImage();
+    if (!img)
+        return;
+
+    // this is a heuristic that tries to filter images that are not
+    // cover images, like in http://www.sethgodin.com/sg/docs/StopStealingDreams-SethGodin.mobi
+    // TODO: a better way would be to only add the image if one isn't
+    // present at the beginning of html
+    Rect size = BitmapSizeFromData(img->data, img->len);
+    if ((size.Width < 320) || (size.Height < 200))
+        return;
+
+    coverImage = img;
+    // TODO: vertically center the cover image?
+    EmitImage(coverImage);
+    ForceNewPage();
 }
 
 void MobiFormatter::HandleTagP_Mobi(HtmlToken *t)
@@ -1097,7 +1109,8 @@ PageData *MobiFormatter::Next()
         if (!t || t->IsError())
             break;
 
-        currReparsePoint = t->GetReparsePoint();
+        currReparseIdx = t->GetReparsePoint() - htmlParser->Start();
+        CrashIf(!ValidReparseIdx(currReparseIdx, htmlParser));
         if (t->IsTag()) {
             HandleHtmlTag_Mobi(t);
         } else {

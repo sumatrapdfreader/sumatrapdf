@@ -100,18 +100,24 @@ static bool SkipUntil(const char*& s, const char *end, char *term)
     return false;
 }
 
-void SkipWs(const char* & s, const char *end)
+// return true if skipped
+bool SkipWs(const char* & s, const char *end)
 {
+    const char *start = s;
     while ((s < end) && str::IsWs(*s)) {
         ++s;
     }
+    return start != s;
 }
 
-void SkipNonWs(const char* & s, const char *end)
+// return true if skipped
+bool SkipNonWs(const char* & s, const char *end)
 {
+    const char *start = s;
     while ((s < end) && !str::IsWs(*s)) {
         ++s;
     }
+    return start != s;
 }
 
 static int IsNameChar(int c)

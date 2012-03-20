@@ -63,17 +63,14 @@ public:
     MobiDoc *           mobiDoc;
     PoolAllocator *     textAllocator;
     EbookController *   controller;
-    // if set, we first send pages for text parsed from
-    // this point and then we sent pages as parsed from
-    // the beginning
-    const char *        reparsePoint;
+    int                 reparseIdx;
 
     // state used during layout process
     PageData *  pages[MobiLayoutData::MAX_PAGES];
     int         pageCount;
 
     void        SendPagesIfNecessary(bool force, bool finished, bool fromBeginning);
-    bool        Layout(const char *reparsePoint);
+    bool        Layout(int reparseIdx);
 
     ThreadLayoutMobi(LayoutInfo *li, MobiDoc *doc, EbookController *ctrl);
     virtual ~ThreadLayoutMobi();
@@ -127,13 +124,13 @@ void ThreadLayoutMobi::SendPagesIfNecessary(bool force, bool finished, bool from
 
 // layout pages from a given reparse point (beginning if NULL)
 // returns true if layout thread was cancelled
-bool ThreadLayoutMobi::Layout(const char *reparsePoint)
+bool ThreadLayoutMobi::Layout(int reparseIdx)
 {
-    bool fromBeginning = (reparsePoint == NULL);
+    bool fromBeginning = (0 == reparseIdx);
     //lf("Started laying out mobi, fromBeginning=%d", (int)fromBeginning);
     int totalPageCount = 0;
     Timer t(true);
-    layoutInfo->reparsePoint = reparsePoint;
+    layoutInfo->reparseIdx = reparseIdx;
     MobiFormatter mf(layoutInfo, mobiDoc);
     for (PageData *pd = mf.Next(); pd; pd = mf.Next()) {
         if (WasCancelRequested()) {
@@ -162,10 +159,10 @@ void ThreadLayoutMobi::Run()
 {
     // if we have reparsePoint, layout from that point and then
     // layout from the beginning. Otherwise just from beginning
-    bool cancelled = Layout(reparsePoint);
-    if (cancelled || !reparsePoint)
+    bool cancelled = Layout(reparseIdx);
+    if (cancelled || (0 == reparseIdx))
         return;
-    Layout(NULL);
+    Layout(0);
 }
 
 EbookController::EbookController(EbookControls *ctrls) :
@@ -219,7 +216,7 @@ void EbookController::CloseCurrentDocument()
     delete mobiDoc;
     mobiDoc = NULL;
     html = NULL;
-    layoutTemp.reparsePoint = NULL; // mark as being laid out from the beginning
+    layoutTemp.reparseIdx = 0; // mark as being laid out from the beginning
     pageDx = 0; pageDy = 0;
 }
 
@@ -254,20 +251,20 @@ LayoutInfo *GetLayoutInfo(const char *html, MobiDoc *mobiDoc, int dx, int dy, Po
     return li;
 }
 
-// returns page whose content contains reparsePoint
+// returns page whose content contains reparseIdx
 // page is in 1..$pageCount range to match currPageNo
 // returns 0 if not found
-static size_t PageForReparsePoint(Vec<PageData*> *pages, const char *reparsePoint)
+static size_t PageForReparsePoint(Vec<PageData*> *pages, int reparseIdx)
 {
     if (!pages)
         return 0;
     for (size_t i = 0; i < pages->Count(); i++) {
         PageData *pd = pages->At(i);
-        if (pd->reparsePoint == reparsePoint)
+        if (pd->reparseIdx == reparseIdx)
             return i + 1;
-        // this is the first page whose content is after reparsePoint, so
-        // the page contining reparsePoint must be the one before
-        if (pd->reparsePoint > reparsePoint) {
+        // this is the first page whose content is after reparseIdx, so
+        // the page contining reparseIdx must be the one before
+        if (pd->reparseIdx > reparseIdx) {
             CrashIf(0 == i);
             return i;
         }
@@ -301,7 +298,7 @@ void EbookController::UpdateCurrPageNoForPage(PageData *pd)
             return;
         }
     }
-    currPageNo = PageForReparsePoint(GetPagesFromBeginning(), pd->reparsePoint);
+    currPageNo = PageForReparsePoint(GetPagesFromBeginning(), pd->reparseIdx);
 }
 
 void EbookController::ShowPage(PageData *pd, bool deleteWhenDone)
@@ -312,11 +309,14 @@ void EbookController::ShowPage(PageData *pd, bool deleteWhenDone)
     ctrls->page->SetPage(pageShown);
 
     UpdateCurrPageNoForPage(pageShown);
+#if 0
     if (pd) {
         char s[64] = { 0 };
-        memcpy(s, pd->reparsePoint, dimof(s) - 1);
-        //lf("ShowPage() %d '%s'", currPageNo, s);
+        //TODO: this would have to be html + pd->reparseIdx
+        //memcpy(s, pd->reparseIdx, dimof(s) - 1);
+        lf("ShowPage() %d '%s'", currPageNo, s);
     }
+#endif
 }
 
 void EbookController::HandleMobiLayoutMsg(MobiLayoutData *ld)
@@ -340,7 +340,7 @@ void EbookController::HandleMobiLayoutMsg(MobiLayoutData *ld)
         }
         layoutTemp.pagesFromPage.Append(ld->pages, ld->pageCount);
         if (pageToShow) {
-            CrashIf(pageToShow->reparsePoint != pageShown->reparsePoint);
+            CrashIf(pageToShow->reparseIdx != pageShown->reparseIdx);
             ShowPage(pageToShow, false);
         }
         //lf("Got %d pages from page, total %d", ld->pageCount, layoutTemp.pagesFromPage.Count());
@@ -355,11 +355,11 @@ void EbookController::HandleMobiLayoutMsg(MobiLayoutData *ld)
 
     layoutTemp.pagesFromBeginning.Append(ld->pages, ld->pageCount);
     for (size_t i = 0; i < ld->pageCount; i++) {
-        CrashIf(!ld->pages[i]->reparsePoint);
+        CrashIf(ld->pages[i]->reparseIdx < 0);
     }
     //lf("Got %d pages from beginning, total %d", ld->pageCount, layoutTemp.pagesFromBeginning.Count());
 
-    if (NULL == layoutTemp.reparsePoint) {
+    if (0 == layoutTemp.reparseIdx) {
         // if we're starting from the beginning, show the first page as
         // quickly as we can
         if (pageToShow)
@@ -439,10 +439,10 @@ void EbookController::TriggerLayout()
     pageDx = dx; pageDy = dy; // set it early to prevent re-doing layout at the same size
     PageData *newPage = PreserveTempPageShown();
     if (newPage) {
-        CrashIf((layoutTemp.reparsePoint != NULL) && 
-                (layoutTemp.reparsePoint != newPage->reparsePoint));
+        CrashIf((layoutTemp.reparseIdx != 0) && 
+                (layoutTemp.reparseIdx != newPage->reparseIdx));
     } else {
-        CrashIf(layoutTemp.reparsePoint != NULL);
+        CrashIf(layoutTemp.reparseIdx != 0);
     }
 
     StopLayoutThread(false);
@@ -456,20 +456,18 @@ void EbookController::TriggerLayout()
     ShowPage(newPage, newPage != NULL);
     LayoutInfo *li = GetLayoutInfo(html, mobiDoc, dx, dy, &textAllocator);
     layoutThread = new ThreadLayoutMobi(li, mobiDoc, this);
-    // additional sanity check for reparsePoint: if it's the same as start of html,
-    // mark it as NULL for the benefit of ThreadLayoutMobi
-    if (layoutTemp.reparsePoint == li->htmlStr)
-        layoutTemp.reparsePoint = NULL;
-    layoutThread->reparsePoint = layoutTemp.reparsePoint;
+    CrashIf(layoutTemp.reparseIdx < 0);
+    CrashIf(layoutTemp.reparseIdx > (int)li->htmlStrLen);
+    layoutThread->reparseIdx = layoutTemp.reparseIdx;
     layoutThread->Start();
     UpdateStatus();
 }
 
 void EbookController::OnLayoutTimer()
 {
-    layoutTemp.reparsePoint = NULL;
+    layoutTemp.reparseIdx = NULL;
     if (pageShown)
-        layoutTemp.reparsePoint = pageShown->reparsePoint;
+        layoutTemp.reparseIdx = pageShown->reparseIdx;
     TriggerLayout();
 }
 
@@ -641,12 +639,10 @@ void EbookController::HandleFinishedMobiLoadingMsg(FinishedMobiLoadingData *fini
     finishedMobiLoading->mobiDoc = NULL; // just in case, it shouldn't be freed anyway
 }
 
-int EbookController::CurrReparsePointIdx() const
+int EbookController::CurrPageReparseIdx() const
 {
     if (!pageShown)
         return 0;
-    // TODO: switch to remembering reparsePointIdx instead of reparsePoint
-    // return pageShown->reparsePoint;
-    return 0;
+    return pageShown->reparseIdx;
 }
 
