@@ -401,6 +401,9 @@ An eine einzelne Seite anpassen
 Fonts:
 Schriftarten:
 
+Formatting the book... %d pages
+Buch wird formatiert... Seite %d
+
 Found text at page %s
 Text auf Seite %s gefunden
 
@@ -427,6 +430,9 @@ Bilder (*.%s)
 
 KB
 KB
+
+Loading file %s...
+%s wird geladen...
 
 MB
 MB
@@ -688,8 +694,4 @@ Text kopieren verweigert
 
 printing document
 Dokument drucken verweigert
-
-# Untranslated:
-#Formatting the book... %d pages
-#Loading file %s...
 
