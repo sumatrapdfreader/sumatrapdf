@@ -113,16 +113,14 @@ bool IsRunningInPortableMode()
 
 /* Generate the full path for a filename used by the app in the userdata path. */
 /* Caller needs to free() the result. */
-TCHAR *AppGenDataFilename(TCHAR *pFilename)
+TCHAR *AppGenDataFilename(TCHAR *fileName)
 {
     ScopedMem<TCHAR> path;
     if (IsRunningInPortableMode()) {
         /* Use the same path as the binary */
         ScopedMem<TCHAR> exePath(GetExePath());
-        if (exePath) {
-            assert(exePath[0]);
+        if (exePath)
             path.Set(path::GetDir(exePath));
-        }
     } else {
         /* Use %APPDATA% */
         TCHAR dir[MAX_PATH];
@@ -135,11 +133,10 @@ TCHAR *AppGenDataFilename(TCHAR *pFilename)
         }
     }
 
-    assert(path && pFilename);
-    if (!path || !pFilename)
+    if (!path || !fileName)
         return NULL;
 
-    return path::Join(path, pFilename);
+    return path::Join(path, fileName);
 }
 
 // Updates the drive letter for a path that could have been on a removable drive,
