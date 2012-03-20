@@ -399,6 +399,9 @@ Fit a Single Page
 Fonts:
 Шрифты:
 
+Formatting the book... %d pages
+Форматирование книги... %d стр.
+
 Found text at page %s
 Текст найден на стр. %s
 
@@ -425,6 +428,9 @@ Image files (*.%s)
 
 KB
 Кб
+
+Loading file %s...
+Загрузка файла %s...
 
 MB
 Мб
@@ -686,8 +692,4 @@ copying text
 
 printing document
 печатается документ
-
-# Untranslated:
-#Formatting the book... %d pages
-#Loading file %s...
 
