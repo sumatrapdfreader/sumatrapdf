@@ -1073,7 +1073,7 @@ static bool BuilCrashDumpPaths(const TCHAR *symDir)
         LogDbg("GetCrashDumpDir(): couldn't get symbols dir");
         return false;
     }
-    gCrashDumpDir = (TCHAR*)symDir;
+    gCrashDumpDir = str::Dup(symDir);
     gSymbolsZipPath = path::Join(symDir, _T("symbols_tmp.zip"));
     gLibMupdfPdbPath = path::Join(symDir, _T("SumatraPDF.pdb"));
     gSumatraPdfPdbPath = path::Join(symDir, _T("libmupdf.pdb"));
