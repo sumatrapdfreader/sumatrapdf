@@ -9,6 +9,7 @@
 #include "MobiWindow.h"
 #include "PageLayout.h"
 #include "SumatraWindow.h"
+#include "Translations.h"
 #include "ThreadUtil.h"
 #include "Timer.h"
 #include "UiMsgSumatra.h"
@@ -275,6 +276,8 @@ static size_t PageForReparsePoint(Vec<PageData*> *pages, int reparseIdx)
     return 0;
 }
 
+// gets pages as formatted from beginning, either from a temporary state
+// when layout is in progress or final formatted pages
 Vec<PageData*> *EbookController::GetPagesFromBeginning()
 {
     if (pagesFromBeginning) {
@@ -529,27 +532,24 @@ void EbookController::UpdateStatus()
     size_t pageCount = GetMaxPageCount();
 
     if (fileBeingLoaded) {
-        ScopedMem<WCHAR> s(str::Format(L"Loading %s...", fileBeingLoaded));
+        ScopedMem<WCHAR> s(str::Format(_TR("Loading file %s..."), fileBeingLoaded));
         ctrls->status->SetText(s.Get());
         return;
     }
 
     if (LayoutInProgress()) {
-        ScopedMem<WCHAR> s(str::Format(L"Formatting the book... %d pages", pageCount));
+        ScopedMem<WCHAR> s(str::Format(_TR("Formatting the book... %d pages"), pageCount));
         ctrls->status->SetText(s.Get());
         return;
     }
 
-    WCHAR *s = NULL;
-    if (0 == currPageNo)
-        s = str::Format(L"%d pages", pageCount);
-    else
-        s = str::Format(L"Page %d out of %d", currPageNo, pageCount);
+    ScopedMem<WCHAR> s(str::Format(_T("%s %d / %d"), _TR("Page:"), currPageNo, pageCount));
+    ctrls->status->SetText(s.Get());
 
-    ctrls->status->SetText(s);
-    free(s);
     if (GetPagesFromBeginning())
         ctrls->progress->SetFilled(PercFromInt(GetPagesFromBeginning()->Count(), currPageNo));
+    else
+        ctrls->progress->SetFilled(0.f);
 }
 
 void EbookController::GoToPage(int newPageNo)
