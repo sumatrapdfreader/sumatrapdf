@@ -1342,33 +1342,34 @@ bool MobiEngineImpl::Load(const TCHAR *fileName)
 
 PageDestination *MobiEngineImpl::GetNamedDest(const TCHAR *name)
 {
-    int filepos = _ttoi(name);
-    if (!filepos)
+    int filePos = _ttoi(name);
+    if (!filePos)
         return NULL;
-    size_t htmlLen;
-    char *start = doc->GetBookHtmlData(htmlLen);
-    // TODO: less indentation via:
-    // PageData *pd = PageForReparseIdx(filePos);
-    // if (!pd) return NULL;
-    // ...
+    int foundPageNo = -1;
     for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
-        if (PageCount() == pageNo || pages->At(pageNo)->reparseIdx > filepos) {
-            ScopedCritSec scope(&pagesAccess);
-            Vec<DrawInstr> *pageInstrs = GetPageData(pageNo);
-            float currY = 0;
-            for (DrawInstr *i = pageInstrs->IterStart(); i; i = pageInstrs->IterNext()) {
-                if (InstrString == i->type && i->str.s >= start &&
-                    i->str.s <= start + htmlLen && i->str.s - start >= filepos) {
-                    currY = i->bbox.Y;
-                    break;
-                }
-            }
-            RectD rect(0, currY + pageBorder, pageRect.dx, 10);
-            rect.Inflate(-pageBorder, 0);
-            return new SimpleDest2(pageNo, rect);
+        if (PageCount() == pageNo || pages->At(pageNo)->reparseIdx > filePos) {
+            foundPageNo = pageNo;
+            break;
         }
     }
-    return NULL;
+    if (-1 == foundPageNo)
+        return NULL;
+
+    size_t htmlLen;
+    char *start = doc->GetBookHtmlData(htmlLen);
+    ScopedCritSec scope(&pagesAccess);
+    Vec<DrawInstr> *pageInstrs = GetPageData(foundPageNo);
+    float currY = 0;
+    for (DrawInstr *i = pageInstrs->IterStart(); i; i = pageInstrs->IterNext()) {
+        if (InstrString == i->type && i->str.s >= start &&
+            i->str.s <= start + htmlLen && i->str.s - start >= filePos) {
+            currY = i->bbox.Y;
+            break;
+        }
+    }
+    RectD rect(0, currY + pageBorder, pageRect.dx, 10);
+    rect.Inflate(-pageBorder, 0);
+    return new SimpleDest2(foundPageNo, rect);
 }
 
 DocTocItem *MobiEngineImpl::GetTocTree()
