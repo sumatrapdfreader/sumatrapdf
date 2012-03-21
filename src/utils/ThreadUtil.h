@@ -6,6 +6,8 @@
 
 #include "Vec.h"
 
+#include "DebugLog.h"
+
 class Functor {
 public:
     virtual void operator()() = 0;
@@ -89,11 +91,11 @@ public:
     bool IsUiThread() { return GetCurrentThreadId() == threadId; }
 };
 
-/* A very simple thread class that provides for stopping a thread */
-// TODO: ThreadBase::Kill(DWORD waitMs) which will ask the thread
-// to stop, but if it doesn't stop after waitMs, it'll be terminated.
+/* A very simple thread class that allows stopping a thread */
 class ThreadBase {
 protected:
+    int                 threadNo;
+
     HANDLE              hThread;
 
     // should we delete the object when the thread function finishes?
@@ -109,10 +111,7 @@ protected:
     static DWORD WINAPI ThreadProc(void* data);
 
 public:
-    ThreadBase() :
-      hThread(NULL), autoDeleteSelf(false),
-      cancelRequested(0), threadName(NULL)
-    { }
+    ThreadBase();
 
     // Name is for debugging purposes, can be NULL.
     // if autoDeleteSelf is true, the object will be deleted after
@@ -121,7 +120,7 @@ public:
     // if the object has been deleted
     ThreadBase(const char *name, bool autoDeleteSelf);
 
-    virtual ~ThreadBase() { free(threadName); }
+    virtual ~ThreadBase();
 
     // TODO: do I need to use some Interlocked*() funtion like InterlockedCompareExchange()
     // for this to be safe? It's only ever changed via RequestCancel()
@@ -138,6 +137,10 @@ public:
     // to end and terminate if didn't end and terminate is true
     // returns true if thread stopped by itself
     bool RequestCancelAndWaitToStop(DWORD waitMs, bool terminate);
+
+    // get a unique number that identifies a thread and unlike an
+    // address of the object, will not be reused
+    int GetNo() const { return threadNo; }
 
     // over-write this to implement the actual thread functionality
     virtual void Run() = 0;

@@ -101,11 +101,27 @@ static void SetThreadName(DWORD dwThreadID, char* threadName)
    }
 }
 
+static LONG gThreadNoSeq = 0;
+
+ThreadBase::ThreadBase() :
+      hThread(NULL), autoDeleteSelf(false),
+      cancelRequested(0), threadName(NULL)
+{
+    threadNo = (int)InterlockedIncrement(&gThreadNoSeq);
+    //lf("ThreadBase() %d", threadNo);
+}
+
 ThreadBase::ThreadBase(const char *name, bool autoDeleteSelf) : autoDeleteSelf(autoDeleteSelf)
 {
     threadName = str::Dup(name);
     cancelRequested = 0;
     hThread = NULL;
+}
+
+ThreadBase::~ThreadBase()
+{
+    //lf("~ThreadBase() %d", threadNo);
+    free(threadName);
 }
 
 DWORD WINAPI ThreadBase::ThreadProc(void *data)

@@ -28,8 +28,12 @@ static Rect RectForCircle(int x, int y, int r)
 }
 void PageControl::SetPage(PageData *newPage)
 {
+#if 1
+    lf("PageControl::SetPage(0x%x)", (int)newPage);
+#else
     lf("\n\nPageControl::SetPage(0x%x)", (int)newPage);
     dbghelp::LogCallstack();
+#endif
     page = newPage;
     RequestRepaint(this);
 }

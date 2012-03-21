@@ -1,5 +1,4 @@
 Things to do before 2.0 release:
-- ThreadLayoutMobi crash (http://code.google.com/p/sumatrapdf/issues/detail?id=1843)
 - sometimes during layout 'n' (next page) stops working even though it should
 
 Maybe for 2.0:

@@ -39,6 +39,7 @@ struct MobiLayoutData {
     bool               finished;
     EbookController *  controller;
     ThreadLayoutMobi * thread;
+    int                threadNo;
 };
 
 // data used on the ui thread side when handling UiMsg::MobiLayout
@@ -98,6 +99,7 @@ class EbookController : public IClicked, ISizeChanged
     int             pageDx, pageDy;
 
     ThreadLayoutMobi *layoutThread;
+    int               layoutThreadNo;
     LayoutTemp        layoutTemp;
 
     // when loading a new mobiDoc, this indicates the page we should
