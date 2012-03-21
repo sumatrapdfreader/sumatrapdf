@@ -85,7 +85,7 @@ static TCHAR *  gLibMupdfPdbPath = NULL;
 static TCHAR *  gSumatraPdfPdbPath = NULL;
 static char *   gSystemInfo = NULL;
 static char *   gModulesInfo = NULL;
-
+static str::Str<char>* gTmpStr = NULL;
 static HANDLE   gDumpEvent = NULL;
 static HANDLE   gDumpThread = NULL;
 static bool     gIsStaticBuild = false;
@@ -166,6 +166,21 @@ static bool DeleteSymbolsIfExist()
     return file::Delete(gSumatraPdfPdbPath);
 }
 
+static void LogFailedUnzip(const TCHAR *zipFile, const TCHAR *dstDir, const char *file)
+{
+    char buf[512];
+    gTmpStr->Reset();
+    gTmpStr->Append("Failed to unzip ");
+    gTmpStr->Append(file);
+    gTmpStr->Append(" from ");
+    str::conv::ToCodePageBuf(buf, dimof(buf), zipFile, CP_UTF8);
+    gTmpStr->Append(buf);
+    gTmpStr->Append(" to dir ");
+    str::conv::ToCodePageBuf(buf, dimof(buf), dstDir, CP_UTF8);
+    gTmpStr->Append(buf);
+    plog(gTmpStr->Get());
+}
+
 // In static (single executable) builds, the pdb file inside
 // symbolsZipPath are named SumatraPDF-${ver}.pdb (release) resp.
 // SumatraPDF-prelease-${buildno}.pdb (pre-release) and must be
@@ -178,7 +193,10 @@ static bool UnpackStaticSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir
     const TCHAR *symbolsName = _T("SumatraPDF-") _T(QM(CURR_VERSION)) _T(".pdb");
 #endif
     ZipFile archive(symbolsZipPath, gCrashHandlerAllocator);
-    return archive.UnzipFile(symbolsName, symDir, _T("SumatraPDF.pdb"));
+    if (!archive.UnzipFile(symbolsName, symDir, _T("SumatraPDF.pdb"))) {
+        LogFailedUnzip(symbolsZipPath, symDir, "SumatraPDF.pdb");
+    }
+    return true;
 }
 
 // In lib (.exe + libmupdf.dll) release and pre-release builds, the pdb files
@@ -193,9 +211,19 @@ static bool UnpackLibSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir)
     const TCHAR *instSymbolsName = _T("SumatraPDF-") _T(QM(CURR_VERSION)) _T("-install.pdb");
 #endif
     ZipFile archive(symbolsZipPath, gCrashHandlerAllocator);
-    return archive.UnzipFile(_T("libmupdf.pdb"), symDir) &&
-           archive.UnzipFile(_T("Installer.pdb"), symDir, instSymbolsName) &&
-           archive.UnzipFile(_T("SumatraPDF-no-MuPDF.pdb"), symDir, _T("SumatraPDF.pdb"));
+    if (!archive.UnzipFile(_T("libmupdf.pdb"), symDir)) {
+        LogFailedUnzip(symbolsZipPath, symDir, "libmupdf.pdb");
+        return false;
+    }
+    if (!archive.UnzipFile(_T("Installer.pdb"), symDir, instSymbolsName)) {
+        LogFailedUnzip(symbolsZipPath, symDir, "Installer.pdb");
+        return false;
+    }
+    if (!archive.UnzipFile(_T("SumatraPDF-no-MuPDF.pdb"), symDir, _T("SumatraPDF.pdb"))) {
+        LogFailedUnzip(symbolsZipPath, symDir, "SumatraPDF-no-MuPDF.pdb");
+        return false;
+    }
+    return true;
 }
 
 // *.pdb files are on S3 with a known name. Try to download them here to a directory
@@ -213,9 +241,7 @@ static bool DownloadSymbols(const TCHAR *symDir, const TCHAR *symbolsZipPath)
 #endif
 
     if (!HttpGetToFile(SYMBOL_DOWNLOAD_URL, symbolsZipPath)) {
-#ifndef SVN_PRE_RELEASE_VER
-        plog("Couldn't download release symbols");
-#endif
+        plog("DownloadSymbols(): couldn't download release symbols");
         return false;
     }
 
@@ -225,11 +251,11 @@ static bool DownloadSymbols(const TCHAR *symDir, const TCHAR *symbolsZipPath)
     if (gIsStaticBuild) {
         ok = UnpackStaticSymbols(symbolsZipPath, symDir);
         if (!ok)
-            plog("Couldn't unpack symbols for static build");
+            plog("DownloadSymbols(): couldn't unpack symbols for static build");
     } else {
         ok = UnpackLibSymbols(symbolsZipPath, symDir);
         if (!ok)
-            plog("Couldn't unpack symbols for lib build");
+            plog("DownloadSymbols(): couldn't unpack symbols for lib build");
     }
     file::Delete(symbolsZipPath);
     return ok;
@@ -472,7 +498,7 @@ static bool BuilCrashDumpPaths(const TCHAR *symDir)
     if (!symDir)
         return false;
     if (!dir::Create(symDir)) {
-        plog("GetCrashDumpDir(): couldn't get symbols dir");
+        plog("BuilCrashDumpPaths(): couldn't create symbols dir");
         return false;
     }
     gCrashDumpDir = str::Dup(symDir);
@@ -573,6 +599,7 @@ void InstallCrashHandler(const TCHAR *crashDumpPath, const TCHAR *symDir)
     // when crash handler is invoked. It's ok to use standard
     // allocation functions here.
     gCrashHandlerAllocator = new CrashHandlerAllocator();
+    gTmpStr = new str::Str<char>(2048, gCrashHandlerAllocator);
 #endif
     gCrashDumpPath = str::Dup(crashDumpPath);
 
@@ -602,5 +629,6 @@ void UninstallCrashHandler()
     free(gSymbolPathW);
     free(gSystemInfo);
     free(gModulesInfo);
+    delete gTmpStr;
     delete gCrashHandlerAllocator;
 }
