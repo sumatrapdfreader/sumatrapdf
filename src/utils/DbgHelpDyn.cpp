@@ -2,18 +2,23 @@
    License: Simplified BSD */
 
 /* Wrappers around dbghelp.dll that load it on demand and provide
-   utility functions related to debugging like getting callstacs etc. */
+   utility functions related to debugging like getting callstacs etc. 
+   This module is carefully written to not allocate memory as it
+   can be used from crash handler.
+*/
 
 #include "DbgHelpDyn.h"
 #include "FileUtil.h"
+#include "StrUtil.h"
 #include "WinUtil.h"
 
 /* Hard won wisdom: changing symbol path with SymSetSearchPath() after modules
-have been loaded (invideProcess=TRUE in SymInitialize() or SymRefreshModuleList())
-doesn't work.
-I had to provide symbol path in SymInitialize() (and either invideProcess=TRUE
-or invideProcess=FALSE and call SymRefreshModuleList()). There's probably
-a way to force it, but I'm happy I found a way that works. */
+   have been loaded (invideProcess=TRUE in SymInitialize() or SymRefreshModuleList())
+   doesn't work.
+   I had to provide symbol path in SymInitialize() (and either invideProcess=TRUE
+   or invideProcess=FALSE and call SymRefreshModuleList()). There's probably
+   a way to force it, but I'm happy I found a way that works.
+*/
 
 typedef BOOL WINAPI MiniDumpWriteDumpProc(
     HANDLE hProcess,
@@ -255,7 +260,7 @@ bool HasSymbols()
 // build symPathA out of symPathW, to simplify callers
 // TODO: if symPathW/A are NULL, as a fallback we should use exe's directory
 // (which is the right place when running from IDE during development)
-bool Initialize(const WCHAR *symPathW, const char *symPathA)
+bool Initialize(const WCHAR *symPathW)
 {
     if (gSymInitializeOk)
         return true;
@@ -272,8 +277,10 @@ bool Initialize(const WCHAR *symPathW, const char *symPathA)
 
     if (_SymInitializeW) {
         gSymInitializeOk = _SymInitializeW(GetCurrentProcess(), symPathW, TRUE);
-    } else if (symPathA) {
-        gSymInitializeOk = _SymInitialize(GetCurrentProcess(), symPathA, TRUE);
+    } else {
+        char symPathA[MAX_PATH];
+        if (0 != str::conv::ToCodePageBuf(symPathA, dimof(symPathA), symPathW, CP_ACP))
+            gSymInitializeOk = _SymInitialize(GetCurrentProcess(), symPathA, TRUE);
     }
 
     if (!gSymInitializeOk) {
@@ -288,6 +295,11 @@ bool Initialize(const WCHAR *symPathW, const char *symPathA)
 
     //SetupSymbolPath();
     return true;
+}
+
+void SymCleanup()
+{
+    _SymCleanup(GetCurrentProcess());
 }
 
 static BOOL CALLBACK OpenMiniDumpCallback(void* /*param*/, PMINIDUMP_CALLBACK_INPUT input, PMINIDUMP_CALLBACK_OUTPUT output)
@@ -312,7 +324,7 @@ static BOOL CALLBACK OpenMiniDumpCallback(void* /*param*/, PMINIDUMP_CALLBACK_IN
 
 void WriteMiniDump(const TCHAR *crashDumpFilePath, MINIDUMP_EXCEPTION_INFORMATION* mei, bool fullDump)
 {
-    if (!Initialize(NULL, NULL) || !_MiniDumpWriteDump)
+    if (!Initialize(NULL) || !_MiniDumpWriteDump)
         return;
 
     HANDLE hFile = CreateFile(crashDumpFilePath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, NULL);
@@ -439,11 +451,11 @@ static bool GetStackFrameInfo(str::Str<char>& s, STACKFRAME64 *stackFrame,
     return true;
 }
 
-void GetCallstack(str::Str<char>& s, CONTEXT& ctx, HANDLE hThread)
+static bool GetCallstack(str::Str<char>& s, CONTEXT& ctx, HANDLE hThread)
 {
     if (!CanStackWalk()) {
         s.Append("GetCallstack(): CanStackWalk() returned false");
-        return;
+        return false;
     }
 
     STACKFRAME64 stackFrame;
@@ -469,14 +481,101 @@ void GetCallstack(str::Str<char>& s, CONTEXT& ctx, HANDLE hThread)
             break;
         framesCount++;
     }
-    if (0 == framesCount)
+    if (0 == framesCount) {
         s.Append("StackWalk64() couldn't get even the first stack frame info");
+        return false;
+    }
+    return true;
 }
 
-void SymCleanup()
+void GetThreadCallstack(str::Str<char>& s, DWORD threadId)
 {
-    _SymCleanup(GetCurrentProcess());
+    if (threadId == GetCurrentThreadId())
+        return;
+
+    s.AppendFmt("\r\nThread: %x\r\n", threadId);
+
+    DWORD access = THREAD_GET_CONTEXT | THREAD_QUERY_INFORMATION | THREAD_SUSPEND_RESUME;
+    HANDLE hThread = OpenThread(access, false, threadId);
+    if (!hThread) {
+        s.Append("Failed to OpenThread()\r\n");
+        return;
+    }
+
+    DWORD res = SuspendThread(hThread);
+    if (-1 == res) {
+        s.Append("Failed to SuspendThread()\r\n");
+    } else {
+        CONTEXT ctx = { 0 };
+        ctx.ContextFlags = CONTEXT_FULL;
+        BOOL ok = GetThreadContext(hThread, &ctx);
+        if (ok)
+            GetCallstack(s, ctx, hThread);
+        else
+            s.Append("Failed to GetThreadContext()\r\n");
+
+        ResumeThread(hThread);
+    }
+    CloseHandle(hThread);
 }
+
+// we disable optimizations for this function as it calls RtlCaptureContext()
+// which cannot deal with Omit Frame Pointers optimization (/Oy explicitly, turned
+// implicitly by e.g. /O2)
+// http://www.bytetalk.net/2011/06/why-rtlcapturecontext-crashes-on.html
+#pragma optimize( "", off )
+// we also need to disable warning 4748 "/GS can not protect parameters and local variables
+// from local buffer overrun because optimizations are disabled in function)"
+#pragma warning(push)
+#pragma warning(disable : 4748)
+typedef VOID WINAPI RtlCaptureContextProc(PCONTEXT ContextRecord);
+__declspec(noinline) bool GetCurrentThreadCallstack(str::Str<char>& s)
+{
+    if (!Initialize(NULL))
+        return false;
+
+    CONTEXT ctx;
+    //Some blog post say this is an alternative way to get CONTEXT
+    //but it doesn't work in practice
+    //ctx = *(gMei.ExceptionPointers->ContextRecord);
+
+    // not available under Win2000
+    RtlCaptureContextProc *MyRtlCaptureContext = (RtlCaptureContextProc *)LoadDllFunc(_T("kernel32.dll"), "RtlCaptureContext");
+    if (!MyRtlCaptureContext)
+        return false;
+
+    MyRtlCaptureContext(&ctx);
+    return GetCallstack(s, ctx, GetCurrentThread());
+}
+#pragma optimize("", off )
+
+void LogCallstack()
+{
+    str::Str<char> s(2048);
+    if (GetCurrentThreadCallstack(s))
+        plog(s.Get());
+}
+
+void GetAllThreadsCallstacks(str::Str<char>& s)
+{
+    HANDLE threadSnap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
+    if (threadSnap == INVALID_HANDLE_VALUE)
+        return;
+
+    THREADENTRY32 te32;
+    te32.dwSize = sizeof(THREADENTRY32);
+
+    DWORD pid = GetCurrentProcessId();
+    BOOL ok = Thread32First(threadSnap, &te32);
+    while (ok) {
+        if (te32.th32OwnerProcessID == pid)
+            GetThreadCallstack(s, te32.th32ThreadID);
+        ok = Thread32Next(threadSnap, &te32);
+    }
+
+    CloseHandle(threadSnap);
+}
+#pragma warning(pop)
 
 void GetExceptionInfo(str::Str<char>& s, EXCEPTION_POINTERS *excPointers)
 {

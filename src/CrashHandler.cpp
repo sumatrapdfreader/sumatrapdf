@@ -79,7 +79,6 @@ static CrashHandlerAllocator *gCrashHandlerAllocator = NULL;
 // static initializers/destructors, which are bad
 static TCHAR *  gCrashDumpPath = NULL;
 static WCHAR *  gSymbolPathW = NULL;
-static char *   gSymbolPathA = NULL;
 static TCHAR *  gCrashDumpDir = NULL;
 static TCHAR *  gSymbolsZipPath = NULL;
 static TCHAR *  gLibMupdfPdbPath = NULL;
@@ -111,84 +110,6 @@ static UnzipAllocFuncs gUnzipAllocFuncs = {
     &zip_free
 };
 
-
-// disabled because apparently RtlCaptureContext() crashes when code
-// is compiled with  Omit Frame Pointers option (/Oy explicitly, can
-// be turned on implictly by e.g. /O2)
-// http://www.bytetalk.net/2011/06/why-rtlcapturecontext-crashes-on.html
-// This thread isn't important - it's the CrashHandler thread.
-#if 0
-typedef VOID WINAPI RtlCaptureContextProc(
-    PCONTEXT ContextRecord);
-static void GetCurrentThreadCallstack(str::Str<char>& s)
-{
-    CONTEXT ctx;
-    //Some blog post say this is an alternative way to get CONTEXT
-    //but it doesn't work in practice
-    //ctx = *(gMei.ExceptionPointers->ContextRecord);
-
-    // not available under Win2000
-    RtlCaptureContextProc *MyRtlCaptureContext = (RtlCaptureContextProc *)LoadDllFunc(_T("kernel32.dll"), "RtlCaptureContext");
-    if (!RtlCaptureContext)
-        return;
-
-    MyRtlCaptureContext(&ctx);
-    s.AppendFmt("Thread: %x\r\n", GetCurrentThreadId());
-    GetCallstack(s, ctx, GetCurrentThread());
-}
-#endif
-
-static void GetThreadCallstack(str::Str<char>& s, DWORD threadId)
-{
-    if (threadId == GetCurrentThreadId())
-        return;
-
-    s.AppendFmt("\r\nThread: %x\r\n", threadId);
-
-    DWORD access = THREAD_GET_CONTEXT | THREAD_QUERY_INFORMATION | THREAD_SUSPEND_RESUME;
-    HANDLE hThread = OpenThread(access, false, threadId);
-    if (!hThread) {
-        s.Append("Failed to OpenThread()\r\n");
-        return;
-    }
-
-    DWORD res = SuspendThread(hThread);
-    if (-1 == res) {
-        s.Append("Failed to SuspendThread()\r\n");
-    } else {
-        CONTEXT ctx = { 0 };
-        ctx.ContextFlags = CONTEXT_FULL;
-        BOOL ok = GetThreadContext(hThread, &ctx);
-        if (ok)
-            dbghelp::GetCallstack(s, ctx, hThread);
-        else
-            s.Append("Failed to GetThreadContext()\r\n");
-
-        ResumeThread(hThread);
-    }
-    CloseHandle(hThread);
-}
-
-static void GetAllThreadsCallstacks(str::Str<char>& s)
-{
-    HANDLE threadSnap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
-    if (threadSnap == INVALID_HANDLE_VALUE)
-        return;
-
-    THREADENTRY32 te32;
-    te32.dwSize = sizeof(THREADENTRY32);
-
-    DWORD pid = GetCurrentProcessId();
-    BOOL ok = Thread32First(threadSnap, &te32);
-    while (ok) {
-        if (te32.th32OwnerProcessID == pid)
-            GetThreadCallstack(s, te32.th32ThreadID);
-        ok = Thread32Next(threadSnap, &te32);
-    }
-
-    CloseHandle(threadSnap);
-}
-
 static char *BuildCrashInfoText()
 {
     logdetail("BuildCrashInfoText(): start");
@@ -201,10 +122,11 @@ static char *BuildCrashInfoText()
     s.Append("\r\n");
 
     dbghelp::GetExceptionInfo(s, gMei.ExceptionPointers);
-    GetAllThreadsCallstacks(s);
+    dbghelp::GetAllThreadsCallstacks(s);
     s.Append("\r\n");
 #if 0 // disabled because crashes in release builds
-    GetCurrentThreadCallstack(s);
+    s.AppendFmt("Thread: %x\r\n", GetCurrentThreadId());
+    dbghelp::GetCurrentThreadCallstack(s);
     s.Append("\r\n");
 #endif
     s.Append(gModulesInfo);
@@ -326,7 +248,7 @@ void SubmitCrashInfo()
 
     char *s = NULL;
 
-    if (!dbghelp::Initialize(gSymbolPathW, gSymbolPathA)) {
+    if (!dbghelp::Initialize(gSymbolPathW)) {
         plog("SubmitCrashInfo(): dbghelp::Initialize() failed");
         return;
     }
@@ -338,7 +260,7 @@ void SubmitCrashInfo()
         }
 
         dbghelp::SymCleanup();
-        if (!dbghelp::Initialize(gSymbolPathW, gSymbolPathA)) {
+        if (!dbghelp::Initialize(gSymbolPathW)) {
             plog("SubmitCrashInfo(): dbghelp::Initialize() failed");
             return;
         }
@@ -606,10 +528,6 @@ static bool BuildSymbolPath()
     gSymbolPathW = path.StealData();
     if (!gSymbolPathW)
         return false;
-
-    // gSymbolPathA can be NULL in case gSymbolPathW exists but
-    // cannot be represented in Ansii
-    gSymbolPathA = str::conv::ToAnsi(AsTStrQ(gSymbolPathW));
     return true;
 }
 
@@ -682,7 +600,6 @@ void UninstallCrashHandler()
     free(gSumatraPdfPdbPath);
 
     free(gSymbolPathW);
-    free(gSymbolPathA);
     free(gSystemInfo);
     free(gModulesInfo);
     delete gCrashHandlerAllocator;

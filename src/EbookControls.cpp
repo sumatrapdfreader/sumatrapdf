@@ -3,9 +3,11 @@
 
 #include "BaseUtil.h"
 #include "EbookControls.h"
+
 #include "PageLayout.h"
 #include "SvgPath.h"
 
+#include "DbgHelpDyn.h"
 #include "DebugLog.h"
 
 static Style *   styleMainWnd = NULL;
@@ -26,7 +28,8 @@ static Rect RectForCircle(int x, int y, int r)
 }
 void PageControl::SetPage(PageData *newPage)
 {
-    lf("PageControl::SetPage(0x%x)", (int)newPage);
+    lf("\n\nPageControl::SetPage(0x%x)", (int)newPage);
+    dbghelp::LogCallstack();
     page = newPage;
     RequestRepaint(this);
 }

@@ -27,11 +27,14 @@ namespace dbghelp
 {
 
 bool Load();
-bool Initialize(const WCHAR *symPathW, const char *symPathA);
+bool Initialize(const WCHAR *symPathW);
 bool HasSymbols();
-void WriteMiniDump(const TCHAR *crashDumpFilePath, MINIDUMP_EXCEPTION_INFORMATION* mei, bool fullDump);
-void GetCallstack(str::Str<char>& s, CONTEXT& ctx, HANDLE hThread);
 void SymCleanup();
+void WriteMiniDump(const TCHAR *crashDumpFilePath, MINIDUMP_EXCEPTION_INFORMATION* mei, bool fullDump);
+void GetThreadCallstack(str::Str<char>& s, DWORD threadId);
+bool GetCurrentThreadCallstack(str::Str<char>& s);
+void LogCallstack();
+void GetAllThreadsCallstacks(str::Str<char>& s);
 void GetExceptionInfo(str::Str<char>& s, EXCEPTION_POINTERS *excPointers);
 
 }
