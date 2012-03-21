@@ -16,13 +16,6 @@
 #define plog(msg) \
     OutputDebugStringA(msg)
 
-#if 0 // 1 for more detailed debugging of crash handler progress
-#define logdetail(msg) \
-    OutputDebugStringA(msg)
-#else
-#define logdetail(msg) NoOp()
-#endif
-
 namespace dbghelp 
 {
 

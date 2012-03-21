@@ -33,6 +33,13 @@
 #define CRASH_SUBMIT_URL    _T("/app/crashsubmit?appname=SumatraPDF")
 #endif
 
+#if 0 // 1 for more detailed debugging of crash handler progress
+#define logdetail(msg) \
+    OutputDebugStringA(msg)
+#else
+#define logdetail(msg) NoOp()
+#endif
+
 // The following functions allow crash handler to be used by both installer
 // and sumatra proper. They must be implemented for each app.
 extern void GetStressTestInfo(str::Str<char>* s);
@@ -216,9 +223,6 @@ static bool UnpackStaticSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir
 // names.
 static bool UnpackLibSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir)
 {
-    if (!file::Exists(symbolsZipPath)) {
-        plog("UnpackLibSymbols(): .pdb.zip file doesn't exist");
-    }
     ZipFile archive(symbolsZipPath, gCrashHandlerAllocator);
     if (!archive.UnzipFile(_T("libmupdf.pdb"), symDir)) {
         LogFailedUnzip(symbolsZipPath, symDir, "libmupdf.pdb");
@@ -233,9 +237,6 @@ static bool UnpackLibSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir)
 
 static bool UnpackInstallerSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir)
 {
-    if (!file::Exists(symbolsZipPath)) {
-        plog("UnpackLibSymbols(): .pdb.zip file doesn't exist");
-    }
     ZipFile archive(symbolsZipPath, gCrashHandlerAllocator);
     if (!archive.UnzipFile(_T("Installer.pdb"), symDir, GetInstallerPdbName())) {
         LogFailedUnzip(symbolsZipPath, symDir, "Installer.pdb");
@@ -250,8 +251,10 @@ static bool DownloadAndUnzipSymbols( const TCHAR *symbolsZipPath, const TCHAR *s
 {
     if (!symDir || !dir::Exists(symDir))
         return false;
-    if (!DeleteSymbolsIfExist())
+    if (!DeleteSymbolsIfExist()) {
+        plog("DownloadAndUnzipSymbols(): DeleteSymbolsIfExist() failed");
         return false;
+    }
 
 #ifdef DEBUG
     // don't care about debug builds because we don't release them
@@ -278,6 +281,8 @@ static bool DownloadAndUnzipSymbols( const TCHAR *symbolsZipPath, const TCHAR *s
         ok = UnpackInstallerSymbols(symbolsZipPath, symDir);
         if (!ok)
             plog("DownloadAndUnzipSymbols(): couldn't unpack symbols for lib build");
+    } else {
+        plog("DownloadAndUnzipSymbols(): unknown exe type");
     }
 
     //TODO: temporary
