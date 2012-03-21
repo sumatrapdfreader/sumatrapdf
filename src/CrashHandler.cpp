@@ -210,6 +210,9 @@ static bool UnpackLibSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir)
 #else
     const TCHAR *instSymbolsName = _T("SumatraPDF-") _T(QM(CURR_VERSION)) _T("-install.pdb");
 #endif
+    if (!file::Exists(symbolsZipPath)) {
+        plog("UnpackLibSymbols(): .pdb.zip file doesn't exist");
+    }
     ZipFile archive(symbolsZipPath, gCrashHandlerAllocator);
     if (!archive.UnzipFile(_T("libmupdf.pdb"), symDir)) {
         LogFailedUnzip(symbolsZipPath, symDir, "libmupdf.pdb");
@@ -228,7 +231,7 @@ static bool UnpackLibSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir)
 
 // *.pdb files are on S3 with a known name. Try to download them here to a directory
 // in symbol path to get meaningful callstacks
-static bool DownloadSymbols(const TCHAR *symDir, const TCHAR *symbolsZipPath)
+static bool DownloadAndUnzipSymbols( const TCHAR *symbolsZipPath, const TCHAR *symDir)
 {
     if (!symDir || !dir::Exists(symDir))
         return false;
@@ -241,7 +244,7 @@ static bool DownloadSymbols(const TCHAR *symDir, const TCHAR *symbolsZipPath)
 #endif
 
     if (!HttpGetToFile(SYMBOL_DOWNLOAD_URL, symbolsZipPath)) {
-        plog("DownloadSymbols(): couldn't download release symbols");
+        plog("DownloadAndUnzipSymbols(): couldn't download release symbols");
         return false;
     }
 
@@ -251,13 +254,14 @@ static bool DownloadSymbols(const TCHAR *symDir, const TCHAR *symbolsZipPath)
     if (gIsStaticBuild) {
         ok = UnpackStaticSymbols(symbolsZipPath, symDir);
         if (!ok)
-            plog("DownloadSymbols(): couldn't unpack symbols for static build");
+            plog("DownloadAndUnzipSymbols(): couldn't unpack symbols for static build");
     } else {
         ok = UnpackLibSymbols(symbolsZipPath, symDir);
         if (!ok)
-            plog("DownloadSymbols(): couldn't unpack symbols for lib build");
+            plog("DownloadAndUnzipSymbols(): couldn't unpack symbols for lib build");
     }
-    file::Delete(symbolsZipPath);
+    //TODO: temporary
+    //file::Delete(symbolsZipPath);
     return ok;
 }
 
@@ -280,7 +284,7 @@ void SubmitCrashInfo()
     }
 
     if (!dbghelp::HasSymbols()) {
-        if (!DownloadSymbols(gCrashDumpDir, gSymbolsZipPath)) {
+        if (!DownloadAndUnzipSymbols(gSymbolsZipPath, gCrashDumpDir)) {
             plog("SubmitCrashInfo(): failed to download symbols");
             return;
         }
