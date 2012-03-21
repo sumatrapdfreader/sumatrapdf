@@ -164,9 +164,9 @@ def main():
   pdb_zip = os.path.join(obj_dir, "%s.pdb.zip" % filename_base)
 
   zip_file(pdb_zip, os.path.join(obj_dir, "libmupdf.pdb"))
-  zip_file(pdb_zip, os.path.join(obj_dir, "Installer.pdb"))
+  zip_file(pdb_zip, os.path.join(obj_dir, "Installer.pdb"), append=True)
   zip_file(pdb_zip, os.path.join(obj_dir, "SumatraPDF-no-MuPDF.pdb"), append=True)
-  zip_file(pdb_zip, os.path.join(obj_dir, "SumatraPDF.pdb"), "%s.pdb" % filename_base, append=True)
+  zip_file(pdb_zip, os.path.join(obj_dir, "SumatraPDF.pdb"), append=True)
 
   builds_dir = os.path.join("builds", ver)
   if os.path.exists(builds_dir):

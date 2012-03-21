@@ -73,6 +73,15 @@ public:
     }
 };
 
+enum ExeType {
+    // this is an installer, SumatraPDF-${ver}-install.exe
+    ExeInstaller,
+    // this is a single-executable (portable) build (doesn't have libmupdf.dll)
+    ExeSumatraStatic,
+    // an installable build (has libmupdf.dll)
+    ExeSumatraLib
+};
+
 static CrashHandlerAllocator *gCrashHandlerAllocator = NULL;
 
 // Note: intentionally not using ScopedMem<> to avoid
@@ -83,12 +92,13 @@ static TCHAR *  gCrashDumpDir = NULL;
 static TCHAR *  gSymbolsZipPath = NULL;
 static TCHAR *  gLibMupdfPdbPath = NULL;
 static TCHAR *  gSumatraPdfPdbPath = NULL;
+static TCHAR *  gInstallerPdbPath = NULL;
 static char *   gSystemInfo = NULL;
 static char *   gModulesInfo = NULL;
 static str::Str<char>* gTmpStr = NULL;
 static HANDLE   gDumpEvent = NULL;
 static HANDLE   gDumpThread = NULL;
-static bool     gIsStaticBuild = false;
+static ExeType  gExeType = ExeSumatraStatic;
 
 static MINIDUMP_EXCEPTION_INFORMATION gMei = { 0 };
 static LPTOP_LEVEL_EXCEPTION_FILTER gPrevExceptionFilter = NULL;
@@ -161,9 +171,10 @@ static void SendCrashInfo(char *s)
 // Returns false if files were there but we couldn't delete them
 static bool DeleteSymbolsIfExist()
 {
-    if (!file::Delete(gLibMupdfPdbPath))
-        return false;
-    return file::Delete(gSumatraPdfPdbPath);
+    bool ok1 = file::Delete(gLibMupdfPdbPath);
+    bool ok2 = file::Delete(gSumatraPdfPdbPath);
+    bool ok3 = file::Delete(gInstallerPdbPath);
+    return ok1 && ok2 && ok3;
 }
 
 static void LogFailedUnzip(const TCHAR *zipFile, const TCHAR *dstDir, const char *file)
@@ -181,19 +192,19 @@ static void LogFailedUnzip(const TCHAR *zipFile, const TCHAR *dstDir, const char
     plog(gTmpStr->Get());
 }
 
-// In static (single executable) builds, the pdb file inside
-// symbolsZipPath are named SumatraPDF-${ver}.pdb (release) resp.
-// SumatraPDF-prelease-${buildno}.pdb (pre-release) and must be
-// extracted as SumatraPDF.pdb to match the executable name
-static bool UnpackStaticSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir)
+static const TCHAR *GetInstallerPdbName()
 {
 #ifdef SVN_PRE_RELEASE_VER
-    const TCHAR *symbolsName = _T("SumatraPDF-prerelease-") _T(QM(SVN_PRE_RELEASE_VER)) _T(".pdb");
+    return _T("SumatraPDF-prerelease-") _T(QM(SVN_PRE_RELEASE_VER)) _T("-install.pdb");
 #else
-    const TCHAR *symbolsName = _T("SumatraPDF-") _T(QM(CURR_VERSION)) _T(".pdb");
+    return _T("SumatraPDF-") _T(QM(CURR_VERSION)) _T("-install.pdb");
 #endif
+}
+
+static bool UnpackStaticSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir)
+{
     ZipFile archive(symbolsZipPath, gCrashHandlerAllocator);
-    if (!archive.UnzipFile(symbolsName, symDir, _T("SumatraPDF.pdb"))) {
+    if (!archive.UnzipFile(_T("SumatraPDF.pdb"), symDir)) {
         LogFailedUnzip(symbolsZipPath, symDir, "SumatraPDF.pdb");
     }
     return true;
@@ -205,11 +216,6 @@ static bool UnpackStaticSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir
 // names.
 static bool UnpackLibSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir)
 {
-#ifdef SVN_PRE_RELEASE_VER
-    const TCHAR *instSymbolsName = _T("SumatraPDF-prerelease-") _T(QM(SVN_PRE_RELEASE_VER)) _T("-install.pdb");
-#else
-    const TCHAR *instSymbolsName = _T("SumatraPDF-") _T(QM(CURR_VERSION)) _T("-install.pdb");
-#endif
     if (!file::Exists(symbolsZipPath)) {
         plog("UnpackLibSymbols(): .pdb.zip file doesn't exist");
     }
@@ -218,12 +224,21 @@ static bool UnpackLibSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir)
         LogFailedUnzip(symbolsZipPath, symDir, "libmupdf.pdb");
         return false;
     }
-    if (!archive.UnzipFile(_T("Installer.pdb"), symDir, instSymbolsName)) {
-        LogFailedUnzip(symbolsZipPath, symDir, "Installer.pdb");
-        return false;
-    }
     if (!archive.UnzipFile(_T("SumatraPDF-no-MuPDF.pdb"), symDir, _T("SumatraPDF.pdb"))) {
         LogFailedUnzip(symbolsZipPath, symDir, "SumatraPDF-no-MuPDF.pdb");
+        return false;
+    }
+    return true;
+}
+
+static bool UnpackInstallerSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir)
+{
+    if (!file::Exists(symbolsZipPath)) {
+        plog("UnpackLibSymbols(): .pdb.zip file doesn't exist");
+    }
+    ZipFile archive(symbolsZipPath, gCrashHandlerAllocator);
+    if (!archive.UnzipFile(_T("Installer.pdb"), symDir, GetInstallerPdbName())) {
+        LogFailedUnzip(symbolsZipPath, symDir, "Installer.pdb");
         return false;
     }
     return true;
@@ -251,15 +266,20 @@ static bool DownloadAndUnzipSymbols( const TCHAR *symbolsZipPath, const TCHAR *s
     unzSetAllocFuncs(&gUnzipAllocFuncs);
 
     bool ok = false;
-    if (gIsStaticBuild) {
+    if (ExeSumatraStatic == gExeType) {
         ok = UnpackStaticSymbols(symbolsZipPath, symDir);
         if (!ok)
             plog("DownloadAndUnzipSymbols(): couldn't unpack symbols for static build");
-    } else {
+    } else if (ExeSumatraLib == gExeType) {
         ok = UnpackLibSymbols(symbolsZipPath, symDir);
         if (!ok)
             plog("DownloadAndUnzipSymbols(): couldn't unpack symbols for lib build");
+    } else if (ExeInstaller == gExeType) {
+        ok = UnpackInstallerSymbols(symbolsZipPath, symDir);
+        if (!ok)
+            plog("DownloadAndUnzipSymbols(): couldn't unpack symbols for lib build");
     }
+
     //TODO: temporary
     //file::Delete(symbolsZipPath);
     return ok;
@@ -509,6 +529,7 @@ static bool BuilCrashDumpPaths(const TCHAR *symDir)
     gSymbolsZipPath = path::Join(symDir, _T("symbols_tmp.zip"));
     gLibMupdfPdbPath = path::Join(symDir, _T("SumatraPDF.pdb"));
     gSumatraPdfPdbPath = path::Join(symDir, _T("libmupdf.pdb"));
+    gInstallerPdbPath = path::Join(symDir, GetInstallerPdbName());
     return true;
 }
 
@@ -561,11 +582,15 @@ static bool BuildSymbolPath()
     return true;
 }
 
-// return true for static, single executable build, false for a build with libmupdf.dll
-static bool IsStaticBuild()
+// detect which exe it is 
+static ExeType DetectExeType()
 {
+    ExeType exeType = ExeSumatraStatic;
     HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
-    if (snap == INVALID_HANDLE_VALUE) return true;
+    if (snap == INVALID_HANDLE_VALUE) {
+        plog("DetectExeType(): failed to detect type");
+        return exeType;
+    }
     MODULEENTRY32 mod;
     mod.dwSize = sizeof(mod);
     BOOL cont = Module32First(snap, &mod);
@@ -573,13 +598,17 @@ static bool IsStaticBuild()
     while (cont) {
         TCHAR *name = mod.szModule;
         if (str::EqI(name, _T("libmupdf.dll"))) {
-            isStatic = false;
+            exeType = ExeSumatraLib;
+            break;
+        }
+        if (str::StartsWithI(name, _T("SumatraPDF-")) && str::EndsWithI(name, _T("install.exe"))) {
+            exeType = ExeInstaller;
             break;
         }
         cont = Module32Next(snap, &mod);
     }
     CloseHandle(snap);
-    return isStatic;
+    return exeType;
 }
 
 void InstallCrashHandler(const TCHAR *crashDumpPath, const TCHAR *symDir)
@@ -598,7 +627,7 @@ void InstallCrashHandler(const TCHAR *crashDumpPath, const TCHAR *symDir)
     // dbghlp.dll which shouldn't be loaded yet)
     BuildModulesInfo();
 
-    gIsStaticBuild = IsStaticBuild();
+    gExeType = DetectExeType();
     // we pre-allocate as much as possible to minimize allocations
     // when crash handler is invoked. It's ok to use standard
     // allocation functions here.
@@ -629,6 +658,7 @@ void UninstallCrashHandler()
     free(gSymbolsZipPath);
     free(gLibMupdfPdbPath);
     free(gSumatraPdfPdbPath);
+    free(gInstallerPdbPath);
 
     free(gSymbolPathW);
     free(gSystemInfo);
