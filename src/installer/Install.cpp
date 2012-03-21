@@ -322,8 +322,8 @@ static bool IsCheckboxChecked(HWND hwnd)
 
 static void OnButtonInstall()
 {
-    if (gGlobalData.crash)
-        CrashAlwaysIf(true);
+//    if (gGlobalData.crash)
+//        CrashAlwaysIf(true);
 
     if (gShowOptions)
         OnButtonOptions();
