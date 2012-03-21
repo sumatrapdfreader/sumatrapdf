@@ -11,7 +11,7 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 */
 
 // define to allow testing crash handling via -crash cmd-line option
-#define ENABLE_CRASH_TESTING
+//#define ENABLE_CRASH_TESTING
 
 // define for testing the uninstaller
 // #define TEST_UNINSTALLER

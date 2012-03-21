@@ -196,7 +196,7 @@ static LPTOP_LEVEL_EXCEPTION_FILTER gPrevExceptionFilter = NULL;
 #define plog(msg) \
     OutputDebugStringA(msg)
 
-#if 1 // 1 for more detailed debugging of crash handler progress
+#if 0 // 1 for more detailed debugging of crash handler progress
 #define logdetail(msg) \
     OutputDebugStringA(msg)
 #else
