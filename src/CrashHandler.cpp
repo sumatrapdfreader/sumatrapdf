@@ -189,14 +189,18 @@ static bool     gIsStaticBuild = false;
 static MINIDUMP_EXCEPTION_INFORMATION gMei = { 0 };
 static LPTOP_LEVEL_EXCEPTION_FILTER gPrevExceptionFilter = NULL;
 
-#define LogDbg(msg) \
+// We're not using DebugLog.[h|cpp] here to make sure logging doesn't allocate
+// memory. We use plog because it's similar to plogf() but we don't want to lie
+// by claiming we support formatted strings.
+// We always log those because they only kick in on error code paths
+#define plog(msg) \
     OutputDebugStringA(msg)
 
-#if 0 // 1 for more detailed debugging of crash handler progress
-#define LogDbgDetail(msg) \
+#if 1 // 1 for more detailed debugging of crash handler progress
+#define logdetail(msg) \
     OutputDebugStringA(msg)
 #else
-#define LogDbgDetail(msg) NoOp()
+#define logdetail(msg) NoOp()
 #endif
 
 // alloc/free functions to be passed to unzip.c
@@ -254,13 +258,13 @@ static bool LoadDbgHelpFuncs()
 static bool SetupSymbolPath()
 {
     if (!_SymSetSearchPathW && !_SymSetSearchPath) {
-        LogDbg("SetupSymbolPath(): _SymSetSearchPathW and _SymSetSearchPath missing");
+        plog("SetupSymbolPath(): _SymSetSearchPathW and _SymSetSearchPath missing");
         return false;
     }
 
     ScopedMem<WCHAR> path(GetSymbolPath());
     if (!path) {
-        LogDbg("SetupSymbolPath(): GetSymbolPath() returned NULL");
+        plog("SetupSymbolPath(): GetSymbolPath() returned NULL");
         return false;
     }
 
@@ -269,12 +273,12 @@ static bool SetupSymbolPath()
     if (_SymSetSearchPathW) {
         ok = _SymSetSearchPathW(GetCurrentProcess(), path);
         if (!ok)
-            LogDbg("_SymSetSearchPathW() failed, path='%s'", tpath);
+            plog("_SymSetSearchPathW() failed");
     } else {
         ScopedMem<char> tmp(str::conv::ToAnsi(tpath));
         ok = _SymSetSearchPath(GetCurrentProcess(), tmp);
         if (!ok)
-            LogDbg("_SymSetSearchPath() failed, path='%s'", tpath);
+            plog("_SymSetSearchPath() failed");
     }
 
     _SymRefreshModuleList(GetCurrentProcess());
@@ -286,12 +290,12 @@ static bool SetupSymbolPath()
 static bool InitializeDbgHelp()
 {
     if (!LoadDbgHelpFuncs()) {
-        LogDbg("InitializeDbgHelp(): LoadDbgHelpFuncs() failed");
+        plog("InitializeDbgHelp(): LoadDbgHelpFuncs() failed");
         return false;
     }
 
     if (!_SymInitializeW && !_SymInitialize) {
-        LogDbg("InitializeDbgHelp(): SymInitializeW() or SymInitializeA() not present in dbghelp.dll");
+        plog("InitializeDbgHelp(): SymInitializeW() or SymInitializeA() not present in dbghelp.dll");
         return false;
     }
 
@@ -302,7 +306,7 @@ static bool InitializeDbgHelp()
     }
 
     if (!gSymInitializeOk) {
-        LogDbg("InitializeDbgHelp(): _SymInitialize() failed");
+        plog("InitializeDbgHelp(): _SymInitialize() failed");
         return false;
     }
 
@@ -682,10 +686,10 @@ static void GetExceptionInfo(str::Str<char>& s, EXCEPTION_POINTERS *excPointers)
 
 static char *BuildCrashInfoText()
 {
-    LogDbgDetail("BuildCrashInfoText(): start");
+    logdetail("BuildCrashInfoText(): start");
 
     if (!gSymInitializeOk) {
-        LogDbg("BuildCrashInfoText(): gSymInitializeOk is false");
+        plog("BuildCrashInfoText(): gSymInitializeOk is false");
         return NULL;
     }
 
@@ -697,27 +701,22 @@ static char *BuildCrashInfoText()
     s.Append("\r\n");
 
     GetExceptionInfo(s, gMei.ExceptionPointers);
-    LogDbgDetail("BuildCrashInfoText(): 5");
     GetAllThreadsCallstacks(s);
     s.Append("\r\n");
-    LogDbgDetail("BuildCrashInfoText(): 6");
 #if 0 // disabled because crashes in release builds
     GetCurrentThreadCallstack(s);
     s.Append("\r\n");
-    LogDbgDetail("BuildCrashInfoText(): 7");
 #endif
-
     s.Append(gModulesInfo);
 
-    LogDbgDetail("BuildCrashInfoText(): finish");
     return s.StealData();
 }
 
 static void SendCrashInfo(char *s)
 {
-    LogDbgDetail("SendCrashInfo(): started");
+    logdetail("SendCrashInfo(): started");
     if (str::IsEmpty(s)) {
-        LogDbg("SendCrashInfo(): s is empty");
+        plog("SendCrashInfo(): s is empty");
         return;
     }
 
@@ -766,8 +765,14 @@ static bool UnpackStaticSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir
 // names.
 static bool UnpackLibSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir)
 {
+#ifdef SVN_PRE_RELEASE_VER
+    const TCHAR *instSymbolsName = _T("SumatraPDF-prerelease-") _T(QM(SVN_PRE_RELEASE_VER)) _T("-install.pdb");
+#else
+    const TCHAR *instSymbolsName = _T("SumatraPDF-") _T(QM(CURR_VERSION)) _T("-install.pdb");
+#endif
     ZipFile archive(symbolsZipPath, gCrashHandlerAllocator);
     return archive.UnzipFile(_T("libmupdf.pdb"), symDir) &&
+           archive.UnzipFile(_T("Installer.pdb"), symDir, instSymbolsName) &&
            archive.UnzipFile(_T("SumatraPDF-no-MuPDF.pdb"), symDir, _T("SumatraPDF.pdb"));
 }
 
@@ -787,7 +792,7 @@ static bool DownloadSymbols(const TCHAR *symDir, const TCHAR *symbolsZipPath)
 
     if (!HttpGetToFile(SYMBOL_DOWNLOAD_URL, symbolsZipPath)) {
 #ifndef SVN_PRE_RELEASE_VER
-        LogDbg("Couldn't download release symbols");
+        plog("Couldn't download release symbols");
 #endif
         return false;
     }
@@ -798,11 +803,11 @@ static bool DownloadSymbols(const TCHAR *symDir, const TCHAR *symbolsZipPath)
     if (gIsStaticBuild) {
         ok = UnpackStaticSymbols(symbolsZipPath, symDir);
         if (!ok)
-            LogDbg("Couldn't unpack symbols for static build");
+            plog("Couldn't unpack symbols for static build");
     } else {
         ok = UnpackLibSymbols(symbolsZipPath, symDir);
         if (!ok)
-            LogDbg("Couldn't unpack symbols for lib build");
+            plog("Couldn't unpack symbols for lib build");
     }
     file::Delete(symbolsZipPath);
     return ok;
@@ -813,40 +818,40 @@ static bool DownloadSymbols(const TCHAR *symDir, const TCHAR *symbolsZipPath)
 // get the callstacks etc. and submit to our server for analysis.
 void SubmitCrashInfo()
 {
-    LogDbgDetail("SubmitCrashInfo(): start");
+    logdetail("SubmitCrashInfo(): start");
     if (!CrashHandlerCanUseNet()) {
-        LogDbg("SubmitCrashInfo(): No internet access permission");
+        plog("SubmitCrashInfo(): No internet access permission");
         return;
     }
 
     char *s = NULL;
 
     if (!InitializeDbgHelp()) {
-        LogDbg("SubmitCrashInfo(): InitializeDbgHelp() failed");
+        plog("SubmitCrashInfo(): InitializeDbgHelp() failed");
         return;
     }
 
     if (!HasOwnSymbols()) {
         if (!DownloadSymbols(gCrashDumpDir, gSymbolsZipPath)) {
-            LogDbg("SubmitCrashInfo(): failed to download symbols");
+            plog("SubmitCrashInfo(): failed to download symbols");
             return;
         }
 
         _SymCleanup(GetCurrentProcess());
         if (!InitializeDbgHelp()) {
-            LogDbg("SubmitCrashInfo(): InitializeDbgHelp() failed");
+            plog("SubmitCrashInfo(): InitializeDbgHelp() failed");
             return;
         }
     }
 
     if (!HasOwnSymbols()) {
-        LogDbg("SubmitCrashInfo(): HasOwnSymbols() false after downloading symbols");
+        plog("SubmitCrashInfo(): HasOwnSymbols() false after downloading symbols");
         return;
     }
 
     s = BuildCrashInfoText();
     if (!s) {
-        LogDbg("SubmitCrashInfo(): BuildCrashInfoText() returned NULL for second report");
+        plog("SubmitCrashInfo(): BuildCrashInfoText() returned NULL for second report");
         return;
     }
 
@@ -1024,7 +1029,6 @@ static void GetSystemInfo(str::Str<char>& s)
     // * amount of memory used by Sumatra,
     // * graphics card and its driver version
     // * processor capabilities (mmx, sse, sse2 etc.)
-    // * list of currently opened documents (by traversing gWindows)
 }
 
 static void GetModules(str::Str<char>& s)
@@ -1065,7 +1069,7 @@ static bool BuilCrashDumpPaths(const TCHAR *symDir)
     if (!symDir)
         return false;
     if (!dir::Create(symDir)) {
-        LogDbg("GetCrashDumpDir(): couldn't get symbols dir");
+        plog("GetCrashDumpDir(): couldn't get symbols dir");
         return false;
     }
     gCrashDumpDir = str::Dup(symDir);
