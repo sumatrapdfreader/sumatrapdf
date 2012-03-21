@@ -11,7 +11,7 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 */
 
 // define to allow testing crash handling via -crash cmd-line option
-//#define ENABLE_CRASH_TESTING
+#define ENABLE_CRASH_TESTING
 
 // define for testing the uninstaller
 // #define TEST_UNINSTALLER
@@ -964,7 +964,8 @@ static void InstallInstallerCrashHandler()
             return;
     }
 
-    ScopedMem<TCHAR> symDir(path::Join(tempDir, _T("sumatrasymbols")));
+    // save symbols directly into %TEMP% (so that the installer doesn't
+    // unnecessarily leave an empty directory behind if it doesn't have to)
     ScopedMem<TCHAR> crashDumpPath(path::Join(tempDir, CRASH_DUMP_FILE_NAME));
     InstallCrashHandler(crashDumpPath, tempDir);
 }
@@ -995,6 +996,17 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 #if defined(BUILD_UNINSTALLER) && !defined(TEST_UNINSTALLER)
     if (ExecuteUninstallerFromTempDir())
         return 0;
+#endif
+
+#ifdef ENABLE_CRASH_TESTING
+    if (gGlobalData.crash) {
+        ScopedMem<TCHAR> path(GetExePath());
+        path.Set(path::GetDir(path));
+        path.Set(path::Join(path, _T("PdfPreview.dll")));
+        // this is sufficient to cause a crash at exit if linking with ucrt
+        RegisterServerDLL(path);
+        RegisterServerDLL(path, true);
+    }
 #endif
 
     if (gGlobalData.silent) {

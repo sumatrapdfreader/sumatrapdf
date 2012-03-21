@@ -114,9 +114,10 @@ $(OS)\CrashHandler.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
 $(OS)\CrashHandler.obj: src\CrashHandler.h src\DisplayState.h src\SumatraPDF.h
 $(OS)\CrashHandler.obj: src\SumatraWindow.h src\TextSearch.h src\TextSelection.h
 $(OS)\CrashHandler.obj: src\Translations.h src\utils\Allocator.h src\utils\BaseUtil.h
-$(OS)\CrashHandler.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Http.h
-$(OS)\CrashHandler.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
-$(OS)\CrashHandler.obj: src\utils\WinUtil.h src\utils\ZipUtil.h src\Version.h
+$(OS)\CrashHandler.obj: src\utils\DbgHelpDyn.h src\utils\FileUtil.h src\utils\GeomUtil.h
+$(OS)\CrashHandler.obj: src\utils\Http.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OS)\CrashHandler.obj: src\utils\Vec.h src\utils\WinUtil.h src\utils\ZipUtil.h
+$(OS)\CrashHandler.obj: src\Version.h
 $(OS)\DisplayModel.obj: src\BaseEngine.h src\ChmEngine.h src\DisplayModel.h
 $(OS)\DisplayModel.obj: src\DisplayState.h src\DjVuEngine.h src\EngineManager.h
 $(OS)\DisplayModel.obj: src\EpubEngine.h src\ImagesEngine.h src\PdfEngine.h
@@ -146,9 +147,10 @@ $(OS)\EbookControls.obj: src\mui\MuiBase.h src\mui\MuiButton.h src\mui\MuiContro
 $(OS)\EbookControls.obj: src\mui\MuiCss.h src\mui\MuiEventMgr.h src\mui\MuiHwndWrapper.h
 $(OS)\EbookControls.obj: src\mui\MuiLayout.h src\mui\MuiPainter.h src\mui\MuiScrollBar.h
 $(OS)\EbookControls.obj: src\mui\SvgPath.h src\PageLayout.h src\utils\Allocator.h
-$(OS)\EbookControls.obj: src\utils\BaseUtil.h src\utils\BitManip.h src\utils\GdiPlusUtil.h
-$(OS)\EbookControls.obj: src\utils\GeomUtil.h src\utils\HtmlPullParser.h src\utils\Scoped.h
-$(OS)\EbookControls.obj: src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\EbookControls.obj: src\utils\BaseUtil.h src\utils\BitManip.h src\utils\DbgHelpDyn.h
+$(OS)\EbookControls.obj: src\utils\DebugLog.h src\utils\GdiPlusUtil.h src\utils\GeomUtil.h
+$(OS)\EbookControls.obj: src\utils\HtmlPullParser.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OS)\EbookControls.obj: src\utils\Vec.h
 $(OS)\EngineDump.obj: src\BaseEngine.h src\ChmEngine.h src\DjVuEngine.h
 $(OS)\EngineDump.obj: src\EngineManager.h src\EpubEngine.h src\ImagesEngine.h
 $(OS)\EngineDump.obj: src\PdfEngine.h src\PsEngine.h src\utils\Allocator.h
@@ -194,10 +196,10 @@ $(OS)\Install.obj: src\utils\BaseUtil.h src\utils\CmdLineParser.h src\utils\File
 $(OS)\Install.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
 $(OS)\Install.obj: src\utils\StrUtil.h src\utils\Timer.h src\utils\Vec.h
 $(OS)\Install.obj: src\utils\WinUtil.h src\utils\ZipUtil.h src\Version.h
-$(OS)\Installer.obj: src\AppTools.h src\BaseEngine.h src\CrashHandler.h
-$(OS)\Installer.obj: src\ifilter\PdfFilter.h src\previewer\PdfPreview.h src\installer\Install.cpp
-$(OS)\Installer.obj: src\installer\Installer.h src\installer\Resource.h src\installer\Uninstall.cpp
-$(OS)\Installer.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\CmdLineParser.h
+$(OS)\Installer.obj: src\BaseEngine.h src\CrashHandler.h src\ifilter\PdfFilter.h
+$(OS)\Installer.obj: src\previewer\PdfPreview.h src\installer\Install.cpp src\installer\Installer.h
+$(OS)\Installer.obj: src\installer\Resource.h src\installer\Uninstall.cpp src\utils\Allocator.h
+$(OS)\Installer.obj: src\utils\BaseUtil.h src\utils\CmdLineParser.h src\utils\DebugLog.h
 $(OS)\Installer.obj: src\utils\FileTransactions.h src\utils\FileUtil.h src\utils\FrameTimeoutCalculator.h
 $(OS)\Installer.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
 $(OS)\Installer.obj: src\utils\Timer.h src\utils\Vec.h src\utils\WinUtil.h
@@ -441,6 +443,9 @@ $(OS)\WindowInfo.obj: src\WindowInfo.h
 $(OU)\BencUtil.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\BencUtil.h
 $(OU)\BencUtil.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
 $(OU)\BitReader.obj: src\utils\BaseUtil.h src\utils\BitReader.h
+$(OU)\DbgHelpDyn.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\DbgHelpDyn.h
+$(OU)\DbgHelpDyn.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\StrUtil.h
+$(OU)\DbgHelpDyn.obj: src\utils\Vec.h src\utils\WinUtil.h
 $(OU)\DebugLog.obj: src\utils\BaseUtil.h src\utils\DebugLog.h src\utils\Scoped.h
 $(OU)\DebugLog.obj: src\utils\StrUtil.h
 $(OU)\DialogSizer.obj: src\utils\BaseUtil.h src\utils\DialogSizer.h src\utils\GeomUtil.h

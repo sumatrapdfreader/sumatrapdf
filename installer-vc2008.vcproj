@@ -129,6 +129,14 @@
 				Name="system"
 				>
 				<File
+					RelativePath=".\src\utils\DbgHelpDyn.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\utils\DbgHelpDyn.h"
+					>
+				</File>
+				<File
 					RelativePath=".\src\utils\DialogSizer.cpp"
 					>
 				</File>
