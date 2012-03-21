@@ -387,6 +387,14 @@
 				Name="Ebook / UI"
 				>
 				<File
+					RelativePath=".\src\ChmDoc.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\ChmDoc.h"
+					>
+				</File>
+				<File
 					RelativePath=".\src\EbookController.cpp"
 					>
 				</File>

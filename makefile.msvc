@@ -169,7 +169,7 @@ ENGINE_OBJS = \
 	$(OS)\PdfEngine.obj $(OS)\PsEngine.obj \
 	$(OS)\ImagesEngine.obj $(ZIP_OBJS) $(UNRAR_OBJS) \
 	$(OS)\DjVuEngine.obj $(DJVU_OBJS) \
-	$(OS)\ChmEngine.obj $(CHMLIB_OBJS) \
+	$(OS)\ChmEngine.obj $(OS)\ChmDoc.obj $(CHMLIB_OBJS) \
 	$(OS)\EpubEngine.obj
 
 EBOOK_OBJS = \

@@ -109,7 +109,7 @@ static SymGetModuleBase64Proc *         _SymGetModuleBase64;
 static SymFromAddrProc *                _SymFromAddr;
 static SymRefreshModuleListProc *       _SymRefreshModuleList;
 static SymGetLineFromAddr64Proc *       _SymGetLineFromAddr64;
-static BOOL     						gSymInitializeOk = FALSE;
+static BOOL                             gSymInitializeOk = FALSE;
 
 static char *ExceptionNameFromCode(DWORD excCode)
 {

@@ -9,6 +9,8 @@
 #include "TrivialHtmlParser.h"
 #include "HtmlWindow.h"
 #include "WinUtil.h"
+// for GetChmCodepage
+#include "ChmDoc.h"
 
 #define CHM_MT
 #ifdef UNICODE
@@ -409,7 +411,7 @@ static char *ReadString(const Bytes& b, size_t off)
     if (off >= b.size)
         return NULL;
     char *strStart = (char *)b.d + off;
-    char *strEnd = (char *)memchr(strStart, 0, b.size);
+    char *strEnd = (char *)memchr(strStart, 0, b.size - off);
     // didn't find terminating 0 - assume it's corrupted
     if (!strEnd || !*strStart)
         return NULL;
@@ -599,33 +601,6 @@ static bool ParseSystemChmData(chmFile *chmHandle, ChmInfo *chmInfo)
         off += len;
     }
     return true;
-}
-
-#define CP_CHM_DEFAULT  1252
-
-static UINT GetChmCodepage(const TCHAR *fileName)
-{
-    // cf. http://msdn.microsoft.com/en-us/library/bb165625(v=VS.90).aspx
-    static struct {
-        DWORD langId;
-        UINT codepage;
-    } langIdToCodepage[] = {
-        { 1025, 1256 }, { 2052,  936 }, { 1028,  950 }, { 1029, 1250 },
-        { 1032, 1253 }, { 1037, 1255 }, { 1038, 1250 }, { 1041,  932 },
-        { 1042,  949 }, { 1045, 1250 }, { 1049, 1251 }, { 1051, 1250 },
-        { 1060, 1250 }, { 1055, 1254 }
-    };
-
-    DWORD header[6];
-    if (!file::ReadAll(fileName, (char *)header, sizeof(header)))
-        return CP_CHM_DEFAULT;
-    DWORD lang_id = LEtoHl(header[5]);
-
-    for (int i = 0; i < dimof(langIdToCodepage); i++)
-        if (lang_id == langIdToCodepage[i].langId)
-            return langIdToCodepage[i].codepage;
-
-    return CP_CHM_DEFAULT;
 }
 
 // We fake page numbers by doing a depth-first traversal of
