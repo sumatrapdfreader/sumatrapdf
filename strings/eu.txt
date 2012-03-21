@@ -12,7 +12,7 @@ Contributor: Igor G. Olaizola
 Contributor: Xabier Aramendi (azpidatziak@gmail.com) 2011-2012
 
 &About
-Ho&ni buruz...
+&Honi buruz...
 
 &Actual Size\tCtrl+1
 &Oraingo Neurria\tKtrl+1
@@ -21,13 +21,13 @@ Ho&ni buruz...
 &Hautatutako orrialde guztiak
 
 &Back\tAlt+Left Arrow
-&Atzera\tAlt+Ezker Gezia
+A&tzera\tAlt+Ezker Gezia
 
 &Book View\tCtrl+8
 &Liburu Ikuspegia\tKtrl+8
 
 &Close\tCtrl+W
-&Itxi\tKtrl+W
+It&xi\tKtrl+W
 
 &Copy Selection
 &Kopiatu Hautapena
@@ -66,7 +66,7 @@ J&oan orrialdera:
 &Laguntza
 
 &Last Page\tEnd
-&Azken Orrialdea\tAmaiera
+A&zken Orrialdea\tAmaiera
 
 &Magnification:
 &Handipena:
@@ -78,7 +78,7 @@ J&oan orrialdera:
 &Hizki larri-xeheak bereizi
 
 &Next Page\tRight Arrow
-&Hurrengo Orriakdea\tEskuin Gezia
+&Hurrengo Orrialdea\tEskuin Gezia
 
 &No
 &Ez
@@ -111,7 +111,7 @@ Sarhitza
 &Irarkitu...
 
 &Print...\tCtrl+P
-&Irarkitu...\tKtrl+P
+Irarkit&u...\tKtrl+P
 
 &Print... (denied)
 &Irarkitu... (ukatuta)
@@ -129,7 +129,7 @@ G&ogoratu ezarpen hauek agiri bakoitzerako
 &Gorde Honela...
 
 &Save As...\tCtrl+S
-G&orde Honela...\tKtrl+S
+&Gorde Honela...\tKtrl+S
 
 &Settings
 &Ezarpenak
@@ -207,7 +207,7 @@ Book View
 Liburu Ikuspena
 
 Book&marks\tF12
-Gogo&koenak\tF12
+&Gogokoenak\tF12
 
 Bookmark Shortcuts
 Gogoekoenen Lasterbideak
@@ -330,7 +330,7 @@ Error loading %s
 Akatsa %s gertatzerakoan
 
 F&avorites
-Gogo&koenak
+&Gogokoenak
 
 F&orward\tAlt+Right Arrow
 A&urrera\tAlt+Eskuin Gezia
@@ -357,7 +357,7 @@ File:
 Agiria:
 
 Fin&d...\tCtrl+F
-Bi&latu...\tKtrl+F
+&Bilatu...\tKtrl+F
 
 Find
 Bilatu
@@ -375,7 +375,7 @@ Fit &Content\tCtrl+3
 Finkatu &Edukia\tKtrl+3
 
 Fit &Page\tCtrl+0
-Finkatu &Orrialdea\tKtrl+O
+&Finkatu Orrialdea\tKtrl+O
 
 Fit &Width\tCtrl+2
 Finkatu &Zabalera\tKtrl+2
@@ -458,6 +458,9 @@ Hurrengo Orrialdea
 No matches were found
 Ez da emaitzik aurkitu
 
+No result found around line %u in file %s
+Ez da emaitzik aurkitu %u lerro inguran %s agirian
+
 No synchronization file found
 Aldiberetze agiria ez da aurkitu
 
@@ -507,7 +510,7 @@ PDF documents
 PDF agiriak
 
 Pa&ge...\tCtrl+G
-Or&rialdea...\tKtrl+G
+&Orrialdea...\tKtrl+G
 
 Page %s
 %s Orrialdea
@@ -555,7 +558,7 @@ Printing problem.
 Arazoak irarkitzerakoan.
 
 Remember &opened files
-Gogoratu ir&ekitako agiriak
+Gogoratu &irekitako agiriak
 
 Remove from favorites
 Kendu Gogokoenetatik
@@ -688,7 +691,4 @@ idazkia kopiatzen
 
 printing document
 agiria irarkitzen
-
-# Untranslated:
-#No result found around line %u in file %s
 
