@@ -9,13 +9,13 @@
 Lang: eu Basque (Euskara)
 
 Contributor: Igor G. Olaizola
-Contributor: Xabier Aramendi (azpidatziak@gmail.com)
+Contributor: Xabier Aramendi (azpidatziak@gmail.com) 2011-2012
 
 &About
 Ho&ni buruz...
 
 &Actual Size\tCtrl+1
-&Oraingo neurria\tCtrl+1
+&Oraingo Neurria\tKtrl+1
 
 &All selected pages
 &Hautatutako orrialde guztiak
@@ -24,16 +24,16 @@ Ho&ni buruz...
 &Atzera\tAlt+Ezker Gezia
 
 &Book View\tCtrl+8
-&Liburu Ikuspegia\tCtrl+8
+&Liburu Ikuspegia\tKtrl+8
 
 &Close\tCtrl+W
-&Itxi\tCtrl+W
+&Itxi\tKtrl+W
 
 &Copy Selection
 &Kopiatu Hautapena
 
 &Copy Selection\tCtrl+C
-Kopiatu Hautapena\tCtrl+C
+Kopiatu Hautapena\tKtrl+C
 
 &Don't ask me again
 &Ez galdetu berriro
@@ -42,7 +42,7 @@ Kopiatu Hautapena\tCtrl+C
 &Orrialde bakoitiak bakarrik
 
 &Facing\tCtrl+7
-&Bi aldetatik\tCtrl+7
+&Bi Aldeetatik\tKtrl+7
 
 &File
 &Agiria
@@ -51,7 +51,7 @@ Kopiatu Hautapena\tCtrl+C
 &Bilatu hau:
 
 &First Page\tHome
-&Lehen Orrialdea\tHome
+&Lehen Orrialdea\tHasiera
 
 &Fit pages to printable area
 &Zuzendu orrialdeak eremu irarkigarrira
@@ -66,7 +66,7 @@ J&oan orrialdera:
 &Laguntza
 
 &Last Page\tEnd
-&Azken orrialdea\tEnd
+&Azken Orrialdea\tAmaiera
 
 &Magnification:
 &Handipena:
@@ -90,7 +90,7 @@ J&oan orrialdera:
 &Orrialde bikoitiak bakarrik
 
 &Open\tCtrl+O
-&Ireki\tCtrl+O
+&Ireki\tKtrl+O
 
 &Open Document
 &Ireki Agiria
@@ -99,7 +99,10 @@ J&oan orrialdera:
 A&ukerak...
 
 &Password:
-Sar-hitza
+Sarhitza
+
+&Pin Document
+&Pin Agiria
 
 &Previous Page\tLeft Arrow
 &Aurreko Orrialdea\tEzker Gezia
@@ -108,13 +111,13 @@ Sar-hitza
 &Irarkitu...
 
 &Print...\tCtrl+P
-&Irarkitu...\tCtrl+P
+&Irarkitu...\tKtrl+P
 
 &Print... (denied)
 &Irarkitu... (ukatuta)
 
 &Remember the password for this document
-&Gogoratu agiri honetarako sar-hitza
+&Gogoratu agiri honetarako sarhitza
 
 &Remember these settings for each document
 G&ogoratu ezarpen hauek agiri bakoitzerako
@@ -126,7 +129,7 @@ G&ogoratu ezarpen hauek agiri bakoitzerako
 &Gorde Honela...
 
 &Save As...\tCtrl+S
-G&orde Honela...\tCtrl+S
+G&orde Honela...\tKtrl+S
 
 &Settings
 &Ezarpenak
@@ -135,7 +138,7 @@ G&orde Honela...\tCtrl+S
 &Txikitu orrialdeak eremu irarkigarrira (beharrezkoa bada)
 
 &Single Page\tCtrl+6
-&Orrialde Bakarra\tCtrl+6
+&Orrialde Bakarra\tKtrl+6
 
 &Skip this version
 &Ahaztu bertsio hau
@@ -165,13 +168,13 @@ Add Favorite
 Gehitu Gogokoena
 
 Add page %s to favorites
-Gehitu %s orrialdea gogokoenetara
+Gehitu %s Orrialdea Gogokoenetara
 
 Add page %s to favorites with (optional) name:
-Gehitu %s gogokoenetara izenarekin (aukerazkoa):
+Gehitu %s Gogokoenetara Izenarekin (aukerazkoa):
 
 Add to favorites
-Gehitu gogokoenetara
+Gehitu Gogokoenetara
 
 Advanced
 Aurreratua
@@ -180,7 +183,7 @@ All files
 Agiri guztiak
 
 All supported documents
-Sostengatutako agiriguztiak
+Sostengatutako agiri guztiak
 
 Application:
 Aplikazioa:
@@ -234,7 +237,7 @@ Cannot start inverse search command. Please check the command line in the settin
 Ezinezkoa alderantzizko bilaketa komandoa hasi. Mesedez, egiaztatu komando lerroa ezarpenetan.
 
 Change Language
-Aldatu Hizkuntza (Change Language)
+Aldatu Hizkuntza
 
 Check for &Updates
 Egiaztatu E&guneraketak
@@ -246,13 +249,16 @@ Continuous
 Jarraian
 
 Continuous Book View
-Liburu ikuspegi jarraia
+Liburu Ikuspegi Jarraia
 
 Continuous Facing
-Bi Aldetatik Jarraian
+Bi Aldeetatik Jarraian
 
 Contribute Translation
 Lagundu Itzultzen
+
+Copy &Image
+Kopiatu &Irudia
 
 Copy &Link Address
 Kopiatu &Lotura Helbidea
@@ -262,6 +268,9 @@ Kopiatu Ira&dokizuna
 
 Copying text was denied (copying as image only)
 Idazkia kopiatzea eragotzita (kopiatzea irudi bezala bakarrik)
+
+Copyright:
+Copyrighta:
 
 Could not obtain Printer properties
 Ezinezkoa Irarkailu ezaugarriak lortzea
@@ -279,7 +288,7 @@ Current file
 Uneko agiria
 
 Custom &Zoom...\tCtrl+Y
-Egile &Zooma...\tCtrl+Y
+Egile &Zooma...\tKtrl+Y
 
 Default &Layout:
 Berezko &Egitura:
@@ -303,16 +312,16 @@ Download
 Jeitsi
 
 E&xit\tCtrl+Q
-I&rten\tCtrl+Q
+I&rten\tKtrl+Q
 
 EPUB ebooks
 EPUB agiriak
 
 Enter password
-Idatzi sar-hitza
+Idatzi sarhitza
 
 Enter password for %s
-Idatzi %s-rentzako sar-hitza
+Idatzi %s-rentzako sarhitza
 
 Enter the command-line to invoke when you double-click on the PDF document:
 Idatzi deitzeko agindu-lerroa PDF agirian klik-bikoitza egiten duzunean:
@@ -327,16 +336,19 @@ F&orward\tAlt+Right Arrow
 A&urrera\tAlt+Eskuin Gezia
 
 F&ullscreen\tCtrl+Shift+L
-Ikusleiho-osoan\tCtrl+Shift+L
+Ikusleiho-osoan\tKtrl+Shift+L
 
 Facing
-Bi aldetatik
+Bi Aldeetatik
 
 Failed to save a file
 Hutsegitea agiria gordetzerakoan
 
 Favorites
 Gogokoenak
+
+File %s not found
+%s agiria ez da aurkitu
 
 File Size:
 Agiriaren Neurria:
@@ -345,7 +357,7 @@ File:
 Agiria:
 
 Fin&d...\tCtrl+F
-Bi&latu...\tCtrl+F
+Bi&latu...\tKtrl+F
 
 Find
 Bilatu
@@ -360,13 +372,13 @@ Find:
 Bilatu:
 
 Fit &Content\tCtrl+3
-Finkatu &Edukia\tCtrl+3
+Finkatu &Edukia\tKtrl+3
 
 Fit &Page\tCtrl+0
-Finkatu &Orrialdea\tCtrl+O
+Finkatu &Orrialdea\tKtrl+O
 
 Fit &Width\tCtrl+2
-Finkatu &Zabalera\tCtrl+2
+Finkatu &Zabalera\tKtrl+2
 
 Fit Content
 Finkatu Edukia
@@ -382,6 +394,12 @@ Finkatu Zabalera eta Erakutsi Orrialdeak Jarraian
 
 Fit a Single Page
 Finkatu Orrialde Bakar bat
+
+Fonts:
+Hizi-motak:
+
+Formatting the book... %d pages
+Liburua formateatzen... %d orrialde
 
 Found text at page %s
 Bilatu idazkia %s orrialdean
@@ -410,6 +428,9 @@ Irudi agiriak (*.%s)
 KB
 KB
 
+Loading file %s...
+%s agiria gertatzen...
+
 MB
 MB
 
@@ -420,7 +441,7 @@ Make SumatraPDF my default PDF reader
 Egin SumatraPDF nire berezko PDF irakurlea
 
 Match Case
-Hizki handiak edo txikiak bereizi
+Hizki Larriak edo Xeheak Bereizi
 
 Mobi documents
 Mobi agiriak
@@ -462,7 +483,7 @@ Open in &Foxit Reader
 Ireki &Foxit Readerren
 
 Open in Microsoft XPS-Viewer
-Ireki Microsoft XPS-Viewern
+Ireki Microsoft XPS-Ikusgailuan
 
 Open in PDF-XChange
 Ireki PDF-XChangen
@@ -471,7 +492,7 @@ P&roperties
 Eza&ugarriak
 
 P&roperties\tCtrl+D
-Ezaugarriak\tCtrl+D
+Ezaugarriak\tKtrl+D
 
 PDF Document
 PDF Agiria
@@ -486,7 +507,7 @@ PDF documents
 PDF agiriak
 
 Pa&ge...\tCtrl+G
-Or&rialdea...\tCtrl+G
+Or&rialdea...\tKtrl+G
 
 Page %s
 %s Orrialdea
@@ -510,7 +531,7 @@ Postscript documents
 Postscript agirak
 
 Pr&esentation\tCtrl+L
-Aurk&ezpena\tCtrl+L
+Aurk&ezpena\tKtrl+L
 
 Previous Page
 Aurreko Orrialdea
@@ -537,22 +558,25 @@ Remember &opened files
 Gogoratu ir&ekitako agiriak
 
 Remove from favorites
-Kendu gogokoenetatik
+Kendu Gogokoenetatik
 
 Remove page %s from favorites
 Kendu %s orrialdea gogokoenetatik
 
+Replace document &colors with Windows color scheme
+Ordeztu agiri &margoak Windowsen margo eskemarekin
+
 Rotate &Left\tCtrl+Shift+-
-Itzulikatu E&zkerrerantz\tCtrl+Shift+-
+Itzulikatu E&zkerrerantz\tKtrl+Shift+-
 
 Rotate &Right\tCtrl+Shift++
-Itzulikatu E&skuinera\tCtrl+Shift++
+Itzulikatu E&skuinera\tKtrl+Shift++
 
 Save As
 Gorde Honela
 
 Save S&hortcut...\tCtrl+Shift+S
-Gorde &Lasterbidea...\tCtrl+Shift+S
+Gorde &Lasterbidea...\tKtrl+Shift+S
 
 Searching %d of %d...
 %d-tik %d bilatzen...
@@ -561,10 +585,10 @@ Select &All
 Hautatu G&uztiak
 
 Select &All\tCtrl+A
-Hautatu &Guztiak\tCtrl+A
+Hautatu &Guztiak\tKtrl+A
 
 Select content with Ctrl+left mouse button
-Hautatu edukia Ctrl+ezker sagu botoiarekin
+Hautatu edukia Ktrl+ezker sagu botoiarekin
 
 Send by &E-mail...
 Post@z bidali...
@@ -576,7 +600,7 @@ Show &Toolbar
 Erakutsi &Tresnabarra
 
 Show &pages continuously
-Erakutsi orrialdeak &jarraian
+Erakutsi Orrialdeak &Jarraian
 
 Show Favorites
 Erakutsi Gogokoenak
@@ -588,7 +612,7 @@ Show the &bookmarks sidebar when available
 Erakutsi &lastermarka albobarra eskuragarri dagoenean
 
 Single Page
-Orrialde bakarra
+Orrialde Bakarra
 
 Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 Barkatu, hau ez litzake gertatu behar!\n\nMesedez sakatu 'ezeztatu', matxura hau eragin duena zuzentzen laguntzea nahi badiguzu.
@@ -666,13 +690,5 @@ printing document
 agiria irarkitzen
 
 # Untranslated:
-#&Pin Document
-#Copy &Image
-#Copyright:
-#File %s not found
-#Fonts:
-#Formatting the book... %d pages
-#Loading file %s...
 #No result found around line %u in file %s
-#Replace document &colors with Windows color scheme
 
