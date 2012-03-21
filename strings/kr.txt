@@ -335,7 +335,7 @@ F&avorites
 책갈피(&A)
 
 F&orward\tAlt+Right Arrow
-앞으로(&O)\tAlt+Right Arrow
+앞으로(&O)\tAlt+오른쪽 방향키
 
 F&ullscreen\tCtrl+Shift+L
 전체 화면(&U)\tCtrl+Shift+L
@@ -400,6 +400,9 @@ Fit a Single Page
 Fonts:
 글꼴:
 
+Formatting the book... %d pages
+책 포맷 중... %d 페이지
+
 Found text at page %s
 %s 페이지에서 텍스트를 찾았습니다.
 
@@ -426,6 +429,9 @@ Image files (*.%s)
 
 KB
 KB
+
+Loading file %s...
+%s 파일 불러오는 중...
 
 MB
 MB
@@ -578,7 +584,7 @@ Save S&hortcut...\tCtrl+Shift+S
 바로가기 저장(&H)...\tCtrl+Shift+S
 
 Searching %d of %d...
-%d / %d 를 검색 중...
+%d / %d (을)를 검색 중...
 
 Select &All
 모두 선택(&A)
@@ -687,8 +693,4 @@ copying text
 
 printing document
 문서 인쇄 중
-
-# Untranslated:
-#Formatting the book... %d pages
-#Loading file %s...
 
