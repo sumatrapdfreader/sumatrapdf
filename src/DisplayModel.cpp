@@ -1366,7 +1366,7 @@ float DisplayModel::NextZoomStep(float towardsLevel)
             widthZoom = min(widthZoom, pageWidthZoom);
         }
     }
-    CrashIf(pageZoom == (float)HUGE_VAL || widthZoom == (float)HUGE_VAL);
+    CrashIf(!AsChmEngine() && (pageZoom == (float)HUGE_VAL || widthZoom == (float)HUGE_VAL));
     pageZoom *= 100 / dpiFactor; widthZoom *= 100 / dpiFactor;
 
     float newZoom = towardsLevel;
