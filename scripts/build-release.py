@@ -20,6 +20,7 @@ upload               = test_for_flag(args, "-upload")
 upload_tmp           = test_for_flag(args, "-uploadtmp")
 testing              = test_for_flag(args, "-test") or test_for_flag(args, "-testing")
 build_test_installer = test_for_flag(args, "-test-installer") or test_for_flag(args, "-testinst") or test_for_flag(args, "-testinstaller")
+build_rel_installer  = test_for_flag(args, "-testrelinst")
 build_prerelease     = test_for_flag(args, "-prerelease")
 svn_revision         = test_for_flag(args, "-svn-revision", True)
 target_platform      = test_for_flag(args, "-platform", True)
@@ -139,7 +140,7 @@ def main():
   if target_platform == "X64":
     obj_dir += "64"
 
-  if not testing and not build_test_installer:
+  if not testing and not build_test_installer and not build_rel_installer:
     shutil.rmtree(obj_dir, ignore_errors=True)
 
   config = "CFG=rel"
@@ -155,7 +156,7 @@ def main():
   build_installer_data(obj_dir)
   run_cmd_throw("nmake", "-f", "makefile.msvc", "Installer", config, platform, extcflags)
 
-  if build_test_installer:
+  if build_test_installer or build_rel_installer:
     sys.exit(0)
 
   exe = os.path.join(obj_dir, "SumatraPDF.exe")
