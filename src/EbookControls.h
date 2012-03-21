@@ -38,7 +38,7 @@ public:
     }
     virtual ~PageControl() { }
 
-    void      SetPage(PageData *newPage) { page = newPage; RequestRepaint(this); }
+    void      SetPage(PageData *newPage);
     PageData* GetPage() const { return page; }
 
     Size GetDrawableSize();

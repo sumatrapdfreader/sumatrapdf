@@ -6,6 +6,8 @@
 #include "PageLayout.h"
 #include "SvgPath.h"
 
+#include "DebugLog.h"
+
 static Style *   styleMainWnd = NULL;
 static Style *   stylePage = NULL;
 static Style *   styleStatus = NULL;
@@ -21,6 +23,12 @@ static HCURSOR   gCursorHand = NULL;
 static Rect RectForCircle(int x, int y, int r)
 {
     return Rect(x - r, y - r, r * 2, r * 2);
+}
+void PageControl::SetPage(PageData *newPage)
+{
+    lf("PageControl::SetPage(0x%x)", (int)newPage);
+    page = newPage;
+    RequestRepaint(this);
 }
 
 // This is just to test mouse move handling

@@ -212,8 +212,8 @@ void EbookController::StopLayoutThread(bool forceTerminate)
 
 void EbookController::CloseCurrentDocument()
 {
-    StopLayoutThread(true);
     ctrls->page->SetPage(NULL);
+    StopLayoutThread(true);
     DeletePageShown();
     DeletePages(&pagesFromBeginning);
     DeletePages(&pagesFromPage);
@@ -449,8 +449,7 @@ PageData *EbookController::PreserveTempPageShown()
 
 void EbookController::TriggerLayout()
 {
-    Size s = ctrls->page->GetDrawableSize();
-    int dx = s.Width; int dy = s.Height;
+    Size s = ctrls->page->GetDrawableSize();    int dx = s.Width; int dy = s.Height;
     if ((0 == dx) || (0 == dy)) {
         // we haven't been sized yet
         return;
@@ -639,8 +638,8 @@ void EbookController::AdvancePage(int dist)
 
 void EbookController::SetHtml(const char *newHtml)
 {
-    startReparseIdx = -1;
     CloseCurrentDocument();
+    startReparseIdx = -1;
     html = newHtml;
     TriggerLayout();
 }
