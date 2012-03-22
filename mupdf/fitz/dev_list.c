@@ -658,6 +658,9 @@ fz_run_display_list(fz_display_list *list, fz_device *dev, fz_matrix top_ctm, fz
 visible:
 		ctm = fz_concat(node->ctm, top_ctm);
 
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1848 */
+		fz_try(dev->ctx) {
+
 		switch (node->cmd)
 		{
 		case FZ_CMD_FILL_PATH:
@@ -745,6 +748,13 @@ visible:
 			tiled--;
 			fz_end_tile(dev);
 			break;
+		}
+
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1848 */
+		}
+		fz_catch(dev->ctx)
+		{
+			fz_warn(dev->ctx, "continuing despite exception");
 		}
 	}
 }
