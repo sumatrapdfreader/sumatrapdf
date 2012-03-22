@@ -231,7 +231,7 @@ static bool UnpackLibSymbols(const TCHAR *pdbZipPath, const TCHAR *symDir)
         LogFailedUnzip(pdbZipPath, symDir, "libmupdf.pdb");
         return false;
     }
-    if (!archive.UnzipFile(_T("SumatraPDF-no-MuPDF.pdb"), symDir) {
+    if (!archive.UnzipFile(_T("SumatraPDF-no-MuPDF.pdb"), symDir)) {
         LogFailedUnzip(pdbZipPath, symDir, "SumatraPDF-no-MuPDF.pdb");
         return false;
     }
