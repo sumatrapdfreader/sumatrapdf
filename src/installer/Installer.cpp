@@ -308,10 +308,14 @@ bool RegisterServerDLL(TCHAR *dllPath, bool unregister=false)
     HMODULE lib = LoadLibrary(dllPath);
     if (lib) {
         typedef HRESULT (WINAPI *DllInitProc)(VOID);
-        DllInitProc CallDLL = (DllInitProc)GetProcAddress(lib, unregister ? "DllUnregisterServer" : "DllRegisterServer");
+        const char *func = unregister ? "DllUnregisterServer" : "DllRegisterServer";
+        DllInitProc CallDLL = (DllInitProc)GetProcAddress(lib, func);
         if (CallDLL)
             ok = SUCCEEDED(CallDLL());
-        FreeLibrary(lib);
+        //TODO: this is a work-around for the crash-on-exit bug with ucrt caused
+        //by trying to call C++ static destructrors in libmupdf.dll after it
+        // has been unloaded. So we don't unload
+        //FreeLibrary(lib);
     }
 
     if (_SetDllDirectory)

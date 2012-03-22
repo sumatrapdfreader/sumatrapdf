@@ -6,7 +6,7 @@
 #endif
 #include <windows.h>
 
-#define NOLOG 0
+#define NOLOG 1
 #include "ucrt_log.h"
 
 extern void OnExit();
