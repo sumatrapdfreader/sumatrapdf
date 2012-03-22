@@ -405,6 +405,9 @@ Visualizza una pagina singola
 Fonts:
 Font:
 
+Formatting the book... %d pages
+Formattazione del libro ... %d pagine
+
 Found text at page %s
 Testo trovato a pagina %s
 
@@ -431,6 +434,9 @@ File immagine (*.%s)
 
 KB
 KB
+
+Loading file %s...
+Caricamento file %s...
 
 MB
 MB
@@ -692,8 +698,4 @@ Copia del testo...
 
 printing document
 Stampa documento...
-
-# Untranslated:
-#Formatting the book... %d pages
-#Loading file %s...
 
