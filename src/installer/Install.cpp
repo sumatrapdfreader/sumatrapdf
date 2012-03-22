@@ -44,9 +44,10 @@ static int GetInstallationStepCount()
      * - and one step afterwards.
      */
     int count = 2;
-    for (int i = 0; NULL != gPayloadData[i].filepath; i++)
+    for (int i = 0; NULL != gPayloadData[i].filepath; i++) {
         if (gPayloadData[i].install)
             count++;
+    }
     return count;
 }
 
@@ -177,10 +178,12 @@ static bool WriteUninstallerRegistryInfo(HKEY hkey)
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_ICON, installedExePath);
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_NAME, TAPP);
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_VERSION, CURR_VERSION_STR);
-    // Windows XP doesn't allow to view the version number at a glance, so include it in the DisplayName
+    // Windows XP doesn't allow to view the version number at a glance,
+    // so include it in the DisplayName
     if (!WindowsVerVistaOrGreater())
         success &= WriteRegStr(hkey, REG_PATH_UNINST, DISPLAY_NAME, TAPP _T(" ") CURR_VERSION_STR);
-    success &= WriteRegDWORD(hkey, REG_PATH_UNINST, ESTIMATED_SIZE, GetDirSize(gGlobalData.installDir) / 1024);
+    DWORD size = GetDirSize(gGlobalData.installDir) / 1024;
+    success &= WriteRegDWORD(hkey, REG_PATH_UNINST, ESTIMATED_SIZE, size);
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, INSTALL_DATE, installDate);
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, INSTALL_LOCATION, installDir);
     success &= WriteRegDWORD(hkey, REG_PATH_UNINST, NO_MODIFY, 1);
@@ -322,8 +325,7 @@ static bool IsCheckboxChecked(HWND hwnd)
 
 static void OnButtonInstall()
 {
-//    if (gGlobalData.crash)
-//        CrashAlwaysIf(true);
+    CrashAlwaysIf(gForceCrash);
 
     if (gShowOptions)
         OnButtonOptions();

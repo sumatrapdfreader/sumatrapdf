@@ -111,8 +111,6 @@ struct GlobalData {
     TCHAR * firstError;
     HANDLE  hThread;
     bool    success;
-    // only for testing 
-    bool    crash;
 };
 
 struct PayloadInfo {
@@ -130,6 +128,8 @@ extern HWND         gHwndButtonInstUninst;
 extern HFONT        gFontDefault;
 extern TCHAR *      gMsgError;
 extern bool         gShowOptions;
+extern bool         gForceCrash;
+extern bool         gReproBug;
 
 extern Gdiplus::Color COLOR_MSG_WELCOME;
 extern Gdiplus::Color COLOR_MSG_OK;

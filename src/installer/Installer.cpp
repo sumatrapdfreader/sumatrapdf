@@ -39,18 +39,20 @@ using namespace Gdiplus;
 #define DRAW_TEXT_SHADOW 1
 #define DRAW_MSG_TEXT_SHADOW 0
 
-       HINSTANCE        ghinst;
-       HWND             gHwndFrame = NULL;
-       HWND             gHwndButtonExit = NULL;
-       HWND             gHwndButtonInstUninst = NULL;
-       HFONT            gFontDefault;
-       bool             gShowOptions = false;
-static StrVec           gProcessesToClose;
+HINSTANCE       ghinst;
+HWND            gHwndFrame = NULL;
+HWND            gHwndButtonExit = NULL;
+HWND            gHwndButtonInstUninst = NULL;
+HFONT           gFontDefault;
+bool            gShowOptions = false;
+bool            gForceCrash = false;
+bool            gReproBug = false;
+TCHAR *         gMsgError = NULL;
 
+static StrVec           gProcessesToClose;
 static float            gUiDPIFactor = 1.0f;
 
 static ScopedMem<TCHAR> gMsg;
-       TCHAR *          gMsgError = NULL;
 static Color            gMsgColor;
 
 Color gCol1(196, 64, 50); Color gCol1Shadow(134, 48, 39);
@@ -101,7 +103,6 @@ GlobalData gGlobalData = {
     NULL,  /* TCHAR *firstError */
     NULL,  /* HANDLE hThread */
     false, /* bool success */
-    false, /* bool crash */
 };
 
 void NotifyFailed(TCHAR *msg)
@@ -926,7 +927,9 @@ static void ParseCommandLine(TCHAR *cmdLine)
         else if (is_arg("crash")) {
             // will induce crash when 'Install' button is pressed
             // for testing crash handling
-            gGlobalData.crash = true;
+            gForceCrash = true;
+        } else if (is_arg("bug")) {
+            gReproBug = true;
         }
 #endif
     }
@@ -999,7 +1002,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 #endif
 
 #ifdef ENABLE_CRASH_TESTING
-    if (gGlobalData.crash) {
+    if (gReproBug) {
         ScopedMem<TCHAR> path(GetExePath());
         path.Set(path::GetDir(path));
         path.Set(path::Join(path, _T("PdfPreview.dll")));
