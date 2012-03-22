@@ -338,6 +338,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     gRenderCache.colorRange[0] = i.colorRange[0];
     gRenderCache.colorRange[1] = i.colorRange[1];
     DebugGdiPlusDevice(gUseGdiRenderer);
+    DebugAlternateChmEngine(!gUseEbookUI);
 
     if (i.inverseSearchCmdLine) {
         str::ReplacePtr(&gGlobalPrefs.inverseSearchCmdLine, i.inverseSearchCmdLine);

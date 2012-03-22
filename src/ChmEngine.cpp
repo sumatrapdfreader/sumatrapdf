@@ -20,6 +20,15 @@
 #include <inttypes.h>
 #include <chm_lib.h>
 
+// when set, always returns false from ChmEngine::IsSupportedFile
+// so that an alternative implementation can be used
+static bool gDebugAlternateChmEngine = false;
+
+void DebugAlternateChmEngine(bool enable)
+{
+    gDebugAlternateChmEngine = enable;
+}
+
 STATIC_ASSERT(1 == sizeof(uint8_t), uint8_is_1_byte);
 STATIC_ASSERT(2 == sizeof(uint16_t), uint16_is_2_bytes);
 STATIC_ASSERT(4 == sizeof(uint32_t), uint32_is_4_bytes);
@@ -631,7 +640,7 @@ static int CreatePageNoForURL(StrVec& pages, const TCHAR *url)
 <li>
   ... siblings ...
 */
-ChmTocItem *TocItemFromLi(StrVec& pages, HtmlElement *el, UINT cp)
+static ChmTocItem *TocItemFromLi(StrVec& pages, HtmlElement *el, UINT cp)
 {
     assert(str::Eq("li", el->name));
     el = el->GetChildByName("object");
@@ -668,7 +677,7 @@ ChmTocItem *TocItemFromLi(StrVec& pages, HtmlElement *el, UINT cp)
     return new ChmTocItem(name.StealData(), pageNo, local.StealData());
 }
 
-ChmTocItem *BuildChmToc(StrVec& pages, HtmlElement *list, UINT cp, int& idCounter, bool topLevel)
+static ChmTocItem *BuildChmToc(StrVec& pages, HtmlElement *list, UINT cp, int& idCounter, bool topLevel)
 {
     assert(str::Eq("ul", list->name));
     ChmTocItem *node = NULL;
@@ -804,6 +813,9 @@ unsigned char *ChmEngineImpl::GetFileData(size_t *cbCount)
 
 bool ChmEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
 {
+    if (gDebugAlternateChmEngine)
+        return false;
+
     if (sniff)
         return file::StartsWith(fileName, "ITSF");
 

@@ -2447,6 +2447,7 @@ static void OnMenuSaveAs(WindowInfo& win)
     case Engine_Epub:   fileFilter.Append(_TR("EPUB ebooks")); break;
     case Engine_Fb2:    fileFilter.Append(_T("FictionBooks")); break;
     case Engine_Mobi:   fileFilter.Append(_TR("Mobi documents")); break;
+    case Engine_Chm2:   fileFilter.Append(_TR("CHM documents")); break;
     default:            fileFilter.Append(_TR("PDF documents")); break;
     }
     fileFilter.AppendFmt(_T("\1*%s\1"), defExt);
@@ -4522,6 +4523,7 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
 
         case IDM_DEBUG_EBOOK_UI:
             gUseEbookUI = !gUseEbookUI;
+            DebugAlternateChmEngine(!gUseEbookUI);
             break;
 
         case IDM_DEBUG_CRASH_ME:

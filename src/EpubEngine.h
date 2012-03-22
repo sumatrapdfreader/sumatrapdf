@@ -1,4 +1,4 @@
-/* Copyright 2006-2012 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
 #ifndef EpubEngine_h
@@ -23,6 +23,12 @@ class MobiEngine : public virtual BaseEngine {
 public:
     static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
     static MobiEngine *CreateFromFile(const TCHAR *fileName);
+};
+
+class Chm2Engine : public virtual BaseEngine {
+public:
+    static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
+    static Chm2Engine *CreateFromFile(const TCHAR *fileName);
 };
 
 #endif

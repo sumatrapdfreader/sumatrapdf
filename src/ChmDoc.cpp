@@ -4,12 +4,18 @@
 #include "ChmDoc.h"
 #include "StrUtil.h"
 #include "FileUtil.h"
+#include "TrivialHtmlParser.h"
 
 #define CHM_MT
 #ifdef UNICODE
 #define PPC_BSTR
 #endif
 #include <chm_lib.h>
+
+ChmDoc::~ChmDoc()
+{
+    chm_close(chmHandle);
+}
 
 bool ChmDoc::HasData(const char *fileName)
 {
@@ -56,7 +62,8 @@ unsigned char *ChmDoc::GetData(const char *fileName, size_t *lenOut)
         return NULL;
     data[len] = '\0';
 
-    *lenOut = len;
+    if (lenOut)
+        *lenOut = len;
     return data.StealData();
 }
 
@@ -70,9 +77,6 @@ static char *GetCharZ(const unsigned char *data, size_t len, size_t off)
     if (off >= len)
         return NULL;
     const char *str = (char *)data + off;
-    // assume a string is corrupted if it's missing a terminating 0
-    if (!memchr(str, 0, len - off))
-        return NULL;
     if (str::IsEmpty(str))
         return NULL;
     return str::Dup(str);
@@ -232,6 +236,125 @@ TCHAR *ChmDoc::GetProperty(const char *name)
         str::NormalizeWS(result);
     }
     return result.StealData();
+}
+
+char *ChmDoc::GetHomepage()
+{
+    return (char *)GetData(homePath, NULL);
+}
+
+char *ChmDoc::ToUtf8(const unsigned char *text)
+{
+    const char *s = (char *)text;
+    if (str::StartsWith(s, "\xEF\xBB\xBF"))
+        return str::Dup(s + 3);
+    if (CP_UTF8 == codepage)
+        return str::Dup(s);
+    return str::ToMultiByte(s, codepage, CP_UTF8);
+}
+
+bool ChmDoc::HasToc()
+{
+    return tocPath != NULL;
+}
+
+static bool VisitChmTocItem(ChmTocVisitor *visitor, HtmlElement *el, UINT cp, int level)
+{
+    assert(str::Eq("li", el->name));
+    el = el->GetChildByName("object");
+    if (!el)
+        return false;
+
+    ScopedMem<TCHAR> name, local;
+    for (el = el->GetChildByName("param"); el; el = el->next) {
+        if (!str::Eq("param", el->name))
+            continue;
+        ScopedMem<TCHAR> attrName(el->GetAttribute("name"));
+        ScopedMem<TCHAR> attrVal(el->GetAttribute("value"));
+        if (!attrName || !attrVal)
+            /* ignore incomplete/unneeded <param> */;
+        else if (str::EqI(attrName, _T("Name"))) {
+#ifdef UNICODE
+            if (cp != CP_CHM_DEFAULT) {
+                ScopedMem<char> bytes(str::conv::ToCodePage(attrVal, CP_CHM_DEFAULT));
+                attrVal.Set(str::conv::FromCodePage(bytes, cp));
+            }
+#endif
+            name.Set(attrVal.StealData());
+        }
+        else if (str::EqI(attrName, _T("Local")))
+            local.Set(attrVal.StealData());
+    }
+    if (!name)
+        return false;
+    // remove the ITS protocol and any filename references from the URLs
+    if (local && str::Find(local, _T("::/")))
+        local.Set(str::Dup(str::Find(local, _T("::/")) + 3));
+
+    visitor->visit(name, local, level);
+    return true;
+}
+
+static void WalkChmToc(ChmTocVisitor *visitor, HtmlElement *list, UINT cp, int level=1)
+{
+    assert(str::Eq("ul", list->name));
+
+    // some broken ToCs wrap every <li> into its own <ul>
+    for (; list && str::Eq(list->name, "ul"); list = list->next) {
+        for (HtmlElement *el = list->down; el; el = el->next) {
+            if (!str::Eq(el->name, "li"))
+                continue; // ignore unexpected elements
+            bool valid = VisitChmTocItem(visitor, el, cp, level);
+            if (!valid)
+                continue; // skip incomplete elements and all their children
+
+            HtmlElement *nested = el->GetChildByName("ul");
+            // some broken ToCs have the <ul> follow right *after* a <li>
+            if (!nested && el->next && str::Eq(el->next->name, "ul"))
+                nested = el->next;
+            if (nested)
+                WalkChmToc(visitor, nested, cp, level + 1);
+        }
+    }
+}
+
+bool ChmDoc::ParseToc(ChmTocVisitor *visitor)
+{
+    if (!tocPath)
+        return false;
+    ScopedMem<unsigned char> htmlData(GetData(tocPath, NULL));
+    const char *html = (char *)htmlData.Get();
+    if (!html)
+        return false;
+
+    HtmlParser p;
+    UINT cp = codepage;
+    // detect UTF-8 content by BOM
+    if (str::StartsWith(html, "\xEF\xBB\xBF")) {
+        html += 3;
+        cp = CP_UTF8;
+    }
+    // enforce the default codepage, so that pre-encoded text and
+    // entities are in the same codepage and VisitChmTocItem yields
+    // consistent results
+    HtmlElement *el = p.Parse(html, CP_CHM_DEFAULT);
+    if (!el)
+        return false;
+    el = p.FindElementByName("body");
+    // since <body> is optional, also continue without one
+    el = p.FindElementByName("ul", el);
+    if (!el)
+        return false;
+    WalkChmToc(visitor, el, cp);
+    return true;
+}
+
+bool ChmDoc::IsSupportedFile(const TCHAR *fileName, bool sniff)
+{
+    if (sniff)
+        return file::StartsWith(fileName, "ITSF");
+
+    return str::EndsWithI(fileName, _T(".chm"));
 }
 
 ChmDoc *ChmDoc::CreateFromFile(const TCHAR *fileName)

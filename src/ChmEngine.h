@@ -42,4 +42,6 @@ public:
     static ChmEngine *CreateFromFile(const TCHAR *fileName);
 };
 
+void DebugAlternateChmEngine(bool enable);
+
 #endif

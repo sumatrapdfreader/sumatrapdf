@@ -193,7 +193,7 @@ DisplayModel::DisplayModel(DisplayModelCallback *cb)
     _displayMode = DM_AUTOMATIC;
     presDisplayMode = DM_AUTOMATIC;
     presZoomVirtual = INVALID_ZOOM;
-    _rotation = INVALID_ROTATION;
+    _rotation = 0;
     _zoomVirtual = INVALID_ZOOM;
     padding = &gPagePadding;
     presentationMode = false;

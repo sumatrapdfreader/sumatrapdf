@@ -300,7 +300,7 @@ int main(int argc, char **argv)
     CmdLineParser argList(GetCommandLine());
     if (argList.Count() < 2) {
 Usage:
-        ErrOut("%s <filename> [-pwd <password>] [-full] [-render <path-%%d.bmp>]\n",
+        ErrOut("%s <filename> [-pwd <password>][-full][-alt][-render <path-%%d.tga>]\n",
             path::GetBaseName(argList.At(0)));
         return 0;
     }
@@ -322,6 +322,8 @@ Usage:
     bool fullDump = false;
     TCHAR *password = NULL;
     TCHAR *renderPath = NULL;
+    bool useAlternateHandlers = false;
+
     for (size_t i = 2; i < argList.Count(); i++) {
         if (str::Eq(argList.At(i), _T("-full")))
             fullDump = true;
@@ -329,9 +331,15 @@ Usage:
             password = argList.At(++i);
         else if (str::Eq(argList.At(i), _T("-render")) && i + 1 < argList.Count())
             renderPath = argList.At(++i);
+        else if (str::Eq(argList.At(i), _T("-alt")))
+            useAlternateHandlers = true;
         else
             goto Usage;
     }
+
+    // optionally use GDI+ rendering for PDF/XPS and the original ChmEngine for CHM
+    DebugGdiPlusDevice(useAlternateHandlers);
+    DebugAlternateChmEngine(!useAlternateHandlers);
 
     ScopedGdiPlus gdiPlus;
     EngineType engineType;

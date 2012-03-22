@@ -9,6 +9,11 @@
 
 #define CP_CHM_DEFAULT 1252
 
+class ChmTocVisitor {
+public:
+    virtual void visit(const TCHAR *name, const TCHAR *url, int level) = 0;
+};
+
 class ChmDoc {
     struct chmFile *chmHandle;
 
@@ -27,11 +32,19 @@ class ChmDoc {
 
 public:
     ChmDoc() : codepage(CP_CHM_DEFAULT) { }
+    ~ChmDoc();
 
     bool HasData(const char *fileName);
     unsigned char *GetData(const char *fileName, size_t *lenOut);
     TCHAR *GetProperty(const char *name);
 
+    char *GetHomepage();
+    char *ToUtf8(const unsigned char *text);
+
+    bool HasToc();
+    bool ParseToc(ChmTocVisitor *visitor);
+
+    static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
     static ChmDoc *CreateFromFile(const TCHAR *fileName);
 };
 

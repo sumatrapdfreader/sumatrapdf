@@ -19,6 +19,7 @@ enum EngineType {
     Engine_Epub,
     Engine_Fb2,
     Engine_Mobi,
+    Engine_Chm2,
 };
 
 #include "BaseEngine.h"
@@ -72,6 +73,9 @@ RetrySniffing:
             engineType = Engine_Fb2;
         } else if (MobiEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_Mobi) {
             engine = MobiEngine::CreateFromFile(filePath);
+            engineType = Engine_Mobi;
+        } else if (Chm2Engine::IsSupportedFile(filePath, sniff) && engineType != Engine_Chm2) {
+            engine = Chm2Engine::CreateFromFile(filePath);
             engineType = Engine_Mobi;
 #endif
         }

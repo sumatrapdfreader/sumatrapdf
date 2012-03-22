@@ -12,7 +12,6 @@
 // #define DRAW_PAGE_SHADOWS
 
 #define INVALID_PAGE_NO     -1
-#define INVALID_ROTATION    -1
 
 extern bool gPredictiveRender;
 

@@ -412,6 +412,7 @@ static LRESULT OnCommand(MobiWindow *win, UINT msg, WPARAM wParam, LPARAM lParam
         case IDM_DEBUG_EBOOK_UI:
             gUseEbookUI = !gUseEbookUI;
             win::menu::SetChecked(GetMenu(win->hwndFrame), IDM_DEBUG_EBOOK_UI, !gUseEbookUI);
+            DebugAlternateChmEngine(!gUseEbookUI);
             break;
 #endif
 

@@ -16,12 +16,13 @@
 #include "HtmlPullParser.h"
 #include "PageLayout.h"
 #include "MobiDoc.h"
+#include "ChmDoc.h"
 
 // disable warning C4250 which is wrongly issued due to a compiler bug; cf.
 // http://connect.microsoft.com/VisualStudio/feedback/details/101259/disable-warning-c4250-class1-inherits-class2-member-via-dominance-when-weak-member-is-a-pure-virtual-function
 #pragma warning( disable: 4250 ) /* 'class1' : inherits 'class2::member' via dominance */
 
-/* common classes for EPUB, FictionBook2 and Mobi engines */
+/* common classes for EPUB, FictionBook2, Mobi and CHM engines */
 
 namespace str {
     namespace conv {
@@ -469,11 +470,7 @@ struct ImageData2 {
     size_t  idx; // document specific index at which to find this image
 };
 
-class EpubEngineImpl;
-
 class EpubDoc {
-    friend EpubEngineImpl;
-
     ZipFile zip;
     str::Str<char> htmlData;
     Vec<ImageData2> images;
@@ -541,6 +538,24 @@ public:
             return VerifyEpub(ZipFile(fileName));
         }
         return str::EndsWithI(fileName, _T(".epub"));
+    }
+
+    static EpubDoc *CreateFromFile(const TCHAR *fileName) {
+        EpubDoc *doc = new EpubDoc(fileName);
+        if (!doc || !doc->Load()) {
+            delete doc;
+            return NULL;
+        }
+        return doc;
+    }
+
+    static EpubDoc *CreateFromStream(IStream *stream) {
+        EpubDoc *doc = new EpubDoc(stream);
+        if (!doc || !doc->Load()) {
+            delete doc;
+            return NULL;
+        }
+        return doc;
     }
 };
 
@@ -799,19 +814,19 @@ protected:
 bool EpubEngineImpl::Load(const TCHAR *fileName)
 {
     this->fileName = str::Dup(fileName);
-    doc = new EpubDoc(fileName);
+    doc = EpubDoc::CreateFromFile(fileName);
     return FinishLoading();
 }
 
 bool EpubEngineImpl::Load(IStream *stream)
 {
-    doc = new EpubDoc(stream);
+    doc = EpubDoc::CreateFromStream(stream);
     return FinishLoading();
 }
 
 bool EpubEngineImpl::FinishLoading()
 {
-    if (!doc || !doc->Load())
+    if (!doc)
         return false;
 
     LayoutInfo li;
@@ -869,6 +884,7 @@ DocTocItem *EpubEngineImpl::BuildTocTree(HtmlPullParser& parser, int& idCounter)
                 itemSrc.Set(NULL);
                 EbookTocItem *item = new EbookTocItem(itemText.StealData(), dest);
                 item->id = ++idCounter;
+                item->open = level <= 1;
                 AppendTocItem(root, item, level);
             }
             if (tok->IsStartTag())
@@ -938,11 +954,7 @@ EpubEngine *EpubEngine::CreateFromStream(IStream *stream)
 
 /* FictionBook2 loading code */
 
-class Fb2EngineImpl;
-
 class Fb2Doc {
-    friend Fb2EngineImpl;
-
     ScopedMem<TCHAR> fileName;
     str::Str<char> xmlData;
     Vec<ImageData2> images;
@@ -982,6 +994,15 @@ public:
     static bool IsSupportedFile(const TCHAR *fileName, bool sniff) {
         return str::EndsWithI(fileName, _T(".fb2")) ||
                str::EndsWithI(fileName, _T(".fb2.zip"));
+    }
+
+    static Fb2Doc *CreateFromFile(const TCHAR *fileName) {
+        Fb2Doc *doc = new Fb2Doc(fileName);
+        if (!doc || !doc->Load()) {
+            delete doc;
+            return NULL;
+        }
+        return doc;
     }
 };
 
@@ -1242,8 +1263,8 @@ bool Fb2EngineImpl::Load(const TCHAR *fileName)
 {
     this->fileName = str::Dup(fileName);
 
-    doc = new Fb2Doc(fileName);
-    if (!doc || !doc->Load())
+    doc = Fb2Doc::CreateFromFile(fileName);
+    if (!doc)
         return false;
 
     LayoutInfo li;
@@ -1444,6 +1465,245 @@ bool MobiEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
 MobiEngine *MobiEngine::CreateFromFile(const TCHAR *fileName)
 {
     MobiEngineImpl *engine = new MobiEngineImpl();
+    if (!engine->Load(fileName)) {
+        delete engine;
+        return NULL;
+    }
+    return engine;
+}
+
+/* formatting extensions for CHM */
+
+class ChmDataCache {
+    ChmDoc *doc; // owned by creator
+    ScopedMem<char> html;
+
+public:
+    ChmDataCache(ChmDoc *doc, char *html) : doc(doc), html(html) { }
+
+    const char *GetBookData(size_t *lenOut) {
+        *lenOut = 0;
+        return NULL;
+    }
+
+    ImageData *GetImageData(const char *id) {
+        return NULL;
+    }
+};
+
+class ChmFormatter : public HtmlFormatter {
+protected:
+    void HandleTagImg_Chm(HtmlToken *t);
+    void HandleHtmlTag_Chm(HtmlToken *t);
+
+    ChmDataCache *chmDoc;
+
+public:
+    ChmFormatter(LayoutInfo *li, ChmDataCache *doc) : HtmlFormatter(li), chmDoc(doc) { }
+
+    Vec<PageData*> *FormatAllPages();
+};
+
+void ChmFormatter::HandleTagImg_Chm(HtmlToken *t)
+{
+    CrashIf(!chmDoc);
+    if (t->IsEndTag())
+        return;
+    AttrInfo *attr = t->GetAttrByName("src");
+    if (!attr)
+        return;
+    ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
+    ImageData *img = chmDoc->GetImageData(src);
+    if (img)
+        EmitImage(img);
+}
+
+void ChmFormatter::HandleHtmlTag_Chm(HtmlToken *t)
+{
+    HtmlTag tag = FindTag(t);
+    if (Tag_Img == tag) {
+        HandleTagImg_Chm(t);
+        HandleAnchorTag(t);
+    }
+    else if (Tag_Pagebreak == tag)
+        ForceNewPage();
+    else
+        HandleHtmlTag(t);
+}
+
+Vec<PageData*> *ChmFormatter::FormatAllPages()
+{
+    HtmlToken *t;
+    while ((t = htmlParser->Next()) && !t->IsError()) {
+        if (t->IsTag())
+            HandleHtmlTag_Chm(t);
+        else if (!IgnoreText())
+            HandleText(t);
+    }
+
+    FlushCurrLine(true);
+    UpdateLinkBboxes(currPage);
+    pagesToSend.Append(currPage);
+    currPage = NULL;
+
+    Vec<PageData *> *result = new Vec<PageData *>(pagesToSend);
+    pagesToSend.Reset();
+    return result;
+}
+
+/* BaseEngine for handling CHM documents */
+
+class Chm2EngineImpl : public EbookEngine, public Chm2Engine {
+    friend Chm2Engine;
+
+public:
+    Chm2EngineImpl() : EbookEngine(), doc(NULL), dataCache(NULL) {
+        // ISO 216 A4 (210mm x 297mm)
+        pageRect = RectD(0, 0, 8.27 * GetFileDPI(), 11.693 * GetFileDPI());
+    }
+    virtual ~Chm2EngineImpl() {
+        delete dataCache;
+        delete doc;
+    }
+    virtual Chm2Engine *Clone() {
+        return fileName ? CreateFromFile(fileName) : NULL;
+    }
+
+    virtual TCHAR *GetProperty(char *name) {
+        return doc ? doc->GetProperty(name) : NULL;
+    }
+    virtual const TCHAR *GetDefaultFileExt() const { return _T(".chm"); }
+
+    virtual PageLayoutType PreferredLayout() { return Layout_Single; }
+
+    virtual bool HasTocTree() const { return doc->HasToc(); }
+    virtual DocTocItem *GetTocTree();
+
+protected:
+    ChmDoc *doc;
+    ChmDataCache *dataCache;
+
+    bool Load(const TCHAR *fileName);
+
+    DocTocItem *BuildTocTree(HtmlPullParser& parser, int& idCounter);
+};
+
+static bool IsExternalUrl(const TCHAR *url)
+{
+    return str::StartsWithI(url, _T("http://")) ||
+           str::StartsWithI(url, _T("https://")) ||
+           str::StartsWithI(url, _T("mailto:"));
+}
+
+static TCHAR *ToPlainUrl(const TCHAR *url)
+{
+    TCHAR *plainUrl = str::Dup(url);
+    str::TransChars(plainUrl, _T("#?"), _T("\0\0"));
+    return plainUrl;
+}
+
+class ChmHtmlCollector : public ChmTocVisitor {
+    ChmDoc *doc;
+    StrVec added;
+    str::Str<char> html;
+
+public:
+    ChmHtmlCollector(ChmDoc *doc) : doc(doc) { }
+
+    char *GetHtml() {
+        if (doc->ParseToc(this))
+            return html.StealData();
+        return doc->GetHomepage();
+    }
+
+    void visit(const TCHAR *name, const TCHAR *url, int level) {
+        if (!url || IsExternalUrl(url))
+            return;
+        ScopedMem<TCHAR> plainUrl(ToPlainUrl(url));
+        if (added.Find(plainUrl) != -1)
+            return;
+        ScopedMem<char> urlUtf8(str::conv::ToUtf8(plainUrl));
+        // TODO: use the native codepage for the path to GetData
+        ScopedMem<unsigned char> pageHtml(doc->GetData(urlUtf8, NULL));
+        if (!pageHtml)
+            return;
+        if (html.Count() > 0)
+            html.Append("<pagebreak />");
+        html.AppendFmt("<a name='%s' />", urlUtf8);
+        html.AppendAndFree(doc->ToUtf8(pageHtml));
+        added.Append(plainUrl.StealData());
+    }
+};
+
+bool Chm2EngineImpl::Load(const TCHAR *fileName)
+{
+    this->fileName = str::Dup(fileName);
+    doc = ChmDoc::CreateFromFile(fileName);
+    if (!doc)
+        return false;
+
+    LayoutInfo li;
+    li.htmlStr = ChmHtmlCollector(doc).GetHtml();
+    li.htmlStrLen = str::Len(li.htmlStr);
+    li.pageDx = (int)(pageRect.dx - 2 * pageBorder);
+    li.pageDy = (int)(pageRect.dy - 2 * pageBorder);
+    li.fontName = L"Georgia";
+    li.fontSize = 11;
+    li.textAllocator = &allocator;
+
+    dataCache = new ChmDataCache(doc, (char *)li.htmlStr);
+    pages = ChmFormatter(&li, dataCache).FormatAllPages();
+    if (!ExtractPageAnchors())
+        return false;
+
+    return pages->Count() > 0;
+}
+
+
+class ChmTocBuilder : public ChmTocVisitor {
+    ChmDoc *doc;
+    Chm2Engine *engine;
+    EbookTocItem *root;
+    int idCounter;
+
+public:
+    ChmTocBuilder(Chm2Engine *engine, ChmDoc *doc) :
+        engine(engine), doc(doc), root(NULL), idCounter(0) { }
+
+    EbookTocItem *GetTocRoot() {
+        doc->ParseToc(this);
+        return root;
+    }
+
+    void visit(const TCHAR *name, const TCHAR *url, int level) {
+        PageDestination *dest = NULL;
+        if (url && IsExternalUrl(url))
+            dest = new SimpleDest2(0, RectD(), str::Dup(url));
+        if (url && str::FindChar(url, '#'))
+            url = str::FindChar(url, '#');
+        if (url && !dest)
+            dest = engine->GetNamedDest(url);
+
+        EbookTocItem *item = new EbookTocItem(str::Dup(name), dest);
+        AppendTocItem(root, item, level);
+        item->id = ++idCounter;
+        item->open = level == 1;
+    }
+};
+
+DocTocItem *Chm2EngineImpl::GetTocTree()
+{
+    return ChmTocBuilder(this, doc).GetTocRoot();
+}
+
+bool Chm2Engine::IsSupportedFile(const TCHAR *fileName, bool sniff)
+{
+    return ChmDoc::IsSupportedFile(fileName, sniff);
+}
+
+Chm2Engine *Chm2Engine::CreateFromFile(const TCHAR *fileName)
+{
+    Chm2EngineImpl *engine = new Chm2EngineImpl();
     if (!engine->Load(fileName)) {
         delete engine;
         return NULL;
