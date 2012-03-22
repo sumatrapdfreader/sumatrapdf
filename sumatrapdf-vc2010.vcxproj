@@ -275,6 +275,7 @@
     <ClCompile Include="src\TextSelection.cpp" />
     <ClCompile Include="src\Toolbar.cpp" />
     <ClCompile Include="src\utils\BitReader.cpp" />
+    <ClCompile Include="src\utils\DbgHelpDyn.cpp" />
     <ClCompile Include="src\utils\DebugLog.cpp" />
     <ClCompile Include="src\utils\DirIter.cpp" />
     <ClCompile Include="src\utils\FileTransactions.cpp" />
@@ -438,6 +439,7 @@
     <ClInclude Include="src\utils\Allocator.h" />
     <ClInclude Include="src\utils\BitManip.h" />
     <ClInclude Include="src\utils\BitReader.h" />
+    <ClInclude Include="src\utils\DbgHelpDyn.h" />
     <ClInclude Include="src\utils\DebugLog.h" />
     <ClInclude Include="src\utils\DirIter.h" />
     <ClInclude Include="src\utils\FileTransactions.h" />

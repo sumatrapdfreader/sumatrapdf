@@ -161,10 +161,12 @@ bool Load()
     TCHAR *dbghelpPath = _T("C:\\Program Files (x86)\\Microsoft Visual Studio 10.0\\Team Tools\\Performance Tools\\dbghelp.dll");
     HMODULE h = LoadLibrary(dbghelpPath);
 #else
-    HMODULE h = SafeLoadLibrary(_T("DBGHELP.DLL"));
+    HMODULE h = SafeLoadLibrary(_T("dbghelp.dll"));
 #endif
-    if (!h)
+    if (!h) {
+        plog("dbghelp::Load(): failed to load dbghelp.dll");
         return false;
+    }
 
 #define Load(func) _ ## func = (func ## Proc *)GetProcAddress(h, #func)
     Load(MiniDumpWriteDump);
@@ -184,7 +186,10 @@ bool Load()
     Load(SymGetLineFromAddr64);
 #undef Load
 
-    return _StackWalk64 != NULL;
+    bool ok = _StackWalk64 != NULL;
+    if (!ok)
+        plog("dbghelp::Load(): _StackWalk64 not present in dbghelp.dll");
+    return ok;
 }
 
 #if 0
@@ -222,12 +227,15 @@ static bool SetupSymbolPath()
 
 static bool CanStackWalk()
 {
-    return gSymInitializeOk && _SymCleanup && _SymGetOptions
+    bool ok = gSymInitializeOk && _SymCleanup && _SymGetOptions
         && _SymSetOptions&& _StackWalk64 && _SymFunctionTableAccess64
         && _SymGetModuleBase64 && _SymFromAddr;
+    if (!ok)
+        plog("dbghelp::CanStackWalk(): no");
+    return ok;
 }
 
-static bool CanSymbolizeAddress(DWORD64 addr)
+__declspec(noinline) bool CanSymbolizeAddress(DWORD64 addr)
 {
     static const int MAX_SYM_LEN = 512;
 
@@ -265,13 +273,11 @@ bool Initialize(const WCHAR *symPathW)
     if (gSymInitializeOk)
         return true;
 
-    if (!Load()) {
-        plog("dbghelp::Initialize(): LoadDbgHelpFuncs() failed");
+    if (!Load())
         return false;
-    }
 
     if (!_SymInitializeW && !_SymInitialize) {
-        plog("dbghelp::Initialize(): SymInitializeW() or SymInitializeA() not present in dbghelp.dll");
+        plog("dbghelp::Initialize(): SymInitializeW() and SymInitialize() not present in dbghelp.dll");
         return false;
     }
 

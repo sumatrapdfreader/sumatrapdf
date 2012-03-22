@@ -199,6 +199,7 @@ static void LogFailedUnzip(const TCHAR *zipFile, const TCHAR *dstDir, const char
     plog(gTmpStr->Get());
 }
 
+// get name of .pdb file that matches the name of the installer .exe file
 static const TCHAR *GetInstallerPdbName()
 {
 #ifdef SVN_PRE_RELEASE_VER
@@ -213,12 +214,13 @@ static bool UnpackStaticSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir
     ZipFile archive(symbolsZipPath, gCrashHandlerAllocator);
     if (!archive.UnzipFile(_T("SumatraPDF.pdb"), symDir)) {
         LogFailedUnzip(symbolsZipPath, symDir, "SumatraPDF.pdb");
+        return false;
     }
     return true;
 }
 
 // In lib (.exe + libmupdf.dll) release and pre-release builds, the pdb files
-// inside symbolsZipPath are libmupdf.pdb and SumatraPDF-no-MuPDF.pdb and
+// inside symbolsZipPath are libmupdf.pdb and SumatraPDF-lib.pdb and
 // must be extracted as libmupdf.pdb and SumatraPDF.pdb, to match the dll/exe
 // names.
 static bool UnpackLibSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir)
@@ -228,8 +230,8 @@ static bool UnpackLibSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir)
         LogFailedUnzip(symbolsZipPath, symDir, "libmupdf.pdb");
         return false;
     }
-    if (!archive.UnzipFile(_T("SumatraPDF-no-MuPDF.pdb"), symDir, _T("SumatraPDF.pdb"))) {
-        LogFailedUnzip(symbolsZipPath, symDir, "SumatraPDF-no-MuPDF.pdb");
+    if (!archive.UnzipFile(_T("SumatraPDF-lib.pdb"), symDir, _T("SumatraPDF.pdb"))) {
+        LogFailedUnzip(symbolsZipPath, symDir, "SumatraPDF-lib.pdb");
         return false;
     }
     return true;
@@ -245,9 +247,13 @@ static bool UnpackInstallerSymbols(const TCHAR *symbolsZipPath, const TCHAR *sym
     return true;
 }
 
-// *.pdb files are on S3 with a known name. Try to download them here to a directory
-// in symbol path to get meaningful callstacks
-static bool DownloadAndUnzipSymbols( const TCHAR *symbolsZipPath, const TCHAR *symDir)
+// .pdb files are stored in a .zip file on a web server. Download that .zip
+// file as pdbZipPath, extract the symbols relevant to our executable
+// to symDir directory.
+// Returns false if downloading or extracting failed
+// note: to simplify callers, it could choose pdbZipPath by itself (in a temporary
+// directory) as the file is deleted on exit anyway
+static bool DownloadAndUnzipSymbols(const TCHAR *pdbZipPath, const TCHAR *symDir)
 {
     if (!symDir || !dir::Exists(symDir))
         return false;
@@ -261,7 +267,7 @@ static bool DownloadAndUnzipSymbols( const TCHAR *symbolsZipPath, const TCHAR *s
     return false;
 #endif
 
-    if (!HttpGetToFile(SYMBOL_DOWNLOAD_URL, symbolsZipPath)) {
+    if (!HttpGetToFile(SYMBOL_DOWNLOAD_URL, pdbZipPath)) {
         plog("DownloadAndUnzipSymbols(): couldn't download release symbols");
         return false;
     }
@@ -270,23 +276,17 @@ static bool DownloadAndUnzipSymbols( const TCHAR *symbolsZipPath, const TCHAR *s
 
     bool ok = false;
     if (ExeSumatraStatic == gExeType) {
-        ok = UnpackStaticSymbols(symbolsZipPath, symDir);
-        if (!ok)
-            plog("DownloadAndUnzipSymbols(): couldn't unpack symbols for static build");
+        ok = UnpackStaticSymbols(pdbZipPath, symDir);
     } else if (ExeSumatraLib == gExeType) {
-        ok = UnpackLibSymbols(symbolsZipPath, symDir);
-        if (!ok)
-            plog("DownloadAndUnzipSymbols(): couldn't unpack symbols for lib build");
+        ok = UnpackLibSymbols(pdbZipPath, symDir);
     } else if (ExeInstaller == gExeType) {
-        ok = UnpackInstallerSymbols(symbolsZipPath, symDir);
-        if (!ok)
-            plog("DownloadAndUnzipSymbols(): couldn't unpack symbols for lib build");
+        ok = UnpackInstallerSymbols(pdbZipPath, symDir);
     } else {
         plog("DownloadAndUnzipSymbols(): unknown exe type");
     }
 
     //TODO: temporary
-    //file::Delete(symbolsZipPath);
+    //file::Delete(pdbZipPath);
     return ok;
 }
 
