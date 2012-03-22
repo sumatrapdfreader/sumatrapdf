@@ -329,7 +329,7 @@ void SubmitCrashInfo()
             return;
         }
 
-        if (!dbghelp::Initialize(gSymbolPathW), true) {
+        if (!dbghelp::Initialize(gSymbolPathW, true)) {
             plog("SubmitCrashInfo(): dbghelp::Initialize() failed");
             return;
         }
