@@ -18,7 +18,7 @@
 #include "ZipUtil.h"
 #include <unzalloc.h>
 
-#define NOLOG 1 // 0 for more detailed debugging, 1 to disable lf()
+#define NOLOG 0 // 0 for more detailed debugging, 1 to disable lf()
 #include "DebugLog.h"
 
 #ifndef SYMBOL_DOWNLOAD_URL
@@ -180,16 +180,6 @@ static bool DeleteSymbolsIfExist()
     return ok;
 }
 
-// get name of .pdb file that matches the name of the installer .exe file
-static const TCHAR *GetInstallerPdbName()
-{
-#ifdef SVN_PRE_RELEASE_VER
-    return _T("SumatraPDF-prerelease-") _T(QM(SVN_PRE_RELEASE_VER)) _T("-install.pdb");
-#else
-    return _T("SumatraPDF-") _T(QM(CURR_VERSION)) _T("-install.pdb");
-#endif
-}
-
 // static (single .exe) build
 static bool UnpackStaticSymbols(const TCHAR *pdbZipPath, const TCHAR *symDir)
 {
@@ -223,7 +213,7 @@ static bool UnpackInstallerSymbols(const TCHAR *pdbZipPath, const TCHAR *symDir)
 {
     lf(_T("UnpackInstallerSymbols(): unpacking %s to dir %s"), pdbZipPath, symDir);
     ZipFile archive(pdbZipPath, gCrashHandlerAllocator);
-    if (!archive.UnzipFile(_T("Installer.pdb"), symDir, GetInstallerPdbName())) {
+    if (!archive.UnzipFile(_T("Installer.pdb"), symDir)) {
         plog("Failed to unzip Installer.pdb");
         return false;
     }
@@ -521,7 +511,7 @@ static bool BuilCrashDumpPaths(const TCHAR *symDir)
     gPdbZipPath = path::Join(symDir, _T("symbols_tmp.zip"));
     gLibMupdfPdbPath = path::Join(symDir, _T("SumatraPDF.pdb"));
     gSumatraPdfPdbPath = path::Join(symDir, _T("libmupdf.pdb"));
-    gInstallerPdbPath = path::Join(symDir, GetInstallerPdbName());
+    gInstallerPdbPath = path::Join(symDir, _T("Installer.pdb"));
     return true;
 }
 
