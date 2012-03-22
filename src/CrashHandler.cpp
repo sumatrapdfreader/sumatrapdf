@@ -210,6 +210,7 @@ static const TCHAR *GetInstallerPdbName()
 #endif
 }
 
+// static (single .exe) build
 static bool UnpackStaticSymbols(const TCHAR *pdbZipPath, const TCHAR *symDir)
 {
     lf(_T("UnpackStaticSymbols(): unpacking %s to dir %s"), pdbZipPath, symDir);
@@ -221,10 +222,7 @@ static bool UnpackStaticSymbols(const TCHAR *pdbZipPath, const TCHAR *symDir)
     return true;
 }
 
-// In lib (.exe + libmupdf.dll) release and pre-release builds, the pdb files
-// inside symbolsZipPath are libmupdf.pdb and SumatraPDF-lib.pdb and
-// must be extracted as libmupdf.pdb and SumatraPDF.pdb, to match the dll/exe
-// names.
+// lib (.exe + libmupdf.dll) release and pre-release builds
 static bool UnpackLibSymbols(const TCHAR *pdbZipPath, const TCHAR *symDir)
 {
     lf(_T("UnpackLibSymbols(): unpacking %s to dir %s"), pdbZipPath, symDir);
@@ -233,13 +231,14 @@ static bool UnpackLibSymbols(const TCHAR *pdbZipPath, const TCHAR *symDir)
         LogFailedUnzip(pdbZipPath, symDir, "libmupdf.pdb");
         return false;
     }
-    if (!archive.UnzipFile(_T("SumatraPDF-lib.pdb"), symDir, _T("SumatraPDF.pdb"))) {
-        LogFailedUnzip(pdbZipPath, symDir, "SumatraPDF-lib.pdb");
+    if (!archive.UnzipFile(_T("SumatraPDF-no-MuPDF.pdb"), symDir) {
+        LogFailedUnzip(pdbZipPath, symDir, "SumatraPDF-no-MuPDF.pdb");
         return false;
     }
     return true;
 }
 
+// an installer
 static bool UnpackInstallerSymbols(const TCHAR *pdbZipPath, const TCHAR *symDir)
 {
     lf(_T("UnpackInstallerSymbols(): unpacking %s to dir %s"), pdbZipPath, symDir);
@@ -265,6 +264,7 @@ static bool DownloadAndUnzipSymbols(const TCHAR *pdbZipPath, const TCHAR *symDir
         return false;
     }
 
+#if 0
     if (!DeleteSymbolsIfExist()) {
         plog("DownloadAndUnzipSymbols(): DeleteSymbolsIfExist() failed");
         return false;
@@ -274,6 +274,7 @@ static bool DownloadAndUnzipSymbols(const TCHAR *pdbZipPath, const TCHAR *symDir
         plog("DownloadAndUnzipSymbols(): deleting pdbZipPath failed");
         return false;
     }
+#endif
 
 #ifdef DEBUG
     // don't care about debug builds because we don't release them
