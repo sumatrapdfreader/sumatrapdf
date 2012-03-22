@@ -139,7 +139,7 @@ ENGINEDUMP_APP = $(O)\EngineDump.exe
 
 UCRT_OBJS = \
 	$(OS)\ucrt.obj $(OS)\ucrt_asm.obj $(OS)\ucrt_math.obj \
-	$(OS)\_wstat64i32.obj $(OS)\_stat64i32.obj \
+	$(OS)\ucrt_log.obj $(OS)\_wstat64i32.obj $(OS)\_stat64i32.obj \
 	src\ucrt\lib\msvcrt_dll.lib src\ucrt\lib\ntdll_dll.lib
 
 UCRT_WIN_OBJS = $(UCRT_OBJS) $(OS)\ucrt_win.obj

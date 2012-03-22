@@ -2,7 +2,6 @@ LIBRARY	NTDLL.DLL
 EXPORTS
 	_atoi64
 	_fltused DATA
-	_vsnprintf
 	_stricmp
 	_strnicmp
 	_vsnprintf

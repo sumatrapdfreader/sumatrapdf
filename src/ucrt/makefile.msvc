@@ -10,7 +10,7 @@ LIBS = $(LIBS) kernel32.lib lib\msvcrt_dll.lib lib\ntdll_dll.lib
 
 MICROCRT_OBJS = \
 	$(O)\ucrt.obj $(O)\ucrt_asm.obj $(O)\ucrt_math.obj \
-	$(O)\_wstat64i32.obj $(O)\_stat64i32.obj
+	$(O)\ucrt_log.obj $(O)\_wstat64i32.obj $(O)\_stat64i32.obj
 
 MICROCRT_WIN_OBJS = $(MICROCRT_OBJS) $(O)\ucrt_win.obj
 

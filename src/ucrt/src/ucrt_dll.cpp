@@ -6,6 +6,9 @@
 #endif
 #include <windows.h>
 
+#define NOLOG 0
+#include "ucrt_log.h"
+
 extern void OnExit();
 extern void OnStart();
 
@@ -14,6 +17,8 @@ extern "C" BOOL WINAPI DllMain(HANDLE hDllHandle, DWORD dwReason, LPVOID reserve
 extern "C"
 BOOL WINAPI _DllMainCRTStartup(HANDLE hDllHandle, DWORD dwReason, LPVOID reserved)
 {
+    lf("_DllMainCRTStartup, reason=%d", (int)dwReason);
+
     if (DLL_PROCESS_ATTACH == dwReason)
         OnStart();
 
