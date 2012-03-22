@@ -88,12 +88,12 @@ bool IsRunningInWow64()
 void LogLastError(DWORD err)
 {
     // allow to set a breakpoint in release builds
-    if (err == 0)
+    if (0 == err)
         err = GetLastError();
     char *msgBuf = NULL;
-    FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-        NULL, err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-        (LPSTR)&msgBuf, 0, NULL);
+    DWORD flags = FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
+    DWORD lang =  MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT);
+    FormatMessageA(flags, NULL, err, lang, (LPSTR)&msgBuf, 0, NULL);
     if (!msgBuf) return;
     plogf("LogLastError: %s", msgBuf);
     LocalFree(msgBuf);

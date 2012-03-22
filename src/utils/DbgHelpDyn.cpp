@@ -155,8 +155,11 @@ static char *ExceptionNameFromCode(DWORD excCode)
 // It can (but doesn't have to) be called before Initialize().
 bool Load()
 {
-    if (_MiniDumpWriteDump)
+    if (_MiniDumpWriteDump) {
+        plog("dbghelp::Load() - has already loaded");
         return true;
+    }
+    plog("dbghelp::Load()");
 #if 0
     TCHAR *dbghelpPath = _T("C:\\Program Files (x86)\\Microsoft Visual Studio 10.0\\Team Tools\\Performance Tools\\dbghelp.dll");
     HMODULE h = LoadLibrary(dbghelpPath);
@@ -186,7 +189,7 @@ bool Load()
     Load(SymGetLineFromAddr64);
 #undef Load
 
-    bool ok = _StackWalk64 != NULL;
+    bool ok = (NULL != _StackWalk64);
     if (!ok)
         plog("dbghelp::Load(): _StackWalk64 not present in dbghelp.dll");
     return ok;
@@ -264,6 +267,20 @@ static void SymCleanup()
     _SymCleanup(GetCurrentProcess());
 }
 
+static void LogLastErrorLocal(DWORD err=0)
+{
+    // allow to set a breakpoint in release builds
+    if (0 == err)
+        err = GetLastError();
+    char *msgBuf = NULL;
+    DWORD flags = FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
+    DWORD lang =  MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT);
+    FormatMessageA(flags, NULL, err, lang, (LPSTR)&msgBuf, 0, NULL);
+    if (!msgBuf) return;
+    plog(msgBuf);
+    LocalFree(msgBuf);
+}
+
 // Load and initialize dbghelp.dll. Returns false if failed.
 // To simplify callers, it can be called multiple times - it only does the
 // work the first time, unless force is true, in which case we re-initialize
@@ -271,6 +288,11 @@ static void SymCleanup()
 // downloading symbols)
 bool Initialize(const WCHAR *symPathW, bool force)
 {
+    if (force)
+        plog("dbglog::Initialize() force=true");
+    else
+        plog("dbglog::Initialize() force=false");
+
     if (gSymInitializeOk && !force)
         return true;
 
@@ -298,6 +320,7 @@ bool Initialize(const WCHAR *symPathW, bool force)
 
     if (!gSymInitializeOk) {
         plog("dbghelp::Initialize(): _SymInitialize() failed");
+        LogLastErrorLocal();
         return false;
     }
 
