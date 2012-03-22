@@ -18,7 +18,7 @@
 #include "ZipUtil.h"
 #include <unzalloc.h>
 
-#define NOLOG 0 // 0 for more detailed debugging of crash handler progress
+#define NOLOG 1 // 0 for more detailed debugging, 1 to disable lf()
 #include "DebugLog.h"
 
 #ifndef SYMBOL_DOWNLOAD_URL
@@ -96,7 +96,6 @@ static TCHAR *  gSumatraPdfPdbPath = NULL;
 static TCHAR *  gInstallerPdbPath = NULL;
 static char *   gSystemInfo = NULL;
 static char *   gModulesInfo = NULL;
-static str::Str<char>* gTmpStr = NULL;
 static HANDLE   gDumpEvent = NULL;
 static HANDLE   gDumpThread = NULL;
 static ExeType  gExeType = ExeSumatraStatic;
@@ -181,25 +180,6 @@ static bool DeleteSymbolsIfExist()
     return ok;
 }
 
-static void AppendTStr(str::Str<char>* s, const TCHAR *toAppend)
-{
-    char buf[512];
-    str::conv::ToCodePageBuf(buf, dimof(buf), toAppend, CP_UTF8);
-    s->Append((const char*)buf);
-}
-
-static void LogFailedUnzip(const TCHAR *zipFile, const TCHAR *dstDir, const char *file)
-{
-    gTmpStr->Reset();
-    gTmpStr->Append("Failed to unzip ");
-    gTmpStr->Append(file);
-    gTmpStr->Append(" from ");
-    AppendTStr(gTmpStr, zipFile);
-    gTmpStr->Append(" to dir ");
-    AppendTStr(gTmpStr, dstDir);
-    plog(gTmpStr->Get());
-}
-
 // get name of .pdb file that matches the name of the installer .exe file
 static const TCHAR *GetInstallerPdbName()
 {
@@ -216,7 +196,7 @@ static bool UnpackStaticSymbols(const TCHAR *pdbZipPath, const TCHAR *symDir)
     lf(_T("UnpackStaticSymbols(): unpacking %s to dir %s"), pdbZipPath, symDir);
     ZipFile archive(pdbZipPath, gCrashHandlerAllocator);
     if (!archive.UnzipFile(_T("SumatraPDF.pdb"), symDir)) {
-        LogFailedUnzip(pdbZipPath, symDir, "SumatraPDF.pdb");
+        plog("Failed to unzip SumatraPDF.pdb");
         return false;
     }
     return true;
@@ -228,11 +208,11 @@ static bool UnpackLibSymbols(const TCHAR *pdbZipPath, const TCHAR *symDir)
     lf(_T("UnpackLibSymbols(): unpacking %s to dir %s"), pdbZipPath, symDir);
     ZipFile archive(pdbZipPath, gCrashHandlerAllocator);
     if (!archive.UnzipFile(_T("libmupdf.pdb"), symDir)) {
-        LogFailedUnzip(pdbZipPath, symDir, "libmupdf.pdb");
+        plog("Failed to unzip libmupdf.pdb");
         return false;
     }
     if (!archive.UnzipFile(_T("SumatraPDF-no-MuPDF.pdb"), symDir)) {
-        LogFailedUnzip(pdbZipPath, symDir, "SumatraPDF-no-MuPDF.pdb");
+        plog("Failed to unzip SumatraPDF-no-MuPDF.pdb");
         return false;
     }
     return true;
@@ -244,7 +224,7 @@ static bool UnpackInstallerSymbols(const TCHAR *pdbZipPath, const TCHAR *symDir)
     lf(_T("UnpackInstallerSymbols(): unpacking %s to dir %s"), pdbZipPath, symDir);
     ZipFile archive(pdbZipPath, gCrashHandlerAllocator);
     if (!archive.UnzipFile(_T("Installer.pdb"), symDir, GetInstallerPdbName())) {
-        LogFailedUnzip(pdbZipPath, symDir, "Installer.pdb");
+        plog("Failed to unzip Installer.pdb");
         return false;
     }
     return true;
@@ -264,7 +244,6 @@ static bool DownloadAndUnzipSymbols(const TCHAR *pdbZipPath, const TCHAR *symDir
         return false;
     }
 
-#if 0
     if (!DeleteSymbolsIfExist()) {
         plog("DownloadAndUnzipSymbols(): DeleteSymbolsIfExist() failed");
         return false;
@@ -274,7 +253,6 @@ static bool DownloadAndUnzipSymbols(const TCHAR *pdbZipPath, const TCHAR *symDir
         plog("DownloadAndUnzipSymbols(): deleting pdbZipPath failed");
         return false;
     }
-#endif
 
 #ifdef DEBUG
     // don't care about debug builds because we don't release them
@@ -282,7 +260,7 @@ static bool DownloadAndUnzipSymbols(const TCHAR *pdbZipPath, const TCHAR *symDir
     return false;
 #else
     if (!HttpGetToFile(SYMBOL_DOWNLOAD_URL, pdbZipPath)) {
-        plog("DownloadAndUnzipSymbols(): couldn't download release symbols");
+        plog("DownloadAndUnzipSymbols(): couldn't download symbols");
         return false;
     }
 
@@ -299,8 +277,7 @@ static bool DownloadAndUnzipSymbols(const TCHAR *pdbZipPath, const TCHAR *symDir
         plog("DownloadAndUnzipSymbols(): unknown exe type");
     }
 
-    //TODO: temporary
-    //file::Delete(pdbZipPath);
+    file::Delete(pdbZipPath);
     return ok;
 #endif
 }
@@ -313,7 +290,7 @@ void SubmitCrashInfo()
     lf("SubmitCrashInfo(): start");
     lf(L"SubmitCrashInfo(): gSymbolPathW: '%s'", gSymbolPathW);
     if (!CrashHandlerCanUseNet()) {
-        plog("SubmitCrashInfo(): No internet access permission");
+        plog("SubmitCrashInfo(): internet access not allowed");
         return;
     }
 
@@ -330,7 +307,7 @@ void SubmitCrashInfo()
         }
 
         if (!dbghelp::Initialize(gSymbolPathW, true)) {
-            plog("SubmitCrashInfo(): dbghelp::Initialize() failed");
+            plog("SubmitCrashInfo(): second dbghelp::Initialize() failed");
             return;
         }
     }
@@ -341,11 +318,8 @@ void SubmitCrashInfo()
     }
 
     s = BuildCrashInfoText();
-    if (!s) {
-        plog("SubmitCrashInfo(): BuildCrashInfoText() returned NULL for second report");
+    if (!s)
         return;
-    }
-
     SendCrashInfo(s);
     gCrashHandlerAllocator->Free(s);
 }
@@ -649,7 +623,6 @@ void InstallCrashHandler(const TCHAR *crashDumpPath, const TCHAR *symDir)
     // when crash handler is invoked. It's ok to use standard
     // allocation functions here.
     gCrashHandlerAllocator = new CrashHandlerAllocator();
-    gTmpStr = new str::Str<char>(2048, gCrashHandlerAllocator);
 #endif
     gCrashDumpPath = str::Dup(crashDumpPath);
 
@@ -680,6 +653,5 @@ void UninstallCrashHandler()
     free(gSymbolPathW);
     free(gSystemInfo);
     free(gModulesInfo);
-    delete gTmpStr;
     delete gCrashHandlerAllocator;
 }
