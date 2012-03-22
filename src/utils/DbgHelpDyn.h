@@ -20,9 +20,8 @@ namespace dbghelp
 {
 
 bool Load();
-bool Initialize(const WCHAR *symPathW);
+bool Initialize(const WCHAR *symPathW, bool force = false);
 bool HasSymbols();
-void SymCleanup();
 void WriteMiniDump(const TCHAR *crashDumpFilePath, MINIDUMP_EXCEPTION_INFORMATION* mei, bool fullDump);
 void GetThreadCallstack(str::Str<char>& s, DWORD threadId);
 bool GetCurrentThreadCallstack(str::Str<char>& s);

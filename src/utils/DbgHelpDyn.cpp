@@ -259,19 +259,22 @@ bool HasSymbols()
     return CanSymbolizeAddress(addr);
 }
 
+static void SymCleanup()
+{
+    _SymCleanup(GetCurrentProcess());
+}
+
 // Load and initialize dbghelp.dll. Returns false if failed.
 // To simplify callers, it can be called multiple times - it only does the
-// work the first time.
-// We need both symPathW and symPathA because on some XP version I've
-// seen dbghelp.dll not have SymInitializeW().
-// TODO: symPathW and symPathA are the same location so we should
-// build symPathA out of symPathW, to simplify callers
-// TODO: if symPathW/A are NULL, as a fallback we should use exe's directory
-// (which is the right place when running from IDE during development)
-bool Initialize(const WCHAR *symPathW)
+// work the first time, unless force is true, in which case we re-initialize
+// the library (needed in crash dump where we re-initialize dbghelp.dll after
+// downloading symbols)
+bool Initialize(const WCHAR *symPathW, bool force)
 {
-    if (gSymInitializeOk)
+    if (gSymInitializeOk && !force)
         return true;
+
+    bool needsCleanup = gSymInitializeOk;
 
     if (!Load())
         return false;
@@ -281,9 +284,13 @@ bool Initialize(const WCHAR *symPathW)
         return false;
     }
 
+    if (needsCleanup)
+        SymCleanup();
+
     if (_SymInitializeW) {
         gSymInitializeOk = _SymInitializeW(GetCurrentProcess(), symPathW, TRUE);
     } else {
+        // SymInitializeW() is not present on some XP systems
         char symPathA[MAX_PATH];
         if (0 != str::conv::ToCodePageBuf(symPathA, dimof(symPathA), symPathW, CP_ACP))
             gSymInitializeOk = _SymInitialize(GetCurrentProcess(), symPathA, TRUE);
@@ -301,11 +308,6 @@ bool Initialize(const WCHAR *symPathW)
 
     //SetupSymbolPath();
     return true;
-}
-
-void SymCleanup()
-{
-    _SymCleanup(GetCurrentProcess());
 }
 
 static BOOL CALLBACK OpenMiniDumpCallback(void* /*param*/, PMINIDUMP_CALLBACK_INPUT input, PMINIDUMP_CALLBACK_OUTPUT output)
@@ -541,10 +543,6 @@ __declspec(noinline) bool GetCurrentThreadCallstack(str::Str<char>& s)
         return false;
 
     CONTEXT ctx;
-    //Some blog post say this is an alternative way to get CONTEXT
-    //but it doesn't work in practice
-    //ctx = *(gMei.ExceptionPointers->ContextRecord);
-
     // not available under Win2000
     RtlCaptureContextProc *MyRtlCaptureContext = (RtlCaptureContextProc *)LoadDllFunc(_T("kernel32.dll"), "RtlCaptureContext");
     if (!MyRtlCaptureContext)
