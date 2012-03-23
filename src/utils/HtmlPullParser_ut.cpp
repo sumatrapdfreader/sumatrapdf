@@ -51,8 +51,10 @@ static void HtmlEntities()
     };
     for (size_t i = 0; i < dimof(entities); i++ ) {
         const char *s = entities[i].s;
-        int got = ResolveHtmlEntity(s + 1, str::Len(s) - 2);
+        int got;
+        const char *entEnd = ResolveHtmlEntity(s + 1, str::Len(s) - 1, got);
         assert(got == entities[i].rune);
+        assert((-1 == got) == !entEnd);
     }
     const char *unchanged[] = {
         "foo", "", " as;d "
@@ -69,12 +71,13 @@ static void HtmlEntities()
         // implementation detail: if there is '&' in the string
         // we always allocate, even if it isn't a valid entity
         { "a&12", "a&12" },
-        { "a&#30", "a&#30" },
+        { "a&x#30", "a&x#30" },
 
         { "&#32;b", " b" },
         { "&#x20;ra", " ra" },
         { "&lt;", "<" },
-        { "a&amp; &#32;to&#x20;end", "a&  to end" }
+        { "a&amp; &#32;to&#x20;end", "a&  to end" },
+        { "&nbsp test&auml ;&ouml;&#64&#x50go", "\xC2\xA0 test\xC3\xA4 ;\xC3\xB6@Pgo" },
     };
     for (size_t i = 0; i < dimof(changed); i++) {
         const char *s = changed[i].s;

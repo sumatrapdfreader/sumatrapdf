@@ -152,16 +152,32 @@ void MemAppend(char *& dst, const char *s, size_t len)
 }
 
 // if "&foo;" was the entity, s points at the char
-// after '&' and len is lenght of the string (3 in case of "foo")
-// the caller must ensure that there is terminating ';'
-static int ResolveHtmlEntity(const char *s, size_t len)
+// after '&' and len is the maximum lenght of the string
+// (4 in case of "foo;")
+// returns a pointer to the first character after the entity
+static const char *ResolveHtmlEntity(const char *s, size_t len, int& rune)
 {
-    int rune;
-    if (str::Parse(s, "#%d;", &rune))
-        return rune;
-    if (str::Parse(s, "#x%x;", &rune))
-        return rune;
-    return HtmlEntityNameToRune(s, len);
+    const char *entEnd = str::Parse(s, len, "#%d%?;", &rune);
+    if (entEnd)
+        return entEnd;
+    entEnd = str::Parse(s, len, "#x%x%?;", &rune);
+    if (entEnd)
+        return entEnd;
+
+    // go to the end of a potential named entity
+    for (entEnd = s; entEnd < s + len && isalnum(*entEnd); entEnd++);
+    if (entEnd != s) {
+        rune = HtmlEntityNameToRune(s, entEnd - s);
+        if (-1 == rune)
+            return NULL;
+        // skip the trailing colon - if there is one
+        if (entEnd < s + len && *entEnd == ';')
+            entEnd++;
+        return entEnd;
+    }
+
+    rune = -1;
+    return NULL;
 }
 
 // if s doesn't contain html entities, we just return it
@@ -172,9 +188,8 @@ static int ResolveHtmlEntity(const char *s, size_t len)
 const char *ResolveHtmlEntities(const char *s, const char *end, Allocator *alloc)
 {
     char *        res = NULL;
-    size_t        resLen;
+    size_t        resLen = 0;
     char *        dst;
-    const char *  colon;
 
     const char *curr = s;
     for (;;) {
@@ -195,21 +210,17 @@ const char *ResolveHtmlEntities(const char *s, const char *end, Allocator *alloc
             dst = res;
         }
         MemAppend(dst, s, curr - s);
-        // curr points at '&'. Make sure there is ';' within source string
-        colon = curr;
-        found = SkipUntil(colon, end, ';');
-        if (!found) {
-            MemAppend(dst, curr, end - curr);
-            break;
-        }
-        int rune = ResolveHtmlEntity(curr+1, colon - curr - 1);
-        if (-1 == rune) {
-            // unknown entity, copy the string verbatim
-            MemAppend(dst, curr, colon - curr + 1);
+        // curr points at '&'
+        int rune = -1;
+        const char *entEnd = ResolveHtmlEntity(curr + 1, end - curr - 1, rune);
+        if (!entEnd) {
+            // unknown entity, just copy the '&'
+            MemAppend(dst, curr, 1);
+            curr++;
         } else {
             str::Utf8Encode(dst, rune);
+            curr = entEnd;
         }
-        curr = colon + 1;
         s = curr;
     }
     *dst = 0;

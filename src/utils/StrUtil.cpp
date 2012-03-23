@@ -891,7 +891,7 @@ const char *Parse(const char *str, size_t len, const char *fmt, ...)
 
     if (s != buf)
         free(s);
-    return res;
+    return res ? str + (res - s) : NULL;
 }
 
 const WCHAR *Parse(const WCHAR *str, const WCHAR *format, ...)
