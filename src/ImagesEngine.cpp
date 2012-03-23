@@ -869,7 +869,8 @@ CbxEngine *CbxEngine::CreateFromFile(const TCHAR *fileName)
     CbxEngineImpl *engine = new CbxEngineImpl();
     bool ok = false;
     if (str::EndsWithI(fileName, _T(".cbz")) ||
-        str::EndsWithI(fileName, _T(".zip"))) {
+        str::EndsWithI(fileName, _T(".zip")) ||
+        file::StartsWith(fileName, "PK\x03\x04")) {
         ok = engine->LoadCbzFile(fileName);
     }
     else if (str::EndsWithI(fileName, _T(".cbr")) ||
