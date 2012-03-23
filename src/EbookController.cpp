@@ -314,9 +314,9 @@ void EbookController::UpdateCurrPageNoForPage(PageData *pd)
     if (!pd)
         return;
     // pages can have have the same reparse point, so finding them by
-    // reparse point is not reliable. Try 
-    if (pagesFromBeginning) {
-        int n = pagesFromBeginning->Find(pd) + 1;
+    // reparse point is not reliable. try first to find by page object
+    if (GetPagesFromBeginning()) {
+        int n = GetPagesFromBeginning()->Find(pd) + 1;
         if (n > 0) {
             currPageNo = n;
             return;
@@ -602,10 +602,9 @@ void EbookController::UpdateStatus()
 
 void EbookController::GoToPage(int newPageNo)
 {
-    if (currPageNo == newPageNo)
+    if ((newPageNo < 1) || (newPageNo == currPageNo))
         return;
-    CrashIf(!GetPagesFromBeginning());
-    if ((newPageNo < 1) || ((size_t)newPageNo > GetPagesFromBeginning()->Count()))
+    if ((size_t)newPageNo > GetPagesFromBeginning()->Count())
         return;
     ShowPage(GetPagesFromBeginning()->At(newPageNo - 1), false);
     // even if we were showing a page from pagesFromPage before, we've
@@ -624,11 +623,14 @@ bool EbookController::GoOnePageForward(Vec<PageData*> *pages)
 {
     if (!pageShown || !pages)
         return false;
+
     int newPageIdx = pages->Find(pageShown) + 1;
     if (0 == newPageIdx)
         return false;
+
     if ((size_t)newPageIdx >= pages->Count())
         return false;
+
     ShowPage(pages->At(newPageIdx), false);
     return true;
 }
