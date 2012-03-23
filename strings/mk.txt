@@ -188,7 +188,7 @@ Application:
 Апликација:
 
 Associate with PDF files?
-Да управувам со PDF датотеки?
+Да управувам со PDF-датотеки?
 
 Attachment: %s
 Прилог: %s
@@ -221,7 +221,7 @@ Bytes
 бајти
 
 CHM documents
-Документи од тип CHM 
+CHM-документи
 
 Can't connect to the Internet (error %#x).
 Не можам да се поврзам на Интернет (грешка %#x).
@@ -256,6 +256,9 @@ Continuous Facing
 Contribute Translation
 Учествувај во преведувањето на оваа апликација
 
+Copy &Image
+Копирај &слика
+
 Copy &Link Address
 Копирај ја адресата на &врската
 
@@ -264,6 +267,9 @@ Copy Co&mment
 
 Copying text was denied (copying as image only)
 Копирањето на текстот беше одбиено (копирање само во вид на слика)
+
+Copyright:
+Авторско право:
 
 Could not obtain Printer properties
 Не можам да дојдам до својствата на печатачот
@@ -284,7 +290,7 @@ Custom &Zoom...\tCtrl+Y
 &Зумирање по избор...\tCtrl+Y
 
 Default &Layout:
-Основен поглед:
+&Основен поглед:
 
 Default &Zoom:
 Основно &зумирање:
@@ -296,7 +302,7 @@ Denied Permissions:
 Одбиени привилегии:
 
 DjVu documents
-Документи од тип DjVu
+DjVu-документи
 
 Document Properties
 Својства на документ
@@ -308,7 +314,7 @@ E&xit\tCtrl+Q
 &Излези\tCtrl+Q
 
 EPUB ebooks
-Документи од тип EPUB
+EPUB-е-книги
 
 Enter password
 Внеси лозинка
@@ -317,7 +323,7 @@ Enter password for %s
 Внеси лозинка за %s
 
 Enter the command-line to invoke when you double-click on the PDF document:
-Внесете команда, за да се извршува при секое двојно кликнунвање на PDF документот:
+Внесете команда, за да се извршува при секое двојно кликнунвање на PDF-документот:
 
 Error loading %s
 Грешка при вчитување %s
@@ -335,7 +341,7 @@ Facing
 Две страници
 
 Failed to save a file
-Зачувување на PDF документот не успеа
+Зачувување на PDF-документот не успеа
 
 Favorites
 Омилени
@@ -388,6 +394,12 @@ Fit Width and Show Pages Continuously
 Fit a Single Page
 Прилагоди на поединечна страница
 
+Fonts:
+Букви:
+
+Formatting the book... %d pages
+Ја форматирам книгата... %d страници
+
 Found text at page %s
 Пронајдов текст на страница %s
 
@@ -415,11 +427,14 @@ Image files (*.%s)
 KB
 KB
 
+Loading file %s...
+Ја вчитувам датотеката %s...
+
 MB
 MB
 
 Make SumatraPDF default application for PDF files?
-Дали да ја направам SumatraPDF основна апликација за PDF датотеки?
+Дали да ја направам SumatraPDF основна апликација за PDF-датотеки?
 
 Make SumatraPDF my default PDF reader
 Направи ја SumatraPDF основен читач на PDF
@@ -428,7 +443,7 @@ Match Case
 Разликувај мали и големи букви
 
 Mobi documents
-Документи од тип Mobi
+Mobi-документи
 
 Modified:
 Изменето на:
@@ -482,16 +497,16 @@ P&roperties\tCtrl+D
 С&војства...\tCtrl+D
 
 PDF Document
-PDF документ
+PDF-документ
 
 PDF Producer:
-PDF генератор:
+PDF-генератор:
 
 PDF Version:
 Верзија на PDF:
 
 PDF documents
-Документи од тип PDF
+PDF-документи
 
 Pa&ge...\tCtrl+G
 Страница...\tCtrl+G
@@ -515,7 +530,7 @@ Please wait - rendering...
 Ве молам почекајте - создавам приказ...
 
 Postscript documents
-Документи од тип Postscript
+Postscript-документи
 
 Pr&esentation\tCtrl+L
 Презентација\tCtrl+L
@@ -549,6 +564,9 @@ Remove from favorites
 
 Remove page %s from favorites
 Отстрани страница %s од омилени
+
+Replace document &colors with Windows color scheme
+Замени ги &боите во документот со палетата на Windows
 
 Rotate &Left\tCtrl+Shift+-
 Ротирај на лево\tCtrl+Shift+-
@@ -644,7 +662,7 @@ Warning
 Предупредување
 
 XPS documents
-Документи од тип XPS
+XPS-документи
 
 You have the latest version.
 Ја имате најновата верзија.
@@ -672,12 +690,4 @@ copying text
 
 printing document
 печатам документ
-
-# Untranslated:
-#Copy &Image
-#Copyright:
-#Fonts:
-#Formatting the book... %d pages
-#Loading file %s...
-#Replace document &colors with Windows color scheme
 
