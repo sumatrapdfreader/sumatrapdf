@@ -146,25 +146,10 @@
     <ClCompile Include="mupdf\fitz\filt_jbig2d.c">
       <Filter>mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\fitz\filt_jpxd.c">
-      <Filter>mupdf\fitz</Filter>
-    </ClCompile>
     <ClCompile Include="mupdf\fitz\filt_lzwd.c">
       <Filter>mupdf\fitz</Filter>
     </ClCompile>
     <ClCompile Include="mupdf\fitz\filt_predict.c">
-      <Filter>mupdf\fitz</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\fitz\obj_array.c">
-      <Filter>mupdf\fitz</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\fitz\obj_dict.c">
-      <Filter>mupdf\fitz</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\fitz\obj_print.c">
-      <Filter>mupdf\fitz</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\fitz\obj_simple.c">
       <Filter>mupdf\fitz</Filter>
     </ClCompile>
     <ClCompile Include="mupdf\fitz\res_colorspace.c">
@@ -398,9 +383,6 @@
     <ClCompile Include="mupdf\fitz\dev_bbox.c">
       <Filter>mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\fitz\dev_draw.c">
-      <Filter>mupdf\fitz</Filter>
-    </ClCompile>
     <ClCompile Include="mupdf\fitz\dev_gdiplus.cpp">
       <Filter>mupdf\fitz</Filter>
     </ClCompile>
@@ -466,93 +448,6 @@
     </ClCompile>
     <ClCompile Include="src\utils\ZipUtil.cpp">
       <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_xref.c">
-      <Filter>mupdf\pdf</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_annot.c">
-      <Filter>mupdf\pdf</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_cmap.c">
-      <Filter>mupdf\pdf</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_cmap_load.c">
-      <Filter>mupdf\pdf</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_cmap_parse.c">
-      <Filter>mupdf\pdf</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_cmap_table.c">
-      <Filter>mupdf\pdf</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_colorspace.c">
-      <Filter>mupdf\pdf</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_crypt.c">
-      <Filter>mupdf\pdf</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_encoding.c">
-      <Filter>mupdf\pdf</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_font.c">
-      <Filter>mupdf\pdf</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_fontfile.c">
-      <Filter>mupdf\pdf</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_ft_tools.c">
-      <Filter>mupdf\pdf</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_function.c">
-      <Filter>mupdf\pdf</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_image.c">
-      <Filter>mupdf\pdf</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_interpret.c">
-      <Filter>mupdf\pdf</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_lex.c">
-      <Filter>mupdf\pdf</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_metrics.c">
-      <Filter>mupdf\pdf</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_nametree.c">
-      <Filter>mupdf\pdf</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_outline.c">
-      <Filter>mupdf\pdf</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_page.c">
-      <Filter>mupdf\pdf</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_parse.c">
-      <Filter>mupdf\pdf</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_pattern.c">
-      <Filter>mupdf\pdf</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_repair.c">
-      <Filter>mupdf\pdf</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_shade.c">
-      <Filter>mupdf\pdf</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_store.c">
-      <Filter>mupdf\pdf</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_stream.c">
-      <Filter>mupdf\pdf</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_type3.c">
-      <Filter>mupdf\pdf</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_unicode.c">
-      <Filter>mupdf\pdf</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_xobject.c">
-      <Filter>mupdf\pdf</Filter>
     </ClCompile>
     <ClCompile Include="mupdf\xps\xps_zip.c">
       <Filter>mupdf\xps</Filter>
@@ -666,12 +561,6 @@
       <Filter>bzip2</Filter>
     </ClCompile>
     <ClCompile Include="mupdf\fitz\base_context.c">
-      <Filter>mupdf\fitz</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\fitz\base_link.c">
-      <Filter>mupdf\fitz</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\fitz\base_object.c">
       <Filter>mupdf\fitz</Filter>
     </ClCompile>
     <ClCompile Include="mupdf\fitz\crypt_sha2.c">
@@ -899,6 +788,120 @@
     <ClCompile Include="src\utils\DbgHelpDyn.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="mupdf\fitz\doc_document.c">
+      <Filter>mupdf\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\fitz\doc_link.c">
+      <Filter>mupdf\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\fitz\image_jpeg.c">
+      <Filter>mupdf\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\fitz\image_jpx.c">
+      <Filter>mupdf\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\fitz\image_md5.c">
+      <Filter>mupdf\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\fitz\image_png.c">
+      <Filter>mupdf\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\fitz\image_save.c">
+      <Filter>mupdf\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\fitz\image_tiff.c">
+      <Filter>mupdf\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\pdf\pdf_xref.c">
+      <Filter>mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\pdf\base_object.c">
+      <Filter>mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\pdf\pdf_annot.c">
+      <Filter>mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\pdf\pdf_cmap.c">
+      <Filter>mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\pdf\pdf_cmap_load.c">
+      <Filter>mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\pdf\pdf_cmap_parse.c">
+      <Filter>mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\pdf\pdf_cmap_table.c">
+      <Filter>mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\pdf\pdf_colorspace.c">
+      <Filter>mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\pdf\pdf_crypt.c">
+      <Filter>mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\pdf\pdf_encoding.c">
+      <Filter>mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\pdf\pdf_font.c">
+      <Filter>mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\pdf\pdf_fontfile.c">
+      <Filter>mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\pdf\pdf_ft_tools.c">
+      <Filter>mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\pdf\pdf_function.c">
+      <Filter>mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\pdf\pdf_image.c">
+      <Filter>mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\pdf\pdf_interpret.c">
+      <Filter>mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\pdf\pdf_lex.c">
+      <Filter>mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\pdf\pdf_metrics.c">
+      <Filter>mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\pdf\pdf_nametree.c">
+      <Filter>mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\pdf\pdf_outline.c">
+      <Filter>mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\pdf\pdf_page.c">
+      <Filter>mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\pdf\pdf_parse.c">
+      <Filter>mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\pdf\pdf_pattern.c">
+      <Filter>mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\pdf\pdf_repair.c">
+      <Filter>mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\pdf\pdf_shade.c">
+      <Filter>mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\pdf\pdf_store.c">
+      <Filter>mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\pdf\pdf_stream.c">
+      <Filter>mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\pdf\pdf_type3.c">
+      <Filter>mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\pdf\pdf_unicode.c">
+      <Filter>mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\pdf\pdf_xobject.c">
+      <Filter>mupdf\pdf</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -1089,15 +1092,6 @@
     </ClInclude>
     <ClInclude Include="src\utils\WinUtil.h">
       <Filter>utils</Filter>
-    </ClInclude>
-    <ClInclude Include="mupdf\pdf\data_encodings.h">
-      <Filter>mupdf\pdf</Filter>
-    </ClInclude>
-    <ClInclude Include="mupdf\pdf\data_glyphlist.h">
-      <Filter>mupdf\pdf</Filter>
-    </ClInclude>
-    <ClInclude Include="mupdf\pdf\mupdf.h">
-      <Filter>mupdf\pdf</Filter>
     </ClInclude>
     <ClInclude Include="mupdf\xps\muxps.h">
       <Filter>mupdf\xps</Filter>
@@ -1323,6 +1317,21 @@
     </ClInclude>
     <ClInclude Include="src\utils\DbgHelpDyn.h">
       <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="mupdf\fitz\fitz-internal.h">
+      <Filter>mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="mupdf\pdf\data_encodings.h">
+      <Filter>mupdf\pdf</Filter>
+    </ClInclude>
+    <ClInclude Include="mupdf\pdf\data_glyphlist.h">
+      <Filter>mupdf\pdf</Filter>
+    </ClInclude>
+    <ClInclude Include="mupdf\pdf\mupdf.h">
+      <Filter>mupdf\pdf</Filter>
+    </ClInclude>
+    <ClInclude Include="mupdf\pdf\mupdf-internal.h">
+      <Filter>mupdf\pdf</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
