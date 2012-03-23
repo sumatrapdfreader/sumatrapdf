@@ -447,8 +447,8 @@ Next:
     }
 
     CrashIf('>' != *currPos);
-    if (currPos == start) {
-        // skip empty tags (<>), because we're lenient
+    if (currPos == start || currPos == start + 1 && *start == '/') {
+        // skip empty tags (<> and </>), because we're lenient
         ++currPos;
         goto Next;
     }

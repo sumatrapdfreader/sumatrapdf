@@ -116,6 +116,7 @@ void HtmlPullParser_UnitTests()
     unittests::Test00("<p a1='>' foo=bar />");
     unittests::Test00("<p a1 ='>'     foo=\"bar\"/>");
     unittests::Test00("<p a1=  '>' foo=bar>", HtmlToken::StartTag);
+    unittests::Test00("<></><><!-- < skip > --><p a1=\">\" foo=bar>", HtmlToken::StartTag);
     unittests::HtmlEntities();
     unittests::Test01();
 }
