@@ -791,13 +791,11 @@ public:
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
-    virtual TCHAR *GetProperty(char *name) {
-        return doc ? doc->GetProperty(name) : NULL;
-    }
+    virtual TCHAR *GetProperty(char *name) { return doc->GetProperty(name); }
     virtual const TCHAR *GetDefaultFileExt() const { return _T(".epub"); }
 
     virtual bool HasTocTree() const {
-        return doc && ScopedMem<char>(doc->GetToC()) != NULL;
+        return ScopedMem<char>(doc->GetToC()) != NULL;
     }
     virtual DocTocItem *GetTocTree();
 
@@ -1248,9 +1246,7 @@ public:
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
-    virtual TCHAR *GetProperty(char *name) {
-        return doc ? doc->GetProperty(name) : NULL;
-    }
+    virtual TCHAR *GetProperty(char *name) { return doc->GetProperty(name); }
     virtual const TCHAR *GetDefaultFileExt() const { return _T(".fb2"); }
 
 protected:
@@ -1477,17 +1473,35 @@ MobiEngine *MobiEngine::CreateFromFile(const TCHAR *fileName)
 class ChmDataCache {
     ChmDoc *doc; // owned by creator
     ScopedMem<char> html;
+    Vec<ImageData2> images;
 
 public:
     ChmDataCache(ChmDoc *doc, char *html) : doc(doc), html(html) { }
+    ~ChmDataCache() {
+        for (size_t i = 0; i < images.Count(); i++) {
+            free(images.At(i).base.data);
+            free(images.At(i).id);
+        }
+    }
 
     const char *GetBookData(size_t *lenOut) {
-        *lenOut = 0;
-        return NULL;
+        *lenOut = html ? str::Len(html) : 0;
+        return html;
     }
 
     ImageData *GetImageData(const char *id) {
-        return NULL;
+        for (size_t i = 0; i < images.Count(); i++) {
+            if (str::Eq(images.At(i).id, id))
+                return &images.At(i).base;
+        }
+
+        ImageData2 data = { 0 };
+        data.base.data = (char *)doc->GetData(id, &data.base.len);
+        if (!data.base.data)
+            return NULL;
+        data.id = str::Dup(id);
+        images.Append(data);
+        return &images.Last().base;
     }
 };
 
@@ -1569,9 +1583,7 @@ public:
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
-    virtual TCHAR *GetProperty(char *name) {
-        return doc ? doc->GetProperty(name) : NULL;
-    }
+    virtual TCHAR *GetProperty(char *name) { return doc->GetProperty(name); }
     virtual const TCHAR *GetDefaultFileExt() const { return _T(".chm"); }
 
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
@@ -1643,16 +1655,17 @@ bool Chm2EngineImpl::Load(const TCHAR *fileName)
     if (!doc)
         return false;
 
+    char *html = ChmHtmlCollector(doc).GetHtml();
+    dataCache = new ChmDataCache(doc, html);
+
     LayoutInfo li;
-    li.htmlStr = ChmHtmlCollector(doc).GetHtml();
-    li.htmlStrLen = str::Len(li.htmlStr);
+    li.htmlStr = dataCache->GetBookData(&li.htmlStrLen);
     li.pageDx = (int)(pageRect.dx - 2 * pageBorder);
     li.pageDy = (int)(pageRect.dy - 2 * pageBorder);
     li.fontName = L"Georgia";
     li.fontSize = 11;
     li.textAllocator = &allocator;
 
-    dataCache = new ChmDataCache(doc, (char *)li.htmlStr);
     pages = ChmFormatter(&li, dataCache).FormatAllPages();
     if (!ExtractPageAnchors())
         return false;
