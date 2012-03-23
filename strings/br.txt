@@ -398,6 +398,9 @@ Ajustar em uma única página
 Fonts:
 Fontes:
 
+Formatting the book... %d pages
+Formatando o livro... %d páginas
+
 Found text at page %s
 Texto encontrado na página %s
 
@@ -424,6 +427,9 @@ Arquivos de imagem (*.%s)
 
 KB
 KB
+
+Loading file %s...
+Carregando arquivo %s...
 
 MB
 MB
@@ -685,8 +691,4 @@ copiando texto
 
 printing document
 imprimindo documento
-
-# Untranslated:
-#Formatting the book... %d pages
-#Loading file %s...
 

@@ -786,7 +786,7 @@
       <Filter>installer</Filter>
     </ClCompile>
     <ClCompile Include="src\utils\DbgHelpDyn.cpp">
-      <Filter>utils</Filter>
+      <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="mupdf\fitz\doc_document.c">
       <Filter>mupdf\fitz</Filter>
@@ -1316,7 +1316,7 @@
       <Filter>installer</Filter>
     </ClInclude>
     <ClInclude Include="src\utils\DbgHelpDyn.h">
-      <Filter>utils</Filter>
+      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="mupdf\fitz\fitz-internal.h">
       <Filter>mupdf\fitz</Filter>
