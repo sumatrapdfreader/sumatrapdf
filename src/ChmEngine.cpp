@@ -2,23 +2,13 @@
    License: GPLv3 */
 
 #include "ChmEngine.h"
+#include "ChmDoc.h"
 #include "Scoped.h"
 #include "StrUtil.h"
 #include "FileUtil.h"
 #include "Vec.h"
-#include "TrivialHtmlParser.h"
 #include "HtmlWindow.h"
 #include "WinUtil.h"
-// for GetChmCodepage
-#include "ChmDoc.h"
-
-#define CHM_MT
-#ifdef UNICODE
-#define PPC_BSTR
-#endif
-
-#include <inttypes.h>
-#include <chm_lib.h>
 
 // when set, always returns false from ChmEngine::IsSupportedFile
 // so that an alternative implementation can be used
@@ -29,26 +19,18 @@ void DebugAlternateChmEngine(bool enable)
     gDebugAlternateChmEngine = enable;
 }
 
-STATIC_ASSERT(1 == sizeof(uint8_t), uint8_is_1_byte);
-STATIC_ASSERT(2 == sizeof(uint16_t), uint16_is_2_bytes);
-STATIC_ASSERT(4 == sizeof(uint32_t), uint32_is_4_bytes);
-
-class Bytes {
-public:
-    Bytes() : d(NULL), size(0)
-    {}
-    ~Bytes() {
-        free(d);
-    }
-    uint8_t *d;
-    size_t size;
-};
-
 static bool IsExternalUrl(const TCHAR *url)
 {
     return str::StartsWithI(url, _T("http://")) ||
            str::StartsWithI(url, _T("https://")) ||
            str::StartsWithI(url, _T("mailto:"));
+}
+
+static TCHAR *ToPlainUrl(const TCHAR *url)
+{
+    TCHAR *plainUrl = str::Dup(url);
+    str::TransChars(plainUrl, _T("#?"), _T("\0\0"));
+    return plainUrl;
 }
 
 class ChmTocItem : public DocTocItem, public PageDestination {
@@ -88,36 +70,18 @@ ChmTocItem *ChmTocItem::Clone()
     return res;
 }
 
-// Data parsed from /#WINDOWS, /#STRINGS, /#SYSTEM files inside CHM file
-class ChmInfo {
-public:
-    ChmInfo() : title(NULL), tocPath(NULL), indexPath(NULL),
-        homePath(NULL), creator(NULL), codepage(CP_ACP) { }
-    ~ChmInfo() {
-        free(title);
-        free(tocPath);
-        free(indexPath);
-        free(homePath);
-        free(creator);
-    }
-    char *title;
-    char *tocPath;
-    char *indexPath;
-    char *homePath;
-    char *creator;
-    UINT codepage;
-};
-
 class ChmCacheEntry {
 public:
     TCHAR *url;
-    Bytes data;
+    char *data;
+    size_t size;
 
-    ChmCacheEntry(const TCHAR *url) {
+    ChmCacheEntry(const TCHAR *url) : data(NULL), size(0) {
         this->url = str::Dup(url);
     }
     ~ChmCacheEntry() {
         free(url);
+        free(data);
     }
 };
 
@@ -158,7 +122,9 @@ public:
     virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false) {
         return rect;
     }
-    virtual unsigned char *GetFileData(size_t *cbCount);
+    virtual unsigned char *GetFileData(size_t *cbCount) {
+        return (unsigned char *)file::ReadAll(fileName, cbCount);
+    }
 
     virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View) {
@@ -167,7 +133,7 @@ public:
 
     virtual bool HasClipOptimizations(int pageNo) { return false; }
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
-    virtual TCHAR *GetProperty(char *name);
+    virtual TCHAR *GetProperty(char *name) { return doc->GetProperty(name); }
 
     virtual const TCHAR *GetDefaultFileExt() const { return _T(".chm"); }
 
@@ -203,12 +169,9 @@ public:
     virtual void OnLButtonDown() { if (navCb) navCb->FocusFrame(true); }
     virtual bool GetDataForUrl(const TCHAR *url, char **data, size_t *len);
 
-    Bytes *FindDataForUrl(const TCHAR *url);
-
 protected:
     const TCHAR *fileName;
-    struct chmFile *chmHandle;
-    ChmInfo chmInfo;
+    ChmDoc *doc;
     ChmTocItem *tocRoot;
 
     StrVec pages;
@@ -220,30 +183,26 @@ protected:
 
     bool Load(const TCHAR *fileName);
     void DisplayPage(const TCHAR *pageUrl);
+
+    ChmCacheEntry *FindDataForUrl(const TCHAR *url);
 };
 
 ChmEngineImpl::ChmEngineImpl() :
-    fileName(NULL), chmHandle(NULL), tocRoot(NULL),
+    fileName(NULL), doc(NULL), tocRoot(NULL),
     htmlWindow(NULL), navCb(NULL), currentPageNo(1)
 {
 }
 
-Bytes *ChmEngineImpl::FindDataForUrl(const TCHAR *url)
+ChmEngineImpl::~ChmEngineImpl()
 {
-    for (size_t i = 0; i < urlDataCache.Count(); i++) {
-        ChmCacheEntry *e = urlDataCache.At(i);
-        if (str::Eq(url, e->url))
-            return &e->data;
-    }
-
-    return NULL;
-}
-
-static TCHAR *ToPlainUrl(const TCHAR *url)
-{
-    TCHAR *plainUrl = str::Dup(url);
-    str::TransChars(plainUrl, _T("#?"), _T("\0\0"));
-    return plainUrl;
+    // TODO: deleting htmlWindow seems to spin a modal loop which
+    //       can lead to WM_PAINT being dispatched for the parent
+    //       hwnd and then crashing in SumatraPDF.cpp's DrawDocument
+    delete htmlWindow;
+    delete tocRoot;
+    delete doc;
+    free((void *)fileName);
+    DeleteVecMembers(urlDataCache);
 }
 
 // Called after html document has been loaded.
@@ -385,406 +344,97 @@ void ChmEngineImpl::ZoomTo(float zoomLevel)
         htmlWindow->SetZoomPercent((int)zoomLevel);
 }
 
-ChmEngineImpl::~ChmEngineImpl()
-{
-    chm_close(chmHandle);
-    // TODO: deleting htmlWindow seems to spin a modal loop which
-    //       can lead to WM_PAINT being dispatched for the parent
-    //       hwnd and then crashing in SumatraPDF.cpp's DrawDocument
-    delete htmlWindow;
-    delete tocRoot;
-    free((void *)fileName);
-    DeleteVecMembers(urlDataCache);
-}
+class ChmTocBuilder : public ChmTocVisitor {
+    ChmDoc *doc;
+    StrVec *pages;
+    ChmTocItem **root;
+    int idCounter;
+    Vec<DocTocItem *> lastItems;
 
-// The numbers in CHM format are little-endian
-static bool ReadU16(const Bytes& b, size_t off, uint16_t& valOut)
-{
-    if (off + sizeof(uint16_t) > b.size)
-        return false;
-    valOut = b.d[off] | (b.d[off+1] << 8);
-    return true;
-}
+    // We fake page numbers by doing a depth-first traversal of
+    // toc tree and considering each unique html page in toc tree
+    // as a page
+    int CreatePageNoForURL(const TCHAR *url) {
+        if (!url || IsExternalUrl(url))
+            return 0;
 
-// The numbers in CHM format are little-endian
-static bool ReadU32(const Bytes& b, size_t off, uint32_t& valOut)
-{
-    if (off + sizeof(uint32_t) > b.size)
-        return false;
-    valOut = b.d[off] | (b.d[off+1] << 8) | (b.d[off+2] << 16) | (b.d[off+3] << 24);
-    return true;
-}
+        ScopedMem<TCHAR> plainUrl(ToPlainUrl(url));
+        int pageNo = pages->Find(plainUrl) + 1;
+        if (pageNo > 0)
+            return pageNo;
 
-static char *ReadString(const Bytes& b, size_t off)
-{
-    if (off >= b.size)
-        return NULL;
-    char *strStart = (char *)b.d + off;
-    char *strEnd = (char *)memchr(strStart, 0, b.size - off);
-    // didn't find terminating 0 - assume it's corrupted
-    if (!strEnd || !*strStart)
-        return NULL;
-    return str::Dup(strStart);
-}
-
-static char *ReadWsTrimmedString(const Bytes& b, size_t off)
-{
-    char *s = ReadString(b, off);
-    if (s) {
-        str::RemoveChars(s, "\n\r\t");
-    }
-    return s;
-}
-
-static bool GetChmDataForFile(struct chmFile *chmHandle, const char *fileName, Bytes& dataOut)
-{
-    ScopedMem<const char> fileNameTmp;
-    if (!str::StartsWith(fileName, "/")) {
-        fileNameTmp.Set(str::Join("/", fileName));
-        fileName = fileNameTmp;
-    } else if (str::StartsWith(fileName, "///")) {
-        fileName += 2;
+        pages->Append(plainUrl.StealData());
+        return pages->Count();
     }
 
-    struct chmUnitInfo info;
-    int res = chm_resolve_object(chmHandle, fileName, &info);
-    if (CHM_RESOLVE_SUCCESS != res) {
-        return false;
-    }
+public:
+    ChmTocBuilder(ChmDoc *doc, StrVec *pages, ChmTocItem **root) :
+        doc(doc), pages(pages), root(root), idCounter(0) { }
 
-    dataOut.size = (size_t)info.length;
-    if (dataOut.size > 128*1024*1024) {
-        // don't allow anything above 128 MB
-        return false;
-    }
+    void visit(const TCHAR *name, const TCHAR *url, int level) {
+        int pageNo = CreatePageNoForURL(url);
+        ChmTocItem *item = new ChmTocItem(str::Dup(name), pageNo, url ? str::Dup(url) : NULL);
+        item->id = ++idCounter;
+        item->open = level == 1;
 
-    // +1 for 0 terminator for C string compatibility
-    dataOut.d = (uint8_t *)malloc(dataOut.size + 1);
-    if (!dataOut.d)
-        return false;
-
-    if (!chm_retrieve_object(chmHandle, &info, dataOut.d, 0, dataOut.size)) {
-        return false;
-    }
-    dataOut.d[dataOut.size] = 0;
-    return true;
-}
-
-static bool ChmFileExists(struct chmFile *chmHandle, const char *path)
-{
-    ScopedMem<char> path2;
-    if (!str::StartsWith(path, "/"))
-        path2.Set(str::Join("/", path));
-    else if (str::StartsWith(path, "///"))
-        path += 2;
-
-    struct chmUnitInfo info;
-    return chm_resolve_object(chmHandle, path2 ? path2 : path, &info) == CHM_RESOLVE_SUCCESS;
-}
-
-static char *FindHomeForPath(struct chmFile *chmHandle, const char *basePath)
-{
-    const char *pathsToTest[] = {
-        "index.htm", "index.html",
-        "default.htm", "default.html"
-    };
-
-    const char *sep = str::EndsWith(basePath, "/") ? "" : "/";
-    for (int i = 0; i < dimof(pathsToTest); i++) {
-        ScopedMem<char> testPath(str::Format("%s%s%s", basePath, sep, pathsToTest[i]));
-        if (ChmFileExists(chmHandle, testPath))
-            return testPath.StealData();
-    }
-    return NULL;
-}
-
-// http://www.nongnu.org/chmspec/latest/Internal.html#WINDOWS
-static void ParseWindowsChmData(chmFile *chmHandle, ChmInfo *chmInfo)
-{
-    Bytes windowsBytes;
-    Bytes stringsBytes;
-    bool hasWindows = GetChmDataForFile(chmHandle, "/#WINDOWS", windowsBytes);
-    bool hasStrings = GetChmDataForFile(chmHandle, "/#STRINGS", stringsBytes);
-    if (!hasWindows || !hasStrings)
-        return;
-
-    uint32_t entries, entrySize, strOff;
-    bool ok = ReadU32(windowsBytes, 0, entries);
-    if (!ok)
-        return;
-    ok = ReadU32(windowsBytes, 4, entrySize);
-    if (!ok)
-        return;
-
-    for (uint32_t i = 0; i < entries; ++i) {
-        uint32_t off = 8 + (i * entrySize);
-        if (!chmInfo->title) {
-            ok = ReadU32(windowsBytes, off + 0x14, strOff);
-            if (ok) {
-                chmInfo->title = ReadWsTrimmedString(stringsBytes, strOff);
-            }
-        }
-        if (!chmInfo->tocPath) {
-            ok = ReadU32(windowsBytes, off + 0x60, strOff);
-            if (ok) {
-                chmInfo->tocPath = ReadString(stringsBytes, strOff);
-            }
-        }
-        if (!chmInfo->indexPath) {
-            ok = ReadU32(windowsBytes, off + 0x64, strOff);
-            if (ok) {
-                chmInfo->indexPath = ReadString(stringsBytes, strOff);
-            }
-        }
-        if (!chmInfo->homePath) {
-            ok = ReadU32(windowsBytes, off+0x68, strOff);
-            if (ok) {
-                chmInfo->homePath = ReadString(stringsBytes, strOff);
-            }
+        // append the item at the correct level
+        CrashIf(level < 1);
+        if (!*root) {
+            *root = item;
+            lastItems.Append(*root);
+        } else if ((size_t)level <= lastItems.Count()) {
+            lastItems.RemoveAt(level, lastItems.Count() - level);
+            lastItems.Last() = lastItems.Last()->next = item;
+        } else {
+            lastItems.Last()->child = item;
+            lastItems.Append(item);
         }
     }
-}
-
-// http://www.nongnu.org/chmspec/latest/Internal.html#SYSTEM
-static bool ParseSystemChmData(chmFile *chmHandle, ChmInfo *chmInfo)
-{
-    Bytes b;
-    uint16_t type, len;
-    bool ok = GetChmDataForFile(chmHandle, "/#SYSTEM", b);
-    if (!ok)
-        return false;
-    uint16_t off = 4;
-    // Note: skipping uint32_t version at offset 0. It's supposed to be 2 or 3.
-    while (off < b.size) {
-        // Note: at some point we seem to get off-sync i.e. I'm seeing many entries
-        // with type==0 and len==0. Seems harmless.
-        ok = ReadU16(b, off, type);
-        if (!ok)
-            return true;
-        ok = ReadU16(b, off+2, len);
-        if (!ok)
-            return true;
-        off += 4;
-        switch (type) {
-        case 0:
-            if (!chmInfo->tocPath && len > 0) {
-                chmInfo->tocPath = ReadString(b, off);
-            }
-            break;
-        case 1:
-            if (!chmInfo->indexPath) {
-                chmInfo->indexPath = ReadString(b, off);
-            }
-            break;
-        case 2:
-            if (!chmInfo->homePath) {
-                chmInfo->homePath = ReadString(b, off);
-            }
-            break;
-        case 3:
-            if (!chmInfo->title) {
-                chmInfo->title = ReadWsTrimmedString(b, off);
-            }
-            break;
-
-        case 6:
-            // for now for debugging
-            {
-                char *compiledFile = ReadString(b, off);
-                free(compiledFile);
-            }
-            break;
-        case 9:
-            if (!chmInfo->creator) {
-                chmInfo->creator = ReadWsTrimmedString(b, off);
-            }
-            break;
-        case 16:
-            // for now for debugging
-            {
-                char *defaultFont = ReadString(b, off);
-                free(defaultFont);
-            }
-            break;
-        }
-        off += len;
-    }
-    return true;
-}
-
-// We fake page numbers by doing a depth-first traversal of
-// toc tree and considering each unique html page in toc tree
-// as a page
-static int CreatePageNoForURL(StrVec& pages, const TCHAR *url)
-{
-    if (!url || IsExternalUrl(url))
-        return 0;
-
-    ScopedMem<TCHAR> plainUrl(ToPlainUrl(url));
-    int pageNo = pages.Find(plainUrl) + 1;
-    if (pageNo > 0)
-        return pageNo;
-
-    pages.Append(plainUrl.StealData());
-    return pages.Count();
-}
-
-/* The html looks like:
-<li>
-  <object type="text/sitemap">
-    <param name="Name" value="Main Page">
-    <param name="Local" value="0789729717_main.html">
-    <param name="ImageNumber" value="12">
-  </object>
-  <ul> ... children ... </ul>
-<li>
-  ... siblings ...
-*/
-static ChmTocItem *TocItemFromLi(StrVec& pages, HtmlElement *el, UINT cp)
-{
-    assert(str::Eq("li", el->name));
-    el = el->GetChildByName("object");
-    if (!el)
-        return NULL;
-
-    ScopedMem<TCHAR> name, local;
-    for (el = el->GetChildByName("param"); el; el = el->next) {
-        if (!str::Eq("param", el->name))
-            continue;
-        ScopedMem<TCHAR> attrName(el->GetAttribute("name"));
-        ScopedMem<TCHAR> attrVal(el->GetAttribute("value"));
-        if (!attrName || !attrVal)
-            /* ignore incomplete/unneeded <param> */;
-        else if (str::EqI(attrName, _T("Name"))) {
-#ifdef UNICODE
-            if (cp != CP_CHM_DEFAULT) {
-                ScopedMem<char> bytes(str::conv::ToCodePage(attrVal, CP_CHM_DEFAULT));
-                attrVal.Set(str::conv::FromCodePage(bytes, cp));
-            }
-#endif
-            name.Set(attrVal.StealData());
-        }
-        else if (str::EqI(attrName, _T("Local")))
-            local.Set(attrVal.StealData());
-    }
-    if (!name)
-        return NULL;
-    // remove the ITS protocol and any filename references from the URLs
-    if (local && str::Find(local, _T("::/")))
-        local.Set(str::Dup(str::Find(local, _T("::/")) + 3));
-
-    int pageNo = CreatePageNoForURL(pages, local);
-    return new ChmTocItem(name.StealData(), pageNo, local.StealData());
-}
-
-static ChmTocItem *BuildChmToc(StrVec& pages, HtmlElement *list, UINT cp, int& idCounter, bool topLevel)
-{
-    assert(str::Eq("ul", list->name));
-    ChmTocItem *node = NULL;
-
-    // some broken ToCs wrap every <li> into its own <ul>
-    for (; list && str::Eq(list->name, "ul"); list = list->next) {
-        for (HtmlElement *el = list->down; el; el = el->next) {
-            if (!str::Eq(el->name, "li"))
-                continue; // ignore unexpected elements
-            ChmTocItem *item = TocItemFromLi(pages, el, cp);
-            if (!item)
-                continue; // skip incomplete elements and all their children
-            item->id = ++idCounter;
-
-            HtmlElement *nested = el->GetChildByName("ul");
-            // some broken ToCs have the <ul> follow right *after* a <li>
-            if (!nested && el->next && str::Eq(el->next->name, "ul"))
-                nested = el->next;
-            if (nested)
-                item->child = BuildChmToc(pages, nested, cp, idCounter, false);
-            item->open = topLevel;
-
-            if (!node)
-                node = item;
-            else
-                node->AddSibling(item);
-        }
-    }
-
-    return node;
-}
-
-static ChmTocItem *ParseChmHtmlToc(StrVec& pages, char *html, UINT cp)
-{
-    HtmlParser p;
-    // detect UTF-8 content by BOM
-    if (str::StartsWith(html, "\xEF\xBB\xBF")) {
-        html += 3;
-        cp = CP_UTF8;
-    }
-    // enforce the default codepage, so that pre-encoded text and
-    // entities are in the same codepage and TocItemFromLi yields
-    // consistent results
-    HtmlElement *el = p.Parse(html, CP_CHM_DEFAULT);
-    if (!el)
-        return NULL;
-    el = p.FindElementByName("body");
-    // since <body> is optional, also continue without one
-    el = p.FindElementByName("ul", el);
-    if (!el)
-        return NULL;
-    int idCounter = 0;
-    return BuildChmToc(pages, el, cp, idCounter, true);
-}
+};
 
 bool ChmEngineImpl::Load(const TCHAR *fileName)
 {
-    assert(NULL == chmHandle);
-
     this->fileName = str::Dup(fileName);
-    chmHandle = chm_open((TCHAR *)fileName);
-    if (!chmHandle)
+    doc = ChmDoc::CreateFromFile(fileName);
+    if (!doc)
         return false;
-    ParseWindowsChmData(chmHandle, &chmInfo);
-    if (!ParseSystemChmData(chmHandle, &chmInfo))
-        return false;
-
-    if (!chmInfo.homePath || !ChmFileExists(chmHandle, chmInfo.homePath))
-        chmInfo.homePath = FindHomeForPath(chmHandle, "/");
-    if (!chmInfo.homePath)
-        return false;
-
-    UINT codepage = GetChmCodepage(fileName);
-    if (GetACP() != codepage)
-        chmInfo.codepage = codepage;
 
     // always make the document's homepage page 1
-    pages.Append(str::conv::FromCodePage(chmInfo.homePath, chmInfo.codepage));
+    pages.Append(str::conv::FromAnsi(doc->GetIndexPath()));
+    // parse the ToC here, since page numbering depends on it
+    doc->ParseToc(&ChmTocBuilder(doc, &pages, &tocRoot));
 
-    if (chmInfo.tocPath) {
-        // parse the ToC here, since page numbering depends on it
-        Bytes b;
-        if (GetChmDataForFile(chmHandle, chmInfo.tocPath, b))
-            tocRoot = ParseChmHtmlToc(pages, (char *)b.d, codepage);
+    CrashIf(pages.Count() == 0);
+    return pages.Count() > 0;
+}
+
+ChmCacheEntry *ChmEngineImpl::FindDataForUrl(const TCHAR *url)
+{
+    for (size_t i = 0; i < urlDataCache.Count(); i++) {
+        ChmCacheEntry *e = urlDataCache.At(i);
+        if (str::Eq(url, e->url))
+            return e;
     }
-
-    return true;
+    return NULL;
 }
 
 // Load and cache data for a given url inside CHM file.
 bool ChmEngineImpl::GetDataForUrl(const TCHAR *url, char **data, size_t *len)
 {
     ScopedMem<TCHAR> plainUrl(ToPlainUrl(url));
-    Bytes *b = FindDataForUrl(plainUrl);
-    if (!b) {
-        ChmCacheEntry *e = new ChmCacheEntry(plainUrl);
+    ChmCacheEntry *e = FindDataForUrl(plainUrl);
+    if (!e) {
+        e = new ChmCacheEntry(plainUrl);
         ScopedMem<char> urlAnsi(str::conv::ToAnsi(plainUrl));
-        bool ok = GetChmDataForFile(chmHandle, urlAnsi, e->data);
-        if (!ok) {
+        e->data = (char *)doc->GetData(urlAnsi, &e->size);
+        if (!e->data) {
             delete e;
             return false;
         }
-        b = &e->data;
         urlDataCache.Append(e);
     }
-    *data = (char*)b->d;
-    *len = b->size;
+    *data = e->data;
+    *len = e->size;
     return true;
 }
 
@@ -797,29 +447,11 @@ PageDestination *ChmEngineImpl::GetNamedDest(const TCHAR *name)
     return NULL;
 }
 
-TCHAR *ChmEngineImpl::GetProperty(char *name)
-{
-    if (str::Eq(name, "Title") && chmInfo.title)
-        return str::conv::FromCodePage(chmInfo.title, chmInfo.codepage);
-    if (str::Eq(name, "Creator") && chmInfo.creator)
-        return str::conv::FromCodePage(chmInfo.creator, chmInfo.codepage);
-    return NULL;
-}
-
-unsigned char *ChmEngineImpl::GetFileData(size_t *cbCount)
-{
-    return (unsigned char *)file::ReadAll(fileName, cbCount);
-}
-
 bool ChmEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
 {
     if (gDebugAlternateChmEngine)
         return false;
-
-    if (sniff)
-        return file::StartsWith(fileName, "ITSF");
-
-    return str::EndsWithI(fileName, _T(".chm"));
+    return ChmDoc::IsSupportedFile(fileName, sniff);
 }
 
 ChmEngine *ChmEngine::CreateFromFile(const TCHAR *fileName)

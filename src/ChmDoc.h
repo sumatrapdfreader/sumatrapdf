@@ -38,7 +38,7 @@ public:
     unsigned char *GetData(const char *fileName, size_t *lenOut);
     TCHAR *GetProperty(const char *name);
 
-    char *GetHomepage();
+    const char *GetIndexPath();
     char *ToUtf8(const unsigned char *text);
 
     bool HasToc();
@@ -47,7 +47,5 @@ public:
     static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
     static ChmDoc *CreateFromFile(const TCHAR *fileName);
 };
-
-UINT GetChmCodepage(const TCHAR *fileName);
 
 #endif

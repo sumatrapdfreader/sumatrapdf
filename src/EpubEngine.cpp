@@ -1613,7 +1613,8 @@ public:
     char *GetHtml() {
         if (doc->ParseToc(this))
             return html.StealData();
-        return doc->GetHomepage();
+        const char *index = doc->GetIndexPath();
+        return (char *)doc->GetData(index, NULL);
     }
 
     void visit(const TCHAR *name, const TCHAR *url, int level) {
@@ -1659,15 +1660,14 @@ bool Chm2EngineImpl::Load(const TCHAR *fileName)
     return pages->Count() > 0;
 }
 
-
-class ChmTocBuilder : public ChmTocVisitor {
+class Chm2TocBuilder : public ChmTocVisitor {
     ChmDoc *doc;
     Chm2Engine *engine;
     EbookTocItem *root;
     int idCounter;
 
 public:
-    ChmTocBuilder(Chm2Engine *engine, ChmDoc *doc) :
+    Chm2TocBuilder(Chm2Engine *engine, ChmDoc *doc) :
         engine(engine), doc(doc), root(NULL), idCounter(0) { }
 
     EbookTocItem *GetTocRoot() {
@@ -1685,15 +1685,15 @@ public:
             dest = engine->GetNamedDest(url);
 
         EbookTocItem *item = new EbookTocItem(str::Dup(name), dest);
-        AppendTocItem(root, item, level);
         item->id = ++idCounter;
         item->open = level == 1;
+        AppendTocItem(root, item, level);
     }
 };
 
 DocTocItem *Chm2EngineImpl::GetTocTree()
 {
-    return ChmTocBuilder(this, doc).GetTocRoot();
+    return Chm2TocBuilder(this, doc).GetTocRoot();
 }
 
 bool Chm2Engine::IsSupportedFile(const TCHAR *fileName, bool sniff)

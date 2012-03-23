@@ -169,7 +169,7 @@ bool ChmDoc::ParseSystemData()
     return true;
 }
 
-UINT GetChmCodepage(const TCHAR *fileName)
+static UINT GetChmCodepage(const TCHAR *fileName)
 {
     // cf. http://msdn.microsoft.com/en-us/library/bb165625(v=VS.90).aspx
     static struct {
@@ -238,9 +238,9 @@ TCHAR *ChmDoc::GetProperty(const char *name)
     return result.StealData();
 }
 
-char *ChmDoc::GetHomepage()
+const char *ChmDoc::GetIndexPath()
 {
-    return (char *)GetData(homePath, NULL);
+    return homePath;
 }
 
 char *ChmDoc::ToUtf8(const unsigned char *text)
@@ -258,6 +258,17 @@ bool ChmDoc::HasToc()
     return tocPath != NULL;
 }
 
+/* The html looks like:
+<li>
+  <object type="text/sitemap">
+    <param name="Name" value="Main Page">
+    <param name="Local" value="0789729717_main.html">
+    <param name="ImageNumber" value="12">
+  </object>
+  <ul> ... children ... </ul>
+<li>
+  ... siblings ...
+*/
 static bool VisitChmTocItem(ChmTocVisitor *visitor, HtmlElement *el, UINT cp, int level)
 {
     assert(str::Eq("li", el->name));
