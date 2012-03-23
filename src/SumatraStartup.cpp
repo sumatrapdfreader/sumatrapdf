@@ -166,12 +166,15 @@ static void OpenUsingDde(CommandLineInfo& i, int n, bool firstIsDocLoaded)
     }
 }
 
-static bool LoadOnStartup(CommandLineInfo& i, int n, bool firstIsDocLoaded)
+static WindowInfo *LoadOnStartup(CommandLineInfo& i, int n, bool firstIsDocLoaded, bool& ok)
 {
+    ok = true;
     bool showWin = !(i.printDialog && i.exitOnPrint) && !gPluginMode;
     WindowInfo *win = LoadDocument(i.fileNames.At(n), NULL, showWin);
-    if (!win || !win->IsDocLoaded())
-        return false;
+    if (!win || !win->IsDocLoaded()) {
+        ok = false;
+        return win;
+    }
 
     if (win->IsDocLoaded() && i.destName && !firstIsDocLoaded) {
         win->linkHandler->GotoNamedDest(i.destName);
@@ -182,7 +185,7 @@ static bool LoadOnStartup(CommandLineInfo& i, int n, bool firstIsDocLoaded)
     if (i.hwndPluginParent)
         MakePluginWindow(*win, i.hwndPluginParent);
     if (!(win->IsDocLoaded() && !firstIsDocLoaded))
-        return true;
+        return win;
 
     if (i.enterPresentation || i.enterFullscreen)
         EnterFullscreen(*win, i.enterPresentation);
@@ -202,7 +205,7 @@ static bool LoadOnStartup(CommandLineInfo& i, int n, bool firstIsDocLoaded)
         int ret = win->pdfsync->SourceToDoc(i.forwardSearchOrigin, i.forwardSearchLine, 0, &page, rects);
         ShowForwardSearchResult(win, i.forwardSearchOrigin, i.forwardSearchLine, 0, ret, page, rects);
     }
-    return true;
+    return win;
 }
 
 static void SetupPluginMode(CommandLineInfo& i)
@@ -381,7 +384,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         if (i.reuseInstance && !i.printDialog) {
             OpenUsingDde(i, n, firstIsDocLoaded);
         } else {
-            if (!LoadOnStartup(i, n, firstIsDocLoaded))
+            bool ok;
+            win = LoadOnStartup(i, n, firstIsDocLoaded, ok);
+            if (!ok)
                 goto Exit;
         }
 
