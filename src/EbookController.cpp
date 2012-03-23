@@ -576,24 +576,24 @@ size_t EbookController::GetMaxPageCount()
 void EbookController::UpdateStatus()
 {
     UpdateCurrPageNoForPage(pageShown);
-    ctrls->progress->SetFilled(0.f);
     size_t pageCount = GetMaxPageCount();
 
     if (fileBeingLoaded) {
         ScopedMem<WCHAR> s(str::Format(_TR("Loading file %s..."), fileBeingLoaded));
         ctrls->status->SetText(s.Get());
+        ctrls->progress->SetFilled(0.f);
         return;
     }
 
     if (LayoutInProgress()) {
         ScopedMem<WCHAR> s(str::Format(_TR("Formatting the book... %d pages"), pageCount));
         ctrls->status->SetText(s.Get());
+        ctrls->progress->SetFilled(0.f);
         return;
     }
 
     ScopedMem<WCHAR> s(str::Format(_T("%s %d / %d"), _TR("Page:"), currPageNo, pageCount));
     ctrls->status->SetText(s.Get());
-
     if (GetPagesFromBeginning())
         ctrls->progress->SetFilled(PercFromInt(GetPagesFromBeginning()->Count(), currPageNo));
     else

@@ -1,10 +1,5 @@
 Things to do before 2.0 release:
 
-Maybe for 2.0:
-- progress bar flicker when status line changes width (I think). We probably
-  force repaint after re-layout in mui even if position/size of controls
-  hasn't changed
-
 Things that can wait for 2.1 or later:
 - even more mobi document properties
 - links in mobi format
