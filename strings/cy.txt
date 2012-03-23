@@ -374,6 +374,9 @@ Agor yn &Adobe Reader
 Open in &Foxit Reader
 Agor yn &Foxit Reader
 
+Open in Microsoft HTML Help
+Agor yn Microsoft HTML Help
+
 Open in Microsoft XPS-Viewer
 Agor yn Microsoft XPS-Viewer
 

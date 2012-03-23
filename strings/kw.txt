@@ -285,6 +285,9 @@ Ygeri yn &Adobe Reader
 Open in &Foxit Reader
 Ygeri yn &Foxit Reader
 
+Open in Microsoft HTML Help
+Ygeri yn Microsoft HTML Help
+
 Open in Microsoft XPS-Viewer
 Ygeri yn Microsoft XPS-Viewer
 

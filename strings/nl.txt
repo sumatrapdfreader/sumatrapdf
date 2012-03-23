@@ -487,6 +487,9 @@ Openen met &Adobe Reader
 Open in &Foxit Reader
 Openen met &Foxit Reader
 
+Open in Microsoft HTML Help
+Openen met Microsoft HTML Help
+
 Open in Microsoft XPS-Viewer
 Openen met Microsoft XPS-Viewer
 

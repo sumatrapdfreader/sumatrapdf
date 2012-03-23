@@ -467,6 +467,9 @@ Deschide în &Adobe Reader
 Open in &Foxit Reader
 Deschide în &Foxit Reader
 
+Open in Microsoft HTML Help
+Deschide în Microsoft HTML Help
+
 Open in Microsoft XPS-Viewer
 Deschide în Microsoft XPS-Viewer
 

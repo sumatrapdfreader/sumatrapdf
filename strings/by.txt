@@ -245,6 +245,9 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 Адкрыць у &Foxit Reader
 
+Open in Microsoft HTML Help
+Адкрыць у Microsoft HTML Help
+
 Open in Microsoft XPS-Viewer
 Адкрыць у Microsoft XPS-Viewer
 

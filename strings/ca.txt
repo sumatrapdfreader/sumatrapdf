@@ -471,6 +471,9 @@ Obre amb l'&Adobe Reader
 Open in &Foxit Reader
 Obre amb el &Foxit Reader
 
+Open in Microsoft HTML Help
+Obre amb el Microsoft HTML Help
+
 Open in Microsoft XPS-Viewer
 Obre amb el Microsoft XPS-Viewer
 

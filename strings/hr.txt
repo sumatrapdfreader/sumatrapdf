@@ -479,6 +479,9 @@ Otvori u programu &Adobe Reader
 Open in &Foxit Reader
 Otvori u programu &Foxit Reader
 
+Open in Microsoft HTML Help
+Otvori u programu Microsoft HTML Help
+
 Open in Microsoft XPS-Viewer
 Otvori u programu Microsoft XPS-Viewer
 

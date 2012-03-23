@@ -472,6 +472,9 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 在 &Foxit Reader 中打开
 
+Open in Microsoft HTML Help
+在 Microsoft HTML Help 中打开
+
 Open in Microsoft XPS-Viewer
 在 Microsoft XPS-Viewer 中打开
 

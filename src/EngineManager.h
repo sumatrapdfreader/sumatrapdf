@@ -76,7 +76,7 @@ RetrySniffing:
             engineType = Engine_Mobi;
         } else if (Chm2Engine::IsSupportedFile(filePath, sniff) && engineType != Engine_Chm2) {
             engine = Chm2Engine::CreateFromFile(filePath);
-            engineType = Engine_Mobi;
+            engineType = Engine_Chm2;
 #endif
         }
 

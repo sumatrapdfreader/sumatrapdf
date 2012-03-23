@@ -492,6 +492,9 @@ Apri con &Adobe Reader
 Open in &Foxit Reader
 Apri con &Foxit Reader
 
+Open in Microsoft HTML Help
+Apri con Microsoft HTML Help
+
 Open in Microsoft XPS-Viewer
 Apri con Microsoft XPS-Viewer
 

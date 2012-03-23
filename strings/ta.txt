@@ -378,6 +378,9 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 &Foxit Reader இல் திற
 
+Open in Microsoft HTML Help
+Microsoft HTML Help இல் திற
+
 Open in Microsoft XPS-Viewer
 Microsoft XPS-Viewer இல் திற
 

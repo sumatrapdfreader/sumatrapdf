@@ -380,6 +380,9 @@ Buksan sa Adobe Reader
 Open in &Foxit Reader
 Buksan sa Foxit Reader
 
+Open in Microsoft HTML Help
+Buksan sa Microsoft HTML Help
+
 Open in Microsoft XPS-Viewer
 Buksan sa Microsoft XPS-Viewer
 

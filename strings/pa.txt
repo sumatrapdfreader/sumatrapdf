@@ -315,6 +315,7 @@ Zoom Out
 #Open a document...
 #Open in &Adobe Reader
 #Open in &Foxit Reader
+#Open in Microsoft HTML Help
 #Open in Microsoft XPS-Viewer
 #Open in PDF-XChange
 #P&roperties

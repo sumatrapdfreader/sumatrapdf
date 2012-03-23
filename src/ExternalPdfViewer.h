@@ -18,4 +18,7 @@ bool ViewWithAcrobat(WindowInfo *win, TCHAR *args=NULL);
 bool CanViewWithXPSViewer(WindowInfo *win);
 bool ViewWithXPSViewer(WindowInfo *win, TCHAR *args=NULL);
 
+bool CanViewWithHtmlHelp(WindowInfo *win);
+bool ViewWithHtmlHelp(WindowInfo *win, TCHAR *args=NULL);
+
 #endif

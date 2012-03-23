@@ -466,6 +466,9 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 გახსნა &Foxit Reader-ში
 
+Open in Microsoft HTML Help
+გახსნა Microsoft HTML Help-ში
+
 Open in Microsoft XPS-Viewer
 გახსნა Microsoft XPS-Viewer-ში
 

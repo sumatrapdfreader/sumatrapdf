@@ -440,6 +440,9 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 以 Foxit Reader 開啟
 
+Open in Microsoft HTML Help
+以 Microsoft HTML Help 開啟
+
 Open in Microsoft XPS-Viewer
 以 Microsoft XPS-Viewer 開啟
 

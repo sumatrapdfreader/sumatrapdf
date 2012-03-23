@@ -480,6 +480,9 @@ Abrir no Adobe &Reader
 Open in &Foxit Reader
 Abrir &no Foxit Reader
 
+Open in Microsoft HTML Help
+Abrir no Microsoft HTML Help
+
 Open in Microsoft XPS-Viewer
 Abrir no Microsoft XPS-Viewer
 

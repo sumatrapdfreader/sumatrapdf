@@ -480,6 +480,9 @@ Odpri s programom &Adobe Reader
 Open in &Foxit Reader
 Odpri s programom &Foxit Reader
 
+Open in Microsoft HTML Help
+Odpri s programom Microsoft HTML Help
+
 Open in Microsoft XPS-Viewer
 Odpri s programom Microsoft XPS-Viewer
 

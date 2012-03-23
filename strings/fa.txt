@@ -321,6 +321,9 @@ Adobe Reader باز کردن در
 Open in &Foxit Reader
 Foxit Reader باز کردن در
 
+Open in Microsoft HTML Help
+Microsoft HTML Help باز کردن در
+
 Open in Microsoft XPS-Viewer
 Microsoft XPS-Viewer باز کردن در
 

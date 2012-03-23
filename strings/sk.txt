@@ -475,6 +475,9 @@ Otvoriť v programe &Adobe Reader
 Open in &Foxit Reader
 Otvoriť v programe &Foxit Reader
 
+Open in Microsoft HTML Help
+Otvoriť v programe Microsoft HTML Help
+
 Open in Microsoft XPS-Viewer
 Otvoriť v programe Microsoft XPS-Viewer
 

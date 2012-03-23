@@ -467,6 +467,9 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 Åben med &Foxit Reader
 
+Open in Microsoft HTML Help
+Åben med Microsoft HTML Help
+
 Open in Microsoft XPS-Viewer
 Åben med Microsoft XPS-Viewer
 

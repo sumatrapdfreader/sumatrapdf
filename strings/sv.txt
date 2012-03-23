@@ -454,6 +454,9 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 Öppna i Foxit Reader
 
+Open in Microsoft HTML Help
+Öppna i Microsoft HTML Help
+
 Open in Microsoft XPS-Viewer
 Öppna i Microsoft XPS-Viewer
 

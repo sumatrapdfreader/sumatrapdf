@@ -486,6 +486,9 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 Отк&рыть в Foxit Reader
 
+Open in Microsoft HTML Help
+Открыть в Microsoft HTML Help
+
 Open in Microsoft XPS-Viewer
 Открыть в Microsoft XPS-Viewer
 

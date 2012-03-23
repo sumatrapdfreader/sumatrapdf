@@ -487,6 +487,9 @@ Adobe Reader에서 열기(&A)
 Open in &Foxit Reader
 Foxit Reader에서 열기(&F)
 
+Open in Microsoft HTML Help
+Microsoft HTML Help에서 열기
+
 Open in Microsoft XPS-Viewer
 Microsoft XPS-Viewer에서 열기
 

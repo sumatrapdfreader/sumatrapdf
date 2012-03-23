@@ -361,6 +361,9 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 &Foxit කියවනය මගින් විවෘතකරන්න
 
+Open in Microsoft HTML Help
+Microsoft HTML Help කියවනය මගින් විවෘතකරන්න
+
 Open in Microsoft XPS-Viewer
 Microsoft XPS-Viewer කියවනය මගින් විවෘතකරන්න
 

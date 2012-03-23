@@ -475,6 +475,9 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 فتح الملف بـ Foxit Reader
 
+Open in Microsoft HTML Help
+فتح الملف بـ Microsoft HTML Help
+
 Open in Microsoft XPS-Viewer
 فتح الملف بـ Microsoft XPS-Viewer
 

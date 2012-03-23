@@ -4467,6 +4467,10 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
             ViewWithXPSViewer(win);
             break;
 
+        case IDM_VIEW_WITH_HTML_HELP:
+            ViewWithHtmlHelp(win);
+            break;
+
         case IDM_SEND_BY_EMAIL:
             SendAsEmailAttachment(win);
             break;

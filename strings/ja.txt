@@ -677,6 +677,7 @@ printing document
 #Fonts:
 #Formatting the book... %d pages
 #Loading file %s...
+#Open in Microsoft HTML Help
 #Open in Microsoft XPS-Viewer
 #Replace document &colors with Windows color scheme
 

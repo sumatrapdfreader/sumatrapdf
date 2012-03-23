@@ -469,6 +469,9 @@ Megnyitás &Adobe Acrobat-ban
 Open in &Foxit Reader
 Megnyitás &Foxit Readerben
 
+Open in Microsoft HTML Help
+Megnyitás Microsoft HTML Helpben
+
 Open in Microsoft XPS-Viewer
 Megnyitás Microsoft XPS-Viewerben
 

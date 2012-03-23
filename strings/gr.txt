@@ -478,6 +478,9 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 Άνοιγμα με &Foxit Reader
 
+Open in Microsoft HTML Help
+Άνοιγμα με Microsoft HTML Help
+
 Open in Microsoft XPS-Viewer
 Άνοιγμα με Microsoft XPS-Viewer
 

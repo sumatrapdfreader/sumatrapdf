@@ -467,6 +467,9 @@ Adobe פתח בקורא
 Open in &Foxit Reader
 Foxit פתח בקורא
 
+Open in Microsoft HTML Help
+Microsoft HTML Help פתח בקורא
+
 Open in Microsoft XPS-Viewer
 Microsoft XPS-Viewer פתח בקורא
 
