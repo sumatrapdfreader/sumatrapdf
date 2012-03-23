@@ -1092,28 +1092,25 @@ PdfEngineImpl::~PdfEngineImpl()
         free(_pages);
     }
 
-    if (outline)
-        fz_free_outline(ctx, outline);
-    if (attachments)
-        fz_free_outline(ctx, attachments);
-    if (_info)
-        pdf_drop_obj(_info);
+    fz_free_outline(ctx, outline);
+    fz_free_outline(ctx, attachments);
+    pdf_drop_obj(_info);
 
     if (pageComments) {
-        for (int i = 0; i < PageCount(); i++)
+        for (int i = 0; i < PageCount(); i++) {
             free(pageComments[i]);
+        }
         free(pageComments);
     }
     if (imageRects) {
-        for (int i = 0; i < PageCount(); i++)
+        for (int i = 0; i < PageCount(); i++) {
             free(imageRects[i]);
+        }
         free(imageRects);
     }
 
-    if (_doc) {
-        pdf_close_document(_doc);
-        _doc = NULL;
-    }
+    pdf_close_document(_doc);
+    _doc = NULL;
 
     while (runCache.Count() > 0) {
         assert(runCache.Last()->refs == 1);
