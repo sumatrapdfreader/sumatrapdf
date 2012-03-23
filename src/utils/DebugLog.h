@@ -24,7 +24,11 @@ for an easy switch for turning logging on/off in a given .cpp file.
 #include "BaseUtil.h"
 
 #ifndef NOLOG
-#define NOLOG defined(NDEBUG)
+  #ifdef NDEBUG
+    #define NOLOG 1
+  #else
+    #define NOLOG 0
+  #endif
 #endif
 
 namespace dbglog {
