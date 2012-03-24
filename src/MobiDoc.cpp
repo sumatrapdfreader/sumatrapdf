@@ -740,8 +740,6 @@ ImageData *MobiDoc::GetCoverImage()
     size_t coverImage = 0;
     Rect size;
     for (size_t i = 0; i < 2; i++) {
-        if (!images[i])
-            continue;
         Rect s = BitmapSizeFromData(images[i].data, images[i].len);
         int32 prevSize = size.Width * size.Height;
         int32 currSize = s.Width * s.Height;
