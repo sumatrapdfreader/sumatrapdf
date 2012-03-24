@@ -21,9 +21,9 @@
 #pragma warning(push)
 #pragma warning(disable : 4530)
 
-#include <set>
+#include "BaseUtil.h"
+#include "Vec.h"
 #include <list>
-#include <windows.h>
 
 namespace sigslot {
 
@@ -171,41 +171,39 @@ public:
 class has_slots
 {
 private:
-    typedef std::set<_signal_base *> sender_set;
-    typedef sender_set::const_iterator const_iterator;
+    // m_senders is a set i.e. no duplicates
+    Vec<_signal_base *> m_senders;
 
 public:
-    has_slots()
-    {
-        ;
-    }
+    has_slots() { }
 
     has_slots(const has_slots& hs)
     {
         lock_block lock;
-        const_iterator it = hs.m_senders.begin();
-        const_iterator itEnd = hs.m_senders.end();
-
-        while(it != itEnd)
-        {
-            (*it)->slot_duplicate(&hs, this);
-            m_senders.insert(*it);
-            ++it;
+        for (size_t i = 0; i < hs.m_senders.Count(); i++) {
+            _signal_base *s = hs.m_senders.At(i);
+            s->slot_duplicate(&hs, this);
+            m_senders.Append(s);
         }
     } 
 
     void signal_connect(_signal_base* sender)
     {
         lock_block lock;
-        m_senders.insert(sender);
+        // ensure set semantics (i.e. no duplicates)
+        if (-1 == m_senders.Find(sender))
+            m_senders.Append(sender);
     }
 
     void signal_disconnect(_signal_base* sender)
     {
         lock_block lock;
-        m_senders.erase(sender);
+        m_senders.Remove(sender);
     }
 
+    // TODO: does it have to be virtual or was it only needed
+    /// to accomodate inheriting from mt_policy, which did have
+    // virtual functions?
     virtual ~has_slots()
     {
         disconnect_all();
@@ -214,20 +212,12 @@ public:
     void disconnect_all()
     {
         lock_block lock;
-        const_iterator it = m_senders.begin();
-        const_iterator itEnd = m_senders.end();
-
-        while(it != itEnd)
-        {
-            (*it)->slot_disconnect(this);
-            ++it;
+        for (size_t i = 0; i < m_senders.Count(); i++) {
+            _signal_base *s = m_senders.At(i);
+            s->slot_disconnect(this);
         }
-
-        m_senders.erase(m_senders.begin(), m_senders.end());
+        m_senders.Reset();
     }
-
-private:
-    sender_set m_senders;
 };
 
 class _signal_base0 : public _signal_base
