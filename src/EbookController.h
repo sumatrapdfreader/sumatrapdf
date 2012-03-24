@@ -57,7 +57,7 @@ struct LayoutTemp {
 
 LayoutInfo *GetLayoutInfo(const char *html, MobiDoc *mobiDoc, int dx, int dy, PoolAllocator *textAllocator);
 
-class EbookController : public sigslot::has_slots<>
+class EbookController : public sigslot::has_slots
 {
     EbookControls * ctrls;
 
