@@ -36,6 +36,11 @@ inline TCHAR *FromUtf8N(const char *s, size_t len)
     }
 }
 
+inline bool IsExternalUrl(const TCHAR *url)
+{
+    return str::FindChar(url, ':') != NULL;
+}
+
 struct PageAnchor {
     DrawInstr *instr;
     int pageNo;
@@ -393,11 +398,8 @@ PageElement *EbookEngine::CreatePageLink(DrawInstr *link, RectI rect, int pageNo
     if (!isInternal)
         return new EbookLink(link, rect, NULL, pageNo);
 
-    const char *id = (const char *)memchr(link->str.s, '#', link->str.len);
-    if (!id)
-        id = link->str.s;
-    ScopedMem<TCHAR> idt(str::conv::FromUtf8N(id, link->str.len - (id - link->str.s)));
-    PageDestination *dest = GetNamedDest(idt);
+    ScopedMem<TCHAR> id(str::conv::FromUtf8N(link->str.s, link->str.len));
+    PageDestination *dest = GetNamedDest(id);
     if (!dest)
         return NULL;
     return new EbookLink(link, rect, dest, pageNo);
@@ -444,15 +446,33 @@ PageElement *EbookEngine::GetElementAtPos(int pageNo, PointD pt)
 
 PageDestination *EbookEngine::GetNamedDest(const TCHAR *name)
 {
-    if ('#' == *name)
-        name++;
     ScopedMem<char> name_utf8(str::conv::ToUtf8(name));
-    size_t name_len = str::Len(name_utf8);
+    const char *id = name_utf8;
+    if (str::FindChar(id, '#'))
+        id = str::FindChar(id, '#') + 1;
 
-    for (size_t i = 0; i < anchors.Count(); i++) {
+    // if the name consists of both path and ID,
+    // try to first skip to the page with the desired
+    // path before looking for the ID to allow
+    // for the same ID to be reused on different pages
+    size_t startIdx = 0;
+    if (id > name_utf8 + 1) {
+        size_t base_len = id - name_utf8 - 1;
+        for (size_t i = 0; i < anchors.Count(); i++) {
+            PageAnchor *anchor = &anchors.At(i);
+            if (base_len == anchor->instr->str.len &&
+                str::EqN(name_utf8, anchor->instr->str.s, base_len)) {
+                startIdx = i;
+                break;
+            }
+        }
+    }
+
+    size_t id_len = str::Len(id);
+    for (size_t i = startIdx; i < anchors.Count(); i++) {
         PageAnchor *anchor = &anchors.At(i);
-        if (name_len == anchor->instr->str.len &&
-            str::EqN(name_utf8, anchor->instr->str.s, name_len)) {
+        if (id_len == anchor->instr->str.len &&
+            str::EqN(id, anchor->instr->str.s, id_len)) {
             RectD rect(0, anchor->instr->bbox.Y + pageBorder, pageRect.dx, 10);
             rect.Inflate(-pageBorder, 0);
             return new SimpleDest2(anchor->pageNo, rect);
@@ -872,12 +892,12 @@ DocTocItem *EpubEngineImpl::BuildTocTree(HtmlPullParser& parser, int& idCounter)
     while ((tok = parser.Next()) && !tok->IsError() && (!tok->IsEndTag() || !tok->NameIs("navMap") && !tok->NameIs("ncx:navMap"))) {
         if (tok->IsTag() && (tok->NameIs("navPoint") || tok->NameIs("ncx:navPoint"))) {
             if (itemText) {
-                PageDestination *dest = NULL;
-                if (itemSrc && str::FindChar(itemSrc, ':'))
+                PageDestination *dest;
+                if (!itemSrc)
+                    dest = NULL;
+                else if (IsExternalUrl(itemSrc))
                     dest = new SimpleDest2(0, RectD(), itemSrc.StealData());
-                else if (itemSrc && str::FindChar(itemSrc, '#'))
-                    dest = GetNamedDest(str::FindChar(itemSrc, '#'));
-                else if (itemSrc)
+                else
                     dest = GetNamedDest(itemSrc);
                 itemSrc.Set(NULL);
                 EbookTocItem *item = new EbookTocItem(itemText.StealData(), dest);
@@ -1431,7 +1451,7 @@ DocTocItem *MobiEngineImpl::GetTocTree()
                 itemLink.Set(NULL);
                 continue;
             }
-            if (str::FindChar(itemLink, ':'))
+            if (IsExternalUrl(itemLink))
                 dest = new SimpleDest2(0, RectD(), itemLink.StealData());
             else
                 dest = GetNamedDest(itemLink);
@@ -1600,13 +1620,6 @@ protected:
     DocTocItem *BuildTocTree(HtmlPullParser& parser, int& idCounter);
 };
 
-static bool IsExternalUrl(const TCHAR *url)
-{
-    return str::StartsWithI(url, _T("http://")) ||
-           str::StartsWithI(url, _T("https://")) ||
-           str::StartsWithI(url, _T("mailto:"));
-}
-
 static TCHAR *ToPlainUrl(const TCHAR *url)
 {
     TCHAR *plainUrl = str::Dup(url);
@@ -1689,12 +1702,12 @@ public:
     }
 
     void visit(const TCHAR *name, const TCHAR *url, int level) {
-        PageDestination *dest = NULL;
-        if (url && IsExternalUrl(url))
+        PageDestination *dest;
+        if (!url)
+            dest = NULL;
+        else if (IsExternalUrl(url))
             dest = new SimpleDest2(0, RectD(), str::Dup(url));
-        if (url && str::FindChar(url, '#'))
-            url = str::FindChar(url, '#');
-        if (url && !dest)
+        else
             dest = engine->GetNamedDest(url);
 
         EbookTocItem *item = new EbookTocItem(str::Dup(name), dest);
