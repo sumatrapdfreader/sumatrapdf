@@ -224,6 +224,8 @@ bool ExecuteUninstallerFromTempDir()
 static bool RemoveShortcut(bool allUsers)
 {
     ScopedMem<TCHAR> p(GetShortcutPath(allUsers));
+    if (!p.Get())
+        return false;
     bool ok = DeleteFile(p);
     if (!ok && (ERROR_FILE_NOT_FOUND != GetLastError())) {
         LogLastError();

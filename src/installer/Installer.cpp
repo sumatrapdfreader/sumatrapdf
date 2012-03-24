@@ -245,7 +245,10 @@ static TCHAR *GetStartMenuProgramsPath(bool allUsers)
 
 TCHAR *GetShortcutPath(bool allUsers)
 {
-    return path::Join(GetStartMenuProgramsPath(allUsers), TAPP _T(".lnk"));
+    TCHAR *path = GetStartMenuProgramsPath(allUsers);
+    if (!path)
+        return NULL;
+    return path::Join(path, TAPP _T(".lnk"));
 }
 
 /* if the app is running, we have to kill it so that we can over-write the executable */

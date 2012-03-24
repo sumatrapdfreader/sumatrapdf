@@ -250,8 +250,10 @@ static void CreateButtonRunSumatra(HWND hwndParent)
 
 static bool CreateAppShortcut(bool allUsers)
 {
-    ScopedMem<TCHAR> installedExePath(GetInstalledExePath());
     ScopedMem<TCHAR> shortcutPath(GetShortcutPath(allUsers));
+    if (!shortcutPath.Get())
+        return false;
+    ScopedMem<TCHAR> installedExePath(GetInstalledExePath());
     return CreateShortcut(shortcutPath, installedExePath);
 }
 
