@@ -902,6 +902,9 @@
     <ClCompile Include="src\utils\DbgHelpDyn.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="src\utils\Sigslot_ut.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">

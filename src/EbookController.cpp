@@ -24,8 +24,8 @@
 #define FONT_NAME              L"Georgia"
 #define FONT_SIZE              12.5f
 
-// in EbookTest.cpp
-void RestartLayoutTimer(EbookController *controller);
+// in MobiWindow.cpp
+extern void RestartLayoutTimer(EbookController *controller);
 
 void LayoutTemp::DeletePages()
 {

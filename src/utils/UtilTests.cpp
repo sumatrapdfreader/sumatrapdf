@@ -11,7 +11,7 @@
 #include "WinUtil.h"
 #include "Vec.h"
 #include "SimpleLog.h"
-#include <time.h>
+#include "Sigslot.h"
 #include "DebugLog.h"
 
 static void GeomTest()
@@ -1117,6 +1117,8 @@ static void BencTestStress()
     delete startDict;
 }
 
+#include "Sigslot_ut.cpp"
+
 void BaseUtils_UnitTests()
 {
     plogf("Running BaseUtils unit tests");
@@ -1135,6 +1137,7 @@ void BaseUtils_UnitTests()
     BencTestArrayAppend();
     BencTestDictAppend();
     BencTestStress();
+    SigSlotTest();
 }
 
 #endif
