@@ -27,58 +27,30 @@
 
 namespace sigslot {
 
-// The multi threading policies only get compiled in if they are enabled.
-class multi_threaded_global
+class lock_block
 {
 public:
-    multi_threaded_global()
+    lock_block()
     {
         static bool isinitialised = false;
 
-        if(!isinitialised)
+        if (!isinitialised)
         {
             InitializeCriticalSection(get_critsec());
             isinitialised = true;
         }
-    }
-
-    multi_threaded_global(const multi_threaded_global&)
-    {
-        ;
-    }
-
-    virtual ~multi_threaded_global()
-    {
-        ;
-    }
-
-    virtual void lock()
-    {
         EnterCriticalSection(get_critsec());
     }
 
-    virtual void unlock()
-    {
-        LeaveCriticalSection(get_critsec());
-    }
+    ~lock_block() { LeaveCriticalSection(get_critsec()); }
 
 private:
+    lock_block(const lock_block&) { }
+
     CRITICAL_SECTION* get_critsec()
     {
         static CRITICAL_SECTION g_critsec;
         return &g_critsec;
-    }
-};
-
-class lock_block 
-{
-    multi_threaded_global mutex;
-public:
-    lock_block() {
-        mutex.lock();
-    }
-    ~lock_block() {
-        mutex.unlock(); 
     }
 };
 
