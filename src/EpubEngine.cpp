@@ -41,6 +41,46 @@ inline bool IsExternalUrl(const TCHAR *url)
     return str::FindChar(url, ':') != NULL;
 }
 
+static char *NormalizeURL(const char *url, const char *base)
+{
+    if (*url == '/' || str::FindChar(url, ':'))
+        return str::Dup(url);
+
+    const char *baseEnd = str::FindCharLast(base, '/');
+    const char *hash = str::FindChar(base, '#');
+    if (baseEnd && hash && hash < baseEnd) {
+        for (baseEnd = hash - 1; baseEnd > base && *baseEnd != '/'; baseEnd--);
+    }
+    if (baseEnd)
+        baseEnd++;
+    else
+        baseEnd = base;
+    ScopedMem<char> basePath(str::DupN(base, baseEnd - base));
+    ScopedMem<char> norm(str::Join(basePath, url));
+
+    char *dst = norm;
+    for (char *src = norm; *src; src++) {
+        if (*src != '/')
+            *dst++ = *src;
+        else if (str::StartsWith(src, "/./"))
+            src++;
+        else if (str::StartsWith(src, "/../")) {
+            for (; dst > norm && *(dst - 1) != '/'; dst--);
+            src += 3;
+        }
+        else
+            *dst++ = '/';
+    }
+    *dst = '\0';
+    return norm.StealData();
+}
+
+struct ImageData2 {
+    ImageData base;
+    char *  id; // path by which content refers to this image
+    size_t  idx; // document specific index at which to find this image
+};
+
 struct PageAnchor {
     DrawInstr *instr;
     int pageNo;
@@ -92,6 +132,9 @@ protected:
     const TCHAR *fileName;
     Vec<PageData *> *pages;
     Vec<PageAnchor> anchors;
+    // contains for each page the last anchor indicating
+    // a break between two merged documents
+    Vec<DrawInstr *> baseAnchors;
     // needed so that memory allocated by ResolveHtmlEntities isn't leaked
     PoolAllocator allocator;
     // needed since pages::IterStart/IterNext aren't thread-safe
@@ -223,16 +266,24 @@ bool EbookEngine::ExtractPageAnchors()
 {
     ScopedCritSec scope(&pagesAccess);
 
+    DrawInstr *baseAnchor = NULL;
     for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
         Vec<DrawInstr> *pageInstrs = GetPageData(pageNo);
         if (!pageInstrs)
             return false;
-        for (DrawInstr *i = pageInstrs->IterStart(); i; i = pageInstrs->IterNext()) {
-            if (InstrAnchor == i->type)
-                anchors.Append(PageAnchor(i, pageNo));
+
+        for (size_t k = 0; k < pageInstrs->Count(); k++) {
+            DrawInstr *i = &pageInstrs->At(k);
+            if (InstrAnchor != i->type)
+                continue;
+            anchors.Append(PageAnchor(i, pageNo));
+            if (k < 2 && str::StartsWith(i->str.s + i->str.len, "\" page_marker />"))
+                baseAnchor = i;
         }
+        baseAnchors.Append(baseAnchor);
     }
 
+    CrashIf(baseAnchors.Count() != pages->Count());
     return true;
 }
 
@@ -398,7 +449,17 @@ PageElement *EbookEngine::CreatePageLink(DrawInstr *link, RectI rect, int pageNo
     if (!isInternal)
         return new EbookLink(link, rect, NULL, pageNo);
 
-    ScopedMem<TCHAR> id(str::conv::FromUtf8N(link->str.s, link->str.len));
+    ScopedMem<TCHAR> id;
+    DrawInstr *baseAnchor = baseAnchors.At(pageNo-1);
+    if (baseAnchor) {
+        ScopedMem<char> basePath(str::DupN(baseAnchor->str.s, baseAnchor->str.len));
+        ScopedMem<char> url(str::DupN(link->str.s, link->str.len));
+        url.Set(NormalizeURL(url, basePath));
+        id.Set(str::conv::FromUtf8(url));
+    }
+    else
+        id.Set(str::conv::FromUtf8N(link->str.s, link->str.len));
+
     PageDestination *dest = GetNamedDest(id);
     if (!dest)
         return NULL;
@@ -455,22 +516,27 @@ PageDestination *EbookEngine::GetNamedDest(const TCHAR *name)
     // try to first skip to the page with the desired
     // path before looking for the ID to allow
     // for the same ID to be reused on different pages
-    size_t startIdx = 0;
+    DrawInstr *baseAnchor = NULL;
     if (id > name_utf8 + 1) {
         size_t base_len = id - name_utf8 - 1;
-        for (size_t i = 0; i < anchors.Count(); i++) {
-            PageAnchor *anchor = &anchors.At(i);
-            if (base_len == anchor->instr->str.len &&
-                str::EqN(name_utf8, anchor->instr->str.s, base_len)) {
-                startIdx = i;
+        for (size_t i = 0; i < baseAnchors.Count(); i++) {
+            DrawInstr *anchor = baseAnchors.At(i);
+            if (base_len == anchor->str.len &&
+                str::EqN(name_utf8, anchor->str.s, base_len)) {
+                baseAnchor = anchor;
                 break;
             }
         }
     }
 
     size_t id_len = str::Len(id);
-    for (size_t i = startIdx; i < anchors.Count(); i++) {
+    for (size_t i = 0; i < anchors.Count(); i++) {
         PageAnchor *anchor = &anchors.At(i);
+        if (baseAnchor) {
+            if (anchor->instr == baseAnchor)
+                baseAnchor = NULL;
+            continue;
+        }
         if (id_len == anchor->instr->str.len &&
             str::EqN(id, anchor->instr->str.s, id_len)) {
             RectD rect(0, anchor->instr->bbox.Y + pageBorder, pageRect.dx, 10);
@@ -483,12 +549,6 @@ PageDestination *EbookEngine::GetNamedDest(const TCHAR *name)
 }
 
 /* EPUB loading code */
-
-struct ImageData2 {
-    ImageData base;
-    char *  id; // path by which content refers to this image
-    size_t  idx; // document specific index at which to find this image
-};
 
 class EpubDoc {
     ZipFile zip;
@@ -526,10 +586,10 @@ public:
         return htmlData.Get();
     }
 
-    ImageData *GetImageData(const char *id) {
-        // TODO: paths are relative from the html document to the image
+    ImageData *GetImageData(const char *id, const char *pagePath) {
+        ScopedMem<char> url(NormalizeURL(id, pagePath));
         for (size_t i = 0; i < images.Count(); i++) {
-            if (str::EndsWith(id, images.At(i).id)) {
+            if (str::Eq(images.At(i).id, url)) {
                 if (!images.At(i).base.data)
                     images.At(i).base.data = zip.GetFileData(images.At(i).idx, &images.At(i).base.len);
                 if (images.At(i).base.data)
@@ -680,13 +740,10 @@ bool EpubDoc::Load()
         ScopedMem<char> html(zip.GetFileData(fullPath));
         if (!html)
             continue;
-        if (htmlData.Count() > 0) {
-            // insert explicit page-breaks between sections
-            htmlData.Append("<pagebreak />");
-        }
-        // add an anchor with the file name at the top (for internal links)
+        // insert explicit page-breaks between sections including
+        // an anchor with the file name at the top (for internal links)
         ScopedMem<char> utf8_path(str::conv::ToUtf8(htmlPath));
-        htmlData.AppendFmt("<a name=\"%s\" />", utf8_path);
+        htmlData.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", utf8_path);
         // TODO: merge/remove <head>s and drop everything else outside of <body>s(?)
         htmlData.Append(html);
     }
@@ -745,6 +802,7 @@ protected:
     void HandleHtmlTag_Epub(HtmlToken *t);
 
     EpubDoc *epubDoc;
+    ScopedMem<char> pagePath;
 
 public:
     EpubFormatter(LayoutInfo *li, EpubDoc *doc) : HtmlFormatter(li), epubDoc(doc) { }
@@ -761,7 +819,7 @@ void EpubFormatter::HandleTagImg_Epub(HtmlToken *t)
     if (!attr)
         return;
     ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
-    ImageData *img = epubDoc->GetImageData(src);
+    ImageData *img = epubDoc->GetImageData(src, pagePath);
     if (img)
         EmitImage(img);
 }
@@ -773,8 +831,16 @@ void EpubFormatter::HandleHtmlTag_Epub(HtmlToken *t)
         HandleTagImg_Epub(t);
         HandleAnchorTag(t);
     }
-    else if (Tag_Pagebreak == tag)
-        ForceNewPage();
+    else if (Tag_Pagebreak == tag) {
+        AttrInfo *attr = t->GetAttrByName("page_path");
+        if (!attr || pagePath)
+            ForceNewPage();
+        if (attr) {
+            RectF bbox(0, currY, pageDx, 0);
+            currPage->instructions.Append(DrawInstr::Anchor(attr->val, attr->valLen, bbox));
+            pagePath.Set(str::DupN(attr->val, attr->valLen));
+        }
+    }
     else
         HandleHtmlTag(t);
 }
@@ -1509,17 +1575,18 @@ public:
         return html;
     }
 
-    ImageData *GetImageData(const char *id) {
+    ImageData *GetImageData(const char *id, const char *pagePath) {
+        ScopedMem<char> url(NormalizeURL(id, pagePath));
         for (size_t i = 0; i < images.Count(); i++) {
-            if (str::Eq(images.At(i).id, id))
+            if (str::Eq(images.At(i).id, url))
                 return &images.At(i).base;
         }
 
         ImageData2 data = { 0 };
-        data.base.data = (char *)doc->GetData(id, &data.base.len);
+        data.base.data = (char *)doc->GetData(url, &data.base.len);
         if (!data.base.data)
             return NULL;
-        data.id = str::Dup(id);
+        data.id = url.StealData();
         images.Append(data);
         return &images.Last().base;
     }
@@ -1531,6 +1598,7 @@ protected:
     void HandleHtmlTag_Chm(HtmlToken *t);
 
     ChmDataCache *chmDoc;
+    ScopedMem<char> pagePath;
 
 public:
     ChmFormatter(LayoutInfo *li, ChmDataCache *doc) : HtmlFormatter(li), chmDoc(doc) { }
@@ -1547,7 +1615,7 @@ void ChmFormatter::HandleTagImg_Chm(HtmlToken *t)
     if (!attr)
         return;
     ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
-    ImageData *img = chmDoc->GetImageData(src);
+    ImageData *img = chmDoc->GetImageData(src, pagePath);
     if (img)
         EmitImage(img);
 }
@@ -1559,8 +1627,16 @@ void ChmFormatter::HandleHtmlTag_Chm(HtmlToken *t)
         HandleTagImg_Chm(t);
         HandleAnchorTag(t);
     }
-    else if (Tag_Pagebreak == tag)
-        ForceNewPage();
+    else if (Tag_Pagebreak == tag) {
+        AttrInfo *attr = t->GetAttrByName("page_path");
+        if (!attr || pagePath)
+            ForceNewPage();
+        if (attr) {
+            RectF bbox(0, currY, pageDx, 0);
+            currPage->instructions.Append(DrawInstr::Anchor(attr->val, attr->valLen, bbox));
+            pagePath.Set(str::DupN(attr->val, attr->valLen));
+        }
+    }
     else
         HandleHtmlTag(t);
 }
@@ -1636,10 +1712,14 @@ public:
     ChmHtmlCollector(ChmDoc *doc) : doc(doc) { }
 
     char *GetHtml() {
-        if (doc->ParseToc(this))
-            return html.StealData();
-        const char *index = doc->GetIndexPath();
-        return (char *)doc->GetData(index, NULL);
+        if (!doc->ParseToc(this)) {
+            const char *index = doc->GetIndexPath();
+            ScopedMem<char> urlUtf8(doc->ToUtf8((unsigned char *)index));
+            ScopedMem<unsigned char> data(doc->GetData(index, NULL));
+            html.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", urlUtf8);
+            html.AppendAndFree(doc->ToUtf8(data));
+        }
+        return html.StealData();
     }
 
     void visit(const TCHAR *name, const TCHAR *url, int level) {
@@ -1653,9 +1733,7 @@ public:
         ScopedMem<unsigned char> pageHtml(doc->GetData(urlUtf8, NULL));
         if (!pageHtml)
             return;
-        if (html.Count() > 0)
-            html.Append("<pagebreak />");
-        html.AppendFmt("<a name='%s' />", urlUtf8);
+        html.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", urlUtf8);
         html.AppendAndFree(doc->ToUtf8(pageHtml));
         added.Append(plainUrl.StealData());
     }

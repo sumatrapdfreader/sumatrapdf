@@ -230,7 +230,7 @@ const char *ResolveHtmlEntities(const char *s, const char *end, Allocator *alloc
 
 static bool StrLenIs(const char *s, size_t len, const char *s2)
 {
-    return str::Len(s2) == len && str::StartsWith(s, s2);
+    return str::Len(s2) == len && str::StartsWithI(s, s2);
 }
 
 bool AttrInfo::NameIs(const char *s) const
@@ -260,7 +260,7 @@ void HtmlToken::SetError(ParsingError err, const char *errContext)
 
 bool HtmlToken::NameIs(const char *name) const
 {
-    return  (str::Len(name) == GetTagLen(this)) && str::StartsWith(s, name);
+    return  (str::Len(name) == GetTagLen(this)) && str::StartsWithI(s, name);
 }
 
 // reparse point is an address within html that we can

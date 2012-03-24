@@ -8,7 +8,7 @@
 
 namespace unittests {
 
-static void Test00(const char *s, HtmlToken::TokenType expectedType = HtmlToken::EmptyElementTag) {
+static void Test00(const char *s, HtmlToken::TokenType expectedType) {
     HtmlPullParser parser(s, str::Len(s));
     HtmlToken *t = parser.Next();
     assert(t->type == expectedType);
@@ -113,10 +113,11 @@ static void Test01()
 
 void HtmlPullParser_UnitTests()
 {
-    unittests::Test00("<p a1='>' foo=bar />");
-    unittests::Test00("<p a1 ='>'     foo=\"bar\"/>");
+    unittests::Test00("<p a1='>' foo=bar />", HtmlToken::EmptyElementTag);
+    unittests::Test00("<p a1 ='>'     foo=\"bar\"/>", HtmlToken::EmptyElementTag);
     unittests::Test00("<p a1=  '>' foo=bar>", HtmlToken::StartTag);
     unittests::Test00("<></><><!-- < skip > --><p a1=\">\" foo=bar>", HtmlToken::StartTag);
+    unittests::Test00("<P A1='>' FOO=bar />", HtmlToken::EmptyElementTag);
     unittests::HtmlEntities();
     unittests::Test01();
 }
