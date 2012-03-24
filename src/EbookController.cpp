@@ -181,15 +181,11 @@ EbookController::EbookController(EbookControls *ctrls) :
     currPageNo(0), pageShown(NULL), deletePageShown(false),
     pageDx(0), pageDy(0), layoutThread(NULL), layoutThreadNo(-1), startReparseIdx(-1)
 {
-    EventMgr *evtMgr = ctrls->mainWnd->evtMgr;
-    ControlEvents *events = evtMgr->EventsForControl(ctrls->next);
-    events->Clicked.connect(this, &EbookController::Clicked);
-    events = evtMgr->EventsForControl(ctrls->prev);
-    events->Clicked.connect(this, &EbookController::Clicked);
-    events = evtMgr->EventsForControl(ctrls->progress);
-    events->Clicked.connect(this, &EbookController::Clicked);
-    events = evtMgr->EventsForControl(ctrls->page);
-    events->SizeChanged.connect(this, &EbookController::SizeChanged);
+    EventMgr *em = ctrls->mainWnd->evtMgr;
+    em->EventsForControl(ctrls->next)->Clicked.connect(this, &EbookController::ClickedNext);
+    em->EventsForControl(ctrls->prev)->Clicked.connect(this, &EbookController::ClickedPrev);
+    em->EventsForControl(ctrls->progress)->Clicked.connect(this, &EbookController::ClickedProgress);
+    em->EventsForControl(ctrls->page)->SizeChanged.connect(this, &EbookController::SizeChangedPage);
     UpdateStatus();
 }
 
@@ -532,7 +528,7 @@ void EbookController::OnLayoutTimer()
     TriggerLayout();
 }
 
-void EbookController::SizeChanged(Control *c, int dx, int dy)
+void EbookController::SizeChangedPage(Control *c, int dx, int dy)
 {
     CrashIf(c != ctrls->page);
     // delay re-layout so that we don't unnecessarily do the
@@ -540,21 +536,22 @@ void EbookController::SizeChanged(Control *c, int dx, int dy)
     RestartLayoutTimer(this);
 }
 
-// (x, y) is in the coordinates of w
-void EbookController::Clicked(Control *c, int x, int y)
+void EbookController::ClickedNext(Control *c, int x, int y)
 {
-    if (c == ctrls->next) {
-        AdvancePage(1);
-        return;
-    }
+    CrashIf(c != ctrls->next);
+    AdvancePage(1);
+}
 
-    if (c == ctrls->prev) {
-        AdvancePage(-1);
-        return;
-    }
+void EbookController::ClickedPrev(Control *c, int x, int y)
+{
+    CrashIf(c != ctrls->prev);
+    AdvancePage(-1);
+}
 
+// (x, y) is in the coordinates of w
+void EbookController::ClickedProgress(Control *c, int x, int y)
+{
     CrashIf(c != ctrls->progress);
-
     float perc = ctrls->progress->GetPercAt(x);
     CrashIf(!GetPagesFromBeginning()); // shouldn't be active if we don't have those
     int pageCount = GetPagesFromBeginning()->Count();

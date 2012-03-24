@@ -122,8 +122,10 @@ class EbookController : public sigslot::has_slots
     void        CloseCurrentDocument();
 
     // event handlers
-    void        Clicked(Control *c, int x, int y);
-    void        SizeChanged(Control *c, int dx, int dy);
+    void        ClickedNext(Control *c, int x, int y);
+    void        ClickedPrev(Control *c, int x, int y);
+    void        ClickedProgress(Control *c, int x, int y);
+    void        SizeChangedPage(Control *c, int dx, int dy);
 
 public:
     EbookController(EbookControls *ctrls);
