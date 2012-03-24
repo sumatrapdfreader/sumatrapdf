@@ -487,8 +487,8 @@ public:
         for (conn_t** c = m_connections.IterStart(); c; c = m_connections.IterNext()) {
             if ((*c)->getdest() == pclass)
             {
+                delete *c; // must delete before Remove()
                 m_connections.Remove(*c);
-                delete *c;
                 pclass->signal_disconnect(this);
                 return;
             }
@@ -560,8 +560,8 @@ public:
         for (conn_t** c = m_connections.IterStart(); c; c = m_connections.IterNext()) {
             if ((*c)->getdest() == pclass)
             {
+                delete *c; // must delete before Remove()
                 m_connections.Remove(*c);
-                delete *c;
                 pclass->signal_disconnect(this);
                 return;
             }
@@ -1649,12 +1649,11 @@ public:
     { }
 
     template<class desttype>
-        void connect(desttype* pclass, void (desttype::*pmemfun)(arg1_type,
-        arg2_type))
+    void connect(desttype* pclass, void (desttype::*pmemfun)(arg1_type, arg2_type))
     {
+        typedef _connection2<desttype, arg1_type, arg2_type> conn_t;
         lock_block lock;
-        _connection2<desttype, arg1_type, arg2_type>* conn = new
-            _connection2<desttype, arg1_type, arg2_type>(pclass, pmemfun);
+        conn_t* conn = new conn_t(pclass, pmemfun);
         m_connections.Append(conn);
         pclass->signal_connect(this);
     }
