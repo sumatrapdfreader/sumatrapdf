@@ -73,7 +73,7 @@ void Button::RecalculateSize(bool repaintIfSizeDidntChange)
     if (text) {
         bbox = MeasureText(gfx, font, text);
         textDx = (size_t)bbox.Width; // TODO: round up?
-        // bbox shouldn't be bigger than fontDy. We apply magic .1f adjustment because
+        // bbox shouldn't be bigger than fontDy. We apply magic adjustment because
         // bbox is bigger in n-th decimal point
         CrashIf(fontDy + .5f < bbox.Height);
     }
