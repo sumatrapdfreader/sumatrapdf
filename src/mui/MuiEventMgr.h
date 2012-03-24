@@ -34,7 +34,7 @@ class EventMgr
 
     struct EventHandler {
         Control *       ctrlSource;
-        ControlEvents * ctrlEvents;
+        ControlEvents * events;
     };
 
     Vec<EventHandler> eventHandlers;

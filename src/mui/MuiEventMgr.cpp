@@ -40,7 +40,9 @@ void EventMgr::RemoveEventsForControl(Control *c)
     for (size_t i = 0; i < eventHandlers.Count(); i++) {
         EventHandler h = eventHandlers.At(i);
         if (h.ctrlSource == c) {
+            ControlEvents *events = eventHandlers.At(i).events;
             eventHandlers.RemoveAtFast(i);
+            delete events;
             return;
         }
     }
@@ -50,7 +52,7 @@ ControlEvents *EventMgr::EventsForControl(Control *c)
 {
     for (EventHandler *h = eventHandlers.IterStart(); h; h = eventHandlers.IterNext()) {
         if (h->ctrlSource == c)
-            return h->ctrlEvents;
+            return h->events;
     }
     ControlEvents *events = new ControlEvents();
     EventHandler h = { c, events };
@@ -63,7 +65,7 @@ void EventMgr::NotifyClicked(Control *c, int x, int y)
     EventHandler *h;
     for (h = eventHandlers.IterStart(); h; h = eventHandlers.IterNext()) {
         if (h->ctrlSource == c)
-            return h->ctrlEvents->Clicked.emit(c, x, y);
+            return h->events->Clicked.emit(c, x, y);
     }
 }
 
@@ -72,7 +74,7 @@ void EventMgr::NotifySizeChanged(Control *c, int dx, int dy)
     EventHandler *h;
     for (h = eventHandlers.IterStart(); h; h = eventHandlers.IterNext()) {
         if (h->ctrlSource == c)
-            h->ctrlEvents->SizeChanged.emit(c, dx, dy);
+            h->events->SizeChanged.emit(c, dx, dy);
     }
 }
 
