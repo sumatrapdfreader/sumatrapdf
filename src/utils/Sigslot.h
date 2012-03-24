@@ -11,9 +11,6 @@
 // - we only use multi_threaded_global threading policy, support for other
 //   policies has been removed
 //
-// TODO:
-// - remove the use of STL
-//
 #ifndef SIGSLOT_H__
 #define SIGSLOT_H__
 
@@ -23,7 +20,27 @@
 
 #include "BaseUtil.h"
 #include "Vec.h"
-#include <list>
+
+// including <list> at this point breaks debug compilation
+// under VS2008 due to the redefined operator new
+namespace std {
+
+template <typename T>
+class list : protected Vec<T> {
+public:
+    list() { }
+
+    T* begin() const { return els; }
+    T* end() const { return els + len; }
+
+    void push_back(T el) { Append(el); }
+    void erase(T *el, T *end=NULL) { RemoveAt(el - els, end ? end - el : 1); }
+
+    typedef T* iterator;
+    typedef const T* const_iterator;
+};
+
+}
 
 namespace sigslot {
 
@@ -299,7 +316,7 @@ public:
             if((*it)->getdest() == pslot)
             {
                 m_connected_slots.erase(it);
-                //			delete *it;
+                // delete *it;
             }
 
             it = itNext;
@@ -424,7 +441,7 @@ public:
             if((*it)->getdest() == pslot)
             {
                 m_connected_slots.erase(it);
-                //			delete *it;
+                // delete *it;
             }
 
             it = itNext;
@@ -679,7 +696,7 @@ public:
             if((*it)->getdest() == pslot)
             {
                 m_connected_slots.erase(it);
-                //			delete *it;
+                // delete *it;
             }
 
             it = itNext;
@@ -790,7 +807,7 @@ public:
             if((*it)->getdest() == pslot)
             {
                 m_connected_slots.erase(it);
-                //			delete *it;
+                // delete *it;
             }
 
             it = itNext;
@@ -901,7 +918,7 @@ public:
             if((*it)->getdest() == pslot)
             {
                 m_connected_slots.erase(it);
-                //			delete *it;
+                // delete *it;
             }
 
             it = itNext;
@@ -1012,7 +1029,7 @@ public:
             if((*it)->getdest() == pslot)
             {
                 m_connected_slots.erase(it);
-                //			delete *it;
+                // delete *it;
             }
 
             it = itNext;
@@ -1127,7 +1144,7 @@ public:
             if((*it)->getdest() == pslot)
             {
                 m_connected_slots.erase(it);
-                //			delete *it;
+                // delete *it;
             }
 
             it = itNext;
