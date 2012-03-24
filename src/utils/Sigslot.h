@@ -24,8 +24,6 @@
 
 #include <set>
 #include <list>
-
-#define _SIGSLOT_HAS_WIN32_THREADS
 #include <windows.h>
 
 #define SIGSLOT_DEFAULT_MT_POLICY multi_threaded_global
@@ -75,21 +73,15 @@ private:
     }
 };
 
-template<class mt_policy>
-class lock_block
+class lock_block 
 {
+    multi_threaded_global mutex;
 public:
-    mt_policy *m_mutex;
-
-    lock_block(mt_policy *mtx)
-        : m_mutex(mtx)
-    {
-        m_mutex->lock();
+    lock_block() {
+        mutex.lock();
     }
-
-    ~lock_block()
-    {
-        m_mutex->unlock();
+    ~lock_block() {
+        mutex.unlock(); 
     }
 };
 
@@ -226,7 +218,7 @@ public:
     has_slots(const has_slots& hs)
         : mt_policy(hs)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         const_iterator it = hs.m_senders.begin();
         const_iterator itEnd = hs.m_senders.end();
 
@@ -240,13 +232,13 @@ public:
 
     void signal_connect(_signal_base<mt_policy>* sender)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         m_senders.insert(sender);
     }
 
     void signal_disconnect(_signal_base<mt_policy>* sender)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         m_senders.erase(sender);
     }
 
@@ -257,7 +249,7 @@ public:
 
     void disconnect_all()
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         const_iterator it = m_senders.begin();
         const_iterator itEnd = m_senders.end();
 
@@ -288,7 +280,7 @@ public:
     _signal_base0(const _signal_base0& s)
         : _signal_base<mt_policy>(s)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::const_iterator it = s.m_connected_slots.begin();
         connections_list::const_iterator itEnd = s.m_connected_slots.end();
 
@@ -308,7 +300,7 @@ public:
 
     void disconnect_all()
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::const_iterator it = m_connected_slots.begin();
         connections_list::const_iterator itEnd = m_connected_slots.end();
 
@@ -325,7 +317,7 @@ public:
 
     void disconnect(has_slots<mt_policy>* pclass)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::iterator it = m_connected_slots.begin();
         connections_list::iterator itEnd = m_connected_slots.end();
 
@@ -345,7 +337,7 @@ public:
 
     void slot_disconnect(has_slots<mt_policy>* pslot)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::iterator it = m_connected_slots.begin();
         connections_list::iterator itEnd = m_connected_slots.end();
 
@@ -366,7 +358,7 @@ public:
 
     void slot_duplicate(const has_slots<mt_policy>* oldtarget, has_slots<mt_policy>* newtarget)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::iterator it = m_connected_slots.begin();
         connections_list::iterator itEnd = m_connected_slots.end();
 
@@ -399,7 +391,7 @@ public:
     _signal_base1(const _signal_base1<arg1_type, mt_policy>& s)
         : _signal_base<mt_policy>(s)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::const_iterator it = s.m_connected_slots.begin();
         connections_list::const_iterator itEnd = s.m_connected_slots.end();
 
@@ -414,7 +406,7 @@ public:
 
     void slot_duplicate(const has_slots<mt_policy>* oldtarget, has_slots<mt_policy>* newtarget)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::iterator it = m_connected_slots.begin();
         connections_list::iterator itEnd = m_connected_slots.end();
 
@@ -436,7 +428,7 @@ public:
 
     void disconnect_all()
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::const_iterator it = m_connected_slots.begin();
         connections_list::const_iterator itEnd = m_connected_slots.end();
 
@@ -453,7 +445,7 @@ public:
 
     void disconnect(has_slots<mt_policy>* pclass)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::iterator it = m_connected_slots.begin();
         connections_list::iterator itEnd = m_connected_slots.end();
 
@@ -473,7 +465,7 @@ public:
 
     void slot_disconnect(has_slots<mt_policy>* pslot)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::iterator it = m_connected_slots.begin();
         connections_list::iterator itEnd = m_connected_slots.end();
 
@@ -512,7 +504,7 @@ public:
     _signal_base2(const _signal_base2<arg1_type, arg2_type, mt_policy>& s)
         : _signal_base<mt_policy>(s)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::const_iterator it = s.m_connected_slots.begin();
         connections_list::const_iterator itEnd = s.m_connected_slots.end();
 
@@ -527,7 +519,7 @@ public:
 
     void slot_duplicate(const has_slots<mt_policy>* oldtarget, has_slots<mt_policy>* newtarget)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::iterator it = m_connected_slots.begin();
         connections_list::iterator itEnd = m_connected_slots.end();
 
@@ -549,7 +541,7 @@ public:
 
     void disconnect_all()
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::const_iterator it = m_connected_slots.begin();
         connections_list::const_iterator itEnd = m_connected_slots.end();
 
@@ -566,7 +558,7 @@ public:
 
     void disconnect(has_slots<mt_policy>* pclass)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::iterator it = m_connected_slots.begin();
         connections_list::iterator itEnd = m_connected_slots.end();
 
@@ -586,7 +578,7 @@ public:
 
     void slot_disconnect(has_slots<mt_policy>* pslot)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::iterator it = m_connected_slots.begin();
         connections_list::iterator itEnd = m_connected_slots.end();
 
@@ -624,7 +616,7 @@ public:
     _signal_base3(const _signal_base3<arg1_type, arg2_type, arg3_type, mt_policy>& s)
         : _signal_base<mt_policy>(s)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::const_iterator it = s.m_connected_slots.begin();
         connections_list::const_iterator itEnd = s.m_connected_slots.end();
 
@@ -639,7 +631,7 @@ public:
 
     void slot_duplicate(const has_slots<mt_policy>* oldtarget, has_slots<mt_policy>* newtarget)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::iterator it = m_connected_slots.begin();
         connections_list::iterator itEnd = m_connected_slots.end();
 
@@ -661,7 +653,7 @@ public:
 
     void disconnect_all()
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::const_iterator it = m_connected_slots.begin();
         connections_list::const_iterator itEnd = m_connected_slots.end();
 
@@ -678,7 +670,7 @@ public:
 
     void disconnect(has_slots<mt_policy>* pclass)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::iterator it = m_connected_slots.begin();
         connections_list::iterator itEnd = m_connected_slots.end();
 
@@ -698,7 +690,7 @@ public:
 
     void slot_disconnect(has_slots<mt_policy>* pslot)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::iterator it = m_connected_slots.begin();
         connections_list::iterator itEnd = m_connected_slots.end();
 
@@ -736,7 +728,7 @@ public:
     _signal_base4(const _signal_base4<arg1_type, arg2_type, arg3_type, arg4_type, mt_policy>& s)
         : _signal_base<mt_policy>(s)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::const_iterator it = s.m_connected_slots.begin();
         connections_list::const_iterator itEnd = s.m_connected_slots.end();
 
@@ -751,7 +743,7 @@ public:
 
     void slot_duplicate(const has_slots<mt_policy>* oldtarget, has_slots<mt_policy>* newtarget)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::iterator it = m_connected_slots.begin();
         connections_list::iterator itEnd = m_connected_slots.end();
 
@@ -773,7 +765,7 @@ public:
 
     void disconnect_all()
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::const_iterator it = m_connected_slots.begin();
         connections_list::const_iterator itEnd = m_connected_slots.end();
 
@@ -790,7 +782,7 @@ public:
 
     void disconnect(has_slots<mt_policy>* pclass)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::iterator it = m_connected_slots.begin();
         connections_list::iterator itEnd = m_connected_slots.end();
 
@@ -810,7 +802,7 @@ public:
 
     void slot_disconnect(has_slots<mt_policy>* pslot)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::iterator it = m_connected_slots.begin();
         connections_list::iterator itEnd = m_connected_slots.end();
 
@@ -850,7 +842,7 @@ public:
         arg5_type, mt_policy>& s)
         : _signal_base<mt_policy>(s)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::const_iterator it = s.m_connected_slots.begin();
         connections_list::const_iterator itEnd = s.m_connected_slots.end();
 
@@ -865,7 +857,7 @@ public:
 
     void slot_duplicate(const has_slots<mt_policy>* oldtarget, has_slots<mt_policy>* newtarget)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::iterator it = m_connected_slots.begin();
         connections_list::iterator itEnd = m_connected_slots.end();
 
@@ -887,7 +879,7 @@ public:
 
     void disconnect_all()
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::const_iterator it = m_connected_slots.begin();
         connections_list::const_iterator itEnd = m_connected_slots.end();
 
@@ -904,7 +896,7 @@ public:
 
     void disconnect(has_slots<mt_policy>* pclass)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::iterator it = m_connected_slots.begin();
         connections_list::iterator itEnd = m_connected_slots.end();
 
@@ -924,7 +916,7 @@ public:
 
     void slot_disconnect(has_slots<mt_policy>* pslot)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::iterator it = m_connected_slots.begin();
         connections_list::iterator itEnd = m_connected_slots.end();
 
@@ -964,7 +956,7 @@ public:
         arg5_type, arg6_type, mt_policy>& s)
         : _signal_base<mt_policy>(s)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::const_iterator it = s.m_connected_slots.begin();
         connections_list::const_iterator itEnd = s.m_connected_slots.end();
 
@@ -979,7 +971,7 @@ public:
 
     void slot_duplicate(const has_slots<mt_policy>* oldtarget, has_slots<mt_policy>* newtarget)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::iterator it = m_connected_slots.begin();
         connections_list::iterator itEnd = m_connected_slots.end();
 
@@ -1001,7 +993,7 @@ public:
 
     void disconnect_all()
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::const_iterator it = m_connected_slots.begin();
         connections_list::const_iterator itEnd = m_connected_slots.end();
 
@@ -1018,7 +1010,7 @@ public:
 
     void disconnect(has_slots<mt_policy>* pclass)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::iterator it = m_connected_slots.begin();
         connections_list::iterator itEnd = m_connected_slots.end();
 
@@ -1038,7 +1030,7 @@ public:
 
     void slot_disconnect(has_slots<mt_policy>* pslot)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::iterator it = m_connected_slots.begin();
         connections_list::iterator itEnd = m_connected_slots.end();
 
@@ -1078,7 +1070,7 @@ public:
         arg5_type, arg6_type, arg7_type, mt_policy>& s)
         : _signal_base<mt_policy>(s)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::const_iterator it = s.m_connected_slots.begin();
         connections_list::const_iterator itEnd = s.m_connected_slots.end();
 
@@ -1093,7 +1085,7 @@ public:
 
     void slot_duplicate(const has_slots<mt_policy>* oldtarget, has_slots<mt_policy>* newtarget)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::iterator it = m_connected_slots.begin();
         connections_list::iterator itEnd = m_connected_slots.end();
 
@@ -1115,7 +1107,7 @@ public:
 
     void disconnect_all()
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::const_iterator it = m_connected_slots.begin();
         connections_list::const_iterator itEnd = m_connected_slots.end();
 
@@ -1132,7 +1124,7 @@ public:
 
     void disconnect(has_slots<mt_policy>* pclass)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::iterator it = m_connected_slots.begin();
         connections_list::iterator itEnd = m_connected_slots.end();
 
@@ -1152,7 +1144,7 @@ public:
 
     void slot_disconnect(has_slots<mt_policy>* pslot)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::iterator it = m_connected_slots.begin();
         connections_list::iterator itEnd = m_connected_slots.end();
 
@@ -1193,7 +1185,7 @@ public:
         arg5_type, arg6_type, arg7_type, arg8_type, mt_policy>& s)
         : _signal_base<mt_policy>(s)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::const_iterator it = s.m_connected_slots.begin();
         connections_list::const_iterator itEnd = s.m_connected_slots.end();
 
@@ -1208,7 +1200,7 @@ public:
 
     void slot_duplicate(const has_slots<mt_policy>* oldtarget, has_slots<mt_policy>* newtarget)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::iterator it = m_connected_slots.begin();
         connections_list::iterator itEnd = m_connected_slots.end();
 
@@ -1230,7 +1222,7 @@ public:
 
     void disconnect_all()
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::const_iterator it = m_connected_slots.begin();
         connections_list::const_iterator itEnd = m_connected_slots.end();
 
@@ -1247,7 +1239,7 @@ public:
 
     void disconnect(has_slots<mt_policy>* pclass)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::iterator it = m_connected_slots.begin();
         connections_list::iterator itEnd = m_connected_slots.end();
 
@@ -1267,7 +1259,7 @@ public:
 
     void slot_disconnect(has_slots<mt_policy>* pslot)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::iterator it = m_connected_slots.begin();
         connections_list::iterator itEnd = m_connected_slots.end();
 
@@ -1723,7 +1715,7 @@ public:
     template<class desttype>
         void connect(desttype* pclass, void (desttype::*pmemfun)())
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         _connection0<desttype, mt_policy>* conn = 
             new _connection0<desttype, mt_policy>(pclass, pmemfun);
         m_connected_slots.push_back(conn);
@@ -1732,7 +1724,7 @@ public:
 
     void emit()
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::const_iterator itNext, it = m_connected_slots.begin();
         connections_list::const_iterator itEnd = m_connected_slots.end();
 
@@ -1749,7 +1741,7 @@ public:
 
     void operator()()
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::const_iterator itNext, it = m_connected_slots.begin();
         connections_list::const_iterator itEnd = m_connected_slots.end();
 
@@ -1783,7 +1775,7 @@ public:
     template<class desttype>
         void connect(desttype* pclass, void (desttype::*pmemfun)(arg1_type))
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         _connection1<desttype, arg1_type, mt_policy>* conn = 
             new _connection1<desttype, arg1_type, mt_policy>(pclass, pmemfun);
         m_connected_slots.push_back(conn);
@@ -1792,7 +1784,7 @@ public:
 
     void emit(arg1_type a1)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::const_iterator itNext, it = m_connected_slots.begin();
         connections_list::const_iterator itEnd = m_connected_slots.end();
 
@@ -1809,7 +1801,7 @@ public:
 
     void operator()(arg1_type a1)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::const_iterator itNext, it = m_connected_slots.begin();
         connections_list::const_iterator itEnd = m_connected_slots.end();
 
@@ -1844,7 +1836,7 @@ public:
         void connect(desttype* pclass, void (desttype::*pmemfun)(arg1_type,
         arg2_type))
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         _connection2<desttype, arg1_type, arg2_type, mt_policy>* conn = new
             _connection2<desttype, arg1_type, arg2_type, mt_policy>(pclass, pmemfun);
         m_connected_slots.push_back(conn);
@@ -1853,7 +1845,7 @@ public:
 
     void emit(arg1_type a1, arg2_type a2)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::const_iterator itNext, it = m_connected_slots.begin();
         connections_list::const_iterator itEnd = m_connected_slots.end();
 
@@ -1870,7 +1862,7 @@ public:
 
     void operator()(arg1_type a1, arg2_type a2)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::const_iterator itNext, it = m_connected_slots.begin();
         connections_list::const_iterator itEnd = m_connected_slots.end();
 
@@ -1905,7 +1897,7 @@ public:
         void connect(desttype* pclass, void (desttype::*pmemfun)(arg1_type,
         arg2_type, arg3_type))
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         _connection3<desttype, arg1_type, arg2_type, arg3_type, mt_policy>* conn = 
             new _connection3<desttype, arg1_type, arg2_type, arg3_type, mt_policy>(pclass,
             pmemfun);
@@ -1915,7 +1907,7 @@ public:
 
     void emit(arg1_type a1, arg2_type a2, arg3_type a3)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::const_iterator itNext, it = m_connected_slots.begin();
         connections_list::const_iterator itEnd = m_connected_slots.end();
 
@@ -1932,7 +1924,7 @@ public:
 
     void operator()(arg1_type a1, arg2_type a2, arg3_type a3)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::const_iterator itNext, it = m_connected_slots.begin();
         connections_list::const_iterator itEnd = m_connected_slots.end();
 
@@ -1968,7 +1960,7 @@ public:
         void connect(desttype* pclass, void (desttype::*pmemfun)(arg1_type,
         arg2_type, arg3_type, arg4_type))
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         _connection4<desttype, arg1_type, arg2_type, arg3_type, arg4_type, mt_policy>*
             conn = new _connection4<desttype, arg1_type, arg2_type, arg3_type,
             arg4_type, mt_policy>(pclass, pmemfun);
@@ -1978,7 +1970,7 @@ public:
 
     void emit(arg1_type a1, arg2_type a2, arg3_type a3, arg4_type a4)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::const_iterator itNext, it = m_connected_slots.begin();
         connections_list::const_iterator itEnd = m_connected_slots.end();
 
@@ -1995,7 +1987,7 @@ public:
 
     void operator()(arg1_type a1, arg2_type a2, arg3_type a3, arg4_type a4)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::const_iterator itNext, it = m_connected_slots.begin();
         connections_list::const_iterator itEnd = m_connected_slots.end();
 
@@ -2034,7 +2026,7 @@ public:
         void connect(desttype* pclass, void (desttype::*pmemfun)(arg1_type,
         arg2_type, arg3_type, arg4_type, arg5_type))
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         _connection5<desttype, arg1_type, arg2_type, arg3_type, arg4_type,
             arg5_type, mt_policy>* conn = new _connection5<desttype, arg1_type, arg2_type,
             arg3_type, arg4_type, arg5_type, mt_policy>(pclass, pmemfun);
@@ -2045,7 +2037,7 @@ public:
     void emit(arg1_type a1, arg2_type a2, arg3_type a3, arg4_type a4,
         arg5_type a5)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::const_iterator itNext, it = m_connected_slots.begin();
         connections_list::const_iterator itEnd = m_connected_slots.end();
 
@@ -2063,7 +2055,7 @@ public:
     void operator()(arg1_type a1, arg2_type a2, arg3_type a3, arg4_type a4,
         arg5_type a5)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::const_iterator itNext, it = m_connected_slots.begin();
         connections_list::const_iterator itEnd = m_connected_slots.end();
 
@@ -2103,7 +2095,7 @@ public:
         void connect(desttype* pclass, void (desttype::*pmemfun)(arg1_type,
         arg2_type, arg3_type, arg4_type, arg5_type, arg6_type))
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         _connection6<desttype, arg1_type, arg2_type, arg3_type, arg4_type,
             arg5_type, arg6_type, mt_policy>* conn = 
             new _connection6<desttype, arg1_type, arg2_type, arg3_type,
@@ -2115,7 +2107,7 @@ public:
     void emit(arg1_type a1, arg2_type a2, arg3_type a3, arg4_type a4,
         arg5_type a5, arg6_type a6)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::const_iterator itNext, it = m_connected_slots.begin();
         connections_list::const_iterator itEnd = m_connected_slots.end();
 
@@ -2133,7 +2125,7 @@ public:
     void operator()(arg1_type a1, arg2_type a2, arg3_type a3, arg4_type a4,
         arg5_type a5, arg6_type a6)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::const_iterator itNext, it = m_connected_slots.begin();
         connections_list::const_iterator itEnd = m_connected_slots.end();
 
@@ -2173,7 +2165,7 @@ public:
         arg2_type, arg3_type, arg4_type, arg5_type, arg6_type, 
         arg7_type))
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         _connection7<desttype, arg1_type, arg2_type, arg3_type, arg4_type,
             arg5_type, arg6_type, arg7_type, mt_policy>* conn = 
             new _connection7<desttype, arg1_type, arg2_type, arg3_type,
@@ -2185,7 +2177,7 @@ public:
     void emit(arg1_type a1, arg2_type a2, arg3_type a3, arg4_type a4,
         arg5_type a5, arg6_type a6, arg7_type a7)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::const_iterator itNext, it = m_connected_slots.begin();
         connections_list::const_iterator itEnd = m_connected_slots.end();
 
@@ -2203,7 +2195,7 @@ public:
     void operator()(arg1_type a1, arg2_type a2, arg3_type a3, arg4_type a4,
         arg5_type a5, arg6_type a6, arg7_type a7)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::const_iterator itNext, it = m_connected_slots.begin();
         connections_list::const_iterator itEnd = m_connected_slots.end();
 
@@ -2243,7 +2235,7 @@ public:
         arg2_type, arg3_type, arg4_type, arg5_type, arg6_type, 
         arg7_type, arg8_type))
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         _connection8<desttype, arg1_type, arg2_type, arg3_type, arg4_type,
             arg5_type, arg6_type, arg7_type, arg8_type, mt_policy>* conn = 
             new _connection8<desttype, arg1_type, arg2_type, arg3_type,
@@ -2256,7 +2248,7 @@ public:
     void emit(arg1_type a1, arg2_type a2, arg3_type a3, arg4_type a4,
         arg5_type a5, arg6_type a6, arg7_type a7, arg8_type a8)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::const_iterator itNext, it = m_connected_slots.begin();
         connections_list::const_iterator itEnd = m_connected_slots.end();
 
@@ -2274,7 +2266,7 @@ public:
     void operator()(arg1_type a1, arg2_type a2, arg3_type a3, arg4_type a4,
         arg5_type a5, arg6_type a6, arg7_type a7, arg8_type a8)
     {
-        lock_block<mt_policy> lock(this);
+        lock_block lock;
         connections_list::const_iterator itNext, it = m_connected_slots.begin();
         connections_list::const_iterator itEnd = m_connected_slots.end();
 
