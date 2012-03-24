@@ -36,11 +36,8 @@ be positioned outside of parent's bounds.
 There must be a parent window backed by HWND which handles windows
 messages and paints child windows on WM_PAINT.
 
-Event handling tries to be loosly coupled. The traditional way of
-providing e.g. a virtual OnClick() on a button class forces creating
-lots of subclasses and forcing logic into a button class. We provide
-a way to subscribe any class implementing IClicked interface
-to register for click evens from any window that generates thems.
+Event handling is loosly coupled and uses slots/signals via
+sigslot library.
 
 TODO: generic way to handle tooltips
 

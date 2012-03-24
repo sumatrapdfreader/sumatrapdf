@@ -17,9 +17,6 @@
     <Filter Include="jpeg">
       <UniqueIdentifier>{066558ef-98f1-4e63-b5d4-b5aaebd0d65e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="utils">
-      <UniqueIdentifier>{88c95b88-1f3f-4262-835b-91b32349401b}</UniqueIdentifier>
-    </Filter>
     <Filter Include="mupdf\pdf">
       <UniqueIdentifier>{a35cfdd9-b833-4410-afd7-a4771ef8887b}</UniqueIdentifier>
     </Filter>
@@ -59,6 +56,9 @@
     </Filter>
     <Filter Include="installer">
       <UniqueIdentifier>{b0cee761-6a1e-4847-955e-f0eb80c32cd6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utils">
+      <UniqueIdentifier>{88c95b88-1f3f-4262-835b-91b32349401b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -785,9 +785,6 @@
     <ClCompile Include="src\installer\Uninstall.cpp">
       <Filter>installer</Filter>
     </ClCompile>
-    <ClCompile Include="src\utils\DbgHelpDyn.cpp">
-      <Filter>sumatra</Filter>
-    </ClCompile>
     <ClCompile Include="mupdf\fitz\doc_document.c">
       <Filter>mupdf\fitz</Filter>
     </ClCompile>
@@ -901,6 +898,9 @@
     </ClCompile>
     <ClCompile Include="mupdf\pdf\pdf_xobject.c">
       <Filter>mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\DbgHelpDyn.cpp">
+      <Filter>utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1315,9 +1315,6 @@
     <ClInclude Include="src\installer\Installer.h">
       <Filter>installer</Filter>
     </ClInclude>
-    <ClInclude Include="src\utils\DbgHelpDyn.h">
-      <Filter>sumatra</Filter>
-    </ClInclude>
     <ClInclude Include="mupdf\fitz\fitz-internal.h">
       <Filter>mupdf\fitz</Filter>
     </ClInclude>
@@ -1332,6 +1329,12 @@
     </ClInclude>
     <ClInclude Include="mupdf\pdf\mupdf-internal.h">
       <Filter>mupdf\pdf</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\DbgHelpDyn.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\Sigslot.h">
+      <Filter>utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

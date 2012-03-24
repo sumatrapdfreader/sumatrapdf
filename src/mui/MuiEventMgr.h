@@ -12,16 +12,11 @@
 class HwndWrapper;
 class Control;
 
-class IClicked
+class ControlEvents
 {
 public:
-    virtual void Clicked(Control *c, int x, int y) = 0;
-};
-
-class ISizeChanged
-{
-public:
-    virtual void SizeChanged(Control *c, int newDx, int newDy) = 0;
+    sigslot::signal3<Control*, int, int> Clicked;
+    sigslot::signal3<Control*, int, int> SizeChanged;
 };
 
 // A single EventMgr is associated with a single HwndWrapper
@@ -38,16 +33,8 @@ class EventMgr
     Size    maxSize;
 
     struct EventHandler {
-        enum Type {
-            Clicked, SizeChanged
-        };
-        Type            type;
         Control *       ctrlSource;
-        union {
-            IClicked *      clicked;
-            ISizeChanged *  sizeChanged;
-            void *          handler;
-        };
+        ControlEvents * ctrlEvents;
     };
 
     Vec<EventHandler> eventHandlers;
@@ -57,20 +44,16 @@ class EventMgr
     LRESULT OnLButtonUp(WPARAM keys, int x, int y, bool& wasHandled);
     LRESULT OnGetMinMaxInfo(MINMAXINFO *info, bool& wasHandled);
 
-    void UnRegisterEventHandler(EventHandler::Type type, void *handler);
-
 public:
     EventMgr(HwndWrapper *wndRoot);
     ~EventMgr();
 
     LRESULT OnMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& handledOut);
 
-    void           UnRegisterClicked(IClicked *handler);
-    void           RegisterClicked(Control *ctrlSource, IClicked *handler);
-    void           NotifyClicked(Control *c, int x, int y);
+    ControlEvents *EventsForControl(Control *c);
+    void           RemoveEventsForControl(Control *c);
 
-    void           UnRegisterSizeChanged(ISizeChanged *handler);
-    void           RegisterSizeChanged(Control *ctrlSource, ISizeChanged *handler);
+    void           NotifyClicked(Control *c, int x, int y);
     void           NotifySizeChanged(Control *c, int dx, int dy);
 
     void SetMinSize(Size s);

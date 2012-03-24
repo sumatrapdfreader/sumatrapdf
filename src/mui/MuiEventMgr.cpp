@@ -16,6 +16,9 @@ EventMgr::EventMgr(HwndWrapper *wndRoot)
 
 EventMgr::~EventMgr()
 {
+    // for good programming hygene, we want event subscribers
+    // to unsubscribe
+    CrashIf(0 != eventHandlers.Count());
 }
 
 // Set minimum size that will be enforced by handling WM_GETMINMAXINFO
@@ -32,64 +35,44 @@ void EventMgr::SetMaxSize(Size s)
     maxSize = s;
 }
 
-void EventMgr::UnRegisterEventHandler(EventHandler::Type type, void *handler)
+void EventMgr::RemoveEventsForControl(Control *c)
 {
-    size_t i = 0;
-    while (i < eventHandlers.Count()) {
+    for (size_t i = 0; i < eventHandlers.Count(); i++) {
         EventHandler h = eventHandlers.At(i);
-        if (h.type != type) {
-            i++;
-            continue;
-        }
-        if (handler == h.handler)
+        if (h.ctrlSource == c) {
             eventHandlers.RemoveAtFast(i);
-        else
-            i++;
+            return;
+        }
     }
 }
 
-void EventMgr::UnRegisterClicked(IClicked *handler)
+ControlEvents *EventMgr::EventsForControl(Control *c)
 {
-    void *tmp = reinterpret_cast<void*>(handler);
-    UnRegisterEventHandler(EventHandler::Clicked, tmp);
-}
-
-void EventMgr::RegisterClicked(Control *ctrlSource, IClicked *handler)
-{
-    EventHandler h = { EventHandler::Clicked, ctrlSource, handler };
+    for (EventHandler *h = eventHandlers.IterStart(); h; h = eventHandlers.IterNext()) {
+        if (h->ctrlSource == c)
+            return h->ctrlEvents;
+    }
+    ControlEvents *events = new ControlEvents();
+    EventHandler h = { c, events };
     eventHandlers.Append(h);
+    return events;
 }
 
 void EventMgr::NotifyClicked(Control *c, int x, int y)
 {
     EventHandler *h;
     for (h = eventHandlers.IterStart(); h; h = eventHandlers.IterNext()) {
-        if ((h->ctrlSource == c) && (h->type == EventHandler::Clicked)) {
-            h->clicked->Clicked(c, x, y);
-        }
+        if (h->ctrlSource == c)
+            return h->ctrlEvents->Clicked.emit(c, x, y);
     }
-}
-
-void EventMgr::UnRegisterSizeChanged(ISizeChanged *handler)
-{
-    void *tmp = reinterpret_cast<void*>(handler);
-    UnRegisterEventHandler(EventHandler::SizeChanged, tmp);
-}
-
-void EventMgr::RegisterSizeChanged(Control *ctrlSource, ISizeChanged *handler)
-{
-    EventHandler h = { EventHandler::SizeChanged, ctrlSource, NULL };
-    h.sizeChanged = handler;
-    eventHandlers.Append(h);
 }
 
 void EventMgr::NotifySizeChanged(Control *c, int dx, int dy)
 {
     EventHandler *h;
     for (h = eventHandlers.IterStart(); h; h = eventHandlers.IterNext()) {
-        if ((h->ctrlSource == c) && (h->type == EventHandler::SizeChanged)) {
-            h->sizeChanged->SizeChanged(c, dx, dy);
-        }
+        if (h->ctrlSource == c)
+            h->ctrlEvents->SizeChanged.emit(c, dx, dy);
     }
 }
 

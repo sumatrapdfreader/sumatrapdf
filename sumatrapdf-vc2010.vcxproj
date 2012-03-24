@@ -448,6 +448,7 @@
     <ClInclude Include="src\utils\FileTransactions.h" />
     <ClInclude Include="src\utils\GdiPlusUtil.h" />
     <ClInclude Include="src\utils\HtmlPullParser.h" />
+    <ClInclude Include="src\utils\Sigslot.h" />
     <ClInclude Include="src\utils\ThreadUtil.h" />
     <ClInclude Include="src\utils\Touch.h" />
     <ClInclude Include="src\Translations.h" />

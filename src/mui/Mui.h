@@ -6,10 +6,11 @@
 
 #define __STDC_LIMIT_MACROS
 #include "BaseUtil.h"
-#include "Vec.h"
 #include "BitManip.h"
 #include "GeomUtil.h"
 #include "HtmlPullParser.h"
+#include "Sigslot.h"
+#include "Vec.h"
 
 namespace mui {
 

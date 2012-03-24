@@ -57,7 +57,7 @@ struct LayoutTemp {
 
 LayoutInfo *GetLayoutInfo(const char *html, MobiDoc *mobiDoc, int dx, int dy, PoolAllocator *textAllocator);
 
-class EbookController : public IClicked, ISizeChanged
+class EbookController : public sigslot::has_slots<>
 {
     EbookControls * ctrls;
 
@@ -121,11 +121,9 @@ class EbookController : public IClicked, ISizeChanged
     void        StopLayoutThread(bool forceTerminate);
     void        CloseCurrentDocument();
 
-    // IClickHandler
-    virtual void Clicked(Control *c, int x, int y);
-
-    // ISizeChanged
-    virtual void SizeChanged(Control *c, int dx, int dy);
+    // event handlers
+    void        Clicked(Control *c, int x, int y);
+    void        SizeChanged(Control *c, int dx, int dy);
 
 public:
     EbookController(EbookControls *ctrls);

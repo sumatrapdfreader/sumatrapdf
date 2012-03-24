@@ -181,18 +181,25 @@ EbookController::EbookController(EbookControls *ctrls) :
     currPageNo(0), pageShown(NULL), deletePageShown(false),
     pageDx(0), pageDy(0), layoutThread(NULL), layoutThreadNo(-1), startReparseIdx(-1)
 {
-    ctrls->mainWnd->evtMgr->RegisterClicked(ctrls->next, this);
-    ctrls->mainWnd->evtMgr->RegisterClicked(ctrls->prev, this);
-    ctrls->mainWnd->evtMgr->RegisterClicked(ctrls->progress, this);
-    ctrls->mainWnd->evtMgr->RegisterSizeChanged(ctrls->page, this);
-
+    EventMgr *evtMgr = ctrls->mainWnd->evtMgr;
+    ControlEvents *events = evtMgr->EventsForControl(ctrls->next);
+    events->Clicked.connect(this, &EbookController::Clicked);
+    events = evtMgr->EventsForControl(ctrls->prev);
+    events->Clicked.connect(this, &EbookController::Clicked);
+    events = evtMgr->EventsForControl(ctrls->progress);
+    events->Clicked.connect(this, &EbookController::Clicked);
+    events = evtMgr->EventsForControl(ctrls->page);
+    events->SizeChanged.connect(this, &EbookController::SizeChanged);
     UpdateStatus();
 }
 
 EbookController::~EbookController()
 {
-    ctrls->mainWnd->evtMgr->UnRegisterClicked(this);
-    ctrls->mainWnd->evtMgr->UnRegisterSizeChanged(this);
+    EventMgr *evtMgr = ctrls->mainWnd->evtMgr;
+    evtMgr->RemoveEventsForControl(ctrls->next);
+    evtMgr->RemoveEventsForControl(ctrls->prev);
+    evtMgr->RemoveEventsForControl(ctrls->progress);
+    evtMgr->RemoveEventsForControl(ctrls->page);
     CloseCurrentDocument();
 }
 

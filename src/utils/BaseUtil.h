@@ -29,6 +29,7 @@
 
 /* Few most common includes for C stdlib */
 #include <assert.h>
+#include <float.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <time.h>
