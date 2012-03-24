@@ -499,7 +499,7 @@ $(OU)\UtilTests.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\BencUt
 $(OU)\UtilTests.obj: src\utils\DebugLog.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OU)\UtilTests.obj: src\utils\Scoped.h src\utils\Sigslot.h src\utils\Sigslot_ut.cpp
 $(OU)\UtilTests.obj: src\utils\SimpleLog.h src\utils\StrUtil.h src\utils\Vec.h
-$(OU)\UtilTests.obj: src\utils\WinUtil.h
+$(OU)\UtilTests.obj: src\utils\Vec_ut.cpp src\utils\WinUtil.h
 $(OU)\WinUtil.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\DebugLog.h
 $(OU)\WinUtil.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
 $(OU)\WinUtil.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h

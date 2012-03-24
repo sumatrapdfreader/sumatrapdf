@@ -29,6 +29,8 @@ protected:
     T *         els;
     T           buf[INTERNAL_BUF_SIZE];
     Allocator * allocator;
+
+    // state of the IterStart()/IterNext() iterator
     T *         iterCurr;
 
     T* MakeSpaceAt(size_t idx, size_t count) {
@@ -272,6 +274,13 @@ public:
         T *res = iterCurr;
         ++iterCurr;
         return res;
+    }
+
+    // return the index of the item returned by last IterStart()/IterNext()
+    size_t IterIdx() {
+        size_t idx = iterCurr - els;
+        CrashIf(0 == idx);
+        return idx - 1;
     }
 };
 
