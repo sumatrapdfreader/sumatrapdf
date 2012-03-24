@@ -225,10 +225,7 @@ class _signal_base0 : public _signal_base
 public:
     typedef std::list<_connection_base0 *>  connections_list;
 
-    _signal_base0()
-    {
-        ;
-    }
+    _signal_base0() { }
 
     _signal_base0(const _signal_base0& s)
         : _signal_base(s)
@@ -336,10 +333,7 @@ class _signal_base1 : public _signal_base
 public:
     typedef std::list<_connection_base1<arg1_type> *>  connections_list;
 
-    _signal_base1()
-    {
-        ;
-    }
+    _signal_base1() { }
 
     _signal_base1(const _signal_base1<arg1_type>& s)
         : _signal_base(s)
@@ -448,10 +442,7 @@ public:
     typedef std::list<_connection_base2<arg1_type, arg2_type> *>
         connections_list;
 
-    _signal_base2()
-    {
-        ;
-    }
+    _signal_base2() { }
 
     _signal_base2(const _signal_base2<arg1_type, arg2_type>& s)
         : _signal_base(s)
@@ -633,10 +624,7 @@ public:
     typedef std::list<_connection_base4<arg1_type, arg2_type, arg3_type,
         arg4_type> *>  connections_list;
 
-    _signal_base4()
-    {
-        ;
-    }
+    _signal_base4() { }
 
     _signal_base4(const _signal_base4<arg1_type, arg2_type, arg3_type, arg4_type>& s)
         : _signal_base(s)
@@ -746,10 +734,7 @@ public:
     typedef std::list<_connection_base5<arg1_type, arg2_type, arg3_type,
         arg4_type, arg5_type> *>  connections_list;
 
-    _signal_base5()
-    {
-        ;
-    }
+    _signal_base5() { }
 
     _signal_base5(const _signal_base5<arg1_type, arg2_type, arg3_type, arg4_type,
         arg5_type>& s)
@@ -860,10 +845,7 @@ public:
     typedef std::list<_connection_base6<arg1_type, arg2_type, arg3_type, 
         arg4_type, arg5_type, arg6_type> *>  connections_list;
 
-    _signal_base6()
-    {
-        ;
-    }
+    _signal_base6() { }
 
     _signal_base6(const _signal_base6<arg1_type, arg2_type, arg3_type, arg4_type,
         arg5_type, arg6_type>& s)
@@ -974,10 +956,7 @@ public:
     typedef std::list<_connection_base7<arg1_type, arg2_type, arg3_type, 
         arg4_type, arg5_type, arg6_type, arg7_type> *>  connections_list;
 
-    _signal_base7()
-    {
-        ;
-    }
+    _signal_base7() {}
 
     _signal_base7(const _signal_base7<arg1_type, arg2_type, arg3_type, arg4_type,
         arg5_type, arg6_type, arg7_type>& s)
@@ -1613,16 +1592,11 @@ private:
 class signal0 : public _signal_base0
 {
 public:
-    signal0()
-    {
-        ;
-    }
+    signal0() { }
 
     signal0(const signal0& s)
         : _signal_base0(s)
-    {
-        ;
-    }
+    { }
 
     template<class desttype>
         void connect(desttype* pclass, void (desttype::*pmemfun)())
@@ -1653,19 +1627,7 @@ public:
 
     void operator()()
     {
-        lock_block lock;
-        connections_list::const_iterator itNext, it = m_connected_slots.begin();
-        connections_list::const_iterator itEnd = m_connected_slots.end();
-
-        while(it != itEnd)
-        {
-            itNext = it;
-            ++itNext;
-
-            (*it)->emit();
-
-            it = itNext;
-        }
+        emit();
     }
 };
 
@@ -1673,16 +1635,11 @@ template<class arg1_type>
 class signal1 : public _signal_base1<arg1_type>
 {
 public:
-    signal1()
-    {
-        ;
-    }
+    signal1() { }
 
     signal1(const signal1<arg1_type>& s)
         : _signal_base1<arg1_type>(s)
-    {
-        ;
-    }
+    { }
 
     template<class desttype>
         void connect(desttype* pclass, void (desttype::*pmemfun)(arg1_type))
@@ -1713,19 +1670,7 @@ public:
 
     void operator()(arg1_type a1)
     {
-        lock_block lock;
-        connections_list::const_iterator itNext, it = m_connected_slots.begin();
-        connections_list::const_iterator itEnd = m_connected_slots.end();
-
-        while(it != itEnd)
-        {
-            itNext = it;
-            ++itNext;
-
-            (*it)->emit(a1);
-
-            it = itNext;
-        }
+        emit(a1);
     }
 };
 
@@ -1733,16 +1678,11 @@ template<class arg1_type, class arg2_type>
 class signal2 : public _signal_base2<arg1_type, arg2_type>
 {
 public:
-    signal2()
-    {
-        ;
-    }
+    signal2() { }
 
     signal2(const signal2<arg1_type, arg2_type>& s)
         : _signal_base2<arg1_type, arg2_type>(s)
-    {
-        ;
-    }
+    { }
 
     template<class desttype>
         void connect(desttype* pclass, void (desttype::*pmemfun)(arg1_type,
@@ -1774,19 +1714,7 @@ public:
 
     void operator()(arg1_type a1, arg2_type a2)
     {
-        lock_block lock;
-        connections_list::const_iterator itNext, it = m_connected_slots.begin();
-        connections_list::const_iterator itEnd = m_connected_slots.end();
-
-        while(it != itEnd)
-        {
-            itNext = it;
-            ++itNext;
-
-            (*it)->emit(a1, a2);
-
-            it = itNext;
-        }
+        emit(a1, a2);
     }
 };
 
@@ -1866,19 +1794,7 @@ public:
 
     void operator()(arg1_type a1, arg2_type a2, arg3_type a3, arg4_type a4)
     {
-        lock_block lock;
-        connections_list::const_iterator itNext, it = m_connected_slots.begin();
-        connections_list::const_iterator itEnd = m_connected_slots.end();
-
-        while(it != itEnd)
-        {
-            itNext = it;
-            ++itNext;
-
-            (*it)->emit(a1, a2, a3, a4);
-
-            it = itNext;
-        }
+        emit(a1, a2, a3, a4);
     }
 };
 
@@ -1888,18 +1804,13 @@ class signal5 : public _signal_base5<arg1_type, arg2_type, arg3_type,
     arg4_type, arg5_type>
 {
 public:
-    signal5()
-    {
-        ;
-    }
+    signal5() { }
 
     signal5(const signal5<arg1_type, arg2_type, arg3_type, arg4_type,
         arg5_type>& s)
         : _signal_base5<arg1_type, arg2_type, arg3_type, arg4_type,
         arg5_type>(s)
-    {
-        ;
-    }
+    { }
 
     template<class desttype>
         void connect(desttype* pclass, void (desttype::*pmemfun)(arg1_type,
@@ -1934,19 +1845,7 @@ public:
     void operator()(arg1_type a1, arg2_type a2, arg3_type a3, arg4_type a4,
         arg5_type a5)
     {
-        lock_block lock;
-        connections_list::const_iterator itNext, it = m_connected_slots.begin();
-        connections_list::const_iterator itEnd = m_connected_slots.end();
-
-        while(it != itEnd)
-        {
-            itNext = it;
-            ++itNext;
-
-            (*it)->emit(a1, a2, a3, a4, a5);
-
-            it = itNext;
-        }
+        emit(a1, a2, a3, a4, a5);
     }
 };
 
@@ -1957,18 +1856,13 @@ class signal6 : public _signal_base6<arg1_type, arg2_type, arg3_type,
     arg4_type, arg5_type, arg6_type>
 {
 public:
-    signal6()
-    {
-        ;
-    }
+    signal6() { }
 
     signal6(const signal6<arg1_type, arg2_type, arg3_type, arg4_type,
         arg5_type, arg6_type>& s)
         : _signal_base6<arg1_type, arg2_type, arg3_type, arg4_type,
         arg5_type, arg6_type>(s)
-    {
-        ;
-    }
+    { }
 
     template<class desttype>
         void connect(desttype* pclass, void (desttype::*pmemfun)(arg1_type,
@@ -2004,19 +1898,7 @@ public:
     void operator()(arg1_type a1, arg2_type a2, arg3_type a3, arg4_type a4,
         arg5_type a5, arg6_type a6)
     {
-        lock_block lock;
-        connections_list::const_iterator itNext, it = m_connected_slots.begin();
-        connections_list::const_iterator itEnd = m_connected_slots.end();
-
-        while(it != itEnd)
-        {
-            itNext = it;
-            ++itNext;
-
-            (*it)->emit(a1, a2, a3, a4, a5, a6);
-
-            it = itNext;
-        }
+        emit(a1, a2, a3, a4, a5, a6);
     }
 };
 
@@ -2026,18 +1908,13 @@ class signal7 : public _signal_base7<arg1_type, arg2_type, arg3_type,
     arg4_type, arg5_type, arg6_type, arg7_type>
 {
 public:
-    signal7()
-    {
-        ;
-    }
+    signal7() { }
 
     signal7(const signal7<arg1_type, arg2_type, arg3_type, arg4_type,
         arg5_type, arg6_type, arg7_type>& s)
         : _signal_base7<arg1_type, arg2_type, arg3_type, arg4_type,
         arg5_type, arg6_type, arg7_type>(s)
-    {
-        ;
-    }
+    { }
 
     template<class desttype>
         void connect(desttype* pclass, void (desttype::*pmemfun)(arg1_type,
@@ -2074,19 +1951,7 @@ public:
     void operator()(arg1_type a1, arg2_type a2, arg3_type a3, arg4_type a4,
         arg5_type a5, arg6_type a6, arg7_type a7)
     {
-        lock_block lock;
-        connections_list::const_iterator itNext, it = m_connected_slots.begin();
-        connections_list::const_iterator itEnd = m_connected_slots.end();
-
-        while(it != itEnd)
-        {
-            itNext = it;
-            ++itNext;
-
-            (*it)->emit(a1, a2, a3, a4, a5, a6, a7);
-
-            it = itNext;
-        }
+        emit(a1, a2, a3, a4, a5, a6, a7);
     }
 };
 
@@ -2096,18 +1961,13 @@ class signal8 : public _signal_base8<arg1_type, arg2_type, arg3_type,
     arg4_type, arg5_type, arg6_type, arg7_type, arg8_type>
 {
 public:
-    signal8()
-    {
-        ;
-    }
+    signal8() { }
 
     signal8(const signal8<arg1_type, arg2_type, arg3_type, arg4_type,
         arg5_type, arg6_type, arg7_type, arg8_type>& s)
         : _signal_base8<arg1_type, arg2_type, arg3_type, arg4_type,
         arg5_type, arg6_type, arg7_type, arg8_type>(s)
-    {
-        ;
-    }
+    { }
 
     template<class desttype>
         void connect(desttype* pclass, void (desttype::*pmemfun)(arg1_type,
@@ -2145,19 +2005,7 @@ public:
     void operator()(arg1_type a1, arg2_type a2, arg3_type a3, arg4_type a4,
         arg5_type a5, arg6_type a6, arg7_type a7, arg8_type a8)
     {
-        lock_block lock;
-        connections_list::const_iterator itNext, it = m_connected_slots.begin();
-        connections_list::const_iterator itEnd = m_connected_slots.end();
-
-        while(it != itEnd)
-        {
-            itNext = it;
-            ++itNext;
-
-            (*it)->emit(a1, a2, a3, a4, a5, a6, a7, a8);
-
-            it = itNext;
-        }
+        emit(a1, a2, a3, a4, a5, a6, a7, a8);
     }
 };
 
