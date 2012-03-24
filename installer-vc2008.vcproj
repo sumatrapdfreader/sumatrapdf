@@ -177,10 +177,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\src\utils\Timer.h"
-					>
-				</File>
-				<File
 					RelativePath=".\src\utils\Touch.cpp"
 					>
 				</File>
@@ -229,7 +225,15 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\utils\Sigslot.h"
+					>
+				</File>
+				<File
 					RelativePath=".\src\utils\SimpleLog.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\utils\Timer.h"
 					>
 				</File>
 				<File
@@ -290,6 +294,14 @@
 				</File>
 				<File
 					RelativePath=".\src\utils\ThreadUtil.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\utils\UiMsg.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\utils\UiMsg.h"
 					>
 				</File>
 				<File

@@ -99,6 +99,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\ChmDoc.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\ChmDoc.h"
+					>
+				</File>
+				<File
 					RelativePath=".\src\ChmEngine.cpp"
 					>
 				</File>
@@ -136,6 +144,22 @@
 				</File>
 				<File
 					RelativePath=".\src\ImagesEngine.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\MobiDoc.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\MobiDoc.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\PageLayout.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\PageLayout.h"
 					>
 				</File>
 				<File
@@ -211,6 +235,22 @@
 				Name="User Interface"
 				>
 				<File
+					RelativePath=".\src\EbookController.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\EbookController.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\EbookControls.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\EbookControls.h"
+					>
+				</File>
+				<File
 					RelativePath=".\src\Favorites.cpp"
 					>
 				</File>
@@ -259,34 +299,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\src\SumatraAbout.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\src\SumatraAbout.h"
-					>
-				</File>
-				<File
-					RelativePath=".\src\SumatraDialogs.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\src\SumatraDialogs.h"
-					>
-				</File>
-				<File
-					RelativePath=".\src\SumatraProperties.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\src\SumatraProperties.h"
-					>
-				</File>
-				<File
-					RelativePath=".\src\SumatraWindow.h"
-					>
-				</File>
-				<File
 					RelativePath=".\src\TableOfContents.cpp"
 					>
 				</File>
@@ -315,11 +327,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\src\WindowInfo.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\src\WindowInfo.h"
+					RelativePath=".\src\UiMsgSumatra.h"
 					>
 				</File>
 			</Filter>
@@ -384,40 +392,8 @@
 				</File>
 			</Filter>
 			<Filter
-				Name="Ebook / UI"
+				Name="Windows"
 				>
-				<File
-					RelativePath=".\src\ChmDoc.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\src\ChmDoc.h"
-					>
-				</File>
-				<File
-					RelativePath=".\src\EbookController.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\src\EbookController.h"
-					>
-				</File>
-				<File
-					RelativePath=".\src\EbookControls.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\src\EbookControls.h"
-					>
-				</File>
-				<File
-					RelativePath=".\src\MobiDoc.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\src\MobiDoc.h"
-					>
-				</File>
 				<File
 					RelativePath=".\src\MobiWindow.cpp"
 					>
@@ -427,15 +403,39 @@
 					>
 				</File>
 				<File
-					RelativePath=".\src\PageLayout.cpp"
+					RelativePath=".\src\SumatraAbout.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\src\PageLayout.h"
+					RelativePath=".\src\SumatraAbout.h"
 					>
 				</File>
 				<File
-					RelativePath=".\src\UiMsgSumatra.h"
+					RelativePath=".\src\SumatraDialogs.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\SumatraDialogs.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\SumatraProperties.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\SumatraProperties.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\SumatraWindow.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\WindowInfo.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\WindowInfo.h"
 					>
 				</File>
 			</Filter>
@@ -589,10 +589,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\src\utils\Timer.h"
-					>
-				</File>
-				<File
 					RelativePath=".\src\utils\Touch.cpp"
 					>
 				</File>
@@ -646,6 +642,10 @@
 				</File>
 				<File
 					RelativePath=".\src\utils\SimpleLog.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\utils\Timer.h"
 					>
 				</File>
 				<File
