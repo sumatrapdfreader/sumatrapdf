@@ -271,6 +271,9 @@ Copy Co&mment
 Copying text was denied (copying as image only)
 Η αντιγραφή κειμένου δεν επετράπη (μόνο ως εικόνα)
 
+Copyright:
+Πνευματική ιδιοκτησία:
+
 Could not obtain Printer properties
 Δεν ήταν δυνατή η ανάκτηση των ιδιοτήτων του εκτυπωτή
 
@@ -397,6 +400,9 @@ Fit a Single Page
 Fonts:
 Γραμματοσειρές:
 
+Formatting the book... %d pages
+Διαμόρφωση του βιβλίου... %d σελίδες
+
 Found text at page %s
 Το κείμενο βρέθηκε στη σελίδα %s
 
@@ -423,6 +429,9 @@ Image files (*.%s)
 
 KB
 KB
+
+Loading file %s...
+Φόρτωση του αρχείου %s
 
 MB
 MB
@@ -687,9 +696,4 @@ copying text
 
 printing document
 εκτύπωση εγγράφου
-
-# Untranslated:
-#Copyright:
-#Formatting the book... %d pages
-#Loading file %s...
 
