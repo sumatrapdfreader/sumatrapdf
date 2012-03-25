@@ -657,6 +657,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\utils\Vec_ut.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\src\utils\VecSegmented.h"
 					>
 				</File>

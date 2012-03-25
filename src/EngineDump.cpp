@@ -1,7 +1,9 @@
 /* Copyright 2006-2012 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+#ifndef ENABLE_EBOOK_ENGINES
 #define ENABLE_EBOOK_ENGINES
+#endif
 #include "EngineManager.h"
 #include "FileUtil.h"
 #include "CmdLineParser.h"
