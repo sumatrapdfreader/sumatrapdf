@@ -296,17 +296,19 @@ char *EpubDoc::GetTocData()
 
 bool EpubDoc::VerifyEpub(ZipFile& zip)
 {
-    ScopedMem<char> firstFileData(zip.GetFileData(_T("mimetype")));
+    ScopedMem<char> mimetype(zip.GetFileData(_T("mimetype")));
+    if (!mimetype)
+        return false;
     // trailing whitespace is allowed for the mimetype file
-    for (size_t i = str::Len(firstFileData); i > 0; i--) {
-        if (!str::IsWs(firstFileData[i-1]))
+    for (size_t i = str::Len(mimetype); i > 0; i--) {
+        if (!str::IsWs(mimetype[i-1]))
             break;
-        firstFileData[i-1] = '\0';
+        mimetype[i-1] = '\0';
     }
     // a proper EPUB documents has a "mimetype" file with content
     // "application/epub+zip" as the first entry in its ZIP structure
     return str::Eq(zip.GetFileName(0), _T("mimetype")) &&
-           str::Eq(firstFileData, "application/epub+zip");
+           str::Eq(mimetype, "application/epub+zip");
 }
 
 bool EpubDoc::IsSupportedFile(const TCHAR *fileName, bool sniff)

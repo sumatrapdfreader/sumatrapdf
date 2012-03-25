@@ -75,6 +75,18 @@ bool EqN(const WCHAR *s1, const WCHAR *s2, size_t len)
     return 0 == wcsncmp(s1, s2, len);
 }
 
+bool EqNI(const char *s1, const char *s2, size_t len)
+{
+    EntryCheck(s1, s2);
+    return 0 == _strnicmp(s1, s2, len);
+}
+
+bool EqNI(const WCHAR *s1, const WCHAR *s2, size_t len)
+{
+    EntryCheck(s1, s2);
+    return 0 == _wcsnicmp(s1, s2, len);
+}
+
 /* return true if 'str' starts with 'txt', NOT case-sensitive */
 bool StartsWithI(const char *str, const char *txt)
 {

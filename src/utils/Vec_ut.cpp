@@ -39,6 +39,7 @@ static void StrVecTest()
         size_t count = v2.Split(_T("a,b,,c,"), _T(","));
         assert(count == 5 && v2.Find(_T("c")) == 3);
         assert(v2.Find(_T("")) == 2 && v2.Find(_T(""), 3) == 4 && v2.Find(_T(""), 5) == -1);
+        assert(v2.Find(_T("B")) == -1 && v2.FindI(_T("B")) == 1);
         ScopedMem<TCHAR> joined(v2.Join(_T(";")));
         assert(str::Eq(joined, _T("a;b;;c;")));
     }

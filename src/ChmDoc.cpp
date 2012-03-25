@@ -2,9 +2,10 @@
    License: GPLv3 */
 
 #include "ChmDoc.h"
-#include "StrUtil.h"
 #include "FileUtil.h"
+#include "StrUtil.h"
 #include "TrivialHtmlParser.h"
+#include "Vec.h"
 
 #define CHM_MT
 #ifdef UNICODE
@@ -65,6 +66,21 @@ unsigned char *ChmDoc::GetData(const char *fileName, size_t *lenOut)
     if (lenOut)
         *lenOut = len;
     return data.StealData();
+}
+
+char *ChmDoc::ToUtf8(const unsigned char *text)
+{
+    const char *s = (char *)text;
+    if (str::StartsWith(s, "\xEF\xBB\xBF"))
+        return str::Dup(s + 3);
+    if (CP_UTF8 == codepage)
+        return str::Dup(s);
+    return str::ToMultiByte(s, codepage, CP_UTF8);
+}
+
+TCHAR *ChmDoc::ToStr(const char *text)
+{
+    return str::conv::FromCodePage(text, codepage);
 }
 
 inline DWORD GetDWord(const unsigned char *data, size_t offset)
@@ -243,14 +259,20 @@ const char *ChmDoc::GetIndexPath()
     return homePath;
 }
 
-char *ChmDoc::ToUtf8(const unsigned char *text)
+static int ChmEnumerateEntry(struct chmFile *chmHandle, struct chmUnitInfo *info, void *data)
 {
-    const char *s = (char *)text;
-    if (str::StartsWith(s, "\xEF\xBB\xBF"))
-        return str::Dup(s + 3);
-    if (CP_UTF8 == codepage)
-        return str::Dup(s);
-    return str::ToMultiByte(s, codepage, CP_UTF8);
+    if (info->path) {
+        Vec<char *> *paths = (Vec<char *> *)data;
+        paths->Append(str::Dup(info->path));
+    }
+    return CHM_ENUMERATOR_CONTINUE;
+}
+
+Vec<char *> *ChmDoc::GetAllPaths()
+{
+    Vec<char *> *paths = new Vec<char *>();
+    chm_enumerate(chmHandle, CHM_ENUMERATE_FILES | CHM_ENUMERATE_NORMAL, ChmEnumerateEntry, paths);
+    return paths;
 }
 
 bool ChmDoc::HasToc()

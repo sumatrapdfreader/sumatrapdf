@@ -402,6 +402,15 @@ public:
         return -1;
     }
 
+    int FindI(const TCHAR *string, size_t startAt=0) const {
+        for (size_t i = startAt; i < len; i++) {
+            TCHAR *item = At(i);
+            if (str::EqI(string, item))
+                return (int)i;
+        }
+        return -1;
+    }
+
     /* splits a string into several substrings, separated by the separator
        (optionally collapsing several consecutive separators into one);
        e.g. splitting "a,b,,c," by "," results in the list "a", "b", "", "c", ""

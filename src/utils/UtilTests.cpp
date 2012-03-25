@@ -94,6 +94,8 @@ static void TStrTest()
     assert(!str::Eq(str, NULL) && !str::Eq(str, _T("A String")));
     assert(str::EqI(str, _T("A String")) && str::EqI(str, str));
     assert(!str::EqI(str, NULL) && str::EqI((char*)NULL, (char*)NULL));
+    assert(str::EqN(_T("abcd"), _T("abce"), 3) && !str::EqN(_T("abcd"), _T("Abcd"), 3));
+    assert(str::EqNI(_T("abcd"), _T("ABCE"), 3) && !str::EqNI(_T("abcd"), _T("Ebcd"), 3));
     assert(str::StartsWith(str, _T("a s")) && str::StartsWithI(str, _T("A Str")));
     assert(!str::StartsWith(str, _T("Astr")));
     assert(str::EndsWith(str, _T("ing")) && str::EndsWithI(str, _T("ING")));

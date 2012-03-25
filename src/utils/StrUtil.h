@@ -31,6 +31,8 @@ bool EqI(const WCHAR *s1, const WCHAR *s2);
 bool EqIS(const TCHAR *s1, const TCHAR *s2);
 bool EqN(const char *s1, const char *s2, size_t len);
 bool EqN(const WCHAR *s1, const WCHAR *s2, size_t len);
+bool EqNI(const char *s1, const char *s2, size_t len);
+bool EqNI(const WCHAR *s1, const WCHAR *s2, size_t len);
 
 template <typename T>
 inline bool IsEmpty(T *s) {

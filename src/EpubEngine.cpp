@@ -476,13 +476,15 @@ PageDestination *EbookEngine::GetNamedDest(const TCHAR *name)
     // path before looking for the ID to allow
     // for the same ID to be reused on different pages
     DrawInstr *baseAnchor = NULL;
+    int basePageNo = 0;
     if (id > name_utf8 + 1) {
         size_t base_len = id - name_utf8 - 1;
         for (size_t i = 0; i < baseAnchors.Count(); i++) {
             DrawInstr *anchor = baseAnchors.At(i);
             if (base_len == anchor->str.len &&
-                str::EqN(name_utf8, anchor->str.s, base_len)) {
+                str::EqNI(name_utf8, anchor->str.s, base_len)) {
                 baseAnchor = anchor;
+                basePageNo = (int)i + 1;
                 break;
             }
         }
@@ -496,12 +498,20 @@ PageDestination *EbookEngine::GetNamedDest(const TCHAR *name)
                 baseAnchor = NULL;
             continue;
         }
+        // note: at least CHM treats URLs as case-independent
         if (id_len == anchor->instr->str.len &&
-            str::EqN(id, anchor->instr->str.s, id_len)) {
+            str::EqNI(id, anchor->instr->str.s, id_len)) {
             RectD rect(0, anchor->instr->bbox.Y + pageBorder, pageRect.dx, 10);
             rect.Inflate(-pageBorder, 0);
             return new SimpleDest2(anchor->pageNo, rect);
         }
+    }
+
+    // don't fail if an ID doesn't exist in a merged document
+    if (basePageNo != 0) {
+        RectD rect(0, pageBorder, pageRect.dx, 10);
+        rect.Inflate(-pageBorder, 0);
+        return new SimpleDest2(basePageNo, rect);
     }
 
     return NULL;
@@ -1247,21 +1257,36 @@ public:
     ChmHtmlCollector(ChmDoc *doc) : doc(doc) { }
 
     char *GetHtml() {
-        if (!doc->ParseToc(this)) {
-            const char *index = doc->GetIndexPath();
-            ScopedMem<char> urlUtf8(doc->ToUtf8((unsigned char *)index));
-            ScopedMem<unsigned char> data(doc->GetData(index, NULL));
-            html.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", urlUtf8);
-            html.AppendAndFree(doc->ToUtf8(data));
+        // first add the homepage
+        const char *index = doc->GetIndexPath();
+        ScopedMem<TCHAR> url(doc->ToStr(index));
+        visit(NULL, url, 0);
+
+        // then add all pages linked to from the table of contents
+        doc->ParseToc(this);
+
+        // finally add all the remaining HTML files
+        Vec<char *> *paths = doc->GetAllPaths();
+        for (size_t i = 0; i < paths->Count(); i++) {
+            char *path = paths->At(i);
+            if (str::EndsWithI(path, ".htm") || str::EndsWithI(path, ".html")) {
+                if (*path == '/')
+                    path++;
+                url.Set(doc->ToStr(path));
+                visit(NULL, url, -1);
+            }
         }
+        FreeVecMembers(*paths);
+        delete paths;
+
         return html.StealData();
     }
 
-    void visit(const TCHAR *name, const TCHAR *url, int level) {
+    virtual void visit(const TCHAR *name, const TCHAR *url, int level) {
         if (!url || IsExternalUrl(url))
             return;
         ScopedMem<TCHAR> plainUrl(ToPlainUrl(url));
-        if (added.Find(plainUrl) != -1)
+        if (added.FindI(plainUrl) != -1)
             return;
         ScopedMem<char> urlUtf8(str::conv::ToUtf8(plainUrl));
         // TODO: use the native codepage for the path to GetData
@@ -1314,7 +1339,7 @@ public:
         return root;
     }
 
-    void visit(const TCHAR *name, const TCHAR *url, int level) {
+    virtual void visit(const TCHAR *name, const TCHAR *url, int level) {
         PageDestination *dest;
         if (!url)
             dest = NULL;
