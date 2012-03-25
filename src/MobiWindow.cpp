@@ -547,16 +547,15 @@ static RenderedBitmap *ThumbFromCoverPage(MobiDoc *mobiDoc)
     if (!coverBmp)
         return NULL;
 
-    Rect bmpSize = BitmapSizeFromData(coverImage->data, coverImage->len);
     Bitmap res(THUMBNAIL_DX, THUMBNAIL_DY, PixelFormat24bppRGB);
-    float scale = (float)THUMBNAIL_DX / (float)bmpSize.Width;
+    float scale = (float)THUMBNAIL_DX / (float)coverBmp->GetWidth();
     int fromDy = THUMBNAIL_DY;
     if (scale < 1.f)
-        fromDy = (int)((float)bmpSize.Height * scale);
+        fromDy = (int)((float)coverBmp->GetHeight() * scale);
     Graphics g(&res);
     g.SetInterpolationMode(InterpolationModeHighQualityBicubic);
     g.DrawImage(coverBmp, Rect(0, 0, THUMBNAIL_DX, THUMBNAIL_DY),
-        0, 0, bmpSize.Width, fromDy, UnitPixel);
+        0, 0, coverBmp->GetWidth(), fromDy, UnitPixel);
     HBITMAP hbmp;
     Status ok = res.GetHBITMAP(Color::White, &hbmp);
     delete coverBmp;

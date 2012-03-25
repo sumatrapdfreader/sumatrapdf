@@ -477,6 +477,7 @@ void HtmlFormatter::EmitEmptyLine(float lineDy)
 
 void HtmlFormatter::EmitImage(ImageData *img)
 {
+    CrashIf(!img->data);
     Rect imgSize = BitmapSizeFromData(img->data, img->len);
     if (imgSize.IsEmptyArea())
         return;

@@ -249,7 +249,7 @@ Rect BitmapSizeFromData(char *data, size_t len)
 {
     Rect result;
     // too short to contain magic number and image dimensions
-    if (!data || len < 8) {
+    if (len < 8) {
     }
     // Bitmap
     else if (str::StartsWith(data, "BM")) {
