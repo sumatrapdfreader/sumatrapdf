@@ -462,9 +462,9 @@ fixup_text_block(fz_context *ctx, fz_text_block *block)
 				{
 					if (span2 == line2->spans + line2->len)
 					{
-						span2 = (++line2)->spans;
-						if (line2 == block->lines + block->len || line2 - line == 2)
+						if (line2 + 1 == block->lines + block->len || line2 != line)
 							break;
+						span2 = (++line2)->spans;
 					}
 					for (; j < span2->len; j++)
 						if (span->text[i].c != 32 && do_glyphs_overlap(span, i, span2, j, 1))
