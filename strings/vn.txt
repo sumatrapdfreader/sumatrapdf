@@ -398,6 +398,9 @@ Vừa một trang đơn
 Fonts:
 Font chữ
 
+Formatting the book... %d pages
+Đang định dạng sách... %d trang
+
 Found text at page %s
 Tìm thấy từ ở trang %s
 
@@ -424,6 +427,9 @@ Tập tin ảnh (*.%s)
 
 KB
 KB
+
+Loading file %s...
+Đang mở tập tin %s...
 
 MB
 MB
@@ -688,8 +694,4 @@ copying text
 
 printing document
 đang in tập tin
-
-# Untranslated:
-#Formatting the book... %d pages
-#Loading file %s...
 

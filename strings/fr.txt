@@ -273,6 +273,9 @@ Copier le co&mmentaire
 Copying text was denied (copying as image only)
 La copie en texte est refusée (seule une capture d’écran est faite)
 
+Copyright:
+Copyright :
+
 Could not obtain Printer properties
 Impossible d'obtenir les propriétés de l'imprimante
 
@@ -396,6 +399,12 @@ Pleine largeur, vue continue
 Fit a Single Page
 Page unique
 
+Fonts:
+Polices :
+
+Formatting the book... %d pages
+Mise en forme du livre... %d pages
+
 Found text at page %s
 Texte trouvé à la page %s
 
@@ -422,6 +431,9 @@ Fichiers-images (*.%s)
 
 KB
 Ko
+
+Loading file %s...
+Chargement du fichier %s...
 
 MB
 Mo
@@ -561,6 +573,9 @@ Enlever des favoris
 Remove page %s from favorites
 Enlever page %s des favoris
 
+Replace document &colors with Windows color scheme
+Remplacer les &couleurs du document par le schéma de couleurs Windows
+
 Rotate &Left\tCtrl+Shift+-
 Rotation &antihoraire\tCtrl+Shift+-
 
@@ -683,11 +698,4 @@ copie du texte
 
 printing document
 impression du document
-
-# Untranslated:
-#Copyright:
-#Fonts:
-#Formatting the book... %d pages
-#Loading file %s...
-#Replace document &colors with Windows color scheme
 

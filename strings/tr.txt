@@ -257,6 +257,9 @@ Devamlı çift sayfa
 Contribute Translation
 Çeviriye katkıda bulunun.
 
+Copy &Image
+&Görüntüyü Kopyala
+
 Copy &Link Address
 &Bağlantı Adresini Kopyala
 
@@ -265,6 +268,9 @@ Copy Co&mment
 
 Copying text was denied (copying as image only)
 Metnin kopyalanması reddedildi (görüntü olarak kopyalandı)
+
+Copyright:
+Telif hakkı:
 
 Could not obtain Printer properties
 Yazıcı özellikleri temin edilemedi
@@ -389,6 +395,12 @@ Genişliğe ölçekle ve sayfaları devamlı göster
 Fit a Single Page
 Tek sayfaya ölçekle
 
+Fonts:
+Yazıyüzleri:
+
+Formatting the book... %d pages
+Kitap biçimlendiriliyor... %d sayfa
+
 Found text at page %s
 Metin %s numaralı sayfada bulundu
 
@@ -415,6 +427,9 @@ Görüntü dosyaları (*.%s)
 
 KB
 KB
+
+Loading file %s...
+%s dosyası yükleniyor...
 
 MB
 MB
@@ -554,6 +569,9 @@ Sık kullanılanlardan çıkar
 Remove page %s from favorites
 Sayfa %s sık kullanılanlardan çıkar
 
+Replace document &colors with Windows color scheme
+Belgenin &renklerini Windows renk planıyla değiştir
+
 Rotate &Left\tCtrl+Shift+-
 S&ola çevir\tCtrl+Shift+-
 
@@ -609,7 +627,7 @@ Source file %s has no synchronization point
 %s kaynak dosyasında senkronizasyon noktası yoktur
 
 Subject:
-Mevzu:
+Konu:
 
 SumatraPDF Options
 SumatraPDF Seçenekleri
@@ -676,12 +694,4 @@ metin kopyalanıyor
 
 printing document
 belge yazdırılıyor
-
-# Untranslated:
-#Copy &Image
-#Copyright:
-#Fonts:
-#Formatting the book... %d pages
-#Loading file %s...
-#Replace document &colors with Windows color scheme
 
