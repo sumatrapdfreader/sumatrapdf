@@ -227,6 +227,7 @@
     <ClCompile Include="mupdf\xps\xps_zip.c" />
     <ClCompile Include="src\AppPrefs.cpp" />
     <ClCompile Include="src\AppTools.cpp" />
+    <ClCompile Include="src\browserplugin\npPdfViewer.cpp" />
     <ClCompile Include="src\ChmEngine.cpp" />
     <ClCompile Include="src\CrashHandler.cpp" />
     <ClCompile Include="src\DisplayModel.cpp" />
@@ -239,6 +240,9 @@
     <ClCompile Include="src\ExternalPdfViewer.cpp" />
     <ClCompile Include="src\Favorites.cpp" />
     <ClCompile Include="src\FileWatch.cpp" />
+    <ClCompile Include="src\ifilter\CPdfFilter.cpp" />
+    <ClCompile Include="src\ifilter\CTeXFilter.cpp" />
+    <ClCompile Include="src\ifilter\PdfFilterDll.cpp" />
     <ClCompile Include="src\ImagesEngine.cpp" />
     <ClCompile Include="src\installer\Install.cpp" />
     <ClCompile Include="src\installer\Installer.cpp" />
@@ -265,6 +269,8 @@
     <ClCompile Include="src\ParseCommandLine.cpp" />
     <ClCompile Include="src\PdfEngine.cpp" />
     <ClCompile Include="src\PdfSync.cpp" />
+    <ClCompile Include="src\previewer\PdfPreview.cpp" />
+    <ClCompile Include="src\previewer\PdfPreviewDll.cpp" />
     <ClCompile Include="src\Print.cpp" />
     <ClCompile Include="src\PsEngine.cpp" />
     <ClCompile Include="src\RenderCache.cpp" />
@@ -401,6 +407,10 @@
     <ClInclude Include="src\Favorites.h" />
     <ClInclude Include="src\FileHistory.h" />
     <ClInclude Include="src\FileWatch.h" />
+    <ClInclude Include="src\ifilter\CPdfFilter.h" />
+    <ClInclude Include="src\ifilter\CTeXFilter.h" />
+    <ClInclude Include="src\ifilter\FilterBase.h" />
+    <ClInclude Include="src\ifilter\PdfFilter.h" />
     <ClInclude Include="src\ImagesEngine.h" />
     <ClInclude Include="src\installer\Installer.h" />
     <ClInclude Include="src\installer\Resource.h" />
@@ -427,6 +437,7 @@
     <ClInclude Include="src\ParseCommandLine.h" />
     <ClInclude Include="src\PdfEngine.h" />
     <ClInclude Include="src\PdfSync.h" />
+    <ClInclude Include="src\previewer\PdfPreview.h" />
     <ClInclude Include="src\Print.h" />
     <ClInclude Include="src\PsEngine.h" />
     <ClInclude Include="src\RenderCache.h" />
@@ -562,8 +573,10 @@
     <Manifest Include="src\SumatraPDF.exe.manifest" />
   </ItemGroup>
   <ItemGroup>
+    <ResourceCompile Include="src\ifilter\PdfFilter.rc" />
     <ResourceCompile Include="src\installer\Installer.manifest.rc" />
     <ResourceCompile Include="src\installer\Installer.rc" />
+    <ResourceCompile Include="src\previewer\PdfPreview.rc" />
     <ResourceCompile Include="src\SumatraPDF.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

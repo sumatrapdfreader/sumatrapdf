@@ -60,6 +60,18 @@
     <Filter Include="utils">
       <UniqueIdentifier>{88c95b88-1f3f-4262-835b-91b32349401b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="dlls">
+      <UniqueIdentifier>{8d1ef194-ad72-4aeb-93e7-628a89158c73}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dlls\ifilter">
+      <UniqueIdentifier>{f3b78d8d-cb6d-4728-9f92-10059ca368a7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dlls\browser">
+      <UniqueIdentifier>{b04f4d08-164c-4b30-ba0c-26ec812e2c88}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dlls\preview">
+      <UniqueIdentifier>{b4798144-bcb4-46dd-b39d-a5e4bbdb93ae}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ext\jbig2dec\jbig2.c">
@@ -908,6 +920,24 @@
     <ClCompile Include="src\utils\Vec_ut.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="src\ifilter\CPdfFilter.cpp">
+      <Filter>dlls\ifilter</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ifilter\CTeXFilter.cpp">
+      <Filter>dlls\ifilter</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ifilter\PdfFilterDll.cpp">
+      <Filter>dlls\ifilter</Filter>
+    </ClCompile>
+    <ClCompile Include="src\browserplugin\npPdfViewer.cpp">
+      <Filter>dlls\browser</Filter>
+    </ClCompile>
+    <ClCompile Include="src\previewer\PdfPreview.cpp">
+      <Filter>dlls\preview</Filter>
+    </ClCompile>
+    <ClCompile Include="src\previewer\PdfPreviewDll.cpp">
+      <Filter>dlls\preview</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -1342,6 +1372,21 @@
     <ClInclude Include="src\utils\Sigslot.h">
       <Filter>utils</Filter>
     </ClInclude>
+    <ClInclude Include="src\ifilter\FilterBase.h">
+      <Filter>dlls\ifilter</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ifilter\CPdfFilter.h">
+      <Filter>dlls\ifilter</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ifilter\CTeXFilter.h">
+      <Filter>dlls\ifilter</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ifilter\PdfFilter.h">
+      <Filter>dlls\ifilter</Filter>
+    </ClInclude>
+    <ClInclude Include="src\previewer\PdfPreview.h">
+      <Filter>dlls\preview</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\closetoc.bmp">
@@ -1547,6 +1592,12 @@
     </ResourceCompile>
     <ResourceCompile Include="src\installer\Installer.rc">
       <Filter>Resource Files</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="src\ifilter\PdfFilter.rc">
+      <Filter>dlls\ifilter</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="src\previewer\PdfPreview.rc">
+      <Filter>dlls\preview</Filter>
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
