@@ -297,10 +297,11 @@ char *EpubDoc::GetTocData()
 bool EpubDoc::VerifyEpub(ZipFile& zip)
 {
     ScopedMem<char> firstFileData(zip.GetFileData(_T("mimetype")));
-    // some EPUB documents contain an additional newline after the mimetype
+    // trailing whitespace is allowed for the mimetype file
     for (size_t i = str::Len(firstFileData); i > 0; i--) {
-        if ('\n' == firstFileData[i-1] || '\r' == firstFileData[i-1])
-            firstFileData[i-1] = '\0';
+        if (!str::IsWs(firstFileData[i-1]))
+            break;
+        firstFileData[i-1] = '\0';
     }
     // a proper EPUB documents has a "mimetype" file with content
     // "application/epub+zip" as the first entry in its ZIP structure
