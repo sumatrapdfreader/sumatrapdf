@@ -165,12 +165,16 @@ $(OS)\EngineDump.obj: src\PdfEngine.h src\PsEngine.h src\utils\Allocator.h
 $(OS)\EngineDump.obj: src\utils\BaseUtil.h src\utils\CmdLineParser.h src\utils\FileUtil.h
 $(OS)\EngineDump.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
 $(OS)\EngineDump.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
-$(OS)\EpubEngine.obj: src\BaseEngine.h src\ChmDoc.h src\EpubEngine.h
-$(OS)\EpubEngine.obj: src\MobiDoc.h src\mui\MiniMui.h src\PageLayout.h
-$(OS)\EpubEngine.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\FileUtil.h
-$(OS)\EpubEngine.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\HtmlPullParser.h
-$(OS)\EpubEngine.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\TrivialHtmlParser.h
-$(OS)\EpubEngine.obj: src\utils\Vec.h src\utils\ZipUtil.h
+$(OS)\EpubDoc.obj: src\BaseEngine.h src\EpubDoc.h src\utils\Allocator.h
+$(OS)\EpubDoc.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
+$(OS)\EpubDoc.obj: src\utils\HtmlPullParser.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OS)\EpubDoc.obj: src\utils\TrivialHtmlParser.h src\utils\Vec.h src\utils\ZipUtil.h
+$(OS)\EpubEngine.obj: src\BaseEngine.h src\ChmDoc.h src\EpubDoc.h
+$(OS)\EpubEngine.obj: src\EpubEngine.h src\MobiDoc.h src\mui\MiniMui.h
+$(OS)\EpubEngine.obj: src\PageLayout.h src\utils\Allocator.h src\utils\BaseUtil.h
+$(OS)\EpubEngine.obj: src\utils\FileUtil.h src\utils\GdiPlusUtil.h src\utils\GeomUtil.h
+$(OS)\EpubEngine.obj: src\utils\HtmlPullParser.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OS)\EpubEngine.obj: src\utils\TrivialHtmlParser.h src\utils\Vec.h src\utils\ZipUtil.h
 $(OS)\ExternalPdfViewer.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
 $(OS)\ExternalPdfViewer.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
 $(OS)\ExternalPdfViewer.obj: src\EngineManager.h src\EpubEngine.h src\ExternalPdfViewer.h

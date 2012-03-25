@@ -170,7 +170,7 @@ ENGINE_OBJS = \
 	$(OS)\ImagesEngine.obj $(ZIP_OBJS) $(UNRAR_OBJS) \
 	$(OS)\DjVuEngine.obj $(DJVU_OBJS) \
 	$(OS)\ChmEngine.obj $(OS)\ChmDoc.obj $(CHMLIB_OBJS) \
-	$(OS)\EpubEngine.obj
+	$(OS)\EpubEngine.obj $(OS)\EpubDoc.obj
 
 EBOOK_OBJS = \
 	$(OS)\MobiDoc.obj $(OS)\PageLayout.obj \
@@ -254,7 +254,7 @@ PDFPREVIEW_OBJS = $(PDFPREVIEW_OBJS) $(OS)\ImagesEngine.obj $(OU)\GdiPlusUtil.ob
 !endif
 !if "$(BUILD_EPUB_PREVIEW)"!=""
 PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_EPUB_PREVIEW"
-PDFPREVIEW_OBJS = $(PDFPREVIEW_OBJS) $(OS)\EpubEngine.obj $(OS)\PageLayout.obj \
+PDFPREVIEW_OBJS = $(PDFPREVIEW_OBJS) $(OS)\EpubEngine.obj $(OS)\EpubDoc.obj $(OS)\PageLayout.obj \
 	$(OMUI)\MiniMui.obj $(OU)\TrivialHtmlParser.obj $(OU)\HtmlPullParser.obj
 !if "$(BUILD_CBZ_PREVIEW)"==""
 PDFPREVIEW_OBJS = $(PDFPREVIEW_OBJS) $(OU)\GdiPlusUtil.obj $(ZIP_OBJS)

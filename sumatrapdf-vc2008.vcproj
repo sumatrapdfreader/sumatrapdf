@@ -131,6 +131,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\EpubDoc.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\EpubDoc.h"
+					>
+				</File>
+				<File
 					RelativePath=".\src\EpubEngine.cpp"
 					>
 				</File>
