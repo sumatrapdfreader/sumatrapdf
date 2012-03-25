@@ -96,6 +96,7 @@ static TCHAR *  gSumatraPdfPdbPath = NULL;
 static TCHAR *  gInstallerPdbPath = NULL;
 static char *   gSystemInfo = NULL;
 static char *   gModulesInfo = NULL;
+static str::Str<char> *gAdditionalInfo = NULL;
 static HANDLE   gDumpEvent = NULL;
 static HANDLE   gDumpThread = NULL;
 static ExeType  gExeType = ExeSumatraStatic;
@@ -140,6 +141,9 @@ static char *BuildCrashInfoText()
     s.Append("\r\n");
 #endif
     s.Append(gModulesInfo);
+
+    s.Append("\r\n");
+    s.Append(gAdditionalInfo->LendData());
 
     return s.StealData();
 }
@@ -592,6 +596,15 @@ static ExeType DetectExeType()
     return exeType;
 }
 
+void CrashLogFmt(const char *fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    char *s = str::FmtV(fmt, args);
+    gAdditionalInfo->AppendAndFree(s);
+    va_end(args);
+}
+
 void InstallCrashHandler(const TCHAR *crashDumpPath, const TCHAR *symDir)
 {
     assert(!gDumpEvent && !gDumpThread);
@@ -615,7 +628,7 @@ void InstallCrashHandler(const TCHAR *crashDumpPath, const TCHAR *symDir)
     gCrashHandlerAllocator = new CrashHandlerAllocator();
 #endif
     gCrashDumpPath = str::Dup(crashDumpPath);
-
+    gAdditionalInfo = new str::Str<char>(4096);
     gDumpEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
     if (!gDumpEvent)
         return;
@@ -640,6 +653,7 @@ void UninstallCrashHandler()
     free(gSumatraPdfPdbPath);
     free(gInstallerPdbPath);
 
+    delete gAdditionalInfo;
     free(gSymbolPathW);
     free(gSystemInfo);
     free(gModulesInfo);
