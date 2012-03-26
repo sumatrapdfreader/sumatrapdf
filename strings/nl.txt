@@ -101,7 +101,7 @@ Alleen &Oneven pagina's
 &Openen\tCtrl+O
 
 &Open Document
-Bestand &Openen
+Document &Openen
 
 &Options...
 &Opties...
@@ -110,7 +110,7 @@ Bestand &Openen
 &Wachtwoord:
 
 &Pin Document
-Document &Vastmaken
+Document &Vastpinnen
 
 &Previous Page\tLeft Arrow
 Vorige pagina\t<-
@@ -125,13 +125,13 @@ Afdrukken...\tCtrl+P
 Afdrukken... (niet toegestaan)
 
 &Remember the password for this document
-Wachtwoord onthouden voor dit bestand
+Wachtwoord onthouden voor dit document
 
 &Remember these settings for each document
-&Bewaar deze instellingen voor elk bestand
+&Bewaar deze instellingen voor elk document
 
 &Remove Document
-Bestand ve&rwijderen
+Document ve&rwijderen
 
 &Save As...
 Op&slaan als...
@@ -191,7 +191,7 @@ All files
 Alle bestanden
 
 All supported documents
-Ondersteunde bestandsformaten
+Alle ondersteunde documenten
 
 Application:
 Programma:
@@ -230,7 +230,7 @@ Bytes
 Bytes
 
 CHM documents
-CHM-bestanden
+CHM-documenten
 
 Can't connect to the Internet (error %#x).
 Kan geen verbinding maken met internet (fout %#x).
@@ -314,7 +314,7 @@ DjVu documents
 DjVu-documenten
 
 Document Properties
-Bestandseigenschappen
+Documenteigenschappen
 
 Download
 Downloaden
@@ -332,7 +332,7 @@ Enter password for %s
 Wachtwoord invoeren voor %s
 
 Enter the command-line to invoke when you double-click on the PDF document:
-Opdracht-regel die gestart moet worden bij het dubbelklikken van een PDF-bestand:
+Opdracht-regel die gestart moet worden bij het dubbelklikken van een PDF-document:
 
 Error loading %s
 Fout bij het laden van %s
@@ -406,6 +406,9 @@ Hele pagina passend maken
 Fonts:
 Lettertypen:
 
+Formatting the book... %d pages
+Boek samenstellen... %d paginas
+
 Found text at page %s
 Tekst gevonden op pagina %s
 
@@ -433,6 +436,9 @@ Afbeeldingen (*.%s)
 KB
 KB
 
+Loading file %s...
+Bestand %s laden...
+
 MB
 MB
 
@@ -446,7 +452,7 @@ Match Case
 Hoofdlettergevoelig
 
 Mobi documents
-Mobi-bestanden
+Mobi-documenten
 
 Modified:
 Aangepast:
@@ -503,7 +509,7 @@ P&roperties\tCtrl+D
 E&igenschappen...\tCtrl+D
 
 PDF Document
-PDF-bestand
+PDF-document
 
 PDF Producer:
 PDF-maker:
@@ -512,7 +518,7 @@ PDF Version:
 PDF-versie:
 
 PDF documents
-PDF-bestanden
+PDF-documenten
 
 Pa&ge...\tCtrl+G
 Pa&gina...\tCtrl+G
@@ -536,7 +542,7 @@ Please wait - rendering...
 Een ogenblik - weergeven...
 
 Postscript documents
-Postscript bestanden
+Postscript documenten
 
 Pr&esentation\tCtrl+L
 Pr&esentatie\tCtrl+L
@@ -668,7 +674,7 @@ Warning
 Waarschuwing
 
 XPS documents
-XPS-bestanden
+XPS-documenten
 
 You have the latest version.
 U gebruikt de meest recente versie.
@@ -695,9 +701,5 @@ copying text
 tekst kopiëren
 
 printing document
-bestand afdrukken
-
-# Untranslated:
-#Formatting the book... %d pages
-#Loading file %s...
+Document afdrukken
 
