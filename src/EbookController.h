@@ -15,7 +15,7 @@ using namespace mui;
 
 struct  EbookControls;
 class   EbookController;
-struct  PageData;
+class   PageData;
 class   PoolAllocator;
 class   MobiDoc;
 class   ThreadLayoutMobi;

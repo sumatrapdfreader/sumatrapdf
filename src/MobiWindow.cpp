@@ -21,10 +21,10 @@ using namespace Gdiplus;
 
 #ifdef SHOW_DEBUG_MENU_ITEMS
 // A sample text to display if we don't show an actual mobi file
-static const char *gSampleHtml =
+static const char *gSampleMobiHtml =
     "<html><p align=justify width=1em><b>ClearType</b>, is <b>dependent</b> "\
     "on the <i>orientation &amp; ordering</i> of the LCD stripes and "\
-    "possibly some other things unknown.</p> "\
+    "possibly some other <i><b>things</b> unknown</i>.</p> "\
     "<p align='right height=13pt'><em>Currently</em>, ClearType is implemented "\
     "<hr><br/> only for vertical stripes that are ordered RGB.</p> "\
     "<p align=center height=8pt>This might be a concern if you are using a "\
@@ -406,7 +406,7 @@ static LRESULT OnCommand(MobiWindow *win, UINT msg, WPARAM wParam, LPARAM lParam
             break;
 
         case IDM_DEBUG_PAGE_LAYOUT:
-            win->ebookController->SetHtml(gSampleHtml);
+            win->ebookController->SetHtml(gSampleMobiHtml);
             break;
 
         case IDM_DEBUG_EBOOK_UI:

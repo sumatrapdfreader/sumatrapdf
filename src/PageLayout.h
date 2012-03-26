@@ -62,14 +62,26 @@ struct DrawInstr {
     static DrawInstr Anchor(const char *s, size_t len, RectF bbox);
 };
 
-struct PageData {
-    PageData() : reparseIdx(NULL)
-    {}
+struct DrawStyle {
+    Font *font;
+    AlignAttr align;
+};
+
+class PageData {
+public:
+    PageData() : reparseIdx(0), listDepth(0), preFormatted(false) { }
+
+    Vec<DrawInstr>  instructions;
     // if we start parsing html again from reparseIdx, we should
     // get the same instructions. reparseIdx is an offset within
     // html data
     int             reparseIdx;
-    Vec<DrawInstr>  instructions;
+    // a copy of the current style stack, so that styling
+    // doesn't change on a relayout from reparseIdx
+    Vec<DrawStyle>  styleStack;
+    // further information that is required for reliable relayouting
+    int listDepth;
+    bool preFormatted;
 };
 
 // just to pack args to HtmlFormatter
@@ -96,7 +108,7 @@ public:
     const char *    htmlStr;
     size_t          htmlStrLen;
 
-    // we stat parsing from htmlStr + reparseIdx
+    // we start parsing from htmlStr + reparseIdx
     int             reparseIdx;
 };
 
@@ -129,11 +141,17 @@ protected:
     void  EmitElasticSpace();
     void  EmitParagraph(float indent);
     void  EmitEmptyLine(float lineDy);
+    void  EmitNewPage();
     void  ForceNewPage();
     bool  EnsureDx(float dx);
 
-    void  SetFont(const WCHAR *fontName, FontStyle fs, float fontSize);
+    DrawStyle *CurrStyle() { return &styleStack.Last(); }
+    Font *CurrFont() { return CurrStyle()->font; }
+    void  SetFont(const WCHAR *fontName, FontStyle fs, float fontSize=-1);
+    void  SetFont(Font *origFont, FontStyle fs, float fontSize=-1);
     void  ChangeFontStyle(FontStyle fs, bool isStart);
+    void  SetAlignment(AlignAttr align);
+    void  RevertStyleChange();
 
     void  AppendInstr(DrawInstr di);
     bool  IsCurrLineEmpty();
@@ -150,12 +168,7 @@ protected:
     float               defaultFontSize;
     Allocator *         textAllocator;
 
-    // temporary state during layout process
-    FontStyle           currFontStyle;
-    float               currFontSize;
-    Font *              currFont;
-
-    AlignAttr           currJustification;
+    Vec<DrawStyle>      styleStack;
     // current position in a page
     float               currX, currY;
     // remembered when we start a new line, used when we actually
