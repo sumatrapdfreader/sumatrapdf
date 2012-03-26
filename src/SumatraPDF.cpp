@@ -516,6 +516,8 @@ static void UpdateCurrentFileDisplayStateForWinMobi(MobiWindow* win)
 static void UpdateCurrentFileDisplayStateForWinInfo(WindowInfo* win)
 {
     RememberDefaultWindowPosition(*win);
+    if (!win->IsDocLoaded())
+        return;
     DisplayState *ds = gFileHistory.Find(win->loadedFilePath);
     if (!ds)
         return;
