@@ -217,7 +217,7 @@ void EbookController::StopLayoutThread(bool forceTerminate)
     // note: we don't delete the thread object, it'll be deleted in
     // EbookController::HandleMobiLayoutMsg() when its final message
     // arrives
-    // TODO: unfortunately ths leads to leaking thread objects and
+    // TODO: unfortunately this leads to leaking thread objects and
     // messages sent by them. Maintaining the lifteime of thread objects
     // is tricky
     // One possibility is to switch to using thread no, disallow ~ThreadBase
@@ -607,6 +607,8 @@ void EbookController::UpdateStatus()
 void EbookController::GoToPage(int newPageNo)
 {
     if ((newPageNo < 1) || (newPageNo == currPageNo))
+        return;
+    if (!GetPagesFromBeginning())
         return;
     if ((size_t)newPageNo > GetPagesFromBeginning()->Count())
         return;
