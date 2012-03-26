@@ -918,7 +918,7 @@ const char *gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "Ireki agiri bat...",
   "Ireki &Adobe Readerren",
   "Ireki &Foxit Readerren",
-  NULL,
+  "Ireki Microsoft HTML Laguntzan",
   "Ireki Microsoft XPS-Ikusgailuan",
   "Ireki PDF-XChangen",
   "Eza&ugarriak",

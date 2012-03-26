@@ -485,6 +485,9 @@ Ireki &Adobe Readerren
 Open in &Foxit Reader
 Ireki &Foxit Readerren
 
+Open in Microsoft HTML Help
+Ireki Microsoft HTML Laguntzan
+
 Open in Microsoft XPS-Viewer
 Ireki Microsoft XPS-Ikusgailuan
 
@@ -691,7 +694,4 @@ idazkia kopiatzen
 
 printing document
 agiria irarkitzen
-
-# Untranslated:
-#Open in Microsoft HTML Help
 
