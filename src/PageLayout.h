@@ -110,6 +110,7 @@ protected:
     bool HandleTagA(HtmlToken *t, const char *linkAttr="href");
     void HandleTagHx(HtmlToken *t);
     void HandleTagList(HtmlToken *t);
+    void HandleTagPre(HtmlToken *t);
     void HandleHtmlTag(HtmlToken *t);
     void HandleText(HtmlToken *t);
 
@@ -131,9 +132,8 @@ protected:
     void  ForceNewPage();
     bool  EnsureDx(float dx);
 
-    void  SetCurrentFont(FontStyle fs, float fontSize);
+    void  SetFont(const WCHAR *fontName, FontStyle fs, float fontSize);
     void  ChangeFontStyle(FontStyle fs, bool isStart);
-    void  ChangeFontSize(float fontSize);
 
     void  AppendInstr(DrawInstr di);
     bool  IsCurrLineEmpty();
@@ -163,6 +163,8 @@ protected:
     float               currLineTopPadding;
     // number of nested lists for indenting whole paragraphs
     int                 listDepth;
+    // set if newlines are not to be ignored
+    bool                preFormatted;
 
     // isntructions for the current line
     Vec<DrawInstr>      currLineInstr;

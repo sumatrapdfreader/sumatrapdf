@@ -113,7 +113,7 @@ $(OS)\AppTools.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
 $(OS)\AppTools.obj: src\utils\Vec.h src\utils\WinUtil.h src\Version.h
 $(OS)\ChmDoc.obj: src\ChmDoc.h src\utils\Allocator.h src\utils\BaseUtil.h
 $(OS)\ChmDoc.obj: src\utils\FileUtil.h src\utils\Scoped.h src\utils\StrUtil.h
-$(OS)\ChmDoc.obj: src\utils\TrivialHtmlParser.h
+$(OS)\ChmDoc.obj: src\utils\TrivialHtmlParser.h src\utils\Vec.h
 $(OS)\ChmEngine.obj: src\BaseEngine.h src\ChmDoc.h src\ChmEngine.h
 $(OS)\ChmEngine.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\FileUtil.h
 $(OS)\ChmEngine.obj: src\utils\GeomUtil.h src\utils\HtmlWindow.h src\utils\Scoped.h

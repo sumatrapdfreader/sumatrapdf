@@ -121,7 +121,8 @@ HtmlFormatter::HtmlFormatter(LayoutInfo *li) : layoutInfo(li),
     pageDx((REAL)li->pageDx), pageDy((REAL)li->pageDy),
     textAllocator(li->textAllocator), currLineReparseIdx(NULL),
     currX(0), currY(0), currJustification(Align_Justify),
-    currLineTopPadding(0), currLinkIdx(0), listDepth(0)
+    currLineTopPadding(0), currLinkIdx(0), listDepth(0),
+    preFormatted(false)
 {
     currReparseIdx = li->reparseIdx;
     htmlParser = new HtmlPullParser(li->htmlStr, li->htmlStrLen);
@@ -131,7 +132,7 @@ HtmlFormatter::HtmlFormatter(LayoutInfo *li) : layoutInfo(li),
     gfx = mui::AllocGraphicsForMeasureText();
     defaultFontName.Set(str::Dup(li->fontName));
     defaultFontSize = li->fontSize;
-    SetCurrentFont(FontStyleRegular, defaultFontSize);
+    SetFont(defaultFontName, FontStyleRegular, defaultFontSize);
 
     lineSpacing = currFont->GetHeight(gfx);
     spaceDx = currFontSize / 2.5f; // note: a heuristic
@@ -161,12 +162,12 @@ void HtmlFormatter::AppendInstr(DrawInstr di)
     }
 }
 
-void HtmlFormatter::SetCurrentFont(FontStyle fontStyle, float fontSize)
+void HtmlFormatter::SetFont(const WCHAR *fontName, FontStyle fs, float fontSize)
 {
-    Font *newFont = mui::GetCachedFont(defaultFontName.Get(), fontSize, fontStyle);
+    Font *newFont = mui::GetCachedFont(fontName, fontSize, fs);
     if (currFont == newFont)
         return;
-    currFontStyle = fontStyle;
+    currFontStyle = fs;
     currFontSize = fontSize;
     currFont = newFont;
     AppendInstr(DrawInstr::SetFont(currFont));
@@ -196,13 +197,8 @@ void HtmlFormatter::ChangeFontStyle(FontStyle fs, bool addStyle)
         newFontStyle = (FontStyle) (newFontStyle | fs);
     else
         newFontStyle = (FontStyle) (newFontStyle & ~fs);
-
-    SetCurrentFont(newFontStyle, currFontSize);
-}
-
-void HtmlFormatter::ChangeFontSize(float fontSize)
-{
-    SetCurrentFont(currFontStyle, fontSize);
+    // TODO: keep the current font face
+    SetFont(defaultFontName, newFontStyle, currFontSize);
 }
 
 static bool IsVisibleDrawInstr(DrawInstr *i)
@@ -566,7 +562,7 @@ void HtmlFormatter::EmitTextRun(const char *s, const char *end)
 {
     currReparseIdx = s - htmlParser->Start();
     CrashIf(!ValidReparseIdx(currReparseIdx, htmlParser));
-    CrashIf(IsSpaceOnly(s, end));
+    CrashIf(IsSpaceOnly(s, end) && !preFormatted);
     const char *tmp = ResolveHtmlEntities(s, end, textAllocator);
     bool resolved = tmp != s;
     if (resolved) {
@@ -597,14 +593,6 @@ void HtmlFormatter::EmitTextRun(const char *s, const char *end)
         currX += bbox.Width;
         s += lenThatFits;
     }
-}
-
-// parse the number in s as a float
-static float ParseFloat(const char *s, size_t len)
-{
-    float x = 0;
-    str::Parse(s, len, "%f", &x);
-    return x;
 }
 
 // parses size in the form "1em" or "3pt". To interpret ems we need emInPoints
@@ -643,7 +631,7 @@ void HtmlFormatter::HandleAnchorTag(HtmlToken *t, bool idsOnly)
 
 void HtmlFormatter::HandleTagBr()
 {
-    // Trying to match Kindle behavior
+    // make sure to always emit a line
     if (IsCurrLineEmpty())
         EmitEmptyLine(lineSpacing);
     else
@@ -669,30 +657,36 @@ void HtmlFormatter::HandleTagP(HtmlToken *t)
 void HtmlFormatter::HandleTagFont(HtmlToken *t)
 {
     if (t->IsEndTag()) {
-        ChangeFontSize(defaultFontSize);
+        SetFont(defaultFontName, currFontStyle, defaultFontSize);
         return;
     }
 
-    AttrInfo *attr = t->GetAttrByName("name");
-    float size;
+    AttrInfo *attr = t->GetAttrByName("face");
+    const WCHAR *faceName = defaultFontName;
     if (attr) {
-        // TODO: also use font name (not sure if mobi documents use that)
-        CrashIf(true);
-        size = 0; // only so that we can set a breakpoing
+        size_t strLen = str::Utf8ToWcharBuf(t->s, t->sLen, buf, dimof(buf));
+        // multiple font names can be comma separated
+        if (strLen > 0 && *buf != ',') {
+            str::TransChars(buf, L",", L"\0");
+            faceName = buf;
+        }
     }
 
+    float fontSize = defaultFontSize;
     attr = t->GetAttrByName("size");
-    if (!attr)
-        return;
-    size = ParseFloat(attr->val, attr->valLen);
-    // the sizes seem to be in 3-6 range. I try to convert it to
-    // relative sizes that visually match Kindle app
-    if (size < 1.f)
-        size = 1.f;
-    else if (size > 10.f)
-        size = 10.f;
-    float scale = 1.f + (size/10.f * .4f);
-    ChangeFontSize(defaultFontSize * scale);
+    if (attr) {
+        // the sizes are in the range from 1 (tiny) to 7 (huge)
+        int size = 3; // normal size
+        str::Parse(attr->val, attr->valLen, "%d", &size);
+        // sizes can also be relative to the current size
+        if (attr->valLen > 0 && ('-' == *attr->val || '+' == *attr->val))
+            size += 3;
+        size = limitValue(size, 1, 7);
+        float scale = pow(1.2f, size - 3);
+        fontSize = defaultFontSize * scale;
+    }
+
+    SetFont(faceName, currFontStyle, fontSize);
 }
 
 bool HtmlFormatter::HandleTagA(HtmlToken *t, const char *linkAttr)
@@ -752,6 +746,22 @@ void HtmlFormatter::HandleTagList(HtmlToken *t)
     else if (t->IsEndTag() && listDepth > 0)
         listDepth--;
     currX = NewLineX();
+}
+
+void HtmlFormatter::HandleTagPre(HtmlToken *t)
+{
+    FlushCurrLine(true);
+    if (t->IsStartTag()) {
+        SetFont(L"Courier New", currFontStyle, currFontSize);
+        currJustification = Align_Left;
+        preFormatted = true;
+    }
+    else if (t->IsEndTag()) {
+        // TODO: keep the current font face
+        SetFont(defaultFontName, currFontStyle, currFontSize);
+        currJustification = Align_Justify;
+        preFormatted = false;
+    }
 }
 
 void HtmlFormatter::HandleHtmlTag(HtmlToken *t)
@@ -819,6 +829,14 @@ void HtmlFormatter::HandleHtmlTag(HtmlToken *t)
     } else if (Tag_Tr == tag) {
         // display tables row-by-row for now
         FlushCurrLine(true);
+    } else if (Tag_Code == tag) {
+        if (t->IsStartTag())
+            SetFont(L"Courier New", FontStyleRegular, currFontSize);
+        else if (t->IsEndTag())
+            // TODO: keep the current font face
+            SetFont(defaultFontName, FontStyleRegular, currFontSize);
+    } else if (Tag_Pre == tag) {
+        HandleTagPre(t);
     } else {
         // TODO: temporary debugging
         //lf("unhandled tag: %d", tag);
@@ -834,6 +852,25 @@ void HtmlFormatter::HandleText(HtmlToken *t)
     bool skipped;
     const char *curr = t->s;
     const char *end = t->s + t->sLen;
+
+    if (preFormatted) {
+        // don't collapse whitespace and respect text newlines
+        while (curr < end) {
+            const char *text = curr;
+            currReparseIdx = curr - htmlParser->Start();
+            // skip to the next newline
+            for (; curr < end && *curr != '\n'; curr++);
+            if (curr < end && curr > text && *(curr - 1) == '\r')
+                curr--;
+            EmitTextRun(text, curr);
+            if ('\n' == *curr || '\r' == *curr) {
+                curr += '\r' == *curr ? 2 : 1;
+                HandleTagBr();
+            }
+        }
+        return;
+    }
+
     // break text into runs i.e. chunks that are either all
     // whitespace or all non-whitespace
     while (curr < end) {
