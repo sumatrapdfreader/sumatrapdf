@@ -2133,7 +2133,7 @@ static void OnMouseLeftButtonDblClk(WindowInfo& win, int x, int y, WPARAM key)
 
         DeleteOldSelectionInfo(&win, true);
         win.selectionOnPage = SelectionOnPage::FromRectangle(win.dm, rc);
-        win.showSelection = true;
+        win.showSelection = win.selectionOnPage != NULL;
         win.RepaintAsync();
     }
     delete pageEl;

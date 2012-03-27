@@ -44,6 +44,10 @@ Vec<SelectionOnPage> *SelectionOnPage::FromRectangle(DisplayModel *dm, RectI rec
     }
     sel->Reverse();
 
+    if (sel->Count() == 0) {
+        delete sel;
+        return NULL;
+    }
     return sel;
 }
 
@@ -51,10 +55,16 @@ Vec<SelectionOnPage> *SelectionOnPage::FromTextSelect(TextSel *textSel)
 {
     Vec<SelectionOnPage> *sel = new Vec<SelectionOnPage>(textSel->len);
 
-    for (int i = textSel->len - 1; i >= 0; i--)
-        sel->Append(SelectionOnPage(textSel->pages[i], &textSel->rects[i].Convert<double>()));
+    for (int i = textSel->len - 1; i >= 0; i--) {
+        RectD rect = textSel->rects[i].Convert<double>();
+        sel->Append(SelectionOnPage(textSel->pages[i], &rect));
+    }
     sel->Reverse();
 
+    if (sel->Count() == 0) {
+        delete sel;
+        return NULL;
+    }
     return sel;
 }
 
@@ -139,7 +149,7 @@ void UpdateTextSelection(WindowInfo *win, bool select)
 
     DeleteOldSelectionInfo(win);
     win->selectionOnPage = SelectionOnPage::FromTextSelect(&win->dm->textSelection->result);
-    win->showSelection = true;
+    win->showSelection = win->selectionOnPage != NULL;
 }
 
 void ZoomToSelection(WindowInfo *win, float factor, bool relative)
@@ -266,14 +276,15 @@ void OnSelectAll(WindowInfo *win, bool textOnly)
         win->dm->textSelection->SelectUpTo(pageNo, -1);
         win->selectionRect = RectI::FromXY(INT_MIN / 2, INT_MIN / 2, INT_MAX, INT_MAX);
         UpdateTextSelection(win);
+        win->showSelection = true;
     }
     else {
         DeleteOldSelectionInfo(win, true);
         win->selectionRect = RectI::FromXY(INT_MIN / 2, INT_MIN / 2, INT_MAX, INT_MAX);
         win->selectionOnPage = SelectionOnPage::FromRectangle(win->dm, win->selectionRect);
+        win->showSelection = win->selectionOnPage != NULL;
     }
 
-    win->showSelection = true;
     win->RepaintAsync();
 }
 
@@ -343,7 +354,9 @@ void OnSelectionStop(WindowInfo *win, int x, int y, bool aborted)
     win->selectionRect = RectI::FromXY(win->selectionRect.x, win->selectionRect.y, x, y);
     if (aborted || (MA_SELECTING == win->mouseAction ? win->selectionRect.IsEmpty() : !win->selectionOnPage))
         DeleteOldSelectionInfo(win, true);
-    else if (win->mouseAction == MA_SELECTING)
+    else if (win->mouseAction == MA_SELECTING) {
         win->selectionOnPage = SelectionOnPage::FromRectangle(win->dm, win->selectionRect);
+        win->showSelection = win->selectionOnPage != NULL;
+    }
     win->RepaintAsync();
 }
