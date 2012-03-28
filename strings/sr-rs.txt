@@ -258,6 +258,9 @@ Continuous Facing
 Contribute Translation
 Учествуј у превођењу
 
+Copy &Image
+Копирај слику
+
 Copy &Link Address
 Копирај адресу везе
 
@@ -266,6 +269,9 @@ Copy Co&mment
 
 Copying text was denied (copying as image only)
 Копирање текста је одбијено (може се копирати само као слика)
+
+Copyright:
+Ауторска права:
 
 Could not obtain Printer properties
 Није могуће приказати особине штампача
@@ -390,6 +396,12 @@ Fit Width and Show Pages Continuously
 Fit a Single Page
 Подеси према појединачној страници
 
+Fonts:
+Фонтови:
+
+Formatting the book... %d pages
+Форматирање књиге... %d страница
+
 Found text at page %s
 Текст је пронађен на %s. страници
 
@@ -416,6 +428,9 @@ Image files (*.%s)
 
 KB
 kB
+
+Loading file %s...
+Учитавање датотеке %s...
 
 MB
 MB
@@ -555,6 +570,9 @@ Remove from favorites
 Remove page %s from favorites
 Уклони страницу %s из одабраних
 
+Replace document &colors with Windows color scheme
+Замени боје документа Windows колор шемом
+
 Rotate &Left\tCtrl+Shift+-
 Ротирај улево\tCtrl+Shift+-
 
@@ -568,7 +586,7 @@ Save S&hortcut...\tCtrl+Shift+S
 Сачувај пречицу...\tCtrl+Shift+S
 
 Searching %d of %d...
-Претраживање %d. странице од укупно %d...
+Претраживање %d странице од укупно %d...
 
 Select &All
 Изабери све
@@ -677,12 +695,4 @@ copying text
 
 printing document
 штампање документа
-
-# Untranslated:
-#Copy &Image
-#Copyright:
-#Fonts:
-#Formatting the book... %d pages
-#Loading file %s...
-#Replace document &colors with Windows color scheme
 
