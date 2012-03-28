@@ -26,6 +26,11 @@ static void Test00(const char *s, HtmlToken::TokenType expectedType) {
     a = t->GetAttrByName("nope");
     assert(!a);
 
+    a = t->GetAttrByValue(">");
+    assert(a->NameIs("a1"));
+    a = t->GetAttrByValue("bar");
+    assert(a->NameIs("foo"));
+
     t = parser.Next();
     assert(!t);
 }

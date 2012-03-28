@@ -354,7 +354,9 @@ bool Fb2Doc::Load()
 {
     size_t len;
     ScopedMem<char> data;
-    if (str::EndsWithI(fileName, _T(".zip"))) {
+    if (str::EndsWithI(fileName, _T(".zip")) ||
+        str::EndsWithI(fileName, _T(".fb2z")) ||
+        str::EndsWithI(fileName, _T(".zfb2"))) {
         ZipFile archive(fileName);
         data.Set(archive.GetFileData((size_t)0, &len));
     }
@@ -383,7 +385,15 @@ bool Fb2Doc::Load()
     int inBody = 0, inTitleInfo = 0;
     const char *bodyStart = NULL;
     while ((tok = parser.Next()) && !tok->IsError()) {
-        if (!inTitleInfo && tok->IsStartTag() && tok->NameIs("body")) {
+        if (tok->IsStartTag() && tok->NameIs("FictionBook") && !hrefName &&
+            parser.tagNesting.Count() == 1) {
+            AttrInfo *attr = tok->GetAttrByValue("http://www.w3.org/1999/xlink");
+            if (attr && attr->nameLen > 6 && str::StartsWith(attr->name, "xmlns:")) {
+                ScopedMem<char> ns(str::DupN(attr->name + 6, attr->nameLen - 6));
+                hrefName.Set(str::Join(ns, ":href"));
+            }
+        }
+        else if (!inTitleInfo && tok->IsStartTag() && tok->NameIs("body")) {
             if (!inBody++)
                 bodyStart = tok->s;
         }
@@ -458,9 +468,16 @@ TCHAR *Fb2Doc::GetProperty(const char *name)
     return NULL;
 }
 
+const char *Fb2Doc::GetHrefName()
+{
+    return hrefName ? hrefName : "href";
+}
+
 bool Fb2Doc::IsSupportedFile(const TCHAR *fileName, bool sniff)
 {
-    return str::EndsWithI(fileName, _T(".fb2")) ||
+    return str::EndsWithI(fileName, _T(".fb2"))  ||
+           str::EndsWithI(fileName, _T(".fb2z")) ||
+           str::EndsWithI(fileName, _T(".zfb2")) ||
            str::EndsWithI(fileName, _T(".fb2.zip"));
 }
 

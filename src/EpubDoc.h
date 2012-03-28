@@ -55,6 +55,7 @@ class Fb2Doc {
     str::Str<char> xmlData;
     Vec<ImageData2> images;
     ScopedMem<TCHAR> docTitle;
+    ScopedMem<char> hrefName;
 
     bool Load();
     void ExtractImage(HtmlPullParser *parser, HtmlToken *tok);
@@ -67,6 +68,7 @@ public:
     ImageData2 *GetImageData(const char *id);
 
     TCHAR *GetProperty(const char *name);
+    const char *GetHrefName();
 
     static bool IsSupportedFile(const TCHAR *fileName, bool sniff);
     static Fb2Doc *CreateFromFile(const TCHAR *fileName);

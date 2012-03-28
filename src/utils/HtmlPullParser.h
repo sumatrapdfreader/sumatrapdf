@@ -141,6 +141,7 @@ struct HtmlToken {
 
     bool             NameIs(const char *name) const;
     AttrInfo *       GetAttrByName(const char *name);
+    AttrInfo *       GetAttrByValue(const char *name);
 
 protected:
     AttrInfo *       NextAttr();

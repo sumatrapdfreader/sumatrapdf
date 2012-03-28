@@ -782,7 +782,7 @@ void Fb2Formatter::HandleTagImg_Fb2(HtmlToken *t)
     CrashIf(!fb2Doc);
     if (t->IsEndTag())
         return;
-    AttrInfo *attr = t->GetAttrByName("xlink:href");
+    AttrInfo *attr = t->GetAttrByName(fb2Doc->GetHrefName());
     if (!attr)
         return;
     ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
@@ -800,9 +800,10 @@ void Fb2Formatter::HandleTagAsHtml(HtmlToken *t, const char *name)
 
 void Fb2Formatter::HandleFb2Tag(HtmlToken *t)
 {
-    if (t->NameIs("title")) {
+    if (t->NameIs("title") || t->NameIs("subtitle")) {
+        bool isSubtitle = t->NameIs("subtitle");
+        ScopedMem<char> name(str::Format("h%d", section + (isSubtitle ? 1 : 0)));
         HtmlToken tok;
-        ScopedMem<char> name(str::Format("h%d", section));
         tok.SetValue(t->type, name, name + str::Len(name));
         HandleTagHx(&tok);
         HandleAnchorTag(t);
@@ -824,7 +825,7 @@ void Fb2Formatter::HandleFb2Tag(HtmlToken *t)
         HandleAnchorTag(t);
     }
     else if (t->NameIs("a")) {
-        HandleTagA(t, "xlink:href");
+        HandleTagA(t, fb2Doc->GetHrefName());
         HandleAnchorTag(t, true);
     }
     else if (t->NameIs("pagebreak"))

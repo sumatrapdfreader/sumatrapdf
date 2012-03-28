@@ -287,6 +287,17 @@ AttrInfo *HtmlToken::GetAttrByName(const char *name)
     return NULL;
 }
 
+AttrInfo *HtmlToken::GetAttrByValue(const char *name)
+{
+    size_t len = str::Len(name);
+    nextAttr = NULL; // start from the beginning
+    for (AttrInfo *a = NextAttr(); a; a = NextAttr()) {
+        if (len == a->valLen && str::EqN(a->val, name, len))
+            return a;
+    }
+    return NULL;
+}
+
 // We expect:
 // whitespace | attribute name | = | attribute value
 // where attribute value can be quoted
