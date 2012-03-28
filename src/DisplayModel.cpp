@@ -1369,14 +1369,15 @@ float DisplayModel::NextZoomStep(float towardsLevel)
     CrashIf(!AsChmEngine() && (pageZoom == (float)HUGE_VAL || widthZoom == (float)HUGE_VAL));
     pageZoom *= 100 / dpiFactor; widthZoom *= 100 / dpiFactor;
 
+#define FLOAT_FUZZ 0.01f
     float newZoom = towardsLevel;
     if (currZoom < towardsLevel) {
         for (int i = 0; i < dimof(zoomLevels); i++) {
-            if (zoomLevels[i] - 0.01f <= currZoom)
+            if (zoomLevels[i] - FLOAT_FUZZ <= currZoom)
                 continue;
-            if (currZoom < pageZoom && pageZoom <= zoomLevels[i])
+            if (currZoom + FLOAT_FUZZ < pageZoom && pageZoom < zoomLevels[i] - FLOAT_FUZZ)
                 newZoom = ZOOM_FIT_PAGE;
-            else if (currZoom < widthZoom && widthZoom <= zoomLevels[i])
+            else if (currZoom + FLOAT_FUZZ < widthZoom && widthZoom < zoomLevels[i] - FLOAT_FUZZ)
                 newZoom = ZOOM_FIT_WIDTH;
             else
                 newZoom = zoomLevels[i];
@@ -1384,17 +1385,18 @@ float DisplayModel::NextZoomStep(float towardsLevel)
         }
     } else if (currZoom > towardsLevel) {
         for (int i = dimof(zoomLevels); i > 0; i--) {
-            if (currZoom <= zoomLevels[i-1] + 0.01f)
+            if (currZoom <= zoomLevels[i-1] + FLOAT_FUZZ)
                 continue;
-            if (zoomLevels[i-1] <= pageZoom && pageZoom < currZoom)
+            if (zoomLevels[i-1] + FLOAT_FUZZ < pageZoom && pageZoom < currZoom - FLOAT_FUZZ)
                 newZoom = ZOOM_FIT_PAGE;
-            else if (zoomLevels[i-1] <= widthZoom && widthZoom < currZoom)
+            else if (zoomLevels[i-1] + FLOAT_FUZZ < widthZoom && widthZoom < currZoom - FLOAT_FUZZ)
                 newZoom = ZOOM_FIT_WIDTH;
             else
                 newZoom = zoomLevels[i-1];
             break;
         }
     }
+#undef FLOAT_FUZZ
 #endif
 
     return newZoom;
