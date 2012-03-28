@@ -3,6 +3,10 @@ the release notes, as we make them, to make the release process easier.
 
 Next version:
 
+2.1 (????-??-??)
+
+* support multi-page TIFF files
+
 2.0 (????-??-??)
 
 * support for mobi ebook format
