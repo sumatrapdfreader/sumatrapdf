@@ -206,7 +206,7 @@ ps_push_real(ps_stack *st, float n)
 		if (isnan(n))
 		{
 			/* Push 1.0, as it's a small known value that won't
-			   cause a divide by 0. Same reason as in fz_atof. */
+			 * cause a divide by 0. Same reason as in fz_atof. */
 			n = 1.0;
 		}
 		st->stack[st->sp].u.f = CLAMP(n, -FLT_MAX, FLT_MAX);

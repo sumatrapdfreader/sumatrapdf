@@ -375,6 +375,21 @@ void *fz_malloc(fz_context *ctx, unsigned int size);
 void *fz_calloc(fz_context *ctx, unsigned int count, unsigned int size);
 
 /*
+	fz_malloc_struct: Allocate storage for a structure (with scavenging),
+	clear it, and (in Memento builds) tag the pointer as belonging to a
+	struct of this type.
+
+	CTX: The context.
+
+	STRUCT: The structure type.
+
+	Returns a pointer to allocated (and cleared) structure. Throws
+	exception on failure to allocate.
+*/
+#define fz_malloc_struct(CTX, STRUCT) \
+	Memento_label(fz_calloc(CTX,1,sizeof(STRUCT)), #STRUCT)
+
+/*
 	fz_malloc_array: Allocate a block of (non zeroed) memory (with
 	scavenging). Equivalent to fz_calloc without the memory clearing.
 
@@ -560,7 +575,9 @@ int fz_runetochar(char *str, int rune);
 */
 int fz_runelen(int rune);
 
-/* getopt */
+/*
+	getopt: Simple functions/variables for use in tools.
+*/
 extern int fz_getopt(int nargc, char * const *nargv, const char *ostr);
 extern int fz_optind;
 extern char *fz_optarg;
@@ -1410,7 +1427,7 @@ void fz_write_tga(fz_context *ctx, fz_pixmap *pixmap, char *filename, int saveal
 	These may be implemented as simple wrappers around a pixmap, or as
 	more complex things that decode at different subsample settings on
 	demand.
- */
+*/
 typedef struct fz_image_s fz_image;
 
 /*
@@ -1525,7 +1542,9 @@ fz_device *fz_new_gdiplus_device(fz_context *ctx, void *dc, fz_bbox base_clip);
 
 /*
 	Text extraction device: Used for searching, format conversion etc.
- */
+
+	(In development - Subject to change in future versions)
+*/
 
 typedef struct fz_text_style_s fz_text_style;
 typedef struct fz_text_char_s fz_text_char;
@@ -1536,51 +1555,35 @@ typedef struct fz_text_block_s fz_text_block;
 typedef struct fz_text_sheet_s fz_text_sheet;
 typedef struct fz_text_page_s fz_text_page;
 
-struct fz_text_style_s
-{
-	int id;
-	fz_font *font;
-	float size;
-	int wmode;
-	int script;
-	/* etc... */
-	fz_text_style *next;
-};
-
+/*
+	fz_text_sheet: A text sheet contains a list of distinct text styles
+	used on a page (or a series of pages).
+*/ 
 struct fz_text_sheet_s
 {
 	int maxid;
 	fz_text_style *style;
 };
 
-struct fz_text_char_s
+/*
+	fz_text_style: A text style contains details of a distinct text style
+	used on a page.
+*/ 
+struct fz_text_style_s
 {
-	fz_rect bbox;
-	int c;
+	fz_text_style *next;
+	int id;
+	fz_font *font;
+	float size;
+	int wmode;
+	int script;
+	/* etc... */
 };
 
-struct fz_text_span_s
-{
-	fz_rect bbox;
-	int len, cap;
-	fz_text_char *text;
-	fz_text_style *style;
-};
-
-struct fz_text_line_s
-{
-	fz_rect bbox;
-	int len, cap;
-	fz_text_span *spans;
-};
-
-struct fz_text_block_s
-{
-	fz_rect bbox;
-	int len, cap;
-	fz_text_line *lines;
-};
-
+/*
+	fz_text_page: A text page is a list of blocks of text, together with
+	an overall bounding box.
+*/ 
 struct fz_text_page_s
 {
 	fz_rect mediabox;
@@ -1589,11 +1592,72 @@ struct fz_text_page_s
 };
 
 /*
+	fz_text_block: A text block is a list of lines of text. In typical
+	cases this may correspond to a paragraph or a column of text. A
+	collection of blocks makes up a page.
+*/ 
+struct fz_text_block_s
+{
+	fz_rect bbox;
+	int len, cap;
+	fz_text_line *lines;
+};
+
+/*
+	fz_text_line: A text line is a list of text spans, with the same
+	(or very similar) baseline. In typical cases this should correspond
+	(as expected) to complete lines of text. A collection of lines makes
+	up a block.
+*/ 
+struct fz_text_line_s
+{
+	fz_rect bbox;
+	int len, cap;
+	fz_text_span *spans;
+};
+
+/*
+	fz_text_span: A text span is a list of characters in the same style
+	that share a common (or very similar) baseline. In typical cases
+	(where only one font style is used in a line), a single span may be
+	enough to represent a complete line. In cases where multiple
+	font styles are used (for example italics), then a line will be
+	broken down into a series of spans.
+*/ 
+struct fz_text_span_s
+{
+	fz_rect bbox;
+	int len, cap;
+	fz_text_char *text;
+	fz_text_style *style;
+};
+
+/*
+	fz_text_char: A text char is a unicode character and the bounding
+	box with which it appears on the page.
+*/ 
+struct fz_text_char_s
+{
+	fz_rect bbox;
+	int c;
+};
+
+/*
 	fz_new_text_device: Create a device to extract the text on a page.
 
 	Gather and sort the text on a page into spans of uniform style,
 	arranged into lines and blocks by reading order. The reading order
 	is determined by various heuristics, so may not be accurate.
+
+	sheet: The text sheet to which styles should be added. This can
+	either be a newly created (empty) text sheet, or one containing
+	styles from a previous text device. The same sheet cannot be used
+	in multiple threads simultaneously.
+
+	page: The text page to which content should be added. This will
+	usually be a newly created (empty) text page, but it can be one
+	containing data already (for example when merging multiple pages, or
+	watermarking).
 */
 fz_device *fz_new_text_device(fz_context *ctx, fz_text_sheet *sheet, fz_text_page *page);
 
@@ -1616,14 +1680,29 @@ void fz_free_text_sheet(fz_context *ctx, fz_text_sheet *sheet);
 fz_text_page *fz_new_text_page(fz_context *ctx, fz_rect mediabox);
 void fz_free_text_page(fz_context *ctx, fz_text_page *page);
 
+/*
+	fz_print_text_sheet: Output a text sheet to a file as CSS.
+*/ 
 void fz_print_text_sheet(fz_context *ctx, FILE *out, fz_text_sheet *sheet);
+
+/*
+	fz_print_text_page_html: Output a page to a file in HTML format.
+*/ 
 void fz_print_text_page_html(fz_context *ctx, FILE *out, fz_text_page *page);
+
+/*
+	fz_print_text_page_xml: Output a page to a file in XML format.
+*/ 
 void fz_print_text_page_xml(fz_context *ctx, FILE *out, fz_text_page *page);
+
+/*
+	fz_print_text_page: Output a page to a file in UTF-8 format.
+*/ 
 void fz_print_text_page(fz_context *ctx, FILE *out, fz_text_page *page);
 
 /*
- * Cookie support - simple communication channel between app/library.
- */
+	Cookie support - simple communication channel between app/library.
+*/
 
 typedef struct fz_cookie_s fz_cookie;
 
@@ -1745,7 +1824,12 @@ void fz_run_display_list(fz_display_list *list, fz_device *dev, fz_matrix ctm, f
 */
 void fz_free_display_list(fz_context *ctx, fz_display_list *list);
 
-/* Links */
+/*
+	Links
+
+	NOTE: The link destination struct is scheduled for imminent change!
+	Use at your own peril.
+*/
 
 typedef struct fz_link_s fz_link;
 
@@ -1772,33 +1856,57 @@ enum {
 };
 
 /*
-	fz_link_dest: XXX
+	fz_link_dest: This structure represents the destination of
+	an fz_link; this may be a page to display, a new file to open,
+	a javascript action to perform, etc.
 
-	kind: Set to one of FZ_LINK_* to tell what what type of link
-	destination this is, and where in the union to look for
-	information. XXX
+	kind: This identifies the kind of link destination. Different
+	kinds use different sections of the union.
 
-	gotor.page: Page number, 0 is the first page of the document. XXX
+	For FZ_LINK_GOTO or FZ_LINK_GOTOR:
 
-	gotor.flags: A bitfield consisting of fz_link_flag_* telling
-	what parts of gotor.lt and gotor.rb are valid, whether
-	fitting to width/height should be used, or if an arbitrary
-	zoom factor is used. XXX
+		gotor.page: The target page number to move to (0 being the
+		first page in the document).
 
-	gotor.lt: The top left corner of the destination bounding box. XXX
-	gotor.rb: The bottom right corner of the destination bounding box. XXX
+		gotor.flags: A bitfield consisting of fz_link_flag_*
+		describing the validity and meaning of the different parts
+		of gotor.lr and gotor.rb. Link destinations are constructed
+		(as far as possible) so that lt and rb can be treated as a
+		bounding box, though the validity flags indicate which of the
+		values was actually specified in the file.
 
-	gotor.file_spec: XXX
+		gotor.lt: The top left corner of the destination bounding box.
 
-	gotor.new_window: XXX
+		gotor.rb: The bottom right corner of the destination bounding
+		box. If fz_link_flag_r_is_zoom is set, then the r figure
+		should actually be interpretted as a zoom ratio.
 
-	uri.uri: XXX
-	uri.is_map: XXX
+		gotor.file_spec: If set, this destination should cause a new
+		file to be opened; this field holds a pointer to a remote
+		file specification (UTF-8). Always NULL in the FZ_LINK_GOTO
+		case.
 
-	launch.file_spec: XXX
-	launch.new_window: XXX
+		gotor.new_window: If true, the destination should open in a
+		new window.
 
-	named.named: XXX
+	For FZ_LINK_URI:		
+
+		uri.uri: A UTF-8 encoded URI to launch.
+
+		uri.is_map: If true, the x and y coords (as ints, in user
+		space) should be appended to the URI before launch.
+
+	For FZ_LINK_LAUNCH:
+
+		launch.file_spec: A UTF-8 file specification to launch.
+
+		launch.new_window: If true, the destination should be launched
+		in a new window.
+
+	For FZ_LINK_NAMED:
+
+		named.named: The named action to perform. Likely to be
+		client specific.
 */
 struct fz_link_dest_s
 {

@@ -92,7 +92,7 @@ endif
 # The following section works for both device and simulator builds.
 
 ifeq "$(OS)" "ios"
-CC = $(PLATFORM_DEVELOPER_BIN_DIR)/clang
+CC = $(PLATFORM_DEVELOPER_BIN_DIR)/gcc
 AR = $(PLATFORM_DEVELOPER_BIN_DIR)/ar
 RANLIB_CMD = $(PLATFORM_DEVELOPER_BIN_DIR)/ranlib $@
 CROSSCOMPILE=yes

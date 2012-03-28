@@ -949,6 +949,7 @@ xps_parse_path(xps_document *doc, fz_matrix ctm, char *base_uri, xps_resource *d
 					s++;
 				if (*s) /* needed in case of a space before the last quote */
 					dash_len++;
+
 				while (*s && *s != ' ')
 					s++;
 			}

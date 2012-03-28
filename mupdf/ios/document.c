@@ -164,71 +164,84 @@ draw_page(struct document *doc, int number, fz_device *dev, fz_matrix ctm, fz_co
 	fz_flush_warnings(doc->ctx);
 }
 
-static int
-charat(fz_text_span *span, int idx)
+static fz_text_char
+textcharat(fz_text_page *page, int idx)
 {
+	static fz_text_char emptychar = { {0,0,0,0}, ' ' };
+	fz_text_block *block;
+	fz_text_line *line;
+	fz_text_span *span;
 	int ofs = 0;
-	while (span) {
-		if (idx < ofs + span->len)
-			return span->text[idx - ofs].c;
-		if (span->eol) {
-			if (idx == ofs + span->len)
-				return ' ';
-			ofs ++;
+	for (block = page->blocks; block < page->blocks + page->len; block++)
+	{
+		for (line = block->lines; line < block->lines + block->len; line++)
+		{
+			for (span = line->spans; span < line->spans + line->len; span++)
+			{
+				if (idx < ofs + span->len)
+					return span->text[idx - ofs];
+				/* pseudo-newline */
+				if (span + 1 == line->spans + line->len)
+				{
+					if (idx == ofs + span->len)
+						return emptychar;
+					ofs++;
+				}
+				ofs += span->len;
+			}
 		}
-		ofs += span->len;
-		span = span->next;
 	}
-	return 0;
+	return emptychar;
+}
+
+static int
+charat(fz_text_page *page, int idx)
+{
+	return textcharat(page, idx).c;
 }
 
 static fz_bbox
-bboxat(fz_text_span *span, int idx)
+bboxat(fz_text_page *page, int idx)
 {
-	int ofs = 0;
-	while (span) {
-		if (idx < ofs + span->len)
-			return span->text[idx - ofs].bbox;
-		if (span->eol) {
-			if (idx == ofs + span->len)
-				return fz_empty_bbox;
-			ofs ++;
-		}
-		ofs += span->len;
-		span = span->next;
-	}
-	return fz_empty_bbox;
+	return fz_round_rect(textcharat(page, idx).bbox);
 }
 
 static int
-textlen(fz_text_span *span)
+textlen(fz_text_page *page)
 {
+	fz_text_block *block;
+	fz_text_line *line;
+	fz_text_span *span;
 	int len = 0;
-	while (span) {
-		len += span->len;
-		if (span->eol)
-			len ++;
-		span = span->next;
+	for (block = page->blocks; block < page->blocks + page->len; block++)
+	{
+		for (line = block->lines; line < block->lines + block->len; line++)
+		{
+			for (span = line->spans; span < line->spans + line->len; span++)
+				len += span->len;
+			len++; /* pseudo-newline */
+		}
 	}
 	return len;
 }
 
 static int
-match(fz_text_span *span, char *s, int n)
+match(fz_text_page *page, const char *s, int n)
 {
-	int start = n, c;
+	int orig = n;
+	int c;
 	while (*s) {
-		s += chartorune(&c, s);
-		if (c == ' ' && charat(span, n) == ' ') {
-			while (charat(span, n) == ' ')
+		s += fz_chartorune(&c, (char *)s);
+		if (c == ' ' && charat(page, n) == ' ') {
+			while (charat(page, n) == ' ')
 				n++;
 		} else {
-			if (tolower(c) != tolower(charat(span, n)))
+			if (tolower(c) != tolower(charat(page, n)))
 				return 0;
 			n++;
 		}
 	}
-	return n - start;
+	return n - orig;
 }
 
 int
@@ -239,8 +252,9 @@ search_page(struct document *doc, int number, char *needle, fz_cookie *cookie)
 	if (strlen(needle) == 0)
 		return 0;
 
-	fz_text_span *text = fz_new_text_span(doc->ctx);
-	fz_device *dev = fz_new_text_device(doc->ctx, text);
+	fz_text_sheet *sheet = fz_new_text_sheet(doc->ctx);
+	fz_text_page *text = fz_new_text_page(doc->ctx, fz_empty_rect);
+	fz_device *dev = fz_new_text_device(doc->ctx, sheet, text);
 	draw_page(doc, number, dev, fz_identity, cookie);
 	fz_free_device(dev);
 
@@ -258,7 +272,8 @@ search_page(struct document *doc, int number, char *needle, fz_cookie *cookie)
 		}
 	}
 
-	fz_free_text_span(doc->ctx, text);
+	fz_free_text_page(doc->ctx, text);
+	fz_free_text_sheet(doc->ctx, sheet);
 	return doc->hit_count;
 }
 

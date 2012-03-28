@@ -249,8 +249,7 @@ float fz_atof(const char *s)
 	errno = 0;
 	d = strtod(s, NULL);
 	if (errno == ERANGE || isnan(d)) {
-		/* Return 1.0, as it's a small known value that won't cause a
-		   divide by 0. */
+		/* Return 1.0, as it's a small known value that won't cause a divide by 0. */
 		return 1.0;
 	}
 	d = CLAMP(d, -FLT_MAX, FLT_MAX);

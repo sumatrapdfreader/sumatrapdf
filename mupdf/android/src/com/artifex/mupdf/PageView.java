@@ -10,6 +10,7 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.os.Handler;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -44,6 +45,7 @@ public abstract class PageView extends ViewGroup {
 	private static final int HIGHLIGHT_COLOR = 0x805555FF;
 	private static final int LINK_COLOR = 0x80FFCC88;
 	private static final int BACKGROUND_COLOR = 0xFFFFFFFF;
+	private static final int PROGRESS_DIALOG_DELAY = 200;
 	private final Context   mContext;
 	protected     int       mPageNumber;
 	private       Point     mParentSize;
@@ -66,6 +68,7 @@ public abstract class PageView extends ViewGroup {
 	private       boolean   mHighlightLinks;
 
 	private       ProgressBar mBusyIndicator;
+	private final Handler   mHandler = new Handler();
 
 	public PageView(Context c, Point parentSize) {
 		super(c);
@@ -155,6 +158,13 @@ public abstract class PageView extends ViewGroup {
 					mBusyIndicator.setIndeterminate(true);
 					mBusyIndicator.setBackgroundResource(R.drawable.busy);
 					addView(mBusyIndicator);
+					mBusyIndicator.setVisibility(INVISIBLE);
+					mHandler.postDelayed(new Runnable() {
+						public void run() {
+							if (mBusyIndicator != null)
+								mBusyIndicator.setVisibility(VISIBLE);
+						}
+					}, PROGRESS_DIALOG_DELAY);
 				}
 			}
 
@@ -206,10 +216,14 @@ public abstract class PageView extends ViewGroup {
 
 	public void setSearchBoxes(RectF searchBoxes[]) {
 		mSearchBoxes = searchBoxes;
+		if (mSearchView != null)
+			mSearchView.invalidate();
 	}
 
 	public void setLinkHighlighting(boolean f) {
 		mHighlightLinks = f;
+		if (mSearchView != null)
+			mSearchView.invalidate();
 	}
 
 	@Override

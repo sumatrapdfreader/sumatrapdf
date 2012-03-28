@@ -66,22 +66,6 @@ void fz_synchronize_end();
  * Basic runtime and utility functions
  */
 
-/*
-	fz_malloc_struct: Allocate storage for a structure (with scavenging),
-	clear it, and (in Memento builds) tag the pointer as belonging to a
-	struct of this type.
-
-	CTX: The context.
-
-	STRUCT: The structure type.
-
-	Returns a pointer to allocated (and cleared) structure. Throws
-	exception on failure to allocate.
-*/
-/* alloc and zero a struct, and tag it for memento */
-#define fz_malloc_struct(CTX, STRUCT) \
-	Memento_label(fz_calloc(CTX,1,sizeof(STRUCT)), #STRUCT)
-
 /* Range checking atof */
 float fz_atof(const char *s);
 

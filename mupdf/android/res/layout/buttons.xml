@@ -37,7 +37,7 @@
                 android:layout_toLeftOf="@+id/searchButton"
                 android:contentDescription="@string/search_document"
                 android:src="@drawable/ic_list" />
-
+<!--
             <ImageButton
                 android:id="@+id/linkButton"
                 android:layout_width="wrap_content"
@@ -46,14 +46,14 @@
                 android:layout_toLeftOf="@+id/outlineButton"
                 android:contentDescription="@string/link_control"
                 android:src="@drawable/ic_link" />
-
+-->
             <TextView
                 android:id="@+id/docNameText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentLeft="true"
                 android:layout_centerVertical="true"
-                android:layout_toLeftOf="@+id/linkButton"
+                android:layout_toLeftOf="@+id/searchButton"
                 android:paddingLeft="15dp"
                 android:singleLine="true"
                 android:textAppearance="?android:attr/textAppearanceMedium" />

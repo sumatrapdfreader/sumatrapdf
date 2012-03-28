@@ -12,6 +12,7 @@ import android.graphics.RectF;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.text.method.PasswordTransformationMethod;
@@ -39,11 +40,30 @@ class SearchTaskResult {
 		searchBoxes = _searchBoxes;
 	}
 }
+
+class ProgressDialogX extends ProgressDialog {
+	public ProgressDialogX(Context context) {
+		super(context);
+	}
+
+	private boolean mCancelled = false;
+
+	public boolean isCancelled() {
+		return mCancelled;
+	}
+
+	@Override
+	public void cancel() {
+		mCancelled = true;
+		super.cancel();
+	}
+}
 public class MuPDFActivity extends Activity
 {
 	/* The core rendering instance */
 	private enum LinkState {DEFAULT, HIGHLIGHT, INHIBIT};
 	private final int    TAP_PAGE_MARGIN = 5;
+	private static final int    SEARCH_PROGRESS_DELAY = 200;
 	private MuPDFCore    core;
 	private String       mFileName;
 	private ReaderView   mDocView;
@@ -57,7 +77,7 @@ public class MuPDFActivity extends Activity
 	private ImageButton  mCancelButton;
 	private ImageButton  mOutlineButton;
 	private ViewSwitcher mTopBarSwitcher;
-	private ImageButton  mLinkButton;
+// XXX	private ImageButton  mLinkButton;
 	private boolean      mTopBarIsSearch;
 	private ImageButton  mSearchBack;
 	private ImageButton  mSearchFwd;
@@ -66,6 +86,7 @@ public class MuPDFActivity extends Activity
 	private SearchTaskResult mSearchTaskResult;
 	private AlertDialog.Builder mAlertBuilder;
 	private LinkState    mLinkState = LinkState.DEFAULT;
+	private final Handler mHandler = new Handler();
 
 	private MuPDFCore openFile(String path)
 	{
@@ -185,7 +206,7 @@ public class MuPDFActivity extends Activity
 					if (mLinkState != LinkState.INHIBIT) {
 						MuPDFPageView pageView = (MuPDFPageView) mDocView.getDisplayedView();
 						if (pageView != null) {
-							linkPage = pageView.hitLinkPage(e.getX(), e.getY());
+// XXX							linkPage = pageView.hitLinkPage(e.getX(), e.getY());
 						}
 					}
 
@@ -338,6 +359,7 @@ public class MuPDFActivity extends Activity
 			}
 		});
 
+/* XXX
 		mLinkButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
 				switch(mLinkState) {
@@ -360,6 +382,7 @@ public class MuPDFActivity extends Activity
 				}
 			}
 		});
+*/
 
 		if (core.hasOutline()) {
 			mOutlineButton.setOnClickListener(new View.OnClickListener() {
@@ -559,7 +582,7 @@ public class MuPDFActivity extends Activity
 		mSearchBack = (ImageButton)mButtonsView.findViewById(R.id.searchBack);
 		mSearchFwd = (ImageButton)mButtonsView.findViewById(R.id.searchForward);
 		mSearchText = (EditText)mButtonsView.findViewById(R.id.searchText);
-		mLinkButton = (ImageButton)mButtonsView.findViewById(R.id.linkButton);
+// XXX		mLinkButton = (ImageButton)mButtonsView.findViewById(R.id.linkButton);
 		mTopBarSwitcher.setVisibility(View.INVISIBLE);
 		mPageNumberView.setVisibility(View.INVISIBLE);
 		mPageSlider.setVisibility(View.INVISIBLE);
@@ -587,7 +610,7 @@ public class MuPDFActivity extends Activity
 	void search(int direction) {
 		killSearch();
 
-		final ProgressDialog progressDialog = new ProgressDialog(this);
+		final ProgressDialogX progressDialog = new ProgressDialogX(this);
 		progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
 		progressDialog.setTitle(getString(R.string.searching_));
 		progressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
@@ -652,7 +675,12 @@ public class MuPDFActivity extends Activity
 			@Override
 			protected void onPreExecute() {
 				super.onPreExecute();
-				progressDialog.show();
+				mHandler.postDelayed(new Runnable() {
+					public void run() {
+						if (!progressDialog.isCancelled())
+							progressDialog.show();
+					}
+				}, SEARCH_PROGRESS_DELAY);
 			}
 		};
 
