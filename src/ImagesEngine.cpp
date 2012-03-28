@@ -324,11 +324,11 @@ ImageEngine *ImageEngineImpl::Clone()
         return NULL;
 
     ImageEngineImpl *clone = new ImageEngineImpl();
-    clone->pages.Append(bmp);
     clone->fileName = fileName ? str::Dup(fileName) : NULL;
     clone->fileExt = fileExt;
     if (fileStream)
         fileStream->Clone(&clone->fileStream);
+    clone->FinishLoading(bmp);
 
     return clone;
 }
@@ -368,6 +368,18 @@ bool ImageEngineImpl::FinishLoading(Bitmap *bmp)
         return false;
     pages.Append(bmp);
     assert(pages.Count() == 1);
+
+    if (str::Eq(fileExt, _T(".tif"))) {
+        // extract all frames from multi-page TIFFs
+        UINT frames = bmp->GetFrameCount(&FrameDimensionPage);
+        for (UINT i = 1; i < frames; i++) {
+            Bitmap *frame = bmp->Clone(0, 0, bmp->GetWidth(), bmp->GetHeight(), PixelFormat32bppARGB);
+            if (!frame)
+                continue;
+            frame->SelectActiveFrame(&FrameDimensionPage, i);
+            pages.Append(frame);
+        }
+    }
 
     assert(fileExt);
     return fileExt != NULL;
