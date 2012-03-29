@@ -36,6 +36,13 @@
  #define VERSION_SUB_TXT        _T("")
 #endif
 
+// TODO: replace this link with a better one where license information is nicely collected/linked
+#if defined(SVN_PRE_RELEASE_VER) || defined(DEBUG)
+#define URL_LICENSE _T("http://sumatrapdf.googlecode.com/svn/trunk/AUTHORS")
+#else
+#define URL_LICENSE _T("http://sumatrapdf.googlecode.com/svn/tags/") CURR_VERSION_STR _T("rel/AUTHORS")
+#endif
+
 static HWND gHwndAbout;
 static HWND gHwndAboutTooltip = NULL;
 static const TCHAR *gClickedURL = NULL;
@@ -57,8 +64,7 @@ static AboutLayoutInfoEl gAboutLayoutInfo[] = {
     { _T("programming"),    _T("Krzysztof Kowalczyk"),  _T("http://blog.kowalczyk.info") },
     { _T("programming"),    _T("Simon B\xFCnzli"),      _T("http://www.zeniko.ch/#SumatraPDF") },
     { _T("programming"),    _T("William Blum"),         _T("http://william.famille-blum.org/") },
-    // TODO: replace this link with a better one where license information is nicely collected/linked
-    { _T("license"),        _T("open source"),          _T("http://sumatrapdf.googlecode.com/svn/trunk/AUTHORS") },
+    { _T("license"),        _T("open source"),          URL_LICENSE },
 #ifdef SVN_PRE_RELEASE_VER
     { _T("a note"),         _T("Pre-release version, for testing only!"), NULL },
 #endif
