@@ -2490,9 +2490,6 @@ static void OnMenuSaveAs(WindowInfo& win)
     ofn.nMaxFile = dimof(dstFileName);
     ofn.lpstrFilter = fileFilter.Get();
     ofn.nFilterIndex = 1;
-    ofn.lpstrFileTitle = NULL;
-    ofn.nMaxFileTitle = 0;
-    ofn.lpstrInitialDir = NULL;
     ofn.lpstrDefExt = defExt + 1;
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
 
@@ -2611,6 +2608,7 @@ static void OnMenuRenameFile(WindowInfo &win)
     if (gPluginMode) return;
 
     const TCHAR *srcFileName = win.dm->FileName();
+    // this happens e.g. for embedded documents
     if (!file::Exists(srcFileName))
         return;
 
@@ -2625,8 +2623,6 @@ static void OnMenuRenameFile(WindowInfo &win)
 
     TCHAR dstFileName[MAX_PATH];
     str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseName(srcFileName));
-    // TODO: don't rename if it's an embedded PDF documents
-    str::TransChars(dstFileName, _T(":"), _T("_"));
     // Remove the extension so that it can be re-added depending on the chosen filter
     if (str::EndsWithI(dstFileName, defExt))
         dstFileName[str::Len(dstFileName) - str::Len(defExt)] = '\0';
@@ -2638,11 +2634,8 @@ static void OnMenuRenameFile(WindowInfo &win)
     ofn.nMaxFile = dimof(dstFileName);
     ofn.lpstrFilter = fileFilter.Get();
     ofn.nFilterIndex = 1;
-    ofn.lpstrFileTitle = NULL;
     // TODO: translate after 2.0
     ofn.lpstrTitle = _T("Rename to:");
-    ofn.nMaxFileTitle = 0;
-    ofn.lpstrInitialDir = path::GetDir(srcFileName);
     ofn.lpstrDefExt = defExt + 1;
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
 
@@ -2650,21 +2643,37 @@ static void OnMenuRenameFile(WindowInfo &win)
     if (!ok)
         return;
 
+    UpdateCurrentFileDisplayStateForWinInfo(&win);
+    // note: srcFileName is deleted together with the DisplayModel
     ScopedMem<TCHAR> srcFilePath(str::Dup(srcFileName));
     CloseDocumentInWindow(&win);
 
-    DWORD flags = MOVEFILE_WRITE_THROUGH | MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING;
+    DWORD flags = MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING;
     BOOL moveOk = MoveFileEx(srcFilePath.Get(), dstFileName, flags);
     if (!moveOk) {
-        // TODO: translate after 2.0
         LogLastError();
-        ShowNotification(&win,  _T("Failed to rename a file"), false /* autoDismiss */, true /* highlight */);
+        LoadDocument(srcFilePath, &win);
+        // TODO: translate after 2.0
+        ShowNotification(&win,  _T("Failed to rename the file"), false /* autoDismiss */, true /* highlight */);
         return;
     }
-    // TODO: update file preferences from old name to new name
-    // TODO: update frequently opened info
-    if (file::Exists(dstFileName))
-        LoadDocument(dstFileName, &win);
+
+    ScopedMem<TCHAR> newPath(path::Normalize(dstFileName));
+    // update file history entry
+    DisplayState *ds = gFileHistory.Find(newPath);
+    if (ds) {
+        gFileHistory.Remove(ds);
+        delete ds;
+    }
+    ds = gFileHistory.Find(srcFilePath);
+    if (ds) {
+        str::ReplacePtr(&ds->filePath, newPath);
+        // the thumbnail is recreated by LoadDocument
+        delete ds->thumbnail;
+        ds->thumbnail = NULL;
+    }
+    // TODO: update Favorites references
+    LoadDocument(dstFileName, &win);
 }
 
 static void OnMenuSaveBookmark(WindowInfo& win)
@@ -2821,9 +2830,6 @@ void OnMenuOpen(SumatraWindow& win)
 
     ofn.lpstrFilter = fileFilter.Get();
     ofn.nFilterIndex = 1;
-    ofn.lpstrFileTitle = NULL;
-    ofn.nMaxFileTitle = 0;
-    ofn.lpstrInitialDir = NULL;
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY |
                 OFN_ALLOWMULTISELECT | OFN_EXPLORER;
 

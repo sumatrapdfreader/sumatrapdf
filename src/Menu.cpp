@@ -42,7 +42,7 @@ static MenuDef menuDefFile[] = {
     { _TRN("&Close\tCtrl+W"),               IDM_CLOSE,                  MF_REQ_DISK_ACCESS },
     { _TRN("&Save As...\tCtrl+S"),          IDM_SAVEAS,                 MF_REQ_DISK_ACCESS },
     // TODO: translate after 2.0
-    { "Re&name...\tF2",          IDM_RENAME_FILE,            MF_REQ_DISK_ACCESS | MF_NO_TRANSLATE},
+    { "Re&name...\tF2",                     IDM_RENAME_FILE,            MF_REQ_DISK_ACCESS | MF_NO_TRANSLATE},
     { _TRN("&Print...\tCtrl+P"),            IDM_PRINT,                  MF_REQ_PRINTER_ACCESS },
     { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS },
     { _TRN("Save S&hortcut...\tCtrl+Shift+S"), IDM_SAVEAS_BOOKMARK,     MF_REQ_DISK_ACCESS | MF_NOT_FOR_CHM },
@@ -381,6 +381,10 @@ void MenuUpdateStateForWindow(WindowInfo* win) {
 
     if (win->dm && win->dm->engine)
         win::menu::SetEnabled(win->menu, IDM_FIND_FIRST, !win->dm->engine->IsImageCollection());
+
+    // TODO: is this check too expensive?
+    if (win->IsDocLoaded() && !file::Exists(win->dm->FileName()))
+        win::menu::SetEnabled(win->menu, IDM_RENAME_FILE, false);
 
 #ifdef SHOW_DEBUG_MENU_ITEMS
     win::menu::SetChecked(win->menu, IDM_DEBUG_SHOW_LINKS, gDebugShowLinks);
