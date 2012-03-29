@@ -2411,6 +2411,24 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
     }
 }
 
+static void AppendFileFilterForDoc(DisplayModel *dm, str::Str<TCHAR>& fileFilter)
+{
+    const TCHAR *defExt = dm->engine->GetDefaultFileExt();
+    switch (dm->engineType) {
+        case Engine_XPS:    fileFilter.Append(_TR("XPS documents")); break;
+        case Engine_DjVu:   fileFilter.Append(_TR("DjVu documents")); break;
+        case Engine_ComicBook: fileFilter.Append(_TR("Comic books")); break;
+        case Engine_Image:  fileFilter.AppendFmt(_TR("Image files (*.%s)"), defExt + 1); break;
+        case Engine_PS:     fileFilter.Append(_TR("Postscript documents")); break;
+        case Engine_Chm:    fileFilter.Append(_TR("CHM documents")); break;
+        case Engine_Epub:   fileFilter.Append(_TR("EPUB ebooks")); break;
+        case Engine_Fb2:    fileFilter.Append(_T("FictionBooks")); break;
+        case Engine_Mobi:   fileFilter.Append(_TR("Mobi documents")); break;
+        case Engine_Chm2:   fileFilter.Append(_TR("CHM documents")); break;
+        default:            fileFilter.Append(_TR("PDF documents")); break;
+    }
+}
+
 static void OnMenuSaveAs(WindowInfo& win)
 {
     if (!HasPermission(Perm_DiskAccess)) return;
@@ -2434,24 +2452,11 @@ static void OnMenuSaveAs(WindowInfo& win)
     bool canConvertToPDF = Engine_PS == win.dm->engineType;
 
     const TCHAR *defExt = win.dm->engine->GetDefaultFileExt();
-
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
     str::Str<TCHAR> fileFilter(256);
-    switch (win.dm->engineType) {
-    case Engine_XPS:    fileFilter.Append(_TR("XPS documents")); break;
-    case Engine_DjVu:   fileFilter.Append(_TR("DjVu documents")); break;
-    case Engine_ComicBook: fileFilter.Append(_TR("Comic books")); break;
-    case Engine_Image:  fileFilter.AppendFmt(_TR("Image files (*.%s)"), defExt + 1); break;
-    case Engine_PS:     fileFilter.Append(_TR("Postscript documents")); break;
-    case Engine_Chm:    fileFilter.Append(_TR("CHM documents")); break;
-    case Engine_Epub:   fileFilter.Append(_TR("EPUB ebooks")); break;
-    case Engine_Fb2:    fileFilter.Append(_T("FictionBooks")); break;
-    case Engine_Mobi:   fileFilter.Append(_TR("Mobi documents")); break;
-    case Engine_Chm2:   fileFilter.Append(_TR("CHM documents")); break;
-    default:            fileFilter.Append(_TR("PDF documents")); break;
-    }
+    AppendFileFilterForDoc(win.dm, fileFilter);
     fileFilter.AppendFmt(_T("\1*%s\1"), defExt);
     if (hasCopyPerm) {
         fileFilter.Append(_TR("Text documents"));
@@ -2594,34 +2599,20 @@ bool LinkSaver::SaveEmbedded(unsigned char *data, size_t len)
 static void OnMenuRenameFile(WindowInfo &win)
 {
     if (!HasPermission(Perm_DiskAccess)) return;
-    assert(win.dm);
+    CrashIf(!win.dm);
     if (!win.IsDocLoaded()) return;
-
     if (gPluginMode) return;
 
     const TCHAR *srcFileName = win.dm->FileName();
-    if (!file::Exists(srcFileName)) return;
+    if (!file::Exists(srcFileName))
+        return;
 
-    const TCHAR *defExt = win.dm->engine->GetDefaultFileExt();
-
-    // TODO: this is the same as in SaveAs()
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
+    const TCHAR *defExt = win.dm->engine->GetDefaultFileExt();
     str::Str<TCHAR> fileFilter(256);
-    switch (win.dm->engineType) {
-    case Engine_XPS:    fileFilter.Append(_TR("XPS documents")); break;
-    case Engine_DjVu:   fileFilter.Append(_TR("DjVu documents")); break;
-    case Engine_ComicBook: fileFilter.Append(_TR("Comic books")); break;
-    case Engine_Image:  fileFilter.AppendFmt(_TR("Image files (*.%s)"), defExt + 1); break;
-    case Engine_PS:     fileFilter.Append(_TR("Postscript documents")); break;
-    case Engine_Chm:    fileFilter.Append(_TR("CHM documents")); break;
-    case Engine_Epub:   fileFilter.Append(_TR("EPUB ebooks")); break;
-    case Engine_Fb2:    fileFilter.Append(_T("FictionBooks")); break;
-    case Engine_Mobi:   fileFilter.Append(_TR("Mobi documents")); break;
-    case Engine_Chm2:   fileFilter.Append(_TR("CHM documents")); break;
-    default:            fileFilter.Append(_TR("PDF documents")); break;
-    }
+    AppendFileFilterForDoc(win.dm, fileFilter);
     fileFilter.AppendFmt(_T("\1*%s\1"), defExt);
     str::TransChars(fileFilter.Get(), _T("\1"), _T("\0"));
 
@@ -2642,7 +2633,7 @@ static void OnMenuRenameFile(WindowInfo &win)
     ofn.nFilterIndex = 1;
     ofn.lpstrFileTitle = NULL;
     // TODO: translate after 2.0
-    ofn.lpstrTitle = _T("Rename To");
+    ofn.lpstrTitle = _T("Rename to:");
     ofn.nMaxFileTitle = 0;
     ofn.lpstrInitialDir = path::GetDir(srcFileName);
     ofn.lpstrDefExt = defExt + 1;
@@ -2654,21 +2645,25 @@ static void OnMenuRenameFile(WindowInfo &win)
 
     ScopedMem<TCHAR> srcFilePath(str::Dup(srcFileName));
     CloseDocumentInWindow(&win);
-    if (MoveFileEx(srcFilePath.Get(), dstFileName, MOVEFILE_WRITE_THROUGH | MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING ) != 0) {
-        // TODO: update file preferences from old name to new name
-        // TODO: update frequently opened info
-        if (file::Exists(dstFileName))
-            LoadDocument(dstFileName, &win);
-    } else {
+
+    DWORD flags = MOVEFILE_WRITE_THROUGH | MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING;
+    BOOL moveOk = MoveFileEx(srcFilePath.Get(), dstFileName, flags);
+    if (!moveOk) {
         // TODO: translate after 2.0
+        LogLastError();
         ShowNotification(&win,  _T("Failed to rename a file"), false /* autoDismiss */, true /* highlight */);
+        return;
     }
+    // TODO: update file preferences from old name to new name
+    // TODO: update frequently opened info
+    if (file::Exists(dstFileName))
+        LoadDocument(dstFileName, &win);
 }
 
 static void OnMenuSaveBookmark(WindowInfo& win)
 {
     if (!HasPermission(Perm_DiskAccess) || gPluginMode) return;
-    assert(win.dm);
+    CrashIf(!win.dm);
     if (!win.IsDocLoaded()) return;
 
     const TCHAR *defExt = win.dm->engine->GetDefaultFileExt();
