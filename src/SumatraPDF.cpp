@@ -2591,6 +2591,80 @@ bool LinkSaver::SaveEmbedded(unsigned char *data, size_t len)
     return ok;
 }
 
+static void OnMenuRenameFile(WindowInfo &win)
+{
+    if (!HasPermission(Perm_DiskAccess)) return;
+    assert(win.dm);
+    if (!win.IsDocLoaded()) return;
+
+    if (gPluginMode) return;
+
+    const TCHAR *srcFileName = win.dm->FileName();
+    if (!file::Exists(srcFileName)) return;
+
+    const TCHAR *defExt = win.dm->engine->GetDefaultFileExt();
+
+    // TODO: this is the same as in SaveAs()
+    // Prepare the file filters (use \1 instead of \0 so that the
+    // double-zero terminated string isn't cut by the string handling
+    // methods too early on)
+    str::Str<TCHAR> fileFilter(256);
+    switch (win.dm->engineType) {
+    case Engine_XPS:    fileFilter.Append(_TR("XPS documents")); break;
+    case Engine_DjVu:   fileFilter.Append(_TR("DjVu documents")); break;
+    case Engine_ComicBook: fileFilter.Append(_TR("Comic books")); break;
+    case Engine_Image:  fileFilter.AppendFmt(_TR("Image files (*.%s)"), defExt + 1); break;
+    case Engine_PS:     fileFilter.Append(_TR("Postscript documents")); break;
+    case Engine_Chm:    fileFilter.Append(_TR("CHM documents")); break;
+    case Engine_Epub:   fileFilter.Append(_TR("EPUB ebooks")); break;
+    case Engine_Fb2:    fileFilter.Append(_T("FictionBooks")); break;
+    case Engine_Mobi:   fileFilter.Append(_TR("Mobi documents")); break;
+    case Engine_Chm2:   fileFilter.Append(_TR("CHM documents")); break;
+    default:            fileFilter.Append(_TR("PDF documents")); break;
+    }
+    fileFilter.AppendFmt(_T("\1*%s\1"), defExt);
+    str::TransChars(fileFilter.Get(), _T("\1"), _T("\0"));
+
+    TCHAR dstFileName[MAX_PATH];
+    str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseName(srcFileName));
+    // TODO: don't rename if it's an embedded PDF documents
+    str::TransChars(dstFileName, _T(":"), _T("_"));
+    // Remove the extension so that it can be re-added depending on the chosen filter
+    if (str::EndsWithI(dstFileName, defExt))
+        dstFileName[str::Len(dstFileName) - str::Len(defExt)] = '\0';
+
+    OPENFILENAME ofn = { 0 };
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = win.hwndFrame;
+    ofn.lpstrFile = dstFileName;
+    ofn.nMaxFile = dimof(dstFileName);
+    ofn.lpstrFilter = fileFilter.Get();
+    ofn.nFilterIndex = 1;
+    ofn.lpstrFileTitle = NULL;
+    // TODO: translate after 2.0
+    ofn.lpstrTitle = _T("Rename To");
+    ofn.nMaxFileTitle = 0;
+    ofn.lpstrInitialDir = path::GetDir(srcFileName);
+    ofn.lpstrDefExt = defExt + 1;
+    ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
+
+    bool ok = GetSaveFileName(&ofn);
+    if (!ok)
+        return;
+
+    ScopedMem<TCHAR> srcFilePath(str::Dup(srcFileName));
+    CloseDocumentInWindow(&win);
+    if (MoveFileEx(srcFilePath.Get(), dstFileName, MOVEFILE_WRITE_THROUGH | MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING ) != 0) {
+        // TODO: update file preferences from old name to new name
+        // TODO: update frequently opened info
+        if (file::Exists(dstFileName))
+            LoadDocument(dstFileName, &win);
+    } else {
+        // TODO: translate after 2.0
+        ShowNotification(&win,  _T("Failed to rename a file"), false /* autoDismiss */, true /* highlight */);
+    }
+}
+
 static void OnMenuSaveBookmark(WindowInfo& win)
 {
     if (!HasPermission(Perm_DiskAccess) || gPluginMode) return;
@@ -4274,6 +4348,10 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
             break;
         case IDM_SAVEAS:
             OnMenuSaveAs(*win);
+            break;
+
+        case IDM_RENAME_FILE:
+            OnMenuRenameFile(*win);
             break;
 
         case IDT_FILE_PRINT:

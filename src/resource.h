@@ -95,6 +95,7 @@
 #define IDM_DEBUG_PAGE_LAYOUT           593
 #define IDM_DEBUG_EBOOK_UI              594
 #define IDM_FAV_FIRST                   600
+#define IDM_RENAME_FILE                 610
 #define IDM_FAV_LAST                    800
 #define IDC_GOTO_PAGE_EDIT              1000
 #define IDC_GOTO_PAGE_GO                1001
