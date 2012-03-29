@@ -10,7 +10,7 @@ Lang: pt Portuguese - Portugal (Português)
 
 Contributor: Ricardo Santos[bogas] (http://www.meta-morf.pt.vu)
 Contributor: Bruno Rodrigues
-Contributor: Sérgio Marques <smarquespt@gmail.com>, 2010-2011
+Contributor: Sérgio Marques <smarquespt@gmail.com>, 2010-2012
 
 &About
 &Sobre
@@ -399,6 +399,9 @@ Ajustar a uma página
 Fonts:
 Tipo de letra:
 
+Formatting the book... %d pages
+A formatar livro... %d páginas
+
 Found text at page %s
 Texto encontrado na página %s
 
@@ -425,6 +428,9 @@ Imagens (*.%s)
 
 KB
 KB
+
+Loading file %s...
+A carregar o ficheiro %s...
 
 MB
 MB
@@ -689,8 +695,4 @@ cópia de texto
 
 printing document
 impressão de documento
-
-# Untranslated:
-#Formatting the book... %d pages
-#Loading file %s...
 
