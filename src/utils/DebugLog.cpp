@@ -11,12 +11,12 @@ namespace dbglog {
 // when formatting, when there are no args just output fmt
 void LogF(const char *fmt, ...)
 {
+    char buf[512] = { 0 };
     va_list args;
     va_start(args, fmt);
-    ScopedMem<char> s(str::FmtV(fmt, args));
-    // DbgView displays one line per OutputDebugString call
-    s.Set(str::Join(s, "\n"));
-    OutputDebugStringA(s.Get());
+    str::BufFmtV(buf, dimof(buf), fmt, args);
+    str::BufAppend(buf, dimof(buf), "\n");
+    OutputDebugStringA(buf);
     va_end(args);
 }
 
@@ -24,12 +24,12 @@ void LogF(const char *fmt, ...)
 // when formatting, when there are no args just output fmt
 void LogF(const WCHAR *fmt, ...)
 {
+    WCHAR buf[256] = { 0 };
     va_list args;
     va_start(args, fmt);
-    ScopedMem<WCHAR> s(str::FmtV(fmt, args));
-    // DbgView displays one line per OutputDebugString call
-    s.Set(str::Join(s, L"\n"));
-    OutputDebugStringW(s.Get());
+    str::BufFmtV(buf, dimof(buf), fmt, args);
+    str::BufAppend(buf, dimof(buf), L"\n");
+    OutputDebugStringW(buf);
     va_end(args);
 }
 

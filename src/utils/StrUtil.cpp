@@ -373,6 +373,18 @@ Next:
     return -1;
 }
 
+// format string to a buffer profided by the caller
+// the hope here is to avoid allocating memory (assuming vsnprintf
+// doesn't allocate)
+bool BufFmtV(char *buf, size_t bufCchSize, const char *fmt, va_list args)
+{
+    int count = vsnprintf(buf, bufCchSize, fmt, args);
+    buf[bufCchSize-1] = 0;
+    if ((count >= 0) && ((size_t)count < bufCchSize))
+        return true;
+    return false;
+}
+
 char *FmtV(const char *fmt, va_list args)
 {
     char    message[256];
@@ -409,6 +421,15 @@ char *Format(const char *fmt, ...)
     char *res = FmtV(fmt, args);
     va_end(args);
     return res;
+}
+
+bool BufFmtV(WCHAR *buf, size_t bufCchSize, const WCHAR *fmt, va_list args)
+{
+    int count = _vsnwprintf(buf, bufCchSize, fmt, args);
+    buf[bufCchSize-1] = 0;
+    if ((count >= 0) && ((size_t)count < bufCchSize))
+        return true;
+    return false;
 }
 
 WCHAR *FmtV(const WCHAR *fmt, va_list args)
@@ -575,12 +596,12 @@ size_t BufSet(char *dst, size_t dstCchSize, const char *src)
     CrashAlwaysIf(0 == dstCchSize);
 
     size_t srcCchSize = str::Len(src);
-    size_t size = min(dstCchSize - 1, srcCchSize);
+    size_t toCopy = min(dstCchSize - 1, srcCchSize);
 
-    strncpy(dst, src, size + 1);
-    dst[size] = '\0';
+    strncpy(dst, src, toCopy);
+    dst[toCopy] = 0;
 
-    return size;
+    return toCopy;
 }
 
 size_t BufSet(WCHAR *dst, size_t dstCchSize, const WCHAR *src)
@@ -588,12 +609,40 @@ size_t BufSet(WCHAR *dst, size_t dstCchSize, const WCHAR *src)
     CrashAlwaysIf(0 == dstCchSize);
 
     size_t srcCchSize = str::Len(src);
-    size_t size = min(dstCchSize - 1, srcCchSize);
+    size_t toCopy = min(dstCchSize - 1, srcCchSize);
 
-    wcsncpy(dst, src, size + 1);
-    dst[size] = '\0';
+    wcsncpy(dst, src, toCopy);
+    dst[toCopy] = 0;
 
-    return size;
+    return toCopy;
+}
+
+// append as much of s at the end of dst (which must be properly null-terminated)
+// as will fit. 
+size_t  BufAppend(char *dst, size_t dstCchSize, const char *s)
+{
+    size_t srcCchSize = str::Len(s);
+    size_t currDstCchLen = str::Len(dst);
+    if (currDstCchLen + 1 >= dstCchSize)
+        return 0;
+    size_t left = dstCchSize - currDstCchLen - 1;
+    size_t toCopy = min(left, srcCchSize);
+    strncpy(dst + currDstCchLen, s, toCopy);
+    dst[currDstCchLen + toCopy] = 0;
+    return toCopy;
+}
+
+size_t  BufAppend(WCHAR *dst, size_t dstCchSize, const WCHAR *s)
+{
+    size_t srcCchSize = str::Len(s);
+    size_t currDstCchLen = str::Len(dst);
+    if (currDstCchLen + 1 >= dstCchSize)
+        return 0;
+    size_t left = dstCchSize - currDstCchLen - 1;
+    size_t toCopy = min(left, srcCchSize);
+    wcsncpy(dst + currDstCchLen, s, toCopy);
+    dst[currDstCchLen + toCopy] = 0;
+    return toCopy;
 }
 
 /* Convert binary data in <buf> of size <len> to a hex-encoded string */
