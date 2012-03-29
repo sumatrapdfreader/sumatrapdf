@@ -5,7 +5,7 @@ Next version:
 
 2.1 (????-??-??)
 
-* added menu item to rename a file (contributed by Vasili Fomin)
+* added menu item to rename a file (contributed by Vasily Fomin)
 * support multi-page TIFF files
 
 2.0 (????-??-??)
