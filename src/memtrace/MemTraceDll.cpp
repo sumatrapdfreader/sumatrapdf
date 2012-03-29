@@ -29,13 +29,13 @@ byte    data[];     // bytes for a given message
 #include "Vec.h"
 #include "WinUtil.h"
 
-#define NOLOG 1
+#define NOLOG 0
 #include "DebugLog.h"
 
 #define PIPE_NAME "\\\\.\\pipe\\MemTraceCollectorPipe"
 
-#define MIN_BLOCK_SIZE      4096
-#define MEMCOPY_THRESHOLD      1024
+#define MIN_BLOCK_SIZE      1024*32
+#define MEMCOPY_THRESHOLD   1024
 
 // a block of memory. data to be sent is appended at the end,
 // sending thread consumes the data from the beginning
@@ -80,6 +80,7 @@ static HANDLE           gPipe;
 static MemBlock *       gCurrBlock;
 static MemBlock *       gBlocksToSend;
 static MemBlock *       gBlocksFreeList;
+static int              gBlocksAllocated;
 
 // protects access to gToSend and gBlocksFreList
 static CRITICAL_SECTION gMemMutex;
@@ -162,7 +163,8 @@ static MemBlock *GetBlock(size_t len)
         }
     }
 
-    lf("memtrace.dll: allocated a new block");
+    //lf("memtrace.dll: allocated a new block");
+    ++gBlocksAllocated;
     newBlock->next = NULL;
     newBlock->size = dataSize;
     newBlock->used = 0;
@@ -422,7 +424,7 @@ static DWORD WINAPI DataSendThreadProc(void* data)
                 break;
             }
 
-            lf("memtrace.dll: sending %d bytes", (int)dataLen);
+            //lf("memtrace.dll: sending %d bytes", (int)dataLen);
             WriteToPipe(dataToSend, dataLen);
             if (block) {
                 block->sent += dataLen;
@@ -562,6 +564,7 @@ static BOOL ProcessDetach()
     DeleteCriticalSection(&gMemMutex);
     CloseHandle(gSendThreadEvent);
     FreeAllBlocks();
+    lf("memtrace.dll: allocated total %d blocks", gBlocksAllocated);
     HeapDestroy(gHeap);
     return TRUE;
 }
