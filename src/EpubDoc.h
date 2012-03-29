@@ -55,6 +55,7 @@ class Fb2Doc {
     str::Str<char> xmlData;
     Vec<ImageData2> images;
     ScopedMem<TCHAR> docTitle;
+    ScopedMem<TCHAR> docAuthor;
     ScopedMem<char> hrefName;
 
     bool Load();

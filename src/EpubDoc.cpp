@@ -385,8 +385,8 @@ bool Fb2Doc::Load()
     int inBody = 0, inTitleInfo = 0;
     const char *bodyStart = NULL;
     while ((tok = parser.Next()) && !tok->IsError()) {
-        if (tok->IsStartTag() && tok->NameIs("FictionBook") && !hrefName &&
-            parser.tagNesting.Count() == 1) {
+        if (!inBody && !inTitleInfo && tok->IsStartTag() && tok->NameIs("FictionBook") &&
+            !hrefName && parser.tagNesting.Count() == 1) {
             AttrInfo *attr = tok->GetAttrByValue("http://www.w3.org/1999/xlink");
             if (attr && attr->nameLen > 6 && str::StartsWith(attr->name, "xmlns:")) {
                 ScopedMem<char> ns(str::DupN(attr->name + 6, attr->nameLen - 6));
@@ -406,10 +406,8 @@ bool Fb2Doc::Load()
                 xmlData.Append('>');
             }
         }
-        else if (!inBody && tok->IsStartTag() && tok->NameIs("binary"))
-            ExtractImage(&parser, tok);
-        else if (!inBody && tok->IsStartTag() && tok->NameIs("title-info"))
-            inTitleInfo++;
+        else if (inBody)
+            continue;
         else if (inTitleInfo && tok->IsEndTag() && tok->NameIs("title-info"))
             inTitleInfo--;
         else if (inTitleInfo && tok->IsStartTag() && tok->NameIs("book-title")) {
@@ -421,6 +419,27 @@ bool Fb2Doc::Load()
             else if (tok->IsError())
                 break;
         }
+        else if (inTitleInfo && tok->IsStartTag() && tok->NameIs("author")) {
+            while ((tok = parser.Next()) && !tok->IsError() &&
+                !(tok->IsEndTag() && tok->NameIs("author"))) {
+                if (tok->IsText()) {
+                    ScopedMem<char> tmp(str::DupN(tok->s, tok->sLen));
+                    ScopedMem<TCHAR> author(DecodeHtmlEntitites(tmp, CP_UTF8));
+                    if (docAuthor)
+                        docAuthor.Set(str::Join(docAuthor, _T(" "), author));
+                    else
+                        docAuthor.Set(author.StealData());
+                }
+            }
+            if (docAuthor)
+                str::NormalizeWS(docAuthor);
+        }
+        else if (inTitleInfo)
+            continue;
+        else if (tok->IsStartTag() && tok->NameIs("title-info"))
+            inTitleInfo++;
+        else if (tok->IsStartTag() && tok->NameIs("binary"))
+            ExtractImage(&parser, tok);
     }
 
     return xmlData.Size() > 0;
@@ -465,6 +484,8 @@ TCHAR *Fb2Doc::GetProperty(const char *name)
 {
     if (str::Eq(name, "Title") && docTitle)
         return str::Dup(docTitle);
+    if (str::Eq(name, "Author") && docAuthor)
+        return str::Dup(docAuthor);
     return NULL;
 }
 
