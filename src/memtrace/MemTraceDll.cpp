@@ -12,6 +12,11 @@ by itself (easier to integrate than injecting dll).
 
 If the collection process doesn't run when memtrace.dll is initialized, we do
 nothing.
+
+The data sent via named pipe is framed as messages (packets):
+uint16  messageLen; // length of the data follows
+uint16  msgId;      // determines how the data is to be decoded
+byte    data[];     // bytes for a given message
 */
 
 #include <stddef.h> // for offsetof
@@ -22,8 +27,9 @@ nothing.
 #include "StrUtil.h"
 #include "Scoped.h"
 #include "Vec.h"
+#include "WinUtil.h"
 
-#define NOLOG 0  // always log
+#define NOLOG 1
 #include "DebugLog.h"
 
 #define PIPE_NAME "\\\\.\\pipe\\MemTraceCollectorPipe"
@@ -82,7 +88,7 @@ static CRITICAL_SECTION gMemMutex;
 static HANDLE           gSendThreadEvent;
 static HANDLE           gSendThread;
 
-static PerThreadData *GetPerThreadData()
+static PerThreadData *GetPerThreadData(PerThreadData *threadDataEmergency)
 {
     void *data = TlsGetValue(gTlsIndex);
     if (data)
@@ -90,12 +96,12 @@ static PerThreadData *GetPerThreadData()
     data = HeapAlloc(gHeap, 0, sizeof(PerThreadData));
     if (!data) {
         lf("memtrace.dll: failed to allocate PerThreadData");
-        return NULL;
+        return threadDataEmergency;
     }
     if (!TlsSetValue(gTlsIndex, data)) {
         HeapFree(gHeap, 0, data);
         lf("memtrace.dll: TlsSetValue() failed");
-        return NULL;
+        return threadDataEmergency;
     }
     PerThreadData *tmp = (PerThreadData*)data;
     tmp->inAlloc = false;
@@ -106,6 +112,7 @@ static PerThreadData *GetPerThreadData()
 // the caller should ensure that block has enough data
 void MemBlock::Append(byte *data, size_t len)
 {
+    ScopedCritSec cs(&gMemMutex);
     CrashIf(len > Left());
     memcpy(Data(), data, len);
     used += len;
@@ -119,14 +126,13 @@ static void InsertAtEnd(MemBlock **root, MemBlock *el)
         *root = el;
         return;
     }
-    MemBlock **last = root;
-    MemBlock *curr = (*root)->next;
-    while (curr) {
-        last = &curr;
+    MemBlock *curr = *root;
+    while (curr->next) {
         curr = curr->next;
     }
-    CrashIf((*last)->next);
-    (*last)->next = el;
+    MemBlock **lastPtr = &curr;
+    CrashIf((*lastPtr)->next);
+    (*lastPtr)->next = el;
 }
 
 static MemBlock *GetBlock(size_t len)
@@ -137,23 +143,23 @@ static MemBlock *GetBlock(size_t len)
     if (gCurrBlock && (gCurrBlock->Left() >= len))
         return gCurrBlock;
 
-    // try to allocate from free list
+    MemBlock *newBlock;
+    size_t dataSize;
     if (gBlocksFreeList && gBlocksFreeList->size >= len) {
-        MemBlock *tmp = gBlocksFreeList;
+        newBlock = gBlocksFreeList;
+        dataSize = newBlock->size;
         gBlocksFreeList = gBlocksFreeList->next;
-        return tmp;
-    }
-
-    // allocate new block
-    size_t dataSize = len;
-    if (dataSize < MIN_BLOCK_SIZE)
-        dataSize = MIN_BLOCK_SIZE;
-
-    // TODO: have at least 2 MemBlocks allocated as a static memory?
-    MemBlock *newBlock = (MemBlock*)HeapAlloc(gHeap, 0, sizeof(MemBlock) + dataSize);
-    if (!newBlock) {
-        lf("memtrace.dll: failed to allocate a block");
-        return NULL;
+    } else {
+        // allocate new block
+        dataSize = len;
+        if (dataSize < MIN_BLOCK_SIZE)
+            dataSize = MIN_BLOCK_SIZE;
+        // TODO: have at least 2 MemBlocks allocated as a static memory?
+        newBlock = (MemBlock*)HeapAlloc(gHeap, 0, sizeof(MemBlock) + dataSize);
+        if (!newBlock) {
+            lf("memtrace.dll: failed to allocate a block");
+            return NULL;
+        }
     }
 
     lf("memtrace.dll: allocated a new block");
@@ -174,11 +180,8 @@ static MemBlock *GetBlock(size_t len)
 // but then again it shouldn't happen often
 static void FreeBlock(MemBlock *block)
 {
-    if (!block)
-        return;
-    CrashIf(0 != block->UnsentLen());
-
     ScopedCritSec cs(&gMemMutex);
+    CrashIf(0 != block->UnsentLen());
     block->next = gBlocksFreeList;
     gBlocksFreeList = block;
 }
@@ -297,7 +300,7 @@ static void SerializeType(byte *data, TypeSerializeInfo *typeInfo, Vec<byte>& ms
     // note: we can easily relax that by using uint32 for len
     uint16 *msgLenPtr = (uint16*)msg.AppendBlanks(2);
     uint16 msgId = (uint16)typeInfo->msgId;
-    int msgLen = 2 + SerNum16((byte*)&msgId, msg);
+    int msgLen = SerNum16((byte*)&msgId, msg);
 
     for (MemberSerializeInfo *member = typeInfo->members; !member->IsSentinel(); ++ member) {
         switch (member->type) {
@@ -343,7 +346,15 @@ static bool WriteToPipe(const byte *s, size_t len)
         return false;
     DWORD toWrite = (DWORD)len;
     BOOL ok = WriteFile(gPipe, s, toWrite, &written, NULL);
-    if (!ok || (written != toWrite)) {
+    if (!ok) {
+        lf("memtrace.dll: WriteToPipe() failed");
+        LogLastError();
+        ClosePipe();
+        return false;
+    }
+
+    if (written != toWrite) {
+        lf("memtrace.dll: only wrote %d out of %d", (int)written, (int)toWrite);
         ClosePipe();
         return false;
     }
@@ -377,9 +388,9 @@ static MemBlock* GetDataToSend(byte *buf, size_t bufSize, size_t *bufLenOut)
     memcpy(buf, gCurrBlock->UnsentData(), len);
     *bufLenOut = len;
     gCurrBlock->sent += len;
+    CrashIf(gCurrBlock->sent > gCurrBlock->size);
     CrashIf(0 != gCurrBlock->UnsentLen());
     gCurrBlock->Reset();
-    CrashIf(gCurrBlock->sent <= gCurrBlock->size);
     return NULL;
 }
 
@@ -413,9 +424,13 @@ static DWORD WINAPI DataSendThreadProc(void* data)
 
             lf("memtrace.dll: sending %d bytes", (int)dataLen);
             WriteToPipe(dataToSend, dataLen);
-            FreeBlock(block);
+            if (block) {
+                block->sent += dataLen;
+                FreeBlock(block);
+            }
         }
     }
+    lf("memtrace.dll: DataSendThreadProc ended");
     return 0;
 }
 
@@ -442,23 +457,23 @@ PVOID (WINAPI *gRtlAllocateHeapOrig)(PVOID heapHandle, ULONG flags, SIZE_T size)
 // http://msdn.microsoft.com/en-us/library/windows/hardware/ff552276(v=vs.85).aspx
 BOOLEAN (WINAPI *gRtlFreeHeapOrig)(PVOID heapHandle, ULONG flags, PVOID heapBase);
 
-// TODO: for now must be careful to not allocate memory in this function to avoid
-// infinite recursion. We'll fix it with per-thread flag that says whether we're
-// inside this function already
 PVOID WINAPI RtlAllocateHeapHook(PVOID heapHandle, ULONG flags, SIZE_T size)
 {
-    PVOID res = gRtlAllocateHeapOrig(heapHandle, flags, size);
-    if (!gPipe || (gHeap == heapHandle))
-        return res;
+    PVOID res;
+    if (!gPipe || (gHeap == heapHandle)) {
+        return gRtlAllocateHeapOrig(heapHandle, flags, size);
+    }
 
-    PerThreadData *threadData = GetPerThreadData();
-    if (!threadData)
-        return res;
+    PerThreadData threadDataEmergency = { true, true };
+    PerThreadData *threadData = GetPerThreadData(&threadDataEmergency);
+    bool inAlloc = threadData->inAlloc;
     // prevent infinite recursion
-    if (threadData->inAlloc)
+    threadData->inAlloc = true;
+
+    res = gRtlAllocateHeapOrig(heapHandle, flags, size);
+    if (inAlloc)
         return res;
 
-    threadData->inAlloc = true;
     AllocData d = { (uint32)size, (uint32)res };
     Vec<byte> msg;
     SerializeType((byte*)&d, &allocDataTypeInfo, msg);
@@ -469,17 +484,21 @@ PVOID WINAPI RtlAllocateHeapHook(PVOID heapHandle, ULONG flags, SIZE_T size)
 
 BOOLEAN WINAPI RtlFreeHeapHook(PVOID heapHandle, ULONG flags, PVOID heapBase)
 {
-    BOOLEAN res = gRtlFreeHeapOrig(heapHandle, flags, heapBase);
-    if (!gPipe || (gHeap == heapHandle))
+    BOOLEAN res;
+    if (!gPipe || (gHeap == heapHandle)) {
+        res = gRtlFreeHeapOrig(heapHandle, flags, heapBase);
+        return res;
+    }
+
+    PerThreadData threadDataEmergency = { true, true };
+    PerThreadData *threadData = GetPerThreadData(&threadDataEmergency);
+    bool inFree = threadData->inFree;
+    // prevent infinite recursion
+    threadData->inFree = true;
+    res = gRtlFreeHeapOrig(heapHandle, flags, heapBase);
+    if (inFree)
         return res;
 
-    PerThreadData *threadData = GetPerThreadData();
-    if (!threadData)
-        return res;
-    // prevent infinite recursion
-    if (threadData->inFree)
-        return res;
-    threadData->inFree = true;
     FreeData d = { (uint32)heapBase };
     Vec<byte> msg;
     SerializeType((byte*)&d, &freeDataTypeInfo, msg);
@@ -521,11 +540,11 @@ static BOOL ProcessAttach()
     }
     gSendThread = CreateThread(NULL, 0, DataSendThreadProc, NULL, 0, 0);
     if (!gSendThread) {
-        lf("memtrace.dllcouldn't create gSendThread");
+        lf("memtrace.dll: couldn't create gSendThread");
         return FALSE;
     }
     if (!OpenPipe()) {
-        lf("memtrace.dllcouldn't open pipe");
+        lf("memtrace.dll: couldn't open pipe");
         return FALSE;
     } else {
         lf("memtrace.dll: opened pipe");

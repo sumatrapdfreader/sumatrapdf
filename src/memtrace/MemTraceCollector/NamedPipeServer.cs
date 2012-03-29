@@ -12,39 +12,25 @@ namespace NamedPipe
     {
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern SafeFileHandle CreateNamedPipe(
-           String pipeName,
-           uint dwOpenMode,
-           uint dwPipeMode,
-           uint nMaxInstances,
-           uint nOutBufferSize,
-           uint nInBufferSize,
-           uint nDefaultTimeOut,
-           IntPtr lpSecurityAttributes);
+           String pipeName, uint dwOpenMode, uint dwPipeMode,
+           uint nMaxInstances, uint nOutBufferSize, uint nInBufferSize,
+           uint nDefaultTimeOut, IntPtr lpSecurityAttributes);
 
         [DllImport("kernel32.dll", SetLastError = true)]
-        public static extern int ConnectNamedPipe(
-           SafeFileHandle hNamedPipe,
-           IntPtr lpOverlapped);
+        public static extern int ConnectNamedPipe(SafeFileHandle hNamedPipe, IntPtr lpOverlapped);
 
-        public const uint DUPLEX = (0x00000003);
-        public const uint FILE_FLAG_OVERLAPPED = (0x40000000);
+        public const uint DUPLEX = 0x00000003;
+        public const uint FILE_FLAG_OVERLAPPED = 0x40000000;
 
-        public class Client
-        {
-            public SafeFileHandle handle;
-            public FileStream stream;
-        }
+        public delegate void ClientConnectedHandler(SafeFileHandle fileHandle);
 
-        public delegate void MessageReceivedHandler(Client client, string message);
-
-        public event MessageReceivedHandler MessageReceived;
+        public event ClientConnectedHandler ClientConnected;
         public const int BUFFER_SIZE = 4096;
 
-        string pipeName;
-        Thread listenThread;
-        bool running = false;
-        bool requestedCancel = false;
-        List<Client> clients;
+        string  pipeName;
+        Thread  listenThread;
+        bool    running = false;
+        bool    requestedCancel = false;
 
         public string PipeName
         {
@@ -59,7 +45,6 @@ namespace NamedPipe
 
         public Server()
         {
-            this.clients = new List<Client>();
         }
 
         public void Start()
@@ -93,91 +78,28 @@ namespace NamedPipe
             {
             }
         }
+
         private void ListenForClients()
         {
             while (true)
             {
-                SafeFileHandle clientHandle =
-                CreateNamedPipe(
+                SafeFileHandle clientHandle = CreateNamedPipe(
                      this.pipeName,
-                     DUPLEX | FILE_FLAG_OVERLAPPED,
-                     0,
-                     255,
-                     BUFFER_SIZE,
-                     BUFFER_SIZE,
-                     0,
-                     IntPtr.Zero);
+                     DUPLEX | FILE_FLAG_OVERLAPPED, 0, 255,
+                     BUFFER_SIZE, BUFFER_SIZE, 0, IntPtr.Zero);
 
                 if (clientHandle.IsInvalid)
                     return;
 
                 int success = ConnectNamedPipe(clientHandle, IntPtr.Zero);
-
                 if (requestedCancel)
                     return;
 
-                //could not connect client
+                // could not connect client
                 if (success == 0)
                     return;
 
-                Client client = new Client();
-                client.handle = clientHandle;
-
-                lock (clients)
-                    this.clients.Add(client);
-
-                Thread readThread = new Thread(new ParameterizedThreadStart(Read));
-                readThread.Start(client);
-            }
-        }
-
-        // Read incoming data from connected clients
-        private void Read(object clientObj)
-        {
-            Client client = (Client)clientObj;
-            client.stream = new FileStream(client.handle, FileAccess.ReadWrite, BUFFER_SIZE, true);
-            byte[] buffer = new byte[BUFFER_SIZE];
-            ASCIIEncoding encoder = new ASCIIEncoding();
-
-            while (true)
-            {
-                int bytesRead = 0;
-
-                try
-                {
-                    bytesRead = client.stream.Read(buffer, 0, BUFFER_SIZE);
-                }
-                catch
-                {
-                    //read error has occurred
-                    break;
-                }
-
-                //client has disconnected
-                if (bytesRead == 0)
-                    break;
-
-                if (this.MessageReceived != null)
-                    this.MessageReceived(client, encoder.GetString(buffer, 0, bytesRead));
-            }
-
-            client.stream.Close();
-            client.handle.Close();
-            lock (this.clients)
-                this.clients.Remove(client);
-        }
-
-        public void SendMessage(string message)
-        {
-            lock (this.clients)
-            {
-                ASCIIEncoding encoder = new ASCIIEncoding();
-                byte[] messageBuffer = encoder.GetBytes(message);
-                foreach (Client client in this.clients)
-                {
-                    client.stream.Write(messageBuffer, 0, messageBuffer.Length);
-                    client.stream.Flush();
-                }
+                ClientConnected(clientHandle);
             }
         }
     }
