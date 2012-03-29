@@ -396,40 +396,53 @@ static MemBlock* GetDataToSend(byte *buf, size_t bufSize, size_t *bufLenOut)
     return NULL;
 }
 
-static DWORD WINAPI DataSendThreadProc(void* data)
+static bool gStopSendThread = false;
+
+static void SendQueuedMessages()
 {
     byte        buf[MEMCOPY_THRESHOLD];
     size_t      dataLen;
     MemBlock *  block;
-    bool        shouldExit = false;
 
+    for (;;) 
+    {
+        if (!gPipe)
+            return;
+
+        dataLen = 0;
+        block = GetDataToSend(buf, dimof(buf), &dataLen);
+        byte *dataToSend = buf;
+        if (block) {
+            dataToSend = block->UnsentData();
+            dataLen = block->UnsentLen();
+        }
+
+        if (0 == dataLen) {
+            CrashIf(block);
+            return;
+        }
+
+        //lf("memtrace.dll: sending %d bytes", (int)dataLen);
+        WriteToPipe(dataToSend, dataLen);
+        if (block) {
+            block->sent += dataLen;
+            FreeBlock(block);
+        }
+    }
+}
+
+static DWORD WINAPI DataSendThreadProc(void* data)
+{
     // if pipe was closed, we exit the thread
     while (gPipe) {
         DWORD res = WaitForSingleObject(gSendThreadEvent, INFINITE);
         if (WAIT_OBJECT_0 != res)
             continue;
 
-        // send all queued messages
-        for (;;) {
-            dataLen = 0;
-            block = GetDataToSend(buf, dimof(buf), &dataLen);
-            byte *dataToSend = buf;
-            if (block) {
-                dataToSend = block->UnsentData();
-                dataLen = block->UnsentLen();
-            }
-
-            if (0 == dataLen) {
-                CrashIf(block);
-                break;
-            }
-
-            //lf("memtrace.dll: sending %d bytes", (int)dataLen);
-            WriteToPipe(dataToSend, dataLen);
-            if (block) {
-                block->sent += dataLen;
-                FreeBlock(block);
-            }
+        SendQueuedMessages();
+        if (gStopSendThread) {
+            lf("memtrace.dll: DataSendThreadProc, gStopSendThread is true");
+            break;
         }
     }
     lf("memtrace.dll: DataSendThreadProc ended");
@@ -461,10 +474,8 @@ BOOLEAN (WINAPI *gRtlFreeHeapOrig)(PVOID heapHandle, ULONG flags, PVOID heapBase
 
 PVOID WINAPI RtlAllocateHeapHook(PVOID heapHandle, ULONG flags, SIZE_T size)
 {
-    PVOID res;
-    if (!gPipe || (gHeap == heapHandle)) {
+    if (!gPipe || (gHeap == heapHandle) || gStopSendThread)
         return gRtlAllocateHeapOrig(heapHandle, flags, size);
-    }
 
     PerThreadData threadDataEmergency = { true, true };
     PerThreadData *threadData = GetPerThreadData(&threadDataEmergency);
@@ -472,7 +483,7 @@ PVOID WINAPI RtlAllocateHeapHook(PVOID heapHandle, ULONG flags, SIZE_T size)
     // prevent infinite recursion
     threadData->inAlloc = true;
 
-    res = gRtlAllocateHeapOrig(heapHandle, flags, size);
+    PVOID res = gRtlAllocateHeapOrig(heapHandle, flags, size);
     if (inAlloc)
         return res;
 
@@ -486,18 +497,15 @@ PVOID WINAPI RtlAllocateHeapHook(PVOID heapHandle, ULONG flags, SIZE_T size)
 
 BOOLEAN WINAPI RtlFreeHeapHook(PVOID heapHandle, ULONG flags, PVOID heapBase)
 {
-    BOOLEAN res;
-    if (!gPipe || (gHeap == heapHandle)) {
-        res = gRtlFreeHeapOrig(heapHandle, flags, heapBase);
-        return res;
-    }
+    if (!gPipe || (gHeap == heapHandle) || gStopSendThread)
+        return gRtlFreeHeapOrig(heapHandle, flags, heapBase);
 
     PerThreadData threadDataEmergency = { true, true };
     PerThreadData *threadData = GetPerThreadData(&threadDataEmergency);
     bool inFree = threadData->inFree;
     // prevent infinite recursion
     threadData->inFree = true;
-    res = gRtlFreeHeapOrig(heapHandle, flags, heapBase);
+    BOOLEAN res = gRtlFreeHeapOrig(heapHandle, flags, heapBase);
     if (inFree)
         return res;
 
@@ -558,8 +566,17 @@ static BOOL ProcessAttach()
 static BOOL ProcessDetach()
 {
     lf("memtrace.dll: ProcessDetach()");
-    TerminateThread(gSendThread, 1);
+    gStopSendThread = true;
+    SetEvent(gSendThreadEvent);
+    DWORD res = WaitForSingleObject(gSendThread, 5*1024);
+    if (WAIT_OBJECT_0 == res) {
+        lf("memtrace.dll: thread quit by itself");
+    } else {
+        TerminateThread(gSendThread, 1);
+        lf("memtrace.dll: terminated sending thread");
+    }
     CloseHandle(gSendThread);
+    SendQueuedMessages();
     ClosePipe();
     DeleteCriticalSection(&gMemMutex);
     CloseHandle(gSendThreadEvent);
