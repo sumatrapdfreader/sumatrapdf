@@ -1561,6 +1561,14 @@ void OnDropFiles(HDROP hDrop)
     DragFinish(hDrop);
 }
 
+static void MessageBoxWarning(HWND hwnd, const TCHAR *msg, const TCHAR *title = NULL)
+{
+    UINT type =  MB_OK | MB_ICONEXCLAMATION | (IsUIRightToLeft() ? MB_RTLREADING : 0);
+    if (!title)
+        title = _TR("Warning");
+    MessageBox(hwnd, msg, title, type);
+}
+
 static DWORD ShowAutoUpdateDialog(HWND hParent, HttpReq *ctx, bool silent)
 {
     if (ctx->error)
@@ -1583,10 +1591,8 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpReq *ctx, bool silent)
     str::TransChars(verTxt, _T("\r\n"), _T("\0\0"));
     if (CompareVersion(verTxt, UPDATE_CHECK_VER) <= 0) {
         /* if automated => don't notify that there is no new version */
-        if (!silent) {
-            UINT flags =  MB_ICONINFORMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0);
-            MessageBox(hParent, _TR("You have the latest version."), _TR("SumatraPDF Update"), flags);
-        }
+        if (!silent)
+            MessageBoxWarning(hParent, _TR("You have the latest version."), _TR("SumatraPDF Update"));
         return 0;
     }
 
@@ -1620,8 +1626,7 @@ static void ProcessAutoUpdateCheckResult(HWND hwnd, HttpReq *req, bool autoCheck
 
     // notify the user about network error during a manual update check
     msg.Set(str::Format(_TR("Can't connect to the Internet (error %#x)."), error));
-    UINT flags = MB_ICONEXCLAMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0);
-    MessageBox(hwnd, msg, _TR("SumatraPDF Update"), flags);
+    MessageBoxWarning(hwnd, msg, _TR("SumatraPDF Update"));
 Exit:
     delete req;
 }
@@ -2510,14 +2515,16 @@ static void OnMenuSaveAs(WindowInfo& win)
     // Extract all text when saving as a plain text file
     if (hasCopyPerm && str::EndsWithI(realDstFileName, _T(".txt"))) {
         str::Str<TCHAR> text(1024);
-        for (int pageNo = 1; pageNo <= win.dm->PageCount(); pageNo++)
-            text.AppendAndFree(win.dm->engine->ExtractPageText(pageNo, _T("\r\n"), NULL, Target_Export));
+        for (int pageNo = 1; pageNo <= win.dm->PageCount(); pageNo++) {
+            TCHAR *tmp = win.dm->engine->ExtractPageText(pageNo, _T("\r\n"), NULL, Target_Export);
+            text.AppendAndFree(tmp);
+        }
 
         ScopedMem<char> textUTF8(str::conv::ToUtf8(text.LendData()));
         ScopedMem<char> textUTF8BOM(str::Join("\xEF\xBB\xBF", textUTF8));
         ok = file::WriteAll(realDstFileName, textUTF8BOM, str::Len(textUTF8BOM));
         if (!ok)
-            MessageBox(win.hwndFrame, _TR("Failed to save a file"), _TR("Warning"), MB_OK | MB_ICONEXCLAMATION | (IsUIRightToLeft() ? MB_RTLREADING : 0));
+            MessageBoxWarning(win.hwndFrame, _TR("Failed to save a file"), _TR("Warning"));
     }
     // Convert the Postscript file into a PDF one
     else if (canConvertToPDF && str::EndsWithI(realDstFileName, _T(".pdf"))) {
@@ -2525,7 +2532,7 @@ static void OnMenuSaveAs(WindowInfo& win)
         ScopedMem<unsigned char> data(static_cast<PsEngine *>(win.dm->engine)->GetPDFData(&dataLen));
         ok = data && file::WriteAll(realDstFileName, data, dataLen);
         if (!ok)
-            MessageBox(win.hwndFrame, _TR("Failed to save a file"), _TR("Warning"), MB_OK | MB_ICONEXCLAMATION | (IsUIRightToLeft() ? MB_RTLREADING : 0));
+            MessageBoxWarning(win.hwndFrame, _TR("Failed to save a file"));
     }
     // Recreate inexistant files from memory...
     else if (!file::Exists(srcFileName)) {
@@ -2533,7 +2540,7 @@ static void OnMenuSaveAs(WindowInfo& win)
         ScopedMem<unsigned char> data(win.dm->engine->GetFileData(&dataLen));
         ok = data && file::WriteAll(realDstFileName, data, dataLen);
         if (!ok)
-            MessageBox(win.hwndFrame, _TR("Failed to save a file"), _TR("Warning"), MB_OK | MB_ICONEXCLAMATION | (IsUIRightToLeft() ? MB_RTLREADING : 0));
+            MessageBoxWarning(win.hwndFrame, _TR("Failed to save a file"));
     }
     // ... else just copy the file
     else {
@@ -2552,7 +2559,7 @@ static void OnMenuSaveAs(WindowInfo& win)
             } else {
                 errorMsg = str::Dup(_TR("Failed to save a file"));
             }
-            MessageBox(win.hwndFrame, errorMsg, _TR("Warning"), MB_OK | MB_ICONEXCLAMATION | (IsUIRightToLeft() ? MB_RTLREADING : 0));
+            MessageBoxWarning(win.hwndFrame, errorMsg);
             free(errorMsg);
         }
     }
