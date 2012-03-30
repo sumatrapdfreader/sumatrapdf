@@ -12,7 +12,8 @@ enum { SEARCH_PAGE, SKIP_PAGE };
 // cf. http://code.google.com/p/sumatrapdf/issues/detail?id=959
 #define isnoncjkwordchar(c) (iswordchar(c) && (unsigned short)(c) < 0x2E80)
 
-TextSearch::TextSearch(BaseEngine *engine) : TextSelection(engine),
+TextSearch::TextSearch(BaseEngine *engine, PageTextCache *textCache) :
+    TextSelection(engine, textCache),
     findText(NULL), anchor(NULL), pageText(NULL),
     caseSensitive(false), forward(true),
     matchWordStart(false), matchWordEnd(false),
@@ -97,9 +98,9 @@ void TextSearch::SetDirection(TextSearchDirection direction)
 
 // try to match "findText" from "start" with whitespace tolerance
 // (ignore all whitespace except after alphanumeric characters)
-int TextSearch::MatchLen(TCHAR *start)
+int TextSearch::MatchLen(const TCHAR *start)
 {
-    TCHAR *match = findText, *end = start;
+    const TCHAR *match = findText, *end = start;
 
     if (matchWordStart && start > pageText && iswordchar(start[-1]) && iswordchar(start[0]))
         return -1;
@@ -145,9 +146,9 @@ int TextSearch::MatchLen(TCHAR *start)
     return (int)(end - start);
 }
 
-static TCHAR *GetNextIndex(TCHAR *base, int offset, bool forward)
+static const TCHAR *GetNextIndex(const TCHAR *base, int offset, bool forward)
 {
-    TCHAR *c = base + offset + (forward ? 0 : -1);
+    const TCHAR *c = base + offset + (forward ? 0 : -1);
     if (c < base || !*c)
         return NULL;
     return c;
@@ -161,7 +162,7 @@ bool TextSearch::FindTextInPage(int pageNo)
         pageNo = findPage;
     findPage = pageNo;
 
-    TCHAR *found;
+    const TCHAR *found;
     int length;
     do {
         if (!anchor)
@@ -203,14 +204,10 @@ bool TextSearch::FindStartingAtPage(int pageNo, ProgressUpdateUI *tracker)
 
         Reset();
 
-        // make sure that the page text has been cached
-        if (!text[pageNo - 1])
-            FindClosestGlyph(pageNo, 0, 0);
-
-        pageText = text[pageNo - 1];
-        findIndex = forward ? 0 : lens[pageNo - 1];
-
+        pageText = textCache->GetData(pageNo, &findIndex);
         if (pageText) {
+            if (forward)
+                findIndex = 0;
             if (FindTextInPage(pageNo))
                 return true;
             findCache[pageNo - 1] = SKIP_PAGE;

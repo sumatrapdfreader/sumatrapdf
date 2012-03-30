@@ -532,6 +532,12 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data)
             continue;
         }
 
+        // make sure that we have extracted page text for
+        // all rendered pages to allow text selection and
+        // searching without any further delays
+        if (!req.dm->textCache->HasData(req.pageNo))
+            req.dm->textCache->GetData(req.pageNo);
+
         bmp = req.dm->engine->RenderBitmap(req.pageNo, req.zoom, req.rotation, &req.pageRect);
         if (req.abort) {
             delete bmp;

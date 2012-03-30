@@ -5,7 +5,6 @@
 #define TextSearch_h
 
 #include <windows.h>
-#include "BaseEngine.h"
 #include "TextSelection.h"
 
 enum TextSearchDirection {
@@ -26,7 +25,7 @@ public:
 class TextSearch : public TextSelection
 {
 public:
-    TextSearch(BaseEngine *engine);
+    TextSearch(BaseEngine *engine, PageTextCache *textCache);
     ~TextSearch();
 
     void SetSensitive(bool sensitive);
@@ -52,7 +51,7 @@ protected:
     void SetText(TCHAR *text);
     bool FindTextInPage(int pageNo = 0);
     bool FindStartingAtPage(int pageNo, ProgressUpdateUI *tracker);
-    int MatchLen(TCHAR *start);
+    int MatchLen(const TCHAR *start);
 
     void Clear()
     {
@@ -64,7 +63,7 @@ protected:
     void Reset();
 
 private:
-    TCHAR *pageText;
+    const TCHAR *pageText;
     int findIndex;
 
     TCHAR *lastText;

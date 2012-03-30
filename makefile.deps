@@ -24,8 +24,9 @@ $(ODLL)\PdfPreviewDll.obj: src\BaseEngine.h src\previewer\PdfPreview.h src\utils
 $(ODLL)\PdfPreviewDll.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
 $(ODLL)\PdfPreviewDll.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(OM)\MemTraceDll.obj: src\memtrace\MemTraceDll.h src\memtrace\nsWindowsDllInterceptor.h src\utils\Allocator.h
-$(OM)\MemTraceDll.obj: src\utils\BaseUtil.h src\utils\DebugLog.h src\utils\StrUtil.h
-$(OM)\MemTraceDll.obj: src\utils\Vec.h
+$(OM)\MemTraceDll.obj: src\utils\BaseUtil.h src\utils\DebugLog.h src\utils\GeomUtil.h
+$(OM)\MemTraceDll.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
+$(OM)\MemTraceDll.obj: src\utils\WinUtil.h
 $(OMUI)\MiniMui.obj: src\mui\MiniMui.h src\utils\Allocator.h src\utils\BaseUtil.h
 $(OMUI)\MiniMui.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
 $(OMUI)\Mui.obj: src\mui\Mui.h src\mui\MuiBase.h src\mui\MuiButton.h
@@ -420,8 +421,8 @@ $(OS)\TextSearch.obj: src\BaseEngine.h src\TextSearch.h src\TextSelection.h
 $(OS)\TextSearch.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GeomUtil.h
 $(OS)\TextSearch.obj: src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\TextSelection.obj: src\BaseEngine.h src\TextSelection.h src\utils\Allocator.h
-$(OS)\TextSelection.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\StrUtil.h
-$(OS)\TextSelection.obj: src\utils\Vec.h
+$(OS)\TextSelection.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
+$(OS)\TextSelection.obj: src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\Toolbar.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
 $(OS)\Toolbar.obj: src\ChmEngine.h src\DisplayModel.h src\DisplayState.h
 $(OS)\Toolbar.obj: src\DjVuEngine.h src\EngineManager.h src\EpubEngine.h
@@ -486,6 +487,7 @@ $(OU)\Http.obj: src\utils\GeomUtil.h src\utils\Http.h src\utils\StrUtil.h
 $(OU)\Http.obj: src\utils\Vec.h src\utils\WinUtil.h
 $(OU)\NoFreeAllocator.obj: src\utils\BaseUtil.h src\utils\NoFreeAllocator.h
 $(OU)\StrUtil.obj: src\utils\BaseUtil.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OU)\StrUtil_ut.obj: src\utils\BaseUtil.h src\utils\Scoped.h src\utils\StrUtil.h
 $(OU)\ThreadUtil.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\DebugLog.h
 $(OU)\ThreadUtil.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\ThreadUtil.h
 $(OU)\ThreadUtil.obj: src\utils\Vec.h
@@ -502,8 +504,8 @@ $(OU)\UiMsg.obj: src\utils\StrUtil.h src\utils\UiMsg.h src\utils\Vec.h
 $(OU)\UtilTests.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\BencUtil.h
 $(OU)\UtilTests.obj: src\utils\DebugLog.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OU)\UtilTests.obj: src\utils\Scoped.h src\utils\Sigslot.h src\utils\Sigslot_ut.cpp
-$(OU)\UtilTests.obj: src\utils\SimpleLog.h src\utils\StrUtil.h src\utils\Vec.h
-$(OU)\UtilTests.obj: src\utils\Vec_ut.cpp src\utils\WinUtil.h
+$(OU)\UtilTests.obj: src\utils\SimpleLog.h src\utils\StrUtil.h src\utils\StrUtil_ut.cpp
+$(OU)\UtilTests.obj: src\utils\Vec.h src\utils\Vec_ut.cpp src\utils\WinUtil.h
 $(OU)\WinUtil.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\DebugLog.h
 $(OU)\WinUtil.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
 $(OU)\WinUtil.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h

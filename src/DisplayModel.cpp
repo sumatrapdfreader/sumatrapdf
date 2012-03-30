@@ -205,6 +205,7 @@ DisplayModel::DisplayModel(DisplayModelCallback *cb)
     engine = NULL;
     engineType = Engine_None;
 
+    textCache = NULL;
     textSelection = NULL;
     textSearch = NULL;
     pagesInfo = NULL;
@@ -223,6 +224,7 @@ DisplayModel::~DisplayModel()
 
     delete textSearch;
     delete textSelection;
+    delete textCache;
     delete engine;
     free(pagesInfo);
 }
@@ -280,8 +282,9 @@ bool DisplayModel::Load(const TCHAR *fileName, PasswordUI *pwdUI)
     if (AsChmEngine())
         AsChmEngine()->SetNavigationCalback(dmCb);
 
-    textSelection = new TextSelection(engine);
-    textSearch = new TextSearch(engine);
+    textCache = new PageTextCache(engine);
+    textSelection = new TextSelection(engine, textCache);
+    textSearch = new TextSearch(engine, textCache);
     return true;
 }
 
@@ -875,6 +878,7 @@ PageElement *DisplayModel::GetElementAtPos(PointI pt)
     return engine->GetElementAtPos(pageNo, pos);
 }
 
+// note: returns false for pages that haven't been rendered yet
 bool DisplayModel::IsOverText(PointI pt)
 {
     int pageNo = GetPageNoByPoint(pt);
@@ -882,6 +886,8 @@ bool DisplayModel::IsOverText(PointI pt)
         return false;
     // only return visible elements (for cursor interaction)
     if (!RectI(PointI(), viewPort.Size()).Contains(pt))
+        return false;
+    if (!textCache->HasData(pageNo))
         return false;
 
     PointD pos = CvtFromScreen(pt, pageNo);

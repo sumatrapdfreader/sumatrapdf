@@ -201,6 +201,8 @@ EXPORTS
 	fz_open_flated
 	fz_open_lzwd
 	fz_open_predict
+	fz_load_jbig2_globals
+	fz_free_jbig2_globals_imp
 	fz_open_jbig2d
 	fz_lookup_blendmode
 	fz_blendmode_name
