@@ -106,7 +106,7 @@ void PaintSelection(WindowInfo *win, HDC hdc)
     Vec<RectI> rects;
 
     if (win->mouseAction == MA_SELECTING) {
-        // during selecting
+        // during rectangle selection
         RectI selRect = win->selectionRect;
         if (selRect.dx < 0) {
             selRect.x += selRect.dx;
@@ -119,14 +119,22 @@ void PaintSelection(WindowInfo *win, HDC hdc)
 
         rects.Append(selRect);
     } else {
-        if (MA_SELECTING_TEXT == win->mouseAction)
+        // during text selection or after selection is done
+        if (MA_SELECTING_TEXT == win->mouseAction) {
             UpdateTextSelection(win);
+            if (!win->selectionOnPage) {
+                // prevent the selection from disappearing while the
+                // user is still at it (OnSelectionStop removes it
+                // if it is still empty at the end)
+                win->selectionOnPage = new Vec<SelectionOnPage>();
+                win->showSelection = true;
+            }
+        }
 
-        assert(win->selectionOnPage);
+        CrashIf(!win->selectionOnPage);
         if (!win->selectionOnPage)
             return;
 
-        // after selection is done
         for (size_t i = 0; i < win->selectionOnPage->Count(); i++)
             rects.Append(win->selectionOnPage->At(i).GetRect(win->dm));
     }
@@ -276,15 +284,14 @@ void OnSelectAll(WindowInfo *win, bool textOnly)
         win->dm->textSelection->SelectUpTo(pageNo, -1);
         win->selectionRect = RectI::FromXY(INT_MIN / 2, INT_MIN / 2, INT_MAX, INT_MAX);
         UpdateTextSelection(win);
-        win->showSelection = true;
     }
     else {
         DeleteOldSelectionInfo(win, true);
         win->selectionRect = RectI::FromXY(INT_MIN / 2, INT_MIN / 2, INT_MAX, INT_MAX);
         win->selectionOnPage = SelectionOnPage::FromRectangle(win->dm, win->selectionRect);
-        win->showSelection = win->selectionOnPage != NULL;
     }
 
+    win->showSelection = win->selectionOnPage != NULL;
     win->RepaintAsync();
 }
 
