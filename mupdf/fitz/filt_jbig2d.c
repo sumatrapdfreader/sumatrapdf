@@ -19,11 +19,24 @@ typedef unsigned int uint32_t;
 
 typedef struct fz_jbig2d_s fz_jbig2d;
 
+/* SumatraPDF: reuse JBIG2Globals */
+struct fz_jbig2_globals_s
+{
+	fz_storable storable;
+	Jbig2GlobalCtx *gctx;
+};
+
+static void
+fz_drop_jbig2_globals(fz_context *ctx, fz_jbig2_globals *globals)
+{
+	fz_drop_storable(ctx, &globals->storable);
+}
+
 struct fz_jbig2d_s
 {
 	fz_stream *chain;
 	Jbig2Ctx *ctx;
-	Jbig2GlobalCtx *gctx;
+	fz_jbig2_globals *gctx;
 	Jbig2Image *page;
 	int idx;
 };
@@ -35,7 +48,7 @@ close_jbig2d(fz_context *ctx, void *state_)
 	if (state->page)
 		jbig2_release_page(state->ctx, state->page);
 	if (state->gctx)
-		jbig2_global_ctx_free(state->gctx);
+		fz_drop_jbig2_globals(ctx, state->gctx);
 	jbig2_ctx_free(state->ctx);
 	fz_close(state->chain);
 	fz_free(ctx, state);
@@ -90,8 +103,32 @@ error_callback(void *data, const char *msg, Jbig2Severity severity, int32_t seg_
 	return 0;
 }
 
+/* SumatraPDF: reuse JBIG2Globals */
+fz_jbig2_globals *
+fz_load_jbig2_globals(fz_context *ctx, unsigned char *data, int size)
+{
+	fz_jbig2_globals *globals = fz_malloc_struct(ctx, fz_jbig2_globals);
+
+	Jbig2Ctx *jctx = jbig2_ctx_new(NULL, JBIG2_OPTIONS_EMBEDDED, NULL, error_callback, ctx);
+	/* TODO: this call leads to memory leaks */
+	jbig2_data_in(jctx, data, size);
+
+	FZ_INIT_STORABLE(globals, 1, fz_free_jbig2_globals_imp);
+	globals->gctx = jbig2_make_global_ctx(jctx);
+
+	return globals;
+}
+
+void
+fz_free_jbig2_globals_imp(fz_context *ctx, fz_storable *globals_)
+{
+	fz_jbig2_globals *globals = (fz_jbig2_globals *)globals_;
+	jbig2_global_ctx_free(globals->gctx);
+	fz_free(ctx, globals);
+}
+
 fz_stream *
-fz_open_jbig2d(fz_stream *chain, fz_buffer *globals)
+fz_open_jbig2d(fz_stream *chain, fz_jbig2_globals *globals)
 {
 	fz_jbig2d *state = NULL;
 	fz_context *ctx = chain->ctx;
@@ -102,35 +139,26 @@ fz_open_jbig2d(fz_stream *chain, fz_buffer *globals)
 	{
 		state = fz_malloc_struct(chain->ctx, fz_jbig2d);
 		state->ctx = NULL;
-		state->gctx = NULL;
+		/* SumatraPDF: reuse JBIG2Globals */
+		state->gctx = globals;
 		state->chain = chain;
-		state->ctx = jbig2_ctx_new(NULL, JBIG2_OPTIONS_EMBEDDED, NULL, error_callback, ctx);
+		state->ctx = jbig2_ctx_new(NULL, JBIG2_OPTIONS_EMBEDDED, globals ? globals->gctx : NULL, error_callback, ctx);
 		state->page = NULL;
 		state->idx = 0;
-
-		if (globals)
-		{
-			/* SumatraPDF: TODO: this call leads to memory leaks */
-			jbig2_data_in(state->ctx, globals->data, globals->len);
-			state->gctx = jbig2_make_global_ctx(state->ctx);
-			state->ctx = jbig2_ctx_new(NULL, JBIG2_OPTIONS_EMBEDDED, state->gctx, error_callback, ctx);
-		}
 	}
 	fz_catch(ctx)
 	{
 		if (state)
 		{
 			if (state->gctx)
-				jbig2_global_ctx_free(state->gctx);
+				fz_drop_jbig2_globals(ctx, state->gctx);
 			if (state->ctx)
 				jbig2_ctx_free(state->ctx);
 		}
-		fz_drop_buffer(ctx, globals);
 		fz_free(ctx, state);
 		fz_close(chain);
 		fz_rethrow(ctx);
 	}
-	fz_drop_buffer(ctx, globals);
 
 	return fz_new_stream(ctx, state, read_jbig2d, close_jbig2d);
 }
