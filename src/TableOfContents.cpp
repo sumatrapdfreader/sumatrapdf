@@ -18,6 +18,8 @@ using namespace Gdiplus;
 #define WM_APP_REPAINT_TOC     (WM_APP + 1)
 #endif
 
+static void *gOnTocTreeNotifyAddr = NULL;
+
 static void TreeView_ExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, bool subtree=false)
 {
     while (hItem) {
@@ -31,8 +33,13 @@ static void TreeView_ExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, b
     }
 }
 
-static void CustomizeTocInfoTip(LPNMTVGETINFOTIP nmit)
+static void CustomizeTocInfoTip(LPNMTVGETINFOTIP nmit, void *callerAddr)
 {
+    // note: a hack trying to fix 
+    // http://code.google.com/p/sumatrapdf/issues/detail?id=1862
+    if (callerAddr != gOnTocTreeNotifyAddr)
+        return;
+
     DocTocItem *tocItem = (DocTocItem *)nmit->lParam;
     ScopedMem<TCHAR> path(tocItem->GetLink() ? tocItem->GetLink()->GetDestValue() : NULL);
     if (!path)
@@ -354,6 +361,9 @@ void LoadTocTree(WindowInfo *win)
 
 static LRESULT OnTocTreeNotify(WindowInfo *win, LPNMTREEVIEW pnmtv)
 {
+    if (!gOnTocTreeNotifyAddr)
+        gOnTocTreeNotifyAddr = (void*)&OnTocTreeNotify;
+
     switch (pnmtv->hdr.code)
     {
         case TVN_SELCHANGED:
@@ -412,7 +422,7 @@ static LRESULT OnTocTreeNotify(WindowInfo *win, LPNMTREEVIEW pnmtv)
 #endif
 
         case TVN_GETINFOTIP:
-            CustomizeTocInfoTip((LPNMTVGETINFOTIP)pnmtv);
+            CustomizeTocInfoTip((LPNMTVGETINFOTIP)pnmtv, (void*)&OnTocTreeNotify);
             break;
     }
     return -1;
