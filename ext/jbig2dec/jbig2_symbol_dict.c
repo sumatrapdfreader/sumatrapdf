@@ -1012,9 +1012,12 @@ jbig2_symbol_dictionary(Jbig2Ctx *ctx, Jbig2Segment *segment,
       {
           jbig2_error(ctx, JBIG2_SEVERITY_WARNING, segment->number,
               "failed to allocate symbol array in symbol dictionary");
-          jbig2_sd_release(ctx, *dicts);
+          /* SumatraPDF: this looks more correct */
+          jbig2_free(ctx->allocator, dicts);
           goto cleanup;
       }
+      /* SumatraPDF: fix memory leak */
+      jbig2_free(ctx->allocator, dicts);
     }
     if (params.SDINSYMS != NULL) {
       params.SDNUMINSYMS = params.SDINSYMS->n_symbols;
@@ -1068,6 +1071,8 @@ jbig2_symbol_dictionary(Jbig2Ctx *ctx, Jbig2Segment *segment,
   } else {
       /* todo: free GB_stats, GR_stats */
   }
+  /* SumatraPDF: fix memory leak */
+  jbig2_free(ctx->allocator, GR_stats);
 
 cleanup:
   if (params.SDHUFF) {
@@ -1076,6 +1081,8 @@ cleanup:
       jbig2_release_huffman_table(ctx, params.SDHUFFBMSIZE);
       jbig2_release_huffman_table(ctx, params.SDHUFFAGGINST);
   }
+  /* SumatraPDF: fix memory leak */
+  jbig2_sd_release(ctx, params.SDINSYMS);
 
   return (segment->result != NULL) ? 0 : -1;
 

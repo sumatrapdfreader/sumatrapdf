@@ -280,8 +280,10 @@ cleanup1:
         if (code < 0) goto cleanup2;
 	    }
 	    if (ID >= SBNUMSYMS) {
-		return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
+		/* SumatraPDF: fix memory leak */
+		code = jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
                     "symbol id out of range! (%d/%d)", ID, SBNUMSYMS);
+		goto cleanup2;
 	    }
 
 	    /* (3c.v) / 6.4.11 - look up the symbol bitmap IB */

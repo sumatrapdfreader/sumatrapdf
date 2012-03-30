@@ -110,7 +110,6 @@ fz_load_jbig2_globals(fz_context *ctx, unsigned char *data, int size)
 	fz_jbig2_globals *globals = fz_malloc_struct(ctx, fz_jbig2_globals);
 
 	Jbig2Ctx *jctx = jbig2_ctx_new(NULL, JBIG2_OPTIONS_EMBEDDED, NULL, error_callback, ctx);
-	/* TODO: this call leads to memory leaks */
 	jbig2_data_in(jctx, data, size);
 
 	FZ_INIT_STORABLE(globals, 1, fz_free_jbig2_globals_imp);

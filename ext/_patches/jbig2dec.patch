@@ -1,6 +1,6 @@
 diff -rPu5 jbig2dec.orig\jbig2_halftone.c jbig2dec\jbig2_halftone.c
---- jbig2dec.orig\jbig2_halftone.c	Mon Feb 27 16:33:25 2012
-+++ jbig2dec\jbig2_halftone.c	Tue Jan 24 19:20:14 2012
+--- jbig2dec.orig\jbig2_halftone.c	Mon Feb 27 17:33:25 2012
++++ jbig2dec\jbig2_halftone.c	Tue Jan 24 20:20:14 2012
 @@ -140,11 +140,11 @@
    /* fill out the generic region decoder parameters */
    rparams.MMR = params->HDMMR;
@@ -15,8 +15,8 @@ diff -rPu5 jbig2dec.orig\jbig2_halftone.c jbig2dec\jbig2_halftone.c
    rparams.gbat[4] = 2;
    rparams.gbat[5] = -2;
 diff -rPu5 jbig2dec.orig\jbig2_huffman.c jbig2dec\jbig2_huffman.c
---- jbig2dec.orig\jbig2_huffman.c	Mon Feb 27 16:33:25 2012
-+++ jbig2dec\jbig2_huffman.c	Fri Jan 27 22:30:00 2012
+--- jbig2dec.orig\jbig2_huffman.c	Mon Feb 27 17:33:25 2012
++++ jbig2dec\jbig2_huffman.c	Fri Jan 27 23:30:00 2012
 @@ -251,10 +251,17 @@
        int PREFLEN;
  
@@ -49,8 +49,8 @@ diff -rPu5 jbig2dec.orig\jbig2_huffman.c jbig2dec\jbig2_huffman.c
    for (CURLEN = 1; CURLEN <= LENMAX; CURLEN++)
      {
 diff -rPu5 jbig2dec.orig\jbig2_image.c jbig2dec\jbig2_image.c
---- jbig2dec.orig\jbig2_image.c	Mon Feb 27 16:33:25 2012
-+++ jbig2dec\jbig2_image.c	Mon Feb 27 22:28:52 2012
+--- jbig2dec.orig\jbig2_image.c	Mon Feb 27 17:33:25 2012
++++ jbig2dec\jbig2_image.c	Mon Feb 27 23:40:03 2012
 @@ -39,11 +39,12 @@
              "could not allocate image structure in jbig2_image_new");
  		return NULL;
@@ -79,3 +79,98 @@ diff -rPu5 jbig2dec.orig\jbig2_image.c jbig2dec\jbig2_image.c
  	mask = 0x100 - (0x100 >> w);
          for (j = 0; j < h; j++) {
              *d |= (*s & mask) >> shift;
+diff -rPu5 jbig2dec.orig\jbig2_segment.c jbig2dec\jbig2_segment.c
+--- jbig2dec.orig\jbig2_segment.c	Mon Feb 27 17:33:25 2012
++++ jbig2dec\jbig2_segment.c	Fri Mar 30 16:45:04 2012
+@@ -23,10 +23,13 @@
+ #include "jbig2.h"
+ #include "jbig2_priv.h"
+ #include "jbig2_huffman.h"
+ #include "jbig2_symbol_dict.h"
+ #include "jbig2_metadata.h"
++/* SumatraPDF: fix memory leak */
++#include "jbig2_arith.h"
++#include "jbig2_halftone.h"
+ 
+ Jbig2Segment *
+ jbig2_parse_segment_header (Jbig2Ctx *ctx, uint8_t *buf, size_t buf_size,
+ 			    size_t *p_header_size)
+ {
+@@ -153,10 +156,14 @@
+ 	  break;
+ 	case 4:  /* intermediate text region */
+ 	case 40: /* intermediate refinement region */
+ 	  if (segment->result != NULL)
+ 	    jbig2_image_release(ctx, (Jbig2Image*)segment->result);
++	  break;
++	case 16: /* SumatraPDF: pattern dictionary */
++	  if (segment->result != NULL)
++	    jbig2_hd_release(ctx, (Jbig2PatternDict*)segment->result);
+ 	  break;
+ 	case 53: /* user-supplied huffman table */
+ 	  if (segment->result != NULL)
+ 		jbig2_table_free(ctx, (Jbig2HuffmanParams*)segment->result);
+ 	  break;
+diff -rPu5 jbig2dec.orig\jbig2_symbol_dict.c jbig2dec\jbig2_symbol_dict.c
+--- jbig2dec.orig\jbig2_symbol_dict.c	Mon Feb 27 17:33:25 2012
++++ jbig2dec\jbig2_symbol_dict.c	Fri Mar 30 16:33:51 2012
+@@ -1010,13 +1010,16 @@
+       params.SDINSYMS = jbig2_sd_cat(ctx, n_dicts, dicts);
+       if (params.SDINSYMS == NULL)
+       {
+           jbig2_error(ctx, JBIG2_SEVERITY_WARNING, segment->number,
+               "failed to allocate symbol array in symbol dictionary");
+-          jbig2_sd_release(ctx, *dicts);
++          /* SumatraPDF: this looks more correct */
++          jbig2_free(ctx->allocator, dicts);
+           goto cleanup;
+       }
++      /* SumatraPDF: fix memory leak */
++      jbig2_free(ctx->allocator, dicts);
+     }
+     if (params.SDINSYMS != NULL) {
+       params.SDNUMINSYMS = params.SDINSYMS->n_symbols;
+     }
+   }
+@@ -1066,18 +1069,22 @@
+       jbig2_error(ctx, JBIG2_SEVERITY_WARNING, segment->number,
+           "segment marks bitmap coding context as retained (NYI)");
+   } else {
+       /* todo: free GB_stats, GR_stats */
+   }
++  /* SumatraPDF: fix memory leak */
++  jbig2_free(ctx->allocator, GR_stats);
+ 
+ cleanup:
+   if (params.SDHUFF) {
+       jbig2_release_huffman_table(ctx, params.SDHUFFDH);
+       jbig2_release_huffman_table(ctx, params.SDHUFFDW);
+       jbig2_release_huffman_table(ctx, params.SDHUFFBMSIZE);
+       jbig2_release_huffman_table(ctx, params.SDHUFFAGGINST);
+   }
++  /* SumatraPDF: fix memory leak */
++  jbig2_sd_release(ctx, params.SDINSYMS);
+ 
+   return (segment->result != NULL) ? 0 : -1;
+ 
+  too_short:
+   return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
+diff -rPu5 jbig2dec.orig\jbig2_text.c jbig2dec\jbig2_text.c
+--- jbig2dec.orig\jbig2_text.c	Mon Feb 27 17:33:25 2012
++++ jbig2dec\jbig2_text.c	Fri Mar 30 15:14:57 2012
+@@ -278,12 +278,14 @@
+ 	    } else {
+ 		code = jbig2_arith_iaid_decode(params->IAID, as, (int *)&ID);
+         if (code < 0) goto cleanup2;
+ 	    }
+ 	    if (ID >= SBNUMSYMS) {
+-		return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
++		/* SumatraPDF: fix memory leak */
++		code = jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
+                     "symbol id out of range! (%d/%d)", ID, SBNUMSYMS);
++		goto cleanup2;
+ 	    }
+ 
+ 	    /* (3c.v) / 6.4.11 - look up the symbol bitmap IB */
+ 	    {
+ 		uint32_t id = ID;
