@@ -995,7 +995,11 @@ pdf_new_csi(pdf_document *xref, fz_device *dev, fz_matrix ctm, char *event, fz_c
 		csi->top_ctm = ctm;
 		pdf_init_gstate(ctx, &csi->gstate[0], ctm);
 		if (gstate)
+		{
+			/* SumatraPDF: fix memory leak */
+			fz_drop_stroke_state(ctx, csi->gstate[0].stroke_state);
 			copy_state(ctx, &csi->gstate[0], gstate);
+		}
 		csi->gtop = 0;
 
 		csi->cookie = cookie;
