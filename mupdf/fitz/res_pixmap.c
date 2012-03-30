@@ -590,16 +590,28 @@ fz_write_png(fz_context *ctx, fz_pixmap *pixmap, char *filename, int savealpha)
 /* SumatraPDF: Write pixmap to TGA file (with or without alpha channel) */
 static inline void tga_put_pixel(char *data, int n, FILE *fp)
 {
-	if (n < 3)
-		fwrite(data, 1, n, fp);
-	else
+	if (n >= 3)
 	{
-		putc(data[2], fp);
-		putc(data[1], fp);
-		putc(data[0], fp);
+		char buf[4];
+		buf[0] = data[2];
+		buf[1] = data[1];
+		buf[2] = data[0];
 		if (n == 4)
-			putc(data[3], fp);
+			buf[3] = data[3];
+		data = buf;
 	}
+	fwrite(data, 1, n, fp);
+}
+
+static inline int memeq(char *pix1, char *pix2, int n)
+{
+	int k;
+	for (k = 0; k < n; k++)
+	{
+		if (pix1[k] != pix2[k])
+			return 0;
+	}
+	return 1;
 }
 
 void
@@ -631,7 +643,7 @@ fz_write_tga(fz_context *ctx, fz_pixmap *pixmap, char *filename, int savealpha)
 		char *line = pixmap->samples + pixmap->w * n * (pixmap->h - k);
 		for (i = 0, j = 1; i < pixmap->w; i += j, j = 1)
 		{
-			for (; i + j < pixmap->w && j < 128 && !memcmp(line + i * n, line + (i + j) * n, d); j++);
+			for (; i + j < pixmap->w && j < 128 && memeq(line + i * n, line + (i + j) * n, d); j++);
 			if (j > 1)
 			{
 				putc(j - 1 + 128, fp);
@@ -639,7 +651,7 @@ fz_write_tga(fz_context *ctx, fz_pixmap *pixmap, char *filename, int savealpha)
 			}
 			else
 			{
-				for (; i + j < pixmap->w && j < 128 && memcmp(line + (i + j - 1) * n, line + (i + j) * n, d) != 0; j++);
+				for (; i + j < pixmap->w && j < 128 && !memeq(line + (i + j - 1) * n, line + (i + j) * n, d) != 0; j++);
 				putc(j - 1, fp);
 				for (; j > 0; j--, i++)
 					tga_put_pixel(line + i * n, d, fp);

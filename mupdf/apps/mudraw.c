@@ -177,7 +177,7 @@ static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display
 	bmi.bmiHeader.biCompression = BI_RGB;
 
 	bmp_data_len = ((w * 3 + 3) / 4) * 4 * h;
-	bmp_data = fz_malloc(ctx, bmp_data_len);
+	bmp_data = fz_malloc(ctx, bmp_data_len + 1);
 	if (!GetDIBits(dc, hbmp, 0, h, bmp_data, &bmi, DIB_RGB_COLORS))
 		fz_throw(ctx, "gdierror: cannot draw page %d in PDF file '%s'", pagenum, filename);
 
@@ -221,7 +221,8 @@ static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display
 				char *line = bmp_data + bmp_data_len / h * k;
 				for (i = 0, j = 1; i < width; i += j, j = 1)
 				{
-					for (; i + j < width && j < 128 && !memcmp(line + i * 3, line + (i + j) * 3, 3); j++);
+#define memeq3(a, b) ((*(DWORD *)a & 0xFFFFFF) == (*(DWORD *)b & 0xFFFFFF))
+					for (; i + j < width && j < 128 && memeq3(line + i * 3, line + (i + j) * 3); j++);
 					if (j > 1)
 					{
 						putc(j - 1 + 128, f);
@@ -229,10 +230,11 @@ static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display
 					}
 					else
 					{
-						for (; i + j < width && j < 128 && memcmp(line + (i + j - 1) * 3, line + (i + j) * 3, 3) != 0; j++);
+						for (; i + j < width && j < 128 && !memeq3(line + (i + j - 1) * 3, line + (i + j) * 3) != 0; j++);
 						putc(j - 1, f);
 						fwrite(line + i * 3, 1, j * 3, f);
 					}
+#undef memeq3
 				}
 			}
 			fwrite("\0\0\0\0\0\0\0\0TRUEVISION-XFILE.\0", 1, 26, f);

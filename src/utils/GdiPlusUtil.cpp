@@ -354,7 +354,7 @@ struct TgaHeader {
 
 inline bool memeq3(char *pix1, char *pix2)
 {
-    return (*(DWORD *)pix1 & 0xFFFFFF) == (*(DWORD *)pix2 & 0xFFFFFF);
+    return *(WORD *)pix1 == *(WORD *)pix2 && pix1[2] == pix2[2];
 }
 
 unsigned char *SerializeRunLengthEncoded(HBITMAP hbmp, size_t *bmpBytesOut)
