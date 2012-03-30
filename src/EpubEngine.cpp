@@ -26,10 +26,10 @@
 namespace str {
     namespace conv {
 
-inline TCHAR *FromUtf8N(const char *s, size_t len)
+inline TCHAR *FromHtmlUtf8(const char *s, size_t len)
 {
     ScopedMem<char> tmp(str::DupN(s, len));
-    return str::conv::FromUtf8(tmp);
+    return DecodeHtmlEntitites(tmp, CP_UTF8);
 }
 
     }
@@ -152,7 +152,7 @@ public:
     virtual RectD GetRect() const { return rect.Convert<double>(); }
     virtual TCHAR *GetValue() const {
         if (!dest)
-            return str::conv::FromUtf8N(link->str.s, link->str.len);
+            return str::conv::FromHtmlUtf8(link->str.s, link->str.len);
         return NULL;
     }
     virtual PageDestination *AsLink() { return dest ? dest : this; }
@@ -378,7 +378,7 @@ TCHAR *EbookEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_o
             }
             insertSpace = false;
             {
-                ScopedMem<TCHAR> s(str::conv::FromUtf8N(i->str.s, i->str.len));
+                ScopedMem<TCHAR> s(str::conv::FromHtmlUtf8(i->str.s, i->str.len));
                 content.Append(s);
                 size_t len = str::Len(s);
                 double cwidth = 1.0 * bbox.dx / len;
@@ -417,7 +417,7 @@ PageElement *EbookEngine::CreatePageLink(DrawInstr *link, RectI rect, int pageNo
         id.Set(str::conv::FromUtf8(url));
     }
     else
-        id.Set(str::conv::FromUtf8N(link->str.s, link->str.len));
+        id.Set(str::conv::FromHtmlUtf8(link->str.s, link->str.len));
 
     PageDestination *dest = GetNamedDest(id);
     if (!dest)
@@ -691,7 +691,7 @@ DocTocItem *EpubEngineImpl::BuildTocTree(HtmlPullParser& parser, int& idCounter)
                 itemSrc.Set(NULL);
                 EbookTocItem *item = new EbookTocItem(itemText.StealData(), dest);
                 item->id = ++idCounter;
-                item->open = level <= 1;
+                item->open = level <= 2;
                 AppendTocItem(root, item, level);
             }
             if (tok->IsStartTag())
@@ -702,14 +702,14 @@ DocTocItem *EpubEngineImpl::BuildTocTree(HtmlPullParser& parser, int& idCounter)
         else if (tok->IsStartTag() && (tok->NameIs("text") || tok->NameIs("ncx:text"))) {
             tok = parser.Next();
             if (tok->IsText())
-                itemText.Set(str::conv::FromUtf8N(tok->s, tok->sLen));
+                itemText.Set(str::conv::FromHtmlUtf8(tok->s, tok->sLen));
             else if (tok->IsError())
                 break;
         }
         else if (tok->IsTag() && !tok->IsEndTag() && (tok->NameIs("content") || tok->NameIs("ncx:content"))) {
             AttrInfo *attrInfo = tok->GetAttrByName("src");
             if (attrInfo)
-                itemSrc.Set(str::conv::FromUtf8N(attrInfo->val, attrInfo->valLen));
+                itemSrc.Set(str::conv::FromHtmlUtf8(attrInfo->val, attrInfo->valLen));
         }
     }
 
@@ -761,8 +761,11 @@ EpubEngine *EpubEngine::CreateFromStream(IStream *stream)
 
 /* formatting extensions for FictionBook2 */
 
+#define FB2_TOC_ENTRY_MARK "ToC!Entry!"
+
 class Fb2Formatter : public HtmlFormatter {
     int section;
+    int titleCount;
 
     void HandleTagImg_Fb2(HtmlToken *t);
     void HandleTagAsHtml(HtmlToken *t, const char *name);
@@ -772,7 +775,7 @@ class Fb2Formatter : public HtmlFormatter {
 
 public:
     Fb2Formatter(LayoutInfo *li, Fb2Doc *doc) :
-        HtmlFormatter(li), fb2Doc(doc), section(1) { }
+        HtmlFormatter(li), fb2Doc(doc), section(1), titleCount(0) { }
 
     Vec<PageData*> *FormatAllPages();
 };
@@ -807,6 +810,11 @@ void Fb2Formatter::HandleFb2Tag(HtmlToken *t)
         tok.SetValue(t->type, name, name + str::Len(name));
         HandleTagHx(&tok);
         HandleAnchorTag(t);
+        if (!isSubtitle && t->IsStartTag()) {
+            char *link = (char *)Allocator::Alloc(textAllocator, 24);
+            sprintf(link, FB2_TOC_ENTRY_MARK "%d", ++titleCount);
+            currPage->instructions.Append(DrawInstr::Anchor(link, str::Len(link), RectF(0, currY, pageDx, 0)));
+        }
     }
     else if (t->NameIs("section")) {
         if (t->IsStartTag())
@@ -877,6 +885,9 @@ public:
     virtual TCHAR *GetProperty(char *name) { return doc->GetProperty(name); }
     virtual const TCHAR *GetDefaultFileExt() const { return _T(".fb2"); }
 
+    virtual bool HasTocTree() const;
+    virtual DocTocItem *GetTocTree();
+
 protected:
     Fb2Doc *doc;
 
@@ -904,6 +915,63 @@ bool Fb2EngineImpl::Load(const TCHAR *fileName)
         return false;
 
     return pages->Count() > 0;
+}
+
+bool Fb2EngineImpl::HasTocTree() const
+{
+    CrashIf(str::Len(FB2_TOC_ENTRY_MARK) != 10);
+    for (size_t i = 0; i < anchors.Count(); i++) {
+        DrawInstr *instr = anchors.At(i).instr;
+        if (instr->str.len == 11 && str::EqN(instr->str.s, FB2_TOC_ENTRY_MARK "1", 11))
+            return true;
+    }
+    return false;
+}
+
+DocTocItem *Fb2EngineImpl::GetTocTree()
+{
+    EbookTocItem *root = NULL;
+    ScopedMem<TCHAR> itemText;
+    int titleCount = 0;
+    bool inTitle = false;
+    int level = 0;
+
+    size_t xmlLen;
+    const char *xmlData = doc->GetTextData(&xmlLen);
+    HtmlPullParser parser(xmlData, xmlLen);
+    HtmlToken *tok;
+    while ((tok = parser.Next()) && !tok->IsError()) {
+        if (tok->IsStartTag() && tok->NameIs("section"))
+            level++;
+        else if (tok->IsEndTag() && tok->NameIs("section") && level > 0)
+            level--;
+        else if (tok->IsStartTag() && tok->NameIs("title")) {
+            inTitle = true;
+            titleCount++;
+        }
+        else if (tok->IsEndTag() && tok->NameIs("title")) {
+            if (itemText)
+                str::NormalizeWS(itemText);
+            if (!str::IsEmpty(itemText.Get())) {
+                ScopedMem<TCHAR> name(str::Format(_T(FB2_TOC_ENTRY_MARK) _T("%d"), titleCount));
+                PageDestination *dest = GetNamedDest(name);
+                EbookTocItem *item = new EbookTocItem(itemText.StealData(), dest);
+                item->id = titleCount;
+                item->open = level <= 2;
+                AppendTocItem(root, item, level);
+            }
+            inTitle = false;
+        }
+        else if (inTitle && tok->IsText()) {
+            ScopedMem<TCHAR> text(str::conv::FromHtmlUtf8(tok->s, tok->sLen));
+            if (str::IsEmpty(itemText.Get()))
+                itemText.Set(text.StealData());
+            else
+                itemText.Set(str::Join(itemText, _T(" "), text));
+        }
+    }
+
+    return root;
 }
 
 bool Fb2Engine::IsSupportedFile(const TCHAR *fileName, bool sniff)
@@ -1038,7 +1106,7 @@ DocTocItem *MobiEngineImpl::GetTocTree()
     HtmlToken *tok;
     while ((tok = parser.Next()) && !tok->IsError()) {
         if (itemLink && tok->IsText()) {
-            ScopedMem<TCHAR> linkText(str::conv::FromUtf8N(tok->s, tok->sLen));
+            ScopedMem<TCHAR> linkText(str::conv::FromHtmlUtf8(tok->s, tok->sLen));
             if (itemText)
                 itemText.Set(str::Join(itemText, _T(" "), linkText));
             else
@@ -1053,7 +1121,7 @@ DocTocItem *MobiEngineImpl::GetTocTree()
             if (!attr)
                 attr = tok->GetAttrByName("href");
             if (attr)
-                itemLink.Set(str::conv::FromUtf8N(attr->val, attr->valLen));
+                itemLink.Set(str::conv::FromHtmlUtf8(attr->val, attr->valLen));
         }
         else if (itemLink && tok->IsEndTag() && tok->NameIs("a")) {
             PageDestination *dest = NULL;
@@ -1067,6 +1135,7 @@ DocTocItem *MobiEngineImpl::GetTocTree()
                 dest = GetNamedDest(itemLink);
             EbookTocItem *item = new EbookTocItem(itemText.StealData(), dest);
             item->id = ++idCounter;
+            item->open = itemLevel <= 2;
             AppendTocItem(root, item, itemLevel);
             itemLink.Set(NULL);
         }
