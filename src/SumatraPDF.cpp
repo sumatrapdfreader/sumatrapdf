@@ -73,11 +73,7 @@ bool             gUseEbookUI = false;
 // embedded (e.g. in a web browser)
 TCHAR *          gPluginURL = NULL; // owned by CommandLineInfo in WinMain
 
-#if defined(SVN_PRE_RELEASE_VER) && !defined(BLACK_ON_YELLOW)
-#define ABOUT_BG_COLOR          RGB(0xFF, 0, 0)
-#else
 #define ABOUT_BG_COLOR          RGB(0xFF, 0xF2, 0)
-#endif
 
 // Background color comparison:
 // Adobe Reader X   0x565656 without any frame border
