@@ -233,6 +233,7 @@
     <ClCompile Include="src\DisplayModel.cpp" />
     <ClCompile Include="src\DisplayState.cpp" />
     <ClCompile Include="src\DjVuEngine.cpp" />
+    <ClCompile Include="src\Doc.cpp" />
     <ClCompile Include="src\EbookController.cpp" />
     <ClCompile Include="src\EbookControls.cpp" />
     <ClCompile Include="src\EngineDump.cpp" />
@@ -251,7 +252,6 @@
     <ClCompile Include="src\memtrace\MemTraceDll.cpp" />
     <ClCompile Include="src\Menu.cpp" />
     <ClCompile Include="src\MobiDoc.cpp" />
-    <ClCompile Include="src\MobiEngine.cpp" />
     <ClCompile Include="src\MobiWindow.cpp" />
     <ClCompile Include="src\mui\Mui.cpp" />
     <ClCompile Include="src\mui\MuiBase.cpp" />
@@ -400,6 +400,7 @@
     <ClInclude Include="src\DisplayModel.h" />
     <ClInclude Include="src\DisplayState.h" />
     <ClInclude Include="src\DjVuEngine.h" />
+    <ClInclude Include="src\Doc.h" />
     <ClInclude Include="src\EbookController.h" />
     <ClInclude Include="src\EbookControls.h" />
     <ClInclude Include="src\EngineManager.h" />
@@ -420,7 +421,6 @@
     <ClInclude Include="src\memtrace\nsWindowsDllInterceptor.h" />
     <ClInclude Include="src\Menu.h" />
     <ClInclude Include="src\MobiDoc.h" />
-    <ClInclude Include="src\MobiEngine.h" />
     <ClInclude Include="src\MobiWindow.h" />
     <ClInclude Include="src\mui\Mui.h" />
     <ClInclude Include="src\mui\MuiBase.h" />

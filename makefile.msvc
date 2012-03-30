@@ -177,7 +177,7 @@ EBOOK_OBJS = \
 	$(OS)\EbookControls.obj $(OS)\EbookController.obj $(OS)\MobiWindow.obj
 
 SUMATRA_OBJS = \
-	$(OS)\AppPrefs.obj $(OS)\DisplayModel.obj $(OS)\CrashHandler.obj \
+	$(OS)\AppPrefs.obj $(OS)\DisplayModel.obj $(OS)\CrashHandler.obj $(OS)\Doc.obj \
 	$(OS)\Favorites.obj $(OS)\TextSearch.obj $(OS)\SumatraAbout.obj \
 	$(OS)\SumatraDialogs.obj $(OS)\SumatraProperties.obj \
 	$(OS)\SumatraPDF.obj $(OS)\translations.obj $(OS)\FileWatch.obj \
