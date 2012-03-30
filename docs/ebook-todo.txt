@@ -3,8 +3,6 @@ Things to do for the first version of ebook (mobi) support:
 * mobi: parse table of content (<html><head><guide><reference type="toc" title="Table of Contents", filepos=$N />)
 * layout: support different font names (are those used by mobi?)
 * layout: links
-* layout: improvements to background thread layout. We can't change top of the page
-  as a result of the layout as this disorients the user
 
 Done:
 * layout: support images
@@ -22,6 +20,8 @@ Done:
 * layout: do layout on a thread, send laid out pages incrementally. Laying out
   a whole book takes a while, the idea is to be able to display the current
   page as soon as it's available
+* layout: improvements to background thread layout. We can't change top of the page
+  as a result of the layout as this disorients the user
 
 Things nice to have but can wait for future:
 * ui: double page display

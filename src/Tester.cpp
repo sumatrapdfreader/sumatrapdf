@@ -27,11 +27,13 @@ using namespace Gdiplus;
 // if true, we'll save html content of a mobi ebook as well
 // as pretty-printed html to MOBI_SAVE_DIR. The name will be
 // ${file}.html and ${file}_pp.html
-static bool gMobiSaveHtml = true;
+static bool gSaveHtml = false;
 // if true, we'll also save images in mobi files. The name
 // will be ${file}_img_${imgNo}.[jpg|png]
 // gMobiSaveHtml must be true as well
-static bool gMobiSaveImages = true;
+static bool gSaveImages = false;
+// if true, we'll do a layout of mobi files
+static bool gLayout = false;
 // directory to which we'll save mobi html and images
 #define MOBI_SAVE_DIR _T("..\\ebooks-converted")
 
@@ -39,13 +41,15 @@ static int Usage()
 {
     printf("Tester.exe\n");
     printf("  -mobi dirOrFile : run mobi tests in a given directory or for a given file\n");
-    printf("  -mobilayout file : load and layout mobi file\n");
+    printf("  -layout - will also layout mobi files\n");
+    printf("  -save-html] - will save html content of mobi file\n");
+    printf("  -save-images - will save images extracted from mobi files\n");
     return 1;
 }
 
-static void SaveMobiHtml(const TCHAR *filePathBase, MobiDoc *mb)
+static void MobiSaveHtml(const TCHAR *filePathBase, MobiDoc *mb)
 {
-    CrashAlwaysIf(!gMobiSaveHtml);
+    CrashAlwaysIf(!gSaveHtml);
 
     ScopedMem<TCHAR> outFile(str::Join(filePathBase, _T("_pp.html")));
 
@@ -59,7 +63,7 @@ static void SaveMobiHtml(const TCHAR *filePathBase, MobiDoc *mb)
     file::WriteAll(outFile.Get(), html, htmlLen);
 }
 
-static void SaveMobiImage(const TCHAR *filePathBase, size_t imgNo, ImageData *img)
+static void MobiSaveImage(const TCHAR *filePathBase, size_t imgNo, ImageData *img)
 {
     // it's valid to not have image data at a given index
     if (!img || !img->data)
@@ -70,26 +74,53 @@ static void SaveMobiImage(const TCHAR *filePathBase, size_t imgNo, ImageData *im
     file::WriteAll(fileName.Get(), img->data, img->len);
 }
 
-static void SaveMobiImages(const TCHAR *filePathBase, MobiDoc *mb)
+static void MobiSaveImages(const TCHAR *filePathBase, MobiDoc *mb)
 {
-    if (!gMobiSaveImages)
+    if (!gSaveImages)
         return;
     for (size_t i = 0; i < mb->imagesCount; i++) {
-        SaveMobiImage(filePathBase, i, mb->GetImage(i+1));
+        MobiSaveImage(filePathBase, i, mb->GetImage(i+1));
     }
 }
 
-static void TestMobiFile(const TCHAR *filePath)
+// This loads and layouts a given mobi file. Used for profiling layout process.
+static void MobiLayout(MobiDoc *mobiDoc)
+{
+    PoolAllocator textAllocator;
+
+    LayoutInfo li;
+    li.pageDx = 640;
+    li.pageDy = 480;
+    li.fontName = L"Tahoma";
+    li.fontSize = 12;
+    li.htmlStr = mobiDoc->GetBookHtmlData(li.htmlStrLen);
+    li.textAllocator = &textAllocator;
+
+    MobiFormatter mf(&li, mobiDoc);
+    Vec<PageData*> *pages = mf.FormatAllPages();
+    DeleteVecMembers<PageData*>(*pages);
+    delete pages;
+}
+
+static void MobiTestFile(const TCHAR *filePath)
 {
     _tprintf(_T("Testing file '%s'\n"), filePath);
-    MobiDoc *mb = MobiDoc::CreateFromFile(filePath);
-    if (!mb) {
+    MobiDoc *mobiDoc = MobiDoc::CreateFromFile(filePath);
+    if (!mobiDoc) {
         printf(" error: failed to parse the file\n");
         return;
     }
 
-    if (!gMobiSaveHtml)
+    if (gLayout) {
+        Timer t(true);
+        MobiLayout(mobiDoc);
+        _tprintf(_T("Spent %.2f ms laying out %s\n"), t.GetTimeInMs(), filePath);
+    }
+
+    if (!gSaveHtml) {
+        delete mobiDoc;
         return;
+    }
 
     // Given the name of the name of source mobi file "${srcdir}/${file}.mobi"
     // construct a base name for extracted html/image files in the form
@@ -102,10 +133,10 @@ static void TestMobiFile(const TCHAR *filePath)
     TCHAR *ext = (TCHAR*)str::FindCharLast(filePathBase.Get(), '.');
     *ext = 0;
 
-    SaveMobiHtml(filePathBase, mb);
-    SaveMobiImages(filePathBase, mb);
+    MobiSaveHtml(filePathBase, mobiDoc);
+    MobiSaveImages(filePathBase, mobiDoc);
 
-    delete mb;
+    delete mobiDoc;
 }
 
 static bool IsMobiFile(const TCHAR *f)
@@ -130,7 +161,7 @@ static void MobiTestDir(TCHAR *dir)
         if (NULL == p)
             break;
         if (IsMobiFile(p))
-            TestMobiFile(p);
+            MobiTestFile(p);
     }
 }
 
@@ -139,42 +170,9 @@ static void MobiTest(char *dirOrFile)
     TCHAR *tmp = nf::str::conv::FromAnsi(dirOrFile);
 
     if (file::Exists(tmp) && IsMobiFile(tmp))
-        TestMobiFile(tmp);
+        MobiTestFile(tmp);
     else
         MobiTestDir(tmp);
-}
-
-// This loads and layouts a given mobi file. Used for profiling layout process.
-static void MobiLayout(char *file)
-{
-    nf::AllocatorMark mark;
-    TCHAR *tmp = nf::str::conv::FromAnsi(file);
-    if (!file::Exists(tmp) || !IsMobiFile(tmp)) {
-        printf("MobiLayout: file %s doesn't exist or not a mobi file", file);
-        return;
-    }
-    printf("Laying out file '%s'\n", file);
-    MobiDoc *mb = MobiDoc::CreateFromFile(tmp);
-    if (!mb) {
-        printf("MobiLayout: failed to parse the file\n");
-        return;
-    }
-
-    PoolAllocator textAllocator;
-
-    LayoutInfo li;
-    li.pageDx = 640;
-    li.pageDy = 480;
-    li.fontName = L"Tahoma";
-    li.fontSize = 12;
-    li.htmlStr = mb->GetBookHtmlData(li.htmlStrLen);
-    li.textAllocator = &textAllocator;
-
-    MobiFormatter mf(&li, mb);
-    Vec<PageData*> *pages = mf.FormatAllPages();
-    DeleteVecMembers<PageData*>(*pages);
-    delete pages;
-    delete mb;
 }
 
 extern "C"
@@ -185,31 +183,40 @@ int main(int argc, char **argv)
     int i = 1;
     int left = argc - 1;
 
-    if (left < 2)
+    InitAllCommonControls();
+    ScopedGdiPlus gdi;
+    mui::Initialize();
+
+    char *dirOrFile = NULL;
+    bool mobiTest = false;
+
+    while (left > 0) {
+        if (str::Eq(argv[i], "-mobi")) {
+            ++i; --left;
+            if (left < 1)
+                return Usage();
+            mobiTest = true;
+            dirOrFile = argv[i];
+            ++i; --left;
+        } else if (str::Eq(argv[i], "-layout")) {
+            gLayout = true;
+            ++i; --left;
+        } else if (str::Eq(argv[i], "-save-html")) {
+            gSaveHtml = true;
+            ++i; --left;
+        } else if (str::Eq(argv[i], "-save-images")) {
+            gSaveImages = true;
+            ++i; --left;
+        } else {
+            // unknown argument
+            return Usage();
+        }
+    }
+
+    if (!mobiTest)
         return Usage();
+    MobiTest(dirOrFile);
 
-    if (str::Eq(argv[i], "-mobi")) {
-        ++i; --left;
-        if (1 != left)
-            return Usage();
-        MobiTest(argv[i]);
-        return 0;
-    }
-
-    if (str::Eq(argv[i], "-mobilayout")) {
-        ++i; --left;
-        if (1 != left)
-            return Usage();
-        void *test = nf::alloc(50);
-        InitAllCommonControls();
-        ScopedGdiPlus gdi;
-        mui::Initialize();
-        Timer t(true);
-        MobiLayout(argv[i]);
-        printf("Spent %.2f ms laying out %s", t.GetTimeInMs(), argv[i]);
-        mui::Destroy();
-        return 0;
-    }
-
-    return Usage();
+    mui::Destroy();
+    return 0;
 }

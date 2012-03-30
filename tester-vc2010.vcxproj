@@ -119,7 +119,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="docs\ebook-todo.txt" />
-    <None Include="docs\ebooks-impl-notes.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

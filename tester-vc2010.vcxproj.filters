@@ -131,7 +131,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="docs\ebook-todo.txt" />
-    <None Include="docs\ebooks-impl-notes.txt" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="utils">

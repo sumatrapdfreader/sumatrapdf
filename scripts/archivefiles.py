@@ -58,6 +58,8 @@ def copy_file(srcDir, dstDir, moveFiles, fileName, dstDir2):
 		print("  deleting %s" % srcPath)
 		os.remove(srcPath)
 
+def copy_mobi_file(srcDir, dstDir, moveFiles, fileName)
+
 def copy_files(srcDir, dstDir, moveFiles):
 	print("Copy files from %s to %s, move: %s" % (srcDir, dstDir, moveFiles))
 	files = os.listdir(srcDir)
