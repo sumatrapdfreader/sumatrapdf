@@ -102,27 +102,16 @@ RenderedFitzBitmap::RenderedFitzBitmap(fz_context *ctx, fz_pixmap *pixmap) :
     int h = pixmap->h;
     int rows8 = ((w + 3) / 4) * 4;
 
-    /* BGRA is a GDI compatible format */
-    fz_pixmap *bgrPixmap;
-    fz_try(ctx) {
-        fz_colorspace *colorspace = fz_find_device_colorspace(ctx, "DeviceBGR");
-        bgrPixmap = fz_new_pixmap_with_bbox(ctx, colorspace, fz_pixmap_bbox(ctx, pixmap));
-        fz_convert_pixmap(ctx, bgrPixmap, pixmap);
-    }
-    fz_catch(ctx) {
-        return;
-    }
-
-    assert(bgrPixmap->n == 4);
-
     BITMAPINFO *bmi = (BITMAPINFO *)calloc(1, sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
 
     // always try to produce an 8-bit palette for saving some memory
     unsigned char *bmpData = (unsigned char *)calloc(rows8, h);
-    if (bmpData)
+    fz_pixmap *bgrPixmap = NULL;
+    if (bmpData && pixmap->n == 4 &&
+        pixmap->colorspace == fz_find_device_colorspace(ctx, "DeviceRGB"))
     {
         unsigned char *dest = bmpData;
-        unsigned char *source = bgrPixmap->samples;
+        unsigned char *source = pixmap->samples;
 
         for (int j = 0; j < h; j++)
         {
@@ -130,9 +119,9 @@ RenderedFitzBitmap::RenderedFitzBitmap(fz_context *ctx, fz_pixmap *pixmap) :
             {
                 RGBQUAD c = { 0 };
 
-                c.rgbBlue = *source++;
-                c.rgbGreen = *source++;
                 c.rgbRed = *source++;
+                c.rgbGreen = *source++;
+                c.rgbBlue = *source++;
                 source++;
 
                 /* find this color in the palette */
@@ -156,6 +145,19 @@ RenderedFitzBitmap::RenderedFitzBitmap(fz_context *ctx, fz_pixmap *pixmap) :
 ProducingPaletteDone:
         hasPalette = paletteSize < 256;
     }
+    if (!hasPalette) {
+        free(bmpData);
+        /* BGRA is a GDI compatible format */
+        fz_try(ctx) {
+            fz_colorspace *colorspace = fz_find_device_colorspace(ctx, "DeviceBGR");
+            bgrPixmap = fz_new_pixmap_with_bbox(ctx, colorspace, fz_pixmap_bbox(ctx, pixmap));
+            fz_convert_pixmap(ctx, bgrPixmap, pixmap);
+        }
+        fz_catch(ctx) {
+            free(bmi);
+            return;
+        }
+    }
 
     bmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     bmi->bmiHeader.biWidth = w;
@@ -171,9 +173,11 @@ ProducingPaletteDone:
         hasPalette ? bmpData : bgrPixmap->samples, bmi, DIB_RGB_COLORS);
     ReleaseDC(NULL, hDC);
 
-    fz_drop_pixmap(ctx, bgrPixmap);
+    if (hasPalette)
+        free(bmpData);
+    else
+        fz_drop_pixmap(ctx, bgrPixmap);
     free(bmi);
-    free(bmpData);
 }
 
 fz_stream *fz_open_file2(fz_context *ctx, const TCHAR *filePath)
