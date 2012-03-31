@@ -119,7 +119,7 @@ HtmlFormatter::HtmlFormatter(LayoutInfo *li) : layoutInfo(li),
     pageDx((REAL)li->pageDx), pageDy((REAL)li->pageDy),
     textAllocator(li->textAllocator), currLineReparseIdx(NULL),
     currX(0), currY(0), currLineTopPadding(0), currLinkIdx(0),
-    listDepth(0), preFormatted(false)
+    listDepth(0), preFormatted(false), currPage(NULL)
 {
     currReparseIdx = li->reparseIdx;
     htmlParser = new HtmlPullParser(li->htmlStr, li->htmlStrLen);
@@ -473,16 +473,33 @@ bool HtmlFormatter::FlushCurrLine(bool isParagraphBreak)
     return createdPage;
 }
 
+static DrawInstr *FindLastSetFontInstr(PageData *page)
+{
+    if (!page)
+        return NULL;
+    Vec<DrawInstr> *els = &page->instructions;
+    size_t n = els->Count();
+    for (size_t i = 0; i < n; i++) {
+        DrawInstr *di = els->AtPtr(n - i - 1);
+        if (InstrSetFont == di->type)
+            return di;
+    }
+    return NULL;
+}
+
 void HtmlFormatter::EmitNewPage()
 {
+    PageData *prevPage = currPage;
     currPage = new PageData();
     currPage->reparseIdx = currReparseIdx;
     currPage->styleStack = styleStack;
     currPage->listDepth = listDepth;
     currPage->preFormatted = preFormatted;
-    // TODO: this is wrong, it needs to be font that was
-    // current at the last instruction on the page
-    currPage->instructions.Append(DrawInstr::SetFont(CurrFont()));
+    DrawInstr *lastSetFont = FindLastSetFontInstr(prevPage);
+    if (lastSetFont)
+        currPage->instructions.Append(*lastSetFont);
+    else
+        currPage->instructions.Append(DrawInstr::SetFont(CurrFont()));
     currY = 0.f;
 }
 
