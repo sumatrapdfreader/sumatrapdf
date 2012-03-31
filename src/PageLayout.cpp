@@ -620,7 +620,6 @@ void HtmlFormatter::EmitTextRun(const char *s, const char *end)
 
         size_t strLen = str::Utf8ToWcharBuf(s, end - s, buf, dimof(buf));
         RectF bbox = MeasureText(gfx, CurrFont(), buf, strLen);
-        bbox.Y = 0.f;
         EnsureDx(bbox.Width);
         if (bbox.Width <= pageDx - currX) {
             AppendInstr(DrawInstr::Str(s, end - s, bbox));
@@ -629,12 +628,25 @@ void HtmlFormatter::EmitTextRun(const char *s, const char *end)
         }
 
         int lenThatFits = StringLenForWidth(gfx, CurrFont(), buf, strLen, pageDx - NewLineX());
+        // try to prevent a break in the middle of a word
+        if (iswalnum(buf[lenThatFits])) {
+            for (int len = lenThatFits; len > 0; len--) {
+                if (!iswalnum(buf[len-1])) {
+                    lenThatFits = len;
+                    break;
+                }
+            }
+        }
         bbox = MeasureText(gfx, CurrFont(), buf, lenThatFits);
-        bbox.Y = 0.f;
         CrashIf(bbox.Width > pageDx);
         AppendInstr(DrawInstr::Str(s, lenThatFits, bbox));
         currX += bbox.Width;
-        s += lenThatFits;
+
+        for (int i = 0; i < lenThatFits; i++) {
+            // s is UTF-8 and buf is UTF-16, so one
+            // WCHAR doesn't always equal one char
+            s += buf[i] < 0x80 ? 1 : buf[i] < 0x800 ? 2 : 3;
+        }
     }
 }
 

@@ -2428,6 +2428,8 @@ static void AppendFileFilterForDoc(DisplayModel *dm, str::Str<TCHAR>& fileFilter
         case Engine_Fb2:    fileFilter.Append(_T("FictionBooks")); break;
         case Engine_Mobi:   fileFilter.Append(_TR("Mobi documents")); break;
         case Engine_Chm2:   fileFilter.Append(_TR("CHM documents")); break;
+        // TODO: translate after 2.0
+        case Engine_Txt:    fileFilter.Append(_T("Text documents")); break;
         default:            fileFilter.Append(_TR("PDF documents")); break;
     }
 }
@@ -2821,6 +2823,8 @@ void OnMenuOpen(SumatraWindow& win)
 #ifdef ENABLE_EBOOK_ENGINES
         { _TR("EPUB ebooks"),           _T("*.epub"),       true },
         { _T("FictionBooks"),           _T("*.fb2"),        true },
+        // TODO: translate after 2.0
+        { _T("Text documents"),         _T("*.txt;*.log"),  true },
 #endif
     };
     // Prepare the file filters (use \1 instead of \0 so that the
