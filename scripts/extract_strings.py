@@ -67,7 +67,12 @@ def load_one_strings_file(file_path, lang_code, strings_dict, langs_dict, contri
             assert curr_orig not in all_origs, "Duplicate entry for '%s'" % curr_orig
             assert curr_trans is not None, "File %s, line %d" % (file_path, line_no)
             if re.findall(r"%#?[sdux]", curr_orig) != re.findall(r"%#?[sdux]", curr_trans):
-                print("File %s, line %d, translation has incorrect variable order '%s'" % (file_path, line_no, curr_trans))
+                try:
+                    print("File %s, line %d, translation has incorrect variable order '%s'" % (file_path, line_no, curr_trans))
+                except:
+                    # might fail to print unicode to console, so print again
+                    # without the string
+                    print("File %s, line %d, translation has incorrect variable order" % (file_path, line_no))
                 assert 0
             elif re.search(r"\\(?![\\tn])", curr_trans):
                 print("File %s, line %d, translation has incorrect escape characters '%s'" % (file_path, line_no, curr_trans))
@@ -100,7 +105,12 @@ def load_one_strings_file(file_path, lang_code, strings_dict, langs_dict, contri
             #print l
         else:
             if curr_trans is not None:
-                print("curr_trans: '%s', line: %d in '%s'" % (curr_trans, line_no, os.path.basename(file_path)))
+                try:
+                    print("curr_trans: '%s', line: %d in '%s'" % (curr_trans, line_no, os.path.basename(file_path)))
+                except:
+                    # above can fail to print curr_trans to console, so
+                    # print again without the string
+                    print("error in line: %d in '%s'" % (line_no, os.path.basename(file_path)))
             assert curr_trans is None, "curr_trans: '%s', line: %d in '%s'" % (curr_trans, line_no, os.path.basename(file_path))
             curr_trans = l
             #print l
