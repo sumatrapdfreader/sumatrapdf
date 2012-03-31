@@ -138,11 +138,6 @@ public:
         return els[idx];
     }
 
-    T* AtPtr(size_t idx) const {
-        CrashIf(idx >= len);
-        return &els[idx];
-    }
-
     size_t Count() const {
         return len;
     }
@@ -202,13 +197,11 @@ public:
         Append(el);
     }
 
-    // TODO: this doesn't preserve 0-padding at the end. Should zero out the memory
-    // for the last element
-    T& Pop() {
+    T Pop() {
         CrashIf(0 == len);
-        T *el = AtPtr(len - 1);
-        len--;
-        return *el;
+        T el = At(len - 1);
+        RemoveAt(len - 1);
+        return el;
     }
 
     T& Last() const {

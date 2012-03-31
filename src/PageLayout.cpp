@@ -480,7 +480,7 @@ static DrawInstr *FindLastSetFontInstr(PageData *page)
     Vec<DrawInstr> *els = &page->instructions;
     size_t n = els->Count();
     for (size_t i = 0; i < n; i++) {
-        DrawInstr *di = els->AtPtr(n - i - 1);
+        DrawInstr *di = &els->At(n - i - 1);
         if (InstrSetFont == di->type)
             return di;
     }
