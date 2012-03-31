@@ -32,6 +32,7 @@ static void StrVecTest()
         v2 = v;
         assert(v2.Count() == 3 && v2.At(0) != v.At(0));
         assert(str::Eq(v2.At(1), _T("foo")));
+        assert(&v2.At(2) == v2.AtPtr(2) && str::Eq(*v2.AtPtr(2), _T("glee")));
     }
 
     {
@@ -50,6 +51,8 @@ static void StrVecTest()
         assert(count == 3 && v2.Find(_T("c")) == 2);
         ScopedMem<TCHAR> joined(v2.Join(_T(";")));
         assert(str::Eq(joined, _T("a;b;c")));
+        ScopedMem<TCHAR> last(v2.Pop());
+        assert(v2.Count() == 2 && str::Eq(last, _T("c")));
     }
 }
 
@@ -91,6 +94,10 @@ static void VecTest()
     assert(ints.Count() == 1000 && ints.At(500) == 500);
     ints.Remove(500);
     assert(ints.Count() == 999 && ints.At(500) == 501);
+    last = ints.Pop();
+    assert(last == 999);
+    ints.Append(last);
+    assert(ints.AtPtr(501) == &ints.At(501));
 
     {
         Vec<int> ints2(ints);
@@ -161,6 +168,12 @@ static void VecTest()
         assert(str::Eq(s, "lambda"));
         free(s);
         assert(v.Count() == 0);
+
+        v.Append("lambda");
+        assert(str::Eq(v.LendData(), "lambda"));
+        char c = v.Pop();
+        assert(c == 'a');
+        assert(str::Eq(v.LendData(), "lambd"));
     }
 
     VecTestAppendFmt();

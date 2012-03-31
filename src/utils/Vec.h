@@ -138,6 +138,12 @@ public:
         return els[idx];
     }
 
+    T *AtPtr(size_t idx) const {
+        CrashIf(idx >= len);
+        CrashIf(&els[idx] != &At(idx));
+        return &els[idx];
+    }
+
     size_t Count() const {
         return len;
     }
