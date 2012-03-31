@@ -184,11 +184,10 @@ $(OS)\EngineDump.obj: src\utils\BaseUtil.h src\utils\CmdLineParser.h src\utils\F
 $(OS)\EngineDump.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\RefCounted.h
 $(OS)\EngineDump.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\EngineDump.obj: src\utils\WinUtil.h
-$(OS)\EpubDoc.obj: src\BaseEngine.h src\EpubDoc.h src\utils\Allocator.h
-$(OS)\EpubDoc.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
-$(OS)\EpubDoc.obj: src\utils\HtmlPullParser.h src\utils\RefCounted.h src\utils\Scoped.h
-$(OS)\EpubDoc.obj: src\utils\StrUtil.h src\utils\TrivialHtmlParser.h src\utils\Vec.h
-$(OS)\EpubDoc.obj: src\utils\ZipUtil.h
+$(OS)\EpubDoc.obj: src\EpubDoc.h src\utils\Allocator.h src\utils\BaseUtil.h
+$(OS)\EpubDoc.obj: src\utils\FileUtil.h src\utils\HtmlPullParser.h src\utils\RefCounted.h
+$(OS)\EpubDoc.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\TrivialHtmlParser.h
+$(OS)\EpubDoc.obj: src\utils\Vec.h src\utils\ZipUtil.h
 $(OS)\EpubEngine.obj: src\BaseEngine.h src\ChmDoc.h src\EpubDoc.h
 $(OS)\EpubEngine.obj: src\EpubEngine.h src\MobiDoc.h src\mui\MiniMui.h
 $(OS)\EpubEngine.obj: src\PageLayout.h src\utils\Allocator.h src\utils\BaseUtil.h

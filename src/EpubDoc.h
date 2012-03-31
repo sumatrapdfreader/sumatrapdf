@@ -4,7 +4,6 @@
 #ifndef EpubDoc_h
 #define EpubDoc_h
 
-#include "BaseEngine.h"
 #include "Scoped.h"
 #include "Vec.h"
 #include "ZipUtil.h"
