@@ -112,7 +112,7 @@ void ThreadLayoutMobi::SendPagesIfNecessary(bool force, bool finished, bool from
     ld->fromBeginning = fromBeginning;
     if (pageCount > 0)
         memcpy(ld->pages, pages, pageCount * sizeof(PageData*));
-    //lf("ThreadLayoutMobi::SendPagesIfNecessary() sending %d pages, ld=0x%x", pageCount, (int)ld);
+    //lf("ThreadLayoutMobi::SendPagesIfNecessary() sending %d pages, finished=%d", pageCount, (int)finished);
     ld->pageCount = pageCount;
     ld->threadNo = threadNo;
     ld->controller = controller;
@@ -211,8 +211,8 @@ void EbookController::StopLayoutThread(bool forceTerminate)
 {
     if (!layoutThread)
         return;
-    layoutThread->UnRef();
-    layoutThread->RequestCancelAndWaitToStop(1000, forceTerminate);
+    if (layoutThread->RequestCancelAndWaitToStop(1000, forceTerminate))
+        layoutThread->UnRef();
     layoutThread = NULL;
     layoutThreadNo = -1;
     layoutTemp.DeletePages();
@@ -422,6 +422,7 @@ void EbookController::HandleMobiLayoutMsg(MobiLayoutData *ld)
             pagesFromPage->Append(pages, pageCount);
             layoutTemp.pagesFromPage.Reset();
         }
+        StopLayoutThread(false);
     }
     UpdateStatus();
 }

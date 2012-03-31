@@ -23,6 +23,8 @@ target: 6/1):
 - a smoother transition betwen different window types which
   doesn't involve closing the window
 - enable epub in ebook ui
+- mobi: closing mobi document when initial layout is going on,
+  we loose the position in the file (it gets reset to 0)
 - a web-based translation system as described in wishilist.txt
   Server written in Go + python scripts to upload strings for
   translation and download translations

@@ -120,6 +120,7 @@ ThreadBase::ThreadBase(const char *name)
 ThreadBase::~ThreadBase()
 {
     //lf("~ThreadBase() %d", threadNo);
+    CloseHandle(hThread);
     free(threadName);
 }
 
@@ -129,7 +130,6 @@ DWORD WINAPI ThreadBase::ThreadProc(void *data)
     if (thread->threadName)
         SetThreadName(GetCurrentThreadId(), thread->threadName);
     thread->Run();
-    CloseHandle(thread->hThread);
     thread->UnRef();
     return 0;
 }
@@ -144,11 +144,15 @@ bool ThreadBase::RequestCancelAndWaitToStop(DWORD waitMs, bool terminate)
 {
     RequestCancel();
     DWORD res = WaitForSingleObject(hThread, waitMs);
-    if (WAIT_OBJECT_0 == res)
+    if (WAIT_OBJECT_0 == res) {
+        CloseHandle(hThread);
+        hThread = NULL;
         return true;
+    }
     if (terminate) {
         TerminateThread(hThread, 1);
         CloseHandle(hThread);
+        hThread = NULL;
     }
     return false;
 }
