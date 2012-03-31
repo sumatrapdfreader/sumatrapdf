@@ -8,6 +8,7 @@
 
 class FileChangeObserver {
 public:
+    virtual ~FileChangeObserver() { }
     virtual void OnFileChanged() = 0;
 };
 
