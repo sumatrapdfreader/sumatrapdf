@@ -1,21 +1,54 @@
-Things to do before 2.0 release:
+The idea for the next few releases is to make them relatively quickly,
+every 2-3 months.
 
-Things that can wait for 2.1 or later:
+Major user-visible changes in each release:
+2.1 - epub in ebook ui; new translation system as described
+      in wishlist.txt
+2.2 - fb2 in ebook ui; rebrand as Sumatra Reader
+2.3 - text support (in it's own ui)
+2.4 - hex display (can show any file in hex/text view; it's own ui)
+
+Note: we could compress all those features into a single release
+but the idea is that each release will have as many additional
+changes as we can make in 2-3 months but most of them will
+be internal refactorings invisible to users or smaller UI tweaks.
+Support for an additional format is something that justifies
+making another release, which is why it's spaced like this.
+
+More detailed list for 2.1 (code comple target: 5/23, release
+target: 6/1):
+- refactor LoadDocument() so that more code is shared between
+  engine/ebook UIs and so that it loads documents in the
+  background thread
+- a smoother transition betwen different window types which
+  doesn't involve closing the window
+- ref count ThreadBase objects for easier management of their
+  lifetime (which is impossible to get right with current design)
+- enable epub in ebook ui
+- a web-based translation system as described in wishilist.txt
+  Server written in Go + python scripts to upload strings for
+  translation and download translations
+- disable File/Save Shortcut... in official builds
+- set min size of the window (to 480x320?)
+- File/Open => File/Open...
+- ???
+
+Given aggresive schedule, it's important to make the most risky
+(most likely to introduce breakage) changes first so that there
+is time to stabilize the code. E.g. in 2.1, LoadDocument() 
+refactoring is such a change.
+
+A random list of itmes to implement sooner or later:
 - even more mobi document properties
 - links in mobi format
 - lists in mobi format (ul, li)
 - mobi: search
 - mobi: fullscreen
 - mobi: printing
-- better way of switching between mobi and non-mobi windows
 - mobi: allow to change default font name/size, remember it
         for a given document in preferences
 - mobi: 2 page display
-- mobi: rtl support
-- etc.
-
-Misc stuff for 2.1 or later:
+- ebook ui: rtl support
 - rename LayoutInfo => FormatterArgs (HtmlFormatterArgs ?),
   PageData => HtmlPage (?), DrawPageLayout => DrawHtmlPage (?),
   *Layout* => *Format*, PageLayout.[h|cpp] => HtmlFormatter.[h|cpp]
-
