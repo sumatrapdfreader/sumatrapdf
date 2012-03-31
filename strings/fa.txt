@@ -11,108 +11,174 @@ Lang: fa Persian (فارسی)
 Contributor: Adham Beyki (odinay@gmail.com)
 Contributor: Mardi Az Pansad Dastgah Artesh
 Contributor: Ali Nayeri
+Contributor: dawoodiran@gmail.com
+Contributor: DR. dawood fakhim
+Contributor: داود فخیم
 
 &About
-درباره
+&درباره
 
 &Actual Size\tCtrl+1
-ابعاد اصلی‌\tCtrl+1
+&ابعاد اصلی‌\tCtrl+1
+
+&All selected pages
+همه صفحات انتخاب شده
 
 &Back\tAlt+Left Arrow
-عقب\tAlt+Left Arrow
+&قبلی\tAlt+Left Arrow
+
+&Book View\tCtrl+8
+نمایش بشکل کتاب
 
 &Close\tCtrl+W
-بستن\tCtrl+W
+&بستن\tCtrl+W
+
+&Copy Selection
+رونوشت از انتخاب شده
 
 &Copy Selection\tCtrl+C
-رونوشت مورد منتخب
+&رونوشت مورد منتخب
 
 &Don't ask me again
-این پاسخ را به یاد بسپار و دوباره از من نپرس
+& دوباره از من نپرس
+
+&Even pages only
+فقط صفحات زوج
+
+&Facing\tCtrl+7
+دو صفحه ایی
 
 &File
-فايل
+&فايل
 
 &Find what:
-:جستجو برای
+&:جستجو برای
 
 &First Page\tHome
-صفحه نخست\tHome
+&صفحه نخست\tHome
+
+&Fit pages to printable area
+صفحات را متناسب با صفحه چاپ بکن
 
 &Go To
-برو به
+&برو به
 
 &Go to page:
-:برو به صفحه
+&:برو به صفحه
 
 &Help
-راهنما
+&راهنما
 
 &Last Page\tEnd
-صفحه آخر\tEnd
+&صفحه آخر\tEnd
 
 &Magnification:
-درشت نمایی
+&درشت نمایی
 
 &Manual
-کتابچه راهنما در اینترنت
+&کتابچه راهنما در اینترنت
 
 &Match case
-با توجه به قالب حروف
+&با توجه به قالب حروف
 
 &Next Page\tRight Arrow
-صفحه بعدی\t->
+&صفحه بعدی\t->
 
 &No
-خیر
+&خیر
 
 &No, thanks
-نه، متشکرم
+&نه، متشکرم
+
+&Odd pages only
+فقط صفحات فرد
 
 &Open\tCtrl+O
-باز کردن\tCtrl+O
+&باز کردن\tCtrl+O
+
+&Open Document
+باز کردن سند
 
 &Options...
-گزینه ها
+&گزینه ها
 
 &Password:
-کلمه عبور
+&کلمه عبور
+
+&Pin Document
+ثابت نمودن سند
 
 &Previous Page\tLeft Arrow
-صفحه قبلی\t<-
+&صفحه قبلی\t<-
+
+&Print...
+چاپ کردن000
 
 &Print...\tCtrl+P
-چاپ\tCtrl+P
+&چاپ\tCtrl+P
 
 &Print... (denied)
-(چاپ ... (رد شد
+&چاپ(ممنوع).. 
+
+&Remember the password for this document
+رمز عبور این سند را بخاطر داشته باش
 
 &Remember these settings for each document
-این تنظیمات را برای هر سند بخاطر بسپار
+&این تنظیمات را برای هر سند بخاطر بسپار
+
+&Remove Document
+سند را حذف کن
+
+&Save As...
+ذخیره کردن بنام000
 
 &Save As...\tCtrl+S
-...ذخیره بعنوان\tCtrl+S
+&...ذخیره بعنوان\tCtrl+S
 
 &Settings
-تنظیمات
+&تنظیمات
+
+&Shrink pages to printable area (if necessary)
+صفحات را برای متناسب کردن با صفحه چاپ کوچک کن(اگر ضروری است)
+
+&Single Page\tCtrl+6
+تک صفحه ای
 
 &Skip this version
-از این نسخه چشم پوشی کن
+&از این نسخه چشم پوشی کن
+
+&Use original page sizes
+اندازه صفحه اصلی را بکار بگیر
 
 &View
-نمايش
+&نمايش
 
 &Yes
 بلی
 
 &Zoom
-تغییر ابعاد نمایش
+&تغییر ابعاد نمایش
 
 (of %d)
 (%d از)
 
+(page %s)
+(صفحه 5%s)
+
 About SumatraPDF
 SumatraPDF درباره برنامه
+
+Add Favorite
+افزودن به دلخواه
+
+Add page %s to favorites
+افزودن صفحه %sبه دلخواهها
+
+Add page %s to favorites with (optional) name:
+افزودن صفحه به %sدلخواهها با نام:
+
+Add to favorites
+افزودن به دلخواهها
 
 Advanced
 امکانات پیشرفته
@@ -120,11 +186,17 @@ Advanced
 All files
 تمام فایلها
 
+All supported documents
+همه اسناد قابل پشتیبانی
+
 Application:
 :نرم‌افزار
 
 Associate with PDF files?
 قرار بدهیم ؟ PDF ایا این برنامه را نمایشگر همیشگی فایل های
+
+Attachment: %s
+پیوست:%s
 
 Author:
 :مولف
@@ -141,11 +213,23 @@ Book View
 Book&marks\tF12
 نشان یادگاری سرکتاب\tF12
 
+Bookmark Shortcuts
+میانبر به نشانه گذاری ها
+
+Bookmark shortcut to page %s of %s
+میانبر به نشانه گذاری صفحه %s از %s
+
+Bookmarks
+نشانه گذاریها
+
 Bytes
-Bytes
+بایتها
 
 CHM documents
 CHM اسناد
+
+Can't connect to the Internet (error %#x).
+ناتوانی در اتصال به اینترنت(خطای %#x)
 
 Cancel
 لغو
@@ -162,6 +246,9 @@ Change Language
 Check for &Updates
 چک کردن نسخه تازه تر
 
+Comic books
+کتابهای فکاهی
+
 Continuous
 نمايش پيوسته
 
@@ -174,6 +261,24 @@ Continuous Facing
 Contribute Translation
 در ترجمه این برنامه کمک کنید
 
+Copy &Image
+رونوشت و عکس
+
+Copy &Link Address
+رونوشت و لینک آدرس
+
+Copy Co&mment
+رونوشت و توضیح
+
+Copying text was denied (copying as image only)
+رونوشت گیری ممنوع (کپی فقط بعنوان عکس)
+
+Copyright:
+حق نشر
+
+Could not obtain Printer properties
+قادر به تعیین خصوصیات چاپ نمیباشم
+
 Couldn't initialize printer
 متأسفانه چاپگر منتخب در دسترس نیست
 
@@ -183,11 +288,14 @@ Couldn't render the page
 Created:
 :بوجود آمده
 
+Current file
+همین فایل
+
 Custom &Zoom...\tCtrl+Y
 ابعاد نمایش مخصوص\tCtrl+Y
 
 Default &Layout:
-:نحوه نمایش
+:نمایش پیش فرض
 
 Default &Zoom:
 :ابعاد نمایش
@@ -219,6 +327,15 @@ Enter password
 Enter password for %s
 را وارد کنید %s کلمه عبور برای
 
+Enter the command-line to invoke when you double-click on the PDF document:
+خط دستور را برای فرخوانی هنگام کلیک روی فایل pdf  را وارد کن
+
+Error loading %s
+نمایش خطا %s
+
+F&avorites
+دلخواهها
+
 F&orward\tAlt+Right Arrow
 جلو\tAlt+Right Arrow
 
@@ -230,6 +347,12 @@ Facing
 
 Failed to save a file
 ذخيره کردن فايل با مشکل روبرو شد
+
+Favorites
+دلخواهها
+
+File %s not found
+فایل %s پیدا نشد
 
 File Size:
 :حجم فایل
@@ -252,11 +375,17 @@ Find Previous
 Find:
 جستجو:
 
+Fit &Content\tCtrl+3
+متناسب کردن &محتویات\tCtrl+3
+
 Fit &Page\tCtrl+0
 به بزرگی پنجره\tCtrl+0
 
 Fit &Width\tCtrl+2
 به بزرگی پهنای پنجره\tCtrl+2
+
+Fit Content
+متناسب کردن محتویات
 
 Fit Page
 به بزرگی پنجره
@@ -264,8 +393,26 @@ Fit Page
 Fit Width
 به بزرگی پهنای پنجره
 
+Fit Width and Show Pages Continuously
+متناسب کردن پهنا و نمایش بدنبال هم صفحات
+
+Fit a Single Page
+متناسب کردن یک صفحه
+
+Fonts:
+قلمها
+
+Formatting the book... %d pages
+قالب بندی کتاب 000%d صفحات
+
 Found text at page %s
 پیدا شد %s متن در صفحه
+
+Found text at page %s (again)
+پیدا کردن متن در صفحه%s (دوباره)
+
+Frequently Read
+سوالات رایج
 
 GB
 GB
@@ -273,11 +420,20 @@ GB
 Go to page
 برو به صفحه
 
+Hide frequently read
+پنهان کردن مطالعه شده  مکرر
+
 Hint: Use the F3 key for finding again
 استفاده کنید F3 اشاره: برای جستجو مجدد از کلید
 
+Image files (*.%s)
+(*.%s)فایلهای تصویری
+
 KB
 KB
+
+Loading file %s...
+نمایش فایل %s....
 
 MB
 MB
@@ -289,7 +445,7 @@ Make SumatraPDF my default PDF reader
 PDF بعنوان مرورگر اصلی‌ اسناد SumatraPDF انتخاب
 
 Match Case
-با توجه به قالب حروف
+متناسب با مورد
 
 Mobi documents
 Mobi اسناد
@@ -303,17 +459,29 @@ New version %s is available. Download new version?
 Next Page
 صفحه بعدی
 
+No matches were found
+مورد مرتبطی یافت نشد
+
+No result found around line %u in file %s
+هیچ نتیجه ای در خط %u در فایل %s یافت نشد
+
 No synchronization file found
 فایل همگام سازی موجود نیست
 
+No synchronization info at this position
+هیچ اصلاعاتی در ین محل همگام نشد
+
 Number of Pages:
-تعداد صفحات
+شماره صفحات
 
 OK
 قبول
 
 Open
 باز کردن
+
+Open a document...
+باز کردن سند....
 
 Open in &Adobe Reader
 Adobe Reader باز کردن در
@@ -329,6 +497,9 @@ Microsoft XPS-Viewer باز کردن در
 
 Open in PDF-XChange
 PDF-XChange باز کردن در
+
+P&roperties
+خصوصیات
 
 P&roperties\tCtrl+D
 ...ویزگیها\tCtrl+D
@@ -348,11 +519,17 @@ PDF اسناد
 Pa&ge...\tCtrl+G
 ...صفحه\tCtrl+G
 
+Page %s
+صفحه %s
+
 Page Size:
 :ابعاد صفحه
 
 Page number %u inexistant
 موجود نیست %u صفحه
+
+Page scaling
+اندازه گیری صفحه
 
 Page:
 صفحه:
@@ -360,8 +537,29 @@ Page:
 Please wait - rendering...
 ... لطفا صبر کنید
 
+Postscript documents
+ضمیه اسناد
+
+Pr&esentation\tCtrl+L
+نمایش\tCtrl+L
+
 Previous Page
 صفحه قبلی
+
+Print
+چاپ
+
+Print range
+محدوده چاپ
+
+Printer with given name doesn't exist
+چاپگر با نام داده شده وجود ندارد
+
+Printing is still in progress. Abort and start over?
+در حال چاپ کردن .انصراف و شروع مجدد؟
+
+Printing page %d of %d...
+چاپ کردن از صفحه %d از %d
 
 Printing problem.
 مشکل در چاپ
@@ -369,14 +567,35 @@ Printing problem.
 Remember &opened files
 فایلهای باز شده را بخاطر بسپار
 
+Remove from favorites
+حذف از دلخواه ها
+
+Remove page %s from favorites
+حذف صفحه %s از دلخواه ها
+
+Replace document &colors with Windows color scheme
+جایگزینی سند و رنگها با تم رنگ ویندوز
+
 Rotate &Left\tCtrl+Shift+-
 چرخاندن به چپ\tCtrl+Shift+-
 
 Rotate &Right\tCtrl+Shift++
 چرخاندن به راست\tCtrl+Shift++
 
+Save As
+ذخیره بنام
+
+Save S&hortcut...\tCtrl+Shift+S
+...\tCtrl+Shift+Sذخیره میانبر
+
 Searching %d of %d...
 ... %d از %d در حال جستجو
+
+Select &All
+انتخاب همه
+
+Select &All\tCtrl+A
+انتخاب همه\tCtrl+A
 
 Select content with Ctrl+left mouse button
 و دکمه سمت چپ موس انتخاب کنید Ctrl متن مورد نظر را با
@@ -393,8 +612,20 @@ Show &Toolbar
 Show &pages continuously
 نمایش پیوسته صفحات
 
+Show Favorites
+نشان دادن دلخواه ها
+
+Show frequently read
+نشان دادن بیشترین خوانده شده
+
+Show the &bookmarks sidebar when available
+نشان دادن  نوار کناری علامتگذاریها هنگامیکه در دسترس است
+
 Single Page
 نمایش تک صفحه‌ای
+
+Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+متاسفانه انجام نشد!\n\n لطفاً کلید کنسل را بزنید
 
 Source file %s has no synchronization point
 نقاط همگام سازی ندارد %s فایل
@@ -404,6 +635,12 @@ Subject:
 
 SumatraPDF Options
 SumatraPDF گزینه ها
+
+SumatraPDF Update
+بروز رسانی SumatraPDF
+
+SumatraPDF crashed
+SumatraPDF خراب شد
 
 SumatraPDF is your default PDF reader
 شماست PDF مرورگر اصلی SumatraPDF
@@ -439,7 +676,7 @@ You have the latest version.
 .نسخه شما تازه‌ترین نسخه می‌باشد
 
 You have version %s
-را استفاد می‌کنید %s شما هماکنون نسکه شماره
+شما نسخه %s را دارید
 
 Zoom
 ابعاد نمایش
@@ -461,84 +698,4 @@ copying text
 
 printing document
 در حل چاپ سند
-
-# Untranslated:
-#&All selected pages
-#&Book View\tCtrl+8
-#&Copy Selection
-#&Even pages only
-#&Facing\tCtrl+7
-#&Fit pages to printable area
-#&Odd pages only
-#&Open Document
-#&Pin Document
-#&Print...
-#&Remember the password for this document
-#&Remove Document
-#&Save As...
-#&Shrink pages to printable area (if necessary)
-#&Single Page\tCtrl+6
-#&Use original page sizes
-#(page %s)
-#Add Favorite
-#Add page %s to favorites
-#Add page %s to favorites with (optional) name:
-#Add to favorites
-#All supported documents
-#Attachment: %s
-#Bookmark Shortcuts
-#Bookmark shortcut to page %s of %s
-#Bookmarks
-#Can't connect to the Internet (error %#x).
-#Comic books
-#Copy &Image
-#Copy &Link Address
-#Copy Co&mment
-#Copying text was denied (copying as image only)
-#Copyright:
-#Could not obtain Printer properties
-#Current file
-#Enter the command-line to invoke when you double-click on the PDF document:
-#Error loading %s
-#F&avorites
-#Favorites
-#File %s not found
-#Fit &Content\tCtrl+3
-#Fit Content
-#Fit Width and Show Pages Continuously
-#Fit a Single Page
-#Fonts:
-#Formatting the book... %d pages
-#Found text at page %s (again)
-#Frequently Read
-#Hide frequently read
-#Image files (*.%s)
-#Loading file %s...
-#No matches were found
-#No result found around line %u in file %s
-#No synchronization info at this position
-#Open a document...
-#P&roperties
-#Page %s
-#Page scaling
-#Postscript documents
-#Pr&esentation\tCtrl+L
-#Print
-#Print range
-#Printer with given name doesn't exist
-#Printing is still in progress. Abort and start over?
-#Printing page %d of %d...
-#Remove from favorites
-#Remove page %s from favorites
-#Replace document &colors with Windows color scheme
-#Save As
-#Save S&hortcut...\tCtrl+Shift+S
-#Select &All
-#Select &All\tCtrl+A
-#Show Favorites
-#Show frequently read
-#Show the &bookmarks sidebar when available
-#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
-#SumatraPDF Update
-#SumatraPDF crashed
 
