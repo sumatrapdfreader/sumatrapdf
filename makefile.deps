@@ -136,6 +136,11 @@ $(OS)\DisplayModel.obj: src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\DjVuEngine.obj: src\BaseEngine.h src\DjVuEngine.h src\utils\Allocator.h
 $(OS)\DjVuEngine.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\DjVuEngine.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\Doc.obj: src\BaseEngine.h src\ChmEngine.h src\DjVuEngine.h
+$(OS)\Doc.obj: src\Doc.h src\EpubEngine.h src\ImagesEngine.h
+$(OS)\Doc.obj: src\PdfEngine.h src\PsEngine.h src\utils\Allocator.h
+$(OS)\Doc.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\StrUtil.h
+$(OS)\Doc.obj: src\utils\Vec.h
 $(OS)\EbookController.obj: src\BaseEngine.h src\ChmEngine.h src\DisplayModel.h
 $(OS)\EbookController.obj: src\DisplayState.h src\DjVuEngine.h src\EbookController.h
 $(OS)\EbookController.obj: src\EbookControls.h src\EngineManager.h src\EpubEngine.h

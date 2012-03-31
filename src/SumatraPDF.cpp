@@ -1072,12 +1072,11 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
 static void UpdateToolbarAndScrollbarState(WindowInfo& win)
 {
     ToolbarUpdateStateForWindow(&win, true);
-
-    if (!win.IsDocLoaded()) {
-        ShowScrollBar(win.hwndCanvas, SB_BOTH, FALSE);
-        if (win.IsAboutWindow())
-            win::SetText(win.hwndFrame, SUMATRA_WINDOW_TITLE);
-    }
+    if (win.IsDocLoaded())
+        return;
+    ShowScrollBar(win.hwndCanvas, SB_BOTH, FALSE);
+    if (win.IsAboutWindow())
+        win::SetText(win.hwndFrame, SUMATRA_WINDOW_TITLE);
 }
 
 static void CreateSidebar(WindowInfo* win)

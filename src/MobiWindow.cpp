@@ -611,10 +611,13 @@ void OpenMobiInWindow(MobiDoc *mobiDoc, SumatraWindow& winToReplace)
     if (HasPermission(Perm_DiskAccess) && !gPluginMode)
         SHAddToRecentDocs(SHARD_PATH, fullPath);
 
+    ScopedMem<TCHAR> winTitle(str::Format(_T("%s - %s"), path::GetBaseName(fullPath), SUMATRA_WINDOW_TITLE));
+
     if (winToReplace.AsMobiWindow()) {
         MobiWindow *mw = winToReplace.AsMobiWindow();
         CrashIf(!mw);
         mw->ebookController->SetMobiDoc(mobiDoc);
+        win::SetText(mw->hwndFrame, winTitle);
         // TODO: if we have window position/last position for this file, restore it
         return;
     }
@@ -659,6 +662,8 @@ void OpenMobiInWindow(MobiDoc *mobiDoc, SumatraWindow& winToReplace)
     win->hwndFrame = hwnd;
 
     gMobiWindows.Append(win);
+    win::SetText(win->hwndFrame, winTitle);
+
     ShowWindow(hwnd, wasMaximized ? SW_SHOWMAXIMIZED : SW_SHOW);
     win->ebookController->SetMobiDoc(mobiDoc, startReparseIdx);
 }

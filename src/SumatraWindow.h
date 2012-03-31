@@ -22,6 +22,16 @@ struct SumatraWindow {
         return w;
     }
 
+#if 0
+    HWND HwndFrame() const {
+        if (Info == type)
+            return winInfo->hwndFrame;
+        if (Mobi == type)
+            return winMobi->hwndFrame;
+        return NULL;
+    }
+#endif
+
 private:
     enum Type { Info, Mobi };
     Type type;
