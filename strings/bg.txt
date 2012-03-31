@@ -269,6 +269,9 @@ Copy Co&mment
 Copying text was denied (copying as image only)
 Текстът не може да бъде копиран (копиране само като картинка)
 
+Copyright:
+Авторско право:
+
 Could not obtain Printer properties
 Настройките на принтера не са намерени
 
@@ -348,7 +351,7 @@ File %s not found
 Файлът %s не е намерен
 
 File Size:
-Размер на файла:
+Големина на файла:
 
 File:
 Файл:
@@ -392,6 +395,12 @@ Fit Width and Show Pages Continuously
 Fit a Single Page
 Оразмери една страница
 
+Fonts:
+Шрифтове:
+
+Formatting the book... %d pages
+Форматиране на книгата... %d страници
+
 Found text at page %s
 Текстът е намерен на страница %s
 
@@ -419,6 +428,9 @@ Image files (*.%s)
 KB
 KB
 
+Loading file %s...
+Зареждане на файл %s...
+
 MB
 MB
 
@@ -435,7 +447,7 @@ Mobi documents
 Mobi документи
 
 Modified:
-Модифициран:
+Променен:
 
 New version %s is available. Download new version?
 Достъпна е нова версия %s. Искате ли да я свалите?
@@ -492,7 +504,7 @@ PDF Document
 PDF документ
 
 PDF Producer:
-PDF създаден с:
+PDF създател:
 
 PDF Version:
 PDF версия:
@@ -507,7 +519,7 @@ Page %s
 Страница %s
 
 Page Size:
-Размер на страницата:
+Размери на страницата:
 
 Page number %u inexistant
 Страница с номер %u не съществува
@@ -556,6 +568,9 @@ Remove from favorites
 
 Remove page %s from favorites
 Премахни страница %s от любимите
+
+Replace document &colors with Windows color scheme
+Замени &цветовете на документа с цветовата схема на Windows
 
 Rotate &Left\tCtrl+Shift+-
 Завърти на&ляво\tCtrl+Shift+-
@@ -679,11 +694,4 @@ copying text
 
 printing document
 отпечатване на документ
-
-# Untranslated:
-#Copyright:
-#Fonts:
-#Formatting the book... %d pages
-#Loading file %s...
-#Replace document &colors with Windows color scheme
 
