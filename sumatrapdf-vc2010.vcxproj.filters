@@ -1390,6 +1390,9 @@
     <ClInclude Include="src\Doc.h">
       <Filter>sumatra\documents</Filter>
     </ClInclude>
+    <ClInclude Include="src\utils\RefCounted.h">
+      <Filter>utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\closetoc.bmp">
