@@ -79,8 +79,8 @@ public:
     static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
     // ProgressUpdateUI methods
-    virtual bool UpdateProgress(int current, int total);
-
+    virtual void UpdateProgress(int current, int total);
+    virtual bool WasCanceled();
 };
 
 class Notifications : public NotificationWndCallback {

@@ -214,14 +214,13 @@ struct FindThreadData : public ProgressUpdateUI {
         }
     }
 
-    virtual bool UpdateProgress(int current, int total) {
-        if (!WindowInfoStillValid(win) || win->findCanceled) {
-            return false;
-        }
-        if (wnd) {
+    virtual void UpdateProgress(int current, int total) {
+        if (wnd && !WasCanceled())
             QueueWorkItem(new UpdateFindStatusWorkItem(win, wnd, current, total));
-        }
-        return true;
+    }
+
+    virtual bool WasCanceled() {
+        return !WindowInfoStillValid(win) || win->findCanceled;
     }
 };
 

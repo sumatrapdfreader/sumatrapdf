@@ -195,8 +195,10 @@ bool TextSearch::FindStartingAtPage(int pageNo, ProgressUpdateUI *tracker)
         return false;
 
     int total = engine->PageCount();
-    while (1 <= pageNo && pageNo <= total &&
-           (!tracker || tracker->UpdateProgress(pageNo, total))) {
+    while (1 <= pageNo && pageNo <= total && (!tracker || !tracker->WasCanceled())) {
+        if (tracker)
+            tracker->UpdateProgress(pageNo, total);
+
         if (SKIP_PAGE == findCache[pageNo - 1]) {
             pageNo += forward ? 1 : -1;
             continue;
@@ -233,11 +235,15 @@ TextSel *TextSearch::FindFirst(int page, TCHAR *text, ProgressUpdateUI *tracker)
 
 TextSel *TextSearch::FindNext(ProgressUpdateUI *tracker)
 {
-    assert(findText);
+    CrashIf(!findText);
     if (!findText)
         return NULL;
-    if (tracker && !tracker->UpdateProgress(findPage, engine->PageCount()))
-        return NULL;
+
+    if (tracker) {
+        if (tracker->WasCanceled())
+            return NULL;
+        tracker->UpdateProgress(findPage, engine->PageCount());
+    }
 
     if (FindTextInPage())
         return &result;

@@ -15,11 +15,8 @@ enum TextSearchDirection {
 class ProgressUpdateUI
 {
 public:
-    // TODO: it seems wrong that it is used to both show the progress
-    // visually as well as check if the operation has been cancelled by the user
-    // It's certainly not reflected in the name and it's questionable those
-    // belong together
-    virtual bool UpdateProgress(int current, int total) = 0;
+    virtual void UpdateProgress(int current, int total) = 0;
+    virtual bool WasCanceled() = 0;
 };
 
 class TextSearch : public TextSelection

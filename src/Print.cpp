@@ -159,9 +159,12 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
             }
 
             current++;
-            if (progressUI && !progressUI->UpdateProgress(current, total)) {
-                AbortDoc(hdc);
-                return;
+            if (progressUI) {
+                if (progressUI->WasCanceled()) {
+                    AbortDoc(hdc);
+                    return;
+                }
+                progressUI->UpdateProgress(current, total);
             }
         }
 
@@ -252,9 +255,12 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
             }
 
             current++;
-            if (progressUI && !progressUI->UpdateProgress(current, total)) {
-                AbortDoc(hdc);
-                return;
+            if (progressUI) {
+                if (progressUI->WasCanceled()) {
+                    AbortDoc(hdc);
+                    return;
+                }
+                progressUI->UpdateProgress(current, total);
             }
         }
     }
@@ -296,9 +302,12 @@ public:
         RemoveNotification(wnd);
     }
 
-    virtual bool UpdateProgress(int current, int total) {
+    virtual void UpdateProgress(int current, int total) {
         QueueWorkItem(new PrintThreadUpdateWorkItem(win, wnd, current, total));
-        return WindowInfoStillValid(win) && !win->printCanceled && !isCanceled;
+    }
+
+    virtual bool WasCanceled() {
+        return isCanceled || !WindowInfoStillValid(win) || win->printCanceled;
     }
 
     // called when printing has been canceled
