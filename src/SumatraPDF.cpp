@@ -2243,6 +2243,10 @@ static void OnPaint(WindowInfo& win)
         win.buffer->Flush(hdc);
     } else if (!win.IsDocLoaded()) {
         // TODO: replace with notifications as far as reasonably possible
+        // note: currently it's possible to easily reload the document
+        // and/or open it in an external viewer (e.g. Adobe Reader might
+        // be able to handle PDFs that are too broken for MuPDF),
+        // a notification would break this
         ScopedFont fontRightTxt(GetSimpleFont(hdc, _T("MS Shell Dlg"), 14));
         HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
         SetBkMode(hdc, TRANSPARENT);
@@ -2471,11 +2475,23 @@ static void OnMenuSaveAs(WindowInfo& win)
 
     TCHAR dstFileName[MAX_PATH];
     str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseName(srcFileName));
-    // TODO: fix saving embedded PDF documents
-    str::TransChars(dstFileName, _T(":"), _T("_"));
+    if (str::FindChar(dstFileName, ':')) {
+        // handle embed-marks (for embedded PDF documents):
+        // remove the container document's extension and include
+        // the embedding reference in the suggested filename
+        TCHAR *colon = (TCHAR *)str::FindChar(dstFileName, ':');
+        str::TransChars(colon, _T(":"), _T("_"));
+        TCHAR *ext;
+        for (ext = colon; ext > dstFileName && *ext != '.'; ext--);
+        if (ext == dstFileName)
+            ext = colon;
+        memmove(ext, colon, (str::Len(colon) + 1) * sizeof(TCHAR));
+    }
     // Remove the extension so that it can be re-added depending on the chosen filter
-    if (str::EndsWithI(dstFileName, defExt))
+    else if (str::EndsWithI(dstFileName, defExt))
         dstFileName[str::Len(dstFileName) - str::Len(defExt)] = '\0';
+
+    ScopedMem<TCHAR> initDir(path::GetDir(srcFileName));
 
     OPENFILENAME ofn = { 0 };
     ofn.lStructSize = sizeof(ofn);
@@ -2484,6 +2500,7 @@ static void OnMenuSaveAs(WindowInfo& win)
     ofn.nMaxFile = dimof(dstFileName);
     ofn.lpstrFilter = fileFilter.Get();
     ofn.nFilterIndex = 1;
+    ofn.lpstrInitialDir = initDir;
     ofn.lpstrDefExt = defExt + 1;
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
 
@@ -2621,6 +2638,8 @@ static void OnMenuRenameFile(WindowInfo &win)
     if (str::EndsWithI(dstFileName, defExt))
         dstFileName[str::Len(dstFileName) - str::Len(defExt)] = '\0';
 
+    ScopedMem<TCHAR> initDir(path::GetDir(srcFileName));
+
     OPENFILENAME ofn = { 0 };
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = win.hwndFrame;
@@ -2630,6 +2649,7 @@ static void OnMenuRenameFile(WindowInfo &win)
     ofn.nFilterIndex = 1;
     // TODO: translate after 2.0
     ofn.lpstrTitle = _T("Rename to:");
+    ofn.lpstrInitialDir = initDir;
     ofn.lpstrDefExt = defExt + 1;
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
 
@@ -2666,7 +2686,17 @@ static void OnMenuRenameFile(WindowInfo &win)
         delete ds->thumbnail;
         ds->thumbnail = NULL;
     }
-    // TODO: update Favorites references
+
+    FileFavs *oldFav = gFavorites->GetFavByFilePath(srcFilePath);
+    if (oldFav) {
+        // move all favorites of the old file over the the new one
+        for (size_t i = 0; i < oldFav->favNames.Count(); i++) {
+            FavName *fn = oldFav->favNames.At(i);
+            gFavorites->AddOrReplace(newPath, fn->pageNo, fn->name);
+        }
+        gFavorites->RemoveAllForFile(srcFilePath);
+    }
+
     LoadDocument(dstFileName, &win);
 }
 
@@ -2679,7 +2709,7 @@ static void OnMenuSaveBookmark(WindowInfo& win)
     const TCHAR *defExt = win.dm->engine->GetDefaultFileExt();
 
     TCHAR dstFileName[MAX_PATH];
-    // Remove the extension so that it can be re-added depending on the chosen filter
+    // Remove the extension so that it can be replaced with .lnk
     str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseName(win.dm->FileName()));
     str::TransChars(dstFileName, _T(":"), _T("_"));
     if (str::EndsWithI(dstFileName, defExt))
@@ -2701,7 +2731,7 @@ static void OnMenuSaveBookmark(WindowInfo& win)
     ofn.lpstrDefExt = _T("lnk");
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
 
-    if (FALSE == GetSaveFileName(&ofn))
+    if (!GetSaveFileName(&ofn))
         return;
 
     ScopedMem<TCHAR> filename(str::Dup(dstFileName));

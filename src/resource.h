@@ -89,13 +89,13 @@
 #define IDM_FAV_ADD                     560
 #define IDM_FAV_DEL                     561
 #define IDM_FAV_TOGGLE                  562
+#define IDM_RENAME_FILE                 580
 #define IDM_DEBUG_SHOW_LINKS            590
 #define IDM_DEBUG_GDI_RENDERER          591
 #define IDM_DEBUG_CRASH_ME              592
 #define IDM_DEBUG_PAGE_LAYOUT           593
 #define IDM_DEBUG_EBOOK_UI              594
 #define IDM_FAV_FIRST                   600
-#define IDM_RENAME_FILE                 610
 #define IDM_FAV_LAST                    800
 #define IDC_GOTO_PAGE_EDIT              1000
 #define IDC_GOTO_PAGE_GO                1001
