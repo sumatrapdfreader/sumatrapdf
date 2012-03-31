@@ -150,6 +150,8 @@ public:
     virtual void Callback() = 0;
 };
 
+// TODO: also include Scoped.h, StrUtil.h, Vec.h
+//       and other commonly used headers?
 #include "RefCounted.h"
 
 #endif

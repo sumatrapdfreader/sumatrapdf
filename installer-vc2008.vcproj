@@ -221,6 +221,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\utils\RefCounted.h"
+					>
+				</File>
+				<File
 					RelativePath=".\src\utils\Scoped.h"
 					>
 				</File>

@@ -17,7 +17,7 @@ private:
     NonCopyable& operator=(const NonCopyable&);
 };
 
-// Note: I don't like ref counting. I"ve seen to many code bases
+// Note: I don't like ref counting. I've seen to many code bases
 // that overused it. Sometimes, however, it's the best solution
 // for managing the lifetime of shared objects.
 // This is a thread-safe base class for objects that are
@@ -31,19 +31,20 @@ private:
 
 protected:
     virtual ~RefCounted() {
-        CrashIf(1 != refCnt);
-        refCnt = 0;
+        CrashIf(0 != refCnt);
     }
 
 public:
     RefCounted() : refCnt(1) { }
 
-    void Ref() { CrashIf(refCnt < 0); InterlockedIncrement(&refCnt); }
+    // TODO: rename to AddRef/Release same as for COM?
+    void Ref() {
+        CrashIf(refCnt <= 0);
+        InterlockedIncrement(&refCnt);
+    }
     void UnRef() {
         if (0 == InterlockedDecrement(&refCnt)) {
-            refCnt = 1; // for the benefit of the check in the destructor
             delete this;
         }
     }
 };
-

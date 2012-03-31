@@ -40,6 +40,8 @@ public:
     };
 
     DocType type;
+    // TODO: instead of listing all supported engines,
+    //       only use a single BaseEngine reference?
     union {
         void *dummy;
         PdfEngine * pdfEngine;

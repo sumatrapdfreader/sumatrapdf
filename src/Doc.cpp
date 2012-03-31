@@ -2,13 +2,8 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
-#include "ChmEngine.h"
-#include "DjVuEngine.h"
 #include "Doc.h"
-#include "EpubEngine.h"
-#include "ImagesEngine.h"
-#include "PdfEngine.h"
-#include "PsEngine.h"
+#include "EngineManager.h"
 
 BaseEngine *Doc::AsEngine() const
 {
@@ -17,5 +12,5 @@ BaseEngine *Doc::AsEngine() const
     case Mobi:
         return NULL;
     }
-    return (BaseEngine*)pdfEngine;
+    return pdfEngine;
 }

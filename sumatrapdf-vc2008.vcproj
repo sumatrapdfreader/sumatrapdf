@@ -123,6 +123,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\Doc.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\Doc.h"
+					>
+				</File>
+				<File
 					RelativePath=".\src\EngineDump.cpp"
 					>
 				</File>
@@ -638,6 +646,10 @@
 				</File>
 				<File
 					RelativePath=".\src\utils\GeomUtil.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\utils\RefCounted.h"
 					>
 				</File>
 				<File
