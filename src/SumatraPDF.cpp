@@ -1246,11 +1246,10 @@ static bool IsMobiFile(const TCHAR *fileName)
 // Start loading a mobi file in the background
 static void LoadMobiAsync(const TCHAR *fileName, SumatraWindow& win)
 {
-    // note: ThreadLoadMobi object will get automatically deleted, so no
-    // need to keep it around
     ThreadLoadMobi *loadThread = new ThreadLoadMobi(fileName, NULL, win);
     loadThread->Start();
-    
+    // make the thread delete itself at the end of processing
+    loadThread->UnRef();
     // when loading is done, we'll call HandleFinishedMobiLoadingMsg()
 
     // TODO: we should show a notification in the window user is looking at

@@ -40,7 +40,7 @@ public:
 
     void Ref() { CrashIf(refCnt < 0); InterlockedIncrement(&refCnt); }
     void UnRef() {
-        if (1 == InterlockedDecrement(&refCnt)) {
+        if (0 == InterlockedDecrement(&refCnt)) {
             refCnt = 1; // for the benefit of the check in the destructor
             delete this;
         }

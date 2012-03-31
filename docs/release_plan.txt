@@ -22,8 +22,6 @@ target: 6/1):
   background thread
 - a smoother transition betwen different window types which
   doesn't involve closing the window
-- ref count ThreadBase objects for easier management of their
-  lifetime (which is impossible to get right with current design)
 - enable epub in ebook ui
 - a web-based translation system as described in wishilist.txt
   Server written in Go + python scripts to upload strings for

@@ -36,7 +36,6 @@ void LayoutTemp::DeletePages()
 ThreadLoadMobi::ThreadLoadMobi(const TCHAR *fn, EbookController *controller, const SumatraWindow& sumWin) :
     controller(controller)
 {
-    autoDeleteSelf = true;
     fileName = str::Dup(fn);
     win = sumWin;
 }
@@ -83,7 +82,6 @@ public:
 ThreadLayoutMobi::ThreadLayoutMobi(LayoutInfo *li, MobiDoc *doc, EbookController *ctrl) :
     layoutInfo(li), mobiDoc(doc), controller(ctrl), pageCount(0)
 {
-    autoDeleteSelf = false;
 }
 
 ThreadLayoutMobi::~ThreadLayoutMobi()
@@ -116,7 +114,6 @@ void ThreadLayoutMobi::SendPagesIfNecessary(bool force, bool finished, bool from
         memcpy(ld->pages, pages, pageCount * sizeof(PageData*));
     //lf("ThreadLayoutMobi::SendPagesIfNecessary() sending %d pages, ld=0x%x", pageCount, (int)ld);
     ld->pageCount = pageCount;
-    ld->thread = this;
     ld->threadNo = threadNo;
     ld->controller = controller;
     pageCount = 0;
@@ -191,6 +188,7 @@ EbookController::EbookController(EbookControls *ctrls) :
 
 EbookController::~EbookController()
 {
+    StopLayoutThread(true);
     EventMgr *evtMgr = ctrls->mainWnd->evtMgr;
     evtMgr->RemoveEventsForControl(ctrls->next);
     evtMgr->RemoveEventsForControl(ctrls->prev);
@@ -213,17 +211,8 @@ void EbookController::StopLayoutThread(bool forceTerminate)
 {
     if (!layoutThread)
         return;
+    layoutThread->UnRef();
     layoutThread->RequestCancelAndWaitToStop(1000, forceTerminate);
-    // note: we don't delete the thread object, it'll be deleted in
-    // EbookController::HandleMobiLayoutMsg() when its final message
-    // arrives
-    // TODO: unfortunately this leads to leaking thread objects and
-    // messages sent by them. Maintaining the lifteime of thread objects
-    // is tricky
-    // One possibility is to switch to using thread no, disallow ~ThreadBase
-    // by making it private and adding DeleteThread(int threadNo) which ensures
-    // thread object can only be deleted once by tracking undeleted threads
-    // in a Vec (and removing deleted threads from that vector)
     layoutThread = NULL;
     layoutThreadNo = -1;
     layoutTemp.DeletePages();
@@ -351,10 +340,6 @@ void EbookController::HandleMobiLayoutMsg(MobiLayoutData *ld)
     if (layoutThreadNo != ld->threadNo) {
         // this is a message from cancelled thread, we can disregard
         //lf("EbookController::MobiLayout() thread msg discarded, curr thread: %d, sending thread: %d", layoutThreadNo, ld->threadNo);
-        if (ld->finished) {
-            //lf("deleting thread %d", ld->threadNo);
-            delete ld->thread;
-        }
         return;
     }
     //lf("EbookController::HandleMobiLayoutMsg() %d pages, ld=0x%x", ld->pageCount, (int)ld);
@@ -424,9 +409,6 @@ void EbookController::HandleMobiLayoutMsg(MobiLayoutData *ld)
 
     if (ld->finished) {
         CrashIf(pagesFromBeginning || pagesFromPage);
-        delete layoutThread;
-        layoutThread = NULL;
-        layoutThreadNo = -1;
         pagesFromBeginning = new Vec<PageData*>();
         PageData **pages = layoutTemp.pagesFromBeginning.LendData();
         size_t pageCount =  layoutTemp.pagesFromBeginning.Count();

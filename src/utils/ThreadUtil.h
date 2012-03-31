@@ -92,15 +92,11 @@ public:
 };
 
 /* A very simple thread class that allows stopping a thread */
-class ThreadBase {
+class ThreadBase : public RefCounted {
 protected:
     int                 threadNo;
 
     HANDLE              hThread;
-
-    // should we delete the object when the thread function finishes?
-    // useful for "fire and forget" threads.
-    bool                autoDeleteSelf;
 
     // it's a bool but we're using LONG as this is operated on with
     // IterlockedIncrement() etc. functions.
@@ -110,17 +106,13 @@ protected:
 
     static DWORD WINAPI ThreadProc(void* data);
 
+    virtual ~ThreadBase();
+
 public:
     ThreadBase();
 
-    // Name is for debugging purposes, can be NULL.
-    // if autoDeleteSelf is true, the object will be deleted after
-    // Run() finishes. In this case don't retain this object and act
-    // on it in any way after calling Execute() as you can't know
-    // if the object has been deleted
-    ThreadBase(const char *name, bool autoDeleteSelf);
-
-    virtual ~ThreadBase();
+    // name is for debugging purposes, can be NULL.
+    ThreadBase(const char *name);
 
     // TODO: do I need to use some Interlocked*() funtion like InterlockedCompareExchange()
     // for this to be safe? It's only ever changed via RequestCancel()

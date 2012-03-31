@@ -104,14 +104,13 @@ static void SetThreadName(DWORD dwThreadID, char* threadName)
 static LONG gThreadNoSeq = 0;
 
 ThreadBase::ThreadBase() :
-      hThread(NULL), autoDeleteSelf(false),
-      cancelRequested(0), threadName(NULL)
+      hThread(NULL), cancelRequested(0), threadName(NULL)
 {
     threadNo = (int)InterlockedIncrement(&gThreadNoSeq);
     //lf("ThreadBase() %d", threadNo);
 }
 
-ThreadBase::ThreadBase(const char *name, bool autoDeleteSelf) : autoDeleteSelf(autoDeleteSelf)
+ThreadBase::ThreadBase(const char *name)
 {
     threadName = str::Dup(name);
     cancelRequested = 0;
@@ -130,27 +129,19 @@ DWORD WINAPI ThreadBase::ThreadProc(void *data)
     if (thread->threadName)
         SetThreadName(GetCurrentThreadId(), thread->threadName);
     thread->Run();
-    HANDLE hThread = thread->hThread;
-    thread->hThread = NULL;
-    if (thread->autoDeleteSelf)
-        delete thread;
-    CloseHandle(hThread);
+    CloseHandle(thread->hThread);
+    thread->UnRef();
     return 0;
 }
 
 void ThreadBase::Start()
 {
+    Ref(); // will be unref'd at the end of ThreadBase::ThreadProc
     hThread = CreateThread(NULL, 0, ThreadProc, this, 0, 0);
 }
 
 bool ThreadBase::RequestCancelAndWaitToStop(DWORD waitMs, bool terminate)
 {
-    // should not be called on threads that are auto-delete because there's
-    // a race where WaitForSingleObject() might return telling us the thread
-    // is still alive but the thread might auto-delete itself right after
-    // that and we'll crash trying to use hThread which is now garbage
-    CrashIf(autoDeleteSelf && terminate);
-
     RequestCancel();
     DWORD res = WaitForSingleObject(hThread, waitMs);
     if (WAIT_OBJECT_0 == res)

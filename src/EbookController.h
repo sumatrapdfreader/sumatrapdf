@@ -38,7 +38,6 @@ struct MobiLayoutData {
     bool               fromBeginning;
     bool               finished;
     EbookController *  controller;
-    ThreadLayoutMobi * thread;
     int                threadNo;
 };
 
