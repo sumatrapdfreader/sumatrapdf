@@ -5,7 +5,6 @@
 #define ThreadUtil_h
 
 #include "Vec.h"
-#include "RefCounted.h"
 
 #include "DebugLog.h"
 

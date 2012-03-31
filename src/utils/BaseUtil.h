@@ -150,4 +150,6 @@ public:
     virtual void Callback() = 0;
 };
 
+#include "RefCounted.h"
+
 #endif

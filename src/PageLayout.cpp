@@ -480,6 +480,8 @@ void HtmlFormatter::EmitNewPage()
     currPage->styleStack = styleStack;
     currPage->listDepth = listDepth;
     currPage->preFormatted = preFormatted;
+    // TODO: this is wrong, it needs to be font that was
+    // current at the last instruction on the page
     currPage->instructions.Append(DrawInstr::SetFont(CurrFont()));
     currY = 0.f;
 }

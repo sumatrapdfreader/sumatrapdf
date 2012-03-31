@@ -76,8 +76,6 @@ static void MobiSaveImage(const TCHAR *filePathBase, size_t imgNo, ImageData *im
 
 static void MobiSaveImages(const TCHAR *filePathBase, MobiDoc *mb)
 {
-    if (!gSaveImages)
-        return;
     for (size_t i = 0; i < mb->imagesCount; i++) {
         MobiSaveImage(filePathBase, i, mb->GetImage(i+1));
     }
@@ -117,24 +115,23 @@ static void MobiTestFile(const TCHAR *filePath)
         _tprintf(_T("Spent %.2f ms laying out %s\n"), t.GetTimeInMs(), filePath);
     }
 
-    if (!gSaveHtml) {
-        delete mobiDoc;
-        return;
+    if (gSaveHtml || gSaveImages) {
+        // Given the name of the name of source mobi file "${srcdir}/${file}.mobi"
+        // construct a base name for extracted html/image files in the form
+        // "${MOBI_SAVE_DIR}/${file}" i.e. change dir to MOBI_SAVE_DIR and
+        // remove the file extension
+        TCHAR *dir = MOBI_SAVE_DIR;
+        dir::CreateAll(dir);
+        ScopedMem<TCHAR> fileName(str::Dup(path::GetBaseName(filePath)));
+        ScopedMem<TCHAR> filePathBase(path::Join(dir, fileName));
+        TCHAR *ext = (TCHAR*)str::FindCharLast(filePathBase.Get(), '.');
+        *ext = 0;
+
+        if (gSaveHtml)
+            MobiSaveHtml(filePathBase, mobiDoc);
+        if (gSaveImages)
+            MobiSaveImages(filePathBase, mobiDoc);
     }
-
-    // Given the name of the name of source mobi file "${srcdir}/${file}.mobi"
-    // construct a base name for extracted html/image files in the form
-    // "${MOBI_SAVE_DIR}/${file}" i.e. change dir to MOBI_SAVE_DIR and
-    // remove the file extension
-    TCHAR *dir = MOBI_SAVE_DIR;
-    dir::CreateAll(dir);
-    ScopedMem<TCHAR> fileName(str::Dup(path::GetBaseName(filePath)));
-    ScopedMem<TCHAR> filePathBase(path::Join(dir, fileName));
-    TCHAR *ext = (TCHAR*)str::FindCharLast(filePathBase.Get(), '.');
-    *ext = 0;
-
-    MobiSaveHtml(filePathBase, mobiDoc);
-    MobiSaveImages(filePathBase, mobiDoc);
 
     delete mobiDoc;
 }
