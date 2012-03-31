@@ -307,7 +307,7 @@ static void MakeRandomSelection(DisplayModel *dm, int pageNo)
 a human advancing one page at a time. This is mostly to run through a large number
 of PDFs before a release to make sure we're crash proof. */
 
-class StressTest : public CallbackFunc {
+class StressTest : public StressTestBase {
     WindowInfo *      win;
     RenderCache *     renderCache;
     Timer             currPageRenderTime;
@@ -334,7 +334,6 @@ class StressTest : public CallbackFunc {
     bool GoToNextPage();
     bool GoToNextFile();
 
-    void OnTimer();
     void TickTimer();
     void Finished(bool success);
 
@@ -344,10 +343,10 @@ public:
         filesCount(0), cycles(1), fileIndex(0)
         { }
 
-    void GetLogInfo(str::Str<char> *s);
     void Start(const TCHAR *path, const TCHAR *filter, const TCHAR *ranges, int cycles);
 
-    virtual void Callback() { OnTimer(); }
+    virtual void OnTimer();
+    virtual void GetLogInfo(str::Str<char> *s);
 };
 
 void StressTest::Start(const TCHAR *path, const TCHAR *filter, const TCHAR *ranges, int cycles)
@@ -604,11 +603,6 @@ void StressTest::GetLogInfo(str::Str<char> *s)
     s->AppendFmt(", stress test rendered %d files in ", filesCount);
     FormatTime(SecsSinceSystemTime(stressStartTime), s);
     s->AppendFmt(", currPage: %d", currPage);
-}
-
-void GetStressTestInfo(CallbackFunc *dst, str::Str<char> *s)
-{
-    static_cast<StressTest *>(dst)->GetLogInfo(s);
 }
 
 void StartStressTest(WindowInfo *win, const TCHAR *path, const TCHAR *filter,

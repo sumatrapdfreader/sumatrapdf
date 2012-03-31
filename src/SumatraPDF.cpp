@@ -1197,12 +1197,12 @@ static void DeleteWindowInfo(WindowInfo *win)
     delete win;
 }
 
-class FileChangeCallback : public UIThreadWorkItem, public CallbackFunc
+class FileChangeCallback : public UIThreadWorkItem, public FileChangeObserver
 {
 public:
     FileChangeCallback(WindowInfo *win) : UIThreadWorkItem(win) { }
 
-    virtual void Callback() {
+    virtual void OnFileChanged() {
         // We cannot call win->Reload directly as it could cause race conditions
         // between the watching thread and the main thread (and only pass a copy of this
         // callback to the UIThreadMarshaller, as the object will be deleted after use)
@@ -2303,7 +2303,7 @@ void GetStressTestInfo(str::Str<char>* s)
         char buf[256];
         str::conv::ToCodePageBuf(buf, dimof(buf), w->loadedFilePath, CP_UTF8);
         s->Append(buf);
-        GetStressTestInfo(w->stressTest, s);
+        w->stressTest->GetLogInfo(s);
         s->Append("\r\n");
     }
 }
@@ -3993,7 +3993,7 @@ static void OnTimer(WindowInfo& win, HWND hwnd, WPARAM timerId)
         break;
 
     case DIR_STRESS_TIMER_ID:
-        win.stressTest->Callback();
+        win.stressTest->OnTimer();
         break;
     }
 }

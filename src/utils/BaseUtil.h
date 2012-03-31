@@ -144,12 +144,6 @@ inline bool memeq(const void *s1, const void *s2, size_t len)
     return 0 == memcmp(s1, s2, len);
 }
 
-class CallbackFunc {
-public:
-    virtual ~CallbackFunc() { }
-    virtual void Callback() = 0;
-};
-
 // TODO: also include Scoped.h, StrUtil.h, Vec.h
 //       and other commonly used headers?
 #include "RefCounted.h"

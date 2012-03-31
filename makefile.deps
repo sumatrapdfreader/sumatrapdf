@@ -478,12 +478,12 @@ $(OS)\WindowInfo.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
 $(OS)\WindowInfo.obj: src\EngineManager.h src\EpubEngine.h src\FileWatch.h
 $(OS)\WindowInfo.obj: src\ImagesEngine.h src\Notifications.h src\PdfEngine.h
 $(OS)\WindowInfo.obj: src\PdfSync.h src\Print.h src\PsEngine.h
-$(OS)\WindowInfo.obj: src\Resource.h src\Selection.h src\SumatraPDF.h
-$(OS)\WindowInfo.obj: src\SumatraWindow.h src\TextSearch.h src\TextSelection.h
-$(OS)\WindowInfo.obj: src\Translations.h src\utils\Allocator.h src\utils\BaseUtil.h
-$(OS)\WindowInfo.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\RefCounted.h
-$(OS)\WindowInfo.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
-$(OS)\WindowInfo.obj: src\utils\WinUtil.h src\WindowInfo.h
+$(OS)\WindowInfo.obj: src\Resource.h src\Selection.h src\StressTesting.h
+$(OS)\WindowInfo.obj: src\SumatraPDF.h src\SumatraWindow.h src\TextSearch.h
+$(OS)\WindowInfo.obj: src\TextSelection.h src\Translations.h src\utils\Allocator.h
+$(OS)\WindowInfo.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
+$(OS)\WindowInfo.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OS)\WindowInfo.obj: src\utils\Vec.h src\utils\WinUtil.h src\WindowInfo.h
 $(OU)\BencUtil.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\BencUtil.h
 $(OU)\BencUtil.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\StrUtil.h
 $(OU)\BencUtil.obj: src\utils\Vec.h
