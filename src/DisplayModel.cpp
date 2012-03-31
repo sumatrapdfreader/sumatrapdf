@@ -1426,35 +1426,24 @@ void DisplayModel::RotateBy(int newRotation)
 TCHAR *DisplayModel::GetTextInRegion(int pageNo, RectD region)
 {
     RectI *coords;
-    TCHAR *pageText = engine->ExtractPageText(pageNo, _T("\r\n"), &coords);
-    if (!pageText)
+    const TCHAR *pageText = textCache->GetData(pageNo, NULL, &coords);
+    if (str::IsEmpty(pageText))
         return NULL;
 
+    str::Str<TCHAR> result;
     RectI regionI = region.Round();
-    TCHAR *result = SAZA(TCHAR, str::Len(pageText) + 1);
-    if (!result)
-        return NULL;
-    TCHAR *dest = result;
-    for (TCHAR *src = pageText; *src; src++) {
-        if (*src != '\r' && *src != '\n') {
+    for (const TCHAR *src = pageText; *src; src++) {
+        if (*src != '\n') {
             RectI rect = coords[src - pageText];
             RectI isect = regionI.Intersect(rect);
-            if (!isect.IsEmpty() && 1.0 * isect.dx * isect.dy / (rect.dx * rect.dy) >= 0.3) {
-                *dest++ = *src;
-                //lf("Char: %c : %d; ushort: %hu", (char)c, (int)c, (unsigned short)c);
-                //lf("Found char: %c : %hu; real %c : %hu", c, (unsigned short)(unsigned char) c, ln->text[i].c, ln->text[i].c);
-            }
-        } else if (dest > result && *(dest - 1) != '\n') {
-            *dest++ = *src;
-            //lf("Char: %c : %d; ushort: %hu", (char)buf[p], (int)(unsigned char)buf[p], buf[p]);
+            if (!isect.IsEmpty() && 1.0 * isect.dx * isect.dy / (rect.dx * rect.dy) >= 0.3)
+                result.Append(*src);
         }
+        else if (result.Count() > 0 && result.Last() != '\n')
+            result.Append(_T("\r\n"), 2);
     }
-    *dest = '\0';
 
-    delete[] coords;
-    free(pageText);
-
-    return result;
+    return result.StealData();
 }
 
 // returns true if it was necessary to scroll the display (horizontally or vertically)
