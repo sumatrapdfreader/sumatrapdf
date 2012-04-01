@@ -359,9 +359,11 @@ bool Fb2Doc::Load()
         str::EndsWithI(fileName, _T(".zfb2"))) {
         ZipFile archive(fileName);
         data.Set(archive.GetFileData((size_t)0, &len));
+        isZipped = true;
     }
     else {
         data.Set(file::ReadAll(fileName, &len));
+        isZipped = false;
     }
     if (!data)
         return false;

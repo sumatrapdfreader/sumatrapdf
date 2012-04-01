@@ -1,8 +1,8 @@
 /* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// Test engines to see how well the BaseEngine API fits flowed ebook formats
-// (pages are layed out the same as for a "B Format" paperback: 5.12" x 7.8")
+// engines which render flowed ebook formats into fixed pages through the BaseEngine API
+// (pages are mostly layed out the same as for a "B Format" paperback: 5.12" x 7.8")
 
 #include "EpubEngine.h"
 #include "Scoped.h"
@@ -883,7 +883,9 @@ public:
     }
 
     virtual TCHAR *GetProperty(char *name) { return doc->GetProperty(name); }
-    virtual const TCHAR *GetDefaultFileExt() const { return _T(".fb2"); }
+    virtual const TCHAR *GetDefaultFileExt() const {
+        return doc && doc->isZipped ? _T(".fb2z") : _T(".fb2");
+    }
 
     virtual bool HasTocTree() const;
     virtual DocTocItem *GetTocTree();
@@ -1526,7 +1528,9 @@ public:
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
-    virtual const TCHAR *GetDefaultFileExt() const { return _T(".txt"); }
+    virtual const TCHAR *GetDefaultFileExt() const {
+        return fileName ? path::GetExt(fileName) : _T(".txt");
+    }
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
 
 protected:

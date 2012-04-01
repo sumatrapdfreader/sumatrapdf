@@ -64,6 +64,8 @@ public:
     Fb2Doc(const TCHAR *fileName);
     ~Fb2Doc();
 
+    bool isZipped;
+
     const char *GetTextData(size_t *lenOut);
     ImageData2 *GetImageData(const char *id);
 

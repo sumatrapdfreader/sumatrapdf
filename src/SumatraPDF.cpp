@@ -2822,7 +2822,7 @@ void OnMenuOpen(SumatraWindow& win)
         { _TR("Mobi documents"),        _T("*.mobi"),       true },
 #ifdef ENABLE_EBOOK_ENGINES
         { _TR("EPUB ebooks"),           _T("*.epub"),       true },
-        { _T("FictionBooks"),           _T("*.fb2"),        true },
+        { _T("FictionBooks"),           _T("*.fb2;*.fb2z;*.zfb2"), true },
         // TODO: translate after 2.0
         { _T("Text documents"),         _T("*.txt;*.log"),  true },
 #endif
