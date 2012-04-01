@@ -393,6 +393,12 @@ Sovita leveys ja näytä sivut peräkkäin
 Fit a Single Page
 Sovita yksittäinen sivu
 
+Fonts:
+Fontit:
+
+Formatting the book... %d pages
+Muotoillaan kirjaa... %d sivua
+
 Found text at page %s
 Tekstiä löytyi sivulta %s
 
@@ -419,6 +425,9 @@ Kuvatiedostot (*.%s)
 
 KB
 Kt
+
+Loading file %s...
+Ladataan tiedostoa %s...
 
 MB
 Mt
@@ -683,8 +692,5 @@ tulostetaan asiakirjaa
 
 # Untranslated:
 #Copyright:
-#Fonts:
-#Formatting the book... %d pages
-#Loading file %s...
 #Replace document &colors with Windows color scheme
 
