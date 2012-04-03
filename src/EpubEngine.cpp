@@ -623,9 +623,7 @@ public:
     virtual TCHAR *GetProperty(char *name) { return doc->GetProperty(name); }
     virtual const TCHAR *GetDefaultFileExt() const { return _T(".epub"); }
 
-    virtual bool HasTocTree() const {
-        return ScopedMem<char>(doc->GetTocData()) != NULL;
-    }
+    virtual bool HasTocTree() const { return doc->HasToc(); }
     virtual DocTocItem *GetTocTree();
 
 protected:
@@ -671,67 +669,40 @@ bool EpubEngineImpl::FinishLoading()
     return pages->Count() > 0;
 }
 
-DocTocItem *EpubEngineImpl::BuildTocTree(HtmlPullParser& parser, int& idCounter)
-{
-    ScopedMem<TCHAR> itemText, itemSrc;
-    EbookTocItem *root = NULL;
-    int level = -1;
+class EpubTocBuilder : public EpubTocVisitor {
+    EpubDoc *doc;
+    EpubEngine *engine;
+    EbookTocItem *root;
+    int idCounter;
 
-    HtmlToken *tok;
-    while ((tok = parser.Next()) && !tok->IsError() && (!tok->IsEndTag() || !tok->NameIs("navMap") && !tok->NameIs("ncx:navMap"))) {
-        if (tok->IsTag() && (tok->NameIs("navPoint") || tok->NameIs("ncx:navPoint"))) {
-            if (itemText) {
-                PageDestination *dest;
-                if (!itemSrc)
-                    dest = NULL;
-                else if (IsExternalUrl(itemSrc))
-                    dest = new SimpleDest2(0, RectD(), itemSrc.StealData());
-                else
-                    dest = GetNamedDest(itemSrc);
-                itemSrc.Set(NULL);
-                EbookTocItem *item = new EbookTocItem(itemText.StealData(), dest);
-                item->id = ++idCounter;
-                item->open = level <= 2;
-                AppendTocItem(root, item, level);
-            }
-            if (tok->IsStartTag())
-                level++;
-            else if (tok->IsEndTag())
-                level--;
-        }
-        else if (tok->IsStartTag() && (tok->NameIs("text") || tok->NameIs("ncx:text"))) {
-            tok = parser.Next();
-            if (tok->IsText())
-                itemText.Set(str::conv::FromHtmlUtf8(tok->s, tok->sLen));
-            else if (tok->IsError())
-                break;
-        }
-        else if (tok->IsTag() && !tok->IsEndTag() && (tok->NameIs("content") || tok->NameIs("ncx:content"))) {
-            AttrInfo *attrInfo = tok->GetAttrByName("src");
-            if (attrInfo)
-                itemSrc.Set(str::conv::FromHtmlUtf8(attrInfo->val, attrInfo->valLen));
-        }
+public:
+    EpubTocBuilder(EpubEngine *engine, EpubDoc *doc) :
+        engine(engine), doc(doc), root(NULL), idCounter(0) { }
+
+    EbookTocItem *GetTocRoot() {
+        doc->ParseToc(this);
+        return root;
     }
 
-    return root;
-}
+    virtual void visit(const TCHAR *name, const TCHAR *url, int level) {
+        PageDestination *dest;
+        if (!url)
+            dest = NULL;
+        else if (IsExternalUrl(url))
+            dest = new SimpleDest2(0, RectD(), str::Dup(url));
+        else
+            dest = engine->GetNamedDest(url);
+
+        EbookTocItem *item = new EbookTocItem(str::Dup(name), dest);
+        item->id = ++idCounter;
+        item->open = level <= 2;
+        AppendTocItem(root, item, level);
+    }
+};
 
 DocTocItem *EpubEngineImpl::GetTocTree()
 {
-    ScopedMem<char> tocXml(doc->GetTocData());
-    if (!tocXml)
-        return NULL;
-
-    HtmlPullParser parser(tocXml, str::Len(tocXml));
-    HtmlToken *tok;
-    // skip to the start of the navMap
-    while ((tok = parser.Next()) && !tok->IsError()) {
-        if (tok->IsStartTag() && (tok->NameIs("navMap") || tok->NameIs("ncx:navMap"))) {
-            int idCounter = 0;
-            return BuildTocTree(parser, idCounter);
-        }
-    }
-    return NULL;
+    return EpubTocBuilder(this, doc).GetTocRoot();
 }
 
 bool EpubEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
@@ -884,7 +855,7 @@ public:
 
     virtual TCHAR *GetProperty(char *name) { return doc->GetProperty(name); }
     virtual const TCHAR *GetDefaultFileExt() const {
-        return doc && doc->isZipped ? _T(".fb2z") : _T(".fb2");
+        return doc && doc->IsZipped() ? _T(".fb2z") : _T(".fb2");
     }
 
     virtual bool HasTocTree() const;

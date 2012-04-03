@@ -10,6 +10,12 @@
 #include "Vec.h"
 #include "ZipUtil.h"
 
+inline TCHAR *FromHtmlUtf8(const char *s, size_t len)
+{
+    ScopedMem<char> tmp(str::DupN(s, len));
+    return DecodeHtmlEntitites(tmp, CP_UTF8);
+}
+
 /* URL handling helpers */
 
 char *NormalizeURL(const char *url, const char *base)
@@ -287,11 +293,60 @@ TCHAR *EpubDoc::GetProperty(const char *name)
     return NULL;
 }
 
-char *EpubDoc::GetTocData()
+bool EpubDoc::HasToc() const
+{
+    return tocPath != NULL;
+}
+
+bool EpubDoc::ParseToc(EpubTocVisitor *visitor)
 {
     if (!tocPath)
-        return NULL;
-    return zip.GetFileData(tocPath);
+        return false;
+    size_t tocDataLen;
+    ScopedMem<char> tocData(zip.GetFileData(tocPath, &tocDataLen));
+    if (!tocData)
+        return false;
+
+    HtmlPullParser parser(tocData, tocDataLen);
+    HtmlToken *tok;
+    // skip to the start of the navMap
+    while ((tok = parser.Next()) && !tok->IsError()) {
+        if (tok->IsStartTag() && (tok->NameIs("navMap") || tok->NameIs("ncx:navMap")))
+            break;
+    }
+    if (!tok || tok->IsError())
+        return false;
+
+    ScopedMem<TCHAR> itemText, itemSrc;
+    int level = -1;
+
+    while ((tok = parser.Next()) && !tok->IsError() && (!tok->IsEndTag() || !tok->NameIs("navMap") && !tok->NameIs("ncx:navMap"))) {
+        if (tok->IsTag() && (tok->NameIs("navPoint") || tok->NameIs("ncx:navPoint"))) {
+            if (itemText) {
+                visitor->visit(itemText, itemSrc, level);
+                itemText.Set(NULL);
+                itemSrc.Set(NULL);
+            }
+            if (tok->IsStartTag())
+                level++;
+            else if (tok->IsEndTag())
+                level--;
+        }
+        else if (tok->IsStartTag() && (tok->NameIs("text") || tok->NameIs("ncx:text"))) {
+            tok = parser.Next();
+            if (tok->IsText())
+                itemText.Set(FromHtmlUtf8(tok->s, tok->sLen));
+            else if (tok->IsError())
+                break;
+        }
+        else if (tok->IsTag() && !tok->IsEndTag() && (tok->NameIs("content") || tok->NameIs("ncx:content"))) {
+            AttrInfo *attrInfo = tok->GetAttrByName("src");
+            if (attrInfo)
+                itemSrc.Set(FromHtmlUtf8(attrInfo->val, attrInfo->valLen));
+        }
+    }
+
+    return true;
 }
 
 bool EpubDoc::VerifyEpub(ZipFile& zip)
@@ -340,7 +395,8 @@ EpubDoc *EpubDoc::CreateFromStream(IStream *stream)
 
 /* FictionBook2 */
 
-Fb2Doc::Fb2Doc(const TCHAR *fileName) : fileName(str::Dup(fileName)) { }
+Fb2Doc::Fb2Doc(const TCHAR *fileName) : fileName(str::Dup(fileName)),
+    isZipped(false), hasToc(false) { }
 
 Fb2Doc::~Fb2Doc()
 {
@@ -361,10 +417,8 @@ bool Fb2Doc::Load()
         data.Set(archive.GetFileData((size_t)0, &len));
         isZipped = true;
     }
-    else {
+    else
         data.Set(file::ReadAll(fileName, &len));
-        isZipped = false;
-    }
     if (!data)
         return false;
 
@@ -489,6 +543,11 @@ TCHAR *Fb2Doc::GetProperty(const char *name)
     if (str::Eq(name, "Author") && docAuthor)
         return str::Dup(docAuthor);
     return NULL;
+}
+
+bool Fb2Doc::IsZipped()
+{
+    return isZipped;
 }
 
 const char *Fb2Doc::GetHrefName()

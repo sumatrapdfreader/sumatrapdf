@@ -45,7 +45,7 @@ public:
     const char *GetIndexPath();
     Vec<char *> *GetAllPaths();
 
-    bool HasToc();
+    bool HasToc() const;
     bool ParseToc(ChmTocVisitor *visitor);
 
     static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);

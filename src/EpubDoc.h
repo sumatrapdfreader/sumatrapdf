@@ -18,6 +18,12 @@ struct ImageData2 {
     size_t  idx; // document specific index at which to find this image
 };
 
+// note: same interface as ChmTocVisitor
+class EpubTocVisitor {
+public:
+    virtual void visit(const TCHAR *name, const TCHAR *url, int level) = 0;
+};
+
 class EpubDoc {
     ZipFile zip;
     str::Str<char> htmlData;
@@ -39,7 +45,9 @@ public:
     ImageData2 *GetImageData(const char *id, const char *pagePath);
 
     TCHAR *GetProperty(const char *name);
-    char *GetTocData();
+
+    bool HasToc() const;
+    bool ParseToc(EpubTocVisitor *visitor);
 
     static bool IsSupportedFile(const TCHAR *fileName, bool sniff);
     static EpubDoc *CreateFromFile(const TCHAR *fileName);
@@ -57,6 +65,9 @@ class Fb2Doc {
     ScopedMem<TCHAR> docAuthor;
     ScopedMem<char> hrefName;
 
+    bool isZipped;
+    bool hasToc;
+
     bool Load();
     void ExtractImage(HtmlPullParser *parser, HtmlToken *tok);
 
@@ -64,13 +75,13 @@ public:
     Fb2Doc(const TCHAR *fileName);
     ~Fb2Doc();
 
-    bool isZipped;
 
     const char *GetTextData(size_t *lenOut);
     ImageData2 *GetImageData(const char *id);
 
     TCHAR *GetProperty(const char *name);
     const char *GetHrefName();
+    bool IsZipped();
 
     static bool IsSupportedFile(const TCHAR *fileName, bool sniff);
     static Fb2Doc *CreateFromFile(const TCHAR *fileName);

@@ -275,7 +275,7 @@ Vec<char *> *ChmDoc::GetAllPaths()
     return paths;
 }
 
-bool ChmDoc::HasToc()
+bool ChmDoc::HasToc() const
 {
     return tocPath != NULL;
 }
