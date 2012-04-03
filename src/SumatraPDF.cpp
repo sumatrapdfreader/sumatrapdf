@@ -2496,8 +2496,6 @@ static void OnMenuSaveAs(WindowInfo& win)
     else if (str::EndsWithI(dstFileName, defExt))
         dstFileName[str::Len(dstFileName) - str::Len(defExt)] = '\0';
 
-    ScopedMem<TCHAR> initDir(path::GetDir(srcFileName));
-
     OPENFILENAME ofn = { 0 };
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = win.hwndFrame;
@@ -2505,9 +2503,11 @@ static void OnMenuSaveAs(WindowInfo& win)
     ofn.nMaxFile = dimof(dstFileName);
     ofn.lpstrFilter = fileFilter.Get();
     ofn.nFilterIndex = 1;
-    ofn.lpstrInitialDir = initDir;
     ofn.lpstrDefExt = defExt + 1;
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
+    // note: explicitly not setting lpstrInitialDir so that the OS
+    // picks a reasonable default (in particular, we don't want this
+    // in plugin mode, which is likely the main reason for saving as...)
 
     bool ok = GetSaveFileName(&ofn);
     if (!ok)
