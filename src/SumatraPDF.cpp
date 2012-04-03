@@ -106,6 +106,10 @@ TCHAR *          gPluginURL = NULL; // owned by CommandLineInfo in WinMain
 #define SPLITTER_DY         4
 #define TOC_MIN_DY          100
 
+// minimum size of the window
+#define MIN_WIN_DX 480
+#define MIN_WIN_DY 320
+
 #define REPAINT_TIMER_ID            1
 #define REPAINT_MESSAGE_DELAY_IN_MS 1000
 
@@ -4670,6 +4674,13 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
     return 0;
 }
 
+static LRESULT OnFrameGetMinMaxInfo(MINMAXINFO *info)
+{
+    info->ptMinTrackSize.x = MIN_WIN_DX;
+    info->ptMinTrackSize.y = MIN_WIN_DY;
+    return 0;
+}
+
 static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     WindowInfo *    win;
@@ -4693,6 +4704,9 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
                 FrameOnSize(win, dx, dy);
             }
             break;
+
+        case WM_GETMINMAXINFO:
+            return OnFrameGetMinMaxInfo((MINMAXINFO*)lParam);
 
         case WM_MOVE:
             if (win) {
