@@ -12,5 +12,5 @@ BaseEngine *Doc::AsEngine() const
     case Mobi:
         return NULL;
     }
-    return pdfEngine;
+    return engine;
 }
