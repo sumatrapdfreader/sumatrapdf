@@ -8,7 +8,7 @@ Next version:
 * added menu item to rename a file (contributed by Vasily Fomin)
 * support multi-page TIFF files
 
-2.0 (????-??-??)
+2.0 (2012-04-02)
 
 * support for mobi ebook format
 * we can now open CHM documents from network drives
