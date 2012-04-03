@@ -199,9 +199,10 @@ static TCHAR *GetInstallationDir()
     // fall back to %ProgramFiles%
     TCHAR buf[MAX_PATH] = {0};
     BOOL ok = SHGetSpecialFolderPath(NULL, buf, CSIDL_PROGRAM_FILES, FALSE);
-    if (!ok)
-        return NULL;
-    return path::Join(buf, TAPP);
+    if (ok)
+        return path::Join(buf, TAPP);
+    // fall back to C:\ as a last resort
+    return str::Dup(_T("C:\\"));
 #else
     // fall back to the uninstaller's path
     return path::GetDir(GetOwnPath());
