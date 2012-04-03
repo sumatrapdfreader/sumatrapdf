@@ -202,7 +202,7 @@ static TCHAR *GetInstallationDir()
     if (ok)
         return path::Join(buf, TAPP);
     // fall back to C:\ as a last resort
-    return str::Dup(_T("C:\\"));
+    return str::Dup(_T("C:\\" TAPP));
 #else
     // fall back to the uninstaller's path
     return path::GetDir(GetOwnPath());
