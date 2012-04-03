@@ -88,11 +88,11 @@ Contributor: WangKing (http://wkismet.spaces.live.com)
 &Odd pages only
 仅奇数页(&O)
 
-&Open\tCtrl+O
-打开(&O)\tCtrl+O
-
 &Open Document
 打开文件(&O)
+
+&Open...\tCtrl+O
+打开(&O)...\tCtrl+O
 
 &Options...
 选项(&O)...

@@ -79,8 +79,8 @@ Contributor: Hasitha Jayasooriya (hasithakj@gmail.com)
 &Odd pages only
 &ඔත්තෙ පිටු පමණි
 
-&Open\tCtrl+O
-&විවෘත කරන්න (O)\tCtrl+O
+&Open...\tCtrl+O
+&විවෘත කරන්න... (O)\tCtrl+O
 
 &Options...
 &විකල්ප... (O)

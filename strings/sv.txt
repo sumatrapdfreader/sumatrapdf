@@ -94,11 +94,11 @@ Nästa sida\t->
 &Odd pages only
 Endast &udda sidor
 
-&Open\tCtrl+O
-&Öppna...\tCtrl+O
-
 &Open Document
 &Öppna dokument
+
+&Open...\tCtrl+O
+&Öppna...\tCtrl+O
 
 &Options...
 &Inställningar...

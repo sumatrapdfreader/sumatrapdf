@@ -88,11 +88,11 @@ Sljedeća stranica\t->
 &Odd pages only
 Samo &neparne stranice
 
-&Open\tCtrl+O
-&Otvori\tCtrl+O
-
 &Open Document
 &Otvori dokument
+
+&Open...\tCtrl+O
+&Otvori...\tCtrl+O
 
 &Options...
 Opcije...

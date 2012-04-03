@@ -97,11 +97,11 @@ Volgende pagina\t->
 &Odd pages only
 Alleen &Oneven pagina's
 
-&Open\tCtrl+O
-&Openen\tCtrl+O
-
 &Open Document
 Document &Openen
+
+&Open...\tCtrl+O
+&Openen...\tCtrl+O
 
 &Options...
 &Opties...

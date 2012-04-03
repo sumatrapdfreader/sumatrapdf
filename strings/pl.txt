@@ -89,11 +89,11 @@ Nie, &dziękuję
 &Odd pages only
 Strony &nieparzyste
 
-&Open\tCtrl+O
-&Otwórz…\tCtrl+O
-
 &Open Document
 &Otwórz dokument
+
+&Open...\tCtrl+O
+&Otwórz…\tCtrl+O
 
 &Options...
 &Opcje...
@@ -111,7 +111,7 @@ Strony &nieparzyste
 &Drukuj...
 
 &Print...\tCtrl+P
-&Drukuj\tCtrl+P
+&Drukuj...\tCtrl+P
 
 &Print... (denied)
 &Drukuj... (odmówiono)
@@ -129,7 +129,7 @@ Pamiętaj ustawienia dla &każdego dokumentu
 Zapisz jako...
 
 &Save As...\tCtrl+S
-Zapisz &jako…\tCtrl+S
+Zapisz &jako...\tCtrl+S
 
 &Settings
 &Ustawienia

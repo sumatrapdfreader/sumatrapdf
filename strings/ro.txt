@@ -89,11 +89,11 @@ Pagina următoare\t->
 &Odd pages only
 Doar paginile impare
 
-&Open\tCtrl+O
-&Deschidere\tCtrl+O
-
 &Open Document
 Deschide d&ocument
+
+&Open...\tCtrl+O
+&Deschidere...\tCtrl+O
 
 &Options...
 &Opțiuni...
@@ -111,7 +111,7 @@ Pagina anterioară\t<-
 &Tipărește...
 
 &Print...\tCtrl+P
-I&mprimare\tCtrl+P
+I&mprimare...\tCtrl+P
 
 &Print... (denied)
 &Imprimare... (interzisă)

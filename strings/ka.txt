@@ -88,11 +88,11 @@ Contributor: Beqa Arabuli (arabulibeqa@yahoo.com)
 &Odd pages only
 მხოლოდ &კენტი გვერდები
 
-&Open\tCtrl+O
-&გახსნა\tCtrl+O
-
 &Open Document
 &დოკუმენტის გახსნა
+
+&Open...\tCtrl+O
+&გახსნა...\tCtrl+O
 
 &Options...
 &პარამეტრები...
@@ -110,7 +110,7 @@ Contributor: Beqa Arabuli (arabulibeqa@yahoo.com)
 &ამობეჭდვა...
 
 &Print...\tCtrl+P
-&ამობეჭდვა\tCtrl+P
+&ამობეჭდვა...\tCtrl+P
 
 &Print... (denied)
 &ამობეჭდვა... (გაუქმდა)

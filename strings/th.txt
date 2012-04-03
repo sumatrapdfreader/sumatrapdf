@@ -43,8 +43,8 @@ Contributor: Uthen Phutneam
 &Next Page\tRight Arrow
 หน้าถัดไป\t->
 
-&Open\tCtrl+O
-เปิด\tCtrl+O
+&Open...\tCtrl+O
+เปิด...\tCtrl+O
 
 &Previous Page\tLeft Arrow
 หน้าก่อนหน้า\t<-
@@ -53,7 +53,7 @@ Contributor: Uthen Phutneam
 พิมพ์\tCtrl+P
 
 &Save As...\tCtrl+S
-บันทึกเป็น\tCtrl+S
+บันทึกเป็น...\tCtrl+S
 
 &Skip this version
 ช้ามเวอร์ชั่นนี้ไป

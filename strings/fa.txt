@@ -93,11 +93,11 @@ Contributor: داود فخیم
 &Odd pages only
 فقط صفحات فرد
 
-&Open\tCtrl+O
-&باز کردن\tCtrl+O
-
 &Open Document
 باز کردن سند
+
+&Open...\tCtrl+O
+&باز کردن...\tCtrl+O
 
 &Options...
 &گزینه ها
@@ -115,7 +115,7 @@ Contributor: داود فخیم
 چاپ کردن000
 
 &Print...\tCtrl+P
-&چاپ\tCtrl+P
+&چاپ...\tCtrl+P
 
 &Print... (denied)
 &چاپ(ممنوع).. 

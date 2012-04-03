@@ -40,14 +40,14 @@ Peji yekupedzisira\tEnd
 &Next Page\tRight Arrow
 Peji yemberi\t->
 
-&Open\tCtrl+O
-Vhura\tCtrl+0
+&Open...\tCtrl+O
+Vhura...\tCtrl+0
 
 &Previous Page\tLeft Arrow
 Peji yesure\t<-
 
 &Print...\tCtrl+P
-&Printa\tCtrl+P
+&Printa...\tCtrl+P
 
 &Save As...\tCtrl+S
 &Sevha se...\tCtrl+S

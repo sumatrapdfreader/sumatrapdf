@@ -44,14 +44,14 @@ Contributor: Shabab Mustafa (shabab.mustafa@gmail.com)
 &Next Page\tRight Arrow
 পরবর্তী পৃষ্ঠা\t->
 
-&Open\tCtrl+O
-&উন্মীলন\tCtrl+O
+&Open...\tCtrl+O
+&উন্মীলন...\tCtrl+O
 
 &Previous Page\tLeft Arrow
 পূর্ববর্তী পৃষ্ঠা\t<-
 
 &Print...\tCtrl+P
-&মুদ্রন\tCtrl+P
+&মুদ্রন...\tCtrl+P
 
 &Save As...\tCtrl+S
 &সংরক্ষণ এই রূপে...\tCtrl+S

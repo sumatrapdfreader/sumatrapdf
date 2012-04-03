@@ -89,11 +89,11 @@ Página seguinte\t->
 &Odd pages only
 Apenas as páginas ímpares
 
-&Open\tCtrl+O
-A&brir\tCtrl+O
-
 &Open Document
 Abrir d&ocumento
+
+&Open...\tCtrl+O
+A&brir...\tCtrl+O
 
 &Options...
 &Opções...

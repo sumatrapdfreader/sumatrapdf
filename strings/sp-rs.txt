@@ -89,11 +89,11 @@ Ne, hvala
 &Odd pages only
 Samo poleđine stranica
 
-&Open\tCtrl+O
-Otvori\tCtrl+O
-
 &Open Document
 Otvori dokument
+
+&Open...\tCtrl+O
+Otvori...\tCtrl+O
 
 &Options...
 Opcije
@@ -111,7 +111,7 @@ Prethodna stranica\t<-
 Štampaj...
 
 &Print...\tCtrl+P
-Štampaj\tCtrl+P
+Štampaj...\tCtrl+P
 
 &Print... (denied)
 Štampaj... (odbijeno)

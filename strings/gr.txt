@@ -91,11 +91,11 @@ Contributor: XhmikosR
 &Odd pages only
 &Μόνο οι μονές σελίδες
 
-&Open\tCtrl+O
-Ά&νοιγμα\tCtrl+O
-
 &Open Document
 Ά&νοιγμα Εγγράφου
+
+&Open...\tCtrl+O
+Ά&νοιγμα...\tCtrl+O
 
 &Options...
 &Επιλογές...
@@ -113,7 +113,7 @@ Contributor: XhmikosR
 &Εκτύπωση
 
 &Print...\tCtrl+P
-&Εκτύπωση\tCtrl+P
+&Εκτύπωση...\tCtrl+P
 
 &Print... (denied)
 &Εκτύπωση... (απαγορεύεται)
@@ -131,7 +131,7 @@ Contributor: XhmikosR
 &Αποθήκευση ως...
 
 &Save As...\tCtrl+S
-&Αποθήκευση ως\tCtrl+S
+&Αποθήκευση ως...\tCtrl+S
 
 &Settings
 &Ρυθμίσεις

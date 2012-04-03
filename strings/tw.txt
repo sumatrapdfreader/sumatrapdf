@@ -89,9 +89,6 @@ Contributor: theowoo (http://grnrnat.net.ru/)
 &Odd pages only
 只有奇數頁(&O)
 
-&Open\tCtrl+O
-開啟\tCtrl+O
-
 &Open Document
 開啟此文件(&O)
 
@@ -111,7 +108,7 @@ Contributor: theowoo (http://grnrnat.net.ru/)
 列印...(&P)
 
 &Print...\tCtrl+P
-列印(&P)\tCtrl+P
+列印(&P)...\tCtrl+P
 
 &Print... (denied)
 列印... (已中斷)
@@ -129,7 +126,7 @@ Contributor: theowoo (http://grnrnat.net.ru/)
 另存新檔(&S)
 
 &Save As...\tCtrl+S
-另存新檔(&S)\tCtrl+S
+另存新檔(&S)...\tCtrl+S
 
 &Settings
 設定
@@ -633,6 +630,7 @@ printing document
 文件列印中
 
 # Untranslated:
+#&Open...\tCtrl+O
 #(page %s)
 #Add Favorite
 #Add page %s to favorites

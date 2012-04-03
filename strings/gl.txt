@@ -88,11 +88,11 @@ Páxina seguinte\t->
 &Odd pages only
 &Só páxinas impares
 
-&Open\tCtrl+O
-A&brir\tCtrl+O
-
 &Open Document
 Abrir Documento
+
+&Open...\tCtrl+O
+A&brir...\tCtrl+O
 
 &Options...
 &Opcións...
@@ -110,7 +110,7 @@ Páxina anterior\t<-
 &Imprimir...
 
 &Print...\tCtrl+P
-&Imprimir\tCtrl+P
+&Imprimir...\tCtrl+P
 
 &Print... (denied)
 &Imprimir... (denegado)

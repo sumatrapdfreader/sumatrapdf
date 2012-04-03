@@ -90,11 +90,11 @@ Contributor: Victor Kozyakin
 &Odd pages only
 Только нечётн&ые страницы
 
-&Open\tCtrl+O
-&Открыть\tCtrl+O
-
 &Open Document
 &Открыть документ
+
+&Open...\tCtrl+O
+&Открыть...\tCtrl+O
 
 &Options...
 &Параметры...
@@ -112,7 +112,7 @@ Contributor: Victor Kozyakin
 Пе&чать...
 
 &Print...\tCtrl+P
-Пе&чать\tCtrl+P
+Пе&чать...\tCtrl+P
 
 &Print... (denied)
 Пе&чать... (отмена)

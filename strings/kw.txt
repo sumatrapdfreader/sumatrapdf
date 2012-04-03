@@ -69,8 +69,8 @@ Nessa Folen\t->
 &No, thanks
 &Na, meur ras
 
-&Open\tCtrl+O
-&Ygor\tCtrl+O
+&Open...\tCtrl+O
+&Ygor...\tCtrl+O
 
 &Options...
 &Etholyow...

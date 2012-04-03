@@ -90,11 +90,11 @@ Sama kirjainkoko
 &Odd pages only
 Vain &parittomat sivut
 
-&Open\tCtrl+O
-&Avaa\tCtrl+O
-
 &Open Document
 &Avaa asiakirja
+
+&Open...\tCtrl+O
+&Avaa...\tCtrl+O
 
 &Options...
 &Asetukset...

@@ -90,11 +90,11 @@ Contributor: Милан Гашић
 &Odd pages only
 Само полеђине страница
 
-&Open\tCtrl+O
-Отвори\tCtrl+O
-
 &Open Document
 Отвори документ
+
+&Open...\tCtrl+O
+Отвори...\tCtrl+O
 
 &Options...
 Опције
@@ -112,7 +112,7 @@ Contributor: Милан Гашић
 Штампај...
 
 &Print...\tCtrl+P
-Штампај\tCtrl+P
+Штампај...\tCtrl+P
 
 &Print... (denied)
 Штампај... (одбијено)

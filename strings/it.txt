@@ -96,11 +96,11 @@ Pagi&na successiva\t<Freccia destra>
 &Odd pages only
 S&olo pagine dispari
 
-&Open\tCtrl+O
-&Apri\tCtrl+O
-
 &Open Document
 &Apri documento
+
+&Open...\tCtrl+O
+&Apri...\tCtrl+O
 
 &Options...
 &Opzioni...
@@ -118,7 +118,7 @@ S&olo pagine dispari
 &Stampa
 
 &Print...\tCtrl+P
-Stam&pa\tCtrl+P
+Stam&pa...\tCtrl+P
 
 &Print... (denied)
 Stam&pa... (rifiutato)

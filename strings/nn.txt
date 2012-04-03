@@ -40,17 +40,17 @@ Siste side\tEnd
 &Next Page\tRight Arrow
 Neste side\t->
 
-&Open\tCtrl+O
-&Opne\tCtrl+O
+&Open...\tCtrl+O
+&Opne...\tCtrl+O
 
 &Previous Page\tLeft Arrow
 Førre side\t<-
 
 &Print...\tCtrl+P
-Skriv &ut\tCtrl+P
+Skriv &ut...\tCtrl+P
 
 &Save As...\tCtrl+S
-Lagre &som\tCtrl+S
+Lagre &som...\tCtrl+S
 
 &Skip this version
 Hopp over denne versjonen

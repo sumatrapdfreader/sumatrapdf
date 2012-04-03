@@ -37,17 +37,17 @@ Contributor: Maxin B. John (maxinbjohn@gmail.com)
 &Next Page\tRight Arrow
 അടുത്ത താള്‍\t->
 
-&Open\tCtrl+O
-തുറക്കുക\tCtrl+O
+&Open...\tCtrl+O
+തുറക്കുക...\tCtrl+O
 
 &Previous Page\tLeft Arrow
 മുന്‍പുള്ള താള്‍\t<-
 
 &Print...\tCtrl+P
-അച്ചടി\tCtrl+P
+അച്ചടി...\tCtrl+P
 
 &Save As...\tCtrl+S
-എന്ന പേരില്‍ സൂക്ഷിക്കുക\tCtrl+S
+എന്ന പേരില്‍ സൂക്ഷിക്കുക...\tCtrl+S
 
 &View
 കാഴ്ച്ച

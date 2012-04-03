@@ -90,11 +90,11 @@ Ačiū, &ne
 &Odd pages only
 &Tik nelyginiai puslapiai
 
-&Open\tCtrl+O
-&Atverti\tCtrl+O
-
 &Open Document
 &Atverti dokumentą
+
+&Open...\tCtrl+O
+&Atverti...\tCtrl+O
 
 &Options...
 &Nuostatos...

@@ -91,11 +91,11 @@ Contributor: Abu Abdullah (falcon.sheep@gmail.com)
 &Odd pages only
 &الصفحات الفردية فقط
 
-&Open\tCtrl+O
-&فتح\tCtrl+O
-
 &Open Document
 &فتح مستند
+
+&Open...\tCtrl+O
+&فتح...\tCtrl+O
 
 &Options...
 &خيارات...

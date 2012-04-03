@@ -91,11 +91,11 @@ Köszönöm,&nem
 &Odd pages only
 Csak a páratlan oldalak
 
-&Open\tCtrl+O
-Megny&itás\tCtrl+O
-
 &Open Document
 &Fájl Megnyitása
+
+&Open...\tCtrl+O
+Megny&itás...\tCtrl+O
 
 &Options...
 &Beállítások
@@ -113,7 +113,7 @@ Előző oldal\t<-
 &Nyomtatás
 
 &Print...\tCtrl+P
-Nyomt&atás\tCtrl+P
+Nyomt&atás...\tCtrl+P
 
 &Print... (denied)
 Nyomtatás... (tiltott)

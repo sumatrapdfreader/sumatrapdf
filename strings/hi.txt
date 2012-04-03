@@ -41,7 +41,7 @@ Sumatra के बारे में(&A)
 &Next Page\tRight Arrow
 अगले पृष्ठ पर\t->
 
-&Open\tCtrl+O
+&Open...\tCtrl+O
 फाईल खोलें(&O)\tCtrl+O
 
 &Previous Page\tLeft Arrow

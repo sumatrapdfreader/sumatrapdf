@@ -92,11 +92,11 @@ Seiten in Druckbereich &einpassen
 &Odd pages only
 Nur &ungerade Seiten
 
-&Open\tCtrl+O
-Ö&ffnen…\tStrg+O
-
 &Open Document
 Ö&ffnen
+
+&Open...\tCtrl+O
+Ö&ffnen...\tStrg+O
 
 &Options...
 &Optionen…
@@ -111,13 +111,13 @@ Auf dieser Seite &behalten
 &Vorherige Seite\t<-
 
 &Print...
-&Drucken…
+&Drucken...
 
 &Print...\tCtrl+P
-&Drucken…\tStrg+P
+&Drucken...\tStrg+P
 
 &Print... (denied)
-&Drucken… (verweigert)
+&Drucken... (verweigert)
 
 &Remember the password for this document
 Passwort für dieses Dokument &merken

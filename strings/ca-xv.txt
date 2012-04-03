@@ -89,11 +89,11 @@ Pàgina &següent\t->
 &Odd pages only
 Només les pàgines senars
 
-&Open\tCtrl+O
-&Obri\tCtrl+O
-
 &Open Document
 &Obri el document
+
+&Open...\tCtrl+O
+&Obri...\tCtrl+O
 
 &Options...
 &Opcions...

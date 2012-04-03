@@ -67,8 +67,8 @@ Folgjende side\t->
 &No, thanks
 &Nee, tankewol
 
-&Open\tCtrl+O
-&Iepenje\tCtrl+O
+&Open...\tCtrl+O
+&Iepenje...\tCtrl+O
 
 &Options...
 &Opsjes...
@@ -80,7 +80,7 @@ Folgjende side\t->
 Foarige side\t<-
 
 &Print...\tCtrl+P
-&Ofdrukke\tCtrl+P
+&Ofdrukke...\tCtrl+P
 
 &Remember these settings for each document
 &Bewarje dizze ynstellingen foar elk dokumint

@@ -88,11 +88,11 @@ Contributor: Гоце Митевски (http://www.nicer2.com)
 &Odd pages only
 Само &непарни страници
 
-&Open\tCtrl+O
-&Отвори\tCtrl+O
-
 &Open Document
 Отвори документ
+
+&Open...\tCtrl+O
+&Отвори...\tCtrl+O
 
 &Options...
 &Опции...
@@ -110,7 +110,7 @@ Contributor: Гоце Митевски (http://www.nicer2.com)
 &Печати...
 
 &Print...\tCtrl+P
-&Печати\tCtrl+P
+&Печати...\tCtrl+P
 
 &Print... (denied)
 &Печати... (denied)

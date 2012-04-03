@@ -90,14 +90,14 @@ Naslednja stran\tPuščica desno
 &Odd pages only
 Samo &lihe strani
 
-&Open\tCtrl+O
-&Odpri\tCtrl+O
-
 &Open Document
 &Odpri dokument
 
+&Open...\tCtrl+O
+&Odpri...\tCtrl+O
+
 &Options...
-&Možnosti …
+&Možnosti...
 
 &Password:
 &Geslo:
@@ -109,13 +109,13 @@ Samo &lihe strani
 Predhodna stran\tPuščica levo
 
 &Print...
-&Natisni …
+&Natisni...
 
 &Print...\tCtrl+P
 &Natisni …\tCtrl+P
 
 &Print... (denied)
-&Natisni … (onemogočeno)
+&Natisni... (onemogočeno)
 
 &Remember the password for this document
 &Zapomni si geslo za ta dokument
@@ -130,7 +130,7 @@ Odstrani dokument
 Shrani &kot …
 
 &Save As...\tCtrl+S
-Shrani &kot …\tCtrl+S
+Shrani &kot...\tCtrl+S
 
 &Settings
 &Nastavitve

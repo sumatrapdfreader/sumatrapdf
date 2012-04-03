@@ -91,11 +91,11 @@ Další strá&nka\tŠipka vpravo
 &Odd pages only
 &Pouze liché stránky
 
-&Open\tCtrl+O
-&Otevřít...\tCtrl+O
-
 &Open Document
 &Otevřít dokument
+
+&Open...\tCtrl+O
+&Otevřít...\tCtrl+O
 
 &Options...
 &Možnosti...

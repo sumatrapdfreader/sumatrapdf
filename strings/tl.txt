@@ -83,8 +83,8 @@ Hindi
 &Odd pages only
 Mga odd na pahina lamang
 
-&Open\tCtrl+O
-Buksan\tCtrl+O
+&Open...\tCtrl+O
+Buksan...\tCtrl+O
 
 &Options...
 Mga Pagpipilian

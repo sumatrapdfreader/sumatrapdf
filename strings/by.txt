@@ -56,8 +56,8 @@ Contributor: Drive DRKA (drka2003@mail.ru)
 &No, thanks
 Дзякуй, не
 
-&Open\tCtrl+O
-Адчыніць\tCtrl+O
+&Open...\tCtrl+O
+Адчыніць...\tCtrl+O
 
 &Options...
 &Параметры...
@@ -69,13 +69,13 @@ Contributor: Drive DRKA (drka2003@mail.ru)
 Папярэдняя старонка\t<-
 
 &Print...\tCtrl+P
-Друкаваць\tCtrl+P
+Друкаваць...\tCtrl+P
 
 &Remember these settings for each document
 Запомніць гэтыя параметры для &кожнага дакумента
 
 &Save As...\tCtrl+S
-Захаваць як\tCtrl+S
+Захаваць як...\tCtrl+S
 
 &Settings
 Налады

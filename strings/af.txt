@@ -43,8 +43,8 @@ Handleiding
 &Next Page\tRight Arrow
 Volgende Bladsy\t->
 
-&Open\tCtrl+O
-&Maak Oop\tCtrl+O
+&Open...\tCtrl+O
+&Maak Oop...\tCtrl+O
 
 &Previous Page\tLeft Arrow
 Vorige Bladsy\t<-

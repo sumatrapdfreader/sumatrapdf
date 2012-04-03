@@ -32,7 +32,6 @@ target: 6/1):
 - disable File/Save Shortcut... in official builds
 - set min size of the window (to 480x320?)
 - File/Open => File/Open...
-
 - ???
 
 Given aggresive schedule, it's important to make the most risky

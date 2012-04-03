@@ -88,11 +88,11 @@ Contributor: Hrant Ohanyan »»» http://haysoft.org (hrantohanyan@mail.am)
 &Odd pages only
 &Միայն կենտ էջերը
 
-&Open\tCtrl+O
-Բացել\tCtrl+O
-
 &Open Document
 &Բացել էջը
+
+&Open...\tCtrl+O
+Բացել...\tCtrl+O
 
 &Options...
 &Ընտրանքներ...

@@ -88,11 +88,11 @@ K&asutusjuhend
 &Odd pages only
 Vaid &paaritud leheküljed
 
-&Open\tCtrl+O
-&Ava\tCtrl+O
-
 &Open Document
 &Ava dokument
+
+&Open...\tCtrl+O
+&Ava...\tCtrl+O
 
 &Options...
 &Sätted...

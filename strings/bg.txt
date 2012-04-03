@@ -89,11 +89,11 @@ Contributor: Nikolay Ikonomov
 &Odd pages only
 Само &нечетни страници
 
-&Open\tCtrl+O
-&Отвори\tCtrl+O
-
 &Open Document
 &Отвори документ
+
+&Open...\tCtrl+O
+&Отвори...\tCtrl+O
 
 &Options...
 &Настройки

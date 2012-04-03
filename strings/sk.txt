@@ -91,11 +91,11 @@ Contributor: Peter Bartik
 &Odd pages only
 &Tlačiť iba nepárne strany
 
-&Open\tCtrl+O
-&Otvoriť\tCtrl+O
-
 &Open Document
 &Otvoriť dokument
+
+&Open...\tCtrl+O
+&Otvoriť...\tCtrl+O
 
 &Options...
 &Možnosti...

@@ -89,11 +89,11 @@ Contributor: Brian S. Vangsgaard
 &Odd pages only
 &Kun ulige sider
 
-&Open\tCtrl+O
-&Åbn\tCtrl+O
-
 &Open Document
 &Åbn dokument
+
+&Open...\tCtrl+O
+&Åbn...\tCtrl+O
 
 &Options...
 &Valgmuligheder...
@@ -111,7 +111,7 @@ Contributor: Brian S. Vangsgaard
 &Udskriv...
 
 &Print...\tCtrl+P
-&Udskriv\tCtrl+P
+&Udskriv...\tCtrl+P
 
 &Print... (denied)
 &Udskriv... (nægtet)

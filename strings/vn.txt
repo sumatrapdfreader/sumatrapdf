@@ -89,11 +89,11 @@ Không, cảm ơn
 &Odd pages only
 Chỉ những trang chẵn
 
-&Open\tCtrl+O
-Mở tập tin\tCtrl+O
-
 &Open Document
 Mở tập tin
+
+&Open...\tCtrl+O
+Mở tập tin...\tCtrl+O
 
 &Options...
 Tuỳ chọn
@@ -111,7 +111,7 @@ Trang trước\tMũi tên trái
 In...
 
 &Print...\tCtrl+P
-In\tCtrl+P
+In...\tCtrl+P
 
 &Print... (denied)
 &In... (bị từ chối)
@@ -129,7 +129,7 @@ Xóa tập tin
 Lưu thành...
 
 &Save As...\tCtrl+S
-Lưu thành\tCtrl+S
+Lưu thành...\tCtrl+S
 
 &Settings
 Cài đặt

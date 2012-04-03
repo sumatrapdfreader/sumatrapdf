@@ -77,8 +77,8 @@ Contributor: Muhammad Syawal bin Halimun www.sabily.org (syawal@sabily.org)
 &Odd pages only
 &Mukasurat ganjil sahaja
 
-&Open\tCtrl+O
-&Buka\tCtrl+O
+&Open...\tCtrl+O
+&Buka...\tCtrl+O
 
 &Options...
 &Pilihan...
@@ -90,7 +90,7 @@ Contributor: Muhammad Syawal bin Halimun www.sabily.org (syawal@sabily.org)
 &Halaman sebelumnya\t<-
 
 &Print...\tCtrl+P
-&Cetak\tCtrl+P
+&Cetak...\tCtrl+P
 
 &Print... (denied)
 &Cetak... (dinafikan)
@@ -102,7 +102,7 @@ Contributor: Muhammad Syawal bin Halimun www.sabily.org (syawal@sabily.org)
 &Ingat tetapan-tetapan ini untuk setiap dokumen
 
 &Save As...\tCtrl+S
-&Simpan sebagai\tCtrl+S
+&Simpan sebagai...\tCtrl+S
 
 &Settings
 &Tetapan

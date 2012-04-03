@@ -93,11 +93,11 @@ Page &suivante\t->
 &Odd pages only
 Seulement les pages &impaires
 
-&Open\tCtrl+O
-&Ouvrir\tCtrl+O
-
 &Open Document
 &Ouvrir le document
+
+&Open...\tCtrl+O
+&Ouvrir...\tCtrl+O
 
 &Options...
 &Options...

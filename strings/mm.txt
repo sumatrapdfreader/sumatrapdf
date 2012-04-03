@@ -43,14 +43,14 @@ Contributor: Mohammed Ottama
 &Next Page\tRight Arrow
 နောက် တမျက်နှာ\t->
 
-&Open\tCtrl+O
-&ဖွင့်ပါ\tCtrl+O
+&Open...\tCtrl+O
+&ဖွင့်ပါ...\tCtrl+O
 
 &Previous Page\tLeft Arrow
 ပြီးတဲ့ စာမျက်နှာ\t<-
 
 &Print...\tCtrl+P
-&ပုံနှိပ်ပါ\tCtrl+P
+&ပုံနှိပ်ပါ...\tCtrl+P
 
 &Save As...\tCtrl+S
 &ကဲ့သို့ သိမ်းပါ.....\tCtrl+S

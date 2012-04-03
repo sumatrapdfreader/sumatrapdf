@@ -87,11 +87,11 @@ Contributor: Jegatheesan Veeramalai (vjegatheesh@gmail.com)
 &Odd pages only
 ஒற்றைபடை பக்கங்கள் மட்டும்
 
-&Open\tCtrl+O
-திற\tCtrl+O
-
 &Open Document
 கோப்பை திற
+
+&Open...\tCtrl+O
+திற...\tCtrl+O
 
 &Options...
 விருப்ப பேரம்
@@ -109,7 +109,7 @@ Contributor: Jegatheesan Veeramalai (vjegatheesh@gmail.com)
 அச்சிடு...
 
 &Print...\tCtrl+P
-அச்சிடு\tCtrl+P
+அச்சிடு...\tCtrl+P
 
 &Print... (denied)
 அகசிடல்... (நிராகரிக்கப்பட்டது)
@@ -127,7 +127,7 @@ Contributor: Jegatheesan Veeramalai (vjegatheesh@gmail.com)
 எனச் சேமி...
 
 &Save As...\tCtrl+S
-எனச் சேமி\tCtrl+S
+எனச் சேமி...\tCtrl+S
 
 &Settings
 அமைப்புகள்

@@ -92,11 +92,11 @@ Halaman Berikutnya\t->
 &Odd pages only
 Hanya halaman ganji&l
 
-&Open\tCtrl+O
-&Buka\tCtrl+O
-
 &Open Document
 Buka D&okumen
+
+&Open...\tCtrl+O
+&Buka...\tCtrl+O
 
 &Options...
 &Pilihan...
@@ -132,7 +132,7 @@ Halaman Sebelumnya\t<-
 Si&mpan Sebagai...
 
 &Save As...\tCtrl+S
-&Simpan Sebagai\tCtrl+S
+&Simpan Sebagai...\tCtrl+S
 
 &Settings
 &Pengaturan

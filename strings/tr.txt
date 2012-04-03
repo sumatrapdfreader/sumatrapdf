@@ -89,11 +89,11 @@ S&onraki Sayfa\t->
 &Odd pages only
 Sadece &tek sayfalar
 
-&Open\tCtrl+O
-&Aç\tCtrl+O
-
 &Open Document
 Belgeyi &Aç
+
+&Open...\tCtrl+O
+&Aç...\tCtrl+O
 
 &Options...
 &Seçenekler...

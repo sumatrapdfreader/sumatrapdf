@@ -92,11 +92,11 @@ Neste side\tPil høyre
 &Odd pages only
 Bare &oddetallssider
 
-&Open\tCtrl+O
-&Åpne...\tCtrl+O
-
 &Open Document
 &Åpne dokument
+
+&Open...\tCtrl+O
+&Åpne...\tCtrl+O
 
 &Options...
 &Innstillinger...

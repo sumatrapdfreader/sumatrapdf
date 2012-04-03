@@ -86,11 +86,11 @@ For&mhéadú:
 &Odd pages only
 &Corr-leathanaigh amháin
 
-&Open\tCtrl+O
-&Oscail\tCtrl+O
-
 &Open Document
 &Oscail Cáipéis
+
+&Open...\tCtrl+O
+&Oscail...\tCtrl+O
 
 &Options...
 &Roghanna...

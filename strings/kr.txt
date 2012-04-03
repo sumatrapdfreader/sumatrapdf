@@ -91,11 +91,11 @@ Contributor: 4Li
 &Odd pages only
 홀수 페이지만(&O)
 
-&Open\tCtrl+O
-열기(&O)\tCtrl+O
-
 &Open Document
 문서 열기(&O)
+
+&Open...\tCtrl+O
+열기(&O)...\tCtrl+O
 
 &Options...
 옵션(&O)...

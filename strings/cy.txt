@@ -80,8 +80,8 @@ Tudalen Nesaf\t->
 &Odd pages only
 Tudalennau &odrif yn unig
 
-&Open\tCtrl+O
-&Agor\tCtrl+O
+&Open...\tCtrl+O
+&Agor...\tCtrl+O
 
 &Options...
 &Dewisiadau...
@@ -93,7 +93,7 @@ Tudalennau &odrif yn unig
 Tudalen Flaenorol\t<-
 
 &Print...\tCtrl+P
-&Argraffu\tCtrl+P
+&Argraffu...\tCtrl+P
 
 &Print... (denied)
 &Argraffu... (gwrthodwyd)

@@ -61,7 +61,7 @@ static const char *gSampleMobiHtml =
 static bool gShowTextBoundingBoxes = false;
 
 static MenuDef menuDefMobiFile[] = {
-    { _TRN("&Open\tCtrl+O"),                IDM_OPEN ,                  MF_REQ_DISK_ACCESS },
+    { _TRN("&Open...\tCtrl+O"),             IDM_OPEN,                   MF_REQ_DISK_ACCESS },
     { _TRN("&Close\tCtrl+W"),               IDM_CLOSE,                  MF_REQ_DISK_ACCESS },
     { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS },
     { _TRN("E&xit\tCtrl+Q"),                IDM_EXIT,                   0 }

@@ -90,11 +90,11 @@ Página &seguinte\t->
 &Odd pages only
 Apenas páginas í&mpares
 
-&Open\tCtrl+O
-&Abrir\tCtrl+O
-
 &Open Document
 &Abrir documento
+
+&Open...\tCtrl+O
+&Abrir...\tCtrl+O
 
 &Options...
 &Opções...
@@ -130,7 +130,7 @@ Esq&uecer documento
 &Gravar como...
 
 &Save As...\tCtrl+S
-&Gravar como\tCtrl+S
+&Gravar como...\tCtrl+S
 
 &Settings
 &Definições
