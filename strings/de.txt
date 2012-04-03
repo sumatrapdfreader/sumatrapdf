@@ -96,7 +96,7 @@ Nur &ungerade Seiten
 Ö&ffnen
 
 &Open...\tCtrl+O
-Ö&ffnen...\tStrg+O
+Ö&ffnen…\tStrg+O
 
 &Options...
 &Optionen…
@@ -111,13 +111,13 @@ Auf dieser Seite &behalten
 &Vorherige Seite\t<-
 
 &Print...
-&Drucken...
+&Drucken…
 
 &Print...\tCtrl+P
-&Drucken...\tStrg+P
+&Drucken…\tStrg+P
 
 &Print... (denied)
-&Drucken... (verweigert)
+&Drucken… (verweigert)
 
 &Remember the password for this document
 Passwort für dieses Dokument &merken
@@ -402,7 +402,7 @@ Fonts:
 Schriftarten:
 
 Formatting the book... %d pages
-Buch wird formatiert... Seite %d
+Buch wird formatiert… Seite %d
 
 Found text at page %s
 Text auf Seite %s gefunden
@@ -432,7 +432,7 @@ KB
 KB
 
 Loading file %s...
-%s wird geladen...
+%s wird geladen…
 
 MB
 MB
