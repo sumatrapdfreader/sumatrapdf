@@ -268,6 +268,9 @@ Copy Co&mment
 Copying text was denied (copying as image only)
 Տեքստի պատճենումը թույլատրված չէ (պատճենում է որպես պատկեր)
 
+Copyright:
+Հեղ. իրավունքը.
+
 Could not obtain Printer properties
 Տպիչի հատկությունները հասանելի չեն
 
@@ -309,6 +312,9 @@ Download
 
 E&xit\tCtrl+Q
 Փա&կել\tCtrl+Q
+
+EPUB ebooks
+EPUB ebooks
 
 Enter password
 Գրել ծածկագիրը
@@ -388,6 +394,12 @@ Fit Width and Show Pages Continuously
 Fit a Single Page
 Ձգել մեկ էջի չափով
 
+Fonts:
+Տառատեսաներ.
+
+Formatting the book... %d pages
+Գրքի կազմորոշում... %d էջ
+
 Found text at page %s
 Տեքստը գտնվել է %s էջում
 
@@ -414,6 +426,9 @@ Image files (*.%s)
 
 KB
 ԿԲ
+
+Loading file %s...
+%s ֆայլը բացվում է...
 
 MB
 ՄԲ
@@ -553,6 +568,9 @@ Remove from favorites
 Remove page %s from favorites
 Հեռացնել %s  էջը ընտրյալներից
 
+Replace document &colors with Windows color scheme
+Փոխարինել փաստաթղթի &գույները Windows-ի գույնային սխեմայով
+
 Rotate &Left\tCtrl+Shift+-
 Շրջել ձախ\tCtrl+Shift+-
 
@@ -671,19 +689,13 @@ Zoom factor
 [Հայտնաբերվել են փոփոխություններ, ընթանում է թարմացում] %s
 
 copying text
-տեքստը պատճենվում է
+Տեքստը պատճենվում է
 
 printing document
-ֆայլը տպվում է
+Ֆայլը տպվում է
 
 # Untranslated:
-#Copyright:
-#EPUB ebooks
 #Failed to rename the file!
-#Fonts:
-#Formatting the book... %d pages
-#Loading file %s...
 #Re&name...\tF2
 #Rename To
-#Replace document &colors with Windows color scheme
 

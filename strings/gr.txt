@@ -14,7 +14,7 @@ Contributor: Dimitris Mytilinaios
 Contributor: XhmikosR
 
 &About
-&Σχετικά...
+&Σχετικά
 
 &Actual Size\tCtrl+1
 Πραγματικό &Μέγεθος\tCtrl+1
@@ -343,6 +343,9 @@ F&ullscreen\tCtrl+Shift+L
 Facing
 Δύο σελίδες
 
+Failed to rename the file!
+Η μετονομασία του αρχείου απέτυχε!
+
 Failed to save a file
 Αποτυχία αποθήκευσης αρχείου
 
@@ -562,6 +565,9 @@ Printing page %d of %d...
 Printing problem.
 Πρόβλημα εκτύπωσης.
 
+Re&name...\tF2
+&Μετονομασία...\tF2
+
 Remember &opened files
 Απο&μνημόνευση προσφάτων αρχείων
 
@@ -570,6 +576,9 @@ Remove from favorites
 
 Remove page %s from favorites
 Αφαίρεση σελίδας %s από τα αγαπημένα
+
+Rename To
+Μετονομασία
 
 Replace document &colors with Windows color scheme
 Αντικατάσταση των &χρωμάτων του εγγράφου με το θέμα των Windows
@@ -696,9 +705,4 @@ copying text
 
 printing document
 εκτύπωση εγγράφου
-
-# Untranslated:
-#Failed to rename the file!
-#Re&name...\tF2
-#Rename To
 

@@ -13,7 +13,7 @@ Contributor: Martin Srebotnjak
 Contributor: Damjan Gerl
 
 &About
-&O programu …
+&O programu
 
 &Actual Size\tCtrl+1
 &Dejanska velikost\tCtrl+1
@@ -94,10 +94,10 @@ Samo &lihe strani
 &Odpri dokument
 
 &Open...\tCtrl+O
-&Odpri...\tCtrl+O
+&Odpri …\tCtrl+O
 
 &Options...
-&Možnosti...
+&Možnosti …
 
 &Password:
 &Geslo:
@@ -109,13 +109,13 @@ Samo &lihe strani
 Predhodna stran\tPuščica levo
 
 &Print...
-&Natisni...
+&Natisni …
 
 &Print...\tCtrl+P
 &Natisni …\tCtrl+P
 
 &Print... (denied)
-&Natisni... (onemogočeno)
+&Natisni … (onemogočeno)
 
 &Remember the password for this document
 &Zapomni si geslo za ta dokument
@@ -130,7 +130,7 @@ Odstrani dokument
 Shrani &kot …
 
 &Save As...\tCtrl+S
-Shrani &kot...\tCtrl+S
+Shrani &kot …\tCtrl+S
 
 &Settings
 &Nastavitve
@@ -342,8 +342,11 @@ Celozaslonsko\tCtrl+Shift+L
 Facing
 Dvostransko
 
+Failed to rename the file!
+Preimenovanje datoteke ni uspelo!
+
 Failed to save a file
-Shranjevanje datoteke ni uspelo.
+Shranjevanje datoteke ni uspelo
 
 Favorites
 Priljubljeni
@@ -358,7 +361,7 @@ File:
 Datoteka:
 
 Fin&d...\tCtrl+F
-Najdi …\tCtrl+F
+Išči …\tCtrl+F
 
 Find
 Išči
@@ -399,6 +402,9 @@ Prilagodi enostransko
 Fonts:
 Pisave:
 
+Formatting the book... %d pages
+Oblikovanje knjige … %d strani
+
 Found text at page %s
 Besedilo najdeno na strani %s
 
@@ -425,6 +431,9 @@ Slikovne datoteke (*.%s)
 
 KB
 KB
+
+Loading file %s...
+Nalaganje datoteke %s …
 
 MB
 MB
@@ -555,6 +564,9 @@ Tiskanje strani %d od %d …
 Printing problem.
 Težave pri tiskanju.
 
+Re&name...\tF2
+Preime&nuj …\tF2
+
 Remember &opened files
 &Zapomni si odprte datoteke
 
@@ -563,6 +575,9 @@ Odstrani iz priljubljenih
 
 Remove page %s from favorites
 Odstrani stran %s iz priljubljenih
+
+Rename To
+Preimenuj v
 
 Replace document &colors with Windows color scheme
 Zamenjaj &barve dokumenta z barvno shemo Windows
@@ -689,11 +704,4 @@ kopiranje besedila
 
 printing document
 tiskanje dokumenta
-
-# Untranslated:
-#Failed to rename the file!
-#Formatting the book... %d pages
-#Loading file %s...
-#Re&name...\tF2
-#Rename To
 

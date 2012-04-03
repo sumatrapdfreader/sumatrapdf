@@ -342,6 +342,9 @@ Ecrã co&mpleto\tCtrl+Shift+L
 Facing
 Duas páginas
 
+Failed to rename the file!
+Falha ao mudar o nome do ficheiro!
+
 Failed to save a file
 Erro ao gravar o ficheiro
 
@@ -472,7 +475,7 @@ Number of Pages:
 Número de páginas:
 
 OK
-OK
+Aplicar
 
 Open
 Abrir
@@ -561,6 +564,9 @@ A imprimir página %d de %d...
 Printing problem.
 Erro de impressão.
 
+Re&name...\tF2
+Mudar &nome...\tF2
+
 Remember &opened files
 Lembrar ficheiros abert&os
 
@@ -569,6 +575,9 @@ Remover dos favoritos
 
 Remove page %s from favorites
 Remover página %s dos favoritos
+
+Rename To
+Mudar nome para
 
 Replace document &colors with Windows color scheme
 Substituir &cores do documento pelas cores Windows
@@ -695,9 +704,4 @@ cópia de texto
 
 printing document
 impressão de documento
-
-# Untranslated:
-#Failed to rename the file!
-#Re&name...\tF2
-#Rename To
 
