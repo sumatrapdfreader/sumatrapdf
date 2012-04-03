@@ -488,6 +488,7 @@ Faktor-zoum
 #Printer with given name doesn't exist
 #Printing is still in progress. Abort and start over?
 #Printing page %d of %d...
+#Re&name...\tF2
 #Remove from favorites
 #Remove page %s from favorites
 #Rename To

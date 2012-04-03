@@ -693,6 +693,7 @@ tulostetaan asiakirjaa
 # Untranslated:
 #Copyright:
 #Failed to rename the file!
+#Re&name...\tF2
 #Rename To
 #Replace document &colors with Windows color scheme
 

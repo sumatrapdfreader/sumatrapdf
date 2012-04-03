@@ -696,5 +696,6 @@ printing document
 
 # Untranslated:
 #Failed to rename the file!
+#Re&name...\tF2
 #Rename To
 

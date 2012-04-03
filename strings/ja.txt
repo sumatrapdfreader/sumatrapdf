@@ -680,6 +680,7 @@ printing document
 #Loading file %s...
 #Open in Microsoft HTML Help
 #Open in Microsoft XPS-Viewer
+#Re&name...\tF2
 #Rename To
 #Replace document &colors with Windows color scheme
 

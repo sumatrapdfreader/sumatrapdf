@@ -566,6 +566,9 @@ Drucke Seite %d von %d…
 Printing problem.
 Druckerproblem
 
+Re&name...\tF2
+Umbe&nennen…\tF2
+
 Remember &opened files
 Liste der &zuletzt geöffneten Dokumente anlegen
 

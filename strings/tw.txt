@@ -649,6 +649,7 @@ printing document
 #Loading file %s...
 #Page %s
 #Printer with given name doesn't exist
+#Re&name...\tF2
 #Remove from favorites
 #Remove page %s from favorites
 #Rename To

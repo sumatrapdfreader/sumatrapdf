@@ -41,11 +41,12 @@ static MenuDef menuDefFile[] = {
     { _TRN("&Open...\tCtrl+O"),             IDM_OPEN ,                  MF_REQ_DISK_ACCESS },
     { _TRN("&Close\tCtrl+W"),               IDM_CLOSE,                  MF_REQ_DISK_ACCESS },
     { _TRN("&Save As...\tCtrl+S"),          IDM_SAVEAS,                 MF_REQ_DISK_ACCESS },
-    // TODO: translate after 2.0
-    { "Re&name...\tF2",                     IDM_RENAME_FILE,            MF_REQ_DISK_ACCESS | MF_NO_TRANSLATE},
+#ifdef ENABLE_SAVE_SHORTCUT
+    { _TRN("Save S&hortcut...\tCtrl+Shift+S"), IDM_SAVEAS_BOOKMARK,     MF_REQ_DISK_ACCESS | MF_NOT_FOR_CHM },
+#endif
+    { _TRN("Re&name...\tF2"),               IDM_RENAME_FILE,            MF_REQ_DISK_ACCESS },
     { _TRN("&Print...\tCtrl+P"),            IDM_PRINT,                  MF_REQ_PRINTER_ACCESS },
     { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS },
-    { _TRN("Save S&hortcut...\tCtrl+Shift+S"), IDM_SAVEAS_BOOKMARK,     MF_REQ_DISK_ACCESS | MF_NOT_FOR_CHM },
     // PDF/XPS/CHM specific items are dynamically removed in RebuildFileMenu
     { _TRN("Open in &Adobe Reader"),        IDM_VIEW_WITH_ACROBAT,      MF_REQ_DISK_ACCESS },
     { _TRN("Open in &Foxit Reader"),        IDM_VIEW_WITH_FOXIT,        MF_REQ_DISK_ACCESS },
@@ -181,6 +182,7 @@ static void AddFileMenuItem(HMENU menuFile, const TCHAR *filePath, UINT index)
 HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu, bool forChm)
 {
     assert(menu);
+    bool wasSeparator = true;
 
     for (int i = 0; i < menuLen; i++) {
         MenuDef md = menuDefs[i];
@@ -193,16 +195,23 @@ HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu, bool for
             continue;
 
         if (str::Eq(title, SEP_ITEM)) {
-            AppendMenu(menu, MF_SEPARATOR, 0, NULL);
+            // prevent two consecutive separators
+            if (!wasSeparator)
+                AppendMenu(menu, MF_SEPARATOR, 0, NULL);
+            wasSeparator = true;
         } else if (MF_NO_TRANSLATE == (md.flags & MF_NO_TRANSLATE)) {
             ScopedMem<TCHAR> tmp(str::conv::FromUtf8(title));
             AppendMenu(menu, MF_STRING, (UINT_PTR)md.id, tmp);
+            wasSeparator = false;
         } else {
             const TCHAR *tmp = Trans::GetTranslation(title);
             AppendMenu(menu, MF_STRING, (UINT_PTR)md.id, tmp);
+            wasSeparator = false;
         }
     }
 
+    // TODO: remove trailing separator if there ever is one
+    CrashIf(wasSeparator);
     return menu;
 }
 

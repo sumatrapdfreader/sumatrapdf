@@ -2652,6 +2652,7 @@ static void OnMenuRenameFile(WindowInfo &win)
     ofn.nMaxFile = dimof(dstFileName);
     ofn.lpstrFilter = fileFilter.Get();
     ofn.nFilterIndex = 1;
+    // note: the other two dialogs are named "Open" and "Save As"
     ofn.lpstrTitle = _TR("Rename To");
     ofn.lpstrInitialDir = initDir;
     ofn.lpstrDefExt = defExt + 1;

@@ -685,6 +685,7 @@ printing document
 #Fonts:
 #Formatting the book... %d pages
 #Loading file %s...
+#Re&name...\tF2
 #Rename To
 #Replace document &colors with Windows color scheme
 

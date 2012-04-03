@@ -425,6 +425,7 @@ mencetak dokumen
 #Printer with given name doesn't exist
 #Printing is still in progress. Abort and start over?
 #Printing page %d of %d...
+#Re&name...\tF2
 #Remember &opened files
 #Remove from favorites
 #Remove page %s from favorites

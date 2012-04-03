@@ -681,6 +681,7 @@ s'està imprimint el document
 #Fonts:
 #Formatting the book... %d pages
 #Loading file %s...
+#Re&name...\tF2
 #Rename To
 #Replace document &colors with Windows color scheme
 #Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.

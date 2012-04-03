@@ -698,5 +698,6 @@ imprimimendo documento
 #Failed to rename the file!
 #Formatting the book... %d pages
 #Loading file %s...
+#Re&name...\tF2
 #Rename To
 
