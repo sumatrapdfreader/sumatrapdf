@@ -378,6 +378,7 @@ void EbookController::HandleMobiLayoutMsg(MobiLayoutData *ld)
                     pageToShow = ld->pages[i];
                     //lf("showing page %d", i);
                 } else {
+                    // TODO: showed up in crash reports
                     CrashIf(0 == layoutTemp.pagesFromBeginning.Count());
                     size_t pageNo = layoutTemp.pagesFromBeginning.Count() - 1;
                     //lf("showing page %d from layoutTemp.pagesFromBeginning", (int)pageNo);
