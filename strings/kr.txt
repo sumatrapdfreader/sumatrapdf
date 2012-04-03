@@ -697,3 +697,7 @@ copying text
 printing document
 문서 인쇄 중
 
+# Untranslated:
+#Failed to rename the file!
+#Rename To
+

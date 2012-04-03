@@ -702,3 +702,7 @@ Copia del testo...
 printing document
 Stampa documento...
 
+# Untranslated:
+#Failed to rename the file!
+#Rename To
+

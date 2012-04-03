@@ -695,3 +695,7 @@ copying text
 printing document
 đang in tập tin
 
+# Untranslated:
+#Failed to rename the file!
+#Rename To
+

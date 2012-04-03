@@ -695,3 +695,7 @@ copying text
 printing document
 отпечатване на документ
 
+# Untranslated:
+#Failed to rename the file!
+#Rename To
+

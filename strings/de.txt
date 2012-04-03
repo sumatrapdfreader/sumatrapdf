@@ -177,7 +177,7 @@ Add page %s to favorites with (optional) name:
 Bezeichnung des Favoriten für Seite %s (optional):
 
 Add to favorites
-Zu Favoriten hinzufügen
+Zu Favoriten hinzufügen…
 
 Advanced
 Weiteres
@@ -344,8 +344,11 @@ F&ullscreen\tCtrl+Shift+L
 Facing
 Doppelseite
 
+Failed to rename the file!
+Die Datei konnte nicht umbenannt werden!
+
 Failed to save a file
-Fehler beim Speichern der Datei!
+Die Datei konnte nicht neu gespeichert werden!
 
 Favorites
 Favoriten
@@ -571,6 +574,9 @@ Aus Favoriten entfernen
 
 Remove page %s from favorites
 Seite %s aus Favoriten entfernen
+
+Rename To
+Umbenennen zu
 
 Replace document &colors with Windows color scheme
 Dokumenten&farben durch Windows-Farbschema ersetzen

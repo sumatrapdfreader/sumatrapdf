@@ -681,8 +681,10 @@ dokumendi printimine
 
 # Untranslated:
 #Copyright:
+#Failed to rename the file!
 #Fonts:
 #Formatting the book... %d pages
 #Loading file %s...
+#Rename To
 #Replace document &colors with Windows color scheme
 

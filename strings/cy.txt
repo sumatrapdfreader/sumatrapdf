@@ -564,6 +564,7 @@ argraffu dogfen
 #Enter the command-line to invoke when you double-click on the PDF document:
 #Error loading %s
 #F&avorites
+#Failed to rename the file!
 #Favorites
 #File %s not found
 #Fonts:
@@ -583,6 +584,7 @@ argraffu dogfen
 #Printing page %d of %d...
 #Remove from favorites
 #Remove page %s from favorites
+#Rename To
 #Replace document &colors with Windows color scheme
 #Save S&hortcut...\tCtrl+Shift+S
 #Select &All

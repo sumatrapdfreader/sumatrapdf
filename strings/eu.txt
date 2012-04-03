@@ -695,3 +695,7 @@ idazkia kopiatzen
 printing document
 agiria irarkitzen
 
+# Untranslated:
+#Failed to rename the file!
+#Rename To
+

@@ -696,3 +696,7 @@ copying text
 printing document
 штампање документа
 
+# Untranslated:
+#Failed to rename the file!
+#Rename To
+

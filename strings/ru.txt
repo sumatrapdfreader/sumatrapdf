@@ -696,3 +696,7 @@ copying text
 printing document
 печатается документ
 
+# Untranslated:
+#Failed to rename the file!
+#Rename To
+

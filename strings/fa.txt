@@ -699,3 +699,7 @@ copying text
 printing document
 در حل چاپ سند
 
+# Untranslated:
+#Failed to rename the file!
+#Rename To
+

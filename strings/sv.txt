@@ -670,9 +670,11 @@ skriver ut dokumentet
 #Copy &Image
 #Copyright:
 #Could not obtain Printer properties
+#Failed to rename the file!
 #File %s not found
 #Fonts:
 #Formatting the book... %d pages
 #Loading file %s...
+#Rename To
 #Replace document &colors with Windows color scheme
 

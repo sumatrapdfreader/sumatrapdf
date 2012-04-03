@@ -2432,8 +2432,7 @@ static void AppendFileFilterForDoc(DisplayModel *dm, str::Str<TCHAR>& fileFilter
         case Engine_Fb2:    fileFilter.Append(_T("FictionBooks")); break;
         case Engine_Mobi:   fileFilter.Append(_TR("Mobi documents")); break;
         case Engine_Chm2:   fileFilter.Append(_TR("CHM documents")); break;
-        // TODO: translate after 2.0
-        case Engine_Txt:    fileFilter.Append(_T("Text documents")); break;
+        case Engine_Txt:    fileFilter.Append(_TR("Text documents")); break;
         default:            fileFilter.Append(_TR("PDF documents")); break;
     }
 }
@@ -2653,8 +2652,7 @@ static void OnMenuRenameFile(WindowInfo &win)
     ofn.nMaxFile = dimof(dstFileName);
     ofn.lpstrFilter = fileFilter.Get();
     ofn.nFilterIndex = 1;
-    // TODO: translate after 2.0
-    ofn.lpstrTitle = _T("Rename to:");
+    ofn.lpstrTitle = _TR("Rename To");
     ofn.lpstrInitialDir = initDir;
     ofn.lpstrDefExt = defExt + 1;
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
@@ -2673,8 +2671,7 @@ static void OnMenuRenameFile(WindowInfo &win)
     if (!moveOk) {
         LogLastError();
         LoadDocument(srcFilePath, &win);
-        // TODO: translate after 2.0
-        ShowNotification(&win,  _T("Failed to rename the file"), false /* autoDismiss */, true /* highlight */);
+        ShowNotification(&win, _TR("Failed to rename the file!"), false /* autoDismiss */, true /* highlight */);
         return;
     }
 
@@ -2827,8 +2824,7 @@ void OnMenuOpen(SumatraWindow& win)
 #ifdef ENABLE_EBOOK_ENGINES
         { _TR("EPUB ebooks"),           _T("*.epub"),       true },
         { _T("FictionBooks"),           _T("*.fb2;*.fb2z;*.zfb2"), true },
-        // TODO: translate after 2.0
-        { _T("Text documents"),         _T("*.txt;*.log"),  true },
+        { _TR("Text documents"),        _T("*.txt;*.log"),  true },
 #endif
     };
     // Prepare the file filters (use \1 instead of \0 so that the

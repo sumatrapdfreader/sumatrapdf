@@ -382,6 +382,7 @@ mencetak dokumen
 #Error loading %s
 #F&avorites
 #F&orward\tAlt+Right Arrow
+#Failed to rename the file!
 #Favorites
 #File %s not found
 #Fit &Content\tCtrl+3
@@ -427,6 +428,7 @@ mencetak dokumen
 #Remember &opened files
 #Remove from favorites
 #Remove page %s from favorites
+#Rename To
 #Replace document &colors with Windows color scheme
 #Save S&hortcut...\tCtrl+Shift+S
 #Searching %d of %d...

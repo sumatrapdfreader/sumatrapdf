@@ -695,3 +695,7 @@ metin kopyalanıyor
 printing document
 belge yazdırılıyor
 
+# Untranslated:
+#Failed to rename the file!
+#Rename To
+

@@ -703,3 +703,7 @@ tekst kopiëren
 printing document
 Document afdrukken
 
+# Untranslated:
+#Failed to rename the file!
+#Rename To
+

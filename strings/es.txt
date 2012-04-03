@@ -695,6 +695,8 @@ printing document
 imprimimendo documento
 
 # Untranslated:
+#Failed to rename the file!
 #Formatting the book... %d pages
 #Loading file %s...
+#Rename To
 

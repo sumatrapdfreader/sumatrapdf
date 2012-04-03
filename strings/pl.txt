@@ -690,6 +690,8 @@ printing document
 drukowanie dokumentu
 
 # Untranslated:
+#Failed to rename the file!
 #Formatting the book... %d pages
 #Loading file %s...
+#Rename To
 

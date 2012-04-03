@@ -695,3 +695,7 @@ copiando texto
 printing document
 imprimindo documento
 
+# Untranslated:
+#Failed to rename the file!
+#Rename To
+

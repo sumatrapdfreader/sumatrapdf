@@ -532,6 +532,7 @@ printing document
 #EPUB ebooks
 #Error loading %s
 #F&avorites
+#Failed to rename the file!
 #Favorites
 #File %s not found
 #Fonts:
@@ -556,6 +557,7 @@ printing document
 #Printing page %d of %d...
 #Remove from favorites
 #Remove page %s from favorites
+#Rename To
 #Replace document &colors with Windows color scheme
 #Save S&hortcut...\tCtrl+Shift+S
 #Select &All

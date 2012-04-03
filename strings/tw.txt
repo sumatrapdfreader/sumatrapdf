@@ -641,6 +641,7 @@ printing document
 #Could not obtain Printer properties
 #Current file
 #F&avorites
+#Failed to rename the file!
 #Favorites
 #File %s not found
 #Fonts:
@@ -650,6 +651,7 @@ printing document
 #Printer with given name doesn't exist
 #Remove from favorites
 #Remove page %s from favorites
+#Rename To
 #Replace document &colors with Windows color scheme
 #Show Favorites
 

@@ -696,3 +696,7 @@ cópia de texto
 printing document
 impressão de documento
 
+# Untranslated:
+#Failed to rename the file!
+#Rename To
+

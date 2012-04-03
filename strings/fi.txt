@@ -692,5 +692,7 @@ tulostetaan asiakirjaa
 
 # Untranslated:
 #Copyright:
+#Failed to rename the file!
+#Rename To
 #Replace document &colors with Windows color scheme
 

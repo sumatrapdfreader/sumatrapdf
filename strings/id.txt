@@ -679,10 +679,12 @@ mencetak dokumen
 
 # Untranslated:
 #Copyright:
+#Failed to rename the file!
 #Fonts:
 #Formatting the book... %d pages
 #Loading file %s...
 #Open in Microsoft HTML Help
 #Open in Microsoft XPS-Viewer
+#Rename To
 #Replace document &colors with Windows color scheme
 
