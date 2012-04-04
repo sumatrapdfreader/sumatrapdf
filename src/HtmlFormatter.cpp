@@ -46,7 +46,7 @@ The information that we need to remember:
 * text color (when/if we support changing text color)
 * more ?
 
-TODO: reuse styleStack, listDepth, preFormatted from PageData when restarting
+TODO: reuse styleStack, listDepth, preFormatted from HtmlPage when restarting
 layout from a reparseIdx
 
 TODO: HtmlFormatter could be split into DrawInstrBuilder which knows pageDx, pageDy
@@ -397,7 +397,7 @@ static RectF RectFUnion(RectF& r1, RectF& r2)
     return ru;
 }
 
-void HtmlFormatter::UpdateLinkBboxes(PageData *page)
+void HtmlFormatter::UpdateLinkBboxes(HtmlPage *page)
 {
     for (DrawInstr *i = page->instructions.IterStart(); i; i = page->instructions.IterNext()) {
         if (InstrLinkStart != i->type)
@@ -477,7 +477,7 @@ bool HtmlFormatter::FlushCurrLine(bool isParagraphBreak)
     return createdPage;
 }
 
-static DrawInstr *FindLastSetFontInstr(PageData *page)
+static DrawInstr *FindLastSetFontInstr(HtmlPage *page)
 {
     if (!page)
         return NULL;
@@ -493,8 +493,8 @@ static DrawInstr *FindLastSetFontInstr(PageData *page)
 
 void HtmlFormatter::EmitNewPage()
 {
-    PageData *prevPage = currPage;
-    currPage = new PageData();
+    HtmlPage *prevPage = currPage;
+    currPage = new HtmlPage();
     currPage->reparseIdx = currReparseIdx;
     currPage->styleStack = styleStack;
     currPage->listDepth = listDepth;
@@ -1144,7 +1144,7 @@ void MobiFormatter::HandleHtmlTag_Mobi(HtmlToken *t)
 }
 
 // empty page is one that consists of only invisible instructions
-static bool IsEmptyPage(PageData *p)
+static bool IsEmptyPage(HtmlPage *p)
 {
     if (!p)
         return false;
@@ -1167,13 +1167,13 @@ static bool IsEmptyPage(PageData *p)
 // xml element at a time. This might cause a creation of one
 // or more pages, which we remeber and send to the caller
 // if we detect accumulated pages.
-PageData *MobiFormatter::Next()
+HtmlPage *MobiFormatter::Next()
 {
     for (;;)
     {
         // send out all pages accumulated so far
         while (pagesToSend.Count() > 0) {
-            PageData *ret = pagesToSend.At(0);
+            HtmlPage *ret = pagesToSend.At(0);
             pagesToSend.RemoveAt(0);
             pageCount++;
             if (IsEmptyPage(ret))
@@ -1211,10 +1211,10 @@ PageData *MobiFormatter::Next()
 }
 
 // convenience method to format the whole html
-Vec<PageData*> *MobiFormatter::FormatAllPages()
+Vec<HtmlPage*> *MobiFormatter::FormatAllPages()
 {
-    Vec<PageData *> *pages = new Vec<PageData *>();
-    for (PageData *pd = Next(); pd; pd = Next()) {
+    Vec<HtmlPage *> *pages = new Vec<HtmlPage *>();
+    for (HtmlPage *pd = Next(); pd; pd = Next()) {
         pages->Append(pd);
     }
     return pages;
@@ -1257,7 +1257,7 @@ void EpubFormatter::HandleHtmlTag_Epub(HtmlToken *t)
 
 // TODO: replace with a single HtmlFormatter::FormatAllPages()
 // implemented like MobiFormatter::FormatAllPages() (uses Next())
-Vec<PageData*> *EpubFormatter::FormatAllPages()
+Vec<HtmlPage*> *EpubFormatter::FormatAllPages()
 {
     HtmlToken *t;
     while ((t = htmlParser->Next()) && !t->IsError()) {
@@ -1272,7 +1272,7 @@ Vec<PageData*> *EpubFormatter::FormatAllPages()
     pagesToSend.Append(currPage);
     currPage = NULL;
 
-    Vec<PageData *> *result = new Vec<PageData *>(pagesToSend);
+    Vec<HtmlPage *> *result = new Vec<HtmlPage *>(pagesToSend);
     pagesToSend.Reset();
     return result;
 }
@@ -1284,13 +1284,13 @@ Vec<PageData*> *EpubFormatter::FormatAllPages()
 // if we detect accumulated pages.
 // TODO: make this single implementation part of HtmlFormatter
 // (we can make HandleHtmlTag() virtual to make this work)
-PageData *EpubFormatter::Next()
+HtmlPage *EpubFormatter::Next()
 {
     for (;;)
     {
         // send out all pages accumulated so far
         while (pagesToSend.Count() > 0) {
-            PageData *ret = pagesToSend.At(0);
+            HtmlPage *ret = pagesToSend.At(0);
             pagesToSend.RemoveAt(0);
             pageCount++;
             if (IsEmptyPage(ret))

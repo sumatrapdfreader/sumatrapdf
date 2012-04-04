@@ -507,7 +507,7 @@ RenderedBitmap *RenderFirstMobiPageToBitmap(MobiDoc *mobiDoc, SizeI pageSize, Si
     PoolAllocator textAllocator;
     HtmlFormatterArgs *args = CreateFormatterArgs(NULL, Doc(mobiDoc), pageSize.dx, pageSize.dy, &textAllocator);
     MobiFormatter mf(args, mobiDoc);
-    PageData *pd = mf.Next();
+    HtmlPage *pd = mf.Next();
     if (!pd)
         return NULL;
 

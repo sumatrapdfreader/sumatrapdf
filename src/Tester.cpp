@@ -95,8 +95,8 @@ static void MobiLayout(MobiDoc *mobiDoc)
     args.textAllocator = &textAllocator;
 
     MobiFormatter mf(&args, mobiDoc);
-    Vec<PageData*> *pages = mf.FormatAllPages();
-    DeleteVecMembers<PageData*>(*pages);
+    Vec<HtmlPage*> *pages = mf.FormatAllPages();
+    DeleteVecMembers<HtmlPage*>(*pages);
     delete pages;
 }
 

@@ -26,7 +26,7 @@ static Rect RectForCircle(int x, int y, int r)
 {
     return Rect(x - r, y - r, r * 2, r * 2);
 }
-void PageControl::SetPage(PageData *newPage)
+void PageControl::SetPage(HtmlPage *newPage)
 {
     page = newPage;
     RequestRepaint(this);

@@ -23,13 +23,13 @@ struct EbookControls {
 EbookControls * CreateEbookControls(HWND hwnd);
 void            DestroyEbookControls(EbookControls* controls);
 
-class PageData;
+class HtmlPage;
 
 // control that shows a single ebook page
 // TODO: move to a separate file
 class PageControl : public Control
 {
-    PageData *  page;
+    HtmlPage *  page;
     int         cursorX, cursorY;
 
 public:
@@ -38,8 +38,8 @@ public:
     }
     virtual ~PageControl() { }
 
-    void      SetPage(PageData *newPage);
-    PageData* GetPage() const { return page; }
+    void      SetPage(HtmlPage *newPage);
+    HtmlPage* GetPage() const { return page; }
 
     Size GetDrawableSize();
 

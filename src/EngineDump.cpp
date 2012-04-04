@@ -196,7 +196,7 @@ const char *PageDestToStr(PageDestType destType)
     return NULL;
 }
 
-void DumpPageData(BaseEngine *engine, int pageNo, bool fullDump)
+void DumpHtmlPage(BaseEngine *engine, int pageNo, bool fullDump)
 {
     // ensure that the page is loaded
     engine->BenchLoadPage(pageNo);
@@ -289,7 +289,7 @@ void DumpData(BaseEngine *engine, bool fullDump)
     DumpProperties(engine);
     DumpToc(engine);
     for (int i = 1; i <= engine->PageCount(); i++)
-        DumpPageData(engine, i, fullDump);
+        DumpHtmlPage(engine, i, fullDump);
     if (fullDump)
         DumpThumbnail(engine);
     Out("</EngineDump>\n");

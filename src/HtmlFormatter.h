@@ -70,9 +70,9 @@ struct DrawStyle {
     AlignAttr align;
 };
 
-class PageData {
+class HtmlPage {
 public:
-    PageData() : reparseIdx(0), listDepth(0), preFormatted(false) { }
+    HtmlPage() : reparseIdx(0), listDepth(0), preFormatted(false) { }
 
     Vec<DrawInstr>  instructions;
     // if we start parsing html again from reparseIdx, we should
@@ -136,7 +136,7 @@ protected:
     void  JustifyLineBoth();
     void  JustifyCurrLine(AlignAttr align);
     bool  FlushCurrLine(bool isParagraphBreak);
-    void  UpdateLinkBboxes(PageData *page);
+    void  UpdateLinkBboxes(HtmlPage *page);
 
     void  EmitImage(ImageData *img);
     void  EmitHr();
@@ -186,7 +186,7 @@ protected:
     Vec<DrawInstr>      currLineInstr;
     // reparse point of the first instructions in a current line
     int                 currLineReparseIdx;
-    PageData *          currPage;
+    HtmlPage *          currPage;
 
     // for tracking whether we're currently inside <a> tag
     size_t              currLinkIdx;
@@ -197,7 +197,7 @@ protected:
     HtmlPullParser *    htmlParser;
 
     // list of pages that we've created but haven't yet sent to client
-    Vec<PageData*>      pagesToSend;
+    Vec<HtmlPage*>      pagesToSend;
 
     bool                finishedParsing;
     // number of pages generated so far, approximate. Only used
@@ -210,7 +210,7 @@ public:
     HtmlFormatter(HtmlFormatterArgs *args);
     virtual ~HtmlFormatter();
 
-    virtual PageData *Next() { CrashIf(true); return NULL; }
+    virtual HtmlPage *Next() { CrashIf(true); return NULL; }
 };
 
 class MobiFormatter : public HtmlFormatter {
@@ -228,8 +228,8 @@ class MobiFormatter : public HtmlFormatter {
 public:
     MobiFormatter(HtmlFormatterArgs *args, MobiDoc *doc);
 
-    virtual PageData *Next();
-    Vec<PageData*> *FormatAllPages();
+    virtual HtmlPage *Next();
+    Vec<HtmlPage*> *FormatAllPages();
 };
 
 /* formatting extensions for EPUB */
@@ -245,8 +245,8 @@ protected:
 public:
     EpubFormatter(HtmlFormatterArgs *args, EpubDoc *doc) : HtmlFormatter(args), epubDoc(doc) { }
 
-    virtual PageData *Next();
-    Vec<PageData*> *FormatAllPages();
+    virtual HtmlPage *Next();
+    Vec<HtmlPage*> *FormatAllPages();
 };
 
 void DrawHtmlPage(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox, Color *textColor=NULL);

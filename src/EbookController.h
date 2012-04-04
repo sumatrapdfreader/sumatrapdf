@@ -16,7 +16,7 @@ using namespace mui;
 
 struct  EbookControls;
 class   EbookController;
-class   PageData;
+class   HtmlPage;
 class   PoolAllocator;
 class   EbookFormattingThread;
 
@@ -34,7 +34,7 @@ struct FinishedMobiLoadingData {
 
 struct EbookFormattingData {
     enum { MAX_PAGES = 32 };
-    PageData *         pages[MAX_PAGES];
+    HtmlPage *         pages[MAX_PAGES];
     size_t             pageCount;
     bool               fromBeginning;
     bool               finished;
@@ -49,8 +49,8 @@ struct FormattingTemp {
     // otherwise it's the reparse point of the page we were showing when
     // we started the layout
     int             reparseIdx;
-    Vec<PageData *> pagesFromPage;
-    Vec<PageData *> pagesFromBeginning;
+    Vec<HtmlPage *> pagesFromPage;
+    Vec<HtmlPage *> pagesFromBeginning;
 
     void            DeletePages();
 };
@@ -77,8 +77,8 @@ class EbookController : public sigslot::has_slots
     //    (caused by resizing a window while displaying that page)
     // 3. like 2. but layout process is still in progress and we're waiting
     //    for more pages
-    Vec<PageData*>* pagesFromBeginning;
-    Vec<PageData*>* pagesFromPage;
+    Vec<HtmlPage*>* pagesFromBeginning;
+    Vec<HtmlPage*>* pagesFromPage;
 
     // currPageNo is in range 1..$numberOfPages. It's always a page number
     // as if the pages were formatted from the begginging. We don't always
@@ -91,7 +91,7 @@ class EbookController : public sigslot::has_slots
     // pagesFromPage or from formattingTemp during layout or it can be a page that
     // we took from previous pagesFromBeginning/pagesFromPage when we started
     // new layout process
-    PageData *      pageShown;
+    HtmlPage *      pageShown;
     // if true, we need to delete pageShown if we no longer need it
     bool            deletePageShown;
 
@@ -106,16 +106,16 @@ class EbookController : public sigslot::has_slots
     // show after loading. -1 indicates no action needed
     int               startReparseIdx;
 
-    Vec<PageData*> *GetPagesFromBeginning();
-    PageData*   PreserveTempPageShown();
+    Vec<HtmlPage*> *GetPagesFromBeginning();
+    HtmlPage*   PreserveTempPageShown();
     void        UpdateStatus();
-    void        DeletePages(Vec<PageData*>** pages);
+    void        DeletePages(Vec<HtmlPage*>** pages);
     void        DeletePageShown();
-    void        ShowPage(PageData *pd, bool deleteWhenDone);
-    void        UpdateCurrPageNoForPage(PageData *pd);
+    void        ShowPage(HtmlPage *pd, bool deleteWhenDone);
+    void        UpdateCurrPageNoForPage(HtmlPage *pd);
     void        TriggerBookFormatting();
     bool        FormattingInProgress() const { return formattingThread != NULL; }
-    bool        GoOnePageForward(Vec<PageData*> *pages);
+    bool        GoOnePageForward(Vec<HtmlPage*> *pages);
     void        GoOnePageForward();
     size_t      GetMaxPageCount();
     void        StopFormattingThread(bool forceTerminate);

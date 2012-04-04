@@ -78,7 +78,7 @@ public:
     int                 reparseIdx;
 
     // state used during layout process
-    PageData *  pages[EbookFormattingData::MAX_PAGES];
+    HtmlPage *  pages[EbookFormattingData::MAX_PAGES];
     int         pageCount;
 
     void        SendPagesIfNecessary(bool force, bool finished, bool fromBeginning);
@@ -104,7 +104,7 @@ EbookFormattingThread::~EbookFormattingThread()
     delete formatterArgs;
 }
 
-static void DeletePages(Vec<PageData*> *pages)
+static void DeletePages(Vec<HtmlPage*> *pages)
 {
     if (!pages)
         return;
@@ -124,7 +124,7 @@ void EbookFormattingThread::SendPagesIfNecessary(bool force, bool finished, bool
     ld->finished = finished;
     ld->fromBeginning = fromBeginning;
     if (pageCount > 0)
-        memcpy(ld->pages, pages, pageCount * sizeof(PageData*));
+        memcpy(ld->pages, pages, pageCount * sizeof(HtmlPage*));
     //lf("ThreadLayoutEbook::SendPagesIfNecessary() sending %d pages, finished=%d", pageCount, (int)finished);
     ld->pageCount = pageCount;
     ld->threadNo = threadNo;
@@ -156,7 +156,7 @@ bool EbookFormattingThread::Format(int reparseIdx)
     formatterArgs->reparseIdx = reparseIdx;
     HtmlFormatter *formatter = CreateFormatterForDoc(doc, formatterArgs);
     int lastReparseIdx = reparseIdx;
-    for (PageData *pd = formatter->Next(); pd; pd = formatter->Next()) {
+    for (HtmlPage *pd = formatter->Next(); pd; pd = formatter->Next()) {
         CrashIf(pd->reparseIdx < lastReparseIdx);
         lastReparseIdx = pd->reparseIdx;
         if (WasCancelRequested()) {
@@ -258,7 +258,7 @@ void EbookController::CloseCurrentDocument()
     pageDx = 0; pageDy = 0;
 }
 
-void EbookController::DeletePages(Vec<PageData*>** pages)
+void EbookController::DeletePages(Vec<HtmlPage*>** pages)
 {
     CrashIf((pagesFromBeginning != *pages) && 
             (pagesFromPage != *pages));
@@ -299,12 +299,12 @@ HtmlFormatterArgs *CreateFormatterArgs(const char *html, Doc doc, int dx, int dy
 // returns page whose content contains reparseIdx
 // page is in 1..$pageCount range to match currPageNo
 // returns 0 if not found
-static size_t PageForReparsePoint(Vec<PageData*> *pages, int reparseIdx)
+static size_t PageForReparsePoint(Vec<HtmlPage*> *pages, int reparseIdx)
 {
     if (!pages)
         return 0;
     for (size_t i = 0; i < pages->Count(); i++) {
-        PageData *pd = pages->At(i);
+        HtmlPage *pd = pages->At(i);
         if (pd->reparseIdx == reparseIdx)
             return i + 1;
         // this is the first page whose content is after reparseIdx, so
@@ -319,7 +319,7 @@ static size_t PageForReparsePoint(Vec<PageData*> *pages, int reparseIdx)
 
 // gets pages as formatted from beginning, either from a temporary state
 // when layout is in progress or final formatted pages
-Vec<PageData*> *EbookController::GetPagesFromBeginning()
+Vec<HtmlPage*> *EbookController::GetPagesFromBeginning()
 {
     if (pagesFromBeginning) {
         CrashIf(FormattingInProgress());
@@ -331,7 +331,7 @@ Vec<PageData*> *EbookController::GetPagesFromBeginning()
 }
 
 // Given a page try to calculate its page number
-void EbookController::UpdateCurrPageNoForPage(PageData *pd)
+void EbookController::UpdateCurrPageNoForPage(HtmlPage *pd)
 {
     currPageNo = 0;
     if (!pd)
@@ -348,7 +348,7 @@ void EbookController::UpdateCurrPageNoForPage(PageData *pd)
     currPageNo = PageForReparsePoint(GetPagesFromBeginning(), pd->reparseIdx);
 }
 
-void EbookController::ShowPage(PageData *pd, bool deleteWhenDone)
+void EbookController::ShowPage(HtmlPage *pd, bool deleteWhenDone)
 {
     DeletePageShown();
     pageShown = pd;
@@ -374,7 +374,7 @@ void EbookController::HandleMobiLayoutMsg(EbookFormattingData *ld)
         return;
     }
     //lf("EbookController::HandleMobiLayoutMsg() %d pages, ld=0x%x", ld->pageCount, (int)ld);
-    PageData *pageToShow = NULL;
+    HtmlPage *pageToShow = NULL;
 
     if (!ld->fromBeginning) {
         // if this is the first page sent, we're currently showing a page
@@ -399,7 +399,7 @@ void EbookController::HandleMobiLayoutMsg(EbookFormattingData *ld)
         // page from previous session
         CrashIf(formattingTemp.reparseIdx != 0);
         for (size_t i = 0; i < ld->pageCount; i++) {
-            PageData *pd = ld->pages[i];
+            HtmlPage *pd = ld->pages[i];
             if (pd->reparseIdx == startReparseIdx) {
                 pageToShow = pd;
             } else if (pd->reparseIdx >= startReparseIdx) {
@@ -443,8 +443,8 @@ void EbookController::HandleMobiLayoutMsg(EbookFormattingData *ld)
 
     if (ld->finished) {
         CrashIf(pagesFromBeginning || pagesFromPage);
-        pagesFromBeginning = new Vec<PageData*>();
-        PageData **pages = formattingTemp.pagesFromBeginning.LendData();
+        pagesFromBeginning = new Vec<HtmlPage*>();
+        HtmlPage **pages = formattingTemp.pagesFromBeginning.LendData();
         size_t pageCount =  formattingTemp.pagesFromBeginning.Count();
         pagesFromBeginning->Append(pages, pageCount);
         formattingTemp.pagesFromBeginning.Reset();
@@ -452,7 +452,7 @@ void EbookController::HandleMobiLayoutMsg(EbookFormattingData *ld)
         pageCount =  formattingTemp.pagesFromPage.Count();
         if (pageCount > 0) {
             pages = formattingTemp.pagesFromPage.LendData();
-            pagesFromPage = new Vec<PageData*>();
+            pagesFromPage = new Vec<HtmlPage*>();
             pagesFromPage->Append(pages, pageCount);
             formattingTemp.pagesFromPage.Reset();
         }
@@ -464,7 +464,7 @@ void EbookController::HandleMobiLayoutMsg(EbookFormattingData *ld)
 // if we're showing a temp page, it must be part of some collection that we're
 // about to delete. Remove the page from its collection so that it doesn't get
 // deleted along with it. The caller must assume ownership of the object
-PageData *EbookController::PreserveTempPageShown()
+HtmlPage *EbookController::PreserveTempPageShown()
 {
     if (!pageShown)
         return NULL;
@@ -510,7 +510,7 @@ void EbookController::TriggerBookFormatting()
 
     //lf("(%3d,%3d) EbookController::TriggerBookFormatting", dx, dy);
     pageDx = dx; pageDy = dy; // set it early to prevent re-doing layout at the same size
-    PageData *newPage = PreserveTempPageShown();
+    HtmlPage *newPage = PreserveTempPageShown();
     if (newPage) {
         CrashIf((formattingTemp.reparseIdx != 0) && 
                 (formattingTemp.reparseIdx != newPage->reparseIdx));
@@ -578,8 +578,8 @@ void EbookController::ClickedProgress(Control *c, int x, int y)
 
 size_t EbookController::GetMaxPageCount()
 {
-    Vec<PageData *> *pages1 = pagesFromBeginning;
-    Vec<PageData *> *pages2 = pagesFromPage;
+    Vec<HtmlPage *> *pages1 = pagesFromBeginning;
+    Vec<HtmlPage *> *pages2 = pagesFromPage;
     if (FormattingInProgress()) {
         CrashIf(pages1 || pages2);
         pages1 = &formattingTemp.pagesFromBeginning;
@@ -642,7 +642,7 @@ void EbookController::GoToLastPage()
         GoToPage(GetPagesFromBeginning()->Count());
 }
 
-bool EbookController::GoOnePageForward(Vec<PageData*> *pages)
+bool EbookController::GoOnePageForward(Vec<HtmlPage*> *pages)
 {
     if (!pageShown || !pages)
         return false;

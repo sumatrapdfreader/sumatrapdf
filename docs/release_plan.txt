@@ -26,13 +26,12 @@ target: 6/1):
   doesn't involve closing the window
 - thumbnails for epub documents when opened in ebook ui
 - make -esc-on-exit work for ebook window
-- mobi: closing mobi document when initial layout is going on,
+- mobi: closing mobi document when initial formatting is going on,
   we loose the position in the file (it gets reset to 0)
 - a web-based translation system as described in wishlist.txt
   Server written in Go + python scripts to upload strings for
   translation and download translations
   https://github.com/kjk/apptranslator
-- rename PageData => HtmlPage (?)
 - ???
 
 Given aggresive schedule, it's important to make the most risky

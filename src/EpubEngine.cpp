@@ -89,7 +89,7 @@ public:
 
 protected:
     const TCHAR *fileName;
-    Vec<PageData *> *pages;
+    Vec<HtmlPage *> *pages;
     Vec<PageAnchor> anchors;
     // contains for each page the last anchor indicating
     // a break between two merged documents
@@ -112,7 +112,7 @@ protected:
     void FixFontSizeForResolution(HDC hDC);
     PageElement *CreatePageLink(DrawInstr *link, RectI rect, int pageNo);
 
-    Vec<DrawInstr> *GetPageData(int pageNo) {
+    Vec<DrawInstr> *GetHtmlPage(int pageNo) {
         CrashIf(pageNo < 1 || PageCount() < pageNo);
         if (pageNo < 1 || PageCount() < pageNo)
             return NULL;
@@ -227,7 +227,7 @@ bool EbookEngine::ExtractPageAnchors()
 
     DrawInstr *baseAnchor = NULL;
     for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
-        Vec<DrawInstr> *pageInstrs = GetPageData(pageNo);
+        Vec<DrawInstr> *pageInstrs = GetHtmlPage(pageNo);
         if (!pageInstrs)
             return false;
 
@@ -301,7 +301,7 @@ void EbookEngine::FixFontSizeForResolution(HDC hDC)
     LOGFONTW lfw;
 
     for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
-        Vec<DrawInstr> *pageInstrs = GetPageData(pageNo);
+        Vec<DrawInstr> *pageInstrs = GetHtmlPage(pageNo);
         for (DrawInstr *i = pageInstrs->IterStart(); i; i = pageInstrs->IterNext()) {
             if (InstrSetFont == i->type) {
                 Status ok = i->font->GetLogFontW(&g, &lfw);
@@ -340,7 +340,7 @@ bool EbookEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, 
 
     ScopedCritSec scope(&pagesAccess);
     FixFontSizeForResolution(hDC);
-    DrawHtmlPage(&g, GetPageData(pageNo), pageBorder, pageBorder, false, &Color(Color::Black));
+    DrawHtmlPage(&g, GetHtmlPage(pageNo), pageBorder, pageBorder, false, &Color(Color::Black));
     return true;
 }
 
@@ -359,7 +359,7 @@ TCHAR *EbookEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_o
     Vec<RectI> coords;
     bool insertSpace = false;
 
-    Vec<DrawInstr> *pageInstrs = GetPageData(pageNo);
+    Vec<DrawInstr> *pageInstrs = GetHtmlPage(pageNo);
     for (DrawInstr *i = pageInstrs->IterStart(); i; i = pageInstrs->IterNext()) {
         RectI bbox = GetInstrBbox(i, pageBorder);
         switch (i->type) {
@@ -429,7 +429,7 @@ Vec<PageElement *> *EbookEngine::GetElements(int pageNo)
 {
     Vec<PageElement *> *els = new Vec<PageElement *>();
 
-    Vec<DrawInstr> *pageInstrs = GetPageData(pageNo);
+    Vec<DrawInstr> *pageInstrs = GetHtmlPage(pageNo);
     // CreatePageLink -> GetNamedDest might use pageInstrs->IterStart()
     for (size_t k = 0; k < pageInstrs->Count(); k++) {
         DrawInstr *i = &pageInstrs->At(k);
@@ -675,7 +675,7 @@ public:
     Fb2Formatter(HtmlFormatterArgs *args, Fb2Doc *doc) :
         HtmlFormatter(args), fb2Doc(doc), section(1), titleCount(0) { }
 
-    Vec<PageData*> *FormatAllPages();
+    Vec<HtmlPage*> *FormatAllPages();
 };
 
 void Fb2Formatter::HandleTagImg_Fb2(HtmlToken *t)
@@ -748,7 +748,7 @@ void Fb2Formatter::HandleFb2Tag(HtmlToken *t)
     }
 }
 
-Vec<PageData*> *Fb2Formatter::FormatAllPages()
+Vec<HtmlPage*> *Fb2Formatter::FormatAllPages()
 {
     HtmlToken *t;
     while ((t = htmlParser->Next()) && !t->IsError()) {
@@ -763,7 +763,7 @@ Vec<PageData*> *Fb2Formatter::FormatAllPages()
     pagesToSend.Append(currPage);
     currPage = NULL;
 
-    Vec<PageData *> *result = new Vec<PageData *>(pagesToSend);
+    Vec<HtmlPage *> *result = new Vec<HtmlPage *>(pagesToSend);
     pagesToSend.Reset();
     return result;
 }
@@ -973,7 +973,7 @@ PageDestination *MobiEngineImpl::GetNamedDest(const TCHAR *name)
         return NULL;
 
     ScopedCritSec scope(&pagesAccess);
-    Vec<DrawInstr> *pageInstrs = GetPageData(pageNo);
+    Vec<DrawInstr> *pageInstrs = GetHtmlPage(pageNo);
     // link to the bottom of the page, if filePos points
     // beyond the last visible DrawInstr of a page
     float currY = (float)pageRect.dy;
@@ -1118,7 +1118,7 @@ protected:
 public:
     ChmFormatter(HtmlFormatterArgs *args, ChmDataCache *doc) : HtmlFormatter(args), chmDoc(doc) { }
 
-    Vec<PageData*> *FormatAllPages();
+    Vec<HtmlPage*> *FormatAllPages();
 };
 
 void ChmFormatter::HandleTagImg_Chm(HtmlToken *t)
@@ -1156,7 +1156,7 @@ void ChmFormatter::HandleHtmlTag_Chm(HtmlToken *t)
         HandleHtmlTag(t);
 }
 
-Vec<PageData*> *ChmFormatter::FormatAllPages()
+Vec<HtmlPage*> *ChmFormatter::FormatAllPages()
 {
     HtmlToken *t;
     while ((t = htmlParser->Next()) && !t->IsError()) {
@@ -1171,7 +1171,7 @@ Vec<PageData*> *ChmFormatter::FormatAllPages()
     pagesToSend.Append(currPage);
     currPage = NULL;
 
-    Vec<PageData *> *result = new Vec<PageData *>(pagesToSend);
+    Vec<HtmlPage *> *result = new Vec<HtmlPage *>(pagesToSend);
     pagesToSend.Reset();
     return result;
 }
@@ -1323,10 +1323,10 @@ protected:
 public:
     TxtFormatter(HtmlFormatterArgs *args) : HtmlFormatter(args) { }
 
-    Vec<PageData*> *FormatAllPages();
+    Vec<HtmlPage*> *FormatAllPages();
 };
 
-Vec<PageData*> *TxtFormatter::FormatAllPages()
+Vec<HtmlPage*> *TxtFormatter::FormatAllPages()
 {
     const char *curr = args->htmlStr;
     const char *end = curr + args->htmlStrLen;
@@ -1378,7 +1378,7 @@ Vec<PageData*> *TxtFormatter::FormatAllPages()
     pagesToSend.Append(currPage);
     currPage = NULL;
 
-    Vec<PageData *> *result = new Vec<PageData *>(pagesToSend);
+    Vec<HtmlPage *> *result = new Vec<HtmlPage *>(pagesToSend);
     pagesToSend.Reset();
     return result;
 }
