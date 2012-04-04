@@ -893,6 +893,12 @@ char *MobiDoc::GetBookHtmlData(size_t& lenOut) const
     return doc->Get();
 }
 
+bool MobiDoc::IsSupportedFile(const TCHAR *fileName, bool sniff)
+{
+    // TODO: also accept .prc and .azw as MobiEngine::IsSupportedFile ?
+    return str::EndsWithI(fileName, _T(".mobi"));
+}
+
 MobiDoc *MobiDoc::CreateFromFile(const TCHAR *fileName)
 {
     HANDLE fh = CreateFile(fileName, GENERIC_READ, FILE_SHARE_READ, NULL,

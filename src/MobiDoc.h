@@ -109,6 +109,7 @@ public:
     ImageData *         GetImage(size_t imgRecIndex) const;
     const TCHAR *       GetFileName() const { return fileName; }
 
+    static bool         IsSupportedFile(const TCHAR *fileName, bool sniff=false);
     static MobiDoc *    CreateFromFile(const TCHAR *fileName);
 };
 

@@ -41,28 +41,18 @@ ThreadLoadEbook::ThreadLoadEbook(const TCHAR *fn, EbookController *controller, c
     win = sumWin;
 }
 
-static bool IsMobiFile(const TCHAR *fileName)
-{
-    return str::EndsWithI(fileName, _T(".mobi"));
-}
-
-static bool IsEpubFile(const TCHAR *fileName)
-{
-    return str::EndsWithI(fileName, _T(".epub"));
-}
-
 void ThreadLoadEbook::Run()
 {
     //lf(_T("ThreadLoadEbook::Run(%s)"), fileName);
     Timer t(true);
     Doc doc;
 
-    if (IsMobiFile(fileName)) {
+    if (MobiDoc::IsSupportedFile(fileName)) {
         // TODO: make it Doc::CreateFromFile()
-        doc.Set(MobiDoc::CreateFromFile(fileName));
-    } else if (IsEpubFile(fileName)) {
+        doc = Doc(MobiDoc::CreateFromFile(fileName));
+    } else if (EpubDoc::IsSupportedFile(fileName)) {
         // TODO: make it Doc::CreateFromFile()
-        doc.Set(EpubDoc::CreateFromFile(fileName));
+        doc = Doc(EpubDoc::CreateFromFile(fileName));
     } else {
         CrashIf(true);
     }

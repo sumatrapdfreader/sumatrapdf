@@ -42,7 +42,7 @@ public:
     bool HasToc() const;
     bool ParseToc(EbookTocVisitor *visitor);
 
-    static bool IsSupportedFile(const TCHAR *fileName, bool sniff);
+    static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
     static EpubDoc *CreateFromFile(const TCHAR *fileName);
     static EpubDoc *CreateFromStream(IStream *stream);
 };
@@ -77,7 +77,7 @@ public:
     const char *GetHrefName();
     bool IsZipped();
 
-    static bool IsSupportedFile(const TCHAR *fileName, bool sniff);
+    static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
     static Fb2Doc *CreateFromFile(const TCHAR *fileName);
 };
 
