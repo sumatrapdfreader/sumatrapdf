@@ -5,6 +5,7 @@
 #define EbookController_h
 
 #include "BaseUtil.h"
+#include "Doc.h"
 #include "Mui.h"
 #include "PageLayout.h"
 #include "SumatraWindow.h"
@@ -17,17 +18,17 @@ struct  EbookControls;
 class   EbookController;
 class   PageData;
 class   PoolAllocator;
-class   MobiDoc;
-class   ThreadLayoutMobi;
+class   ThreadLayoutEbook;
 
 struct FinishedMobiLoadingData {
     TCHAR *         fileName;
-    MobiDoc *       mobiDoc;
+    Doc *           doc;
     SumatraWindow   win;
     double          loadingTimeMs;
 
     void Free() {
         free(fileName);
+        delete doc;
     }
 };
 
@@ -54,13 +55,13 @@ struct LayoutTemp {
     void            DeletePages();
 };
 
-LayoutInfo *GetLayoutInfo(const char *html, MobiDoc *mobiDoc, int dx, int dy, PoolAllocator *textAllocator);
+LayoutInfo *GetLayoutInfo(const char *html, Doc doc, int dx, int dy, PoolAllocator *textAllocator);
 
 class EbookController : public sigslot::has_slots
 {
     EbookControls * ctrls;
 
-    MobiDoc *       mobiDoc;
+    Doc             doc;
     const char *    html;
 
     // only set while we load the file on a background thread, used in UpdateStatus()
@@ -97,7 +98,7 @@ class EbookController : public sigslot::has_slots
      // size of the page for which pages were generated
     int             pageDx, pageDy;
 
-    ThreadLayoutMobi *layoutThread;
+    ThreadLayoutEbook *layoutThread;
     int               layoutThreadNo;
     LayoutTemp        layoutTemp;
 
@@ -131,14 +132,14 @@ public:
     virtual ~EbookController();
 
     void SetHtml(const char *html);
-    void SetMobiDoc(MobiDoc *newMobiDoc, int startReparseIdxArg = -1);
+    void SetDoc(Doc newDoc, int startReparseIdxArg = -1);
     void HandleFinishedMobiLoadingMsg(FinishedMobiLoadingData *finishedMobiLoading);
     void HandleMobiLayoutMsg(MobiLayoutData *mobiLayout);
     void OnLayoutTimer();
     void AdvancePage(int dist);
     void GoToPage(int newPageNo);
     void GoToLastPage();
-    MobiDoc *GetMobiDoc() const { return mobiDoc; }
+    Doc  GetDoc() const { return doc; }
     int  CurrPageReparseIdx() const;
 };
 

@@ -125,9 +125,9 @@ static HMENU BuildMobiMenu()
 
 TCHAR *MobiWindow::LoadedFilePath() const
 {
-    if (!ebookController || !ebookController->GetMobiDoc())
-        return NULL;
-    return ebookController->GetMobiDoc()->GetFileName();
+    if (ebookController)
+        return ebookController->GetDoc().GetFilePath();
+    return NULL;
 }
 
 static MobiWindow* FindMobiWindowByHwnd(HWND hwnd)
@@ -505,7 +505,7 @@ static LRESULT CALLBACK MobiWndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPA
 RenderedBitmap *RenderFirstMobiPageToBitmap(MobiDoc *mobiDoc, SizeI pageSize, SizeI bmpSize)
 {
     PoolAllocator textAllocator;
-    LayoutInfo *li = GetLayoutInfo(NULL, mobiDoc, pageSize.dx, pageSize.dy, &textAllocator);
+    LayoutInfo *li = GetLayoutInfo(NULL, Doc(mobiDoc), pageSize.dx, pageSize.dy, &textAllocator);
     MobiFormatter mf(li, mobiDoc);
     PageData *pd = mf.Next();
     if (!pd)
@@ -588,16 +588,24 @@ static void CreateThumbnailForMobiDoc(MobiDoc *mobiDoc, DisplayState& ds)
     delete bmp;
 }
 
-void OpenMobiInWindow(MobiDoc *mobiDoc, SumatraWindow& winToReplace)
+static void CreateThumbnailForDoc(Doc doc, DisplayState& ds)
 {
-    TCHAR *fullPath = mobiDoc->GetFileName();
+    if (doc.AsMobi())
+        CreateThumbnailForMobiDoc(doc.AsMobi(), ds);
+    else
+        CrashIf(true);
+}
+
+void OpenMobiInWindow(Doc doc, SumatraWindow& winToReplace)
+{
+    TCHAR *fullPath = doc.GetFilePath();
     DisplayState *ds = gFileHistory.Find(fullPath);
 
     if (gGlobalPrefs.rememberOpenedFiles) {
         ds = gFileHistory.MarkFileLoaded(fullPath);
         if (gGlobalPrefs.showStartPage && ds) {
             // TODO: do it on a background thread?
-            CreateThumbnailForMobiDoc(mobiDoc, *ds);
+            CreateThumbnailForDoc(doc, *ds);
         }
         SavePrefs();
     }
@@ -616,7 +624,7 @@ void OpenMobiInWindow(MobiDoc *mobiDoc, SumatraWindow& winToReplace)
     if (winToReplace.AsMobiWindow()) {
         MobiWindow *mw = winToReplace.AsMobiWindow();
         CrashIf(!mw);
-        mw->ebookController->SetMobiDoc(mobiDoc);
+        mw->ebookController->SetDoc(doc);
         win::SetText(mw->hwndFrame, winTitle);
         // TODO: if we have window position/last position for this file, restore it
         return;
@@ -665,7 +673,7 @@ void OpenMobiInWindow(MobiDoc *mobiDoc, SumatraWindow& winToReplace)
     win::SetText(win->hwndFrame, winTitle);
 
     ShowWindow(hwnd, wasMaximized ? SW_SHOWMAXIMIZED : SW_SHOW);
-    win->ebookController->SetMobiDoc(mobiDoc, startReparseIdx);
+    win->ebookController->SetDoc(doc, startReparseIdx);
 }
 
 bool RegisterMobiWinClass(HINSTANCE hinst)

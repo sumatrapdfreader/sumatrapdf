@@ -433,7 +433,7 @@ static void ShowProperties(WindowInfo& win, bool extended=false)
     if (!CreatePropertiesWindow(win.hwndFrame, layoutData))
         delete layoutData;
 }
-static void GetProps(MobiDoc *mobiDoc, PropertiesLayout *layoutData)
+static void GetMobiProps(MobiDoc *mobiDoc, PropertiesLayout *layoutData)
 {
     TCHAR *str = str::Dup(gPluginMode ? gPluginURL : mobiDoc->GetFileName());
     layoutData->AddProperty(_TR("File:"), str);
@@ -446,6 +446,19 @@ static void GetProps(MobiDoc *mobiDoc, PropertiesLayout *layoutData)
 
 }
 
+static bool GetProps(Doc doc, PropertiesLayout *layoutData)
+{
+    if (doc.AsMobi()) {
+        GetMobiProps(doc.AsMobi(), layoutData);
+        return true;
+    } else if (doc.AsEpub()) {
+        // TODO: GetEpubProps(doc.AsEpub(), layoutData);
+        return false;
+    }
+    CrashIf(true);
+    return false;
+}
+
 static void ShowProperties(MobiWindow *win)
 {
     PropertiesLayout *layoutData = FindPropertyWindowByParent(win->hwndFrame);
@@ -453,12 +466,17 @@ static void ShowProperties(MobiWindow *win)
         SetActiveWindow(layoutData->hwnd);
         return;
     }
-    MobiDoc *mobiDoc = win->ebookController->GetMobiDoc();
-    if (!mobiDoc)
+    Doc doc = win->ebookController->GetDoc();
+    if (!doc.IsNone())
         return;
     layoutData = new PropertiesLayout();
     gPropertiesWindows.Append(layoutData);
-    GetProps(mobiDoc, layoutData);
+
+    if (!GetProps(doc, layoutData)) {
+        delete layoutData;
+        return;
+    }
+
     // TODO: show properties
     if (!CreatePropertiesWindow(win->hwndFrame, layoutData))
         delete layoutData;

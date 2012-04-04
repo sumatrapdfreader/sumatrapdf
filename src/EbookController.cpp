@@ -4,6 +4,7 @@
 #include "EbookController.h"
 
 #include "EbookControls.h"
+#include "EpubDoc.h"
 #include "FileUtil.h"
 #include "MobiDoc.h"
 #include "MobiWindow.h"
@@ -33,34 +34,55 @@ void LayoutTemp::DeletePages()
     DeleteVecMembers(pagesFromPage);
 }
 
-ThreadLoadMobi::ThreadLoadMobi(const TCHAR *fn, EbookController *controller, const SumatraWindow& sumWin) :
+ThreadLoadEbook::ThreadLoadEbook(const TCHAR *fn, EbookController *controller, const SumatraWindow& sumWin) :
     controller(controller)
 {
     fileName = str::Dup(fn);
     win = sumWin;
 }
 
-void ThreadLoadMobi::Run()
+static bool IsMobiFile(const TCHAR *fileName)
 {
-    //lf(_T("ThreadLoadMobi::Run(%s)"), fileName);
+    return str::EndsWithI(fileName, _T(".mobi"));
+}
+
+static bool IsEpubFile(const TCHAR *fileName)
+{
+    return str::EndsWithI(fileName, _T(".epub"));
+}
+
+void ThreadLoadEbook::Run()
+{
+    //lf(_T("ThreadLoadEbook::Run(%s)"), fileName);
     Timer t(true);
-    MobiDoc *mobiDoc = MobiDoc::CreateFromFile(fileName);
+    Doc doc;
+
+    if (IsMobiFile(fileName)) {
+        // TODO: make it Doc::CreateFromFile()
+        doc.Set(MobiDoc::CreateFromFile(fileName));
+    } else if (IsEpubFile(fileName)) {
+        // TODO: make it Doc::CreateFromFile()
+        doc.Set(EpubDoc::CreateFromFile(fileName));
+    } else {
+        CrashIf(true);
+    }
+
     double loadingTimeMs = t.GetTimeInMs();
     //lf(_T("Loaded %s in %.2f ms"), fileName, t.GetTimeInMs());
 
     UiMsg *msg = new UiMsg(UiMsg::FinishedMobiLoading);
-    msg->finishedMobiLoading.mobiDoc = mobiDoc;
+    msg->finishedMobiLoading.doc = new Doc(doc);
     msg->finishedMobiLoading.fileName = fileName;
     msg->finishedMobiLoading.win = win;
     fileName = NULL;
     uimsg::Post(msg);
 }
 
-class ThreadLayoutMobi : public ThreadBase {
+class ThreadLayoutEbook : public ThreadBase {
 public:
     // provided by the caller
     LayoutInfo *        layoutInfo; // we own it
-    MobiDoc *           mobiDoc;
+    Doc                 doc;
     PoolAllocator *     textAllocator;
     EbookController *   controller;
     int                 reparseIdx;
@@ -72,21 +94,22 @@ public:
     void        SendPagesIfNecessary(bool force, bool finished, bool fromBeginning);
     bool        Layout(int reparseIdx);
 
-    ThreadLayoutMobi(LayoutInfo *li, MobiDoc *doc, EbookController *ctrl);
-    virtual ~ThreadLayoutMobi();
+    ThreadLayoutEbook(LayoutInfo *li, Doc doc, EbookController *ctrl);
+    virtual ~ThreadLayoutEbook();
 
     // ThreadBase
     virtual void Run();
 };
 
-ThreadLayoutMobi::ThreadLayoutMobi(LayoutInfo *li, MobiDoc *doc, EbookController *ctrl) :
-    layoutInfo(li), mobiDoc(doc), controller(ctrl), pageCount(0)
+ThreadLayoutEbook::ThreadLayoutEbook(LayoutInfo *li, Doc doc, EbookController *ctrl) :
+    layoutInfo(li), doc(doc), controller(ctrl), pageCount(0)
 {
+    AssertCrash(doc.IsEbook());
 }
 
-ThreadLayoutMobi::~ThreadLayoutMobi()
+ThreadLayoutEbook::~ThreadLayoutEbook()
 {
-    //lf("ThreadLayoutMobi::~ThreadLayoutMobi()");
+    //lf("ThreadLayoutEbook::~ThreadLayoutEbook()");
     free((void*)layoutInfo->fontName);
     delete layoutInfo;
 }
@@ -100,7 +123,7 @@ static void DeletePages(Vec<PageData*> *pages)
 }
 
 // send accumulated pages if we filled the buffer or the caller forces us
-void ThreadLayoutMobi::SendPagesIfNecessary(bool force, bool finished, bool fromBeginning)
+void ThreadLayoutEbook::SendPagesIfNecessary(bool force, bool finished, bool fromBeginning)
 {
     if (finished)
         force = true;
@@ -112,7 +135,7 @@ void ThreadLayoutMobi::SendPagesIfNecessary(bool force, bool finished, bool from
     ld->fromBeginning = fromBeginning;
     if (pageCount > 0)
         memcpy(ld->pages, pages, pageCount * sizeof(PageData*));
-    //lf("ThreadLayoutMobi::SendPagesIfNecessary() sending %d pages, finished=%d", pageCount, (int)finished);
+    //lf("ThreadLayoutEbook::SendPagesIfNecessary() sending %d pages, finished=%d", pageCount, (int)finished);
     ld->pageCount = pageCount;
     ld->threadNo = threadNo;
     ld->controller = controller;
@@ -121,18 +144,26 @@ void ThreadLayoutMobi::SendPagesIfNecessary(bool force, bool finished, bool from
     uimsg::Post(msg);
 }
 
+HtmlFormatter *CreateFormatterForDoc(Doc doc, LayoutInfo* li)
+{
+    if (doc.AsMobi())
+        return new MobiFormatter(li, doc.AsMobi());
+    CrashIf(true);
+    return NULL;
+}
+
 // layout pages from a given reparse point (beginning if NULL)
 // returns true if layout thread was cancelled
-bool ThreadLayoutMobi::Layout(int reparseIdx)
+bool ThreadLayoutEbook::Layout(int reparseIdx)
 {
     bool fromBeginning = (0 == reparseIdx);
     //lf("Started laying out mobi, fromBeginning=%d", (int)fromBeginning);
     int totalPageCount = 0;
     Timer t(true);
     layoutInfo->reparseIdx = reparseIdx;
-    MobiFormatter mf(layoutInfo, mobiDoc);
+    HtmlFormatter *formatter = CreateFormatterForDoc(doc, layoutInfo);
     int lastReparseIdx = reparseIdx;
-    for (PageData *pd = mf.Next(); pd; pd = mf.Next()) {
+    for (PageData *pd = formatter->Next(); pd; pd = formatter->Next()) {
         CrashIf(pd->reparseIdx < lastReparseIdx);
         lastReparseIdx = pd->reparseIdx;
         if (WasCancelRequested()) {
@@ -144,6 +175,7 @@ bool ThreadLayoutMobi::Layout(int reparseIdx)
             delete pd;
             // send a 'finished' message so that the thread object gets deleted
             SendPagesIfNecessary(true, true, fromBeginning);
+            delete formatter;
             return true;
         }
         pages[pageCount++] = pd;
@@ -157,12 +189,13 @@ bool ThreadLayoutMobi::Layout(int reparseIdx)
     bool finished = fromBeginning;
     SendPagesIfNecessary(true, finished, fromBeginning);
     //lf("Laying out took %.2f ms", t.GetTimeInMs());
+    delete formatter;
     return false;
 }
 
-void ThreadLayoutMobi::Run()
+void ThreadLayoutEbook::Run()
 {
-    //lf("ThreadLayoutMobi::Run()");
+    //lf("ThreadLayoutEbook::Run()");
 
     // if we have reparsePoint, layout from that point and then
     // layout from the beginning. Otherwise just from beginning
@@ -173,7 +206,7 @@ void ThreadLayoutMobi::Run()
 }
 
 EbookController::EbookController(EbookControls *ctrls) :
-    ctrls(ctrls), mobiDoc(NULL), html(NULL),
+    ctrls(ctrls), html(NULL),
     fileBeingLoaded(NULL), pagesFromBeginning(NULL), pagesFromPage(NULL),
     currPageNo(0), pageShown(NULL), deletePageShown(false),
     pageDx(0), pageDy(0), layoutThread(NULL), layoutThreadNo(-1), startReparseIdx(-1)
@@ -225,8 +258,7 @@ void EbookController::CloseCurrentDocument()
     DeletePageShown();
     DeletePages(&pagesFromBeginning);
     DeletePages(&pagesFromPage);
-    delete mobiDoc;
-    mobiDoc = NULL;
+    doc.Delete();
     html = NULL;
     layoutTemp.reparseIdx = 0; // mark as being laid out from the beginning
     pageDx = 0; pageDy = 0;
@@ -245,15 +277,20 @@ void EbookController::DeletePages(Vec<PageData*>** pages)
 }
 
 
-LayoutInfo *GetLayoutInfo(const char *html, MobiDoc *mobiDoc, int dx, int dy, PoolAllocator *textAllocator)
+LayoutInfo *GetLayoutInfo(const char *html, Doc doc, int dx, int dy, PoolAllocator *textAllocator)
 {
     LayoutInfo *li = new LayoutInfo();
     size_t len;
     if (html) {
-        CrashIf(mobiDoc);
+        CrashIf(!doc.IsNone());
         len = strlen(html);
     } else {
-        html = mobiDoc->GetBookHtmlData(len);
+        if (doc.AsMobi())
+            html = doc.AsMobi()->GetBookHtmlData(len);
+        else if (doc.AsEpub()) {
+            // TODO: html = doc.AsEpub()->
+            CrashIf(true);
+        }
     }
     li->fontName = str::Dup(FONT_NAME);
     li->fontSize = FONT_SIZE;
@@ -467,7 +504,7 @@ void EbookController::TriggerLayout()
         return;
     }
     CrashIf((dx < 100) || (dy < 40));
-    if (!html && !mobiDoc)
+    if (!html && !doc.IsEbook())
         return;
 
     if ((pageDx == dx) && (pageDy == dy)) {
@@ -494,8 +531,8 @@ void EbookController::TriggerLayout()
     CrashIf(layoutTemp.pagesFromPage.Count() > 0);
 
     ShowPage(newPage, newPage != NULL);
-    LayoutInfo *li = GetLayoutInfo(html, mobiDoc, dx, dy, &textAllocator);
-    layoutThread = new ThreadLayoutMobi(li, mobiDoc, this);
+    LayoutInfo *li = GetLayoutInfo(html, doc, dx, dy, &textAllocator);
+    layoutThread = new ThreadLayoutEbook(li, doc, this);
     layoutThreadNo = layoutThread->GetNo();
     CrashIf(layoutTemp.reparseIdx < 0);
     CrashIf(layoutTemp.reparseIdx > (int)li->htmlStrLen);
@@ -662,27 +699,35 @@ void EbookController::SetHtml(const char *newHtml)
     TriggerLayout();
 }
 
-void EbookController::SetMobiDoc(MobiDoc *newMobiDoc, int startReparseIdxArg)
+static int GetEbookHtmlSize(Doc doc)
 {
+    if (doc.AsMobi())
+        return doc.AsMobi()->GetBookHtmlSize();
+    CrashIf(true);
+    return 0;
+}
+
+void EbookController::SetDoc(Doc newDoc, int startReparseIdxArg)
+{
+    CrashIf(!newDoc.IsEbook());
     startReparseIdx = startReparseIdxArg;
-    if (startReparseIdx >= (int)newMobiDoc->GetBookHtmlSize())
+    if (startReparseIdx >= GetEbookHtmlSize(newDoc))
         startReparseIdx = -1;
     CloseCurrentDocument();
-    mobiDoc = newMobiDoc;
+    doc = newDoc;
     TriggerLayout();
 }
 
 void EbookController::HandleFinishedMobiLoadingMsg(FinishedMobiLoadingData *finishedMobiLoading)
 {
     str::ReplacePtr(&fileBeingLoaded, NULL);
-    if (NULL == finishedMobiLoading->mobiDoc) {
+    if (NULL == finishedMobiLoading->doc) {
         // TODO: a better way to notify about this, should be a transient message
         ScopedMem<TCHAR> s(str::Format(_T("Failed to load %s!"), finishedMobiLoading->fileName));
         ctrls->status->SetText(AsWStrQ(s.Get()));
         return;
     }
-    SetMobiDoc(finishedMobiLoading->mobiDoc);
-    finishedMobiLoading->mobiDoc = NULL; // just in case, it shouldn't be freed anyway
+    SetDoc(*finishedMobiLoading->doc);
 }
 
 int EbookController::CurrPageReparseIdx() const

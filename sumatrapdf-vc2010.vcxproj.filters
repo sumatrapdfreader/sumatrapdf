@@ -45,9 +45,6 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="sumatra\mobi">
-      <UniqueIdentifier>{232267dd-50d1-4b01-83e1-89ab2c6dde73}</UniqueIdentifier>
-    </Filter>
     <Filter Include="memtrace">
       <UniqueIdentifier>{fd8ec5df-2865-47af-8513-c20645a2e26c}</UniqueIdentifier>
     </Filter>
@@ -71,6 +68,9 @@
     </Filter>
     <Filter Include="sumatra\documents">
       <UniqueIdentifier>{2fe13b22-1504-45f2-95a0-8e2d5978dd9f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sumatra\ebook">
+      <UniqueIdentifier>{232267dd-50d1-4b01-83e1-89ab2c6dde73}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -753,22 +753,22 @@
       <Filter>sumatra\documents</Filter>
     </ClCompile>
     <ClCompile Include="src\MobiDoc.cpp">
-      <Filter>sumatra\mobi</Filter>
+      <Filter>sumatra\ebook</Filter>
     </ClCompile>
     <ClCompile Include="src\MobiWindow.cpp">
-      <Filter>sumatra\mobi</Filter>
+      <Filter>sumatra\ebook</Filter>
     </ClCompile>
     <ClCompile Include="src\PageLayout.cpp">
-      <Filter>sumatra\mobi</Filter>
+      <Filter>sumatra\ebook</Filter>
     </ClCompile>
     <ClCompile Include="src\DjVuEngine.cpp">
       <Filter>sumatra\documents</Filter>
     </ClCompile>
     <ClCompile Include="src\EbookControls.cpp">
-      <Filter>sumatra\mobi</Filter>
+      <Filter>sumatra\ebook</Filter>
     </ClCompile>
     <ClCompile Include="src\EbookController.cpp">
-      <Filter>sumatra\mobi</Filter>
+      <Filter>sumatra\ebook</Filter>
     </ClCompile>
     <ClCompile Include="src\utils\BitReader.cpp">
       <Filter>utils</Filter>
@@ -940,6 +940,9 @@
     </ClCompile>
     <ClCompile Include="src\Doc.cpp">
       <Filter>sumatra\documents</Filter>
+    </ClCompile>
+    <ClCompile Include="src\EpubDoc.cpp">
+      <Filter>sumatra\ebook</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1304,13 +1307,13 @@
       <Filter>sumatra\documents</Filter>
     </ClInclude>
     <ClInclude Include="src\PageLayout.h">
-      <Filter>sumatra\mobi</Filter>
+      <Filter>sumatra\ebook</Filter>
     </ClInclude>
     <ClInclude Include="src\MobiDoc.h">
-      <Filter>sumatra\mobi</Filter>
+      <Filter>sumatra\ebook</Filter>
     </ClInclude>
     <ClInclude Include="src\MobiWindow.h">
-      <Filter>sumatra\mobi</Filter>
+      <Filter>sumatra\ebook</Filter>
     </ClInclude>
     <ClInclude Include="src\EngineManager.h">
       <Filter>sumatra\documents</Filter>
@@ -1319,10 +1322,10 @@
       <Filter>sumatra\documents</Filter>
     </ClInclude>
     <ClInclude Include="src\EbookController.h">
-      <Filter>sumatra\mobi</Filter>
+      <Filter>sumatra\ebook</Filter>
     </ClInclude>
     <ClInclude Include="src\EbookControls.h">
-      <Filter>sumatra\mobi</Filter>
+      <Filter>sumatra\ebook</Filter>
     </ClInclude>
     <ClInclude Include="src\utils\BitManip.h">
       <Filter>utils</Filter>
@@ -1392,6 +1395,9 @@
     </ClInclude>
     <ClInclude Include="src\utils\RefCounted.h">
       <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\EpubDoc.h">
+      <Filter>sumatra\ebook</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

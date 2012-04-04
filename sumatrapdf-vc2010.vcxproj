@@ -237,6 +237,7 @@
     <ClCompile Include="src\EbookController.cpp" />
     <ClCompile Include="src\EbookControls.cpp" />
     <ClCompile Include="src\EngineDump.cpp" />
+    <ClCompile Include="src\EpubDoc.cpp" />
     <ClCompile Include="src\EpubEngine.cpp" />
     <ClCompile Include="src\ExternalPdfViewer.cpp" />
     <ClCompile Include="src\Favorites.cpp" />
@@ -404,6 +405,7 @@
     <ClInclude Include="src\EbookController.h" />
     <ClInclude Include="src\EbookControls.h" />
     <ClInclude Include="src\EngineManager.h" />
+    <ClInclude Include="src\EpubDoc.h" />
     <ClInclude Include="src\EpubEngine.h" />
     <ClInclude Include="src\ExternalPdfViewer.h" />
     <ClInclude Include="src\Favorites.h" />

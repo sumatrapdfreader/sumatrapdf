@@ -100,20 +100,22 @@ void CrashMe(); // in StrUtil.cpp
 // in some builds, so it shouldn't contain the actual logic of the code
 #if defined(SVN_PRE_RELEASE_VER) || defined(DEBUG)
 #define CrashIf(exp) \
-    if (exp) \
-        CrashMe(); \
-    /* prevent CrashIf(...) else ... from compiling accidentally */ \
-    else \
-        NoOp()
+    { if (exp) \
+        CrashMe(); }
 #else
 #define CrashIf(exp) NoOp()
 #endif
 
 #define CrashAlwaysIf(exp) \
-    if (exp) \
-        CrashMe(); \
-    else \
-        NoOp()
+    { if (exp) \
+        CrashMe(); }
+
+// AssertCrash is like assert() but crashes like CrashIf()
+// It's meant to make converting assert() easier (converting to
+// CrashIf() requires inverting the condition, which can introduce bugs)
+#define AssertCrash(exp) \
+    { if (!exp) \
+        CrashMe(); }
 
 template <typename T>
 inline void swap(T& one, T&two)

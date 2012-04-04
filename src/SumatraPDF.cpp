@@ -1234,23 +1234,24 @@ static void RefreshUpdatedFiles() {
 // called when a background thread finishes loading mobi file
 static void HandleFinishedMobiLoadingMsg(FinishedMobiLoadingData *finishedMobiLoading)
 {
-    if (!finishedMobiLoading->mobiDoc) {
+    if (!finishedMobiLoading->doc) {
         // TODO: show notification that loading failed
         // TODO: remove from file history
         return;
     }
-    OpenMobiInWindow(finishedMobiLoading->mobiDoc, finishedMobiLoading->win);
+    OpenMobiInWindow(*finishedMobiLoading->doc, finishedMobiLoading->win);
 }
 
-static bool IsMobiFile(const TCHAR *fileName)
+static bool IsEbookFile(const TCHAR *fileName)
 {
-    return str::EndsWithI(fileName, _T(".mobi"));
+    return str::EndsWithI(fileName, _T(".mobi")) ||
+           str::EndsWithI(fileName, _T(".epub"));
 }
 
 // Start loading a mobi file in the background
-static void LoadMobiAsync(const TCHAR *fileName, SumatraWindow& win)
+static void LoadEbookAsync(const TCHAR *fileName, SumatraWindow& win)
 {
-    ThreadLoadMobi *loadThread = new ThreadLoadMobi(fileName, NULL, win);
+    ThreadLoadEbook *loadThread = new ThreadLoadEbook(fileName, NULL, win);
     loadThread->Start();
     // make the thread delete itself at the end of processing
     loadThread->UnRef();
@@ -1319,7 +1320,7 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin,
         return NULL;
     }
 
-    if (gUseEbookUI && IsMobiFile(fileName)) {
+    if (gUseEbookUI && IsEbookFile(fileName)) {
         if (!win) {
             if ((1 == gWindows.Count()) && gWindows.At(0)->IsAboutWindow())
                 win = gWindows.At(0);
@@ -1327,7 +1328,7 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin,
             if (win->IsDocLoaded() && !forceReuse)
                 win = NULL;
         }
-        LoadMobiAsync(fileName, SumatraWindow::Make(win));
+        LoadEbookAsync(fileName, SumatraWindow::Make(win));
         return NULL;
     }
 

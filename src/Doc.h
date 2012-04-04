@@ -51,6 +51,9 @@ public:
         MobiDoc * mobiDoc;
     };
 
+    Doc(const Doc& other) { type = other.type; dummy = other.dummy; }
+    Doc& operator=(const Doc& other) { type = other.type; dummy = other.dummy; return *this; }
+
     Doc() { type = None; dummy = NULL; }
     Doc(CbxEngine *doc) { Set(doc); }
     Doc(ChmEngine *doc) { Set(doc); }
@@ -66,6 +69,8 @@ public:
     Doc(PdfEngine *doc) { Set(doc); }
     Doc(PsEngine *doc) { Set(doc); }
     Doc(XpsEngine *doc) { Set(doc); }
+
+    void Delete();
 
     // TODO: move to .cpp file where cast to BaseEngine can be verified by the compiler
     void Set(CbxEngine *doc) { type = CbxEng; engine = (BaseEngine*)doc; }
@@ -83,7 +88,16 @@ public:
     void Set(PsEngine *doc) { type = PsEng; engine = (BaseEngine*)doc; }
     void Set(XpsEngine *doc) { type = XpsEng; engine = (BaseEngine*)doc; }
 
+    // note: find a better name, if possible
+    bool IsNone() const { return None == type; }
+
+    bool IsEbook() const;
+
     BaseEngine *AsEngine() const;
+    MobiDoc *AsMobi() const;
+    EpubDoc *AsEpub() const;
+
+    TCHAR *GetFilePath() const;
 };
 
 #endif

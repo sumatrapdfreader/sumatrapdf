@@ -200,7 +200,9 @@ protected:
 
 public:
     HtmlFormatter(LayoutInfo *li);
-    ~HtmlFormatter();
+    virtual ~HtmlFormatter();
+
+    virtual PageData *Next() { CrashIf(true); return NULL; }
 };
 
 class MobiFormatter : public HtmlFormatter {
@@ -223,7 +225,7 @@ class MobiFormatter : public HtmlFormatter {
 public:
     MobiFormatter(LayoutInfo *li, MobiDoc *doc);
 
-    PageData *Next();
+    virtual PageData *Next();
     Vec<PageData*> *FormatAllPages();
 };
 
