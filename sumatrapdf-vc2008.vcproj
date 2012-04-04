@@ -131,6 +131,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\EbookBase.h"
+					>
+				</File>
+				<File
 					RelativePath=".\src\EngineDump.cpp"
 					>
 				</File>

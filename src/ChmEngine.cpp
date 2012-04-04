@@ -344,7 +344,7 @@ void ChmEngineImpl::ZoomTo(float zoomLevel)
         htmlWindow->SetZoomPercent((int)zoomLevel);
 }
 
-class ChmTocBuilder : public ChmTocVisitor {
+class ChmTocBuilder : public EbookTocVisitor {
     ChmDoc *doc;
     StrVec *pages;
     ChmTocItem **root;

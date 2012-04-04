@@ -116,7 +116,7 @@ EpubDoc::EpubDoc(IStream *stream) : zip(stream) { }
 EpubDoc::~EpubDoc()
 {
     for (size_t i = 0; i < images.Count(); i++) {
-        free(images.At(i).data);
+        free(images.At(i).base.data);
         free(images.At(i).id);
     }
     for (size_t i = 1; i < props.Count(); i += 2) {
@@ -270,15 +270,15 @@ const char *EpubDoc::GetTextData(size_t *lenOut)
     return htmlData.Get();
 }
 
-ImageData2 *EpubDoc::GetImageData(const char *id, const char *pagePath)
+ImageData *EpubDoc::GetImageData(const char *id, const char *pagePath)
 {
     ScopedMem<char> url(NormalizeURL(id, pagePath));
     for (size_t i = 0; i < images.Count(); i++) {
         if (str::Eq(images.At(i).id, url)) {
-            if (!images.At(i).data)
-                images.At(i).data = zip.GetFileData(images.At(i).idx, &images.At(i).len);
-            if (images.At(i).data)
-                return &images.At(i);
+            if (!images.At(i).base.data)
+                images.At(i).base.data = zip.GetFileData(images.At(i).idx, &images.At(i).base.len);
+            if (images.At(i).base.data)
+                return &images.At(i).base;
         }
     }
     return NULL;
@@ -298,7 +298,7 @@ bool EpubDoc::HasToc() const
     return tocPath != NULL;
 }
 
-bool EpubDoc::ParseToc(EpubTocVisitor *visitor)
+bool EpubDoc::ParseToc(EbookTocVisitor *visitor)
 {
     if (!tocPath)
         return false;
@@ -401,7 +401,7 @@ Fb2Doc::Fb2Doc(const TCHAR *fileName) : fileName(str::Dup(fileName)),
 Fb2Doc::~Fb2Doc()
 {
     for (size_t i = 0; i < images.Count(); i++) {
-        free(images.At(i).data);
+        free(images.At(i).base.data);
         free(images.At(i).id);
     }
 }
@@ -513,8 +513,8 @@ void Fb2Doc::ExtractImage(HtmlPullParser *parser, HtmlToken *tok)
         return;
 
     ImageData2 data = { 0 };
-    data.data = Base64Decode(tok->s, tok->s + tok->sLen, &data.len);
-    if (!data.data)
+    data.base.data = Base64Decode(tok->s, tok->s + tok->sLen, &data.base.len);
+    if (!data.base.data)
         return;
     data.id = str::Join("#", id);
     data.idx = images.Count();
@@ -527,11 +527,11 @@ const char *Fb2Doc::GetTextData(size_t *lenOut)
     return xmlData.Get();
 }
 
-ImageData2 *Fb2Doc::GetImageData(const char *id)
+ImageData *Fb2Doc::GetImageData(const char *id)
 {
     for (size_t i = 0; i < images.Count(); i++) {
         if (str::Eq(images.At(i).id, id))
-            return &images.At(i);
+            return &images.At(i).base;
     }
     return NULL;
 }

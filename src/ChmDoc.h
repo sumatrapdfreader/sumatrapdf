@@ -5,15 +5,11 @@
 #define ChmDoc_h
 
 #include "BaseUtil.h"
+#include "EbookBase.h"
 #include "Scoped.h"
 #include "Vec.h"
 
 #define CP_CHM_DEFAULT 1252
-
-class ChmTocVisitor {
-public:
-    virtual void visit(const TCHAR *name, const TCHAR *url, int level) = 0;
-};
 
 class ChmDoc {
     struct chmFile *chmHandle;
@@ -46,7 +42,7 @@ public:
     Vec<char *> *GetAllPaths();
 
     bool HasToc() const;
-    bool ParseToc(ChmTocVisitor *visitor);
+    bool ParseToc(EbookTocVisitor *visitor);
 
     static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
     static ChmDoc *CreateFromFile(const TCHAR *fileName);

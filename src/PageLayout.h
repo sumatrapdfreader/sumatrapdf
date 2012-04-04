@@ -5,8 +5,8 @@
 #define PageLayout_h
 
 #include "BaseUtil.h"
+#include "EbookBase.h"
 #include "HtmlPullParser.h"
-#include "MobiDoc.h"
 #include "Scoped.h"
 #include "Vec.h"
 
@@ -204,6 +204,8 @@ public:
 
     virtual PageData *Next() { CrashIf(true); return NULL; }
 };
+
+#include "MobiDoc.h"
 
 class MobiFormatter : public HtmlFormatter {
     // accessor to images (and other format-specific data)

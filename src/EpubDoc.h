@@ -4,24 +4,15 @@
 #ifndef EpubDoc_h
 #define EpubDoc_h
 
+#include "EbookBase.h"
 #include "Scoped.h"
 #include "Vec.h"
 #include "ZipUtil.h"
 
-// TODO: keep the start of this structure in sync with
-//       ImageData from MobiDoc.h until that structure
-//       has been moved somewhere more appropriate
 struct ImageData2 {
-    char *  data;
-    size_t  len;
+    ImageData base;
     char *  id;  // path by which content refers to this image
     size_t  idx; // document specific index at which to find this image
-};
-
-// note: same interface as ChmTocVisitor
-class EpubTocVisitor {
-public:
-    virtual void visit(const TCHAR *name, const TCHAR *url, int level) = 0;
 };
 
 class EpubDoc {
@@ -42,12 +33,12 @@ public:
     ~EpubDoc();
 
     const char *GetTextData(size_t *lenOut);
-    ImageData2 *GetImageData(const char *id, const char *pagePath);
+    ImageData *GetImageData(const char *id, const char *pagePath);
 
     TCHAR *GetProperty(const char *name);
 
     bool HasToc() const;
-    bool ParseToc(EpubTocVisitor *visitor);
+    bool ParseToc(EbookTocVisitor *visitor);
 
     static bool IsSupportedFile(const TCHAR *fileName, bool sniff);
     static EpubDoc *CreateFromFile(const TCHAR *fileName);
@@ -77,7 +68,7 @@ public:
 
 
     const char *GetTextData(size_t *lenOut);
-    ImageData2 *GetImageData(const char *id);
+    ImageData *GetImageData(const char *id);
 
     TCHAR *GetProperty(const char *name);
     const char *GetHrefName();

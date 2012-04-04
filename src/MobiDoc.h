@@ -5,6 +5,7 @@
 #define MobiDoc_h
 
 #include "BaseUtil.h"
+#include "EbookBase.h"
 #include "Vec.h"
 
 class HuffDicDecompressor;
@@ -55,11 +56,6 @@ struct PdbRecordHeader {
 STATIC_ASSERT(kPdbRecordHeaderLen == sizeof(PdbRecordHeader), validPdbRecordHeader);
 
 #define kMaxRecordSize 64*1024
-
-struct ImageData {
-    char *      data;
-    size_t      len;
-};
 
 class MobiDoc
 {

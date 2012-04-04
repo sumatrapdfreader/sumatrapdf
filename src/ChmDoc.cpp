@@ -291,7 +291,7 @@ bool ChmDoc::HasToc() const
 <li>
   ... siblings ...
 */
-static bool VisitChmTocItem(ChmTocVisitor *visitor, HtmlElement *el, UINT cp, int level)
+static bool VisitChmTocItem(EbookTocVisitor *visitor, HtmlElement *el, UINT cp, int level)
 {
     assert(str::Eq("li", el->name));
     el = el->GetChildByName("object");
@@ -328,7 +328,7 @@ static bool VisitChmTocItem(ChmTocVisitor *visitor, HtmlElement *el, UINT cp, in
     return true;
 }
 
-static void WalkChmToc(ChmTocVisitor *visitor, HtmlElement *list, UINT cp, int level=1)
+static void WalkChmToc(EbookTocVisitor *visitor, HtmlElement *list, UINT cp, int level=1)
 {
     assert(str::Eq("ul", list->name));
 
@@ -351,7 +351,7 @@ static void WalkChmToc(ChmTocVisitor *visitor, HtmlElement *list, UINT cp, int l
     }
 }
 
-bool ChmDoc::ParseToc(ChmTocVisitor *visitor)
+bool ChmDoc::ParseToc(EbookTocVisitor *visitor)
 {
     if (!tocPath)
         return false;

@@ -537,6 +537,33 @@ static void AppendTocItem(EbookTocItem *& root, EbookTocItem *item, int level)
     r2->AddSibling(item);
 }
 
+class EbookTocBuilder : public EbookTocVisitor {
+    BaseEngine *engine;
+    EbookTocItem *root;
+    int idCounter;
+
+public:
+    EbookTocBuilder(BaseEngine *engine) :
+        engine(engine),root(NULL), idCounter(0) { }
+
+    virtual void visit(const TCHAR *name, const TCHAR *url, int level) {
+        PageDestination *dest;
+        if (!url)
+            dest = NULL;
+        else if (IsExternalUrl(url))
+            dest = new SimpleDest2(0, RectD(), str::Dup(url));
+        else
+            dest = engine->GetNamedDest(url);
+
+        EbookTocItem *item = new EbookTocItem(str::Dup(name), dest);
+        item->id = ++idCounter;
+        item->open = level <= 2;
+        AppendTocItem(root, item, level);
+    }
+
+    EbookTocItem *GetRoot() { return root; }
+};
+
 /* formatting extensions for EPUB */
 
 class EpubFormatter : public HtmlFormatter {
@@ -562,9 +589,9 @@ void EpubFormatter::HandleTagImg_Epub(HtmlToken *t)
     if (!attr)
         return;
     ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
-    ImageData2 *img = epubDoc->GetImageData(src, pagePath);
+    ImageData *img = epubDoc->GetImageData(src, pagePath);
     if (img)
-        EmitImage((ImageData *)img);
+        EmitImage(img);
 }
 
 void EpubFormatter::HandleHtmlTag_Epub(HtmlToken *t)
@@ -669,40 +696,11 @@ bool EpubEngineImpl::FinishLoading()
     return pages->Count() > 0;
 }
 
-class EpubTocBuilder : public EpubTocVisitor {
-    EpubDoc *doc;
-    EpubEngine *engine;
-    EbookTocItem *root;
-    int idCounter;
-
-public:
-    EpubTocBuilder(EpubEngine *engine, EpubDoc *doc) :
-        engine(engine), doc(doc), root(NULL), idCounter(0) { }
-
-    EbookTocItem *GetTocRoot() {
-        doc->ParseToc(this);
-        return root;
-    }
-
-    virtual void visit(const TCHAR *name, const TCHAR *url, int level) {
-        PageDestination *dest;
-        if (!url)
-            dest = NULL;
-        else if (IsExternalUrl(url))
-            dest = new SimpleDest2(0, RectD(), str::Dup(url));
-        else
-            dest = engine->GetNamedDest(url);
-
-        EbookTocItem *item = new EbookTocItem(str::Dup(name), dest);
-        item->id = ++idCounter;
-        item->open = level <= 2;
-        AppendTocItem(root, item, level);
-    }
-};
-
 DocTocItem *EpubEngineImpl::GetTocTree()
 {
-    return EpubTocBuilder(this, doc).GetTocRoot();
+    EbookTocBuilder builder(this);
+    doc->ParseToc(&builder);
+    return builder.GetRoot();
 }
 
 bool EpubEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
@@ -760,9 +758,9 @@ void Fb2Formatter::HandleTagImg_Fb2(HtmlToken *t)
     if (!attr)
         return;
     ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
-    ImageData2 *img = fb2Doc->GetImageData(src);
+    ImageData *img = fb2Doc->GetImageData(src);
     if (img)
-        EmitImage((ImageData *)img);
+        EmitImage(img);
 }
 
 void Fb2Formatter::HandleTagAsHtml(HtmlToken *t, const char *name)
@@ -1153,7 +1151,7 @@ public:
     ChmDataCache(ChmDoc *doc, char *html) : doc(doc), html(html) { }
     ~ChmDataCache() {
         for (size_t i = 0; i < images.Count(); i++) {
-            free(images.At(i).data);
+            free(images.At(i).base.data);
             free(images.At(i).id);
         }
     }
@@ -1163,20 +1161,20 @@ public:
         return html;
     }
 
-    ImageData2 *GetImageData(const char *id, const char *pagePath) {
+    ImageData *GetImageData(const char *id, const char *pagePath) {
         ScopedMem<char> url(NormalizeURL(id, pagePath));
         for (size_t i = 0; i < images.Count(); i++) {
             if (str::Eq(images.At(i).id, url))
-                return &images.At(i);
+                return &images.At(i).base;
         }
 
         ImageData2 data = { 0 };
-        data.data = (char *)doc->GetData(url, &data.len);
-        if (!data.data)
+        data.base.data = (char *)doc->GetData(url, &data.base.len);
+        if (!data.base.data)
             return NULL;
         data.id = url.StealData();
         images.Append(data);
-        return &images.Last();
+        return &images.Last().base;
     }
 };
 
@@ -1203,9 +1201,9 @@ void ChmFormatter::HandleTagImg_Chm(HtmlToken *t)
     if (!attr)
         return;
     ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
-    ImageData2 *img = chmDoc->GetImageData(src, pagePath);
+    ImageData *img = chmDoc->GetImageData(src, pagePath);
     if (img)
-        EmitImage((ImageData *)img);
+        EmitImage(img);
 }
 
 void ChmFormatter::HandleHtmlTag_Chm(HtmlToken *t)
@@ -1291,7 +1289,7 @@ static TCHAR *ToPlainUrl(const TCHAR *url)
     return plainUrl;
 }
 
-class ChmHtmlCollector : public ChmTocVisitor {
+class ChmHtmlCollector : public EbookTocVisitor {
     ChmDoc *doc;
     StrVec added;
     str::Str<char> html;
@@ -1367,40 +1365,11 @@ bool Chm2EngineImpl::Load(const TCHAR *fileName)
     return pages->Count() > 0;
 }
 
-class Chm2TocBuilder : public ChmTocVisitor {
-    ChmDoc *doc;
-    Chm2Engine *engine;
-    EbookTocItem *root;
-    int idCounter;
-
-public:
-    Chm2TocBuilder(Chm2Engine *engine, ChmDoc *doc) :
-        engine(engine), doc(doc), root(NULL), idCounter(0) { }
-
-    EbookTocItem *GetTocRoot() {
-        doc->ParseToc(this);
-        return root;
-    }
-
-    virtual void visit(const TCHAR *name, const TCHAR *url, int level) {
-        PageDestination *dest;
-        if (!url)
-            dest = NULL;
-        else if (IsExternalUrl(url))
-            dest = new SimpleDest2(0, RectD(), str::Dup(url));
-        else
-            dest = engine->GetNamedDest(url);
-
-        EbookTocItem *item = new EbookTocItem(str::Dup(name), dest);
-        item->id = ++idCounter;
-        item->open = level == 1;
-        AppendTocItem(root, item, level);
-    }
-};
-
 DocTocItem *Chm2EngineImpl::GetTocTree()
 {
-    return Chm2TocBuilder(this, doc).GetTocRoot();
+    EbookTocBuilder builder(this);
+    doc->ParseToc(&builder);
+    return builder.GetRoot();
 }
 
 bool Chm2Engine::IsSupportedFile(const TCHAR *fileName, bool sniff)
