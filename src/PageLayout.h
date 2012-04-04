@@ -199,6 +199,11 @@ protected:
     // list of pages that we've created but haven't yet sent to client
     Vec<PageData*>      pagesToSend;
 
+    bool                finishedParsing;
+    // number of pages generated so far, approximate. Only used
+    // for detection of cover image duplicates in mobi formatting
+    int                 pageCount;
+
     WCHAR               buf[512];
 
 public:
@@ -215,11 +220,6 @@ class MobiFormatter : public HtmlFormatter {
     // can avoid adding the same image twice if it's early in
     // the book
     ImageData *         coverImage;
-    // number of pages generated so far, approximate. Only used
-    // for detection of cover image duplicates
-    int                 pageCount;
-
-    bool                finishedParsing;
 
     void HandleSpacing_Mobi(HtmlToken *t);
     void HandleTagImg_Mobi(HtmlToken *t);
@@ -245,10 +245,8 @@ protected:
 public:
     EpubFormatter(LayoutInfo *li, EpubDoc *doc) : HtmlFormatter(li), epubDoc(doc) { }
 
+    virtual PageData *Next();
     Vec<PageData*> *FormatAllPages();
-
-    // TODO: add:
-    // virtual PageData *Next();
 };
 
 void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox, Color *textColor=NULL);

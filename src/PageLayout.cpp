@@ -122,7 +122,8 @@ HtmlFormatter::HtmlFormatter(LayoutInfo *li) : layoutInfo(li),
     pageDx((REAL)li->pageDx), pageDy((REAL)li->pageDy),
     textAllocator(li->textAllocator), currLineReparseIdx(NULL),
     currX(0), currY(0), currLineTopPadding(0), currLinkIdx(0),
-    listDepth(0), preFormatted(false), currPage(NULL)
+    listDepth(0), preFormatted(false), currPage(NULL),
+    finishedParsing(false), pageCount(0)
 {
     currReparseIdx = li->reparseIdx;
     htmlParser = new HtmlPullParser(li->htmlStr, li->htmlStrLen);
@@ -1025,8 +1026,7 @@ void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, RE
 /* Mobi-specific formatting methods */
 
 MobiFormatter::MobiFormatter(LayoutInfo* li, MobiDoc *doc) :
-    HtmlFormatter(li), doc(doc), coverImage(NULL), pageCount(0),
-    finishedParsing(false)
+    HtmlFormatter(li), doc(doc), coverImage(NULL)
 {
     bool fromBeginning = (0 == li->reparseIdx);
     if (!doc || !fromBeginning)
@@ -1255,6 +1255,8 @@ void EpubFormatter::HandleHtmlTag_Epub(HtmlToken *t)
         HandleHtmlTag(t);
 }
 
+// TODO: replace with a single HtmlFormatter::FormatAllPages()
+// implemented like MobiFormatter::FormatAllPages() (uses Next())
 Vec<PageData*> *EpubFormatter::FormatAllPages()
 {
     HtmlToken *t;
@@ -1273,4 +1275,54 @@ Vec<PageData*> *EpubFormatter::FormatAllPages()
     Vec<PageData *> *result = new Vec<PageData *>(pagesToSend);
     pagesToSend.Reset();
     return result;
+}
+
+// Return the next parsed page. Returns NULL if finished parsing.
+// For simplicity of implementation, we parse xml text node or
+// xml element at a time. This might cause a creation of one
+// or more pages, which we remeber and send to the caller
+// if we detect accumulated pages.
+// TODO: make this single implementation part of HtmlFormatter
+// (we can make HandleHtmlTag() virtual to make this work)
+PageData *EpubFormatter::Next()
+{
+    for (;;)
+    {
+        // send out all pages accumulated so far
+        while (pagesToSend.Count() > 0) {
+            PageData *ret = pagesToSend.At(0);
+            pagesToSend.RemoveAt(0);
+            pageCount++;
+            if (IsEmptyPage(ret))
+                delete ret;
+            else
+                return ret;
+        }
+        // we can call ourselves recursively to send outstanding
+        // pages after parsing has finished so this is to detect
+        // that case and really end parsing
+        if (finishedParsing)
+            return NULL;
+        HtmlToken *t = htmlParser->Next();
+        if (!t || t->IsError())
+            break;
+
+        currReparseIdx = t->GetReparsePoint() - htmlParser->Start();
+        CrashIf(!ValidReparseIdx(currReparseIdx, htmlParser));
+        if (t->IsTag()) {
+            HandleHtmlTag_Epub(t);
+        } else {
+            if (!IgnoreText())
+                HandleText(t);
+        }
+    }
+    // force layout of the last line
+    FlushCurrLine(true);
+
+    UpdateLinkBboxes(currPage);
+    pagesToSend.Append(currPage);
+    currPage = NULL;
+    // call ourselves recursively to return accumulated pages
+    finishedParsing = true;
+    return Next();
 }

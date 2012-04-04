@@ -369,10 +369,10 @@ void EbookController::HandleMobiLayoutMsg(MobiLayoutData *ld)
 {
     if (layoutThreadNo != ld->threadNo) {
         // this is a message from cancelled thread, we can disregard
-        //lf("EbookController::MobiLayout() thread msg discarded, curr thread: %d, sending thread: %d", layoutThreadNo, ld->threadNo);
+        lf("EbookController::MobiLayout() thread msg discarded, curr thread: %d, sending thread: %d", layoutThreadNo, ld->threadNo);
         return;
     }
-    //lf("EbookController::HandleMobiLayoutMsg() %d pages, ld=0x%x", ld->pageCount, (int)ld);
+    lf("EbookController::HandleMobiLayoutMsg() %d pages, ld=0x%x", ld->pageCount, (int)ld);
     PageData *pageToShow = NULL;
 
     if (!ld->fromBeginning) {
@@ -408,11 +408,13 @@ void EbookController::HandleMobiLayoutMsg(MobiLayoutData *ld)
                     pageToShow = ld->pages[i];
                     //lf("showing page %d", i);
                 } else {
-                    // TODO: showed up in crash reports
-                    CrashIf(0 == layoutTemp.pagesFromBeginning.Count());
-                    size_t pageNo = layoutTemp.pagesFromBeginning.Count() - 1;
-                    //lf("showing page %d from layoutTemp.pagesFromBeginning", (int)pageNo);
-                    pageToShow = layoutTemp.pagesFromBeginning.At(pageNo);
+                    if (0 == layoutTemp.pagesFromBeginning.Count()) {
+                        pageToShow = ld->pages[0];
+                    } else {
+                        size_t pageNo = layoutTemp.pagesFromBeginning.Count() - 1;
+                        //lf("showing page %d from layoutTemp.pagesFromBeginning", (int)pageNo);
+                        pageToShow = layoutTemp.pagesFromBeginning.At(pageNo);
+                    }
                 }
             }
             if (pageToShow) {

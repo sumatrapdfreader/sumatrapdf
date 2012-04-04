@@ -20,11 +20,12 @@ target: 6/1):
 - refactor LoadDocument() so that more code is shared between
   engine/ebook UIs and so that it loads documents in the
   background thread
+- make loading of .mobi and .epub files from cmd-line work
+  (part of LoadDocument() refactor)
 - a smoother transition betwen different window types which
   doesn't involve closing the window
-- enable epub in ebook ui
-- make -esc-on-exit work for mobi window
-- make loading of .mobi files from cmd-line work
+- thumbnails for epub documents when opened in ebook ui
+- make -esc-on-exit work for ebook window
 - mobi: closing mobi document when initial layout is going on,
   we loose the position in the file (it gets reset to 0)
 - a web-based translation system as described in wishlist.txt
