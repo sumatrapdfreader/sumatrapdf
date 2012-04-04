@@ -154,8 +154,7 @@ bool IsSame(const TCHAR *path1, const TCHAR *path2)
     return str::EqI(npath1, npath2);
 }
 
-// returns true if the drive letter for this path might be variable
-bool IsOnRemovableDrive(const TCHAR *path)
+bool HasVariableDriveLetter(const TCHAR *path)
 {
     TCHAR root[] = _T("?:\\");
     root[0] = _totupper(path[0]);

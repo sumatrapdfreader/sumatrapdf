@@ -62,7 +62,7 @@ int CompareVersion(TCHAR *txt1, TCHAR *txt2);
 
 bool IsRunningInPortableMode();
 TCHAR *AppGenDataFilename(TCHAR *pFilename);
-bool AdjustRemovableDriveLetter(TCHAR *path);
+bool AdjustVariableDriveLetter(TCHAR *path);
 
 void DoAssociateExeWithPdfExtension(HKEY hkey);
 bool IsExeAssociatedWithPdfExtension();

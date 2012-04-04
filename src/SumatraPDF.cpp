@@ -1341,7 +1341,7 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin,
     // on a different removable drive before failing
     if (failEarly && gFileHistory.Find(fullPath)) {
         ScopedMem<TCHAR> adjPath(str::Dup(fullPath));
-        if (AdjustRemovableDriveLetter(adjPath)) {
+        if (AdjustVariableDriveLetter(adjPath)) {
             RenameFileInHistory(fullPath, adjPath);
             fullPath.Set(adjPath.StealData());
             failEarly = false;
