@@ -2,8 +2,9 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "ZipUtil.h"
-#include "StrUtil.h"
 #include "FileUtil.h"
+#include "Scoped.h"
+#include "StrUtil.h"
 
 // mini(un)zip
 #include <ioapi.h>
@@ -12,7 +13,7 @@
 
 ZipFile::ZipFile(const TCHAR *path, Allocator *allocator) :
     filenames(0, allocator), fileinfo(0, allocator),
-    filepos(0, allocator), allocator(allocator)
+    filepos(0, allocator), allocator(allocator), commentLen(0)
 {
     zlib_filefunc64_def ffunc;
     fill_win32_filefunc64(&ffunc);
@@ -23,7 +24,7 @@ ZipFile::ZipFile(const TCHAR *path, Allocator *allocator) :
 
 ZipFile::ZipFile(IStream *stream, Allocator *allocator) :
     filenames(0, allocator), fileinfo(0, allocator),
-    filepos(0, allocator), allocator(allocator)
+    filepos(0, allocator), allocator(allocator), commentLen(0)
 {
     zlib_filefunc64_def ffunc;
     fill_win32s_filefunc64(&ffunc);
@@ -78,6 +79,7 @@ void ZipFile::ExtractFilenames()
         }
         err = unzGoToNextFile(uf);
     }
+    commentLen = ginfo.size_comment;
 }
 
 size_t ZipFile::GetFileIndex(const TCHAR *filename)
@@ -174,6 +176,19 @@ FILETIME ZipFile::GetFileTime(size_t fileindex)
         LocalFileTimeToFileTime(&ftLocal, &ft);
     }
     return ft;
+}
+
+char *ZipFile::GetComment(size_t *len)
+{
+    ScopedMem<char> comment(SAZA(char, commentLen + 1));
+    if (!comment || !uf)
+        return NULL;
+    int read = unzGetGlobalComment(uf, comment, commentLen);
+    if (read <= 0)
+        return NULL;
+    if (len)
+        *len = commentLen;
+    return comment.StealData();
 }
 
 bool ZipFile::UnzipFile(const TCHAR *filename, const TCHAR *dir, const TCHAR *unzippedName)
