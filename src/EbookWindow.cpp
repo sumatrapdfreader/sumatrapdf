@@ -592,7 +592,9 @@ static void CreateThumbnailForDoc(Doc doc, DisplayState& ds)
 {
     if (doc.AsMobi())
         CreateThumbnailForMobiDoc(doc.AsMobi(), ds);
-    else
+    else if (doc.AsEpub()) {
+        // TODO: write me
+    } else
         CrashIf(true);
 }
 

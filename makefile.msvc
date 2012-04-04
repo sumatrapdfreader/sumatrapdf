@@ -107,10 +107,6 @@ INSTALLER_RES   = $(OS)\Installer.res
 UNINSTALLER_APP = $(O)\uninstall.exe
 UNINSTALLER_RES = $(OS)\Uninstaller.res
 
-ET_APP          = $(O)\EbookTest.exe
-ET_RES          = $(OEB)\EbookTest.res
-ET_CFLAGS       = $(SUMATRA_CFLAGS) /wd4530
-
 TESTER_APP      = $(O)\tester.exe
 TESTER_CFLAGS   = $(SUMATRA_CFLAGS)
 
@@ -196,14 +192,10 @@ INSTALLER_OBJS = \
 UNINSTALLER_OBJS = \
 	$(OS)\Uninstaller.obj $(UNINSTALLER_RES) $(UTILS_OBJS)
 
-ET_OBJS = \
-	$(OEB)\EbookTest.obj $(OEB)\EbookTestMenu.obj $(ET_RES) \
-	$(OS)\PageLayout.obj $(MUI_OBJS) $(UTILS_OBJS) $(OS)\MobiDoc.obj \
-	$(OEB)\EbookControls.obj $(OEB)\EbookController.obj
-
 TESTER_OBJS = \
-	$(UTILS_OBJS) $(MUI_OBJS) $(OS)\Tester.obj $(OS)\PageLayout.obj \
-	$(OU)\NoFreeAllocator.obj $(OS)\MobiDoc.obj
+	$(UTILS_OBJS) $(MUI_OBJS) $(ZIP_OBJS) $(ZLIB_OBJS) $(OS)\Tester.obj \
+	$(OS)\PageLayout.obj $(OU)\NoFreeAllocator.obj $(OS)\MobiDoc.obj \
+	$(OS)\EpubDoc.obj
 
 PDFFILTER_OBJS = \
 	$(ODLL)\PdfFilterDll.obj $(ODLL)\CPdfFilter.obj $(PDFFILTER_RES) \
@@ -229,7 +221,6 @@ MEMTRACE_OBJS = \
 LIBMUPDF_OBJS = $(LIBS_OBJS)
 
 !if "$(WITH_UCRT)"=="yes"
-ET_OBJS             = $(ET_OBJS) $(UCRT_WIN_OBJS)
 INSTALLER_OBJS      = $(INSTALLER_OBJS) $(UCRT_WIN_OBJS)
 UNINSTALLER_OBJS    = $(UNINSTALLER_OBJS) $(UCRT_WIN_OBJS)
 SUMATRA_OBJS        = $(SUMATRA_OBJS) $(UCRT_WIN_OBJS)
@@ -280,7 +271,6 @@ PdfPreview:    $(OS) $(LIBMUPDF_DLL) $(PDFPREVIEW_DLL)
 BrowserPlugin: $(OS) $(BROWSER_PLUGIN)
 PdfBench:      $(OS) $(PDFBENCH_APP)
 EngineDump:    $(OS) $(ENGINEDUMP_APP)
-et:            $(OS) $(ET_APP)
 tester:        $(OS) $(TESTER_APP)
 memtrace:      $(OS) $(MEMTRACE_DLL)
 
@@ -318,12 +308,6 @@ $(INSTALLER_APP): $(INSTALLER_OBJS)
 
 $(UNINSTALLER_APP): $(UNINSTALLER_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
-
-$(ET_RES): src\ebooktest\EbookTest.rc src\ebooktest\Resource.h src\Version.h
-	rc /r /fo$@ $(EXTCFLAGS) src\ebooktest\EbookTest.rc
-
-$(ET_APP): $(ET_OBJS)
-	$(LD) $(LDFLAGS) $** $(LIBS) dbghelp.lib psapi.lib /PDB:$*.pdb /OUT:$@
 
 $(TESTER_APP): $(TESTER_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE

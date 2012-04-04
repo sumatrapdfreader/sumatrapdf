@@ -148,6 +148,9 @@ HtmlFormatter *CreateFormatterForDoc(Doc doc, LayoutInfo* li)
 {
     if (doc.AsMobi())
         return new MobiFormatter(li, doc.AsMobi());
+    if (doc.AsEpub())
+        return new EpubFormatter(li, doc.AsEpub());
+
     CrashIf(true);
     return NULL;
 }
@@ -287,10 +290,10 @@ LayoutInfo *GetLayoutInfo(const char *html, Doc doc, int dx, int dy, PoolAllocat
     } else {
         if (doc.AsMobi())
             html = doc.AsMobi()->GetBookHtmlData(len);
-        else if (doc.AsEpub()) {
-            // TODO: html = doc.AsEpub()->
+        else if (doc.AsEpub())
+            html = doc.AsEpub()->GetTextData(&len);
+        else
             CrashIf(true);
-        }
     }
     li->fontName = str::Dup(FONT_NAME);
     li->fontSize = FONT_SIZE;
@@ -703,6 +706,12 @@ static int GetEbookHtmlSize(Doc doc)
 {
     if (doc.AsMobi())
         return doc.AsMobi()->GetBookHtmlSize();
+
+    if (doc.AsEpub()) {
+        size_t len;
+        doc.AsEpub()->GetTextData(&len);
+        return len;
+    }
     CrashIf(true);
     return 0;
 }

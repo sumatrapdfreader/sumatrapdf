@@ -110,8 +110,15 @@ static char *Base64Decode(const char *s, const char *end, size_t *len)
 
 /* EPUB */
 
-EpubDoc::EpubDoc(const TCHAR *fileName) : zip(fileName) { }
-EpubDoc::EpubDoc(IStream *stream) : zip(stream) { }
+EpubDoc::EpubDoc(const TCHAR *fileName) : zip(fileName) 
+{
+    filePath = str::Dup(fileName);
+}
+
+EpubDoc::EpubDoc(IStream *stream) : zip(stream)
+{
+    filePath = NULL;
+}
 
 EpubDoc::~EpubDoc()
 {
@@ -122,6 +129,7 @@ EpubDoc::~EpubDoc()
     for (size_t i = 1; i < props.Count(); i += 2) {
         free((void *)props.At(i));
     }
+    free(filePath);
 }
 
 bool EpubDoc::Load()

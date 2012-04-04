@@ -21,6 +21,8 @@ class EpubDoc {
     Vec<ImageData2> images;
     Vec<const char *> props;
     ScopedMem<TCHAR> tocPath;
+    // NULL if initialized from IStream
+    TCHAR *filePath;
 
     bool Load();
     void ParseMetadata(const char *content);
@@ -39,6 +41,8 @@ public:
 
     bool HasToc() const;
     bool ParseToc(EbookTocVisitor *visitor);
+
+    TCHAR *GetFilePath() const { return filePath; }
 
     static bool IsSupportedFile(const TCHAR *fileName, bool sniff);
     static EpubDoc *CreateFromFile(const TCHAR *fileName);

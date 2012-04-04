@@ -12,6 +12,9 @@
 
 using namespace Gdiplus;
 
+class EpubDoc;
+class MobiDoc;
+
 // Layout information for a given page is a list of
 // draw instructions that define what to draw and where.
 enum DrawInstrType {
@@ -205,8 +208,6 @@ public:
     virtual PageData *Next() { CrashIf(true); return NULL; }
 };
 
-#include "MobiDoc.h"
-
 class MobiFormatter : public HtmlFormatter {
     // accessor to images (and other format-specific data)
     MobiDoc *           doc;
@@ -229,6 +230,25 @@ public:
 
     virtual PageData *Next();
     Vec<PageData*> *FormatAllPages();
+};
+
+/* formatting extensions for EPUB */
+
+class EpubFormatter : public HtmlFormatter {
+protected:
+    void HandleTagImg_Epub(HtmlToken *t);
+    void HandleHtmlTag_Epub(HtmlToken *t);
+
+    EpubDoc *epubDoc;
+    ScopedMem<char> pagePath;
+
+public:
+    EpubFormatter(LayoutInfo *li, EpubDoc *doc) : HtmlFormatter(li), epubDoc(doc) { }
+
+    Vec<PageData*> *FormatAllPages();
+
+    // TODO: add:
+    // virtual PageData *Next();
 };
 
 void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox, Color *textColor=NULL);

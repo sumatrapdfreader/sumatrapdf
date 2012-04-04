@@ -67,6 +67,8 @@ TCHAR *Doc::GetFilePath() const
     switch (type) {
     case Mobi:
         return mobiDoc->GetFileName();
+    case Epub:
+        return epubDoc->GetFilePath();
     default:
         CrashIf(true);
         break;

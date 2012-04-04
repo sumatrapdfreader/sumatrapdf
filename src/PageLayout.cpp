@@ -1,13 +1,16 @@
 /* Copyright 2011-2012 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "DebugLog.h"
-#include "Mui.h"
 #include "PageLayout.h"
+#include "EpubDoc.h"
+#include "MobiDoc.h"
+#include "Mui.h"
 #include "StrUtil.h"
 
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
+
+#include "DebugLog.h"
 
 /*
 Given size of a page, we format html into a set of pages. We handle only a small
@@ -1215,4 +1218,59 @@ Vec<PageData*> *MobiFormatter::FormatAllPages()
         pages->Append(pd);
     }
     return pages;
+}
+
+void EpubFormatter::HandleTagImg_Epub(HtmlToken *t)
+{
+    CrashIf(!epubDoc);
+    if (t->IsEndTag())
+        return;
+    AttrInfo *attr = t->GetAttrByName("src");
+    if (!attr)
+        return;
+    ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
+    ImageData *img = epubDoc->GetImageData(src, pagePath);
+    if (img)
+        EmitImage(img);
+}
+
+void EpubFormatter::HandleHtmlTag_Epub(HtmlToken *t)
+{
+    HtmlTag tag = FindTag(t);
+    if (Tag_Img == tag) {
+        HandleTagImg_Epub(t);
+        HandleAnchorTag(t);
+    }
+    else if (Tag_Pagebreak == tag) {
+        AttrInfo *attr = t->GetAttrByName("page_path");
+        if (!attr || pagePath)
+            ForceNewPage();
+        if (attr) {
+            RectF bbox(0, currY, pageDx, 0);
+            currPage->instructions.Append(DrawInstr::Anchor(attr->val, attr->valLen, bbox));
+            pagePath.Set(str::DupN(attr->val, attr->valLen));
+        }
+    }
+    else
+        HandleHtmlTag(t);
+}
+
+Vec<PageData*> *EpubFormatter::FormatAllPages()
+{
+    HtmlToken *t;
+    while ((t = htmlParser->Next()) && !t->IsError()) {
+        if (t->IsTag())
+            HandleHtmlTag_Epub(t);
+        else if (!IgnoreText())
+            HandleText(t);
+    }
+
+    FlushCurrLine(true);
+    UpdateLinkBboxes(currPage);
+    pagesToSend.Append(currPage);
+    currPage = NULL;
+
+    Vec<PageData *> *result = new Vec<PageData *>(pagesToSend);
+    pagesToSend.Reset();
+    return result;
 }
