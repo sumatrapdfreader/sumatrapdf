@@ -140,14 +140,15 @@ TCHAR *AppGenDataFilename(TCHAR *fileName)
 
 // Updates the drive letter for a path that could have been on a removable drive,
 // if that same path can be found on a different removable drive
-void AdjustRemovableDriveLetter(TCHAR *path)
+// returns true if the path has been changed
+bool AdjustRemovableDriveLetter(TCHAR *path)
 {
     // Don't bother if the file path is still valid
     if (file::Exists(path))
-        return;
+        return false;
     // Don't bother for files on non-removable drives
     if (!path::IsOnRemovableDrive(path))
-        return;
+        return false;
 
     // Iterate through all (other) removable drives and try to find the file there
     TCHAR szDrive[] = _T("A:\\");
@@ -156,11 +157,12 @@ void AdjustRemovableDriveLetter(TCHAR *path)
         if ((driveMask & 1) && szDrive[0] != origDrive && path::IsOnRemovableDrive(szDrive)) {
             path[0] = szDrive[0];
             if (file::Exists(path))
-                return;
+                return true;
         }
         szDrive[0]++;
     }
     path[0] = origDrive;
+    return false;
 }
 
 

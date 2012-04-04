@@ -818,7 +818,6 @@ static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win, PasswordUI *pwdU
     } else if (NULL == state) {
         state = gFileHistory.Find(fileName);
         if (state) {
-            AdjustRemovableDriveLetter(fileName);
             if (state->windowPos.IsEmpty())
                 state->windowPos = gGlobalPrefs.windowPos;
             EnsureAreaVisibility(state->windowPos);
@@ -1231,6 +1230,40 @@ static void RefreshUpdatedFiles() {
 }
 #endif
 
+static void RenameFileInHistory(const TCHAR *oldPath, const TCHAR *newPath)
+{
+    DisplayState *ds = gFileHistory.Find(newPath);
+    bool oldIsPinned = false;
+    int oldOpenCount = 0;
+    if (ds) {
+        oldIsPinned = ds->isPinned;
+        oldOpenCount = ds->openCount;
+        gFileHistory.Remove(ds);
+        delete ds;
+    }
+    ds = gFileHistory.Find(oldPath);
+    if (ds) {
+        str::ReplacePtr(&ds->filePath, newPath);
+        // merge Frequently Read data, so that a file
+        // doesn't accidentally vanish from there
+        ds->isPinned = ds->isPinned || oldIsPinned;
+        ds->openCount += oldOpenCount;
+        // the thumbnail is recreated by LoadDocument
+        delete ds->thumbnail;
+        ds->thumbnail = NULL;
+    }
+
+    FileFavs *oldFav = gFavorites->GetFavByFilePath(oldPath);
+    if (oldFav) {
+        // move all favorites of the old file over the the new one
+        for (size_t i = 0; i < oldFav->favNames.Count(); i++) {
+            FavName *fn = oldFav->favNames.At(i);
+            gFavorites->AddOrReplace(newPath, fn->pageNo, fn->name);
+        }
+        gFavorites->RemoveAllForFile(oldPath);
+    }
+}
+
 // called when a background thread finishes loading mobi file
 static void HandleFinishedMobiLoadingMsg(FinishedMobiLoadingData *finishedMobiLoading)
 {
@@ -1303,9 +1336,21 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin,
 
     ScopedMem<TCHAR> fullPath(path::Normalize(fileName));
 
+    bool failEarly = win && !forceReuse && !DocumentPathExists(fullPath);
+    // try to find inexistent files with history data
+    // on a different removable drive before failing
+    if (failEarly && gFileHistory.Find(fullPath)) {
+        ScopedMem<TCHAR> adjPath(str::Dup(fullPath));
+        if (AdjustRemovableDriveLetter(adjPath)) {
+            RenameFileInHistory(fullPath, adjPath);
+            fullPath.Set(adjPath.StealData());
+            failEarly = false;
+        }
+    }
+
     // fail with a notification if the file doesn't exist and
     // there is a window the user has just been interacting with
-    if (win && !forceReuse && !DocumentPathExists(fullPath)) {
+    if (failEarly) {
         ScopedMem<TCHAR> msg(str::Format(_TR("File %s not found"), fullPath));
         ShowNotification(win, msg, true /* autoDismiss */, true /* highlight */);
         // display the notification ASAP (SavePrefs() can introduce a notable delay)
@@ -1320,7 +1365,7 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin,
         return NULL;
     }
 
-    if (gUseEbookUI && IsEbookFile(fileName)) {
+    if (gUseEbookUI && IsEbookFile(fullPath)) {
         if (!win) {
             if ((1 == gWindows.Count()) && gWindows.At(0)->IsAboutWindow())
                 win = gWindows.At(0);
@@ -1328,7 +1373,7 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin,
             if (win->IsDocLoaded() && !forceReuse)
                 win = NULL;
         }
-        LoadEbookAsync(fileName, SumatraWindow::Make(win));
+        LoadEbookAsync(fullPath, SumatraWindow::Make(win));
         return NULL;
     }
 
@@ -2678,29 +2723,7 @@ static void OnMenuRenameFile(WindowInfo &win)
     }
 
     ScopedMem<TCHAR> newPath(path::Normalize(dstFileName));
-    // update file history entry
-    DisplayState *ds = gFileHistory.Find(newPath);
-    if (ds) {
-        gFileHistory.Remove(ds);
-        delete ds;
-    }
-    ds = gFileHistory.Find(srcFilePath);
-    if (ds) {
-        str::ReplacePtr(&ds->filePath, newPath);
-        // the thumbnail is recreated by LoadDocument
-        delete ds->thumbnail;
-        ds->thumbnail = NULL;
-    }
-
-    FileFavs *oldFav = gFavorites->GetFavByFilePath(srcFilePath);
-    if (oldFav) {
-        // move all favorites of the old file over the the new one
-        for (size_t i = 0; i < oldFav->favNames.Count(); i++) {
-            FavName *fn = oldFav->favNames.At(i);
-            gFavorites->AddOrReplace(newPath, fn->pageNo, fn->name);
-        }
-        gFavorites->RemoveAllForFile(srcFilePath);
-    }
+    RenameFileInHistory(srcFilePath, newPath);
 
     LoadDocument(dstFileName, &win);
 }
