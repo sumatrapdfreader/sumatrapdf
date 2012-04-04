@@ -174,7 +174,7 @@ ENGINE_OBJS = \
 
 EBOOK_OBJS = \
 	$(OS)\MobiDoc.obj $(OS)\PageLayout.obj \
-	$(OS)\EbookControls.obj $(OS)\EbookController.obj $(OS)\MobiWindow.obj
+	$(OS)\EbookControls.obj $(OS)\EbookController.obj $(OS)\EbookWindow.obj
 
 SUMATRA_OBJS = \
 	$(OS)\AppPrefs.obj $(OS)\DisplayModel.obj $(OS)\CrashHandler.obj $(OS)\Doc.obj \

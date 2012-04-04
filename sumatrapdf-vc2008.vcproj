@@ -411,11 +411,11 @@
 				Name="Windows"
 				>
 				<File
-					RelativePath=".\src\MobiWindow.cpp"
+					RelativePath=".\src\EbookWindow.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\src\MobiWindow.h"
+					RelativePath=".\src\EbookWindow.h"
 					>
 				</File>
 				<File

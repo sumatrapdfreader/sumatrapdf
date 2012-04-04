@@ -5,7 +5,7 @@
 #include "EbookController.h"
 #include "FileUtil.h"
 #include "MobiDoc.h"
-#include "MobiWindow.h"
+#include "EbookWindow.h"
 #include "resource.h"
 #include "Scoped.h"
 #include "SumatraPDF.h"
@@ -459,7 +459,7 @@ static bool GetProps(Doc doc, PropertiesLayout *layoutData)
     return false;
 }
 
-static void ShowProperties(MobiWindow *win)
+static void ShowProperties(EbookWindow *win)
 {
     PropertiesLayout *layoutData = FindPropertyWindowByParent(win->hwndFrame);
     if (layoutData) {
@@ -486,8 +486,8 @@ void OnMenuProperties(SumatraWindow& win)
 {
     if (win.AsWindowInfo())
         ShowProperties(*win.AsWindowInfo());
-    else if (win.AsMobiWindow())
-        ShowProperties(win.AsMobiWindow());
+    else if (win.AsEbookWindow())
+        ShowProperties(win.AsEbookWindow());
 }
 
 static void DrawProperties(HWND hwnd, HDC hdc)

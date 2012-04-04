@@ -253,7 +253,7 @@
     <ClCompile Include="src\memtrace\MemTraceDll.cpp" />
     <ClCompile Include="src\Menu.cpp" />
     <ClCompile Include="src\MobiDoc.cpp" />
-    <ClCompile Include="src\MobiWindow.cpp" />
+    <ClCompile Include="src\EbookWindow.cpp" />
     <ClCompile Include="src\mui\Mui.cpp" />
     <ClCompile Include="src\mui\MuiBase.cpp" />
     <ClCompile Include="src\mui\MuiButton.cpp" />
@@ -423,7 +423,7 @@
     <ClInclude Include="src\memtrace\nsWindowsDllInterceptor.h" />
     <ClInclude Include="src\Menu.h" />
     <ClInclude Include="src\MobiDoc.h" />
-    <ClInclude Include="src\MobiWindow.h" />
+    <ClInclude Include="src\EbookWindow.h" />
     <ClInclude Include="src\mui\Mui.h" />
     <ClInclude Include="src\mui\MuiBase.h" />
     <ClInclude Include="src\mui\MuiButton.h" />

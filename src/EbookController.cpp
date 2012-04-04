@@ -7,7 +7,7 @@
 #include "EpubDoc.h"
 #include "FileUtil.h"
 #include "MobiDoc.h"
-#include "MobiWindow.h"
+#include "EbookWindow.h"
 #include "PageLayout.h"
 #include "SumatraWindow.h"
 #include "Translations.h"
@@ -25,7 +25,7 @@
 #define FONT_NAME              L"Georgia"
 #define FONT_SIZE              12.5f
 
-// in MobiWindow.cpp
+// in EbookWindow.cpp
 extern void RestartLayoutTimer(EbookController *controller);
 
 void LayoutTemp::DeletePages()

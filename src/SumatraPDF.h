@@ -64,7 +64,7 @@ enum MenuToolbarFlags {
 #define ABOUT_BG_COLOR_DEFAULT  (RGB(0xff, 0xf2, 0) - 0x80000000)
 
 class WindowInfo;
-class MobiWindow;
+class EbookWindow;
 class Favorites;
 
 // all defined in SumatraPDF.cpp
@@ -81,7 +81,7 @@ extern HBRUSH                   gBrushAboutBg;
 extern HFONT                    gDefaultGuiFont;
 extern TCHAR *                  gPluginURL;
 extern Vec<WindowInfo*>         gWindows;
-extern Vec<MobiWindow*>         gMobiWindows;
+extern Vec<EbookWindow*>         gEbookWindows;
 extern Favorites *              gFavorites;
 extern FileHistory              gFileHistory;
 extern WNDPROC                  DefWndProcCloseButton;

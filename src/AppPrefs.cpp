@@ -683,8 +683,8 @@ bool SavePrefs()
         UpdateCurrentFileDisplayStateForWin(SumatraWindow::Make(gWindows.At(i)));
     }
 
-    for (size_t i = 0; i < gMobiWindows.Count(); i++) {
-        UpdateCurrentFileDisplayStateForWin(SumatraWindow::Make(gMobiWindows.At(i)));
+    for (size_t i = 0; i < gEbookWindows.Count(); i++) {
+        UpdateCurrentFileDisplayStateForWin(SumatraWindow::Make(gEbookWindows.At(i)));
     }
 
     // don't save preferences without the proper permission

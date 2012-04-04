@@ -20,7 +20,7 @@ using namespace Gdiplus;
 #include "HtmlWindow.h"
 #include "Menu.h"
 #include "Mui.h"
-#include "MobiWindow.h"
+#include "EbookWindow.h"
 #include "Notifications.h"
 #include "ParseCommandLine.h"
 #include "PdfSync.h"
@@ -134,7 +134,7 @@ HFONT                        gDefaultGuiFont;
 
 // TODO: combine into Vec<SumatraWindow> (after 2.0) ?
 Vec<WindowInfo*>             gWindows;
-Vec<MobiWindow*>             gMobiWindows;
+Vec<EbookWindow*>             gEbookWindows;
 FileHistory                  gFileHistory;
 Favorites *                  gFavorites;
 
@@ -435,7 +435,7 @@ static void RememberDefaultWindowPosition(WindowInfo& win)
 
 // update global windowState for next default launch when either
 // no pdf is opened or a document without window dimension information
-static void RememberDefaultWindowPosition(MobiWindow *win)
+static void RememberDefaultWindowPosition(EbookWindow *win)
 {
     if (IsZoomed(win->hwndFrame))
         gGlobalPrefs.windowState = WIN_STATE_MAXIMIZED;
@@ -479,14 +479,14 @@ static void UpdateSidebarDisplayState(WindowInfo *win, DisplayState *ds)
         ds->tocState = new Vec<int>(win->tocState);
 }
 
-static void UpdateSidebarDisplayState(MobiWindow *win, DisplayState *ds)
+static void UpdateSidebarDisplayState(EbookWindow *win, DisplayState *ds)
 {
     ds->tocVisible = false;
     delete ds->tocState;
     ds->tocState = NULL;
 }
 
-static void DisplayStateFromMobiWindow(MobiWindow* win, DisplayState* ds)
+static void DisplayStateFromEbookWindow(EbookWindow* win, DisplayState* ds)
 {
     if (!ds->filePath || !str::EqI(ds->filePath, win->LoadedFilePath()))
         str::ReplacePtr(&ds->filePath, win->LoadedFilePath());
@@ -500,13 +500,13 @@ static void DisplayStateFromMobiWindow(MobiWindow* win, DisplayState* ds)
     ds->reparseIdx = win->ebookController->CurrPageReparseIdx();
 }
 
-static void UpdateCurrentFileDisplayStateForWinMobi(MobiWindow* win)
+static void UpdateCurrentFileDisplayStateForWinMobi(EbookWindow* win)
 {
     RememberDefaultWindowPosition(win);
     DisplayState *ds = gFileHistory.Find(win->LoadedFilePath());
     if (!ds)
         return;
-    DisplayStateFromMobiWindow(win, ds);
+    DisplayStateFromEbookWindow(win, ds);
     ds->useGlobalValues = gGlobalPrefs.globalPrefsOnly;
     ds->windowState = gGlobalPrefs.windowState;
     ds->windowPos   = gGlobalPrefs.windowPos;
@@ -531,8 +531,8 @@ void UpdateCurrentFileDisplayStateForWin(SumatraWindow& win)
 {
     if (win.AsWindowInfo())
         UpdateCurrentFileDisplayStateForWinInfo(win.AsWindowInfo());
-    else if (win.AsMobiWindow())
-        UpdateCurrentFileDisplayStateForWinMobi(win.AsMobiWindow());
+    else if (win.AsEbookWindow())
+        UpdateCurrentFileDisplayStateForWinMobi(win.AsEbookWindow());
 }
 
 bool IsUIRightToLeft()
@@ -788,7 +788,7 @@ static void RebuildMenuBarForAllWindows()
     for (size_t i = 0; i < gWindows.Count(); i++) {
         RebuildMenuBarForWindow(gWindows.At(i));
     }
-    RebuildMenuBarForMobiWindows();
+    RebuildMenuBarForEbookWindows();
 }
 
 // When displaying CHM document we subclass hwndCanvas. UnsubclassCanvas() reverts that.
@@ -1284,8 +1284,8 @@ void LoadDocument(const TCHAR *fileName, SumatraWindow& win)
         LoadDocument(fileName, win.AsWindowInfo());
         return;
     }
-    CrashIf(!win.AsMobiWindow());
-    // TODO: LoadDocument() needs to handle MobiWindow, for now
+    CrashIf(!win.AsEbookWindow());
+    // TODO: LoadDocument() needs to handle EbookWindow, for now
     // we force opening in a new window
     LoadDocument(fileName, NULL);
 }
@@ -2319,7 +2319,7 @@ void GetStressTestInfo(str::Str<char>* s)
 
 size_t TotalWindowsCount()
 {
-    return gWindows.Count() + gMobiWindows.Count();
+    return gWindows.Count() + gEbookWindows.Count();
 }
 
 // closes a document inside a WindowInfo and turns it into
@@ -2798,8 +2798,8 @@ HWND GetSumatraWindowHwnd(const SumatraWindow& win)
     if (win.AsWindowInfo()) {
         return win.AsWindowInfo()->hwndFrame;
     } else {
-        CrashIf(!win.AsMobiWindow());
-        return win.AsMobiWindow()->hwndFrame;
+        CrashIf(!win.AsEbookWindow());
+        return win.AsEbookWindow()->hwndFrame;
     }
     return NULL;
 }
@@ -4845,7 +4845,7 @@ static void DispatchUiMsg(UiMsg *msg)
     if (UiMsg::FinishedMobiLoading == msg->type) {
         HandleFinishedMobiLoadingMsg(&msg->finishedMobiLoading);
     } else if (UiMsg::MobiLayout == msg->type) {
-        MobiWindow *win = FindMobiWindowByController(msg->mobiLayout.controller);
+        EbookWindow *win = FindEbookWindowByController(msg->mobiLayout.controller);
         if (win)
             win->ebookController->HandleMobiLayoutMsg(&msg->mobiLayout);
     } else {

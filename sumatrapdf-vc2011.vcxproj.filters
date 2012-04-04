@@ -782,7 +782,7 @@
     <ClCompile Include="src\MobiDoc.cpp">
       <Filter>sumatra\ebook</Filter>
     </ClCompile>
-    <ClCompile Include="src\MobiWindow.cpp">
+    <ClCompile Include="src\EbookWindow.cpp">
       <Filter>sumatra\ebook</Filter>
     </ClCompile>
     <ClCompile Include="src\EbookController.cpp">
@@ -1177,7 +1177,7 @@
     <ClInclude Include="src\MobiDoc.h">
       <Filter>sumatra\ebook</Filter>
     </ClInclude>
-    <ClInclude Include="src\MobiWindow.h">
+    <ClInclude Include="src\EbookWindow.h">
       <Filter>sumatra\ebook</Filter>
     </ClInclude>
     <ClInclude Include="src\EbookController.h">

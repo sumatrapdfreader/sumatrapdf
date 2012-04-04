@@ -1,4 +1,4 @@
-#include "MobiWindow.h"
+#include "EbookWindow.h"
 
 #include "AppTools.h"
 #include "BaseEngine.h"
@@ -95,7 +95,7 @@ static MenuDef menuDefDebug[] = {
 };
 #endif
 
-static void RebuildFileMenuForMobiWindow(HMENU menu)
+static void RebuildFileMenuForEbookWindow(HMENU menu)
 {
     win::menu::Empty(menu);
     BuildMenuFromMenuDef(menuDefMobiFile, dimof(menuDefMobiFile), menu, false);
@@ -106,7 +106,7 @@ static HMENU BuildMobiMenu()
 {
     HMENU mainMenu = CreateMenu();
     HMENU m = CreateMenu();
-    RebuildFileMenuForMobiWindow(m);
+    RebuildFileMenuForEbookWindow(m);
 
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&File"));
     m = BuildMenuFromMenuDef(menuDefMobiGoTo, dimof(menuDefMobiGoTo), CreateMenu(), false);
@@ -123,25 +123,25 @@ static HMENU BuildMobiMenu()
     return mainMenu;
 }
 
-TCHAR *MobiWindow::LoadedFilePath() const
+TCHAR *EbookWindow::LoadedFilePath() const
 {
     if (ebookController)
         return ebookController->GetDoc().GetFilePath();
     return NULL;
 }
 
-static MobiWindow* FindMobiWindowByHwnd(HWND hwnd)
+static EbookWindow* FindEbookWindowByHwnd(HWND hwnd)
 {
-    for (MobiWindow **w = gMobiWindows.IterStart(); w; w = gMobiWindows.IterNext()) {
+    for (EbookWindow **w = gEbookWindows.IterStart(); w; w = gEbookWindows.IterNext()) {
         if ((*w)->hwndFrame == hwnd)
             return *w;
     }
     return NULL;
 }
 
-MobiWindow* FindMobiWindowByController(EbookController *controller)
+EbookWindow* FindEbookWindowByController(EbookController *controller)
 {
-    for (MobiWindow **w = gMobiWindows.IterStart(); w; w = gMobiWindows.IterNext()) {
+    for (EbookWindow **w = gEbookWindows.IterStart(); w; w = gEbookWindows.IterNext()) {
         if ((*w)->ebookController == controller)
             return *w;
     }
@@ -152,19 +152,19 @@ MobiWindow* FindMobiWindowByController(EbookController *controller)
 
 void RestartLayoutTimer(EbookController *controller)
 {
-    MobiWindow *win = FindMobiWindowByController(controller);
+    EbookWindow *win = FindEbookWindowByController(controller);
     KillTimer(win->hwndFrame, LAYOUT_TIMER_ID);
     SetTimer(win->hwndFrame,  LAYOUT_TIMER_ID, 600, NULL);
 }
 
-static void OnTimer(MobiWindow *win, WPARAM timerId)
+static void OnTimer(EbookWindow *win, WPARAM timerId)
 {
     CrashIf(timerId != LAYOUT_TIMER_ID);
     KillTimer(win->hwndFrame, LAYOUT_TIMER_ID);
     win->ebookController->OnLayoutTimer();
 }
 
-static void OnToggleBbox(MobiWindow *win)
+static void OnToggleBbox(EbookWindow *win)
 {
     gShowTextBoundingBoxes = !gShowTextBoundingBoxes;
     SetDebugPaint(gShowTextBoundingBoxes);
@@ -172,9 +172,9 @@ static void OnToggleBbox(MobiWindow *win)
     win::menu::SetChecked(GetMenu(win->hwndFrame), IDM_DEBUG_SHOW_LINKS, gShowTextBoundingBoxes);
 }
 
-// closes a physical window, deletes the MobiWindow object and removes it
+// closes a physical window, deletes the EbookWindow object and removes it
 // from the global list of windows
-void DeleteMobiWindow(MobiWindow *win, bool forceDelete)
+void DeleteEbookWindow(EbookWindow *win, bool forceDelete)
 {
     if (gPluginMode && !forceDelete)
         return;
@@ -184,10 +184,10 @@ void DeleteMobiWindow(MobiWindow *win, bool forceDelete)
     DeletePropertiesWindow(win->hwndFrame);
     delete win->ebookController;
     DestroyEbookControls(win->ebookControls);
-    gMobiWindows.Remove(win);
+    gEbookWindows.Remove(win);
     HWND toDestroy = win->hwndFrame;
     delete win;
-    // must be called after removing win from gMobiWindows so that window
+    // must be called after removing win from gEbookWindows so that window
     // message processing doesn't pick up a window being destroyed
     DestroyWindow(toDestroy);
 }
@@ -195,9 +195,9 @@ void DeleteMobiWindow(MobiWindow *win, bool forceDelete)
 // if forceClose is true, we force window deletion in plugin mode
 // if quitIfLast is true, we quit if we closed the last window, otherwise
 // we create an about window
-static void CloseMobiWindow(MobiWindow *win, bool quitIfLast, bool forceClose)
+static void CloseEbookWindow(EbookWindow *win, bool quitIfLast, bool forceClose)
 {
-    DeleteMobiWindow(win, forceClose);
+    DeleteEbookWindow(win, forceClose);
     if (TotalWindowsCount() > 0)
         return;
     if (quitIfLast) {
@@ -211,7 +211,7 @@ static void CloseMobiWindow(MobiWindow *win, bool quitIfLast, bool forceClose)
     }
 }
 
-static LRESULT OnKeyDown(MobiWindow *win, UINT msg, WPARAM key, LPARAM lParam)
+static LRESULT OnKeyDown(EbookWindow *win, UINT msg, WPARAM key, LPARAM lParam)
 {
     switch (key) {
     case VK_LEFT: case VK_PRIOR: case 'P':
@@ -235,7 +235,7 @@ static LRESULT OnKeyDown(MobiWindow *win, UINT msg, WPARAM key, LPARAM lParam)
         win->ebookController->GoToLastPage();
         break;
     case 'Q':
-        CloseMobiWindow(win, true, true);
+        CloseEbookWindow(win, true, true);
         break;
     default:
         return DefWindowProc(win->hwndFrame, msg, key, lParam);
@@ -243,7 +243,7 @@ static LRESULT OnKeyDown(MobiWindow *win, UINT msg, WPARAM key, LPARAM lParam)
     return 0;
 }
 
-static void RebuildMenuBarForMobiWindow(MobiWindow *win)
+static void RebuildMenuBarForEbookWindow(EbookWindow *win)
 {
     HMENU oldMenu = GetMenu(win->hwndFrame);
     HMENU newMenu = BuildMobiMenu();
@@ -255,21 +255,21 @@ static void RebuildMenuBarForMobiWindow(MobiWindow *win)
     DestroyMenu(oldMenu);
 }
 
-void UpdateMenuForMobiWindow(MobiWindow *win, HMENU m)
+void UpdateMenuForEbookWindow(EbookWindow *win, HMENU m)
 {
     UINT id = GetMenuItemID(m, 0);
     if (id == menuDefMobiFile[0].id)
-        RebuildFileMenuForMobiWindow( m);
+        RebuildFileMenuForEbookWindow( m);
 }
 
-void RebuildMenuBarForMobiWindows()
+void RebuildMenuBarForEbookWindows()
 {
-    for (size_t i = 0; i < gMobiWindows.Count(); i++) {
-        RebuildMenuBarForMobiWindow(gMobiWindows.At(i));
+    for (size_t i = 0; i < gEbookWindows.Count(); i++) {
+        RebuildMenuBarForEbookWindow(gEbookWindows.At(i));
     }
 }
 
-static LRESULT OnGesture(MobiWindow *win, UINT message, WPARAM wParam, LPARAM lParam)
+static LRESULT OnGesture(EbookWindow *win, UINT message, WPARAM wParam, LPARAM lParam)
 {
     if (!Touch::SupportsGestures())
         return DefWindowProc(win->hwndFrame, message, wParam, lParam);
@@ -330,7 +330,7 @@ static LRESULT OnGesture(MobiWindow *win, UINT message, WPARAM wParam, LPARAM lP
     return 0;
 }
 
-static LRESULT OnCommand(MobiWindow *win, UINT msg, WPARAM wParam, LPARAM lParam)
+static LRESULT OnCommand(EbookWindow *win, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     int wmId = LOWORD(wParam);
 
@@ -353,7 +353,7 @@ static LRESULT OnCommand(MobiWindow *win, UINT msg, WPARAM wParam, LPARAM lParam
 
         case IDT_FILE_EXIT:
         case IDM_CLOSE:
-            CloseMobiWindow(win, false, false);
+            CloseEbookWindow(win, false, false);
             break;
 
         case IDM_EXIT:
@@ -441,7 +441,7 @@ static LRESULT OnCommand(MobiWindow *win, UINT msg, WPARAM wParam, LPARAM lParam
 
 static LRESULT CALLBACK MobiWndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    // messages that don't require MobiWindow
+    // messages that don't require EbookWindow
     switch (msg)
     {
         case WM_DROPFILES:
@@ -455,8 +455,8 @@ static LRESULT CALLBACK MobiWndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPA
             return 0;
     }
 
-    // messages that do require MobiWindow
-    MobiWindow *win = FindMobiWindowByHwnd(hwnd);
+    // messages that do require EbookWindow
+    EbookWindow *win = FindEbookWindowByHwnd(hwnd);
     if (!win)
         return DefWindowProc(hwnd, msg, wParam, lParam);
 
@@ -470,7 +470,7 @@ static LRESULT CALLBACK MobiWndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPA
         case WM_DESTROY:
             // called by windows if user clicks window's close button or if
             // we call DestroyWindow()
-            CloseMobiWindow(win, true, true);
+            CloseEbookWindow(win, true, true);
             break;
 
         case WM_PAINT:
@@ -485,7 +485,7 @@ static LRESULT CALLBACK MobiWndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPA
             break;
 
         case WM_INITMENUPOPUP:
-            UpdateMenuForMobiWindow(win, (HMENU)wParam);
+            UpdateMenuForEbookWindow(win, (HMENU)wParam);
             break;
 
         case WM_GESTURE:
@@ -621,8 +621,8 @@ void OpenMobiInWindow(Doc doc, SumatraWindow& winToReplace)
 
     ScopedMem<TCHAR> winTitle(str::Format(_T("%s - %s"), path::GetBaseName(fullPath), SUMATRA_WINDOW_TITLE));
 
-    if (winToReplace.AsMobiWindow()) {
-        MobiWindow *mw = winToReplace.AsMobiWindow();
+    if (winToReplace.AsEbookWindow()) {
+        EbookWindow *mw = winToReplace.AsEbookWindow();
         CrashIf(!mw);
         mw->ebookController->SetDoc(doc);
         win::SetText(mw->hwndFrame, winTitle);
@@ -663,13 +663,13 @@ void OpenMobiInWindow(Doc doc, SumatraWindow& winToReplace)
         Touch::SetGestureConfig(hwnd, 0, 1, &gc, sizeof(GESTURECONFIG));
     }
 
-    MobiWindow *win = new MobiWindow();
+    EbookWindow *win = new EbookWindow();
     win->ebookControls = CreateEbookControls(hwnd);
     win->hwndWrapper = win->ebookControls->mainWnd;
     win->ebookController = new EbookController(win->ebookControls);
     win->hwndFrame = hwnd;
 
-    gMobiWindows.Append(win);
+    gEbookWindows.Append(win);
     win::SetText(win->hwndFrame, winTitle);
 
     ShowWindow(hwnd, wasMaximized ? SW_SHOWMAXIMIZED : SW_SHOW);

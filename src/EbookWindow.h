@@ -1,5 +1,5 @@
-#ifndef MobiWindow_h
-#define MobiWindow_h
+#ifndef EbookWindow_h
+#define EbookWindow_h
 
 #include "BaseUtil.h"
 #include "Doc.h"
@@ -24,13 +24,13 @@ public:
     virtual void Run();
 };
 
-class MobiWindow {
+class EbookWindow {
 public:
-    MobiWindow() : 
+    EbookWindow() : 
         hwndFrame(NULL), ebookControls(NULL), 
         hwndWrapper(NULL), ebookController(NULL) 
     { touchState.panStarted = false; }
-    ~MobiWindow() {}
+    ~EbookWindow() {}
     HWND                hwndFrame;
     EbookControls *     ebookControls;
     mui::HwndWrapper *  hwndWrapper;
@@ -39,10 +39,10 @@ public:
     TCHAR *             LoadedFilePath() const;
 };
 
-MobiWindow* FindMobiWindowByController(EbookController *controller);
+EbookWindow* FindEbookWindowByController(EbookController *controller);
 void   OpenMobiInWindow(Doc doc, SumatraWindow& winToReplace);
 bool   RegisterMobiWinClass(HINSTANCE hinst);
-void   RebuildMenuBarForMobiWindows();
-void   DeleteMobiWindow(MobiWindow *win, bool forceDelete = false);
+void   RebuildMenuBarForEbookWindows();
+void   DeleteEbookWindow(EbookWindow *win, bool forceDelete = false);
 
 #endif

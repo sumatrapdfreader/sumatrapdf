@@ -5,7 +5,7 @@
 #define Doc_h
 
 // In the past operations on supported document files were done as BaseEngine
-// subclass. When we added MobiDoc and MobiWindow, not every document is an engine.
+// subclass. When we added MobiDoc and EbookWindow, not every document is an engine.
 // Class Doc (a short for Document, since it's going to be used frequently)
 // is a wrapper/abstractions for them.
 // It simply wraps all document objects, allows querying the type, casting

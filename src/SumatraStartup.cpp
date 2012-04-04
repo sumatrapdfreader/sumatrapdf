@@ -438,8 +438,8 @@ Exit:
     while (gWindows.Count() > 0) {
         DeleteWindowInfo(gWindows.At(0));
     }
-    while (gMobiWindows.Count() > 0) {
-        DeleteMobiWindow(gMobiWindows.At(0), true);
+    while (gEbookWindows.Count() > 0) {
+        DeleteEbookWindow(gEbookWindows.At(0), true);
     }
 
 #ifndef DEBUG
