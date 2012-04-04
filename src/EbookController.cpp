@@ -245,7 +245,7 @@ void EbookController::StopLayoutThread(bool forceTerminate)
     if (!layoutThread)
         return;
     if (layoutThread->RequestCancelAndWaitToStop(1000, forceTerminate))
-        layoutThread->UnRef();
+        layoutThread->Release();
     layoutThread = NULL;
     layoutThreadNo = -1;
     layoutTemp.DeletePages();

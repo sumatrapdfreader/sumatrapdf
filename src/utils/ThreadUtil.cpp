@@ -130,13 +130,13 @@ DWORD WINAPI ThreadBase::ThreadProc(void *data)
     if (thread->threadName)
         SetThreadName(GetCurrentThreadId(), thread->threadName);
     thread->Run();
-    thread->UnRef();
+    thread->Release();
     return 0;
 }
 
 void ThreadBase::Start()
 {
-    Ref(); // will be unref'd at the end of ThreadBase::ThreadProc
+    AddRef(); // will be unref'd at the end of ThreadBase::ThreadProc
     hThread = CreateThread(NULL, 0, ThreadProc, this, 0, 0);
 }
 

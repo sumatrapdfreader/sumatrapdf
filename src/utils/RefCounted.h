@@ -37,12 +37,11 @@ protected:
 public:
     RefCounted() : refCnt(1) { }
 
-    // TODO: rename to AddRef/Release same as for COM?
-    void Ref() {
+    void AddRef() {
         CrashIf(refCnt <= 0);
         InterlockedIncrement(&refCnt);
     }
-    void UnRef() {
+    void Release() {
         if (0 == InterlockedDecrement(&refCnt)) {
             delete this;
         }
