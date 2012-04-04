@@ -14,6 +14,15 @@ enum RenderTarget { Target_View, Target_Print, Target_Export };
 enum PageLayoutType { Layout_Single = 0, Layout_Facing = 1, Layout_Book = 2,
                       Layout_R2L = 16, Layout_NonContinuous = 32 };
 
+enum PageElementType { Element_Link, Element_Comment, Element_Image };
+
+enum PageDestType { Dest_None,
+    Dest_ScrollTo, Dest_LaunchURL, Dest_LaunchEmbedded, Dest_LaunchFile,
+    Dest_NextPage, Dest_PrevPage, Dest_FirstPage, Dest_LastPage,
+    Dest_FindDialog, Dest_FullScreen, Dest_GoBack, Dest_GoForward,
+    Dest_GoToPageDialog, Dest_PrintDialog, Dest_SaveAsDialog, Dest_ZoomToDialog,
+};
+
 class RenderedBitmap {
 protected:
     HBITMAP hbmp;
@@ -58,9 +67,8 @@ public:
 class PageDestination {
 public:
     virtual ~PageDestination() { }
-    // type of the destination (see LinkHandler::GotoLink in WindowInfo.cpp for
-    // the supported values; the most common values are "ScrollTo" and "LaunchURL")
-    virtual const char *GetDestType() const = 0;
+    // type of the destination (most common are Dest_ScrollTo and Dest_LaunchURL)
+    virtual PageDestType GetDestType() const = 0;
     // page the destination points to (0 for external destinations such as URLs)
     virtual int GetDestPageNo() const = 0;
     // rectangle of the destination on the above returned page
@@ -81,12 +89,6 @@ public:
 
 // use in PageDestination::GetDestRect for values that don't matter
 #define DEST_USE_DEFAULT    -999.9
-
-enum PageElementType {
-    Element_Link,
-    Element_Comment,
-    Element_Image,
-};
 
 // hoverable (and maybe interactable) element on a single page
 class PageElement {

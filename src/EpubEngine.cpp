@@ -129,7 +129,7 @@ public:
     SimpleDest2(int pageNo, RectD rect, TCHAR *value=NULL) :
         pageNo(pageNo), rect(rect), value(value) { }
 
-    virtual const char *GetDestType() const { return value ? "LaunchURL" : "ScrollTo"; }
+    virtual PageDestType GetDestType() const { return value ? Dest_LaunchURL : Dest_ScrollTo; }
     virtual int GetDestPageNo() const { return pageNo; }
     virtual RectD GetDestRect() const { return rect; }
     virtual TCHAR *GetDestValue() const { return value ? str::Dup(value) : NULL; }
@@ -157,7 +157,7 @@ public:
     }
     virtual PageDestination *AsLink() { return dest ? dest : this; }
 
-    virtual const char *GetDestType() const { return "LaunchURL"; }
+    virtual PageDestType GetDestType() const { return Dest_LaunchURL; }
     virtual int GetDestPageNo() const { return 0; }
     virtual RectD GetDestRect() const { return RectD(); }
     virtual TCHAR *GetDestValue() const { return GetValue(); }

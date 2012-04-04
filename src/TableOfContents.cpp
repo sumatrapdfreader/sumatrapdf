@@ -63,7 +63,7 @@ static void CustomizeTocInfoTip(LPNMTVGETINFOTIP nmit, void *callerAddr)
         infotip.Append(_T("\r\n"));
     }
 
-    if (tocItem->GetLink() && str::Eq(tocItem->GetLink()->GetDestType(), "LaunchEmbedded"))
+    if (tocItem->GetLink() && Dest_LaunchEmbedded == tocItem->GetLink()->GetDestType())
         path.Set(str::Format(_TR("Attachment: %s"), path));
 
     infotip.Append(path);
@@ -174,7 +174,7 @@ static void GoToTocLinkForTVItem(WindowInfo* win, HWND hTV, HTREEITEM hItem=NULL
     DocTocItem *tocItem = (DocTocItem *)item.lParam;
     if (!tocItem || !win->IsDocLoaded())
         return;
-    if ((allowExternal || tocItem->GetLink() && str::Eq(tocItem->GetLink()->GetDestType(), "ScrollTo")) || tocItem->pageNo) {
+    if ((allowExternal || tocItem->GetLink() && Dest_ScrollTo == tocItem->GetLink()->GetDestType()) || tocItem->pageNo) {
         // delay changing the page until the tree messages have been handled
         QueueWorkItem(new GoToTocLinkWorkItem(win, tocItem, hItem));
     }

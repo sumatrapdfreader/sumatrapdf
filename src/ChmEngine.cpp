@@ -42,10 +42,10 @@ public:
     ChmTocItem *Clone();
 
     virtual PageDestination *GetLink() { return this; }
-    virtual const char *GetDestType() const {
+    virtual PageDestType GetDestType() const {
         if (url && IsExternalUrl(url))
-            return "LaunchURL";
-        return "ScrollTo";
+            return Dest_LaunchURL;
+        return Dest_ScrollTo;
     }
     virtual int GetDestPageNo() const { return pageNo; }
     virtual RectD GetDestRect() const {

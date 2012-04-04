@@ -570,7 +570,7 @@ class SimpleDest : public PageDestination {
 public:
     SimpleDest(int pageNo, RectD rect) : pageNo(pageNo), rect(rect) { }
 
-    virtual const char *GetDestType() const { return NULL; }
+    virtual PageDestType GetDestType() const { return Dest_ScrollTo; }
     virtual int GetDestPageNo() const { return pageNo; }
     virtual RectD GetDestRect() const { return rect; }
 };
@@ -1012,7 +1012,7 @@ public:
     virtual TCHAR *GetValue() const;
     virtual PageDestination *AsLink() { return this; }
 
-    virtual const char *GetDestType() const;
+    virtual PageDestType GetDestType() const;
     virtual int GetDestPageNo() const;
     virtual RectD GetDestRect() const;
     virtual TCHAR *GetDestValue() const { return GetValue(); }
@@ -2382,21 +2382,52 @@ TCHAR *PdfLink::GetValue() const
     return path;
 }
 
-const char *PdfLink::GetDestType() const
+static PageDestType DestTypeFromName(const char *name)
+{
+    // named actions are converted either to Dest_Name or Dest_NameDialog
+#define HandleType(type) if (str::Eq(name, #type)) return Dest_ ## type
+#define HandleTypeDialog(type) if (str::Eq(name, #type)) return Dest_ ## type ## Dialog
+    // predefined named actions
+    HandleType(NextPage);
+    HandleType(PrevPage);
+    HandleType(FirstPage);
+    HandleType(LastPage);
+    // Adobe Reader extensions to the spec
+    // cf. http://www.tug.org/applications/hyperref/manual.html
+    HandleTypeDialog(Find);
+    HandleType(FullScreen);
+    HandleType(GoBack);
+    HandleType(GoForward);
+    HandleTypeDialog(GoToPage);
+    HandleTypeDialog(Print);
+    HandleTypeDialog(SaveAs);
+    HandleTypeDialog(ZoomTo);
+#undef HandleType
+#undef HandleTypeDialog
+    // named action that we don't support (or invalid action name)
+    return Dest_None;
+}
+
+PageDestType PdfLink::GetDestType() const
 {
     if (!link)
-        return NULL;
+        return Dest_None;
 
     switch (link->kind) {
-    case FZ_LINK_GOTO: return "ScrollTo";
-    case FZ_LINK_URI: return "LaunchURL";
-    case FZ_LINK_NAMED: return link->ld.named.named;
+    case FZ_LINK_GOTO:
+        return Dest_ScrollTo;
+    case FZ_LINK_URI:
+        return Dest_LaunchURL;
+    case FZ_LINK_NAMED:
+        return DestTypeFromName(link->ld.named.named);
     case FZ_LINK_LAUNCH:
         if (link->ld.launch.embedded_num)
-            return "LaunchEmbedded";
-        return "LaunchFile";
-    case FZ_LINK_GOTOR: return "LaunchFile";
-    default: return NULL; // unsupported action
+            return Dest_LaunchEmbedded;
+        return Dest_LaunchFile;
+    case FZ_LINK_GOTOR:
+        return Dest_LaunchFile;
+    default:
+        return Dest_None; // unsupported action
     }
 }
 
@@ -2633,14 +2664,14 @@ public:
     }
     virtual PageDestination *AsLink() { return this; }
 
-    virtual const char *GetDestType() const {
+    virtual PageDestType GetDestType() const {
         if (!link)
-            return NULL;
+            return Dest_None;
         if (FZ_LINK_GOTO == link->kind)
-            return "ScrollTo";
+            return Dest_ScrollTo;
         if (FZ_LINK_URI == link->kind)
-            return "LaunchURL";
-        return NULL;
+            return Dest_LaunchURL;
+        return Dest_None;
     }
     virtual int GetDestPageNo() const {
         if (!link || link->kind != FZ_LINK_GOTO)

@@ -168,6 +168,34 @@ void DumpToc(BaseEngine *engine)
     delete root;
 }
 
+const char *PageDestToStr(PageDestType destType)
+{
+#define HandleType(type) if (destType == Dest_ ## type) return #type;
+#define HandleTypeDialog(type) if (destType == Dest_ ## type ## Dialog) return #type;
+    // common actions
+    HandleType(ScrollTo);
+    HandleType(LaunchURL);
+    HandleType(LaunchEmbedded);
+    HandleType(LaunchFile);
+    // named actions
+    HandleType(NextPage);
+    HandleType(PrevPage);
+    HandleType(FirstPage);
+    HandleType(LastPage);
+    HandleTypeDialog(Find);
+    HandleType(FullScreen);
+    HandleType(GoBack);
+    HandleType(GoForward);
+    HandleTypeDialog(GoToPage);
+    HandleTypeDialog(Print);
+    HandleTypeDialog(SaveAs);
+    HandleTypeDialog(ZoomTo);
+#undef HandleType
+#undef HandleTypeDialog
+    CrashIf(destType != Dest_None);
+    return NULL;
+}
+
 void DumpPageData(BaseEngine *engine, int pageNo, bool fullDump)
 {
     // ensure that the page is loaded
@@ -201,10 +229,8 @@ void DumpPageData(BaseEngine *engine, int pageNo, bool fullDump)
             Out("\t\t\t<Element\n\t\t\t\tRect=\"%.0f %.0f %.0f %.0f\"\n", rect.x, rect.y, rect.dx, rect.dy);
             PageDestination *dest = els->At(i)->AsLink();
             if (dest) {
-                if (dest->GetDestType()) {
-                    ScopedMem<char> type(Escape(str::conv::FromAnsi(dest->GetDestType())));
-                    Out("\t\t\t\tType=\"%s\"\n", type.Get());
-                }
+                if (dest->GetDestType() != Dest_None)
+                    Out("\t\t\t\tType=\"%s\"\n", PageDestToStr(dest->GetDestType()));
                 ScopedMem<char> value(Escape(dest->GetDestValue()));
                 if (value)
                     Out("\t\t\t\tTarget=\"%s\"\n", value.Get());

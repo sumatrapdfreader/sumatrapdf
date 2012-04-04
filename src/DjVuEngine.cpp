@@ -65,16 +65,16 @@ public:
     DjVuDestination(const char *link) : link(str::Dup(link)) { }
     ~DjVuDestination() { free(link); }
 
-    virtual const char *GetDestType() const {
+    virtual PageDestType GetDestType() const {
         if (IsPageLink(link))
-            return "ScrollTo";
+            return Dest_ScrollTo;
         if (str::Eq(link, "#+1"))
-            return "NextPage";
+            return Dest_NextPage;
         if (str::Eq(link, "#-1"))
-            return "PrevPage";
+            return Dest_PrevPage;
         if (str::StartsWithI(link, "http:") || str::StartsWithI(link, "https:") || str::StartsWithI(link, "mailto:"))
-            return "LaunchURL";
-        return NULL;
+            return Dest_LaunchURL;
+        return Dest_None;
     }
     virtual int GetDestPageNo() const {
         if (IsPageLink(link))
@@ -85,7 +85,7 @@ public:
         return RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
     }
     virtual TCHAR *GetDestValue() const {
-        if (str::Eq(GetDestType(), "LaunchURL"))
+        if (Dest_LaunchURL == GetDestType())
             return str::conv::FromUtf8(link);
         return NULL;
     }
@@ -115,7 +115,7 @@ public:
     virtual TCHAR *GetValue() const {
         if (value)
             return str::Dup(value);
-        if (str::Eq(dest->GetDestType(), "LaunchURL"))
+        if (Dest_LaunchURL == dest->GetDestType())
             return dest->GetDestValue();
         return NULL;
     }
