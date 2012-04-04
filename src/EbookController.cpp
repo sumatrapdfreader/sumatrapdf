@@ -8,7 +8,7 @@
 #include "FileUtil.h"
 #include "MobiDoc.h"
 #include "EbookWindow.h"
-#include "PageLayout.h"
+#include "HtmlFormatter.h"
 #include "SumatraWindow.h"
 #include "Translations.h"
 #include "ThreadUtil.h"

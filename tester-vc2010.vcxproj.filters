@@ -2,7 +2,7 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="src\MobiDoc.cpp" />
-    <ClCompile Include="src\PageLayout.cpp" />
+    <ClCompile Include="src\HtmlFormatter.cpp" />
     <ClCompile Include="src\Tester.cpp" />
     <ClCompile Include="src\utils\BitReader.cpp">
       <Filter>utils</Filter>
@@ -61,7 +61,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\MobiDoc.h" />
-    <ClInclude Include="src\PageLayout.h" />
+    <ClInclude Include="src\HtmlFormatter.h" />
     <ClInclude Include="src\utils\BitReader.h">
       <Filter>utils</Filter>
     </ClInclude>

@@ -175,11 +175,11 @@
 					>
 				</File>
 				<File
-					RelativePath=".\src\PageLayout.cpp"
+					RelativePath=".\src\HtmlFormatter.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\src\PageLayout.h"
+					RelativePath=".\src\HtmlFormatter.h"
 					>
 				</File>
 				<File

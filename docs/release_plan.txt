@@ -52,4 +52,4 @@ A random list of itmes to implement sooner or later:
 - ebook ui: rtl support
 - rename LayoutInfo => FormatterArgs (HtmlFormatterArgs ?),
   PageData => HtmlPage (?), DrawPageLayout => DrawHtmlPage (?),
-  *Layout* => *Format*, PageLayout.[h|cpp] => HtmlFormatter.[h|cpp]
+  *Layout* => *Format*

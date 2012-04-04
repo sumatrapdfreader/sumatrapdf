@@ -169,7 +169,7 @@ ENGINE_OBJS = \
 	$(OS)\EpubEngine.obj $(OS)\EpubDoc.obj
 
 EBOOK_OBJS = \
-	$(OS)\MobiDoc.obj $(OS)\PageLayout.obj \
+	$(OS)\MobiDoc.obj $(OS)\HtmlFormatter.obj \
 	$(OS)\EbookControls.obj $(OS)\EbookController.obj $(OS)\EbookWindow.obj
 
 SUMATRA_OBJS = \
@@ -194,7 +194,7 @@ UNINSTALLER_OBJS = \
 
 TESTER_OBJS = \
 	$(UTILS_OBJS) $(MUI_OBJS) $(ZIP_OBJS) $(ZLIB_OBJS) $(OS)\Tester.obj \
-	$(OS)\PageLayout.obj $(OU)\NoFreeAllocator.obj $(OS)\MobiDoc.obj \
+	$(OS)\HtmlFormatter.obj $(OU)\NoFreeAllocator.obj $(OS)\MobiDoc.obj \
 	$(OS)\EpubDoc.obj
 
 PDFFILTER_OBJS = \
@@ -213,7 +213,7 @@ BROWSER_PLUGIN_OBJS = \
 
 ENGINEDUMP_OBJS = \
 	$(OS)\EngineDump.obj $(ENGINE_OBJS) $(LIBS_OBJS) $(UTILS_OBJS) \
-	$(OS)\PageLayout.obj $(OMUI)\MiniMui.obj $(OS)\MobiDoc.obj
+	$(OS)\HtmlFormatter.obj $(OMUI)\MiniMui.obj $(OS)\MobiDoc.obj
 
 MEMTRACE_OBJS = \
 	$(OM)\MemTraceDll.obj $(UTILS_OBJS)
@@ -245,8 +245,9 @@ PDFPREVIEW_OBJS = $(PDFPREVIEW_OBJS) $(OS)\ImagesEngine.obj $(OU)\GdiPlusUtil.ob
 !endif
 !if "$(BUILD_EPUB_PREVIEW)"!=""
 PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_EPUB_PREVIEW"
-PDFPREVIEW_OBJS = $(PDFPREVIEW_OBJS) $(OS)\EpubEngine.obj $(OS)\EpubDoc.obj $(OS)\PageLayout.obj \
-	$(OMUI)\MiniMui.obj $(OU)\TrivialHtmlParser.obj $(OU)\HtmlPullParser.obj
+PDFPREVIEW_OBJS = $(PDFPREVIEW_OBJS) $(OS)\EpubEngine.obj $(OS)\EpubDoc.obj \
+	$(OS)\HtmlFormatter.obj $(OMUI)\MiniMui.obj $(OU)\TrivialHtmlParser.obj \
+	$(OU)\HtmlPullParser.obj
 !if "$(BUILD_CBZ_PREVIEW)"==""
 PDFPREVIEW_OBJS = $(PDFPREVIEW_OBJS) $(OU)\GdiPlusUtil.obj $(ZIP_OBJS)
 !endif

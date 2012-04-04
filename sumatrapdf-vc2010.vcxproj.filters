@@ -758,7 +758,7 @@
     <ClCompile Include="src\EbookWindow.cpp">
       <Filter>sumatra\ebook</Filter>
     </ClCompile>
-    <ClCompile Include="src\PageLayout.cpp">
+    <ClCompile Include="src\HtmlFormatter.cpp">
       <Filter>sumatra\ebook</Filter>
     </ClCompile>
     <ClCompile Include="src\DjVuEngine.cpp">
@@ -1306,7 +1306,7 @@
     <ClInclude Include="src\PdfEngine.h">
       <Filter>sumatra\documents</Filter>
     </ClInclude>
-    <ClInclude Include="src\PageLayout.h">
+    <ClInclude Include="src\HtmlFormatter.h">
       <Filter>sumatra\ebook</Filter>
     </ClInclude>
     <ClInclude Include="src\MobiDoc.h">

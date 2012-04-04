@@ -800,7 +800,7 @@
     <ClCompile Include="src\utils\ThreadUtil.cpp">
       <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="src\PageLayout.cpp">
+    <ClCompile Include="src\HtmlFormatter.cpp">
       <Filter>sumatra\ebook</Filter>
     </ClCompile>
     <ClCompile Include="src\mui\Mui.cpp">
@@ -1195,7 +1195,7 @@
     <ClInclude Include="src\utils\ThreadUtil.h">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="src\PageLayout.h">
+    <ClInclude Include="src\HtmlFormatter.h">
       <Filter>sumatra\ebook</Filter>
     </ClInclude>
     <ClInclude Include="src\mui\Mui.h">

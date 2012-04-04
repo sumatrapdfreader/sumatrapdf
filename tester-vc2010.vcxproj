@@ -80,7 +80,7 @@
     <ClCompile Include="src\mui\MuiLayout.cpp" />
     <ClCompile Include="src\mui\MuiPainter.cpp" />
     <ClCompile Include="src\mui\MuiScrollBar.cpp" />
-    <ClCompile Include="src\PageLayout.cpp" />
+    <ClCompile Include="src\HtmlFormatter.cpp" />
     <ClCompile Include="src\Tester.cpp" />
     <ClCompile Include="src\utils\BitReader.cpp" />
     <ClCompile Include="src\utils\DirIter.cpp" />
@@ -103,7 +103,7 @@
     <ClInclude Include="src\mui\MuiLayout.h" />
     <ClInclude Include="src\mui\MuiPainter.h" />
     <ClInclude Include="src\mui\MuiScrollBar.h" />
-    <ClInclude Include="src\PageLayout.h" />
+    <ClInclude Include="src\HtmlFormatter.h" />
     <ClInclude Include="src\utils\Allocator.h" />
     <ClInclude Include="src\utils\BaseUtil.h" />
     <ClInclude Include="src\utils\BitReader.h" />

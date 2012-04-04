@@ -1,8 +1,8 @@
 /* Copyright 2011-2012 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef PageLayout_h
-#define PageLayout_h
+#ifndef HtmlFormatter_h
+#define HtmlFormatter_h
 
 #include "BaseUtil.h"
 #include "EbookBase.h"

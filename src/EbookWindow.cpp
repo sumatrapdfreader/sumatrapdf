@@ -9,7 +9,7 @@ using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "Menu.h"
 #include "MobiDoc.h"
-#include "PageLayout.h"
+#include "HtmlFormatter.h"
 #include "Resource.h"
 #include "SumatraProperties.h"
 #include "SumatraAbout.h"

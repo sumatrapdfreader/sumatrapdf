@@ -28,7 +28,7 @@ of string value (16-bit offset of the array of strings and 16-bit lenght
 of the string) and value.
 
 TODO: this is meant to be used for cache of string measurements in
-PageLayout.
+HtmlFormatter.
 */
 
 // non-templated base class where value is a blob of bytes of fixed

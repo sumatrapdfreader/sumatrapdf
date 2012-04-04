@@ -7,7 +7,7 @@
 #include "BaseUtil.h"
 #include "Doc.h"
 #include "Mui.h"
-#include "PageLayout.h"
+#include "HtmlFormatter.h"
 #include "SumatraWindow.h"
 #include "ThreadUtil.h"
 #include "Vec.h"

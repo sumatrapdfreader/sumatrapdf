@@ -4,7 +4,7 @@
 #include "BaseUtil.h"
 #include "EbookControls.h"
 
-#include "PageLayout.h"
+#include "HtmlFormatter.h"
 #include "SvgPath.h"
 
 #include "DbgHelpDyn.h"

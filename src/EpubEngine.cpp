@@ -14,7 +14,7 @@
 #include "GdiPlusUtil.h"
 #include "TrivialHtmlParser.h"
 #include "HtmlPullParser.h"
-#include "PageLayout.h"
+#include "HtmlFormatter.h"
 #include "EpubDoc.h"
 
 // disable warning C4250 which is wrongly issued due to a compiler bug; cf.

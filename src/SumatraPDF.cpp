@@ -1287,7 +1287,7 @@ static void LoadEbookAsync(const TCHAR *fileName, SumatraWindow& win)
     ThreadLoadEbook *loadThread = new ThreadLoadEbook(fileName, NULL, win);
     loadThread->Start();
     // make the thread delete itself at the end of processing
-    loadThread->AddRef();
+    loadThread->Release();
     // when loading is done, we'll call HandleFinishedMobiLoadingMsg()
 
     // TODO: we should show a notification in the window user is looking at
