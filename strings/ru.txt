@@ -342,6 +342,9 @@ F&ullscreen\tCtrl+Shift+L
 Facing
 По две страницы
 
+Failed to rename the file!
+Ошибка переименования файла!
+
 Failed to save a file
 Ошибка сохранения файла
 
@@ -561,6 +564,9 @@ Printing page %d of %d...
 Printing problem.
 Ошибка при печати.
 
+Re&name...\tF2
+Пере&именовать...\tF2
+
 Remember &opened files
 Запоминать &открытые файлы
 
@@ -569,6 +575,9 @@ Remove from favorites
 
 Remove page %s from favorites
 Удалить стр. %s из избранного
+
+Rename To
+Переименовать в
 
 Replace document &colors with Windows color scheme
 Применить к документу цветовую схему Windows
@@ -695,9 +704,4 @@ copying text
 
 printing document
 печатается документ
-
-# Untranslated:
-#Failed to rename the file!
-#Re&name...\tF2
-#Rename To
 

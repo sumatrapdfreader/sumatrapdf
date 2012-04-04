@@ -269,7 +269,7 @@ Copy Co&mment
 주석 복사(&M)
 
 Copying text was denied (copying as image only)
-텍스트 복사가 거부되었습니다. (이미지만 복사됩니다.)
+문자열 복사가 거부되었습니다. (이미지만 복사됩니다.)
 
 Copyright:
 저작권:
@@ -343,6 +343,9 @@ F&ullscreen\tCtrl+Shift+L
 Facing
 두 페이지씩
 
+Failed to rename the file!
+파일 이름 바꾸기 실패!
+
 Failed to save a file
 파일을 저장하지 못했습니다.
 
@@ -404,10 +407,10 @@ Formatting the book... %d pages
 책 포맷 중... %d 페이지
 
 Found text at page %s
-%s 페이지에서 텍스트를 찾았습니다.
+%s 페이지에서 문자열 찾음
 
 Found text at page %s (again)
-%s 페이지에서 텍스트 찾음 (다시)
+%s 페이지에서 문자열 찾음 (다시)
 
 Frequently Read
 최근에 읽은 파일
@@ -562,6 +565,9 @@ Printing page %d of %d...
 Printing problem.
 인쇄 중 문제 발생.
 
+Re&name...\tF2
+이름 바꾸기(&N)...\tF2
+
 Remember &opened files
 열었던 파일들 기억(&O)
 
@@ -570,6 +576,9 @@ Remove from favorites
 
 Remove page %s from favorites
 책갈피에서 %s 페이지 제거
+
+Rename To
+바꿀 이름
 
 Replace document &colors with Windows color scheme
 Windows 색 구성표처럼 문서 색 교체(&C)
@@ -692,13 +701,8 @@ Zoom factor
 [변경 감지됨. 갱신 중...] %s
 
 copying text
-텍스트 복사 중
+문자열 복사 중
 
 printing document
 문서 인쇄 중
-
-# Untranslated:
-#Failed to rename the file!
-#Re&name...\tF2
-#Rename To
 
