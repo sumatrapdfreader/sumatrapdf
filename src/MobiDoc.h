@@ -107,7 +107,7 @@ public:
     size_t              GetBookHtmlSize() const { return doc->Size(); }
     ImageData *         GetCoverImage();
     ImageData *         GetImage(size_t imgRecIndex) const;
-    TCHAR *             GetFileName() const { return fileName; }
+    const TCHAR *       GetFileName() const { return fileName; }
 
     static MobiDoc *    CreateFromFile(const TCHAR *fileName);
 };

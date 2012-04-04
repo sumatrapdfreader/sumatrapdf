@@ -36,7 +36,7 @@ public:
     mui::HwndWrapper *  hwndWrapper;
     EbookController *   ebookController;
     TouchState          touchState;
-    TCHAR *             LoadedFilePath() const;
+    const TCHAR *       LoadedFilePath() const;
 };
 
 EbookWindow* FindEbookWindowByController(EbookController *controller);

@@ -20,15 +20,15 @@ void Doc::Delete()
     case None:
         break;
     default:
-        if (AsEngine())
-            delete AsEngine();
+        if (IsEngine())
+            delete engine;
         else
             CrashIf(true);
         break;
     }
 
     type = None;
-    dummy = NULL;
+    generic = NULL;
 }
 
 BaseEngine *Doc::AsEngine() const
@@ -62,17 +62,16 @@ bool Doc::IsEbook() const
     return (Mobi == type) || (Epub == type);
 }
 
-TCHAR *Doc::GetFilePath() const
+const TCHAR *Doc::GetFilePath() const
 {
     switch (type) {
     case Mobi:
         return mobiDoc->GetFileName();
     case Epub:
-        return epubDoc->GetFilePath();
+        return epubDoc->GetFileName();
     default:
         CrashIf(true);
         break;
     }
     return NULL;
 }
-

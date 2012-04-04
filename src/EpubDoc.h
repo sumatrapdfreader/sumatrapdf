@@ -21,8 +21,7 @@ class EpubDoc {
     Vec<ImageData2> images;
     Vec<const char *> props;
     ScopedMem<TCHAR> tocPath;
-    // NULL if initialized from IStream
-    TCHAR *filePath;
+    ScopedMem<TCHAR> fileName;
 
     bool Load();
     void ParseMetadata(const char *content);
@@ -38,11 +37,10 @@ public:
     ImageData *GetImageData(const char *id, const char *pagePath);
 
     TCHAR *GetProperty(const char *name);
+    const TCHAR *GetFileName() const;
 
     bool HasToc() const;
     bool ParseToc(EbookTocVisitor *visitor);
-
-    TCHAR *GetFilePath() const { return filePath; }
 
     static bool IsSupportedFile(const TCHAR *fileName, bool sniff);
     static EpubDoc *CreateFromFile(const TCHAR *fileName);
@@ -75,6 +73,7 @@ public:
     ImageData *GetImageData(const char *id);
 
     TCHAR *GetProperty(const char *name);
+    const TCHAR *GetFileName() const;
     const char *GetHrefName();
     bool IsZipped();
 

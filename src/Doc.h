@@ -45,16 +45,25 @@ public:
 
     DocType type;
     union {
-        void *dummy;
+        void *generic;
         BaseEngine *engine; // we can always cast to the right type based on type
         EpubDoc * epubDoc;
         MobiDoc * mobiDoc;
     };
 
-    Doc(const Doc& other) { type = other.type; dummy = other.dummy; }
-    Doc& operator=(const Doc& other) { type = other.type; dummy = other.dummy; return *this; }
+    Doc(const Doc& other) {
+        type = other.type;
+        generic = other.generic;
+    }
+    Doc& operator=(const Doc& other) {
+        if (this != &other) {
+            type = other.type;
+            generic = other.generic;
+        }
+        return *this;
+    }
 
-    Doc() { type = None; dummy = NULL; }
+    Doc() : type(None), generic(NULL) { }
     Doc(CbxEngine *doc) { Set(doc); }
     Doc(ChmEngine *doc) { Set(doc); }
     Doc(Chm2Engine *doc) { Set(doc); }
@@ -90,14 +99,14 @@ public:
 
     // note: find a better name, if possible
     bool IsNone() const { return None == type; }
-
     bool IsEbook() const;
+    bool IsEngine() const { return !IsNone() && !IsEbook(); }
 
     BaseEngine *AsEngine() const;
     MobiDoc *AsMobi() const;
     EpubDoc *AsEpub() const;
 
-    TCHAR *GetFilePath() const;
+    const TCHAR *GetFilePath() const;
 };
 
 #endif

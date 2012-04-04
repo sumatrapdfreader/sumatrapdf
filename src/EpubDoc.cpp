@@ -110,15 +110,11 @@ static char *Base64Decode(const char *s, const char *end, size_t *len)
 
 /* EPUB */
 
-EpubDoc::EpubDoc(const TCHAR *fileName) : zip(fileName) 
-{
-    filePath = str::Dup(fileName);
-}
+EpubDoc::EpubDoc(const TCHAR *fileName) :
+    zip(fileName), fileName(str::Dup(fileName)) { }
 
-EpubDoc::EpubDoc(IStream *stream) : zip(stream)
-{
-    filePath = NULL;
-}
+EpubDoc::EpubDoc(IStream *stream) :
+    zip(stream), fileName(NULL) { }
 
 EpubDoc::~EpubDoc()
 {
@@ -129,7 +125,6 @@ EpubDoc::~EpubDoc()
     for (size_t i = 1; i < props.Count(); i += 2) {
         free((void *)props.At(i));
     }
-    free(filePath);
 }
 
 bool EpubDoc::Load()
@@ -299,6 +294,11 @@ TCHAR *EpubDoc::GetProperty(const char *name)
             return str::conv::FromUtf8(props.At(i + 1));
     }
     return NULL;
+}
+
+const TCHAR *EpubDoc::GetFileName() const
+{
+    return fileName;
 }
 
 bool EpubDoc::HasToc() const
@@ -553,14 +553,19 @@ TCHAR *Fb2Doc::GetProperty(const char *name)
     return NULL;
 }
 
-bool Fb2Doc::IsZipped()
+const TCHAR *Fb2Doc::GetFileName() const
 {
-    return isZipped;
+    return fileName;
 }
 
 const char *Fb2Doc::GetHrefName()
 {
     return hrefName ? hrefName : "href";
+}
+
+bool Fb2Doc::IsZipped()
+{
+    return isZipped;
 }
 
 bool Fb2Doc::IsSupportedFile(const TCHAR *fileName, bool sniff)

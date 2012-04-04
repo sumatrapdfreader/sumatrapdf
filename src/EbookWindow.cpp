@@ -123,7 +123,7 @@ static HMENU BuildMobiMenu()
     return mainMenu;
 }
 
-TCHAR *EbookWindow::LoadedFilePath() const
+const TCHAR *EbookWindow::LoadedFilePath() const
 {
     if (ebookController)
         return ebookController->GetDoc().GetFilePath();
@@ -600,7 +600,7 @@ static void CreateThumbnailForDoc(Doc doc, DisplayState& ds)
 
 void OpenMobiInWindow(Doc doc, SumatraWindow& winToReplace)
 {
-    TCHAR *fullPath = doc.GetFilePath();
+    const TCHAR *fullPath = doc.GetFilePath();
     DisplayState *ds = gFileHistory.Find(fullPath);
 
     if (gGlobalPrefs.rememberOpenedFiles) {
