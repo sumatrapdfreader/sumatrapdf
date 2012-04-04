@@ -340,7 +340,7 @@ bool EbookEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, 
 
     ScopedCritSec scope(&pagesAccess);
     FixFontSizeForResolution(hDC);
-    DrawPageLayout(&g, GetPageData(pageNo), pageBorder, pageBorder, false, &Color(Color::Black));
+    DrawHtmlPage(&g, GetPageData(pageNo), pageBorder, pageBorder, false, &Color(Color::Black));
     return true;
 }
 
@@ -610,15 +610,15 @@ bool EpubEngineImpl::FinishLoading()
     if (!doc)
         return false;
 
-    LayoutInfo li;
-    li.htmlStr = doc->GetTextData(&li.htmlStrLen);
-    li.pageDx = (int)(pageRect.dx - 2 * pageBorder);
-    li.pageDy = (int)(pageRect.dy - 2 * pageBorder);
-    li.fontName = L"Georgia";
-    li.fontSize = 11;
-    li.textAllocator = &allocator;
+    HtmlFormatterArgs args;
+    args.htmlStr = doc->GetTextData(&args.htmlStrLen);
+    args.pageDx = (int)(pageRect.dx - 2 * pageBorder);
+    args.pageDy = (int)(pageRect.dy - 2 * pageBorder);
+    args.fontName = L"Georgia";
+    args.fontSize = 11;
+    args.textAllocator = &allocator;
 
-    pages = EpubFormatter(&li, doc).FormatAllPages();
+    pages = EpubFormatter(&args, doc).FormatAllPages();
     if (!ExtractPageAnchors())
         return false;
 
@@ -672,8 +672,8 @@ class Fb2Formatter : public HtmlFormatter {
     Fb2Doc *fb2Doc;
 
 public:
-    Fb2Formatter(LayoutInfo *li, Fb2Doc *doc) :
-        HtmlFormatter(li), fb2Doc(doc), section(1), titleCount(0) { }
+    Fb2Formatter(HtmlFormatterArgs *args, Fb2Doc *doc) :
+        HtmlFormatter(args), fb2Doc(doc), section(1), titleCount(0) { }
 
     Vec<PageData*> *FormatAllPages();
 };
@@ -802,15 +802,15 @@ bool Fb2EngineImpl::Load(const TCHAR *fileName)
     if (!doc)
         return false;
 
-    LayoutInfo li;
-    li.htmlStr = doc->GetTextData(&li.htmlStrLen);
-    li.pageDx = (int)(pageRect.dx - 2 * pageBorder);
-    li.pageDy = (int)(pageRect.dy - 2 * pageBorder);
-    li.fontName = L"Georgia";
-    li.fontSize = 11;
-    li.textAllocator = &allocator;
+    HtmlFormatterArgs args;
+    args.htmlStr = doc->GetTextData(&args.htmlStrLen);
+    args.pageDx = (int)(pageRect.dx - 2 * pageBorder);
+    args.pageDy = (int)(pageRect.dy - 2 * pageBorder);
+    args.fontName = L"Georgia";
+    args.fontSize = 11;
+    args.textAllocator = &allocator;
 
-    pages = Fb2Formatter(&li, doc).FormatAllPages();
+    pages = Fb2Formatter(&args, doc).FormatAllPages();
     if (!ExtractPageAnchors())
         return false;
 
@@ -924,28 +924,28 @@ bool MobiEngineImpl::Load(const TCHAR *fileName)
     if (!doc)
         return false;
 
-    LayoutInfo li;
-    li.htmlStr = doc->GetBookHtmlData(li.htmlStrLen);
-    li.pageDx = (int)(pageRect.dx - 2 * pageBorder);
-    li.pageDy = (int)(pageRect.dy - 2 * pageBorder);
-    li.fontName = L"Georgia";
-    li.fontSize = 11;
-    li.textAllocator = &allocator;
+    HtmlFormatterArgs args;
+    args.htmlStr = doc->GetBookHtmlData(args.htmlStrLen);
+    args.pageDx = (int)(pageRect.dx - 2 * pageBorder);
+    args.pageDy = (int)(pageRect.dy - 2 * pageBorder);
+    args.fontName = L"Georgia";
+    args.fontSize = 11;
+    args.textAllocator = &allocator;
 
-    pages = MobiFormatter(&li, doc).FormatAllPages();
+    pages = MobiFormatter(&args, doc).FormatAllPages();
     if (!ExtractPageAnchors())
         return false;
 
     HtmlParser parser;
-    if (parser.Parse(li.htmlStr)) {
+    if (parser.Parse(args.htmlStr)) {
         HtmlElement *ref = NULL;
         while ((ref = parser.FindElementByName("reference", ref))) {
             ScopedMem<TCHAR> type(ref->GetAttribute("type"));
             ScopedMem<TCHAR> filepos(ref->GetAttribute("filepos"));
             if (str::EqI(type, _T("toc")) && filepos) {
                 unsigned int pos;
-                if (str::Parse(filepos, _T("%u%$"), &pos) && pos < li.htmlStrLen) {
-                    tocReparsePoint = li.htmlStr + pos;
+                if (str::Parse(filepos, _T("%u%$"), &pos) && pos < args.htmlStrLen) {
+                    tocReparsePoint = args.htmlStr + pos;
                     break;
                 }
             }
@@ -1116,7 +1116,7 @@ protected:
     ScopedMem<char> pagePath;
 
 public:
-    ChmFormatter(LayoutInfo *li, ChmDataCache *doc) : HtmlFormatter(li), chmDoc(doc) { }
+    ChmFormatter(HtmlFormatterArgs *args, ChmDataCache *doc) : HtmlFormatter(args), chmDoc(doc) { }
 
     Vec<PageData*> *FormatAllPages();
 };
@@ -1279,15 +1279,15 @@ bool Chm2EngineImpl::Load(const TCHAR *fileName)
     char *html = ChmHtmlCollector(doc).GetHtml();
     dataCache = new ChmDataCache(doc, html);
 
-    LayoutInfo li;
-    li.htmlStr = dataCache->GetTextData(&li.htmlStrLen);
-    li.pageDx = (int)(pageRect.dx - 2 * pageBorder);
-    li.pageDy = (int)(pageRect.dy - 2 * pageBorder);
-    li.fontName = L"Georgia";
-    li.fontSize = 11;
-    li.textAllocator = &allocator;
+    HtmlFormatterArgs args;
+    args.htmlStr = dataCache->GetTextData(&args.htmlStrLen);
+    args.pageDx = (int)(pageRect.dx - 2 * pageBorder);
+    args.pageDy = (int)(pageRect.dy - 2 * pageBorder);
+    args.fontName = L"Georgia";
+    args.fontSize = 11;
+    args.textAllocator = &allocator;
 
-    pages = ChmFormatter(&li, dataCache).FormatAllPages();
+    pages = ChmFormatter(&args, dataCache).FormatAllPages();
     if (!ExtractPageAnchors())
         return false;
 
@@ -1321,15 +1321,15 @@ Chm2Engine *Chm2Engine::CreateFromFile(const TCHAR *fileName)
 class TxtFormatter : public HtmlFormatter {
 protected:
 public:
-    TxtFormatter(LayoutInfo *li) : HtmlFormatter(li) { }
+    TxtFormatter(HtmlFormatterArgs *args) : HtmlFormatter(args) { }
 
     Vec<PageData*> *FormatAllPages();
 };
 
 Vec<PageData*> *TxtFormatter::FormatAllPages()
 {
-    const char *curr = layoutInfo->htmlStr;
-    const char *end = curr + layoutInfo->htmlStrLen;
+    const char *curr = args->htmlStr;
+    const char *end = curr + args->htmlStrLen;
 
     while (curr < end) {
         const char *s = curr;
@@ -1338,7 +1338,7 @@ Vec<PageData*> *TxtFormatter::FormatAllPages()
             curr--;
 
         while (s < curr) {
-            currReparseIdx = s - layoutInfo->htmlStr;
+            currReparseIdx = s - args->htmlStr;
 
             size_t strLen = str::Utf8ToWcharBuf(s, curr - s, buf, dimof(buf));
             RectF bbox = MeasureText(gfx, CurrFont(), buf, strLen);
@@ -1421,16 +1421,16 @@ bool TxtEngineImpl::Load(const TCHAR *fileName)
     if (!text)
         return false;
 
-    LayoutInfo li;
-    li.htmlStr = text;
-    li.htmlStrLen = textLen;
-    li.pageDx = (int)(pageRect.dx - 2 * pageBorder);
-    li.pageDy = (int)(pageRect.dy - 2 * pageBorder);
-    li.fontName = L"Courier New";
-    li.fontSize = 11;
-    li.textAllocator = &allocator;
+    HtmlFormatterArgs args;
+    args.htmlStr = text;
+    args.htmlStrLen = textLen;
+    args.pageDx = (int)(pageRect.dx - 2 * pageBorder);
+    args.pageDy = (int)(pageRect.dy - 2 * pageBorder);
+    args.fontName = L"Courier New";
+    args.fontSize = 11;
+    args.textAllocator = &allocator;
 
-    pages = TxtFormatter(&li).FormatAllPages();
+    pages = TxtFormatter(&args).FormatAllPages();
 
     return pages->Count() > 0;
 }

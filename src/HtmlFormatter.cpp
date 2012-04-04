@@ -35,7 +35,7 @@ stage 1 calculates the sizes of elements.
 
 /*
 TODO: Instead of inserting explicit SetFont, StartLink, etc. instructions
-at the beginning of every page, DrawPageLayout could always start with
+at the beginning of every page, DrawHtmlPage could always start with
 that page's styleStack.Last().font, etc.
 The information that we need to remember:
 * font name (if different from default font name, NULL otherwise)
@@ -118,21 +118,21 @@ DrawInstr DrawInstr::Anchor(const char *s, size_t len, RectF bbox)
     return di;
 }
 
-HtmlFormatter::HtmlFormatter(LayoutInfo *li) : layoutInfo(li),
-    pageDx((REAL)li->pageDx), pageDy((REAL)li->pageDy),
-    textAllocator(li->textAllocator), currLineReparseIdx(NULL),
+HtmlFormatter::HtmlFormatter(HtmlFormatterArgs *args) : args(args),
+    pageDx((REAL)args->pageDx), pageDy((REAL)args->pageDy),
+    textAllocator(args->textAllocator), currLineReparseIdx(NULL),
     currX(0), currY(0), currLineTopPadding(0), currLinkIdx(0),
     listDepth(0), preFormatted(false), currPage(NULL),
     finishedParsing(false), pageCount(0)
 {
-    currReparseIdx = li->reparseIdx;
-    htmlParser = new HtmlPullParser(li->htmlStr, li->htmlStrLen);
+    currReparseIdx = args->reparseIdx;
+    htmlParser = new HtmlPullParser(args->htmlStr, args->htmlStrLen);
     htmlParser->SetCurrPosOff(currReparseIdx);
     CrashIf(!ValidReparseIdx(currReparseIdx, htmlParser));
 
     gfx = mui::AllocGraphicsForMeasureText();
-    defaultFontName.Set(str::Dup(li->fontName));
-    defaultFontSize = li->fontSize;
+    defaultFontName.Set(str::Dup(args->fontName));
+    defaultFontSize = args->fontSize;
     DrawStyle style;
     style.font = mui::GetCachedFont(defaultFontName, defaultFontSize, FontStyleRegular);
     style.align = Align_Justify;
@@ -964,7 +964,7 @@ bool HtmlFormatter::IgnoreText()
 // mouse is over a link. There's a slight complication here: we only get explicit information about
 // strings, not about the whitespace and we should underline the whitespace as well. Also the text
 // should be underlined at a baseline
-void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox, Color *textColor)
+void DrawHtmlPage(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox, Color *textColor)
 {
     Color kindleTextColor(0x5F, 0x4B, 0x32); // this color matches Kindle app
     if (!textColor)
@@ -1025,10 +1025,10 @@ void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, RE
 
 /* Mobi-specific formatting methods */
 
-MobiFormatter::MobiFormatter(LayoutInfo* li, MobiDoc *doc) :
-    HtmlFormatter(li), doc(doc), coverImage(NULL)
+MobiFormatter::MobiFormatter(HtmlFormatterArgs* args, MobiDoc *doc) :
+    HtmlFormatter(args), doc(doc), coverImage(NULL)
 {
-    bool fromBeginning = (0 == li->reparseIdx);
+    bool fromBeginning = (0 == args->reparseIdx);
     if (!doc || !fromBeginning)
         return;
 

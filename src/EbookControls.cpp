@@ -91,7 +91,7 @@ void PageControl::Paint(Graphics *gfx, int offX, int offY)
 
     // TODO: support changing the text color to gRenderCache.colorRange[0]
     //       or GetSysColor(COLOR_WINDOWTEXT) if gGlobalPrefs.useSysColors
-    DrawPageLayout(gfx, &page->instructions, (REAL)r.X, (REAL)r.Y, IsDebugPaint());
+    DrawHtmlPage(gfx, &page->instructions, (REAL)r.X, (REAL)r.Y, IsDebugPaint());
     gfx->SetClip(&origClipRegion, CombineModeReplace);
 }
 

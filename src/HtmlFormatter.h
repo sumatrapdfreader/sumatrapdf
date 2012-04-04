@@ -88,9 +88,9 @@ public:
 };
 
 // just to pack args to HtmlFormatter
-class LayoutInfo {
+class HtmlFormatterArgs {
 public:
-    LayoutInfo() :
+    HtmlFormatterArgs() :
       pageDx(0), pageDy(0), fontName(NULL), fontSize(0),
       textAllocator(NULL), htmlStr(0), htmlStrLen(0),
       reparseIdx(0)
@@ -161,7 +161,7 @@ protected:
     bool  IgnoreText();
 
     // constant during layout process
-    LayoutInfo *        layoutInfo;
+    HtmlFormatterArgs * args;
     float               pageDx;
     float               pageDy;
     float               lineSpacing;
@@ -207,7 +207,7 @@ protected:
     WCHAR               buf[512];
 
 public:
-    HtmlFormatter(LayoutInfo *li);
+    HtmlFormatter(HtmlFormatterArgs *args);
     virtual ~HtmlFormatter();
 
     virtual PageData *Next() { CrashIf(true); return NULL; }
@@ -226,7 +226,7 @@ class MobiFormatter : public HtmlFormatter {
     void HandleHtmlTag_Mobi(HtmlToken *t);
 
 public:
-    MobiFormatter(LayoutInfo *li, MobiDoc *doc);
+    MobiFormatter(HtmlFormatterArgs *args, MobiDoc *doc);
 
     virtual PageData *Next();
     Vec<PageData*> *FormatAllPages();
@@ -243,12 +243,12 @@ protected:
     ScopedMem<char> pagePath;
 
 public:
-    EpubFormatter(LayoutInfo *li, EpubDoc *doc) : HtmlFormatter(li), epubDoc(doc) { }
+    EpubFormatter(HtmlFormatterArgs *args, EpubDoc *doc) : HtmlFormatter(args), epubDoc(doc) { }
 
     virtual PageData *Next();
     Vec<PageData*> *FormatAllPages();
 };
 
-void DrawPageLayout(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox, Color *textColor=NULL);
+void DrawHtmlPage(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox, Color *textColor=NULL);
 
 #endif

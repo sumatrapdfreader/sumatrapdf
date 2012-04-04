@@ -86,15 +86,15 @@ static void MobiLayout(MobiDoc *mobiDoc)
 {
     PoolAllocator textAllocator;
 
-    LayoutInfo li;
-    li.pageDx = 640;
-    li.pageDy = 480;
-    li.fontName = L"Tahoma";
-    li.fontSize = 12;
-    li.htmlStr = mobiDoc->GetBookHtmlData(li.htmlStrLen);
-    li.textAllocator = &textAllocator;
+    HtmlFormatterArgs args;
+    args.pageDx = 640;
+    args.pageDy = 480;
+    args.fontName = L"Tahoma";
+    args.fontSize = 12;
+    args.htmlStr = mobiDoc->GetBookHtmlData(args.htmlStrLen);
+    args.textAllocator = &textAllocator;
 
-    MobiFormatter mf(&li, mobiDoc);
+    MobiFormatter mf(&args, mobiDoc);
     Vec<PageData*> *pages = mf.FormatAllPages();
     DeleteVecMembers<PageData*>(*pages);
     delete pages;

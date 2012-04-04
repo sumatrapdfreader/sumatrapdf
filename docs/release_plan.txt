@@ -32,6 +32,7 @@ target: 6/1):
   Server written in Go + python scripts to upload strings for
   translation and download translations
   https://github.com/kjk/apptranslator
+- rename PageData => HtmlPage (?)
 - ???
 
 Given aggresive schedule, it's important to make the most risky
@@ -50,6 +51,3 @@ A random list of itmes to implement sooner or later:
         for a given document in preferences
 - mobi: 2 page display
 - ebook ui: rtl support
-- rename LayoutInfo => FormatterArgs (HtmlFormatterArgs ?),
-  PageData => HtmlPage (?), DrawPageLayout => DrawHtmlPage (?),
-  *Layout* => *Format*

@@ -505,8 +505,8 @@ static LRESULT CALLBACK MobiWndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPA
 RenderedBitmap *RenderFirstMobiPageToBitmap(MobiDoc *mobiDoc, SizeI pageSize, SizeI bmpSize)
 {
     PoolAllocator textAllocator;
-    LayoutInfo *li = GetLayoutInfo(NULL, Doc(mobiDoc), pageSize.dx, pageSize.dy, &textAllocator);
-    MobiFormatter mf(li, mobiDoc);
+    HtmlFormatterArgs *args = CreateFormatterArgs(NULL, Doc(mobiDoc), pageSize.dx, pageSize.dy, &textAllocator);
+    MobiFormatter mf(args, mobiDoc);
     PageData *pd = mf.Next();
     if (!pd)
         return NULL;
@@ -521,7 +521,7 @@ RenderedBitmap *RenderFirstMobiPageToBitmap(MobiDoc *mobiDoc, SizeI pageSize, Si
     r.Inflate(1,1);
     SolidBrush br(Color(255, 255, 255));
     g.FillRectangle(&br, r);
-    DrawPageLayout(&g, &pd->instructions, 0, 0, false, &Color(Color::Black));
+    DrawHtmlPage(&g, &pd->instructions, 0, 0, false, &Color(Color::Black));
 
     Bitmap res(bmpSize.dx, bmpSize.dy, PixelFormat24bppRGB);
     Graphics g2(&res);

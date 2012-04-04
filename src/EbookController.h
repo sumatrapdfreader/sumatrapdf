@@ -18,7 +18,7 @@ struct  EbookControls;
 class   EbookController;
 class   PageData;
 class   PoolAllocator;
-class   ThreadLayoutEbook;
+class   EbookFormattingThread;
 
 struct FinishedMobiLoadingData {
     TCHAR *         fileName;
@@ -32,7 +32,7 @@ struct FinishedMobiLoadingData {
     }
 };
 
-struct MobiLayoutData {
+struct EbookFormattingData {
     enum { MAX_PAGES = 32 };
     PageData *         pages[MAX_PAGES];
     size_t             pageCount;
@@ -44,7 +44,7 @@ struct MobiLayoutData {
 
 // data used on the ui thread side when handling UiMsg::MobiLayout
 // it's in its own struct for clarity
-struct LayoutTemp {
+struct FormattingTemp {
     // if we're doing layout that starts from the beginning, this is 0
     // otherwise it's the reparse point of the page we were showing when
     // we started the layout
@@ -55,7 +55,7 @@ struct LayoutTemp {
     void            DeletePages();
 };
 
-LayoutInfo *GetLayoutInfo(const char *html, Doc doc, int dx, int dy, PoolAllocator *textAllocator);
+HtmlFormatterArgs *CreateFormatterArgs(const char *html, Doc doc, int dx, int dy, PoolAllocator *textAllocator);
 
 class EbookController : public sigslot::has_slots
 {
@@ -88,7 +88,7 @@ class EbookController : public sigslot::has_slots
     size_t          currPageNo;
 
     // page that we're currently showing. It can come from pagesFromBeginning,
-    // pagesFromPage or from layoutTemp during layout or it can be a page that
+    // pagesFromPage or from formattingTemp during layout or it can be a page that
     // we took from previous pagesFromBeginning/pagesFromPage when we started
     // new layout process
     PageData *      pageShown;
@@ -98,9 +98,9 @@ class EbookController : public sigslot::has_slots
      // size of the page for which pages were generated
     int             pageDx, pageDy;
 
-    ThreadLayoutEbook *layoutThread;
-    int               layoutThreadNo;
-    LayoutTemp        layoutTemp;
+    EbookFormattingThread *formattingThread;
+    int               formattingThreadNo;
+    FormattingTemp        formattingTemp;
 
     // when loading a new mobiDoc, this indicates the page we should
     // show after loading. -1 indicates no action needed
@@ -113,12 +113,12 @@ class EbookController : public sigslot::has_slots
     void        DeletePageShown();
     void        ShowPage(PageData *pd, bool deleteWhenDone);
     void        UpdateCurrPageNoForPage(PageData *pd);
-    void        TriggerLayout();
-    bool        LayoutInProgress() const { return layoutThread != NULL; }
+    void        TriggerBookFormatting();
+    bool        FormattingInProgress() const { return formattingThread != NULL; }
     bool        GoOnePageForward(Vec<PageData*> *pages);
     void        GoOnePageForward();
     size_t      GetMaxPageCount();
-    void        StopLayoutThread(bool forceTerminate);
+    void        StopFormattingThread(bool forceTerminate);
     void        CloseCurrentDocument();
 
     // event handlers
@@ -134,7 +134,7 @@ public:
     void SetHtml(const char *html);
     void SetDoc(Doc newDoc, int startReparseIdxArg = -1);
     void HandleFinishedMobiLoadingMsg(FinishedMobiLoadingData *finishedMobiLoading);
-    void HandleMobiLayoutMsg(MobiLayoutData *mobiLayout);
+    void HandleMobiLayoutMsg(EbookFormattingData *mobiLayout);
     void OnLayoutTimer();
     void AdvancePage(int dist);
     void GoToPage(int newPageNo);
