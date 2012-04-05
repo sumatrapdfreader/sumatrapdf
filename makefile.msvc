@@ -373,9 +373,6 @@ $(ENGINEDUMP_APP): $(ENGINEDUMP_OBJS)
 $(OS)\Uninstaller.obj: $(OS)\Installer.obj
 	$(CC) $(UNINSTALLER_CFLAGS) /Fo$(OS)\Uninstaller.obj /Fd$(O)\vc80.pdb src\installer\Installer.cpp
 
-{src\ebooktest}.cpp{$(OEB)}.obj::
-	$(CC) $(ET_CFLAGS) /Fo$(OEB)\ /Fd$(O)\vc80.pdb $<
-
 {src\memtrace}.cpp{$(OM)}.obj::
 	$(CC) $(MEMTRACE_CFLAGS) /Fo$(OM)\ /Fd$(O)\vc80.pdb $<
 

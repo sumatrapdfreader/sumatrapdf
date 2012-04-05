@@ -5,6 +5,7 @@ Next version:
 
 2.1 (????-??-??)
 
+* support for epub ebok format
 * added menu item to rename a file (contributed by Vasily Fomin)
 * support multi-page TIFF files
 

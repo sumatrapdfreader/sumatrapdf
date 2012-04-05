@@ -720,6 +720,9 @@ local unzFile unzOpenInternal (const void *path,
             err=UNZ_ERRNO;
         number_entry_CD = uL;
 
+        // TODO: I have an epub zip file where number_entry_CD = 21
+        // and us.gi.number_entry = 42. It cannot be opened with
+        // 7-zip but window's built-in zip does extract it
         if ((number_entry_CD!=us.gi.number_entry) ||
             (number_disk_with_CD!=0) ||
             (number_disk!=0))
