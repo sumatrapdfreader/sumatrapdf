@@ -1319,7 +1319,6 @@ Chm2Engine *Chm2Engine::CreateFromFile(const TCHAR *fileName)
 /* formatting extensions for TXT */
 
 class TxtFormatter : public HtmlFormatter {
-protected:
 public:
     TxtFormatter(HtmlFormatterArgs *args) : HtmlFormatter(args) { }
 
@@ -1328,53 +1327,16 @@ public:
 
 Vec<HtmlPage*> *TxtFormatter::FormatAllPages()
 {
-    const char *curr = args->htmlStr;
-    const char *end = curr + args->htmlStrLen;
-
-    while (curr < end) {
-        const char *s = curr;
-        for (; curr < end && *curr != '\n'; curr++);
-        if (curr < end && curr > s && *(curr - 1) == '\r')
-            curr--;
-
-        while (s < curr) {
-            currReparseIdx = s - args->htmlStr;
-
-            size_t strLen = str::Utf8ToWcharBuf(s, curr - s, buf, dimof(buf));
-            RectF bbox = MeasureText(gfx, CurrFont(), buf, strLen);
-            EnsureDx(bbox.Width);
-            if (bbox.Width <= pageDx - currX) {
-                AppendInstr(DrawInstr::Str(s, curr - s, bbox));
-                currX += bbox.Width;
-                break;
-            }
-
-            int lenThatFits = StringLenForWidth(gfx, CurrFont(), buf, strLen, pageDx);
-            if (iswalnum(buf[lenThatFits])) {
-                for (int len = lenThatFits; len > 0; len--) {
-                    if (!iswalnum(buf[len-1])) {
-                        lenThatFits = len;
-                        break;
-                    }
-                }
-            }
-            bbox = MeasureText(gfx, CurrFont(), buf, lenThatFits);
-            CrashIf(bbox.Width > pageDx);
-            AppendInstr(DrawInstr::Str(s, lenThatFits, bbox));
-            currX += bbox.Width;
-
-            for (int i = 0; i < lenThatFits; i++) {
-                s += buf[i] < 0x80 ? 1 : buf[i] < 0x800 ? 2 : 3;
-            }
-        }
-
-        if ('\n' == *curr || '\r' == *curr) {
-            curr += '\r' == *curr ? 2 : 1;
-            HandleTagBr();
-        }
+    HtmlToken *t;
+    while ((t = htmlParser->Next()) && !t->IsError()) {
+        if (t->IsTag())
+            HandleHtmlTag(t);
+        else
+            HandleText(t);
     }
 
     FlushCurrLine(true);
+    UpdateLinkBboxes(currPage);
     pagesToSend.Append(currPage);
     currPage = NULL;
 
@@ -1393,6 +1355,7 @@ public:
         // ISO 216 A4 (210mm x 297mm)
         pageRect = RectD(0, 0, 8.27 * GetFileDPI(), 11.693 * GetFileDPI());
     }
+    virtual ~TxtEngineImpl() { delete doc; }
     virtual TxtEngine *Clone() {
         return fileName ? CreateFromFile(fileName) : NULL;
     }
@@ -1403,7 +1366,7 @@ public:
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
 
 protected:
-    ScopedMem<char> text;
+    TxtDoc *doc;
 
     bool Load(const TCHAR *fileName);
 };
@@ -1412,18 +1375,12 @@ bool TxtEngineImpl::Load(const TCHAR *fileName)
 {
     this->fileName = str::Dup(fileName);
 
-    size_t textLen;
-    text.Set(file::ReadAll(fileName, &textLen));
-    if (text && !str::StartsWith(text.Get(), "\xEF\xBB\xBF")) {
-        ScopedMem<TCHAR> tmp(str::conv::FromAnsi(text));
-        text.Set(str::conv::ToUtf8(tmp));
-    }
-    if (!text)
+    doc = TxtDoc::CreateFromFile(fileName);
+    if (!doc)
         return false;
 
     HtmlFormatterArgs args;
-    args.htmlStr = text;
-    args.htmlStrLen = textLen;
+    args.htmlStr = doc->GetTextData(&args.htmlStrLen);
     args.pageDx = (int)(pageRect.dx - 2 * pageBorder);
     args.pageDy = (int)(pageRect.dy - 2 * pageBorder);
     args.fontName = L"Courier New";
@@ -1437,8 +1394,7 @@ bool TxtEngineImpl::Load(const TCHAR *fileName)
 
 bool TxtEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
 {
-    return str::EndsWithI(fileName, _T(".txt")) ||
-           str::EndsWithI(fileName, _T(".log"));
+    return TxtDoc::IsSupportedFile(fileName, sniff);
 }
 
 TxtEngine *TxtEngine::CreateFromFile(const TCHAR *fileName)

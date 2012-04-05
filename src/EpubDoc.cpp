@@ -585,3 +585,63 @@ Fb2Doc *Fb2Doc::CreateFromFile(const TCHAR *fileName)
     }
     return doc;
 }
+
+/* Plain Text */
+
+TxtDoc::TxtDoc(const TCHAR *fileName) : fileName(str::Dup(fileName)) { }
+
+bool TxtDoc::Load()
+{
+    ScopedMem<char> text(file::ReadAll(fileName, NULL));
+    if (text && !str::StartsWith(text.Get(), "\xEF\xBB\xBF")) {
+        ScopedMem<TCHAR> tmp(str::conv::FromAnsi(text));
+        text.Set(str::conv::ToUtf8(tmp));
+    }
+    if (!text)
+        return false;
+
+    char *curr = text;
+    if (str::StartsWith(text.Get(), "\xEF\xBB\xBF"))
+        curr += 3;
+
+    htmlData.Append("<pre>");
+    while (*curr) {
+        if ('<' == *curr)
+            htmlData.Append("&lt;");
+        else if ('&' == *curr)
+            htmlData.Append("&amp;");
+        else
+            htmlData.Append(*curr);
+        curr++;
+    }
+    htmlData.Append("</pre>");
+    
+    return true;
+}
+
+const char *TxtDoc::GetTextData(size_t *lenOut)
+{
+    *lenOut = htmlData.Size();
+    return htmlData.Get();
+}
+
+const TCHAR *TxtDoc::GetFileName() const
+{
+    return fileName;
+}
+
+bool TxtDoc::IsSupportedFile(const TCHAR *fileName, bool sniff)
+{
+    return str::EndsWithI(fileName, _T(".txt"))  ||
+           str::EndsWithI(fileName, _T(".log"));
+}
+
+TxtDoc *TxtDoc::CreateFromFile(const TCHAR *fileName)
+{
+    TxtDoc *doc = new TxtDoc(fileName);
+    if (!doc || !doc->Load()) {
+        delete doc;
+        return NULL;
+    }
+    return doc;
+}

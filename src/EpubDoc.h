@@ -68,7 +68,6 @@ public:
     Fb2Doc(const TCHAR *fileName);
     ~Fb2Doc();
 
-
     const char *GetTextData(size_t *lenOut);
     ImageData *GetImageData(const char *id);
 
@@ -79,6 +78,22 @@ public:
 
     static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
     static Fb2Doc *CreateFromFile(const TCHAR *fileName);
+};
+
+class TxtDoc {
+    ScopedMem<TCHAR> fileName;
+    str::Str<char> htmlData;
+
+    bool Load();
+
+public:
+    TxtDoc(const TCHAR *fileName);
+
+    const char *GetTextData(size_t *lenOut);
+    const TCHAR *GetFileName() const;
+
+    static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
+    static TxtDoc *CreateFromFile(const TCHAR *fileName);
 };
 
 char *NormalizeURL(const char *url, const char *base);
