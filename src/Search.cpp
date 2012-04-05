@@ -97,7 +97,7 @@ void OnMenuFind(WindowInfo *win)
 
 void OnMenuFindNext(WindowInfo *win)
 {
-    if (!NeedsFindUI(win))
+    if (!win->IsDocLoaded() || !NeedsFindUI(win))
         return;
     if (SendMessage(win->hwndToolbar, TB_ISBUTTONENABLED, IDM_FIND_NEXT, 0))
         FindTextOnThread(win, FIND_FORWARD);
@@ -105,7 +105,7 @@ void OnMenuFindNext(WindowInfo *win)
 
 void OnMenuFindPrev(WindowInfo *win)
 {
-    if (!NeedsFindUI(win))
+    if (!win->IsDocLoaded() || !NeedsFindUI(win))
         return;
     if (SendMessage(win->hwndToolbar, TB_ISBUTTONENABLED, IDM_FIND_PREV, 0))
         FindTextOnThread(win, FIND_BACKWARD);
@@ -113,7 +113,7 @@ void OnMenuFindPrev(WindowInfo *win)
 
 void OnMenuFindMatchCase(WindowInfo *win)
 {
-    if (!NeedsFindUI(win))
+    if (!win->IsDocLoaded() || !NeedsFindUI(win))
         return;
     WORD state = (WORD)SendMessage(win->hwndToolbar, TB_GETSTATE, IDM_FIND_MATCH, 0);
     win->dm->textSearch->SetSensitive((state & TBSTATE_CHECKED) != 0);
