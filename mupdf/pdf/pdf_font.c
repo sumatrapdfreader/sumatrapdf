@@ -722,6 +722,13 @@ pdf_load_simple_font(pdf_document *xref, pdf_obj *dict)
 						etable[i] = FT_Get_Name_Index(face, estrings[i]);
 						if (etable[i] == 0)
 							etable[i] = ft_char_index(face, i);
+						/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1872 */
+						if (etable[i] == 0 && symbolic)
+						{
+							int aglcode = pdf_lookup_agl(estrings[i]);
+							if (aglcode)
+								etable[i] = ft_char_index(face, aglcode);
+						}
 					}
 				}
 			}
