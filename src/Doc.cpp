@@ -69,9 +69,10 @@ const TCHAR *Doc::GetFilePath() const
         return mobiDoc->GetFileName();
     case Epub:
         return epubDoc->GetFileName();
+    case None:
+        return NULL;
     default:
-        CrashIf(true);
-        break;
+        CrashIf(!engine);
+        return engine->FileName();
     }
-    return NULL;
 }

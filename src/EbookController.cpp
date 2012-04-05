@@ -280,14 +280,12 @@ HtmlFormatterArgs *CreateFormatterArgs(const char *html, Doc doc, int dx, int dy
     if (html) {
         CrashIf(!doc.IsNone());
         len = strlen(html);
-    } else {
-        if (doc.AsMobi())
-            html = doc.AsMobi()->GetBookHtmlData(len);
-        else if (doc.AsEpub())
-            html = doc.AsEpub()->GetTextData(&len);
-        else
-            CrashIf(true);
-    }
+    } else if (doc.AsMobi())
+        html = doc.AsMobi()->GetBookHtmlData(len);
+    else if (doc.AsEpub())
+        html = doc.AsEpub()->GetTextData(&len);
+    else
+        CrashIf(true);
     args->fontName = str::Dup(FONT_NAME);
     args->fontSize = FONT_SIZE;
     args->htmlStr = html;

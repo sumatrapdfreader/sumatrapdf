@@ -514,39 +514,41 @@ RenderedBitmap *RenderFirstDocPageToBitmap(Doc doc, SizeI pageSize, SizeI bmpSiz
     HtmlFormatter *formatter = CreateFormatterForDoc(doc, args);
     HtmlPage *pd = formatter->Next();
     delete formatter;
+    free((void *)args->fontName);
     delete args;
     if (!pd)
         return NULL;
 
-    Bitmap *pageBmp = ::new Bitmap(pageSize.dx, pageSize.dy, PixelFormat32bppARGB);
-    if (!pageBmp) {
-        delete pd;
-        return NULL;
-    }
-    Graphics g((Image*)pageBmp);
+    Bitmap pageBmp(pageSize.dx, pageSize.dy, PixelFormat24bppRGB);
+    Graphics g(&pageBmp);
     Rect r(0, 0, pageSize.dx, pageSize.dy);
-    r.Inflate(1,1);
+    r.Inflate(1, 1);
     SolidBrush br(Color(255, 255, 255));
     g.FillRectangle(&br, r);
+
     DrawHtmlPage(&g, &pd->instructions, 0, 0, false, &Color(Color::Black));
+    delete pd;
 
     Bitmap res(bmpSize.dx, bmpSize.dy, PixelFormat24bppRGB);
     Graphics g2(&res);
     g2.SetInterpolationMode(InterpolationModeHighQualityBicubic);
-    g2.DrawImage(pageBmp, Rect(0, 0, bmpSize.dx, bmpSize.dy),
+    g2.DrawImage(&pageBmp, Rect(0, 0, bmpSize.dx, bmpSize.dy),
                  0, 0, pageSize.dx, pageSize.dy, UnitPixel);
 
     HBITMAP hbmp;
     Status ok = res.GetHBITMAP(Color::White, &hbmp);
-    ::delete pageBmp;
-    delete pd;
     if (ok != Ok)
         return NULL;
     return new RenderedBitmap(hbmp, bmpSize);
 }
 
-static RenderedBitmap *ThumbFromCoverPage(MobiDoc *mobiDoc)
+static RenderedBitmap *ThumbFromCoverPage(Doc doc)
 {
+    // currently only Mobi supports cover pages (FB2 would too)
+    if (!doc.AsMobi())
+        return NULL;
+
+    MobiDoc *mobiDoc = doc.AsMobi();
     ImageData *coverImage = mobiDoc->GetCoverImage();
     if (!coverImage)
         return NULL;
@@ -571,9 +573,9 @@ static RenderedBitmap *ThumbFromCoverPage(MobiDoc *mobiDoc)
     return NULL;
 }
 
-static void CreateThumbnailForMobiDoc(MobiDoc *mobiDoc, DisplayState& ds)
+static void CreateThumbnailForDoc(Doc doc, DisplayState& ds)
 {
-    CrashIf(!mobiDoc);
+    CrashIf(!doc.AsMobi() && !doc.AsEpub());
 
     if (!ShouldSaveThumbnail(ds))
         return;
@@ -581,41 +583,17 @@ static void CreateThumbnailForMobiDoc(MobiDoc *mobiDoc, DisplayState& ds)
     // if there is cover image, we use it to generate thumbnail by scaling
     // image width to thumbnail dx, scaling height proportionally and using
     // as much of it as fits in thumbnail dy
-    RenderedBitmap *bmp = ThumbFromCoverPage(mobiDoc);
-    if (!bmp)
-    {
+    RenderedBitmap *bmp = ThumbFromCoverPage(doc);
+    if (!bmp) {
         // no cover image so generate thumbnail from first page
         SizeI pageSize(THUMBNAIL_DX * 2, THUMBNAIL_DY * 2);
         SizeI dstSize(THUMBNAIL_DX, THUMBNAIL_DY);
-        bmp = RenderFirstDocPageToBitmap(Doc(mobiDoc), pageSize, dstSize);
+        bmp = RenderFirstDocPageToBitmap(doc, pageSize, dstSize);
     }
 
-    if (bmp && SaveThumbnailForFile(mobiDoc->GetFileName(), bmp))
-        bmp = NULL;
-    delete bmp;
-}
-
-static void CreateThumbnailForEpubDoc(Doc doc, DisplayState& ds)
-{
-    if (!ShouldSaveThumbnail(ds))
-        return;
-
-    SizeI pageSize(THUMBNAIL_DX * 2, THUMBNAIL_DY * 2);
-    SizeI dstSize(THUMBNAIL_DX, THUMBNAIL_DY);
-    RenderedBitmap *bmp = RenderFirstDocPageToBitmap(doc, pageSize, dstSize);
     if (bmp && SaveThumbnailForFile(doc.GetFilePath(), bmp))
         bmp = NULL;
     delete bmp;
-}
-
-static void CreateThumbnailForDoc(Doc doc, DisplayState& ds)
-{
-    if (doc.AsMobi())
-        CreateThumbnailForMobiDoc(doc.AsMobi(), ds);
-    else if (doc.AsEpub()) {
-        CreateThumbnailForEpubDoc(doc, ds);
-    } else
-        CrashIf(true);
 }
 
 void OpenMobiInWindow(Doc doc, SumatraWindow& winToReplace)
