@@ -31,6 +31,8 @@ target: 6/1):
   Server written in Go + python scripts to upload strings for
   translation and download translations
   https://github.com/kjk/apptranslator
+- move to a single-year copyright notice (i.e. "Copyight 2011-2012" =>
+  "Copyright 2012". If it's good enough for Google, it's good enough for me.
 - ???
 
 Given aggresive schedule, it's important to make the most risky
