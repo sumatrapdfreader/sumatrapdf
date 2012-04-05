@@ -237,6 +237,10 @@ static LRESULT OnKeyDown(EbookWindow *win, UINT msg, WPARAM key, LPARAM lParam)
     case 'Q':
         CloseEbookWindow(win, true, true);
         break;
+    case VK_ESCAPE:
+        if (gGlobalPrefs.escToExit)
+            CloseEbookWindow(win, true, true);
+        break;
     default:
         return DefWindowProc(win->hwndFrame, msg, key, lParam);
     }
