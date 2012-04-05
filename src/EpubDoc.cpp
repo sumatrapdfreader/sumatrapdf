@@ -632,8 +632,14 @@ const TCHAR *TxtDoc::GetFileName() const
 
 bool TxtDoc::IsSupportedFile(const TCHAR *fileName, bool sniff)
 {
-    return str::EndsWithI(fileName, _T(".txt"))  ||
-           str::EndsWithI(fileName, _T(".log"));
+    return str::EndsWithI(fileName, _T(".txt")) ||
+           str::EndsWithI(fileName, _T(".log")) ||
+           // http://en.wikipedia.org/wiki/.nfo
+           str::EndsWithI(fileName, _T(".nfo")) ||
+           // http://en.wikipedia.org/wiki/FILE_ID.DIZ
+           str::EndsWithI(fileName, _T("\\file_id.diz")) ||
+           // http://en.wikipedia.org/wiki/Read.me
+           str::EndsWithI(fileName, _T("\\Read.me"));
 }
 
 TxtDoc *TxtDoc::CreateFromFile(const TCHAR *fileName)
