@@ -500,7 +500,9 @@ ps_run(fz_context *ctx, psobj *code, ps_stack *st, int pc)
 
 			case PS_OP_LN:
 				r1 = ps_pop_real(st);
-				ps_push_real(st, logf(r1));
+				/* Bug 692941 - logf as separate statement */
+				r2 = logf(r1);
+				ps_push_real(st, r2);
 				break;
 
 			case PS_OP_LOG:

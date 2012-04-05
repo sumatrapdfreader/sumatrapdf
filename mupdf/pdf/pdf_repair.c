@@ -397,8 +397,18 @@ pdf_repair_xref(pdf_document *xref, pdf_lexbuf *buf)
 			if (list[i].stm_len >= 0)
 			{
 				fz_unlock(ctx, FZ_LOCK_FILE);
-				dict = pdf_load_object(xref, list[i].num, list[i].gen);
-				fz_lock(ctx, FZ_LOCK_FILE);
+				fz_try(ctx)
+				{
+					dict = pdf_load_object(xref, list[i].num, list[i].gen);
+				}
+				fz_always(ctx)
+				{
+					fz_lock(ctx, FZ_LOCK_FILE);
+				}
+				fz_catch(ctx)
+				{
+					fz_rethrow(ctx);
+				}
 				/* RJW: "cannot load stream object (%d %d R)", list[i].num, list[i].gen */
 
 				length = pdf_new_int(ctx, list[i].stm_len);
