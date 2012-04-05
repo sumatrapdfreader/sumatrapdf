@@ -49,10 +49,12 @@ void ThreadLoadEbook::Run()
 
     if (MobiDoc::IsSupportedFile(fileName)) {
         // TODO: make it Doc::CreateFromFile()
-        doc = Doc(MobiDoc::CreateFromFile(fileName));
+        MobiDoc *mobiDoc = MobiDoc::CreateFromFile(fileName);
+        doc = Doc(mobiDoc);
     } else if (EpubDoc::IsSupportedFile(fileName)) {
         // TODO: make it Doc::CreateFromFile()
-        doc = Doc(EpubDoc::CreateFromFile(fileName));
+        EpubDoc *epubDoc = EpubDoc::CreateFromFile(fileName);
+        doc = Doc(epubDoc);
     } else {
         CrashIf(true);
     }

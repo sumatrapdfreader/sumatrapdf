@@ -1271,12 +1271,13 @@ static void RenameFileInHistory(const TCHAR *oldPath, const TCHAR *newPath)
 // called when a background thread finishes loading mobi file
 static void HandleFinishedMobiLoadingMsg(FinishedMobiLoadingData *finishedMobiLoading)
 {
-    if (!finishedMobiLoading->doc) {
+    Doc doc(*finishedMobiLoading->doc);
+    if (!doc.generic) {
         // TODO: show notification that loading failed
         // TODO: remove from file history
         return;
     }
-    OpenMobiInWindow(*finishedMobiLoading->doc, finishedMobiLoading->win);
+    OpenMobiInWindow(doc, finishedMobiLoading->win);
 }
 
 static bool IsEbookFile(const TCHAR *fileName)

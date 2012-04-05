@@ -136,11 +136,11 @@ class LoadArgs
 public:
     LoadArgs(const TCHAR *fileName, WindowInfo *win=NULL, bool showWin=true, bool forceReuse=false, bool suppressPwdUI=false)
     {
-        fileName = fileName;
-        win = win;
-        showWin = showWin;
-        forceReuse = forceReuse;
-        suppressPwdUI = suppressPwdUI;
+        this->fileName = fileName;
+        this->win = win;
+        this->showWin = showWin;
+        this->forceReuse = forceReuse;
+        this->suppressPwdUI = suppressPwdUI;
     }
     const TCHAR *fileName;
     WindowInfo *win;

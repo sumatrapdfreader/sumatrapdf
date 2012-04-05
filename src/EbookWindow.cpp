@@ -514,6 +514,7 @@ RenderedBitmap *RenderFirstDocPageToBitmap(Doc doc, SizeI pageSize, SizeI bmpSiz
     HtmlFormatter *formatter = CreateFormatterForDoc(doc, args);
     HtmlPage *pd = formatter->Next();
     delete formatter;
+    delete args;
     if (!pd)
         return NULL;
 
@@ -596,6 +597,9 @@ static void CreateThumbnailForMobiDoc(MobiDoc *mobiDoc, DisplayState& ds)
 
 static void CreateThumbnailForEpubDoc(Doc doc, DisplayState& ds)
 {
+    if (!ShouldSaveThumbnail(ds))
+        return;
+
     SizeI pageSize(THUMBNAIL_DX * 2, THUMBNAIL_DY * 2);
     SizeI dstSize(THUMBNAIL_DX, THUMBNAIL_DY);
     RenderedBitmap *bmp = RenderFirstDocPageToBitmap(doc, pageSize, dstSize);
