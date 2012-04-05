@@ -1394,6 +1394,7 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
     bool isNewWindow = false;
     if (!win && 1 == gWindows.Count() && gWindows.At(0)->IsAboutWindow()) {
         win = gWindows.At(0);
+        args.win = win;
     } else if (!win || win->IsDocLoaded() && !args.forceReuse) {
         WindowInfo *currWin = win;
         win = CreateWindowInfo();
