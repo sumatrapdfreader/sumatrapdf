@@ -670,7 +670,7 @@ bool SaveThumbnailForFile(const TCHAR *filePath, RenderedBitmap *bmp)
 
 class ThumbnailRenderingWorkItem : public UIThreadWorkItem, public RenderingCallback
 {
-    const TCHAR *filePath;
+    ScopedMem<TCHAR> filePath;
     RenderedBitmap *bmp;
 
 public:
@@ -679,7 +679,6 @@ public:
     }
 
     ~ThumbnailRenderingWorkItem() {
-        free((void *)filePath);
         delete bmp;
     }
 

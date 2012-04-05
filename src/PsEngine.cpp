@@ -195,7 +195,7 @@ class PsEngineImpl : public PsEngine {
 public:
     PsEngineImpl() : fileName(NULL), pdfEngine(NULL) { }
     virtual ~PsEngineImpl() {
-        free((void *)fileName);
+        free(fileName);
         delete pdfEngine;
     }
     virtual PsEngineImpl *Clone() {
@@ -293,7 +293,7 @@ public:
     }
 
 protected:
-    const TCHAR *fileName;
+    TCHAR *fileName;
     PdfEngine *pdfEngine;
 
     bool Load(const TCHAR *fileName) {

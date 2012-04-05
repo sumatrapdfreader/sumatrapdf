@@ -253,7 +253,7 @@ void EpubDoc::ParseMetadata(const char *content)
                 tok = pullParser.Next();
                 if (!tok->IsText())
                     break;
-                ScopedMem<const char> value(str::DupN(tok->s, tok->sLen));
+                ScopedMem<char> value(str::DupN(tok->s, tok->sLen));
                 const char *text = ResolveHtmlEntities(value, value + tok->sLen, NULL);
                 if (text == value)
                     text = str::Dup(text);

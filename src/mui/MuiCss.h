@@ -166,14 +166,14 @@ struct Prop {
     PropType    type;
 
     union {
-        const WCHAR *   fontName;
-        float           fontSize;
-        FontStyle       fontWeight;
-        Padding         padding;
-        ColorData       color;
-        float           width;
-        AlignAttr       textAlign;
-        ElAlignData     elAlign;
+        WCHAR *     fontName;
+        float       fontSize;
+        FontStyle   fontWeight;
+        Padding     padding;
+        ColorData   color;
+        float       width;
+        AlignAttr   textAlign;
+        ElAlignData elAlign;
     };
 
     bool Eq(const Prop* other) const;

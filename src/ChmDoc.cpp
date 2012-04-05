@@ -37,7 +37,7 @@ bool ChmDoc::HasData(const char *fileName)
 
 unsigned char *ChmDoc::GetData(const char *fileName, size_t *lenOut)
 {
-    ScopedMem<const char> fileNameTmp;
+    ScopedMem<char> fileNameTmp;
     if (!str::StartsWith(fileName, "/")) {
         fileNameTmp.Set(str::Join("/", fileName));
         fileName = fileNameTmp;

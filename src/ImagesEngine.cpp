@@ -122,7 +122,7 @@ public:
     ImagesEngine() : fileName(NULL), fileExt(NULL) { }
     virtual ~ImagesEngine() {
         DeleteVecMembers(pages);
-        free((void *)fileName);
+        free(fileName);
     }
 
     virtual const TCHAR *FileName() const { return fileName; };
@@ -157,7 +157,7 @@ public:
     virtual bool BenchLoadPage(int pageNo) { return LoadImage(pageNo) != NULL; }
 
 protected:
-    const TCHAR *fileName;
+    TCHAR *fileName;
     const TCHAR *fileExt;
     ScopedComPtr<IStream> fileStream;
 
@@ -719,16 +719,12 @@ bool CbxEngineImpl::FinishLoadingCbz()
 
 class ImagesPage {
 public:
-    const TCHAR *   fileName; // for sorting image files
+    ScopedMem<TCHAR>fileName; // for sorting image files
     Bitmap *        bmp;
 
-    ImagesPage(const TCHAR *fileName, Bitmap *bmp) : bmp(bmp) {
-        this->fileName = str::Dup(fileName);
-    }
-    ~ImagesPage() {
-        free((void *)fileName);
-        delete bmp;
-    }
+    ImagesPage(const TCHAR *fileName, Bitmap *bmp) : bmp(bmp),
+        fileName(str::Dup(fileName)) { }
+    ~ImagesPage() { delete bmp; }
 
     static int cmpPageByName(const void *o1, const void *o2) {
         ImagesPage *p1 = *(ImagesPage **)o1;

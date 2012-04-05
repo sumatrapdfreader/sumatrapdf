@@ -269,7 +269,7 @@ int ElAlignData::CalcOffset(int elSize, int containerSize)
 void Prop::Free()
 {
     if (PropFontName == type)
-        free((void*)fontName);
+        free(fontName);
 
     if (IsColorProp(type) && (ColorSolid == color.type))
         ::delete color.solid.cachedBrush;

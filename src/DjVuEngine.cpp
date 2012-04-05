@@ -233,7 +233,7 @@ public:
     virtual DocTocItem *GetTocTree();
 
 protected:
-    const TCHAR *fileName;
+    TCHAR *fileName;
 
     int pageCount;
     RectD *mediaboxes;
@@ -262,7 +262,7 @@ DjVuEngineImpl::~DjVuEngineImpl()
     ScopedCritSec scope(&gDjVuContext.lock);
 
     delete[] mediaboxes;
-    free((void *)fileName);
+    free(fileName);
 
     if (annos) {
         for (int i = 0; i < pageCount; i++)

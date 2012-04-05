@@ -170,7 +170,7 @@ public:
     virtual bool GetDataForUrl(const TCHAR *url, char **data, size_t *len);
 
 protected:
-    const TCHAR *fileName;
+    TCHAR *fileName;
     ChmDoc *doc;
     ChmTocItem *tocRoot;
 
@@ -201,7 +201,7 @@ ChmEngineImpl::~ChmEngineImpl()
     delete htmlWindow;
     delete tocRoot;
     delete doc;
-    free((void *)fileName);
+    free(fileName);
     DeleteVecMembers(urlDataCache);
 }
 

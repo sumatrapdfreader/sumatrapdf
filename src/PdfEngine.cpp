@@ -931,7 +931,7 @@ public:
     virtual char *GetDecryptionKey() const;
 
 protected:
-    const TCHAR *_fileName;
+    TCHAR *_fileName;
     char *_decryptionKey;
     bool isProtected;
 
@@ -1123,7 +1123,7 @@ PdfEngineImpl::~PdfEngineImpl()
 
     delete[] _mediaboxes;
     delete _pagelabels;
-    free((void*)_fileName);
+    free(_fileName);
     free(_decryptionKey);
 
     fz_free_context(ctx);
@@ -2594,7 +2594,7 @@ public:
     fz_rect FindDestRect(const char *target);
 
 protected:
-    const TCHAR *_fileName;
+    TCHAR *_fileName;
 
     // make sure to never ask for _pagesAccess in an ctxAccess
     // protected critical section in order to avoid deadlocks
@@ -2759,7 +2759,7 @@ XpsEngineImpl::~XpsEngineImpl()
         DropPageRun(runCache.Last(), true);
     }
 
-    free((void*)_fileName);
+    free(_fileName);
 
     fz_free_context(ctx);
 

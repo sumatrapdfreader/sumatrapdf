@@ -120,7 +120,7 @@ TCHAR *Dialog_GetPassword(HWND hwndParent, const TCHAR *fileName, bool *remember
     INT_PTR res = CreateDialogBox(IDD_DIALOG_GET_PASSWORD, hwndParent,
                                   Dialog_GetPassword_Proc, (LPARAM)&data);
     if (IDOK != res) {
-        free((void*)data.pwdOut);
+        free(data.pwdOut);
         return NULL;
     }
     return data.pwdOut;
@@ -461,7 +461,7 @@ static INT_PTR CALLBACK Dialog_NewVersion_Proc(HWND hDlg, UINT msg, WPARAM wPara
 
         txt = str::Format(_TR("You have version %s"), data->currVersion);
         SetDlgItemText(hDlg, IDC_YOU_HAVE, txt);
-        free((void*)txt);
+        free(txt);
 
         txt = str::Format(_TR("New version %s is available. Download new version?"), data->newVersion);
         SetDlgItemText(hDlg, IDC_NEW_AVAILABLE, txt);

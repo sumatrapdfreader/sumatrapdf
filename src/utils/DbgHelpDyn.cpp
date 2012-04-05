@@ -220,7 +220,6 @@ static bool SetupSymbolPath()
     }
 
     _SymRefreshModuleList(GetCurrentProcess());
-    free((void*)path);
     return ok;
 }
 #endif

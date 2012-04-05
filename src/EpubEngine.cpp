@@ -88,7 +88,7 @@ public:
     virtual bool BenchLoadPage(int pageNo) { return true; }
 
 protected:
-    const TCHAR *fileName;
+    TCHAR *fileName;
     Vec<HtmlPage *> *pages;
     Vec<PageAnchor> anchors;
     // contains for each page the last anchor indicating
@@ -215,7 +215,7 @@ EbookEngine::~EbookEngine()
     if (pages)
         DeleteVecMembers(*pages);
     delete pages;
-    free((void *)fileName);
+    free(fileName);
 
     LeaveCriticalSection(&pagesAccess);
     DeleteCriticalSection(&pagesAccess);

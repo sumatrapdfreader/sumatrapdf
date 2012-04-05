@@ -38,8 +38,8 @@ ZipFile::~ZipFile()
     if (!uf)
         return;
     unzClose(uf);
-    for (const TCHAR **fn = filenames.IterStart(); fn; fn = filenames.IterNext()) {
-        Allocator::Free(allocator, (TCHAR *)*fn);
+    for (TCHAR **fn = filenames.IterStart(); fn; fn = filenames.IterNext()) {
+        Allocator::Free(allocator, *fn);
     }
 }
 
@@ -67,7 +67,7 @@ void ZipFile::ExtractFilenames()
             TCHAR fileNameT[MAX_PATH];
             UINT cp = (finfo.flag & (1 << 11)) ? CP_UTF8 : CP_ZIP;
             str::conv::FromCodePageBuf(fileNameT, dimof(fileNameT), fileName, cp);
-            filenames.Append((const TCHAR *)Allocator::Dup(allocator, fileNameT,
+            filenames.Append((TCHAR *)Allocator::Dup(allocator, fileNameT,
                 (str::Len(fileNameT) + 1) * sizeof(TCHAR)));
             fileinfo.Append(finfo);
 

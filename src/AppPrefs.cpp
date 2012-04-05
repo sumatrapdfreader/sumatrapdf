@@ -305,9 +305,9 @@ static BencArray *SerializeFavorites(Favorites *favs)
     return res;
 }
 
-static const char *SerializePrefs(SerializableGlobalPrefs& globalPrefs, FileHistory& root, Favorites *favs, size_t* lenOut)
+static char *SerializePrefs(SerializableGlobalPrefs& globalPrefs, FileHistory& root, Favorites *favs, size_t* lenOut)
 {
-    const char *data = NULL;
+    char *data = NULL;
 
     BencDict *prefs = new BencDict();
     if (!prefs)
@@ -592,13 +592,13 @@ bool Save(TCHAR *filepath, SerializableGlobalPrefs& globalPrefs, FileHistory& fi
         return false;
 
     size_t dataLen;
-    ScopedMem<const char> data(SerializePrefs(globalPrefs, fileHistory, favs, &dataLen));
+    ScopedMem<char> data(SerializePrefs(globalPrefs, fileHistory, favs, &dataLen));
     if (!data)
         return false;
 
     assert(dataLen > 0);
     FileTransaction trans;
-    bool ok = trans.WriteAll(filepath, (void *)data.Get(), dataLen) && trans.Commit();
+    bool ok = trans.WriteAll(filepath, data, dataLen) && trans.Commit();
     if (ok)
         globalPrefs.lastPrefUpdate = file::GetModificationTime(filepath);
     return ok;
