@@ -348,6 +348,9 @@ S&chermo intero\t<Ctrl>+<Maiusc>+L
 Facing
 Pagine affiancate
 
+Failed to rename the file!
+Impossibile rinominare il file
+
 Failed to save a file
 Salvataggio file non riuscito
 
@@ -567,6 +570,9 @@ Stampa pagina %d di %d...
 Printing problem.
 Problemi di stampa.
 
+Re&name...\tF2
+Ri&nomina...\tF2
+
 Remember &opened files
 Ric&orda file aperti
 
@@ -575,6 +581,9 @@ Rimuovi dai Preferiti
 
 Remove page %s from favorites
 Rimuovi la pagina %s dai Preferiti
+
+Rename To
+Rinomina in
 
 Replace document &colors with Windows color scheme
 Sostituisci &colori documento con schema colore di Windows
@@ -701,9 +710,4 @@ Copia del testo...
 
 printing document
 Stampa documento...
-
-# Untranslated:
-#Failed to rename the file!
-#Re&name...\tF2
-#Rename To
 
