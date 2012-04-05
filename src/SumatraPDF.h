@@ -127,9 +127,30 @@ bool  SaveThumbnailForFile(const TCHAR *filePath, RenderedBitmap *bmp);
 WindowInfo* FindWindowInfoByFile(const TCHAR *file);
 WindowInfo* FindWindowInfoByHwnd(HWND hwnd);
 WindowInfo* FindWindowInfoBySyncFile(const TCHAR *file);
-WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win=NULL,
-                         bool showWin=true, bool forceReuse=false, bool suppressPwdUI=false);
-void        LoadDocument(const TCHAR *fileName, SumatraWindow& win);
+
+// TODO: this is hopefully temporary
+// LoadDocument carries a lot of state, this holds them in
+// one place
+class LoadArgs
+{
+public:
+    LoadArgs(const TCHAR *fileName, WindowInfo *win=NULL, bool showWin=true, bool forceReuse=false, bool suppressPwdUI=false)
+    {
+        fileName = fileName;
+        win = win;
+        showWin = showWin;
+        forceReuse = forceReuse;
+        suppressPwdUI = suppressPwdUI;
+    }
+    const TCHAR *fileName;
+    WindowInfo *win;
+    bool showWin;
+    bool forceReuse;
+    bool suppressPwdUI;
+};
+
+WindowInfo* LoadDocument(LoadArgs& args);
+void        LoadDocument2(const TCHAR *fileName, SumatraWindow& win);
 WindowInfo *CreateAndShowWindowInfo();
 
 #endif

@@ -170,7 +170,8 @@ static WindowInfo *LoadOnStartup(CommandLineInfo& i, int n, bool firstIsDocLoade
 {
     ok = true;
     bool showWin = !(i.printDialog && i.exitOnPrint) && !gPluginMode;
-    WindowInfo *win = LoadDocument(i.fileNames.At(n), NULL, showWin);
+    LoadArgs args(i.fileNames.At(n), NULL, showWin);
+    WindowInfo *win = LoadDocument(args);
     if (!win || !win->IsDocLoaded()) {
         ok = false;
         return win;

@@ -805,18 +805,18 @@ static void UnsubclassCanvas(HWND hwnd)
 // placeWindow : if true then the Window will be moved/sized according
 //   to the 'state' information even if the window was already placed
 //   before (isNewWindow=false)
-static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win, PasswordUI *pwdUI,
-    DisplayState *state, bool isNewWindow, bool allowFailure,
-    bool showWin, bool placeWindow)
+static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
+    DisplayState *state, bool isNewWindow, bool allowFailure, bool placeWindow)
 {
     ScopedMem<TCHAR> title;
+    WindowInfo *win = args.win;
 
     // Never load settings from a preexisting state if the user doesn't wish to
     // (unless we're just refreshing the document, i.e. only if placeWindow == true)
     if (placeWindow && (gGlobalPrefs.globalPrefsOnly || state && state->useGlobalValues)) {
         state = NULL;
     } else if (NULL == state) {
-        state = gFileHistory.Find(fileName);
+        state = gFileHistory.Find(args.fileName);
         if (state) {
             if (state->windowPos.IsEmpty())
                 state->windowPos = gGlobalPrefs.windowPos;
@@ -845,31 +845,31 @@ static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win, PasswordUI *pwdU
         tocVisible = state->tocVisible;
     }
 
-    DisplayModel *prevModel = win.dm;
-    AbortFinding(&win);
-    delete win.pdfsync;
-    win.pdfsync = NULL;
+    DisplayModel *prevModel = win->dm;
+    AbortFinding(args.win);
+    delete win->pdfsync;
+    win->pdfsync = NULL;
 
-    str::ReplacePtr(&win.loadedFilePath, fileName);
-    win.dm = DisplayModel::CreateFromFile(fileName, &win, pwdUI);
+    str::ReplacePtr(&win->loadedFilePath, args.fileName);
+    win->dm = DisplayModel::CreateFromFile(args.fileName, win, pwdUI);
 
     // make sure that MSHTML can't be used as a potential exploit
     // vector through another browser and our plugin (which doesn't
     // advertise itself for Chm documents but could be tricked into
     // loading one nonetheless)
-    if (gPluginMode && win.dm && win.dm->AsChmEngine() && IsUntrustedFile(fileName, gPluginURL)) {
-        delete win.dm;
-        win.dm = NULL;
+    if (gPluginMode && win->dm && win->dm->AsChmEngine() && IsUntrustedFile(args.fileName, gPluginURL)) {
+        delete win->dm;
+        win->dm = NULL;
     }
 
-    bool needrefresh = !win.dm;
+    bool needRefresh = !win->dm;
 
     // ToC items might hold a reference to an Engine, so make sure to
     // delete them before destroying the whole DisplayModel
-    if (win.dm || allowFailure)
-        ClearTocBox(&win);
+    if (win->dm || allowFailure)
+        ClearTocBox(win);
 
-    assert(!win.IsAboutWindow() && win.IsDocLoaded() == (win.dm != NULL));
+    assert(!win->IsAboutWindow() && win->IsDocLoaded() == (win->dm != NULL));
     /* see http://code.google.com/p/sumatrapdf/issues/detail?id=1570
     if (!win.dm) {
         // TODO: this should be "Error opening %s". Change after 1.7 is released
@@ -881,68 +881,68 @@ static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win, PasswordUI *pwdU
         str::ReplacePtr(&win.loadedFilePath, NULL);
     }
     */
-    if (win.dm) {
-        win.dm->SetInitialViewSettings(displayMode, startPage, win.GetViewPortSize(), win.dpi);
-        if (prevModel && str::Eq(win.dm->FileName(), prevModel->FileName())) {
-            gRenderCache.KeepForDisplayModel(prevModel, win.dm);
-            win.dm->CopyNavHistory(*prevModel);
+    if (win->dm) {
+        win->dm->SetInitialViewSettings(displayMode, startPage, win->GetViewPortSize(), win->dpi);
+        if (prevModel && str::Eq(win->dm->FileName(), prevModel->FileName())) {
+            gRenderCache.KeepForDisplayModel(prevModel, win->dm);
+            win->dm->CopyNavHistory(*prevModel);
         }
         delete prevModel;
-        ChmEngine *chmEngine = win.dm->AsChmEngine();
+        ChmEngine *chmEngine = win->dm->AsChmEngine();
         if (chmEngine)
-            chmEngine->SetParentHwnd(win.hwndCanvas);
+            chmEngine->SetParentHwnd(win->hwndCanvas);
     } else if (allowFailure) {
         delete prevModel;
-        ScopedMem<TCHAR> title2(str::Format(_T("%s - %s"), path::GetBaseName(fileName), SUMATRA_WINDOW_TITLE));
-        win::SetText(win.hwndFrame, title2);
+        ScopedMem<TCHAR> title2(str::Format(_T("%s - %s"), path::GetBaseName(args.fileName), SUMATRA_WINDOW_TITLE));
+        win::SetText(win->hwndFrame, title2);
         goto Error;
     } else {
         // if there is an error while reading the document and a repair is not requested
         // then fallback to the previous state
-        win.dm = prevModel;
+        win->dm = prevModel;
     }
 
     float zoomVirtual = gGlobalPrefs.defaultZoom;
     int rotation = 0;
 
     if (state) {
-        if (win.dm->ValidPageNo(startPage)) {
+        if (win->dm->ValidPageNo(startPage)) {
             ss.page = startPage;
             if (ZOOM_FIT_CONTENT != state->zoomVirtual) {
                 ss.x = state->scrollPos.x;
                 ss.y = state->scrollPos.y;
             }
             // else let win.dm->Relayout() scroll to fit the page (again)
-        } else if (startPage > win.dm->PageCount()) {
-            ss.page = win.dm->PageCount();
+        } else if (startPage > win->dm->PageCount()) {
+            ss.page = win->dm->PageCount();
         }
         zoomVirtual = state->zoomVirtual;
         rotation = state->rotation;
 
-        win.tocState.Reset();
+        win->tocState.Reset();
         if (state->tocState)
-            win.tocState = *state->tocState;
+            win->tocState = *state->tocState;
     }
 
-    win.dm->Relayout(zoomVirtual, rotation);
+    win->dm->Relayout(zoomVirtual, rotation);
 
     if (!isNewWindow) {
-        win.RedrawAll();
-        OnMenuFindMatchCase(&win);
+        win->RedrawAll();
+        OnMenuFindMatchCase(win);
     }
-    UpdateFindbox(&win);
+    UpdateFindbox(win);
 
     // menu for chm docs is different, so we have to re-create it
-    RebuildMenuBarForWindow(&win);
+    RebuildMenuBarForWindow(win);
 
-    int pageCount = win.dm->PageCount();
+    int pageCount = win->dm->PageCount();
     if (pageCount > 0) {
-        UpdateToolbarPageText(&win, pageCount);
-        UpdateToolbarFindText(&win);
+        UpdateToolbarPageText(win, pageCount);
+        UpdateToolbarFindText(win);
     }
 
-    const TCHAR *baseName = path::GetBaseName(win.dm->FileName());
-    TCHAR *docTitle = win.dm->engine ? win.dm->engine->GetProperty("Title") : NULL;
+    const TCHAR *baseName = path::GetBaseName(win->dm->FileName());
+    TCHAR *docTitle = win->dm->engine ? win->dm->engine->GetProperty("Title") : NULL;
     if (docTitle) {
         str::NormalizeWS(docTitle);
         if (!str::IsEmpty(docTitle)) {
@@ -959,13 +959,13 @@ static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win, PasswordUI *pwdU
     }
 #endif
     free(docTitle);
-    if (needrefresh)
+    if (needRefresh)
         title.Set(str::Format(_TR("[Changes detected; refreshing] %s"), title));
-    win::SetText(win.hwndFrame, title);
+    win::SetText(win->hwndFrame, title);
 
-    if (HasPermission(Perm_DiskAccess) && Engine_PDF == win.dm->engineType) {
-        int res = Synchronizer::Create(fileName,
-            static_cast<PdfEngine *>(win.dm->engine), &win.pdfsync);
+    if (HasPermission(Perm_DiskAccess) && Engine_PDF == win->dm->engineType) {
+        int res = Synchronizer::Create(args.fileName,
+            static_cast<PdfEngine *>(win->dm->engine), &win->pdfsync);
         // expose SyncTeX in the UI
         if (PDFSYNCERR_SUCCESS == res)
             gGlobalPrefs.enableTeXEnhancements = true;
@@ -978,45 +978,45 @@ Error:
             RectI rect = ShiftRectToWorkArea(state->windowPos);
             // This shouldn't happen until !win.IsAboutWindow(), so that we don't
             // accidentally update gGlobalState with this window's dimensions
-            MoveWindow(win.hwndFrame, rect);
+            MoveWindow(win->hwndFrame, rect);
         }
 
-        if (showWin)
-            ShowWindow(win.hwndFrame, showType);
+        if (args.showWin)
+            ShowWindow(win->hwndFrame, showType);
 
-        UpdateWindow(win.hwndFrame);
+        UpdateWindow(win->hwndFrame);
     }
-    if (win.IsDocLoaded()) {
-        bool enable = !win.dm->engine || !win.dm->engine->HasPageLabels();
-        ToggleWindowStyle(win.hwndPageBox, ES_NUMBER, enable);
+    if (win->IsDocLoaded()) {
+        bool enable = !win->dm->engine || !win->dm->engine->HasPageLabels();
+        ToggleWindowStyle(win->hwndPageBox, ES_NUMBER, enable);
         // if the window isn't shown and win.canvasRc is still empty, zoom
         // has not been determined yet
-        assert(!showWin || !win.canvasRc.IsEmpty() || win.IsChm());
-        if (showWin || ss.page != 1)
-            win.dm->SetScrollState(ss);
-        UpdateToolbarState(&win);
+        assert(!args.showWin || !win->canvasRc.IsEmpty() || win->IsChm());
+        if (args.showWin || ss.page != 1)
+            win->dm->SetScrollState(ss);
+        UpdateToolbarState(win);
         // Note: this is a hack. Somewhere between r4593 and r4629
         // restoring zoom for chm files from history regressed and
         // I'm too lazy to figure out where and why. This forces
         // setting zoom level after a page has been displayed
         // (indirectly triggered via UpdateToolbarState()).
-        if (win.IsChm())
-            win.dm->Relayout(zoomVirtual, rotation);
+        if (win->IsChm())
+            win->dm->Relayout(zoomVirtual, rotation);
     }
 
-    SetSidebarVisibility(&win, tocVisible, gGlobalPrefs.favVisible);
-    win.RedrawAll(true);
+    SetSidebarVisibility(win, tocVisible, gGlobalPrefs.favVisible);
+    win->RedrawAll(true);
 
-    UpdateToolbarAndScrollbarState(win);
-    if (!win.IsDocLoaded()) {
-        win.RedrawAll();
+    UpdateToolbarAndScrollbarState(*win);
+    if (!win->IsDocLoaded()) {
+        win->RedrawAll();
         return false;
     }
     // This should only happen after everything else is ready
-    if ((isNewWindow || placeWindow) && showWin && showAsFullScreen)
-        EnterFullscreen(win);
-    if (!isNewWindow && win.presentation && win.dm)
-        win.dm->SetPresentationMode(true);
+    if ((isNewWindow || placeWindow) && args.showWin && showAsFullScreen)
+        EnterFullscreen(*win);
+    if (!isNewWindow && win->presentation && win->dm)
+        win->dm->SetPresentationMode(true);
 
     return true;
 }
@@ -1029,8 +1029,10 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
     DisplayState ds;
     ds.useGlobalValues = gGlobalPrefs.globalPrefsOnly;
     if (!win->IsDocLoaded()) {
-        if (!autorefresh && win->loadedFilePath)
-            LoadDocument(win->loadedFilePath, win);
+        if (!autorefresh && win->loadedFilePath) {
+            LoadArgs args(win->loadedFilePath, win);
+            LoadDocument(args);
+        }
         return;
     }
     win->dm->DisplayStateFromModel(&ds);
@@ -1052,7 +1054,9 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
     bool placeWindow = false;
     ScopedMem<TCHAR> path(str::Dup(win->loadedFilePath));
     HwndPasswordUI pwdUI(win->hwndFrame, false);
-    if (!LoadDocIntoWindow(path, *win, &pwdUI, &ds, isNewWindow, allowFailure, showWin, placeWindow))
+    LoadArgs args(path, win);
+    args.showWin = showWin;
+    if (!LoadDocIntoWindow(args, &pwdUI, &ds, isNewWindow, allowFailure, placeWindow))
         return;
 
     if (gGlobalPrefs.showStartPage) {
@@ -1309,18 +1313,27 @@ static bool DocumentPathExists(const TCHAR *path)
     return false;
 }
 
-void LoadDocument(const TCHAR *fileName, SumatraWindow& win)
+void LoadDocument2(const TCHAR *fileName, SumatraWindow& win)
 {
     // TODO: opening non-mobi files from mobi window doesn't work exactly
-    // as opening them from non-mobi window
+    // the same as opening them from non-mobi window
     if (win.AsWindowInfo()) {
-        LoadDocument(fileName, win.AsWindowInfo());
+        LoadArgs args(fileName, win.AsWindowInfo());
+        LoadDocument(args);
         return;
     }
     CrashIf(!win.AsEbookWindow());
     // TODO: LoadDocument() needs to handle EbookWindow, for now
     // we force opening in a new window
-    LoadDocument(fileName, NULL);
+    LoadArgs args(fileName, NULL);
+    LoadDocument(args);
+}
+
+static WindowInfo* LoadDocumentNew(LoadArgs& args)
+{
+    // TODO: write me
+    CrashIf(true);
+    return NULL;
 }
 
 // TODO: eventually I would like to move all loading to be async. To achieve that
@@ -1328,15 +1341,15 @@ void LoadDocument(const TCHAR *fileName, SumatraWindow& win)
 // file (and showing progress/load failures in topmost window) and placing
 // the loaded document in the window (either by replacing document in existing
 // window or creating a new window for the document)
-WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, 
-                         bool forceReuse, bool suppressPwdUI)
+static WindowInfo* LoadDocumentOld(LoadArgs& args)
 {
     if (gCrashOnOpen)
         CrashMe();
 
-    ScopedMem<TCHAR> fullPath(path::Normalize(fileName));
+    ScopedMem<TCHAR> fullPath(path::Normalize(args.fileName));
+    WindowInfo *win = args.win;
 
-    bool failEarly = win && !forceReuse && !DocumentPathExists(fullPath);
+    bool failEarly = win && !args.forceReuse && !DocumentPathExists(fullPath);
     // try to find inexistent files with history data
     // on a different removable drive before failing
     if (failEarly && gFileHistory.Find(fullPath)) {
@@ -1370,7 +1383,7 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin,
             if ((1 == gWindows.Count()) && gWindows.At(0)->IsAboutWindow())
                 win = gWindows.At(0);
         } else {
-            if (win->IsDocLoaded() && !forceReuse)
+            if (win->IsDocLoaded() && !args.forceReuse)
                 win = NULL;
         }
         LoadEbookAsync(fullPath, SumatraWindow::Make(win));
@@ -1380,11 +1393,12 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin,
     bool isNewWindow = false;
     if (!win && 1 == gWindows.Count() && gWindows.At(0)->IsAboutWindow()) {
         win = gWindows.At(0);
-    } else if (!win || win->IsDocLoaded() && !forceReuse) {
+    } else if (!win || win->IsDocLoaded() && !args.forceReuse) {
         WindowInfo *currWin = win;
         win = CreateWindowInfo();
         if (!win)
             return NULL;
+        args.win = win;
         isNewWindow = true;
         if (currWin) {
             RememberFavTreeExpansionState(currWin);
@@ -1397,9 +1411,10 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin,
     win->notifications->RemoveAllInGroup(NG_RESPONSE_TO_ACTION);
     win->notifications->RemoveAllInGroup(NG_PAGE_INFO_HELPER);
 
-    HwndPasswordUI pwdUI(win->hwndFrame, suppressPwdUI);
-    bool loaded = LoadDocIntoWindow(fullPath, *win, &pwdUI, NULL, isNewWindow,
-                           true /* allowFailure */, showWin, true /* placeWindow */);
+    HwndPasswordUI pwdUI(win->hwndFrame, args.suppressPwdUI);
+    args.fileName = fullPath;
+    bool loaded = LoadDocIntoWindow(args, &pwdUI, NULL, isNewWindow, 
+        true /* allowFailure */, true /* placeWindow */);
 
     if (!loaded) {
         if (gFileHistory.MarkFileInexistent(fullPath))
@@ -1428,6 +1443,15 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin,
         SHAddToRecentDocs(SHARD_PATH, fullPath);
 
     return win;
+}
+
+WindowInfo* LoadDocument(LoadArgs& args)
+{
+#if 0
+    return LoadDocumentNew(args);
+#else
+    return LoadDocumentOld(args);
+#endif
 }
 
 // The current page edit box is updated with the current page number
@@ -1588,19 +1612,20 @@ static bool RegisterForPdfExtentions(HWND hwnd)
 
 void OnDropFiles(HDROP hDrop)
 {
-    TCHAR       filename[MAX_PATH];
+    TCHAR       filePath[MAX_PATH];
     const int   count = DragQueryFile(hDrop, DRAGQUERY_NUMFILES, 0, 0);
 
     for (int i = 0; i < count; i++)
     {
-        DragQueryFile(hDrop, i, filename, dimof(filename));
-        if (str::EndsWithI(filename, _T(".lnk"))) {
-            ScopedMem<TCHAR> resolved(ResolveLnk(filename));
+        DragQueryFile(hDrop, i, filePath, dimof(filePath));
+        if (str::EndsWithI(filePath, _T(".lnk"))) {
+            ScopedMem<TCHAR> resolved(ResolveLnk(filePath));
             if (resolved)
-                str::BufSet(filename, dimof(filename), resolved);
+                str::BufSet(filePath, dimof(filePath), resolved);
         }
         // The first dropped document may override the current window
-        LoadDocument(filename);
+        LoadArgs args(filePath);
+        LoadDocument(args);
     }
     DragFinish(hDrop);
 }
@@ -2094,8 +2119,10 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
                 win.RedrawAll(true);
             } else if (!str::StartsWithI(url, _T("http:")) &&
                        !str::StartsWithI(url, _T("https:")) &&
-                       !str::StartsWithI(url, _T("mailto:"))) {
-                LoadDocument(url, &win);
+                       !str::StartsWithI(url, _T("mailto:"))) 
+            {
+                LoadArgs args(url, &win);
+                LoadDocument(args);
             } else
                 LaunchBrowser(url);
         }
@@ -2717,7 +2744,8 @@ static void OnMenuRenameFile(WindowInfo &win)
     BOOL moveOk = MoveFileEx(srcFilePath.Get(), dstFileName, flags);
     if (!moveOk) {
         LogLastError();
-        LoadDocument(srcFilePath, &win);
+        LoadArgs args(srcFilePath, &win);
+        LoadDocument(args);
         ShowNotification(&win, _TR("Failed to rename the file!"), false /* autoDismiss */, true /* highlight */);
         return;
     }
@@ -2725,7 +2753,8 @@ static void OnMenuRenameFile(WindowInfo &win)
     ScopedMem<TCHAR> newPath(path::Normalize(dstFileName));
     RenameFileInHistory(srcFilePath, newPath);
 
-    LoadDocument(dstFileName, &win);
+    LoadArgs args(dstFileName, &win);
+    LoadDocument(args);
 }
 
 static void OnMenuSaveBookmark(WindowInfo& win)
@@ -2909,14 +2938,14 @@ void OnMenuOpen(SumatraWindow& win)
     TCHAR *fileName = ofn.lpstrFile + ofn.nFileOffset;
     if (*(fileName - 1)) {
         // special case: single filename without NULL separator
-        LoadDocument(ofn.lpstrFile, win);
+        LoadDocument2(ofn.lpstrFile, win);
         return;
     }
 
     while (*fileName) {
         ScopedMem<TCHAR> filePath(path::Join(ofn.lpstrFile, fileName));
         if (filePath)
-            LoadDocument(filePath, win);
+            LoadDocument2(filePath, win);
         fileName += str::Len(fileName) + 1;
     }
 }
@@ -2950,7 +2979,8 @@ static void BrowseFolder(WindowInfo& win, bool forward)
         index = (int)(index + files.Count() - 1) % files.Count();
 
     UpdateCurrentFileDisplayStateForWin(SumatraWindow::Make(&win));
-    LoadDocument(files.At(index), &win, true, true);
+    LoadArgs args(files.At(index), &win, true, true);
+    LoadDocument(args);
 }
 
 static void OnVScroll(WindowInfo& win, WPARAM wParam)
@@ -4385,8 +4415,10 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
     if ((wmId >= IDM_FILE_HISTORY_FIRST) && (wmId <= IDM_FILE_HISTORY_LAST))
     {
         DisplayState *state = gFileHistory.Get(wmId - IDM_FILE_HISTORY_FIRST);
-        if (state && HasPermission(Perm_DiskAccess))
-            LoadDocument(state->filePath, win);
+        if (state && HasPermission(Perm_DiskAccess)) {
+            LoadArgs args(state->filePath, win);
+            LoadDocument(args);
+        }
         return 0;
     }
 

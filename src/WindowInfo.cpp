@@ -222,8 +222,10 @@ void LinkHandler::GotoLink(PageDestination *link)
         // open embedded PDF documents in a new window
         if (path && str::StartsWith(path.Get(), dm->FileName())) {
             WindowInfo *newWin = FindWindowInfoByFile(path);
-            if (!newWin)
-                newWin = LoadDocument(path, owner);
+            if (!newWin) {
+                LoadArgs args(path, owner);
+                newWin = LoadDocument(args);
+            }
             if (newWin)
                 newWin->Focus();
         }
@@ -343,7 +345,8 @@ void LinkHandler::LaunchFile(const TCHAR *path, PageDestination *link)
     WindowInfo *newWin = FindWindowInfoByFile(fullPath);
     // TODO: don't show window until it's certain that there was no error
     if (!newWin) {
-        newWin = LoadDocument(fullPath, owner);
+        LoadArgs args(fullPath, owner);
+        newWin = LoadDocument(args);
         if (!newWin)
             return;
     }

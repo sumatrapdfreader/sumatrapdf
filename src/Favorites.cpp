@@ -414,7 +414,8 @@ static void GoToFavorite(WindowInfo *win, FileFavs *f, FavName *fn)
         pageNo = -1;
     }
 
-    win = LoadDocument(f->filePath, win);
+    LoadArgs args(f->filePath, win);
+    win = LoadDocument(args);
     if (win)
         QueueWorkItem(new GoToFavoriteWorkItem(win, pageNo));
 }

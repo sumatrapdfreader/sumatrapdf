@@ -345,7 +345,7 @@ static LRESULT OnCommand(EbookWindow *win, UINT msg, WPARAM wParam, LPARAM lPara
     {
         DisplayState *state = gFileHistory.Get(wmId - IDM_FILE_HISTORY_FIRST);
         if (state && HasPermission(Perm_DiskAccess))
-            LoadDocument(state->filePath, SumatraWindow::Make(win));
+            LoadDocument2(state->filePath, SumatraWindow::Make(win));
         return 0;
     }
 

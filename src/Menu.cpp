@@ -424,7 +424,10 @@ void OnAboutContextMenu(WindowInfo* win, int x, int y)
                              pt.x, pt.y, 0, win->hwndFrame, NULL);
     switch (cmd) {
     case IDM_OPEN_SELECTED_DOCUMENT:
-        LoadDocument(filePath, win);
+        {
+            LoadArgs args(filePath, win);
+            LoadDocument(args);
+        }
         break;
 
     case IDM_PIN_SELECTED_DOCUMENT:

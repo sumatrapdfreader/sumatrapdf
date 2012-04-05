@@ -518,16 +518,20 @@ static const TCHAR *HandleSyncCmd(const TCHAR *cmd, DDEACK& ack)
         // check if the PDF is already opened
         win = FindWindowInfoByFile(pdfFile);
         // if not then open it
-        if (newWindow || !win)
-            win = LoadDocument(pdfFile, !newWindow ? win : NULL);
-        else if (win && !win->IsDocLoaded())
+        if (newWindow || !win) {
+            LoadArgs args(pdfFile, !newWindow ? win : NULL);
+            win = LoadDocument(args);
+        } else if (win && !win->IsDocLoaded()) {
             ReloadDocument(win);
+        }
     }
     else {
         // check if any opened PDF has sync information for the source file
         win = FindWindowInfoBySyncFile(srcFile);
-        if (newWindow)
-            win = LoadDocument(win->loadedFilePath);
+        if (newWindow) {
+            LoadArgs args(win->loadedFilePath);
+            win = LoadDocument(args);
+        }
     }
 
     if (!win || !win->IsDocLoaded())
@@ -561,9 +565,10 @@ static const TCHAR *HandleOpenCmd(const TCHAR *cmd, DDEACK& ack)
         return NULL;
 
     WindowInfo *win = FindWindowInfoByFile(pdfFile);
-    if (newWindow || !win)
-        win = LoadDocument(pdfFile, !newWindow ? win : NULL);
-    else if (win && !win->IsDocLoaded()) {
+    if (newWindow || !win) {
+        LoadArgs args(pdfFile, !newWindow ? win : NULL);
+        win = LoadDocument(args);
+    } else if (win && !win->IsDocLoaded()) {
         ReloadDocument(win);
         forceRefresh = 0;
     }
