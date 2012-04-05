@@ -1,6 +1,6 @@
 diff -rPu5 zlib.orig\gzguts.h zlib\gzguts.h
 --- zlib.orig\gzguts.h	Sun Jan 29 10:13:14 2012
-+++ zlib\gzguts.h	Sat Feb 04 07:53:13 2012
++++ zlib\gzguts.h	Sat Feb 04 08:53:13 2012
 @@ -28,10 +28,14 @@
  #include <fcntl.h>
  
@@ -18,7 +18,7 @@ diff -rPu5 zlib.orig\gzguts.h zlib\gzguts.h
  
 diff -rPu5 zlib.orig\gzwopen.c zlib\gzwopen.c
 --- zlib.orig\gzwopen.c	Thu Jan 01 01:00:00 1970
-+++ zlib\gzwopen.c	Sat Feb 04 06:13:51 2012
++++ zlib\gzwopen.c	Sat Feb 04 07:13:51 2012
 @@ -0,0 +1,23 @@
 +/* Copyright 2011 the SumatraPDF project authors (see AUTHORS file).
 +   License: Simplified BSD (see COPYING.BSD) */
@@ -45,7 +45,7 @@ diff -rPu5 zlib.orig\gzwopen.c zlib\gzwopen.c
 +}
 diff -rPu5 zlib.orig\minizip\iowin32s.c zlib\minizip\iowin32s.c
 --- zlib.orig\minizip\iowin32s.c	Thu Jan 01 01:00:00 1970
-+++ zlib\minizip\iowin32s.c	Sat Jan 21 15:18:29 2012
++++ zlib\minizip\iowin32s.c	Sat Jan 21 16:18:29 2012
 @@ -0,0 +1,103 @@
 +/* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
 +   License: Simplified BSD (see COPYING.BSD) */
@@ -152,7 +152,7 @@ diff -rPu5 zlib.orig\minizip\iowin32s.c zlib\minizip\iowin32s.c
 +}
 diff -rPu5 zlib.orig\minizip\iowin32s.h zlib\minizip\iowin32s.h
 --- zlib.orig\minizip\iowin32s.h	Thu Jan 01 01:00:00 1970
-+++ zlib\minizip\iowin32s.h	Sat Jan 21 15:18:39 2012
++++ zlib\minizip\iowin32s.h	Sat Jan 21 16:18:39 2012
 @@ -0,0 +1,14 @@
 +/* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
 +   License: Simplified BSD (see COPYING.BSD) */
@@ -170,7 +170,7 @@ diff -rPu5 zlib.orig\minizip\iowin32s.h zlib\minizip\iowin32s.h
 +#endif
 diff -rPu5 zlib.orig\minizip\unzalloc.c zlib\minizip\unzalloc.c
 --- zlib.orig\minizip\unzalloc.c	Thu Jan 01 01:00:00 1970
-+++ zlib\minizip\unzalloc.c	Sat Feb 04 06:36:16 2012
++++ zlib\minizip\unzalloc.c	Sat Feb 04 07:36:16 2012
 @@ -0,0 +1,27 @@
 +/* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
 +   License: Simplified BSD (see COPYING.BSD) */
@@ -201,7 +201,7 @@ diff -rPu5 zlib.orig\minizip\unzalloc.c zlib\minizip\unzalloc.c
 +}
 diff -rPu5 zlib.orig\minizip\unzalloc.h zlib\minizip\unzalloc.h
 --- zlib.orig\minizip\unzalloc.h	Thu Jan 01 01:00:00 1970
-+++ zlib\minizip\unzalloc.h	Sat Feb 04 06:42:30 2012
++++ zlib\minizip\unzalloc.h	Sat Feb 04 07:42:30 2012
 @@ -0,0 +1,28 @@
 +/* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
 +   License: Simplified BSD (see COPYING.BSD) */
@@ -233,7 +233,7 @@ diff -rPu5 zlib.orig\minizip\unzalloc.h zlib\minizip\unzalloc.h
 +#endif
 diff -rPu5 zlib.orig\minizip\unzip.c zlib\minizip\unzip.c
 --- zlib.orig\minizip\unzip.c	Sat Jan 21 11:49:30 2012
-+++ zlib\minizip\unzip.c	Sat Feb 04 07:41:07 2012
++++ zlib\minizip\unzip.c	Thu Apr 05 13:36:53 2012
 @@ -91,10 +91,16 @@
  #  define local static
  #endif
@@ -251,7 +251,22 @@ diff -rPu5 zlib.orig\minizip\unzip.c zlib\minizip\unzip.c
  #    define CASESENSITIVITYDEFAULT_NO
  #  endif
  #endif
-@@ -1373,10 +1379,15 @@
+@@ -712,10 +718,14 @@
+         /* total number of entries in the central dir */
+         if (unz64local_getShort(&us.z_filefunc, us.filestream,&uL)!=UNZ_OK)
+             err=UNZ_ERRNO;
+         number_entry_CD = uL;
+ 
++        /* SumatraPDF: this is a complete guess but it does fix opening a .zip file I had */
++        if (number_entry_CD * 2 == us.gi.number_entry)
++            us.gi.number_entry = number_entry_CD;
++
+         if ((number_entry_CD!=us.gi.number_entry) ||
+             (number_disk_with_CD!=0) ||
+             (number_disk!=0))
+             err=UNZ_BADZIPFILE;
+ 
+@@ -1373,10 +1383,15 @@
  /*
  // Unzip Helper Functions - should be here?
  ///////////////////////////////////////////
@@ -267,7 +282,7 @@ diff -rPu5 zlib.orig\minizip\unzip.c zlib\minizip\unzip.c
    Check the coherency of the local header and info in the end of central
          directory about this file
    store in *piSizeVar the size of extra info in local header
-@@ -1548,17 +1559,19 @@
+@@ -1548,17 +1563,19 @@
      pfile_in_zip_read_info->stream.total_out = 0;
  
      if ((s->cur_file_info.compression_method==Z_BZIP2ED) && (!raw))
@@ -291,7 +306,7 @@ diff -rPu5 zlib.orig\minizip\unzip.c zlib\minizip\unzip.c
        pfile_in_zip_read_info->stream.avail_in = 0;
  
        err=BZ2_bzDecompressInit(&pfile_in_zip_read_info->bstream, 0, 0);
-@@ -1573,12 +1586,13 @@
+@@ -1573,12 +1590,13 @@
        pfile_in_zip_read_info->raw=1;
  #endif
      }

@@ -720,7 +720,7 @@ local unzFile unzOpenInternal (const void *path,
             err=UNZ_ERRNO;
         number_entry_CD = uL;
 
-        /* note: this is a complete guess but it does fix opening a .zip file I had */
+        /* SumatraPDF: this is a complete guess but it does fix opening a .zip file I had */
         if (number_entry_CD * 2 == us.gi.number_entry)
             us.gi.number_entry = number_entry_CD;
 
