@@ -77,7 +77,8 @@ CFLAGSB = $(CFLAGSB) /wd4996
 # /Zi  : enable debug information
 # /GS  : enable security checks
 # /Gy  : separate functions for linker
-CFLAGSB = $(CFLAGSB) /W3 /GR- /Zi /GS /Gy
+# /GF  : enable read-only string pooling
+CFLAGSB = $(CFLAGSB) /W3 /GR- /Zi /GS /Gy /GF
 
 !if "$(WITH_ANALYZE)"!="yes"
 CFLAGSB = $(CFLAGSB) /WX
