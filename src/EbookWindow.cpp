@@ -514,7 +514,6 @@ RenderedBitmap *RenderFirstDocPageToBitmap(Doc doc, SizeI pageSize, SizeI bmpSiz
     HtmlFormatter *formatter = CreateFormatterForDoc(doc, args);
     HtmlPage *pd = formatter->Next();
     delete formatter;
-    free((void *)args->fontName);
     delete args;
     if (!pd)
         return NULL;

@@ -102,7 +102,6 @@ EbookFormattingThread::EbookFormattingThread(HtmlFormatterArgs *args, Doc doc, E
 EbookFormattingThread::~EbookFormattingThread()
 {
     //lf("ThreadLayoutEbook::~ThreadLayoutEbook()");
-    free((void*)formatterArgs->fontName);
     delete formatterArgs;
 }
 
@@ -286,7 +285,7 @@ HtmlFormatterArgs *CreateFormatterArgs(const char *html, Doc doc, int dx, int dy
         html = doc.AsEpub()->GetTextData(&len);
     else
         CrashIf(true);
-    args->fontName = str::Dup(FONT_NAME);
+    args->fontName = FONT_NAME;
     args->fontSize = FONT_SIZE;
     args->htmlStr = html;
     args->htmlStrLen = len;
