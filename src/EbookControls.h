@@ -5,8 +5,11 @@
 #define EbookControls_h
 
 #include "BaseUtil.h"
+#include "Doc.h"
 #include "Mui.h"
 
+class HtmlFormatter;
+class HtmlFormatterArgs;
 class PageControl;
 using namespace mui;
 
@@ -47,5 +50,7 @@ public:
 
     virtual void NotifyMouseMove(int x, int y);
 };
+
+HtmlFormatter *CreateFormatterForDoc(Doc doc, HtmlFormatterArgs* args);
 
 #endif

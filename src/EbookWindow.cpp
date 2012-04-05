@@ -4,12 +4,13 @@
 #include "BaseEngine.h"
 #include "EbookController.h"
 #include "EbookControls.h"
+#include "EpubDoc.h"
 #include "FileHistory.h"
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
+#include "HtmlFormatter.h"
 #include "Menu.h"
 #include "MobiDoc.h"
-#include "HtmlFormatter.h"
 #include "Resource.h"
 #include "SumatraProperties.h"
 #include "SumatraAbout.h"
@@ -506,12 +507,13 @@ static LRESULT CALLBACK MobiWndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPA
     return 0;
 }
 
-RenderedBitmap *RenderFirstMobiPageToBitmap(MobiDoc *mobiDoc, SizeI pageSize, SizeI bmpSize)
+RenderedBitmap *RenderFirstDocPageToBitmap(Doc doc, SizeI pageSize, SizeI bmpSize)
 {
     PoolAllocator textAllocator;
-    HtmlFormatterArgs *args = CreateFormatterArgs(NULL, Doc(mobiDoc), pageSize.dx, pageSize.dy, &textAllocator);
-    MobiFormatter mf(args, mobiDoc);
-    HtmlPage *pd = mf.Next();
+    HtmlFormatterArgs *args = CreateFormatterArgs(NULL, doc, pageSize.dx, pageSize.dy, &textAllocator);
+    HtmlFormatter *formatter = CreateFormatterForDoc(doc, args);
+    HtmlPage *pd = formatter->Next();
+    delete formatter;
     if (!pd)
         return NULL;
 
@@ -584,10 +586,20 @@ static void CreateThumbnailForMobiDoc(MobiDoc *mobiDoc, DisplayState& ds)
         // no cover image so generate thumbnail from first page
         SizeI pageSize(THUMBNAIL_DX * 2, THUMBNAIL_DY * 2);
         SizeI dstSize(THUMBNAIL_DX, THUMBNAIL_DY);
-        bmp = RenderFirstMobiPageToBitmap(mobiDoc, pageSize, dstSize);
+        bmp = RenderFirstDocPageToBitmap(Doc(mobiDoc), pageSize, dstSize);
     }
 
     if (bmp && SaveThumbnailForFile(mobiDoc->GetFileName(), bmp))
+        bmp = NULL;
+    delete bmp;
+}
+
+static void CreateThumbnailForEpubDoc(Doc doc, DisplayState& ds)
+{
+    SizeI pageSize(THUMBNAIL_DX * 2, THUMBNAIL_DY * 2);
+    SizeI dstSize(THUMBNAIL_DX, THUMBNAIL_DY);
+    RenderedBitmap *bmp = RenderFirstDocPageToBitmap(doc, pageSize, dstSize);
+    if (bmp && SaveThumbnailForFile(doc.GetFilePath(), bmp))
         bmp = NULL;
     delete bmp;
 }
@@ -597,7 +609,7 @@ static void CreateThumbnailForDoc(Doc doc, DisplayState& ds)
     if (doc.AsMobi())
         CreateThumbnailForMobiDoc(doc.AsMobi(), ds);
     else if (doc.AsEpub()) {
-        // TODO: write me
+        CreateThumbnailForEpubDoc(doc, ds);
     } else
         CrashIf(true);
 }
