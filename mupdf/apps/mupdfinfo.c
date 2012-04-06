@@ -209,9 +209,9 @@ gatherdimensions(int page, pdf_obj *pageref, pdf_obj *pageobj)
 	if (j < dims)
 		return;
 
+	dim = fz_resize_array(ctx, dim, dims+1, sizeof(struct info));
 	dims++;
 
-	dim = fz_resize_array(ctx, dim, dims, sizeof(struct info));
 	dim[dims - 1].page = page;
 	dim[dims - 1].pageref = pageref;
 	dim[dims - 1].pageobj = pageobj;
@@ -254,9 +254,9 @@ gatherfonts(int page, pdf_obj *pageref, pdf_obj *pageobj, pdf_obj *dict)
 		if (k < fonts)
 			continue;
 
+		font = fz_resize_array(ctx, font, fonts+1, sizeof(struct info));
 		fonts++;
 
-		font = fz_resize_array(ctx, font, fonts, sizeof(struct info));
 		font[fonts - 1].page = page;
 		font[fonts - 1].pageref = pageref;
 		font[fonts - 1].pageobj = pageobj;
@@ -323,9 +323,9 @@ gatherimages(int page, pdf_obj *pageref, pdf_obj *pageobj, pdf_obj *dict)
 		if (k < images)
 			continue;
 
+		image = fz_resize_array(ctx, image, images+1, sizeof(struct info));
 		images++;
 
-		image = fz_resize_array(ctx, image, images, sizeof(struct info));
 		image[images - 1].page = page;
 		image[images - 1].pageref = pageref;
 		image[images - 1].pageobj = pageobj;
@@ -381,9 +381,9 @@ gatherforms(int page, pdf_obj *pageref, pdf_obj *pageobj, pdf_obj *dict)
 		if (k < forms)
 			continue;
 
+		form = fz_resize_array(ctx, form, forms+1, sizeof(struct info));
 		forms++;
 
-		form = fz_resize_array(ctx, form, forms, sizeof(struct info));
 		form[forms - 1].page = page;
 		form[forms - 1].pageref = pageref;
 		form[forms - 1].pageobj = pageobj;
@@ -426,9 +426,9 @@ gatherpsobjs(int page, pdf_obj *pageref, pdf_obj *pageobj, pdf_obj *dict)
 		if (k < psobjs)
 			continue;
 
+		psobj = fz_resize_array(ctx, psobj, psobjs+1, sizeof(struct info));
 		psobjs++;
 
-		psobj = fz_resize_array(ctx, psobj, psobjs, sizeof(struct info));
 		psobj[psobjs - 1].page = page;
 		psobj[psobjs - 1].pageref = pageref;
 		psobj[psobjs - 1].pageobj = pageobj;
@@ -469,9 +469,9 @@ gathershadings(int page, pdf_obj *pageref, pdf_obj *pageobj, pdf_obj *dict)
 		if (k < shadings)
 			continue;
 
+		shading = fz_resize_array(ctx, shading, shadings+1, sizeof(struct info));
 		shadings++;
 
-		shading = fz_resize_array(ctx, shading, shadings, sizeof(struct info));
 		shading[shadings - 1].page = page;
 		shading[shadings - 1].pageref = pageref;
 		shading[shadings - 1].pageobj = pageobj;
@@ -537,9 +537,9 @@ gatherpatterns(int page, pdf_obj *pageref, pdf_obj *pageobj, pdf_obj *dict)
 		if (k < patterns)
 			continue;
 
+		pattern = fz_resize_array(ctx, pattern, patterns+1, sizeof(struct info));
 		patterns++;
 
-		pattern = fz_resize_array(ctx, pattern, patterns, sizeof(struct info));
 		pattern[patterns - 1].page = page;
 		pattern[patterns - 1].pageref = pageref;
 		pattern[patterns - 1].pageobj = pageobj;

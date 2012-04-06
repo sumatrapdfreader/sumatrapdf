@@ -80,9 +80,9 @@ pdf_load_page_tree_node(pdf_document *xref, pdf_obj *node, struct info info)
 			if (xref->page_len == xref->page_cap)
 			{
 				fz_warn(ctx, "found more pages than expected");
+				xref->page_refs = fz_resize_array(ctx, xref->page_refs, xref->page_cap+1, sizeof(pdf_obj*));
+				xref->page_objs = fz_resize_array(ctx, xref->page_objs, xref->page_cap+1, sizeof(pdf_obj*));
 				xref->page_cap ++;
-				xref->page_refs = fz_resize_array(ctx, xref->page_refs, xref->page_cap, sizeof(pdf_obj*));
-				xref->page_objs = fz_resize_array(ctx, xref->page_objs, xref->page_cap, sizeof(pdf_obj*));
 			}
 
 			xref->page_refs[xref->page_len] = pdf_keep_obj(node);

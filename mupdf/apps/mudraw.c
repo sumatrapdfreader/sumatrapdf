@@ -650,13 +650,13 @@ int main(int argc, char **argv)
 	fz_set_aa_level(ctx, alphabits);
 
 	colorspace = fz_device_rgb;
-	if (grayscale)
-		colorspace = fz_device_gray;
 	if (output && strstr(output, ".pgm"))
 		colorspace = fz_device_gray;
 	if (output && strstr(output, ".ppm"))
 		colorspace = fz_device_rgb;
 	if (output && strstr(output, ".pbm"))
+		colorspace = fz_device_gray;
+	if (grayscale)
 		colorspace = fz_device_gray;
 
 	timing.count = 0;

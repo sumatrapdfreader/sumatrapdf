@@ -307,8 +307,9 @@ fz_insert_gel_raw(fz_gel *gel, int x0, int y0, int x1, int y1)
 	if (y1 > gel->bbox.y1) gel->bbox.y1 = y1;
 
 	if (gel->len + 1 == gel->cap) {
-		gel->cap = gel->cap + 512;
-		gel->edges = fz_resize_array(gel->ctx, gel->edges, gel->cap, sizeof(fz_edge));
+		int new_cap = gel->cap + 512;
+		gel->edges = fz_resize_array(gel->ctx, gel->edges, new_cap, sizeof(fz_edge));
+		gel->cap = new_cap;
 	}
 
 	edge = &gel->edges[gel->len++];

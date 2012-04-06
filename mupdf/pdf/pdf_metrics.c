@@ -25,8 +25,9 @@ pdf_add_hmtx(fz_context *ctx, pdf_font_desc *font, int lo, int hi, int w)
 {
 	if (font->hmtx_len + 1 >= font->hmtx_cap)
 	{
-		font->hmtx_cap = font->hmtx_cap + 16;
-		font->hmtx = fz_resize_array(ctx, font->hmtx, font->hmtx_cap, sizeof(pdf_hmtx));
+		int new_cap = font->hmtx_cap + 16;
+		font->hmtx = fz_resize_array(ctx, font->hmtx, new_cap, sizeof(pdf_hmtx));
+		font->hmtx_cap = new_cap;
 	}
 
 	font->hmtx[font->hmtx_len].lo = lo;
@@ -40,8 +41,9 @@ pdf_add_vmtx(fz_context *ctx, pdf_font_desc *font, int lo, int hi, int x, int y,
 {
 	if (font->vmtx_len + 1 >= font->vmtx_cap)
 	{
-		font->vmtx_cap = font->vmtx_cap + 16;
-		font->vmtx = fz_resize_array(ctx, font->vmtx, font->vmtx_cap, sizeof(pdf_vmtx));
+		int new_cap = font->vmtx_cap + 16;
+		font->vmtx = fz_resize_array(ctx, font->vmtx, new_cap, sizeof(pdf_vmtx));
+		font->vmtx_cap = new_cap;
 	}
 
 	font->vmtx[font->vmtx_len].lo = lo;

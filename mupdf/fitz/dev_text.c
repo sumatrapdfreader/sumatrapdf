@@ -129,8 +129,9 @@ append_char(fz_context *ctx, fz_text_span *span, int c, fz_rect bbox)
 {
 	if (span->len == span->cap)
 	{
-		span->cap = MAX(64, span->cap * 2);
-		span->text = fz_resize_array(ctx, span->text, span->cap, sizeof(*span->text));
+		int new_cap = MAX(64, span->cap * 2);
+		span->text = fz_resize_array(ctx, span->text, new_cap, sizeof(*span->text));
+		span->cap = new_cap;
 	}
 	span->bbox = fz_union_rect(span->bbox, bbox);
 	span->text[span->len].c = c;
@@ -154,8 +155,9 @@ append_span(fz_context *ctx, fz_text_line *line, fz_text_span *span)
 		return;
 	if (line->len == line->cap)
 	{
-		line->cap = MAX(8, line->cap * 2);
-		line->spans = fz_resize_array(ctx, line->spans, line->cap, sizeof(*line->spans));
+		int new_cap = MAX(8, line->cap * 2);
+		line->spans = fz_resize_array(ctx, line->spans, new_cap, sizeof(*line->spans));
+		line->cap = new_cap;
 	}
 	line->bbox = fz_union_rect(line->bbox, span->bbox);
 	line->spans[line->len++] = *span;
@@ -174,8 +176,9 @@ append_line(fz_context *ctx, fz_text_block *block, fz_text_line *line)
 {
 	if (block->len == block->cap)
 	{
-		block->cap = MAX(16, block->cap * 2);
-		block->lines = fz_resize_array(ctx, block->lines, block->cap, sizeof *block->lines);
+		int new_cap = MAX(16, block->cap * 2);
+		block->lines = fz_resize_array(ctx, block->lines, new_cap, sizeof *block->lines);
+		block->cap = new_cap;
 	}
 	block->bbox = fz_union_rect(block->bbox, line->bbox);
 	block->lines[block->len++] = *line;
@@ -205,8 +208,9 @@ lookup_block_for_line(fz_context *ctx, fz_text_page *page, fz_text_line *line)
 
 	if (page->len == page->cap)
 	{
-		page->cap = MAX(16, page->cap * 2);
-		page->blocks = fz_resize_array(ctx, page->blocks, page->cap, sizeof(*page->blocks));
+		int new_cap = MAX(16, page->cap * 2);
+		page->blocks = fz_resize_array(ctx, page->blocks, new_cap, sizeof(*page->blocks));
+		page->cap = new_cap;
 	}
 
 	page->blocks[page->len].bbox = fz_empty_rect;

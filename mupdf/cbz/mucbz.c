@@ -233,7 +233,7 @@ cbz_read_zip_dir_imp(cbz_document *doc, int startoffset)
 		(void) getlong(file); /* ext file atts */
 		entry->offset = getlong(file);
 
-		entry->name = malloc(namesize + 1);
+		entry->name = fz_malloc(ctx, namesize + 1);
 		fz_read(file, (unsigned char *)entry->name, namesize);
 		entry->name[namesize] = 0;
 
