@@ -65,7 +65,7 @@ protected:
             T* dst = els + idx + count;
             memmove(dst, src, (len - idx) * sizeof(T));
         }
-        IncreaseLen(count);
+        len += count;
         return res;
     }
 
@@ -118,20 +118,6 @@ public:
         memset(buf, 0, sizeof(buf));
     }
 
-    // ensures empty space at the end of the list where items can
-    // be appended through ReadFile or memcpy (don't forget to call
-    // IncreaseLen once you know how many items have been added)
-    // and returns a pointer to the first empty spot
-    // Note: use AppendBlanks if you know the number of items in advance
-    T *EnsureEndPadding(size_t count) {
-        EnsureCap(len + count);
-        return &els[len];
-    }
-
-    void IncreaseLen(size_t count) {
-        len += count;
-    }
-
     // use &At() if you need a pointer to the element (e.g. if T is a struct)
     T& At(size_t idx) const {
         CrashIf(idx >= len);
@@ -168,7 +154,6 @@ public:
     }
 
     // appends count blank (i.e. zeroed-out) elements at the end
-    // like EnsureEndPadding() but also increases the length
     T* AppendBlanks(size_t count) {
         return MakeSpaceAt(len, count);
     }

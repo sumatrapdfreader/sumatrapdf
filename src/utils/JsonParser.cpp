@@ -54,10 +54,10 @@ static const char *ExtractString(str::Str<char>& string, const char *data)
             case 't': string.Append('\t'); break;
             case 'u':
                 if (str::Parse(data + 1, "%4x", &i) && 0 < i && i < 0x10000) {
-                    char *buf = string.EnsureEndPadding(4);
+                    char buf[5] = { 0 };
                     wchar_t c = (wchar_t)i;
-                    WideCharToMultiByte(CP_UTF8, 0, &c, 1, buf, 4, NULL, NULL);
-                    string.IncreaseLen(str::Len(buf));
+                    WideCharToMultiByte(CP_UTF8, 0, &c, 1, buf, dimof(buf), NULL, NULL);
+                    string.Append(buf);
                     data += 4;
                     break;
                 }

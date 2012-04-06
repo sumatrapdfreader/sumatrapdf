@@ -28,10 +28,10 @@ DWORD HttpGet(const TCHAR *url, str::Str<char> *dataOut)
 
     DWORD dwRead;
     do {
-        char *buf = dataOut->EnsureEndPadding(1024);
-        if (!InternetReadFile(hFile, buf, 1024, &dwRead))
+        char buf[1024];
+        if (!InternetReadFile(hFile, buf, sizeof(buf), &dwRead))
             goto Error;
-        dataOut->IncreaseLen(dwRead);
+        dataOut->Append(buf, dwRead);
     } while (dwRead > 0);
 
 Exit:
@@ -144,10 +144,10 @@ bool HttpPost(const TCHAR *server, const TCHAR *url, str::Str<char> *headers, st
 
     DWORD dwRead;
     do {
-        char *buf = resp.EnsureEndPadding(1024);
-        if (!InternetReadFile(hReq, buf, 1024, &dwRead))
+        char buf[1024];
+        if (!InternetReadFile(hReq, buf, sizeof(buf), &dwRead))
             goto Exit;
-        resp.IncreaseLen(dwRead);
+        resp.Append(buf, dwRead);
     } while (dwRead > 0);
 
 #if 0
