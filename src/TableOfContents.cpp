@@ -46,13 +46,14 @@ static void CustomizeTocInfoTip(LPNMTVGETINFOTIP nmit)
     TreeView_GetItemRect(hTV, nmit->hItem, &rcLine, FALSE);
     TreeView_GetItemRect(hTV, nmit->hItem, &rcLabel, TRUE);
     if (rcLine.right + 2 < rcLabel.right) {
+        TCHAR buf[INFOTIPSIZE+1] = { 0 };
         TVITEM item;
         item.hItem = nmit->hItem;
         item.mask = TVIF_TEXT;
-        item.pszText = infotip.EnsureEndPadding(INFOTIPSIZE);
+        item.pszText = buf;
         item.cchTextMax = INFOTIPSIZE;
         TreeView_GetItem(hTV, &item);
-        infotip.IncreaseLen(str::Len(item.pszText));
+        infotip.Append(item.pszText);
         infotip.Append(_T("\r\n"));
     }
 
