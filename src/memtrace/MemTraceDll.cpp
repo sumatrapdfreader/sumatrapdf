@@ -22,10 +22,10 @@ byte    data[];     // bytes for a given message
 #include <stddef.h> // for offsetof
 #include "BaseUtil.h"
 #include "MemTraceDll.h"
-
 #include "nsWindowsDllInterceptor.h"
 #include "StrUtil.h"
 #include "Scoped.h"
+#include "Timer.h"
 #include "Vec.h"
 #include "WinUtil.h"
 
@@ -436,14 +436,14 @@ static DWORD WINAPI DataSendThreadProc(void* data)
     // if pipe was closed, we exit the thread
     while (gPipe) {
         DWORD res = WaitForSingleObject(gSendThreadEvent, INFINITE);
+        if (gStopSendThread) {
+            lf("memtrace.dll: DataSendThreadProc, gStopSendThread is true");
+            return 0;
+        }
         if (WAIT_OBJECT_0 != res)
             continue;
 
         SendQueuedMessages();
-        if (gStopSendThread) {
-            lf("memtrace.dll: DataSendThreadProc, gStopSendThread is true");
-            break;
-        }
     }
     lf("memtrace.dll: DataSendThreadProc ended");
     return 0;
@@ -533,9 +533,19 @@ static void InstallHooks()
         lf("memtrace.dll: failed to hook RtlFreeHeap");
 }
 
+// TODO: I should probably move all initalization inside the thread
+// We should minimize the amount of work done in DLL_PROCESS_ATTACH as per
+// http://blogs.msdn.com/b/oleglv/archive/2003/10/24/56141.aspx
 static BOOL ProcessAttach()
 {
     lf("memtrace.dll: ProcessAttach()");
+    if (!OpenPipe()) {
+        lf("memtrace.dll: couldn't open pipe");
+        return FALSE;
+    } else {
+        lf("memtrace.dll: opened pipe");
+    }
+
     gHeap = HeapCreate(0, 0, 0);
     if (!gHeap) {
         lf("memtrace.dll: failed to create heap");
@@ -553,22 +563,22 @@ static BOOL ProcessAttach()
         lf("memtrace.dll: couldn't create gSendThread");
         return FALSE;
     }
-    if (!OpenPipe()) {
-        lf("memtrace.dll: couldn't open pipe");
-        return FALSE;
-    } else {
-        lf("memtrace.dll: opened pipe");
-    }
     InstallHooks();
     return TRUE;
 }
 
-static BOOL ProcessDetach()
+static void TerminateSendingThread()
 {
-    lf("memtrace.dll: ProcessDetach()");
+    if (!gSendThread)
+        return;
+    lf("memtrace.dll: TerminateSendingThread() setting gStopSendThread=TRUE and signaling gSendThreadEvent");
     gStopSendThread = true;
     SetEvent(gSendThreadEvent);
+    lf("memtrace.dll: TerminateSendingThread() waiting for gSendThread");
+    Timer t(true);
     DWORD res = WaitForSingleObject(gSendThread, 5*1024);
+    t.Stop();
+    lf("%.2f ms to terminate the thread", t.GetTimeInMs());
     if (WAIT_OBJECT_0 == res) {
         lf("memtrace.dll: thread quit by itself");
     } else {
@@ -577,6 +587,12 @@ static BOOL ProcessDetach()
     }
     CloseHandle(gSendThread);
     SendQueuedMessages();
+}
+
+static BOOL ProcessDetach()
+{
+    lf("memtrace.dll: ProcessDetach()");
+    TerminateSendingThread();
     ClosePipe();
     DeleteCriticalSection(&gMemMutex);
     CloseHandle(gSendThreadEvent);
