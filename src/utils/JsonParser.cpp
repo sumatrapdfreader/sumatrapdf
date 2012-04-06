@@ -15,14 +15,9 @@ static inline const char *SkipWS(const char *s)
     return s;
 }
 
-static inline bool IsDigit(char c)
-{
-    return '0' <= c && c <= '9';
-}
-
 static inline const char *SkipDigits(const char *s)
 {
-    while (IsDigit(*s))
+    while (str::IsDigit(*s))
         s++;
     return s;
 }
@@ -91,7 +86,7 @@ static const char *ParseNumber(ParseArgs& args, const char *data)
         data++;
     if ('0' == *data)
         data++;
-    else if (IsDigit(*data))
+    else if (str::IsDigit(*data))
         data = SkipDigits(data + 1);
     else
         return NULL;
@@ -106,7 +101,7 @@ static const char *ParseNumber(ParseArgs& args, const char *data)
         data = SkipDigits(data + 1);
     }
     // validity check
-    if (!IsDigit(*(data - 1)) || IsDigit(*data))
+    if (!str::IsDigit(*(data - 1)) || str::IsDigit(*data))
         return NULL;
 
     char *number = str::DupN(start, data - start);

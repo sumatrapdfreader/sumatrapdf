@@ -1183,12 +1183,12 @@ static const TCHAR *findEmbedMarks(const TCHAR *fileName)
     int colonCount = 0;
     for (const TCHAR *c = fileName + str::Len(fileName) - 1; c > fileName; c--) {
         if (*c == ':') {
-            if (!ChrIsDigit(*(c + 1)))
+            if (!str::IsDigit(*(c + 1)))
                 break;
             if (++colonCount % 2 == 0)
                 embedMarks = c;
         }
-        else if (!ChrIsDigit(*c))
+        else if (!str::IsDigit(*c))
             break;
     }
 

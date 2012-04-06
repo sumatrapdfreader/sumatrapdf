@@ -221,7 +221,7 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
         }
         else if (is_arg_with_param("-plugin")) {
             // -plugin [<URL>] <parent HWND>
-            if (!ChrIsDigit(*param) && has_additional_param())
+            if (!str::IsDigit(*param) && has_additional_param())
                 str::ReplacePtr(&pluginURL, argList.At(++n));
             // the argument is a (numeric) window handle to
             // become the parent of a frameless SumatraPDF

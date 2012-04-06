@@ -120,12 +120,10 @@ bool SkipNonWs(const char* & s, const char *end)
     return start != s;
 }
 
-static int IsNameChar(int c)
+static int IsNameChar(char c)
 {
     return c == '.' || c == '-' || c == '_' || c == ':' ||
-        (c >= '0' && c <= '9') ||
-        (c >= 'A' && c <= 'Z') ||
-        (c >= 'a' && c <= 'z');
+           str::IsDigit(c) || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
 }
 
 // skip all html tag or attribute characters

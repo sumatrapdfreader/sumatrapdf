@@ -323,7 +323,7 @@ bool EpubDoc::ParseToc(EbookTocVisitor *visitor)
         return false;
 
     ScopedMem<TCHAR> itemText, itemSrc;
-    int level = -1;
+    int level = 0;
 
     while ((tok = parser.Next()) && !tok->IsError() && (!tok->IsEndTag() || !tok->NameIs("navMap") && !tok->NameIs("ncx:navMap"))) {
         if (tok->IsTag() && (tok->NameIs("navPoint") || tok->NameIs("ncx:navPoint"))) {
@@ -555,12 +555,12 @@ const TCHAR *Fb2Doc::GetFileName() const
     return fileName;
 }
 
-const char *Fb2Doc::GetHrefName()
+const char *Fb2Doc::GetHrefName() const
 {
     return hrefName ? hrefName : "href";
 }
 
-bool Fb2Doc::IsZipped()
+bool Fb2Doc::IsZipped() const
 {
     return isZipped;
 }
@@ -585,7 +585,7 @@ Fb2Doc *Fb2Doc::CreateFromFile(const TCHAR *fileName)
 
 /* Plain Text */
 
-TxtDoc::TxtDoc(const TCHAR *fileName) : fileName(str::Dup(fileName)) { }
+TxtDoc::TxtDoc(const TCHAR *fileName) : fileName(str::Dup(fileName)), isRFC(false) { }
 
 static inline void AppendChar(str::Str<char>& htmlData, char c)
 {
@@ -675,6 +675,17 @@ static char *TextFindEmailEnd(str::Str<char>& htmlData, char *curr, bool fromAt=
     return end;
 }
 
+static char *TextFindRfcEnd(str::Str<char>& htmlData, char *curr)
+{
+    if (isalnum((unsigned)*(curr - 1)))
+        return NULL;
+    int rfc;
+    char *end = (char *)str::Parse(curr, "RFC %d", &rfc);
+    // cf. http://en.wikipedia.org/wiki/Request_for_Comments#Obtaining_RFCs
+    htmlData.AppendFmt("<a href='http://www.rfc-editor.org/rfc/rfc%d.txt'>", rfc);
+    return end;
+}
+
 bool TxtDoc::Load()
 {
     ScopedMem<char> text(file::ReadAll(fileName, NULL));
@@ -685,10 +696,15 @@ bool TxtDoc::Load()
     if (!text)
         return false;
 
+    int rfc;
+    isRFC = str::Parse(path::GetBaseName(fileName), _T("rfc%d.txt%$"), &rfc) != NULL;
+
     char *curr = text;
     if (str::StartsWith(text.Get(), UTF8_BOM))
         curr += 3;
     char *linkEnd = NULL;
+    bool rfcHeader = false;
+    int sectionCount = 0;
 
     htmlData.Append("<pre>");
     while (*curr) {
@@ -709,6 +725,8 @@ bool TxtDoc::Load()
             linkEnd = TextFindLinkEnd(htmlData, curr, true);
         else if ('m' == *curr && str::StartsWith(curr, "mailto:"))
             linkEnd = TextFindEmailEnd(htmlData, curr);
+        else if (isRFC && curr > text && 'R' == *curr && str::Parse(curr, "RFC %d", &rfc))
+            linkEnd = TextFindRfcEnd(htmlData, curr);
 
         // RFCs use (among others) form feeds as page separators
         if ('\f' == *curr && (curr == text || '\n' == *(curr - 1)) &&
@@ -718,6 +736,21 @@ bool TxtDoc::Load()
                 htmlData.Append("<pagebreak />");
             curr++;
             continue;
+        }
+
+        if (isRFC && curr > text && '\n' == *(curr - 1) &&
+            (str::IsDigit(*curr) || str::StartsWith(curr, "APPENDIX")) &&
+            str::FindChar(curr, '\n') && str::Parse(str::FindChar(curr, '\n') + 1, "%?\r\n")) {
+            htmlData.AppendFmt("<b id='section%d' title=\"", ++sectionCount);
+            for (const char *c = curr; *c != '\r' && *c != '\n'; c++) {
+                AppendChar(htmlData, *c);
+            }
+            htmlData.Append("\">");
+            rfcHeader = true;
+        }
+        if (rfcHeader && ('\r' == *curr || '\n' == *curr)) {
+            htmlData.Append("</b>");
+            rfcHeader = false;
         }
 
         AppendChar(htmlData, *curr);
@@ -739,6 +772,40 @@ const char *TxtDoc::GetTextData(size_t *lenOut)
 const TCHAR *TxtDoc::GetFileName() const
 {
     return fileName;
+}
+
+bool TxtDoc::IsRFC() const
+{
+    return isRFC;
+}
+
+bool TxtDoc::HasToc() const
+{
+    return isRFC;
+}
+
+bool TxtDoc::ParseToc(EbookTocVisitor *visitor)
+{
+    if (!isRFC)
+        return false;
+
+    HtmlParser parser;
+    parser.Parse(htmlData.Get(), CP_UTF8);
+    HtmlElement *el = NULL;
+    while ((el = parser.FindElementByName("b", el))) {
+        ScopedMem<TCHAR> title(el->GetAttribute("title"));
+        ScopedMem<TCHAR> id(el->GetAttribute("id"));
+        int level = 1;
+        if (str::IsDigit(*title)) {
+            const TCHAR *dot = str::FindChar(title, '.');
+            while ((dot = str::FindChar(dot + 1, '.'))) {
+                level++;
+            }
+        }
+        visitor->visit(title, id, level);
+    }
+
+    return true;
 }
 
 bool TxtDoc::IsSupportedFile(const TCHAR *fileName, bool sniff)

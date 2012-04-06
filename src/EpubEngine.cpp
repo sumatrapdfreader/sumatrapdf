@@ -525,7 +525,7 @@ static void AppendTocItem(EbookTocItem *& root, EbookTocItem *item, int level)
     }
     // find the last child at each level, until finding the parent of the new item
     DocTocItem *r2 = root;
-    while (level-- > 0) {
+    while (--level > 0) {
         for (; r2->next; r2 = r2->next);
         if (r2->child)
             r2 = r2->child;
@@ -1377,6 +1377,9 @@ public:
     }
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
 
+    virtual bool HasTocTree() const { return doc->HasToc(); }
+    virtual DocTocItem *GetTocTree();
+
 protected:
     TxtDoc *doc;
 
@@ -1391,6 +1394,11 @@ bool TxtEngineImpl::Load(const TCHAR *fileName)
     if (!doc)
         return false;
 
+    if (doc->IsRFC()) {
+        // RFCs are targeted at letter size pages
+        pageRect = RectD(0, 0, 8.5 * GetFileDPI(), 11 * GetFileDPI());
+    }
+
     HtmlFormatterArgs args;
     args.htmlStr = doc->GetTextData(&args.htmlStrLen);
     args.pageDx = (int)(pageRect.dx - 2 * pageBorder);
@@ -1400,8 +1408,17 @@ bool TxtEngineImpl::Load(const TCHAR *fileName)
     args.textAllocator = &allocator;
 
     pages = TxtFormatter(&args).FormatAllPages();
+    if (!ExtractPageAnchors())
+        return false;
 
     return pages->Count() > 0;
+}
+
+DocTocItem *TxtEngineImpl::GetTocTree()
+{
+    EbookTocBuilder builder(this);
+    doc->ParseToc(&builder);
+    return builder.GetRoot();
 }
 
 bool TxtEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)

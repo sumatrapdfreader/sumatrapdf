@@ -73,8 +73,8 @@ public:
 
     TCHAR *GetProperty(const char *name);
     const TCHAR *GetFileName() const;
-    const char *GetHrefName();
-    bool IsZipped();
+    const char *GetHrefName() const;
+    bool IsZipped() const;
 
     static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
     static Fb2Doc *CreateFromFile(const TCHAR *fileName);
@@ -83,6 +83,7 @@ public:
 class TxtDoc {
     ScopedMem<TCHAR> fileName;
     str::Str<char> htmlData;
+    bool isRFC;
 
     bool Load();
 
@@ -91,6 +92,10 @@ public:
 
     const char *GetTextData(size_t *lenOut);
     const TCHAR *GetFileName() const;
+
+    bool IsRFC() const;
+    bool HasToc() const;
+    bool ParseToc(EbookTocVisitor *visitor);
 
     static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
     static TxtDoc *CreateFromFile(const TCHAR *fileName);

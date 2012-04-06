@@ -27,12 +27,10 @@ struct HtmlAttr {
 
 #ifndef USE_PULL_PARSER
 
-static int IsName(int c)
+static int IsName(char c)
 {
     return c == '.' || c == '-' || c == '_' || c == ':' ||
-        (c >= '0' && c <= '9') ||
-        (c >= 'A' && c <= 'Z') ||
-        (c >= 'a' && c <= 'z');
+           str::IsDigit(c) || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
 }
 
 static void SkipWs(char **sPtr)

@@ -192,8 +192,8 @@ static void TStrTest()
     free(str);
 #undef TEST_STRING
 
-    assert(ChrIsDigit('0') && ChrIsDigit(_T('5')) && ChrIsDigit(L'9'));
-    assert(iswdigit(L'\xB2') && !ChrIsDigit(L'\xB2'));
+    assert(str::IsDigit('0') && str::IsDigit(_T('5')) && str::IsDigit(L'9'));
+    assert(iswdigit(L'\xB2') && !str::IsDigit(L'\xB2'));
 
     assert(str::CmpNatural(_T(".hg"), _T("2.pdf")) < 0);
     assert(str::CmpNatural(_T("100.pdf"), _T("2.pdf")) > 0);

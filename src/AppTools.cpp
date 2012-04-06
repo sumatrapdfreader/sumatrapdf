@@ -17,13 +17,13 @@
 // Return false if it contains anything else.
 bool IsValidProgramVersion(char *txt)
 {
-    if (!ChrIsDigit(*txt))
+    if (!str::IsDigit(*txt))
         return false;
 
     for (; *txt; txt++) {
-        if (ChrIsDigit(*txt))
+        if (str::IsDigit(*txt))
             continue;
-        if (*txt == '.' && ChrIsDigit(*(txt + 1)))
+        if (*txt == '.' && str::IsDigit(*(txt + 1)))
             continue;
         if (*txt == '\r' && *(txt + 1) == '\n')
             continue;

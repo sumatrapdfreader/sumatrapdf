@@ -58,7 +58,7 @@ class DjVuDestination : public PageDestination {
     char *link;
 
     bool IsPageLink(const char *link) const {
-        return link[0] == '#' && (ChrIsDigit(link[1]) || link[1] == ' ' && ChrIsDigit(link[2]));
+        return link[0] == '#' && (str::IsDigit(link[1]) || link[1] == ' ' && str::IsDigit(link[2]));
     }
 
 public:

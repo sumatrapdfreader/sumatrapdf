@@ -767,16 +767,16 @@ int CmpNatural(const TCHAR *a, const TCHAR *b)
         // whitespace, compare them traditionally for a stable sort order
         if (!*a && !*b)
             return _tcscmp(aStart, bStart);
-        if (ChrIsDigit(*a) && ChrIsDigit(*b)) {
+        if (str::IsDigit(*a) && str::IsDigit(*b)) {
             // ignore leading zeroes
             for (; '0' == *a; a++);
             for (; '0' == *b; b++);
             // compare the two numbers as (positive) integers
-            for (diff = 0; ChrIsDigit(*a) || ChrIsDigit(*b); a++, b++) {
+            for (diff = 0; str::IsDigit(*a) || str::IsDigit(*b); a++, b++) {
                 // if either *a or *b isn't a number, they differ in magnitude
-                if (!ChrIsDigit(*a))
+                if (!str::IsDigit(*a))
                     return -1;
-                if (!ChrIsDigit(*b))
+                if (!str::IsDigit(*b))
                     return 1;
                 // remember the difference for when the numbers are of the same magnitude
                 if (0 == diff)
@@ -909,7 +909,7 @@ static const char *ParseV(const char *str, const char *format, va_list args)
                 continue;
             end = (char *)str + 1;
         }
-        else if (ChrIsDigit(*f))
+        else if (str::IsDigit(*f))
             f = ParseLimitedNumber(str, f, &end, va_arg(args, void *)) - 1;
         if (!end || end == str)
             return NULL;
@@ -989,12 +989,12 @@ const WCHAR *Parse(const WCHAR *str, const WCHAR *format, ...)
             continue; // don't fail, if we're indeed at the end of the string
         else if ('%' == *f && *f == *str)
             end = (WCHAR *)str + 1;
-        else if (' ' == *f && iswspace(*str))
+        else if (' ' == *f && str::IsWs(*str))
             end = (WCHAR *)str + 1;
         else if ('_' == *f) {
-            if (!iswspace(*str))
+            if (!str::IsWs(*str))
                 continue; // don't fail, if there's no whitespace at all
-            for (end = (WCHAR *)str + 1; iswspace(*end); end++);
+            for (end = (WCHAR *)str + 1; str::IsWs(*end); end++);
         }
         else if ('?' == *f && *(f + 1)) {
             // skip the next format character, advance the string,
@@ -1003,7 +1003,7 @@ const WCHAR *Parse(const WCHAR *str, const WCHAR *format, ...)
                 continue;
             end = (WCHAR *)str + 1;
         }
-        else if (ChrIsDigit(*f))
+        else if (str::IsDigit(*f))
             f = ParseLimitedNumber(str, f, &end, va_arg(args, void *)) - 1;
         if (!end || end == str)
             goto Failure;

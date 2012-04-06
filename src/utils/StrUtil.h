@@ -95,7 +95,10 @@ bool    BufFmtV(WCHAR *buf, size_t bufCchSize, const WCHAR *fmt, va_list args);
 WCHAR * FmtV(const WCHAR *fmt, va_list args);
 WCHAR * Format(const WCHAR *fmt, ...);
 
-inline bool IsWs(char c) { return isspace((unsigned char)c); }
+inline bool IsWs(char c) { return iswspace(c); }
+inline bool IsWs(WCHAR c) { return isspace((unsigned char)c); }
+inline bool IsDigit(char c) { return '0' <= c && c <= '9'; }
+inline bool IsDigit(WCHAR c) { return '0' <= c && c <= '9'; }
 size_t  TrimWS(TCHAR *s, TrimOpt opt=TrimBoth);
 
 size_t  TransChars(char *str, const char *oldChars, const char *newChars);
@@ -160,11 +163,6 @@ size_t FromCodePageBuf(WCHAR *buf, size_t cchBufSize, const char *s, UINT cp);
 #define AsWStrQ(src) (ScopedMem<WCHAR>(str::conv::ToWStr(src)))
 #define AsTStrQ(src) (ScopedMem<TCHAR>(str::conv::FromWStr(src)))
 #endif
-
-inline bool ChrIsDigit(const WCHAR c)
-{
-    return '0' <= c && c <= '9';
-}
 
 #define _MemToHex(ptr) str::MemToHex((const unsigned char *)(ptr), sizeof(*ptr))
 #define _HexToMem(txt, ptr) str::HexToMem(txt, (unsigned char *)(ptr), sizeof(*ptr))
