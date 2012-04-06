@@ -6,9 +6,6 @@
 
 # See http://msdn.microsoft.com/en-us/library/dd318693.aspx for the full list.
 
-# The language order is the same as will be used for generating translations_txt.c
-# (changing it will thus generate a huge changeset)
-
 # code	Language	Sublanguage/Variant/Dialect (empty if neutral)	Layout (RTL or empty)
 en	English	# keep default language on first line
 am	Armenian	
@@ -28,7 +25,7 @@ it	Italian
 nl	Dutch	
 fi	Finnish	
 ca	Catalan	
-ca-xv	#Catalan Valencian	
+ca-xv	# Catalan Valencian	
 sl	Slovenian	
 sr-rs	Serbian	Cyrillic
 ml	Malayalam	
@@ -70,7 +67,7 @@ no	Norwegian	Bokmal
 kw	# Cornish	
 fy-nl	Frisian	
 si	Sinhalese	
-bs	Bosnian	BOSNIA_HERZEGOVINA_LATIN
+bs	Bosnian	Bosnia Herzegovina Latin
 ka	Georgian
 et	Estonian
 uz	Uzbek

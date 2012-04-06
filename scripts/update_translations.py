@@ -98,7 +98,7 @@ def make_lang_ids(langs, lang_index):
     lang_ids = {}
     for cols in lang_index:
         if cols[1] and cols[2]:
-            id = "MAKELANGID(LANG_%s, SUBLANG_%s_%s)" % (cols[1], cols[1], cols[2])
+            id = "MAKELANGID(LANG_%s, SUBLANG_%s_%s)" % (cols[1], cols[1], cols[2].replace(" ", "_"))
         elif cols[1]:
             id = "_LANGID(LANG_%s)" % (cols[1])
         else:
