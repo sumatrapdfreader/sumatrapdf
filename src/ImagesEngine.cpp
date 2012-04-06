@@ -572,7 +572,7 @@ class CbxEngineImpl : public ImagesEngine, public CbxEngine, public json::ValueO
     friend CbxEngine;
 
 public:
-    CbxEngineImpl() : cbzFile(NULL), propAuthorIdx(-1) {
+    CbxEngineImpl() : cbzFile(NULL) {
         InitializeCriticalSection(&fileAccess);
     }
     virtual ~CbxEngineImpl();
@@ -616,8 +616,6 @@ protected:
     ScopedMem<TCHAR> propSummary;
     // temporary state needed for extracting metadata
     ScopedMem<TCHAR> propAuthorTmp;
-    int propAuthorIdx;
-    bool propAuthorPrimary;
 
     // used for lazily loading page images (only supported for .cbz files)
     CRITICAL_SECTION fileAccess;
@@ -770,12 +768,12 @@ void CbxEngineImpl::ParseComicInfoXml(const char *xmlData)
         }
         else if (tok->IsStartTag() && tok->NameIs("Writer") && (tok = parser.Next()) && tok->IsText()) {
             ScopedMem<char> value(ResolveHtmlEntities(tok->s, tok->sLen));
-            observe("/ComicBookInfo/1.0/credits[0]/person", value, json::Type_Number);
+            observe("/ComicBookInfo/1.0/credits[0]/person", value, json::Type_String);
             observe("/ComicBookInfo/1.0/credits[0]/primary", "true", json::Type_Bool);
         }
         else if (tok->IsStartTag() && tok->NameIs("Penciller") && (tok = parser.Next()) && tok->IsText()) {
             ScopedMem<char> value(ResolveHtmlEntities(tok->s, tok->sLen));
-            observe("/ComicBookInfo/1.0/credits[1]/person", value, json::Type_Number);
+            observe("/ComicBookInfo/1.0/credits[1]/person", value, json::Type_String);
             observe("/ComicBookInfo/1.0/credits[1]/primary", "true", json::Type_Bool);
         }
     }
@@ -800,24 +798,13 @@ bool CbxEngineImpl::observe(const char *path, const char *value, json::DataType 
         int idx = -1;
         const char *prop = str::Parse(path, "/ComicBookInfo/1.0/credits[%d]/", &idx);
         if (prop) {
-            // remember only primary authors
-            if (propAuthorIdx != idx) {
-                CrashIf(propAuthorIdx >= idx);
-                if (propAuthorTmp && propAuthorPrimary)
-                    propAuthors.Append(propAuthorTmp.StealData());
-                propAuthorTmp.Set(NULL);
-                propAuthorPrimary = false;
-            }
             if (json::Type_String == type && str::Eq(prop, "person"))
                 propAuthorTmp.Set(str::conv::FromUtf8(value));
-            else if (json::Type_Bool == type && str::Eq(prop, "primary"))
-                propAuthorPrimary = str::Eq(value, "true");
+            else if (json::Type_Bool == type && str::Eq(prop, "primary") && propAuthorTmp)
+                propAuthors.Append(propAuthorTmp.StealData());
         }
         return true;
     }
-    if (propAuthorTmp && propAuthorPrimary)
-        propAuthors.Append(propAuthorTmp.StealData());
-    propAuthorTmp.Set(NULL);
     // stop parsing once we have all desired information
     return !propTitle || propAuthors.Count() == 0 || !propCreator ||
            !propDate || str::FindChar(propDate, '/') <= propDate;
