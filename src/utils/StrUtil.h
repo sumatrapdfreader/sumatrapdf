@@ -175,4 +175,6 @@ inline bool ChrIsDigit(const WCHAR c)
   #define CF_T_TEXT CF_TEXT
 #endif
 
+#define UTF8_BOM "\xEF\xBB\xBF"
+
 #endif

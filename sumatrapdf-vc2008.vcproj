@@ -159,6 +159,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\HtmlFormatter.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\HtmlFormatter.h"
+					>
+				</File>
+				<File
 					RelativePath=".\src\ImagesEngine.cpp"
 					>
 				</File>
@@ -172,14 +180,6 @@
 				</File>
 				<File
 					RelativePath=".\src\MobiDoc.h"
-					>
-				</File>
-				<File
-					RelativePath=".\src\HtmlFormatter.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\src\HtmlFormatter.h"
 					>
 				</File>
 				<File
@@ -509,6 +509,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\utils\BencUtil_ut.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\src\utils\BitReader.cpp"
 					>
 				</File>
@@ -534,6 +538,18 @@
 				</File>
 				<File
 					RelativePath=".\src\utils\HtmlPullParser_ut.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\utils\JsonParser.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\utils\JsonParser.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\utils\JsonParser_ut.cpp"
 					>
 				</File>
 				<File

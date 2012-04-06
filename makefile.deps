@@ -254,9 +254,9 @@ $(OS)\HtmlFormatter.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\Sig
 $(OS)\HtmlFormatter.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\ZipUtil.h
 $(OS)\ImagesEngine.obj: ext\unrar\dll.hpp src\BaseEngine.h src\ImagesEngine.h
 $(OS)\ImagesEngine.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\FileUtil.h
-$(OS)\ImagesEngine.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\RefCounted.h
-$(OS)\ImagesEngine.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
-$(OS)\ImagesEngine.obj: src\utils\WinUtil.h src\utils\ZipUtil.h
+$(OS)\ImagesEngine.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\JsonParser.h
+$(OS)\ImagesEngine.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OS)\ImagesEngine.obj: src\utils\Vec.h src\utils\WinUtil.h src\utils\ZipUtil.h
 $(OS)\Install.obj: src\BaseEngine.h src\ifilter\PdfFilter.h src\previewer\PdfPreview.h
 $(OS)\Install.obj: src\installer\Installer.h src\installer\Resource.h src\utils\Allocator.h
 $(OS)\Install.obj: src\utils\BaseUtil.h src\utils\CmdLineParser.h src\utils\FileTransactions.h
@@ -497,6 +497,8 @@ $(OS)\WindowInfo.obj: src\utils\Vec.h src\utils\WinUtil.h src\WindowInfo.h
 $(OU)\BencUtil.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\BencUtil.h
 $(OU)\BencUtil.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\StrUtil.h
 $(OU)\BencUtil.obj: src\utils\Vec.h
+$(OU)\BencUtil_ut.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\BencUtil.h
+$(OU)\BencUtil_ut.obj: src\utils\RefCounted.h src\utils\StrUtil.h src\utils\Vec.h
 $(OU)\BitReader.obj: src\utils\BaseUtil.h src\utils\BitReader.h src\utils\RefCounted.h
 $(OU)\DbgHelpDyn.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\DbgHelpDyn.h
 $(OU)\DbgHelpDyn.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\RefCounted.h
@@ -529,7 +531,12 @@ $(OU)\HtmlWindow.obj: src\utils\WinUtil.h
 $(OU)\Http.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\FileUtil.h
 $(OU)\Http.obj: src\utils\GeomUtil.h src\utils\Http.h src\utils\RefCounted.h
 $(OU)\Http.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
+$(OU)\JsonParser.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\JsonParser.h
+$(OU)\JsonParser.obj: src\utils\RefCounted.h src\utils\StrUtil.h src\utils\Vec.h
+$(OU)\JsonParser_ut.obj: src\utils\JsonParser.h
 $(OU)\NoFreeAllocator.obj: src\utils\BaseUtil.h src\utils\NoFreeAllocator.h src\utils\RefCounted.h
+$(OU)\Sigslot_ut.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\RefCounted.h
+$(OU)\Sigslot_ut.obj: src\utils\Sigslot.h src\utils\StrUtil.h src\utils\Vec.h
 $(OU)\StrUtil.obj: src\utils\BaseUtil.h src\utils\RefCounted.h src\utils\Scoped.h
 $(OU)\StrUtil.obj: src\utils\StrUtil.h
 $(OU)\StrUtil_ut.obj: src\utils\BaseUtil.h src\utils\RefCounted.h src\utils\Scoped.h
@@ -549,7 +556,8 @@ $(OU)\UiMsg.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\RefCounted
 $(OU)\UiMsg.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\UiMsg.h
 $(OU)\UiMsg.obj: src\utils\Vec.h
 $(OU)\UtilTests.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\BencUtil.h
-$(OU)\UtilTests.obj: src\utils\DebugLog.h src\utils\FileUtil.h src\utils\GeomUtil.h
+$(OU)\UtilTests.obj: src\utils\BencUtil_ut.cpp src\utils\DebugLog.h src\utils\FileUtil.h
+$(OU)\UtilTests.obj: src\utils\GeomUtil.h src\utils\JsonParser.h src\utils\JsonParser_ut.cpp
 $(OU)\UtilTests.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\Sigslot.h
 $(OU)\UtilTests.obj: src\utils\Sigslot_ut.cpp src\utils\SimpleLog.h src\utils\StrUtil.h
 $(OU)\UtilTests.obj: src\utils\StrUtil_ut.cpp src\utils\Vec.h src\utils\Vec_ut.cpp

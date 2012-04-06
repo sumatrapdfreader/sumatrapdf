@@ -71,7 +71,7 @@ unsigned char *ChmDoc::GetData(const char *fileName, size_t *lenOut)
 char *ChmDoc::ToUtf8(const unsigned char *text)
 {
     const char *s = (char *)text;
-    if (str::StartsWith(s, "\xEF\xBB\xBF"))
+    if (str::StartsWith(s, UTF8_BOM))
         return str::Dup(s + 3);
     if (CP_UTF8 == codepage)
         return str::Dup(s);
@@ -363,7 +363,7 @@ bool ChmDoc::ParseToc(EbookTocVisitor *visitor)
     HtmlParser p;
     UINT cp = codepage;
     // detect UTF-8 content by BOM
-    if (str::StartsWith(html, "\xEF\xBB\xBF")) {
+    if (str::StartsWith(html, UTF8_BOM)) {
         html += 3;
         cp = CP_UTF8;
     }

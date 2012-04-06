@@ -2608,7 +2608,7 @@ static void OnMenuSaveAs(WindowInfo& win)
         }
 
         ScopedMem<char> textUTF8(str::conv::ToUtf8(text.LendData()));
-        ScopedMem<char> textUTF8BOM(str::Join("\xEF\xBB\xBF", textUTF8));
+        ScopedMem<char> textUTF8BOM(str::Join(UTF8_BOM, textUTF8));
         ok = file::WriteAll(realDstFileName, textUTF8BOM, str::Len(textUTF8BOM));
         if (!ok)
             MessageBoxWarning(win.hwndFrame, _TR("Failed to save a file"), _TR("Warning"));

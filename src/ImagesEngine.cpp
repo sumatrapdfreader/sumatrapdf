@@ -8,6 +8,7 @@
 #include "Vec.h"
 #include "Scoped.h"
 #include "ZipUtil.h"
+#include "JsonParser.h"
 
 #include "../ext/unrar/dll.hpp"
 
@@ -565,7 +566,7 @@ ImageDirEngine *ImageDirEngine::CreateFromFile(const TCHAR *fileName)
 
 ///// CbxEngine handles comic book files (either .cbz or .cbr) /////
 
-class CbxEngineImpl : public ImagesEngine, public CbxEngine {
+class CbxEngineImpl : public ImagesEngine, public CbxEngine, public json::ValueObserver {
     friend CbxEngine;
 
 public:
@@ -587,6 +588,11 @@ public:
     }
     virtual RectD PageMediabox(int pageNo);
 
+    virtual TCHAR *GetProperty(char *name);
+
+    // json::ValueObserver
+    virtual bool observe(const char *path, const char *value, json::DataType type);
+
 protected:
     bool LoadCbzFile(const TCHAR *fileName);
     bool LoadCbzStream(IStream *stream);
@@ -597,6 +603,11 @@ protected:
     char *GetImageData(int pageNo, size_t& len);
 
     Vec<RectD> mediaboxes;
+
+    ScopedMem<TCHAR> propTitle;
+    ScopedMem<TCHAR> propDate;
+    ScopedMem<TCHAR> propAuthor;
+    ScopedMem<TCHAR> propCreator;
 
     // used for lazily loading page images (only supported for .cbz files)
     CRITICAL_SECTION fileAccess;
@@ -696,7 +707,11 @@ bool CbxEngineImpl::FinishLoadingCbz()
     }
     assert(allFileNames.Count() == cbzFile->GetFileCount());
 
-    // TODO: any meta-information available?
+    // cf. http://code.google.com/p/comicbookinfo/
+    ScopedMem<char> comment(cbzFile->GetComment());
+    if (comment)
+        json::Parse(comment, this);
+    // TODO: also read ComicInfo.xml if it exists
 
     Vec<const TCHAR *> pageFileNames;
     for (const TCHAR **fn = allFileNames.IterStart(); fn; fn = allFileNames.IterNext()) {
@@ -715,6 +730,36 @@ bool CbxEngineImpl::FinishLoadingCbz()
     mediaboxes.AppendBlanks(fileIdxs.Count());
 
     return true;
+}
+
+// extract ComicBookInfo metadata
+bool CbxEngineImpl::observe(const char *path, const char *value, json::DataType type)
+{
+    if (json::Type_String == type && str::Eq(path, "/ComicBookInfo/1.0/title"))
+        propTitle.Set(str::conv::FromUtf8(value));
+    // TODO: extract all primary authors instead?
+    else if (json::Type_String == type && str::Eq(path, "/ComicBookInfo/1.0/credits[0]/person"))
+        propAuthor.Set(str::conv::FromUtf8(value));
+    else if (json::Type_Number == type && str::Eq(path, "/ComicBookInfo/1.0/publicationYear"))
+        propDate.Set(str::Format(_T("%s/%d"), propDate ? propDate : _T(""), atoi(value)));
+    else if (json::Type_Number == type && str::Eq(path, "/ComicBookInfo/1.0/publicationMonth"))
+        propDate.Set(str::Format(_T("%d%s"), atoi(value), propDate ? propDate : _T("")));
+    else if (json::Type_String == type && str::Eq(path, "/appID"))
+        propCreator.Set(str::conv::FromUtf8(value));
+    return true;
+}
+
+TCHAR *CbxEngineImpl::GetProperty(char *name)
+{
+    if (str::Eq(name, "Title"))
+        return propTitle ? str::Dup(propTitle) : NULL;
+    if (str::Eq(name, "Author"))
+        return propAuthor ? str::Dup(propAuthor) : NULL;
+    if (str::Eq(name, "CreationDate"))
+        return propDate ? str::Dup(propDate) : NULL;
+    if (str::Eq(name, "Creator"))
+        return propCreator ? str::Dup(propCreator) : NULL;
+    return NULL;
 }
 
 class ImagesPage {

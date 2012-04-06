@@ -149,7 +149,7 @@ UTILS_OBJS = \
 	$(OU)\TrivialHtmlParser.obj $(OU)\HtmlWindow.obj $(OU)\GdiPlusUtil.obj \
 	$(OU)\DirIter.obj $(OU)\BitReader.obj $(OU)\HtmlPullParser.obj \
 	$(OU)\HtmlPrettyPrint.obj $(OU)\ThreadUtil.obj $(OU)\DebugLog.obj \
-	$(OU)\UiMsg.obj $(OU)\DbgHelpDyn.obj
+	$(OU)\UiMsg.obj $(OU)\DbgHelpDyn.obj $(OU)\JsonParser.obj
 
 # requires either MuPDF/libmupdf or $(ZLIB_OBJS)
 ZIP_OBJS = \

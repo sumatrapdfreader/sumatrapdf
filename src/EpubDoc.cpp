@@ -681,7 +681,7 @@ static char *TextFindEmailEnd(str::Str<char>& htmlData, char *curr, bool fromAt=
 bool TxtDoc::Load()
 {
     ScopedMem<char> text(file::ReadAll(fileName, NULL));
-    if (text && !str::StartsWith(text.Get(), "\xEF\xBB\xBF")) {
+    if (text && !str::StartsWith(text.Get(), UTF8_BOM)) {
         ScopedMem<TCHAR> tmp(str::conv::FromAnsi(text));
         text.Set(str::conv::ToUtf8(tmp));
     }
@@ -689,7 +689,7 @@ bool TxtDoc::Load()
         return false;
 
     char *curr = text;
-    if (str::StartsWith(text.Get(), "\xEF\xBB\xBF"))
+    if (str::StartsWith(text.Get(), UTF8_BOM))
         curr += 3;
     char *linkEnd = NULL;
 

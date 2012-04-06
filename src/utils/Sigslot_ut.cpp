@@ -1,3 +1,8 @@
+/* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
+   License: Simplified BSD (see COPYING.BSD) */
+
+#include "Sigslot.h"
+
 // for a lack of a better place, simple tests to make sure sigslot compiles
 class SigSlotSender {
 public:
@@ -139,4 +144,3 @@ static void SigSlotTest()
     SigSlotTestEmit(s);
     SigSlotTestAssertCounts(r, 2);
 }
-
