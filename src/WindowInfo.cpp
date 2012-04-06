@@ -267,7 +267,7 @@ void LinkHandler::GotoLink(PageDestination *link)
     else if (Dest_ZoomToDialog == type)
         PostMessage(owner->hwndFrame, WM_COMMAND, IDM_ZOOM_CUSTOM, 0);
     else
-        CrashIf(true);
+        CrashIf(Dest_None != type);
 }
 
 void LinkHandler::ScrollTo(PageDestination *dest)

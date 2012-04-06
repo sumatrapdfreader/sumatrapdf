@@ -18,8 +18,6 @@ using namespace Gdiplus;
 #define WM_APP_REPAINT_TOC     (WM_APP + 1)
 #endif
 
-static void *gOnTocTreeNotifyAddr = NULL;
-
 static void TreeView_ExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, bool subtree=false)
 {
     while (hItem) {
@@ -33,19 +31,14 @@ static void TreeView_ExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, b
     }
 }
 
-static void CustomizeTocInfoTip(LPNMTVGETINFOTIP nmit, void *callerAddr)
+static void CustomizeTocInfoTip(LPNMTVGETINFOTIP nmit)
 {
-    // note: a hack trying to fix 
-    // http://code.google.com/p/sumatrapdf/issues/detail?id=1862
-    if (callerAddr != gOnTocTreeNotifyAddr)
-        return;
-
     DocTocItem *tocItem = (DocTocItem *)nmit->lParam;
     ScopedMem<TCHAR> path(tocItem->GetLink() ? tocItem->GetLink()->GetDestValue() : NULL);
     if (!path)
         return;
 
-    str::Str<TCHAR> infotip(INFOTIPSIZE);
+    str::Str<TCHAR> infotip;
 
     RECT rcLine, rcLabel;
     HWND hTV = nmit->hdr.hwndFrom;
@@ -53,6 +46,7 @@ static void CustomizeTocInfoTip(LPNMTVGETINFOTIP nmit, void *callerAddr)
     TreeView_GetItemRect(hTV, nmit->hItem, &rcLine, FALSE);
     TreeView_GetItemRect(hTV, nmit->hItem, &rcLabel, TRUE);
     if (rcLine.right + 2 < rcLabel.right) {
+        infotip.EnsureCap(INFOTIPSIZE);
         TVITEM item;
         item.hItem = nmit->hItem;
         item.mask = TVIF_TEXT;
@@ -361,9 +355,6 @@ void LoadTocTree(WindowInfo *win)
 
 static LRESULT OnTocTreeNotify(WindowInfo *win, LPNMTREEVIEW pnmtv)
 {
-    if (!gOnTocTreeNotifyAddr)
-        gOnTocTreeNotifyAddr = (void*)&OnTocTreeNotify;
-
     switch (pnmtv->hdr.code)
     {
         case TVN_SELCHANGED:
@@ -422,7 +413,7 @@ static LRESULT OnTocTreeNotify(WindowInfo *win, LPNMTREEVIEW pnmtv)
 #endif
 
         case TVN_GETINFOTIP:
-            CustomizeTocInfoTip((LPNMTVGETINFOTIP)pnmtv, (void*)&OnTocTreeNotify);
+            CustomizeTocInfoTip((LPNMTVGETINFOTIP)pnmtv);
             break;
     }
     return -1;
@@ -510,8 +501,7 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
 
         case WM_NOTIFY:
             if (LOWORD(wParam) == IDC_TOC_TREE) {
-                LPNMTREEVIEW pnmtv = (LPNMTREEVIEW) lParam;
-                LRESULT res = OnTocTreeNotify(win, pnmtv);
+                LRESULT res = OnTocTreeNotify(win, (LPNMTREEVIEW)lParam);
                 if (res != -1)
                     return res;
             }
