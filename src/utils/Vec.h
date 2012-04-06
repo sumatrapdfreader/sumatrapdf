@@ -167,7 +167,7 @@ public:
         memcpy(dst, src, count * sizeof(T));
     }
 
-    // TODO: bad name, it doesn't append anything; AllocateAtEnd()?
+    // appends count blank (i.e. zeroed-out) elements at the end
     // like EnsureEndPadding() but also increases the length
     T* AppendBlanks(size_t count) {
         return MakeSpaceAt(len, count);
