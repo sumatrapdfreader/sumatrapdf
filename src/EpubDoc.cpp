@@ -590,6 +590,94 @@ Fb2Doc *Fb2Doc::CreateFromFile(const TCHAR *fileName)
 
 TxtDoc::TxtDoc(const TCHAR *fileName) : fileName(str::Dup(fileName)) { }
 
+static inline void AppendChar(str::Str<char>& htmlData, char c)
+{
+    switch (c) {
+    case '&': htmlData.Append("&amp;"); break;
+    case '<': htmlData.Append("&lt;"); break;
+    case '"': htmlData.Append("&quot;"); break;
+    default:  htmlData.Append(c); break;
+    }
+}
+
+static char *TextFindLinkEnd(str::Str<char>& htmlData, char *curr, bool fromWww=false)
+{
+    char *end = curr;
+    // look for the end of the URL (ends in a space preceded maybe by interpunctuation)
+    for (; *end && !str::IsWs(*end); end++);
+    if (',' == end[-1] || '.' == end[-1])
+        end--;
+    // also ignore a closing parenthesis, if the URL doesn't contain any opening one
+    if (')' == end[-1] && (!str::FindChar(curr, '(') || str::FindChar(curr, '(') >= end))
+        end--;
+
+    if (fromWww && (end - curr <= 4 || !str::FindChar(curr + 5, '.') ||
+                    str::FindChar(curr + 5, '.') >= end)) {
+        // ignore www. links without a top-level domain
+        return NULL;
+    }
+
+    htmlData.Append("<a href=\"");
+    if (fromWww)
+        htmlData.Append("http://");
+    for (; curr < end; curr++) {
+        AppendChar(htmlData, *curr);
+    }
+    htmlData.Append("\">");
+
+    return end;
+}
+
+// cf. http://weblogs.mozillazine.org/gerv/archives/2011/05/html5_email_address_regexp.html
+inline bool IsEmailUsernameChar(char c)
+{
+    return isalnum((unsigned char)c) || str::FindChar(".!#$%&'*+-=?^`{|}~", c);
+}
+inline bool IsEmailDomainChar(char c)
+{
+    return isalnum((unsigned char)c) || '-' == c;
+}
+
+static char *TextFindEmailEnd(str::Str<char>& htmlData, char *curr, bool fromAt=false)
+{
+    ScopedMem<char> beforeAt;
+    char *end = curr;
+    if (fromAt) {
+        if (htmlData.Count() == 0 || !IsEmailUsernameChar(htmlData.Last()))
+            return NULL;
+        size_t idx = htmlData.Count();
+        for (; idx > 1 && IsEmailUsernameChar(htmlData.At(idx - 1)); idx--);
+        beforeAt.Set(str::Dup(&htmlData.At(idx)));
+        htmlData.RemoveAt(idx, htmlData.Count() - idx);
+    } else {
+        end = curr + 7; // skip mailto:
+        if (!IsEmailUsernameChar(*end))
+            return NULL;
+        for (; IsEmailUsernameChar(*end); end++);
+    }
+
+    if (*end != '@' || !IsEmailDomainChar(*(end + 1)))
+        return NULL;
+    for (end++; IsEmailDomainChar(*end); end++);
+    if ('.' != *end || !IsEmailDomainChar(*(end + 1)))
+        return NULL;
+    do {
+        for (end++; IsEmailDomainChar(*end); end++);
+    } while ('.' == *end && IsEmailDomainChar(*(end + 1)));
+
+    htmlData.Append("<a href=\"");
+    if (fromAt)
+        htmlData.AppendFmt("mailto:%s", beforeAt);
+    for (; curr < end; curr++) {
+        AppendChar(htmlData, *curr);
+    }
+    htmlData.Append("\">");
+    if (fromAt)
+        htmlData.Append(beforeAt);
+
+    return end;
+}
+
 bool TxtDoc::Load()
 {
     ScopedMem<char> text(file::ReadAll(fileName, NULL));
@@ -603,17 +691,33 @@ bool TxtDoc::Load()
     char *curr = text;
     if (str::StartsWith(text.Get(), "\xEF\xBB\xBF"))
         curr += 3;
+    char *linkEnd = NULL;
 
     htmlData.Append("<pre>");
     while (*curr) {
-        if ('<' == *curr)
-            htmlData.Append("&lt;");
-        else if ('&' == *curr)
-            htmlData.Append("&amp;");
-        else
-            htmlData.Append(*curr);
+        // similar logic to LinkifyText in PdfEngine.cpp
+        if (linkEnd == curr) {
+            htmlData.Append("</a>");
+            linkEnd = NULL;
+        }
+        else if (linkEnd)
+            /* don't check for hyperlinks inside a link */;
+        else if ('@' == *curr)
+            linkEnd = TextFindEmailEnd(htmlData, curr, true);
+        else if (curr > text && ('/' == curr[-1] || isalnum((unsigned char)curr[-1])))
+            /* don't check for a link at this position */;
+        else if ('h' == *curr && str::Parse(curr, "http%?s://"))
+            linkEnd = TextFindLinkEnd(htmlData, curr);
+        else if ('w' == *curr && str::StartsWith(curr, "www."))
+            linkEnd = TextFindLinkEnd(htmlData, curr, true);
+        else if ('m' == *curr && str::StartsWith(curr, "mailto:"))
+            linkEnd = TextFindEmailEnd(htmlData, curr);
+
+        AppendChar(htmlData, *curr);
         curr++;
     }
+    if (linkEnd)
+        htmlData.Append("</a>");
     htmlData.Append("</pre>");
     
     return true;

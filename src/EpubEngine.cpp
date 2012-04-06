@@ -364,7 +364,7 @@ TCHAR *EbookEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_o
         RectI bbox = GetInstrBbox(i, pageBorder);
         switch (i->type) {
         case InstrString:
-            if (coords.Count() > 0 && bbox.x <= coords.Last().BR().x) {
+            if (coords.Count() > 0 && bbox.x < coords.Last().BR().x) {
                 content.Append(lineSep);
                 coords.AppendBlanks(str::Len(lineSep));
                 CrashIf(*lineSep && !coords.Last().IsEmpty());

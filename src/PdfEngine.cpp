@@ -454,7 +454,7 @@ static TCHAR *LinkifyMultilineText(LinkRectList *list, TCHAR *pageText, TCHAR *s
 // cf. http://weblogs.mozillazine.org/gerv/archives/2011/05/html5_email_address_regexp.html
 inline bool IsEmailUsernameChar(TCHAR c)
 {
-    return _istalnum(c) || str::FindChar(_T(".!#$%&'*+-/=?^`{|}~"), c);
+    return _istalnum(c) || str::FindChar(_T(".!#$%&'*+-=?^`{|}~"), c);
 }
 inline bool IsEmailDomainChar(TCHAR c)
 {
@@ -514,7 +514,7 @@ static LinkRectList *LinkifyText(TCHAR *pageText, RectI *coords)
             multiline = LinkifyCheckMultiline(pageText, end, coords);
             protocol = _T("http://");
             // ignore www. links without a top-level domain
-            if (end - start <= 4 || !multiline && (!_tcschr(start + 5, '.') || _tcschr(start + 5, '.') > end))
+            if (end - start <= 4 || !multiline && (!_tcschr(start + 5, '.') || _tcschr(start + 5, '.') >= end))
                 end = NULL;
         }
         else if ('m' == *start && str::StartsWith(start, _T("mailto:"))) {
