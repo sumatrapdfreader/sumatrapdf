@@ -25,13 +25,37 @@ protected:
 
     size_t      len;
     size_t      cap;
-    size_t      initialCap;
+    size_t      capacityHint;
     T *         els;
     T           buf[INTERNAL_BUF_SIZE];
     Allocator * allocator;
 
     // state of the IterStart()/IterNext() iterator
     T *         iterCurr;
+
+    void EnsureCap(size_t needed) {
+        if (cap >= needed)
+            return;
+
+        size_t newCap = cap * 2;
+        if (needed > newCap)
+            newCap = needed;
+        if (newCap < capacityHint)
+            newCap = capacityHint;
+
+        size_t newElCount = newCap + PADDING;
+        CrashAlwaysIf(newElCount >= SIZE_MAX / sizeof(T));
+
+        size_t allocSize = newElCount * sizeof(T);
+        size_t newPadding = allocSize - len * sizeof(T);
+        if (buf == els)
+            els = (T *)Allocator::Dup(allocator, buf, len * sizeof(T), newPadding);
+        else
+            els = (T *)Allocator::Realloc(allocator, els, allocSize);
+        CrashAlwaysIf(!els);
+        memset(els + len, 0, newPadding);
+        cap = newCap;
+    }
 
     T* MakeSpaceAt(size_t idx, size_t count) {
         EnsureCap(len + count);
@@ -52,8 +76,8 @@ protected:
 
 public:
     // allocator is not owned by Vec and must outlive it
-    Vec(size_t initCap=0, Allocator *allocator=NULL)
-        : initialCap(initCap), allocator(allocator)
+    Vec(size_t capHint=0, Allocator *allocator=NULL)
+        : capacityHint(capHint), allocator(allocator)
     {
         els = buf;
         Reset();
@@ -65,7 +89,7 @@ public:
 
     // ensure that a Vec never shares its els buffer with another after a clone/copy
     Vec(const Vec& orig) {
-        initialCap = 0;
+        capacityHint = 0;
         els = buf;
         // note: we don't inherit allocator as it's not needed for
         // our use cases
@@ -92,30 +116,6 @@ public:
         FreeEls();
         els = buf;
         memset(buf, 0, sizeof(buf));
-    }
-
-    void EnsureCap(size_t needed) {
-        if (cap >= needed)
-            return;
-
-        size_t newCap = cap * 2;
-        if (needed > newCap)
-            newCap = needed;
-        if (initialCap > newCap)
-            newCap = initialCap;
-
-        size_t newElCount = newCap + PADDING;
-        CrashAlwaysIf(newElCount >= SIZE_MAX / sizeof(T));
-
-        size_t allocSize = newElCount * sizeof(T);
-        size_t newPadding = allocSize - len * sizeof(T);
-        if (buf == els)
-            els = (T *)Allocator::Dup(allocator, buf, len * sizeof(T), newPadding);
-        else
-            els = (T *)Allocator::Realloc(allocator, els, allocSize);
-        CrashAlwaysIf(!els);
-        memset(els + len, 0, newPadding);
-        cap = newCap;
     }
 
     // ensures empty space at the end of the list where items can
@@ -308,7 +308,7 @@ template <typename T>
 
 class Str : public Vec<T> {
 public:
-    Str(size_t initCap=0, Allocator *allocator=NULL) : Vec(initCap, allocator) { }
+    Str(size_t capHint=0, Allocator *allocator=NULL) : Vec(capHint, allocator) { }
 
     void Append(T c)
     {

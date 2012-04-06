@@ -46,7 +46,7 @@ static void CustomizeTocInfoTip(LPNMTVGETINFOTIP nmit)
     TreeView_GetItemRect(hTV, nmit->hItem, &rcLine, FALSE);
     TreeView_GetItemRect(hTV, nmit->hItem, &rcLabel, TRUE);
     if (rcLine.right + 2 < rcLabel.right) {
-        infotip.EnsureCap(INFOTIPSIZE);
+        infotip.EnsureEndPadding(INFOTIPSIZE);
         TVITEM item;
         item.hItem = nmit->hItem;
         item.mask = TVIF_TEXT;
