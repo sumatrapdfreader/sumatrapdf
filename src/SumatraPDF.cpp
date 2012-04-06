@@ -4924,41 +4924,51 @@ static void DrainUiMsgQueue()
     }
 }
 
-int RunMessageLoop()
+static HACCEL gAccelTable;
+
+// return true if should exit
+static bool ProcessAllMessages()
 {
     MSG msg = { 0 };
-
     WindowInfo *win = NULL;
-    HACCEL hAccelTable = LoadAccelerators(ghinst, MAKEINTRESOURCE(IDC_SUMATRAPDF));
 
+    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+        if (msg.message == WM_QUIT)
+            return true;
+
+#ifndef THREAD_BASED_FILEWATCH
+        if (NULL == msg.hwnd && WM_TIMER == msg.message && timerID == msg.wParam) {
+            RefreshUpdatedFiles();
+            continue;
+        }
+#endif
+        // dispatch the accelerator to the correct window
+        win = FindWindowInfoByHwnd(msg.hwnd);
+        HWND accHwnd = win ? win->hwndFrame : msg.hwnd;
+        if (TranslateAccelerator(accHwnd, gAccelTable, &msg))
+            continue;
+
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+    return false;
+}
+
+static int RunMessageLoop()
+{
+    gAccelTable = LoadAccelerators(ghinst, MAKEINTRESOURCE(IDC_SUMATRAPDF));
     for (;;) {
-        DWORD res = WAIT_TIMEOUT;
         HANDLE handles[MAXIMUM_WAIT_OBJECTS];
         DWORD handleCount = 0;
         handles[handleCount++] = uimsg::GetQueueEvent();
         CrashIf(handleCount >= MAXIMUM_WAIT_OBJECTS);
-        res = MsgWaitForMultipleObjects(handleCount, handles, FALSE, INFINITE, QS_ALLINPUT);
-        if (res == WAIT_OBJECT_0)
+        DWORD res = MsgWaitForMultipleObjects(handleCount, handles, FALSE, INFINITE, QS_ALLINPUT);
+        if (res == WAIT_OBJECT_0) {
             DispatchUiMessages();
-
-        while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-            if (msg.message == WM_QUIT)
-                return (int)msg.wParam;
-
-#ifndef THREAD_BASED_FILEWATCH
-            if (NULL == msg.hwnd && WM_TIMER == msg.message && timerID == msg.wParam) {
-                RefreshUpdatedFiles();
-                continue;
-            }
-#endif
-            // Dispatch the accelerator to the correct window
-            win = FindWindowInfoByHwnd(msg.hwnd);
-            HWND accHwnd = win ? win->hwndFrame : msg.hwnd;
-            if (TranslateAccelerator(accHwnd, hAccelTable, &msg))
-                continue;
-
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
+        } else {
+            bool shouldExit = ProcessAllMessages();
+            if (shouldExit)
+                return 0;
         }
         // process these messages here so that we don't have to add this
         // handling to every WndProc that might receive those messages
@@ -4967,7 +4977,7 @@ int RunMessageLoop()
         gUIThreadMarshaller.Execute();
         DispatchUiMessages();
     }
-    return (int)msg.wParam;
+    return 0;
 }
 
 void GetProgramInfo(str::Str<char>& s)
