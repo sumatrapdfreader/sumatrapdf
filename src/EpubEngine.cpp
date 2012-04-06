@@ -1319,18 +1319,30 @@ Chm2Engine *Chm2Engine::CreateFromFile(const TCHAR *fileName)
 /* formatting extensions for TXT */
 
 class TxtFormatter : public HtmlFormatter {
+protected:
+    void HandleHtmlTag_Txt(HtmlToken *t);
+
 public:
     TxtFormatter(HtmlFormatterArgs *args) : HtmlFormatter(args) { }
 
     Vec<HtmlPage*> *FormatAllPages();
 };
 
+void TxtFormatter::HandleHtmlTag_Txt(HtmlToken *t)
+{
+    HtmlTag tag = FindTag(t);
+    if (Tag_Pagebreak == tag)
+        ForceNewPage();
+    else
+        HandleHtmlTag(t);
+}
+
 Vec<HtmlPage*> *TxtFormatter::FormatAllPages()
 {
     HtmlToken *t;
     while ((t = htmlParser->Next()) && !t->IsError()) {
         if (t->IsTag())
-            HandleHtmlTag(t);
+            HandleHtmlTag_Txt(t);
         else
             HandleText(t);
     }

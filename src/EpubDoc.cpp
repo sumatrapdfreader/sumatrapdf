@@ -713,6 +713,16 @@ bool TxtDoc::Load()
         else if ('m' == *curr && str::StartsWith(curr, "mailto:"))
             linkEnd = TextFindEmailEnd(htmlData, curr);
 
+        // RFCs use (among others) form feeds as page separators
+        if ('\f' == *curr && (curr == text || '\n' == *(curr - 1)) &&
+            (!*(curr + 1) || '\r' == *(curr + 1) || '\n' == *(curr + 1))) {
+            // only insert pagebreaks if not at the very beginning or end
+            if (curr > text && *(curr + 2) && (*(curr + 3) || *(curr + 2) != '\n'))
+                htmlData.Append("<pagebreak />");
+            curr++;
+            continue;
+        }
+
         AppendChar(htmlData, *curr);
         curr++;
     }
