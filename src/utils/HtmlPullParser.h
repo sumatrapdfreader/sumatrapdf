@@ -192,5 +192,6 @@ AlignAttr   GetAlignAttrByName(const char *attr, size_t len);
 
 char *      PrettyPrintHtml(const char *s, size_t len, size_t& lenOut);
 const char *ResolveHtmlEntities(const char *s, const char *end, Allocator *alloc);
+char *      ResolveHtmlEntities(const char *s, size_t len);
 
 #endif

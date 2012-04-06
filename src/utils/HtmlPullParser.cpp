@@ -228,6 +228,15 @@ const char *ResolveHtmlEntities(const char *s, const char *end, Allocator *alloc
     return (const char*)res;
 }
 
+// convenience function for the above that always allocates
+char *ResolveHtmlEntities(const char *s, size_t len)
+{
+    const char *tmp = ResolveHtmlEntities(s, s + len, NULL);
+    if (tmp == s)
+        return str::DupN(s, len);
+    return (char *)tmp;
+}
+
 static bool StrLenIs(const char *s, size_t len, const char *s2)
 {
     return str::Len(s2) == len && str::StartsWithI(s, s2);

@@ -9,6 +9,8 @@
 #include "Scoped.h"
 #include "ZipUtil.h"
 #include "JsonParser.h"
+#include "HtmlPullParser.h"
+#include "Allocator.h"
 
 #include "../ext/unrar/dll.hpp"
 
@@ -570,7 +572,7 @@ class CbxEngineImpl : public ImagesEngine, public CbxEngine, public json::ValueO
     friend CbxEngine;
 
 public:
-    CbxEngineImpl() : cbzFile(NULL) {
+    CbxEngineImpl() : cbzFile(NULL), propAuthorIdx(-1) {
         InitializeCriticalSection(&fileAccess);
     }
     virtual ~CbxEngineImpl();
@@ -597,6 +599,7 @@ protected:
     bool LoadCbzFile(const TCHAR *fileName);
     bool LoadCbzStream(IStream *stream);
     bool FinishLoadingCbz();
+    void ParseComicInfoXml(const char *xmlData);
     bool LoadCbrFile(const TCHAR *fileName);
 
     virtual Bitmap *LoadImage(int pageNo);
@@ -604,10 +607,17 @@ protected:
 
     Vec<RectD> mediaboxes;
 
+    // extracted metadata
     ScopedMem<TCHAR> propTitle;
+    StrVec propAuthors;
     ScopedMem<TCHAR> propDate;
-    ScopedMem<TCHAR> propAuthor;
+    ScopedMem<TCHAR> propModDate;
     ScopedMem<TCHAR> propCreator;
+    ScopedMem<TCHAR> propSummary;
+    // temporary state needed for extracting metadata
+    ScopedMem<TCHAR> propAuthorTmp;
+    int propAuthorIdx;
+    bool propAuthorPrimary;
 
     // used for lazily loading page images (only supported for .cbz files)
     CRITICAL_SECTION fileAccess;
@@ -707,11 +717,14 @@ bool CbxEngineImpl::FinishLoadingCbz()
     }
     assert(allFileNames.Count() == cbzFile->GetFileCount());
 
+    // cf. http://comicrack.cyolito.com/downloads/comicrack/ComicRack/Support-Files/ComicInfoSchema.zip/
+    ScopedMem<char> metadata(cbzFile->GetFileData(_T("ComicInfo.xml")));
+    if (metadata)
+        ParseComicInfoXml(metadata);
     // cf. http://code.google.com/p/comicbookinfo/
-    ScopedMem<char> comment(cbzFile->GetComment());
-    if (comment)
-        json::Parse(comment, this);
-    // TODO: also read ComicInfo.xml if it exists
+    metadata.Set(cbzFile->GetComment());
+    if (metadata)
+        json::Parse(metadata, this);
 
     Vec<const TCHAR *> pageFileNames;
     for (const TCHAR **fn = allFileNames.IterStart(); fn; fn = allFileNames.IterNext()) {
@@ -732,21 +745,82 @@ bool CbxEngineImpl::FinishLoadingCbz()
     return true;
 }
 
+// extract ComicInfo.xml metadata
+void CbxEngineImpl::ParseComicInfoXml(const char *xmlData)
+{
+    PoolAllocator allocator;
+    HtmlPullParser parser(xmlData, str::Len(xmlData));
+    HtmlToken *tok;
+    while ((tok = parser.Next()) && !tok->IsError()) {
+        if (tok->IsStartTag() && tok->NameIs("Title") && (tok = parser.Next()) && tok->IsText()) {
+            ScopedMem<char> value(ResolveHtmlEntities(tok->s, tok->sLen));
+            observe("/ComicBookInfo/1.0/title", value, json::Type_String);
+        }
+        else if (tok->IsStartTag() && tok->NameIs("Year") && (tok = parser.Next()) && tok->IsText()) {
+            ScopedMem<char> value(ResolveHtmlEntities(tok->s, tok->sLen));
+            observe("/ComicBookInfo/1.0/publicationYear", value, json::Type_Number);
+        }
+        else if (tok->IsStartTag() && tok->NameIs("Month") && (tok = parser.Next()) && tok->IsText()) {
+            ScopedMem<char> value(ResolveHtmlEntities(tok->s, tok->sLen));
+            observe("/ComicBookInfo/1.0/publicationMonth", value, json::Type_Number);
+        }
+        if (tok->IsStartTag() && tok->NameIs("Summary") && (tok = parser.Next()) && tok->IsText()) {
+            ScopedMem<char> value(ResolveHtmlEntities(tok->s, tok->sLen));
+            observe("/X-summary", value, json::Type_String);
+        }
+        else if (tok->IsStartTag() && tok->NameIs("Writer") && (tok = parser.Next()) && tok->IsText()) {
+            ScopedMem<char> value(ResolveHtmlEntities(tok->s, tok->sLen));
+            observe("/ComicBookInfo/1.0/credits[0]/person", value, json::Type_Number);
+            observe("/ComicBookInfo/1.0/credits[0]/primary", "true", json::Type_Bool);
+        }
+        else if (tok->IsStartTag() && tok->NameIs("Penciller") && (tok = parser.Next()) && tok->IsText()) {
+            ScopedMem<char> value(ResolveHtmlEntities(tok->s, tok->sLen));
+            observe("/ComicBookInfo/1.0/credits[1]/person", value, json::Type_Number);
+            observe("/ComicBookInfo/1.0/credits[1]/primary", "true", json::Type_Bool);
+        }
+    }
+}
+
 // extract ComicBookInfo metadata
 bool CbxEngineImpl::observe(const char *path, const char *value, json::DataType type)
 {
     if (json::Type_String == type && str::Eq(path, "/ComicBookInfo/1.0/title"))
         propTitle.Set(str::conv::FromUtf8(value));
-    // TODO: extract all primary authors instead?
-    else if (json::Type_String == type && str::Eq(path, "/ComicBookInfo/1.0/credits[0]/person"))
-        propAuthor.Set(str::conv::FromUtf8(value));
     else if (json::Type_Number == type && str::Eq(path, "/ComicBookInfo/1.0/publicationYear"))
         propDate.Set(str::Format(_T("%s/%d"), propDate ? propDate : _T(""), atoi(value)));
     else if (json::Type_Number == type && str::Eq(path, "/ComicBookInfo/1.0/publicationMonth"))
         propDate.Set(str::Format(_T("%d%s"), atoi(value), propDate ? propDate : _T("")));
     else if (json::Type_String == type && str::Eq(path, "/appID"))
         propCreator.Set(str::conv::FromUtf8(value));
-    return true;
+    else if (json::Type_String == type && str::Eq(path, "/lastModified"))
+        propModDate.Set(str::conv::FromUtf8(value));
+    else if (json::Type_String == type && str::Eq(path, "/X-summary"))
+        propSummary.Set(str::conv::FromUtf8(value));
+    else if (str::StartsWith(path, "/ComicBookInfo/1.0/credits[")) {
+        int idx = -1;
+        const char *prop = str::Parse(path, "/ComicBookInfo/1.0/credits[%d]/", &idx);
+        if (prop) {
+            // remember only primary authors
+            if (propAuthorIdx != idx) {
+                CrashIf(propAuthorIdx >= idx);
+                if (propAuthorTmp && propAuthorPrimary)
+                    propAuthors.Append(propAuthorTmp.StealData());
+                propAuthorTmp.Set(NULL);
+                propAuthorPrimary = false;
+            }
+            if (json::Type_String == type && str::Eq(prop, "person"))
+                propAuthorTmp.Set(str::conv::FromUtf8(value));
+            else if (json::Type_Bool == type && str::Eq(prop, "primary"))
+                propAuthorPrimary = str::Eq(value, "true");
+        }
+        return true;
+    }
+    if (propAuthorTmp && propAuthorPrimary)
+        propAuthors.Append(propAuthorTmp.StealData());
+    propAuthorTmp.Set(NULL);
+    // stop parsing once we have all desired information
+    return !propTitle || propAuthors.Count() == 0 || !propCreator ||
+           !propDate || str::FindChar(propDate, '/') <= propDate;
 }
 
 TCHAR *CbxEngineImpl::GetProperty(char *name)
@@ -754,11 +828,15 @@ TCHAR *CbxEngineImpl::GetProperty(char *name)
     if (str::Eq(name, "Title"))
         return propTitle ? str::Dup(propTitle) : NULL;
     if (str::Eq(name, "Author"))
-        return propAuthor ? str::Dup(propAuthor) : NULL;
+        return propAuthors.Count() ? propAuthors.Join(_T(", ")) : NULL;
     if (str::Eq(name, "CreationDate"))
         return propDate ? str::Dup(propDate) : NULL;
+    if (str::Eq(name, "ModDate"))
+        return propModDate ? str::Dup(propModDate) : NULL;
     if (str::Eq(name, "Creator"))
         return propCreator ? str::Dup(propCreator) : NULL;
+    if (str::Eq(name, "Subject"))
+        return propSummary ? str::Dup(propSummary) : NULL;
     return NULL;
 }
 

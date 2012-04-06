@@ -387,13 +387,12 @@ static void ShowProperties(WindowInfo& win, bool extended=false)
 
     if (!win.IsDocLoaded())
         return;
-    BaseEngine *engine = win.dm->engine;
     layoutData = new PropertiesLayout();
     gPropertiesWindows.Append(layoutData);
-    GetProps(engine, win.dm->engineType, layoutData);
+    GetProps(win.dm->engine, win.dm->engineType, layoutData);
 
     if (!win.IsChm()) {
-        str = FormatPageSize(engine, win.dm->CurrentPageNo(), win.dm->Rotation());
+        str = FormatPageSize(win.dm->engine, win.dm->CurrentPageNo(), win.dm->Rotation());
 #ifdef UNICODE
         if (IsUIRightToLeft() && WindowsVerVistaOrGreater()) {
             ScopedMem<TCHAR> tmp(str);
@@ -405,7 +404,7 @@ static void ShowProperties(WindowInfo& win, bool extended=false)
         layoutData->AddProperty(_TR("Page Size:"), str);
     }
 
-    str = FormatPermissions(engine);
+    str = FormatPermissions(win.dm->engine);
     layoutData->AddProperty(_TR("Denied Permissions:"), str);
 
     // TODO: this is about linearlized PDF. Looks like mupdf would
@@ -421,7 +420,7 @@ static void ShowProperties(WindowInfo& win, bool extended=false)
 #if defined(DEBUG) || defined(ENABLE_EXTENDED_PROPERTIES)
     if (extended) {
         // TODO: FontList extraction can take a while
-        str = engine->GetProperty("FontList");
+        str = win.dm->engine->GetProperty("FontList");
         if (str) {
             // add a space between basic and extended file properties
             layoutData->AddProperty(_T(" "), str::Dup(_T(" ")));

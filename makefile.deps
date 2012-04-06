@@ -30,7 +30,7 @@ $(ODLL)\PdfPreviewDll.obj: src\utils\WinUtil.h
 $(OM)\MemTraceDll.obj: src\memtrace\MemTraceDll.h src\memtrace\nsWindowsDllInterceptor.h src\utils\Allocator.h
 $(OM)\MemTraceDll.obj: src\utils\BaseUtil.h src\utils\DebugLog.h src\utils\GeomUtil.h
 $(OM)\MemTraceDll.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\StrUtil.h
-$(OM)\MemTraceDll.obj: src\utils\Vec.h src\utils\WinUtil.h
+$(OM)\MemTraceDll.obj: src\utils\Timer.h src\utils\Vec.h src\utils\WinUtil.h
 $(OMUI)\MiniMui.obj: src\mui\MiniMui.h src\utils\Allocator.h src\utils\BaseUtil.h
 $(OMUI)\MiniMui.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\StrUtil.h
 $(OMUI)\MiniMui.obj: src\utils\Vec.h
@@ -254,9 +254,10 @@ $(OS)\HtmlFormatter.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\Sig
 $(OS)\HtmlFormatter.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\ZipUtil.h
 $(OS)\ImagesEngine.obj: ext\unrar\dll.hpp src\BaseEngine.h src\ImagesEngine.h
 $(OS)\ImagesEngine.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\FileUtil.h
-$(OS)\ImagesEngine.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\JsonParser.h
-$(OS)\ImagesEngine.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\StrUtil.h
-$(OS)\ImagesEngine.obj: src\utils\Vec.h src\utils\WinUtil.h src\utils\ZipUtil.h
+$(OS)\ImagesEngine.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\HtmlPullParser.h
+$(OS)\ImagesEngine.obj: src\utils\JsonParser.h src\utils\RefCounted.h src\utils\Scoped.h
+$(OS)\ImagesEngine.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
+$(OS)\ImagesEngine.obj: src\utils\ZipUtil.h
 $(OS)\Install.obj: src\BaseEngine.h src\ifilter\PdfFilter.h src\previewer\PdfPreview.h
 $(OS)\Install.obj: src\installer\Installer.h src\installer\Resource.h src\utils\Allocator.h
 $(OS)\Install.obj: src\utils\BaseUtil.h src\utils\CmdLineParser.h src\utils\FileTransactions.h
