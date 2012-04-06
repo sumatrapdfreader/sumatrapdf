@@ -5,9 +5,10 @@ Next version:
 
 2.1 (????-??-??)
 
-* support for epub ebok format
+* support for EPUB ebook format
 * added menu item to rename a file (contributed by Vasily Fomin)
 * support multi-page TIFF files
+* support for some comic book (CBZ) metadata
 
 2.0 (2012-04-02)
 
