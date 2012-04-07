@@ -107,6 +107,8 @@ public:
     EpubDoc *AsEpub() const;
 
     const TCHAR *GetFilePath() const;
+
+    static Doc CreateFromFile(const TCHAR *filePath);
 };
 
 #endif

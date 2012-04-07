@@ -76,3 +76,12 @@ const TCHAR *Doc::GetFilePath() const
         return engine->FileName();
     }
 }
+
+Doc Doc::CreateFromFile(const TCHAR *filePath)
+{
+    if (MobiDoc::IsSupportedFile(filePath))
+        return Doc(MobiDoc::CreateFromFile(filePath));
+    if (EpubDoc::IsSupportedFile(filePath))
+        return Doc(EpubDoc::CreateFromFile(filePath));
+    return Doc();
+}

@@ -45,20 +45,8 @@ void ThreadLoadEbook::Run()
 {
     //lf(_T("ThreadLoadEbook::Run(%s)"), fileName);
     Timer t(true);
-    Doc doc;
-
-    if (MobiDoc::IsSupportedFile(fileName)) {
-        // TODO: make it Doc::CreateFromFile()
-        MobiDoc *mobiDoc = MobiDoc::CreateFromFile(fileName);
-        doc = Doc(mobiDoc);
-    } else if (EpubDoc::IsSupportedFile(fileName)) {
-        // TODO: make it Doc::CreateFromFile()
-        EpubDoc *epubDoc = EpubDoc::CreateFromFile(fileName);
-        doc = Doc(epubDoc);
-    } else {
-        CrashIf(true);
-    }
-
+    Doc doc = Doc::CreateFromFile(fileName);
+    CrashIf(!doc.IsEbook());
     double loadingTimeMs = t.GetTimeInMs();
     //lf(_T("Loaded %s in %.2f ms"), fileName, t.GetTimeInMs());
 

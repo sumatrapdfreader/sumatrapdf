@@ -1279,12 +1279,6 @@ static void HandleFinishedMobiLoadingMsg(FinishedMobiLoadingData *finishedMobiLo
     OpenMobiInWindow(doc, finishedMobiLoading->win);
 }
 
-static bool IsEbookFile(const TCHAR *fileName)
-{
-    return str::EndsWithI(fileName, _T(".mobi")) ||
-           str::EndsWithI(fileName, _T(".epub"));
-}
-
 // Start loading a mobi file in the background
 static void LoadEbookAsync(const TCHAR *fileName, SumatraWindow& win)
 {

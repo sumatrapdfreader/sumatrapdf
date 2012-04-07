@@ -46,5 +46,6 @@ void   OpenMobiInWindow(Doc doc, SumatraWindow& winToReplace);
 bool   RegisterMobiWinClass(HINSTANCE hinst);
 void   RebuildMenuBarForEbookWindows();
 void   DeleteEbookWindow(EbookWindow *win, bool forceDelete = false);
+bool   IsEbookFile(const TCHAR *fileName);
 
 #endif

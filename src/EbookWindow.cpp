@@ -95,7 +95,8 @@ static MenuDef menuDefHelp[] = {
 #ifdef SHOW_DEBUG_MENU_ITEMS
 static MenuDef menuDefDebug[] = {
     { "Show bbox",                          IDM_DEBUG_SHOW_LINKS,       MF_NO_TRANSLATE },
-    { "Test page layout",                   IDM_DEBUG_PAGE_LAYOUT,      MF_NO_TRANSLATE },
+    // TODO: fix or remove
+    // { "Test page layout",                   IDM_DEBUG_PAGE_LAYOUT,      MF_NO_TRANSLATE },
     { "Toggle ebook UI",                    IDM_DEBUG_EBOOK_UI,         MF_NO_TRANSLATE },
 };
 #endif
@@ -173,7 +174,8 @@ static void OnToggleBbox(EbookWindow *win)
 {
     gShowTextBoundingBoxes = !gShowTextBoundingBoxes;
     SetDebugPaint(gShowTextBoundingBoxes);
-    InvalidateRect(win->hwndFrame, NULL, FALSE);
+    win->ebookControls->mainWnd->RequestRepaint();
+    InvalidateRect(win->hwndFrame, NULL, TRUE);
     win::menu::SetChecked(GetMenu(win->hwndFrame), IDM_DEBUG_SHOW_LINKS, gShowTextBoundingBoxes);
 }
 
@@ -693,4 +695,10 @@ bool RegisterMobiWinClass(HINSTANCE hinst)
 
     ATOM atom = RegisterClassEx(&wcex);
     return atom != NULL;
+}
+
+bool IsEbookFile(const TCHAR *fileName)
+{
+    return MobiDoc::IsSupportedFile(fileName) ||
+           EpubDoc::IsSupportedFile(fileName);
 }
