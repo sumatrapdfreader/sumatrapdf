@@ -172,7 +172,7 @@ static WindowInfo *LoadOnStartup(CommandLineInfo& i, int n, bool firstIsDocLoade
     bool showWin = !(i.printDialog && i.exitOnPrint) && !gPluginMode;
     LoadArgs args(i.fileNames.At(n), NULL, showWin);
     WindowInfo *win = LoadDocument(args);
-    if (!win || !win->IsDocLoaded()) {
+    if (!win) {
         ok = false;
         return win;
     }
@@ -185,7 +185,7 @@ static WindowInfo *LoadOnStartup(CommandLineInfo& i, int n, bool firstIsDocLoade
     }
     if (i.hwndPluginParent)
         MakePluginWindow(*win, i.hwndPluginParent);
-    if (!(win->IsDocLoaded() && !firstIsDocLoaded))
+    if (!win->IsDocLoaded() || firstIsDocLoaded)
         return win;
 
     if (i.enterPresentation || i.enterFullscreen)
