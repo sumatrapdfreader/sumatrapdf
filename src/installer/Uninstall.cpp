@@ -1,4 +1,4 @@
-/* Copyright 2010-2012 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
 #ifndef BUILD_UNINSTALLER

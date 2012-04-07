@@ -279,6 +279,7 @@ BEGIN
     EDITTEXT        IDC_FAV_NAME_EDIT,7,20,222,14,ES_AUTOHSCROLL
 END
 
+1                   RT_RCDATA               
 
 /////////////////////////////////////////////////////////////////////////////
 //

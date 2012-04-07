@@ -1,4 +1,4 @@
-/* Copyright 2006-2012 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
 #ifndef AppTools_h

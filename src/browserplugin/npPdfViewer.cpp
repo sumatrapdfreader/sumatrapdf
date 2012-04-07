@@ -1,4 +1,4 @@
-﻿/* (Minimal) SumatraPDF Browser Plugin - Copyright © 2010-2012  Simon Bünzli */
+﻿/* (Minimal) SumatraPDF Browser Plugin - Copyright © 2012  Simon Bünzli */
 
 #include "BaseUtil.h"
 

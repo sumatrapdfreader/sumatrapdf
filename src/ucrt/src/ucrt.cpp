@@ -1,4 +1,4 @@
-/* Copyright 2011-2012 the ucrt project authors (see AUTHORS file).
+/* Copyright 2012 the ucrt project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
 #ifndef WIN32_LEAN_AND_MEAN
@@ -16,6 +16,8 @@
 #include <process.h>
 #include <wchar.h>
 
+// we provide our own implementation of functions in those libraries
+// so tell the linker not to link them to avoid duplicate symbols
 #pragma comment(linker, "/nodefaultlib:libc.lib")
 #pragma comment(linker, "/nodefaultlib:libcmt.lib")
 #pragma comment(linker, "/nodefaultlib:libcmtd.lib")

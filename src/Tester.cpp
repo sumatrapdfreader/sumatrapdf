@@ -1,4 +1,4 @@
-/* Copyright 2011-2012 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
 /* A driver for various tests. The idea is that instead of having a separate

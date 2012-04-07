@@ -1,4 +1,4 @@
-/* Copyright 2006-2012 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 #ifndef HtmlWindow_h
 #define HtmlWindow_h
