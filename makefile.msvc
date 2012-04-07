@@ -81,10 +81,13 @@ UNINSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 
 UCRT_CFLAGS = $(CFLAGS)
 
+RC_FLAGS = $(EXTCFLAGS)
+
 !if "$(CFG)"=="dbg"
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "DEBUG" /D "_DEBUG"
 INSTALLER_CFLAGS = $(INSTALLER_CFLAGS) /D "DEBUG" /D "_DEBUG"
 UNINSTALLER_CFLAGS = $(UNINSTALLER_CFLAGS) /D "DEBUG" /D "_DEBUG"
+RC_FLAGS = $(RC_FLAGS) /D "DEBUG" /D "_DEBUG"
 !endif
 
 LIBS = $(LIBS) \
@@ -285,7 +288,7 @@ $(OS): $(O) $(OE)
 	@if not exist $(OM) mkdir $(OM)
 
 $(SUMATRA_RES): src\SumatraPDF.rc src\Resource.h src\Version.h
-	rc /r /fo$@ $(EXTCFLAGS) src\SumatraPDF.rc
+	rc /r /fo$@ $(RC_FLAGS) src\SumatraPDF.rc
 
 $(SUMATRA_APP): $(LIBS_OBJS) $(SUMATRA_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
@@ -294,16 +297,16 @@ $(SUMATRA_APP_NO_MUPDF): $(SUMATRA_OBJS) $(OS)\MuPDF_Exports.obj
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ $(LIBMUPDF_LIB)
 
 $(LIBMUPDF_RES): src\libmupdf.rc src\Version.h
-	rc /r /fo$@ $(EXTCFLAGS) src\libmupdf.rc
+	rc /r /fo$@ $(RC_FLAGS) src\libmupdf.rc
 
 $(LIBMUPDF_DLL): $(LIBMUPDF_OBJS) $(LIBMUPDF_DEF) $(LIBMUPDF_RES)
 	$(LD) /DLL $(LDFLAGS) $(LIBMUPDF_OBJS) $(LIBMUPDF_RES) $(LIBS) /DEF:$(LIBMUPDF_DEF) /IMPLIB:$(LIBMUPDF_LIB) /PDB:$*.pdb /OUT:$@
 
 $(INSTALLER_RES): src\installer\Installer.rc src\installer\Resource.h src\Version.h
-	rc /r /fo$@ $(EXTCFLAGS) /D "INSTALL_PAYLOAD_ZIP=..\..\$(O)\InstallerData.zip" src\installer\Installer.rc
+	rc /r /fo$@ $(RC_FLAGS) /D "INSTALL_PAYLOAD_ZIP=..\..\$(O)\InstallerData.zip" src\installer\Installer.rc
 
 $(UNINSTALLER_RES): src\installer\Installer.rc src\installer\Resource.h src\Version.h
-	rc /r /fo$@ $(EXTCFLAGS) /D "BUILD_UNINSTALLER" src\installer\Installer.rc
+	rc /r /fo$@ $(RC_FLAGS) /D "BUILD_UNINSTALLER" src\installer\Installer.rc
 
 $(INSTALLER_APP): $(INSTALLER_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
@@ -315,25 +318,25 @@ $(TESTER_APP): $(TESTER_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
 
 $(PDFFILTER_RES): src\ifilter\PdfFilter.rc src\Version.h
-	rc /r /fo$@ $(EXTCFLAGS) src\ifilter\PdfFilter.rc
+	rc /r /fo$@ $(RC_FLAGS) src\ifilter\PdfFilter.rc
 
 $(PDFFILTER_DLL): $(PDFFILTER_OBJS)
 	$(LD) /DLL $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
 
 $(PDFPREVIEW_RES): src\previewer\PdfPreview.rc src\Version.h
-	rc /r /fo$@ $(EXTCFLAGS) src\previewer\PdfPreview.rc
+	rc /r /fo$@ $(RC_FLAGS) src\previewer\PdfPreview.rc
 
 $(PDFPREVIEW_DLL): $(PDFPREVIEW_OBJS)
 	$(LD) /DLL $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
 
 $(MEMTRACE_RES): src\memtrace\MemTrace.rc
-	rc /r /fo$@ $(EXTCFLAGS) src\memtrace\MemTrace.rc
+	rc /r /fo$@ $(RC_FLAGS) src\memtrace\MemTrace.rc
 
 $(MEMTRACE_DLL): $(MEMTRACE_OBJS)
 	$(LD) /DLL $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
 
 $(BROWSER_PLUGIN_RES): src\browserplugin\npPdfViewer.rc src\Version.h
-	rc /r /fo$@ $(EXTCFLAGS) src\browserplugin\npPdfViewer.rc
+	rc /r /fo$@ $(RC_FLAGS) src\browserplugin\npPdfViewer.rc
 
 $(BROWSER_PLUGIN): $(BROWSER_PLUGIN_OBJS)
 	$(LD) /DLL $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@

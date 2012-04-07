@@ -279,6 +279,9 @@ BEGIN
     EDITTEXT        IDC_FAV_NAME_EDIT,7,20,222,14,ES_AUTOHSCROLL
 END
 
+#ifdef DEBUG
+IDD_SAMPLE_MOBI     RCDATA                      "sample_mobi.html"
+#endif
 
 /////////////////////////////////////////////////////////////////////////////
 //

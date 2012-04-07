@@ -120,7 +120,7 @@ void CrashMe(); // in StrUtil.cpp
 // It's meant to make converting assert() easier (converting to
 // CrashIf() requires inverting the condition, which can introduce bugs)
 #define AssertCrash(exp) \
-    { if (!exp) \
+    { if (!(exp)) \
         CrashMe(); }
 
 template <typename T>

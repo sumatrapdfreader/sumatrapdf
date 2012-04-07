@@ -26,36 +26,8 @@ using namespace Gdiplus;
 
 #ifdef SHOW_DEBUG_MENU_ITEMS
 // A sample text to display if we don't show an actual mobi file
-static const char *gSampleMobiHtml =
-    "<html><p align=justify width=1em><b>ClearType</b>, is <b>dependent</b> "\
-    "on the <i>orientation &amp; ordering</i> of the LCD stripes and "\
-    "possibly some other <i><b>things</b> unknown</i>.</p> "\
-    "<p align='right height=13pt'><em>Currently</em>, ClearType is implemented "\
-    "<hr><br/> only for vertical stripes that are ordered RGB.</p> "\
-    "<p align=center height=8pt>This might be a concern if you are using a "\
-    "<a href='http://en.wikipedia.org/wiki/Tablet_pc'>tablet PC</a>.</p>"\
-    "<p width='1em'>Where the display can be oriented in any direction, or if you"\
-    "are using a screen that can be turned from landscape to portrait. The "\
-    "<strike>following example</strike> draws text with two <u>different quality</u> "\
-    "settings.</p> "\
-    "<h2>Intermediary heading</h2>"\
-    "<p width=1em>This is a paragraph that should take at least two lines. "\
-    "With study and discreet inquiries, Abagnale picked up airline jargon "\
-    "and discovered that pilots could ride free anywhere in the world on any "\
-    "airline; and that hotels billed airlines direct and cashed checks issued "\
-    "by airline companies.</p><br><p width=1em>    And this is another paragraph "\
-    "tha we wrote today. Hiding out in a southern city, Abagnale learned that the "\
-    "state attorney general was seeking assistants. For nine months he practiced law, "\
-    "but when a real Harvard lawyer appeared on the scene, Abagnale figured it was "\
-    "time to move on.</p> "\
-    "On to the <b>next<mbp:pagebreak>page</b>"\
-    "<p>ThisIsAVeryVeryVeryLongWordThatShouldBeBrokenIntoMultiple lines</p>"\
-    "<h3>List</h3><ul><li>First item</li><li>Nested: "\
-    "<ol><li>Number one</li><li>Two</li></ol></li></ul>"\
-    "<ul><ul><ul><ul><ul><ul><ul><ul><ul><ul><ul><ul><ul><ul><ul>"\
-    "<li>VeryVeryVeryVeryDeeplyNestedListItem</li>"\
-    "</ul></ul></ul></ul></ul></ul></ul></ul></ul></ul></ul></ul></ul></ul></ul>"
-    "<mbp:pagebreak><hr><mbp:pagebreak>blah<br>Foodo.<p>And me</p></html>";
+static const char *gSampleMobiHtml = NULL;
+static size_t      gSampleMobiHtmlSize;
 #endif
 
 #define MOBI_FRAME_CLASS_NAME    _T("SUMATRA_MOBI_FRAME")
@@ -95,8 +67,7 @@ static MenuDef menuDefHelp[] = {
 #ifdef SHOW_DEBUG_MENU_ITEMS
 static MenuDef menuDefDebug[] = {
     { "Show bbox",                          IDM_DEBUG_SHOW_LINKS,       MF_NO_TRANSLATE },
-    // TODO: fix or remove
-    // { "Test page layout",                   IDM_DEBUG_PAGE_LAYOUT,      MF_NO_TRANSLATE },
+    { "Load mobi sample",                   IDM_LOAD_MOBI_SAMPLE,      MF_NO_TRANSLATE },
     { "Toggle ebook UI",                    IDM_DEBUG_EBOOK_UI,         MF_NO_TRANSLATE },
 };
 #endif
@@ -341,6 +312,20 @@ static LRESULT OnGesture(EbookWindow *win, UINT message, WPARAM wParam, LPARAM l
     return 0;
 }
 
+static void OnLoadMobiSample(EbookWindow *win)
+{
+    if (!gSampleMobiHtml) {
+        HRSRC resSrc = FindResource(ghinst, MAKEINTRESOURCE(IDD_SAMPLE_MOBI), RT_RCDATA);
+        CrashIf(!resSrc);
+        HGLOBAL res = LoadResource(NULL, resSrc);
+        CrashIf(!res);
+        gSampleMobiHtml = (const char*)LockResource(res);
+        gSampleMobiHtmlSize = SizeofResource(NULL, resSrc);
+        CrashIf(0 == gSampleMobiHtmlSize);
+    }
+    win->ebookController->SetHtml(gSampleMobiHtml, gSampleMobiHtmlSize);
+}
+
 static LRESULT OnCommand(EbookWindow *win, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     int wmId = LOWORD(wParam);
@@ -416,8 +401,8 @@ static LRESULT OnCommand(EbookWindow *win, UINT msg, WPARAM wParam, LPARAM lPara
             OnToggleBbox(win);
             break;
 
-        case IDM_DEBUG_PAGE_LAYOUT:
-            win->ebookController->SetHtml(gSampleMobiHtml);
+        case IDM_LOAD_MOBI_SAMPLE:
+            OnLoadMobiSample(win);
             break;
 
         case IDM_DEBUG_EBOOK_UI:
@@ -516,8 +501,8 @@ static LRESULT CALLBACK MobiWndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPA
 RenderedBitmap *RenderFirstDocPageToBitmap(Doc doc, SizeI pageSize, SizeI bmpSize, int border)
 {
     PoolAllocator textAllocator;
-    HtmlFormatterArgs *args = CreateFormatterArgs(NULL, doc, pageSize.dx - 2 * border, pageSize.dy - 2 * border, &textAllocator);
-    HtmlFormatter *formatter = CreateFormatterForDoc(doc, args);
+    HtmlFormatterArgs *args = CreateFormatterArgsDoc(doc, pageSize.dx - 2 * border, pageSize.dy - 2 * border, &textAllocator);
+    HtmlFormatter *formatter = CreateFormatter(args);
     HtmlPage *pd = formatter->Next();
     delete formatter;
     delete args;

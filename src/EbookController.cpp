@@ -62,8 +62,6 @@ class EbookFormattingThread : public ThreadBase {
 public:
     // provided by the caller
     HtmlFormatterArgs * formatterArgs; // we own it
-    Doc                 doc;
-    PoolAllocator *     textAllocator;
     EbookController *   controller;
     int                 reparseIdx;
 
@@ -74,17 +72,17 @@ public:
     void        SendPagesIfNecessary(bool force, bool finished, bool fromBeginning);
     bool        Format(int reparseIdx);
 
-    EbookFormattingThread(HtmlFormatterArgs *arsg, Doc doc, EbookController *ctrl);
+    EbookFormattingThread(HtmlFormatterArgs *arsg, EbookController *ctrl);
     virtual ~EbookFormattingThread();
 
     // ThreadBase
     virtual void Run();
 };
 
-EbookFormattingThread::EbookFormattingThread(HtmlFormatterArgs *args, Doc doc, EbookController *ctrl) :
-    formatterArgs(args), doc(doc), controller(ctrl), pageCount(0)
+EbookFormattingThread::EbookFormattingThread(HtmlFormatterArgs *args, EbookController *ctrl) :
+    formatterArgs(args), controller(ctrl), pageCount(0)
 {
-    AssertCrash(doc.IsEbook());
+    AssertCrash(args->doc.IsEbook() || (args->doc.IsNone() && (NULL != args->htmlStr)));
 }
 
 EbookFormattingThread::~EbookFormattingThread()
@@ -123,13 +121,15 @@ void EbookFormattingThread::SendPagesIfNecessary(bool force, bool finished, bool
     uimsg::Post(msg);
 }
 
-HtmlFormatter *CreateFormatterForDoc(Doc doc, HtmlFormatterArgs* args)
+HtmlFormatter *CreateFormatter(HtmlFormatterArgs* args)
 {
-    if (doc.AsMobi())
-        return new MobiFormatter(args, doc.AsMobi());
-    if (doc.AsEpub())
-        return new EpubFormatter(args, doc.AsEpub());
-
+    if (args->doc.AsMobi())
+        return new MobiFormatter(args, args->doc.AsMobi());
+    if (args->doc.AsEpub())
+        return new EpubFormatter(args, args->doc.AsEpub());
+    // TODO: maybe should add anohter "RawHtml" Doc type
+    if (args->doc.IsNone() && args->htmlStr)
+        return new MobiFormatter(args, NULL);
     CrashIf(true);
     return NULL;
 }
@@ -143,7 +143,7 @@ bool EbookFormattingThread::Format(int reparseIdx)
     int totalPageCount = 0;
     Timer t(true);
     formatterArgs->reparseIdx = reparseIdx;
-    HtmlFormatter *formatter = CreateFormatterForDoc(doc, formatterArgs);
+    HtmlFormatter *formatter = CreateFormatter(formatterArgs);
     int lastReparseIdx = reparseIdx;
     for (HtmlPage *pd = formatter->Next(); pd; pd = formatter->Next()) {
         CrashIf(pd->reparseIdx < lastReparseIdx);
@@ -259,27 +259,37 @@ void EbookController::DeletePages(Vec<HtmlPage*>** pages)
     *pages = NULL;
 }
 
-
-HtmlFormatterArgs *CreateFormatterArgs(const char *html, Doc doc, int dx, int dy, PoolAllocator *textAllocator)
+HtmlFormatterArgs *CreateFormatterArgs(int dx, int dy, PoolAllocator *textAllocator)
 {
     HtmlFormatterArgs *args = new HtmlFormatterArgs();
-    size_t len;
-    if (html) {
-        CrashIf(!doc.IsNone());
-        len = strlen(html);
-    } else if (doc.AsMobi())
-        html = doc.AsMobi()->GetBookHtmlData(len);
-    else if (doc.AsEpub())
-        html = doc.AsEpub()->GetTextData(&len);
-    else
-        CrashIf(true);
+    args->htmlStr = NULL;
     args->fontName = FONT_NAME;
     args->fontSize = FONT_SIZE;
-    args->htmlStr = html;
-    args->htmlStrLen = len;
     args->pageDx = dx;
     args->pageDy = dy;
     args->textAllocator = textAllocator;
+    return args;
+}
+
+HtmlFormatterArgs *CreateFormatterArgsDoc(Doc doc, int dx, int dy, PoolAllocator *textAllocator)
+{
+    HtmlFormatterArgs *args = CreateFormatterArgs(dx, dy, textAllocator);
+    args->doc = doc;
+    if (doc.AsMobi())
+        args->htmlStr = doc.AsMobi()->GetBookHtmlData(args->htmlStrLen);
+    else if (doc.AsEpub())
+        args->htmlStr = doc.AsEpub()->GetTextData(&args->htmlStrLen);
+    else
+        CrashIf(true);
+    return args;
+}
+
+HtmlFormatterArgs *CreateFormatterArgsHtml(const char *html, size_t htmlSize, int dx, int dy, PoolAllocator *textAllocator)
+{
+    CrashIf(!html);
+    HtmlFormatterArgs *args = CreateFormatterArgs(dx, dy, textAllocator);
+    args->htmlStr = html;
+    args->htmlStrLen = htmlSize;
     return args;
 }
 
@@ -514,8 +524,12 @@ void EbookController::TriggerBookFormatting()
     CrashIf(formattingTemp.pagesFromPage.Count() > 0);
 
     ShowPage(newPage, newPage != NULL);
-    HtmlFormatterArgs *args = CreateFormatterArgs(html, doc, dx, dy, &textAllocator);
-    formattingThread = new EbookFormattingThread(args, doc, this);
+    HtmlFormatterArgs *args;
+    if (html)
+        args = CreateFormatterArgsHtml(html, htmlSize, dx, dy, &textAllocator);
+    else
+        args = CreateFormatterArgsDoc(doc, dx, dy, &textAllocator);
+    formattingThread = new EbookFormattingThread(args, this);
     formattingThreadNo = formattingThread->GetNo();
     CrashIf(formattingTemp.reparseIdx < 0);
     CrashIf(formattingTemp.reparseIdx > (int)args->htmlStrLen);
@@ -674,11 +688,12 @@ void EbookController::AdvancePage(int dist)
     GoToPage(currPageNo + dist);
 }
 
-void EbookController::SetHtml(const char *newHtml)
+void EbookController::SetHtml(const char *newHtml, size_t newHtmlSize)
 {
     CloseCurrentDocument();
     startReparseIdx = -1;
     html = newHtml;
+    htmlSize = newHtmlSize;
     TriggerBookFormatting();
 }
 

@@ -1082,6 +1082,10 @@ void MobiFormatter::HandleSpacing_Mobi(HtmlToken *t)
 // TODO: handle alt attribute (?)
 void MobiFormatter::HandleTagImg_Mobi(HtmlToken *t)
 {
+    // we allow formatting raw html which can't require doc
+    if (!doc)
+        return;
+
     AttrInfo *attr = t->GetAttrByName("recindex");
     if (!attr)
         return;

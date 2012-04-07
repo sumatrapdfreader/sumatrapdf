@@ -1033,9 +1033,6 @@
     <ClInclude Include="src\PdfSync.h">
       <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="src\Resource.h">
-      <Filter>sumatra</Filter>
-    </ClInclude>
     <ClInclude Include="src\SumatraDialogs.h">
       <Filter>sumatra</Filter>
     </ClInclude>
@@ -1095,9 +1092,6 @@
     </ClInclude>
     <ClInclude Include="src\CrashHandler.h">
       <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\installer\Resource.h">
-      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\WindowInfo.h">
       <Filter>sumatra</Filter>
@@ -1429,6 +1423,9 @@
     <ClInclude Include="src\mui\MiniMui.h">
       <Filter>mui</Filter>
     </ClInclude>
+    <ClInclude Include="src\Resource.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\closetoc.bmp">
@@ -1624,6 +1621,9 @@
     <None Include="docs\wishlist.txt" />
     <None Include="docs\release_plan.txt" />
     <None Include="makefile.msvc" />
+    <None Include="src\sample_mobi.html">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="src\SumatraPDF.rc">

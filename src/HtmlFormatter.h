@@ -4,13 +4,11 @@
 #ifndef HtmlFormatter_h
 #define HtmlFormatter_h
 
+#include "Doc.h"
 #include "EbookBase.h"
 #include "HtmlPullParser.h"
 
 using namespace Gdiplus;
-
-class EpubDoc;
-class MobiDoc;
 
 // Layout information for a given page is a list of
 // draw instructions that define what to draw and where.
@@ -105,6 +103,7 @@ public:
        used to allocate this text. */
     Allocator *     textAllocator;
 
+    Doc             doc;
     const char *    htmlStr;
     size_t          htmlStrLen;
 
@@ -212,6 +211,7 @@ public:
 
 class MobiFormatter : public HtmlFormatter {
     // accessor to images (and other format-specific data)
+    // it can be NULL (enables testing by feeding raw html)
     MobiDoc *           doc;
     // remember cover image if we've generated one, so that we
     // can avoid adding the same image twice if it's early in

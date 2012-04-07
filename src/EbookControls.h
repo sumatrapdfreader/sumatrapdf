@@ -50,6 +50,6 @@ public:
     virtual void NotifyMouseMove(int x, int y);
 };
 
-HtmlFormatter *CreateFormatterForDoc(Doc doc, HtmlFormatterArgs* args);
+HtmlFormatter *CreateFormatter(HtmlFormatterArgs* args);
 
 #endif

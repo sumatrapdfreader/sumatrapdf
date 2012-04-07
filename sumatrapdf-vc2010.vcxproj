@@ -423,7 +423,6 @@
     <ClInclude Include="src\ifilter\PdfFilter.h" />
     <ClInclude Include="src\ImagesEngine.h" />
     <ClInclude Include="src\installer\Installer.h" />
-    <ClInclude Include="src\installer\Resource.h" />
     <ClInclude Include="src\LangMenuDef.h" />
     <ClInclude Include="src\memtrace\MemTraceDll.h" />
     <ClInclude Include="src\memtrace\nsWindowsDllInterceptor.h" />
@@ -578,6 +577,7 @@
     <None Include="src\dragcursor.cur" />
     <None Include="src\PdfDoc.ico" />
     <None Include="src\reloading.bmp" />
+    <None Include="src\sample_mobi.html" />
     <None Include="src\SumatraPDF-smaller.ico" />
     <None Include="src\SumatraPDF.ico" />
     <None Include="src\toolbar_11.bmp" />

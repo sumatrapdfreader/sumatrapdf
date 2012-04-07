@@ -93,7 +93,7 @@
 #define IDM_DEBUG_SHOW_LINKS            590
 #define IDM_DEBUG_GDI_RENDERER          591
 #define IDM_DEBUG_CRASH_ME              592
-#define IDM_DEBUG_PAGE_LAYOUT           593
+#define IDM_LOAD_MOBI_SAMPLE            593
 #define IDM_DEBUG_EBOOK_UI              594
 #define IDM_FAV_FIRST                   600
 #define IDM_FAV_LAST                    800
@@ -181,6 +181,7 @@
 #define IDT_FILE_ADDTOFAV               3025
 #define IDT_VIEW_FIT_WIDTH              3026
 #define IDT_VIEW_FIT_PAGE               3027
+#define IDD_SAMPLE_MOBI                 3050
 #define IDC_SUMATRAPDF                  4000
 #define IDI_SMALL                       4001
 #define IDC_STATIC                      -1

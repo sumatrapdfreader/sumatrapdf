@@ -53,7 +53,7 @@ struct FormattingTemp {
     void            DeletePages();
 };
 
-HtmlFormatterArgs *CreateFormatterArgs(const char *html, Doc doc, int dx, int dy, PoolAllocator *textAllocator);
+HtmlFormatterArgs *CreateFormatterArgsDoc(Doc doc, int dx, int dy, PoolAllocator *textAllocator);
 
 class EbookController : public sigslot::has_slots
 {
@@ -61,6 +61,7 @@ class EbookController : public sigslot::has_slots
 
     Doc             doc;
     const char *    html;
+    size_t          htmlSize;
 
     // only set while we load the file on a background thread, used in UpdateStatus()
     TCHAR *         fileBeingLoaded;
@@ -129,7 +130,7 @@ public:
     EbookController(EbookControls *ctrls);
     virtual ~EbookController();
 
-    void SetHtml(const char *html);
+    void SetHtml(const char *newHtml, size_t newHtmlSize);
     void SetDoc(Doc newDoc, int startReparseIdxArg = -1);
     void HandleFinishedMobiLoadingMsg(FinishedMobiLoadingData *finishedMobiLoading);
     void HandleMobiLayoutMsg(EbookFormattingData *mobiLayout);
