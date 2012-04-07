@@ -316,10 +316,7 @@ bool RegisterServerDLL(TCHAR *dllPath, bool unregister=false)
         DllInitProc CallDLL = (DllInitProc)GetProcAddress(lib, func);
         if (CallDLL)
             ok = SUCCEEDED(CallDLL());
-        //TODO: this is a work-around for the crash-on-exit bug with ucrt caused
-        //by trying to call C++ static destructrors in libmupdf.dll after it
-        // has been unloaded. So we don't unload
-        //FreeLibrary(lib);
+        FreeLibrary(lib);
     }
 
     if (_SetDllDirectory)

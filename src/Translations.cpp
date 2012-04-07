@@ -100,15 +100,14 @@ static int GetTranslationIndex(const char* txt)
 }
 
 // Call at program exit to free all memory related to translations functionality.
-static int FreeData()
+static void __cdecl FreeData()
 {
     if (!gTranslationCache)
-        return 0;
+        return;
     for (size_t i = 0; i < dimof(gTranslations); i++)
         free((void *)gTranslationCache[i]);
     free((void *)gTranslationCache);
     gTranslationCache = NULL;
-    return 0;
 }
 
 // Return a properly encoded version of a translation for 'txt'.
@@ -123,7 +122,7 @@ const TCHAR *GetTranslation(const char *txt)
         gTranslationCache = SAZA(const TCHAR *, dimof(gTranslations));
         if (!gTranslationCache)
             return _T("Missing translation!?");
-        _onexit(FreeData);
+        atexit(FreeData);
     }
 
     int idx = GetTranslationIndex(txt);

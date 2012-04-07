@@ -13,6 +13,7 @@
 #include <typeinfo.h>
 #include <math.h>
 #include <errno.h>
+#include <process.h>
 #include <wchar.h>
 
 #pragma comment(linker, "/nodefaultlib:libc.lib")
@@ -416,6 +417,19 @@ int __cdecl _vswprintf_c_l(wchar_t *dst, size_t count, const wchar_t *fmt, _loca
     return ret;
 }
 
+// we can't just expose msvcrt.atexit or msvcrt._onexit becuase those
+// functions are called when msvcrt is unloaded (i.e. when a process
+// exits) but the functions can be registered by a dll that might
+// have been unloaded by that time (e.g. if a dll is dynamically
+// loaded/unloaded by the process). For that reason each dll linking
+// to ucrt needs its own atexit() registry
+int __cdecl atexit(void (__cdecl *func )(void))
+{
+    // TODO: implement me but it's not a big deal
+    // (we'll leak some memory or not run deinitalization functions)
+    return 0;
+}
+
 int __cdecl _CrtSetDbgFlag(int newFlag)
 {
     // do nothing, we don't the equivalent of crt's debugging
@@ -495,9 +509,6 @@ void * __cdecl operator new[](unsigned int s, int, char const *file, int line)
 
 void OnStart()
 {
-    // TODO: initialize atexit support
-    // _atexit_init();
-
     // call C initializers and C++ constructors
     _initterm(__xi_a, __xi_z);
     _initterm(__xc_a, __xc_z);
@@ -505,8 +516,7 @@ void OnStart()
 
 void OnExit()
 {
-    // TODO: call atexit() functions?
-
+    // TODO: call functions registered with atexit()
     // call C and C++ destructors
     _initterm(__xp_a, __xp_z);
     _initterm(__xt_a, __xt_z);

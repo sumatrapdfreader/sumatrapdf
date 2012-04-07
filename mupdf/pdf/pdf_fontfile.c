@@ -599,12 +599,11 @@ extend_system_font_list(fz_context *ctx, const TCHAR *path)
 	FindClose(hList);
 }
 
-static int
+static void __cdecl
 destroy_system_font_list(void)
 {
 	free(fontlistMS.fontmap);
 	memset(&fontlistMS, 0, sizeof(fontlistMS));
-	return 0;
 }
 
 static void
@@ -635,7 +634,7 @@ create_system_font_list(fz_context *ctx)
 	qsort(fontlistMS.fontmap, fontlistMS.len, sizeof(pdf_fontmapMS), _stricmp);
 
 	// make sure to clean up after ourselves
-	_onexit(destroy_system_font_list);
+	atexit(destroy_system_font_list);
 }
 
 void

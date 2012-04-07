@@ -96,7 +96,7 @@ void PageControl::Paint(Graphics *gfx, int offX, int offY)
 }
 
 // should only be called once at the end of the program
-static int DeleteEbookStyles()
+static void __cdecl DeleteEbookStyles()
 {
     delete styleStatus;
     delete styleBtnNextPrevDefault;
@@ -104,7 +104,6 @@ static int DeleteEbookStyles()
     delete stylePage;
     delete styleProgress;
     delete styleMainWnd;
-    return 0;
 }
 
 static void CreateEbookStyles()
@@ -150,7 +149,7 @@ static void CreateEbookStyles()
     styleProgress->Set(Prop::AllocColorSolid(PropBgColor, COLOR_LIGHT_GRAY));
     styleProgress->Set(Prop::AllocColorSolid(PropColor, COLOR_LIGHT_BLUE));
 
-    _onexit(DeleteEbookStyles);
+    atexit(DeleteEbookStyles);
 }
 
 static void CreateLayout(EbookControls *ctrls)

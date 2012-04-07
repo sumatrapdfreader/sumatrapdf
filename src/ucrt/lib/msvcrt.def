@@ -40,7 +40,6 @@ EXPORTS
        _localtime64
        _lseek
        _lseeki64
-       _onexit
        _open
        _open_osfhandle	
        __open_osfhandle=_open_osfhandle
@@ -85,7 +84,6 @@ EXPORTS
        asin
        atan
        atan2
-       atexit
        atof
        atoi
        atol
