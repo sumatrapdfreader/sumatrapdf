@@ -1,14 +1,15 @@
 /* Copyright 2006-2012 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "SumatraPDF.h"
+#include "BaseUtil.h"
 #include "SumatraDialogs.h"
-#include "AppTools.h"
-#include "Resource.h"
 
-#include "WinUtil.h"
+#include "AppTools.h"
 #include "DialogSizer.h"
+#include "Resource.h"
+#include "SumatraPDF.h"
 #include "Translations.h"
+#include "WinUtil.h"
 
 // cf. http://msdn.microsoft.com/en-us/library/ms645398(v=VS.85).aspx
 struct DLGTEMPLATEEX {

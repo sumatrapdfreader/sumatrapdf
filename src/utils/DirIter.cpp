@@ -1,7 +1,9 @@
 /* Copyright 2011-2012 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+#include "BaseUtil.h"
 #include "DirIter.h"
+
 #include "FileUtil.h"
 
 // Start directory traversal in a given dir

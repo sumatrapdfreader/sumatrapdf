@@ -4,8 +4,6 @@
 #ifndef SimpleLog_h
 #define SimpleLog_h
 
-#include "BaseUtil.h"
-
 namespace slog {
 
 class Logger {

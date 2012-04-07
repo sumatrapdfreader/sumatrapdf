@@ -1,6 +1,7 @@
 ﻿/* (Minimal) SumatraPDF Browser Plugin - Copyright © 2010-2012  Simon Bünzli */
 
 #include "BaseUtil.h"
+
 #include "CmdLineParser.h"
 #include "FileUtil.h"
 #include "WinUtil.h"
@@ -8,7 +9,6 @@
 #define _WINDOWS
 #endif
 #include "npapi/npfunctions.h"
-#include <shlwapi.h>
 
 #include "DebugLog.h"
 

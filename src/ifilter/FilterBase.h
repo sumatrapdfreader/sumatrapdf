@@ -9,7 +9,6 @@
 #define __FILTERBASE_H__
 
 #include <strsafe.h>
-#include <shlwapi.h>
 #include <propkey.h>
 #include <propsys.h>
 #include <filter.h>

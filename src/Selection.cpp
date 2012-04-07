@@ -2,9 +2,9 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include "Selection.h"
 
 #include "Notifications.h"
-#include "Selection.h"
 #include "SumatraPDF.h"
 #include "Toolbar.h"
 #include "Translations.h"

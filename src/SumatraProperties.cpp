@@ -2,13 +2,14 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include "SumatraProperties.h"
+
 #include "EbookController.h"
 #include "EbookWindow.h"
 #include "FileUtil.h"
 #include "MobiDoc.h"
 #include "resource.h"
 #include "SumatraPDF.h"
-#include "SumatraProperties.h"
 #include "Translations.h"
 #include "WindowInfo.h"
 #include "WinUtil.h"

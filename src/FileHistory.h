@@ -4,7 +4,6 @@
 #ifndef FileHistory_h
 #define FileHistory_h
 
-#include "BaseUtil.h"
 #include "DisplayState.h"
 #include "FileUtil.h"
 

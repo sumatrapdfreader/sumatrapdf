@@ -1,14 +1,15 @@
 /* Copyright 2006-2012 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+#include "BaseUtil.h"
 #include "SumatraPDF.h"
-#include <shlobj.h>
 #include <wininet.h>
 
 #include "AppPrefs.h"
 #include "AppTools.h"
 #include "CrashHandler.h"
 #include "EbookController.h"
+#include "EbookWindow.h"
 #include "ExternalPdfViewer.h"
 #include "FileHistory.h"
 #include "Favorites.h"
@@ -20,7 +21,6 @@ using namespace Gdiplus;
 #include "HtmlWindow.h"
 #include "Menu.h"
 #include "Mui.h"
-#include "EbookWindow.h"
 #include "Notifications.h"
 #include "ParseCommandLine.h"
 #include "PdfSync.h"

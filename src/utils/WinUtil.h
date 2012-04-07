@@ -4,7 +4,6 @@
 #ifndef WinUtil_h
 #define WinUtil_h
 
-#include "BaseUtil.h"
 #include "GeomUtil.h"
 #include <WindowsX.h>
 #include <CommCtrl.h>

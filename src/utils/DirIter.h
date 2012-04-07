@@ -4,8 +4,6 @@
 #ifndef DirIter_h
 #define DirIter_h
 
-#include "BaseUtil.h"
-
 class DirIter
 {
     bool            recursive;

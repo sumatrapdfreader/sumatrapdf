@@ -1,7 +1,9 @@
 /* Copyright 2011-2012 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+#include "BaseUtil.h"
 #include "PdfPreview.h"
+
 #include "WinUtil.h"
 
 HINSTANCE g_hInstance = NULL;

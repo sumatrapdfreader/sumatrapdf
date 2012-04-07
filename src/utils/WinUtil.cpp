@@ -2,13 +2,11 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
-#include "FileUtil.h"
 #include "WinUtil.h"
-
-#include <shlwapi.h>
-#include <shlobj.h>
 #include <io.h>
 #include <fcntl.h>
+
+#include "FileUtil.h"
 
 #include "DebugLog.h"
 

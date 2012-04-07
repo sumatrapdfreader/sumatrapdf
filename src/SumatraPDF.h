@@ -4,7 +4,6 @@
 #ifndef SumatraPDF_h
 #define SumatraPDF_h
 
-#include "BaseUtil.h"
 #include "AppPrefs.h"
 #include "SumatraWindow.h"
 #include "TextSearch.h"

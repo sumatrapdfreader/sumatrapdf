@@ -4,7 +4,6 @@
 #ifndef HtmlFormatter_h
 #define HtmlFormatter_h
 
-#include "BaseUtil.h"
 #include "EbookBase.h"
 #include "HtmlPullParser.h"
 

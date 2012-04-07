@@ -21,8 +21,6 @@ Any other value for NOLOG (including 0), enables logging. This provides
 for an easy switch for turning logging on/off in a given .cpp file.
 */
 
-#include "BaseUtil.h"
-
 #ifndef NOLOG
   #ifdef NDEBUG
     #define NOLOG 1

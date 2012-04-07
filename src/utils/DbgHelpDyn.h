@@ -4,7 +4,6 @@
 #ifndef DbgHelpDyn_h
 #define DbgHelpDyn_h
 
-#include "BaseUtil.h"
 #include <dbghelp.h>
 #include <tlhelp32.h>
 

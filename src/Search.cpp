@@ -7,12 +7,12 @@
 */
 
 #include "BaseUtil.h"
+#include "Search.h"
 
 #include "AppTools.h"
 #include "Notifications.h"
 #include "PdfSync.h"
 #include "resource.h"
-#include "Search.h"
 #include "Selection.h"
 #include "SumatraDialogs.h"
 #include "SumatraPDF.h"

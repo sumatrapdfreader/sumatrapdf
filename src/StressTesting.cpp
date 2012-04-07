@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include "StressTesting.h"
 
 #include "AppTools.h"
 #include "EngineManager.h"
@@ -10,7 +11,6 @@
 #include "RenderCache.h"
 #include "SimpleLog.h"
 #include "SumatraPDF.h"
-#include "StressTesting.h"
 #include "Timer.h"
 #include "WindowInfo.h"
 #include "WinUtil.h"

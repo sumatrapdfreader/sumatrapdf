@@ -4,10 +4,10 @@
 #include "BaseUtil.h"
 #include "EbookControls.h"
 
+#include "DbgHelpDyn.h"
 #include "HtmlFormatter.h"
 #include "SvgPath.h"
 
-#include "DbgHelpDyn.h"
 #include "DebugLog.h"
 
 static Style *   styleMainWnd = NULL;

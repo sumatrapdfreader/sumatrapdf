@@ -43,6 +43,7 @@
   those pages to a bitmap and display those bitmaps.
 */
 
+#include "BaseUtil.h"
 #include "DisplayModel.h"
 
 // Note: adding chm handling to DisplayModel is a hack, because DisplayModel

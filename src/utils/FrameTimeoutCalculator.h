@@ -4,8 +4,6 @@
 #ifndef FrameTimeoutCalculator_h
 #define FrameTimeoutCalculator_h
 
-#include "BaseUtil.h"
-
 class FrameTimeoutCalculator {
 
     LARGE_INTEGER   timeStart;

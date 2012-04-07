@@ -7,7 +7,9 @@
    can be used from crash handler.
 */
 
+#include "BaseUtil.h"
 #include "DbgHelpDyn.h"
+
 #include "FileUtil.h"
 #include "WinUtil.h"
 

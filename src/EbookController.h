@@ -4,7 +4,6 @@
 #ifndef EbookController_h
 #define EbookController_h
 
-#include "BaseUtil.h"
 #include "Doc.h"
 #include "Mui.h"
 #include "HtmlFormatter.h"

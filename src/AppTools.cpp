@@ -3,13 +3,12 @@
 
 #include "BaseUtil.h"
 #include "AppTools.h"
+
 #include "CmdLineParser.h"
 #include "FileUtil.h"
 #include "Translations.h"
 #include "Version.h"
 #include "WinUtil.h"
-#include <shlobj.h>
-#include <shlwapi.h>
 
 // the only valid chars are 0-9, . and newlines.
 // a valid version has to match the regex /^\d+(\.\d+)*(\r?\n)?$/

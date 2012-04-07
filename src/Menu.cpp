@@ -1,16 +1,19 @@
 /* Copyright 2006-2012 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+#include "BaseUtil.h"
 #include "Menu.h"
+
 #include "DisplayModel.h"
+#include "EbookWindow.h"
 #include "ExternalPdfViewer.h"
 #include "Favorites.h"
 #include "FileUtil.h"
 #include "FileHistory.h"
-#include "EbookWindow.h"
 #include "Selection.h"
 #include "SumatraAbout.h"
 #include "SumatraDialogs.h"
+#include "SumatraPDF.h"
 #include "Translations.h"
 #include "WindowInfo.h"
 #include "WinUtil.h"

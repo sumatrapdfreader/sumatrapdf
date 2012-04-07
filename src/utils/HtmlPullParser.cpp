@@ -1,6 +1,7 @@
 /* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+#include "BaseUtil.h"
 #include "HtmlPullParser.h"
 
 /* TODO: We could extend the parser to allow navigating the tree (go to a prev/next sibling, go

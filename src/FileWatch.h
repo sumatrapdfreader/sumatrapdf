@@ -4,8 +4,6 @@
 #ifndef FileWatch_h
 #define FileWatch_h
 
-#include "BaseUtil.h"
-
 class FileChangeObserver {
 public:
     virtual ~FileChangeObserver() { }

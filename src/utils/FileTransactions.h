@@ -4,8 +4,6 @@
 #ifndef FileTransactions_h
 #define FileTransactions_h
 
-#include "BaseUtil.h"
-
 // cf. http://www.codeproject.com/KB/vista/VistaKTM.aspx for the inspiration
 
 class FileTransaction {

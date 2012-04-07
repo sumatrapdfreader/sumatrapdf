@@ -7,7 +7,9 @@ __pragma(warning(push))
 __pragma(warning(pop))
 }
 
+#include "BaseUtil.h"
 #include "PdfEngine.h"
+
 #include "FileUtil.h"
 
 // maximum size of a file that's entirely loaded into memory before parsed

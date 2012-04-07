@@ -1,7 +1,9 @@
+/* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
+   License: GPLv3 */
+
 #ifndef EbookWindow_h
 #define EbookWindow_h
 
-#include "BaseUtil.h"
 #include "Doc.h"
 #include "Mui.h"
 #include "SumatraWindow.h"

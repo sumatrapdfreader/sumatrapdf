@@ -4,8 +4,6 @@
 #ifndef Http_h
 #define Http_h
 
-#include "BaseUtil.h"
-
 bool  HttpPost(const TCHAR *server, const TCHAR *url, str::Str<char> *headers, str::Str<char> *data);
 DWORD HttpGet(const TCHAR *url, str::Str<char> *dataOut);
 bool  HttpGetToFile(const TCHAR *url, const TCHAR *destFilePath);

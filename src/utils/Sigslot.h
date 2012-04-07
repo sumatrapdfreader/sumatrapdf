@@ -20,8 +20,6 @@
 #ifndef SIGSLOT_H__
 #define SIGSLOT_H__
 
-#include "BaseUtil.h"
-
 // including <list> at this point breaks debug compilation
 // under VS2008 due to the redefined operator new
 namespace std {

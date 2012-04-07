@@ -4,7 +4,6 @@
 #ifndef ZipUtil_h
 #define ZipUtil_h
 
-#include "BaseUtil.h"
 #include <unzip.h>
 
 class ZipFile {

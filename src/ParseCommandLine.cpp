@@ -2,9 +2,10 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include "ParseCommandLine.h"
+
 #include "AppPrefs.h"
 #include "CmdLineParser.h"
-#include "ParseCommandLine.h"
 #include "StressTesting.h"
 #include "SumatraPDF.h"
 #include "WinUtil.h"

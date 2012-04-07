@@ -4,7 +4,6 @@
 #ifndef BaseEngine_h
 #define BaseEngine_h
 
-#include "BaseUtil.h"
 #include "GeomUtil.h"
 
 /* certain OCGs will only be rendered for some of these (e.g. watermarks) */

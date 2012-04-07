@@ -19,9 +19,13 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #define BUILD_UNINSTALLER
 #endif
 
+#include "BaseUtil.h"
 #include "Installer.h"
+
+#include "CmdLineParser.h"
 #include "CrashHandler.h"
 #include "FrameTimeoutCalculator.h"
+#include "ParseCommandLine.h"
 
 // TODO: can't build these separately without breaking TEST_UNINSTALLER
 #ifdef BUILD_UNINSTALLER

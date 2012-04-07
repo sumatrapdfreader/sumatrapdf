@@ -2,8 +2,11 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
-
 #include "SumatraAbout.h"
+
+#include "AppTools.h"
+#include "FileHistory.h"
+#include "FileUtil.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
 #include "Version.h"
@@ -506,10 +509,6 @@ void DrawAboutPage(WindowInfo& win, HDC hdc)
 }
 
 /* alternate static page to display when no document is loaded */
-
-#include "FileUtil.h"
-#include "AppTools.h"
-#include "FileHistory.h"
 
 #define DOCLIST_SEPARATOR_DY        2
 #define DOCLIST_THUMBNAIL_BORDER_W  1

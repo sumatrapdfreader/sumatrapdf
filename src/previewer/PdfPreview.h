@@ -15,10 +15,8 @@
 #define SZ_EPUB_PREVIEW_CLSID   _T("{80C4E4B1-2B0F-40d5-95AF-BE7B57FEA4F9}")
 #endif
 
-#include "BaseUtil.h"
 #include "BaseEngine.h"
 
-#include <shlwapi.h>
 #include <Thumbcache.h>
 
 class PageRenderer;

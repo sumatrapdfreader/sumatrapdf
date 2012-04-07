@@ -4,8 +4,6 @@
 #ifndef TrivialHtmlParser_h
 #define TrivialHtmlParser_h
 
-#include "BaseUtil.h"
-
 enum HtmlParseError {
     ErrParsingNoError,
     ErrParsingElement, // syntax error parsing element

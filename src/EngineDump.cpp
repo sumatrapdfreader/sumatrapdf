@@ -4,6 +4,9 @@
 #ifndef ENABLE_EBOOK_ENGINES
 #define ENABLE_EBOOK_ENGINES
 #endif
+
+#include "BaseUtil.h"
+
 #include "CmdLineParser.h"
 #include "EngineManager.h"
 #include "FileUtil.h"

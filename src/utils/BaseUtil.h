@@ -13,6 +13,8 @@
 
 #include <windows.h>
 #include <unknwn.h>
+#include <shlwapi.h>
+#include <shlobj.h>
 #include <gdiplus.h>
 
 #ifdef DEBUG

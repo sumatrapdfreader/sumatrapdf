@@ -4,15 +4,10 @@
 #ifndef Installer_h
 #define Installer_h
 
-#include "BaseUtil.h"
-
-#include <shlobj.h>
 #include <Tlhelp32.h>
-#include <Shlwapi.h>
 #include <objidl.h>
 #include <io.h>
 
-#include "CmdLineParser.h"
 #include "FileTransactions.h"
 #include "FileUtil.h"
 

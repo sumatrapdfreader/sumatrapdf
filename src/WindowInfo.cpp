@@ -1,18 +1,20 @@
 /* Copyright 2006-2012 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "SumatraPDF.h"
-#include "FileUtil.h"
-#include "WinUtil.h"
+#include "BaseUtil.h"
 #include "WindowInfo.h"
-#include "PdfSync.h"
-#include "Resource.h"
+
+#include "FileUtil.h"
 #include "FileWatch.h"
 #include "Notifications.h"
+#include "PdfSync.h"
 #include "Print.h"
+#include "Resource.h"
 #include "Selection.h"
 #include "StressTesting.h"
+#include "SumatraPDF.h"
 #include "Translations.h"
+#include "WinUtil.h"
 
 WindowInfo::WindowInfo(HWND hwnd) :
     dm(NULL), menu(NULL), hwndFrame(hwnd),

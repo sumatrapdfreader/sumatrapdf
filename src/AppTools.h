@@ -4,7 +4,6 @@
 #ifndef AppTools_h
 #define AppTools_h
 
-#include "BaseUtil.h"
 #include "GeomUtil.h"
 
 class WindowInfo;

@@ -1,6 +1,7 @@
 /* Copyright 2006-2012 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+#include "BaseUtil.h"
 #include "ImagesEngine.h"
 
 #include "FileUtil.h"

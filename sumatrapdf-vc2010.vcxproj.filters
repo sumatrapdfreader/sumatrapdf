@@ -191,9 +191,6 @@
     <ClCompile Include="src\DisplayModel.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="src\DisplayState.cpp">
-      <Filter>sumatra</Filter>
-    </ClCompile>
     <ClCompile Include="src\FileWatch.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>

@@ -1,7 +1,9 @@
 /* Copyright 2006-2012 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+#include "BaseUtil.h"
 #include "FileWatch.h"
+
 #include "FileUtil.h"
 
 // TODO: a hack for VS 2011 compilation. 1600 is VS 2010

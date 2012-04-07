@@ -4,7 +4,6 @@
 #ifndef MobiDoc_h
 #define MobiDoc_h
 
-#include "BaseUtil.h"
 #include "EbookBase.h"
 
 class HuffDicDecompressor;

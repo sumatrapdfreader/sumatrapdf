@@ -5,9 +5,11 @@
 #define DDJVUAPI /**/
 #define MINILISPAPI /**/
 
+#include "BaseUtil.h"
+#include "DjVuEngine.h"
 #include <ddjvuapi.h>
 #include <miniexp.h>
-#include "DjVuEngine.h"
+
 #include "FileUtil.h"
 
 // TODO: libdjvu leaks memory - among others

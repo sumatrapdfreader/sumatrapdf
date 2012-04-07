@@ -4,7 +4,6 @@
 #ifndef SumatraDialogs_h
 #define SumatraDialogs_h
 
-#include "BaseUtil.h"
 #include "AppPrefs.h"
 
 TCHAR * Dialog_GoToPage(HWND hwnd, const TCHAR *currentPageLabel, int pageCount, bool onlyNumeric=true);

@@ -4,7 +4,6 @@
 #ifndef GeomUtil_h
 #define GeomUtil_h
 
-#include "BaseUtil.h"
 #include <math.h>
 
 template <typename T>

@@ -4,8 +4,6 @@
 #ifndef CmdLineParser_h
 #define CmdLineParser_h
 
-#include "BaseUtil.h"
-
 class CmdLineParser : public StrVec {
 public:
     /* 'cmdLine' contains one or several arguments can be:

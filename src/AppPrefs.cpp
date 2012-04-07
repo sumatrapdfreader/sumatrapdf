@@ -2,14 +2,15 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
-#include "BencUtil.h"
 #include "AppPrefs.h"
+
 #include "AppTools.h"
+#include "BencUtil.h"
 #include "DisplayState.h"
 #include "Favorites.h"
 #include "FileHistory.h"
-#include "FileUtil.h"
 #include "FileTransactions.h"
+#include "FileUtil.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
 #include "WindowInfo.h"

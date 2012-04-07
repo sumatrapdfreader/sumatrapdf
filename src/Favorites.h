@@ -4,8 +4,6 @@
 #ifndef Favorites_h
 #define Favorites_h
 
-#include "BaseUtil.h"
-
 class WindowInfo;
 
 /*

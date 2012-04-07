@@ -3,7 +3,6 @@
 
 #include "BaseUtil.h"
 #include "Print.h"
-#include <shlwapi.h>
 
 #include "AppTools.h"
 #include "EngineManager.h"

@@ -4,9 +4,9 @@
 #ifndef Menu_h
 #define Menu_h
 
-#include "BaseUtil.h"
-#include "SumatraPDF.h"
 #include "resource.h"
+
+class WindowInfo;
 
 #define SEP_ITEM "-----"
 

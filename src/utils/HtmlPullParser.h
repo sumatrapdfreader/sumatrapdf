@@ -4,8 +4,6 @@
 #ifndef HtmlPullParser_h
 #define HtmlPullParser_h
 
-#include "BaseUtil.h"
-
 // enums must match HTML_TAGS_STRINGS order
 enum HtmlTag {
     Tag_NotFound = -1,
