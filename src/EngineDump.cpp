@@ -327,6 +327,9 @@ public:
 
 int main(int argc, char **argv)
 {
+    setlocale(LC_ALL, "C");
+    EnableNx();
+
     CmdLineParser argList(GetCommandLine());
     if (argList.Count() < 2) {
 Usage:

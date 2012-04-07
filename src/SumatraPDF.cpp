@@ -134,11 +134,11 @@ HFONT                        gDefaultGuiFont;
 
 // TODO: combine into Vec<SumatraWindow> (after 2.0) ?
 Vec<WindowInfo*>             gWindows;
-Vec<EbookWindow*>             gEbookWindows;
+Vec<EbookWindow*>            gEbookWindows;
 FileHistory                  gFileHistory;
 Favorites *                  gFavorites;
 
-bool                         gIsStressTesting = false;
+static bool                         gIsStressTesting = false;
 
 static HCURSOR                      gCursorDrag;
 static HCURSOR                      gCursorScroll;

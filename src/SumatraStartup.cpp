@@ -206,8 +206,11 @@ static WindowInfo *LoadOnStartup(const TCHAR *filePath, CommandLineInfo& i, bool
     return win;
 }
 
-static void SetupPluginMode(CommandLineInfo& i)
+static bool SetupPluginMode(CommandLineInfo& i)
 {
+    if (!IsWindow(i.hwndPluginParent) || i.fileNames.Count() == 0)
+        return false;
+
     gPluginURL = i.pluginURL;
     if (!gPluginURL)
         gPluginURL = i.fileNames.At(0);
@@ -230,6 +233,8 @@ static void SetupPluginMode(CommandLineInfo& i)
         gGlobalPrefs.defaultDisplayMode = DM_CONTINUOUS;
         gGlobalPrefs.defaultZoom = ZOOM_FIT_WIDTH;
     }
+
+    return true;
 }
 
 static void RunUnitTests()
@@ -363,13 +368,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         goto Exit;
 
     if (i.hwndPluginParent) {
-        if (!IsWindow(i.hwndPluginParent) || i.fileNames.Count() == 0)
+        if (!SetupPluginMode(i))
             goto Exit;
-        SetupPluginMode(i);
     }
 
-    WindowInfo *win = NULL;
-    bool isFirstWin = true;
     if (i.printerName) {
         // note: this prints all PDF files. Another option would be to
         // print only the first one
@@ -387,6 +389,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         SHFILEINFO sfi;
         SHGetFileInfo(_T(".pdf"), 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
     }
+
+    WindowInfo *win = NULL;
+    bool isFirstWin = true;
 
     for (size_t n = 0; n < i.fileNames.Count(); n++) {
         if (i.reuseInstance && !i.printDialog) {
@@ -408,7 +413,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         goto Exit;
     }
 
-    if (i.reuseInstance || i.printDialog && i.exitOnPrint)
+    if (i.reuseInstance && !i.printDialog || i.printDialog && i.exitOnPrint)
         goto Exit;
 
     if (isFirstWin) {
