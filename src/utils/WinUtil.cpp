@@ -2,11 +2,11 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
+#include "FileUtil.h"
 #include "WinUtil.h"
 #include <io.h>
 #include <fcntl.h>
-
-#include "FileUtil.h"
+#include <mlang.h>
 
 #include "DebugLog.h"
 
@@ -746,7 +746,7 @@ static HRESULT GetDataFromStream(IStream *stream, void **data, ULONG *len)
     // zero terminate the stream's content, so that it could be
     // used directly as either a char* or a WCHAR* string
     *len = stat.cbSize.LowPart;
-    *data = malloc(*len + 2);
+    *data = malloc(*len + sizeof(WCHAR));
     if (!*data)
         return E_OUTOFMEMORY;
 
@@ -791,6 +791,25 @@ bool ReadDataFromStream(IStream *stream, void *buffer, size_t len, size_t offset
     if (read < len)
         ((char *)buffer)[read] = '\0';
     return SUCCEEDED(res);
+}
+
+UINT GuessTextCodepage(char *data, size_t len, UINT default)
+{
+    // try to guess the codepage
+    ScopedComPtr<IMultiLanguage2> pMLang;
+    HRESULT hr = CoCreateInstance(CLSID_CMultiLanguage, NULL, CLSCTX_ALL,
+                                  IID_IMultiLanguage2, (void **)&pMLang);
+    if (FAILED(hr))
+        return default;
+
+    int ilen = (int)max(len, INT_MAX);
+    int count = 1;
+    DetectEncodingInfo info = { 0 };
+    hr = pMLang->DetectInputCodepage(MLDETECTCP_NONE, CP_ACP, data,
+                                     &ilen, &info, &count);
+    if (FAILED(hr) || count != 1)
+        return default;
+    return info.nCodePage;
 }
 
 namespace win {

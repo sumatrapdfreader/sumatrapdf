@@ -172,5 +172,6 @@ size_t FromCodePageBuf(WCHAR *buf, size_t cchBufSize, const char *s, UINT cp);
   #define CF_T_TEXT CF_TEXT
 #endif
 
-#define UTF8_BOM "\xEF\xBB\xBF"
-
+#define UTF8_BOM    "\xEF\xBB\xBF"
+#define UTF16_BOM   "\xFF\xFE"
+#define UTF16BE_BOM "\xFE\xFF"

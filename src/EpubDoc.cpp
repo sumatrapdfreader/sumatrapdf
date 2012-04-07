@@ -5,6 +5,7 @@
 #include "FileUtil.h"
 #include "HtmlPullParser.h"
 #include "TrivialHtmlParser.h"
+#include "WinUtil.h"
 #include "ZipUtil.h"
 
 inline TCHAR *FromHtmlUtf8(const char *s, size_t len)
@@ -686,9 +687,16 @@ static char *TextFindRfcEnd(str::Str<char>& htmlData, char *curr)
 bool TxtDoc::Load()
 {
     ScopedMem<char> text(file::ReadAll(fileName, NULL));
-    if (text && !str::StartsWith(text.Get(), UTF8_BOM)) {
-        ScopedMem<TCHAR> tmp(str::conv::FromAnsi(text));
-        text.Set(str::conv::ToUtf8(tmp));
+    if (str::StartsWith(text.Get(), UTF16BE_BOM)) {
+        // convert big-endian UTF-16 to little-endian UTF-16
+        for (WCHAR *c = (WCHAR *)text.Get(); *c; c++)
+            *c = BEtoHs(*c);
+    }
+    if (str::StartsWith(text.Get(), UTF16_BOM))
+        text.Set(str::ToMultiByte((WCHAR *)text.Get(), CP_UTF8));
+    if (!str::StartsWith(text.Get(), UTF8_BOM)) {
+        UINT codePage = GuessTextCodepage(text, str::Len(text), CP_ACP);
+        text.Set(str::ToMultiByte(text, codePage, CP_UTF8));
     }
     if (!text)
         return false;

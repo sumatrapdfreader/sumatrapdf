@@ -152,11 +152,11 @@ inline bool memeq(const void *s1, const void *s2, size_t len)
     return 0 == memcmp(s1, s2, len);
 }
 
-#include "RefCounted.h"
 #include "Allocator.h"
+#include "GeomUtil.h"
+#include "RefCounted.h"
 #include "Scoped.h"
 #include "StrUtil.h"
 #include "Vec.h"
-#include "GeomUtil.h"
 
 #endif

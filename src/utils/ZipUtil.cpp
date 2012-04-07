@@ -137,11 +137,11 @@ char *ZipFile::GetFileData(size_t fileindex, size_t *len)
         return NULL;
     }
 
-    char *result = (char *)Allocator::Alloc(allocator, len2 + 1);
+    char *result = (char *)Allocator::Alloc(allocator, len2 + sizeof(WCHAR));
     if (result) {
         unsigned int readBytes = unzReadCurrentFile(uf, result, (unsigned int)len2);
         // zero-terminate for convenience
-        result[len2] = '\0';
+        result[len2] = result[len2 + 1] = '\0';
         if (readBytes != len2) {
             Allocator::Free(allocator, result);
             result = NULL;

@@ -15,6 +15,7 @@ using namespace Gdiplus;
 #include "HtmlFormatter.h"
 #include "MiniMui.h"
 #include "TrivialHtmlParser.h"
+#include "WinUtil.h"
 #include "ZipUtil.h"
 
 // disable warning C4250 which is wrongly issued due to a compiler bug; cf.
@@ -1098,8 +1099,6 @@ protected:
     bool Load(const TCHAR *fileName);
 };
 
-#include <mlang.h>
-
 bool PdbEngineImpl::Load(const TCHAR *fileName)
 {
     this->fileName = str::Dup(fileName);
@@ -1110,19 +1109,6 @@ bool PdbEngineImpl::Load(const TCHAR *fileName)
 
     size_t textLen;
     const char *text = doc->GetBookHtmlData(textLen);
-    UINT codePage = CP_ACP;
-
-    // try to guess the codepage
-    ScopedComPtr<IMultiLanguage2> pMLang;
-    HRESULT hr = CoCreateInstance(CLSID_CMultiLanguage, NULL, CLSCTX_ALL,
-                                  IID_IMultiLanguage2, (void **)&pMLang);
-    if (SUCCEEDED(hr)) {
-        int len = (int)textLen, count = 1;
-        DetectEncodingInfo info = { 0 };
-        hr = pMLang->DetectInputCodepage(MLDETECTCP_NONE, CP_ACP, (CHAR *)text, &len, &info, &count);
-        if (SUCCEEDED(hr) && 1 == count)
-            codePage = info.nCodePage;
-    }
 
     str::Str<char> builder;
     builder.Append("<body>");
@@ -1135,6 +1121,8 @@ bool PdbEngineImpl::Load(const TCHAR *fileName)
             builder.Append(text[i]);
     }
     builder.Append("</body>");
+
+    UINT codePage = GuessTextCodepage((char *)text, textLen, CP_ACP);
     htmlData.Set(str::ToMultiByte(builder.Get(), codePage, CP_UTF8));
 
     HtmlFormatterArgs args;
