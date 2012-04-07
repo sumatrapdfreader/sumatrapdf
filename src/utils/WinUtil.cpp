@@ -152,21 +152,25 @@ bool CreateRegKey(HKEY keySub, const TCHAR *keyName)
     return true;
 }
 
+// try to remove any access restrictions on the key
+// by granting everybody all access to this key (NULL DACL)
+static void ResetRegKeyAcl(HKEY keySub, const TCHAR *keyName)
+{
+    HKEY hKey;
+    LONG res = RegOpenKeyEx(keySub, keyName, 0, WRITE_DAC, &hKey);
+    if (ERROR_SUCCESS != res)
+        return;
+    SECURITY_DESCRIPTOR secdesc;
+    InitializeSecurityDescriptor(&secdesc, SECURITY_DESCRIPTOR_REVISION);
+    SetSecurityDescriptorDacl(&secdesc, TRUE, NULL, TRUE);
+    RegSetKeySecurity(hKey, DACL_SECURITY_INFORMATION, &secdesc);
+    RegCloseKey(hKey);
+}
+
 bool DeleteRegKey(HKEY keySub, const TCHAR *keyName, bool resetACLFirst)
 {
-    if (resetACLFirst) {
-        // try to remove any access restrictions on the key to delete
-        // by first granting everybody all access to this key (NULL DACL)
-        HKEY hKey;
-        LONG res = RegOpenKeyEx(keySub, keyName, 0, WRITE_DAC, &hKey);
-        if (ERROR_SUCCESS == res) {
-            SECURITY_DESCRIPTOR secdesc;
-            InitializeSecurityDescriptor(&secdesc, SECURITY_DESCRIPTOR_REVISION);
-            SetSecurityDescriptorDacl(&secdesc, TRUE, NULL, TRUE);
-            RegSetKeySecurity(hKey, DACL_SECURITY_INFORMATION, &secdesc);
-            RegCloseKey(hKey);
-        }
-    }
+    if (resetACLFirst)
+        ResetRegKeyAcl(keySub, keyName);
 
     LSTATUS res = SHDeleteKey(keySub, keyName);
     return ERROR_SUCCESS == res || ERROR_FILE_NOT_FOUND == res;
