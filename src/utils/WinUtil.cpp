@@ -99,6 +99,21 @@ void LogLastError(DWORD err)
     LocalFree(msgBuf);
 }
 
+// return true if a given registry key (path) exists
+bool RegKeyExists(HKEY keySub, const TCHAR *keyName)
+{
+    HKEY hKey;
+    LONG res = RegOpenKey(keySub, keyName, &hKey);
+    if (ERROR_SUCCESS == res) {
+        RegCloseKey(hKey);
+        return true;
+    }
+
+    // return true for key that exists even if it's not
+    // accessible by us
+    return ERROR_ACCESS_DENIED == res;
+}
+
 // called needs to free() the result
 TCHAR *ReadRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName)
 {

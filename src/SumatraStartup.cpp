@@ -264,6 +264,11 @@ static void GetCommandLineInfo(CommandLineInfo& i)
     i.ParseCommandLine(GetCommandLine());
 }
 
+static bool RunningUnderWine()
+{
+    return RegKeyExists(HKEY_LOCAL_MACHINE, _T("Software\\Wine"));
+}
+
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     int retCode = 1;    // by default it's error
@@ -290,13 +295,17 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
     srand((unsigned int)time(NULL));
 
-    // TODO: move into %TEMP%? or rename? currently the
-    //       "symbols" folder isn't obviously related to
-    //       SumatraPDF when running in portable mode from
-    //       a folder containing multiple applications
-    ScopedMem<TCHAR> symDir(AppGenDataFilename(_T("symbols")));
-    ScopedMem<TCHAR> crashDumpPath(AppGenDataFilename(CRASH_DUMP_FILE_NAME));
-    InstallCrashHandler(crashDumpPath, symDir);
+    // don't bother sending crash reports when running under Wine
+    // as they're not helpful
+    if (!RunningUnderWine()) {
+        // TODO: move into %TEMP%? or rename? currently the
+        //       "symbols" folder isn't obviously related to
+        //       SumatraPDF when running in portable mode from
+        //       a folder containing multiple applications
+        ScopedMem<TCHAR> symDir(AppGenDataFilename(_T("symbols")));
+        ScopedMem<TCHAR> crashDumpPath(AppGenDataFilename(CRASH_DUMP_FILE_NAME));
+        InstallCrashHandler(crashDumpPath, symDir);
+    }
 
     ScopedOle ole;
     InitAllCommonControls();
@@ -463,7 +472,8 @@ Exit:
 
     // it's still possible to crash after this (destructors of static classes,
     // atexit() code etc.) point, but it's very unlikely
-    UninstallCrashHandler();
+    if (!RunningUnderWine())
+        UninstallCrashHandler();
 
 #ifdef DEBUG
     // output leaks after all destructors of static objects have run
