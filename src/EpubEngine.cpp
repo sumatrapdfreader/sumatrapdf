@@ -111,7 +111,7 @@ protected:
     }
     bool ExtractPageAnchors();
     void FixFontSizeForResolution(HDC hDC);
-    PageElement *CreatePageLink(DrawInstr *link, RectI rect, int pageNo);
+    virtual PageElement *CreatePageLink(DrawInstr *link, RectI rect, int pageNo);
 
     Vec<DrawInstr> *GetHtmlPage(int pageNo) {
         CrashIf(pageNo < 1 || PageCount() < pageNo);
@@ -122,6 +122,7 @@ protected:
 };
 
 class SimpleDest2 : public PageDestination {
+protected:
     int pageNo;
     RectD rect;
     ScopedMem<TCHAR> value;
@@ -141,18 +142,19 @@ class EbookLink : public PageElement, public PageDestination {
     DrawInstr *link; // owned by *EngineImpl::pages
     RectI rect;
     int pageNo;
+    bool showUrl;
 
 public:
-    EbookLink() : dest(NULL), link(NULL), pageNo(-1) { }
-    EbookLink(DrawInstr *link, RectI rect, PageDestination *dest, int pageNo=-1) :
-        link(link), rect(rect), dest(dest), pageNo(pageNo) { }
+    EbookLink() : dest(NULL), link(NULL), pageNo(-1), showUrl(false) { }
+    EbookLink(DrawInstr *link, RectI rect, PageDestination *dest, int pageNo=-1, bool showUrl=false) :
+        link(link), rect(rect), dest(dest), pageNo(pageNo), showUrl(showUrl) { }
     virtual ~EbookLink() { delete dest; }
 
     virtual PageElementType GetType() const { return Element_Link; }
     virtual int GetPageNo() const { return pageNo; }
     virtual RectD GetRect() const { return rect.Convert<double>(); }
     virtual TCHAR *GetValue() const {
-        if (!dest)
+        if (!dest || showUrl)
             return str::conv::FromHtmlUtf8(link->str.s, link->str.len);
         return NULL;
     }
@@ -482,7 +484,7 @@ PageDestination *EbookEngine::GetNamedDest(const TCHAR *name)
         size_t base_len = id - name_utf8 - 1;
         for (size_t i = 0; i < baseAnchors.Count(); i++) {
             DrawInstr *anchor = baseAnchors.At(i);
-            if (base_len == anchor->str.len &&
+            if (anchor && base_len == anchor->str.len &&
                 str::EqNI(name_utf8, anchor->str.s, base_len)) {
                 baseAnchor = anchor;
                 basePageNo = (int)i + 1;
@@ -904,11 +906,11 @@ public:
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
+    virtual const TCHAR *GetDefaultFileExt() const { return _T(".mobi"); }
+
     virtual PageDestination *GetNamedDest(const TCHAR *name);
     virtual bool HasTocTree() const { return tocReparsePoint != NULL; }
     virtual DocTocItem *GetTocTree();
-
-    virtual const TCHAR *GetDefaultFileExt() const { return _T(".mobi"); }
 
 protected:
     MobiDoc *doc;
@@ -1088,9 +1090,8 @@ public:
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
-    virtual PageDestination *GetNamedDest(const TCHAR *name) { return NULL; }
-
     virtual const TCHAR *GetDefaultFileExt() const { return _T(".pdb"); }
+    virtual PageDestination *GetNamedDest(const TCHAR *name) { return NULL; }
 
 protected:
     MobiDoc *doc;
@@ -1492,13 +1493,14 @@ public:
     }
 
     virtual const TCHAR *GetDefaultFileExt() const { return _T(".html"); }
-
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
 
 protected:
     HtmlDoc *doc;
 
     bool Load(const TCHAR *fileName);
+
+    virtual PageElement *CreatePageLink(DrawInstr *link, RectI rect, int pageNo);
 };
 
 bool HtmlEngineImpl::Load(const TCHAR *fileName)
@@ -1522,6 +1524,35 @@ bool HtmlEngineImpl::Load(const TCHAR *fileName)
         return false;
 
     return pages->Count() > 0;
+}
+
+class RemoteHtmlDest : public SimpleDest2 {
+    ScopedMem<TCHAR> name;
+
+public:
+    RemoteHtmlDest(const TCHAR *relativeURL) : SimpleDest2(0, RectD()) {
+        const TCHAR *id = str::FindChar(relativeURL, '#');
+        if (id) {
+            value.Set(str::DupN(relativeURL, id - relativeURL));
+            name.Set(str::Dup(id));
+        }
+        else
+            value.Set(str::Dup(relativeURL));
+    }
+
+    virtual PageDestType GetDestType() const { return Dest_LaunchFile; }
+    virtual TCHAR *GetDestName() const { return name ? str::Dup(name) : NULL; }
+};
+
+PageElement *HtmlEngineImpl::CreatePageLink(DrawInstr *link, RectI rect, int pageNo)
+{
+    bool isInternal = !memchr(link->str.s, ':', link->str.len);
+    if (!isInternal || !link->str.len || '#' == *link->str.s)
+        return EbookEngine::CreatePageLink(link, rect, pageNo);
+
+    ScopedMem<TCHAR> url(str::conv::FromHtmlUtf8(link->str.s, link->str.len));
+    PageDestination *dest = new RemoteHtmlDest(url);
+    return new EbookLink(link, rect, dest, pageNo, true);
 }
 
 bool HtmlEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
