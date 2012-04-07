@@ -876,7 +876,8 @@ bool MobiDoc::LoadDocument()
         if (!LoadDocRecordIntoBuffer(i, *doc))
             return false;
     }
-    assert(docUncompressedSize == doc->Size());
+    // in one PalmDOC file the value is off-by-one (counting the trailing zero?)
+    assert(docUncompressedSize == doc->Size() || docUncompressedSize == doc->Size() + 1);
     if (textEncoding != CP_UTF8) {
         char *docUtf8 = str::ToMultiByte(doc->Get(), textEncoding, CP_UTF8);
         if (docUtf8) {

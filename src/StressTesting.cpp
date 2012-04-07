@@ -220,6 +220,8 @@ static bool IsStressTestSupportedFile(const TCHAR *fileName, const TCHAR *filter
 #ifdef DISABLE_EBOOK_UI
            MobiEngine::IsSupportedFile(fileName) ||
 #endif
+           PdbEngine::IsSupportedFile(fileName)  ||
+           TxtEngine::IsSupportedFile(fileName)  ||
 #endif
            ChmEngine::IsSupportedFile(fileName);
 }

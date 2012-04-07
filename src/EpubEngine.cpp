@@ -21,7 +21,7 @@
 // http://connect.microsoft.com/VisualStudio/feedback/details/101259/disable-warning-c4250-class1-inherits-class2-member-via-dominance-when-weak-member-is-a-pure-virtual-function
 #pragma warning( disable: 4250 ) /* 'class1' : inherits 'class2::member' via dominance */
 
-/* common classes for EPUB, FictionBook2, Mobi, CHM and TXT engines */
+/* common classes for EPUB, FictionBook2, Mobi, PalmDOC, CHM and TXT engines */
 
 namespace str {
     namespace conv {
@@ -889,7 +889,7 @@ Fb2Engine *Fb2Engine::CreateFromFile(const TCHAR *fileName)
     return engine;
 }
 
-/* BaseEngine for handling Mobi documents (for reference testing) */
+/* BaseEngine for handling Mobi documents */
 
 #include "MobiDoc.h"
 
@@ -912,6 +912,7 @@ public:
 protected:
     MobiDoc *doc;
     const char *tocReparsePoint;
+    ScopedMem<char> pdbHtml;
 
     bool Load(const TCHAR *fileName);
 };
@@ -921,7 +922,7 @@ bool MobiEngineImpl::Load(const TCHAR *fileName)
     this->fileName = str::Dup(fileName);
 
     doc = MobiDoc::CreateFromFile(fileName);
-    if (!doc)
+    if (!doc || doc->IsPalmDoc())
         return false;
 
     HtmlFormatterArgs args;
@@ -1052,6 +1053,13 @@ DocTocItem *MobiEngineImpl::GetTocTree()
 
 bool MobiEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
 {
+    if (sniff) {
+        char header[kPdbHeaderLen];
+        ZeroMemory(header, sizeof(header));
+        file::ReadAll(fileName, header, sizeof(header));
+        return str::EqN(header + 60, "BOOKMOBI", 8);
+    }
+
     return str::EndsWithI(fileName, _T(".mobi")) ||
            str::EndsWithI(fileName, _T(".azw"))  ||
            str::EndsWithI(fileName, _T(".prc"));
@@ -1060,6 +1068,106 @@ bool MobiEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
 MobiEngine *MobiEngine::CreateFromFile(const TCHAR *fileName)
 {
     MobiEngineImpl *engine = new MobiEngineImpl();
+    if (!engine->Load(fileName)) {
+        delete engine;
+        return NULL;
+    }
+    return engine;
+}
+
+/* BaseEngine for handling PalmDOC documents */
+
+class PdbEngineImpl : public EbookEngine, public PdbEngine {
+    friend PdbEngine;
+
+public:
+    PdbEngineImpl() : EbookEngine(), doc(NULL) { }
+    virtual ~PdbEngineImpl() { delete doc; }
+    virtual PdbEngine *Clone() {
+        return fileName ? CreateFromFile(fileName) : NULL;
+    }
+
+    virtual PageDestination *GetNamedDest(const TCHAR *name) { return NULL; }
+
+    virtual const TCHAR *GetDefaultFileExt() const { return _T(".pdb"); }
+
+protected:
+    MobiDoc *doc;
+    ScopedMem<char> htmlData;
+
+    bool Load(const TCHAR *fileName);
+};
+
+#include <mlang.h>
+
+bool PdbEngineImpl::Load(const TCHAR *fileName)
+{
+    this->fileName = str::Dup(fileName);
+
+    doc = MobiDoc::CreateFromFile(fileName);
+    if (!doc || !doc->IsPalmDoc())
+        return false;
+
+    size_t textLen;
+    const char *text = doc->GetBookHtmlData(textLen);
+    UINT codePage = CP_ACP;
+
+    // try to guess the codepage
+    ScopedComPtr<IMultiLanguage2> pMLang;
+    HRESULT hr = CoCreateInstance(CLSID_CMultiLanguage, NULL, CLSCTX_ALL,
+                                  IID_IMultiLanguage2, (void **)&pMLang);
+    if (SUCCEEDED(hr)) {
+        int len = (int)textLen, count = 1;
+        DetectEncodingInfo info = { 0 };
+        hr = pMLang->DetectInputCodepage(MLDETECTCP_NONE, CP_ACP, (CHAR *)text, &len, &info, &count);
+        if (SUCCEEDED(hr) && 1 == count)
+            codePage = info.nCodePage;
+    }
+
+    str::Str<char> builder;
+    builder.Append("<body>");
+    for (size_t i = 0; i < textLen; i++) {
+        if ('&' == text[i])
+            builder.Append("&amp;");
+        else if ('<' == text[i])
+            builder.Append("&lt;");
+        else
+            builder.Append(text[i]);
+    }
+    builder.Append("</body>");
+    htmlData.Set(str::ToMultiByte(builder.Get(), codePage, CP_UTF8));
+
+    HtmlFormatterArgs args;
+    args.htmlStr = htmlData.Get();
+    args.htmlStrLen = str::Len(htmlData.Get());
+    args.pageDx = (int)(pageRect.dx - 2 * pageBorder);
+    args.pageDy = (int)(pageRect.dy - 2 * pageBorder);
+    args.fontName = L"Georgia";
+    args.fontSize = 11;
+    args.textAllocator = &allocator;
+
+    pages = MobiFormatter(&args, doc).FormatAllPages();
+    if (!ExtractPageAnchors())
+        return false;
+
+    return pages->Count() > 0;
+}
+
+bool PdbEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
+{
+    if (sniff) {
+        char header[kPdbHeaderLen];
+        ZeroMemory(header, sizeof(header));
+        file::ReadAll(fileName, header, sizeof(header));
+        return str::EqN(header + 60, "TEXtREAd", 8);
+    }
+
+    return str::EndsWithI(fileName, _T(".pdb"));
+}
+
+PdbEngine *PdbEngine::CreateFromFile(const TCHAR *fileName)
+{
+    PdbEngineImpl *engine = new PdbEngineImpl();
     if (!engine->Load(fileName)) {
         delete engine;
         return NULL;

@@ -94,6 +94,7 @@ class MobiDoc
     bool    LoadDocRecordIntoBuffer(size_t recNo, str::Str<char>& strOut);
     void    LoadImages();
     bool    LoadImage(size_t imageNo);
+    bool    LoadDocument();
 
 public:
     str::Str<char> *    doc;
@@ -102,12 +103,12 @@ public:
 
     ~MobiDoc();
 
-    bool                LoadDocument();
     char *              GetBookHtmlData(size_t& lenOut) const;
     size_t              GetBookHtmlSize() const { return doc->Size(); }
     ImageData *         GetCoverImage();
     ImageData *         GetImage(size_t imgRecIndex) const;
     const TCHAR *       GetFileName() const { return fileName; }
+    bool                IsPalmDoc() const { return !isMobi; }
 
     static bool         IsSupportedFile(const TCHAR *fileName, bool sniff=false);
     static MobiDoc *    CreateFromFile(const TCHAR *fileName);

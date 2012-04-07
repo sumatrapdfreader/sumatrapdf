@@ -25,6 +25,12 @@ public:
     static MobiEngine *CreateFromFile(const TCHAR *fileName);
 };
 
+class PdbEngine : public virtual BaseEngine {
+public:
+    static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
+    static PdbEngine *CreateFromFile(const TCHAR *fileName);
+};
+
 class Chm2Engine : public virtual BaseEngine {
 public:
     static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);

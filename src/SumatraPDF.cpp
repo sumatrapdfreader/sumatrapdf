@@ -2505,6 +2505,7 @@ static void AppendFileFilterForDoc(DisplayModel *dm, str::Str<TCHAR>& fileFilter
         case Engine_Epub:   fileFilter.Append(_TR("EPUB ebooks")); break;
         case Engine_Fb2:    fileFilter.Append(_T("FictionBooks")); break;
         case Engine_Mobi:   fileFilter.Append(_TR("Mobi documents")); break;
+        case Engine_Pdb:    fileFilter.Append(_T("PalmDOC")); break;
         case Engine_Chm2:   fileFilter.Append(_TR("CHM documents")); break;
         case Engine_Txt:    fileFilter.Append(_TR("Text documents")); break;
         default:            fileFilter.Append(_TR("PDF documents")); break;
