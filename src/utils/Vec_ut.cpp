@@ -89,8 +89,9 @@ static void VecTest()
     ints.Reset();
     assert(ints.Count() == 0);
 
-    for (int i = 0; i < 1000; i++)
+    for (int i = 0; i < 1000; i++) {
         ints.Push(i);
+    }
     assert(ints.Count() == 1000 && ints.At(500) == 500);
     ints.Remove(500);
     assert(ints.Count() == 999 && ints.At(500) == 501);

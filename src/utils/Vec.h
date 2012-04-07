@@ -149,7 +149,7 @@ public:
     void Append(const T* src, size_t count) {
         if (0 == count)
             return;
-        T* dst = AppendBlanks(count);
+        T* dst = MakeSpaceAt(len, count);
         memcpy(dst, src, count * sizeof(T));
     }
 
@@ -297,7 +297,7 @@ public:
 
     void Append(T c)
     {
-        AppendBlanks(1)[0] = c;
+        InsertAt(len, c);
     }
 
     void Append(const T* src, size_t size=-1)
