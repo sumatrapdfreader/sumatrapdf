@@ -1118,6 +1118,8 @@ bool PdbEngineImpl::Load(const TCHAR *fileName)
             builder.Append("&amp;");
         else if ('<' == text[i])
             builder.Append("&lt;");
+        else if ('\n' == text[i])
+            builder.Append("\n<br>");
         else
             builder.Append(text[i]);
     }
