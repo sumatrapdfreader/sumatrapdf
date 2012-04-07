@@ -20,8 +20,6 @@ target: 6/1):
 - refactor LoadDocument() so that more code is shared between
   engine/ebook UIs and so that it loads documents in the
   background thread
-- make loading of .mobi and .epub files from cmd-line work
-  (part of LoadDocument() refactor)
 - a smoother transition betwen different window types which
   doesn't involve closing the window
 - mobi: closing mobi document when initial formatting is going on,

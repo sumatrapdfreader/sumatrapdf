@@ -1386,8 +1386,13 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
             if (win->IsDocLoaded() && !args.forceReuse)
                 win = NULL;
         }
+        if (!win) {
+            // create a dummy window so that we can return
+            // a non-NULL value to indicate loading success
+            win = CreateWindowInfo();
+        }
         LoadEbookAsync(fullPath, SumatraWindow::Make(win));
-        return NULL;
+        return win;
     }
 
     bool isNewWindow = false;

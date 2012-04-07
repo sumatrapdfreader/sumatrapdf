@@ -136,24 +136,24 @@ static bool InstanceInit(HINSTANCE hInstance, int nCmdShow)
     return true;
 }
 
-static void OpenUsingDde(CommandLineInfo& i, int n, bool firstIsDocLoaded)
+static void OpenUsingDde(const TCHAR *filePath, CommandLineInfo& i, bool isFirstWin)
 {
     // delegate file opening to a previously running instance by sending a DDE message
     TCHAR fullpath[MAX_PATH];
-    GetFullPathName(i.fileNames.At(n), dimof(fullpath), fullpath, NULL);
+    GetFullPathName(filePath, dimof(fullpath), fullpath, NULL);
 
     ScopedMem<TCHAR> cmd(str::Format(_T("[") DDECOMMAND_OPEN _T("(\"%s\", 0, 1, 0)]"), fullpath));
     DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
-    if (i.destName && !firstIsDocLoaded) {
+    if (i.destName && isFirstWin) {
         cmd.Set(str::Format(_T("[") DDECOMMAND_GOTO _T("(\"%s\", \"%s\")]"), fullpath, i.destName));
         DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
     }
-    else if (i.pageNumber > 0 && !firstIsDocLoaded) {
+    else if (i.pageNumber > 0 && isFirstWin) {
         cmd.Set(str::Format(_T("[") DDECOMMAND_PAGE _T("(\"%s\", %d)]"), fullpath, i.pageNumber));
         DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
     }
     if ((i.startView != DM_AUTOMATIC || i.startZoom != INVALID_ZOOM ||
-            i.startScroll.x != -1 && i.startScroll.y != -1) && !firstIsDocLoaded) {
+            i.startScroll.x != -1 && i.startScroll.y != -1) && isFirstWin) {
         const TCHAR *viewMode = DisplayModeConv::NameFromEnum(i.startView);
         cmd.Set(str::Format(_T("[") DDECOMMAND_SETVIEW _T("(\"%s\", \"%s\", %.2f, %d, %d)]"),
                                     fullpath, viewMode, i.startZoom, i.startScroll.x, i.startScroll.y));
@@ -161,31 +161,28 @@ static void OpenUsingDde(CommandLineInfo& i, int n, bool firstIsDocLoaded)
     }
     if (i.forwardSearchOrigin && i.forwardSearchLine) {
         cmd.Set(str::Format(_T("[") DDECOMMAND_SYNC _T("(\"%s\", \"%s\", %d, 0, 0, 1)]"),
-                                    i.fileNames.At(n), i.forwardSearchOrigin, i.forwardSearchLine));
+                                    filePath, i.forwardSearchOrigin, i.forwardSearchLine));
         DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
     }
 }
 
-static WindowInfo *LoadOnStartup(CommandLineInfo& i, int n, bool firstIsDocLoaded, bool& ok)
+static WindowInfo *LoadOnStartup(const TCHAR *filePath, CommandLineInfo& i, bool isFirstWin)
 {
-    ok = true;
     bool showWin = !(i.printDialog && i.exitOnPrint) && !gPluginMode;
-    LoadArgs args(i.fileNames.At(n), NULL, showWin);
+    LoadArgs args(filePath, NULL, showWin);
     WindowInfo *win = LoadDocument(args);
-    if (!win) {
-        ok = false;
+    if (!win)
         return win;
-    }
 
-    if (win->IsDocLoaded() && i.destName && !firstIsDocLoaded) {
+    if (win->IsDocLoaded() && i.destName && isFirstWin) {
         win->linkHandler->GotoNamedDest(i.destName);
-    } else if (win->IsDocLoaded() && i.pageNumber > 0 && !firstIsDocLoaded) {
+    } else if (win->IsDocLoaded() && i.pageNumber > 0 && isFirstWin) {
         if (win->dm->ValidPageNo(i.pageNumber))
             win->dm->GoToPage(i.pageNumber, 0);
     }
     if (i.hwndPluginParent)
         MakePluginWindow(*win, i.hwndPluginParent);
-    if (!win->IsDocLoaded() || firstIsDocLoaded)
+    if (!win->IsDocLoaded() || !isFirstWin)
         return win;
 
     if (i.enterPresentation || i.enterFullscreen)
@@ -372,7 +369,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     }
 
     WindowInfo *win = NULL;
-    bool firstIsDocLoaded = false;
+    bool isFirstWin = true;
     if (i.printerName) {
         // note: this prints all PDF files. Another option would be to
         // print only the first one
@@ -393,30 +390,35 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     for (size_t n = 0; n < i.fileNames.Count(); n++) {
         if (i.reuseInstance && !i.printDialog) {
-            OpenUsingDde(i, n, firstIsDocLoaded);
+            OpenUsingDde(i.fileNames.At(n), i, isFirstWin);
         } else {
-            bool ok;
-            win = LoadOnStartup(i, n, firstIsDocLoaded, ok);
-            if (!ok)
-                goto Exit;
+            win = LoadOnStartup(i.fileNames.At(n), i, isFirstWin);
+            if (!win) {
+                retCode++;
+                continue;
+            }
+            if (i.printDialog)
+                OnMenuPrint(win, i.exitOnPrint);
         }
-
-        if (i.printDialog)
-            OnMenuPrint(win, i.exitOnPrint);
-        firstIsDocLoaded = true;
+        isFirstWin = false;
+    }
+    if (i.fileNames.Count() > 0 && isFirstWin) {
+        // failed to create any window, even though there
+        // were files to load (or show a failure message for)
+        goto Exit;
     }
 
     if (i.reuseInstance || i.printDialog && i.exitOnPrint)
         goto Exit;
 
-    if (!firstIsDocLoaded) {
+    if (isFirstWin) {
         win = CreateAndShowWindowInfo();
         if (!win)
             goto Exit;
     }
 
     UpdateUITextForLanguage(); // needed for RTL languages
-    if (!firstIsDocLoaded)
+    if (isFirstWin)
         UpdateToolbarAndScrollbarState(*win);
 
     // Make sure that we're still registered as default,
