@@ -10,6 +10,12 @@ Next version:
 * support multi-page TIFF files
 * support for some comic book (CBZ) metadata
 
+2.0.1 (????-??-??)
+
+* fix loading .mobi files from command line
+* fix a crash loading multiple .mobi files at once
+* fix a crash showing tooltips for table of contents tree entries
+
 2.0 (2012-04-02)
 
 * support for mobi ebook format
