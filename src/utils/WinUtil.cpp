@@ -793,7 +793,7 @@ bool ReadDataFromStream(IStream *stream, void *buffer, size_t len, size_t offset
     return SUCCEEDED(res);
 }
 
-UINT GuessTextCodepage(char *data, size_t len, UINT default)
+UINT GuessTextCodepage(const char *data, size_t len, UINT default)
 {
     // try to guess the codepage
     ScopedComPtr<IMultiLanguage2> pMLang;
@@ -802,10 +802,10 @@ UINT GuessTextCodepage(char *data, size_t len, UINT default)
     if (FAILED(hr))
         return default;
 
-    int ilen = (int)max(len, INT_MAX);
+    int ilen = (int)min(len, INT_MAX);
     int count = 1;
     DetectEncodingInfo info = { 0 };
-    hr = pMLang->DetectInputCodepage(MLDETECTCP_NONE, CP_ACP, data,
+    hr = pMLang->DetectInputCodepage(MLDETECTCP_NONE, CP_ACP, (char *)data,
                                      &ilen, &info, &count);
     if (FAILED(hr) || count != 1)
         return default;

@@ -22,7 +22,7 @@ using namespace Gdiplus;
 // http://connect.microsoft.com/VisualStudio/feedback/details/101259/disable-warning-c4250-class1-inherits-class2-member-via-dominance-when-weak-member-is-a-pure-virtual-function
 #pragma warning( disable: 4250 ) /* 'class1' : inherits 'class2::member' via dominance */
 
-/* common classes for EPUB, FictionBook2, Mobi, PalmDOC, CHM and TXT engines */
+/* common classes for EPUB, FictionBook2, Mobi, PalmDOC, CHM, HTML and TXT engines */
 
 namespace str {
     namespace conv {
@@ -1405,6 +1405,133 @@ bool Chm2Engine::IsSupportedFile(const TCHAR *fileName, bool sniff)
 Chm2Engine *Chm2Engine::CreateFromFile(const TCHAR *fileName)
 {
     Chm2EngineImpl *engine = new Chm2EngineImpl();
+    if (!engine->Load(fileName)) {
+        delete engine;
+        return NULL;
+    }
+    return engine;
+}
+
+/* formatting extensions for HTML */
+
+class HtmlFormatter2 : public HtmlFormatter {
+protected:
+    void HandleTagImg_Html(HtmlToken *t);
+    void HandleHtmlTag2(HtmlToken *t);
+
+    HtmlDoc *htmlDoc;
+
+public:
+    HtmlFormatter2(HtmlFormatterArgs *args, HtmlDoc *doc) :
+        HtmlFormatter(args), htmlDoc(doc) { }
+
+    Vec<HtmlPage*> *FormatAllPages();
+};
+
+void HtmlFormatter2::HandleTagImg_Html(HtmlToken *t)
+{
+    CrashIf(!htmlDoc);
+    if (t->IsEndTag())
+        return;
+    AttrInfo *attr = t->GetAttrByName("src");
+    if (!attr)
+        return;
+    ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
+    ImageData *img = htmlDoc->GetImageData(src);
+    if (img)
+        EmitImage(img);
+}
+
+void HtmlFormatter2::HandleHtmlTag2(HtmlToken *t)
+{
+    HtmlTag tag = FindTag(t);
+    if (Tag_Img == tag) {
+        HandleTagImg_Html(t);
+        HandleAnchorTag(t);
+    }
+    else
+        HandleHtmlTag(t);
+}
+
+Vec<HtmlPage*> *HtmlFormatter2::FormatAllPages()
+{
+    HtmlToken *t;
+    while ((t = htmlParser->Next()) && !t->IsError()) {
+        if (t->IsTag())
+            HandleHtmlTag2(t);
+        else if (!IgnoreText())
+            HandleText(t);
+    }
+
+    FlushCurrLine(true);
+    UpdateLinkBboxes(currPage);
+    pagesToSend.Append(currPage);
+    currPage = NULL;
+
+    Vec<HtmlPage *> *result = new Vec<HtmlPage *>(pagesToSend);
+    pagesToSend.Reset();
+    return result;
+}
+
+/* BaseEngine for handling HTML documents */
+/* (mainly to allow creating minimal regression test testcases more easily) */
+
+class HtmlEngineImpl : public EbookEngine, public HtmlEngine {
+    friend HtmlEngine;
+
+public:
+    HtmlEngineImpl() : EbookEngine(), doc(NULL) {
+        // ISO 216 A4 (210mm x 297mm)
+        pageRect = RectD(0, 0, 8.27 * GetFileDPI(), 11.693 * GetFileDPI());
+    }
+    virtual ~HtmlEngineImpl() {
+        delete doc;
+    }
+    virtual HtmlEngine *Clone() {
+        return fileName ? CreateFromFile(fileName) : NULL;
+    }
+
+    virtual const TCHAR *GetDefaultFileExt() const { return _T(".html"); }
+
+    virtual PageLayoutType PreferredLayout() { return Layout_Single; }
+
+protected:
+    HtmlDoc *doc;
+
+    bool Load(const TCHAR *fileName);
+};
+
+bool HtmlEngineImpl::Load(const TCHAR *fileName)
+{
+    this->fileName = str::Dup(fileName);
+
+    doc = HtmlDoc::CreateFromFile(fileName);
+    if (!doc)
+        return false;
+
+    HtmlFormatterArgs args;
+    args.htmlStr = doc->GetTextData(&args.htmlStrLen);
+    args.pageDx = (int)(pageRect.dx - 2 * pageBorder);
+    args.pageDy = (int)(pageRect.dy - 2 * pageBorder);
+    args.fontName = L"Georgia";
+    args.fontSize = 11;
+    args.textAllocator = &allocator;
+
+    pages = HtmlFormatter2(&args, doc).FormatAllPages();
+    if (!ExtractPageAnchors())
+        return false;
+
+    return pages->Count() > 0;
+}
+
+bool HtmlEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
+{
+    return HtmlDoc::IsSupportedFile(fileName, sniff);
+}
+
+HtmlEngine *HtmlEngine::CreateFromFile(const TCHAR *fileName)
+{
+    HtmlEngineImpl *engine = new HtmlEngineImpl();
     if (!engine->Load(fileName)) {
         delete engine;
         return NULL;

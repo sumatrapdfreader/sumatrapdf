@@ -85,7 +85,7 @@ void    ToggleWindowStyle(HWND hwnd, DWORD flag, bool enable, int type=GWL_STYLE
 IStream*CreateStreamFromData(void *data, size_t len);
 void  * GetDataFromStream(IStream *stream, size_t *len, HRESULT *res_opt=NULL);
 bool    ReadDataFromStream(IStream *stream, void *buffer, size_t len, size_t offset=0);
-UINT    GuessTextCodepage(char *data, size_t len, UINT default=CP_ACP);
+UINT    GuessTextCodepage(const char *data, size_t len, UINT default=CP_ACP);
 
 namespace win {
 

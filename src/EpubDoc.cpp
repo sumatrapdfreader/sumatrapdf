@@ -14,6 +14,24 @@ inline TCHAR *FromHtmlUtf8(const char *s, size_t len)
     return DecodeHtmlEntitites(tmp, CP_UTF8);
 }
 
+static char *DecodeTextToUtf8(const char *s)
+{
+    ScopedMem<WCHAR> tmp;
+    if (str::StartsWith(s, UTF16BE_BOM)) {
+        // convert big-endian UTF-16 to little-endian UTF-16
+        tmp.Set(str::Dup((WCHAR *)s));
+        for (WCHAR *c = tmp.Get(); *c; c++)
+            *c = BEtoHs(*c);
+        s = (char *)tmp.Get();
+    }
+    if (str::StartsWith(s, UTF16_BOM))
+        return str::ToMultiByte((WCHAR *)s, CP_UTF8);
+    if (str::StartsWith(s, UTF8_BOM))
+        return str::Dup(s);
+    UINT codePage = GuessTextCodepage(s, str::Len(s), CP_ACP);
+    return str::ToMultiByte(s, codePage, CP_UTF8);
+}
+
 /* URL handling helpers */
 
 char *NormalizeURL(const char *url, const char *base)
@@ -581,6 +599,79 @@ Fb2Doc *Fb2Doc::CreateFromFile(const TCHAR *fileName)
     return doc;
 }
 
+/* HTML */
+
+HtmlDoc::HtmlDoc(const TCHAR *fileName) : fileName(str::Dup(fileName)) { }
+
+HtmlDoc::~HtmlDoc()
+{
+    for (size_t i = 0; i < images.Count(); i++) {
+        free(images.At(i).base.data);
+        free(images.At(i).id);
+    }
+}
+
+bool HtmlDoc::Load()
+{
+    ScopedMem<char> data(file::ReadAll(fileName, NULL));
+    if (!data)
+        return false;
+    htmlData.Set(DecodeTextToUtf8(data));
+    if (!htmlData)
+        return false;
+
+    pagePath.Set(str::conv::ToUtf8(fileName));
+    str::TransChars(pagePath, "\\", "/");
+
+    return true;
+}
+
+const char *HtmlDoc::GetTextData(size_t *lenOut)
+{
+    *lenOut = htmlData ? str::Len(htmlData) : 0;
+    return htmlData;
+}
+
+ImageData *HtmlDoc::GetImageData(const char *id)
+{
+    ScopedMem<char> url(NormalizeURL(id, pagePath));
+    for (size_t i = 0; i < images.Count(); i++) {
+        if (str::Eq(images.At(i).id, url))
+            return &images.At(i).base;
+    }
+
+    ScopedMem<TCHAR> path(str::conv::FromUtf8(url));
+    str::TransChars(path, _T("/"), _T("\\"));
+    ImageData2 data = { 0 };
+    data.base.data = file::ReadAll(path, &data.base.len);
+    if (!data.base.data)
+        return NULL;
+    data.id = url.StealData();
+    images.Append(data);
+    return &images.Last().base;
+}
+
+const TCHAR *HtmlDoc::GetFileName() const
+{
+    return fileName;
+}
+
+bool HtmlDoc::IsSupportedFile(const TCHAR *fileName, bool sniff)
+{
+    return str::EndsWithI(fileName, _T(".html")) ||
+           str::EndsWithI(fileName, _T(".htm"));
+}
+
+HtmlDoc *HtmlDoc::CreateFromFile(const TCHAR *fileName)
+{
+    HtmlDoc *doc = new HtmlDoc(fileName);
+    if (!doc || !doc->Load()) {
+        delete doc;
+        return NULL;
+    }
+    return doc;
+}
+
 /* Plain Text */
 
 TxtDoc::TxtDoc(const TCHAR *fileName) : fileName(str::Dup(fileName)), isRFC(false) { }
@@ -687,17 +778,7 @@ static char *TextFindRfcEnd(str::Str<char>& htmlData, char *curr)
 bool TxtDoc::Load()
 {
     ScopedMem<char> text(file::ReadAll(fileName, NULL));
-    if (str::StartsWith(text.Get(), UTF16BE_BOM)) {
-        // convert big-endian UTF-16 to little-endian UTF-16
-        for (WCHAR *c = (WCHAR *)text.Get(); *c; c++)
-            *c = BEtoHs(*c);
-    }
-    if (str::StartsWith(text.Get(), UTF16_BOM))
-        text.Set(str::ToMultiByte((WCHAR *)text.Get(), CP_UTF8));
-    if (!str::StartsWith(text.Get(), UTF8_BOM)) {
-        UINT codePage = GuessTextCodepage(text, str::Len(text), CP_ACP);
-        text.Set(str::ToMultiByte(text, codePage, CP_UTF8));
-    }
+    text.Set(DecodeTextToUtf8(text));
     if (!text)
         return false;
 

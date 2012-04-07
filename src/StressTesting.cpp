@@ -219,6 +219,7 @@ static bool IsStressTestSupportedFile(const TCHAR *fileName, const TCHAR *filter
            Fb2Engine::IsSupportedFile(fileName)  ||
            MobiEngine::IsSupportedFile(fileName) && !gUseEbookUI ||
            PdbEngine::IsSupportedFile(fileName)  ||
+           HtmlEngine::IsSupportedFile(fileName) ||
            TxtEngine::IsSupportedFile(fileName)  ||
 #endif
            ChmEngine::IsSupportedFile(fileName);

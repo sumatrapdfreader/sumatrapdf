@@ -99,6 +99,27 @@ public:
     static TxtDoc *CreateFromFile(const TCHAR *fileName);
 };
 
+class HtmlDoc {
+    ScopedMem<TCHAR> fileName;
+    ScopedMem<char> htmlData;
+    ScopedMem<char> pagePath;
+    Vec<ImageData2> images;
+
+    bool Load();
+
+public:
+    HtmlDoc(const TCHAR *fileName);
+    ~HtmlDoc();
+
+    const char *GetTextData(size_t *lenOut);
+    ImageData *GetImageData(const char *id);
+
+    const TCHAR *GetFileName() const;
+
+    static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
+    static HtmlDoc *CreateFromFile(const TCHAR *fileName);
+};
+
 char *NormalizeURL(const char *url, const char *base);
 
 #endif

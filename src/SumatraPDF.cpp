@@ -2503,8 +2503,8 @@ static void AppendFileFilterForDoc(DisplayModel *dm, str::Str<TCHAR>& fileFilter
         case Engine_PS:     fileFilter.Append(_TR("Postscript documents")); break;
         case Engine_Chm:    fileFilter.Append(_TR("CHM documents")); break;
         case Engine_Epub:   fileFilter.Append(_TR("EPUB ebooks")); break;
-        case Engine_Fb2:    fileFilter.Append(_T("FictionBooks")); break;
         case Engine_Mobi:   fileFilter.Append(_TR("Mobi documents")); break;
+        case Engine_Fb2:    fileFilter.Append(_T("FictionBooks")); break;
         case Engine_Pdb:    fileFilter.Append(_T("PalmDOC")); break;
         case Engine_Chm2:   fileFilter.Append(_TR("CHM documents")); break;
         case Engine_Txt:    fileFilter.Append(_TR("Text documents")); break;
@@ -2877,10 +2877,11 @@ void OnMenuOpen(SumatraWindow& win)
         { _TR("Comic books"),           _T("*.cbz;*.cbr"),  true },
         { _TR("CHM documents"),         _T("*.chm"),        true },
         { _TR("Mobi documents"),        _T("*.mobi"),       true },
-#ifdef ENABLE_EBOOK_ENGINES
         { _TR("EPUB ebooks"),           _T("*.epub"),       true },
+#ifdef ENABLE_EBOOK_ENGINES
         { _T("FictionBooks"),           _T("*.fb2;*.fb2z;*.zfb2"), true },
-        { _TR("Text documents"),        _T("*.txt;*.log"),  true },
+        { _T("PalmDOC"),                _T("*.pdb"),        true },
+        { _TR("Text documents"),        _T("*.txt;*.log;*.nfo;file_id.diz;read.me"), true },
 #endif
     };
     // Prepare the file filters (use \1 instead of \0 so that the
