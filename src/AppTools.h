@@ -4,8 +4,6 @@
 #ifndef AppTools_h
 #define AppTools_h
 
-#include "GeomUtil.h"
-
 class WindowInfo;
 
 // Base class for code that has to be executed on UI thread. Derive your class

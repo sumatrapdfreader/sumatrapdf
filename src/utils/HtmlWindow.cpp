@@ -9,7 +9,6 @@
 #include <exdispid.h>
 #include <wininet.h>
 
-#include "GeomUtil.h"
 #include "Timer.h"
 #include "WinUtil.h"
 

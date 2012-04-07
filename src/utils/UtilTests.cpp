@@ -4,11 +4,11 @@
 #ifdef DEBUG
 
 #include "BaseUtil.h"
-#include "DebugLog.h"
 #include "FileUtil.h"
-#include "GeomUtil.h"
 #include "SimpleLog.h"
 #include "WinUtil.h"
+
+#include "DebugLog.h"
 
 static void GeomTest()
 {

@@ -7,7 +7,6 @@
 #define __STDC_LIMIT_MACROS
 #include "BaseUtil.h"
 #include "BitManip.h"
-#include "GeomUtil.h"
 #include "HtmlPullParser.h"
 #include "Sigslot.h"
 

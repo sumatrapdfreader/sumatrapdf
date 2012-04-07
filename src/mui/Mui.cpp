@@ -4,7 +4,6 @@
 #include <Windowsx.h>
 
 #include "Mui.h"
-#include "GeomUtil.h"
 
 #include "DebugLog.h"
 

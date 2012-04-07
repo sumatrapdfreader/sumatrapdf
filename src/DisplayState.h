@@ -4,7 +4,6 @@
 #ifndef DisplayState_h
 #define DisplayState_h
 
-#include "GeomUtil.h"
 #include "BaseEngine.h"
 
 enum DisplayMode {

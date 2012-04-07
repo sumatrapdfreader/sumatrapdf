@@ -4,7 +4,6 @@
 #ifndef WindowInfo_h
 #define WindowInfo_h
 
-#include "GeomUtil.h"
 #include "DisplayModel.h"
 
 class FileWatcher;

@@ -5,8 +5,6 @@
 #ifndef PdfSync_h
 #define PdfSync_h
 
-#include "GeomUtil.h"
-
 // Error codes returned by the synchronization functions
 enum {
     PDFSYNCERR_SUCCESS,                   // the synchronization succeeded

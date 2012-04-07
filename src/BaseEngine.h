@@ -4,8 +4,6 @@
 #ifndef BaseEngine_h
 #define BaseEngine_h
 
-#include "GeomUtil.h"
-
 /* certain OCGs will only be rendered for some of these (e.g. watermarks) */
 enum RenderTarget { Target_View, Target_Print, Target_Export };
 

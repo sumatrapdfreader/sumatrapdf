@@ -3,7 +3,6 @@
 #ifndef HtmlWindow_h
 #define HtmlWindow_h
 
-#include "GeomUtil.h"
 #include <exdisp.h>
 
 class FrameSite;

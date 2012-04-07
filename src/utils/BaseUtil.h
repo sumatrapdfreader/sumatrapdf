@@ -28,7 +28,13 @@
 #define new DEBUG_NEW
 #endif
 
+#ifndef UNICODE
+#include <sys/types.h>
+#include <sys/stat.h>
+#endif
 #include <tchar.h>
+#include <wchar.h>
+#include <string.h>
 
 /* Few most common includes for C stdlib */
 #include <assert.h>
@@ -39,12 +45,8 @@
 #include <time.h>
 #include <locale.h>
 
-#ifndef UNICODE
-#include <sys/types.h>
-#include <sys/stat.h>
-#endif
-#include <wchar.h>
-#include <string.h>
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 /* Ugly name, but the whole point is to make things shorter.
    SAZA = Struct Allocate and Zero memory for Array
@@ -155,5 +157,6 @@ inline bool memeq(const void *s1, const void *s2, size_t len)
 #include "Scoped.h"
 #include "StrUtil.h"
 #include "Vec.h"
+#include "GeomUtil.h"
 
 #endif

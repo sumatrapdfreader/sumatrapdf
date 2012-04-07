@@ -4,8 +4,6 @@
 #ifndef Search_h
 #define Search_h
 
-#include "GeomUtil.h"
-
 #define PDFSYNC_DDE_SERVICE   _T("SUMATRA")
 #define PDFSYNC_DDE_TOPIC     _T("control")
 

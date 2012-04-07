@@ -4,8 +4,6 @@
 #ifndef Selection_h
 #define Selection_h
 
-#include "GeomUtil.h"
-
 #define SMOOTHSCROLL_TIMER_ID       2
 #define SMOOTHSCROLL_DELAY_IN_MS    20
 #define SMOOTHSCROLL_SLOW_DOWN_FACTOR 10

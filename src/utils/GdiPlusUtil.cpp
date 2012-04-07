@@ -4,7 +4,7 @@
 #include "BaseUtil.h"
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
-#include "GeomUtil.h"
+
 #include "WinUtil.h"
 
 // Get width of each character and add them up.

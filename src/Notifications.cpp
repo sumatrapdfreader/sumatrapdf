@@ -3,7 +3,7 @@
 
 #include "BaseUtil.h"
 #include "Notifications.h"
-#include "GeomUtil.h"
+
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "WinUtil.h"

@@ -4,9 +4,6 @@
 #ifndef Touch_h
 #define Touch_h
 
-#define _USE_MATH_DEFINES
-#include <math.h>
-
 #ifndef _QWORD_DEFINED
 #define _QWORD_DEFINED
 typedef unsigned __int64 QWORD, *LPQWORD;

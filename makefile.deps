@@ -33,8 +33,8 @@ $(OM)\MemTraceDll.obj: src\utils\BaseUtil.h src\utils\DebugLog.h src\utils\GeomU
 $(OM)\MemTraceDll.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\StrUtil.h
 $(OM)\MemTraceDll.obj: src\utils\Timer.h src\utils\Vec.h src\utils\WinUtil.h
 $(OMUI)\MiniMui.obj: src\mui\MiniMui.h src\utils\Allocator.h src\utils\BaseUtil.h
-$(OMUI)\MiniMui.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\StrUtil.h
-$(OMUI)\MiniMui.obj: src\utils\Vec.h
+$(OMUI)\MiniMui.obj: src\utils\GeomUtil.h src\utils\RefCounted.h src\utils\Scoped.h
+$(OMUI)\MiniMui.obj: src\utils\StrUtil.h src\utils\Vec.h
 $(OMUI)\Mui.obj: src\mui\Mui.h src\mui\MuiBase.h src\mui\MuiButton.h
 $(OMUI)\Mui.obj: src\mui\MuiControl.h src\mui\MuiCss.h src\mui\MuiEventMgr.h
 $(OMUI)\Mui.obj: src\mui\MuiHwndWrapper.h src\mui\MuiLayout.h src\mui\MuiPainter.h
@@ -106,9 +106,9 @@ $(OMUI)\MuiScrollBar.obj: src\utils\BitManip.h src\utils\GeomUtil.h src\utils\Ht
 $(OMUI)\MuiScrollBar.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\Sigslot.h
 $(OMUI)\MuiScrollBar.obj: src\utils\StrUtil.h src\utils\Vec.h
 $(OMUI)\SvgPath.obj: src\mui\SvgPath.h src\mui\SvgPath_ut.cpp src\utils\Allocator.h
-$(OMUI)\SvgPath.obj: src\utils\BaseUtil.h src\utils\GdiPlusUtil.h src\utils\RefCounted.h
-$(OMUI)\SvgPath.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
-$(OMUI)\SvgPath.obj: src\utils\VecSegmented.h
+$(OMUI)\SvgPath.obj: src\utils\BaseUtil.h src\utils\GdiPlusUtil.h src\utils\GeomUtil.h
+$(OMUI)\SvgPath.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OMUI)\SvgPath.obj: src\utils\Vec.h src\utils\VecSegmented.h
 $(OS)\AppPrefs.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
 $(OS)\AppPrefs.obj: src\ChmEngine.h src\DisplayModel.h src\DisplayState.h
 $(OS)\AppPrefs.obj: src\DjVuEngine.h src\EngineManager.h src\EpubEngine.h
@@ -125,9 +125,9 @@ $(OS)\AppTools.obj: src\utils\GeomUtil.h src\utils\RefCounted.h src\utils\Scoped
 $(OS)\AppTools.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\AppTools.obj: src\Version.h
 $(OS)\ChmDoc.obj: src\ChmDoc.h src\EbookBase.h src\utils\Allocator.h
-$(OS)\ChmDoc.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\RefCounted.h
-$(OS)\ChmDoc.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\TrivialHtmlParser.h
-$(OS)\ChmDoc.obj: src\utils\Vec.h
+$(OS)\ChmDoc.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
+$(OS)\ChmDoc.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OS)\ChmDoc.obj: src\utils\TrivialHtmlParser.h src\utils\Vec.h
 $(OS)\ChmEngine.obj: src\BaseEngine.h src\ChmDoc.h src\ChmEngine.h
 $(OS)\ChmEngine.obj: src\EbookBase.h src\utils\Allocator.h src\utils\BaseUtil.h
 $(OS)\ChmEngine.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\HtmlWindow.h
@@ -214,9 +214,10 @@ $(OS)\EngineDump.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\Ref
 $(OS)\EngineDump.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\EngineDump.obj: src\utils\WinUtil.h
 $(OS)\EpubDoc.obj: src\EbookBase.h src\EpubDoc.h src\utils\Allocator.h
-$(OS)\EpubDoc.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\HtmlPullParser.h
-$(OS)\EpubDoc.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\StrUtil.h
-$(OS)\EpubDoc.obj: src\utils\TrivialHtmlParser.h src\utils\Vec.h src\utils\ZipUtil.h
+$(OS)\EpubDoc.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
+$(OS)\EpubDoc.obj: src\utils\HtmlPullParser.h src\utils\RefCounted.h src\utils\Scoped.h
+$(OS)\EpubDoc.obj: src\utils\StrUtil.h src\utils\TrivialHtmlParser.h src\utils\Vec.h
+$(OS)\EpubDoc.obj: src\utils\ZipUtil.h
 $(OS)\EpubEngine.obj: src\BaseEngine.h src\ChmDoc.h src\EbookBase.h
 $(OS)\EpubEngine.obj: src\EpubDoc.h src\EpubEngine.h src\HtmlFormatter.h
 $(OS)\EpubEngine.obj: src\MobiDoc.h src\mui\MiniMui.h src\utils\Allocator.h
@@ -245,8 +246,8 @@ $(OS)\Favorites.obj: src\utils\FileUtil.h src\utils\GdiPlusUtil.h src\utils\Geom
 $(OS)\Favorites.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\StrUtil.h
 $(OS)\Favorites.obj: src\utils\Vec.h src\utils\WinUtil.h src\WindowInfo.h
 $(OS)\FileWatch.obj: src\FileWatch.h src\utils\Allocator.h src\utils\BaseUtil.h
-$(OS)\FileWatch.obj: src\utils\FileUtil.h src\utils\RefCounted.h src\utils\Scoped.h
-$(OS)\FileWatch.obj: src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\FileWatch.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\RefCounted.h
+$(OS)\FileWatch.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\HtmlFormatter.obj: src\EbookBase.h src\EpubDoc.h src\HtmlFormatter.h
 $(OS)\HtmlFormatter.obj: src\MobiDoc.h src\mui\Mui.h src\mui\MuiBase.h
 $(OS)\HtmlFormatter.obj: src\mui\MuiButton.h src\mui\MuiControl.h src\mui\MuiCss.h
@@ -264,8 +265,8 @@ $(OS)\ImagesEngine.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\ImagesEngine.obj: src\utils\ZipUtil.h
 $(OS)\Install.obj: src\BaseEngine.h src\ifilter\PdfFilter.h src\previewer\PdfPreview.h
 $(OS)\Install.obj: src\installer\Installer.h src\installer\Resource.h src\utils\FileTransactions.h
-$(OS)\Install.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Timer.h
-$(OS)\Install.obj: src\utils\WinUtil.h src\utils\ZipUtil.h src\Version.h
+$(OS)\Install.obj: src\utils\FileUtil.h src\utils\Timer.h src\utils\WinUtil.h
+$(OS)\Install.obj: src\utils\ZipUtil.h src\Version.h
 $(OS)\Installer.obj: src\BaseEngine.h src\CrashHandler.h src\DisplayState.h
 $(OS)\Installer.obj: src\ifilter\PdfFilter.h src\previewer\PdfPreview.h src\installer\Install.cpp
 $(OS)\Installer.obj: src\installer\Installer.h src\installer\Resource.h src\installer\Uninstall.cpp
@@ -275,8 +276,9 @@ $(OS)\Installer.obj: src\utils\FileUtil.h src\utils\FrameTimeoutCalculator.h src
 $(OS)\Installer.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\StrUtil.h
 $(OS)\Installer.obj: src\utils\Timer.h src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\Installer.obj: src\utils\ZipUtil.h src\Version.h
-$(OS)\libmupdf_stub.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\RefCounted.h
-$(OS)\libmupdf_stub.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\libmupdf_stub.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GeomUtil.h
+$(OS)\libmupdf_stub.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OS)\libmupdf_stub.obj: src\utils\Vec.h
 $(OS)\Menu.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
 $(OS)\Menu.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
 $(OS)\Menu.obj: src\Doc.h src\EbookWindow.h src\EngineManager.h
@@ -296,8 +298,9 @@ $(OS)\Menu.obj: src\utils\StrUtil.h src\utils\ThreadUtil.h src\utils\Vec.h
 $(OS)\Menu.obj: src\utils\WinUtil.h src\WindowInfo.h
 $(OS)\MobiDoc.obj: src\EbookBase.h src\MobiDoc.h src\utils\Allocator.h
 $(OS)\MobiDoc.obj: src\utils\BaseUtil.h src\utils\BitReader.h src\utils\DebugLog.h
-$(OS)\MobiDoc.obj: src\utils\FileUtil.h src\utils\GdiPlusUtil.h src\utils\RefCounted.h
-$(OS)\MobiDoc.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\MobiDoc.obj: src\utils\FileUtil.h src\utils\GdiPlusUtil.h src\utils\GeomUtil.h
+$(OS)\MobiDoc.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OS)\MobiDoc.obj: src\utils\Vec.h
 $(OS)\MuPDF_Exports.obj: mupdf\fitz\fitz.h
 $(OS)\Notifications.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
 $(OS)\Notifications.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
@@ -476,11 +479,11 @@ $(OS)\Toolbar.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GeomUtil
 $(OS)\Toolbar.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\StrUtil.h
 $(OS)\Toolbar.obj: src\utils\Vec.h src\utils\WinUtil.h src\WindowInfo.h
 $(OS)\Translations.obj: src\Translations.h src\Translations_txt.cpp src\utils\Allocator.h
-$(OS)\Translations.obj: src\utils\BaseUtil.h src\utils\RefCounted.h src\utils\Scoped.h
-$(OS)\Translations.obj: src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\Translations.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\RefCounted.h
+$(OS)\Translations.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\Uninstall.obj: src\installer\Installer.h src\installer\Resource.h src\utils\FileTransactions.h
-$(OS)\Uninstall.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Timer.h
-$(OS)\Uninstall.obj: src\utils\WinUtil.h src\Version.h
+$(OS)\Uninstall.obj: src\utils\FileUtil.h src\utils\Timer.h src\utils\WinUtil.h
+$(OS)\Uninstall.obj: src\Version.h
 $(OS)\UnitTests.obj: src\AppTools.h src\BaseEngine.h src\DisplayState.h
 $(OS)\UnitTests.obj: src\ParseCommandLine.h src\StressTesting.h src\utils\Allocator.h
 $(OS)\UnitTests.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\RefCounted.h
@@ -498,41 +501,41 @@ $(OS)\WindowInfo.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUt
 $(OS)\WindowInfo.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\StrUtil.h
 $(OS)\WindowInfo.obj: src\utils\Vec.h src\utils\WinUtil.h src\WindowInfo.h
 $(OU)\BencUtil.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\BencUtil.h
-$(OU)\BencUtil.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\StrUtil.h
-$(OU)\BencUtil.obj: src\utils\Vec.h
+$(OU)\BencUtil.obj: src\utils\GeomUtil.h src\utils\RefCounted.h src\utils\Scoped.h
+$(OU)\BencUtil.obj: src\utils\StrUtil.h src\utils\Vec.h
 $(OU)\BencUtil_ut.obj: src\utils\BencUtil.h
 $(OU)\BitReader.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\BitReader.h
-$(OU)\BitReader.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\StrUtil.h
-$(OU)\BitReader.obj: src\utils\Vec.h
+$(OU)\BitReader.obj: src\utils\GeomUtil.h src\utils\RefCounted.h src\utils\Scoped.h
+$(OU)\BitReader.obj: src\utils\StrUtil.h src\utils\Vec.h
 $(OU)\DbgHelpDyn.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\DbgHelpDyn.h
 $(OU)\DbgHelpDyn.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\RefCounted.h
 $(OU)\DbgHelpDyn.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
 $(OU)\DbgHelpDyn.obj: src\utils\WinUtil.h
 $(OU)\DebugLog.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\DebugLog.h
-$(OU)\DebugLog.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\StrUtil.h
-$(OU)\DebugLog.obj: src\utils\Vec.h
+$(OU)\DebugLog.obj: src\utils\GeomUtil.h src\utils\RefCounted.h src\utils\Scoped.h
+$(OU)\DebugLog.obj: src\utils\StrUtil.h src\utils\Vec.h
 $(OU)\DialogSizer.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\DialogSizer.h
 $(OU)\DialogSizer.obj: src\utils\GeomUtil.h src\utils\RefCounted.h src\utils\Scoped.h
 $(OU)\DialogSizer.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(OU)\DirIter.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\DirIter.h
-$(OU)\DirIter.obj: src\utils\FileUtil.h src\utils\RefCounted.h src\utils\Scoped.h
-$(OU)\DirIter.obj: src\utils\StrUtil.h src\utils\Vec.h
+$(OU)\DirIter.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\RefCounted.h
+$(OU)\DirIter.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
 $(OU)\FileTransactions.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\FileTransactions.h
 $(OU)\FileTransactions.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\RefCounted.h
 $(OU)\FileTransactions.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
 $(OU)\FileTransactions.obj: src\utils\WinUtil.h
 $(OU)\FileUtil.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\FileUtil.h
-$(OU)\FileUtil.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\StrUtil.h
-$(OU)\FileUtil.obj: src\utils\Vec.h
+$(OU)\FileUtil.obj: src\utils\GeomUtil.h src\utils\RefCounted.h src\utils\Scoped.h
+$(OU)\FileUtil.obj: src\utils\StrUtil.h src\utils\Vec.h
 $(OU)\GdiPlusUtil.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GdiPlusUtil.h
 $(OU)\GdiPlusUtil.obj: src\utils\GeomUtil.h src\utils\RefCounted.h src\utils\Scoped.h
 $(OU)\GdiPlusUtil.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
-$(OU)\HtmlPrettyPrint.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\HtmlPrettyPrint.h
-$(OU)\HtmlPrettyPrint.obj: src\utils\HtmlPullParser.h src\utils\RefCounted.h src\utils\Scoped.h
-$(OU)\HtmlPrettyPrint.obj: src\utils\StrUtil.h src\utils\Vec.h
-$(OU)\HtmlPullParser.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\HtmlPullParser.h
-$(OU)\HtmlPullParser.obj: src\utils\HtmlPullParser_ut.cpp src\utils\RefCounted.h src\utils\Scoped.h
-$(OU)\HtmlPullParser.obj: src\utils\StrUtil.h src\utils\Vec.h
+$(OU)\HtmlPrettyPrint.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GeomUtil.h
+$(OU)\HtmlPrettyPrint.obj: src\utils\HtmlPrettyPrint.h src\utils\HtmlPullParser.h src\utils\RefCounted.h
+$(OU)\HtmlPrettyPrint.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
+$(OU)\HtmlPullParser.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GeomUtil.h
+$(OU)\HtmlPullParser.obj: src\utils\HtmlPullParser.h src\utils\HtmlPullParser_ut.cpp src\utils\RefCounted.h
+$(OU)\HtmlPullParser.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
 $(OU)\HtmlWindow.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GeomUtil.h
 $(OU)\HtmlWindow.obj: src\utils\HtmlWindow.h src\utils\RefCounted.h src\utils\Scoped.h
 $(OU)\HtmlWindow.obj: src\utils\StrUtil.h src\utils\Timer.h src\utils\Vec.h
@@ -541,21 +544,23 @@ $(OU)\Http.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\FileUtil.h
 $(OU)\Http.obj: src\utils\GeomUtil.h src\utils\Http.h src\utils\RefCounted.h
 $(OU)\Http.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
 $(OU)\Http.obj: src\utils\WinUtil.h
-$(OU)\JsonParser.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\JsonParser.h
-$(OU)\JsonParser.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\StrUtil.h
-$(OU)\JsonParser.obj: src\utils\Vec.h
+$(OU)\JsonParser.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GeomUtil.h
+$(OU)\JsonParser.obj: src\utils\JsonParser.h src\utils\RefCounted.h src\utils\Scoped.h
+$(OU)\JsonParser.obj: src\utils\StrUtil.h src\utils\Vec.h
 $(OU)\JsonParser_ut.obj: src\utils\JsonParser.h
-$(OU)\NoFreeAllocator.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\NoFreeAllocator.h
-$(OU)\NoFreeAllocator.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\StrUtil.h
-$(OU)\NoFreeAllocator.obj: src\utils\Vec.h
+$(OU)\NoFreeAllocator.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GeomUtil.h
+$(OU)\NoFreeAllocator.obj: src\utils\NoFreeAllocator.h src\utils\RefCounted.h src\utils\Scoped.h
+$(OU)\NoFreeAllocator.obj: src\utils\StrUtil.h src\utils\Vec.h
 $(OU)\Sigslot_ut.obj: src\utils\Sigslot.h
-$(OU)\StrUtil.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\RefCounted.h
-$(OU)\StrUtil.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
-$(OU)\StrUtil_ut.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\RefCounted.h
-$(OU)\StrUtil_ut.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
-$(OU)\ThreadUtil.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\RefCounted.h
-$(OU)\ThreadUtil.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\ThreadUtil.h
-$(OU)\ThreadUtil.obj: src\utils\Vec.h
+$(OU)\StrUtil.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GeomUtil.h
+$(OU)\StrUtil.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OU)\StrUtil.obj: src\utils\Vec.h
+$(OU)\StrUtil_ut.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GeomUtil.h
+$(OU)\StrUtil_ut.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OU)\StrUtil_ut.obj: src\utils\Vec.h
+$(OU)\ThreadUtil.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GeomUtil.h
+$(OU)\ThreadUtil.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OU)\ThreadUtil.obj: src\utils\ThreadUtil.h src\utils\Vec.h
 $(OU)\Touch.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GeomUtil.h
 $(OU)\Touch.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\StrUtil.h
 $(OU)\Touch.obj: src\utils\Touch.h src\utils\Vec.h src\utils\WinUtil.h
@@ -563,10 +568,10 @@ $(OU)\TrivialHtmlParser.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\util
 $(OU)\TrivialHtmlParser.obj: src\utils\GeomUtil.h src\utils\HtmlPullParser.h src\utils\RefCounted.h
 $(OU)\TrivialHtmlParser.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\TrivialHtmlParser.h
 $(OU)\TrivialHtmlParser.obj: src\utils\TrivialHtmlParser_ut.cpp src\utils\Vec.h src\utils\WinUtil.h
-$(OU)\TrivialHtmlParser_ut.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\WinUtil.h
-$(OU)\UiMsg.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\RefCounted.h
-$(OU)\UiMsg.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\UiMsg.h
-$(OU)\UiMsg.obj: src\utils\Vec.h
+$(OU)\TrivialHtmlParser_ut.obj: src\utils\FileUtil.h src\utils\WinUtil.h
+$(OU)\UiMsg.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GeomUtil.h
+$(OU)\UiMsg.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OU)\UiMsg.obj: src\utils\UiMsg.h src\utils\Vec.h
 $(OU)\UtilTests.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\BencUtil.h
 $(OU)\UtilTests.obj: src\utils\BencUtil_ut.cpp src\utils\DebugLog.h src\utils\FileUtil.h
 $(OU)\UtilTests.obj: src\utils\GeomUtil.h src\utils\JsonParser.h src\utils\JsonParser_ut.cpp
@@ -579,5 +584,5 @@ $(OU)\WinUtil.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\RefCounte
 $(OU)\WinUtil.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
 $(OU)\WinUtil.obj: src\utils\WinUtil.h
 $(OU)\ZipUtil.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\FileUtil.h
-$(OU)\ZipUtil.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\StrUtil.h
-$(OU)\ZipUtil.obj: src\utils\Vec.h src\utils\ZipUtil.h
+$(OU)\ZipUtil.obj: src\utils\GeomUtil.h src\utils\RefCounted.h src\utils\Scoped.h
+$(OU)\ZipUtil.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\ZipUtil.h
