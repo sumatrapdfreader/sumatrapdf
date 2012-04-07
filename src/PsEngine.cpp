@@ -94,21 +94,11 @@ public:
     }
 };
 
-// caller must free() the result
-static TCHAR *GetTempFilePath(const TCHAR *prefix=_T("PsE"))
-{
-    TCHAR path[MAX_PATH], tempDir[MAX_PATH - 14];
-    DWORD res = GetTempPath(dimof(tempDir), tempDir);
-    if (!res || res >= dimof(tempDir) || !GetTempFileName(tempDir, prefix, 0, path))
-        return NULL;
-    return str::Dup(path);
-}
-
 static PdfEngine *ps2pdf(const TCHAR *fileName)
 {
     // TODO: read from gswin32c's stdout instead of using a TEMP file
     ScopedMem<TCHAR> shortPath(path::ShortPath(fileName));
-    ScopedMem<TCHAR> tmpFile(GetTempFilePath());
+    ScopedMem<TCHAR> tmpFile(path::GetTempPath(_T("PsE")));
     ScopedFile tmpFileScope(tmpFile);
     ScopedMem<TCHAR> gswin32c(GetGhostscriptPath());
     if (!shortPath || !tmpFile || !gswin32c)
@@ -157,7 +147,7 @@ inline bool isgzipped(const TCHAR *fileName)
 
 static PdfEngine *psgz2pdf(const TCHAR *fileName)
 {
-    ScopedMem<TCHAR> tmpFile(GetTempFilePath());
+    ScopedMem<TCHAR> tmpFile(path::GetTempPath(_T("PsE")));
     ScopedFile tmpFileScope(tmpFile);
     if (!tmpFile)
         return NULL;

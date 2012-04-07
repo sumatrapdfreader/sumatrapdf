@@ -201,6 +201,22 @@ bool Match(const TCHAR *path, const TCHAR *filter)
     return MatchWildcardsRec(path, filter);
 }
 
+// returns the path to either the %TEMP% directory or a
+// non-existing file inside whose name starts with filePrefix
+TCHAR *GetTempPath(const TCHAR *filePrefix)
+{
+    TCHAR tempDir[MAX_PATH - 14];
+    DWORD res = ::GetTempPath(dimof(tempDir), tempDir);
+    if (!res || res >= dimof(tempDir))
+        return NULL;
+    if (!filePrefix)
+        return str::Dup(tempDir);
+    TCHAR path[MAX_PATH];
+    if (!GetTempFileName(tempDir, filePrefix, 0, path))
+        return NULL;
+    return str::Dup(path);
+}
+
 }
 
 namespace file {

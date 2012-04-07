@@ -279,6 +279,11 @@ static bool DownloadAndUnzipSymbols(const TCHAR *pdbZipPath, const TCHAR *symDir
 // get the callstacks etc. and submit to our server for analysis.
 void SubmitCrashInfo()
 {
+    if (!dir::Create(gSymbolsDir)) {
+        plog("SubmitCrashInfo(): couldn't create symbols dir");
+        return;
+    }
+
     lf("SubmitCrashInfo(): start");
     lf(L"SubmitCrashInfo(): gSymbolPathW: '%s'", gSymbolPathW);
     if (!CrashHandlerCanUseNet()) {
@@ -501,14 +506,10 @@ static void BuildSystemInfo()
     gSystemInfo = s.StealData();
 }
 
-static bool BuilCrashDumpPaths(const TCHAR *symDir)
+static bool StoreCrashDumpPaths(const TCHAR *symDir)
 {
     if (!symDir)
         return false;
-    if (!dir::Create(symDir)) {
-        plog("BuilCrashDumpPaths(): couldn't create symbols dir");
-        return false;
-    }
     gSymbolsDir = str::Dup(symDir);
     gPdbZipPath = path::Join(symDir, _T("symbols_tmp.zip"));
     gLibMupdfPdbPath = path::Join(symDir, _T("SumatraPDF.pdb"));
@@ -609,8 +610,7 @@ void InstallCrashHandler(const TCHAR *crashDumpPath, const TCHAR *symDir)
 
     if (!crashDumpPath)
         return;
-#ifndef HAS_NO_SYMBOLS
-    if (!BuilCrashDumpPaths(symDir))
+    if (!StoreCrashDumpPaths(symDir))
         return;
     if (!BuildSymbolPath())
         return;
@@ -624,7 +624,6 @@ void InstallCrashHandler(const TCHAR *crashDumpPath, const TCHAR *symDir)
     // when crash handler is invoked. It's ok to use standard
     // allocation functions here.
     gCrashHandlerAllocator = new CrashHandlerAllocator();
-#endif
     gCrashDumpPath = str::Dup(crashDumpPath);
     gAdditionalInfo = new str::Str<char>(4096);
     gDumpEvent = CreateEvent(NULL, FALSE, FALSE, NULL);

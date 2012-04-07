@@ -211,26 +211,18 @@ bool GetExePath(LPTSTR lpPath, int len)
     return true;
 }
 
-// filePathBuf must be MAX_PATH in size
-HANDLE CreateTempFile(TCHAR *filePathBufOut)
+HANDLE CreateTempFile(TCHAR *filePathBufOut, size_t bufSize)
 {
-    TCHAR pathBuf[MAX_PATH];
-    DWORD ret = GetTempPath(dimof(pathBuf), pathBuf);
-    if (0 == ret || ret > dimof(pathBuf))
+    ScopedMem<TCHAR> tmpPath(path::GetTempPath(_T("nPV")));
+    if (!tmpPath)
     {
         plogf("sp: CreateTempFile(): GetTempPath() failed");
         return NULL;
     }
-
-    UINT uret = GetTempFileName(pathBuf, _T("SPT"), 0, filePathBufOut);
-    if (0 == uret)
-    {
-        plogf("sp: CreateTempFile(): GetTempFileName() failed");
-        return NULL;
-    }
+    str::BufSet(filePathBufOut, bufSize, tmpPath);
 
     HANDLE hFile = CreateFile(filePathBufOut, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
-                            FILE_ATTRIBUTE_NORMAL, NULL);
+                              FILE_ATTRIBUTE_NORMAL, NULL);
     if (INVALID_HANDLE_VALUE == hFile)
     {
         plogf("sp: CreateTempFile(): CreateFile() failed");
@@ -481,7 +473,7 @@ NPError NP_LOADDS NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream,
         str::StartsWith(userAgent, "Opera/") ||
         str::Find(userAgent, "QupZilla/"))
     {
-        data->hFile = CreateTempFile(data->filepath);
+        data->hFile = CreateTempFile(data->filepath, dimof(data->filepath));
         if (data->hFile)
         {
             plogf("sp: using temporary file: %s", data->filepath);

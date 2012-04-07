@@ -18,6 +18,8 @@ bool         IsSame(const TCHAR *path1, const TCHAR *path2);
 bool         HasVariableDriveLetter(const TCHAR *path);
 bool         Match(const TCHAR *path, const TCHAR *filter);
 
+TCHAR *      GetTempPath(const TCHAR *filePrefix=NULL);
+
 }
 
 namespace file {

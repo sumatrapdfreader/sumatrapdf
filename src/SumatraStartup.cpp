@@ -298,11 +298,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     // don't bother sending crash reports when running under Wine
     // as they're not helpful
     if (!RunningUnderWine()) {
-        // TODO: move into %TEMP%? or rename? currently the
-        //       "symbols" folder isn't obviously related to
-        //       SumatraPDF when running in portable mode from
-        //       a folder containing multiple applications
-        ScopedMem<TCHAR> symDir(AppGenDataFilename(_T("symbols")));
+        ScopedMem<TCHAR> symDir;
+        ScopedMem<TCHAR> tmpDir(path::GetTempPath());
+        if (tmpDir)
+            symDir.Set(path::Join(tmpDir, _T("SumatraPDF-symbols")));
+        else
+            symDir.Set(AppGenDataFilename(_T("SumatraPDF-symbols")));
         ScopedMem<TCHAR> crashDumpPath(AppGenDataFilename(CRASH_DUMP_FILE_NAME));
         InstallCrashHandler(crashDumpPath, symDir);
     }
