@@ -417,17 +417,34 @@ int __cdecl _vswprintf_c_l(wchar_t *dst, size_t count, const wchar_t *fmt, _loca
     return ret;
 }
 
+#define MAX_ATEXIT_FUNCS 64 // should be enough
+static int atexit_funcs_count = 0;
+
+typedef void (__cdecl *atexit_func)(void);
+
+static atexit_func g_atexit_funcs[MAX_ATEXIT_FUNCS];
+
 // we can't just expose msvcrt.atexit or msvcrt._onexit becuase those
 // functions are called when msvcrt is unloaded (i.e. when a process
 // exits) but the functions can be registered by a dll that might
 // have been unloaded by that time (e.g. if a dll is dynamically
 // loaded/unloaded by the process). For that reason each dll linking
 // to ucrt needs its own atexit() registry
-int __cdecl atexit(void (__cdecl *func )(void))
+int __cdecl atexit(void (__cdecl *func)(void))
 {
-    // TODO: implement me but it's not a big deal
-    // (we'll leak some memory or not run deinitalization functions)
+    if (atexit_funcs_count >= MAX_ATEXIT_FUNCS)
+        return 1;
+
+    g_atexit_funcs[atexit_funcs_count++] = func;
     return 0;
+}
+
+static void call_atexit_functions()
+{
+    for (int i=0; i<atexit_funcs_count; i++) {
+        g_atexit_funcs[i]();
+    }
+    atexit_funcs_count = 0;
 }
 
 int __cdecl _CrtSetDbgFlag(int newFlag)
@@ -516,7 +533,8 @@ void OnStart()
 
 void OnExit()
 {
-    // TODO: call functions registered with atexit()
+    call_atexit_functions();
+
     // call C and C++ destructors
     _initterm(__xp_a, __xp_z);
     _initterm(__xt_a, __xt_z);
