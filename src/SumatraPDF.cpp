@@ -1382,14 +1382,16 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
         if (!win) {
             if ((1 == gWindows.Count()) && gWindows.At(0)->IsAboutWindow())
                 win = gWindows.At(0);
-        } else {
-            if (win->IsDocLoaded() && !args.forceReuse)
-                win = NULL;
-        }
+        } else if (!win->IsAboutWindow() && !args.forceReuse)
+            win = NULL;
         if (!win) {
             // create a dummy window so that we can return
             // a non-NULL value to indicate loading success
             win = CreateWindowInfo();
+        }
+        if (win->IsAboutWindow()) {
+            // don't crash if multiple Mobi files are opened at once
+            win->loadedFilePath = str::Dup(fullPath);
         }
         LoadEbookAsync(fullPath, SumatraWindow::Make(win));
         return win;
