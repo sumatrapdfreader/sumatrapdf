@@ -5,8 +5,6 @@
 #define EpubDoc_h
 
 #include "EbookBase.h"
-#include "Scoped.h"
-#include "Vec.h"
 #include "ZipUtil.h"
 
 struct ImageData2 {

@@ -6,7 +6,6 @@
 
 #include "Mui.h"
 #include "GeomUtil.h"
-#include "Vec.h"
 
 #include "DebugLog.h"
 

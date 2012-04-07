@@ -4,8 +4,6 @@
 #ifndef GdiPlusUtil_h
 #define GdiPlusUtil_h
 
-#include "BaseUtil.h"
-
 // used for communicating with DrawCloseButton()
 #define BUTTON_HOVER_TEXT _T("1")
 

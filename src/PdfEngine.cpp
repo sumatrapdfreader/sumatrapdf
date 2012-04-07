@@ -8,9 +8,7 @@ __pragma(warning(pop))
 }
 
 #include "PdfEngine.h"
-#include "StrUtil.h"
 #include "FileUtil.h"
-#include "Scoped.h"
 
 // maximum size of a file that's entirely loaded into memory before parsed
 // and displayed; larger files will be kept open while they're displayed

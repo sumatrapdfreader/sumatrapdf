@@ -1,11 +1,11 @@
 /* Copyright 2006-2012 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+#include "BaseUtil.h"
 #include "ChmDoc.h"
+
 #include "FileUtil.h"
-#include "StrUtil.h"
 #include "TrivialHtmlParser.h"
-#include "Vec.h"
 
 #define CHM_MT
 #ifdef UNICODE

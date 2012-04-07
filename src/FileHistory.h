@@ -4,10 +4,9 @@
 #ifndef FileHistory_h
 #define FileHistory_h
 
+#include "BaseUtil.h"
 #include "DisplayState.h"
-#include "StrUtil.h"
 #include "FileUtil.h"
-#include "Vec.h"
 
 /* Handling of file history list.
 

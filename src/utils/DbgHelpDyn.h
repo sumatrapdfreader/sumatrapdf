@@ -7,7 +7,6 @@
 #include "BaseUtil.h"
 #include <dbghelp.h>
 #include <tlhelp32.h>
-#include "Vec.h"
 
 // We're not using DebugLog.[h|cpp] here to make sure logging doesn't allocate
 // memory. We use plog because it's similar to plogf() but we don't want to lie

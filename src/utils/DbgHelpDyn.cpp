@@ -9,7 +9,6 @@
 
 #include "DbgHelpDyn.h"
 #include "FileUtil.h"
-#include "StrUtil.h"
 #include "WinUtil.h"
 
 /* Hard won wisdom: changing symbol path with SymSetSearchPath() after modules

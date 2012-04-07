@@ -4,7 +4,7 @@
 #ifndef StressTesting_h
 #define StressTesting_h
 
-#include "Vec.h"
+#include "BaseUtil.h"
 
 bool IsValidPageRange(const TCHAR *ranges);
 bool IsBenchPagesInfo(const TCHAR *s);

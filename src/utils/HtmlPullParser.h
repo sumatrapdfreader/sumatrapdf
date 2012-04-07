@@ -4,9 +4,7 @@
 #ifndef HtmlPullParser_h
 #define HtmlPullParser_h
 
-#include "Vec.h"
-
-class Allocator;
+#include "BaseUtil.h"
 
 // enums must match HTML_TAGS_STRINGS order
 enum HtmlTag {

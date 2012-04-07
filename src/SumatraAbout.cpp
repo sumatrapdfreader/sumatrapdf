@@ -1,13 +1,14 @@
 /* Copyright 2006-2012 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "SumatraPDF.h"
-#include "WindowInfo.h"
+#include "BaseUtil.h"
+
 #include "SumatraAbout.h"
+#include "SumatraPDF.h"
 #include "Translations.h"
 #include "Version.h"
+#include "WindowInfo.h"
 #include "WinUtil.h"
-#include "Scoped.h"
 
 #define ABOUT_LINE_OUTER_SIZE       2
 #define ABOUT_LINE_SEP_SIZE         1

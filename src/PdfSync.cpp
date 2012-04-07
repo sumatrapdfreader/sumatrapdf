@@ -2,13 +2,11 @@
    License: GPLv3 */
 
 #include "PdfSync.h"
-#include "StrUtil.h"
 #include "FileUtil.h"
 #include "PdfEngine.h"
 
 #include <shlwapi.h>
-#include <time.h>
-#include <synctex_parser.h>
+#include "synctex_parser.h"
 
 // size of the mark highlighting the location calculated by forward-search
 #define MARK_SIZE               10

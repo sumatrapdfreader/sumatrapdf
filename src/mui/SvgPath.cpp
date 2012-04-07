@@ -26,7 +26,6 @@ understand.
 
 #include "BaseUtil.h"
 #include "SvgPath.h"
-#include "StrUtil.h"
 #include "VecSegmented.h"
 
 namespace svg {

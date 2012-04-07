@@ -2,9 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
-#include "StrUtil.h"
 #include "FileUtil.h"
-#include "Scoped.h"
 
 namespace path {
 

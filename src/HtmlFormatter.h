@@ -7,8 +7,6 @@
 #include "BaseUtil.h"
 #include "EbookBase.h"
 #include "HtmlPullParser.h"
-#include "Scoped.h"
-#include "Vec.h"
 
 using namespace Gdiplus;
 

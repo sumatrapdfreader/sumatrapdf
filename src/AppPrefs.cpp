@@ -1,20 +1,18 @@
 /* Copyright 2006-2012 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+#include "BaseUtil.h"
 #include "BencUtil.h"
-#include "StrUtil.h"
+#include "AppPrefs.h"
+#include "AppTools.h"
+#include "DisplayState.h"
+#include "Favorites.h"
+#include "FileHistory.h"
 #include "FileUtil.h"
 #include "FileTransactions.h"
-
-#include "AppPrefs.h"
-#include "DisplayState.h"
-#include "FileHistory.h"
-#include "Favorites.h"
-#include "Translations.h"
-
 #include "SumatraPDF.h"
+#include "Translations.h"
 #include "WindowInfo.h"
-#include "AppTools.h"
 
 #define PREFS_FILE_NAME         _T("sumatrapdfprefs.dat")
 

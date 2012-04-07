@@ -3,10 +3,7 @@
 
 #include "BaseUtil.h"
 #include "FileUtil.h"
-#include "StrUtil.h"
-#include "Vec.h"
 #include "WinUtil.h"
-#include "Scoped.h"
 
 #include <shlwapi.h>
 #include <shlobj.h>

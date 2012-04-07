@@ -4,8 +4,7 @@
 #ifndef SimpleLog_h
 #define SimpleLog_h
 
-#include "Vec.h"
-#include "Scoped.h"
+#include "BaseUtil.h"
 
 namespace slog {
 

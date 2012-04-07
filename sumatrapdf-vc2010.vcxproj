@@ -228,6 +228,7 @@
     <ClCompile Include="src\AppPrefs.cpp" />
     <ClCompile Include="src\AppTools.cpp" />
     <ClCompile Include="src\browserplugin\npPdfViewer.cpp" />
+    <ClCompile Include="src\ChmDoc.cpp" />
     <ClCompile Include="src\ChmEngine.cpp" />
     <ClCompile Include="src\CrashHandler.cpp" />
     <ClCompile Include="src\DisplayModel.cpp" />
@@ -254,6 +255,7 @@
     <ClCompile Include="src\Menu.cpp" />
     <ClCompile Include="src\MobiDoc.cpp" />
     <ClCompile Include="src\EbookWindow.cpp" />
+    <ClCompile Include="src\mui\MiniMui.cpp" />
     <ClCompile Include="src\mui\Mui.cpp" />
     <ClCompile Include="src\mui\MuiBase.cpp" />
     <ClCompile Include="src\mui\MuiButton.cpp" />
@@ -267,6 +269,7 @@
     <ClCompile Include="src\mui\SvgPath.cpp" />
     <ClCompile Include="src\mui\SvgPath_ut.cpp" />
     <ClCompile Include="src\HtmlFormatter.cpp" />
+    <ClCompile Include="src\Notifications.cpp" />
     <ClCompile Include="src\ParseCommandLine.cpp" />
     <ClCompile Include="src\PdfEngine.cpp" />
     <ClCompile Include="src\PdfSync.cpp" />
@@ -294,6 +297,8 @@
     <ClCompile Include="src\utils\FileTransactions.cpp" />
     <ClCompile Include="src\utils\GdiPlusUtil.cpp" />
     <ClCompile Include="src\utils\HtmlPullParser.cpp" />
+    <ClCompile Include="src\utils\JsonParser.cpp" />
+    <ClCompile Include="src\utils\JsonParser_ut.cpp" />
     <ClCompile Include="src\utils\Sigslot_ut.cpp" />
     <ClCompile Include="src\utils\StrUtil_ut.cpp" />
     <ClCompile Include="src\utils\ThreadUtil.cpp" />
@@ -345,6 +350,7 @@
     <ClCompile Include="src\utils\Http.cpp" />
     <ClCompile Include="src\utils\StrUtil.cpp" />
     <ClCompile Include="src\utils\TrivialHtmlParser.cpp" />
+    <ClCompile Include="src\utils\UiMsg.cpp" />
     <ClCompile Include="src\utils\UtilTests.cpp" />
     <ClCompile Include="src\utils\Vec_ut.cpp" />
     <ClCompile Include="src\utils\WinUtil.cpp" />
@@ -396,6 +402,7 @@
     <ClInclude Include="src\AppPrefs.h" />
     <ClInclude Include="src\AppTools.h" />
     <ClInclude Include="src\BaseEngine.h" />
+    <ClInclude Include="src\ChmDoc.h" />
     <ClInclude Include="src\ChmEngine.h" />
     <ClInclude Include="src\CrashHandler.h" />
     <ClInclude Include="src\DisplayModel.h" />
@@ -424,6 +431,7 @@
     <ClInclude Include="src\Menu.h" />
     <ClInclude Include="src\MobiDoc.h" />
     <ClInclude Include="src\EbookWindow.h" />
+    <ClInclude Include="src\mui\MiniMui.h" />
     <ClInclude Include="src\mui\Mui.h" />
     <ClInclude Include="src\mui\MuiBase.h" />
     <ClInclude Include="src\mui\MuiButton.h" />
@@ -464,6 +472,7 @@
     <ClInclude Include="src\utils\FileTransactions.h" />
     <ClInclude Include="src\utils\GdiPlusUtil.h" />
     <ClInclude Include="src\utils\HtmlPullParser.h" />
+    <ClInclude Include="src\utils\JsonParser.h" />
     <ClInclude Include="src\utils\RefCounted.h" />
     <ClInclude Include="src\utils\Sigslot.h" />
     <ClInclude Include="src\utils\ThreadUtil.h" />
@@ -481,7 +490,9 @@
     <ClInclude Include="src\utils\StrUtil.h" />
     <ClInclude Include="src\utils\TrivialHtmlParser.h" />
     <ClInclude Include="src\utils\Scoped.h" />
+    <ClInclude Include="src\utils\UiMsg.h" />
     <ClInclude Include="src\utils\Vec.h" />
+    <ClInclude Include="src\utils\VecSegmented.h" />
     <ClInclude Include="src\utils\WinUtil.h" />
     <ClInclude Include="src\utils\ZipUtil.h" />
     <ClInclude Include="src\Version.h" />

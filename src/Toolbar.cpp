@@ -1,16 +1,17 @@
 /* Copyright 2006-2012 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "SumatraPDF.h"
-#include "StrUtil.h"
-#include "WinUtil.h"
+#include "BaseUtil.h"
 #include "Toolbar.h"
-#include "Translations.h"
-#include "resource.h"
-#include "WindowInfo.h"
+
 #include "AppTools.h"
-#include "Search.h"
 #include "Menu.h"
+#include "resource.h"
+#include "Search.h"
+#include "SumatraPDF.h"
+#include "Translations.h"
+#include "WindowInfo.h"
+#include "WinUtil.h"
 
 struct ToolbarButtonInfo {
     /* index in the toolbar bitmap (-1 for separators) */

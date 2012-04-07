@@ -4,7 +4,7 @@
 #ifndef Http_h
 #define Http_h
 
-#include "Vec.h"
+#include "BaseUtil.h"
 
 bool  HttpPost(const TCHAR *server, const TCHAR *url, str::Str<char> *headers, str::Str<char> *data);
 DWORD HttpGet(const TCHAR *url, str::Str<char> *dataOut);

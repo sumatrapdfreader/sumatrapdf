@@ -19,14 +19,10 @@ uint16  msgId;      // determines how the data is to be decoded
 byte    data[];     // bytes for a given message
 */
 
-#include <stddef.h> // for offsetof
 #include "BaseUtil.h"
 #include "MemTraceDll.h"
 #include "nsWindowsDllInterceptor.h"
-#include "StrUtil.h"
-#include "Scoped.h"
 #include "Timer.h"
-#include "Vec.h"
 #include "WinUtil.h"
 
 #define NOLOG 0

@@ -2,8 +2,6 @@
    License: GPLv3 */
 
 #include "TextSelection.h"
-#include "Scoped.h"
-#include "Vec.h"
 
 PageTextCache::PageTextCache(BaseEngine *engine) : engine(engine)
 {

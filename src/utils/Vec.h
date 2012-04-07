@@ -1,12 +1,7 @@
 /* Copyright 2006-2012 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef Vec_h
-#define Vec_h
-
-#include "BaseUtil.h"
-#include "StrUtil.h"
-#include "Allocator.h"
+// note: include BaseUtil.h instead of including directly
 
 /* Simple but also optimized for small sizes vector/array class that can
 store pointer types or POD types
@@ -427,4 +422,3 @@ private:
     }
 };
 
-#endif

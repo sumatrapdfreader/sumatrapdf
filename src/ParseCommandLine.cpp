@@ -1,14 +1,13 @@
 /* Copyright 2006-2012 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "SumatraPDF.h"
 #include "BaseUtil.h"
-#include "StrUtil.h"
-#include "WinUtil.h"
 #include "AppPrefs.h"
-#include "ParseCommandLine.h"
 #include "CmdLineParser.h"
+#include "ParseCommandLine.h"
 #include "StressTesting.h"
+#include "SumatraPDF.h"
+#include "WinUtil.h"
 
 #ifdef DEBUG
 static void EnumeratePrinters()

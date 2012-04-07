@@ -2,9 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "HtmlPrettyPrint.h"
-
 #include "HtmlPullParser.h"
-#include "Vec.h"
 
 static void HtmlAddWithNesting(str::Str<char>* out, HtmlToken *tok, HtmlTag tag, size_t nesting)
 {

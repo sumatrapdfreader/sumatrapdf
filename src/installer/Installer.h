@@ -17,10 +17,7 @@
 #include "FileUtil.h"
 
 #include "Resource.h"
-#include "Scoped.h"
-#include "StrUtil.h"
 #include "Timer.h"
-#include "Vec.h"
 #include "Version.h"
 #include "WinUtil.h"
 

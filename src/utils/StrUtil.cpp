@@ -2,8 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 /* The most basic things, including string handling functions */
-#include "Scoped.h"
-#include "StrUtil.h"
+#include "BaseUtil.h"
 
 void CrashMe()
 {

@@ -4,10 +4,6 @@
 #ifndef VecSegmented_h
 #define VecSegmented_h
 
-#include "BaseUtil.h"
-#include "StrUtil.h"
-#include "Allocator.h"
-
 /* VecSegmented has (mostly) the same API as Vec but allocates
    using PoolAllocator. This means it's append only (we have no
    easy way to remove an item). The upside is that we can retain

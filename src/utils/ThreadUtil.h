@@ -4,7 +4,7 @@
 #ifndef ThreadUtil_h
 #define ThreadUtil_h
 
-#include "Vec.h"
+#include "BaseUtil.h"
 
 #include "DebugLog.h"
 

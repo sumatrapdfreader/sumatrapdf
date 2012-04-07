@@ -3,11 +3,10 @@
 
 #include "BaseUtil.h"
 #include "EbookController.h"
+#include "EbookWindow.h"
 #include "FileUtil.h"
 #include "MobiDoc.h"
-#include "EbookWindow.h"
 #include "resource.h"
-#include "Scoped.h"
 #include "SumatraPDF.h"
 #include "SumatraProperties.h"
 #include "Translations.h"

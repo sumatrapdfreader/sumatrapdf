@@ -8,7 +8,6 @@
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "resource.h"
-#include "StrUtil.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
 #include "WindowInfo.h"

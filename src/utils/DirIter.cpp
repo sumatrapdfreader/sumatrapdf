@@ -2,7 +2,6 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "DirIter.h"
-#include "StrUtil.h"
 #include "FileUtil.h"
 
 // Start directory traversal in a given dir

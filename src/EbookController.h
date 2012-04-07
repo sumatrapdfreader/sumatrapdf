@@ -10,7 +10,6 @@
 #include "HtmlFormatter.h"
 #include "SumatraWindow.h"
 #include "ThreadUtil.h"
-#include "Vec.h"
 
 using namespace mui;
 

@@ -4,18 +4,18 @@
 // engines which render flowed ebook formats into fixed pages through the BaseEngine API
 // (pages are mostly layed out the same as for a "B Format" paperback: 5.12" x 7.8")
 
+#include "BaseUtil.h"
 #include "EpubEngine.h"
-#include "Scoped.h"
-#include "Allocator.h"
-#include "StrUtil.h"
+
+#include "EpubDoc.h"
 #include "FileUtil.h"
-#include "ZipUtil.h"
-#include "MiniMui.h"
+using namespace Gdiplus;
 #include "GdiPlusUtil.h"
-#include "TrivialHtmlParser.h"
 #include "HtmlPullParser.h"
 #include "HtmlFormatter.h"
-#include "EpubDoc.h"
+#include "MiniMui.h"
+#include "TrivialHtmlParser.h"
+#include "ZipUtil.h"
 
 // disable warning C4250 which is wrongly issued due to a compiler bug; cf.
 // http://connect.microsoft.com/VisualStudio/feedback/details/101259/disable-warning-c4250-class1-inherits-class2-member-via-dominance-when-weak-member-is-a-pure-virtual-function

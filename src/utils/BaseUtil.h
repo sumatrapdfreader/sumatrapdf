@@ -18,6 +18,7 @@
 #ifdef DEBUG
 #define _CRTDBG_MAP_ALLOC
 #endif
+
 #include <stdlib.h>
 #ifdef DEBUG
 #include <crtdbg.h>
@@ -30,6 +31,7 @@
 /* Few most common includes for C stdlib */
 #include <assert.h>
 #include <float.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <time.h>
@@ -146,8 +148,10 @@ inline bool memeq(const void *s1, const void *s2, size_t len)
     return 0 == memcmp(s1, s2, len);
 }
 
-// TODO: also include Scoped.h, StrUtil.h, Vec.h
-//       and other commonly used headers?
 #include "RefCounted.h"
+#include "Allocator.h"
+#include "Scoped.h"
+#include "StrUtil.h"
+#include "Vec.h"
 
 #endif

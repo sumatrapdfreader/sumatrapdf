@@ -4,11 +4,10 @@
 #ifdef DEBUG
 
 #include "BaseUtil.h"
-#include "StrUtil.h"
-#include "ParseCommandLine.h"
-#include "WinUtil.h"
 #include "AppTools.h"
+#include "ParseCommandLine.h"
 #include "StressTesting.h"
+#include "WinUtil.h"
 
 static void hexstrTest()
 {

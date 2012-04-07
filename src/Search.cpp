@@ -7,21 +7,18 @@
 */
 
 #include "BaseUtil.h"
-#include "StrUtil.h"
-#include "WinUtil.h"
-#include "Scoped.h"
 
-#include "Search.h"
-#include "resource.h"
-#include "Translations.h"
-#include "SumatraPDF.h"
-#include "WindowInfo.h"
+#include "AppTools.h"
 #include "Notifications.h"
 #include "PdfSync.h"
+#include "resource.h"
+#include "Search.h"
 #include "Selection.h"
-
 #include "SumatraDialogs.h"
-#include "AppTools.h"
+#include "SumatraPDF.h"
+#include "Translations.h"
+#include "WindowInfo.h"
+#include "WinUtil.h"
 
 // don't show the Search UI for document types that don't
 // support extracting text and/or navigating to a specific

@@ -5,7 +5,6 @@
 #define ZipUtil_h
 
 #include "BaseUtil.h"
-#include "Vec.h"
 #include <unzip.h>
 
 class ZipFile {

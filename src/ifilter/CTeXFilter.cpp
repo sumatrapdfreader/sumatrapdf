@@ -2,7 +2,6 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
-#include "StrUtil.h"
 #include "WinUtil.h"
 #include "CTeXFilter.h"
 

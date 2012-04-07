@@ -10,10 +10,7 @@
 #include <wininet.h>
 
 #include "GeomUtil.h"
-#include "Scoped.h"
-#include "StrUtil.h"
 #include "Timer.h"
-#include "Vec.h"
 #include "WinUtil.h"
 
 #pragma comment(lib, "urlmon")

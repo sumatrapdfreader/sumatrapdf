@@ -4,8 +4,6 @@
 #include "TrivialHtmlParser.h"
 
 #include "HtmlPullParser.h"
-#include "Scoped.h"
-#include "StrUtil.h"
 
 // define to use HtmlPullParser for parsing
 // TODO: always parse using HtmlPullParser

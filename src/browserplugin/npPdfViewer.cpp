@@ -3,8 +3,6 @@
 #include "BaseUtil.h"
 #include "CmdLineParser.h"
 #include "FileUtil.h"
-#include "Scoped.h"
-#include "StrUtil.h"
 #include "WinUtil.h"
 #ifndef _WINDOWS
 #define _WINDOWS

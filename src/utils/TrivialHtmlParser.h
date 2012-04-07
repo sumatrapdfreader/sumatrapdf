@@ -4,7 +4,7 @@
 #ifndef TrivialHtmlParser_h
 #define TrivialHtmlParser_h
 
-#include "Allocator.h"
+#include "BaseUtil.h"
 
 enum HtmlParseError {
     ErrParsingNoError,

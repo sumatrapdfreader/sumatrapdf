@@ -944,6 +944,24 @@
     <ClCompile Include="src\EpubDoc.cpp">
       <Filter>sumatra\ebook</Filter>
     </ClCompile>
+    <ClCompile Include="src\Notifications.cpp">
+      <Filter>sumatra</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ChmDoc.cpp">
+      <Filter>sumatra\documents</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\UiMsg.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\JsonParser.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\JsonParser_ut.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mui\MiniMui.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -1398,6 +1416,21 @@
     </ClInclude>
     <ClInclude Include="src\EpubDoc.h">
       <Filter>sumatra\ebook</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ChmDoc.h">
+      <Filter>sumatra\documents</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\UiMsg.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\JsonParser.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\VecSegmented.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mui\MiniMui.h">
+      <Filter>mui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

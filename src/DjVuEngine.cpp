@@ -9,8 +9,6 @@
 #include <miniexp.h>
 #include "DjVuEngine.h"
 #include "FileUtil.h"
-#include "Vec.h"
-#include "Scoped.h"
 
 // TODO: libdjvu leaks memory - among others
 //       DjVuPort::corpse_lock, DjVuPort::corpse_head, pcaster,

@@ -16,7 +16,6 @@
 #endif
 
 #include "BaseUtil.h"
-#include "Scoped.h"
 #include "BaseEngine.h"
 
 #include <shlwapi.h>

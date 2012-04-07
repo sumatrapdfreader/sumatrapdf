@@ -17,7 +17,7 @@
 
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
-#include "Vec.h"
+#include "BaseUtil.h"
 
 enum BencType { BT_STRING, BT_INT, BT_ARRAY, BT_DICT };
 

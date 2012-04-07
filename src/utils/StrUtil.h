@@ -1,8 +1,7 @@
 /* Copyright 2006-2012 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef StrUtil_h
-#define StrUtil_h
+// note: include BaseUtil.h instead of including directly
 
 namespace str {
 
@@ -175,4 +174,3 @@ size_t FromCodePageBuf(WCHAR *buf, size_t cchBufSize, const char *s, UINT cp);
 
 #define UTF8_BOM "\xEF\xBB\xBF"
 
-#endif

@@ -3,7 +3,6 @@
 
 #include "BaseUtil.h"
 #include "Translations.h"
-#include "StrUtil.h"
 
 namespace Trans {
 

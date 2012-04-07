@@ -4,10 +4,7 @@
 #ifndef ChmDoc_h
 #define ChmDoc_h
 
-#include "BaseUtil.h"
 #include "EbookBase.h"
-#include "Scoped.h"
-#include "Vec.h"
 
 #define CP_CHM_DEFAULT 1252
 

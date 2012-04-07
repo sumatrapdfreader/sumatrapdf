@@ -4,10 +4,7 @@
 #include "EpubDoc.h"
 #include "FileUtil.h"
 #include "HtmlPullParser.h"
-#include "Scoped.h"
-#include "StrUtil.h"
 #include "TrivialHtmlParser.h"
-#include "Vec.h"
 #include "ZipUtil.h"
 
 inline TCHAR *FromHtmlUtf8(const char *s, size_t len)

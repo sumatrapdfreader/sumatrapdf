@@ -5,9 +5,7 @@
 #ifndef PdfSync_h
 #define PdfSync_h
 
-#include "Scoped.h"
 #include "GeomUtil.h"
-#include "Vec.h"
 
 // Error codes returned by the synchronization functions
 enum {

@@ -4,7 +4,7 @@
 #ifndef SumatraProperties_h
 #define SumatraProperties_h
 
-#include "Vec.h"
+#include "BaseUtil.h"
 
 #define PROPERTIES_CLASS_NAME   _T("SUMATRA_PDF_PROPERTIES")
 

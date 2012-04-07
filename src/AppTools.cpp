@@ -2,13 +2,12 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
-#include "StrUtil.h"
-#include "FileUtil.h"
-#include "WinUtil.h"
-#include "Translations.h"
 #include "AppTools.h"
 #include "CmdLineParser.h"
+#include "FileUtil.h"
+#include "Translations.h"
 #include "Version.h"
+#include "WinUtil.h"
 #include <shlobj.h>
 #include <shlwapi.h>
 

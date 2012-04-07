@@ -4,7 +4,7 @@
 #ifndef Search_h
 #define Search_h
 
-#include "Vec.h"
+#include "BaseUtil.h"
 
 #define PDFSYNC_DDE_SERVICE   _T("SUMATRA")
 #define PDFSYNC_DDE_TOPIC     _T("control")

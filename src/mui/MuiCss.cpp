@@ -1,9 +1,9 @@
 /* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+#include "BaseUtil.h"
 #include "Mui.h"
 #include "VecSegmented.h"
-#include "Scoped.h"
 
 using namespace Gdiplus;
 

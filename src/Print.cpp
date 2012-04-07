@@ -2,22 +2,19 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
-#include "StrUtil.h"
-#include "WinUtil.h"
-#include "FileUtil.h"
+#include "Print.h"
 #include <shlwapi.h>
 
-#include "Print.h"
-
-#include "Translations.h"
-#include "WindowInfo.h"
 #include "AppTools.h"
 #include "EngineManager.h"
-
-#include "SumatraPDF.h"
+#include "FileUtil.h"
 #include "Notifications.h"
-#include "SumatraDialogs.h"
 #include "Selection.h"
+#include "SumatraDialogs.h"
+#include "SumatraPDF.h"
+#include "Translations.h"
+#include "WindowInfo.h"
+#include "WinUtil.h"
 
 static bool PrinterSupportsStretchDib(HWND hwndForMsgBox, HDC hdc)
 {

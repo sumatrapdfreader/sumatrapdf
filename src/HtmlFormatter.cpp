@@ -1,14 +1,13 @@
 /* Copyright 2011-2012 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+#include "BaseUtil.h"
 #include "HtmlFormatter.h"
 #include "EpubDoc.h"
-#include "MobiDoc.h"
-#include "Mui.h"
-#include "StrUtil.h"
-
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
+#include "MobiDoc.h"
+#include "Mui.h"
 
 #include "DebugLog.h"
 

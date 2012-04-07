@@ -6,8 +6,6 @@
 
 // as little of mui as necessary to make ../EngineDump.cpp compile
 
-#include "BaseUtil.h"
-
 using namespace Gdiplus;
 
 namespace mui {

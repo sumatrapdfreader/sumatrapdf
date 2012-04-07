@@ -5,8 +5,6 @@
 #define Favorites_h
 
 #include "BaseUtil.h"
-#include "StrUtil.h"
-#include "Vec.h"
 
 class WindowInfo;
 

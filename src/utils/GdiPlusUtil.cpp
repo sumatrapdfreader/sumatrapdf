@@ -2,15 +2,10 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
-#include "Allocator.h"
-#include "Scoped.h"
-#include "StrUtil.h"
-#include "WinUtil.h"
-#include "GeomUtil.h"
-#include "Vec.h"
-
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
+#include "GeomUtil.h"
+#include "WinUtil.h"
 
 // Get width of each character and add them up.
 // Doesn't seem to be any different than MeasureTextAccurate() i.e. it still

@@ -8,8 +8,6 @@
 #include "FileUtil.h"
 #include "GeomUtil.h"
 #include "SimpleLog.h"
-#include "StrUtil.h"
-#include "Vec.h"
 #include "WinUtil.h"
 
 static void GeomTest()

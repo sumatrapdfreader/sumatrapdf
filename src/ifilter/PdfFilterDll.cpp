@@ -3,7 +3,6 @@
 
 #include "BaseUtil.h"
 #include "WinUtil.h"
-#include "Scoped.h"
 
 #include "CPdfFilter.h"
 #ifdef BUILD_TEX_IFILTER

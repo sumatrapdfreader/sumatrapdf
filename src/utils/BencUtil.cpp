@@ -1,9 +1,8 @@
 /* Copyright 2006-2012 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "Scoped.h"
+#include "BaseUtil.h"
 #include "BencUtil.h"
-#include "StrUtil.h"
 
 BencObj *BencObj::Decode(const char *bytes, size_t *lenOut)
 {

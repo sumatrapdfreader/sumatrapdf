@@ -4,7 +4,7 @@
 #ifndef CmdLineParser_h
 #define CmdLineParser_h
 
-#include "Vec.h"
+#include "BaseUtil.h"
 
 class CmdLineParser : public StrVec {
 public:

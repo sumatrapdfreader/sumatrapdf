@@ -5,8 +5,6 @@
 #define DirIter_h
 
 #include "BaseUtil.h"
-#include "Vec.h"
-#include "Scoped.h"
 
 class DirIter
 {

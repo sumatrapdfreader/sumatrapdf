@@ -2,8 +2,6 @@
    License: GPLv3 */
 
 #include "FileWatch.h"
-#include "Scoped.h"
-#include "StrUtil.h"
 #include "FileUtil.h"
 
 // TODO: a hack for VS 2011 compilation. 1600 is VS 2010

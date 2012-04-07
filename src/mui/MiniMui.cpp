@@ -3,9 +3,8 @@
 
 // as little of mui as necessary to make ../EngineDump.cpp compile
 
+#include "BaseUtil.h"
 #include "MiniMui.h"
-#include "Scoped.h"
-#include "Vec.h"
 
 namespace mui {
 

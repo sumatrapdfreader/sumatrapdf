@@ -1,6 +1,4 @@
 #include "BaseUtil.h"
-#include "StrUtil.h"
-#include "Scoped.h"
 
 static void TStrTest()
 {

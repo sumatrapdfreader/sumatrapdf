@@ -4,13 +4,12 @@
 #ifndef ENABLE_EBOOK_ENGINES
 #define ENABLE_EBOOK_ENGINES
 #endif
+#include "CmdLineParser.h"
 #include "EngineManager.h"
 #include "FileUtil.h"
-#include "CmdLineParser.h"
-#include "WinUtil.h"
-#include "Scoped.h"
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
+#include "WinUtil.h"
 
 #define Out(msg, ...) printf(msg, __VA_ARGS__)
 

@@ -2,13 +2,9 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "MobiDoc.h"
-#include <time.h>
 
 #include "BitReader.h"
 #include "FileUtil.h"
-
-#include "StrUtil.h"
-
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 

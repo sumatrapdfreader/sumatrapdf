@@ -2,8 +2,6 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "HtmlPullParser.h"
-#include "Allocator.h"
-#include "StrUtil.h"
 
 /* TODO: We could extend the parser to allow navigating the tree (go to a prev/next sibling, go
 to a parent) without explicitly building a tree in memory. I think all we need to do is to extend

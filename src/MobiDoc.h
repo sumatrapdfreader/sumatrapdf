@@ -6,7 +6,6 @@
 
 #include "BaseUtil.h"
 #include "EbookBase.h"
-#include "Vec.h"
 
 class HuffDicDecompressor;
 

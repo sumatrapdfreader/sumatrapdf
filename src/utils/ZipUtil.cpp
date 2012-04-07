@@ -3,8 +3,6 @@
 
 #include "ZipUtil.h"
 #include "FileUtil.h"
-#include "Scoped.h"
-#include "StrUtil.h"
 
 // mini(un)zip
 #include <ioapi.h>

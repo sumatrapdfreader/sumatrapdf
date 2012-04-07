@@ -1,10 +1,7 @@
 /* Copyright 2006-2012 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef Scoped_h
-#define Scoped_h
-
-#include "BaseUtil.h"
+// include BaseUtil.h instead of including directly
 
 // auto-free memory for arbitrary malloc()ed memory of type T*
 template <typename T>
@@ -134,4 +131,3 @@ public:
     }
 };
 
-#endif

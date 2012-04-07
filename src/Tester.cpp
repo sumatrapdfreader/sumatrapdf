@@ -6,23 +6,20 @@
    driver which dispatches desired test based on cmd-line arguments.
    Currently it only does one test: mobi file parsing. */
 
-#include <stdio.h>
-#include <stdlib.h>
-
+#include "BaseUtil.h"
 #include "DirIter.h"
-#include "DebugLog.h"
 #include "FileUtil.h"
+using namespace Gdiplus;
+#include "GdiPlusUtil.h"
 #include "HtmlFormatter.h"
 #include "HtmlPrettyPrint.h"
 #include "MobiDoc.h"
 #include "Mui.h"
 #include "NoFreeAllocator.h"
-#include "Scoped.h"
 #include "Timer.h"
 #include "WinUtil.h"
 
-using namespace Gdiplus;
-#include "GdiPlusUtil.h"
+#include "DebugLog.h"
 
 // if true, we'll save html content of a mobi ebook as well
 // as pretty-printed html to MOBI_SAVE_DIR. The name will be

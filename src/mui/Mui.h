@@ -10,7 +10,6 @@
 #include "GeomUtil.h"
 #include "HtmlPullParser.h"
 #include "Sigslot.h"
-#include "Vec.h"
 
 namespace mui {
 
