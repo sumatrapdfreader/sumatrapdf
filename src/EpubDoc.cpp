@@ -383,8 +383,10 @@ bool EpubDoc::VerifyEpub(ZipFile& zip)
     }
     // a proper EPUB documents has a "mimetype" file with content
     // "application/epub+zip" as the first entry in its ZIP structure
-    return str::Eq(zip.GetFileName(0), _T("mimetype")) &&
-           str::Eq(mimetype, "application/epub+zip");
+    /* cf. http://forums.fofou.org/sumatrapdf/topic?id=2599331
+    if (!str::Eq(zip.GetFileName(0), _T("mimetype")))
+        return false; */
+    return str::Eq(mimetype, "application/epub+zip");
 }
 
 bool EpubDoc::IsSupportedFile(const TCHAR *fileName, bool sniff)
