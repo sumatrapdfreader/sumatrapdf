@@ -240,9 +240,9 @@ Bitmap *BitmapFromData(void *data, size_t len)
 }
 
 // adapted from http://cpansearch.perl.org/src/RJRAY/Image-Size-3.230/lib/Image/Size.pm
-Rect BitmapSizeFromData(char *data, size_t len)
+Size BitmapSizeFromData(char *data, size_t len)
 {
-    Rect result;
+    Size result;
     // too short to contain magic number and image dimensions
     if (len < 8) {
     }
@@ -252,7 +252,7 @@ Rect BitmapSizeFromData(char *data, size_t len)
             BITMAPINFOHEADER *bmi = (BITMAPINFOHEADER *)(data + sizeof(BITMAPFILEHEADER));
             DWORD width = LEtoHl(bmi->biWidth);
             DWORD height = LEtoHl(bmi->biHeight);
-            result = Rect(0, 0, width, height);
+            result = Size(width, height);
         }
     }
     // PNG
@@ -260,7 +260,7 @@ Rect BitmapSizeFromData(char *data, size_t len)
         if (len >= 24 && str::StartsWith(data + 12, "IHDR")) {
             DWORD width = BEtoHl(*(DWORD *)(data + 16));
             DWORD height = BEtoHl(*(DWORD *)(data + 20));
-            result = Rect(0, 0, width, height);
+            result = Size(width, height);
         }
     }
     // JPEG
@@ -270,7 +270,7 @@ Rect BitmapSizeFromData(char *data, size_t len)
             if ('\xC0' <= data[ix + 1] && data[ix + 1] <= '\xC3') {
                 WORD width = BEtoHs(*(WORD *)(data + ix + 7));
                 WORD height = BEtoHs(*(WORD *)(data + ix + 5));
-                result = Rect(0, 0, width, height);
+                result = Size(width, height);
             }
             ix += BEtoHs(*(WORD *)(data + ix + 2)) + 2;
         }
@@ -288,7 +288,7 @@ Rect BitmapSizeFromData(char *data, size_t len)
                 if (data[ix] == '\x2c') {
                     WORD width = LEtoHs(*(WORD *)(data + ix + 5));
                     WORD height = LEtoHs(*(WORD *)(data + ix + 7));
-                    result = Rect(0, 0, width, height);
+                    result = Size(width, height);
                     break;
                 }
                 else if (data[ix] == '\x21' && data[ix + 1] == '\xF9')
@@ -315,12 +315,12 @@ Rect BitmapSizeFromData(char *data, size_t len)
         // TODO: speed this up (if necessary)
     }
 
-    if (result.IsEmptyArea()) {
+    if (result.Empty()) {
         // let GDI+ extract the image size if we've failed
         // (currently happens for animated GIFs and for all TIFFs)
         Bitmap *bmp = BitmapFromData(data, len);
         if (bmp)
-            result = Rect(0, 0, bmp->GetWidth(), bmp->GetHeight());
+            result = Size(bmp->GetWidth(), bmp->GetHeight());
         delete bmp;
     }
 

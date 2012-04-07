@@ -20,12 +20,6 @@ using namespace Gdiplus;
 
 ///// Helper methods for handling image files of the most common types /////
 
-RectI SizeFromData(char *data, size_t len)
-{
-    Rect rect = BitmapSizeFromData(data, len);
-    return RectI(rect.X, rect.Y, rect.Width, rect.Height);
-}
-
 RenderedBitmap *LoadRenderedBitmap(const TCHAR *filePath)
 {
     if (str::EndsWithI(filePath, _T(".bmp"))) {
@@ -278,8 +272,12 @@ public:
 
 Vec<PageElement *> *ImagesEngine::GetElements(int pageNo)
 {
+    Bitmap *bmp = LoadImage(pageNo);
+    if (!bmp)
+        return NULL;
+
     Vec<PageElement *> *els = new Vec<PageElement *>();
-    els->Append(new ImageElement(pageNo, LoadImage(pageNo)));
+    els->Append(new ImageElement(pageNo, bmp));
     return els;
 }
 
@@ -287,7 +285,10 @@ PageElement *ImagesEngine::GetElementAtPos(int pageNo, PointD pt)
 {
     if (!PageMediabox(pageNo).Contains(pt))
         return NULL;
-    return new ImageElement(pageNo, LoadImage(pageNo));
+    Bitmap *bmp = LoadImage(pageNo);
+    if (!bmp)
+        return NULL;
+    return new ImageElement(pageNo, bmp);
 }
 
 unsigned char *ImagesEngine::GetFileData(size_t *cbCount)
@@ -364,7 +365,7 @@ bool ImageEngineImpl::LoadFromStream(IStream *stream)
 
 bool ImageEngineImpl::FinishLoading(Bitmap *bmp)
 {
-    if (!bmp)
+    if (!bmp || bmp->GetLastStatus() != Ok)
         return false;
     pages.Append(bmp);
     assert(pages.Count() == 1);
@@ -488,8 +489,8 @@ RectD ImageDirEngineImpl::PageMediabox(int pageNo)
     size_t len;
     ScopedMem<char> bmpData(file::ReadAll(pageFileNames.At(pageNo - 1), &len));
     if (bmpData) {
-        RectI rect = SizeFromData(bmpData, len);
-        mediaboxes.At(pageNo - 1) = rect.Convert<double>();
+        Size size = BitmapSizeFromData(bmpData, len);
+        mediaboxes.At(pageNo - 1) = RectD(0, 0, size.Width, size.Height);
     }
     return mediaboxes.At(pageNo - 1);
 }
@@ -642,8 +643,8 @@ RectD CbxEngineImpl::PageMediabox(int pageNo)
     size_t len;
     ScopedMem<char> bmpData(GetImageData(pageNo, len));
     if (bmpData) {
-        RectI rect = SizeFromData(bmpData, len);
-        mediaboxes.At(pageNo - 1) = rect.Convert<double>();
+        Size size = BitmapSizeFromData(bmpData, len);
+        mediaboxes.At(pageNo - 1) = RectD(0, 0, size.Width, size.Height);
     }
     return mediaboxes.At(pageNo - 1);
 }

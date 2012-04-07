@@ -735,12 +735,12 @@ ImageData *MobiDoc::GetImage(size_t imgRecIndex) const
 ImageData *MobiDoc::GetCoverImage()
 {
     size_t coverImage = 0;
-    Rect size;
+    Size size;
     size_t maxImageNo = min(imagesCount, 2);
     for (size_t i = 0; i < maxImageNo; i++) {
         if (!images[i].data)
             continue;
-        Rect s = BitmapSizeFromData(images[i].data, images[i].len);
+        Size s = BitmapSizeFromData(images[i].data, images[i].len);
         int32 prevSize = size.Width * size.Height;
         int32 currSize = s.Width * s.Height;
         if (currSize > prevSize) {
@@ -748,7 +748,7 @@ ImageData *MobiDoc::GetCoverImage()
             size = s;
         }
     }
-    if (size.IsEmptyArea())
+    if (size.Empty())
         return NULL;
     return &images[coverImage];
 }

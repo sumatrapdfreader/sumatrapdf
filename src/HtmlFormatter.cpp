@@ -520,8 +520,8 @@ void HtmlFormatter::EmitEmptyLine(float lineDy)
 void HtmlFormatter::EmitImage(ImageData *img)
 {
     CrashIf(!img->data);
-    Rect imgSize = BitmapSizeFromData(img->data, img->len);
-    if (imgSize.IsEmptyArea())
+    Size imgSize = BitmapSizeFromData(img->data, img->len);
+    if (imgSize.Empty())
         return;
 
     SizeF newSize((REAL)imgSize.Width, (REAL)imgSize.Height);
@@ -1039,7 +1039,7 @@ MobiFormatter::MobiFormatter(HtmlFormatterArgs* args, MobiDoc *doc) :
     // cover images, like in http://www.sethgodin.com/sg/docs/StopStealingDreams-SethGodin.mobi
     // TODO: a better way would be to only add the image if one isn't
     // present at the beginning of html
-    Rect size = BitmapSizeFromData(img->data, img->len);
+    Size size = BitmapSizeFromData(img->data, img->len);
     if ((size.Width < 320) || (size.Height < 200))
         return;
 

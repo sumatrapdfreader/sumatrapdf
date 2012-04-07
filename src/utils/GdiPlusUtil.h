@@ -7,7 +7,7 @@
 // used for communicating with DrawCloseButton()
 #define BUTTON_HOVER_TEXT _T("1")
 
-// not: must write "using namespace Gdipluls" before #include "GdiPlusUtil.h"
+// note: must write "using namespace Gdiplus;" before #include "GdiPlusUtil.h"
 // this is to make sure we don't accidentally do that just by including this file
 RectF    MeasureTextAccurate(Graphics *g, Font *f, const WCHAR *s, size_t len);
 RectF    MeasureTextAccurate2(Graphics *g, Font *f, const WCHAR *s, size_t len);
@@ -21,7 +21,7 @@ void     GetBaseTransform(Matrix& m, RectF pageRect, float zoom, int rotation);
 
 const TCHAR * GfxFileExtFromData(char *data, size_t len);
 Bitmap *      BitmapFromData(void *data, size_t len);
-Rect          BitmapSizeFromData(char *data, size_t len);
+Size          BitmapSizeFromData(char *data, size_t len);
 
 unsigned char * SerializeRunLengthEncoded(HBITMAP hbmp, size_t *bmpBytesOut);
 
