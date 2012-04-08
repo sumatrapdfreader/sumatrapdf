@@ -563,7 +563,7 @@ $(OU)\StrUtil_ut.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\StrUti
 $(OU)\StrUtil_ut.obj: src\utils\Vec.h
 $(OU)\TgaReader.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GeomUtil.h
 $(OU)\TgaReader.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\StrUtil.h
-$(OU)\TgaReader.obj: src\utils\TgaReader.h src\utils\Vec.h src\utils\WinUtil.h
+$(OU)\TgaReader.obj: src\utils\TgaReader.h src\utils\Vec.h
 $(OU)\ThreadUtil.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GeomUtil.h
 $(OU)\ThreadUtil.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\StrUtil.h
 $(OU)\ThreadUtil.obj: src\utils\ThreadUtil.h src\utils\Vec.h

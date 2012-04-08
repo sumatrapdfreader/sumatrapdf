@@ -2,7 +2,6 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "TgaReader.h"
-#include "WinUtil.h"
 
 using namespace Gdiplus;
 
@@ -218,27 +217,46 @@ inline bool memeq3(char *pix1, char *pix2)
 
 unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut)
 {
-    SizeI size = GetBitmapSize(hbmp);
-    int stride = ((size.dx * 3 + 3) / 4) * 4;
-    size_t bmpBytes;
-    ScopedMem<char> bmpData((char *)::SerializeBitmap(hbmp, &bmpBytes));
+    BITMAP bmpInfo;
+    GetObject(hbmp, sizeof(BITMAP), &bmpInfo);
+    if ((ULONG)bmpInfo.bmWidth > USHRT_MAX || (ULONG)bmpInfo.bmHeight > USHRT_MAX)
+        return 0;
+
+    WORD w = (WORD)bmpInfo.bmWidth;
+    WORD h = (WORD)bmpInfo.bmHeight;
+    int stride = ((w * 3 + 3) / 4) * 4;
+    ScopedMem<char> bmpData((char *)malloc(stride * h));
     if (!bmpData)
         return NULL;
 
-    str::Str<char> tgaData;
+    BITMAPINFO bmi = { 0 };
+    bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
+    bmi.bmiHeader.biWidth = w;
+    bmi.bmiHeader.biHeight = h;
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 24;
+    bmi.bmiHeader.biCompression = BI_RGB;
+
+    HDC hDC = GetDC(NULL);
+    if (!GetDIBits(hDC, hbmp, 0, h, bmpData, &bmi, DIB_RGB_COLORS)) {
+        ReleaseDC(NULL, hDC);
+        return NULL;
+    }
+    ReleaseDC(NULL, hDC);
 
     TgaHeader header = { 0 };
     header.imageType = Type_Truecolor_RLE;
-    header.width = LEtoHs(size.dx);
-    header.height = LEtoHs(size.dy);
+    header.width = LEtoHs(w);
+    header.height = LEtoHs(h);
     header.bitDepth = 24;
-    tgaData.Append((char *)&header, sizeof(header));
 
-    for (int k = 0; k < size.dy; k++) {
-        char *line = bmpData + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFO) + k * stride;
-        for (int i = 0, j = 1; i < size.dx; i += j, j = 1) {
+    str::Str<char> tgaData;
+    tgaData.Append((char *)&header, sizeof(header));
+    for (int k = 0; k < h; k++) {
+        char *line = bmpData + k * stride;
+        for (int i = 0, j = 1; i < w; i += j, j = 1) {
             // determine the length of a run of identical pixels
-            while (i + j < size.dx && j < 128 && memeq3(line + i * 3, line + (i + j) * 3)) {
+            while (i + j < w && j < 128 && memeq3(line + i * 3, line + (i + j) * 3)) {
                 j++;
             }
             if (j > 1) {
@@ -246,7 +264,7 @@ unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut)
                 tgaData.Append(line + i * 3, 3);
             } else {
                 // determine the length of a run of different pixels
-                while (i + j < size.dx && j < 128 && !memeq3(line + (i + j - 1) * 3, line + (i + j) * 3)) {
+                while (i + j < w && j < 128 && !memeq3(line + (i + j - 1) * 3, line + (i + j) * 3)) {
                     j++;
                 }
                 tgaData.Append(j - 1);

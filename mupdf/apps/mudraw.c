@@ -170,8 +170,8 @@ static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display
 	fz_free_device(dev);
 
 	bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
-	bmi.bmiHeader.biHeight = h;
 	bmi.bmiHeader.biWidth = w;
+	bmi.bmiHeader.biHeight = h;
 	bmi.bmiHeader.biPlanes = 1;
 	bmi.bmiHeader.biBitCount = 24;
 	bmi.bmiHeader.biCompression = BI_RGB;

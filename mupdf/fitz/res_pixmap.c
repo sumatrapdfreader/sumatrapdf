@@ -600,6 +600,12 @@ static inline void tga_put_pixel(char *data, int n, FILE *fp)
 			buf[3] = data[3];
 		data = buf;
 	}
+	else if (n == 2)
+	{
+		char buf[2];
+		buf[0] = buf[1] = data[0];
+		fwrite(buf, 1, 2, fp);
+	}
 	fwrite(data, 1, n, fp);
 }
 
@@ -634,7 +640,9 @@ fz_write_tga(fz_context *ctx, fz_pixmap *pixmap, char *filename, int savealpha)
 	head[1] = n == 4 ? 10 : 11;
 	head[6] = pixmap->w;
 	head[7] = pixmap->h;
-	head[8] = d * 8 + (savealpha ? 1 << 8 : 0);
+	head[8] = d * 8 | (savealpha && n > 1 ? 0x0800 : 0);
+	if (savealpha && d == 2)
+		head[8] += 16;
 	fwrite(head, sizeof(head), 1, fp);
 
 	for (k = 1; k <= pixmap->h; k++)
