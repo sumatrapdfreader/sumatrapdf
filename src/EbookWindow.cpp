@@ -312,6 +312,7 @@ static LRESULT OnGesture(EbookWindow *win, UINT message, WPARAM wParam, LPARAM l
     return 0;
 }
 
+#ifdef SHOW_DEBUG_MENU_ITEMS
 static void OnLoadMobiSample(EbookWindow *win)
 {
     if (!gSampleMobiHtml) {
@@ -325,6 +326,7 @@ static void OnLoadMobiSample(EbookWindow *win)
     }
     win->ebookController->SetHtml(gSampleMobiHtml, gSampleMobiHtmlSize);
 }
+#endif
 
 static LRESULT OnCommand(EbookWindow *win, UINT msg, WPARAM wParam, LPARAM lParam)
 {

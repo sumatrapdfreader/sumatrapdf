@@ -218,13 +218,14 @@ $(OS)\EpubDoc.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.
 $(OS)\EpubDoc.obj: src\utils\HtmlPullParser.h src\utils\RefCounted.h src\utils\Scoped.h
 $(OS)\EpubDoc.obj: src\utils\StrUtil.h src\utils\TrivialHtmlParser.h src\utils\Vec.h
 $(OS)\EpubDoc.obj: src\utils\WinUtil.h src\utils\ZipUtil.h
-$(OS)\EpubEngine.obj: src\BaseEngine.h src\ChmDoc.h src\EbookBase.h
-$(OS)\EpubEngine.obj: src\EpubDoc.h src\EpubEngine.h src\HtmlFormatter.h
-$(OS)\EpubEngine.obj: src\MobiDoc.h src\mui\MiniMui.h src\utils\Allocator.h
-$(OS)\EpubEngine.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GdiPlusUtil.h
-$(OS)\EpubEngine.obj: src\utils\GeomUtil.h src\utils\HtmlPullParser.h src\utils\RefCounted.h
-$(OS)\EpubEngine.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\TrivialHtmlParser.h
-$(OS)\EpubEngine.obj: src\utils\Vec.h src\utils\WinUtil.h src\utils\ZipUtil.h
+$(OS)\EpubEngine.obj: src\BaseEngine.h src\ChmDoc.h src\Doc.h
+$(OS)\EpubEngine.obj: src\EbookBase.h src\EpubDoc.h src\EpubEngine.h
+$(OS)\EpubEngine.obj: src\HtmlFormatter.h src\MobiDoc.h src\mui\MiniMui.h
+$(OS)\EpubEngine.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\FileUtil.h
+$(OS)\EpubEngine.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\HtmlPullParser.h
+$(OS)\EpubEngine.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OS)\EpubEngine.obj: src\utils\TrivialHtmlParser.h src\utils\Vec.h src\utils\WinUtil.h
+$(OS)\EpubEngine.obj: src\utils\ZipUtil.h
 $(OS)\ExternalPdfViewer.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
 $(OS)\ExternalPdfViewer.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
 $(OS)\ExternalPdfViewer.obj: src\EngineManager.h src\EpubEngine.h src\ExternalPdfViewer.h
@@ -248,15 +249,16 @@ $(OS)\Favorites.obj: src\utils\Vec.h src\utils\WinUtil.h src\WindowInfo.h
 $(OS)\FileWatch.obj: src\FileWatch.h src\utils\Allocator.h src\utils\BaseUtil.h
 $(OS)\FileWatch.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\RefCounted.h
 $(OS)\FileWatch.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
-$(OS)\HtmlFormatter.obj: src\EbookBase.h src\EpubDoc.h src\HtmlFormatter.h
-$(OS)\HtmlFormatter.obj: src\MobiDoc.h src\mui\Mui.h src\mui\MuiBase.h
-$(OS)\HtmlFormatter.obj: src\mui\MuiButton.h src\mui\MuiControl.h src\mui\MuiCss.h
-$(OS)\HtmlFormatter.obj: src\mui\MuiEventMgr.h src\mui\MuiHwndWrapper.h src\mui\MuiLayout.h
-$(OS)\HtmlFormatter.obj: src\mui\MuiPainter.h src\mui\MuiScrollBar.h src\utils\Allocator.h
-$(OS)\HtmlFormatter.obj: src\utils\BaseUtil.h src\utils\BitManip.h src\utils\DebugLog.h
-$(OS)\HtmlFormatter.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\HtmlPullParser.h
-$(OS)\HtmlFormatter.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\Sigslot.h
-$(OS)\HtmlFormatter.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\ZipUtil.h
+$(OS)\HtmlFormatter.obj: src\Doc.h src\EbookBase.h src\EpubDoc.h
+$(OS)\HtmlFormatter.obj: src\HtmlFormatter.h src\MobiDoc.h src\mui\Mui.h
+$(OS)\HtmlFormatter.obj: src\mui\MuiBase.h src\mui\MuiButton.h src\mui\MuiControl.h
+$(OS)\HtmlFormatter.obj: src\mui\MuiCss.h src\mui\MuiEventMgr.h src\mui\MuiHwndWrapper.h
+$(OS)\HtmlFormatter.obj: src\mui\MuiLayout.h src\mui\MuiPainter.h src\mui\MuiScrollBar.h
+$(OS)\HtmlFormatter.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\BitManip.h
+$(OS)\HtmlFormatter.obj: src\utils\DebugLog.h src\utils\GdiPlusUtil.h src\utils\GeomUtil.h
+$(OS)\HtmlFormatter.obj: src\utils\HtmlPullParser.h src\utils\RefCounted.h src\utils\Scoped.h
+$(OS)\HtmlFormatter.obj: src\utils\Sigslot.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\HtmlFormatter.obj: src\utils\ZipUtil.h
 $(OS)\ImagesEngine.obj: ext\unrar\dll.hpp src\BaseEngine.h src\ImagesEngine.h
 $(OS)\ImagesEngine.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\FileUtil.h
 $(OS)\ImagesEngine.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\HtmlPullParser.h
@@ -450,17 +452,17 @@ $(OS)\TableOfContents.obj: src\Translations.h src\utils\Allocator.h src\utils\Ba
 $(OS)\TableOfContents.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\RefCounted.h
 $(OS)\TableOfContents.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\TableOfContents.obj: src\utils\WinUtil.h src\WindowInfo.h
-$(OS)\Tester.obj: src\EbookBase.h src\HtmlFormatter.h src\MobiDoc.h
-$(OS)\Tester.obj: src\mui\Mui.h src\mui\MuiBase.h src\mui\MuiButton.h
-$(OS)\Tester.obj: src\mui\MuiControl.h src\mui\MuiCss.h src\mui\MuiEventMgr.h
-$(OS)\Tester.obj: src\mui\MuiHwndWrapper.h src\mui\MuiLayout.h src\mui\MuiPainter.h
-$(OS)\Tester.obj: src\mui\MuiScrollBar.h src\utils\Allocator.h src\utils\BaseUtil.h
-$(OS)\Tester.obj: src\utils\BitManip.h src\utils\DebugLog.h src\utils\DirIter.h
-$(OS)\Tester.obj: src\utils\FileUtil.h src\utils\GdiPlusUtil.h src\utils\GeomUtil.h
-$(OS)\Tester.obj: src\utils\HtmlPrettyPrint.h src\utils\HtmlPullParser.h src\utils\NoFreeAllocator.h
-$(OS)\Tester.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\Sigslot.h
-$(OS)\Tester.obj: src\utils\StrUtil.h src\utils\Timer.h src\utils\Vec.h
-$(OS)\Tester.obj: src\utils\WinUtil.h
+$(OS)\Tester.obj: src\Doc.h src\EbookBase.h src\HtmlFormatter.h
+$(OS)\Tester.obj: src\MobiDoc.h src\mui\Mui.h src\mui\MuiBase.h
+$(OS)\Tester.obj: src\mui\MuiButton.h src\mui\MuiControl.h src\mui\MuiCss.h
+$(OS)\Tester.obj: src\mui\MuiEventMgr.h src\mui\MuiHwndWrapper.h src\mui\MuiLayout.h
+$(OS)\Tester.obj: src\mui\MuiPainter.h src\mui\MuiScrollBar.h src\utils\Allocator.h
+$(OS)\Tester.obj: src\utils\BaseUtil.h src\utils\BitManip.h src\utils\DebugLog.h
+$(OS)\Tester.obj: src\utils\DirIter.h src\utils\FileUtil.h src\utils\GdiPlusUtil.h
+$(OS)\Tester.obj: src\utils\GeomUtil.h src\utils\HtmlPrettyPrint.h src\utils\HtmlPullParser.h
+$(OS)\Tester.obj: src\utils\NoFreeAllocator.h src\utils\RefCounted.h src\utils\Scoped.h
+$(OS)\Tester.obj: src\utils\Sigslot.h src\utils\StrUtil.h src\utils\Timer.h
+$(OS)\Tester.obj: src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\TextSearch.obj: src\BaseEngine.h src\TextSearch.h src\TextSelection.h
 $(OS)\TextSearch.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GeomUtil.h
 $(OS)\TextSearch.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\StrUtil.h
