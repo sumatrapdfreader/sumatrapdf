@@ -259,22 +259,14 @@ void EbookController::DeletePages(Vec<HtmlPage*>** pages)
 HtmlFormatterArgs *CreateFormatterArgsDoc(Doc doc, int dx, int dy, PoolAllocator *textAllocator)
 {
     HtmlFormatterArgs *args = new HtmlFormatterArgs();
-    args->htmlStr = NULL;
+    args->doc = doc;
+    args->htmlStr = doc.GetHtmlData(args->htmlStrLen);
+    CrashIf(!args->htmlStr);
     args->fontName = FONT_NAME;
     args->fontSize = FONT_SIZE;
     args->pageDx = dx;
     args->pageDy = dy;
     args->textAllocator = textAllocator;
-
-    args->doc = doc;
-    if (doc.AsMobi())
-        args->htmlStr = doc.AsMobi()->GetBookHtmlData(args->htmlStrLen);
-    else if (doc.AsMobiTest())
-        args->htmlStr = doc.AsMobiTest()->GetBookHtmlData(args->htmlStrLen);
-    else if (doc.AsEpub())
-        args->htmlStr = doc.AsEpub()->GetTextData(&args->htmlStrLen);
-    else
-        CrashIf(true);
     return args;
 }
 
@@ -669,23 +661,11 @@ void EbookController::AdvancePage(int dist)
     GoToPage(currPageNo + dist);
 }
 
-static int GetEbookHtmlSize(Doc doc)
-{
-    if (doc.AsMobi())
-        return doc.AsMobi()->GetBookHtmlSize();
-    if (doc.AsMobiTest())
-        return doc.AsMobiTest()->GetBookHtmlSize();
-    if (doc.AsEpub())
-        return doc.AsEpub()->GetTextDataSize();
-    CrashIf(true);
-    return 0;
-}
-
 void EbookController::SetDoc(Doc newDoc, int startReparseIdxArg)
 {
     CrashIf(!newDoc.IsEbook());
     startReparseIdx = startReparseIdxArg;
-    if (startReparseIdx >= GetEbookHtmlSize(newDoc))
+    if ((size_t)startReparseIdx >= newDoc.GetHtmlDataSize())
         startReparseIdx = -1;
     CloseCurrentDocument();
     doc = newDoc;

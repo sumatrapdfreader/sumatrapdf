@@ -900,7 +900,7 @@ public:
                                     RenderTarget target=Target_View);
     virtual bool HasClipOptimizations(int pageNo);
     virtual PageLayoutType PreferredLayout();
-    virtual TCHAR *GetProperty(char *name);
+    virtual TCHAR *GetProperty(const char *name);
 
     virtual bool IsPrintingAllowed() {
         return pdf_has_permission(_doc, PDF_PERM_PRINT);
@@ -2192,7 +2192,7 @@ TCHAR *PdfEngineImpl::ExtractFontList()
     return fonts.Join(_T("\n"));
 }
 
-TCHAR *PdfEngineImpl::GetProperty(char *name)
+TCHAR *PdfEngineImpl::GetProperty(const char *name)
 {
     if (!_doc)
         return NULL;
@@ -2208,7 +2208,7 @@ TCHAR *PdfEngineImpl::GetProperty(char *name)
 
     // _info is guaranteed not to contain any indirect references,
     // so no need for ctxAccess
-    pdf_obj *obj = pdf_dict_gets(_info, name);
+    pdf_obj *obj = pdf_dict_gets(_info, (char *)name);
     if (!obj)
         return NULL;
 
@@ -2577,7 +2577,7 @@ public:
         return ExtractPageText(GetXpsPage(pageNo), lineSep, coords_out);
     }
     virtual bool HasClipOptimizations(int pageNo);
-    virtual TCHAR *GetProperty(char *name);
+    virtual TCHAR *GetProperty(const char *name);
 
     virtual float GetFileDPI() const { return 72.0f; }
     virtual const TCHAR *GetDefaultFileExt() const { return _T(".xps"); }
@@ -3304,7 +3304,7 @@ TCHAR *XpsEngineImpl::ExtractFontList()
     return fonts.Join(_T("\n"));
 }
 
-TCHAR *XpsEngineImpl::GetProperty(char *name)
+TCHAR *XpsEngineImpl::GetProperty(const char *name)
 {
     for (xps_doc_prop *prop = _info; prop; prop = prop->next) {
         if (str::Eq(prop->name, name) && !str::IsEmpty(prop->value))

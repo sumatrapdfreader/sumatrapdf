@@ -131,7 +131,7 @@ public:
 
     virtual bool HasClipOptimizations(int pageNo) { return false; }
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
-    virtual TCHAR *GetProperty(char *name) { return doc->GetProperty(name); }
+    virtual TCHAR *GetProperty(const char *name) { return doc->GetProperty(name); }
 
     virtual const TCHAR *GetDefaultFileExt() const { return _T(".chm"); }
 

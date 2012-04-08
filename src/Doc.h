@@ -34,6 +34,8 @@ class PdfEngine;
 class PsEngine;
 class XpsEngine;
 
+struct ImageData;
+
 class Doc
 {
 public:
@@ -111,7 +113,14 @@ public:
     MobiTestDoc *AsMobiTest() const;
     EpubDoc *AsEpub() const;
 
+    // instead of adding these to Doc, they could also be part
+    // of a virtual EbookDoc interface that *Doc implement so
+    // that the compiler can choose the correct method automatically
     const TCHAR *GetFilePath() const;
+    TCHAR *GetProperty(const char *name);
+    const char *GetHtmlData(size_t &len);
+    size_t GetHtmlDataSize();
+    ImageData *GetCoverImage();
 
     static Doc CreateFromFile(const TCHAR *filePath);
 };

@@ -35,6 +35,8 @@ static MenuDef menuDefMobiFile[] = {
     { _TRN("&Open...\tCtrl+O"),             IDM_OPEN,                   MF_REQ_DISK_ACCESS },
     { _TRN("&Close\tCtrl+W"),               IDM_CLOSE,                  MF_REQ_DISK_ACCESS },
     { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS },
+    { _TRN("P&roperties\tCtrl+D"),          IDM_PROPERTIES,             0 },
+    { SEP_ITEM,                             0,                          0 },
     { _TRN("E&xit\tCtrl+Q"),                IDM_EXIT,                   0 }
 };
 
@@ -528,12 +530,7 @@ RenderedBitmap *RenderFirstDocPageToBitmap(Doc doc, SizeI pageSize, SizeI bmpSiz
 
 static RenderedBitmap *ThumbFromCoverPage(Doc doc)
 {
-    // currently only Mobi supports cover pages (FB2 would too)
-    if (!doc.AsMobi())
-        return NULL;
-
-    MobiDoc *mobiDoc = doc.AsMobi();
-    ImageData *coverImage = mobiDoc->GetCoverImage();
+    ImageData *coverImage = doc.GetCoverImage();
     if (!coverImage)
         return NULL;
     Bitmap *coverBmp = BitmapFromData(coverImage->data, coverImage->len);

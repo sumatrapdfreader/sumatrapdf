@@ -90,6 +90,50 @@ const TCHAR *Doc::GetFilePath() const
     }
 }
 
+TCHAR *Doc::GetProperty(const char *name)
+{
+    if (Epub == type)
+        return epubDoc->GetProperty(name);
+    return NULL;
+}
+
+const char *Doc::GetHtmlData(size_t &len)
+{
+    switch (type) {
+    case Mobi:
+        return mobiDoc->GetBookHtmlData(len);
+    case MobiTest:
+        return mobiTestDoc->GetBookHtmlData(len);
+    case Epub:
+        return epubDoc->GetTextData(&len);
+    default:
+        CrashIf(true);
+        return NULL;
+    }
+}
+
+size_t Doc::GetHtmlDataSize()
+{
+    switch (type) {
+    case Mobi:
+        return mobiDoc->GetBookHtmlSize();
+    case MobiTest:
+        return mobiTestDoc->GetBookHtmlSize();
+    case Epub:
+        return epubDoc->GetTextDataSize();
+    default:
+        CrashIf(true);
+        return NULL;
+    }
+}
+
+ImageData *Doc::GetCoverImage()
+{
+    if (type != Mobi)
+        return NULL;
+    return mobiDoc->GetCoverImage();
+}
+
 Doc Doc::CreateFromFile(const TCHAR *filePath)
 {
     if (MobiDoc::IsSupportedFile(filePath))

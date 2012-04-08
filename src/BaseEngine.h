@@ -206,7 +206,7 @@ public:
     virtual bool IsImageCollection() { return false; }
 
     // access to various document properties (such as Author, Title, etc.)
-    virtual TCHAR *GetProperty(char *name) { return NULL; }
+    virtual TCHAR *GetProperty(const char *name) { return NULL; }
 
     // TODO: needs a more general interface
     // whether it is allowed to print the current document

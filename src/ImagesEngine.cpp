@@ -604,7 +604,7 @@ public:
     }
     virtual RectD PageMediabox(int pageNo);
 
-    virtual TCHAR *GetProperty(char *name);
+    virtual TCHAR *GetProperty(const char *name);
 
     // json::ValueObserver
     virtual bool observe(const char *path, const char *value, json::DataType type);
@@ -824,7 +824,7 @@ bool CbxEngineImpl::observe(const char *path, const char *value, json::DataType 
            !propDate || str::FindChar(propDate, '/') <= propDate;
 }
 
-TCHAR *CbxEngineImpl::GetProperty(char *name)
+TCHAR *CbxEngineImpl::GetProperty(const char *name)
 {
     if (str::Eq(name, "Title"))
         return propTitle ? str::Dup(propTitle) : NULL;
