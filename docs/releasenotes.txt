@@ -11,7 +11,7 @@ Next version:
 * support TGA images
 * support for some comic book (CBZ) metadata
 
-2.0.1 (????-??-??)
+2.0.1 (2012-04-08)
 
 * fix loading .mobi files from command line
 * fix a crash loading multiple .mobi files at once
