@@ -20,10 +20,16 @@ enum ImageType {
 };
 
 enum ImageFlag {
-    Flag_Multiple_Alpha = 0x0C,
+    Flag_Alpha = 0x0F,
     Flag_InvertX = 0x10,
     Flag_InvertY = 0x20,
     Flag_Reserved = 0xC0,
+};
+
+enum ImageAlpha {
+    Alpha_Ignore = 0,
+    Alpha_Normal = 3,
+    Alpha_Premultiplied = 4,
 };
 
 #pragma pack(push)
@@ -44,38 +50,43 @@ struct TgaHeader {
 
 #pragma pack(pop)
 
-// note: we only support the more common bit depths
-static PixelFormat GetPixelFormat(TgaHeader *header)
+// note: we only support the more common bit depths:
+// http://www.ryanjuckett.com/programming/graphics/26-parsing-colors-in-a-tga-file
+static PixelFormat GetPixelFormat(TgaHeader *header, ImageAlpha aType=Alpha_Normal)
 {
-    switch (header->imageType) {
-    case Type_Palette: case Type_Palette_RLE:
-        if (header->cmapType != 1 || header->bitDepth > 16)
+    int bits = header->bitDepth;
+    int alphaBits = (header->flags & Flag_Alpha);
+
+    if (Type_Palette == header->imageType || Type_Palette_RLE == header->imageType) {
+        if (header->bitDepth != 8 && header->bitDepth != 16 || 1 != header->cmapType)
             return 0;
-        if (16 == header->cmapBitDepth || 15 == header->cmapBitDepth)
-            return PixelFormat16bppRGB555;
-        if (24 == header->cmapBitDepth)
+        bits = header->cmapBitDepth;
+    }
+    else if (Type_Truecolor == header->imageType || Type_Truecolor_RLE == header->imageType) {
+        if (header->cmapType != 0)
+            return 0;
+    }
+    else if (Type_Grayscale == header->imageType || Type_Grayscale_RLE == header->imageType) {
+        if (0 == header->cmapType && 8 == header->bitDepth && 0 == alphaBits)
             return PixelFormat24bppRGB;
-        if (32 == header->cmapBitDepth)
-            return PixelFormat32bppARGB;
-        return 0;
-
-    case Type_Truecolor: case Type_Truecolor_RLE:
-        if (16 == header->bitDepth)
-            return PixelFormat16bppRGB555;
-        if (24 == header->bitDepth)
-            return PixelFormat24bppRGB;
-        if (32 == header->bitDepth)
-            return PixelFormat32bppARGB;
-        return 0;
-
-    case Type_Grayscale: case Type_Grayscale_RLE:
-        if (8 == header->bitDepth)
-            return PixelFormat24bppRGB;
-        return 0;
-
-    default:
         return 0;
     }
+    else
+        return 0;
+
+    if (15 == bits && 0 == alphaBits)
+        return PixelFormat16bppRGB555;
+    if (16 == bits && (1 == alphaBits || 0 == alphaBits))
+        return PixelFormat16bppRGB555;
+    if (24 == bits && 0 == alphaBits)
+        return PixelFormat24bppRGB;
+    if (32 == bits && (0 == alphaBits || Alpha_Ignore == aType))
+        return PixelFormat32bppRGB;
+    if (32 == bits && 8 == alphaBits && Alpha_Normal == aType)
+        return PixelFormat32bppARGB;
+    if (32 == bits && 8 == alphaBits && Alpha_Premultiplied == aType)
+        return PixelFormat32bppPARGB;
+    return 0;
 }
 
 bool HasSignature(const char *data, size_t len)
@@ -89,11 +100,9 @@ bool HasSignature(const char *data, size_t len)
     if (len < sizeof(TgaHeader))
         return false;
     TgaHeader *header = (TgaHeader *)data;
-    if (header->cmapType != 0 && header->cmapType != 1)
-        return false;
     if (!GetPixelFormat(header))
         return false;
-    if ((header->flags & (Flag_Multiple_Alpha | Flag_Reserved)))
+    if ((header->flags & Flag_Reserved))
         return false;
     return true;
 
@@ -104,7 +113,7 @@ Gdiplus::Size GetImageSize(const char *data, size_t len)
     if (len < sizeof(TgaHeader))
         return Size();
     TgaHeader *header = (TgaHeader *)data;
-    return Size(header->width, header->height);
+    return Size(LEtoHs(header->width), LEtoHs(header->height));
 }
 
 struct ReadState {
@@ -129,8 +138,8 @@ static void ReadPixel(ReadState& s, char *dst)
     int idx;
     switch (s.header->imageType) {
     case Type_Palette: case Type_Palette_RLE:
-        idx = (s.data[0] + (s.n == 2 ? (s.data[1] << 8) : 0)) & ((1 << s.header->bitDepth) - 1) - s.header->cmapFirstEntry;
-        if (0 <= idx && idx < s.header->cmapLength) {
+        idx = (uint8_t)s.data[0] + (2 == s.n ? ((uint8_t)s.data[1] << 8) : 0) - LEtoHs(s.header->cmapFirstEntry);
+        if (0 <= idx && idx < LEtoHs(s.header->cmapLength)) {
             int n2 = (s.header->cmapBitDepth + 7) / 8;
             for (int k = 0; k < n2; k++) {
                 dst[k] = s.colormap[idx * n2 + k];
@@ -160,23 +169,36 @@ static void ReadPixel(ReadState& s, char *dst)
 
 Gdiplus::Bitmap *ImageFromData(const char *data, size_t len)
 {
-    if (!HasSignature(data, len))
+    if (len < sizeof(TgaHeader))
         return NULL;
 
-    ReadState s;
+    ReadState s = { 0 };
     s.header = (TgaHeader *)data;
-    s.colormap = data + sizeof(TgaHeader) + s.header->idLength;
-    s.data = s.colormap + s.header->cmapLength * ((s.header->cmapBitDepth + 7) / 8);
+    s.data = data + sizeof(TgaHeader) + s.header->idLength;
     s.end = data + len;
-    s.repeat = 0;
+    if (1 == s.header->cmapType) {
+        s.colormap = s.data;
+        s.data += LEtoHs(s.header->cmapLength) * ((s.header->cmapBitDepth + 7) / 8);
+    }
     s.n = (s.header->bitDepth + 7) / 8;
 
-    PixelFormat format = GetPixelFormat(s.header);
+    ImageAlpha aType = Alpha_Normal;
+    bool hasFooter = len >= sizeof(TgaHeader) + 26 &&
+                     str::EqN(data + len - 18, TGA_FOOTER_SIGNATURE, 18);
+    if (hasFooter) {
+        uint32_t extensionArea = LEtoHl(*(uint32_t *)(data + len - 26));
+        if (data + extensionArea >= s.data && extensionArea + 495 + 26 <= len) {
+            uint8_t f24 = data[extensionArea + 494];
+            aType = 3 == f24 ? Alpha_Normal : 4 == f24 ? Alpha_Premultiplied : Alpha_Ignore;
+        }
+    }
+
+    PixelFormat format = GetPixelFormat(s.header, aType);
     if (!format)
         return NULL;
 
-    int w = s.header->width;
-    int h = s.header->height;
+    int w = LEtoHs(s.header->width);
+    int h = LEtoHs(s.header->height);
     int n = ((format >> 8) & 0x3F) / 8;
     bool invertX = (s.header->flags & Flag_InvertX);
     bool invertY = (s.header->flags & Flag_InvertY);
@@ -214,9 +236,9 @@ unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut)
     str::Str<char> tgaData;
 
     TgaHeader header = { 0 };
-    header.imageType = 10; // true color, run-length encoded
-    header.width = size.dx;
-    header.height = size.dy;
+    header.imageType = Type_Truecolor_RLE;
+    header.width = LEtoHs(size.dx);
+    header.height = LEtoHs(size.dy);
     header.bitDepth = 24;
     tgaData.Append((char *)&header, sizeof(header));
 
