@@ -1165,12 +1165,9 @@ pdf_set_color(pdf_csi *csi, int what, float *v)
 	{
 	case PDF_MAT_PATTERN:
 	case PDF_MAT_COLOR:
-		if (!strcmp(mat->colorspace->name, "Lab"))
-		{
-			mat->v[0] = v[0] / 100;
-			mat->v[1] = (v[1] + 100) / 200;
-			mat->v[2] = (v[2] + 100) / 200;
-		}
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1879 */
+		if (!strcmp(mat->colorspace->name, "Indexed"))
+			v[0] = v[0] / 255;
 		for (i = 0; i < mat->colorspace->n; i++)
 			mat->v[i] = v[i];
 		break;
