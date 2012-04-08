@@ -8,6 +8,7 @@ Next version:
 * support for EPUB ebook format
 * added menu item to rename a file (contributed by Vasily Fomin)
 * support multi-page TIFF files
+* support TGA images
 * support for some comic book (CBZ) metadata
 
 2.0.1 (????-??-??)

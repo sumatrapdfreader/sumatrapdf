@@ -6,12 +6,10 @@
 #endif
 
 #include "BaseUtil.h"
-
 #include "CmdLineParser.h"
 #include "EngineManager.h"
 #include "FileUtil.h"
-using namespace Gdiplus;
-#include "GdiPlusUtil.h"
+#include "TgaReader.h"
 #include "WinUtil.h"
 
 #define Out(msg, ...) printf(msg, __VA_ARGS__)
@@ -273,7 +271,7 @@ void DumpThumbnail(BaseEngine *engine)
     }
 
     size_t len;
-    ScopedMem<unsigned char> data(SerializeRunLengthEncoded(bmp->GetBitmap(), &len));
+    ScopedMem<unsigned char> data(tga::SerializeBitmap(bmp->GetBitmap(), &len));
     ScopedMem<char> hexData(data ? str::MemToHex(data, len) : NULL);
     if (hexData)
         Out("\t<Thumbnail>\n\t\t%s\n\t</Thumbnail>\n", hexData.Get());
@@ -306,7 +304,7 @@ void RenderDocument(BaseEngine *engine, const TCHAR *renderPath)
         if (bmp && str::EndsWithI(renderPath, _T(".bmp")))
             data.Set(SerializeBitmap(bmp->GetBitmap(), &len));
         else if (bmp)
-            data.Set(SerializeRunLengthEncoded(bmp->GetBitmap(), &len));
+            data.Set(tga::SerializeBitmap(bmp->GetBitmap(), &len));
         ScopedMem<TCHAR> pageBmpPath(str::Format(renderPath, pageNo));
         file::WriteAll(pageBmpPath, data, len);
         delete bmp;

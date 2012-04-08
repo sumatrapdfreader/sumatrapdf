@@ -553,6 +553,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\utils\TgaReader.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\utils\TgaReader.h"
+					>
+				</File>
+				<File
 					RelativePath=".\src\utils\TrivialHtmlParser.cpp"
 					>
 				</File>

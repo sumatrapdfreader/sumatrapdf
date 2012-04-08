@@ -23,6 +23,4 @@ const TCHAR * GfxFileExtFromData(char *data, size_t len);
 Bitmap *      BitmapFromData(void *data, size_t len);
 Size          BitmapSizeFromData(char *data, size_t len);
 
-unsigned char * SerializeRunLengthEncoded(HBITMAP hbmp, size_t *bmpBytesOut);
-
 #endif

@@ -4,7 +4,7 @@
 #include "BaseUtil.h"
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
-
+#include "TgaReader.h"
 #include "WinUtil.h"
 
 // Get width of each character and add them up.
@@ -220,12 +220,19 @@ const TCHAR *GfxFileExtFromData(char *data, size_t len)
         return _T(".gif");
     if (memeq(header, "MM\x00\x2A", 4) || memeq(header, "II\x2A\x00", 4))
         return _T(".tif");
+    if (tga::HasSignature(data, len))
+        return _T(".tga");
     return NULL;
 }
 
 // cf. http://stackoverflow.com/questions/4598872/creating-hbitmap-from-memory-buffer/4616394#4616394
 Bitmap *BitmapFromData(void *data, size_t len)
 {
+    if (!data)
+        return NULL;
+    if (tga::HasSignature((const char *)data, len))
+        return tga::ImageFromData((const char *)data, len);
+
     ScopedComPtr<IStream> stream(CreateStreamFromData(data, len));
     if (!stream)
         return NULL;
@@ -314,6 +321,10 @@ Size BitmapSizeFromData(char *data, size_t len)
     else if (memeq(data, "MM\x00\x2A", 4) || memeq(data, "II\x2A\x00", 4)) {
         // TODO: speed this up (if necessary)
     }
+    // TGA
+    else if (tga::HasSignature(data, len)) {
+        result = tga::GetImageSize(data, len);
+    }
 
     if (result.Empty()) {
         // let GDI+ extract the image size if we've failed
@@ -325,74 +336,4 @@ Size BitmapSizeFromData(char *data, size_t len)
     }
 
     return result;
-}
-
-// TGA images are fairly simple to create and compare and
-// yet offer an average compression ratio of 5:1
-// cf. http://en.wikipedia.org/wiki/Truevision_TGA
-
-#pragma pack(push)
-#pragma pack(1)
-struct TgaHeader {
-    uint8_t idLength;
-    uint8_t cmapType;
-    uint8_t imageType;
-    uint16_t cmapFirstEntry;
-    uint16_t cmapLength;
-    uint8_t cmapBitDepth;
-    uint16_t offsetX, offsetY;
-    uint16_t width, height;
-    uint8_t bitDepth;
-    uint8_t flags;
-};
-#pragma pack(pop)
-
-inline bool memeq3(char *pix1, char *pix2)
-{
-    return *(WORD *)pix1 == *(WORD *)pix2 && pix1[2] == pix2[2];
-}
-
-unsigned char *SerializeRunLengthEncoded(HBITMAP hbmp, size_t *bmpBytesOut)
-{
-    SizeI size = GetBitmapSize(hbmp);
-    int stride = ((size.dx * 3 + 3) / 4) * 4;
-    size_t bmpBytes;
-    ScopedMem<char> bmpData((char *)SerializeBitmap(hbmp, &bmpBytes));
-    if (!bmpData)
-        return NULL;
-
-    str::Str<char> tgaData;
-
-    TgaHeader header = { 0 };
-    header.imageType = 10; // true color, run-length encoded
-    header.width = size.dx;
-    header.height = size.dy;
-    header.bitDepth = 24;
-    tgaData.Append((char *)&header, sizeof(header));
-
-    for (int k = 0; k < size.dy; k++) {
-        char *line = bmpData + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFO) + k * stride;
-        for (int i = 0, j = 1; i < size.dx; i += j, j = 1) {
-            // determine the length of a run of identical pixels
-            while (i + j < size.dx && j < 128 && memeq3(line + i * 3, line + (i + j) * 3)) {
-                j++;
-            }
-            if (j > 1) {
-                tgaData.Append(j - 1 + 128);
-                tgaData.Append(line + i * 3, 3);
-            } else {
-                // determine the length of a run of different pixels
-                while (i + j < size.dx && j < 128 && !memeq3(line + (i + j - 1) * 3, line + (i + j) * 3)) {
-                    j++;
-                }
-                tgaData.Append(j - 1);
-                tgaData.Append(line + i * 3, j * 3);
-            }
-        }
-    }
-    tgaData.Append("\0\0\0\0\0\0\0\0TRUEVISION-XFILE.\0", 26);
-
-    if (bmpBytesOut)
-        *bmpBytesOut = tgaData.Size();
-    return (unsigned char *)tgaData.StealData();
 }
