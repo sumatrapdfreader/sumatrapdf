@@ -32,6 +32,7 @@ public:
     ~EpubDoc();
 
     const char *GetTextData(size_t *lenOut);
+    size_t GetTextDataSize();
     ImageData *GetImageData(const char *id, const char *pagePath);
 
     TCHAR *GetProperty(const char *name);

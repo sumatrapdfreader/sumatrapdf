@@ -24,12 +24,6 @@ using namespace Gdiplus;
 #include "WindowInfo.h"
 #include "WinUtil.h"
 
-#ifdef SHOW_DEBUG_MENU_ITEMS
-// A sample text to display if we don't show an actual mobi file
-static const char *gSampleMobiHtml = NULL;
-static size_t      gSampleMobiHtmlSize;
-#endif
-
 #define MOBI_FRAME_CLASS_NAME    _T("SUMATRA_MOBI_FRAME")
 
 #define WIN_DX    720
@@ -315,16 +309,14 @@ static LRESULT OnGesture(EbookWindow *win, UINT message, WPARAM wParam, LPARAM l
 #ifdef SHOW_DEBUG_MENU_ITEMS
 static void OnLoadMobiSample(EbookWindow *win)
 {
-    if (!gSampleMobiHtml) {
-        HRSRC resSrc = FindResource(ghinst, MAKEINTRESOURCE(IDD_SAMPLE_MOBI), RT_RCDATA);
-        CrashIf(!resSrc);
-        HGLOBAL res = LoadResource(NULL, resSrc);
-        CrashIf(!res);
-        gSampleMobiHtml = (const char*)LockResource(res);
-        gSampleMobiHtmlSize = SizeofResource(NULL, resSrc);
-        CrashIf(0 == gSampleMobiHtmlSize);
-    }
-    win->ebookController->SetHtml(gSampleMobiHtml, gSampleMobiHtmlSize);
+    HRSRC resSrc = FindResource(ghinst, MAKEINTRESOURCE(IDD_SAMPLE_MOBI), RT_RCDATA);
+    CrashIf(!resSrc);
+    HGLOBAL res = LoadResource(NULL, resSrc);
+    CrashIf(!res);
+    MobiTestDoc *doc = new MobiTestDoc((const char *)LockResource(res), SizeofResource(NULL, resSrc));
+    CrashIf(!doc || 0 == doc->GetBookHtmlSize());
+    UnlockResource(res);
+    win->ebookController->SetDoc(Doc(doc));
 }
 #endif
 

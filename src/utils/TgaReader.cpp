@@ -19,6 +19,13 @@ enum ImageType {
     Type_Grayscale_RLE = 11,
 };
 
+enum ImageFlag {
+    Flag_Multiple_Alpha = 0x0C,
+    Flag_InvertX = 0x10,
+    Flag_InvertY = 0x20,
+    Flag_Reserved = 0xC0,
+};
+
 #pragma pack(push)
 #pragma pack(1)
 
@@ -86,7 +93,7 @@ bool HasSignature(const char *data, size_t len)
         return false;
     if (!GetPixelFormat(header))
         return false;
-    if ((header->flags & 0xCC))
+    if ((header->flags & (Flag_Multiple_Alpha | Flag_Reserved)))
         return false;
     return true;
 
@@ -171,8 +178,8 @@ Gdiplus::Bitmap *ImageFromData(const char *data, size_t len)
     int w = s.header->width;
     int h = s.header->height;
     int n = ((format >> 8) & 0x3F) / 8;
-    bool invHori = (s.header->flags & 0x10);
-    bool invVert = (s.header->flags & 0x20);
+    bool invertX = (s.header->flags & Flag_InvertX);
+    bool invertY = (s.header->flags & Flag_InvertY);
 
     Bitmap bmp(w, h, format);
     BitmapData bmpData;
@@ -180,9 +187,9 @@ Gdiplus::Bitmap *ImageFromData(const char *data, size_t len)
     if (ok != Ok)
         return NULL;
     for (int y = 0; y < h; y++) {
-        char *rowOut = (char *)bmpData.Scan0 + bmpData.Stride * (invVert ? y : h - y - 1);
+        char *rowOut = (char *)bmpData.Scan0 + bmpData.Stride * (invertY ? y : h - y - 1);
         for (int x = 0; x < w; x++) {
-            ReadPixel(s, rowOut + n * (invHori ? w - x - 1 : x));
+            ReadPixel(s, rowOut + n * (invertX ? w - x - 1 : x));
         }
     }
     bmp.UnlockBits(&bmpData);

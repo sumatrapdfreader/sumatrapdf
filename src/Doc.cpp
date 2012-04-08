@@ -17,6 +17,9 @@ void Doc::Delete()
     case Epub:
         delete epubDoc;
         break;
+    case MobiTest:
+        delete mobiTestDoc;
+        break;
     case None:
         break;
     default:
@@ -36,6 +39,7 @@ BaseEngine *Doc::AsEngine() const
     switch (type) {
     case None:
     case Mobi:
+    case MobiTest:
     case Epub:
         return NULL;
     }
@@ -49,6 +53,13 @@ MobiDoc *Doc::AsMobi() const
     return NULL;
 }
 
+MobiTestDoc *Doc::AsMobiTest() const
+{
+    if (MobiTest == type)
+        return mobiTestDoc;
+    return NULL;
+}
+
 EpubDoc *Doc::AsEpub() const
 {
     if (Epub == type)
@@ -59,7 +70,7 @@ EpubDoc *Doc::AsEpub() const
 // return true if this is document supported by ebook UI
 bool Doc::IsEbook() const
 {
-    return (Mobi == type) || (Epub == type);
+    return (Mobi == type) || (MobiTest == type) || (Epub == type);
 }
 
 const TCHAR *Doc::GetFilePath() const
@@ -67,6 +78,8 @@ const TCHAR *Doc::GetFilePath() const
     switch (type) {
     case Mobi:
         return mobiDoc->GetFileName();
+    case MobiTest:
+        return NULL;
     case Epub:
         return epubDoc->GetFileName();
     case None:

@@ -29,6 +29,7 @@ class ImageEngine;
 class ImageDirEngine;
 class MobiEngine;
 class MobiDoc;
+class MobiTestDoc;
 class PdfEngine;
 class PsEngine;
 class XpsEngine;
@@ -40,7 +41,7 @@ public:
         None,
         CbxEng, ChmEng, Chm2Eng, DjVuEng, Epub,
         EpubEng, Fb2Eng, ImageEng, ImageDirEng,
-        MobiEng, Mobi, PdfEng, PsEng, XpsEng
+        MobiEng, Mobi, MobiTest, PdfEng, PsEng, XpsEng
     };
 
     DocType type;
@@ -49,6 +50,7 @@ public:
         BaseEngine *engine; // we can always cast to the right type based on type
         EpubDoc * epubDoc;
         MobiDoc * mobiDoc;
+        MobiTestDoc *mobiTestDoc;
     };
 
     Doc(const Doc& other) {
@@ -75,6 +77,7 @@ public:
     Doc(ImageDirEngine *doc) { Set(doc); }
     Doc(MobiEngine *doc) { Set(doc); }
     Doc(MobiDoc *doc) { Set(doc); }
+    Doc(MobiTestDoc *doc) { Set(doc); }
     Doc(PdfEngine *doc) { Set(doc); }
     Doc(PsEngine *doc) { Set(doc); }
     Doc(XpsEngine *doc) { Set(doc); }
@@ -93,6 +96,7 @@ public:
     void Set(ImageDirEngine *doc) { type = ImageDirEng; engine = (BaseEngine*)doc; }
     void Set(MobiEngine *doc) { type = MobiEng; engine = (BaseEngine*)doc; }
     void Set(MobiDoc *doc) { type = Mobi; mobiDoc = doc; }
+    void Set(MobiTestDoc *doc) { type = MobiTest; mobiTestDoc = doc; }
     void Set(PdfEngine *doc) { type = PdfEng; engine = (BaseEngine*)doc; }
     void Set(PsEngine *doc) { type = PsEng; engine = (BaseEngine*)doc; }
     void Set(XpsEngine *doc) { type = XpsEng; engine = (BaseEngine*)doc; }
@@ -104,6 +108,7 @@ public:
 
     BaseEngine *AsEngine() const;
     MobiDoc *AsMobi() const;
+    MobiTestDoc *AsMobiTest() const;
     EpubDoc *AsEpub() const;
 
     const TCHAR *GetFilePath() const;

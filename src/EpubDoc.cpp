@@ -286,6 +286,11 @@ const char *EpubDoc::GetTextData(size_t *lenOut)
     return htmlData.Get();
 }
 
+size_t EpubDoc::GetTextDataSize()
+{
+    return htmlData.Size();
+}
+
 ImageData *EpubDoc::GetImageData(const char *id, const char *pagePath)
 {
     ScopedMem<char> url(NormalizeURL(id, pagePath));

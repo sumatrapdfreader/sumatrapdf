@@ -125,11 +125,10 @@ HtmlFormatter *CreateFormatter(HtmlFormatterArgs* args)
 {
     if (args->doc.AsMobi())
         return new MobiFormatter(args, args->doc.AsMobi());
+    if (args->doc.AsMobiTest())
+        return new MobiFormatter(args, NULL);
     if (args->doc.AsEpub())
         return new EpubFormatter(args, args->doc.AsEpub());
-    // TODO: maybe should add anohter "RawHtml" Doc type
-    if (args->doc.IsNone() && args->htmlStr)
-        return new MobiFormatter(args, NULL);
     CrashIf(true);
     return NULL;
 }
@@ -187,8 +186,7 @@ void EbookFormattingThread::Run()
     Format(0);
 }
 
-EbookController::EbookController(EbookControls *ctrls) :
-    ctrls(ctrls), html(NULL),
+EbookController::EbookController(EbookControls *ctrls) : ctrls(ctrls),
     fileBeingLoaded(NULL), pagesFromBeginning(NULL), pagesFromPage(NULL),
     currPageNo(0), pageShown(NULL), deletePageShown(false),
     pageDx(0), pageDy(0), formattingThread(NULL), formattingThreadNo(-1),
@@ -242,7 +240,6 @@ void EbookController::CloseCurrentDocument()
     DeletePages(&pagesFromBeginning);
     DeletePages(&pagesFromPage);
     doc.Delete();
-    html = NULL;
     formattingTemp.reparseIdx = 0; // mark as being laid out from the beginning
     pageDx = 0; pageDy = 0;
 }
@@ -259,7 +256,7 @@ void EbookController::DeletePages(Vec<HtmlPage*>** pages)
     *pages = NULL;
 }
 
-HtmlFormatterArgs *CreateFormatterArgs(int dx, int dy, PoolAllocator *textAllocator)
+HtmlFormatterArgs *CreateFormatterArgsDoc(Doc doc, int dx, int dy, PoolAllocator *textAllocator)
 {
     HtmlFormatterArgs *args = new HtmlFormatterArgs();
     args->htmlStr = NULL;
@@ -268,28 +265,16 @@ HtmlFormatterArgs *CreateFormatterArgs(int dx, int dy, PoolAllocator *textAlloca
     args->pageDx = dx;
     args->pageDy = dy;
     args->textAllocator = textAllocator;
-    return args;
-}
 
-HtmlFormatterArgs *CreateFormatterArgsDoc(Doc doc, int dx, int dy, PoolAllocator *textAllocator)
-{
-    HtmlFormatterArgs *args = CreateFormatterArgs(dx, dy, textAllocator);
     args->doc = doc;
     if (doc.AsMobi())
         args->htmlStr = doc.AsMobi()->GetBookHtmlData(args->htmlStrLen);
+    else if (doc.AsMobiTest())
+        args->htmlStr = doc.AsMobiTest()->GetBookHtmlData(args->htmlStrLen);
     else if (doc.AsEpub())
         args->htmlStr = doc.AsEpub()->GetTextData(&args->htmlStrLen);
     else
         CrashIf(true);
-    return args;
-}
-
-HtmlFormatterArgs *CreateFormatterArgsHtml(const char *html, size_t htmlSize, int dx, int dy, PoolAllocator *textAllocator)
-{
-    CrashIf(!html);
-    HtmlFormatterArgs *args = CreateFormatterArgs(dx, dy, textAllocator);
-    args->htmlStr = html;
-    args->htmlStrLen = htmlSize;
     return args;
 }
 
@@ -497,7 +482,7 @@ void EbookController::TriggerBookFormatting()
         return;
     }
     CrashIf((dx < 100) || (dy < 40));
-    if (!html && !doc.IsEbook())
+    if (!doc.IsEbook())
         return;
 
     if ((pageDx == dx) && (pageDy == dy)) {
@@ -524,11 +509,7 @@ void EbookController::TriggerBookFormatting()
     CrashIf(formattingTemp.pagesFromPage.Count() > 0);
 
     ShowPage(newPage, newPage != NULL);
-    HtmlFormatterArgs *args;
-    if (html)
-        args = CreateFormatterArgsHtml(html, htmlSize, dx, dy, &textAllocator);
-    else
-        args = CreateFormatterArgsDoc(doc, dx, dy, &textAllocator);
+    HtmlFormatterArgs *args = CreateFormatterArgsDoc(doc, dx, dy, &textAllocator);
     formattingThread = new EbookFormattingThread(args, this);
     formattingThreadNo = formattingThread->GetNo();
     CrashIf(formattingTemp.reparseIdx < 0);
@@ -688,25 +669,14 @@ void EbookController::AdvancePage(int dist)
     GoToPage(currPageNo + dist);
 }
 
-void EbookController::SetHtml(const char *newHtml, size_t newHtmlSize)
-{
-    CloseCurrentDocument();
-    startReparseIdx = -1;
-    html = newHtml;
-    htmlSize = newHtmlSize;
-    TriggerBookFormatting();
-}
-
 static int GetEbookHtmlSize(Doc doc)
 {
     if (doc.AsMobi())
         return doc.AsMobi()->GetBookHtmlSize();
-
-    if (doc.AsEpub()) {
-        size_t len;
-        doc.AsEpub()->GetTextData(&len);
-        return len;
-    }
+    if (doc.AsMobiTest())
+        return doc.AsMobiTest()->GetBookHtmlSize();
+    if (doc.AsEpub())
+        return doc.AsEpub()->GetTextDataSize();
     CrashIf(true);
     return 0;
 }
