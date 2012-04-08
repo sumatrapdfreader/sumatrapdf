@@ -79,9 +79,57 @@ diff -rPu5 jbig2dec.orig\jbig2_image.c jbig2dec\jbig2_image.c
  	mask = 0x100 - (0x100 >> w);
          for (j = 0; j < h; j++) {
              *d |= (*s & mask) >> shift;
+diff -rPu5 jbig2dec.orig\jbig2_refinement.c jbig2dec\jbig2_refinement.c
+--- jbig2dec.orig\jbig2_refinement.c	Mon Feb 27 17:33:25 2012
++++ jbig2dec\jbig2_refinement.c	Sun Apr 08 19:26:30 2012
+@@ -511,12 +511,16 @@
+     Jbig2Image *image = NULL;
+     int code;
+ 
+     image = jbig2_image_new(ctx, rsi.width, rsi.height);
+     if (image == NULL)
+-      return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
++    {
++        /* SumatraPDF: fix memory leak */
++        jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
+                "unable to allocate refinement image");
++        goto cleanup;
++    }
+     jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, segment->number,
+       "allocated %d x %d image buffer for region decode results",
+           rsi.width, rsi.height);
+ 
+     stats_size = params.GRTEMPLATE ? 1 << 10 : 1 << 13;
+@@ -549,22 +553,24 @@
+     code = jbig2_decode_refinement_region(ctx, segment, &params,
+                               as, image, GR_stats);
+ 
+     if ((segment->flags & 63) == 40) {
+         /* intermediate region. save the result for later */
+-	segment->result = image;
++	segment->result = jbig2_image_clone(ctx, image);
+     } else {
+ 	/* immediate region. composite onto the page */
+         jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, segment->number,
+             "composing %dx%d decoded refinement region onto page at (%d, %d)",
+             rsi.width, rsi.height, rsi.x, rsi.y);
+ 	jbig2_page_add_result(ctx, &ctx->pages[ctx->current_page],
+           image, rsi.x, rsi.y, rsi.op);
+-        jbig2_image_release(ctx, image);
+     }
+ 
+ cleanup:
++    /* SumatraPDF: fix memory leak */
++    jbig2_image_release(ctx, image);
++    jbig2_image_release(ctx, params.reference);
+     jbig2_free(ctx->allocator, as);
+     jbig2_word_stream_buf_free(ctx, ws);
+     jbig2_free(ctx->allocator, GR_stats);
+   }
+ 
 diff -rPu5 jbig2dec.orig\jbig2_segment.c jbig2dec\jbig2_segment.c
 --- jbig2dec.orig\jbig2_segment.c	Mon Feb 27 17:33:25 2012
-+++ jbig2dec\jbig2_segment.c	Fri Mar 30 16:45:04 2012
++++ jbig2dec\jbig2_segment.c	Fri Mar 30 20:15:51 2012
 @@ -23,10 +23,13 @@
  #include "jbig2.h"
  #include "jbig2_priv.h"
@@ -113,7 +161,7 @@ diff -rPu5 jbig2dec.orig\jbig2_segment.c jbig2dec\jbig2_segment.c
  	  break;
 diff -rPu5 jbig2dec.orig\jbig2_symbol_dict.c jbig2dec\jbig2_symbol_dict.c
 --- jbig2dec.orig\jbig2_symbol_dict.c	Mon Feb 27 17:33:25 2012
-+++ jbig2dec\jbig2_symbol_dict.c	Fri Mar 30 16:33:51 2012
++++ jbig2dec\jbig2_symbol_dict.c	Fri Mar 30 20:15:51 2012
 @@ -1010,13 +1010,16 @@
        params.SDINSYMS = jbig2_sd_cat(ctx, n_dicts, dicts);
        if (params.SDINSYMS == NULL)
@@ -157,7 +205,7 @@ diff -rPu5 jbig2dec.orig\jbig2_symbol_dict.c jbig2dec\jbig2_symbol_dict.c
    return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
 diff -rPu5 jbig2dec.orig\jbig2_text.c jbig2dec\jbig2_text.c
 --- jbig2dec.orig\jbig2_text.c	Mon Feb 27 17:33:25 2012
-+++ jbig2dec\jbig2_text.c	Fri Mar 30 15:14:57 2012
++++ jbig2dec\jbig2_text.c	Sun Apr 08 19:28:22 2012
 @@ -278,12 +278,14 @@
  	    } else {
  		code = jbig2_arith_iaid_decode(params->IAID, as, (int *)&ID);
@@ -174,3 +222,27 @@ diff -rPu5 jbig2dec.orig\jbig2_text.c jbig2dec\jbig2_text.c
  	    /* (3c.v) / 6.4.11 - look up the symbol bitmap IB */
  	    {
  		uint32_t id = ID;
+@@ -854,10 +856,11 @@
+     if ((as == NULL) || (params.IADT == NULL) || (params.IAFS == NULL) ||
+         (params.IADS == NULL) || (params.IAIT == NULL))
+     {
+         code = jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
+             "couldn't allocate text region image data");
++        jbig2_image_release(ctx, image);
+         goto cleanup3;
+     }
+ 
+ 	/* Table 31 */
+ 	for (SBSYMCODELEN = 0; (1 << SBSYMCODELEN) < SBNUMSYMS; SBSYMCODELEN++);
+@@ -871,10 +874,11 @@
+         (params.IARDW == NULL) || (params.IARDH == NULL) ||
+         (params.IARDX == NULL) || (params.IARDY == NULL))
+     {
+         code = jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
+             "couldn't allocate text region image data");
++        jbig2_image_release(ctx, image);
+         goto cleanup4;
+     }
+     }
+ 
+     code = jbig2_decode_text_region(ctx, segment, &params,

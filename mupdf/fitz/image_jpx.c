@@ -69,12 +69,22 @@ fz_load_jpx(fz_context *ctx, unsigned char *data, int size, fz_colorspace *defcs
 
 	for (k = 1; k < jpx->numcomps; k++)
 	{
+		/* SumatraPDF: fix memory leak */
 		if (jpx->comps[k].w != jpx->comps[0].w)
+		{
+			opj_image_destroy(jpx);
 			fz_throw(ctx, "image components have different width");
+		}
 		if (jpx->comps[k].h != jpx->comps[0].h)
+		{
+			opj_image_destroy(jpx);
 			fz_throw(ctx, "image components have different height");
+		}
 		if (jpx->comps[k].prec != jpx->comps[0].prec)
+		{
+			opj_image_destroy(jpx);
 			fz_throw(ctx, "image components have different precision");
+		}
 	}
 
 	n = jpx->numcomps;

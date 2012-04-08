@@ -513,8 +513,12 @@ jbig2_refinement_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
 
     image = jbig2_image_new(ctx, rsi.width, rsi.height);
     if (image == NULL)
-      return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
+    {
+        /* SumatraPDF: fix memory leak */
+        jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
                "unable to allocate refinement image");
+        goto cleanup;
+    }
     jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, segment->number,
       "allocated %d x %d image buffer for region decode results",
           rsi.width, rsi.height);
@@ -551,7 +555,7 @@ jbig2_refinement_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
 
     if ((segment->flags & 63) == 40) {
         /* intermediate region. save the result for later */
-	segment->result = image;
+	segment->result = jbig2_image_clone(ctx, image);
     } else {
 	/* immediate region. composite onto the page */
         jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, segment->number,
@@ -559,10 +563,12 @@ jbig2_refinement_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
             rsi.width, rsi.height, rsi.x, rsi.y);
 	jbig2_page_add_result(ctx, &ctx->pages[ctx->current_page],
           image, rsi.x, rsi.y, rsi.op);
-        jbig2_image_release(ctx, image);
     }
 
 cleanup:
+    /* SumatraPDF: fix memory leak */
+    jbig2_image_release(ctx, image);
+    jbig2_image_release(ctx, params.reference);
     jbig2_free(ctx->allocator, as);
     jbig2_word_stream_buf_free(ctx, ws);
     jbig2_free(ctx->allocator, GR_stats);

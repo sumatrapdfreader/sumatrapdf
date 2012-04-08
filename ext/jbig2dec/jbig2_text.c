@@ -858,6 +858,7 @@ jbig2_text_region(Jbig2Ctx *ctx, Jbig2Segment *segment, const byte *segment_data
     {
         code = jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
             "couldn't allocate text region image data");
+        jbig2_image_release(ctx, image);
         goto cleanup3;
     }
 
@@ -875,6 +876,7 @@ jbig2_text_region(Jbig2Ctx *ctx, Jbig2Segment *segment, const byte *segment_data
     {
         code = jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
             "couldn't allocate text region image data");
+        jbig2_image_release(ctx, image);
         goto cleanup4;
     }
     }

@@ -454,7 +454,7 @@ static TCHAR *LinkifyMultilineText(LinkRectList *list, TCHAR *pageText, TCHAR *s
 // cf. http://weblogs.mozillazine.org/gerv/archives/2011/05/html5_email_address_regexp.html
 inline bool IsEmailUsernameChar(TCHAR c)
 {
-    return _istalnum(c) || str::FindChar(_T(".!#$%&'*+-=?^`{|}~"), c);
+    return _istalnum(c) || c && str::FindChar(_T(".!#$%&'*+-=?^`{|}~"), c);
 }
 inline bool IsEmailDomainChar(TCHAR c)
 {
