@@ -89,13 +89,17 @@ static PixelFormat GetPixelFormat(TgaHeader *header, ImageAlpha aType=Alpha_Norm
     return 0;
 }
 
+static bool HasTgaFooter(const char *data, size_t len)
+{
+    return len >= sizeof(TgaHeader) + 26 &&
+           str::EqN(data + len - 18, TGA_FOOTER_SIGNATURE, 18);
+}
+
 bool HasSignature(const char *data, size_t len)
 {
-    if (len >= sizeof(TgaHeader) + 26) {
-        // check for TGA version 2 footer
-        if (str::EqN(data + len - 18, TGA_FOOTER_SIGNATURE, 18))
-            return true;
-    }
+    // check for TGA version 2 footer
+    if (HasTgaFooter(data, len))
+        return true;
     // fall back to checking for values that would be valid for a TGA image
     if (len < sizeof(TgaHeader))
         return false;
@@ -106,14 +110,6 @@ bool HasSignature(const char *data, size_t len)
         return false;
     return true;
 
-}
-
-Gdiplus::Size GetImageSize(const char *data, size_t len)
-{
-    if (len < sizeof(TgaHeader))
-        return Size();
-    TgaHeader *header = (TgaHeader *)data;
-    return Size(LEtoHs(header->width), LEtoHs(header->height));
 }
 
 struct ReadState {
@@ -146,13 +142,11 @@ static void ReadPixel(ReadState& s, char *dst)
             }
         }
         break;
-
     case Type_Truecolor: case Type_Truecolor_RLE:
         for (int k = 0; k < s.n; k++) {
             dst[k] = s.data[k];
         }
         break;
-
     case Type_Grayscale: case Type_Grayscale_RLE:
         dst[0] = dst[1] = dst[2] = s.data[0];
         break;
@@ -183,9 +177,7 @@ Gdiplus::Bitmap *ImageFromData(const char *data, size_t len)
     s.n = (s.header->bitDepth + 7) / 8;
 
     ImageAlpha aType = Alpha_Normal;
-    bool hasFooter = len >= sizeof(TgaHeader) + 26 &&
-                     str::EqN(data + len - 18, TGA_FOOTER_SIGNATURE, 18);
-    if (hasFooter) {
+    if (HasTgaFooter(data, len)) {
         uint32_t extensionArea = LEtoHl(*(uint32_t *)(data + len - 26));
         if (data + extensionArea >= s.data && extensionArea + 495 + 26 <= len) {
             uint8_t f24 = data[extensionArea + 494];

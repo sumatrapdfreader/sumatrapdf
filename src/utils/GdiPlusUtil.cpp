@@ -323,7 +323,9 @@ Size BitmapSizeFromData(char *data, size_t len)
     }
     // TGA
     else if (tga::HasSignature(data, len)) {
-        result = tga::GetImageSize(data, len);
+        WORD width = LEtoHs(*(WORD *)(data + 12));
+        WORD height = LEtoHs(*(WORD *)(data + 14));
+        result = Size(width, height);
     }
 
     if (result.Empty()) {

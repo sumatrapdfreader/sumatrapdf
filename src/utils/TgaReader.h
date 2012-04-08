@@ -13,7 +13,6 @@
 namespace tga {
 
 bool                HasSignature(const char *data, size_t len);
-Gdiplus::Size       GetImageSize(const char *data, size_t len);
 Gdiplus::Bitmap *   ImageFromData(const char *data, size_t len);
 
 unsigned char *     SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut);
