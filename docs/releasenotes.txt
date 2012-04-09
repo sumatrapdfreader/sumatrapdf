@@ -10,6 +10,8 @@ Next version:
 * support multi-page TIFF files
 * support TGA images
 * support for some comic book (CBZ) metadata
+* support JPEG XR images (available on Windows Vista or later,
+  for Windows XP the Windows Imaging Component has to be installed)
 
 2.0.1 (2012-04-08)
 

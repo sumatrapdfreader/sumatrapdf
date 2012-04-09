@@ -205,7 +205,49 @@ void GetBaseTransform(Matrix& m, RectF pageRect, float zoom, int rotation)
     m.Rotate((REAL)rotation, MatrixOrderAppend);
 }
 
-enum ImgFormat { Img_Unknown, Img_BMP, Img_GIF, Img_JPEG, Img_PNG, Img_TGA, Img_TIFF };
+#include <wincodec.h>
+
+// cf. http://msdn.microsoft.com/en-us/magazine/cc500647.aspx
+IStream *HdPhotoToPngStream(IStream *stream)
+{
+    ScopedComPtr<IWICBitmapDecoder> pDecoder;
+    ScopedComPtr<IWICBitmapEncoder> pEncoder;
+    ScopedComPtr<IWICBitmapFrameDecode> srcFrame;
+    ScopedComPtr<IWICBitmapFrameEncode> dstFrame;
+    ScopedComPtr<IStream> pngStream;
+    WICPixelFormatGUID pixelFormat;
+    UINT width, height;
+
+#define HR(hr) if (FAILED(hr)) return NULL;
+    HR(CoCreateInstance(CLSID_WICWmpDecoder, NULL, CLSCTX_INPROC_SERVER,
+                        IID_IWICBitmapDecoder, (void **)&pDecoder));
+    HR(CoCreateInstance(CLSID_WICPngEncoder, NULL, CLSCTX_INPROC_SERVER,
+                        IID_IWICBitmapEncoder, (void **)&pEncoder));
+
+    HR(pDecoder->Initialize(stream, WICDecodeMetadataCacheOnDemand));
+    HR(pDecoder->GetFrame(0, &srcFrame));
+    HR(srcFrame->GetSize(&width, &height));
+    HR(srcFrame->GetPixelFormat(&pixelFormat));
+
+    HR(CreateStreamOnHGlobal(NULL, TRUE, &pngStream));
+    HR(pEncoder->Initialize(pngStream, WICBitmapEncoderNoCache));
+    HR(pEncoder->CreateNewFrame(&dstFrame, NULL));
+    HR(dstFrame->Initialize(NULL));
+    HR(dstFrame->SetSize(width, height));
+    HR(dstFrame->SetPixelFormat(&pixelFormat));
+    HR(dstFrame->WriteSource(srcFrame, NULL));
+    HR(dstFrame->Commit());
+    HR(pEncoder->Commit());
+#undef HR
+
+    pngStream->AddRef();
+    return pngStream;
+}
+
+enum ImgFormat {
+    Img_Unknown, Img_BMP, Img_GIF, Img_JPEG,
+    Img_JXR, Img_PNG, Img_TGA, Img_TIFF,
+};
 
 static ImgFormat GfxFormatFromData(const char *data, size_t len)
 {
@@ -224,6 +266,8 @@ static ImgFormat GfxFormatFromData(const char *data, size_t len)
         return Img_TIFF;
     if (tga::HasSignature(data, len))
         return Img_TGA;
+    if (memeq(data, "\x49\x49\xBC\x01", 4) || memeq(data, "\x49\x49\xBC\x00", 4))
+        return Img_JXR;
     return Img_Unknown;
 }
 
@@ -233,11 +277,20 @@ const TCHAR *GfxFileExtFromData(const char *data, size_t len)
     case Img_BMP:  return _T(".bmp");
     case Img_GIF:  return _T(".gif");
     case Img_JPEG: return _T(".jpg");
+    case Img_JXR:  return _T(".jxr");
     case Img_PNG:  return _T(".png");
     case Img_TGA:  return _T(".tga");
     case Img_TIFF: return _T(".tif");
     default:       return NULL;
     }
+}
+
+bool IsGdiPlusNativeFormat(const char *data, size_t len)
+{
+    ImgFormat fmt = GfxFormatFromData(data, len);
+    return Img_BMP == fmt || Img_GIF == fmt ||
+           Img_JPEG == fmt || Img_PNG == fmt ||
+           Img_TIFF == fmt;
 }
 
 // cf. http://stackoverflow.com/questions/4598872/creating-hbitmap-from-memory-buffer/4616394#4616394
@@ -250,6 +303,12 @@ Bitmap *BitmapFromData(const char *data, size_t len)
     ScopedComPtr<IStream> stream(CreateStreamFromData(data, len));
     if (!stream)
         return NULL;
+
+    if (Img_JXR == format) {
+        stream = HdPhotoToPngStream(stream);
+        if (!stream)
+            return NULL;
+    }
 
     Bitmap *bmp = Bitmap::FromStream(stream);
     if (bmp && bmp->GetLastStatus() != Ok) {

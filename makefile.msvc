@@ -92,7 +92,8 @@ RC_FLAGS = $(RC_FLAGS) /D "DEBUG" /D "_DEBUG"
 
 LIBS = $(LIBS) \
 	comctl32.lib Msimg32.lib Winspool.lib wininet.lib \
-	ole32.lib OleAut32.lib shlwapi.lib version.lib
+	ole32.lib OleAut32.lib shlwapi.lib version.lib \
+	WindowsCodecs.lib
 
 OS   = $(O)\sumatrapdf
 OU   = $(O)\utils

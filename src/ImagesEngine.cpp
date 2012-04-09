@@ -344,13 +344,15 @@ bool ImageEngineImpl::LoadSingleFile(const TCHAR *file)
     if (file::ReadAll(file, header, sizeof(header)))
         fileExt = GfxFileExtFromData(header, sizeof(header));
 
-    if (str::Eq(fileExt, _T(".tga"))) {
+    Bitmap *bmp;
+    if (fileExt && !IsGdiPlusNativeFormat(header, sizeof(header))) {
         size_t len;
         ScopedMem<char> data(file::ReadAll(file, &len));
-        return FinishLoading(BitmapFromData(data, len));
+        bmp = BitmapFromData(data, len);
     }
+    else
+        bmp = Bitmap::FromFile(AsWStrQ(file));
 
-    Bitmap *bmp = Bitmap::FromFile(AsWStrQ(file));
     return FinishLoading(bmp);
 }
 
@@ -365,13 +367,15 @@ bool ImageEngineImpl::LoadFromStream(IStream *stream)
     if (ReadDataFromStream(stream, header, sizeof(header)))
         fileExt = GfxFileExtFromData(header, sizeof(header));
 
-    if (str::Eq(fileExt, _T(".tga"))) {
+    Bitmap *bmp;
+    if (fileExt && !IsGdiPlusNativeFormat(header, sizeof(header))) {
         size_t len;
         ScopedMem<char> data((char *)GetDataFromStream(stream, &len));
-        return FinishLoading(BitmapFromData(data, len));
+        bmp = BitmapFromData(data, len);
     }
+    else
+        bmp = Bitmap::FromStream(stream);
 
-    Bitmap *bmp = Bitmap::FromStream(stream);
     return FinishLoading(bmp);
 }
 
@@ -411,7 +415,9 @@ bool ImageEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
            str::EndsWithI(fileName, _T(".gif")) ||
            str::EndsWithI(fileName, _T(".tif")) || str::EndsWithI(fileName, _T(".tiff")) ||
            str::EndsWithI(fileName, _T(".bmp")) ||
-           str::EndsWithI(fileName, _T(".tga"));
+           str::EndsWithI(fileName, _T(".tga")) ||
+           str::EndsWithI(fileName, _T(".jxr")) || str::EndsWithI(fileName, _T(".hdp")) ||
+                                                   str::EndsWithI(fileName, _T(".wdp"));
 }
 
 ImageEngine *ImageEngine::CreateFromFile(const TCHAR *fileName)

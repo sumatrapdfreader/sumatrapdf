@@ -20,6 +20,7 @@ void     DrawCloseButton(DRAWITEMSTRUCT *dis);
 void     GetBaseTransform(Matrix& m, RectF pageRect, float zoom, int rotation);
 
 const TCHAR * GfxFileExtFromData(const char *data, size_t len);
+bool          IsGdiPlusNativeFormat(const char *data, size_t len);
 Bitmap *      BitmapFromData(const char *data, size_t len);
 Size          BitmapSizeFromData(const char *data, size_t len);
 
