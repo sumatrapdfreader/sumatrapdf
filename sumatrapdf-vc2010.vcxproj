@@ -513,6 +513,8 @@
     <ClInclude Include="src\WindowInfo.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="docs\codingstyle.txt" />
+    <None Include="docs\ebook-todo.txt" />
     <None Include="docs\releasenotes.txt" />
     <None Include="docs\release_plan.txt" />
     <None Include="docs\wishlist.txt" />

@@ -14,6 +14,7 @@ This coding style follows 2 main principles:
 * clean looking code (which is e.g. why we avoid "_" prefixes or postfixes in names)
 
 1. Naming classes, methods, functions, variables
+------------------------------------------------
 
 The best way to describe naming style is via examples.
 
@@ -42,10 +43,12 @@ bool ThisIsFunction(int inArgsGoFirst, int *outArgsGoLast)
 int gThisIsGlobalVariable;
 
 2. Tabs vs. spaces
+------------------
 
 We use spaces, not tabs, with 4 space indentation.
 
 3. Naming of header guards
+--------------------------
 
 We use Webkit's style:
 
@@ -53,4 +56,30 @@ We use Webkit's style:
 including case), replacing the '.' with a '_'."
 
 http://www.webkit.org/coding/coding-style.html
+
+4. #include statements
+----------------------
+
+.cpp files:
+- #include "BaseUtil.h" first
+- followed by .h corresponding to .cpp i.e. Foo.cpp => #include "Foo.h"
+- followed by system headers (C library, additional windows headers)
+- followed by .h for Sumatra's files, sorted by name
+- as an exception to the "sort by name" rule, #include "DebugLog.h" 
+  can be at the end
+
+.h files:
+- should never include "BaseUtil.h"
+- need to include all the .h files they depend on, although it's preferred
+  to use pointers in APIs and pre-declaring types i.e.:
+
+// Bar.h
+class Foo;
+void Bar(Foo *);
+
+is better than:
+
+// Bar.h
+#include "Foo.h"
+void Bar(Foo& );
 

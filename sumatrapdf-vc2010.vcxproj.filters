@@ -72,6 +72,9 @@
     <Filter Include="sumatra\ebook">
       <UniqueIdentifier>{232267dd-50d1-4b01-83e1-89ab2c6dde73}</UniqueIdentifier>
     </Filter>
+    <Filter Include="docs">
+      <UniqueIdentifier>{367a3cbe-0f88-4739-8890-c93e3b756c3f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ext\jbig2dec\jbig2.c">
@@ -1617,12 +1620,24 @@
     <None Include="src\reloading.bmp">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="docs\releasenotes.txt" />
-    <None Include="docs\wishlist.txt" />
-    <None Include="docs\release_plan.txt" />
     <None Include="makefile.msvc" />
     <None Include="src\sample_mobi.html">
       <Filter>Resource Files</Filter>
+    </None>
+    <None Include="docs\release_plan.txt">
+      <Filter>docs</Filter>
+    </None>
+    <None Include="docs\wishlist.txt">
+      <Filter>docs</Filter>
+    </None>
+    <None Include="docs\releasenotes.txt">
+      <Filter>docs</Filter>
+    </None>
+    <None Include="docs\codingstyle.txt">
+      <Filter>docs</Filter>
+    </None>
+    <None Include="docs\ebook-todo.txt">
+      <Filter>docs</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
