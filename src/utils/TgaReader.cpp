@@ -7,7 +7,7 @@ using namespace Gdiplus;
 
 namespace tga {
 
-#define TGA_FOOTER_SIGNATURE "TRUEVISION-XFILE.\0"
+#define TGA_FOOTER_SIGNATURE "TRUEVISION-XFILE."
 
 enum ImageType {
     Type_Palette = 1,
@@ -47,7 +47,27 @@ struct TgaHeader {
     uint8_t     flags;
 };
 
+struct TgaFooter {
+    uint32_t    extAreaOffset;
+    uint32_t    devAreaOffset;
+    const char  signature[18];
+};
+
+struct TgaExtArea {
+    uint16_t    size;
+    uint8_t     fields_11_to_23[492];
+    uint8_t     alphaType;
+};
+
 #pragma pack(pop)
+
+static bool HasVersion2Footer(const char *data, size_t len)
+{
+    if (len < sizeof(TgaHeader) + sizeof(TgaFooter))
+        return false;
+    TgaFooter *footer = (TgaFooter *)(data + len - sizeof(TgaFooter));
+    return str::EqN(footer->signature, TGA_FOOTER_SIGNATURE, sizeof(footer->signature));
+}
 
 // note: we only support the more common bit depths:
 // http://www.ryanjuckett.com/programming/graphics/26-parsing-colors-in-a-tga-file
@@ -57,26 +77,29 @@ static PixelFormat GetPixelFormat(TgaHeader *header, ImageAlpha aType=Alpha_Norm
     int alphaBits = (header->flags & Flag_Alpha);
 
     if (Type_Palette == header->imageType || Type_Palette_RLE == header->imageType) {
-        if (header->bitDepth != 8 && header->bitDepth != 16 || 1 != header->cmapType)
+        if (1 != header->cmapType || 8 != header->bitDepth && 16 != header->bitDepth)
             return 0;
         bits = header->cmapBitDepth;
     }
     else if (Type_Truecolor == header->imageType || Type_Truecolor_RLE == header->imageType) {
-        if (header->cmapType != 0)
+        if (0 != header->cmapType)
             return 0;
     }
     else if (Type_Grayscale == header->imageType || Type_Grayscale_RLE == header->imageType) {
-        if (0 == header->cmapType && 8 == header->bitDepth && 0 == alphaBits)
-            return PixelFormat24bppRGB;
-        return 0;
+        if (0 != header->cmapType || 8 != header->bitDepth || 0 != alphaBits)
+            return 0;
+        // using a non-indexed format so that we don't have to bother with a palette
+        return PixelFormat24bppRGB;
     }
     else
         return 0;
 
     if (15 == bits && 0 == alphaBits)
         return PixelFormat16bppRGB555;
-    if (16 == bits && (1 == alphaBits || 0 == alphaBits))
+    if (16 == bits && (0 == alphaBits || Alpha_Ignore == aType))
         return PixelFormat16bppRGB555;
+    if (16 == bits && 1 == alphaBits)
+        return PixelFormat16bppARGB1555;
     if (24 == bits && 0 == alphaBits)
         return PixelFormat24bppRGB;
     if (32 == bits && (0 == alphaBits || Alpha_Ignore == aType))
@@ -88,24 +111,39 @@ static PixelFormat GetPixelFormat(TgaHeader *header, ImageAlpha aType=Alpha_Norm
     return 0;
 }
 
-static bool HasTgaFooter(const char *data, size_t len)
+static ImageAlpha GetAlphaType(const char *data, size_t len)
 {
-    return len >= sizeof(TgaHeader) + 26 &&
-           str::EqN(data + len - 18, TGA_FOOTER_SIGNATURE, 18);
+    if (!HasVersion2Footer(data, len))
+        return Alpha_Normal;
+
+    TgaFooter *footer = (TgaFooter *)(data + len - sizeof(TgaFooter));
+    if (footer->extAreaOffset >= sizeof(TgaHeader) &&
+        footer->extAreaOffset + sizeof(TgaExtArea) + sizeof(TgaFooter) <= len) {
+        TgaExtArea *extArea = (TgaExtArea *)(data + footer->extAreaOffset);
+        if (extArea->size >= sizeof(TgaExtArea)) {
+            switch (extArea->alphaType) {
+            case Alpha_Normal:          return Alpha_Normal;
+            case Alpha_Premultiplied:   return Alpha_Premultiplied;
+            default:                    return Alpha_Ignore;
+            }
+        }
+    }
+
+    return Alpha_Normal;
 }
 
+// checks whether this could be data for a TGA image
 bool HasSignature(const char *data, size_t len)
 {
-    // check for TGA version 2 footer
-    if (HasTgaFooter(data, len))
+    if (HasVersion2Footer(data, len))
         return true;
     // fall back to checking for values that would be valid for a TGA image
     if (len < sizeof(TgaHeader))
         return false;
     TgaHeader *header = (TgaHeader *)data;
-    if (!GetPixelFormat(header))
-        return false;
     if ((header->flags & Flag_Reserved))
+        return false;
+    if (!GetPixelFormat(header))
         return false;
     return true;
 
@@ -175,16 +213,7 @@ Gdiplus::Bitmap *ImageFromData(const char *data, size_t len)
     }
     s.n = (s.header->bitDepth + 7) / 8;
 
-    ImageAlpha aType = Alpha_Normal;
-    if (HasTgaFooter(data, len)) {
-        uint32_t extensionArea = LEtoHl(*(uint32_t *)(data + len - 26));
-        if (data + extensionArea >= s.data && extensionArea + 495 + 26 <= len) {
-            uint8_t f24 = data[extensionArea + 494];
-            aType = 3 == f24 ? Alpha_Normal : 4 == f24 ? Alpha_Premultiplied : Alpha_Ignore;
-        }
-    }
-
-    PixelFormat format = GetPixelFormat(s.header, aType);
+    PixelFormat format = GetPixelFormat(s.header, GetAlphaType(data, len));
     if (!format)
         return NULL;
 
@@ -249,6 +278,7 @@ unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut)
     header.width = LEtoHs(w);
     header.height = LEtoHs(h);
     header.bitDepth = 24;
+    TgaFooter footer = { 0, 0, TGA_FOOTER_SIGNATURE };
 
     str::Str<char> tgaData;
     tgaData.Append((char *)&header, sizeof(header));
@@ -272,7 +302,7 @@ unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut)
             }
         }
     }
-    tgaData.Append("\0\0\0\0\0\0\0\0" TGA_FOOTER_SIGNATURE, 26);
+    tgaData.Append((char *)&footer, sizeof(footer));
 
     if (bmpBytesOut)
         *bmpBytesOut = tgaData.Size();
