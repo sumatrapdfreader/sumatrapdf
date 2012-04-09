@@ -340,6 +340,9 @@ F&ullscreen\tCtrl+Shift+L
 Facing
 Երկու էջ
 
+Failed to rename the file!
+Հնարավոր չեղավ անվանափոխել ֆայլը։
+
 Failed to save a file
 Հնարավոր չէ պահպանել ֆայլում
 
@@ -559,6 +562,9 @@ Printing page %d of %d...
 Printing problem.
 Սխալ տպելիս
 
+Re&name...\tF2
+Ան&վանափոխել...\tF2
+
 Remember &opened files
 Հիշել &բացված ֆայլերը
 
@@ -567,6 +573,9 @@ Remove from favorites
 
 Remove page %s from favorites
 Հեռացնել %s  էջը ընտրյալներից
+
+Rename To
+Անվանափոխել՝
 
 Replace document &colors with Windows color scheme
 Փոխարինել փաստաթղթի &գույները Windows-ի գույնային սխեմայով
@@ -693,9 +702,4 @@ copying text
 
 printing document
 Ֆայլը տպվում է
-
-# Untranslated:
-#Failed to rename the file!
-#Re&name...\tF2
-#Rename To
 
