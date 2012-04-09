@@ -47,6 +47,24 @@ public:
     };
 
     DocType type;
+
+    // If there was an error loading a file in CreateFromFile(),
+    // this is an error message to be shown to the user. Most
+    // of the time it's a generic error message but can be
+    // more specific e.g. mobi loading might specify that
+    // loading failed due to DRM
+    // The caller can also display it's own message.
+    //
+    // If it's set, it also marks a specific state: we tried to
+    // load the file but failed (wchich can be useful e.g.
+    // for implementing reloading)
+    TCHAR *loadingErrorMessage;
+
+    // A copy of the file path. We need this because while in
+    // most cases we can extract it from the wrapped object,
+    // if loading failed we don't have it but might need it
+    TCHAR *filePath;
+
     union {
         void *generic;
         BaseEngine *engine; // we can always cast to the right type based on type
@@ -55,19 +73,10 @@ public:
         MobiTestDoc *mobiTestDoc;
     };
 
-    Doc(const Doc& other) {
-        type = other.type;
-        generic = other.generic;
-    }
-    Doc& operator=(const Doc& other) {
-        if (this != &other) {
-            type = other.type;
-            generic = other.generic;
-        }
-        return *this;
-    }
+    Doc(const Doc& other);
+    Doc& operator=(const Doc& other);
 
-    Doc() : type(None), generic(NULL) { }
+    Doc() : type(None), loadingErrorMessage(NULL), filePath(NULL), generic(NULL) { }
     Doc(CbxEngine *doc) { Set(doc); }
     Doc(ChmEngine *doc) { Set(doc); }
     Doc(Chm2Engine *doc) { Set(doc); }
@@ -86,27 +95,28 @@ public:
 
     void Delete();
 
-    // TODO: move to .cpp file where cast to BaseEngine can be verified by the compiler
-    void Set(CbxEngine *doc) { type = CbxEng; engine = (BaseEngine*)doc; }
-    void Set(ChmEngine *doc) { type = ChmEng; engine = (BaseEngine*)doc; }
-    void Set(Chm2Engine *doc) { type = Chm2Eng; engine = (BaseEngine*)doc; }
-    void Set(DjVuEngine *doc) { type = DjVuEng; engine = (BaseEngine*)doc; }
-    void Set(EpubEngine *doc) { type = EpubEng; engine = (BaseEngine*)doc; }
-    void Set(EpubDoc *doc) { type = Epub; epubDoc = doc; }
-    void Set(Fb2Engine *doc) { type = Fb2Eng; engine = (BaseEngine*)doc; }
-    void Set(ImageEngine *doc) { type = ImageEng; engine = (BaseEngine*)doc; }
-    void Set(ImageDirEngine *doc) { type = ImageDirEng; engine = (BaseEngine*)doc; }
-    void Set(MobiEngine *doc) { type = MobiEng; engine = (BaseEngine*)doc; }
-    void Set(MobiDoc *doc) { type = Mobi; mobiDoc = doc; }
-    void Set(MobiTestDoc *doc) { type = MobiTest; mobiTestDoc = doc; }
-    void Set(PdfEngine *doc) { type = PdfEng; engine = (BaseEngine*)doc; }
-    void Set(PsEngine *doc) { type = PsEng; engine = (BaseEngine*)doc; }
-    void Set(XpsEngine *doc) { type = XpsEng; engine = (BaseEngine*)doc; }
+    void Set(CbxEngine *doc);
+    void Set(ChmEngine *doc);
+    void Set(Chm2Engine *doc);
+    void Set(DjVuEngine *doc);
+    void Set(EpubEngine *doc);
+    void Set(EpubDoc *doc);
+    void Set(Fb2Engine *doc);
+    void Set(ImageEngine *doc);
+    void Set(ImageDirEngine *doc);
+    void Set(MobiEngine *doc);
+    void Set(MobiDoc *doc);
+    void Set(MobiTestDoc *doc);
+    void Set(PdfEngine *doc);
+    void Set(PsEngine *doc);
+    void Set(XpsEngine *doc);
 
     // note: find a better name, if possible
     bool IsNone() const { return None == type; }
     bool IsEbook() const;
     bool IsEngine() const { return !IsNone() && !IsEbook(); }
+
+    bool LoadingFailed() const { return NULL != loadingErrorMessage; }
 
     BaseEngine *AsEngine() const;
     MobiDoc *AsMobi() const;
@@ -123,6 +133,11 @@ public:
     ImageData *GetCoverImage();
 
     static Doc CreateFromFile(const TCHAR *filePath);
+
+private:
+    const TCHAR *GetFilePathFromDoc() const;
+    void FreeStrings();
+    void SetEngine(DocType newType, BaseEngine *doc);
 };
 
 #endif

@@ -3,9 +3,38 @@
 
 #include "BaseUtil.h"
 #include "Doc.h"
+
 #include "EngineManager.h"
-#include "MobiDoc.h"
 #include "EpubDoc.h"
+#include "MobiDoc.h"
+#include "Translations.h"
+
+Doc::Doc(const Doc& other)
+{
+    type = other.type;
+    generic = other.generic;
+    loadingErrorMessage = NULL;
+    filePath = NULL;
+    str::ReplacePtr(&loadingErrorMessage, other.loadingErrorMessage);
+    str::ReplacePtr(&filePath, other.filePath);
+}
+
+Doc& Doc::operator=(const Doc& other)
+{
+    if (this != &other) {
+        type = other.type;
+        generic = other.generic;
+        str::ReplacePtr(&loadingErrorMessage, other.loadingErrorMessage);
+        str::ReplacePtr(&filePath, other.filePath);
+    }
+    return *this;
+}
+
+void Doc::FreeStrings()
+{
+    str::ReplacePtr(&loadingErrorMessage, NULL);
+    str::ReplacePtr(&filePath, NULL);
+}
 
 // delete underlying object
 void Doc::Delete()
@@ -32,6 +61,48 @@ void Doc::Delete()
 
     type = None;
     generic = NULL;
+    FreeStrings();
+}
+
+void Doc::SetEngine(DocType newType, BaseEngine *doc)
+{
+    type = newType;
+    engine = doc;
+    FreeStrings();
+}
+
+void Doc::Set(CbxEngine *doc)      { SetEngine(CbxEng,      doc); }
+void Doc::Set(ChmEngine *doc)      { SetEngine(ChmEng,      doc); }
+void Doc::Set(Chm2Engine *doc)     { SetEngine(Chm2Eng,     doc); }
+void Doc::Set(DjVuEngine *doc)     { SetEngine(DjVuEng,     doc); }
+void Doc::Set(EpubEngine *doc)     { SetEngine(EpubEng,     doc); }
+void Doc::Set(Fb2Engine *doc)      { SetEngine(Fb2Eng,      doc); }
+void Doc::Set(ImageEngine *doc)    { SetEngine(ImageEng,    doc); }
+void Doc::Set(ImageDirEngine *doc) { SetEngine(ImageDirEng, doc); }
+void Doc::Set(MobiEngine *doc)     { SetEngine(MobiEng,     doc); }
+void Doc::Set(PdfEngine *doc)      { SetEngine(PdfEng,      doc); }
+void Doc::Set(PsEngine *doc)       { SetEngine(PsEng,       doc);}
+void Doc::Set(XpsEngine *doc)      { SetEngine(XpsEng,      doc); }
+
+void Doc::Set(EpubDoc *doc)
+{
+    type = Epub;
+    epubDoc = doc;
+    FreeStrings();
+}
+
+void Doc::Set(MobiDoc *doc)
+{
+    type = Mobi;
+    mobiDoc = doc;
+    FreeStrings();
+}
+
+void Doc::Set(MobiTestDoc *doc)
+{ 
+    type = MobiTest;
+    mobiTestDoc = doc;
+    FreeStrings();
 }
 
 BaseEngine *Doc::AsEngine() const
@@ -73,7 +144,8 @@ bool Doc::IsEbook() const
     return (Mobi == type) || (MobiTest == type) || (Epub == type);
 }
 
-const TCHAR *Doc::GetFilePath() const
+// the caller should make sure there is a document object
+const TCHAR *Doc::GetFilePathFromDoc() const
 {
     switch (type) {
     case Mobi:
@@ -88,6 +160,23 @@ const TCHAR *Doc::GetFilePath() const
         CrashIf(!engine);
         return engine->FileName();
     }
+}
+
+const TCHAR *Doc::GetFilePath() const
+{
+    if (filePath) {
+        // verify it's consistent with the path in the doc
+        if (NULL != generic) {
+            const TCHAR *docPath = GetFilePathFromDoc();
+            CrashIf(docPath && !str::Eq(filePath, docPath));
+        }
+        return filePath;
+    }
+    if (NULL == generic) {
+        CrashIf(None != type);
+        return NULL;
+    }
+    return GetFilePathFromDoc();
 }
 
 TCHAR *Doc::GetProperty(const char *name)
@@ -136,9 +225,17 @@ ImageData *Doc::GetCoverImage()
 
 Doc Doc::CreateFromFile(const TCHAR *filePath)
 {
+    Doc doc;
     if (MobiDoc::IsSupportedFile(filePath))
-        return Doc(MobiDoc::CreateFromFile(filePath));
-    if (EpubDoc::IsSupportedFile(filePath))
-        return Doc(EpubDoc::CreateFromFile(filePath));
-    return Doc();
+        doc.Set(MobiDoc::CreateFromFile(filePath));
+    else if (EpubDoc::IsSupportedFile(filePath))
+        doc.Set(EpubDoc::CreateFromFile(filePath));
+
+    doc.filePath = str::Dup(filePath);
+    // if failed to load and more specific error message hasn't been
+    // set above, set a generic error message
+    if ((NULL == doc.generic) && (NULL == doc.loadingErrorMessage)) {
+        doc.loadingErrorMessage = str::Format(_TR("Error loading %s"), filePath);
+    }
+    return doc;
 }
