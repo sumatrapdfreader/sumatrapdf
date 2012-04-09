@@ -117,10 +117,10 @@ static ImageAlpha GetAlphaType(const char *data, size_t len)
         return Alpha_Normal;
 
     TgaFooter *footer = (TgaFooter *)(data + len - sizeof(TgaFooter));
-    if (footer->extAreaOffset >= sizeof(TgaHeader) &&
-        footer->extAreaOffset + sizeof(TgaExtArea) + sizeof(TgaFooter) <= len) {
-        TgaExtArea *extArea = (TgaExtArea *)(data + footer->extAreaOffset);
-        if (extArea->size >= sizeof(TgaExtArea)) {
+    if (LEtoHl(footer->extAreaOffset) >= sizeof(TgaHeader) &&
+        LEtoHl(footer->extAreaOffset) + sizeof(TgaExtArea) + sizeof(TgaFooter) <= len) {
+        TgaExtArea *extArea = (TgaExtArea *)(data + LEtoHl(footer->extAreaOffset));
+        if (LEtoHs(extArea->size) >= sizeof(TgaExtArea)) {
             switch (extArea->alphaType) {
             case Alpha_Normal:          return Alpha_Normal;
             case Alpha_Premultiplied:   return Alpha_Premultiplied;
