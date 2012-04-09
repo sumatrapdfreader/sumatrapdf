@@ -55,6 +55,8 @@ STATIC_ASSERT(kPdbRecordHeaderLen == sizeof(PdbRecordHeader), validPdbRecordHead
 
 #define kMaxRecordSize 64*1024
 
+enum PdbDocType { Pdb_Unknown, Pdb_Mobipocket, Pdb_PalmDoc, Pdb_TealDoc };
+
 class MobiDoc
 {
     TCHAR *             fileName;
@@ -64,7 +66,7 @@ class MobiDoc
     PdbRecordHeader *   recHeaders;
     char *              firstRecData;
 
-    bool                isMobi;
+    PdbDocType          docType;
     size_t              docRecCount;
     int                 compressionType;
     size_t              docUncompressedSize;
@@ -106,7 +108,7 @@ public:
     ImageData *         GetCoverImage();
     ImageData *         GetImage(size_t imgRecIndex) const;
     const TCHAR *       GetFileName() const { return fileName; }
-    bool                IsPalmDoc() const { return !isMobi; }
+    PdbDocType          GetDocType() const { return docType; }
 
     static bool         IsSupportedFile(const TCHAR *fileName, bool sniff=false);
     static MobiDoc *    CreateFromFile(const TCHAR *fileName);

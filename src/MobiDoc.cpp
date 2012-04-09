@@ -8,14 +8,13 @@
 #include "FileUtil.h"
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
+#include "DebugLog.h"
 
 // Parse mobi format http://wiki.mobileread.com/wiki/MOBI
 
-#define NOLOG 0
-#include "DebugLog.h"
-
-#define PALMDOC_TYPE_CREATOR   "TEXtREAd"
 #define MOBI_TYPE_CREATOR      "BOOKMOBI"
+#define PALMDOC_TYPE_CREATOR   "TEXtREAd"
+#define TEALDOC_TYPE_CREATOR   "TEXtTlDc"
 
 #define COMPRESSION_NONE 1
 #define COMPRESSION_PALM 2
@@ -422,14 +421,15 @@ bool HuffDicDecompressor::AddCdicData(uint8 *cdicData, uint32 cdicDataLen)
     return true;
 }
 
-static bool IsMobiPdb(PdbHeader *pdbHdr)
+static PdbDocType GetPdbDocType(PdbHeader *pdbHdr)
 {
-    return str::EqN(pdbHdr->type, MOBI_TYPE_CREATOR, 8);
-}
-
-static bool IsPalmDocPdb(PdbHeader *pdbHdr)
-{
-    return str::EqN(pdbHdr->type, PALMDOC_TYPE_CREATOR, 8);
+    if (str::EqN(pdbHdr->type, MOBI_TYPE_CREATOR, 8))
+        return Pdb_Mobipocket;
+    if (str::EqN(pdbHdr->type, PALMDOC_TYPE_CREATOR, 8))
+        return Pdb_PalmDoc;
+    if (str::EqN(pdbHdr->type, TEALDOC_TYPE_CREATOR, 8))
+        return Pdb_TealDoc;
+    return Pdb_Unknown;
 }
 
 static bool IsValidCompression(int comprType)
@@ -441,7 +441,7 @@ static bool IsValidCompression(int comprType)
 
 MobiDoc::MobiDoc() :
     fileName(NULL), fileHandle(0), recHeaders(NULL), firstRecData(NULL),
-    isMobi(false), docRecCount(0), compressionType(0), docUncompressedSize(0),
+    docType(Pdb_Unknown), docRecCount(0), compressionType(0), docUncompressedSize(0),
     doc(NULL), multibyte(false), trailersCount(0), imageFirstRec(0),
     imagesCount(0), images(NULL), bufDynamic(NULL), bufDynamicSize(0),
     huffDic(NULL), textEncoding(CP_UTF8)
@@ -470,11 +470,8 @@ bool MobiDoc::ParseHeader()
     if (!ok || (kPdbHeaderLen != bytesRead))
         return false;
 
-    if (IsMobiPdb(&pdbHeader)) {
-        isMobi = true;
-    } else if (IsPalmDocPdb(&pdbHeader)) {
-        isMobi = false;
-    } else {
+    docType = GetPdbDocType(&pdbHeader);
+    if (Pdb_Unknown == docType) {
         // TODO: print type/creator
         lf(" unknown pdb type/creator");
         return false;
@@ -535,7 +532,7 @@ bool MobiDoc::ParseHeader()
         lf("unknown compression type");
         return false;
     }
-    if (isMobi) {
+    if (Pdb_Mobipocket == docType) {
         // TODO: this needs to be surfaced to the client so
         // that we can show the right error message
         if (palmDocHdr->mobi.encrType != ENCRYPTION_NONE) {
@@ -549,7 +546,7 @@ bool MobiDoc::ParseHeader()
     compressionType = palmDocHdr->compressionType;
 
     if (0 == recLeft) {
-        assert(!isMobi);
+        CrashIf(Pdb_Mobipocket == docType);
         // TODO: calculate imageFirstRec / imagesCount
         return true;
     }
@@ -608,7 +605,7 @@ bool MobiDoc::ParseHeader()
     }
 
     if (palmDocHdr->compressionType == COMPRESSION_HUFF) {
-        assert(isMobi);
+        CrashIf(Pdb_Mobipocket != docType);
         size_t recSize;
         char *recData = ReadRecord(mobiHdr->huffmanFirstRec, recSize);
         if (!recData)
@@ -893,7 +890,7 @@ char *MobiDoc::GetBookHtmlData(size_t& lenOut) const
 
 bool MobiDoc::IsSupportedFile(const TCHAR *fileName, bool sniff)
 {
-    // TODO: also accept .prc and .azw as MobiEngine::IsSupportedFile ?
+    // TODO: also accept .prc as MobiEngine::IsSupportedFile ?
     return str::EndsWithI(fileName, _T(".mobi"));
 }
 

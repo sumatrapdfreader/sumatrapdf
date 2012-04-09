@@ -925,7 +925,7 @@ bool MobiEngineImpl::Load(const TCHAR *fileName)
     this->fileName = str::Dup(fileName);
 
     doc = MobiDoc::CreateFromFile(fileName);
-    if (!doc || doc->IsPalmDoc())
+    if (!doc || Pdb_Mobipocket != doc->GetDocType())
         return false;
 
     HtmlFormatterArgs args;
@@ -1064,7 +1064,6 @@ bool MobiEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
     }
 
     return str::EndsWithI(fileName, _T(".mobi")) ||
-           str::EndsWithI(fileName, _T(".azw"))  ||
            str::EndsWithI(fileName, _T(".prc"));
 }
 
@@ -1105,12 +1104,16 @@ bool PdbEngineImpl::Load(const TCHAR *fileName)
     this->fileName = str::Dup(fileName);
 
     doc = MobiDoc::CreateFromFile(fileName);
-    if (!doc || !doc->IsPalmDoc())
+    if (!doc || Pdb_PalmDoc != doc->GetDocType() && Pdb_TealDoc != doc->GetDocType())
         return false;
 
     size_t textLen;
     const char *text = doc->GetBookHtmlData(textLen);
 
+    // TODO: support or ignore TealDoc extensions:
+    // * <BOOKMARK NAME="ToC entry">
+    // * <HEADER TEXT="Title" FONT=1 ALIGN=CENTER> (font: 0 = tiny, 2 = large)
+    // * <TEALPAINT SRC="file.pdb" IMAGE=0 WIDTH=10 HEIGHT=10 SX=0 SY=7>
     str::Str<char> builder;
     builder.Append("<body>");
     for (size_t i = 0; i < textLen; i++) {
@@ -1150,7 +1153,8 @@ bool PdbEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
         char header[kPdbHeaderLen];
         ZeroMemory(header, sizeof(header));
         file::ReadAll(fileName, header, sizeof(header));
-        return str::EqN(header + 60, "TEXtREAd", 8);
+        return str::EqN(header + 60, "TEXtREAd", 8) ||
+               str::EqN(header + 60, "TEXtTlDc", 8);
     }
 
     return str::EndsWithI(fileName, _T(".pdb"));
