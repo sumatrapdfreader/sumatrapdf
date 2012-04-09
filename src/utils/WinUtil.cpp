@@ -710,7 +710,7 @@ HFONT GetSimpleFont(HDC hdc, TCHAR *fontName, int fontSize)
     return CreateFontIndirect(&lf);
 }
 
-IStream *CreateStreamFromData(void *data, size_t len)
+IStream *CreateStreamFromData(const void *data, size_t len)
 {
     if (!data)
         return NULL;

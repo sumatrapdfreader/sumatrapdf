@@ -72,7 +72,7 @@ static bool GetEncoderClsid(const TCHAR *format, CLSID& clsid)
 bool SaveRenderedBitmap(RenderedBitmap *bmp, const TCHAR *filePath)
 {
     size_t bmpDataLen;
-    ScopedMem<unsigned char> bmpData(SerializeBitmap(bmp->GetBitmap(), &bmpDataLen));
+    ScopedMem<char> bmpData((char *)SerializeBitmap(bmp->GetBitmap(), &bmpDataLen));
     if (!bmpData)
         return false;
 

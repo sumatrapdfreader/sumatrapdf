@@ -253,7 +253,7 @@ PDFPREVIEW_OBJS = $(PDFPREVIEW_OBJS) $(OS)\EpubEngine.obj $(OS)\EpubDoc.obj \
 	$(OS)\HtmlFormatter.obj $(OMUI)\MiniMui.obj $(OU)\TrivialHtmlParser.obj \
 	$(OU)\HtmlPullParser.obj
 !if "$(BUILD_CBZ_PREVIEW)"==""
-PDFPREVIEW_OBJS = $(PDFPREVIEW_OBJS) $(OU)\GdiPlusUtil.obj $(ZIP_OBJS)
+PDFPREVIEW_OBJS = $(PDFPREVIEW_OBJS) $(OU)\GdiPlusUtil.obj $(OU)\TgaReader.obj $(ZIP_OBJS)
 !endif
 !endif
 

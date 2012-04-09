@@ -205,33 +205,47 @@ void GetBaseTransform(Matrix& m, RectF pageRect, float zoom, int rotation)
     m.Rotate((REAL)rotation, MatrixOrderAppend);
 }
 
-const TCHAR *GfxFileExtFromData(char *data, size_t len)
-{
-    char header[9] = { 0 };
-    memcpy(header, data, min(len, sizeof(header)));
+enum ImgFormat { Img_Unknown, Img_BMP, Img_GIF, Img_JPEG, Img_PNG, Img_TGA, Img_TIFF };
 
-    if (str::StartsWith(header, "BM"))
-        return _T(".bmp");
-    if (str::StartsWith(header, "\x89PNG\x0D\x0A\x1A\x0A"))
-        return _T(".png");
-    if (str::StartsWith(header, "\xFF\xD8"))
-        return _T(".jpg");
-    if (str::StartsWith(header, "GIF87a") || str::StartsWith(header, "GIF89a"))
-        return _T(".gif");
-    if (memeq(header, "MM\x00\x2A", 4) || memeq(header, "II\x2A\x00", 4))
-        return _T(".tif");
+static ImgFormat GfxFormatFromData(const char *data, size_t len)
+{
+    if (!data || len < 8)
+        return Img_Unknown;
+    // check the most common formats first
+    if (str::StartsWith(data, "\x89PNG\x0D\x0A\x1A\x0A"))
+        return Img_PNG;
+    if (str::StartsWith(data, "\xFF\xD8"))
+        return Img_JPEG;
+    if (str::StartsWith(data, "GIF87a") || str::StartsWith(data, "GIF89a"))
+        return Img_GIF;
+    if (str::StartsWith(data, "BM"))
+        return Img_BMP;
+    if (memeq(data, "MM\x00\x2A", 4) || memeq(data, "II\x2A\x00", 4))
+        return Img_TIFF;
     if (tga::HasSignature(data, len))
-        return _T(".tga");
-    return NULL;
+        return Img_TGA;
+    return Img_Unknown;
+}
+
+const TCHAR *GfxFileExtFromData(const char *data, size_t len)
+{
+    switch (GfxFormatFromData(data, len)) {
+    case Img_BMP:  return _T(".bmp");
+    case Img_GIF:  return _T(".gif");
+    case Img_JPEG: return _T(".jpg");
+    case Img_PNG:  return _T(".png");
+    case Img_TGA:  return _T(".tga");
+    case Img_TIFF: return _T(".tif");
+    default:       return NULL;
+    }
 }
 
 // cf. http://stackoverflow.com/questions/4598872/creating-hbitmap-from-memory-buffer/4616394#4616394
-Bitmap *BitmapFromData(void *data, size_t len)
+Bitmap *BitmapFromData(const char *data, size_t len)
 {
-    if (!data)
-        return NULL;
-    if (tga::HasSignature((const char *)data, len))
-        return tga::ImageFromData((const char *)data, len);
+    ImgFormat format = GfxFormatFromData(data, len);
+    if (Img_TGA == format)
+        return tga::ImageFromData(data, len);
 
     ScopedComPtr<IStream> stream(CreateStreamFromData(data, len));
     if (!stream)
@@ -247,43 +261,19 @@ Bitmap *BitmapFromData(void *data, size_t len)
 }
 
 // adapted from http://cpansearch.perl.org/src/RJRAY/Image-Size-3.230/lib/Image/Size.pm
-Size BitmapSizeFromData(char *data, size_t len)
+Size BitmapSizeFromData(const char *data, size_t len)
 {
     Size result;
-    // too short to contain magic number and image dimensions
-    if (len < 8) {
-    }
-    // Bitmap
-    else if (str::StartsWith(data, "BM")) {
+    switch (GfxFormatFromData(data, len)) {
+    case Img_BMP:
         if (len >= sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER)) {
             BITMAPINFOHEADER *bmi = (BITMAPINFOHEADER *)(data + sizeof(BITMAPFILEHEADER));
             DWORD width = LEtoHl(bmi->biWidth);
             DWORD height = LEtoHl(bmi->biHeight);
             result = Size(width, height);
         }
-    }
-    // PNG
-    else if (str::StartsWith(data, "\x89PNG\x0D\x0A\x1A\x0A")) {
-        if (len >= 24 && str::StartsWith(data + 12, "IHDR")) {
-            DWORD width = BEtoHl(*(DWORD *)(data + 16));
-            DWORD height = BEtoHl(*(DWORD *)(data + 20));
-            result = Size(width, height);
-        }
-    }
-    // JPEG
-    else if (str::StartsWith(data, "\xFF\xD8")) {
-        // find the last start of frame marker for non-differential Huffman coding
-        for (size_t ix = 2; ix + 9 < len && data[ix] == '\xFF'; ) {
-            if ('\xC0' <= data[ix + 1] && data[ix + 1] <= '\xC3') {
-                WORD width = BEtoHs(*(WORD *)(data + ix + 7));
-                WORD height = BEtoHs(*(WORD *)(data + ix + 5));
-                result = Size(width, height);
-            }
-            ix += BEtoHs(*(WORD *)(data + ix + 2)) + 2;
-        }
-    }
-    // GIF
-    else if (str::StartsWith(data, "GIF87a") || str::StartsWith(data, "GIF89a")) {
+        break;
+    case Img_GIF:
         if (len >= 13) {
             // find the first image's actual size instead of using the
             // "logical screen" size which is sometimes too large
@@ -316,16 +306,35 @@ Size BitmapSizeFromData(char *data, size_t len)
                     break;
             }
         }
-    }
-    // TIFF
-    else if (memeq(data, "MM\x00\x2A", 4) || memeq(data, "II\x2A\x00", 4)) {
+        break;
+    case Img_JPEG:
+        // find the last start of frame marker for non-differential Huffman coding
+        for (size_t ix = 2; ix + 9 < len && data[ix] == '\xFF'; ) {
+            if ('\xC0' <= data[ix + 1] && data[ix + 1] <= '\xC3') {
+                WORD width = BEtoHs(*(WORD *)(data + ix + 7));
+                WORD height = BEtoHs(*(WORD *)(data + ix + 5));
+                result = Size(width, height);
+            }
+            ix += BEtoHs(*(WORD *)(data + ix + 2)) + 2;
+        }
+        break;
+    case Img_PNG:
+        if (len >= 24 && str::StartsWith(data + 12, "IHDR")) {
+            DWORD width = BEtoHl(*(DWORD *)(data + 16));
+            DWORD height = BEtoHl(*(DWORD *)(data + 20));
+            result = Size(width, height);
+        }
+        break;
+    case Img_TGA:
+        if (len >= 16) {
+            WORD width = LEtoHs(*(WORD *)(data + 12));
+            WORD height = LEtoHs(*(WORD *)(data + 14));
+            result = Size(width, height);
+        }
+        break;
+    case Img_TIFF:
         // TODO: speed this up (if necessary)
-    }
-    // TGA
-    else if (tga::HasSignature(data, len)) {
-        WORD width = LEtoHs(*(WORD *)(data + 12));
-        WORD height = LEtoHs(*(WORD *)(data + 14));
-        result = Size(width, height);
+        break;
     }
 
     if (result.Empty()) {

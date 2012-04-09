@@ -19,8 +19,8 @@ void     DrawCloseButton(DRAWITEMSTRUCT *dis);
 
 void     GetBaseTransform(Matrix& m, RectF pageRect, float zoom, int rotation);
 
-const TCHAR * GfxFileExtFromData(char *data, size_t len);
-Bitmap *      BitmapFromData(void *data, size_t len);
-Size          BitmapSizeFromData(char *data, size_t len);
+const TCHAR * GfxFileExtFromData(const char *data, size_t len);
+Bitmap *      BitmapFromData(const char *data, size_t len);
+Size          BitmapSizeFromData(const char *data, size_t len);
 
 #endif
