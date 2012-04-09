@@ -50,6 +50,10 @@ void ThreadLoadEbook::Run()
     double loadingTimeMs = t.GetTimeInMs();
     //lf(_T("Loaded %s in %.2f ms"), fileName, t.GetTimeInMs());
 
+    // don't load PalmDoc, etc. files as long as they're not correctly formatted
+    if (doc.AsMobi() && Pdb_Mobipocket != doc.AsMobi()->GetDocType())
+        doc.Delete();
+
     UiMsg *msg = new UiMsg(UiMsg::FinishedMobiLoading);
     msg->finishedMobiLoading.doc = new Doc(doc);
     msg->finishedMobiLoading.fileName = fileName;

@@ -27,10 +27,15 @@ using namespace Gdiplus;
 namespace str {
     namespace conv {
 
-inline TCHAR *FromHtmlUtf8(const char *s, size_t len)
+inline TCHAR *FromHtmlCP(const char *s, size_t len, UINT codePage)
 {
     ScopedMem<char> tmp(str::DupN(s, len));
-    return DecodeHtmlEntitites(tmp, CP_UTF8);
+    return DecodeHtmlEntitites(tmp, codePage);
+}
+
+inline TCHAR *FromHtmlUtf8(const char *s, size_t len)
+{
+    return FromHtmlCP(s, len, CP_UTF8);
 }
 
     }
@@ -1077,7 +1082,9 @@ MobiEngine *MobiEngine::CreateFromFile(const TCHAR *fileName)
     return engine;
 }
 
-/* BaseEngine for handling PalmDOC documents */
+/* BaseEngine for handling PalmDOC documents (and extensions such as TealDoc) */
+
+#define PDB_TOC_ENTRY_MARK "ToC!Entry!"
 
 class PdbEngineImpl : public EbookEngine, public PdbEngine {
     friend PdbEngine;
@@ -1090,14 +1097,66 @@ public:
     }
 
     virtual const TCHAR *GetDefaultFileExt() const { return _T(".pdb"); }
-    virtual PageDestination *GetNamedDest(const TCHAR *name) { return NULL; }
+
+    virtual bool HasTocTree() const { return tocEntries.Count() > 0; }
+    virtual DocTocItem *GetTocTree();
 
 protected:
     MobiDoc *doc;
     ScopedMem<char> htmlData;
+    StrVec tocEntries;
 
     bool Load(const TCHAR *fileName);
+    const char *HandleTealDocTag(str::Str<char>& builder, const char *text, size_t len, UINT codePage);
 };
+
+const char *PdbEngineImpl::HandleTealDocTag(str::Str<char>& builder, const char *text, size_t len, UINT codePage)
+{
+    if (len < 9) {
+Fallback:
+        builder.Append("&lt;");
+        return text + 1;
+    }
+    if (!str::StartsWithI(text, "<BOOKMARK") &&
+        !str::StartsWithI(text, "<HEADER") &&
+        !str::StartsWithI(text, "<TEALPAINT")) {
+        goto Fallback;
+    }
+    HtmlPullParser parser(text, len);
+    HtmlToken *tok = parser.Next();
+    if (!tok->IsStartTag())
+        goto Fallback;
+
+    if (tok->NameIs("BOOKMARK")) {
+        // <BOOKMARK NAME="ToC entry">
+        AttrInfo *attr = tok->GetAttrByName("NAME");
+        if (attr && attr->valLen > 0) {
+            tocEntries.Append(str::conv::FromHtmlCP(attr->val, attr->valLen, codePage));
+            builder.AppendFmt("<a name=" PDB_TOC_ENTRY_MARK "%d>", tocEntries.Count());
+            return tok->s + tok->sLen;
+        }
+    }
+    else if (tok->NameIs("HEADER")) {
+        // <HEADER TEXT="Title" FONT=1 ALIGN=CENTER>
+        int hx = 2;
+        AttrInfo *attr = tok->GetAttrByName("FONT");
+        if (attr && attr->valLen > 0)
+            hx = '0' == *attr->val ? 1 : '2' == *attr->val ? 3 : 2;
+        attr = tok->GetAttrByName("TEXT");
+        if (attr) {
+            builder.AppendFmt("<h%d>", hx);
+            builder.Append(attr->val, attr->valLen);
+            builder.AppendFmt("</h%d>", hx);
+            return tok->s + tok->sLen;
+        }
+    }
+    else if (tok->NameIs("TEALPAINT")) {
+        // <TEALPAINT SRC="file.pdb" IMAGE=0 WIDTH=10 HEIGHT=10 SX=0 SY=7>
+        // skip images (for now)
+        return tok->s + tok->sLen;
+    }
+    goto Fallback;
+}
 
 bool PdbEngineImpl::Load(const TCHAR *fileName)
 {
@@ -1109,26 +1168,22 @@ bool PdbEngineImpl::Load(const TCHAR *fileName)
 
     size_t textLen;
     const char *text = doc->GetBookHtmlData(textLen);
+    UINT codePage = GuessTextCodepage((char *)text, textLen, CP_ACP);
 
-    // TODO: support or ignore TealDoc extensions:
-    // * <BOOKMARK NAME="ToC entry">
-    // * <HEADER TEXT="Title" FONT=1 ALIGN=CENTER> (font: 0 = tiny, 2 = large)
-    // * <TEALPAINT SRC="file.pdb" IMAGE=0 WIDTH=10 HEIGHT=10 SX=0 SY=7>
     str::Str<char> builder;
     builder.Append("<body>");
-    for (size_t i = 0; i < textLen; i++) {
-        if ('&' == text[i])
+    for (const char *curr = text; curr < text + textLen; curr++) {
+        if ('&' == *curr)
             builder.Append("&amp;");
-        else if ('<' == text[i])
-            builder.Append("&lt;");
-        else if ('\n' == text[i])
+        else if ('<' == *curr)
+            curr = HandleTealDocTag(builder, curr, text + textLen - curr, codePage);
+        else if ('\n' == *curr || '\r' == *curr && curr + 1 < text + textLen && '\n' != *(curr + 1))
             builder.Append("\n<br>");
         else
-            builder.Append(text[i]);
+            builder.Append(*curr);
     }
     builder.Append("</body>");
 
-    UINT codePage = GuessTextCodepage((char *)text, textLen, CP_ACP);
     htmlData.Set(str::ToMultiByte(builder.Get(), codePage, CP_UTF8));
 
     HtmlFormatterArgs args;
@@ -1145,6 +1200,19 @@ bool PdbEngineImpl::Load(const TCHAR *fileName)
         return false;
 
     return pages->Count() > 0;
+}
+
+DocTocItem *PdbEngineImpl::GetTocTree()
+{
+    EbookTocItem *root = NULL;
+    for (size_t i = 0; i < tocEntries.Count(); i++) {
+        ScopedMem<TCHAR> name(str::Format(_T(PDB_TOC_ENTRY_MARK) _T("%d"), i + 1));
+        PageDestination *dest = GetNamedDest(name);
+        EbookTocItem *item = new EbookTocItem(str::Dup(tocEntries.At(i)), dest);
+        item->id = i + 1;
+        AppendTocItem(root, item, 1);
+    }
+    return root;
 }
 
 bool PdbEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
