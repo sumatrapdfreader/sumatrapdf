@@ -56,9 +56,10 @@ inline bool IsValidLangIdx(int idx)
 
 static int GetLangIndexFromCode(const char *code)
 {
-    for (int i = 0; i < LANGS_COUNT; i++)
+    for (int i = 0; i < LANGS_COUNT; i++) {
         if (str::Eq(code, gLangData[i].code))
             return i;
+    }
     return -1;
 }
 
@@ -103,8 +104,9 @@ static void __cdecl FreeData()
 {
     if (!gTranslationCache)
         return;
-    for (size_t i = 0; i < dimof(gTranslations); i++)
+    for (size_t i = 0; i < dimof(gTranslations); i++) {
         free((void *)gTranslationCache[i]);
+    }
     free((void *)gTranslationCache);
     gTranslationCache = NULL;
 }
@@ -171,6 +173,7 @@ TCHAR *GetLanguageName(int langIdx)
     return str::conv::FromUtf8(gLangData[langIdx].fullName);
 }
 
+// TODO: use GetLocaleInfoEx() (http://blogs.msdn.com/b/oldnewthing/archive/2011/12/22/10250164.aspx)
 bool IsLanguageRtL(int langIdx)
 {
     assert(IsValidLangIdx(langIdx));

@@ -61,7 +61,7 @@
 
 // for converting between big-/little-endian values and host endianness
 // (the same macros could also be used for conversion in the opposite direction)
-// TODO: swap definitions should we ever compile for big-endian architectures
+// TODO: do it the way Rob Pike says: http://commandcenter.blogspot.com/2012/04/byte-order-fallacy.html
 #define BEtoHs(x) MAKEWORD(HIBYTE(x), LOBYTE(x))
 #define BEtoHl(x) MAKELONG(BEtoHs(HIWORD(x)), BEtoHs(LOWORD(x)))
 #define LEtoHs(x) (x)
