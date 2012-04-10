@@ -117,12 +117,12 @@ DrawInstr DrawInstr::Anchor(const char *s, size_t len, RectF bbox)
     return di;
 }
 
-HtmlFormatter::HtmlFormatter(HtmlFormatterArgs *args) : args(args),
-    pageDx((REAL)args->pageDx), pageDy((REAL)args->pageDy),
+HtmlFormatter::HtmlFormatter(HtmlFormatterArgs *args) :
+    pageDx(args->pageDx), pageDy(args->pageDy),
     textAllocator(args->textAllocator), currLineReparseIdx(NULL),
     currX(0), currY(0), currLineTopPadding(0), currLinkIdx(0),
     listDepth(0), preFormatted(false), currPage(NULL),
-    finishedParsing(false), pageCount(0)
+    finishedParsing(false), pageCount(0), measureAlgo(args->measureAlgo)
 {
     currReparseIdx = args->reparseIdx;
     htmlParser = new HtmlPullParser(args->htmlStr, args->htmlStrLen);
@@ -139,7 +139,7 @@ HtmlFormatter::HtmlFormatter(HtmlFormatterArgs *args) : args(args),
 
     lineSpacing = CurrFont()->GetHeight(gfx);
     spaceDx = CurrFont()->GetSize() / 2.5f; // note: a heuristic
-    float spaceDx2 = GetSpaceDx(gfx, CurrFont());
+    float spaceDx2 = GetSpaceDx(gfx, CurrFont(), measureAlgo);
     if (spaceDx2 < spaceDx)
         spaceDx = spaceDx2;
 
@@ -622,7 +622,7 @@ void HtmlFormatter::EmitTextRun(const char *s, const char *end)
             currReparseIdx = s - htmlParser->Start();
 
         size_t strLen = str::Utf8ToWcharBuf(s, end - s, buf, dimof(buf));
-        RectF bbox = MeasureText(gfx, CurrFont(), buf, strLen);
+        RectF bbox = MeasureText(gfx, CurrFont(), buf, strLen, measureAlgo);
         EnsureDx(bbox.Width);
         if (bbox.Width <= pageDx - currX) {
             AppendInstr(DrawInstr::Str(s, end - s, bbox));
@@ -630,7 +630,7 @@ void HtmlFormatter::EmitTextRun(const char *s, const char *end)
             break;
         }
 
-        int lenThatFits = StringLenForWidth(gfx, CurrFont(), buf, strLen, pageDx - NewLineX());
+        int lenThatFits = StringLenForWidth(gfx, CurrFont(), buf, strLen, pageDx - NewLineX(), measureAlgo);
         // try to prevent a break in the middle of a word
         if (iswalnum(buf[lenThatFits])) {
             for (int len = lenThatFits; len > 0; len--) {
@@ -640,7 +640,7 @@ void HtmlFormatter::EmitTextRun(const char *s, const char *end)
                 }
             }
         }
-        bbox = MeasureText(gfx, CurrFont(), buf, lenThatFits);
+        bbox = MeasureText(gfx, CurrFont(), buf, lenThatFits, measureAlgo);
         CrashIf(bbox.Width > pageDx);
         AppendInstr(DrawInstr::Str(s, lenThatFits, bbox));
         currX += bbox.Width;
@@ -1239,12 +1239,11 @@ void EpubFormatter::HandleTagImg_Epub(HtmlToken *t)
 
 void EpubFormatter::HandleHtmlTag_Epub(HtmlToken *t)
 {
-    HtmlTag tag = FindTag(t);
-    if (Tag_Img == tag) {
+    if (t->NameIs("img")) {
         HandleTagImg_Epub(t);
         HandleAnchorTag(t);
     }
-    else if (Tag_Pagebreak == tag) {
+    else if (t->NameIs("pagebreak")) {
         AttrInfo *attr = t->GetAttrByName("page_path");
         if (!attr || pagePath)
             ForceNewPage();

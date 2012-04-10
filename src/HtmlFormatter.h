@@ -88,11 +88,11 @@ public:
     HtmlFormatterArgs() :
       pageDx(0), pageDy(0), fontName(NULL), fontSize(0),
       textAllocator(NULL), htmlStr(0), htmlStrLen(0),
-      reparseIdx(0)
+      reparseIdx(0), measureAlgo(NULL)
     { }
 
-    int             pageDx;
-    int             pageDy;
+    REAL            pageDx;
+    REAL            pageDy;
 
     const WCHAR *   fontName;
     float           fontSize;
@@ -102,6 +102,10 @@ public:
        html entities) we need a modified text. This allocator is
        used to allocate this text. */
     Allocator *     textAllocator;
+
+    // if layouting everything at once, MeasureTextAccurate is too slow,
+    // so measureAlgo allows to choose a quicker text measurer instead
+    RectF        (* measureAlgo)(Graphics *g, Font *f, const WCHAR *s, size_t len);
 
     Doc             doc;
     const char *    htmlStr;
@@ -157,7 +161,6 @@ protected:
     bool  IgnoreText();
 
     // constant during layout process
-    HtmlFormatterArgs * args;
     float               pageDx;
     float               pageDy;
     float               lineSpacing;
@@ -166,6 +169,7 @@ protected:
     ScopedMem<WCHAR>    defaultFontName;
     float               defaultFontSize;
     Allocator *         textAllocator;
+    RectF            (* measureAlgo)(Graphics *g, Font *f, const WCHAR *s, size_t len);
 
     Vec<DrawStyle>      styleStack;
     // current position in a page

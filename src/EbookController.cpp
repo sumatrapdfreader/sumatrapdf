@@ -268,8 +268,8 @@ HtmlFormatterArgs *CreateFormatterArgsDoc(Doc doc, int dx, int dy, PoolAllocator
     CrashIf(!args->htmlStr);
     args->fontName = FONT_NAME;
     args->fontSize = FONT_SIZE;
-    args->pageDx = dx;
-    args->pageDy = dy;
+    args->pageDx = (REAL)dx;
+    args->pageDy = (REAL)dy;
     args->textAllocator = textAllocator;
     return args;
 }

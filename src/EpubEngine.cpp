@@ -111,7 +111,7 @@ protected:
     float pageBorder;
 
     void GetTransform(Matrix& m, float zoom, int rotation) {
-        GetBaseTransform(m, RectF(0, 0, (REAL)pageRect.dx, (REAL)pageRect.dy),
+        GetBaseTransform(m, RectF(0, 0, (float)pageRect.dx, (float)pageRect.dy),
                          zoom, rotation);
     }
     bool ExtractPageAnchors();
@@ -262,10 +262,8 @@ PointD EbookEngine::Transform(PointD pt, int pageNo, float zoom, int rotation, b
 
 RectD EbookEngine::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse)
 {
-    PointF pts[2] = {
-        PointF((REAL)rect.x, (REAL)rect.y),
-        PointF((REAL)(rect.x + rect.dx), (REAL)(rect.y + rect.dy))
-    };
+    RectT<REAL> rcF = rect.Convert<REAL>();
+    PointF pts[2] = { PointF(rcF.x, rcF.y), PointF(rcF.x + rcF.dx, rcF.y + rcF.dy) };
     Matrix m;
     GetTransform(m, zoom, rotation);
     if (inverse)
@@ -343,7 +341,7 @@ bool EbookEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, 
 
     Matrix m;
     GetTransform(m, zoom, rotation);
-    m.Translate((REAL)(screenRect.x - screen.x), (REAL)(screenRect.y - screen.y), MatrixOrderAppend);
+    m.Translate((float)(screenRect.x - screen.x), (float)(screenRect.y - screen.y), MatrixOrderAppend);
     g.SetTransform(&m);
 
     ScopedCritSec scope(&pagesAccess);
@@ -620,11 +618,12 @@ bool EpubEngineImpl::FinishLoading()
 
     HtmlFormatterArgs args;
     args.htmlStr = doc->GetTextData(&args.htmlStrLen);
-    args.pageDx = (int)(pageRect.dx - 2 * pageBorder);
-    args.pageDy = (int)(pageRect.dy - 2 * pageBorder);
+    args.pageDx = (float)pageRect.dx - 2 * pageBorder;
+    args.pageDy = (float)pageRect.dy - 2 * pageBorder;
     args.fontName = L"Georgia";
     args.fontSize = 11;
     args.textAllocator = &allocator;
+    args.measureAlgo = MeasureTextQuick;
 
     pages = EpubFormatter(&args, doc).FormatAllPages();
     if (!ExtractPageAnchors())
@@ -812,11 +811,12 @@ bool Fb2EngineImpl::Load(const TCHAR *fileName)
 
     HtmlFormatterArgs args;
     args.htmlStr = doc->GetTextData(&args.htmlStrLen);
-    args.pageDx = (int)(pageRect.dx - 2 * pageBorder);
-    args.pageDy = (int)(pageRect.dy - 2 * pageBorder);
+    args.pageDx = (float)pageRect.dx - 2 * pageBorder;
+    args.pageDy = (float)pageRect.dy - 2 * pageBorder;
     args.fontName = L"Georgia";
     args.fontSize = 11;
     args.textAllocator = &allocator;
+    args.measureAlgo = MeasureTextQuick;
 
     pages = Fb2Formatter(&args, doc).FormatAllPages();
     if (!ExtractPageAnchors())
@@ -935,11 +935,12 @@ bool MobiEngineImpl::Load(const TCHAR *fileName)
 
     HtmlFormatterArgs args;
     args.htmlStr = doc->GetBookHtmlData(args.htmlStrLen);
-    args.pageDx = (int)(pageRect.dx - 2 * pageBorder);
-    args.pageDy = (int)(pageRect.dy - 2 * pageBorder);
+    args.pageDx = (float)pageRect.dx - 2 * pageBorder;
+    args.pageDy = (float)pageRect.dy - 2 * pageBorder;
     args.fontName = L"Georgia";
     args.fontSize = 11;
     args.textAllocator = &allocator;
+    args.measureAlgo = MeasureTextQuick;
 
     pages = MobiFormatter(&args, doc).FormatAllPages();
     if (!ExtractPageAnchors())
@@ -1189,11 +1190,12 @@ bool PdbEngineImpl::Load(const TCHAR *fileName)
     HtmlFormatterArgs args;
     args.htmlStr = htmlData.Get();
     args.htmlStrLen = str::Len(htmlData.Get());
-    args.pageDx = (int)(pageRect.dx - 2 * pageBorder);
-    args.pageDy = (int)(pageRect.dy - 2 * pageBorder);
+    args.pageDx = (float)pageRect.dx - 2 * pageBorder;
+    args.pageDy = (float)pageRect.dy - 2 * pageBorder;
     args.fontName = L"Georgia";
     args.fontSize = 11;
     args.textAllocator = &allocator;
+    args.measureAlgo = MeasureTextQuick;
 
     pages = MobiFormatter(&args, doc).FormatAllPages();
     if (!ExtractPageAnchors())
@@ -1287,7 +1289,8 @@ protected:
     ScopedMem<char> pagePath;
 
 public:
-    ChmFormatter(HtmlFormatterArgs *args, ChmDataCache *doc) : HtmlFormatter(args), chmDoc(doc) { }
+    ChmFormatter(HtmlFormatterArgs *args, ChmDataCache *doc) :
+        HtmlFormatter(args), chmDoc(doc) { }
 
     Vec<HtmlPage*> *FormatAllPages();
 };
@@ -1308,12 +1311,11 @@ void ChmFormatter::HandleTagImg_Chm(HtmlToken *t)
 
 void ChmFormatter::HandleHtmlTag_Chm(HtmlToken *t)
 {
-    HtmlTag tag = FindTag(t);
-    if (Tag_Img == tag) {
+    if (t->NameIs("img")) {
         HandleTagImg_Chm(t);
         HandleAnchorTag(t);
     }
-    else if (Tag_Pagebreak == tag) {
+    else if (t->NameIs("pagebreak")) {
         AttrInfo *attr = t->GetAttrByName("page_path");
         if (!attr || pagePath)
             ForceNewPage();
@@ -1452,11 +1454,12 @@ bool Chm2EngineImpl::Load(const TCHAR *fileName)
 
     HtmlFormatterArgs args;
     args.htmlStr = dataCache->GetTextData(&args.htmlStrLen);
-    args.pageDx = (int)(pageRect.dx - 2 * pageBorder);
-    args.pageDy = (int)(pageRect.dy - 2 * pageBorder);
+    args.pageDx = (float)pageRect.dx - 2 * pageBorder;
+    args.pageDy = (float)pageRect.dy - 2 * pageBorder;
     args.fontName = L"Georgia";
     args.fontSize = 11;
     args.textAllocator = &allocator;
+    args.measureAlgo = MeasureTextQuick;
 
     pages = ChmFormatter(&args, dataCache).FormatAllPages();
     if (!ExtractPageAnchors())
@@ -1519,8 +1522,7 @@ void HtmlFormatter2::HandleTagImg_Html(HtmlToken *t)
 
 void HtmlFormatter2::HandleHtmlTag2(HtmlToken *t)
 {
-    HtmlTag tag = FindTag(t);
-    if (Tag_Img == tag) {
+    if (t->NameIs("img")) {
         HandleTagImg_Html(t);
         HandleAnchorTag(t);
     }
@@ -1587,8 +1589,8 @@ bool HtmlEngineImpl::Load(const TCHAR *fileName)
 
     HtmlFormatterArgs args;
     args.htmlStr = doc->GetTextData(&args.htmlStrLen);
-    args.pageDx = (int)(pageRect.dx - 2 * pageBorder);
-    args.pageDy = (int)(pageRect.dy - 2 * pageBorder);
+    args.pageDx = (float)pageRect.dx - 2 * pageBorder;
+    args.pageDy = (float)pageRect.dy - 2 * pageBorder;
     args.fontName = L"Georgia";
     args.fontSize = 11;
     args.textAllocator = &allocator;
@@ -1658,8 +1660,7 @@ public:
 
 void TxtFormatter::HandleHtmlTag_Txt(HtmlToken *t)
 {
-    HtmlTag tag = FindTag(t);
-    if (Tag_Pagebreak == tag)
+    if (t->NameIs("pagebreak"))
         ForceNewPage();
     else
         HandleHtmlTag(t);
@@ -1729,8 +1730,8 @@ bool TxtEngineImpl::Load(const TCHAR *fileName)
 
     HtmlFormatterArgs args;
     args.htmlStr = doc->GetTextData(&args.htmlStrLen);
-    args.pageDx = (int)(pageRect.dx - 2 * pageBorder);
-    args.pageDy = (int)(pageRect.dy - 2 * pageBorder);
+    args.pageDx = (float)pageRect.dx - 2 * pageBorder;
+    args.pageDy = (float)pageRect.dy - 2 * pageBorder;
     args.fontName = L"Courier New";
     args.fontSize = 11;
     args.textAllocator = &allocator;

@@ -79,10 +79,22 @@ RectF MeasureTextStandard(Graphics *g, Font *f, const WCHAR *s, size_t len)
     return bbox;
 }
 
-RectF MeasureText(Graphics *g, Font *f, const WCHAR *s, size_t len)
+RectF MeasureTextQuick(Graphics *g, Font *f, const WCHAR *s, size_t len)
+{
+    RectF bbox;
+    g->MeasureString(s, len, f, PointF(0, 0), &bbox);
+    // most documents look good enough with these adjustments
+    bbox.Width *= 0.92f;
+    bbox.Height *= 0.96f;
+    return bbox;
+}
+
+RectF MeasureText(Graphics *g, Font *f, const WCHAR *s, size_t len, TextMeasureAlgorithm algo)
 {
     if (-1 == len)
         len = str::Len(s);
+    if (algo)
+        return algo(g, f, s, len);
     //RectF bbox = MeasureTextStandard(g, f, s, len);
     RectF bbox = MeasureTextAccurate(g, f, s, len);
     //RectF bbox = MeasureTextAccurate2(g, f, s, len);
@@ -95,22 +107,22 @@ RectF MeasureText(Graphics *g, Font *f, const WCHAR *s, size_t len)
 // this shouldn't happen often, so that's fine. It's also possible that
 // a smarter approach is possible, but this usually only does 3 MeasureText
 // calls, so it's not that bad
-int StringLenForWidth(Graphics *g, Font *f, const WCHAR *s, size_t len, float dx)
+int StringLenForWidth(Graphics *g, Font *f, const WCHAR *s, size_t len, float dx, TextMeasureAlgorithm algo)
 {
-    RectF r = MeasureText(g, f, s, len);
+    RectF r = MeasureText(g, f, s, len, algo);
     if (r.Width <= dx)
         return len;
     // make the best guess of the length that fits
     size_t n = (int)((dx / r.Width) * (float)len);
     CrashIf((0 == n) || (n > len));
-    r = MeasureText(g, f, s, n);
+    r = MeasureText(g, f, s, n, algo);
     // find the length len of s that fits within dx iff width of len+1 exceeds dx
     int dir = 1; // increasing length
     if (r.Width > dx)
         dir = -1; // decreasing length
     for (;;) {
         n += dir;
-        r = MeasureText(g, f, s, n);
+        r = MeasureText(g, f, s, n, algo);
         if (1 == dir) {
             // if advancing length, we know that previous string did fit, so if
             // the new one doesn't fit, the previous length was the right one
@@ -127,19 +139,19 @@ int StringLenForWidth(Graphics *g, Font *f, const WCHAR *s, size_t len, float dx
 
 // TODO: not quite sure why spaceDx1 != spaceDx2, using spaceDx2 because
 // is smaller and looks as better spacing to me
-REAL GetSpaceDx(Graphics *g, Font *f)
+REAL GetSpaceDx(Graphics *g, Font *f, TextMeasureAlgorithm algo)
 {
     RectF bbox;
 #if 0
-    bbox = MeasureText(g, f, L" ", 1);
+    bbox = MeasureText(g, f, L" ", 1, algo);
     REAL spaceDx1 = bbox.Width;
     return spaceDx1;
 #else
     // this method seems to return (much) smaller size that measuring
     // the space itself
-    bbox = MeasureText(g, f, L"wa", 2);
+    bbox = MeasureText(g, f, L"wa", 2, algo);
     REAL l1 = bbox.Width;
-    bbox = MeasureText(g, f, L"w a", 3);
+    bbox = MeasureText(g, f, L"w a", 3, algo);
     REAL l2 = bbox.Width;
     REAL spaceDx2 = l2 - l1;
     return spaceDx2;
