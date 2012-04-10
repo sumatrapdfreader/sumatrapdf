@@ -122,9 +122,9 @@ public:
        (i.e. 100.0 is original size) or one of virtual values ZOOM_FIT_PAGE,
        ZOOM_FIT_WIDTH or ZOOM_FIT_CONTENT, whose real value depends on draw area size */
     float ZoomVirtual() const { return zoomVirtual; }
-    float ZoomReal() const { return _zoomReal; }
+    float ZoomReal() const { return zoomReal; }
     float ZoomReal(int pageNo);
-    float ZoomAbsolute() const { return _zoomReal * 100 / dpiFactor; }
+    float ZoomAbsolute() const { return zoomReal * 100 / dpiFactor; }
 
     bool HasTocTree() const { return engine && engine->HasTocTree();}
     int CurrentPageNo() const;
@@ -244,7 +244,7 @@ protected:
     /* real zoom value calculated from zoomVirtual. Same as
        zoomVirtual * 0.01 * dpiFactor
        except for ZOOM_FIT_PAGE, ZOOM_FIT_WIDTH and ZOOM_FIT_CONTENT */
-    float           _zoomReal;
+    float           zoomReal;
     float           zoomVirtual;
     int             rotation;
     /* dpi correction factor by which _zoomVirtual has to be multiplied in

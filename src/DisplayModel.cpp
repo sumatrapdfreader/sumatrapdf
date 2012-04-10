@@ -198,7 +198,7 @@ DisplayModel::DisplayModel(DisplayModelCallback *cb)
     zoomVirtual = INVALID_ZOOM;
     padding = &gPagePadding;
     presentationMode = false;
-    _zoomReal = INVALID_ZOOM;
+    zoomReal = INVALID_ZOOM;
     dpiFactor = 1.0f;
     startPage = INVALID_PAGE_NO;
     dmCb = cb;
@@ -499,7 +499,7 @@ void DisplayModel::SetZoomVirtual(float newZoomVirtual)
     if (AsChmEngine()) {
         if (IsZoomVirtual(zoomVirtual) || !IsValidZoom(zoomVirtual))
             zoomVirtual = 100.0f;
-        _zoomReal = zoomVirtual * 0.01f * dpiFactor;
+        zoomReal = zoomVirtual * 0.01f * dpiFactor;
         AsChmEngine()->ZoomTo(zoomVirtual);
         return;
     }
@@ -517,18 +517,18 @@ void DisplayModel::SetZoomVirtual(float newZoomVirtual)
             }
         }
         assert(minZoom != (float)HUGE_VAL);
-        this->_zoomReal = minZoom;
+        zoomReal = minZoom;
     } else if (ZOOM_FIT_CONTENT == newZoomVirtual) {
         float newZoom = ZoomRealFromVirtualForPage(newZoomVirtual, CurrentPageNo());
         // limit zooming in to 800% on almost empty pages
         if (newZoom > 8.0)
             newZoom = 8.0;
         // don't zoom in by just a few pixels (throwing away a prerendered page)
-        if (newZoom < this->_zoomReal || this->_zoomReal / newZoom < 0.95 ||
-            this->_zoomReal < ZoomRealFromVirtualForPage(ZOOM_FIT_PAGE, CurrentPageNo()))
-            this->_zoomReal = newZoom;
+        if (newZoom < zoomReal || zoomReal / newZoom < 0.95 ||
+            zoomReal < ZoomRealFromVirtualForPage(ZOOM_FIT_PAGE, CurrentPageNo()))
+            zoomReal = newZoom;
     } else {
-        this->_zoomReal = zoomVirtual * 0.01f * dpiFactor;
+        zoomReal = zoomVirtual * 0.01f * dpiFactor;
     }
 }
 
@@ -536,7 +536,7 @@ float DisplayModel::ZoomReal(int pageNo)
 {
     DisplayMode mode = GetDisplayMode();
     if (displayModeContinuous(mode))
-        return _zoomReal;
+        return zoomReal;
     if (displayModeSingle(mode))
         return ZoomRealFromVirtualForPage(zoomVirtual, pageNo);
     pageNo = FirstPageInARowNo(pageNo, columnsFromDisplayMode(mode), displayModeShowCover(mode));
@@ -551,12 +551,12 @@ float DisplayModel::ZoomReal(int pageNo)
      * rotation changes
      * switching between display modes
      * navigating to another page in non-continuous mode */
-void DisplayModel::Relayout(float zoomVirtual, int newRotation)
+void DisplayModel::Relayout(float newZoomVirtual, int newRotation)
 {
     // an optimization: the code below doesn't make sense for chm
     // and causes SetZoomVirtual() to be called 3 times, so skip it
     if (AsChmEngine()) {
-        SetZoomVirtual(zoomVirtual);
+        SetZoomVirtual(newZoomVirtual);
         return;
     }
 
@@ -572,12 +572,12 @@ void DisplayModel::Relayout(float zoomVirtual, int newRotation)
 
 RestartLayout:
     int currPosY = padding->top;
-    float currZoomReal = _zoomReal;
-    SetZoomVirtual(zoomVirtual);
+    float currZoomReal = zoomReal;
+    SetZoomVirtual(newZoomVirtual);
 
     int newViewPortOffsetX = 0;
     if (0 != currZoomReal && INVALID_ZOOM != currZoomReal)
-        newViewPortOffsetX = (int)(viewPort.x * _zoomReal / currZoomReal);
+        newViewPortOffsetX = (int)(viewPort.x * zoomReal / currZoomReal);
     viewPort.x = newViewPortOffsetX;
     /* calculate the position of each page on the canvas, given current zoom,
        rotation, columns parameters. You can think of it as a simple
@@ -595,8 +595,8 @@ RestartLayout:
         SizeD pageSize = PageSizeAfterRotation(pageNo);
         RectI pos;
         // don't add the full 0.5 for rounding to account for precision errors
-        pos.dx = (int)(pageSize.dx * _zoomReal + 0.499);
-        pos.dy = (int)(pageSize.dy * _zoomReal + 0.499);
+        pos.dx = (int)(pageSize.dx * zoomReal + 0.499);
+        pos.dy = (int)(pageSize.dy * zoomReal + 0.499);
 
         if (rowMaxPageDy < pos.dy)
             rowMaxPageDy = pos.dy;
@@ -777,7 +777,7 @@ void DisplayModel::RecalcVisibleParts()
 int DisplayModel::GetPageNoByPoint(PointI pt)
 {
     // no reasonable answer possible, if zoom hasn't been set yet
-    if (_zoomReal <= 0)
+    if (zoomReal <= 0)
         return -1;
 
     for (int pageNo = 1; pageNo <= PageCount(); ++pageNo) {
@@ -795,7 +795,7 @@ int DisplayModel::GetPageNoByPoint(PointI pt)
 
 int DisplayModel::GetPageNextToPoint(PointI pt)
 {
-    if (_zoomReal <= 0)
+    if (zoomReal <= 0)
         return startPage;
 
     double maxDist = -1;
@@ -828,7 +828,7 @@ PointI DisplayModel::CvtToScreen(int pageNo, PointD pt)
     if (!pageInfo)
         return PointI();
 
-    PointD p = engine->Transform(pt, pageNo, _zoomReal, rotation);
+    PointD p = engine->Transform(pt, pageNo, zoomReal, rotation);
     p.x += 0.5 + pageInfo->pageOnScreen.x;
     p.y += 0.5 + pageInfo->pageOnScreen.y;
 
@@ -854,7 +854,7 @@ PointD DisplayModel::CvtFromScreen(PointI pt, int pageNo)
 
     PointD p = PointD(pt.x - 0.5 - pageInfo->pageOnScreen.x,
                       pt.y - 0.5 - pageInfo->pageOnScreen.y);
-    return engine->Transform(p, pageNo, _zoomReal, rotation, true);
+    return engine->Transform(p, pageNo, zoomReal, rotation, true);
 }
 
 RectD DisplayModel::CvtFromScreen(RectI r, int pageNo)
@@ -947,7 +947,7 @@ void DisplayModel::ChangeViewPortSize(SizeI newViewPortSize)
 {
     ScrollState ss;
 
-    bool isDocReady = ValidPageNo(startPage) && _zoomReal != 0;
+    bool isDocReady = ValidPageNo(startPage) && zoomReal != 0;
     if (isDocReady)
         ss = GetScrollState();
 
@@ -980,7 +980,7 @@ RectD DisplayModel::GetContentBox(int pageNo, RenderTarget target)
     else
         cbox = engine->PageContentBox(pageNo, target);
 
-    return engine->Transform(cbox, pageNo, _zoomReal, rotation);
+    return engine->Transform(cbox, pageNo, zoomReal, rotation);
 }
 
 /* get the (screen) coordinates of the point where a page's actual
