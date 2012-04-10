@@ -6,7 +6,7 @@ OS := $(OS:MINGW%=MINGW)
 CFLAGS += -Wall
 
 ifeq "$(build)" "debug"
-CFLAGS += -pipe -g
+CFLAGS += -pipe -g -DDEBUG
 else ifeq "$(build)" "profile"
 CFLAGS += -pipe -O2 -DNDEBUG -pg
 LDFLAGS += -pg
@@ -15,7 +15,7 @@ CFLAGS += -pipe -O2 -DNDEBUG -fomit-frame-pointer
 else ifeq "$(build)" "native"
 CFLAGS += -pipe -O2 -DNDEBUG -fomit-frame-pointer -march=native -mfpmath=sse
 else ifeq "$(build)" "memento"
-CFLAGS += -pipe -g -DMEMENTO
+CFLAGS += -pipe -g -DMEMENTO -DDEBUG
 else
 $(error unknown build setting: '$(build)')
 endif

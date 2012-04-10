@@ -124,8 +124,12 @@ fz_clone_context_internal(fz_context *ctx)
 	new_ctx = new_context_phase1(ctx->alloc, ctx->locks);
 	/* Inherit AA defaults from old context. */
 	fz_copy_aa_context(new_ctx, ctx);
-	new_ctx->store = fz_keep_store_context(ctx);
-	new_ctx->glyph_cache = fz_keep_glyph_cache(ctx);
-	new_ctx->font = fz_keep_font_context(ctx);
+	/* Keep thread lock checking happy by copying pointers first and locking under new context */
+	new_ctx->store = ctx->store;
+	new_ctx->store = fz_keep_store_context(new_ctx);
+	new_ctx->glyph_cache = ctx->glyph_cache;
+	new_ctx->glyph_cache = fz_keep_glyph_cache(new_ctx);
+	new_ctx->font = ctx->font;
+	new_ctx->font = fz_keep_font_context(new_ctx);
 	return new_ctx;
 }

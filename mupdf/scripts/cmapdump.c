@@ -85,6 +85,7 @@ main(int argc, char **argv)
 		clean(name);
 
 		fi = fz_open_file(ctx, argv[i]);
+		fz_lock_stream(fi);
 		cmap = pdf_load_cmap(ctx, fi);
 		fz_close(fi);
 

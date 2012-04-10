@@ -1029,7 +1029,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\fitz\image_jxr.cpp"
+					RelativePath=".\mupdf\fitz\image_jxr.c"
 					>
 				</File>
 				<File

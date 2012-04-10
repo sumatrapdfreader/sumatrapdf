@@ -274,8 +274,23 @@ static int find_context(fz_context *ctx)
 			return i;
 		if (fz_lock_debug_contexts[i] == NULL)
 		{
-			fz_lock_debug_contexts[i] = ctx;
-			return i;
+			int gottit = 0;
+			/* We've not locked on this context before, so use
+			 * this one for this new context. We might have other
+			 * threads trying here too though so, so claim it
+			 * atomically. No one has locked on this context
+			 * before, so we are safe to take the ALLOC lock. */
+			ctx->locks->lock(ctx->locks->user, FZ_LOCK_ALLOC);
+			/* If it's still free, then claim it as ours,
+			 * otherwise we'll keep hunting. */
+			if (fz_lock_debug_contexts[i] == NULL)
+			{
+				gottit = 1;
+				fz_lock_debug_contexts[i] = ctx;
+			}
+			ctx->locks->unlock(ctx->locks->user, FZ_LOCK_ALLOC);
+			if (gottit)
+				return i;
 		}
 	}
 	return -1;
