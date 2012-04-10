@@ -102,7 +102,7 @@ public:
 class DisplayModel
 {
 public:
-    DisplayModel(DisplayModelCallback *dmCb);
+    DisplayModel(BaseEngine *engine, EngineType engineType, DisplayModelCallback *dmCb);
     ~DisplayModel();
 
     const TCHAR *FilePath() const { return engine->FileName(); }
@@ -210,7 +210,6 @@ public:
 
 protected:
 
-    bool            Load(const TCHAR *fileName, PasswordUI *pwdUI);
     void            BuildPagesInfo();
     float           ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo);
     SizeD           PageSizeAfterRotation(int pageNo, bool fitToContent=false);
@@ -267,9 +266,6 @@ protected:
 public:
     /* allow resizing a window without triggering a new rendering (needed for window destruction) */
     bool            dontRenderFlag;
-
-    static DisplayModel *CreateFromFile(const TCHAR *fileName,
-        DisplayModelCallback *dmCb, PasswordUI *pwdUI);
 };
 
 bool    displayModeContinuous(DisplayMode displayMode);

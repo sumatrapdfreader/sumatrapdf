@@ -189,33 +189,26 @@ static int LastPageInARowNo(int pageNo, int columns, bool showCover, int pageCou
     return min(lastPageNo, pageCount);
 }
 
-DisplayModel::DisplayModel(DisplayModelCallback *cb)
+// must call SetInitialViewSettings() after creation
+DisplayModel::DisplayModel(BaseEngine *engine, EngineType engineType, DisplayModelCallback *cb) :
+    engine(engine), engineType(engineType), dmCb(cb),
+    pagesInfo(NULL), displayMode(DM_AUTOMATIC), startPage(1),
+    padding(&gPagePadding), zoomReal(INVALID_ZOOM), zoomVirtual(INVALID_ZOOM),
+    rotation(0), dpiFactor(1.0f), displayR2L(false),
+    presentationMode(false), presZoomVirtual(INVALID_ZOOM),
+    presDisplayMode(DM_AUTOMATIC), navHistoryIx(0),
+    dontRenderFlag(false)
 {
-    displayMode = DM_AUTOMATIC;
-    presDisplayMode = DM_AUTOMATIC;
-    presZoomVirtual = INVALID_ZOOM;
-    rotation = 0;
-    zoomVirtual = INVALID_ZOOM;
-    padding = &gPagePadding;
-    presentationMode = false;
-    zoomReal = INVALID_ZOOM;
-    dpiFactor = 1.0f;
-    startPage = INVALID_PAGE_NO;
-    dmCb = cb;
+    CrashIf(!engine || engine->PageCount() <= 0);
 
-    engine = NULL;
-    engineType = Engine_None;
+    if (engine->IsImageCollection())
+        padding = &gImagePadding;
+    if (AsChmEngine())
+        AsChmEngine()->SetNavigationCalback(dmCb);
 
-    textCache = NULL;
-    textSelection = NULL;
-    textSearch = NULL;
-    pagesInfo = NULL;
-
-    navHistoryIx = 0;
-
-    dontRenderFlag = false;
-
-    displayR2L = false;
+    textCache = new PageTextCache(engine);
+    textSelection = new TextSelection(engine, textCache);
+    textSearch = new TextSearch(engine, textCache);
 }
 
 DisplayModel::~DisplayModel()
@@ -239,7 +232,7 @@ PageInfo *DisplayModel::GetPageInfo(int pageNo) const
     return &(pagesInfo[pageNo-1]);
 }
 
-// Call this after Load() but before the first Relayout
+// Call this before the first Relayout
 void DisplayModel::SetInitialViewSettings(DisplayMode newDisplayMode, int newStartPage, SizeI viewPort, int screenDPI)
 {
     totalViewPortSize = viewPort;
@@ -266,27 +259,6 @@ void DisplayModel::SetInitialViewSettings(DisplayMode newDisplayMode, int newSta
     displayR2L = (layout & Layout_R2L) != 0;
     if (!AsChmEngine())
         BuildPagesInfo();
-}
-
-// must call SetInitialViewSettings() after Load()
-// pwdUI only needs to be available during loading
-bool DisplayModel::Load(const TCHAR *fileName, PasswordUI *pwdUI)
-{
-    assert(fileName);
-    engine = EngineManager::CreateEngine(fileName, pwdUI, &engineType);
-    if (!engine)
-        return false;
-    assert(engine->PageCount() > 0);
-    startPage = 1;
-    if (engine->IsImageCollection())
-        padding = &gImagePadding;
-    if (AsChmEngine())
-        AsChmEngine()->SetNavigationCalback(dmCb);
-
-    textCache = new PageTextCache(engine);
-    textSelection = new TextSelection(engine, textCache);
-    textSearch = new TextSearch(engine, textCache);
-    return true;
 }
 
 void DisplayModel::BuildPagesInfo()
@@ -1607,16 +1579,6 @@ void DisplayModel::CopyNavHistory(DisplayModel& orig)
                 navHistoryIx--;
         }
     }
-}
-
-DisplayModel *DisplayModel::CreateFromFile(const TCHAR *fileName, DisplayModelCallback *cb, PasswordUI *pwdUI)
-{
-    DisplayModel *dm = new DisplayModel(cb);
-    if (!dm || !dm->Load(fileName, pwdUI)) {
-        delete dm;
-        return NULL;
-    }
-    return dm;
 }
 
 ChmEngine *DisplayModel::AsChmEngine() const

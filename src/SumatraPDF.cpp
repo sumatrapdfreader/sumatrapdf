@@ -10,6 +10,7 @@
 #include "CrashHandler.h"
 #include "EbookController.h"
 #include "EbookWindow.h"
+#include "EngineManager.h"
 #include "ExternalPdfViewer.h"
 #include "FileHistory.h"
 #include "Favorites.h"
@@ -850,7 +851,12 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
     win->pdfsync = NULL;
 
     str::ReplacePtr(&win->loadedFilePath, args.fileName);
-    win->dm = DisplayModel::CreateFromFile(args.fileName, win, pwdUI);
+    EngineType engineType;
+    BaseEngine *engine = EngineManager::CreateEngine(args.fileName, pwdUI, &engineType);
+    if (engine)
+        win->dm = new DisplayModel(engine, engineType, win);
+    else
+        win->dm = NULL;
 
     // make sure that MSHTML can't be used as a potential exploit
     // vector through another browser and our plugin (which doesn't
