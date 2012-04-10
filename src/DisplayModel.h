@@ -121,7 +121,7 @@ public:
     /* a "virtual" zoom level. Can be either a real zoom level in percent
        (i.e. 100.0 is original size) or one of virtual values ZOOM_FIT_PAGE,
        ZOOM_FIT_WIDTH or ZOOM_FIT_CONTENT, whose real value depends on draw area size */
-    float ZoomVirtual() const { return _zoomVirtual; }
+    float ZoomVirtual() const { return zoomVirtual; }
     float ZoomReal() const { return _zoomReal; }
     float ZoomReal(int pageNo);
     float ZoomAbsolute() const { return _zoomReal * 100 / dpiFactor; }
@@ -245,7 +245,7 @@ protected:
        zoomVirtual * 0.01 * dpiFactor
        except for ZOOM_FIT_PAGE, ZOOM_FIT_WIDTH and ZOOM_FIT_CONTENT */
     float           _zoomReal;
-    float           _zoomVirtual;
+    float           zoomVirtual;
     int             rotation;
     /* dpi correction factor by which _zoomVirtual has to be multiplied in
        order to get _zoomReal */
