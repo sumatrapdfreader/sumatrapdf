@@ -77,6 +77,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\utils\BencUtil_ut.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\src\utils\BitReader.cpp"
 					>
 				</File>
@@ -102,6 +106,26 @@
 				</File>
 				<File
 					RelativePath=".\src\utils\HtmlPullParser_ut.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\utils\JsonParser.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\utils\JsonParser.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\utils\JsonParser_ut.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\utils\TgaReader.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\utils\TgaReader.h"
 					>
 				</File>
 				<File
@@ -233,6 +257,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\utils\Sigslot_ut.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\src\utils\SimpleLog.h"
 					>
 				</File>
@@ -242,6 +270,10 @@
 				</File>
 				<File
 					RelativePath=".\src\utils\Vec.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\utils\Vec_ut.cpp"
 					>
 				</File>
 				<File
@@ -290,6 +322,10 @@
 				</File>
 				<File
 					RelativePath=".\src\utils\StrUtil.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\utils\StrUtil_ut.cpp"
 					>
 				</File>
 				<File
