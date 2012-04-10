@@ -8,13 +8,6 @@ Major user-visible changes in each release:
 2.3 - text support (in it's own ui)
 2.4 - hex display (can show any file in hex/text view; it's own ui)
 
-Note: we could compress all those features into a single release
-but the idea is that each release will have as many additional
-changes as we can make in 2-3 months but most of them will
-be internal refactorings invisible to users or smaller UI tweaks.
-Support for an additional format is something that justifies
-making another release, which is why it's spaced like this.
-
 More detailed list for 2.1 (code comple target: 5/23, release
 target: 6/1):
 - refactor LoadDocument() so that more code is shared between
@@ -37,23 +30,27 @@ Given aggresive schedule, it's important to make the most risky
 is time to stabilize the code. E.g. in 2.1, LoadDocument() 
 refactoring is such a change.
 
-A random list of itmes to implement sooner or later:
-- even more mobi document properties
-- links in mobi format
-- lists in mobi format (ul, li)
-- mobi: search
-- mobi: fullscreen
-- mobi: printing
-- mobi: allow to change default font name/size, remember it
+A random list of things to implement sooner or later:
+- html: format text on a line to a baseline
+  http://www.bobpowell.net/formattingtext.htm
+- mobi: document properties (metadata)
+- mobi: links
+- ebook ui: links
+- mobi: lists (ul, li)
+- ebook ui: search
+- ebook ui: fullscreen
+- ebook ui: printing
+- ebook ui: allow to change default font name/size, remember it
         for a given document in preferences
-- mobi: 2 page display
+- ebook ui: 2 page display
 - ebook ui: rtl support
-- async saving of preferences. To avoid excessive saving,
-  maybe introduce a notion of 'dirty' state and call
-  SavePrefsIfNeeded() at the very end of operations
-  that might have changed prefs. Serialization can
-  probably happen on main thread (to minimize implempentation
-  complexity). Care needs to be taken to not start
-  a new save when one is still going on
-  (we could treat that as a corner case and quit
-  SavePrefsIfNeeded() withough changing dirty state)
+- mobi: parse table of content (<html><head><guide><reference type="toc" title="Table of Contents", filepos=$N />)
+- ebook ui: change the font size
+- ebook ui: change font/background combinations (just 3 options, like in kindle app:
+  black on white, sepia, white on black)
+- ebook ui: change brightness
+- ebook ui: table of content
+- ebook ui: better (on-screen) ui for bookmarks
+- html: hyphenation (http://www.tug.org/docs/liang/)
+- sign the installer/exe to hopefully make false positives
+  from anti-virus programms less frequent
