@@ -624,7 +624,7 @@ void
 fz_write_tga(fz_context *ctx, fz_pixmap *pixmap, char *filename, int savealpha)
 {
 	FILE *fp;
-	unsigned short head[9];
+	unsigned char head[18];
 	int n = pixmap->n;
 	int d = savealpha || n == 1 ? n : n - 1;
 	int k;
@@ -637,14 +637,15 @@ fz_write_tga(fz_context *ctx, fz_pixmap *pixmap, char *filename, int savealpha)
 		fz_throw(ctx, "cannot open file '%s': %s", filename, strerror(errno));
 
 	memset(head, 0, sizeof(head));
-	head[1] = n == 4 ? 10 : 11;
-	head[6] = pixmap->w;
-	head[7] = pixmap->h;
-	head[8] = d * 8 | (savealpha && n > 1 ? 0x0800 : 0);
+	head[2] = n == 4 ? 10 : 11;
+	head[12] = pixmap->w & 0xFF; head[13] = (pixmap->w >> 8) & 0xFF;
+	head[14] = pixmap->h & 0xFF; head[15] = (pixmap->h >> 8) & 0xFF;
+	head[16] = d * 8;
+	head[17] = savealpha && n > 1 ? 8 : 0;
 	if (savealpha && d == 2)
-		head[8] += 16;
-	fwrite(head, sizeof(head), 1, fp);
+		head[16] = 32;
 
+	fwrite(head, sizeof(head), 1, fp);
 	for (k = 1; k <= pixmap->h; k++)
 	{
 		int i, j;

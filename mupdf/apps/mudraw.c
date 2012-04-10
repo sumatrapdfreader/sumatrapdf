@@ -179,7 +179,7 @@ static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display
 	bmp_data_len = ((w * 3 + 3) / 4) * 4 * h;
 	bmp_data = fz_malloc(ctx, bmp_data_len + 1);
 	if (!GetDIBits(dc, hbmp, 0, h, bmp_data, &bmi, DIB_RGB_COLORS))
-		fz_throw(ctx, "gdierror: cannot draw page %d in PDF file '%s'", pagenum, filename);
+		fz_throw(ctx, "cannot draw page %d in PDF file '%s'", pagenum, filename);
 
 	DeleteDC(dc);
 	ReleaseDC(NULL, dc_main);
@@ -189,15 +189,19 @@ static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display
 	{
 		char buf[512];
 		FILE *f;
-		BITMAPFILEHEADER bmpfh = { 0 };
 
 		sprintf(buf, output, pagenum);
 		f = fopen(buf, "wb");
 		if (!f)
-			fz_throw(ctx, "ioerror: could not create raster file '%s'", buf);
+			fz_throw(ctx, "could not create raster file '%s'", buf);
 
 		if (strstr(output, ".bmp"))
 		{
+			BITMAPFILEHEADER bmpfh = { 0 };
+			static const int one = 1;
+			if (!*(char *)&one)
+				fz_throw(ctx, "rendering to BMP is not supported on big-endian architectures");
+
 			bmpfh.bfType = MAKEWORD('B', 'M');
 			bmpfh.bfOffBits = sizeof(bmpfh) + sizeof(bmi);
 			bmpfh.bfSize = bmpfh.bfOffBits + bmp_data_len;
@@ -211,8 +215,8 @@ static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display
 			unsigned short width = w, height = h, k;
 
 			fwrite("\0\0\x0A\0\0\0\0\0\0\0\0\0", 1, 12, f);
-			fwrite(&width, 2, 1, f);
-			fwrite(&height, 2, 1, f);
+			putc(width & 0xFF, f); putc((width >> 8) & 0xFF, f);
+			putc(height & 0xFF, f); putc((height >> 8) & 0xFF, f);
 			fwrite("\x18\0", 1, 2, f);
 
 			for (k = 0; k < height; k++)
