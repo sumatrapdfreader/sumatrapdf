@@ -226,6 +226,8 @@ Bitmap *ImageFromHdPhotoStream(IStream *stream)
 
     UINT w, h;
     HR(pConverter->GetSize(&w, &h));
+    double xres, yres;
+    HR(pConverter->GetResolution(&xres, &yres));
     Bitmap bmp(w, h, PixelFormat32bppARGB);
     BitmapData bmpData;
     Status ok = bmp.LockBits(&Rect(0, 0, w, h), ImageLockModeWrite, PixelFormat32bppARGB, &bmpData);
@@ -233,6 +235,7 @@ Bitmap *ImageFromHdPhotoStream(IStream *stream)
         return NULL;
     HR(pConverter->CopyPixels(NULL, bmpData.Stride, w * h * 4, (BYTE *)bmpData.Scan0));
     bmp.UnlockBits(&bmpData);
+    bmp.SetResolution((REAL)xres, (REAL)yres);
 #undef HR
 
     // hack to avoid the use of ::new (because there won't be a corresponding ::delete)

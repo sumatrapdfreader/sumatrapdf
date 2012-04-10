@@ -9,10 +9,7 @@
 fz_pixmap *
 fz_load_jxr(fz_context *ctx, unsigned char *data, int size)
 {
-#ifndef _WIN32
-	fz_throw(ctx, "JPEG-XR codec is not available");
-	return NULL;
-#else
+#ifdef _WIN32
 	fz_pixmap *pix = NULL;
 	IStream *stream = NULL;
 	IWICImagingFactory *factory = NULL;
@@ -23,6 +20,7 @@ fz_load_jxr(fz_context *ctx, unsigned char *data, int size)
 	int codec_available = 0;
 	LARGE_INTEGER zero = { 0 };
 	UINT width, height;
+	double xres, yres;
 	ULONG written;
 	HRESULT hr;
 
@@ -38,6 +36,7 @@ fz_load_jxr(fz_context *ctx, unsigned char *data, int size)
 	HR(IUnknown_QueryInterface(src_frame, &IID_IWICBitmapSource, &src_bitmap));
 	HR(IWICFormatConverter_Initialize(converter, src_bitmap, &GUID_WICPixelFormat32bppBGRA, WICBitmapDitherTypeNone, NULL, 0.f, WICBitmapPaletteTypeCustom));
 	HR(IWICFormatConverter_GetSize(converter, &width, &height));
+	HR(IWICFormatConverter_GetResolution(converter, &xres, &yres));
 #undef HR
 	codec_available = 1;
 
@@ -56,6 +55,8 @@ fz_load_jxr(fz_context *ctx, unsigned char *data, int size)
 		fz_drop_pixmap(ctx, pix);
 		pix = NULL;
 	}
+	pix->xres = (int)(xres + 0.5);
+	pix->yres = (int)(yres + 0.5);
 
 CleanUp:
 	if (src_bitmap)
@@ -72,8 +73,13 @@ CleanUp:
 		IUnknown_Release(stream);
 	CoUninitialize();
 
-	if (!pix)
-        fz_throw(ctx, codec_available ? "JPEG-XR codec failed to decode the image" : "JPEG-XR codec is not available");
-	return pix;
+	if (codec_available)
+	{
+		if (!pix)
+			fz_throw(ctx, "JPEG-XR codec failed to decode the image");
+		return pix;
+	}
 #endif
+	fz_throw(ctx, "JPEG-XR codec is not available");
+	return NULL;
 }
