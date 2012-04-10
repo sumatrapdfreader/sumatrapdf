@@ -294,7 +294,7 @@ void SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode, bool keepCont
     if (!win->IsDocLoaded())
         return;
 
-    if (keepContinuous && displayModeContinuous(win->dm->displayMode())) {
+    if (keepContinuous && displayModeContinuous(win->dm->GetDisplayMode())) {
         switch (displayMode) {
             case DM_SINGLE_PAGE: displayMode = DM_CONTINUOUS; break;
             case DM_FACING: displayMode = DM_CONTINUOUS_FACING; break;
@@ -882,7 +882,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
     */
     if (win->dm) {
         win->dm->SetInitialViewSettings(displayMode, startPage, win->GetViewPortSize(), win->dpi);
-        if (prevModel && str::Eq(win->dm->FileName(), prevModel->FileName())) {
+        if (prevModel && str::Eq(win->dm->FilePath(), prevModel->FilePath())) {
             gRenderCache.KeepForDisplayModel(prevModel, win->dm);
             win->dm->CopyNavHistory(*prevModel);
         }
@@ -940,7 +940,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
         UpdateToolbarFindText(win);
     }
 
-    const TCHAR *baseName = path::GetBaseName(win->dm->FileName());
+    const TCHAR *baseName = path::GetBaseName(win->dm->FilePath());
     TCHAR *docTitle = win->dm->engine ? win->dm->engine->GetProperty("Title") : NULL;
     if (docTitle) {
         str::NormalizeWS(docTitle);
@@ -2523,7 +2523,7 @@ static void OnMenuSaveAs(WindowInfo& win)
     assert(win.dm);
     if (!win.IsDocLoaded()) return;
 
-    const TCHAR *srcFileName = win.dm->FileName();
+    const TCHAR *srcFileName = win.dm->FilePath();
     ScopedMem<TCHAR> urlName;
     if (gPluginMode) {
         urlName.Set(ExtractFilenameFromURL(gPluginURL));
@@ -2657,7 +2657,7 @@ static void OnMenuSaveAs(WindowInfo& win)
         }
     }
 
-    if (ok && IsUntrustedFile(win.dm->FileName(), gPluginURL))
+    if (ok && IsUntrustedFile(win.dm->FilePath(), gPluginURL))
         file::SetZoneIdentifier(realDstFileName);
 
     if (realDstFileName != dstFileName)
@@ -2691,7 +2691,7 @@ bool LinkSaver::SaveEmbedded(unsigned char *data, size_t len)
     if (!ok)
         return false;
     ok = file::WriteAll(dstFileName, data, len);
-    if (ok && IsUntrustedFile(owner->dm ? owner->dm->FileName() : owner->loadedFilePath, gPluginURL))
+    if (ok && IsUntrustedFile(owner->dm ? owner->dm->FilePath() : owner->loadedFilePath, gPluginURL))
         file::SetZoneIdentifier(dstFileName);
     return ok;
 }
@@ -2703,7 +2703,7 @@ static void OnMenuRenameFile(WindowInfo &win)
     if (!win.IsDocLoaded()) return;
     if (gPluginMode) return;
 
-    const TCHAR *srcFileName = win.dm->FileName();
+    const TCHAR *srcFileName = win.dm->FilePath();
     // this happens e.g. for embedded documents
     if (!file::Exists(srcFileName))
         return;
@@ -2774,7 +2774,7 @@ static void OnMenuSaveBookmark(WindowInfo& win)
 
     TCHAR dstFileName[MAX_PATH];
     // Remove the extension so that it can be replaced with .lnk
-    str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseName(win.dm->FileName()));
+    str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseName(win.dm->FilePath()));
     str::TransChars(dstFileName, _T(":"), _T("_"));
     if (str::EndsWithI(dstFileName, defExt))
         dstFileName[str::Len(dstFileName) - str::Len(defExt)] = '\0';
@@ -2803,7 +2803,7 @@ static void OnMenuSaveBookmark(WindowInfo& win)
         filename.Set(str::Join(dstFileName, _T(".lnk")));
 
     ScrollState ss = win.dm->GetScrollState();
-    const TCHAR *viewMode = DisplayModeConv::NameFromEnum(win.dm->displayMode());
+    const TCHAR *viewMode = DisplayModeConv::NameFromEnum(win.dm->GetDisplayMode());
     ScopedMem<TCHAR> ZoomVirtual(str::Format(_T("%.2f"), win.dm->ZoomVirtual()));
     if (ZOOM_FIT_PAGE == win.dm->ZoomVirtual())
         ZoomVirtual.Set(str::Dup(_T("fitpage")));
@@ -2814,10 +2814,10 @@ static void OnMenuSaveBookmark(WindowInfo& win)
 
     ScopedMem<TCHAR> exePath(GetExePath());
     ScopedMem<TCHAR> args(str::Format(_T("\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d -reuse-instance"),
-                          win.dm->FileName(), ss.page, viewMode, ZoomVirtual, (int)ss.x, (int)ss.y));
+                          win.dm->FilePath(), ss.page, viewMode, ZoomVirtual, (int)ss.x, (int)ss.y));
     ScopedMem<TCHAR> label(win.dm->engine->GetPageLabel(ss.page));
     ScopedMem<TCHAR> desc(str::Format(_TR("Bookmark shortcut to page %s of %s"),
-                          label, path::GetBaseName(win.dm->FileName())));
+                          label, path::GetBaseName(win.dm->FilePath())));
 
     CreateShortcut(filename, exePath, args, desc, 1);
 }
@@ -3004,7 +3004,7 @@ static void OnVScroll(WindowInfo& win, WPARAM wParam)
 
     int iVertPos = si.nPos;
     int lineHeight = 16;
-    if (!displayModeContinuous(win.dm->displayMode()) && ZOOM_FIT_PAGE == win.dm->ZoomVirtual())
+    if (!displayModeContinuous(win.dm->GetDisplayMode()) && ZOOM_FIT_PAGE == win.dm->ZoomVirtual())
         lineHeight = 1;
 
     switch (LOWORD(wParam)) {
@@ -3169,7 +3169,7 @@ static void OnMenuViewContinuous(WindowInfo& win)
     if (!win.IsDocLoaded())
         return;
 
-    DisplayMode newMode = win.dm->displayMode();
+    DisplayMode newMode = win.dm->GetDisplayMode();
     switch (newMode) {
         case DM_SINGLE_PAGE:
         case DM_CONTINUOUS:
@@ -3193,7 +3193,7 @@ static void ChangeZoomLevel(WindowInfo *win, float newZoom, bool pagesContinuous
         return;
 
     float zoom = win->dm->ZoomVirtual();
-    DisplayMode mode = win->dm->displayMode();
+    DisplayMode mode = win->dm->GetDisplayMode();
     DisplayMode newMode = pagesContinuously ? DM_CONTINUOUS : DM_SINGLE_PAGE;
 
     if (mode != newMode || zoom != newZoom) {
@@ -3584,7 +3584,7 @@ static void FrameOnChar(WindowInfo& win, WPARAM key)
         OnMenuViewContinuous(win);
         break;
     case 'b':
-        if (!displayModeSingle(win.dm->displayMode())) {
+        if (!displayModeSingle(win.dm->GetDisplayMode())) {
             // "e-book view": flip a single page
             bool forward = !IsShiftPressed();
             int currPage = win.dm->CurrentPageNo();
@@ -3592,7 +3592,7 @@ static void FrameOnChar(WindowInfo& win, WPARAM key)
                 break;
 
             DisplayMode newMode = DM_BOOK_VIEW;
-            if (displayModeShowCover(win.dm->displayMode()))
+            if (displayModeShowCover(win.dm->GetDisplayMode()))
                 newMode = DM_FACING;
             SwitchToDisplayMode(&win, newMode, true);
 
@@ -4134,7 +4134,7 @@ static LRESULT CanvasOnMouseWheel(WindowInfo& win, UINT message, WPARAM wParam, 
     }
 
     // make sure to scroll whole pages in non-continuous Fit Content mode
-    if (!displayModeContinuous(win.dm->displayMode()) &&
+    if (!displayModeContinuous(win.dm->GetDisplayMode()) &&
         ZOOM_FIT_CONTENT == win.dm->ZoomVirtual()) {
         if (delta > 0)
             win.dm->GoToPrevPage(0);
@@ -4179,7 +4179,7 @@ static LRESULT CanvasOnMouseWheel(WindowInfo& win, UINT message, WPARAM wParam, 
         win.wheelAccumDelta += gDeltaPerLine;
     }
 
-    if (!horizontal && !displayModeContinuous(win.dm->displayMode()) &&
+    if (!horizontal && !displayModeContinuous(win.dm->GetDisplayMode()) &&
         GetScrollPos(win.hwndCanvas, SB_VERT) == currentScrollPos) {
         if (delta > 0)
             win.dm->GoToPrevPage(-1);

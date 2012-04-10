@@ -222,7 +222,7 @@ void LinkHandler::GotoLink(PageDestination *link)
     }
     else if (Dest_LaunchEmbedded == type) {
         // open embedded PDF documents in a new window
-        if (path && str::StartsWith(path.Get(), dm->FileName())) {
+        if (path && str::StartsWith(path.Get(), dm->FilePath())) {
             WindowInfo *newWin = FindWindowInfoByFile(path);
             if (!newWin) {
                 LoadArgs args(path, owner);
@@ -340,7 +340,7 @@ void LinkHandler::LaunchFile(const TCHAR *path, PageDestination *link)
         return;
     }
 
-    ScopedMem<TCHAR> fullPath(path::GetDir(owner->dm->FileName()));
+    ScopedMem<TCHAR> fullPath(path::GetDir(owner->dm->FilePath()));
     fullPath.Set(path::Join(fullPath, path));
     fullPath.Set(path::Normalize(fullPath));
     // TODO: respect link->ld.gotor.new_window for PDF documents ?

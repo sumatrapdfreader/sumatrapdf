@@ -21,7 +21,7 @@
 void MenuUpdateDisplayMode(WindowInfo* win)
 {
     bool enabled = win->IsDocLoaded();
-    DisplayMode displayMode = enabled ? win->dm->displayMode() : gGlobalPrefs.defaultDisplayMode;
+    DisplayMode displayMode = enabled ? win->dm->GetDisplayMode() : gGlobalPrefs.defaultDisplayMode;
 
     for (int id = IDM_VIEW_LAYOUT_FIRST; id <= IDM_VIEW_LAYOUT_LAST; id++)
         win::menu::SetEnabled(win->menu, id, enabled);
@@ -395,7 +395,7 @@ void MenuUpdateStateForWindow(WindowInfo* win) {
         win::menu::SetEnabled(win->menu, IDM_FIND_FIRST, !win->dm->engine->IsImageCollection());
 
     // TODO: is this check too expensive?
-    if (win->IsDocLoaded() && !file::Exists(win->dm->FileName()))
+    if (win->IsDocLoaded() && !file::Exists(win->dm->FilePath()))
         win::menu::SetEnabled(win->menu, IDM_RENAME_FILE, false);
 
 #ifdef SHOW_DEBUG_MENU_ITEMS

@@ -105,7 +105,7 @@ public:
     DisplayModel(DisplayModelCallback *dmCb);
     ~DisplayModel();
 
-    const TCHAR *FileName() const { return engine->FileName(); }
+    const TCHAR *FilePath() const { return engine->FileName(); }
     /* number of pages in the document */
     int  PageCount() const { return engine->PageCount(); }
     bool ValidPageNo(int pageNo) const {
@@ -116,8 +116,8 @@ public:
     int Rotation() const { return _rotation; }
     void SetRotation(int rotation) { _rotation = rotation; }
 
-    DisplayMode displayMode() const { return _displayMode; }
-    void ChangeDisplayMode(DisplayMode displayMode);
+    DisplayMode GetDisplayMode() const { return displayMode; }
+    void ChangeDisplayMode(DisplayMode newDisplayMode);
     void SetPresentationMode(bool enable);
 
     /* a "virtual" zoom level. Can be either a real zoom level in percent
@@ -232,7 +232,7 @@ protected:
     /* an array of PageInfo, len of array is pageCount */
     PageInfo *      pagesInfo;
 
-    DisplayMode     _displayMode;
+    DisplayMode     displayMode;
     /* In non-continuous mode is the first page from a file that we're
        displaying.
        No meaning in continous mode. */
