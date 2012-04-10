@@ -7,6 +7,7 @@
 bool IsValidPageRange(const TCHAR *ranges);
 bool IsBenchPagesInfo(const TCHAR *s);
 void BenchFileOrDir(StrVec& pathsToBench);
+bool IsStressTesting();
 
 #define DIR_STRESS_TIMER_ID 101
 

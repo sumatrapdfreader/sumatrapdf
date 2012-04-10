@@ -18,6 +18,13 @@
 static slog::Logger *gLog;
 #define logbench(msg, ...) gLog->LogFmt(_T(msg), __VA_ARGS__)
 
+static bool gIsStressTesting = false;
+
+bool IsStressTesting()
+{
+    return gIsStressTesting;
+}
+
 struct PageRange {
     PageRange() : start(1), end(INT_MAX) { }
     PageRange(int start, int end) : start(start), end(end) { }
@@ -453,7 +460,7 @@ bool StressTest::OpenFile(const TCHAR *fileName)
     bool reuse = rand() % 3 != 1;
     _tprintf(_T("%s\n"), fileName);
     fflush(stdout);
-    LoadArgs args(fileName, NULL, true /* show */, reuse, true /* suppressPwdUI */);
+    LoadArgs args(fileName, NULL, true /* show */, reuse);
     WindowInfo *w = LoadDocument(args);
     if (!w)
         return false;
@@ -611,7 +618,7 @@ void StartStressTest(WindowInfo *win, const TCHAR *path, const TCHAR *filter,
                      const TCHAR *ranges, int cycles, RenderCache *renderCache)
 {
     // gPredictiveRender = false;
-
+    gIsStressTesting = true;
     // dst will be deleted when the stress ends
     StressTest *dst = new StressTest(win, renderCache);
     win->stressTest = dst;

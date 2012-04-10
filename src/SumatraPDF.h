@@ -132,19 +132,17 @@ WindowInfo* FindWindowInfoBySyncFile(const TCHAR *file);
 class LoadArgs
 {
 public:
-    LoadArgs(const TCHAR *fileName, WindowInfo *win=NULL, bool showWin=true, bool forceReuse=false, bool suppressPwdUI=false)
+    LoadArgs(const TCHAR *fileName, WindowInfo *win=NULL, bool showWin=true, bool forceReuse=false)
     {
         this->fileName = fileName;
         this->win = win;
         this->showWin = showWin;
         this->forceReuse = forceReuse;
-        this->suppressPwdUI = suppressPwdUI;
     }
     const TCHAR *fileName;
     WindowInfo *win;
     bool showWin;
     bool forceReuse;
-    bool suppressPwdUI;
 };
 
 WindowInfo* LoadDocument(LoadArgs& args);

@@ -365,10 +365,9 @@ WindowInfo* FindWindowInfoBySyncFile(const TCHAR *file)
 class HwndPasswordUI : public PasswordUI
 {
     HWND hwnd;
-    bool suppressPwdUI;
 
 public:
-    HwndPasswordUI(HWND hwnd, bool suppressPwdUI) : hwnd(hwnd), suppressPwdUI(suppressPwdUI)
+    HwndPasswordUI(HWND hwnd) : hwnd(hwnd)
     {}
 
     virtual TCHAR * GetPassword(const TCHAR *fileName, unsigned char *fileDigest,
@@ -390,7 +389,8 @@ TCHAR *HwndPasswordUI::GetPassword(const TCHAR *fileName, unsigned char *fileDig
     }
 
     *saveKey = false;
-    if (suppressPwdUI)
+
+    if (IsStressTesting())
         return NULL;
 
     // extract the filename from the URL in plugin mode instead
@@ -1059,7 +1059,7 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
     bool showWin = true;
     bool placeWindow = false;
     ScopedMem<TCHAR> path(str::Dup(win->loadedFilePath));
-    HwndPasswordUI pwdUI(win->hwndFrame, false);
+    HwndPasswordUI pwdUI(win->hwndFrame);
     LoadArgs args(path, win);
     args.showWin = showWin;
     if (!LoadDocIntoWindow(args, &pwdUI, &ds, isNewWindow, allowFailure, placeWindow))
@@ -1427,7 +1427,7 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
     win->notifications->RemoveAllInGroup(NG_RESPONSE_TO_ACTION);
     win->notifications->RemoveAllInGroup(NG_PAGE_INFO_HELPER);
 
-    HwndPasswordUI pwdUI(win->hwndFrame, args.suppressPwdUI);
+    HwndPasswordUI pwdUI(win->hwndFrame);
     args.fileName = fullPath;
     bool loaded = LoadDocIntoWindow(args, &pwdUI, NULL, isNewWindow, 
         true /* allowFailure */, true /* placeWindow */);
