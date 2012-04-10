@@ -1636,9 +1636,6 @@
     <None Include="docs\codingstyle.txt">
       <Filter>docs</Filter>
     </None>
-    <None Include="docs\ebook-todo.txt">
-      <Filter>docs</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="src\SumatraPDF.rc">

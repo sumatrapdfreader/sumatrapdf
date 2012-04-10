@@ -403,11 +403,12 @@ TCHAR *HwndPasswordUI::GetPassword(const TCHAR *fileName, unsigned char *fileDig
     }
 
     fileName = path::GetBaseName(fileName);
-    // the window that was used to initiate the loading process can be closed by now
-    // TODO: use our top-most window instead
+    // check if window is still validity as it might have been
+    // closed by now
     if (!IsWindow(hwnd))
-        hwnd = NULL;
-    return Dialog_GetPassword(hwnd, fileName, gGlobalPrefs.rememberOpenedFiles ? saveKey : NULL);
+        hwnd = GetForegroundWindow();
+    bool *rememberPwd =  gGlobalPrefs.rememberOpenedFiles ? saveKey : NULL;
+    return Dialog_GetPassword(hwnd, fileName, rememberPwd);
 }
 
 // update global windowState for next default launch when either
