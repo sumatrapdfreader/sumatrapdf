@@ -153,7 +153,8 @@ UTILS_OBJS = \
 	$(OU)\TrivialHtmlParser.obj $(OU)\HtmlWindow.obj $(OU)\GdiPlusUtil.obj \
 	$(OU)\DirIter.obj $(OU)\BitReader.obj $(OU)\HtmlPullParser.obj \
 	$(OU)\HtmlPrettyPrint.obj $(OU)\ThreadUtil.obj $(OU)\DebugLog.obj \
-	$(OU)\UiMsg.obj $(OU)\DbgHelpDyn.obj $(OU)\JsonParser.obj $(OU)\TgaReader.obj
+	$(OU)\UiMsg.obj $(OU)\DbgHelpDyn.obj $(OU)\JsonParser.obj $(OU)\TgaReader.obj \
+	$(OU)\HtmlParserLookup.obj
 
 # requires either MuPDF/libmupdf or $(ZLIB_OBJS)
 ZIP_OBJS = \
@@ -246,13 +247,13 @@ PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_XPS_PREVIEW"
 !if "$(BUILD_CBZ_PREVIEW)"!=""
 PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_CBZ_PREVIEW"
 PDFPREVIEW_OBJS = $(PDFPREVIEW_OBJS) $(OS)\ImagesEngine.obj $(OU)\GdiPlusUtil.obj $(ZIP_OBJS) \
-	$(OU)\JsonParser.obj $(OU)\HtmlPullParser.obj $(OU)\TgaReader.obj
+	$(OU)\JsonParser.obj $(OU)\HtmlPullParser.obj $(OU)\HtmlParserLookup.obj $(OU)\TgaReader.obj
 !endif
 !if "$(BUILD_EPUB_PREVIEW)"!=""
 PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_EPUB_PREVIEW"
 PDFPREVIEW_OBJS = $(PDFPREVIEW_OBJS) $(OS)\EpubEngine.obj $(OS)\EpubDoc.obj \
 	$(OS)\HtmlFormatter.obj $(OMUI)\MiniMui.obj $(OU)\TrivialHtmlParser.obj \
-	$(OU)\HtmlPullParser.obj
+	$(OU)\HtmlPullParser.obj $(OU)\HtmlParserLookup.obj
 !if "$(BUILD_CBZ_PREVIEW)"==""
 PDFPREVIEW_OBJS = $(PDFPREVIEW_OBJS) $(OU)\GdiPlusUtil.obj $(OU)\TgaReader.obj $(ZIP_OBJS)
 !endif

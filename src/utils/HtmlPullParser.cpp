@@ -9,30 +9,16 @@ to a parent) without explicitly building a tree in memory. I think all we need t
 tagNesting to also remember the position in html of the tag. Given this information we should be
 able to navigate the tree by reparsing.*/
 
-// map of entity names to their Unicde runes, based on
-// http://en.wikipedia.org/wiki/List_of_XML_and_HTML_character_entity_references
-// the order of strings in gHtmlEntityNames corresponds to
-// order of Unicode runes in gHtmlEntityRunes
-static const char *gHtmlEntityNames = "AElig\0Aacute\0Acirc\0Agrave\0Alpha\0Aring\0Atilde\0Auml\0Beta\0Ccedil\0Chi\0Dagger\0Delta\0ETH\0Eacute\0Ecirc\0Egrave\0Epsilon\0Eta\0Euml\0Gamma\0Iacute\0Icirc\0Igrave\0Iota\0Iuml\0Kappa\0Lambda\0Mu\0Ntilde\0Nu\0OElig\0Oacute\0Ocirc\0Ograve\0Omega\0Omicron\0Oslash\0Otilde\0Ouml\0Phi\0Pi\0Prime\0Psi\0Rho\0Scaron\0Sigma\0THORN\0Tau\0Theta\0Uacute\0Ucirc\0Ugrave\0Upsilon\0Uuml\0Xi\0Yacute\0Yuml\0Zeta\0aacute\0acirc\0acute\0aelig\0agrave\0alefsym\0alpha\0amp\0and\0ang\0apos\0aring\0asymp\0atilde\0auml\0bdquo\0beta\0brvbar\0bull\0cap\0ccedil\0cedil\0cent\0chi\0circ\0clubs\0cong\0copy\0crarr\0cup\0curren\0dArr\0dagger\0darr\0deg\0delta\0diams\0divide\0eacute\0ecirc\0egrave\0empty\0emsp\0ensp\0epsilon\0equiv\0eta\0eth\0euml\0euro\0exist\0fnof\0forall\0frac12\0frac14\0frac34\0frasl\0gamma\0ge\0gt\0hArr\0harr\0hearts\0hellip\0iacute\0icirc\0iexcl\0igrave\0image\0infin\0int\0iota\0iquest\0isin\0iuml\0kappa\0lArr\0lambda\0lang\0laquo\0larr\0lceil\0ldquo\0le\0lfloor\0lowast\0loz\0lrm\0lsaquo\0lsquo\0lt\0macr\0mdash\0micro\0middot\0minus\0mu\0nabla\0nbsp\0ndash\0ne\0ni\0not\0notin\0nsub\0ntilde\0nu\0oacute\0ocirc\0oelig\0ograve\0oline\0omega\0omicron\0oplus\0or\0ordf\0ordm\0oslash\0otilde\0otimes\0ouml\0para\0part\0permil\0perp\0phi\0pi\0piv\0plusmn\0pound\0prime\0prod\0prop\0psi\0quot\0rArr\0radic\0rang\0raquo\0rarr\0rceil\0rdquo\0real\0reg\0rfloor\0rho\0rlm\0rsaquo\0rsquo\0sbquo\0scaron\0sdot\0sect\0shy\0sigma\0sigmaf\0sim\0spades\0sub\0sube\0sum\0sup\0sup1\0sup2\0sup3\0supe\0szlig\0tau\0there4\0theta\0thetasym\0thinsp\0thorn\0tilde\0times\0trade\0uArr\0uacute\0uarr\0ucirc\0ugrave\0uml\0upsih\0upsilon\0uuml\0weierp\0xi\0yacute\0yen\0yuml\0zeta\0zwj\0zwnj\0";
-
-static uint16 gHtmlEntityRunes[] = { 198, 193, 194, 192, 913, 197, 195, 196, 914, 199, 935, 8225, 916, 208, 201, 202, 200, 917, 919, 203, 915, 205, 206, 204, 921, 207, 922, 923, 924, 209, 925, 338, 211, 212, 210, 937, 927, 216, 213, 214, 934, 928, 8243, 936, 929, 352, 931, 222, 932, 920, 218, 219, 217, 933, 220, 926, 221, 376, 918, 225, 226, 180, 230, 224, 8501, 945, 38, 8743, 8736, 39, 229, 8776, 227, 228, 8222, 946, 166, 8226, 8745, 231, 184, 162, 967, 710, 9827, 8773, 169, 8629, 8746, 164, 8659, 8224, 8595, 176, 948, 9830, 247, 233, 234, 232, 8709, 8195, 8194, 949, 8801, 951, 240, 235, 8364, 8707, 402, 8704, 189, 188, 190, 8260, 947, 8805, 62, 8660, 8596, 9829, 8230, 237, 238, 161, 236, 8465, 8734, 8747, 953, 191, 8712, 239, 954, 8656, 955, 9001, 171, 8592, 8968, 8220, 8804, 8970, 8727, 9674, 8206, 8249, 8216, 60, 175, 8212, 181, 183, 8722, 956, 8711, 160, 8211, 8800, 8715, 172, 8713, 8836, 241, 957, 243, 244, 339, 242, 8254, 969, 959, 8853, 8744, 170, 186, 248, 245, 8855, 246, 182, 8706, 8240, 8869, 966, 960, 982, 177, 163, 8242, 8719, 8733, 968, 34, 8658, 8730, 9002, 187, 8594, 8969, 8221, 8476, 174, 8971, 961, 8207, 8250, 8217, 8218, 353, 8901, 167, 173, 963, 962, 8764, 9824, 8834, 8838, 8721, 8835, 185, 178, 179, 8839, 223, 964, 8756, 952, 977, 8201, 254, 732, 215, 8482, 8657, 250, 8593, 251, 249, 168, 978, 965, 252, 8472, 958, 253, 165, 255, 950, 8205, 8204 };
-
-#define MAX_ENTITY_NAME_LEN 8
-#define MAX_ENTITY_CHAR     122
-
 // returns -1 if didn't find
 int HtmlEntityNameToRune(const char *name, size_t nameLen)
 {
-    if (nameLen > MAX_ENTITY_NAME_LEN)
-        return -1;
-    int pos = str::FindStrPos(gHtmlEntityNames, name, nameLen);
-    if (-1 == pos)
-        return -1;
-    return (int)gHtmlEntityRunes[pos];
+    return FindHtmlEntityRune(name, nameLen);
 }
 
+#define MAX_ENTITY_NAME_LEN 8
+
 // A unicode version of HtmlEntityNameToRune. It's safe because 
-// entities only contain ascii (<127) characters so if a simplistic
+// entity names only contain ascii (<127) characters so if a simplistic
 // conversion from unicode to ascii succeeds, we can use ascii
 // version, otherwise it wouldn't match anyway
 // returns -1 if didn't find
@@ -43,42 +29,19 @@ int HtmlEntityNameToRune(const WCHAR *name, size_t nameLen)
         return -1;
     char *s = asciiName;
     for (size_t i = 0; i < nameLen; i++) {
-        if (name[i] > MAX_ENTITY_CHAR)
+        if (name[i] > 127)
             return -1;
         asciiName[i] = (char)name[i];
     }
-    return HtmlEntityNameToRune(asciiName, nameLen);
-}
-
-static uint8 gSelfClosingTags[] = { Tag_Area, Tag_Base, Tag_Basefont, Tag_Br, Tag_Col, Tag_Frame, Tag_Hr, Tag_Img, Tag_Input, Tag_Link, Tag_Mbp_Pagebreak, Tag_Meta, Tag_Pagebreak, Tag_Param };
-
-STATIC_ASSERT(Tag_Last < 256, too_many_tags);
-
-bool IsInArray(uint8 val, uint8 *arr, size_t arrLen)
-{
-    while (arrLen-- > 0) {
-        if (val == *arr++)
-            return true;
-    }
-    return false;
-}
-
-bool IsTagSelfClosing(HtmlTag tag)
-{
-    return IsInArray((uint8)tag, gSelfClosingTags, dimof(gSelfClosingTags));
+    return FindHtmlEntityRune(asciiName, nameLen);
 }
 
 bool IsTagSelfClosing(const char *s, size_t len)
 {
-    HtmlTag tag = FindTag(s, len);
+    if (-1 == len)
+        len = str::Len(s);
+    HtmlTag tag = FindHtmlTag(s, len);
     return IsTagSelfClosing(tag);
-}
-
-static uint8 gInlineTags[] = { Tag_A, Tag_Abbr, Tag_Acronym, Tag_B, Tag_Br, Tag_Em, Tag_Font, Tag_I, Tag_Img, Tag_S, Tag_Small, Tag_Span, Tag_Strike, Tag_Strong, Tag_Sub, Tag_Sup, Tag_U };
-
-bool IsInlineTag(HtmlTag tag)
-{
-    return IsInArray((uint8)tag, gInlineTags, dimof(gInlineTags));
 }
 
 static bool SkipUntil(const char*& s, const char *end, char c)
@@ -484,28 +447,9 @@ Next:
     return &currToken;
 }
 
-HtmlTag FindTag(const char *s, size_t len)
-{
-    if (-1 == len)
-        len = str::Len(s);
-    return (HtmlTag)str::FindStrPosI(HTML_TAGS_STRINGS, s, len);
-}
-
 HtmlTag FindTag(HtmlToken *tok)
 {
-    return FindTag(tok->s, GetTagLen(tok));
-}
-
-#if 0
-HtmlAttr FindAttr(AttrInfo *attrInfo)
-{
-    return (HtmlAttr)str::FindStrPosI(HTML_ATTRS_STRINGS, attrInfo->name, attrInfo->nameLen);
-}
-#endif
-
-AlignAttr GetAlignAttrByName(const char *attr, size_t len)
-{
-    return (AlignAttr)str::FindStrPosI(ALIGN_ATTRS_STRINGS, attr, len);
+    return FindHtmlTag(tok->s, GetTagLen(tok));
 }
 
 size_t GetTagLen(const HtmlToken *tok)
@@ -523,4 +467,3 @@ size_t GetTagLen(const HtmlToken *tok)
 #ifdef DEBUG
 #include "HtmlPullParser_ut.cpp"
 #endif
-

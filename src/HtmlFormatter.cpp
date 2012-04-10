@@ -702,7 +702,7 @@ void HtmlFormatter::HandleTagP(HtmlToken *t)
         AlignAttr align = CurrStyle()->align;
         AttrInfo *attr = t->GetAttrByName("align");
         if (attr) {
-            AlignAttr just = GetAlignAttrByName(attr->val, attr->valLen);
+            AlignAttr just = FindAlignAttr(attr->val, attr->valLen);
             if (just != Align_NotFound)
                 align = just;
         }

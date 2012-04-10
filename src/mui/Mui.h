@@ -7,7 +7,7 @@
 #define __STDC_LIMIT_MACROS
 #include "BaseUtil.h"
 #include "BitManip.h"
-#include "HtmlPullParser.h"
+#include "HtmlParserLookup.h"
 #include "Sigslot.h"
 
 namespace mui {
