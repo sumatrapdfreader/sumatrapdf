@@ -1405,8 +1405,8 @@ Exit:
 // classes while we're still using them, so we use this function
 // to block those cases.
 // The right fix is to move to truly async processing where instead
-// of busy-waiting for html loading ot finish, we schedule the
-// remaining of the code to be executed on document loaded
+// of busy-waiting for html loading to finish, we schedule the
+// remaining of the code to be executed in document loaded
 // notification/callback
 bool InHtmlNestedMessagePump()
 {
