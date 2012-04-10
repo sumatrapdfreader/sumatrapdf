@@ -113,8 +113,8 @@ public:
     }
 
     /* current rotation selected by user */
-    int Rotation() const { return _rotation; }
-    void SetRotation(int rotation) { _rotation = rotation; }
+    int Rotation() const { return rotation; }
+    void SetRotation(int newRotation) { rotation = newRotation; }
 
     DisplayMode GetDisplayMode() const { return displayMode; }
     void ChangeDisplayMode(DisplayMode newDisplayMode);
@@ -128,9 +128,7 @@ public:
     float ZoomReal(int pageNo);
     float ZoomAbsolute() const { return _zoomReal * 100 / dpiFactor; }
 
-    bool HasTocTree() const {
-        return engine && engine->HasTocTree();
-    }
+    bool HasTocTree() const { return engine && engine->HasTocTree();}
     int CurrentPageNo() const;
 
     BaseEngine *    engine;
@@ -250,7 +248,7 @@ protected:
        except for ZOOM_FIT_PAGE, ZOOM_FIT_WIDTH and ZOOM_FIT_CONTENT */
     float           _zoomReal;
     float           _zoomVirtual;
-    int             _rotation;
+    int             rotation;
     /* dpi correction factor by which _zoomVirtual has to be multiplied in
        order to get _zoomReal */
     float           dpiFactor;

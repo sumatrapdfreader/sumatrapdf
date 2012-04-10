@@ -135,7 +135,7 @@ void DisplayModel::DisplayStateFromModel(DisplayState *ds)
         str::ReplacePtr(&ds->filePath, FilePath());
 
     ds->displayMode = presentationMode ? presDisplayMode : GetDisplayMode();
-    ds->rotation = _rotation;
+    ds->rotation = rotation;
     ds->zoomVirtual = presentationMode ? presZoomVirtual : _zoomVirtual;
 
     ScrollState ss = GetScrollState();
@@ -159,7 +159,7 @@ SizeD DisplayModel::PageSizeAfterRotation(int pageNo, bool fitToContent)
     }
 
     RectD box = fitToContent ? pageInfo->contentBox : pageInfo->page;
-    return engine->Transform(box, pageNo, 1.0, _rotation).Size();
+    return engine->Transform(box, pageNo, 1.0, rotation).Size();
 }
 
 /* given 'columns' and an absolute 'pageNo', return the number of the first
@@ -194,7 +194,7 @@ DisplayModel::DisplayModel(DisplayModelCallback *cb)
     displayMode = DM_AUTOMATIC;
     presDisplayMode = DM_AUTOMATIC;
     presZoomVirtual = INVALID_ZOOM;
-    _rotation = 0;
+    rotation = 0;
     _zoomVirtual = INVALID_ZOOM;
     padding = &gPagePadding;
     presentationMode = false;
@@ -401,12 +401,12 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo)
         int last = LastPageInARowNo(pageNo, columns, displayModeShowCover(GetDisplayMode()), PageCount());
         for (int i = first; i <= last; i++) {
             PageInfo *pageInfo = GetPageInfo(i);
-            RectD pageBox = engine->Transform(pageInfo->page, i, 1.0, _rotation);
+            RectD pageBox = engine->Transform(pageInfo->page, i, 1.0, rotation);
             row.dx += pageBox.dx;
 
             if (pageInfo->contentBox.IsEmpty())
                 pageInfo->contentBox = engine->PageContentBox(i);
-            RectD rotatedContent = engine->Transform(pageInfo->contentBox, i, 1.0, _rotation);
+            RectD rotatedContent = engine->Transform(pageInfo->contentBox, i, 1.0, rotation);
             if (i == first && !rotatedContent.IsEmpty())
                 row.dx -= (rotatedContent.x - pageBox.x);
             if (i == last && !rotatedContent.IsEmpty())
@@ -551,7 +551,7 @@ float DisplayModel::ZoomReal(int pageNo)
      * rotation changes
      * switching between display modes
      * navigating to another page in non-continuous mode */
-void DisplayModel::Relayout(float zoomVirtual, int rotation)
+void DisplayModel::Relayout(float zoomVirtual, int newRotation)
 {
     // an optimization: the code below doesn't make sense for chm
     // and causes SetZoomVirtual() to be called 3 times, so skip it
@@ -564,7 +564,7 @@ void DisplayModel::Relayout(float zoomVirtual, int rotation)
     if (!pagesInfo)
         return;
 
-    _rotation = normalizeRotation(rotation);
+    rotation = normalizeRotation(newRotation);
 
     bool needHScroll = false;
     bool needVScroll = false;
@@ -740,7 +740,7 @@ void DisplayModel::ChangeStartPage(int startPage)
             pageInfo->shown = false;
         pageInfo->visibleRatio = 0.0;
     }
-    Relayout(_zoomVirtual, _rotation);
+    Relayout(_zoomVirtual, rotation);
 }
 
 /* Given positions of each page in a large sheet that is continous view and
@@ -828,7 +828,7 @@ PointI DisplayModel::CvtToScreen(int pageNo, PointD pt)
     if (!pageInfo)
         return PointI();
 
-    PointD p = engine->Transform(pt, pageNo, _zoomReal, _rotation);
+    PointD p = engine->Transform(pt, pageNo, _zoomReal, rotation);
     p.x += 0.5 + pageInfo->pageOnScreen.x;
     p.y += 0.5 + pageInfo->pageOnScreen.y;
 
@@ -854,7 +854,7 @@ PointD DisplayModel::CvtFromScreen(PointI pt, int pageNo)
 
     PointD p = PointD(pt.x - 0.5 - pageInfo->pageOnScreen.x,
                       pt.y - 0.5 - pageInfo->pageOnScreen.y);
-    return engine->Transform(p, pageNo, _zoomReal, _rotation, true);
+    return engine->Transform(p, pageNo, _zoomReal, rotation, true);
 }
 
 RectD DisplayModel::CvtFromScreen(RectI r, int pageNo)
@@ -952,7 +952,7 @@ void DisplayModel::ChangeViewPortSize(SizeI newViewPortSize)
         ss = GetScrollState();
 
     totalViewPortSize = newViewPortSize;
-    Relayout(_zoomVirtual, _rotation);
+    Relayout(_zoomVirtual, rotation);
 
     if (isDocReady) {
         // when fitting to content, let GoToPage do the necessary scrolling
@@ -980,7 +980,7 @@ RectD DisplayModel::GetContentBox(int pageNo, RenderTarget target)
     else
         cbox = engine->PageContentBox(pageNo, target);
 
-    return engine->Transform(cbox, pageNo, _zoomReal, _rotation);
+    return engine->Transform(cbox, pageNo, _zoomReal, rotation);
 }
 
 /* get the (screen) coordinates of the point where a page's actual
@@ -1022,7 +1022,7 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
         // the zoom level for (visibility will be recalculated below anyway)
         for (int i =  PageCount(); i > 0; i--)
             GetPageInfo(i)->visibleRatio = (i == pageNo ? 1.0f : 0);
-        Relayout(_zoomVirtual, _rotation);
+        Relayout(_zoomVirtual, rotation);
     }
     //lf("DisplayModel::GoToPage(pageNo=%d, scrollY=%d)", pageNo, scrollY);
     PageInfo * pageInfo = GetPageInfo(pageNo);
@@ -1085,7 +1085,7 @@ void DisplayModel::ChangeDisplayMode(DisplayMode newDisplayMode)
             pageInfo->shown = true;
             pageInfo->visibleRatio = 0.0;
         }
-        Relayout(_zoomVirtual, _rotation);
+        Relayout(_zoomVirtual, rotation);
     }
     GoToPage(currPageNo, 0);
 }
@@ -1320,7 +1320,7 @@ void DisplayModel::ZoomTo(float zoomLevel, PointI *fixPt)
     }
 
     //lf("DisplayModel::zoomTo() zoomLevel=%.6f", _zoomLevel);
-    Relayout(zoomLevel, _rotation);
+    Relayout(zoomLevel, rotation);
     SetScrollState(ss);
 
     if (fixPt) {
@@ -1415,7 +1415,7 @@ void DisplayModel::RotateBy(int newRotation)
     assert(0 != newRotation);
     if (0 == newRotation)
         return;
-    newRotation = normalizeRotation(newRotation + _rotation);
+    newRotation = normalizeRotation(newRotation + rotation);
 
     int currPageNo = CurrentPageNo();
     Relayout(_zoomVirtual, newRotation);
