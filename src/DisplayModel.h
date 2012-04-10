@@ -108,9 +108,7 @@ public:
     const TCHAR *FilePath() const { return engine->FileName(); }
     /* number of pages in the document */
     int  PageCount() const { return engine->PageCount(); }
-    bool ValidPageNo(int pageNo) const {
-        return 1 <= pageNo && pageNo <= engine->PageCount();
-    }
+    bool ValidPageNo(int pageNo) const { return 1 <= pageNo && pageNo <= engine->PageCount(); }
 
     /* current rotation selected by user */
     int Rotation() const { return rotation; }
@@ -234,7 +232,7 @@ protected:
     /* In non-continuous mode is the first page from a file that we're
        displaying.
        No meaning in continous mode. */
-    int             _startPage;
+    int             startPage;
 
     /* A callback to notify UI about required changes */
     DisplayModelCallback *dmCb;

@@ -200,7 +200,7 @@ DisplayModel::DisplayModel(DisplayModelCallback *cb)
     presentationMode = false;
     _zoomReal = INVALID_ZOOM;
     dpiFactor = 1.0f;
-    _startPage = INVALID_PAGE_NO;
+    startPage = INVALID_PAGE_NO;
     dmCb = cb;
 
     engine = NULL;
@@ -245,7 +245,7 @@ void DisplayModel::SetInitialViewSettings(DisplayMode newDisplayMode, int newSta
     totalViewPortSize = viewPort;
     dpiFactor = 1.0f * screenDPI / engine->GetFileDPI();
     if (ValidPageNo(newStartPage))
-        _startPage = newStartPage;
+        startPage = newStartPage;
 
     if (AsChmEngine())
         displayMode = DM_SINGLE_PAGE;
@@ -277,7 +277,7 @@ bool DisplayModel::Load(const TCHAR *fileName, PasswordUI *pwdUI)
     if (!engine)
         return false;
     assert(engine->PageCount() > 0);
-    _startPage = 1;
+    startPage = 1;
     if (engine->IsImageCollection())
         padding = &gImagePadding;
     if (AsChmEngine())
@@ -304,9 +304,9 @@ void DisplayModel::BuildPagesInfo()
         defaultRect = RectD(0, 0, 8.5 * engine->GetFileDPI(), 11 * engine->GetFileDPI());
 
     int columns = columnsFromDisplayMode(displayMode);
-    int startPage = _startPage;
-    if (displayModeShowCover(displayMode) && startPage == 1 && columns > 1)
-        startPage--;
+    int newStartPage = startPage;
+    if (displayModeShowCover(displayMode) && newStartPage == 1 && columns > 1)
+        newStartPage--;
     for (int pageNo = 1; pageNo <= pageCount; pageNo++) {
         PageInfo *pageInfo = GetPageInfo(pageNo);
         pageInfo->page = engine->PageMediabox(pageNo);
@@ -317,7 +317,7 @@ void DisplayModel::BuildPagesInfo()
         pageInfo->shown = false;
         if (displayModeContinuous(displayMode))
             pageInfo->shown = true;
-        else if (startPage <= pageNo && pageNo < startPage + columns)
+        else if (newStartPage <= pageNo && pageNo < newStartPage + columns)
             pageInfo->shown = true;
     }
 }
@@ -463,7 +463,7 @@ int DisplayModel::CurrentPageNo() const
         return AsChmEngine()->CurrentPageNo();
 
     if (!displayModeContinuous(GetDisplayMode()))
-        return _startPage;
+        return startPage;
 
     assert(pagesInfo);
     if (!pagesInfo) return INVALID_PAGE_NO;
@@ -720,15 +720,15 @@ RestartLayout:
     canvasSize = SizeI(max(canvasDx, viewPort.dx), max(canvasDy, viewPort.dy));
 }
 
-void DisplayModel::ChangeStartPage(int startPage)
+void DisplayModel::ChangeStartPage(int newStartPage)
 {
     assert(ValidPageNo(startPage));
     assert(!displayModeContinuous(GetDisplayMode()));
 
     int columns = columnsFromDisplayMode(GetDisplayMode());
-    _startPage = startPage;
-    if (displayModeShowCover(GetDisplayMode()) && startPage == 1 && columns > 1)
-        startPage--;
+    startPage = newStartPage;
+    if (displayModeShowCover(GetDisplayMode()) && newStartPage == 1 && columns > 1)
+        newStartPage--;
     for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
         PageInfo *pageInfo = GetPageInfo(pageNo);
         if (displayModeContinuous(GetDisplayMode()))
@@ -796,10 +796,10 @@ int DisplayModel::GetPageNoByPoint(PointI pt)
 int DisplayModel::GetPageNextToPoint(PointI pt)
 {
     if (_zoomReal <= 0)
-        return _startPage;
+        return startPage;
 
     double maxDist = -1;
-    int closest = _startPage;
+    int closest = startPage;
 
     for (int pageNo = 1; pageNo <= PageCount(); ++pageNo) {
         PageInfo *pageInfo = GetPageInfo(pageNo);
@@ -947,7 +947,7 @@ void DisplayModel::ChangeViewPortSize(SizeI newViewPortSize)
 {
     ScrollState ss;
 
-    bool isDocReady = ValidPageNo(_startPage) && _zoomReal != 0;
+    bool isDocReady = ValidPageNo(startPage) && _zoomReal != 0;
     if (isDocReady)
         ss = GetScrollState();
 
@@ -1198,8 +1198,8 @@ bool DisplayModel::GoToFirstPage()
             return false;
         }
     } else {
-        assert(PageShown(_startPage));
-        if (1 == _startPage) {
+        assert(PageShown(startPage));
+        if (1 == startPage) {
             /* we're on a first page already */
             return false;
         }
@@ -1257,8 +1257,8 @@ void DisplayModel::ScrollYBy(int dy, bool changePage)
 
     if (!displayModeContinuous(GetDisplayMode()) && changePage) {
         if ((dy < 0) && (0 == currYOff)) {
-            if (_startPage > 1) {
-                newPageNo = _startPage-1;
+            if (startPage > 1) {
+                newPageNo = startPage - 1;
                 assert(ValidPageNo(newPageNo));
                 pageInfo = GetPageInfo(newPageNo);
                 newYOff = pageInfo->pos.dy - viewPort.dy;
@@ -1270,7 +1270,7 @@ void DisplayModel::ScrollYBy(int dy, bool changePage)
         }
 
         /* see if we have to change page when scrolling forward */
-        if ((dy > 0) && (_startPage < PageCount())) {
+        if ((dy > 0) && (startPage < PageCount())) {
             if (viewPort.y + viewPort.dy >= canvasSize.dy) {
                 GoToNextPage(0);
                 return;
