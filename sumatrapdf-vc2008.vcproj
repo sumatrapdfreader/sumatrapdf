@@ -1029,6 +1029,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\mupdf\fitz\image_jxr.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\mupdf\fitz\image_md5.c"
 					>
 				</File>

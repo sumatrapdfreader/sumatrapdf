@@ -1493,12 +1493,14 @@ public:
 
 static NativeLock globalLock;
 
-extern "C" void fz_synchronize_begin()
+extern "C" void
+fz_synchronize_begin()
 {
 	globalLock.Acquire();
 }
 
-extern "C" void fz_synchronize_end()
+extern "C" void
+fz_synchronize_end()
 {
 	globalLock.Release();
 }

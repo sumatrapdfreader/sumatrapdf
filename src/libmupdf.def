@@ -221,6 +221,7 @@ EXPORTS
 	fz_load_jpeg
 	fz_load_png
 	fz_load_tiff
+	fz_load_jxr
 	fz_new_halftone
 	fz_default_halftone
 	fz_drop_halftone

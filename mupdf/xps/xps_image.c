@@ -45,7 +45,7 @@ xps_load_image(fz_context *ctx, byte *buf, int len)
 	else if (memcmp(buf, "\211PNG\r\n\032\n", 8) == 0)
 		pix = fz_load_png(ctx, buf, len);
 	else if (memcmp(buf, "II", 2) == 0 && buf[2] == 0xBC)
-		fz_throw(ctx, "JPEG-XR codec is not available");
+		pix = fz_load_jxr(ctx, buf, len);
 	else if (memcmp(buf, "MM", 2) == 0 || memcmp(buf, "II", 2) == 0)
 		pix = fz_load_tiff(ctx, buf, len);
 	else

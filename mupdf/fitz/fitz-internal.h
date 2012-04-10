@@ -641,6 +641,8 @@ fz_pixmap *fz_load_jpx(fz_context *ctx, unsigned char *data, int size, fz_colors
 fz_pixmap *fz_load_jpeg(fz_context *doc, unsigned char *data, int size);
 fz_pixmap *fz_load_png(fz_context *doc, unsigned char *data, int size);
 fz_pixmap *fz_load_tiff(fz_context *doc, unsigned char *data, int size);
+/* SumatraPDF: support JPEG-XR images */
+fz_pixmap *fz_load_jxr(fz_context *ctx, unsigned char *data, int size);
 
 struct fz_halftone_s
 {

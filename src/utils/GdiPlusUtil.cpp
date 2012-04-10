@@ -2,6 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
+#include <wincodec.h>
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "TgaReader.h"
@@ -205,43 +206,37 @@ void GetBaseTransform(Matrix& m, RectF pageRect, float zoom, int rotation)
     m.Rotate((REAL)rotation, MatrixOrderAppend);
 }
 
-#include <wincodec.h>
-
-// cf. http://msdn.microsoft.com/en-us/magazine/cc500647.aspx
-IStream *HdPhotoToPngStream(IStream *stream)
+Bitmap *ImageFromHdPhotoStream(IStream *stream)
 {
-    ScopedComPtr<IWICBitmapDecoder> pDecoder;
-    ScopedComPtr<IWICBitmapEncoder> pEncoder;
-    ScopedComPtr<IWICBitmapFrameDecode> srcFrame;
-    ScopedComPtr<IWICBitmapFrameEncode> dstFrame;
-    ScopedComPtr<IStream> pngStream;
-    WICPixelFormatGUID pixelFormat;
-    UINT width, height;
+    ScopedCom com;
 
 #define HR(hr) if (FAILED(hr)) return NULL;
-    HR(CoCreateInstance(CLSID_WICWmpDecoder, NULL, CLSCTX_INPROC_SERVER,
-                        IID_IWICBitmapDecoder, (void **)&pDecoder));
-    HR(CoCreateInstance(CLSID_WICPngEncoder, NULL, CLSCTX_INPROC_SERVER,
-                        IID_IWICBitmapEncoder, (void **)&pEncoder));
-
-    HR(pDecoder->Initialize(stream, WICDecodeMetadataCacheOnDemand));
+    ScopedComPtr<IWICImagingFactory> pFactory;
+    HR(CoCreateInstance(CLSID_WICImagingFactory, NULL, CLSCTX_ALL,
+                        IID_IWICImagingFactory, (void **)&pFactory));
+    ScopedComPtr<IWICBitmapDecoder> pDecoder;
+    HR(pFactory->CreateDecoderFromStream(stream, NULL, WICDecodeMetadataCacheOnDemand,
+                                         &pDecoder));
+    ScopedComPtr<IWICBitmapFrameDecode> srcFrame;
     HR(pDecoder->GetFrame(0, &srcFrame));
-    HR(srcFrame->GetSize(&width, &height));
-    HR(srcFrame->GetPixelFormat(&pixelFormat));
+    ScopedComPtr<IWICFormatConverter> pConverter;
+    HR(pFactory->CreateFormatConverter(&pConverter));
+    HR(pConverter->Initialize(srcFrame, GUID_WICPixelFormat32bppBGRA,
+                              WICBitmapDitherTypeNone, NULL, 0.f, WICBitmapPaletteTypeCustom));
 
-    HR(CreateStreamOnHGlobal(NULL, TRUE, &pngStream));
-    HR(pEncoder->Initialize(pngStream, WICBitmapEncoderNoCache));
-    HR(pEncoder->CreateNewFrame(&dstFrame, NULL));
-    HR(dstFrame->Initialize(NULL));
-    HR(dstFrame->SetSize(width, height));
-    HR(dstFrame->SetPixelFormat(&pixelFormat));
-    HR(dstFrame->WriteSource(srcFrame, NULL));
-    HR(dstFrame->Commit());
-    HR(pEncoder->Commit());
+    UINT w, h;
+    HR(pConverter->GetSize(&w, &h));
+    Bitmap bmp(w, h, PixelFormat32bppARGB);
+    BitmapData bmpData;
+    Status ok = bmp.LockBits(&Rect(0, 0, w, h), ImageLockModeWrite, PixelFormat32bppARGB, &bmpData);
+    if (ok != Ok)
+        return NULL;
+    HR(pConverter->CopyPixels(NULL, bmpData.Stride, w * h * 4, (BYTE *)bmpData.Scan0));
+    bmp.UnlockBits(&bmpData);
 #undef HR
 
-    pngStream->AddRef();
-    return pngStream;
+    // hack to avoid the use of ::new (because there won't be a corresponding ::delete)
+    return bmp.Clone(0, 0, w, h, PixelFormat32bppARGB);
 }
 
 enum ImgFormat {
@@ -303,19 +298,14 @@ Bitmap *BitmapFromData(const char *data, size_t len)
     ScopedComPtr<IStream> stream(CreateStreamFromData(data, len));
     if (!stream)
         return NULL;
-
-    if (Img_JXR == format) {
-        stream = HdPhotoToPngStream(stream);
-        if (!stream)
-            return NULL;
-    }
+    if (Img_JXR == format)
+        return ImageFromHdPhotoStream(stream);
 
     Bitmap *bmp = Bitmap::FromStream(stream);
     if (bmp && bmp->GetLastStatus() != Ok) {
         delete bmp;
         bmp = NULL;
     }
-
     return bmp;
 }
 
@@ -377,6 +367,9 @@ Size BitmapSizeFromData(const char *data, size_t len)
             ix += BEtoHs(*(WORD *)(data + ix + 2)) + 2;
         }
         break;
+    case Img_JXR:
+        // TODO: speed this up (if necessary)
+        break;
     case Img_PNG:
         if (len >= 24 && str::StartsWith(data + 12, "IHDR")) {
             DWORD width = BEtoHl(*(DWORD *)(data + 16));
@@ -398,7 +391,7 @@ Size BitmapSizeFromData(const char *data, size_t len)
 
     if (result.Empty()) {
         // let GDI+ extract the image size if we've failed
-        // (currently happens for animated GIFs and for all TIFFs)
+        // (currently happens for animated GIFs and for all TIFFs and JXRs)
         Bitmap *bmp = BitmapFromData(data, len);
         if (bmp)
             result = Size(bmp->GetWidth(), bmp->GetHeight());
