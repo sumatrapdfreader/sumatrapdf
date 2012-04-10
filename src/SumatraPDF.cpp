@@ -1323,9 +1323,13 @@ void LoadDocument2(const TCHAR *fileName, SumatraWindow& win)
     LoadDocument(args);
 }
 
+// 
+// TODO: write me
 static WindowInfo* LoadDocumentNew(LoadArgs& args)
 {
-    // TODO: write me
+    ScopedMem<TCHAR> fullPath(path::Normalize(args.fileName));
+    // TODO: try to find file on other drives if doesn't exist
+
     CrashIf(true);
     return NULL;
 }

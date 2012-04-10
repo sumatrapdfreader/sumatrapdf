@@ -173,7 +173,6 @@ TCHAR *GetLanguageName(int langIdx)
     return str::conv::FromUtf8(gLangData[langIdx].fullName);
 }
 
-// TODO: use GetLocaleInfoEx() (http://blogs.msdn.com/b/oldnewthing/archive/2011/12/22/10250164.aspx)
 bool IsLanguageRtL(int langIdx)
 {
     assert(IsValidLangIdx(langIdx));

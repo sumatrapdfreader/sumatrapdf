@@ -48,3 +48,12 @@ A random list of itmes to implement sooner or later:
         for a given document in preferences
 - mobi: 2 page display
 - ebook ui: rtl support
+- async saving of preferences. To avoid excessive saving,
+  maybe introduce a notion of 'dirty' state and call
+  SavePrefsIfNeeded() at the very end of operations
+  that might have changed prefs. Serialization can
+  probably happen on main thread (to minimize implempentation
+  complexity). Care needs to be taken to not start
+  a new save when one is still going on
+  (we could treat that as a corner case and quit
+  SavePrefsIfNeeded() withough changing dirty state)
