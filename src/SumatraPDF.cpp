@@ -1329,7 +1329,10 @@ void LoadDocument2(const TCHAR *fileName, SumatraWindow& win)
     LoadDocument(args);
 }
 
-// 
+// Load a file into a new or existing window, show error message
+// if loading failed, set the right window position (based on history
+// settings for this file or default position), update file history,
+// update frequently read information, generate a thumbnail if necessary
 // TODO: write me
 static WindowInfo* LoadDocumentNew(LoadArgs& args)
 {

@@ -345,6 +345,9 @@ F&ullscreen\tCtrl+Shift+L
 Facing
 Page double
 
+Failed to rename the file!
+Impossible de renommer le fichier!
+
 Failed to save a file
 Échec à l'enregistrement du fichier
 
@@ -564,6 +567,9 @@ Impression de la page %d sur %d...
 Printing problem.
 Problème d'impression.
 
+Re&name...\tF2
+Re&nommer...\tF2
+
 Remember &opened files
 Se rappeler les fichiers &ouverts
 
@@ -572,6 +578,9 @@ Enlever des favoris
 
 Remove page %s from favorites
 Enlever page %s des favoris
+
+Rename To
+Renommer En
 
 Replace document &colors with Windows color scheme
 Remplacer les &couleurs du document par le schéma de couleurs Windows
@@ -698,9 +707,4 @@ copie du texte
 
 printing document
 impression du document
-
-# Untranslated:
-#Failed to rename the file!
-#Re&name...\tF2
-#Rename To
 
