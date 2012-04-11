@@ -81,13 +81,24 @@ RectF MeasureTextStandard(Graphics *g, Font *f, const WCHAR *s, size_t len)
 
 RectF MeasureTextQuick(Graphics *g, Font *f, const WCHAR *s, size_t len)
 {
+    static Vec<Font *> fontCache;
+    static Vec<bool> fixCache;
+
     RectF bbox;
     g->MeasureString(s, len, f, PointF(0, 0), &bbox);
-    INT style = f->GetStyle();
-    LOGFONTW lfw;
-    Status ok = f->GetLogFontW(g, &lfw);
+    int idx = fontCache.Find(f);
+    if (-1 == idx) {
+        INT style = f->GetStyle();
+        LOGFONTW lfw;
+        Status ok = f->GetLogFontW(g, &lfw);
+        bool isItalicOrMonospace = (style & FontStyleItalic) || Ok != ok ||
+                                   str::Eq(lfw.lfFaceName, L"Courier New");
+        fontCache.Append(f);
+        fixCache.Append(isItalicOrMonospace);
+        idx = (int)fontCache.Count() - 1;
+    }
     // most documents look good enough with these adjustments
-    if (!(style & FontStyleItalic) && Ok == ok && !str::Eq(lfw.lfFaceName, L"Courier New"))
+    if (!fixCache.At(idx))
         bbox.Width *= 0.92f;
     bbox.Height *= 0.96f;
     return bbox;
