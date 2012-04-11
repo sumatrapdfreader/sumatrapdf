@@ -4,7 +4,6 @@
 #include "BaseUtil.h"
 #include "SumatraProperties.h"
 
-#include "EbookController.h"
 #include "EbookWindow.h"
 #include "FileUtil.h"
 #include "resource.h"
@@ -173,13 +172,16 @@ static TCHAR *FormatPageSize(BaseEngine *engine, int pageNo, int rotation)
 
 // returns a list of permissions denied by this document
 // Caller needs to free the result
-static TCHAR *FormatPermissions(BaseEngine *engine)
+static TCHAR *FormatPermissions(Doc doc)
 {
+    if (!doc.IsEngine())
+        return NULL;
+
     StrVec denials;
 
-    if (!engine->IsPrintingAllowed())
+    if (!doc.AsEngine()->IsPrintingAllowed())
         denials.Push(str::Dup(_TR("printing document")));
-    if (!engine->IsCopyingTextAllowed())
+    if (!doc.AsEngine()->IsCopyingTextAllowed())
         denials.Push(str::Dup(_TR("copying text")));
 
     return denials.Join(_T(", "));
@@ -300,139 +302,10 @@ static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData)
     return true;
 }
 
-/*
-Example xref->info ("Info") object:
-<<
- /Title (javascript performance rocks checklist.graffle)
- /Author (Amy Hoy)
- /Subject <>
- /Creator (OmniGraffle Professional)
- /Producer (Mac OS X 10.5.8 Quartz PDFContext)
-
- /CreationDate (D:20091017155028Z)
- /ModDate (D:20091019165730+02'00')
-
- /AAPL:Keywords [ <> ]
- /Keywords <>
->>
-*/
-static void GetProps(BaseEngine *engine, EngineType engineType, PropertiesLayout *layoutData, DisplayModel *dm, bool extended=false)
+static void GetProps(Doc doc, PropertiesLayout *layoutData, DisplayModel *dm, bool extended)
 {
-    TCHAR *str = str::Dup(gPluginMode ? gPluginURL : engine->FileName());
-    layoutData->AddProperty(_TR("File:"), str);
-
-    str = engine->GetProperty("Title");
-    layoutData->AddProperty(_TR("Title:"), str);
-
-    str = engine->GetProperty("Subject");
-    layoutData->AddProperty(_TR("Subject:"), str);
-
-    str = engine->GetProperty("Author");
-    layoutData->AddProperty(_TR("Author:"), str);
-
-    str = engine->GetProperty("Copyright");
-    layoutData->AddProperty(_TR("Copyright:"), str);
-
-    str = engine->GetProperty("CreationDate");
-    if (Engine_PDF == engineType)
-        ConvDateToDisplay(&str, PdfDateParse);
-    else if (Engine_XPS == engineType)
-        ConvDateToDisplay(&str, IsoDateParse);
-    else if (Engine_Epub == engineType)
-        ConvDateToDisplay(&str, IsoDateParse);
-    layoutData->AddProperty(_TR("Created:"), str);
-
-    str = engine->GetProperty("ModDate");
-    if (Engine_PDF == engineType)
-        ConvDateToDisplay(&str, PdfDateParse);
-    else if (Engine_XPS == engineType)
-        ConvDateToDisplay(&str, IsoDateParse);
-    else if (Engine_Epub == engineType)
-        ConvDateToDisplay(&str, IsoDateParse);
-    layoutData->AddProperty(_TR("Modified:"), str);
-
-    str = engine->GetProperty("Creator");
-    layoutData->AddProperty(_TR("Application:"), str);
-
-    str = engine->GetProperty("Producer");
-    layoutData->AddProperty(_TR("PDF Producer:"), str);
-
-    str = engine->GetProperty("PdfVersion");
-    layoutData->AddProperty(_TR("PDF Version:"), str);
-
-    size_t fileSize = file::GetSize(engine->FileName());
-    if (fileSize == INVALID_FILE_SIZE) {
-        unsigned char *data = engine->GetFileData(&fileSize);
-        free(data);
-    }
-    if (fileSize != INVALID_FILE_SIZE) {
-        str = FormatFileSize(fileSize);
-        layoutData->AddProperty(_TR("File Size:"), str);
-    }
-
-    str = str::Format(_T("%d"), engine->PageCount());
-    layoutData->AddProperty(_TR("Number of Pages:"), str);
-
-    if (dm && engineType != Engine_Chm) {
-        str = FormatPageSize(engine, dm->CurrentPageNo(), dm->Rotation());
-#ifdef UNICODE
-        if (IsUIRightToLeft() && WindowsVerVistaOrGreater()) {
-            ScopedMem<TCHAR> tmp(str);
-            // ensure that the size remains ungarbled left-to-right
-            // (note: XP doesn't know about \u202A...\u202C)
-            str = str::Format(_T("\u202A%s\u202C"), tmp);
-        }
-#endif
-        layoutData->AddProperty(_TR("Page Size:"), str);
-    }
-
-    str = FormatPermissions(engine);
-    layoutData->AddProperty(_TR("Denied Permissions:"), str);
-
-    // TODO: this is about linearlized PDF. Looks like mupdf would
-    // have to be extended to detect linearlized PDF. The rules are described
-    // in F3.3 of http://www.adobe.com/devnet/acrobat/pdfs/PDF32000_2008.pdf
-    // layoutData->AddProperty(_T("Fast Web View:"), str::Dup(_T("No")));
-
-    // TODO: probably needs to extend mupdf to get this information.
-    // Tagged PDF rules are described in 14.8.2 of
-    // http://www.adobe.com/devnet/acrobat/pdfs/PDF32000_2008.pdf
-    // layoutData->AddProperty(_T("Tagged PDF:"), str::Dup(_T("No")));
-
-#if defined(DEBUG) || defined(ENABLE_EXTENDED_PROPERTIES)
-    if (extended) {
-        // TODO: FontList extraction can take a while
-        str = engine->GetProperty("FontList");
-        if (str) {
-            // add a space between basic and extended file properties
-            layoutData->AddProperty(_T(" "), str::Dup(_T(" ")));
-        }
-        layoutData->AddProperty(_TR("Fonts:"), str);
-    }
-#endif
-}
-
-static void ShowProperties(WindowInfo& win, bool extended=false)
-{
-    PropertiesLayout *layoutData = FindPropertyWindowByParent(win.hwndFrame);
-    if (layoutData) {
-        SetActiveWindow(layoutData->hwnd);
-        return;
-    }
-
-    if (!win.IsDocLoaded())
-        return;
-    layoutData = new PropertiesLayout();
-    gPropertiesWindows.Append(layoutData);
-    GetProps(win.dm->engine, win.dm->engineType, layoutData, win.dm, extended);
-
-    if (!CreatePropertiesWindow(win.hwndFrame, layoutData))
-        delete layoutData;
-}
-
-static void GetProps(Doc doc, PropertiesLayout *layoutData)
-{
-    CrashIf(!doc.IsEbook());
+    CrashIf(!doc.IsEngine() && !doc.IsEbook());
+    EngineType engineType = doc.GetEngineType();
 
     TCHAR *str = str::Dup(gPluginMode ? gPluginURL : doc.GetFilePath());
     layoutData->AddProperty(_TR("File:"), str);
@@ -450,42 +323,108 @@ static void GetProps(Doc doc, PropertiesLayout *layoutData)
     layoutData->AddProperty(_TR("Copyright:"), str);
 
     str = doc.GetProperty("CreationDate");
-    if (doc.AsEpub())
+    if (Engine_PDF == engineType)
+        ConvDateToDisplay(&str, PdfDateParse);
+    else if (Engine_XPS == engineType)
+        ConvDateToDisplay(&str, IsoDateParse);
+    else if (Engine_Epub == engineType || doc.AsEpub())
         ConvDateToDisplay(&str, IsoDateParse);
     layoutData->AddProperty(_TR("Created:"), str);
 
+    str = doc.GetProperty("ModDate");
+    if (Engine_PDF == engineType)
+        ConvDateToDisplay(&str, PdfDateParse);
+    else if (Engine_XPS == engineType)
+        ConvDateToDisplay(&str, IsoDateParse);
+    else if (Engine_Epub == engineType || doc.AsEpub())
+        ConvDateToDisplay(&str, IsoDateParse);
+    layoutData->AddProperty(_TR("Modified:"), str);
+
+    str = doc.GetProperty("Creator");
+    layoutData->AddProperty(_TR("Application:"), str);
+
+    str = doc.GetProperty("Producer");
+    // TODO: remove PDF from string
+    layoutData->AddProperty(_TR("PDF Producer:"), str);
+
+    str = doc.GetProperty("PdfVersion");
+    layoutData->AddProperty(_TR("PDF Version:"), str);
+
     size_t fileSize = file::GetSize(doc.GetFilePath());
+    if (fileSize == INVALID_FILE_SIZE && doc.IsEngine())
+        free(doc.AsEngine()->GetFileData(&fileSize));
     if (fileSize != INVALID_FILE_SIZE) {
         str = FormatFileSize(fileSize);
         layoutData->AddProperty(_TR("File Size:"), str);
     }
+
+    if (doc.IsEngine()) {
+        str = str::Format(_T("%d"), doc.AsEngine()->PageCount());
+        layoutData->AddProperty(_TR("Number of Pages:"), str);
+    }
+
+    if (dm && dm->engineType != Engine_Chm) {
+        str = FormatPageSize(dm->engine, dm->CurrentPageNo(), dm->Rotation());
+#ifdef UNICODE
+        if (IsUIRightToLeft() && WindowsVerVistaOrGreater()) {
+            // ensure that the size remains ungarbled left-to-right
+            // (note: XP doesn't know about \u202A...\u202C)
+            str = str::Format(_T("\u202A%s\u202C"), ScopedMem<TCHAR>(str));
+        }
+#endif
+        layoutData->AddProperty(_TR("Page Size:"), str);
+    }
+
+    str = FormatPermissions(doc);
+    layoutData->AddProperty(_TR("Denied Permissions:"), str);
+
+    // TODO: this is about linearlized PDF. Looks like mupdf would
+    // have to be extended to detect linearlized PDF. The rules are described
+    // in F3.3 of http://www.adobe.com/devnet/acrobat/pdfs/PDF32000_2008.pdf
+    // layoutData->AddProperty(_T("Fast Web View:"), str::Dup(_T("No")));
+
+    // TODO: probably needs to extend mupdf to get this information.
+    // Tagged PDF rules are described in 14.8.2 of
+    // http://www.adobe.com/devnet/acrobat/pdfs/PDF32000_2008.pdf
+    // layoutData->AddProperty(_T("Tagged PDF:"), str::Dup(_T("No")));
+
+#if defined(DEBUG) || defined(ENABLE_EXTENDED_PROPERTIES)
+    if (extended) {
+        // TODO: FontList extraction can take a while
+        str = doc.GetProperty("FontList");
+        if (str) {
+            // add a space between basic and extended file properties
+            layoutData->AddProperty(_T(" "), str::Dup(_T(" ")));
+        }
+        layoutData->AddProperty(_TR("Fonts:"), str);
+    }
+#endif
 }
 
-static void ShowProperties(EbookWindow *win)
+static void ShowProperties(HWND parent, Doc doc, DisplayModel *dm, bool extended=false)
 {
-    PropertiesLayout *layoutData = FindPropertyWindowByParent(win->hwndFrame);
+    PropertiesLayout *layoutData = FindPropertyWindowByParent(parent);
     if (layoutData) {
         SetActiveWindow(layoutData->hwnd);
         return;
     }
 
-    Doc doc = win->ebookController->GetDoc();
-    if (!doc.IsEbook())
+    if (!doc.IsEngine() && !doc.IsEbook())
         return;
     layoutData = new PropertiesLayout();
     gPropertiesWindows.Append(layoutData);
-    GetProps(doc, layoutData);
+    GetProps(doc, layoutData, dm, extended);
 
-    if (!CreatePropertiesWindow(win->hwndFrame, layoutData))
+    if (!CreatePropertiesWindow(parent, layoutData))
         delete layoutData;
 }
 
 void OnMenuProperties(SumatraWindow& win)
 {
     if (win.AsWindowInfo())
-        ShowProperties(*win.AsWindowInfo());
+        ShowProperties(win.AsWindowInfo()->hwndFrame, GetDocForWindow(win), win.AsWindowInfo()->dm);
     else if (win.AsEbookWindow())
-        ShowProperties(win.AsEbookWindow());
+        ShowProperties(win.AsEbookWindow()->hwndFrame, GetDocForWindow(win), NULL);
 }
 
 static void DrawProperties(HWND hwnd, HDC hdc)
@@ -579,7 +518,7 @@ static void PropertiesOnCommand(HWND hwnd, WPARAM wParam)
             WindowInfo *win = FindWindowInfoByHwnd(pl->hwndParent);
             if (win && !pl->HasProperty(_TR("Fonts:"))) {
                 DestroyWindow(hwnd);
-                ShowProperties(*win, true);
+                ShowProperties(win->hwndFrame, GetDocForWindow(SumatraWindow::Make(win)), win->dm, true);
             }
         }
 #endif

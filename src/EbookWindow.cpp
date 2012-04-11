@@ -678,3 +678,19 @@ bool IsEbookFile(const TCHAR *fileName)
     return MobiDoc::IsSupportedFile(fileName) ||
            EpubDoc::IsSupportedFile(fileName);
 }
+
+Doc GetDocForWindow(SumatraWindow& win)
+{
+    if (win.AsWindowInfo()) {
+        WindowInfo *iwin = win.AsWindowInfo();
+        if (!iwin->IsDocLoaded())
+            return Doc();
+        return Doc(iwin->dm->engine, iwin->dm->engineType);
+    }
+    if (win.AsEbookWindow()) {
+        EbookWindow *ewin = win.AsEbookWindow();
+        return ewin->ebookController->GetDoc();
+    }
+    CrashIf(true);
+    return Doc();
+}

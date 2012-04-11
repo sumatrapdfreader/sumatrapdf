@@ -48,4 +48,6 @@ void   RebuildMenuBarForEbookWindows();
 void   DeleteEbookWindow(EbookWindow *win, bool forceDelete = false);
 bool   IsEbookFile(const TCHAR *fileName);
 
+Doc    GetDocForWindow(SumatraWindow& win);
+
 #endif

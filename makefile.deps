@@ -428,9 +428,8 @@ $(OS)\SumatraPDF.obj: src\utils\Vec.h src\utils\WinUtil.h src\Version.h
 $(OS)\SumatraPDF.obj: src\WindowInfo.h
 $(OS)\SumatraProperties.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
 $(OS)\SumatraProperties.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
-$(OS)\SumatraProperties.obj: src\Doc.h src\EbookBase.h src\EbookController.h
-$(OS)\SumatraProperties.obj: src\EbookWindow.h src\EngineManager.h src\EpubEngine.h
-$(OS)\SumatraProperties.obj: src\HtmlFormatter.h src\ImagesEngine.h src\mui\Mui.h
+$(OS)\SumatraProperties.obj: src\Doc.h src\EbookWindow.h src\EngineManager.h
+$(OS)\SumatraProperties.obj: src\EpubEngine.h src\ImagesEngine.h src\mui\Mui.h
 $(OS)\SumatraProperties.obj: src\mui\MuiBase.h src\mui\MuiButton.h src\mui\MuiControl.h
 $(OS)\SumatraProperties.obj: src\mui\MuiCss.h src\mui\MuiEventMgr.h src\mui\MuiHwndWrapper.h
 $(OS)\SumatraProperties.obj: src\mui\MuiLayout.h src\mui\MuiPainter.h src\mui\MuiScrollBar.h
