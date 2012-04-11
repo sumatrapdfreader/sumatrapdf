@@ -31,71 +31,6 @@ using namespace Gdiplus;
 
 static bool gShowTextBoundingBoxes = false;
 
-static MenuDef menuDefMobiFile[] = {
-    { _TRN("&Open...\tCtrl+O"),             IDM_OPEN,                   MF_REQ_DISK_ACCESS },
-    { _TRN("&Close\tCtrl+W"),               IDM_CLOSE,                  MF_REQ_DISK_ACCESS },
-    { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS },
-    { _TRN("P&roperties\tCtrl+D"),          IDM_PROPERTIES,             0 },
-    { SEP_ITEM,                             0,                          0 },
-    { _TRN("E&xit\tCtrl+Q"),                IDM_EXIT,                   0 }
-};
-
-static MenuDef menuDefMobiGoTo[] = {
-    { _TRN("&Next Page\tRight Arrow"),      IDM_GOTO_NEXT_PAGE,         0 },
-    { _TRN("&Previous Page\tLeft Arrow"),   IDM_GOTO_PREV_PAGE,         0 },
-    { _TRN("&First Page\tHome"),            IDM_GOTO_FIRST_PAGE,        0 },
-    { _TRN("&Last Page\tEnd"),              IDM_GOTO_LAST_PAGE,         0 },
-};
-
-static MenuDef menuDefMobiSettings[] = {
-    { _TRN("Change Language"),              IDM_CHANGE_LANGUAGE,        0  },
-    { _TRN("&Options..."),                  IDM_SETTINGS,               MF_REQ_PREF_ACCESS },
-};
-
-static MenuDef menuDefHelp[] = {
-    { _TRN("Visit &Website"),               IDM_VISIT_WEBSITE,          MF_REQ_DISK_ACCESS },
-    { _TRN("&Manual"),                      IDM_MANUAL,                 MF_REQ_DISK_ACCESS },
-    { _TRN("Check for &Updates"),           IDM_CHECK_UPDATE,           MF_REQ_INET_ACCESS },
-    { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS },
-    { _TRN("&About"),                       IDM_ABOUT,                  0 },
-};
-
-#ifdef SHOW_DEBUG_MENU_ITEMS
-static MenuDef menuDefDebug[] = {
-    { "Show bbox",                          IDM_DEBUG_SHOW_LINKS,       MF_NO_TRANSLATE },
-    { "Load mobi sample",                   IDM_LOAD_MOBI_SAMPLE,      MF_NO_TRANSLATE },
-    { "Toggle ebook UI",                    IDM_DEBUG_EBOOK_UI,         MF_NO_TRANSLATE },
-};
-#endif
-
-static void RebuildFileMenuForEbookWindow(HMENU menu)
-{
-    win::menu::Empty(menu);
-    BuildMenuFromMenuDef(menuDefMobiFile, dimof(menuDefMobiFile), menu, false);
-    AppendRecentFilesToMenu(menu);
-}
-
-static HMENU BuildMobiMenu()
-{
-    HMENU mainMenu = CreateMenu();
-    HMENU m = CreateMenu();
-    RebuildFileMenuForEbookWindow(m);
-
-    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&File"));
-    m = BuildMenuFromMenuDef(menuDefMobiGoTo, dimof(menuDefMobiGoTo), CreateMenu(), false);
-    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Go To"));
-    m = BuildMenuFromMenuDef(menuDefMobiSettings, dimof(menuDefMobiSettings), CreateMenu());
-    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Settings"));
-    m = BuildMenuFromMenuDef(menuDefHelp, dimof(menuDefHelp), CreateMenu());
-    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Help"));
-#ifdef SHOW_DEBUG_MENU_ITEMS
-    m = BuildMenuFromMenuDef(menuDefDebug, dimof(menuDefDebug), CreateMenu());
-    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _T("Debug"));
-#endif
-
-    return mainMenu;
-}
-
 const TCHAR *EbookWindow::LoadedFilePath() const
 {
     if (ebookController)
@@ -224,20 +159,13 @@ static LRESULT OnKeyDown(EbookWindow *win, UINT msg, WPARAM key, LPARAM lParam)
 static void RebuildMenuBarForEbookWindow(EbookWindow *win)
 {
     HMENU oldMenu = GetMenu(win->hwndFrame);
-    HMENU newMenu = BuildMobiMenu();
+    HMENU newMenu = BuildMenu(win);
 #if 0 // TODO: support fullscreen mode when we have it
     if (!win->presentation && !win->fullScreen)
         SetMenu(win->hwndFrame, win->menu);
 #endif
     SetMenu(win->hwndFrame, newMenu);
     DestroyMenu(oldMenu);
-}
-
-void UpdateMenuForEbookWindow(EbookWindow *win, HMENU m)
-{
-    UINT id = GetMenuItemID(m, 0);
-    if (id == menuDefMobiFile[0].id)
-        RebuildFileMenuForEbookWindow( m);
 }
 
 void RebuildMenuBarForEbookWindows()
@@ -477,7 +405,7 @@ static LRESULT CALLBACK MobiWndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPA
             break;
 
         case WM_INITMENUPOPUP:
-            UpdateMenuForEbookWindow(win, (HMENU)wParam);
+            UpdateMenu(win, (HMENU)wParam);
             break;
 
         case WM_GESTURE:
@@ -636,7 +564,6 @@ void OpenMobiInWindow(Doc doc, SumatraWindow& winToReplace)
             ghinst, NULL);
     if (!hwnd)
         return;
-    SetMenu(hwnd, BuildMobiMenu());
     if (HasPermission(Perm_DiskAccess) && !gPluginMode)
         DragAcceptFiles(hwnd, TRUE);
     if (Touch::SupportsGestures()) {
@@ -652,6 +579,7 @@ void OpenMobiInWindow(Doc doc, SumatraWindow& winToReplace)
 
     gEbookWindows.Append(win);
     win::SetText(win->hwndFrame, winTitle);
+    SetMenu(hwnd, BuildMenu(win));
 
     ShowWindow(hwnd, wasMaximized ? SW_SHOWMAXIMIZED : SW_SHOW);
     win->ebookController->SetDoc(doc, startReparseIdx);

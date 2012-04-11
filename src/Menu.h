@@ -30,17 +30,18 @@ struct MenuDef {
 extern MenuDef menuDefFavorites[];
 
 class WindowInfo;
+class EbookWindow;
 
-HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu, bool forChm=false);
+HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu, int flagFilter=0);
 HMENU BuildMenu(WindowInfo *win);
+HMENU BuildMenu(EbookWindow *win);
 void  OnContextMenu(WindowInfo* win, int x, int y);
 void  OnAboutContextMenu(WindowInfo* win, int x, int y);
 void  OnMenuZoom(WindowInfo* win, UINT menuId);
 void  OnMenuCustomZoom(WindowInfo* win);
 UINT  MenuIdFromVirtualZoom(float virtualZoom);
 void  UpdateMenu(WindowInfo *win, HMENU m);
-bool  IsFileCloseMenuEnabled();
-void  AppendRecentFilesToMenu(HMENU m);
+void  UpdateMenu(EbookWindow *win, HMENU m);
 
 /* Define if you want to display an additional debug menu */
 #ifdef DEBUG

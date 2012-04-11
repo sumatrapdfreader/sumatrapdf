@@ -43,26 +43,27 @@ void MenuUpdateDisplayMode(WindowInfo* win)
 static MenuDef menuDefFile[] = {
     { _TRN("&Open...\tCtrl+O"),             IDM_OPEN ,                  MF_REQ_DISK_ACCESS },
     { _TRN("&Close\tCtrl+W"),               IDM_CLOSE,                  MF_REQ_DISK_ACCESS },
-    { _TRN("&Save As...\tCtrl+S"),          IDM_SAVEAS,                 MF_REQ_DISK_ACCESS },
+    { _TRN("&Save As...\tCtrl+S"),          IDM_SAVEAS,                 MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
 #ifdef ENABLE_SAVE_SHORTCUT
-    { _TRN("Save S&hortcut...\tCtrl+Shift+S"), IDM_SAVEAS_BOOKMARK,     MF_REQ_DISK_ACCESS | MF_NOT_FOR_CHM },
+    { _TRN("Save S&hortcut...\tCtrl+Shift+S"), IDM_SAVEAS_BOOKMARK,     MF_REQ_DISK_ACCESS | MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
 #endif
-    { _TRN("Re&name...\tF2"),               IDM_RENAME_FILE,            MF_REQ_DISK_ACCESS },
-    { _TRN("&Print...\tCtrl+P"),            IDM_PRINT,                  MF_REQ_PRINTER_ACCESS },
+    { _TRN("Re&name...\tF2"),               IDM_RENAME_FILE,            MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("&Print...\tCtrl+P"),            IDM_PRINT,                  MF_REQ_PRINTER_ACCESS | MF_NOT_FOR_EBOOK_UI },
     { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS },
     // PDF/XPS/CHM specific items are dynamically removed in RebuildFileMenu
-    { _TRN("Open in &Adobe Reader"),        IDM_VIEW_WITH_ACROBAT,      MF_REQ_DISK_ACCESS },
-    { _TRN("Open in &Foxit Reader"),        IDM_VIEW_WITH_FOXIT,        MF_REQ_DISK_ACCESS },
-    { _TRN("Open in PDF-XChange"),          IDM_VIEW_WITH_PDF_XCHANGE,  MF_REQ_DISK_ACCESS },
-    { _TRN("Open in Microsoft XPS-Viewer"), IDM_VIEW_WITH_XPS_VIEWER,   MF_REQ_DISK_ACCESS },
-    { _TRN("Open in Microsoft HTML Help"),  IDM_VIEW_WITH_HTML_HELP,    MF_REQ_DISK_ACCESS },
-    { _TRN("Send by &E-mail..."),           IDM_SEND_BY_EMAIL,          MF_REQ_DISK_ACCESS },
-    { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS },
+    { _TRN("Open in &Adobe Reader"),        IDM_VIEW_WITH_ACROBAT,      MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Open in &Foxit Reader"),        IDM_VIEW_WITH_FOXIT,        MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Open in PDF-XChange"),          IDM_VIEW_WITH_PDF_XCHANGE,  MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Open in Microsoft XPS-Viewer"), IDM_VIEW_WITH_XPS_VIEWER,   MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Open in Microsoft HTML Help"),  IDM_VIEW_WITH_HTML_HELP,    MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Send by &E-mail..."),           IDM_SEND_BY_EMAIL,          MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
     { _TRN("P&roperties\tCtrl+D"),          IDM_PROPERTIES,             0 },
     { SEP_ITEM,                             0,                          0 },
     { _TRN("E&xit\tCtrl+Q"),                IDM_EXIT,                   0 }
 };
 
+// the whole menu is MF_NOT_FOR_EBOOK_UI
 static MenuDef menuDefView[] = {
     { _TRN("&Single Page\tCtrl+6"),         IDM_VIEW_SINGLE_PAGE,       MF_NOT_FOR_CHM },
     { _TRN("&Facing\tCtrl+7"),              IDM_VIEW_FACING,            MF_NOT_FOR_CHM },
@@ -87,14 +88,15 @@ static MenuDef menuDefGoTo[] = {
     { _TRN("&Previous Page\tLeft Arrow"),   IDM_GOTO_PREV_PAGE,         0 },
     { _TRN("&First Page\tHome"),            IDM_GOTO_FIRST_PAGE,        0 },
     { _TRN("&Last Page\tEnd"),              IDM_GOTO_LAST_PAGE,         0 },
-    { _TRN("Pa&ge...\tCtrl+G"),             IDM_GOTO_PAGE,              0 },
-    { SEP_ITEM,                             0,                          0 },
-    { _TRN("&Back\tAlt+Left Arrow"),        IDM_GOTO_NAV_BACK,          0 },
-    { _TRN("F&orward\tAlt+Right Arrow"),    IDM_GOTO_NAV_FORWARD,       0 },
-    { SEP_ITEM,                             0,                          0 },
-    { _TRN("Fin&d...\tCtrl+F"),             IDM_FIND_FIRST,             0 },
+    { _TRN("Pa&ge...\tCtrl+G"),             IDM_GOTO_PAGE,              MF_NOT_FOR_EBOOK_UI },
+    { SEP_ITEM,                             0,                          MF_NOT_FOR_EBOOK_UI },
+    { _TRN("&Back\tAlt+Left Arrow"),        IDM_GOTO_NAV_BACK,          MF_NOT_FOR_EBOOK_UI },
+    { _TRN("F&orward\tAlt+Right Arrow"),    IDM_GOTO_NAV_FORWARD,       MF_NOT_FOR_EBOOK_UI },
+    { SEP_ITEM,                             0,                          MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Fin&d...\tCtrl+F"),             IDM_FIND_FIRST,             MF_NOT_FOR_EBOOK_UI },
 };
 
+// the whole menu is MF_NOT_FOR_EBOOK_UI
 static MenuDef menuDefZoom[] = {
     { _TRN("Fit &Page\tCtrl+0"),            IDM_ZOOM_FIT_PAGE,          MF_NOT_FOR_CHM },
     { _TRN("&Actual Size\tCtrl+1"),         IDM_ZOOM_ACTUAL_SIZE,       MF_NOT_FOR_CHM },
@@ -126,6 +128,7 @@ static MenuDef menuDefSettings[] = {
     { _TRN("&Options..."),                  IDM_SETTINGS,               MF_REQ_PREF_ACCESS },
 };
 
+// the whole menu is MF_NOT_FOR_EBOOK_UI
 MenuDef menuDefFavorites[] = {
     { _TRN("Add to favorites"),             IDM_FAV_ADD,                0 },
     { _TRN("Remove from favorites"),        IDM_FAV_DEL,                0 },
@@ -148,9 +151,15 @@ static MenuDef menuDefDebug[] = {
 //  { SEP_ITEM,                             0,                          0 },
 //  { "Crash me",                           IDM_DEBUG_CRASH_ME,         MF_NO_TRANSLATE },
 };
+
+static MenuDef menuDefDebugEbooks[] = {
+    { "Show bbox",                          IDM_DEBUG_SHOW_LINKS,       MF_NO_TRANSLATE },
+    { "Load mobi sample",                   IDM_LOAD_MOBI_SAMPLE,       MF_NO_TRANSLATE },
+    { "Toggle ebook UI",                    IDM_DEBUG_EBOOK_UI,         MF_NO_TRANSLATE },
+};
 #endif
 
-// not used for Chm documents
+// the whole menu is MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI
 static MenuDef menuDefContext[] = {
     { _TRN("&Copy Selection"),              IDM_COPY_SELECTION,         MF_REQ_ALLOW_COPY },
     { _TRN("Copy &Link Address"),           IDM_COPY_LINK_TARGET,       MF_REQ_ALLOW_COPY },
@@ -182,32 +191,31 @@ static void AddFileMenuItem(HMENU menuFile, const TCHAR *filePath, UINT index)
     InsertMenu(menuFile, IDM_EXIT, MF_BYCOMMAND | MF_ENABLED | MF_STRING, menuId, menuString);
 }
 
-HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu, bool forChm)
+HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu, int flagFilter)
 {
     assert(menu);
     bool wasSeparator = true;
+    if (!gPluginMode)
+        flagFilter |= MF_PLUGIN_MODE_ONLY;
 
     for (int i = 0; i < menuLen; i++) {
         MenuDef md = menuDefs[i];
-        const char *title = md.title;
+        if ((md.flags & flagFilter))
+            continue;
         if (!HasPermission(md.flags >> PERM_FLAG_OFFSET))
             continue;
-        if (!gPluginMode && (md.flags & MF_PLUGIN_MODE_ONLY))
-            continue;
-        if (forChm && (md.flags & MF_NOT_FOR_CHM))
-            continue;
 
-        if (str::Eq(title, SEP_ITEM)) {
+        if (str::Eq(md.title, SEP_ITEM)) {
             // prevent two consecutive separators
             if (!wasSeparator)
                 AppendMenu(menu, MF_SEPARATOR, 0, NULL);
             wasSeparator = true;
         } else if (MF_NO_TRANSLATE == (md.flags & MF_NO_TRANSLATE)) {
-            ScopedMem<TCHAR> tmp(str::conv::FromUtf8(title));
+            ScopedMem<TCHAR> tmp(str::conv::FromUtf8(md.title));
             AppendMenu(menu, MF_STRING, (UINT_PTR)md.id, tmp);
             wasSeparator = false;
         } else {
-            const TCHAR *tmp = Trans::GetTranslation(title);
+            const TCHAR *tmp = Trans::GetTranslation(md.title);
             AppendMenu(menu, MF_STRING, (UINT_PTR)md.id, tmp);
             wasSeparator = false;
         }
@@ -218,7 +226,7 @@ HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu, bool for
     return menu;
 }
 
-void AppendRecentFilesToMenu(HMENU m)
+static void AppendRecentFilesToMenu(HMENU m)
 {
     if (!HasPermission(Perm_DiskAccess)) return;
     if (gFileHistory.IsEmpty()) return;
@@ -319,7 +327,7 @@ void MenuUpdatePrintItem(WindowInfo* win, HMENU menu, bool disableOnly=false) {
     win::menu::SetEnabled(menu, IDM_PRINT, filePrintEnabled && filePrintAllowed);
 }
 
-bool IsFileCloseMenuEnabled()
+static bool IsFileCloseMenuEnabled()
 {
     if (gEbookWindows.Count() > 0)
         return true;
@@ -530,7 +538,7 @@ void OnMenuCustomZoom(WindowInfo* win)
 static void RebuildFileMenu(WindowInfo *win, HMENU menu)
 {
     win::menu::Empty(menu);
-    BuildMenuFromMenuDef(menuDefFile, dimof(menuDefFile), menu, win->IsChm());
+    BuildMenuFromMenuDef(menuDefFile, dimof(menuDefFile), menu, win->IsChm() ? MF_NOT_FOR_CHM : 0);
     AppendRecentFilesToMenu(menu);
 
     // Suppress menu items that depend on specific software being installed:
@@ -556,14 +564,15 @@ static void RebuildFileMenu(WindowInfo *win, HMENU menu)
 HMENU BuildMenu(WindowInfo *win)
 {
     HMENU mainMenu = CreateMenu();
+    int filter = win->IsChm() ? MF_NOT_FOR_CHM : 0;
     HMENU m = CreateMenu();
     RebuildFileMenu(win, m);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&File"));
-    m = BuildMenuFromMenuDef(menuDefView, dimof(menuDefView), CreateMenu(), win->IsChm());
+    m = BuildMenuFromMenuDef(menuDefView, dimof(menuDefView), CreateMenu(), filter);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&View"));
-    m = BuildMenuFromMenuDef(menuDefGoTo, dimof(menuDefGoTo), CreateMenu(), win->IsChm());
+    m = BuildMenuFromMenuDef(menuDefGoTo, dimof(menuDefGoTo), CreateMenu(), filter);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Go To"));
-    m = BuildMenuFromMenuDef(menuDefZoom, dimof(menuDefZoom), CreateMenu(), win->IsChm());
+    m = BuildMenuFromMenuDef(menuDefZoom, dimof(menuDefZoom), CreateMenu(), filter);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Zoom"));
 
     if (HasPermission(Perm_SavePreferences)) {
@@ -573,15 +582,42 @@ HMENU BuildMenu(WindowInfo *win)
         RebuildFavMenu(win, m);
         AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("F&avorites"));
     }
-    m = BuildMenuFromMenuDef(menuDefSettings, dimof(menuDefSettings), CreateMenu());
+    m = BuildMenuFromMenuDef(menuDefSettings, dimof(menuDefSettings), CreateMenu(), filter);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Settings"));
-    m = BuildMenuFromMenuDef(menuDefHelp, dimof(menuDefHelp), CreateMenu());
+    m = BuildMenuFromMenuDef(menuDefHelp, dimof(menuDefHelp), CreateMenu(), filter);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Help"));
 #ifdef SHOW_DEBUG_MENU_ITEMS
-    m = BuildMenuFromMenuDef(menuDefDebug, dimof(menuDefDebug), CreateMenu());
+    m = BuildMenuFromMenuDef(menuDefDebug, dimof(menuDefDebug), CreateMenu(), filter);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _T("Debug"));
 #endif
 
+    return mainMenu;
+}
+
+static void RebuildFileMenuForEbookUI(HMENU menu)
+{
+    win::menu::Empty(menu);
+    BuildMenuFromMenuDef(menuDefFile, dimof(menuDefFile), menu, MF_NOT_FOR_EBOOK_UI);
+    AppendRecentFilesToMenu(menu);
+}
+
+HMENU BuildMenu(EbookWindow *win)
+{
+    HMENU mainMenu = CreateMenu();
+    int filter = MF_NOT_FOR_EBOOK_UI;
+    HMENU m = CreateMenu();
+    RebuildFileMenuForEbookUI(m);
+    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&File"));
+    m = BuildMenuFromMenuDef(menuDefGoTo, dimof(menuDefGoTo), CreateMenu(), filter);
+    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Go To"));
+    m = BuildMenuFromMenuDef(menuDefSettings, dimof(menuDefSettings), CreateMenu(), filter);
+    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Settings"));
+    m = BuildMenuFromMenuDef(menuDefHelp, dimof(menuDefHelp), CreateMenu(), filter);
+    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Help"));
+#ifdef SHOW_DEBUG_MENU_ITEMS
+    m = BuildMenuFromMenuDef(menuDefDebugEbooks, dimof(menuDefDebugEbooks), CreateMenu(), filter);
+    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _T("Debug"));
+#endif
     return mainMenu;
 }
 
@@ -594,4 +630,11 @@ void UpdateMenu(WindowInfo *win, HMENU m)
         RebuildFavMenu(win, m);
     if (win)
         MenuUpdateStateForWindow(win);
+}
+
+void UpdateMenu(EbookWindow *win, HMENU m)
+{
+    UINT id = GetMenuItemID(m, 0);
+    if (id == menuDefFile[0].id)
+        RebuildFileMenuForEbookUI(m);
 }
