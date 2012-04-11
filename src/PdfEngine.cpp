@@ -1155,7 +1155,7 @@ PdfEngineImpl *PdfEngineImpl::Clone()
 
     // use this document's encryption key (if any) to load the clone
     PasswordCloner *pwdUI = NULL;
-    if (_doc->crypt)
+    if (pdf_crypt_key(_doc))
         pwdUI = new PasswordCloner(pdf_crypt_key(_doc));
 
     PdfEngineImpl *clone = new PdfEngineImpl();
