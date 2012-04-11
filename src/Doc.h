@@ -75,8 +75,10 @@ public:
 
     Doc(const Doc& other);
     Doc& operator=(const Doc& other);
+    ~Doc();
 
-    Doc() : type(None), loadingErrorMessage(NULL), filePath(NULL), generic(NULL) { }
+    void Clear() { type = None; loadingErrorMessage = NULL; filePath = NULL; generic = NULL; }
+    Doc() { Clear(); }
     Doc(CbxEngine *doc) { Set(doc); }
     Doc(ChmEngine *doc) { Set(doc); }
     Doc(Chm2Engine *doc) { Set(doc); }
@@ -85,7 +87,7 @@ public:
     Doc(EpubEngine *doc) { Set(doc); }
     Doc(Fb2Engine *doc) { Set(doc); }
     Doc(ImageEngine *doc) { Set(doc); }
-    Doc(ImageDirEngine *doc) { Set(doc); }
+    Doc(ImageDirEngine *doc)  { Set(doc); }
     Doc(MobiEngine *doc) { Set(doc); }
     Doc(MobiDoc *doc) { Set(doc); }
     Doc(MobiTestDoc *doc) { Set(doc); }
@@ -94,22 +96,6 @@ public:
     Doc(XpsEngine *doc) { Set(doc); }
 
     void Delete();
-
-    void Set(CbxEngine *doc);
-    void Set(ChmEngine *doc);
-    void Set(Chm2Engine *doc);
-    void Set(DjVuEngine *doc);
-    void Set(EpubEngine *doc);
-    void Set(EpubDoc *doc);
-    void Set(Fb2Engine *doc);
-    void Set(ImageEngine *doc);
-    void Set(ImageDirEngine *doc);
-    void Set(MobiEngine *doc);
-    void Set(MobiDoc *doc);
-    void Set(MobiTestDoc *doc);
-    void Set(PdfEngine *doc);
-    void Set(PsEngine *doc);
-    void Set(XpsEngine *doc);
 
     // note: find a better name, if possible
     bool IsNone() const { return None == type; }
@@ -135,6 +121,23 @@ public:
     static Doc CreateFromFile(const TCHAR *filePath);
 
 private:
+    // Set() only called from the constructor and it really sets (and not replaces)
+    void Set(CbxEngine *doc);
+    void Set(ChmEngine *doc);
+    void Set(Chm2Engine *doc);
+    void Set(DjVuEngine *doc);
+    void Set(EpubEngine *doc);
+    void Set(EpubDoc *doc);
+    void Set(Fb2Engine *doc);
+    void Set(ImageEngine *doc);
+    void Set(ImageDirEngine *doc);
+    void Set(MobiEngine *doc);
+    void Set(MobiDoc *doc);
+    void Set(MobiTestDoc *doc);
+    void Set(PdfEngine *doc);
+    void Set(PsEngine *doc);
+    void Set(XpsEngine *doc);
+
     const TCHAR *GetFilePathFromDoc() const;
     void FreeStrings();
     void SetEngine(DocType newType, BaseEngine *doc);

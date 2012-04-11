@@ -11,10 +11,9 @@
 
 Doc::Doc(const Doc& other)
 {
+    Clear();
     type = other.type;
     generic = other.generic;
-    loadingErrorMessage = NULL;
-    filePath = NULL;
     str::ReplacePtr(&loadingErrorMessage, other.loadingErrorMessage);
     str::ReplacePtr(&filePath, other.filePath);
 }
@@ -28,6 +27,11 @@ Doc& Doc::operator=(const Doc& other)
         str::ReplacePtr(&filePath, other.filePath);
     }
     return *this;
+}
+
+Doc::~Doc()
+{
+    FreeStrings();
 }
 
 void Doc::FreeStrings()
@@ -86,23 +90,23 @@ void Doc::Set(XpsEngine *doc)      { SetEngine(XpsEng,      doc); }
 
 void Doc::Set(EpubDoc *doc)
 {
+    Clear();
     type = Epub;
     epubDoc = doc;
-    FreeStrings();
 }
 
 void Doc::Set(MobiDoc *doc)
 {
+    Clear();
     type = Mobi;
     mobiDoc = doc;
-    FreeStrings();
 }
 
 void Doc::Set(MobiTestDoc *doc)
 { 
+    Clear();
     type = MobiTest;
     mobiTestDoc = doc;
-    FreeStrings();
 }
 
 BaseEngine *Doc::AsEngine() const
