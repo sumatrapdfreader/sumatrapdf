@@ -5,7 +5,7 @@
 #include "StressTesting.h"
 
 #include "AppTools.h"
-#include "EngineManager.h"
+#include "Doc.h"
 #include "FileUtil.h"
 #include "Notifications.h"
 #include "RenderCache.h"
@@ -120,7 +120,7 @@ static void BenchFile(TCHAR *filePath, const TCHAR *pagesSpec)
     logbench("Starting: %s", filePath);
 
     Timer t(true);
-    BaseEngine *engine = EngineManager::CreateEngine(filePath);
+    BaseEngine *engine = EngineManager(!gUseEbookUI).CreateEngine(filePath);
     t.Stop();
 
     if (!engine) {
@@ -214,22 +214,7 @@ static bool IsStressTestSupportedFile(const TCHAR *fileName, const TCHAR *filter
 {
     if (filter && !path::Match(fileName, filter))
         return false;
-
-    return PdfEngine::IsSupportedFile(fileName)  ||
-           XpsEngine::IsSupportedFile(fileName)  ||
-           DjVuEngine::IsSupportedFile(fileName) ||
-           CbxEngine::IsSupportedFile(fileName)  ||
-           ImageEngine::IsSupportedFile(fileName)||
-           PsEngine::IsSupportedFile(fileName)   ||
-#ifdef ENABLE_EBOOK_ENGINES
-           EpubEngine::IsSupportedFile(fileName) && !gUseEbookUI ||
-           Fb2Engine::IsSupportedFile(fileName)  ||
-           MobiEngine::IsSupportedFile(fileName) && !gUseEbookUI ||
-           PdbEngine::IsSupportedFile(fileName)  ||
-           HtmlEngine::IsSupportedFile(fileName) ||
-           TxtEngine::IsSupportedFile(fileName)  ||
-#endif
-           ChmEngine::IsSupportedFile(fileName);
+    return EngineManager(!gUseEbookUI).IsSupportedFile(fileName);
 }
 
 static bool CollectStressTestSupportedFilesFromDirectory(const TCHAR *dirPath, const TCHAR *filter, StrVec& paths)

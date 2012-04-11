@@ -4,6 +4,7 @@
 #ifndef EbookControls_h
 #define EbookControls_h
 
+#include "BitManip.h"
 #include "Doc.h"
 #include "Mui.h"
 

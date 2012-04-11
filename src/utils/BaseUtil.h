@@ -154,7 +154,6 @@ inline bool memeq(const void *s1, const void *s2, size_t len)
 
 #include "Allocator.h"
 #include "GeomUtil.h"
-#include "RefCounted.h"
 #include "Scoped.h"
 #include "StrUtil.h"
 #include "Vec.h"

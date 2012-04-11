@@ -1,14 +1,13 @@
 /* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef ENABLE_EBOOK_ENGINES
-#define ENABLE_EBOOK_ENGINES
-#endif
-
 #include "BaseUtil.h"
+#include "BaseEngine.h"
+#include "ChmEngine.h"
 #include "CmdLineParser.h"
-#include "EngineManager.h"
+#include "Doc.h"
 #include "FileUtil.h"
+#include "PdfEngine.h"
 #include "TgaReader.h"
 #include "WinUtil.h"
 
@@ -378,7 +377,7 @@ Usage:
     ScopedGdiPlus gdiPlus;
     EngineType engineType;
     PasswordHolder pwdUI(password);
-    BaseEngine *engine = EngineManager::CreateEngine(filePath, &pwdUI, &engineType);
+    BaseEngine *engine = EngineManager(true).CreateEngine(filePath, &pwdUI, &engineType);
     if (!engine) {
         ErrOut("Error: Couldn't create an engine for %s!\n", path::GetBaseName(filePath));
         return 1;

@@ -539,10 +539,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\src\EngineManager.h"
-					>
-				</File>
-				<File
 					RelativePath=".\src\EpubDoc.cpp"
 					>
 				</File>

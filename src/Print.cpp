@@ -5,7 +5,7 @@
 #include "Print.h"
 
 #include "AppTools.h"
-#include "EngineManager.h"
+#include "Doc.h"
 #include "FileUtil.h"
 #include "Notifications.h"
 #include "Selection.h"
@@ -553,7 +553,7 @@ bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool displayErro
         return false;
 
     ScopedMem<TCHAR> fileName2(path::Normalize(fileName));
-    BaseEngine *engine = EngineManager::CreateEngine(fileName2);
+    BaseEngine *engine = EngineManager(!gUseEbookUI).CreateEngine(fileName2);
     if (!engine || !engine->IsPrintingAllowed()) {
         if (displayErrors)
             MessageBox(NULL, _TR("Cannot print this file"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0));

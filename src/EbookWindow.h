@@ -5,7 +5,6 @@
 #define EbookWindow_h
 
 #include "Doc.h"
-#include "Mui.h"
 #include "SumatraWindow.h"
 #include "ThreadUtil.h"
 #include "WindowInfo.h"
@@ -26,13 +25,16 @@ public:
     virtual void Run();
 };
 
+namespace mui { class HwndWrapper; }
+
 class EbookWindow {
 public:
-    EbookWindow() : 
-        hwndFrame(NULL), ebookControls(NULL), 
-        hwndWrapper(NULL), ebookController(NULL) 
-    { touchState.panStarted = false; }
-    ~EbookWindow() {}
+    EbookWindow() : hwndFrame(NULL), ebookControls(NULL),
+        hwndWrapper(NULL), ebookController(NULL) {
+        touchState.panStarted = false;
+    }
+    ~EbookWindow() { }
+
     HWND                hwndFrame;
     EbookControls *     ebookControls;
     mui::HwndWrapper *  hwndWrapper;

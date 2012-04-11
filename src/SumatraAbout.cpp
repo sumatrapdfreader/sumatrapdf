@@ -7,6 +7,8 @@
 #include "AppTools.h"
 #include "FileHistory.h"
 #include "FileUtil.h"
+#include "ImagesEngine.h"
+#include "PdfEngine.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
 #include "Version.h"

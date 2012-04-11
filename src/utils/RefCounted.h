@@ -1,8 +1,8 @@
 /* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-// note: for simplicty, only meant to be included in
-// BaseUtil.h
+#ifndef RefCounted_h
+#define RefCounted_h
 
 // Auto-generated copy constructors can be incorrect.
 // To ensure a given class won't get copy constructor
@@ -47,3 +47,5 @@ public:
         }
     }
 };
+
+#endif

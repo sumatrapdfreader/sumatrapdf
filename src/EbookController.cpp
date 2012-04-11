@@ -5,8 +5,6 @@
 #include "EbookController.h"
 
 #include "EbookControls.h"
-#include "EpubDoc.h"
-#include "FileUtil.h"
 #include "MobiDoc.h"
 #include "EbookWindow.h"
 #include "SumatraWindow.h"

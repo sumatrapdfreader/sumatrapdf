@@ -4,9 +4,9 @@
 #ifndef DisplayModel_h
 #define DisplayModel_h
 
+#include "ChmEngine.h"
 #include "DisplayState.h"
-#include "EngineManager.h"
-#include "TextSearch.h"
+#include "Doc.h"
 
 // define the following if you want shadows drawn around the pages
 // #define DRAW_PAGE_SHADOWS
@@ -82,6 +82,10 @@ struct ScrollState {
 };
 
 class DisplayModel;
+class PageTextCache;
+class TextSelection;
+class TextSearch;
+struct TextSel;
 
 class DisplayModelCallback : public ChmNavigationCallback {
 public:

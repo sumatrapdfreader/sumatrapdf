@@ -11,6 +11,7 @@
 
 #include "AppTools.h"
 #include "Notifications.h"
+#include "PdfEngine.h"
 #include "PdfSync.h"
 #include "resource.h"
 #include "Selection.h"

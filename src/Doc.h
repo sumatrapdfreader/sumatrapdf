@@ -21,9 +21,19 @@ class BaseEngine;
 class EpubDoc;
 class MobiDoc;
 class MobiTestDoc;
+class PasswordUI;
 
-enum EngineType;
 struct ImageData;
+
+enum EngineType {
+    Engine_None,
+    Engine_DjVu,
+    Engine_Image, Engine_ImageDir, Engine_ComicBook,
+    Engine_PDF, Engine_XPS,
+    Engine_PS,
+    Engine_Chm,
+    Engine_Epub, Engine_Fb2, Engine_Mobi, Engine_Pdb, Engine_Chm2, Engine_Html, Engine_Txt,
+};
 
 class Doc
 {
@@ -106,6 +116,15 @@ public:
     ImageData *GetCoverImage();
 
     static Doc CreateFromFile(const TCHAR *filePath);
+};
+
+class EngineManager {
+    bool enableEbookEngines;
+
+public:
+    EngineManager(bool enableEbookEngines=false) : enableEbookEngines(enableEbookEngines) { }
+    bool IsSupportedFile(const TCHAR *filePath, bool sniff=false);
+    BaseEngine *CreateEngine(const TCHAR *filePath, PasswordUI *pwdUI=NULL, EngineType *typeOut=NULL);
 };
 
 #endif

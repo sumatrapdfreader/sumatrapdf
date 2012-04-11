@@ -5,6 +5,7 @@
 
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
+#include "HtmlParserLookup.h"
 
 namespace mui {
 

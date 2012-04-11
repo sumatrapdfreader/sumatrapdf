@@ -2,6 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "Mui.h"
+#include "BitManip.h"
 
 namespace mui {
 

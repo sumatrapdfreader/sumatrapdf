@@ -45,6 +45,8 @@
 
 #include "BaseUtil.h"
 #include "DisplayModel.h"
+#include "TextSearch.h"
+#include "TextSelection.h"
 
 // Note: adding chm handling to DisplayModel is a hack, because DisplayModel
 // doesn't map to chm features well.

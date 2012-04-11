@@ -4,6 +4,8 @@
 #ifndef ThreadUtil_h
 #define ThreadUtil_h
 
+#include "RefCounted.h"
+
 class Functor {
 public:
     virtual void operator()() = 0;

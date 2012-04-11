@@ -8,9 +8,9 @@
 #include "AppPrefs.h"
 #include "AppTools.h"
 #include "CrashHandler.h"
+#include "Doc.h"
 #include "EbookController.h"
 #include "EbookWindow.h"
-#include "EngineManager.h"
 #include "ExternalPdfViewer.h"
 #include "FileHistory.h"
 #include "Favorites.h"
@@ -24,8 +24,10 @@ using namespace Gdiplus;
 #include "Mui.h"
 #include "Notifications.h"
 #include "ParseCommandLine.h"
+#include "PdfEngine.h"
 #include "PdfSync.h"
 #include "Print.h"
+#include "PsEngine.h"
 #include "RenderCache.h"
 #include "Resource.h"
 #include "Search.h"
@@ -853,7 +855,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
 
     str::ReplacePtr(&win->loadedFilePath, args.fileName);
     EngineType engineType;
-    BaseEngine *engine = EngineManager::CreateEngine(args.fileName, pwdUI, &engineType);
+    BaseEngine *engine = EngineManager(!gUseEbookUI).CreateEngine(args.fileName, pwdUI, &engineType);
     if (engine)
         win->dm = new DisplayModel(engine, engineType, win);
     else
@@ -2893,11 +2895,9 @@ void OnMenuOpen(SumatraWindow& win)
         { _TR("CHM documents"),         _T("*.chm"),        true },
         { _TR("Mobi documents"),        _T("*.mobi"),       true },
         { _TR("EPUB ebooks"),           _T("*.epub"),       true },
-#ifdef ENABLE_EBOOK_ENGINES
-        { _T("FictionBooks"),           _T("*.fb2;*.fb2z;*.zfb2"), true },
-        { _T("PalmDOC"),                _T("*.pdb"),        true },
-        { _TR("Text documents"),        _T("*.txt;*.log;*.nfo;file_id.diz;read.me"), true },
-#endif
+        { _T("FictionBooks"),           _T("*.fb2;*.fb2z;*.zfb2"), !gUseEbookUI },
+        { _T("PalmDOC"),                _T("*.pdb"),        !gUseEbookUI },
+        { _TR("Text documents"),        _T("*.txt;*.log;*.nfo;file_id.diz;read.me"), !gUseEbookUI },
     };
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling

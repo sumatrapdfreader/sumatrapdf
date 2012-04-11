@@ -3,6 +3,7 @@
 
 #include "BaseUtil.h"
 #include "RenderCache.h"
+#include "TextSelection.h"
 #include "WinUtil.h"
 
 /* Define if you want to conserve memory by always freeing cached bitmaps
