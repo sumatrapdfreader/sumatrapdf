@@ -88,10 +88,9 @@ RectF MeasureTextQuick(Graphics *g, Font *f, const WCHAR *s, size_t len)
     g->MeasureString(s, len, f, PointF(0, 0), &bbox);
     int idx = fontCache.Find(f);
     if (-1 == idx) {
-        INT style = f->GetStyle();
         LOGFONTW lfw;
         Status ok = f->GetLogFontW(g, &lfw);
-        bool isItalicOrMonospace = (style & FontStyleItalic) || Ok != ok ||
+        bool isItalicOrMonospace = Ok != ok || lfw.lfItalic ||
                                    str::Eq(lfw.lfFaceName, L"Courier New");
         fontCache.Append(f);
         fixCache.Append(isItalicOrMonospace);

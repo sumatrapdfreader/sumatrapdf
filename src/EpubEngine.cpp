@@ -1391,9 +1391,29 @@ static TCHAR *ToPlainUrl(const TCHAR *url)
     return plainUrl;
 }
 
+// variation of CRC-32 which deals with strings that are
+// mostly ASCII and should be treated case independently
+static uint32_t GetQuickHashI(const TCHAR *str)
+{
+    uint32_t crc = 0;
+    for (; *str; str++) {
+        uint32_t bits = (crc ^ ((_totlower((wint_t)*str) & 0xFF) << 24)) & 0xFF000000L;
+        for (int i = 0; i < 8; i++) {
+            if ((bits & 0x80000000L))
+                bits = (bits << 1) ^ 0x04C11DB7L;
+            else
+                bits <<= 1;
+        }
+        crc = (crc << 8) ^ bits;
+    }
+    return crc;
+}
+
 class ChmHtmlCollector : public EbookTocVisitor {
     ChmDoc *doc;
     StrVec added;
+    // for performance we first check the URL's fingerprints
+    Vec<uint32_t> addedHashes;
     str::Str<char> html;
 
 public:
@@ -1429,8 +1449,11 @@ public:
         if (!url || IsExternalUrl(url))
             return;
         ScopedMem<TCHAR> plainUrl(ToPlainUrl(url));
-        if (added.FindI(plainUrl) != -1)
-            return;
+        uint32_t hash = GetQuickHashI(plainUrl);
+        for (int idx = 0; (idx = addedHashes.Find(hash, idx)) != -1; ) {
+            if (str::EqI(added.At(idx), plainUrl))
+                return;
+        }
         ScopedMem<char> urlUtf8(str::conv::ToUtf8(plainUrl));
         // TODO: use the native codepage for the path to GetData
         ScopedMem<unsigned char> pageHtml(doc->GetData(urlUtf8, NULL));
@@ -1439,6 +1462,7 @@ public:
         html.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", urlUtf8);
         html.AppendAndFree(doc->ToUtf8(pageHtml));
         added.Append(plainUrl.StealData());
+        addedHashes.Append(hash);
     }
 };
 
