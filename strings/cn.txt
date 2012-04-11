@@ -268,6 +268,9 @@ Copy Co&mment
 Copying text was denied (copying as image only)
 无法复制文本 (只能作为图像复制)
 
+Copyright:
+版权:
+
 Could not obtain Printer properties
 无法获得打印机属性
 
@@ -337,6 +340,9 @@ F&ullscreen\tCtrl+Shift+L
 Facing
 平铺页面
 
+Failed to rename the file!
+无法重命名!
+
 Failed to save a file
 保存文件失败
 
@@ -391,6 +397,12 @@ Fit Width and Show Pages Continuously
 Fit a Single Page
 自适应单页模式
 
+Fonts:
+字体:
+
+Formatting the book... %d pages
+正在格式化 %d 页
+
 Found text at page %s
 在第 %s 页找到文本
 
@@ -417,6 +429,9 @@ Image files (*.%s)
 
 KB
 KB
+
+Loading file %s...
+正在加载 %s...
 
 MB
 MB
@@ -547,6 +562,9 @@ Printing page %d of %d...
 Printing problem.
 打印问题。
 
+Re&name...\tF2
+重命名(&N)...\tF2
+
 Remember &opened files
 记住已打开的文件(&O)
 
@@ -555,6 +573,12 @@ Remove from favorites
 
 Remove page %s from favorites
 从收藏中删除第 %s 页
+
+Rename To
+重命名到
+
+Replace document &colors with Windows color scheme
+采用系统颜色方案(&C)
 
 Rotate &Left\tCtrl+Shift+-
 向左旋转(&L)\tCtrl+Shift+-
@@ -678,14 +702,4 @@ copying text
 
 printing document
 正在打印文档
-
-# Untranslated:
-#Copyright:
-#Failed to rename the file!
-#Fonts:
-#Formatting the book... %d pages
-#Loading file %s...
-#Re&name...\tF2
-#Rename To
-#Replace document &colors with Windows color scheme
 
