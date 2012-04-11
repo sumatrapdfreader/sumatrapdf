@@ -770,7 +770,7 @@ bool HtmlFormatter::HandleTagA(HtmlToken *t, const char *linkAttr)
     return false;
 }
 
-static bool IsTagH(HtmlTag tag)
+inline bool IsTagH(HtmlTag tag)
 {
     switch (tag) {
         case Tag_H1:
@@ -778,6 +778,7 @@ static bool IsTagH(HtmlTag tag)
         case Tag_H3:
         case Tag_H4:
         case Tag_H5:
+        case Tag_H6:
             return true;
     }
    return false;

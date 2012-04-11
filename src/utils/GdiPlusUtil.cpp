@@ -83,8 +83,12 @@ RectF MeasureTextQuick(Graphics *g, Font *f, const WCHAR *s, size_t len)
 {
     RectF bbox;
     g->MeasureString(s, len, f, PointF(0, 0), &bbox);
+    INT style = f->GetStyle();
+    LOGFONTW lfw;
+    Status ok = f->GetLogFontW(g, &lfw);
     // most documents look good enough with these adjustments
-    bbox.Width *= 0.92f;
+    if (!(style & FontStyleItalic) && Ok == ok && !str::Eq(lfw.lfFaceName, L"Courier New"))
+        bbox.Width *= 0.92f;
     bbox.Height *= 0.96f;
     return bbox;
 }

@@ -77,6 +77,7 @@ HtmlTag FindHtmlTag(const char *name, size_t len)
     case CS2('h','3'): return Tag_H3;
     case CS2('h','4'): return Tag_H4;
     case CS2('h','5'): return Tag_H5;
+    case CS2('h','6'): return Tag_H6;
     case CS4('h','e','a','d'):
         if (4 == len) return Tag_Head;
         break;
