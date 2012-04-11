@@ -177,7 +177,7 @@ print Template_Entities_Comment
 print createFastFinder(List_HTML_Entities, "uint32_t", "-1", False, "HtmlEntityRune")
 
 cssColors = [(name, "MKRGB(%s)" % value) for (name, value) in List_CSS_Colors]
-print createFastFinder(cssColors, "ARGB", "MKRGBA(0,0,0,0)", True)
+print createFastFinder(cssColors, "ARGB", "MKRGBA(0,0,0,0)", True, "CssColor")
 
 # enumerations for the header
 print createTypeEnum(tags, "HtmlTag", "Tag_NotFound")

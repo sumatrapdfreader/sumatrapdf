@@ -164,16 +164,30 @@ bool IsAlignProp(PropType type)
     return ((PropVertAlign == type) || (PropHorizAlign == type));
 }
 
-static const char *gCssKnownColorsStrings = "black\0blue\0gray\0green\0red\0transparent\0white\0yellow\0";
-static ARGB gCssKnownColorsValues[] = { MKRGB(0, 0, 0), MKRGB(0,0,255), MKRGB(128,128,128), MKRGB(0,128,0), MKRGB(255,0,0), MKARGB(0,0,0,0), MKRGB(255,255,255), MKRGB(255,255,0) };
+// TODO: use FindCssColor from gen_fast_string_lookup.py
+//       once there are significantly more colors
+static struct {
+    const char *name;
+    ARGB value;
+} gCssKnownColors[] = {
+    { "black", Color::Black },
+    { "blue",  Color::Blue  },
+    { "gray",  Color::Gray  },
+    { "green", Color::Green },
+    { "red",   Color::Red   },
+    { "white", Color::White },
+    { "transparent", MKARGB(0,0,0,0) },
+};
 
 static bool GetKnownCssColor(const char *name, ARGB& colOut)
 {
-    int pos = str::FindStrPosI(gCssKnownColorsStrings, name, str::Len(name));
-    if (-1 == pos)
-        return false;
-    colOut = gCssKnownColorsValues[pos];
-    return true;
+    for (size_t i = 0; i < dimof(gCssKnownColors); i++) {
+        if (str::EqI(name, gCssKnownColors[i].name)) {
+            colOut = gCssKnownColors[i].value;
+            return true;
+        }
+    }
+    return false;
 }
 
 // Parses css-like color formats:

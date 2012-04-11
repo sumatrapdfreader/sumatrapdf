@@ -82,11 +82,6 @@ inline const WCHAR * Find(const WCHAR *str, const WCHAR *find) {
     return wcsstr(str, find);
 }
 
-const char * FindI(const char *s, const char *find);
-
-int     FindStrPosI(const char *strings, const char *str, size_t len);
-int     FindStrPos(const char *strings, const char *str, size_t len);
-
 bool    BufFmtV(char *buf, size_t bufCchSize, const char *fmt, va_list args);
 char *  FmtV(const char *fmt, va_list args);
 char *  Format(const char *fmt, ...);

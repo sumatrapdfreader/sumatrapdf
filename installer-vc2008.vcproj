@@ -89,6 +89,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\utils\HtmlParserLookup.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\utils\HtmlParserLookup.h"
+					>
+				</File>
+				<File
 					RelativePath=".\src\utils\HtmlPrettyPrint.cpp"
 					>
 				</File>
