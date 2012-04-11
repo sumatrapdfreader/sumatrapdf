@@ -1278,7 +1278,7 @@ static void RenameFileInHistory(const TCHAR *oldPath, const TCHAR *newPath)
 static void HandleFinishedMobiLoadingMsg(FinishedMobiLoadingData *finishedMobiLoading)
 {
     Doc doc(*finishedMobiLoading->doc);
-    if (!doc.generic) {
+    if (!doc.IsEbook()) {
         // TODO: show notification that loading failed
         // TODO: remove from file history
         return;

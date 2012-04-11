@@ -200,7 +200,7 @@ UNINSTALLER_OBJS = \
 TESTER_OBJS = \
 	$(UTILS_OBJS) $(MUI_OBJS) $(ZIP_OBJS) $(ZLIB_OBJS) $(OS)\Tester.obj \
 	$(OS)\HtmlFormatter.obj $(OU)\NoFreeAllocator.obj $(OS)\MobiDoc.obj \
-	$(OS)\EpubDoc.obj $(OS)\Doc.obj $(OS)\Translations.obj
+	$(OS)\EpubDoc.obj $(OS)\Doc.obj
 
 PDFFILTER_OBJS = \
 	$(ODLL)\PdfFilterDll.obj $(ODLL)\CPdfFilter.obj $(PDFFILTER_RES) \
@@ -219,7 +219,7 @@ BROWSER_PLUGIN_OBJS = \
 ENGINEDUMP_OBJS = \
 	$(OS)\EngineDump.obj $(ENGINE_OBJS) $(LIBS_OBJS) $(UTILS_OBJS) \
 	$(OS)\HtmlFormatter.obj $(OMUI)\MiniMui.obj $(OS)\MobiDoc.obj \
-	$(OS)\Doc.obj $(OS)\Translations.obj
+	$(OS)\Doc.obj
 
 MEMTRACE_OBJS = \
 	$(OM)\MemTraceDll.obj $(UTILS_OBJS)

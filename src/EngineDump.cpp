@@ -354,6 +354,7 @@ Usage:
     TCHAR *password = NULL;
     TCHAR *renderPath = NULL;
     bool useAlternateHandlers = false;
+    bool loadOnly = false;
 
     for (size_t i = 2; i < argList.Count(); i++) {
         if (str::Eq(argList.At(i), _T("-full")))
@@ -364,6 +365,8 @@ Usage:
             renderPath = argList.At(++i);
         else if (str::Eq(argList.At(i), _T("-alt")))
             useAlternateHandlers = true;
+        else if (str::Eq(argList.At(i), _T("-loadonly")))
+            loadOnly = true;
         else
             goto Usage;
     }
@@ -380,7 +383,8 @@ Usage:
         ErrOut("Error: Couldn't create an engine for %s!\n", path::GetBaseName(filePath));
         return 1;
     }
-    DumpData(engine, fullDump);
+    if (!loadOnly)
+        DumpData(engine, fullDump);
     if (renderPath)
         RenderDocument(engine, renderPath);
     delete engine;

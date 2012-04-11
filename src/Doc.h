@@ -18,35 +18,23 @@
 // leaf nodes of the code
 
 class BaseEngine;
-class CbxEngine;
-class ChmEngine;
-class Chm2Engine;
-class DjVuEngine;
 class EpubDoc;
-class EpubEngine;
-class Fb2Engine;
-class ImageEngine;
-class ImageDirEngine;
-class MobiEngine;
 class MobiDoc;
 class MobiTestDoc;
-class PdfEngine;
-class PsEngine;
-class XpsEngine;
 
+enum EngineType;
 struct ImageData;
 
 class Doc
 {
 public:
-    enum DocType {
-        None,
-        CbxEng, ChmEng, Chm2Eng, DjVuEng, Epub,
-        EpubEng, Fb2Eng, ImageEng, ImageDirEng,
-        MobiEng, Mobi, MobiTest, PdfEng, PsEng, XpsEng
-    };
+    enum DocType { None, Engine, Epub, Error, Mobi, MobiTest };
 
+protected:
     DocType type;
+    // reuse the enumeration instead of trying
+    // to keep DocType in sync with EngineType
+    EngineType engineType;
 
     // If there was an error loading a file in CreateFromFile(),
     // this is an error message to be shown to the user. Most
@@ -55,9 +43,8 @@ public:
     // loading failed due to DRM
     // The caller can also display it's own message.
     //
-    // If it's set, it also marks a specific state: we tried to
-    // load the file but failed (wchich can be useful e.g.
-    // for implementing reloading)
+    // TODO: replace with an enumeration so that translation
+    //       can more easily happen in UI code?
     TCHAR *loadingErrorMessage;
 
     // A copy of the file path. We need this because while in
@@ -67,47 +54,47 @@ public:
 
     union {
         void *generic;
-        BaseEngine *engine; // we can always cast to the right type based on type
+        BaseEngine *engine; // we can always cast to the right type based on engineType
         EpubDoc * epubDoc;
         MobiDoc * mobiDoc;
         MobiTestDoc *mobiTestDoc;
     };
 
+    const TCHAR *GetFilePathFromDoc() const;
+    void FreeStrings();
+
+public:
     Doc(const Doc& other);
     Doc& operator=(const Doc& other);
     ~Doc();
 
-    void Clear() { type = None; loadingErrorMessage = NULL; filePath = NULL; generic = NULL; }
+    void Clear();
     Doc() { Clear(); }
-    Doc(CbxEngine *doc) { Set(doc); }
-    Doc(ChmEngine *doc) { Set(doc); }
-    Doc(Chm2Engine *doc) { Set(doc); }
-    Doc(DjVuEngine *doc) { Set(doc); }
-    Doc(EpubDoc *doc) { Set(doc); }
-    Doc(EpubEngine *doc) { Set(doc); }
-    Doc(Fb2Engine *doc) { Set(doc); }
-    Doc(ImageEngine *doc) { Set(doc); }
-    Doc(ImageDirEngine *doc)  { Set(doc); }
-    Doc(MobiEngine *doc) { Set(doc); }
-    Doc(MobiDoc *doc) { Set(doc); }
-    Doc(MobiTestDoc *doc) { Set(doc); }
-    Doc(PdfEngine *doc) { Set(doc); }
-    Doc(PsEngine *doc) { Set(doc); }
-    Doc(XpsEngine *doc) { Set(doc); }
+    Doc(BaseEngine *doc, EngineType engineType);
+    Doc(EpubDoc *doc);
+    Doc(MobiDoc *doc);
+    Doc(MobiTestDoc *doc);
 
     void Delete();
 
     // note: find a better name, if possible
     bool IsNone() const { return None == type; }
+    // to allow distinguishing loading errors from blank docs
+    bool IsError() const { return Error == type; }
     bool IsEbook() const;
-    bool IsEngine() const { return !IsNone() && !IsEbook(); }
+    bool IsEngine() const { return Engine == type; }
 
-    bool LoadingFailed() const { return NULL != loadingErrorMessage; }
+    bool LoadingFailed() const {
+        CrashIf(loadingErrorMessage && !IsError());
+        return NULL != loadingErrorMessage;
+    }
 
     BaseEngine *AsEngine() const;
+    EpubDoc *AsEpub() const;
     MobiDoc *AsMobi() const;
     MobiTestDoc *AsMobiTest() const;
-    EpubDoc *AsEpub() const;
+
+    EngineType GetEngineType() const { return engineType; }
 
     // instead of adding these to Doc, they could also be part
     // of a virtual EbookDoc interface that *Doc implement so
@@ -119,28 +106,6 @@ public:
     ImageData *GetCoverImage();
 
     static Doc CreateFromFile(const TCHAR *filePath);
-
-private:
-    // Set() only called from the constructor and it really sets (and not replaces)
-    void Set(CbxEngine *doc);
-    void Set(ChmEngine *doc);
-    void Set(Chm2Engine *doc);
-    void Set(DjVuEngine *doc);
-    void Set(EpubEngine *doc);
-    void Set(EpubDoc *doc);
-    void Set(Fb2Engine *doc);
-    void Set(ImageEngine *doc);
-    void Set(ImageDirEngine *doc);
-    void Set(MobiEngine *doc);
-    void Set(MobiDoc *doc);
-    void Set(MobiTestDoc *doc);
-    void Set(PdfEngine *doc);
-    void Set(PsEngine *doc);
-    void Set(XpsEngine *doc);
-
-    const TCHAR *GetFilePathFromDoc() const;
-    void FreeStrings();
-    void SetEngine(DocType newType, BaseEngine *doc);
 };
 
 #endif
