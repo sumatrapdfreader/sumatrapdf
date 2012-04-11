@@ -3579,7 +3579,12 @@ static void FrameOnChar(WindowInfo& win, WPARAM key)
     case 'z':
         win.ToggleZoom();
         break;
-    case '+':
+    // per http://en.wikipedia.org/wiki/Keyboard_layout
+    // almost all keyboard layouts allow to press either
+    // '+' or '=' unshifted (and one of them is also often
+    // close to '-'); the other two alternatives are for
+    // the major exception: the two Swiss layouts
+    case '+': case '=': case 0xE0: case 0xE4:
         ZoomToSelection(&win, win.dm->NextZoomStep(ZOOM_MAX));
         break;
     case '-':
