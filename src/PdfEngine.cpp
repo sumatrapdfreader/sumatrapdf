@@ -585,9 +585,46 @@ struct FitzImagePos {
 
 struct ListInspectionData {
     Vec<FitzImagePos> *images;
-    bool requiresBlending;
+    bool req_blending;
+    bool req_t3_fonts;
     size_t mem_estimate;
+
+    ListInspectionData(Vec<FitzImagePos>& images) : images(&images),
+        req_blending(false), req_t3_fonts(false), mem_estimate(0) { }
 };
+
+extern "C" static void
+fz_inspection_free(fz_device *dev)
+{
+    // images are extracted in bottom-to-top order, but for GetElements
+    // we want to access them in top-to-bottom order (since images at
+    // the bottom might not be visible at all)
+    ((ListInspectionData *)dev->user)->images->Reverse();
+}
+
+extern "C" static void
+fz_inspection_fill_text(fz_device *dev, fz_text *text, fz_matrix ctm, fz_colorspace *colorspace, float *color, float alpha)
+{
+    ((ListInspectionData *)dev->user)->req_t3_fonts = text->font->t3procs != NULL;
+}
+
+extern "C" static void
+fz_inspection_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *stroke, fz_matrix ctm, fz_colorspace *colorspace, float *color, float alpha)
+{
+    ((ListInspectionData *)dev->user)->req_t3_fonts = text->font->t3procs != NULL;
+}
+
+extern "C" static void
+fz_inspection_clip_text(fz_device *dev, fz_text *text, fz_matrix ctm, int accumulate)
+{
+    ((ListInspectionData *)dev->user)->req_t3_fonts = text->font->t3procs != NULL;
+}
+
+extern "C" static void
+fz_inspection_clip_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *stroke, fz_matrix ctm)
+{
+    ((ListInspectionData *)dev->user)->req_t3_fonts = text->font->t3procs != NULL;
+}
 
 extern "C" static void
 fz_inspection_fill_shade(fz_device *dev, fz_shade *shade, fz_matrix ctm, float alpha)
@@ -628,27 +665,25 @@ extern "C" static void
 fz_inspection_begin_group(fz_device *dev, fz_rect rect, int isolated, int knockout, int blendmode, float alpha)
 {
     if (blendmode != FZ_BLEND_NORMAL || alpha != 1.0f || !isolated || knockout)
-        ((ListInspectionData *)dev->user)->requiresBlending = true;
-}
-
-extern "C" static void
-fz_inspection_free(fz_device *dev)
-{
-    // images are extracted in bottom-to-top order, but for GetElements
-    // we want to access them in top-to-bottom order (since images at
-    // the bottom might not be visible at all)
-    ((ListInspectionData *)dev->user)->images->Reverse();
+        ((ListInspectionData *)dev->user)->req_blending = true;
 }
 
 static fz_device *fz_new_inspection_device(fz_context *ctx, ListInspectionData *data)
 {
     fz_device *dev = fz_new_device(ctx, data);
+    dev->free_user = fz_inspection_free;
+
+    dev->fill_text = fz_inspection_fill_text;
+    dev->stroke_text = fz_inspection_stroke_text;
+    dev->clip_text = fz_inspection_clip_text;
+    dev->clip_stroke_text = fz_inspection_clip_stroke_text;
+
     dev->fill_shade = fz_inspection_fill_shade;
     dev->fill_image = fz_inspection_fill_image;
     dev->fill_image_mask = fz_inspection_fill_image_mask;
     dev->clip_image_mask = fz_inspection_clip_image_mask;
+
     dev->begin_group = fz_inspection_begin_group;
-    dev->free_user = fz_inspection_free;
     return dev;
 }
 
@@ -857,6 +892,7 @@ struct PdfPageRun {
     fz_display_list *list;
     size_t size_est;
     bool req_blending;
+    bool req_t3_fonts;
     int refs;
 };
 
@@ -1521,7 +1557,7 @@ int PdfEngineImpl::GetPageNo(pdf_page *page)
 PdfPageRun *PdfEngineImpl::CreatePageRun(pdf_page *page, fz_display_list *list)
 {
     Vec<FitzImagePos> positions;
-    ListInspectionData data = { &positions, false, 0 };
+    ListInspectionData data(positions);
     fz_device *dev = NULL;
 
     fz_var(dev);
@@ -1545,7 +1581,7 @@ PdfPageRun *PdfEngineImpl::CreatePageRun(pdf_page *page, fz_display_list *list)
         }
     }
 
-    PdfPageRun newRun = { page, list, data.mem_estimate, data.requiresBlending, 1 };
+    PdfPageRun newRun = { page, list, data.mem_estimate, data.req_blending, data.req_t3_fonts, 1 };
     return (PdfPageRun *)_memdup(&newRun);
 }
 
@@ -1789,13 +1825,14 @@ bool PdfEngineImpl::RenderPage(HDC hDC, pdf_page *page, RectI screenRect, fz_mat
 
 // Fitz' draw_device.c currently isn't able to correctly/quickly render some
 // transparency groups while our dev_gdiplus.cpp gets most of them right
+// (however dev_gdiplus' Type 3 fonts look worse than bad transparency rendering)
 bool PdfEngineImpl::RequiresBlending(pdf_page *page)
 {
     PdfPageRun *run = GetPageRun(page);
     if (!run)
         return false;
 
-    bool result = run->req_blending;
+    bool result = run->req_blending && !run->req_t3_fonts;
     DropPageRun(run);
     return result;
 }
@@ -2019,7 +2056,7 @@ RenderedBitmap *PdfEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
         return NULL;
 
     Vec<FitzImagePos> positions;
-    ListInspectionData data = { &positions, false, 0 };
+    ListInspectionData data(positions);
     fz_device *dev;
 
     EnterCriticalSection(&ctxAccess);
@@ -2915,7 +2952,7 @@ int XpsEngineImpl::GetPageNo(xps_page *page)
 XpsPageRun *XpsEngineImpl::CreatePageRun(xps_page *page, fz_display_list *list)
 {
     Vec<FitzImagePos> positions;
-    ListInspectionData data = { &positions, false, 0 };
+    ListInspectionData data(positions);
     fz_device *dev = NULL;
 
     fz_var(dev);
@@ -3405,7 +3442,7 @@ RenderedBitmap *XpsEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
         return NULL;
 
     Vec<FitzImagePos> positions;
-    ListInspectionData data = { &positions, false, 0 };
+    ListInspectionData data(positions);
     fz_device *dev;
 
     EnterCriticalSection(&ctxAccess);
