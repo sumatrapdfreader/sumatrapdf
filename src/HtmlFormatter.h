@@ -151,7 +151,7 @@ protected:
     void  ForceNewPage();
     bool  EnsureDx(float dx);
 
-    DrawStyle *CurrStyle() { return &styleStack.Last(); }
+    DrawStyle *CurrStyle() { return &currLineStyleStack.Last(); }
     Font *CurrFont() { return CurrStyle()->font; }
     void  SetFont(const WCHAR *fontName, FontStyle fs, float fontSize=-1);
     void  SetFont(Font *origFont, FontStyle fs, float fontSize=-1);
@@ -175,6 +175,9 @@ protected:
     RectF            (* measureAlgo)(Graphics *g, Font *f, const WCHAR *s, size_t len);
 
     Vec<DrawStyle>      styleStack;
+    // style stack of the current line
+    // (might be pushed to the next page)
+    Vec<DrawStyle>      currLineStyleStack;
     // current position in a page
     float               currX, currY;
     // remembered when we start a new line, used when we actually

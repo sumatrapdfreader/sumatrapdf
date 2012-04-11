@@ -97,10 +97,10 @@ public:
 
     Vec& operator=(const Vec& that) {
         if (this != &that) {
-            Reset();
             EnsureCap(that.cap);
             // use memcpy, as Vec only supports POD types
             memcpy(els, that.els, sizeof(T) * (len = that.len));
+            memset(els + len, 0, sizeof(T) * (cap - len));
         }
         return *this;
     }

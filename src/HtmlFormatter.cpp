@@ -136,7 +136,8 @@ HtmlFormatter::HtmlFormatter(HtmlFormatterArgs *args) :
     DrawStyle style;
     style.font = mui::GetCachedFont(defaultFontName, defaultFontSize, FontStyleRegular);
     style.align = Align_Justify;
-    styleStack.Append(style);
+    currLineStyleStack.Append(style);
+    styleStack = currLineStyleStack;
 
     lineSpacing = CurrFont()->GetHeight(gfx);
     spaceDx = CurrFont()->GetSize() / 2.5f; // note: a heuristic
@@ -173,7 +174,7 @@ void HtmlFormatter::SetFont(const WCHAR *fontName, FontStyle fs, float fontSize)
     if (CurrFont() != newFont)
         AppendInstr(DrawInstr::SetFont(newFont));
 
-    styleStack.Append(styleStack.Last());
+    currLineStyleStack.Append(currLineStyleStack.Last());
     CurrStyle()->font = newFont;
 }
 
@@ -211,14 +212,14 @@ void HtmlFormatter::ChangeFontStyle(FontStyle fs, bool addStyle)
 
 void HtmlFormatter::SetAlignment(AlignAttr align)
 {
-    styleStack.Append(styleStack.Last());
+    currLineStyleStack.Append(currLineStyleStack.Last());
     CurrStyle()->align = align;
 }
 
 void HtmlFormatter::RevertStyleChange()
 {
-    if (styleStack.Count() > 1) {
-        DrawStyle style = styleStack.Pop();
+    if (currLineStyleStack.Count() > 1) {
+        DrawStyle style = currLineStyleStack.Pop();
         if (style.font != CurrFont())
             AppendInstr(DrawInstr::SetFont(CurrFont()));
     }
@@ -474,21 +475,8 @@ bool HtmlFormatter::FlushCurrLine(bool isParagraphBreak)
         AppendInstr(DrawInstr::LinkStart(link.str.s, link.str.len));
         currLinkIdx = currLineInstr.Count();
     }
+    styleStack = currLineStyleStack;
     return createdPage;
-}
-
-static DrawInstr *FindLastSetFontInstr(HtmlPage *page)
-{
-    if (!page)
-        return NULL;
-    Vec<DrawInstr> *els = &page->instructions;
-    size_t n = els->Count();
-    for (size_t i = 0; i < n; i++) {
-        DrawInstr *di = &els->At(n - i - 1);
-        if (InstrSetFont == di->type)
-            return di;
-    }
-    return NULL;
 }
 
 void HtmlFormatter::EmitNewPage()
@@ -499,11 +487,7 @@ void HtmlFormatter::EmitNewPage()
     currPage->styleStack = styleStack;
     currPage->listDepth = listDepth;
     currPage->preFormatted = preFormatted;
-    DrawInstr *lastSetFont = FindLastSetFontInstr(prevPage);
-    if (lastSetFont)
-        currPage->instructions.Append(*lastSetFont);
-    else
-        currPage->instructions.Append(DrawInstr::SetFont(CurrFont()));
+    currPage->instructions.Append(DrawInstr::SetFont(currPage->styleStack.Last().font));
     currY = 0.f;
 }
 
