@@ -702,17 +702,17 @@ void Fb2Formatter::HandleTagImg_Fb2(HtmlToken *t)
 void Fb2Formatter::HandleTagAsHtml(HtmlToken *t, const char *name)
 {
     HtmlToken tok;
-    tok.SetValue(t->type, name, name + str::Len(name));
+    tok.SetTag(t->type, name, name + str::Len(name));
     HandleHtmlTag(&tok);
 }
 
 void Fb2Formatter::HandleFb2Tag(HtmlToken *t)
 {
-    if (t->NameIs("title") || t->NameIs("subtitle")) {
-        bool isSubtitle = t->NameIs("subtitle");
+    if (Tag_Title == t->tag || Tag_Subtitle == t->tag) {
+        bool isSubtitle = Tag_Subtitle == t->tag;
         ScopedMem<char> name(str::Format("h%d", section + (isSubtitle ? 1 : 0)));
         HtmlToken tok;
-        tok.SetValue(t->type, name, name + str::Len(name));
+        tok.SetTag(t->type, name, name + str::Len(name));
         HandleTagHx(&tok);
         HandleAnchorTag(t);
         if (!isSubtitle && t->IsStartTag()) {
@@ -721,7 +721,7 @@ void Fb2Formatter::HandleFb2Tag(HtmlToken *t)
             currPage->instructions.Append(DrawInstr::Anchor(link, str::Len(link), RectF(0, currY, pageDx, 0)));
         }
     }
-    else if (t->NameIs("section")) {
+    else if (Tag_Section == t->tag) {
         if (t->IsStartTag())
             section++;
         else if (t->IsEndTag() && section > 1)
@@ -729,21 +729,21 @@ void Fb2Formatter::HandleFb2Tag(HtmlToken *t)
         FlushCurrLine(true);
         HandleAnchorTag(t);
     }
-    else if (t->NameIs("p")) {
+    else if (Tag_P == t->tag) {
         if (htmlParser->tagNesting.Find(Tag_Title) == -1)
             HandleHtmlTag(t);
     }
-    else if (t->NameIs("image")) {
+    else if (Tag_Image == t->tag) {
         HandleTagImg_Fb2(t);
         HandleAnchorTag(t);
     }
-    else if (t->NameIs("a")) {
+    else if (Tag_A == t->tag) {
         HandleTagA(t, fb2Doc->GetHrefName());
         HandleAnchorTag(t, true);
     }
-    else if (t->NameIs("pagebreak"))
+    else if (Tag_Pagebreak == t->tag)
         ForceNewPage();
-    else if (t->NameIs("strong"))
+    else if (Tag_Strong == t->tag)
         HandleTagAsHtml(t, "b");
     else if (t->NameIs("emphasis"))
         HandleTagAsHtml(t, "i");
@@ -849,15 +849,15 @@ DocTocItem *Fb2EngineImpl::GetTocTree()
     HtmlPullParser parser(xmlData, xmlLen);
     HtmlToken *tok;
     while ((tok = parser.Next()) && !tok->IsError()) {
-        if (tok->IsStartTag() && tok->NameIs("section"))
+        if (tok->IsStartTag() && Tag_Section == tok->tag)
             level++;
-        else if (tok->IsEndTag() && tok->NameIs("section") && level > 0)
+        else if (tok->IsEndTag() && Tag_Section == tok->tag && level > 0)
             level--;
-        else if (tok->IsStartTag() && tok->NameIs("title")) {
+        else if (tok->IsStartTag() && Tag_Title == tok->tag) {
             inTitle = true;
             titleCount++;
         }
-        else if (tok->IsEndTag() && tok->NameIs("title")) {
+        else if (tok->IsEndTag() && Tag_Title == tok->tag) {
             if (itemText)
                 str::NormalizeWS(itemText);
             if (!str::IsEmpty(itemText.Get())) {

@@ -45,8 +45,9 @@ struct HtmlToken {
     bool IsError() const { return type == Error; }
 
     const char *GetReparsePoint() const;
-    void SetValue(TokenType new_type, const char *new_s, const char *end);
+    void SetTag(TokenType new_type, const char *new_s, const char *end);
     void SetError(ParsingError err, const char *errContext);
+    void SetText(const char *new_s, const char *end);
 
     TokenType        type;
     ParsingError     error;

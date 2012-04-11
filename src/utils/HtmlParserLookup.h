@@ -11,13 +11,14 @@ enum HtmlTag {
     Tag_Div, Tag_Dl, Tag_Dt, Tag_Em, Tag_Font,
     Tag_Frame, Tag_Guide, Tag_H1, Tag_H2, Tag_H3,
     Tag_H4, Tag_H5, Tag_Head, Tag_Hr, Tag_Html,
-    Tag_I, Tag_Img, Tag_Input, Tag_Lh, Tag_Li,
-    Tag_Link, Tag_Mbp_Pagebreak, Tag_Meta, Tag_Object, Tag_Ol,
-    Tag_P, Tag_Pagebreak, Tag_Param, Tag_Pre, Tag_Reference,
-    Tag_S, Tag_Small, Tag_Span, Tag_Strike, Tag_Strong,
-    Tag_Style, Tag_Sub, Tag_Sup, Tag_Table, Tag_Td,
-    Tag_Th, Tag_Title, Tag_Tr, Tag_Tt, Tag_U,
-    Tag_Ul, Tag_Video, Tag_NotFound
+    Tag_I, Tag_Image, Tag_Img, Tag_Input, Tag_Lh,
+    Tag_Li, Tag_Link, Tag_Mbp_Pagebreak, Tag_Meta, Tag_Object,
+    Tag_Ol, Tag_P, Tag_Pagebreak, Tag_Param, Tag_Pre,
+    Tag_Reference, Tag_S, Tag_Section, Tag_Small, Tag_Span,
+    Tag_Strike, Tag_Strong, Tag_Style, Tag_Sub, Tag_Subtitle,
+    Tag_Sup, Tag_Table, Tag_Td, Tag_Th, Tag_Title,
+    Tag_Tr, Tag_Tt, Tag_U, Tag_Ul, Tag_Video,
+    Tag_NotFound
 };
 
 enum AlignAttr {

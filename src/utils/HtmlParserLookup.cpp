@@ -85,6 +85,9 @@ HtmlTag FindHtmlTag(const char *name, size_t len)
         if (4 == len) return Tag_Html;
         return Tag_NotFound;
     case CS1('i'): return Tag_I;
+    case CS4('i','m','a','g'):
+        if (5 == len && CS1('e') == STR1i(name + 4)) return Tag_Image;
+        return Tag_NotFound;
     case CS3('i','m','g'): return Tag_Img;
     case CS4('i','n','p','u'):
         if (5 == len && CS1('t') == STR1i(name + 4)) return Tag_Input;
@@ -116,6 +119,9 @@ HtmlTag FindHtmlTag(const char *name, size_t len)
         if (9 == len && str::EqNI(name + 4, "rence", 5)) return Tag_Reference;
         return Tag_NotFound;
     case CS1('s'): return Tag_S;
+    case CS4('s','e','c','t'):
+        if (7 == len && CS3('i','o','n') == STR3i(name + 4)) return Tag_Section;
+        return Tag_NotFound;
     case CS4('s','m','a','l'):
         if (5 == len && CS1('l') == STR1i(name + 4)) return Tag_Small;
         return Tag_NotFound;
@@ -132,6 +138,9 @@ HtmlTag FindHtmlTag(const char *name, size_t len)
         if (5 == len && CS1('e') == STR1i(name + 4)) return Tag_Style;
         return Tag_NotFound;
     case CS3('s','u','b'): return Tag_Sub;
+    case CS4('s','u','b','t'):
+        if (8 == len && CS4('i','t','l','e') == STR4i(name + 4)) return Tag_Subtitle;
+        return Tag_NotFound;
     case CS3('s','u','p'): return Tag_Sup;
     case CS4('t','a','b','l'):
         if (5 == len && CS1('e') == STR1i(name + 4)) return Tag_Table;

@@ -204,14 +204,22 @@ bool AttrInfo::ValIs(const char *s) const
     return StrLenIs(val, valLen, s);
 }
 
-void HtmlToken::SetValue(TokenType new_type, const char *new_s, const char *end)
+void HtmlToken::SetTag(TokenType new_type, const char *new_s, const char *end)
 {
     type = new_type;
     s = new_s;
     sLen = end - s;
-    tag = Tag_NotFound;
-    nLen = 0;
+    SkipName(new_s, s + sLen);
+    nLen = new_s - s;
+    tag = FindHtmlTag(s, nLen);
     nextAttr = NULL;
+}
+
+void HtmlToken::SetText(const char *new_s, const char *end)
+{
+    type = Text;
+    s = new_s;
+    sLen = end - s;
 }
 
 void HtmlToken::SetError(ParsingError err, const char *errContext)
@@ -371,15 +379,6 @@ static void UpdateTagNesting(Vec<HtmlTag> *tagNesting, HtmlToken *t)
         RecordEndTag(tagNesting, t->tag);
 }
 
-static size_t GetTagLen(const HtmlToken *tok)
-{
-    for (size_t i = 0; i < tok->sLen; i++) {
-        if (!IsNameChar(tok->s[i]))
-            return i;
-    }
-    return tok->sLen;
-}
-
 // Returns next part of html or NULL if finished
 HtmlToken *HtmlPullParser::Next()
 {
@@ -397,7 +396,7 @@ Next:
             // text cannot be at the end
             currToken.SetError(HtmlToken::NonTagAtEnd, start);
         } else {
-            currToken.SetValue(HtmlToken::Text, start, currPos);
+            currToken.SetText(start, currPos);
         }
         return &currToken;
     }
@@ -438,15 +437,11 @@ Next:
     if (('/' == *start) && ('/' == currPos[-1])) { // </foo/>
         currToken.SetError(HtmlToken::InvalidTag, start);
     } else if ('/' == *start) { // </foo>
-        currToken.SetValue(HtmlToken::EndTag, start + 1, currPos);
+        currToken.SetTag(HtmlToken::EndTag, start + 1, currPos);
     } else if ('/' == currPos[-1]) { // <foo/>
-        currToken.SetValue(HtmlToken::EmptyElementTag, start, currPos - 1);
+        currToken.SetTag(HtmlToken::EmptyElementTag, start, currPos - 1);
     } else {
-        currToken.SetValue(HtmlToken::StartTag, start, currPos);
-    }
-    if (!currToken.IsError()) {
-        currToken.nLen = GetTagLen(&currToken);
-        currToken.tag = FindHtmlTag(currToken.s, currToken.nLen);
+        currToken.SetTag(HtmlToken::StartTag, start, currPos);
     }
     ++currPos;
     UpdateTagNesting(&tagNesting, &currToken);

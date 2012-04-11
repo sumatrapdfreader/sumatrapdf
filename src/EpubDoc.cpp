@@ -453,7 +453,8 @@ bool Fb2Doc::Load()
     const char *xmlPI = str::Find(data, "<?xml");
     if (xmlPI && str::Find(xmlPI, "?>")) {
         HtmlToken pi;
-        pi.SetValue(HtmlToken::EmptyElementTag, xmlPI + 2, str::Find(xmlPI, "?>"));
+        pi.SetTag(HtmlToken::EmptyElementTag, xmlPI + 2, str::Find(xmlPI, "?>"));
+        pi.nLen = 4;
         AttrInfo *enc = pi.GetAttrByName("encoding");
         if (enc) {
             ScopedMem<char> tmp(str::DupN(enc->val, enc->valLen));
@@ -477,11 +478,11 @@ bool Fb2Doc::Load()
                 hrefName.Set(str::Join(ns, ":href"));
             }
         }
-        else if (!inTitleInfo && tok->IsStartTag() && tok->NameIs("body")) {
+        else if (!inTitleInfo && tok->IsStartTag() && Tag_Body == tok->tag) {
             if (!inBody++)
                 bodyStart = tok->s;
         }
-        else if (inBody && tok->IsEndTag() && tok->NameIs("body")) {
+        else if (inBody && tok->IsEndTag() && Tag_Body == tok->tag) {
             if (!--inBody) {
                 if (xmlData.Count() > 0)
                     xmlData.Append("<pagebreak />");
