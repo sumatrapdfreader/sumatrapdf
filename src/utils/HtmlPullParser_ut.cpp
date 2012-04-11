@@ -101,10 +101,6 @@ static void Test01()
     assert(IsTagSelfClosing(Tag_Link));
     assert(IsTagSelfClosing(Tag_Param));
     assert(!IsTagSelfClosing(Tag_P));
-    assert(IsTagSelfClosing("area"));
-    assert(IsTagSelfClosing("link"));
-    assert(IsTagSelfClosing("param"));
-    assert(!IsTagSelfClosing("p"));
 }
 
 }

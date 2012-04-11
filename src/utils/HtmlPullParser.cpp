@@ -36,14 +36,6 @@ int HtmlEntityNameToRune(const WCHAR *name, size_t nameLen)
     return FindHtmlEntityRune(asciiName, nameLen);
 }
 
-bool IsTagSelfClosing(const char *s, size_t len)
-{
-    if (-1 == len)
-        len = str::Len(s);
-    HtmlTag tag = FindHtmlTag(s, len);
-    return IsTagSelfClosing(tag);
-}
-
 static bool SkipUntil(const char*& s, const char *end, char c)
 {
     while ((s < end) && (*s != c)) {
@@ -218,6 +210,7 @@ void HtmlToken::SetValue(TokenType new_type, const char *new_s, const char *end)
     s = new_s;
     sLen = end - s;
     tag = Tag_NotFound;
+    nLen = 0;
     nextAttr = NULL;
 }
 
@@ -230,7 +223,7 @@ void HtmlToken::SetError(ParsingError err, const char *errContext)
 
 bool HtmlToken::NameIs(const char *name) const
 {
-    return  (str::Len(name) == GetTagLen(this)) && str::StartsWithI(s, name);
+    return (str::Len(name) == nLen) && str::StartsWithI(s, name);
 }
 
 // reparse point is an address within html that we can
@@ -276,7 +269,7 @@ AttrInfo *HtmlToken::NextAttr()
     // start after the last attribute found (or the beginning)
     const char *curr = nextAttr;
     if (!curr)
-        curr = s + GetTagLen(this);
+        curr = s + nLen;
     const char *end = s + sLen;
 
     // parse attribute name
@@ -378,6 +371,15 @@ static void UpdateTagNesting(Vec<HtmlTag> *tagNesting, HtmlToken *t)
         RecordEndTag(tagNesting, t->tag);
 }
 
+static size_t GetTagLen(const HtmlToken *tok)
+{
+    for (size_t i = 0; i < tok->sLen; i++) {
+        if (!IsNameChar(tok->s[i]))
+            return i;
+    }
+    return tok->sLen;
+}
+
 // Returns next part of html or NULL if finished
 HtmlToken *HtmlPullParser::Next()
 {
@@ -442,20 +444,13 @@ Next:
     } else {
         currToken.SetValue(HtmlToken::StartTag, start, currPos);
     }
-    if (!currToken.IsError())
-        currToken.tag = FindHtmlTag(currToken.s, GetTagLen(&currToken));
+    if (!currToken.IsError()) {
+        currToken.nLen = GetTagLen(&currToken);
+        currToken.tag = FindHtmlTag(currToken.s, currToken.nLen);
+    }
     ++currPos;
     UpdateTagNesting(&tagNesting, &currToken);
     return &currToken;
-}
-
-size_t GetTagLen(const HtmlToken *tok)
-{
-    for (size_t i = 0; i < tok->sLen; i++) {
-        if (!IsNameChar(tok->s[i]))
-            return i;
-    }
-    return tok->sLen;
 }
 
 // note: this is a bit unorthodox but allows us to easily separate

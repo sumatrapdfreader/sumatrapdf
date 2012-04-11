@@ -6,13 +6,10 @@
 
 #include "HtmlPullParser.h"
 
-// define to use HtmlPullParser for parsing
-// TODO: always parse using HtmlPullParser
-#define USE_PULL_PARSER
-
 /*
 Html parser that is good enough for parsing html files
-inside CHM archives. Not meant for general use.
+inside CHM archives (and XML files in EPUB documents).
+Not really meant for general use.
 
 name/val pointers inside Element/Attr structs refer to
 memory inside HtmlParser::s, so they don't need to be freed.
@@ -23,57 +20,6 @@ struct HtmlAttr {
     char *val;
     HtmlAttr *next;
 };
-
-#ifndef USE_PULL_PARSER
-
-static int IsName(char c)
-{
-    return c == '.' || c == '-' || c == '_' || c == ':' ||
-           str::IsDigit(c) || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
-}
-
-static void SkipWs(char **sPtr)
-{
-    char *s = *sPtr;
-    while (str::IsWs(*s)) {
-        s++;
-    }
-    *sPtr = s;
-}
-
-static void SkipName(char **sPtr)
-{
-    char *s = *sPtr;
-    while (IsName(*s)) {
-        s++;
-    }
-    *sPtr = s;
-}
-
-static bool SkipUntil(char **sPtr, char c)
-{
-    char *s = *sPtr;
-    while (*s && (*s != c)) {
-        ++s;
-    }
-    *sPtr = s;
-    return *s == c;
-}
-
-// 0 if not tag end, 1 if ends with '>' and 2 if ends with "/>"
-static int TagEndLen(char *s) {
-    if ('>' == *s)
-        return 1;
-    if ('/' == s[0] && '>' == s[1])
-        return 2;
-    return 0;
-}
-
-static bool IsUnquotedAttrValEnd(char c) {
-    return !c || str::IsWs(c) || c == '/' || c == '>';
-}
-
-#endif
 
 HtmlElement *HtmlElement::GetChildByName(const char *name, int idx) const
 {
@@ -256,178 +202,6 @@ void HtmlParser::AppendAttr(char *name, char *value)
     currElement->firstAttr->val = value;
 }
 
-#ifndef USE_PULL_PARSER
-
-static char *ParseAttrValue(char **sPtr)
-{
-    char *attrVal = NULL;
-    char *s = *sPtr;
-    SkipWs(&s);
-    char quoteChar = *s;
-    if (quoteChar == '"' || quoteChar == '\'') {
-        ++s;
-        attrVal = s;
-        if (!SkipUntil(&s, quoteChar))
-            return NULL;
-        *s++ = 0;
-    } else {
-        attrVal = s;
-        while (!IsUnquotedAttrValEnd(*s)) {
-            ++s;
-        }
-        if (!str::IsWs(*s) && TagEndLen(s) == 0)
-            return NULL;
-        if (str::IsWs(*s))
-            *s = 0;
-    }
-    *sPtr = s;
-    return attrVal;
-}
-
-static char *ParseAttrName(char **sPtr)
-{
-    char *s = *sPtr;
-    char *attrName = s;
-    SkipName(&s);
-    char *attrNameEnd = s;
-    SkipWs(&s);
-    if (*s != '=')
-        return NULL;
-    *attrNameEnd = 0; // terminate attribute name
-    *sPtr = ++s;
-    return attrName;
-}
-
-// Parse s in place i.e. we assume we can modify it. Must be 0-terminated.
-// The caller owns the memory for s.
-HtmlElement *HtmlParser::ParseInPlace(char *s, UINT codepage)
-{
-    char *tagName, *attrName, *attrVal, *tagEnd;
-    int tagEndLen;
-
-    if (this->html)
-        Reset();
-
-    this->html = s;
-    this->codepage = codepage;
-
-ParseText:
-    if (!SkipUntil(&s, '<')) {
-        // Note: I think we can be in an inconsistent state here
-        // (unclosed tags) but not sure if we should care
-        return rootElement;
-    }
-    // TODO: if within a tag, set this as tag value
-    // Note: even then it won't handle cases where value
-    // spans multiple parts as in:
-    // "<a>foo<b/>bar</a>", where value of tag a should be "foobar"
-    ++s;
-
-    if (*s == '!' || *s == '?') {
-        ++s;
-        goto ParseExclOrPi;
-    }
-
-    if (*s == '/') {
-        ++s;
-        goto ParseClosingElement;
-    }
-
-    // parse element name
-    errorContext = s;
-    SkipWs(&s);
-    if (!IsName(*s))
-        return ParseError(ErrParsingElement);
-    tagName = s;
-    SkipName(&s);
-    tagEnd = s;
-    SkipWs(&s);
-    tagEndLen = TagEndLen(s);
-    if (tagEndLen > 0) {
-        *tagEnd = 0;
-        StartTag(tagName);
-        if (tagEndLen == 2 || IsTagSelfClosing(tagName))
-            CloseTag(tagName);
-        s += tagEndLen;
-        goto ParseText;
-    }
-    if (str::IsWs(*tagEnd)) {
-        *tagEnd = 0;
-        StartTag(tagName);
-        goto ParseAttributes;
-    }
-    return ParseError(ErrParsingElementName);
-
-ParseClosingElement: // "</"
-    errorContext = s;
-    SkipWs(&s);
-    if (!IsName(*s))
-        return ParseError(ErrParsingClosingElement);
-    tagName = s;
-    SkipName(&s);
-    tagEnd = s;
-    SkipWs(&s);
-    if (*s != '>')
-        return ParseError(ErrParsingClosingElement);
-    *tagEnd = 0;
-    CloseTag(tagName);
-    ++s;
-    goto ParseText;
-
-ParseAttributes:
-    errorContext = s;
-    SkipWs(&s);
-    if (IsName(*s))
-        goto ParseAttributeName;
-    tagEndLen = TagEndLen(s);
-    if (0 == tagEndLen)
-        return ParseError(ErrParsingAttributes);
-
-FoundElementEnd:
-    if (tagEndLen == 2 || IsTagSelfClosing(tagName))
-        CloseTag(tagName);
-    s += tagEndLen;
-    goto ParseText;
-
-ParseAttributeName:
-    errorContext = s;
-    attrName = ParseAttrName(&s);
-    if (!attrName)
-        return ParseError(ErrParsingAttributeName);
-    // parse attribute value
-    errorContext = s;
-    attrVal = ParseAttrValue(&s);
-    if (!attrVal)
-        return ParseError(ErrParsingAttributeValue);
-    tagEndLen = TagEndLen(s);
-    if (tagEndLen > 0) {
-        *s = 0;
-        AppendAttr(attrName, attrVal);
-        goto FoundElementEnd;
-    }
-    AppendAttr(attrName, attrVal);
-    s++;
-    goto ParseAttributes;
-
-ParseExclOrPi: // "<!" or "<?"
-    // might be a <!DOCTYPE ..>, a <!-- comment -->, a <? processing instruction >
-    // or really anything. We're very lenient and consider it a success
-    // if we find a terminating '>'
-    errorContext = s;
-    if (str::StartsWith(s, "--")) {
-        s = (char *)str::Find(s + 2, "-->");
-        if (!s)
-            return ParseError(ErrParsingExclOrPI);
-        s += 2;
-    }
-    else if (!SkipUntil(&s, '>'))
-        return ParseError(ErrParsingExclOrPI);
-    ++s;
-    goto ParseText;
-}
-
-#else
-
 // Parse s in place i.e. we assume we can modify it. Must be 0-terminated.
 // The caller owns the memory for s.
 HtmlElement *HtmlParser::ParseInPlace(char *s, UINT codepage)
@@ -455,7 +229,7 @@ HtmlElement *HtmlParser::ParseInPlace(char *s, UINT codepage)
             assert(tok->IsText());
             continue;
         }
-        char *tagEnd = tag + GetTagLen(tok);
+        char *tagEnd = tag + tok->nLen;
         if (!tok->IsEndTag()) {
             // note: call tok->NextAttr() before zero-terminating names and values
             AttrInfo *attr = tok->NextAttr();
@@ -473,7 +247,7 @@ HtmlElement *HtmlParser::ParseInPlace(char *s, UINT codepage)
                 AppendAttr(name, value);
             }
         }
-        if (!tok->IsStartTag() || IsTagSelfClosing(tag)) {
+        if (!tok->IsStartTag() || IsTagSelfClosing(tok->tag)) {
             *tagEnd = '\0';
             CloseTag(tag);
         }
@@ -481,8 +255,6 @@ HtmlElement *HtmlParser::ParseInPlace(char *s, UINT codepage)
 
     return rootElement;
 }
-
-#endif
 
 HtmlElement *HtmlParser::Parse(const char *s, UINT codepage)
 {

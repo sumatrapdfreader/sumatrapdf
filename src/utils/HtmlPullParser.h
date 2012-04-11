@@ -53,7 +53,9 @@ struct HtmlToken {
     const char *     s;
     size_t           sLen;
 
+    // only for tags: type and name length
     HtmlTag          tag;
+    size_t           nLen;
 
     bool             NameIs(const char *name) const;
     AttrInfo *       GetAttrByName(const char *name);
@@ -93,12 +95,9 @@ public:
 bool        SkipWs(const char*& s, const char *end);
 bool        SkipNonWs(const char*& s, const char *end);
 bool        IsSpaceOnly(const char *s, const char *end);
-bool        IsTagSelfClosing(const char *s, size_t len = -1);
 
 int         HtmlEntityNameToRune(const char *name, size_t nameLen);
 int         HtmlEntityNameToRune(const WCHAR *name, size_t nameLen);
-
-size_t      GetTagLen(const HtmlToken *tok);
 
 const char *ResolveHtmlEntities(const char *s, const char *end, Allocator *alloc);
 char *      ResolveHtmlEntities(const char *s, size_t len);
