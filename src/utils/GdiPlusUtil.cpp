@@ -91,15 +91,27 @@ RectF MeasureTextQuick(Graphics *g, Font *f, const WCHAR *s, size_t len)
         LOGFONTW lfw;
         Status ok = f->GetLogFontW(g, &lfw);
         bool isItalicOrMonospace = Ok != ok || lfw.lfItalic ||
-                                   str::Eq(lfw.lfFaceName, L"Courier New");
+                                   str::Eq(lfw.lfFaceName, L"Courier New") ||
+                                   str::Find(lfw.lfFaceName, L"Consol") ||
+                                   str::EndsWith(lfw.lfFaceName, L"Mono") ||
+                                   str::EndsWith(lfw.lfFaceName, L"Typewriter");
         fontCache.Append(f);
         fixCache.Append(isItalicOrMonospace);
         idx = (int)fontCache.Count() - 1;
     }
     // most documents look good enough with these adjustments
-    if (!fixCache.At(idx))
-        bbox.Width *= 0.92f;
-    bbox.Height *= 0.96f;
+    if (!fixCache.At(idx)) {
+        REAL correct = 0;
+        for (size_t i = 0; i < len; i++) {
+            switch (s[i]) {
+            case 'i': case 'l': correct += 0.2f; break;
+            case 't': case 'f': case 'I': correct += 0.1f; break;
+            case '.': case ',': case '!': correct += 0.1f; break;
+            }
+        }
+        bbox.Width *= (1.0f - correct / len) * 0.99f;
+    }
+    bbox.Height *= 0.95f;
     return bbox;
 }
 
