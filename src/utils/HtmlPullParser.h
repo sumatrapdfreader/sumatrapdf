@@ -16,9 +16,6 @@ struct AttrInfo {
     bool ValIs(const char *s) const;
 };
 
-struct HtmlToken;
-size_t GetTagLen(const HtmlToken *tok);
-
 // TrivialHtmlParser needs to enumerate all attributes of an HtmlToken
 class HtmlParser;
 
@@ -55,6 +52,8 @@ struct HtmlToken {
     ParsingError     error;
     const char *     s;
     size_t           sLen;
+
+    HtmlTag          tag;
 
     bool             NameIs(const char *name) const;
     AttrInfo *       GetAttrByName(const char *name);
@@ -99,9 +98,8 @@ bool        IsTagSelfClosing(const char *s, size_t len = -1);
 int         HtmlEntityNameToRune(const char *name, size_t nameLen);
 int         HtmlEntityNameToRune(const WCHAR *name, size_t nameLen);
 
-HtmlTag     FindTag(HtmlToken *tok);
+size_t      GetTagLen(const HtmlToken *tok);
 
-char *      PrettyPrintHtml(const char *s, size_t len, size_t& lenOut);
 const char *ResolveHtmlEntities(const char *s, const char *end, Allocator *alloc);
 char *      ResolveHtmlEntities(const char *s, size_t len);
 

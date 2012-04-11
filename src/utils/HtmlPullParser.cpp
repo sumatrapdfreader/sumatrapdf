@@ -217,6 +217,7 @@ void HtmlToken::SetValue(TokenType new_type, const char *new_s, const char *end)
     type = new_type;
     s = new_s;
     sLen = end - s;
+    tag = Tag_NotFound;
     nextAttr = NULL;
 }
 
@@ -371,11 +372,10 @@ static void RecordEndTag(Vec<HtmlTag> *tagNesting, HtmlTag tag)
 static void UpdateTagNesting(Vec<HtmlTag> *tagNesting, HtmlToken *t)
 {
     // update the current state of html tree
-    HtmlTag tag = FindTag(t);
     if (t->IsStartTag())
-        RecordStartTag(tagNesting, tag);
+        RecordStartTag(tagNesting, t->tag);
     else if (t->IsEndTag())
-        RecordEndTag(tagNesting, tag);
+        RecordEndTag(tagNesting, t->tag);
 }
 
 // Returns next part of html or NULL if finished
@@ -442,14 +442,11 @@ Next:
     } else {
         currToken.SetValue(HtmlToken::StartTag, start, currPos);
     }
+    if (!currToken.IsError())
+        currToken.tag = FindHtmlTag(currToken.s, GetTagLen(&currToken));
     ++currPos;
     UpdateTagNesting(&tagNesting, &currToken);
     return &currToken;
-}
-
-HtmlTag FindTag(HtmlToken *tok)
-{
-    return FindHtmlTag(tok->s, GetTagLen(tok));
 }
 
 size_t GetTagLen(const HtmlToken *tok)

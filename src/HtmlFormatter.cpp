@@ -675,7 +675,7 @@ void HtmlFormatter::HandleAnchorTag(HtmlToken *t, bool idsOnly)
         return;
 
     AttrInfo *attr = t->GetAttrByName("id");
-    if (!attr && !idsOnly && t->NameIs("a"))
+    if (!attr && !idsOnly && Tag_A == t->tag)
         attr = t->GetAttrByName("name");
     if (!attr)
         return;
@@ -827,7 +827,7 @@ void HtmlFormatter::HandleHtmlTag(HtmlToken *t)
 {
     CrashAlwaysIf(!t->IsTag());
 
-    HtmlTag tag = FindTag(t);
+    HtmlTag tag = t->tag;
 
     if (Tag_P == tag) {
         HandleTagP(t);
@@ -1104,39 +1104,19 @@ void MobiFormatter::HandleTagImg_Mobi(HtmlToken *t)
     EmitImage(img);
 }
 
-// tags that I want to explicitly ignore and not define
-// HtmlTag enums for them
-// One file has a bunch of st1:* tags (st1:city, st1:place etc.)
-static bool IgnoreTag(const char *s, size_t sLen)
-{
-    if (sLen >= 4 && s[3] == ':' && s[0] == 's' && s[1] == 't' && s[2] == '1')
-        return true;
-    // no idea what "o:p" is
-    if (sLen == 3 && s[1] == ':' && s[0] == 'o'  && s[2] == 'p')
-        return true;
-    return false;
-}
-
 void MobiFormatter::HandleHtmlTag_Mobi(HtmlToken *t)
 {
     CrashAlwaysIf(!t->IsTag());
 
-    // HtmlToken string includes potential attributes,
-    // get the length of just the tag
-    size_t tagLen = GetTagLen(t);
-    if (IgnoreTag(t->s, tagLen))
-        return;
-
-    HtmlTag tag = FindTag(t);
-    if (Tag_P == tag || Tag_Blockquote == tag) {
+    if (Tag_P == t->tag || Tag_Blockquote == t->tag) {
         HandleHtmlTag(t);
         HandleSpacing_Mobi(t);
-    } else if (Tag_Mbp_Pagebreak == tag) {
+    } else if (Tag_Mbp_Pagebreak == t->tag) {
         ForceNewPage();
-    } else if (Tag_Img == tag) {
+    } else if (Tag_Img == t->tag) {
         HandleTagImg_Mobi(t);
         HandleAnchorTag(t);
-    } else if (Tag_A == tag) {
+    } else if (Tag_A == t->tag) {
         HandleAnchorTag(t);
         // handle internal and external links (prefer internal ones)
         if (!HandleTagA(t, "filepos"))
@@ -1239,11 +1219,11 @@ void EpubFormatter::HandleTagImg_Epub(HtmlToken *t)
 
 void EpubFormatter::HandleHtmlTag_Epub(HtmlToken *t)
 {
-    if (t->NameIs("img")) {
+    if (Tag_Img == t->tag) {
         HandleTagImg_Epub(t);
         HandleAnchorTag(t);
     }
-    else if (t->NameIs("pagebreak")) {
+    else if (Tag_Pagebreak == t->tag) {
         AttrInfo *attr = t->GetAttrByName("page_path");
         if (!attr || pagePath)
             ForceNewPage();

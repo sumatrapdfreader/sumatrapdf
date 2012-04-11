@@ -13,8 +13,7 @@ static void Test00(const char *s, HtmlToken::TokenType expectedType) {
     HtmlToken *t = parser.Next();
     assert(t->type == expectedType);
     assert(t->NameIs("p"));
-    HtmlTag tag = FindTag(t);
-    assert(Tag_P == tag);
+    assert(Tag_P == t->tag);
     AttrInfo *a = t->GetAttrByName("a1");
     assert(a->NameIs("a1"));
     assert(a->ValIs(">"));

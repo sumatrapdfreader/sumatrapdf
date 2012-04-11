@@ -1024,16 +1024,16 @@ DocTocItem *MobiEngineImpl::GetTocTree()
         }
         else if (!tok->IsTag())
             continue;
-        else if (tok->NameIs("mbp:pagebreak"))
+        else if (Tag_Mbp_Pagebreak == tok->tag)
             break;
-        else if (!itemLink && tok->IsStartTag() && tok->NameIs("a")) {
+        else if (!itemLink && tok->IsStartTag() && Tag_A == tok->tag) {
             AttrInfo *attr = tok->GetAttrByName("filepos");
             if (!attr)
                 attr = tok->GetAttrByName("href");
             if (attr)
                 itemLink.Set(str::conv::FromHtmlUtf8(attr->val, attr->valLen));
         }
-        else if (itemLink && tok->IsEndTag() && tok->NameIs("a")) {
+        else if (itemLink && tok->IsEndTag() && Tag_A == tok->tag) {
             PageDestination *dest = NULL;
             if (!itemText) {
                 itemLink.Set(NULL);
@@ -1049,7 +1049,7 @@ DocTocItem *MobiEngineImpl::GetTocTree()
             AppendTocItem(root, item, itemLevel);
             itemLink.Set(NULL);
         }
-        else if (tok->NameIs("blockquote") || tok->NameIs("ul") || tok->NameIs("ol")) {
+        else if (Tag_Blockquote == tok->tag || Tag_Ul == tok->tag || Tag_Ol == tok->tag) {
             if (tok->IsStartTag())
                 itemLevel++;
             else if (tok->IsEndTag() && itemLevel > 0)
@@ -1311,11 +1311,11 @@ void ChmFormatter::HandleTagImg_Chm(HtmlToken *t)
 
 void ChmFormatter::HandleHtmlTag_Chm(HtmlToken *t)
 {
-    if (t->NameIs("img")) {
+    if (Tag_Img == t->tag) {
         HandleTagImg_Chm(t);
         HandleAnchorTag(t);
     }
-    else if (t->NameIs("pagebreak")) {
+    else if (Tag_Pagebreak == t->tag) {
         AttrInfo *attr = t->GetAttrByName("page_path");
         if (!attr || pagePath)
             ForceNewPage();
@@ -1522,7 +1522,7 @@ void HtmlFormatter2::HandleTagImg_Html(HtmlToken *t)
 
 void HtmlFormatter2::HandleHtmlTag2(HtmlToken *t)
 {
-    if (t->NameIs("img")) {
+    if (Tag_Img == t->tag) {
         HandleTagImg_Html(t);
         HandleAnchorTag(t);
     }
@@ -1660,7 +1660,7 @@ public:
 
 void TxtFormatter::HandleHtmlTag_Txt(HtmlToken *t)
 {
-    if (t->NameIs("pagebreak"))
+    if (Tag_Pagebreak == t->tag)
         ForceNewPage();
     else
         HandleHtmlTag(t);

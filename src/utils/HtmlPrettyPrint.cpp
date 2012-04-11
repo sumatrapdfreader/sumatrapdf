@@ -5,10 +5,10 @@
 #include "HtmlPrettyPrint.h"
 #include "HtmlPullParser.h"
 
-static void HtmlAddWithNesting(str::Str<char>* out, HtmlToken *tok, HtmlTag tag, size_t nesting)
+static void HtmlAddWithNesting(str::Str<char>* out, HtmlToken *tok, size_t nesting)
 {
     CrashIf(!tok->IsStartTag() && !tok->IsEndTag() && !tok->IsEmptyElementEndTag());
-    bool isInline = IsInlineTag(tag);
+    bool isInline = IsInlineTag(tok->tag);
     // add a newline before block start tags (unless there already is one)
     bool onNewLine = out->Count() == 0 || out->Last() == '\n';
     if (!onNewLine && !isInline && !tok->IsEndTag()) {
@@ -58,8 +58,7 @@ char *PrettyPrintHtml(const char *s, size_t len, size_t& lenOut)
         if (!t->IsTag())
             continue;
 
-        HtmlTag tag = FindTag(t);
-        HtmlAddWithNesting(&res, t, tag, nesting);
+        HtmlAddWithNesting(&res, t, nesting);
 
         // determine the next tag's nesting before the
         // call to UpdateTagNesting so that the tag
