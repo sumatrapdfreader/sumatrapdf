@@ -6,6 +6,7 @@
 #include "EpubDoc.h"
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
+#include "HtmlPullParser.h"
 #include "MobiDoc.h"
 #include "Mui.h"
 

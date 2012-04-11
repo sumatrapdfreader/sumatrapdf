@@ -172,10 +172,10 @@ $(OS)\EbookController.obj: src\PsEngine.h src\SumatraWindow.h src\TextSearch.h
 $(OS)\EbookController.obj: src\TextSelection.h src\Translations.h src\UiMsgSumatra.h
 $(OS)\EbookController.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\BitManip.h
 $(OS)\EbookController.obj: src\utils\DebugLog.h src\utils\FileUtil.h src\utils\GeomUtil.h
-$(OS)\EbookController.obj: src\utils\HtmlParserLookup.h src\utils\HtmlPullParser.h src\utils\RefCounted.h
-$(OS)\EbookController.obj: src\utils\Scoped.h src\utils\Sigslot.h src\utils\StrUtil.h
-$(OS)\EbookController.obj: src\utils\ThreadUtil.h src\utils\Timer.h src\utils\UiMsg.h
-$(OS)\EbookController.obj: src\utils\Vec.h src\utils\ZipUtil.h src\WindowInfo.h
+$(OS)\EbookController.obj: src\utils\HtmlParserLookup.h src\utils\RefCounted.h src\utils\Scoped.h
+$(OS)\EbookController.obj: src\utils\Sigslot.h src\utils\StrUtil.h src\utils\ThreadUtil.h
+$(OS)\EbookController.obj: src\utils\Timer.h src\utils\UiMsg.h src\utils\Vec.h
+$(OS)\EbookController.obj: src\utils\ZipUtil.h src\WindowInfo.h
 $(OS)\EbookControls.obj: src\Doc.h src\EbookBase.h src\EbookControls.h
 $(OS)\EbookControls.obj: src\HtmlFormatter.h src\mui\Mui.h src\mui\MuiBase.h
 $(OS)\EbookControls.obj: src\mui\MuiButton.h src\mui\MuiControl.h src\mui\MuiCss.h
@@ -183,9 +183,9 @@ $(OS)\EbookControls.obj: src\mui\MuiEventMgr.h src\mui\MuiHwndWrapper.h src\mui\
 $(OS)\EbookControls.obj: src\mui\MuiPainter.h src\mui\MuiScrollBar.h src\mui\SvgPath.h
 $(OS)\EbookControls.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\BitManip.h
 $(OS)\EbookControls.obj: src\utils\DbgHelpDyn.h src\utils\DebugLog.h src\utils\GdiPlusUtil.h
-$(OS)\EbookControls.obj: src\utils\GeomUtil.h src\utils\HtmlParserLookup.h src\utils\HtmlPullParser.h
-$(OS)\EbookControls.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\Sigslot.h
-$(OS)\EbookControls.obj: src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\EbookControls.obj: src\utils\GeomUtil.h src\utils\HtmlParserLookup.h src\utils\RefCounted.h
+$(OS)\EbookControls.obj: src\utils\Scoped.h src\utils\Sigslot.h src\utils\StrUtil.h
+$(OS)\EbookControls.obj: src\utils\Vec.h
 $(OS)\EbookWindow.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
 $(OS)\EbookWindow.obj: src\ChmEngine.h src\DisplayModel.h src\DisplayState.h
 $(OS)\EbookWindow.obj: src\DjVuEngine.h src\Doc.h src\EbookBase.h
@@ -202,10 +202,10 @@ $(OS)\EbookWindow.obj: src\SumatraProperties.h src\SumatraWindow.h src\TextSearc
 $(OS)\EbookWindow.obj: src\TextSelection.h src\Translations.h src\utils\Allocator.h
 $(OS)\EbookWindow.obj: src\utils\BaseUtil.h src\utils\BitManip.h src\utils\FileUtil.h
 $(OS)\EbookWindow.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\HtmlParserLookup.h
-$(OS)\EbookWindow.obj: src\utils\HtmlPullParser.h src\utils\RefCounted.h src\utils\Scoped.h
-$(OS)\EbookWindow.obj: src\utils\Sigslot.h src\utils\StrUtil.h src\utils\ThreadUtil.h
-$(OS)\EbookWindow.obj: src\utils\Touch.h src\utils\Vec.h src\utils\WinUtil.h
-$(OS)\EbookWindow.obj: src\utils\ZipUtil.h src\WindowInfo.h
+$(OS)\EbookWindow.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\Sigslot.h
+$(OS)\EbookWindow.obj: src\utils\StrUtil.h src\utils\ThreadUtil.h src\utils\Touch.h
+$(OS)\EbookWindow.obj: src\utils\Vec.h src\utils\WinUtil.h src\utils\ZipUtil.h
+$(OS)\EbookWindow.obj: src\WindowInfo.h
 $(OS)\EngineDump.obj: src\BaseEngine.h src\ChmEngine.h src\DjVuEngine.h
 $(OS)\EngineDump.obj: src\EngineManager.h src\EpubEngine.h src\ImagesEngine.h
 $(OS)\EngineDump.obj: src\PdfEngine.h src\PsEngine.h src\utils\Allocator.h
@@ -420,12 +420,12 @@ $(OS)\SumatraPDF.obj: src\SumatraWindow.h src\TableOfContents.h src\TextSearch.h
 $(OS)\SumatraPDF.obj: src\TextSelection.h src\Toolbar.h src\Translations.h
 $(OS)\SumatraPDF.obj: src\UiMsgSumatra.h src\utils\Allocator.h src\utils\BaseUtil.h
 $(OS)\SumatraPDF.obj: src\utils\BitManip.h src\utils\FileUtil.h src\utils\GdiPlusUtil.h
-$(OS)\SumatraPDF.obj: src\utils\GeomUtil.h src\utils\HtmlParserLookup.h src\utils\HtmlPullParser.h
-$(OS)\SumatraPDF.obj: src\utils\HtmlWindow.h src\utils\Http.h src\utils\RefCounted.h
-$(OS)\SumatraPDF.obj: src\utils\Scoped.h src\utils\Sigslot.h src\utils\StrUtil.h
-$(OS)\SumatraPDF.obj: src\utils\ThreadUtil.h src\utils\Timer.h src\utils\Touch.h
-$(OS)\SumatraPDF.obj: src\utils\UiMsg.h src\utils\Vec.h src\utils\WinUtil.h
-$(OS)\SumatraPDF.obj: src\Version.h src\WindowInfo.h
+$(OS)\SumatraPDF.obj: src\utils\GeomUtil.h src\utils\HtmlParserLookup.h src\utils\HtmlWindow.h
+$(OS)\SumatraPDF.obj: src\utils\Http.h src\utils\RefCounted.h src\utils\Scoped.h
+$(OS)\SumatraPDF.obj: src\utils\Sigslot.h src\utils\StrUtil.h src\utils\ThreadUtil.h
+$(OS)\SumatraPDF.obj: src\utils\Timer.h src\utils\Touch.h src\utils\UiMsg.h
+$(OS)\SumatraPDF.obj: src\utils\Vec.h src\utils\WinUtil.h src\Version.h
+$(OS)\SumatraPDF.obj: src\WindowInfo.h
 $(OS)\SumatraProperties.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
 $(OS)\SumatraProperties.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
 $(OS)\SumatraProperties.obj: src\Doc.h src\EbookBase.h src\EbookController.h
@@ -439,9 +439,9 @@ $(OS)\SumatraProperties.obj: src\SumatraPDF.h src\SumatraProperties.h src\Sumatr
 $(OS)\SumatraProperties.obj: src\TextSearch.h src\TextSelection.h src\Translations.h
 $(OS)\SumatraProperties.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\BitManip.h
 $(OS)\SumatraProperties.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\HtmlParserLookup.h
-$(OS)\SumatraProperties.obj: src\utils\HtmlPullParser.h src\utils\RefCounted.h src\utils\Scoped.h
-$(OS)\SumatraProperties.obj: src\utils\Sigslot.h src\utils\StrUtil.h src\utils\ThreadUtil.h
-$(OS)\SumatraProperties.obj: src\utils\Vec.h src\utils\WinUtil.h src\WindowInfo.h
+$(OS)\SumatraProperties.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\Sigslot.h
+$(OS)\SumatraProperties.obj: src\utils\StrUtil.h src\utils\ThreadUtil.h src\utils\Vec.h
+$(OS)\SumatraProperties.obj: src\utils\WinUtil.h src\WindowInfo.h
 $(OS)\TableOfContents.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
 $(OS)\TableOfContents.obj: src\ChmEngine.h src\DisplayModel.h src\DisplayState.h
 $(OS)\TableOfContents.obj: src\DjVuEngine.h src\EngineManager.h src\EpubEngine.h
@@ -460,9 +460,9 @@ $(OS)\Tester.obj: src\mui\MuiPainter.h src\mui\MuiScrollBar.h src\utils\Allocato
 $(OS)\Tester.obj: src\utils\BaseUtil.h src\utils\BitManip.h src\utils\DebugLog.h
 $(OS)\Tester.obj: src\utils\DirIter.h src\utils\FileUtil.h src\utils\GdiPlusUtil.h
 $(OS)\Tester.obj: src\utils\GeomUtil.h src\utils\HtmlParserLookup.h src\utils\HtmlPrettyPrint.h
-$(OS)\Tester.obj: src\utils\HtmlPullParser.h src\utils\NoFreeAllocator.h src\utils\RefCounted.h
-$(OS)\Tester.obj: src\utils\Scoped.h src\utils\Sigslot.h src\utils\StrUtil.h
-$(OS)\Tester.obj: src\utils\Timer.h src\utils\Vec.h src\utils\WinUtil.h
+$(OS)\Tester.obj: src\utils\NoFreeAllocator.h src\utils\RefCounted.h src\utils\Scoped.h
+$(OS)\Tester.obj: src\utils\Sigslot.h src\utils\StrUtil.h src\utils\Timer.h
+$(OS)\Tester.obj: src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\TextSearch.obj: src\BaseEngine.h src\TextSearch.h src\TextSelection.h
 $(OS)\TextSearch.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GeomUtil.h
 $(OS)\TextSearch.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\StrUtil.h

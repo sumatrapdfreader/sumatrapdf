@@ -6,7 +6,7 @@
 
 #include "Doc.h"
 #include "EbookBase.h"
-#include "HtmlPullParser.h"
+#include "HtmlParserLookup.h"
 
 using namespace Gdiplus;
 
@@ -114,6 +114,9 @@ public:
     // we start parsing from htmlStr + reparseIdx
     int             reparseIdx;
 };
+
+class HtmlPullParser;
+struct HtmlToken;
 
 class HtmlFormatter
 {
