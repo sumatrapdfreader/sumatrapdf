@@ -578,7 +578,7 @@ HMENU BuildMenu(WindowInfo *win)
     if (HasPermission(Perm_SavePreferences)) {
         // I think it makes sense to disable favorites in restricted mode
         // because they wouldn't be persisted, anyway
-        m = CreateMenu();
+        m = BuildMenuFromMenuDef(menuDefFavorites, dimof(menuDefFavorites), CreateMenu());
         RebuildFavMenu(win, m);
         AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("F&avorites"));
     }
@@ -626,8 +626,11 @@ void UpdateMenu(WindowInfo *win, HMENU m)
     UINT id = GetMenuItemID(m, 0);
     if (id == menuDefFile[0].id)
         RebuildFileMenu(win, m);
-    else if (id == menuDefFavorites[0].id)
+    else if (id == menuDefFavorites[0].id) {
+        win::menu::Empty(m);
+        BuildMenuFromMenuDef(menuDefFavorites, dimof(menuDefFavorites), m);
         RebuildFavMenu(win, m);
+    }
     if (win)
         MenuUpdateStateForWindow(win);
 }

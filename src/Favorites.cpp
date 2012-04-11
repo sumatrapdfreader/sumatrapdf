@@ -195,6 +195,16 @@ MenuDef menuDefFavContext[] = {
     { _TRN("Remove from favorites"),        IDM_FAV_DEL,                0 }
 };
 
+static bool HasFavorites()
+{
+    for (size_t i = 0; i < gFavorites->Count(); i++) {
+        FileFavs *f = gFavorites->favs.At(i);
+        if (f->favNames.Count() > 0)
+            return true;
+    }
+    return false;
+}
+
 // caller has to free() the result
 static TCHAR *FavReadableName(FavName *fn)
 {
@@ -320,17 +330,15 @@ static void AppendFavMenus(HMENU m, const TCHAR *currFilePath)
 //   disable "add" menu item and enable "remove" menu item
 // - if a document is opened and the page is not bookmarked,
 //   enable "add" menu item and disable "remove" menu item
-static void RebuildFavMenu(TCHAR *filePath, int pageNo, HMENU menu, BaseEngine *engine=NULL)
+void RebuildFavMenu(WindowInfo *win, HMENU menu)
 {
-    win::menu::Empty(menu);
-    BuildMenuFromMenuDef(menuDefFavorites, 3, menu);
-    if (!filePath) {
+    if (!win->IsDocLoaded()) {
         win::menu::SetEnabled(menu, IDM_FAV_ADD, false);
         win::menu::SetEnabled(menu, IDM_FAV_DEL, false);
         AppendFavMenus(menu, NULL);
     } else {
-        ScopedMem<TCHAR> label(engine ? engine->GetPageLabel(pageNo) : str::Format(_T("%d"), pageNo));
-        bool isBookmarked = gFavorites->IsPageInFavorites(filePath, pageNo);
+        ScopedMem<TCHAR> label(win->dm->engine->GetPageLabel(win->currPageNo));
+        bool isBookmarked = gFavorites->IsPageInFavorites(win->dm->FilePath(), win->currPageNo);
         if (isBookmarked) {
             win::menu::SetEnabled(menu, IDM_FAV_ADD, false);
             ScopedMem<TCHAR> s(str::Format(_TR("Remove page %s from favorites"), label));
@@ -340,18 +348,9 @@ static void RebuildFavMenu(TCHAR *filePath, int pageNo, HMENU menu, BaseEngine *
             ScopedMem<TCHAR> s(str::Format(_TR("Add page %s to favorites"), label));
             win::menu::SetText(menu, IDM_FAV_ADD, s);
         }
-        AppendFavMenus(menu, filePath);
+        AppendFavMenus(menu, win->dm->FilePath());
     }
     win::menu::SetEnabled(menu, IDM_FAV_TOGGLE, HasFavorites());
-}
-
-void RebuildFavMenu(WindowInfo *win, HMENU menu)
-{
-    if (win->IsDocLoaded()) {
-        RebuildFavMenu(win->loadedFilePath, win->currPageNo, menu, win->dm->engine);
-    } else {
-        RebuildFavMenu(NULL, 0, menu);
-    }
 }
 
 void ToggleFavorites(WindowInfo *win)
@@ -534,16 +533,6 @@ static void UpdateFavoritesTreeIfNecessary(WindowInfo *win)
     PopulateFavTreeIfNeeded(win);
 }
 
-bool HasFavorites()
-{
-    for (size_t i = 0; i < gFavorites->Count(); i++) {
-        FileFavs *f = gFavorites->favs.At(i);
-        if (f->favNames.Count() > 0)
-            return true;
-    }
-    return false;
-}
-
 void UpdateFavoritesTreeForAllWindows()
 {
     for (size_t i = 0; i < gWindows.Count(); i++) {
@@ -683,13 +672,13 @@ static LRESULT OnFavTreeNotify(WindowInfo *win, LPNMTREEVIEW pnmtv)
     return -1;
 }
 
-static void OnFavTreeContextMenu(WindowInfo *win, int xScreen, int yScreen)
+static void OnFavTreeContextMenu(WindowInfo *win, PointI pt)
 {
     TVITEM item;
-    if (xScreen != -1 || yScreen != -1) {
+    if (pt.x != -1 || pt.y != -1) {
         TVHITTESTINFO ht = { 0 };
-        ht.pt.x = xScreen;
-        ht.pt.y = yScreen;
+        ht.pt.x = pt.x;
+        ht.pt.y = pt.y;
 
         MapWindowPoints(HWND_DESKTOP, win->hwndFavTree, &ht.pt, 1);
         TreeView_HitTest(win->hwndFavTree, &ht);
@@ -706,13 +695,12 @@ static void OnFavTreeContextMenu(WindowInfo *win, int xScreen, int yScreen)
         RECT rcItem;
         if (TreeView_GetItemRect(win->hwndFavTree, item.hItem, &rcItem, TRUE)) {
             MapWindowPoints(win->hwndFavTree, HWND_DESKTOP, (POINT *)&rcItem, 2);
-            xScreen = rcItem.left;
-            yScreen = rcItem.bottom;
+            pt.x = rcItem.left;
+            pt.y = rcItem.bottom;
         }
         else {
             WindowRect rc(win->hwndFavTree);
-            xScreen = rc.x;
-            yScreen = rc.y;
+            pt = rc.TL();
         }
     }
 
@@ -724,7 +712,7 @@ static void OnFavTreeContextMenu(WindowInfo *win, int xScreen, int yScreen)
     HMENU popup = BuildMenuFromMenuDef(menuDefFavContext, dimof(menuDefFavContext), CreatePopupMenu());
 
     INT cmd = TrackPopupMenu(popup, TPM_RETURNCMD | TPM_RIGHTBUTTON,
-                             xScreen, yScreen, 0, win->hwndFavTree, NULL);
+                             pt.x, pt.y, 0, win->hwndFavTree, NULL);
     DestroyMenu(popup);
     if (IDM_FAV_DEL == cmd) {
         RememberFavTreeExpansionStateForAllWindows();
@@ -810,7 +798,7 @@ static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT message, WPARAM wParam, LP
 
         case WM_CONTEXTMENU:
             if (win->hwndFavTree == (HWND)wParam) {
-                OnFavTreeContextMenu(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+                OnFavTreeContextMenu(win, PointI(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)));
                 return 0;
             }
             break;

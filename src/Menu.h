@@ -6,8 +6,6 @@
 
 #include "resource.h"
 
-class WindowInfo;
-
 #define SEP_ITEM "-----"
 
 // those are defined here instead of resource.h to avoid
@@ -26,8 +24,6 @@ struct MenuDef {
     int         id;
     int         flags;
 };
-
-extern MenuDef menuDefFavorites[];
 
 class WindowInfo;
 class EbookWindow;
