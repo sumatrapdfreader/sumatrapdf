@@ -340,19 +340,11 @@ bool ImageEngineImpl::LoadSingleFile(const TCHAR *file)
         return false;
     fileName = str::Dup(file);
 
-    char header[18];
-    if (file::ReadAll(file, header, sizeof(header)))
-        fileExt = GfxFileExtFromData(header, sizeof(header));
+    size_t len;
+    ScopedMem<char> data(file::ReadAll(file, &len));
+    fileExt = GfxFileExtFromData(data, len);
 
-    Bitmap *bmp;
-    if (fileExt && !IsGdiPlusNativeFormat(header, sizeof(header))) {
-        size_t len;
-        ScopedMem<char> data(file::ReadAll(file, &len));
-        bmp = BitmapFromData(data, len);
-    }
-    else
-        bmp = Bitmap::FromFile(AsWStrQ(file));
-
+    Bitmap *bmp = BitmapFromData(data, len);
     return FinishLoading(bmp);
 }
 
