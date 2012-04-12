@@ -881,6 +881,12 @@ void HtmlFormatter::HandleHtmlTag(HtmlToken *t)
             RevertStyleChange();
     } else if (Tag_Pre == tag) {
         HandleTagPre(t);
+    } else if (Tag_Img == tag) {
+        HandleTagImg(t);
+    } else if (Tag_Pagebreak == tag) {
+        // not really a HTML tag, but many ebook
+        // formats use it
+        HandleTagPagebreak(t);
     } else {
         // TODO: temporary debugging
         //lf("unhandled tag: %d", tag);
@@ -943,6 +949,81 @@ bool HtmlFormatter::IgnoreText()
         }
     }
     return false;
+}
+
+// empty page is one that consists of only invisible instructions
+static bool IsEmptyPage(HtmlPage *p)
+{
+    if (!p)
+        return false;
+    DrawInstr *i;
+    for (i = p->instructions.IterStart(); i; i = p->instructions.IterNext()) {
+        // if a page only consits of lines we consider it empty. It's different
+        // than what Kindle does but I don't see the purpose of showing such
+        // pages to the user
+        if (InstrLine == i->type)
+            continue;
+        if (IsVisibleDrawInstr(i))
+            return false;
+    }
+    // all instructions were invisible
+    return true;
+}
+
+// Return the next parsed page. Returns NULL if finished parsing.
+// For simplicity of implementation, we parse xml text node or
+// xml element at a time. This might cause a creation of one
+// or more pages, which we remeber and send to the caller
+// if we detect accumulated pages.
+HtmlPage *HtmlFormatter::Next(bool skipEmptyPages)
+{
+    for (;;)
+    {
+        // send out all pages accumulated so far
+        while (pagesToSend.Count() > 0) {
+            HtmlPage *ret = pagesToSend.At(0);
+            pagesToSend.RemoveAt(0);
+            pageCount++;
+            if (skipEmptyPages && IsEmptyPage(ret))
+                delete ret;
+            else
+                return ret;
+        }
+        // we can call ourselves recursively to send outstanding
+        // pages after parsing has finished so this is to detect
+        // that case and really end parsing
+        if (finishedParsing)
+            return NULL;
+        HtmlToken *t = htmlParser->Next();
+        if (!t || t->IsError())
+            break;
+
+        currReparseIdx = t->GetReparsePoint() - htmlParser->Start();
+        CrashIf(!ValidReparseIdx(currReparseIdx, htmlParser));
+        if (t->IsTag())
+            HandleHtmlTag(t);
+        else if (!IgnoreText())
+            HandleText(t);
+    }
+    // force layout of the last line
+    FlushCurrLine(true);
+
+    UpdateLinkBboxes(currPage);
+    pagesToSend.Append(currPage);
+    currPage = NULL;
+    // call ourselves recursively to return accumulated pages
+    finishedParsing = true;
+    return Next();
+}
+
+// convenience method to format the whole html
+Vec<HtmlPage*> *HtmlFormatter::FormatAllPages(bool skipEmptyPages)
+{
+    Vec<HtmlPage *> *pages = new Vec<HtmlPage *>();
+    for (HtmlPage *pd = Next(skipEmptyPages); pd; pd = Next(skipEmptyPages)) {
+        pages->Append(pd);
+    }
+    return pages;
 }
 
 // TODO: draw link in the appropriate format (blue text, underlined, should show hand cursor when
@@ -1008,7 +1089,7 @@ void DrawHtmlPage(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL
     }
 }
 
-/* Mobi-specific formatting methods */
+/* Mobi- and EPUB-specific formatting methods */
 
 MobiFormatter::MobiFormatter(HtmlFormatterArgs* args, MobiDoc *doc) :
     HtmlFormatter(args), doc(doc), coverImage(NULL)
@@ -1066,7 +1147,7 @@ void MobiFormatter::HandleSpacing_Mobi(HtmlToken *t)
 // that holds the image (within image record array, not a
 // global record)
 // TODO: handle alt attribute (?)
-void MobiFormatter::HandleTagImg_Mobi(HtmlToken *t)
+void MobiFormatter::HandleTagImg(HtmlToken *t)
 {
     // we allow formatting raw html which can't require doc
     if (!doc)
@@ -1090,106 +1171,26 @@ void MobiFormatter::HandleTagImg_Mobi(HtmlToken *t)
     EmitImage(img);
 }
 
-void MobiFormatter::HandleHtmlTag_Mobi(HtmlToken *t)
+void MobiFormatter::HandleHtmlTag(HtmlToken *t)
 {
     CrashAlwaysIf(!t->IsTag());
 
     if (Tag_P == t->tag || Tag_Blockquote == t->tag) {
-        HandleHtmlTag(t);
+        HtmlFormatter::HandleHtmlTag(t);
         HandleSpacing_Mobi(t);
     } else if (Tag_Mbp_Pagebreak == t->tag) {
         ForceNewPage();
-    } else if (Tag_Img == t->tag) {
-        HandleTagImg_Mobi(t);
-        HandleAnchorTag(t);
     } else if (Tag_A == t->tag) {
         HandleAnchorTag(t);
         // handle internal and external links (prefer internal ones)
         if (!HandleTagA(t, "filepos"))
             HandleTagA(t);
     } else {
-        HandleHtmlTag(t);
+        HtmlFormatter::HandleHtmlTag(t);
     }
 }
 
-// empty page is one that consists of only invisible instructions
-static bool IsEmptyPage(HtmlPage *p)
-{
-    if (!p)
-        return false;
-    DrawInstr *i;
-    for (i = p->instructions.IterStart(); i; i = p->instructions.IterNext()) {
-        // if a page only consits of lines we consider it empty. It's different
-        // than what Kindle does but I don't see the purpose of showing such
-        // pages to the user
-        if (InstrLine == i->type)
-            continue;
-        if (IsVisibleDrawInstr(i))
-            return false;
-    }
-    // all instructions were invisible
-    return true;
-}
-
-// Return the next parsed page. Returns NULL if finished parsing.
-// For simplicity of implementation, we parse xml text node or
-// xml element at a time. This might cause a creation of one
-// or more pages, which we remeber and send to the caller
-// if we detect accumulated pages.
-HtmlPage *MobiFormatter::Next()
-{
-    for (;;)
-    {
-        // send out all pages accumulated so far
-        while (pagesToSend.Count() > 0) {
-            HtmlPage *ret = pagesToSend.At(0);
-            pagesToSend.RemoveAt(0);
-            pageCount++;
-            if (IsEmptyPage(ret))
-                delete ret;
-            else
-                return ret;
-        }
-        // we can call ourselves recursively to send outstanding
-        // pages after parsing has finished so this is to detect
-        // that case and really end parsing
-        if (finishedParsing)
-            return NULL;
-        HtmlToken *t = htmlParser->Next();
-        if (!t || t->IsError())
-            break;
-
-        currReparseIdx = t->GetReparsePoint() - htmlParser->Start();
-        CrashIf(!ValidReparseIdx(currReparseIdx, htmlParser));
-        if (t->IsTag()) {
-            HandleHtmlTag_Mobi(t);
-        } else {
-            if (!IgnoreText())
-                HandleText(t);
-        }
-    }
-    // force layout of the last line
-    FlushCurrLine(true);
-
-    UpdateLinkBboxes(currPage);
-    pagesToSend.Append(currPage);
-    currPage = NULL;
-    // call ourselves recursively to return accumulated pages
-    finishedParsing = true;
-    return Next();
-}
-
-// convenience method to format the whole html
-Vec<HtmlPage*> *MobiFormatter::FormatAllPages()
-{
-    Vec<HtmlPage *> *pages = new Vec<HtmlPage *>();
-    for (HtmlPage *pd = Next(); pd; pd = Next()) {
-        pages->Append(pd);
-    }
-    return pages;
-}
-
-void EpubFormatter::HandleTagImg_Epub(HtmlToken *t)
+void EpubFormatter::HandleTagImg(HtmlToken *t)
 {
     CrashIf(!epubDoc);
     if (t->IsEndTag())
@@ -1203,94 +1204,14 @@ void EpubFormatter::HandleTagImg_Epub(HtmlToken *t)
         EmitImage(img);
 }
 
-void EpubFormatter::HandleHtmlTag_Epub(HtmlToken *t)
+void EpubFormatter::HandleTagPagebreak(HtmlToken *t)
 {
-    if (Tag_Img == t->tag) {
-        HandleTagImg_Epub(t);
-        HandleAnchorTag(t);
+    AttrInfo *attr = t->GetAttrByName("page_path");
+    if (!attr || pagePath)
+        ForceNewPage();
+    if (attr) {
+        RectF bbox(0, currY, pageDx, 0);
+        currPage->instructions.Append(DrawInstr::Anchor(attr->val, attr->valLen, bbox));
+        pagePath.Set(str::DupN(attr->val, attr->valLen));
     }
-    else if (Tag_Pagebreak == t->tag) {
-        AttrInfo *attr = t->GetAttrByName("page_path");
-        if (!attr || pagePath)
-            ForceNewPage();
-        if (attr) {
-            RectF bbox(0, currY, pageDx, 0);
-            currPage->instructions.Append(DrawInstr::Anchor(attr->val, attr->valLen, bbox));
-            pagePath.Set(str::DupN(attr->val, attr->valLen));
-        }
-    }
-    else
-        HandleHtmlTag(t);
-}
-
-// TODO: replace with a single HtmlFormatter::FormatAllPages()
-// implemented like MobiFormatter::FormatAllPages() (uses Next())
-Vec<HtmlPage*> *EpubFormatter::FormatAllPages()
-{
-    HtmlToken *t;
-    while ((t = htmlParser->Next()) && !t->IsError()) {
-        if (t->IsTag())
-            HandleHtmlTag_Epub(t);
-        else if (!IgnoreText())
-            HandleText(t);
-    }
-
-    FlushCurrLine(true);
-    UpdateLinkBboxes(currPage);
-    pagesToSend.Append(currPage);
-    currPage = NULL;
-
-    Vec<HtmlPage *> *result = new Vec<HtmlPage *>(pagesToSend);
-    pagesToSend.Reset();
-    return result;
-}
-
-// Return the next parsed page. Returns NULL if finished parsing.
-// For simplicity of implementation, we parse xml text node or
-// xml element at a time. This might cause a creation of one
-// or more pages, which we remeber and send to the caller
-// if we detect accumulated pages.
-// TODO: make this single implementation part of HtmlFormatter
-// (we can make HandleHtmlTag() virtual to make this work)
-HtmlPage *EpubFormatter::Next()
-{
-    for (;;)
-    {
-        // send out all pages accumulated so far
-        while (pagesToSend.Count() > 0) {
-            HtmlPage *ret = pagesToSend.At(0);
-            pagesToSend.RemoveAt(0);
-            pageCount++;
-            if (IsEmptyPage(ret))
-                delete ret;
-            else
-                return ret;
-        }
-        // we can call ourselves recursively to send outstanding
-        // pages after parsing has finished so this is to detect
-        // that case and really end parsing
-        if (finishedParsing)
-            return NULL;
-        HtmlToken *t = htmlParser->Next();
-        if (!t || t->IsError())
-            break;
-
-        currReparseIdx = t->GetReparsePoint() - htmlParser->Start();
-        CrashIf(!ValidReparseIdx(currReparseIdx, htmlParser));
-        if (t->IsTag()) {
-            HandleHtmlTag_Epub(t);
-        } else {
-            if (!IgnoreText())
-                HandleText(t);
-        }
-    }
-    // force layout of the last line
-    FlushCurrLine(true);
-
-    UpdateLinkBboxes(currPage);
-    pagesToSend.Append(currPage);
-    currPage = NULL;
-    // call ourselves recursively to return accumulated pages
-    finishedParsing = true;
-    return Next();
 }

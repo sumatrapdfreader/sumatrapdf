@@ -6,7 +6,6 @@
 
 #include "Doc.h"
 #include "Mui.h"
-#include "HtmlFormatter.h"
 #include "SumatraWindow.h"
 #include "ThreadUtil.h"
 
@@ -17,6 +16,7 @@ class   EbookController;
 class   HtmlPage;
 class   PoolAllocator;
 class   EbookFormattingThread;
+class   HtmlFormatterArgs;
 
 struct FinishedMobiLoadingData {
     TCHAR *         fileName;

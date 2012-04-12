@@ -7,6 +7,7 @@
 #include "EbookControls.h"
 #include "MobiDoc.h"
 #include "EbookWindow.h"
+#include "HtmlFormatter.h"
 #include "SumatraWindow.h"
 #include "Translations.h"
 #include "ThreadUtil.h"

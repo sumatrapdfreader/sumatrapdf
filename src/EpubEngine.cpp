@@ -625,7 +625,7 @@ bool EpubEngineImpl::FinishLoading()
     args.textAllocator = &allocator;
     args.measureAlgo = MeasureTextQuick;
 
-    pages = EpubFormatter(&args, doc).FormatAllPages();
+    pages = EpubFormatter(&args, doc).FormatAllPages(false);
     if (!ExtractPageAnchors())
         return false;
 
@@ -672,20 +672,20 @@ class Fb2Formatter : public HtmlFormatter {
     int section;
     int titleCount;
 
-    void HandleTagImg_Fb2(HtmlToken *t);
+    virtual void HandleTagImg(HtmlToken *t);
     void HandleTagAsHtml(HtmlToken *t, const char *name);
-    void HandleFb2Tag(HtmlToken *t);
+    virtual void HandleHtmlTag(HtmlToken *t);
+
+    virtual bool IgnoreText() { return false; }
 
     Fb2Doc *fb2Doc;
 
 public:
     Fb2Formatter(HtmlFormatterArgs *args, Fb2Doc *doc) :
         HtmlFormatter(args), fb2Doc(doc), section(1), titleCount(0) { }
-
-    Vec<HtmlPage*> *FormatAllPages();
 };
 
-void Fb2Formatter::HandleTagImg_Fb2(HtmlToken *t)
+void Fb2Formatter::HandleTagImg(HtmlToken *t)
 {
     CrashIf(!fb2Doc);
     if (t->IsEndTag())
@@ -703,10 +703,11 @@ void Fb2Formatter::HandleTagAsHtml(HtmlToken *t, const char *name)
 {
     HtmlToken tok;
     tok.SetTag(t->type, name, name + str::Len(name));
-    HandleHtmlTag(&tok);
+    HtmlFormatter::HandleHtmlTag(&tok);
 }
 
-void Fb2Formatter::HandleFb2Tag(HtmlToken *t)
+// the name doesn't quite fit: this handles FB2 tags
+void Fb2Formatter::HandleHtmlTag(HtmlToken *t)
 {
     if (Tag_Title == t->tag || Tag_Subtitle == t->tag) {
         bool isSubtitle = Tag_Subtitle == t->tag;
@@ -731,10 +732,10 @@ void Fb2Formatter::HandleFb2Tag(HtmlToken *t)
     }
     else if (Tag_P == t->tag) {
         if (htmlParser->tagNesting.Find(Tag_Title) == -1)
-            HandleHtmlTag(t);
+            HtmlFormatter::HandleHtmlTag(t);
     }
     else if (Tag_Image == t->tag) {
-        HandleTagImg_Fb2(t);
+        HandleTagImg(t);
         HandleAnchorTag(t);
     }
     else if (Tag_A == t->tag) {
@@ -753,26 +754,6 @@ void Fb2Formatter::HandleFb2Tag(HtmlToken *t)
         if (!t->IsEndTag())
             EmitParagraph(0);
     }
-}
-
-Vec<HtmlPage*> *Fb2Formatter::FormatAllPages()
-{
-    HtmlToken *t;
-    while ((t = htmlParser->Next()) && !t->IsError()) {
-        if (t->IsTag())
-            HandleFb2Tag(t);
-        else
-            HandleText(t);
-    }
-
-    FlushCurrLine(true);
-    UpdateLinkBboxes(currPage);
-    pagesToSend.Append(currPage);
-    currPage = NULL;
-
-    Vec<HtmlPage *> *result = new Vec<HtmlPage *>(pagesToSend);
-    pagesToSend.Reset();
-    return result;
 }
 
 /* BaseEngine for handling FictionBook2 documents */
@@ -818,7 +799,7 @@ bool Fb2EngineImpl::Load(const TCHAR *fileName)
     args.textAllocator = &allocator;
     args.measureAlgo = MeasureTextQuick;
 
-    pages = Fb2Formatter(&args, doc).FormatAllPages();
+    pages = Fb2Formatter(&args, doc).FormatAllPages(false);
     if (!ExtractPageAnchors())
         return false;
 
@@ -1197,7 +1178,7 @@ bool PdbEngineImpl::Load(const TCHAR *fileName)
     args.textAllocator = &allocator;
     args.measureAlgo = MeasureTextQuick;
 
-    pages = MobiFormatter(&args, doc).FormatAllPages();
+    pages = MobiFormatter(&args, doc).FormatAllPages(false);
     if (!ExtractPageAnchors())
         return false;
 
@@ -1280,10 +1261,11 @@ public:
     }
 };
 
+// TODO: this is almost identical to EpubFormatter
 class ChmFormatter : public HtmlFormatter {
 protected:
-    void HandleTagImg_Chm(HtmlToken *t);
-    void HandleHtmlTag_Chm(HtmlToken *t);
+    virtual void HandleTagImg(HtmlToken *t);
+    virtual void HandleTagPagebreak(HtmlToken *t);
 
     ChmDataCache *chmDoc;
     ScopedMem<char> pagePath;
@@ -1291,11 +1273,9 @@ protected:
 public:
     ChmFormatter(HtmlFormatterArgs *args, ChmDataCache *doc) :
         HtmlFormatter(args), chmDoc(doc) { }
-
-    Vec<HtmlPage*> *FormatAllPages();
 };
 
-void ChmFormatter::HandleTagImg_Chm(HtmlToken *t)
+void ChmFormatter::HandleTagImg(HtmlToken *t)
 {
     CrashIf(!chmDoc);
     if (t->IsEndTag())
@@ -1309,44 +1289,16 @@ void ChmFormatter::HandleTagImg_Chm(HtmlToken *t)
         EmitImage(img);
 }
 
-void ChmFormatter::HandleHtmlTag_Chm(HtmlToken *t)
+void ChmFormatter::HandleTagPagebreak(HtmlToken *t)
 {
-    if (Tag_Img == t->tag) {
-        HandleTagImg_Chm(t);
-        HandleAnchorTag(t);
+    AttrInfo *attr = t->GetAttrByName("page_path");
+    if (!attr || pagePath)
+        ForceNewPage();
+    if (attr) {
+        RectF bbox(0, currY, pageDx, 0);
+        currPage->instructions.Append(DrawInstr::Anchor(attr->val, attr->valLen, bbox));
+        pagePath.Set(str::DupN(attr->val, attr->valLen));
     }
-    else if (Tag_Pagebreak == t->tag) {
-        AttrInfo *attr = t->GetAttrByName("page_path");
-        if (!attr || pagePath)
-            ForceNewPage();
-        if (attr) {
-            RectF bbox(0, currY, pageDx, 0);
-            currPage->instructions.Append(DrawInstr::Anchor(attr->val, attr->valLen, bbox));
-            pagePath.Set(str::DupN(attr->val, attr->valLen));
-        }
-    }
-    else
-        HandleHtmlTag(t);
-}
-
-Vec<HtmlPage*> *ChmFormatter::FormatAllPages()
-{
-    HtmlToken *t;
-    while ((t = htmlParser->Next()) && !t->IsError()) {
-        if (t->IsTag())
-            HandleHtmlTag_Chm(t);
-        else if (!IgnoreText())
-            HandleText(t);
-    }
-
-    FlushCurrLine(true);
-    UpdateLinkBboxes(currPage);
-    pagesToSend.Append(currPage);
-    currPage = NULL;
-
-    Vec<HtmlPage *> *result = new Vec<HtmlPage *>(pagesToSend);
-    pagesToSend.Reset();
-    return result;
 }
 
 /* BaseEngine for handling CHM documents */
@@ -1485,7 +1437,7 @@ bool Chm2EngineImpl::Load(const TCHAR *fileName)
     args.textAllocator = &allocator;
     args.measureAlgo = MeasureTextQuick;
 
-    pages = ChmFormatter(&args, dataCache).FormatAllPages();
+    pages = ChmFormatter(&args, dataCache).FormatAllPages(false);
     if (!ExtractPageAnchors())
         return false;
 
@@ -1518,19 +1470,16 @@ Chm2Engine *Chm2Engine::CreateFromFile(const TCHAR *fileName)
 
 class HtmlFormatter2 : public HtmlFormatter {
 protected:
-    void HandleTagImg_Html(HtmlToken *t);
-    void HandleHtmlTag2(HtmlToken *t);
+    virtual void HandleTagImg(HtmlToken *t);
 
     HtmlDoc *htmlDoc;
 
 public:
     HtmlFormatter2(HtmlFormatterArgs *args, HtmlDoc *doc) :
         HtmlFormatter(args), htmlDoc(doc) { }
-
-    Vec<HtmlPage*> *FormatAllPages();
 };
 
-void HtmlFormatter2::HandleTagImg_Html(HtmlToken *t)
+void HtmlFormatter2::HandleTagImg(HtmlToken *t)
 {
     CrashIf(!htmlDoc);
     if (t->IsEndTag())
@@ -1542,36 +1491,6 @@ void HtmlFormatter2::HandleTagImg_Html(HtmlToken *t)
     ImageData *img = htmlDoc->GetImageData(src);
     if (img)
         EmitImage(img);
-}
-
-void HtmlFormatter2::HandleHtmlTag2(HtmlToken *t)
-{
-    if (Tag_Img == t->tag) {
-        HandleTagImg_Html(t);
-        HandleAnchorTag(t);
-    }
-    else
-        HandleHtmlTag(t);
-}
-
-Vec<HtmlPage*> *HtmlFormatter2::FormatAllPages()
-{
-    HtmlToken *t;
-    while ((t = htmlParser->Next()) && !t->IsError()) {
-        if (t->IsTag())
-            HandleHtmlTag2(t);
-        else if (!IgnoreText())
-            HandleText(t);
-    }
-
-    FlushCurrLine(true);
-    UpdateLinkBboxes(currPage);
-    pagesToSend.Append(currPage);
-    currPage = NULL;
-
-    Vec<HtmlPage *> *result = new Vec<HtmlPage *>(pagesToSend);
-    pagesToSend.Reset();
-    return result;
 }
 
 /* BaseEngine for handling HTML documents */
@@ -1619,7 +1538,7 @@ bool HtmlEngineImpl::Load(const TCHAR *fileName)
     args.fontSize = 11;
     args.textAllocator = &allocator;
 
-    pages = HtmlFormatter2(&args, doc).FormatAllPages();
+    pages = HtmlFormatter2(&args, doc).FormatAllPages(false);
     if (!ExtractPageAnchors())
         return false;
 
@@ -1674,41 +1593,12 @@ HtmlEngine *HtmlEngine::CreateFromFile(const TCHAR *fileName)
 
 class TxtFormatter : public HtmlFormatter {
 protected:
-    void HandleHtmlTag_Txt(HtmlToken *t);
+    virtual void HandleTagPagebreak(HtmlToken *t) { ForceNewPage(); }
+    virtual bool IgnoreText() { return false; }
 
 public:
     TxtFormatter(HtmlFormatterArgs *args) : HtmlFormatter(args) { }
-
-    Vec<HtmlPage*> *FormatAllPages();
 };
-
-void TxtFormatter::HandleHtmlTag_Txt(HtmlToken *t)
-{
-    if (Tag_Pagebreak == t->tag)
-        ForceNewPage();
-    else
-        HandleHtmlTag(t);
-}
-
-Vec<HtmlPage*> *TxtFormatter::FormatAllPages()
-{
-    HtmlToken *t;
-    while ((t = htmlParser->Next()) && !t->IsError()) {
-        if (t->IsTag())
-            HandleHtmlTag_Txt(t);
-        else
-            HandleText(t);
-    }
-
-    FlushCurrLine(true);
-    UpdateLinkBboxes(currPage);
-    pagesToSend.Append(currPage);
-    currPage = NULL;
-
-    Vec<HtmlPage *> *result = new Vec<HtmlPage *>(pagesToSend);
-    pagesToSend.Reset();
-    return result;
-}
 
 /* BaseEngine for handling TXT documents */
 
@@ -1760,7 +1650,7 @@ bool TxtEngineImpl::Load(const TCHAR *fileName)
     args.fontSize = 11;
     args.textAllocator = &allocator;
 
-    pages = TxtFormatter(&args).FormatAllPages();
+    pages = TxtFormatter(&args).FormatAllPages(false);
     if (!ExtractPageAnchors())
         return false;
 

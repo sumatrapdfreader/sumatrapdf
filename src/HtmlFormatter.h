@@ -129,8 +129,11 @@ protected:
     void HandleTagHx(HtmlToken *t);
     void HandleTagList(HtmlToken *t);
     void HandleTagPre(HtmlToken *t);
-    void HandleHtmlTag(HtmlToken *t);
+    virtual void HandleHtmlTag(HtmlToken *t);
     void HandleText(HtmlToken *t);
+    // blank convenience methods to override
+    virtual void HandleTagImg(HtmlToken *t) { }
+    virtual void HandleTagPagebreak(HtmlToken *t) { }
 
     float CurrLineDx();
     float CurrLineDy();
@@ -161,7 +164,7 @@ protected:
 
     void  AppendInstr(DrawInstr di);
     bool  IsCurrLineEmpty();
-    bool  IgnoreText();
+    virtual bool IgnoreText();
 
     // constant during layout process
     float               pageDx;
@@ -216,7 +219,8 @@ public:
     HtmlFormatter(HtmlFormatterArgs *args);
     virtual ~HtmlFormatter();
 
-    virtual HtmlPage *Next() { CrashIf(true); return NULL; }
+    HtmlPage *Next(bool skipEmptyPages=true);
+    Vec<HtmlPage*> *FormatAllPages(bool skipEmptyPages=true);
 };
 
 class MobiFormatter : public HtmlFormatter {
@@ -229,31 +233,25 @@ class MobiFormatter : public HtmlFormatter {
     ImageData *         coverImage;
 
     void HandleSpacing_Mobi(HtmlToken *t);
-    void HandleTagImg_Mobi(HtmlToken *t);
-    void HandleHtmlTag_Mobi(HtmlToken *t);
+    virtual void HandleTagImg(HtmlToken *t);
+    virtual void HandleHtmlTag(HtmlToken *t);
 
 public:
     MobiFormatter(HtmlFormatterArgs *args, MobiDoc *doc);
-
-    virtual HtmlPage *Next();
-    Vec<HtmlPage*> *FormatAllPages();
 };
 
 /* formatting extensions for EPUB */
 
 class EpubFormatter : public HtmlFormatter {
 protected:
-    void HandleTagImg_Epub(HtmlToken *t);
-    void HandleHtmlTag_Epub(HtmlToken *t);
+    virtual void HandleTagImg(HtmlToken *t);
+    virtual void HandleTagPagebreak(HtmlToken *t);
 
     EpubDoc *epubDoc;
     ScopedMem<char> pagePath;
 
 public:
     EpubFormatter(HtmlFormatterArgs *args, EpubDoc *doc) : HtmlFormatter(args), epubDoc(doc) { }
-
-    virtual HtmlPage *Next();
-    Vec<HtmlPage*> *FormatAllPages();
 };
 
 void DrawHtmlPage(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox, Color *textColor=NULL);
