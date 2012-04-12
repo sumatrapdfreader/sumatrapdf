@@ -260,7 +260,7 @@ HuffDicDecompressor::~HuffDicDecompressor()
 
 inline uint16 ReadBeU16(uint8 *d)
 {
-    return (d[0] << 8) + d[1];
+    return (d[0] << 8) | d[1];
 }
 
 bool HuffDicDecompressor::DecodeOne(uint32 code, uint8 *& dst, size_t& dstLeft)

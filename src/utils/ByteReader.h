@@ -16,7 +16,7 @@ class ByteReader {
         for (const char *c = format; *c; c++) {
             if (isdigit((wint_t)*c)) {
                 repeat = atoi(c);
-                for (; isdigit((wint_t)*c); c++);
+                for (c++; isdigit((wint_t)*c); c++);
             }
             switch (*c) {
             case 'b':
@@ -60,25 +60,25 @@ public:
 
     uint16_t WordLE(size_t off) {
         if (off + 2 <= len)
-            return d[off] + (d[off + 1] << 8);
+            return d[off] | (d[off + 1] << 8);
         return 0;
     }
 
     uint16_t WordBE(size_t off) {
         if (off + 2 <= len)
-            return (d[off] << 8) + d[off + 1];
+            return (d[off] << 8) | d[off + 1];
         return 0;
     }
 
     uint32_t DWordLE(size_t off) {
         if (off + 4 <= len)
-            return d[off] + (d[off + 1] << 8) + (d[off + 2] << 16) + (d[off + 3] << 24);
+            return d[off] | (d[off + 1] << 8) | (d[off + 2] << 16) | (d[off + 3] << 24);
         return 0;
     }
 
     uint32_t DWordBE(size_t off) {
         if (off + 4 <= len)
-            return (d[off] << 24) + (d[off + 1] << 16) + (d[off + 2] << 8) + d[off + 3];
+            return (d[off] << 24) | (d[off + 1] << 16) | (d[off + 2] << 8) | d[off + 3];
         return 0;
     }
 

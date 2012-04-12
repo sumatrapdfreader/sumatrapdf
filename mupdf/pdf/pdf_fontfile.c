@@ -233,13 +233,13 @@ static pdf_fontlistMS fontlistMS =
 static inline USHORT BEtoHs(USHORT x)
 {
 	BYTE *data = (BYTE *)&x;
-	return (data[0] << 8) + data[1];
+	return (data[0] << 8) | data[1];
 }
 
 static inline ULONG BEtoHl(ULONG x)
 {
 	BYTE *data = (BYTE *)&x;
-	return (data[0] << 24) + (data[1] << 16) + (data[2] << 8) + data[3];
+	return (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3];
 }
 
 /* A little bit more sophisticated name matching so that e.g. "EurostileExtended"
