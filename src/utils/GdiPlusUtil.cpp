@@ -350,6 +350,19 @@ Bitmap *BitmapFromData(const char *data, size_t len)
     return bmp;
 }
 
+// TODO: find better names
+inline WORD WordBE(const unsigned char *d) { return d[0] << 8 | d[1]; }
+inline DWORD DWordBE(const unsigned char *d) { return d[0] << 24 | d[1] << 16 | d[2] << 8 | d[3]; }
+inline WORD WordLE(const unsigned char *d) { return d[1] << 8 | d[0]; }
+inline DWORD DWordLE(const unsigned char *d) { return d[3] << 24 | d[2] << 16 | d[1] << 8 | d[0]; }
+// TODO: does this mean we have to start handling const unsigned char*
+//       instead of const char* for data read from disk?
+inline WORD WordBE(const char *d) { return WordBE((unsigned char *)d); }
+inline DWORD DWordBE(const char *d) { return DWordBE((unsigned char *)d); }
+inline WORD WordLE(const char *d) { return WordLE((unsigned char *)d); }
+inline DWORD DWordLE(const char *d) { return DWordLE((unsigned char *)d); }
+// TODO: what about LEtoHl in the Img_BMP case?
+
 // adapted from http://cpansearch.perl.org/src/RJRAY/Image-Size-3.230/lib/Image/Size.pm
 Size BitmapSizeFromData(const char *data, size_t len)
 {
@@ -358,9 +371,8 @@ Size BitmapSizeFromData(const char *data, size_t len)
     case Img_BMP:
         if (len >= sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER)) {
             BITMAPINFOHEADER *bmi = (BITMAPINFOHEADER *)(data + sizeof(BITMAPFILEHEADER));
-            DWORD width = LEtoHl(bmi->biWidth);
-            DWORD height = LEtoHl(bmi->biHeight);
-            result = Size(width, height);
+            result.Width = LEtoHl(bmi->biWidth);
+            result.Height = LEtoHl(bmi->biHeight);
         }
         break;
     case Img_GIF:
@@ -373,9 +385,8 @@ Size BitmapSizeFromData(const char *data, size_t len)
                 ix += 3 * (1 << ((data[10] & 0x07) + 1));
             while (ix + 8 < len) {
                 if (data[ix] == '\x2c') {
-                    WORD width = LEtoHs(*(WORD *)(data + ix + 5));
-                    WORD height = LEtoHs(*(WORD *)(data + ix + 7));
-                    result = Size(width, height);
+                    result.Width = WordLE(data + ix + 5);
+                    result.Height = WordLE(data + ix + 7);
                     break;
                 }
                 else if (data[ix] == '\x21' && data[ix + 1] == '\xF9')
@@ -401,28 +412,37 @@ Size BitmapSizeFromData(const char *data, size_t len)
         // find the last start of frame marker for non-differential Huffman coding
         for (size_t ix = 2; ix + 9 < len && data[ix] == '\xFF'; ) {
             if ('\xC0' <= data[ix + 1] && data[ix + 1] <= '\xC3') {
-                WORD width = BEtoHs(*(WORD *)(data + ix + 7));
-                WORD height = BEtoHs(*(WORD *)(data + ix + 5));
-                result = Size(width, height);
+                result.Width = WordBE(data + ix + 7);
+                result.Height = WordBE(data + ix + 5);
             }
-            ix += BEtoHs(*(WORD *)(data + ix + 2)) + 2;
+            ix += WordBE(data + ix + 2) + 2;
         }
         break;
     case Img_JXR:
-        // TODO: speed this up (if necessary)
+        if (len >= 10 && LEtoHl(*(DWORD *)(data + 4)) == 8) {
+            WORD ifdLen = LEtoHs(*(WORD *)(data + 8));
+            for (size_t i = 0; i < ifdLen && 10 + (i + 1) * 12 < len; i++) {
+                if (memeq(data + 10 + i * 12, "\x80\xBC\x04\x00\x01\x00\x00\x00", 8))
+                    result.Width = DWordLE(data + 10 + i * 12 + 8);
+                if (memeq(data + 10 + i * 12, "\x80\xBC\x03\x00\x01\x00\x00\x00", 8))
+                    result.Width = WordLE(data + 10 + i * 12 + 8);
+                if (memeq(data + 10 + i * 12, "\x81\xBC\x04\x00\x01\x00\x00\x00", 8))
+                    result.Height = DWordLE(data + 10 + i * 12 + 8);
+                if (memeq(data + 10 + i * 12, "\x81\xBC\x03\x00\x01\x00\x00\x00", 8))
+                    result.Height = WordLE(data + 10 + i * 12 + 8);
+            }
+        }
         break;
     case Img_PNG:
         if (len >= 24 && str::StartsWith(data + 12, "IHDR")) {
-            DWORD width = BEtoHl(*(DWORD *)(data + 16));
-            DWORD height = BEtoHl(*(DWORD *)(data + 20));
-            result = Size(width, height);
+            result.Width = DWordBE(data + 16);
+            result.Height = DWordBE(data + 20);
         }
         break;
     case Img_TGA:
         if (len >= 16) {
-            WORD width = LEtoHs(*(WORD *)(data + 12));
-            WORD height = LEtoHs(*(WORD *)(data + 14));
-            result = Size(width, height);
+            result.Width = WordLE(data + 12);
+            result.Height = WordLE(data + 14);
         }
         break;
     case Img_TIFF:

@@ -16,13 +16,15 @@ inline TCHAR *FromHtmlUtf8(const char *s, size_t len)
 
 static char *DecodeTextToUtf8(const char *s)
 {
-    ScopedMem<WCHAR> tmp;
+    ScopedMem<char> tmp;
     if (str::StartsWith(s, UTF16BE_BOM)) {
         // convert big-endian UTF-16 to little-endian UTF-16
-        tmp.Set(str::Dup((WCHAR *)s));
-        for (WCHAR *c = tmp.Get(); *c; c++)
-            *c = BEtoHs(*c);
-        s = (char *)tmp.Get();
+        size_t byteCount = (str::Len((WCHAR *)s) + 1) * sizeof(WCHAR);
+        tmp.Set((char *)memdup(s, byteCount));
+        for (size_t i = 0; i < byteCount; i += 2) {
+            swap(tmp[i], tmp[i+1]);
+        }
+        s = tmp;
     }
     if (str::StartsWith(s, UTF16_BOM))
         return str::ToMultiByte((WCHAR *)s, CP_UTF8);

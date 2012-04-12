@@ -138,7 +138,7 @@ inline T limitValue(T val, T min, T max)
     return val;
 }
 
-inline void *memdup(void *data, size_t len)
+inline void *memdup(const void *data, size_t len)
 {
     void *dup = malloc(len);
     if (dup)
