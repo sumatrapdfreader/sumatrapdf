@@ -262,9 +262,10 @@ $(OS)\Menu.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\StrUtil.h
 $(OS)\Menu.obj: src\utils\ThreadUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\Menu.obj: src\WindowInfo.h
 $(OS)\MobiDoc.obj: src\EbookBase.h src\MobiDoc.h src\utils\Allocator.h
-$(OS)\MobiDoc.obj: src\utils\BaseUtil.h src\utils\BitReader.h src\utils\DebugLog.h
-$(OS)\MobiDoc.obj: src\utils\FileUtil.h src\utils\GdiPlusUtil.h src\utils\GeomUtil.h
-$(OS)\MobiDoc.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\MobiDoc.obj: src\utils\BaseUtil.h src\utils\BitReader.h src\utils\ByteReader.h
+$(OS)\MobiDoc.obj: src\utils\DebugLog.h src\utils\FileUtil.h src\utils\GdiPlusUtil.h
+$(OS)\MobiDoc.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OS)\MobiDoc.obj: src\utils\Vec.h
 $(OS)\MuPDF_Exports.obj: mupdf\fitz\fitz.h
 $(OS)\Notifications.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
 $(OS)\Notifications.obj: src\DisplayModel.h src\DisplayState.h src\Doc.h
