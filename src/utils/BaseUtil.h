@@ -59,14 +59,6 @@
 /* compile-time assert */
 #define STATIC_ASSERT(exp, name) typedef int assert_##name [(exp) != FALSE]
 
-// for converting between big-/little-endian values and host endianness
-// (the same macros could also be used for conversion in the opposite direction)
-// TODO: do it the way Rob Pike says: http://commandcenter.blogspot.com/2012/04/byte-order-fallacy.html
-#define BEtoHs(x) MAKEWORD(HIBYTE(x), LOBYTE(x))
-#define BEtoHl(x) MAKELONG(BEtoHs(HIWORD(x)), BEtoHs(LOWORD(x)))
-#define LEtoHs(x) (x)
-#define LEtoHl(x) (x)
-
 typedef unsigned char uint8;
 typedef int16_t   int16;
 typedef uint16_t uint16;

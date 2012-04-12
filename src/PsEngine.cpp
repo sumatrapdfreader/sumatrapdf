@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "PsEngine.h"
 
+#include "ByteReader.h"
 #include "FileUtil.h"
 #include "PdfEngine.h"
 #include "WinUtil.h"
@@ -317,7 +318,7 @@ bool PsEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
         file::ReadAll(fileName, header, sizeof(header) - 1);
         if (str::StartsWith(header, "\xC5\xD0\xD3\xC6")) {
             // Windows-format EPS file - cf. http://partners.adobe.com/public/developer/en/ps/5002.EPSF_Spec.pdf
-            DWORD psStart = LEtoHl(*(DWORD *)(header + 4));
+            DWORD psStart = ByteReader(header, sizeof(header)).DWordLE(4);
             return psStart >= sizeof(header) - 12 || str::StartsWith(header + psStart, "%!PS-Adobe-");
         }
         return str::StartsWith(header, "%!") ||

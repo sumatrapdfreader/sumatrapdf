@@ -10,6 +10,7 @@
 #include <ddjvuapi.h>
 #include <miniexp.h>
 
+#include "ByteReader.h"
 #include "FileUtil.h"
 
 // TODO: libdjvu leaks memory - among others
@@ -290,11 +291,11 @@ static bool ReadBytes(HANDLE h, int offset, void *buffer, int count)
     return ok && res == count;
 }
 
-#define DJVU_MARK_MAGIC (*(DWORD *)"AT&T")
-#define DJVU_MARK_FORM  (*(DWORD *)"FORM")
-#define DJVU_MARK_DJVM  (*(DWORD *)"DJVM")
-#define DJVU_MARK_DJVU  (*(DWORD *)"DJVU")
-#define DJVU_MARK_INFO  (*(DWORD *)"INFO")
+#define DJVU_MARK_MAGIC 0x41542654L /* AT&T */
+#define DJVU_MARK_FORM  0x464F524DL /* FORM */
+#define DJVU_MARK_DJVM  0x444A564DL /* DJVM */
+#define DJVU_MARK_DJVU  0x444A5655L /* DJVU */
+#define DJVU_MARK_INFO  0x494E464FL /* INFO */
 
 bool DjVuEngineImpl::LoadMediaboxes()
 {
@@ -302,33 +303,35 @@ bool DjVuEngineImpl::LoadMediaboxes()
                               OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL));
     if (h == INVALID_HANDLE_VALUE)
         return false;
-    DWORD buffer[8];
-    if (!ReadBytes(h, 0, buffer, 16) || DJVU_MARK_MAGIC != buffer[0] || DJVU_MARK_FORM != buffer[1])
+    char buffer[16];
+    ByteReader r(buffer, sizeof(buffer));
+    if (!ReadBytes(h, 0, buffer, 16) || r.DWordBE(0) != DJVU_MARK_MAGIC || r.DWordBE(4) != DJVU_MARK_FORM)
         return false;
 
-    int offset = DJVU_MARK_DJVM == buffer[3] ? 16 : 4;
+    int offset = r.DWordBE(12) == DJVU_MARK_DJVM ? 16 : 4;
     for (int pages = 0; pages < pageCount; ) {
         if (!ReadBytes(h, offset, buffer, 16))
             return false;
-        if (DJVU_MARK_FORM == buffer[0] && DJVU_MARK_DJVU == buffer[2] && DJVU_MARK_INFO == buffer[3]) {
-            if (!ReadBytes(h, offset + 16, buffer + 4, 14))
+        int partLen = r.DWordBE(4);
+        if (partLen < 0)
+            return false;
+        if (r.DWordBE(0) == DJVU_MARK_FORM && r.DWordBE(8) == DJVU_MARK_DJVU &&
+            r.DWordBE(12) == DJVU_MARK_INFO) {
+            if (!ReadBytes(h, offset + 16, buffer, 14))
                 return false;
-            int width = HIWORD(BEtoHl(buffer[5]));
-            int height = LOWORD(BEtoHl(buffer[5]));
-            int dpi = HIWORD(LEtoHl(buffer[6]));
+            int width = r.WordBE(4);
+            int height = r.WordBE(6);
+            int dpi = r.WordLE(10);
             // DjVuLibre ignores DPI values outside 25 to 6000 in DjVuInfo::decode
             if (dpi < 25 || 6000 < dpi)
                 dpi = 300;
-            int flags = HIBYTE(LEtoHl(buffer[7]));
+            int flags = r.Byte(13);
             mediaboxes[pages].dx = GetFileDPI() * width / dpi;
             mediaboxes[pages].dy = GetFileDPI() * height / dpi;
             if ((flags & 4))
                 swap(mediaboxes[pages].dx, mediaboxes[pages].dy);
             pages++;
         }
-        int partLen = BEtoHl(buffer[1]);
-        if (partLen < 0)
-            return false;
         offset += 8 + partLen + (partLen & 1);
     }
 

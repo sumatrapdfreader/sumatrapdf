@@ -112,9 +112,9 @@ $(OS)\AppTools.obj: src\utils\BaseUtil.h src\utils\CmdLineParser.h src\utils\Fil
 $(OS)\AppTools.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
 $(OS)\AppTools.obj: src\utils\Vec.h src\utils\WinUtil.h src\Version.h
 $(OS)\ChmDoc.obj: src\ChmDoc.h src\EbookBase.h src\utils\Allocator.h
-$(OS)\ChmDoc.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
-$(OS)\ChmDoc.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\TrivialHtmlParser.h
-$(OS)\ChmDoc.obj: src\utils\Vec.h
+$(OS)\ChmDoc.obj: src\utils\BaseUtil.h src\utils\ByteReader.h src\utils\FileUtil.h
+$(OS)\ChmDoc.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OS)\ChmDoc.obj: src\utils\TrivialHtmlParser.h src\utils\Vec.h
 $(OS)\ChmEngine.obj: src\BaseEngine.h src\ChmDoc.h src\ChmEngine.h
 $(OS)\ChmEngine.obj: src\EbookBase.h src\utils\Allocator.h src\utils\BaseUtil.h
 $(OS)\ChmEngine.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\HtmlWindow.h
@@ -134,8 +134,9 @@ $(OS)\DisplayModel.obj: src\TextSelection.h src\utils\Allocator.h src\utils\Base
 $(OS)\DisplayModel.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
 $(OS)\DisplayModel.obj: src\utils\Vec.h
 $(OS)\DjVuEngine.obj: src\BaseEngine.h src\DjVuEngine.h src\utils\Allocator.h
-$(OS)\DjVuEngine.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
-$(OS)\DjVuEngine.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\DjVuEngine.obj: src\utils\BaseUtil.h src\utils\ByteReader.h src\utils\FileUtil.h
+$(OS)\DjVuEngine.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OS)\DjVuEngine.obj: src\utils\Vec.h
 $(OS)\Doc.obj: src\BaseEngine.h src\ChmEngine.h src\DjVuEngine.h
 $(OS)\Doc.obj: src\Doc.h src\EbookBase.h src\EpubDoc.h
 $(OS)\Doc.obj: src\EpubEngine.h src\ImagesEngine.h src\MobiDoc.h
@@ -297,9 +298,9 @@ $(OS)\Print.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
 $(OS)\Print.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\Print.obj: src\WindowInfo.h
 $(OS)\PsEngine.obj: src\BaseEngine.h src\PdfEngine.h src\PsEngine.h
-$(OS)\PsEngine.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\FileUtil.h
-$(OS)\PsEngine.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
-$(OS)\PsEngine.obj: src\utils\Vec.h src\utils\WinUtil.h
+$(OS)\PsEngine.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\ByteReader.h
+$(OS)\PsEngine.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
+$(OS)\PsEngine.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\RenderCache.obj: src\BaseEngine.h src\ChmEngine.h src\DisplayModel.h
 $(OS)\RenderCache.obj: src\DisplayState.h src\Doc.h src\RenderCache.h
 $(OS)\RenderCache.obj: src\TextSelection.h src\utils\Allocator.h src\utils\BaseUtil.h
@@ -456,9 +457,10 @@ $(OU)\FileTransactions.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUti
 $(OU)\FileUtil.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\FileUtil.h
 $(OU)\FileUtil.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
 $(OU)\FileUtil.obj: src\utils\Vec.h
-$(OU)\GdiPlusUtil.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GdiPlusUtil.h
-$(OU)\GdiPlusUtil.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
-$(OU)\GdiPlusUtil.obj: src\utils\TgaReader.h src\utils\Vec.h src\utils\WinUtil.h
+$(OU)\GdiPlusUtil.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\ByteReader.h
+$(OU)\GdiPlusUtil.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
+$(OU)\GdiPlusUtil.obj: src\utils\StrUtil.h src\utils\TgaReader.h src\utils\Vec.h
+$(OU)\GdiPlusUtil.obj: src\utils\WinUtil.h
 $(OU)\HtmlParserLookup.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GeomUtil.h
 $(OU)\HtmlParserLookup.obj: src\utils\HtmlParserLookup.h src\utils\Scoped.h src\utils\StrUtil.h
 $(OU)\HtmlParserLookup.obj: src\utils\Vec.h

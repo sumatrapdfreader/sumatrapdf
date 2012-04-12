@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "ChmDoc.h"
 
+#include "ByteReader.h"
 #include "FileUtil.h"
 #include "TrivialHtmlParser.h"
 
@@ -83,14 +84,11 @@ TCHAR *ChmDoc::ToStr(const char *text)
     return str::conv::FromCodePage(text, codepage);
 }
 
-inline DWORD GetDWord(const unsigned char *data, size_t offset)
-{
-    return LEtoHl(*(DWORD *)&data[offset]);
-}
-
 static char *GetCharZ(const unsigned char *data, size_t len, size_t off)
 {
     if (off >= len)
+        return NULL;
+    if (!memchr(data + off, '\0', len - off))
         return NULL;
     const char *str = (char *)data + off;
     if (str::IsEmpty(str))
@@ -109,27 +107,28 @@ void ChmDoc::ParseWindowsData()
     if (windowsLen <= 8)
         return;
 
-    DWORD entries = GetDWord(windowsData, 0);
-    DWORD entrySize = GetDWord(windowsData, 4);
+    ByteReader rw(windowsData, windowsLen);
+    DWORD entries = rw.DWordLE(0);
+    DWORD entrySize = rw.DWordLE(4);
     if (entrySize < 188)
         return;
 
     for (DWORD i = 0; i < entries && (i + 1) * entrySize <= windowsLen; i++) {
         DWORD off = 8 + i * entrySize;
         if (!title) {
-            DWORD strOff = GetDWord(windowsData, off + 0x14);
+            DWORD strOff = rw.DWordLE(off + 0x14);
             title.Set(GetCharZ(stringsData, stringsLen, strOff));
         }
         if (!tocPath) {
-            DWORD strOff = GetDWord(windowsData, off + 0x60);
+            DWORD strOff = rw.DWordLE(off + 0x60);
             tocPath.Set(GetCharZ(stringsData, stringsLen, strOff));
         }
         if (!indexPath) {
-            DWORD strOff = GetDWord(windowsData, off + 0x64);
+            DWORD strOff = rw.DWordLE(off + 0x64);
             indexPath.Set(GetCharZ(stringsData, stringsLen, strOff));
         }
         if (!homePath) {
-            DWORD strOff = GetDWord(windowsData, off + 0x68);
+            DWORD strOff = rw.DWordLE(off + 0x68);
             homePath.Set(GetCharZ(stringsData, stringsLen, strOff));
         }
     }
@@ -143,16 +142,17 @@ bool ChmDoc::ParseSystemData()
     if (!data)
         return false;
 
+    ByteReader r(data, dataLen);
     DWORD len = 0;
     // Note: skipping DWORD version at offset 0. It's supposed to be 2 or 3.
     for (size_t off = 4; off + 4 < dataLen; off += len + 4) {
         // Note: at some point we seem to get off-sync i.e. I'm seeing
         // many entries with type == 0 and len == 0. Seems harmless.
-        DWORD type_len = GetDWord(data, off);
-        len = HIWORD(type_len);
+        len = r.WordLE(off + 2);
         if (len == 0)
             continue;
-        switch (LOWORD(type_len)) {
+        WORD type = r.WordLE(off);
+        switch (type) {
         case 0:
             if (!tocPath)
                 tocPath.Set(GetCharZ(data, dataLen, off + 4));
@@ -198,11 +198,11 @@ static UINT GetChmCodepage(const TCHAR *fileName)
         { 1060, 1250 }, { 1055, 1254 }
     };
 
-    DWORD header[6];
-    if (!file::ReadAll(fileName, (char *)header, sizeof(header)))
+    char header[24];
+    if (!file::ReadAll(fileName, header, sizeof(header)))
         return CP_CHM_DEFAULT;
-    DWORD lang_id = LEtoHl(header[5]);
 
+    DWORD lang_id = ByteReader(header, sizeof(header)).DWordLE(20);
     for (int i = 0; i < dimof(langIdToCodepage); i++)
         if (lang_id == langIdToCodepage[i].langId)
             return langIdToCodepage[i].codepage;

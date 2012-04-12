@@ -111,13 +111,18 @@ struct MobiHeader {
 
 STATIC_ASSERT(kMobiHeaderLen == sizeof(MobiHeader), validMobiHeader);
 
+// TODO: do it the way Rob Pike says: http://commandcenter.blogspot.com/2012/04/byte-order-fallacy.html
+// TODO: use ByteReader::UnpackBE
+#define BEtoHs(x) MAKEWORD(HIBYTE(x), LOBYTE(x))
+#define BEtoHl(x) MAKELONG(BEtoHs(HIWORD(x)), BEtoHs(LOWORD(x)))
+
 // change big-endian int16 to little-endian (our native format)
-static void SwapU16(uint16& i)
+inline void SwapU16(uint16& i)
 {
     i = BEtoHs(i);
 }
 
-static void SwapU32(uint32& i)
+inline void SwapU32(uint32& i)
 {
     i = BEtoHl(i);
 }
@@ -253,11 +258,9 @@ HuffDicDecompressor::~HuffDicDecompressor()
     free(huffmanData);
 }
 
-uint16 ReadBeU16(uint8 *d)
+inline uint16 ReadBeU16(uint8 *d)
 {
-    uint16 v = *((uint16*)d);
-    SwapU16(v);
-    return v;
+    return (d[0] << 8) + d[1];
 }
 
 bool HuffDicDecompressor::DecodeOne(uint32 code, uint8 *& dst, size_t& dstLeft)

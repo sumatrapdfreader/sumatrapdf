@@ -5,6 +5,8 @@
 #include <wincodec.h>
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
+
+#include "ByteReader.h"
 #include "TgaReader.h"
 #include "WinUtil.h"
 
@@ -350,29 +352,19 @@ Bitmap *BitmapFromData(const char *data, size_t len)
     return bmp;
 }
 
-// TODO: find better names
-inline WORD WordBE(const unsigned char *d) { return d[0] << 8 | d[1]; }
-inline DWORD DWordBE(const unsigned char *d) { return d[0] << 24 | d[1] << 16 | d[2] << 8 | d[3]; }
-inline WORD WordLE(const unsigned char *d) { return d[1] << 8 | d[0]; }
-inline DWORD DWordLE(const unsigned char *d) { return d[3] << 24 | d[2] << 16 | d[1] << 8 | d[0]; }
-// TODO: does this mean we have to start handling const unsigned char*
-//       instead of const char* for data read from disk?
-inline WORD WordBE(const char *d) { return WordBE((unsigned char *)d); }
-inline DWORD DWordBE(const char *d) { return DWordBE((unsigned char *)d); }
-inline WORD WordLE(const char *d) { return WordLE((unsigned char *)d); }
-inline DWORD DWordLE(const char *d) { return DWordLE((unsigned char *)d); }
-// TODO: what about LEtoHl in the Img_BMP case?
-
 // adapted from http://cpansearch.perl.org/src/RJRAY/Image-Size-3.230/lib/Image/Size.pm
 Size BitmapSizeFromData(const char *data, size_t len)
 {
     Size result;
+    ByteReader r(data, len);
     switch (GfxFormatFromData(data, len)) {
     case Img_BMP:
         if (len >= sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER)) {
-            BITMAPINFOHEADER *bmi = (BITMAPINFOHEADER *)(data + sizeof(BITMAPFILEHEADER));
-            result.Width = LEtoHl(bmi->biWidth);
-            result.Height = LEtoHl(bmi->biHeight);
+            BITMAPINFOHEADER bmi;
+            if (r.UnpackLE(&bmi, sizeof(bmi), "3d2w6d", sizeof(BITMAPFILEHEADER))) {
+                result.Width = bmi.biWidth;
+                result.Height = bmi.biHeight;
+            }
         }
         break;
     case Img_GIF:
@@ -381,26 +373,26 @@ Size BitmapSizeFromData(const char *data, size_t len)
             // "logical screen" size which is sometimes too large
             size_t ix = 13;
             // skip the global color table
-            if ((data[10] & 0x80))
-                ix += 3 * (1 << ((data[10] & 0x07) + 1));
+            if ((r.Byte(10) & 0x80))
+                ix += 3 * (1 << ((r.Byte(10) & 0x07) + 1));
             while (ix + 8 < len) {
-                if (data[ix] == '\x2c') {
-                    result.Width = WordLE(data + ix + 5);
-                    result.Height = WordLE(data + ix + 7);
+                if (r.Byte(ix) == '\x2c') {
+                    result.Width = r.WordLE(ix + 5);
+                    result.Height = r.WordLE(ix + 7);
                     break;
                 }
-                else if (data[ix] == '\x21' && data[ix + 1] == '\xF9')
+                else if (r.Byte(ix) == '\x21' && r.Byte(ix + 1) == '\xF9')
                     ix += 8;
-                else if (data[ix] == '\x21' && data[ix + 1] == '\xFE') {
-                    char *commentEnd = (char *)memchr(data + ix + 2, '\0', len - ix - 2);
+                else if (r.Byte(ix) == '\x21' && r.Byte(ix + 1) == '\xFE') {
+                    const char *commentEnd = r.Find(ix + 2, '\0');
                     ix = commentEnd ? commentEnd - data + 1 : len;
                 }
-                else if (data[ix] == '\x21' && data[ix + 1] == '\x01' && ix + 15 < len) {
-                    char *textDataEnd = (char *)memchr(data + ix + 15, '\0', len - ix - 15);
+                else if (r.Byte(ix) == '\x21' && r.Byte(ix + 1) == '\x01' && ix + 15 < len) {
+                    const char *textDataEnd = r.Find(ix + 15, '\0');
                     ix = textDataEnd ? textDataEnd - data + 1 : len;
                 }
-                else if (data[ix] == '\x21' && data[ix + 1] == '\xFF' && ix + 14 < len) {
-                    char *applicationDataEnd = (char *)memchr(data + ix + 14, '\0', len - ix - 14);
+                else if (r.Byte(ix) == '\x21' && r.Byte(ix + 1) == '\xFF' && ix + 14 < len) {
+                    const char *applicationDataEnd = r.Find(ix + 14, '\0');
                     ix = applicationDataEnd ? applicationDataEnd - data + 1 : len;
                 }
                 else
@@ -410,39 +402,44 @@ Size BitmapSizeFromData(const char *data, size_t len)
         break;
     case Img_JPEG:
         // find the last start of frame marker for non-differential Huffman coding
-        for (size_t ix = 2; ix + 9 < len && data[ix] == '\xFF'; ) {
-            if ('\xC0' <= data[ix + 1] && data[ix + 1] <= '\xC3') {
-                result.Width = WordBE(data + ix + 7);
-                result.Height = WordBE(data + ix + 5);
+        for (size_t ix = 2; ix + 9 < len && r.Byte(ix) == '\xFF'; ) {
+            if ('\xC0' <= r.Byte(ix + 1) && r.Byte(ix + 1) <= '\xC3') {
+                result.Width = r.WordBE(ix + 7);
+                result.Height = r.WordBE(ix + 5);
             }
-            ix += WordBE(data + ix + 2) + 2;
+            ix += r.WordBE(ix + 2) + 2;
         }
         break;
     case Img_JXR:
-        if (len >= 10 && LEtoHl(*(DWORD *)(data + 4)) == 8) {
-            WORD ifdLen = LEtoHs(*(WORD *)(data + 8));
+        if (len >= 10 && r.DWordLE(4) == 8) {
+            WORD ifdLen = r.WordLE(8);
             for (size_t i = 0; i < ifdLen && 10 + (i + 1) * 12 < len; i++) {
-                if (memeq(data + 10 + i * 12, "\x80\xBC\x04\x00\x01\x00\x00\x00", 8))
-                    result.Width = DWordLE(data + 10 + i * 12 + 8);
-                if (memeq(data + 10 + i * 12, "\x80\xBC\x03\x00\x01\x00\x00\x00", 8))
-                    result.Width = WordLE(data + 10 + i * 12 + 8);
-                if (memeq(data + 10 + i * 12, "\x81\xBC\x04\x00\x01\x00\x00\x00", 8))
-                    result.Height = DWordLE(data + 10 + i * 12 + 8);
-                if (memeq(data + 10 + i * 12, "\x81\xBC\x03\x00\x01\x00\x00\x00", 8))
-                    result.Height = WordLE(data + 10 + i * 12 + 8);
+                size_t idx = 10 + i * 12;
+                if (r.WordLE(idx + 0) == 0xBC80 && r.WordLE(idx + 2) == 4 && r.DWordLE(idx + 4) == 1)
+                    result.Width = r.DWordLE(idx + 8);
+                if (r.WordLE(idx + 0) == 0xBC80 && r.WordLE(idx + 2) == 3 && r.DWordLE(idx + 4) == 1)
+                    result.Width = r.WordLE(idx + 8);
+                if (r.WordLE(idx + 0) == 0xBC80 && r.WordLE(idx + 2) == 1 && r.DWordLE(idx + 4) == 1)
+                    result.Width = r.Byte(idx + 8);
+                if (r.WordLE(idx + 0) == 0xBC81 && r.WordLE(idx + 2) == 4 && r.DWordLE(idx + 4) == 1)
+                    result.Height = r.DWordLE(idx + 8);
+                if (r.WordLE(idx + 0) == 0xBC81 && r.WordLE(idx + 2) == 3 && r.DWordLE(idx + 4) == 1)
+                    result.Height = r.WordLE(idx + 8);
+                if (r.WordLE(idx + 0) == 0xBC81 && r.WordLE(idx + 2) == 1 && r.DWordLE(idx + 4) == 1)
+                    result.Height = r.Byte(idx + 8);
             }
         }
         break;
     case Img_PNG:
         if (len >= 24 && str::StartsWith(data + 12, "IHDR")) {
-            result.Width = DWordBE(data + 16);
-            result.Height = DWordBE(data + 20);
+            result.Width = r.DWordBE(16);
+            result.Height = r.DWordBE(20);
         }
         break;
     case Img_TGA:
         if (len >= 16) {
-            result.Width = WordLE(data + 12);
-            result.Height = WordLE(data + 14);
+            result.Width = r.WordLE(12);
+            result.Height = r.WordLE(14);
         }
         break;
     case Img_TIFF:

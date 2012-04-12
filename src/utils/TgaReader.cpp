@@ -111,6 +111,9 @@ static PixelFormat GetPixelFormat(TgaHeader *header, ImageAlpha aType=Alpha_Norm
     return 0;
 }
 
+#define LEtoHs(x) (x)
+#define LEtoHl(x) (x)
+
 static ImageAlpha GetAlphaType(const char *data, size_t len)
 {
     if (!HasVersion2Footer(data, len))

@@ -89,6 +89,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\utils\ByteReader.h"
+					>
+				</File>
+				<File
 					RelativePath=".\src\utils\HtmlParserLookup.cpp"
 					>
 				</File>
