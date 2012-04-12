@@ -998,15 +998,19 @@ CbxEngine *CbxEngine::CreateFromFile(const TCHAR *fileName)
     assert(IsSupportedFile(fileName) || IsSupportedFile(fileName, true));
     CbxEngineImpl *engine = new CbxEngineImpl();
     bool ok = false;
-    if (str::EndsWithI(fileName, _T(".cbz")) ||
-        str::EndsWithI(fileName, _T(".zip")) ||
+    if (str::EndsWithI(fileName, _T(".cbz")) || str::EndsWithI(fileName, _T(".zip")) ||
         file::StartsWith(fileName, "PK\x03\x04")) {
         ok = engine->LoadCbzFile(fileName);
     }
-    else if (str::EndsWithI(fileName, _T(".cbr")) ||
-             str::EndsWithI(fileName, _T(".rar")) ||
-             file::StartsWith(fileName, "Rar!\x1A\x07\x00", 7)) {
-        ok = engine->LoadCbrFile(fileName);
+    if (!ok) {
+        // also try again if a .cbz or .zip file failed to load, it might
+        // just have been misnamed (which apparently happens occasionally)
+        delete engine;
+        engine = new CbxEngineImpl();
+        if (str::EndsWithI(fileName, _T(".cbr")) || str::EndsWithI(fileName, _T(".rar")) ||
+            file::StartsWith(fileName, "Rar!\x1A\x07\x00", 7)) {
+            ok = engine->LoadCbrFile(fileName);
+        }
     }
     if (!ok) {
         delete engine;
