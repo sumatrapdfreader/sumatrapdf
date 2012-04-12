@@ -100,7 +100,7 @@ static int GetTranslationIndex(const char* txt)
 }
 
 // Call at program exit to free all memory related to translations functionality.
-static void __cdecl FreeData()
+extern "C" static void FreeData()
 {
     if (!gTranslationCache)
         return;

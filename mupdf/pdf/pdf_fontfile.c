@@ -142,9 +142,6 @@ pdf_lookup_substitute_cjk_font(int ros, int serif, unsigned int *len)
 #include FT_TRUETYPE_IDS_H
 #include FT_TRUETYPE_TAGS_H
 
-#define BEtoHs(x)   MAKEWORD(HIBYTE(x), LOBYTE(x))
-#define BEtoHl(x)   MAKELONG(BEtoHs(HIWORD(x)), BEtoHs(LOWORD(x)))
-
 #define TTC_VERSION1	0x00010000
 #define TTC_VERSION2	0x00020000
 
@@ -233,10 +230,22 @@ static pdf_fontlistMS fontlistMS =
 	0,
 };
 
+static inline USHORT BEtoHs(USHORT x)
+{
+	BYTE *data = (BYTE *)&x;
+	return (data[0] << 8) + data[1];
+}
+
+static inline ULONG BEtoHl(ULONG x)
+{
+	BYTE *data = (BYTE *)&x;
+	return (data[0] << 24) + (data[1] << 16) + (data[2] << 8) + data[3];
+}
+
 /* A little bit more sophisticated name matching so that e.g. "EurostileExtended"
    matches "EurostileExtended-Roman" or "Tahoma-Bold,Bold" matches "Tahoma-Bold" */
 static int
-lookupcompare(const void *elem1, const void *elem2)
+lookup_compare(const void *elem1, const void *elem2)
 {
 	const char *val1 = elem1;
 	const char *val2 = elem2;
@@ -254,7 +263,7 @@ lookupcompare(const void *elem1, const void *elem2)
 }
 
 static void
-removespaces(char *srcDest)
+remove_spaces(char *srcDest)
 {
 	char *dest;
 
@@ -276,12 +285,12 @@ strendswith(const char *str, const char *end)
 static pdf_fontmapMS*
 pdf_find_windows_font_path(const char *fontname)
 {
-	return bsearch(fontname, fontlistMS.fontmap, fontlistMS.len, sizeof(pdf_fontmapMS), lookupcompare);
+	return bsearch(fontname, fontlistMS.fontmap, fontlistMS.len, sizeof(pdf_fontmapMS), lookup_compare);
 }
 
 /* source and dest can be same */
 static void
-decodeunicodeBE(fz_context *ctx, char* source, int sourcelen, char* dest, int destlen)
+decode_unicode_BE(fz_context *ctx, char *source, int sourcelen, char *dest, int destlen)
 {
 	WCHAR *tmp;
 	int converted, i;
@@ -301,7 +310,7 @@ decodeunicodeBE(fz_context *ctx, char* source, int sourcelen, char* dest, int de
 }
 
 static void
-decodeplatformstring(fz_context *ctx, int platform, int enctype, char* source, int sourcelen, char* dest, int destlen)
+decode_platform_string(fz_context *ctx, int platform, int enctype, char *source, int sourcelen, char *dest, int destlen)
 {
 	switch (platform)
 	{
@@ -310,7 +319,7 @@ decodeplatformstring(fz_context *ctx, int platform, int enctype, char* source, i
 		{
 		case TT_APPLE_ID_DEFAULT:
 		case TT_APPLE_ID_UNICODE_2_0:
-			decodeunicodeBE(ctx, source, sourcelen, dest, destlen);
+			decode_unicode_BE(ctx, source, sourcelen, dest, destlen);
 			return;
 		}
 		fz_throw(ctx, "fonterror : unsupported encoding (%d/%d)", platform, enctype);
@@ -332,7 +341,7 @@ decodeplatformstring(fz_context *ctx, int platform, int enctype, char* source, i
 		case TT_MS_ID_SYMBOL_CS:
 		case TT_MS_ID_UNICODE_CS:
 		case TT_MS_ID_UCS_4:
-			decodeunicodeBE(ctx, source, sourcelen, dest, destlen);
+			decode_unicode_BE(ctx, source, sourcelen, dest, destlen);
 			return;
 		}
 		fz_throw(ctx, "fonterror : unsupported encoding (%d/%d)", platform, enctype);
@@ -388,78 +397,81 @@ safe_read(fz_stream *file, char *buf, int size)
 }
 
 static void
-read_ttf_string(fz_stream *file, int offset, TT_NAME_RECORD *ttRecord, char *buf, int size)
+read_ttf_string(fz_stream *file, int offset, TT_NAME_RECORD *ttRecordBE, char *buf, int size)
 {
 	char szTemp[MAX_FACENAME * 2];
 	// ignore empty and overlong strings
-	int stringLength = BEtoHs(ttRecord->uStringLength);
+	int stringLength = BEtoHs(ttRecordBE->uStringLength);
 	if (stringLength == 0 || stringLength >= sizeof(szTemp))
 		return;
 
-	fz_seek(file, offset + BEtoHs(ttRecord->uStringOffset), 0);
+	fz_seek(file, offset + BEtoHs(ttRecordBE->uStringOffset), 0);
 	safe_read(file, szTemp, stringLength);
-	decodeplatformstring(file->ctx, BEtoHs(ttRecord->uPlatformID),
-		BEtoHs(ttRecord->uEncodingID), szTemp, stringLength, buf, size);
+	decode_platform_string(file->ctx, BEtoHs(ttRecordBE->uPlatformID),
+		BEtoHs(ttRecordBE->uEncodingID), szTemp, stringLength, buf, size);
 }
 
 static void
 parseTTF(fz_stream *file, int offset, int index, char *path)
 {
-	TT_OFFSET_TABLE ttOffsetTable;
-	TT_TABLE_DIRECTORY tblDir;
-	TT_NAME_TABLE_HEADER ttNTHeader;
-	TT_NAME_RECORD ttRecord;
+	TT_OFFSET_TABLE ttOffsetTableBE;
+	TT_TABLE_DIRECTORY tblDirBE;
+	TT_NAME_TABLE_HEADER ttNTHeaderBE;
+	TT_NAME_RECORD ttRecordBE;
 
 	char szPSName[MAX_FACENAME] = { 0 }, szTTName[MAX_FACENAME] = { 0 }, szStyle[MAX_FACENAME] = { 0 };
 	int i, count, tblOffset;
 
 	fz_seek(file, offset, 0);
-	safe_read(file, (char *)&ttOffsetTable, sizeof(TT_OFFSET_TABLE));
+	safe_read(file, (char *)&ttOffsetTableBE, sizeof(TT_OFFSET_TABLE));
 
 	// check if this is a TrueType font of version 1.0 or an OpenType font
-	if (BEtoHl(ttOffsetTable.uVersion) != TTC_VERSION1 && ttOffsetTable.uVersion != TTAG_OTTO)
-		fz_throw(file->ctx, "fonterror : invalid font version %x", BEtoHl(ttOffsetTable.uVersion));
+	if (BEtoHl(ttOffsetTableBE.uVersion) != TTC_VERSION1 &&
+		BEtoHl(ttOffsetTableBE.uVersion) != TTAG_OTTO)
+	{
+		fz_throw(file->ctx, "fonterror : invalid font version %x", BEtoHl(ttOffsetTableBE.uVersion));
+	}
 
 	// determine the name table's offset by iterating through the offset table
-	count = BEtoHs(ttOffsetTable.uNumOfTables);
+	count = BEtoHs(ttOffsetTableBE.uNumOfTables);
 	for (i = 0; i < count; i++)
 	{
-		safe_read(file, (char *)&tblDir, sizeof(TT_TABLE_DIRECTORY));
-		if (!tblDir.uTag || BEtoHl(tblDir.uTag) == TTAG_name)
+		safe_read(file, (char *)&tblDirBE, sizeof(TT_TABLE_DIRECTORY));
+		if (!BEtoHl(tblDirBE.uTag) || BEtoHl(tblDirBE.uTag) == TTAG_name)
 			break;
 	}
-	if (count == i || !tblDir.uTag)
+	if (count == i || !BEtoHl(tblDirBE.uTag))
 		fz_throw(file->ctx, "fonterror : nameless font");
-	tblOffset = BEtoHl(tblDir.uOffset);
+	tblOffset = BEtoHl(tblDirBE.uOffset);
 
 	// read the 'name' table for record count and offsets
 	fz_seek(file, tblOffset, 0);
-	safe_read(file, (char *)&ttNTHeader, sizeof(TT_NAME_TABLE_HEADER));
+	safe_read(file, (char *)&ttNTHeaderBE, sizeof(TT_NAME_TABLE_HEADER));
 	offset = tblOffset + sizeof(TT_NAME_TABLE_HEADER);
-	tblOffset += BEtoHs(ttNTHeader.uStorageOffset);
+	tblOffset += BEtoHs(ttNTHeaderBE.uStorageOffset);
 
 	// read through the strings for PostScript name and font family
-	count = BEtoHs(ttNTHeader.uNRCount);
+	count = BEtoHs(ttNTHeaderBE.uNRCount);
 	for (i = 0; i < count; i++)
 	{
 		short nameId;
 
 		fz_seek(file, offset + i * sizeof(TT_NAME_RECORD), 0);
-		safe_read(file, (char *)&ttRecord, sizeof(TT_NAME_RECORD));
+		safe_read(file, (char *)&ttRecordBE, sizeof(TT_NAME_RECORD));
 
 		// ignore non-English strings
-		if (ttRecord.uLanguageID && BEtoHs(ttRecord.uLanguageID) != TT_MS_LANGID_ENGLISH_UNITED_STATES)
+		if (BEtoHs(ttRecordBE.uLanguageID) && BEtoHs(ttRecordBE.uLanguageID) != TT_MS_LANGID_ENGLISH_UNITED_STATES)
 			continue;
 		// ignore names other than font (sub)family and PostScript name
-		nameId = BEtoHs(ttRecord.uNameID);
+		nameId = BEtoHs(ttRecordBE.uNameID);
 		fz_try(file->ctx)
 		{
 			if (TT_NAME_ID_FONT_FAMILY == nameId)
-				read_ttf_string(file, tblOffset, &ttRecord, szTTName, MAX_FACENAME);
+				read_ttf_string(file, tblOffset, &ttRecordBE, szTTName, MAX_FACENAME);
 			else if (TT_NAME_ID_FONT_SUBFAMILY == nameId)
-				read_ttf_string(file, tblOffset, &ttRecord, szStyle, MAX_FACENAME);
+				read_ttf_string(file, tblOffset, &ttRecordBE, szStyle, MAX_FACENAME);
 			else if (TT_NAME_ID_PS_NAME == nameId)
-				read_ttf_string(file, tblOffset, &ttRecord, szPSName, MAX_FACENAME);
+				read_ttf_string(file, tblOffset, &ttRecordBE, szPSName, MAX_FACENAME);
 		}
 		fz_catch(file->ctx)
 		{
@@ -485,9 +497,9 @@ parseTTF(fz_stream *file, int offset, int index, char *path)
 			fz_strlcat(szTTName, "-", MAX_FACENAME);
 			fz_strlcat(szTTName, szStyle, MAX_FACENAME);
 		}
-		removespaces(szTTName);
+		remove_spaces(szTTName);
 		// compare the two names before adding this one
-		if (lookupcompare(szTTName, szPSName))
+		if (lookup_compare(szTTName, szPSName))
 			insert_mapping(file->ctx, &fontlistMS, szTTName, path, index);
 	}
 }
@@ -514,33 +526,35 @@ parseTTFs(fz_context *ctx, char *path)
 static void
 parseTTCs(fz_context *ctx, char *path)
 {
-	FONT_COLLECTION fontcollection;
-	ULONG i, numFonts, *offsettable = NULL;
+	FONT_COLLECTION fontcollectionBE;
+	ULONG i, numFonts, *offsettableBE = NULL;
 
 	fz_stream *file = fz_open_file(ctx, path);
 	/* "fonterror : %s not found", path */
 
-	fz_var(offsettable);
+	fz_var(offsettableBE);
 
 	fz_try(ctx)
 	{
-		safe_read(file, (char *)&fontcollection, sizeof(FONT_COLLECTION));
-		if (BEtoHl(fontcollection.Tag) != TTAG_ttcf)
-			fz_throw(ctx, "fonterror : wrong format %x", BEtoHl(fontcollection.Tag));
-		if (BEtoHl(fontcollection.Version) != TTC_VERSION1 &&
-			BEtoHl(fontcollection.Version) != TTC_VERSION2)
-			fz_throw(ctx, "fonterror : invalid version %x", BEtoHl(fontcollection.Version));
+		safe_read(file, (char *)&fontcollectionBE, sizeof(FONT_COLLECTION));
+		if (BEtoHl(fontcollectionBE.Tag) != TTAG_ttcf)
+			fz_throw(ctx, "fonterror : wrong format %x", BEtoHl(fontcollectionBE.Tag));
+		if (BEtoHl(fontcollectionBE.Version) != TTC_VERSION1 &&
+			BEtoHl(fontcollectionBE.Version) != TTC_VERSION2)
+		{
+			fz_throw(ctx, "fonterror : invalid version %x", BEtoHl(fontcollectionBE.Version));
+		}
 
-		numFonts = BEtoHl(fontcollection.NumFonts);
-		offsettable = fz_malloc_array(ctx, numFonts, sizeof(ULONG));
+		numFonts = BEtoHl(fontcollectionBE.NumFonts);
+		offsettableBE = fz_malloc_array(ctx, numFonts, sizeof(ULONG));
 
-		safe_read(file, (char *)offsettable, numFonts * sizeof(ULONG));
+		safe_read(file, (char *)offsettableBE, numFonts * sizeof(ULONG));
 		for (i = 0; i < numFonts; i++)
-			parseTTF(file, BEtoHl(offsettable[i]), i, path);
+			parseTTF(file, BEtoHl(offsettableBE[i]), i, path);
 	}
 	fz_always(ctx)
 	{
-		fz_free(ctx, offsettable);
+		fz_free(ctx, offsettableBE);
 		fz_close(file);
 	}
 	fz_catch(ctx)
@@ -599,7 +613,7 @@ extend_system_font_list(fz_context *ctx, const TCHAR *path)
 	FindClose(hList);
 }
 
-static void __cdecl
+static void
 destroy_system_font_list(void)
 {
 	free(fontlistMS.fontmap);
@@ -661,7 +675,7 @@ pdf_load_windows_font(fz_context *ctx, pdf_font_desc *font, char *fontname)
 
 	// work on a normalized copy of the font name
 	fontname = fz_strdup(ctx, fontname);
-	removespaces(fontname);
+	remove_spaces(fontname);
 
 	// first, try to find the exact font name (including appended style information)
 	comma = strchr(fontname, ',');

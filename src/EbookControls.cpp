@@ -96,7 +96,7 @@ void PageControl::Paint(Graphics *gfx, int offX, int offY)
 }
 
 // should only be called once at the end of the program
-static void __cdecl DeleteEbookStyles()
+extern "C" static void DeleteEbookStyles()
 {
     delete styleStatus;
     delete styleBtnNextPrevDefault;
