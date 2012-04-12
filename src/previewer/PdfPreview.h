@@ -11,8 +11,8 @@
 #ifdef BUILD_CBZ_PREVIEW
 #define SZ_CBZ_PREVIEW_CLSID    _T("{C29D3E2B-8FF6-4033-A4E8-54221D859D74}")
 #endif
-#ifdef BUILD_EPUB_PREVIEW
-#define SZ_EPUB_PREVIEW_CLSID   _T("{80C4E4B1-2B0F-40d5-95AF-BE7B57FEA4F9}")
+#ifdef BUILD_TGA_PREVIEW
+#define SZ_TGA_PREVIEW_CLSID    _T("{CB1D63A6-FE5E-4ded-BEA5-3F6AF1A70D08}")
 #endif
 
 #include "BaseEngine.h"
@@ -22,13 +22,17 @@
 class PageRenderer;
 
 class PreviewBase : public IThumbnailProvider, public IInitializeWithStream,
-    public IObjectWithSite, public IPreviewHandler, public IOleWindow
+    public IObjectWithSite, public IPreviewHandler, public IOleWindow,
+    // for Windows XP
+    public IPersistFile, public IExtractImage2
 {
 public:
-    PreviewBase(long *plRefCount) : m_lRef(1), m_plModuleRef(plRefCount),
-        m_pStream(NULL), m_engine(NULL), renderer(NULL), m_gdiScope(NULL),
-        m_site(NULL), m_hwnd(NULL), m_hwndParent(NULL) {
+    PreviewBase(long *plRefCount, const TCHAR *clsid) : m_lRef(1),
+        m_plModuleRef(plRefCount), m_pStream(NULL), m_engine(NULL),
+        renderer(NULL), m_gdiScope(NULL), m_site(NULL), m_hwnd(NULL),
+        m_hwndParent(NULL), m_clsid(clsid), m_extractCx(0) {
         InterlockedIncrement(m_plModuleRef);
+        m_dateStamp.dwLowDateTime = m_dateStamp.dwHighDateTime = 0;
     }
 
     virtual ~PreviewBase() {
@@ -45,6 +49,10 @@ public:
             QITABENT(PreviewBase, IObjectWithSite),
             QITABENT(PreviewBase, IPreviewHandler),
             QITABENT(PreviewBase, IOleWindow),
+            QITABENT(PreviewBase, IExtractImage2),
+            QITABENT(PreviewBase, IExtractImage),
+            QITABENT(PreviewBase, IPersistFile),
+            QITABENT(PreviewBase, IPersist),
             { 0 }
         };
         return QISearch(this, qit, riid, ppv);
@@ -146,6 +154,57 @@ public:
     }
     IFACEMETHODIMP ContextSensitiveHelp(BOOL fEnterMode) { return E_NOTIMPL; }
 
+    // IPersist (for Windows XP)
+    IFACEMETHODIMP GetClassID(CLSID *pClassID) {
+        return CLSIDFromString(AsWStrQ(m_clsid), pClassID);
+    }
+
+    // IPersistFile (for Windows XP)
+    IFACEMETHODIMP Load(LPCOLESTR pszFileName, DWORD dwMode) {
+        HANDLE hFile = CreateFileW(pszFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile == INVALID_HANDLE_VALUE)
+            return E_INVALIDARG;
+        DWORD size = GetFileSize(hFile, NULL), read;
+        HGLOBAL data = GlobalAlloc(GMEM_MOVEABLE, size);
+        ReadFile(hFile, GlobalLock(data), size, &read, NULL);
+        GlobalUnlock(data);
+        GetFileTime(hFile, NULL, NULL, &m_dateStamp);
+        CloseHandle(hFile);
+
+        IStream *pStm;
+        if (FAILED(CreateStreamOnHGlobal(data, TRUE, &pStm)))
+            return E_FAIL;
+        HRESULT res = Initialize(pStm, 0);
+        pStm->Release();
+        return res;
+    }
+    IFACEMETHODIMP IsDirty(void) { return E_NOTIMPL; }
+    IFACEMETHODIMP Save(LPCOLESTR pszFileName, BOOL bRemember) { return E_NOTIMPL; }
+    IFACEMETHODIMP SaveCompleted(LPCOLESTR pszFileName) { return E_NOTIMPL; }
+    IFACEMETHODIMP GetCurFile(LPOLESTR *ppszFileName) { return E_NOTIMPL; }
+
+    // IExtractImage2 (for Windows XP)
+    IFACEMETHODIMP Extract(HBITMAP *phBmpThumbnail) {
+        if (!phBmpThumbnail || !m_extractCx)
+            return E_INVALIDARG;
+        WTS_ALPHATYPE dummy;
+        return GetThumbnail(m_extractCx, phBmpThumbnail, &dummy);
+    }
+    IFACEMETHODIMP GetLocation(LPWSTR pszPathBuffer, DWORD cch, DWORD *pdwPriority, const SIZE *prgSize, DWORD dwRecClrDepth, DWORD *pdwFlags) {
+        if (!prgSize || !pdwFlags)
+            return E_INVALIDARG;
+        // cheap implementation: ignore anything that isn't useful for IThumbnailProvider::GetThumbnail
+        m_extractCx = min(prgSize->cx, prgSize->cy);
+        *pdwFlags |= IEIFLAG_CACHE;
+        return S_OK;
+    }
+    IFACEMETHODIMP GetDateStamp(FILETIME *pDateStamp) {
+        if (!m_dateStamp.dwLowDateTime && !m_dateStamp.dwHighDateTime)
+            return E_FAIL;
+        *pDateStamp = m_dateStamp;
+        return S_OK;
+    }
+
     BaseEngine *GetEngine() {
         if (!m_engine && m_pStream)
             m_engine = LoadEngine(m_pStream);
@@ -164,13 +223,17 @@ protected:
     ScopedComPtr<IUnknown> m_site;
     HWND        m_hwnd, m_hwndParent;
     RectI       m_rcParent;
+    // for IExtractImage2
+    const TCHAR*m_clsid;
+    UINT        m_extractCx;
+    FILETIME    m_dateStamp;
 
     virtual BaseEngine *LoadEngine(IStream *stream) = 0;
 };
 
 class CPdfPreview : public PreviewBase {
 public:
-    CPdfPreview(long *plRefCount) : PreviewBase(plRefCount) { }
+    CPdfPreview(long *plRefCount) : PreviewBase(plRefCount, SZ_PDF_PREVIEW_CLSID) { }
 
 protected:
     virtual BaseEngine *LoadEngine(IStream *stream);
@@ -179,7 +242,7 @@ protected:
 #ifdef BUILD_XPS_PREVIEW
 class CXpsPreview : public PreviewBase {
 public:
-    CXpsPreview(long *plRefCount) : PreviewBase(plRefCount) { }
+    CXpsPreview(long *plRefCount) : PreviewBase(plRefCount, SZ_XPS_PREVIEW_CLSID) { }
 
 protected:
     virtual BaseEngine *LoadEngine(IStream *stream);
@@ -189,7 +252,7 @@ protected:
 #ifdef BUILD_CBZ_PREVIEW
 class CCbzPreview : public PreviewBase {
 public:
-    CCbzPreview(long *plRefCount) : PreviewBase(plRefCount) {
+    CCbzPreview(long *plRefCount) : PreviewBase(plRefCount, SZ_CBZ_PREVIEW_CLSID) {
         m_gdiScope = new ScopedGdiPlus();
     }
 
@@ -198,10 +261,10 @@ protected:
 };
 #endif
 
-#ifdef BUILD_EPUB_PREVIEW
-class CEpubPreview : public PreviewBase {
+#ifdef BUILD_TGA_PREVIEW
+class CTgaPreview : public PreviewBase {
 public:
-    CEpubPreview(long *plRefCount) : PreviewBase(plRefCount) {
+    CTgaPreview(long *plRefCount) : PreviewBase(plRefCount, SZ_TGA_PREVIEW_CLSID) {
         m_gdiScope = new ScopedGdiPlus();
     }
 

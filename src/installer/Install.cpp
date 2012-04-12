@@ -685,18 +685,15 @@ void OnCreateWindow(HWND hwnd)
         rc.y += staticDy;
     }
 
-    // only show this checkbox on systems that actually support
-    // IThumbnailProvider and IPreviewHandler
-    if (WindowsVerVistaOrGreater()) {
-        gHwndCheckboxRegisterPdfPreviewer = CreateWindow(
-            WC_BUTTON, _T("Let Windows show &previews of PDF documents"),
-            WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
-            rc.x, rc.y, r.dx - 2 * rc.x, staticDy,
-            hwnd, (HMENU)ID_CHECKBOX_PDF_PREVIEWER, ghinst, NULL);
-        SetWindowFont(gHwndCheckboxRegisterPdfPreviewer, gFontDefault, TRUE);
-        Button_SetCheck(gHwndCheckboxRegisterPdfPreviewer, gGlobalData.installPdfPreviewer || IsPdfPreviewerInstalled());
-        rc.y += staticDy;
-    }
+    // for Windows XP, this means only basic thumbnail support
+    gHwndCheckboxRegisterPdfPreviewer = CreateWindow(
+        WC_BUTTON, _T("Let Windows show &previews of PDF documents"),
+        WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
+        rc.x, rc.y, r.dx - 2 * rc.x, staticDy,
+        hwnd, (HMENU)ID_CHECKBOX_PDF_PREVIEWER, ghinst, NULL);
+    SetWindowFont(gHwndCheckboxRegisterPdfPreviewer, gFontDefault, TRUE);
+    Button_SetCheck(gHwndCheckboxRegisterPdfPreviewer, gGlobalData.installPdfPreviewer || IsPdfPreviewerInstalled());
+    rc.y += staticDy;
 
     gShowOptions = !gShowOptions;
     OnButtonOptions();

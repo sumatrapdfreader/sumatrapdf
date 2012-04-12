@@ -38,7 +38,8 @@ IFACEMETHODIMP PreviewBase::GetThumbnail(UINT cx, HBITMAP *phbmp, WTS_ALPHATYPE 
             bmpData[4 * i + 3] = 0xFF;
 
         *phbmp = hthumb;
-        *pdwAlpha = WTSAT_RGB;
+        if (pdwAlpha)
+            *pdwAlpha = WTSAT_RGB;
     }
     else {
         DeleteObject(hthumb);
@@ -48,7 +49,7 @@ IFACEMETHODIMP PreviewBase::GetThumbnail(UINT cx, HBITMAP *phbmp, WTS_ALPHATYPE 
     ReleaseDC(NULL, hdc);
     delete bmp;
 
-    return hthumb ? S_OK : E_FAIL;
+    return hthumb ? S_OK : E_NOTIMPL;
 }
 
 #define COL_WINDOW_BG   RGB(0x99, 0x99, 0x99)
@@ -308,6 +309,13 @@ BaseEngine *CCbzPreview::LoadEngine(IStream *stream)
     return CbxEngine::CreateFromStream(stream);
 }
 
+#ifdef BUILD_TGA_PREVIEW
+BaseEngine *CTgaPreview::LoadEngine(IStream *stream)
+{
+    return ImageEngine::CreateFromStream(stream);
+}
+#endif
+
 // allow to build PdfPreview.dll without UnRAR
 #include "../ext/unrar/dll.hpp"
 HANDLE PASCAL   RAROpenArchiveEx(struct RAROpenArchiveDataEx *) { return NULL; }
@@ -315,24 +323,4 @@ int    PASCAL   RARReadHeaderEx(HANDLE, struct RARHeaderDataEx *) { return -1; }
 void   PASCAL   RARSetCallback(HANDLE, UNRARCALLBACK, LPARAM) { }
 int    PASCAL   RARProcessFile(HANDLE, int, char *, char *) { return -1; }
 int    PASCAL   RARCloseArchive(HANDLE) { return -1; }
-#endif
-
-#ifdef BUILD_EPUB_PREVIEW
-// TODO: this somehow prevents dllhost.exe from exiting
-//       (maybe due to the global ScopedGdiPlus in (Mini)Mui?)
-
-#include "EpubEngine.h"
-
-BaseEngine *CEpubPreview::LoadEngine(IStream *stream)
-{
-    return EpubEngine::CreateFromStream(stream);
-}
-
-// allow to build PdfPreview.dll without MobiDoc
-#include "MobiDoc.h"
-MobiDoc::~MobiDoc() { }
-ImageData *MobiDoc::GetImage(size_t imgRecIndex) const { return NULL; }
-ImageData *MobiDoc::GetCoverImage() { return NULL; }
-char *MobiDoc::GetBookHtmlData(size_t& lenOut) const { return NULL; }
-MobiDoc *MobiDoc::CreateFromFile(const TCHAR *fileName) { return NULL; }
 #endif
