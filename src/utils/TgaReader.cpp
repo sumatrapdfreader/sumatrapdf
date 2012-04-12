@@ -61,6 +61,10 @@ struct TgaExtArea {
 
 #pragma pack(pop)
 
+STATIC_ASSERT(sizeof(TgaHeader) == 18, tgaHeaderSize);
+STATIC_ASSERT(sizeof(TgaFooter) == 26, tgaFooterSize);
+STATIC_ASSERT(sizeof(TgaExtArea) == 495, tgaExtAreaSize);
+
 static inline uint16_t convLE(uint16_t x)
 {
     uint8_t *data = (uint8_t *)&x;

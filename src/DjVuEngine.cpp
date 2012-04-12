@@ -297,6 +297,15 @@ static bool ReadBytes(HANDLE h, int offset, void *buffer, int count)
 #define DJVU_MARK_DJVU  0x444A5655L /* DJVU */
 #define DJVU_MARK_INFO  0x494E464FL /* INFO */
 
+struct DjVuInfoChunk {
+    WORD width, height;
+    BYTE minor, major;
+    BYTE dpiLo, dpiHi;
+    BYTE gamma, flags;
+};
+
+STATIC_ASSERT(sizeof(DjVuInfoChunk) == 10, djvuInfoChunkSize);
+
 bool DjVuEngineImpl::LoadMediaboxes()
 {
     ScopedHandle h(CreateFile(fileName, GENERIC_READ, FILE_SHARE_READ, NULL,
@@ -319,16 +328,16 @@ bool DjVuEngineImpl::LoadMediaboxes()
             r.DWordBE(12) == DJVU_MARK_INFO) {
             if (!ReadBytes(h, offset + 16, buffer, 14))
                 return false;
-            int width = r.WordBE(4);
-            int height = r.WordBE(6);
-            int dpi = r.WordLE(10);
+            DjVuInfoChunk info;
+            bool ok = r.UnpackBE(&info, sizeof(info), "2w6b", 4);
+            CrashIf(!ok);
+            int dpi = MAKEWORD(info.dpiLo, info.dpiHi); // dpi is little-endian
             // DjVuLibre ignores DPI values outside 25 to 6000 in DjVuInfo::decode
             if (dpi < 25 || 6000 < dpi)
                 dpi = 300;
-            int flags = r.Byte(13);
-            mediaboxes[pages].dx = GetFileDPI() * width / dpi;
-            mediaboxes[pages].dy = GetFileDPI() * height / dpi;
-            if ((flags & 4))
+            mediaboxes[pages].dx = GetFileDPI() * info.width / dpi;
+            mediaboxes[pages].dy = GetFileDPI() * info.height / dpi;
+            if ((info.flags & 4))
                 swap(mediaboxes[pages].dx, mediaboxes[pages].dy);
             pages++;
         }

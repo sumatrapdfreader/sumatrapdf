@@ -361,10 +361,10 @@ Size BitmapSizeFromData(const char *data, size_t len)
     case Img_BMP:
         if (len >= sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER)) {
             BITMAPINFOHEADER bmi;
-            if (r.UnpackLE(&bmi, sizeof(bmi), "3d2w6d", sizeof(BITMAPFILEHEADER))) {
-                result.Width = bmi.biWidth;
-                result.Height = bmi.biHeight;
-            }
+            bool ok = r.UnpackLE(&bmi, sizeof(bmi), "3d2w6d", sizeof(BITMAPFILEHEADER));
+            CrashIf(!ok);
+            result.Width = bmi.biWidth;
+            result.Height = bmi.biHeight;
         }
         break;
     case Img_GIF:
