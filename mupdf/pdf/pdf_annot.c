@@ -925,6 +925,8 @@ pdf_prepend_ap_background(fz_buffer *content, pdf_document *xref, pdf_obj *obj)
 	for (i = 0; i < form->contents->len - 3 && memcmp(form->contents->data + i, "/Tx", 3) != 0; i++);
 	if (i == form->contents->len - 3)
 		i = form->contents->len;
+	if (content->len + i < 0)
+		i = 0;
 	if (content->cap < content->len + i)
 		fz_resize_buffer(xref->ctx, content, content->len + i);
 	memcpy(content->data + content->len, form->contents->data, i);

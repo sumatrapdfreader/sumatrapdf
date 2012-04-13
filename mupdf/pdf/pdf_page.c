@@ -263,6 +263,13 @@ pdf_load_page_contents_array(pdf_document *xref, pdf_obj *list)
 			continue;
 		}
 
+		/* SumatraPDF: prevent an integer overflow */
+		if (big->len + one->len < 0)
+		{
+			fz_drop_buffer(ctx, one);
+			fz_warn(ctx, "ignoring part %d/%d of huge content stream", i + 1, n);
+			continue;
+		}
 		if (big->len + one->len + 1 > big->cap)
 			fz_resize_buffer(ctx, big, big->len + one->len + 1);
 		memcpy(big->data + big->len, one->data, one->len);

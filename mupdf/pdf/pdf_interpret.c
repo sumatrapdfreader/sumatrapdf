@@ -2694,6 +2694,10 @@ pdf_run_buffer(pdf_csi *csi, pdf_obj *rdb, fz_buffer *contents)
 
 	if (contents == NULL)
 		return;
+	// SumatraPDF: apparently it's possible to get cap == 0 && len != 0
+	//             (most likely due to an integer overflow)
+	if (!contents->data)
+		return;
 
 	fz_try(ctx)
 	{

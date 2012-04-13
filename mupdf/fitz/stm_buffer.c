@@ -52,6 +52,9 @@ fz_drop_buffer(fz_context *ctx, fz_buffer *buf)
 void
 fz_resize_buffer(fz_context *ctx, fz_buffer *buf, int size)
 {
+	/* SumatraPDF: prevent integer overflows if fz_grow_buffer and fz_trim_buffer */
+	if (size < 0)
+		fz_throw(ctx, "size %d indicates integer overflow", size);
 	buf->data = fz_resize_array(ctx, buf->data, size, 1);
 	buf->cap = size;
 	if (buf->len > buf->cap)
