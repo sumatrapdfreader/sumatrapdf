@@ -305,7 +305,7 @@ static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData)
 static void GetProps(Doc doc, PropertiesLayout *layoutData, DisplayModel *dm, bool extended)
 {
     CrashIf(!doc.IsEngine() && !doc.IsEbook());
-    EngineType engineType = doc.GetEngineType();
+    DocType engineType = doc.GetDocType();
 
     TCHAR *str = str::Dup(gPluginMode ? gPluginURL : doc.GetFilePath());
     layoutData->AddProperty(_TR("File:"), str);
@@ -327,7 +327,7 @@ static void GetProps(Doc doc, PropertiesLayout *layoutData, DisplayModel *dm, bo
         ConvDateToDisplay(&str, PdfDateParse);
     else if (Engine_XPS == engineType)
         ConvDateToDisplay(&str, IsoDateParse);
-    else if (Engine_Epub == engineType || doc.AsEpub())
+    else if (Engine_Epub == engineType || Doc_Epub == engineType)
         ConvDateToDisplay(&str, IsoDateParse);
     layoutData->AddProperty(_TR("Created:"), str);
 
@@ -336,7 +336,7 @@ static void GetProps(Doc doc, PropertiesLayout *layoutData, DisplayModel *dm, bo
         ConvDateToDisplay(&str, PdfDateParse);
     else if (Engine_XPS == engineType)
         ConvDateToDisplay(&str, IsoDateParse);
-    else if (Engine_Epub == engineType || doc.AsEpub())
+    else if (Engine_Epub == engineType || Doc_Epub == engineType)
         ConvDateToDisplay(&str, IsoDateParse);
     layoutData->AddProperty(_TR("Modified:"), str);
 

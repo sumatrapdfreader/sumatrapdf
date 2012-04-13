@@ -375,7 +375,7 @@ Usage:
     DebugAlternateChmEngine(!useAlternateHandlers);
 
     ScopedGdiPlus gdiPlus;
-    EngineType engineType;
+    DocType engineType;
     PasswordHolder pwdUI(password);
     BaseEngine *engine = EngineManager(true).CreateEngine(filePath, &pwdUI, &engineType);
     if (!engine) {

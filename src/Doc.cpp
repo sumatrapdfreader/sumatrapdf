@@ -50,24 +50,20 @@ void Doc::FreeStrings()
 void Doc::Delete()
 {
     switch (type) {
-    case Engine:
-        delete engine;
-        break;
-    case Epub:
+    case Doc_Epub:
         delete epubDoc;
         break;
-    case Error:
-        break;
-    case Mobi:
+    case Doc_Mobi:
         delete mobiDoc;
         break;
-    case MobiTest:
+    case Doc_MobiTest:
         delete mobiTestDoc;
         break;
-    case None:
+    case Doc_None:
         break;
     default:
-        CrashIf(true);
+        CrashIf(!IsEngine());
+        delete engine;
         break;
     }
 
@@ -75,40 +71,38 @@ void Doc::Delete()
     Clear();
 }
 
-Doc::Doc(BaseEngine *doc, EngineType newEngineType)
+Doc::Doc(BaseEngine *doc, DocType engineType)
 {
     Clear();
-    type = doc ? Engine : Error;
+    type = doc ? engineType : Engine_None;
     engine = doc;
-    engineType = newEngineType;
-    CrashIf(Engine_None == engineType);
+    CrashIf(doc && !IsEngine());
 }
 
 Doc::Doc(EpubDoc *doc)
 {
     Clear();
-    type = doc ? Epub : Error;
+    type = doc ? Doc_Epub : Doc_None;
     epubDoc = doc;
 }
 
 Doc::Doc(MobiDoc *doc)
 {
     Clear();
-    type = doc ? Mobi : Error;
+    type = doc ? Doc_Mobi : Doc_None;
     mobiDoc = doc;
 }
 
 Doc::Doc(MobiTestDoc *doc)
 { 
     Clear();
-    type = doc ? MobiTest : Error;
+    type = doc ? Doc_MobiTest : Doc_None;
     mobiTestDoc = doc;
 }
 
 void Doc::Clear()
 {
-    type = None;
-    engineType = Engine_None;
+    type = Doc_None;
     loadingErrorMessage = NULL;
     filePath = NULL;
     generic = NULL;
@@ -116,28 +110,28 @@ void Doc::Clear()
 
 BaseEngine *Doc::AsEngine() const
 {
-    if (Engine == type)
+    if (IsEngine())
         return engine;
     return NULL;
 }
 
 MobiDoc *Doc::AsMobi() const
 {
-    if (Mobi == type)
+    if (Doc_Mobi == type)
         return mobiDoc;
     return NULL;
 }
 
 MobiTestDoc *Doc::AsMobiTest() const
 {
-    if (MobiTest == type)
+    if (Doc_MobiTest == type)
         return mobiTestDoc;
     return NULL;
 }
 
 EpubDoc *Doc::AsEpub() const
 {
-    if (Epub == type)
+    if (Doc_Epub == type)
         return epubDoc;
     return NULL;
 }
@@ -145,28 +139,41 @@ EpubDoc *Doc::AsEpub() const
 // return true if this is document supported by ebook UI
 bool Doc::IsEbook() const
 {
-    return (Mobi == type) || (MobiTest == type) || (Epub == type);
+    return (Doc_Mobi == type) || (Doc_MobiTest == type) || (Doc_Epub == type);
+}
+
+bool Doc::IsEngine() const
+{
+    switch (type) {
+    case Engine_PDF: case Engine_XPS:
+    case Engine_DjVu:
+    case Engine_Image: case Engine_ImageDir: case Engine_ComicBook:
+    case Engine_PS:
+    case Engine_Chm:
+    case Engine_Epub: case Engine_Fb2: case Engine_Mobi: case Engine_Pdb:
+    case Engine_Chm2: case Engine_Html: case Engine_Txt:
+        return true;
+    default:
+        CrashIf(!IsEbook() && !IsNone());
+        return false;
+    }
 }
 
 // the caller should make sure there is a document object
 const TCHAR *Doc::GetFilePathFromDoc() const
 {
     switch (type) {
-    case Engine:
-        return engine->FileName();
-    case Epub:
+    case Doc_Epub:
         return epubDoc->GetFileName();
-    case Error:
-        return NULL;
-    case Mobi:
+    case Doc_Mobi:
         return mobiDoc->GetFileName();
-    case MobiTest:
+    case Doc_MobiTest:
         return NULL;
-    case None:
+    case Doc_None:
         return NULL;
     default:
-        CrashIf(true);
-        return NULL;
+        CrashIf(!IsEngine());
+        return engine->FileName();
     }
 }
 
@@ -178,15 +185,15 @@ const TCHAR *Doc::GetFilePath() const
         CrashIf(docPath && !str::Eq(filePath, docPath));
         return filePath;
     }
-    CrashIf(!generic && !(IsNone() || IsError()));
+    CrashIf(!generic && !IsNone());
     return GetFilePathFromDoc();
 }
 
 TCHAR *Doc::GetProperty(const char *name)
 {
-    if (Epub == type)
+    if (Doc_Epub == type)
         return epubDoc->GetProperty(name);
-    if (Engine == type)
+    if (IsEngine())
         return engine->GetProperty(name);
     return NULL;
 }
@@ -194,11 +201,11 @@ TCHAR *Doc::GetProperty(const char *name)
 const char *Doc::GetHtmlData(size_t &len)
 {
     switch (type) {
-    case Mobi:
+    case Doc_Mobi:
         return mobiDoc->GetBookHtmlData(len);
-    case MobiTest:
+    case Doc_MobiTest:
         return mobiTestDoc->GetBookHtmlData(len);
-    case Epub:
+    case Doc_Epub:
         return epubDoc->GetTextData(&len);
     default:
         CrashIf(true);
@@ -209,11 +216,11 @@ const char *Doc::GetHtmlData(size_t &len)
 size_t Doc::GetHtmlDataSize()
 {
     switch (type) {
-    case Mobi:
+    case Doc_Mobi:
         return mobiDoc->GetBookHtmlSize();
-    case MobiTest:
+    case Doc_MobiTest:
         return mobiTestDoc->GetBookHtmlSize();
-    case Epub:
+    case Doc_Epub:
         return epubDoc->GetTextDataSize();
     default:
         CrashIf(true);
@@ -223,7 +230,7 @@ size_t Doc::GetHtmlDataSize()
 
 ImageData *Doc::GetCoverImage()
 {
-    if (type != Mobi)
+    if (type != Doc_Mobi)
         return NULL;
     return mobiDoc->GetCoverImage();
 }
@@ -239,10 +246,11 @@ Doc Doc::CreateFromFile(const TCHAR *filePath)
     doc.filePath = str::Dup(filePath);
     // if failed to load and more specific error message hasn't been
     // set above, set a generic error message
-    if ((NULL == doc.generic) && (NULL == doc.loadingErrorMessage)) {
-        doc.type = Error;
+    if (doc.IsNone()) {
+        CrashIf(doc.loadingErrorMessage);
         doc.loadingErrorMessage = str::Format(_T("Error loading %s"), filePath);
     }
+    CrashIf(!doc.generic && !doc.IsNone());
     return doc;
 }
 
@@ -251,9 +259,9 @@ bool EngineManager::IsSupportedFile(const TCHAR *filePath, bool sniff)
     return PdfEngine::IsSupportedFile(filePath, sniff)  ||
            XpsEngine::IsSupportedFile(filePath, sniff)  ||
            DjVuEngine::IsSupportedFile(filePath, sniff) ||
-           CbxEngine::IsSupportedFile(filePath, sniff)  ||
            ImageEngine::IsSupportedFile(filePath, sniff)||
            ImageDirEngine::IsSupportedFile(filePath, sniff) ||
+           CbxEngine::IsSupportedFile(filePath, sniff)  ||
            PsEngine::IsSupportedFile(filePath, sniff)   ||
            ChmEngine::IsSupportedFile(filePath, sniff)  ||
            enableEbookEngines && (
@@ -267,13 +275,13 @@ bool EngineManager::IsSupportedFile(const TCHAR *filePath, bool sniff)
            );
 }
 
-BaseEngine *EngineManager::CreateEngine(const TCHAR *filePath, PasswordUI *pwdUI, EngineType *typeOut)
+BaseEngine *EngineManager::CreateEngine(const TCHAR *filePath, PasswordUI *pwdUI, DocType *typeOut)
 {
     assert(filePath);
     if (!filePath) return NULL;
 
     BaseEngine *engine = NULL;
-    EngineType engineType = Engine_None;
+    DocType engineType = Engine_None;
     bool sniff = false;
 RetrySniffing:
     if (PdfEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_PDF) {
@@ -285,15 +293,15 @@ RetrySniffing:
     } else if (DjVuEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_DjVu) {
         engine = DjVuEngine::CreateFromFile(filePath);
         engineType = Engine_DjVu;
-    } else if (CbxEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_ComicBook) {
-        engine = CbxEngine::CreateFromFile(filePath);
-        engineType = Engine_ComicBook;
     } else if (ImageEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_Image) {
         engine = ImageEngine::CreateFromFile(filePath);
         engineType = Engine_Image;
     } else if (ImageDirEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_ImageDir) {
         engine = ImageDirEngine::CreateFromFile(filePath);
         engineType = Engine_ImageDir;
+    } else if (CbxEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_ComicBook) {
+        engine = CbxEngine::CreateFromFile(filePath);
+        engineType = Engine_ComicBook;
     } else if (PsEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_PS) {
         engine = PsEngine::CreateFromFile(filePath);
         engineType = Engine_PS;
@@ -330,6 +338,7 @@ RetrySniffing:
         sniff = true;
         goto RetrySniffing;
     }
+    CrashIf(engine && !IsSupportedFile(filePath, sniff));
 
     if (typeOut)
         *typeOut = engine ? engineType : Engine_None;

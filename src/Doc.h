@@ -25,11 +25,18 @@ class PasswordUI;
 
 struct ImageData;
 
-enum EngineType {
-    Engine_None,
+enum DocType {
+    Doc_None = 0, Engine_None = 0,
+
+    Doc_Epub,
+    Doc_Mobi, Doc_MobiTest,
+
+    // the EngineManager tries to create a new engine
+    // in the following order (types on the same line
+    // share common code and reside in the same file)
+    Engine_PDF, Engine_XPS,
     Engine_DjVu,
     Engine_Image, Engine_ImageDir, Engine_ComicBook,
-    Engine_PDF, Engine_XPS,
     Engine_PS,
     Engine_Chm,
     Engine_Epub, Engine_Fb2, Engine_Mobi, Engine_Pdb, Engine_Chm2, Engine_Html, Engine_Txt,
@@ -37,14 +44,8 @@ enum EngineType {
 
 class Doc
 {
-public:
-    enum DocType { None, Engine, Epub, Error, Mobi, MobiTest };
-
 protected:
     DocType type;
-    // reuse the enumeration instead of trying
-    // to keep DocType in sync with EngineType
-    EngineType engineType;
 
     // If there was an error loading a file in CreateFromFile(),
     // this is an error message to be shown to the user. Most
@@ -64,7 +65,7 @@ protected:
 
     union {
         void *generic;
-        BaseEngine *engine; // we can always cast to the right type based on engineType
+        BaseEngine *engine; // we can always cast to the right type based on type
         EpubDoc * epubDoc;
         MobiDoc * mobiDoc;
         MobiTestDoc *mobiTestDoc;
@@ -80,7 +81,7 @@ public:
 
     void Clear();
     Doc() { Clear(); }
-    Doc(BaseEngine *doc, EngineType engineType);
+    Doc(BaseEngine *doc, DocType engineType);
     Doc(EpubDoc *doc);
     Doc(MobiDoc *doc);
     Doc(MobiTestDoc *doc);
@@ -88,14 +89,13 @@ public:
     void Delete();
 
     // note: find a better name, if possible
-    bool IsNone() const { return None == type; }
+    bool IsNone() const { return Doc_None == type; }
     // to allow distinguishing loading errors from blank docs
-    bool IsError() const { return Error == type; }
     bool IsEbook() const;
-    bool IsEngine() const { return Engine == type; }
+    bool IsEngine() const;
 
     bool LoadingFailed() const {
-        CrashIf(loadingErrorMessage && !IsError());
+        CrashIf(loadingErrorMessage && !IsNone());
         return NULL != loadingErrorMessage;
     }
 
@@ -104,7 +104,7 @@ public:
     MobiDoc *AsMobi() const;
     MobiTestDoc *AsMobiTest() const;
 
-    EngineType GetEngineType() const { return engineType; }
+    DocType GetDocType() const { return type; }
 
     // instead of adding these to Doc, they could also be part
     // of a virtual EbookDoc interface that *Doc implement so
@@ -124,7 +124,7 @@ class EngineManager {
 public:
     EngineManager(bool enableEbookEngines=false) : enableEbookEngines(enableEbookEngines) { }
     bool IsSupportedFile(const TCHAR *filePath, bool sniff=false);
-    BaseEngine *CreateEngine(const TCHAR *filePath, PasswordUI *pwdUI=NULL, EngineType *typeOut=NULL);
+    BaseEngine *CreateEngine(const TCHAR *filePath, PasswordUI *pwdUI=NULL, DocType *typeOut=NULL);
 };
 
 #endif

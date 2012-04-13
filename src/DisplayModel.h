@@ -106,7 +106,7 @@ public:
 class DisplayModel
 {
 public:
-    DisplayModel(BaseEngine *engine, EngineType engineType, DisplayModelCallback *dmCb);
+    DisplayModel(BaseEngine *engine, DocType engineType, DisplayModelCallback *dmCb);
     ~DisplayModel();
 
     const TCHAR *FilePath() const { return engine->FileName(); }
@@ -134,7 +134,7 @@ public:
     int CurrentPageNo() const;
 
     BaseEngine *    engine;
-    EngineType      engineType;
+    DocType         engineType;
 
     PageTextCache * textCache;
     TextSelection * textSelection;

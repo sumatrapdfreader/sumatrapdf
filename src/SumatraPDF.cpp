@@ -851,7 +851,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
     win->pdfsync = NULL;
 
     str::ReplacePtr(&win->loadedFilePath, args.fileName);
-    EngineType engineType;
+    DocType engineType;
     BaseEngine *engine = EngineManager(!gUseEbookUI).CreateEngine(args.fileName, pwdUI, &engineType);
     if (engine)
         win->dm = new DisplayModel(engine, engineType, win);
