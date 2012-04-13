@@ -119,7 +119,7 @@ void  CloseDocumentAndDeleteWindowInfo(WindowInfo *win);
 void  OnMenuAbout();
 void  QuitIfNoMoreWindows();
 bool  ShouldSaveThumbnail(DisplayState& ds);
-bool  SaveThumbnailForFile(const TCHAR *filePath, RenderedBitmap *bmp);
+void  SaveThumbnailForFile(const TCHAR *filePath, RenderedBitmap *bmp);
 
 WindowInfo* FindWindowInfoByFile(const TCHAR *file);
 WindowInfo* FindWindowInfoByHwnd(HWND hwnd);

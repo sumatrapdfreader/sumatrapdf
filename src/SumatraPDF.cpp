@@ -659,17 +659,16 @@ void QueueWorkItem(UIThreadWorkItem *wi)
     gUIThreadMarshaller.Queue(wi);
 }
 
-bool SaveThumbnailForFile(const TCHAR *filePath, RenderedBitmap *bmp)
+void SaveThumbnailForFile(const TCHAR *filePath, RenderedBitmap *bmp)
 {
     DisplayState *ds = gFileHistory.Find(filePath);
-    if (!ds) {
+    if (!ds || !bmp) {
         delete bmp;
-        return false;
+        return;
     }
     delete ds->thumbnail;
     ds->thumbnail = bmp;
     SaveThumbnail(*ds);
-    return true;
 }
 
 class ThumbnailRenderingWorkItem : public UIThreadWorkItem, public RenderingCallback
@@ -692,8 +691,8 @@ public:
     }
 
     virtual void Execute() {
-        if (SaveThumbnailForFile(filePath, bmp))
-            bmp = NULL;
+        SaveThumbnailForFile(filePath, bmp);
+        bmp = NULL;
     }
 };
 
@@ -714,9 +713,7 @@ static void CreateChmThumbnail(WindowInfo& win, DisplayState& ds)
 
     SizeI thumbSize(THUMBNAIL_DX, THUMBNAIL_DY);
     RenderedBitmap *bmp = chmEngine->CreateThumbnail(thumbSize);
-    if (bmp && SaveThumbnailForFile(win.loadedFilePath, bmp))
-        bmp = NULL;
-    delete bmp;
+    SaveThumbnailForFile(win.loadedFilePath, bmp);
     delete chmEngine;
 }
 

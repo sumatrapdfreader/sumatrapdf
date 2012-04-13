@@ -500,10 +500,7 @@ static void CreateThumbnailForDoc(Doc doc, DisplayState& ds)
         SizeI dstSize(THUMBNAIL_DX, THUMBNAIL_DY);
         bmp = RenderFirstDocPageToBitmap(doc, pageSize, dstSize, 10);
     }
-
-    if (bmp && SaveThumbnailForFile(doc.GetFilePath(), bmp))
-        bmp = NULL;
-    delete bmp;
+    SaveThumbnailForFile(doc.GetFilePath(), bmp);
 }
 
 void OpenMobiInWindow(Doc doc, SumatraWindow& winToReplace)
