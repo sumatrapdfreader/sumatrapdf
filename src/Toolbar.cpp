@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "Toolbar.h"
 
+#include "AppPrefs.h"
 #include "AppTools.h"
 #include "Menu.h"
 #include "resource.h"

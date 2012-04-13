@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "Menu.h"
 
+#include "AppPrefs.h"
 #include "DisplayModel.h"
 #include "EbookWindow.h"
 #include "ExternalPdfViewer.h"

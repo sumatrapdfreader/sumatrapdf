@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "EbookWindow.h"
 
+#include "AppPrefs.h"
 #include "AppTools.h"
 #include "BaseEngine.h"
 #include "EbookController.h"

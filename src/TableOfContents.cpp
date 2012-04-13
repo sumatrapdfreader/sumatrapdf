@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "TableOfContents.h"
 
+#include "AppPrefs.h"
 #include "AppTools.h"
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"

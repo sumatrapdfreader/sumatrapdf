@@ -11,7 +11,6 @@
 #include "Http.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
-#include "Version.h"
 #include "WinUtil.h"
 #include "ZipUtil.h"
 #include <unzalloc.h>

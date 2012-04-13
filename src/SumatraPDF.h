@@ -4,9 +4,8 @@
 #ifndef SumatraPDF_h
 #define SumatraPDF_h
 
-#include "AppPrefs.h"
+#include "FileHistory.h"
 #include "SumatraWindow.h"
-#include "TextSearch.h"
 
 #define UWM_PREFS_FILE_UPDATED  (WM_USER + 1)
 
@@ -93,7 +92,6 @@ bool  IsUIRightToLeft();
 bool  LaunchBrowser(const TCHAR *url);
 bool  OpenFileExternally(const TCHAR *path);
 void  AssociateExeWithPdfExtension();
-void  FindTextOnThread(WindowInfo* win, TextSearchDirection direction=FIND_FORWARD, bool FAYT=false);
 void  CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose);
 void  SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool favVisible);
 void  RememberFavTreeExpansionState(WindowInfo *win);

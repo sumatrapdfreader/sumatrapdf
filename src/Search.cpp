@@ -9,6 +9,7 @@
 #include "BaseUtil.h"
 #include "Search.h"
 
+#include "AppPrefs.h"
 #include "AppTools.h"
 #include "Notifications.h"
 #include "PdfEngine.h"

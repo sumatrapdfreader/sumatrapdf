@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "SumatraDialogs.h"
 
+#include "AppPrefs.h"
 #include "AppTools.h"
 #include "DialogSizer.h"
 #include "Resource.h"

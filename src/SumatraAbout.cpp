@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "SumatraAbout.h"
 
+#include "AppPrefs.h"
 #include "AppTools.h"
 #include "FileHistory.h"
 #include "FileUtil.h"

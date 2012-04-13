@@ -4,6 +4,8 @@
 #ifndef Search_h
 #define Search_h
 
+#include "TextSearch.h"
+
 #define PDFSYNC_DDE_SERVICE   _T("SUMATRA")
 #define PDFSYNC_DDE_TOPIC     _T("control")
 
@@ -59,5 +61,6 @@ void OnMenuFindNext(WindowInfo *win);
 void OnMenuFind(WindowInfo *win);
 void OnMenuFindMatchCase(WindowInfo *win);
 void AbortFinding(WindowInfo *win, bool hideMessage=false);
+void FindTextOnThread(WindowInfo* win, TextSearchDirection direction=FIND_FORWARD, bool FAYT=false);
 
 #endif
