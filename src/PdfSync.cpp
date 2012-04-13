@@ -221,7 +221,7 @@ int Pdfsync::RebuildIndex()
 
     line = Advance0Line(line, dataEnd);
     UINT versionNumber = 0;
-    if (!line || sscanf(line, "version %u", &versionNumber) != 1 || versionNumber != 1)
+    if (!line || !str::Parse(line, "version %u", &versionNumber) || versionNumber != 1)
         return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
 
     // reset synchronizer database
@@ -245,27 +245,33 @@ int Pdfsync::RebuildIndex()
     PdfsyncPoint pspoint;
 
     // parse data
+    UINT maxPageNo = engine->PageCount();
     while ((line = Advance0Line(line, dataEnd))) {
         switch (*line) {
         case 'l':
             psline.file = filestack.Last();
-            psline.column = 0;
-            if (sscanf(line, "l %u %u %u", &psline.record, &psline.line, &psline.column) >= 2)
+            if (str::Parse(line, "l %u %u %u", &psline.record, &psline.line, &psline.column) ||
+                !(psline.column = 0) && str::Parse(line, "l %u %u", &psline.record, &psline.line)) {
                 lines.Append(psline);
+            }
             // else dbg("Bad 'l' line in the pdfsync file");
             break;
 
         case 's':
-            if (sscanf(line, "s %u", &page) == 1)
+            if (str::Parse(line, "s %u", &page))
                 sheetIndex.Append(points.Count());
             // else dbg("Bad 's' line in the pdfsync file");
+            // if (0 == page || page > maxPageNo)
+            //     dbg("'s' line with invalid page number in the pdfsync file");
             break;
 
         case 'p':
             pspoint.page = page;
-            if (sscanf(line, "p %u %u %u", &pspoint.record, &pspoint.x, &pspoint.y) == 3)
+            if (0 == page || page > maxPageNo)
+                /* ignore point for invalid page number */;
+            else if (str::Parse(line, "p %u %u %u", &pspoint.record, &pspoint.x, &pspoint.y))
                 points.Append(pspoint);
-            else if (sscanf(line, "p* %u %u %u", &pspoint.record, &pspoint.x, &pspoint.y) == 3)
+            else if (str::Parse(line, "p* %u %u %u", &pspoint.record, &pspoint.x, &pspoint.y))
                 points.Append(pspoint);
             // else dbg("Bad 'p' line in the pdfsync file");
             break;
@@ -334,14 +340,14 @@ int Pdfsync::DocToSource(UINT pageNo, PointI pt, ScopedMem<TCHAR>& filename, UIN
     pt.y = mbox.dy - pt.y;
 
     // distance to the closest pdf location (in the range <PDFSYNC_EPSILON_SQUARE)
-    UINT closest_xydist = (UINT)-1;
-    UINT selected_record = (UINT)-1;
+    UINT closest_xydist = UINT_MAX;
+    UINT selected_record = UINT_MAX;
     // If no record is found within a distance^2 of PDFSYNC_EPSILON_SQUARE
     // (selected_record == -1) then we pick up the record that is closest
     // vertically to the hit-point.
-    UINT closest_ydist = (UINT)-1; // vertical distance between the hit point and the vertically-closest record
-    UINT closest_xdist = (UINT)-1; // horizontal distance between the hit point and the vertically-closest record
-    UINT closest_ydist_record = (UINT)-1; // vertically-closest record
+    UINT closest_ydist = UINT_MAX; // vertical distance between the hit point and the vertically-closest record
+    UINT closest_xdist = UINT_MAX; // horizontal distance between the hit point and the vertically-closest record
+    UINT closest_ydist_record = UINT_MAX; // vertically-closest record
 
     // read all the sections of 'p' declarations for this pdf sheet
     for (size_t i = sheetIndex.At(pageNo); i < points.Count() && points.At(i).page == pageNo; i++) {
@@ -353,7 +359,7 @@ int Pdfsync::DocToSource(UINT pageNo, PointI pt, ScopedMem<TCHAR>& filename, UIN
             selected_record = points.At(i).record;
             closest_xydist = dist;
         }
-        else if ((closest_xydist == (UINT)-1) && dy < PDFSYNC_EPSILON_Y &&
+        else if ((closest_xydist == UINT_MAX) && dy < PDFSYNC_EPSILON_Y &&
                  (dy < closest_ydist || (dy == closest_ydist && dx < closest_xdist))) {
             closest_ydist_record = points.At(i).record;
             closest_ydist = dy;
@@ -361,9 +367,9 @@ int Pdfsync::DocToSource(UINT pageNo, PointI pt, ScopedMem<TCHAR>& filename, UIN
         }
     }
 
-    if (selected_record == (UINT)-1)
+    if (selected_record == UINT_MAX)
         selected_record = closest_ydist_record;
-    if (selected_record == (UINT)-1)
+    if (selected_record == UINT_MAX)
         return PDFSYNCERR_NO_SYNC_AT_LOCATION; // no record was found close enough to the hit point
 
     // We have a record number, we need to find its declaration ('l ...') in the syncfile
@@ -457,23 +463,21 @@ int Pdfsync::SourceToDoc(const TCHAR* srcfilename, UINT line, UINT col, UINT *pa
     rects.Reset();
 
     // records have been found for the desired source position:
-    // we now find the pages and position in the PDF corresponding to these found records
-    UINT firstPage = (UINT)-1;
-    for (size_t irecord = 0; irecord < found_records.Count(); irecord++) {
-        for (size_t i = 0; i < points.Count(); i++) {
-            if (points.At(i).record != found_records.At(irecord) ||
-                firstPage != (UINT)-1 && firstPage != points.At(i).page) {
-                continue;
-            }
-            firstPage = *page = points.At(i).page;
-            RectD rc(SYNC_TO_PDF_COORDINATE(points.At(i).x),
-                     SYNC_TO_PDF_COORDINATE(points.At(i).y),
-                     MARK_SIZE, MARK_SIZE);
-            // PdfSync coordinates are y-inversed
-            RectD mbox = engine->PageMediabox(firstPage);
-            rc.y = mbox.dy - (rc.y + rc.dy);
-            rects.Push(rc.Round());
-        }
+    // we now find the page and positions in the PDF corresponding to these found records
+    UINT firstPage = UINT_MAX;
+    for (size_t i = 0; i < points.Count(); i++) {
+        if (found_records.Find(points.At(i).record) == -1)
+            continue;
+        if (firstPage != UINT_MAX && firstPage != points.At(i).page)
+            continue;
+        firstPage = *page = points.At(i).page;
+        RectD rc(SYNC_TO_PDF_COORDINATE(points.At(i).x),
+                 SYNC_TO_PDF_COORDINATE(points.At(i).y),
+                 MARK_SIZE, MARK_SIZE);
+        // PdfSync coordinates are y-inversed
+        RectD mbox = engine->PageMediabox(firstPage);
+        rc.y = mbox.dy - (rc.y + rc.dy);
+        rects.Push(rc.Round());
     }
 
     if (rects.Count() > 0)
