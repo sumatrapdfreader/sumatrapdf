@@ -111,9 +111,7 @@ void CrashMe(); // in StrUtil.cpp
 // AssertCrash is like assert() but crashes like CrashIf()
 // It's meant to make converting assert() easier (converting to
 // CrashIf() requires inverting the condition, which can introduce bugs)
-#define AssertCrash(exp) \
-    { if (!(exp)) \
-        CrashMe(); }
+#define AssertCrash(exp) CrashIf(!(exp))
 
 template <typename T>
 inline void swap(T& one, T&two)

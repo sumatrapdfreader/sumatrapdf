@@ -203,7 +203,7 @@ static bool ValidStyleForChangeFontStyle(FontStyle fs)
 // like "<b>fo<i>oo</b>bar</i>" - "bar" should be italic but will be bold
 void HtmlFormatter::ChangeFontStyle(FontStyle fs, bool addStyle)
 {
-    CrashAlwaysIf(!ValidStyleForChangeFontStyle(fs));
+    CrashIf(!ValidStyleForChangeFontStyle(fs));
     if (addStyle)
         SetFont(CurrFont(), (FontStyle)(fs | CurrFont()->GetStyle()));
     else
@@ -812,7 +812,7 @@ void HtmlFormatter::HandleTagPre(HtmlToken *t)
 
 void HtmlFormatter::HandleHtmlTag(HtmlToken *t)
 {
-    CrashAlwaysIf(!t->IsTag());
+    CrashIf(!t->IsTag());
 
     HtmlTag tag = t->tag;
 
@@ -1174,7 +1174,7 @@ void MobiFormatter::HandleTagImg(HtmlToken *t)
 
 void MobiFormatter::HandleHtmlTag(HtmlToken *t)
 {
-    CrashAlwaysIf(!t->IsTag());
+    CrashIf(!t->IsTag());
 
     if (Tag_P == t->tag || Tag_Blockquote == t->tag) {
         HtmlFormatter::HandleHtmlTag(t);

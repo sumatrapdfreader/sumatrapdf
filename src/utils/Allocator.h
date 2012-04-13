@@ -165,7 +165,7 @@ public:
         // TODO: we can't do that because we don't know the original
         // size of memory piece pointed by mem. We can remember it
         // within the block that we allocate
-        CrashAlwaysIf(true);
+        CrashIf(true);
         return NULL;
     }
 
