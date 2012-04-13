@@ -696,7 +696,7 @@ RestartLayout:
 
 void DisplayModel::ChangeStartPage(int newStartPage)
 {
-    assert(ValidPageNo(startPage));
+    assert(ValidPageNo(newStartPage));
     assert(!displayModeContinuous(GetDisplayMode()));
 
     int columns = columnsFromDisplayMode(GetDisplayMode());
@@ -707,7 +707,7 @@ void DisplayModel::ChangeStartPage(int newStartPage)
         PageInfo *pageInfo = GetPageInfo(pageNo);
         if (displayModeContinuous(GetDisplayMode()))
             pageInfo->shown = true;
-        else if (pageNo >= startPage && pageNo < startPage + columns) {
+        else if (pageNo >= newStartPage && pageNo < newStartPage + columns) {
             //lf("DisplayModel::changeStartPage() set page %d as shown", pageNo);
             pageInfo->shown = true;
         } else
