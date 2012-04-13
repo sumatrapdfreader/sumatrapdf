@@ -427,7 +427,7 @@ RenderedBitmap *RenderFirstDocPageToBitmap(Doc doc, SizeI pageSize, SizeI bmpSiz
 {
     PoolAllocator textAllocator;
     HtmlFormatterArgs *args = CreateFormatterArgsDoc(doc, pageSize.dx - 2 * border, pageSize.dy - 2 * border, &textAllocator);
-    HtmlFormatter *formatter = CreateFormatter(args);
+    HtmlFormatter *formatter = CreateFormatter(doc, args);
     HtmlPage *pd = formatter->Next();
     delete formatter;
     delete args;

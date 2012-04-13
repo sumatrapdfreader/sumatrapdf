@@ -9,7 +9,7 @@
 #include "Mui.h"
 
 class HtmlFormatter;
-class HtmlFormatterArgs;
+struct HtmlFormatterArgs;
 class PageControl;
 using namespace mui;
 
@@ -51,6 +51,6 @@ public:
     virtual void NotifyMouseMove(int x, int y);
 };
 
-HtmlFormatter *CreateFormatter(HtmlFormatterArgs* args);
+HtmlFormatter *CreateFormatter(Doc doc, HtmlFormatterArgs* args);
 
 #endif

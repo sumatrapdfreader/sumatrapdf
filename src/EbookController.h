@@ -5,18 +5,17 @@
 #define EbookController_h
 
 #include "Doc.h"
-#include "Mui.h"
+#include "Sigslot.h"
 #include "SumatraWindow.h"
-#include "ThreadUtil.h"
-
-using namespace mui;
 
 struct  EbookControls;
 class   EbookController;
 class   HtmlPage;
 class   PoolAllocator;
 class   EbookFormattingThread;
-class   HtmlFormatterArgs;
+struct  HtmlFormatterArgs;
+namespace mui { class Control; }
+using namespace mui;
 
 struct FinishedMobiLoadingData {
     TCHAR *         fileName;

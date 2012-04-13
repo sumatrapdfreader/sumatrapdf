@@ -4,7 +4,6 @@
 #ifndef HtmlFormatter_h
 #define HtmlFormatter_h
 
-#include "Doc.h"
 #include "EbookBase.h"
 #include "HtmlParserLookup.h"
 
@@ -83,8 +82,7 @@ public:
 };
 
 // just to pack args to HtmlFormatter
-class HtmlFormatterArgs {
-public:
+struct HtmlFormatterArgs {
     HtmlFormatterArgs() :
       pageDx(0), pageDy(0), fontName(NULL), fontSize(0),
       textAllocator(NULL), htmlStr(0), htmlStrLen(0),
@@ -107,7 +105,6 @@ public:
     // so measureAlgo allows to choose a quicker text measurer instead
     RectF        (* measureAlgo)(Graphics *g, Font *f, const WCHAR *s, size_t len);
 
-    Doc             doc;
     const char *    htmlStr;
     size_t          htmlStrLen;
 
@@ -223,6 +220,10 @@ public:
     Vec<HtmlPage*> *FormatAllPages(bool skipEmptyPages=true);
 };
 
+/* formatting extensions for Mobi */
+
+class MobiDoc;
+
 class MobiFormatter : public HtmlFormatter {
     // accessor to images (and other format-specific data)
     // it can be NULL (enables testing by feeding raw html)
@@ -241,6 +242,8 @@ public:
 };
 
 /* formatting extensions for EPUB */
+
+class EpubDoc;
 
 class EpubFormatter : public HtmlFormatter {
 protected:

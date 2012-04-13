@@ -7,8 +7,6 @@
 // this is a collection of structs and classes that are
 // useful for more than one ebook format
 
-#include "BaseUtil.h"
-
 struct ImageData {
     char *      data;
     size_t      len;
