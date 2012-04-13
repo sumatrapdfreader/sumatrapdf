@@ -688,9 +688,25 @@ class Fb2Formatter : public HtmlFormatter {
     Fb2Doc *fb2Doc;
 
 public:
-    Fb2Formatter(HtmlFormatterArgs *args, Fb2Doc *doc) :
-        HtmlFormatter(args), fb2Doc(doc), section(1), titleCount(0) { }
+    Fb2Formatter(HtmlFormatterArgs *args, Fb2Doc *doc);
 };
+
+Fb2Formatter::Fb2Formatter(HtmlFormatterArgs *args, Fb2Doc *doc) :
+    HtmlFormatter(args), fb2Doc(doc), section(1), titleCount(0)
+{
+    if (args->reparseIdx != 0)
+        return;
+    ImageData *cover = doc->GetCoverImage();
+    if (!cover)
+        return;
+    EmitImage(cover);
+    // render larger images alone on the cover page,
+    // smaller images just separated by a horizontal line
+    if (currLineInstr.Last().bbox.Height > args->pageDy / 2)
+        ForceNewPage();
+    else
+        EmitHr();
+}
 
 void Fb2Formatter::HandleTagImg(HtmlToken *t)
 {

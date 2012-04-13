@@ -56,6 +56,7 @@ class Fb2Doc {
     ScopedMem<TCHAR> docTitle;
     ScopedMem<TCHAR> docAuthor;
     ScopedMem<char> hrefName;
+    ScopedMem<char> coverImage;
 
     bool isZipped;
     bool hasToc;
@@ -69,6 +70,7 @@ public:
 
     const char *GetTextData(size_t *lenOut);
     ImageData *GetImageData(const char *id);
+    ImageData *GetCoverImage();
 
     TCHAR *GetProperty(const char *name);
     const TCHAR *GetFileName() const;

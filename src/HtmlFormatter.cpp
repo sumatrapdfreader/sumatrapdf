@@ -819,9 +819,6 @@ void HtmlFormatter::HandleHtmlTag(HtmlToken *t)
     if (Tag_P == tag) {
         HandleTagP(t);
     } else if (Tag_Hr == tag) {
-        // imitating Kindle: hr is proceeded by an empty line
-        FlushCurrLine(false);
-        EmitEmptyLine(lineSpacing);
         EmitHr();
     } else if ((Tag_B == tag) || (Tag_Strong == tag)) {
         ChangeFontStyle(FontStyleBold, t->IsStartTag());
@@ -1186,6 +1183,11 @@ void MobiFormatter::HandleHtmlTag(HtmlToken *t)
         // handle internal and external links (prefer internal ones)
         if (!HandleTagA(t, "filepos"))
             HandleTagA(t);
+    } else if (Tag_Hr == t->tag) {
+        // imitating Kindle: hr is proceeded by an empty line
+        FlushCurrLine(false);
+        EmitEmptyLine(lineSpacing);
+        EmitHr();
     } else {
         HtmlFormatter::HandleHtmlTag(t);
     }

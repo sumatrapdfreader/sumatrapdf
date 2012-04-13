@@ -550,6 +550,16 @@ bool Fb2Doc::Load()
             if (docAuthor)
                 str::NormalizeWS(docAuthor);
         }
+        else if (inTitleInfo && tok->IsStartTag() && tok->NameIs("coverpage")) {
+            tok = parser.Next();
+            if (tok->IsText())
+                tok = parser.Next();
+            if (tok->IsEmptyElementEndTag() && tok->NameIs("image")) {
+                AttrInfo *attr = tok->GetAttrByName(GetHrefName());
+                if (attr)
+                    coverImage.Set(str::DupN(attr->val, attr->valLen));
+            }
+        }
         else if (inTitleInfo)
             continue;
         else if (tok->IsStartTag() && tok->NameIs("title-info"))
@@ -594,6 +604,13 @@ ImageData *Fb2Doc::GetImageData(const char *id)
             return &images.At(i).base;
     }
     return NULL;
+}
+
+ImageData *Fb2Doc::GetCoverImage()
+{
+    if (!coverImage)
+        return NULL;
+    return GetImageData(coverImage);
 }
 
 TCHAR *Fb2Doc::GetProperty(const char *name)
