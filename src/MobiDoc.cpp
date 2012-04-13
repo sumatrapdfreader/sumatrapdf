@@ -250,7 +250,7 @@ bool HuffDicDecompressor::DecodeOne(uint32 code, uint8 *& dst, size_t& dstLeft)
         lf("invalid dict value");
         return false;
     }
-    ByteReader r(dicts[dict], dictSize[dictsCount]);
+    ByteReader r(dicts[dict], dictSize[dict]);
     code &= ((1 << (code_length)) - 1);
     uint16 offset = r.WordBE(code * 2);
 
