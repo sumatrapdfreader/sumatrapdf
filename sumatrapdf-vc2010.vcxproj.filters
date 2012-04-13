@@ -962,6 +962,12 @@
     <ClCompile Include="src\mui\MiniMui.cpp">
       <Filter>mui</Filter>
     </ClCompile>
+    <ClCompile Include="src\utils\ByteOrderDecoder.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\ByteOrderDecoder_ut.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -1428,6 +1434,12 @@
     </ClInclude>
     <ClInclude Include="src\Resource.h">
       <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\ByteOrderDecoder.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\ByteReader.h">
+      <Filter>utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

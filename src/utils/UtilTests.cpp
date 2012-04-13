@@ -210,10 +210,12 @@ static void LogTest()
 #include "Sigslot_ut.cpp"
 #include "StrUtil_ut.cpp"
 #include "Vec_ut.cpp"
+#include "ByteOrderDecoder_ut.cpp"
 
 void BaseUtils_UnitTests()
 {
     plogf("Running BaseUtils unit tests");
+    ByteOrderTests();
     GeomTest();
     TStrTest();
     FileUtilTest();

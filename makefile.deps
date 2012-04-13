@@ -125,7 +125,7 @@ $(OS)\CrashHandler.obj: src\SumatraWindow.h src\Translations.h src\utils\Allocat
 $(OS)\CrashHandler.obj: src\utils\BaseUtil.h src\utils\DbgHelpDyn.h src\utils\DebugLog.h
 $(OS)\CrashHandler.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Http.h
 $(OS)\CrashHandler.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
-$(OS)\CrashHandler.obj: src\utils\WinUtil.h src\utils\ZipUtil.h
+$(OS)\CrashHandler.obj: src\utils\WinUtil.h src\utils\ZipUtil.h src\Version.h
 $(OS)\DisplayModel.obj: src\BaseEngine.h src\ChmEngine.h src\DisplayModel.h
 $(OS)\DisplayModel.obj: src\DisplayState.h src\Doc.h src\TextSearch.h
 $(OS)\DisplayModel.obj: src\TextSelection.h src\utils\Allocator.h src\utils\BaseUtil.h
@@ -434,6 +434,10 @@ $(OU)\BencUtil_ut.obj: src\utils\BencUtil.h
 $(OU)\BitReader.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\BitReader.h
 $(OU)\BitReader.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
 $(OU)\BitReader.obj: src\utils\Vec.h
+$(OU)\ByteOrderDecoder.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\ByteOrderDecoder.h
+$(OU)\ByteOrderDecoder.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OU)\ByteOrderDecoder.obj: src\utils\Vec.h
+$(OU)\ByteOrderDecoder_ut.obj: src\utils\ByteOrderDecoder.h
 $(OU)\DbgHelpDyn.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\DbgHelpDyn.h
 $(OU)\DbgHelpDyn.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
 $(OU)\DbgHelpDyn.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
@@ -501,11 +505,12 @@ $(OU)\UiMsg.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GeomUtil.h
 $(OU)\UiMsg.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\UiMsg.h
 $(OU)\UiMsg.obj: src\utils\Vec.h
 $(OU)\UtilTests.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\BencUtil.h
-$(OU)\UtilTests.obj: src\utils\BencUtil_ut.cpp src\utils\DebugLog.h src\utils\FileUtil.h
-$(OU)\UtilTests.obj: src\utils\GeomUtil.h src\utils\JsonParser.h src\utils\JsonParser_ut.cpp
-$(OU)\UtilTests.obj: src\utils\Scoped.h src\utils\Sigslot.h src\utils\Sigslot_ut.cpp
-$(OU)\UtilTests.obj: src\utils\SimpleLog.h src\utils\StrUtil.h src\utils\StrUtil_ut.cpp
-$(OU)\UtilTests.obj: src\utils\Vec.h src\utils\Vec_ut.cpp src\utils\WinUtil.h
+$(OU)\UtilTests.obj: src\utils\BencUtil_ut.cpp src\utils\ByteOrderDecoder.h src\utils\ByteOrderDecoder_ut.cpp
+$(OU)\UtilTests.obj: src\utils\DebugLog.h src\utils\FileUtil.h src\utils\GeomUtil.h
+$(OU)\UtilTests.obj: src\utils\JsonParser.h src\utils\JsonParser_ut.cpp src\utils\Scoped.h
+$(OU)\UtilTests.obj: src\utils\Sigslot.h src\utils\Sigslot_ut.cpp src\utils\SimpleLog.h
+$(OU)\UtilTests.obj: src\utils\StrUtil.h src\utils\StrUtil_ut.cpp src\utils\Vec.h
+$(OU)\UtilTests.obj: src\utils\Vec_ut.cpp src\utils\WinUtil.h
 $(OU)\WinUtil.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\DebugLog.h
 $(OU)\WinUtil.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
 $(OU)\WinUtil.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
