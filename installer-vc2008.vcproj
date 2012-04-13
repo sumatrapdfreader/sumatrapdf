@@ -89,6 +89,22 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\utils\ByteOrderDecoder.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\utils\ByteOrderDecoder.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\utils\ByteOrderDecoder_ut.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\utils\ByteReader.h"
+					>
+				</File>
+				<File
 					RelativePath=".\src\utils\HtmlParserLookup.cpp"
 					>
 				</File>

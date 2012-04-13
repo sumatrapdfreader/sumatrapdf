@@ -250,7 +250,7 @@ bool HuffDicDecompressor::DecodeOne(uint32 code, uint8 *& dst, size_t& dstLeft)
         lf("invalid dict value");
         return false;
     }
-    ByteReader r(dicts[dict], 32);
+    ByteReader r(dicts[dict], dictSize[dictsCount]);
     code &= ((1 << (code_length)) - 1);
     uint16 offset = r.WordBE(code * 2);
 
@@ -353,7 +353,8 @@ bool HuffDicDecompressor::SetHuffData(uint8 *huffData, size_t huffDataLen)
     HuffHeader *huffHdr = (HuffHeader*)huffData;
     ByteReader r(huffData, huffDataLen);
     // TODO: fix unpacking the two little-endian values on big-endian architectures
-    r.UnpackBE(huffHdr, sizeof(*huffHdr), "4b3w8b");
+    bool ok = r.UnpackBE(huffHdr, sizeof(*huffHdr), "4b3d8b");
+    CrashIf(!ok);
 
     if (!str::EqN("HUFF", huffHdr->id, 4))
         return false;
