@@ -93,7 +93,24 @@ def deleteOldPreReleaseBuilds():
       #print("Deleting %s" % f)
       s3Delete(f)
 
+def sign(file_path, cert_pwd):
+  # the sign tool is finicky, so copy it and cert to the same dir as
+  # exe we're signing
+  file_dir = os.path.dirname(file_path)
+  file_name = os.path.basename(file_path)
+  cert_src = os.path.join("scripts", "cert.pfx")
+  sign_tool_src = os.path.join("bin", "ksigncmd.exe")
+  cert_dest = os.path.join(file_dir, "cert.pfx")
+  sign_tool_dest = os.path.join(file_dir, "ksigncmd.exe")
+  if not os.path.exists(cert_dest): shutil.copy(cert_src, cert_dest)
+  if not os.path.exists(sign_tool_dest): shutil.copy(sign_tool_src, sign_tool_dest)
+  curr_dir = os.getcwd()
+  os.chdir(file_dir)
+  run_cmd_throw("ksigncmd.exe", "/f", "cert.pfx", "/p", cert_pwd, file_name)  
+  os.chdir(curr_dir)
+
 def main():
+  global upload
   if len(args) != 0:
     usage()
   verify_started_in_right_directory()
@@ -118,9 +135,10 @@ def main():
   if build_prerelease:
     s3_dir = "sumatrapdf/prerel"
   if upload_tmp:
+    upload = True
     s3_dir += "tmp"
 
-  if upload or upload_tmp:
+  if upload:
     log("Will upload to s3 at %s" % s3_dir)
 
   s3_prefix = "%s/%s" % (s3_dir, filename_base)
@@ -133,8 +151,15 @@ def main():
   if not build_prerelease:
     s3_files.append(s3_exe_zip)
 
+  cert_pwd = None
+  cert_path = os.path.join("scripts", "cert.pfx")
   if upload:
     map(ensure_s3_doesnt_exist, s3_files)
+    if not os.path.exists(os.path.join("scripts", "cert.pfx")):
+      print("scripts/cert.pfx missing")
+      sys.exit(1)
+    import awscreds
+    cert_pwd = awscreds.certpwd
 
   obj_dir = "obj-rel"
   if target_platform == "X64":
@@ -153,14 +178,21 @@ def main():
   platform = "PLATFORM=%s" % (target_platform or "X86")
 
   run_cmd_throw("nmake", "-f", "makefile.msvc", config, extcflags, platform, "all_sumatrapdf")
+  exe = os.path.join(obj_dir, "SumatraPDF.exe")
+  if upload:
+    sign(exe, cert_pwd)
+    sign(os.path.join(obj_dir, "uninstall.exe"), cert_pwd)
+
   build_installer_data(obj_dir)
   run_cmd_throw("nmake", "-f", "makefile.msvc", "Installer", config, platform, extcflags)
 
   if build_test_installer or build_rel_installer:
     sys.exit(0)
 
-  exe = os.path.join(obj_dir, "SumatraPDF.exe")
   installer = os.path.join(obj_dir, "Installer.exe")
+  if upload:
+    sign(installer, cert_pwd)
+
   pdb_zip = os.path.join(obj_dir, "%s.pdb.zip" % filename_base)
 
   zip_file(pdb_zip, os.path.join(obj_dir, "libmupdf.pdb"))
@@ -183,29 +215,30 @@ def main():
     ensure_path_exists(exe_zip)
     copy_to_dst_dir(exe_zip, builds_dir)
 
-  if upload or upload_tmp:
-    if build_prerelease:
-      jstxt  = 'var sumLatestVer = %s;\n' % ver
-      jstxt += 'var sumBuiltOn = "%s";\n' % time.strftime("%Y-%m-%d")
-      jstxt += 'var sumLatestName = "%s";\n' % s3_exe.split("/")[-1]
-      jstxt += 'var sumLatestExe = "http://kjkpub.s3.amazonaws.com/%s";\n' % s3_exe
-      jstxt += 'var sumLatestPdb = "http://kjkpub.s3.amazonaws.com/%s";\n' % s3_pdb_zip
-      jstxt += 'var sumLatestInstaller = "http://kjkpub.s3.amazonaws.com/%s";\n' % s3_installer
+  if not upload: return
 
-    s3UploadFilePublic(installer, s3_installer)
-    s3UploadFilePublic(pdb_zip, s3_pdb_zip)
-    s3UploadFilePublic(exe, s3_exe)
+  if build_prerelease:
+    jstxt  = 'var sumLatestVer = %s;\n' % ver
+    jstxt += 'var sumBuiltOn = "%s";\n' % time.strftime("%Y-%m-%d")
+    jstxt += 'var sumLatestName = "%s";\n' % s3_exe.split("/")[-1]
+    jstxt += 'var sumLatestExe = "http://kjkpub.s3.amazonaws.com/%s";\n' % s3_exe
+    jstxt += 'var sumLatestPdb = "http://kjkpub.s3.amazonaws.com/%s";\n' % s3_pdb_zip
+    jstxt += 'var sumLatestInstaller = "http://kjkpub.s3.amazonaws.com/%s";\n' % s3_installer
 
-    if build_prerelease:
-      s3UploadDataPublic(jstxt, "sumatrapdf/sumatralatest.js")
-      txt = "%s\n" % ver
-      s3UploadDataPublic(txt, "sumatrapdf/sumpdf-prerelease-latest.txt")
-      deleteOldPreReleaseBuilds()
-    else:
-      s3UploadFilePublic(exe_zip, s3_exe_zip)
+  s3UploadFilePublic(installer, s3_installer)
+  s3UploadFilePublic(pdb_zip, s3_pdb_zip)
+  s3UploadFilePublic(exe, s3_exe)
 
-    # Note: for release builds, must update sumatrapdf/sumpdf-latest.txt in s3
-    # manually to: "%s\n" % ver
+  if build_prerelease:
+    s3UploadDataPublic(jstxt, "sumatrapdf/sumatralatest.js")
+    txt = "%s\n" % ver
+    s3UploadDataPublic(txt, "sumatrapdf/sumpdf-prerelease-latest.txt")
+    deleteOldPreReleaseBuilds()
+  else:
+    s3UploadFilePublic(exe_zip, s3_exe_zip)
+
+  # Note: for release builds, must update sumatrapdf/sumpdf-latest.txt in s3
+  # manually to: "%s\n" % ver
 
 if __name__ == "__main__":
   main()

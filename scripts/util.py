@@ -115,11 +115,10 @@ def ensure_path_exists(path):
     sys.exit(1)
 
 def verify_started_in_right_directory():
-  p1 = os.path.join("scripts", "build-release.py")
-  p2 = os.path.join(os.getcwd(), "scripts", "build-release.py")
-  if not (os.path.exists(p1) and os.path.exists(p2)):
-    print("This script must be run from top of the source tree")
-    sys.exit(1)
+  if os.path.exists(os.path.join("scripts", "build-release.py")): return
+  if os.path.exists(os.path.join(os.getcwd(), "scripts", "build-release.py")): return
+  print("This script must be run from top of the source tree")
+  sys.exit(1)
 
 # like cmdrun() but throws an exception on failure
 def run_cmd_throw(*args):

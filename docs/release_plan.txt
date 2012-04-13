@@ -52,5 +52,3 @@ A random list of things to implement sooner or later:
 - ebook ui: table of content
 - ebook ui: better (on-screen) ui for bookmarks
 - html: hyphenation (http://www.tug.org/docs/liang/)
-- sign the installer/exe to hopefully make false positives
-  from anti-virus programms less frequent
