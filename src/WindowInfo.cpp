@@ -19,7 +19,7 @@
 WindowInfo::WindowInfo(HWND hwnd) :
     dm(NULL), menu(NULL), hwndFrame(hwnd),
     linkOnLastButtonDown(NULL), url(NULL), selectionOnPage(NULL),
-    tocLoaded(false), tocVisible(false), tocRoot(NULL),
+    tocLoaded(false), tocVisible(false), tocRoot(NULL), tocKeepSelection(false),
     fullScreen(false), presentation(PM_DISABLED), tocBeforeFullScreen(false),
     windowStateBeforePresentation(0), prevStyle(0),
     hwndCanvas(NULL), hwndToolbar(NULL), hwndReBar(NULL),

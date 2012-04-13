@@ -146,13 +146,14 @@ public:
         if (!WindowInfoStillValid(win) || !win->IsDocLoaded() || !tocItem)
             return;
 
+        // make sure that the tree item that the user selected
+        // isn't unselected in UpdateTocSelection right again
+        win->tocKeepSelection = true;
         if (tocItem->GetLink())
             win->linkHandler->GotoLink(tocItem->GetLink());
         else if (tocItem->pageNo)
             win->dm->GoToPage(tocItem->pageNo, 0, true);
-        // make sure that the tree item that the user selected
-        // isn't unselected in UpdateTocSelection right again
-        TreeView_SelectItem(win->hwndTocTree, hItem);
+        win->tocKeepSelection = false;
     }
 };
 
@@ -272,7 +273,7 @@ static HTREEITEM TreeItemForPageNo(WindowInfo *win, HTREEITEM hItem, int pageNo)
 
 void UpdateTocSelection(WindowInfo *win, int currPageNo)
 {
-    if (!win->tocLoaded || !win->tocVisible)
+    if (!win->tocLoaded || !win->tocVisible || win->tocKeepSelection)
         return;
 
     HTREEITEM hRoot = TreeView_GetRoot(win->hwndTocTree);

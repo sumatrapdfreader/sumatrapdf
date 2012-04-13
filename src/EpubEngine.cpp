@@ -547,10 +547,11 @@ class EbookTocBuilder : public EbookTocVisitor {
     BaseEngine *engine;
     EbookTocItem *root;
     int idCounter;
+    bool isIndex;
 
 public:
     EbookTocBuilder(BaseEngine *engine) :
-        engine(engine),root(NULL), idCounter(0) { }
+        engine(engine),root(NULL), idCounter(0), isIndex(false) { }
 
     virtual void visit(const TCHAR *name, const TCHAR *url, int level) {
         PageDestination *dest;
@@ -564,10 +565,16 @@ public:
         EbookTocItem *item = new EbookTocItem(str::Dup(name), dest);
         item->id = ++idCounter;
         item->open = level <= 2;
+        if (isIndex) {
+            item->pageNo = 0;
+            item->open = level != 1;
+            level++;
+        }
         AppendTocItem(root, item, level);
     }
 
     EbookTocItem *GetRoot() { return root; }
+    void SetIsIndex(bool value) { isIndex = value; }
 };
 
 /* BaseEngine for handling EPUB documents */
@@ -1324,7 +1331,7 @@ public:
 
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
 
-    virtual bool HasTocTree() const { return doc->HasToc(); }
+    virtual bool HasTocTree() const { return doc->HasToc() || doc->HasIndex(); }
     virtual DocTocItem *GetTocTree();
 
 protected:
@@ -1373,7 +1380,7 @@ public:
 
     char *GetHtml() {
         // first add the homepage
-        const char *index = doc->GetIndexPath();
+        const char *index = doc->GetHomePath();
         ScopedMem<TCHAR> url(doc->ToStr(index));
         visit(NULL, url, 0);
 
@@ -1448,6 +1455,14 @@ DocTocItem *Chm2EngineImpl::GetTocTree()
 {
     EbookTocBuilder builder(this);
     doc->ParseToc(&builder);
+    if (doc->HasIndex()) {
+        // TODO: ToC code doesn't work too well for displaying an index,
+        //       so this should really become a tree of its own (which
+        //       doesn't rely on entries being in the same order as pages)
+        builder.visit(_T("Index"), NULL, 1);
+        builder.SetIsIndex(true);
+        doc->ParseIndex(&builder);
+    }
     return builder.GetRoot();
 }
 

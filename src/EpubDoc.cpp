@@ -17,8 +17,10 @@ inline TCHAR *FromHtmlUtf8(const char *s, size_t len)
 static char *DecodeTextToUtf8(const char *s)
 {
     ScopedMem<char> tmp;
-    if (str::StartsWith(s, UTF16BE_BOM)) {
-        // convert big-endian UTF-16 to little-endian UTF-16
+    int one = 1;
+    bool isBE = !*(char *)&one;
+    if (str::StartsWith(s, isBE ? UTF16_BOM : UTF16BE_BOM)) {
+        // swap endianness to match the local architecture's
         size_t byteCount = (str::Len((WCHAR *)s) + 1) * sizeof(WCHAR);
         tmp.Set((char *)memdup(s, byteCount));
         for (size_t i = 0; i < byteCount; i += 2) {
@@ -26,7 +28,7 @@ static char *DecodeTextToUtf8(const char *s)
         }
         s = tmp;
     }
-    if (str::StartsWith(s, UTF16_BOM))
+    if (str::StartsWith(s, isBE ? UTF16BE_BOM : UTF16_BOM))
         return str::ToMultiByte((WCHAR *)s, CP_UTF8);
     if (str::StartsWith(s, UTF8_BOM))
         return str::Dup(s);

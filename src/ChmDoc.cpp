@@ -253,7 +253,7 @@ TCHAR *ChmDoc::GetProperty(const char *name)
     return result.StealData();
 }
 
-const char *ChmDoc::GetIndexPath()
+const char *ChmDoc::GetHomePath()
 {
     return homePath;
 }
@@ -272,11 +272,6 @@ Vec<char *> *ChmDoc::GetAllPaths()
     Vec<char *> *paths = new Vec<char *>();
     chm_enumerate(chmHandle, CHM_ENUMERATE_FILES | CHM_ENUMERATE_NORMAL, ChmEnumerateEntry, paths);
     return paths;
-}
-
-bool ChmDoc::HasToc() const
-{
-    return tocPath != NULL;
 }
 
 /* The html looks like:
@@ -314,20 +309,93 @@ static bool VisitChmTocItem(EbookTocVisitor *visitor, HtmlElement *el, UINT cp, 
 #endif
             name.Set(attrVal.StealData());
         }
-        else if (str::EqI(attrName, _T("Local")))
+        else if (str::EqI(attrName, _T("Local"))) {
+            // remove the ITS protocol and any filename references from the URLs
+            if (str::Find(attrVal, _T("::/")))
+                attrVal.Set(str::Dup(str::Find(attrVal, _T("::/")) + 3));
             local.Set(attrVal.StealData());
+        }
     }
     if (!name)
         return false;
-    // remove the ITS protocol and any filename references from the URLs
-    if (local && str::Find(local, _T("::/")))
-        local.Set(str::Dup(str::Find(local, _T("::/")) + 3));
 
     visitor->visit(name, local, level);
     return true;
 }
 
-static void WalkChmToc(EbookTocVisitor *visitor, HtmlElement *list, UINT cp, int level=1)
+/* The html looks like:
+<li>
+  <object type="text/sitemap">
+    <param name="Keyword" value="- operator">
+    <param name="Name" value="Subtraction Operator (-)">
+    <param name="Local" value="html/vsoprsubtract.htm">
+    <param name="Name" value="Subtraction Operator (-)">
+    <param name="Local" value="html/js56jsoprsubtract.htm">
+  </object>
+  <ul> ... optional children ... </ul>
+<li>
+  ... siblings ...
+*/
+static bool VisitChmIndexItem(EbookTocVisitor *visitor, HtmlElement *el, UINT cp, int level)
+{
+    assert(str::Eq("li", el->name));
+    el = el->GetChildByName("object");
+    if (!el)
+        return false;
+
+    StrVec references;
+    ScopedMem<TCHAR> keyword, name;
+    for (el = el->GetChildByName("param"); el; el = el->next) {
+        if (!str::Eq("param", el->name))
+            continue;
+        ScopedMem<TCHAR> attrName(el->GetAttribute("name"));
+        ScopedMem<TCHAR> attrVal(el->GetAttribute("value"));
+        if (!attrName || !attrVal)
+            /* ignore incomplete/unneeded <param> */;
+        else if (str::EqI(attrName, _T("Keyword"))) {
+#ifdef UNICODE
+            if (cp != CP_CHM_DEFAULT) {
+                ScopedMem<char> bytes(str::conv::ToCodePage(attrVal, CP_CHM_DEFAULT));
+                attrVal.Set(str::conv::FromCodePage(bytes, cp));
+            }
+#endif
+            keyword.Set(attrVal.StealData());
+        }
+        else if (str::EqI(attrName, _T("Name"))) {
+#ifdef UNICODE
+            if (cp != CP_CHM_DEFAULT) {
+                ScopedMem<char> bytes(str::conv::ToCodePage(attrVal, CP_CHM_DEFAULT));
+                attrVal.Set(str::conv::FromCodePage(bytes, cp));
+            }
+#endif
+            name.Set(attrVal.StealData());
+            // some CHM documents seem to use a lonely Name instead of Keyword
+            if (!keyword)
+                keyword.Set(str::Dup(name));
+        }
+        else if (str::EqI(attrName, _T("Local")) && name) {
+            // remove the ITS protocol and any filename references from the URLs
+            if (str::Find(attrVal, _T("::/")))
+                attrVal.Set(str::Dup(str::Find(attrVal, _T("::/")) + 3));
+            references.Append(name.StealData());
+            references.Append(attrVal.StealData());
+        }
+    }
+    if (!keyword)
+        return false;
+
+    if (references.Count() == 2) {
+        visitor->visit(keyword, references.At(1), level);
+        return true;
+    }
+    visitor->visit(keyword, NULL, level);
+    for (size_t i = 0; i < references.Count(); i += 2) {
+        visitor->visit(references.At(i), references.At(i + 1), level + 1);
+    }
+    return true;
+}
+
+static void WalkChmTocOrIndex(EbookTocVisitor *visitor, HtmlElement *list, UINT cp, bool isIndex, int level=1)
 {
     assert(str::Eq("ul", list->name));
 
@@ -336,7 +404,7 @@ static void WalkChmToc(EbookTocVisitor *visitor, HtmlElement *list, UINT cp, int
         for (HtmlElement *el = list->down; el; el = el->next) {
             if (!str::Eq(el->name, "li"))
                 continue; // ignore unexpected elements
-            bool valid = VisitChmTocItem(visitor, el, cp, level);
+            bool valid = (isIndex ? VisitChmIndexItem : VisitChmTocItem)(visitor, el, cp, level);
             if (!valid)
                 continue; // skip incomplete elements and all their children
 
@@ -345,20 +413,13 @@ static void WalkChmToc(EbookTocVisitor *visitor, HtmlElement *list, UINT cp, int
             if (!nested && el->next && str::Eq(el->next->name, "ul"))
                 nested = el->next;
             if (nested)
-                WalkChmToc(visitor, nested, cp, level + 1);
+                WalkChmTocOrIndex(visitor, nested, cp, isIndex, level + 1);
         }
     }
 }
 
-bool ChmDoc::ParseToc(EbookTocVisitor *visitor)
+static bool ParseTocOrIndex(EbookTocVisitor *visitor, const char *html, UINT codepage, bool isIndex)
 {
-    if (!tocPath)
-        return false;
-    ScopedMem<unsigned char> htmlData(GetData(tocPath, NULL));
-    const char *html = (char *)htmlData.Get();
-    if (!html)
-        return false;
-
     HtmlParser p;
     UINT cp = codepage;
     // detect UTF-8 content by BOM
@@ -377,8 +438,40 @@ bool ChmDoc::ParseToc(EbookTocVisitor *visitor)
     el = p.FindElementByName("ul", el);
     if (!el)
         return false;
-    WalkChmToc(visitor, el, cp);
+    WalkChmTocOrIndex(visitor, el, cp, isIndex);
     return true;
+}
+
+bool ChmDoc::HasToc() const
+{
+    return tocPath != NULL;
+}
+
+bool ChmDoc::ParseToc(EbookTocVisitor *visitor)
+{
+    if (!tocPath)
+        return false;
+    ScopedMem<unsigned char> htmlData(GetData(tocPath, NULL));
+    const char *html = (char *)htmlData.Get();
+    if (!html)
+        return false;
+    return ParseTocOrIndex(visitor, html, codepage, false);
+}
+
+bool ChmDoc::HasIndex() const
+{
+    return indexPath != NULL;
+}
+
+bool ChmDoc::ParseIndex(EbookTocVisitor *visitor)
+{
+    if (!indexPath)
+        return false;
+    ScopedMem<unsigned char> htmlData(GetData(indexPath, NULL));
+    const char *html = (char *)htmlData.Get();
+    if (!html)
+        return false;
+    return ParseTocOrIndex(visitor, html, codepage, true);
 }
 
 bool ChmDoc::IsSupportedFile(const TCHAR *fileName, bool sniff)

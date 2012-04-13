@@ -398,7 +398,7 @@ bool ChmEngineImpl::Load(const TCHAR *fileName)
         return false;
 
     // always make the document's homepage page 1
-    pages.Append(str::conv::FromAnsi(doc->GetIndexPath()));
+    pages.Append(str::conv::FromAnsi(doc->GetHomePath()));
     // parse the ToC here, since page numbering depends on it
     doc->ParseToc(&ChmTocBuilder(doc, &pages, &tocRoot));
 

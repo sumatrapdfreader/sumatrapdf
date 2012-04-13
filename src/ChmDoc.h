@@ -35,11 +35,13 @@ public:
     TCHAR *ToStr(const char *text);
 
     TCHAR *GetProperty(const char *name);
-    const char *GetIndexPath();
+    const char *GetHomePath();
     Vec<char *> *GetAllPaths();
 
     bool HasToc() const;
     bool ParseToc(EbookTocVisitor *visitor);
+    bool HasIndex() const;
+    bool ParseIndex(EbookTocVisitor *visitor);
 
     static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
     static ChmDoc *CreateFromFile(const TCHAR *fileName);
