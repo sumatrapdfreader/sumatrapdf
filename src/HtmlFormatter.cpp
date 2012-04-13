@@ -627,14 +627,15 @@ void HtmlFormatter::EmitTextRun(const char *s, const char *end)
         }
         bbox = MeasureText(gfx, CurrFont(), buf, lenThatFits, measureAlgo);
         CrashIf(bbox.Width > pageDx);
+        // s is UTF-8 and buf is UTF-16, so one
+        // WCHAR doesn't always equal one char
+        // TODO: this usually fails for non-BMP characters (i.e. hardly ever)
+        for (int i = lenThatFits - 1; i >= 0; i--) {
+            lenThatFits += buf[i] < 0x80 ? 0 : buf[i] < 0x800 ? 1 : 2;
+        }
         AppendInstr(DrawInstr::Str(s, lenThatFits, bbox));
         currX += bbox.Width;
-
-        for (int i = 0; i < lenThatFits; i++) {
-            // s is UTF-8 and buf is UTF-16, so one
-            // WCHAR doesn't always equal one char
-            s += buf[i] < 0x80 ? 1 : buf[i] < 0x800 ? 2 : 3;
-        }
+        s += lenThatFits;
     }
 }
 

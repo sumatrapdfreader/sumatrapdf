@@ -36,6 +36,37 @@ static char *DecodeTextToUtf8(const char *s)
     return str::ToMultiByte(s, codePage, CP_UTF8);
 }
 
+// tries to extract an encoding from <?xml encoding="..."?>
+// returns CP_ACP on failure
+static UINT GetCodepageFromPI(const char *xmlPI)
+{
+    const char *xmlPIEnd = str::Find(xmlPI, "?>");
+    if (!xmlPIEnd)
+        return CP_ACP;
+    HtmlToken pi;
+    pi.SetTag(HtmlToken::EmptyElementTag, xmlPI + 2, xmlPIEnd);
+    pi.nLen = 4;
+    AttrInfo *enc = pi.GetAttrByName("encoding");
+    if (!enc)
+        return CP_ACP;
+
+    ScopedMem<char> encoding(str::DupN(enc->val, enc->valLen));
+    struct {
+        char *namePart;
+        UINT codePage;
+    } encodings[] = {
+        { "UTF", CP_UTF8 }, { "utf", CP_UTF8 },
+        { "1252", 1252 }, { "1251", 1251 },
+        // TODO: any other commonly used codepages?
+    };
+    for (size_t i = 0; i < dimof(encodings); i++) {
+        if (str::Find(encoding, encodings[i].namePart))
+            return encodings[i].codePage;
+    }
+    return CP_ACP;
+}
+
+
 /* URL handling helpers */
 
 char *NormalizeURL(const char *url, const char *base)
@@ -455,17 +486,11 @@ bool Fb2Doc::Load()
         return false;
 
     const char *xmlPI = str::Find(data, "<?xml");
-    if (xmlPI && str::Find(xmlPI, "?>")) {
-        HtmlToken pi;
-        pi.SetTag(HtmlToken::EmptyElementTag, xmlPI + 2, str::Find(xmlPI, "?>"));
-        pi.nLen = 4;
-        AttrInfo *enc = pi.GetAttrByName("encoding");
-        if (enc) {
-            ScopedMem<char> tmp(str::DupN(enc->val, enc->valLen));
-            if (str::Find(tmp, "1251")) {
-                data.Set(str::ToMultiByte(data, 1251, CP_UTF8));
-                len = str::Len(data);
-            }
+    if (xmlPI) {
+        UINT cp = GetCodepageFromPI(xmlPI);
+        if (cp != CP_ACP && cp != CP_UTF8) {
+            data.Set(str::ToMultiByte(data, cp, CP_UTF8));
+            len = str::Len(data);
         }
     }
 
@@ -628,7 +653,13 @@ bool HtmlDoc::Load()
     ScopedMem<char> data(file::ReadAll(fileName, NULL));
     if (!data)
         return false;
-    htmlData.Set(DecodeTextToUtf8(data));
+    if (str::StartsWith(data.Get(), "<?xml")) {
+        UINT cp = GetCodepageFromPI(data);
+        if (cp != CP_ACP)
+            htmlData.Set(str::ToMultiByte(data, cp, CP_UTF8));
+    }
+    if (!htmlData)
+        htmlData.Set(DecodeTextToUtf8(data));
     if (!htmlData)
         return false;
 
@@ -671,7 +702,8 @@ const TCHAR *HtmlDoc::GetFileName() const
 bool HtmlDoc::IsSupportedFile(const TCHAR *fileName, bool sniff)
 {
     return str::EndsWithI(fileName, _T(".html")) ||
-           str::EndsWithI(fileName, _T(".htm"));
+           str::EndsWithI(fileName, _T(".htm")) ||
+           str::EndsWithI(fileName, _T(".xhtml"));
 }
 
 HtmlDoc *HtmlDoc::CreateFromFile(const TCHAR *fileName)
