@@ -4973,15 +4973,21 @@ static bool ProcessAllMessages()
     return false;
 }
 
+#ifndef QS_RAWINPUT
+#define QS_RAWINPUT 0x0400
+#endif
+
 static int RunMessageLoop()
 {
     gAccelTable = LoadAccelerators(ghinst, MAKEINTRESOURCE(IDC_SUMATRAPDF));
+    // cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1868#c9
+    DWORD wakeMask = QS_ALLINPUT | (GetWindowsVersion() >= 0x0501 ? QS_RAWINPUT : 0);
     for (;;) {
         HANDLE handles[MAXIMUM_WAIT_OBJECTS];
         DWORD handleCount = 0;
         handles[handleCount++] = uimsg::GetQueueEvent();
         CrashIf(handleCount >= MAXIMUM_WAIT_OBJECTS);
-        DWORD res = MsgWaitForMultipleObjects(handleCount, handles, FALSE, INFINITE, QS_ALLINPUT);
+        DWORD res = MsgWaitForMultipleObjects(handleCount, handles, FALSE, INFINITE, wakeMask);
         if (res == WAIT_OBJECT_0) {
             DispatchUiMessages();
         } else {
