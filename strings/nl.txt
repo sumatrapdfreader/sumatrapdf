@@ -349,6 +349,9 @@ Volledig scherm\tCtrl+Shift+L
 Facing
 Dubbele pagina
 
+Failed to rename the file!
+Naam niet kunnen wijzigen!
+
 Failed to save a file
 Fout bij opslaan bestand
 
@@ -568,6 +571,9 @@ Pagina %d van %d afdrukken...
 Printing problem.
 Probleem bij het afdrukken
 
+Re&name...\tF2
+&Naam wijzigen...\tF2
+
 Remember &opened files
 Onthoud ge&opende bestanden
 
@@ -576,6 +582,9 @@ Verwijder uit favorieten
 
 Remove page %s from favorites
 Verwijder pagina %s uit favorieten
+
+Rename To
+Naam wijzigen in
 
 Replace document &colors with Windows color scheme
 Vervang de documentkleuren met Windows kleurenschema
@@ -701,10 +710,5 @@ copying text
 tekst kopiëren
 
 printing document
-Document afdrukken
-
-# Untranslated:
-#Failed to rename the file!
-#Re&name...\tF2
-#Rename To
+document afdrukken
 
