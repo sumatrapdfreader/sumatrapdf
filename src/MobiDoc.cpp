@@ -504,7 +504,6 @@ bool MobiDoc::ParseHeader()
 
     docType = GetPdbDocType(&pdbHeader);
     if (Pdb_Unknown == docType) {
-        // TODO: print type/creator
         lf(" unknown pdb type/creator");
         return false;
     }
@@ -740,8 +739,6 @@ void MobiDoc::LoadImages()
 // recognize)
 ImageData *MobiDoc::GetImage(size_t imgRecIndex) const
 {
-    // TODO: remove this before shipping as it probably can happen
-    // in malfromed mobi files, but for now we want to know if it happens
     CrashIf((imgRecIndex > imagesCount) || (imgRecIndex < 1));
     if ((imgRecIndex > imagesCount) || (imgRecIndex < 1))
         return NULL;
