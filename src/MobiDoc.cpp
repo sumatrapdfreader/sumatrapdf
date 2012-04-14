@@ -231,7 +231,7 @@ class HuffDicDecompressor
     uint8 *     dicts[kCdicsMax];
     uint32      dictSize[kCdicsMax];
 
-    uint32      code_length;
+    uint32      codeLength;
 
 public:
     HuffDicDecompressor();
@@ -244,7 +244,7 @@ public:
 
 HuffDicDecompressor::HuffDicDecompressor() :
     huffmanData(NULL), cacheTable(NULL), baseTable(NULL),
-    code_length(0), dictsCount(0)
+    codeLength(0), dictsCount(0)
 {
 }
 
@@ -258,12 +258,12 @@ HuffDicDecompressor::~HuffDicDecompressor()
 
 bool HuffDicDecompressor::DecodeOne(uint32 code, uint8 *& dst, size_t& dstLeft)
 {
-    uint16 dict = code >> code_length;
+    uint16 dict = code >> codeLength;
     if ((size_t)dict > dictsCount) {
         lf("invalid dict value");
         return false;
     }
-    code &= ((1 << (code_length)) - 1);
+    code &= ((1 << (codeLength)) - 1);
     uint16 offset = UInt16BE(dicts[dict] + code * 2);
 
     if ((uint32)offset > dictSize[dict]) {
@@ -398,8 +398,8 @@ bool HuffDicDecompressor::AddCdicData(uint8 *cdicData, uint32 cdicDataLen)
     SwapU32(cdicHdr->hdrLen);
     SwapU32(cdicHdr->codeLen);
 
-    assert((0 == code_length) || (cdicHdr->codeLen == code_length));
-    code_length = cdicHdr->codeLen;
+    assert((0 == codeLength) || (cdicHdr->codeLen == codeLength));
+    codeLength = cdicHdr->codeLen;
 
     if (!str::EqN("CDIC", cdicHdr->id, 4))
         return false;
@@ -408,7 +408,7 @@ bool HuffDicDecompressor::AddCdicData(uint8 *cdicData, uint32 cdicDataLen)
         return false;
     uint32 size = cdicDataLen - cdicHdr->hdrLen;
 
-    uint32 maxSize = 1 << code_length;
+    uint32 maxSize = 1 << codeLength;
     if (maxSize >= size)
         return false;
     dicts[dictsCount] = (uint8*)memdup(cdicData + cdicHdr->hdrLen, size);
