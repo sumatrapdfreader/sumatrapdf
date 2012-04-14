@@ -12,7 +12,7 @@
 #include <iowin32s.h>
 
 ZipFile::ZipFile(const TCHAR *path, Allocator *allocator) :
-    filenames(0, allocator), fileinfo(0, allocator),
+    filenames(0, allocator), filenameHashes(0, allocator), fileinfo(0, allocator),
     filepos(0, allocator), allocator(allocator), commentLen(0)
 {
     zlib_filefunc64_def ffunc;
@@ -23,7 +23,7 @@ ZipFile::ZipFile(const TCHAR *path, Allocator *allocator) :
 }
 
 ZipFile::ZipFile(IStream *stream, Allocator *allocator) :
-    filenames(0, allocator), fileinfo(0, allocator),
+    filenames(0, allocator), filenameHashes(0, allocator), fileinfo(0, allocator),
     filepos(0, allocator), allocator(allocator), commentLen(0)
 {
     zlib_filefunc64_def ffunc;
@@ -48,6 +48,23 @@ ZipFile::~ZipFile()
 
 #define INVALID_ZIP_FILE_POS ((ZPOS64_T)-1)
 
+// variation of CRC-32 which deals with strings that are mostly ASCII
+static uint32_t GetQuickHash(const TCHAR *str)
+{
+    uint32_t crc = 0;
+    for (; *str; str++) {
+        uint32_t bits = (crc ^ ((*str & 0xFF) << 24)) & 0xFF000000L;
+        for (int i = 0; i < 8; i++) {
+            if ((bits & 0x80000000L))
+                bits = (bits << 1) ^ 0x04C11DB7L;
+            else
+                bits <<= 1;
+        }
+        crc = (crc << 8) ^ bits;
+    }
+    return crc;
+}
+
 void ZipFile::ExtractFilenames()
 {
     if (!uf)
@@ -69,6 +86,7 @@ void ZipFile::ExtractFilenames()
             str::conv::FromCodePageBuf(fileNameT, dimof(fileNameT), fileName, cp);
             filenames.Append((TCHAR *)Allocator::Dup(allocator, fileNameT,
                 (str::Len(fileNameT) + 1) * sizeof(TCHAR)));
+            filenameHashes.Append(GetQuickHash(fileNameT));
             fileinfo.Append(finfo);
 
             unz64_file_pos fpos;
@@ -84,8 +102,9 @@ void ZipFile::ExtractFilenames()
 
 size_t ZipFile::GetFileIndex(const TCHAR *filename)
 {
-    for (size_t i = 0; i < filenames.Count(); i++) {
-        if (str::Eq(filename, filenames.At(i)))
+    uint32_t hash = GetQuickHash(filename);
+    for (int i = 0; (i = filenameHashes.Find(hash, i)) != -1; ) {
+        if (str::EqI(filename, filenames.At(i)))
             return i;
     }
     return (size_t)-1;
