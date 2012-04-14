@@ -436,7 +436,7 @@ static bool IsValidCompression(int comprType)
 }
 
 MobiDoc::MobiDoc() :
-    fileName(NULL), fileHandle(0), recHeaders(NULL), firstRecData(NULL),
+    fileName(NULL), fileHandle(0), firstRecData(NULL),
     docType(Pdb_Unknown), docRecCount(0), compressionType(0), docUncompressedSize(0),
     doc(NULL), multibyte(false), trailersCount(0), imageFirstRec(0),
     imagesCount(0), images(NULL), bufDynamic(NULL), bufDynamicSize(0),
@@ -449,7 +449,6 @@ MobiDoc::~MobiDoc()
     CloseHandle(fileHandle);
     free(fileName);
     free(firstRecData);
-    free(recHeaders);
     free(bufDynamic);
     for (size_t i = 0; i < imagesCount; i++) {
         free(images[i].data);
@@ -484,6 +483,16 @@ static void DecodePdbHeader(uint8 *buf, PdbHeader *hdr)
     CrashIf(d.Offset() != kPdbHeaderLen);
 }
 
+#define kPdbRecordHeaderLen 8
+
+/* PdbRecordHeader is a following struct:
+struct PdbRecordHeader {
+    uint32   offset;
+    uint8    flags; // deleted, dirty, busy, secret, category
+    char     uniqueID[3];
+};
+*/
+
 bool MobiDoc::ParseHeader()
 {
     DWORD bytesRead;
@@ -503,24 +512,29 @@ bool MobiDoc::ParseHeader()
     if (pdbHeader.numRecords < 1)
         return false;
 
-    // allocate one more record as a sentinel to make calculating
-    // size of the records easier
-    recHeaders = SAZA(PdbRecordHeader, pdbHeader.numRecords + 1);
-    if (!recHeaders)
-        return false;
-    DWORD toRead = kPdbRecordHeaderLen * pdbHeader.numRecords;
-    ok = ReadFile(fileHandle, (void*)recHeaders, toRead, &bytesRead, NULL);
-    if (!ok || (toRead != bytesRead))
-        return false;
+    CrashIf(0 != recordOffsets.Count());
 
-    for (int i = 0; i < pdbHeader.numRecords; i++) {
-        SwapU32(recHeaders[i].offset);
+    DWORD toRead = kPdbRecordHeaderLen * pdbHeader.numRecords;
+    uint8 *pdbHeadersBuf = (uint8*)malloc(toRead);
+    ok = ReadFile(fileHandle, (void*)pdbHeadersBuf, toRead, &bytesRead, NULL);
+    if (!ok || (toRead != bytesRead)) {
+        free(pdbHeadersBuf);
+        return false;
     }
+    uint8 *tmp = pdbHeadersBuf;
+    for (int i = 0; i < pdbHeader.numRecords; i++) {
+        uint32 off = UInt32BE(tmp);
+        recordOffsets.Append(off);
+        tmp += kPdbRecordHeaderLen;
+    }
+    free(pdbHeadersBuf);
+    // add sentinel value to simplify use
     size_t fileSize = file::GetSize(fileName);
-    recHeaders[pdbHeader.numRecords].offset = fileSize;
+    recordOffsets.Append(fileSize);
+
     // validate offsets
     for (int i = 0; i < pdbHeader.numRecords; i++) {
-        if (recHeaders[i + 1].offset < recHeaders[i].offset) {
+        if (recordOffsets.At(i + 1) < recordOffsets.At(i)) {
             lf("invalid offset field");
             return false;
         }
@@ -762,7 +776,7 @@ ImageData *MobiDoc::GetCoverImage()
 
 size_t MobiDoc::GetRecordSize(size_t recNo)
 {
-    size_t size = recHeaders[recNo + 1].offset - recHeaders[recNo].offset;
+    size_t size = recordOffsets.At(recNo + 1) - recordOffsets.At(recNo);
     return size;
 }
 
@@ -782,7 +796,7 @@ char *MobiDoc::GetBufForRecordData(size_t size)
 // read a record and return it's data and size. Return NULL if error
 char* MobiDoc::ReadRecord(size_t recNo, size_t& sizeOut)
 {
-    size_t off = recHeaders[recNo].offset;
+    size_t off = recordOffsets.At(recNo);
     DWORD toRead = GetRecordSize(recNo);
     sizeOut = toRead;
     char *buf = GetBufForRecordData(toRead);

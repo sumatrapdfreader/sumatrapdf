@@ -29,23 +29,6 @@ struct PdbHeader
     uint16      numRecords;
 };
 
-#define kPdbRecordHeaderLen 8
-
-#pragma pack(push)
-#pragma pack(1)
-struct PdbRecordHeader {
-    uint32   offset;
-    uint8    deleted   : 1;
-    uint8    dirty     : 1;
-    uint8    busy      : 1;
-    uint8    secret    : 1;
-    uint8    category  : 4;
-    char     uniqueID[3];
-};
-#pragma pack(pop)
-
-STATIC_ASSERT(kPdbRecordHeaderLen == sizeof(PdbRecordHeader), validPdbRecordHeader);
-
 #define kMaxRecordSize 64*1024
 
 enum PdbDocType { Pdb_Unknown, Pdb_Mobipocket, Pdb_PalmDoc, Pdb_TealDoc };
@@ -56,7 +39,9 @@ class MobiDoc
     HANDLE              fileHandle;
 
     PdbHeader           pdbHeader;
-    PdbRecordHeader *   recHeaders;
+    // offset of each pdb record within the file + a sentinel
+    // value equal to file size to simplify use
+    Vec<uint32>         recordOffsets;
     char *              firstRecData;
 
     PdbDocType          docType;
