@@ -4,6 +4,7 @@
 #ifndef ByteOrderDecoder_h
 #define ByteOrderDecoder_h
 
+// class for decoding of byte buffer as a sequence of numbers
 class ByteOrderDecoder
 {
 public:
@@ -31,6 +32,12 @@ protected:
     const uint8 *curr;
     size_t left;
 };
+
+// decode a given piece of memory
+uint16 UInt16BE(const uint8* d);
+uint16 UInt16LE(const uint8* d);
+uint32 UInt32BE(const uint8* d);
+uint32 UInt32LE(const uint8* d);
 
 #endif
 

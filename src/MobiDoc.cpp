@@ -5,6 +5,7 @@
 #include "MobiDoc.h"
 
 #include "BitReader.h"
+#include "ByteOrderDecoder.h"
 #include "EbookBase.h"
 #include "FileUtil.h"
 using namespace Gdiplus;
@@ -112,20 +113,16 @@ struct MobiHeader {
 
 STATIC_ASSERT(kMobiHeaderLen == sizeof(MobiHeader), validMobiHeader);
 
-// TODO: do it the way Rob Pike says: http://commandcenter.blogspot.com/2012/04/byte-order-fallacy.html
-// TODO: use ByteReader::UnpackBE
-#define BEtoHs(x) MAKEWORD(HIBYTE(x), LOBYTE(x))
-#define BEtoHl(x) MAKELONG(BEtoHs(HIWORD(x)), BEtoHs(LOWORD(x)))
-
-// change big-endian int16 to little-endian (our native format)
-inline void SwapU16(uint16& i)
+// change big-endian int16 to host endianness
+static void SwapU16(uint16& i)
 {
-    i = BEtoHs(i);
+    i = UInt16BE((uint8*)&i);
 }
 
-inline void SwapU32(uint32& i)
+// change big-endian unt16 to host endianness
+static void SwapU32(uint32& i)
 {
-    i = BEtoHl(i);
+    i = UInt32BE((uint8*)&i);
 }
 
 // Uncompress source data compressed with PalmDoc compression into a buffer.
@@ -259,11 +256,6 @@ HuffDicDecompressor::~HuffDicDecompressor()
     free(huffmanData);
 }
 
-inline uint16 ReadBeU16(uint8 *d)
-{
-    return (d[0] << 8) | d[1];
-}
-
 bool HuffDicDecompressor::DecodeOne(uint32 code, uint8 *& dst, size_t& dstLeft)
 {
     uint16 dict = code >> code_length;
@@ -272,13 +264,13 @@ bool HuffDicDecompressor::DecodeOne(uint32 code, uint8 *& dst, size_t& dstLeft)
         return false;
     }
     code &= ((1 << (code_length)) - 1);
-    uint16 offset = ReadBeU16(dicts[dict] + code * 2);
+    uint16 offset = UInt16BE(dicts[dict] + code * 2);
 
     if ((uint32)offset > dictSize[dict]) {
         lf("invalid offset");
         return false;
     }
-    uint16 symLen = ReadBeU16(dicts[dict] + offset);
+    uint16 symLen = UInt16BE(dicts[dict] + offset);
     uint8 *p = dicts[dict] + offset + 2;
 
     if (!(symLen & 0x8000)) {
@@ -427,11 +419,11 @@ bool HuffDicDecompressor::AddCdicData(uint8 *cdicData, uint32 cdicDataLen)
 
 static PdbDocType GetPdbDocType(PdbHeader *pdbHdr)
 {
-    if (str::EqN(pdbHdr->type, MOBI_TYPE_CREATOR, 8))
+    if (str::EqN(pdbHdr->typeCreator, MOBI_TYPE_CREATOR, 8))
         return Pdb_Mobipocket;
-    if (str::EqN(pdbHdr->type, PALMDOC_TYPE_CREATOR, 8))
+    if (str::EqN(pdbHdr->typeCreator, PALMDOC_TYPE_CREATOR, 8))
         return Pdb_PalmDoc;
-    if (str::EqN(pdbHdr->type, TEALDOC_TYPE_CREATOR, 8))
+    if (str::EqN(pdbHdr->typeCreator, TEALDOC_TYPE_CREATOR, 8))
         return Pdb_TealDoc;
     return Pdb_Unknown;
 }
@@ -467,12 +459,39 @@ MobiDoc::~MobiDoc()
     delete doc;
 }
 
+// Decodes a byte buf of size kPdbHeaderLen as PdbHeader
+// http://en.wikipedia.org/wiki/PDB_(Palm_OS)
+static void DecodePdbHeader(uint8 *buf, PdbHeader *hdr)
+{
+    ByteOrderDecoder d(buf, kPdbHeaderLen, ByteOrderDecoder::BigEndian);
+    d.Bytes(hdr->name, kDBNameLength);
+    // the spec says it should be zero-terminated anyway, but this
+    // comes from untrusted source, so we do our own termination
+    hdr->name[kDBNameLength - 1] = 0;
+    hdr->attributes             = d.UInt16();
+    hdr->attributes             = d.UInt16();
+    hdr->createTime             = d.UInt32();
+    hdr->modifyTime             = d.UInt32();
+    hdr->backupTime             = d.UInt32();
+    hdr->modificationNumber     = d.UInt32();
+    hdr->appInfoID              = d.UInt32();
+    hdr->sortInfoID             = d.UInt32();
+    d.Bytes(hdr->typeCreator, 8);
+    hdr->idSeed                 = d.UInt32();
+    hdr->nextRecordList         = d.UInt32();
+    hdr->numRecords             = d.UInt16();
+
+    CrashIf(d.Offset() != kPdbHeaderLen);
+}
+
 bool MobiDoc::ParseHeader()
 {
     DWORD bytesRead;
-    BOOL ok = ReadFile(fileHandle, (void*)&pdbHeader, kPdbHeaderLen, &bytesRead, NULL);
+    uint8 pdbHeaderBuf[kPdbHeaderLen];
+    BOOL ok = ReadFile(fileHandle, pdbHeaderBuf, kPdbHeaderLen, &bytesRead, NULL);
     if (!ok || (kPdbHeaderLen != bytesRead))
         return false;
+    DecodePdbHeader(pdbHeaderBuf, &pdbHeader);
 
     docType = GetPdbDocType(&pdbHeader);
     if (Pdb_Unknown == docType) {
@@ -481,9 +500,6 @@ bool MobiDoc::ParseHeader()
         return false;
     }
 
-    // the values are in big-endian, so convert to host order
-    // but only those that we actually access
-    SwapU16(pdbHeader.numRecords);
     if (pdbHeader.numRecords < 1)
         return false;
 
@@ -643,26 +659,16 @@ bool MobiDoc::ParseHeader()
 #define SRCS_REC  0x53524353 // 'SRCS'
 #define VIDE_REC  0x56494445 // 'VIDE'
 
-static uint32 GetUpToFour(uint8*& s, size_t& len)
-{
-    size_t n = 0;
-    uint32 v = *s++; len--;
-    while ((n < 3) && (len > 0)) {
-        v = v << 8;
-        v = v | *s++;
-        len--; n++;
-    }
-    return v;
-}
-
 static bool IsEofRecord(uint8 *data, size_t dataLen)
 {
-    return (4 == dataLen) && (EOF_REC == GetUpToFour(data, dataLen));
+    return (4 == dataLen) && (EOF_REC == UInt32BE(data));
 }
 
 static bool KnownNonImageRec(uint8 *data, size_t dataLen)
 {
-    uint32 sig = GetUpToFour(data, dataLen);
+    if (dataLen < 4)
+        return false;
+    uint32 sig = UInt32BE(data);
 
     if (FLIS_REC == sig) return true;
     if (FCIS_REC == sig) return true;

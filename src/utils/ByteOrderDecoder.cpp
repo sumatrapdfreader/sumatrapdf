@@ -4,6 +4,26 @@
 #include "BaseUtil.h"
 #include "ByteOrderDecoder.h"
 
+uint16 UInt16BE(const uint8* d)
+{
+    return d[1] | (d[0] << 8);
+}
+
+uint16 UInt16LE(const uint8* d)
+{
+    return d[0] | (d[1] << 8);
+}
+
+uint32 UInt32BE(const uint8* d)
+{
+    return d[3] | (d[2] << 8) | (d[1] << 16) | (d[0] << 24);
+}
+
+uint32 UInt32LE(const uint8* d)
+{
+    return d[0] | (d[1] << 8) | (d[2] << 16) | (d[3] << 24);
+}
+
 ByteOrderDecoder::ByteOrderDecoder(const char *d, size_t len, ByteOrder order)
     : left(len), byteOrder(order)
 {
@@ -24,9 +44,9 @@ uint16 ByteOrderDecoder::UInt16()
     CrashIf(left < sizeof(v));
 
     if (LittleEndian == byteOrder)
-        v = curr[0] | (curr[1] << 8);
+        v = UInt16LE(curr);
     else
-        v = curr[1] | (curr[0] << 8);
+        v = UInt16BE(curr);
     left -= sizeof(v);
     curr += sizeof(v);
     return v;
@@ -38,9 +58,9 @@ uint32 ByteOrderDecoder::UInt32()
     CrashIf(left < sizeof(v));
 
     if (LittleEndian == byteOrder)
-        v = curr[0] | (curr[1] << 8) | (curr[2] << 16) | (curr[3] << 24);
+        v = UInt32LE(curr);
     else
-        v = curr[3] | (curr[2] << 8) | (curr[1] << 16) | (curr[0] << 24);
+        v = UInt32BE(curr);
     left -= sizeof(v);
     curr += sizeof(v);
     return v;

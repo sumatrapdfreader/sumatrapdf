@@ -11,8 +11,6 @@ struct ImageData;
 #define kDBNameLength    32
 #define kPdbHeaderLen    78
 
-#pragma pack(push)
-#pragma pack(1)
 struct PdbHeader
 {
      /* 31 chars + 1 null terminator */
@@ -25,15 +23,11 @@ struct PdbHeader
     uint32      modificationNumber;
     uint32      appInfoID;
     uint32      sortInfoID;
-    char        type[4];
-    char        creator[4];
+    char        typeCreator[8];
     uint32      idSeed;
     uint32      nextRecordList;
     uint16      numRecords;
 };
-#pragma pack(pop)
-
-STATIC_ASSERT(kPdbHeaderLen == sizeof(PdbHeader), validPdbHeader);
 
 #define kPdbRecordHeaderLen 8
 
