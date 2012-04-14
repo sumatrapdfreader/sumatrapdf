@@ -4,9 +4,8 @@
 #ifndef MobiDoc_h
 #define MobiDoc_h
 
-#include "EbookBase.h"
-
 class HuffDicDecompressor;
+struct ImageData;
 
 // http://en.wikipedia.org/wiki/PDB_(Palm_OS)
 #define kDBNameLength    32

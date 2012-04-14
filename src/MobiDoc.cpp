@@ -5,6 +5,7 @@
 #include "MobiDoc.h"
 
 #include "BitReader.h"
+#include "EbookBase.h"
 #include "FileUtil.h"
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
