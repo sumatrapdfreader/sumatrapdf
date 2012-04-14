@@ -502,6 +502,25 @@ void HtmlFormatter::EmitEmptyLine(float lineDy)
     ForceNewPage();
 }
 
+static bool HasPreviousLineSingleImage(Vec<DrawInstr>& instrs)
+{
+    REAL imageY = -1;
+    for (size_t idx = instrs.Count(); idx > 0; idx--) {
+        DrawInstr *i = &instrs.At(idx - 1);
+        if (!IsVisibleDrawInstr(i))
+            continue;
+        if (-1 != imageY) {
+            // if another visible item precedes the image,
+            // it must be completely above it (previous line)
+            return i->bbox.Y + i->bbox.Height <= imageY;
+        }
+        if (InstrImage != i->type)
+            return false;
+        imageY = i->bbox.Y;
+    }
+    return imageY != -1;
+}
+
 void HtmlFormatter::EmitImage(ImageData *img)
 {
     CrashIf(!img->data);
@@ -518,9 +537,17 @@ void HtmlFormatter::EmitImage(ImageData *img)
         ForceNewPage();
     // if image is still bigger than available space, scale it down
     if ((newSize.Width > pageDx) || (currY + newSize.Height) > pageDy) {
-        REAL scale = min(pageDx / newSize.Width, (pageDy - currY) / newSize.Height);
-        newSize.Width *= scale;
-        newSize.Height *= scale;
+        if (HasPreviousLineSingleImage(currPage->instructions)) {
+            // don't scale down images that follow right after a
+            // line containing a single image, as they might be
+            // intended to be of the same size
+            ForceNewPage();
+        }
+        else {
+            REAL scale = min(pageDx / newSize.Width, (pageDy - currY) / newSize.Height);
+            newSize.Width *= scale;
+            newSize.Height *= scale;
+        }
     }
 
     RectF bbox(PointF(currX, 0), newSize);
