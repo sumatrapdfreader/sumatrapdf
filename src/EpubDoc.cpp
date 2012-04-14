@@ -688,6 +688,18 @@ bool HtmlDoc::Load()
     pagePath.Set(str::conv::ToUtf8(fileName));
     str::TransChars(pagePath, "\\", "/");
 
+    HtmlPullParser parser(htmlData, str::Len(htmlData));
+    HtmlToken *tok;
+    while ((tok = parser.Next()) && !tok->IsError()) {
+        if (tok->IsStartTag() && (Tag_Title == tok->tag || Tag_Body == tok->tag || Tag_P == tok->tag))
+            break;
+    }
+    if (tok->IsStartTag() && Tag_Title == tok->tag) {
+        tok = parser.Next();
+        if (tok->IsText())
+            title.Set(FromHtmlUtf8(tok->s, tok->sLen));
+    }
+
     return true;
 }
 
@@ -714,6 +726,13 @@ ImageData *HtmlDoc::GetImageData(const char *id)
     data.id = url.StealData();
     images.Append(data);
     return &images.Last().base;
+}
+
+TCHAR *HtmlDoc::GetProperty(const char *name)
+{
+    if (str::Eq(name, "Title") && title)
+        return str::Dup(title);
+    return NULL;
 }
 
 const TCHAR *HtmlDoc::GetFileName() const

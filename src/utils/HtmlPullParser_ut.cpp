@@ -103,6 +103,16 @@ static void Test01()
     assert(!IsTagSelfClosing(Tag_P));
 }
 
+static void Test02()
+{
+    const char *s = "<p>Last paragraph";
+    HtmlPullParser parser(s, str::Len(s));
+    HtmlToken *t = parser.Next();
+    assert(t && t->IsTag() && t->IsStartTag() && Tag_P == t->tag);
+    t = parser.Next();
+    assert(t && t->IsText() && str::Eq(t->s, "Last paragraph"));
+}
+
 }
 
 void HtmlPullParser_UnitTests()
@@ -114,4 +124,5 @@ void HtmlPullParser_UnitTests()
     unittests::Test00("<P A1='>' FOO=bar />", HtmlToken::EmptyElementTag);
     unittests::HtmlEntities();
     unittests::Test01();
+    unittests::Test02();
 }

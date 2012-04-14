@@ -32,7 +32,6 @@ struct HtmlToken {
 
     enum ParsingError {
         ExpectedElement,
-        NonTagAtEnd,
         UnclosedTag,
         InvalidTag
     };

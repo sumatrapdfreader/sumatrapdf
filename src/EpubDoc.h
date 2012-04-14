@@ -107,6 +107,7 @@ class HtmlDoc {
     ScopedMem<char> htmlData;
     ScopedMem<char> pagePath;
     Vec<ImageData2> images;
+    ScopedMem<TCHAR> title;
 
     bool Load();
 
@@ -117,6 +118,7 @@ public:
     const char *GetTextData(size_t *lenOut);
     ImageData *GetImageData(const char *id);
 
+    TCHAR *GetProperty(const char *name);
     const TCHAR *GetFileName() const;
 
     static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);

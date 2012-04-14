@@ -126,6 +126,9 @@ protected:
     void HandleTagHx(HtmlToken *t);
     void HandleTagList(HtmlToken *t);
     void HandleTagPre(HtmlToken *t);
+
+    void AutoCloseTags(size_t count);
+    void UpdateTagNesting(HtmlToken *t);
     virtual void HandleHtmlTag(HtmlToken *t);
     void HandleText(HtmlToken *t);
     // blank convenience methods to override
@@ -187,6 +190,9 @@ protected:
     int                 listDepth;
     // set if newlines are not to be ignored
     bool                preFormatted;
+    // TODO: HtmlPullParser::tagNesting is updated too soon for our purposes
+    Vec<HtmlTag>        tagNesting;
+    bool                keepTagNesting;
 
     // isntructions for the current line
     Vec<DrawInstr>      currLineInstr;

@@ -123,7 +123,8 @@ HtmlFormatter::HtmlFormatter(HtmlFormatterArgs *args) :
     textAllocator(args->textAllocator), currLineReparseIdx(NULL),
     currX(0), currY(0), currLineTopPadding(0), currLinkIdx(0),
     listDepth(0), preFormatted(false), currPage(NULL),
-    finishedParsing(false), pageCount(0), measureAlgo(args->measureAlgo)
+    finishedParsing(false), pageCount(0), measureAlgo(args->measureAlgo),
+    keepTagNesting(false)
 {
     currReparseIdx = args->reparseIdx;
     htmlParser = new HtmlPullParser(args->htmlStr, args->htmlStrLen);
@@ -837,12 +838,92 @@ void HtmlFormatter::HandleTagPre(HtmlToken *t)
     }
 }
 
+// returns true if prev can't contain curr and should thus be closed
+static bool AutoCloseOnOpen(HtmlTag curr, HtmlTag prev)
+{
+    CrashIf(IsInlineTag(curr));
+    // always start afresh for a new <body>
+    if (Tag_Body == curr)
+        return true;
+    // allow <div>s to be contained within inline tags
+    // (e.g. <i><div>...</div></i> from pg12.mobi)
+    if (Tag_Div == curr)
+        return false;
+
+    switch (prev) {
+    case Tag_Dd: case Tag_Dt:
+        return Tag_Dd == curr || Tag_Dt == curr;
+    case Tag_H1: case Tag_H2: case Tag_H3:
+    case Tag_H4: case Tag_H5: case Tag_H6:
+        return IsTagH(curr);
+    case Tag_Lh: case Tag_Li:
+        return Tag_Lh == curr || Tag_Li == curr;
+    case Tag_P:
+        return true; // <p> can't contain any block-level elements
+    case Tag_Td: case Tag_Tr:
+        return Tag_Tr == curr;
+    default:
+        return IsInlineTag(prev);
+    }
+}
+
+void HtmlFormatter::AutoCloseTags(size_t count)
+{
+    keepTagNesting = true; // prevent recursion
+    HtmlToken tok;
+    tok.type = HtmlToken::EndTag;
+    // let HandleHtmlTag clean up (in reverse order)
+    for (size_t i = 0; i < count; i++) {
+        tok.tag = tagNesting.Pop();
+        HandleHtmlTag(&tok);
+    }
+    keepTagNesting = false;
+}
+
+void HtmlFormatter::UpdateTagNesting(HtmlToken *t)
+{
+    CrashIf(!t->IsTag());
+    if (keepTagNesting || Tag_NotFound == t->tag ||
+        t->IsEmptyElementEndTag() || IsTagSelfClosing(t->tag)) {
+        return;
+    }
+
+    size_t idx = tagNesting.Count();
+    bool isInline = IsInlineTag(t->tag);
+    if (t->IsStartTag()) {
+        if (IsInlineTag(t->tag)) {
+            tagNesting.Push(t->tag);
+            return;
+        }
+        // close all tags that can't contain this new block-level tag
+        for (; idx > 0 && AutoCloseOnOpen(t->tag, tagNesting.At(idx - 1)); idx--);
+    }
+    else {
+        // close all tags that were contained within the current tag
+        // (for inline tags just up to the next block-level tag)
+        for (; idx > 0 && (!isInline || IsInlineTag(tagNesting.At(idx - 1))) &&
+                                        t->tag != tagNesting.At(idx - 1); idx--);
+        if (0 == idx || tagNesting.At(idx - 1) != t->tag)
+            return;
+    }
+
+    AutoCloseTags(tagNesting.Count() - idx);
+
+    if (t->IsStartTag())
+        tagNesting.Push(t->tag);
+    else {
+        CrashIf(!t->IsEndTag() || t->tag != tagNesting.Last());
+        tagNesting.Pop();
+    }
+}
+
 void HtmlFormatter::HandleHtmlTag(HtmlToken *t)
 {
     CrashIf(!t->IsTag());
 
-    HtmlTag tag = t->tag;
+    UpdateTagNesting(t);
 
+    HtmlTag tag = t->tag;
     if (Tag_P == tag) {
         HandleTagP(t);
     } else if (Tag_Hr == tag) {
@@ -882,24 +963,24 @@ void HtmlFormatter::HandleHtmlTag(HtmlToken *t)
             CurrStyle()->align = Align_Center;
     } else if ((Tag_Ul == tag) || (Tag_Ol == tag)) {
         HandleTagList(t);
-    } else if ((Tag_Li == tag) || (Tag_Dd == tag)) {
-        // TODO: display bullet/number for Tag_Li
+    } else if (Tag_Li == tag) {
+        // TODO: display bullet/number
         FlushCurrLine(true);
     } else if (Tag_Dt == tag) {
-        if (t->IsStartTag())
-            EmitParagraph(15.f);
-        else
-            FlushCurrLine(true);
+        FlushCurrLine(true);
         ChangeFontStyle(FontStyleBold, t->IsStartTag());
         if (t->IsStartTag())
             CurrStyle()->align = Align_Left;
+    } else if (Tag_Dd == tag) {
+        // TODO: separate indentation from list depth
+        HandleTagList(t);
     } else if (Tag_Table == tag) {
         // TODO: implement me
         HandleTagList(t);
     } else if (Tag_Tr == tag) {
         // display tables row-by-row for now
         FlushCurrLine(true);
-    } else if (Tag_Code == tag) {
+    } else if (Tag_Code == tag || Tag_Tt == tag) {
         if (t->IsStartTag())
             SetFont(L"Courier New", (FontStyle)CurrFont()->GetStyle());
         else if (t->IsEndTag())
@@ -1031,6 +1112,7 @@ HtmlPage *HtmlFormatter::Next(bool skipEmptyPages)
             HandleText(t);
     }
     // force layout of the last line
+    AutoCloseTags(tagNesting.Count());
     FlushCurrLine(true);
 
     UpdateLinkBboxes(currPage);

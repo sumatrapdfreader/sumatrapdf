@@ -69,9 +69,6 @@ HtmlTag FindHtmlTag(const char *name, size_t len)
     case CS4('f','r','a','m'):
         if (5 == len && CS1('e') == STR1i(name + 4)) return Tag_Frame;
         break;
-    case CS4('g','u','i','d'):
-        if (5 == len && CS1('e') == STR1i(name + 4)) return Tag_Guide;
-        break;
     case CS2('h','1'): return Tag_H1;
     case CS2('h','2'): return Tag_H2;
     case CS2('h','3'): return Tag_H3;
@@ -116,9 +113,6 @@ HtmlTag FindHtmlTag(const char *name, size_t len)
         if (5 == len && CS1('m') == STR1i(name + 4)) return Tag_Param;
         break;
     case CS3('p','r','e'): return Tag_Pre;
-    case CS4('r','e','f','e'):
-        if (9 == len && str::EqNI(name + 4, "rence", 5)) return Tag_Reference;
-        break;
     case CS1('s'): return Tag_S;
     case CS4('s','e','c','t'):
         if (7 == len && CS3('i','o','n') == STR3i(name + 4)) return Tag_Section;
@@ -178,11 +172,11 @@ bool IsTagSelfClosing(HtmlTag item)
 bool IsInlineTag(HtmlTag item)
 {
     switch (item) {
-    case Tag_A: case Tag_Abbr: case Tag_Acronym: case Tag_B:
-    case Tag_Br: case Tag_Em: case Tag_Font: case Tag_I:
-    case Tag_Img: case Tag_S: case Tag_Small: case Tag_Span:
+    case Tag_A: case Tag_Abbr: case Tag_Acronym: case Tag_Audio:
+    case Tag_B: case Tag_Code: case Tag_Em: case Tag_Font:
+    case Tag_I: case Tag_S: case Tag_Small: case Tag_Span:
     case Tag_Strike: case Tag_Strong: case Tag_Sub: case Tag_Sup:
-    case Tag_U:
+    case Tag_Tt: case Tag_U: case Tag_Video:
         return true;
     default:
         return false;

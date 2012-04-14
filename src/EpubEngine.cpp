@@ -1201,7 +1201,7 @@ bool PdbEngineImpl::Load(const TCHAR *fileName)
     args.textAllocator = &allocator;
     args.measureAlgo = MeasureTextQuick;
 
-    pages = MobiFormatter(&args, doc).FormatAllPages(false);
+    pages = MobiFormatter(&args, doc).FormatAllPages();
     if (!ExtractPageAnchors())
         return false;
 
@@ -1542,6 +1542,7 @@ public:
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
+    virtual TCHAR *GetProperty(const char *name) { return doc->GetProperty(name); }
     virtual const TCHAR *GetDefaultFileExt() const { return _T(".html"); }
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
 

@@ -389,15 +389,11 @@ Next:
     const char *start = currPos;
     if (*currPos != '<') {
         // this must text between tags
-        if (!SkipUntil(currPos, end, '<')) {
+        if (!SkipUntil(currPos, end, '<') && IsSpaceOnly(start, currPos)) {
             // ignore whitespace after the last tag
-            if (IsSpaceOnly(start, currPos))
-                return NULL;
-            // text cannot be at the end
-            currToken.SetError(HtmlToken::NonTagAtEnd, start);
-        } else {
-            currToken.SetText(start, currPos);
+            return NULL;
         }
+        currToken.SetText(start, currPos);
         return &currToken;
     }
 
