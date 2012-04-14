@@ -26,8 +26,6 @@ using namespace Gdiplus;
 #define ENCRYPTION_OLD  1
 #define ENCRYPTION_NEW  2
 
-// http://wiki.mobileread.com/wiki/MOBI#PalmDOC_Header
-#define kPalmDocHeaderLen 16
 struct PalmDocHeader
 {
     uint16      compressionType;
@@ -44,7 +42,21 @@ struct PalmDocHeader
         } mobi;
     };
 };
-STATIC_ASSERT(kPalmDocHeaderLen == sizeof(PalmDocHeader), validMobiFirstRecord);
+#define kPalmDocHeaderLen 16
+
+// http://wiki.mobileread.com/wiki/MOBI#PalmDOC_Header
+static void DecodePalmDocHeader(const uint8 *buf, PalmDocHeader* hdr)
+{
+    ByteOrderDecoder d(buf, kPalmDocHeaderLen, ByteOrderDecoder::BigEndian);
+    hdr->compressionType     = d.UInt16();
+    hdr->reserved1           = d.UInt16();
+    hdr->uncompressedDocSize = d.UInt32();
+    hdr->recordsCount        = d.UInt16();
+    hdr->maxRecSize          = d.UInt16();
+    hdr->currPos             = d.UInt32();
+
+    CrashIf(kPalmDocHeaderLen != d.Offset());
+}
 
 enum MobiDocType {
     TypeMobiDoc = 2,
@@ -553,30 +565,30 @@ bool MobiDoc::ParseHeader()
     if (!firstRecData)
         return false;
     char *currRecPos = firstRecData;
-    PalmDocHeader *palmDocHdr = (PalmDocHeader*)currRecPos;
-    currRecPos += sizeof(PalmDocHeader);
-    recLeft -= sizeof(PalmDocHeader);
+    if (recLeft < kPalmDocHeaderLen)
+        return false;
 
-    SwapU16(palmDocHdr->compressionType);
-    SwapU32(palmDocHdr->uncompressedDocSize);
-    SwapU16(palmDocHdr->recordsCount);
-    SwapU16(palmDocHdr->maxRecSize);
-    if (!IsValidCompression(palmDocHdr->compressionType)) {
+    PalmDocHeader palmDocHdr;
+    DecodePalmDocHeader((const uint8*)currRecPos, &palmDocHdr);
+    currRecPos += kPalmDocHeaderLen;
+    recLeft -= kPalmDocHeaderLen;
+
+    if (!IsValidCompression(palmDocHdr.compressionType)) {
         lf("unknown compression type");
         return false;
     }
     if (Pdb_Mobipocket == docType) {
         // TODO: this needs to be surfaced to the client so
         // that we can show the right error message
-        if (palmDocHdr->mobi.encrType != ENCRYPTION_NONE) {
+        if (palmDocHdr.mobi.encrType != ENCRYPTION_NONE) {
             lf("encryption is unsupported");
             return false;
         }
     }
 
-    docRecCount = palmDocHdr->recordsCount;
-    docUncompressedSize = palmDocHdr->uncompressedDocSize;
-    compressionType = palmDocHdr->compressionType;
+    docRecCount = palmDocHdr.recordsCount;
+    docUncompressedSize = palmDocHdr.uncompressedDocSize;
+    compressionType = palmDocHdr.compressionType;
 
     if (0 == recLeft) {
         CrashIf(Pdb_Mobipocket == docType);
@@ -637,7 +649,7 @@ bool MobiDoc::ParseHeader()
         }
     }
 
-    if (palmDocHdr->compressionType == COMPRESSION_HUFF) {
+    if (palmDocHdr.compressionType == COMPRESSION_HUFF) {
         CrashIf(Pdb_Mobipocket != docType);
         size_t recSize;
         char *recData = ReadRecord(mobiHdr->huffmanFirstRec, recSize);
