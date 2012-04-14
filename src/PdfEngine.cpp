@@ -11,6 +11,7 @@ __pragma(warning(pop))
 #include "PdfEngine.h"
 
 #include "FileUtil.h"
+#include "ZipUtil.h"
 
 // maximum size of a file that's entirely loaded into memory before parsed
 // and displayed; larger files will be kept open while they're displayed
@@ -3552,9 +3553,10 @@ bool XpsEngineImpl::HasClipOptimizations(int pageNo)
 bool XpsEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
 {
     if (sniff) {
-        // this check is technically not correct (ZIP files are read from back to front),
-        // but it should catch all but specially crafted ZIP files anyway
-        return file::StartsWith(fileName, "PK\x03\x04");
+        ZipFile zip(fileName);
+        return zip.GetFileIndex(_T("_rels/.rels")) != (size_t)-1 ||
+               zip.GetFileIndex(_T("_rels/.rels/[0].piece")) != (size_t)-1 ||
+               zip.GetFileIndex(_T("_rels/.rels/[0].last.piece")) != (size_t)-1;
     }
 
     return str::EndsWithI(fileName, _T(".xps"));

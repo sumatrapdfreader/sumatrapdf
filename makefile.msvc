@@ -205,12 +205,12 @@ TESTER_OBJS = \
 PDFFILTER_OBJS = \
 	$(ODLL)\PdfFilterDll.obj $(ODLL)\CPdfFilter.obj $(PDFFILTER_RES) \
 	$(OU)\StrUtil.obj $(OU)\FileUtil.obj $(OU)\WinUtil.obj $(OU)\DebugLog.obj \
-	$(LIBMUPDF_LIB) $(OS)\MuPDF_Exports.obj $(OS)\PdfEngine.obj
+	$(LIBMUPDF_LIB) $(OS)\MuPDF_Exports.obj $(OS)\PdfEngine.obj $(ZIP_OBJS)
 
 PDFPREVIEW_OBJS = \
 	$(ODLL)\PdfPreviewDll.obj $(ODLL)\PdfPreview.obj $(PDFPREVIEW_RES) \
 	$(OU)\StrUtil.obj $(OU)\FileUtil.obj $(OU)\WinUtil.obj $(OU)\DebugLog.obj \
-	$(LIBMUPDF_LIB) $(OS)\MuPDF_Exports.obj $(OS)\PdfEngine.obj
+	$(LIBMUPDF_LIB) $(OS)\MuPDF_Exports.obj $(OS)\PdfEngine.obj $(ZIP_OBJS)
 
 BROWSER_PLUGIN_OBJS = \
 	$(ODLL)\npPdfViewer.obj $(BROWSER_PLUGIN_RES) \

@@ -428,7 +428,10 @@ bool EpubDoc::VerifyEpub(ZipFile& zip)
     /* cf. http://forums.fofou.org/sumatrapdf/topic?id=2599331
     if (!str::Eq(zip.GetFileName(0), _T("mimetype")))
         return false; */
-    return str::Eq(mimetype, "application/epub+zip");
+    return str::Eq(mimetype, "application/epub+zip") ||
+           // also open renamed .ibooks files
+           // cf. http://en.wikipedia.org/wiki/IBooks#Formats
+           str::Eq(mimetype, "application/x-ibooks+zip");
 }
 
 bool EpubDoc::IsSupportedFile(const TCHAR *fileName, bool sniff)
