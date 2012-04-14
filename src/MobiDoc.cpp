@@ -5,7 +5,6 @@
 #include "MobiDoc.h"
 
 #include "BitReader.h"
-#include "ByteReader.h"
 #include "FileUtil.h"
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
@@ -111,6 +110,22 @@ struct MobiHeader {
 };
 
 STATIC_ASSERT(kMobiHeaderLen == sizeof(MobiHeader), validMobiHeader);
+
+// TODO: do it the way Rob Pike says: http://commandcenter.blogspot.com/2012/04/byte-order-fallacy.html
+// TODO: use ByteReader::UnpackBE
+#define BEtoHs(x) MAKEWORD(HIBYTE(x), LOBYTE(x))
+#define BEtoHl(x) MAKELONG(BEtoHs(HIWORD(x)), BEtoHs(LOWORD(x)))
+
+// change big-endian int16 to little-endian (our native format)
+inline void SwapU16(uint16& i)
+{
+    i = BEtoHs(i);
+}
+
+inline void SwapU32(uint32& i)
+{
+    i = BEtoHl(i);
+}
 
 // Uncompress source data compressed with PalmDoc compression into a buffer.
 // Returns size of uncompressed data or -1 on error (if destination buffer too small)
@@ -243,6 +258,11 @@ HuffDicDecompressor::~HuffDicDecompressor()
     free(huffmanData);
 }
 
+inline uint16 ReadBeU16(uint8 *d)
+{
+    return (d[0] << 8) | d[1];
+}
+
 bool HuffDicDecompressor::DecodeOne(uint32 code, uint8 *& dst, size_t& dstLeft)
 {
     uint16 dict = code >> code_length;
@@ -250,15 +270,14 @@ bool HuffDicDecompressor::DecodeOne(uint32 code, uint8 *& dst, size_t& dstLeft)
         lf("invalid dict value");
         return false;
     }
-    ByteReader r(dicts[dict], dictSize[dict]);
     code &= ((1 << (code_length)) - 1);
-    uint16 offset = r.WordBE(code * 2);
+    uint16 offset = ReadBeU16(dicts[dict] + code * 2);
 
-    if (offset > dictSize[dict]) {
+    if ((uint32)offset > dictSize[dict]) {
         lf("invalid offset");
         return false;
     }
-    uint16 symLen = r.WordBE(offset);
+    uint16 symLen = ReadBeU16(dicts[dict] + offset);
     uint8 *p = dicts[dict] + offset + 2;
 
     if (!(symLen & 0x8000)) {
@@ -351,10 +370,9 @@ bool HuffDicDecompressor::SetHuffData(uint8 *huffData, size_t huffDataLen)
     if (huffDataLen < kHuffRecordMinLen)
         return false;
     HuffHeader *huffHdr = (HuffHeader*)huffData;
-    ByteReader r(huffData, huffDataLen);
-    // TODO: fix unpacking the two little-endian values on big-endian architectures
-    bool ok = r.UnpackBE(huffHdr, sizeof(*huffHdr), "4b3d8b");
-    CrashIf(!ok);
+    SwapU32(huffHdr->hdrLen);
+    SwapU32(huffHdr->cacheOffset);
+    SwapU32(huffHdr->baseTableOffset);
 
     if (!str::EqN("HUFF", huffHdr->id, 4))
         return false;
@@ -372,11 +390,11 @@ bool HuffDicDecompressor::SetHuffData(uint8 *huffData, size_t huffDataLen)
     // we conservatively use the big-endian version of the data,
     cacheTable = (uint32*)(huffmanData + huffHdr->cacheOffset);
     for (size_t i = 0; i < 256; i++) {
-        cacheTable[i] = r.DWordBE(huffHdr->cacheOffset + i * sizeof(uint32));
+        SwapU32(cacheTable[i]);
     }
     baseTable = (uint32*)(huffmanData + huffHdr->baseTableOffset);
     for (size_t i = 0; i < 64; i++) {
-        baseTable[i] = r.DWordBE(huffHdr->baseTableOffset + i * sizeof(uint32));
+        SwapU32(baseTable[i]);
     }
     return true;
 }
@@ -384,8 +402,8 @@ bool HuffDicDecompressor::SetHuffData(uint8 *huffData, size_t huffDataLen)
 bool HuffDicDecompressor::AddCdicData(uint8 *cdicData, uint32 cdicDataLen)
 {
     CdicHeader *cdicHdr = (CdicHeader*)cdicData;
-    ByteReader r(cdicData, cdicDataLen);
-    r.UnpackBE(cdicHdr, sizeof(*cdicHdr), "4b3d");
+    SwapU32(cdicHdr->hdrLen);
+    SwapU32(cdicHdr->codeLen);
 
     assert((0 == code_length) || (cdicHdr->codeLen == code_length));
     code_length = cdicHdr->codeLen;
@@ -462,10 +480,9 @@ bool MobiDoc::ParseHeader()
         return false;
     }
 
-    // the values are in big-endian, so convert to host order (in place)
-    ByteReader rh((char *)&pdbHeader, sizeof(pdbHeader));
-    ok = rh.UnpackBE(&pdbHeader, sizeof(pdbHeader), "32b2w6d8b2d1w");
-    CrashIf(!ok);
+    // the values are in big-endian, so convert to host order
+    // but only those that we actually access
+    SwapU16(pdbHeader.numRecords);
     if (pdbHeader.numRecords < 1)
         return false;
 
@@ -479,10 +496,8 @@ bool MobiDoc::ParseHeader()
     if (!ok || (toRead != bytesRead))
         return false;
 
-    ByteReader rrh((char *)recHeaders, toRead);
     for (int i = 0; i < pdbHeader.numRecords; i++) {
-        ok = rrh.UnpackBE(recHeaders + i, sizeof(recHeaders[0]), "d4b", i * sizeof(recHeaders[0]));
-        CrashIf(!ok);
+        SwapU32(recHeaders[i].offset);
     }
     size_t fileSize = file::GetSize(fileName);
     recHeaders[pdbHeader.numRecords].offset = fileSize;
@@ -509,9 +524,13 @@ bool MobiDoc::ParseHeader()
         return false;
     char *currRecPos = firstRecData;
     PalmDocHeader *palmDocHdr = (PalmDocHeader*)currRecPos;
-    ByteReader rdata(firstRecData, recLeft);
-    ok = rdata.UnpackBE(palmDocHdr, sizeof(*palmDocHdr), "2wd2wd");
-    CrashIf(!ok);
+    currRecPos += sizeof(PalmDocHeader);
+    recLeft -= sizeof(PalmDocHeader);
+
+    SwapU16(palmDocHdr->compressionType);
+    SwapU32(palmDocHdr->uncompressedDocSize);
+    SwapU16(palmDocHdr->recordsCount);
+    SwapU16(palmDocHdr->maxRecSize);
     if (!IsValidCompression(palmDocHdr->compressionType)) {
         lf("unknown compression type");
         return false;
@@ -524,8 +543,6 @@ bool MobiDoc::ParseHeader()
             return false;
         }
     }
-    currRecPos += sizeof(PalmDocHeader);
-    recLeft -= sizeof(PalmDocHeader);
 
     docRecCount = palmDocHdr->recordsCount;
     docUncompressedSize = palmDocHdr->uncompressedDocSize;
@@ -544,12 +561,21 @@ bool MobiDoc::ParseHeader()
         lf("MobiHeader.id is not 'MOBI'");
         return false;
     }
-    CrashIf(currRecPos - firstRecData != sizeof(PalmDocHeader));
-    ok = rdata.UnpackBE(mobiHdr, sizeof(*mobiHdr) - 68, "4b28d32b4d", sizeof(PalmDocHeader));
-    if (!ok) {
-        lf("not enough data to unpack MobiHeader");
-        return false;
-    }
+    SwapU32(mobiHdr->hdrLen);
+    SwapU32(mobiHdr->type);
+    SwapU32(mobiHdr->textEncoding);
+    SwapU32(mobiHdr->mobiFormatVersion);
+    SwapU32(mobiHdr->firstNonBookRec);
+    SwapU32(mobiHdr->fullNameOffset);
+    SwapU32(mobiHdr->fullNameLen);
+    SwapU32(mobiHdr->locale);
+    SwapU32(mobiHdr->minRequiredMobiFormatVersion);
+    SwapU32(mobiHdr->imageFirstRec);
+    SwapU32(mobiHdr->huffmanFirstRec);
+    SwapU32(mobiHdr->huffmanRecCount);
+    SwapU32(mobiHdr->huffmanTableOffset);
+    SwapU32(mobiHdr->huffmanTableLen);
+    SwapU32(mobiHdr->exhtFlags);
 
     textEncoding = mobiHdr->textEncoding;
 
@@ -568,11 +594,11 @@ bool MobiDoc::ParseHeader()
     }
     currRecPos += hdrLen;
     recLeft -= hdrLen;
-    CrashIf(currRecPos - firstRecData != sizeof(PalmDocHeader) + hdrLen);
-
     bool hasExtraFlags = (hdrLen >= 228); // TODO: also only if mobiFormatVersion >= 5?
+
     if (hasExtraFlags) {
-        uint16 flags = rdata.WordBE(sizeof(PalmDocHeader) + 226);
+        SwapU16(mobiHdr->extraDataFlags);
+        uint16 flags = mobiHdr->extraDataFlags;
         multibyte = ((flags & 1) != 0);
         while (flags > 1) {
             if (0 != (flags & 2))
@@ -616,14 +642,27 @@ bool MobiDoc::ParseHeader()
 #define SRCS_REC  0x53524353 // 'SRCS'
 #define VIDE_REC  0x56494445 // 'VIDE'
 
+static uint32 GetUpToFour(uint8*& s, size_t& len)
+{
+    size_t n = 0;
+    uint32 v = *s++; len--;
+    while ((n < 3) && (len > 0)) {
+        v = v << 8;
+        v = v | *s++;
+        len--; n++;
+    }
+    return v;
+}
+
 static bool IsEofRecord(uint8 *data, size_t dataLen)
 {
-    return (4 == dataLen) && (EOF_REC == ByteReader(data, dataLen).DWordBE(0));
+    return (4 == dataLen) && (EOF_REC == GetUpToFour(data, dataLen));
 }
 
 static bool KnownNonImageRec(uint8 *data, size_t dataLen)
 {
-    uint32 sig = ByteReader(data, dataLen).DWordBE(0);
+    uint32 sig = GetUpToFour(data, dataLen);
+
     if (FLIS_REC == sig) return true;
     if (FCIS_REC == sig) return true;
     if (FDST_REC == sig) return true;
