@@ -1441,6 +1441,9 @@
     <ClInclude Include="src\utils\ByteReader.h">
       <Filter>utils</Filter>
     </ClInclude>
+    <ClInclude Include="src\EbookBase.h">
+      <Filter>sumatra\ebook</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\closetoc.bmp">

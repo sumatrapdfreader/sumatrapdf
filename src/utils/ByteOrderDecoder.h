@@ -19,6 +19,8 @@ public:
     uint32 UInt32();
     int32  Int32() { return (int32)UInt32(); }
 
+    void   Bytes(char *dest, size_t len);
+
     void   Skip(size_t len);
     size_t Offset() const { return curr - data; } // for debugging
 

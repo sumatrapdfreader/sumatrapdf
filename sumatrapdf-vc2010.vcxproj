@@ -410,6 +410,7 @@
     <ClInclude Include="src\DisplayState.h" />
     <ClInclude Include="src\DjVuEngine.h" />
     <ClInclude Include="src\Doc.h" />
+    <ClInclude Include="src\EbookBase.h" />
     <ClInclude Include="src\EbookController.h" />
     <ClInclude Include="src\EbookControls.h" />
     <ClInclude Include="src\EngineManager.h" />

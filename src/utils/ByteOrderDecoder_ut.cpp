@@ -1,5 +1,6 @@
 #include "ByteOrderDecoder.h"
 
+#define ABC "abc"
 static void ByteOrderTests()
 {
     unsigned char d1[] = {
@@ -11,11 +12,13 @@ static void ByteOrderTests()
         0x00, 0x00, 0x00, 0x01,
         0x01, 0x00, 0x00, 0x00,
         0xff, 0xff, 0xff, 0xfe,
-        0x02, 0x00
+        0x02, 0x00,
+        'a', 'b', 'c'
     };
 
     {
         uint16 vu16; uint32 vu32;
+        char b[3];
         ByteOrderDecoder d(d1, sizeof(d1), ByteOrderDecoder::LittleEndian);
         assert(0 == d.Offset());
         vu16 = d.UInt16();
@@ -46,10 +49,15 @@ static void ByteOrderTests()
         vu16 = d.UInt16();
         assert(vu16 == 0x200);
         assert(23 == d.Offset());
+
+        d.Bytes(b, 3);
+        assert(memeq(ABC, b, 3));
+        assert(26 == d.Offset());
     }
 
     {
         uint16 vu16; uint32 vu32;
+        char b[3];
         ByteOrderDecoder d(d1, sizeof(d1), ByteOrderDecoder::BigEndian);
         vu16 = d.UInt16();
         assert(vu16 == 1);
@@ -70,10 +78,14 @@ static void ByteOrderTests()
         d.ChangeOrder(ByteOrderDecoder::LittleEndian);
         vu16 = d.UInt16();
         assert(vu16 == 2);
+        d.Bytes(b, 3);
+        assert(memeq(ABC, b, 3));
+        assert(26 == d.Offset());
     }
 
     {
         int16 v16; int32 v32;
+        char b[3];
         ByteOrderDecoder d(d1, sizeof(d1), ByteOrderDecoder::LittleEndian);
         v16 = d.Int16();
         assert(v16 == 0x100);
@@ -94,10 +106,14 @@ static void ByteOrderTests()
         d.ChangeOrder(ByteOrderDecoder::BigEndian);
         v16 = d.Int16();
         assert(v16 == 0x200);
+        d.Bytes(b, 3);
+        assert(memeq(ABC, b, 3));
+        assert(26 == d.Offset());
     }
 
     {
         int16 v16; int32 v32;
+        char b[3];
         ByteOrderDecoder d(d1, sizeof(d1), ByteOrderDecoder::BigEndian);
         v16 = d.Int16();
         assert(v16 == 0x1);
@@ -118,6 +134,10 @@ static void ByteOrderTests()
         d.ChangeOrder(ByteOrderDecoder::LittleEndian);
         v16 = d.Int16();
         assert(v16 == 2);
+        d.Bytes(b, 3);
+        assert(memeq(ABC, b, 3));
+        assert(26 == d.Offset());
     }
-
 }
+
+#undef ABC

@@ -46,9 +46,17 @@ uint32 ByteOrderDecoder::UInt32()
     return v;
 }
 
+void ByteOrderDecoder::Bytes(char *dest, size_t len)
+{
+    CrashIf(left < len);
+    memcpy(dest, curr, len);
+    left -= len;
+    curr += len;
+}
+
 void ByteOrderDecoder::Skip(size_t len)
 {
-    CrashIf(len >= left);
+    CrashIf(left < len);
     left -= len;
     curr += len;
 }
