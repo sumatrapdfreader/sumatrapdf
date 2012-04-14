@@ -311,6 +311,8 @@ class ImageEngineImpl : public ImagesEngine, public ImageEngine {
 public:
     virtual ImageEngine *Clone();
 
+    virtual TCHAR *GetProperty(const char *name);
+
 protected:
     bool LoadSingleFile(const TCHAR *fileName);
     bool LoadFromStream(IStream *stream);
@@ -392,6 +394,52 @@ bool ImageEngineImpl::FinishLoading(Bitmap *bmp)
 
     assert(fileExt);
     return fileExt != NULL;
+}
+
+// cf. http://www.universalthread.com/ViewPageArticle.aspx?ID=831
+#ifndef PropertyTagXPTitle
+#define PropertyTagXPTitle      0x9c9b
+#define PropertyTagXPComment    0x9c9c
+#define PropertyTagXPAuthor     0x9c9d
+#define PropertyTagXPKeywords   0x9c9e
+#define PropertyTagXPSubject    0x9c9f
+#endif
+
+static TCHAR *GetImageProperty(Bitmap *bmp, PROPID id, PROPID altId=0)
+{
+    TCHAR *value = NULL;
+    UINT size = bmp->GetPropertyItemSize(id);
+    PropertyItem *item = (PropertyItem *)malloc(size);
+    Status ok = bmp->GetPropertyItem(id, size, item);
+    if (Ok != ok)
+        /* property didn't exist */;
+    else if (PropertyTagTypeASCII == item->type)
+        value = str::conv::FromAnsi((char *)item->value);
+    else if (PropertyTagTypeByte == item->type && item->length > 0 &&
+        0 == (item->length % 2) && !((WCHAR *)item->value)[item->length / 2 - 1]) {
+        value = str::conv::FromWStr((WCHAR *)item->value);
+    }
+    free(item);
+    if (!value && altId)
+        return GetImageProperty(bmp, altId);
+    return value;
+}
+
+TCHAR *ImageEngineImpl::GetProperty(const char *name)
+{
+    if (str::Eq(name, "Title"))
+        return GetImageProperty(LoadImage(1), PropertyTagImageDescription, PropertyTagXPTitle);
+    if (str::Eq(name, "Subject"))
+        return GetImageProperty(LoadImage(1), PropertyTagXPSubject);
+    if (str::Eq(name, "Author"))
+        return GetImageProperty(LoadImage(1), PropertyTagArtist, PropertyTagXPAuthor);
+    if (str::Eq(name, "Copyright"))
+        return GetImageProperty(LoadImage(1), PropertyTagCopyright);
+    if (str::Eq(name, "CreationDate"))
+        return GetImageProperty(LoadImage(1), PropertyTagDateTime, PropertyTagExifDTDigitized);
+    if (str::Eq(name, "Creator"))
+        return GetImageProperty(LoadImage(1), PropertyTagSoftwareUsed);
+    return NULL;
 }
 
 bool ImageEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)

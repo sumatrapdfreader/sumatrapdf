@@ -55,7 +55,14 @@ struct TgaFooter {
 
 struct TgaExtArea {
     uint16_t    size;
-    uint8_t     fields_11_to_23[492];
+    const char  author[41];
+    const char  comments[4][81];
+    uint16_t    dateTime[6];
+    uint8_t     fields_14_to_15[47];
+    const char  progName[41];
+    uint16_t    progVersion;
+    const char  progVersionC;
+    uint32_t    fields_18_to_23[6];
     uint8_t     alphaType;
 };
 
@@ -83,6 +90,21 @@ static bool HasVersion2Footer(const char *data, size_t len)
         return false;
     TgaFooter *footerLE = (TgaFooter *)(data + len - sizeof(TgaFooter));
     return str::EqN(footerLE->signature, TGA_FOOTER_SIGNATURE, sizeof(footerLE->signature));
+}
+
+static TgaExtArea *GetExtAreaPtr(const char *data, size_t len)
+{
+    if (!HasVersion2Footer(data, len))
+        return NULL;
+    TgaFooter *footerLE = (TgaFooter *)(data + len - sizeof(TgaFooter));
+    if (convLE(footerLE->extAreaOffset) < sizeof(TgaHeader) ||
+        convLE(footerLE->extAreaOffset) + sizeof(TgaExtArea) + sizeof(TgaFooter) > len) {
+        return NULL;
+    }
+    TgaExtArea *extAreaLE = (TgaExtArea *)(data + convLE(footerLE->extAreaOffset));
+    if (convLE(extAreaLE->size) < sizeof(TgaExtArea))
+        return NULL;
+    return extAreaLE;
 }
 
 // note: we only support the more common bit depths:
@@ -129,23 +151,15 @@ static PixelFormat GetPixelFormat(TgaHeader *headerLE, ImageAlpha aType=Alpha_No
 
 static ImageAlpha GetAlphaType(const char *data, size_t len)
 {
-    if (!HasVersion2Footer(data, len))
+    TgaExtArea *extAreaLE = GetExtAreaPtr(data, len);
+    if (!extAreaLE)
         return Alpha_Normal;
 
-    TgaFooter *footerLE = (TgaFooter *)(data + len - sizeof(TgaFooter));
-    if (convLE(footerLE->extAreaOffset) >= sizeof(TgaHeader) &&
-        convLE(footerLE->extAreaOffset) + sizeof(TgaExtArea) + sizeof(TgaFooter) <= len) {
-        TgaExtArea *extAreaLE = (TgaExtArea *)(data + convLE(footerLE->extAreaOffset));
-        if (convLE(extAreaLE->size) >= sizeof(TgaExtArea)) {
-            switch (extAreaLE->alphaType) {
-            case Alpha_Normal:          return Alpha_Normal;
-            case Alpha_Premultiplied:   return Alpha_Premultiplied;
-            default:                    return Alpha_Ignore;
-            }
-        }
+    switch (extAreaLE->alphaType) {
+    case Alpha_Normal:          return Alpha_Normal;
+    case Alpha_Premultiplied:   return Alpha_Premultiplied;
+    default:                    return Alpha_Ignore;
     }
-
-    return Alpha_Normal;
 }
 
 // checks whether this could be data for a TGA image
@@ -163,6 +177,57 @@ bool HasSignature(const char *data, size_t len)
         return false;
     return true;
 
+}
+
+static void SetImageProperty(Bitmap *bmp, PROPID id, const char *asciiValue)
+{
+    PropertyItem item;
+    item.id = id;
+    item.type = PropertyTagTypeASCII;
+    item.value = (void *)asciiValue;
+    item.length = str::Len(asciiValue) + 1;
+    Status ok = bmp->SetPropertyItem(&item);
+    CrashIf(ok != Ok);
+}
+
+static bool IsFieldSet(const char *field, size_t len, bool isBinary=false)
+{
+    for (size_t i = 0; i < len; i++) {
+        if (field[i] && (isBinary || field[i] != ' '))
+            return isBinary || '\0' == field[len - 1];
+    }
+    return false;
+}
+
+static void CopyMetadata(const char *data, size_t len, Bitmap *bmp)
+{
+    TgaExtArea *extAreaLE = GetExtAreaPtr(data, len);
+    if (!extAreaLE)
+        return;
+
+    if (IsFieldSet(extAreaLE->author, sizeof(extAreaLE->author)))
+        SetImageProperty(bmp, PropertyTagArtist, extAreaLE->author);
+    if (IsFieldSet((const char *)extAreaLE->dateTime, sizeof(extAreaLE->dateTime), true)) {
+        char dateTime[20];
+        int count = _snprintf(dateTime, dimof(dateTime), "%04d-%02d-%02d %02d:%02d:%02d",
+            convLE(extAreaLE->dateTime[2]), convLE(extAreaLE->dateTime[1]),
+            convLE(extAreaLE->dateTime[0]), convLE(extAreaLE->dateTime[3]),
+            convLE(extAreaLE->dateTime[4]), convLE(extAreaLE->dateTime[5]));
+        if (19 == count)
+            SetImageProperty(bmp, PropertyTagDateTime, dateTime);
+    }
+    if (IsFieldSet(extAreaLE->progName, sizeof(extAreaLE->progName))) {
+        char software[49];
+        str::BufSet(software, 41, extAreaLE->progName);
+        if (convLE(extAreaLE->progVersion) != 0) {
+            _snprintf(software + str::Len(software), 9, " %d.%d%c",
+                convLE(extAreaLE->progVersion) / 100,
+                convLE(extAreaLE->progVersion) % 100,
+                extAreaLE->progVersionC != ' ' ? extAreaLE->progVersionC : '\0');
+            software[48] = '\0';
+        }
+        SetImageProperty(bmp, PropertyTagSoftwareUsed, software);
+    }
 }
 
 struct ReadState {
@@ -267,11 +332,12 @@ Gdiplus::Bitmap *ImageFromData(const char *data, size_t len)
     bmp.UnlockBits(&bmpData);
     if (s.failed)
         return NULL;
+    CopyMetadata(data, len, &bmp);
     // hack to avoid the use of ::new (because there won't be a corresponding ::delete)
     return bmp.Clone(0, 0, w, h, format);
 }
 
-inline bool memeq3(char *pix1, char *pix2)
+inline bool memeq3(const char *pix1, const char *pix2)
 {
     return *(WORD *)pix1 == *(WORD *)pix2 && pix1[2] == pix2[2];
 }
