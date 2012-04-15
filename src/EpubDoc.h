@@ -81,6 +81,31 @@ public:
     static Fb2Doc *CreateFromFile(const TCHAR *fileName);
 };
 
+class MobiDoc;
+
+class PalmDoc {
+    MobiDoc *mobiDoc;
+    str::Str<char> htmlData;
+    StrVec tocEntries;
+    Vec<ImageData2> images;
+
+    bool Load();
+
+public:
+    PalmDoc(const TCHAR *fileName);
+    ~PalmDoc();
+
+    const char *GetTextData(size_t *lenOut);
+    ImageData *GetImageData(const char *id);
+    const TCHAR *GetFileName() const;
+
+    bool HasToc() const;
+    bool ParseToc(EbookTocVisitor *visitor);
+
+    static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
+    static PalmDoc *CreateFromFile(const TCHAR *fileName);
+};
+
 class TxtDoc {
     ScopedMem<TCHAR> fileName;
     str::Str<char> htmlData;

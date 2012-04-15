@@ -6,6 +6,8 @@
 
 #include "FileUtil.h"
 #include "HtmlPullParser.h"
+#include "MobiDoc.h"
+#include "PdbReader.h"
 #include "TrivialHtmlParser.h"
 #include "WinUtil.h"
 #include "ZipUtil.h"
@@ -651,6 +653,210 @@ bool Fb2Doc::IsSupportedFile(const TCHAR *fileName, bool sniff)
 Fb2Doc *Fb2Doc::CreateFromFile(const TCHAR *fileName)
 {
     Fb2Doc *doc = new Fb2Doc(fileName);
+    if (!doc || !doc->Load()) {
+        delete doc;
+        return NULL;
+    }
+    return doc;
+}
+
+/* PalmDOC (and TealDoc) */
+
+PalmDoc::PalmDoc(const TCHAR *fileName)
+{
+    mobiDoc = MobiDoc::CreateFromFile(fileName);
+}
+
+PalmDoc::~PalmDoc()
+{
+    for (size_t i = 0; i < images.Count(); i++) {
+        free(images.At(i).base.data);
+        free(images.At(i).id);
+    }
+    delete mobiDoc;
+}
+
+#define PDB_TOC_ENTRY_MARK "ToC!Entry!"
+
+// cf. http://wiki.mobileread.com/wiki/TealDoc
+static const char *HandleTealDocTag(str::Str<char>& builder, StrVec& tocEntries, const char *text, size_t len, UINT codePage)
+{
+    if (len < 9) {
+Fallback:
+        builder.Append("&lt;");
+        return text + 1;
+    }
+    if (!str::StartsWithI(text, "<BOOKMARK") &&
+        !str::StartsWithI(text, "<HEADER") &&
+        !str::StartsWithI(text, "<HRULE") &&
+        !str::StartsWithI(text, "<LABEL") &&
+        !str::StartsWithI(text, "<LINK") &&
+        !str::StartsWithI(text, "<TEALPAINT")) {
+        goto Fallback;
+    }
+    HtmlPullParser parser(text, len);
+    HtmlToken *tok = parser.Next();
+    if (!tok->IsStartTag())
+        goto Fallback;
+
+    if (tok->NameIs("BOOKMARK")) {
+        // <BOOKMARK NAME="Contents">
+        AttrInfo *attr = tok->GetAttrByName("NAME");
+        if (attr && attr->valLen > 0) {
+            tocEntries.Append(FromHtmlUtf8(attr->val, attr->valLen));
+            builder.AppendFmt("<a name=" PDB_TOC_ENTRY_MARK "%d>", tocEntries.Count());
+            return tok->s + tok->sLen;
+        }
+    }
+    else if (tok->NameIs("HEADER")) {
+        // <HEADER TEXT="Contents" ALIGN=CENTER STYLE=UNDERLINE>
+        int hx = 2;
+        AttrInfo *attr = tok->GetAttrByName("FONT");
+        if (attr && attr->valLen > 0)
+            hx = '0' == *attr->val ? 5 : '2' == *attr->val ? 1 : 3;
+        attr = tok->GetAttrByName("TEXT");
+        if (attr) {
+            builder.AppendFmt("<h%d>", hx);
+            builder.Append(attr->val, attr->valLen);
+            builder.AppendFmt("</h%d>", hx);
+            return tok->s + tok->sLen;
+        }
+    }
+    else if (tok->NameIs("HRULE")) {
+        // <HRULE STYLE=OUTLINE>
+        builder.Append("<hr>");
+        return tok->s + tok->sLen;
+    }
+    else if (tok->NameIs("LABEL")) {
+        // <LABEL NAME="Contents">
+        AttrInfo *attr = tok->GetAttrByName("NAME");
+        if (attr && attr->valLen > 0) {
+            builder.Append("<a name=\"");
+            builder.Append(attr->val, attr->valLen);
+            builder.Append("\">");
+            return tok->s + tok->sLen;
+        }
+    }
+    else if (tok->NameIs("LINK")) {
+        // <LINK TEXT="Press Me" TAG="Contents" FILE="My Novels">
+        AttrInfo *attrTag = tok->GetAttrByName("TAG");
+        AttrInfo *attrText = tok->GetAttrByName("TEXT");
+        if (attrTag && attrText) {
+            if (tok->GetAttrByName("FILE")) {
+                // skip links to other files
+                return tok->s + tok->sLen;
+            }
+            builder.Append("<a href=\"#");
+            builder.Append(attrTag->val, attrTag->valLen);
+            builder.Append("\">");
+            builder.Append(attrText->val, attrText->valLen);
+            builder.Append("</a>");
+            return tok->s + tok->sLen;
+        }
+    }
+    else if (tok->NameIs("TEALPAINT")) {
+        // <TEALPAINT SRC="Pictures" INDEX=0 LINK=SUPERMAP SUPERIMAGE=1 SUPERW=640 SUPERH=480>
+        AttrInfo *attr = tok->GetAttrByName("SRC");
+        if (attr) {
+            builder.Append("<img src=\"");
+            builder.Append(attr->val, attr->valLen);
+            attr = tok->GetAttrByName("INDEX");
+            if (!attr)
+                attr = tok->GetAttrByName("IMAGE");
+            unsigned int idx;
+            if (attr && str::Parse(attr->val, attr->valLen, "%u", &idx))
+                builder.AppendFmt(";%u", idx);
+            builder.Append("\">");
+            return tok->s + tok->sLen;
+        }
+    }
+    goto Fallback;
+}
+
+bool PalmDoc::Load()
+{
+    if (!mobiDoc)
+        return false;
+    if (Pdb_PalmDoc != mobiDoc->GetDocType() && Pdb_TealDoc != mobiDoc->GetDocType())
+        return false;
+
+    size_t textLen;
+    const char *text = mobiDoc->GetBookHtmlData(textLen);
+    UINT codePage = GuessTextCodepage((char *)text, textLen, CP_ACP);
+    ScopedMem<char> textUtf8(str::ToMultiByte(text, codePage, CP_UTF8));
+    textLen = str::Len(textUtf8);
+
+    htmlData.Append("<body>");
+    for (const char *curr = textUtf8; curr < textUtf8 + textLen; curr++) {
+        if ('&' == *curr)
+            htmlData.Append("&amp;");
+        else if ('<' == *curr)
+            curr = HandleTealDocTag(htmlData, tocEntries, curr, textUtf8 + textLen - curr, codePage);
+        else if ('\n' == *curr || '\r' == *curr && curr + 1 < textUtf8 + textLen && '\n' != *(curr + 1))
+            htmlData.Append("\n<br>");
+        else
+            htmlData.Append(*curr);
+    }
+    htmlData.Append("</body>");
+
+    return true;
+}
+
+const char *PalmDoc::GetTextData(size_t *lenOut)
+{
+    *lenOut = htmlData.Size();
+    return htmlData.Get();
+}
+
+ImageData *PalmDoc::GetImageData(const char *id)
+{
+    for (size_t i = 0; i < images.Count(); i++) {
+        if (str::Eq(images.At(i).id, id))
+            return &images.At(i).base;
+    }
+
+    ImageData2 data = { 0 };
+    // data.base.data = file::ReadAll(path, &data.base.len);
+    if (!data.base.data)
+        return NULL;
+    data.id = str::Dup(id);
+    images.Append(data);
+    return &images.Last().base;
+}
+
+const TCHAR *PalmDoc::GetFileName() const
+{
+    return mobiDoc->GetFileName();
+}
+
+bool PalmDoc::HasToc() const
+{
+    return tocEntries.Count() > 0;
+}
+
+bool PalmDoc::ParseToc(EbookTocVisitor *visitor)
+{
+    for (size_t i = 0; i < tocEntries.Count(); i++) {
+        ScopedMem<TCHAR> name(str::Format(_T(PDB_TOC_ENTRY_MARK) _T("%d"), i + 1));
+        visitor->visit(tocEntries.At(i), name, 1);
+    }
+    return true;
+}
+
+bool PalmDoc::IsSupportedFile(const TCHAR *fileName, bool sniff)
+{
+    if (sniff) {
+        PdbReader pdbReader(fileName);
+        return str::Eq(pdbReader.GetDbType(), "TEXtREAd") ||
+               str::Eq(pdbReader.GetDbType(), "TEXtTlDc");
+    }
+
+    return str::EndsWithI(fileName, _T(".pdb"));
+}
+
+PalmDoc *PalmDoc::CreateFromFile(const TCHAR *fileName)
+{
+    PalmDoc *doc = new PalmDoc(fileName);
     if (!doc || !doc->Load()) {
         delete doc;
         return NULL;

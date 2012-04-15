@@ -185,19 +185,19 @@ $(OS)\EngineDump.obj: src\PdfEngine.h src\utils\Allocator.h src\utils\BaseUtil.h
 $(OS)\EngineDump.obj: src\utils\CmdLineParser.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\EngineDump.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\TgaReader.h
 $(OS)\EngineDump.obj: src\utils\Vec.h src\utils\WinUtil.h
-$(OS)\EpubDoc.obj: src\EbookBase.h src\EpubDoc.h src\utils\Allocator.h
-$(OS)\EpubDoc.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
-$(OS)\EpubDoc.obj: src\utils\HtmlParserLookup.h src\utils\HtmlPullParser.h src\utils\Scoped.h
-$(OS)\EpubDoc.obj: src\utils\StrUtil.h src\utils\TrivialHtmlParser.h src\utils\Vec.h
-$(OS)\EpubDoc.obj: src\utils\WinUtil.h src\utils\ZipUtil.h
+$(OS)\EpubDoc.obj: src\EbookBase.h src\EpubDoc.h src\MobiDoc.h
+$(OS)\EpubDoc.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\FileUtil.h
+$(OS)\EpubDoc.obj: src\utils\GeomUtil.h src\utils\HtmlParserLookup.h src\utils\HtmlPullParser.h
+$(OS)\EpubDoc.obj: src\utils\PdbReader.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OS)\EpubDoc.obj: src\utils\TrivialHtmlParser.h src\utils\Vec.h src\utils\WinUtil.h
+$(OS)\EpubDoc.obj: src\utils\ZipUtil.h
 $(OS)\EpubEngine.obj: src\BaseEngine.h src\ChmDoc.h src\EbookBase.h
 $(OS)\EpubEngine.obj: src\EpubDoc.h src\EpubEngine.h src\HtmlFormatter.h
 $(OS)\EpubEngine.obj: src\MobiDoc.h src\mui\MiniMui.h src\utils\Allocator.h
 $(OS)\EpubEngine.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GdiPlusUtil.h
 $(OS)\EpubEngine.obj: src\utils\GeomUtil.h src\utils\HtmlParserLookup.h src\utils\HtmlPullParser.h
 $(OS)\EpubEngine.obj: src\utils\PdbReader.h src\utils\Scoped.h src\utils\StrUtil.h
-$(OS)\EpubEngine.obj: src\utils\TrivialHtmlParser.h src\utils\Vec.h src\utils\WinUtil.h
-$(OS)\EpubEngine.obj: src\utils\ZipUtil.h
+$(OS)\EpubEngine.obj: src\utils\TrivialHtmlParser.h src\utils\Vec.h src\utils\ZipUtil.h
 $(OS)\ExternalPdfViewer.obj: src\BaseEngine.h src\ChmEngine.h src\DisplayModel.h
 $(OS)\ExternalPdfViewer.obj: src\DisplayState.h src\Doc.h src\ExternalPdfViewer.h
 $(OS)\ExternalPdfViewer.obj: src\FileHistory.h src\SumatraPDF.h src\SumatraWindow.h
