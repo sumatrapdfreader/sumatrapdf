@@ -145,6 +145,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\utils\PdbReader.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\utils\PdbReader.h"
+					>
+				</File>
+				<File
 					RelativePath=".\src\utils\TgaReader.cpp"
 					>
 				</File>

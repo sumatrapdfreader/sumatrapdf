@@ -174,7 +174,7 @@ ENGINE_OBJS = \
 	$(OS)\EpubEngine.obj $(OS)\EpubDoc.obj
 
 EBOOK_OBJS = \
-	$(OS)\MobiDoc.obj $(OS)\HtmlFormatter.obj \
+	$(OS)\MobiDoc.obj $(OU)\PdbReader.obj $(OS)\HtmlFormatter.obj \
 	$(OS)\EbookControls.obj $(OS)\EbookController.obj $(OS)\EbookWindow.obj
 
 SUMATRA_OBJS = \
@@ -198,7 +198,7 @@ UNINSTALLER_OBJS = \
 	$(OS)\Uninstaller.obj $(UNINSTALLER_RES) $(UTILS_OBJS)
 
 TESTER_OBJS = \
-	$(UTILS_OBJS) $(MUI_OBJS) $(OS)\Tester.obj \
+	$(UTILS_OBJS) $(MUI_OBJS) $(OS)\Tester.obj $(OU)\PdbReader.obj \
 	$(OS)\HtmlFormatter.obj $(OU)\NoFreeAllocator.obj $(OS)\MobiDoc.obj \
 	$(OS)\Doc.obj $(ENGINE_OBJS) $(LIBMUPDF_LIB) $(OS)\MuPDF_Exports.obj
 
@@ -219,7 +219,7 @@ BROWSER_PLUGIN_OBJS = \
 ENGINEDUMP_OBJS = \
 	$(OS)\EngineDump.obj $(ENGINE_OBJS) $(LIBS_OBJS) $(UTILS_OBJS) \
 	$(OS)\HtmlFormatter.obj $(OMUI)\MiniMui.obj $(OS)\MobiDoc.obj \
-	$(OS)\Doc.obj
+	$(OS)\Doc.obj $(OU)\PdbReader.obj
 
 MEMTRACE_OBJS = \
 	$(OM)\MemTraceDll.obj $(UTILS_OBJS)

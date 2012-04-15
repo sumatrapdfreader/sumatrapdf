@@ -14,6 +14,7 @@ using namespace Gdiplus;
 #include "HtmlPullParser.h"
 #include "HtmlFormatter.h"
 #include "MiniMui.h"
+#include "PdbReader.h"
 #include "TrivialHtmlParser.h"
 #include "WinUtil.h"
 #include "ZipUtil.h"
@@ -1067,10 +1068,8 @@ DocTocItem *MobiEngineImpl::GetTocTree()
 bool MobiEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
 {
     if (sniff) {
-        char header[kPdbHeaderLen];
-        ZeroMemory(header, sizeof(header));
-        file::ReadAll(fileName, header, sizeof(header));
-        return str::EqN(header + 60, "BOOKMOBI", 8);
+        PdbReader pdbReader(fileName);
+        return str::Eq(pdbReader.GetDbType(), "BOOKMOBI");
     }
 
     return str::EndsWithI(fileName, _T(".mobi")) ||
@@ -1224,11 +1223,9 @@ DocTocItem *PdbEngineImpl::GetTocTree()
 bool PdbEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
 {
     if (sniff) {
-        char header[kPdbHeaderLen];
-        ZeroMemory(header, sizeof(header));
-        file::ReadAll(fileName, header, sizeof(header));
-        return str::EqN(header + 60, "TEXtREAd", 8) ||
-               str::EqN(header + 60, "TEXtTlDc", 8);
+        PdbReader pdbReader(fileName);
+        return str::Eq(pdbReader.GetDbType(), "TEXtREAd") ||
+               str::Eq(pdbReader.GetDbType(), "TEXtTlDc");
     }
 
     return str::EndsWithI(fileName, _T(".pdb"));

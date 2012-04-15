@@ -4,45 +4,17 @@
 #ifndef MobiDoc_h
 #define MobiDoc_h
 
+class PdbReader;
 class HuffDicDecompressor;
 struct ImageData;
-
-// http://en.wikipedia.org/wiki/PDB_(Palm_OS)
-#define kDBNameLength    32
-#define kPdbHeaderLen    78
-
-struct PdbHeader
-{
-     /* 31 chars + 1 null terminator */
-    char        name[kDBNameLength];
-    uint16      attributes;
-    uint16      version;
-    uint32      createTime;
-    uint32      modifyTime;
-    uint32      backupTime;
-    uint32      modificationNumber;
-    uint32      appInfoID;
-    uint32      sortInfoID;
-    char        typeCreator[8];
-    uint32      idSeed;
-    uint32      nextRecordList;
-    uint16      numRecords;
-};
-
-#define kMaxRecordSize 64*1024
 
 enum PdbDocType { Pdb_Unknown, Pdb_Mobipocket, Pdb_PalmDoc, Pdb_TealDoc };
 
 class MobiDoc
 {
     TCHAR *             fileName;
-    HANDLE              fileHandle;
 
-    PdbHeader           pdbHeader;
-    // offset of each pdb record within the file + a sentinel
-    // value equal to file size to simplify use
-    Vec<uint32>         recordOffsets;
-    char *              firstRecData;
+    PdbReader *         pdbReader;
 
     PdbDocType          docType;
     size_t              docRecCount;
@@ -54,21 +26,13 @@ class MobiDoc
     size_t              trailersCount;
     size_t              imageFirstRec; // 0 if no images
 
-    // we use bufStatic if record fits in it, bufDynamic otherwise
-    char                bufStatic[kMaxRecordSize];
-    char *              bufDynamic;
-    size_t              bufDynamicSize;
-
     ImageData *         images;
 
     HuffDicDecompressor *huffDic;
 
-    MobiDoc();
+    MobiDoc(const TCHAR *filePath);
 
     bool    ParseHeader();
-    char *  GetBufForRecordData(size_t size);
-    size_t  GetRecordSize(size_t recNo);
-    char*   ReadRecord(size_t recNo, size_t& sizeOut);
     bool    LoadDocRecordIntoBuffer(size_t recNo, str::Str<char>& strOut);
     void    LoadImages();
     bool    LoadImage(size_t imageNo);
