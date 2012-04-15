@@ -51,7 +51,7 @@ bool PdbReader::ParseHeader()
     CrashIf(recOffsets.Count() > 0);
 
     PdbHeader pdbHeader;
-    if (dataSize < sizeof(pdbHeader))
+    if (!data || dataSize < sizeof(pdbHeader))
         return false;
     ByteReader r(data, dataSize);
 

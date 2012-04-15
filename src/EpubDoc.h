@@ -90,6 +90,7 @@ class PalmDoc {
     Vec<ImageData2> images;
 
     bool Load();
+    char *LoadTealPaintImage(const TCHAR *dbFile, size_t idx, size_t *lenOut);
 
 public:
     PalmDoc(const TCHAR *fileName);
