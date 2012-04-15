@@ -999,19 +999,21 @@ char *PalmDoc::LoadTealPaintImage(const TCHAR *dbFile, size_t idx, size_t *lenOu
             uint8_t c = r.Read();
             switch (hdr.depth) {
             case 1:
-                for (int i = 0; i < 8 && x + i < hdr.width; i++) {
-                    tgaData.Append(c & (1 << (7 - i)) ? 255 : 0);
+                for (int i = 0; i < 8; i++, x++, c <<= 1) {
+                    if (x < hdr.width)
+                        tgaData.Append(c & 0x80 ? 255 : 0);
                 }
-                x += 8;
                 break;
             case 2:
-                for (int z = 0; z < 4 && x < hdr.width; z++, c <<= 2, x++) {
-                    tgaData.Append(paletteIdx2[(c >> 6) & 0x3]);
+                for (int i = 0; i < 4; i++, x++, c <<= 2) {
+                    if (x < hdr.width)
+                        tgaData.Append(paletteIdx2[(c & 0xC0) >> 6]);
                 }
                 break;
             case 4:
-                for (int z = 0; z < 2 && x < hdr.width; z++, c <<= 4, x++) {
-                    tgaData.Append(paletteIdx4[(c >> 4) & 0xF]);
+                for (int i = 0; i < 2; i++, x++, c <<= 4) {
+                    if (x < hdr.width)
+                        tgaData.Append(paletteIdx4[(c & 0xF0) >> 4]);
                 }
                 break;
             case 8:
@@ -1032,8 +1034,6 @@ char *PalmDoc::LoadTealPaintImage(const TCHAR *dbFile, size_t idx, size_t *lenOu
                 CrashIf(true);
             }
         }
-        if (hdr.compression && (2 == hdr.depth || 4 == hdr.depth) && (bwidth % 2))
-            r.Read();
     }
 
     if (lenOut)
