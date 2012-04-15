@@ -13,6 +13,8 @@ struct ImageData2 {
     size_t  idx; // document specific index at which to find this image
 };
 
+/* ********** EPUB ********** */
+
 class EpubDoc {
     ZipFile zip;
     str::Str<char> htmlData;
@@ -45,6 +47,8 @@ public:
     static EpubDoc *CreateFromFile(const TCHAR *fileName);
     static EpubDoc *CreateFromStream(IStream *stream);
 };
+
+/* ********** FictionBook (FB2) ********** */
 
 class HtmlPullParser;
 struct HtmlToken;
@@ -81,16 +85,19 @@ public:
     static Fb2Doc *CreateFromFile(const TCHAR *fileName);
 };
 
-class MobiDoc;
+/* ********** PalmDOC (and TealDoc) ********** */
+
+class PdbReader;
 
 class PalmDoc {
-    MobiDoc *mobiDoc;
+    ScopedMem<TCHAR> fileName;
     str::Str<char> htmlData;
-    StrVec tocEntries;
     Vec<ImageData2> images;
+    StrVec tocEntries;
 
     bool Load();
     char *LoadTealPaintImage(const TCHAR *dbFile, size_t idx, size_t *lenOut);
+    char *GetTealPaintImageName(PdbReader *pdbReader, size_t idx);
 
 public:
     PalmDoc(const TCHAR *fileName);
@@ -107,26 +114,7 @@ public:
     static PalmDoc *CreateFromFile(const TCHAR *fileName);
 };
 
-class TxtDoc {
-    ScopedMem<TCHAR> fileName;
-    str::Str<char> htmlData;
-    bool isRFC;
-
-    bool Load();
-
-public:
-    TxtDoc(const TCHAR *fileName);
-
-    const char *GetTextData(size_t *lenOut);
-    const TCHAR *GetFileName() const;
-
-    bool IsRFC() const;
-    bool HasToc() const;
-    bool ParseToc(EbookTocVisitor *visitor);
-
-    static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
-    static TxtDoc *CreateFromFile(const TCHAR *fileName);
-};
+/* ********** Plain HTML ********** */
 
 class HtmlDoc {
     ScopedMem<TCHAR> fileName;
@@ -149,6 +137,29 @@ public:
 
     static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
     static HtmlDoc *CreateFromFile(const TCHAR *fileName);
+};
+
+/* ********** Plain Text ********** */
+
+class TxtDoc {
+    ScopedMem<TCHAR> fileName;
+    str::Str<char> htmlData;
+    bool isRFC;
+
+    bool Load();
+
+public:
+    TxtDoc(const TCHAR *fileName);
+
+    const char *GetTextData(size_t *lenOut);
+    const TCHAR *GetFileName() const;
+
+    bool IsRFC() const;
+    bool HasToc() const;
+    bool ParseToc(EbookTocVisitor *visitor);
+
+    static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
+    static TxtDoc *CreateFromFile(const TCHAR *fileName);
 };
 
 char *NormalizeURL(const char *url, const char *base);

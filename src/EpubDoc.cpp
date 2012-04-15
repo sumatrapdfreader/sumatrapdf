@@ -13,6 +13,8 @@
 #include "WinUtil.h"
 #include "ZipUtil.h"
 
+/* ********** Codepage conversion helpers ********** */
+
 inline TCHAR *FromHtmlUtf8(const char *s, size_t len)
 {
     ScopedMem<char> tmp(str::DupN(s, len));
@@ -71,8 +73,7 @@ static UINT GetCodepageFromPI(const char *xmlPI)
     return CP_ACP;
 }
 
-
-/* URL handling helpers */
+/* ********** URL handling helpers ********** */
 
 char *NormalizeURL(const char *url, const char *base)
 {
@@ -164,7 +165,7 @@ static char *Base64Decode(const char *s, const char *end, size_t *len)
     return result;
 }
 
-/* EPUB */
+/* ********** EPUB ********** */
 
 EpubDoc::EpubDoc(const TCHAR *fileName) :
     zip(fileName), fileName(str::Dup(fileName)) { }
@@ -464,7 +465,7 @@ EpubDoc *EpubDoc::CreateFromStream(IStream *stream)
     return doc;
 }
 
-/* FictionBook2 */
+/* ********** FictionBook ********** */
 
 Fb2Doc::Fb2Doc(const TCHAR *fileName) : fileName(str::Dup(fileName)),
     isZipped(false), hasToc(false) { }
@@ -661,12 +662,9 @@ Fb2Doc *Fb2Doc::CreateFromFile(const TCHAR *fileName)
     return doc;
 }
 
-/* PalmDOC (and TealDoc) */
+/* ********** PalmDOC (and TealDoc) ********** */
 
-PalmDoc::PalmDoc(const TCHAR *fileName)
-{
-    mobiDoc = MobiDoc::CreateFromFile(fileName);
-}
+PalmDoc::PalmDoc(const TCHAR *fileName) : fileName(str::Dup(fileName)) { }
 
 PalmDoc::~PalmDoc()
 {
@@ -674,7 +672,6 @@ PalmDoc::~PalmDoc()
         free(images.At(i).base.data);
         free(images.At(i).id);
     }
-    delete mobiDoc;
 }
 
 #define PDB_TOC_ENTRY_MARK "ToC!Entry!"
@@ -776,10 +773,28 @@ Fallback:
 
 bool PalmDoc::Load()
 {
-    if (!mobiDoc)
+    MobiDoc *mobiDoc = MobiDoc::CreateFromFile(fileName);
+    if (!mobiDoc) {
+        // just display all images out of a TealPaint database
+        PdbReader pdb(fileName);
+        if (str::Eq(pdb.GetDbType(), "DataTlPt")) {
+            ScopedMem<char> src(str::conv::ToUtf8(path::GetBaseName(fileName)));
+            for (uint32_t i = 0; i < pdb.GetRecordCount(); i++) {
+                if (htmlData.Size() > 0)
+                    htmlData.Append("<hr>");
+                htmlData.AppendFmt("<p align=center id=\"" PDB_TOC_ENTRY_MARK "%u\"><img src=\"%s:%u\"></p>", i + 1, src, i);
+                ScopedMem<char> name(GetTealPaintImageName(&pdb, i));
+                if (!name)
+                    name.Set(str::Format("Index %u", i + 1));
+                tocEntries.Append(str::conv::FromAnsi(name));
+            }
+        }
+        return htmlData.Size() > 0;
+    }
+    if (Pdb_PalmDoc != mobiDoc->GetDocType() && Pdb_TealDoc != mobiDoc->GetDocType()) {
+        delete mobiDoc;
         return false;
-    if (Pdb_PalmDoc != mobiDoc->GetDocType() && Pdb_TealDoc != mobiDoc->GetDocType())
-        return false;
+    }
 
     size_t textLen;
     const char *text = mobiDoc->GetBookHtmlData(textLen);
@@ -787,7 +802,6 @@ bool PalmDoc::Load()
     ScopedMem<char> textUtf8(str::ToMultiByte(text, codePage, CP_UTF8));
     textLen = str::Len(textUtf8);
 
-    htmlData.Append("<body>");
     for (const char *curr = textUtf8; curr < textUtf8 + textLen; curr++) {
         if ('&' == *curr)
             htmlData.Append("&amp;");
@@ -798,8 +812,8 @@ bool PalmDoc::Load()
         else
             htmlData.Append(*curr);
     }
-    htmlData.Append("</body>");
 
+    delete mobiDoc;
     return true;
 }
 
@@ -838,7 +852,7 @@ ImageData *PalmDoc::GetImageData(const char *id)
 
 const TCHAR *PalmDoc::GetFileName() const
 {
-    return mobiDoc->GetFileName();
+    return fileName;
 }
 
 bool PalmDoc::HasToc() const
@@ -910,6 +924,9 @@ public:
 char *PalmDoc::LoadTealPaintImage(const TCHAR *dbFile, size_t idx, size_t *lenOut)
 {
     PdbReader pdbReader(dbFile);
+    if (!str::Eq(pdbReader.GetDbType(), "DataTlPt"))
+        return NULL;
+
     size_t size;
     const char *data = pdbReader.GetRecord(idx, &size);
     if (!data || size < sizeof(sizeof(TealPaintHeader)))
@@ -1024,12 +1041,28 @@ char *PalmDoc::LoadTealPaintImage(const TCHAR *dbFile, size_t idx, size_t *lenOu
     return (char *)tgaData.StealData();
 }
 
+char *PalmDoc::GetTealPaintImageName(PdbReader *pdbReader, size_t idx)
+{
+    size_t size;
+    const char *data = pdbReader->GetRecord(idx, &size);
+    if (!data || size < sizeof(sizeof(TealPaintHeader)))
+        return NULL;
+
+    TealPaintHeader hdr;
+    bool ok = ByteReader(data, size).UnpackBE(&hdr, sizeof(hdr), "5d2b3w");
+    CrashIf(!ok);
+    if (hdr.headSize < sizeof(hdr) - 2 || hdr.nameOffset >= size)
+        return NULL;
+    return str::DupN(data + hdr.nameOffset, size - hdr.nameOffset);
+}
+
 bool PalmDoc::IsSupportedFile(const TCHAR *fileName, bool sniff)
 {
     if (sniff) {
         PdbReader pdbReader(fileName);
         return str::Eq(pdbReader.GetDbType(), "TEXtREAd") ||
-               str::Eq(pdbReader.GetDbType(), "TEXtTlDc");
+               str::Eq(pdbReader.GetDbType(), "TEXtTlDc") ||
+               str::Eq(pdbReader.GetDbType(), "DataTlPt");
     }
 
     return str::EndsWithI(fileName, _T(".pdb"));
@@ -1045,7 +1078,7 @@ PalmDoc *PalmDoc::CreateFromFile(const TCHAR *fileName)
     return doc;
 }
 
-/* HTML */
+/* ********** Plain HTML ********** */
 
 HtmlDoc::HtmlDoc(const TCHAR *fileName) : fileName(str::Dup(fileName)) { }
 
@@ -1144,7 +1177,7 @@ HtmlDoc *HtmlDoc::CreateFromFile(const TCHAR *fileName)
     return doc;
 }
 
-/* Plain Text */
+/* ********** Plain Text ********** */
 
 TxtDoc::TxtDoc(const TCHAR *fileName) : fileName(str::Dup(fileName)), isRFC(false) { }
 
