@@ -980,6 +980,10 @@ void HtmlFormatter::HandleHtmlTag(HtmlToken *t)
     } else if (Tag_Tr == tag) {
         // display tables row-by-row for now
         FlushCurrLine(true);
+        if (t->IsStartTag())
+            SetAlignment(Align_Left);
+        else if (t->IsEndTag())
+            RevertStyleChange();
     } else if (Tag_Code == tag || Tag_Tt == tag) {
         if (t->IsStartTag())
             SetFont(L"Courier New", (FontStyle)CurrFont()->GetStyle());
