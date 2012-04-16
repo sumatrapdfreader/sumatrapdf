@@ -90,7 +90,7 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
     else
         di.lpszDocName = engine.FileName();
 
-    int current = 0, total = 0;
+    int current = 1, total = 0;
     for (size_t i = 0; i < pd.ranges.Count(); i++) {
         if (pd.ranges.At(i).nToPage < pd.ranges.At(i).nFromPage)
             total += pd.ranges.At(i).nFromPage - pd.ranges.At(i).nToPage + 1;
@@ -122,6 +122,9 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
 
     if (pd.sel.Count() > 0) {
         for (size_t i = 0; i < pd.sel.Count(); i++) {
+            if (progressUI)
+                progressUI->UpdateProgress(current, total);
+
             StartPage(hdc);
             RectD *clipRegion = &pd.sel.At(i).rect;
 
@@ -154,14 +157,11 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
                 return;
             }
 
-            current++;
-            if (progressUI) {
-                if (progressUI->WasCanceled()) {
-                    AbortDoc(hdc);
-                    return;
-                }
-                progressUI->UpdateProgress(current, total);
+            if (progressUI && progressUI->WasCanceled()) {
+                AbortDoc(hdc);
+                return;
             }
+            current++;
         }
 
         EndDoc(hdc);
@@ -175,6 +175,8 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
             if ((PrintRangeEven == pd.rangeAdv && pageNo % 2 != 0) ||
                 (PrintRangeOdd == pd.rangeAdv && pageNo % 2 == 0))
                 continue;
+            if (progressUI)
+                progressUI->UpdateProgress(current, total);
 
             StartPage(hdc);
             // MM_TEXT: Each logical unit is mapped to one device pixel.
@@ -250,14 +252,11 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
                 return;
             }
 
-            current++;
-            if (progressUI) {
-                if (progressUI->WasCanceled()) {
-                    AbortDoc(hdc);
-                    return;
-                }
-                progressUI->UpdateProgress(current, total);
+            if (progressUI && progressUI->WasCanceled()) {
+                AbortDoc(hdc);
+                return;
             }
+            current++;
         }
     }
 
