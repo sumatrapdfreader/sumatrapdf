@@ -97,7 +97,8 @@ class PalmDoc {
 
     bool Load();
     char *LoadTealPaintImage(const TCHAR *dbFile, size_t idx, size_t *lenOut);
-    char *GetTealPaintImageName(PdbReader *pdbReader, size_t idx);
+    bool LoadTealPaintImageTile(PdbReader *pdbReader, size_t idx, uint8_t *pixels, int left, int top, int width, int height, int stride, bool hasPalette);
+    char *GetTealPaintImageName(PdbReader *pdbReader, size_t idx, bool& isValid);
 
 public:
     PalmDoc(const TCHAR *fileName);
