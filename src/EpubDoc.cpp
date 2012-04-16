@@ -249,7 +249,7 @@ bool EpubDoc::Load()
             data.idx = zip.GetFileIndex(imgPath);
             images.Append(data);
         }
-        else if (str::Eq(mediatype, _T("application/x-dtbncx+xml"))) {
+        else if (str::Eq(mediatype, _T("application/x-dtbncx+xml")) && !tocPath) {
             // EPUB 2 ToC
             tocPath.Set(node->GetAttribute("href"));
             if (tocPath) {
@@ -296,6 +296,7 @@ void EpubDoc::ParseMetadata(const char *content)
         "dc:title",         "Title",
         "dc:creator",       "Author",
         "dc:date",          "CreationDate",
+        "dcterms:modified", "ModDate",
         "dc:description",   "Subject",
         "dc:rights",        "Copyright",
     };
@@ -315,7 +316,9 @@ void EpubDoc::ParseMetadata(const char *content)
             continue;
 
         for (int i = 0; i < dimof(metadataMap); i += 2) {
-            if (tok->NameIs(metadataMap[i])) {
+            if (tok->NameIs(metadataMap[i]) ||
+                Tag_Meta == tok->tag && tok->GetAttrByName("property") &&
+                tok->GetAttrByName("property")->ValIs(metadataMap[i])) {
                 tok = pullParser.Next();
                 if (!tok->IsText())
                     break;
@@ -378,7 +381,7 @@ bool EpubDoc::ParseNavToc(const char *data, size_t dataLen, const char *pagePath
 {
     HtmlPullParser parser(data, dataLen);
     HtmlToken *tok;
-    // skip to the start of the nav
+    // skip to the start of the <nav epub:type="toc">
     while ((tok = parser.Next()) && !tok->IsError()) {
         if (tok->IsStartTag() && Tag_Nav == tok->tag) {
             AttrInfo *attr = tok->GetAttrByName("epub:type");
