@@ -22,9 +22,12 @@ class EpubDoc {
     Vec<const char *> props;
     ScopedMem<TCHAR> tocPath;
     ScopedMem<TCHAR> fileName;
+    bool isNcxToc;
 
     bool Load();
     void ParseMetadata(const char *content);
+    bool ParseNavToc(const char *data, size_t dataLen, const char *pagePath, EbookTocVisitor *visitor);
+    bool ParseNcxToc(const char *data, size_t dataLen, const char *pagePath, EbookTocVisitor *visitor);
 
     static bool VerifyEpub(ZipFile& zip);
 

@@ -101,6 +101,7 @@ HtmlTag FindHtmlTag(const char *name, size_t len)
     case CS4('m','e','t','a'):
         if (4 == len) return Tag_Meta;
         break;
+    case CS3('n','a','v'): return Tag_Nav;
     case CS4('o','b','j','e'):
         if (6 == len && CS2('c','t') == STR2i(name + 4)) return Tag_Object;
         break;

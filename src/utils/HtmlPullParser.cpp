@@ -189,19 +189,19 @@ char *ResolveHtmlEntities(const char *s, size_t len)
     return (char *)tmp;
 }
 
-static bool StrLenIs(const char *s, size_t len, const char *s2)
+inline bool StrEqNIx(const char *s, size_t len, const char *s2)
 {
     return str::Len(s2) == len && str::StartsWithI(s, s2);
 }
 
 bool AttrInfo::NameIs(const char *s) const
 {
-    return StrLenIs(name, nameLen, s);
+    return StrEqNIx(name, nameLen, s);
 }
 
 bool AttrInfo::ValIs(const char *s) const
 {
-    return StrLenIs(val, valLen, s);
+    return StrEqNIx(val, valLen, s);
 }
 
 void HtmlToken::SetTag(TokenType new_type, const char *new_s, const char *end)

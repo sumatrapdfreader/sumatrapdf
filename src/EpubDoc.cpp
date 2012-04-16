@@ -168,10 +168,10 @@ static char *Base64Decode(const char *s, const char *end, size_t *len)
 /* ********** EPUB ********** */
 
 EpubDoc::EpubDoc(const TCHAR *fileName) :
-    zip(fileName), fileName(str::Dup(fileName)) { }
+    zip(fileName), fileName(str::Dup(fileName)), isNcxToc(false) { }
 
 EpubDoc::EpubDoc(IStream *stream) :
-    zip(stream), fileName(NULL) { }
+    zip(stream), fileName(NULL), isNcxToc(false) { }
 
 EpubDoc::~EpubDoc()
 {
@@ -224,6 +224,12 @@ bool EpubDoc::Load()
         if (str::Eq(mediatype, _T("application/xhtml+xml"))) {
             ScopedMem<TCHAR> htmlPath(node->GetAttribute("href"));
             ScopedMem<TCHAR> htmlId(node->GetAttribute("id"));
+            // EPUB 3 ToC
+            ScopedMem<TCHAR> props(node->GetAttribute("properties"));
+            if (props && str::Find(props, _T("nav"))) {
+                isNcxToc = false;
+                tocPath.Set(str::Join(contentPath, htmlPath));
+            }
             if (htmlPath && htmlId) {
                 idPathMap.Append(htmlId.StealData());
                 idPathMap.Append(htmlPath.StealData());
@@ -235,18 +241,21 @@ bool EpubDoc::Load()
             ScopedMem<TCHAR> imgPath(node->GetAttribute("href"));
             if (!imgPath)
                 continue;
-            ScopedMem<TCHAR> zipPath(str::Join(contentPath, imgPath));
-            UrlDecode(zipPath);
+            imgPath.Set(str::Join(contentPath, imgPath));
             // load the image lazily
             ImageData2 data = { 0 };
             data.id = str::conv::ToUtf8(imgPath);
-            data.idx = zip.GetFileIndex(zipPath);
+            UrlDecode(imgPath);
+            data.idx = zip.GetFileIndex(imgPath);
             images.Append(data);
         }
         else if (str::Eq(mediatype, _T("application/x-dtbncx+xml"))) {
+            // EPUB 2 ToC
             tocPath.Set(node->GetAttribute("href"));
-            if (tocPath)
+            if (tocPath) {
                 tocPath.Set(str::Join(contentPath, tocPath));
+                isNcxToc = true;
+            }
         }
     }
 
@@ -273,7 +282,7 @@ bool EpubDoc::Load()
             continue;
         // insert explicit page-breaks between sections including
         // an anchor with the file name at the top (for internal links)
-        ScopedMem<char> utf8_path(str::conv::ToUtf8(htmlPath));
+        ScopedMem<char> utf8_path(str::conv::ToUtf8(fullPath));
         htmlData.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", utf8_path);
         htmlData.Append(html);
     }
@@ -365,16 +374,56 @@ bool EpubDoc::HasToc() const
     return tocPath != NULL;
 }
 
-bool EpubDoc::ParseToc(EbookTocVisitor *visitor)
+bool EpubDoc::ParseNavToc(const char *data, size_t dataLen, const char *pagePath, EbookTocVisitor *visitor)
 {
-    if (!tocPath)
-        return false;
-    size_t tocDataLen;
-    ScopedMem<char> tocData(zip.GetFileData(tocPath, &tocDataLen));
-    if (!tocData)
+    HtmlPullParser parser(data, dataLen);
+    HtmlToken *tok;
+    // skip to the start of the nav
+    while ((tok = parser.Next()) && !tok->IsError()) {
+        if (tok->IsStartTag() && Tag_Nav == tok->tag) {
+            AttrInfo *attr = tok->GetAttrByName("epub:type");
+            if (attr && attr->ValIs("toc"))
+                break;
+        }
+    }
+    if (!tok || tok->IsError())
         return false;
 
-    HtmlPullParser parser(tocData, tocDataLen);
+    int level = 0;
+    while ((tok = parser.Next()) && !tok->IsError() && (!tok->IsEndTag() || Tag_Nav != tok->tag)) {
+        if (tok->IsStartTag() && Tag_Ol == tok->tag)
+            level++;
+        else if (tok->IsEndTag() && Tag_Ol == tok->tag && level > 0)
+            level--;
+        if (tok->IsStartTag() && Tag_A == tok->tag) {
+            AttrInfo *attrInfo = tok->GetAttrByName("href");
+            if (!attrInfo)
+                continue;
+            ScopedMem<char> href(str::DupN(attrInfo->val, attrInfo->valLen));
+            ScopedMem<char> text;
+            while ((tok = parser.Next()) && !tok->IsError() && (!tok->IsEndTag() || Tag_A != tok->tag)) {
+                if (tok->IsText()) {
+                    ScopedMem<char> part(str::DupN(tok->s, tok->sLen));
+                    if (!text)
+                        text.Set(part.StealData());
+                    else
+                        text.Set(str::Join(text, part));
+                }
+            }
+            href.Set(NormalizeURL(href, pagePath));
+            ScopedMem<TCHAR> itemSrc(FromHtmlUtf8(href, str::Len(href)));
+            ScopedMem<TCHAR> itemText(str::conv::FromUtf8(text));
+            str::NormalizeWS(itemText);
+            visitor->visit(itemText, itemSrc, level);
+        }
+    }
+
+    return true;
+}
+
+bool EpubDoc::ParseNcxToc(const char *data, size_t dataLen, const char *pagePath, EbookTocVisitor *visitor)
+{
+    HtmlPullParser parser(data, dataLen);
     HtmlToken *tok;
     // skip to the start of the navMap
     while ((tok = parser.Next()) && !tok->IsError()) {
@@ -386,7 +435,6 @@ bool EpubDoc::ParseToc(EbookTocVisitor *visitor)
 
     ScopedMem<TCHAR> itemText, itemSrc;
     int level = 0;
-
     while ((tok = parser.Next()) && !tok->IsError() && (!tok->IsEndTag() || !tok->NameIs("navMap") && !tok->NameIs("ncx:navMap"))) {
         if (tok->IsTag() && (tok->NameIs("navPoint") || tok->NameIs("ncx:navPoint"))) {
             if (itemText) {
@@ -396,7 +444,7 @@ bool EpubDoc::ParseToc(EbookTocVisitor *visitor)
             }
             if (tok->IsStartTag())
                 level++;
-            else if (tok->IsEndTag())
+            else if (tok->IsEndTag() && level > 0)
                 level--;
         }
         else if (tok->IsStartTag() && (tok->NameIs("text") || tok->NameIs("ncx:text"))) {
@@ -408,12 +456,30 @@ bool EpubDoc::ParseToc(EbookTocVisitor *visitor)
         }
         else if (tok->IsTag() && !tok->IsEndTag() && (tok->NameIs("content") || tok->NameIs("ncx:content"))) {
             AttrInfo *attrInfo = tok->GetAttrByName("src");
-            if (attrInfo)
-                itemSrc.Set(FromHtmlUtf8(attrInfo->val, attrInfo->valLen));
+            if (attrInfo) {
+                ScopedMem<char> src(str::DupN(attrInfo->val, attrInfo->valLen));
+                src.Set(NormalizeURL(src, pagePath));
+                itemSrc.Set(FromHtmlUtf8(src, str::Len(src)));
+            }
         }
     }
 
     return true;
+}
+
+bool EpubDoc::ParseToc(EbookTocVisitor *visitor)
+{
+    if (!tocPath)
+        return false;
+    size_t tocDataLen;
+    ScopedMem<char> tocData(zip.GetFileData(tocPath, &tocDataLen));
+    if (!tocData)
+        return false;
+
+    ScopedMem<char> pagePath(str::conv::ToUtf8(tocPath));
+    if (isNcxToc)
+        return ParseNcxToc(tocData, tocDataLen, pagePath, visitor);
+    return ParseNavToc(tocData, tocDataLen, pagePath, visitor);
 }
 
 bool EpubDoc::VerifyEpub(ZipFile& zip)
@@ -1190,11 +1256,11 @@ bool HtmlDoc::Load()
             AttrInfo *attrValue = tok->GetAttrByName("content");
             if (!attrName || !attrValue)
                 /* ignore this tag */;
-            else if (6 == attrName->valLen && str::EqNI(attrName->val, "author", 6))
+            else if (attrName->ValIs("author"))
                 author.Set(FromHtmlUtf8(attrValue->val, attrValue->valLen));
-            else if (4 == attrName->valLen && str::EqNI(attrName->val, "date", 6))
+            else if (attrName->ValIs("date"))
                 date.Set(FromHtmlUtf8(attrValue->val, attrValue->valLen));
-            else if (9 == attrName->valLen && str::EqNI(attrName->val, "copyright", 6))
+            else if (attrName->ValIs("copyright"))
                 copyright.Set(FromHtmlUtf8(attrValue->val, attrValue->valLen));
         }
     }
