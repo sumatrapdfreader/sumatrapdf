@@ -1178,14 +1178,25 @@ bool HtmlDoc::Load()
 
     HtmlPullParser parser(htmlData, str::Len(htmlData));
     HtmlToken *tok;
-    while ((tok = parser.Next()) && !tok->IsError()) {
-        if (tok->IsStartTag() && (Tag_Title == tok->tag || Tag_Body == tok->tag || Tag_P == tok->tag))
-            break;
-    }
-    if (tok->IsStartTag() && Tag_Title == tok->tag) {
-        tok = parser.Next();
-        if (tok->IsText())
-            title.Set(FromHtmlUtf8(tok->s, tok->sLen));
+    while ((tok = parser.Next()) && !tok->IsError() &&
+        (!tok->IsTag() || Tag_Body != tok->tag && Tag_P != tok->tag)) {
+        if (tok->IsStartTag() && Tag_Title == tok->tag) {
+            tok = parser.Next();
+            if (tok->IsText())
+                title.Set(FromHtmlUtf8(tok->s, tok->sLen));
+        }
+        else if ((tok->IsStartTag() || tok->IsEmptyElementEndTag()) && Tag_Meta == tok->tag) {
+            AttrInfo *attrName = tok->GetAttrByName("name");
+            AttrInfo *attrValue = tok->GetAttrByName("content");
+            if (!attrName || !attrValue)
+                /* ignore this tag */;
+            else if (6 == attrName->valLen && str::EqNI(attrName->val, "author", 6))
+                author.Set(FromHtmlUtf8(attrValue->val, attrValue->valLen));
+            else if (4 == attrName->valLen && str::EqNI(attrName->val, "date", 6))
+                date.Set(FromHtmlUtf8(attrValue->val, attrValue->valLen));
+            else if (9 == attrName->valLen && str::EqNI(attrName->val, "copyright", 6))
+                copyright.Set(FromHtmlUtf8(attrValue->val, attrValue->valLen));
+        }
     }
 
     return true;
@@ -1220,6 +1231,12 @@ TCHAR *HtmlDoc::GetProperty(const char *name)
 {
     if (str::Eq(name, "Title") && title)
         return str::Dup(title);
+    if (str::Eq(name, "Author") && author)
+        return str::Dup(author);
+    if (str::Eq(name, "CreationDate") && date)
+        return str::Dup(date);
+    if (str::Eq(name, "Copyright") && copyright)
+        return str::Dup(copyright);
     return NULL;
 }
 

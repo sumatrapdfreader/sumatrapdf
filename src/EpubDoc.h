@@ -122,7 +122,11 @@ class HtmlDoc {
     ScopedMem<char> htmlData;
     ScopedMem<char> pagePath;
     Vec<ImageData2> images;
+
     ScopedMem<TCHAR> title;
+    ScopedMem<TCHAR> author;
+    ScopedMem<TCHAR> date;
+    ScopedMem<TCHAR> copyright;
 
     bool Load();
 
