@@ -916,7 +916,7 @@ public:
             if (++offset >= len)
                 return 0;
         }
-        return 0 == --repeat || repeatSame ? data[offset] : data[offset++];
+        return 0 != --repeat && repeatSame ? data[offset] : data[offset++];
     }
 };
 
@@ -942,7 +942,7 @@ char *PalmDoc::LoadTealPaintImage(const TCHAR *dbFile, size_t idx, size_t *lenOu
     if (hdr.depth != 1 && hdr.depth != 2 && hdr.depth != 4 && hdr.depth != 8 && hdr.depth != 16)
         return NULL;
     // TODO: support multi-part images where the name has the form
-    //       #(%(col)hd,%(row)hd) - %(totalWidth)hdx%(totalHeight)hd {%(layerNo)hd/%(layerCount)hd}
+    //       #(%(col)hd,%(row)hd) - %(totalWidth)hdx%(totalHeight)hd
     bool hasPalette = hdr.depth != 16;
     str::Str<uint8_t> tgaData;
 
@@ -999,29 +999,29 @@ char *PalmDoc::LoadTealPaintImage(const TCHAR *dbFile, size_t idx, size_t *lenOu
             uint8_t c = r.Read();
             switch (hdr.depth) {
             case 1:
-                for (int i = 0; i < 8; i++, x++, c <<= 1) {
-                    if (x < hdr.width)
+                for (int i = 0; i < 8; i++, c <<= 1) {
+                    if (x++ < hdr.width)
                         tgaData.Append(c & 0x80 ? 255 : 0);
                 }
                 break;
             case 2:
-                for (int i = 0; i < 4; i++, x++, c <<= 2) {
-                    if (x < hdr.width)
+                for (int i = 0; i < 4; i++, c <<= 2) {
+                    if (x++ < hdr.width)
                         tgaData.Append(paletteIdx2[(c & 0xC0) >> 6]);
                 }
                 break;
             case 4:
-                for (int i = 0; i < 2; i++, x++, c <<= 4) {
-                    if (x < hdr.width)
+                for (int i = 0; i < 2; i++, c <<= 4) {
+                    if (x++ < hdr.width)
                         tgaData.Append(paletteIdx4[(c & 0xF0) >> 4]);
                 }
                 break;
             case 8:
-                if (x < hdr.width)
+                if (x++ < hdr.width)
                     tgaData.Append(c);
                 break;
             case 16:
-                if (x < hdr.width) {
+                if (x++ < hdr.width) {
                     uint16_t c2 = (c << 8) | r.Read();
                     tgaData.Append((c2 << 3) & 0xF8); // blue
                     tgaData.Append((c2 >> 3) & 0xFC); // green
