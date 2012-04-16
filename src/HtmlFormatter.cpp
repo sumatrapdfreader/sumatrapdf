@@ -872,6 +872,7 @@ void HtmlFormatter::AutoCloseTags(size_t count)
     keepTagNesting = true; // prevent recursion
     HtmlToken tok;
     tok.type = HtmlToken::EndTag;
+    tok.sLen = 0;
     // let HandleHtmlTag clean up (in reverse order)
     for (size_t i = 0; i < count; i++) {
         tok.tag = tagNesting.Pop();
@@ -1330,4 +1331,26 @@ void EpubFormatter::HandleTagPagebreak(HtmlToken *t)
         currPage->instructions.Append(DrawInstr::Anchor(attr->val, attr->valLen, bbox));
         pagePath.Set(str::DupN(attr->val, attr->valLen));
     }
+}
+
+void EpubFormatter::HandleHtmlTag(HtmlToken *t)
+{
+    CrashIf(!t->IsTag());
+    if (hiddenDepth && t->IsEndTag() && tagNesting.Count() == hiddenDepth &&
+        t->tag == tagNesting.Last()) {
+        hiddenDepth = 0;
+        UpdateTagNesting(t);
+        return;
+    }
+    if (!hiddenDepth && t->IsStartTag() && t->GetAttrByName("hidden"))
+        hiddenDepth = tagNesting.Count() + 1;
+    if (!hiddenDepth)
+        HtmlFormatter::HandleHtmlTag(t);
+    else
+        UpdateTagNesting(t);
+}
+
+bool EpubFormatter::IgnoreText()
+{
+    return hiddenDepth > 0 || HtmlFormatter::IgnoreText();
 }

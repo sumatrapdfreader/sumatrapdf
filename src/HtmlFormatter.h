@@ -255,12 +255,16 @@ class EpubFormatter : public HtmlFormatter {
 protected:
     virtual void HandleTagImg(HtmlToken *t);
     virtual void HandleTagPagebreak(HtmlToken *t);
+    virtual void HandleHtmlTag(HtmlToken *t);
+    virtual bool IgnoreText();
 
     EpubDoc *epubDoc;
     ScopedMem<char> pagePath;
+    size_t hiddenDepth;
 
 public:
-    EpubFormatter(HtmlFormatterArgs *args, EpubDoc *doc) : HtmlFormatter(args), epubDoc(doc) { }
+    EpubFormatter(HtmlFormatterArgs *args, EpubDoc *doc) :
+        HtmlFormatter(args), epubDoc(doc), hiddenDepth(0) { }
 };
 
 void DrawHtmlPage(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox, Color *textColor=NULL);

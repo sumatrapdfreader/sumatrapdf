@@ -1216,7 +1216,6 @@ public:
     }
 };
 
-// TODO: this is almost identical to EpubFormatter
 class ChmFormatter : public HtmlFormatter {
 protected:
     virtual void HandleTagImg(HtmlToken *t);
