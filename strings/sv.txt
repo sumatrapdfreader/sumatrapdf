@@ -106,6 +106,9 @@ Endast &udda sidor
 &Password:
 &Lösenord:
 
+&Pin Document
+&Fäst dokument
+
 &Previous Page\tLeft Arrow
 Föregående sida\t<-
 
@@ -184,6 +187,9 @@ Avancerad
 All files
 Alla filer
 
+All supported documents
+Alla dokument som stöds
+
 Application:
 Programvara:
 
@@ -200,13 +206,19 @@ Automatic
 Automatiskt
 
 Automatically check for &updates
-Sök automatisk efter &uppdateringar
+Sök &automatisk efter uppdateringar
 
 Book View
 Bokuppslag
 
 Book&marks\tF12
 Bokmärken\tF12
+
+Bookmark Shortcuts
+Bokmärkesgenvägar
+
+Bookmark shortcut to page %s of %s
+Bokmärk genväg till sida %s av %s
 
 Bookmarks
 Bokmärken
@@ -235,6 +247,9 @@ Byt språk (Change Language)
 Check for &Updates
 &Sök efter ny version
 
+Comic books
+Serier
+
 Continuous
 Fortlöpande
 
@@ -247,6 +262,9 @@ Fortlöpande uppslag
 Contribute Translation
 Bidra med översättning
 
+Copy &Image
+Kop&iera bild
+
 Copy &Link Address
 Kopiera länkadress
 
@@ -255,6 +273,12 @@ Kopiera kommentar
 
 Copying text was denied (copying as image only)
 Textkopiering tilläts ej (kopierar som bild)
+
+Copyright:
+Copyright:
+
+Could not obtain Printer properties
+Kunde inte hämta egenskaper för skrivare
 
 Couldn't initialize printer
 Kunde ej använda skrivare
@@ -322,11 +346,17 @@ Fullskärm\tCtrl+Shift+L
 Facing
 Uppslag
 
+Failed to rename the file!
+Kunde inte döpa om filen!
+
 Failed to save a file
 Kan inte spara filen.
 
 Favorites
 Favoriter
+
+File %s not found
+Fil %s hittades inte
 
 File Size:
 Filstorlek:
@@ -373,6 +403,12 @@ Anpassa bredd och visa sidor fortlöpande
 Fit a Single Page
 Anpassa till helsida
 
+Fonts:
+Typsnitt:
+
+Formatting the book... %d pages
+Formatterar bok... %d sidor
+
 Found text at page %s
 Hittade text på sidan %s
 
@@ -399,6 +435,9 @@ Bildfiler (*.%s)
 
 KB
 KB
+
+Loading file %s...
+Laddar fil %s...
 
 MB
 MB
@@ -538,6 +577,12 @@ Ta bort från favoriter
 Remove page %s from favorites
 Ta bort sida %s från favoriter
 
+Rename To
+Döp om till
+
+Replace document &colors with Windows color scheme
+Byt ut dokument&färg till Windows färgschema
+
 Rotate &Left\tCtrl+Shift+-
 Rotera åt vänster\tCtrl+Shift+-
 
@@ -662,20 +707,5 @@ printing document
 skriver ut dokumentet
 
 # Untranslated:
-#&Pin Document
-#All supported documents
-#Bookmark Shortcuts
-#Bookmark shortcut to page %s of %s
-#Comic books
-#Copy &Image
-#Copyright:
-#Could not obtain Printer properties
-#Failed to rename the file!
-#File %s not found
-#Fonts:
-#Formatting the book... %d pages
-#Loading file %s...
 #Re&name...\tF2
-#Rename To
-#Replace document &colors with Windows color scheme
 
