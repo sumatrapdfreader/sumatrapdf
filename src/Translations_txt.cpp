@@ -10042,7 +10042,7 @@ const char *gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "Utskriften p\303\245g\303\245r fortfarande. Avbryt och b\303\266rja om?",
   "Skriver ut sida %d av %d...",
   "Utskriftsproblem.",
-  NULL,
+  "D\303\266p om",
   "Kom ih\303\245g \303\266ppnade &filer",
   "Ta bort fr\303\245n favoriter",
   "Ta bort sida %s fr\303\245n favoriter",

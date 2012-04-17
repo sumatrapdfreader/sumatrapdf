@@ -568,6 +568,9 @@ Skriver ut sida %d av %d...
 Printing problem.
 Utskriftsproblem.
 
+Re&name...\tF2
+Döp om
+
 Remember &opened files
 Kom ihåg öppnade &filer
 
@@ -705,7 +708,4 @@ kopierar text
 
 printing document
 skriver ut dokumentet
-
-# Untranslated:
-#Re&name...\tF2
 
