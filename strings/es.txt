@@ -346,6 +346,9 @@ Pantalla completa\tCtrl+Mayús+L
 Facing
 Página doble
 
+Failed to rename the file!
+No se puede renombrar el fichero!
+
 Failed to save a file
 Error al Guardar el Archivo
 
@@ -403,6 +406,9 @@ Ajustar a una sola página
 Fonts:
 Fuentes:
 
+Formatting the book... %d pages
+Dando formato al libro... %d páginas
+
 Found text at page %s
 Se encontró el texto en la página %s
 
@@ -429,6 +435,9 @@ Ficheros de imagen (*.%s)
 
 KB
 KB
+
+Loading file %s...
+Cargando fichero %s...
 
 MB
 MB
@@ -559,6 +568,9 @@ Imprimiendo página %d de %d...
 Printing problem.
 Problema de impresión.
 
+Re&name...\tF2
+Re&nombrar...\tF2
+
 Remember &opened files
 Recordar archiv&os abiertos
 
@@ -567,6 +579,9 @@ Eliminar de favoritos
 
 Remove page %s from favorites
 Eliminar página %s de favoritos
+
+Rename To
+Renombrando a
 
 Replace document &colors with Windows color scheme
 Reemplazar &colors del documento con el esquema de color de Windows
@@ -693,11 +708,4 @@ copiado de texto
 
 printing document
 imprimimendo documento
-
-# Untranslated:
-#Failed to rename the file!
-#Formatting the book... %d pages
-#Loading file %s...
-#Re&name...\tF2
-#Rename To
 
