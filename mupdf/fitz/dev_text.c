@@ -652,7 +652,8 @@ fz_text_extract(fz_context *ctx, fz_text_device *dev, fz_text *text, fz_matrix c
 			rect.x1 = adv;
 			rect.y1 = ascender;
 		}
-		else
+		/* SumatraPDF: prevent heap overflow */
+		else if (text->items[i].gid < 256)
 		{
 			adv = font->t3widths[text->items[i].gid];
 			rect.x0 = 0;
