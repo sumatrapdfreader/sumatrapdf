@@ -116,6 +116,9 @@ pdf_load_type3_font(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict)
 
 		first = pdf_to_int(pdf_dict_gets(dict, "FirstChar"));
 		last = pdf_to_int(pdf_dict_gets(dict, "LastChar"));
+		/* SumatraPDF: prevent heap overflow */
+		if (first < 0 || last > 255 || first > last)
+			fz_throw(ctx, "invalid FirstChar/LastChar for Type3 font");
 
 		widths = pdf_dict_gets(dict, "Widths");
 		if (!widths)
@@ -127,8 +130,6 @@ pdf_load_type3_font(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict)
 		{
 			float w = pdf_to_real(pdf_array_get(widths, i - first));
 			w = fontdesc->font->t3matrix.a * w * 1000;
-			/* SumatraPDF: prevent heap overflow */
-			if (i < 256)
 			fontdesc->font->t3widths[i] = w * 0.001f;
 			pdf_add_hmtx(ctx, fontdesc, i, i, w);
 		}
