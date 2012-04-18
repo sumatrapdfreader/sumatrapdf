@@ -96,7 +96,7 @@ public:
                    float zoom=INVALID_ZOOM, TilePosition *tile=NULL);
     bool    FreeForDisplayModel(DisplayModel *dm);
     void    KeepForDisplayModel(DisplayModel *oldDm, DisplayModel *newDm);
-    UINT    Paint(HDC hdc, RectI *bounds, DisplayModel *dm, int pageNo,
+    UINT    Paint(HDC hdc, RectI bounds, DisplayModel *dm, int pageNo,
                   PageInfo *pageInfo, bool *renderOutOfDateCue);
 
 protected:
@@ -131,11 +131,11 @@ private:
     void    DropCacheEntry(BitmapCacheEntry *entry);
     bool    FreePage(DisplayModel *dm=NULL, int pageNo=-1, TilePosition *tile=NULL);
 
-    UINT    PaintTile(HDC hdc, RectI *bounds, DisplayModel *dm, int pageNo,
-                      TilePosition tile, RectI *tileOnScreen, bool renderMissing,
+    UINT    PaintTile(HDC hdc, RectI bounds, DisplayModel *dm, int pageNo,
+                      TilePosition tile, RectI tileOnScreen, bool renderMissing,
                       bool *renderOutOfDateCue, bool *renderedReplacement);
-    UINT    PaintTiles(HDC hdc, RectI *bounds, DisplayModel *dm, int pageNo,
-                      RectI *pageOnScreen, USHORT tileRes, bool renderMissing,
+    UINT    PaintTiles(HDC hdc, RectI bounds, DisplayModel *dm, int pageNo,
+                      RectI pageOnScreen, USHORT tileRes, bool renderMissing,
                       bool *renderOutOfDateCue, bool *renderedReplacement);
 
 };

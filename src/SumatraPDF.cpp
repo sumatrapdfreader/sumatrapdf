@@ -1909,7 +1909,7 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
                 dm->engine->RenderPage(hdc, pageInfo->pageOnScreen, pageNo, dm->ZoomReal(pageNo), dm->Rotation());
         }
         else
-            renderDelay = gRenderCache.Paint(hdc, &bounds, dm, pageNo, pageInfo, &renderOutOfDateCue);
+            renderDelay = gRenderCache.Paint(hdc, bounds, dm, pageNo, pageInfo, &renderOutOfDateCue);
 
         if (renderDelay) {
             ScopedFont fontRightTxt(GetSimpleFont(hdc, _T("MS Shell Dlg"), 14));

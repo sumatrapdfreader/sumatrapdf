@@ -118,8 +118,8 @@ void RenderCache::Add(PageRenderRequest &req, RenderedBitmap *bitmap)
         cacheCount++;
 }
 
-// get the (user) coordinates of a specific tile
-static RectD GetTileRect(BaseEngine *engine, int pageNo, int rotation, float zoom, TilePosition tile)
+// get the coordinates of a specific tile
+static RectI GetTileRectDevice(BaseEngine *engine, int pageNo, int rotation, float zoom, TilePosition tile)
 {
     RectD mediabox = engine->PageMediabox(pageNo);
 
@@ -133,16 +133,17 @@ static RectD GetTileRect(BaseEngine *engine, int pageNo, int rotation, float zoo
     }
 
     RectD pixelbox = engine->Transform(mediabox, pageNo, zoom, rotation);
-    pixelbox = pixelbox.Round().Convert<double>();
-    mediabox = engine->Transform(pixelbox, pageNo, zoom, rotation, true);
-
-    return mediabox;
+    return pixelbox.Round();
+}
+static RectD GetTileRectUser(BaseEngine *engine, int pageNo, int rotation, float zoom, TilePosition tile)
+{
+    RectI pixelbox = GetTileRectDevice(engine, pageNo, rotation, zoom, tile);
+    return engine->Transform(pixelbox.Convert<double>(), pageNo, zoom, rotation, true);
 }
 
 static RectI GetTileOnScreen(BaseEngine *engine, int pageNo, int rotation, float zoom, TilePosition tile, RectI pageOnScreen)
 {
-    RectD mediabox = GetTileRect(engine, pageNo, rotation, zoom, tile);
-    RectI bbox = engine->Transform(mediabox, pageNo, zoom, rotation).Round();
+    RectI bbox = GetTileRectDevice(engine, pageNo, rotation, zoom, tile);
     bbox.Offset(pageOnScreen.x, pageOnScreen.y);
     return bbox;
 }
@@ -247,7 +248,10 @@ USHORT RenderCache::GetTileRes(DisplayModel *dm, int pageNo)
 
     float factorW = (float)pixelbox.dx / (maxTileSize.dx + 1);
     float factorH = (float)pixelbox.dy / (maxTileSize.dy + 1);
-    float factorMax = max(factorW, factorH);
+    // using the geometric mean instead of the maximum factor
+    // so that the tile area doesn't get too small in comparison
+    // to maxTileSize (but remains smaller)
+    float factorAvg = sqrtf(factorW * factorH);
 
     // use larger tiles when fitting page or width or when a page is smaller
     // than the visible canvas width/height or when rendering pages
@@ -255,12 +259,12 @@ USHORT RenderCache::GetTileRes(DisplayModel *dm, int pageNo)
     if (dm->ZoomVirtual() == ZOOM_FIT_PAGE || dm->ZoomVirtual() == ZOOM_FIT_WIDTH ||
         pixelbox.dx <= dm->viewPort.dx || pixelbox.dy < dm->viewPort.dy ||
         !dm->engine->HasClipOptimizations(pageNo)) {
-        factorMax /= 2.0;
+        factorAvg /= 2.0;
     }
 
     USHORT res = 0;
-    if (factorMax > 1.5)
-        res = (USHORT)ceilf(log(factorMax) / log(2.0f));
+    if (factorAvg > 1.5)
+        res = (USHORT)ceilf(log(factorAvg) / log(2.0f));
     return res;
 }
 
@@ -404,7 +408,7 @@ bool RenderCache::Render(DisplayModel *dm, int pageNo, int rotation, float zoom,
     newRequest->rotation = rotation;
     newRequest->zoom = zoom;
     if (tile) {
-        newRequest->pageRect = GetTileRect(dm->engine, pageNo, rotation, zoom, *tile);
+        newRequest->pageRect = GetTileRectUser(dm->engine, pageNo, rotation, zoom, *tile);
         newRequest->tile = *tile;
     }
     else if (pageRect) {
@@ -568,8 +572,8 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data)
 
 // TODO: conceptually, RenderCache is not the right place for code that paints
 //       (this is the only place that knows about Tiles, though)
-UINT RenderCache::PaintTile(HDC hdc, RectI *bounds, DisplayModel *dm, int pageNo,
-                            TilePosition tile, RectI *tileOnScreen, bool renderMissing,
+UINT RenderCache::PaintTile(HDC hdc, RectI bounds, DisplayModel *dm, int pageNo,
+                            TilePosition tile, RectI tileOnScreen, bool renderMissing,
                             bool *renderOutOfDateCue, bool *renderedReplacement)
 {
     BitmapCacheEntry *entry = Find(dm, pageNo, dm->Rotation(), dm->ZoomReal(), &tile);
@@ -599,20 +603,27 @@ UINT RenderCache::PaintTile(HDC hdc, RectI *bounds, DisplayModel *dm, int pageNo
     HDC bmpDC = CreateCompatibleDC(hdc);
     if (bmpDC) {
         SizeI bmpSize = renderedBmp->Size();
-        int xSrc = -min(tileOnScreen->x, 0);
-        int ySrc = -min(tileOnScreen->y, 0);
-        float factor = min(1.0f * bmpSize.dx / tileOnScreen->dx, 1.0f * bmpSize.dy / tileOnScreen->dy);
+        int xSrc = -min(tileOnScreen.x, 0);
+        int ySrc = -min(tileOnScreen.y, 0);
+        float factor = min(1.0f * bmpSize.dx / tileOnScreen.dx, 1.0f * bmpSize.dy / tileOnScreen.dy);
 
         SelectObject(bmpDC, hbmp);
         if (factor != 1.0f)
-            StretchBlt(hdc, bounds->x, bounds->y, bounds->dx, bounds->dy,
+            StretchBlt(hdc, bounds.x, bounds.y, bounds.dx, bounds.dy,
                 bmpDC, (int)(xSrc * factor), (int)(ySrc * factor),
-                (int)(bounds->dx * factor), (int)(bounds->dy * factor), SRCCOPY);
+                (int)(bounds.dx * factor), (int)(bounds.dy * factor), SRCCOPY);
         else
-            BitBlt(hdc, bounds->x, bounds->y, bounds->dx, bounds->dy,
+            BitBlt(hdc, bounds.x, bounds.y, bounds.dx, bounds.dy,
                 bmpDC, xSrc, ySrc, SRCCOPY);
 
         DeleteDC(bmpDC);
+
+#ifdef DEBUG_TILE_LAYOUT
+        HPEN pen = CreatePen(PS_SOLID, 1, RGB(0xff, 0xff, 0x00));
+        HGDIOBJ oldPen = SelectObject(hdc, pen);
+        PaintRect(hdc, bounds);
+        DeletePen(SelectObject(hdc, oldPen));
+#endif
     }
 
     if (renderOutOfDateCue)
@@ -622,8 +633,8 @@ UINT RenderCache::PaintTile(HDC hdc, RectI *bounds, DisplayModel *dm, int pageNo
     return 0;
 }
 
-UINT RenderCache::PaintTiles(HDC hdc, RectI *bounds, DisplayModel *dm, int pageNo,
-                             RectI *pageOnScreen, USHORT tileRes, bool renderMissing,
+UINT RenderCache::PaintTiles(HDC hdc, RectI bounds, DisplayModel *dm, int pageNo,
+                             RectI pageOnScreen, USHORT tileRes, bool renderMissing,
                              bool *renderOutOfDateCue, bool *renderedReplacement)
 {
     int rotation = dm->Rotation();
@@ -635,11 +646,11 @@ UINT RenderCache::PaintTiles(HDC hdc, RectI *bounds, DisplayModel *dm, int pageN
     UINT renderTimeMin = (UINT)-1;
     for (tile.row = 0; tile.row < tileCount; tile.row++) {
         for (tile.col = 0; tile.col < tileCount; tile.col++) {
-            RectI tileOnScreen = GetTileOnScreen(dm->engine, pageNo, rotation, zoom, tile, *pageOnScreen);
-            tileOnScreen = pageOnScreen->Intersect(tileOnScreen);
-            RectI isect = bounds->Intersect(tileOnScreen);
+            RectI tileOnScreen = GetTileOnScreen(dm->engine, pageNo, rotation, zoom, tile, pageOnScreen);
+            tileOnScreen = pageOnScreen.Intersect(tileOnScreen);
+            RectI isect = bounds.Intersect(tileOnScreen);
             if (!isect.IsEmpty()) {
-                UINT renderTime = PaintTile(hdc, &isect, dm, pageNo, tile, &tileOnScreen, renderMissing, renderOutOfDateCue, renderedReplacement);
+                UINT renderTime = PaintTile(hdc, isect, dm, pageNo, tile, tileOnScreen, renderMissing, renderOutOfDateCue, renderedReplacement);
                 renderTimeMin = min(renderTime, renderTimeMin);
             }
         }
@@ -648,7 +659,7 @@ UINT RenderCache::PaintTiles(HDC hdc, RectI *bounds, DisplayModel *dm, int pageN
     return renderTimeMin;
 }
 
-UINT RenderCache::Paint(HDC hdc, RectI *bounds, DisplayModel *dm, int pageNo,
+UINT RenderCache::Paint(HDC hdc, RectI bounds, DisplayModel *dm, int pageNo,
                         PageInfo *pageInfo, bool *renderOutOfDateCue)
 {
     assert(pageInfo->shown && 0.0 != pageInfo->visibleRatio);
@@ -658,7 +669,7 @@ UINT RenderCache::Paint(HDC hdc, RectI *bounds, DisplayModel *dm, int pageNo,
     UINT renderTime = RENDER_DELAY_UNDEFINED, renderTimeMin = renderTime = RENDER_DELAY_UNDEFINED;
     for (int res = 0; res <= tileRes; res++) {
         renderedReplacement = false;
-        renderTime = PaintTiles(hdc, bounds, dm, pageNo, &pageInfo->pageOnScreen,
+        renderTime = PaintTiles(hdc, bounds, dm, pageNo, pageInfo->pageOnScreen,
                                 res, res == tileRes, renderOutOfDateCue, &renderedReplacement);
         renderTimeMin = min(renderTime, renderTimeMin);
     }
