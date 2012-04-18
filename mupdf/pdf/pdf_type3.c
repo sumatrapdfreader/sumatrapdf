@@ -173,9 +173,8 @@ pdf_load_type3_font(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict)
 	}
 	fz_catch(ctx)
 	{
-		if (fontdesc)
-			fz_drop_font(ctx, fontdesc->font);
-		fz_free(ctx, fontdesc);
+		/* SumatraPDF: fix memory leak */
+		pdf_drop_font(ctx, fontdesc);
 		fz_throw(ctx, "cannot load type3 font (%d %d R)", pdf_to_num(dict), pdf_to_gen(dict));
 	}
 	return fontdesc;
