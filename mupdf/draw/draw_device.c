@@ -1661,6 +1661,23 @@ fz_new_draw_device(fz_context *ctx, fz_pixmap *dest)
 }
 
 fz_device *
+fz_new_draw_device_with_bbox(fz_context *ctx, fz_pixmap *dest, fz_bbox clip)
+{
+	fz_device *dev = fz_new_draw_device(ctx, dest);
+	fz_draw_device *ddev = dev->user;
+
+	if (clip.x0 > ddev->stack[0].scissor.x0)
+		ddev->stack[0].scissor.x0 = clip.x0;
+	if (clip.x1 < ddev->stack[0].scissor.x1)
+		ddev->stack[0].scissor.x1 = clip.x1;
+	if (clip.y0 > ddev->stack[0].scissor.y0)
+		ddev->stack[0].scissor.y0 = clip.y0;
+	if (clip.y1 < ddev->stack[0].scissor.y1)
+		ddev->stack[0].scissor.y1 = clip.y1;
+	return dev;
+}
+
+fz_device *
 fz_new_draw_device_type3(fz_context *ctx, fz_pixmap *dest)
 {
 	fz_device *dev = fz_new_draw_device(ctx, dest);

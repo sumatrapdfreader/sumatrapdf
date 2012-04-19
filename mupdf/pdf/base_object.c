@@ -1183,7 +1183,7 @@ static void fmt_obj(struct fmt *fmt, pdf_obj *obj)
 	}
 	else if (pdf_is_real(obj))
 	{
-		sprintf(buf, "%g", pdf_to_real(obj));
+		sprintf(buf, "%1.9g", pdf_to_real(obj));
 		if (strchr(buf, 'e')) /* bad news! */
 			sprintf(buf, fabsf(pdf_to_real(obj)) > 1 ? "%1.1f" : "%1.8f", pdf_to_real(obj));
 		fmt_puts(fmt, buf);

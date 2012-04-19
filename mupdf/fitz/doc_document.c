@@ -113,3 +113,11 @@ fz_free_page(fz_document *doc, fz_page *page)
 	if (doc && doc->free_page && page)
 		doc->free_page(doc, page);
 }
+
+int
+fz_meta(fz_document *doc, int key, void *ptr, int size)
+{
+	if (doc && doc->meta)
+		return doc->meta(doc, key, ptr, size);
+	return FZ_META_UNKNOWN_KEY;
+}

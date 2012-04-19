@@ -20,6 +20,7 @@
 #endif
 
 #define ID_ABOUT	0x1000
+#define ID_DOCINFO	0x1001
 
 static HWND hwndframe = NULL;
 static HWND hwndview = NULL;
@@ -165,6 +166,83 @@ char *winpassword(pdfapp_t *app, char *filename)
 }
 
 INT CALLBACK
+dloginfoproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	char buf[256];
+	fz_document *doc = gapp.doc;
+
+	switch(message)
+	{
+	case WM_INITDIALOG:
+
+		SetDlgItemTextW(hwnd, 0x10, wbuf);
+
+		if (fz_meta(doc, FZ_META_FORMAT_INFO, buf, 256) < 0)
+		{
+			SetDlgItemTextA(hwnd, 0x11, "Unknown");
+			SetDlgItemTextA(hwnd, 0x12, "None");
+			SetDlgItemTextA(hwnd, 0x13, "n/a");
+			return TRUE;
+		}
+
+		SetDlgItemTextA(hwnd, 0x11, buf);
+
+		if (fz_meta(doc, FZ_META_CRYPT_INFO, buf, 256) == 0)
+		{
+			SetDlgItemTextA(hwnd, 0x12, buf);
+		}
+		else
+		{
+			SetDlgItemTextA(hwnd, 0x12, "None");
+		}
+		buf[0] = 0;
+		if (fz_meta(doc, FZ_META_HAS_PERMISSION, NULL, FZ_PERMISSION_PRINT) == 0)
+			strcat(buf, "print, ");
+		if (fz_meta(doc, FZ_META_HAS_PERMISSION, NULL, FZ_PERMISSION_CHANGE) == 0)
+			strcat(buf, "modify, ");
+		if (fz_meta(doc, FZ_META_HAS_PERMISSION, NULL, FZ_PERMISSION_COPY) == 0)
+			strcat(buf, "copy, ");
+		if (fz_meta(doc, FZ_META_HAS_PERMISSION, NULL, FZ_PERMISSION_NOTES) == 0)
+			strcat(buf, "annotate, ");
+		if (strlen(buf) > 2)
+			buf[strlen(buf)-2] = 0;
+		else
+			strcpy(buf, "None");
+		SetDlgItemTextA(hwnd, 0x13, buf);
+
+#define SETUTF8(ID, STRING) \
+		{ \
+			*(char **)buf = STRING; \
+			if (fz_meta(doc, FZ_META_INFO, buf, 256) <= 0) \
+				buf[0] = 0; \
+			SetDlgItemTextA(hwnd, ID, buf); \
+		}
+
+		SETUTF8(0x20, "Title");
+		SETUTF8(0x21, "Author");
+		SETUTF8(0x22, "Subject");
+		SETUTF8(0x23, "Keywords");
+		SETUTF8(0x24, "Creator");
+		SETUTF8(0x25, "Producer");
+		SETUTF8(0x26, "CreationDate");
+		SETUTF8(0x27, "ModDate");
+		return TRUE;
+
+	case WM_COMMAND:
+		EndDialog(hwnd, 1);
+		return TRUE;
+	}
+	return FALSE;
+}
+
+void info()
+{
+	int code = DialogBoxW(NULL, L"IDD_DLOGINFO", hwndframe, dloginfoproc);
+	if (code <= 0)
+		winerror(&gapp, "cannot create info dialog");
+}
+
+INT CALLBACK
 dlogaboutproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch(message)
@@ -287,6 +365,7 @@ void winopen()
 	menu = GetSystemMenu(hwndframe, 0);
 	AppendMenuW(menu, MF_SEPARATOR, 0, NULL);
 	AppendMenuW(menu, MF_STRING, ID_ABOUT, L"About MuPDF...");
+	AppendMenuW(menu, MF_STRING, ID_DOCINFO, L"Document Properties...");
 
 	SetCursor(arrowcurs);
 }
@@ -598,6 +677,11 @@ frameproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		if (wParam == ID_ABOUT)
 		{
 			winhelp(&gapp);
+			return 0;
+		}
+		if (wParam == ID_DOCINFO)
+		{
+			info();
 			return 0;
 		}
 		if (wParam == SC_MAXIMIZE)

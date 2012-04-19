@@ -490,6 +490,22 @@ static void cbz_free_page_shim(fz_document *doc, fz_page *page)
 	cbz_free_page((cbz_document*)doc, (cbz_page*)page);
 }
 
+static int cbz_meta(fz_document *doc_, int key, void *ptr, int size)
+{
+	cbz_document *doc = (cbz_document *)doc_;
+
+	doc = doc;
+
+	switch(key)
+	{
+	case FZ_META_FORMAT_INFO:
+		sprintf((char *)ptr, "CBZ");
+		return FZ_META_OK;
+	default:
+		return FZ_META_UNKNOWN_KEY;
+	}
+}
+
 static void
 cbz_init_document(cbz_document *doc)
 {
@@ -503,4 +519,5 @@ cbz_init_document(cbz_document *doc)
 	doc->super.bound_page = cbz_bound_page_shim;
 	doc->super.run_page = cbz_run_page_shim;
 	doc->super.free_page = cbz_free_page_shim;
+	doc->super.meta = cbz_meta;
 }

@@ -720,6 +720,22 @@ static void xps_free_page_shim(fz_document *doc, fz_page *page)
 	xps_free_page((xps_document*)doc, (xps_page*)page);
 }
 
+static int xps_meta(fz_document *doc_, int key, void *ptr, int size)
+{
+	xps_document *doc = (xps_document *)doc_;
+
+	doc = doc;
+
+	switch(key)
+	{
+	case FZ_META_FORMAT_INFO:
+		sprintf((char *)ptr, "XPS");
+		return FZ_META_OK;
+	default:
+		return FZ_META_UNKNOWN_KEY;
+	}
+}
+
 static void
 xps_init_document(xps_document *doc)
 {
@@ -733,4 +749,5 @@ xps_init_document(xps_document *doc)
 	doc->super.bound_page = xps_bound_page_shim;
 	doc->super.run_page = xps_run_page_shim;
 	doc->super.free_page = xps_free_page_shim;
+	doc->super.meta = xps_meta;
 }

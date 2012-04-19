@@ -9,7 +9,7 @@ GEN := generated
 
 default: all
 
-CFLAGS += -Ifitz -Ipdf -Ixps -Icbz -Iscripts
+CFLAGS += $(XCFLAGS) -Ifitz -Ipdf -Ixps -Icbz -Iscripts
 LIBS += -lfreetype -ljbig2dec -ljpeg -lopenjpeg -lz -lm
 
 include Makerules
