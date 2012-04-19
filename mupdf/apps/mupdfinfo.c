@@ -939,6 +939,18 @@ showinfo(char *filename, int show, char *pagelist)
 		printinfo(filename, show, -1);
 }
 
+static int arg_is_page_range(const char *arg)
+{
+	int c;
+
+	while ((c = *arg++) != 0)
+	{
+		if ((c < '0' || c > '9') && (c != '-') && (c != ','))
+			return 0;
+	}
+	return 1;
+}
+
 #ifdef MUPDF_COMBINED_EXE
 int pdfinfo_main(int argc, char **argv)
 #else
@@ -981,7 +993,7 @@ int main(int argc, char **argv)
 	state = NO_FILE_OPENED;
 	while (fz_optind < argc)
 	{
-		if (strstr(argv[fz_optind], ".pdf") || strstr(argv[fz_optind], ".PDF"))
+		if (state == NO_FILE_OPENED || !arg_is_page_range(argv[fz_optind]))
 		{
 			if (state == NO_INFO_GATHERED)
 			{

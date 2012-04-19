@@ -457,7 +457,7 @@ fz_render_ft_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm, int a
 
 	if (aa == 0)
 	{
-		/* If you really want grid fitting, enable this code. */
+		/* enable grid fitting for non-antialiased rendering */
 		float scale = fz_matrix_expansion(trm);
 		m.xx = trm.a * 65536 / scale;
 		m.xy = trm.b * 65536 / scale;
@@ -471,8 +471,10 @@ fz_render_ft_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm, int a
 			fz_warn(ctx, "freetype setting character size: %s", ft_error_string(fterr));
 		FT_Set_Transform(face, &m, &v);
 		fterr = FT_Load_Glyph(face, gid, FT_LOAD_NO_BITMAP | FT_LOAD_TARGET_MONO);
-		if (fterr)
-			fz_warn(ctx, "freetype load glyph (gid %d): %s", gid, ft_error_string(fterr));
+		if (fterr) {
+			fz_warn(ctx, "freetype load hinted glyph (gid %d): %s", gid, ft_error_string(fterr));
+			goto retry_unhinted;
+		}
 	}
 	else if (font->ft_hint)
 	{
@@ -484,11 +486,14 @@ fz_render_ft_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm, int a
 		so that we get the correct outline shape.
 		*/
 		fterr = FT_Load_Glyph(face, gid, FT_LOAD_NO_BITMAP);
-		if (fterr)
-			fz_warn(ctx, "freetype load glyph (gid %d): %s", gid, ft_error_string(fterr));
+		if (fterr) {
+			fz_warn(ctx, "freetype load hinted glyph (gid %d): %s", gid, ft_error_string(fterr));
+			goto retry_unhinted;
+		}
 	}
 	else
 	{
+retry_unhinted:
 		fterr = FT_Load_Glyph(face, gid, FT_LOAD_NO_BITMAP | FT_LOAD_NO_HINTING);
 		if (fterr)
 		{

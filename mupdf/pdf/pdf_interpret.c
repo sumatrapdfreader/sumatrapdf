@@ -1284,25 +1284,25 @@ pdf_show_pattern(pdf_csi *csi, pdf_pattern *pat, fz_rect area, int what)
 	ptm = fz_concat(pat->matrix, csi->top_ctm);
 	invptm = fz_invert_matrix(ptm);
 
-	/* patterns are painted using the ctm in effect at the beginning of the content stream */
-	/* get bbox of shape in pattern space for stamping */
+	/* patterns are painted using the ctm in effect at the beginning
+	 * of the content stream. area = bbox of shape to be filled in
+	 * device space. Map it back to pattern space. */
 	area = fz_transform_rect(invptm, area);
 
 	/* When calculating the number of tiles required, we adjust by a small
 	 * amount to allow for rounding errors. By choosing this amount to be
 	 * smaller than 1/256, we guarantee we won't cause problems that will
 	 * be visible even under our most extreme antialiasing. */
-	x0 = floorf(area.x0 / pat->xstep + 0.001);
-	y0 = floorf(area.y0 / pat->ystep + 0.001);
-	x1 = ceilf(area.x1 / pat->xstep - 0.001);
-	y1 = ceilf(area.y1 / pat->ystep - 0.001);
+	x0 = floorf((area.x0 - pat->bbox.x0) / pat->xstep + 0.001);
+	y0 = floorf((area.y0 - pat->bbox.y0) / pat->ystep + 0.001);
+	x1 = ceilf((area.x1 - pat->bbox.x0) / pat->xstep - 0.001);
+	y1 = ceilf((area.y1 - pat->bbox.y0) / pat->ystep - 0.001);
 
 	oldtopctm = csi->top_ctm;
 	oldtop = csi->gtop;
 
 #ifdef TILE
-	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1807 */
-	if ((x1 - x0) * (y1 - y0) > 1 && fz_matrix_max_expansion(ptm) < 50)
+	if ((x1 - x0) * (y1 - y0) > 1)
 #else
 	if (0)
 #endif
