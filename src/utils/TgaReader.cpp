@@ -111,20 +111,17 @@ static TgaExtArea *GetExtAreaPtr(const char *data, size_t len)
 // http://www.ryanjuckett.com/programming/graphics/26-parsing-colors-in-a-tga-file
 static PixelFormat GetPixelFormat(TgaHeader *headerLE, ImageAlpha aType=Alpha_Normal)
 {
-    int bits = headerLE->bitDepth;
-    int alphaBits = (headerLE->flags & Flag_Alpha);
-
+    int bits;
     if (Type_Palette == headerLE->imageType || Type_Palette_RLE == headerLE->imageType) {
         if (1 != headerLE->cmapType || 8 != headerLE->bitDepth && 16 != headerLE->bitDepth)
             return 0;
         bits = headerLE->cmapBitDepth;
     }
     else if (Type_Truecolor == headerLE->imageType || Type_Truecolor_RLE == headerLE->imageType) {
-        if (0 != headerLE->cmapType)
-            return 0;
+        bits = headerLE->bitDepth;
     }
     else if (Type_Grayscale == headerLE->imageType || Type_Grayscale_RLE == headerLE->imageType) {
-        if (0 != headerLE->cmapType || 8 != headerLE->bitDepth || 0 != alphaBits)
+        if (8 != headerLE->bitDepth || (headerLE->flags & Flag_Alpha))
             return 0;
         // using a non-indexed format so that we don't have to bother with a palette
         return PixelFormat24bppRGB;
@@ -132,6 +129,7 @@ static PixelFormat GetPixelFormat(TgaHeader *headerLE, ImageAlpha aType=Alpha_No
     else
         return 0;
 
+    int alphaBits = (headerLE->flags & Flag_Alpha);
     if (15 == bits && 0 == alphaBits)
         return PixelFormat16bppRGB555;
     if (16 == bits && (0 == alphaBits || Alpha_Ignore == aType))
@@ -171,6 +169,8 @@ bool HasSignature(const char *data, size_t len)
     if (len < sizeof(TgaHeader))
         return false;
     TgaHeader *headerLE = (TgaHeader *)data;
+    if (headerLE->cmapType != 0 && headerLE->cmapType != 1)
+        return false;
     if ((headerLE->flags & Flag_Reserved))
         return false;
     if (!GetPixelFormat(headerLE))
