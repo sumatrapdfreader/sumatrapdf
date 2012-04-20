@@ -1004,6 +1004,8 @@ static bool GetTealPaintHeader(const char *data, size_t size, TealPaintHeader *h
         hdr->depth = 1;
     if (hdr->depth != 1 && hdr->depth != 2 && hdr->depth != 4 && hdr->depth != 8 && hdr->depth != 16)
         return false;
+    if (hdr->bodyOffset > size || hdr->bodySize > size - hdr->bodyOffset)
+        return false;
     if (0 < hdr->nameOffset && hdr->nameOffset < hdr->headSize || hdr->nameOffset >= size)
         return false;
     return true;
