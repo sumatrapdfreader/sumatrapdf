@@ -139,61 +139,38 @@ static void SwapU32(uint32& i)
 }
 
 // Uncompress source data compressed with PalmDoc compression into a buffer.
-// Returns size of uncompressed data or -1 on error (if destination buffer too small)
-static size_t PalmdocUncompress(uint8 *src, size_t srcLen, uint8 *dst, size_t dstLen)
+// http://wiki.mobileread.com/wiki/PalmDOC#Format
+// Returns false on decoding errors
+static bool PalmdocUncompress(uint8 *src, size_t srcLen, str::Str<char>& dst)
 {
     uint8 *srcEnd = src + srcLen;
-    uint8 *dstEnd = dst + dstLen;
-    uint8 *dstOrig = dst;
-    size_t dstLeft;
     while (src < srcEnd) {
-        dstLeft = dstEnd - dst;
-        assert(dstLeft > 0);
-        if (0 == dstLeft)
-            return -1;
-
-        unsigned c = *src++;
-
+        uint8 c = *src++;
         if ((c >= 1) && (c <= 8)) {
-            assert(dstLeft >= c);
-            if (dstLeft < c)
-                return -1;
-            while (c > 0) {
-                *dst++ = *src++;
-                --c;
+            for (uint8 n = c; n > 0; n--) {
+                dst.Append((char)*src++);
             }
         } else if (c < 128) {
-            assert(c != 0);
-            *dst++ = c;
-        } else if (c >= 192) {
-            assert(dstLeft >= 2);
-            if (dstLeft < 2)
-                return -1;
-            *dst++ = ' ';
-            *dst++ = c ^ 0x80;
-        } else {
-            assert((c >= 128) && (c < 192));
-            assert(src < srcEnd);
-            if (src < srcEnd) {
-                c = (c << 8) | *src++;
-                size_t back = (c >> 3) & 0x07ff;
-                size_t n = (c & 7) + 3;
-                uint8 *dstBack = dst - back;
-                assert(dstBack >= dstOrig);
-                assert(dstLeft >= n);
-                while (n > 0) {
-                    *dst++ = *dstBack++;
-                    --n;
-                }
+            dst.Append((char)c);
+        } else if ((c >= 128) && (c < 192)) {
+            if (src >= srcEnd)
+                return false;
+            uint16 c2 = (c << 8) | *src++;
+            uint16 back = (c2 >> 3) & 0x07ff;
+            if (back > dst.Size() || 0 == back)
+                return false;
+            for (uint8 n = (c2 & 7) + 3; n > 0; n--) {
+                dst.Append(dst.At(dst.Size() - back));
             }
+        } else if (c >= 192) {
+            dst.Append(' ');
+            dst.Append((char)(c ^ 0x80));
         }
+        else
+            CrashIf(true);
     }
 
-    // zero-terminate to make inspecting in the debugger easier
-    if (dst < dstEnd)
-        *dst = 0;
-
-    return dst - dstOrig;
+    return true;
 }
 
 #define kHuffHeaderLen 24
@@ -739,14 +716,10 @@ bool MobiDoc::LoadDocRecordIntoBuffer(size_t recNo, str::Str<char>& strOut)
     }
 
     if (COMPRESSION_PALM == compressionType) {
-        char buf[6000]; // should be enough to decompress any record
-        size_t uncompressedSize = PalmdocUncompress((uint8*)recData, recSize, (uint8*)buf, sizeof(buf));
-        if (-1 == uncompressedSize) {
+        bool ok = PalmdocUncompress((uint8 *)recData, recSize, strOut);
+        if (!ok)
             lf("PalmDoc decompression failed");
-            return false;
-        }
-        strOut.Append(buf, uncompressedSize);
-        return true;
+        return ok;
     }
 
     if (COMPRESSION_HUFF == compressionType) {
