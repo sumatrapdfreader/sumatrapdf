@@ -228,8 +228,8 @@ public:
     ~HuffDicDecompressor();
     bool SetHuffData(uint8 *huffData, size_t huffDataLen);
     bool AddCdicData(uint8 *cdicData, uint32 cdicDataLen);
-    size_t Decompress(uint8 *src, size_t octets, uint8 *dst, size_t avail_in);
-    bool DecodeOne(uint32 code, uint8 *& dst, size_t& dstLeft);
+    bool Decompress(uint8 *src, size_t octets, str::Str<char>& dst);
+    bool DecodeOne(uint32 code, str::Str<char>& dst);
 };
 
 HuffDicDecompressor::HuffDicDecompressor() :
@@ -246,59 +246,52 @@ HuffDicDecompressor::~HuffDicDecompressor()
     free(huffmanData);
 }
 
-bool HuffDicDecompressor::DecodeOne(uint32 code, uint8 *& dst, size_t& dstLeft)
+bool HuffDicDecompressor::DecodeOne(uint32 code, str::Str<char>& dst)
 {
     uint16 dict = code >> codeLength;
-    if ((size_t)dict > dictsCount) {
+    if (dict >= dictsCount) {
         lf("invalid dict value");
         return false;
     }
     code &= ((1 << (codeLength)) - 1);
     uint16 offset = UInt16BE(dicts[dict] + code * 2);
 
-    if ((uint32)offset > dictSize[dict]) {
+    if ((uint32)offset + 2 > dictSize[dict]) {
         lf("invalid offset");
         return false;
     }
     uint16 symLen = UInt16BE(dicts[dict] + offset);
     uint8 *p = dicts[dict] + offset + 2;
+    if ((uint32)(symLen & 0x7fff) > dictSize[dict] - offset - 2) {
+        lf("invalid symLen");
+        return false;
+    }
 
     if (!(symLen & 0x8000)) {
-        size_t res = Decompress(p, symLen, dst, dstLeft);
-        if (-1 == res)
+        if (!Decompress(p, symLen, dst))
             return false;
-        dst += res;
-        assert(dstLeft >= res);
-        dstLeft -= res;
     } else {
         symLen &= 0x7fff;
         if (symLen > 127) {
             lf("symLen too big");
             return false;
         }
-        if (symLen > dstLeft) {
-            lf("not enough space");
-            return false;
-        }
-        memcpy(dst, p, symLen);
-        dst += symLen;
-        dstLeft -= symLen;
+        dst.Append((char *)p, symLen);
     }
     return true;
 }
 
-size_t HuffDicDecompressor::Decompress(uint8 *src, size_t srcSize, uint8 *dst, size_t dstSize)
+bool HuffDicDecompressor::Decompress(uint8 *src, size_t srcSize, str::Str<char>& dst)
 {
     uint32    bitsConsumed = 0;
     uint32    bits = 0;
 
     BitReader br(src, srcSize);
-    size_t      dstLeft = dstSize;
 
     for (;;) {
         if (bitsConsumed > br.BitsLeft()) {
             lf("not enough data");
-            return -1;
+            return false;
         }
         br.Eat(bitsConsumed);
         if (0 == br.BitsLeft())
@@ -311,7 +304,7 @@ size_t HuffDicDecompressor::Decompress(uint8 *src, size_t srcSize, uint8 *dst, s
         uint32 codeLen = v & 0x1f;
         if (!codeLen) {
             lf("corrupted table, zero code len");
-            return -1;
+            return false;
         }
         bool isTerminal = (v & 0x80) != 0;
 
@@ -322,26 +315,27 @@ size_t HuffDicDecompressor::Decompress(uint8 *src, size_t srcSize, uint8 *dst, s
             uint32 baseVal;
             codeLen -= 1;
             do {
+                CrashIf(codeLen > 31);
                 baseVal = baseTable[codeLen*2];
                 code = (bits >> (32 - (codeLen+1)));
                 codeLen++;
                 if (codeLen > 32) {
                     lf("code len > 32 bits");
-                    return -1;
+                    return false;
                 }
             } while (baseVal > code);
-            code = baseTable[1 + ((codeLen - 1) * 2)] - (bits >> (32 - codeLen));
+            code = baseTable[codeLen * 2 - 1] - (bits >> (32 - codeLen));
         }
 
-        if (!DecodeOne(code, dst, dstLeft))
-            return -1;
+        if (!DecodeOne(code, dst))
+            return false;
         bitsConsumed = codeLen;
     }
 
     if (br.BitsLeft() > 0 && 0 != bits) {
         lf("compressed data left");
     }
-    return dstSize - dstLeft;
+    return true;
 }
 
 bool HuffDicDecompressor::SetHuffData(uint8 *huffData, size_t huffDataLen)
@@ -365,6 +359,8 @@ bool HuffDicDecompressor::SetHuffData(uint8 *huffData, size_t huffDataLen)
     if (huffHdr->cacheOffset != kHuffHeaderLen)
         return false;
     if (huffHdr->baseTableOffset != (huffHdr->cacheOffset + kCacheDataLen))
+        return false;
+    if (huffHdr->baseTableOffset + kBaseTableDataLen > huffDataLen)
         return false;
     assert(NULL == huffmanData);
     huffmanData = (uint8*)memdup(huffData, huffDataLen);
@@ -723,26 +719,24 @@ bool MobiDoc::LoadDocRecordIntoBuffer(size_t recNo, str::Str<char>& strOut)
     }
 
     if (COMPRESSION_HUFF == compressionType) {
-        char buf[6000]; // should be enough to decompress any record
         assert(huffDic);
         if (!huffDic)
             return false;
-        size_t uncompressedSize = huffDic->Decompress((uint8*)recData, recSize, (uint8*)buf, sizeof(buf));
-        if (-1 == uncompressedSize) {
+        bool ok = huffDic->Decompress((uint8*)recData, recSize, strOut);
+        if (!ok)
             lf("HuffDic decompression failed");
-            return false;
-        }
-        strOut.Append(buf, uncompressedSize);
-        return true;
+        return ok;
     }
 
     assert(0);
     return false;
 }
 
-// assumes that ParseHeader() has been called
 bool MobiDoc::LoadDocument()
 {
+    if (!ParseHeader())
+        return false;
+
     assert(docUncompressedSize > 0);
     assert(!doc);
     doc = new str::Str<char>(docUncompressedSize);
@@ -777,12 +771,9 @@ bool MobiDoc::IsSupportedFile(const TCHAR *fileName, bool sniff)
 MobiDoc *MobiDoc::CreateFromFile(const TCHAR *fileName)
 {
     MobiDoc *mb = new MobiDoc(fileName);
-    if (!mb->ParseHeader())
-        goto Error;
-    if (!mb->LoadDocument())
-        goto Error;
+    if (!mb->LoadDocument()) {
+        delete mb;
+        return NULL;
+    }
     return mb;
-Error:
-    delete mb;
-    return NULL;
 }
