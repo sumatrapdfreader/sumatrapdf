@@ -380,6 +380,10 @@ static int _unmarshal_itsf_header(unsigned char **pData,
     _unmarshal_uint64    (pData, pDataLen, &dest->dir_offset);
     _unmarshal_uint64    (pData, pDataLen, &dest->dir_len);
 
+    /* SumatraPDF: sanity check for values (huge values are usually due to broken files) */
+    if (dest->dir_offset > UINT_MAX || dest->dir_len > UINT_MAX)
+        return 0;
+
     /* error check the data */
     /* XXX: should also check UUIDs, probably, though with a version 3 file,
      * current MS tools do not seem to use them.
@@ -563,6 +567,10 @@ static int _unmarshal_lzxc_reset_table(unsigned char **pData,
     _unmarshal_uint64    (pData, pDataLen, &dest->uncompressed_len);
     _unmarshal_uint64    (pData, pDataLen, &dest->compressed_len);
     _unmarshal_uint64    (pData, pDataLen, &dest->block_len);
+
+    /* SumatraPDF: sanity check for values (huge values are usually due to broken files) */
+    if (dest->uncompressed_len > UINT_MAX || dest->compressed_len > UINT_MAX || dest->block_len > UINT_MAX)
+        return 0;
 
     /* check structure */
     if (dest->version != 2)
@@ -1545,6 +1553,7 @@ static Int64 _chm_decompress_region(struct chmFile *h,
 
     /* decompress some data */
     gotLen = _chm_decompress_block(h, nBlock, &ubuffer);
+    /* SumatraPDF: check return value */
     if (gotLen == (UInt64)-1)
     {
         CHM_RELEASE_LOCK(h->lzx_mutex);

@@ -1,6 +1,6 @@
 diff -rPu5 CHMLib.orig\src\chm_lib.c CHMLib\src\chm_lib.c
 --- CHMLib.orig\src\chm_lib.c	Thu Jul 02 23:34:54 2009
-+++ CHMLib\src\chm_lib.c	Fri Apr 20 19:59:12 2012
++++ CHMLib\src\chm_lib.c	Fri Apr 20 21:55:28 2012
 @@ -92,11 +92,11 @@
  #ifdef WIN32
  #define CHM_ACQUIRE_LOCK(a) do {                        \
@@ -14,12 +14,43 @@ diff -rPu5 CHMLib.orig\src\chm_lib.c CHMLib\src\chm_lib.c
  #else
  #include <pthread.h>
  
-@@ -1543,10 +1543,15 @@
+@@ -378,10 +378,14 @@
+     _unmarshal_uint64    (pData, pDataLen, &dest->unknown_offset);
+     _unmarshal_uint64    (pData, pDataLen, &dest->unknown_len);
+     _unmarshal_uint64    (pData, pDataLen, &dest->dir_offset);
+     _unmarshal_uint64    (pData, pDataLen, &dest->dir_len);
+ 
++    /* SumatraPDF: sanity check for values (huge values are usually due to broken files) */
++    if (dest->dir_offset > UINT_MAX || dest->dir_len > UINT_MAX)
++        return 0;
++
+     /* error check the data */
+     /* XXX: should also check UUIDs, probably, though with a version 3 file,
+      * current MS tools do not seem to use them.
+      */
+     if (memcmp(dest->signature, "ITSF", 4) != 0)
+@@ -562,10 +566,14 @@
+     _unmarshal_uint32    (pData, pDataLen, &dest->table_offset);
+     _unmarshal_uint64    (pData, pDataLen, &dest->uncompressed_len);
+     _unmarshal_uint64    (pData, pDataLen, &dest->compressed_len);
+     _unmarshal_uint64    (pData, pDataLen, &dest->block_len);
+ 
++    /* SumatraPDF: sanity check for values (huge values are usually due to broken files) */
++    if (dest->uncompressed_len > UINT_MAX || dest->compressed_len > UINT_MAX || dest->block_len > UINT_MAX)
++        return 0;
++
+     /* check structure */
+     if (dest->version != 2)
+         return 0;
+ 
+     return 1;
+@@ -1543,10 +1551,16 @@
          h->lzx_state = LZXinit(window_size);
      }
  
      /* decompress some data */
      gotLen = _chm_decompress_block(h, nBlock, &ubuffer);
++    /* SumatraPDF: check return value */
 +    if (gotLen == (UInt64)-1)
 +    {
 +        CHM_RELEASE_LOCK(h->lzx_mutex);
