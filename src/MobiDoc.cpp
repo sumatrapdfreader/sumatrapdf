@@ -126,6 +126,7 @@ struct MobiHeader {
 
 STATIC_ASSERT(kMobiHeaderLen == sizeof(MobiHeader), validMobiHeader);
 
+// TODO: SwapU16/32 are badly named (use ByteOrderDecoder instead?)
 // change big-endian int16 to host endianness
 static void SwapU16(uint16& i)
 {
@@ -210,14 +211,12 @@ STATIC_ASSERT(kCdicHeaderLen == sizeof(CdicHeader), validCdicHeader);
 
 class HuffDicDecompressor
 {
-    // underlying data for cache and baseTable
-    // (an optimization to only do one allocation instead of two)
-    uint8 *     huffmanData;
-
+    // owned by the creator (in our case: by the PdbReader)
     uint32 *    cacheTable;
     uint32 *    baseTable;
 
     size_t      dictsCount;
+    // owned by the creator (in our case: by the PdbReader)
     uint8 *     dicts[kCdicsMax];
     uint32      dictSize[kCdicsMax];
 
@@ -225,7 +224,7 @@ class HuffDicDecompressor
 
 public:
     HuffDicDecompressor();
-    ~HuffDicDecompressor();
+
     bool SetHuffData(uint8 *huffData, size_t huffDataLen);
     bool AddCdicData(uint8 *cdicData, uint32 cdicDataLen);
     bool Decompress(uint8 *src, size_t octets, str::Str<char>& dst);
@@ -233,17 +232,9 @@ public:
 };
 
 HuffDicDecompressor::HuffDicDecompressor() :
-    huffmanData(NULL), cacheTable(NULL), baseTable(NULL),
+    cacheTable(NULL), baseTable(NULL),
     codeLength(0), dictsCount(0)
 {
-}
-
-HuffDicDecompressor::~HuffDicDecompressor()
-{
-    for (size_t i = 0; i < dictsCount; i++) {
-        free(dicts[i]);
-    }
-    free(huffmanData);
 }
 
 bool HuffDicDecompressor::DecodeOne(uint32 code, str::Str<char>& dst)
@@ -362,16 +353,12 @@ bool HuffDicDecompressor::SetHuffData(uint8 *huffData, size_t huffDataLen)
         return false;
     if (huffHdr->baseTableOffset + kBaseTableDataLen > huffDataLen)
         return false;
-    assert(NULL == huffmanData);
-    huffmanData = (uint8*)memdup(huffData, huffDataLen);
-    if (!huffmanData)
-        return false;
     // we conservatively use the big-endian version of the data,
-    cacheTable = (uint32*)(huffmanData + huffHdr->cacheOffset);
+    cacheTable = (uint32 *)(huffData + huffHdr->cacheOffset);
     for (size_t i = 0; i < 256; i++) {
         SwapU32(cacheTable[i]);
     }
-    baseTable = (uint32*)(huffmanData + huffHdr->baseTableOffset);
+    baseTable = (uint32 *)(huffData + huffHdr->baseTableOffset);
     for (size_t i = 0; i < 64; i++) {
         SwapU32(baseTable[i]);
     }
@@ -380,6 +367,9 @@ bool HuffDicDecompressor::SetHuffData(uint8 *huffData, size_t huffDataLen)
 
 bool HuffDicDecompressor::AddCdicData(uint8 *cdicData, uint32 cdicDataLen)
 {
+    if (dictsCount >= kCdicsMax)
+        return false;
+
     CdicHeader *cdicHdr = (CdicHeader*)cdicData;
     SwapU32(cdicHdr->hdrLen);
     SwapU32(cdicHdr->codeLen);
@@ -397,7 +387,7 @@ bool HuffDicDecompressor::AddCdicData(uint8 *cdicData, uint32 cdicDataLen)
     uint32 maxSize = 1 << codeLength;
     if (maxSize >= size)
         return false;
-    dicts[dictsCount] = (uint8*)memdup(cdicData + cdicHdr->hdrLen, size);
+    dicts[dictsCount] = cdicData + cdicHdr->hdrLen;
     dictSize[dictsCount] = size;
     ++dictsCount;
     return true;
@@ -540,14 +530,12 @@ bool MobiDoc::ParseHeader()
         const char *recData = pdbReader->GetRecord(mobiHdr->huffmanFirstRec, &recSize);
         if (!recData)
             return false;
-        size_t cdicsCount = mobiHdr->huffmanRecCount - 1;
-        assert(cdicsCount <= kCdicsMax);
-        if (cdicsCount > kCdicsMax)
-            return false;
         assert(NULL == huffDic);
         huffDic = new HuffDicDecompressor();
         if (!huffDic->SetHuffData((uint8*)recData, recSize))
             return false;
+        size_t cdicsCount = mobiHdr->huffmanRecCount - 1;
+        assert(cdicsCount <= kCdicsMax);
         for (size_t i = 0; i < cdicsCount; i++) {
             recData = pdbReader->GetRecord(mobiHdr->huffmanFirstRec + 1 + i, &recSize);
             if (!recData)
