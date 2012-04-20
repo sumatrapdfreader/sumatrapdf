@@ -50,6 +50,7 @@ all_sumatrapdf: SumatraPDF Uninstaller PDFFilter PdfPreview BrowserPlugin Engine
 ##### add configuration changes that should NOT affect MuPDF after this line #####
 
 # some libraries require stdint.h
+CFLAGS = $(CFLAGS) /Isrc/utils/msvc
 CFLAGSOPT = $(CFLAGSOPT) /Isrc/utils/msvc
 
 # include build data for the remaining third-party libraries

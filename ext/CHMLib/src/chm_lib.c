@@ -94,7 +94,7 @@
         EnterCriticalSection(&(a));                     \
     } while(0)
 #define CHM_RELEASE_LOCK(a) do {                        \
-        EnterCriticalSection(&(a));                     \
+        LeaveCriticalSection(&(a));                     \
     } while(0)
 
 #else
@@ -1545,6 +1545,11 @@ static Int64 _chm_decompress_region(struct chmFile *h,
 
     /* decompress some data */
     gotLen = _chm_decompress_block(h, nBlock, &ubuffer);
+    if (gotLen == (UInt64)-1)
+    {
+        CHM_RELEASE_LOCK(h->lzx_mutex);
+        return 0;
+    }
     if (gotLen < nLen)
         nLen = gotLen;
     memcpy(buf, ubuffer+nOffset, (unsigned int)nLen);

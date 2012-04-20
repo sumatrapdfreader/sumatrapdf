@@ -1,0 +1,32 @@
+diff -rPu5 CHMLib.orig\src\chm_lib.c CHMLib\src\chm_lib.c
+--- CHMLib.orig\src\chm_lib.c	Thu Jul 02 23:34:54 2009
++++ CHMLib\src\chm_lib.c	Fri Apr 20 19:59:12 2012
+@@ -92,11 +92,11 @@
+ #ifdef WIN32
+ #define CHM_ACQUIRE_LOCK(a) do {                        \
+         EnterCriticalSection(&(a));                     \
+     } while(0)
+ #define CHM_RELEASE_LOCK(a) do {                        \
+-        EnterCriticalSection(&(a));                     \
++        LeaveCriticalSection(&(a));                     \
+     } while(0)
+ 
+ #else
+ #include <pthread.h>
+ 
+@@ -1543,10 +1543,15 @@
+         h->lzx_state = LZXinit(window_size);
+     }
+ 
+     /* decompress some data */
+     gotLen = _chm_decompress_block(h, nBlock, &ubuffer);
++    if (gotLen == (UInt64)-1)
++    {
++        CHM_RELEASE_LOCK(h->lzx_mutex);
++        return 0;
++    }
+     if (gotLen < nLen)
+         nLen = gotLen;
+     memcpy(buf, ubuffer+nOffset, (unsigned int)nLen);
+     CHM_RELEASE_LOCK(h->lzx_mutex);
+     return nLen;
