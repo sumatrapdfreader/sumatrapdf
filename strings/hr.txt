@@ -341,6 +341,9 @@ Cijeli zaslon\tCtrl+Shift+L
 Facing
 Dvije stranice
 
+Failed to rename the file!
+Neuspjeh u preimenovanju datoteke!
+
 Failed to save a file
 Spremanje datoteke nije uspjelo
 
@@ -398,6 +401,9 @@ Namjesti po jednoj stranici
 Fonts:
 Fontovi:
 
+Formatting the book... %d pages
+Oblikovanje knjige... %d stranica
+
 Found text at page %s
 Tekst je pronađen na %s. stranici
 
@@ -424,6 +430,9 @@ Slikovne datoteke (*.%s)
 
 KB
 KiB
+
+Loading file %s...
+Pokretanje datoteke %s...
 
 MB
 MiB
@@ -554,6 +563,9 @@ Ispis stranice %d od %d...
 Printing problem.
 Problem prilikom ispisivanja.
 
+Re&name...\tF2
+Preime&novati...\tF2
+
 Remember &opened files
 Upamti &otvorene datoteke
 
@@ -562,6 +574,9 @@ Ukloni iz favorita
 
 Remove page %s from favorites
 Ukloni stranicu %s iz favorita
+
+Rename To
+Preimenuj u
 
 Replace document &colors with Windows color scheme
 Zamijeni boje dokumenta s postavkama &Windows boja 
@@ -688,11 +703,4 @@ kopiram tekst
 
 printing document
 ispisujem dokument
-
-# Untranslated:
-#Failed to rename the file!
-#Formatting the book... %d pages
-#Loading file %s...
-#Re&name...\tF2
-#Rename To
 
