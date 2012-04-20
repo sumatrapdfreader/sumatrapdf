@@ -63,7 +63,7 @@ static void usage(void)
 		"\t-b -\tnumber of bits of antialiasing (0 to 8)\n"
 		"\t-g\trender in grayscale\n"
 		"\t-m\tshow timing information\n"
-		"\t-t\tshow text (-tt for xml)\n"
+		"\t-t\tshow text (-tt for xml, -ttt for more verbose xml)\n"
 		"\t-x\tshow display list\n"
 		"\t-d\tdisable use of display list\n"
 		"\t-5\tshow md5 checksums\n"

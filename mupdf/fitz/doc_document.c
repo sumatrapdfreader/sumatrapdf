@@ -27,7 +27,7 @@ fz_document *
 fz_open_document(fz_context *ctx, char *filename)
 {
 	char *ext = strrchr(filename, '.');
-	if (ext && !fz_strcasecmp(ext, ".xps"))
+	if (ext && (!fz_strcasecmp(ext, ".xps") || !fz_strcasecmp(ext, ".rels")))
 		return (fz_document*) xps_open_document(ctx, filename);
 	if (ext && !fz_strcasecmp(ext, ".cbz"))
 		return (fz_document*) cbz_open_document(ctx, filename);

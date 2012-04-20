@@ -594,15 +594,8 @@ void windocopy(pdfapp_t *app)
 
 void winreloadfile(pdfapp_t *app)
 {
-	int fd;
-
 	pdfapp_close(app);
-
-	fd = _wopen(wbuf, O_BINARY | O_RDONLY, 0666);
-	if (fd < 0)
-		winerror(&gapp, "cannot reload file");
-
-	pdfapp_open(app, filename, fd, 1);
+	pdfapp_open(app, filename, 1);
 }
 
 void winopenuri(pdfapp_t *app, char *buf)
@@ -834,7 +827,6 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShow
 	LPWSTR *argv = CommandLineToArgvW(GetCommandLineW(), &argc);
 	char argv0[256];
 	MSG msg;
-	int fd;
 	int code;
 	fz_context *ctx;
 
@@ -861,15 +853,11 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShow
 			exit(0);
 	}
 
-	fd = _wopen(wbuf, O_BINARY | O_RDONLY, 0666);
-	if (fd < 0)
-		winerror(&gapp, "cannot open file");
-
 	code = WideCharToMultiByte(CP_UTF8, 0, wbuf, -1, filename, sizeof filename, NULL, NULL);
 	if (code == 0)
 		winerror(&gapp, "cannot convert filename to utf-8");
 
-	pdfapp_open(&gapp, filename, fd, 0);
+	pdfapp_open(&gapp, filename, 0);
 
 	while (GetMessage(&msg, NULL, 0, 0))
 	{

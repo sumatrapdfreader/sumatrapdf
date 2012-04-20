@@ -532,15 +532,8 @@ void onselreq(Window requestor, Atom selection, Atom target, Atom property, Time
 
 void winreloadfile(pdfapp_t *app)
 {
-	int fd;
-
 	pdfapp_close(app);
-
-	fd = open(filename, O_RDONLY, 0666);
-	if (fd < 0)
-		fz_throw(gapp.ctx, "cannot reload file '%s'", filename);
-
-	pdfapp_open(app, filename, fd, 1);
+	pdfapp_open(app, filename, 1);
 }
 
 void winopenuri(pdfapp_t *app, char *buf)
@@ -612,7 +605,6 @@ int main(int argc, char **argv)
 	int oldy = 0;
 	int resolution = -1;
 	int pageno = 1;
-	int fd;
 	fd_set fds;
 	int width = -1;
 	int height = -1;
@@ -663,11 +655,7 @@ int main(int argc, char **argv)
 	gapp.resolution = resolution;
 	gapp.pageno = pageno;
 
-	fd = open(filename, O_RDONLY, 0666);
-	if (fd < 0)
-		fz_throw(gapp.ctx, "cannot open file '%s'", filename);
-
-	pdfapp_open(&gapp, filename, fd, 0);
+	pdfapp_open(&gapp, filename, 0);
 
 	FD_ZERO(&fds);
 

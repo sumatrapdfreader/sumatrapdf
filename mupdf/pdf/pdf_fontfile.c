@@ -507,7 +507,7 @@ parseTTF(fz_stream *file, int offset, int index, char *path)
 static void
 parseTTFs(fz_context *ctx, char *path)
 {
-	fz_stream *file = fz_open_file(ctx, path);
+	fz_stream *file = fz_open_file_a(ctx, path);
 	/* "fonterror : %s not found", path */
 	fz_try(ctx)
 	{
@@ -529,7 +529,7 @@ parseTTCs(fz_context *ctx, char *path)
 	FONT_COLLECTION fontcollectionBE;
 	ULONG i, numFonts, *offsettableBE = NULL;
 
-	fz_stream *file = fz_open_file(ctx, path);
+	fz_stream *file = fz_open_file_a(ctx, path);
 	/* "fonterror : %s not found", path */
 
 	fz_var(offsettableBE);

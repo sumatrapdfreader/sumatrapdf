@@ -206,7 +206,7 @@ fz_stream *fz_open_file2(fz_context *ctx, const TCHAR *filePath)
 #ifdef UNICODE
     return fz_open_file_w(ctx, filePath);
 #else
-    return fz_open_file(ctx, filePath);
+    return fz_open_file_a(ctx, filePath);
 #endif
 }
 

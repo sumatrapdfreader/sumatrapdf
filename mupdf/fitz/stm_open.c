@@ -149,7 +149,21 @@ fz_open_fd(fz_context *ctx, int fd)
 fz_stream *
 fz_open_file(fz_context *ctx, const char *name)
 {
+#ifdef _WIN32
+	char *s = (char*)name;
+	wchar_t *wname, *d;
+	int c, fd;
+	d = wname = fz_malloc(ctx, (strlen(name)+1) * sizeof(wchar_t));
+	while (*s) {
+		s += fz_chartorune(&c, s);
+		*d++ = c;
+	}
+	*d = 0;
+	fd = _wopen(wname, O_BINARY | O_RDONLY, 0);
+	fz_free(ctx, wname);
+#else
 	int fd = open(name, O_BINARY | O_RDONLY, 0);
+#endif
 	if (fd == -1)
 		fz_throw(ctx, "cannot open %s", name);
 	return fz_open_fd(ctx, fd);
@@ -160,6 +174,16 @@ fz_stream *
 fz_open_file_w(fz_context *ctx, const wchar_t *name)
 {
 	int fd = _wopen(name, O_BINARY | O_RDONLY, 0);
+	if (fd == -1)
+		return NULL;
+	return fz_open_fd(ctx, fd);
+}
+
+/* SumatraPDF: allow to open ANSI-encoded paths */
+fz_stream *
+fz_open_file_a(fz_context *ctx, const char *name)
+{
+	int fd = open(name, O_BINARY | O_RDONLY, 0);
 	if (fd == -1)
 		return NULL;
 	return fz_open_fd(ctx, fd);

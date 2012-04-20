@@ -544,20 +544,20 @@ int fz_strlcpy(char *dst, const char *src, int n);
 int fz_strlcat(char *dst, const char *src, int n);
 
 /*
-	fz_chartorune: UTF8 decode a string of chars to a rune.
+	fz_chartorune: UTF8 decode a single rune from a sequence of chars.
 
 	rune: Pointer to an int to assign the decoded 'rune' to.
 
-	str: Pointer to a UTF8 encoded string
+	str: Pointer to a UTF8 encoded string.
 
 	Returns the number of bytes consumed. Does not throw exceptions.
 */
 int fz_chartorune(int *rune, char *str);
 
 /*
-	runetochar: UTF8 encode a run to a string of chars.
+	fz_runetochar: UTF8 encode a rune to a sequence of chars.
 
-	str: Pointer to a place to put the UTF8 encoded string.
+	str: Pointer to a place to put the UTF8 encoded character.
 
 	rune: Pointer to a 'rune'.
 
@@ -567,7 +567,7 @@ int fz_chartorune(int *rune, char *str);
 int fz_runetochar(char *str, int rune);
 
 /*
-	fz_runelen: Count many chars are required to represent a rune.
+	fz_runelen: Count how many chars are required to represent a rune.
 
 	rune: The rune to encode.
 
@@ -996,7 +996,12 @@ typedef struct fz_stream_s fz_stream;
 /*
 	fz_open_file: Open the named file and wrap it in a stream.
 
-	filename: Path to a file as it would be given to open(2).
+	filename: Path to a file. On non-Windows machines the filename should
+	be exactly as it would be passed to open(2). On Windows machines, the
+	path should be UTF-8 encoded so that non-ASCII characters can be
+	represented. Other platforms do the encoding as standard anyway (and
+	in most cases, particularly for MacOS and Linux, the encoding they
+	use is UTF-8 anyway).
 */
 fz_stream *fz_open_file(fz_context *ctx, const char *filename);
 
@@ -1009,6 +1014,9 @@ fz_stream *fz_open_file(fz_context *ctx, const char *filename);
 	to _wopen().
 */
 fz_stream *fz_open_file_w(fz_context *ctx, const wchar_t *filename);
+
+/* SumatraPDF: allow to open ANSI-encoded paths */
+fz_stream *fz_open_file_a(fz_context *ctx, const char *filename);
 
 /*
 	fz_open_fd: Wrap an open file descriptor in a stream.
