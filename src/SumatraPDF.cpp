@@ -236,6 +236,9 @@ bool OpenFileExternally(const TCHAR *path)
     // check if this file's perceived type is allowed
     const TCHAR *ext = path::GetExt(path);
     ScopedMem<TCHAR> perceivedType(ReadRegStr(HKEY_CLASSES_ROOT, ext, _T("PerceivedType")));
+    // since we allow following hyperlinks, also allow opening local webpages
+    if (str::EndsWithI(path, _T(".htm")) || str::EndsWithI(path, _T(".html")) || str::EndsWithI(path, _T(".xhtml")))
+        perceivedType.Set(str::Dup(_T("webpage")));
     if (str::IsEmpty(perceivedType.Get()))
         return false;
     str::ToLower(perceivedType);
