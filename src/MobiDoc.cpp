@@ -137,14 +137,14 @@ static bool PalmdocUncompress(const char *src, size_t srcLen, str::Str<char>& ds
     while (src < srcEnd) {
         uint8 c = (uint8)*src++;
         if ((c >= 1) && (c <= 8)) {
-            if (src + c >= srcEnd)
+            if (src + c > srcEnd)
                 return false;
             dst.Append(src, c);
             src += c;
         } else if (c < 128) {
             dst.Append((char)c);
         } else if ((c >= 128) && (c < 192)) {
-            if (src >= srcEnd)
+            if (src + 1 > srcEnd)
                 return false;
             uint16 c2 = (c << 8) | (uint8)*src++;
             uint16 back = (c2 >> 3) & 0x07ff;
