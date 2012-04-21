@@ -152,8 +152,7 @@ struct fz_error_context_s
 	struct {
 		int code;
 		jmp_buf buffer;
-	/* SumatraPDF: stack overflows happen in pdf_load_page_tree_node and pdf_read_xref_sections */
-	} stack[1024];
+	} stack[256];
 	char message[256];
 };
 

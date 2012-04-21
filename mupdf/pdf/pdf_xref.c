@@ -415,26 +415,37 @@ pdf_read_xref_sections(pdf_document *xref, int ofs, pdf_lexbuf *buf)
 	pdf_obj *prev = NULL;
 	fz_context *ctx = xref->ctx;
 
+	fz_var(trailer);
+	fz_var(xrefstm);
+	fz_var(prev);
+
 	fz_try(ctx)
 	{
-		trailer = pdf_read_xref(xref, ofs, buf);
+		do
+		{
+			trailer = pdf_read_xref(xref, ofs, buf);
 
-		/* FIXME: do we overwrite free entries properly? */
-		xrefstm = pdf_dict_gets(trailer, "XRefStm");
-		if (xrefstm)
-			pdf_read_xref_sections(xref, pdf_to_int(xrefstm), buf);
-
-		prev = pdf_dict_gets(trailer, "Prev");
-		if (prev)
-			pdf_read_xref_sections(xref, pdf_to_int(prev), buf);
+			/* FIXME: do we overwrite free entries properly? */
+			xrefstm = pdf_dict_gets(trailer, "XRefStm");
+			prev = pdf_dict_gets(trailer, "Prev");
+			/* We only recurse if we have both xrefstm and prev.
+			 * Hopefully this happens infrequently. */
+			if (xrefstm && prev)
+				pdf_read_xref_sections(xref, pdf_to_int(xrefstm), buf);
+			if (prev)
+				ofs = pdf_to_int(prev);
+			else if (xrefstm)
+				ofs = pdf_to_int(xrefstm);
+			pdf_drop_obj(trailer);
+			trailer = NULL;
+		}
+		while (prev || xrefstm);
 	}
 	fz_catch(ctx)
 	{
 		pdf_drop_obj(trailer);
 		fz_throw(ctx, "cannot read xref at offset %d", ofs);
 	}
-
-	pdf_drop_obj(trailer);
 }
 
 /*
@@ -1226,7 +1237,7 @@ static int pdf_meta(fz_document *doc_, int key, void *ptr, int size)
 		default:
 			return 0;
 		}
-		return pdf_has_permission(doc, size);
+		return pdf_has_permission(doc, i);
 	}
 	case FZ_META_INFO:
 	{

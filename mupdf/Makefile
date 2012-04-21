@@ -9,8 +9,11 @@ GEN := generated
 
 default: all
 
+# Do not specify CFLAGS or LIBS on the make invocation line - specify
+# XCFLAGS or XLIBS instead. Make ignores any lines in the makefile that
+# set a variable that was set on the command line.
 CFLAGS += $(XCFLAGS) -Ifitz -Ipdf -Ixps -Icbz -Iscripts
-LIBS += -lfreetype -ljbig2dec -ljpeg -lopenjpeg -lz -lm
+LIBS += $(XLIBS) -lfreetype -ljbig2dec -ljpeg -lopenjpeg -lz -lm
 
 include Makerules
 include Makethird
