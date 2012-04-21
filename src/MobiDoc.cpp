@@ -131,23 +131,22 @@ STATIC_ASSERT(kMobiHeaderLen == sizeof(MobiHeader), validMobiHeader);
 // Uncompress source data compressed with PalmDoc compression into a buffer.
 // http://wiki.mobileread.com/wiki/PalmDOC#Format
 // Returns false on decoding errors
-static bool PalmdocUncompress(uint8 *src, size_t srcLen, str::Str<char>& dst)
+static bool PalmdocUncompress(const char *src, size_t srcLen, str::Str<char>& dst)
 {
-    uint8 *srcEnd = src + srcLen;
+    const char *srcEnd = src + srcLen;
     while (src < srcEnd) {
-        uint8 c = *src++;
+        uint8 c = (uint8)*src++;
         if ((c >= 1) && (c <= 8)) {
-            for (uint8 n = c; n > 0; n--) {
-                if (src >= srcEnd)
-                    return false;
-                dst.Append((char)*src++);
-            }
+            if (src + c >= srcEnd)
+                return false;
+            dst.Append(src, c);
+            src += c;
         } else if (c < 128) {
             dst.Append((char)c);
         } else if ((c >= 128) && (c < 192)) {
             if (src >= srcEnd)
                 return false;
-            uint16 c2 = (c << 8) | *src++;
+            uint16 c2 = (c << 8) | (uint8)*src++;
             uint16 back = (c2 >> 3) & 0x07ff;
             if (back > dst.Size() || 0 == back)
                 return false;
@@ -173,11 +172,11 @@ struct HuffHeader
     // offset of 256 4-byte elements of cache data, in big endian
     uint32       cacheOffset;       // should be 24 as well
     // offset of 64 4-byte elements of base table data, in big endian
-    uint32       baseTableOffset;   // should be 1024 + 24
+    uint32       baseTableOffset;   // should be 24 + 1024
     // like cacheOffset except data is in little endian
-    uint32       cacheOffsetLE;     // should be 64 + 1024 + 24
+    uint32       cacheLEOffset;     // should be 24 + 1024 + 256
     // like baseTableOffset except data is in little endian
-    uint32       baseTableOffsetLE; // should be 1024 + 64 + 1024 + 24
+    uint32       baseTableLEOffset; // should be 24 + 1024 + 256 + 1024
 };
 STATIC_ASSERT(kHuffHeaderLen == sizeof(HuffHeader), validHuffHeader);
 
@@ -192,8 +191,10 @@ struct CdicHeader
 
 STATIC_ASSERT(kCdicHeaderLen == sizeof(CdicHeader), validCdicHeader);
 
-#define kCacheDataLen      (256*4)
-#define kBaseTableDataLen  (64*4)
+#define kCacheItemCount     256
+#define kCacheDataLen      (kCacheItemCount * sizeof(uint32))
+#define kBaseTableItemCount 64
+#define kBaseTableDataLen  (kBaseTableItemCount * sizeof(uint32))
 
 #define kHuffRecordMinLen (kHuffHeaderLen +     kCacheDataLen +     kBaseTableDataLen)
 #define kHuffRecordLen    (kHuffHeaderLen + 2 * kCacheDataLen + 2 * kBaseTableDataLen)
@@ -202,8 +203,8 @@ STATIC_ASSERT(kCdicHeaderLen == sizeof(CdicHeader), validCdicHeader);
 
 class HuffDicDecompressor
 {
-    uint32      cacheTable[256];
-    uint32      baseTable[64];
+    uint32      cacheTable[kCacheItemCount];
+    uint32      baseTable[kBaseTableItemCount];
 
     size_t      dictsCount;
     // owned by the creator (in our case: by the PdbReader)
@@ -330,10 +331,8 @@ bool HuffDicDecompressor::SetHuffData(uint8 *huffData, size_t huffDataLen)
     huffHdr.hdrLen = d.UInt32();
     huffHdr.cacheOffset = d.UInt32();
     huffHdr.baseTableOffset = d.UInt32();
-    d.ChangeOrder(ByteOrderDecoder::LittleEndian);
-    huffHdr.cacheOffsetLE = d.UInt32();
-    huffHdr.baseTableOffsetLE = d.UInt32();
-    d.ChangeOrder(ByteOrderDecoder::BigEndian);
+    huffHdr.cacheLEOffset = d.UInt32();
+    huffHdr.baseTableLEOffset = d.UInt32();
     CrashIf(d.Offset() != kHuffHeaderLen);
 
     if (!str::EqN(huffHdr.id, "HUFF", 4))
@@ -346,15 +345,14 @@ bool HuffDicDecompressor::SetHuffData(uint8 *huffData, size_t huffDataLen)
         return false;
     if (huffHdr.baseTableOffset != huffHdr.cacheOffset + kCacheDataLen)
         return false;
-    if (huffHdr.baseTableOffset + kBaseTableDataLen > huffDataLen)
-        return false;
     // we conservatively use the big-endian version of the data,
-    for (int i = 0; i < 256; i++) {
+    for (int i = 0; i < kCacheItemCount; i++) {
         cacheTable[i] = d.UInt32();
     }
-    for (int i = 0; i < 64; i++) {
+    for (int i = 0; i < kBaseTableItemCount; i++) {
         baseTable[i] = d.UInt32();
     }
+    CrashIf(d.Offset() != kHuffRecordMinLen);
     return true;
 }
 
@@ -725,22 +723,18 @@ bool MobiDoc::LoadDocRecordIntoBuffer(size_t recNo, str::Str<char>& strOut)
         return false;
     size_t extraSize = ExtraDataSize((uint8*)recData, recSize, trailersCount, multibyte);
     recSize -= extraSize;
+
     if (COMPRESSION_NONE == compressionType) {
         strOut.Append(recData, recSize);
         return true;
     }
-
     if (COMPRESSION_PALM == compressionType) {
-        bool ok = PalmdocUncompress((uint8 *)recData, recSize, strOut);
+        bool ok = PalmdocUncompress(recData, recSize, strOut);
         if (!ok)
             lf("PalmDoc decompression failed");
         return ok;
     }
-
-    if (COMPRESSION_HUFF == compressionType) {
-        assert(huffDic);
-        if (!huffDic)
-            return false;
+    if (COMPRESSION_HUFF == compressionType && huffDic) {
         bool ok = huffDic->Decompress((uint8*)recData, recSize, strOut);
         if (!ok)
             lf("HuffDic decompression failed");
