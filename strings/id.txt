@@ -13,6 +13,7 @@ Contributor: Yudi Wibisono (http://yudiwbs.wordpress.com)
 Contributor: Ricki Yani Setiawan
 Contributor: Tri R.A. Wibowo
 Contributor: Alif Jum'an (www.boloplekcd.blogspot.com)
+Contributor: Muhamad Abdul Rosid
 
 &About
 &Tentang
@@ -272,6 +273,9 @@ Salin &Komentar
 Copying text was denied (copying as image only)
 Menyalin teks ditolak (menyalin sebagai gambar saja)
 
+Copyright:
+Hak Cipta
+
 Could not obtain Printer properties
 Tidak bsa mendapatkan sifat Pencetak
 
@@ -341,6 +345,9 @@ Selayar Penuh\tCtrl+Shift+L
 Facing
 Dua Halaman
 
+Failed to rename the file!
+Gagal mengganti nama berkas!
+
 Failed to save a file
 Gagal menyimpan berkas
 
@@ -395,6 +402,12 @@ Sesuaikan Lebar Dan Tampilkan Halaman Secara Kontinu
 Fit a Single Page
 Sesuaikan Halaman Tunggal
 
+Fonts:
+Huruf
+
+Formatting the book... %d pages
+Memformat buku... %d halaman
+
 Found text at page %s
 Teks ditemukan pada halaman %s
 
@@ -421,6 +434,9 @@ Berkas Gambar (*.%s)
 
 KB
 KB
+
+Loading file %s...
+Memuat berkas %s...
 
 MB
 MB
@@ -475,6 +491,12 @@ Buka di &Adobe Reader
 
 Open in &Foxit Reader
 Buka di &Foxit Reader
+
+Open in Microsoft HTML Help
+Buka dengan Microsoft HTML Help
+
+Open in Microsoft XPS-Viewer
+Buka dengan Microsoft XPS-Viewer
 
 Open in PDF-XChange
 Buka di PDF-&XChange
@@ -545,6 +567,9 @@ Mencetak halaman %d dari %d...
 Printing problem.
 Masalah pencetakan.
 
+Re&name...\tF2
+&Ganti Nama...\tF2
+
 Remember &opened files
 Ingat &berkas yang pernah dibuka
 
@@ -553,6 +578,12 @@ Hapus Dari Favorit
 
 Remove page %s from favorites
 Hapus Halaman %s Dari Favorit
+
+Rename To
+Ganti Nama Menjadi
+
+Replace document &colors with Windows color scheme
+Ganti &warna dokumen dengan skema warna Windows
 
 Rotate &Left\tCtrl+Shift+-
 Putar Ke Kiri\tCtrl+Shift+-
@@ -676,16 +707,4 @@ menyalin teks
 
 printing document
 mencetak dokumen
-
-# Untranslated:
-#Copyright:
-#Failed to rename the file!
-#Fonts:
-#Formatting the book... %d pages
-#Loading file %s...
-#Open in Microsoft HTML Help
-#Open in Microsoft XPS-Viewer
-#Re&name...\tF2
-#Rename To
-#Replace document &colors with Windows color scheme
 
