@@ -87,6 +87,22 @@ CROSSCOMPILE=yes
 NOX11=yes
 endif
 
+ifeq "$(OS)" "w64_x86-cross-mingw32"
+CC = i686-w64-mingw32-gcc
+LD = i686-w64-mingw32-gcc
+AR = i686-w64-mingw32-ar
+CROSSCOMPILE=yes
+NOX11=yes
+endif
+
+ifeq "$(OS)" "w64_amd64-cross-mingw32"
+CC = x86_64-w64-mingw32-gcc
+LD = x86_64-w64-mingw32-gcc
+AR = x86_64-w64-mingw32-ar
+CROSSCOMPILE=yes
+NOX11=yes
+endif
+
 # Most variables when building for iOS are set up in ios/build_libs.sh,
 # which is called from the Xcode project as a "Run Script" build step.
 # The following section works for both device and simulator builds.

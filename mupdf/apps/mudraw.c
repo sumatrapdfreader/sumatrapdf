@@ -743,7 +743,7 @@ int main(int argc, char **argv)
 	if (showtext)
 		fz_free_text_sheet(ctx, sheet);
 
-	if (showtime)
+	if (showtime && timing.count > 0)
 	{
 		printf("total %dms / %d pages for an average of %dms\n",
 			timing.total, timing.count, timing.total / timing.count);

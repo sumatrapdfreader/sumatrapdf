@@ -58,6 +58,7 @@ EXPORTS
 	fz_buffer_storage
 	fz_open_file
 	fz_open_file_w
+	fz_open_file_a
 	fz_open_fd
 	fz_open_memory
 	fz_open_buffer
@@ -106,6 +107,7 @@ EXPORTS
 	fz_new_bbox_device
 	fz_new_draw_device
 	fz_new_gdiplus_device
+	fz_new_draw_device_with_bbox
 	fz_new_text_device
 	fz_new_text_sheet
 	fz_free_text_sheet
@@ -137,6 +139,8 @@ EXPORTS
 	fz_bound_page
 	fz_run_page
 	fz_free_page
+	fz_meta
+	fz_write
 
 	fz_clone_context_internal
 	fz_new_aa_context
@@ -409,6 +413,7 @@ EXPORTS
 	pdf_open_document
 	pdf_open_document_with_stream
 	pdf_close_document
+	pdf_write
 	pdf_needs_password
 	pdf_authenticate_password
 	pdf_has_permission

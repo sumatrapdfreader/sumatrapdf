@@ -129,3 +129,10 @@ fz_meta(fz_document *doc, int key, void *ptr, int size)
 		return doc->meta(doc, key, ptr, size);
 	return FZ_META_UNKNOWN_KEY;
 }
+
+void
+fz_write(fz_document *doc, char *filename, fz_write_options *opts)
+{
+	if (doc && doc->write)
+		doc->write(doc, filename, opts);
+}

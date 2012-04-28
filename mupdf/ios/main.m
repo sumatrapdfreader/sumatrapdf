@@ -272,10 +272,10 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 
 - (void) viewWillAppear: (BOOL)animated
 {
-	[self setTitle: @"PDF and XPS Documents"];
+	[self setTitle: @"PDF, XPS and CBZ Documents"];
 	[self reload];
 	printf("library viewWillAppear (starting reload timer)\n");
-	timer = [NSTimer timerWithTimeInterval: 1
+	timer = [NSTimer timerWithTimeInterval: 3
 		target: self selector: @selector(reload) userInfo: nil
 		repeats: YES];
 	[[NSRunLoop currentRunLoop] addTimer: timer forMode: NSDefaultRunLoopMode];
@@ -290,18 +290,26 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 
 - (void) reload
 {
-	NSError *error = nil;
-
 	if (files) {
 		[files release];
 		files = nil;
 	}
 
+	NSFileManager *fileman = [NSFileManager defaultManager];
 	NSString *docdir = [NSString stringWithFormat: @"%@/Documents", NSHomeDirectory()];
-	files = [[NSFileManager defaultManager] contentsOfDirectoryAtPath: docdir error: &error];
-	if (error)
-		files = [NSArray arrayWithObjects: @"...error loading directory...", nil];
-	[files retain];
+	NSMutableArray *outfiles = [[NSMutableArray alloc] init];
+	NSDirectoryEnumerator *direnum = [fileman enumeratorAtPath:docdir];
+	NSString *file;
+	BOOL isdir;
+	while (file = [direnum nextObject]) {
+		NSString *filepath = [docdir stringByAppendingPathComponent:file];
+		NSLog(@"file %@\n", file);
+		if ([fileman fileExistsAtPath:filepath isDirectory:&isdir] && !isdir) {
+			[outfiles addObject:file];
+		}
+	}
+
+	files = outfiles;
 
 	[[self tableView] reloadData];
 }
@@ -1386,6 +1394,8 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 
 - (BOOL) application: (UIApplication*)application didFinishLaunchingWithOptions: (NSDictionary*)launchOptions
 {
+	NSString *filename;
+
 	queue = dispatch_queue_create("com.artifex.mupdf.queue", NULL);
 
 	// use at most 128M for resource cache
@@ -1405,11 +1415,29 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 	[window addSubview: [navigator view]];
 	[window makeKeyAndVisible];
 
-	NSString *filename = [[NSUserDefaults standardUserDefaults] objectForKey: @"OpenDocumentKey"];
+	filename = [[NSUserDefaults standardUserDefaults] objectForKey: @"OpenDocumentKey"];
 	if (filename)
 		[library openDocument: filename];
 
+	filename = [launchOptions objectForKey: UIApplicationLaunchOptionsURLKey];
+	NSLog(@"urlkey = %@\n", filename);
+
 	return YES;
+}
+
+- (BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation
+{
+	NSLog(@"openURL: %@\n", url);
+	if ([url isFileURL]) {
+		NSString *path = [url path];
+		NSString *dir = [NSString stringWithFormat: @"%@/Documents/", NSHomeDirectory()];
+		path = [path stringByReplacingOccurrencesOfString:@"/private" withString:@""];
+		path = [path stringByReplacingOccurrencesOfString:dir withString:@""];
+		NSLog(@"file relative path: %@\n", path);
+		[library openDocument:path];
+		return YES;
+	}
+	return NO;
 }
 
 - (void)applicationDidEnterBackground:(UIApplication *)application

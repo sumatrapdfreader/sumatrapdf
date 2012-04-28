@@ -11,7 +11,7 @@ LOCAL_C_INCLUDES := \
 	../thirdparty/openjpeg-1.5.0/libopenjpeg \
 	../thirdparty/jpeg-8d \
 	../thirdparty/zlib-1.2.5 \
-	../thirdparty/freetype-2.4.8/include \
+	../thirdparty/freetype-2.4.9/include \
 	../draw \
 	../fitz \
 	../pdf \

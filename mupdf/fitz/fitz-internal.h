@@ -1096,6 +1096,7 @@ struct fz_document_s
 	void (*run_page)(fz_document *doc, fz_page *page, fz_device *dev, fz_matrix transform, fz_cookie *cookie);
 	void (*free_page)(fz_document *doc, fz_page *page);
 	int (*meta)(fz_document *doc, int key, void *ptr, int size);
+	void (*write)(fz_document *doc, char *filename, fz_write_options *opts);
 };
 
 #endif

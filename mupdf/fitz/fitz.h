@@ -712,7 +712,7 @@ extern const fz_bbox fz_infinite_bbox;
 	different representations.
 
 	/ a b 0 \
-	| c d 0 |   normally represented as    [ a b c d e f ].
+	| c d 0 | normally represented as [ a b c d e f ].
 	\ e f 1 /
 */
 typedef struct fz_matrix_s fz_matrix;
@@ -2260,5 +2260,51 @@ enum
 	*/
 	FZ_META_INFO = 4,
 };
+
+typedef struct fz_write_options_s fz_write_options;
+
+/*
+	In calls to fz_write, the following options structure can be used
+	to control aspects of the writing process. This structure may grow
+	in future, and should be zero-filled to allow forwards compatiblity.
+*/
+struct fz_write_options_s
+{
+	int doascii;    /*	If non-zero then attempt (where possible) to
+				make the output ascii. */
+	int doexpand;	/*	Bitflags; each non zero bit indicates an aspect
+				of the file that should be 'expanded' on
+				writing. */
+	int dogarbage;	/*	If non-zero then attempt (where possible) to
+				garbage collect the file before writing. */
+};
+
+/*	An enumeration of bitflags to use in the above 'doexpand' field of
+	fz_write_options.
+*/
+enum
+{
+	fz_expand_images = 1,
+	fz_expand_fonts = 2,
+	fz_expand_all = -1
+};
+
+/*
+	fz_write: Write a document out.
+
+	(In development - Subject to change in future versions)
+
+	Save a copy of the current document in its original format.
+	Internally the document may change.
+
+	doc: The document to save.
+
+	filename: The filename to save to.
+
+	opts: NULL, or a pointer to an options structure.
+
+	May throw exceptions.
+*/
+void fz_write(fz_document *doc, char *filename, fz_write_options *opts);
 
 #endif

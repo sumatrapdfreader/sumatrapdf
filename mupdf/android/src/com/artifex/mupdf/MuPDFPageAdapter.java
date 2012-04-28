@@ -65,7 +65,21 @@ public class MuPDFPageAdapter extends BaseAdapter {
 						pageView.setPage(position, result);
 				}
 			};
-			sizingTask.execute((Void)null);
+			try
+			{
+				sizingTask.execute((Void)null);
+			}
+			catch (java.util.concurrent.RejectedExecutionException e)
+			{
+				// If we can't do it in the background, just
+				// do it in the foreground.
+				PointF result = mCore.getPageSize(position);
+				mPageSizes.put(position, result);
+				// Check that this view hasn't been reused for
+				// another page since we started
+				if (pageView.getPage() == position)
+					pageView.setPage(position, result);
+			}
 		}
 		return pageView;
 	}

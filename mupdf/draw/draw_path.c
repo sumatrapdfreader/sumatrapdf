@@ -272,8 +272,8 @@ fz_add_line_join(struct sctx *s, fz_point a, fz_point b, fz_point c, int join_un
 	}
 	else
 	{
-			fz_add_line(s, b.x + dlx1, b.y + dly1, b.x, b.y);
-			fz_add_line(s, b.x, b.y, b.x + dlx0, b.y + dly0);
+		fz_add_line(s, b.x + dlx1, b.y + dly1, b.x, b.y);
+		fz_add_line(s, b.x, b.y, b.x + dlx0, b.y + dly0);
 	}
 
 	/* XPS miter joins are clipped at miterlength, rather than simply

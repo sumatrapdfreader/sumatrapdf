@@ -252,7 +252,7 @@ MUPDF_OBJS = \
 	$(OP)\pdf_parse.obj $(OP)\pdf_pattern.obj $(OP)\pdf_repair.obj $(OP)\pdf_shade.obj \
 	$(OP)\pdf_stream.obj $(OP)\pdf_type3.obj $(OP)\pdf_unicode.obj \
 	$(OP)\pdf_xobject.obj $(OP)\pdf_xref.obj $(OP)\pdf_cmap_load.obj \
-	$(OP)\pdf_cmap_parse.obj $(OP)\pdf_cmap_table.obj $(OP)\pdf_ft_tools.obj
+	$(OP)\pdf_cmap_parse.obj $(OP)\pdf_cmap_table.obj $(OP)\pdf_write.obj $(OP)\pdf_ft_tools.obj
 
 MUXPS_OBJS = \
 	$(OX)\xps_common.obj $(OX)\xps_doc.obj $(OX)\xps_glyphs.obj $(OX)\xps_gradient.obj \

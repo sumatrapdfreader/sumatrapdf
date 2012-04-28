@@ -146,6 +146,8 @@ pdf_document *pdf_open_document_with_stream(fz_stream *file);
 */
 void pdf_close_document(pdf_document *doc);
 
+void pdf_write(pdf_document *doc, char *filename, fz_write_options *opts);
+
 int pdf_needs_password(pdf_document *doc);
 int pdf_authenticate_password(pdf_document *doc, char *pw);
 

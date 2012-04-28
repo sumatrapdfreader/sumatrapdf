@@ -136,8 +136,8 @@ JPEG_SRC := \
 	jidctflt.c \
 	jidctfst.c \
 	jidctint.c \
-	jmemansi.c \
 	jmemmgr.c \
+	jmemnobs.c \
 	jquant1.c \
 	jquant2.c \
 	jutils.c \
@@ -156,8 +156,8 @@ OPENJPEG_LIB := $(OUT)/libopenjpeg.a
 
 OPENJPEG_SRC := \
 	bio.c \
-	cio.c \
 	cidx_manager.c \
+	cio.c \
 	dwt.c \
 	event.c \
 	image.c \

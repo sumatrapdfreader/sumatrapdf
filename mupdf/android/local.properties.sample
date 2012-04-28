@@ -1,0 +1,8 @@
+# Uncomment and edit the appropriate line below.
+# Resave this file as local.properties.
+
+# For MacOS/Linux you want a line such as:
+#sdk.dir=/Library/android-sdk-mac_x86
+
+# For Windows/Cygwin you want something like the following:
+#sdk.dir=C:\\Program Files (x86)\\Android\\android-sdk

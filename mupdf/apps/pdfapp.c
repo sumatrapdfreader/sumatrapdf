@@ -297,7 +297,7 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 	if (drawpage)
 	{
 		char buf2[64];
-		size_t len;
+		int len;
 
 		sprintf(buf2, " - %d/%d (%d dpi)",
 				app->pageno, app->pagecount, app->resolution);

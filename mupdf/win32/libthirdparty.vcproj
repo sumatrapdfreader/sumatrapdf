@@ -39,7 +39,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\scripts;..\thirdparty\jbig2dec;..\thirdparty\jpeg-8d;..\thirdparty\openjpeg-1.5.0\libopenjpeg;..\thirdparty\zlib-1.2.5;..\thirdparty\freetype-2.4.8\include"
+				AdditionalIncludeDirectories="..\scripts;..\thirdparty\jbig2dec;..\thirdparty\jpeg-8d;..\thirdparty\openjpeg-1.5.0\libopenjpeg;..\thirdparty\zlib-1.2.5;..\thirdparty\freetype-2.4.9\include"
 				PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;FT_CONFIG_MODULES_H=\&quot;slimftmodules.h\&quot;;FT_CONFIG_OPTIONS_H=\&quot;slimftoptions.h\&quot;;DEBUG=1;verbose=-1"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -102,7 +102,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\scripts;..\thirdparty\jbig2dec;..\thirdparty\jpeg-8d;..\thirdparty\openjpeg-1.5.0\libopenjpeg;..\thirdparty\zlib-1.2.5;..\thirdparty\freetype-2.4.8\include"
+				AdditionalIncludeDirectories="..\scripts;..\thirdparty\jbig2dec;..\thirdparty\jpeg-8d;..\thirdparty\openjpeg-1.5.0\libopenjpeg;..\thirdparty\zlib-1.2.5;..\thirdparty\freetype-2.4.9\include"
 				PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;FT_CONFIG_MODULES_H=\&quot;slimftmodules.h\&quot;;FT_CONFIG_OPTIONS_H=\&quot;slimftoptions.h\&quot;;verbose=-1"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
@@ -162,7 +162,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\scripts;..\thirdparty\jbig2dec;..\thirdparty\jpeg-8d;..\thirdparty\openjpeg-1.5.0\libopenjpeg;..\thirdparty\zlib-1.2.5;..\thirdparty\freetype-2.4.8\include"
+				AdditionalIncludeDirectories="..\scripts;..\thirdparty\jbig2dec;..\thirdparty\jpeg-8d;..\thirdparty\openjpeg-1.5.0\libopenjpeg;..\thirdparty\zlib-1.2.5;..\thirdparty\freetype-2.4.9\include"
 				PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;FT_CONFIG_MODULES_H=\&quot;slimftmodules.h\&quot;;FT_CONFIG_OPTIONS_H=\&quot;slimftoptions.h\&quot;;MEMENTO=1;DEBUG=1;verbose=-1"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -310,11 +310,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\jpeg-8d\jmemansi.c"
+				RelativePath="..\thirdparty\jpeg-8d\jmemmgr.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\jpeg-8d\jmemmgr.c"
+				RelativePath="..\thirdparty\jpeg-8d\jmemnobs.c"
 				>
 			</File>
 			<File
@@ -538,90 +538,90 @@
 			Name="libfreetype"
 			>
 			<File
-				RelativePath="..\thirdparty\freetype-2.4.8\src\cff\cff.c"
+				RelativePath="..\thirdparty\freetype-2.4.9\src\cff\cff.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\freetype-2.4.8\src\psaux\psaux.c"
+				RelativePath="..\thirdparty\freetype-2.4.9\src\psaux\psaux.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\freetype-2.4.8\src\pshinter\pshinter.c"
+				RelativePath="..\thirdparty\freetype-2.4.9\src\pshinter\pshinter.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\freetype-2.4.8\src\psnames\psnames.c"
+				RelativePath="..\thirdparty\freetype-2.4.9\src\psnames\psnames.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\freetype-2.4.8\src\raster\raster.c"
+				RelativePath="..\thirdparty\freetype-2.4.9\src\raster\raster.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\freetype-2.4.8\src\sfnt\sfnt.c"
+				RelativePath="..\thirdparty\freetype-2.4.9\src\sfnt\sfnt.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\freetype-2.4.8\src\smooth\smooth.c"
+				RelativePath="..\thirdparty\freetype-2.4.9\src\smooth\smooth.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\freetype-2.4.8\src\truetype\truetype.c"
+				RelativePath="..\thirdparty\freetype-2.4.9\src\truetype\truetype.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\freetype-2.4.8\src\type1\type1.c"
+				RelativePath="..\thirdparty\freetype-2.4.9\src\type1\type1.c"
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\freetype-2.4.8\src\cid\type1cid.c"
+				RelativePath="..\thirdparty\freetype-2.4.9\src\cid\type1cid.c"
 				>
 			</File>
 			<Filter
 				Name="base"
 				>
 				<File
-					RelativePath="..\thirdparty\freetype-2.4.8\src\base\ftbase.c"
+					RelativePath="..\thirdparty\freetype-2.4.9\src\base\ftbase.c"
 					>
 				</File>
 				<File
-					RelativePath="..\thirdparty\freetype-2.4.8\src\base\ftbbox.c"
+					RelativePath="..\thirdparty\freetype-2.4.9\src\base\ftbbox.c"
 					>
 				</File>
 				<File
-					RelativePath="..\thirdparty\freetype-2.4.8\src\base\ftbitmap.c"
+					RelativePath="..\thirdparty\freetype-2.4.9\src\base\ftbitmap.c"
 					>
 				</File>
 				<File
-					RelativePath="..\thirdparty\freetype-2.4.8\src\base\ftgasp.c"
+					RelativePath="..\thirdparty\freetype-2.4.9\src\base\ftgasp.c"
 					>
 				</File>
 				<File
-					RelativePath="..\thirdparty\freetype-2.4.8\src\base\ftglyph.c"
+					RelativePath="..\thirdparty\freetype-2.4.9\src\base\ftglyph.c"
 					>
 				</File>
 				<File
-					RelativePath="..\thirdparty\freetype-2.4.8\src\base\ftinit.c"
+					RelativePath="..\thirdparty\freetype-2.4.9\src\base\ftinit.c"
 					>
 				</File>
 				<File
-					RelativePath="..\thirdparty\freetype-2.4.8\src\base\ftstroke.c"
+					RelativePath="..\thirdparty\freetype-2.4.9\src\base\ftstroke.c"
 					>
 				</File>
 				<File
-					RelativePath="..\thirdparty\freetype-2.4.8\src\base\ftsynth.c"
+					RelativePath="..\thirdparty\freetype-2.4.9\src\base\ftsynth.c"
 					>
 				</File>
 				<File
-					RelativePath="..\thirdparty\freetype-2.4.8\src\base\ftsystem.c"
+					RelativePath="..\thirdparty\freetype-2.4.9\src\base\ftsystem.c"
 					>
 				</File>
 				<File
-					RelativePath="..\thirdparty\freetype-2.4.8\src\base\fttype1.c"
+					RelativePath="..\thirdparty\freetype-2.4.9\src\base\fttype1.c"
 					>
 				</File>
 				<File
-					RelativePath="..\thirdparty\freetype-2.4.8\src\base\ftxf86.c"
+					RelativePath="..\thirdparty\freetype-2.4.9\src\base\ftxf86.c"
 					>
 				</File>
 			</Filter>
