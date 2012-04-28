@@ -29,8 +29,6 @@ class EpubDoc {
     bool ParseNavToc(const char *data, size_t dataLen, const char *pagePath, EbookTocVisitor *visitor);
     bool ParseNcxToc(const char *data, size_t dataLen, const char *pagePath, EbookTocVisitor *visitor);
 
-    static bool VerifyEpub(ZipFile& zip);
-
 public:
     EpubDoc(const TCHAR *fileName);
     EpubDoc(IStream *stream);

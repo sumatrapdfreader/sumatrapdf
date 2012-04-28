@@ -186,9 +186,6 @@ EpubDoc::~EpubDoc()
 
 bool EpubDoc::Load()
 {
-    if (!VerifyEpub(zip))
-        return false;
-
     ScopedMem<char> container(zip.GetFileData(_T("META-INF/container.xml")));
     HtmlParser parser;
     HtmlElement *node = parser.ParseInPlace(container);
@@ -485,32 +482,29 @@ bool EpubDoc::ParseToc(EbookTocVisitor *visitor)
     return ParseNavToc(tocData, tocDataLen, pagePath, visitor);
 }
 
-bool EpubDoc::VerifyEpub(ZipFile& zip)
-{
-    ScopedMem<char> mimetype(zip.GetFileData(_T("mimetype")));
-    if (!mimetype)
-        return false;
-    // trailing whitespace is allowed for the mimetype file
-    for (size_t i = str::Len(mimetype); i > 0; i--) {
-        if (!str::IsWs(mimetype[i-1]))
-            break;
-        mimetype[i-1] = '\0';
-    }
-    // a proper EPUB documents has a "mimetype" file with content
-    // "application/epub+zip" as the first entry in its ZIP structure
-    /* cf. http://forums.fofou.org/sumatrapdf/topic?id=2599331
-    if (!str::Eq(zip.GetFileName(0), _T("mimetype")))
-        return false; */
-    return str::Eq(mimetype, "application/epub+zip") ||
-           // also open renamed .ibooks files
-           // cf. http://en.wikipedia.org/wiki/IBooks#Formats
-           str::Eq(mimetype, "application/x-ibooks+zip");
-}
-
 bool EpubDoc::IsSupportedFile(const TCHAR *fileName, bool sniff)
 {
-    if (sniff)
-        return VerifyEpub(ZipFile(fileName));
+    if (sniff) {
+        ZipFile zip(fileName);
+        ScopedMem<char> mimetype(zip.GetFileData(_T("mimetype")));
+        if (!mimetype)
+            return false;
+        // trailing whitespace is allowed for the mimetype file
+        for (size_t i = str::Len(mimetype); i > 0; i--) {
+            if (!str::IsWs(mimetype[i-1]))
+                break;
+            mimetype[i-1] = '\0';
+        }
+        // a proper EPUB document has a "mimetype" file with content
+        // "application/epub+zip" as the first entry in its ZIP structure
+        /* cf. http://forums.fofou.org/sumatrapdf/topic?id=2599331
+        if (!str::Eq(zip.GetFileName(0), _T("mimetype")))
+            return false; */
+        return str::Eq(mimetype, "application/epub+zip") ||
+               // also open renamed .ibooks files
+               // cf. http://en.wikipedia.org/wiki/IBooks#Formats
+               str::Eq(mimetype, "application/x-ibooks+zip");
+    }
     return str::EndsWithI(fileName, _T(".epub"));
 }
 
