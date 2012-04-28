@@ -565,6 +565,8 @@ bool MobiDoc::ParseHeader()
             return false;
         size_t cdicsCount = mobiHdr.huffmanRecCount - 1;
         assert(cdicsCount <= kCdicsMax);
+        if (cdicsCount > kCdicsMax)
+            return false;
         for (size_t i = 0; i < cdicsCount; i++) {
             recData = pdbReader->GetRecord(mobiHdr.huffmanFirstRec + 1 + i, &recSize);
             if (!recData)
@@ -686,31 +688,34 @@ ImageData *MobiDoc::GetCoverImage()
 }
 
 // each record can have extra data at the end, which we must discard
-static size_t ExtraDataSize(uint8 *recData, size_t recLen, size_t trailersCount, bool multibyte)
+// returns (size_t)-1 on error
+static size_t GetRealRecordSize(uint8 *recData, size_t recLen, size_t trailersCount, bool multibyte)
 {
-    size_t newLen = recLen;
     for (size_t i = 0; i < trailersCount; i++) {
-        assert(newLen > 4);
+        if (recLen < 4)
+            return (size_t)-1;
         uint32 n = 0;
         for (size_t j = 0; j < 4; j++) {
-            uint8 v = recData[newLen - 4 + j];
+            uint8 v = recData[recLen - 4 + j];
             if (0 != (v & 0x80))
                 n = 0;
             n = (n << 7) | (v & 0x7f);
         }
-        assert(newLen > n);
-        newLen -= n;
+        if (n > recLen)
+            return (size_t)-1;
+        recLen -= n;
     }
 
     if (multibyte) {
-        assert(newLen > 0);
-        if (newLen > 0) {
-            uint8 n = (recData[newLen-1] & 3) + 1;
-            assert(newLen >= n);
-            newLen -= n;
-        }
+        if (0 == recLen)
+            return (size_t)-1;
+        uint8 n = (recData[recLen-1] & 3) + 1;
+        if (n > recLen)
+            return (size_t)-1;
+        recLen -= n;
     }
-    return recLen - newLen;
+
+    return recLen;
 }
 
 // Load a given record of a document into strOut, uncompressing if necessary.
@@ -721,8 +726,9 @@ bool MobiDoc::LoadDocRecordIntoBuffer(size_t recNo, str::Str<char>& strOut)
     const char *recData = pdbReader->GetRecord(recNo, &recSize);
     if (NULL == recData)
         return false;
-    size_t extraSize = ExtraDataSize((uint8*)recData, recSize, trailersCount, multibyte);
-    recSize -= extraSize;
+    recSize = GetRealRecordSize((uint8*)recData, recSize, trailersCount, multibyte);
+    if ((size_t)-1 == recSize)
+        return false;
 
     if (COMPRESSION_NONE == compressionType) {
         strOut.Append(recData, recSize);
