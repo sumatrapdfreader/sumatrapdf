@@ -93,7 +93,8 @@ read_lzwd(fz_stream *stm, unsigned char *buf, int len)
 		{
 			old_code = code;
 		}
-		else
+		/* SumatraPDF: prevent heap overflow */
+		else if (next_code < NUM_CODES)
 		{
 			/* add new entry to the code table */
 			table[next_code].prev = old_code;
