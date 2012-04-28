@@ -110,7 +110,7 @@ int TextSearch::MatchLen(const TCHAR *start)
     while (*match) {
         if (!*end)
             return -1;
-        if (caseSensitive ? *match != *end : CharLower((LPTSTR)LOWORD(*match)) == CharLower((LPTSTR)LOWORD(*end)))
+        if (caseSensitive ? *match == *end : CharLower((LPTSTR)LOWORD(*match)) == CharLower((LPTSTR)LOWORD(*end)))
             /* characters are identical */;
         else if (_istspace(*match) && _istspace(*end))
             /* treat all whitespace as identical */;
