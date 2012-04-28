@@ -187,6 +187,8 @@ EpubDoc::~EpubDoc()
 bool EpubDoc::Load()
 {
     ScopedMem<char> container(zip.GetFileData(_T("META-INF/container.xml")));
+    if (!container)
+        return false;
     HtmlParser parser;
     HtmlElement *node = parser.ParseInPlace(container);
     if (!node)
