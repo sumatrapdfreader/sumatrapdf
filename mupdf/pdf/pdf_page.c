@@ -150,7 +150,8 @@ pdf_load_page_tree(pdf_document *xref)
 	pdf_obj *count;
 	struct info info;
 
-	if (xref->page_len)
+	/* SumatraPDF: fix memory leak */
+	if (xref->page_refs || xref->page_objs)
 		return;
 
 	catalog = pdf_dict_gets(xref->trailer, "Root");

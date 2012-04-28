@@ -297,6 +297,13 @@ pdf_repair_xref(pdf_document *xref, pdf_lexbuf *buf)
 					break;
 				}
 
+				/* SumatraPDF: sanity check */
+				if (num < 0 || gen < 0)
+				{
+					fz_warn(ctx, "ignoring object (%d %d R)", num, gen);
+					continue;
+				}
+
 				if (listlen + 1 == listcap)
 				{
 					listcap = (listcap * 3) / 2;
