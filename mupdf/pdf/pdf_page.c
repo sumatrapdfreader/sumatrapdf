@@ -114,6 +114,7 @@ pdf_load_page_tree_node(pdf_document *xref, pdf_obj *node, struct info info)
 				}
 			}
 			/* Get the next node */
+			if (stacklen >= 0) /* SumatraPDF: prevent heap underflow */
 			while (++stack[stacklen].pos == stack[stacklen].max)
 			{
 				pdf_dict_unmark(stack[stacklen].node);
