@@ -950,6 +950,8 @@ struct chmFile *chm_open(const char *filename)
         {
             newHandle->compression_enabled = 0;
         }
+        else /* SumatraPDF: prevent division by zero */
+        {
 
         newHandle->window_size = ctlData.windowSize;
         newHandle->reset_interval = ctlData.resetInterval;
@@ -965,6 +967,7 @@ struct chmFile *chm_open(const char *filename)
                                     (newHandle->window_size / 2) *
                                     ctlData.windowsPerReset;
 #endif
+        }
     }
 
     /* initialize cache */

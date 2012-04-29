@@ -1,6 +1,6 @@
 diff -rPu5 CHMLib.orig\src\chm_lib.c CHMLib\src\chm_lib.c
 --- CHMLib.orig\src\chm_lib.c	Thu Jul 02 23:34:54 2009
-+++ CHMLib\src\chm_lib.c	Sun Apr 29 11:19:02 2012
++++ CHMLib\src\chm_lib.c	Sun Apr 29 11:26:37 2012
 @@ -92,11 +92,11 @@
  #ifdef WIN32
  #define CHM_ACQUIRE_LOCK(a) do {                        \
@@ -59,7 +59,32 @@ diff -rPu5 CHMLib.orig\src\chm_lib.c CHMLib\src\chm_lib.c
  }
  
  /* structure of LZXC control data block */
-@@ -1543,10 +1555,16 @@
+@@ -936,10 +948,12 @@
+             !_unmarshal_lzxc_control_data(&sbufpos, &sremain,
+                                           &ctlData))
+         {
+             newHandle->compression_enabled = 0;
+         }
++        else /* SumatraPDF: prevent division by zero */
++        {
+ 
+         newHandle->window_size = ctlData.windowSize;
+         newHandle->reset_interval = ctlData.resetInterval;
+ 
+ /* Jed, Mon Jun 28: Experimentally, it appears that the reset block count */
+@@ -951,10 +965,11 @@
+ #else
+         newHandle->reset_blkcount = newHandle->reset_interval    /
+                                     (newHandle->window_size / 2) *
+                                     ctlData.windowsPerReset;
+ #endif
++        }
+     }
+ 
+     /* initialize cache */
+     chm_set_param(newHandle, CHM_PARAM_MAX_BLOCKS_CACHED,
+                   CHM_MAX_BLOCKS_CACHED);
+@@ -1543,10 +1558,16 @@
          h->lzx_state = LZXinit(window_size);
      }
  
