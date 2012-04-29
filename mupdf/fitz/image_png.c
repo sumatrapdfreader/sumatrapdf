@@ -438,6 +438,9 @@ png_read_image(fz_context *ctx, struct info *info, unsigned char *p, int total)
 
 			if (size + 12 > total)
 				fz_throw(info->ctx, "premature end of data in png image");
+			/* SumatraPDF: sanity check */
+			if (size < 0)
+				fz_throw(info->ctx, "invalid png chunk");
 
 			if (!memcmp(p + 4, "PLTE", 4))
 				png_read_plte(info, p + 8, size);
