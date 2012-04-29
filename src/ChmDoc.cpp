@@ -88,7 +88,7 @@ static char *GetCharZ(const unsigned char *data, size_t len, size_t off)
 {
     if (off >= len)
         return NULL;
-    CrashIf(!memchr(data + off, '\0', len - off)); // data is zero-terminated
+    CrashIf(!memchr(data + off, '\0', len - off + 1)); // data is zero-terminated
     const char *str = (char *)data + off;
     if (str::IsEmpty(str))
         return NULL;

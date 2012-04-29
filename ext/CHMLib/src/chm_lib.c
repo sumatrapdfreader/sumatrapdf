@@ -380,10 +380,6 @@ static int _unmarshal_itsf_header(unsigned char **pData,
     _unmarshal_uint64    (pData, pDataLen, &dest->dir_offset);
     _unmarshal_uint64    (pData, pDataLen, &dest->dir_len);
 
-    /* SumatraPDF: sanity check for values (huge values are usually due to broken files) */
-    if (dest->dir_offset > UINT_MAX || dest->dir_len > UINT_MAX)
-        return 0;
-
     /* error check the data */
     /* XXX: should also check UUIDs, probably, though with a version 3 file,
      * current MS tools do not seem to use them.
@@ -415,6 +411,10 @@ static int _unmarshal_itsf_header(unsigned char **pData,
     }
     else
         dest->data_offset = dest->dir_offset + dest->dir_len;
+
+    /* SumatraPDF: sanity check (huge values are usually due to broken files) */
+    if (dest->dir_offset > UINT_MAX || dest->dir_len > UINT_MAX)
+        return 0;
 
     return 1;
 }
@@ -471,6 +471,9 @@ static int _unmarshal_itsp_header(unsigned char **pData,
     if (dest->version != 1)
         return 0;
     if (dest->header_len != _CHM_ITSP_V1_LEN)
+        return 0;
+    /* SumatraPDF: sanity check */
+    if (dest->block_len == 0)
         return 0;
 
     return 1;
@@ -568,12 +571,13 @@ static int _unmarshal_lzxc_reset_table(unsigned char **pData,
     _unmarshal_uint64    (pData, pDataLen, &dest->compressed_len);
     _unmarshal_uint64    (pData, pDataLen, &dest->block_len);
 
-    /* SumatraPDF: sanity check for values (huge values are usually due to broken files) */
-    if (dest->uncompressed_len > UINT_MAX || dest->compressed_len > UINT_MAX || dest->block_len > UINT_MAX)
-        return 0;
-
     /* check structure */
     if (dest->version != 2)
+        return 0;
+    /* SumatraPDF: sanity check (huge values are usually due to broken files) */
+    if (dest->uncompressed_len > UINT_MAX || dest->compressed_len > UINT_MAX)
+        return 0;
+    if (dest->block_len == 0 || dest->block_len > UINT_MAX)
         return 0;
 
     return 1;

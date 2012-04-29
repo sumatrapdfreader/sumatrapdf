@@ -1,6 +1,6 @@
 diff -rPu5 CHMLib.orig\src\chm_lib.c CHMLib\src\chm_lib.c
 --- CHMLib.orig\src\chm_lib.c	Thu Jul 02 23:34:54 2009
-+++ CHMLib\src\chm_lib.c	Fri Apr 20 21:55:28 2012
++++ CHMLib\src\chm_lib.c	Sun Apr 29 11:19:02 2012
 @@ -92,11 +92,11 @@
  #ifdef WIN32
  #define CHM_ACQUIRE_LOCK(a) do {                        \
@@ -14,37 +14,52 @@ diff -rPu5 CHMLib.orig\src\chm_lib.c CHMLib\src\chm_lib.c
  #else
  #include <pthread.h>
  
-@@ -378,10 +378,14 @@
-     _unmarshal_uint64    (pData, pDataLen, &dest->unknown_offset);
-     _unmarshal_uint64    (pData, pDataLen, &dest->unknown_len);
-     _unmarshal_uint64    (pData, pDataLen, &dest->dir_offset);
-     _unmarshal_uint64    (pData, pDataLen, &dest->dir_len);
+@@ -410,10 +410,14 @@
+             return 0;
+     }
+     else
+         dest->data_offset = dest->dir_offset + dest->dir_len;
  
-+    /* SumatraPDF: sanity check for values (huge values are usually due to broken files) */
++    /* SumatraPDF: sanity check (huge values are usually due to broken files) */
 +    if (dest->dir_offset > UINT_MAX || dest->dir_len > UINT_MAX)
 +        return 0;
 +
-     /* error check the data */
-     /* XXX: should also check UUIDs, probably, though with a version 3 file,
-      * current MS tools do not seem to use them.
-      */
-     if (memcmp(dest->signature, "ITSF", 4) != 0)
-@@ -562,10 +566,14 @@
-     _unmarshal_uint32    (pData, pDataLen, &dest->table_offset);
-     _unmarshal_uint64    (pData, pDataLen, &dest->uncompressed_len);
-     _unmarshal_uint64    (pData, pDataLen, &dest->compressed_len);
+     return 1;
+ }
+ 
+ /* structure of ITSP headers */
+ #define _CHM_ITSP_V1_LEN (0x54)
+@@ -466,10 +470,13 @@
+         return 0;
+     if (dest->version != 1)
+         return 0;
+     if (dest->header_len != _CHM_ITSP_V1_LEN)
+         return 0;
++    /* SumatraPDF: sanity check */
++    if (dest->block_len == 0)
++        return 0;
+ 
+     return 1;
+ }
+ 
+ /* structure of PMGL headers */
+@@ -565,10 +572,15 @@
      _unmarshal_uint64    (pData, pDataLen, &dest->block_len);
  
-+    /* SumatraPDF: sanity check for values (huge values are usually due to broken files) */
-+    if (dest->uncompressed_len > UINT_MAX || dest->compressed_len > UINT_MAX || dest->block_len > UINT_MAX)
-+        return 0;
-+
      /* check structure */
      if (dest->version != 2)
          return 0;
++    /* SumatraPDF: sanity check (huge values are usually due to broken files) */
++    if (dest->uncompressed_len > UINT_MAX || dest->compressed_len > UINT_MAX)
++        return 0;
++    if (dest->block_len == 0 || dest->block_len > UINT_MAX)
++        return 0;
  
      return 1;
-@@ -1543,10 +1551,16 @@
+ }
+ 
+ /* structure of LZXC control data block */
+@@ -1543,10 +1555,16 @@
          h->lzx_state = LZXinit(window_size);
      }
  
