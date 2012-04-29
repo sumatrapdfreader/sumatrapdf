@@ -464,12 +464,14 @@ bool StressTest::OpenFile(const TCHAR *fileName)
     // current one
     assert(this == win->stressTest);
     if (w != win) {
-        // try to provoke a crash in RenderCache cleanup code
-        ClientRect rect(win->hwndFrame);
-        rect.Inflate(rand() % 10, rand() % 10);
-        SendMessage(win->hwndFrame, WM_SIZE, 0, MAKELONG(rect.dx, rect.dy));
-        win->RenderPage(1);
-        win->RepaintAsync();
+        if (win->IsDocLoaded()) {
+            // try to provoke a crash in RenderCache cleanup code
+            ClientRect rect(win->hwndFrame);
+            rect.Inflate(rand() % 10, rand() % 10);
+            SendMessage(win->hwndFrame, WM_SIZE, 0, MAKELONG(rect.dx, rect.dy));
+            win->RenderPage(1);
+            win->RepaintAsync();
+        }
 
         WindowInfo *toClose = win;
         w->stressTest = win->stressTest;

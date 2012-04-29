@@ -655,13 +655,12 @@ void MobiDoc::LoadImages()
 // recognize)
 ImageData *MobiDoc::GetImage(size_t imgRecIndex) const
 {
-    CrashIf((imgRecIndex > imagesCount) || (imgRecIndex < 1));
     if ((imgRecIndex > imagesCount) || (imgRecIndex < 1))
         return NULL;
-   --imgRecIndex;
-   if (!images[imgRecIndex].data || (0 == images[imgRecIndex].len))
-       return NULL;
-   return &images[imgRecIndex];
+    --imgRecIndex;
+    if (!images[imgRecIndex].data || (0 == images[imgRecIndex].len))
+        return NULL;
+    return &images[imgRecIndex];
 }
 
 // first two images seem to be the same picture of the cover
@@ -756,15 +755,12 @@ bool MobiDoc::LoadDocument()
     if (!ParseHeader())
         return false;
 
-    assert(docUncompressedSize > 0);
     assert(!doc);
     doc = new str::Str<char>(docUncompressedSize);
     for (size_t i = 1; i <= docRecCount; i++) {
         if (!LoadDocRecordIntoBuffer(i, *doc))
             return false;
     }
-    // in one PalmDOC file the value is off-by-one (counting the trailing zero?)
-    assert(docUncompressedSize == doc->Size() || docUncompressedSize == doc->Size() + 1);
     if (textEncoding != CP_UTF8) {
         char *docUtf8 = str::ToMultiByte(doc->Get(), textEncoding, CP_UTF8);
         if (docUtf8) {
