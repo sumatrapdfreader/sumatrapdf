@@ -394,9 +394,10 @@ static const TCHAR *ReadableProcName(const TCHAR *procPath)
         _T("dllhost.exe"), _T("Windows Explorer"),
     };
     const TCHAR *procName = path::GetBaseName(procPath);
-    for (size_t i = 0; i < dimof(nameList); i += 2)
+    for (size_t i = 0; i < dimof(nameList); i += 2) {
         if (str::EqI(procName, nameList[i]))
             return nameList[i + 1];
+    }
     return procName;
 }
 
