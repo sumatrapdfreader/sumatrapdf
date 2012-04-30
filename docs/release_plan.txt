@@ -2,14 +2,12 @@ The idea for the next few releases is to make them relatively quickly,
 every 2-3 months.
 
 Major user-visible changes in each release:
-2.1 - epub in ebook ui; new translation system as described
-      in wishlist.txt
-2.2 - fb2 in ebook ui; rebrand as Sumatra Reader
+2.2 - fb2 in ebook ui; new translation system as described
+      in wishlist.txt; rebrand as Sumatra Reader
 2.3 - text support (in it's own ui)
 2.4 - hex display (can show any file in hex/text view; it's own ui)
 
-More detailed list for 2.1 (code comple target: 5/23, release
-target: 6/1):
+More detailed list for 2.2:
 - refactor LoadDocument() so that more code is shared between
   engine/ebook UIs and so that it loads documents in the
   background thread
@@ -27,7 +25,7 @@ target: 6/1):
 
 Given aggresive schedule, it's important to make the most risky
 (most likely to introduce breakage) changes first so that there
-is time to stabilize the code. E.g. in 2.1, LoadDocument() 
+is time to stabilize the code. E.g. in 2.2, LoadDocument() 
 refactoring is such a change.
 
 A random list of things to implement sooner or later:
