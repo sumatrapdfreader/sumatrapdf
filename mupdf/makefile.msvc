@@ -284,7 +284,8 @@ LIBS_OBJS = \
 
 MUAPPS_OBJS = \
 	$(OA)\win_main.obj $(OA)\pdfapp.obj $(OA)\mudraw.obj $(OA)\pdfbench.obj \
-	$(OA)\mupdfshow.obj $(OA)\mupdfclean.obj $(OA)\mupdfinfo.obj $(OA)\mupdfextract.obj
+	$(OA)\mupdfshow.obj $(OA)\mupdfclean.obj $(OA)\mupdfinfo.obj $(OA)\mupdfextract.obj \
+	$(OA)\mupdfposter.obj
 
 PDFAPP_RES = $(OA)\pdfview.res
 PDFAPP_OBJS = $(LIBS_OBJS) $(OA)\win_main.obj $(OA)\pdfapp.obj $(PDFAPP_RES)
@@ -305,13 +306,16 @@ PDFINFO_APP = $(O)\pdfinfo.exe
 PDFEXTRACT_OBJS = $(LIBS_OBJS) $(OA)\mupdfextract.obj
 PDFEXTRACT_APP = $(O)\pdfextract.exe
 
+PDFPOSTER_OBJS = $(LIBS_OBJS) $(OA)\mupdfposter.obj
+PDFPOSTER_APP = $(O)\pdfposter.exe
+
 FONTDUMP_OBJS = $(OP)\fontdump.obj
 FONTDUMP_APP = $(O)\fontdump.exe
 
 MUDRAW_OBJS = $(LIBS_OBJS) $(OA)\mudraw.obj
 MUDRAW_APP = $(O)\mudraw.exe
 
-all: $(O) $(MUDRAW_APP) $(PDFSHOW_APP) $(PDFCLEAN_APP) $(PDFINFO_APP) $(PDFEXTRACT_APP) $(PDFAPP_APP) $(PDFBENCH_APP)
+all: $(O) $(MUDRAW_APP) $(PDFSHOW_APP) $(PDFCLEAN_APP) $(PDFINFO_APP) $(PDFEXTRACT_APP) $(PDFPOSTER_APP) $(PDFAPP_APP) $(PDFBENCH_APP)
 
 clean: force
 	-rmdir /S /Q $(O)
@@ -357,6 +361,9 @@ $(PDFEXTRACT_APP): $(PDFEXTRACT_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
 
 $(MUDRAW_APP): $(MUDRAW_OBJS)
+	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
+
+$(PDFPOSTER_APP): $(PDFPOSTER_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
 
 # freetype directories

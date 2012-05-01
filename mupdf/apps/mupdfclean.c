@@ -12,8 +12,6 @@
 #include "fitz.h"
 #include "mupdf-internal.h"
 
-static FILE *out = NULL;
-
 static pdf_document *xref = NULL;
 static fz_context *ctx = NULL;
 

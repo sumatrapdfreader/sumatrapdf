@@ -20,6 +20,7 @@ pdf_obj *pdf_new_real(fz_context *ctx, float f);
 pdf_obj *fz_new_name(fz_context *ctx, char *str);
 pdf_obj *pdf_new_string(fz_context *ctx, char *str, int len);
 pdf_obj *pdf_new_indirect(fz_context *ctx, int num, int gen, void *doc);
+pdf_obj *pdf_new_ref(pdf_document *xref, pdf_obj *obj);
 
 pdf_obj *pdf_new_array(fz_context *ctx, int initialcap);
 pdf_obj *pdf_new_dict(fz_context *ctx, int initialcap);

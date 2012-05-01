@@ -53,6 +53,12 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mubusy", "mubusy.vcproj", "
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "generated", "generated.vcproj", "{A5053AA7-02E5-4903-B596-04F17AEB1526}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mupdfposter", "mupdfposter.vcproj", "{495EC73D-30C5-4F38-8B78-955E0FDBE5E9}"
+	ProjectSection(ProjectDependencies) = postProject
+		{5EDCF4FD-0291-4FB9-8D96-D58957CA5E3C} = {5EDCF4FD-0291-4FB9-8D96-D58957CA5E3C}
+		{5F615F91-DFF8-4F05-BF48-6222B7D86519} = {5F615F91-DFF8-4F05-BF48-6222B7D86519}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -120,6 +126,12 @@ Global
 		{A5053AA7-02E5-4903-B596-04F17AEB1526}.Memento|Win32.Build.0 = Memento|Win32
 		{A5053AA7-02E5-4903-B596-04F17AEB1526}.Release|Win32.ActiveCfg = Release|Win32
 		{A5053AA7-02E5-4903-B596-04F17AEB1526}.Release|Win32.Build.0 = Release|Win32
+		{495EC73D-30C5-4F38-8B78-955E0FDBE5E9}.Debug|Win32.ActiveCfg = Debug|Win32
+		{495EC73D-30C5-4F38-8B78-955E0FDBE5E9}.Debug|Win32.Build.0 = Debug|Win32
+		{495EC73D-30C5-4F38-8B78-955E0FDBE5E9}.Memento|Win32.ActiveCfg = Memento|Win32
+		{495EC73D-30C5-4F38-8B78-955E0FDBE5E9}.Memento|Win32.Build.0 = Memento|Win32
+		{495EC73D-30C5-4F38-8B78-955E0FDBE5E9}.Release|Win32.ActiveCfg = Release|Win32
+		{495EC73D-30C5-4F38-8B78-955E0FDBE5E9}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

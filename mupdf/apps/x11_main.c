@@ -59,6 +59,7 @@ extern void ximage_blit(Drawable d, GC gc, int dstx, int dsty,
 	int srcx, int srcy, int srcw, int srch, int srcstride);
 
 void windrawstringxor(pdfapp_t *app, int x, int y, char *s);
+void cleanup(pdfapp_t *app);
 
 static Display *xdpy;
 static Atom XA_TARGETS;
@@ -100,6 +101,7 @@ static int showingpage = 0;
 void winerror(pdfapp_t *app, char *msg)
 {
 	fprintf(stderr, "mupdf: error: %s\n", msg);
+	cleanup(app);
 	exit(1);
 }
 
@@ -213,6 +215,27 @@ static void winopen(void)
 void winclose(pdfapp_t *app)
 {
 	closing = 1;
+}
+
+void cleanup(pdfapp_t *app)
+{
+	fz_context *ctx = app->ctx;
+
+	pdfapp_close(app);
+
+	XDestroyWindow(xdpy, xwin);
+
+	XFreePixmap(xdpy, xicon);
+
+	XFreeCursor(xdpy, xcwait);
+	XFreeCursor(xdpy, xchand);
+	XFreeCursor(xdpy, xcarrow);
+
+	XFreeGC(xdpy, xgc);
+
+	XCloseDisplay(xdpy);
+
+	fz_free_context(ctx);
 }
 
 static int winresolution()
@@ -825,21 +848,7 @@ int main(int argc, char **argv)
 		}
 	}
 
-	pdfapp_close(&gapp);
-
-	XDestroyWindow(xdpy, xwin);
-
-	XFreePixmap(xdpy, xicon);
-
-	XFreeCursor(xdpy, xcwait);
-	XFreeCursor(xdpy, xchand);
-	XFreeCursor(xdpy, xcarrow);
-
-	XFreeGC(xdpy, xgc);
-
-	XCloseDisplay(xdpy);
-
-	fz_free_context(ctx);
+	cleanup(&gapp);
 
 	return 0;
 }
