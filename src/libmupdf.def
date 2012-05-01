@@ -344,6 +344,7 @@ EXPORTS
 	fz_new_name
 	pdf_new_string
 	pdf_new_indirect
+	pdf_new_ref
 	pdf_new_array
 	pdf_new_dict
 	pdf_copy_array

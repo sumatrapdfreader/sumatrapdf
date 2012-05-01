@@ -7,9 +7,12 @@
 #include <WindowsX.h>
 #include <CommCtrl.h>
 
+// the following are only defined if _WIN32_WINNT >= 0x0600 and we use 0x0500
 #ifndef USER_DEFAULT_SCREEN_DPI
-// the following is only defined if _WIN32_WINNT >= 0x0600 and we use 0x0500
 #define USER_DEFAULT_SCREEN_DPI 96
+#endif
+#ifndef WM_MOUSEHWHEEL
+#define WM_MOUSEHWHEEL 0x020E
 #endif
 
 #define WIN_COL_WHITE   RGB(0xff, 0xff, 0xff)

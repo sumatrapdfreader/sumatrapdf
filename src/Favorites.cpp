@@ -754,6 +754,7 @@ static LRESULT CALLBACK WndProcFavTree(HWND hwnd, UINT msg, WPARAM wParam, LPARA
             break;
 
         case WM_MOUSEWHEEL:
+        case WM_MOUSEHWHEEL:
             // scroll the canvas if the cursor isn't over the ToC tree
             if (!IsCursorOverWindow(win->hwndFavTree))
                 return SendMessage(win->hwndCanvas, msg, wParam, lParam);

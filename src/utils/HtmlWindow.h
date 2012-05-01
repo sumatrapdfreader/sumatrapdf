@@ -79,7 +79,7 @@ public:
     void SelectAll();
     void CopySelection();
     bool WaitUntilLoaded(DWORD maxWaitMs, const TCHAR *url=NULL);
-    void SendMsg(UINT msg, WPARAM wp, LPARAM lp);
+    LRESULT SendMsg(UINT msg, WPARAM wp, LPARAM lp);
     void OnLButtonDown() const;
 
     HBITMAP TakeScreenshot(RectI area, SizeI finalSize);

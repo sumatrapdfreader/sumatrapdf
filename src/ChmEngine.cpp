@@ -157,8 +157,8 @@ public:
     virtual void SelectAll() { if (htmlWindow) htmlWindow->SelectAll(); }
     virtual void CopySelection() { if (htmlWindow) htmlWindow->CopySelection(); }
     virtual int CurrentPageNo() const { return currentPageNo; }
-    virtual void PassUIMsg(UINT msg, WPARAM wParam, LPARAM lParam) {
-        if (htmlWindow) htmlWindow->SendMsg(msg, wParam, lParam);
+    virtual LRESULT PassUIMsg(UINT msg, WPARAM wParam, LPARAM lParam) {
+        return htmlWindow ? htmlWindow->SendMsg(msg, wParam, lParam) : 0;
     }
 
     // from HtmlWindowCallback

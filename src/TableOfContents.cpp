@@ -451,6 +451,7 @@ static LRESULT CALLBACK WndProcTocTree(HWND hwnd, UINT message, WPARAM wParam, L
             TreeView_EnsureVisible(hwnd, TreeView_GetSelection(hwnd));
             return 0;
         case WM_MOUSEWHEEL:
+        case WM_MOUSEHWHEEL:
             // scroll the canvas if the cursor isn't over the ToC tree
             if (!IsCursorOverWindow(win->hwndTocTree))
                 return SendMessage(win->hwndCanvas, message, wParam, lParam);
