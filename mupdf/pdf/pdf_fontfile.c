@@ -389,11 +389,26 @@ insert_mapping(fz_context *ctx, pdf_fontlistMS *fl, char *facename, char *path, 
 }
 
 static void
-safe_read(fz_stream *file, char *buf, int size)
+safe_read(fz_stream *file, int offset, char *buf, int size)
 {
-	int n = fz_read(file, buf, size);
+	int n = -1;
+	// lock to prevent an assertion in seek_file and read_file
+	fz_lock(file->ctx, FZ_LOCK_FILE);
+	fz_try(file->ctx)
+	{
+		fz_seek(file, offset, 0);
+		n = fz_read(file, buf, size);
+	}
+	fz_always(file->ctx)
+	{
+		fz_unlock(file->ctx, FZ_LOCK_FILE);
+	}
+	fz_catch(file->ctx)
+	{
+		fz_rethrow(file->ctx);
+	}
 	if (n != size) /* covers n < 0 case */
-		fz_throw(file->ctx, "ioerror : read %d, expected %d", n, size);
+		fz_throw(file->ctx, "safe_read: read %d, expected %d", n, size);
 }
 
 static void
@@ -405,8 +420,7 @@ read_ttf_string(fz_stream *file, int offset, TT_NAME_RECORD *ttRecordBE, char *b
 	if (stringLength == 0 || stringLength >= sizeof(szTemp))
 		return;
 
-	fz_seek(file, offset + BEtoHs(ttRecordBE->uStringOffset), 0);
-	safe_read(file, szTemp, stringLength);
+	safe_read(file, offset + BEtoHs(ttRecordBE->uStringOffset), szTemp, stringLength);
 	decode_platform_string(file->ctx, BEtoHs(ttRecordBE->uPlatformID),
 		BEtoHs(ttRecordBE->uEncodingID), szTemp, stringLength, buf, size);
 }
@@ -422,8 +436,7 @@ parseTTF(fz_stream *file, int offset, int index, char *path)
 	char szPSName[MAX_FACENAME] = { 0 }, szTTName[MAX_FACENAME] = { 0 }, szStyle[MAX_FACENAME] = { 0 };
 	int i, count, tblOffset;
 
-	fz_seek(file, offset, 0);
-	safe_read(file, (char *)&ttOffsetTableBE, sizeof(TT_OFFSET_TABLE));
+	safe_read(file, offset, (char *)&ttOffsetTableBE, sizeof(TT_OFFSET_TABLE));
 
 	// check if this is a TrueType font of version 1.0 or an OpenType font
 	if (BEtoHl(ttOffsetTableBE.uVersion) != TTC_VERSION1 &&
@@ -436,7 +449,8 @@ parseTTF(fz_stream *file, int offset, int index, char *path)
 	count = BEtoHs(ttOffsetTableBE.uNumOfTables);
 	for (i = 0; i < count; i++)
 	{
-		safe_read(file, (char *)&tblDirBE, sizeof(TT_TABLE_DIRECTORY));
+		int entryOffset = offset + sizeof(TT_OFFSET_TABLE) + i * sizeof(TT_TABLE_DIRECTORY);
+		safe_read(file, entryOffset, (char *)&tblDirBE, sizeof(TT_TABLE_DIRECTORY));
 		if (!BEtoHl(tblDirBE.uTag) || BEtoHl(tblDirBE.uTag) == TTAG_name)
 			break;
 	}
@@ -445,8 +459,7 @@ parseTTF(fz_stream *file, int offset, int index, char *path)
 	tblOffset = BEtoHl(tblDirBE.uOffset);
 
 	// read the 'name' table for record count and offsets
-	fz_seek(file, tblOffset, 0);
-	safe_read(file, (char *)&ttNTHeaderBE, sizeof(TT_NAME_TABLE_HEADER));
+	safe_read(file, tblOffset, (char *)&ttNTHeaderBE, sizeof(TT_NAME_TABLE_HEADER));
 	offset = tblOffset + sizeof(TT_NAME_TABLE_HEADER);
 	tblOffset += BEtoHs(ttNTHeaderBE.uStorageOffset);
 
@@ -456,8 +469,7 @@ parseTTF(fz_stream *file, int offset, int index, char *path)
 	{
 		short nameId;
 
-		fz_seek(file, offset + i * sizeof(TT_NAME_RECORD), 0);
-		safe_read(file, (char *)&ttRecordBE, sizeof(TT_NAME_RECORD));
+		safe_read(file, offset + i * sizeof(TT_NAME_RECORD), (char *)&ttRecordBE, sizeof(TT_NAME_RECORD));
 
 		// ignore non-English strings
 		if (BEtoHs(ttRecordBE.uLanguageID) && BEtoHs(ttRecordBE.uLanguageID) != TT_MS_LANGID_ENGLISH_UNITED_STATES)
@@ -536,7 +548,7 @@ parseTTCs(fz_context *ctx, char *path)
 
 	fz_try(ctx)
 	{
-		safe_read(file, (char *)&fontcollectionBE, sizeof(FONT_COLLECTION));
+		safe_read(file, 0, (char *)&fontcollectionBE, sizeof(FONT_COLLECTION));
 		if (BEtoHl(fontcollectionBE.Tag) != TTAG_ttcf)
 			fz_throw(ctx, "fonterror : wrong format %x", BEtoHl(fontcollectionBE.Tag));
 		if (BEtoHl(fontcollectionBE.Version) != TTC_VERSION1 &&
@@ -548,7 +560,7 @@ parseTTCs(fz_context *ctx, char *path)
 		numFonts = BEtoHl(fontcollectionBE.NumFonts);
 		offsettableBE = fz_malloc_array(ctx, numFonts, sizeof(ULONG));
 
-		safe_read(file, (char *)offsettableBE, numFonts * sizeof(ULONG));
+		safe_read(file, sizeof(FONT_COLLECTION), (char *)offsettableBE, numFonts * sizeof(ULONG));
 		for (i = 0; i < numFonts; i++)
 			parseTTF(file, BEtoHl(offsettableBE[i]), i, path);
 	}
