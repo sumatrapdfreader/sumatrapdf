@@ -342,7 +342,7 @@ Favorites
 Закладки
 
 File %s not found
-Файл %s не знайдено 
+Файл %s не знайдено
 
 File Size:
 Розмір файла:

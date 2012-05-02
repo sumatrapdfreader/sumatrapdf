@@ -142,7 +142,7 @@ Contributor: Jegatheesan Veeramalai (vjegatheesh@gmail.com)
 இப்பதிப்பை தவிர்
 
 &Use original page sizes
-மூல பக்க அளவுகளை உபயோகி 
+மூல பக்க அளவுகளை உபயோகி
 
 &View
 நோக்கு
@@ -163,13 +163,13 @@ About SumatraPDF
 SumatraPDF பற்றி
 
 Add Favorite
-விருப்பகளில்  சேர் 
+விருப்பகளில்  சேர்
 
 Add page %s to favorites
 விருப்பகளில்  பக்கம் %s ஐ சேர்
 
 Add page %s to favorites with (optional) name:
-விருப்பகளில்  பக்கம் %s ஐ பெயருடன் சேர் 
+விருப்பகளில்  பக்கம் %s ஐ பெயருடன் சேர்
 
 Add to favorites
 விருப்பகளில் சேர்
