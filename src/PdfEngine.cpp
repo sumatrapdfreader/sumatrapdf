@@ -872,9 +872,9 @@ fz_lock_context_cs(void *user, int lock)
     // thus already be in place (in debug builds we
     // crash if that assertion doesn't hold)
     CRITICAL_SECTION *cs = (CRITICAL_SECTION *)user;
-    bool ok = TryEnterCriticalSection(cs);
-    CrashIf(!ok);
+    BOOL ok = TryEnterCriticalSection(cs);
     if (!ok) {
+        CrashIf(true);
         EnterCriticalSection(cs);
     }
 }
@@ -1114,10 +1114,16 @@ PdfEngineImpl::PdfEngineImpl() : _fileName(NULL), _doc(NULL),
     InitializeCriticalSection(&pagesAccess);
     InitializeCriticalSection(&ctxAccess);
 
+    // TODO: disabled for now as it deadlocks in pdf/deadlock.pdf, but we should figure out
+    // the root cause
+#if 0
     fz_locks_ctx.user = &ctxAccess;
     fz_locks_ctx.lock = fz_lock_context_cs;
     fz_locks_ctx.unlock = fz_unlock_context_cs;
     ctx = fz_new_context(NULL, &fz_locks_ctx, MAX_CONTEXT_MEMORY);
+#else
+    ctx = fz_new_context(NULL, NULL, MAX_CONTEXT_MEMORY);
+#endif
 }
 
 PdfEngineImpl::~PdfEngineImpl()
