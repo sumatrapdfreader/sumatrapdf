@@ -52,7 +52,7 @@ static void decimatepages(pdf_document *xref)
 	/* Create a new kids array with only the pages we want to keep */
 	parent = pdf_new_indirect(ctx, pdf_to_num(pages), pdf_to_gen(pages), xref);
 	kids = pdf_new_array(ctx, 1);
-	
+
 	kidcount = 0;
 	for (page=0; page < num_pages; page++)
 	{

@@ -382,6 +382,8 @@ pdf_read_new_xref(pdf_document *xref, pdf_lexbuf *buf)
 	{
 		pdf_drop_obj(trailer);
 		pdf_drop_obj(index);
+		/* SumatraPDF: prevent lock inconsistency */
+		fz_lock(ctx, FZ_LOCK_FILE);
 		fz_rethrow(ctx);
 	}
 	fz_lock(ctx, FZ_LOCK_FILE);

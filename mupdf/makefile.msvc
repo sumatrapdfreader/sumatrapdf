@@ -138,7 +138,6 @@ JPEG_TURBO_NASM_FLAGS = $(JPEG_TURBO_NASM_FLAGS) -f win64 -D__x86_64__ -DWIN64 -
 JPEG_TURBO_NASM_FLAGS = $(JPEG_TURBO_NASM_FLAGS) -f win32
 !endif
 
-# also use $(CFLAGSOPT) for mupdf ?
 MUPDF_CFLAGS = $(CFLAGS) /D "NEED_MATH" /D "NEED_GETTIMEOFDAY" /D "HAVE_JBIG2DEC" /D "USE_HINTING"
 
 MUPDF_CFLAGS = $(MUPDF_CFLAGS) /D "HAVE_OPENJPEG" /I$(OPENJPEG_DIR)
@@ -147,6 +146,10 @@ MUPDF_CFLAGS = $(MUPDF_CFLAGS) \
 	/I$(MUPDF_DIR)/fitz /I$(MUPDF_DIR)/pdf /I$(MUPDF_DIR)/xps /I$(MUPDF_DIR)/cbz /I$(MUPDF_DIR)/apps \
 	/I$(FREETYPE_DIR)/config /I$(FREETYPE_DIR)/include /I$(ZLIB_DIR) \
 	/I$(JBIG2_DIR) /I$(JPEG_TURBO_DIR)
+
+!if "$(CFG)"=="dbg"
+MUPDF_CFLAGS = $(MUPDF_CFLAGS) /D "DEBUG"
+!endif
 
 !if "$(PLATFORM)"=="X64"
 # disable warning C4244: conversion from 'type1' to 'type2', possible loss of data
