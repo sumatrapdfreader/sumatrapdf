@@ -730,6 +730,7 @@ int main(int argc, char **argv)
 	fz_catch(ctx)
 	{
 		fz_close_document(doc);
+		fprintf(stderr, "error: cannot draw '%s'\n", filename);
 	}
 
 	if (showtext == TEXT_HTML)
