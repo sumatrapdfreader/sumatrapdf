@@ -50,7 +50,6 @@ HWND            gHwndButtonInstUninst = NULL;
 HFONT           gFontDefault;
 bool            gShowOptions = false;
 bool            gForceCrash = false;
-bool            gReproBug = false;
 TCHAR *         gMsgError = NULL;
 
 static StrVec           gProcessesToClose;
@@ -113,7 +112,6 @@ void NotifyFailed(TCHAR *msg)
 {
     if (!gGlobalData.firstError)
         gGlobalData.firstError = str::Dup(msg);
-    // MessageBox(gHwndFrame, msg, _T("Installation failed"),  MB_ICONEXCLAMATION | MB_OK);
     plogf(_T("%s"), msg);
 }
 
@@ -938,8 +936,6 @@ static void ParseCommandLine(TCHAR *cmdLine)
             // will induce crash when 'Install' button is pressed
             // for testing crash handling
             gForceCrash = true;
-        } else if (is_arg("bug")) {
-            gReproBug = true;
         }
 #endif
     }
@@ -947,10 +943,9 @@ static void ParseCommandLine(TCHAR *cmdLine)
 
 #define CRASH_DUMP_FILE_NAME         _T("suminstaller.dmp")
 
-void CrashHandlerMessage()
-{
-    // no-op but must be defined for CrashHandler.cpp
-}
+// no-op but must be defined for CrashHandler.cpp
+void CrashHandlerMessage() { }
+void GetStressTestInfo(str::Str<char>* s) { }
 
 void GetProgramInfo(str::Str<char>& s)
 {
@@ -960,11 +955,6 @@ void GetProgramInfo(str::Str<char>& s)
 bool CrashHandlerCanUseNet()
 {
     return true;
-}
-
-void GetStressTestInfo(str::Str<char>* s)
-{
-    // no-op but must be defined for CrashHandler.cpp
 }
 
 static void InstallInstallerCrashHandler()
@@ -1009,17 +999,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 #if defined(BUILD_UNINSTALLER) && !defined(TEST_UNINSTALLER)
     if (ExecuteUninstallerFromTempDir())
         return 0;
-#endif
-
-#ifdef ENABLE_CRASH_TESTING
-    if (gReproBug) {
-        ScopedMem<TCHAR> path(GetExePath());
-        path.Set(path::GetDir(path));
-        path.Set(path::Join(path, _T("PdfPreview.dll")));
-        // this is sufficient to cause a crash at exit if linking with ucrt
-        RegisterServerDLL(path);
-        RegisterServerDLL(path, true);
-    }
 #endif
 
     if (gGlobalData.silent) {
