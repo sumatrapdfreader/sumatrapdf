@@ -608,6 +608,8 @@ void StartStressTest(WindowInfo *win, const TCHAR *path, const TCHAR *filter,
 {
     // gPredictiveRender = false;
     gIsStressTesting = true;
+    // TODO: for now stress testing only supports the non-ebook ui
+    gUseEbookUI = false;
     // dst will be deleted when the stress ends
     StressTest *dst = new StressTest(win, renderCache);
     win->stressTest = dst;
