@@ -333,6 +333,7 @@ void EbookController::ShowPage(HtmlPage *pd, bool deleteWhenDone)
     ctrls->page->SetPage(pageShown);
 
     UpdateCurrPageNoForPage(pageShown);
+    UpdateStatus();
 #if 0
     if (pd) {
         char s[64] = { 0 };
@@ -366,7 +367,7 @@ void EbookController::HandleMobiLayoutMsg(EbookFormattingData *ld)
             ShowPage(pageToShow, false);
         }
         //lf("Got %d pages from page, total %d", ld->pageCount, formattingTemp.pagesFromPage.Count());
-        UpdateStatus();
+        //UpdateStatus();
         return;
     }
 
@@ -610,7 +611,7 @@ void EbookController::GoToPage(int newPageNo)
     // even if we were showing a page from pagesFromPage before, we've
     // transitioned to using pagesFromBeginning so we no longer need pagesFromPage
     DeletePages(&pagesFromPage);
-    UpdateStatus();
+    //UpdateStatus();
 }
 
 void EbookController::GoToLastPage()
