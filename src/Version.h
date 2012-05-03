@@ -6,10 +6,10 @@
 
 // CURR_VERSION can be over-written externally (via makefile)
 #ifndef CURR_VERSION
-#define CURR_VERSION 2.1
+#define CURR_VERSION 2.2
 #endif
 #ifndef CURR_VERSION_COMMA
-#define CURR_VERSION_COMMA 2,1,0
+#define CURR_VERSION_COMMA 2,2,0
 #endif
 
 #define APP_NAME_STR       _T("SumatraPDF")

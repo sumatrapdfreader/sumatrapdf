@@ -3,7 +3,9 @@ the release notes, as we make them, to make the release process easier.
 
 Next version:
 
-2.1 (????-??-??)
+2.2 (2012-??-??)
+
+2.1 (2012-05-03)
 
 * support for EPUB ebook format
 * added menu item to rename a file (contributed by Vasily Fomin)
