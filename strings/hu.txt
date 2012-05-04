@@ -259,6 +259,9 @@ Folyamatos oldalpár
 Contribute Translation
 &Járulj hozzá a fordításhoz
 
+Copy &Image
+Másol &Kép
+
 Copy &Link Address
 &Hivatkozás címének másolása
 
@@ -267,6 +270,9 @@ Me&gjegyzés másolása
 
 Copying text was denied (copying as image only)
 Szöveg másolása tiltott(csak képként másolva)
+
+Copyright:
+Szerzői jog:
 
 Could not obtain Printer properties
 A nyomtató tulajdonságai nem érhetőek el
@@ -337,11 +343,17 @@ Teljes képernyő\tCtrl+Shift+L
 Facing
 Oldalpár
 
+Failed to rename the file!
+A fájl átnevezése hibás
+
 Failed to save a file
 A fájl mentése sikertelen
 
 Favorites
 Kedvencek
+
+File %s not found
+Fájl %s nem található
 
 File Size:
 Méret:
@@ -388,6 +400,12 @@ Oldalszélességhez igazítás + folyamatos nézet
 Fit a Single Page
 Teljes oldalankénti nézet
 
+Fonts:
+Betűk:
+
+Formatting the book... %d pages
+Könyv formázása... %d oldal
+
 Found text at page %s
 Találat a(z) %s. oldalon
 
@@ -414,6 +432,9 @@ Képfájlok (*.%s)
 
 KB
 Kb
+
+Loading file %s...
+Fájl beolvasása %s...
 
 MB
 Mb
@@ -544,6 +565,9 @@ Printing page %d of %d...
 Printing problem.
 Nyomtatási probléma.
 
+Re&name...\tF2
+Átnevezés...\tF2
+
 Remember &opened files
 Korábban megnyitott file-ok listájának tárolása
 
@@ -552,6 +576,12 @@ Eltávolítás a kedvencek közül
 
 Remove page %s from favorites
 %s. oldal eltávolítása a kedvencek közül
+
+Rename To
+Átnevezés
+
+Replace document &colors with Windows color scheme
+Helyettesíti a dokumentum &színeket Windows színsémával
 
 Rotate &Left\tCtrl+Shift+-
 Forgatás balra\tCtrl+Shift+-
@@ -675,16 +705,4 @@ Szöveg vágólapra
 
 printing document
 Nyomtatás
-
-# Untranslated:
-#Copy &Image
-#Copyright:
-#Failed to rename the file!
-#File %s not found
-#Fonts:
-#Formatting the book... %d pages
-#Loading file %s...
-#Re&name...\tF2
-#Rename To
-#Replace document &colors with Windows color scheme
 
