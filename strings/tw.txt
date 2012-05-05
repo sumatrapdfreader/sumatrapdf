@@ -10,6 +10,7 @@ Lang: tw Chinese Traditional (繁體中文)
 
 Contributor: FreeXD (http://blog.ecstart.com/?47979)
 Contributor: theowoo (http://grnrnat.net.ru/)
+Contributor: 張修銘 (cges30901@gamil.com)
 
 &About
 關於(&A)
@@ -33,10 +34,10 @@ Contributor: theowoo (http://grnrnat.net.ru/)
 複製選取的範圍(&C)
 
 &Copy Selection\tCtrl+C
-截取範圍\tCtrl+C
+截取範圍(&C)\tCtrl+C
 
 &Don't ask me again
-不要再問我
+不要再問我(&D)
 
 &Even pages only
 只有偶數頁(&E)
@@ -51,7 +52,7 @@ Contributor: theowoo (http://grnrnat.net.ru/)
 尋找：(&F)
 
 &First Page\tHome
-首頁\tHome
+首頁(&F)\tHome
 
 &Fit pages to printable area
 縮小或放大頁面以符合可列印區域(&F)
@@ -66,7 +67,7 @@ Contributor: theowoo (http://grnrnat.net.ru/)
 說明(&H)
 
 &Last Page\tEnd
-尾頁\tEnd
+尾頁(&L)\tEnd
 
 &Magnification:
 倍率(&M)
@@ -78,7 +79,7 @@ Contributor: theowoo (http://grnrnat.net.ru/)
 區別大小寫(&M)
 
 &Next Page\tRight Arrow
-下一頁\t->
+下一頁(&N)\t->
 
 &No
 否(&N)
@@ -92,6 +93,9 @@ Contributor: theowoo (http://grnrnat.net.ru/)
 &Open Document
 開啟此文件(&O)
 
+&Open...\tCtrl+O
+開啟(&O)...\tCtrl+O
+
 &Options...
 選項(&O)...
 
@@ -102,7 +106,7 @@ Contributor: theowoo (http://grnrnat.net.ru/)
 固定此縮圖(&P)
 
 &Previous Page\tLeft Arrow
-上一頁\t<-
+上一頁(&P)\t<-
 
 &Print...
 列印...(&P)
@@ -111,7 +115,7 @@ Contributor: theowoo (http://grnrnat.net.ru/)
 列印(&P)...\tCtrl+P
 
 &Print... (denied)
-列印... (已中斷)
+列印(&P)... (已中斷)
 
 &Remember the password for this document
 記住此文件的密碼(&R)
@@ -129,7 +133,7 @@ Contributor: theowoo (http://grnrnat.net.ru/)
 另存新檔(&S)...\tCtrl+S
 
 &Settings
-設定
+設定(&S)
 
 &Shrink pages to printable area (if necessary)
 如有需要，縮小頁面以符合可列印區域(&S)
@@ -155,8 +159,20 @@ Contributor: theowoo (http://grnrnat.net.ru/)
 (of %d)
 （共 %d 頁）
 
+(page %s)
+(第 %s 頁)
+
 About SumatraPDF
 關於 SumatraPDF
+
+Add page %s to favorites
+把第 %s 頁加入我的最愛
+
+Add page %s to favorites with (optional) name:
+把第 %s 頁加入我的最愛
+
+Add to favorites
+加入我的最愛
 
 Advanced
 進階
@@ -189,7 +205,7 @@ Book View
 書本模式
 
 Book&marks\tF12
-書籤\tF12
+書籤(&M)\tF12
 
 Bookmark Shortcuts
 書籤捷徑
@@ -239,6 +255,9 @@ Continuous Facing
 Contribute Translation
 提供翻譯
 
+Copy &Image
+複製圖片(&I)
+
 Copy &Link Address
 複製連結位址(&L)
 
@@ -247,6 +266,9 @@ Copy Co&mment
 
 Copying text was denied (copying as image only)
 複製文字失敗（只能複製為圖片）
+
+Copyright:
+版權：
 
 Couldn't initialize printer
 無法初始化印表機
@@ -257,14 +279,17 @@ Couldn't render the page
 Created:
 檔案建立日期：
 
+Current file
+當前的檔案
+
 Custom &Zoom...\tCtrl+Y
 自訂縮放(&C)...\tCtrl+Y
 
 Default &Layout:
-預設閱覽模式：(L)
+預設閱覽模式：(&L)
 
 Default &Zoom:
-預設比例：(Z)
+預設比例：(&Z)
 
 Default PDF reader can't be changed in portable mode
 不能在便攜模式更改預設 PDF 閱讀器
@@ -299,17 +324,26 @@ Enter the command-line to invoke when you double-click on the PDF document:
 Error loading %s
 載入 %s 時發生錯誤
 
+F&avorites
+我的最愛(&A)
+
 F&orward\tAlt+Right Arrow
-下一停頓頁面\tAlt+->
+下一停頓頁面(&O)\tAlt+->
 
 F&ullscreen\tCtrl+Shift+L
-全螢幕顯示\tCtrl+Shift+L
+全螢幕顯示(&U)\tCtrl+Shift+L
 
 Facing
 雙頁模式
 
 Failed to save a file
 檔案儲存失敗
+
+Favorites
+我的最愛
+
+File %s not found
+找不到檔案 %s 
 
 File Size:
 檔案大小：
@@ -318,7 +352,7 @@ File:
 檔案：
 
 Fin&d...\tCtrl+F
-尋找...\tCtrl+F
+尋找(&P)...\tCtrl+F
 
 Find
 尋找
@@ -435,7 +469,7 @@ Open in &Adobe Reader
 以 Adobe Reader 開啟(&A)
 
 Open in &Foxit Reader
-以 Foxit Reader 開啟
+以 Foxit Reader 開啟(&F)
 
 Open in Microsoft HTML Help
 以 Microsoft HTML Help 開啟
@@ -465,7 +499,10 @@ PDF documents
 PDF 文件
 
 Pa&ge...\tCtrl+G
-頁面...\tCtrl+G
+頁面(&A)...\tCtrl+G
+
+Page %s
+第 %s 頁
 
 Page Size:
 頁面大小：
@@ -507,13 +544,19 @@ Printing problem.
 列印問題
 
 Remember &opened files
-儲存最近開啟檔案
+儲存最近開啟檔案(&O)
+
+Remove from favorites
+從我的最愛移除
+
+Remove page %s from favorites
+從我的最愛中移除第 %s 頁
 
 Rotate &Left\tCtrl+Shift+-
-頁面左旋\tCtrl+Shift+-
+頁面左旋(&L)\tCtrl+Shift+-
 
 Rotate &Right\tCtrl+Shift++
-頁面右旋\tCtrl+Shift++
+頁面右旋(&R)\tCtrl+Shift++
 
 Save As
 另存新檔
@@ -540,10 +583,13 @@ Set inverse search command-line
 設定反搜尋命令列
 
 Show &Toolbar
-顯示工具列
+顯示工具列(&T)
 
 Show &pages continuously
-連續顯示頁面
+連續顯示頁面(&P)
+
+Show Favorites
+顯示我的最愛
 
 Show frequently read
 顯示經常開啟的檔案
@@ -630,29 +676,14 @@ printing document
 文件列印中
 
 # Untranslated:
-#&Open...\tCtrl+O
-#(page %s)
 #Add Favorite
-#Add page %s to favorites
-#Add page %s to favorites with (optional) name:
-#Add to favorites
-#Copy &Image
-#Copyright:
 #Could not obtain Printer properties
-#Current file
-#F&avorites
 #Failed to rename the file!
-#Favorites
-#File %s not found
 #Fonts:
 #Formatting the book... %d pages
 #Loading file %s...
-#Page %s
 #Printer with given name doesn't exist
 #Re&name...\tF2
-#Remove from favorites
-#Remove page %s from favorites
 #Rename To
 #Replace document &colors with Windows color scheme
-#Show Favorites
 
