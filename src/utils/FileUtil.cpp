@@ -265,10 +265,13 @@ char *ReadAll(const TCHAR *filePath, size_t *fileSizeOut)
     if (INVALID_FILE_SIZE == size)
         return NULL;
 
-    /* allocate one byte more and 0-terminate just in case it's a text
-       file we'll want to treat as C string. Doesn't hurt for binary
+    // overflow check
+    if (size + sizeof(WCHAR) < sizeof(WCHAR))
+        return NULL;
+    /* allocate one character more and zero-terminate just in case it's a
+       text file we'll want to treat as C string. Doesn't hurt for binary
        files (note: two byte terminator for UTF-16 files) */
-    char *data = SAZA(char, size + sizeof(WCHAR));
+    char *data = (char *)malloc(size + sizeof(WCHAR));
     if (!data)
         return NULL;
 
@@ -276,6 +279,9 @@ char *ReadAll(const TCHAR *filePath, size_t *fileSizeOut)
         free(data);
         return NULL;
     }
+
+    // zero-terminate for convenience
+    data[size] = data[size + 1] = '\0';
 
     if (fileSizeOut)
         *fileSizeOut = size;

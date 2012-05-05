@@ -775,11 +775,9 @@ bool CbxEngineImpl::FinishLoadingCbz()
     }
     assert(allFileNames.Count() == cbzFile->GetFileCount());
 
-    // cf. http://comicrack.cyolito.com/downloads/comicrack/ComicRack/Support-Files/ComicInfoSchema.zip/
     ScopedMem<char> metadata(cbzFile->GetFileData(_T("ComicInfo.xml")));
     if (metadata)
         ParseComicInfoXml(metadata);
-    // cf. http://code.google.com/p/comicbookinfo/
     metadata.Set(cbzFile->GetComment());
     if (metadata)
         json::Parse(metadata, this);
@@ -804,6 +802,7 @@ bool CbxEngineImpl::FinishLoadingCbz()
 }
 
 // extract ComicInfo.xml metadata
+// cf. http://comicrack.cyolito.com/downloads/comicrack/ComicRack/Support-Files/ComicInfoSchema.zip/
 void CbxEngineImpl::ParseComicInfoXml(const char *xmlData)
 {
     PoolAllocator allocator;
@@ -840,6 +839,7 @@ void CbxEngineImpl::ParseComicInfoXml(const char *xmlData)
 }
 
 // extract ComicBookInfo metadata
+// cf. http://code.google.com/p/comicbookinfo/
 bool CbxEngineImpl::observe(const char *path, const char *value, json::DataType type)
 {
     if (json::Type_String == type && str::Eq(path, "/ComicBookInfo/1.0/title"))
@@ -860,8 +860,10 @@ bool CbxEngineImpl::observe(const char *path, const char *value, json::DataType 
         if (prop) {
             if (json::Type_String == type && str::Eq(prop, "person"))
                 propAuthorTmp.Set(str::conv::FromUtf8(value));
-            else if (json::Type_Bool == type && str::Eq(prop, "primary") && propAuthorTmp)
+            else if (json::Type_Bool == type && str::Eq(prop, "primary") &&
+                propAuthorTmp && propAuthors.Find(propAuthorTmp) == -1) {
                 propAuthors.Append(propAuthorTmp.StealData());
+            }
         }
         return true;
     }
@@ -927,47 +929,50 @@ static int CALLBACK unrarCallback(UINT msg, LPARAM userData, LPARAM rarBuffer, L
     return 1;
 }
 
+static char *LoadCurrentCbrFile(HANDLE hArc, RARHeaderDataEx& rarHeader, size_t *lenOut)
+{
+    ScopedMem<char> data((char *)malloc(rarHeader.UnpSize + sizeof(WCHAR)));
+
+    if (rarHeader.UnpSizeHigh != 0 || rarHeader.UnpSize == 0 ||
+        rarHeader.UnpSize + sizeof(WCHAR) < sizeof(WCHAR) || !data) {
+        RARProcessFile(hArc, RAR_SKIP, NULL, NULL);
+        return NULL;
+    }
+
+    RarDecompressData rdd;
+    rdd.totalSize = rarHeader.UnpSize;
+    rdd.buf = data;
+    rdd.currSize = 0;
+    RARSetCallback(hArc, unrarCallback, (LPARAM)&rdd);
+    int res = RARProcessFile(hArc, RAR_TEST, NULL, NULL);
+    if (0 != res || rdd.totalSize != rdd.currSize)
+        return NULL;
+    // zero-terminate for convenience
+    data[rdd.totalSize] = data[rdd.totalSize + 1] = '\0';
+
+    if (lenOut)
+        *lenOut = rdd.totalSize;
+    return data.StealData();
+}
+
 static ImagesPage *LoadCurrentCbrPage(HANDLE hArc, RARHeaderDataEx& rarHeader)
 {
-    ScopedMem<char> bmpData;
+    size_t bmpDataSize;
+    ScopedMem<char> bmpData(LoadCurrentCbrFile(hArc, rarHeader, &bmpDataSize));
+    if (!bmpData)
+        return NULL;
+
+    Bitmap *bmp = BitmapFromData(bmpData, bmpDataSize);
+    if (!bmp)
+        return NULL;
+
 #ifdef UNICODE
     TCHAR *fileName = rarHeader.FileNameW;
 #else
     TCHAR *fileName = rarHeader.FileName;
 #endif
-
-    if (!ImageEngine::IsSupportedFile(fileName))
-        goto SkipFile;
-    if (rarHeader.UnpSizeHigh != 0)
-        goto SkipFile;
-    if (rarHeader.UnpSize == 0)
-        goto SkipFile;
-
-    RarDecompressData rdd;
-    rdd.totalSize = rarHeader.UnpSize;
-    bmpData.Set(SAZA(char, rdd.totalSize));
-    if (!bmpData)
-        goto SkipFile;
-
-    rdd.buf = bmpData;
-    rdd.currSize = 0;
-    RARSetCallback(hArc, unrarCallback, (LPARAM)&rdd);
-    int res = RARProcessFile(hArc, RAR_TEST, NULL, NULL);
-    if (0 != res)
-        return NULL;
-    if (rdd.totalSize != rdd.currSize)
-        return NULL;
-
-    Bitmap *bmp = BitmapFromData(bmpData, rdd.totalSize);
-    if (!bmp)
-        return NULL;
-
     return new ImagesPage(fileName, bmp);
-
-SkipFile:
-    RARProcessFile(hArc, RAR_SKIP, NULL, NULL);
-    return NULL;
- }
+}
 
 bool CbxEngineImpl::LoadCbrFile(const TCHAR *file)
 {
@@ -998,9 +1003,24 @@ bool CbxEngineImpl::LoadCbrFile(const TCHAR *file)
         if (0 != res)
             break;
 
-        ImagesPage *page = LoadCurrentCbrPage(hArc, rarHeader);
-        if (page)
-            found.Append(page);
+#ifdef UNICODE
+        TCHAR *fileName = rarHeader.FileNameW;
+#else
+        TCHAR *fileName = rarHeader.FileName;
+#endif
+        if (ImageEngine::IsSupportedFile(fileName)) {
+            ImagesPage *page = LoadCurrentCbrPage(hArc, rarHeader);
+            if (page)
+                found.Append(page);
+        }
+        else if (str::EqI(fileName, _T("ComicInfo.xml"))) {
+            ScopedMem<char> xmlData(LoadCurrentCbrFile(hArc, rarHeader, NULL));
+            if (xmlData)
+                ParseComicInfoXml(xmlData);
+        }
+        else
+            RARProcessFile(hArc, RAR_SKIP, NULL, NULL);
+
     }
     RARCloseArchive(hArc);
 
