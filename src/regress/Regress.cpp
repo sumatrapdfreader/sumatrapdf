@@ -83,10 +83,26 @@ static DWORD WINAPI CrashDumpThread(LPVOID data)
 {
     WaitForSingleObject(gDumpEvent, INFINITE);
     printflush("Captain, we've got a crash!\n");
-    if (!dbghelp::Load())
+    if (!dbghelp::Load()) {
+        printflush("CrashDumpThread(): dbghelp::Load() failed");
         return 0;
+    }
 
-    // TODO: print a callstack
+    if (!dbghelp::Initialize(L"")) {
+        printflush("CrashDumpThread(): dbghelp::Initialize() failed");
+        return 0;
+    }
+
+    if (!dbghelp::HasSymbols()) {
+        printflush("CrashDumpThread(): dbghelp::HasSymbols() is false");
+        return 0;
+    }
+
+    str::Str<char> s(16 * 1024);
+    dbghelp::GetExceptionInfo(s, gMei.ExceptionPointers);
+    dbghelp::GetAllThreadsCallstacks(s);
+    s.Append("\r\n");
+    printflush(s.LendData());
     return 0;
 }
 
