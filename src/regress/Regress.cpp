@@ -16,6 +16,7 @@ To write new regression test:
 */
 
 #include "BaseUtil.h"
+#include "DbgHelpDyn.h"
 #include "DirIter.h"
 #include "Doc.h"
 #include "FileUtil.h"
@@ -27,14 +28,9 @@ using namespace Gdiplus;
 
 #include "DebugLog.h"
 
-/*
-TODO: install a crash handler and dump crash info to stdout so that we can tell
-a crash has happened
-*/
-
 static TCHAR *gTestFilesDir;
 
-TCHAR *TestFilesDir()
+static TCHAR *TestFilesDir()
 {
     return gTestFilesDir;
 }
@@ -44,6 +40,12 @@ static int Usage()
     printf("regress.exe\n");
     printf("Error: didn't find test files on this computer!\n");
     return 1;
+}
+
+static void printflush(const char *s)
+{
+    printf(s);
+    fflush(stdout);
 }
 
 /* Auto-detect the location of test files. Ultimately we might add a cmd-line
@@ -63,13 +65,77 @@ static bool FindTestFilesDir()
     return false;
 }
 
-void VerifyFileExists(const TCHAR *filePath)
+static void VerifyFileExists(const TCHAR *filePath)
 {
     if (!file::Exists(filePath)) {
         _tprintf(_T("File '%s' doesn't exist!\n"), filePath);
         exit(1);
     }
 }
+
+static HANDLE   gDumpEvent = NULL;
+static HANDLE   gDumpThread = NULL;
+
+static MINIDUMP_EXCEPTION_INFORMATION gMei = { 0 };
+static LPTOP_LEVEL_EXCEPTION_FILTER gPrevExceptionFilter = NULL;
+
+static DWORD WINAPI CrashDumpThread(LPVOID data)
+{
+    WaitForSingleObject(gDumpEvent, INFINITE);
+    printflush("Captain, we've got a crash!\n");
+    if (!dbghelp::Load())
+        return 0;
+
+    // TODO: print a callstack
+    return 0;
+}
+
+static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS *exceptionInfo)
+{
+    if (!exceptionInfo || (EXCEPTION_BREAKPOINT == exceptionInfo->ExceptionRecord->ExceptionCode))
+        return EXCEPTION_CONTINUE_SEARCH;
+
+    static bool wasHere = false;
+    if (wasHere)
+        return EXCEPTION_CONTINUE_SEARCH;
+    wasHere = true;
+
+    gMei.ThreadId = GetCurrentThreadId();
+    gMei.ExceptionPointers = exceptionInfo;
+    // per msdn (which is backed by my experience), MiniDumpWriteDump() doesn't
+    // write callstack for the calling thread correctly. We use msdn-recommended
+    // work-around of spinning a thread to do the writing
+    SetEvent(gDumpEvent);
+    WaitForSingleObject(gDumpThread, INFINITE);
+
+    TerminateProcess(GetCurrentProcess(), 1);
+    return EXCEPTION_CONTINUE_SEARCH;
+}
+
+static void InstallCrashHandler()
+{
+    gDumpEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+    if (!gDumpEvent) {
+        printflush("InstallCrashHandler(): CreateEvent() failed\n");
+        return;
+    }
+    gDumpThread = CreateThread(NULL, 0, CrashDumpThread, NULL, 0, 0);
+    if (!gDumpThread) {
+        printflush("InstallCrashHandler(): CreateThread() failed\n");
+        return;
+    }
+    gPrevExceptionFilter = SetUnhandledExceptionFilter(DumpExceptionHandler);
+}
+
+static void UninstallCrashHandler()
+{
+    if (gDumpEvent)
+        SetUnhandledExceptionFilter(gPrevExceptionFilter);
+    TerminateThread(gDumpThread, 1);
+    CloseHandle(gDumpThread);
+    CloseHandle(gDumpEvent);
+}
+
 
 #include "Regress00.cpp"
 
@@ -84,12 +150,14 @@ int main(int argc, char **argv)
     if (!FindTestFilesDir())
         return Usage();
 
+    InstallCrashHandler();
     InitAllCommonControls();
     ScopedGdiPlus gdi;
     mui::Initialize();
 
     RunTests();
-    printf("All tests completed successfully!\n");
+    printflush("All tests completed successfully!\n");
     mui::Destroy();
+    UninstallCrashHandler();
     return 0;
 }
