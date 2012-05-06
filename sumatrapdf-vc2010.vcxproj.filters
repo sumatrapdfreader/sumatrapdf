@@ -971,10 +971,10 @@
     <ClCompile Include="src\utils\ByteOrderDecoder_ut.cpp">
       <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="src\Regress.cpp">
+    <ClCompile Include="src\regress\Regress00.cpp">
       <Filter>sumatra\regress</Filter>
     </ClCompile>
-    <ClCompile Include="src\regress\Regress00.cpp">
+    <ClCompile Include="src\regress\Regress.cpp">
       <Filter>sumatra\regress</Filter>
     </ClCompile>
   </ItemGroup>
