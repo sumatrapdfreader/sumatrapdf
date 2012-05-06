@@ -277,6 +277,7 @@
     <ClCompile Include="src\Print.cpp" />
     <ClCompile Include="src\PsEngine.cpp" />
     <ClCompile Include="src\Regress.cpp" />
+    <ClCompile Include="src\regress\Regress00.cpp" />
     <ClCompile Include="src\RenderCache.cpp" />
     <ClCompile Include="src\Search.cpp" />
     <ClCompile Include="src\Selection.cpp" />

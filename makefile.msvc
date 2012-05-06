@@ -382,6 +382,9 @@ $(ENGINEDUMP_APP): $(ENGINEDUMP_OBJS)
 {src\previewer}.cpp{$(ODLL)}.obj::
 	$(CC) $(PDFPREVIEW_CFLAGS) /Fo$(ODLL)\ /Fd$(O)\vc80.pdb $<
 
+{src\regress}.cpp{$(OS)}.obj::
+	$(CC) $(REGRESS_CFLAGS) /Fo$(OS)\ /Fd$(O)\vc80.pdb $<
+
 {src\installer}.cpp{$(OS)}.obj::
 	$(CC) $(INSTALLER_CFLAGS) /Fo$(OS)\ /Fd$(O)\vc80.pdb $<
 $(OS)\Uninstaller.obj: $(OS)\Installer.obj
