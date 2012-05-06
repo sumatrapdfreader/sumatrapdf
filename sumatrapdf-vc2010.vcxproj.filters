@@ -968,6 +968,9 @@
     <ClCompile Include="src\utils\ByteOrderDecoder_ut.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="src\Regress.cpp">
+      <Filter>sumatra</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
