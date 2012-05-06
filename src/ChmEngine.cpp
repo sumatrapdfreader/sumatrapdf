@@ -208,6 +208,8 @@ ChmEngineImpl::~ChmEngineImpl()
 // the right page number, select the right item in toc tree)
 void ChmEngineImpl::OnDocumentComplete(const TCHAR *url)
 {
+    if (!url)
+        return;
     if (*url == _T('/'))
         ++url;
     int pageNo = pages.Find(ScopedMem<TCHAR>(ToPlainUrl(url))) + 1;
