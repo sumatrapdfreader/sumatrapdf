@@ -118,6 +118,22 @@ DrawInstr DrawInstr::Anchor(const char *s, size_t len, RectF bbox)
     return di;
 }
 
+#define FONT_NAME              L"Georgia"
+#define FONT_SIZE              12.5f
+
+HtmlFormatterArgs *CreateFormatterArgsDoc(Doc doc, int dx, int dy, PoolAllocator *textAllocator)
+{
+    HtmlFormatterArgs *args = new HtmlFormatterArgs();
+    args->htmlStr = doc.GetHtmlData(args->htmlStrLen);
+    CrashIf(!args->htmlStr);
+    args->fontName = FONT_NAME;
+    args->fontSize = FONT_SIZE;
+    args->pageDx = (REAL)dx;
+    args->pageDy = (REAL)dy;
+    args->textAllocator = textAllocator;
+    return args;
+}
+
 HtmlFormatter::HtmlFormatter(HtmlFormatterArgs *args) :
     pageDx(args->pageDx), pageDy(args->pageDy),
     textAllocator(args->textAllocator), currLineReparseIdx(NULL),
@@ -1353,4 +1369,16 @@ void EpubFormatter::HandleHtmlTag(HtmlToken *t)
 bool EpubFormatter::IgnoreText()
 {
     return hiddenDepth > 0 || HtmlFormatter::IgnoreText();
+}
+
+HtmlFormatter *CreateFormatter(Doc doc, HtmlFormatterArgs* args)
+{
+    if (doc.AsMobi())
+        return new MobiFormatter(args, doc.AsMobi());
+    if (doc.AsMobiTest())
+        return new MobiFormatter(args, NULL);
+    if (doc.AsEpub())
+        return new EpubFormatter(args, doc.AsEpub());
+    CrashIf(true);
+    return NULL;
 }

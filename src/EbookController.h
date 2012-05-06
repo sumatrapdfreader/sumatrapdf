@@ -52,8 +52,6 @@ struct FormattingTemp {
     void            DeletePages();
 };
 
-HtmlFormatterArgs *CreateFormatterArgsDoc(Doc doc, int dx, int dy, PoolAllocator *textAllocator);
-
 class EbookController : public sigslot::has_slots
 {
     EbookControls * ctrls;

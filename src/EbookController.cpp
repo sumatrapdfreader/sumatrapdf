@@ -21,9 +21,6 @@
    while showing second page whose reparse point will be within the first page
    after resize. */
 
-#define FONT_NAME              L"Georgia"
-#define FONT_SIZE              12.5f
-
 // in EbookWindow.cpp
 extern void RestartLayoutTimer(EbookController *controller);
 
@@ -123,18 +120,6 @@ void EbookFormattingThread::SendPagesIfNecessary(bool force, bool finished, bool
     pageCount = 0;
     memset(pages, 0, sizeof(pages));
     uimsg::Post(msg);
-}
-
-HtmlFormatter *CreateFormatter(Doc doc, HtmlFormatterArgs* args)
-{
-    if (doc.AsMobi())
-        return new MobiFormatter(args, doc.AsMobi());
-    if (doc.AsMobiTest())
-        return new MobiFormatter(args, NULL);
-    if (doc.AsEpub())
-        return new EpubFormatter(args, doc.AsEpub());
-    CrashIf(true);
-    return NULL;
 }
 
 // layout pages from a given reparse point (beginning if NULL)
@@ -258,19 +243,6 @@ void EbookController::DeletePages(Vec<HtmlPage*>** pages)
 #endif
     ::DeletePages(*pages);
     *pages = NULL;
-}
-
-HtmlFormatterArgs *CreateFormatterArgsDoc(Doc doc, int dx, int dy, PoolAllocator *textAllocator)
-{
-    HtmlFormatterArgs *args = new HtmlFormatterArgs();
-    args->htmlStr = doc.GetHtmlData(args->htmlStrLen);
-    CrashIf(!args->htmlStr);
-    args->fontName = FONT_NAME;
-    args->fontSize = FONT_SIZE;
-    args->pageDx = (REAL)dx;
-    args->pageDy = (REAL)dy;
-    args->textAllocator = textAllocator;
-    return args;
 }
 
 // returns page whose content contains reparseIdx
