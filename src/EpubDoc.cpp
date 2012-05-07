@@ -166,6 +166,16 @@ static char *Base64Decode(const char *s, const char *end, size_t *len)
     return result;
 }
 
+static inline void AppendChar(str::Str<char>& htmlData, char c)
+{
+    switch (c) {
+    case '&': htmlData.Append("&amp;"); break;
+    case '<': htmlData.Append("&lt;"); break;
+    case '"': htmlData.Append("&quot;"); break;
+    default:  htmlData.Append(c); break;
+    }
+}
+
 /* ********** EPUB ********** */
 
 EpubDoc::EpubDoc(const TCHAR *fileName) :
@@ -1235,6 +1245,82 @@ PalmDoc *PalmDoc::CreateFromFile(const TCHAR *fileName)
     return doc;
 }
 
+/* ********** TCR (Text Compression for (Psion) Reader) ********** */
+
+// cf. http://www.cix.co.uk/~gidds/Software/TCR.html
+#define TCR_HEADER      "!!8-Bit!!"
+#define TCR_HEADER_LEN  strlen(TCR_HEADER)
+
+TcrDoc::TcrDoc(const TCHAR *fileName) : fileName(str::Dup(fileName)) { }
+TcrDoc::~TcrDoc() { }
+
+bool TcrDoc::Load()
+{
+    size_t dataLen;
+    ScopedMem<char> data(file::ReadAll(fileName, &dataLen));
+    if (!data)
+        return false;
+    if (dataLen < TCR_HEADER_LEN || !str::StartsWith(data.Get(), TCR_HEADER))
+        return false;
+
+    const char *curr = data + TCR_HEADER_LEN;
+    const char *end = data + dataLen;
+
+    const char *dict[256];
+    for (int n = 0; n < dimof(dict); n++) {
+        if (curr >= end)
+            return false;
+        dict[n] = curr;
+        curr += 1 + (uint8_t)*curr;
+    }
+
+    str::Str<char> text(dataLen * 2);
+    for (; curr < end; curr++) {
+        const char *entry = dict[(uint8_t)*curr];
+        text.Append(entry + 1, (uint8_t)*entry);
+    }
+
+    ScopedMem<char> textUtf8(DecodeTextToUtf8(text.Get()));
+    if (!textUtf8)
+        return false;
+    htmlData.Append("<pre>");
+    for (curr = textUtf8; *curr; curr++) {
+        AppendChar(htmlData, *curr);
+    }
+    htmlData.Append("</pre>");
+
+    return true;
+}
+
+const char *TcrDoc::GetTextData(size_t *lenOut)
+{
+    *lenOut = htmlData.Size();
+    return htmlData.Get();
+}
+
+const TCHAR *TcrDoc::GetFileName() const
+{
+    return fileName;
+}
+
+bool TcrDoc::IsSupportedFile(const TCHAR *fileName, bool sniff)
+{
+    if (sniff)
+        return file::StartsWith(fileName, TCR_HEADER);
+
+    return str::EndsWithI(fileName, _T(".tcr"));
+}
+
+TcrDoc *TcrDoc::CreateFromFile(const TCHAR *fileName)
+{
+    TcrDoc *doc = new TcrDoc(fileName);
+    if (!doc || !doc->Load()) {
+        delete doc;
+        return NULL;
+    }
+    return doc;
+}
+
 /* ********** Plain HTML ********** */
 
 HtmlDoc::HtmlDoc(const TCHAR *fileName) : fileName(str::Dup(fileName)) { }
@@ -1354,16 +1440,6 @@ HtmlDoc *HtmlDoc::CreateFromFile(const TCHAR *fileName)
 /* ********** Plain Text ********** */
 
 TxtDoc::TxtDoc(const TCHAR *fileName) : fileName(str::Dup(fileName)), isRFC(false) { }
-
-static inline void AppendChar(str::Str<char>& htmlData, char c)
-{
-    switch (c) {
-    case '&': htmlData.Append("&amp;"); break;
-    case '<': htmlData.Append("&lt;"); break;
-    case '"': htmlData.Append("&quot;"); break;
-    default:  htmlData.Append(c); break;
-    }
-}
 
 static char *TextFindLinkEnd(str::Str<char>& htmlData, char *curr, bool fromWww=false)
 {

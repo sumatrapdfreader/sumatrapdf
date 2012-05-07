@@ -25,7 +25,7 @@ using namespace Gdiplus;
 #define DEFAULT_FONT_NAME L"Georgia"
 #define DEFAULT_FONT_SIZE 10
 
-/* common classes for EPUB, FictionBook2, Mobi, PalmDOC, CHM, HTML and TXT engines */
+/* common classes for EPUB, FictionBook2, Mobi, PalmDOC, CHM, TCR, HTML and TXT engines */
 
 namespace str {
     namespace conv {
@@ -1431,6 +1431,67 @@ Chm2Engine *Chm2Engine::CreateFromFile(const TCHAR *fileName)
     return engine;
 }
 
+/* BaseEngine for handling TCR documents */
+
+class TcrEngineImpl : public EbookEngine, public TcrEngine {
+    friend TcrEngine;
+
+public:
+    TcrEngineImpl() : EbookEngine(), doc(NULL) {
+        // ISO 216 A4 (210mm x 297mm)
+        pageRect = RectD(0, 0, 8.27 * GetFileDPI(), 11.693 * GetFileDPI());
+    }
+    virtual ~TcrEngineImpl() { delete doc; }
+    virtual TcrEngine *Clone() {
+        return fileName ? CreateFromFile(fileName) : NULL;
+    }
+
+    virtual const TCHAR *GetDefaultFileExt() const { return _T(".tcr"); }
+    virtual PageLayoutType PreferredLayout() { return Layout_Single; }
+
+protected:
+    TcrDoc *doc;
+
+    bool Load(const TCHAR *fileName);
+};
+
+bool TcrEngineImpl::Load(const TCHAR *fileName)
+{
+    this->fileName = str::Dup(fileName);
+
+    doc = TcrDoc::CreateFromFile(fileName);
+    if (!doc)
+        return false;
+
+    HtmlFormatterArgs args;
+    args.htmlStr = doc->GetTextData(&args.htmlStrLen);
+    args.pageDx = (float)pageRect.dx - 2 * pageBorder;
+    args.pageDy = (float)pageRect.dy - 2 * pageBorder;
+    args.fontName = DEFAULT_FONT_NAME;
+    args.fontSize = DEFAULT_FONT_SIZE;
+    args.textAllocator = &allocator;
+    args.measureAlgo = MeasureTextQuick;
+
+    pages = HtmlFormatter(&args).FormatAllPages(false);
+
+    return pages->Count() > 0;
+}
+
+bool TcrEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
+{
+    return TcrDoc::IsSupportedFile(fileName, sniff);
+}
+
+TcrEngine *TcrEngine::CreateFromFile(const TCHAR *fileName)
+{
+    TcrEngineImpl *engine = new TcrEngineImpl();
+    if (!engine->Load(fileName)) {
+        delete engine;
+        return NULL;
+    }
+    return engine;
+}
+
 /* formatting extensions for HTML */
 
 class HtmlFormatter2 : public HtmlFormatter {
@@ -1560,7 +1621,6 @@ HtmlEngine *HtmlEngine::CreateFromFile(const TCHAR *fileName)
 class TxtFormatter : public HtmlFormatter {
 protected:
     virtual void HandleTagPagebreak(HtmlToken *t) { ForceNewPage(); }
-    virtual bool IgnoreText() { return false; }
 
 public:
     TxtFormatter(HtmlFormatterArgs *args) : HtmlFormatter(args) { }
@@ -1572,7 +1632,7 @@ class TxtEngineImpl : public EbookEngine, public TxtEngine {
     friend TxtEngine;
 
 public:
-    TxtEngineImpl() : EbookEngine() {
+    TxtEngineImpl() : EbookEngine(), doc(NULL) {
         // ISO 216 A4 (210mm x 297mm)
         pageRect = RectD(0, 0, 8.27 * GetFileDPI(), 11.693 * GetFileDPI());
     }

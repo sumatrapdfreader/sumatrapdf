@@ -39,7 +39,7 @@ enum DocType {
     Engine_Image, Engine_ImageDir, Engine_ComicBook,
     Engine_PS,
     Engine_Chm,
-    Engine_Epub, Engine_Fb2, Engine_Mobi, Engine_Pdb, Engine_Chm2, Engine_Html, Engine_Txt,
+    Engine_Epub, Engine_Fb2, Engine_Mobi, Engine_Pdb, Engine_Chm2, Engine_Tcr, Engine_Html, Engine_Txt,
 };
 
 class Doc

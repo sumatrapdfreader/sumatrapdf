@@ -151,7 +151,7 @@ bool Doc::IsEngine() const
     case Engine_PS:
     case Engine_Chm:
     case Engine_Epub: case Engine_Fb2: case Engine_Mobi: case Engine_Pdb:
-    case Engine_Chm2: case Engine_Html: case Engine_Txt:
+    case Engine_Chm2: case Engine_Tcr: case Engine_Html: case Engine_Txt:
         return true;
     default:
         CrashIf(!IsEbook() && !IsNone());
@@ -270,6 +270,7 @@ bool EngineManager::IsSupportedFile(const TCHAR *filePath, bool sniff)
                MobiEngine::IsSupportedFile(filePath, sniff) ||
                PdbEngine::IsSupportedFile(filePath, sniff)  ||
                Chm2Engine::IsSupportedFile(filePath, sniff) ||
+               TcrEngine::IsSupportedFile(filePath, sniff)  ||
                HtmlEngine::IsSupportedFile(filePath, sniff) ||
                TxtEngine::IsSupportedFile(filePath, sniff)
            );
@@ -325,6 +326,9 @@ RetrySniffing:
     } else if (Chm2Engine::IsSupportedFile(filePath, sniff) && engineType != Engine_Chm2) {
         engine = Chm2Engine::CreateFromFile(filePath);
         engineType = Engine_Chm2;
+    } else if (TcrEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_Tcr) {
+        engine = TcrEngine::CreateFromFile(filePath);
+        engineType = Engine_Tcr;
     } else if (HtmlEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_Html) {
         engine = HtmlEngine::CreateFromFile(filePath);
         engineType = Engine_Html;
