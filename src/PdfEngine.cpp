@@ -183,12 +183,12 @@ ProducingPaletteDone:
 
 fz_stream *fz_open_file2(fz_context *ctx, const TCHAR *filePath)
 {
+    fz_stream *file = NULL;
     size_t fileSize = file::GetSize(filePath);
     // load small files entirely into memory so that they can be
     // overwritten even by programs that don't open files with FILE_SHARE_READ
     if (fileSize < MAX_MEMORY_FILE_SIZE) {
         fz_buffer *data = NULL;
-        fz_stream *file = NULL;
         fz_var(data);
         fz_try(ctx) {
             data = fz_new_buffer(ctx, (int)fileSize);
@@ -203,11 +203,17 @@ fz_stream *fz_open_file2(fz_context *ctx, const TCHAR *filePath)
             return file;
     }
 
+    fz_try(ctx) {
 #ifdef UNICODE
-    return fz_open_file_w(ctx, filePath);
+        file = fz_open_file_w(ctx, filePath);
 #else
-    return fz_open_file_a(ctx, filePath);
+        file = fz_open_file_a(ctx, filePath);
 #endif
+    }
+    fz_catch(ctx) {
+        file = NULL;
+    }
+    return file;
 }
 
 unsigned char *fz_extract_stream_data(fz_stream *stream, size_t *cbCount)
