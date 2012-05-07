@@ -5,6 +5,10 @@ Next version:
 
 2.2 (2012-??-??)
 
+2.1.1 (2012-05-07)
+
+* fix a couple of crashes, most importantly crash when resizing some ePub files
+
 2.1 (2012-05-03)
 
 * support for EPUB ebook format
