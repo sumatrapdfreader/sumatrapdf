@@ -175,7 +175,7 @@ fz_open_file_w(fz_context *ctx, const wchar_t *name)
 {
 	int fd = _wopen(name, O_BINARY | O_RDONLY, 0);
 	if (fd == -1)
-		return NULL;
+		fz_throw(ctx, "cannot open file");
 	return fz_open_fd(ctx, fd);
 }
 
@@ -185,7 +185,7 @@ fz_open_file_a(fz_context *ctx, const char *name)
 {
 	int fd = open(name, O_BINARY | O_RDONLY, 0);
 	if (fd == -1)
-		return NULL;
+		fz_throw(ctx, "cannot open %s", name);
 	return fz_open_fd(ctx, fd);
 }
 #endif
