@@ -303,11 +303,12 @@ $(OS)\Regress.obj: src\Doc.h src\EbookBase.h src\HtmlFormatter.h
 $(OS)\Regress.obj: src\mui\Mui.h src\mui\MuiBase.h src\mui\MuiButton.h
 $(OS)\Regress.obj: src\mui\MuiControl.h src\mui\MuiCss.h src\mui\MuiEventMgr.h
 $(OS)\Regress.obj: src\mui\MuiHwndWrapper.h src\mui\MuiLayout.h src\mui\MuiPainter.h
-$(OS)\Regress.obj: src\mui\MuiScrollBar.h src\utils\Allocator.h src\utils\BaseUtil.h
-$(OS)\Regress.obj: src\utils\DebugLog.h src\utils\DirIter.h src\utils\FileUtil.h
-$(OS)\Regress.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\HtmlParserLookup.h
-$(OS)\Regress.obj: src\utils\Scoped.h src\utils\Sigslot.h src\utils\StrUtil.h
-$(OS)\Regress.obj: src\utils\Vec.h src\utils\WinUtil.h
+$(OS)\Regress.obj: src\mui\MuiScrollBar.h src\regress\Regress00.cpp src\utils\Allocator.h
+$(OS)\Regress.obj: src\utils\BaseUtil.h src\utils\DbgHelpDyn.h src\utils\DebugLog.h
+$(OS)\Regress.obj: src\utils\DirIter.h src\utils\FileUtil.h src\utils\GdiPlusUtil.h
+$(OS)\Regress.obj: src\utils\GeomUtil.h src\utils\HtmlParserLookup.h src\utils\Scoped.h
+$(OS)\Regress.obj: src\utils\Sigslot.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\Regress.obj: src\utils\WinUtil.h
 $(OS)\RenderCache.obj: src\BaseEngine.h src\ChmEngine.h src\DisplayModel.h
 $(OS)\RenderCache.obj: src\DisplayState.h src\Doc.h src\RenderCache.h
 $(OS)\RenderCache.obj: src\TextSelection.h src\utils\Allocator.h src\utils\BaseUtil.h
