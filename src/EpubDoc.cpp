@@ -77,25 +77,21 @@ static UINT GetCodepageFromPI(const char *xmlPI)
 
 char *NormalizeURL(const char *url, const char *base)
 {
+    CrashIf(!url || !base);
     if (*url == '/' || str::FindChar(url, ':'))
         return str::Dup(url);
 
-    ScopedMem<char> norm;
-    if (base) {
-        const char *baseEnd = str::FindCharLast(base, '/');
-        const char *hash = str::FindChar(base, '#');
-        if (baseEnd && hash && hash < baseEnd) {
-            for (baseEnd = hash - 1; baseEnd > base && *baseEnd != '/'; baseEnd--);
-        }
-        if (baseEnd)
-            baseEnd++;
-        else
-            baseEnd = base;
-        ScopedMem<char> basePath(str::DupN(base, baseEnd - base));
-        norm.Set(str::Join(basePath, url));
-    } else {
-        norm.Set(str::Dup(url));
+    const char *baseEnd = str::FindCharLast(base, '/');
+    const char *hash = str::FindChar(base, '#');
+    if (baseEnd && hash && hash < baseEnd) {
+        for (baseEnd = hash - 1; baseEnd > base && *baseEnd != '/'; baseEnd--);
     }
+    if (baseEnd)
+        baseEnd++;
+    else
+        baseEnd = base;
+    ScopedMem<char> basePath(str::DupN(base, baseEnd - base));
+    ScopedMem<char> norm(str::Join(basePath, url));
 
     char *dst = norm;
     for (char *src = norm; *src; src++) {
@@ -348,32 +344,32 @@ size_t EpubDoc::GetTextDataSize()
     return htmlData.Size();
 }
 
-
 ImageData *EpubDoc::GetImageData(const char *id, const char *pagePath)
 {
-    ImageData2 *img;
-    ScopedMem<char> url(NormalizeURL(id, pagePath));
-
-    // try to find an image with the exact url
-    for (size_t i = 0; i < images.Count(); i++) {
-        img = images.AtPtr(i);
-        if (str::Eq(img->id, url)) {
-            if (!img->base.data)
-                img->base.data = zip.GetFileData(img->idx, &img->base.len);
-            if (img->base.data)
-                return &img->base;
+    if (!pagePath) {
+        // if we're reparsing, we might not have pagePath, which is needed to
+        // build the exact url so try to find a partial match
+        // TODO: the correct approach would be to extend reparseIdx into a
+        // struct ReparseData, which would include pagePath, and store it
+        // in every HtmlPage (same as styleStack, listDepth, preFormatted and
+        // later for FB2 section and titleCount), but this should work well
+        // enough for now. The worst that can happen is picking up the wrong image
+        for (size_t i = 0; i < images.Count(); i++) {
+            ImageData2 *img = &images.At(i);
+            if (str::EndsWithI(img->id, id)) {
+                if (!img->base.data)
+                    img->base.data = zip.GetFileData(img->idx, &img->base.len);
+                if (img->base.data)
+                    return &img->base;
+            }
         }
+        return NULL;
     }
 
-    // if we're reparsing, we might not have pagePath, which is needed to
-    // build exact url so try to find a partial match
-    // note: a different approach would be to extend reparseIdx into a
-    // struct ReparseData, which would include pagePath, and store it
-    // in every HtmlPage, but this should work well enough. The worst that
-    // can happen is picking up the wrong image
+    ScopedMem<char> url(NormalizeURL(id, pagePath));
     for (size_t i = 0; i < images.Count(); i++) {
-        img = images.AtPtr(i);
-        if (str::EndsWithI(img->id, url)) {
+        ImageData2 *img = &images.At(i);
+        if (str::Eq(img->id, url)) {
             if (!img->base.data)
                 img->base.data = zip.GetFileData(img->idx, &img->base.len);
             if (img->base.data)
