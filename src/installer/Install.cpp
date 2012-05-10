@@ -454,11 +454,18 @@ Error:
 }
 #endif
 
+// CreateProcessWithTokenW() only available since Vista
+typedef BOOL WINAPI CreateProcessWithTokenWProc(HANDLE hToken, DWORD dwLogonFlags,
+    LPCWSTR lpApplicationName, LPWSTR lpCommandLine, DWORD dwCreationFlags,
+    LPVOID lpEnvironment, LPCWSTR lpCurrentDirectory, LPSTARTUPINFOW lpStartupInfo,
+    LPPROCESS_INFORMATION lpProcessInformation);
+
 // Run a given *.exe as a non-elevated (non-admin) process.
 // based on http://stackoverflow.com/questions/3298611/run-my-program-asuser
 // TODO: move to WinUtil.cpp
 bool RunAsUser(WCHAR *cmd)
 {
+    CreateProcessWithTokenWProc *_CreateProcessWithTokenW;
     PROCESS_INFORMATION pi = { 0 };
     STARTUPINFO si = { 0 };
     HANDLE hProcessToken = 0;
@@ -469,7 +476,11 @@ bool RunAsUser(WCHAR *cmd)
     TOKEN_PRIVILEGES tkp = { 0 };
     bool ret = false;
 
-    // Enable SeIncreaseQuotaPrivilege in this process (won't work if current process is not elevated)
+    _CreateProcessWithTokenW = (CreateProcessWithTokenWProc*)LoadDllFunc(_T("Advapi32.lib"), "CreateProcessWithTokenW");
+    if (!_CreateProcessWithTokenW)
+        return false;
+
+        // Enable SeIncreaseQuotaPrivilege in this process (won't work if current process is not elevated)
     BOOL ok = OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hProcessToken);
     if (!ok) {
         lf("RunAsUser(): OpenProcessToken() failed");
@@ -538,7 +549,7 @@ bool RunAsUser(WCHAR *cmd)
     si.wShowWindow = SW_SHOWNORMAL;
     si.dwFlags = STARTF_USESHOWWINDOW;
 
-    ok = CreateProcessWithTokenW(hPrimaryToken, 0, NULL, cmd, 0, NULL, NULL, &si, &pi);
+    ok = _CreateProcessWithTokenW(hPrimaryToken, 0, NULL, cmd, 0, NULL, NULL, &si, &pi);
     if (!ok) {
         lf("RunAsUser(): CreateProcessWithTokenW() failed");
         goto Error;
