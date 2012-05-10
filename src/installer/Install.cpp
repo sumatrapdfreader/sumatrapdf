@@ -12,8 +12,6 @@
 #include "../ifilter/PdfFilter.h"
 #include "../previewer/PdfPreview.h"
 
-#include "DebugLog.h"
-
 #define ID_CHECKBOX_MAKE_DEFAULT      14
 #define ID_CHECKBOX_BROWSER_PLUGIN    15
 #define ID_BUTTON_START_SUMATRA       16

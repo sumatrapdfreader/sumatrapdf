@@ -27,15 +27,14 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "FrameTimeoutCalculator.h"
 #include "ParseCommandLine.h"
 
+#include "DebugLog.h"
+
 // TODO: can't build these separately without breaking TEST_UNINSTALLER
 #ifdef BUILD_UNINSTALLER
 #include "Uninstall.cpp"
 #else
 #include "Install.cpp"
 #endif
-
-#define NOLOG 0 // log always
-#include "DebugLog.h"
 
 using namespace Gdiplus;
 
