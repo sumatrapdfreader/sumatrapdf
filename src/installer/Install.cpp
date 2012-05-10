@@ -474,21 +474,21 @@ bool RunAsUser(WCHAR *cmd)
     // Enable SeIncreaseQuotaPrivilege in this process (won't work if current process is not elevated)
     BOOL ok = OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hProcessToken);
     if (!ok) {
-        plogf("RunAsUser(): OpenProcessToken() failed");
+        lf("RunAsUser(): OpenProcessToken() failed");
         goto Error;
     }
 
     tkp.PrivilegeCount = 1;
-    ok = LookupPrivilegeValue(NULL, SE_INCREASE_QUOTA_NAME, &tkp.Privileges[0].Luid);
+    ok = LookupPrivilegeValueW(NULL, SE_INCREASE_QUOTA_NAME, &tkp.Privileges[0].Luid);
     if (!ok) {
-        plogf("RunAsUser(): LookupPrivilegeValue() failed");
+        lf("RunAsUser(): LookupPrivilegeValue() failed");
         goto Error;
     }
    
     tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
     ok = AdjustTokenPrivileges(hProcessToken, FALSE, &tkp, 0, NULL, &retLength);
     if (!ok || (ERROR_SUCCESS != GetLastError())) {
-        plogf("RunAsUser(): AdjustTokenPrivileges() failed");
+        lf("RunAsUser(): AdjustTokenPrivileges() failed");
         goto Error;
     }
 
@@ -499,28 +499,28 @@ bool RunAsUser(WCHAR *cmd)
     // restarted elevated.b
     HWND hwnd = GetShellWindow();
     if (NULL == hwnd) {
-        plogf("RunAsUser(): GetShellWindow() failed");
+        lf("RunAsUser(): GetShellWindow() failed");
         goto Error;
     }
 
     // Get the PID of the desktop shell process.
     GetWindowThreadProcessId(hwnd, &pid);
     if (0 == pid) {
-        plogf("RunAsUser(): GetWindowThreadProcessId() failed");
+        lf("RunAsUser(): GetWindowThreadProcessId() failed");
         goto Error;
     }
 
     // Open the desktop shell process in order to query it (get its token)
     hShellProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
     if (0 == hShellProcess) {
-        plogf("RunAsUser(): OpenProcess() failed");
+        lf("RunAsUser(): OpenProcess() failed");
         goto Error;
     }
 
     // Get the process token of the desktop shell.
     ok = OpenProcessToken(hShellProcess, TOKEN_DUPLICATE, &hShellProcessToken);
     if (!ok) {
-        plogf("RunAsUser(): OpenProcessToken() failed");
+        lf("RunAsUser(): OpenProcessToken() failed");
         goto Error;
     }
 
@@ -532,7 +532,7 @@ bool RunAsUser(WCHAR *cmd)
     DWORD tokenRights = TOKEN_ALL_ACCESS;
     ok = DuplicateTokenEx(hShellProcessToken, tokenRights, NULL, SecurityImpersonation, TokenPrimary, &hPrimaryToken);
     if (!ok) {
-        plogf("RunAsUser(): DuplicateTokenEx() failed");
+        lf("RunAsUser(): DuplicateTokenEx() failed");
         goto Error;
     }
 
@@ -542,7 +542,7 @@ bool RunAsUser(WCHAR *cmd)
 
     ok = CreateProcessWithTokenW(hPrimaryToken, 0, NULL, cmd, 0, NULL, NULL, &si, &pi);
     if (!ok) {
-        plogf("RunAsUser(): CreateProcessWithTokenW() failed");
+        lf("RunAsUser(): CreateProcessWithTokenW() failed");
         goto Error;
     }
 
@@ -569,7 +569,11 @@ static void OnButtonStartSumatra()
     if (!h)
         CreateProcessHelper(exePath);
 #else
-    RunAsUser(exePath);
+    bool ok = RunAsUser(AsWStrQ(exePath));
+    if (!ok) {
+        // create the process as is (mainly for non-admin users)
+        CreateProcessHelper(exePath);
+    }
 #endif
     OnButtonExit();
 }
