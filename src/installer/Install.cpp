@@ -12,6 +12,8 @@
 #include "../ifilter/PdfFilter.h"
 #include "../previewer/PdfPreview.h"
 
+#include "DebugLog.h"
+
 #define ID_CHECKBOX_MAKE_DEFAULT      14
 #define ID_CHECKBOX_BROWSER_PLUGIN    15
 #define ID_BUTTON_START_SUMATRA       16
@@ -410,6 +412,7 @@ void OnInstallationFinished()
     CloseHandle(gGlobalData.hThread);
 }
 
+#if 0
 typedef BOOL WINAPI SaferCreateLevelProc(DWORD dwScopeId, DWORD dwLevelId, DWORD OpenFlags, SAFER_LEVEL_HANDLE *pLevelHandle, LPVOID lpReserved);
 typedef BOOL WINAPI SaferComputeTokenFromLevelProc(SAFER_LEVEL_HANDLE LevelHandle, HANDLE InAccessToken, PHANDLE OutAccessToken, DWORD dwFlags, LPVOID lpReserved);
 typedef BOOL WINAPI SaferCloseLevelProc(SAFER_LEVEL_HANDLE hLevelHandle);
@@ -451,16 +454,123 @@ Error:
     _SaferCloseLevel(slh);
     return NULL;
 }
+#endif
+
+// Run a given *.exe as a non-elevated (non-admin) process.
+// based on http://stackoverflow.com/questions/3298611/run-my-program-asuser
+// TODO: move to WinUtil.cpp
+bool RunAsUser(WCHAR *cmd)
+{
+    PROCESS_INFORMATION pi = { 0 };
+    STARTUPINFO si = { 0 };
+    HANDLE hProcessToken = 0;
+    HANDLE hShellProcess = 0;
+    HANDLE hShellProcessToken = 0;
+    HANDLE hPrimaryToken = 0;
+    DWORD retLength, pid;
+    TOKEN_PRIVILEGES tkp = { 0 };
+    bool ret = false;
+
+    // Enable SeIncreaseQuotaPrivilege in this process (won't work if current process is not elevated)
+    BOOL ok = OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hProcessToken);
+    if (!ok) {
+        plogf("RunAsUser(): OpenProcessToken() failed");
+        goto Error;
+    }
+
+    tkp.PrivilegeCount = 1;
+    ok = LookupPrivilegeValue(NULL, SE_INCREASE_QUOTA_NAME, &tkp.Privileges[0].Luid);
+    if (!ok) {
+        plogf("RunAsUser(): LookupPrivilegeValue() failed");
+        goto Error;
+    }
+   
+    tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+    ok = AdjustTokenPrivileges(hProcessToken, FALSE, &tkp, 0, NULL, &retLength);
+    if (!ok || (ERROR_SUCCESS != GetLastError())) {
+        plogf("RunAsUser(): AdjustTokenPrivileges() failed");
+        goto Error;
+    }
+
+    // Get an HWND representing the desktop shell.
+    // Note: this will fail if the shell is not running (crashed or terminated),
+    // or the default shell has been replaced with a custom shell. This also won't
+    // return what you probably want if Explorer has been terminated and
+    // restarted elevated.b
+    HWND hwnd = GetShellWindow();
+    if (NULL == hwnd) {
+        plogf("RunAsUser(): GetShellWindow() failed");
+        goto Error;
+    }
+
+    // Get the PID of the desktop shell process.
+    GetWindowThreadProcessId(hwnd, &pid);
+    if (0 == pid) {
+        plogf("RunAsUser(): GetWindowThreadProcessId() failed");
+        goto Error;
+    }
+
+    // Open the desktop shell process in order to query it (get its token)
+    hShellProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
+    if (0 == hShellProcess) {
+        plogf("RunAsUser(): OpenProcess() failed");
+        goto Error;
+    }
+
+    // Get the process token of the desktop shell.
+    ok = OpenProcessToken(hShellProcess, TOKEN_DUPLICATE, &hShellProcessToken);
+    if (!ok) {
+        plogf("RunAsUser(): OpenProcessToken() failed");
+        goto Error;
+    }
+
+    // Duplicate the shell's process token to get a primary token.
+    // Based on experimentation, this is the minimal set of rights required 
+    // for CreateProcessWithTokenW (contrary to current documentation).
+    //DWORD tokenRights = TOKEN_QUERY || TOKEN_ASSIGN_PRIMARY || TOKEN_DUPLICATE || TOKEN_ADJUST_DEFAULT || TOKEN_ADJUST_SESSIONID || TOKEN_IMPERSONATE;
+    // TODO: tokenRights could probably be trimmed but the one above is not enough
+    DWORD tokenRights = TOKEN_ALL_ACCESS;
+    ok = DuplicateTokenEx(hShellProcessToken, tokenRights, NULL, SecurityImpersonation, TokenPrimary, &hPrimaryToken);
+    if (!ok) {
+        plogf("RunAsUser(): DuplicateTokenEx() failed");
+        goto Error;
+    }
+
+    si.cb = sizeof(si);
+    si.wShowWindow = SW_SHOWNORMAL;
+    si.dwFlags = STARTF_USESHOWWINDOW;
+
+    ok = CreateProcessWithTokenW(hPrimaryToken, 0, NULL, cmd, 0, NULL, NULL, &si, &pi);
+    if (!ok) {
+        plogf("RunAsUser(): CreateProcessWithTokenW() failed");
+        goto Error;
+    }
+
+    ret = true;
+Exit:
+    CloseHandle(hProcessToken);
+    CloseHandle(pi.hProcess);
+    CloseHandle(hShellProcessToken);
+    CloseHandle(hPrimaryToken);
+    CloseHandle(hShellProcess);
+    return ret;
+Error:
+    LogLastError();
+    goto Exit;
+}
 
 static void OnButtonStartSumatra()
 {
     ScopedMem<TCHAR> exePath(GetInstalledExePath());
+#if 0
     // try to create the process as a normal user
     ScopedHandle h(CreateProcessAtLevel(exePath));
     // create the process as is (mainly for Windows 2000 compatibility)
     if (!h)
         CreateProcessHelper(exePath);
-
+#else
+    RunAsUser(exePath);
+#endif
     OnButtonExit();
 }
 
