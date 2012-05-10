@@ -43,7 +43,8 @@ bool   CreateRegKey(HKEY keySub, const TCHAR *keyName);
 bool   DeleteRegKey(HKEY keySub, const TCHAR *keyName, bool resetACLFirst=false);
 TCHAR *ReadIniString(const TCHAR *iniPath, const TCHAR *section, const TCHAR *key);
 
-void   EnableNx();
+void   DisableDataExecution();
+void   EnableDataExecution();
 void   RedirectIOToConsole();
 TCHAR *GetExePath();
 int    FileTimeDiffInSecs(FILETIME& ft1, FILETIME& ft2);

@@ -101,8 +101,16 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
     if (progressUI)
         progressUI->UpdateProgress(current, total);
 
+    // cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1882
+    // According to our crash dumps, Cannon printer drivers (caprenn.dll etc.)
+    // are buggy and like to crash during printing with DEP violation
+    // We disable dep during printing to hopefully not crash
+    // TODO: even better would be to print in a separate process so that
+    // crashes during printing wouldn't affect the main process. It's also
+    // much more complicated to implement
+    EnableDataExecution();
     if (StartDoc(hdc, &di) <= 0)
-        return;
+        goto Exit;
 
     SetMapMode(hdc, MM_TEXT);
 
@@ -154,18 +162,18 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
 #endif
             if (EndPage(hdc) <= 0) {
                 AbortDoc(hdc);
-                return;
+                goto Exit;
             }
 
             if (progressUI && progressUI->WasCanceled()) {
                 AbortDoc(hdc);
-                return;
+                goto Exit;
             }
             current++;
         }
 
         EndDoc(hdc);
-        return;
+        goto Exit;
     }
 
     // print all the pages the user requested
@@ -249,18 +257,20 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
 #endif
             if (EndPage(hdc) <= 0) {
                 AbortDoc(hdc);
-                return;
+                goto Exit;
             }
 
             if (progressUI && progressUI->WasCanceled()) {
                 AbortDoc(hdc);
-                return;
+                goto Exit;
             }
             current++;
         }
     }
 
     EndDoc(hdc);
+Exit:
+    DisableDataExecution();
 }
 
 class PrintThreadUpdateWorkItem : public UIThreadWorkItem {

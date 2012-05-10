@@ -200,10 +200,8 @@ TCHAR *ReadIniString(const TCHAR *iniPath, const TCHAR *section, const TCHAR *ke
 
 #define PROCESS_EXECUTE_FLAGS 0x22
 
-/*
- * enable "NX" execution prevention for XP, 2003
- * cf. http://www.uninformed.org/?v=2&a=4
- */
+/* enable "NX" execution prevention for XP, 2003
+ * cf. http://www.uninformed.org/?v=2&a=4 */
 typedef HRESULT (WINAPI *_NtSetInformationProcess)(
    HANDLE  ProcessHandle,
    UINT    ProcessInformationClass,
@@ -211,14 +209,29 @@ typedef HRESULT (WINAPI *_NtSetInformationProcess)(
    ULONG   ProcessInformationLength
    );
 
-void EnableNx()
+#define MEM_EXECUTE_OPTION_DISABLE 0x1
+#define MEM_EXECUTE_OPTION_ENABLE 0x2
+#define MEM_EXECUTE_OPTION_PERMANENT 0x8
+#define MEM_EXECUTE_OPTION_DISABLE_ATL 0x4
+
+void EnableDataExecution()
 {
     _NtSetInformationProcess ntsip;
-    DWORD dep_mode = 13; /* ENABLE | DISABLE_ATL | PERMANENT */
+    DWORD depMode = MEM_EXECUTE_OPTION_ENABLE | MEM_EXECUTE_OPTION_DISABLE_ATL;
 
     ntsip = (_NtSetInformationProcess)LoadDllFunc(_T("ntdll.dll"), "NtSetInformationProcess");
     if (ntsip)
-        ntsip(GetCurrentProcess(), PROCESS_EXECUTE_FLAGS, &dep_mode, sizeof(dep_mode));
+        ntsip(GetCurrentProcess(), PROCESS_EXECUTE_FLAGS, &depMode, sizeof(depMode));
+}
+
+void DisableDataExecution()
+{
+    _NtSetInformationProcess ntsip;
+    DWORD depMode = MEM_EXECUTE_OPTION_DISABLE | MEM_EXECUTE_OPTION_DISABLE_ATL;
+
+    ntsip = (_NtSetInformationProcess)LoadDllFunc(_T("ntdll.dll"), "NtSetInformationProcess");
+    if (ntsip)
+        ntsip(GetCurrentProcess(), PROCESS_EXECUTE_FLAGS, &depMode, sizeof(depMode));
 }
 
 // Code from http://www.halcyon.com/~ast/dload/guicon.htm
